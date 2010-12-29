@@ -54,6 +54,8 @@ void InsertAfterCurrentKist(KistHndl kist,Data *data){
 
     Unit *unit = (Unit *)malloc(sizeof(Unit));
 
+    assert(unit);
+
     unit->data = data;
 
     if(kist->Nunits > 0){
@@ -86,6 +88,8 @@ void InsertBeforeCurrentKist(KistHndl kist,Data *data){
 	Unit *unit;
 
 	unit=(Unit *)malloc(sizeof(Unit));
+    assert(unit);
+
 	unit->data=data;
 
     if(kist->Nunits > 0){

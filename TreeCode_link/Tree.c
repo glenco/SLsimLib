@@ -577,6 +577,7 @@ Point *AddPointToArray(Point *points,unsigned long N,unsigned long Nold){
 	  points=(Point *) realloc(points,N*sizeof(Point));
 	  for(i=Nold;i<N;++i){
 		  points[i].x=(double *) malloc(2*sizeof(double));
+		  assert(points[i].x);
 		  points[i].head=0;
 		  points[i].in_image=False;
 		  points[i].leaf=NULL;
@@ -591,6 +592,8 @@ Point *NewPoint(double *x,unsigned long id){
   Point *point;
 
   point=(Point *) malloc(sizeof(Point));
+  assert(point);
+
   point->head = 1;
   point->id=id;
   point->x=x;
@@ -689,9 +692,12 @@ ImageInfo *NewImageInfo(int Nimages){
   int i;
 
   imageinfo=(ImageInfo *) malloc(Nimages*sizeof(ImageInfo));
-  imageinfo->imagekist = NewKist();
+  assert(imageinfo);
+
+  //imageinfo->imagekist = NewKist();
 
   for(i=0;i<Nimages;++i){
+	imageinfo[i].imagekist = NewKist();
 	imageinfo[i].Npoints=0;
     imageinfo[i].innerborder = NewKist();
     imageinfo[i].outerborder = NewKist();
@@ -703,8 +709,9 @@ ImageInfo *NewImageInfo(int Nimages){
 void freeImageInfo(ImageInfo *imageinfo,int Nimages){
 	int i;
 
-	freeKist(imageinfo->imagekist);
+	//freeKist(imageinfo->imagekist);
 	for(i=0;i<Nimages;++i){
+		freeKist(imageinfo[i].imagekist);
 	    freeKist(imageinfo[i].innerborder);
 	    freeKist(imageinfo[i].outerborder);
 	}

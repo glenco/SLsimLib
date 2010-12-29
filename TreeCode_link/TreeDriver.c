@@ -95,6 +95,7 @@ void _BuildTree(TreeHndl tree){
   }
  
   x=(double *)malloc(cbranch->npoints*sizeof(double));
+  assert(x);
 
   /* initialize bounderies to old bounderies */
   for(i=0;i<2;++i){
@@ -228,8 +229,11 @@ Point *NearestNeighbor(TreeHndl tree,double *ray,int Nneighbors,ListHndl neighbo
   if(count==0){
     /*printf("allocating memory\n");*/
     rneighbors=(double *)malloc((Nneighbors+Nbucket)*sizeof(double));
+    assert(rneighbors);
     neighborpoints=(Point **)malloc((Nneighbors+Nbucket)*sizeof(Point *));
+    assert(neighborpoints);
     temp_points=(Point **)malloc((Nneighbors+Nbucket)*sizeof(Point *));
+    assert(temp_points);
     ++count;
     oldNneighbors=Nneighbors;
 
@@ -564,6 +568,7 @@ int AddPointsToTree(TreeHndl tree,Point *xpoint,unsigned long Nadd){
     parent_branch=tree->current;
     tree->current->npoints -= Nadd;
 	x=(double *) malloc(2*Nbucket*sizeof(double));
+	assert(x);
 
     for(j=0;j<Nadd;++j){
 

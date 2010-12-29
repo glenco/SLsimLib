@@ -54,7 +54,7 @@ int main(int arg,char **argv){
   double min_image_seporation;
   ImageInfo *imageinfo,*critical;
   //FILE *file;
-  int Ncrit,Nsources,Ntotal_lenses;
+  int Ncrit,Nsources,Ntotal_lenses,refresh;
   time_t to,now,t4;
   Boolean verbose,nocrit,just_mags,success;
   char *paramfile;
@@ -272,27 +272,27 @@ int main(int arg,char **argv){
 		  }
 		  if(m==2) lens->sub_N=0;
 
-			  //////////////////////////////
-			  // redo grid with stars in it
-			  // free old tree to speed up image finding
-		  emptyTree(i_tree);
-		  emptyTree(s_tree);
-
-			  // build new initial grid
-		  i_points=NewPointArray(Ngrid*Ngrid,True);
-		  xygridpoints(i_points,range,center,Ngrid,0);
-		  s_points=LinkToSourcePoints(i_points,Ngrid*Ngrid);
-		  rayshooterInternal(Ngrid*Ngrid,i_points,i_tree,True);
-			  // fill trees
-		  FillTree(i_tree,i_points,Ngrid*Ngrid);
-		  FillTree(s_tree,s_points,Ngrid*Ngrid);
-
-
-		  fprintf(file,"%i %i\n",m,8*15 + 1);
+		  fprintf(file,"%i %i\n",m,8*20 + 1);
 		  // calculate the magnifications starting with
-		  for(r_source_phys = 1.0e-2;r_source_phys >= 1.0e-7*0.99999e-3
-		        ;r_source_phys /= pow(10,1.0/15.0) ){
+		  for(r_source_phys = 1.0e-2, refresh = 0;r_source_phys >= 1.0e-7*0.99999e-3
+		        ;r_source_phys /= pow(10,1.0/20.0), ++refresh ){
  
+			  if(refresh % 20 == 0){ // refresh grids to reduce memory and tree lookup
+
+				  // free old tree to speed up image finding
+				  emptyTree(i_tree);
+				  emptyTree(s_tree);
+
+				  // build new initial grid
+				  i_points=NewPointArray(Ngrid*Ngrid,True);
+				  xygridpoints(i_points,range,center,Ngrid,0);
+				  s_points=LinkToSourcePoints(i_points,Ngrid*Ngrid);
+				  rayshooterInternal(Ngrid*Ngrid,i_points,i_tree,True);
+				  // fill trees
+				  FillTree(i_tree,i_points,Ngrid*Ngrid);
+				  FillTree(s_tree,s_points,Ngrid*Ngrid);
+			  }
+
  			  lens->source_r = r_source_phys*angDist(0,lens->zlens)/angDist(0,lens->zsource);
 
 			  if(lens->source_r > 1.0e-6)

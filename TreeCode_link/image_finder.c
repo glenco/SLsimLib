@@ -488,34 +488,51 @@ short image_finder(double *y_source,double r_source,TreeHndl s_tree,TreeHndl i_t
   // transform from source plane to image points
   TranformPlanesKist(imageinfo->imagekist);
 
+  //  x[] is not allocated
+  imageinfo->points = NewPointArray(imageinfo->imagekist->Nunits,False);
+
   // split images
   if( splitparities == 0 ){
-	  divide_images(i_tree,imageinfo,Nimages,NimageMax);
+	  divide_images2(i_tree,imageinfo,Nimages,NimageMax);
   }else{
 	  *Nimages = 1;
 	  imageinfo->Npoints = imageinfo->imagekist->Nunits;
   }
 
-  //  x[] is not allocated
-  imageinfo->points = NewPointArray(imageinfo->imagekist->Nunits,False);
-
+/*  with divide_images
   // copy information into array
   MoveToTopKist(imageinfo->imagekist);
   for(i=0;i < imageinfo->imagekist->Nunits;++i){
-	  PointCopyData(&(imageinfo->points[i]),getCurrentKist(imageinfo->imagekist));
-	  MoveDownKist(imageinfo->imagekist);
+	  //PointCopyData(&(imageinfo->points[i]),getCurrentKist(imageinfo->imagekist));
+	  PointCopyData(&(imageinfo->points[i]),TakeOutCurrentKist(imageinfo->imagekist));
+	  //MoveDownKist(imageinfo->imagekist);
+  }
+*/
+
+  // for divide_images2
+  // copy information into array
+  for(i=0,j=0;i<*Nimages;++i){
+	  imageinfo[i].Npoints = imageinfo[i].imagekist->Nunits;
+
+	  MoveToTopKist(imageinfo[i].imagekist);
+	  PointCopyData(&(imageinfo->points[j]),TakeOutCurrentKist(imageinfo[i].imagekist));
+	  imageinfo[i].points = &(imageinfo->points[j]);
+	  ++j;
+	  while(imageinfo[i].imagekist->Nunits > 0){
+		  PointCopyData(&(imageinfo->points[j]),TakeOutCurrentKist(imageinfo[i].imagekist));
+		  ++j;
+	  }
   }
 
   //imageinfo->Npoints = imageinfo->imagekist->Nunits; // ***
-  EmptyKist(imageinfo->imagekist);
-
+/*
   // set first point in each image in the array
   for(i=1,j=0 ; i < *Nimages ; ++i){
 	  //printf("  image %i  Npoints = %li \n",i,imageinfo[i].Npoints);
 	  j += imageinfo[i-1].Npoints;
 	  imageinfo[i].points = &(imageinfo->points[j]);
   }
-
+*/
   //printf("Nimages =%i splitparities == %i r_source = %e\n",*Nimages,splitparities,r_source);
   /*if(splitparities == -1 && r_source > 0.0){
 
@@ -523,12 +540,12 @@ short image_finder(double *y_source,double r_source,TreeHndl s_tree,TreeHndl i_t
 
   }else{ // *************** split into separate images ********************
 
-	  printf("Nimages =%i\n",*Nimages);
+	  //printf("Nimages =%i\n",*Nimages);
 	  //split_images(i_tree,imageinfo,NimageMax,Nimages,True);
 	  split_images2(i_tree,imageinfo,NimageMax,Nimages);    // brute force, but reliable
 	  //split_images3(i_tree,imageinfo,NimageMax,Nimages,True);  // split by edge method
 
-	  printf("Nimages =%i\n\n",*Nimages);
+	  //printf("Nimages =%i\n\n",*Nimages);
   }*/
 
   if( splitparities == 0 ) for(i=0;i<*Nimages;++i) findborders3(i_tree,&imageinfo[i]);
@@ -559,7 +576,7 @@ short image_finder(double *y_source,double r_source,TreeHndl s_tree,TreeHndl i_t
 	  }
 
 	  // find area of images
-	  //findarea(&imageinfo[i]);  this is now done in divide_images
+	  //findarea(&imageinfo[i]);  // ****this is now done in divide_images
 
 	  assert(imageinfo[i].area >= 0.0);
 	  if(Nsource_points < NpointsRequired || moved) imageinfo[i].area_error=1.0;

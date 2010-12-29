@@ -85,6 +85,7 @@ void split_order_curve4(ImageInfo *curves,int Maxcurves,int *Ncurves){
 */
 	// order curve points
 	theta=(double *)malloc(NpointsTotal*sizeof(double));
+	assert(theta);
 	for(i=0;i<*Ncurves;++i){
 
 		if(curves[i].Npoints > 3){
@@ -655,6 +656,7 @@ void split_images(TreeHndl i_tree,ImageInfo *images,int Maximages
 
 	// copy outer borders to borders array
 	borders=(ImageInfo *) malloc(Maximages*sizeof(ImageInfo));
+	assert(borders);
 	Npoints=images->outerborder->Nunits;
 
 	// make a copy of the border points in a point array
@@ -695,6 +697,7 @@ void split_images(TreeHndl i_tree,ImageInfo *images,int Maximages
 	if(sortallpoints){
 		if(*Nimages > 1){
 			image_number_array=(double *)malloc(Npoints_tot*sizeof(double));
+			assert(image_number_array);
 			for(j=0,maxN=0;j<TmpNimages;++j) if(borders[j].Nencircled % 2 == 0 && borders[j].Nencircled > maxN) maxN=borders[j].Nencircled;
 			// sort points into images
 			//#pragma omp parallel for private(j)
@@ -822,6 +825,7 @@ void split_images3(TreeHndl i_tree,ImageInfo *images,int Maximages
 
 	// copy inner borders to borders array
 	borders=(ImageInfo *) malloc(Maximages*sizeof(ImageInfo));
+	assert(borders);
 	Npoints=images->innerborder->Nunits;
 
 	// make a copy of the border points in a point array
@@ -861,6 +865,7 @@ void split_images3(TreeHndl i_tree,ImageInfo *images,int Maximages
 	if(sortallpoints){
 		if(*Nimages > 1){
 			image_number_array=(double *)malloc(Npoints_tot*sizeof(double));
+			assert(image_number_array);
 			// sort points into images
 			//#pragma omp parallel for private(j)
 
