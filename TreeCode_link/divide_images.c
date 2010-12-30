@@ -196,6 +196,7 @@ void divide_images2(TreeHndl i_tree,ImageInfo *imageinfo
 		getCurrentKist(imageinfo->imagekist)->in_image = True;
 		getCurrentKist(imageinfo->imagekist)->image->in_image = True;
 		InsertAfterCurrentKist(new_imagekist,TakeOutCurrentKist(imageinfo->imagekist));
+		MoveDownKist(new_imagekist);
 	}while(imageinfo->imagekist->Nunits > 0);
 
 
@@ -208,27 +209,35 @@ void divide_images2(TreeHndl i_tree,ImageInfo *imageinfo
 
 	i=0;
 	do{
-		partition_images2(getCurrentKist(new_imagekist),imageinfo[i].imagekist,i_tree);
-
+		imageinfo[i].area = partition_images2(getCurrentKist(new_imagekist),imageinfo[i].imagekist,i_tree);
 		imageinfo[i].Npoints = imageinfo[i].imagekist->Nunits;
 		// take out points that got un-marked in partition_images
 
 		Ntemp = new_imagekist->Nunits;
-		imageinfo[i].area = imageinfo[i].area_error = 0.0;
-		for( j=0,MoveToTopKist(new_imagekist) ; j < Ntemp ; ++j,MoveDownKist(new_imagekist) ){
-			if(getCurrentKist(new_imagekist)->in_image == 0){
+		imageinfo[i].area_error = 0.0;
+
+		for( j=0,MoveToTopKist(new_imagekist) ; j < Ntemp ; ++j){
+			if(getCurrentKist(new_imagekist)->in_image == False){
 
 				// calculates area of image
 				tmp = pow(getCurrentKist(new_imagekist)->gridsize,2 );
-				imageinfo[i].area += tmp;
+				//imageinfo[i].area += tmp;
 			    if(imageinfo[i].area_error < tmp) imageinfo[i].area_error = tmp;
 
-				TakeOutCurrentKist(new_imagekist);
+			    if(AtTopKist(new_imagekist)){
+			    	TakeOutCurrentKist(new_imagekist);
+			    }else{
+			    	TakeOutCurrentKist(new_imagekist);
+			    	MoveDownKist(new_imagekist);
+			    }
+			}else{
 				MoveDownKist(new_imagekist);
 			}
 		}
 		imageinfo[i].area_error /= imageinfo[i].area;
 
+		assert(Ntemp - new_imagekist->Nunits - imageinfo[i].imagekist->Nunits == 0);
+		assert(AtBottomKist(new_imagekist));
 		++i;
 	}while(new_imagekist->Nunits > 0 && i < Nimagesmax);
 
@@ -301,7 +310,7 @@ void partition_images(Point *point,unsigned long *N_in_image,TreeHndl i_tree){
 	return;
 }
 
-void partition_images2(Point *point,KistHndl imagekist,TreeHndl i_tree){
+double partition_images2(Point *point,KistHndl imagekist,TreeHndl i_tree){
 /* finds all the points with in_image = True that are connected to point
  *    by cell neighbors of cell neighbors.  The resulting kist of points
  *    is left in imagekist.  The in_image marks are returned to their original
@@ -311,6 +320,7 @@ void partition_images2(Point *point,KistHndl imagekist,TreeHndl i_tree){
 	assert(i_tree);
 	assert(point->in_image == True);
 
+	double area = 0.0;
 	KistHndl neighbors = NewKist();
 
 	EmptyKist(imagekist);
@@ -320,6 +330,8 @@ void partition_images2(Point *point,KistHndl imagekist,TreeHndl i_tree){
 
 		if(getCurrentKist(imagekist)->in_image == True){
 			getCurrentKist(imagekist)->in_image = False;
+
+			area += pow(getCurrentKist(imagekist)->gridsize,2);
 
 			// find all the neighbors of point
 			FindAllBoxNeighborsKist(i_tree,getCurrentKist(imagekist),neighbors);
@@ -332,12 +344,12 @@ void partition_images2(Point *point,KistHndl imagekist,TreeHndl i_tree){
 					InsertAfterCurrentKist(imagekist,TakeOutCurrentKist(neighbors));
 				}
 			}
+
 		}else{
 			TakeOutCurrentKist(imagekist);
 		}
 	}while(MoveDownKist(imagekist));
 
-	//printf("exiting partition_images\n");
 
 	/*MoveToTopKist(imagekist);
 	do{
@@ -348,5 +360,5 @@ void partition_images2(Point *point,KistHndl imagekist,TreeHndl i_tree){
 	assert(neighbors->Nunits == 0);
 	freeKist(neighbors);
 
-	return;
+	return area;
 }

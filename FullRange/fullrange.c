@@ -277,7 +277,7 @@ int main(int arg,char **argv){
 		  for(r_source_phys = 1.0e-2, refresh = 0;r_source_phys >= 1.0e-7*0.99999e-3
 		        ;r_source_phys /= pow(10,1.0/20.0), ++refresh ){
  
-			  if(refresh % 20 == 0){ // refresh grids to reduce memory and tree lookup
+			  if(refresh % 2000 == 0){ // refresh grids to reduce memory and tree lookup
 
 				  // free old tree to speed up image finding
 				  emptyTree(i_tree);
