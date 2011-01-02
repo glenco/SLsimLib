@@ -10,7 +10,7 @@
 
 static const int NpointsRequired = 50;
 static const float mumin = 0.3;  // actually the sqrt of the minimum magnification
-//static const float mumin = 0.1;
+//static const float mumin = 0.2;
 static const int Ngrid_block = 3;
 static const float FracResTarget = 4.0e-4;
 //#define FracResTarget 1.0e-3
@@ -29,13 +29,19 @@ void find_images(double *y_source,double r_source
 	 * find_image returns finite refined images
 	 *  it starts with a large source and reduces down to the right size refining at each step
 	 *  should not miss any image larger than ~ munin*r_source linear size
-	 *  if r_souce < 0 the source is a point source and fabs(r_source) is the resolution
+	 *
 	 *  if splitimage==TRUE each image is refined to target accuracy, otherwise all images are treated as one
 	 *  edge_refinement = 0 does not do edge refinement
 	 *                  = 1 uses refine_edge() which keeps the images fully up to date
 	 *                  = 2 uses refine_edge2() which is faster but does not keep edges
 	 *  kappa_off = True - turns off calculation of kappa and gamma
 	 *              False - turns on calculation of kappa and gamma
+	 *
+	 *  fromthetop = True -  The telescoping steps will start from the largest gird size and
+	 *  	                 got down to make sure all images are found
+	 *             = False - If the source has not moved and source size is smaller than
+	 *                       the last the telescaoping will begin with the last source size
+	 *                       ,otherwise the same as true
 	 */
 
 	long Nsizes,Nold;
@@ -48,9 +54,15 @@ void find_images(double *y_source,double r_source
 	KistHndl tmp_border_kist;
 	Boolean image_overlap;
 	static int oldNimages=0;
+	static unsigned long Npoints_old = 0;
 
-	if(oldr==0) oldr=r_source;
-	if((oldy[0]==y_source[0])*(oldy[1]==y_source[1])*(oldr > r_source)) initial_size=oldr;
+	if(oldr==0){ oldr=r_source; Npoints_old = i_tree->pointlist->Npoints;}
+	if((Npoints_old <= i_tree->pointlist->Npoints )* // if grid has not been refreshed
+			(oldy[0]==y_source[0])*(oldy[1]==y_source[1])* // and source not moved
+			(oldr > r_source)  // and source size has gotten smaller
+			) initial_size=oldr;
+
+	Npoints_old = i_tree->pointlist->Npoints;
 
 	if(r_source==0.0){ERROR_MESSAGE(); printf("ERROR: find_images, point source must have a resolution target\n"); exit(1);}
 

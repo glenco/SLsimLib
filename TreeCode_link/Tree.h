@@ -207,7 +207,8 @@ void FindAllBoxNeighbors(TreeHndl tree,Point *point,ListHndl neighbors);
 
 void find_images(double *y_source,double r_source,TreeHndl s_tree,TreeHndl i_tree
 		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
-		  ,double initial_size,Boolean splitimages,short edge_refinement,Boolean verbose,Boolean kappa_off);
+		  ,double initial_size,Boolean splitimages,short edge_refinement
+		  ,Boolean verbose,Boolean kappa_off);
 short image_finder(double *y_source,double r_source,TreeHndl s_tree,TreeHndl i_tree
 		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
 		,short splitparities,short true_images);

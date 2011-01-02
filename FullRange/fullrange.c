@@ -57,6 +57,7 @@ int main(int arg,char **argv){
   int Ncrit,Nsources,Ntotal_lenses,refresh;
   time_t to,now,t4;
   Boolean verbose,nocrit,just_mags,success;
+  Boolean fromthetop;
   char *paramfile;
   FILE *file;
 
@@ -272,12 +273,12 @@ int main(int arg,char **argv){
 		  }
 		  if(m==2) lens->sub_N=0;
 
-		  fprintf(file,"%i %i\n",m,8*20 + 1);
+		  fprintf(file,"%i %i\n",m,8*40 + 1);
 		  // calculate the magnifications starting with
 		  for(r_source_phys = 1.0e-2, refresh = 0;r_source_phys >= 1.0e-7*0.99999e-3
-		        ;r_source_phys /= pow(10,1.0/20.0), ++refresh ){
+		        ;r_source_phys /= pow(10,1.0/40.0), ++refresh ){
  
-			  if(refresh % 2000 == 0){ // refresh grids to reduce memory and tree lookup
+			  if(refresh % 40 == 0){ // refresh grids to reduce memory and tree lookup
 
 				  // free old tree to speed up image finding
 				  emptyTree(i_tree);
@@ -291,6 +292,10 @@ int main(int arg,char **argv){
 				  // fill trees
 				  FillTree(i_tree,i_points,Ngrid*Ngrid);
 				  FillTree(s_tree,s_points,Ngrid*Ngrid);
+
+				  fromthetop = True;
+			  }else{
+				  fromthetop = False;
 			  }
 
  			  lens->source_r = r_source_phys*angDist(0,lens->zlens)/angDist(0,lens->zsource);
