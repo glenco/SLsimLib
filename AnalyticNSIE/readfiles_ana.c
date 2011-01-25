@@ -115,18 +115,23 @@ void readparams_ana(char *filename,struct cosmology *cosmo,AnaLens *lens){
 		  lens->sub_alpha_func = alphaNFW;
 		  lens->sub_kappa_func = kappaNFW;
 		  lens->sub_gamma_func = gammaNFW;
+		  lens->sub_phi_func = 0;
+		  ERROR_MESSAGE();
+		  printf("no time delay function defined for NFW\n");
 		  printf("  NFW clumps\n");
 		  break;
 	  case powerlaw:
 		  lens->sub_alpha_func = alphaPowLaw;
 		  lens->sub_kappa_func = kappaPowLaw;
 		  lens->sub_gamma_func = gammaPowLaw;
+		  lens->sub_phi_func = phiPowLaw;
 		  printf("  Power Law clumps\n");
 		  break;
 	  case pointmass:
 		  lens->sub_alpha_func = 0;
 		  lens->sub_kappa_func = 0;
 		  lens->sub_gamma_func = 0;
+		  lens->sub_phi_func = 0;
 		  printf("  Point Mass clumps\n");
 		  break;
 	  default:
@@ -192,7 +197,7 @@ void readparams_ana(char *filename,struct cosmology *cosmo,AnaLens *lens){
   /********************************/
 
   lens->sub_sigmaScale=lens->host_sigma;
-  lens->MpcToAsec=60*60*180*(1+lens->zsource)/pi/angDist(0,lens->zlens);
+  lens->MpcToAsec=60*60*180/pi/angDist(0,lens->zlens);
   printf("Arcseconds/Mpc: %e\n",lens->MpcToAsec);
   // in degrees
   lens->host_pos_angle*=pi/180;
@@ -200,10 +205,14 @@ void readparams_ana(char *filename,struct cosmology *cosmo,AnaLens *lens){
   lens->host_ro=4*pi*pow(lens->host_sigma/2.99792e5,2)*angDist(0,lens->zlens)*angDist(lens->zlens,lens->zsource)
 		  /angDist(0,lens->zsource)/(1+lens->zlens);
 
-  /* find critical density */
+  // find critical density
   lens->Sigma_crit=angDist(0,lens->zsource)/angDist(lens->zlens,lens->zsource)/angDist(0,lens->zlens)/4/pi/Grav;
-  printf("critical density is %e Msun/Mpc^2    ro=%e Mpc  D_l = %e Mpc\n",lens->Sigma_crit,lens->host_ro
-		  ,angDist(0,lens->zlens));
+  lens->to = (1+lens->zlens)*angDist(0,lens->zsource)/angDist(lens->zlens,lens->zsource)/angDist(0,lens->zlens)
+		  /8.39428142e-10;
+
+  printf("critical density is %e Msun/Mpc^2    ro=%e Mpc  D_l = %e Mpc D_s = %e Mpc  to = %e days/Mpc^2\n"
+		  ,lens->Sigma_crit,lens->host_ro
+		  ,angDist(0,lens->zlens),angDist(0,lens->zsource),lens->to);
 
   NSubstructInRe = pi*pow(2*lens->host_ro,2)*lens->sub_Ndensity;
 
@@ -217,10 +226,7 @@ void readparams_ana(char *filename,struct cosmology *cosmo,AnaLens *lens){
 	  lens->NSubstruct = (int)(lens->NdensitySubstruct*pi*Rmax*Rmax+0.5);
 	  */
 	  printf("average number of clumps including outside Re: %f\n",pi*pow(lens->host_ro,2)*lens->sub_Ndensity);
-	  printf("average clumps mass: %e Msun\n",lens->sub_Mmax*(lens->sub_alpha+1)
-			  /(lens->sub_alpha+2)*(1-pow(lens->sub_Mmin/lens->sub_Mmax,lens->sub_alpha+2))/
-			  (1-pow(lens->sub_Mmin/lens->sub_Mmax,lens->sub_alpha+1))
-			  );
+	  printf("average clumps mass: %e Msun\n",averageSubMass(lens));
 
 	  /*for(i=0;i<lens->NSubstruct;++i){
 		  lens->RcutSubstruct[i]=lens->RmaxSubstruct;

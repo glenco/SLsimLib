@@ -54,3 +54,14 @@ void gammaPowLaw(double *gamma,double *x,double R,double mass,double beta
 
 	return ;
 }
+
+double phiPowLaw(double *x,double R,double mass,double beta
+		,double *center,double Sigma_crit){
+	double b,r;
+
+	r=sqrt(pow(x[0]-center[0],2) + pow(x[1]-center[1],2));
+
+	b=mass/pi/Sigma_crit;
+	if(r<=R) return b*pow(r/R,beta+2);
+	return b*(log(r/R) + 1);
+}

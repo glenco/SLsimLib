@@ -1,6 +1,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 /*#include "double_sort.c"*/
 #include "../../Library/Recipes/nrutil.h"
 #include "../../Library/Recipes/nr.h"
@@ -49,11 +50,11 @@ TreeNBHndl BuildTreeNB(PosType **xp,float *rsph,float *mass,Boolean MultiRadius
   /* Initialize tree root */
   tree=NewTreeNB(particles,Nparticles,p1,p2,center,Ndim);
 
-  tree->MultiMass=MultiMass;
-  tree->MultiRadius=MultiRadius;
-  tree->xp=xp;
-  tree->rsph=rsph;
-  tree->mass=mass;
+  tree->MultiMass = MultiMass;
+  tree->MultiRadius = MultiRadius;
+  tree->xp = xp;
+  tree->rsph = rsph;
+  tree->mass = mass;
 
   /* build the tree */
   _BuildTreeNB(tree,Nparticles,particles);
@@ -506,61 +507,56 @@ void cuttoffscale(TreeNBHndl tree,double *theta){
 		if(*theta > 0.0) cbranch->rcrit_angle=1.15470*rcom/(*theta);
 		else  cbranch->rcrit_angle=1.0e100;
 
-   //////////////////////////////////////////////
-   /* find the biggest particle that is not the
-    * biggest particle of any of its parents
-    ///////////////////////////////////////////////*/
-		if(cbranch->particles[i]>0){
+		//////////////////////////////////////////////
+		/* find the biggest particle that is not the
+		 * biggest particle of any of its parents
+		///////////////////////////////////////////////*/
+
+		if(tree->MultiRadius){
+
 			if(atTopNB(tree) || cbranch->prev->rcrit_part==0.0){
-				prev_big=-1;
-				prev_size=1.0e100;
+				prev_big = -1;
+				prev_size = 1.0e100;
 			}else{
-				prev_big=cbranch->prev->big_particle;
-				prev_size=cbranch->prev->maxrsph;
+				prev_big = cbranch->prev->big_particle;
+				prev_size = cbranch->prev->maxrsph;
 			}
+
+			//assert(tree->MultiRadius == 0);
+
 			// find largest rsph smoothing in cell  that is not the largest in a previous cell
-			cbranch->big_particle=cbranch->particles[0];
+			cbranch->big_particle = cbranch->particles[0];
 			for(i=0,maxrsph=0.0,cbranch->big_particle=0;i<cbranch->nparticles;++i){
 
-				if(maxrsph<=tree->rsph[tree->MultiRadius*cbranch->particles[i]] ){
-					maxrsph=tree->rsph[tree->MultiRadius*cbranch->particles[i]];
-					cbranch->big_particle=cbranch->particles[i];
+				assert(i < tree->top->nparticles);
+
+				if(maxrsph <= tree->rsph[tree->MultiRadius*cbranch->particles[i]] ){
+					maxrsph = tree->rsph[tree->MultiRadius*cbranch->particles[i]];
+					cbranch->big_particle = cbranch->particles[i];
 				}
 			}
 			// if it is possible for the largest particle size to be big enough
 			//    cause the opening of a box then tag it
-			cbranch->maxrsph=maxrsph;
+			cbranch->maxrsph = maxrsph;
 			//printf("set maxrsp=%e\n",cbranch->maxrsph);
 			//if(maxrsph > rcom*(1.0/(*theta)-1)/2){
+
 			if(maxrsph > cbranch->rcrit_angle/2){
-				tree->rsph[tree->MultiRadius*cbranch->big_particle]=0.0; // zero out so it wont show up in leaf
+				tree->rsph[tree->MultiRadius*cbranch->big_particle] = 0.0; // zero out so it wont show up in leaf
 				cbranch->rcrit_part = rcom + 2*maxrsph;
 			}else{
 				cbranch->rcrit_part = 0;
 			}
+
 		}else{
 			// point mass case
-			cbranch->rcrit_part = 0;
-			cbranch->big_particle=cbranch->particles[0];
+			cbranch->maxrsph = tree->rsph[0];
+			cbranch->rcrit_part = rcom + 2*cbranch->maxrsph;
+			cbranch->big_particle = cbranch->particles[0];
 		}
 		cbranch->rcrit_angle += cbranch->rcrit_part;
 
 	}while(TreeNBWalkStep(tree,True));
-	//exit(0);
- /*
-  if(cbranch->child1 != NULL){
-    moveToChildNB(tree,1);
-    cuttoffscale(tree,theta);
 
-    moveUpNB(tree);
-  }
-
-  if(cbranch->child2 != NULL){
-    moveToChildNB(tree,2);
-    cuttoffscale(tree,theta);
-
-    moveUpNB(tree);
-  }
-*/
-  return;
+	return;
 }

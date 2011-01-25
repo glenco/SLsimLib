@@ -97,6 +97,7 @@ void find_images(double *y_source,double r_source
 			do{
 				time(&t1);
 				if(verbose) printf("      time in refine grid %f sec\n",difftime(t1,t2));
+
 				moved=image_finder(y_source,rtemp,s_tree,i_tree
 						,Nimages,imageinfo,NimageMax,Nimagepoints,-1,0);
 
@@ -204,7 +205,8 @@ void find_images(double *y_source,double r_source
 				moved=image_finder(y_source,fabs(r_source),s_tree,i_tree
 						,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
 				++i;
-			}while( refine_grid(i_tree,s_tree,imageinfo,*Nimages,FracResTarget,0,kappa_off)
+			}while( refine_grid(i_tree,s_tree,imageinfo,*Nimages,FracResTarget
+					,0,kappa_off)
 					|| moved );
 
 		}else if(edge_refinement==1){
@@ -227,6 +229,7 @@ void find_images(double *y_source,double r_source
 			while(refine_edges2(y_source,r_source,i_tree,s_tree
 					,imageinfo,&image_overlap,*Nimages,FracResTarget,0,kappa_off)){
 				// if an overlap is detected find the images again
+
 				if(image_overlap) moved=image_finder(y_source,fabs(r_source),s_tree,i_tree
 						,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
 				++i;
@@ -247,6 +250,7 @@ void find_images(double *y_source,double r_source
 
 			// mark image points in tree
 			PointsWithinKist(s_tree,y_source,r_source,subkist,1);
+
 			moved=image_finder(y_source,fabs(r_source),s_tree,i_tree
 					,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
 
@@ -262,6 +266,7 @@ void find_images(double *y_source,double r_source
 		// remove images with no points in them
 		for(j=0;j<*Nimages;++j){
 			if(imageinfo[j].Npoints < 1){
+				ERROR_MESSAGE();
 				for(k=j+1;k<*Nimages;++k){
 					imageinfo[k-1].Nencircled=imageinfo[k].Nencircled;
 					imageinfo[k-1].Npoints=imageinfo[k].Npoints;
@@ -309,8 +314,10 @@ void find_images(double *y_source,double r_source
 					|| moved );
 
 		}else if(edge_refinement==2){
+
 			while(refine_edges2(y_source,r_source,i_tree,s_tree
 					,imageinfo,&image_overlap,*Nimages,FracResTarget,2,kappa_off)){
+
 			if(image_overlap) moved=image_finder(y_source,fabs(r_source),s_tree,i_tree
 					,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
 			++i;
@@ -475,7 +482,7 @@ short image_finder(double *y_source,double r_source,TreeHndl s_tree,TreeHndl i_t
 		  // in_source(y_source,sourcelist);
 
 		  if(imageinfo->imagekist->Nunits < 1  && true_images ){  // no points in the source
-			  freeKist(imageinfo->imagekist);
+			  EmptyKist(imageinfo->imagekist);
 			  imageinfo->Npoints=0;
 			  *Nimages=0;
 			  Nimagepoints=0;
@@ -493,6 +500,7 @@ short image_finder(double *y_source,double r_source,TreeHndl s_tree,TreeHndl i_t
 
 	  // free points if this not the first time
   if(count>1 && imageinfo->points != NULL){
+  //if(count>1 ){
 	  free(imageinfo[0].points);
 	  Nold_images = *Nimages;
   }
@@ -509,6 +517,11 @@ short image_finder(double *y_source,double r_source,TreeHndl s_tree,TreeHndl i_t
   }else{
 	  *Nimages = 1;
 	  imageinfo->Npoints = imageinfo->imagekist->Nunits;
+	  imageinfo->area = 0.0;
+	  MoveToTopKist(imageinfo->imagekist);
+	  do{
+		  imageinfo->area += pow(getCurrentKist(imageinfo->imagekist)->gridsize,2);
+	  }while(MoveDownKist(imageinfo->imagekist));
   }
 
 /*  with divide_images
@@ -910,7 +923,7 @@ long refine_edges2(double *y_source,double r_source,TreeHndl i_tree,TreeHndl s_t
 	// count border points
 	if( criterion==2) for(i=0,area_total = 0.0;i<Nimages;++i) area_total += imageinfo[i].area;
 
-	//*image_overlap=False;
+	*image_overlap=False;
 
 	// loop through outer border of ith image
 

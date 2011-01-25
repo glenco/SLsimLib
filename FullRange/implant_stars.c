@@ -7,6 +7,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 #include "../../Library/Recipes/nr.h"
 #include "../../Library/Recipes/nrutil.h"
 #include "../../Library/RecipesD/nrD.h"
@@ -27,27 +28,29 @@ void implant_stars(AnaLens *lens,Point *centers,unsigned long Nregions,long *see
 
 	if(lens->stars_N < 1.0  || lens->star_fstars <= 0) return;
 	if(lens->star_fstars > 1.0){ printf("fstars > 1.0\n"); exit(0); }
-	if(lens->stars_implanted){
-		ERROR_MESSAGE();
-		printf("ERROR: implant_stars is not set up for changing star positions\n");
-		exit(0);
+	if(!(lens->stars_implanted) ){
+
+		coord = PosTypeMatrix(0,2,0,2);
+		coord[0][0] = coord[1][1] = coord[2][2] = 1.0;
+		coord[0][1] = coord[0][2] = coord[1][0] = coord[1][2] = 0.0;
+		coord[2][0] = coord[2][1] = 0.0;
+
+		lens->star_rsph = (float *) calloc(lens->stars_N,sizeof(float));
+		lens->star_masses = (float *) calloc(lens->stars_N,sizeof(float));
+		lens->stars = (unsigned long *) calloc(lens->stars_N,sizeof(unsigned long));
+		lens->stars_xp = PosTypeMatrix(0,lens->stars_N-1,0,2);
+		lens->star_theta_force = 1.0e-1;
+
+		assert(Nregions > 0);
+		lens->star_Nregions = Nregions;
+		lens->star_region = (double *)calloc(Nregions,sizeof(double));
+		lens->star_kappa = (double *)calloc(Nregions,sizeof(double));
+		lens->star_xdisk = dmatrix(0,Nregions-1,0,1);
+
+	}else{
+		// free star_tree
+		freeTreeNB(lens->star_tree);
 	}
-
-	coord=PosTypeMatrix(0,2,0,2);
-	coord[0][0]=coord[1][1]=coord[2][2]=1.0;
-	coord[0][1]=coord[0][2]=coord[1][0]=coord[1][2]=0.0;
-	coord[2][0]=coord[2][1]=0.0;
-
-	lens->star_rsph=(float *) calloc(1,sizeof(float));
-	lens->star_masses=(float *) calloc(lens->stars_N,sizeof(float));
-	lens->stars=(unsigned long *) calloc(lens->stars_N,sizeof(unsigned long));
-	lens->stars_xp = PosTypeMatrix(0,lens->stars_N-1,0,2);
-	lens->star_theta_force=1.0e-1;
-
-	lens->star_Nregions=Nregions;
-	lens->star_region=(double *)calloc(Nregions,sizeof(double));
-	lens->star_kappa=(double *)calloc(Nregions,sizeof(double));
-	lens->star_xdisk=dmatrix(0,Nregions-1,0,1);
 
 	for(j=0,m=0;j<Nregions;++j){
 
@@ -88,15 +91,17 @@ void implant_stars(AnaLens *lens,Point *centers,unsigned long Nregions,long *see
 			//printf("%e %e\n",lens->stars_xp[m][0],lens->stars_xp[m][1]);
 		}
 	}
+	assert(m <= lens->stars_N);
 	lens->stars_N = m;
 
-	lens->star_tree=BuildTreeNB(lens->stars_xp,lens->star_rsph,lens->star_masses
+
+	lens->star_tree = BuildTreeNB(lens->stars_xp,lens->star_rsph,lens->star_masses
 			,False,True,lens->stars_N,lens->stars,2,lens->star_theta_force);
 
 	//printf("projected with 2D tree\n");
 
 	// visit every branch to find center of mass and cutoff scale */
-	lens->stars_implanted=True;
+	lens->stars_implanted = True;
 
 	return ;
 }

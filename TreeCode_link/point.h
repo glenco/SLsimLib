@@ -32,6 +32,7 @@ typedef struct Point{
   unsigned long id;
   double kappa;
   double gamma[2];
+  double dt;
   double invmag;
   double *x;
   double gridsize;

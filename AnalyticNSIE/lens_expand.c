@@ -1,5 +1,5 @@
 /*
- * expanded_powerlaw.c
+ * lens_expand.c
  *
  *  Created on: Feb 22, 2010
  *      Author: R.B. Metcalf
@@ -31,8 +31,8 @@
 
 #define Grav 4.7788e-20
 
-double lens_expand(double beta,double *mod,int Nmodes,double *x,double *alpha,double *gamma){
-  double F,F1,F2,theta,r,cosx,sinx,dxdr,dxda,dydr,dyda,cos2theta,sin2theta,gt,gx;
+double lens_expand(double beta,double *mod,int Nmodes,double *x,double *alpha,double *gamma,double *phi){
+  double F,F1,F2,theta,r,cosx,sinx,cos2theta,sin2theta,gt,gx;
   int i,k;
 
   if(Nmodes<=0){
@@ -67,28 +67,6 @@ double lens_expand(double beta,double *mod,int Nmodes,double *x,double *alpha,do
   alpha[0] += x[0]*mod[0];
   alpha[1] += x[1]*mod[0];
 
-  // magnification matrix in polar coordinates
-  /*
-  dxdr= (1+mod[1])*cosx + mod[2]*sinx
-    - (beta-1)*pow(r,beta-2)*(beta*cosx*F-sinx*F1);
-  dxda=-(1+mod[1])*r*sinx + mod[2]*r*cosx
-    + pow(r,beta-1)*(beta*sinx*F + (1-beta)*cosx*F1 + sinx*F2);
-  dydr= (1-mod[1])*sinx + mod[2]*cosx
-    - (beta-1)*pow(r,beta-2)*(beta*sinx*F+cosx*F1);
-  dyda= (1-mod[1])*r*cosx - mod[2]*r*sinx
-    + pow(r,beta-1)*(-beta*cosx*F + (1-beta)*sinx*F1 - cosx*F2);
-
-  /*
-  // inverse magnification
-  // *mag=(dxdr*dyda - dxda*dydr)/r;
-
-  // convert magnification matrix to Cartesian coordinates
-
-  mag[0]=( -x[1]*dxda + r*x[0]*dxdr )/r/r;  // xx
-  mag[1]=(  x[0]*dyda + r*x[1]*dydr )/r/r;  // yy
-  mag[2]=(  x[0]*dxda + r*x[1]*dxdr )/r/r;  // xy
-  */
-
   gt=-0.5*pow(r,beta-2)*(beta*(beta-2)*F-F2);
   gx=pow(r,beta-2)*(beta-1)*F1;
 
@@ -101,6 +79,10 @@ double lens_expand(double beta,double *mod,int Nmodes,double *x,double *alpha,do
   //gamma[0]=-0.5*( x[0]*(r*dxdr - dyda) - x[1]*(r*dydr + dxda) )/r/r;
   //gamma[1]=-(  x[0]*dxda + r*x[1]*dxdr )/r/r;
 
+  // potential
+  *phi = F*pow(r,beta) + r*r*(mod[0] + mod[1]*cos2theta + mod[2]*sin2theta)/2;
+
+  //printf("  lens_expand *phi = %e\n",*phi);
   return 0.5*(beta*beta*F+F2)*pow(r,beta-2) + mod[0];
 }
 

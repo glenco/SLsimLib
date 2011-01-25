@@ -51,12 +51,13 @@ typedef struct analytic_lens{
   double host_ro;
   double MpcToAsec;    // conversion factor between Mpc on the lens plane and arcseconds
   double Sigma_crit;   // critical surface density
+  double to;           // the time delay scale in days/Mpc^2
 
   // substructures
   Boolean substruct_implanted;
   double sub_sigmaScale;
   double sub_Ndensity;
-  int sub_N;
+  int sub_N;          // actual number of substructures
   double **sub_x;
   float *sub_Rcut;
   float *sub_mass;
@@ -75,7 +76,9 @@ typedef struct analytic_lens{
   double (*sub_kappa_func)(double *x,double Rtrunc,double mass,double r_scale
   		,double *center,double Sigma_crit);
   void (*sub_gamma_func)(double *gamma,double *x,double Rtrunc,double mass,double r_scale
-  		,double *center,double Sigma_crit);
+    		,double *center,double Sigma_crit);
+  double (*sub_phi_func)(double *x,double Rtrunc,double mass,double r_scale
+    		,double *center,double Sigma_crit);
 
   // stars
   Boolean stars_implanted;
@@ -111,6 +114,7 @@ void readparams_ana(char *filename,struct cosmology *cosmo,AnaLens *lens);
 void alphaPowLaw(double *alpha,double *x,double R,double mass,double beta,double *center,double Sigma_crit);
 double kappaPowLaw(double *x,double R,double mass,double beta,double *center,double Sigma_crit);
 void gammaPowLaw(double *gamma,double *x,double R,double mass,double beta,double *center,double Sigma_crit);
+double phiPowLaw(double *x,double R,double mass,double beta,double *center,double Sigma_crit);
 
 // in nfw_lens.c
 void alphaNFW(double *alpha,double *x,double Rtrunc,double mass,double r_scale
@@ -122,7 +126,7 @@ void gammaNFW(double *gamma,double *x,double Rtrunc,double mass,double r_scale
 
 // in lens_expand.c
 
-double lens_expand(double beta,double *mod,int Nmodes,double *x,double *alpha,double *gamma);
+double lens_expand(double beta,double *mod,int Nmodes,double *x,double *alpha,double *gamma,double *phi);
 void free_AnaLens(AnaLens *lens);
 void PrintAnaLens(AnaLens *lens,Boolean show_substruct,Boolean show_stars);
 
@@ -134,7 +138,9 @@ void AlignedRandomlyDistortLens(AnaLens *lens,long *seed,double theta,int n);
 double RandomFromTable(double *table,unsigned long Ntable,long *seed);
 void RandomizeSubstructure(AnaLens *lens,double rangeInRei,long *seed);
 void RandomizeSubstructure2(AnaLens *lens,double rangeInRei,long *seed);
+void RandomizeSubstructure3(AnaLens *lens,double rangeInRei,long *seed);
 double FractionWithinRe(AnaLens *lens,double rangeInRei);
+double averageSubMass(AnaLens *lens);
 
 // in FullRange/implant_stars.c
 

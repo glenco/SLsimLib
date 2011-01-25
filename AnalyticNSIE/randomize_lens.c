@@ -197,35 +197,28 @@ void AlignedRandomlyDistortLens(AnaLens *lens,long *seed,double theta,int Npole)
 
 void RandomizeSubstructure2(AnaLens *lens,double rangeInRei,long *seed){
 	long i,k;
-	double r,theta,Rmax,rmax,scale=0,ndensity=0,rav[2],r2av=0,area_av=0;
+	double r,theta,rmax,rav[2],r2av=0,area_av=0;
 	static unsigned long NsubMax;
+	static double Rmax = 0.0,scale = 0.0,ndensity = 0.0,host_ro_save = 0.0;
 
 	rav[0]=rav[1]=0.0;
 
-	/*
-	//printf("%e\n",fracofsource*lens->MmaxSubstruct/pi/lens->Sigma_crit/lens->ro);
-
-	//tmp=pi*lens->Sigma_crit*lens->ro/fracofsource;
-	printf("fraction within Re %e rsource=%e\n",FractionWithinRe(lens,rangeInRei),lens->ro);
-
-	printf("SIS %e %e, Point Mass %e %e\n"
-			,sqrt(lens->MmaxSubstruct/2/pi/lens->Sigma_crit/lens->RmaxSubstruct/lens->ro/sheartol)
-			,sqrt(lens->MminSubstruct/2/pi/lens->Sigma_crit/(lens->RmaxSubstruct*pow(lens->MminSubstruct/lens->MmaxSubstruct,1/3.))/lens->ro/sheartol)
-			,pow(2*lens->MmaxSubstruct/2/pi/lens->Sigma_crit/pow(lens->ro,2)/sheartol,1./3.)
-			,pow(2*lens->MminSubstruct/2/pi/lens->Sigma_crit/pow(lens->ro,2)/sheartol,1./3.)
-					);
-	*/
 
 	// scaling of substructure masses with host sigma
 	//  exponent of 3 is for  M_host propto sigma^3 model
-	scale = pow(lens->host_sigma/lens->sub_sigmaScale,3);
+	if(lens->host_sigma > 0.0){
+		scale = pow(lens->host_sigma/lens->sub_sigmaScale,3);
 
-	// keep fraction of surface density at r = f R(sigma) constant
-	//   R(sigma) propto sigma to make all hosts have the same average density
-	ndensity = lens->sub_Ndensity*pow(lens->host_sigma/lens->sub_sigmaScale,1)/scale;
+		// keep fraction of surface density at r = f R(sigma) constant
+		//   R(sigma) propto sigma to make all hosts have the same average density
+		ndensity = lens->sub_Ndensity*pow(lens->host_sigma/lens->sub_sigmaScale,1)/scale;
+	}
 
-	Rmax = lens->host_ro*rangeInRei + lens->sub_Rmax*pow(scale,1./3.)
+	if(lens->host_ro > 0.0){
+		Rmax = lens->host_ro*rangeInRei + lens->sub_Rmax*pow(scale,1./3.)
 	          + pow(2*lens->sub_Mmax*scale*lens->host_ro/pi/lens->Sigma_crit/sheartol,1./3.);
+		host_ro_save = lens->host_ro;
+	}
 
 	if(!lens->substruct_implanted){
 		NsubMax=(unsigned long)(ndensity*pi*Rmax*Rmax*(1+5/sqrt(ndensity*pi*Rmax*Rmax)) );
@@ -241,28 +234,33 @@ void RandomizeSubstructure2(AnaLens *lens,double rangeInRei,long *seed){
 	unsigned int Nsub=(int)(poidev(ndensity*pi*Rmax*Rmax,seed));
 	Nsub = (NsubMax > Nsub) ? Nsub : NsubMax ;
 
+	//printf("scale = %e\n",scale);
+
 	for(i=0,k=0; i < Nsub;++i){
 		//for(i=0;i<lens->NSubstruct;++i){
 
 		r=Rmax*sqrt(ran2(seed));
 
-		if(lens->sub_alpha == -1.0){
-			lens->sub_mass[k]=lens->sub_Mmin*scale
-					*pow(lens->sub_Mmax/lens->sub_Mmin,ran2(seed));
-		}else{
-			lens->sub_mass[k]=lens->sub_Mmin*scale
-					*pow(ran2(seed)*(pow(lens->sub_Mmax/lens->sub_Mmin,lens->sub_alpha+1)-1)+1.0
-							,1.0/(lens->sub_alpha+1));
-		}
+		do{
+			if(lens->sub_alpha == -1.0){
+				lens->sub_mass[k] = lens->sub_Mmin*scale
+						*pow(lens->sub_Mmax/lens->sub_Mmin,ran2(seed));
+			}else{
+				lens->sub_mass[k] = lens->sub_Mmin*scale
+						*pow(ran2(seed)*(pow(lens->sub_Mmax/lens->sub_Mmin,lens->sub_alpha+1)-1)+1.0
+								,1.0/(lens->sub_alpha+1));
+			}
+		}while(lens->sub_mass[k] < lens->sub_Mmin);  // not sure why this is necessary
 
 		// average density of a substructure does not scale with host
 		if(lens->sub_type != pointmass) lens->sub_Rcut[k]=lens->sub_Rmax*pow(scale,1./3.)
 				*pow(lens->sub_mass[k]/lens->sub_Mmax/scale,1/3.);
 
 		// maximum radius for a substructure of this mass
-		rmax = (lens->host_ro*rangeInRei + lens->sub_Rcut[k]
-		     + pow(2*lens->sub_mass[k]*lens->host_ro/pi/lens->Sigma_crit/sheartol,1./3.) );
-//printf("lens->RcutSubstruct[%i] = %e\n",k,lens->RcutSubstruct[k]);
+		rmax = (host_ro_save*rangeInRei + lens->sub_Rcut[k]
+		     + pow(2*lens->sub_mass[k]*host_ro_save/pi/lens->Sigma_crit/sheartol,1./3.) );
+
+		//printf("lens->RcutSubstruct[%i] = %e\n",k,lens->RcutSubstruct[k]);
 		//printf("%e %e %e Rmax=%e\n",r/rmax,r,rmax,Rmax);
 		if( r < rmax){
 			theta=2*pi*ran2(seed);
@@ -280,6 +278,7 @@ void RandomizeSubstructure2(AnaLens *lens,double rangeInRei,long *seed){
 
 	lens->sub_N = k;
 
+/*
 	if(lens->sub_N > 2){
 		// decide if it is worth doing substructure force calculation by tree or
 		//   by direct summation
@@ -287,7 +286,7 @@ void RandomizeSubstructure2(AnaLens *lens,double rangeInRei,long *seed){
 		r2av = r2av - (rav[0]*rav[0]+rav[1]*rav[1])/(lens->sub_N)/(lens->sub_N);
 		area_av /= lens->sub_N;
 
-		printf("relative area of average particle %e \n",area_av/r2av);
+		//printf("relative area of average particle %e \n",area_av/r2av);
 
 		assert(r2av > 0);
 		assert(area_av >= 0.0);
@@ -303,7 +302,122 @@ void RandomizeSubstructure2(AnaLens *lens,double rangeInRei,long *seed){
 				True,True,lens->sub_N,lens->sub_substructures,2,lens->sub_theta_force);
 		}else lens->sub_tree = 0;
 	}else lens->sub_tree = 0;
+*/
+	return;
+}
+void RandomizeSubstructure3(AnaLens *lens,double rangeInRei,long *seed){
+	/*
+	 *  get a random population of substructures
+	 *  This version does not scale to lens->host_ro and
+	 *  lens->host_sigma
+	 */
+	long i,k;
+	double r,theta,rmax,rav[2],r2av=0,area_av=0;
+	static unsigned long NsubMax;
+	static double Rmax = 0.0,host_ro_save = 0.0;
 
+	rav[0]=rav[1]=0.0;
+
+	if(lens->host_ro > 0.0){
+		host_ro_save = lens->host_ro;
+		//printf("lens->host_ro = %e\n",lens->host_ro);
+	}
+
+	assert(host_ro_save > 0.0);
+
+	Rmax = host_ro_save*rangeInRei;
+	Rmax +=  lens->sub_Rmax
+          + pow(2*lens->sub_Mmax*host_ro_save/pi/lens->Sigma_crit/sheartol,1./3.);
+
+	assert(Rmax > 0.0);
+
+	if(!lens->substruct_implanted){
+		NsubMax=(unsigned long)(lens->sub_Ndensity*pi*Rmax*Rmax*(1+5/sqrt(lens->sub_Ndensity*pi*Rmax*Rmax)) );
+		lens->sub_x=dmatrix(0,NsubMax-1,0,1);
+		lens->sub_Rcut=(float *)calloc(NsubMax,sizeof(float));
+		lens->sub_mass=(float *)calloc(NsubMax,sizeof(float));
+		lens->substruct_implanted=True;
+		lens->sub_substructures = (IndexType *)calloc(NsubMax,sizeof(IndexType));
+	}
+	//printf("Rmax/re = %e\n",Rmax/lens->ro);
+	//for(i=0;i<12;++i) printf("%f %f\n",poidev(ndensity*pi*Rmax*Rmax,seed),ndensity*pi*Rmax*Rmax);
+
+	unsigned int Nsub=(int)(poidev(lens->sub_Ndensity*pi*Rmax*Rmax,seed));
+
+	assert(Nsub < NsubMax);
+
+	Nsub = (NsubMax > Nsub) ? Nsub : NsubMax ;
+
+	//printf("scale = %e\n",scale);
+
+	for(i=0,k=0; i < Nsub;++i){
+		//for(i=0;i<lens->NSubstruct;++i){
+
+		r=Rmax*sqrt(ran2(seed));
+
+		do{
+			if(lens->sub_alpha == -1.0){
+				lens->sub_mass[k] = lens->sub_Mmin
+						*pow(lens->sub_Mmax/lens->sub_Mmin,ran2(seed));
+			}else{
+				lens->sub_mass[k] = lens->sub_Mmin
+						*pow(ran2(seed)*(pow(lens->sub_Mmax/lens->sub_Mmin,lens->sub_alpha+1)-1)+1.0
+								,1.0/(lens->sub_alpha+1));
+			}
+		}while(lens->sub_mass[k] < lens->sub_Mmin);  // not sure why this is necessary
+
+		// average density of a substructure does not scale with host
+		if(lens->sub_type != pointmass) lens->sub_Rcut[k] = lens->sub_Rmax
+				*pow(lens->sub_mass[k]/lens->sub_Mmax,1/3.);
+
+		// maximum radius for a substructure of this mass
+		rmax = (host_ro_save*rangeInRei + lens->sub_Rcut[k]
+		     + pow(2*lens->sub_mass[k]*host_ro_save/pi/lens->Sigma_crit/sheartol,1./3.) );
+
+		//printf("lens->RcutSubstruct[%i] = %e\n",k,lens->RcutSubstruct[k]);
+		//printf("%e %e %e Rmax=%e\n",r/rmax,r,rmax,Rmax);
+		if( r < rmax){
+			theta=2*pi*ran2(seed);
+			lens->sub_x[k][0]=r*cos(theta);
+			lens->sub_x[k][1]=r*sin(theta);
+			assert(k<NsubMax);
+
+			rav[0] += lens->sub_x[k][0];
+			rav[1] += lens->sub_x[k][1];
+			r2av += r*r;
+			area_av += pow(lens->sub_Rcut[k],2);
+			++k;
+		}
+	}
+
+	lens->sub_N = k;
+
+	//printf("sub_N = %li Nsub = %li ndensity =%e\n",lens->sub_N,Nsub,lens->sub_Ndensity);
+/*
+	if(lens->sub_N > 2){
+		// decide if it is worth doing substructure force calculation by tree or
+		//   by direct summation
+		r2av /= lens->sub_N;
+		r2av = r2av - (rav[0]*rav[0]+rav[1]*rav[1])/(lens->sub_N)/(lens->sub_N);
+		area_av /= lens->sub_N;
+
+		//printf("relative area of average particle %e \n",area_av/r2av);
+
+		assert(r2av > 0);
+		assert(area_av >= 0.0);
+
+		if(lens->sub_type == pointmass){  // always use tree for point mass substructures
+			lens->sub_theta_force=1.0e-1;
+			lens->sub_tree=BuildTreeNB(lens->sub_x,lens->sub_Rcut,lens->sub_mass,
+				False,True,lens->sub_N,lens->sub_substructures,2,lens->sub_theta_force);
+		}else if( area_av/r2av < 1.0e-2 && lens->sub_N > 300 ){
+			// build tree for doing substructure force calculation
+			lens->sub_theta_force=1.0e-1;
+			lens->sub_tree=BuildTreeNB(lens->sub_x,lens->sub_Rcut,lens->sub_mass,
+				True,True,lens->sub_N,lens->sub_substructures,2,lens->sub_theta_force);
+		}else lens->sub_tree = 0;
+	}else lens->sub_tree = 0;
+*/
 	return;
 }
 
@@ -334,4 +448,11 @@ double FractionWithinRe(AnaLens *lens,double rangeInRei){
 				)/(lens->sub_alpha+5./3.)
 		)/(pow(rangeInRei*lens->host_ro,2)*(pow(lens->sub_Mmax,lens->sub_alpha+1.0)-pow(lens->sub_Mmin,lens->sub_alpha+1.0))
 				);
+}
+
+double averageSubMass(AnaLens *lens){
+	// average mass of substructures
+	return lens->sub_Mmax*(lens->sub_alpha+1)
+				  /(lens->sub_alpha+2)*(1-pow(lens->sub_Mmin/lens->sub_Mmax,lens->sub_alpha+2))/
+				  (1-pow(lens->sub_Mmin/lens->sub_Mmax,lens->sub_alpha+1));
 }

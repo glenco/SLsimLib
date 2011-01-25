@@ -83,7 +83,7 @@ typedef struct branchNBstruct2{
 typedef struct TreeNBStruct{
   BranchNB *top;
   BranchNB *current;
-  unsigned long NbranchNBes;  /* number of barnches in tree */
+  unsigned long Nbranches;  /* number of barnches in tree */
   short Ndimensions;
   Boolean MultiMass;
   Boolean MultiRadius;
@@ -144,6 +144,10 @@ typedef struct lens{
 TreeNBHndl NewTreeNB(IndexType *particles,IndexType nparticles
 		 ,PosType boundery_p1[],PosType boundery_p2[],
 		     PosType center[],short Ndimensions);
+void freeTreeNB(TreeNBHndl tree);
+short emptyTreeNB(TreeNBHndl tree);
+void _freeTreeNB(TreeNBHndl tree,short child);
+
 BranchNB *NewBranchNB(IndexType *particles,IndexType nparticles
 		  ,PosType boundery_p1[],PosType boundery_p2[]
 		  ,PosType center[2],int level,unsigned long branchNBnumber);

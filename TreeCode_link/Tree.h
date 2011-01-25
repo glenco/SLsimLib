@@ -15,6 +15,10 @@
 #define ERROR_MESSAGE() printf("ERROR: file: %s line: %i\n",__FILE__,__LINE__)
 #endif
 
+#ifndef line_message
+#define PRINT_LINE() printf("file: %s line: %i\n",__FILE__,__LINE__)
+#endif
+
 #ifndef Boolean_declare
 #define Boolean_declare
 typedef enum {False, True} Boolean;

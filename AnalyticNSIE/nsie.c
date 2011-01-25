@@ -127,3 +127,9 @@ void rotation(double *xout,double *xin,double theta){
   xout[0]=xin[0]*cos(theta)-xin[1]*sin(theta);
   xout[1]=xin[1]*cos(theta)+xin[0]*sin(theta);
 }
+
+/* potential in Mpc^2 */
+double phiNSIE(double *xt,double f,double bc,double theta){
+
+	return 0.0;
+}

@@ -88,14 +88,79 @@ TreeNBHndl NewTreeNB(IndexType *particles,IndexType nparticles
     }
 
     tree->top= NewBranchNB(particles,nparticles,boundery_p1,boundery_p2,center,0,0);
-    tree->NbranchNBes = 1;
+    if (!(tree->top)){
+      ERROR_MESSAGE(); fprintf(stderr,"allocation failure in NewTreeNB()\n");
+      exit(1);
+    }
+
+    tree->Nbranches = 1;
     tree->current = tree->top;
     tree->Ndimensions=Ndimensions;
 
     return(tree);
 }
 
+void freeTreeNB(TreeNBHndl tree){
+	/* free treeNB
+	 *  does not free the particle positions, masses or rsph
+	 */
 
+	if(tree == NULL) return;
+
+	emptyTreeNB(tree);
+  	FreeBranchNB(tree->top);
+	free(tree);
+
+	return;
+}
+
+short emptyTreeNB(TreeNBHndl tree){
+
+	moveTopNB(tree);
+	_freeTreeNB(tree,0);
+
+	assert(tree->Nbranches == 1);
+
+	return 1;
+}
+
+void _freeTreeNB(TreeNBHndl tree,short child){
+	BranchNB *branch;
+
+	assert( tree );
+	assert( tree->current);
+
+	if(tree->current->child1 != NULL){
+		moveToChildNB(tree,1);
+		_freeTreeNB(tree,1);
+	}
+
+    if(tree->current->child2 != NULL){
+      moveToChildNB(tree,2);
+      _freeTreeNB(tree,2);
+    }
+
+    if( (tree->current->child1 == NULL)*(tree->current->child2 == NULL) ){
+
+    	if(atTopNB(tree)) return;
+
+    	branch = tree->current;
+    	moveUpNB(tree);
+       	FreeBranchNB(branch);
+
+    	/*printf("*** removing branch %i number of branches %i\n",branch->number
+			,tree->Nbranches-1);*/
+
+       	if(child==1) tree->current->child1 = NULL;
+    	if(child==2) tree->current->child2 = NULL;
+
+    	--tree->Nbranches;
+
+    	return;
+    }
+
+    return;
+}
 /***** Access functions *****/
 
 /************************************************************************
@@ -105,7 +170,7 @@ TreeNBHndl NewTreeNB(IndexType *particles,IndexType nparticles
 Boolean isEmptyNB(TreeNBHndl tree){
 
     assert(tree != NULL);
-    return(tree->NbranchNBes == 0);
+    return(tree->Nbranches == 0);
 }
 
 /************************************************************************
@@ -181,7 +246,7 @@ void getCurrentNB(TreeNBHndl tree,IndexType *particles,IndexType *nparticles){
 unsigned long getNbranchesNB(TreeNBHndl tree){
 
     assert(tree != NULL);
-    return(tree->NbranchNBes);
+    return(tree->Nbranches);
 }
 
 /***** Manipulation procedures *****/
@@ -272,7 +337,7 @@ void insertChildToCurrentNB(TreeNBHndl tree, IndexType *particles,IndexType npar
     /*printf("attaching child%i  current paricle number %i\n",child,tree->current->nparticles);*/
 
     branchNB = NewBranchNB(particles,nparticles,boundery_p1,boundery_p2,center
-		       ,tree->current->level+1,tree->NbranchNBes);
+		       ,tree->current->level+1,tree->Nbranches);
 
     assert(tree != NULL);
     
@@ -294,14 +359,14 @@ void insertChildToCurrentNB(TreeNBHndl tree, IndexType *particles,IndexType npar
     if(child==2){
       if(tree->current->child2 != NULL){
     	  ERROR_MESSAGE();
-    	  fprintf(stderr, "TreeNB Error: calling insertChildToCurrentNB() when child2 alread exists\n  current level=%i NbranchNBes=%i\n"
-    			  ,tree->current->level,tree->NbranchNBes);
+    	  fprintf(stderr, "TreeNB Error: calling insertChildToCurrentNB() when child2 alread exists\n  current level=%i Nbranches=%li\n"
+    			  ,tree->current->level,tree->Nbranches);
     	  exit(1);
       }
       tree->current->child2 = branchNB;      
     }
 
-    tree->NbranchNBes++;
+    tree->Nbranches++;
 
     return;
 }
@@ -378,7 +443,7 @@ void printBranchNB(BranchNB *data,PosType **xp,short Ndim){
 			  ,data->boundery_p2[0],data->boundery_p2[1]);
 
   }
-	  printf("number of particles = %i\n",data->nparticles);
+	  printf("number of particles = %li\n",data->nparticles);
   /*for(i=0;i<data->nparticles;++i) printf("%e %e %e\n",xp[data->particles[i]][0] ,xp[data->particles[i]][1],xp[data->particles[i]][2]); */
 }
 
@@ -557,7 +622,7 @@ void readSmoothingNB(float *rsph,char *filename){
   fread(&Ndimensions,sizeof(short),1,file);
   //fread(&NbranchNBes,sizeof(unsigned long),1,file);
 
-  printf("nparticles %i  dimensions=%i\n",nparticles,Ndimensions);
+  printf("nparticles %li  dimensions=%i\n",nparticles,Ndimensions);
 
   fread(rsph,sizeof(float),nparticles,file);
   fclose(file);

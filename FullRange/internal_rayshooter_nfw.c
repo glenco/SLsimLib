@@ -14,8 +14,10 @@
 #include "../../Library/RecipesD/nrD.h"
 
 #include "../TreeCode_link/Tree.h"
+#include "../TreeCode_link/point.h"
 #include "../../Library/cosmo.h"
 #include "../AnalyticNSIE/analytic_lens.h"
+#include "../AnalyticNSIE/nsie.h"
 #include "../TreeCode/TreeNB.h"
 
 //extern char *paramfile,*outputfile;
@@ -27,7 +29,7 @@ extern AnaLens *lens;
 void rayshooterInternal(unsigned long Npoints,Point *i_points,TreeHndl i_tree
 		,Boolean kappa_off){
   /* i_points need to be already linked to s_points */
-  double x_rescale[2],alpha[2],gamma[2],tmp;
+  double x_rescale[2],alpha[2],gamma[2],tmp,dt=0;
   static double zs_old=-1,convert_factor=0;
   long i,j;
   //TreeNBHndl star_tree;
@@ -50,7 +52,10 @@ void rayshooterInternal(unsigned long Npoints,Point *i_points,TreeHndl i_tree
   //#pragma omp parallel for private(x_rescale,star_tree,alpha,gamma,tmp)
   for(i=0;i<Npoints;++i){
 
-	if(isnan(i_points[i].x[0]*i_points[i].x[1])){
+	i_points[i].dt = 0;
+
+    if(isnan(i_points[i].x[0]*i_points[i].x[1])){
+		ERROR_MESSAGE();
 		printf("x nan in internal_rayshooter\n    i=%li x= %e %e\n",
 				i,i_points[i].x[0],i_points[i].x[1]);
 
@@ -61,41 +66,58 @@ void rayshooterInternal(unsigned long Npoints,Point *i_points,TreeHndl i_tree
       i_points[i].kappa=0.0;
       i_points[i].gamma[0]=0.0; i_points[i].gamma[1]=0.0;
       i_points[i].invmag=1.0;
+      i_points[i].dt = 0;
 
     }else{
 
-      x_rescale[0]=i_points[i].x[0]/lens->host_ro;
-      x_rescale[1]=i_points[i].x[1]/lens->host_ro;
+        // host lens
+        if(lens->host_ro > 0){
 
-      // host lens
-      if(lens->host_ro > 0){
+        	x_rescale[0]=i_points[i].x[0]/lens->host_ro;
+        	x_rescale[1]=i_points[i].x[1]/lens->host_ro;
 
-    	  alphaNSIE(i_points[i].image->x,x_rescale,lens->host_axis_ratio
+        	alphaNSIE(i_points[i].image->x,x_rescale,lens->host_axis_ratio
     			  ,lens->host_core/lens->host_ro,lens->host_pos_angle);
-    	  if(!kappa_off){
-    		  gammaNSIE(i_points[i].gamma,x_rescale,lens->host_axis_ratio
-    				  ,lens->host_core/lens->host_ro,lens->host_pos_angle);
-    		  i_points[i].kappa=kappaNSIE(x_rescale,lens->host_axis_ratio
-    				  ,lens->host_core/lens->host_ro,lens->host_pos_angle);
-    	  }else{
-    		  i_points[i].kappa=0;
-    		  i_points[i].gamma[0]=i_points[i].gamma[1]=0.0;
-    	  }
 
-          i_points[i].image->x[0] *= lens->host_ro;
-          i_points[i].image->x[1] *= lens->host_ro;
+        	if(!kappa_off){
+        		gammaNSIE(i_points[i].gamma,x_rescale,lens->host_axis_ratio
+    				  ,lens->host_core/lens->host_ro,lens->host_pos_angle);
+        		i_points[i].kappa=kappaNSIE(x_rescale,lens->host_axis_ratio
+    				  ,lens->host_core/lens->host_ro,lens->host_pos_angle);
+        		i_points[i].dt = phiNSIE(x_rescale,lens->host_axis_ratio
+      				  ,lens->host_core/lens->host_ro,lens->host_pos_angle);
+        	}else{
+        		i_points[i].kappa=0;
+        		i_points[i].gamma[0]=i_points[i].gamma[1]=0.0;
+        		i_points[i].dt = 0.0;
+        	}
+
+        	i_points[i].image->x[0] *= lens->host_ro;
+        	i_points[i].image->x[1] *= lens->host_ro;
+
+        }else{
+        	i_points[i].image->x[0] = 0.0;
+        	i_points[i].image->x[1] = 0.0;
+        	i_points[i].kappa=0;
+        	i_points[i].gamma[0]=i_points[i].gamma[1]=0;
+       		i_points[i].dt = 0.0;
+        }
+
 
           // perturbations of host lens
-          if(lens->perturb_Nmodes > 0){
-        	  i_points[i].kappa += lens_expand(lens->perturb_beta,lens->perturb_modes
-        			  ,lens->perturb_Nmodes,i_points[i].x,alpha,gamma);
-        	  i_points[i].image->x[0] += alpha[0];
-           	  i_points[i].image->x[1] += alpha[1];
-           	  if(!kappa_off){
-            	  i_points[i].gamma[0] += gamma[0];
-            	  i_points[i].gamma[1] += gamma[1];
-           	  } else i_points[i].kappa = 0;
-          }
+        if(lens->perturb_Nmodes > 0){
+        	i_points[i].kappa += lens_expand(lens->perturb_beta,lens->perturb_modes
+    			  ,lens->perturb_Nmodes,i_points[i].x,alpha,gamma,&dt);
+
+        	i_points[i].image->x[0] += alpha[0];
+        	i_points[i].image->x[1] += alpha[1];
+
+        	if(!kappa_off){
+        		i_points[i].gamma[0] += gamma[0];
+        		i_points[i].gamma[1] += gamma[1];
+        		i_points[i].dt += dt;
+        	} else i_points[i].kappa = 0;
+        }
 
           // add substructure
          if(lens->substruct_implanted){
@@ -113,42 +135,50 @@ void rayshooterInternal(unsigned long Npoints,Point *i_points,TreeHndl i_tree
         			  i_points[i].kappa += tmp/lens->Sigma_crit;
         			  i_points[i].gamma[0] += gamma[0]/lens->Sigma_crit;
         			  i_points[i].gamma[1] += gamma[1]/lens->Sigma_crit;
+
+        			  **** dt
         		  }
         	  }else{
-*/        		  for(j=0;j<lens->sub_N;++j){
+*/
+        	 for(j=0;j<lens->sub_N;++j){
 
-        			  lens->sub_alpha_func(alpha,i_points[i].x,lens->sub_Rcut[j]
+        		 lens->sub_alpha_func(alpha,i_points[i].x,lens->sub_Rcut[j]
         			       ,lens->sub_mass[j],lens->sub_beta
         			       ,lens->sub_x[j],lens->Sigma_crit);
 
-        			  assert(fabs(alpha[0]) > 0 && fabs(alpha[1]) >0 );
+        		 assert(fabs(alpha[0]) > 0 && fabs(alpha[1]) >0 );
 
-        			  //*** alphaNFW does not have the same input format
+        		 //*** alphaNFW does not have the same input format
 
-        			  //alphaPowLaw(alpha,i_points[i].x,lens->RcutSubstruct[j],lens->massSubstruct[j]
-        	          //   ,Concentration*lens->RcutSubstruct[j],lens->xSubstruct[j],lens->Sigma_crit);
-        			  //alphaNFW(alpha,i_points[i].x,lens->RcutSubstruct[j],lens->massSubstruct[j]
-        	          //   ,Concentration*lens->RcutSubstruct[j],lens->xSubstruct[j],lens->Sigma_crit);
-        			  i_points[i].image->x[0] += alpha[0];
-        			  i_points[i].image->x[1] += alpha[1];
+        		 //alphaPowLaw(alpha,i_points[i].x,lens->RcutSubstruct[j],lens->massSubstruct[j]
+        		 //   ,Concentration*lens->RcutSubstruct[j],lens->xSubstruct[j],lens->Sigma_crit);
+        		 //alphaNFW(alpha,i_points[i].x,lens->RcutSubstruct[j],lens->massSubstruct[j]
+        		 //   ,Concentration*lens->RcutSubstruct[j],lens->xSubstruct[j],lens->Sigma_crit);
+        		 i_points[i].image->x[0] += alpha[0];
+        		 i_points[i].image->x[1] += alpha[1];
 
-        			  if(!kappa_off){
-        				  i_points[i].kappa += lens->sub_kappa_func(i_points[i].x,lens->sub_Rcut[j]
+        		 if(!kappa_off){
+        			 i_points[i].kappa += lens->sub_kappa_func(i_points[i].x,lens->sub_Rcut[j]
            		            ,lens->sub_mass[j],lens->sub_beta,lens->sub_x[j]
-           		                                                            ,lens->Sigma_crit);
+           		            ,lens->Sigma_crit);
+
         				  //i_points[i].kappa+=kappaNFW(i_points[i].x,lens->RcutSubstruct[j]
            		          //  ,lens->massSubstruct[j],Concentration*lens->RcutSubstruct[j],lens->xSubstruct[j],lens->Sigma_crit);
 
-        				  lens->sub_gamma_func(gamma,i_points[i].x,lens->sub_Rcut[j],lens->sub_mass[j]
-        				          ,lens->sub_beta,lens->sub_x[j],lens->Sigma_crit);
+        			 lens->sub_gamma_func(gamma,i_points[i].x,lens->sub_Rcut[j],lens->sub_mass[j]
+        			                      ,lens->sub_beta,lens->sub_x[j],lens->Sigma_crit);
         				  //gammaNFW(gamma,i_points[i].x,lens->RcutSubstruct[j],lens->massSubstruct[j]
         				  //        ,Concentration*lens->RcutSubstruct[j],lens->xSubstruct[j],lens->Sigma_crit);
-        				  i_points[i].gamma[0] += gamma[0];
-        				  i_points[i].gamma[1] += gamma[1];
-        			  }
+        			 i_points[i].gamma[0] += gamma[0];
+        			 i_points[i].gamma[1] += gamma[1];
 
-//        		  }
-        	  }
+        			 i_points[i].dt += lens->sub_phi_func(i_points[i].x,lens->sub_Rcut[j],lens->sub_mass[j]
+        			                         ,lens->sub_beta,lens->sub_x[j],lens->Sigma_crit);
+        			 //printf(" dt = %e\n",lens->sub_phi_func(i_points[i].x,lens->sub_Rcut[j],lens->sub_mass[j]
+        			 //                        ,lens->sub_beta,lens->sub_x[j],lens->Sigma_crit));
+        			 //if(isinf(i_points[i].dt)) exit(0);
+        		 }
+        	 }
           }
 
           // add stars for microlensing
@@ -172,15 +202,17 @@ void rayshooterInternal(unsigned long Npoints,Point *i_points,TreeHndl i_tree
 
           }
 
-      }else{
-    	  i_points[i].kappa=0;
-    	  i_points[i].gamma[0]=i_points[i].gamma[1]=0;
-      }
+    	  if(!kappa_off){
+    		  i_points[i].dt = 0.5*(i_points[i].image->x[0]*i_points[i].image->x[0]
+                                    + i_points[i].image->x[1]*i_points[i].image->x[1])
+                                 - i_points[i].dt;
+    		  i_points[i].dt *= lens->to;
+    	  }
 
-      i_points[i].image->x[0]=i_points[i].x[0] - i_points[i].image->x[0];
-      i_points[i].image->x[1]=i_points[i].x[1] - i_points[i].image->x[1];
+          i_points[i].image->x[0] = i_points[i].x[0] - i_points[i].image->x[0];
+          i_points[i].image->x[1] = i_points[i].x[1] - i_points[i].image->x[1];
 
-      i_points[i].invmag=(1-i_points[i].kappa)*(1-i_points[i].kappa)
+          i_points[i].invmag = (1-i_points[i].kappa)*(1-i_points[i].kappa)
 			- i_points[i].gamma[0]*i_points[i].gamma[0] - i_points[i].gamma[1]*i_points[i].gamma[1];
     }
 
@@ -188,6 +220,7 @@ void rayshooterInternal(unsigned long Npoints,Point *i_points,TreeHndl i_tree
     i_points[i].image->kappa=i_points[i].kappa;
     i_points[i].image->gamma[0]=i_points[i].gamma[0];
     i_points[i].image->gamma[1]=i_points[i].gamma[1];
+    i_points[i].image->dt = i_points[i].dt;
 
 /*    // register surface brightness at point
     x_rescale[0]=i_points[i].image->x[0] - lens->source_x[0];

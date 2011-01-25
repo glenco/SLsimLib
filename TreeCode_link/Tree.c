@@ -83,6 +83,7 @@ Point *NewPointArray(unsigned long N,Boolean NewXs){
   Point *points;
   unsigned long i;
 
+  if(N <= 0) return NULL;
   points = (Point *) calloc(N,sizeof(Point));
   if(NewXs) points[0].x = (double *) calloc(2,sizeof(double));
   points[0].head = N;
@@ -153,6 +154,7 @@ short freeTree(TreeHndl tree){
 	free(tree->pointlist);
 	free(tree);
 
+	tree = NULL;
 	return 1;
 }
 
@@ -164,6 +166,8 @@ short emptyTree(TreeHndl tree){
   Point *heads[tree->pointlist->Npoints];
   long i,j,count;
 
+  if(tree == NULL) return 1;
+
   moveTop(tree);
   _freeTree(tree,0);
   //printTree(tree);
@@ -173,17 +177,17 @@ short emptyTree(TreeHndl tree){
   MoveToTopList(tree->pointlist);
   for(i=0,j=0,count=0;i<tree->pointlist->Npoints;++i){
 	  if(tree->pointlist->current->head){
-		  heads[j]=tree->pointlist->current;
+		  heads[j] = tree->pointlist->current;
 		  ++j;
-		  count+=tree->pointlist->current->head;
+		  count += tree->pointlist->current->head;
 	  }
 	  MoveDownList(tree->pointlist);
   }
-  assert(count==tree->pointlist->Npoints);
+  assert(count == tree->pointlist->Npoints);
 
   //printf("freed %i arrays out of %i points in array, %i freed\n",j,i,count);
   for(i=0;i<j;++i) FreePointArray(heads[i]);
-  tree->top->npoints=0;
+  tree->top->npoints = 0;
 
   //printTree(tree);
 
@@ -336,11 +340,10 @@ unsigned long getNbranches(TreeHndl tree){
  ************************************************************************/
 void moveTop(TreeHndl tree){
     
-    assert(tree != NULL);
+	//assert(tree != NULL);
     if( isEmpty(tree) ){
-	
-	ERROR_MESSAGE(); fprintf(stderr, "Tree Error: calling moveTop() on empty tree\n");
-	exit(1);
+    	ERROR_MESSAGE(); fprintf(stderr, "Tree Error: calling moveTop() on empty tree\n");
+    	exit(1);
     }
 
     tree->current = tree->top;
