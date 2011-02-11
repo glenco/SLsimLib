@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <time.h>
 #include <omp.h>
+#include <string.h>
+
 #include "../../Library/Recipes/nr.h"
 #include "../../Library/Recipes/nrutil.h"
 #include "../../Library/Recipes/nrutil.c"
@@ -24,28 +26,24 @@
 #include "../../Library/powerCDM.c"
 #include "../../Library/cosmo.c"
 
-#include "../TreeCode_link/Tree.h"
-//#include "../TreeCode_link/Tree.c"
-//#include "../TreeCode_link/double_sort.c"
-//#include "../TreeCode_link/TreeDriver.c"
-//#include "../TreeCode_link/image_finder.c"
-
-#include "../TreeCode/TreeNB.h"/**/
-//#include "../TreeCode/rayshooter.c"/**/
 #include "../AnalyticNSIE/analytic_lens.h"
+#include "../TreeCode_link/Tree.h"
+#include "../TreeCode/TreeNB.h"
 
-char *paramfile,*outputfile;
-AnaLens *lens;
+AnaLens *lens = 0;
 
 int main(int arg,char **argv){
   TreeHndl i_tree,s_tree;
   Point *i_points,*s_points,*caustic_points,*tmp_point,*point;
-  double range,source[2],r_source_phys,center[2],tmp,tmp2
+  double range,r_source_phys,center[2],tmp,tmp2
                           ,xrange[2],yrange[2],rmin,r,*times,xtmp[2];
-  unsigned long i,j,k,m,Ngrid,Nimages,NewNimages,NImagePoints,Ncritpoints;
+  unsigned long i,j,k,m,Ngrid,NImagePoints,Ncritpoints;
+  int Nimages,NewNimages;
   long seed=282923,i_total=0;
   //long seed=282925,i_total=0;
   //long seed=28374;
+
+  printf("seed = %li\n",seed);
 
   double min_image_seporation,invmag_bg;
   ImageInfo *imageinfo,*critical;
@@ -53,6 +51,8 @@ int main(int arg,char **argv){
   int Ncrit,tange_caustic=0,Nsources,Ntotal_lenses;
   time_t to,now,t3,t4;
   Boolean verbose,nocrit,just_mags,success;
+  const int NimageMax = 100;
+  char *paramfile;
 
   verbose=False;
   //verbose=True;
@@ -82,19 +82,28 @@ int main(int arg,char **argv){
   tmp_point=NewPointArray(1,True);
   tmp_point->image=NewPointArray(1,True);
 
-  imageinfo=NewImageInfo(200);
+  imageinfo=NewImageInfo(NimageMax);
 
   //   make initial grid
   center[0]=0.0; center[1]=0.0;
 
   time(&to);
 
+   // read parameter file in
+  if(paramfile==NULL){
+	  paramfile=(char *)malloc(60*sizeof(char));
+	  sprintf(paramfile,"FullRange/paramfile");
+  }
+  lens=(AnaLens *)calloc(1,sizeof(AnaLens));
+  readparams_ana(paramfile,&cosmo,lens);
+ 
   // initialize tree and lens model
   i_points=NewPointArray(Ngrid*Ngrid,True);
   xygridpoints(i_points,range,center,Ngrid,0);
   s_points=LinkToSourcePoints(i_points,Ngrid*Ngrid);
   i_tree=NULL;
   rayshooterInternal(Ngrid*Ngrid,i_points,i_tree,False);
+
   // build trees
   i_tree=BuildTree(i_points,Ngrid*Ngrid);
   s_tree=BuildTree(s_points,Ngrid*Ngrid);
@@ -127,8 +136,7 @@ int main(int arg,char **argv){
 
 		  // find critical curves
 
-		  critical=find_crit(s_tree,i_tree,&Ncrit,5.0e-5,&success,verbose);
-		  //critical=find_crit(s_tree,i_tree,&Ncrit,1.0e-5,&success,verbose);
+		  critical=find_crit(s_tree,i_tree,&Ncrit,5.0e-5,&success,False,verbose);
 
 		  if(Ncrit == 0){
 			  //printf("error: Ncrit=0 \n");
@@ -206,26 +214,27 @@ int main(int arg,char **argv){
 	  windings(caustic_points->x,caustic_points,Ncritpoints,&tmp,0);
 	  //fprintf(file,"%e\n",tmp);
 	  // area is made negative when find_caustic has failed to order critcurve properly
-	  invmag_bg=fabs(pow(1-lens->modes[0],2)-pow(lens->modes[1],2)-pow(lens->modes[2],2));
+
+	  invmag_bg=fabs(pow(1-lens->perturb_modes[0],2)-pow(lens->perturb_modes[1],2)-pow(lens->perturb_modes[2],2));
 	  invmag_bg=1.0;
 
-	  if(success) printf("%e %e\n",tmp,pi*pow(lens->ro,2)/invmag_bg);
-	  else printf("%e %e\n",-tmp,pi*pow(lens->ro,2)/invmag_bg);
+	  if(success) printf("%e %e\n",tmp,pi*pow(lens->host_ro,2)/invmag_bg);
+	  else printf("%e %e\n",-tmp,pi*pow(lens->host_ro,2)/invmag_bg);
 
-	  printf("%.2f  %.3f  %.3f  %.3f   %i  %e\n",lens->sigma,lens->axis_ratio,lens->zlens,lens->zsource
-			  ,lens->NSubstruct,lens->r_source);
+	  printf("%.2f  %.3f  %.3f  %.3f   %i  %e\n",lens->host_sigma,lens->host_axis_ratio,lens->zlens,lens->zsource
+			  ,lens->sub_N,lens->source_r);
 
 	  //fprintf(file,"\n%i\n",Nsources);
 
-	  printf("\n %i\n",(int)(Nsources*tmp/pi/pow(lens->ro,2)/invmag_bg + 0.5));
-	  for(i=0; (i < (int)(Nsources*tmp/pi/pow(lens->ro,2)/invmag_bg + 0.5)) ;++i){
+	  printf("\n %i\n",(int)(Nsources*tmp/pi/pow(lens->host_ro,2)/invmag_bg + 0.5));
+	  for(i=0; (i < (int)(Nsources*tmp/pi/pow(lens->host_ro,2)/invmag_bg + 0.5)) ;++i){
 		  //printf("source %i\n",i);
 
 		  do{
-			  source[0]=xrange[0] + ran2(&seed)*(xrange[1]-xrange[0]);
-			  source[1]=yrange[0] + ran2(&seed)*(yrange[1]-yrange[0]);
+			  lens->source_x[0]=xrange[0] + ran2(&seed)*(xrange[1]-xrange[0]);
+			  lens->source_x[1]=yrange[0] + ran2(&seed)*(yrange[1]-yrange[0]);
 			  //printf("source = %e %e\n",source[0],source[1]);
-		  }while(abs(windings(source,caustic_points,Ncritpoints,&tmp,0)) < 1);
+		  }while(abs(windings(lens->source_x,caustic_points,Ncritpoints,&tmp,0)) < 1);
 
 		  // free old tree to speed up image finding
 		  emptyTree(i_tree);
@@ -243,17 +252,19 @@ int main(int arg,char **argv){
 		  time(&t3);
 
 		  ++i_total;
-		  //fprintf(file,"\n%i  %e %e  %e\n",i,source[0],source[1],r_source_phys);
-		  printf("\n %li %li  %e %e  %e\n",i_total,i,source[0],source[1],r_source_phys);
+		  //fprintf(file,"\n%i  %e %e  %e\n",i,lens->source_x[0],lens->source_x[1],r_source_phys);
+		  printf("\n %li %li  %e %e  %e\n",i_total,i,lens->source_x[0],lens->source_x[1],r_source_phys);
 
 		  // find images
 		  if(verbose) printf("finding images\n");
 
-		  find_images(source,lens->r_source,s_tree,i_tree,&Nimages
-				  ,imageinfo,&NImagePoints,0,True,2,verbose,True);
+		  //find_images(lens->source_x,lens->source_r,s_tree,i_tree,&Nimages
+		 //		  ,imageinfo,&NImagePoints,0,True,2,verbose,True);
+		  find_images(lens->source_x,lens->source_r,s_tree,i_tree,&Nimages
+			  ,imageinfo,NimageMax,&NImagePoints,0,False,2,verbose,True);
 
 		  // find the point source magnification for each image
-		  if(verbose) printf(" %li images\n",Nimages);
+		  if(verbose) printf(" %i images\n",Nimages);
 		  //else //fprintf(file,"%i\n",Nimages);
 			  //printf(" %li\n",Nimages);
 
@@ -291,15 +302,16 @@ int main(int arg,char **argv){
 		  */
 
 			  // remove images that are too close together
-		  combineCloseImages(min_image_seporation*angDist(0,lens->zlens)*pi/60/60/180,imageinfo,&Nimages,&NewNimages);
+		  combineCloseImages(min_image_seporation*angDist(0,lens->zlens)*pi/60/60/180
+		          ,imageinfo,&Nimages,&NewNimages);
 		  //NewNimages=Nimages;
-		  printf("%li  %li\n",Nimages,NewNimages);
+		  printf("%i  %i\n",Nimages,NewNimages);
 		  for(k=0;k<NewNimages;++k){
 
 			  // find the magnification of the point closest to the source
 			  for(j=0,rmin=1.0e99;j<imageinfo[k].Npoints;++j){
-				  r=sqrt( pow(imageinfo[k].points[j].image->x[0] - source[0],2)
-						  + pow(imageinfo[k].points[j].image->x[1] - source[1],2) );
+				  r=sqrt( pow(imageinfo[k].points[j].image->x[0] - lens->source_x[0],2)
+						  + pow(imageinfo[k].points[j].image->x[1] - lens->source_x[1],2) );
 				  if(rmin>r){
 					  rmin=r;
 					  point=&(imageinfo[k].points[j]);
@@ -320,7 +332,7 @@ int main(int arg,char **argv){
 			  rayshooterInternal(1,point,i_tree,False);
 
 			  printf("%e %e     %e %e %e\n",imageinfo[k].centroid[0],imageinfo[k].centroid[1]
-						  ,imageinfo[k].area/(pi*pow(lens->r_source,2)),1.0/tmp_point->invmag,1.0/point->invmag);
+						  ,imageinfo[k].area/(pi*pow(lens->source_r,2)),1.0/tmp_point->invmag,1.0/point->invmag);
 			  //,(imageinfo[k].area/(pi*pow(lens->r_source,2))-1.0/fabs(point->invmag))*fabs(point->invmag));
 		  }
 
@@ -330,8 +342,8 @@ int main(int arg,char **argv){
 			  exit(0);
 		  }*/
 
-		  PrintList(i_tree->pointlist);
-		  exit(0);
+		  //PrintList(i_tree->pointlist);
+		  //exit(0);
 
 		  /* print all points in images */
 		  if(!verbose && !just_mags){

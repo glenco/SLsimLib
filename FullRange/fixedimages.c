@@ -32,7 +32,7 @@
 #include "../AnalyticNSIE/analytic_lens.h"
 #include "../TreeCode_link/Tree.h"
 #include "../TreeCode/TreeNB.h"
-#include "../Fitlens/fitlens.h"
+#include "../FitLens/fitlens.h"
 
 //char *paramfile,*outputfile;
 AnaLens *lens=0;

@@ -11,7 +11,9 @@
 #include "../../Library/Recipes/nrutil.h"
 #include "../../Library/RecipesD/nrD.h"
 #include "Tree.h"
-#define pi  3.1415926
+#ifndef pi
+#define pi  3.1415936
+#endif
 
 inline double MIN(double x,double y){
 	return (x < y) ? x : y;

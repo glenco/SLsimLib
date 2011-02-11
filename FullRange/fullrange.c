@@ -29,8 +29,7 @@
 #include "../TreeCode_link/Tree.h"
 #include "../TreeCode/TreeNB.h"
 
-//char *paramfile,*outputfile;
-AnaLens *lens=0;
+AnaLens *lens = 0;
 
 /*
  *   fullrange.c calculates the magnifications of circular images as a function of
@@ -88,7 +87,6 @@ int main(int arg,char **argv){
 
   imageinfo=NewImageInfo(NimageMax);
 
-
   //   make initial grid
   center[0]=0.0; center[1]=0.0;
 
@@ -111,7 +109,6 @@ int main(int arg,char **argv){
   i_tree=NULL;
   rayshooterInternal(Ngrid*Ngrid,i_points,i_tree,False);
 
-  //exit(0);
   // build trees
   i_tree=BuildTree(i_points,Ngrid*Ngrid);
   s_tree=BuildTree(s_points,Ngrid*Ngrid);

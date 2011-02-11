@@ -597,7 +597,7 @@ double deflect_translated(double beta,double *mod,double *x,double *y,double *ma
 
 double regularize(int Nmax,int Nmin,int N,int Nsources,int degen
 		  ,double *mod,double **v,double *modo){
-  double Dsum,sum,sumold,aa,*weights;
+  double Dsum,sum=0,sumold,aa,*weights;
 
   /*****************************************************************/
   /** find degenerate model most like modo modulo a normalization **/

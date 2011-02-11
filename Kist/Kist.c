@@ -194,10 +194,12 @@ void FreeAllKist(KistHndl kist){
 	unsigned long Nheads=0,Ndata=0,i,Nunits;
 
 	Nunits = kist->Nunits;
+	i=0;
 	while(kist->Nunits > 0){
 		data[i] = TakeOutCurrentKist(kist);
 		Ndata += data[i]->head;
 		if(data[i]->head) ++Nheads;
+		++i;
 	}
 
 	for(i = 0; i < Nheads ; ++i){

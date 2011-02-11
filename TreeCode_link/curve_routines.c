@@ -12,7 +12,9 @@
 #include "../../Library/Recipes/nrutil.h"
 #include "../../Library/RecipesD/nrD.h"
 #include "Tree.h"
+#ifndef pi
 #define pi  3.1415926
+#endif
 
 void split_order_curve4(ImageInfo *curves,int Maxcurves,int *Ncurves){
 /*  orders points in a curve, separates disconnected curves
