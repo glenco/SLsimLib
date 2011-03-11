@@ -12,16 +12,16 @@
 #include "../../Library/Recipes/nr.h"
 #include "../../Library/Recipes/nrutil.h"
 #include "../../Library/RecipesD/nrD.h"
+#include "../../Library/cosmo.h"
 
 #include "../TreeCode_link/Tree.h"
 #include "../TreeCode_link/point.h"
-#include "../../Library/cosmo.h"
 #include "../AnalyticNSIE/analytic_lens.h"
 #include "../AnalyticNSIE/nsie.h"
 #include "../TreeCode/TreeNB.h"
 
 //extern char *paramfile,*outputfile;
-struct cosmology cosmo;
+extern struct cosmology cosmo;
 extern AnaLens *lens;
 
 //const float Concentration=0.0776;  // ratio between truncation radius and scale length

@@ -6,36 +6,36 @@
 #include <time.h>
 #include <assert.h>
 #include <omp.h>
-#include "../../Library/Recipes/nr.h"
-#include "../../Library/Recipes/nrutil.h"
-#include "../../Library/Recipes/nrutil.c"
-#include "../../Library/Recipes/ran2.c"
-#include "../../Library/RecipesD/nrD.h"
-#include "../../Library/RecipesD/locateD.c"
-#include "../../Library/RecipesD/powellD.c"
-#include "../../Library/RecipesD/odeintD.c"
-#include "../../Library/RecipesD/bsstepD.c"
-#include "../../Library/RecipesD/mmidD.c"
-#include "../../Library/RecipesD/pzextrD.c"
-#include "../../Library/RecipesD/polintD.c"
-#include "../../Library/Recipes/poidev.c"
-#include "../../Library/Recipes/gammln.c"
-#include "../../Library/RecipesD/dfridrD.c"
-#include "../../Library/Recipes/gasdev.c"
+#include "../Library/Recipes/nr.h"
+#include "../Library/Recipes/nrutil.h"
+#include "../Library/Recipes/nrutil.c"
+#include "../Library/Recipes/ran2.c"
+#include "../Library/RecipesD/nrD.h"
+#include "../Library/RecipesD/locateD.c"
+#include "../Library/RecipesD/powellD.c"
+#include "../Library/RecipesD/odeintD.c"
+#include "../Library/RecipesD/bsstepD.c"
+#include "../Library/RecipesD/mmidD.c"
+#include "../Library/RecipesD/pzextrD.c"
+#include "../Library/RecipesD/polintD.c"
+#include "../Library/Recipes/poidev.c"
+#include "../Library/Recipes/gammln.c"
+#include "../Library/RecipesD/dfridrD.c"
+#include "../Library/Recipes/gasdev.c"
 
-#include "../../Library/cosmo.h"
-#include "../../Library/powerCDM.c"
-#include "../../Library/cosmo.c"
+#include "../Library/cosmo.h"
+#include "../Library/powerCDM.c"
+#include "../Library/cosmo.c"
 
-#include "../AnalyticNSIE/analytic_lens.h"
-#include "../TreeCode_link/Tree.h"
+#include "../SLsim/AnalyticNSIE/analytic_lens.h"
+#include "../SLsim/TreeCode_link/Tree.h"
 //#include "../TreeCode/TreeNB.h"
-#include "../TreeCode_link/List/List.h"
-#include "../Kist/Kist.h"
-#include "../TreeCode_link/map_images.h"
-#include "../ImageProcessing/image_processing.h"
+#include "../SLsim/TreeCode_link/List/List.h"
+#include "../SLsim/Kist/Kist.h"
+#include "../SLsim/TreeCode_link/map_images.h"
+#include "../SLsim/ImageProcessing/image_processing.h"
 
-//char *paramfile,*outputfile;
+COSMOLOGY cosmo;
 AnaLens *lens=0;
 
 int main(int arg,char **argv){

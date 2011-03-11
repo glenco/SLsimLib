@@ -409,6 +409,8 @@ int main(int arg,char **argv){
   freeTree(s_tree);
 
   free(times);
+  free(paramfile);
+
   //fclose(file);
 
   return 1;

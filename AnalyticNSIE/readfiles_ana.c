@@ -22,92 +22,92 @@ void readparams_ana(char *filename,struct cosmology *cosmo,AnaLens *lens){
   int i;
   double tmp=0,NSubstructInRe=0;
 
-  printf("reading from %s\n",filename);
+  printf(">reading from %s\n",filename);
 
   file=fopen(filename,"r");
 
   // output file
   fscanf(file,"%s %s",label,&(lens->outputfile));
-  printf("%s %s\n\n",label,lens->outputfile);
+  printf(">%s %s\n\n",label,lens->outputfile);
   // parameters of host elliptical
-  printf("  Host lens model\n");
+  printf(">  Host lens model\n");
   fscanf(file,"%s %le",label,&(lens->host_sigma));
-  printf("%s %f km/s\n",label,lens->host_sigma);
+  printf(">%s %f km/s\n",label,lens->host_sigma);
   fscanf(file,"%s %le",label,&(lens->host_core));
-  printf("%s %f Mpc\n",label,lens->host_core);
+  printf(">%s %f Mpc\n",label,lens->host_core);
   fscanf(file,"%s %le",label,&(lens->host_axis_ratio));
-  printf("%s %f\n",label,lens->host_axis_ratio);
+  printf(">%s %f\n",label,lens->host_axis_ratio);
   fscanf(file,"%s %le",label,&(lens->host_pos_angle));
-  printf("%s %f\n",label,lens->host_pos_angle);
+  printf(">%s %f\n",label,lens->host_pos_angle);
 
   // parameters of distortion to host elliptical
-  printf("\n  Distortion mode\n");
+  printf("\n>  Distortion mode\n");
   fscanf(file,"%s %li",label,&(lens->perturb_Nmodes));
-  printf("%s %li\n",label,lens->perturb_Nmodes);
+  printf(">%s %li\n",label,lens->perturb_Nmodes);
   if(lens->perturb_Nmodes > 0){
-	  lens->perturb_modes=(double *)calloc(lens->perturb_Nmodes,sizeof(double));
+	  lens->perturb_modes=(double *)calloc(lens->perturb_Nmodes+1,sizeof(double));
 	  lens->perturb_rms=(double *)calloc(6,sizeof(double));
 
 	  fscanf(file,"%s %le",label,&(lens->perturb_beta));
-	  printf("%s %.3f\n",label,lens->perturb_beta);
+	  printf(">%s %.3f\n",label,lens->perturb_beta);
 
 	  // kappa
 	  fscanf(file,"%s %le",label,&(lens->perturb_rms[0]));
-	  printf("%s %.3e\n",label,lens->perturb_rms[0]);
+	  printf(">%s %.3e\n",label,lens->perturb_rms[0]);
 	  // gamma
 	  fscanf(file,"%s %le",label,&(lens->perturb_rms[1]));
-	  printf("%s %.3e\n",label,lens->perturb_rms[1]);
+	  printf(">%s %.3e\n",label,lens->perturb_rms[1]);
 	  // monopole
 	  fscanf(file,"%s %le",label,&(lens->perturb_rms[2]));
-	  printf("%s %.3e\n",label,lens->perturb_rms[2]);
+	  printf(">%s %.3e\n",label,lens->perturb_rms[2]);
 	  // quadropole
 	  fscanf(file,"%s %le",label,&(lens->perturb_rms[3]));
-	  printf("%s %.3e\n",label,lens->perturb_rms[3]);
+	  printf(">%s %.3e\n",label,lens->perturb_rms[3]);
 	  // hexopole
 	  fscanf(file,"%s %le",label,&(lens->perturb_rms[4]));
-	  printf("%s %.3e\n",label,lens->perturb_rms[4]);
+	  printf(">%s %.3e\n",label,lens->perturb_rms[4]);
 	  // octopole
 	  fscanf(file,"%s %le",label,&(lens->perturb_rms[5]));
-	  printf("%s %.3e\n",label,lens->perturb_rms[5]);
+	  printf(">%s %.3e\n",label,lens->perturb_rms[5]);
 
   }else{
 	  for(i=0;i<7;++i) fscanf(file,"%s %le",label,&tmp);
-	  //printf("%s %.3e\n",label,tmp);
+	  //printf(">%s %.3e\n",label,tmp);
   }
 
   // parameters of substructures
-  printf("\n  **Substructures**\n");
+  printf("\n>  **Substructures**\n");
   lens->substruct_implanted=False;  // substructures are implanted later where mem is allocated
   fscanf(file,"%s %le",label,&(lens->sub_Ndensity));
-  printf("%s %e\n",label,lens->sub_Ndensity);
+  printf(">%s %e\n",label,lens->sub_Ndensity);
   if(lens->sub_Ndensity > 0){
 	  fscanf(file,"%s %le",label,&(lens->sub_beta));
-	  printf("%s %f\n",label,lens->sub_beta);
+	  printf(">%s %f\n",label,lens->sub_beta);
 	  fscanf(file,"%s %le",label,&(lens->sub_alpha));
-	  printf("%s %f\n",label,lens->sub_alpha);
+	  printf(">%s %f\n",label,lens->sub_alpha);
 
 	  fscanf(file,"%s %le",label,&lens->sub_Rmax);
-	  printf("%s %.3e Mpc\n",label,lens->sub_Rmax);
+	  printf(">%s %.3e Mpc\n",label,lens->sub_Rmax);
 	  fscanf(file,"%s %le",label,&lens->sub_Mmax);
-	  printf("%s %.3e Msun\n",label,lens->sub_Mmax);
+	  printf(">%s %.3e Msun\n",label,lens->sub_Mmax);
 	  fscanf(file,"%s %le",label,&lens->sub_Mmin);
-	  printf("%s %.3e Msun\n",label,lens->sub_Mmin);
+	  printf(">%s %.3e Msun\n",label,lens->sub_Mmin);
 	  fscanf(file,"%s %i",label,&lens->sub_type);
-	  printf("%s %i ",label,lens->sub_type);
+	  printf(">%s %i ",label,lens->sub_type);
 
   }else{
 	  fscanf(file,"%s %le",label,&tmp);
-	  //printf("%s %.3e Mpc\n",label,tmp);
+	  //printf(">%s %.3e Mpc\n",label,tmp);
 	  fscanf(file,"%s %le",label,&tmp);
-	  //printf("%s %.3e Mpc\n",label,tmp);
+	  //printf(">%s %.3e Mpc\n",label,tmp);
 	  fscanf(file,"%s %le",label,&tmp);
-	  //printf("%s %.3e Msun\n\n",label,tmp);
+	  //printf(">%s %.3e Msun\n\n",label,tmp);
 	  fscanf(file,"%s %le",label,&tmp);
-	  //printf("%s %.3e Msun\n\n",label,tmp);
+	  //printf(">%s %.3e Msun\n\n",label,tmp);
 	  fscanf(file,"%s %le",label,&tmp);
-	  //printf("%s %.3e Msun\n\n",label,tmp);
+	  //printf(">%s %.3e Msun\n\n",label,tmp);
 	  fscanf(file,"%s %i",label,&lens->sub_type);
-	  //printf("%s %i \n",label,lens->sub_type);
+	  //printf(">%s %i \n",label,lens->sub_type);
  }
   if(lens->sub_Ndensity > 0){
 	  switch(lens->sub_type){
@@ -117,79 +117,79 @@ void readparams_ana(char *filename,struct cosmology *cosmo,AnaLens *lens){
 		  lens->sub_gamma_func = gammaNFW;
 		  lens->sub_phi_func = 0;
 		  ERROR_MESSAGE();
-		  printf("no time delay function defined for NFW\n");
-		  printf("  NFW clumps\n");
+		  printf(">no time delay function defined for NFW\n");
+		  printf(">  NFW clumps\n");
 		  break;
 	  case powerlaw:
 		  lens->sub_alpha_func = alphaPowLaw;
 		  lens->sub_kappa_func = kappaPowLaw;
 		  lens->sub_gamma_func = gammaPowLaw;
 		  lens->sub_phi_func = phiPowLaw;
-		  printf("  Power Law clumps\n");
+		  printf(">  Power Law clumps\n");
 		  break;
 	  case pointmass:
 		  lens->sub_alpha_func = 0;
 		  lens->sub_kappa_func = 0;
 		  lens->sub_gamma_func = 0;
 		  lens->sub_phi_func = 0;
-		  printf("  Point Mass clumps\n");
+		  printf(">  Point Mass clumps\n");
 		  break;
 	  default:
 		  ERROR_MESSAGE();
-		  printf("ERROR: no submass internal profile chosen\n");
+		  printf(">ERROR: no submass internal profile chosen\n");
 		  exit(1);
 	  }
 
   }
 
   // parameters for stars
-  printf("\n  **Stars**\n");
+  printf("\n>  **Stars**\n");
   lens->stars_implanted=False; // stars are implanted later
   fscanf(file,"%s %li",label,&(lens->stars_N));
-  printf("%s %li\n",label,lens->stars_N);
+  printf(">%s %li\n",label,lens->stars_N);
   fscanf(file,"%s %le",label,&(lens->star_fstars));
-  printf("%s %.3f\n",label,lens->star_fstars);
+  printf(">%s %.3f\n",label,lens->star_fstars);
   fscanf(file,"%s %le",label,&(lens->star_massscale));
-  printf("%s %e\n",label,lens->star_massscale);
+  printf(">%s %e\n",label,lens->star_massscale);
 
   // source information
   fscanf(file,"%s %i",label,&(lens->source_sb_type));
-  printf("%s %i ",label,lens->source_sb_type);
+  printf(">%s %i ",label,lens->source_sb_type);
   switch(lens->source_sb_type){
 	  case Uniform:
 		  lens->source_sb_func = uniform_SB;
-		  printf("  uniform surface brightness source\n");
+		  printf(">  uniform surface brightness source\n");
 		  break;
 	  case Gaussian:
 		  lens->source_sb_func = gaussian_SB;
-		  printf("  Gaussian surface brightness source\n");
+		  printf(">  Gaussian surface brightness source\n");
 		  break;
 	  case BLR:
 		  lens->source_sb_func = BLR_SB;
-		  printf("  BLR surface brightness source\n");
+		  printf(">  BLR surface brightness source\n");
 		  break;
 	  default:
 		  ERROR_MESSAGE();
-		  printf("ERROR: no submass internal profile chosen\n");
+		  printf(">ERROR: no submass internal profile chosen\n");
 		  exit(1);
 	  }
 
   // redshifts
   fscanf(file,"%s %le",label,&(lens->zlens));
-  printf("\n%s %f\n",label,lens->zlens);
+  printf("\n>%s %f\n",label,lens->zlens);
   fscanf(file,"%s %le",label,&(lens->zsource));
-  printf("%s %f\n",label,lens->zsource);
+  printf(">%s %f\n",label,lens->zsource);
 
   // cosmology
   SetConcordenceCosmology();
   cosmo->physical=0;
 
   fscanf(file,"%s %le",label,&(cosmo->Omo));
-  printf("%s %f\n",label,cosmo->Omo);
+  printf(">%s %f\n",label,cosmo->Omo);
   fscanf(file,"%s %le",label,&(cosmo->Oml));
-  printf("%s %f\n",label,cosmo->Oml);
+  printf(">%s %f\n",label,cosmo->Oml);
   fscanf(file,"%s %le",label,&(cosmo->h));
-  printf("%s %f\n",label,cosmo->h);
+  printf(">%s %f\n",label,cosmo->h);
   fclose(file);
 
    /********************************/
@@ -198,7 +198,7 @@ void readparams_ana(char *filename,struct cosmology *cosmo,AnaLens *lens){
 
   lens->sub_sigmaScale=lens->host_sigma;
   lens->MpcToAsec=60*60*180/pi/angDist(0,lens->zlens);
-  printf("Arcseconds/Mpc: %e\n",lens->MpcToAsec);
+  printf(">Arcseconds/Mpc: %e\n",lens->MpcToAsec);
   // in degrees
   lens->host_pos_angle*=pi/180;
   // in Mpc
@@ -210,7 +210,7 @@ void readparams_ana(char *filename,struct cosmology *cosmo,AnaLens *lens){
   lens->to = (1+lens->zlens)*angDist(0,lens->zsource)/angDist(lens->zlens,lens->zsource)/angDist(0,lens->zlens)
 		  /8.39428142e-10;
 
-  printf("critical density is %e Msun/Mpc^2    ro=%e Mpc  D_l = %e Mpc D_s = %e Mpc  to = %e days/Mpc^2\n"
+  printf(">critical density is %e Msun/Mpc^2    ro=%e Mpc  D_l = %e Mpc D_s = %e Mpc  to = %e days/Mpc^2\n"
 		  ,lens->Sigma_crit,lens->host_ro
 		  ,angDist(0,lens->zlens),angDist(0,lens->zsource),lens->to);
 
@@ -225,8 +225,8 @@ void readparams_ana(char *filename,struct cosmology *cosmo,AnaLens *lens){
 		          + pow(2*lens->MmaxSubstruct*lens->ro/pi/lens->Sigma_crit/1.0e-3,1./3.);
 	  lens->NSubstruct = (int)(lens->NdensitySubstruct*pi*Rmax*Rmax+0.5);
 	  */
-	  printf("average number of clumps including outside Re: %f\n",pi*pow(lens->host_ro,2)*lens->sub_Ndensity);
-	  printf("average clumps mass: %e Msun\n",averageSubMass(lens));
+	  printf(">average number of clumps including outside Re: %f\n",pi*pow(lens->host_ro,2)*lens->sub_Ndensity);
+	  printf(">average clumps mass: %e Msun\n",averageSubMass(lens));
 
 	  /*for(i=0;i<lens->NSubstruct;++i){
 		  lens->RcutSubstruct[i]=lens->RmaxSubstruct;
@@ -236,7 +236,7 @@ void readparams_ana(char *filename,struct cosmology *cosmo,AnaLens *lens){
   }
 
   lens->set=True;
-  printf("\n");
+  printf(">\n");
 }
 
 void free_AnaLens(AnaLens *lens){
@@ -263,80 +263,80 @@ void free_AnaLens(AnaLens *lens){
 void PrintAnaLens(AnaLens *lens,Boolean show_substruct,Boolean show_stars){
 	int i;
 
-	printf("Output file %s\n\n",lens->outputfile);
+	printf(">Output file %s\n\n",lens->outputfile);
 	// parameters of host elliptical
-	printf("  Host lens model\n");
-	printf("sigma %f km/s\n",lens->host_sigma);
-	printf("core %f Mpc\n",lens->host_core);
-	printf("axis_ratio %f\n",lens->host_axis_ratio);
-	printf("position angle %f\n",lens->host_pos_angle);
-	printf("r_source on lens plane %e pc\n",lens->source_r*1.0e6);
+	printf(">  Host lens model\n");
+	printf(">sigma %f km/s\n",lens->host_sigma);
+	printf(">core %f Mpc\n",lens->host_core);
+	printf(">axis_ratio %f\n",lens->host_axis_ratio);
+	printf(">position angle %f\n",lens->host_pos_angle);
+	printf(">r_source on lens plane %e pc\n",lens->source_r*1.0e6);
 
 			// parameters of distortion to host elliptical
-	printf("\nNmodes %li\n",lens->perturb_Nmodes);
-	printf("   beta=%e\n",lens->perturb_beta);
+	printf("\n>Nmodes %li\n",lens->perturb_Nmodes);
+	printf(">   beta=%e\n",lens->perturb_beta);
 	if(lens->perturb_Nmodes>0){
-		printf("rms\n");
-		for(i=0;i<6;++i) printf("  %e\n",lens->perturb_rms[i]);
-		printf("modes\n");
-		for(i=0;i<lens->perturb_Nmodes;++i) printf("  %e\n",lens->perturb_modes[i]);
+		printf(">rms\n");
+		for(i=0;i<6;++i) printf(">  %e\n",lens->perturb_rms[i]);
+		printf(">modes\n");
+		for(i=0;i<lens->perturb_Nmodes;++i) printf(">  %e\n",lens->perturb_modes[i]);
 	}
 
 	  // parameters of substructures
-	printf("  Substructures\n");
-	printf("NdensitySubstruct %e\n",lens->sub_Ndensity);
-	printf("NSubstruct %i\n",lens->sub_N);
+	printf(">  Substructures\n");
+	printf(">NdensitySubstruct %e\n",lens->sub_Ndensity);
+	printf(">NSubstruct %i\n",lens->sub_N);
 
 	if(lens->sub_N > 0){
-		printf("betaSubstruct %.4f\n",lens->sub_beta);
-		printf("alphaSubstruct %.4f\n",lens->sub_alpha);
-		printf("RmaxSubstruct %.3e Mpc\n",lens->sub_Rmax);
-		printf("MmaxSubstruct %.3e Msun\n",lens->sub_Mmax);
-		printf("MminSubstruct %.3e Msun\n\n",lens->sub_Mmin);
+		printf(">betaSubstruct %.4f\n",lens->sub_beta);
+		printf(">alphaSubstruct %.4f\n",lens->sub_alpha);
+		printf(">RmaxSubstruct %.3e Mpc\n",lens->sub_Rmax);
+		printf(">MmaxSubstruct %.3e Msun\n",lens->sub_Mmax);
+		printf(">MminSubstruct %.3e Msun\n\n",lens->sub_Mmin);
 
 		if(show_substruct){
 			if(lens->substruct_implanted){
 				for(i=0;i<lens->sub_N;++i){
-					printf("RcutSubstruct[%i] %.3e Mpc\n",i,lens->sub_Rcut[i]);
-					printf("massSubstruct[%i] %.3e Msun\n",i,lens->sub_mass[i]);
-					printf("xSubstruct[%i] %e %e Mpc\n\n",i,lens->sub_x[i][0],lens->sub_x[i][1]);
+					printf(">RcutSubstruct[%i] %.3e Mpc\n",i,lens->sub_Rcut[i]);
+					printf(">massSubstruct[%i] %.3e Msun\n",i,lens->sub_mass[i]);
+					printf(">xSubstruct[%i] %e %e Mpc\n\n",i,lens->sub_x[i][0],lens->sub_x[i][1]);
 					switch(lens->sub_type){
 					case NFW:
-						printf("  NFW clumps\n");
+						printf(">  NFW clumps\n");
 						break;
 					case powerlaw:
-						printf("  Power Law clumps\n");
+						printf(">  Power Law clumps\n");
 						break;
 					case pointmass:
-						printf("  Point Mass clumps\n");
+						printf(">  Point Mass clumps\n");
 						break;
 					default:
 						ERROR_MESSAGE();
-						printf("ERROR: no submass internal profile chosen\n");
+						printf(">ERROR: no submass internal profile chosen\n");
 						exit(1);
 					}
 				}
-			}else printf("  substructures are implanted yet\n");
+			}else printf(">  substructures are implanted yet\n");
 		}
 	}
 	if(lens->stars_N>0){
 		printf("\nNstars=%li\n",lens->stars_N);
-		printf("stars_Nregions %i\n",lens->star_Nregions);
-		printf("stars_massscale %e\n",lens->star_massscale);
-		printf("stars_fstars %e\n",lens->star_fstars);
-		printf("stars_theta_force %e\n",lens->star_theta_force);
+		printf(">stars_Nregions %i\n",lens->star_Nregions);
+		printf(">stars_massscale %e\n",lens->star_massscale);
+		printf(">stars_fstars %e\n",lens->star_fstars);
+		printf(">stars_theta_force %e\n",lens->star_theta_force);
 		if(show_stars){
 			if(lens->stars_implanted){
-				for(i=0;i<lens->stars_N;++i) printf("    x[%i] = %e %e\n",lens->stars_xp[i][0],lens->stars_xp[i][1]);
-			}else printf(" stars not implanted yet\n");
+				for(i=0;i<lens->stars_N;++i) printf(">    x[%i] = %e %e\n",lens->stars_xp[i][0],lens->stars_xp[i][1]);
+			}else printf("> stars not implanted yet\n");
 		}
 	}
 
 	// redshifts
-	printf("\nzlens %f\n",lens->zlens);
-	printf("zsource %f\n",lens->zsource);
+	printf("\n>zlens %f\n",lens->zlens);
+	printf(">zsource %f\n",lens->zsource);
 
-	printf("critical density is %e Msun/Mpc^2\n",lens->Sigma_crit);
+	printf(">critical density is %e Msun/Mpc^2\n",lens->Sigma_crit);
 }
 
 void reNormSubstructure(AnaLens *lens,double kappa_sub){

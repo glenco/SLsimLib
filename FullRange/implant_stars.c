@@ -12,8 +12,9 @@
 #include "../../Library/Recipes/nrutil.h"
 #include "../../Library/RecipesD/nrD.h"
 
-#include "../TreeCode_link/Tree.h"
 #include "../../Library/cosmo.h"
+
+#include "../TreeCode_link/Tree.h"
 #include "../AnalyticNSIE/analytic_lens.h"
 #include "../TreeCode/TreeNB.h"
 

@@ -32,17 +32,17 @@ void RandomizeHost(AnaLens *lens,double r_source_phys,long *seed,Boolean tables)
 		// read in Einstein radius projected onto the source plane
 
 		sprintf(filename,"AnalyticNSIE/z_table.txt");
-		printf("reading from %s\n",filename);
+		printf(">reading from %s\n",filename);
 		file=fopen(filename,"r");
 		fscanf(file,"%i",&NzTable);
-		//printf("%i\n",NzTable);
+		//printf(">%i\n",NzTable);
 		zTable=(double **) dmatrix(0,NzTable-1,0,1);
 		for(n=0;n<NzTable;++n) fscanf(file,"%le  %le",&zTable[n][0],&zTable[n][1]);
 		//for(n=0;n<NzTable;++n) printf("%le  %le\n",zTable[n][0],zTable[n][1]);
 		fclose(file);
 
 		sprintf(filename,"AnalyticNSIE/slacs_sigma.dat");
-		printf("reading from %s\n",filename);
+		printf(">reading from %s\n",filename);
 		file=fopen(filename,"r");
 		fscanf(file,"%i",&NsigmaTable);
 		sigmaTable=(double *)calloc(NsigmaTable,sizeof(double));
@@ -54,7 +54,7 @@ void RandomizeHost(AnaLens *lens,double r_source_phys,long *seed,Boolean tables)
 		fclose(file);
 
 		sprintf(filename,"AnalyticNSIE/slacs_f.dat");
-		printf("reading from %s\n",filename);
+		printf(">reading from %s\n",filename);
 		file=fopen(filename,"r");
 		fscanf(file,"%i",&NaxisTable);
 		//printf("%i\n",NaxisTable);

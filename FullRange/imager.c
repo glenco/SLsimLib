@@ -1,5 +1,6 @@
 
 #include <math.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
 #include <omp.h>
@@ -7,9 +8,9 @@
 
 #include "../../Library/Recipes/nr.h"
 #include "../../Library/Recipes/nrutil.h"
+#include "../../Library/RecipesD/nrD.h"
 #include "../../Library/Recipes/nrutil.c"
 #include "../../Library/Recipes/ran2.c"
-#include "../../Library/RecipesD/nrD.h"
 #include "../../Library/RecipesD/locateD.c"
 #include "../../Library/RecipesD/powellD.c"
 #include "../../Library/RecipesD/odeintD.c"
@@ -30,6 +31,7 @@
 #include "../TreeCode_link/Tree.h"
 #include "../TreeCode/TreeNB.h"
 
+COSMOLOGY cosmo;
 AnaLens *lens = 0;
 
 int main(int arg,char **argv){
@@ -42,8 +44,9 @@ int main(int arg,char **argv){
   long seed=282923,i_total=0;
   //long seed=282925,i_total=0;
   //long seed=28374;
+  time(&seed);
 
-  printf("seed = %li\n",seed);
+  printf(">seed = %li\n",seed);
 
   double min_image_seporation,invmag_bg;
   ImageInfo *imageinfo,*critical;
@@ -68,8 +71,9 @@ int main(int arg,char **argv){
   Ngrid=64;
   Ntotal_lenses=100000;
   Nsources=2000;
-//  Ntotal_lenses=1000;
 
+  //Ntotal_lenses=5;
+  //Nsources=1000;
   //Ntotal_lenses=5;
   //Nsources=50;
 
@@ -136,14 +140,14 @@ int main(int arg,char **argv){
 
 		  // find critical curves
 
-		  critical=find_crit(s_tree,i_tree,&Ncrit,5.0e-5,&success,False,verbose);
+		  critical=find_crit(s_tree,i_tree,&Ncrit,5.0e-5,&success,True,verbose);
 
 		  if(Ncrit == 0){
 			  //printf("error: Ncrit=0 \n");
 			  //PrintAnaLens(lens,False,False);
 			  //printf("\n %li\n",m);
 		  }
-		  printf("\n\n");
+		  printf("\n");
 
 		  /* select critical curve with largest area
 		   *     this will generally be the tangential critical curve if
@@ -165,7 +169,7 @@ int main(int arg,char **argv){
 			  /*
 			  printf("error: no tangential caustic found\n");
 			  for(i=0;i<Ncrit;++i){
-				  printf("%li area=%e windings=%i\n",i,critical[i].area,
+				  printf(">%li area=%e windings=%i\n",i,critical[i].area,
 					  windings(xtmp,critical[i].points,critical[i].Npoints,&tmp2,0) );
 			  }
 			  for(i=0;i<Ncrit;++i){
@@ -228,12 +232,12 @@ int main(int arg,char **argv){
 
 	  printf("\n %i\n",(int)(Nsources*tmp/pi/pow(lens->host_ro,2)/invmag_bg + 0.5));
 	  for(i=0; (i < (int)(Nsources*tmp/pi/pow(lens->host_ro,2)/invmag_bg + 0.5)) ;++i){
-		  //printf("source %i\n",i);
+		  //printf(">source %i\n",i);
 
 		  do{
 			  lens->source_x[0]=xrange[0] + ran2(&seed)*(xrange[1]-xrange[0]);
 			  lens->source_x[1]=yrange[0] + ran2(&seed)*(yrange[1]-yrange[0]);
-			  //printf("source = %e %e\n",source[0],source[1]);
+			  //printf(">source = %e %e\n",source[0],source[1]);
 		  }while(abs(windings(lens->source_x,caustic_points,Ncritpoints,&tmp,0)) < 1);
 
 		  // free old tree to speed up image finding
@@ -355,6 +359,7 @@ int main(int arg,char **argv){
 				  }
 
 				  //PrintList(imageinfo[k].outerborder);
+
 			  }
 		  }
 		  time(&t4);
@@ -373,10 +378,10 @@ int main(int arg,char **argv){
 //    }
 //  }
 
-  printf("\nNumber of lenses =  %li average number of sources per lens =  %0.2f\n",m,Ntotal_lenses*1.0/m);
+  printf("\n>Number of lenses =  %li average number of sources per lens =  %0.2f\n",m,Ntotal_lenses*1.0/m);
 
   time(&now);
-  printf("all images found in %f min\n     %f sec per source    %f sec per lens average\n"
+  printf(">all images found in %f min\n     %f sec per source    %f sec per lens average\n"
 	 ,difftime(now,to)/60.
 	 ,difftime(now,to)/Ntotal_lenses
 	 ,difftime(now,to)*m/Ntotal_lenses
@@ -384,23 +389,24 @@ int main(int arg,char **argv){
   /*
   printf("times for each source\n");
   for(i=1;i<Nsources;++i){
-	  //printf("    %f sec\n",times[i]);
+	  //printf(">    %f sec\n",times[i]);
 	  times[0]+=times[i]/Nsources;
   }
-  printf("average time for one source %f sec",times[0]);
+  printf(">average time for one source %f sec",times[0]);
 	*/
 
-  printf("\nNumber of rays shot for last source:  %li\n",i_tree->pointlist->Npoints);
-  //printf("param file : %s\n",paramfile);
+  printf("\n>Number of rays shot for last source:  %li\n",i_tree->pointlist->Npoints);
+  //printf(">param file : %s\n",paramfile);
 
   free(imageinfo->points);
-  freeImageInfo(imageinfo,200);
+  freeImageInfo(imageinfo,NimageMax);
   //FreePointArray(caustic_points);
   FreePointArray(tmp_point->image);
   FreePointArray(tmp_point);
   freeTree(i_tree);
   freeTree(s_tree);
   free(times);
+  free(paramfile);
   //fclose(file);
 
   return 1;

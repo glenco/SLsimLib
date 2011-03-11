@@ -8,33 +8,33 @@
 #include <time.h>
 #include <omp.h>
 #include <string.h>
-#include "../../Library/Recipes/nr.h"
-#include "../../Library/Recipes/nrutil.h"
-#include "../../Library/Recipes/nrutil.c"
-#include "../../Library/Recipes/ran2.c"
-#include "../../Library/RecipesD/nrD.h"
-#include "../../Library/RecipesD/locateD.c"
-#include "../../Library/RecipesD/powellD.c"
-#include "../../Library/RecipesD/odeintD.c"
-#include "../../Library/RecipesD/bsstepD.c"
-#include "../../Library/RecipesD/mmidD.c"
-#include "../../Library/RecipesD/pzextrD.c"
-#include "../../Library/RecipesD/polintD.c"
-#include "../../Library/Recipes/poidev.c"
-#include "../../Library/Recipes/gammln.c"
-#include "../../Library/RecipesD/dfridrD.c"
-#include "../../Library/Recipes/gasdev.c"
+#include "../Library/Recipes/nr.h"
+#include "../Library/Recipes/nrutil.h"
+#include "../Library/RecipesD/nrD.h"
+/*#include "../Library/Recipes/nrutil.c"
+#include "../Library/Recipes/ran2.c"
+#include "../Library/RecipesD/locateD.c"
+#include "../Library/RecipesD/powellD.c"
+#include "../Library/RecipesD/odeintD.c"
+#include "../Library/RecipesD/bsstepD.c"
+#include "../Library/RecipesD/mmidD.c"
+#include "../Library/RecipesD/pzextrD.c"
+#include "../Library/RecipesD/polintD.c"
+#include "../Library/Recipes/poidev.c"
+#include "../Library/Recipes/gammln.c"
+#include "../Library/RecipesD/dfridrD.c"
+#include "../Library/Recipes/gasdev.c"*/
 
-#include "../../Library/cosmo.h"
-#include "../../Library/powerCDM.c"
-#include "../../Library/cosmo.c"
+#include "../Library/cosmo.h"
+/*#include "../Library/powerCDM.c"
+#include "../Library/cosmo.c"*/
 
-#include "../AnalyticNSIE/analytic_lens.h"
-#include "../TreeCode_link/Tree.h"
-#include "../TreeCode/TreeNB.h"
-#include "../FitLens/fitlens.h"
+#include "../SLsim/AnalyticNSIE/analytic_lens.h"
+#include "../SLsim/TreeCode_link/Tree.h"
+#include "../SLsim/TreeCode/TreeNB.h"
+#include "../SLsim/FitLens/fitlens.h"
 
-//char *paramfile,*outputfile;
+COSMOLOGY cosmo;
 AnaLens *lens=0;
 
 /*
