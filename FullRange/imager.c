@@ -79,11 +79,6 @@ int main(int arg,char **argv){
   Ntotal_lenses=100000;
   Nsources=2000;
 
-
-  double funcc(double);
-  printf("\nintegrate %e\n",nintegrateD(funcc,0.0,2,1.0e-5));
-  exit(0);
-
   //Ntotal_lenses=5;
   //Nsources=1000;
   //Ntotal_lenses=5;
@@ -424,7 +419,3 @@ int main(int arg,char **argv){
   return 1;
 }
 
-
-double funcc(double x){
-	return x*x;
-}
