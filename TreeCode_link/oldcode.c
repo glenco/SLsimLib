@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include "../../Library/Recipes/nrutil.h"
-#include "../../Library/RecipesD/nrD.h"
+#include <nrD.h>
 #include "Tree.h"
 #define pi  3.1415926
 

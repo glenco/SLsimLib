@@ -10,13 +10,13 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "../../Library/Recipes/nr.h"
+#include <nr.h>
 #include "../../Library/Recipes/nrutil.h"
-#include "../../Library/RecipesD/nrD.h"
+#include <nrD.h>
 #include "../../Library/cosmo.h"
 #include "analytic_lens.h"
 
-void readparams_ana(char *filename,struct cosmology *cosmo,AnaLens *lens){
+void readparams_ana(char *filename,CosmoHndl cosmo,AnaLens *lens){
   FILE *file;
   char label[20];
   int i;
@@ -181,7 +181,7 @@ void readparams_ana(char *filename,struct cosmology *cosmo,AnaLens *lens){
   printf(">%s %f\n",label,lens->zsource);
 
   // cosmology
-  SetConcordenceCosmology();
+  SetConcordenceCosmology(cosmo);
   cosmo->physical=0;
 
   fscanf(file,"%s %le",label,&(cosmo->Omo));
@@ -197,22 +197,25 @@ void readparams_ana(char *filename,struct cosmology *cosmo,AnaLens *lens){
   /********************************/
 
   lens->sub_sigmaScale=lens->host_sigma;
-  lens->MpcToAsec=60*60*180/pi/angDist(0,lens->zlens);
+  lens->MpcToAsec=60*60*180/pi/angDist(0,lens->zlens,cosmo);
   printf(">Arcseconds/Mpc: %e\n",lens->MpcToAsec);
   // in degrees
   lens->host_pos_angle*=pi/180;
   // in Mpc
-  lens->host_ro=4*pi*pow(lens->host_sigma/2.99792e5,2)*angDist(0,lens->zlens)*angDist(lens->zlens,lens->zsource)
-		  /angDist(0,lens->zsource)/(1+lens->zlens);
+  lens->host_ro=4*pi*pow(lens->host_sigma/2.99792e5,2)*angDist(0,lens->zlens,cosmo)
+		  *angDist(lens->zlens,lens->zsource,cosmo)
+		  /angDist(0,lens->zsource,cosmo)/(1+lens->zlens);
 
   // find critical density
-  lens->Sigma_crit=angDist(0,lens->zsource)/angDist(lens->zlens,lens->zsource)/angDist(0,lens->zlens)/4/pi/Grav;
-  lens->to = (1+lens->zlens)*angDist(0,lens->zsource)/angDist(lens->zlens,lens->zsource)/angDist(0,lens->zlens)
+  lens->Sigma_crit=angDist(0,lens->zsource,cosmo)/angDist(lens->zlens,lens->zsource,cosmo)
+		  /angDist(0,lens->zlens,cosmo)/4/pi/Grav;
+  lens->to = (1+lens->zlens)*angDist(0,lens->zsource,cosmo)
+		  /angDist(lens->zlens,lens->zsource,cosmo)/angDist(0,lens->zlens,cosmo)
 		  /8.39428142e-10;
 
   printf(">critical density is %e Msun/Mpc^2    ro=%e Mpc  D_l = %e Mpc D_s = %e Mpc  to = %e days/Mpc^2\n"
 		  ,lens->Sigma_crit,lens->host_ro
-		  ,angDist(0,lens->zlens),angDist(0,lens->zsource),lens->to);
+		  ,angDist(0,lens->zlens,cosmo),angDist(0,lens->zsource,cosmo),lens->to);
 
   NSubstructInRe = pi*pow(2*lens->host_ro,2)*lens->sub_Ndensity;
 

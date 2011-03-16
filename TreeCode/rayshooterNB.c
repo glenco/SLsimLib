@@ -4,8 +4,8 @@
 #include <time.h>
 #include <omp.h>
 #include "../../Library/Recipes/nrutil.h"
-#include "../../Library/Recipes/nr.h"
-#include "../../Library/RecipesD/nrD.h"
+#include <nr.h>
+#include <nrD.h>
 #include "../../Library/cosmo.h"
 
 #include "TreeNB.h"

@@ -10,7 +10,7 @@
 #include <assert.h>
 #include <omp.h>
 #include "../../Library/Recipes/nrutil.h"
-#include "../../Library/RecipesD/nrD.h"
+#include <nrD.h>
 #include "Tree.h"
 #ifndef pi
 #define pi  3.1415926

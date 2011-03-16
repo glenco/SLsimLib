@@ -7,10 +7,10 @@
 #include <math.h>
 #include <stdio.h>
 #include <time.h>
-#include "../../Library/Recipes/nr.h"
+#include <nr.h>
 #include "../../Library/Recipes/nrutil.h"
 #include "../../Library/Recipes/nrutil.c"
-#include "../../Library/RecipesD/nrD.h"
+#include <nrD.h>
 #include "../../Library/RecipesD/ran2D.c"
 #include "../../Library/RecipesD/bsstepD.c"
 #include "../../Library/RecipesD/dfridrD.c"

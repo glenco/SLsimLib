@@ -8,9 +8,9 @@
 #include <time.h>
 #include <omp.h>
 #include <string.h>
-#include "../Library/Recipes/nr.h"
+#include <nr.h>
 #include "../Library/Recipes/nrutil.h"
-#include "../Library/RecipesD/nrD.h"
+#include <nrD.h>
 /*#include "../Library/Recipes/nrutil.c"
 #include "../Library/Recipes/ran2.c"
 #include "../Library/RecipesD/locateD.c"

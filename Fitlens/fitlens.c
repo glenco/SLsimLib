@@ -6,9 +6,9 @@
 #include <float.h>
 #include <assert.h>
 
-#include "../../Library/Recipes/nr.h"
+#include <nr.h>
 #include "../../Library/Recipes/nrutil.h"
-#include "../../Library/RecipesD/nrD.h"
+#include <nrD.h>
 
 //#include "../../Library/RecipesD/powellD.c"
 #include "../../Library/RecipesD/rfD.c"

@@ -9,9 +9,9 @@
 #include <math.h>
 #include <omp.h>
 #include <assert.h>
-#include "../../Library/Recipes/nr.h"
+#include <nr.h>
 #include "../../Library/Recipes/nrutil.h"
-#include "../../Library/RecipesD/nrD.h"
+#include <nrD.h>
 #include "../../Library/cosmo.h"
 
 #include "../TreeCode_link/Tree.h"
@@ -21,7 +21,7 @@
 #include "../TreeCode/TreeNB.h"
 
 //extern char *paramfile,*outputfile;
-extern struct cosmology cosmo;
+extern COSMOLOGY cosmo;
 extern AnaLens *lens;
 
 //const float Concentration=0.0776;  // ratio between truncation radius and scale length
@@ -42,8 +42,9 @@ void rayshooterInternal(unsigned long Npoints,Point *i_points,TreeHndl i_tree
 
 
   if( lens->zsource != zs_old){
-	  lens->host_ro = 4*pi*pow(lens->host_sigma/2.99792e5,2)*angDist(0,lens->zlens)
-    				*angDist(lens->zlens,lens->zsource)/angDist(0,lens->zsource)/(1+lens->zlens);
+	  lens->host_ro = 4*pi*pow(lens->host_sigma/2.99792e5,2)*angDist(0,lens->zlens,&cosmo)
+    				*angDist(lens->zlens,lens->zsource,&cosmo)
+    				/angDist(0,lens->zsource,&cosmo)/(1+lens->zlens);
 	  zs_old=lens->zsource;
   }
 

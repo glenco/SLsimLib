@@ -3,8 +3,8 @@
 #include <time.h>
 #include "../../Library/Recipes/nrutil.h"
 //#include "../../Library/Recipes/nrutil.c"
-#include "../../Library/Recipes/nr.h"
-#include "../../Library/RecipesD/nrD.h"
+#include <nr.h>
+#include <nrD.h>
 #include "../../Library/RecipesD/locateD.c"
 #include "../../Library/RecipesD/odeintD.c"
 #include "../../Library/RecipesD/bsstepD.c"

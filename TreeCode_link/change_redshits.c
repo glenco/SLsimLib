@@ -18,21 +18,26 @@
 #include "../AnalyticNSIE/analytic_lens.h"
 //#include "../TreeCode/TreeNB.h"
 
-void change_redshifts(TreeHndl i_tree,TreeHndl s_tree,AnaLens *lens,double z_source,double z_lens){
+extern COSMOLOGY cosmo;
+
+void change_redshifts(TreeHndl i_tree,TreeHndl s_tree,AnaLens *lens,double z_source
+		,double z_lens){
 	double oldSigma=0,factor=0;
 
 	oldSigma=lens->Sigma_crit;
-	lens->source_r *= angDist(0,z_source)/angDist(0,lens->zsource);
+	lens->source_r *= angDist(0,z_source,&cosmo)/angDist(0,lens->zsource,&cosmo);
 	lens->zlens=z_lens;
 	lens->zsource=z_source;
 
-	lens->Sigma_crit=angDist(0,lens->zsource)/angDist(lens->zlens,lens->zsource)/angDist(0,lens->zlens)/4/pi/Grav;
+	lens->Sigma_crit = angDist(0,lens->zsource,&cosmo)
+			/angDist(lens->zlens,lens->zsource,&cosmo)/angDist(0,lens->zlens,&cosmo)/4/pi/Grav;
 
 	factor=oldSigma/lens->Sigma_crit;
 
-	lens->MpcToAsec=60*60*180*(1+lens->zsource)/pi/angDist(0,lens->zlens);
-	lens->host_ro=4*pi*pow(lens->host_sigma/2.99792e5,2)*angDist(0,lens->zlens)*angDist(lens->zlens,lens->zsource)
-			  /angDist(0,lens->zsource)/(1+lens->zlens);
+	lens->MpcToAsec=60*60*180*(1+lens->zsource)/pi/angDist(0,lens->zlens,&cosmo);
+	lens->host_ro=4*pi*pow(lens->host_sigma/2.99792e5,2)*angDist(0,lens->zlens,&cosmo)
+			*angDist(lens->zlens,lens->zsource,&cosmo)
+			  /angDist(0,lens->zsource,&cosmo)/(1+lens->zlens);
 
 	if(lens->Sigma_crit == oldSigma) return ;
 

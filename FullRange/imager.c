@@ -6,10 +6,15 @@
 #include <omp.h>
 #include <string.h>
 
-#include "../../Library/Recipes/nr.h"
+/*#include <nr.h>
 #include "../../Library/Recipes/nrutil.h"
-#include "../../Library/RecipesD/nrD.h"
-#include "../../Library/Recipes/nrutil.c"
+#include <nrD.h>
+*/
+#include <nr.h>
+#include <nrutil.h>
+#include <nrD.h>
+
+/*#include "../../Library/Recipes/nrutil.c"
 #include "../../Library/Recipes/ran2.c"
 #include "../../Library/RecipesD/locateD.c"
 #include "../../Library/RecipesD/powellD.c"
@@ -26,7 +31,7 @@
 #include "../../Library/cosmo.h"
 #include "../../Library/powerCDM.c"
 #include "../../Library/cosmo.c"
-
+*/
 #include "../AnalyticNSIE/analytic_lens.h"
 #include "../TreeCode_link/Tree.h"
 #include "../TreeCode/TreeNB.h"
@@ -42,6 +47,8 @@ int main(int arg,char **argv){
   unsigned long i,j,k,m,Ngrid,NImagePoints,Ncritpoints;
   int Nimages,NewNimages;
   long seed=282923,i_total=0;
+  double nintegrateD(double (*func)(double),double,double,double);
+
   //long seed=282925,i_total=0;
   //long seed=28374;
   time(&seed);
@@ -71,6 +78,11 @@ int main(int arg,char **argv){
   Ngrid=64;
   Ntotal_lenses=100000;
   Nsources=2000;
+
+
+  double funcc(double);
+  printf("\nintegrate %e\n",nintegrateD(funcc,0.0,2,1.0e-5));
+  exit(0);
 
   //Ntotal_lenses=5;
   //Nsources=1000;
@@ -306,7 +318,7 @@ int main(int arg,char **argv){
 		  */
 
 			  // remove images that are too close together
-		  combineCloseImages(min_image_seporation*angDist(0,lens->zlens)*pi/60/60/180
+		  combineCloseImages(min_image_seporation*angDist(0,lens->zlens,&cosmo)*pi/60/60/180
 		          ,imageinfo,&Nimages,&NewNimages);
 		  //NewNimages=Nimages;
 		  printf("%i  %i\n",Nimages,NewNimages);
@@ -410,4 +422,9 @@ int main(int arg,char **argv){
   //fclose(file);
 
   return 1;
+}
+
+
+double funcc(double x){
+	return x*x;
 }

@@ -4,8 +4,8 @@
 #include <assert.h>
 /*#include "double_sort.c"*/
 #include "../../Library/Recipes/nrutil.h"
-#include "../../Library/Recipes/nr.h"
-#include "../../Library/RecipesD/nrD.h"
+#include <nr.h>
+#include <nrD.h>
 #include "TreeNB.h"
 
 #define Nbucket 5

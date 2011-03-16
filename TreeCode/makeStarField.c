@@ -9,7 +9,7 @@
 /*#include "../Library/Include/nr.h"*/
 #include "../../Library/Recipes/nrutil.h"
 //#include "../../Library/Recipes/nrutil.c"
-#include "../../Library/RecipesD/nrD.h"
+#include <nrD.h>
 //#include "../../Library/RecipesD/ran2D.c"
 
 int main(int arg,char **argv){

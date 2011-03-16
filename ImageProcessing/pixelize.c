@@ -10,7 +10,7 @@
 #include <time.h>
 #include <assert.h>
 #include <omp.h>
-#include "../../Library/Recipes/nr.h"
+#include <nr.h>
 #include "../../Library/Recipes/nrutil.h"
 #include "../Kist/Kist.h"
 #include "../TreeCode_link/Tree.h"

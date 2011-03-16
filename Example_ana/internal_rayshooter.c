@@ -9,9 +9,9 @@
 #include <math.h>
 #include <omp.h>
 #include <assert.h>
-#include "../../Library/Recipes/nr.h"
+#include <nr.h>
 #include "../../Library/Recipes/nrutil.h"
-#include "../../Library/RecipesD/nrD.h"
+#include <nrD.h>
 
 #include "../TreeCode_link/Tree.h"
 #include "../../Library/cosmo.h"

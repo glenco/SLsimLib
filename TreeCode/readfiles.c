@@ -5,7 +5,7 @@
 #include "../../Library/cosmo.h"
 #include "../../Library/Recipes/nrutil.h"
 
-SimLens *readparams(char *filename,struct cosmology *cosmo){
+SimLens *readparams(char *filename,CosmoHndl cosmo){
   FILE *file;
   char label[20];
   SimLens lens, *lenses;
@@ -39,7 +39,7 @@ SimLens *readparams(char *filename,struct cosmology *cosmo){
   fscanf(file,"%s %le",label,&(lens.zsource));
   printf("%s %f\n",label,lens.zsource);
 
-  SetConcordenceCosmology();
+  SetConcordenceCosmology(cosmo);
   cosmo->physical=0;
 
   fscanf(file,"%s %le",label,&(cosmo->Omo));
@@ -75,7 +75,8 @@ SimLens *readparams(char *filename,struct cosmology *cosmo){
   lens.coord[2][2]=cos(lens.phi)*cos(lens.theta);
 
   /* find critical density */
-  lens.Sigma_crit=angDist(0,lens.zsource)/angDist(lens.zlens,lens.zsource)/angDist(0,lens.zlens)/4/pi/Grav;
+  lens.Sigma_crit=angDist(0,lens.zsource,cosmo)/angDist(lens.zlens,lens.zsource,cosmo)
+		  /angDist(0,lens.zlens,cosmo)/4/pi/Grav;
   printf("critical density is %e Msun/Mpc^2\n",lens.Sigma_crit);
 
   lenses=(SimLens *)malloc(lens.Nspecies*sizeof(SimLens));

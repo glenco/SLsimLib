@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
-#include "../../Library/Recipes/nr.h"
+#include <nr.h>
 #include "../../Library/Recipes/nrutil.h"
 
 
