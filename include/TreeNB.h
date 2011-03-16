@@ -5,8 +5,8 @@
  * Comments:                           
  */
 
-#include "../TreeCode_link/Tree.h"
-#include "../../Library/cosmo.h"
+#include <Tree.h>
+#include <cosmo.h>
 
 #ifndef pi
 #define pi  3.141593

@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <assert.h>
 /*#include "double_sort.c"*/
-#include "../../Library/Recipes/nrutil.h"
+#include <nrutil.h>
 #include <nr.h>
 #include <nrD.h>
 #include "TreeNB.h"

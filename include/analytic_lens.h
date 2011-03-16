@@ -4,8 +4,8 @@
  *  Created on: Dec 8, 2009
  *      Author: R.B. Metcalf
  */
-#include "../../Library/cosmo.h"
-#include "../TreeCode_link/Tree.h"
+#include <cosmo.h>
+#include <Tree.h>
 #include "../TreeCode/TreeNB.h"
 
 #ifndef pi
@@ -132,7 +132,8 @@ void PrintAnaLens(AnaLens *lens,Boolean show_substruct,Boolean show_stars);
 
 // in randoimize_lens.c
 
-void RandomizeHost(AnaLens *lens,double r_source_physical,long *seed,Boolean tables);
+void RandomizeHost(AnaLens *lens,double r_source_physical,long *seed,Boolean tables
+		,CosmoHndl cosmo);
 void RandomlyDistortLens(AnaLens *lens,long *seed,int Nmodes);
 void AlignedRandomlyDistortLens(AnaLens *lens,long *seed,double theta,int n);
 double RandomFromTable(double *table,unsigned long Ntable,long *seed);

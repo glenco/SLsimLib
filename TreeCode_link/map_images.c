@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
-#include "../../Library/Recipes/nrutil.h"
+#include <nrutil.h>
 #include "Tree.h"
 #include "../AnalyticNSIE/analytic_lens.h"
 #include "../Kist/Kist.h"

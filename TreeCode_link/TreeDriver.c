@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include "Tree.h"
-#include "../../Library/Recipes/nrutil.h"
+#include <nrutil.h>
 /*#include "double_sort.c"*/
 #define Nbucket 1   // must be =1 if each leaf is to coincide with each cell
 

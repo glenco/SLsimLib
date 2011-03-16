@@ -3,7 +3,7 @@
 /* note #undef's at end of file */
 #include "Tree.h"
 #define NRANSI
-#include "../../Library/Recipes/nrutil.h"
+#include <nrutil.h>
 //#define SWAP(a,b) temp=(a);(a)=(b);(b)=temp;
 #define M 7
 #define NSTACK 50

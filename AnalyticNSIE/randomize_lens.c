@@ -10,7 +10,7 @@
 #include <assert.h>
 #include <nr.h>
 #include <nrD.h>
-#include "../../Library/Recipes/nrutil.h"
+#include <nrutil.h>
 #include "analytic_lens.h"
 #define sheartol 1.0e-3
 
@@ -19,9 +19,10 @@
  *     lenses
  */
 
-extern COSMOLOGY cosmo;
+//extern COSMOLOGY cosmo;
 
-void RandomizeHost(AnaLens *lens,double r_source_phys,long *seed,Boolean tables){
+void RandomizeHost(AnaLens *lens,double r_source_phys,long *seed,Boolean tables
+		,CosmoHndl cosmo){
 	static double fo=0.0,*axisTable,*sigmaTable,**zTable;
 	int n,i;
 	static int init=0,NaxisTable,NreTable,NsigmaTable,NzTable;
@@ -92,12 +93,12 @@ void RandomizeHost(AnaLens *lens,double r_source_phys,long *seed,Boolean tables)
 
 		lens->host_sigma = RandomFromTable(sigmaTable,NsigmaTable,seed);
 		lens->host_ro = 4*pi*pow(lens->host_sigma/2.99792e5,2)
-		        *angDist(lens->zlens,lens->zsource,&cosmo)*angDist(0,lens->zlens,&cosmo)
-				/angDist(0,lens->zsource,&cosmo);
+		        *angDist(lens->zlens,lens->zsource,cosmo)*angDist(0,lens->zlens,cosmo)
+				/angDist(0,lens->zsource,cosmo);
 		lens->Sigma_crit = pow(lens->host_sigma/2.99792e5,2)/Grav/lens->host_ro;
-		lens->source_r = r_source_phys*angDist(0,lens->zlens,&cosmo)
-		                /angDist(0,lens->zsource,&cosmo);
-		lens->MpcToAsec=60*60*180*(1+lens->zsource)/pi/angDist(0,lens->zlens,&cosmo);
+		lens->source_r = r_source_phys*angDist(0,lens->zlens,cosmo)
+		                /angDist(0,lens->zsource,cosmo);
+		lens->MpcToAsec=60*60*180*(1+lens->zsource)/pi/angDist(0,lens->zlens,cosmo);
 	}
 
 	if(fo==0.0) fo=lens->host_axis_ratio;

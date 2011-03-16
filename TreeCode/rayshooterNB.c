@@ -3,10 +3,10 @@
 #include <stdlib.h>
 #include <time.h>
 #include <omp.h>
-#include "../../Library/Recipes/nrutil.h"
+#include <nrutil.h>
 #include <nr.h>
 #include <nrD.h>
-#include "../../Library/cosmo.h"
+#include <cosmo.h>
 
 #include "TreeNB.h"
 

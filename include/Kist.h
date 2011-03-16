@@ -5,7 +5,7 @@
  *      Author: R.B. Metcalf
  */
 
-#include "../TreeCode_link/point.h"  // only reason is to define Point
+#include <point.h>  // only reason is to define Point
 
 #ifndef kisttypes_declare
 	#define kisttypes_declare

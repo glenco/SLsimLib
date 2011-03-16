@@ -9,12 +9,12 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <nr.h>
-#include "../../Library/Recipes/nrutil.h"
+#include <nrutil.h>
 #include <nrD.h>
 
-#include "../../Library/cosmo.h"
+#include <cosmo.h>
 
-#include "../TreeCode_link/Tree.h"
+#include <Tree.h>
 #include "../AnalyticNSIE/analytic_lens.h"
 #include "../TreeCode/TreeNB.h"
 

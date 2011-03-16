@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <math.h>
 #include "TreeNB.h"
-#include "../../Library/cosmo.h"
-#include "../../Library/Recipes/nrutil.h"
+#include <cosmo.h>
+#include <nrutil.h>
 
 SimLens *readparams(char *filename,CosmoHndl cosmo){
   FILE *file;

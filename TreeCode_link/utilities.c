@@ -8,7 +8,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "../../Library/Recipes/nrutil.h"
+#include <nrutil.h>
 #include <nrD.h>
 #include "Tree.h"
 #ifndef pi

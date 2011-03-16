@@ -7,7 +7,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "../../Library/Recipes/nrutil.h"
+#include <nrutil.h>
 #include "Tree.h"
 #define NMAXCRITS 100
 

@@ -10,15 +10,15 @@
 #include <omp.h>
 #include <assert.h>
 #include <nr.h>
-#include "../../Library/Recipes/nrutil.h"
+#include <nrutil.h>
 #include <nrD.h>
-#include "../../Library/cosmo.h"
+#include <cosmo.h>
 
-#include "../TreeCode_link/Tree.h"
-#include "../TreeCode_link/point.h"
-#include "../AnalyticNSIE/analytic_lens.h"
-#include "../AnalyticNSIE/nsie.h"
-#include "../TreeCode/TreeNB.h"
+#include <Tree.h>
+#include <point.h>
+#include <analytic_lens.h>
+#include <nsie.h>
+#include <TreeNB.h>
 
 //extern char *paramfile,*outputfile;
 extern COSMOLOGY cosmo;

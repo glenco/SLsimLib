@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <omp.h>
-#include "../../Library/Recipes/nrutil.h"
+#include <nrutil.h>
 #include <nrD.h>
 #include "Tree.h"
 #ifndef pi

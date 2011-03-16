@@ -11,9 +11,9 @@
 #include <assert.h>
 #include <omp.h>
 #include <nr.h>
-#include "../../Library/Recipes/nrutil.h"
+#include <nrutil.h>
 #include "../Kist/Kist.h"
-#include "../TreeCode_link/Tree.h"
+#include <Tree.h>
 
 /*
  * pixelize takes images and pixelizes the flux into regular pixels

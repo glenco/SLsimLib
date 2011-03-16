@@ -14,8 +14,8 @@
 #include <math.h>
 #include <stdlib.h>
 #include <assert.h>
-#include "../TreeCode_link/Tree.h"
-#include "../AnalyticNSIE/analytic_lens.h"
+#include <Tree.h>
+#include <analytic_lens.h>
 //#include "../TreeCode/TreeNB.h"
 
 extern COSMOLOGY cosmo;
@@ -45,9 +45,9 @@ void change_redshifts(TreeHndl i_tree,TreeHndl s_tree,AnaLens *lens,double z_sou
 	MoveToTopList(i_tree->pointlist);
 	do{
 		i_tree->pointlist->current->image->x[0] = (1-factor)*i_tree->pointlist->current->x[0]
-		                                          + factor*i_tree->pointlist->current->image->x[0];
+		                                     + factor*i_tree->pointlist->current->image->x[0];
 		i_tree->pointlist->current->image->x[1] = (1-factor)*i_tree->pointlist->current->x[1]
-		                                          + factor*i_tree->pointlist->current->image->x[1];
+		                                     + factor*i_tree->pointlist->current->image->x[1];
 	}while(MoveDownList(i_tree->pointlist));
 
 	// rebuild tree on source plane

@@ -11,9 +11,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <nr.h>
-#include "../../Library/Recipes/nrutil.h"
+#include <nrutil.h>
 #include <nrD.h>
-#include "../../Library/cosmo.h"
+#include <cosmo.h>
 #include "analytic_lens.h"
 
 void readparams_ana(char *filename,CosmoHndl cosmo,AnaLens *lens){

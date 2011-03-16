@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
-#include "../../Library/Recipes/nrutil.h"
+#include <nrutil.h>
 #include "Tree.h"
 #include "KistDriver.h"
 #include "divide_images.h"

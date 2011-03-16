@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <assert.h>
-#include "../TreeCode_link/Tree.h"
+#include <Tree.h>
 #include"../AnalyticNSIE/analytic_lens.h"
 
 /* MarkPoints sets the point.in_image to True
