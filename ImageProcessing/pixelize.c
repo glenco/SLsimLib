@@ -12,7 +12,7 @@
 #include <omp.h>
 #include <nr.h>
 #include <nrutil.h>
-#include "../Kist/Kist.h"
+#include <Kist.h>
 #include <Tree.h>
 
 /*

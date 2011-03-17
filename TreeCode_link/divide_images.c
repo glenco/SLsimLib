@@ -7,10 +7,10 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <math.h>
-#include "Tree.h"
-#include "../Kist/Kist.h"
-#include "KistDriver.h"
-#include "divide_images.h"
+#include <Tree.h>
+#include <Kist.h>
+#include <KistDriver.h>
+#include <divide_images.h>
 
 void find_divide_images(TreeHndl i_tree,TreeHndl s_tree
 		,double *source_x,double source_r

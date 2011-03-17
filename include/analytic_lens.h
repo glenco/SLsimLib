@@ -6,7 +6,7 @@
  */
 #include <cosmo.h>
 #include <Tree.h>
-#include "../TreeCode/TreeNB.h"
+#include <TreeNB.h>
 
 #ifndef pi
 #define pi  3.141593

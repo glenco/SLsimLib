@@ -15,8 +15,8 @@
 #include <cosmo.h>
 
 #include <Tree.h>
-#include "../AnalyticNSIE/analytic_lens.h"
-#include "../TreeCode/TreeNB.h"
+#include <analytic_lens.h>
+#include <TreeNB.h>
 
 void implant_stars(AnaLens *lens,Point *centers,unsigned long Nregions,long *seed){
 	/*  implants stars into the lens around the images

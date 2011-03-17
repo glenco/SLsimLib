@@ -31,10 +31,12 @@ void RandomizeHost(AnaLens *lens,double r_source_phys,long *seed,Boolean tables
 	//double re_onsource;
 
 	if(init==0 && tables){
+
+		printf("> reading lens distribution tables");
 		++init;
 		// read in Einstein radius projected onto the source plane
 
-		sprintf(filename,"AnalyticNSIE/z_table.txt");
+		sprintf(filename,"GalaxyData/z_table.txt");
 		printf(">reading from %s\n",filename);
 		file=fopen(filename,"r");
 		fscanf(file,"%i",&NzTable);
@@ -44,7 +46,7 @@ void RandomizeHost(AnaLens *lens,double r_source_phys,long *seed,Boolean tables
 		//for(n=0;n<NzTable;++n) printf("%le  %le\n",zTable[n][0],zTable[n][1]);
 		fclose(file);
 
-		sprintf(filename,"AnalyticNSIE/slacs_sigma.dat");
+		sprintf(filename,"GalaxyData/slacs_sigma.dat");
 		printf(">reading from %s\n",filename);
 		file=fopen(filename,"r");
 		fscanf(file,"%i",&NsigmaTable);
@@ -56,7 +58,7 @@ void RandomizeHost(AnaLens *lens,double r_source_phys,long *seed,Boolean tables
 		}
 		fclose(file);
 
-		sprintf(filename,"AnalyticNSIE/slacs_f.dat");
+		sprintf(filename,"GalaxyData/slacs_f.dat");
 		printf(">reading from %s\n",filename);
 		file=fopen(filename,"r");
 		fscanf(file,"%i",&NaxisTable);

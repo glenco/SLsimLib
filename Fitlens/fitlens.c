@@ -11,15 +11,15 @@
 #include <nrD.h>
 
 //#include "../../Library/RecipesD/powellD.c"
-#include "../../Library/RecipesD/rfD.c"
+/*#include "../../Library/RecipesD/rfD.c"
 #include "../../Library/RecipesD/rdD.c"
 #include "../../Library/RecipesD/svdcmpD.c"
 #include "../../Library/RecipesD/svbksbD.c"
 #include "../../Library/RecipesD/zriddrD.c"
-#include "../../Library/RecipesD/pythagD.c"
+#include "../../Library/RecipesD/pythagD.c"*/
 
-#include "../AnalyticNSIE/analytic_lens.h"
-#include "fitlens.h"
+#include <analytic_lens.h>
+#include <fitlens.h>
 
 static double betaT,*modT,**xobT,**dx_subT,sigGT,*modTT,*modoT,**vT,x_centerT[2],**xgT,**dx_subTt;
 static int NmodT,NsourcesT,NimagesT,*pairingT,degenT,Nmin;

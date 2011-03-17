@@ -10,8 +10,8 @@
 #include <stdlib.h>
 #include <assert.h>
 #include "Tree.h"
-#include "../Kist/Kist.h"
-#include "List/List.h"
+#include <Kist.h>
+#include <List.h>
 
 double dummy;
 

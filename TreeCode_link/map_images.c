@@ -10,12 +10,12 @@
 #include <stdio.h>
 #include <assert.h>
 #include <nrutil.h>
-#include "Tree.h"
-#include "../AnalyticNSIE/analytic_lens.h"
-#include "../Kist/Kist.h"
-#include "KistDriver.h"
-#include "divide_images.h"
-#include "map_images.h"
+#include <Tree.h>
+#include <analytic_lens.h>
+#include <Kist.h>
+#include <KistDriver.h>
+#include <divide_images.h>
+#include <map_images.h>
 
 const float mumin = 0.3;  // actually the sqrt of the minimum magnification
 const int Ngrid_block = 3;

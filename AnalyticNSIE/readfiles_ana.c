@@ -22,7 +22,7 @@ void readparams_ana(char *filename,CosmoHndl cosmo,AnaLens *lens){
   int i;
   double tmp=0,NSubstructInRe=0;
 
-  printf(">reading from %s\n",filename);
+  printf(">reading from %s\n>",filename);
 
   file=fopen(filename,"r");
 

@@ -9,7 +9,7 @@
 #include <math.h>
 #include <assert.h>
 #include <Tree.h>
-#include"../AnalyticNSIE/analytic_lens.h"
+#include <analytic_lens.h>
 
 /* MarkPoints sets the point.in_image to True
  * if the source point is within lens->source_r of lens->source_x
