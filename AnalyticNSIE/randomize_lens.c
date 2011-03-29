@@ -11,7 +11,7 @@
 #include <nr.h>
 #include <nrD.h>
 #include <nrutil.h>
-#include "analytic_lens.h"
+#include <analytic_lens.h>
 #define sheartol 1.0e-3
 
 /*
@@ -227,13 +227,15 @@ void RandomizeSubstructure2(AnaLens *lens,double rangeInRei,long *seed){
 		host_ro_save = lens->host_ro;
 	}
 
-	if(!lens->substruct_implanted){
-		NsubMax=(unsigned long)(ndensity*pi*Rmax*Rmax*(1+5/sqrt(ndensity*pi*Rmax*Rmax)) );
-		lens->sub_x=dmatrix(0,NsubMax-1,0,1);
-		lens->sub_Rcut=(float *)calloc(NsubMax,sizeof(float));
-		lens->sub_mass=(float *)calloc(NsubMax,sizeof(float));
-		lens->substruct_implanted=True;
-		lens->sub_substructures = (IndexType *)calloc(NsubMax,sizeof(IndexType));
+	if(!lens->substruct_implanted && ndensity > 0){
+		NsubMax=(unsigned long)(ndensity*pi*Rmax*Rmax + 5*sqrt(ndensity*pi*Rmax*Rmax) );
+		if(NsubMax > 0){
+			lens->sub_x=dmatrix(0,NsubMax-1,0,1);
+			lens->sub_Rcut=(float *)calloc(NsubMax,sizeof(float));
+			lens->sub_mass=(float *)calloc(NsubMax,sizeof(float));
+			lens->substruct_implanted=True;
+			lens->sub_substructures = (IndexType *)calloc(NsubMax,sizeof(IndexType));
+		}
 	}
 	//printf("Rmax/re = %e\n",Rmax/lens->ro);
 	//for(i=0;i<12;++i) printf("%f %f\n",poidev(ndensity*pi*Rmax*Rmax,seed),ndensity*pi*Rmax*Rmax);

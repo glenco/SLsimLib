@@ -4,17 +4,17 @@
 #include <stdio.h>
 #include <assert.h>
 #include <nrutil.h>
-#include "Tree.h"
-#include "KistDriver.h"
-#include "divide_images.h"
+#include <Tree.h>
+#include <KistDriver.h>
+#include <divide_images.h>
 
 static const int NpointsRequired = 50;  // number of points required to be within an image
 static const int Ngrid_block = 3;       // each cell is divided into Ngrid_block^2 subcells
 
-static const float mumin = 0.3;  // actually the sqrt of the minimum magnification
-//static const float mumin = 0.2;
+//static const float mumin = 0.3;  // actually the sqrt of the minimum magnification
+static const float mumin = 0.5;
 static const float FracResTarget = 4.0e-4;
-//static const float FracResTarget 1.0e-3
+//static const float FracResTarget = 1.0e-4;
 
 Point *pointg;
 double ysourceg[2],magsigng;

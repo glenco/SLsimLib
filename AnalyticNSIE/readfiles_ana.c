@@ -27,6 +27,8 @@ void readparams_ana(char *filename,CosmoHndl cosmo,AnaLens *lens){
   file=fopen(filename,"r");
 
   // output file
+
+  //lens->outputfile = (char *)malloc(50*sizeof(char));
   fscanf(file,"%s %s",label,&(lens->outputfile));
   printf(">%s %s\n\n",label,lens->outputfile);
   // parameters of host elliptical
