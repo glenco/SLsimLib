@@ -227,15 +227,15 @@ void RandomizeSubstructure2(AnaLens *lens,double rangeInRei,long *seed){
 		host_ro_save = lens->host_ro;
 	}
 
-	if(!lens->substruct_implanted && ndensity > 0){
+	if(!(lens->substruct_implanted) && ndensity > 0){
 		NsubMax=(unsigned long)(ndensity*pi*Rmax*Rmax + 5*sqrt(ndensity*pi*Rmax*Rmax) );
 		if(NsubMax > 0){
 			lens->sub_x=dmatrix(0,NsubMax-1,0,1);
 			lens->sub_Rcut=(float *)calloc(NsubMax,sizeof(float));
 			lens->sub_mass=(float *)calloc(NsubMax,sizeof(float));
-			lens->substruct_implanted=True;
 			lens->sub_substructures = (IndexType *)calloc(NsubMax,sizeof(IndexType));
 		}
+		lens->substruct_implanted=True;
 	}
 	//printf("Rmax/re = %e\n",Rmax/lens->ro);
 	//for(i=0;i<12;++i) printf("%f %f\n",poidev(ndensity*pi*Rmax*Rmax,seed),ndensity*pi*Rmax*Rmax);

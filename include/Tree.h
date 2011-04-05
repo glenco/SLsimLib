@@ -126,7 +126,6 @@ unsigned long getNbranches(TreeHndl tree);
 /***** Manipulation procedures *****/
 
 void moveTop(TreeHndl tree);
-
 void moveUp(TreeHndl tree);
 
 Boolean moveToChild(TreeHndl tree,int child);
@@ -152,6 +151,7 @@ TreeHndl readTree(char *filename);
 short emptyTree(TreeHndl tree);
 short freeTree(TreeHndl tree);
 void _freeTree(TreeHndl tree,short child);
+void _freeTree_iter(TreeHndl tree);
 void checkTree(TreeHndl tree);
 
 /** routines in TreeDriver.c **/

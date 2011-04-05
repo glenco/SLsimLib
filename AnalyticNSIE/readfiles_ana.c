@@ -82,35 +82,21 @@ void readparams_ana(char *filename,CosmoHndl cosmo,AnaLens *lens){
   lens->substruct_implanted=False;  // substructures are implanted later where mem is allocated
   fscanf(file,"%s %le",label,&(lens->sub_Ndensity));
   printf(">%s %e\n",label,lens->sub_Ndensity);
-  if(lens->sub_Ndensity > 0){
-	  fscanf(file,"%s %le",label,&(lens->sub_beta));
-	  printf(">%s %f\n",label,lens->sub_beta);
-	  fscanf(file,"%s %le",label,&(lens->sub_alpha));
-	  printf(">%s %f\n",label,lens->sub_alpha);
 
-	  fscanf(file,"%s %le",label,&lens->sub_Rmax);
-	  printf(">%s %.3e Mpc\n",label,lens->sub_Rmax);
-	  fscanf(file,"%s %le",label,&lens->sub_Mmax);
-	  printf(">%s %.3e Msun\n",label,lens->sub_Mmax);
-	  fscanf(file,"%s %le",label,&lens->sub_Mmin);
-	  printf(">%s %.3e Msun\n",label,lens->sub_Mmin);
-	  fscanf(file,"%s %i",label,&lens->sub_type);
-	  printf(">%s %i ",label,lens->sub_type);
+  fscanf(file,"%s %le",label,&(lens->sub_beta));
+  if(lens->sub_Ndensity > 0) printf(">%s %f\n",label,lens->sub_beta);
+  fscanf(file,"%s %le",label,&(lens->sub_alpha));
+  if(lens->sub_Ndensity > 0) printf(">%s %f\n",label,lens->sub_alpha);
 
-  }else{
-	  fscanf(file,"%s %le",label,&tmp);
-	  //printf(">%s %.3e Mpc\n",label,tmp);
-	  fscanf(file,"%s %le",label,&tmp);
-	  //printf(">%s %.3e Mpc\n",label,tmp);
-	  fscanf(file,"%s %le",label,&tmp);
-	  //printf(">%s %.3e Msun\n\n",label,tmp);
-	  fscanf(file,"%s %le",label,&tmp);
-	  //printf(">%s %.3e Msun\n\n",label,tmp);
-	  fscanf(file,"%s %le",label,&tmp);
-	  //printf(">%s %.3e Msun\n\n",label,tmp);
-	  fscanf(file,"%s %i",label,&lens->sub_type);
-	  //printf(">%s %i \n",label,lens->sub_type);
- }
+  fscanf(file,"%s %le",label,&lens->sub_Rmax);
+  if(lens->sub_Ndensity > 0) printf(">%s %.3e Mpc\n",label,lens->sub_Rmax);
+  fscanf(file,"%s %le",label,&lens->sub_Mmax);
+  if(lens->sub_Ndensity > 0) printf(">%s %.3e Msun\n",label,lens->sub_Mmax);
+  fscanf(file,"%s %le",label,&lens->sub_Mmin);
+  if(lens->sub_Ndensity > 0) printf(">%s %.3e Msun\n",label,lens->sub_Mmin);
+  fscanf(file,"%s %i",label,&lens->sub_type);
+  if(lens->sub_Ndensity > 0) printf(">%s %i ",label,lens->sub_type);
+
   if(lens->sub_Ndensity > 0){
 	  switch(lens->sub_type){
 	  case NFW:

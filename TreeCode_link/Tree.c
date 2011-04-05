@@ -168,8 +168,11 @@ short emptyTree(TreeHndl tree){
 
   if(tree == NULL) return 1;
 
+  assert(tree);
+
   moveTop(tree);
-  _freeTree(tree,0);
+  _freeTree_iter(tree);
+//  _freeTree(tree,0);
   //printTree(tree);
 
   assert(tree->Nbranches == 1);
@@ -239,6 +242,39 @@ void _freeTree(TreeHndl tree,short child){
 
     	return;
     }
+
+    return;
+}
+void _freeTree_iter(TreeHndl tree){
+	// does the same as _freeTree only iteratively
+	Branch *branch;
+
+	assert( tree !=NULL);
+	moveTop(tree);
+
+	/*printBranch(tree->current);*/
+
+	while(tree->Nbranches > 1){
+
+		if(tree->current->child1 != NULL){
+			moveToChild(tree,1);
+		}else if(tree->current->child2 != NULL){
+			moveToChild(tree,2);
+		}else{
+			branch = tree->current;
+			if(tree->current->brother == tree->current->prev->brother){
+				moveUp(tree);
+				assert(tree->current->child1 == NULL);
+				tree->current->child2 = NULL;
+			}else{
+				tree->current = tree->current->brother;
+				tree->current->prev->child1 = NULL;
+			}
+
+			free(branch);
+			--tree->Nbranches;
+		}
+	}
 
     return;
 }
@@ -738,6 +774,7 @@ Boolean TreeWalkStep(TreeHndl tree,Boolean allowDescent){
 	}
 	return False;
 }
+
 
 /**************************************************************************
    routines for saving and restoring tree structure
