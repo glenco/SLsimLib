@@ -163,8 +163,10 @@ short emptyTree(TreeHndl tree){
   * leaving a tree with an empty root
   *  FillTree can then be used to regenerate tree
   */
-  Point *heads[tree->pointlist->Npoints];
+  Point **heads;
   long i,j,count;
+
+  heads = (Point **) malloc(tree->pointlist->Npoints*sizeof(Point*));
 
   if(tree == NULL) return 1;
 
@@ -199,6 +201,7 @@ short emptyTree(TreeHndl tree){
 //  free(tree->pointlist);
 //  free(tree);
 
+  free(heads);
   return 1;
 }
 
