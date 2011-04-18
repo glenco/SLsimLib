@@ -166,7 +166,7 @@ short emptyTree(TreeHndl tree){
   Point **heads;
   long i,j,count;
 
-  heads = (Point **) malloc(tree->pointlist->Npoints*sizeof(Point*));
+  heads = (Point **) malloc(tree->pointlist->Npoints*sizeof(Point*));  // maximum number of pointers that could be needed
 
   if(tree == NULL) return 1;
 

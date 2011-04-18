@@ -759,6 +759,171 @@ int refine_grid(TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo
    return number_of_refined;
 }
 
+
+int refine_grid2(TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo
+		,unsigned long Nimages,double res_target,short criterion,Boolean kappa_off,Boolean shootrays,Point *i_points){
+
+	/*
+	 * Same as refine_grid2 with additions
+	 *     - uses imageinfo->imagekist instead of imageinfo->points[]
+	 *     - export rayshooting
+	 *         when shootrays == False no rayshooting is done and i_points is the array
+	 *             of point that are being added, if there are more than one image this
+	 *             will be a pointer only to the new points in the first image.
+	 *
+	 * criterion = 0 stops refining when error in total area reaches res_target
+	 * 	         = 1 stops refining when each image reaches error limit or is smaller than res_target
+	 *           = 2 stops refining when grid resolution is smaller than res_target in all images
+	 */
+
+	//printf("entering refine_grid\n");
+
+  if(Nimages < 1) return 0;
+
+  int i,j,number_of_refined,count; /* Ngrid_block must be odd */
+  double rmax,total_area;
+  Point *s_points,*point;
+  short pass=0;
+  long Ncells,Ncells_o;
+
+  for(i=0,total_area=0;i<Nimages;++i) total_area += imageinfo[i].area;
+
+  number_of_refined=0;
+  for(i=0;i<Nimages;++i){
+    count=0;
+
+    if(criterion == 0) pass = imageinfo[i].area*imageinfo[i].area_error/total_area > res_target;
+    if(criterion == 1) pass = (imageinfo[i].area_error > res_target)*(imageinfo[i].area > 1.0e-5*total_area);
+    if(criterion == 2) pass = imageinfo[i].gridrange[1] > res_target;
+
+    // make sure no border point has a lower res than any image point
+
+    //printf("imageinfo[%i].area_error=%e N=%i\n",i,imageinfo[i].area_error,imageinfo[i].Npoints);
+    if( pass || imageinfo[i].gridrange[0]>1.01*imageinfo[i].gridrange[1]){
+
+    	/* largest gridsize in image */
+    	rmax=MAX(imageinfo[i].gridrange[1],imageinfo[i].gridrange[0]);
+
+      // count number of gridcells to be refined
+      // cells in image
+    	MoveToTopKist(imageinfo[i].imagekist);
+    	Ncells = 0;
+    	do{
+    		if( getCurrentKist(imageinfo[i].imagekist)->gridsize > 1.01*rmax/Ngrid_block) ++Ncells;
+    	}while( MoveDownKist(imageinfo[i].imagekist) );
+
+       	// cells on border
+    	MoveToTopKist(imageinfo[i].outerborder);
+    	do{
+    		if( getCurrentKist(imageinfo[i].outerborder)->gridsize > 1.01*rmax/Ngrid_block){
+       			// border point is marked to prevent refining more than once
+    			//   it will be unmarked by the end of refine grid
+    			getCurrentKist(imageinfo[i].outerborder)->in_image = True;
+    			++Ncells;
+    		}
+    	}while( MoveDownKist(imageinfo[i].outerborder) );
+
+        i_points=NewPointArray((Ngrid_block*Ngrid_block-1)*Ncells,True);
+
+		Ncells_o=Ncells;
+    	//printf("should be Ncells=%i Ngrid_block=%i\n",Ncells,Ngrid_block);
+
+       // loop through points in ith image
+		//for(j=0,Ncells=0;j<imageinfo[i].Npoints;++j){
+		MoveToTopKist(imageinfo[i].imagekist);
+		for(j=0,Ncells=0;j<imageinfo[i].imagekist->Nunits;++j,MoveDownKist(imageinfo[i].imagekist)){
+
+			//if( imageinfo[i].points[j].gridsize > 1.01*rmax/Ngrid_block){  /* only refine largest grid size in image*/
+	   	   	if( getCurrentKist(imageinfo[i].imagekist)->gridsize > 1.01*rmax/Ngrid_block){  /* only refine largest grid size in image*/
+
+    			// get real point in tree
+	   	   		//point = imageinfo[i].points[j].image->image;
+	   			point = getCurrentKist(imageinfo[i].imagekist);
+	    		assert(point->gridsize > 0);
+
+	    		//imageinfo[i].points[j].gridsize /= Ngrid_block;
+    			++count;
+
+    			xygridpoints(&i_points[(Ngrid_block*Ngrid_block-1)*Ncells]
+    			                       ,point->gridsize*(Ngrid_block-1)/Ngrid_block
+    			                       ,point->x,Ngrid_block,1);
+
+    			++Ncells;
+
+    			point->gridsize /= Ngrid_block;
+    			point->image->gridsize /= Ngrid_block;
+
+    		}
+    	}
+
+      /* loop through outer border of ith image */
+
+      MoveToTopKist(imageinfo[i].outerborder);
+      for(j=0;j<imageinfo[i].outerborder->Nunits;++j){
+    	  if( getCurrentKist(imageinfo[i].outerborder)->gridsize > 1.01*rmax/Ngrid_block){ // only refine largest grid size in image
+
+    		  point = getCurrentKist(imageinfo[i].outerborder);
+    		  assert(point->gridsize > 0);
+
+    		  if(point->in_image){ // point has not been refined yet
+    			  ++count;
+
+    			  xygridpoints(&i_points[(Ngrid_block*Ngrid_block-1)*Ncells]
+    			                         ,point->gridsize*(Ngrid_block-1)/Ngrid_block
+    			                         ,point->x,Ngrid_block,1);
+
+    			  if( inbox(i_points[(Ngrid_block*Ngrid_block-1)*Ncells ].x
+    					  ,i_tree->top->boundery_p1,i_tree->top->boundery_p2) == 0 ){
+    				  ERROR_MESSAGE();
+    			  }
+    			  ++Ncells;
+       			  point->gridsize /= Ngrid_block;
+       			  point->image->gridsize /= Ngrid_block;
+       			  point->in_image = False;  // unmak so that it wouldn't bouble refine
+    		  }
+    		  //imageinfo[i].outerborderlist->current->gridsize /= Ngrid_block;/**/
+    	  }
+    	  MoveDownKist(imageinfo[i].outerborder);
+      }
+
+      if(Ncells != Ncells_o){
+       	  i_points=AddPointToArray(i_points,(Ngrid_block*Ngrid_block-1)*Ncells
+       			  ,(Ngrid_block*Ngrid_block-1)*Ncells_o);
+      }
+
+      s_points=LinkToSourcePoints(i_points,(Ngrid_block*Ngrid_block-1)*Ncells);
+
+      // lens the added points
+      //printf("refine_grid\n");
+
+      if(shootrays){
+    	  rayshooterInternal((Ngrid_block*Ngrid_block-1)*Ncells,i_points,i_tree,kappa_off);
+      }else{
+    	  assert(Nimages == 1);
+    	  // The new points could be put into a kist if there where more than one image
+    	 // for(j=0;j<(Ngrid_block*Ngrid_block-1)*Ncells;++j){
+       	//	  i_points[i].image->x[0] = i_points[i].x[0];
+       	//	  i_points[i].image->x[1] = i_points[i].x[1];
+       		  //InsertAfterCurrentKist(newkist,i_points[j]);
+    	//  }
+      }
+
+      //printf("should be Ncells=%i Ngrid_block=%i   %i\n",Ncells,Ngrid_block,
+      //		(Ngrid_block*Ngrid_block-1)*Ncells);
+
+      // add points to trees
+      //printf("refine grid\n");
+		AddPointsToTree(i_tree,i_points,Ncells*(Ngrid_block*Ngrid_block-1));
+		//printf("   s-plane\n");
+		if(shootrays) AddPointsToTree(s_tree,s_points,Ncells*(Ngrid_block*Ngrid_block-1));
+    }
+
+    if(count > 0) ++number_of_refined;
+  } /* end of image loop */
+
+   return number_of_refined;
+}
+
 long refine_edges(TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo
 		,unsigned long Nimages,double res_target,short criterion,Boolean kappa_off){
 	/*	refines only inner and outer edges of all images
@@ -1366,7 +1531,7 @@ void findborders4(TreeHndl i_tree,ImageInfo *imageinfo){
 	 * bordering box method
 	 *   uses the in_image markers
 	 *   uses imaginfo->imagekist instead of
-	 *   which makes it faster
+	 *
 	 *   Note:  markers in_image must be set
 	 */
 	int i;

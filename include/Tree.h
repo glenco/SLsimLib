@@ -81,6 +81,10 @@ typedef struct ImageInfo{
   KistHndl imagekist;     // later addition, holds all points in image, will replace points eventually
   unsigned long Npoints;
   double gridrange[3];
+  // gridrange[2] minimum grid size in image
+  // gridrange[0] maximum grid size in outerborder
+  // gridrange[1] maximum grid size in image
+
   double centroid[2];
   double area;
   double area_error;
@@ -103,6 +107,15 @@ typedef struct ImageInfoKist{
 	double *area;
 	double *area_error;
 } ImageInfoKist;
+
+
+typedef struct Grid{
+	TreeHndl i_tree; // tree on image plane
+	TreeHndl s_tree; // tree on source plane
+	Boolean initialized;
+} Grid;
+
+typedef struct Grid *GridHndl;
 
 #endif
 
@@ -218,6 +231,8 @@ short image_finder(double *y_source,double r_source,TreeHndl s_tree,TreeHndl i_t
 		,short splitparities,short true_images);
 int refine_grid(TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo
 		,unsigned long Nimages,double res_target,short criterion,Boolean kappa_off);
+int refine_grid2(TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo
+		,unsigned long Nimages,double res_target,short criterion,Boolean kappa_off,Boolean shootrays,Point *i_points);
 long refine_edges(TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo
 		,unsigned long Nimages,double res_target,short criterion,Boolean kappa_off);
 long refine_edges2(double *y_source,double r_source,TreeHndl i_tree,TreeHndl s_tree
@@ -231,6 +246,7 @@ void initialize_grid(double center[],double range,long Ngrid,TreeHndl s_tree,Tre
 void findborders(TreeHndl i_tree,ImageInfo *imageinfo);
 void findborders2(TreeHndl i_tree,ImageInfo *imageinfo);
 void findborders3(TreeHndl i_tree,ImageInfo *imageinfo);
+void findborders4(TreeHndl i_tree,ImageInfo *imageinfo);
 ImageInfo *find_crit(TreeHndl s_tree,TreeHndl i_tree,int *Ncrits,double resolution
 		,Boolean *orderingsuccess,Boolean ordercurve,Boolean verbose);
 
