@@ -232,7 +232,7 @@ short image_finder(double *y_source,double r_source,TreeHndl s_tree,TreeHndl i_t
 int refine_grid(TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo
 		,unsigned long Nimages,double res_target,short criterion,Boolean kappa_off);
 int refine_grid2(TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo
-		,unsigned long Nimages,double res_target,short criterion,Boolean kappa_off,Boolean shootrays,Point *i_points);
+		,unsigned long Nimages,double res_target,short criterion,Boolean kappa_off,Boolean shootrays,Point **i_points);
 long refine_edges(TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo
 		,unsigned long Nimages,double res_target,short criterion,Boolean kappa_off);
 long refine_edges2(double *y_source,double r_source,TreeHndl i_tree,TreeHndl s_tree

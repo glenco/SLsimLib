@@ -612,7 +612,7 @@ Point *AddPointToArray(Point *points,unsigned long N,unsigned long Nold){
   unsigned long i;
 
   if(Nold==0){
-	  points=NewPointArray(N,True);
+	  points = NewPointArray(N,True);
   }else{
 	  if(points[0].head != Nold){ ERROR_MESSAGE(); printf("ERROR: AddPointToArray head not set correctly\n"); exit(0);}
 	  for(i=N;i<Nold;++i) free(points[i].x);
@@ -666,39 +666,41 @@ void SwapPointsInArray(Point *p1,Point *p2){
 
 void PointCopy(Point *pcopy,Point *pin){
   /* copies information in point without copying
-  * pointers to prev and next, but moveing the link
+  * pointers to prev and next, but moving the link
   * to the image point */
-  pcopy->id=pin->id;
-  pcopy->image=pin->image;
-  pcopy->invmag=pin->invmag;
-  pcopy->kappa=pin->kappa;
-  pcopy->gamma[0]=pin->gamma[0];
-  pcopy->gamma[1]=pin->gamma[1];
-  pcopy->x=pin->x;
-  pcopy->gridsize=pin->gridsize;
-  pcopy->in_image=pin->in_image;
-  pcopy->surface_brightness=pin->surface_brightness;
-  pcopy->leaf=pin->leaf;
+  pcopy->id = pin->id;
+  pcopy->image = pin->image;
+  pcopy->invmag = pin->invmag;
+  pcopy->kappa = pin->kappa;
+  pcopy->gamma[0] = pin->gamma[0];
+  pcopy->gamma[1] = pin->gamma[1];
+  pcopy->dt = pin->dt;
+  pcopy->x = pin->x;
+  pcopy->gridsize = pin->gridsize;
+  pcopy->in_image = pin->in_image;
+  pcopy->surface_brightness = pin->surface_brightness;
+  pcopy->leaf = pin->leaf;
 
-  if((pin->image != NULL) && (pin->image->image == pin)) pin->image->image=pcopy;
+  if((pin->image != NULL) && (pin->image->image == pin)) pin->image->image = pcopy;
 }
 void PointCopyData(Point *pcopy,Point *pin){
   /* copies information in point without copying */
   /* pointers to prev and next */
   /* does copy image pointer */
-  pcopy->id=pin->id;
-  pcopy->image=pin->image;
-  pcopy->invmag=pin->invmag;
-  pcopy->kappa=pin->kappa;
-  pcopy->gamma[0]=pin->gamma[0];
-  pcopy->gamma[1]=pin->gamma[1];
-  pcopy->x=pin->x;
-//  pcopy->x[0]=pin->x[0];
-//  pcopy->x[1]=pin->x[1];
-  pcopy->gridsize=pin->gridsize;
-  pcopy->in_image=pin->in_image;
-  pcopy->surface_brightness=pin->surface_brightness;
-  pcopy->leaf=pin->leaf;
+  pcopy->id = pin->id;
+  pcopy->image = pin->image;
+  pcopy->invmag = pin->invmag;
+  pcopy->kappa = pin->kappa;
+  pcopy->gamma[0] = pin->gamma[0];
+  pcopy->gamma[1] = pin->gamma[1];
+  pcopy->dt = pin->dt;
+  pcopy->x = pin->x;
+//  pcopy->x[0] = pin->x[0];
+//  pcopy->x[1] = pin->x[1];
+  pcopy->gridsize = pin->gridsize;
+  pcopy->in_image = pin->in_image;
+  pcopy->surface_brightness = pin->surface_brightness;
+  pcopy->leaf = pin->leaf;
 }
 
 /*********************************/
