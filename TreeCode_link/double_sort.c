@@ -1,10 +1,13 @@
 /* double_sort is adapted from NR sort2 to take an unsigned long */
 /* second array brr */
 /* note #undef's at end of file */
-#include "Tree.h"
-#define NRANSI
 #include <nrutil.h>
+#include <nr.h>
+#include <nrD.h>
+#include <Tree.h>
+
 //#define SWAP(a,b) temp=(a);(a)=(b);(b)=temp;
+#define NRANSI
 #define M 7
 #define NSTACK 50
 

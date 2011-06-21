@@ -23,7 +23,7 @@ void implant_stars(AnaLens *lens,Point *centers,unsigned long Nregions,long *see
 	 * lens->Nstars and lens->stars_fstars must be set before calling
 	 * allocates all memory for stars
 	 */
-	PosType r,theta,NstarsPerImage,rcut;
+	PosType r,theta,NstarsPerImage;
 	static PosType **coord;
 	unsigned long i,j,m,k;
 
@@ -55,14 +55,16 @@ void implant_stars(AnaLens *lens,Point *centers,unsigned long Nregions,long *see
 
 	for(j=0,m=0;j<Nregions;++j){
 
+		assert( centers[j].kappa > 0.0);
+
 		NstarsPerImage = lens->stars_N/lens->star_Nregions;
 
 		lens->star_region[j] = 1.0/sqrt(pi*lens->star_fstars*centers[j].kappa*lens->Sigma_crit
 				/lens->star_massscale/NstarsPerImage);
 
 		// cutoff based on comparison of star deflection to smooth component
-		rcut = 4*sqrt(lens->star_massscale/pi/lens->Sigma_crit
-				/( centers[j].kappa+sqrt(pow(centers[j].gamma[0],2)+pow(centers[j].gamma[1],2)) ) );
+		//rcut = 4*sqrt(lens->star_massscale/pi/lens->Sigma_crit
+		//		/( centers[j].kappa+sqrt(pow(centers[j].gamma[0],2)+pow(centers[j].gamma[1],2)) ) );
 
 		lens->star_kappa[j] = lens->star_fstars*centers[j].kappa;
 		lens->star_xdisk[j][0] = centers[j].x[0];
@@ -95,6 +97,7 @@ void implant_stars(AnaLens *lens,Point *centers,unsigned long Nregions,long *see
 	assert(m <= lens->stars_N);
 	lens->stars_N = m;
 
+	//printf("last star x = %e %e\n",lens->stars_xp[lens->stars_N-1][0],lens->stars_xp[lens->stars_N-1][1]);
 
 	lens->star_tree = BuildTreeNB(lens->stars_xp,lens->star_rsph,lens->star_masses
 			,False,True,lens->stars_N,lens->stars,2,lens->star_theta_force);

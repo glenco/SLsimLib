@@ -10,14 +10,6 @@
 #include <nrutil.h>
 #include <nrD.h>
 
-//#include "../../Library/RecipesD/powellD.c"
-/*#include "../../Library/RecipesD/rfD.c"
-#include "../../Library/RecipesD/rdD.c"
-#include "../../Library/RecipesD/svdcmpD.c"
-#include "../../Library/RecipesD/svbksbD.c"
-#include "../../Library/RecipesD/zriddrD.c"
-#include "../../Library/RecipesD/pythagD.c"*/
-
 #include <analytic_lens.h>
 #include <fitlens.h>
 
@@ -32,6 +24,8 @@ void FindLensSimple(AnaLens *lens,int Nimages,Point *image_positions,double *y,d
 	 * the lens is centered on [0,0]
 	 * source position in lens is updated along with all the modes
 	 */
+
+	assert(Nimages < 200);
 
 	if(lens->perturb_Nmodes <= 0 || Nimages <= 0){
 		ERROR_MESSAGE();
@@ -59,8 +53,7 @@ void FindLensSimple(AnaLens *lens,int Nimages,Point *image_positions,double *y,d
 
 	xob = dmatrix(0,Nimages-1,0,1);
 	xg = dmatrix(0,1,0,1);
-	mods=dvector(0,lens->perturb_Nmodes + 2*Nsources );
-
+	mods=dvector(0,lens->perturb_Nmodes + 2*Nsources + 1 );
 
 	xg[0][0] = xg[0][1] = 0.0;
 	x_center[0] = x_center[1] = 0.0;
@@ -78,9 +71,13 @@ void FindLensSimple(AnaLens *lens,int Nimages,Point *image_positions,double *y,d
 
 		dx_sub[i][0] /= scale;
 		dx_sub[i][1] /= scale;
-		//printf("%e %e\n",xob[i][0],xob[i][1]);
+		//printf("xob = %e %e  dx = %e %e\n",xob[i][0],xob[i][1],dx_sub[i][0],dx_sub[i][1]);
 	}
 
+	x_center[0] /= scale;
+	x_center[1] /= scale;
+
+	ERROR_MESSAGE();
 	ElliptisizeLens(Nimages,Nsources,1,pairing,xob,x_center,xg,0,lens->perturb_beta
 			,lens->perturb_Nmodes-1,mods,dx_sub,&re2,q);
 
@@ -99,13 +96,15 @@ void FindLensSimple(AnaLens *lens,int Nimages,Point *image_positions,double *y,d
 		dx_sub[i][0] *= scale;
 		dx_sub[i][1] *= scale;
 	}
+	x_center[0] *= scale;
+	x_center[1] *= scale;
 
-	lens->host_ro = 0.0;
+	lens->host_ro = 0.0; // the monople is now included in the modes
 	lens->host_sigma = 0.0;
 
 	free_dmatrix(xob,0,Nimages-1,0,1);
 	free_dmatrix(xg,0,1,0,1);
-	free_dvector(mods,0,lens->perturb_Nmodes + 2*Nsources );
+	free_dvector(mods,0,lens->perturb_Nmodes + 2*Nsources + 1);
 
 	return ;
 }
@@ -169,13 +168,12 @@ double ElliptisizeLens(int Nimages,int Nsources,int Nlenses,int *pairing,double 
 	pairingT=ivector(0,Nimages-1);
 	xobT=dmatrix(0,Nimages-1,0,1);
 	dx_subT=dmatrix(0,Nimages-1,0,1);
-	modT=dvector(1,Nmod+2*Nsources);
-	modTT=dvector(1,Nmod+2*Nsources);
-	modoT=dvector(1,Nmod+2*Nsources);
-	vT=dmatrix(1,Nmod+2*Nsources,1,Nmod+2*Nsources);
+	modT=dvector(1,Nmod+2*Nsources+1);
+	modTT=dvector(1,Nmod+2*Nsources+1);
+	modoT=dvector(1,Nmod+2*Nsources+1);
+	vT=dmatrix(1,Nmod+2*Nsources+1,1,Nmod+2*Nsources+1);
 	xgT=dmatrix(0,Nlenses-1,0,1);
 	if(Nlenses>1) dx_subTt=dmatrix(0,Nimages-1,0,1);
-
 
 	// copy input parameters into global variables
 	NimagesT=Nimages;
@@ -187,23 +185,24 @@ double ElliptisizeLens(int Nimages,int Nsources,int Nlenses,int *pairing,double 
 	for(i=1;i<=Nmod+2*Nsources;++i) mod[i]=0.0;
 
 	for(i=0;i<Nimages;++i){
-		xobT[i][0]=xob[i][0];
-		xobT[i][1]=xob[i][1];
-		pairingT[i]=pairing[i];
-		dx_subT[i][0]=dx_sub[i][0];
-		dx_subT[i][1]=dx_sub[i][1];
+		xobT[i][0] = xob[i][0];
+		xobT[i][1] = xob[i][1];
+		pairingT[i] = pairing[i];
+		dx_subT[i][0] = dx_sub[i][0];
+		dx_subT[i][1] = dx_sub[i][1];
 		if(Nlenses>1 && count>1 ){
 			s=atan2(xg[1][1]-xob[i][1],xg[1][0]-xob[i][0]);
-			dx_subT[i][0]=dx_sub[i][0] + *re2*cos(s);
-			dx_subT[i][1]=dx_sub[i][1] + *re2*sin(s);
+			dx_subT[i][0] = dx_sub[i][0] + *re2*cos(s);
+			dx_subT[i][1] = dx_sub[i][1] + *re2*sin(s);
 		}
 	}
 	for(i=0;i<Nlenses;++i){
-		xgT[i][0]=xg[i][0];
-		xgT[i][1]=xg[i][1];
+		xgT[i][0] = xg[i][0];
+		xgT[i][1] = xg[i][1];
 	}
 
 	// find lens with degeneracy information
+	ERROR_MESSAGE();
 	find_lens(NimagesT,NsourcesT,pairingT,xobT,x_center,betaT,NmodT,&degenT,modT,vT,dx_subT);
 
 	//printf("found model\n");
@@ -263,10 +262,10 @@ double ElliptisizeLens(int Nimages,int Nsources,int Nlenses,int *pairing,double 
 	free_ivector(pairingT,0,Nimages-1);
 	free_dmatrix(xobT,0,Nimages-1,0,1);
 	free_dmatrix(dx_subT,0,Nimages-1,0,1);
-	free_dvector(modT,1,Nmod+2*Nsources);
-	free_dvector(modTT,1,Nmod+2*Nsources);
-	free_dvector(modoT,1,Nmod+2*Nsources);
-	free_dmatrix(vT,1,Nmod+2*Nsources,1,Nmod+2*Nsources);
+	free_dvector(modT,1,Nmod+2*Nsources+1);
+	free_dvector(modTT,1,Nmod+2*Nsources+1);
+	free_dvector(modoT,1,Nmod+2*Nsources+1);
+	free_dmatrix(vT,1,Nmod+2*Nsources+1,1,Nmod+2*Nsources+1);
 	free_dmatrix(xgT,0,Nlenses-1,0,1);
 	if(Nlenses>1) free_dmatrix(dx_subTt,0,Nimages-1,0,1);
 	free_dmatrix(xi,1,5,1,5);
@@ -385,13 +384,13 @@ void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *x_cent
 	temp=dvector(0,1);
     
 	x=dmatrix(0,Nimages-1,0,1);
-	c=dmatrix(1,2*Nimages,1,Nmodes+2*Nsources);
-	a=dmatrix(1,2*Nimages,1,Nmodes+2*Nsources);
-	b=dvector(1,2*Nimages);
-	w=dvector(1,Nmodes+2*Nsources);
+	c=dmatrix(1,2*Nimages+1,1,Nmodes+2*Nsources+1);
+	a=dmatrix(1,2*Nimages+1,1,Nmodes+2*Nsources+1);
+	b=dvector(1,2*Nimages+1);
+	w=dvector(1,Nmodes+2*Nsources+1);
 
-	betaT=beta;
-	NmodT=Nmodes;
+	betaT = beta;
+	NmodT = Nmodes;
 
 	// recenter on lens center
 	for(i=0;i<Nimages;++i){
@@ -449,7 +448,8 @@ void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *x_cent
 	*degen=0;
 	for(i=1;i<=Nmodes+2*Nsources;++i) if (w[i] > wmax) wmax=w[i];
 	wmax=1.0e-6*wmax;
-	for(i=1;i<=Nmodes+2*Nsources;++i) if (w[i] < wmax){ w[i]=0.0; ++*degen;}
+	for(i=1;i<=Nmodes+2*Nsources;++i) if (w[i] < wmax){ w[i]=0.0; ++*degen;}  // removes degenerate modes
+	ERROR_MESSAGE();
 	svbksbD(c,w,v,2*Nimages,Nmodes+2*Nsources,b,mod);
 
 	//for(i=1;i<=Nmodes + 2*Nsources;++i) printf("mod[%i]=%e\n",i,mod[i]);
@@ -475,10 +475,11 @@ void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *x_cent
 	free_dvector(y,0,1);
 	free_dvector(temp,0,1);
 	free_dmatrix(x,0,Nimages-1,0,1);
-	free_dmatrix(c,1,2*Nimages,1,Nmodes+2*Nsources);
-	free_dmatrix(a,1,2*Nimages,1,Nmodes+2*Nsources);
-	free_dvector(b,1,2*Nimages);
-	free_dvector(w,1,Nmodes+2*Nsources);
+	free_dmatrix(c,1,2*Nimages+1,1,Nmodes+2*Nsources+1);
+	free_dmatrix(a,1,2*Nimages+1,1,Nmodes+2*Nsources+1);
+	free_dvector(b,1,2*Nimages+1);
+	free_dvector(w,1,Nmodes+2*Nsources+1);
+	ERROR_MESSAGE();
 
 	return ;
 }

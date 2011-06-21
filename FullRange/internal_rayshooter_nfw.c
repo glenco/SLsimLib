@@ -246,7 +246,7 @@ double gaussian_SB(double *y){
 }
 
 double BLR_SB(double *y){
-	return blr_surface_brightness(sqrt(y[0]*y[0]+y[1]*y[1]),lens->source_tau,lens->source_nu,1.0721944e15);
+	return blr_surface_brightness_spherical(sqrt(y[0]*y[0]+y[1]*y[1]),lens->source_tau,lens->source_nu,1.0721944e15);
 }
 
 void in_source(double *y_source,ListHndl sourcelist){

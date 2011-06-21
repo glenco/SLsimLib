@@ -113,7 +113,7 @@ BeamHndl find_peaks(double center[],double range,unsigned long Ngrid,double rEin
 
 		//printf("restarget = %e gridrange[2] = %e  gridrange[1] = %e\n",res_target,imageinfo->gridrange[2],imageinfo->gridrange[1]);
 		Nnewpoints = -i_tree->pointlist->Npoints;
-		refine_grid2(i_tree,s_tree,imageinfo,1,res_target,2,True,False,i_points);
+		refine_grid_kist(i_tree,s_tree,imageinfo,1,res_target,2,True,False,i_points);
 		Nnewpoints += i_tree->pointlist->Npoints;
 
 		//printf("Nnewpoints = %li\n",Nnewpoints);
@@ -146,7 +146,7 @@ BeamHndl find_peaks(double center[],double range,unsigned long Ngrid,double rEin
 			// refine all image points and outer border
 
 			Nnewpoints = -i_tree->pointlist->Npoints;
-			refine_grid2(i_tree,s_tree,imageinfo,1,res_target,2,True,False,i_points);
+			refine_grid_kist(i_tree,s_tree,imageinfo,1,res_target,2,True,False,i_points);
 			Nnewpoints += i_tree->pointlist->Npoints;
 			//printf("Nnewpoints = %li\n",Nnewpoints);
 

@@ -330,6 +330,8 @@ void RandomizeSubstructure3(AnaLens *lens,double rangeInRei,long *seed){
 	if(lens->host_ro > 0.0){
 		host_ro_save = lens->host_ro;
 		//printf("lens->host_ro = %e\n",lens->host_ro);
+	}else if( lens->perturb_Nmodes >= 4 && lens->perturb_modes[3] > 0 ){  // this is in case the the host has already been fit to image positions
+		host_ro_save = lens->perturb_modes[3]/2;
 	}
 
 	assert(host_ro_save > 0.0);

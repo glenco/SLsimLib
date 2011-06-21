@@ -69,8 +69,8 @@ void map_images(AnaLens *lens,TreeHndl s_tree,TreeHndl i_tree
 
 	EmptyKist(imageinfo->imagekist);
 	// reset in_image for points in tree incase they haven't
-	ClearAllMarkes(i_tree);
-	ClearAllMarkes(s_tree);
+	ClearAllMarks(i_tree);
+	ClearAllMarks(s_tree);
 
 	// starting with a larger source size make sure all the grid sizes are small enough to find it
 	time(&to);

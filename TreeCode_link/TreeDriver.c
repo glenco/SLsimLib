@@ -1618,7 +1618,7 @@ void UnionList(ListHndl list1,ListHndl list2){
 	return ;
 }
 
-void ClearAllMarkes(TreeHndl tree){
+void ClearAllMarks(TreeHndl tree){
 	unsigned long i;
 
 	MoveToTopList(tree->pointlist);

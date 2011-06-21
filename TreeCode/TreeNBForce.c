@@ -48,7 +48,7 @@ void TreeNBForce2D(TreeNBHndl tree,double *ray
   TreeNBParticleForce2Diter(tree,ray,alpha,kappa,gamma,no_kappa,
 		  alpha_o,kappa_o,gamma_o);
   //moveTopNB(tree);
-   //_TreeNBParticleForce2D(tree,xp_2d,rsph,ray,alpha,kappa,gamma,no_kappa);
+//   _TreeNBParticleForce2D(tree,xp_2d,rsph,ray,alpha,kappa,gamma,no_kappa);
   //_TreeNBForce2D(tree,xp_2d,rsph,ray,alpha,kappa,gamma,no_kappa);
 
   return ;
@@ -333,7 +333,7 @@ void TreeNBParticleForce2Diter(TreeNBHndl tree
 					  gamma[1] += xcm*ycm*tmp;
 				  }
 			  }
-		  }else{
+		  }/*else{
 
 			  // case where largest particle needs to be added singly
 			  //   and a point mass needs to be subtracted
@@ -362,7 +362,7 @@ void TreeNBParticleForce2Diter(TreeNBHndl tree
 					  gamma[1] += xcm*ycm*tmp;
 				  }
 			  }
-		  }
+		  }*/
 	  }else{ // use whole cell
 		  allowDescent=False;
 

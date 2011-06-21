@@ -153,7 +153,7 @@ void substract_stars_disks(AnaLens *lens,PosType *ray,PosType *alpha
 void reNormSubstructure(AnaLens *lens,double kappa_sub);
 
 // Separate files
-double blr_surface_brightness(double x,double tau,double nu
+double blr_surface_brightness_spherical(double x,double tau,double nu
 		,double nu_o);
 
 // in internal_rayshooter.c
