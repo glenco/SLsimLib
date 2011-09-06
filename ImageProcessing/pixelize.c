@@ -22,23 +22,21 @@
  * 			   constant_sb == True - all images will have surface brightness = 1
  *                            False - surface brightness is taken from surface_brighness in
  *                                    the image points
- *     output: ptree->pointlist contains all the pixel positions and
- *              their surface brightnesses
+ *     output: map[0...Npixels*Npixels-1] contains the surface brightness map
  */
 
 #include "image_processing.h"
-static TreeHndl ptree;
 double area=0;
 
 void pixelize(double *map,long Npixels,double range,double *center
-		,KistHndl imagekist,Boolean constant_sb,Boolean cleanmap){
+		,ImageInfo *imageinfo,int Nimages,Boolean constant_sb,Boolean cleanmap){
 
 	long ix;
-	double sb=1.0,resolution=0,x[2];
-	unsigned long i;
+	double sb=1.0,resolution=0;
+	unsigned long i,ii;
 	static unsigned long count=0;
 	Point *points;
-	void _FindAreas(TreeHndl tree,Branch *leaf,double *sb);
+	static TreeHndl ptree;
 
 	if( (Npixels & (Npixels-1)) != 0){
 		ERROR_MESSAGE();
@@ -57,6 +55,16 @@ void pixelize(double *map,long Npixels,double range,double *center
 	}
 
 	if(cleanmap){
+
+		if(count > 1){
+			// rebuild pixel tree
+			emptyTree(ptree);
+			points=NewPointArray(Npixels*Npixels,True);
+			xygridpoints(points,range,center,Npixels,0);
+			FillTree(ptree,points,Npixels*Npixels);
+			//ptree=BuildTree(points,Npixels*Npixels);
+		}
+
 		MoveToTopList(ptree->pointlist);
 		for(i=0 ; i < ptree->pointlist->Npoints ; ++i){
 			ptree->pointlist->current->surface_brightness = 0.0;
@@ -66,68 +74,60 @@ void pixelize(double *map,long Npixels,double range,double *center
 	}
 
 
-	sb=1;
-	MoveToTopKist(imagekist);
-	do{
-		assert(getCurrentKist(imagekist)->leaf);
+	sb = 1;
+	for(ii=0;ii<Nimages;++ii){
+		MoveToTopKist(imageinfo[ii].imagekist);
 
-		/*if((getCurrentKist(imagekist)->leaf->boundery_p2[0] - getCurrentKist(imagekist)->leaf->boundery_p1[0])
-		                                != getCurrentKist(imagekist)->gridsize)
-			printf("   %.9e != %.9e\n",getCurrentKist(imagekist)->leaf->boundery_p2[0]
-			                        - getCurrentKist(imagekist)->leaf->boundery_p1[0]
-					,getCurrentKist(imagekist)->gridsize);
-		if((getCurrentKist(imagekist)->leaf->boundery_p2[1] - getCurrentKist(imagekist)->leaf->boundery_p1[1])
-		                                != getCurrentKist(imagekist)->gridsize)
-			printf("   %.9e != %.9e\n",getCurrentKist(imagekist)->leaf->boundery_p2[1]
-			                        - getCurrentKist(imagekist)->leaf->boundery_p1[1]
-					,getCurrentKist(imagekist)->gridsize);
-		 */
+		do{
 
-		getCurrentKist(imagekist)->gridsize = getCurrentKist(imagekist)->leaf->boundery_p2[0]
-		                             - getCurrentKist(imagekist)->leaf->boundery_p1[0];
-		/*
-		assert( fabs(getCurrentKist(imagekist)->leaf->boundery_p2[1] - getCurrentKist(imagekist)->leaf->boundery_p1[1]
-		                                - getCurrentKist(imagekist)->gridsize)
-		                                < 1.0e-5*getCurrentKist(imagekist)->gridsize);
-		assert( fabs(getCurrentKist(imagekist)->leaf->boundery_p2[0] - getCurrentKist(imagekist)->leaf->boundery_p1[0]
-		                                - getCurrentKist(imagekist)->gridsize)
-		                                < 1.0e-5*getCurrentKist(imagekist)->gridsize);
-       */
-		if( boxinbox(getCurrentKist(imagekist)->leaf,ptree->top) ){
+			if(!constant_sb) sb = getCurrentKist(imageinfo[ii].imagekist)->surface_brightness;
 
-			if(!constant_sb) sb = getCurrentKist(imagekist)->surface_brightness;
-
+			assert(getCurrentKist(imageinfo[ii].imagekist)->leaf);
 			moveTop(ptree);
-			_FindBox(ptree,getCurrentKist(imagekist)->x);
-			//ptree->current->points->surface_brightness += sb;//*pow(getCurrentKist(imagekist)->gridsize,2);
-			if(boxinbox(getCurrentKist(imagekist)->leaf,ptree->current) == True){
-				// entire cell is inside pixel
-				//ptree->current->points->surface_brightness += sb*pow(getCurrentKist(imagekist)->gridsize,2);
-				ptree->current->points->surface_brightness = sb;
-			}else{
-				moveUp(ptree);
+			_SplitFluxIntoPixels(ptree,getCurrentKist(imageinfo[ii].imagekist)->leaf,&sb);
 
-			// find a super-pixel that contains all of the cell
-				while(boxinbox(getCurrentKist(imagekist)->leaf,ptree->current) == False) moveUp(ptree);
+/*
+			getCurrentKist(imageinfo[ii].imagekist)->gridsize = getCurrentKist(imageinfo[ii].imagekist)->leaf->boundery_p2[0]
+		                             - getCurrentKist(imageinfo[ii].imagekist)->leaf->boundery_p1[0];
+			if( boxinbox(getCurrentKist(imageinfo[ii].imagekist)->leaf,ptree->top) ){
 
-				assert((ptree->current->boundery_p1[0]-getCurrentKist(imagekist)->leaf->boundery_p1[0]) < 0);
-				assert((ptree->current->boundery_p1[1]-getCurrentKist(imagekist)->leaf->boundery_p1[1]) < 0);
-				assert((ptree->current->boundery_p2[0]-getCurrentKist(imagekist)->leaf->boundery_p2[0]) > 0);
-				assert((ptree->current->boundery_p2[1]-getCurrentKist(imagekist)->leaf->boundery_p2[1]) > 0);
 
-				_FindAreas(ptree,getCurrentKist(imagekist)->leaf,&sb);
+				moveTop(ptree);
+				_FindBox(ptree,getCurrentKist(imageinfo[ii].imagekist)->x);
+				//ptree->current->points->surface_brightness += sb;// *pow(getCurrentKist(imageinfo[ii].imagekist)->gridsize,2);
+
+				if(boxinbox(getCurrentKist(imageinfo[ii].imagekist)->leaf,ptree->current) == True){
+					// entire cell is inside pixel
+					//ptree->current->points->surface_brightness += sb*pow(getCurrentKist(imageinfo[ii].imagekist)->gridsize/resolution,2);
+					ptree->current->points->surface_brightness = sb;
+
+				}else{  // image cell is in multiple pixels
+
+					moveUp(ptree);
+
+					// find a super-pixel that contains all of the cell
+					while(boxinbox(getCurrentKist(imageinfo[ii].imagekist)->leaf,ptree->current) == False) moveUp(ptree);
+
+					assert((ptree->current->boundery_p1[0]-getCurrentKist(imageinfo[ii].imagekist)->leaf->boundery_p1[0]) < 0);
+					assert((ptree->current->boundery_p1[1]-getCurrentKist(imageinfo[ii].imagekist)->leaf->boundery_p1[1]) < 0);
+					assert((ptree->current->boundery_p2[0]-getCurrentKist(imageinfo[ii].imagekist)->leaf->boundery_p2[0]) > 0);
+					assert((ptree->current->boundery_p2[1]-getCurrentKist(imageinfo[ii].imagekist)->leaf->boundery_p2[1]) > 0);
+
+					_SplitFluxIntoPixels(ptree,getCurrentKist(imageinfo[ii].imagekist)->leaf,&sb);
+				}
+				// TODO fix above so that flux is distributed in pixels correctly
+				//ptree->current->points->surface_brightness = getCurrentKist(imageinfo[ii].imagekist)->surface_brightness;
 			}
-			// TODO fix above so that flux is distributed in pixels correctly
-			//ptree->current->points->surface_brightness = getCurrentKist(imagekist)->surface_brightness;
-		}
+*/
 
-	}while(MoveDownKist(imagekist));
+		}while(MoveDownKist(imageinfo[ii].imagekist));
+	}
 
 	MoveToTopList(ptree->pointlist);
 	for(i=0;i<ptree->pointlist->Npoints;++i){
 		if(ptree->pointlist->current->surface_brightness > 0.0){
 			ix = IndexFromPosition(ptree->pointlist->current->x,Npixels,range,center);
-			if(ix > -1) map[ix] =  ptree->pointlist->current->surface_brightness;
+			if(ix > -1) map[ix] =  ptree->pointlist->current->surface_brightness/resolution/resolution;
 		}
 		MoveDownList(ptree->pointlist);
 	}
@@ -135,35 +135,33 @@ void pixelize(double *map,long Npixels,double range,double *center
 	return;
 }
 
-void _FindAreas(TreeHndl tree,Branch *leaf,double *leaf_sb){
+void _SplitFluxIntoPixels(TreeHndl ptree,Branch *leaf,double *leaf_sb){
+	/* recursively determine which pixels leaf intersects with
+	 *  and add flux to that pixel
+	 */
 
 	area = BoxIntersection(leaf,ptree->current);
-/*	if(  leaf->boundery_p1[0] < tree->current->boundery_p2[0]
-	  && leaf->boundery_p2[0] > tree->current->boundery_p1[0]
-	  && leaf->boundery_p1[1] < tree->current->boundery_p2[1]
-	  && leaf->boundery_p2[1] > tree->current->boundery_p1[1] ){*/
 
 	if(area > 0.0){
-		if(tree->current->child1 == NULL){
+		if(ptree->current->child1 == NULL && ptree->current->child2 == NULL){
 
-			assert(tree->current->child2 == NULL);
-			assert(tree->current->npoints == 1);
-			//tree->current->points->surface_brightness += (*leaf_sb)*area;
-			tree->current->points->surface_brightness = *leaf_sb;
+			assert(ptree->current->npoints == 1);
+			ptree->current->points->surface_brightness += (*leaf_sb)*area;
+			//ptree->current->points->surface_brightness = *leaf_sb;
 
 			return;
 		}
 
-		if(tree->current->child1 != NULL){
-			moveToChild(tree,1);
-			_FindAreas(tree,leaf,leaf_sb);
-			moveUp(tree);
+		if(ptree->current->child1 != NULL){
+			moveToChild(ptree,1);
+			_SplitFluxIntoPixels(ptree,leaf,leaf_sb);
+			moveUp(ptree);
 		}
 
-		if(tree->current->child2 != NULL){
-			moveToChild(tree,2);
-			_FindAreas(tree,leaf,leaf_sb);
-			moveUp(tree);
+		if(ptree->current->child2 != NULL){
+			moveToChild(ptree,2);
+			_SplitFluxIntoPixels(ptree,leaf,leaf_sb);
+			moveUp(ptree);
 		}
 	}
 
