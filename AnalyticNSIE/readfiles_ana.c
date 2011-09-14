@@ -141,6 +141,7 @@ void readparams_ana(char *filename,CosmoHndl cosmo,AnaLens *lens){
   printf(">%s %e\n",label,lens->star_massscale);
 
   // source information
+  printf("\n>  **Source structure**\n");
   fscanf(file,"%s %i",label,&(lens->source_sb_type));
   printf(">%s %i ",label,lens->source_sb_type);
   switch(lens->source_sb_type){
@@ -151,10 +152,33 @@ void readparams_ana(char *filename,CosmoHndl cosmo,AnaLens *lens){
 	  case Gaussian:
 		  lens->source_sb_func = gaussian_SB;
 		  printf(">  Gaussian surface brightness source\n");
+		  fscanf(file,"%s %le",label,&(lens->source_gauss_r2));
+		  printf(">%s %.3e Mpc\n",label,lens->source_gauss_r2);
 		  break;
 	  case BLR:
 		  lens->source_sb_func = BLR_SB;
 		  printf(">  BLR surface brightness source\n");
+		  fscanf(file,"%s %e",label,&(lens->source_BHmass));
+		  printf(">    %s %.3e Msun\n",label,lens->source_BHmass);
+		  fscanf(file,"%s %e",label,&(lens->source_gamma));
+		  printf(">    %s %.3f\n",label,lens->source_gamma);
+		  fscanf(file,"%s %e",label,&(lens->source_inclination));
+		  printf(">    %s %.3f deg\n",label,lens->source_inclination);
+		  lens->source_inclination *= pi/180;
+		  fscanf(file,"%s %e",label,&(lens->source_opening_angle));
+		  printf(">    %s %.3f deg\n",label,lens->source_opening_angle);
+		  lens->source_opening_angle *= pi/180;
+
+		  fscanf(file,"%s %e",label,&(lens->source_r_in));
+		  printf(">    %s %.3e Mpc\n",label,lens->source_r_in);
+		  fscanf(file,"%s %e",label,&(lens->source_r_out));
+		  printf(">    %s %.3e Mpc\n",label,lens->source_r_out);
+		  fscanf(file,"%s %e",label,&(lens->source_nuo));
+		  printf(">    %s %.5e Hz\n",label,lens->source_nuo);
+		  fscanf(file,"%s %e",label,&(lens->source_sigma));
+		  printf(">    %s %.5e km/s\n",label,lens->source_sigma);
+		  lens->source_monocrome = False;  // default value
+
 		  break;
 	  default:
 		  ERROR_MESSAGE();
@@ -273,6 +297,39 @@ void PrintAnaLens(AnaLens *lens,Boolean show_substruct,Boolean show_stars){
 		for(i=0;i<lens->perturb_Nmodes;++i) printf(">  %e\n",lens->perturb_modes[i]);
 	}
 
+	printf(">  Source\n");
+	switch(lens->source_sb_type){
+		  case Uniform:
+			  lens->source_sb_func = uniform_SB;
+			  printf(">  uniform surface brightness source\n");
+			  break;
+		  case Gaussian:
+			  lens->source_sb_func = gaussian_SB;
+			  printf(">  Gaussian surface brightness source\n");
+			  printf(">     sigma^2 = %e Mpc^2",lens->source_gauss_r2);
+			  break;
+		  case BLR:
+			  lens->source_sb_func = BLR_SB;
+			  printf(">  BLR surface brightness source\n");
+			  printf(">      BH mass %e Msun\n",lens->source_BHmass);
+			  printf(">      gamma %.3f \n",lens->source_gamma);
+			  printf(">      inclination %.3f rads\n",lens->source_inclination);
+			  printf(">      disk opening angle %.3f rads\n",lens->source_opening_angle);
+			  printf(">      inner radius %e pc\n",lens->source_r_in*1.0e6);
+			  printf(">      outer radius %e pc\n",lens->source_r_out*1.0e6);
+
+			  if(lens->source_monocrome) printf(">      monocromatic\n");
+			  else printf(">      center of line %e Hz\n",lens->source_nuo);
+
+			  printf(">      turbulent/thermal dispersion %e km/s\n",lens->source_sigma);
+
+			  break;
+		  default:
+			  ERROR_MESSAGE();
+			  printf(">ERROR: no submass internal profile chosen\n");
+			  exit(1);
+		  }
+
 	  // parameters of substructures
 	printf(">  Substructures\n");
 	printf(">NdensitySubstruct %e\n",lens->sub_Ndensity);
@@ -318,7 +375,7 @@ void PrintAnaLens(AnaLens *lens,Boolean show_substruct,Boolean show_stars){
 		printf(">stars_theta_force %e\n",lens->star_theta_force);
 		if(show_stars){
 			if(lens->stars_implanted){
-				for(i=0;i<lens->stars_N;++i) printf(">    x[%i] = %e %e\n",lens->stars_xp[i][0],lens->stars_xp[i][1]);
+				for(i=0 ; i < lens->stars_N ; ++i) printf(">    x[%i] = %e %e\n",lens->stars_xp[i][0],lens->stars_xp[i][1]);
 			}else printf("> stars not implanted yet\n");
 		}
 	}
