@@ -37,7 +37,7 @@ void find_divide_images(TreeHndl i_tree,TreeHndl s_tree
 		return;
 	}
 
-	divide_images(i_tree,imageinfo,Nimages,Nimagesmax);
+	divide_images_kist(i_tree,imageinfo,Nimages,Nimagesmax);
 	return;
 }
 
@@ -156,7 +156,7 @@ void divide_images(TreeHndl i_tree,ImageInfo *imageinfo
 
 	return;
 }
-void divide_images2(TreeHndl i_tree,ImageInfo *imageinfo,int *Nimages,int Nimagesmax){
+void divide_images_kist(TreeHndl i_tree,ImageInfo *imageinfo,int *Nimages,int Nimagesmax){
 	/* divide_images
 	 *
 	 * Divides the image points up into separate images that are linked by cell
@@ -244,7 +244,7 @@ void divide_images2(TreeHndl i_tree,ImageInfo *imageinfo,int *Nimages,int Nimage
 
 	// if more than Nimagemax images add points to last image
 	if(i == Nimagesmax){
-		MoveToTopKist(imageinfo->imagekist);
+		MoveToBottomKist(imageinfo[i-1].imagekist);
 		do{
 			InsertAfterCurrentKist(imageinfo[i-1].imagekist,TakeOutCurrentKist(new_imagekist));
 			MoveDownKist(imageinfo[i-1].imagekist);
@@ -252,13 +252,10 @@ void divide_images2(TreeHndl i_tree,ImageInfo *imageinfo,int *Nimages,int Nimage
 		}while(new_imagekist->Nunits > 0);
 	}
 
-	if(!(new_imagekist->Nunits == 0)){
-		printf("STOP!!!\n");
-	}
 	assert(new_imagekist->Nunits == 0);
 	freeKist(new_imagekist);
 
-
+	// mark all image points
 	for(i=0;i<*Nimages;++i){
 		MoveToTopKist(imageinfo[i].imagekist);
 		do{

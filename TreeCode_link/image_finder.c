@@ -135,7 +135,7 @@ void find_images(double *y_source,double r_source
 			,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
 	 //ClearAllMarks(i_tree);
 
-	printf("  Nimages=%li after telescoping\n",*Nimages);
+	printf("  Nimages=%i after telescoping\n",*Nimages);
 	for(i=0;i<*Nimages;++i){
 		imageinfo[i].centroid[0] = 0.0;
 		imageinfo[i].centroid[1] = 0.0;
@@ -533,7 +533,7 @@ short image_finder(double *y_source,double r_source,TreeHndl s_tree,TreeHndl i_t
 
   // split images
   if( splitparities == 0 ){
-	  divide_images2(i_tree,imageinfo,Nimages,NimageMax);
+	  divide_images_kist(i_tree,imageinfo,Nimages,NimageMax);
 	  //divide_images(i_tree,imageinfo,Nimages,NimageMax);
   }else{
 	  *Nimages = 1;
@@ -768,7 +768,7 @@ int refine_grid(TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo
 
       // lens the added points
       //printf("refine_grid\n");
-      rayshooterInternal((Ngrid_block*Ngrid_block-1)*Ncells,i_points,i_tree,kappa_off);
+      rayshooterInternal((Ngrid_block*Ngrid_block-1)*Ncells,i_points,kappa_off);
 
       //printf("should be Ncells=%i Ngrid_block=%i   %i\n",Ncells,Ngrid_block,
       //		(Ngrid_block*Ngrid_block-1)*Ncells);
@@ -912,7 +912,7 @@ long refine_edges(TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo
 	/* lens the added points */
 	s_points=LinkToSourcePoints(i_points,(Ngrid_block*Ngrid_block-1)*Ncells);
 	//printf("refine_edges\n");
-	rayshooterInternal((Ngrid_block*Ngrid_block-1)*Ncells,i_points,i_tree,kappa_off);
+	rayshooterInternal((Ngrid_block*Ngrid_block-1)*Ncells,i_points,kappa_off);
 
 	/* add points to trees */
 	//printf("edges1\n");
@@ -1077,7 +1077,7 @@ long refine_edges2(double *y_source,double r_source,TreeHndl i_tree,TreeHndl s_t
 			//if(Ncells == 0){
 			// lens the added points
 			s_points=LinkToSourcePoints(i_points,(Ngrid_block*Ngrid_block-1)*Ncells);
-			rayshooterInternal((Ngrid_block*Ngrid_block-1)*Ncells,i_points,i_tree,kappa_off);
+			rayshooterInternal((Ngrid_block*Ngrid_block-1)*Ncells,i_points,kappa_off);
 
 			// add points to trees
 			AddPointsToTree(i_tree,i_points,Ncells*(Ngrid_block*Ngrid_block-1));
@@ -1411,7 +1411,7 @@ void xygridpoints(Point *i_points,double range,double *center,long Ngrid_1d,shor
     /*i_points=NewPointArray(Ngrid_1d*Ngrid_1d-1);*/
     for(i=0,j=0;i<Ngrid_1d*Ngrid_1d;++i){
 
-      if( (2*(i/Ngrid_1d)/(Ngrid_1d-1) == 1) && (i%Ngrid_1d== Ngrid_1d/2+1) ) j=1;
+      if( (2*(i/Ngrid_1d)/(Ngrid_1d-1) == 1) && (i%Ngrid_1d == Ngrid_1d/2+1) ) j=1;
       i_points[i-j].id=id;
       ++id;
       PositionFromIndex(i,i_points[i-j].x,Ngrid_1d,range,center);
@@ -1436,12 +1436,16 @@ void xygridpoints(Point *i_points,double range,double *center,long Ngrid_1d,shor
 }
 
 void combineCloseImages(double linkinglength,ImageInfo *imageinfo,int *Nimages
-		,int *NewNimages){
+		,int *NewNimages,int NimagesMax){
 	unsigned long i,j,k;
+
+	assert(*Nimages < NimagesMax);
 
 	*NewNimages=*Nimages;
 	for(i=0;i<(*NewNimages);++i){
+
 		for(j=i+1;j<(*NewNimages);++j){
+
 			if(sqrt( pow(imageinfo[i].centroid[0] - imageinfo[j].centroid[0],2)
 				   + pow(imageinfo[i].centroid[1] - imageinfo[j].centroid[1],2) )
 					< linkinglength){

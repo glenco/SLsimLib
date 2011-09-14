@@ -13,15 +13,19 @@
 #include <stdlib.h>
 #include <math.h>
 #include <assert.h>
+#include <cosmo.h>
+#include <point.h>
 #include <Tree.h>
 #include <Kist.h>
-#include <point.h>
 #include <KistDriver.h>
 #include <peak_refinement.h>
+#include <analytic_lens.h>
 
+COSMOLOGY cosmo;
+AnaLens *lens = 0;
 
 BeamHndl find_peaks(double center[],double range,unsigned long Ngrid,double rEinsteinMin,double kappa_max
-		,unsigned long *Nbeams,void (*rayshooter)(unsigned long N,Point *i_point)){
+		,unsigned long *Nbeams,void (*rayshooter)(unsigned long N,Beam *beams)){
 
 	/*       center[2] - center of the grid region
 	 *       range  - range of the grid region in whatever units you like
@@ -33,9 +37,9 @@ BeamHndl find_peaks(double center[],double range,unsigned long Ngrid,double rEin
 	 *       Nbeams - number of final grid points
 	 *       rayshooter - user supplied function that does the
 	 *       	         N - number of points to be shot
-	 *       			 i_points - an array of points i_point[i].x[] is the position on the image plane
+	 *       			 beams - an array of points beams[i].image[] is the position on the image plane
 	 *                              i_points[i].kappa should be calculated and the source positions put into
-	 *                              i_points[i].image->x,  same units as range
+	 *                              i_points[i].source[],  same units as range
 	 *
 	 *
 	 *     returns a pointer to an array of beams, beams use less memory than points
@@ -60,7 +64,8 @@ BeamHndl find_peaks(double center[],double range,unsigned long Ngrid,double rEin
 	xygridpoints((*i_points),range,center,Ngrid,0);
 	s_points=LinkToSourcePoints((*i_points),Ngrid*Ngrid);
 
-	rayshooter(Ngrid*Ngrid,(*i_points));
+	RayShooterRap(Ngrid*Ngrid,(*i_points),rayshooter);
+	//rayshooter(Ngrid*Ngrid,(*i_points));
 
 	// build trees
 	i_tree=BuildTree((*i_points),Ngrid*Ngrid);
@@ -118,7 +123,8 @@ BeamHndl find_peaks(double center[],double range,unsigned long Ngrid,double rEin
 
 		//printf("Nnewpoints = %li\n",Nnewpoints);
 		// **** do rayshooting ****
-		rayshooter(Nnewpoints,(*i_points));
+		RayShooterRap(Nnewpoints,(*i_points),rayshooter);
+		//rayshooter(Nnewpoints,(*i_points));
 
 		while(Nnewpoints > 0){
 
@@ -151,7 +157,8 @@ BeamHndl find_peaks(double center[],double range,unsigned long Ngrid,double rEin
 			//printf("Nnewpoints = %li\n",Nnewpoints);
 
 			// **** do rayshooting  ****
-			rayshooter(Nnewpoints,(*i_points));
+			RayShooterRap(Nnewpoints,(*i_points),rayshooter);
+			//rayshooter(Nnewpoints,(*i_points));
 		}
 	}
 
@@ -196,11 +203,11 @@ void copyBeamToPoint(Beam *beam,Point *pointarr,unsigned long N){
 	unsigned long i;
 
 	for(i=0;i<N;++i){
-		pointarr[i].x[0] = beam[i].source[0];
-		pointarr[i].x[1] = beam[i].source[1];
+		pointarr[i].image->x[0] = beam[i].source[0];
+		pointarr[i].image->x[1] = beam[i].source[1];
 
-		pointarr[i].image->x[0] = beam[i].image[0];
-		pointarr[i].image->x[1] = beam[i].image[1];
+		pointarr[i].x[0] = beam[i].image[0];
+		pointarr[i].x[1] = beam[i].image[1];
 
 		pointarr[i].kappa = beam[i].kappa;
 		pointarr[i].gamma[0] = beam[i].gamma[0];
@@ -209,3 +216,34 @@ void copyBeamToPoint(Beam *beam,Point *pointarr,unsigned long N){
 
 	return;
 }
+
+void copyPointArrayToBeams(Point *pointarr,Beam *beams,unsigned long N){
+	unsigned long i;
+
+	for(i=0;i<N;++i){
+		beams[i].source[0] = pointarr[i].image->x[0];
+		beams[i].source[1] = pointarr[i].image->x[1];
+
+		beams[i].image[0] = pointarr[i].x[0];
+		beams[i].image[1] = pointarr[i].x[1];
+
+		beams[i].kappa = pointarr[i].kappa;
+		beams[i].gamma[0] = pointarr[i].gamma[0];
+		beams[i].gamma[1] = pointarr[i].gamma[1];
+	}
+
+	return;
+}
+
+void RayShooterRap(unsigned long N,Point *points,void (*rayshooter)(unsigned long N,Beam *beams)){
+
+	BeamHndl beams = (Beam *)malloc(N*sizeof(Beam));
+
+	copyPointArrayToBeams(points,beams,N);
+	rayshooter(N,beams);
+	copyBeamToPoint(beams,points,N);
+
+	free(beams);
+	return;
+}
+

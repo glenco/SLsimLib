@@ -28,9 +28,20 @@ typedef struct analytic_lens{
   // source parameters
   double source_tau;
   double source_nu;  // frequency
-  double source_r2;  // internal scale parameter
+  double source_gauss_r2;  // internal scale parameter
   double source_r;   // total source size, ie no flux outside this radius
   double source_x[2];
+
+  float source_nuo;
+  float source_r_in;          //inner radius of BLR
+  float source_r_out;         // outer radius of BLR
+  float source_inclination;   //inclination of BLR in radians, face on is
+  float source_opening_angle;
+  float source_gamma;
+  float source_BHmass;
+  float source_sigma;
+  Boolean source_monocrome;   // set to true to integrate over frequency
+
   double (*source_sb_func)(double *y);  // surface brightness function
   SBModel source_sb_type;
 
@@ -151,10 +162,6 @@ void substract_stars_disks(AnaLens *lens,PosType *ray,PosType *alpha
 
 // in readlens_ana.c
 void reNormSubstructure(AnaLens *lens,double kappa_sub);
-
-// Separate files
-double blr_surface_brightness_spherical(double x,double tau,double nu
-		,double nu_o);
 
 // in internal_rayshooter.c
 double uniform_SB(double *y);

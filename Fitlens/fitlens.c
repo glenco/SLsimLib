@@ -77,7 +77,7 @@ void FindLensSimple(AnaLens *lens,int Nimages,Point *image_positions,double *y,d
 	x_center[0] /= scale;
 	x_center[1] /= scale;
 
-	ERROR_MESSAGE();
+	//ERROR_MESSAGE();
 	ElliptisizeLens(Nimages,Nsources,1,pairing,xob,x_center,xg,0,lens->perturb_beta
 			,lens->perturb_Nmodes-1,mods,dx_sub,&re2,q);
 
@@ -202,7 +202,7 @@ double ElliptisizeLens(int Nimages,int Nsources,int Nlenses,int *pairing,double 
 	}
 
 	// find lens with degeneracy information
-	ERROR_MESSAGE();
+	//ERROR_MESSAGE();
 	find_lens(NimagesT,NsourcesT,pairingT,xobT,x_center,betaT,NmodT,&degenT,modT,vT,dx_subT);
 
 	//printf("found model\n");
@@ -449,7 +449,7 @@ void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *x_cent
 	for(i=1;i<=Nmodes+2*Nsources;++i) if (w[i] > wmax) wmax=w[i];
 	wmax=1.0e-6*wmax;
 	for(i=1;i<=Nmodes+2*Nsources;++i) if (w[i] < wmax){ w[i]=0.0; ++*degen;}  // removes degenerate modes
-	ERROR_MESSAGE();
+	//ERROR_MESSAGE();
 	svbksbD(c,w,v,2*Nimages,Nmodes+2*Nsources,b,mod);
 
 	//for(i=1;i<=Nmodes + 2*Nsources;++i) printf("mod[%i]=%e\n",i,mod[i]);
@@ -479,7 +479,6 @@ void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *x_cent
 	free_dmatrix(a,1,2*Nimages+1,1,Nmodes+2*Nsources+1);
 	free_dvector(b,1,2*Nimages+1);
 	free_dvector(w,1,Nmodes+2*Nsources+1);
-	ERROR_MESSAGE();
 
 	return ;
 }

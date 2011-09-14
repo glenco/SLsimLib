@@ -738,8 +738,6 @@ ImageInfo *NewImageInfo(int Nimages){
   imageinfo=(ImageInfo *) malloc(Nimages*sizeof(ImageInfo));
   assert(imageinfo);
 
-  //imageinfo->imagekist = NewKist();
-
   for(i=0;i<Nimages;++i){
 	imageinfo[i].imagekist = NewKist();
 	imageinfo[i].Npoints=0;
@@ -764,6 +762,7 @@ void freeImageInfo(ImageInfo *imageinfo,int Nimages){
 
 // step for walking tree by iteration instead of recursion
 Boolean TreeWalkStep(TreeHndl tree,Boolean allowDescent){
+
 	if(allowDescent && tree->current->child1 != NULL){
 		moveToChild(tree,1);
 		return True;
@@ -774,9 +773,10 @@ Boolean TreeWalkStep(TreeHndl tree,Boolean allowDescent){
 	}
 
 	if(tree->current->brother != NULL){
-		tree->current=tree->current->brother;
+		tree->current = tree->current->brother;
 		return True;
 	}
+
 	return False;
 }
 

@@ -41,18 +41,20 @@ void FindAllBoxNeighborsKist(TreeHndl tree,Point *point,KistHndl neighbors){
 		moveUp(tree);
 	}
 
-	_FindAllBoxNeighborsKist(tree,point->leaf,neighbors);
+	assert(inbox(point->x,tree->current->boundery_p1,tree->current->boundery_p2));
+	_FindAllBoxNeighborsKist_iter(tree,point->leaf,neighbors);
 
 	return;
 }
 
-// this should be made into a loop instead of a recursion
+// There is an iterative version of this recursive function below
+//    This one has been known to cause stack overflow.
 void _FindAllBoxNeighborsKist(TreeHndl tree,Branch *leaf,KistHndl neighbors){
 
-	if(  leaf->boundery_p1[0]<=tree->current->boundery_p2[0]
-	  && leaf->boundery_p2[0]>=tree->current->boundery_p1[0]
-	  && leaf->boundery_p1[1]<=tree->current->boundery_p2[1]
-	  && leaf->boundery_p2[1]>=tree->current->boundery_p1[1]){
+	if(  leaf->boundery_p1[0] <= tree->current->boundery_p2[0]
+	  && leaf->boundery_p2[0] >= tree->current->boundery_p1[0]
+	  && leaf->boundery_p1[1] <= tree->current->boundery_p2[1]
+	  && leaf->boundery_p2[1] >= tree->current->boundery_p1[1]){
 
 		if(tree->current->npoints == Nbucket){
 			if(tree->current->number != leaf->number){
@@ -74,6 +76,46 @@ void _FindAllBoxNeighborsKist(TreeHndl tree,Branch *leaf,KistHndl neighbors){
 			_FindAllBoxNeighborsKist(tree,leaf,neighbors);
 			moveUp(tree);
 		}
+	}
+
+	return;
+}
+
+/* Iterative instead of recursive method for finding neighbors
+ *   the tree->current must be preset so that leaf is within it.
+ *
+ *   The recursive routine _FindAllBoxNeighborsKist has caused stack overflow.
+ */
+
+void _FindAllBoxNeighborsKist_iter(TreeHndl tree,Branch *leaf,KistHndl neighbors){
+
+	Boolean allowDescent = True;
+	long level = tree->current->level;
+	//Branch *brother = tree->current->brother;
+	//unsigned long count = 0;
+
+	EmptyKist(neighbors);
+
+	while(TreeWalkStep(tree,allowDescent) && tree->current->level > level ){
+
+		if(  leaf->boundery_p1[0] <= tree->current->boundery_p2[0]
+		  && leaf->boundery_p2[0] >= tree->current->boundery_p1[0]
+	      && leaf->boundery_p1[1] <= tree->current->boundery_p2[1]
+	      && leaf->boundery_p2[1] >= tree->current->boundery_p1[1]){
+
+			if(tree->current->npoints == Nbucket && tree->current != leaf){
+				InsertAfterCurrentKist(neighbors,tree->current->points);
+				MoveDownKist(neighbors);
+			}
+
+			allowDescent = True;
+		}else{
+			allowDescent = False;
+		}
+
+		//++count;
+		//if(tree->Nbranches > 0) assert(count <= tree->Nbranches );
+
 	}
 
 	return;

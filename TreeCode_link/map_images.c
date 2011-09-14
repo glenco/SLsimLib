@@ -49,15 +49,16 @@ void map_images(AnaLens *lens,TreeHndl s_tree,TreeHndl i_tree
 
 	long Nsizes;
 	unsigned long Nimagepoints;
-	double rtemp,tmp,y[2];
+	double rtemp,tmp,y[2],area_tot;
 	static double oldy[2],oldr=0;
 	short moved;
-	int i,j;
+	long i,j;
 	//Point *i_points,*s_points;
 	//Point *point;
 	time_t to;
 	//ListHndl tmp_border_pointer;
 	static int oldNimages=0;
+	Point **dummy_pnt;
 
 	// flush in-source-markers and surface brightnesses
 	//sublist=NewList();
@@ -67,8 +68,15 @@ void map_images(AnaLens *lens,TreeHndl s_tree,TreeHndl i_tree
 
 	if(lens->source_r <= 0.0){ERROR_MESSAGE(); printf("ERROR: find_images, point source must have a resolution target\n"); exit(1);}
 
+
+	// do an initial refinement to find all images and refine grid
+	find_images_kist(lens->source_x,lens->source_r_in,s_tree,i_tree,Nimages
+			  ,imageinfo,NimageMax,&Nimagepoints,0,False,0,False,True);
+
+	/*
 	EmptyKist(imageinfo->imagekist);
 	// reset in_image for points in tree incase they haven't
+	 * *
 	ClearAllMarks(i_tree);
 	ClearAllMarks(s_tree);
 
@@ -90,28 +98,28 @@ void map_images(AnaLens *lens,TreeHndl s_tree,TreeHndl i_tree
     		;rtemp /= Ngrid_block ){
 
     	do{
-    		moved=image_finder(lens->source_x,rtemp,s_tree,i_tree
+    		moved=image_finder_kist(lens->source_x,rtemp,s_tree,i_tree
     				,Nimages,imageinfo,NimageMax,&Nimagepoints,-1,0);
 
-    		assert(imageinfo->Npoints > 1);
+    		assert(imageinfo->imagekist->Nunits > 1);
     		assert(*Nimages);
-     	}while(refine_grid(i_tree,s_tree,imageinfo,*Nimages,rtemp*mumin/Ngrid_block,2,kappa_off));
+     	}while(refine_grid_kist(i_tree,s_tree,imageinfo,*Nimages,rtemp*mumin/Ngrid_block,2,kappa_off,True,dummy_pnt));
 
-    	assert(imageinfo->Npoints > 1);
+    	assert(imageinfo->imagekist->Nunits > 1);
     	assert(*Nimages);
 
     	//printf("rtemp = %e = %e x r_source\n",rtemp,rtemp/lens->source_r);
     }
-
+*/
     // To conserve space, erase image point information.  It will be re-found later
-    free(imageinfo->points);
-    imageinfo->points = NULL;
+    //free(imageinfo->points);
+    //imageinfo->points = NULL;
 
 	//////////////////////////////////////////////////////////////////////////////////
 	// target source size has been reached, do full image decomposition and refinement
 	/////////////////////////////////////////////////////////////////////////////////
 
-	printf("telescoped\n");
+	//printf("telescoped\n");
 
 	// do an initial uniform refinement to make sure there are enough point in
 	//  the images
@@ -135,13 +143,12 @@ void map_images(AnaLens *lens,TreeHndl s_tree,TreeHndl i_tree
 */
 //	PointsWithin(s_tree,lens->source_x,lens->source_r,imagelist,-1);
 
-	assert(*Nimages);
-	assert(imageinfo->Npoints);
+	//assert(*Nimages);
+	//assert(imageinfo->Npoints);
 
 	// find kist of image points and divide into images
 	//printf("finding images\n");
-	find_divide_images(i_tree,s_tree,lens->source_x,lens->source_r
-			,imageinfo,Nimages,NimageMax);
+	find_divide_images(i_tree,s_tree,lens->source_x,lens->source_r,imageinfo,Nimages,NimageMax);
 
 	//printf("images identified\n");
 	//printf("Nimages = %i\n",*Nimages);
@@ -164,33 +171,34 @@ void map_images(AnaLens *lens,TreeHndl s_tree,TreeHndl i_tree
 	}
 */
 
-	// calculate surface brightnesses and flux of each image
-	MoveToTopKist(imageinfo->imagekist);
-	for(i=0 ; i < *Nimages ; ++i){
+	// ****** calculate surface brightnesses and flux of each image  ******
+	for(i=0,area_tot=0 ; i < *Nimages ; ++i){
+		MoveToTopKist(imageinfo[i].imagekist);
 		imageinfo[i].area = 0.0;
 		//printf("%li points in image %i\n",imageinfo[i].Npoints,i);
-		for(j = 0 ; j < imageinfo[i].Npoints ; ++j,MoveDownKist(imageinfo->imagekist)){
+		for(j = 0 ; j < imageinfo[i].imagekist->Nunits ; ++j,MoveDownKist(imageinfo[i].imagekist)){
 
-			y[0] = getCurrentKist(imageinfo->imagekist)->image->x[0] - lens->source_x[0];
-			y[1] = getCurrentKist(imageinfo->imagekist)->image->x[1] - lens->source_x[1];
-			getCurrentKist(imageinfo->imagekist)->surface_brightness = lens->source_sb_func(y);
-			getCurrentKist(imageinfo->imagekist)->in_image = 1;  // Initialized value for refine_grid_on_image
+			y[0] = getCurrentKist(imageinfo[i].imagekist)->image->x[0] - lens->source_x[0];
+			y[1] = getCurrentKist(imageinfo[i].imagekist)->image->x[1] - lens->source_x[1];
+			getCurrentKist(imageinfo[i].imagekist)->surface_brightness = lens->source_sb_func(y);
+			//if(getCurrentKist(imageinfo[i].imagekist)->surface_brightness != 0.0)
+			//	printf(" %li %li sb = %e",i,j,getCurrentKist(imageinfo[i].imagekist)->surface_brightness);
+			getCurrentKist(imageinfo[i].imagekist)->in_image = 1;  // Initialized value for refine_grid_on_image
 
-			imageinfo[i].area += pow(getCurrentKist(imageinfo->imagekist)->gridsize,2)
-			                     *getCurrentKist(imageinfo->imagekist)->surface_brightness;
+			imageinfo[i].area += pow(getCurrentKist(imageinfo[i].imagekist)->gridsize,2)
+			                     *getCurrentKist(imageinfo[i].imagekist)->surface_brightness;
 		}
+		area_tot += imageinfo[i].area;
 	}
 
 	//PrintList(imagelist);
-
 	//printf("Nimages = %i  Npoints_total = %li\n",*Nimages,imagelist->Npoints);
 	//for(i=0;i<(*Nimages);++i) printf("    Npoints = %li\n",imageinfo[i].Npoints);
-	// refine images based on flux in each pixel
-	i=0;
-	while( refine_grid_on_image(lens,i_tree,s_tree,imageinfo,*Nimages
-			,FracResTarget,criterion,kappa_off) ) ++i;
 
-//	while( refine_grid_on_image(lens,i_tree,s_tree,imageinfo,imagelist,*Nimages,1.0e-9,criterion,kappa_off) ) ++i;
+	// ******* refine images based on flux in each pixel ******
+	i=0;
+	if(area_tot != 0.0) while( refine_grid_on_image(lens,i_tree,s_tree,imageinfo,*Nimages
+			,FracResTarget,criterion,kappa_off) ) ++i;
 
 	//printf("i=%i Nold=%li\n",i,Nold);
 	//printf("%li\n",imagelist->Npoints);
@@ -202,17 +210,17 @@ void map_images(AnaLens *lens,TreeHndl s_tree,TreeHndl i_tree
 	oldNimages=*Nimages;
 
 	// find image centroid
-	MoveToTopKist(imageinfo->imagekist);
 	for(i=0;i<*Nimages;++i){
+		MoveToTopKist(imageinfo[i].imagekist);
 		tmp=0.0;
 		imageinfo[i].centroid[0] = 0.0;
 		imageinfo[i].centroid[1] = 0.0;
-		for(j = 0 ; j < imageinfo[i].Npoints ; ++j,MoveDownKist(imageinfo->imagekist) ){
-			tmp += pow(getCurrentKist(imageinfo->imagekist)->gridsize,2)*getCurrentKist(imageinfo->imagekist)->surface_brightness;
-			imageinfo[i].centroid[0] += getCurrentKist(imageinfo->imagekist)->x[0]*pow(getCurrentKist(imageinfo->imagekist)->gridsize,2)
-					*getCurrentKist(imageinfo->imagekist)->surface_brightness;
-			imageinfo[i].centroid[1] += getCurrentKist(imageinfo->imagekist)->x[1]*pow(getCurrentKist(imageinfo->imagekist)->gridsize,2)
-					*getCurrentKist(imageinfo->imagekist)->surface_brightness;
+		for(j = 0 ; j < imageinfo[i].imagekist->Nunits ; ++j,MoveDownKist(imageinfo[i].imagekist) ){
+			tmp += pow(getCurrentKist(imageinfo[i].imagekist)->gridsize,2)*getCurrentKist(imageinfo[i].imagekist)->surface_brightness;
+			imageinfo[i].centroid[0] += getCurrentKist(imageinfo[i].imagekist)->x[0]*pow(getCurrentKist(imageinfo[i].imagekist)->gridsize,2)
+					*getCurrentKist(imageinfo[i].imagekist)->surface_brightness;
+			imageinfo[i].centroid[1] += getCurrentKist(imageinfo[i].imagekist)->x[1]*pow(getCurrentKist(imageinfo[i].imagekist)->gridsize,2)
+					*getCurrentKist(imageinfo[i].imagekist)->surface_brightness;
 		}
 		if(imageinfo[i].Npoints > 0 ){
 			imageinfo[i].centroid[0] /= tmp;
@@ -222,7 +230,7 @@ void map_images(AnaLens *lens,TreeHndl s_tree,TreeHndl i_tree
 		//printf("  %i  centroid = %e %e N = %li\n",i,imageinfo[i].centroid[0],imageinfo[i].centroid[1]
 		//                                    ,imageinfo[i].Npoints);
 	}
-	assert(AtBottomKist(imageinfo->imagekist));
+	assert(AtBottomKist(imageinfo[i].imagekist));
 
 	return ;
 }
@@ -235,9 +243,11 @@ int refine_grid_on_image(AnaLens *lens,TreeHndl i_tree,TreeHndl s_tree,ImageInfo
 	 *
 	 *  points with in_image == 1 are tested for refinement
 	 *
-	 * criterion = 0 stops refining when error in total area reaches res_target
-	 * 	         = 1 stops refining when each image reaches error limit or is smaller than res_target
-	 *           = 2 stops refining when grid resolution is smaller than res_target in all images
+	 * criterion = TotalArea    stops refining when error in total area reaches res_target
+	 * 	         = EachImage    stops refining when each image reaches error limit or is smaller than res_target
+	 *           = Resolution   stops refining when grid resolution is smaller than res_target in all images
+	 *           = FillHoles    does the same as EachImage but also refines the neighbors to the cells that fullfill
+	 *                            the EachImage criterion
 	 */
 
 	//printf("entering refine_grid\n");
@@ -247,42 +257,42 @@ int refine_grid_on_image(AnaLens *lens,TreeHndl i_tree,TreeHndl s_tree,ImageInfo
   int i,j,k,number_of_refined,count; /* Ngrid_block must be odd */
   double total_area,y[2],flux=0,tmp=0,sbmax,sbmin;
   Point *i_points,*s_points;
-  unsigned long Ncells,Nold;
+  unsigned long Ncells,Nold,Ntmp;
+
+  for(i=0,total_area=0;i<Nimages;++i) total_area += imageinfo[i].area;
+  for(i=0,Nold=0;i<Nimages;++i) Nold += imageinfo[i].imagekist->Nunits;
+  if(total_area == 0.0) return 0;
+
   KistHndl nearest=NewKist();
 
-  for(i=0,total_area=0;i<Nimages;++i) total_area +=
-		  imageinfo[i].area;
-  for(i=0,Nold=0;i<Nimages;++i) Nold += imageinfo[i].Npoints;
-  assert(total_area > 0.0);
-
   number_of_refined=0;
-  MoveToTopKist(imageinfo->imagekist);
   for(i=0,Ncells=0;i<Nimages;++i){
-	assert(imageinfo[i].area > 0.0);
-  	for(j = 0 ; j < imageinfo[i].Npoints ; ++j,MoveDownKist(imageinfo->imagekist) ){
+	MoveToTopKist(imageinfo[i].imagekist);
+	if(imageinfo[i].area > 0.0){
+		for(j = 0 ; j < imageinfo[i].imagekist->Nunits ; ++j,MoveDownKist(imageinfo[i].imagekist) ){
 
-    // count number of gridcells to be refined
-    // cells in image
+			// count number of gridcells to be refined
+			// cells in image
 
-  		//if(getCurrentKist(imageinfo->imagekist)->in_image == 1){
+			//if(getCurrentKist(imageinfo[i].imagekist)->in_image == 1){
 
-  			flux = pow(getCurrentKist(imageinfo->imagekist)->gridsize,2)*getCurrentKist(imageinfo->imagekist)->surface_brightness;
-  			getCurrentKist(imageinfo->imagekist)->in_image = 0;
+  			flux = pow(getCurrentKist(imageinfo[i].imagekist)->gridsize,2)*getCurrentKist(imageinfo[i].imagekist)->surface_brightness;
+  			getCurrentKist(imageinfo[i].imagekist)->in_image = 0;
 
   			if(criterion == TotalArea && flux > res_target*total_area){
-  				getCurrentKist(imageinfo->imagekist)->in_image = 1;
+  				getCurrentKist(imageinfo[i].imagekist)->in_image = 1;
   				++Ncells;
   			}
 
   			if(criterion == EachImage && flux > res_target*imageinfo[i].area
   				&& flux > target_all*res_target*total_area ){
-  				getCurrentKist(imageinfo->imagekist)->in_image = 1;
+  				getCurrentKist(imageinfo[i].imagekist)->in_image = 1;
   				++Ncells;
   			}
 
   			if(criterion == Resolution &&
-  					getCurrentKist(imageinfo->imagekist)->gridsize > res_target ){
-  				getCurrentKist(imageinfo->imagekist)->in_image = 1;
+  					getCurrentKist(imageinfo[i].imagekist)->gridsize > res_target ){
+  				getCurrentKist(imageinfo[i].imagekist)->in_image = 1;
   				++Ncells;
   			}
 
@@ -291,12 +301,12 @@ int refine_grid_on_image(AnaLens *lens,TreeHndl i_tree,TreeHndl s_tree,ImageInfo
   				if(flux > res_target*imageinfo[i].area
   						&& flux > target_all*res_target*total_area
   				){
-  					getCurrentKist(imageinfo->imagekist)->in_image = 1;
+  					getCurrentKist(imageinfo[i].imagekist)->in_image = 1;
   					++Ncells;
 
   				}else{  // fill the holes
 
-  					FindAllBoxNeighborsKist(i_tree,getCurrentKist(imageinfo->imagekist),nearest);
+  					FindAllBoxNeighborsKist(i_tree,getCurrentKist(imageinfo[i].imagekist),nearest);
   					//PrintList(nearest);
   					sbmin = sbmax = 0;
   					MoveToTopKist(nearest);
@@ -310,7 +320,7 @@ int refine_grid_on_image(AnaLens *lens,TreeHndl i_tree,TreeHndl s_tree,ImageInfo
 
   						if( tmp > res_target*imageinfo[i].area
   						 && tmp > target_all*res_target*total_area){
-  							getCurrentKist(imageinfo->imagekist)->in_image = 1;
+  							getCurrentKist(imageinfo[i].imagekist)->in_image = 1;
    							++Ncells;
   							break;
   						}
@@ -321,14 +331,19 @@ int refine_grid_on_image(AnaLens *lens,TreeHndl i_tree,TreeHndl s_tree,ImageInfo
   					if( sbmax > res_target*imageinfo[i].area
   							&& sbmax > target_all*res_target*total_area){
 
-  						getCurrentKist(imageinfo->imagekist)->in_image = 1;
+  						getCurrentKist(imageinfo[i].imagekist)->in_image = 1;
   						++Ncells;
   					}
 	               */
   				}
   			//}
-  		}
-  	}
+  			}
+		}
+	}else{
+		// case of image with no flux in it
+		MoveToTopKist(imageinfo[i].imagekist);
+		do{ getCurrentKist(imageinfo[i].imagekist)->in_image = 0;}while(MoveDownKist(imageinfo[i].imagekist));
+	}
   }
 
   freeKist(nearest);
@@ -339,31 +354,32 @@ int refine_grid_on_image(AnaLens *lens,TreeHndl i_tree,TreeHndl s_tree,ImageInfo
 	  // make space for new points to go into tree
  	  i_points = NewPointArray((Ngrid_block*Ngrid_block-1)*Ncells,True);
 
- 	  MoveToTopKist(imageinfo->imagekist);
-	  for(i=0,Ncells=0;i<Nimages;++i){
-		  for(j = 0,Nold = 0; j < imageinfo[i].Npoints ; ++j){
+	  for(i=0,Ncells=0 ; i < Nimages ; ++i){
+		  Ntmp = imageinfo[i].imagekist->Nunits;
+	 	  MoveToTopKist(imageinfo[i].imagekist);
+		  for(j = 0,Nold = 0; j < Ntmp ; ++j){
 
-			  if(getCurrentKist(imageinfo->imagekist)->in_image){
+			  if(getCurrentKist(imageinfo[i].imagekist)->in_image){
 
 				  ++count;
 				  xygridpoints(&i_points[(Ngrid_block*Ngrid_block-1)*Ncells]
-				      ,getCurrentKist(imageinfo->imagekist)->gridsize*(Ngrid_block-1)/Ngrid_block
-				      ,getCurrentKist(imageinfo->imagekist)->x,Ngrid_block,1);
+				      ,getCurrentKist(imageinfo[i].imagekist)->gridsize*(Ngrid_block-1)/Ngrid_block
+				      ,getCurrentKist(imageinfo[i].imagekist)->x,Ngrid_block,1);
 
 				  // reduces size of actual gridpoint in the tree here
-				  getCurrentKist(imageinfo->imagekist)->gridsize /= Ngrid_block;
+				  getCurrentKist(imageinfo[i].imagekist)->gridsize /= Ngrid_block;
 
 				  // link new points into list
 				  for(k=0;k < Ngrid_block*Ngrid_block-1 ;++k){
 
-					  // put point into image imageinfo->imagekist
-					  InsertAfterCurrentKist(imageinfo->imagekist,&(i_points[(Ngrid_block*Ngrid_block-1)*Ncells+k]));
-					  MoveDownKist(imageinfo->imagekist);
+					  // put point into image imageinfo[i].imagekist
+					  InsertAfterCurrentKist(imageinfo[i].imagekist,&(i_points[(Ngrid_block*Ngrid_block-1)*Ncells+k]));
+					  MoveDownKist(imageinfo[i].imagekist);
 
 					  // mark for future calculation of surface brightness
-					  getCurrentKist(imageinfo->imagekist)->surface_brightness = -1;
+					  getCurrentKist(imageinfo[i].imagekist)->surface_brightness = -1;
 					  // mark for future possible refinement
-					  getCurrentKist(imageinfo->imagekist)->in_image = 1;
+					  getCurrentKist(imageinfo[i].imagekist)->in_image = 1;
 
 					  ++number_of_refined;
 				  }
@@ -374,15 +390,15 @@ int refine_grid_on_image(AnaLens *lens,TreeHndl i_tree,TreeHndl s_tree,ImageInfo
 				  // add points to inner edge list
 
 			  }
-			  MoveDownKist(imageinfo->imagekist);
+			  MoveDownKist(imageinfo[i].imagekist);
 		  }
 		  imageinfo[i].Npoints += Nold;
 	  }
 
-      s_points=LinkToSourcePoints(i_points,(Ngrid_block*Ngrid_block-1)*Ncells);
+      s_points = LinkToSourcePoints(i_points,(Ngrid_block*Ngrid_block-1)*Ncells);
 
       // lens the added points
-      rayshooterInternal((Ngrid_block*Ngrid_block-1)*Ncells,i_points,i_tree,kappa_off);
+      rayshooterInternal((Ngrid_block*Ngrid_block-1)*Ncells,i_points,kappa_off);
 
       // add points to trees
       AddPointsToTree(i_tree,i_points,Ncells*(Ngrid_block*Ngrid_block-1));
@@ -391,21 +407,21 @@ int refine_grid_on_image(AnaLens *lens,TreeHndl i_tree,TreeHndl s_tree,ImageInfo
       // Go through list of image points and copy the information
       //  just calculated into the new points and re-calculate the area/flux
       //  for each image
-     MoveToTopKist(imageinfo->imagekist);
      for(i=0,Ncells=0;i<Nimages;++i){
     	 imageinfo[i].area = 0.0;
-    	 for(j = 0 ; j < imageinfo[i].Npoints ; ++j,MoveDownKist(imageinfo->imagekist) ){
-    		 if(getCurrentKist(imageinfo->imagekist)->surface_brightness == -1){
-    			 //PointCopyData(getCurrentKist(imageinfo->imagekist),getCurrentKist(imageinfo->imagekist)->image);
-    			 y[0] = getCurrentKist(imageinfo->imagekist)->image->x[0] - lens->source_x[0];
-    			 y[1] = getCurrentKist(imageinfo->imagekist)->image->x[1] - lens->source_x[1];
-    			 getCurrentKist(imageinfo->imagekist)->surface_brightness = lens->source_sb_func(y);
+    	 MoveToTopKist(imageinfo[i].imagekist);
+    	 for(j = 0 ; j < imageinfo[i].imagekist->Nunits ; ++j,MoveDownKist(imageinfo[i].imagekist) ){
+    		 if(getCurrentKist(imageinfo[i].imagekist)->surface_brightness == -1){
+    			 //PointCopyData(getCurrentKist(imageinfo[i].imagekist),getCurrentKist(imageinfo[i].imagekist)->image);
+    			 y[0] = getCurrentKist(imageinfo[i].imagekist)->image->x[0] - lens->source_x[0];
+    			 y[1] = getCurrentKist(imageinfo[i].imagekist)->image->x[1] - lens->source_x[1];
+    			 getCurrentKist(imageinfo[i].imagekist)->surface_brightness = lens->source_sb_func(y);
     		 }
-    		 imageinfo[i].area += pow(getCurrentKist(imageinfo->imagekist)->gridsize,2)
-    				 *getCurrentKist(imageinfo->imagekist)->surface_brightness;
+    		 imageinfo[i].area += pow(getCurrentKist(imageinfo[i].imagekist)->gridsize,2)
+    				 * getCurrentKist(imageinfo[i].imagekist)->surface_brightness;
     	 }
+    	 assert(AtBottomKist(imageinfo[i].imagekist));
      }
-     assert(AtBottomKist(imageinfo->imagekist));
   }
 
   return number_of_refined;

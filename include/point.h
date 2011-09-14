@@ -28,17 +28,18 @@ typedef enum {False, True} Boolean;
 typedef struct Point{
   struct Point *next;
   struct Point *prev;
-  struct Point *image;
+  struct Point *image;  // pointer to point on image or source plane
   unsigned long id;
-  double kappa;
-  double gamma[2];
-  double dt;
-  double invmag;
+  double kappa;        // surface density
+  double gamma[2];    // shear
+  double dt;          // time delay
+  double invmag;     // inverse of magnification
   double *x;
   double gridsize;
   unsigned long head;         // marks beginning of allocated array of points for easy deallocation
   Boolean in_image; // marks if point is in image
   double surface_brightness;
+
   struct branchstruct{
     struct Point *points;        // pointer to first points in Branch
     unsigned long npoints;

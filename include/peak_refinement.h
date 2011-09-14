@@ -20,8 +20,10 @@ typedef struct Beam{
 typedef Beam * BeamHndl;
 
 BeamHndl find_peaks(double center[],double range,unsigned long Ngrid,double rEinsteinMin,double kappa_max
-		,unsigned long *Nbeams,void (*rayshooter)(unsigned long N,Point *i_point));
+		,unsigned long *Nbeams,void (*rayshooter)(unsigned long N,Beam *beam));
 void copyPointToBeam(ListHndl pointlist,Beam *beam);
 void copyBeamToPoint(Beam *beam,Point *pointarr,unsigned long N);
+void copyPointArrayToBeams(Point *pointarr,Beam *beams,unsigned long N);
+void RayShooterRap(unsigned long N,Point *points,void (*rayshooter)(unsigned long N,Beam *beams));
 
 #endif

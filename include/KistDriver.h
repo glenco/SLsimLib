@@ -7,6 +7,7 @@
 
 void FindAllBoxNeighborsKist(TreeHndl tree,Point *point,KistHndl neighbors);
 void _FindAllBoxNeighborsKist(TreeHndl tree,Branch *leaf,KistHndl neighbors);
+void _FindAllBoxNeighborsKist_iter(TreeHndl tree,Branch *leaf,KistHndl neighbors);
 void PointsWithinKist(TreeHndl tree,double *ray,float rmax,KistHndl neighborkist,short markpoints);
 void _PointsWithinKist(TreeHndl tree,double *ray,float *rmax,KistHndl neighborkist
 		,short markpoints);

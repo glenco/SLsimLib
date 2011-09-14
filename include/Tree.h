@@ -198,7 +198,7 @@ void PointCopyData(Point *pcopy,Point *pins);
 ImageInfo *NewImageInfo(int Nimages);
 void freeImageInfo(ImageInfo *imageinfo,int Nimages);
 void combineCloseImages(double linkinglength,ImageInfo *imageinfo,int *Nimages
-		,int *NewNimages);
+		,int *NewNimages,int NimageMax);
 void SwapImages(ImageInfo *image1,ImageInfo *image2);
 void PrintImages(ImageInfo *images,long Nimages);
 void PrintImageInfo(ImageInfo *image);
@@ -302,8 +302,7 @@ void splitlist(ListHndl imagelist,ImageInfo *images,int *Nimages,int Maximages);
 /*********************************/
 
 /*  void rayshooterInternal(double *x,double *alpha,double *gamma,double *kappa,double *invmag);*/
-void rayshooterInternal(unsigned long Npoints,Point *i_points,TreeHndl i_tree
-		,Boolean kappa_off);
+void rayshooterInternal(unsigned long Npoints,Point *i_points,Boolean kappa_off);
 void in_source(double *y_source,ListHndl sourcelist);
 
 
