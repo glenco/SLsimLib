@@ -19,6 +19,7 @@
 #include <analytic_lens.h>
 #include <nsie.h>
 #include <TreeNB.h>
+#include <source_model.h>
 
 //extern char *paramfile,*outputfile;
 extern COSMOLOGY cosmo;
@@ -26,8 +27,7 @@ extern AnaLens *lens;
 
 //const float Concentration=0.0776;  // ratio between truncation radius and scale length
 
-void rayshooterInternal(unsigned long Npoints,Point *i_points,TreeHndl i_tree
-		,Boolean kappa_off){
+void rayshooterInternal(unsigned long Npoints,Point *i_points,Boolean kappa_off){
   /* i_points need to be already linked to s_points */
   double x_rescale[2],alpha[2],gamma[2],tmp,dt=0;
   static double zs_old=-1,convert_factor=0;
@@ -242,11 +242,13 @@ double uniform_SB(double *y){
 }
 
 double gaussian_SB(double *y){
-	return exp( -(y[0]*y[0] + y[1]*y[1])/lens->source_r2 );
+	return exp( -(y[0]*y[0] + y[1]*y[1])/lens->source_gauss_r2 );
 }
 
 double BLR_SB(double *y){
-	return blr_surface_brightness_spherical(sqrt(y[0]*y[0]+y[1]*y[1]),lens->source_tau,lens->source_nu,1.0721944e15);
+	return blr_surface_brightness_disk(y,lens,&cosmo);
+	return blr_surface_brightness_spherical_random_motions(sqrt(y[0]*y[0] + y[1]*y[1]),lens,&cosmo);
+	return blr_surface_brightness_spherical_circular_motions(sqrt(y[0]*y[0] + y[1]*y[1]),lens,&cosmo);
 }
 
 void in_source(double *y_source,ListHndl sourcelist){
