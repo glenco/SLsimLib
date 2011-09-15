@@ -16,7 +16,7 @@
 #define analens_declare
 
 typedef enum {NFW,powerlaw,pointmass} ClumpInternal;
-typedef enum {Uniform,Gaussian,BLR} SBModel;
+typedef enum {Uniform,Gaussian,BLR_Disk,BLR_Sph1,BLR_Sph2} SBModel;
 
 typedef struct analytic_lens{
   char outputfile[100];
@@ -166,7 +166,9 @@ void reNormSubstructure(AnaLens *lens,double kappa_sub);
 // in internal_rayshooter.c
 double uniform_SB(double *y);
 double gaussian_SB(double *y);
-double BLR_SB(double *y);
+double BLR_Disk_SB(double *y);
+double BLR_Sph1_SB(double *y);
+double BLR_Sph2_SB(double *y);
 
 // in mark_points.c
 void MarkPoints(TreeHndl s_tree,AnaLens *lens,Boolean sb_cut,short invert);

@@ -56,7 +56,7 @@ double blr_surface_brightness_spherical_random_motions(double x,AnaLens *lens,CO
 	sigma2 = pow(lens->source_nuo*lens->source_sigma,2)*1.1126501e-11;
 	//                                                  1/c^2 in km/s
 
-	eta = 0.398942 *(1+lens->zsource)* exp(-0.5 * pow( lens->source_nu*(1+lens->zsource) - lens->source_nuo ,2) / sigma2) / sqrt(sigma2);
+	eta = lens->source_nuo *(1+lens->zsource)* exp(-0.5 * pow( lens->source_nu*(1+lens->zsource) - lens->source_nuo ,2) / sigma2) / sqrt(sigma2);
 	  //  1/sqrt(2pi)
 
 	return  pow(r/lens->source_r_in,lens->source_gamma)*eta*r/tau;
@@ -94,7 +94,7 @@ double blr_surface_brightness_spherical_circular_motions(double x,AnaLens *lens,
 
 	if ( fabs(lens->source_nu*(1+lens->zsource) - lens->source_nuo) < nu_m ) return 0.0;
 
-	eta = (1+lens->zsource)/sqrt( 1. - pow( (lens->source_nu*(1+lens->zsource) - lens->source_nuo)/nu_m ,2) )/nu_m/pi;
+	eta = lens->source_nuo *(1+lens->zsource)/sqrt( 1. - pow( (lens->source_nu*(1+lens->zsource) - lens->source_nuo)/nu_m ,2) )/nu_m/pi;
 
 	return  pow(r/lens->source_r_in,lens->source_gamma)*eta*r/tau;
 }
@@ -205,7 +205,7 @@ double blr_surface_brightness_disk(double x[],AnaLens *lens,COSMOLOGY *cosmo){
 	sigma2 = pow(lens->source_nuo*lens->source_sigma,2)*1.1126501e-11;
 	//                                                  1/c^2 in km/s
 
-	eta = (1+lens->zsource) * exp(-0.5 * pow( lens->source_nu*(1+lens->zsource) - lens->source_nuo - nu_shift ,2) / sigma2) / sqrt(sigma2);
+	eta = lens->source_nuo *(1+lens->zsource) * exp(-0.5 * pow( lens->source_nu*(1+lens->zsource) - lens->source_nuo - nu_shift ,2) / sigma2) / sqrt(sigma2);
 	 //  1/sqrt(2pi)
 
 	return pow(r/lens->source_r_in,lens->source_gamma)*eta*r/tau;
