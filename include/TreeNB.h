@@ -208,9 +208,11 @@ int cutboxNB(double ray[],PosType *p1,PosType *p2,PosType rmax);
 TreeNBHndl rotate_simulation(PosType **xp,IndexType Nparticles,IndexType *particles
 		,double **coord,double theta,float *rsph,float *mass
 		,Boolean MultiRadius,Boolean MultiMass);
-TreeNBHndl project(PosType **xp,IndexType Nparticles,IndexType *particles
+TreeNBHndl rotate_project(PosType **xp,IndexType Nparticles,IndexType *particles
 		,double **coord,double theta,float *rsph,float *mass
 		,Boolean MultiRadius,Boolean MultiMass);
+TreeNBHndl spread_particles(PosType **xp,IndexType Nparticles,IndexType *particles
+		,double theta,float *rsph,float *mass,Boolean MultiRadius,Boolean MultiMass);
  void cuttoffscale(TreeNBHndl tree,double *theta);
 
 /** routines in TreeNBForce **/

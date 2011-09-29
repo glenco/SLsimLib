@@ -455,7 +455,7 @@ TreeNBHndl rotate_simulation(PosType **xp,IndexType Nparticles,IndexType *partic
   return tree;
 }
 
-TreeNBHndl project(PosType **xp,IndexType Nparticles,IndexType *particles
+TreeNBHndl rotate_project(PosType **xp,IndexType Nparticles,IndexType *particles
 		,double **coord,double theta,float *rsph,float *mass
 		,Boolean MultiRadius,Boolean MultiMass){
  	// rotate particle positions and build 2d tree in x-y plane
@@ -480,6 +480,44 @@ TreeNBHndl project(PosType **xp,IndexType Nparticles,IndexType *particles
 
   return tree;
 }
+
+TreeNBHndl spread_particles(PosType **xp,IndexType Nparticles,IndexType *particles
+		,double theta,float *rsph,float *mass
+		,Boolean MultiRadius,Boolean MultiMass){
+
+	//  !!!! Not yet come up with a good way of doing this !!!!
+
+ 	/* gives the particles a third dimension depending on their size
+ 	 *  This is used to spread subhalos out into 3d so that their density
+ 	 *  is about one per smoothing length.  This is to avoid the big particle
+ 	 *  problem that slows the tree-force calculation.
+ 	 *
+ 	 *  Warning: This will erase the third coordinate of the particles.
+ 	 */
+
+	IndexType i,*dummy;
+	TreeNBHndl tree;
+	float tmp=0;
+
+	//Build 2d tree for
+	tree = BuildTreeNB(xp,&tmp,mass,False,False,Nparticles,particles,2,theta);
+
+	for(i=0;i<Nparticles;++i){
+		dummy = NearestNeighborNB(tree,xp[i],1,&tmp);
+		xp[i][2] = 4*pi*pow(rsph[i],3)/pow(tmp,2)/3;
+	}
+
+	// free tree
+	freeTreeNB(tree);
+
+	// Build 3d tree for force calculations
+	tree = BuildTreeNB(xp,rsph,mass,MultiRadius,MultiMass,Nparticles,particles,3,theta);
+
+	return tree;
+}
+
+
+
 
 void cuttoffscale(TreeNBHndl tree,double *theta){
 	/*

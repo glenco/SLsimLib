@@ -39,7 +39,7 @@ typedef struct analytic_lens{
   float source_opening_angle;
   float source_gamma;
   float source_BHmass;
-  float source_sigma;
+  float source_fK;            // fraction of Keplerian velocity in random motions
   Boolean source_monocrome;   // set to true to integrate over frequency
 
   double (*source_sb_func)(double *y);  // surface brightness function
@@ -101,8 +101,8 @@ typedef struct analytic_lens{
   float *star_masses;    // star masses relative to star_massscles
   double star_fstars;
   double star_theta_force;
-  float *star_rsph;
-  // regions to be subtracted to compensate for the mass in stars
+
+ // regions to be subtracted to compensate for the mass in stars
   int star_Nregions;
   double *star_region;
   double *star_kappa;

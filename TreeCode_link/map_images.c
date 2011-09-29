@@ -49,16 +49,16 @@ void map_images(AnaLens *lens,TreeHndl s_tree,TreeHndl i_tree
 
 	long Nsizes;
 	unsigned long Nimagepoints;
-	double rtemp,tmp,y[2],area_tot;
+	double tmp,y[2],area_tot;
 	static double oldy[2],oldr=0;
-	short moved;
+	//short moved;
 	long i,j;
 	//Point *i_points,*s_points;
 	//Point *point;
-	time_t to;
+	//time_t to;
 	//ListHndl tmp_border_pointer;
 	static int oldNimages=0;
-	Point **dummy_pnt;
+	//Point **dummy_pnt;
 
 	// flush in-source-markers and surface brightnesses
 	//sublist=NewList();
@@ -70,84 +70,13 @@ void map_images(AnaLens *lens,TreeHndl s_tree,TreeHndl i_tree
 
 
 	// do an initial refinement to find all images and refine grid
+	// the lens->source_r_in is used as a characteristic small size for the source
+	assert(lens->source_r_in > 0);
 	find_images_kist(lens->source_x,lens->source_r_in,s_tree,i_tree,Nimages
 			  ,imageinfo,NimageMax,&Nimagepoints,0,False,0,False,True);
 
-	/*
-	EmptyKist(imageinfo->imagekist);
-	// reset in_image for points in tree incase they haven't
-	 * *
-	ClearAllMarks(i_tree);
-	ClearAllMarks(s_tree);
-
-	// starting with a larger source size make sure all the grid sizes are small enough to find it
-	time(&to);
-
-	//if(initial_size == 0) initial_size=initialgridsize;
-    Nsizes=(int)(log(initial_size/sqrt(pi)/fabs(smallest*lens->source_r))/log(Ngrid_block) ) + 1.0; // round up
-
-
-    //////////////////////////////////////////
-    // telescope source size down to target
-    //////////////////////////////////////////
-	//if(!( (oldy[0]==lens->source_x[0])*(oldy[1]==lens->source_x[1])*(oldr < lens->source_r) )){
-
-		//rtelescope = lens->source_r;
-    for(rtemp = initial_size*pow(Ngrid_block,Nsizes)
-    		;rtemp >= 0.999*Ngrid_block*fabs(smallest*lens->source_r)
-    		;rtemp /= Ngrid_block ){
-
-    	do{
-    		moved=image_finder_kist(lens->source_x,rtemp,s_tree,i_tree
-    				,Nimages,imageinfo,NimageMax,&Nimagepoints,-1,0);
-
-    		assert(imageinfo->imagekist->Nunits > 1);
-    		assert(*Nimages);
-     	}while(refine_grid_kist(i_tree,s_tree,imageinfo,*Nimages,rtemp*mumin/Ngrid_block,2,kappa_off,True,dummy_pnt));
-
-    	assert(imageinfo->imagekist->Nunits > 1);
-    	assert(*Nimages);
-
-    	//printf("rtemp = %e = %e x r_source\n",rtemp,rtemp/lens->source_r);
-    }
-*/
-    // To conserve space, erase image point information.  It will be re-found later
-    //free(imageinfo->points);
-    //imageinfo->points = NULL;
-
-	//////////////////////////////////////////////////////////////////////////////////
-	// target source size has been reached, do full image decomposition and refinement
-	/////////////////////////////////////////////////////////////////////////////////
-
-	//printf("telescoped\n");
-
-	// do an initial uniform refinement to make sure there are enough point in
-	//  the images
-/*	do{
-		time(&t3);
-*/
-
-	//splitter(imageinfo,300,Nimages);
-
-			// mark image points in tree
-//		PointsWithin(s_tree,lens->source_x,lens->source_r,imagelist,1);
-//		moved=image_finder(lens->source_x,fabs(lens->source_r),s_tree,i_tree
-//				,Nimages,imageinfo,&Nimagepoints,0,1);
-/*
-		if(*Nimages < 1) printf("  Nimages=%i i=%i\n",*Nimages,i);
-
-		time(&now);
-		++i;
-	}while( refine_grid(i_tree,s_tree,imageinfo,*Nimages,1.0e-1,1,kappa_off)
-				|| moved );
-*/
-//	PointsWithin(s_tree,lens->source_x,lens->source_r,imagelist,-1);
-
-	//assert(*Nimages);
-	//assert(imageinfo->Npoints);
 
 	// find kist of image points and divide into images
-	//printf("finding images\n");
 	find_divide_images(i_tree,s_tree,lens->source_x,lens->source_r,imageinfo,Nimages,NimageMax);
 
 	//printf("images identified\n");
@@ -158,18 +87,6 @@ void map_images(AnaLens *lens,TreeHndl s_tree,TreeHndl i_tree
 	// link image points lists for each image
 	// and calculate surface brightness at each point
 	/////////////////////////////////////////////
-
-/*	for(i=0,Nold=0;i<(*Nimages);++i) Nold += imageinfo[i].Npoints;
-	for(i=0;i<Nold;++i){
-		// make a copy of image point
-		//InsertPointAfterCurrent(imagelist,imageinfo[0].points[i].x,imageinfo[0].points[i].id
-		//		,imageinfo[0].points[i].image);
-		InsertPointAfterCurrent(imagelist,&(imageinfo[0].points[i]));
-		MoveDownList(imagelist);
-		//PointCopyData(imagelist->current,&(imageinfo[0].points[i]));
-		imagelist->current->in_image = 1;  // Initialized value for refine_grid_on_image
-	}
-*/
 
 	// ****** calculate surface brightnesses and flux of each image  ******
 	for(i=0,area_tot=0 ; i < *Nimages ; ++i){
@@ -191,11 +108,9 @@ void map_images(AnaLens *lens,TreeHndl s_tree,TreeHndl i_tree
 		area_tot += imageinfo[i].area;
 	}
 
-	//PrintList(imagelist);
-	//printf("Nimages = %i  Npoints_total = %li\n",*Nimages,imagelist->Npoints);
-	//for(i=0;i<(*Nimages);++i) printf("    Npoints = %li\n",imageinfo[i].Npoints);
-
-	// ******* refine images based on flux in each pixel ******
+	/*
+	 ******* refine images based on flux in each pixel ******
+	 */
 	i=0;
 	if(area_tot != 0.0) while( refine_grid_on_image(lens,i_tree,s_tree,imageinfo,*Nimages
 			,FracResTarget,criterion,kappa_off) ) ++i;

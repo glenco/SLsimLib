@@ -10,7 +10,6 @@
 #include <stdio.h>
 #include <analytic_lens.h>
 #include <source_model.h>
-#include <source_model.h>
 #include <Tree.h>
 
 // computes the surface brightness associated with our simplest model
@@ -53,8 +52,11 @@ double blr_surface_brightness_spherical_random_motions(double x,AnaLens *lens,CO
 	//sigma2 = (lens->source_nuo*lens->source_nuo*1.1126501e-21) * ((8.25111e+07 * temp/mass) + (vturb*vturb) + (f_K*f_K*42.9497*lens->source_BHmass/r));
 	  //                                         1/c^2              kB/Mh
 
-	sigma2 = pow(lens->source_nuo*lens->source_sigma,2)*1.1126501e-11;
+	//sigma2 = pow(lens->source_nuo*lens->source_sigma,2)*1.1126501e-11;
 	//                                                  1/c^2 in km/s
+	float v_Kep = sqrt(4.7788e-20*lens->source_BHmass/r);
+
+	sigma2 = pow(lens->source_nuo*v_Kep*lens->source_fK,2);
 
 	eta = lens->source_nuo *(1+lens->zsource)* exp(-0.5 * pow( lens->source_nu*(1+lens->zsource) - lens->source_nuo ,2) / sigma2) / sqrt(sigma2);
 	  //  1/sqrt(2pi)
@@ -92,10 +94,11 @@ double blr_surface_brightness_spherical_circular_motions(double x,AnaLens *lens,
 	// maximum frequency at theta
 	nu_m = lens->source_nuo * sqrt( 4.7788e-20 * lens->source_BHmass /r ) * sin_theta;
 
-	if ( fabs(lens->source_nu*(1+lens->zsource) - lens->source_nuo) < nu_m ) return 0.0;
+	if ( fabs(lens->source_nu*(1+lens->zsource) - lens->source_nuo) > nu_m ) return 0.0;
 
 	eta = lens->source_nuo *(1+lens->zsource)/sqrt( 1. - pow( (lens->source_nu*(1+lens->zsource) - lens->source_nuo)/nu_m ,2) )/nu_m/pi;
 
+	//printf("tau = %e eta =%e r=%e xi=%e\n",tau,eta,r,pow(r/lens->source_r_in,lens->source_gamma));
 	return  pow(r/lens->source_r_in,lens->source_gamma)*eta*r/tau;
 }
 
@@ -176,7 +179,7 @@ double blr_surface_brightness_disk(double x[],AnaLens *lens,COSMOLOGY *cosmo){
 	if(fabs(zz_prime) > r*sin(lens->source_opening_angle) ) return 0.0;  // outside of disk
 
 	// this is an option to do a monochromatic version
-	if(lens->source_monocrome) return pow(lens->source_r_in,lens->source_gamma) * r / tau;
+	if(lens->source_monocrome) return pow(r/lens->source_r_in,lens->source_gamma) * r / tau;
 
   //now to compute eta
 
@@ -202,10 +205,11 @@ double blr_surface_brightness_disk(double x[],AnaLens *lens,COSMOLOGY *cosmo){
 	//sigma2 = (lens->source_nuo*lens->source_nuo*1.1126501e-21) * ((8.25111e+07 * temp/mass) + (vturb*vturb));
 	//                                         1/c^2              kB/Mh
 	
-	sigma2 = pow(lens->source_nuo*lens->source_sigma,2)*1.1126501e-11;
+	//sigma2 = pow(lens->source_nuo*lens->source_sigma,2)*1.1126501e-11;
+	sigma2 = pow(lens->source_nuo*v_Kep*lens->source_fK,2);
 	//                                                  1/c^2 in km/s
 
-	eta = lens->source_nuo *(1+lens->zsource) * exp(-0.5 * pow( lens->source_nu*(1+lens->zsource) - lens->source_nuo - nu_shift ,2) / sigma2) / sqrt(sigma2);
+	eta = lens->source_nuo*(1+lens->zsource) * exp(-0.5 * pow( lens->source_nu*(1+lens->zsource) - lens->source_nuo - nu_shift ,2) / sigma2) / sqrt(sigma2);
 	 //  1/sqrt(2pi)
 
 	return pow(r/lens->source_r_in,lens->source_gamma)*eta*r/tau;

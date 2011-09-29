@@ -191,8 +191,8 @@ void readparams_ana(char *filename,CosmoHndl cosmo,AnaLens *lens){
 	  printf(">    %s %.3e Mpc\n",label,lens->source_r_out);
 	  fscanf(file,"%s %e",label,&(lens->source_nuo));
 	  printf(">    %s %.5e Hz\n",label,lens->source_nuo);
-	  fscanf(file,"%s %e",label,&(lens->source_sigma));
-	  printf(">    %s %.5e km/s\n",label,lens->source_sigma);
+	  fscanf(file,"%s %e",label,&(lens->source_fK));
+	  printf(">    %s %.4f X V_Kepler\n",label,lens->source_fK);
 	  lens->source_monocrome = False;  // default value
 
   }
@@ -275,7 +275,6 @@ void free_AnaLens(AnaLens *lens){
 	  free(lens->perturb_modes);
 	}
 	if(lens->stars_N > 0 && lens->stars_implanted){
-		free(lens->star_rsph);
 		free(lens->star_masses);
 		free(lens->stars);
 		free_PosTypeMatrix(lens->stars_xp,0,lens->stars_N-1,0,2);
@@ -328,14 +327,14 @@ void PrintAnaLens(AnaLens *lens,Boolean show_substruct,Boolean show_stars){
 			  printf(">    disk model\n");
 			  printf(">      inclination %.3f rads\n",lens->source_inclination);
 			  printf(">      disk opening angle %.3f rads\n",lens->source_opening_angle);
-			  printf(">      turbulent/thermal dispersion %e km/s\n",lens->source_sigma);
+			  printf(">      turbulent/thermal dispersion %e x V_kepler\n",lens->source_fK);
 			  break;
 		  case BLR_Sph1:
 			  printf(">    spherical with circular orbits\n");
 			  break;
 		  case BLR_Sph2:
 			  printf(">    spherical with Gaussian velocities\n");
-			  printf(">      turbulent/thermal dispersion %e km/s\n",lens->source_sigma);
+			  printf(">      turbulent/thermal dispersion %e x V_kepler\n",lens->source_fK);
 			  break;
 		  default:
 			  ERROR_MESSAGE();

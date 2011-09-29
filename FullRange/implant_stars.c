@@ -36,7 +36,6 @@ void implant_stars(AnaLens *lens,Point *centers,unsigned long Nregions,long *see
 		coord[0][1] = coord[0][2] = coord[1][0] = coord[1][2] = 0.0;
 		coord[2][0] = coord[2][1] = 0.0;
 
-		lens->star_rsph = (float *) calloc(lens->stars_N,sizeof(float));
 		lens->star_masses = (float *) calloc(lens->stars_N,sizeof(float));
 		lens->stars = (unsigned long *) calloc(lens->stars_N,sizeof(unsigned long));
 		lens->stars_xp = PosTypeMatrix(0,lens->stars_N-1,0,2);
@@ -74,7 +73,7 @@ void implant_stars(AnaLens *lens,Point *centers,unsigned long Nregions,long *see
 
 		for(i=0;i<NstarsPerImage;++i,++m){
 			//m=j*NstarsPerImage+i;
-			r=lens->star_region[j]*sqrt(ran2(seed));
+			r = lens->star_region[j]*sqrt(ran2(seed));
 			theta=2*pi*ran2(seed);
 			lens->stars_xp[m][0] = centers[j].x[0] + r*cos(theta);
 			lens->stars_xp[m][1] = centers[j].x[1] + r*sin(theta);
@@ -99,7 +98,8 @@ void implant_stars(AnaLens *lens,Point *centers,unsigned long Nregions,long *see
 
 	//printf("last star x = %e %e\n",lens->stars_xp[lens->stars_N-1][0],lens->stars_xp[lens->stars_N-1][1]);
 
-	lens->star_tree = BuildTreeNB(lens->stars_xp,lens->star_rsph,lens->star_masses
+	float dummy=0;
+	lens->star_tree = BuildTreeNB(lens->stars_xp,&dummy,lens->star_masses
 			,False,True,lens->stars_N,lens->stars,2,lens->star_theta_force);
 
 	//printf("projected with 2D tree\n");

@@ -116,7 +116,7 @@ void FreePointArray(Point *array){
 
 TreeHndl NewTree(Point *xp,unsigned long npoints
 		 ,double boundery_p1[2],double boundery_p2[2],
-		 double center[2]){
+		 double center[2],int Nbucket){
   unsigned long i;
   TreeStruct *tree;
 
@@ -140,6 +140,7 @@ TreeHndl NewTree(Point *xp,unsigned long npoints
   tree->Nbranches = 1;
   tree->current = tree->top;
 
+  tree->Nbucket = Nbucket;
   //printTree(tree);
   /*FillList(tree->pointlist,&xp[1],npoints-1,1);*/
   return(tree);
@@ -311,6 +312,17 @@ Boolean atTop(TreeHndl tree){
     return(tree->current == tree->top);
 }
 
+Boolean atLeaf(TreeHndl tree){
+
+    assert(tree != NULL);
+    if( isEmpty(tree) ){
+
+	ERROR_MESSAGE(); fprintf(stderr, "Tree Error: calling atTop() on empty tree\n");
+	exit(1);
+    }
+    return((tree->current->child1==NULL)*(tree->current->child2==NULL));
+}
+
 /************************************************************************
  * noChild
  * Returns "True" if the child of the current branch does not exist and "False" otherwise.
@@ -338,6 +350,12 @@ Boolean offEnd(TreeHndl tree){
 
     assert(tree != NULL);
     return(tree->current == NULL);
+}
+
+Boolean CurrentIsSquareTree(TreeHndl tree){
+	if( fabs(1 - (tree->current->boundery_p2[0] - tree->current->boundery_p1[0])/(tree->current->boundery_p2[1] - tree->current->boundery_p1[1]) )
+			< 0.001) return True;
+	else return False;
 }
 
 /************************************************************************
@@ -413,20 +431,17 @@ Boolean moveToChild(TreeHndl tree,int child){
     return False;
 }
 
-void moveUp(TreeHndl tree){
+Boolean moveUp(TreeHndl tree){
 
     assert(tree != NULL);
     if( offEnd(tree) ){
       ERROR_MESSAGE(); fprintf(stderr, "Tree Error: call to moveUp() when current is off end\n");
       exit(1);
     }
-    if( tree->current == tree->top ){
-      ERROR_MESSAGE(); fprintf(stderr, "Tree Error: call to moveUp() tried to move off the top\n");
-      exit(1);
-    }
+    if( tree->current == tree->top ) return False;
 
     tree->current = tree->current->prev;  /* can move off end */
-    return;
+    return True;
 }
 
 /************************************************************************

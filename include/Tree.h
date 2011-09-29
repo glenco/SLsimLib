@@ -70,6 +70,7 @@ typedef struct TreeStruct{
   Branch *current;
   unsigned long Nbranches;  /* number of barnches in tree */
   PointList *pointlist;
+  int Nbucket;             // number of points allowed in leaves of tree
 } TreeStruct;
 
 typedef struct TreeStruct *TreeHndl;
@@ -117,19 +118,25 @@ typedef struct Grid{
 
 typedef struct Grid *GridHndl;
 
-#endif
+#include <tree_maintenance.h>
+#include <point.h>
+#include <List.h>
+#include <Kist.h>
+#include <KistDriver.h>
 
 /***** Constructors/Destructors*****/
 
 TreeHndl NewTree(Point *xp,unsigned long npoints
-		 ,double boundery_p1[2],double boundery_p2[2],
-		 double center[2]);
+		 ,double boundery_p1[2],double boundery_p2[2]
+		 ,double center[2],int Nbucket);
 
 /***** Access functions *****/
 
 Boolean isEmpty(TreeHndl tree);
 Boolean atTop(TreeHndl tree);
+Boolean atLeaf(TreeHndl tree);
 Boolean offEnd(TreeHndl tree);
+Boolean CurrentIsSquareTree(TreeHndl tree);
 Boolean noChild(TreeHndl tree);
 
 /*unsigned long *getCurrent(TreeHndl tree,unsigned long *npoints);*/
@@ -139,7 +146,7 @@ unsigned long getNbranches(TreeHndl tree);
 /***** Manipulation procedures *****/
 
 void moveTop(TreeHndl tree);
-void moveUp(TreeHndl tree);
+Boolean moveUp(TreeHndl tree);
 
 Boolean moveToChild(TreeHndl tree,int child);
 
@@ -169,9 +176,6 @@ void checkTree(TreeHndl tree);
 
 /** routines in TreeDriver.c **/
 
-TreeHndl BuildTree(Point *xp,unsigned long Npoints);
-void _BuildTree(TreeHndl tree);
-void FillTree(TreeHndl tree,Point *xp,unsigned long Npoints);
 Point *NearestNeighbor(TreeHndl tree,double *ray,int Nneighbors,ListHndl neighborlist
 		,short direction);
 inline int inbox(double ray[2],double *p1,double *p2);
@@ -205,7 +209,6 @@ void PrintImageInfo(ImageInfo *image);
 
 // routines using tree
 
-int AddPointsToTree(TreeHndl tree,Point *xpoint,unsigned long Nadd);
 void PointsWithin(TreeHndl tree,double *ray,float rmax,ListHndl neighborlist,short markpoints);
 void PointsWithin_iter(TreeHndl tree,double *ray,float rmax,ListHndl neighborlist,short markpoints);
 void NeighborsOfNeighbors(ListHndl neighbors,ListHndl wholelist);
@@ -305,4 +308,4 @@ void splitlist(ListHndl imagelist,ImageInfo *images,int *Nimages,int Maximages);
 void rayshooterInternal(unsigned long Npoints,Point *i_points,Boolean kappa_off);
 void in_source(double *y_source,ListHndl sourcelist);
 
-
+#endif
