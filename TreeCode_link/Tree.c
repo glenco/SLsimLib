@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <math.h>
 #include "Tree.h"
 #include <Kist.h>
 #include <List.h>
@@ -312,15 +313,8 @@ Boolean atTop(TreeHndl tree){
     return(tree->current == tree->top);
 }
 
-Boolean atLeaf(TreeHndl tree){
-
-    assert(tree != NULL);
-    if( isEmpty(tree) ){
-
-	ERROR_MESSAGE(); fprintf(stderr, "Tree Error: calling atTop() on empty tree\n");
-	exit(1);
-    }
-    return((tree->current->child1==NULL)*(tree->current->child2==NULL));
+inline Boolean atLeaf(TreeHndl tree){
+    return( (tree->current->child1==NULL)*(tree->current->child2==NULL) );
 }
 
 /************************************************************************
@@ -353,9 +347,13 @@ Boolean offEnd(TreeHndl tree){
 }
 
 Boolean CurrentIsSquareTree(TreeHndl tree){
-	if( fabs(1 - (tree->current->boundery_p2[0] - tree->current->boundery_p1[0])/(tree->current->boundery_p2[1] - tree->current->boundery_p1[1]) )
-			< 0.001) return True;
-	else return False;
+	if( fabs(1 - (tree->current->boundery_p2[0] - tree->current->boundery_p1[0])
+			    /(tree->current->boundery_p2[1] - tree->current->boundery_p1[1]) )
+			< 0.001){
+		return True;
+	}
+
+	return False;
 }
 
 /************************************************************************
@@ -438,8 +436,9 @@ Boolean moveUp(TreeHndl tree){
       ERROR_MESSAGE(); fprintf(stderr, "Tree Error: call to moveUp() when current is off end\n");
       exit(1);
     }
-    if( tree->current == tree->top ) return False;
 
+    if( tree->current == tree->top ) return False;
+    assert(tree->current->prev);
     tree->current = tree->current->prev;  /* can move off end */
     return True;
 }

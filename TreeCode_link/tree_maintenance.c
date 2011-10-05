@@ -16,10 +16,12 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <nrD.h>
-#include "Tree.h"
+#include <Tree.h>
 #include <nrutil.h>
+//#include <tree_maintenance.h>
 
 static int median_cut=1;
+//const int Ngrid_block = 3;
 
 TreeHndl BuildTree(Point *xp,unsigned long Npoints){
   TreeHndl tree;
@@ -170,44 +172,44 @@ void _BuildTree(TreeHndl tree){
 
   /* centers of mass */
 
- for(i=0;i<2;++i) branch1.center[i]=0;
- tree->pointlist->current=branch1.points;
- for(i=0;i<cut; ++i){
+  for(i=0;i<2;++i) branch1.center[i]=0;
+  tree->pointlist->current=branch1.points;
+  for(i=0;i<cut; ++i){
 /*    branch1.center[0]+=xp[points[i]][0]/branch1.npoints; */
 /*    branch1.center[1]+=xp[points[i]][1]/branch1.npoints; */
-   branch1.center[0]+=tree->pointlist->current->x[0]/branch1.npoints;
-   branch1.center[1]+=tree->pointlist->current->x[1]/branch1.npoints;
-   MoveDownList(tree->pointlist);
- }
+	  branch1.center[0]+=tree->pointlist->current->x[0]/branch1.npoints;
+	  branch1.center[1]+=tree->pointlist->current->x[1]/branch1.npoints;
+	  MoveDownList(tree->pointlist);
+  }
 
- for(i=0;i<2;++i) branch2.center[i]=0;
- tree->pointlist->current=branch2.points;
- for(i=cut;i<cbranch->npoints; ++i){
+  for(i=0;i<2;++i) branch2.center[i]=0;
+  tree->pointlist->current=branch2.points;
+  for(i=cut;i<cbranch->npoints; ++i){
 /*    branch2.center[0]+=xp[points[i]][0]/branch2.npoints; */
 /*    branch2.center[1]+=xp[points[i]][1]/branch2.npoints; */
-   branch2.center[0]+=tree->pointlist->current->x[0]/branch2.npoints;
-   branch2.center[1]+=tree->pointlist->current->x[1]/branch2.npoints;
-   MoveDownList(tree->pointlist);
- }
+	  branch2.center[0]+=tree->pointlist->current->x[0]/branch2.npoints;
+	  branch2.center[1]+=tree->pointlist->current->x[1]/branch2.npoints;
+	  MoveDownList(tree->pointlist);
+  }
 
- attachChildrenToCurrent(tree,branch1,branch2);
+  attachChildrenToCurrent(tree,branch1,branch2);
 
- if( branch1.npoints > 0 ){
+  if( branch1.npoints > 0 ){
      //attachChildToCurrent(tree,branch1,1);
      moveToChild(tree,1);
      _BuildTree(tree);
      moveUp(tree);
- }
+  }
 
- if(branch2.npoints > 0 ){
+  if(branch2.npoints > 0 ){
      //attachChildToCurrent(tree,branch2,2);
-     moveToChild(tree,2);
-     _BuildTree(tree);
-     moveUp(tree);
- }
+	  moveToChild(tree,2);
+	  _BuildTree(tree);
+	  moveUp(tree);
+  }
 
  /*printf("reached end of _BuildTree level=%i\n",tree->current->level);*/
- return;
+  return;
 }
 
 int AddPointsToTree(TreeHndl tree,Point *xpoint,unsigned long Nadd){
@@ -227,7 +229,7 @@ int AddPointsToTree(TreeHndl tree,Point *xpoint,unsigned long Nadd){
    moveTop(tree);
    _FindLeaf(tree,xpoint->x,Nadd);
    parent_branch=tree->current;
-   tree->current->npoints -= Nadd;
+   tree->current->npoints -= Nadd;  // subtract number that was added in _FindLeaf
    x=(double *) malloc(2*tree->Nbucket*sizeof(double));
    assert(x);
 
@@ -261,7 +263,7 @@ int AddPointsToTree(TreeHndl tree,Point *xpoint,unsigned long Nadd){
     			parent_branch=tree->current;
     		}
 
-    		if( tree->current->child1 != NULL || tree->current->child2 != NULL){
+    		if( !(atLeaf(tree)) ){
     			ERROR_MESSAGE();
     			printf("ERROR: _FindLeaf did not find a leaf for x = %e %e\n"
     					,xpoint[j].x[0],xpoint[j].x[1]);
@@ -274,11 +276,25 @@ int AddPointsToTree(TreeHndl tree,Point *xpoint,unsigned long Nadd){
     		}
 
     		// insert point into point list
-    		tree->pointlist->current=tree->current->points;
-    		JumpDownList(tree->pointlist,tree->current->npoints-2);  // adds point to end of branches list
-    		InsertPointAfterCurrent(tree->pointlist,&xpoint[j]);
-    		tree->pointlist->current=tree->current->points;
+    		if(tree->current->points == NULL){
+    			// case of no previous points in leaf
+    			assert(tree->current->npoints == 1);
+    			tree->current->points = &xpoint[j];
+     			tree->pointlist->current = tree->current->prev->points;
+       			JumpDownList(tree->pointlist,tree->current->prev->npoints-2);  // adds point to end of parent branches list
+       			InsertPointAfterCurrent(tree->pointlist,tree->current->points);
+       			tree->pointlist->current = tree->current->points;
+       			tree->current->points->leaf = tree->current;
 
+    		}else{
+    			// case of point already in leaf
+    			tree->pointlist->current = tree->current->points;
+    			JumpDownList(tree->pointlist,tree->current->npoints-2);  // adds point to end of branches list
+    			InsertPointAfterCurrent(tree->pointlist,&xpoint[j]);
+    			tree->pointlist->current = tree->current->points;
+    		}
+
+    		assert(tree->Nbucket == 1);
     		if( tree->current->npoints > tree->Nbucket ){ // create new leaves
 
     			// initialize boundaries to old boundaries
@@ -404,14 +420,13 @@ int AddPointsToTree(TreeHndl tree,Point *xpoint,unsigned long Nadd){
     return 1;
 }
 
-unsigned long PruneTree(TreeHndl i_tree,TreeHndl s_tree,double resolution){
+unsigned long PruneTree(TreeHndl i_tree,TreeHndl s_tree,double resolution,Boolean useSB){
 	static ListHndl trashlist;
 	static short init=1;
 	Point *points;
 	long i,Ntmp,count = 0;
 	double res,initres;
-
-	some ability to take surface brightness into account
+	Boolean go;
 
 	if(init){ trashlist = NewList(); init=0; }
 
@@ -425,11 +440,26 @@ unsigned long PruneTree(TreeHndl i_tree,TreeHndl s_tree,double resolution){
 	 if(resolution > initres/3 || resolution <= 0.0) return 0;  // do not allow pruning up to the initial grid size
 
 	 // walk tree
+	 go = True;
 	 do{
 		 res = (i_tree->current->boundery_p2[0]-i_tree->current->boundery_p1[0]);
-		 if(res <= resolution ){
+		 if( (res <= resolution && CurrentIsSquareTree(i_tree) )
+				 &&  i_tree->current->npoints % 9 == 0){
+
+			 if(useSB){
+				 go = True;
+				 // Check if surface brightness of all points in cell are zero.
+				 i_tree->pointlist->current = i_tree->current->points;
+				 for(i=0; i < i_tree->current->npoints;++i,MoveDownList(i_tree->pointlist) ){
+					 if(i_tree->pointlist->current->surface_brightness > 0 ){
+						 go = False;
+						 break;
+					 }
+				 }
+			 }
+
 			 // remove all lower branches and make current a leaf
-			 count += FreeBranchesBelow(i_tree,s_tree,trashlist);
+			 if(go && i_tree->current->npoints > 1) count += FreeBranchesBelow(i_tree,s_tree,trashlist);
 		 }
 	 }while(TreeWalkStep(i_tree,True));
 
@@ -437,19 +467,20 @@ unsigned long PruneTree(TreeHndl i_tree,TreeHndl s_tree,double resolution){
 
 	 // Trash collection
 	 if(count > 10 && trashlist->Npoints > 10){
-		 Boolean step;
 		 MoveToTopList(trashlist);
 		 do{
 			 // check to see if all points in the block have been removed from the trees
 			 for(i=0;i<trashlist->current->head;++i) if(trashlist->current[i].leaf != NULL) break;
 			 if(i == trashlist->current->head){
-				 if(AtTopList(trashlist)) step = False; else step = True;
+				 if(AtTopList(trashlist)) go = False; else go = True;
 				 points = TakeOutCurrent(trashlist);
+				 printf("freeing memory!\n");
 				 FreePointArray(points);
 			 }
-		 }while(MoveDownList(trashlist) && step);
+		 }while(MoveDownList(trashlist) && go);
 	 }
 
+	 printf("count = %li\n",count);
 	 return count;
 }
 
@@ -471,28 +502,39 @@ unsigned long FreeBranchesBelow(TreeHndl i_tree,TreeHndl s_tree,ListHndl trashli
 
 	Branch *branch,*top;
 	Point *point;
-	unsigned long Ntmp,i,count = 0;
+	unsigned long Ntmp,NtoRemove,i,count = 0,count2 = 0;
+	double center[2];
 
+	assert(i_tree->current->npoints % 9 == 0);
 	top = i_tree->current;
 	TreeWalkStep(i_tree,True);
-	while(i_tree->current != top->brother){
+
+	while( (top->child1 != NULL) || (top->child2 != NULL) ){
 
 		if(atLeaf(i_tree)){
+			assert(i_tree->current->points->image->leaf);
 			s_tree->current = i_tree->current->points->image->leaf;  // set s_tree to source of current image cell
-			RemoveLeafFromTree(s_tree,&Ntmp);
+
 			RemoveLeafFromTree(i_tree,&Ntmp);
 
 			// in a square leaf cell take out extra points that have come up from below
-			if( CurrentIsSquareTree(i_tree) && atLeaf(i_tree) ){
+			if( ( CurrentIsSquareTree(i_tree) && atLeaf(i_tree) )
+					&& i_tree->current->npoints == 9){
 
+				//printf("  collecting points from removed leaves\n");
 				i_tree->pointlist->current = i_tree->current->points;
-				Ntmp = i_tree->current->npoints;
-				for(i=0;i<Ntmp;++i,MoveDownList(i_tree->pointlist)){
+				NtoRemove = i_tree->current->npoints;
+				assert(NtoRemove == 9);
+				center[0] = (i_tree->current->boundery_p1[0] + i_tree->current->boundery_p2[0])/2;
+				center[1] = (i_tree->current->boundery_p1[1] + i_tree->current->boundery_p2[1])/2;
+				for(i=0;i<NtoRemove;++i,MoveDownList(i_tree->pointlist)){
 					// find central point and remove others
-					if( (pow(i_tree->current->center[0]-i_tree->pointlist->current->x[0],2)
-						+ pow(i_tree->current->center[1]-i_tree->pointlist->current->x[1],2) )
-						< pow(i_tree->pointlist->current->gridsize,2) ){
 
+					if( (pow(center[0]-i_tree->pointlist->current->x[0],2)
+						+ pow(center[1]-i_tree->pointlist->current->x[1],2) )
+						< pow(i_tree->pointlist->current->gridsize/4,2) ){
+
+						++count2;
 						// keep this central point
 						i_tree->pointlist->current->gridsize = i_tree->current->boundery_p2[0]-i_tree->current->boundery_p1[0];
 						i_tree->pointlist->current->image->gridsize = i_tree->pointlist->current->gridsize;
@@ -503,14 +545,38 @@ unsigned long FreeBranchesBelow(TreeHndl i_tree,TreeHndl s_tree,ListHndl trashli
 						++count;
 
 						// reduce the number of particles in all parent cells
+
+						/* First take points out of source plane
+						 *   This is tricky because they are not ordered into
+						 *   square blocks with 9 points in each.
+						 */
+						assert(i_tree->pointlist->current->image->leaf);
+						// go up the tree to subtract point from branch counts
 						branch = s_tree->current = i_tree->pointlist->current->image->leaf;
-						do{
+						assert(s_tree->current->npoints == 1);
+						assert(atLeaf(s_tree));
+						--(s_tree->current->npoints);
+						s_tree->current->points = NULL;
+
+						while(moveUp(s_tree)){
 							--(s_tree->current->npoints);
-							if(s_tree->current->points == i_tree->pointlist->current->image){
-								s_tree->current->points = s_tree->current->points->next;
+							if(s_tree->current->npoints == 0){
+								// If the branch now has no points in it remove its children.
+								moveToChild(s_tree,1);
+								RemoveLeafFromTree(s_tree,&Ntmp);
+
+								moveToChild(s_tree,2);
+								RemoveLeafFromTree(s_tree,&Ntmp);
+
+								s_tree->current->points = NULL;
+
+							}else{
+							// reassign first point in parent branches if necessary
+								if(s_tree->current->points == i_tree->pointlist->current->image){
+									s_tree->current->points = s_tree->current->points->next;
+								}
 							}
-						}while(moveUp(s_tree));
-						s_tree->current = branch;
+						}
 
 						// Take point out of the source point list
 						s_tree->pointlist->current = i_tree->pointlist->current->image;
@@ -518,8 +584,11 @@ unsigned long FreeBranchesBelow(TreeHndl i_tree,TreeHndl s_tree,ListHndl trashli
 						point->leaf = NULL;  // set leaf to NULL to indicate that point is no longer in tree
 						if(point->head) InsertPointAfterCurrent(trashlist,point);  // save the head of memory blocks
 
+
+						// take points out of image plane
 						branch = i_tree->current;
 						do{
+							assert(s_tree->current->npoints);
 							--(i_tree->current->npoints);
 							if(i_tree->current->points == i_tree->pointlist->current){
 								i_tree->current->points = i_tree->current->points->next;
@@ -534,14 +603,18 @@ unsigned long FreeBranchesBelow(TreeHndl i_tree,TreeHndl s_tree,ListHndl trashli
 					}
 
 				}
+				assert(count % 8 == 0);
+				assert((count + count2) % 9 == 0);
 			}
 
 		}
-		TreeWalkStep(i_tree,True);
+		if( !(atLeaf(i_tree)) )TreeWalkStep(i_tree,True);
 	}
 
 	i_tree->current = top;
 
+
+	//if(count) printf("FreeBranchesBelow() freed %li points and moved up %li points\n",count,count2);
     return count;
 }
 
@@ -563,7 +636,7 @@ Point *RemoveLeafFromTree(TreeHndl tree,unsigned long *Npoints){
 	Point *point;
 	unsigned long i;
 
-	if(atTop(tree)) return NULL;
+	if(atTop(tree) || !(atLeaf(tree)) ) return NULL;
 
 	if( atLeaf(tree) ){
 		branch = tree->current;

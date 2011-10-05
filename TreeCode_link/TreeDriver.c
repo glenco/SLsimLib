@@ -12,7 +12,7 @@
 static int incell;
 static Point **temp_points,tmp;
 static double realray[2];
-Point *point_global;
+//Point *point_global;
 
 
 Point *NearestNeighbor(TreeHndl tree,double *ray,int Nneighbors,ListHndl neighborlist,short direction){
@@ -34,8 +34,13 @@ Point *NearestNeighbor(TreeHndl tree,double *ray,int Nneighbors,ListHndl neighbo
 
   if(tree->top->npoints <= Nneighbors){
 	  ERROR_MESSAGE();
-    printf("ERROR: in NearestNeighbor, number of neighbors > total number of points\n");
-    exit(1);
+	  printf("ERROR: in NearestNeighbor, number of neighbors > total number of points\n");
+	  exit(1);
+  }
+
+  if(Nneighbors <= 0){
+	  EmptyList(neighborlist);
+	  return NULL;
   }
 
   if(count==0){
@@ -57,17 +62,18 @@ Point *NearestNeighbor(TreeHndl tree,double *ray,int Nneighbors,ListHndl neighbo
     oldNneighbors=Nneighbors;
   }
 
+
   /*   printf("Nneighbors=%i\n",Nneighbors); */
   /*   printf("array sizes=%i\n",Nneighbors+tree->Nbucket); */
 
   /* initalize distance to neighbors to a large number */
-  for(i=0;i<tree->Nbucket+Nneighbors;++i){
+  for(i=0;i<(tree->Nbucket+Nneighbors);++i){
     rneighbors[i]=10*(tree->top->boundery_p2[0]-tree->top->boundery_p1[0]);
   }
 
   moveTop(tree);
-//   printf("p1= [%f,%f]\n", tree->current->boundery_p1[0],tree->current->boundery_p1[1]);
-//   printf("p2= [%f,%f]\n", tree->current->boundery_p2[0],tree->current->boundery_p2[1]);
+  //   printf("p1= [%f,%f]\n", tree->current->boundery_p1[0],tree->current->boundery_p1[1]);
+  //   printf("p2= [%f,%f]\n", tree->current->boundery_p2[0],tree->current->boundery_p2[1]);
 
   realray[0]=ray[0];
   realray[1]=ray[1];
@@ -91,16 +97,10 @@ Point *NearestNeighbor(TreeHndl tree,double *ray,int Nneighbors,ListHndl neighbo
   /* convert from point array to exported point list */
 
   for(i=0;i<Nneighbors;++i){
-/*     printf("hello i=%i Nneighbors=%i x= %e %e %i\n",i,Nneighbors */
-/* 	   ,neighborpoints[i]->x[0],neighborpoints[i]->x[1],neighborpoints[i]->image->id); */
     InsertAfterCurrent(neighborlist,neighborpoints[i]->x,neighborpoints[i]->id,neighborpoints[i]->image);
-/*     printf("did insert\n"); */
     MoveDownList(neighborlist);
-    /*neighborlist->current->invmag=neighborpoints[i]->invmag;*/
     PointCopyData(neighborlist->current,neighborpoints[i]);/**/
   }
-
-  /*  printf("returning from NN\n");*/
 
   return neighborpoints[0];
 }
@@ -118,180 +118,157 @@ void _NearestNeighbor(TreeHndl tree,double *ray,int Nneighbors,Point **neighborp
 
     if( inbox(ray,tree->current->boundery_p1,tree->current->boundery_p2) ){
 
-      /* found the box small enough */
-      if( tree->current->npoints <= Nneighbors+tree->Nbucket ){
-	incell=0;
-	/*printf("found box with %i points\n",tree->current->npoints);*/
+    	// found the box small enough */
+    	if( tree->current->npoints <= (Nneighbors+tree->Nbucket) ){
+    		incell=0;
+    		/*printf("found box with %i points\n",tree->current->npoints);*/
 
-	/* this sets ray back to real value once closest leaf bax is found */
-	if( (ray[0]!=realray[0])*(ray[1]!=realray[1]) ){ printf("ray != realray _NearestNeighbor\n"); exit(0);}
+    		/* this sets ray back to real value once closest leaf bax is found */
+    		if( (ray[0]!=realray[0])*(ray[1]!=realray[1]) ){ printf("ray != realray _NearestNeighbor\n"); exit(0);}
 
-	ray[0]=realray[0];
-	ray[1]=realray[1];
+    		ray[0]=realray[0];
+    		ray[1]=realray[1];
 
-	/* calculate the distance to all the points in cell */
-	tree->pointlist->current=tree->current->points;
-	for(i=0;i<tree->current->npoints;++i){
+    		/* calculate the distance to all the points in cell */
+    		if(tree->current->points != NULL ) tree->pointlist->current=tree->current->points;
+    		for(i=0;i<tree->current->npoints;++i){
 
-	  dx=tree->pointlist->current->x[0]-ray[0];
-	  dy=tree->pointlist->current->x[1]-ray[1];
+    			dx=tree->pointlist->current->x[0]-ray[0];
+    			dy=tree->pointlist->current->x[1]-ray[1];
 
-	  switch(*direction){
-	  case 0: /* distance */
-	    rneighbors[i] = sqrt(dx*dx+dy*dy);
-	    break;
-	  case 1: /* right */
-	    if(dx>0 && fabs(dy/dx)<0.999) rneighbors[i]=sqrt(dx*dx+dy*dy);
-	    else rneighbors[i]=1.0e99;
-	    break;
-	  case 2: /* left */
-	    if(dx<0 && fabs(dy/dx)<0.999) rneighbors[i]=sqrt(dx*dx+dy*dy);
-	    else rneighbors[i]=1.0e99;
-	    break;
-	  case 3: /* up */
-	    if(dy>0 && fabs(dx/dy)<0.999) rneighbors[i]=sqrt(dx*dx+dy*dy);
-	    else rneighbors[i]=1.0e99;
-	    break;
-	  case 4: /* down */
-	    if(dy<0 && fabs(dx/dy)<0.999) rneighbors[i]=sqrt(dx*dx+dy*dy);
-	    else rneighbors[i]=1.0e99;
-	    break;
-	  }
+    			switch(*direction){
+    			case 0: /* distance */
+    				rneighbors[i] = sqrt(dx*dx+dy*dy);
+    				break;
+    			case 1: /* right */
+    				if(dx>0 && fabs(dy/dx)<0.999) rneighbors[i]=sqrt(dx*dx+dy*dy);
+    				else rneighbors[i]=1.0e99;
+    				break;
+    			case 2: /* left */
+    				if(dx<0 && fabs(dy/dx)<0.999) rneighbors[i]=sqrt(dx*dx+dy*dy);
+    				else rneighbors[i]=1.0e99;
+    				break;
+    			case 3: /* up */
+    				if(dy>0 && fabs(dx/dy)<0.999) rneighbors[i]=sqrt(dx*dx+dy*dy);
+    				else rneighbors[i]=1.0e99;
+    				break;
+    			case 4: /* down */
+    				if(dy<0 && fabs(dx/dy)<0.999) rneighbors[i]=sqrt(dx*dx+dy*dy);
+    				else rneighbors[i]=1.0e99;
+    				break;
+    			}
 
-	  /*neighbors[i]=tree->pointlist->current->id;*/
-	  index[i]=i;
-	  temp_points[i]=tree->pointlist->current;
-	  MoveDownList(tree->pointlist);
-	}
+     			index[i]=i;
+    			temp_points[i]=tree->pointlist->current;
+    			MoveDownList(tree->pointlist);
+    		}
 
-	/*printf("first sort at level =%i\n",tree->current->level);*/
-	/*printf("N=%i\n",tree->current->npoints);*/
-	/*for(i=0;i<tree->current->npoints;++i) printf("  %i  %e\n",neighbors[i],rneighbors[i]);*/
-	double_sort(tree->current->npoints,rneighbors-1,index-1);
-	for(i=0;i<tree->current->npoints;++i) neighborpoints[i]=temp_points[index[i]];
+    		if(tree->current->npoints > 0){
+    			double_sort(tree->current->npoints,rneighbors-1,index-1);
+    			for(i=0;i<tree->current->npoints;++i) neighborpoints[i] = temp_points[index[i]];
+    		}
 
-      }else{ /* keep going down the tree */
+      }else{  // keep going down the tree
 
-	/*printf("moving to child1 from level %i\n",tree->current->level);*/
-	  if(tree->current->child1 !=NULL){
-	      moveToChild(tree,1);
-	      _NearestNeighbor(tree,ray,Nneighbors,neighborpoints,rneighbors,direction);
-	      /*printf("moving up from level %i\n",tree->current->level);*/
-	      moveUp(tree);
+    	  if(tree->current->child1 !=NULL){
+    		  moveToChild(tree,1);
+    		  _NearestNeighbor(tree,ray,Nneighbors,neighborpoints,rneighbors,direction);
+    		  moveUp(tree);
 
-	      incell2=incell;
-	  }
+    		  incell2=incell;
+    	  }
 
-	  if(tree->current->child2 !=NULL){
-	      /*printf("moving to child2 from level %i\n",tree->current->level);*/
-	      moveToChild(tree,2);
-	      _NearestNeighbor(tree,ray,Nneighbors,neighborpoints,rneighbors,direction);
-	      /*printf("moving up from level %i\n",tree->current->level);*/
-	      moveUp(tree);
-	  }
+    	  if(tree->current->child2 !=NULL){
+    		  moveToChild(tree,2);
+    		  _NearestNeighbor(tree,ray,Nneighbors,neighborpoints,rneighbors,direction);
+    		  moveUp(tree);
+    	  }
 
-	/** if ray found in second child go back to first to search for neighbors **/
-	if( (incell2==1) && (incell==0) ){
-	  if(tree->current->child1 !=NULL){
-	      /*printf("moving to child1 again from level %i\n",tree->current->level);*/
-	      moveToChild(tree,1);
-	      _NearestNeighbor(tree,ray,Nneighbors,neighborpoints,rneighbors,direction);
-	      /*printf("moving up from level %i\n",tree->current->level);*/
-	      moveUp(tree);
-	  }
-	}
+    	  // if ray found in second child go back to first to search for neighbors
+    	  if( (incell2==1) && (incell==0) ){
+    		  if(tree->current->child1 !=NULL){
+    			  moveToChild(tree,1);
+    			  _NearestNeighbor(tree,ray,Nneighbors,neighborpoints,rneighbors,direction);
+    			  moveUp(tree);
+    		  }
+    	  }
+
       }
-    } /* not in the box */
+    } // not in the box
 
   }else{  /* already found cell */
-    /*printf("finding neighboring boxes at level = %i\n",tree->current->level);*/
 
-    /* does radius cut into the box */
-    if( cutbox(ray,tree->current->boundery_p1,tree->current->boundery_p2,rneighbors[Nneighbors-1]) ){
+	  // does radius cut into the box
+	  if( cutbox(ray,tree->current->boundery_p1,tree->current->boundery_p2,rneighbors[Nneighbors-1]) ){
 
-      if( (tree->current->child1 == NULL)*(tree->current->child2 == NULL)){  /* leaf case */
+		  if( atLeaf(tree) ){  /* leaf case */
 
-	/*printf("entering leaf box level %i number of points %i Nbucket=%i\n"
-	  ,tree->current->level,tree->current->npoints,tree->Nbucket);*/
+			  /* combine found neighbors with points in box and resort */
+			  if(tree->current->points != NULL) tree->pointlist->current=tree->current->points;
 
-	/* combine found neighbors with points in box and resort */
-	tree->pointlist->current=tree->current->points;
-	for(i=0;i<Nneighbors;++i){
-	  index[i]=i;
-	  temp_points[i]=neighborpoints[i];
-	}
+			  for(i=0;i<Nneighbors;++i){
+				  index[i]=i;
+				  temp_points[i]=neighborpoints[i];
+			  }
 
-	for(i=Nneighbors;i<(tree->current->npoints+Nneighbors);++i){
-	  /*printf("i=%i\n",i);*/
-/* 	  for(j=0,rneighbors[i]=0.0;j<2;++j){ */
-/* 	    rneighbors[i]+=pow(tree->pointlist->current->x[j]-ray[j],2); */
-/* 	  } */
-/* 	  rneighbors[i]=sqrt( rneighbors[i] ); */
+			  for(i=Nneighbors;i<(tree->current->npoints+Nneighbors);++i){
 
-	  dx=tree->pointlist->current->x[0]-ray[0];
-	  dy=tree->pointlist->current->x[1]-ray[1];
+				  dx=tree->pointlist->current->x[0]-ray[0];
+				  dy=tree->pointlist->current->x[1]-ray[1];
 
-	  switch(*direction){
-	  case 0: /* distance */
-	    rneighbors[i] = sqrt(dx*dx+dy*dy);
-	    break;
-	  case 1: /* right */
-	    if(dx>0 && fabs(dy/dx)<0.999) rneighbors[i]=sqrt(dx*dx+dy*dy);
-	    else rneighbors[i]=1.0e99;
-	    break;
-	  case 2: /* left */
-	    if(dx<0 && fabs(dy/dx)<0.999) rneighbors[i]=sqrt(dx*dx+dy*dy);
-	    else rneighbors[i]=1.0e99;
-	    break;
-	  case 3: /* up */
-	    if(dy>0 && fabs(dx/dy)<0.999) rneighbors[i]=sqrt(dx*dx+dy*dy);
-	    else rneighbors[i]=1.0e99;
-	    break;
-	  case 4: /* down */
-	    if(dy<0 && fabs(dx/dy)<0.999) rneighbors[i]=sqrt(dx*dx+dy*dy);
-	    else rneighbors[i]=1.0e99;
-	    break;
+				  switch(*direction){
+				  case 0: /* distance */
+					  rneighbors[i] = sqrt(dx*dx+dy*dy);
+					  break;
+				  case 1: /* right */
+					  if(dx>0 && fabs(dy/dx)<0.999) rneighbors[i]=sqrt(dx*dx+dy*dy);
+					  else rneighbors[i]=1.0e99;
+					  break;
+				  case 2: /* left */
+					  if(dx<0 && fabs(dy/dx)<0.999) rneighbors[i]=sqrt(dx*dx+dy*dy);
+					  else rneighbors[i]=1.0e99;
+					  break;
+				  case 3: /* up */
+					  if(dy>0 && fabs(dx/dy)<0.999) rneighbors[i]=sqrt(dx*dx+dy*dy);
+					  else rneighbors[i]=1.0e99;
+					  break;
+				  case 4: /* down */
+					  if(dy<0 && fabs(dx/dy)<0.999) rneighbors[i]=sqrt(dx*dx+dy*dy);
+					  else rneighbors[i]=1.0e99;
+					  break;
+				  }
+
+				  index[i]=i;
+				  temp_points[i]=tree->pointlist->current;
+				  MoveDownList(tree->pointlist);
+			  }
+
+			  // sort the points found so far
+			  if(tree->current->npoints > 0){
+				  double_sort(tree->current->npoints+Nneighbors,rneighbors-1,index-1);
+				  for(i=0;i<(tree->current->npoints+Nneighbors);++i) neighborpoints[i] = temp_points[index[i]];
+			  }
+
+		  }else{
+
+			  if(tree->current->child1 !=NULL){
+				  moveToChild(tree,1);
+				  _NearestNeighbor(tree,ray,Nneighbors,neighborpoints,rneighbors,direction);
+				  moveUp(tree);
+			  }
+
+			  if(tree->current->child2 !=NULL){
+				  moveToChild(tree,2);
+				  _NearestNeighbor(tree,ray,Nneighbors,neighborpoints,rneighbors,direction);
+				  /*printf("moving up from level %i\n",tree->current->level);*/
+				  moveUp(tree);
+			  }
+		  }
+
 	  }
-
-	  index[i]=i;
-	  temp_points[i]=tree->pointlist->current;
-	  MoveDownList(tree->pointlist);
-	}
-	/*for(i=(tree->current->npoints+Nneighbors);i<Nneighbors+tree->Nbucket;++i) index[i]=i;*/
-
-	/*for(i=0;i<(tree->current->npoints+Nneighbors);++i) 
-	  printf("   i=%i rneighbor=%e neighbor=%i N=%i\n",i,rneighbors[i],neighbors[i],Nneighbors+tree->Nbucket);*/
-
-	double_sort(tree->current->npoints+Nneighbors,rneighbors-1,index-1);
-	/*for(i=Nneighbors;i<(tree->current->npoints+Nneighbors);++i) neighborpoints[i]=temp_points[index[i]];*/
-	/*printf("hello %i %i\n",Nneighbors+tree->Nbucket,tree->current->npoints+Nneighbors);*/
-	/*for(i=0;i<(tree->current->npoints+Nneighbors);++i) printf("index=%i\n",index[i]);*/
-	for(i=0;i<(tree->current->npoints+Nneighbors);++i) neighborpoints[i]=temp_points[index[i]];
-      }else{
-
-	/*printf("moving to child1 from level %i\n",tree->current->level);*/
-	    if(tree->current->child1 !=NULL){
-		moveToChild(tree,1);
-		_NearestNeighbor(tree,ray,Nneighbors,neighborpoints,rneighbors,direction);
-		/*printf("moving up from level %i\n",tree->current->level);*/
-		moveUp(tree);
-	    }
-
-	    if(tree->current->child2 !=NULL){
-		/*printf("moving to child2 from level %i\n",tree->current->level);*/
-		moveToChild(tree,2);
-		_NearestNeighbor(tree,ray,Nneighbors,neighborpoints,rneighbors,direction);
-		/*printf("moving up from level %i\n",tree->current->level);*/
-		moveUp(tree);
-	    }
-      }
-
-    }/*else{printf("box too distant at level %i\n",tree->current->level);}*/
 
   }
 
-  /*printf("end of _NearestNeighbor incell=%i level=%i p1= %e %e %e\n",incell,tree->current->level
-    ,tree->current->boundery_p1[0],tree->current->boundery_p1[1],tree->current->boundery_p1[2]);*/
   return;
 }
 
@@ -364,6 +341,9 @@ int cutbox(double *ray,double *p1,double *p2,double rmax){
 
 
 void _FindLeaf(TreeHndl tree,double *ray,unsigned long Nadd){
+	/*
+	 *  Finds the leaf the ray is in and adds Nadd to all of is parent leaves
+	 */
 	Boolean contin;
 /*   printf("***********************\n"); */
 /*   printf("level = %i  npoints = %i incell=%i\n", tree->current->level,tree->current->npoints,incell); */
@@ -478,12 +458,14 @@ void _FindBox(TreeHndl tree,double *ray){
 }
 
 
-/** simple sort for points in linked list **/
-/** slow for > 20 points **/
 Point *sortList(long n, double *arr,ListHndl list,Point *firstpointin){
+	/** simple sort for points in linked list **/
+	/** slow for > 20 points **/
   long i,j;
   double a;
   Point *point,*firstpoint;
+
+  if(n <= 1) return firstpointin;
 
   firstpoint=firstpointin;
 
@@ -556,11 +538,6 @@ void PointsWithin_iter(TreeHndl tree,double *ray,float rmax,ListHndl neighborlis
 	EmptyList(neighborlist);
 
 	moveTop(tree);
-
-//	if( inbox(ray,tree->current->boundery_p1,tree->current->boundery_p2) ){
-//	_FindBox(tree,ray);
-//	while(ClosestBorder(ray,tree->current->boundery_p1,tree->current->boundery_p2)
-//			< rmax) moveUp(tree);
 
 	do{
 		descend = True;
@@ -662,7 +639,7 @@ void _PointsWithin(TreeHndl tree,double *ray,float *rmax,ListHndl neighborlist,s
 
       // found the box small enough
     	if( cutbox(ray,tree->current->boundery_p1,tree->current->boundery_p2,*rmax)==1
-    			|| (tree->current->child1 == NULL)*(tree->current->child2 == NULL) ){
+    			|| atLeaf(tree) ){
     		// whole box in circle or a leaf with ray in it
 
     	  incell=0;
@@ -674,9 +651,9 @@ void _PointsWithin(TreeHndl tree,double *ray,float *rmax,ListHndl neighborlist,s
     	  ray[0]=realray[0];
     	  ray[1]=realray[1];
 
-    	  tree->pointlist->current=tree->current->points;
+    	  if(tree->current->points != NULL) tree->pointlist->current = tree->current->points;
 
-    	  if((tree->current->child1 == NULL)*(tree->current->child2 == NULL)){
+    	  if( atLeaf(tree) ){
     	   	  // if leaf calculate the distance to all the points in cell
     		  for(i=0;i<tree->current->npoints;++i){
     			  for(j=0,radius=0.0;j<2;++j) radius+=pow(tree->pointlist->current->x[j]-ray[j],2);
@@ -762,9 +739,10 @@ void _PointsWithin(TreeHndl tree,double *ray,float *rmax,ListHndl neighborlist,s
 	  // does radius cut into the box
 	  if( pass ){
 
-		  if( (tree->current->child1 == NULL)*(tree->current->child2 == NULL)  ){  /* leaf case */
+		  if(tree->current->points != NULL) tree->pointlist->current = tree->current->points;
 
-			  tree->pointlist->current=tree->current->points;
+		  if( atLeaf(tree) ){  /* leaf case */
+
 			  for(i=0;i<tree->current->npoints;++i){
 
 				  for(j=0,radius=0.0;j<2;++j) radius+=pow(tree->pointlist->current->x[j]-ray[j],2);
@@ -789,7 +767,7 @@ void _PointsWithin(TreeHndl tree,double *ray,float *rmax,ListHndl neighborlist,s
 				  MoveDownList(tree->pointlist);
 			  }
 		  }else if(pass==1){ // whole box is inside radius
-			  tree->pointlist->current=tree->current->points;
+
 			  for(i=0;i<tree->current->npoints;++i){
   				  if(markpoints==1){
    					  tree->pointlist->current->in_image=True;

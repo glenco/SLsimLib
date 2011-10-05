@@ -118,11 +118,10 @@ typedef struct Grid{
 
 typedef struct Grid *GridHndl;
 
-#include <tree_maintenance.h>
-#include <point.h>
-#include <List.h>
-#include <Kist.h>
-#include <KistDriver.h>
+//#include <point.h>
+//#include <List.h>
+//#include <Kist.h>
+//#include <KistDriver.h>
 
 /***** Constructors/Destructors*****/
 
@@ -134,7 +133,7 @@ TreeHndl NewTree(Point *xp,unsigned long npoints
 
 Boolean isEmpty(TreeHndl tree);
 Boolean atTop(TreeHndl tree);
-Boolean atLeaf(TreeHndl tree);
+inline Boolean atLeaf(TreeHndl tree);
 Boolean offEnd(TreeHndl tree);
 Boolean CurrentIsSquareTree(TreeHndl tree);
 Boolean noChild(TreeHndl tree);
@@ -307,5 +306,20 @@ void splitlist(ListHndl imagelist,ImageInfo *images,int *Nimages,int Maximages);
 /*  void rayshooterInternal(double *x,double *alpha,double *gamma,double *kappa,double *invmag);*/
 void rayshooterInternal(unsigned long Npoints,Point *i_points,Boolean kappa_off);
 void in_source(double *y_source,ListHndl sourcelist);
+
+/*
+ * tree_maintenance.h
+ *
+ *  Created on: Sep 29, 2011
+ *      Author: bmetcalf
+ */
+
+TreeHndl BuildTree(Point *xp,unsigned long Npoints);
+void _BuildTree(TreeHndl tree);
+void FillTree(TreeHndl tree,Point *xp,unsigned long Npoints);
+int AddPointsToTree(TreeHndl tree,Point *xpoint,unsigned long Nadd);
+unsigned long PruneTree(TreeHndl i_tree,TreeHndl s_tree,double resolution,Boolean useSB);
+unsigned long FreeBranchesBelow(TreeHndl i_tree,TreeHndl s_tree,ListHndl trashlist);
+Point *RemoveLeafFromTree(TreeHndl tree,unsigned long *Npoints);
 
 #endif
