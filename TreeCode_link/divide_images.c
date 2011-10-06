@@ -189,7 +189,7 @@ void divide_images_kist(TreeHndl i_tree,ImageInfo *imageinfo,int *Nimages,int Ni
 		return ;
 	}
 
-	// mark points in tree as in image and transfer points to temporary temporary new_imagekist
+	// mark points in tree as in image and transfer points to temporary kist
 	assert(imageinfo->imagekist->top->data);
 	MoveToTopKist(imageinfo->imagekist);
 	Ntest = imageinfo->imagekist->Nunits;
@@ -312,10 +312,10 @@ void partition_images(Point *point,unsigned long *N_in_image,TreeHndl i_tree){
 }
 
 double partition_images2(Point *point,KistHndl imagekist,TreeHndl i_tree){
-/* finds all the points in i_tree with in_image = True that are connected to point
+/* finds all the points with in_image = True that are connected to point
  *    by cell neighbors of cell neighbors.  The resulting kist of points
  *    is left in imagekist.  The in_image marks are NOT returned to their original
- *    values.  The ones that are put into imagekist are changed to in_image = False
+ *    values.  The ones that are put into imagekist are changed to in_inage = False
  */
 	assert(point);
 	assert(i_tree);
