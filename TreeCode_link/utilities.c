@@ -78,7 +78,9 @@ Point *LinkToSourcePoints(Point *i_points,unsigned long Npoints){
 
   if(Npoints < 1) return NULL;
 
-  s_points=NewPointArray(Npoints,True);
+  s_points = NewPointArray(Npoints,True);
+
+#pragma omp parallel for private(i)
   for(i=0;i<Npoints;++i){
     s_points[i].id=i_points[i].id;
       // link images and source points

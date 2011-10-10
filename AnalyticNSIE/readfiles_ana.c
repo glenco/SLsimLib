@@ -251,7 +251,7 @@ void readparams_ana(char *filename,CosmoHndl cosmo,AnaLens *lens){
   }
 
   lens->set=True;
-  printf(">\n");
+  printf("> lens set %d\n", lens->set);
 }
 
 void free_AnaLens(AnaLens *lens){

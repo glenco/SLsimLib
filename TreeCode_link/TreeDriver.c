@@ -30,7 +30,8 @@ TreeHndl BuildTree(Point *xp,unsigned long Npoints){
   p1[0]=xp[0].x[0]; p1[1]=xp[0].x[1];
   p2[0]=xp[0].x[0]; p2[1]=xp[0].x[1];
 
-  for(i=0;i<Npoints;++i){
+#pragma omp parallel for private(i)
+  for(i = 0;i < Npoints; i++){
     
     /* find X boundery */
     if(xp[i].x[0] < p1[0] ) p1[0]=xp[i].x[0];
@@ -45,7 +46,7 @@ TreeHndl BuildTree(Point *xp,unsigned long Npoints){
   center[1]=(p1[1]+p2[1])/2;
 
   /* Initialize tree root */
-  tree=NewTree(xp,Npoints,p1,p2,center);
+  tree = NewTree(xp,Npoints,p1,p2,center);
 
  /* build the tree */
   _BuildTree(tree);

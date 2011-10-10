@@ -7,6 +7,7 @@
 #include <Tree.h>
 #include <KistDriver.h>
 #include <divide_images.h>
+#include <cosmo.h>
 
 static const int NpointsRequired = 50;  // number of points required to be within an image
 static const int Ngrid_block = 3;       // each cell is divided into Ngrid_block^2 subcells
@@ -1409,6 +1410,7 @@ void xygridpoints(Point *i_points,double range,double *center,long Ngrid_1d,shor
 
   if(remove_center && (Ngrid_1d%2 == 1)){
     /*i_points=NewPointArray(Ngrid_1d*Ngrid_1d-1);*/
+#pragma omp parallel for private(i)
     for(i=0,j=0;i<Ngrid_1d*Ngrid_1d;++i){
 
       if( (2*(i/Ngrid_1d)/(Ngrid_1d-1) == 1) && (i%Ngrid_1d == Ngrid_1d/2+1) ) j=1;
@@ -1422,6 +1424,7 @@ void xygridpoints(Point *i_points,double range,double *center,long Ngrid_1d,shor
 
   }else{
     /*i_points=NewPointArray(Ngrid_1d*Ngrid_1d);*/
+#pragma omp parallel for private(i)
     for(i=0;i<Ngrid_1d*Ngrid_1d;++i){
       i_points[i].id=id;
       ++id;

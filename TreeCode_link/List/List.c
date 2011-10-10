@@ -218,7 +218,7 @@ void MergeLists(ListHndl list1,ListHndl list2){
 		list1->Npoints=list2->Npoints;
 		list1->top=list2->top;
 		list1->bottom=list2->bottom;
-		list1->current=list1->current;
+		list1->current=list2->current;
 		return;
 	}
 
@@ -241,7 +241,7 @@ void InsertListAfterCurrent(ListHndl list1,ListHndl list2){
 		list1->Npoints=list2->Npoints;
 		list1->top=list2->top;
 		list1->bottom=list2->bottom;
-		list1->current=list1->current;
+		list1->current=list2->current;
 		return;
 	}
 
@@ -271,7 +271,7 @@ void InsertListBeforeCurrent(ListHndl list1,ListHndl list2){
 		list1->Npoints=list2->Npoints;
 		list1->top=list2->top;
 		list1->bottom=list2->bottom;
-		list1->current=list1->current;
+		list1->current=list2->current;
 		return;
 	}
 
