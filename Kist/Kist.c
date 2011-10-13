@@ -1,4 +1,7 @@
-/*
+/** \file
+ *
+ * \brief   routines for linked list of Datas
+ *
  * Code Name:     kist
  * Programmer:    R Ben Metcalf
  * Last Revised:  Nov, 2005                                   
@@ -14,10 +17,9 @@
 
 /***** Structs *****/
 
-/***********************************************************
-   routines for linked list of Datas
-************************************************************/
-
+/** \ingroup ConstructorL2
+ *
+ */
 KistHndl NewKist(void){
   KistHndl kist;
 
@@ -176,19 +178,22 @@ void EmptyKist(KistHndl kist){
 	return;
 }
 
+/** \ingroup ConstructorL2
+*  deallocate memory for kist
+*  Note: Does not destroy data.  A handle must still point to the data.
+ * */
 void freeKist(KistHndl kist){
-	// deallocate memory for kist
-	// Note: Does not destroy data.  A handle must still point
-	//    to the data
 	EmptyKist(kist);
 	free(kist);
 	return;
 }
+/** \ingroup ConstructorL2
+ *
+ * Deallocate memory for kist and all points in list.
+ * Note: Does destroys the data points.
+ */
 
 void FreeAllKist(KistHndl kist){
-	// deallocate memory for kist and all points in list
-	// Note: Does not destroy data.  A handle must still point
-	//    to the data
 	assert(kist);
 	Data *data[kist->Nunits];
 	unsigned long Nheads=0,Ndata=0,i,Nunits;
@@ -209,7 +214,7 @@ void FreeAllKist(KistHndl kist){
 
 	if(Nunits != Ndata){
 		ERROR_MESSAGE();
-		printf("FreeAllKist freeed no all of data in kist\n");
+		printf("FreeAllKist freed no all of data in kist\n");
 		exit(0);
 	}
 	return;

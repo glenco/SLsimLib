@@ -11,12 +11,20 @@
 #include "Tree.h"
 #define NMAXCRITS 100
 
+  /** \ingroup ImageFinding
+   *
+   * \brief Finds critical curves and caustics.
+   *
+   *  resolution is the resolution on the image plane
+  * the inner out outer boundaries of the result are the estimated critical curves
+  * OUTPUT: each critical curve is in a array of IamgeInfo's
+  *         result.parity = 1 tangential caustic, 2 radial, 0 not enough points to determine
+  *
+  * This routine needs to be updated.  It still uses List instead of kist and perhaps some
+  * older and slower image splitting and ordering.
+  */
 ImageInfo *find_crit(TreeHndl s_tree,TreeHndl i_tree,int *Ncrits,double resolution
 		,Boolean *orderingsuccess,Boolean ordercurve,Boolean verbose){
-  /* resolution is the resolution on the image plane */
-  /* the inner out outer boundaries of the result are the estimated critical curves */
-  /* OUTPUT: each critical curve is in a array of IamgeInfo's    */
-  /*         result.parity = 1 tangential caustic, 2 radial, 0 not enough points to determine */
 
   Point *minpoint;
   ImageInfo *critcurve,*critexport;

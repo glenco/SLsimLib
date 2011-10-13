@@ -1,4 +1,4 @@
-/*
+/*! \file
  * KistDriver.c
  *
  *  Created on: Nov 16, 2010
@@ -14,13 +14,19 @@
 #include <Kist.h>
 #include <KistDriver.h>
 
-static int Nbucket = 1;   // must be =1 if each leaf is to coincide with each cell
+//static int Nbucket = 1;   // must be =1 if each leaf is to coincide with each cell
 static int incell;
 static double realray[2];
 
+/** \ingroup ImageFundingL2
+ *
+ * \brief Finds all the leaves that are neighboring a point.
+*
+* Points outside of grid have no box neighbors
+* Warning: Does not take empty leaves into account.
+*/
+
 void FindAllBoxNeighborsKist(TreeHndl tree,Point *point,KistHndl neighbors){
-	// finds all the leaves that are neighboring branch
-	// points outside of grid have no box neighbors
 	void _FindAllBoxNeighborsKist(TreeHndl tree,Branch *leaf,KistHndl neighbors);
 	static int count=0;
 
@@ -28,37 +34,40 @@ void FindAllBoxNeighborsKist(TreeHndl tree,Point *point,KistHndl neighbors){
 	EmptyKist(neighbors);
 
 	// point is outside of initial region
-	if(!inbox(point->x,tree->top->boundery_p1,tree->top->boundery_p2)) return;
+	if(!inbox(point->x,tree->top->boundary_p1,tree->top->boundary_p2)) return;
 
 	tree->current = point->leaf;
 
 	// find smallest box that surrounds box and its neighbors
 	moveUp(tree);
-	while( (tree->current->boundery_p1[0]==point->leaf->boundery_p1[0] && point->leaf->boundery_p1[0] != tree->top->boundery_p1[0] )
-			|| (tree->current->boundery_p1[1]==point->leaf->boundery_p1[1] && point->leaf->boundery_p1[1] != tree->top->boundery_p1[1])
-			|| (tree->current->boundery_p2[0]==point->leaf->boundery_p2[0] && point->leaf->boundery_p2[0] != tree->top->boundery_p2[0])
-			|| (tree->current->boundery_p2[1]==point->leaf->boundery_p2[1] && point->leaf->boundery_p2[1] != tree->top->boundery_p2[1]) ){
+	while( (tree->current->boundary_p1[0]==point->leaf->boundary_p1[0] && point->leaf->boundary_p1[0] != tree->top->boundary_p1[0] )
+			|| (tree->current->boundary_p1[1]==point->leaf->boundary_p1[1] && point->leaf->boundary_p1[1] != tree->top->boundary_p1[1])
+			|| (tree->current->boundary_p2[0]==point->leaf->boundary_p2[0] && point->leaf->boundary_p2[0] != tree->top->boundary_p2[0])
+			|| (tree->current->boundary_p2[1]==point->leaf->boundary_p2[1] && point->leaf->boundary_p2[1] != tree->top->boundary_p2[1]) ){
 		moveUp(tree);
 	}
 
-	assert(inbox(point->x,tree->current->boundery_p1,tree->current->boundery_p2));
+	assert(inbox(point->x,tree->current->boundary_p1,tree->current->boundary_p2));
 	_FindAllBoxNeighborsKist_iter(tree,point->leaf,neighbors);
 
 	return;
 }
-
-// There is an iterative version of this recursive function below
-//    This one has been known to cause stack overflow.
+/**  \ingroup LowLevel
+ * A recessive function that was used in FindAllBoxNeighborsKist().
+*    It has been known to cause stack overflow. Use _FindAllBoxNeighborsKist_iter instead.
+*/
 void _FindAllBoxNeighborsKist(TreeHndl tree,Branch *leaf,KistHndl neighbors){
 
-	if(  leaf->boundery_p1[0] <= tree->current->boundery_p2[0]
-	  && leaf->boundery_p2[0] >= tree->current->boundery_p1[0]
-	  && leaf->boundery_p1[1] <= tree->current->boundery_p2[1]
-	  && leaf->boundery_p2[1] >= tree->current->boundery_p1[1]){
+	if(  leaf->boundary_p1[0] <= tree->current->boundary_p2[0]
+	  && leaf->boundary_p2[0] >= tree->current->boundary_p1[0]
+	  && leaf->boundary_p1[1] <= tree->current->boundary_p2[1]
+	  && leaf->boundary_p2[1] >= tree->current->boundary_p1[1]){
 
-		if(tree->current->npoints == Nbucket){
-			if(tree->current->number != leaf->number){
-
+		if( atLeaf(tree) ){
+			assert(tree->current->npoints <= tree->Nbucket);
+			//if(tree->current->npoints == Nbucket){
+			// What if number is > than Nbucket and it is not in a leaf
+			if(tree->current->number != leaf->number && tree->current->npoints > 0){
 				InsertAfterCurrentKist(neighbors,tree->current->points);
 				MoveDownKist(neighbors);
 			}
@@ -80,54 +89,96 @@ void _FindAllBoxNeighborsKist(TreeHndl tree,Branch *leaf,KistHndl neighbors){
 
 	return;
 }
-
-/* Iterative instead of recursive method for finding neighbors
- *   the tree->current must be preset so that leaf is within it.
- *
- *   The recursive routine _FindAllBoxNeighborsKist has caused stack overflow.
- */
-
+/**  \ingroup LowLevel
+ * Used in FindAllBoxNeighborsKist to walk tree for neighbors.
+*/
 void _FindAllBoxNeighborsKist_iter(TreeHndl tree,Branch *leaf,KistHndl neighbors){
+
+	/** Iterative instead of recursive method for finding neighbors
+	 *   the tree->current must be preset so that leaf is within it.
+	 *
+	 *   The recursive routine _FindAllBoxNeighborsKist has caused stack overflow.
+	 */
 
 	Boolean allowDescent = True;
 	long level = tree->current->level;
-	//Branch *brother = tree->current->brother;
-	//unsigned long count = 0;
 
 	EmptyKist(neighbors);
 
 	while(TreeWalkStep(tree,allowDescent) && tree->current->level > level ){
 
-		if(  leaf->boundery_p1[0] <= tree->current->boundery_p2[0]
-		  && leaf->boundery_p2[0] >= tree->current->boundery_p1[0]
-	      && leaf->boundery_p1[1] <= tree->current->boundery_p2[1]
-	      && leaf->boundery_p2[1] >= tree->current->boundery_p1[1]){
+		if(  leaf->boundary_p1[0] <= tree->current->boundary_p2[0]
+		  && leaf->boundary_p2[0] >= tree->current->boundary_p1[0]
+	      && leaf->boundary_p1[1] <= tree->current->boundary_p2[1]
+	      && leaf->boundary_p2[1] >= tree->current->boundary_p1[1]){
 
-			if(tree->current->npoints == Nbucket && tree->current != leaf){
-				InsertAfterCurrentKist(neighbors,tree->current->points);
-				MoveDownKist(neighbors);
+			if( atLeaf(tree) ){
+				if(tree->current != leaf && tree->current->npoints > 0){
+					InsertAfterCurrentKist(neighbors,tree->current->points);
+					MoveDownKist(neighbors);
+				}
 			}
 
 			allowDescent = True;
 		}else{
 			allowDescent = False;
 		}
-
-		//++count;
-		//if(tree->Nbranches > 0) assert(count <= tree->Nbranches );
-
 	}
 
 	return;
 }
+/** \ingroup ImageFundingL2
+ * \brief Finds points within an ellipse
+ *
+ * This becomes less efficient when the ellipse is very elongated.  Could
+ * be improved by incorporating the test of it being in the ellipse into the
+ * tree walk.
+ *
+ * The
+ */
+void PointsWithinEllipKist(
+	TreeHndl tree    /// tree of points
+	,double *ray     /// center of ellipse
+	,float rmax      /// major axis
+	,float rmin     /// minor axis
+	,float posangle  /// position angle of major axis, smallest angle between the x-axis and the long axis
+	,KistHndl neighborkist  /// output neighbor kist, will be emptied if it contains anything on entry
+	){
+	unsigned long i,Ntmp;
+	double *xtmp,x,y,cs,sn;
 
-void PointsWithinKist(TreeHndl tree,double *ray,float rmax,KistHndl neighborkist,short markpoints){
-/*
- *  finds all points in tree that lie within rmax of the point ray[]
+	EmptyKist(neighborkist);
+
+	if(rmax <=0.0 || rmin <= 0.0) return;
+
+	// find point within a circle circumscribes the ellipse
+	PointsWithinKist(tree,ray,rmax,neighborkist,False);
+
+	cs = cos(posangle);
+	sn = sin(posangle);
+	Ntmp = neighborkist->Nunits;
+	for(i=0,MoveToTopKist(neighborkist);i<Ntmp;++i,MoveDownKist(neighborkist) ){
+		xtmp = getCurrentKist(neighborkist)->x;
+		x = xtmp[0]*cs - xtmp[1]*sn;
+		y = xtmp[0]*sn + xtmp[1]*cs;
+		if( pow(x/rmax,2) + pow(y/rmin,2) > 1)	TakeOutCurrentKist(neighborkist);
+	}
+	return;
+}
+/** \ingroup ImageFundingL2
+ * \brief Finds all points in tree that lie within rmax of the point ray[]
+ *
  *   markpoints = 0  does not change in_image variable in any point, gives a list of neighbors
  *              = 1  makes in_image=True for all points in image, gives no list of neighbors
  *              = -1 makes in_image=False for all points in image to reset, gives no list of neighbors
  */
+void PointsWithinKist(
+		TreeHndl tree    /// tree of points
+		,double *ray     /// center of circle
+		,float rmax      /// radius of circle
+		,KistHndl neighborkist  /// output neighbor kist, will be emptied if it contains anything on entre
+		,short markpoints       /// see comment
+		){
 
   if(markpoints==0) EmptyKist(neighborkist);
 
@@ -135,22 +186,25 @@ void PointsWithinKist(TreeHndl tree,double *ray,float rmax,KistHndl neighborkist
   realray[1]=ray[1];
 
   moveTop(tree);
-  if( inbox(ray,tree->current->boundery_p1,tree->current->boundery_p2) == 0 ){
-    printf("Warning: in PointsWithinKist, ray is not inside the simulation box\n    should work in any case\n      ray= %e %e\n     boundery p1 = %e %e p2 = %e %e\n",ray[0],ray[1]
-	   ,tree->current->boundery_p1[0],tree->current->boundery_p1[1]
-	   ,tree->current->boundery_p2[0],tree->current->boundery_p2[1]);
+  if( inbox(ray,tree->current->boundary_p1,tree->current->boundary_p2) == 0 ){
+    printf("Warning: in PointsWithinKist, ray is not inside the simulation box\n    should work in any case\n      ray= %e %e\n     boundary p1 = %e %e p2 = %e %e\n",ray[0],ray[1]
+	   ,tree->current->boundary_p1[0],tree->current->boundary_p1[1]
+	   ,tree->current->boundary_p2[0],tree->current->boundary_p2[1]);
 
-    ray[0]=MAX(ray[0],tree->current->boundery_p1[0]);
-    ray[0]=MIN(ray[0],tree->current->boundery_p2[0]);
+    ray[0]=MAX(ray[0],tree->current->boundary_p1[0]);
+    ray[0]=MIN(ray[0],tree->current->boundary_p2[0]);
 
-    ray[1]=MAX(ray[1],tree->current->boundery_p1[1]);
-    ray[1]=MIN(ray[1],tree->current->boundery_p2[1]);
+    ray[1]=MAX(ray[1],tree->current->boundary_p1[1]);
+    ray[1]=MIN(ray[1],tree->current->boundary_p2[1]);
   }
   incell=1;
 
   _PointsWithinKist(tree,ray,&rmax,neighborkist,markpoints);
-}
 
+  return;
+}
+/** \ingroup LowLevel
+ * Used in PointsWithinKist() to walk tree.*/
 void _PointsWithinKist(TreeHndl tree,double *ray,float *rmax,KistHndl neighborkist
 		,short markpoints){
 
@@ -164,15 +218,14 @@ void _PointsWithinKist(TreeHndl tree,double *ray,float *rmax,KistHndl neighborki
 
   if(incell){  // not found cell yet
 
-    if( inbox(ray,tree->current->boundery_p1,tree->current->boundery_p2) ){
+    if( inbox(ray,tree->current->boundary_p1,tree->current->boundary_p2) ){
 
       // found the box small enough
-    	if( cutbox(ray,tree->current->boundery_p1,tree->current->boundery_p2,*rmax)==1
-    			|| (tree->current->child1 == NULL)*(tree->current->child2 == NULL) ){
+    	if( cutbox(ray,tree->current->boundary_p1,tree->current->boundary_p2,*rmax)==1
+    			|| atLeaf(tree) ){
     		// whole box in circle or a leaf with ray in it
 
     	  incell=0;
-    	  //printf("found box with %i points\n",tree->current->npoints);
 
     	  // this sets ray back to real value once closest leaf bax is found
     	  if( (ray[0]!=realray[0])*(ray[1]!=realray[1]) ){ printf("ray != realray _PointsWithinKist\n"); exit(0);}
@@ -180,9 +233,9 @@ void _PointsWithinKist(TreeHndl tree,double *ray,float *rmax,KistHndl neighborki
     	  ray[0]=realray[0];
     	  ray[1]=realray[1];
 
-    	  tree->pointlist->current=tree->current->points;
+    	  if(tree->current->points != NULL) tree->pointlist->current=tree->current->points;
 
-    	  if((tree->current->child1 == NULL)*(tree->current->child2 == NULL)){
+    	  if( atLeaf(tree) ){
     	   	  // if leaf calculate the distance to all the points in cell
     		  for(i=0;i<tree->current->npoints;++i){
     			  for(j=0,radius=0.0;j<2;++j) radius+=pow(tree->pointlist->current->x[j]-ray[j],2);
@@ -219,31 +272,25 @@ void _PointsWithinKist(TreeHndl tree,double *ray,float *rmax,KistHndl neighborki
 
     	}else{ // keep going down the tree
 
-    	  //printf("moving to child1 from level %i\n",tree->current->level);
-    	  if(tree->current->child1 !=NULL){
+     	  if(tree->current->child1 !=NULL){
     		  moveToChild(tree,1);
     		  _PointsWithinKist(tree,ray,rmax,neighborkist,markpoints);
-    		  //printf("moving up from level %i\n",tree->current->level);
     		  moveUp(tree);
 
     		  incell2=incell;
     	  }
 
     	  if(tree->current->child2 !=NULL){
-    		  //printf("moving to child2 from level %i\n",tree->current->level);
     		  moveToChild(tree,2);
     		  _PointsWithinKist(tree,ray,rmax,neighborkist,markpoints);
-    		  //printf("moving up from level %i\n",tree->current->level);
     		  moveUp(tree);
     	  }
 
     	  // if ray found in second child go back to first to search for neighbors
     	  if( (incell2==1) && (incell==0) ){
     		  if(tree->current->child1 !=NULL){
-    			  //printf("moving to child1 again from level %i\n",tree->current->level);
     			  moveToChild(tree,1);
     			  _PointsWithinKist(tree,ray,rmax,neighborkist,markpoints);
-    			  //printf("moving up from level %i\n",tree->current->level);
     			  moveUp(tree);
     		  }
     	  }
@@ -252,15 +299,14 @@ void _PointsWithinKist(TreeHndl tree,double *ray,float *rmax,KistHndl neighborki
 
   }else{    // found cell
 
-	  //printf("finding neighboring boxes at level = %i\n",tree->current->level);
-
-	  pass=cutbox(ray,tree->current->boundery_p1,tree->current->boundery_p2,*rmax);
+	  pass=cutbox(ray,tree->current->boundary_p1,tree->current->boundary_p2,*rmax);
 	  // does radius cut into the box
 	  if( pass ){
 
-		  if( (tree->current->child1 == NULL)*(tree->current->child2 == NULL)  ){  /* leaf case */
+    	  if(tree->current->points != NULL) tree->pointlist->current=tree->current->points;
 
-			  tree->pointlist->current=tree->current->points;
+		  if( atLeaf(tree)  ){  /* leaf case */
+
 			  for(i=0;i<tree->current->npoints;++i){
 
 				  for(j=0,radius=0.0;j<2;++j) radius+=pow(tree->pointlist->current->x[j]-ray[j],2);
@@ -280,7 +326,7 @@ void _PointsWithinKist(TreeHndl tree,double *ray,float *rmax,KistHndl neighborki
 				  MoveDownList(tree->pointlist);
 			  }
 		  }else if(pass==1){ // whole box is inside radius
-			  tree->pointlist->current=tree->current->points;
+
 			  for(i=0;i<tree->current->npoints;++i){
   				  if(markpoints==1){
    					  tree->pointlist->current->in_image=True;
@@ -296,19 +342,15 @@ void _PointsWithinKist(TreeHndl tree,double *ray,float *rmax,KistHndl neighborki
 				  MoveDownList(tree->pointlist);
 			  }
 		  }else{
-			  //printf("moving to child1 from level %i\n",tree->current->level);
 			  if(tree->current->child1 !=NULL){
 				  moveToChild(tree,1);
 				  _PointsWithinKist(tree,ray,rmax,neighborkist,markpoints);
-				  //printf("moving up from level %i\n",tree->current->level);
 				  moveUp(tree);
 			  }
 
 			  if(tree->current->child2 !=NULL){
-				  //printf("moving to child2 from level %i\n",tree->current->level);
 				  moveToChild(tree,2);
 				  _PointsWithinKist(tree,ray,rmax,neighborkist,markpoints);
-				  //printf("moving up from level %i\n",tree->current->level);
 				  moveUp(tree);
 			  }
 		  }
@@ -316,15 +358,17 @@ void _PointsWithinKist(TreeHndl tree,double *ray,float *rmax,KistHndl neighborki
 	  }
   }
 
-	  //  printf("end of _PointsWithinKist incell=%i level=%i p1= %e %e %e\n",incell,tree->current->level
-	//	,tree->current->boundery_p1[0],tree->current->boundery_p1[1],tree->current->boundery_p1[2]);/**/
   return;
 }
 
+/** \ingroup ImageFundingL2
+ *
+ * \brief Finds nearest neighbor points to ray.
+ *
+ *    This is a kludge that relies on NearestNeighbor which uses a List and translates
+ *    the list to a kist.  Could be rewritten.
+ */
 Point *NearestNeighborKist(TreeHndl tree,double *ray,int Nneighbors,KistHndl neighborkist){
-	/* nearest neighbor points
-	 *    this is a kludge that relies on NearestNeighbor and translates the list to a kist
-	 */
 	ListHndl neighborlist = NewList();
 	Point *point = 0;
 	unsigned long i;

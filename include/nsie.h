@@ -6,10 +6,10 @@
  */
 #include <cosmo.h>
 
-#ifndef analens_declare
-#define analens_declare
-
-typedef struct analytic_lens{
+#ifndef simple_analens_declare
+#define simple_analens_declare
+/** \brief A simplified version of AnaLens */
+typedef struct simple_analytic_lens{
   char outputfile[40];
   double zlens;
   double zsource;
@@ -37,7 +37,7 @@ typedef struct analytic_lens{
   double MpcToAsec;    // conversion factor between Mpc on the lens plane and arcseconds
   double Sigma_crit;   // critical surface density
 
-} AnaLens;
+} SimpAnaLens;
 
 #endif
 
@@ -48,7 +48,7 @@ double invmagNSIE(double *x,double f,double bc,double theta
 		     ,double *gam,double kap);
 double phiNSIE(double *xt,double f,double bc,double theta);
 void rotation(double *xout,double *xin,double theta);
-void readparams_ana(char *filename,struct cosmology *cosmo,AnaLens *lens);
+void ReadParams_AnaLens(char *filename,struct cosmology *cosmo,AnaLens *lens);
 
 //  in powerlow.c
 

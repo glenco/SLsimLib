@@ -94,10 +94,10 @@ void findarea(ImageInfo *imageinfo){
   double tmp;
 
   for(j=0,imageinfo->area=0,imageinfo->area_error=0;j<imageinfo->Npoints;++j){
-	  if( fabs(imageinfo->points[j].leaf->boundery_p2[0] - imageinfo->points[j].leaf->boundery_p1[0]
+	  if( fabs(imageinfo->points[j].leaf->boundary_p2[0] - imageinfo->points[j].leaf->boundary_p1[0]
 	             - imageinfo->points[j].gridsize)/imageinfo->points[j].gridsize > 1.0e-4 ){
-		  printf(" miss aligned gridsize %.5f %.5f \n",(imageinfo->points[j].leaf->boundery_p2[0] - imageinfo->points[j].leaf->boundery_p1[0])
-		  	          /imageinfo->points[j].gridsize,(imageinfo->points[j].leaf->boundery_p2[1] - imageinfo->points[j].leaf->boundery_p1[1])
+		  printf(" miss aligned gridsize %.5f %.5f \n",(imageinfo->points[j].leaf->boundary_p2[0] - imageinfo->points[j].leaf->boundary_p1[0])
+		  	          /imageinfo->points[j].gridsize,(imageinfo->points[j].leaf->boundary_p2[1] - imageinfo->points[j].leaf->boundary_p1[1])
 		  	          /imageinfo->points[j].gridsize);
 	  }
 

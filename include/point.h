@@ -25,8 +25,9 @@ typedef enum {False, True} Boolean;
 #ifndef pointtypes_declare
 #define pointtypes_declare
 
+/** \brief A point on the source or image plane that contains a position and the lensing quantities */
 typedef struct Point{
-  struct Point *next;
+  struct Point *next;    // pointer to next point in linked list
   struct Point *prev;
   struct Point *image;  // pointer to point on image or source plane
   unsigned long id;
@@ -34,25 +35,26 @@ typedef struct Point{
   double gamma[2];    // shear
   double dt;          // time delay
   double invmag;     // inverse of magnification
-  double *x;
-  double gridsize;
+  double *x;         // the position of the point
+  double gridsize;   // the size of the most refined grid the point is in
   unsigned long head;         // marks beginning of allocated array of points for easy deallocation
   Boolean in_image; // marks if point is in image
-  double surface_brightness;
+  double surface_brightness;  // the surface brightness at this point§
 
+  /// \brief Branch of tree that contains grid points
   struct branchstruct{
     struct Point *points;        // pointer to first points in Branch
     unsigned long npoints;
     double center[2];
     int level;
     unsigned long number;
-    double boundery_p1[2];
-    double boundery_p2[2];
+    double boundary_p1[2];
+    double boundary_p2[2];
     struct branchstruct *child1;
     struct branchstruct *child2;
     struct branchstruct *brother;
     struct branchstruct *prev;
-  } *leaf;
+  } *leaf;  /// pointer to leaf of the tree that contains this point
 } Point;
 
 typedef struct branchstruct Branch;

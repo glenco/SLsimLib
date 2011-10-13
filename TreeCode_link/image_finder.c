@@ -746,7 +746,7 @@ int refine_grid(TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo
     			                         ,point->x,Ngrid_block,1);
 
     			  if( inbox(i_points[(Ngrid_block*Ngrid_block-1)*Ncells ].x
-    					  ,i_tree->top->boundery_p1,i_tree->top->boundery_p2) == 0 ){
+    					  ,i_tree->top->boundary_p1,i_tree->top->boundary_p2) == 0 ){
     				  ERROR_MESSAGE();
     			  }
     			  ++Ncells;

@@ -21,6 +21,9 @@
 
 //extern COSMOLOGY cosmo;
 
+/** \ingroup ChangeLens
+ *
+ */
 void RandomizeHost(AnaLens *lens,double r_source_phys,long *seed,Boolean tables
 		,CosmoHndl cosmo){
 	static double fo=0.0,*axisTable,*sigmaTable,**zTable;
@@ -125,14 +128,18 @@ void RandomizeHost(AnaLens *lens,double r_source_phys,long *seed,Boolean tables
 	return ;
 }
 
-void RandomlyDistortLens(AnaLens *lens,long *seed, int Nmodes){
-	/*  make a random realization of the perturbations to the lens
+/** \ingroup ChangeLens
+ *
+ *
+ *	*  make a random realization of the perturbations to the lens
 	 *    the normalization is such that the rms maximum surface
 	 *    density of the k-th mode is rms[i] times the surface density
 	 *    of the host at the Einstein radius if it were a SIS, if beta=1
-	 *    this is true at all radii
+	 *    this is true at all radii.
 	 *    each mode is randomly oriented
 	 */
+
+void RandomlyDistortLens(AnaLens *lens,long *seed, int Nmodes){
 
 	int i,k;
 	double tmp,theta;
@@ -171,14 +178,17 @@ void RandomlyDistortLens(AnaLens *lens,long *seed, int Nmodes){
 
 	return ;
 }
+/** \ingroup ChangeLens
+ *
+ *  make a random realization of the perturbations to the lens
+ *    the normalization is such that the rms maximum surface
+ *    density of the k-th mode is rms[i] times the surface density
+ *    of the host at the Einstein radius if it were a SIS, if beta=1
+ *    this is true at all radii.
+ *    This is for randomly distorting a mode but maintaining its alignment
+ *    with the ellipticity for example.
+ */
 void AlignedRandomlyDistortLens(AnaLens *lens,long *seed,double theta,int Npole){
-	/*  make a random realization of the perturbations to the lens
-	 *    the normalization is such that the rms maximum surface
-	 *    density of the k-th mode is rms[i] times the surface density
-	 *    of the host at the Einstein radius if it were a SIS, if beta=1
-	 *    this is true at all radii
-	 *    each mode is randomly oriented
-	 */
 
 	double tmp;
 	int i,k;
@@ -201,7 +211,9 @@ void AlignedRandomlyDistortLens(AnaLens *lens,long *seed,double theta,int Npole)
 
 	return ;
 }
-
+/** \ingroup ChangeLens
+ *
+ */
 void RandomizeSubstructure2(AnaLens *lens,double rangeInRei,long *seed){
 	long i,k;
 	double r,theta,rmax,rav[2],r2av=0,area_av=0;
@@ -314,12 +326,13 @@ void RandomizeSubstructure2(AnaLens *lens,double rangeInRei,long *seed){
 */
 	return;
 }
-void RandomizeSubstructure3(AnaLens *lens,double rangeInRei,long *seed){
-	/*
+/** \ingroup ChangeLens
+	 *
 	 *  get a random population of substructures
 	 *  This version does not scale to lens->host_ro and
 	 *  lens->host_sigma
 	 */
+void RandomizeSubstructure3(AnaLens *lens,double rangeInRei,long *seed){
 	long i,k;
 	double r,theta,rmax,rav[2],r2av=0,area_av=0;
 	static unsigned long NsubMax;
@@ -433,8 +446,10 @@ void RandomizeSubstructure3(AnaLens *lens,double rangeInRei,long *seed){
 }
 
 
-/// for generating a random deviates drawn from approximately the same as the
-//      values of table
+/** \ingroup Utill
+ * \brief Generates a random deviates drawn from approximately the same as the values of table
+ *
+ */
 double RandomFromTable(double *table,unsigned long Ntable,long *seed){
 	double y;
 	unsigned long j;

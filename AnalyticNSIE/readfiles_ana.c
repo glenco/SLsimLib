@@ -16,7 +16,14 @@
 #include <cosmo.h>
 #include "analytic_lens.h"
 
-void readparams_ana(char *filename,CosmoHndl cosmo,AnaLens *lens){
+/** \ingroup ImageFinding
+ * \brief Reads in a parameter file and sets up an analytic lens.
+ *
+ * Sets many parameters within the lens model, source model and
+ * force calculation.
+ */
+
+void ReadParams_AnaLens(char *filename,CosmoHndl cosmo,AnaLens *lens){
   FILE *file;
   char label[20];
   int i;
@@ -265,6 +272,9 @@ void readparams_ana(char *filename,CosmoHndl cosmo,AnaLens *lens){
   printf(">\n");
 }
 
+/** \ingroup Constructor
+ *
+ */
 void free_AnaLens(AnaLens *lens){
 	free(lens->perturb_modes);
 	if(lens->sub_N > 0 && lens->substruct_implanted){
@@ -284,7 +294,9 @@ void free_AnaLens(AnaLens *lens){
 	}
 }
 
-
+/** \ingroup ImageFinding
+ * \brief Prints the parameters of the analytic lens to stdout
+ */
 void PrintAnaLens(AnaLens *lens,Boolean show_substruct,Boolean show_stars){
 	int i;
 
@@ -392,7 +404,7 @@ void PrintAnaLens(AnaLens *lens,Boolean show_substruct,Boolean show_stars){
 		printf(">stars_theta_force %e\n",lens->star_theta_force);
 		if(show_stars){
 			if(lens->stars_implanted){
-				for(i=0 ; i < lens->stars_N ; ++i) printf(">    x[%i] = %e %e\n",lens->stars_xp[i][0],lens->stars_xp[i][1]);
+				for(i=0 ; i < lens->stars_N ; ++i) printf(">    x[%li] = %e %e\n",i,lens->stars_xp[i][0],lens->stars_xp[i][1]);
 			}else printf("> stars not implanted yet\n");
 		}
 	}

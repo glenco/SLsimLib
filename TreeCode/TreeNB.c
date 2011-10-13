@@ -26,7 +26,7 @@ double dummy;
  * and sets data field to input.  Private.
  ************************************************************************/
 BranchNB *NewBranchNB(IndexType *particles,IndexType nparticles
-		  ,PosType boundery_p1[treeNBdim],PosType boundery_p2[treeNBdim]
+		  ,PosType boundary_p1[treeNBdim],PosType boundary_p2[treeNBdim]
 		  ,PosType center[treeNBdim],int level,unsigned long branchNBnumber){
 
     BranchNB *branchNB;
@@ -44,8 +44,8 @@ BranchNB *NewBranchNB(IndexType *particles,IndexType nparticles
     branchNB->level=level;
 
     for(i=0;i<treeNBdim;++i){
-      branchNB->boundery_p1[i]= boundery_p1[i];
-      branchNB->boundery_p2[i]= boundery_p2[i];
+      branchNB->boundary_p1[i]= boundary_p1[i];
+      branchNB->boundary_p2[i]= boundary_p2[i];
     }
 
     branchNB->number=branchNBnumber;
@@ -76,7 +76,7 @@ void FreeBranchNB(BranchNB *branchNB){
  * current pointers to NULL.  Sets NbranchNBes field to 0.  Exported.
  ************************************************************************/
 TreeNBHndl NewTreeNB(IndexType *particles,IndexType nparticles
-		 ,PosType boundery_p1[treeNBdim],PosType boundery_p2[treeNBdim],
+		 ,PosType boundary_p1[treeNBdim],PosType boundary_p2[treeNBdim],
 		     PosType center[treeNBdim],short Ndimensions){
 
     TreeNBHndl tree;
@@ -87,7 +87,7 @@ TreeNBHndl NewTreeNB(IndexType *particles,IndexType nparticles
       exit(1);
     }
 
-    tree->top= NewBranchNB(particles,nparticles,boundery_p1,boundery_p2,center,0,0);
+    tree->top= NewBranchNB(particles,nparticles,boundary_p1,boundary_p2,center,0,0);
     if (!(tree->top)){
       ERROR_MESSAGE(); fprintf(stderr,"allocation failure in NewTreeNB()\n");
       exit(1);
@@ -329,14 +329,14 @@ void moveToChildNB(TreeNBHndl tree,int child){
  * Pre: !offEndNB(tree)
  ************************************************************************/
 void insertChildToCurrentNB(TreeNBHndl tree, IndexType *particles,IndexType nparticles
-			  ,PosType boundery_p1[treeNBdim],PosType boundery_p2[treeNBdim]
+			  ,PosType boundary_p1[treeNBdim],PosType boundary_p2[treeNBdim]
 			  ,PosType center[treeNBdim],int child){
     
     BranchNB *branchNB;
 
     /*printf("attaching child%i  current paricle number %i\n",child,tree->current->nparticles);*/
 
-    branchNB = NewBranchNB(particles,nparticles,boundery_p1,boundery_p2,center
+    branchNB = NewBranchNB(particles,nparticles,boundary_p1,boundary_p2,center
 		       ,tree->current->level+1,tree->Nbranches);
 
     assert(tree != NULL);
@@ -376,7 +376,7 @@ void insertChildToCurrentNB(TreeNBHndl tree, IndexType *particles,IndexType npar
 void attachChildToCurrentNB(TreeNBHndl tree,BranchNB data,int child){
 
   insertChildToCurrentNB(tree,data.particles,data.nparticles
-		  ,data.boundery_p1,data.boundery_p2,data.center,child);
+		  ,data.boundary_p1,data.boundary_p2,data.center,child);
   return;
 }
 
@@ -432,15 +432,15 @@ void printBranchNB(BranchNB *data,PosType **xp,short Ndim){
 	  printf("******* branchNB *******\nlevel=%i\n",data->level);
 	  printf("center = [%e,%e,%e]\n",data->center[0],data->center[1],data->center[2]);
 	  printf("p1 = [%e,%e,%e] p2 = [%e,%e,%e]\n"
-			  ,data->boundery_p1[0],data->boundery_p1[1],data->boundery_p1[2]
-			  ,data->boundery_p2[0],data->boundery_p2[1],data->boundery_p2[2]);
+			  ,data->boundary_p1[0],data->boundary_p1[1],data->boundary_p1[2]
+			  ,data->boundary_p2[0],data->boundary_p2[1],data->boundary_p2[2]);
   }
   if(Ndim==2){
 	  printf("******* branchNB *******\nlevel=%i\n",data->level);
 	  printf("center = [%e,%e]\n",data->center[0],data->center[1]);
 	  printf("p1 = [%e,%e] p2 = [%e,%e]\n"
-			  ,data->boundery_p1[0],data->boundery_p1[1]
-			  ,data->boundery_p2[0],data->boundery_p2[1]);
+			  ,data->boundary_p1[0],data->boundary_p1[1]
+			  ,data->boundary_p2[0],data->boundary_p2[1]);
 
   }
 	  printf("number of particles = %li\n",data->nparticles);
@@ -498,8 +498,8 @@ void _saveTreeNB(TreeNBHndl tree,RelativeBranchNB *tree_arr,IndexType *particles
   tree_arr[current].nparticles=tree->current->nparticles;
   for(i=0;i<treeNBdim;++i){
     tree_arr[current].center[i]=tree->current->center[i];
-    tree_arr[current].boundery_p1[i]=tree->current->boundery_p1[i];
-    tree_arr[current].boundery_p2[i]=tree->current->boundery_p2[i];
+    tree_arr[current].boundary_p1[i]=tree->current->boundary_p1[i];
+    tree_arr[current].boundary_p2[i]=tree->current->boundary_p2[i];
   }
 
   if(current>0) tree_arr[current].prev=tree->current->prev->number;
@@ -557,7 +557,7 @@ TreeNBHndl readTreeNB(IndexType *particles,float *rsph,IndexType Nparticles,char
   fread(rsph,sizeof(float),nparticles,file);
   fclose(file);
 
-  tree=NewTreeNB(particles,nparticles,tree_arr[0].boundery_p1,tree_arr[0].boundery_p2,tree_arr[0].center,Ndimensions);
+  tree=NewTreeNB(particles,nparticles,tree_arr[0].boundary_p1,tree_arr[0].boundary_p2,tree_arr[0].center,Ndimensions);
 
   moveTopNB(tree);
 
@@ -579,8 +579,8 @@ void _readTreeNB(TreeNBHndl tree,RelativeBranchNB *tree_arr,IndexType *particles
 
   for(i=0;i<treeNBdim;++i){
     tree->current->center[i]=tree_arr[current].center[i];
-    tree->current->boundery_p1[i]=tree_arr[current].boundery_p1[i];
-    tree->current->boundery_p2[i]=tree_arr[current].boundery_p2[i];
+    tree->current->boundary_p1[i]=tree_arr[current].boundary_p1[i];
+    tree->current->boundary_p2[i]=tree_arr[current].boundary_p2[i];
   }
 
   if(tree_arr[current].child1==-1){

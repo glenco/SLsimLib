@@ -37,59 +37,94 @@ typedef enum {False, True} Boolean;
 
 #ifndef treeNBtypes_declare
 #define treeNBtypes_declare
-
+/** \brief
+ * Branch of treeNB for tree in force calculation.
+ *
+ * Contains list of particle indices, boundaries of box, moments of mass distribution
+ * , pointers to other branches, etc.
+ */
 typedef struct branchNBstruct{
-  IndexType *particles;        /* array of particles in BranchNB */
+	/// array of particles in BranchNB
+  IndexType *particles;
   IndexType nparticles;
-  IndexType big_particle;  // the number of particles that aren't in children
+  /// the number of particles that aren't in children
+  IndexType big_particle;
+  /// Size of largest particle in branch
   PosType maxrsph;
-  PosType center[treeNBdim];              // center of mass
+  /// center of mass
+  PosType center[treeNBdim];
   PosType mass;
+  /// level in tree
   int level;
   unsigned long number;
-  PosType boundery_p1[treeNBdim];
-  PosType boundery_p2[treeNBdim];
+  /// bottom, left, back corner of box
+  PosType boundary_p1[treeNBdim];
+  /// top, right, front corner of box
+  PosType boundary_p2[treeNBdim];
   struct branchNBstruct *child1;
   struct branchNBstruct *child2;
+  /// father of branch
   struct branchNBstruct *prev;
+  /// Either child2 of father is branch is child1 and child2 exists or the brother of the father.
+  /// Used for iterative tree walk.
   struct branchNBstruct *brother;
 
   /* projected quantities */
-
-  PosType quad[3];  // quadropole moment of branch
-  PosType rmax;  // largest dimension of box
-  PosType rcrit_angle; /* the critical distance below which a branch is opened in the */
+  /// quadropole moment of branch
+  PosType quad[3];
+  /// largest dimension of box
+  PosType rmax;
+  /// the critical distance below which a branch is opened in the
+  PosType rcrit_angle;
                 /* force calculation */
   PosType rcrit_part;
   //PosType cm[2]; /* projected center of mass */
 
 } BranchNB;
 
+/** \brief
+ * Obsolete - Version of branchNBstruct used to save the tree to disk.
+ */
 typedef struct branchNBstruct2{
-  IndexType particles;        /* list of particles in BranchNB */
+	 // list of particles in BranchNB
+  IndexType particles;
   IndexType nparticles;
-  IndexType big_particle;  // the number of particles that aren't in children
+  // the number of particles that aren't in children
+  IndexType big_particle;
   PosType maxrsph;
   PosType center[treeNBdim];
   int level;
-  PosType boundery_p1[treeNBdim];
-  PosType boundery_p2[treeNBdim];
+  PosType boundary_p1[treeNBdim];
+  PosType boundary_p2[treeNBdim];
   int child1;
   int child2;
   int prev;
 } RelativeBranchNB;
 
-/* TreeNB: Exported struct */
+/** \brief
+ * TreeNB: Tree structure used for force calculation with particles (i.e. stars, Nbody or halos).
+ *
+ * The tree also contains pointers to the list of positions, sizes and masses of the particles.
+ * Also flags for the number of dimensions the tree is defined in (2 or 3), and if multiple
+ * masses and sizes should be used.
+ */
 typedef struct TreeNBStruct{
   BranchNB *top;
   BranchNB *current;
-  unsigned long Nbranches;  /* number of barnches in tree */
+  /// number of branches in tree
+  unsigned long Nbranches;
+  /// Dimension of tree, 2 or 3.  This will dictate how the force is calculated.
   short Ndimensions;
+  /// True if particles have different masses.
   Boolean MultiMass;
+  /// True if particles have different sizes.
   Boolean MultiRadius;
 
+  /// Array of particle positions
   PosType **xp;
+  /// Array of particle sizes
   float *rsph;
+  /// Array of particle masses
   float *mass;
 } TreeNBStruct;
 
@@ -102,19 +137,20 @@ typedef struct TreeNBStruct{
 typedef struct TreeNBStruct * TreeNBHndl;
 typedef int TreeNBElement;
 
-typedef struct lens{
+/** \brief Structure for a lens consisting of simulation particles */
+typedef struct simlens{
   double zlens;
   double zsource;
 
-  int Nspecies;  /* number of particle species */
-  double phi;    /* orientation of the simulation projection */
-  double theta;    /* orientation of the simulation projection */
-  double mass_units; /* mass units for particles */
+  int Nspecies;  /** number of particle species */
+  double phi;    /** orientation of the simulation projection */
+  double theta;    /** orientation of the simulation projection */
+  double mass_units; /** mass units for particles */
   double theta_force;
 
   double r_source;
 
-  int Nsph; /* mass units for particles */
+  int Nsph; /** mass units for particles */
 
   double interpolation_scale; // grid scale below which interpolation is used
 
@@ -122,18 +158,18 @@ typedef struct lens{
   char simfilename[50];
 
   /* private data */
-  TreeNBHndl tree;  /* pointers to the tree structures of each species */
+  TreeNBHndl tree;  /** pointers to the tree structures of each species */
   //int *firstparticle;  // the first particle of each species
-  double *masses;     /* masses of particle species */
-  double Sigma_crit;  /* critical surface density */
-  double **coord;    /* orientation for internal use */
+  double *masses;     /** masses of particle species */
+  double Sigma_crit;  /** critical surface density */
+  double **coord;    /** orientation for internal use */
 
   IndexType Nparticles;
   IndexType *particles;
-  float *rsph;    /* SPH smoothing scale for each particle */
-  PosType **xp;    /* array of particle positions */
+  float *rsph;    /** SPH smoothing scale for each particle */
+  PosType **xp;    /** array of particle positions */
 
-  PosType **xp_2d;    /* array of projected particle positions */
+  PosType **xp_2d;    /** array of projected particle positions */
   
 } SimLens;
 
@@ -141,15 +177,16 @@ typedef struct lens{
 
 /***** Constructors/Destructors*****/
 
+/** Creates a new TreeNB structure */
 TreeNBHndl NewTreeNB(IndexType *particles,IndexType nparticles
-		 ,PosType boundery_p1[],PosType boundery_p2[],
+		 ,PosType boundary_p1[],PosType boundary_p2[],
 		     PosType center[],short Ndimensions);
 void freeTreeNB(TreeNBHndl tree);
 short emptyTreeNB(TreeNBHndl tree);
 void _freeTreeNB(TreeNBHndl tree,short child);
 
 BranchNB *NewBranchNB(IndexType *particles,IndexType nparticles
-		  ,PosType boundery_p1[],PosType boundery_p2[]
+		  ,PosType boundary_p1[],PosType boundary_p2[]
 		  ,PosType center[2],int level,unsigned long branchNBnumber);
 void FreeBranchNB(BranchNB *branchNB);
 
@@ -175,7 +212,7 @@ void moveUpNB(TreeNBHndl tree);
 void moveToChildNB(TreeNBHndl tree,int child);
 
 void insertChildToCurrentNB(TreeNBHndl tree, IndexType *particles,IndexType nparticles
-			  ,PosType boundery_p1[],PosType boundery_p2[]
+			  ,PosType boundary_p1[],PosType boundary_p2[]
 			  ,PosType center[],int child);
 
 void attachChildToCurrentNB(TreeNBHndl tree,BranchNB data,int child);

@@ -11,9 +11,10 @@
 #include <Tree.h>
 #include <analytic_lens.h>
 
-/* MarkPoints sets the point.in_image to True
- * if the source point is within lens->source_r of lens->source_x
+/** \ingroup ImageFindingL2
+ *\brief  MarkPoints sets the point.in_image to True if the source point is within lens->source_r of lens->source_x
  * AND (if sbcut == True) the surface brightness at that point is > 0.
+ *
  * Both the source point and its image point are marked.
  *
  * Setting sb_cut = False speeds the code up for sources without sharp
@@ -47,10 +48,10 @@ void _MarkPoints(TreeHndl s_tree,AnaLens *lens,Boolean *sbcut){
 
   if(incell){  // not found cell yet
 
-    if( inbox(lens->source_x, s_tree->current->boundery_p1, s_tree->current->boundery_p2) ){
+    if( inbox(lens->source_x, s_tree->current->boundary_p1, s_tree->current->boundary_p2) ){
 
       // found the box small enough
-    	if( cutbox(lens->source_x, s_tree->current->boundery_p1, s_tree->current->boundery_p2,lens->source_r) == 1
+    	if( cutbox(lens->source_x, s_tree->current->boundary_p1, s_tree->current->boundary_p2,lens->source_r) == 1
     			|| ( s_tree->current->child1 == NULL)*( s_tree->current->child2 == NULL) ){
 
     		// whole box in circle or a leaf with ray in it
@@ -99,7 +100,7 @@ void _MarkPoints(TreeHndl s_tree,AnaLens *lens,Boolean *sbcut){
 
   }else{    // found cell
 
-	  pass=cutbox(lens->source_x, s_tree->current->boundery_p1, s_tree->current->boundery_p2,lens->source_r);
+	  pass=cutbox(lens->source_x, s_tree->current->boundary_p1, s_tree->current->boundary_p2,lens->source_r);
 	  // does radius cut into the box
 	  if( pass ){
 

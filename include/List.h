@@ -10,7 +10,7 @@
 #ifndef pointlist_declare
 #define pointlist_declare
 
-// link list for points
+/** \brief link list for points, uses the linking pointers within the Point type unlike  Kist */
 typedef struct PointList{
   Point *top;
   Point *bottom;

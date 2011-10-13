@@ -19,13 +19,23 @@
 #include <analytic_lens.h>
 #include <nsie.h>
 #include <TreeNB.h>
-#include <source_model.h>
+#include <source_models.h>
 
 //extern char *paramfile,*outputfile;
 extern COSMOLOGY cosmo;
 extern AnaLens *lens;
 
 //const float Concentration=0.0776;  // ratio between truncation radius and scale length
+
+/** \ingroup DeflectionL2
+ *
+ * \brief Routine for calculating the deflection and other lensing quantities for
+ * a analytic one plane lens (AnaLens).
+ *
+ * Can be switched with rayshooterNB() to change
+ * to particle lens model.  This transition needs to be made more automatic and
+ * fail safe.
+ */
 
 void rayshooterInternal(unsigned long Npoints,Point *i_points,Boolean kappa_off){
   /* i_points need to be already linked to s_points */
@@ -190,7 +200,6 @@ void rayshooterInternal(unsigned long Npoints,Point *i_points,Boolean kappa_off)
 
         	  // do stars with tree code
         	  TreeNBForce2D(lens->star_tree,i_points[i].x,alpha,&tmp,gamma,True);
-
         	  i_points[i].image->x[0] += convert_factor*alpha[0];
         	  i_points[i].image->x[1] += convert_factor*alpha[1];
         	  //printf("alpha = %e %e\n",alpha[0]*convert_factor,alpha[1]*convert_factor);
@@ -249,6 +258,7 @@ double gaussian_SB(double *y){
 double BLR_Disk_SB(double *y){
 	return blr_surface_brightness_disk(y,lens,&cosmo);
 }
+
 double BLR_Sph1_SB(double *y){
 	return blr_surface_brightness_spherical_circular_motions(sqrt(y[0]*y[0] + y[1]*y[1]),lens,&cosmo);
 }

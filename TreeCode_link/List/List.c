@@ -12,7 +12,9 @@
 /***********************************************************
    routines for linked list of points
 ************************************************************/
-
+/** \ingroup ConstructorL2
+ *  \brief Constructor for a new list
+ */
 ListHndl NewList(void){
   PointList *pointlist;
 
@@ -28,6 +30,9 @@ ListHndl NewList(void){
 
   return pointlist;
 }
+/** \ingroup ConstructorL2
+ *  \brief Destructor for a new list
+ */
 
 void freeList(ListHndl list){
 

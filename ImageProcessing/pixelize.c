@@ -14,22 +14,29 @@
 #include <nrutil.h>
 #include <Kist.h>
 #include <Tree.h>
+#include <tree_maintenance.h>
 
-/*
- * pixelize takes images and pixelizes the flux into regular pixels
- *
- * 	   input:  cleanmap - erases previous pixel map contained in ptree
- * 			   constant_sb == True - all images will have surface brightness = 1
- *                            False - surface brightness is taken from surface_brighness in
- *                                    the image points
- *     output: map[0...Npixels*Npixels-1] contains the surface brightness map
- */
 
 #include "image_processing.h"
 double area=0;
 
-void pixelize(double *map,long Npixels,double range,double *center
-		,ImageInfo *imageinfo,int Nimages,Boolean constant_sb,Boolean cleanmap){
+/** \ingroup Image
+ * \brief Takes images and pixelizes the flux into regular pixels.
+ *
+ * The routine constructs a tree structure of the pixel points for fast calculation of location
+ * of each point in the images.  This tree is stored internally and cannot be freed.
+ */
+void pixelize(
+		double *map    /// Output map in one dimensional array. It is always square. map[0...Npixels*Npixels-1]
+		,long Npixels   /// Number of pixels in one dimension of map.
+		,double range   /// One dimensional range of map in whatever units the point positions are in (generally Mpc on the lens plane.)
+		,double *center /// The location of the center of the map
+		,ImageInfo *imageinfo  /// An array of ImageInfo-s.  There is no reason to separate images for this routine
+		,int Nimages           /// Number of images on input.
+		,Boolean constant_sb  /// True - all images will have surface brightness = 1,
+		                      /// False - surface brightness is taken from surface_brighness in  the image points
+		,Boolean cleanmap     ///  True - erases previous pixel map, False - adds new flux to map
+		){
 
 	long ix;
 	double sb=1.0,resolution=0;
@@ -87,8 +94,8 @@ void pixelize(double *map,long Npixels,double range,double *center
 			_SplitFluxIntoPixels(ptree,getCurrentKist(imageinfo[ii].imagekist)->leaf,&sb);
 
 /*
-			getCurrentKist(imageinfo[ii].imagekist)->gridsize = getCurrentKist(imageinfo[ii].imagekist)->leaf->boundery_p2[0]
-		                             - getCurrentKist(imageinfo[ii].imagekist)->leaf->boundery_p1[0];
+			getCurrentKist(imageinfo[ii].imagekist)->gridsize = getCurrentKist(imageinfo[ii].imagekist)->leaf->boundary_p2[0]
+		                             - getCurrentKist(imageinfo[ii].imagekist)->leaf->boundary_p1[0];
 			if( boxinbox(getCurrentKist(imageinfo[ii].imagekist)->leaf,ptree->top) ){
 
 
@@ -108,10 +115,10 @@ void pixelize(double *map,long Npixels,double range,double *center
 					// find a super-pixel that contains all of the cell
 					while(boxinbox(getCurrentKist(imageinfo[ii].imagekist)->leaf,ptree->current) == False) moveUp(ptree);
 
-					assert((ptree->current->boundery_p1[0]-getCurrentKist(imageinfo[ii].imagekist)->leaf->boundery_p1[0]) < 0);
-					assert((ptree->current->boundery_p1[1]-getCurrentKist(imageinfo[ii].imagekist)->leaf->boundery_p1[1]) < 0);
-					assert((ptree->current->boundery_p2[0]-getCurrentKist(imageinfo[ii].imagekist)->leaf->boundery_p2[0]) > 0);
-					assert((ptree->current->boundery_p2[1]-getCurrentKist(imageinfo[ii].imagekist)->leaf->boundery_p2[1]) > 0);
+					assert((ptree->current->boundary_p1[0]-getCurrentKist(imageinfo[ii].imagekist)->leaf->boundary_p1[0]) < 0);
+					assert((ptree->current->boundary_p1[1]-getCurrentKist(imageinfo[ii].imagekist)->leaf->boundary_p1[1]) < 0);
+					assert((ptree->current->boundary_p2[0]-getCurrentKist(imageinfo[ii].imagekist)->leaf->boundary_p2[0]) > 0);
+					assert((ptree->current->boundary_p2[1]-getCurrentKist(imageinfo[ii].imagekist)->leaf->boundary_p2[1]) > 0);
 
 					_SplitFluxIntoPixels(ptree,getCurrentKist(imageinfo[ii].imagekist)->leaf,&sb);
 				}
@@ -135,10 +142,12 @@ void pixelize(double *map,long Npixels,double range,double *center
 	return;
 }
 
+
+/** \ingroup LowLevel
+ *  Recursively determine which pixels a leaf intersects with
+ *  and add flux to that pixel.  Used in pixelizer().
+ */
 void _SplitFluxIntoPixels(TreeHndl ptree,Branch *leaf,double *leaf_sb){
-	/* recursively determine which pixels leaf intersects with
-	 *  and add flux to that pixel
-	 */
 
 	area = BoxIntersection(leaf,ptree->current);
 
@@ -167,7 +176,10 @@ void _SplitFluxIntoPixels(TreeHndl ptree,Branch *leaf,double *leaf_sb){
 
 	return;
 }
-
+/** \ingroup Image
+ *
+ * \brief Smoothes a map with a Gaussian kernel. Needs to be tested.
+ */
 void smoothmap(double *map_out,double *map_in,long Npixels,double range,double sigma){
 	double sum=0,**mask;
 	unsigned long i=0;

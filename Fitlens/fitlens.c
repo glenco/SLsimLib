@@ -17,13 +17,22 @@ static double betaT,*modT,**xobT,**dx_subT,sigGT,*modTT,*modoT,**vT,x_centerT[2]
 static int NmodT,NsourcesT,NimagesT,*pairingT,degenT,Nmin;
 static double oldsm;//,tang[2],length,yot[2],radsourceT;
 
-void FindLensSimple(AnaLens *lens,int Nimages,Point *image_positions,double *y,double **dx_sub){
-	/* rapper that allows simple lens to be found with a single
-	 * lens and translates result into data structures used in the other code
-	 *
-	 * the lens is centered on [0,0]
-	 * source position in lens is updated along with all the modes
-	 */
+/** \ingroup FitLens
+ *
+*  \brief Wrapper that allows simple lens to be found with a single
+ * lens and translates result into data structures used in the other code.
+ *
+ * The lens is centered on [0,0] source position in lens is updated along with all the modes.
+ *
+ */
+
+void FindLensSimple(
+		AnaLens *lens  /// lens model, modes will be changed on return
+		,int Nimages   /// input number of images
+		,Point *image_positions  /// input image positions
+		,double *y               /// output source position
+		,double **dx_sub         /// pre-calculated deflections caused by substructures or external masses at each image
+		){
 
 	assert(Nimages < 200);
 
@@ -109,45 +118,42 @@ void FindLensSimple(AnaLens *lens,int Nimages,Point *image_positions,double *y,d
 	return ;
 }
 
-double ElliptisizeLens(int Nimages,int Nsources,int Nlenses,int *pairing,double **xob
-		       ,double *x_center,double **xg,double sigG,double beta,int Nmod
-		       ,double *mod,double **dx_sub,double *re2,double *q){
-
-
-	/*************************************
-	****** find most elliptical lens *****
-	******
-	***  Input:
-	***
-	****** Nimages  - number of images
-	****** Nsources - number of sources
-	****** Nlenses  - number of lens centers
-	****** pairing  - [0...Nimages-1] which source each image belongs to
-	******             , indexed 1 through Nsources
-	****** xob[][]      - [0...Nimages-1][0...1]  observed image positions
-	****** x_center[][] - ??? expected center of lens
-	****** xg       - ??? [0...Nlenses-1][0...1] centers of additional lenses
-	****** sigG     - amount by which the center of the lens is allowed to vary
-	****** beta     - slope of density profile  kappa propto r^-beta
-	****** Nmod     - number of modes used in lens fitting,  this must be greater then ???
-	****** dx_sub[][]    - [0,Nimages-1][0,1] deflection offset for each image caused by any
-	******             masses not included in the host model (ex substructure)
-	******
-	***  Output:
-	***
-	****** mod[]     - [1...Nmod+2*Nsources]  modes of final model
-	****** re2       - Einstein radius of additional lens
-	****** q[6]
-	******      q[1]     - ellipticity of nearest elliptical lens
-	******  	q[2]     - position angle of nearest elliptical lens
-	****** 	  if sigG == 0
-	****** 	    q[3]     - re2 of additional lens if Nlenses = 2, copied to re2
-	******    if sigG > 0
-	******      q[3,4]   - center of lens, copied to x_center
-	******      q[5]     - re2 of additional lens if Nlenses = 2, copied to re2
-	******
-	*************************************
-	**************************************/
+/** \ingroup FitLensL2
+ * ***********************************
+\brief Find most elliptical lens
+*
+******
+***  Output:
+***
+*   - mod[]     - [1...Nmod+2*Nsources]  modes of final model
+*   - re2       - Einstein radius of additional lens
+*      - q[1]     - ellipticity of nearest elliptical lens
+*      - q[2]     - position angle of nearest elliptical lens
+*   - if sigG == 0
+*      - q[3]     - re2 of additional lens if Nlenses = 2, copied to re2
+*   - if sigG > 0
+*      - q[3,4]   - center of lens, copied to x_center
+*      - q[5]     - re2 of additional lens if Nlenses = 2, copied to re2
+*      - q[6]  ???
+*
+*************************************
+**************************************/
+double ElliptisizeLens(
+		int Nimages   /// number of images
+		,int Nsources /// number of sources
+		,int Nlenses  /// number of lens centers
+		,int *pairing  /// [0...Nimages-1] which source each image belongs to, indexed 1 through Nsources
+		,double **xob  /// [0...Nimages-1][0...1]  observed image positions
+		,double *x_center  /// x_center[][] - ??? expected center of lens
+		,double **xg  /// ??? [0...Nlenses-1][0...1] centers of additional lenses
+		,double sigG  /// amount by which the center of the lens is allowed to vary
+		,double beta  /// - slope of density profile  kappa propto r^-beta
+		,int Nmod    /// number of modes used in lens fitting,  this must be greater then ???
+		,double *mod  /// 0,Nimages-1][0,1] deflection offset for each image caused by any masses not included in the host model (ex substructure)
+		,double **dx_sub  /// [0,Nimages-1][0,1] deflection offset for each image caused by any masses not included in the host model (ex substructure)
+		,double *re2     /// Einstein radius of additional lens
+		,double *q       /// output, see comment
+		){
 
 	int iter,i;
 	double **xi,sm;
@@ -363,17 +369,18 @@ double minEllip(double *par){
 	return sm;
 }
 
+/** \ingroup FitLensL2
+ *
+* \brief Calculates a lens that fits the image positions
+*
+*  dx_sub[] is a perturbation to the deflection angle calculated elsewhere
+*
+* - [1]=gamma1
+* - [2]=gamma2
+* - [3]=ao
+*******************************************************/
 void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *x_center,double beta
 	       ,int Nmodes,int *degen,double *mod,double **v,double **dx_sub){
-	/*******************************************************
-	calculate lens el that fits the image positions
-	  dx_sub[] is a perturbation to the deflection angle calculated elsewhere
-
-	 [1]=gamma1
-	 [2]=gamma2
-	 [3]=ao
-
-	*******************************************************/
 
 	double **c,*b,*w,r,theta,wmax,**a,*y,*temp,**x;
 	int i,k,j;
@@ -484,16 +491,19 @@ void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *x_cent
 }
 
 
+/** \ingroup FitLensL2
+ *
+* \brief  calculate the sources position, surface density and magnification at x
+*given lens model
+*        - mod given
+*        - Re2 - Einstein radius of second lens
+*        - x2 - position of second lens relative to center of lens
+***************************************************************/
+
 double deflect_translated(double beta,double *mod,double *x,double *y,double *mag,int Nmodes
 		  ,int Nlenses,double Re2,double *x2){
 	double kappa,gamma[2],dt;
 
-  /***************************************************************
-    calculate the sources position, surface density and magnification at x
-          given lens model mod
-          Re2 - Einstein radius of second lens
-          x2 - position of second lens relative to center of lens
-  ***************************************************************/
 
   if(mod[0] != 0.0){ERROR_MESSAGE(); printf("background kappa should be zero\n"); exit(0);}
   assert(Nlenses < 3);
@@ -594,14 +604,13 @@ double deflect_translated(double beta,double *mod,double *x,double *y,double *ma
 
   return kappa;
 }
-
+/** \ingroup FitLensL2
+ * \brief find degenerate model most like modo modulo a normalization
+ */
 double regularize(int Nmax,int Nmin,int N,int Nsources,int degen
 		  ,double *mod,double **v,double *modo){
   double Dsum,sum=0,sumold,aa,*weights;
 
-  /*****************************************************************/
-  /** find degenerate model most like modo modulo a normalization **/
-  /*****************************************************************/
 
   int i,j;
 

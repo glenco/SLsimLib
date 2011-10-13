@@ -12,12 +12,20 @@
 
 	typedef struct Point Data;  // change this to make a kist of other objects
 
+	/** \brief Used as internal container in Kist */
 	typedef struct Unit{
 		Data * data;
 		struct Unit *next;
 		struct Unit *prev;
 	} Unit;
 
+	/** \brief
+	 * A Kist is a linked list of Units which each point to a Data type.
+	 *
+	 * In this implementation the Data type is set to Point type, but this could
+	 * be changed for other applications.  Multiple Kists of the same points can be
+	 * made without copying data.
+	 */
 	typedef struct Kist{
 		Unit *top;
 		Unit *bottom;

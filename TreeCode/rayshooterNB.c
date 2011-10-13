@@ -14,8 +14,10 @@ struct cosmology cosmo;
 int kmax,kount; 
 PosType *xp,**yp,dxsav;
 
-/* void rayshooter(PosType *ray,unsigned long Nrays,PosType *alpha,PosType *gamma */
-/* 		,PosType *kappa,PosType *invmag,char *paramfile){ */
+/** \ingroup DeflectionL2
+ *  \brief Wrapper function for initializing and calculating the deflection from particles.
+ *  */
+
 void rayshooterNB(unsigned long Nrays,Point *points,TreeHndl i_tree,char *paramfile,Boolean no_kappa){
  
   int i,j,k;

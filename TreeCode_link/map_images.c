@@ -24,30 +24,33 @@ const float FracResTarget = 3.0e-4;
 const float target_all = 1.0e-2;
 const float smallest = 0.1;
 
-void map_images(AnaLens *lens,TreeHndl s_tree,TreeHndl i_tree
-		,int *Nimages,ImageInfo *imageinfo,int NimageMax,double initial_size
-		  ,Boolean splitimages,ExitCriterion criterion,Boolean kappa_off){
-
-	/*
-	 * map_images is intended for mapping images of sources more complicated than simple circles
-	 *
-	 * returns finite refined images
-	 *  it starts with a large source and reduces down to the right size refining at each step
-	 *  should not miss any image larger than ~ munin*r_source linear size
-	 *  if r_souce < 0 the source is a point source and fabs(r_source) is the resolution
-	 *  if splitimage==TRUE each image is refined to target accuracy, otherwise all images are treated as one
-	 *
-	 *
-	 *  kappa_off = True - turns off calculation of kappa and gamma
-	 *              False - turns on calculation of kappa and gamma
-	 */
+/** \ingroup ImageFinding
+ *  \brief Find images and refine them based on their surface brightness distribution.
+ *
+ *  Uses find_images_kist() to initially find and refine images and then uses a surface brightness
+ *  based criterion the refine the most important parts of the lens.
+ *
+ *  map_images is intended for mapping images of sources more complicated than simple circles.
+ *
+ */
+void map_images(
+		AnaLens *lens    /// lens model
+		,TreeHndl s_tree /// Tree of grid points on the source plane
+		,TreeHndl i_tree /// Tree of grid points on the image plane
+		,int *Nimages /// number of images found
+		,ImageInfo *imageinfo /// information on each image
+		,int NimageMax   /// maximum number of images allowed
+		,double initial_size   /// Initial size of source for telescoping, 0 to start from the initial grid size.
+		,Boolean splitimages  /// TRUE each image is refined to target accuracy, otherwise all images are treated as one
+		,ExitCriterion criterion  /// see data type
+		,Boolean kappa_off  /// turns off calculation of surface density, shear, magnification and time delay
+		){
 
 	assert(lens);
 	assert(s_tree);
 	assert(i_tree);
 	assert(imageinfo->imagekist);
 
-	long Nsizes;
 	unsigned long Nimagepoints;
 	double tmp,y[2],area_tot;
 	static double oldy[2],oldr=0;
@@ -98,14 +101,19 @@ void map_images(AnaLens *lens,TreeHndl s_tree,TreeHndl i_tree
 			y[0] = getCurrentKist(imageinfo[i].imagekist)->image->x[0] - lens->source_x[0];
 			y[1] = getCurrentKist(imageinfo[i].imagekist)->image->x[1] - lens->source_x[1];
 			getCurrentKist(imageinfo[i].imagekist)->surface_brightness = lens->source_sb_func(y);
-			//if(getCurrentKist(imageinfo[i].imagekist)->surface_brightness != 0.0)
+			//printf("%e  %e\n",getCurrentKist(imageinfo[i].imagekist)->surface_brightness,lens->source_sb_func(y));
+			//assert(getCurrentKist(imageinfo[i].imagekist)->surface_brightness >= 0.0);
+			//if(getCurrentKist(imageinfo[i].imagekist)->surface_brightness > 0.0){
 			//	printf(" %li %li sb = %e",i,j,getCurrentKist(imageinfo[i].imagekist)->surface_brightness);
-			getCurrentKist(imageinfo[i].imagekist)->in_image = 1;  // Initialized value for refine_grid_on_image
-
-			imageinfo[i].area += pow(getCurrentKist(imageinfo[i].imagekist)->gridsize,2)
+				getCurrentKist(imageinfo[i].imagekist)->in_image = 1;  // Initialized value for refine_grid_on_image
+				imageinfo[i].area += pow(getCurrentKist(imageinfo[i].imagekist)->gridsize,2)
 			                     *getCurrentKist(imageinfo[i].imagekist)->surface_brightness;
+			//}else{
+			//	getCurrentKist(imageinfo[i].imagekist)->in_image = 0;
+			//}
 		}
 		area_tot += imageinfo[i].area;
+		assert(imageinfo[i].area > 0);
 	}
 
 	/*

@@ -18,11 +18,14 @@
 #include <analytic_lens.h>
 #include <TreeNB.h>
 
+/** \ingroup ChangeLens
+ * \brief  Implants stars into the lens around the images.
+ *
+ * lens->Nstars and lens->stars_fstars must be set before calling
+ * allocates all memory for stars
+ */
+
 void implant_stars(AnaLens *lens,Point *centers,unsigned long Nregions,long *seed){
-	/*  implants stars into the lens around the images
-	 * lens->Nstars and lens->stars_fstars must be set before calling
-	 * allocates all memory for stars
-	 */
 	PosType r,theta,NstarsPerImage;
 	static PosType **coord;
 	unsigned long i,j,m,k;
@@ -110,10 +113,10 @@ void implant_stars(AnaLens *lens,Point *centers,unsigned long Nregions,long *see
 	return ;
 }
 
+/// subtracts the mass in stars from the smooth model to compensate
+/// for the mass of the stars the lensing quantities are all updated not replaced
 void substract_stars_disks(AnaLens *lens,PosType *ray,PosType *alpha
 		,PosType *kappa,PosType *gamma){
-	// subtracts the mass in stars from the smooth model to compensate
-	// for the mass of the stars the lensing quantities are all updated not replaced
 
 	if(!(lens->stars_implanted)) return;
 

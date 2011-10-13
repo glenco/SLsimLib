@@ -34,27 +34,14 @@ typedef enum{TotalArea,EachImage,Resolution,FillHoles} ExitCriterion;
 #define SWAP(a,b) temp=(a);(a)=(b);(b)=temp;
 #endif
 
-/*typedef struct branchstruct{
-   struct Point *points;
-  unsigned long npoints;
-  double center[2];
-  int level;
-  unsigned long number;
-  double boundery_p1[2];
-  double boundery_p2[2];
-  struct branchstruct *child1;
-  struct branchstruct *child2;
-  struct branchstruct *prev;
-} Branch;*/
-
 /*
 typedef struct branchstruct2{
   unsigned long points;        // list of points in Branch
   unsigned long npoints;
   double center[2];
   int level;
-  double boundery_p1[2];
-  double boundery_p2[2];
+  double boundary_p1[2];
+  double boundary_p2[2];
   int child1;
   int child2;
   int prev;
@@ -64,55 +51,55 @@ typedef struct branchstruct2{
 #ifndef treetypes_declare
 #define treetypes_declare
 
-// Tree: Exported struct
+/** \brief Tree: Exported struct */
 typedef struct TreeStruct{
   Branch *top;
   Branch *current;
-  unsigned long Nbranches;  /* number of barnches in tree */
+  /// number of barnches in tree */
+  unsigned long Nbranches;
+  /// list of points
   PointList *pointlist;
-  int Nbucket;             // number of points allowed in leaves of tree
+  /// number of points allowed in leaves of tree
+  int Nbucket;
 } TreeStruct;
 
 typedef struct TreeStruct *TreeHndl;
 typedef int TreeElement;
 
-// this can be used for image or curve
+/** \brief Structure for storing information about images or curves */
 typedef struct ImageInfo{
+    /// Array of points in image,  SHOULD NOT BE USED IN FAVOR OF imagekist!
   Point *points;
-  KistHndl imagekist;     // later addition, holds all points in image, will replace points eventually
+  /// later addition, holds all points in image, will replace points eventually
+  KistHndl imagekist;
+  /// Number of points in image, SHOULD NOT BE USED IN FAVOR OF imagekist->Nunits
   unsigned long Npoints;
+  /// gridrange[2] minimum grid size in image, gridrange[0] maximum grid size in outerborder, gridrange[1] maximum grid size in image
   double gridrange[3];
-  // gridrange[2] minimum grid size in image
-  // gridrange[0] maximum grid size in outerborder
-  // gridrange[1] maximum grid size in image
-
+  /// Centroid of image
   double centroid[2];
+  /// area of image or, when using map_images(), the total brightness of the image
   double area;
+  /// error on the estimate of area
   double area_error;
+  /// the points on the inner border of the image
   KistHndl innerborder;
+  /// the points on the outer border of the image, i.e. not in the image
   KistHndl outerborder;
   short Nencircled;
 } ImageInfo;
 
-typedef struct ImageInfoKist{
-	int NimagesMax;
-	int Nimages;
-	unsigned long Npoints;
-	double gridrange[3];
-
-	// seporate kists for each image
-	KistHndl *imagekist;     // later addition, holds all points in image, will replace points eventually
-	KistHndl *innerborder;
-	KistHndl *outerborder;
-	double **centroid[2];
-	double *area;
-	double *area_error;
-} ImageInfoKist;
-
-
+/**
+ * \brief Structure to contain both source and image trees.
+ * It is not yet used, but may be useful.
+ */
 typedef struct Grid{
-	TreeHndl i_tree; // tree on image plane
-	TreeHndl s_tree; // tree on source plane
+	/// tree on image plane
+	TreeHndl i_tree;
+	/// tree on source plane
+	TreeHndl s_tree;
+	/// one dimensional size of grid
+	int Ngrid;
 	Boolean initialized;
 } Grid;
 
@@ -123,11 +110,11 @@ typedef struct Grid *GridHndl;
 //#include <Kist.h>
 //#include <KistDriver.h>
 
-/***** Constructors/Destructors*****/
-
+/*  *** Constructor****/
 TreeHndl NewTree(Point *xp,unsigned long npoints
-		 ,double boundery_p1[2],double boundery_p2[2]
+		 ,double boundary_p1[2],double boundary_p2[2]
 		 ,double center[2],int Nbucket);
+short freeTree(TreeHndl tree);
 
 /***** Access functions *****/
 
@@ -150,7 +137,7 @@ Boolean moveUp(TreeHndl tree);
 Boolean moveToChild(TreeHndl tree,int child);
 
 void insertChildToCurrent(TreeHndl tree, Point *points,unsigned long npoints
-			  ,double boundery_p1[2],double boundery_p2[2]
+			  ,double boundary_p1[2],double boundary_p2[2]
 			  ,double center[2],int child);
 
 void attachChildToCurrent(TreeHndl tree,Branch data,int child);
@@ -167,10 +154,6 @@ void printBranch(Branch *branch);
 
 void saveTree(TreeHndl tree,char *filename);
 TreeHndl readTree(char *filename);
-short emptyTree(TreeHndl tree);
-short freeTree(TreeHndl tree);
-void _freeTree(TreeHndl tree,short child);
-void _freeTree_iter(TreeHndl tree);
 void checkTree(TreeHndl tree);
 
 /** routines in TreeDriver.c **/
@@ -184,7 +167,6 @@ int cutbox(double ray[2],double *p1,double *p2,double rmax);
 void FindBoxPoint(TreeHndl tree,double *ray,Point *point);
 void _FindBox(TreeHndl tree,double *ray);
 Boolean AreBoxNeighbors(Point *point1,Point *point2);
-
 
 // Point arrays
 
@@ -306,20 +288,5 @@ void splitlist(ListHndl imagelist,ImageInfo *images,int *Nimages,int Maximages);
 /*  void rayshooterInternal(double *x,double *alpha,double *gamma,double *kappa,double *invmag);*/
 void rayshooterInternal(unsigned long Npoints,Point *i_points,Boolean kappa_off);
 void in_source(double *y_source,ListHndl sourcelist);
-
-/*
- * tree_maintenance.h
- *
- *  Created on: Sep 29, 2011
- *      Author: bmetcalf
- */
-
-TreeHndl BuildTree(Point *xp,unsigned long Npoints);
-void _BuildTree(TreeHndl tree);
-void FillTree(TreeHndl tree,Point *xp,unsigned long Npoints);
-int AddPointsToTree(TreeHndl tree,Point *xpoint,unsigned long Nadd);
-unsigned long PruneTree(TreeHndl i_tree,TreeHndl s_tree,double resolution,Boolean useSB);
-unsigned long FreeBranchesBelow(TreeHndl i_tree,TreeHndl s_tree,ListHndl trashlist);
-Point *RemoveLeafFromTree(TreeHndl tree,unsigned long *Npoints);
 
 #endif

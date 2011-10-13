@@ -10,6 +10,7 @@
 #ifndef beamtypes_declare
 #define beamtypes_declare
 
+/** \brief A simplified data structure for use in interface with other codes. */
 typedef struct Beam{
 	double source[2];
 	double image[2];

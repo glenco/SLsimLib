@@ -8,8 +8,8 @@
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <assert.h>
 #include <analytic_lens.h>
-#include <source_model.h>
 #include <Tree.h>
 
 // computes the surface brightness associated with our simplest model
@@ -178,6 +178,8 @@ double blr_surface_brightness_disk(double x[],AnaLens *lens,COSMOLOGY *cosmo){
 
 	if(fabs(zz_prime) > r*sin(lens->source_opening_angle) ) return 0.0;  // outside of disk
 
+	assert(pow(r/lens->source_r_in,lens->source_gamma) * r / tau >= 0.0);
+	//printf("hello 2 %e \n",pow(r/lens->source_r_in,lens->source_gamma) * r / tau);
 	// this is an option to do a monochromatic version
 	if(lens->source_monocrome) return pow(r/lens->source_r_in,lens->source_gamma) * r / tau;
 

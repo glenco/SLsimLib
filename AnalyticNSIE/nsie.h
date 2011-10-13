@@ -48,7 +48,7 @@ double invmagNSIE(double *x,double f,double bc,double theta
 		     ,double *gam,double kap);
 double phiNSIE(double *xt,double f,double bc,double theta);
 void rotation(double *xout,double *xin,double theta);
-void readparams_ana(char *filename,struct cosmology *cosmo,AnaLens *lens);
+void ReadParams_AnaLens(char *filename,struct cosmology *cosmo,AnaLens *lens);
 
 //  in powerlow.c
 

@@ -18,63 +18,89 @@
 typedef enum {NFW,powerlaw,pointmass} ClumpInternal;
 typedef enum {Uniform,Gaussian,BLR_Disk,BLR_Sph1,BLR_Sph2} SBModel;
 
+/**\brief Analytic model for single plane lens and source.
+ *
+ */
 typedef struct analytic_lens{
+  /// output file, not always used.
   char outputfile[100];
-  Boolean set;   // marks if the lens has been setup
+  /// marks if the lens has been setup.
+  Boolean set;
 
+  /// redshift of lens
   double zlens;
+  /// redshift of source
   double zsource;
 
   // source parameters
+  /// lag time
   double source_tau;
-  double source_nu;  // frequency
-  double source_gauss_r2;  // internal scale parameter
-  double source_r;   // total source size, ie no flux outside this radius
+  /// frequency
+  double source_nu;
+  /// internal scale parameter
+  double source_gauss_r2;
+  /// total source size, ie no flux outside this radius
+  double source_r;
+  /// center of source
   double source_x[2];
 
   float source_nuo;
-  float source_r_in;          //inner radius of BLR
-  float source_r_out;         // outer radius of BLR
-  float source_inclination;   //inclination of BLR in radians, face on is
+  /// inner radius of BLR
+  float source_r_in;
+  /// outer radius of BLR
+  float source_r_out;
+  ///inclination of BLR in radians, face on is
+  float source_inclination;
   float source_opening_angle;
   float source_gamma;
   float source_BHmass;
-  float source_fK;            // fraction of Keplerian velocity in random motions
-  Boolean source_monocrome;   // set to true to integrate over frequency
+  /// fraction of Keplerian velocity in random motions
+  float source_fK;
+  /// set to true to integrate over frequency
+  Boolean source_monocrome;
 
-  double (*source_sb_func)(double *y);  // surface brightness function
+  /// pointer to surface brightness function
+  double (*source_sb_func)(double *y);
   SBModel source_sb_type;
 
   // host elliptical
-  double *host_x;    // not used yet
+  double *host_x;    /// not used yet
   double host_core;
   double host_axis_ratio;
-  double host_pos_angle;    // position angle
+  double host_pos_angle;    /// position angle
   double host_sigma;
 
   // perturbations to host
-  long perturb_Nmodes;    // this includes two for external shear
+  long perturb_Nmodes;    /// this includes two for external shear
   double perturb_beta;
   double *perturb_rms;
-  double *perturb_modes;  //first two are shear
+  double *perturb_modes;  ///first two are shear
 
   // private derived quantities
+  /// private: Einstein radius of host
   double host_ro;
-  double MpcToAsec;    // conversion factor between Mpc on the lens plane and arcseconds
-  double Sigma_crit;   // critical surface density
-  double to;           // the time delay scale in days/Mpc^2
+  /// private: conversion factor between Mpc on the lens plane and arcseconds
+  double MpcToAsec;
+  /// private: critical surface density
+  double Sigma_crit;
+  /// private: the time delay scale in days/Mpc^2
+  double to;
 
-  // substructures
+  /// substructures
   Boolean substruct_implanted;
   double sub_sigmaScale;
   double sub_Ndensity;
-  int sub_N;          // actual number of substructures
+  /// actual number of substructures
+  int sub_N;
   double **sub_x;
   float *sub_Rcut;
   float *sub_mass;
-  double sub_beta;   // slope of mass profile
-  double sub_alpha;  // slope of mass function
-  double sub_Rmax;   // radius of largest mass substructures
+  /// slope of mass profile
+  double sub_beta;
+  /// slope of mass function
+  double sub_alpha;
+  /// radius of largest mass substructures
+  double sub_Rmax;
   double sub_Mmax;
   double sub_Mmin;
   double sub_theta_force;
@@ -82,27 +108,32 @@ typedef struct analytic_lens{
   IndexType *sub_substructures;
   ClumpInternal sub_type;
 
+  /// pointer to function for calculating the deflection caused by a subclump
   void (*sub_alpha_func)(double *alpha,double *x,double Rtrunc,double mass,double r_scale
 			,double *center,double Sigma_crit);
+  /// pointer to function for calculating the convergence caused by a subclump
   double (*sub_kappa_func)(double *x,double Rtrunc,double mass,double r_scale
   		,double *center,double Sigma_crit);
+  /// pointer to function for calculating the shear caused by a subclump
   void (*sub_gamma_func)(double *gamma,double *x,double Rtrunc,double mass,double r_scale
     		,double *center,double Sigma_crit);
+  /// pointer to function for calculating the surface potential caused by a subclump
   double (*sub_phi_func)(double *x,double Rtrunc,double mass,double r_scale
     		,double *center,double Sigma_crit);
 
-  // stars
+  /// stars
   Boolean stars_implanted;
   IndexType stars_N;
   IndexType *stars;
   PosType **stars_xp;
   TreeNBHndl star_tree;
   double star_massscale;
-  float *star_masses;    // star masses relative to star_massscles
+  /// star masses relative to star_massscles
+  float *star_masses;
   double star_fstars;
   double star_theta_force;
 
- // regions to be subtracted to compensate for the mass in stars
+ /// Number of regions to be subtracted to compensate for the mass in stars
   int star_Nregions;
   double *star_region;
   double *star_kappa;
@@ -118,7 +149,7 @@ void gammaNSIE(double gam[2],double *xt,double f,double bc,double theta);
 double invmagNSIE(double *x,double f,double bc,double theta
 		     ,double *gam,double kap);
 void rotation(double *xout,double *xin,double theta);
-void readparams_ana(char *filename,struct cosmology *cosmo,AnaLens *lens);
+void ReadParams_AnaLens(char *filename,struct cosmology *cosmo,AnaLens *lens);
 
 //  in powerlow.c
 

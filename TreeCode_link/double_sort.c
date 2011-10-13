@@ -84,13 +84,14 @@ void double_sort(unsigned long n, double *arr, unsigned long *brr)
   }
 }
 
+/** arr array uses NR standard indexing i.e arr[1...n]
+* but brr[0..n-1]
+* if the point array is two-way-coupled to another point array
+* the image pointers of that array will follow sort
+* if the array is not  two-way-coupled to another the image
+* pointers in the other array will be untouched
+*/
 void double_sort_points(unsigned long n, double *arr, Point *brr){
-  /* arr array uses NR standard indexing i.e arr[1...n] */
-  /* but brr[0..n-1] */
-  /* if the point array is two-way-coupled to another point array */
-  /* the image pointers of that array will follow sort */
-  /* if the array is not  two-way-coupled to another the image */
-  /* pointers in the other array will be untouched */
   unsigned long i,ir=n,j,k,l=1,*istack;
   long jstack=0;
   double a,temp;

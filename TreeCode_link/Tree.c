@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <math.h>
 #include "Tree.h"
 #include <Kist.h>
 #include <List.h>
@@ -25,8 +26,11 @@ double dummy;
  * Returns pointer to new Branch struct.  Initializes children pointers to NULL,
  * and sets data field to input.  Private.
  ************************************************************************/
+/** \ingroup ConstructorL2
+ *
+ */
 Branch *NewBranch(Point *points,unsigned long npoints
-		  ,double boundery_p1[2],double boundery_p2[2]
+		  ,double boundary_p1[2],double boundary_p2[2]
 		  ,double center[2],int level,unsigned long branchnumber){
 
     Branch *branch;
@@ -46,8 +50,8 @@ Branch *NewBranch(Point *points,unsigned long npoints
     branch->level=level;
 
     for(i=0;i<2;++i){
-      branch->boundery_p1[i]= boundery_p1[i];
-      branch->boundery_p2[i]= boundery_p2[i];
+      branch->boundary_p1[i]= boundary_p1[i];
+      branch->boundary_p2[i]= boundary_p2[i];
     }
 
     branch->number=branchnumber;
@@ -60,10 +64,8 @@ Branch *NewBranch(Point *points,unsigned long npoints
     return branch;
 }
 
-/************************************************************************
- * FreeBranch
- * Frees memory pointed to by branch.  Private.
- ************************************************************************/
+/** \ingroup ConstructorL2
+*/
 void FreeBranch(Branch *branch){
 
     assert( branch != NULL);
@@ -72,14 +74,12 @@ void FreeBranch(Branch *branch){
     return;
 }
 
-/************************************************************************
- * NewTree
- * Returns pointer to new Tree struct.  Initializes top, last, and
- * current pointers to NULL.  Sets Nbranches field to 1.  Exported.
- * set root of tree and initializes linked list of points that is stored 
- * in tree 
- ************************************************************************/
-Point *NewPointArray(unsigned long N,Boolean NewXs){
+  /** \ingroup ConstructorL2
+ **/
+Point *NewPointArray(
+		unsigned long N  /// number of points in array
+		,Boolean NewXs   /// Allocate memory for point positions or assign pointer to existing position
+		){
   Point *points;
   unsigned long i;
 
@@ -100,6 +100,9 @@ Point *NewPointArray(unsigned long N,Boolean NewXs){
   return points;
 }
 
+/** \ingroup ConstructorL2
+ *
+ */
 void FreePointArray(Point *array){
   /* Note: this deallocates positions!! */
   unsigned long i;
@@ -114,9 +117,19 @@ void FreePointArray(Point *array){
   }
 }
 
-TreeHndl NewTree(Point *xp,unsigned long npoints
-		 ,double boundery_p1[2],double boundery_p2[2],
-		 double center[2]){
+/** \ingroup ConstructorL2
+ *  \brief  Make a new tree and the linked list of points in it.  Does
+ *  not build the tree structure.  BuildTree() calls this and should be used
+ *  for building trees.
+ */
+TreeHndl NewTree(
+		Point *xp   /// array of points to be added to the tree
+		,unsigned long npoints   /// number of points
+		,double boundary_p1[2]   /// bottom left hand corner of root
+		,double boundary_p2[2]   /// upper right hand corner of root
+		,double center[2]        /// center of root (this could be the center of mass)
+		,int Nbucket             /// maximum number of points allowed in a leaf
+		){
   unsigned long i;
   TreeStruct *tree;
 
@@ -134,16 +147,21 @@ TreeHndl NewTree(Point *xp,unsigned long npoints
     MoveDownList(tree->pointlist);
   }
 
-  tree->top=NewBranch(tree->pointlist->top,npoints,boundery_p1,boundery_p2
+  tree->top=NewBranch(tree->pointlist->top,npoints,boundary_p1,boundary_p2
 		      ,center,0,0);
 
   tree->Nbranches = 1;
   tree->current = tree->top;
 
+  tree->Nbucket = Nbucket;
   //printTree(tree);
   /*FillList(tree->pointlist,&xp[1],npoints-1,1);*/
   return(tree);
 }
+
+/** \ingroup ConstructorL2
+ * \brief Free tree and the linked list of points in it.
+ */
 
 short freeTree(TreeHndl tree){
 
@@ -158,129 +176,6 @@ short freeTree(TreeHndl tree){
 	return 1;
 }
 
-short emptyTree(TreeHndl tree){
-  /* empty tree of all point
-  * leaving a tree with an empty root
-  *  FillTree can then be used to regenerate tree
-  */
-  Point **heads;
-  long i,j,count;
-
-  heads = (Point **) malloc(tree->pointlist->Npoints*sizeof(Point*));  // maximum number of pointers that could be needed
-
-  if(tree == NULL) return 1;
-
-  assert(tree);
-
-  moveTop(tree);
-  _freeTree_iter(tree);
-//  _freeTree(tree,0);
-  //printTree(tree);
-
-  assert(tree->Nbranches == 1);
-
-  MoveToTopList(tree->pointlist);
-  for(i=0,j=0,count=0;i<tree->pointlist->Npoints;++i){
-	  if(tree->pointlist->current->head){
-		  heads[j] = tree->pointlist->current;
-		  ++j;
-		  count += tree->pointlist->current->head;
-	  }
-	  MoveDownList(tree->pointlist);
-  }
-  assert(count == tree->pointlist->Npoints);
-
-  //printf("freed %i arrays out of %i points in array, %i freed\n",j,i,count);
-  for(i=0;i<j;++i) FreePointArray(heads[i]);
-  tree->top->npoints = 0;
-
-  //printTree(tree);
-
-  tree->pointlist->Npoints=0;
-  tree->pointlist->top=tree->pointlist->bottom=tree->pointlist->current=NULL;
-//  free(tree->pointlist);
-//  free(tree);
-
-  free(heads);
-  return 1;
-}
-
-void _freeTree(TreeHndl tree,short child){
-	Branch *branch;
-
-	assert( tree !=NULL);
-
-	/*printBranch(tree->current);*/
-
-	if(tree->current->child1 != NULL){
-		moveToChild(tree,1);
-		_freeTree(tree,1);
-	}
-
-    if(tree->current->child2 != NULL){
-      moveToChild(tree,2);
-      _freeTree(tree,2);
-    }
-
-    if( (tree->current->child1 == NULL)*(tree->current->child2 == NULL) ){
-
-    	if(atTop(tree)){
-    		//free(tree->current);
-    		//tree->current=NULL;
-    		//tree->top=NULL;
-    		//--tree->Nbranches;
-    		return;
-    	}
-
-    	branch=tree->current;
-    	moveUp(tree);
-       	free(branch);
-
-    	/*printf("*** removing branch %i number of branches %i\n",branch->number
-			,tree->Nbranches-1);*/
-
-       	if(child==1) tree->current->child1=NULL;
-    	if(child==2) tree->current->child2=NULL;
-    	--tree->Nbranches;
-
-    	return;
-    }
-
-    return;
-}
-void _freeTree_iter(TreeHndl tree){
-	// does the same as _freeTree only iteratively
-	Branch *branch;
-
-	assert( tree !=NULL);
-	moveTop(tree);
-
-	/*printBranch(tree->current);*/
-
-	while(tree->Nbranches > 1){
-
-		if(tree->current->child1 != NULL){
-			moveToChild(tree,1);
-		}else if(tree->current->child2 != NULL){
-			moveToChild(tree,2);
-		}else{
-			branch = tree->current;
-			if(tree->current->brother == tree->current->prev->brother){
-				moveUp(tree);
-				assert(tree->current->child1 == NULL);
-				tree->current->child2 = NULL;
-			}else{
-				tree->current = tree->current->brother;
-				tree->current->prev->child1 = NULL;
-			}
-
-			free(branch);
-			--tree->Nbranches;
-		}
-	}
-
-    return;
-}
 
 /***** Access functions *****/
 
@@ -311,6 +206,10 @@ Boolean atTop(TreeHndl tree){
     return(tree->current == tree->top);
 }
 
+inline Boolean atLeaf(TreeHndl tree){
+    return( (tree->current->child1==NULL)*(tree->current->child2==NULL) );
+}
+
 /************************************************************************
  * noChild
  * Returns "True" if the child of the current branch does not exist and "False" otherwise.
@@ -338,6 +237,16 @@ Boolean offEnd(TreeHndl tree){
 
     assert(tree != NULL);
     return(tree->current == NULL);
+}
+
+Boolean CurrentIsSquareTree(TreeHndl tree){
+	if( fabs(1 - (tree->current->boundary_p2[0] - tree->current->boundary_p1[0])
+			    /(tree->current->boundary_p2[1] - tree->current->boundary_p1[1]) )
+			< 0.001){
+		return True;
+	}
+
+	return False;
 }
 
 /************************************************************************
@@ -413,20 +322,18 @@ Boolean moveToChild(TreeHndl tree,int child){
     return False;
 }
 
-void moveUp(TreeHndl tree){
+Boolean moveUp(TreeHndl tree){
 
     assert(tree != NULL);
     if( offEnd(tree) ){
       ERROR_MESSAGE(); fprintf(stderr, "Tree Error: call to moveUp() when current is off end\n");
       exit(1);
     }
-    if( tree->current == tree->top ){
-      ERROR_MESSAGE(); fprintf(stderr, "Tree Error: call to moveUp() tried to move off the top\n");
-      exit(1);
-    }
 
+    if( tree->current == tree->top ) return False;
+    assert(tree->current->prev);
     tree->current = tree->current->prev;  /* can move off end */
-    return;
+    return True;
 }
 
 /************************************************************************
@@ -442,14 +349,14 @@ void moveUp(TreeHndl tree){
  * Pre: !offEnd(tree)
  ************************************************************************/
 void insertChildToCurrent(TreeHndl tree,Point *points,unsigned long npoints
-			  ,double boundery_p1[2],double boundery_p2[2]
+			  ,double boundary_p1[2],double boundary_p2[2]
 			  ,double center[2],int child){
     
     Branch *branch;
 
     /*printf("attaching child%i  current paricle number %i\n",child,tree->current->npoints);*/
 
-    branch = NewBranch(points,npoints,boundery_p1,boundery_p2,center
+    branch = NewBranch(points,npoints,boundary_p1,boundary_p2,center
 		       ,tree->current->level+1,tree->Nbranches);
 
     assert(tree != NULL);
@@ -488,7 +395,7 @@ void insertChildToCurrent(TreeHndl tree,Point *points,unsigned long npoints
 
 void attachChildToCurrent(TreeHndl tree,Branch data,int child){
 
-  insertChildToCurrent(tree,data.points,data.npoints,data.boundery_p1,data.boundery_p2,data.center,child);
+  insertChildToCurrent(tree,data.points,data.npoints,data.boundary_p1,data.boundary_p2,data.center,child);
   return;
 }
 
@@ -496,9 +403,9 @@ void attachChildrenToCurrent(TreeHndl tree,Branch child1,Branch child2){
 	// this is an addition that keeps assigns the brother pointers
 
 	insertChildToCurrent(tree,child1.points,child1.npoints
-			,child1.boundery_p1,child1.boundery_p2,child1.center,1);
+			,child1.boundary_p1,child1.boundary_p2,child1.center,1);
 	insertChildToCurrent(tree,child2.points,child2.npoints
-			,child2.boundery_p1,child2.boundery_p2,child2.center,2);
+			,child2.boundary_p1,child2.boundary_p2,child2.center,2);
 
 	tree->current->child1->brother = tree->current->child2;
 	tree->current->child2->brother = tree->current->brother;
@@ -526,8 +433,8 @@ void printTree(TreeHndl tree){
     }
     if(tree->current->child1 == NULL) return;
 
-    if( (tree->current->boundery_p1[0]==tree->current->boundery_p2[0]) ||
-    		(tree->current->boundery_p1[0]==tree->current->boundery_p2[0])	){
+    if( (tree->current->boundary_p1[0]==tree->current->boundary_p2[0]) ||
+    		(tree->current->boundary_p1[0]==tree->current->boundary_p2[0])	){
     	ERROR_MESSAGE();
     	printf("ERROR: zero area branch");
     	exit(0);
@@ -550,8 +457,8 @@ void printBranch(Branch *data){
   printf("******* branch *******\nlevel=%i number=%li\n",data->level,data->number);
   printf("center = [%e,%e]\n",data->center[0],data->center[1]);
   printf("p1 = [%e,%e] p2 = [%e,%e]\n"
-	 ,data->boundery_p1[0],data->boundery_p1[1]
-	 ,data->boundery_p2[0],data->boundery_p2[1]);
+	 ,data->boundary_p1[0],data->boundary_p1[1]
+	 ,data->boundary_p2[0],data->boundary_p2[1]);
   printf("number of points = %li\n",data->npoints);
   /*for(i=0;i<data->npoints;++i) printf("%e %e %e\n",xp[data->points[i]][0] ,xp[data->points[i]][1],xp[data->points[i]][2]); */
 }
@@ -598,8 +505,8 @@ void _checkTree(TreeHndl tree,unsigned long *count){
 
 // put in test for each branch
 int checkBranch(Branch *branch){
-   	if(branch->boundery_p1[0] >= branch->boundery_p2[0]
-   	  || branch->boundery_p1[1] >= branch->boundery_p2[1] ){
+   	if(branch->boundary_p1[0] >= branch->boundary_p2[0]
+   	  || branch->boundary_p1[1] >= branch->boundary_p2[1] ){
     		printf("\nthis branch is screwed\n");
     		printBranch(branch);
     		PrintPoint(branch->points);
@@ -730,7 +637,9 @@ void PrintPoint(Point *point){
 	 ,point->gamma[0],point->gamma[1],point->invmag);
   printf("   in_image=%i\n",point->in_image);
 }
-
+/** \ingroup Constructor
+ * Make an array of imageinfo types.
+ */
 ImageInfo *NewImageInfo(int Nimages){
   ImageInfo *imageinfo;
   int i;
@@ -748,6 +657,9 @@ ImageInfo *NewImageInfo(int Nimages){
   return imageinfo;
 }
 
+/** \ingroup Constructor
+ * Free an array of imageinfo types.
+ */
 void freeImageInfo(ImageInfo *imageinfo,int Nimages){
 	int i;
 
@@ -760,7 +672,9 @@ void freeImageInfo(ImageInfo *imageinfo,int Nimages){
 	free(imageinfo);
 }
 
-// step for walking tree by iteration instead of recursion
+/** \ingroup LowLevel
+ *  step for walking tree by iteration instead of recursion
+ */
 Boolean TreeWalkStep(TreeHndl tree,Boolean allowDescent){
 
 	if(allowDescent && tree->current->child1 != NULL){
@@ -839,8 +753,8 @@ void saveTree(TreeHndl tree,char *filename){
 /*   tree_arr[current].npoints=tree->current->npoints; */
 /*   for(i=0;i<2;++i){ */
 /*     tree_arr[current].center[i]=tree->current->center[i]; */
-/*     tree_arr[current].boundery_p1[i]=tree->current->boundery_p1[i]; */
-/*     tree_arr[current].boundery_p2[i]=tree->current->boundery_p2[i]; */
+/*     tree_arr[current].boundary_p1[i]=tree->current->boundary_p1[i]; */
+/*     tree_arr[current].boundary_p2[i]=tree->current->boundary_p2[i]; */
 /*   } */
 
 /*   if(current>0) tree_arr[current].prev=tree->current->prev->number; */
@@ -935,8 +849,8 @@ void _readTree(TreeHndl tree,RelativeBranch *tree_arr,ListHndl points
 
   for(i=0;i<2;++i){
     tree->current->center[i]=tree_arr[current].center[i];
-    tree->current->boundery_p1[i]=tree_arr[current].boundery_p1[i];
-    tree->current->boundery_p2[i]=tree_arr[current].boundery_p2[i];
+    tree->current->boundary_p1[i]=tree_arr[current].boundary_p1[i];
+    tree->current->boundary_p2[i]=tree_arr[current].boundary_p2[i];
   }
 
   if(tree_arr[current].child1==-1){

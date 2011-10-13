@@ -18,11 +18,14 @@
 #include <nrD.h>
 #include <Tree.h>
 #include <nrutil.h>
-//#include <tree_maintenance.h>
+#include <tree_maintenance.h>
 
 static int median_cut=1;
 //const int Ngrid_block = 3;
 
+/** \ingroup  ImageFindingL2
+ * \brief Build a complete tree from a list of points.
+ */
 TreeHndl BuildTree(Point *xp,unsigned long Npoints){
   TreeHndl tree;
   unsigned long i;
@@ -41,11 +44,11 @@ TreeHndl BuildTree(Point *xp,unsigned long Npoints){
 
   for(i=0;i<Npoints;++i){
 
-    /* find X boundery */
+    /* find X boundary */
     if(xp[i].x[0] < p1[0] ) p1[0]=xp[i].x[0];
     if(xp[i].x[0] > p2[0] ) p2[0]=xp[i].x[0];
 
-    /* find Y boundery */
+    /* find Y boundary */
     if(xp[i].x[1] < p1[1] ) p1[1]=xp[i].x[1];
     if(xp[i].x[1] > p2[1] ) p2[1]=xp[i].x[1];
   }
@@ -61,7 +64,9 @@ TreeHndl BuildTree(Point *xp,unsigned long Npoints){
 
   return tree;
 }
-
+/** \ingroup  ImageFindingL2
+ * \brief Fill a tree with points.  The previous tree structure will be destroyed.  Used for refilling.
+ */
 void FillTree(TreeHndl tree,Point *xp,unsigned long Npoints){
   unsigned long i;
   void _BuildTree(TreeHndl tree);
@@ -80,14 +85,170 @@ void FillTree(TreeHndl tree,Point *xp,unsigned long Npoints){
   MoveToTopList(tree->pointlist);
  /* build the tree */
 
+  // make sure there are no branches in the tree
+  _freeBranches_iter(tree);
+
   _BuildTree(tree);
 
   return ;
 }
 
-/* tree must be created and first branch must be set before */
-/* start */
+/** \ingroup  ImageFindingL2
+ * \brief Rebuilds the tree from the points that are already in the tree->pointlist
+ */
+void RebuildTreeFromList(TreeHndl tree){
+ /* Builds or rebuilds a tree that already has a tree->pointlist.
+  */
 
+  assert(tree != NULL);
+  assert(tree->pointlist);
+
+  // tree the barnches
+  _freeBranches_iter(tree);
+
+  if(tree->pointlist->Npoints < 1) return;
+
+  MoveToTopList(tree->pointlist);
+ /* build the tree */
+
+  _BuildTree(tree);
+
+  return ;
+}
+
+/** \ingroup  ImageFindingL2
+* \brief Empty tree of all point leaving a tree with an empty root.
+*  FillTree can then be used to regenerate tree
+*/
+short emptyTree(TreeHndl tree){
+  Point **heads;
+  long i,j,count;
+
+  heads = (Point **) malloc(tree->pointlist->Npoints*sizeof(Point*));  // maximum number of pointers that could be needed
+
+  if(tree == NULL) return 1;
+
+  assert(tree);
+
+  _freeBranches_iter(tree);
+//  _freeTree(tree,0);
+  //printTree(tree);
+
+  assert(tree->Nbranches == 1);
+
+  MoveToTopList(tree->pointlist);
+  for(i=0,j=0,count=0;i<tree->pointlist->Npoints;++i){
+	  if(tree->pointlist->current->head){
+		  heads[j] = tree->pointlist->current;
+		  ++j;
+		  count += tree->pointlist->current->head;
+	  }
+	  MoveDownList(tree->pointlist);
+  }
+  assert(count == tree->pointlist->Npoints);
+
+  //printf("freed %i arrays out of %i points in array, %i freed\n",j,i,count);
+  for(i=0;i<j;++i) FreePointArray(heads[i]);
+  tree->top->npoints = 0;
+
+  //printTree(tree);
+
+  tree->pointlist->Npoints=0;
+  tree->pointlist->top=tree->pointlist->bottom=tree->pointlist->current=NULL;
+//  free(tree->pointlist);
+//  free(tree);
+
+  free(heads);
+  return 1;
+}
+/** \ingroup LowLevel
+* \brief Recursively free branches
+*/
+void _freeBranches(TreeHndl tree,short child){
+	Branch *branch;
+
+	assert( tree !=NULL);
+
+	/*printBranch(tree->current);*/
+
+	if(tree->current->child1 != NULL){
+		moveToChild(tree,1);
+		_freeBranches(tree,1);
+	}
+
+    if(tree->current->child2 != NULL){
+      moveToChild(tree,2);
+      _freeBranches(tree,2);
+    }
+
+    if( (tree->current->child1 == NULL)*(tree->current->child2 == NULL) ){
+
+    	if(atTop(tree)){
+    		//free(tree->current);
+    		//tree->current=NULL;
+    		//tree->top=NULL;
+    		//--tree->Nbranches;
+    		return;
+    	}
+
+    	branch=tree->current;
+    	moveUp(tree);
+       	free(branch);
+
+    	/*printf("*** removing branch %i number of branches %i\n",branch->number
+			,tree->Nbranches-1);*/
+
+       	if(child==1) tree->current->child1=NULL;
+    	if(child==2) tree->current->child2=NULL;
+    	--tree->Nbranches;
+
+    	return;
+    }
+
+    return;
+}
+/** \ingroup LowLevel
+* \brief Iteratively free branches
+*
+* Frees all the barches of the tree so there is only the stump.
+ */
+void _freeBranches_iter(TreeHndl tree){
+	Branch *branch;
+
+	assert( tree !=NULL);
+	moveTop(tree);
+
+	/*printBranch(tree->current);*/
+
+	while(tree->Nbranches > 1){
+
+		if(tree->current->child1 != NULL){
+			moveToChild(tree,1);
+		}else if(tree->current->child2 != NULL){
+			moveToChild(tree,2);
+		}else{
+			branch = tree->current;
+			if(tree->current->brother == tree->current->prev->brother){
+				moveUp(tree);
+				assert(tree->current->child1 == NULL);
+				tree->current->child2 = NULL;
+			}else{
+				tree->current = tree->current->brother;
+				tree->current->prev->child1 = NULL;
+			}
+
+			free(branch);
+			--tree->Nbranches;
+		}
+	}
+
+    return;
+}
+
+
+/** \ingroup LowLevel
+* \brief Recursively build tree from points in its linked list.
+*/
 void _BuildTree(TreeHndl tree){
   /* tree->pointlist must be both a linked list and an array of points in the */
   /* same order as the linked list */
@@ -108,11 +269,11 @@ void _BuildTree(TreeHndl tree){
 
   /* initialize bounderies to old bounderies */
   for(i=0;i<2;++i){
-      branch1.boundery_p1[i]=cbranch->boundery_p1[i];
-      branch1.boundery_p2[i]=cbranch->boundery_p2[i];
+      branch1.boundary_p1[i]=cbranch->boundary_p1[i];
+      branch1.boundary_p2[i]=cbranch->boundary_p2[i];
 
-      branch2.boundery_p1[i]=cbranch->boundery_p1[i];
-      branch2.boundery_p2[i]=cbranch->boundery_p2[i];
+      branch2.boundary_p1[i]=cbranch->boundary_p1[i];
+      branch2.boundary_p2[i]=cbranch->boundary_p2[i];
   }
 
   /* set dimension to cut box */
@@ -143,14 +304,14 @@ void _BuildTree(TreeHndl tree){
 	  double_sort_points(cbranch->npoints,x-1,tree->current->points);
 
 	  cut=cbranch->npoints/2;
-      branch1.boundery_p2[dimension]=(x[cut]+x[cut-1])/2;
-      branch2.boundery_p1[dimension]=(x[cut]+x[cut-1])/2;
+      branch1.boundary_p2[dimension]=(x[cut]+x[cut-1])/2;
+      branch2.boundary_p1[dimension]=(x[cut]+x[cut-1])/2;
 
   }else{
 
-	  xcut=(cbranch->boundery_p1[dimension]+cbranch->boundery_p2[dimension])/2;
-      branch1.boundery_p2[dimension]=xcut;
-      branch2.boundery_p1[dimension]=xcut;
+	  xcut=(cbranch->boundary_p1[dimension]+cbranch->boundary_p2[dimension])/2;
+      branch1.boundary_p2[dimension]=xcut;
+      branch2.boundary_p1[dimension]=xcut;
 
 	  quickPartitionPoints(xcut,&cut
 	  		,tree->current->points,x,cbranch->npoints);
@@ -212,10 +373,10 @@ void _BuildTree(TreeHndl tree){
   return;
 }
 
+/** \ingroup  ImageFindingL2
+ *  \brief Expands tree by adding points
+*/
 int AddPointsToTree(TreeHndl tree,Point *xpoint,unsigned long Nadd){
-	/****************************************************************
-	 * Expands tree by adding points
-	 ****************************************************************/
   unsigned long i,j,cut,dimension;
   Branch branch1,branch2,*parent_branch;
   double *x,xcut;
@@ -236,7 +397,7 @@ int AddPointsToTree(TreeHndl tree,Point *xpoint,unsigned long Nadd){
     for(j=0;j<Nadd;++j){
 
     	// add only that are inside original grid
-    	if( inbox(xpoint[j].x,tree->top->boundery_p1,tree->top->boundery_p2) == 0 ){
+    	if( inbox(xpoint[j].x,tree->top->boundary_p1,tree->top->boundary_p2) == 0 ){
     		ERROR_MESSAGE();
     		printf("ERROR: in AddPointToTree, ray is not inside the simulation box x = %e %e Nadd=%li\n  not adding it to tree\n",
     				   xpoint[j].x[0],xpoint[j].x[1],Nadd);
@@ -247,11 +408,11 @@ int AddPointsToTree(TreeHndl tree,Point *xpoint,unsigned long Nadd){
     	}else{
     		tree->current=parent_branch;
 
-    		if(inbox(xpoint[j].x,tree->current->boundery_p1,tree->current->boundery_p2)){
+    		if(inbox(xpoint[j].x,tree->current->boundary_p1,tree->current->boundary_p2)){
     			_FindLeaf(tree,xpoint[j].x,1);
     		}else{
     			//printf("going to other parent box\n");
-    			while(inbox(xpoint[j].x,tree->current->boundery_p1,tree->current->boundery_p2)
+    			while(inbox(xpoint[j].x,tree->current->boundary_p1,tree->current->boundary_p2)
     					== False){
     				if(atTop(tree)){ERROR_MESSAGE(); printf("ERROR: AddPointsToTree, point not in region\n   x=%e %e\n"
     						,xpoint[j].x[0],xpoint[j].x[1]); printBranch(tree->current); exit(1);}
@@ -270,8 +431,8 @@ int AddPointsToTree(TreeHndl tree,Point *xpoint,unsigned long Nadd){
     			printBranch(tree->current);
     			printf("\nchildren\n");
     			printBranch(tree->current->child1);
-    			printf(" pointer = %p %e\n",&(tree->current->child1->boundery_p1[1])
-    				,tree->current->child1->boundery_p1[1]);
+    			printf(" pointer = %p %e\n",&(tree->current->child1->boundary_p1[1])
+    				,tree->current->child1->boundary_p1[1]);
     			printBranch(tree->current->child2);
     		}
 
@@ -299,11 +460,11 @@ int AddPointsToTree(TreeHndl tree,Point *xpoint,unsigned long Nadd){
 
     			// initialize boundaries to old boundaries
     			for(i=0;i<2;++i){
-    				branch1.boundery_p1[i]=tree->current->boundery_p1[i];
-    				branch1.boundery_p2[i]=tree->current->boundery_p2[i];
+    				branch1.boundary_p1[i]=tree->current->boundary_p1[i];
+    				branch1.boundary_p2[i]=tree->current->boundary_p2[i];
 
-    				branch2.boundery_p1[i]=tree->current->boundery_p1[i];
-    				branch2.boundery_p2[i]=tree->current->boundery_p2[i];
+    				branch2.boundary_p1[i]=tree->current->boundary_p1[i];
+    				branch2.boundary_p2[i]=tree->current->boundary_p2[i];
     			}
 
     			/* set dimension to cut box */
@@ -354,13 +515,13 @@ int AddPointsToTree(TreeHndl tree,Point *xpoint,unsigned long Nadd){
     			if(median_cut){
     				cut=tree->current->npoints/2;
 
-    				branch1.boundery_p2[dimension]=(x[cut]+x[cut-1])/2;
-    				branch2.boundery_p1[dimension]=(x[cut]+x[cut-1])/2;
+    				branch1.boundary_p2[dimension]=(x[cut]+x[cut-1])/2;
+    				branch2.boundary_p1[dimension]=(x[cut]+x[cut-1])/2;
 
     			}else{
-    				xcut=(tree->current->boundery_p1[dimension]+tree->current->boundery_p2[dimension])/2;
-    				branch1.boundery_p2[dimension]=xcut;
-    				branch2.boundery_p1[dimension]=xcut;
+    				xcut=(tree->current->boundary_p1[dimension]+tree->current->boundary_p2[dimension])/2;
+    				branch1.boundary_p2[dimension]=xcut;
+    				branch2.boundary_p1[dimension]=xcut;
 
     				locateD(x-1,tree->current->npoints,xcut,&cut);
     			}
@@ -420,7 +581,17 @@ int AddPointsToTree(TreeHndl tree,Point *xpoint,unsigned long Nadd){
     return 1;
 }
 
-unsigned long PruneTree(TreeHndl i_tree,TreeHndl s_tree,double resolution,Boolean useSB){
+/** \ingroup  ImageFindingL2
+ *  \brief Reduces the size of the tree by removing points and branches that are no longer needed.
+ *
+ *
+*/
+unsigned long PruneTree(
+		TreeHndl i_tree     /// image plane tree
+		,TreeHndl s_tree    /// source plane tree
+		,double resolution  /// Maximum size of a cell to be removed.
+		,Boolean useSB   /// If True it will not remove any point that has flux in it.
+		){
 	static ListHndl trashlist;
 	static short init=1;
 	Point *points;
@@ -436,13 +607,13 @@ unsigned long PruneTree(TreeHndl i_tree,TreeHndl s_tree,double resolution,Boolea
 	 Ntmp = i_tree->pointlist->Npoints;
 
 	 moveTop(i_tree);
-	 initres = (i_tree->top->boundery_p2[0]-i_tree->top->boundery_p1[0]);
+	 initres = (i_tree->top->boundary_p2[0]-i_tree->top->boundary_p1[0]);
 	 if(resolution > initres/3 || resolution <= 0.0) return 0;  // do not allow pruning up to the initial grid size
 
 	 // walk tree
 	 go = True;
 	 do{
-		 res = (i_tree->current->boundery_p2[0]-i_tree->current->boundery_p1[0]);
+		 res = (i_tree->current->boundary_p2[0]-i_tree->current->boundary_p1[0]);
 		 if( (res <= resolution && CurrentIsSquareTree(i_tree) )
 				 &&  i_tree->current->npoints % 9 == 0){
 
@@ -462,6 +633,9 @@ unsigned long PruneTree(TreeHndl i_tree,TreeHndl s_tree,double resolution,Boolea
 			 if(go && i_tree->current->npoints > 1) count += FreeBranchesBelow(i_tree,s_tree,trashlist);
 		 }
 	 }while(TreeWalkStep(i_tree,True));
+
+	 // rebuild source tree from scratch.
+	 RebuildTreeFromList(s_tree);
 
 	 assert(count == (Ntmp - i_tree->pointlist->Npoints) );
 
@@ -484,15 +658,17 @@ unsigned long PruneTree(TreeHndl i_tree,TreeHndl s_tree,double resolution,Boolea
 	 return count;
 }
 
+/** \ingroup ImageFindingL2
+ *
+ *  Frees all branches of the tree below the current branch in i_tree
+ * if that branch is square.  If current branch is not square nothing will happen.
+ *
+ * On exit: The i_tree->current is back to the original current.  If it is
+ *          square it will have no children and contain one point.  The source
+ *          points and branches are also removed.
+ */
 
 unsigned long FreeBranchesBelow(TreeHndl i_tree,TreeHndl s_tree,ListHndl trashlist){
-	/* Frees all branches of the tree below the current branch in i_tree
-	 * if that branch is square.  If current branch is not square nothing will happen.
-	 *
-	 * On exit: The i_tree->current is back to the original current.  If it is
-	 *          square it will have no children and contain one point.  The source
-	 *          points and branches are also removed.
-	 */
 
 	if(!CurrentIsSquareTree(i_tree)) return 0;
 	if(atLeaf(i_tree)) return 0;
@@ -504,6 +680,8 @@ unsigned long FreeBranchesBelow(TreeHndl i_tree,TreeHndl s_tree,ListHndl trashli
 	Point *point;
 	unsigned long Ntmp,NtoRemove,i,count = 0,count2 = 0;
 	double center[2];
+
+	_freeBranches_iter(s_tree);  // s_tree will no longer be valid on exit.  This is to make sure it isn't used later without a rebuild.
 
 	assert(i_tree->current->npoints % 9 == 0);
 	top = i_tree->current;
@@ -525,8 +703,8 @@ unsigned long FreeBranchesBelow(TreeHndl i_tree,TreeHndl s_tree,ListHndl trashli
 				i_tree->pointlist->current = i_tree->current->points;
 				NtoRemove = i_tree->current->npoints;
 				assert(NtoRemove == 9);
-				center[0] = (i_tree->current->boundery_p1[0] + i_tree->current->boundery_p2[0])/2;
-				center[1] = (i_tree->current->boundery_p1[1] + i_tree->current->boundery_p2[1])/2;
+				center[0] = (i_tree->current->boundary_p1[0] + i_tree->current->boundary_p2[0])/2;
+				center[1] = (i_tree->current->boundary_p1[1] + i_tree->current->boundary_p2[1])/2;
 				for(i=0;i<NtoRemove;++i,MoveDownList(i_tree->pointlist)){
 					// find central point and remove others
 
@@ -536,7 +714,7 @@ unsigned long FreeBranchesBelow(TreeHndl i_tree,TreeHndl s_tree,ListHndl trashli
 
 						++count2;
 						// keep this central point
-						i_tree->pointlist->current->gridsize = i_tree->current->boundery_p2[0]-i_tree->current->boundery_p1[0];
+						i_tree->pointlist->current->gridsize = i_tree->current->boundary_p2[0]-i_tree->current->boundary_p1[0];
 						i_tree->pointlist->current->image->gridsize = i_tree->pointlist->current->gridsize;
 						i_tree->current->points = i_tree->pointlist->current;
 
@@ -550,7 +728,10 @@ unsigned long FreeBranchesBelow(TreeHndl i_tree,TreeHndl s_tree,ListHndl trashli
 						 *   This is tricky because they are not ordered into
 						 *   square blocks with 9 points in each.
 						 */
-						assert(i_tree->pointlist->current->image->leaf);
+/*
+ * Below it reduces the s_tree branches, but later it was decided that s_tree should be rebuilt from scratch.
+ *
+ * 						assert(i_tree->pointlist->current->image->leaf);
 						// go up the tree to subtract point from branch counts
 						branch = s_tree->current = i_tree->pointlist->current->image->leaf;
 						assert(s_tree->current->npoints == 1);
@@ -577,7 +758,7 @@ unsigned long FreeBranchesBelow(TreeHndl i_tree,TreeHndl s_tree,ListHndl trashli
 								}
 							}
 						}
-
+*/
 						// Take point out of the source point list
 						s_tree->pointlist->current = i_tree->pointlist->current->image;
 						point = TakeOutCurrent(s_tree->pointlist);
@@ -618,19 +799,19 @@ unsigned long FreeBranchesBelow(TreeHndl i_tree,TreeHndl s_tree,ListHndl trashli
     return count;
 }
 
+/** \ingroup LowLevel
+ * Removes current from a tree if it is a leaf.
+ *   Will not remove root of tree.
+ *
+ *  on output: Current is left at the father of the leaf that was removed.
+ *             All the points in the leaf that was removed are in its father
+ *             so the father might be a leaf without Nbucket points.
+ *             The ->leaf pointer of these points are reassigned to the father.
+ *
+ *  returns: Pointer to first in list of points that were reassigned.
+ *           *Npoints = number of points reassigned.
+ */
 Point *RemoveLeafFromTree(TreeHndl tree,unsigned long *Npoints){
-	/*
-	 * Removes current from a tree if it is a leaf.
-	 *   Will not remove root of tree.
-	 *
-	 *  on output: Current is left at the father of the leaf that was removed.
-	 *             All the points in the leaf that was removed are in its father
-	 *             so the father might be a leaf without Nbucket points.
-	 *             The ->leaf pointer of these points are reassigned to the father.
-	 *
-	 *  returns: Pointer to first in list of points that were reassigned.
-	 *           *Npoints = number of points reassigned.
-	 */
 
 	Branch *branch;
 	Point *point;
@@ -665,3 +846,28 @@ Point *RemoveLeafFromTree(TreeHndl tree,unsigned long *Npoints){
 
 	return NULL;
 }
+
+/** \ingroup ImageFinding
+ * \brief Recalculate surface brightness at every point without changing the positions of the grid or any lens properties.
+ *
+ *  Recalculate the surface brightness at all points on the grid.
+ * This is useful when changing the source model while preserving
+ * changes in the grid.
+ * Both i_tree and s_tree are taken to emphasize that they are both
+ * changed although only s_tree is really needed.
+ */
+void RefreshSurfaceBrightnesses(TreeHndl i_tree,TreeHndl s_tree,AnaLens *lens){
+	double y[2];
+
+	MoveToTopList(s_tree->pointlist);
+	do{
+		y[0] = s_tree->pointlist->current->x[0] - lens->source_x[0];
+		y[1] = s_tree->pointlist->current->x[1] - lens->source_x[1];
+		s_tree->pointlist->current->surface_brightness = s_tree->pointlist->current->image->surface_brightness
+				= lens->source_sb_func(y);
+		assert(s_tree->pointlist->current->surface_brightness >= 0.0);
+	}while( MoveDownList(s_tree->pointlist) );
+
+	return;
+}
+

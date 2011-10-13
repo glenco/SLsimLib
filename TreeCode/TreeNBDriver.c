@@ -76,8 +76,8 @@ void _BuildTreeNB(TreeNBHndl tree,IndexType nparticles,IndexType *particles){
 
   cbranch=tree->current; /* pointer to current branch */
 
-  cbranch->rmax = sqrt( pow(cbranch->boundery_p2[0]-cbranch->boundery_p1[0],2)
-  		     + pow(cbranch->boundery_p2[1]-cbranch->boundery_p1[1],2) );
+  cbranch->rmax = sqrt( pow(cbranch->boundary_p2[0]-cbranch->boundary_p1[0],2)
+  		     + pow(cbranch->boundary_p2[1]-cbranch->boundary_p1[1],2) );
 
   for(i=0,cbranch->mass=0;i<cbranch->nparticles;++i)
  	  cbranch->mass+=tree->mass[cbranch->particles[i]*tree->MultiMass];
@@ -110,11 +110,11 @@ void _BuildTreeNB(TreeNBHndl tree,IndexType nparticles,IndexType *particles){
  
   /* initialize boundaries to old boundaries */
   for(i=0;i<Ndim;++i){
-      branch1.boundery_p1[i]=cbranch->boundery_p1[i];
-      branch1.boundery_p2[i]=cbranch->boundery_p2[i];
+      branch1.boundary_p1[i]=cbranch->boundary_p1[i];
+      branch1.boundary_p2[i]=cbranch->boundary_p2[i];
 
-      branch2.boundery_p1[i]=cbranch->boundery_p1[i];
-      branch2.boundery_p2[i]=cbranch->boundery_p2[i];
+      branch2.boundary_p1[i]=cbranch->boundary_p1[i];
+      branch2.boundary_p2[i]=cbranch->boundary_p2[i];
   }
 /*
   for(i=cbranch->nparticles-1,cbranch->big_particle=0
@@ -149,12 +149,12 @@ void _BuildTreeNB(TreeNBHndl tree,IndexType nparticles,IndexType *particles){
 	  quicksort(particles,x,cbranch->nparticles-cbranch->big_particle);
 
 	  cut=(cbranch->nparticles-cbranch->big_particle)/2;
-      branch1.boundery_p2[dimension]=x[cut];
-      branch2.boundery_p1[dimension]=x[cut];
+      branch1.boundary_p2[dimension]=x[cut];
+      branch2.boundary_p1[dimension]=x[cut];
   }else{
-      xcut=(cbranch->boundery_p1[dimension]+cbranch->boundery_p2[dimension])/2;
-      branch1.boundery_p2[dimension]=xcut;
-      branch2.boundery_p1[dimension]=xcut;
+      xcut=(cbranch->boundary_p1[dimension]+cbranch->boundary_p2[dimension])/2;
+      branch1.boundary_p2[dimension]=xcut;
+      branch2.boundary_p1[dimension]=xcut;
 
       quickPartition(xcut,&cut,particles
     		  ,x,cbranch->nparticles-cbranch->big_particle);
@@ -265,21 +265,21 @@ IndexType *NearestNeighborNB(TreeNBHndl tree,double *ray,int Nneighbors
 
   /* initalize distance to neighbors to a large number */
   for(i=0;i<Nbucket+Nneighbors;++i){
-    rneighbors[i]=10*(tree->top->boundery_p2[0]-tree->top->boundery_p1[0]);
+    rneighbors[i]=10*(tree->top->boundary_p2[0]-tree->top->boundary_p1[0]);
     neighbors[i]=0;
   }
 
   for(i=0;i<Ndim;++i) realrayNB[i]=ray[i];
 
   moveTopNB(tree);
-  if( inboxNB(ray,tree->current->boundery_p1,tree->current->boundery_p2) == 0 ){
+  if( inboxNB(ray,tree->current->boundary_p1,tree->current->boundary_p2) == 0 ){
 	  ERROR_MESSAGE();
-    /*printf("ERROR: in NearestNeighborNB, ray is not inside the simulation box\n      ray=%e %e  boundery= %e %e   %e %e\n",ray[0],ray[1],tree->current->boundery_p1[0],tree->current->boundery_p1[1]
-      ,tree->current->boundery_p1[0],tree->current->boundery_p2[1]);*/
+    /*printf("ERROR: in NearestNeighborNB, ray is not inside the simulation box\n      ray=%e %e  boundary= %e %e   %e %e\n",ray[0],ray[1],tree->current->boundary_p1[0],tree->current->boundary_p1[1]
+      ,tree->current->boundary_p1[0],tree->current->boundary_p2[1]);*/
 
     for(i=0;i<Ndim;++i){
-      ray[i]=DMAX(ray[i],tree->current->boundery_p1[i]);
-      ray[i]=DMIN(ray[i],tree->current->boundery_p2[i]);
+      ray[i]=DMAX(ray[i],tree->current->boundary_p1[i]);
+      ray[i]=DMIN(ray[i],tree->current->boundary_p2[i]);
     }
   }
   incellNB=1;
@@ -301,7 +301,7 @@ void _NearestNeighborNB(TreeNBHndl tree,double *ray,int Nneighbors
 
   if(incellNB){  /* not found cell yet */
 
-    if( inboxNB(ray,tree->current->boundery_p1,tree->current->boundery_p2) ){
+    if( inboxNB(ray,tree->current->boundary_p1,tree->current->boundary_p2) ){
 
       /* found the box small enough */
     	if( tree->current->nparticles <= Nneighbors+Nbucket ){
@@ -363,7 +363,7 @@ void _NearestNeighborNB(TreeNBHndl tree,double *ray,int Nneighbors
     /*printf("finding neighboring boxes at level = %i\n",tree->current->level);*/
 
 		/* does radius cut into the box */
-    if( cutboxNB(ray,tree->current->boundery_p1,tree->current->boundery_p2,rneighbors[Nneighbors-1]) ){
+    if( cutboxNB(ray,tree->current->boundary_p1,tree->current->boundary_p2,rneighbors[Nneighbors-1]) ){
 
     	if( (tree->current->child1 == NULL)*(tree->current->child2 == NULL)){  /* leaf case */
 
@@ -538,8 +538,8 @@ void cuttoffscale(TreeNBHndl tree,double *theta){
 		cbranch=tree->current;
 
 		// largest distance from center of mass of cell
-		for(i=0,rcom=0.0;i<2;++i) rcom+=DMAX( pow(cbranch->center[i]-cbranch->boundery_p1[i],2)
- 				       ,pow(cbranch->center[i]-cbranch->boundery_p2[i],2) );
+		for(i=0,rcom=0.0;i<2;++i) rcom+=DMAX( pow(cbranch->center[i]-cbranch->boundary_p1[i],2)
+ 				       ,pow(cbranch->center[i]-cbranch->boundary_p2[i],2) );
 		rcom=sqrt(rcom);
 
 		if(*theta > 0.0) cbranch->rcrit_angle=1.15470*rcom/(*theta);

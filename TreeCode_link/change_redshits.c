@@ -19,7 +19,11 @@
 //#include "../TreeCode/TreeNB.h"
 
 extern COSMOLOGY cosmo;
-
+/** \ingroup ChangeLens
+ *
+ * \brief SHOULD BE TESTED Changes source and/or source redshits and recalculates the
+ * the source points.  DOES NOT YET RECALCULATE SOURCE TREE
+ */
 void change_redshifts(TreeHndl i_tree,TreeHndl s_tree,AnaLens *lens,double z_source
 		,double z_lens){
 	double oldSigma=0,factor=0;
@@ -52,7 +56,7 @@ void change_redshifts(TreeHndl i_tree,TreeHndl s_tree,AnaLens *lens,double z_sou
 
 	// rebuild tree on source plane
 	moveTop(s_tree);
-	_freeTree(s_tree,0);
+	_freeBranches(s_tree,0);
 	assert(s_tree->Nbranches==0);
 	assert(s_tree->pointlist->Npoints > 0);
 	MoveToTopList(s_tree->pointlist);

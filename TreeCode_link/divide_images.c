@@ -12,13 +12,14 @@
 #include <KistDriver.h>
 #include <divide_images.h>
 
-void find_divide_images(TreeHndl i_tree,TreeHndl s_tree
-		,double *source_x,double source_r
-		,ImageInfo *imageinfo,int *Nimages,int Nimagesmax){
-	/* finds the points that are within the circular source and divides
+	/** \ingroup ImageFindingL2
+	 * \brief finds the points that are within the circular source and divides
 	 * the images.
 	 *
 	 */
+void find_divide_images(TreeHndl i_tree,TreeHndl s_tree
+		,double *source_x,double source_r
+		,ImageInfo *imageinfo,int *Nimages,int Nimagesmax){
 
 	PointsWithinKist(s_tree,source_x,source_r,imageinfo->imagekist,0);
 
@@ -41,29 +42,30 @@ void find_divide_images(TreeHndl i_tree,TreeHndl s_tree
 	return;
 }
 
+/** \ingroup ImageFindingL2
+ *  divide_images
+ *
+ * \brief Divides the image points up into separate images that are linked by cell
+ * neighbors.
+ *
+ * Should scale like NlogN  instead of N^2.  This is achieved with a recursive
+ *   algorithm.
+ *
+ * on entering:
+ *     imageinfo->imagekist must contain all the point in all the images in any order.
+ *     The flags in_image == False for all points in i_tree and their images that
+ *        are not in the image.  Not required that points in the image be
+ *        flagged.
+ * on exit:
+ * 	   imagelist is reordered so that all points in an image are contiguous
+ *     Nimages is updataed
+ *     imageinfo[i].points are not changed
+ *     imageinfo[i].Npoints is set to number of points in ith image
+ *	   image point flags in_image == True
+ *	   the area and area_error of each image is calculated
+ */
 void divide_images(TreeHndl i_tree,ImageInfo *imageinfo
 		,int *Nimages,int Nimagesmax){
-	/* divide_images
-	 *
-	 * Divides the image points up into separate images that are linked by cell
-	 * neighbors.
-	 *
-	 * Should scale like NlogN  instead of N^2.  This is achieved with a recursive
-	 *   algorithm.
-	 *
-	 * on entering:
-	 *     imageinfo->imagekist must contain all the point in all the images in any order.
-	 *     The flags in_image == False for all points in i_tree and their images that
-	 *        are not in the image.  Not required that points in the image be
-	 *        flagged.
-	 * on exit:
-	 * 	   imagelist is reordered so that all points in an image are contiguous
-	 *     Nimages is updataed
-	 *     imageinfo[i].points are not changed
-	 *     imageinfo[i].Npoints is set to number of points in ith image
-	 *	   image point flags in_image == True
-	 *	   the area and area_error of each image is calculated
-	 */
 	unsigned long i,j,Ntemp;
 	KistHndl new_imagekist = NewKist();
 	double tmp = 0;
@@ -156,28 +158,30 @@ void divide_images(TreeHndl i_tree,ImageInfo *imageinfo
 
 	return;
 }
+/** \ingroup ImageFindingL2
+ *
+ *  divide_images
+ *
+ * \brief Divides the image points up into separate images that are linked by cell
+ * neighbors.
+ *
+ * Should scale like NlogN  instead of N^2.  This is achieved with a recursive
+ *   algorithm.
+ *
+ * on entering:
+ *     imageinfo->imagekist must contain all the point in all the images in any order.
+ *     The flags in_image == False for all points in i_tree and their images that
+ *        are not in the image.  Not required that points in the image be
+ *        flagged.
+ * on exit:
+ * 	   imagelist[i] contains all points in that image
+ *     Nimages is updataed
+ *     imageinfo[i].points are not changed
+ *     imageinfo[i].Npoints is set to number of points in ith image
+ *	   image point flags in_image == True
+ *	   the area and area_error of each image are calculated
+ */
 void divide_images_kist(TreeHndl i_tree,ImageInfo *imageinfo,int *Nimages,int Nimagesmax){
-	/* divide_images
-	 *
-	 * Divides the image points up into separate images that are linked by cell
-	 * neighbors.
-	 *
-	 * Should scale like NlogN  instead of N^2.  This is achieved with a recursive
-	 *   algorithm.
-	 *
-	 * on entering:
-	 *     imageinfo->imagekist must contain all the point in all the images in any order.
-	 *     The flags in_image == False for all points in i_tree and their images that
-	 *        are not in the image.  Not required that points in the image be
-	 *        flagged.
-	 * on exit:
-	 * 	   imagelist[i] contains all points in that image
-	 *     Nimages is updataed
-	 *     imageinfo[i].points are not changed
-	 *     imageinfo[i].Npoints is set to number of points in ith image
-	 *	   image point flags in_image == True
-	 *	   the area and area_error of each image are calculated
-	 */
 	unsigned long i,j,Ntemp,Ntest;
 	KistHndl new_imagekist = NewKist();
 	double tmp = 0;
@@ -189,7 +193,7 @@ void divide_images_kist(TreeHndl i_tree,ImageInfo *imageinfo,int *Nimages,int Ni
 		return ;
 	}
 
-	// mark points in tree as in image and transfer points to temporary kist
+	// mark points in tree as in image and transfer points to temporary temporary new_imagekist
 	assert(imageinfo->imagekist->top->data);
 	MoveToTopKist(imageinfo->imagekist);
 	Ntest = imageinfo->imagekist->Nunits;
@@ -269,10 +273,13 @@ void divide_images_kist(TreeHndl i_tree,ImageInfo *imageinfo,int *Nimages,int Ni
 	return;
 }
 
+/** \ingroup ImageFindingL2
+ *
+ * \brief recursive function that un-marks all the points that are attached
+ * to point by cell neighbors that were previously marked in_image==True
+ */
+
 void partition_images(Point *point,unsigned long *N_in_image,TreeHndl i_tree){
-	/* recursive function that un-marks all the points that are attached
-	 * to point by cell neighbors that were previously marked in_image==True
-	 */
 
 	assert(point);
 	assert(i_tree);
@@ -311,12 +318,14 @@ void partition_images(Point *point,unsigned long *N_in_image,TreeHndl i_tree){
 	return;
 }
 
-double partition_images2(Point *point,KistHndl imagekist,TreeHndl i_tree){
-/* finds all the points with in_image = True that are connected to point
+/** \ingroup ImageFindingL2
+ *
+ *  finds all the points in i_tree with in_image = True that are connected to point
  *    by cell neighbors of cell neighbors.  The resulting kist of points
  *    is left in imagekist.  The in_image marks are NOT returned to their original
- *    values.  The ones that are put into imagekist are changed to in_inage = False
+ *    values.  The ones that are put into imagekist are changed to in_image = False
  */
+double partition_images2(Point *point,KistHndl imagekist,TreeHndl i_tree){
 	assert(point);
 	assert(i_tree);
 	assert(point->in_image == True);
