@@ -20,6 +20,7 @@
 #include <KistDriver.h>
 #include <peak_refinement.h>
 #include <analytic_lens.h>
+#include <tree_maintenance.h>
 
 COSMOLOGY cosmo;
 AnaLens *lens = 0;
@@ -60,7 +61,7 @@ BeamHndl find_peaks(double center[],double range,unsigned long Ngrid,double rEin
 	// set up grid
 	i_points = &dummy;   // keep this on the stack
 
-	(*i_points) = NewPointArray(Ngrid*Ngrid,True);
+	(*i_points) = NewPointArray(Ngrid*Ngrid,true);
 	xygridpoints((*i_points),range,center,Ngrid,0);
 	s_points=LinkToSourcePoints((*i_points),Ngrid*Ngrid);
 
@@ -89,7 +90,7 @@ BeamHndl find_peaks(double center[],double range,unsigned long Ngrid,double rEin
 		for(i=0;i<Ntemp;++i){
 			if(getCurrentKist(imageinfo->imagekist)->kappa < threshold){
 
-				getCurrentKist(imageinfo->imagekist)->in_image = False;
+				getCurrentKist(imageinfo->imagekist)->in_image = false;
 				if(AtTopKist(imageinfo->imagekist)){
 					TakeOutCurrentKist(imageinfo->imagekist);
 				}else{
@@ -97,7 +98,7 @@ BeamHndl find_peaks(double center[],double range,unsigned long Ngrid,double rEin
 					MoveDownKist(imageinfo->imagekist);
 				}
 			}else{
-				getCurrentKist(imageinfo->imagekist)->in_image = True;
+				getCurrentKist(imageinfo->imagekist)->in_image = true;
 
 				if(getCurrentKist(imageinfo->imagekist)->gridsize > imageinfo->gridrange[1])
 					imageinfo->gridrange[1] = getCurrentKist(imageinfo->imagekist)->gridsize;
@@ -118,7 +119,7 @@ BeamHndl find_peaks(double center[],double range,unsigned long Ngrid,double rEin
 
 		//printf("restarget = %e gridrange[2] = %e  gridrange[1] = %e\n",res_target,imageinfo->gridrange[2],imageinfo->gridrange[1]);
 		Nnewpoints = -i_tree->pointlist->Npoints;
-		refine_grid_kist(i_tree,s_tree,imageinfo,1,res_target,2,True,False,i_points);
+		refine_grid_kist(i_tree,s_tree,imageinfo,1,res_target,2,true,false,i_points);
 		Nnewpoints += i_tree->pointlist->Npoints;
 
 		//printf("Nnewpoints = %li\n",Nnewpoints);
@@ -134,7 +135,7 @@ BeamHndl find_peaks(double center[],double range,unsigned long Ngrid,double rEin
 
 					InsertAfterCurrentKist(imageinfo->imagekist,&(*i_points)[i]);
 					MoveDownKist(imageinfo->imagekist);
-					getCurrentKist(imageinfo->imagekist)->in_image = True;
+					getCurrentKist(imageinfo->imagekist)->in_image = true;
 
 					if(getCurrentKist(imageinfo->imagekist)->gridsize > imageinfo->gridrange[1])
 						imageinfo->gridrange[1] = getCurrentKist(imageinfo->imagekist)->gridsize;
@@ -142,7 +143,7 @@ BeamHndl find_peaks(double center[],double range,unsigned long Ngrid,double rEin
 						imageinfo->gridrange[2] = getCurrentKist(imageinfo->imagekist)->gridsize;
 
 				}else{
-					(*i_points)[i].in_image = False;
+					(*i_points)[i].in_image = false;
 				}
 			}
 
@@ -152,7 +153,7 @@ BeamHndl find_peaks(double center[],double range,unsigned long Ngrid,double rEin
 			// refine all image points and outer border
 
 			Nnewpoints = -i_tree->pointlist->Npoints;
-			refine_grid_kist(i_tree,s_tree,imageinfo,1,res_target,2,True,False,i_points);
+			refine_grid_kist(i_tree,s_tree,imageinfo,1,res_target,2,true,false,i_points);
 			Nnewpoints += i_tree->pointlist->Npoints;
 			//printf("Nnewpoints = %li\n",Nnewpoints);
 

@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <Tree.h>
+#include <tree_maintenance.h>
 #include <analytic_lens.h>
 //#include "../TreeCode/TreeNB.h"
 

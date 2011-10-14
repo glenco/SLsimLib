@@ -30,7 +30,7 @@ void split_order_curve4(ImageInfo *curves,int Maxcurves,int *Ncurves){
 	//short spur,closed,attach;
 	unsigned long NpointsTotal;
 	double center[2],*theta;
-	//Boolean delta,tmp,step;
+	//bool delta,tmp,step;
 	//ListHndl reservoir,orderedlist;
 	Point *newpointarray;
 
@@ -70,7 +70,7 @@ void split_order_curve4(ImageInfo *curves,int Maxcurves,int *Ncurves){
 
 	// copy list back into array
 	point=curves[0].points;
-	newpointarray=NewPointArray(NpointsTotal,False);
+	newpointarray=NewPointArray(NpointsTotal,false);
 	MoveToTopList(orderedlist);
 	m=0;
 	i=0;
@@ -155,7 +155,7 @@ void split_order_curve3(ImageInfo *curves,int Maxcurves,int *Ncurves){
 	long i,k=0,m;
 	short spur,closed,attach;
 	unsigned long Npoints;
-	Boolean delta,tmp,step;
+	bool delta,tmp,step;
 	ListHndl lists[Maxcurves+1];
 	Point *point,*newpointarray;
 
@@ -186,8 +186,8 @@ void split_order_curve3(ImageInfo *curves,int Maxcurves,int *Ncurves){
 	    do{
 	    	spur=0;
 	    	MoveToTopList(lists[Maxcurves]);
-	    	tmp=True;
-	    	step=True;
+	    	tmp=true;
+	    	step=true;
 
 	    	if(lists[Maxcurves]->Npoints > 0){
 	    		do{
@@ -205,22 +205,22 @@ void split_order_curve3(ImageInfo *curves,int Maxcurves,int *Ncurves){
 	    				MoveToTopList(lists[Maxcurves]);
 	    				InsertPointAfterCurrent(lists[k],point);
 	    				MoveDownList(lists[k]);
-	    				step=True;
+	    				step=true;
 	    			}else{
 	    				tmp=MoveDownList(lists[Maxcurves]);
 	    			}
 
-	    			if( tmp==False && step){
+	    			if( tmp==false && step){
 	    				MoveToTopList(lists[Maxcurves]);
-	    				tmp=True;
-	    				step=False;
+	    				tmp=true;
+	    				step=false;
 	    			}
 
 	    		}while(tmp && lists[Maxcurves]->Npoints > 0);
 	    	}
 
 	    	// check if curve is closed
-	    	if( lists[k]->Npoints < 3 || AreBoxNeighbors(lists[k]->top,lists[k]->bottom ) == False ){
+	    	if( lists[k]->Npoints < 3 || AreBoxNeighbors(lists[k]->top,lists[k]->bottom ) == false ){
 			  // curve is not closed
 
 	    		closed=0;
@@ -282,7 +282,7 @@ void split_order_curve3(ImageInfo *curves,int Maxcurves,int *Ncurves){
 	//printf("  end of loop j=%i k=%i i=%i Npoints=%i\n",j,k,i,Npoints);
 
 	point=curves[0].points;
-	newpointarray=NewPointArray(curves[0].Npoints,False);
+	newpointarray=NewPointArray(curves[0].Npoints,false);
 	for(i=0,*Ncurves=0,m=0;i<k;++i){
 		printf("lists[%li]->Npoints = %li\n",i,lists[i]->Npoints);
 		if(lists[i]->Npoints > 0){
@@ -338,7 +338,7 @@ void split_order_curve(ImageInfo *curves,int Maxcurves,int *Ncurves){
 
 	      // check if curve is closed
 
-		  if( AreBoxNeighbors(&(curves[k].points[0]),&(curves[0].points[j]) ) == False &&
+		  if( AreBoxNeighbors(&(curves[k].points[0]),&(curves[0].points[j]) ) == false &&
 				  (j != jold && j < Maxpoint) ){
 			  // curve is not closed
 
@@ -423,7 +423,7 @@ void split_order_curve2(ImageInfo *curves,int Maxcurves,int *Ncurves){
 
 	      // check if curve is closed
 
-		  if( AreBoxNeighbors(&(curves[k].points[0]),&(curves[0].points[j]) ) == False &&
+		  if( AreBoxNeighbors(&(curves[k].points[0]),&(curves[0].points[j]) ) == false &&
 				  (j != jold && j < Maxpoint) ){
 			  // curve is not closed
 
@@ -512,7 +512,7 @@ void order_curve(ImageInfo *curve){
 		walkcurve(curve->points,curve->Npoints,&j,&end);
 
 		// check if curve is closed
-		if( AreBoxNeighbors(&(curve->points[0]),&(curve->points[j]) ) == False &&
+		if( AreBoxNeighbors(&(curve->points[0]),&(curve->points[j]) ) == false &&
 				(j != 0 && j < curve->Npoints) ){
 				  // curve is not closed
 
@@ -539,7 +539,7 @@ void walkcurve(Point *points,long Npoints,long *j,long *end){
 
 	long i,k;
 	short step;
-	Boolean delta;
+	bool delta;
 
 	//if((*j)==0) *end=Npoints-1;
 	//printf("end = %i\n",*end);
@@ -629,7 +629,7 @@ void nesting_curve(ImageInfo *curves,int Ncurves){
 }
 
 void split_images(TreeHndl i_tree,ImageInfo *images,int Maximages
-		,int *Nimages,Boolean sortallpoints){
+		,int *Nimages,bool sortallpoints){
 	/*
 	 * splits images by edge method to avoid FOF
 	 *    start: all image points should be under image[0].points
@@ -662,7 +662,7 @@ void split_images(TreeHndl i_tree,ImageInfo *images,int Maximages
 	Npoints=images->outerborder->Nunits;
 
 	// make a copy of the border points in a point array
-	borders->points=NewPointArray(Npoints,False);
+	borders->points=NewPointArray(Npoints,false);
 	// copy outer borders of images to border
 	MoveToTopKist(images->outerborder);
 	for(i=0;i<images->outerborder->Nunits;++i){
@@ -800,7 +800,7 @@ void split_images(TreeHndl i_tree,ImageInfo *images,int Maximages
 }
 
 void split_images3(TreeHndl i_tree,ImageInfo *images,int Maximages
-		,int *Nimages,Boolean sortallpoints){
+		,int *Nimages,bool sortallpoints){
 	/*
 	 * splits images by edge method to avoid FOF
 	 *    start: all image points should be under image[0].points
@@ -831,7 +831,7 @@ void split_images3(TreeHndl i_tree,ImageInfo *images,int Maximages
 	Npoints=images->innerborder->Nunits;
 
 	// make a copy of the border points in a point array
-	borders->points=NewPointArray(Npoints,False);
+	borders->points=NewPointArray(Npoints,false);
 	// copy inner borders of images to border
 	MoveToTopKist(images->innerborder);
 	for(i=0;i<images->innerborder->Nunits;++i){
@@ -1007,7 +1007,7 @@ void splitter(ImageInfo *images,int Maximages,int *Nimages){
 
 	// copy list back into array
 	point = images[0].points;
-	newpointarray = NewPointArray(NpointsTotal,False);
+	newpointarray = NewPointArray(NpointsTotal,false);
 	MoveToTopList(imagelist);
 	m=0;
 	i=0;

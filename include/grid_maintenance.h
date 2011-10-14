@@ -8,4 +8,4 @@
 GridHndl NewGrid(int Ngrid,double center[2],double range);
 void FreeGrid(GridHndl grid);
 void ReInitalizeGrid(GridHndl grid);
-void TrimGrid(GridHndl grid,double highestres,Boolean useSB);
+void TrimGrid(GridHndl grid,double highestres,bool useSB);

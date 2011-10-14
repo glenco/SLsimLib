@@ -30,9 +30,9 @@ typedef unsigned long IndexType;
 
 /***** Exported Types *****/
 
-#ifndef Boolean_declare
-#define Boolean_declare
-typedef enum {False, True} Boolean;
+#ifndef bool_declare
+#define bool_declare
+typedef enum {false, true} bool;
 #endif
 
 #ifndef treeNBtypes_declare
@@ -115,10 +115,10 @@ typedef struct TreeNBStruct{
   unsigned long Nbranches;
   /// Dimension of tree, 2 or 3.  This will dictate how the force is calculated.
   short Ndimensions;
-  /// True if particles have different masses.
-  Boolean MultiMass;
-  /// True if particles have different sizes.
-  Boolean MultiRadius;
+  /// true if particles have different masses.
+  bool MultiMass;
+  /// true if particles have different sizes.
+  bool MultiRadius;
 
   /// Array of particle positions
   PosType **xp;
@@ -192,10 +192,10 @@ void FreeBranchNB(BranchNB *branchNB);
 
 /***** Access functions *****/
 
-Boolean isEmptyNB(TreeNBHndl tree);
-Boolean atTopNB(TreeNBHndl tree);
-Boolean offEndNB(TreeNBHndl tree);
-Boolean noChildNB(TreeNBHndl tree);
+bool isEmptyNB(TreeNBHndl tree);
+bool atTopNB(TreeNBHndl tree);
+bool offEndNB(TreeNBHndl tree);
+bool noChildNB(TreeNBHndl tree);
 
 /*unsigned long *getCurrent(TreeNBHndl tree,IndexType *nparticles);*/
 void getCurrentNB(TreeNBHndl tree,IndexType *particles,IndexType *nparticles);
@@ -217,7 +217,7 @@ void insertChildToCurrentNB(TreeNBHndl tree, IndexType *particles,IndexType npar
 
 void attachChildToCurrentNB(TreeNBHndl tree,BranchNB data,int child);
 
-Boolean TreeNBWalkStep(TreeNBHndl tree,Boolean allowDescent);
+bool TreeNBWalkStep(TreeNBHndl tree,bool allowDescent);
 
 /***** Other operations *****/
 
@@ -235,8 +235,8 @@ void readSmoothingNB(float *rsph,char *filename);
 
 /** routines in TreeNBDriver.c **/
 
-TreeNBHndl BuildTreeNB(PosType **xp,float *rsph,float *mass,Boolean MultiRadius
-		,Boolean MultiMass,IndexType Nparticles,IndexType *particles,int Ndimensions
+TreeNBHndl BuildTreeNB(PosType **xp,float *rsph,float *mass,bool MultiRadius
+		,bool MultiMass,IndexType Nparticles,IndexType *particles,int Ndimensions
 		,double theta);
 IndexType *NearestNeighborNB(TreeNBHndl tree,double *ray,int Nneighbors
 				 ,float *rsph);
@@ -244,28 +244,28 @@ int inboxNB(double ray[],PosType *p1,PosType *p2);
 int cutboxNB(double ray[],PosType *p1,PosType *p2,PosType rmax);
 TreeNBHndl rotate_simulation(PosType **xp,IndexType Nparticles,IndexType *particles
 		,double **coord,double theta,float *rsph,float *mass
-		,Boolean MultiRadius,Boolean MultiMass);
+		,bool MultiRadius,bool MultiMass);
 TreeNBHndl rotate_project(PosType **xp,IndexType Nparticles,IndexType *particles
 		,double **coord,double theta,float *rsph,float *mass
-		,Boolean MultiRadius,Boolean MultiMass);
+		,bool MultiRadius,bool MultiMass);
 TreeNBHndl spread_particles(PosType **xp,IndexType Nparticles,IndexType *particles
-		,double theta,float *rsph,float *mass,Boolean MultiRadius,Boolean MultiMass);
+		,double theta,float *rsph,float *mass,bool MultiRadius,bool MultiMass);
  void cuttoffscale(TreeNBHndl tree,double *theta);
 
 /** routines in TreeNBForce **/
 
 float *FindRSPH(TreeNBHndl tree,int Nsph);
 void TreeNBForce2D(TreeNBHndl tree,double *ray
-		 ,double *alpha,double *kappa,double *gamma,Boolean no_kappa);
+		 ,double *alpha,double *kappa,double *gamma,bool no_kappa);
 void _TreeNBForce2D(TreeNBHndl tree,double *ray
-		  ,double *alpha,double *kappa,double *gamma,Boolean no_kappa);
+		  ,double *alpha,double *kappa,double *gamma,bool no_kappa);
 void _TreeNBParticleForce2D(TreeNBHndl tree,double *ray
-		  ,double *alpha,double *kappa,double *gamma,Boolean no_kappa);
+		  ,double *alpha,double *kappa,double *gamma,bool no_kappa);
 void TreeNBParticleForce2Diter(TreeNBHndl tree,double *ray
-		  ,double *alpha,double *kappa,double *gamma,Boolean no_kappa
-		  ,double (*alpha_internal)(double r,double rmax)
-		  ,double (*kappa_internal)(double r,double rmax)
-		  ,double (*gamma_internal)(double r,double rmax));
+		  ,double *alpha,double *kappa,double *gamma,bool no_kappa
+		  ,double (*alpha_internal)(double r,float rmax)
+		  ,double (*kappa_internal)(double r,float rmax)
+		  ,double (*gamma_internal)(double r,float rmax));
 
 double alpha_o(double r,float sigma);
 double kappa_o(double r,float sigma);
@@ -282,6 +282,6 @@ void readpositions(SimLens *lens);
 /*void rayshooter(double *ray,unsigned long Nrays,double *alpha,double *gamma
 		,double*kappa,double *invmag,char *paramfile);*/
 /*void rayshooter(unsigned long Nrays,Point *points,char *paramfile);*/
-void rayshooterNB(unsigned long Nrays,Point *points,TreeHndl i_tree,char *paramfile,Boolean no_kappa);
+void rayshooterNB(unsigned long Nrays,Point *points,TreeHndl i_tree,char *paramfile,bool no_kappa);
 PosType **PosTypeMatrix(long nrl, long nrh, long ncl, long nch);
 void free_PosTypeMatrix(PosType **m, long nrl, long nrh, long ncl, long nch);

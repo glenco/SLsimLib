@@ -40,15 +40,15 @@ void freeList(ListHndl list){
 	free(list);
 }
 
-inline Boolean AtTopList(ListHndl list){
+inline bool AtTopList(ListHndl list){
 	assert(list);
-	if(list->current==list->top) return True;
-	else return False;
+	if(list->current==list->top) return true;
+	else return false;
 }
-inline Boolean AtBottomList(ListHndl list){
+inline bool AtBottomList(ListHndl list){
 	assert(list);
-	if(list->current==list->bottom) return True;
-	else return False;
+	if(list->current==list->bottom) return true;
+	else return false;
 }
 
 
@@ -352,22 +352,22 @@ void JumpDownList(ListHndl list,int jump){
   if(jump < 0) for(i=0;i<abs(jump);++i) MoveUpList(list);
 }
 
-Boolean MoveDownList(ListHndl list){
+bool MoveDownList(ListHndl list){
 
-	if(list->Npoints == 0) return False;
-	if(list->current==list->bottom) return False;
+	if(list->Npoints == 0) return false;
+	if(list->current==list->bottom) return false;
 	list->current=list->current->next;
 
-	return True;
+	return true;
 }
 
-Boolean MoveUpList(ListHndl list){
+bool MoveUpList(ListHndl list){
 
-	if(list->Npoints == 0) return False;
-	if(list->current==list->top) return False;
+	if(list->Npoints == 0) return false;
+	if(list->current==list->top) return false;
 	list->current=list->current->prev;
 
-	return True;
+	return true;
 }
 
 void ShiftList(ListHndl list){

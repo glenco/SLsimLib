@@ -7,6 +7,7 @@
 
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "analytic_lens.h"
 
 void alphaNSIE(double *alpha,double *xt,double f,double bc,double theta){

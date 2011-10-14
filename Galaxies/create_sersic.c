@@ -4,8 +4,10 @@
  *  Created on: Feb 28, 2010
  *      Author: R.B. Metcalf
  */
+#include <stdlib.h>
 #include <math.h>
 #include <nrD.h>
+#include <nr.h>
 #include "galaxies.h"
 /**
  * Returns a Sersic profile

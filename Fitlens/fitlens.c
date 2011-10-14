@@ -45,7 +45,7 @@ void FindLensSimple(
 
 	int i;
 
-	//PrintAnaLens(lens,False,False);
+	//PrintAnaLens(lens,false,false);
 	//for(i=0;i<Nimages;++i) printf("  x = %e %e\n",image_positions[i].x[0],image_positions[i].x[1]);
 
 	if(Nimages == 1){

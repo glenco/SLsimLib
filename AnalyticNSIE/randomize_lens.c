@@ -24,7 +24,7 @@
 /** \ingroup ChangeLens
  *
  */
-void RandomizeHost(AnaLens *lens,double r_source_phys,long *seed,Boolean tables
+void RandomizeHost(AnaLens *lens,double r_source_phys,long *seed,bool tables
 		,CosmoHndl cosmo){
 	static double fo=0.0,*axisTable,*sigmaTable,**zTable;
 	int n,i;
@@ -174,7 +174,7 @@ void RandomlyDistortLens(AnaLens *lens,long *seed, int Nmodes){
 			//		lens->rms_perturb[k+1]);
 		}
 	}
-	//PrintAnaLens(lens,False,False);
+	//PrintAnaLens(lens,false,false);
 
 	return ;
 }
@@ -207,7 +207,7 @@ void AlignedRandomlyDistortLens(AnaLens *lens,long *seed,double theta,int Npole)
 		//		lens->rms_perturb[k+1]);
 	}
 
-	//PrintAnaLens(lens,False,False);
+	//PrintAnaLens(lens,false,false);
 
 	return ;
 }
@@ -247,7 +247,7 @@ void RandomizeSubstructure2(AnaLens *lens,double rangeInRei,long *seed){
 			lens->sub_mass=(float *)calloc(NsubMax,sizeof(float));
 			lens->sub_substructures = (IndexType *)calloc(NsubMax,sizeof(IndexType));
 		}
-		lens->substruct_implanted=True;
+		lens->substruct_implanted=true;
 	}
 	//printf("Rmax/re = %e\n",Rmax/lens->ro);
 	//for(i=0;i<12;++i) printf("%f %f\n",poidev(ndensity*pi*Rmax*Rmax,seed),ndensity*pi*Rmax*Rmax);
@@ -315,12 +315,12 @@ void RandomizeSubstructure2(AnaLens *lens,double rangeInRei,long *seed){
 		if(lens->sub_type == pointmass){  // always use tree for point mass substructures
 			lens->sub_theta_force=1.0e-1;
 			lens->sub_tree=BuildTreeNB(lens->sub_x,lens->sub_Rcut,lens->sub_mass,
-				False,True,lens->sub_N,lens->sub_substructures,2,lens->sub_theta_force);
+				false,true,lens->sub_N,lens->sub_substructures,2,lens->sub_theta_force);
 		}else if( area_av/r2av < 1.0e-2 && lens->sub_N > 300 ){
 			// build tree for doing substructure force calculation
 			lens->sub_theta_force=1.0e-1;
 			lens->sub_tree=BuildTreeNB(lens->sub_x,lens->sub_Rcut,lens->sub_mass,
-				True,True,lens->sub_N,lens->sub_substructures,2,lens->sub_theta_force);
+				true,true,lens->sub_N,lens->sub_substructures,2,lens->sub_theta_force);
 		}else lens->sub_tree = 0;
 	}else lens->sub_tree = 0;
 */
@@ -360,7 +360,7 @@ void RandomizeSubstructure3(AnaLens *lens,double rangeInRei,long *seed){
 		lens->sub_x=dmatrix(0,NsubMax-1,0,1);
 		lens->sub_Rcut=(float *)calloc(NsubMax,sizeof(float));
 		lens->sub_mass=(float *)calloc(NsubMax,sizeof(float));
-		lens->substruct_implanted=True;
+		lens->substruct_implanted=true;
 		lens->sub_substructures = (IndexType *)calloc(NsubMax,sizeof(IndexType));
 	}
 	//printf("Rmax/re = %e\n",Rmax/lens->ro);
@@ -433,12 +433,12 @@ void RandomizeSubstructure3(AnaLens *lens,double rangeInRei,long *seed){
 		if(lens->sub_type == pointmass){  // always use tree for point mass substructures
 			lens->sub_theta_force=1.0e-1;
 			lens->sub_tree=BuildTreeNB(lens->sub_x,lens->sub_Rcut,lens->sub_mass,
-				False,True,lens->sub_N,lens->sub_substructures,2,lens->sub_theta_force);
+				false,true,lens->sub_N,lens->sub_substructures,2,lens->sub_theta_force);
 		}else if( area_av/r2av < 1.0e-2 && lens->sub_N > 300 ){
 			// build tree for doing substructure force calculation
 			lens->sub_theta_force=1.0e-1;
 			lens->sub_tree=BuildTreeNB(lens->sub_x,lens->sub_Rcut,lens->sub_mass,
-				True,True,lens->sub_N,lens->sub_substructures,2,lens->sub_theta_force);
+				true,true,lens->sub_N,lens->sub_substructures,2,lens->sub_theta_force);
 		}else lens->sub_tree = 0;
 	}else lens->sub_tree = 0;
 */

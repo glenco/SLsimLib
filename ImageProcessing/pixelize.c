@@ -33,9 +33,9 @@ void pixelize(
 		,double *center /// The location of the center of the map
 		,ImageInfo *imageinfo  /// An array of ImageInfo-s.  There is no reason to separate images for this routine
 		,int Nimages           /// Number of images on input.
-		,Boolean constant_sb  /// True - all images will have surface brightness = 1,
-		                      /// False - surface brightness is taken from surface_brighness in  the image points
-		,Boolean cleanmap     ///  True - erases previous pixel map, False - adds new flux to map
+		,bool constant_sb  /// true - all images will have surface brightness = 1,
+		                      /// false - surface brightness is taken from surface_brighness in  the image points
+		,bool cleanmap     ///  true - erases previous pixel map, false - adds new flux to map
 		){
 
 	long ix;
@@ -56,7 +56,7 @@ void pixelize(
 
 	// initialize pixel tree
 	if(count==1){
-		points=NewPointArray(Npixels*Npixels,True);
+		points=NewPointArray(Npixels*Npixels,true);
 		xygridpoints(points,range,center,Npixels,0);
 		ptree=BuildTree(points,Npixels*Npixels);
 	}
@@ -66,7 +66,7 @@ void pixelize(
 		if(count > 1){
 			// rebuild pixel tree
 			emptyTree(ptree);
-			points=NewPointArray(Npixels*Npixels,True);
+			points=NewPointArray(Npixels*Npixels,true);
 			xygridpoints(points,range,center,Npixels,0);
 			FillTree(ptree,points,Npixels*Npixels);
 			//ptree=BuildTree(points,Npixels*Npixels);
@@ -103,7 +103,7 @@ void pixelize(
 				_FindBox(ptree,getCurrentKist(imageinfo[ii].imagekist)->x);
 				//ptree->current->points->surface_brightness += sb;// *pow(getCurrentKist(imageinfo[ii].imagekist)->gridsize,2);
 
-				if(boxinbox(getCurrentKist(imageinfo[ii].imagekist)->leaf,ptree->current) == True){
+				if(boxinbox(getCurrentKist(imageinfo[ii].imagekist)->leaf,ptree->current) == true){
 					// entire cell is inside pixel
 					//ptree->current->points->surface_brightness += sb*pow(getCurrentKist(imageinfo[ii].imagekist)->gridsize/resolution,2);
 					ptree->current->points->surface_brightness = sb;
@@ -113,7 +113,7 @@ void pixelize(
 					moveUp(ptree);
 
 					// find a super-pixel that contains all of the cell
-					while(boxinbox(getCurrentKist(imageinfo[ii].imagekist)->leaf,ptree->current) == False) moveUp(ptree);
+					while(boxinbox(getCurrentKist(imageinfo[ii].imagekist)->leaf,ptree->current) == false) moveUp(ptree);
 
 					assert((ptree->current->boundary_p1[0]-getCurrentKist(imageinfo[ii].imagekist)->leaf->boundary_p1[0]) < 0);
 					assert((ptree->current->boundary_p1[1]-getCurrentKist(imageinfo[ii].imagekist)->leaf->boundary_p1[1]) < 0);

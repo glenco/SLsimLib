@@ -25,7 +25,7 @@ typedef struct analytic_lens{
   /// output file, not always used.
   char outputfile[100];
   /// marks if the lens has been setup.
-  Boolean set;
+  bool set;
 
   /// redshift of lens
   double zlens;
@@ -57,7 +57,7 @@ typedef struct analytic_lens{
   /// fraction of Keplerian velocity in random motions
   float source_fK;
   /// set to true to integrate over frequency
-  Boolean source_monocrome;
+  bool source_monocrome;
 
   /// pointer to surface brightness function
   double (*source_sb_func)(double *y);
@@ -87,7 +87,7 @@ typedef struct analytic_lens{
   double to;
 
   /// substructures
-  Boolean substruct_implanted;
+  bool substruct_implanted;
   double sub_sigmaScale;
   double sub_Ndensity;
   /// actual number of substructures
@@ -122,7 +122,7 @@ typedef struct analytic_lens{
     		,double *center,double Sigma_crit);
 
   /// stars
-  Boolean stars_implanted;
+  bool stars_implanted;
   IndexType stars_N;
   IndexType *stars;
   PosType **stars_xp;
@@ -170,11 +170,11 @@ void gammaNFW(double *gamma,double *x,double Rtrunc,double mass,double r_scale
 
 double lens_expand(double beta,double *mod,int Nmodes,double *x,double *alpha,double *gamma,double *phi);
 void free_AnaLens(AnaLens *lens);
-void PrintAnaLens(AnaLens *lens,Boolean show_substruct,Boolean show_stars);
+void PrintAnaLens(AnaLens *lens,bool show_substruct,bool show_stars);
 
 // in randoimize_lens.c
 
-void RandomizeHost(AnaLens *lens,double r_source_physical,long *seed,Boolean tables
+void RandomizeHost(AnaLens *lens,double r_source_physical,long *seed,bool tables
 		,CosmoHndl cosmo);
 void RandomlyDistortLens(AnaLens *lens,long *seed,int Nmodes);
 void AlignedRandomlyDistortLens(AnaLens *lens,long *seed,double theta,int n);
@@ -202,7 +202,7 @@ double BLR_Sph1_SB(double *y);
 double BLR_Sph2_SB(double *y);
 
 // in mark_points.c
-void MarkPoints(TreeHndl s_tree,AnaLens *lens,Boolean sb_cut,short invert);
-void _MarkPoints(TreeHndl s_tree,AnaLens *lens,Boolean *sbcut);
-Boolean InSource(double *ray,AnaLens *lens,Boolean surfacebright);
+void MarkPoints(TreeHndl s_tree,AnaLens *lens,bool sb_cut,short invert);
+void _MarkPoints(TreeHndl s_tree,AnaLens *lens,bool *sbcut);
+bool InSource(double *ray,AnaLens *lens,bool surfacebright);
 

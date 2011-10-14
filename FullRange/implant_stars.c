@@ -103,12 +103,12 @@ void implant_stars(AnaLens *lens,Point *centers,unsigned long Nregions,long *see
 
 	float dummy=0;
 	lens->star_tree = BuildTreeNB(lens->stars_xp,&dummy,lens->star_masses
-			,False,True,lens->stars_N,lens->stars,2,lens->star_theta_force);
+			,false,true,lens->stars_N,lens->stars,2,lens->star_theta_force);
 
 	//printf("projected with 2D tree\n");
 
 	// visit every branch to find center of mass and cutoff scale */
-	lens->stars_implanted = True;
+	lens->stars_implanted = true;
 
 	return ;
 }

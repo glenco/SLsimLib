@@ -15,7 +15,7 @@ TreeHndl BuildTree(Point *xp,unsigned long Npoints);
 void _BuildTree(TreeHndl tree);
 void FillTree(TreeHndl tree,Point *xp,unsigned long Npoints);
 int AddPointsToTree(TreeHndl tree,Point *xpoint,unsigned long Nadd);
-unsigned long PruneTree(TreeHndl i_tree,TreeHndl s_tree,double resolution,Boolean useSB);
+unsigned long PruneTree(TreeHndl i_tree,TreeHndl s_tree,double resolution,bool useSB);
 unsigned long FreeBranchesBelow(TreeHndl i_tree,TreeHndl s_tree,ListHndl trashlist);
 Point *RemoveLeafFromTree(TreeHndl tree,unsigned long *Npoints);
 void RefreshSurfaceBrightnesses(TreeHndl i_tree,TreeHndl s_tree,AnaLens *lens);

@@ -12,12 +12,12 @@
 #include <analytic_lens.h>
 
 /** \ingroup ImageFindingL2
- *\brief  MarkPoints sets the point.in_image to True if the source point is within lens->source_r of lens->source_x
- * AND (if sbcut == True) the surface brightness at that point is > 0.
+ *\brief  MarkPoints sets the point.in_image to true if the source point is within lens->source_r of lens->source_x
+ * AND (if sbcut == true) the surface brightness at that point is > 0.
  *
  * Both the source point and its image point are marked.
  *
- * Setting sb_cut = False speeds the code up for sources without sharp
+ * Setting sb_cut = false speeds the code up for sources without sharp
  * edges.
  *
  * if invert == -1 the same points are unmarked
@@ -28,7 +28,7 @@
  */
 static short incell,invertg=0;
 
-void MarkPoints(TreeHndl s_tree,AnaLens *lens,Boolean sb_cut,short invert){
+void MarkPoints(TreeHndl s_tree,AnaLens *lens,bool sb_cut,short invert){
 
 	assert(s_tree); assert(lens);
 
@@ -41,7 +41,7 @@ void MarkPoints(TreeHndl s_tree,AnaLens *lens,Boolean sb_cut,short invert){
   return;
 }
 
-void _MarkPoints(TreeHndl s_tree,AnaLens *lens,Boolean *sbcut){
+void _MarkPoints(TreeHndl s_tree,AnaLens *lens,bool *sbcut){
 
   int i,incell2=1;
   short pass;
@@ -133,16 +133,16 @@ void _MarkPoints(TreeHndl s_tree,AnaLens *lens,Boolean *sbcut){
   return;
 }
 
-Boolean InSource(double *ray,AnaLens *lens,Boolean surfacebright){
+bool InSource(double *ray,AnaLens *lens,bool surfacebright){
 	double r[2];
 
 	r[0] = lens->source_x[0] - ray[0];
 	r[1] = lens->source_x[1] - ray[1];
 
 	if(r[0]*r[0]+r[1]*r[1] < lens->source_r*lens->source_r){
-		if(surfacebright && lens->source_sb_func(r) <= 0.0) return False;
-		else return True;
+		if(surfacebright && lens->source_sb_func(r) <= 0.0) return false;
+		else return true;
 	}
 
-	return False;
+	return false;
 }

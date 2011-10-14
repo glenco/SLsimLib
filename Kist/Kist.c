@@ -36,17 +36,17 @@ KistHndl NewKist(void){
   return kist;
 }
 
-Boolean AtTopKist(KistHndl kist){
+bool AtTopKist(KistHndl kist){
 	assert(kist);
 
-	if(kist->current==kist->top) return True;
-	else return False;
+	if(kist->current==kist->top) return true;
+	else return false;
 }
-Boolean AtBottomKist(KistHndl kist){
+bool AtBottomKist(KistHndl kist){
 	assert(kist);
 
-	if(kist->current==kist->bottom) return True;
-	else return False;
+	if(kist->current==kist->bottom) return true;
+	else return false;
 }
 
 void InsertAfterCurrentKist(KistHndl kist,Data *data){
@@ -233,24 +233,24 @@ void JumpDownKist(KistHndl kist,int jump){
 	return ;
 }
 
-Boolean MoveDownKist(KistHndl kist){
+bool MoveDownKist(KistHndl kist){
 	assert(kist);
 
-	if(kist->Nunits == 0) return False;
-	if(kist->current==kist->bottom) return False;
+	if(kist->Nunits == 0) return false;
+	if(kist->current==kist->bottom) return false;
 	kist->current=kist->current->next;
 
-	return True;
+	return true;
 }
 
-Boolean MoveUpKist(KistHndl kist){
+bool MoveUpKist(KistHndl kist){
 	assert(kist);
 
-	if(kist->Nunits == 0) return False;
-	if(kist->current==kist->top) return False;
+	if(kist->Nunits == 0) return false;
+	if(kist->current==kist->top) return false;
 	kist->current=kist->current->prev;
 
-	return True;
+	return true;
 }
 
 
@@ -318,9 +318,9 @@ void TranformPlanesKist(KistHndl kist){
 	return;
 }
 
-Boolean AreDataUniqueKist(KistHndl kist){
+bool AreDataUniqueKist(KistHndl kist){
 	assert(kist);
-	if(kist->Nunits < 2) return True;
+	if(kist->Nunits < 2) return true;
 
 	unsigned long i,j;
 	KistHndl tmpkist = NewKist();
@@ -338,11 +338,11 @@ Boolean AreDataUniqueKist(KistHndl kist){
 		for(j=0;j<i;++j,MoveDownKist(tmpkist)){
 			if( getCurrentKist(kist) == getCurrentKist(tmpkist) ){
 				free(tmpkist);
-				return False;
+				return false;
 			}
 		}
 	}
 
 	free(tmpkist);
-	return True;
+	return true;
 }

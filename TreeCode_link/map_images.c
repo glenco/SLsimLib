@@ -16,6 +16,7 @@
 #include <KistDriver.h>
 #include <divide_images.h>
 #include <map_images.h>
+#include <tree_maintenance.h>
 
 const float mumin = 0.3;  // actually the sqrt of the minimum magnification
 const int Ngrid_block = 3;
@@ -41,9 +42,9 @@ void map_images(
 		,ImageInfo *imageinfo /// information on each image
 		,int NimageMax   /// maximum number of images allowed
 		,double initial_size   /// Initial size of source for telescoping, 0 to start from the initial grid size.
-		,Boolean splitimages  /// TRUE each image is refined to target accuracy, otherwise all images are treated as one
+		,bool splitimages  /// TRUE each image is refined to target accuracy, otherwise all images are treated as one
 		,ExitCriterion criterion  /// see data type
-		,Boolean kappa_off  /// turns off calculation of surface density, shear, magnification and time delay
+		,bool kappa_off  /// turns off calculation of surface density, shear, magnification and time delay
 		){
 
 	assert(lens);
@@ -76,7 +77,7 @@ void map_images(
 	// the lens->source_r_in is used as a characteristic small size for the source
 	assert(lens->source_r_in > 0);
 	find_images_kist(lens->source_x,lens->source_r_in,s_tree,i_tree,Nimages
-			  ,imageinfo,NimageMax,&Nimagepoints,0,False,0,False,True);
+			  ,imageinfo,NimageMax,&Nimagepoints,0,false,0,false,true);
 
 
 	// find kist of image points and divide into images
@@ -160,7 +161,7 @@ void map_images(
 
 int refine_grid_on_image(AnaLens *lens,TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo
 		,unsigned long Nimages,double res_target,ExitCriterion criterion
-		,Boolean kappa_off){
+		,bool kappa_off){
 
 	/* refines grid according to criterion based on flux in each grid cell
 	 *
@@ -275,7 +276,7 @@ int refine_grid_on_image(AnaLens *lens,TreeHndl i_tree,TreeHndl s_tree,ImageInfo
   if(Ncells > 0){
 
 	  // make space for new points to go into tree
- 	  i_points = NewPointArray((Ngrid_block*Ngrid_block-1)*Ncells,True);
+ 	  i_points = NewPointArray((Ngrid_block*Ngrid_block-1)*Ncells,true);
 
 	  for(i=0,Ncells=0 ; i < Nimages ; ++i){
 		  Ntmp = imageinfo[i].imagekist->Nunits;

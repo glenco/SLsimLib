@@ -24,10 +24,10 @@ GridHndl NewGrid(int Ngrid,double center[2],double range){
 
 	grid->Ngrid = Ngrid;
 
-	i_points = NewPointArray(Ngrid*Ngrid,True);
+	i_points = NewPointArray(Ngrid*Ngrid,true);
 	xygridpoints(i_points,range,center,Ngrid,0);
 	s_points=LinkToSourcePoints(i_points,Ngrid*Ngrid);
-	rayshooterInternal(Ngrid*Ngrid,i_points,True);
+	rayshooterInternal(Ngrid*Ngrid,i_points,true);
 	// Build trees
 	grid->i_tree = BuildTree(i_points,Ngrid*Ngrid);
 	grid->s_tree = BuildTree(s_points,Ngrid*Ngrid);
@@ -68,10 +68,10 @@ void ReInitalizeGrid(GridHndl grid){
 
 
 	// build new initial grid
-	i_points = NewPointArray(Ngrid*Ngrid,True);
+	i_points = NewPointArray(Ngrid*Ngrid,true);
 	xygridpoints(i_points,range,center,Ngrid,0);
 	s_points=LinkToSourcePoints(i_points,Ngrid*Ngrid);
-	rayshooterInternal(Ngrid*Ngrid,i_points,True);
+	rayshooterInternal(Ngrid*Ngrid,i_points,true);
 	// fill trees
 	FillTree(grid->i_tree,i_points,Ngrid*Ngrid);
 	FillTree(grid->s_tree,s_points,Ngrid*Ngrid);
@@ -81,7 +81,7 @@ void ReInitalizeGrid(GridHndl grid){
 /** \ingroup ImageFinding
  *
  */
-void TrimGrid(GridHndl grid,double highestres,Boolean useSB){
+void TrimGrid(GridHndl grid,double highestres,bool useSB){
 
 	return;
 }

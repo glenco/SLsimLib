@@ -165,9 +165,9 @@ void _freeTreeNB(TreeNBHndl tree,short child){
 
 /************************************************************************
  * isEmptyNB
- * Returns "True" if the TreeNB is empty and "False" otherwise.  Exported.
+ * Returns "true" if the TreeNB is empty and "false" otherwise.  Exported.
  ************************************************************************/
-Boolean isEmptyNB(TreeNBHndl tree){
+bool isEmptyNB(TreeNBHndl tree){
 
     assert(tree != NULL);
     return(tree->Nbranches == 0);
@@ -175,11 +175,11 @@ Boolean isEmptyNB(TreeNBHndl tree){
 
 /************************************************************************
  * atTop
- * Returns "True" if current is the same as top and "False" otherwise.
+ * Returns "true" if current is the same as top and "false" otherwise.
  * Exported.
  * Pre: !isEmptyNB(tree)
  ************************************************************************/
-Boolean atTopNB(TreeNBHndl tree){
+bool atTopNB(TreeNBHndl tree){
 
     assert(tree != NULL);
     if( isEmptyNB(tree) ){
@@ -192,11 +192,11 @@ Boolean atTopNB(TreeNBHndl tree){
 
 /************************************************************************
  * noChild
- * Returns "True" if the child of the current branchNB does not exist and "False" otherwise.
+ * Returns "true" if the child of the current branchNB does not exist and "false" otherwise.
  * Exported.
  * Pre: !isEmptyNB(tree)
  ************************************************************************/
-Boolean noChildNB(TreeNBHndl tree){
+bool noChildNB(TreeNBHndl tree){
 
     assert(tree != NULL);
     if( isEmptyNB(tree) ){
@@ -205,15 +205,15 @@ Boolean noChildNB(TreeNBHndl tree){
 	exit(1);
     }
 
-    if( (tree->current->child1 == NULL) || (tree->current->child2 == NULL) ) return True;
-    return False;
+    if( (tree->current->child1 == NULL) || (tree->current->child2 == NULL) ) return true;
+    return false;
 }
 
 /************************************************************************
  * offEndNB
- * Returns "True" if current is off end and "False" otherwise.  Exported.
+ * Returns "true" if current is off end and "false" otherwise.  Exported.
  ************************************************************************/
-Boolean offEndNB(TreeNBHndl tree){
+bool offEndNB(TreeNBHndl tree){
 
     assert(tree != NULL);
     return(tree->current == NULL);
@@ -381,21 +381,21 @@ void attachChildToCurrentNB(TreeNBHndl tree,BranchNB data,int child){
 }
 
 // step for walking tree by iteration instead of recursion
-Boolean TreeNBWalkStep(TreeNBHndl tree,Boolean allowDescent){
+bool TreeNBWalkStep(TreeNBHndl tree,bool allowDescent){
 	if(allowDescent && tree->current->child1 != NULL){
 		moveToChildNB(tree,1);
-		return True;
+		return true;
 	}
 	if(allowDescent && tree->current->child2 != NULL){
 		moveToChildNB(tree,2);
-		return True;
+		return true;
 	}
 
 	if(tree->current->brother != NULL){
 		tree->current=tree->current->brother;
-		return True;
+		return true;
 	}
-	return False;
+	return false;
 }
 
 /***** Other operations *****/

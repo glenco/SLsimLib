@@ -17,13 +17,15 @@
 #define ERROR_MESSAGE() printf("ERROR: file: %s line: %i\n",__FILE__,__LINE__)
 #endif
 
-#ifndef Boolean_declare
-#define Boolean_declare
-typedef enum {False, True} Boolean;
+#ifndef bool_declare
+#define bool_declare
+typedef enum {false, true} bool;
 #endif
 
 #ifndef pointtypes_declare
 #define pointtypes_declare
+
+struct branchstruct;
 
 /** \brief A point on the source or image plane that contains a position and the lensing quantities */
 typedef struct Point{
@@ -38,10 +40,12 @@ typedef struct Point{
   double *x;         // the position of the point
   double gridsize;   // the size of the most refined grid the point is in
   unsigned long head;         // marks beginning of allocated array of points for easy deallocation
-  Boolean in_image; // marks if point is in image
+  bool in_image; // marks if point is in image
   double surface_brightness;  // the surface brightness at this point§
 
-  /// \brief Branch of tree that contains grid points
+
+  struct branchstruct *leaf;
+ /* /// \brief Branch of tree that contains grid points
   struct branchstruct{
     struct Point *points;        // pointer to first points in Branch
     unsigned long npoints;
@@ -54,8 +58,22 @@ typedef struct Point{
     struct branchstruct *child2;
     struct branchstruct *brother;
     struct branchstruct *prev;
-  } *leaf;  /// pointer to leaf of the tree that contains this point
+  } *leaf;  /// pointer to leaf of the tree that contains this point */
 } Point;
+
+struct branchstruct{
+  struct Point *points;        // pointer to first points in Branch
+  unsigned long npoints;
+  double center[2];
+  int level;
+  unsigned long number;
+  double boundary_p1[2];
+  double boundary_p2[2];
+  struct branchstruct *child1;
+  struct branchstruct *child2;
+  struct branchstruct *brother;
+  struct branchstruct *prev;
+} ;
 
 typedef struct branchstruct Branch;
 

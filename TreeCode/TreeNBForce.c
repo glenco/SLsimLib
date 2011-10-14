@@ -37,7 +37,7 @@ float *FindRSPH(TreeNBHndl tree,int Nsph){
  * */
 
 void TreeNBForce2D(TreeNBHndl tree,double *ray
-		,double *alpha,double *kappa,double *gamma,Boolean no_kappa
+		,double *alpha,double *kappa,double *gamma,bool no_kappa
 		   ){
 
 	assert(tree);
@@ -55,7 +55,7 @@ void TreeNBForce2D(TreeNBHndl tree,double *ray
 }
 
 void _TreeNBForce2D(TreeNBHndl tree,double *ray
-		  ,double *alpha,double *kappa,double *gamma,Boolean no_kappa){
+		  ,double *alpha,double *kappa,double *gamma,bool no_kappa){
   PosType xcm,ycm,rcm2,tmp;
   int OpenBox(TreeNBHndl tree,PosType r);
   int i;
@@ -147,7 +147,7 @@ void _TreeNBForce2D(TreeNBHndl tree,double *ray
 }
 
 void _TreeNBParticleForce2D(TreeNBHndl tree,double *ray
-		  ,double *alpha,double *kappa,double *gamma,Boolean no_kappa){
+		  ,double *alpha,double *kappa,double *gamma,bool no_kappa){
   PosType xcm,ycm,rcm2,tmp,rsphmax;
   int OpenBox(TreeNBHndl tree,PosType r);
   int i;
@@ -266,16 +266,16 @@ void _TreeNBParticleForce2D(TreeNBHndl tree,double *ray
 
 void TreeNBParticleForce2Diter(TreeNBHndl tree
 		  ,double *ray
-		  ,double *alpha,double *kappa,double *gamma,Boolean no_kappa
-		  ,double (*alpha_internal)(double r,double rmax)
-		  ,double (*kappa_internal)(double r,double rmax)
-		  ,double (*gamma_internal)(double r,double rmax)
+		  ,double *alpha,double *kappa,double *gamma,bool no_kappa
+		  ,double (*alpha_internal)(double r,float rmax)
+		  ,double (*kappa_internal)(double r,float rmax)
+		  ,double (*gamma_internal)(double r,float rmax)
 ){
 
   PosType xcm,ycm,rcm2,tmp,rsphmax;
   int OpenBox(TreeNBHndl tree,PosType r);
   int i;
-  Boolean allowDescent=True;
+  bool allowDescent=true;
   unsigned long count=0;
 
   assert(tree);
@@ -304,7 +304,7 @@ void TreeNBParticleForce2Diter(TreeNBHndl tree
 
 	  if( rcm2 < pow(tree->current->rcrit_angle,2) ){
 		  // includes rcrit_particle constraint
-		  allowDescent=True;
+		  allowDescent=true;
 
 		  //printf("right place\n");
 		  if( (tree->current->child1==NULL)*(tree->current->child2==NULL) ){
@@ -364,7 +364,7 @@ void TreeNBParticleForce2Diter(TreeNBHndl tree
 			  }
 		  }*/
 	  }else{ // use whole cell
-		  allowDescent=False;
+		  allowDescent=false;
 
 		  tmp = -1.0*tree->current->mass/rcm2/pi;
 		  //if(rsphmax <  0) tmp*=exp(-rcm2/rsphmax/rsphmax/2);

@@ -18,7 +18,7 @@ PosType *xp,**yp,dxsav;
  *  \brief Wrapper function for initializing and calculating the deflection from particles.
  *  */
 
-void rayshooterNB(unsigned long Nrays,Point *points,TreeHndl i_tree,char *paramfile,Boolean no_kappa){
+void rayshooterNB(unsigned long Nrays,Point *points,TreeHndl i_tree,char *paramfile,bool no_kappa){
  
   int i,j,k;
   float *mass;
@@ -92,7 +92,7 @@ void rayshooterNB(unsigned long Nrays,Point *points,TreeHndl i_tree,char *paramf
     	mass=(float*)calloc(1,sizeof(float));
     	*mass=1.0;
     	lens[i].tree=rotate_project(lens[i].xp,lens[i].Nparticles,lens[i].particles
-    		      ,lens[i].coord,lens[i].theta_force,lens[i].rsph,mass,True,False);
+    		      ,lens[i].coord,lens[i].theta_force,lens[i].rsph,mass,true,false);
     	lens[i].xp_2d=lens[i].xp;
 
     	//lens[i].tree=rotate_simulation(lens[i].xp,lens[i].Nparticles,lens[i].particles

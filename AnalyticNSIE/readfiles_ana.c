@@ -86,7 +86,7 @@ void ReadParams_AnaLens(char *filename,CosmoHndl cosmo,AnaLens *lens){
 
   // parameters of substructures
   printf("\n>  **Substructures**\n");
-  lens->substruct_implanted=False;  // substructures are implanted later where mem is allocated
+  lens->substruct_implanted=false;  // substructures are implanted later where mem is allocated
   fscanf(file,"%s %le",label,&(lens->sub_Ndensity));
   printf(">%s %e\n",label,lens->sub_Ndensity);
 
@@ -139,7 +139,7 @@ void ReadParams_AnaLens(char *filename,CosmoHndl cosmo,AnaLens *lens){
 
   // parameters for stars
   printf("\n>  **Stars**\n");
-  lens->stars_implanted=False; // stars are implanted later
+  lens->stars_implanted=false; // stars are implanted later
   fscanf(file,"%s %li",label,&(lens->stars_N));
   printf(">%s %li\n",label,lens->stars_N);
   fscanf(file,"%s %le",label,&(lens->star_fstars));
@@ -200,7 +200,7 @@ void ReadParams_AnaLens(char *filename,CosmoHndl cosmo,AnaLens *lens){
 	  printf(">    %s %.5e Hz\n",label,lens->source_nuo);
 	  fscanf(file,"%s %e",label,&(lens->source_fK));
 	  printf(">    %s %.4f X V_Kepler\n",label,lens->source_fK);
-	  lens->source_monocrome = False;  // default value
+	  lens->source_monocrome = false;  // default value
 
   }
 
@@ -268,7 +268,7 @@ void ReadParams_AnaLens(char *filename,CosmoHndl cosmo,AnaLens *lens){
 
   }
 
-  lens->set=True;
+  lens->set=true;
   printf(">\n");
 }
 
@@ -297,7 +297,7 @@ void free_AnaLens(AnaLens *lens){
 /** \ingroup ImageFinding
  * \brief Prints the parameters of the analytic lens to stdout
  */
-void PrintAnaLens(AnaLens *lens,Boolean show_substruct,Boolean show_stars){
+void PrintAnaLens(AnaLens *lens,bool show_substruct,bool show_stars){
 	int i;
 
 	printf(">Output file %s\n\n",lens->outputfile);

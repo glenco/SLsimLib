@@ -24,7 +24,7 @@
   * older and slower image splitting and ordering.
   */
 ImageInfo *find_crit(TreeHndl s_tree,TreeHndl i_tree,int *Ncrits,double resolution
-		,Boolean *orderingsuccess,Boolean ordercurve,Boolean verbose){
+		,bool *orderingsuccess,bool ordercurve,bool verbose){
 
   Point *minpoint;
   ImageInfo *critcurve,*critexport;
@@ -73,8 +73,8 @@ ImageInfo *find_crit(TreeHndl s_tree,TreeHndl i_tree,int *Ncrits,double resoluti
 		  ++Npoints;
 		  //critcurve[0].points=(Point *) malloc(sizeof(Point));
 		  //critcurve[0].points->head=1;
-		  critcurve[0].points=NewPointArray(1,False);
-		  critcurve[0].points->in_image=False;
+		  critcurve[0].points=NewPointArray(1,false);
+		  critcurve[0].points->in_image=false;
 		  critcurve[0].Npoints=1;
 		  PointCopyData(critcurve[0].points,minpoint);
 	  }else{
@@ -83,7 +83,7 @@ ImageInfo *find_crit(TreeHndl s_tree,TreeHndl i_tree,int *Ncrits,double resoluti
 		  critcurve[0].points->head=Npoints;
 		   */
 
-		  critcurve[0].points=NewPointArray(Npoints,False);
+		  critcurve[0].points=NewPointArray(Npoints,false);
 
 		  MoveToTopList(negpointlist);
 		  for(i=0;i<negpointlist->Npoints;++i){
@@ -115,7 +115,7 @@ ImageInfo *find_crit(TreeHndl s_tree,TreeHndl i_tree,int *Ncrits,double resoluti
 
 	if(verbose) printf("find_crit, going into refine_grid\n");
      //printf("  Npoints=%i\n",critcurve->Npoints);
-	refinements=refine_grid(i_tree,s_tree,critcurve,1,resolution,2,False);
+	refinements=refine_grid(i_tree,s_tree,critcurve,1,resolution,2,false);
     if(verbose) printf("find_crit, came out of refine_grid\n");
 
      if(refinements==0){
@@ -151,8 +151,8 @@ ImageInfo *find_crit(TreeHndl s_tree,TreeHndl i_tree,int *Ncrits,double resoluti
 
   if(*Ncrits==0 && critcurve->Npoints > 0 ){
 	  *Ncrits=1;
-	  *orderingsuccess=False;
-  }else{ *orderingsuccess=True;}
+	  *orderingsuccess=false;
+  }else{ *orderingsuccess=true;}
 
   if(*Ncrits > NMAXCRITS){ERROR_MESSAGE(); printf("ERROR: in find_crit, too many critical curves Ncrits=%i > NMAXCRITS gridsize=%e\n"
 			       ,*Ncrits,critcurve[0].points[0].gridsize); exit(1);}

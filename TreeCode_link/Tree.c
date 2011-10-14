@@ -13,6 +13,7 @@
 #include "Tree.h"
 #include <Kist.h>
 #include <List.h>
+#include <tree_maintenance.h>
 
 double dummy;
 
@@ -78,7 +79,7 @@ void FreeBranch(Branch *branch){
  **/
 Point *NewPointArray(
 		unsigned long N  /// number of points in array
-		,Boolean NewXs   /// Allocate memory for point positions or assign pointer to existing position
+		,bool NewXs   /// Allocate memory for point positions or assign pointer to existing position
 		){
   Point *points;
   unsigned long i;
@@ -87,12 +88,12 @@ Point *NewPointArray(
   points = (Point *) calloc(N,sizeof(Point));
   if(NewXs) points[0].x = (double *) calloc(2,sizeof(double));
   points[0].head = N;
-  points[0].in_image = False;
+  points[0].in_image = false;
   points[0].leaf = NULL;
   for(i=1;i<N;++i){
 	  if(NewXs) points[i].x = (double *) calloc(2,sizeof(double));
 	  points[i].head = 0;
-	  points[i].in_image = False;
+	  points[i].in_image = false;
 	  points[i].surface_brightness = 0;
 	  points[i].leaf = NULL;
   }
@@ -181,9 +182,9 @@ short freeTree(TreeHndl tree){
 
 /************************************************************************
  * isEmpty
- * Returns "True" if the Tree is empty and "False" otherwise.  Exported.
+ * Returns "true" if the Tree is empty and "false" otherwise.  Exported.
  ************************************************************************/
-Boolean isEmpty(TreeHndl tree){
+bool isEmpty(TreeHndl tree){
 
     assert(tree != NULL);
     return(tree->Nbranches == 0);
@@ -191,11 +192,11 @@ Boolean isEmpty(TreeHndl tree){
 
 /************************************************************************
  * atTop
- * Returns "True" if current is the same as top and "False" otherwise.
+ * Returns "true" if current is the same as top and "false" otherwise.
  * Exported.
  * Pre: !isEmpty(tree)
  ************************************************************************/
-Boolean atTop(TreeHndl tree){
+bool atTop(TreeHndl tree){
 
     assert(tree != NULL);
     if( isEmpty(tree) ){
@@ -206,17 +207,17 @@ Boolean atTop(TreeHndl tree){
     return(tree->current == tree->top);
 }
 
-inline Boolean atLeaf(TreeHndl tree){
+inline bool atLeaf(TreeHndl tree){
     return( (tree->current->child1==NULL)*(tree->current->child2==NULL) );
 }
 
 /************************************************************************
  * noChild
- * Returns "True" if the child of the current branch does not exist and "False" otherwise.
+ * Returns "true" if the child of the current branch does not exist and "false" otherwise.
  * Exported.
  * Pre: !isEmpty(tree)
  ************************************************************************/
-Boolean noChild(TreeHndl tree){
+bool noChild(TreeHndl tree){
 
     assert(tree != NULL);
     if( isEmpty(tree) ){
@@ -225,28 +226,28 @@ Boolean noChild(TreeHndl tree){
 	exit(1);
     }
 
-    if( (tree->current->child1 == NULL) || (tree->current->child2 == NULL) ) return True;
-    return False;
+    if( (tree->current->child1 == NULL) || (tree->current->child2 == NULL) ) return true;
+    return false;
 }
 
 /************************************************************************
  * offEnd
- * Returns "True" if current is off end and "False" otherwise.  Exported.
+ * Returns "true" if current is off end and "false" otherwise.  Exported.
  ************************************************************************/
-Boolean offEnd(TreeHndl tree){
+bool offEnd(TreeHndl tree){
 
     assert(tree != NULL);
     return(tree->current == NULL);
 }
 
-Boolean CurrentIsSquareTree(TreeHndl tree){
+bool CurrentIsSquareTree(TreeHndl tree){
 	if( fabs(1 - (tree->current->boundary_p2[0] - tree->current->boundary_p1[0])
 			    /(tree->current->boundary_p2[1] - tree->current->boundary_p1[1]) )
 			< 0.001){
-		return True;
+		return true;
 	}
 
-	return False;
+	return false;
 }
 
 /************************************************************************
@@ -304,25 +305,25 @@ void moveTop(TreeHndl tree){
  * off end.  Exported.
  * Pre: !offEnd(tree)
  ************************************************************************/
-Boolean moveToChild(TreeHndl tree,int child){
+bool moveToChild(TreeHndl tree,int child){
     
     assert(tree != NULL);
     assert(tree->current != NULL);
 
     if(child==1){
-      if( tree->current->child1 == NULL ) return False;
+      if( tree->current->child1 == NULL ) return false;
       tree->current = tree->current->child1;
-      return True;
+      return true;
     }
     if(child==2){
-      if( tree->current->child2 == NULL ) return False;
+      if( tree->current->child2 == NULL ) return false;
       tree->current = tree->current->child2;
-      return True;
+      return true;
     }
-    return False;
+    return false;
 }
 
-Boolean moveUp(TreeHndl tree){
+bool moveUp(TreeHndl tree){
 
     assert(tree != NULL);
     if( offEnd(tree) ){
@@ -330,10 +331,10 @@ Boolean moveUp(TreeHndl tree){
       exit(1);
     }
 
-    if( tree->current == tree->top ) return False;
+    if( tree->current == tree->top ) return false;
     assert(tree->current->prev);
     tree->current = tree->current->prev;  /* can move off end */
-    return True;
+    return true;
 }
 
 /************************************************************************
@@ -519,7 +520,7 @@ Point *AddPointToArray(Point *points,unsigned long N,unsigned long Nold){
   unsigned long i;
 
   if(Nold==0){
-	  points = NewPointArray(N,True);
+	  points = NewPointArray(N,true);
   }else{
 	  if(points[0].head != Nold){ ERROR_MESSAGE(); printf("ERROR: AddPointToArray head not set correctly\n"); exit(0);}
 	  for(i=N;i<Nold;++i) free(points[i].x);
@@ -528,7 +529,7 @@ Point *AddPointToArray(Point *points,unsigned long N,unsigned long Nold){
 		  points[i].x=(double *) malloc(2*sizeof(double));
 		  assert(points[i].x);
 		  points[i].head=0;
-		  points[i].in_image=False;
+		  points[i].in_image=false;
 		  points[i].leaf=NULL;
 	  }
 	  if(N>0) points[0].head=N;
@@ -546,7 +547,7 @@ Point *NewPoint(double *x,unsigned long id){
   point->head = 1;
   point->id=id;
   point->x=x;
-  point->in_image=False;
+  point->in_image=false;
 
   if (!point){
     ERROR_MESSAGE(); fprintf(stderr,"allocation failure in NewPoint()\n");
@@ -675,23 +676,23 @@ void freeImageInfo(ImageInfo *imageinfo,int Nimages){
 /** \ingroup LowLevel
  *  step for walking tree by iteration instead of recursion
  */
-Boolean TreeWalkStep(TreeHndl tree,Boolean allowDescent){
+bool TreeWalkStep(TreeHndl tree,bool allowDescent){
 
 	if(allowDescent && tree->current->child1 != NULL){
 		moveToChild(tree,1);
-		return True;
+		return true;
 	}
 	if(allowDescent && tree->current->child2 != NULL){
 		moveToChild(tree,2);
-		return True;
+		return true;
 	}
 
 	if(tree->current->brother != NULL){
 		tree->current = tree->current->brother;
-		return True;
+		return true;
 	}
 
-	return False;
+	return false;
 }
 
 

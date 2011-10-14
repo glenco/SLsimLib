@@ -37,7 +37,7 @@ extern AnaLens *lens;
  * fail safe.
  */
 
-void rayshooterInternal(unsigned long Npoints,Point *i_points,Boolean kappa_off){
+void rayshooterInternal(unsigned long Npoints,Point *i_points,bool kappa_off){
   /* i_points need to be already linked to s_points */
   double x_rescale[2],alpha[2],gamma[2],tmp,dt=0;
   static double zs_old=-1,convert_factor=0;
@@ -135,7 +135,7 @@ void rayshooterInternal(unsigned long Npoints,Point *i_points,Boolean kappa_off)
 
   /*      	  if(lens->sub_tree){
         		  // do substructures with tree code
-        		  TreeNBForce2D(lens->sub_tree,i_points[i].x,alpha,&tmp,gamma,True);
+        		  TreeNBForce2D(lens->sub_tree,i_points[i].x,alpha,&tmp,gamma,true);
 
         		  //printf("alpha . r = %e substructure\n"
         		  //		  , sqrt(alpha[0]*alpha[0] + alpha[1]*alpha[1])/lens->Sigma_crit  );
@@ -199,7 +199,7 @@ void rayshooterInternal(unsigned long Npoints,Point *i_points,Boolean kappa_off)
         			  &(i_points[i].kappa),i_points[i].gamma);
 
         	  // do stars with tree code
-        	  TreeNBForce2D(lens->star_tree,i_points[i].x,alpha,&tmp,gamma,True);
+        	  TreeNBForce2D(lens->star_tree,i_points[i].x,alpha,&tmp,gamma,true);
         	  i_points[i].image->x[0] += convert_factor*alpha[0];
         	  i_points[i].image->x[1] += convert_factor*alpha[1];
         	  //printf("alpha = %e %e\n",alpha[0]*convert_factor,alpha[1]*convert_factor);

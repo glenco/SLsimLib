@@ -7,6 +7,7 @@
 #include <Tree.h>
 #include <KistDriver.h>
 #include <divide_images.h>
+#include <tree_maintenance.h>
 
 static const int NpointsRequired = 50;  // number of points required to be within an image
 static const int Ngrid_block = 3;       // each cell is divided into Ngrid_block^2 subcells
@@ -24,8 +25,8 @@ double initialgridsize=0;
 void find_images(double *y_source,double r_source
 		  ,TreeHndl s_tree,TreeHndl i_tree,int *Nimages
 		  ,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
-		  ,double initial_size,Boolean splitimages,short edge_refinement
-		  ,Boolean verbose,Boolean kappa_off){
+		  ,double initial_size,bool splitimages,short edge_refinement
+		  ,bool verbose,bool kappa_off){
 
 	/*
 	 * find_image returns finite refined images
@@ -37,8 +38,8 @@ void find_images(double *y_source,double r_source
 	 *  edge_refinement = 0 does not do edge refinement
 	 *                  = 1 uses refine_edge() which keeps the images fully up to date
 	 *                  = 2 uses refine_edge2() which is faster but does not keep edges
-	 *  kappa_off = True - turns off calculation of kappa and gamma
-	 *              False - turns on calculation of kappa and gamma
+	 *  kappa_off = true - turns off calculation of kappa and gamma
+	 *              false - turns on calculation of kappa and gamma
 	 *
 	 */
 
@@ -50,7 +51,7 @@ void find_images(double *y_source,double r_source
 	//Point *i_points,*s_points,*point;
 	time_t to,t1,t2,t3,now;
 	KistHndl tmp_border_kist;
-	Boolean image_overlap;
+	bool image_overlap;
 	static int oldNimages=0;
 	static unsigned long Npoints_old = 0;
 
@@ -92,7 +93,7 @@ void find_images(double *y_source,double r_source
 			if(verbose)
 			printf("\n   new source size = %e    telescoping rsource = %e\n",rtemp,r_source);
 
-			//for(MoveToTopKist(imageinfo[i].imagekist) ; MoveDownKist(imageinfo[i].imagekist) ;) getCurrentKist(imageinfo[i].imagekist)->in_image = False;
+			//for(MoveToTopKist(imageinfo[i].imagekist) ; MoveDownKist(imageinfo[i].imagekist) ;) getCurrentKist(imageinfo[i].imagekist)->in_image = false;
 			ClearAllMarks(i_tree);
 			do{
 				time(&t1);
@@ -257,7 +258,7 @@ void find_images(double *y_source,double r_source
 
 		if(verbose) printf("finished edge refinement i=%i\n",i);
 
-	}else{ // splitimages == False
+	}else{ // splitimages == false
 
 		// refine grid to fractional error of total image
 		do{
@@ -526,7 +527,7 @@ short image_finder(double *y_source,double r_source,TreeHndl s_tree,TreeHndl i_t
   }
 
   //  x[] is not allocated
-  imageinfo->points = NewPointArray(*Nimagepoints,False);
+  imageinfo->points = NewPointArray(*Nimagepoints,false);
 
   // transform from source plane to image points
   TranformPlanesKist(imageinfo->imagekist);
@@ -595,9 +596,9 @@ short image_finder(double *y_source,double r_source,TreeHndl s_tree,TreeHndl i_t
   }else{ // *************** split into separate images ********************
 
 	  //printf("Nimages =%i\n",*Nimages);
-	  //split_images(i_tree,imageinfo,NimageMax,Nimages,True);
+	  //split_images(i_tree,imageinfo,NimageMax,Nimages,true);
 	  split_images2(i_tree,imageinfo,NimageMax,Nimages);    // brute force, but reliable
-	  //split_images3(i_tree,imageinfo,NimageMax,Nimages,True);  // split by edge method
+	  //split_images3(i_tree,imageinfo,NimageMax,Nimages,true);  // split by edge method
 
 	  //printf("Nimages =%i\n\n",*Nimages);
   }*/
@@ -648,7 +649,7 @@ short image_finder(double *y_source,double r_source,TreeHndl s_tree,TreeHndl i_t
 
 
 int refine_grid(TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo
-		,unsigned long Nimages,double res_target,short criterion,Boolean kappa_off){
+		,unsigned long Nimages,double res_target,short criterion,bool kappa_off){
 
 	/* criterion = 0 stops refining when error in total area reaches res_target
 	 * 	         = 1 stops refining when each image reaches error limit or is smaller than res_target
@@ -694,13 +695,13 @@ int refine_grid(TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo
     		if( getCurrentKist(imageinfo[i].outerborder)->gridsize > 1.01*rmax/Ngrid_block ){
     			// border point is marked to prevent refining more than once
     			//   it will be unmarked by the end of refine grid
-    			getCurrentKist(imageinfo[i].outerborder)->in_image = True;
+    			getCurrentKist(imageinfo[i].outerborder)->in_image = true;
     			++Ncells;
     		}
     		MoveDownKist(imageinfo[i].outerborder);
     	}
 
-        i_points=NewPointArray((Ngrid_block*Ngrid_block-1)*Ncells,True);
+        i_points=NewPointArray((Ngrid_block*Ngrid_block-1)*Ncells,true);
 
 		Ncells_o=Ncells;
     	//printf("should be Ncells=%i Ngrid_block=%i\n",Ncells,Ngrid_block);
@@ -752,7 +753,7 @@ int refine_grid(TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo
     			  ++Ncells;
        			  point->gridsize /= Ngrid_block;
        			  point->image->gridsize /= Ngrid_block;
-       			  point->in_image = False;  // unmak so that it wouldn't bouble refine
+       			  point->in_image = false;  // unmak so that it wouldn't bouble refine
     		  }
     		  //imageinfo[i].outerborderlist->current->gridsize /= Ngrid_block;/**/
     	  }
@@ -789,7 +790,7 @@ int refine_grid(TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo
 
 
 long refine_edges(TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo
-		,unsigned long Nimages,double res_target,short criterion,Boolean kappa_off){
+		,unsigned long Nimages,double res_target,short criterion,bool kappa_off){
 	/*	refines only inner and outer edges of all images
 	 *
 	 *    Does NOT update borders or image points.  These need to be re-found elsewhere.
@@ -817,7 +818,7 @@ long refine_edges(TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo
 							|| ( criterion==1 && getCurrentKist(imageinfo[i].outerborder)->gridsize > res_target)
 							|| ( criterion==2 && pow(getCurrentKist(imageinfo[i].outerborder)->gridsize,2)/area_total > res_target) ){
 				++Ncells;
-				getCurrentKist(imageinfo[i].outerborder)->in_image = True;  // Temporarily mark point so they are not double refined
+				getCurrentKist(imageinfo[i].outerborder)->in_image = true;  // Temporarily mark point so they are not double refined
 			}
 			//if( criterion==0 && pow( getCurrentKist(imageinfo[i].outerborder)->gridsize,2)/imageinfo[i].area > res_target) ++Ncells;
 			//if( criterion==1 && getCurrentKist(imageinfo[i].outerborder)->gridsize > res_target) ++Ncells;
@@ -837,7 +838,7 @@ long refine_edges(TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo
 
 	if(Ncells==0) return 0;
 
-	i_points=NewPointArray((Ngrid_block*Ngrid_block-1)*Ncells,True);
+	i_points=NewPointArray((Ngrid_block*Ngrid_block-1)*Ncells,true);
 	Ncells_o=Ncells;
 
 	for(i=0,Ncells=0;i<Nimages;++i){
@@ -865,7 +866,7 @@ long refine_edges(TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo
 					point->gridsize /= Ngrid_block;
 					point->image->gridsize /= Ngrid_block;
 
-					point->in_image = False;
+					point->in_image = false;
 
 					++Ncells;
 				}
@@ -924,8 +925,8 @@ long refine_edges(TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo
 }
 
 long refine_edges2(double *y_source,double r_source,TreeHndl i_tree,TreeHndl s_tree
-		,ImageInfo *imageinfo,Boolean *image_overlap,unsigned long Nimages,double res_target
-		,short criterion,Boolean kappa_off){
+		,ImageInfo *imageinfo,bool *image_overlap,unsigned long Nimages,double res_target
+		,short criterion,bool kappa_off){
 
 	/*	refines only inner and outer edges of all images
 	 *    then update borders, area and area_error so that the
@@ -939,7 +940,7 @@ long refine_edges2(double *y_source,double r_source,TreeHndl i_tree,TreeHndl s_t
 	 *    on exit:
 	 *       new image points are not added to imageinfo->points so they will be out of date
 	 *       but they are added to imageinfo[i].imagekist
-	 *       *image_overlap = True if the images merge, but not guaranteed when they separate.
+	 *       *image_overlap = true if the images merge, but not guaranteed when they separate.
 	 *
 	 * criterion = 0 stops refining when each image reaches error limit or is smaller than res_target
 	 *           = 1 stops refining when grid resolution is smaller than res_target in all images
@@ -953,12 +954,12 @@ long refine_edges2(double *y_source,double r_source,TreeHndl i_tree,TreeHndl s_t
 	Point *i_points,*s_points,*point;
 	KistHndl neighborkist = NewKist();
 	double tmp_area=0,area_total=0;
-	Boolean addinner;
+	bool addinner;
 
 	// count border points
 	if( criterion==2) for(i=0,area_total = 0.0;i<Nimages;++i) area_total += imageinfo[i].area;
 
-	*image_overlap=False;
+	*image_overlap=false;
 
 	// loop through outer border of ith image
 
@@ -971,7 +972,7 @@ long refine_edges2(double *y_source,double r_source,TreeHndl i_tree,TreeHndl s_t
 					|| ( criterion==1 && getCurrentKist(imageinfo[i].outerborder)->gridsize > res_target)
 					|| ( criterion==2 && pow( getCurrentKist(imageinfo[i].outerborder)->gridsize,2)/area_total > res_target)){
 				++Ncells;
-				getCurrentKist(imageinfo[i].outerborder)->in_image = True; // temporary mark
+				getCurrentKist(imageinfo[i].outerborder)->in_image = true; // temporary mark
 			}
 			/*if( criterion==0 && pow( getCurrentKist(imageinfo[i].outerborder)->gridsize,2)/imageinfo[i].area > res_target ) ++Ncells;
 			if( criterion==1 && getCurrentKist(imageinfo[i].outerborder)->gridsize > res_target) ++Ncells;
@@ -992,7 +993,7 @@ long refine_edges2(double *y_source,double r_source,TreeHndl i_tree,TreeHndl s_t
 
 		if(Ncells > 0){
 
-			i_points=NewPointArray((Ngrid_block*Ngrid_block-1)*Ncells,True);
+			i_points=NewPointArray((Ngrid_block*Ngrid_block-1)*Ncells,true);
 			Ncells_o=Ncells;
 
 			MoveToTopKist(imageinfo[i].outerborder);
@@ -1018,8 +1019,8 @@ long refine_edges2(double *y_source,double r_source,TreeHndl i_tree,TreeHndl s_t
 						point->gridsize /= Ngrid_block;
 						point->image->gridsize /= Ngrid_block;
 
-						point->in_image = False;
-					}else *image_overlap=True;
+						point->in_image = false;
+					}else *image_overlap=true;
 
 				}
 				MoveDownKist(imageinfo[i].outerborder);
@@ -1054,7 +1055,7 @@ long refine_edges2(double *y_source,double r_source,TreeHndl i_tree,TreeHndl s_t
 						// subtract area of new points from image area
 						imageinfo[i].area += pow(point->gridsize,2)*(1-Ngrid_block*Ngrid_block);
 
-					//}else *image_overlap = True;
+					//}else *image_overlap = true;
 
 					if(imageinfo[i].gridrange[2] > point->gridsize)
 						imageinfo[i].gridrange[2] = point->gridsize;
@@ -1093,8 +1094,8 @@ long refine_edges2(double *y_source,double r_source,TreeHndl i_tree,TreeHndl s_t
 						+ pow(i_points[j].image->x[1]-y_source[1],2)) < r_source){
 
 					// mark points
-					i_points[j].in_image = True;
-					i_points[j].image->in_image = True;
+					i_points[j].in_image = true;
+					i_points[j].image->in_image = true;
 
 					InsertAfterCurrentKist(imageinfo[i].innerborder,&(i_points[j]));
 					InsertAfterCurrentKist(imageinfo[i].imagekist,&(i_points[j]));
@@ -1105,8 +1106,8 @@ long refine_edges2(double *y_source,double r_source,TreeHndl i_tree,TreeHndl s_t
 				}else{
 
 					// un-mark points
-					i_points[j].in_image = False;
-					i_points[j].image->in_image = False;
+					i_points[j].in_image = false;
+					i_points[j].image->in_image = false;
 
 				}
 			}
@@ -1121,7 +1122,7 @@ long refine_edges2(double *y_source,double r_source,TreeHndl i_tree,TreeHndl s_t
 			Npoints=imageinfo[i].innerborder->Nunits;
 			MoveToTopKist(imageinfo[i].innerborder);
 			for(j=0;j<Npoints;++j){
-				addinner=False;
+				addinner=false;
 
 				// update leaf pointer of inner border point if necessary
 				//  *** don't think this is necessary anymore
@@ -1135,8 +1136,8 @@ long refine_edges2(double *y_source,double r_source,TreeHndl i_tree,TreeHndl s_t
 
 				MoveToTopKist(neighborkist);
 				for(k=0;k < neighborkist->Nunits ;++k){
-					if(getCurrentKist(neighborkist)->in_image == False){
-						addinner=True;
+					if(getCurrentKist(neighborkist)->in_image == false){
+						addinner=true;
 
 						MoveToTopKist(imageinfo[i].outerborder);
 						for(n=0;n<imageinfo[i].outerborder->Nunits;++n){
@@ -1173,7 +1174,7 @@ void findborders2(TreeHndl i_tree,ImageInfo *imageinfo){
 	 */
 	int i;
 	unsigned long l,m,j;
-	Boolean addinner;
+	bool addinner;
 
 	//printf("beginning findborders2\n");
 	//checkTree(i_tree);
@@ -1197,7 +1198,7 @@ void findborders2(TreeHndl i_tree,ImageInfo *imageinfo){
 		if(imageinfo->gridrange[2] > imageinfo->points[j].gridsize)
 			imageinfo->gridrange[2] = imageinfo->points[j].gridsize;
 
-		addinner=False;
+		addinner=false;
 
 		FindAllBoxNeighborsKist(i_tree,&(imageinfo->points[j]),neighborkist);
 
@@ -1208,7 +1209,7 @@ void findborders2(TreeHndl i_tree,ImageInfo *imageinfo){
 					== imageinfo->points[l].id) break;
 
 			if(l==imageinfo->Npoints){  // point is a neighbor
-				addinner=True;
+				addinner=true;
 				// check if point is already in list
 				MoveToTopKist(imageinfo->outerborder);
 				for(m=0;m<imageinfo->outerborder->Nunits;++m){
@@ -1248,7 +1249,7 @@ void findborders2(TreeHndl i_tree,ImageInfo *imageinfo){
 
 					if(l==imageinfo->Npoints){  // point is a neighbor
 
-						addinner=True;
+						addinner=true;
 						// check if point is already in list
 						MoveToTopKist(imageinfo->outerborder);
 						for(m=0;m<imageinfo->outerborder->Npoints;++m){
@@ -1336,7 +1337,7 @@ void findborders3(TreeHndl i_tree,ImageInfo *imageinfo){
 	 */
 	int i;
 	unsigned long m,j;
-	Boolean addinner;
+	bool addinner;
 
 	//printf("beginning findborders2\n");
 	//checkTree(i_tree);
@@ -1360,15 +1361,15 @@ void findborders3(TreeHndl i_tree,ImageInfo *imageinfo){
 		if(imageinfo->gridrange[2] > imageinfo->points[j].gridsize)
 			imageinfo->gridrange[2] = imageinfo->points[j].gridsize;
 
-		addinner=False;
+		addinner=false;
 
 		FindAllBoxNeighborsKist(i_tree,&(imageinfo->points[j]),neighborkist);
 
 		MoveToTopKist(neighborkist);
 		for(i=0;i<neighborkist->Nunits;++i){
 
-			if( getCurrentKist(neighborkist)->in_image == False){  // point is a neighbor
-				addinner=True;
+			if( getCurrentKist(neighborkist)->in_image == false){  // point is a neighbor
+				addinner=true;
 				// check if point is already in list
 				MoveToTopKist(imageinfo->outerborder);
 				for(m=0;m<imageinfo->outerborder->Nunits;++m){

@@ -10,14 +10,19 @@
 
 #define Nbucket 5
 
-/* median_cutNB determins how the cells are subdivided */
+
+/*
+ *  median_cutNB determins how the cells are subdivided */
 /*    if ==0  equal volume cuts */
 /*    if ==1  median particle cuts */
 static int incellNB,median_cutNB=0,Ndim;
 static PosType realrayNB[treeNBdim];
 
-TreeNBHndl BuildTreeNB(PosType **xp,float *rsph,float *mass,Boolean MultiRadius
-	   ,Boolean MultiMass,IndexType Nparticles,IndexType *particles,int Ndimensions
+/** \ingroup DeflectionL2
+ *
+ */
+TreeNBHndl BuildTreeNB(PosType **xp,float *rsph,float *mass,bool MultiRadius
+	   ,bool MultiMass,IndexType Nparticles,IndexType *particles,int Ndimensions
 	   ,double theta){
   TreeNBHndl tree;
   IndexType i,j;
@@ -228,11 +233,11 @@ void _BuildTreeNB(TreeNBHndl tree,IndexType nparticles,IndexType *particles){
  return;
 }
 
-
+/** \ingroup DeflectionL2
+ *  finds the nearest neighbors in whatever dimensions tree is defined in
+ *  */
 IndexType *NearestNeighborNB(TreeNBHndl tree,double *ray,int Nneighbors
 				 ,float *rsph){
-  /* finds the nearest neighbors in whatever dimensions tree is defined in */
-
   IndexType i;
   void _NearestNeighborNB(TreeNBHndl tree,double *ray,int Nneighbors,IndexType *neighbors,double *rneighbor);
   static int count=0,oldNneighbors=-1;
@@ -429,11 +434,14 @@ int cutboxNB(double *ray,PosType *p1,PosType *p2,PosType rmax){
   return 0;
 }
 
+/** \ingroup DeflectionL2
+ *  rotate particle positions and build 3d tree
+ *
+ */
 TreeNBHndl rotate_simulation(PosType **xp,IndexType Nparticles,IndexType *particles
 		,double **coord,double theta,float *rsph,float *mass
-		,Boolean MultiRadius,Boolean MultiMass){
-  // rotate particle positions and build 3d tree
-	TreeNBHndl tree;
+		,bool MultiRadius,bool MultiMass){
+ 	TreeNBHndl tree;
 	IndexType j;
 	int i;
 	PosType tmp[3];
@@ -455,10 +463,12 @@ TreeNBHndl rotate_simulation(PosType **xp,IndexType Nparticles,IndexType *partic
   return tree;
 }
 
+/** \ingroup DeflectionL2
+ * rotate particle positions and build 2d tree in x-y plane
+ */
 TreeNBHndl rotate_project(PosType **xp,IndexType Nparticles,IndexType *particles
 		,double **coord,double theta,float *rsph,float *mass
-		,Boolean MultiRadius,Boolean MultiMass){
- 	// rotate particle positions and build 2d tree in x-y plane
+		,bool MultiRadius,bool MultiMass){
    IndexType j;
   int i;
   PosType tmp[3];
@@ -481,26 +491,27 @@ TreeNBHndl rotate_project(PosType **xp,IndexType Nparticles,IndexType *particles
   return tree;
 }
 
+/** \ingroup DeflectionL2
+\brief !!!! Not yet come up with a good way of doing this !!!!
+
+	 * gives the particles a third dimension depending on their size
+	 *  This is used to spread subhalos out into 3d so that their density
+	 *  is about one per smoothing length.  This is to avoid the big particle
+	 *  problem that slows the tree-force calculation.
+	 *
+	 *  Warning: This will erase the third coordinate of the particles.
+	 */
 TreeNBHndl spread_particles(PosType **xp,IndexType Nparticles,IndexType *particles
 		,double theta,float *rsph,float *mass
-		,Boolean MultiRadius,Boolean MultiMass){
+		,bool MultiRadius,bool MultiMass){
 
-	//  !!!! Not yet come up with a good way of doing this !!!!
-
- 	/* gives the particles a third dimension depending on their size
- 	 *  This is used to spread subhalos out into 3d so that their density
- 	 *  is about one per smoothing length.  This is to avoid the big particle
- 	 *  problem that slows the tree-force calculation.
- 	 *
- 	 *  Warning: This will erase the third coordinate of the particles.
- 	 */
 
 	IndexType i,*dummy;
 	TreeNBHndl tree;
 	float tmp=0;
 
 	//Build 2d tree for
-	tree = BuildTreeNB(xp,&tmp,mass,False,False,Nparticles,particles,2,theta);
+	tree = BuildTreeNB(xp,&tmp,mass,false,false,Nparticles,particles,2,theta);
 
 	for(i=0;i<Nparticles;++i){
 		dummy = NearestNeighborNB(tree,xp[i],1,&tmp);
@@ -519,15 +530,15 @@ TreeNBHndl spread_particles(PosType **xp,IndexType Nparticles,IndexType *particl
 
 
 
+/** \ingroup DeflectionL2
+ * visits every branch in tree to calculate
+ * two critical lengths rcrit_angle and rcrit_part
+ *   and mark largest particle in each node subject
+ *   to some conditions
+ *
+ *   if the sph[] are negative rcrit_part = 0
+ */
 void cuttoffscale(TreeNBHndl tree,double *theta){
-	/*
-	 * visits every branch in tree to calculate
-	 * two critical lengths rcrit_angle and rcrit_part
-	 *   and mark largest particle in each node subject
-	 *   to some conditions
-	 *
-	 *   if the sph[] are negative rcrit_part = 0
-	 */
 
 	IndexType i,prev_big;
 	PosType rcom,maxrsph,prev_size;
@@ -594,7 +605,7 @@ void cuttoffscale(TreeNBHndl tree,double *theta){
 		}
 		cbranch->rcrit_angle += cbranch->rcrit_part;
 
-	}while(TreeNBWalkStep(tree,True));
+	}while(TreeNBWalkStep(tree,true));
 
 	return;
 }

@@ -19,9 +19,9 @@
 #define PRINT_LINE() printf("file: %s line: %i\n",__FILE__,__LINE__)
 #endif
 
-#ifndef Boolean_declare
-#define Boolean_declare
-typedef enum {False, True} Boolean;
+#ifndef bool_declare
+#define bool_declare
+typedef enum {false, true} bool;
 #endif
 
 #ifndef criterion_declare
@@ -100,7 +100,7 @@ typedef struct Grid{
 	TreeHndl s_tree;
 	/// one dimensional size of grid
 	int Ngrid;
-	Boolean initialized;
+	bool initialized;
 } Grid;
 
 typedef struct Grid *GridHndl;
@@ -118,12 +118,12 @@ short freeTree(TreeHndl tree);
 
 /***** Access functions *****/
 
-Boolean isEmpty(TreeHndl tree);
-Boolean atTop(TreeHndl tree);
-inline Boolean atLeaf(TreeHndl tree);
-Boolean offEnd(TreeHndl tree);
-Boolean CurrentIsSquareTree(TreeHndl tree);
-Boolean noChild(TreeHndl tree);
+bool isEmpty(TreeHndl tree);
+bool atTop(TreeHndl tree);
+inline bool atLeaf(TreeHndl tree);
+bool offEnd(TreeHndl tree);
+bool CurrentIsSquareTree(TreeHndl tree);
+bool noChild(TreeHndl tree);
 
 /*unsigned long *getCurrent(TreeHndl tree,unsigned long *npoints);*/
 void getCurrent(TreeHndl tree,Point *points,unsigned long *npoints);
@@ -132,9 +132,9 @@ unsigned long getNbranches(TreeHndl tree);
 /***** Manipulation procedures *****/
 
 void moveTop(TreeHndl tree);
-Boolean moveUp(TreeHndl tree);
+bool moveUp(TreeHndl tree);
 
-Boolean moveToChild(TreeHndl tree,int child);
+bool moveToChild(TreeHndl tree,int child);
 
 void insertChildToCurrent(TreeHndl tree, Point *points,unsigned long npoints
 			  ,double boundary_p1[2],double boundary_p2[2]
@@ -142,7 +142,7 @@ void insertChildToCurrent(TreeHndl tree, Point *points,unsigned long npoints
 
 void attachChildToCurrent(TreeHndl tree,Branch data,int child);
 void attachChildrenToCurrent(TreeHndl tree,Branch child1,Branch child2);
-Boolean TreeWalkStep(TreeHndl tree,Boolean allowDescent);
+bool TreeWalkStep(TreeHndl tree,bool allowDescent);
 double ClosestBorder(double *ray,double *p1,double *p2);
 inline double FurthestBorder(double *ray,double *p1,double *p2);
 void PointsInCurrent(TreeHndl tree,unsigned long *ids,double **x);
@@ -161,17 +161,17 @@ void checkTree(TreeHndl tree);
 Point *NearestNeighbor(TreeHndl tree,double *ray,int Nneighbors,ListHndl neighborlist
 		,short direction);
 inline int inbox(double ray[2],double *p1,double *p2);
-Boolean boxinbox(Branch *branch1,Branch *branch2);
+bool boxinbox(Branch *branch1,Branch *branch2);
 double BoxIntersection(Branch *branch1,Branch *branch2);
 int cutbox(double ray[2],double *p1,double *p2,double rmax);
 void FindBoxPoint(TreeHndl tree,double *ray,Point *point);
 void _FindBox(TreeHndl tree,double *ray);
-Boolean AreBoxNeighbors(Point *point1,Point *point2);
+bool AreBoxNeighbors(Point *point1,Point *point2);
 
 // Point arrays
 
 void PrintPoint(Point *point);
-Point *NewPointArray(unsigned long N,Boolean NewXs);
+Point *NewPointArray(unsigned long N,bool NewXs);
 Point *AddPointToArray(Point *points,unsigned long N,unsigned long Nold);
 void FreePointArray(Point *array);
 void SwapPointsInArray(Point *p1,Point *p2);
@@ -208,18 +208,18 @@ void FindAllBoxNeighbors(TreeHndl tree,Point *point,ListHndl neighbors);
 
 void find_images(double *y_source,double r_source,TreeHndl s_tree,TreeHndl i_tree
 		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
-		  ,double initial_size,Boolean splitimages,short edge_refinement
-		  ,Boolean verbose,Boolean kappa_off);
+		  ,double initial_size,bool splitimages,short edge_refinement
+		  ,bool verbose,bool kappa_off);
 short image_finder(double *y_source,double r_source,TreeHndl s_tree,TreeHndl i_tree
 		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
 		,short splitparities,short true_images);
 int refine_grid(TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo
-		,unsigned long Nimages,double res_target,short criterion,Boolean kappa_off);
+		,unsigned long Nimages,double res_target,short criterion,bool kappa_off);
 long refine_edges(TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo
-		,unsigned long Nimages,double res_target,short criterion,Boolean kappa_off);
+		,unsigned long Nimages,double res_target,short criterion,bool kappa_off);
 long refine_edges2(double *y_source,double r_source,TreeHndl i_tree,TreeHndl s_tree
-		,ImageInfo *imageinfo,Boolean *image_overlap,unsigned long Nimages,double res_target
-		,short criterion,Boolean kappa_off);
+		,ImageInfo *imageinfo,bool *image_overlap,unsigned long Nimages,double res_target
+		,short criterion,bool kappa_off);
 void xygridpoints(Point *points,double range,double *center,long Ngrid
 		,short remove_center);
 void initialize_grid(double center[],double range,long Ngrid,TreeHndl s_tree,TreeHndl i_tree);
@@ -230,20 +230,20 @@ void findborders3(TreeHndl i_tree,ImageInfo *imageinfo);
 
 void find_images_kist(double *y_source,double r_source,TreeHndl s_tree,TreeHndl i_tree
 		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
-		  ,double initial_size,Boolean splitimages,short edge_refinement
-		  ,Boolean verbose,Boolean kappa_off);
+		  ,double initial_size,bool splitimages,short edge_refinement
+		  ,bool verbose,bool kappa_off);
 short image_finder_kist(double *y_source,double r_source,TreeHndl s_tree,TreeHndl i_tree
 		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
 		,short splitparities,short true_images);
 int refine_grid_kist(TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo
-		,unsigned long Nimages,double res_target,short criterion,Boolean kappa_off,Boolean shootrays,Point **i_points);
+		,unsigned long Nimages,double res_target,short criterion,bool kappa_off,bool shootrays,Point **i_points);
 void findborders4(TreeHndl i_tree,ImageInfo *imageinfo);
 
 // in find_crit.c
 void findborders(TreeHndl i_tree,ImageInfo *imageinfo);
 
 ImageInfo *find_crit(TreeHndl s_tree,TreeHndl i_tree,int *Ncrits,double resolution
-		,Boolean *orderingsuccess,Boolean ordercurve,Boolean verbose);
+		,bool *orderingsuccess,bool ordercurve,bool verbose);
 
 /* in double_sort.c */
 void double_sort(unsigned long n, double *arr, unsigned long *brr);
@@ -274,11 +274,11 @@ void split_order_curve3(ImageInfo *curves,int Maxcurves,int *Ncurves);
 void split_order_curve4(ImageInfo *curves,int Maxcurves,int *Ncurves);
 void walkcurve(Point *points,long Npoints,long *j,long *end);
 short backtrack(Point *points,long Npoints,long *j,long jold,long *end);
-void split_images(TreeHndl i_tree,ImageInfo *images,int Maximages,int *Nimages,Boolean sortallpoints);
+void split_images(TreeHndl i_tree,ImageInfo *images,int Maximages,int *Nimages,bool sortallpoints);
 void split_images2(TreeHndl i_tree,ImageInfo *images,int Maximages
 		,int *Nimages);
 void split_images3(TreeHndl i_tree,ImageInfo *images,int Maximages
-		,int *Nimages,Boolean sortallpoints);
+		,int *Nimages,bool sortallpoints);
 void splitter(ImageInfo *images,int Maximages,int *Nimages);
 void splitlist(ListHndl imagelist,ImageInfo *images,int *Nimages,int Maximages);
 
@@ -286,7 +286,7 @@ void splitlist(ListHndl imagelist,ImageInfo *images,int *Nimages,int Maximages);
 /*********************************/
 
 /*  void rayshooterInternal(double *x,double *alpha,double *gamma,double *kappa,double *invmag);*/
-void rayshooterInternal(unsigned long Npoints,Point *i_points,Boolean kappa_off);
+void rayshooterInternal(unsigned long Npoints,Point *i_points,bool kappa_off);
 void in_source(double *y_source,ListHndl sourcelist);
 
 #endif

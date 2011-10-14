@@ -100,7 +100,7 @@ void _FindAllBoxNeighborsKist_iter(TreeHndl tree,Branch *leaf,KistHndl neighbors
 	 *   The recursive routine _FindAllBoxNeighborsKist has caused stack overflow.
 	 */
 
-	Boolean allowDescent = True;
+	bool allowDescent = true;
 	long level = tree->current->level;
 
 	EmptyKist(neighbors);
@@ -119,9 +119,9 @@ void _FindAllBoxNeighborsKist_iter(TreeHndl tree,Branch *leaf,KistHndl neighbors
 				}
 			}
 
-			allowDescent = True;
+			allowDescent = true;
 		}else{
-			allowDescent = False;
+			allowDescent = false;
 		}
 	}
 
@@ -152,7 +152,7 @@ void PointsWithinEllipKist(
 	if(rmax <=0.0 || rmin <= 0.0) return;
 
 	// find point within a circle circumscribes the ellipse
-	PointsWithinKist(tree,ray,rmax,neighborkist,False);
+	PointsWithinKist(tree,ray,rmax,neighborkist,false);
 
 	cs = cos(posangle);
 	sn = sin(posangle);
@@ -169,8 +169,8 @@ void PointsWithinEllipKist(
  * \brief Finds all points in tree that lie within rmax of the point ray[]
  *
  *   markpoints = 0  does not change in_image variable in any point, gives a list of neighbors
- *              = 1  makes in_image=True for all points in image, gives no list of neighbors
- *              = -1 makes in_image=False for all points in image to reset, gives no list of neighbors
+ *              = 1  makes in_image=true for all points in image, gives no list of neighbors
+ *              = -1 makes in_image=false for all points in image to reset, gives no list of neighbors
  */
 void PointsWithinKist(
 		TreeHndl tree    /// tree of points
@@ -241,11 +241,11 @@ void _PointsWithinKist(TreeHndl tree,double *ray,float *rmax,KistHndl neighborki
     			  for(j=0,radius=0.0;j<2;++j) radius+=pow(tree->pointlist->current->x[j]-ray[j],2);
     			  if( radius < *rmax**rmax ){
        				  if(markpoints == 1){
-       					  tree->pointlist->current->in_image=True;
-      					  tree->pointlist->current->image->in_image=True;
+       					  tree->pointlist->current->in_image=true;
+      					  tree->pointlist->current->image->in_image=true;
       				  }else if(markpoints == -1){
-      					  tree->pointlist->current->in_image=False;
-     					  tree->pointlist->current->image->in_image=False;
+      					  tree->pointlist->current->in_image=false;
+     					  tree->pointlist->current->image->in_image=false;
      					  tree->pointlist->current->surface_brightness = tree->pointlist->current->image->surface_brightness = 0.0;
        				  }else if(markpoints == 0){
          				  InsertAfterCurrentKist(neighborkist,tree->pointlist->current);
@@ -256,11 +256,11 @@ void _PointsWithinKist(TreeHndl tree,double *ray,float *rmax,KistHndl neighborki
     	  }else{ // put all of points in box into getCurrentKist(imagekist)
        		  for(i=0;i<tree->current->npoints;++i){
        			  if(markpoints == 1){
-       				  tree->pointlist->current->in_image=True;
-       				  tree->pointlist->current->image->in_image=True;
+       				  tree->pointlist->current->in_image=true;
+       				  tree->pointlist->current->image->in_image=true;
        			  }else if(markpoints == -1){
-       				  tree->pointlist->current->in_image=False;
-       				  tree->pointlist->current->image->in_image=False;
+       				  tree->pointlist->current->in_image=false;
+       				  tree->pointlist->current->image->in_image=false;
  					  tree->pointlist->current->surface_brightness = tree->pointlist->current->image->surface_brightness = 0.0;
       			  }else if(markpoints == 0){
        				  InsertAfterCurrentKist(neighborkist,tree->pointlist->current);
@@ -312,11 +312,11 @@ void _PointsWithinKist(TreeHndl tree,double *ray,float *rmax,KistHndl neighborki
 				  for(j=0,radius=0.0;j<2;++j) radius+=pow(tree->pointlist->current->x[j]-ray[j],2);
 				  if( radius < *rmax**rmax ){
 					  if(markpoints==1){
-						  tree->pointlist->current->in_image=True;
-						  tree->pointlist->current->image->in_image=True;
+						  tree->pointlist->current->in_image=true;
+						  tree->pointlist->current->image->in_image=true;
 					  }else if(markpoints==-1){
-						  tree->pointlist->current->in_image=False;
-						  tree->pointlist->current->image->in_image=False;
+						  tree->pointlist->current->in_image=false;
+						  tree->pointlist->current->image->in_image=false;
      					  tree->pointlist->current->surface_brightness = tree->pointlist->current->image->surface_brightness = 0.0;
 					  }else if(markpoints==0){
 						  InsertAfterCurrentKist(neighborkist,tree->pointlist->current);
@@ -329,11 +329,11 @@ void _PointsWithinKist(TreeHndl tree,double *ray,float *rmax,KistHndl neighborki
 
 			  for(i=0;i<tree->current->npoints;++i){
   				  if(markpoints==1){
-   					  tree->pointlist->current->in_image=True;
-  					  tree->pointlist->current->image->in_image=True;
+   					  tree->pointlist->current->in_image=true;
+  					  tree->pointlist->current->image->in_image=true;
   				  }else if(markpoints==-1){
-  					  tree->pointlist->current->in_image=False;
- 					  tree->pointlist->current->image->in_image=False;
+  					  tree->pointlist->current->in_image=false;
+ 					  tree->pointlist->current->image->in_image=false;
  					  tree->pointlist->current->surface_brightness = tree->pointlist->current->image->surface_brightness = 0.0;
    				  }else if(markpoints==0){
    					  InsertAfterCurrentKist(neighborkist,tree->pointlist->current);

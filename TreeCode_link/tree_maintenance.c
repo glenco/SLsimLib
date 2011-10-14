@@ -413,7 +413,7 @@ int AddPointsToTree(TreeHndl tree,Point *xpoint,unsigned long Nadd){
     		}else{
     			//printf("going to other parent box\n");
     			while(inbox(xpoint[j].x,tree->current->boundary_p1,tree->current->boundary_p2)
-    					== False){
+    					== false){
     				if(atTop(tree)){ERROR_MESSAGE(); printf("ERROR: AddPointsToTree, point not in region\n   x=%e %e\n"
     						,xpoint[j].x[0],xpoint[j].x[1]); printBranch(tree->current); exit(1);}
     				moveUp(tree);
@@ -590,14 +590,14 @@ unsigned long PruneTree(
 		TreeHndl i_tree     /// image plane tree
 		,TreeHndl s_tree    /// source plane tree
 		,double resolution  /// Maximum size of a cell to be removed.
-		,Boolean useSB   /// If True it will not remove any point that has flux in it.
+		,bool useSB   /// If true it will not remove any point that has flux in it.
 		){
 	static ListHndl trashlist;
 	static short init=1;
 	Point *points;
 	long i,Ntmp,count = 0;
 	double res,initres;
-	Boolean go;
+	bool go;
 
 	if(init){ trashlist = NewList(); init=0; }
 
@@ -611,19 +611,19 @@ unsigned long PruneTree(
 	 if(resolution > initres/3 || resolution <= 0.0) return 0;  // do not allow pruning up to the initial grid size
 
 	 // walk tree
-	 go = True;
+	 go = true;
 	 do{
 		 res = (i_tree->current->boundary_p2[0]-i_tree->current->boundary_p1[0]);
 		 if( (res <= resolution && CurrentIsSquareTree(i_tree) )
 				 &&  i_tree->current->npoints % 9 == 0){
 
 			 if(useSB){
-				 go = True;
+				 go = true;
 				 // Check if surface brightness of all points in cell are zero.
 				 i_tree->pointlist->current = i_tree->current->points;
 				 for(i=0; i < i_tree->current->npoints;++i,MoveDownList(i_tree->pointlist) ){
 					 if(i_tree->pointlist->current->surface_brightness > 0 ){
-						 go = False;
+						 go = false;
 						 break;
 					 }
 				 }
@@ -632,7 +632,7 @@ unsigned long PruneTree(
 			 // remove all lower branches and make current a leaf
 			 if(go && i_tree->current->npoints > 1) count += FreeBranchesBelow(i_tree,s_tree,trashlist);
 		 }
-	 }while(TreeWalkStep(i_tree,True));
+	 }while(TreeWalkStep(i_tree,true));
 
 	 // rebuild source tree from scratch.
 	 RebuildTreeFromList(s_tree);
@@ -646,7 +646,7 @@ unsigned long PruneTree(
 			 // check to see if all points in the block have been removed from the trees
 			 for(i=0;i<trashlist->current->head;++i) if(trashlist->current[i].leaf != NULL) break;
 			 if(i == trashlist->current->head){
-				 if(AtTopList(trashlist)) go = False; else go = True;
+				 if(AtTopList(trashlist)) go = false; else go = true;
 				 points = TakeOutCurrent(trashlist);
 				 printf("freeing memory!\n");
 				 FreePointArray(points);
@@ -685,7 +685,7 @@ unsigned long FreeBranchesBelow(TreeHndl i_tree,TreeHndl s_tree,ListHndl trashli
 
 	assert(i_tree->current->npoints % 9 == 0);
 	top = i_tree->current;
-	TreeWalkStep(i_tree,True);
+	TreeWalkStep(i_tree,true);
 
 	while( (top->child1 != NULL) || (top->child2 != NULL) ){
 
@@ -789,7 +789,7 @@ unsigned long FreeBranchesBelow(TreeHndl i_tree,TreeHndl s_tree,ListHndl trashli
 			}
 
 		}
-		if( !(atLeaf(i_tree)) )TreeWalkStep(i_tree,True);
+		if( !(atLeaf(i_tree)) )TreeWalkStep(i_tree,true);
 	}
 
 	i_tree->current = top;
