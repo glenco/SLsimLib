@@ -527,9 +527,6 @@ TreeNBHndl spread_particles(PosType **xp,IndexType Nparticles,IndexType *particl
 	return tree;
 }
 
-
-
-
 /** \ingroup DeflectionL2
  * visits every branch in tree to calculate
  * two critical lengths rcrit_angle and rcrit_part

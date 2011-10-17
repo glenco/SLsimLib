@@ -84,7 +84,9 @@ void double_sort(unsigned long n, double *arr, unsigned long *brr)
   }
 }
 
-/** arr array uses NR standard indexing i.e arr[1...n]
+/** \brief Sorts points in a apoint array.
+ *
+ *  arr array uses NR standard indexing i.e arr[1...n]
 * but brr[0..n-1]
 * if the point array is two-way-coupled to another point array
 * the image pointers of that array will follow sort

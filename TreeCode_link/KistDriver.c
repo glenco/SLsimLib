@@ -176,7 +176,7 @@ void PointsWithinKist(
 		TreeHndl tree    /// tree of points
 		,double *ray     /// center of circle
 		,float rmax      /// radius of circle
-		,KistHndl neighborkist  /// output neighbor kist, will be emptied if it contains anything on entre
+		,KistHndl neighborkist  /// output neighbor kist, will be emptied if it contains anything on entry
 		,short markpoints       /// see comment
 		){
 
