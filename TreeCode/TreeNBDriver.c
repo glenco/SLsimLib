@@ -59,7 +59,7 @@ TreeNBHndl BuildTreeNB(PosType **xp,float *rsph,float *mass,bool MultiRadius
   tree->MultiRadius = MultiRadius;
   tree->xp = xp;
   tree->rsph = rsph;
-  tree->mass = mass;
+  tree->masses = mass;
 
   /* build the tree */
   _BuildTreeNB(tree,Nparticles,particles);
@@ -85,12 +85,12 @@ void _BuildTreeNB(TreeNBHndl tree,IndexType nparticles,IndexType *particles){
   		     + pow(cbranch->boundary_p2[1]-cbranch->boundary_p1[1],2) );
 
   for(i=0,cbranch->mass=0;i<cbranch->nparticles;++i)
- 	  cbranch->mass+=tree->mass[cbranch->particles[i]*tree->MultiMass];
+ 	  cbranch->mass+=tree->masses[cbranch->particles[i]*tree->MultiMass];
   cbranch->center[0]=cbranch->center[1]=0;
   for(i=0;i<cbranch->nparticles;++i){
-	  cbranch->center[0] += tree->mass[cbranch->particles[i]*tree->MultiMass]
+	  cbranch->center[0] += tree->masses[cbranch->particles[i]*tree->MultiMass]
 	                       *tree->xp[cbranch->particles[i]][0]/cbranch->mass;
-	  cbranch->center[1] += tree->mass[cbranch->particles[i]*tree->MultiMass]
+	  cbranch->center[1] += tree->masses[cbranch->particles[i]*tree->MultiMass]
 	                       *tree->xp[cbranch->particles[i]][1]/cbranch->mass;
   }
   //////////////////////////////////////////////
@@ -101,9 +101,9 @@ void _BuildTreeNB(TreeNBHndl tree,IndexType nparticles,IndexType *particles){
 	  xcm[0]=tree->xp[cbranch->particles[i]][0]-cbranch->center[0];
 	  xcm[1]=tree->xp[cbranch->particles[i]][1]-cbranch->center[1];
 	  xcut=pow(xcm[0],2) + pow(xcm[1],2);
- 	  cbranch->quad[0] += (xcut-2*xcm[0]*xcm[0])*tree->mass[cbranch->particles[i]];
- 	  cbranch->quad[1] += (xcut-2*xcm[1]*xcm[1])*tree->mass[cbranch->particles[i]];
- 	  cbranch->quad[2] += -2*xcm[0]*xcm[1]*tree->mass[cbranch->particles[i]];
+ 	  cbranch->quad[0] += (xcut-2*xcm[0]*xcm[0])*tree->masses[cbranch->particles[i]*tree->MultiMass];
+ 	  cbranch->quad[1] += (xcut-2*xcm[1]*xcm[1])*tree->masses[cbranch->particles[i]*tree->MultiMass];
+ 	  cbranch->quad[2] += -2*xcm[0]*xcm[1]*tree->masses[cbranch->particles[i]*tree->MultiMass];
   }
 
 
@@ -325,7 +325,8 @@ void _NearestNeighborNB(TreeNBHndl tree,double *ray,int Nneighbors
     		/*printf("first sort at level =%i\n",tree->current->level);*/
     		/*printf("N=%i\n",tree->current->nparticles);*/
     		/*for(i=0;i<tree->current->nparticles;++i) printf("  %i  %e\n",neighbors[i],rneighbors[i]);*/
-    		double_sort(tree->current->nparticles,rneighbors-1,neighbors-1);
+    		//double_sort(tree->current->nparticles,rneighbors-1,neighbors-1);
+    		quicksort(neighbors,rneighbors,tree->current->nparticles);
     		/*printf("end sort\n");*/
        
     		/*for(i=0;i<tree->current->nparticles;++i) printf("  %i  %e\n",neighbors[i],rneighbors[i]);*/
@@ -362,8 +363,8 @@ void _NearestNeighborNB(TreeNBHndl tree,double *ray,int Nneighbors
     	  }
       }
 	}/*else{ // not in the box
-		//printf("not in box \n");}
-	  }else{   found cell */
+		//printf("not in box \n");}*/
+  }else{   // found cell
 
     /*printf("finding neighboring boxes at level = %i\n",tree->current->level);*/
 
@@ -381,7 +382,8 @@ void _NearestNeighborNB(TreeNBHndl tree,double *ray,int Nneighbors
     			neighbors[i]=tree->current->particles[i-Nneighbors];
     		}
 
-    		double_sort(Nneighbors+Nbucket,rneighbors-1,neighbors-1);
+    		//double_sort(Nneighbors+Nbucket,rneighbors-1,neighbors-1);
+    		quicksort(neighbors,rneighbors,Nneighbors+Nbucket);
 
     	}else{
 
