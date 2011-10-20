@@ -30,7 +30,6 @@ TreeHndl BuildTree(Point *xp,unsigned long Npoints){
   TreeHndl tree;
   unsigned long i;
   double p1[2],p2[2],center[2];
-  void _BuildTree(TreeHndl tree);
   const int Nbucket = 1;   // must be =1 if each leaf is to coincide with each cell
 
   if( (Npoints & (Npoints-1)) != 0){
@@ -95,30 +94,62 @@ void FillTree(TreeHndl tree,Point *xp,unsigned long Npoints){
 
 /** \ingroup  ImageFindingL2
  * \brief Rebuilds the tree from the points that are already in the tree->pointlist
+ *
+ * This is not the best function because it copies all
  */
 void RebuildTreeFromList(TreeHndl tree){
  /* Builds or rebuilds a tree that already has a tree->pointlist.
   */
+	assert(tree != NULL);
+	assert(tree->pointlist);
+	if(tree->pointlist->Npoints < 1) return;
 
-  assert(tree != NULL);
-  assert(tree->pointlist);
+	unsigned long Npoints = tree->pointlist->Npoints,i,N=0;
+	double *tmp;
 
-  // tree the barnches
-  _freeBranches_iter(tree);
+	// Make new array of points
+	Point *points = NewPointArray(Npoints,true);
 
-  if(tree->pointlist->Npoints < 1) return;
+	MoveToTopList(tree->pointlist);
+	for(i=0;i<Npoints;++i,MoveDownList(tree->pointlist)){
+		tmp = points[i].x;
+		// PointCopy() copies the x pointer which is later freed in emptyTree() so the information needs to be copied
+		PointCopy(&(points[i]),tree->pointlist->current);
+		points[i].x = tmp;
+		points[i].x[0] = tree->pointlist->current->x[0];
+		points[i].x[1] = tree->pointlist->current->x[1];
 
-  MoveToTopList(tree->pointlist);
- /* build the tree */
+		/* Below is for trash collection in PruneTree().
+		 * When PruneTree has been used not all of the
+		 * heads in the point arrays are guaranteed to be
+		 * in the tree->pointlist.
+		 */
+		tree->pointlist->current->leaf = NULL;
+	}
+	//printf(" %e %e\n",points[0].x[0],points[0].x[1]);
+	// emptry the tree and free all former points
+	emptyTree(tree);
 
-  _BuildTree(tree);
+	// fill point list with new (copied) points
+	for(i=0;i<Npoints;++i){
+		InsertPointAfterCurrent(tree->pointlist,&(points[i]));
+	    MoveDownList(tree->pointlist);
+	}
+	tree->top->npoints = Npoints;
+	tree->top->points = points;
 
-  return ;
+	// build the tree
+	 _BuildTree(tree);
+
+	return;
 }
 
 /** \ingroup  ImageFindingL2
 * \brief Empty tree of all point leaving a tree with an empty root.
-*  FillTree can then be used to regenerate tree
+*
+* The points are freed, but the list structure is not destroyed.
+*
+*  FillTree can then be used to regenerate tree.
 */
 short emptyTree(TreeHndl tree){
   Point **heads;
@@ -131,7 +162,7 @@ short emptyTree(TreeHndl tree){
   assert(tree);
 
   _freeBranches_iter(tree);
-//  _freeTree(tree,0);
+  //_freeTree(tree,0);
   //printTree(tree);
 
   assert(tree->Nbranches == 1);
@@ -143,9 +174,10 @@ short emptyTree(TreeHndl tree){
 		  ++j;
 		  count += tree->pointlist->current->head;
 	  }
+	  tree->pointlist->current->leaf = NULL;  // This is for future trash collection if PruneTree() has been used.
 	  MoveDownList(tree->pointlist);
   }
-  assert(count == tree->pointlist->Npoints);
+  //assert(count == tree->pointlist->Npoints);  After using PruneTree this will no longer be guaranteed.
 
   //printf("freed %i arrays out of %i points in array, %i freed\n",j,i,count);
   for(i=0;i<j;++i) FreePointArray(heads[i]);
@@ -154,9 +186,7 @@ short emptyTree(TreeHndl tree){
   //printTree(tree);
 
   tree->pointlist->Npoints=0;
-  tree->pointlist->top=tree->pointlist->bottom=tree->pointlist->current=NULL;
-//  free(tree->pointlist);
-//  free(tree);
+  tree->pointlist->top = tree->pointlist->bottom = tree->pointlist->current=NULL;
 
   free(heads);
   return 1;
@@ -302,6 +332,7 @@ void _BuildTree(TreeHndl tree){
 
   if(median_cut){
 	  double_sort_points(cbranch->npoints,x-1,tree->current->points);
+	  //quicksortPoints(tree->current->points,x,cbranch->npoints);
 
 	  cut=cbranch->npoints/2;
       branch1.boundary_p2[dimension]=(x[cut]+x[cut-1])/2;
@@ -313,8 +344,7 @@ void _BuildTree(TreeHndl tree){
       branch1.boundary_p2[dimension]=xcut;
       branch2.boundary_p1[dimension]=xcut;
 
-	  quickPartitionPoints(xcut,&cut
-	  		,tree->current->points,x,cbranch->npoints);
+	  quickPartitionPoints(xcut,&cut,tree->current->points,x,cbranch->npoints);
 
       //locateD(x-1,cbranch->npoints,xcut,&cut);
   }
@@ -582,7 +612,9 @@ int AddPointsToTree(TreeHndl tree,Point *xpoint,unsigned long Nadd){
 }
 
 /** \ingroup  ImageFindingL2
- *  \brief Reduces the size of the tree by removing points and branches that are no longer needed.
+ *  \brief THIS DOES NOT WORK YET!!!
+ *
+ *  Reduces the size of the tree by removing points and branches that are no longer needed.
  *
  *
 */
@@ -634,7 +666,7 @@ unsigned long PruneTree(
 		 }
 	 }while(TreeWalkStep(i_tree,true));
 
-	 // rebuild source tree from scratch.
+	 // rebuild source tree from list.
 	 RebuildTreeFromList(s_tree);
 
 	 assert(count == (Ntmp - i_tree->pointlist->Npoints) );
@@ -654,7 +686,7 @@ unsigned long PruneTree(
 		 }while(MoveDownList(trashlist) && go);
 	 }
 
-	 printf("count = %li\n",count);
+	 //printf("count = %li\n",count);
 	 return count;
 }
 
@@ -763,7 +795,7 @@ unsigned long FreeBranchesBelow(TreeHndl i_tree,TreeHndl s_tree,ListHndl trashli
 						s_tree->pointlist->current = i_tree->pointlist->current->image;
 						point = TakeOutCurrent(s_tree->pointlist);
 						point->leaf = NULL;  // set leaf to NULL to indicate that point is no longer in tree
-						if(point->head) InsertPointAfterCurrent(trashlist,point);  // save the head of memory blocks
+						if(point->head) InsertPointAfterCurrent(trashlist,point);  // collect heads for later trash collection
 
 
 						// take points out of image plane

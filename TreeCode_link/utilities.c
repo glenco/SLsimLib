@@ -1,4 +1,4 @@
-/*
+/**
  * utilities.c
  *
  *  Created on: Sep 8, 2009
@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <nrutil.h>
+#include <limits.h>
 #include <nrD.h>
 #include "Tree.h"
 #ifndef pi
@@ -91,7 +92,6 @@ Point *LinkToSourcePoints(Point *i_points,unsigned long Npoints){
 
 void findarea(ImageInfo *imageinfo){
   unsigned long j;
-  double tmp;
 
   for(j=0,imageinfo->area=0,imageinfo->area_error=0;j<imageinfo->Npoints;++j){
 	  if( fabs(imageinfo->points[j].leaf->boundary_p2[0] - imageinfo->points[j].leaf->boundary_p1[0]
@@ -225,4 +225,17 @@ inline float isLeft( Point *p0, Point *p1, double *x ){
 
 	return (p1->x[0] - p0->x[0])*(x[1] - p0->x[1])
 			- (x[0] - p0->x[0])*(p1->x[1] - p0->x[1]);
+}
+
+/** \ingroup Utill
+ * This function finds the largest power of 2 that is < k
+ */
+unsigned long prevpower(unsigned long k){
+	int i;
+	if (k == 0)
+		return 1;
+	k--;
+	for (i=1; i<sizeof(unsigned long)*CHAR_BIT; i<<=1)
+		k = k | k >> i;
+	return (k+1)/2;
 }

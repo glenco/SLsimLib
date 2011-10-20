@@ -125,7 +125,7 @@ typedef struct TreeNBStruct{
   /// Array of particle sizes
   float *rsph;
   /// Array of particle masses
-  float *mass;
+  float *masses;
 } TreeNBStruct;
 
 /* typedef struct Point{ */

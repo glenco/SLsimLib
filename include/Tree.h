@@ -265,6 +265,7 @@ int windings(double *x,Point *points,unsigned long Npoints,double *area,short im
 long IndexFromPosition(double *x,long Npixels,double range,double *center);
 void PositionFromIndex(unsigned long i,double *x,long Npixels,double range,double *center);
 inline float isLeft( Point *p0, Point *p1, double *x );
+unsigned long prevpower(unsigned long k);
 
 // in curve_routines.c
 void nesting_curve(ImageInfo *curves,int Ncurves);

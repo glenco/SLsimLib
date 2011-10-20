@@ -80,8 +80,10 @@ void ReInitalizeGrid(GridHndl grid){
 }
 /** \ingroup ImageFinding
  *
+ * \brief DOES NOT WORK YET !!!!
  */
 void TrimGrid(GridHndl grid,double highestres,bool useSB){
 
+	PruneTree(grid->i_tree,grid->s_tree,highestres,useSB);
 	return;
 }

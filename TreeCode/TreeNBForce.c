@@ -319,16 +319,16 @@ void TreeNBParticleForce2Diter(TreeNBHndl tree
 				  rcm2 = xcm*xcm + ycm*ycm;
 
 				  tmp =  alpha_internal(rcm2,tree->rsph[tree->MultiRadius*tree->current->particles[i]])
-						  *tree->mass[tree->MultiMass*tree->current->particles[i]];
+						  *tree->masses[tree->MultiMass*tree->current->particles[i]];
 				  alpha[0] += tmp*xcm;
 				  alpha[1] += tmp*ycm;
 
 				  // can turn off kappa and gamma calculations to save times
 				  if(!no_kappa){
 					  *kappa+=kappa_internal(rcm2,tree->rsph[tree->MultiRadius*tree->current->particles[i]])
-		                  *tree->mass[tree->MultiMass*tree->current->particles[i]];
+		                  *tree->masses[tree->MultiMass*tree->current->particles[i]];
 					  tmp= gamma_internal(rcm2,tree->rsph[tree->MultiRadius*tree->current->particles[i]])
-						  *tree->mass[tree->MultiMass*tree->current->particles[i]];
+						  *tree->masses[tree->MultiMass*tree->current->particles[i]];
 					  gamma[0] += 0.5*(xcm*xcm-ycm*ycm)*tmp;
 					  gamma[1] += xcm*ycm*tmp;
 				  }
