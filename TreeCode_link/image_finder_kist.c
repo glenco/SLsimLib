@@ -443,7 +443,7 @@ short image_finder_kist(double *y_source,double r_source,TreeHndl s_tree,TreeHnd
   // find borders
   if( splitparities == 0 ) for(i=0;i<*Nimages;++i) findborders4(i_tree,&imageinfo[i]);
 
-  assert(*Nimages < NimageMax-1);
+  //assert(*Nimages < NimageMax-1);
 
   //#pragma omp parallel for firstprivate(i_tree)
 
@@ -576,7 +576,7 @@ int refine_grid_kist(TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo,unsign
 	  count=0;
 
 	  if(criterion == 0) pass = imageinfo[i].area*imageinfo[i].area_error/total_area > res_target;
-	  if(criterion == 1) pass = (imageinfo[i].area_error > res_target)*(imageinfo[i].area > 1.0e-5*total_area);
+	  if(criterion == 1) pass = (imageinfo[i].area_error > res_target)*(imageinfo[i].area > 1.0e-2*res_target*total_area);
 	  if(criterion == 2) pass = imageinfo[i].gridrange[1] > res_target;
 
 	  // make sure no border point has a lower res than any image point
@@ -781,7 +781,7 @@ void findborders4(TreeHndl i_tree,ImageInfo *imageinfo){
 						if( getCurrentKist(imageinfo->outerborder) == getCurrentKist(neighborkist) ) break;
 						MoveDownKist(imageinfo->outerborder);
 					}
-					if(m==imageinfo->outerborder->Nunits){
+					if(m == imageinfo->outerborder->Nunits){
 						// add point to outerborder
 						InsertAfterCurrentKist(imageinfo->outerborder,getCurrentKist(neighborkist));
 						MoveDownKist(imageinfo->outerborder);
@@ -799,7 +799,7 @@ void findborders4(TreeHndl i_tree,ImageInfo *imageinfo){
 
 	}
 
-	if(!allin){
+	if(!allin  && imageinfo->outerborder->Nunits > 0){
 		MoveToTopKist(imageinfo->outerborder);
 		do{
 			if(imageinfo->gridrange[0] < getCurrentKist(imageinfo->outerborder)->gridsize)

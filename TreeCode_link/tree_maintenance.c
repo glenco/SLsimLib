@@ -680,7 +680,7 @@ unsigned long PruneTree(
 			 if(i == trashlist->current->head){
 				 if(AtTopList(trashlist)) go = false; else go = true;
 				 points = TakeOutCurrent(trashlist);
-				 printf("freeing memory!\n");
+				 //printf("freeing memory!\n");
 				 FreePointArray(points);
 			 }
 		 }while(MoveDownList(trashlist) && go);
@@ -898,6 +898,8 @@ void RefreshSurfaceBrightnesses(TreeHndl i_tree,TreeHndl s_tree,AnaLens *lens){
 		s_tree->pointlist->current->surface_brightness = s_tree->pointlist->current->image->surface_brightness
 				= lens->source_sb_func(y);
 		assert(s_tree->pointlist->current->surface_brightness >= 0.0);
+		s_tree->pointlist->current->in_image = s_tree->pointlist->current->image->in_image
+				= false;
 	}while( MoveDownList(s_tree->pointlist) );
 
 	return;

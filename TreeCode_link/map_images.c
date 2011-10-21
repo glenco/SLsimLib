@@ -104,18 +104,19 @@ void map_images(
 			getCurrentKist(imageinfo[i].imagekist)->surface_brightness = lens->source_sb_func(y);
 			//printf("%e  %e\n",getCurrentKist(imageinfo[i].imagekist)->surface_brightness,lens->source_sb_func(y));
 			//assert(getCurrentKist(imageinfo[i].imagekist)->surface_brightness >= 0.0);
-			//if(getCurrentKist(imageinfo[i].imagekist)->surface_brightness > 0.0){
+			if(getCurrentKist(imageinfo[i].imagekist)->surface_brightness > 0.0){
 			//	printf(" %li %li sb = %e",i,j,getCurrentKist(imageinfo[i].imagekist)->surface_brightness);
-				getCurrentKist(imageinfo[i].imagekist)->in_image = 1;  // Initialized value for refine_grid_on_image
+				getCurrentKist(imageinfo[i].imagekist)->in_image = true;  // Initialized value for refine_grid_on_image
 				imageinfo[i].area += pow(getCurrentKist(imageinfo[i].imagekist)->gridsize,2)
 			                     *getCurrentKist(imageinfo[i].imagekist)->surface_brightness;
-			//}else{
-			//	getCurrentKist(imageinfo[i].imagekist)->in_image = 0;
-			//}
+			}else{
+				getCurrentKist(imageinfo[i].imagekist)->in_image = false;
+			}
 		}
 		area_tot += imageinfo[i].area;
-		assert(imageinfo[i].area > 0);
+		//assert(imageinfo[i].area > 0);
 	}
+	if(area_tot == 0.0) return;
 
 	/*
 	 ******* refine images based on flux in each pixel ******
@@ -145,6 +146,7 @@ void map_images(
 					*getCurrentKist(imageinfo[i].imagekist)->surface_brightness;
 			imageinfo[i].centroid[1] += getCurrentKist(imageinfo[i].imagekist)->x[1]*pow(getCurrentKist(imageinfo[i].imagekist)->gridsize,2)
 					*getCurrentKist(imageinfo[i].imagekist)->surface_brightness;
+			getCurrentKist(imageinfo[i].imagekist)->in_image = false;  // re-set marks
 		}
 		if(imageinfo[i].Npoints > 0 ){
 			imageinfo[i].centroid[0] /= tmp;

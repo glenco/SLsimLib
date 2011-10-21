@@ -180,6 +180,8 @@ void divide_images(TreeHndl i_tree,ImageInfo *imageinfo
  *     imageinfo[i].Npoints is set to number of points in ith image
  *	   image point flags in_image == true
  *	   the area and area_error of each image are calculated
+ *
+ *	   If more than Nimagesmax images are found the remaining points are put into the last image.
  */
 void divide_images_kist(TreeHndl i_tree,ImageInfo *imageinfo,int *Nimages,int Nimagesmax){
 	unsigned long i,j,Ntemp,Ntest;
