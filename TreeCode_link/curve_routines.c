@@ -4,7 +4,7 @@
  *  Created on: Jan 15, 2010
  *      Author: R.B. Metcalf
  */
-#include <math.h>
+/*#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -12,9 +12,8 @@
 #include <nrutil.h>
 #include <nrD.h>
 #include "Tree.h"
-#ifndef pi
-#define pi  3.1415926
-#endif
+*/
+#include <slsimlib.h>
 
 void split_order_curve4(ImageInfo *curves,int Maxcurves,int *Ncurves){
 /*  orders points in a curve, separates disconnected curves

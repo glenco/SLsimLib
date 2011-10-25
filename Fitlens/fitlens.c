@@ -1,4 +1,4 @@
-#include <math.h>
+/*#include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
@@ -11,7 +11,9 @@
 #include <nrD.h>
 
 #include <analytic_lens.h>
-#include <fitlens.h>
+#include <fitlens.h>*/
+
+#include <slsimlib.h>
 
 static double betaT,*modT,**xobT,**dx_subT,sigGT,*modTT,*modoT,**vT,x_centerT[2],**xgT,**dx_subTt;
 static int NmodT,NsourcesT,NimagesT,*pairingT,degenT,Nmin;

@@ -1,12 +1,13 @@
-#include <math.h>
+/*#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
-/*#include "double_sort.c"*/
 #include <nrutil.h>
 #include <nr.h>
 #include <nrD.h>
-#include "TreeNB.h"
+#include "TreeNB.h"*/
+
+#include <slsimlib.h>
 
 #define Nbucket 5
 

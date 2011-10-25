@@ -4,7 +4,7 @@
  *  Created on: Feb 27, 2010
  *      Author: R.B. Metcalf
  */
-#include <math.h>
+/*#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -15,9 +15,10 @@
 #include <Kist.h>
 #include <Tree.h>
 #include <tree_maintenance.h>
+#include "image_processing.h"*/
 
+#include <slsimlib.h>
 
-#include "image_processing.h"
 double area=0;
 
 /** \ingroup Image

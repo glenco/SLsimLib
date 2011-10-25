@@ -5,11 +5,13 @@
  *      Author: bmetcalf
  */
 
-#include <stdlib.h>
+/*#include <stdlib.h>
 #include <math.h>
 #include <assert.h>
 #include <Tree.h>
-#include <analytic_lens.h>
+#include <analytic_lens.h>*/
+
+#include <slsimlib.h>
 
 /** \ingroup ImageFindingL2
  *\brief  MarkPoints sets the point.in_image to true if the source point is within lens->source_r of lens->source_x

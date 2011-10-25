@@ -4,19 +4,8 @@
  *  Created on: Jun 5, 2010
  *      Author: R.B. Metcalf
  */
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <nr.h>
-#include <nrutil.h>
-#include <nrD.h>
 
-#include <cosmo.h>
-
-#include <Tree.h>
-#include <analytic_lens.h>
-#include <TreeNB.h>
+#include <slsimlib.h>
 
 /** \ingroup ChangeLens
  * \brief  Implants stars into the lens around the images.

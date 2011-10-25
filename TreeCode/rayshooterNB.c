@@ -1,4 +1,4 @@
-#include <math.h>
+/*#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -7,8 +7,9 @@
 #include <nr.h>
 #include <nrD.h>
 #include <cosmo.h>
+#include "TreeNB.h"*/
 
-#include "TreeNB.h"
+#include <slsimlib.h>
 
 struct cosmology cosmo;
 int kmax,kount; 

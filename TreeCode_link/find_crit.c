@@ -4,11 +4,15 @@
  *  Created on: Sep 8, 2009
  *      Author: R.B. Metcalf
  */
-#include <math.h>
+/*#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <nrutil.h>
 #include "Tree.h"
+*/
+
+#include <slsimlib.h>
+
 #define NMAXCRITS 100
 
   /** \ingroup ImageFinding
@@ -23,8 +27,7 @@
   * This routine needs to be updated.  It still uses List instead of kist and perhaps some
   * older and slower image splitting and ordering.
   */
-ImageInfo *find_crit(TreeHndl s_tree,TreeHndl i_tree,int *Ncrits,double resolution
-		,bool *orderingsuccess,bool ordercurve,bool verbose){
+ImageInfo *find_crit(GridHndl grid,int *Ncrits,double resolution,bool *orderingsuccess,bool ordercurve,bool verbose){
 
   Point *minpoint;
   ImageInfo *critcurve,*critexport;
@@ -45,19 +48,19 @@ ImageInfo *find_crit(TreeHndl s_tree,TreeHndl i_tree,int *Ncrits,double resoluti
 
 	  // find list of points with negative magnification
 	  EmptyList(negpointlist);
-	  MoveToTopList(i_tree->pointlist);
-	  for(i=0,minpoint->kappa=0;i<i_tree->pointlist->Npoints;++i){
-		  if(i_tree->pointlist->current->invmag < 0){
+	  MoveToTopList(grid->i_tree->pointlist);
+	  for(i=0,minpoint->kappa=0;i<grid->i_tree->pointlist->Npoints;++i){
+		  if(grid->i_tree->pointlist->current->invmag < 0){
 
-			  InsertAfterCurrent(negpointlist,i_tree->pointlist->current->x,i_tree->pointlist->current->id
-					  ,i_tree->pointlist->current->image);
+			  InsertAfterCurrent(negpointlist,grid->i_tree->pointlist->current->x,grid->i_tree->pointlist->current->id
+					  ,grid->i_tree->pointlist->current->image);
 			  MoveDownList(negpointlist);
-			  PointCopyData(negpointlist->current,i_tree->pointlist->current);
+			  PointCopyData(negpointlist->current,grid->i_tree->pointlist->current);
 		  }
 
 		  // record point of maximum kappa
-		  if(i_tree->pointlist->current->kappa > minpoint->kappa) PointCopyData(minpoint,i_tree->pointlist->current);
-		  MoveDownList(i_tree->pointlist);
+		  if(grid->i_tree->pointlist->current->kappa > minpoint->kappa) PointCopyData(minpoint,grid->i_tree->pointlist->current);
+		  MoveDownList(grid->i_tree->pointlist);
 	  }
 
 	  Npoints=negpointlist->Npoints;
@@ -95,7 +98,7 @@ ImageInfo *find_crit(TreeHndl s_tree,TreeHndl i_tree,int *Ncrits,double resoluti
 	  }
 
     if(verbose) printf("find_crit, going into findborders 1\n");
-    findborders2(i_tree,&critcurve[0]);
+    findborders2(grid->i_tree,&critcurve[0]);
     if(verbose) printf("find_crit, came out of findborders 1\n");
 
     /* make inner border the image */
@@ -110,12 +113,12 @@ ImageInfo *find_crit(TreeHndl s_tree,TreeHndl i_tree,int *Ncrits,double resoluti
 
     // find borders again to properly define outer border
     //printf("going into findborders 2\n");
-	findborders2(i_tree,critcurve);
+	findborders2(grid->i_tree,critcurve);
 	//printf("came out of findborders 2\n");
 
 	if(verbose) printf("find_crit, going into refine_grid\n");
      //printf("  Npoints=%i\n",critcurve->Npoints);
-	refinements=refine_grid(i_tree,s_tree,critcurve,1,resolution,2,false);
+	refinements=refine_grid(grid->i_tree,grid->s_tree,critcurve,1,resolution,2,false);
     if(verbose) printf("find_crit, came out of refine_grid\n");
 
      if(refinements==0){

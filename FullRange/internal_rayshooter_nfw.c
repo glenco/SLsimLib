@@ -4,7 +4,7 @@
  *  Created on: Dec 8, 2009
  *      Author: R.B. Metcalf
  */
-#include <stdio.h>
+/*#include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <omp.h>
@@ -19,7 +19,9 @@
 #include <analytic_lens.h>
 #include <nsie.h>
 #include <TreeNB.h>
-#include <source_models.h>
+#include <source_models.h>*/
+
+#include <slsimlib.h>
 
 //extern char *paramfile,*outputfile;
 extern COSMOLOGY cosmo;

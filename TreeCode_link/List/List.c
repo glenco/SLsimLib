@@ -4,10 +4,12 @@
  *  Created on: Nov 15, 2010
  *      Author: bmetcalf
  */
-#include <stdlib.h>
+/*#include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
-#include "List.h"
+#include "List.h"*/
+
+#include <slsimlib.h>
 
 /***********************************************************
    routines for linked list of points
@@ -175,13 +177,13 @@ void MoveCurrentToBottom(ListHndl list){
 	list->current=point_current;
 }
 
+/**
+ *  takes out current point and set current to point previous */
+/* Except at top where current is set to new top */
+/* returns pointer to removed point */
 Point *TakeOutCurrent(ListHndl list){
 
     Point *point;
-
-    /* takes out current point and set current to point previous */
-    /* Except at top where current is set to new top */
-    /* returns pointer to removed point */
 
     if(list == NULL || list->Npoints <= 0) return NULL;
     assert(list->current);

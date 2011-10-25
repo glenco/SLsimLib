@@ -4,6 +4,7 @@
  *  Created on: Nov 11, 2010
  *      Author: R.B. Metcalf
  */
+/*
 #include <stdlib.h>
 #include <assert.h>
 #include <math.h>
@@ -11,6 +12,8 @@
 #include <Kist.h>
 #include <KistDriver.h>
 #include <divide_images.h>
+*/
+#include <slsimlib.h>
 
 	/** \ingroup ImageFindingL2
 	 * \brief finds the points that are within the circular source and divides
@@ -210,7 +213,7 @@ void divide_images_kist(TreeHndl i_tree,ImageInfo *imageinfo,int *Nimages,int Ni
 	do{
 
 		//printf("   new_imagekist %li\n",new_imagekist->Nunits);
-		imageinfo[i].area = partition_images2(getCurrentKist(new_imagekist),imageinfo[i].imagekist,i_tree);
+		imageinfo[i].area = partition_images_kist(getCurrentKist(new_imagekist),imageinfo[i].imagekist,i_tree);
 		assert(imageinfo[i].imagekist->Nunits <= new_imagekist->Nunits);  // check that no more than
 
 		imageinfo[i].Npoints = imageinfo[i].imagekist->Nunits;
@@ -327,7 +330,7 @@ void partition_images(Point *point,unsigned long *N_in_image,TreeHndl i_tree){
  *    is left in imagekist.  The in_image marks are NOT returned to their original
  *    values.  The ones that are put into imagekist are changed to in_image = false
  */
-double partition_images2(Point *point,KistHndl imagekist,TreeHndl i_tree){
+double partition_images_kist(Point *point,KistHndl imagekist,TreeHndl i_tree){
 	assert(point);
 	assert(i_tree);
 	assert(point->in_image == true);

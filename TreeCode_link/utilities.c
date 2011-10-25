@@ -5,7 +5,7 @@
  *      Author: R.B. Metcalf
  */
 
-#include <math.h>
+/*#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <nrutil.h>
@@ -14,7 +14,9 @@
 #include "Tree.h"
 #ifndef pi
 #define pi  3.1415936
-#endif
+#endif*/
+
+#include <slsimlib.h>
 
 inline double MIN(double x,double y){
 	return (x < y) ? x : y;

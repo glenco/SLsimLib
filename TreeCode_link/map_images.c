@@ -4,7 +4,7 @@
  *  Created on: Oct 6, 2010
  *      Author: bmetcalf
  */
-#include <math.h>
+/*#include <math.h>
 #include <time.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -16,7 +16,9 @@
 #include <KistDriver.h>
 #include <divide_images.h>
 #include <map_images.h>
-#include <tree_maintenance.h>
+#include <tree_maintenance.h>*/
+
+#include <slsimlib.h>
 
 const float mumin = 0.3;  // actually the sqrt of the minimum magnification
 const int Ngrid_block = 3;
@@ -35,9 +37,10 @@ const float smallest = 0.1;
  *
  */
 void map_images(
-		AnaLens *lens    /// lens model
-		,TreeHndl s_tree /// Tree of grid points on the source plane
-		,TreeHndl i_tree /// Tree of grid points on the image plane
+	    /// lens model
+		AnaLens *lens
+		 /// Tree of grid points
+		,GridHndl grid
 		,int *Nimages /// number of images found
 		,ImageInfo *imageinfo /// information on each image
 		,int NimageMax   /// maximum number of images allowed
@@ -48,8 +51,8 @@ void map_images(
 		){
 
 	assert(lens);
-	assert(s_tree);
-	assert(i_tree);
+	assert(grid->s_tree);
+	assert(grid->i_tree);
 	assert(imageinfo->imagekist);
 
 	unsigned long Nimagepoints;
@@ -76,12 +79,12 @@ void map_images(
 	// do an initial refinement to find all images and refine grid
 	// the lens->source_r_in is used as a characteristic small size for the source
 	assert(lens->source_r_in > 0);
-	find_images_kist(lens->source_x,lens->source_r_in,s_tree,i_tree,Nimages
+	find_images_kist(lens->source_x,lens->source_r_in,grid,Nimages
 			  ,imageinfo,NimageMax,&Nimagepoints,0,false,0,false,true);
 
 
 	// find kist of image points and divide into images
-	find_divide_images(i_tree,s_tree,lens->source_x,lens->source_r,imageinfo,Nimages,NimageMax);
+	find_divide_images(grid->i_tree,grid->s_tree,lens->source_x,lens->source_r,imageinfo,Nimages,NimageMax);
 
 	//printf("images identified\n");
 	//printf("Nimages = %i\n",*Nimages);
@@ -121,9 +124,19 @@ void map_images(
 	/*
 	 ******* refine images based on flux in each pixel ******
 	 */
+	 MoveToTopList(grid->i_tree->pointlist);
+	 i=0;
+	 do{ assert(grid->i_tree->pointlist->current->leaf); ++i;}while(MoveDownList(grid->i_tree->pointlist));
+
 	i=0;
-	if(area_tot != 0.0) while( refine_grid_on_image(lens,i_tree,s_tree,imageinfo,*Nimages
-			,FracResTarget,criterion,kappa_off) ) ++i;
+	if(area_tot != 0.0) while( refine_grid_on_image(lens,grid,imageinfo,*Nimages
+			,FracResTarget,criterion,kappa_off) ){ ++i;
+
+			/***************** test lines  **************************
+			MoveToTopList(grid->i_tree->pointlist);
+			do{ assert(grid->i_tree->pointlist->current->leaf); }while(MoveDownList(grid->i_tree->pointlist));
+			/***************** **************************/
+			}
 
 	//printf("i=%i Nold=%li\n",i,Nold);
 	//printf("%li\n",imagelist->Npoints);
@@ -161,7 +174,7 @@ void map_images(
 	return ;
 }
 
-int refine_grid_on_image(AnaLens *lens,TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo
+int refine_grid_on_image(AnaLens *lens,GridHndl grid,ImageInfo *imageinfo
 		,unsigned long Nimages,double res_target,ExitCriterion criterion
 		,bool kappa_off){
 
@@ -232,7 +245,7 @@ int refine_grid_on_image(AnaLens *lens,TreeHndl i_tree,TreeHndl s_tree,ImageInfo
 
   				}else{  // fill the holes
 
-  					FindAllBoxNeighborsKist(i_tree,getCurrentKist(imageinfo[i].imagekist),nearest);
+  					FindAllBoxNeighborsKist(grid->i_tree,getCurrentKist(imageinfo[i].imagekist),nearest);
   					//PrintList(nearest);
   					sbmin = sbmax = 0;
   					MoveToTopKist(nearest);
@@ -326,9 +339,27 @@ int refine_grid_on_image(AnaLens *lens,TreeHndl i_tree,TreeHndl s_tree,ImageInfo
       // lens the added points
       rayshooterInternal((Ngrid_block*Ngrid_block-1)*Ncells,i_points,kappa_off);
 
+		/***************** test lines  **************************
+ 	 do{ assert(grid->i_tree->pointlist->current->leaf);}while(MoveDownList(grid->i_tree->pointlist));
+  	 moveTop(grid->i_tree);
+  	 do{
+  		 if(grid->i_tree->current->number == 4829221){
+  			 printf("STOP!\n");
+  		 }
+  		 assert(grid->i_tree->current->points->next || grid->i_tree->current->points->prev);
+  	 }while(TreeWalkStep(grid->i_tree,true));
+		/*****************  **************************/
+
       // add points to trees
-      AddPointsToTree(i_tree,i_points,Ncells*(Ngrid_block*Ngrid_block-1));
-      AddPointsToTree(s_tree,s_points,Ncells*(Ngrid_block*Ngrid_block-1));
+      AddPointsToTree(grid->i_tree,i_points,Ncells*(Ngrid_block*Ngrid_block-1));
+
+		/***************** test lines  **************************
+  	 do{ assert(grid->i_tree->pointlist->current->leaf);}while(MoveDownList(grid->i_tree->pointlist));
+  	 moveTop(grid->i_tree);
+  	 do{ assert(grid->i_tree->current->points->next || grid->i_tree->current->points->prev); }while(TreeWalkStep(grid->i_tree,true));
+		/***************** **************************/
+
+      AddPointsToTree(grid->s_tree,s_points,Ncells*(Ngrid_block*Ngrid_block-1));
 
       // Go through list of image points and copy the information
       //  just calculated into the new points and re-calculate the area/flux

@@ -10,7 +10,7 @@
  *      them to higher resolution
  */
 
-#include <stdlib.h>
+/*#include <stdlib.h>
 #include <math.h>
 #include <assert.h>
 #include <cosmo.h>
@@ -20,7 +20,9 @@
 #include <KistDriver.h>
 #include <peak_refinement.h>
 #include <analytic_lens.h>
-#include <tree_maintenance.h>
+#include <tree_maintenance.h>*/
+
+#include <slsimlib.h>
 
 COSMOLOGY cosmo;
 AnaLens *lens = 0;

@@ -6,10 +6,12 @@
  * Comments:                           
  */
 
-#include <stdio.h>
+/*#include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
-#include "TreeNB.h"
+#include "TreeNB.h"*/
+
+#include <slsimlib.h>
 
 double dummy;
 

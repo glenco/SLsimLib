@@ -1,9 +1,11 @@
-#include <stdio.h>
+/*#include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include "TreeNB.h"
 #include <cosmo.h>
-#include <nrutil.h>
+#include <nrutil.h>*/
+
+#include <slsimlib.h>
 
 SimLens *readparams(char *filename,CosmoHndl cosmo){
   FILE *file;

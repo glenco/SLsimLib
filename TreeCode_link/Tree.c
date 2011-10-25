@@ -6,14 +6,16 @@
  * Comments:                           
  */
 
-#include <stdio.h>
+/*#include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <math.h>
 #include "Tree.h"
 #include <Kist.h>
 #include <List.h>
-#include <tree_maintenance.h>
+#include <tree_maintenance.h>*/
+
+#include <slsimlib.h>
 
 double dummy;
 
@@ -29,13 +31,15 @@ double dummy;
  ************************************************************************/
 /** \ingroup ConstructorL2
  *
+ * Gives each branch a unique number even if branches are destroyed.
  */
 Branch *NewBranch(Point *points,unsigned long npoints
 		  ,double boundary_p1[2],double boundary_p2[2]
-		  ,double center[2],int level,unsigned long branchnumber){
+		  ,double center[2],int level){
 
     Branch *branch;
     int i;
+    static unsigned long number = 0;
 
     branch = (Branch *)malloc(sizeof(Branch));
     if (!branch){
@@ -55,7 +59,8 @@ Branch *NewBranch(Point *points,unsigned long npoints
       branch->boundary_p2[i]= boundary_p2[i];
     }
 
-    branch->number=branchnumber;
+    branch->number = number;
+    ++number;
 
     branch->child1 = NULL;
     branch->child2 = NULL;
@@ -149,7 +154,7 @@ TreeHndl NewTree(
   }
 
   tree->top=NewBranch(tree->pointlist->top,npoints,boundary_p1,boundary_p2
-		      ,center,0,0);
+		      ,center,0);
 
   tree->Nbranches = 1;
   tree->current = tree->top;
@@ -358,7 +363,7 @@ void insertChildToCurrent(TreeHndl tree,Point *points,unsigned long npoints
     /*printf("attaching child%i  current paricle number %i\n",child,tree->current->npoints);*/
 
     branch = NewBranch(points,npoints,boundary_p1,boundary_p2,center
-		       ,tree->current->level+1,tree->Nbranches);
+		       ,tree->current->level+1);
 
     assert(tree != NULL);
     

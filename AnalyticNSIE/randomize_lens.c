@@ -5,14 +5,17 @@
  *      Author: R.B. Metcalf
  */
 
-#include <stdlib.h>
+/*#include <stdlib.h>
 #include <math.h>
 #include <assert.h>
 #include <nr.h>
 #include <nrD.h>
 #include <nrutil.h>
-#include <analytic_lens.h>
-#define sheartol 1.0e-3
+#include <analytic_lens.h>*/
+
+#include <slsimlib.h>
+
+const float sheartol=1.0e-3;
 
 /*
  * routines for making random, close to elliptical

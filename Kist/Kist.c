@@ -9,11 +9,13 @@
  * Comments:                           
  */
 
-#include <stdio.h>
+/*#include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <assert.h>
-#include "Kist.h"
+#include "Kist.h"*/
+
+#include <slsimlib.h>
 
 /***** Structs *****/
 

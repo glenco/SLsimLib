@@ -1,10 +1,11 @@
-#include <math.h>
+/*#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
 #include "Tree.h"
-#include <nrutil.h>
-/*#include "double_sort.c"*/
+#include <nrutil.h>*/
+
+#include <slsimlib.h>
 
 /* median_cut determines how the cells are subdivided */
 /*    if ==0  equal volume cuts, Warning this option causes an error*/

@@ -1,8 +1,10 @@
-#include <math.h>
+/*#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
-#include "TreeNB.h"
+#include "TreeNB.h"*/
+
+#include <slsimlib.h>
 
 /* find the SPH smoothing length for each particle */
 float *FindRSPH(TreeNBHndl tree,int Nsph){

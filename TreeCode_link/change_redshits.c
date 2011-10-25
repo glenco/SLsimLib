@@ -11,13 +11,16 @@
  *      the physical size of the source remains constant
  */
 
-#include <math.h>
+/*#include <math.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <Tree.h>
 #include <tree_maintenance.h>
 #include <analytic_lens.h>
+*/
 //#include "../TreeCode/TreeNB.h"
+
+#include <slsimlib.h>
 
 extern COSMOLOGY cosmo;
 /** \ingroup ChangeLens

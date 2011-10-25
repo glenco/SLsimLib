@@ -206,10 +206,10 @@ void FindAllBoxNeighbors(TreeHndl tree,Point *point,ListHndl neighbors);
 
 // in image_finder.c
 
-void find_images(double *y_source,double r_source,TreeHndl s_tree,TreeHndl i_tree
+void find_images(double *y_source,double r_source,GridHndl grid
 		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
-		  ,double initial_size,bool splitimages,short edge_refinement
-		  ,bool verbose,bool kappa_off);
+		,double initial_size,bool splitimages,short edge_refinement
+		,bool verbose,bool kappa_off);
 short image_finder(double *y_source,double r_source,TreeHndl s_tree,TreeHndl i_tree
 		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
 		,short splitparities,short true_images);
@@ -228,10 +228,10 @@ void findborders3(TreeHndl i_tree,ImageInfo *imageinfo);
 
 // in image_finder_kist.c
 
-void find_images_kist(double *y_source,double r_source,TreeHndl s_tree,TreeHndl i_tree
+void find_images_kist(double *y_source,double r_source,GridHndl grid
 		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
-		  ,double initial_size,bool splitimages,short edge_refinement
-		  ,bool verbose,bool kappa_off);
+		,double initial_size,bool splitimages,short edge_refinement
+		,bool verbose,bool kappa_off);
 short image_finder_kist(double *y_source,double r_source,TreeHndl s_tree,TreeHndl i_tree
 		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
 		,short splitparities,short true_images);
@@ -242,8 +242,8 @@ void findborders4(TreeHndl i_tree,ImageInfo *imageinfo);
 // in find_crit.c
 void findborders(TreeHndl i_tree,ImageInfo *imageinfo);
 
-ImageInfo *find_crit(TreeHndl s_tree,TreeHndl i_tree,int *Ncrits,double resolution
-		,bool *orderingsuccess,bool ordercurve,bool verbose);
+ImageInfo *find_crit(GridHndl grid,int *Ncrits,double resolution,bool *orderingsuccess
+		,bool ordercurve,bool verbose);
 
 /* in double_sort.c */
 void double_sort(unsigned long n, double *arr, unsigned long *brr);

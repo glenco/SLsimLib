@@ -6,13 +6,15 @@
  *
  *      routines imported from TreeDriver.c made to use Kist instead of List
  */
-#include <stdlib.h>
+/*#include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 #include <assert.h>
 #include <Tree.h>
 #include <Kist.h>
-#include <KistDriver.h>
+#include <KistDriver.h>*/
+
+#include <slsimlib.h>
 
 //static int Nbucket = 1;   // must be =1 if each leaf is to coincide with each cell
 static int incell;
