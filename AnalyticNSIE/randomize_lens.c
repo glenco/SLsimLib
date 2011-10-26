@@ -361,7 +361,6 @@ void RandomizeSubstructure3(AnaLens *lens,double rangeInRei,long *seed){
 	Nsub = (NsubMax > Nsub) ? Nsub : NsubMax ;
 
 	//printf("scale = %e\n",scale);
-
 	for(i=0,k=0; i < Nsub;++i){
 		//for(i=0;i<lens->NSubstruct;++i){
 

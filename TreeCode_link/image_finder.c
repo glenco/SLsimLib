@@ -1410,7 +1410,7 @@ void xygridpoints(Point *i_points,double range,double *center,long Ngrid_1d,shor
 
   if(remove_center && (Ngrid_1d%2 == 1)){
     /*i_points=NewPointArray(Ngrid_1d*Ngrid_1d-1);*/
-#pragma omp parallel for private(i)
+//#pragma omp parallel for private(i)
     for(i=0,j=0;i<Ngrid_1d*Ngrid_1d;++i){
 
       if( (2*(i/Ngrid_1d)/(Ngrid_1d-1) == 1) && (i%Ngrid_1d == Ngrid_1d/2+1) ) j=1;

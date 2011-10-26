@@ -24,12 +24,19 @@
 extern COSMOLOGY cosmo;
 extern AnaLens *lens;
 
+struct temp_data
+{
+  double alpha[2], gamma[2];
+}
+  *temp;
 
 void rayshooterInternal(unsigned long Npoints, Point *i_points, Boolean kappa_off){
   /* i_points need to be already linked to s_points */
-  double x_rescale[2], alpha[2], gamma[2], tmp, dt = 0;
+  double x_rescale[2], tmp, dt = 0;
   static double zs_old=-1,convert_factor=0;
   long i,j;
+
+  temp = (struct temp_data *) malloc(Npoints * sizeof(struct temp_data));
 
   if(lens == NULL || !lens->set)
     {
@@ -49,7 +56,7 @@ void rayshooterInternal(unsigned long Npoints, Point *i_points, Boolean kappa_of
   
   convert_factor = lens->star_massscale / lens->Sigma_crit;
  
-#pragma omp parallel for private(x_rescale, star_tree, alpha, gamma ,tmp, i)
+#pragma omp parallel for private(x_rescale, dt, i)
   for(i = 0; i < Npoints; i++)
     {
       i_points[i].dt = 0;
@@ -115,15 +122,15 @@ void rayshooterInternal(unsigned long Npoints, Point *i_points, Boolean kappa_of
 	  if(lens->perturb_Nmodes > 0)
 	    {
 	      i_points[i].kappa += lens_expand(lens->perturb_beta,lens->perturb_modes
-					       ,lens->perturb_Nmodes,i_points[i].x,alpha,gamma,&dt);
+					       ,lens->perturb_Nmodes,i_points[i].x,temp[i].alpha,temp[i].gamma,&dt);
 	      
-	      i_points[i].image->x[0] += alpha[0];
-	      i_points[i].image->x[1] += alpha[1];
+	      i_points[i].image->x[0] += temp[i].alpha[0];
+	      i_points[i].image->x[1] += temp[i].alpha[1];
 	      
 	      if(!kappa_off)
 		{
-		  i_points[i].gamma[0] += gamma[0];
-		  i_points[i].gamma[1] += gamma[1];
+		  i_points[i].gamma[0] += temp[i].gamma[0];
+		  i_points[i].gamma[1] += temp[i].gamma[1];
 		  i_points[i].dt += dt;
 		} 
 	      else
@@ -135,7 +142,7 @@ void rayshooterInternal(unsigned long Npoints, Point *i_points, Boolean kappa_of
 	   {
 	     for(j=0;j<lens->sub_N;++j)
 	       {
-		 lens->sub_alpha_func(alpha,i_points[i].x,lens->sub_Rcut[j]
+		 lens->sub_alpha_func(temp[i].alpha,i_points[i].x,lens->sub_Rcut[j]
 				      ,lens->sub_mass[j],lens->sub_beta
 				      ,lens->sub_x[j],lens->Sigma_crit);
 		 
@@ -143,8 +150,8 @@ void rayshooterInternal(unsigned long Npoints, Point *i_points, Boolean kappa_of
 		 
 		 //*** alphaNFW does not have the same input format
 
-		 i_points[i].image->x[0] += alpha[0];
-		 i_points[i].image->x[1] += alpha[1];
+		 i_points[i].image->x[0] += temp[i].alpha[0];
+		 i_points[i].image->x[1] += temp[i].alpha[1];
 		 
 		 if(!kappa_off)
 		   {
@@ -156,8 +163,8 @@ void rayshooterInternal(unsigned long Npoints, Point *i_points, Boolean kappa_of
 		     lens->sub_gamma_func(gamma,i_points[i].x,lens->sub_Rcut[j],lens->sub_mass[j]
 					  ,lens->sub_beta,lens->sub_x[j],lens->Sigma_crit);
 		
-		     i_points[i].gamma[0] += gamma[0];
-		     i_points[i].gamma[1] += gamma[1];
+		     i_points[i].gamma[0] += temp[i].gamma[0];
+		     i_points[i].gamma[1] += temp[i].gamma[1];
 		     
 		     i_points[i].dt += lens->sub_phi_func(i_points[i].x,lens->sub_Rcut[j],lens->sub_mass[j]
 							  ,lens->sub_beta,lens->sub_x[j],lens->Sigma_crit);
@@ -166,26 +173,7 @@ void rayshooterInternal(unsigned long Npoints, Point *i_points, Boolean kappa_of
 	       }
 	   }
 	 
-	 // add stars for microlensing
-	 if(lens->stars_N > 0 && lens->stars_implanted)
-	   {
-	     substract_stars_disks(lens,i_points[i].x,i_points[i].image->x,
-				   &(i_points[i].kappa),i_points[i].gamma);
-	     
-	     // do stars with tree code
-	     TreeNBForce2D(lens->star_tree,i_points[i].x,alpha,&tmp,gamma,True);
-	     
-	     i_points[i].image->x[0] += convert_factor*alpha[0];
-	     i_points[i].image->x[1] += convert_factor*alpha[1];
-	     
-	     if(!kappa_off)
-	       {
-		 i_points[i].kappa += convert_factor*tmp;
-		 i_points[i].gamma[0] += convert_factor*gamma[0];
-		 i_points[i].gamma[1] += convert_factor*gamma[1];
-	       }
-	     
-	   }
+
 
     	  if(!kappa_off)
 	    {
@@ -201,15 +189,44 @@ void rayshooterInternal(unsigned long Npoints, Point *i_points, Boolean kappa_of
           i_points[i].invmag = (1-i_points[i].kappa)*(1-i_points[i].kappa)
 	    - i_points[i].gamma[0]*i_points[i].gamma[0] - i_points[i].gamma[1]*i_points[i].gamma[1];
 	}
-      
-      i_points[i].image->invmag=i_points[i].invmag;
-      i_points[i].image->kappa=i_points[i].kappa;
-      i_points[i].image->gamma[0]=i_points[i].gamma[0];
-      i_points[i].image->gamma[1]=i_points[i].gamma[1];
-      i_points[i].image->dt = i_points[i].dt;
-      
-   }
+    }
 
+  for(i = 0; i< Npoints; i++)
+    {
+	 // add stars for microlensing
+      if(lens->stars_N > 0 && lens->stars_implanted)
+	{
+	  substract_stars_disks(lens,i_points[i].x,i_points[i].image->x,
+				&(i_points[i].kappa),i_points[i].gamma);
+	  
+	  // do stars with tree code
+	  TreeNBForce2D(lens->star_tree,i_points[i].x,temp[i].alpha,&tmp,temp[i].gamma,True);
+	  
+	  i_points[i].image->x[0] += convert_factor*temp[i].alpha[0];
+	  i_points[i].image->x[1] += convert_factor*temp[i].alpha[1];
+	  
+	  if(!kappa_off)
+	    {
+		 i_points[i].kappa += convert_factor*tmp;
+		 i_points[i].gamma[0] += convert_factor*temp[i].gamma[0];
+		 i_points[i].gamma[1] += convert_factor*temp[i].gamma[1];
+	    }
+	  
+	}
+
+    }
+     
+#pragma omp parallel for private(i)
+    for(i = 0; i < Npoints; i++)
+      {
+	i_points[i].image->invmag=i_points[i].invmag;
+	i_points[i].image->kappa=i_points[i].kappa;
+	i_points[i].image->gamma[0]=i_points[i].gamma[0];
+	i_points[i].image->gamma[1]=i_points[i].gamma[1];
+	i_points[i].image->dt = i_points[i].dt;
+      }
+
+    free(temp);
 
   return ;
 }

@@ -70,7 +70,7 @@ void map_images(AnaLens *lens,TreeHndl s_tree,TreeHndl i_tree
 
 
 	// do an initial refinement to find all images and refine grid
-	find_images_kist(lens->source_x,lens->source_r_in,s_tree,i_tree,Nimages
+	find_images_kist(lens->source_x,lens->source_r,s_tree,i_tree,Nimages
 			  ,imageinfo,NimageMax,&Nimagepoints,0,False,0,False,True);
 
 	/*
@@ -148,7 +148,10 @@ void map_images(AnaLens *lens,TreeHndl s_tree,TreeHndl i_tree
 
 	// find kist of image points and divide into images
 	//printf("finding images\n");
+
+
 	find_divide_images(i_tree,s_tree,lens->source_x,lens->source_r,imageinfo,Nimages,NimageMax);
+
 
 	//printf("images identified\n");
 	//printf("Nimages = %i\n",*Nimages);
@@ -172,7 +175,9 @@ void map_images(AnaLens *lens,TreeHndl s_tree,TreeHndl i_tree
 */
 
 	// ****** calculate surface brightnesses and flux of each image  ******
-	for(i=0,area_tot=0 ; i < *Nimages ; ++i){
+		area_tot = 0.0;
+#pragma omp parallel for schedule(dynamic) private(i, j, y) reduction(+:area_tot)
+	for(i=0; i < *Nimages ; ++i){
 		MoveToTopKist(imageinfo[i].imagekist);
 		imageinfo[i].area = 0.0;
 		//printf("%li points in image %i\n",imageinfo[i].Npoints,i);
@@ -191,15 +196,17 @@ void map_images(AnaLens *lens,TreeHndl s_tree,TreeHndl i_tree
 		area_tot += imageinfo[i].area;
 	}
 
+
 	//PrintList(imagelist);
 	//printf("Nimages = %i  Npoints_total = %li\n",*Nimages,imagelist->Npoints);
 	//for(i=0;i<(*Nimages);++i) printf("    Npoints = %li\n",imageinfo[i].Npoints);
 
 	// ******* refine images based on flux in each pixel ******
 	i=0;
+	//if(area_tot != 0.0) while( refine_grid_on_image(lens,i_tree,s_tree,imageinfo,*Nimages
+		//	,FracResTarget,criterion,kappa_off) ) ++i;
 	if(area_tot != 0.0) while( refine_grid_on_image(lens,i_tree,s_tree,imageinfo,*Nimages
-			,FracResTarget,criterion,kappa_off) ) ++i;
-
+			,FracResTarget,criterion,kappa_off)) ++i;
 	//printf("i=%i Nold=%li\n",i,Nold);
 	//printf("%li\n",imagelist->Npoints);
 
@@ -210,6 +217,7 @@ void map_images(AnaLens *lens,TreeHndl s_tree,TreeHndl i_tree
 	oldNimages=*Nimages;
 
 	// find image centroid
+#pragma omp parallel for schedule(dynamic) private(i, j, tmp)
 	for(i=0;i<*Nimages;++i){
 		MoveToTopKist(imageinfo[i].imagekist);
 		tmp=0.0;
@@ -226,6 +234,8 @@ void map_images(AnaLens *lens,TreeHndl s_tree,TreeHndl i_tree
 			imageinfo[i].centroid[0] /= tmp;
 			imageinfo[i].centroid[1] /= tmp;
 		}
+
+
 
 		//printf("  %i  centroid = %e %e N = %li\n",i,imageinfo[i].centroid[0],imageinfo[i].centroid[1]
 		//                                    ,imageinfo[i].Npoints);
@@ -407,7 +417,9 @@ int refine_grid_on_image(AnaLens *lens,TreeHndl i_tree,TreeHndl s_tree,ImageInfo
       // Go through list of image points and copy the information
       //  just calculated into the new points and re-calculate the area/flux
       //  for each image
-     for(i=0,Ncells=0;i<Nimages;++i){
+      Ncells = 0;
+//#pragma omp parallel for private(i, j, y, Ncells)
+     for(i=0;i<Nimages;++i){
     	 imageinfo[i].area = 0.0;
     	 MoveToTopKist(imageinfo[i].imagekist);
     	 for(j = 0 ; j < imageinfo[i].imagekist->Nunits ; ++j,MoveDownKist(imageinfo[i].imagekist) ){

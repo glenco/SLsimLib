@@ -53,14 +53,15 @@ void implant_stars(AnaLens *lens,Point *centers,unsigned long Nregions,long *see
 		freeTreeNB(lens->star_tree);
 	}
 
-	for(j=0,m=0;j<Nregions;++j){
-
+//#pragma omp parallel for private(j, NstarsPerImage, r, theta, m) firstprivate(i, k)
+	for(j=0;j<Nregions;++j){
+		m = 0;
 		assert( centers[j].kappa > 0.0);
 
 		NstarsPerImage = lens->stars_N/lens->star_Nregions;
 
 		lens->star_region[j] = 1.0/sqrt(pi*lens->star_fstars*centers[j].kappa*lens->Sigma_crit
-				/lens->star_massscale/NstarsPerImage);
+				/lens->star_massscale/(float)NstarsPerImage);
 
 		// cutoff based on comparison of star deflection to smooth component
 		//rcut = 4*sqrt(lens->star_massscale/pi/lens->Sigma_crit
@@ -94,6 +95,7 @@ void implant_stars(AnaLens *lens,Point *centers,unsigned long Nregions,long *see
 			//printf("%e %e\n",lens->stars_xp[m][0],lens->stars_xp[m][1]);
 		}
 	}
+
 	assert(m <= lens->stars_N);
 	lens->stars_N = m;
 

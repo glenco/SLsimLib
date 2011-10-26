@@ -148,6 +148,7 @@ void readparams_ana(char *filename,CosmoHndl cosmo,AnaLens *lens){
 	  case Uniform:
 		  lens->source_sb_func = uniform_SB;
 		  printf(">  uniform surface brightness source\n");
+		  for(i=0;i<8;++i) fscanf(file,"%s %le",label,&tmp);
 		  break;
 	  case Gaussian:
 		  lens->source_sb_func = gaussian_SB;
