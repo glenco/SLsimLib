@@ -206,13 +206,13 @@ void FindAllBoxNeighbors(TreeHndl tree,Point *point,ListHndl neighbors);
 
 // in image_finder.c
 
-void find_images(double *y_source,double r_source,GridHndl grid
+/*void find_images(double *y_source,double r_source,GridHndl grid
 		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
 		,double initial_size,bool splitimages,short edge_refinement
 		,bool verbose,bool kappa_off);
 short image_finder(double *y_source,double r_source,TreeHndl s_tree,TreeHndl i_tree
 		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
-		,short splitparities,short true_images);
+		,short splitparities,short true_images);*/
 int refine_grid(TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo
 		,unsigned long Nimages,double res_target,short criterion,bool kappa_off);
 long refine_edges(TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo

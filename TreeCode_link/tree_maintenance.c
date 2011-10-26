@@ -755,9 +755,25 @@ unsigned long PruneTrees(
 	 // rebuild source tree from list.
 	 RebuildTreeFromList(s_tree);
 
+		/***************** test lines  **************************
+	 i=0;
+	 moveTop(i_tree);
+	 do{
+		 if(atLeaf(i_tree)){
+			 assert(i_tree->current->npoints == 1);
+			 assert(i_tree->current->points->leaf == i_tree->current);
+			 assert(i_tree->current->points->next || i_tree->current->points->prev);
+			 ++i;
+		 }else{
+			 assert(i_tree->current->npoints > 1);
+			 assert(i_tree->current->points->next || i_tree->current->points->prev);
+		 }
+	 }while(TreeWalkStep(i_tree,true));
+	 assert(i == i_tree->top->npoints);
+
+
 	 MoveToTopList(i_tree->pointlist);
 	 i=0;
-		/***************** test lines  **************************/
 	 do{ assert(i_tree->pointlist->current->leaf); ++i;}while(MoveDownList(i_tree->pointlist));
 	 MoveToTopList(s_tree->pointlist);
 	 i=0;

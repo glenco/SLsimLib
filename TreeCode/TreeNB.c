@@ -13,8 +13,6 @@
 
 #include <slsimlib.h>
 
-double dummy;
-
 /***** Structs *****/
 
 /* BranchNB: Private struct, not exported */ 

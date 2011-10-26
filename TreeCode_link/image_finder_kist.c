@@ -20,8 +20,6 @@ static const float mumin = 0.45;  // actually the sqrt of the minimum magnificat
 static const float FracResTarget = 4.0e-4;
 //static const float FracResTarget = 1.0e-4;
 
-Point *pointg;
-double ysourceg[2],magsigng;
 extern const double initialgridsize;
 
 /** \ingroup ImageFinding
