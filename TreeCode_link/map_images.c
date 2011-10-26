@@ -96,7 +96,9 @@ void map_images(
 	/////////////////////////////////////////////
 
 	// ****** calculate surface brightnesses and flux of each image  ******
-	for(i=0,area_tot=0 ; i < *Nimages ; ++i){
+	area_tot=0;
+#pragma omp parallel for schedule(dynamic) private(i, j, y) reduction(+:area_tot)
+	for(i=0 ; i < *Nimages ; ++i){
 		MoveToTopKist(imageinfo[i].imagekist);
 		imageinfo[i].area = 0.0;
 		//printf("%li points in image %i\n",imageinfo[i].Npoints,i);
@@ -148,6 +150,7 @@ void map_images(
 	oldNimages=*Nimages;
 
 	// find image centroid
+#pragma omp parallel for schedule(dynamic) private(i, j, tmp)
 	for(i=0;i<*Nimages;++i){
 		MoveToTopKist(imageinfo[i].imagekist);
 		tmp=0.0;

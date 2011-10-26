@@ -15,7 +15,13 @@
 #include <List.h>
 #include <tree_maintenance.h>*/
 
+<<<<<<< local
 #include <slsimlib.h>
+=======
+#include <omp.h>
+
+double dummy;
+>>>>>>> other
 
 /***** Structs *****/
 
@@ -88,11 +94,12 @@ Point *NewPointArray(
   unsigned long i;
 
   if(N <= 0) return NULL;
-  points = (Point *) calloc(N,sizeof(Point));
+  points = (Point *) calloc(N, sizeof(Point));
   if(NewXs) points[0].x = (double *) calloc(2,sizeof(double));
   points[0].head = N;
   points[0].in_image = false;
   points[0].leaf = NULL;
+<<<<<<< local
   for(i=1;i<N;++i){
 	  if(NewXs) points[i].x = (double *) calloc(2,sizeof(double));
 	  points[i].head = 0;
@@ -100,6 +107,18 @@ Point *NewPointArray(
 	  points[i].surface_brightness = 0;
 	  points[i].leaf = NULL;
   }
+=======
+
+#pragma omp parallel for private(i)
+  for(i = 1; i < N; i++)
+  	  {
+	  	  if(NewXs) points[i].x = (double *) calloc(2,sizeof(double));
+	  	  points[i].head = 0;
+	  	  points[i].in_image = False;
+	  	  points[i].surface_brightness = 0;
+	  	  points[i].leaf = NULL;
+  	  }
+>>>>>>> other
 
   return points;
 }
@@ -651,7 +670,9 @@ ImageInfo *NewImageInfo(int Nimages){
   imageinfo=(ImageInfo *) malloc(Nimages*sizeof(ImageInfo));
   assert(imageinfo);
 
-  for(i=0;i<Nimages;++i){
+#pragma omp parallel for private(i)
+  for(i = 0;i < Nimages; i++)
+  {
 	imageinfo[i].imagekist = NewKist();
 	imageinfo[i].Npoints=0;
     imageinfo[i].innerborder = NewKist();

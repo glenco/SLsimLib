@@ -7,14 +7,7 @@
  *      reads parameters for analytic lens model
  */
 
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <nr.h>
-#include <nrutil.h>
-#include <nrD.h>
-#include <cosmo.h>
-#include "analytic_lens.h"
+#include <slsimlib.h>
 
 /** \ingroup ImageFinding
  * \brief Reads in a parameter file and sets up an analytic lens.
@@ -269,7 +262,7 @@ void ReadParams_AnaLens(char *filename,CosmoHndl cosmo,AnaLens *lens){
   }
 
   lens->set=true;
-  printf(">\n");
+  printf("> lens set %d\n", lens->set);
 }
 
 /** \ingroup Constructor

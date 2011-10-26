@@ -4,12 +4,6 @@
  *  Created on: Sep 8, 2009
  *      Author: R.B. Metcalf
  */
-/*#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <nrutil.h>
-#include "Tree.h"
-*/
 
 #include <slsimlib.h>
 

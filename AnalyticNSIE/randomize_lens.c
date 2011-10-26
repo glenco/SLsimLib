@@ -11,11 +11,17 @@
 #include <nr.h>
 #include <nrD.h>
 #include <nrutil.h>
+<<<<<<< local
 #include <analytic_lens.h>*/
 
 #include <slsimlib.h>
 
 const float sheartol=1.0e-3;
+=======
+#include <cosmo.h>
+#include <analytic_lens.h>
+#define sheartol 1.0e-3
+>>>>>>> other
 
 /*
  * routines for making random, close to elliptical
@@ -42,7 +48,7 @@ void RandomizeHost(AnaLens *lens,double r_source_phys,long *seed,bool tables
 		++init;
 		// read in Einstein radius projected onto the source plane
 
-		sprintf(filename,"GalaxyData/z_table.txt");
+		sprintf(filename,"../GalaxyData/z_table.txt");
 		printf(">reading from %s\n",filename);
 		file=fopen(filename,"r");
 		fscanf(file,"%i",&NzTable);
@@ -52,7 +58,7 @@ void RandomizeHost(AnaLens *lens,double r_source_phys,long *seed,bool tables
 		//for(n=0;n<NzTable;++n) printf("%le  %le\n",zTable[n][0],zTable[n][1]);
 		fclose(file);
 
-		sprintf(filename,"GalaxyData/slacs_sigma.dat");
+		sprintf(filename,"../GalaxyData/slacs_sigma.dat");
 		printf(">reading from %s\n",filename);
 		file=fopen(filename,"r");
 		fscanf(file,"%i",&NsigmaTable);
@@ -64,7 +70,7 @@ void RandomizeHost(AnaLens *lens,double r_source_phys,long *seed,bool tables
 		}
 		fclose(file);
 
-		sprintf(filename,"GalaxyData/slacs_f.dat");
+		sprintf(filename,"../GalaxyData/slacs_f.dat");
 		printf(">reading from %s\n",filename);
 		file=fopen(filename,"r");
 		fscanf(file,"%i",&NaxisTable);
@@ -376,7 +382,6 @@ void RandomizeSubstructure3(AnaLens *lens,double rangeInRei,long *seed){
 	Nsub = (NsubMax > Nsub) ? Nsub : NsubMax ;
 
 	//printf("scale = %e\n",scale);
-
 	for(i=0,k=0; i < Nsub;++i){
 		//for(i=0;i<lens->NSubstruct;++i){
 

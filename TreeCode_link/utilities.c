@@ -5,16 +5,6 @@
  *      Author: R.B. Metcalf
  */
 
-/*#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <nrutil.h>
-#include <limits.h>
-#include <nrD.h>
-#include "Tree.h"
-#ifndef pi
-#define pi  3.1415936
-#endif*/
 
 #include <slsimlib.h>
 
@@ -81,7 +71,9 @@ Point *LinkToSourcePoints(Point *i_points,unsigned long Npoints){
 
   if(Npoints < 1) return NULL;
 
-  s_points=NewPointArray(Npoints,true);
+  s_points = NewPointArray(Npoints,true);
+
+#pragma omp parallel for private(i)
   for(i=0;i<Npoints;++i){
     s_points[i].id=i_points[i].id;
       // link images and source points
