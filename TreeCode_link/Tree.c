@@ -6,22 +6,7 @@
  * Comments:                           
  */
 
-/*#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <math.h>
-#include "Tree.h"
-#include <Kist.h>
-#include <List.h>
-#include <tree_maintenance.h>*/
-
-<<<<<<< local
 #include <slsimlib.h>
-=======
-#include <omp.h>
-
-double dummy;
->>>>>>> other
 
 /***** Structs *****/
 
@@ -99,26 +84,16 @@ Point *NewPointArray(
   points[0].head = N;
   points[0].in_image = false;
   points[0].leaf = NULL;
-<<<<<<< local
-  for(i=1;i<N;++i){
-	  if(NewXs) points[i].x = (double *) calloc(2,sizeof(double));
-	  points[i].head = 0;
-	  points[i].in_image = false;
-	  points[i].surface_brightness = 0;
-	  points[i].leaf = NULL;
-  }
-=======
 
 #pragma omp parallel for private(i)
   for(i = 1; i < N; i++)
   	  {
 	  	  if(NewXs) points[i].x = (double *) calloc(2,sizeof(double));
 	  	  points[i].head = 0;
-	  	  points[i].in_image = False;
+	  	  points[i].in_image = false;
 	  	  points[i].surface_brightness = 0;
 	  	  points[i].leaf = NULL;
   	  }
->>>>>>> other
 
   return points;
 }

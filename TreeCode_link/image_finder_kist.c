@@ -1,6 +1,15 @@
+/*#include <math.h>
+#include <time.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <assert.h>
+#include <nrutil.h>
+#include <Tree.h>
+#include <KistDriver.h>
+#include <divide_images.h>
+#include <tree_maintenance.h>*/
 
 #include <slsimlib.h>
-#include <cosmo.h>
 
 static const int NpointsRequired = 50;  // number of points required to be within an image
 static const int Ngrid_block = 3;       // each cell is divided into Ngrid_block^2 subcells
@@ -430,13 +439,14 @@ short image_finder_kist(double *y_source,double r_source,TreeHndl s_tree,TreeHnd
 
   // don't copy information into array
 #pragma omp parallel for private(i)
-  for(i=0;i<*Nimages;++i)
-	 imageinfo[i].Npoints = 0;  // to make sure points array is not read beyond length
+  for(i=0;i<*Nimages;++i) imageinfo[i].Npoints = 0;  // to make sure points array is not read beyond length
 
   // find borders
   if( splitparities == 0 ) for(i=0;i<*Nimages;++i) findborders4(i_tree,&imageinfo[i]);
 
   //assert(*Nimages < NimageMax-1);
+
+  //#pragma omp parallel for firstprivate(i_tree)
 
   for(i=0;i<*Nimages;++i){
 
@@ -518,13 +528,12 @@ int refine_grid_kist(TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo,unsign
 
   total_area=0;
 #pragma omp parallel reduction(+:total_area)
-  for(i=0;i<Nimages;++i)
-    total_area += imageinfo[i].area;
-  
+  for(i=0;i<Nimages;++i) total_area += imageinfo[i].area;
+
   number_of_refined = Ncells = 0;
 #pragma omp parallel for schedule(dynamic) private(i, count, rmax, pass) reduction(+:Ncells)
   for(i=0;i<Nimages;++i){
-	count=0;
+    count=0;
 
     if(criterion == 0) pass = imageinfo[i].area*imageinfo[i].area_error/total_area > res_target;
     if(criterion == 1) pass = (imageinfo[i].area_error > res_target)*(imageinfo[i].area > 1.0e-5*total_area);
@@ -565,6 +574,7 @@ int refine_grid_kist(TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo,unsign
 
   i_points = NewPointArray((Ngrid_block*Ngrid_block-1)*Ncells,true);
   Nmarker = 0;
+  Ncells = 0;
 
   for(i=0,Ncells=0;i<Nimages;++i){
 	  count=0;
@@ -673,53 +683,38 @@ int refine_grid_kist(TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo,unsign
 				  }
 			  }
 		  }
-		  assert(Nout > 0);
-		  
-		}
-		
-		assert(Nout >= 0);
-		Nmarker += (Ngrid_block*Ngrid_block-1) - Nout;
-		
-		++Ncells;
-		point->gridsize /= Ngrid_block;
-		point->image->gridsize /= Ngrid_block;
-		point->in_image = False;  // unmak so that it wouldn't double refine
-	      }
-	    }
-	  }
-	  
-	  
-	  //printf("should be Ncells=%i Ngrid_block=%i   %i\n",Ncells,Ngrid_block,
-	  //		(Ngrid_block*Ngrid_block-1)*Ncells);
-	  
-	}
-      
-      if(count > 0) ++number_of_refined;
-    } // end of image loop
-  
+
+
+      //printf("should be Ncells=%i Ngrid_block=%i   %i\n",Ncells,Ngrid_block,
+      //		(Ngrid_block*Ngrid_block-1)*Ncells);
+
+    }
+
+    if(count > 0) ++number_of_refined;
+  } // end of image loop
+
   assert( Nmarker <= (Ngrid_block*Ngrid_block-1)*Ncells_o );
   if( Nmarker != (Ngrid_block*Ngrid_block-1)*Ncells_o ) i_points = AddPointToArray(i_points,Nmarker,(Ngrid_block*Ngrid_block-1)*Ncells_o);
-  
+
   s_points=LinkToSourcePoints(i_points,Nmarker);
-  
+
   if(shootrays){
-    rayshooterInternal(Nmarker,i_points,kappa_off);
+	  rayshooterInternal(Nmarker,i_points,kappa_off);
   }else{
-    assert(Nimages == 1);
-    // The new points could be put into a kist if there where more than one image
-    // for(j=0;j<(Ngrid_block*Ngrid_block-1)*Ncells;++j){
-    //	  i_points[i].image->x[0] = i_points[i].x[0];
-    //	  i_points[i].image->x[1] = i_points[i].x[1];
-    //InsertAfterCurrentKist(newkist,i_points[j]);
-    //  }
+	  assert(Nimages == 1);
+	  // The new points could be put into a kist if there where more than one image
+      // for(j=0;j<(Ngrid_block*Ngrid_block-1)*Ncells;++j){
+	  //	  i_points[i].image->x[0] = i_points[i].x[0];
+	      //	  i_points[i].image->x[1] = i_points[i].x[1];
+      //InsertAfterCurrentKist(newkist,i_points[j]);
+      //  }
   }
-  
+
   // add points to trees
   AddPointsToTree(i_tree,i_points,Nmarker);
   if(shootrays) AddPointsToTree(s_tree,s_points,Nmarker);
-  
-  if(!shootrays) *point_pnt = i_points;
 
+  if(!shootrays) *point_pnt = i_points;
   return number_of_refined;
 }
 
