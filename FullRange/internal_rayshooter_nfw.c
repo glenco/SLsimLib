@@ -235,10 +235,16 @@ double gaussian_SB(double *y){
 	return exp( -(y[0]*y[0] + y[1]*y[1])/lens->source_gauss_r2 );
 }
 
-double BLR_SB(double *y){
+// surface brightness for models of the Broad Line Region
+double BLR_Disk_SB(double *y){
 	return blr_surface_brightness_disk(y,lens,&cosmo);
-	return blr_surface_brightness_spherical_random_motions(sqrt(y[0]*y[0] + y[1]*y[1]),lens,&cosmo);
+}
+
+double BLR_Sph1_SB(double *y){
 	return blr_surface_brightness_spherical_circular_motions(sqrt(y[0]*y[0] + y[1]*y[1]),lens,&cosmo);
+}
+double BLR_Sph2_SB(double *y){
+	return blr_surface_brightness_spherical_random_motions(sqrt(y[0]*y[0] + y[1]*y[1]),lens,&cosmo);
 }
 
 void in_source(double *y_source,ListHndl sourcelist){
