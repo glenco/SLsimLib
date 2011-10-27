@@ -5,6 +5,8 @@
  *      Author: R.B. Metcalf
  */
 
+#include <slsimlib.h>
+
 extern COSMOLOGY cosmo;
 extern AnaLens *lens;
 
@@ -194,7 +196,7 @@ void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off){
 				&(i_points[i].kappa),i_points[i].gamma);
 	  
 	  // do stars with tree code
-	  TreeNBForce2D(lens->star_tree,i_points[i].x,temp[i].alpha,&tmp,temp[i].gamma,True);
+	  TreeNBForce2D(lens->star_tree,i_points[i].x,temp[i].alpha,&tmp,temp[i].gamma,true);
 	  
 	  i_points[i].image->x[0] += convert_factor*temp[i].alpha[0];
 	  i_points[i].image->x[1] += convert_factor*temp[i].alpha[1];
