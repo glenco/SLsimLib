@@ -25,6 +25,7 @@ C_UPPER_DEPS :=
 SUBDIRS := \
 TreeCode_link \
 TreeCode_link/List \
+TreeCode \
 Kist \
 ImageProcessing \
 Galaxies \

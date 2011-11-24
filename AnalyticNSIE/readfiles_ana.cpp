@@ -9,6 +9,12 @@
 
 #include <slsimlib.h>
 
+/// added definition of Grav -- needed it setParams(cosmo)
+
+#ifndef Grav
+#define Grav 4.7788e-20
+#endif
+
 /** \ingroup ImageFinding
  * \brief Reads in a parameter file and sets up an analytic lens.
  *
@@ -16,14 +22,57 @@
  * force calculation.
  */
 
-AnaLens::AnaLens(char *filename,CosmoHndl cosmo){
-  ReadParams_AnaLens(filename,cosmo);
-  setParams(cosmo);
-  
-  set = true;
+void AnaLens::setInternal(CosmoHndl cosmo){
+   /********************************/
+  /* set some internal parameters */
+  /********************************/
+  double NSubstructInRe = 0;
+
+  sub_sigmaScale = host_sigma;
+  MpcToAsec = 60*60*180 / pi / cosmo->angDist(0,zlens);
+  std::cout << "Arcseconds/Mpc: " << MpcToAsec << std::endl;
+
+  // in degrees
+  host_pos_angle*=pi/180;
+
+  // in Mpc
+  host_ro=4*pi*pow(host_sigma/2.99792e5,2)*cosmo->angDist(0,zlens)
+		  *cosmo->angDist(zlens,zsource)
+		  /cosmo->angDist(0,zsource)/(1+zlens);
+
+  // find critical density
+  Sigma_crit=cosmo->angDist(0,zsource)/cosmo->angDist(zlens,zsource)
+		  /cosmo->angDist(0,zlens)/4/pi/Grav;
+  to = (1+zlens)*cosmo->angDist(0,zsource)
+		  /cosmo->angDist(zlens,zsource)/cosmo->angDist(0,zlens)
+		  /8.39428142e-10;
+
+  std::cout << "critical density is " << Sigma_crit << " Msun/Mpc^2    ro=" << host_ro << " Mpc  D_l = "
+       << cosmo->angDist(0,zlens) << " Mpc D_s = " << cosmo->angDist(0,zsource) << " Mpc  to = " << to << " days/Mpc^2" << std::endl;
+
+  NSubstructInRe = pi*pow(2*host_ro,2)*sub_Ndensity;
+
+  if(NSubstructInRe > 0){
+
+	  // include clumps that are beyond 2 Re
+	  /*
+	  NSubstruct = (int)(NSubstructInRe*FractionWithinRe(lens,2) + 0.5);
+	  Rmax = ro*2 + RmaxSubstruct
+		          + pow(2*MmaxSubstruct*ro/pi/Sigma_crit/1.0e-3,1./3.);
+	  NSubstruct = (int)(NdensitySubstruct*pi*Rmax*Rmax+0.5);
+	  */
+	  std::cout << "average number of clumps including outside Re: " << pi*pow(host_ro,2)*sub_Ndensity << std::endl;
+	  std::cout << "average clumps mass: " << averageSubMass() << " Msun" << std::endl;
+
+	  /*for(i=0;i<NSubstruct;++i){
+		  RcutSubstruct[i]=RmaxSubstruct;
+		  massSubstruct[i]=MmaxSubstruct;
+	  }*/
+
+  }
 }
 
-void AnaLens::ReadParams_AnaLens(char *filename,CosmoHndl cosmo){
+void AnaLens::ReadParams_AnaLens(char *filename){
   ifstream file_in(filename);
   char label[20];
   int i, type;
@@ -243,82 +292,10 @@ void AnaLens::ReadParams_AnaLens(char *filename,CosmoHndl cosmo){
   file_in.close();
 }
 
-void AnaLens::setParams(CosmoHndl cosmo){
-   /********************************/
-  /* set some internal parameters */
-  /********************************/
-  double NSubstructInRe = 0;
-
-  sub_sigmaScale = host_sigma;
-  MpcToAsec = 60*60*180 / pi / cosmo->angDist(0,zlens);
-  std::cout << "Arcseconds/Mpc: " << MpcToAsec << std::endl;
-
-  // in degrees
-  host_pos_angle*=pi/180;
-
-  // in Mpc
-  host_ro=4*pi*pow(host_sigma/2.99792e5,2)*cosmo->angDist(0,zlens)
-		  *cosmo->angDist(zlens,zsource)
-		  /cosmo->angDist(0,zsource)/(1+zlens);
-
-  // find critical density
-  Sigma_crit=cosmo->angDist(0,zsource)/cosmo->angDist(zlens,zsource)
-		  /cosmo->angDist(0,zlens)/4/pi/Grav;
-  to = (1+zlens)*cosmo->angDist(0,zsource)
-		  /cosmo->angDist(zlens,zsource)/cosmo->angDist(0,zlens)
-		  /8.39428142e-10;
-
-  std::cout << "critical density is " << Sigma_crit << " Msun/Mpc^2    ro=" << host_ro << " Mpc  D_l = "
-       << cosmo->angDist(0,zlens) << " Mpc D_s = " << cosmo->angDist(0,zsource) << " Mpc  to = " << to << " days/Mpc^2" << std::endl;
-
-  NSubstructInRe = pi*pow(2*host_ro,2)*sub_Ndensity;
-
-  if(NSubstructInRe > 0){
-
-	  // include clumps that are beyond 2 Re
-	  /*
-	  NSubstruct = (int)(NSubstructInRe*FractionWithinRe(lens,2) + 0.5);
-	  Rmax = ro*2 + RmaxSubstruct
-		          + pow(2*MmaxSubstruct*ro/pi/Sigma_crit/1.0e-3,1./3.);
-	  NSubstruct = (int)(NdensitySubstruct*pi*Rmax*Rmax+0.5);
-	  */
-	  std::cout << "average number of clumps including outside Re: " << pi*pow(host_ro,2)*sub_Ndensity << std::endl;
-	  std::cout << "average clumps mass: " << averageSubMass() << " Msun" << std::endl;
-
-	  /*for(i=0;i<NSubstruct;++i){
-		  RcutSubstruct[i]=RmaxSubstruct;
-		  massSubstruct[i]=MmaxSubstruct;
-	  }*/
-
-  }
-}
-
-/** \ingroup Constructor
- *
- */
-AnaLens::~AnaLens(){
-	free(perturb_modes);
-	if(sub_N > 0 && substruct_implanted){
-	  free_dmatrix(sub_x,0,sub_N-1,0,1);
-	  free(sub_Rcut);
-	  free(sub_mass);
-	  free(perturb_rms);
-	  free(perturb_modes);
-	}
-	if(stars_N > 0 && stars_implanted){
-		free(star_masses);
-		free(stars);
-		free_PosTypeMatrix(stars_xp,0,stars_N-1,0,2);
-		free(star_region);
-		free(star_kappa);
-		free_dmatrix(star_xdisk,0,star_Nregions-1,0,1);
-	}
-}
-
 /** \ingroup ImageFinding
  * \brief Prints the parameters of the analytic lens to stdout
  */
-void AnaLens::printLens(bool show_substruct,bool show_stars){
+void AnaLens::PrintAnaLens(bool show_substruct,bool show_stars){
 	int i;
 
 	std::cout << "Output file" << outputfile << std::endl;
@@ -452,4 +429,34 @@ void AnaLens::reNormSubstructure(double kappa_sub){
 	  sub_Ndensity=kappa_sub*Sigma_crit/avem;
 
 	  return ;
+}
+
+
+AnaLens::AnaLens(char filename[],CosmoHndl cosmo){
+  ReadParams_AnaLens(filename);
+  setInternal(cosmo);
+
+  set = true;
+  }
+
+/** \ingroup Constructor
+ *
+ */
+AnaLens::~AnaLens(){
+	free(perturb_modes);
+	if(sub_N > 0 && substruct_implanted){
+	  free_dmatrix(sub_x,0,sub_N-1,0,1);
+	  free(sub_Rcut);
+	  free(sub_mass);
+	  free(perturb_rms);
+	  free(perturb_modes);
+	}
+	if(stars_N > 0 && stars_implanted){
+		free(star_masses);
+		free(stars);
+		free_PosTypeMatrix(stars_xp,0,stars_N-1,0,2);
+		free(star_region);
+		free(star_kappa);
+		free_dmatrix(star_xdisk,0,star_Nregions-1,0,1);
+	}
 }

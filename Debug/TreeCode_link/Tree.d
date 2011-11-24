@@ -3,7 +3,7 @@ TreeCode_link/Tree.d TreeCode_link/Tree.o: ../TreeCode_link/Tree.cpp \
   /Users/mpetkova/Code/NR/include/nrutil.h \
   /Users/mpetkova/Code/NR/include/nr.h \
   /Users/mpetkova/Code/NR/include/nrD.h \
-  /Users/mpetkova/Code/CosmoLib/include/cosmo.h \
+  /Users/mpetkova/Code/CosmoLib_cpp/include/cosmo.h \
   /Users/mpetkova/Code/SLsimLib_cpp/include/point.h \
   /Users/mpetkova/Code/SLsimLib_cpp/include/List1.h \
   /Users/mpetkova/Code/SLsimLib_cpp/include/Tree.h \
@@ -33,7 +33,7 @@ TreeCode_link/Tree.d TreeCode_link/Tree.o: ../TreeCode_link/Tree.cpp \
 
 /Users/mpetkova/Code/NR/include/nrD.h:
 
-/Users/mpetkova/Code/CosmoLib/include/cosmo.h:
+/Users/mpetkova/Code/CosmoLib_cpp/include/cosmo.h:
 
 /Users/mpetkova/Code/SLsimLib_cpp/include/point.h:
 

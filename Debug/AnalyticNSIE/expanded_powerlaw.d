@@ -1,7 +1,7 @@
 AnalyticNSIE/expanded_powerlaw.d AnalyticNSIE/expanded_powerlaw.o:  \
  ../AnalyticNSIE/expanded_powerlaw.cpp \
   /Users/mpetkova/Code/SLsimLib_cpp/include/analytic_lens.h \
-  /Users/mpetkova/Code/CosmoLib/include/cosmo.h \
+  /Users/mpetkova/Code/CosmoLib_cpp/include/cosmo.h \
   /Users/mpetkova/Code/SLsimLib_cpp/include/Tree.h \
   /Users/mpetkova/Code/SLsimLib_cpp/include/point.h \
   /Users/mpetkova/Code/SLsimLib_cpp/include/Kist.h \
@@ -11,7 +11,7 @@ AnalyticNSIE/expanded_powerlaw.d AnalyticNSIE/expanded_powerlaw.o:  \
 
 /Users/mpetkova/Code/SLsimLib_cpp/include/analytic_lens.h:
 
-/Users/mpetkova/Code/CosmoLib/include/cosmo.h:
+/Users/mpetkova/Code/CosmoLib_cpp/include/cosmo.h:
 
 /Users/mpetkova/Code/SLsimLib_cpp/include/Tree.h:
 

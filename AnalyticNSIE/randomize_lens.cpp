@@ -105,7 +105,7 @@ void AnaLens::RandomizeHost(double r_source_phys,long *seed,bool tables
 		//zsource = RandomFromTable(zsTable,NzsTable,seed);
 
 		host_sigma = RandomFromTable(sigmaTable,NsigmaTable,seed);
-		setParams(cosmo);
+		setInternal(cosmo);
 	}
 
 	if(fo==0.0) fo=host_axis_ratio;

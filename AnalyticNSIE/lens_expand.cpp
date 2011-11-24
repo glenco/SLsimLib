@@ -29,7 +29,7 @@
 #include <math.h>
 #include "analytic_lens.h"
 
-#define Grav 4.7788e-20
+/// removed declaration of Grav -- caused compiler problems and was not needed
 
 double lens_expand(double beta,double *mod,int Nmodes,double *x,double *alpha,double *gamma,double *phi){
   double F,F1,F2,theta,r,cosx,sinx,cos2theta,sin2theta,gt,gx;

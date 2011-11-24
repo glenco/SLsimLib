@@ -10,6 +10,7 @@ RM := rm -rf
 -include sources.mk
 -include TreeCode_link/List/subdir.mk
 -include TreeCode_link/subdir.mk
+-include TreeCode/subdir.mk
 -include Kist/subdir.mk
 -include ImageProcessing/subdir.mk
 -include Galaxies/subdir.mk

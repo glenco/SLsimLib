@@ -1,7 +1,7 @@
 AnalyticNSIE/nfw_lens.d AnalyticNSIE/nfw_lens.o:  \
  ../AnalyticNSIE/nfw_lens.cpp \
   /Users/mpetkova/Code/SLsimLib_cpp/include/analytic_lens.h \
-  /Users/mpetkova/Code/CosmoLib/include/cosmo.h \
+  /Users/mpetkova/Code/CosmoLib_cpp/include/cosmo.h \
   /Users/mpetkova/Code/SLsimLib_cpp/include/Tree.h \
   /Users/mpetkova/Code/SLsimLib_cpp/include/point.h \
   /Users/mpetkova/Code/SLsimLib_cpp/include/Kist.h \
@@ -11,7 +11,7 @@ AnalyticNSIE/nfw_lens.d AnalyticNSIE/nfw_lens.o:  \
 
 /Users/mpetkova/Code/SLsimLib_cpp/include/analytic_lens.h:
 
-/Users/mpetkova/Code/CosmoLib/include/cosmo.h:
+/Users/mpetkova/Code/CosmoLib_cpp/include/cosmo.h:
 
 /Users/mpetkova/Code/SLsimLib_cpp/include/Tree.h:
 
