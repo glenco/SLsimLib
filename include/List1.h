@@ -6,6 +6,7 @@
  */
 
 #include <point.h>
+#include <assert.h>
 
 #ifndef pointlist_declare
 #define pointlist_declare
@@ -19,7 +20,27 @@ typedef struct PointList{
 } PointList;
 
 typedef struct PointList *ListHndl;
+//bool AtTopList(ListHndl list);
+//bool AtBottomList(ListHndl list);
 
+inline bool AtTopList(ListHndl list){
+	assert(list);
+	if(list->current==list->top) return true;
+	else return false;
+};
+inline bool AtBottomList(ListHndl list){
+	assert(list);
+	if(list->current==list->bottom) return true;
+	else return false;
+};
+//inline void MoveToTopList(ListHndl list);
+//inline void MoveToBottomList(ListHndl list);
+inline void MoveToTopList(ListHndl list){
+  list->current=list->top;
+};
+inline void MoveToBottomList(ListHndl list){
+  list->current=list->bottom;
+};
 #endif
 /***********************************************************
    routines for linked list of points
@@ -31,14 +52,13 @@ void InsertAfterCurrent(ListHndl list,double *x,unsigned long id,Point *image);
 void InsertBeforeCurrent(ListHndl list,double *x,unsigned long id,Point *image);
 void InsertPointAfterCurrent(ListHndl list,Point *);
 void InsertPointBeforeCurrent(ListHndl list,Point *);
-bool AtTopList(ListHndl list);
-bool AtBottomList(ListHndl list);
+
 void JumpDownList(ListHndl list,int jump);
 bool MoveDownList(ListHndl list);
 bool MoveUpList(ListHndl list);
 void ShiftList(ListHndl list);
-inline void MoveToTopList(ListHndl list);
-inline void MoveToBottomList(ListHndl list);
+
+
 void FillList(ListHndl list,double **x,unsigned long N
 	      ,unsigned long idmin);
 void SwapPointsInList(ListHndl list,Point *p1,Point *p2);

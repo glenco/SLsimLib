@@ -28,6 +28,8 @@ void AnaLens::setInternal(CosmoHndl cosmo){
   /********************************/
   double NSubstructInRe = 0;
 
+  std::cout << "In setInternal(cosmo)\n";
+
   sub_sigmaScale = host_sigma;
   MpcToAsec = 60*60*180 / pi / cosmo->angDist(0,zlens);
   std::cout << "Arcseconds/Mpc: " << MpcToAsec << std::endl;
@@ -443,13 +445,16 @@ AnaLens::AnaLens(char filename[],CosmoHndl cosmo){
  *
  */
 AnaLens::~AnaLens(){
+	if(perturb_Nmodes > 0){
 	free(perturb_modes);
+	free(perturb_rms);
+	}
 	if(sub_N > 0 && substruct_implanted){
 	  free_dmatrix(sub_x,0,sub_N-1,0,1);
 	  free(sub_Rcut);
 	  free(sub_mass);
-	  free(perturb_rms);
-	  free(perturb_modes);
+	  free(sub_substructures);
+	  
 	}
 	if(stars_N > 0 && stars_implanted){
 		free(star_masses);
@@ -458,5 +463,6 @@ AnaLens::~AnaLens(){
 		free(star_region);
 		free(star_kappa);
 		free_dmatrix(star_xdisk,0,star_Nregions-1,0,1);
+		delete star_tree;
 	}
 }

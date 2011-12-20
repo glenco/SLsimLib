@@ -323,7 +323,7 @@ void partition_images(Point *point,unsigned long *N_in_image,TreeHndl i_tree){
 	//printf("exiting partition_images\n");
 
 	assert(neighbors->Nunits == 0);
-	free(neighbors);
+	freeKist(neighbors);
 
 	return;
 }

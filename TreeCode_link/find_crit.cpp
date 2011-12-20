@@ -60,6 +60,8 @@ ImageInfo *find_crit(GridHndl grid,int *Ncrits,double resolution,bool *orderings
 	  Npoints=negpointlist->Npoints;
 	  critcurve[0].Npoints=Npoints;
 
+	  //std::cout << "Npoints " << Npoints << "\n";
+
 	  if(Npoints == 0){
 		  if(minpoint->gridsize <= resolution){  // no caustic found at this resolution
 			  *Ncrits=0;
@@ -85,15 +87,15 @@ ImageInfo *find_crit(GridHndl grid,int *Ncrits,double resolution,bool *orderings
 		  MoveToTopList(negpointlist);
 		  for(i=0;i<negpointlist->Npoints;++i){
 			  PointCopyData(&(critcurve[0].points[i]),negpointlist->current);
-    	  //printf("     negpointlist = %e %e \n       critcurve[0].point[%i]=%e %e\n",negpointlist->current->x[0]
+    	  //std::printf("     negpointlist = %e %e \n       critcurve[0].point[%i]=%e %e\n",negpointlist->current->x[0]
     	 // 	       ,negpointlist->current->x[1],i,critcurve[0].points[i].x[0],critcurve[0].points[i].x[1]);
 			  MoveDownList(negpointlist);
 		  }
 	  }
 
-    if(verbose) printf("find_crit, going into findborders 1\n");
+    if(verbose) std::printf("find_crit, going into findborders 1\n");
     findborders2(grid->i_tree,&critcurve[0]);
-    if(verbose) printf("find_crit, came out of findborders 1\n");
+    if(verbose) std::printf("find_crit, came out of findborders 1\n");
 
     /* make inner border the image */
     MoveToTopKist(critcurve[0].innerborder);
@@ -106,21 +108,21 @@ ImageInfo *find_crit(GridHndl grid,int *Ncrits,double resolution,bool *orderings
     critcurve[0].Npoints=critcurve[0].innerborder->Nunits;
 
     // find borders again to properly define outer border
-    //printf("going into findborders 2\n");
+    //std::printf("going into findborders 2\n");
 	findborders2(grid->i_tree,critcurve);
-	//printf("came out of findborders 2\n");
+	//std::printf("came out of findborders 2\n");
 
-	if(verbose) printf("find_crit, going into refine_grid\n");
-     //printf("  Npoints=%i\n",critcurve->Npoints);
+	if(verbose) std::printf("find_crit, going into refine_grid\n");
+     //std::printf("  Npoints=%i\n",critcurve->Npoints);
 	refinements=refine_grid(grid->i_tree,grid->s_tree,critcurve,1,resolution,2,false);
-    if(verbose) printf("find_crit, came out of refine_grid\n");
+    if(verbose) std::printf("find_crit, came out of refine_grid\n");
 
      if(refinements==0){
       break;
     }else free(critcurve[0].points);
   }
 
-  if(verbose) printf("find_crit, number of caustic points: %li\n",critcurve[0].Npoints);
+  if(verbose) std::printf("find_crit, number of caustic points: %li\n",critcurve[0].Npoints);
 
 // order points in curve
   if(ordercurve) split_order_curve4(critcurve,NMAXCRITS,Ncrits);
@@ -129,18 +131,18 @@ ImageInfo *find_crit(GridHndl grid,int *Ncrits,double resolution,bool *orderings
 
 /*
 //   print out the critical curves and caustics
-  printf("Ncrits=%i\n",*Ncrits);
+  std::printf("Ncrits=%i\n",*Ncrits);
   for(j=0;j<*Ncrits;++j){
-	printf("%li\n",critcurve[j].Npoints);
+	std::printf("%li\n",critcurve[j].Npoints);
 	for(i=0;i<critcurve[j].Npoints;++i)
-		printf("%e %e\n",critcurve[j].points[i].x[0]
+		std::printf("%e %e\n",critcurve[j].points[i].x[0]
 	                    ,critcurve[j].points[i].x[1]);
   }
-  printf("Ncrits=%i\n",*Ncrits);
+  std::printf("Ncrits=%i\n",*Ncrits);
   for(j=0;j<*Ncrits;++j){
-	printf("%li\n",critcurve[j].Npoints);
+	std::printf("%li\n",critcurve[j].Npoints);
 	for(i=0;i<critcurve[j].Npoints;++i)
-		printf("%e %e\n",critcurve[j].points[i].image->x[0]
+		std::printf("%e %e\n",critcurve[j].points[i].image->x[0]
 	                    ,critcurve[j].points[i].image->x[1]);
   }
   exit(0);
@@ -151,7 +153,7 @@ ImageInfo *find_crit(GridHndl grid,int *Ncrits,double resolution,bool *orderings
 	  *orderingsuccess=false;
   }else{ *orderingsuccess=true;}
 
-  if(*Ncrits > NMAXCRITS){ERROR_MESSAGE(); printf("ERROR: in find_crit, too many critical curves Ncrits=%i > NMAXCRITS gridsize=%e\n"
+  if(*Ncrits > NMAXCRITS){ERROR_MESSAGE(); std::printf("ERROR: in find_crit, too many critical curves Ncrits=%i > NMAXCRITS gridsize=%e\n"
 			       ,*Ncrits,critcurve[0].points[0].gridsize); exit(1);}
 
   /* find area of critical curves */
@@ -159,7 +161,7 @@ ImageInfo *find_crit(GridHndl grid,int *Ncrits,double resolution,bool *orderings
   for(i=0;i<*Ncrits;++i){
 	  if(critcurve[i].Npoints > 5){
 			   windings(x,critcurve[i].points,critcurve[i].Npoints,&(critcurve[i].area),0);
-			   //printf("critarea = %e\n",critcurve[i].area);
+			   //std::printf("critarea = %e\n",critcurve[i].area);
 	  }else critcurve[i].area=0;
   }
 

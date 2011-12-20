@@ -34,7 +34,7 @@ BranchNB *NewBranchNB(IndexType *particles,IndexType nparticles
 
     branchNB = (BranchNB *)malloc(sizeof(BranchNB));
     if (!branchNB){
-      ERROR_MESSAGE(); fprintf(stderr,"allocation failure in NewBranchNB()\n");
+      ERROR_MESSAGE(); std::fprintf(stderr,"allocation failure in NewBranchNB()\n");
       exit(1);
     }
     branchNB->particles = particles;
@@ -83,13 +83,13 @@ TreeNBHndl NewTreeNB(IndexType *particles,IndexType nparticles
     
     tree = (TreeNBStruct *)malloc(sizeof(TreeNBStruct));
     if (!tree){
-      ERROR_MESSAGE(); fprintf(stderr,"allocation failure in NewTreeNB()\n");
+      ERROR_MESSAGE(); std::fprintf(stderr,"allocation failure in NewTreeNB()\n");
       exit(1);
     }
 
     tree->top= NewBranchNB(particles,nparticles,boundary_p1,boundary_p2,center,0,0);
     if (!(tree->top)){
-      ERROR_MESSAGE(); fprintf(stderr,"allocation failure in NewTreeNB()\n");
+      ERROR_MESSAGE(); std::fprintf(stderr,"allocation failure in NewTreeNB()\n");
       exit(1);
     }
 
@@ -148,7 +148,7 @@ void _freeTreeNB(TreeNBHndl tree,short child){
     	moveUpNB(tree);
        	FreeBranchNB(branch);
 
-    	/*printf("*** removing branch %i number of branches %i\n",branch->number
+    	/*std::printf("*** removing branch %i number of branches %i\n",branch->number
 			,tree->Nbranches-1);*/
 
        	if(child==1) tree->current->child1 = NULL;
@@ -184,7 +184,7 @@ bool atTopNB(TreeNBHndl tree){
     assert(tree != NULL);
     if( isEmptyNB(tree) ){
     	ERROR_MESSAGE();
-    	fprintf(stderr, "TreeNB Error: calling atTop() on empty tree\n");
+    	std::fprintf(stderr, "TreeNB Error: calling atTop() on empty tree\n");
     	exit(1);
     }
     return(tree->current == tree->top);
@@ -201,7 +201,7 @@ bool noChildNB(TreeNBHndl tree){
     assert(tree != NULL);
     if( isEmptyNB(tree) ){
 	
-	ERROR_MESSAGE(); fprintf(stderr, "TreeNB Error: calling atTop() on empty tree\n");
+	ERROR_MESSAGE(); std::fprintf(stderr, "TreeNB Error: calling atTop() on empty tree\n");
 	exit(1);
     }
 
@@ -229,7 +229,7 @@ void getCurrentNB(TreeNBHndl tree,IndexType *particles,IndexType *nparticles){
     assert(tree != NULL);
     if( offEndNB(tree) ){
 	
-	ERROR_MESSAGE(); fprintf(stderr, "TreeNB Error: calling getCurrent() when current is off end\n");
+	ERROR_MESSAGE(); std::fprintf(stderr, "TreeNB Error: calling getCurrent() when current is off end\n");
 	exit(1);
     }
 
@@ -255,13 +255,13 @@ unsigned long getNbranchesNB(TreeNBHndl tree){
  * moveTopNB
  * Moves current to the front of tree.  Exported.
  * Pre: !isEmptyNB(tree)
- ************************************************************************/
+ ************************************************************************
 void moveTopNB(TreeNBHndl tree){
     
     assert(tree != NULL);
     if( isEmptyNB(tree) ){
 	
-	ERROR_MESSAGE(); fprintf(stderr, "TreeNB Error: calling moveTopNB() on empty tree\n");
+	ERROR_MESSAGE(); std::fprintf(stderr, "TreeNB Error: calling moveTopNB() on empty tree\n");
 	exit(1);
     }
 
@@ -269,7 +269,7 @@ void moveTopNB(TreeNBHndl tree){
     return;
 }
 
-/************************************************************************
+/***********************************************************************
  * movePrev
  * Moves current to the branchNB before it in tree.  This can move current
  * off end.  Exported.
@@ -279,11 +279,11 @@ void moveUpNB(TreeNBHndl tree){
     
     assert(tree != NULL);
     if( offEndNB(tree) ){
-      ERROR_MESSAGE(); fprintf(stderr, "TreeNB Error: call to moveUpNB() when current is off end\n");
+      ERROR_MESSAGE(); std::fprintf(stderr, "TreeNB Error: call to moveUpNB() when current is off end\n");
       exit(1);
     }
     if( tree->current == tree->top ){
-      ERROR_MESSAGE(); fprintf(stderr, "TreeNB Error: call to moveUpNB() tried to move off the top\n");
+      ERROR_MESSAGE(); std::fprintf(stderr, "TreeNB Error: call to moveUpNB() tried to move off the top\n");
       exit(1);
     }
 
@@ -302,19 +302,19 @@ void moveToChildNB(TreeNBHndl tree,int child){
     assert(tree != NULL);
     if( offEndNB(tree) ){
 	
-	ERROR_MESSAGE(); fprintf(stderr, "TreeNB Error: calling moveChildren() when current is off end\n");
+	ERROR_MESSAGE(); std::fprintf(stderr, "TreeNB Error: calling moveChildren() when current is off end\n");
 	exit(1);
     }
     if(child==1){
       if( tree->current->child1 == NULL ){
-	ERROR_MESSAGE(); fprintf(stderr, "TreeNB Error: moveToChildNB() typing to move to child1 when it doesn't exist\n");
+	ERROR_MESSAGE(); std::fprintf(stderr, "TreeNB Error: moveToChildNB() typing to move to child1 when it doesn't exist\n");
 	exit(1);
       }
       tree->current = tree->current->child1;
     }
     if(child==2){
       if( tree->current->child2 == NULL ){
-	ERROR_MESSAGE(); fprintf(stderr, "TreeNB Error: moveToChildNB() typing to move to child2 when it doesn't exist\n");
+	ERROR_MESSAGE(); std::fprintf(stderr, "TreeNB Error: moveToChildNB() typing to move to child2 when it doesn't exist\n");
 	exit(1);
       }
       tree->current = tree->current->child2;
@@ -334,7 +334,7 @@ void insertChildToCurrentNB(TreeNBHndl tree, IndexType *particles,IndexType npar
     
     BranchNB *branchNB;
 
-    /*printf("attaching child%i  current paricle number %i\n",child,tree->current->nparticles);*/
+    /*std::printf("attaching child%i  current paricle number %i\n",child,tree->current->nparticles);*/
 
     branchNB = NewBranchNB(particles,nparticles,boundary_p1,boundary_p2,center
 		       ,tree->current->level+1,tree->Nbranches);
@@ -343,7 +343,7 @@ void insertChildToCurrentNB(TreeNBHndl tree, IndexType *particles,IndexType npar
     
     if( offEndNB(tree) ){
       
-	ERROR_MESSAGE(); fprintf(stderr, "TreeNB Error: calling insertChildToCurrentNB() when current is off end\n");
+	ERROR_MESSAGE(); std::fprintf(stderr, "TreeNB Error: calling insertChildToCurrentNB() when current is off end\n");
 	exit(1);
     }
 
@@ -351,7 +351,7 @@ void insertChildToCurrentNB(TreeNBHndl tree, IndexType *particles,IndexType npar
 
     if(child==1){
       if(tree->current->child1 != NULL){
-	ERROR_MESSAGE(); fprintf(stderr, "TreeNB Error: calling insertChildToCurrentNB() when child1 alread exists\n");
+	ERROR_MESSAGE(); std::fprintf(stderr, "TreeNB Error: calling insertChildToCurrentNB() when child1 alread exists\n");
 	exit(1);
       }
       tree->current->child1 = branchNB;
@@ -359,7 +359,7 @@ void insertChildToCurrentNB(TreeNBHndl tree, IndexType *particles,IndexType npar
     if(child==2){
       if(tree->current->child2 != NULL){
     	  ERROR_MESSAGE();
-    	  fprintf(stderr, "TreeNB Error: calling insertChildToCurrentNB() when child2 alread exists\n  current level=%i Nbranches=%li\n"
+    	  std::fprintf(stderr, "TreeNB Error: calling insertChildToCurrentNB() when child2 alread exists\n  current level=%i Nbranches=%li\n"
     			  ,tree->current->level,tree->Nbranches);
     	  exit(1);
       }
@@ -429,22 +429,22 @@ void printTreeNB(TreeNBHndl tree,PosType **xp){
 void printBranchNB(BranchNB *data,PosType **xp,short Ndim){
 
   if(Ndim==3){
-	  printf("******* branchNB *******\nlevel=%i\n",data->level);
-	  printf("center = [%e,%e,%e]\n",data->center[0],data->center[1],data->center[2]);
-	  printf("p1 = [%e,%e,%e] p2 = [%e,%e,%e]\n"
+	  std::printf("******* branchNB *******\nlevel=%i\n",data->level);
+	  std::printf("center = [%e,%e,%e]\n",data->center[0],data->center[1],data->center[2]);
+	  std::printf("p1 = [%e,%e,%e] p2 = [%e,%e,%e]\n"
 			  ,data->boundary_p1[0],data->boundary_p1[1],data->boundary_p1[2]
 			  ,data->boundary_p2[0],data->boundary_p2[1],data->boundary_p2[2]);
   }
   if(Ndim==2){
-	  printf("******* branchNB *******\nlevel=%i\n",data->level);
-	  printf("center = [%e,%e]\n",data->center[0],data->center[1]);
-	  printf("p1 = [%e,%e] p2 = [%e,%e]\n"
+	  std::printf("******* branchNB *******\nlevel=%i\n",data->level);
+	  std::printf("center = [%e,%e]\n",data->center[0],data->center[1]);
+	  std::printf("p1 = [%e,%e] p2 = [%e,%e]\n"
 			  ,data->boundary_p1[0],data->boundary_p1[1]
 			  ,data->boundary_p2[0],data->boundary_p2[1]);
 
   }
-	  printf("number of particles = %li\n",data->nparticles);
-  /*for(i=0;i<data->nparticles;++i) printf("%e %e %e\n",xp[data->particles[i]][0] ,xp[data->particles[i]][1],xp[data->particles[i]][2]); */
+	  std::printf("number of particles = %li\n",data->nparticles);
+  /*for(i=0;i<data->nparticles;++i) std::printf("%e %e %e\n",xp[data->particles[i]][0] ,xp[data->particles[i]][1],xp[data->particles[i]][2]); */
 }
 
 /**************************************************************************
@@ -545,10 +545,10 @@ TreeNBHndl readTreeNB(IndexType *particles,float *rsph,IndexType Nparticles,char
 
   if(nparticles != Nparticles){
     ERROR_MESSAGE();
-    printf("ERROR: input particle number does not match tree data file in readTreeNB\n");
+    std::printf("ERROR: input particle number does not match tree data file in readTreeNB\n");
     exit(1);
   }
-  printf("nparticles %i   Nbranches %i  demensions=%i\n",nparticles,NbranchNBes,Ndimensions);
+  std::printf("nparticles %i   Nbranches %i  demensions=%i\n",nparticles,NbranchNBes,Ndimensions);
 
   tree_arr=(RelativeBranchNB *)malloc(NbranchNBes*sizeof(RelativeBranchNB));
 
@@ -617,15 +617,15 @@ void readSmoothingNB(float *rsph,char *filename){
   short Ndimensions;
 
 
-  file=fopen(filename,"r");
-  fread(&nparticles,sizeof(IndexType),1,file);
-  fread(&Ndimensions,sizeof(short),1,file);
+  file=std::fopen(filename,"r");
+  std::fread(&nparticles,sizeof(IndexType),1,file);
+  std::fread(&Ndimensions,sizeof(short),1,file);
   //fread(&NbranchNBes,sizeof(unsigned long),1,file);
 
-  printf("nparticles %li  dimensions=%i\n",nparticles,Ndimensions);
+  std::printf("nparticles %li  dimensions=%i\n",nparticles,Ndimensions);
 
-  fread(rsph,sizeof(float),nparticles,file);
-  fclose(file);
+  std::fread(rsph,sizeof(float),nparticles,file);
+  std::fclose(file);
   
 
   //free(tree_arr);

@@ -7,7 +7,7 @@
 
 #include <slsimlib.h>
 
-extern COSMOLOGY cosmo;
+extern CosmoHndl cosmo;
 extern AnaLens *lens;
 
 struct temp_data
@@ -37,15 +37,15 @@ void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off){
   if(lens == NULL || !lens->set)
     {
       ERROR_MESSAGE();
-      printf("ERROR: rayshooterInternal  lens not set!\n");
+      std::printf("ERROR: rayshooterInternal  lens not set!\n");
       exit(0);
     }
   
   if(lens->zsource != zs_old)
     {
-      lens->host_ro = 4*pi*pow(lens->host_sigma/2.99792e5,2) * cosmo.angDist(0,lens->zlens)
-	*cosmo.angDist(lens->zlens,lens->zsource)
-	/cosmo.angDist(0,lens->zsource)/(1+lens->zlens);
+      lens->host_ro = 4*pi*pow(lens->host_sigma/2.99792e5,2) * cosmo->angDist(0,lens->zlens)
+	*cosmo->angDist(lens->zlens,lens->zsource)
+	/cosmo->angDist(0,lens->zsource)/(1+lens->zlens);
       
       zs_old=lens->zsource;
     }
@@ -60,7 +60,7 @@ void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off){
       if(isnan(i_points[i].x[0]*i_points[i].x[1]))
 	{
 	  ERROR_MESSAGE();
-	  printf("x nan in internal_rayshooter\n    i=%li x= %e %e\n",
+	  std::printf("x nan in internal_rayshooter\n    i=%li x= %e %e\n",
 		 i,i_points[i].x[0],i_points[i].x[1]);
 	}
       
@@ -237,14 +237,14 @@ double gaussian_SB(double *y){
 
 // surface brightness for models of the Broad Line Region
 double BLR_Disk_SB(double *y){
-	return blr_surface_brightness_disk(y,lens,&cosmo);
+	return blr_surface_brightness_disk(y,lens,cosmo);
 }
 
 double BLR_Sph1_SB(double *y){
-	return blr_surface_brightness_spherical_circular_motions(sqrt(y[0]*y[0] + y[1]*y[1]),lens,&cosmo);
+	return blr_surface_brightness_spherical_circular_motions(sqrt(y[0]*y[0] + y[1]*y[1]),lens,cosmo);
 }
 double BLR_Sph2_SB(double *y){
-	return blr_surface_brightness_spherical_random_motions(sqrt(y[0]*y[0] + y[1]*y[1]),lens,&cosmo);
+	return blr_surface_brightness_spherical_random_motions(sqrt(y[0]*y[0] + y[1]*y[1]),lens,cosmo);
 }
 
 void in_source(double *y_source,ListHndl sourcelist){

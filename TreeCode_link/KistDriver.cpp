@@ -40,7 +40,10 @@ void FindAllBoxNeighborsKist(TreeHndl tree,Point *point,KistHndl neighbors){
 
 	tree->current = point->leaf;
 
+	//std::cout << "tree current " << tree->current << std::endl;
+
 	// find smallest box that surrounds box and its neighbors
+	//printTree(tree);
 	moveUp(tree);
 	while( (tree->current->boundary_p1[0]==point->leaf->boundary_p1[0] && point->leaf->boundary_p1[0] != tree->top->boundary_p1[0] )
 			|| (tree->current->boundary_p1[1]==point->leaf->boundary_p1[1] && point->leaf->boundary_p1[1] != tree->top->boundary_p1[1])
@@ -189,7 +192,7 @@ void PointsWithinKist(
 
   moveTop(tree);
   if( inbox(ray,tree->current->boundary_p1,tree->current->boundary_p2) == 0 ){
-    printf("Warning: in PointsWithinKist, ray is not inside the simulation box\n    should work in any case\n      ray= %e %e\n     boundary p1 = %e %e p2 = %e %e\n",ray[0],ray[1]
+    std::printf("Warning: in PointsWithinKist, ray is not inside the simulation box\n    should work in any case\n      ray= %e %e\n     boundary p1 = %e %e p2 = %e %e\n",ray[0],ray[1]
 	   ,tree->current->boundary_p1[0],tree->current->boundary_p1[1]
 	   ,tree->current->boundary_p2[0],tree->current->boundary_p2[1]);
 
@@ -215,8 +218,8 @@ void _PointsWithinKist(TreeHndl tree,double *ray,float *rmax,KistHndl neighborki
   short pass;
 
 
-  //printf("**************************************\nlevel %i\n",tree->current->level);
-  //   printf("   %i incell=%i\n",tree->current->points->id,incell);
+  //std::printf("**************************************\nlevel %i\n",tree->current->level);
+  //   std::printf("   %i incell=%i\n",tree->current->points->id,incell);
 
   if(incell){  // not found cell yet
 
@@ -230,7 +233,7 @@ void _PointsWithinKist(TreeHndl tree,double *ray,float *rmax,KistHndl neighborki
     	  incell=0;
 
     	  // this sets ray back to real value once closest leaf bax is found
-    	  if( (ray[0]!=realray[0])*(ray[1]!=realray[1]) ){ printf("ray != realray _PointsWithinKist\n"); exit(0);}
+    	  if( (ray[0]!=realray[0])*(ray[1]!=realray[1]) ){ std::printf("ray != realray _PointsWithinKist\n"); exit(0);}
 
     	  ray[0]=realray[0];
     	  ray[1]=realray[1];

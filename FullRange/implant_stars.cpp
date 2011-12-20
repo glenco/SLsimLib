@@ -20,7 +20,7 @@ void implant_stars(AnaLens *lens,Point *centers,unsigned long Nregions,long *see
 	unsigned long i,j,m,k;
 
 	if(lens->stars_N < 1.0  || lens->star_fstars <= 0) return;
-	if(lens->star_fstars > 1.0){ printf("fstars > 1.0\n"); exit(0); }
+	if(lens->star_fstars > 1.0){ std::printf("fstars > 1.0\n"); exit(0); }
 	if(!(lens->stars_implanted) ){
 
 		coord = PosTypeMatrix(0,2,0,2);
@@ -90,16 +90,16 @@ void implant_stars(AnaLens *lens,Point *centers,unsigned long Nregions,long *see
 	assert(m <= lens->stars_N);
 	lens->stars_N = m;
 
-	//printf("last star x = %e %e\n",lens->stars_xp[lens->stars_N-1][0],lens->stars_xp[lens->stars_N-1][1]);
+	//std::printf("last star x = %e %e\n",lens->stars_xp[lens->stars_N-1][0],lens->stars_xp[lens->stars_N-1][1]);
 
 	float dummy=0;
 	lens->star_tree = new ForceTree(lens->stars_xp,lens->stars_N,lens->star_masses,&dummy
-			,false,true,5,2,false,lens->star_theta_force);
+			,false,false,5,2,false,lens->star_theta_force);
 
-	//printf("projected with 2D tree\n");
+	std::printf("projected with 2D tree\n");
 
 	// visit every branch to find center of mass and cutoff scale */
-	lens->stars_implanted = true;
+	//lens->stars_implanted = true;
 
 	return ;
 }

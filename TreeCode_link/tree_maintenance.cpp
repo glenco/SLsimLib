@@ -36,7 +36,7 @@ TreeHndl BuildTree(Point *xp,unsigned long Npoints){
 
   if( (Npoints & (Npoints-1)) != 0){
 	  ERROR_MESSAGE();
-	  printf("ERROR: BuildTree, Npoints is not a power of 2\n");
+	  std::printf("ERROR: BuildTree, Npoints is not a power of 2\n");
 	  exit(1);
   }
 
@@ -128,7 +128,7 @@ void RebuildTreeFromList(TreeHndl tree){
 		 */
 		tree->pointlist->current->leaf = NULL;
 	}
-	//printf(" %e %e\n",points[0].x[0],points[0].x[1]);
+	//std::printf(" %e %e\n",points[0].x[0],points[0].x[1]);
 	// emptry the tree and free all former points
 	emptyTree(tree);
 
@@ -181,7 +181,7 @@ short emptyTree(TreeHndl tree){
   }
   //assert(count == tree->pointlist->Npoints);  After using PruneTree this will no longer be guaranteed.
 
-  //printf("freed %i arrays out of %i points in array, %i freed\n",j,i,count);
+  //std::printf("freed %i arrays out of %i points in array, %i freed\n",j,i,count);
   for(i=0;i<j;++i) FreePointArray(heads[i]);
   tree->top->npoints = 0;
 
@@ -227,7 +227,7 @@ void _freeBranches(TreeHndl tree,short child){
     	moveUp(tree);
        	free(branch);
 
-    	/*printf("*** removing branch %i number of branches %i\n",branch->number
+    	/*std::printf("*** removing branch %i number of branches %i\n",branch->number
 			,tree->Nbranches-1);*/
 
        	if(child==1) tree->current->child1=NULL;
@@ -407,7 +407,7 @@ void _BuildTree(TreeHndl tree){
 	  moveUp(tree);
   }
 
- /*printf("reached end of _BuildTree level=%i\n",tree->current->level);*/
+ /*std::printf("reached end of _BuildTree level=%i\n",tree->current->level);*/
   return;
 }
 
@@ -437,9 +437,9 @@ int AddPointsToTree(TreeHndl tree,Point *xpoint,unsigned long Nadd){
     	// add only that are inside original grid
     	if( inbox(xpoint[j].x,tree->top->boundary_p1,tree->top->boundary_p2) == 0 ){
     		ERROR_MESSAGE();
-    		printf("ERROR: in AddPointToTree, ray is not inside the simulation box x = %e %e Nadd=%li\n  not adding it to tree\n",
+    		std::printf("ERROR: in AddPointToTree, ray is not inside the simulation box x = %e %e Nadd=%li\n  not adding it to tree\n",
     				   xpoint[j].x[0],xpoint[j].x[1],Nadd);
-    		printf("root of tree\n");
+    		std::printf("root of tree\n");
        		printBranch(tree->top);
         		//exit(0);
     		//return 0;
@@ -449,10 +449,10 @@ int AddPointsToTree(TreeHndl tree,Point *xpoint,unsigned long Nadd){
     		if(inbox(xpoint[j].x,tree->current->boundary_p1,tree->current->boundary_p2)){
     			_FindLeaf(tree,xpoint[j].x,1);
     		}else{
-    			//printf("going to other parent box\n");
+    			//std::printf("going to other parent box\n");
     			while(inbox(xpoint[j].x,tree->current->boundary_p1,tree->current->boundary_p2)
     					== false){
-    				if(atTop(tree)){ERROR_MESSAGE(); printf("ERROR: AddPointsToTree, point not in region\n   x=%e %e\n"
+    				if(atTop(tree)){ERROR_MESSAGE(); std::printf("ERROR: AddPointsToTree, point not in region\n   x=%e %e\n"
     						,xpoint[j].x[0],xpoint[j].x[1]); printBranch(tree->current); exit(1);}
     				moveUp(tree);
     				tree->current->npoints += j - Nadd;
@@ -465,19 +465,19 @@ int AddPointsToTree(TreeHndl tree,Point *xpoint,unsigned long Nadd){
 			/***************** test lines  **************************
 
     		 if(tree->current->number == 4829221){
-     			 printf("STOP!\n");
+     			 std::printf("STOP!\n");
      		 }
 
 			/***************** **************************/
 
     		if( !(atLeaf(tree)) ){
     			ERROR_MESSAGE();
-    			printf("ERROR: _FindLeaf did not find a leaf for x = %e %e\n"
+    			std::printf("ERROR: _FindLeaf did not find a leaf for x = %e %e\n"
     					,xpoint[j].x[0],xpoint[j].x[1]);
     			printBranch(tree->current);
-    			printf("\nchildren\n");
+    			std::printf("\nchildren\n");
     			printBranch(tree->current->child1);
-    			printf(" pointer = %p %e\n",&(tree->current->child1->boundary_p1[1])
+    			std::printf(" pointer = %p %e\n",&(tree->current->child1->boundary_p1[1])
     				,tree->current->child1->boundary_p1[1]);
     			printBranch(tree->current->child2);
     		}
@@ -568,14 +568,14 @@ int AddPointsToTree(TreeHndl tree,Point *xpoint,unsigned long Nadd){
 
     			}
 
-    			//     printf("top of branch list after sort id=%i\n",tree->current->points->id);
+    			//     std::printf("top of branch list after sort id=%i\n",tree->current->points->id);
     			//     PrintList(tree->pointlist);
 
     			/*
-         	printf("\n\nafter sortList n= %i\n",tree->current->npoints);
+         	std::printf("\n\nafter sortList n= %i\n",tree->current->npoints);
 			tree->pointlist->current=tree->current->points;
 			for(i=0;i<tree->current->npoints;i++){
-				printf("%i  %f %f  x=%f\n",tree->pointlist->current->id
+				std::printf("%i  %f %f  x=%f\n",tree->pointlist->current->id
     				,tree->pointlist->current->x[0],tree->pointlist->current->x[1],x[i]);
 				MoveDownList(tree->pointlist);
 			}
@@ -635,7 +635,7 @@ int AddPointsToTree(TreeHndl tree,Point *xpoint,unsigned long Nadd){
     			/***************** test lines  **************************
 
   	 		 if(tree->current->child1->number == 4829221 || tree->current->child2->number == 4829221){
-    	  			 printf("STOP!\n");
+    	  			 std::printf("STOP!\n");
     	  		 }
 
     			assert(tree->current->points->next || tree->current->points->prev);
@@ -666,7 +666,7 @@ int AddPointsToTree(TreeHndl tree,Point *xpoint,unsigned long Nadd){
     				while(moveUp(tree)){
     					/***************** test lines  **************************
     					if(tree->current->number == 4829221){
-    						printf("STOP!\n");
+    						std::printf("STOP!\n");
     					}
     					/*****************  **************************/
 
@@ -791,7 +791,7 @@ unsigned long PruneTrees(
 			 if(i == trashlist->current->head){
 				 if(AtTopList(trashlist)) go = false; else go = true;
 				 points = TakeOutCurrent(trashlist);
-				 //printf("freeing memory!\n");
+				 //std::printf("freeing memory!\n");
 				 FreePointArray(points);
 			 }
 		 }while(MoveDownList(trashlist) && go);
@@ -799,7 +799,7 @@ unsigned long PruneTrees(
 
 	 moveTop(i_tree);
 	 moveTop(s_tree);
-	 //printf("count = %li\n",count);
+	 //std::printf("count = %li\n",count);
 	 return count;
 }
 
@@ -850,7 +850,7 @@ unsigned long FreeBranchesBelow(TreeHndl i_tree,TreeHndl s_tree,ListHndl trashli
 				/***************** test line  **************************/
 				 assert(i_tree->current->points->next || i_tree->current->points->prev);
 
-				//printf("  collecting points from removed leaves\n");
+				//std::printf("  collecting points from removed leaves\n");
 				assert(i_tree->current->points);
 				i_tree->pointlist->current = i_tree->current->points;
 				NtoRemove = i_tree->current->npoints;
@@ -955,7 +955,7 @@ unsigned long FreeBranchesBelow(TreeHndl i_tree,TreeHndl s_tree,ListHndl trashli
 
 	i_tree->current = top;
 
-	//if(count) printf("FreeBranchesBelow() freed %li points and moved up %li points\n",count,count2);
+	//if(count) std::printf("FreeBranchesBelow() freed %li points and moved up %li points\n",count,count2);
     return count;
 }
 

@@ -22,7 +22,7 @@ ListHndl NewList(void){
 
   pointlist=(PointList *) malloc(sizeof(PointList));
   if (!pointlist){
-    ERROR_MESSAGE(); fprintf(stderr,"allocation failure in NewList()\n");
+    ERROR_MESSAGE(); std::fprintf(stderr,"allocation failure in NewList()\n");
     exit(1);
   }
   pointlist->top=NULL;
@@ -41,18 +41,6 @@ void freeList(ListHndl list){
 	EmptyList(list);
 	free(list);
 }
-
-inline bool AtTopList(ListHndl list){
-	assert(list);
-	if(list->current==list->top) return true;
-	else return false;
-}
-inline bool AtBottomList(ListHndl list){
-	assert(list);
-	if(list->current==list->bottom) return true;
-	else return false;
-}
-
 
 void InsertAfterCurrent(ListHndl list,double *x,unsigned long id,Point *image){
 	assert(list);
@@ -79,6 +67,7 @@ void InsertAfterCurrent(ListHndl list,double *x,unsigned long id,Point *image){
       list->bottom=point;
     }
     list->Npoints++;
+
     return;
 }
 
@@ -107,6 +96,7 @@ void InsertBeforeCurrent(ListHndl list,double *x,unsigned long id,Point *image){
     }
 
     list->Npoints++;
+
     return;
 }
 
@@ -388,13 +378,6 @@ void ShiftList(ListHndl list){
 	list->top->prev=NULL;
 }
 
-inline void MoveToTopList(ListHndl list){
-  list->current=list->top;
-}
-inline void MoveToBottomList(ListHndl list){
-  list->current=list->bottom;
-}
-
 void FillList(ListHndl list,double **x,unsigned long N
 	      ,unsigned long idmin){
   unsigned long i;
@@ -402,7 +385,7 @@ void FillList(ListHndl list,double **x,unsigned long N
   /* id numbers are given in order from idmin */
   /* this is used to initialize list */
 
-  printf("Inserting  %li points after %li x= %e %e\n",N,list->current->id
+  std::printf("Inserting  %li points after %li x= %e %e\n",N,list->current->id
 	 ,list->current->x[0],list->current->x[1]);
   MoveToBottomList(list);
   InsertAfterCurrent(list,x[0],idmin,NULL);
@@ -444,11 +427,11 @@ void PrintList(ListHndl list){
 
   placemark=list->current;
   MoveToTopList(list);
-//  printf("%i points in list\n",list->Npoints);
-  printf("%li\n",list->Npoints);
+//  std::printf("%i points in list\n",list->Npoints);
+  std::printf("%li\n",list->Npoints);
 
   for(i=0;i<list->Npoints;++i){
-    printf("%li  %li  %e %e %e\n",i,list->current->id,list->current->x[0],list->current->x[1]
+    std::printf("%li  %li  %e %e %e\n",i,list->current->id,list->current->x[0],list->current->x[1]
                                   ,list->current->gridsize);
     MoveDownList(list);
   }

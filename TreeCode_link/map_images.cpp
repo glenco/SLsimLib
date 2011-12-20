@@ -73,7 +73,7 @@ void map_images(
 	if(oldr==0) oldr=lens->source_r;
 	if((oldy[0]==lens->source_x[0])*(oldy[1]==lens->source_x[1])*(oldr > lens->source_r)) initial_size=oldr;
 
-	if(lens->source_r <= 0.0){ERROR_MESSAGE(); printf("ERROR: find_images, point source must have a resolution target\n"); exit(1);}
+	if(lens->source_r <= 0.0){ERROR_MESSAGE(); std::printf("ERROR: find_images, point source must have a resolution target\n"); exit(1);}
 
 
 	// do an initial refinement to find all images and refine grid
@@ -97,7 +97,7 @@ void map_images(
 
 	// ****** calculate surface brightnesses and flux of each image  ******
 	area_tot=0;
-#pragma omp parallel for schedule(dynamic) private(i, j, y) reduction(+:area_tot)
+//#pragma omp parallel for schedule(dynamic) private(i, j, y) reduction(+:area_tot)
 	for(i=0 ; i < *Nimages ; ++i){
 		MoveToTopKist(imageinfo[i].imagekist);
 		imageinfo[i].area = 0.0;

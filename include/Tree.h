@@ -117,7 +117,10 @@ short freeTree(TreeHndl tree);
 
 bool isEmpty(TreeHndl tree);
 bool atTop(TreeHndl tree);
-inline bool atLeaf(TreeHndl tree);
+//inline bool atLeaf(TreeHndl tree);
+inline bool atLeaf(TreeHndl tree){
+  return( (tree->current->child1==NULL)*(tree->current->child2==NULL) );
+};
 bool offEnd(TreeHndl tree);
 bool CurrentIsSquareTree(TreeHndl tree);
 bool noChild(TreeHndl tree);
@@ -141,7 +144,23 @@ void attachChildToCurrent(TreeHndl tree,Branch data,int child);
 void attachChildrenToCurrent(TreeHndl tree,Branch child1,Branch child2);
 bool TreeWalkStep(TreeHndl tree,bool allowDescent);
 double ClosestBorder(double *ray,double *p1,double *p2);
-inline double FurthestBorder(double *ray,double *p1,double *p2);
+
+inline double MIN(double x,double y){
+	return (x < y) ? x : y;
+};
+inline double MAX(double x,double y){
+	return (x > y) ? x : y;
+};
+//inline double MIN(double x,double y);
+//inline double MAX(double x,double y);
+//inline double FurthestBorder(double *ray,double *p1,double *p2);
+inline double FurthestBorder(double *ray,double *p1,double *p2){
+  /*  returns the distance from ray[] to the furthest point on the                                                  
+   *    border of the box,                                                                                          
+   */
+
+  return sqrt( pow(MAX(ray[0]-p1[0],p2[0]-ray[0]),2) + pow(MAX(ray[1]-p1[1],p2[1]-ray[1]),2) );
+};
 void PointsInCurrent(TreeHndl tree,unsigned long *ids,double **x);
 
 /***** Other operations *****/
@@ -157,7 +176,12 @@ void checkTree(TreeHndl tree);
 
 Point *NearestNeighbor(TreeHndl tree,double *ray,int Nneighbors,ListHndl neighborlist
 		,short direction);
-inline int inbox(double ray[2],double *p1,double *p2);
+//inline int inbox(double ray[2],double *p1,double *p2);
+/* return 1 (0) if ray is (not) in the cube */
+inline int inbox(double *ray,double *p1,double *p2){
+
+  return (ray[0]>=p1[0])*(ray[0]<=p2[0])*(ray[1]>=p1[1])*(ray[1]<=p2[1]);
+};
 bool boxinbox(Branch *branch1,Branch *branch2);
 double BoxIntersection(Branch *branch1,Branch *branch2);
 int cutbox(double ray[2],double *p1,double *p2,double rmax);
@@ -253,15 +277,25 @@ void quickPartitionPoints(double pivotvalue,unsigned long *pivotindex
 		,Point *pointsarray,double *arr,unsigned long N);
 
 /* in utilities.c */
-inline double MIN(double x,double y);
-inline double MAX(double x,double y);
+
 Point *LinkToSourcePoints(Point *i_points,unsigned long Npoints);
 void log_polar_grid(Point *i_points,double rmax,double rmin,double *center,long Ngrid);
 void findarea(ImageInfo *imageinfo);
 int windings(double *x,Point *points,unsigned long Npoints,double *area,short image);
 long IndexFromPosition(double *x,long Npixels,double range,double *center);
 void PositionFromIndex(unsigned long i,double *x,long Npixels,double range,double *center);
-inline float isLeft( Point *p0, Point *p1, double *x );
+//inline float isLeft( Point *p0, Point *p1, double *x );
+
+// isLeft(): tests if a point is Left|On|Right of an infinite line.
+// Input:three points P0, P1, and x
+// Return: >0 for x left of the line through P0 and P1
+//         =0 for x on the line
+//         <0 for x right of the line
+inline float isLeft( Point *p0, Point *p1, double *x ){
+
+	return (p1->x[0] - p0->x[0])*(x[1] - p0->x[1])
+			- (x[0] - p0->x[0])*(p1->x[1] - p0->x[1]);
+};
 unsigned long prevpower(unsigned long k);
 
 // in curve_routines.c

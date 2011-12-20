@@ -40,32 +40,32 @@ void rayshooterNB(unsigned long Nrays,Point *points,TreeHndl i_tree,char *paramf
 	initialize=0;
     if(paramfile == NULL){
       ERROR_MESSAGE();
-      printf("ERROR: in rayshooter, no paramfile\n");
+      std::printf("ERROR: in rayshooter, no paramfile\n");
       exit(0);
     }
     /* read parameter file and simulation */
 
-    printf("READING PARAMETERS FROM %s\n\n",paramfile);
+    std::printf("READING PARAMETERS FROM %s\n\n",paramfile);
     lens=readparams(paramfile,&cosmo);
 
-    /*printf("READING PARAMETERS FROM %s\n\n",teststring);
+    /*std::printf("READING PARAMETERS FROM %s\n\n",teststring);
       readparams(teststring,lens,&cosmo);*/
 
-    printf("\nreading particle positions from %s\n\n",lens->simfilename);
+    std::printf("\nreading particle positions from %s\n\n",lens->simfilename);
     for(i=0;i<lens->Nspecies;++i){
 
     	readpositions(&lens[i]);
 
-    	printf("*********    loaded    *********************\n\n");
-    	printf("number of particles=%li\n",lens[i].Nparticles);
+    	std::printf("*********    loaded    *********************\n\n");
+    	std::printf("number of particles=%li\n",lens[i].Nparticles);
 
-    	/*for(i=0;i<Nparticles;++i) printf("%e %e %e\n",xp[i][0],xp[i][1],xp[i][2]);*/
-    	/*     printf("\n***********************************************\n"); */
-    	/*     printf("********* tree from %s *********************\n\n",lens[i].treefilenames); */
+    	/*for(i=0;i<Nparticles;++i) std::printf("%e %e %e\n",xp[i][0],xp[i][1],xp[i][2]);*/
+    	/*     std::printf("\n***********************************************\n"); */
+    	/*     std::printf("********* tree from %s *********************\n\n",lens[i].treefilenames); */
     	/*lens[i].tree=readTreeNB(lens[i].particles,lens[i].rsph,lens[i].Nparticles,lens[i].treefilenames);*/
 
-    	printf("\n***********************************************\n");
-    	printf("********* reading rsph from %s *********************\n\n",lens[i].treefilenames);
+    	std::printf("\n***********************************************\n");
+    	std::printf("********* reading rsph from %s *********************\n\n",lens[i].treefilenames);
 
     	readSmoothingNB(lens[i].rsph,lens[i].treefilenames);
 
@@ -87,8 +87,8 @@ void rayshooterNB(unsigned long Nrays,Point *points,TreeHndl i_tree,char *paramf
     	}
 
 
-    	printf("\n***********************************************\n");
-    	printf("*********    projecting lens    *********************\n\n");
+    	std::printf("\n***********************************************\n");
+    	std::printf("*********    projecting lens    *********************\n\n");
 
     	mass=(float*)calloc(1,sizeof(float));
     	*mass=1.0;
@@ -101,7 +101,7 @@ void rayshooterNB(unsigned long Nrays,Point *points,TreeHndl i_tree,char *paramf
     	// 2D smoothing
     	//lens[i].rsph=FindRSPH(lens[i].tree,lens[i].xp,lens[i].Nsph);
 
-    	printf("*********    projected    ***************************\n\n");
+    	std::printf("*********    projected    ***************************\n\n");
     	//exit(0);
     }
 
@@ -127,19 +127,19 @@ void rayshooterNB(unsigned long Nrays,Point *points,TreeHndl i_tree,char *paramf
 //  PrintSimLens(lens);
   /*** loop through rays ***/
 
-  time(&to);
+  std::time(&to);
   for(k=0;k<lens->Nspecies;++k){
 	  tree=*(lens[k].tree);
 	  //#pragma omp parallel for private(neighbors,tmp,rmax,pointo) firstprivate(tree) firstprivate(i_tree)
 	  for(i=0;i<Nrays;++i){
 
-		  /*     printf(" i=%i ray = %e %e  ray image = %e %e\n",i */
+		  /*     std::printf(" i=%i ray = %e %e  ray image = %e %e\n",i */
 		  /* 	   ,points[i].x[0],points[i].x[1] */
 		  /* 	   ,points[i].image->x[0],points[i].image->x[1]); */
 
 		  /*     if( i == 0 ) {
 		   nthreads = omp_get_num_threads();
-			   printf("There are %d threads Nrays=%i\n",nthreads,Nrays);
+			   std::printf("There are %d threads Nrays=%i\n",nthreads,Nrays);
        }
 		   */
 		  // determine if interpolation should be used or direct tree summation
@@ -197,7 +197,7 @@ void rayshooterNB(unsigned long Nrays,Point *points,TreeHndl i_tree,char *paramf
 					  tmp=( (neighbors->current->x[0]-pointo->x[0])*dx[0]
                         + (neighbors->current->x[1]-pointo->x[1])*dx[1] )
                         /pow(3*pointo->gridsize,2)/2;
-					  //printf("%e %e\n",(neighbors->current->x[0]-pointo->x[0])/3/pointo->gridsize
+					  //std::printf("%e %e\n",(neighbors->current->x[0]-pointo->x[0])/3/pointo->gridsize
 					  //   ,(neighbors->current->x[1]-pointo->x[1])/3/pointo->gridsize);
 					  points[i].kappa += neighbors->current->kappa*tmp;
 					  points[i].gamma[0] += neighbors->current->gamma[0]*tmp;
@@ -214,8 +214,8 @@ void rayshooterNB(unsigned long Nrays,Point *points,TreeHndl i_tree,char *paramf
 
 			  if(fabs(points[i].kappa-pointo->kappa) > 1){
 			      ERROR_MESSAGE();
-				  printf("error\n");
-				  printf("D kappa=%e   dx= %e  %e  gridsize=%e\n",points[i].kappa-pointo->kappa
+				  std::printf("error\n");
+				  std::printf("D kappa=%e   dx= %e  %e  gridsize=%e\n",points[i].kappa-pointo->kappa
 						  ,dx[0],dx[1],pointo->gridsize);
 				  PrintPoint(pointo);
 				  PrintPoint(&points[i]);
@@ -231,12 +231,12 @@ void rayshooterNB(unsigned long Nrays,Point *points,TreeHndl i_tree,char *paramf
 		  points[i].image->gamma[0]=points[i].gamma[0];
 		  points[i].image->gamma[1]=points[i].gamma[1];
  
-		  /*printf("   alpha = %e %e\n   gamma=%e %e\n   kappa = %e\n   invmag = %e\n"
+		  /*std::printf("   alpha = %e %e\n   gamma=%e %e\n   kappa = %e\n   invmag = %e\n"
 	   ,alpha[2*i],alpha[2*i+1],gamma[2*i],gamma[2*i+1],kappa[i],invmag[i]);*/
 	  }
   }
-  time(&t1);
-	  //printf("rayshooter: time for calculating %i points %f sec\n            %f sec per point\n",Nrays
-//		  ,difftime(t1,to),difftime(t1,to)/Nrays);
+  std::time(&t1);
+	  //std::printf("rayshooter: std::time for calculating %i points %f sec\n            %f sec per point\n",Nrays
+//		  ,std::diffstd::time(t1,to),std::diffstd::time(t1,to)/Nrays);
 
 }

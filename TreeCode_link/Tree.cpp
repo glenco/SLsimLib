@@ -32,7 +32,7 @@ Branch *NewBranch(Point *points,unsigned long npoints
 
     branch = (Branch *)malloc(sizeof(Branch));
     if (!branch){
-      ERROR_MESSAGE(); fprintf(stderr,"allocation failure in NewBranch()\n");
+      ERROR_MESSAGE(); std::fprintf(stderr,"allocation failure in NewBranch()\n");
       assert(branch);
       exit(1);
     }
@@ -85,7 +85,6 @@ Point *NewPointArray(
   points[0].in_image = false;
   points[0].leaf = NULL;
 
-#pragma omp parallel for private(i)
   for(i = 1; i < N; i++)
   	  {
 	  	  if(NewXs) points[i].x = (double *) calloc(2,sizeof(double));
@@ -110,7 +109,7 @@ void FreePointArray(Point *array){
 	  free(array);
   }else{
 	  ERROR_MESSAGE();
-	  printf("ERROR: FreePointArray, miss aligned attempt to free point array");
+	  std::printf("ERROR: FreePointArray, miss aligned attempt to free point array");
 	  exit(1);
   }
 }
@@ -133,7 +132,7 @@ TreeHndl NewTree(
 
   tree = (TreeStruct *)malloc(sizeof(TreeStruct));
   if (!tree){
-    ERROR_MESSAGE(); fprintf(stderr,"allocation failure in NewTree()\n");
+    ERROR_MESSAGE(); std::fprintf(stderr,"allocation failure in NewTree()\n");
     exit(1);
   }
 
@@ -198,14 +197,10 @@ bool atTop(TreeHndl tree){
     assert(tree != NULL);
     if( isEmpty(tree) ){
 	
-	ERROR_MESSAGE(); fprintf(stderr, "Tree Error: calling atTop() on empty tree\n");
+	ERROR_MESSAGE(); std::fprintf(stderr, "Tree Error: calling atTop() on empty tree\n");
 	exit(1);
     }
     return(tree->current == tree->top);
-}
-
-inline bool atLeaf(TreeHndl tree){
-    return( (tree->current->child1==NULL)*(tree->current->child2==NULL) );
 }
 
 /************************************************************************
@@ -219,7 +214,7 @@ bool noChild(TreeHndl tree){
     assert(tree != NULL);
     if( isEmpty(tree) ){
 	
-	ERROR_MESSAGE(); fprintf(stderr, "Tree Error: calling atTop() on empty tree\n");
+	ERROR_MESSAGE(); std::fprintf(stderr, "Tree Error: calling atTop() on empty tree\n");
 	exit(1);
     }
 
@@ -257,7 +252,7 @@ void getCurrent(TreeHndl tree,Point *points,unsigned long *npoints){
     assert(tree != NULL);
     if( offEnd(tree) ){
 	
-	ERROR_MESSAGE(); fprintf(stderr, "Tree Error: calling getCurrent() when current is off end\n");
+	ERROR_MESSAGE(); std::fprintf(stderr, "Tree Error: calling getCurrent() when current is off end\n");
 	exit(1);
     }
 
@@ -288,7 +283,7 @@ void moveTop(TreeHndl tree){
     
 	//assert(tree != NULL);
     if( isEmpty(tree) ){
-    	ERROR_MESSAGE(); fprintf(stderr, "Tree Error: calling moveTop() on empty tree\n");
+    	ERROR_MESSAGE(); std::fprintf(stderr, "Tree Error: calling moveTop() on empty tree\n");
     	exit(1);
     }
 
@@ -324,7 +319,7 @@ bool moveUp(TreeHndl tree){
 
     assert(tree != NULL);
     if( offEnd(tree) ){
-      ERROR_MESSAGE(); fprintf(stderr, "Tree Error: call to moveUp() when current is off end\n");
+      ERROR_MESSAGE(); std::fprintf(stderr, "Tree Error: call to moveUp() when current is off end\n");
       exit(1);
     }
 
@@ -360,7 +355,7 @@ void insertChildToCurrent(TreeHndl tree,Point *points,unsigned long npoints
     assert(tree != NULL);
     
     if( offEnd(tree) ){
-    	ERROR_MESSAGE(); fprintf(stderr, "Tree Error: calling insertChildToCurrent() when current is off end\n");
+    	ERROR_MESSAGE(); std::fprintf(stderr, "Tree Error: calling insertChildToCurrent() when current is off end\n");
     	exit(1);
     }
 
@@ -368,7 +363,7 @@ void insertChildToCurrent(TreeHndl tree,Point *points,unsigned long npoints
 
     if(child==1){
       if(tree->current->child1 != NULL){
-    	  ERROR_MESSAGE(); fprintf(stderr, "Tree Error: calling insertChildToCurrent() when child1 already exists\n");
+    	  ERROR_MESSAGE(); std::fprintf(stderr, "Tree Error: calling insertChildToCurrent() when child1 already exists\n");
     	  exit(1);
       }
       tree->current->child1 = branch;
@@ -377,7 +372,7 @@ void insertChildToCurrent(TreeHndl tree,Point *points,unsigned long npoints
     if(child==2){
       if(tree->current->child2 != NULL){
     	  ERROR_MESSAGE();
-    	  fprintf(stderr, "Tree Error: calling insertChildToCurrent() when child2 already exists\n  current level=%i Nbranches=%li\n",tree->current->level,tree->Nbranches);
+    	  std::fprintf(stderr, "Tree Error: calling insertChildToCurrent() when child2 already exists\n  current level=%i Nbranches=%li\n",tree->current->level,tree->Nbranches);
     	  exit(1);
       }
       tree->current->child2 = branch;      
@@ -426,7 +421,7 @@ void printTree(TreeHndl tree){
     printBranch(tree->current);
     tree->pointlist->current=tree->current->points;
     for(i=0;i<tree->current->npoints;++i){
-      printf("    %li    %f %f\n",tree->pointlist->current->id,tree->pointlist->current->x[0],tree->pointlist->current->x[1]);
+      std::printf("    %li    %f %f\n",tree->pointlist->current->id,tree->pointlist->current->x[0],tree->pointlist->current->x[1]);
       MoveDownList(tree->pointlist);
     }
     if(tree->current->child1 == NULL) return;
@@ -434,7 +429,7 @@ void printTree(TreeHndl tree){
     if( (tree->current->boundary_p1[0]==tree->current->boundary_p2[0]) ||
     		(tree->current->boundary_p1[0]==tree->current->boundary_p2[0])	){
     	ERROR_MESSAGE();
-    	printf("ERROR: zero area branch");
+    	std::printf("ERROR: zero area branch");
     	exit(0);
     }
     moveToChild(tree,1);
@@ -452,13 +447,13 @@ void printTree(TreeHndl tree){
 
 void printBranch(Branch *data){
 
-  printf("******* branch *******\nlevel=%i number=%li\n",data->level,data->number);
-  printf("center = [%e,%e]\n",data->center[0],data->center[1]);
-  printf("p1 = [%e,%e] p2 = [%e,%e]\n"
+  std::printf("******* branch *******\nlevel=%i number=%li\n",data->level,data->number);
+  std::printf("center = [%e,%e]\n",data->center[0],data->center[1]);
+  std::printf("p1 = [%e,%e] p2 = [%e,%e]\n"
 	 ,data->boundary_p1[0],data->boundary_p1[1]
 	 ,data->boundary_p2[0],data->boundary_p2[1]);
-  printf("number of points = %li\n",data->npoints);
-  /*for(i=0;i<data->npoints;++i) printf("%e %e %e\n",xp[data->points[i]][0] ,xp[data->points[i]][1],xp[data->points[i]][2]); */
+  std::printf("number of points = %li\n",data->npoints);
+  /*for(i=0;i<data->npoints;++i) std::printf("%e %e %e\n",xp[data->points[i]][0] ,xp[data->points[i]][1],xp[data->points[i]][2]); */
 }
 /****************************************************************
  *  code for testing tree
@@ -474,7 +469,7 @@ void checkTree(TreeHndl tree){
 	moveTop(tree);
 	_checkTree(tree,&count);
 
-	if(count != tree->Nbranches){ printf("checkTree did not reach all branches.\n"); exit(0);}
+	if(count != tree->Nbranches){ std::printf("checkTree did not reach all branches.\n"); exit(0);}
 	tree->current=initial;
 	return;
 }
@@ -482,7 +477,7 @@ void checkTree(TreeHndl tree){
 void _checkTree(TreeHndl tree,unsigned long *count){
 	int checkBranch(Branch *branch);
 
-	//printf("     hello\n");
+	//std::printf("     hello\n");
 	++*count;
 	if(checkBranch(tree->current)) exit(1);
 
@@ -505,7 +500,7 @@ void _checkTree(TreeHndl tree,unsigned long *count){
 int checkBranch(Branch *branch){
    	if(branch->boundary_p1[0] >= branch->boundary_p2[0]
    	  || branch->boundary_p1[1] >= branch->boundary_p2[1] ){
-    		printf("\nthis branch is screwed\n");
+    		std::printf("\nthis branch is screwed\n");
     		printBranch(branch);
     		PrintPoint(branch->points);
     		return 1;
@@ -519,7 +514,7 @@ Point *AddPointToArray(Point *points,unsigned long N,unsigned long Nold){
   if(Nold==0){
 	  points = NewPointArray(N,true);
   }else{
-	  if(points[0].head != Nold){ ERROR_MESSAGE(); printf("ERROR: AddPointToArray head not set correctly\n"); exit(0);}
+	  if(points[0].head != Nold){ ERROR_MESSAGE(); std::printf("ERROR: AddPointToArray head not set correctly\n"); exit(0);}
 	  for(i=N;i<Nold;++i) free(points[i].x);
 	  points=(Point *) realloc(points,N*sizeof(Point));
 	  for(i=Nold;i<N;++i){
@@ -547,7 +542,7 @@ Point *NewPoint(double *x,unsigned long id){
   point->in_image=false;
 
   if (!point){
-    ERROR_MESSAGE(); fprintf(stderr,"allocation failure in NewPoint()\n");
+    ERROR_MESSAGE(); std::fprintf(stderr,"allocation failure in NewPoint()\n");
     exit(1);
   }
   point->next = point->prev = NULL;
@@ -628,12 +623,12 @@ void PointsInCurrent(TreeHndl tree,unsigned long *ids,double **x){
 }
 
 void PrintPoint(Point *point){
-  printf("Point id = %li\n",point->id);
-  printf("   x= %e %e gridsize = %e \n",point->x[0],point->x[1]
+  std::printf("Point id = %li\n",point->id);
+  std::printf("   x= %e %e gridsize = %e \n",point->x[0],point->x[1]
 	 ,point->gridsize);
-  printf("   kappa= %e gamma = %e %e invmag =%e\n",point->kappa
+  std::printf("   kappa= %e gamma = %e %e invmag =%e\n",point->kappa
 	 ,point->gamma[0],point->gamma[1],point->invmag);
-  printf("   in_image=%i\n",point->in_image);
+  std::printf("   in_image=%i\n",point->in_image);
 }
 /** \ingroup Constructor
  * Make an array of imageinfo types.
@@ -645,7 +640,7 @@ ImageInfo *NewImageInfo(int Nimages){
   imageinfo=(ImageInfo *) malloc(Nimages*sizeof(ImageInfo));
   assert(imageinfo);
 
-#pragma omp parallel for private(i)
+//#pragma omp parallel for private(i)
   for(i = 0;i < Nimages; i++)
   {
 	imageinfo[i].imagekist = NewKist();
@@ -796,7 +791,7 @@ TreeHndl readTree(char *filename){
 
   fread(&Npoints,sizeof(unsigned long),1,file);
   fread(&Nbranches,sizeof(unsigned long),1,file);
-  printf("npoints %i   Nbranches %i\n",Npoints,Nbranches);
+  std::printf("npoints %i   Nbranches %i\n",Npoints,Nbranches);
 
   x=(double *)malloc(Npoints*sizeof(double));
   y=(double *)malloc(Npoints*sizeof(double));
@@ -824,12 +819,12 @@ TreeHndl readTree(char *filename){
   /* re-assign particle ids */
 /*   MoveToTopList(tree->pointlist); */
 /*   for(i=0;i<tree->pointlist->Npoints;++i){ */
-/*     printf("i=%i   %i\n",i,point_id[i]); */
+/*     std::printf("i=%i   %i\n",i,point_id[i]); */
 /*      if( (tree->pointlist->current->x[0] == xp[i][0])*(tree->pointlist->current->x[1] == xp[i][1]) ){ */
 /*       tree->pointlist->current->id=point_id[i]; */
 /*      }else{ */
 /*       ERROR_MESSAGE();
-/*       printf("ERROR in readtree: reconstructed tree is not the same as saved one\n"); */
+/*       std::printf("ERROR in readtree: reconstructed tree is not the same as saved one\n"); */
 /*       exit(1); */
 /*     } */
 /*     MoveDownList(tree->pointlist); */

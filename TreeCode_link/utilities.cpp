@@ -8,12 +8,6 @@
 
 #include <slsimlib.h>
 
-inline double MIN(double x,double y){
-	return (x < y) ? x : y;
-}
-inline double MAX(double x,double y){
-	return (x > y) ? x : y;
-}
 
 int windings2(double *x,Point *points,unsigned long Npoints,double *area,short image){
 	/* slow obsolete version
@@ -58,7 +52,7 @@ int windings2(double *x,Point *points,unsigned long Npoints,double *area,short i
     mo=m;
   }
 
-  /*printf("  windings: area=%e windings/2/pi=%e\n",*area,windings/2/pi); */
+  /*std::printf("  windings: area=%e windings/2/pi=%e\n",*area,windings/2/pi); */
 
   *area=fabs(*area)/2;
   return (int)(fabs(windings)/2/pi + 0.5);
@@ -73,7 +67,7 @@ Point *LinkToSourcePoints(Point *i_points,unsigned long Npoints){
 
   s_points = NewPointArray(Npoints,true);
 
-#pragma omp parallel for private(i)
+//#pragma omp parallel for private(i)
   for(i=0;i<Npoints;++i){
     s_points[i].id=i_points[i].id;
       // link images and source points
@@ -90,7 +84,7 @@ void findarea(ImageInfo *imageinfo){
   for(j=0,imageinfo->area=0,imageinfo->area_error=0;j<imageinfo->Npoints;++j){
 	  if( fabs(imageinfo->points[j].leaf->boundary_p2[0] - imageinfo->points[j].leaf->boundary_p1[0]
 	             - imageinfo->points[j].gridsize)/imageinfo->points[j].gridsize > 1.0e-4 ){
-		  printf(" miss aligned gridsize %.5f %.5f \n",(imageinfo->points[j].leaf->boundary_p2[0] - imageinfo->points[j].leaf->boundary_p1[0])
+		  std::printf(" miss aligned gridsize %.5f %.5f \n",(imageinfo->points[j].leaf->boundary_p2[0] - imageinfo->points[j].leaf->boundary_p1[0])
 		  	          /imageinfo->points[j].gridsize,(imageinfo->points[j].leaf->boundary_p2[1] - imageinfo->points[j].leaf->boundary_p1[1])
 		  	          /imageinfo->points[j].gridsize);
 	  }
@@ -131,7 +125,7 @@ void log_polar_grid(Point *i_points,double rmax,double rmin,double *center,long 
       i_points[i].x[0] = center[0] + r*cos(theta);
       i_points[i].x[1] = center[1] + r*sin(theta);
       i_points[i].gridsize=1.0;
-      //printf("x = %e %e\n",i_points[i].x[0],i_points[i].x[1]);
+      //std::printf("x = %e %e\n",i_points[i].x[0],i_points[i].x[1]);
   }
 
   return;
@@ -150,7 +144,7 @@ long IndexFromPosition(double *x,long Npixels,double range,double *center){
 	  ix=(long)( ((x[0] - center[0])/range + 0.5)*(Npixels-1)+0.5);
 	  iy=(long)( ((x[1] - center[1])/range + 0.5)*(Npixels-1)+0.5);
 
-/*	  printf("point %e %e  map %e %e\n",x[0],x[1]
+/*	  std::printf("point %e %e  map %e %e\n",x[0],x[1]
       ,(ix*1.0/(Npixels-1.) - 0.5)*range + center[0]
       ,(iy*1.0/(Npixels-1.) - 0.5)*range + center[1]);
 */
@@ -205,21 +199,11 @@ int windings(double *x,Point *points,unsigned long Npoints,double *area,short im
 	}
 
 	*area = fabs(*area)*0.5;
-	//printf("wn = %i\n",wn);
+	//std::printf("wn = %i\n",wn);
 	//if(abs(wn) > 0) exit(0);
 	return wn;
 }
 
-// isLeft(): tests if a point is Left|On|Right of an infinite line.
-// Input:three points P0, P1, and x
-// Return: >0 for x left of the line through P0 and P1
-//         =0 for x on the line
-//         <0 for x right of the line
-inline float isLeft( Point *p0, Point *p1, double *x ){
-
-	return (p1->x[0] - p0->x[0])*(x[1] - p0->x[1])
-			- (x[0] - p0->x[0])*(p1->x[1] - p0->x[1]);
-}
 
 /** \ingroup Utill
  * This function finds the largest power of 2 that is < k

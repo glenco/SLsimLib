@@ -27,7 +27,7 @@ KistHndl NewKist(void){
 
   kist=(Kist *) malloc(sizeof(Kist));
   if (!kist){
-    fprintf(stderr,"allocation failure in NewKist()\n");
+    std::fprintf(stderr,"allocation failure in NewKist()\n");
     exit(1);
   }
   kist->top=NULL;
@@ -216,7 +216,7 @@ void FreeAllKist(KistHndl kist){
 
 	if(Nunits != Ndata){
 		ERROR_MESSAGE();
-		printf("FreeAllKist freed no all of data in kist\n");
+		std::printf("FreeAllKist freed no all of data in kist\n");
 		exit(0);
 	}
 	return;

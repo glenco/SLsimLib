@@ -15,7 +15,7 @@
 
 #ifndef error_message
 #define error_message
-#define ERROR_MESSAGE() printf("ERROR: file: %s line: %i\n",__FILE__,__LINE__)
+#define ERROR_MESSAGE() std::printf("ERROR: file: %s line: %i\n",__FILE__,__LINE__)
 #endif
 
 #ifndef pointtypes_declare

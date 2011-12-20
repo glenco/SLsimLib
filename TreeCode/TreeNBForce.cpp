@@ -13,16 +13,16 @@ float *FindRSPH(TreeNBHndl tree,int Nsph){
 
   if(sizeof(tree->xp[0]) != sizeof(double)){
 	  ERROR_MESSAGE();
-	  printf("ERROR: FindRSPH, xp is not a double, need to change PosType\n");
+	  std::printf("ERROR: FindRSPH, xp is not a double, need to change PosType\n");
 	  exit(0);
   }
   rsph=(float *)malloc((tree->top->nparticles)*sizeof(float));
 
   for(i=0;i<tree->top->nparticles;++i){
-	if(i<0){ERROR_MESSAGE(); printf("ERROR: findRSPH, not enough bits to address particle number\n"); exit(1);}
+	if(i<0){ERROR_MESSAGE(); std::printf("ERROR: findRSPH, not enough bits to address particle number\n"); exit(1);}
     if(Nsph > 0) neighbors=NearestNeighborNB(tree,tree->xp[i],Nsph,&(tree->rsph[i]));
     else tree->rsph[i]=0.0;
-    if(i % 50000 == 0) printf("         %.2f percent done\n",100.*i/tree->top->nparticles);
+    if(i % 50000 == 0) std::printf("         %.2f percent done\n",100.*i/tree->top->nparticles);
   }
 
   return rsph;
@@ -70,7 +70,7 @@ void _TreeNBForce2D(TreeNBHndl tree,double *ray
 
   rcm2 = xcm*xcm + ycm*ycm;
   //rcrit2=pow(tree->current->rcrit_angle+tree->current->rcrit_part,2);
-  //printf("rsm=%e rcrit=%e\n",sqrt(rcm2),tree->current->rcrit_angle);
+  //std::printf("rsm=%e rcrit=%e\n",sqrt(rcm2),tree->current->rcrit_angle);
 
   if( rcm2 < pow(tree->current->rcrit_angle,2) ){
 	  if( (tree->current->child1==NULL)*(tree->current->child2==NULL) ){ /* leaf case */
@@ -139,7 +139,7 @@ void _TreeNBForce2D(TreeNBHndl tree,double *ray
 
       /*
       if(isnan(*kappa)){
-    	  printf(" kappa=nan from cell tmp=%e xcm=%e ycm=%e \nrsph=%e  rcrit=%e  level=%i\n",tmp,xcm,ycm
+    	  std::printf(" kappa=nan from cell tmp=%e xcm=%e ycm=%e \nrsph=%e  rcrit=%e  level=%i\n",tmp,xcm,ycm
     			  ,tree->rsph[tree->MultiRadius*tree->current->particles[0]],tree->current->rcrit,tree->current->level);
     	  printBranchNB(tree->current,xp_2d);
     	  exit(1);
@@ -300,15 +300,15 @@ void TreeNBParticleForce2Diter(TreeNBHndl tree
 	   * that will be added later
 	   */
 
-	  //printf("rsm %e rcrit=%e\n",sqrt(rcm2),tree->current->rcrit_angle);
-	  //printf("ray = %e %e\n",ray[0],ray[1]);
+	  //std::printf("rsm %e rcrit=%e\n",sqrt(rcm2),tree->current->rcrit_angle);
+	  //std::printf("ray = %e %e\n",ray[0],ray[1]);
 	  //printBranchNB(tree->current,xp_2d,2);
 
 	  if( rcm2 < pow(tree->current->rcrit_angle,2) ){
 		  // includes rcrit_particle constraint
 		  allowDescent=true;
 
-		  //printf("right place\n");
+		  //std::printf("right place\n");
 		  if( (tree->current->child1==NULL)*(tree->current->child2==NULL) ){
 			  // leaf case
 			  // particle treatment

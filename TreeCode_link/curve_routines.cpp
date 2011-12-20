@@ -33,7 +33,7 @@ void split_order_curve4(ImageInfo *curves,int Maxcurves,int *Ncurves){
 	//ListHndl reservoir,orderedlist;
 	Point *newpointarray;
 
-	//printf("entering split_order_curve\n");
+	//std::printf("entering split_order_curve\n");
 	if(curves[0].Npoints==0){
 		*Ncurves=0;
 		return;
@@ -60,7 +60,7 @@ void split_order_curve4(ImageInfo *curves,int Maxcurves,int *Ncurves){
 		MoveDownList(orderedlist);
 		NeighborsOfNeighbors(orderedlist,reservoir);
 		curves[i].Npoints=orderedlist->Npoints - m;
-		//printf("curves[%i].Npoints=%i %i %i\n",i,curves[i].Npoints,orderedlist->Npoints
+		//std::printf("curves[%i].Npoints=%i %i %i\n",i,curves[i].Npoints,orderedlist->Npoints
 		//		,reservoir->Npoints);
 		m+=curves[i].Npoints;
 		++i;
@@ -108,7 +108,7 @@ void split_order_curve4(ImageInfo *curves,int Maxcurves,int *Ncurves){
 			// check to make sure the center is inside the curves
 			//assert(abs(windings(center,curves[i].points,curves[i].Npoints,&tmp1,0)));
 
-			//printf("N=%i\n",curves[i].Npoints);
+			//std::printf("N=%i\n",curves[i].Npoints);
 			//assert(abs(windings(center,curves[i].points,curves[i].Npoints,&tmp1,0)) > 0 );
 
 			// find the last point that is a neighbor of the first point
@@ -117,20 +117,20 @@ void split_order_curve4(ImageInfo *curves,int Maxcurves,int *Ncurves){
 			end=m;
 			//assert(m > 0);
 
-		//printf("windings = %i\n",windings(center,curves[i].points,curves[i].Npoints,&tmp1,0));
+		//std::printf("windings = %i\n",windings(center,curves[i].points,curves[i].Npoints,&tmp1,0));
 		// walk curve to remove shadowing effect
 			j=0;
 		//end=0;
 			m=0;
 			while(j < curves[i].Npoints-1){
 				walkcurve(curves[i].points,curves[i].Npoints,&j,&end);
-				//printf("i = %i Npoints = %i end+1 = %i j = %i\n",i,curves[i].Npoints,end+1,j);
+				//std::printf("i = %i Npoints = %i end+1 = %i j = %i\n",i,curves[i].Npoints,end+1,j);
 				if(j < curves[i].Npoints-1)
 					backtrack(curves[i].points,curves[i].Npoints,&j,-1,&end);
 				++m;
 				assert(m < curves[i].Npoints);
 			}
-			//printf("i = %i Npoints = %i end+1 = %i j=%i\n",i,curves[i].Npoints,end+1,j);
+			//std::printf("i = %i Npoints = %i end+1 = %i j=%i\n",i,curves[i].Npoints,end+1,j);
 			curves[i].Npoints=end+1;
 		}
 	}
@@ -161,7 +161,7 @@ void split_order_curve3(ImageInfo *curves,int Maxcurves,int *Ncurves){
 	lists[Maxcurves]=NewList();
 	for(i=0;i<curves[0].Npoints;++i) InsertPointAfterCurrent(lists[Maxcurves],&(curves[0].points[i]));
 
-	//printf("entering split_order_curve\n");
+	//std::printf("entering split_order_curve\n");
 	if(curves[0].Npoints==0){
 		*Ncurves=0;
 		return;
@@ -169,12 +169,12 @@ void split_order_curve3(ImageInfo *curves,int Maxcurves,int *Ncurves){
 
 	// separate critical curves
 	Npoints=curves[0].Npoints;
-	//printf("number of curve points: %i\n",curves[0].Npoints);
+	//std::printf("number of curve points: %i\n",curves[0].Npoints);
 
 	for(k=0;lists[Maxcurves]->Npoints > 0;++k){
-		printf("lists[Maxcurves]->Npoints=%li  \n",lists[Maxcurves]->Npoints);
+		std::printf("lists[Maxcurves]->Npoints=%li  \n",lists[Maxcurves]->Npoints);
 		lists[k]=NewList();
-	    if(k==Maxcurves){ ERROR_MESSAGE(); printf("ERROR: in split_order_curve3, not large enough curves array k=%li\n",k); break;}
+	    if(k==Maxcurves){ ERROR_MESSAGE(); std::printf("ERROR: in split_order_curve3, not large enough curves array k=%li\n",k); break;}
 
 		// start new curve
 		point=TakeOutCurrent(lists[Maxcurves]);
@@ -198,7 +198,7 @@ void split_order_curve3(ImageInfo *curves,int Maxcurves,int *Ncurves){
 	    				delta = AreBoxNeighbors(lists[k]->current,lists[Maxcurves]->current);
 	    			}
 
-	    			//printf("move down\n");
+	    			//std::printf("move down\n");
 	    			if(delta){
 	    				point=TakeOutCurrent(lists[Maxcurves]);
 	    				MoveToTopList(lists[Maxcurves]);
@@ -278,12 +278,12 @@ void split_order_curve3(ImageInfo *curves,int Maxcurves,int *Ncurves){
 
 	  }
 
-	//printf("  end of loop j=%i k=%i i=%i Npoints=%i\n",j,k,i,Npoints);
+	//std::printf("  end of loop j=%i k=%i i=%i Npoints=%i\n",j,k,i,Npoints);
 
 	point=curves[0].points;
 	newpointarray=NewPointArray(curves[0].Npoints,false);
 	for(i=0,*Ncurves=0,m=0;i<k;++i){
-		printf("lists[%li]->Npoints = %li\n",i,lists[i]->Npoints);
+		std::printf("lists[%li]->Npoints = %li\n",i,lists[i]->Npoints);
 		if(lists[i]->Npoints > 0){
 			MoveToTopList(lists[i]);
 			PointCopyData(&(newpointarray[m]),lists[i]->current);
@@ -316,7 +316,7 @@ void split_order_curve(ImageInfo *curves,int Maxcurves,int *Ncurves){
 	short spur,closed;
 	unsigned long Npoints,Maxpoint;
 
-	//printf("entering split_order_curve\n");
+	//std::printf("entering split_order_curve\n");
 	if(curves[0].Npoints==0){
 		*Ncurves=0;
 		return;
@@ -324,10 +324,10 @@ void split_order_curve(ImageInfo *curves,int Maxcurves,int *Ncurves){
 
 	// separate critical curves
 	Npoints=curves[0].Npoints;
-	//printf("number of curve points: %i\n",curves[0].Npoints);
+	//std::printf("number of curve points: %i\n",curves[0].Npoints);
 
 	for(j=0,k=0,jold=0;j<Npoints;++k){
-	    if(k==Maxcurves){ ERROR_MESSAGE();printf("ERROR: in split_order_curve, not large enough curves array k=%li j=%li\n",k,j); break;}
+	    if(k==Maxcurves){ ERROR_MESSAGE();std::printf("ERROR: in split_order_curve, not large enough curves array k=%li j=%li\n",k,j); break;}
 	    Maxpoint=Npoints;
 
 	    // go through remaining points ordering them as we go down the list
@@ -356,10 +356,10 @@ void split_order_curve(ImageInfo *curves,int Maxcurves,int *Ncurves){
 	}
 
 
-	//printf("  end of loop j=%i k=%i i=%i Npoints=%i\n",j,k,i,Npoints);
+	//std::printf("  end of loop j=%i k=%i i=%i Npoints=%i\n",j,k,i,Npoints);
 
 	*Ncurves=k;
-	//printf("exiting split_order_curve\n");
+	//std::printf("exiting split_order_curve\n");
 
 }
 
@@ -374,7 +374,7 @@ void split_order_curve2(ImageInfo *curves,int Maxcurves,int *Ncurves){
 	short spur,closed;
 	unsigned long Npoints,Maxpoint;
 
-	//printf("entering split_order_curve\n");
+	//std::printf("entering split_order_curve\n");
 	if(curves[0].Npoints==0){
 		*Ncurves=0;
 		return;
@@ -382,10 +382,10 @@ void split_order_curve2(ImageInfo *curves,int Maxcurves,int *Ncurves){
 
 	// separate critical curves
 	Npoints=curves[0].Npoints;
-	//printf("number of curve points: %i\n",curves[0].Npoints);
+	//std::printf("number of curve points: %i\n",curves[0].Npoints);
 
 	for(j=0,k=0,jold=0;j<Npoints;++k){
-	    if(k==Maxcurves){ ERROR_MESSAGE(); printf("ERROR: in split_order_curve2, not large enough curves array k=%li j=%li\n",k,j); break;}
+	    if(k==Maxcurves){ ERROR_MESSAGE(); std::printf("ERROR: in split_order_curve2, not large enough curves array k=%li j=%li\n",k,j); break;}
 	    Maxpoint=Npoints;
 
 	    // go through remaining points ordering them as we go down the list
@@ -396,7 +396,7 @@ void split_order_curve2(ImageInfo *curves,int Maxcurves,int *Ncurves){
 
 	    	/*
 	    	for(i=j+1,step=1,rmin=1.0e99;i<Maxpoint;++i){
-	    		if( j+1 > Npoints-1 || i==j){ ERROR_MESSAGE(); printf("ERROR: i=%l j=%i\n",i,j); exit(1);}
+	    		if( j+1 > Npoints-1 || i==j){ ERROR_MESSAGE(); std::printf("ERROR: i=%l j=%i\n",i,j); exit(1);}
 
 	    		if(step){
 	    			delta = sqrt( pow(curves[0].points[j].x[0]-curves[0].points[i].x[0],2)
@@ -465,7 +465,7 @@ void split_order_curve2(ImageInfo *curves,int Maxcurves,int *Ncurves){
 	    if(closed==0 || j-jold < 2 ){
 	    	// move spur to end of array, reset to end of last curve and reset total number of points
 	    	for(i=jold,m=Npoints-1;i<=j;++i,--m){
-		    	//printf("%i %e %e\n",i,curves[0].points[i].x[2],curves[0].points[i].x[1]);
+		    	//std::printf("%i %e %e\n",i,curves[0].points[i].x[2],curves[0].points[i].x[1]);
 	    		SwapPointsInArray(&(curves[0].points[i]),&(curves[0].points[m]) );
 	    	}
 	    	--k;
@@ -477,12 +477,12 @@ void split_order_curve2(ImageInfo *curves,int Maxcurves,int *Ncurves){
 	    	jold=j;
 	    	if(j < Npoints && k+1<Maxcurves) curves[k+1].points=&(curves[0].points[j]);
 	    }
-	    // printf("2 Npoints=%i\n",curves[k].Npoints);
+	    // std::printf("2 Npoints=%i\n",curves[k].Npoints);
 	  }
-	//printf("  end of loop j=%i k=%i i=%i Npoints=%i\n",j,k,i,Npoints);
+	//std::printf("  end of loop j=%i k=%i i=%i Npoints=%i\n",j,k,i,Npoints);
 
 	*Ncurves=k;
-	//printf("exiting split_order_curve\n");
+	//std::printf("exiting split_order_curve\n");
 
 }
 
@@ -497,11 +497,11 @@ void order_curve(ImageInfo *curve){
 	long j,jold,end=0;
 	short spur,closed;
 
-	//printf("entering split_order_curve\n");
+	//std::printf("entering split_order_curve\n");
 	if(curve->Npoints==0) return;
 
 	// separate critical curves
-	//printf("number of curve points: %i\n",curves[0].Npoints);
+	//std::printf("number of curve points: %i\n",curves[0].Npoints);
 
 	j=0; jold=0;
 
@@ -523,8 +523,8 @@ void order_curve(ImageInfo *curve){
 
 	}while(spur);
 
-	//printf("  end of loop j=%i k=%i i=%i Npoints=%i\n",j,k,i,Npoints);
-	//printf("exiting split_order_curve\n");
+	//std::printf("  end of loop j=%i k=%i i=%i Npoints=%i\n",j,k,i,Npoints);
+	//std::printf("exiting split_order_curve\n");
 
 }
 
@@ -541,11 +541,11 @@ void walkcurve(Point *points,long Npoints,long *j,long *end){
 	bool delta;
 
 	//if((*j)==0) *end=Npoints-1;
-	//printf("end = %i\n",*end);
+	//std::printf("end = %i\n",*end);
 
 	for(i=(*j)+1,step=1;i<Npoints ;++i){
 		if( (*j)+1 > Npoints-1 || i==(*j)){
-			printf("ERROR: i=%li (*j)=%li\n",i,(*j));
+			std::printf("ERROR: i=%li (*j)=%li\n",i,(*j));
 			exit(1);
 		}
 
@@ -648,7 +648,7 @@ void split_images(TreeHndl i_tree,ImageInfo *images,int Maximages
 
 	Npoints_tot=images->Npoints;
 
-	//printf("entering split_images\n");
+	//std::printf("entering split_images\n");
 	//checkTree(i_tree);
 
 	// find borders of total image
@@ -670,19 +670,19 @@ void split_images(TreeHndl i_tree,ImageInfo *images,int Maximages
 	}
 	borders->Npoints = images->outerborder->Nunits;
 
-	printf("borders  %i  images %i  outerborder %i\n",borders->Npoints,images->Npoints
+	std::printf("borders  %i  images %i  outerborder %i\n",borders->Npoints,images->Npoints
 			,images->outerborder->Nunits);
 
 	split_order_curve(borders,Maximages,&TmpNimages);
 
 //	splitter(borders,Maximages,&TmpNimages);
 
-	printf("*Nimages=%i\n",TmpNimages);
+	std::printf("*Nimages=%i\n",TmpNimages);
 	// split up into separable curves
 	// order points in each curve
-//	for(i=0;i<TmpNimages;++i){ order_curve(&(borders[i])); printf("%i\n",borders[i].Npoints);}
+//	for(i=0;i<TmpNimages;++i){ order_curve(&(borders[i])); std::printf("%i\n",borders[i].Npoints);}
 
-	//printf("number of borders = %i\n",TmpNimages);
+	//std::printf("number of borders = %i\n",TmpNimages);
 
 	// classify curves into those that are inside another curve or not
 	nesting_curve(borders,TmpNimages);
@@ -725,7 +725,7 @@ void split_images(TreeHndl i_tree,ImageInfo *images,int Maximages
 				assert(image_number_array[k] > -1);
 			}
 
-		//printf("Npoints=%i\n",Npoints);
+		//std::printf("Npoints=%i\n",Npoints);
 			if(*Nimages > 2){
 				// sort points into images
 				double_sort_points(Npoints_tot,image_number_array-1,images->points);
@@ -736,7 +736,7 @@ void split_images(TreeHndl i_tree,ImageInfo *images,int Maximages
 						if(i>0){
 							locateD(image_number_array-1,Npoints_tot,k-0.5,&j);
 							images[i].points=&(images[0].points[j]);
-							//printf("%e %e %i %i\n",images[i].points[0].x[0],images[i].points[0].x[1],j,k);
+							//std::printf("%e %e %i %i\n",images[i].points[0].x[0],images[i].points[0].x[1],j,k);
 							images[i-1].Npoints=j-jold;
 							jold=j;
 						}
@@ -748,10 +748,10 @@ void split_images(TreeHndl i_tree,ImageInfo *images,int Maximages
 			}else{
 				// when there are two images there is a faster way of sorting
 				for(i=0;i<TmpNimages;++i) if(borders[i].Nencircled % 2 == 0) break;
-				//printf("i=%i\n",i);
+				//std::printf("i=%i\n",i);
 				for(k=0,j=images[0].Npoints-1,images[1].Npoints=0;k<j;++k){
 					if(image_number_array[k] > i+0.5){
-					//printf("image_number_array[%i]=%f\n",k,image_number_array[k]);
+					//std::printf("image_number_array[%i]=%f\n",k,image_number_array[k]);
 						SwapPointsInArray(&(images[0].points[j]),&(images[0].points[k]));
 						tmp=image_number_array[k];
 						image_number_array[k]=image_number_array[j];
@@ -783,7 +783,7 @@ void split_images(TreeHndl i_tree,ImageInfo *images,int Maximages
 					--(*Nimages);
 				}
 				//findborders2(i_tree,&(images[i]));
-				printf("images[%i].Npoints=%i\n",i,images[i].Npoints);
+				std::printf("images[%i].Npoints=%i\n",i,images[i].Npoints);
 				findborders3(i_tree,&(images[i]));
 			}
 
@@ -795,7 +795,7 @@ void split_images(TreeHndl i_tree,ImageInfo *images,int Maximages
 	free(borders);
 
 	//checkTree(i_tree);
-	//printf("exiting split_images\n");
+	//std::printf("exiting split_images\n");
 }
 
 void split_images3(TreeHndl i_tree,ImageInfo *images,int Maximages
@@ -839,20 +839,20 @@ void split_images3(TreeHndl i_tree,ImageInfo *images,int Maximages
 	}
 	borders->Npoints = images->innerborder->Nunits;
 
-	//printf("borders  %li  images %li  innerborder %li\n",borders->Npoints,images->Npoints
+	//std::printf("borders  %li  images %li  innerborder %li\n",borders->Npoints,images->Npoints
 	//		,images->innerborderkist->Nunits);
 	// split up into separable curves
 	splitter(borders,Maximages,Nimages);
 
 	TmpNimages=*Nimages;
-	//printf("*Nimages=%i\n",TmpNimages);
+	//std::printf("*Nimages=%i\n",TmpNimages);
 
 	// order points in each curve
 	/*for(i=0;i<TmpNimages;++i){
 		order_curve(&(borders[i]));
-		printf("%i\n",borders[i].Npoints);
+		std::printf("%i\n",borders[i].Npoints);
 	}*/
-	//printf("number of borders = %i\n",TmpNimages);
+	//std::printf("number of borders = %i\n",TmpNimages);
 	// classify curves into those that are inside another curve or not
 	//nesting_curve(borders,TmpNimages);
 	// if border is encircled by an even number of other borders count it as an
@@ -882,7 +882,7 @@ void split_images3(TreeHndl i_tree,ImageInfo *images,int Maximages
 				}
 			}
 
-		//printf("Npoints=%i\n",Npoints);
+		//std::printf("Npoints=%i\n",Npoints);
 			if(*Nimages > 2){
 				// sort points into images
 				//double_sort_points(Npoints_tot,image_number_array-1,images->points);
@@ -893,7 +893,7 @@ void split_images3(TreeHndl i_tree,ImageInfo *images,int Maximages
 					//if(borders[k].Nencircled % 2 == 0){
 					locateD(image_number_array-1,Npoints_tot,k-0.5,&j);
 					images[k].points=&(images[0].points[j]);
-					//printf("%e %e %i %i\n",images[i].points[0].x[0],images[i].points[0].x[1],j,k);
+					//std::printf("%e %e %i %i\n",images[i].points[0].x[0],images[i].points[0].x[1],j,k);
 					images[k-1].Npoints=j-jold;
 					jold=j;
 				}
@@ -903,10 +903,10 @@ void split_images3(TreeHndl i_tree,ImageInfo *images,int Maximages
 			}else{
 				// when there are two images there is a faster way of sorting
 				//for(i=0;i<TmpNimages;++i) if(borders[i].Nencircled % 2 == 0) break;
-				//printf("i=%i\n",i);
+				//std::printf("i=%i\n",i);
 				for(k=0,j=images[0].Npoints-1,images[1].Npoints=0;k<j;++k){
 					if(image_number_array[k] > i+0.5){
-					//printf("image_number_array[%i]=%f\n",k,image_number_array[k]);
+					//std::printf("image_number_array[%i]=%f\n",k,image_number_array[k]);
 						SwapPointsInArray(&(images[0].points[j]),&(images[0].points[k]));
 						tmp=image_number_array[k];
 						image_number_array[k]=image_number_array[j];
@@ -938,7 +938,7 @@ void split_images3(TreeHndl i_tree,ImageInfo *images,int Maximages
 					--(*Nimages);
 				}
 				//findborders2(i_tree,&(images[i]));
-				//printf("images[%i].Npoints=%i\n",i,images[i].Npoints);
+				//std::printf("images[%i].Npoints=%i\n",i,images[i].Npoints);
 				findborders3(i_tree,&(images[i]));
 			}
 
@@ -949,7 +949,7 @@ void split_images3(TreeHndl i_tree,ImageInfo *images,int Maximages
 	free(borders);
 
 	//checkTree(i_tree);
-	//printf("exiting split_images\n");
+	//std::printf("exiting split_images\n");
 }
 
 
@@ -966,12 +966,12 @@ void split_images2(TreeHndl i_tree,ImageInfo *images,int Maximages,int *Nimages)
 		return;
 	}
 
-	//printf("In split_image2\n");
+	//std::printf("In split_image2\n");
 	splitter(images,Maximages,Nimages);
-	//printf("Images split\n");
+	//std::printf("Images split\n");
 	 //find borders of each image
 	for(i=0;i<*Nimages;++i) findborders3(i_tree,&(images[i]));
-	//printf("Out split_image2\n");
+	//std::printf("Out split_image2\n");
 
 	return ;
 }
@@ -998,10 +998,10 @@ void splitter(ImageInfo *images,int Maximages,int *Nimages){
 	for(i=0;i<images[0].Npoints;++i) InsertPointAfterCurrent(imagelist,&(images[0].points[i]));
 
 	assert(imagelist->Npoints == images[0].Npoints);
-	//printf("imagelist = %il\n",imagelist->Npoints);
+	//std::printf("imagelist = %il\n",imagelist->Npoints);
 
 	splitlist(imagelist,images,Nimages,Maximages);
-	//printf("imagelist = %il NpointsTotal = %il\n",imagelist->Npoints,NpointsTotal);
+	//std::printf("imagelist = %il NpointsTotal = %il\n",imagelist->Npoints,NpointsTotal);
 	assert(imagelist->Npoints == NpointsTotal);
 
 	// copy list back into array
@@ -1054,7 +1054,7 @@ void splitlist(ListHndl imagelist,ImageInfo *images,int *Nimages,int Maximages){
 	unsigned long i=0,m=0;
 	ListHndl orderedlist = NewList();
 
-	//printf("imagelist = %li\n",imagelist->Npoints);
+	//std::printf("imagelist = %li\n",imagelist->Npoints);
 	// divide images into disconnected curves using neighbors-of-neighbors
 
 	while(imagelist->Npoints > 0 && i < Maximages){
@@ -1083,7 +1083,7 @@ void splitlist(ListHndl imagelist,ImageInfo *images,int *Nimages,int Maximages){
 
 	if(i >= Maximages){
 		ERROR_MESSAGE();
-		printf("Too many images for Note enough images\n");
+		std::printf("Too many images for Note enough images\n");
 	}
 
 	assert(imagelist->Npoints == 0);
@@ -1098,6 +1098,6 @@ void splitlist(ListHndl imagelist,ImageInfo *images,int *Nimages,int Maximages){
 	//imagelist = orderedlist;
 
 	free(orderedlist);
-	//printf("imagelist = %il\n",imagelist->Npoints);
+	//std::printf("imagelist = %il\n",imagelist->Npoints);
 	return;
 }

@@ -46,9 +46,11 @@ void pixelize(
 	Point *points;
 	static TreeHndl ptree;
 
+	std::printf("%d %g %g %g\n", Npixels, range, center[0], center[1]);
+
 	if( (Npixels & (Npixels-1)) != 0){
 		ERROR_MESSAGE();
-		printf("ERROR: pixelsize, Npixels is not a power of 2\n");
+		std::printf("ERROR: pixelsize, Npixels is not a power of 2\n");
 		exit(1);
 	}
 
@@ -58,7 +60,7 @@ void pixelize(
 	// initialize pixel tree
 	if(count==1){
 		points=NewPointArray(Npixels*Npixels,true);
-		xygridpoints(points,range,center,Npixels,0);
+		xygridpoints(points,range,center,Npixels,false);
 		ptree=BuildTree(points,Npixels*Npixels);
 	}
 
@@ -154,7 +156,6 @@ void _SplitFluxIntoPixels(TreeHndl ptree,Branch *leaf,double *leaf_sb){
 
 	if(area > 0.0){
 		if(ptree->current->child1 == NULL && ptree->current->child2 == NULL){
-
 			assert(ptree->current->npoints == 1);
 			ptree->current->points->surface_brightness += (*leaf_sb)*area;
 			//ptree->current->points->surface_brightness = *leaf_sb;
@@ -188,7 +189,7 @@ void smoothmap(double *map_out,double *map_in,long Npixels,double range,double s
 	int Nmask;
 
 	Nmask=2*(int)(3*sigma*Npixels/range + 1);
-	if(Nmask < 4 ) printf("WARNING: pixels are large compare to psf Nmask=%i\n",Nmask);
+	if(Nmask < 4 ) std::printf("WARNING: pixels are large compare to psf Nmask=%i\n",Nmask);
 
 	// set up mask
 	mask=dmatrix(0,Nmask,0,Nmask);

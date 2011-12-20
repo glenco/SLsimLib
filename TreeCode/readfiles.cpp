@@ -15,41 +15,41 @@
 
   file=fopen(filename,"r");
   fscanf(file,"%s %s",label,lens.simfilename);
-  printf("%s %s\n",label,lens.simfilename);
+  std::printf("%s %s\n",label,lens.simfilename);
   fscanf(file,"%s %s",label,lens.treefilenames);
-  printf("%s %s\n",label,lens.treefilenames);
+  std::printf("%s %s\n",label,lens.treefilenames);
 
   fscanf(file,"%s %i",label,&(lens.Nsph));
-  printf("%s %i\n",label,lens.Nsph);
+  std::printf("%s %i\n",label,lens.Nsph);
   fscanf(file,"%s %i",label,&(lens.Nspecies));
-  printf("%s %i\n",label,lens.Nspecies);
+  std::printf("%s %i\n",label,lens.Nspecies);
 
   fscanf(file,"%s %le",label,&(lens.theta_force));
-  printf("%s %f\n",label,lens.theta_force);
+  std::printf("%s %f\n",label,lens.theta_force);
   fscanf(file,"%s %le",label,&(lens.interpolation_scale));
-  printf("%s %f\n",label,lens.interpolation_scale);
+  std::printf("%s %f\n",label,lens.interpolation_scale);
   fscanf(file,"%s %le",label,&(lens.theta));
-  printf("%s %f\n",label,lens.theta);
+  std::printf("%s %f\n",label,lens.theta);
   fscanf(file,"%s %le",label,&(lens.phi));
-  printf("%s %f\n",label,lens.phi);
+  std::printf("%s %f\n",label,lens.phi);
 
   fscanf(file,"%s %le",label,&(lens.mass_units));
-  printf("%s %.3e\n",label,lens.mass_units);
+  std::printf("%s %.3e\n",label,lens.mass_units);
 
   fscanf(file,"%s %le",label,&(lens.zlens));
-  printf("%s %f\n",label,lens.zlens);
+  std::printf("%s %f\n",label,lens.zlens);
   fscanf(file,"%s %le",label,&(lens.zsource));
-  printf("%s %f\n",label,lens.zsource);
+  std::printf("%s %f\n",label,lens.zsource);
 
   SetConcordenceCosmology(cosmo);
   cosmo->physical=0;
 
   fscanf(file,"%s %le",label,&(cosmo->Omo));
-  printf("%s %f\n",label,cosmo->Omo);
+  std::printf("%s %f\n",label,cosmo->Omo);
   fscanf(file,"%s %le",label,&(cosmo->Oml));
-  printf("%s %f\n",label,cosmo->Oml);
+  std::printf("%s %f\n",label,cosmo->Oml);
   fscanf(file,"%s %le",label,&(cosmo->h));
-  printf("%s %f\n",label,cosmo->h);
+  std::printf("%s %f\n",label,cosmo->h);
   fclose(file);
 
 
@@ -74,7 +74,7 @@
 
   lens.Sigma_crit=angDist(0,lens.zsource,cosmo)/angDist(lens.zlens,lens.zsource,cosmo)
 		  /angDist(0,lens.zlens,cosmo)/4/pi/Grav;
-  printf("critical density is %e Msun/Mpc^2\n",lens.Sigma_crit);
+  std::printf("critical density is %e Msun/Mpc^2\n",lens.Sigma_crit);
 
   lenses=(SimLens *)malloc(lens.Nspecies*sizeof(SimLens));
 
@@ -111,23 +111,23 @@
 }
 void PrintSimLens(SimLens *lens){
 
-  printf("param file %s\n",lens->simfilename);
-  printf("tree file %s\n",lens->treefilenames);
+  std::printf("param file %s\n",lens->simfilename);
+  std::printf("tree file %s\n",lens->treefilenames);
 
-  printf("Nsph: %i\n",lens->Nsph);
-  printf("Nspecies: %i\n",lens->Nspecies);
+  std::printf("Nsph: %i\n",lens->Nsph);
+  std::printf("Nspecies: %i\n",lens->Nspecies);
 
-  printf("theta_force %f\n",lens->theta_force);
-  printf("interpolations_scale: %f\n",lens->interpolation_scale);
-  printf("theta: %f\n",lens->theta);
-  printf("phi: %f\n",lens->phi);
+  std::printf("theta_force %f\n",lens->theta_force);
+  std::printf("interpolations_scale: %f\n",lens->interpolation_scale);
+  std::printf("theta: %f\n",lens->theta);
+  std::printf("phi: %f\n",lens->phi);
 
-  printf("mass_units %.3e\n",lens->mass_units);
+  std::printf("mass_units %.3e\n",lens->mass_units);
 
-  printf("zlens %f\n",lens->zlens);
-  printf("zsource %f\n",lens->zsource);
+  std::printf("zlens %f\n",lens->zlens);
+  std::printf("zsource %f\n",lens->zsource);
 
-  printf("critical density is %e Msun/Mpc^2\n",lens->Sigma_crit);
+  std::printf("critical density is %e Msun/Mpc^2\n",lens->Sigma_crit);
 
 }
 
@@ -137,7 +137,7 @@ void readpositions(SimLens *lens){
 
   file=fopen(lens->simfilename,"r");
   fread(&(lens->Nparticles),sizeof(IndexType),1,file);
-  printf("    number of particles to be read:  %li million\n",lens->Nparticles/1000000);
+  std::printf("    number of particles to be read:  %li million\n",lens->Nparticles/1000000);
   lens->particles=(IndexType *)malloc(lens->Nparticles*sizeof(IndexType));
   lens->xp=PosTypeMatrix(0,lens->Nparticles-1,0,2);
   for(i=0;i<lens->Nparticles;++i){
@@ -159,13 +159,13 @@ PosType **PosTypeMatrix(long nrl, long nrh, long ncl, long nch)
 
 	/* allocate pointers to rows */
 	m=(PosType **) malloc((size_t)((nrow+NR_END)*sizeof(PosType*)));
-	if (!m) {ERROR_MESSAGE(); printf("ERROR: PosTypeMatrix\n  allocation failure 1\n\n"); exit(0);}
+	if (!m) {ERROR_MESSAGE(); std::printf("ERROR: PosTypeMatrix\n  allocation failure 1\n\n"); exit(0);}
 	m += NR_END;
 	m -= nrl;
 
 	/* allocate rows and set pointers to them */
 	m[nrl]=(PosType *) malloc((size_t)((nrow*ncol+NR_END)*sizeof(PosType)));
-	if (!m[nrl]) {ERROR_MESSAGE(); printf("ERROR: PosTypeMatrix\n  allocation failure 2\n\n"); exit(0);}
+	if (!m[nrl]) {ERROR_MESSAGE(); std::printf("ERROR: PosTypeMatrix\n  allocation failure 2\n\n"); exit(0);}
 	m[nrl] += NR_END;
 	m[nrl] -= ncl;
 

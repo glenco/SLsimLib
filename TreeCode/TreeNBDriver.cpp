@@ -105,7 +105,7 @@ TreeNBHndl rotate_project(PosType **xp,IndexType Nparticles,IndexType *particles
    }
 
   tree=BuildTreeNB(xp,rsph,mass,MultiRadius,MultiMass,Nparticles,particles,2,theta);
-  printf("projected with 2D tree\n");
+  std::printf("projected with 2D tree\n");
 
   return tree;
 }

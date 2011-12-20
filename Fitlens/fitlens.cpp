@@ -40,7 +40,7 @@ void FindLensSimple(
 
 	if(lens->perturb_Nmodes <= 0 || Nimages <= 0){
 		ERROR_MESSAGE();
-		printf("must set perturb_Nmodes lens->perturb_Nmodes = %li Nimages = %i \n"
+		std::printf("must set perturb_Nmodes lens->perturb_Nmodes = %li Nimages = %i \n"
 				,lens->perturb_Nmodes,Nimages);
 		exit(1);
 	}
@@ -48,7 +48,7 @@ void FindLensSimple(
 	int i;
 
 	//PrintAnaLens(lens,false,false);
-	//for(i=0;i<Nimages;++i) printf("  x = %e %e\n",image_positions[i].x[0],image_positions[i].x[1]);
+	//for(i=0;i<Nimages;++i) std::printf("  x = %e %e\n",image_positions[i].x[0],image_positions[i].x[1]);
 
 	if(Nimages == 1){
 		for(i=1;i<lens->perturb_Nmodes;++i) lens->perturb_modes[i] = 0.0;
@@ -82,7 +82,7 @@ void FindLensSimple(
 
 		dx_sub[i][0] /= scale;
 		dx_sub[i][1] /= scale;
-		//printf("xob = %e %e  dx = %e %e\n",xob[i][0],xob[i][1],dx_sub[i][0],dx_sub[i][1]);
+		//std::printf("xob = %e %e  dx = %e %e\n",xob[i][0],xob[i][1],dx_sub[i][0],dx_sub[i][1]);
 	}
 
 	x_center[0] /= scale;
@@ -167,8 +167,8 @@ double ElliptisizeLens(
 	assert(Nlenses > 0);
 	for(i=0;i<Nimages;++i) assert(pairing[i] > 0 && pairing[i] <= Nimages);
 
-	//printf("x_center = %e %e\n",x_center[0],x_center[1]);
-	//printf("sigG = %e\n",sigG);
+	//std::printf("x_center = %e %e\n",x_center[0],x_center[1]);
+	//std::printf("sigG = %e\n",sigG);
 
 	++count;
 
@@ -213,7 +213,7 @@ double ElliptisizeLens(
 	//ERROR_MESSAGE();
 	find_lens(NimagesT,NsourcesT,pairingT,xobT,x_center,betaT,NmodT,&degenT,modT,vT,dx_subT);
 
-	//printf("found model\n");
+	//std::printf("found model\n");
 	for(i=1;i<=Nmod + 2*Nsources;++i) mod[i] = modT[i];
 
 	/*
@@ -266,7 +266,7 @@ double ElliptisizeLens(
 	}
 	for(i=1;i<=Nmod+2*Nsources;++i) mod[i]=modTT[i];
 
-	//printf("iter = %i\n",iter);
+	//std::printf("iter = %i\n",iter);
 	free_ivector(pairingT,0,Nimages-1);
 	free_dmatrix(xobT,0,Nimages-1,0,1);
 	free_dmatrix(dx_subT,0,Nimages-1,0,1);
@@ -353,9 +353,9 @@ double minEllip(double *par){
 		oldsm=sm;
 		for(i=1;i<=NmodT+2*NsourcesT;++i) modTT[i]=modT[i];
 	}
-	//printf("q=%e   theta=%e gamma=%e %e\n",q,theta*180/pi,modT[1],modT[2]);
-	//printf("%e %e %e %e %e %e\n",modoT[3],modoT[4],modoT[5],modoT[6],modoT[7],modoT[8]);
-	//printf("%e %e %e %e %e %e\n\n",modT[3],modT[4],modT[5],modT[6],modT[7],modT[8]);
+	//std::printf("q=%e   theta=%e gamma=%e %e\n",q,theta*180/pi,modT[1],modT[2]);
+	//std::printf("%e %e %e %e %e %e\n",modoT[3],modoT[4],modoT[5],modoT[6],modoT[7],modoT[8]);
+	//std::printf("%e %e %e %e %e %e\n\n",modT[3],modT[4],modT[5],modT[6],modT[7],modT[8]);
 
 	// keep orientation within range
 	if(theta > pi/2) sm *= exp( (theta - pi/2)/1.0e-5 );
@@ -387,7 +387,7 @@ void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *x_cent
 	double **c,*b,*w,r,theta,wmax,**a,*y,*temp,**x;
 	int i,k,j;
 
-	if(Nmodes+2*Nsources < 2*Nimages){ printf("ERROR: too few parameters in el\n"); exit(0);}
+	if(Nmodes+2*Nsources < 2*Nimages){ std::printf("ERROR: too few parameters in el\n"); exit(0);}
 
 	y=dvector(0,1);
 	temp=dvector(0,1);
@@ -404,7 +404,7 @@ void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *x_cent
 	// recenter on lens center
 	for(i=0;i<Nimages;++i){
 		x[i][0]=xob[i][0]-x_center[0]; x[i][1]=xob[i][1]-x_center[1];
-		 //printf("%e  %e\n",x[i][0],x[i][1]);
+		 //std::printf("%e  %e\n",x[i][0],x[i][1]);
 	}
 
 	// fill in data matrix
@@ -439,7 +439,7 @@ void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *x_cent
 		}
 		b[2*i-1] = x[i-1][0] + dx_sub[i-1][0];
 		b[2*i]   = x[i-1][1] + dx_sub[i-1][1];
-		/*printf("dx_sub = %e %e\n",dx_sub[i-1][0],dx_sub[i-1][1]);*/
+		/*std::printf("dx_sub = %e %e\n",dx_sub[i-1][0],dx_sub[i-1][1]);*/
 	}
 
 	// preserve image data matrix
@@ -461,8 +461,8 @@ void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *x_cent
 	//ERROR_MESSAGE();
 	svbksbD(c,w,v,2*Nimages,Nmodes+2*Nsources,b,mod);
 
-	//for(i=1;i<=Nmodes + 2*Nsources;++i) printf("mod[%i]=%e\n",i,mod[i]);
-	//for(i=1;i<=Nmodes + 2*Nsources;++i) printf("w[%i]=%e\n",i,w[i]);
+	//for(i=1;i<=Nmodes + 2*Nsources;++i) std::printf("mod[%i]=%e\n",i,mod[i]);
+	//for(i=1;i<=Nmodes + 2*Nsources;++i) std::printf("w[%i]=%e\n",i,w[i]);
 
 	/* find degeneracy vectors
 	* and make them the first *degen columns of v
@@ -479,7 +479,7 @@ void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *x_cent
 	}
 
 	//********************************************************************
-	//for(i=1;i<=N+2*Nsources;++i) printf("%e\n",modo[i]);
+	//for(i=1;i<=N+2*Nsources;++i) std::printf("%e\n",modo[i]);
 
 	free_dvector(y,0,1);
 	free_dvector(temp,0,1);
@@ -507,7 +507,7 @@ double deflect_translated(double beta,double *mod,double *x,double *y,double *ma
 	double kappa,gamma[2],dt;
 
 
-  if(mod[0] != 0.0){ERROR_MESSAGE(); printf("background kappa should be zero\n"); exit(0);}
+  if(mod[0] != 0.0){ERROR_MESSAGE(); std::printf("background kappa should be zero\n"); exit(0);}
   assert(Nlenses < 3);
 
   // use deflection calculator to reduce code duplication
@@ -618,7 +618,7 @@ double regularize(int Nmax,int Nmin,int N,int Nsources,int degen
 
   /*
   for(i=Nmin,sum=0.0;i<=Nmax;i+=1){
-    printf("%i %e %e\n",i,mod[i],modo[i]);
+    std::printf("%i %e %e\n",i,mod[i],modo[i]);
   }
    */
 
@@ -664,11 +664,11 @@ double regularize(int Nmax,int Nmin,int N,int Nsources,int degen
       weights[j] /= sum;
 
       for(i=1;i<=N+2*Nsources;++i){
-    	  //printf("i=%i j=%i w=%e v=%e\n",i,j,weights[j],v[i][j]);
+    	  //std::printf("i=%i j=%i w=%e v=%e\n",i,j,weights[j],v[i][j]);
     	  if( !isnan(weights[j]) ) mod[i] += weights[j]*v[i][j];
       }
-      if(sum < 0) printf("max found\n");
-      /*printf("weights[%i]=%e\n",j,weights[j]);*/
+      if(sum < 0) std::printf("max found\n");
+      /*std::printf("weights[%i]=%e\n",j,weights[j]);*/
 	}
 
     for(i=Nmin,sum=0.0;i<=Nmax;i+=1){
@@ -676,9 +676,9 @@ double regularize(int Nmax,int Nmin,int N,int Nsources,int degen
       else sum += pow(1-pow(i/2,2),2)*pow(mod[i]-modo[i],2);
     }
     Dsum=fabs(sumold-sum);
-    /*printf("%e\n",sumold-sum);*/
+    /*std::printf("%e\n",sumold-sum);*/
     sumold=sum;
-    /*printf("Dsum=%e %e\n",Dsum,sumold);*/
+    /*std::printf("Dsum=%e %e\n",Dsum,sumold);*/
   }
 
   /* test result */
@@ -710,7 +710,7 @@ double critmin(double r){
 void RotateModel(double thetaX,double *mod,int N,int Nsources){
   double temp[2];
   int i,k;
-  /*  printf("rotate: theta = %e\n",thetaX);*/
+  /*  std::printf("rotate: theta = %e\n",thetaX);*/
 
   temp[0]=mod[1];  temp[1]=mod[2];
   mod[1]= temp[0]*cos(2*thetaX)+temp[1]*sin(2*thetaX);
@@ -745,7 +745,7 @@ double find_axis(double *mod,int Nmod){
   /* calc 2nd deriv */
   for(i=4,ans=0.0;i<=5;i+=2){
     k=i/2;
-    /*printf("ans=%e   %e %e\n",ans,modT[i],modT[i+1]);*/
+    /*std::printf("ans=%e   %e %e\n",ans,modT[i],modT[i+1]);*/
     ans += -4*k*k*modT[i]*modT[i+1]*sin(2*k*theta)
       - 2*k*k*(modT[i]*modT[i] - modT[i+1]*modT[i+1])*cos(2*k*theta);
   }
@@ -760,7 +760,7 @@ double minaxis(double thetaX){
 
   for(i=4,ans=0.0;i<=5;i+=2){
     k=i/2;
-    /*printf("ans=%e   %e %e\n",ans,modT[i],modT[i+1]);*/
+    /*std::printf("ans=%e   %e %e\n",ans,modT[i],modT[i+1]);*/
     ans += 2*k*modT[i]*modT[i+1]*cos(2*k*thetaX)
       - k*(modT[i]*modT[i] - modT[i+1]*modT[i+1])*sin(2*k*thetaX);
   }
@@ -778,7 +778,7 @@ int check_model(int Nimages,int Nsources,int Nlenses,int *pairing,double **xob,d
   for(i=0,par=0;i<Nimages;++i) par+=(Amag[i][0]*Amag[i][1]-Amag[i][2]*Amag[i][2])
 				  /fabs(Amag[i][0]*Amag[i][1]-Amag[i][2]*Amag[i][2]);
 
-  //printf("par=%e\n",par);
+  //std::printf("par=%e\n",par);
   if(fabs(par) > 1.0e-6 ) return 1;
 
   if(Nlenses>1){
@@ -793,7 +793,7 @@ int check_model(int Nimages,int Nsources,int Nlenses,int *pairing,double **xob,d
     kappa=deflect_translated(1.0,mod,tmp,y[i],mag,Nmod,Nlenses,Re2,x2);
     y[i][0]+=dx_sub[i][0];
     y[i][1]+=dx_sub[i][1];
-    //printf("y= %e %e    %e %e  %i\n",y[i][0],y[i][1],kappa,1.0/(mag[0]*mag[1]-mag[2]*mag[2]),pairing[i-1]);
+    //std::printf("y= %e %e    %e %e  %i\n",y[i][0],y[i][1],kappa,1.0/(mag[0]*mag[1]-mag[2]*mag[2]),pairing[i-1]);
   }
 
   for(i=1,dymax=0;i<Nimages;++i){
@@ -808,12 +808,12 @@ int check_model(int Nimages,int Nsources,int Nlenses,int *pairing,double **xob,d
   // check number of images
   tmp[0]=xob[1][0]-x_center[0];
   tmp[1]=xob[1][1]-x_center[1];
-  //printf("number of images: %i\n",find_image_number(y[0],tmp,mod,Nmod,Nlenses,Re2,x2) );
-  //printf("number of images: %i\n",magandcrit(y[0],tmp,mod,Nmod,Nlenses,Re2,x2) );
-  //printf("finite mag: %e\n",finiteMag(1.0e-3,xob[0],mod,Nmod,Nlenses,Re2,x2) );
-  //printf("finite mag: %e\n",finiteMag(1.0e-3,xob[1],mod,Nmod,Nlenses,Re2,x2) );
-  //printf("finite mag: %e\n",finiteMag(1.0e-3,xob[2],mod,Nmod,Nlenses,Re2,x2) );
-  //printf("finite mag: %e\n",finiteMag(1.0e-3,xob[3],mod,Nmod,Nlenses,Re2,x2) );
+  //std::printf("number of images: %i\n",find_image_number(y[0],tmp,mod,Nmod,Nlenses,Re2,x2) );
+  //std::printf("number of images: %i\n",magandcrit(y[0],tmp,mod,Nmod,Nlenses,Re2,x2) );
+  //std::printf("finite mag: %e\n",finiteMag(1.0e-3,xob[0],mod,Nmod,Nlenses,Re2,x2) );
+  //std::printf("finite mag: %e\n",finiteMag(1.0e-3,xob[1],mod,Nmod,Nlenses,Re2,x2) );
+  //std::printf("finite mag: %e\n",finiteMag(1.0e-3,xob[2],mod,Nmod,Nlenses,Re2,x2) );
+  //std::printf("finite mag: %e\n",finiteMag(1.0e-3,xob[3],mod,Nmod,Nlenses,Re2,x2) );
 
    return 0;
 }

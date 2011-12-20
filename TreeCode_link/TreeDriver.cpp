@@ -24,11 +24,11 @@ Point *NearestNeighbor(TreeHndl tree,double *ray,int Nneighbors,ListHndl neighbo
   static double *rneighbors;
   static Point **neighborpoints;
 
-  /*printf("entering NN\n");*/
+  /*std::printf("entering NN\n");*/
 
   if(tree->top->npoints <= Nneighbors){
 	  ERROR_MESSAGE();
-	  printf("ERROR: in NearestNeighbor, number of neighbors > total number of points\n");
+	  std::printf("ERROR: in NearestNeighbor, number of neighbors > total number of points\n");
 	  exit(1);
   }
 
@@ -38,7 +38,7 @@ Point *NearestNeighbor(TreeHndl tree,double *ray,int Nneighbors,ListHndl neighbo
   }
 
   if(count==0){
-    /*printf("allocating memory\n");*/
+    /*std::printf("allocating memory\n");*/
     rneighbors=(double *)malloc((Nneighbors+tree->Nbucket)*sizeof(double));
     assert(rneighbors);
     neighborpoints=(Point **)malloc((Nneighbors+tree->Nbucket)*sizeof(Point *));
@@ -49,7 +49,7 @@ Point *NearestNeighbor(TreeHndl tree,double *ray,int Nneighbors,ListHndl neighbo
     oldNneighbors=Nneighbors;
 
   }else if(oldNneighbors < Nneighbors){ /* if the number of nearest neighbors goes up get more mem */
-    /*printf("re-allocating memory\n");*/
+    /*std::printf("re-allocating memory\n");*/
     rneighbors=(double *)realloc(rneighbors,(Nneighbors+tree->Nbucket)*sizeof(double));
     neighborpoints=(Point **)realloc(neighborpoints,(Nneighbors+tree->Nbucket)*sizeof(Point *));
     temp_points=(Point **)realloc(temp_points,(Nneighbors+tree->Nbucket)*sizeof(Point *));
@@ -57,8 +57,8 @@ Point *NearestNeighbor(TreeHndl tree,double *ray,int Nneighbors,ListHndl neighbo
   }
 
 
-  /*   printf("Nneighbors=%i\n",Nneighbors); */
-  /*   printf("array sizes=%i\n",Nneighbors+tree->Nbucket); */
+  /*   std::printf("Nneighbors=%i\n",Nneighbors); */
+  /*   std::printf("array sizes=%i\n",Nneighbors+tree->Nbucket); */
 
   /* initalize distance to neighbors to a large number */
   for(i=0;i<(tree->Nbucket+Nneighbors);++i){
@@ -66,14 +66,14 @@ Point *NearestNeighbor(TreeHndl tree,double *ray,int Nneighbors,ListHndl neighbo
   }
 
   moveTop(tree);
-  //   printf("p1= [%f,%f]\n", tree->current->boundary_p1[0],tree->current->boundary_p1[1]);
-  //   printf("p2= [%f,%f]\n", tree->current->boundary_p2[0],tree->current->boundary_p2[1]);
+  //   std::printf("p1= [%f,%f]\n", tree->current->boundary_p1[0],tree->current->boundary_p1[1]);
+  //   std::printf("p2= [%f,%f]\n", tree->current->boundary_p2[0],tree->current->boundary_p2[1]);
 
   realray[0]=ray[0];
   realray[1]=ray[1];
 
   if( inbox(ray,tree->current->boundary_p1,tree->current->boundary_p2) == 0 ){
-    printf("Warning: in NearestNeighbor, ray is not inside the simulation box\n    should work in any case\n      ray= %e %e\n",ray[0],ray[1]);
+    std::printf("Warning: in NearestNeighbor, ray is not inside the simulation box\n    should work in any case\n      ray= %e %e\n",ray[0],ray[1]);
 
     ray[0]=DMAX(ray[0],tree->current->boundary_p1[0]);
     ray[0]=DMIN(ray[0],tree->current->boundary_p2[0]);
@@ -105,8 +105,8 @@ void _NearestNeighbor(TreeHndl tree,double *ray,int Nneighbors,Point **neighborp
   unsigned long index[Nneighbors+tree->Nbucket];
   double dx,dy;
 
-  //printf("**************************************\nlevel %i\n",tree->current->level);
-  //for(i=0;i<tree->current->npoints;++i) printf("   %i\n",tree->current->points[i]);
+  //std::printf("**************************************\nlevel %i\n",tree->current->level);
+  //for(i=0;i<tree->current->npoints;++i) std::printf("   %i\n",tree->current->points[i]);
 
   if(incell){  /* not found cell yet */
 
@@ -115,10 +115,10 @@ void _NearestNeighbor(TreeHndl tree,double *ray,int Nneighbors,Point **neighborp
     	// found the box small enough */
     	if( tree->current->npoints <= (Nneighbors+tree->Nbucket) ){
     		incell=0;
-    		/*printf("found box with %i points\n",tree->current->npoints);*/
+    		/*std::printf("found box with %i points\n",tree->current->npoints);*/
 
     		/* this sets ray back to real value once closest leaf bax is found */
-    		if( (ray[0]!=realray[0])*(ray[1]!=realray[1]) ){ printf("ray != realray _NearestNeighbor\n"); exit(0);}
+    		if( (ray[0]!=realray[0])*(ray[1]!=realray[1]) ){ std::printf("ray != realray _NearestNeighbor\n"); exit(0);}
 
     		ray[0]=realray[0];
     		ray[1]=realray[1];
@@ -254,7 +254,7 @@ void _NearestNeighbor(TreeHndl tree,double *ray,int Nneighbors,Point **neighborp
 			  if(tree->current->child2 !=NULL){
 				  moveToChild(tree,2);
 				  _NearestNeighbor(tree,ray,Nneighbors,neighborpoints,rneighbors,direction);
-				  /*printf("moving up from level %i\n",tree->current->level);*/
+				  /*std::printf("moving up from level %i\n",tree->current->level);*/
 				  moveUp(tree);
 			  }
 		  }
@@ -264,12 +264,6 @@ void _NearestNeighbor(TreeHndl tree,double *ray,int Nneighbors,Point **neighborp
   }
 
   return;
-}
-
-/* return 1 (0) if ray is (not) in the cube */
-inline int inbox(double *ray,double *p1,double *p2){
-
-  return (ray[0]>=p1[0])*(ray[0]<=p2[0])*(ray[1]>=p1[1])*(ray[1]<=p2[1]);
 }
 
 // returns true if branch1 is fully inside barnch2
@@ -339,12 +333,12 @@ void _FindLeaf(TreeHndl tree,double *ray,unsigned long Nadd){
 	 *  Finds the leaf the ray is in and adds Nadd to all of is parent leaves
 	 */
 	bool contin;
-/*   printf("***********************\n"); */
-/*   printf("level = %i  npoints = %i incell=%i\n", tree->current->level,tree->current->npoints,incell); */
-/*   printf("p1= [%f,%f]\n", tree->current->boundary_p1[0],tree->current->boundary_p1[1]); */
-/*   printf("p2= [%f,%f]\n", tree->current->boundary_p2[0],tree->current->boundary_p2[1]); */
-/*   printf("first point = %i x= %f %f\n",tree->current->points->id,tree->current->points->x[0],tree->current->points->x[1]); */
-/*   printf("ray = %f %f\n",ray[0],ray[1]); */
+/*   std::printf("***********************\n"); */
+/*   std::printf("level = %i  npoints = %i incell=%i\n", tree->current->level,tree->current->npoints,incell); */
+/*   std::printf("p1= [%f,%f]\n", tree->current->boundary_p1[0],tree->current->boundary_p1[1]); */
+/*   std::printf("p2= [%f,%f]\n", tree->current->boundary_p2[0],tree->current->boundary_p2[1]); */
+/*   std::printf("first point = %i x= %f %f\n",tree->current->points->id,tree->current->points->x[0],tree->current->points->x[1]); */
+/*   std::printf("ray = %f %f\n",ray[0],ray[1]); */
 
 	assert(inbox(ray,tree->current->boundary_p1,tree->current->boundary_p2) );
 	do{
@@ -405,21 +399,21 @@ void FindBoxPoint(TreeHndl tree,double *ray,Point *point){
 	moveTop(tree);
 	   // check if ray is outside initial box
 	if( inbox(ray,tree->current->boundary_p1,tree->current->boundary_p2) == 0 ){
-		printf("FindBox: ray outside of grided range\n");
+		std::printf("FindBox: ray outside of grided range\n");
 		return;
 	}
 
 	_FindBox(tree,ray);
 	PointCopyData(point,tree->current->points);
 
-	//if(foundpoint == 0){ printf("FindBoxPoint failed to find point\n"); exit(1);}
+	//if(foundpoint == 0){ std::printf("FindBoxPoint failed to find point\n"); exit(1);}
 	//PrintPoint(point);
 
 	// error check
 	if(fabs(ray[0]-point->x[0]) > point->gridsize/2
 			|| fabs(ray[1]-point->x[1]) > point->gridsize/2){
 		ERROR_MESSAGE();
-		printf("ERROR: FindBox did not find box\n  ray = %e %e\n  Delta/gridsize = %e %e\n"
+		std::printf("ERROR: FindBox did not find box\n  ray = %e %e\n  Delta/gridsize = %e %e\n"
 				,ray[0],ray[1]
 		        ,2*(ray[0]-point->x[0])/point->gridsize
 				,2*(ray[1]-point->x[1])/point->gridsize);
@@ -476,7 +470,7 @@ Point *sortList(long n, double *arr,ListHndl list,Point *firstpointin){
       arr[i+1]=arr[i];
       i--;
       MoveUpList(list);
-      /*printf("      current= %i %f %f\n",list->current->id,list->current->x[0],list->current->x[1]);*/
+      /*std::printf("      current= %i %f %f\n",list->current->id,list->current->x[0],list->current->x[1]);*/
     }
     arr[i+1]=a;
 
@@ -505,7 +499,7 @@ void PointsWithin(TreeHndl tree,double *ray,float rmax,ListHndl neighborlist,sho
 
   moveTop(tree);
   if( inbox(ray,tree->current->boundary_p1,tree->current->boundary_p2) == 0 ){
-    printf("Warning: in PointsWithin, ray is not inside the simulation box\n    should work in any case\n      ray= %e %e\n     boundary p1 = %e %e p2 = %e %e\n",ray[0],ray[1]
+    std::printf("Warning: in PointsWithin, ray is not inside the simulation box\n    should work in any case\n      ray= %e %e\n     boundary p1 = %e %e p2 = %e %e\n",ray[0],ray[1]
 	   ,tree->current->boundary_p1[0],tree->current->boundary_p1[1]
 	   ,tree->current->boundary_p2[0],tree->current->boundary_p2[1]);
 
@@ -608,13 +602,6 @@ double ClosestBorder(double *ray,double *p1,double *p2){
 
 	return MIN(p2[1]-ray[1],length);
 }
-inline double FurthestBorder(double *ray,double *p1,double *p2){
-	/*  returns the distance from ray[] to the furthest point on the
-	 *    border of the box,
-	 */
-
-	return sqrt( pow(MAX(ray[0]-p1[0],p2[0]-ray[0]),2) + pow(MAX(ray[1]-p1[1],p2[1]-ray[1]),2) );
-}
 
 
 void _PointsWithin(TreeHndl tree,double *ray,float *rmax,ListHndl neighborlist,short markpoints){
@@ -624,8 +611,8 @@ void _PointsWithin(TreeHndl tree,double *ray,float *rmax,ListHndl neighborlist,s
   short pass;
 
 
-  //printf("**************************************\nlevel %i\n",tree->current->level);
-  //   printf("   %i incell=%i\n",tree->current->points->id,incell);
+  //std::printf("**************************************\nlevel %i\n",tree->current->level);
+  //   std::printf("   %i incell=%i\n",tree->current->points->id,incell);
 
   if(incell){  // not found cell yet
 
@@ -637,10 +624,10 @@ void _PointsWithin(TreeHndl tree,double *ray,float *rmax,ListHndl neighborlist,s
     		// whole box in circle or a leaf with ray in it
 
     	  incell=0;
-    	  //printf("found box with %i points\n",tree->current->npoints);
+    	  //std::printf("found box with %i points\n",tree->current->npoints);
 
     	  // this sets ray back to real value once closest leaf bax is found
-    	  if( (ray[0]!=realray[0])*(ray[1]!=realray[1]) ){ printf("ray != realray _PointsWithin\n"); exit(0);}
+    	  if( (ray[0]!=realray[0])*(ray[1]!=realray[1]) ){ std::printf("ray != realray _PointsWithin\n"); exit(0);}
 
     	  ray[0]=realray[0];
     	  ray[1]=realray[1];
@@ -694,31 +681,31 @@ void _PointsWithin(TreeHndl tree,double *ray,float *rmax,ListHndl neighborlist,s
 
     	}else{ // keep going down the tree
 
-    	  //printf("moving to child1 from level %i\n",tree->current->level);
+    	  //std::printf("moving to child1 from level %i\n",tree->current->level);
     	  if(tree->current->child1 !=NULL){
     		  moveToChild(tree,1);
     		  _PointsWithin(tree,ray,rmax,neighborlist,markpoints);
-    		  //printf("moving up from level %i\n",tree->current->level);
+    		  //std::printf("moving up from level %i\n",tree->current->level);
     		  moveUp(tree);
 
     		  incell2=incell;
     	  }
 
     	  if(tree->current->child2 !=NULL){
-    		  //printf("moving to child2 from level %i\n",tree->current->level);
+    		  //std::printf("moving to child2 from level %i\n",tree->current->level);
     		  moveToChild(tree,2);
     		  _PointsWithin(tree,ray,rmax,neighborlist,markpoints);
-    		  //printf("moving up from level %i\n",tree->current->level);
+    		  //std::printf("moving up from level %i\n",tree->current->level);
     		  moveUp(tree);
     	  }
 
     	  // if ray found in second child go back to first to search for neighbors
     	  if( (incell2==1) && (incell==0) ){
     		  if(tree->current->child1 !=NULL){
-    			  //printf("moving to child1 again from level %i\n",tree->current->level);
+    			  //std::printf("moving to child1 again from level %i\n",tree->current->level);
     			  moveToChild(tree,1);
     			  _PointsWithin(tree,ray,rmax,neighborlist,markpoints);
-    			  //printf("moving up from level %i\n",tree->current->level);
+    			  //std::printf("moving up from level %i\n",tree->current->level);
     			  moveUp(tree);
     		  }
     	  }
@@ -727,7 +714,7 @@ void _PointsWithin(TreeHndl tree,double *ray,float *rmax,ListHndl neighborlist,s
 
   }else{    // found cell
 
-	  //printf("finding neighboring boxes at level = %i\n",tree->current->level);
+	  //std::printf("finding neighboring boxes at level = %i\n",tree->current->level);
 
 	  pass=cutbox(ray,tree->current->boundary_p1,tree->current->boundary_p2,*rmax);
 	  // does radius cut into the box
@@ -782,19 +769,19 @@ void _PointsWithin(TreeHndl tree,double *ray,float *rmax,ListHndl neighborlist,s
 				  MoveDownList(tree->pointlist);
 			  }
 		  }else{
-			  //printf("moving to child1 from level %i\n",tree->current->level);
+			  //std::printf("moving to child1 from level %i\n",tree->current->level);
 			  if(tree->current->child1 !=NULL){
 				  moveToChild(tree,1);
 				  _PointsWithin(tree,ray,rmax,neighborlist,markpoints);
-				  //printf("moving up from level %i\n",tree->current->level);
+				  //std::printf("moving up from level %i\n",tree->current->level);
 				  moveUp(tree);
 			  }
 
 			  if(tree->current->child2 !=NULL){
-				  //printf("moving to child2 from level %i\n",tree->current->level);
+				  //std::printf("moving to child2 from level %i\n",tree->current->level);
 				  moveToChild(tree,2);
 				  _PointsWithin(tree,ray,rmax,neighborlist,markpoints);
-				  //printf("moving up from level %i\n",tree->current->level);
+				  //std::printf("moving up from level %i\n",tree->current->level);
 				  moveUp(tree);
 			  }
 		  }
@@ -802,7 +789,7 @@ void _PointsWithin(TreeHndl tree,double *ray,float *rmax,ListHndl neighborlist,s
 	  }
   }
 
-	  //  printf("end of _PointsWithin incell=%i level=%i p1= %e %e %e\n",incell,tree->current->level
+	  //  std::printf("end of _PointsWithin incell=%i level=%i p1= %e %e %e\n",incell,tree->current->level
 	//	,tree->current->boundary_p1[0],tree->current->boundary_p1[1],tree->current->boundary_p1[2]);/**/
   return;
 }
@@ -841,17 +828,17 @@ void FriendsOfFriends(TreeHndl tree,double *start_point,float linkinglength,List
   Point *placemark,*local_filter;
   short malloced=0;
 
-/*   printf("entering FOF\n"); */
+/*   std::printf("entering FOF\n"); */
 
-  if(filter == NULL){ printf("FriendsOfFriends cannot handle no unfiltered points\n"); return;}
+  if(filter == NULL){ std::printf("FriendsOfFriends cannot handle no unfiltered points\n"); return;}
 
   EmptyList(neighborlist);
 
 /*   if(filter != NULL){   */
-/*     printf("filter first id %i\n   x start = %e %e\n",filter[*filter_place].id,start_point[0],start_point[1]); */
+/*     std::printf("filter first id %i\n   x start = %e %e\n",filter[*filter_place].id,start_point[0],start_point[1]); */
 /*     MoveToTopList(tree->pointlist); */
 /*     for(i=0;i<tree->pointlist->Npoints;++i){ */
-/*       if(filter[*filter_place].id == tree->pointlist->current->id) printf("x in tree %e %e\n" */
+/*       if(filter[*filter_place].id == tree->pointlist->current->id) std::printf("x in tree %e %e\n" */
 /* 					 ,tree->pointlist->current->x[0],tree->pointlist->current->x[1]); */
 /*       MoveDownList(tree->pointlist); */
 /*     } */
@@ -915,13 +902,13 @@ void FriendsOfFriends(TreeHndl tree,double *start_point,float linkinglength,List
     }
   }else{
 	ERROR_MESSAGE();
-    printf("ERROR: no neighbors in Friends of Friends\n");
+    std::printf("ERROR: no neighbors in Friends of Friends\n");
     exit(0);
   }
 
   if(malloced) free(local_filter);
 
-/*   printf("returning from FOF\n"); */
+/*   std::printf("returning from FOF\n"); */
   return;
 }
 
@@ -938,12 +925,12 @@ void _PointsWithin2(TreeHndl tree,double *ray,float *rmax,ListHndl neighborlist
   double radius;
   unsigned long k;
 
-  //if(filter != NULL) printf("filter_place=%i Nneighborlist=%i\n",*filter_place,neighborlist->Npoints);
+  //if(filter != NULL) std::printf("filter_place=%i Nneighborlist=%i\n",*filter_place,neighborlist->Npoints);
 
   if((filter != NULL) && (*filter_place >= Nfilter) ) return; // finished filter
 
-  //printf("**************************************\nlevel %i\n",tree->current->level);
-  //   printf("   %i incell=%i\n",tree->current->points->id,incell);
+  //std::printf("**************************************\nlevel %i\n",tree->current->level);
+  //   std::printf("   %i incell=%i\n",tree->current->points->id,incell);
 
   if(incell){  // not found cell yet
 
@@ -952,10 +939,10 @@ void _PointsWithin2(TreeHndl tree,double *ray,float *rmax,ListHndl neighborlist
       // found the box small enough
       if( (tree->current->child1 == NULL)*(tree->current->child2 == NULL)){  // leaf case
     	  incell=0;
-    	  //printf("found box with %i points\n",tree->current->npoints);
+    	  //std::printf("found box with %i points\n",tree->current->npoints);
 
     	  // this sets ray back to real value once closest leaf bax is found
-    	  if( (ray[0]!=realray[0])*(ray[1]!=realray[1]) ){ printf("ray != realray _PointsWithin\n"); exit(0);}
+    	  if( (ray[0]!=realray[0])*(ray[1]!=realray[1]) ){ std::printf("ray != realray _PointsWithin\n"); exit(0);}
 
     	  ray[0]=realray[0];
     	  ray[1]=realray[1];
@@ -1013,40 +1000,40 @@ void _PointsWithin2(TreeHndl tree,double *ray,float *rmax,ListHndl neighborlist
     	  }
       }else{ // keep going down the tree
 
-    	  //printf("moving to child1 from level %i\n",tree->current->level);
+    	  //std::printf("moving to child1 from level %i\n",tree->current->level);
     	  if(tree->current->child1 !=NULL){
     		  moveToChild(tree,1);
     		  _PointsWithin2(tree,ray,rmax,neighborlist,filter,Nfilter,filter_place,1);
-    		  //printf("moving up from level %i\n",tree->current->level);
+    		  //std::printf("moving up from level %i\n",tree->current->level);
     		  moveUp(tree);
 
     		  incell2=incell;
     	  }
 
     	  if(tree->current->child2 !=NULL){
-    		  //printf("moving to child2 from level %i\n",tree->current->level);
+    		  //std::printf("moving to child2 from level %i\n",tree->current->level);
     		  moveToChild(tree,2);
     		  _PointsWithin2(tree,ray,rmax,neighborlist,filter,Nfilter,filter_place,1);
-    		  //printf("moving up from level %i\n",tree->current->level);
+    		  //std::printf("moving up from level %i\n",tree->current->level);
     		  moveUp(tree);
     	  }
 
     	  // if ray found in second child go back to first to search for neighbors
     	  if( (incell2==1) && (incell==0) ){
     		  if(tree->current->child1 !=NULL){
-    			  //printf("moving to child1 again from level %i\n",tree->current->level);
+    			  //std::printf("moving to child1 again from level %i\n",tree->current->level);
     			  moveToChild(tree,1);
     			  _PointsWithin2(tree,ray,rmax,neighborlist,filter,Nfilter,filter_place,1);
-    			  //printf("moving up from level %i\n",tree->current->level);
+    			  //std::printf("moving up from level %i\n",tree->current->level);
     			  moveUp(tree);
     		  }
     	  }
       }
     }  // not in the box
-    //printf("not in box \n");}
+    //std::printf("not in box \n");}
   }else{    // found cell
 
-	  //printf("finding neighboring boxes at level = %i\n",tree->current->level);
+	  //std::printf("finding neighboring boxes at level = %i\n",tree->current->level);
 
 	  // does radius cut into the box
 	  if( cutbox(ray,tree->current->boundary_p1,tree->current->boundary_p2,*rmax) ){
@@ -1104,27 +1091,27 @@ void _PointsWithin2(TreeHndl tree,double *ray,float *rmax,ListHndl neighborlist
 			  }
 
 		  }else{
-			  //printf("moving to child1 from level %i\n",tree->current->level);
+			  //std::printf("moving to child1 from level %i\n",tree->current->level);
 			  if(tree->current->child1 !=NULL){
 				  moveToChild(tree,1);
 				  _PointsWithin2(tree,ray,rmax,neighborlist,filter,Nfilter,filter_place,1);
-				  //printf("moving up from level %i\n",tree->current->level);
+				  //std::printf("moving up from level %i\n",tree->current->level);
 				  moveUp(tree);
 			  }
 
 			  if(tree->current->child2 !=NULL){
-				  //printf("moving to child2 from level %i\n",tree->current->level);
+				  //std::printf("moving to child2 from level %i\n",tree->current->level);
 				  moveToChild(tree,2);
 				  _PointsWithin2(tree,ray,rmax,neighborlist,filter,Nfilter,filter_place,1);
-				  //printf("moving up from level %i\n",tree->current->level);
+				  //std::printf("moving up from level %i\n",tree->current->level);
 				  moveUp(tree);
 			  }
 		  }
 
-	  }//else{printf("box too distant at level %i\n",tree->current->level);}
+	  }//else{std::printf("box too distant at level %i\n",tree->current->level);}
   }
 
-	  //  printf("end of _PointsWithin incell=%i level=%i p1= %e %e %e\n",incell,tree->current->level
+	  //  std::printf("end of _PointsWithin incell=%i level=%i p1= %e %e %e\n",incell,tree->current->level
 	//	,tree->current->boundary_p1[0],tree->current->boundary_p1[1],tree->current->boundary_p1[2]);/**/
   return;
 }
@@ -1292,19 +1279,19 @@ void _FindAllBoxNeighbors(TreeHndl tree,Branch *leaf,ListHndl neighbors){
 void PrintImages(ImageInfo *images,long Nimages){
 	long i,j;
 
-	printf("%li",Nimages);
+	std::printf("%li",Nimages);
 	for(i=0;i<Nimages;++i){
-		printf("%li\n",images[i].Npoints);
+		std::printf("%li\n",images[i].Npoints);
 		for(j=0;j<images[i].Npoints;++j)
-			printf("%e %e  %e\n",images[i].points[j].x[0],images[i].points[j].x[1]
+			std::printf("%e %e  %e\n",images[i].points[j].x[0],images[i].points[j].x[1]
 			                         ,images[i].points[j].gridsize);
 	}
 }
 
 void PrintImageInfo(ImageInfo *image){
 
-	printf(" PrintImageInfo\n");
-	printf("  Npoints = %li  area = %e +/- %e\n",image->Npoints,image->area,image->area_error);
-	printf("  gridrange = %e %e %e\n",image->gridrange[0],image->gridrange[1],image->gridrange[2]);
-	printf("  borders inner N = %li  outer N = %li\n",image->innerborder->Nunits,image->outerborder->Nunits);
+	std::printf(" PrintImageInfo\n");
+	std::printf("  Npoints = %li  area = %e +/- %e\n",image->Npoints,image->area,image->area_error);
+	std::printf("  gridrange = %e %e %e\n",image->gridrange[0],image->gridrange[1],image->gridrange[2]);
+	std::printf("  borders inner N = %li  outer N = %li\n",image->innerborder->Nunits,image->outerborder->Nunits);
 }
