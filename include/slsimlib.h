@@ -48,6 +48,7 @@
 
 #include <TreeNB.h>
 #include <forceTree.h>
+#include <simpleTree.h>
 
 #include <fitlens.h>
 #include <galaxies.h>

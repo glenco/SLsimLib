@@ -19,45 +19,11 @@
 static int incellNB,median_cutNB=0,Ndim;
 static PosType realrayNB[treeNBdim];
 
-
-
-/* return 1 (0) if ray is (not) in the cube */
-int inboxNB(double *ray,PosType *p1,PosType *p2){
-  short i,ans;
-
-  for(i=1,ans=(ray[0]>=p1[0])*(ray[0]<=p2[0]);i<Ndim;++i) 
-    ans*=(ray[i]>=p1[i])*(ray[i]<=p2[i]);
-
-  return ans;
-}
-
-/* return 1 (0) if box is (not) within rmax of ray */
-int cutboxNB(double *ray,PosType *p1,PosType *p2,PosType rmax){
-  int i;
-  PosType close[3],rtmp;
-  
-  for(i=0;i<Ndim;++i){
-
-    if( ray[i] < p1[i] ){
-      close[i]=p1[i];
-    }else if(ray[i] > p2[i]){
-      close[i]=p2[i];
-    }else{
-      close[i]=ray[i];
-    }
-  }
-  
-  for(i=0,rtmp=0;i<Ndim;++i) rtmp+= pow(ray[i] - close[i],2);
- 
-  if(rtmp<rmax*rmax) return 1;
-  return 0;
-}
-
 /** \ingroup DeflectionL2
  *  rotate particle positions and build 3d tree
  *
  */
-TreeNBHndl rotate_simulation(PosType **xp,IndexType Nparticles,IndexType *particles
+TreeNBHndl SimpleTree::rotate_simulation(PosType **xp,IndexType Nparticles,IndexType *particles
 		,double **coord,double theta,float *rsph,float *mass
 		,bool MultiRadius,bool MultiMass){
  	TreeNBHndl tree;
@@ -85,7 +51,7 @@ TreeNBHndl rotate_simulation(PosType **xp,IndexType Nparticles,IndexType *partic
 /** \ingroup DeflectionL2
  * rotate particle positions and build 2d tree in x-y plane
  */
-TreeNBHndl rotate_project(PosType **xp,IndexType Nparticles,IndexType *particles
+TreeNBHndl SimpleTree::rotate_project(PosType **xp,IndexType Nparticles,IndexType *particles
 		,double **coord,double theta,float *rsph,float *mass
 		,bool MultiRadius,bool MultiMass){
    IndexType j;
@@ -120,7 +86,7 @@ TreeNBHndl rotate_project(PosType **xp,IndexType Nparticles,IndexType *particles
 	 *
 	 *  Warning: This will erase the third coordinate of the particles.
 	 */
-TreeNBHndl spread_particles(PosType **xp,IndexType Nparticles,IndexType *particles
+TreeNBHndl SimpleTree::spread_particles(PosType **xp,IndexType Nparticles,IndexType *particles
 		,double theta,float *rsph,float *mass
 		,bool MultiRadius,bool MultiMass){
 
@@ -133,7 +99,8 @@ TreeNBHndl spread_particles(PosType **xp,IndexType Nparticles,IndexType *particl
 	tree = BuildTreeNB(xp,&tmp,mass,false,false,Nparticles,particles,2,theta);
 
 	for(i=0;i<Nparticles;++i){
-		dummy = NearestNeighborNB(tree,xp[i],1,&tmp);
+		//TODO: this needs to be fixed!!!
+		//dummy = NearestNeighborNB(tree,xp[i],1,&tmp);
 		xp[i][2] = 4*pi*pow(rsph[i],3)/pow(tmp,2)/3;
 	}
 
@@ -154,7 +121,7 @@ TreeNBHndl spread_particles(PosType **xp,IndexType Nparticles,IndexType *particl
  *
  *   if the sph[] are negative rcrit_part = 0
  */
-void cuttoffscale(TreeNBHndl tree,double *theta){
+void SimpleTree::cuttoffscale(TreeNBHndl tree,double *theta){
 
 	IndexType i,prev_big;
 	PosType rcom,maxrsph,prev_size;

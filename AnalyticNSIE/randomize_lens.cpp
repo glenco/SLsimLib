@@ -34,7 +34,7 @@ void AnaLens::RandomizeHost(double r_source_phys,long *seed,bool tables
 		++init;
 		// read in Einstein radius projected onto the source plane
 
-		filename = "../GalaxyData/z_table.txt";
+		filename = "GalaxyData/z_table.txt";
 		std::cout << "reading from " << filename <<"\n";
 		file.open(filename);
 
@@ -50,7 +50,7 @@ void AnaLens::RandomizeHost(double r_source_phys,long *seed,bool tables
 
 		file.close();
 
-		filename = "../GalaxyData/slacs_sigma.dat";
+		filename = "GalaxyData/slacs_sigma.dat";
 		std::cout << "reading from " << filename << std::endl;
 		file.open(filename);
 
@@ -66,7 +66,7 @@ void AnaLens::RandomizeHost(double r_source_phys,long *seed,bool tables
 
 		file.close();
 
-		filename = "../GalaxyData/slacs_f.dat";
+		filename = "GalaxyData/slacs_f.dat";
 		std::cout << "reading from " << filename << std::endl;
 		file.open(filename);
 

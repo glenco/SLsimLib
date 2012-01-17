@@ -112,102 +112,13 @@ typedef struct simlens{
 
 #endif
 
-/***** Constructors/Destructors*****/
-
-/** Creates a new TreeNB structure */
-TreeNBHndl NewTreeNB(IndexType *particles,IndexType nparticles
-		 ,PosType boundary_p1[],PosType boundary_p2[],
-		     PosType center[],short Ndimensions);
-void freeTreeNB(TreeNBHndl tree);
-short emptyTreeNB(TreeNBHndl tree);
-void _freeTreeNB(TreeNBHndl tree,short child);
-
-BranchNB *NewBranchNB(IndexType *particles,IndexType nparticles
-		  ,PosType boundary_p1[],PosType boundary_p2[]
-		  ,PosType center[2],int level,unsigned long branchNBnumber);
-void FreeBranchNB(BranchNB *branchNB);
-
-/***** Access functions *****/
-
-bool isEmptyNB(TreeNBHndl tree);
-bool atTopNB(TreeNBHndl tree);
-bool offEndNB(TreeNBHndl tree);
-bool noChildNB(TreeNBHndl tree);
-
-/*unsigned long *getCurrent(TreeNBHndl tree,IndexType *nparticles);*/
-void getCurrentNB(TreeNBHndl tree,IndexType *particles,IndexType *nparticles);
-
-unsigned long getNbranchNBes(TreeNBHndl tree);
-
-
-/***** Manipulation procedures *****/
-
-void moveTopNB(TreeNBHndl tree);
-
-void moveUpNB(TreeNBHndl tree);
-
-void moveToChildNB(TreeNBHndl tree,int child);
-
-void insertChildToCurrentNB(TreeNBHndl tree, IndexType *particles,IndexType nparticles
-			  ,PosType boundary_p1[],PosType boundary_p2[]
-			  ,PosType center[],int child);
-
-void attachChildToCurrentNB(TreeNBHndl tree,BranchNB data,int child);
-
-bool TreeNBWalkStep(TreeNBHndl tree,bool allowDescent);
-
-/***** Other operations *****/
-
-void printTreeNB(TreeNBHndl tree,PosType **xp);
-
-void printBranchNB(BranchNB *branchNB,PosType **xp,short Ndim);
-
-void saveTreeNB(TreeNBHndl tree,IndexType *particles,float *rsph,char *filename);
-void _saveTreeNB(TreeNBHndl tree,RelativeBranchNB *tree_arr,IndexType *particles);
-TreeNBHndl readTreeNB(IndexType *particles,float *rsph,IndexType Nparticles,char *filename);
-void _readTreeNB(TreeNBHndl tree,RelativeBranchNB *tree_arr,IndexType *particles
-		,unsigned long current);
-void saveSPHsmoothing(TreeNBHndl tree,IndexType *particles,float *rsph,char *filename);
-void readSmoothingNB(float *rsph,char *filename);
-
-/** routines in TreeNBDriver.c **/
-
-TreeNBHndl BuildTreeNB(PosType **xp,float *rsph,float *mass,bool MultiRadius
-		,bool MultiMass,IndexType Nparticles,IndexType *particles,int Ndimensions
-		,double theta);
-IndexType *NearestNeighborNB(TreeNBHndl tree,double *ray,int Nneighbors
-				 ,float *rsph);
-int inboxNB(double ray[],PosType *p1,PosType *p2);
-int cutboxNB(double ray[],PosType *p1,PosType *p2,PosType rmax);
-TreeNBHndl rotate_simulation(PosType **xp,IndexType Nparticles,IndexType *particles
-		,double **coord,double theta,float *rsph,float *mass
-		,bool MultiRadius,bool MultiMass);
-TreeNBHndl rotate_project(PosType **xp,IndexType Nparticles,IndexType *particles
-		,double **coord,double theta,float *rsph,float *mass
-		,bool MultiRadius,bool MultiMass);
-TreeNBHndl spread_particles(PosType **xp,IndexType Nparticles,IndexType *particles
-		,double theta,float *rsph,float *mass,bool MultiRadius,bool MultiMass);
- void cuttoffscale(TreeNBHndl tree,double *theta);
-
 /** routines in TreeNBForce **/
 
-float *FindRSPH(TreeNBHndl tree,int Nsph);
-void TreeNBForce2D(TreeNBHndl tree,double *ray
-		 ,double *alpha,double *kappa,double *gamma,bool no_kappa);
-void _TreeNBForce2D(TreeNBHndl tree,double *ray
-		  ,double *alpha,double *kappa,double *gamma,bool no_kappa);
-void _TreeNBParticleForce2D(TreeNBHndl tree,double *ray
-		  ,double *alpha,double *kappa,double *gamma,bool no_kappa);
-void TreeNBParticleForce2Diter(TreeNBHndl tree,double *ray
-		  ,double *alpha,double *kappa,double *gamma,bool no_kappa
-		  ,double (*alpha_internal)(double r,float rmax)
-		  ,double (*kappa_internal)(double r,float rmax)
-		  ,double (*gamma_internal)(double r,float rmax));
 
 double alpha_o(double r,float sigma);
 double kappa_o(double r,float sigma);
 double gamma_o(double r,float sigma);
-int OpenBox(TreeNBHndl tree,PosType r);
+
 
 /** routines in readfiles **/
 
