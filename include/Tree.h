@@ -5,6 +5,7 @@
  * Comments:  This version uses a linked list for the points so that
  the tree can be expended dynamically
  */
+#include <math.h>
 #include <point.h>
 #include <Kist.h>
 #include <List1.h>

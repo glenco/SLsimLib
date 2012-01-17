@@ -16,6 +16,8 @@ struct temp_data
 }
   *temp;
 
+#define Nplanes 10
+
 /** \ingroup DeflectionL2
  *
  * \brief Routine for calculating the deflection and other lensing quantities for
@@ -41,6 +43,8 @@ void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off){
       exit(0);
     }
   
+  if(Nplanes == 1){
+
   if(lens->zsource != zs_old)
     {
       lens->host_ro = 4*pi*pow(lens->host_sigma/2.99792e5,2) * cosmo->angDist(0,lens->zlens)
@@ -221,6 +225,39 @@ void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off){
 	i_points[i].image->gamma[1]=i_points[i].gamma[1];
 	i_points[i].image->dt = i_points[i].dt;
       }
+
+  }
+  else{
+	  int j;
+	  double zplane = lensPlane[0].redshift;
+
+	  for(j = 0; j < Nplane; j++){
+
+		  convert_factor = cosmo->angDist(0,zplane)
+				  /cosmo->angDist(0,lensPlane[j].redshift);
+
+		  for(i = 0; i< Npoints; i++){
+			  i_points[i].image->x[0]=i_points[i].x[0];
+			  i_points[i].image->x[1]=i_points[i].x[1];
+			  i_points[i].kappa=0.0;
+			  i_points[i].gamma[0]=0.0; i_points[i].gamma[1]=0.0;
+			  i_points[i].invmag=1.0;
+			  i_points[i].dt = 0;
+
+			  halo_tree->force2D(i_points[i].x,temp[i].alpha,&tmp,temp[i].gamma,true);
+
+			  i_points[i].image->x[0] += convert_factor*temp[i].alpha[0];
+			  i_points[i].image->x[1] += convert_factor*temp[i].alpha[1];
+
+			  if(!kappa_off)
+			  {
+				  i_points[i].kappa += convert_factor*tmp;
+				  i_points[i].gamma[0] += convert_factor*temp[i].gamma[0];
+				  i_points[i].gamma[1] += convert_factor*temp[i].gamma[1];
+			  }
+		  }
+	  }
+  }
 
     free(temp);
 
