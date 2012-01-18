@@ -45,6 +45,7 @@
 #include <grid_maintenance.h>
 #include <map_images.h>
 #include <source_models.h>
+#include <multiplane.h>
 
 #include <TreeNB.h>
 #include <forceTree.h>
