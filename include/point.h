@@ -43,34 +43,6 @@ typedef struct Point{
 
 } Point;
 
-
-/** \brief A point on the source or image plane that contains a position and linking pointers */
-typedef struct Point2{
-  struct Point *next;    // pointer to next point in linked list
-  struct Point *prev;
-  struct Point *image;  // pointer to point on image or source plane
-  double *x;         // the position of the point
-  unsigned long head;         // marks beginning of allocated array of points for easy deallocation
-
-  struct branchstruct *leaf;
-
-} Point2;
-
-/**
- * \brief A point on the image plane derived from Point.  This adds the lensing information that
- * would otherwise be redundantly stored in the image and source points.
- */
-typedef struct IPoint2 : public Point2{
-	double kappa;        // surface density
-	double gamma[2];    // shear
-	double dt;          // time delay
-	double invmag;     // inverse of magnification
-	double gridsize;   // the size of the most refined grid the point is in
-	bool in_image; // marks if point is in image
-	double surface_brightness;  // the surface brightness at this points
-
-} IPoints2;
-
 struct branchstruct{
   struct Point *points;        // pointer to first points in Branch
   unsigned long npoints;
