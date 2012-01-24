@@ -241,6 +241,8 @@ void ForceTree::force2D(double *ray,double *alpha,double *kappa,double *gamma,bo
 
 			  for(i=0;i<tree->current->nparticles;++i){
 
+				  cout << tree->xp[tree->current->particles[i]][0]  << endl;
+
 				  xcm = tree->xp[tree->current->particles[i]][0] - ray[0];
 				  ycm = tree->xp[tree->current->particles[i]][1] - ray[1];
 

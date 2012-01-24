@@ -43,4 +43,6 @@ private:
 	void rotate_coordinates(PosType **coord);
 };
 
+typedef ForceTree *ForceTreeHndl;
+
 #endif /* FORCE_TREE_H_ */

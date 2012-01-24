@@ -23,7 +23,7 @@ static const float FracResTarget = 1.0e-4;
 double initialgridsize=0;
 
 
-int refine_grid(TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo
+int refine_grid(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo
 		,unsigned long Nimages,double res_target,short criterion,bool kappa_off){
 
 	/* criterion = 0 stops refining when error in total area reaches res_target
@@ -144,7 +144,7 @@ int refine_grid(TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo
 
       // lens the added points
       //printf("refine_grid\n");
-      rayshooterInternal((Ngrid_block*Ngrid_block-1)*Ncells,i_points,kappa_off);
+      lens->rayshooterInternal((Ngrid_block*Ngrid_block-1)*Ncells,i_points,kappa_off);
 
       //printf("should be Ncells=%i Ngrid_block=%i   %i\n",Ncells,Ngrid_block,
       //		(Ngrid_block*Ngrid_block-1)*Ncells);
@@ -164,7 +164,7 @@ int refine_grid(TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo
 
 
 
-long refine_edges(TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo
+long refine_edges(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo
 		,unsigned long Nimages,double res_target,short criterion,bool kappa_off){
 	/*	refines only inner and outer edges of all images
 	 *
@@ -288,7 +288,7 @@ long refine_edges(TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo
 	/* lens the added points */
 	s_points=LinkToSourcePoints(i_points,(Ngrid_block*Ngrid_block-1)*Ncells);
 	//printf("refine_edges\n");
-	rayshooterInternal((Ngrid_block*Ngrid_block-1)*Ncells,i_points,kappa_off);
+	lens->rayshooterInternal((Ngrid_block*Ngrid_block-1)*Ncells,i_points,kappa_off);
 
 	/* add points to trees */
 	//printf("edges1\n");
@@ -299,7 +299,7 @@ long refine_edges(TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo
 	return count;
 }
 
-long refine_edges2(double *y_source,double r_source,TreeHndl i_tree,TreeHndl s_tree
+long refine_edges2(LensHndl lens,double *y_source,double r_source,TreeHndl i_tree,TreeHndl s_tree
 		,ImageInfo *imageinfo,bool *image_overlap,unsigned long Nimages,double res_target
 		,short criterion,bool kappa_off){
 
@@ -453,7 +453,7 @@ long refine_edges2(double *y_source,double r_source,TreeHndl i_tree,TreeHndl s_t
 			//if(Ncells == 0){
 			// lens the added points
 			s_points=LinkToSourcePoints(i_points,(Ngrid_block*Ngrid_block-1)*Ncells);
-			rayshooterInternal((Ngrid_block*Ngrid_block-1)*Ncells,i_points,kappa_off);
+			lens->rayshooterInternal((Ngrid_block*Ngrid_block-1)*Ncells,i_points,kappa_off);
 
 			// add points to trees
 			AddPointsToTree(i_tree,i_points,Ncells*(Ngrid_block*Ngrid_block-1));

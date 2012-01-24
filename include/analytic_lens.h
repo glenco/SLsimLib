@@ -164,6 +164,7 @@ public:
 
   // in readlens_ana.c
   void reNormSubstructure(double kappa_sub);
+  void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off);
 };
 
 #endif

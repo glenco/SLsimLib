@@ -8,8 +8,8 @@
 #define LENS_H_
 
 #include <cosmo.h>
-#include <Tree.h>
 #include <forceTree.h>
+#include <point.h>
 
 #ifndef lens_declare
 #define lens_declare
@@ -82,7 +82,7 @@ public:
 	void setInternal(CosmoHndl cosmo);
 	int getNplanes();
 
-	virtual void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off);
+	virtual void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off){};
 };
 
 typedef Lens *LensHndl;

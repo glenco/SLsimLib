@@ -30,7 +30,7 @@ GridHndl NewGrid(LensHndl lens, int Ngrid,double center[2],double range){
 	i_points = NewPointArray(Ngrid*Ngrid,true);
 	xygridpoints(i_points,range,center,Ngrid,0);
 	s_points=LinkToSourcePoints(i_points,Ngrid*Ngrid);
-	lens->rayshooterInternal(Ngrid*Ngrid,i_points,false);
+	lens->rayshooterInternal(Ngrid*Ngrid,i_points,true);
 	// Build trees
 	grid->i_tree = BuildTree(i_points,Ngrid*Ngrid);
 	grid->s_tree = BuildTree(s_points,Ngrid*Ngrid);

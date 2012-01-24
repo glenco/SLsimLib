@@ -26,11 +26,7 @@ void multiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
 
 		convert_fac = mass_scale / Sigma_crit[j] * Dl[0] / Dl[j];
 
-		cout << "convert fac " << convert_fac << endl;
-
 		for(i = 0; i< Npoints; i++){
-
-			cout << "halo address " << halo_tree[j] << endl;
 
     		halo_tree[j]->force2D(i_points[i].x,&alpha[0],&tmp,&gamma[0],false);
 

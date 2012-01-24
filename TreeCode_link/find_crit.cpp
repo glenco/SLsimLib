@@ -21,7 +21,7 @@
   * This routine needs to be updated.  It still uses List instead of kist and perhaps some
   * older and slower image splitting and ordering.
   */
-ImageInfo *find_crit(GridHndl grid,int *Ncrits,double resolution,bool *orderingsuccess,bool ordercurve,bool verbose){
+ImageInfo *find_crit(LensHndl lens,GridHndl grid,int *Ncrits,double resolution,bool *orderingsuccess,bool ordercurve,bool verbose){
 
   Point *minpoint;
   ImageInfo *critcurve,*critexport;
@@ -114,7 +114,7 @@ ImageInfo *find_crit(GridHndl grid,int *Ncrits,double resolution,bool *orderings
 
 	if(verbose) std::printf("find_crit, going into refine_grid\n");
      //std::printf("  Npoints=%i\n",critcurve->Npoints);
-	refinements=refine_grid(grid->i_tree,grid->s_tree,critcurve,1,resolution,2,false);
+	refinements=refine_grid(lens,grid->i_tree,grid->s_tree,critcurve,1,resolution,2,false);
     if(verbose) std::printf("find_crit, came out of refine_grid\n");
 
      if(refinements==0){

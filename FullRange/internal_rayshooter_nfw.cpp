@@ -25,7 +25,7 @@ struct temp_data
  * to particle lens model.  This transition needs to be made more automatic and
  * fail safe.
  */
-  void AnaLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off,int a){
+  void AnaLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off){
     /* i_points need to be already linked to s_points */
     double x_rescale[2], tmp, dt = 0;
     static double zs_old=-1,convert_factor=0;
@@ -228,11 +228,11 @@ struct temp_data
   }
 
 double uniform_SB(double *y){
-	return (double)( (y[0]*y[0] + y[1]*y[1]) < source_r*source_r );
+	return (double)( (y[0]*y[0] + y[1]*y[1]) < lens->source_r*lens->source_r );
 }
 
 double gaussian_SB(double *y){
-	return exp( -(y[0]*y[0] + y[1]*y[1])/source_gauss_r2 );
+	return exp( -(y[0]*y[0] + y[1]*y[1])/lens->source_gauss_r2 );
 }
 
 // surface brightness for models of the Broad Line Region

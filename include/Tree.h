@@ -9,6 +9,7 @@
 #include <point.h>
 #include <Kist.h>
 #include <List1.h>
+#include <lens.h>
 
 /***** Exported Types *****/
 
@@ -235,11 +236,11 @@ void FindAllBoxNeighbors(TreeHndl tree,Point *point,ListHndl neighbors);
 short image_finder(double *y_source,double r_source,TreeHndl s_tree,TreeHndl i_tree
 		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
 		,short splitparities,short true_images);*/
-int refine_grid(TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo
+int refine_grid(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo
 		,unsigned long Nimages,double res_target,short criterion,bool kappa_off);
-long refine_edges(TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo
+long refine_edges(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo
 		,unsigned long Nimages,double res_target,short criterion,bool kappa_off);
-long refine_edges2(double *y_source,double r_source,TreeHndl i_tree,TreeHndl s_tree
+long refine_edges2(LensHndl lens,double *y_source,double r_source,TreeHndl i_tree,TreeHndl s_tree
 		,ImageInfo *imageinfo,bool *image_overlap,unsigned long Nimages,double res_target
 		,short criterion,bool kappa_off);
 void xygridpoints(Point *points,double range,double *center,long Ngrid
@@ -250,21 +251,23 @@ void findborders3(TreeHndl i_tree,ImageInfo *imageinfo);
 
 // in image_finder_kist.c
 
-void find_images_kist(double *y_source,double r_source,GridHndl grid
+void find_images_kist(LensHndl lens,double *y_source,double r_source,GridHndl grid
 		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
 		,double initial_size,bool splitimages,short edge_refinement
 		,bool verbose,bool kappa_off);
-short image_finder_kist(double *y_source,double r_source,TreeHndl s_tree,TreeHndl i_tree
+
+short image_finder_kist(LensHndl lens,double *y_source,double r_source,TreeHndl s_tree,TreeHndl i_tree
 		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
 		,short splitparities,short true_images);
-int refine_grid_kist(TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo
+
+int refine_grid_kist(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo
 		,unsigned long Nimages,double res_target,short criterion,bool kappa_off,bool shootrays,Point **i_points);
 void findborders4(TreeHndl i_tree,ImageInfo *imageinfo);
 
 // in find_crit.c
 void findborders(TreeHndl i_tree,ImageInfo *imageinfo);
 
-ImageInfo *find_crit(GridHndl grid,int *Ncrits,double resolution,bool *orderingsuccess
+ImageInfo *find_crit(LensHndl lens,GridHndl grid,int *Ncrits,double resolution,bool *orderingsuccess
 		,bool ordercurve,bool verbose);
 
 /* in double_sort.c */

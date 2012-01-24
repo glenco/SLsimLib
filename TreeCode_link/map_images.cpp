@@ -38,7 +38,7 @@ const float smallest = 0.1;
  */
 void map_images(
 	    /// lens model
-		AnaLens *lens
+		Lens *lens
 		 /// Tree of grid points
 		,GridHndl grid
 		,int *Nimages /// number of images found
@@ -79,7 +79,7 @@ void map_images(
 	// do an initial refinement to find all images and refine grid
 	// the lens->source_r_in is used as a characteristic small size for the source
 	assert(lens->source_r_in > 0);
-	find_images_kist(lens->source_x,lens->source_r_in,grid,Nimages
+	find_images_kist(lens,lens->source_x,lens->source_r_in,grid,Nimages
 			  ,imageinfo,NimageMax,&Nimagepoints,0,false,0,false,true);
 
 

@@ -235,12 +235,12 @@ void find_images_kist(
 			//std::printf("\n");
 
 			++i;
-		}while( refine_edges(grid->i_tree,grid->s_tree,imageinfo,*Nimages,FracResTarget,flag,kappa_off)
+		}while( refine_edges(lens,grid->i_tree,grid->s_tree,imageinfo,*Nimages,FracResTarget,flag,kappa_off)
 				|| moved );
 
 	}else if(edge_refinement==2){
 		++i;
-		while(refine_edges2(y_source,r_source,grid->i_tree,grid->s_tree
+		while(refine_edges2(lens,y_source,r_source,grid->i_tree,grid->s_tree
 				,imageinfo,&image_overlap,*Nimages,FracResTarget,flag,kappa_off)){
 			// if an overlap is detected find the images again
 
