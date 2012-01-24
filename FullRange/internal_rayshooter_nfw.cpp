@@ -9,7 +9,6 @@
 
 extern CosmoHndl cosmo;
 extern AnaLens *lens;
-extern lensPlane *lens_plane;
 
 struct temp_data
 {
@@ -26,31 +25,32 @@ struct temp_data
  * to particle lens model.  This transition needs to be made more automatic and
  * fail safe.
  */
-  void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off){
+  void AnaLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off,int a){
     /* i_points need to be already linked to s_points */
     double x_rescale[2], tmp, dt = 0;
     static double zs_old=-1,convert_factor=0;
+    double convert_fac=0;
     long i,j;
 
     temp = (struct temp_data *) malloc(Npoints * sizeof(struct temp_data));
 
-    if(lens == NULL || !lens->set)
+    if(lens == NULL || !set)
       {
         ERROR_MESSAGE();
         std::printf("ERROR: rayshooterInternal  lens not set!\n");
         exit(0);
       }
 
-    if(lens->zsource != zs_old)
+    if(zsource != zs_old)
       {
-        lens->host_ro = 4*pi*pow(lens->host_sigma/2.99792e5,2) * cosmo->angDist(0,lens->zlens)
-  	*cosmo->angDist(lens->zlens,lens->zsource)
-  	/cosmo->angDist(0,lens->zsource)/(1+lens->zlens);
+        host_ro = 4*pi*pow(host_sigma/2.99792e5,2) * cosmo->angDist(0,zlens)
+  	*cosmo->angDist(zlens,zsource)
+  	/cosmo->angDist(0,zsource)/(1+zlens);
 
-        zs_old=lens->zsource;
+        zs_old=zsource;
       }
 
-    convert_factor = lens->star_massscale / lens->Sigma_crit;
+    convert_factor = star_massscale / Sigma_crit;
 
   #pragma omp parallel for private(x_rescale, dt, i)
     for(i = 0; i < Npoints; i++)
@@ -64,7 +64,7 @@ struct temp_data
   		 i,i_points[i].x[0],i_points[i].x[1]);
   	}
 
-        if(lens->zsource <= lens->zlens)
+        if(zsource <= zlens)
   	{
   	  i_points[i].image->x[0]=i_points[i].x[0];
   	  i_points[i].image->x[1]=i_points[i].x[1];
@@ -76,22 +76,22 @@ struct temp_data
         else
   	{
   	  // host lens
-  	  if(lens->host_ro > 0)
+  	  if(host_ro > 0)
   	    {
-  	      x_rescale[0] = i_points[i].x[0] / lens->host_ro;
-  	      x_rescale[1] = i_points[i].x[1] / lens->host_ro;
+  	      x_rescale[0] = i_points[i].x[0] / host_ro;
+  	      x_rescale[1] = i_points[i].x[1] / host_ro;
 
-  	      alphaNSIE(i_points[i].image->x, x_rescale, lens->host_axis_ratio,
-  			lens->host_core / lens->host_ro, lens->host_pos_angle);
+  	      alphaNSIE(i_points[i].image->x, x_rescale, host_axis_ratio,
+  			host_core / host_ro, host_pos_angle);
 
   	      if(!kappa_off)
   		{
-  		  gammaNSIE(i_points[i].gamma,x_rescale,lens->host_axis_ratio
-  			    ,lens->host_core/lens->host_ro,lens->host_pos_angle);
-  		  i_points[i].kappa=kappaNSIE(x_rescale,lens->host_axis_ratio
-  					      ,lens->host_core/lens->host_ro,lens->host_pos_angle);
-  		  i_points[i].dt = phiNSIE(x_rescale,lens->host_axis_ratio
-  					   ,lens->host_core/lens->host_ro,lens->host_pos_angle);
+  		  gammaNSIE(i_points[i].gamma,x_rescale,host_axis_ratio
+  			    ,host_core/host_ro,host_pos_angle);
+  		  i_points[i].kappa=kappaNSIE(x_rescale,host_axis_ratio
+  					      ,host_core/host_ro,host_pos_angle);
+  		  i_points[i].dt = phiNSIE(x_rescale,host_axis_ratio
+  					   ,host_core/host_ro,host_pos_angle);
   		}
   	      else
   		{
@@ -100,8 +100,8 @@ struct temp_data
   		  i_points[i].dt = 0.0;
   		}
 
-  	      i_points[i].image->x[0] *= lens->host_ro;
-  	      i_points[i].image->x[1] *= lens->host_ro;
+  	      i_points[i].image->x[0] *= host_ro;
+  	      i_points[i].image->x[1] *= host_ro;
 
   	    }
   	  else
@@ -115,10 +115,10 @@ struct temp_data
 
 
             // perturbations of host lens
-  	  if(lens->perturb_Nmodes > 0)
+  	  if(perturb_Nmodes > 0)
   	    {
-  	      i_points[i].kappa += lens_expand(lens->perturb_beta,lens->perturb_modes
-  					       ,lens->perturb_Nmodes,i_points[i].x,temp[i].alpha,temp[i].gamma,&dt);
+  	      i_points[i].kappa += lens_expand(perturb_beta,perturb_modes
+  					       ,perturb_Nmodes,i_points[i].x,temp[i].alpha,temp[i].gamma,&dt);
 
   	      i_points[i].image->x[0] += temp[i].alpha[0];
   	      i_points[i].image->x[1] += temp[i].alpha[1];
@@ -134,13 +134,13 @@ struct temp_data
   	    }
 
             // add substructure
-           if(lens->substruct_implanted)
+           if(substruct_implanted)
   	   {
-  	     for(j=0;j<lens->sub_N;++j)
+  	     for(j=0;j<sub_N;++j)
   	       {
-  		 lens->sub_alpha_func(temp[i].alpha,i_points[i].x,lens->sub_Rcut[j]
-  				      ,lens->sub_mass[j],lens->sub_beta
-  				      ,lens->sub_x[j],lens->Sigma_crit);
+  		 sub_alpha_func(temp[i].alpha,i_points[i].x,sub_Rcut[j]
+  				      ,sub_mass[j],sub_beta
+  				      ,sub_x[j],Sigma_crit);
 
   		 //assert(fabs(alpha[0]) > 0 && fabs(alpha[1]) >0 );
 
@@ -151,19 +151,19 @@ struct temp_data
 
   		 if(!kappa_off)
   		   {
-  		     i_points[i].kappa += lens->sub_kappa_func(i_points[i].x,lens->sub_Rcut[j]
-  							       ,lens->sub_mass[j],lens->sub_beta,lens->sub_x[j]
-  							       ,lens->Sigma_crit);
+  		     i_points[i].kappa += sub_kappa_func(i_points[i].x,sub_Rcut[j]
+  							       ,sub_mass[j],sub_beta,sub_x[j]
+  							       ,Sigma_crit);
 
 
-  		     lens->sub_gamma_func(temp[i].gamma,i_points[i].x,lens->sub_Rcut[j],lens->sub_mass[j]
-  					  ,lens->sub_beta,lens->sub_x[j],lens->Sigma_crit);
+  		     sub_gamma_func(temp[i].gamma,i_points[i].x,sub_Rcut[j],sub_mass[j]
+  					  ,sub_beta,sub_x[j],Sigma_crit);
 
   		     i_points[i].gamma[0] += temp[i].gamma[0];
   		     i_points[i].gamma[1] += temp[i].gamma[1];
 
-  		     i_points[i].dt += lens->sub_phi_func(i_points[i].x,lens->sub_Rcut[j],lens->sub_mass[j]
-  							  ,lens->sub_beta,lens->sub_x[j],lens->Sigma_crit);
+  		     i_points[i].dt += sub_phi_func(i_points[i].x,sub_Rcut[j],sub_mass[j]
+  							  ,sub_beta,sub_x[j],Sigma_crit);
 
   		   }
   	       }
@@ -176,7 +176,7 @@ struct temp_data
   	      i_points[i].dt = 0.5*(i_points[i].image->x[0]*i_points[i].image->x[0]
                                       + i_points[i].image->x[1]*i_points[i].image->x[1])
   		- i_points[i].dt;
-  	      i_points[i].dt *= lens->to;
+  	      i_points[i].dt *= to;
   	    }
 
             i_points[i].image->x[0] = i_points[i].x[0] - i_points[i].image->x[0];
@@ -190,13 +190,13 @@ struct temp_data
     for(i = 0; i< Npoints; i++)
       {
   	 // add stars for microlensing
-        if(lens->stars_N > 0 && lens->stars_implanted)
+        if(stars_N > 0 && stars_implanted)
   	{
   	  substract_stars_disks(lens,i_points[i].x,i_points[i].image->x,
   				&(i_points[i].kappa),i_points[i].gamma);
 
   	  // do stars with tree code
-  	  lens->star_tree->force2D(i_points[i].x,temp[i].alpha,&tmp,temp[i].gamma,true);
+  	  star_tree->force2D(i_points[i].x,temp[i].alpha,&tmp,temp[i].gamma,true);
 
   	  i_points[i].image->x[0] += convert_factor*temp[i].alpha[0];
   	  i_points[i].image->x[1] += convert_factor*temp[i].alpha[1];
@@ -227,59 +227,12 @@ struct temp_data
     return ;
   }
 
-void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off, int Nplanes){
-  /* i_points need to be already linked to s_points */
-  double tmp;
-  double convert_factor=0;
-  long i,j;
-
-  temp = (struct temp_data *) malloc(Npoints * sizeof(struct temp_data));
-
-  if(lens == NULL || !lens->set)
-    {
-      ERROR_MESSAGE();
-      std::printf("ERROR: rayshooterInternal  lens not set!\n");
-      exit(0);
-    }
-
-  for(j = 0; j < Nplanes; j++){
-
-	  convert_factor = lens_plane[j].mass_scale / lens_plane[j].Sigma_crit * lens_plane[0].Dl / lens_plane[j].Dl ;
-
-	  for(i = 0; i< Npoints; i++){
-
-		  i_points[i].image->x[0]=i_points[i].x[0];
-		  i_points[i].image->x[1]=i_points[i].x[1];
-		  i_points[i].kappa=0.0;
-		  i_points[i].gamma[0]=0.0; i_points[i].gamma[1]=0.0;
-		  i_points[i].invmag=1.0;
-		  i_points[i].dt = 0;
-
-		  lens_plane[j].halo_tree->force2D(i_points[i].x,temp[i].alpha,&tmp,temp[i].gamma,true);
-
-		  i_points[i].image->x[0] += convert_factor*temp[i].alpha[0];
-		  i_points[i].image->x[1] += convert_factor*temp[i].alpha[1];
-
-		  if(!kappa_off)
-		  {
-			  i_points[i].kappa += convert_factor*tmp;
-			  i_points[i].gamma[0] += convert_factor*temp[i].gamma[0];
-			  i_points[i].gamma[1] += convert_factor*temp[i].gamma[1];
-		  }
-	  }
-  }
-
-  free(temp);
-
-  return ;
-}
-
 double uniform_SB(double *y){
-	return (double)( (y[0]*y[0] + y[1]*y[1]) < lens->source_r*lens->source_r );
+	return (double)( (y[0]*y[0] + y[1]*y[1]) < source_r*source_r );
 }
 
 double gaussian_SB(double *y){
-	return exp( -(y[0]*y[0] + y[1]*y[1])/lens->source_gauss_r2 );
+	return exp( -(y[0]*y[0] + y[1]*y[1])/source_gauss_r2 );
 }
 
 // surface brightness for models of the Broad Line Region

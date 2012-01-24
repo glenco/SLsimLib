@@ -48,6 +48,7 @@ extern const double initialgridsize;
  */
 
 void find_images_kist(
+		LensHndl lens,  //// contains the lens/es and source/sources
 		double *y_source //// position of source center
 		,double r_source //// radius of source
 		,GridHndl grid  /// grid provided to routine
@@ -129,14 +130,14 @@ void find_images_kist(
 				std::time(&t1);
 				if(verbose) std::printf("      std::time in refine grid %f sec\n",std::difftime(t1,t2));
 
-				moved = image_finder_kist(y_source,rtemp,grid->s_tree,grid->i_tree
+				moved = image_finder_kist(lens,y_source,rtemp,grid->s_tree,grid->i_tree
 						  ,Nimages,imageinfo,NimageMax,Nimagepoints,-1,0);
 
 				std::time(&t2);
 				if(verbose)	std::printf("      std::time in image_finder %f sec\n        Nimagepoints=%li\n"
 						,std::difftime(t2,t1),*Nimagepoints);
 
-			}while(refine_grid_kist(grid->i_tree,grid->s_tree,imageinfo,*Nimages,rtemp*mumin/Ngrid_block,2,kappa_off,true,dummy_pnt));
+			}while(refine_grid_kist(lens,grid->i_tree,grid->s_tree,imageinfo,*Nimages,rtemp*mumin/Ngrid_block,2,kappa_off,true,dummy_pnt));
 
 
 			std::time(&t1);
@@ -177,7 +178,7 @@ void find_images_kist(
 		// mark image points in tree
 		PointsWithinKist(grid->s_tree,y_source,r_source,subkist,1);
 
-		moved=image_finder_kist(y_source,fabs(r_source),grid->s_tree,grid->i_tree
+		moved=image_finder_kist(lens,y_source,fabs(r_source),grid->s_tree,grid->i_tree
 				,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
 
 		if(*Nimages < 1) std::printf("  Nimages=%i i=%i\n",*Nimages,i);
@@ -190,7 +191,7 @@ void find_images_kist(
 			for(j=0;j<*Nimages;++j) std::printf("       %i        %li         %e\n",j,imageinfo[j].imagekist->Nunits,imageinfo[j].area_error);
 		}
 		++i;
-	}while( refine_grid_kist(grid->i_tree,grid->s_tree,imageinfo,*Nimages,1.0e-1,flag,kappa_off,true,dummy_pnt)
+	}while( refine_grid_kist(lens,grid->i_tree,grid->s_tree,imageinfo,*Nimages,1.0e-1,flag,kappa_off,true,dummy_pnt)
 			|| moved );
 
 	// remove images with no points in them
@@ -216,10 +217,10 @@ void find_images_kist(
 			// mark image points in tree
 			PointsWithinKist(grid->s_tree,y_source,r_source,subkist,1);
 
-			moved=image_finder_kist(y_source,fabs(r_source),grid->s_tree,grid->i_tree
+			moved=image_finder_kist(lens,y_source,fabs(r_source),grid->s_tree,grid->i_tree
 					,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
 			++i;
-		}while( refine_grid_kist(grid->i_tree,grid->s_tree,imageinfo,*Nimages,FracResTarget,0,kappa_off,true,dummy_pnt)
+		}while( refine_grid_kist(lens,grid->i_tree,grid->s_tree,imageinfo,*Nimages,FracResTarget,0,kappa_off,true,dummy_pnt)
 				|| moved );
 
 	}else if(edge_refinement==1){
@@ -227,7 +228,7 @@ void find_images_kist(
 			// mark image points in tree
 			PointsWithinKist(grid->s_tree,y_source,r_source,subkist,1);
 
-			moved=image_finder_kist(y_source,fabs(r_source),grid->s_tree,grid->i_tree
+			moved=image_finder_kist(lens,y_source,fabs(r_source),grid->s_tree,grid->i_tree
 					,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
 
 			//for(i = 0; i < *Nimages; ++i) PrintImageInfo(&(imageinfo[i]));
@@ -243,7 +244,7 @@ void find_images_kist(
 				,imageinfo,&image_overlap,*Nimages,FracResTarget,flag,kappa_off)){
 			// if an overlap is detected find the images again
 
-			if(image_overlap) moved=image_finder_kist(y_source,fabs(r_source),grid->s_tree,grid->i_tree
+			if(image_overlap) moved=image_finder_kist(lens,y_source,fabs(r_source),grid->s_tree,grid->i_tree
 					,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
 			++i;
 		}
@@ -337,7 +338,7 @@ void find_images_kist(
  * true_images = 1 gives just the points that are in the image
  *             = 0 if there are not enough points in images this will include close points to be refined
  */
-short image_finder_kist(double *y_source,double r_source,TreeHndl s_tree,TreeHndl i_tree
+short image_finder_kist(LensHndl lens, double *y_source,double r_source,TreeHndl s_tree,TreeHndl i_tree
 		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
 		,short splitparities,short true_images){
    unsigned long i,Nsource_points=0;
@@ -510,7 +511,7 @@ short image_finder_kist(double *y_source,double r_source,TreeHndl s_tree,TreeHnd
  * 	         = 1 stops refining when each image reaches error limit or is smaller than res_target
  *           = 2 stops refining when grid resolution is smaller than res_target in all images
  */
-int refine_grid_kist(TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo,unsigned long Nimages,double res_target
+int refine_grid_kist(LensHndl lens, TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo,unsigned long Nimages,double res_target
 		,short criterion,bool kappa_off,bool shootrays,Point **point_pnt){
 
 
@@ -699,7 +700,7 @@ int refine_grid_kist(TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo,unsign
   s_points=LinkToSourcePoints(i_points,Nmarker);
 
   if(shootrays){
-	  rayshooterInternal(Nmarker,i_points,kappa_off);
+	  lens->rayshooterInternal(Nmarker,i_points,kappa_off);
   }else{
 	  assert(Nimages == 1);
 	  // The new points could be put into a kist if there where more than one image

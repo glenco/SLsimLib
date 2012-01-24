@@ -8,34 +8,117 @@
 #include <slsimlib.h>
 
 extern CosmoHndl cosmo;
-extern AnaLens *lens;
+extern multiLens *lens;
 
-void set_HaloModel(haloHndl *halo, int Nplane, char *filename){
+haloM::haloM(double maxr, double zmax){
+	int i;
+	long seed;
+	double r, theta;
+
+	seed = 2203;
+
+	N = 100;
+
+	masses = new float[N];
+	sizes = new float[N];
+	redshifts = new float[N];
+
+	pos = PosTypeMatrix(0,N-1,0,2);
+
+	for(i = 0; i < N; i++){
+		r = maxr*ran2(&seed);
+		theta=2*pi*ran2(&seed);
+		pos[i][0] = r*cos(theta);
+		pos[i][1] = r*sin(theta);
+		pos[i][2] = 0.0;
+
+		redshifts[i] = ran2(&seed) * zmax;
+
+		sizes[i] = ran2(&seed) * 0.3;
+
+		masses[i] = ran2(&seed);
+	}
 }
 
-lensPlane::lensPlane(){
+haloM::~haloM(){
+	free_PosTypeMatrix(pos,0,N-1,0,2);
+	delete[] redshifts;
+	delete[] sizes;
+	delete[] masses;
 }
 
-lensPlane::~lensPlane(){
-	delete halo_tree;
+multiLens::multiLens(char filename[]) : Lens(filename){
+	redshift = new double[Nplanes];
+	Ds = new double[Nplanes];
+	Dl = new double[Nplanes];
+	Dls = new double[Nplanes];
+	Sigma_crit = new double[Nplanes];
+	halo_tree = new ForceTreeHndl[Nplanes];
 }
 
-void lensPlane::buildHaloTree(){
-	PosType **halo_pos;
-	IndexType halo_N;
-	float *halo_masses;
-	float *halo_sizes;
-	double halo_theta_force = 0.1;
+multiLens::~multiLens(){
+	int i;
 
-	halo_tree = new ForceTree(halo_pos,halo_N,halo_masses,halo_sizes,
-			true,true,5,2,false,halo_theta_force);
+	delete[] halo_tree;
+	delete[] Sigma_crit;
+	delete[] Dls;
+	delete[] Dl;
+	delete[] Ds;
+	delete[] redshift;
 }
 
-void lensPlane::setInternalParams(){
-	Ds = cosmo->angDist(0,lens->zsource);
-	Dl = cosmo->angDist(0,redshift);
-	Dls = cosmo->angDist(redshift,lens->zsource);
+void multiLens::buildHaloTree(){
+	PosType **pos;
+	IndexType N;
+	float *masses;
+	float *sizes;
+	double dz;
+	int i, j, n;
 
-	Sigma_crit=cosmo->angDist(0,lens->zsource)/cosmo->angDist(redshift,lens->zsource)
-			/cosmo->angDist(0,lens->zlens)/4/pi/Grav;
+    haloM *halo = new haloM(0.4, zsource);
+
+    dz = redshift[1] - redshift[0];
+
+	for(j = 0; j < Nplanes; j++){
+
+		for(i = 0, N = 0; i < halo->N; i++)
+			if(halo->redshifts[i] >= redshift[j] && halo->redshifts[i] < (redshift[j]+dz))
+				N++;
+
+		masses = new float[N];
+		sizes = new float[N];
+		pos = PosTypeMatrix(0,N-1,0,2);
+
+		for(i = 0, n = 0; i < halo->N; i++)
+			if(halo->redshifts[i] >= redshift[j] && halo->redshifts[i] < (redshift[j]+dz)){
+				masses[n] = halo->masses[i];
+				sizes[n] = halo->sizes[i];
+				pos[n][0] = halo->pos[i][0];
+				pos[n][1] = halo->pos[i][1];
+				pos[n][2] = halo->pos[i][2];
+			}
+
+		halo_tree[j] = new ForceTree(pos,N,masses,sizes,true,true,5,2,true,0.1);
+
+		free_PosTypeMatrix(pos,0,N-1,0,2);
+		delete[] sizes;
+		delete[] masses;
+	}
+
+	delete halo;
+}
+
+void multiLens::setInternalParams(){
+	int j;
+
+	mass_scale = 1.0;
+
+	for(j = 0; j < Nplanes; j++){
+		Ds[j] = cosmo->angDist(0,zsource);
+		Dl[j] = cosmo->angDist(0,redshift[j]);
+		Dls[j] = cosmo->angDist(redshift[j],zsource);
+
+		Sigma_crit[j]=cosmo->angDist(0,zsource)/cosmo->angDist(redshift[j],zsource)
+					/cosmo->angDist(0,redshift[j])/4/pi/Grav;
+	}
 }
