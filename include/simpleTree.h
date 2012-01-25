@@ -128,8 +128,7 @@ protected:
 	PosType **xp;
 
 
-	TreeNBHndl BuildTreeNB(PosType **xp,float *rsph,float *mass,bool MultiRadius
-		   ,bool MultiMass,IndexType Nparticles,IndexType *particles,int Ndimensions,double theta);
+	TreeNBHndl BuildTreeNB(PosType **xp,IndexType Nparticles,IndexType *particles,int Ndimensions,double theta);
 	void _BuildTreeNB(TreeNBHndl tree,IndexType nparticles,IndexType *particles);
 
 	void _PointsWithin(PosType *ray,float *rmax,list<unsigned long> &neighborkist);

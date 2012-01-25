@@ -14,6 +14,7 @@
 #include <list.h>
 #include <vector.h>
 #include "simpleTree.h"
+#include <TreeNB.h>
 
 
 //double dummy;
@@ -28,7 +29,6 @@ BranchNB::~BranchNB(){
 }
 
 SimpleTree::SimpleTree(PosType **xpt,IndexType Npoints,int bucket,int Ndimensions,bool median){
-	float dummy=1;
 	index = new IndexType[Npoints];
 	IndexType ii;
 
@@ -36,16 +36,25 @@ SimpleTree::SimpleTree(PosType **xpt,IndexType Npoints,int bucket,int Ndimension
 	Ndim = Ndimensions;
 	median_cut = median;
 
-	xp = xpt;
-	for(ii=0;ii<Npoints;++ii) index[ii] = ii;
+	xp = PosTypeMatrix(0,Npoints-1,0,2);
 
-	tree = SimpleTree::BuildTreeNB(xp,&dummy,&dummy,false,false,Npoints,index,Ndimensions,0);
+	for(ii=0;ii<Npoints;++ii){
+		index[ii] = ii;
+		xp[ii][0] = xpt[ii][0];
+		xp[ii][1] = xpt[ii][1];
+		xp[ii][2] = xpt[ii][2];
+	}
+
+	tree = SimpleTree::BuildTreeNB(xp,Npoints,index,Ndimensions,0);
 
 	return;
 }
+
 SimpleTree::~SimpleTree()
 {
+	free_PosTypeMatrix(xp,0,tree->top->nparticles-1,0,2);
 	freeTreeNB(tree);
+	delete[] index;
 	return;
 }
 
@@ -374,8 +383,7 @@ void SimpleTree::_NearestNeighbors(double *ray,int Nneighbors,unsigned long *nei
 }
 
 
-TreeNBHndl SimpleTree::BuildTreeNB(PosType **xp,float *rsph,float *mass,bool MultiRadius
-	   ,bool MultiMass,IndexType Nparticles,IndexType *particles,int Ndims
+TreeNBHndl SimpleTree::BuildTreeNB(PosType **xp,IndexType Nparticles,IndexType *particles,int Ndims
 	   ,double theta){
   TreeNBHndl tree;
   IndexType i;
@@ -390,8 +398,6 @@ TreeNBHndl SimpleTree::BuildTreeNB(PosType **xp,float *rsph,float *mass,bool Mul
   }
 
   for(i=0;i<Nparticles;++i){
-    particles[i]=i;
-
     for(j=0;j<Ndim;++j){
       if(xp[i][j] < p1[j] ) p1[j]=xp[i][j];
       if(xp[i][j] > p2[j] ) p2[j]=xp[i][j];
@@ -403,11 +409,7 @@ TreeNBHndl SimpleTree::BuildTreeNB(PosType **xp,float *rsph,float *mass,bool Mul
   /* Initialize tree root */
   tree=NewTreeNB(particles,Nparticles,p1,p2,center,Ndim);
 
-  tree->MultiMass = MultiMass;
-  tree->MultiRadius = MultiRadius;
   tree->xp = xp;
-  tree->rsph = rsph;
-  tree->masses = mass;
 
   /* build the tree */
   _BuildTreeNB(tree,Nparticles,particles);

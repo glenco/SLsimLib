@@ -57,8 +57,6 @@ multiLens::multiLens(char filename[]) : Lens(filename){
 }
 
 multiLens::~multiLens(){
-	int i;
-
 	delete[] halo_tree;
 	delete[] Sigma_crit;
 	delete[] Dls;
@@ -81,22 +79,26 @@ void multiLens::buildHaloTree(){
 
 	for(j = 0; j < Nplanes; j++){
 
-		for(i = 0, N = 0; i < halo->N; i++)
+		for(i = 0, N = 0; i < halo->N; i++){
 			if(halo->redshifts[i] >= redshift[j] && halo->redshifts[i] < (redshift[j]+dz))
 				N++;
+		}
 
 		masses = new float[N];
 		sizes = new float[N];
 		pos = PosTypeMatrix(0,N-1,0,2);
 
-		for(i = 0, n = 0; i < halo->N; i++)
+		for(i = 0, n = 0; i < halo->N; i++){
 			if(halo->redshifts[i] >= redshift[j] && halo->redshifts[i] < (redshift[j]+dz)){
 				masses[n] = halo->masses[i];
 				sizes[n] = halo->sizes[i];
 				pos[n][0] = halo->pos[i][0];
 				pos[n][1] = halo->pos[i][1];
 				pos[n][2] = halo->pos[i][2];
+
+				n++;
 			}
+		}
 
 		halo_tree[j] = new ForceTree(pos,N,masses,sizes,true,true,5,2,true,0.1);
 

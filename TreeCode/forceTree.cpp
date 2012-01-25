@@ -33,10 +33,19 @@ ForceTree::ForceTree(PosType **xp,IndexType Npoints,float *masses,float *rsph,bo
 		,int bucket,int dimension,bool median,double theta) :
 	SimpleTree(xp,Npoints,bucket,dimension,median)
 {
+	IndexType ii;
+
 	tree->MultiMass = Multimass;
 	tree->MultiRadius = Multisize;
-	tree->masses = masses;
-	tree->rsph = rsph;
+
+	tree->masses = new float[Npoints];
+	tree->rsph = new float[Npoints];
+
+	for(ii=0;ii<Npoints;++ii){
+		tree->masses[ii] = masses[ii];
+		tree->rsph[ii] = rsph[ii];
+	}
+
 	force_theta = theta;
 
 	// This should be changed so other particle profiles can be used.
@@ -48,6 +57,8 @@ ForceTree::ForceTree(PosType **xp,IndexType Npoints,float *masses,float *rsph,bo
 }
 
 ForceTree::~ForceTree(){
+	delete[] tree->rsph;
+	delete[] tree->masses;
 }
 
 // calculates moments of the mass in the squares and the cutoff scale for each box
@@ -225,6 +236,8 @@ void ForceTree::force2D(double *ray,double *alpha,double *kappa,double *gamma,bo
 
 	  rcm2 = xcm*xcm + ycm*ycm;
 
+	  //cout << xcm << " " << ycm << endl;
+
 	  /* if the box is close enough that the smoothing scale could be important
 	   * add those particles individually and subtract their point particle contribution
 	   * that will be added later
@@ -240,8 +253,6 @@ void ForceTree::force2D(double *ray,double *alpha,double *kappa,double *gamma,bo
 			  // particle treatment
 
 			  for(i=0;i<tree->current->nparticles;++i){
-
-				  cout << tree->xp[tree->current->particles[i]][0]  << endl;
 
 				  xcm = tree->xp[tree->current->particles[i]][0] - ray[0];
 				  ycm = tree->xp[tree->current->particles[i]][1] - ray[1];
