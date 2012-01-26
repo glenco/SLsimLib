@@ -33,18 +33,10 @@ ForceTree::ForceTree(PosType **xp,IndexType Npoints,float *masses,float *rsph,bo
 		,int bucket,int dimension,bool median,double theta) :
 	SimpleTree(xp,Npoints,bucket,dimension,median)
 {
-	IndexType ii;
-
 	tree->MultiMass = Multimass;
 	tree->MultiRadius = Multisize;
-
-	tree->masses = new float[Npoints];
-	tree->rsph = new float[Npoints];
-
-	for(ii=0;ii<Npoints;++ii){
-		tree->masses[ii] = masses[ii];
-		tree->rsph[ii] = rsph[ii];
-	}
+	tree->masses = masses;
+	tree->rsph= rsph;
 
 	force_theta = theta;
 
@@ -57,8 +49,6 @@ ForceTree::ForceTree(PosType **xp,IndexType Npoints,float *masses,float *rsph,bo
 }
 
 ForceTree::~ForceTree(){
-	delete[] tree->rsph;
-	delete[] tree->masses;
 }
 
 // calculates moments of the mass in the squares and the cutoff scale for each box

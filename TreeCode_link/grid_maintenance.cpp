@@ -99,15 +99,21 @@ void TrimGrid(GridHndl grid,double highestres,bool useSB){
  * changes in the grid.
  * Both i_tree and s_tree are both changed although only s_tree shows up here.
  */
-void RefreshSurfaceBrightnesses(GridHndl grid,AnaLens *lens){
+void RefreshSurfaceBrightnesses(GridHndl grid,ModelHndl model){
 	double y[2];
+
+	CosmoHndl cosmo;
+	SourceHndl source;
+
+	cosmo = model->cosmo;
+	source = model->source;
 
 	MoveToTopList(grid->s_tree->pointlist);
 	do{
-		y[0] = grid->s_tree->pointlist->current->x[0] - lens->source_x[0];
-		y[1] = grid->s_tree->pointlist->current->x[1] - lens->source_x[1];
+		y[0] = grid->s_tree->pointlist->current->x[0] - source->source_x[0];
+		y[1] = grid->s_tree->pointlist->current->x[1] - source->source_x[1];
 		grid->s_tree->pointlist->current->surface_brightness = grid->s_tree->pointlist->current->image->surface_brightness
-				= lens->source_sb_func(y);
+				= (model->*source_sb_func)(y);
 		assert(grid->s_tree->pointlist->current->surface_brightness >= 0.0);
 		grid->s_tree->pointlist->current->in_image = grid->s_tree->pointlist->current->image->in_image
 				= false;

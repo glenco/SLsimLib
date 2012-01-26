@@ -7,6 +7,7 @@
 #include <cosmo.h>
 #include <Tree.h>
 #include <forceTree.h>
+#include <lens.h>
 
 #ifndef pi
 #define pi  3.141593
@@ -15,62 +16,19 @@
 #ifndef analens_declare
 #define analens_declare
 
-/**\brief Analytic model for single plane lens and source.
+/**\brief Analytic model for single plane lens
  *
  */
-class AnaLens{
+class AnaLens : public Source, virtual public Lens{
 public:
   /// names of clump and sb models
   typedef enum {NFW,powerlaw,pointmass} ClumpInternal;
-  typedef enum {Uniform,Gaussian,BLR_Disk,BLR_Sph1,BLR_Sph2} SBModel;
-
-  /// output file, not always used.
-  char outputfile[100];
-  /// marks if the lens has been setup.
-  bool set;
-
-  /// redshift of lens
-  double zlens;
-  /// redshift of source
-  double zsource;
-
-  // source parameters
-  /// lag time
-  double source_tau;
-  /// frequency
-  double source_nu;
-  /// internal scale parameter
-  double source_gauss_r2;
-  /// total source size, ie no flux outside this radius
-  double source_r;
-  /// center of source
-  double source_x[2];
-
-  float source_nuo;
-  /// inner radius of BLR
-  float source_r_in;
-  /// outer radius of BLR
-  float source_r_out;
-  ///inclination of BLR in radians, face on is
-  float source_inclination;
-  float source_opening_angle;
-  float source_gamma;
-  float source_BHmass;
-  /// fraction of Keplerian velocity in random motions
-  float source_fK;
-  /// set to true to integrate over frequency
-  bool source_monocrome;
-
-  /// pointer to surface brightness function
-  double (*source_sb_func)(double *y);
-  SBModel source_sb_type;
 
   // host elliptical
   double *host_x;    /// not used yet
   double host_core;
   double host_axis_ratio;
   double host_pos_angle;    /// position angle
-  double host_sigma;
 
   // perturbations to host
   long perturb_Nmodes;    /// this includes two for external shear
@@ -79,14 +37,6 @@ public:
   double *perturb_modes;  ///first two are shear
 
   // private derived quantities
-  /// private: Einstein radius of host
-  double host_ro;
-  /// private: conversion factor between Mpc on the lens plane and arcseconds
-  double MpcToAsec;
-  /// private: critical surface density
-  double Sigma_crit;
-  /// private: the time delay scale in days/Mpc^2
-  double to;
 
   /// substructures
   bool substruct_implanted;
@@ -141,9 +91,7 @@ public:
   double *star_kappa;
   double **star_xdisk;
 
-  void setInternal(CosmoHndl cosmo);
-
-  AnaLens(char *filename,CosmoHndl cosmo);
+  AnaLens(char *filename);
   ~AnaLens();
 
   void ReadParams_AnaLens(char *filename);
@@ -168,13 +116,6 @@ public:
 };
 
 #endif
-
-// in internal_rayshooter.c
-double uniform_SB(double *y);
-double gaussian_SB(double *y);
-double BLR_Disk_SB(double *y);
-double BLR_Sph1_SB(double *y);
-double BLR_Sph2_SB(double *y);
 
 void alphaNSIE(double *alpha,double *xt,double f,double bc,double theta);
 double kappaNSIE(double *xt,double f,double bc,double theta);
@@ -212,3 +153,4 @@ void substract_stars_disks(AnaLens *lens,PosType *ray,PosType *alpha
 void MarkPoints(TreeHndl s_tree,AnaLens *lens,bool sb_cut,short invert);
 void _MarkPoints(TreeHndl s_tree,AnaLens *lens,bool *sbcut);
 bool InSource(double *ray,AnaLens *lens,bool surfacebright);
+

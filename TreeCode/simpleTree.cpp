@@ -36,14 +36,9 @@ SimpleTree::SimpleTree(PosType **xpt,IndexType Npoints,int bucket,int Ndimension
 	Ndim = Ndimensions;
 	median_cut = median;
 
-	xp = PosTypeMatrix(0,Npoints-1,0,2);
+	xp = xpt;
 
-	for(ii=0;ii<Npoints;++ii){
-		index[ii] = ii;
-		xp[ii][0] = xpt[ii][0];
-		xp[ii][1] = xpt[ii][1];
-		xp[ii][2] = xpt[ii][2];
-	}
+	for(ii=0;ii<Npoints;++ii) index[ii] = ii;
 
 	tree = SimpleTree::BuildTreeNB(xp,Npoints,index,Ndimensions,0);
 
@@ -52,7 +47,6 @@ SimpleTree::SimpleTree(PosType **xpt,IndexType Npoints,int bucket,int Ndimension
 
 SimpleTree::~SimpleTree()
 {
-	free_PosTypeMatrix(xp,0,tree->top->nparticles-1,0,2);
 	freeTreeNB(tree);
 	delete[] index;
 	return;

@@ -7,15 +7,6 @@
 
 #include <slsimlib.h>
 
-extern CosmoHndl cosmo;
-extern AnaLens *lens;
-
-struct temp_data
-{
-  double alpha[2], gamma[2];
-}
-  *temp;
-
 /** \ingroup DeflectionL2
  *
  * \brief Routine for calculating the deflection and other lensing quantities for
@@ -32,23 +23,30 @@ struct temp_data
     double convert_fac=0;
     long i,j;
 
+    struct temp_data
+    {
+      double alpha[2], gamma[2];
+    }
+      *temp;
+
+
     temp = (struct temp_data *) malloc(Npoints * sizeof(struct temp_data));
 
-    if(lens == NULL || !set)
+    if(this == NULL || !set)
       {
         ERROR_MESSAGE();
         std::printf("ERROR: rayshooterInternal  lens not set!\n");
         exit(0);
       }
 
-    if(zsource != zs_old)
+ /*   if(zsource != zs_old)
       {
         host_ro = 4*pi*pow(host_sigma/2.99792e5,2) * cosmo->angDist(0,zlens)
   	*cosmo->angDist(zlens,zsource)
   	/cosmo->angDist(0,zsource)/(1+zlens);
 
         zs_old=zsource;
-      }
+      }*/
 
     convert_factor = star_massscale / Sigma_crit;
 
@@ -192,7 +190,7 @@ struct temp_data
   	 // add stars for microlensing
         if(stars_N > 0 && stars_implanted)
   	{
-  	  substract_stars_disks(lens,i_points[i].x,i_points[i].image->x,
+  	  substract_stars_disks(this,i_points[i].x,i_points[i].image->x,
   				&(i_points[i].kappa),i_points[i].gamma);
 
   	  // do stars with tree code
@@ -227,26 +225,3 @@ struct temp_data
     return ;
   }
 
-double uniform_SB(double *y){
-	return (double)( (y[0]*y[0] + y[1]*y[1]) < lens->source_r*lens->source_r );
-}
-
-double gaussian_SB(double *y){
-	return exp( -(y[0]*y[0] + y[1]*y[1])/lens->source_gauss_r2 );
-}
-
-// surface brightness for models of the Broad Line Region
-double BLR_Disk_SB(double *y){
-	return blr_surface_brightness_disk(y,lens,cosmo);
-}
-
-double BLR_Sph1_SB(double *y){
-	return blr_surface_brightness_spherical_circular_motions(sqrt(y[0]*y[0] + y[1]*y[1]),lens,cosmo);
-}
-double BLR_Sph2_SB(double *y){
-	return blr_surface_brightness_spherical_random_motions(sqrt(y[0]*y[0] + y[1]*y[1]),lens,cosmo);
-}
-
-void in_source(double *y_source,ListHndl sourcelist){
-  return;
-}

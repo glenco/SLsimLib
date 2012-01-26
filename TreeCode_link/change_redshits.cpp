@@ -22,30 +22,38 @@
 
 #include <slsimlib.h>
 
-extern CosmoHndl cosmo;
 /** \ingroup ChangeLens
  *
  * \brief SHOULD BE TESTED Changes source and/or source redshits and recalculates the
  * the source points.  DOES NOT YET RECALCULATE SOURCE TREE
  */
-void change_redshifts(TreeHndl i_tree,TreeHndl s_tree,AnaLens *lens,double z_source
+void change_redshifts(TreeHndl i_tree,TreeHndl s_tree,ModelHndl model,double z_source
 		,double z_lens){
 	double oldSigma=0,factor=0;
 
-	oldSigma=lens->Sigma_crit;
-	lens->source_r *= cosmo->angDist(0,z_source)/cosmo->angDist(0,lens->zsource);
-	lens->zlens=z_lens;
-	lens->zsource=z_source;
+	CosmoHndl cosmo;
+	SourceHndl source;
+	LensHndl lens;
 
-	lens->Sigma_crit = cosmo->angDist(0,lens->zsource)
-			/cosmo->angDist(lens->zlens,lens->zsource)/cosmo->angDist(0,lens->zlens)/4/pi/Grav;
+	cosmo = model->cosmo;
+	source = model->source;
+	lens = model->lens;
+
+
+	oldSigma=lens->Sigma_crit;
+	source->source_r *= cosmo->angDist(0,z_source)/cosmo->angDist(0,source->zsource);
+	lens->zlens=z_lens;
+	source->zsource=z_source;
+
+	lens->Sigma_crit = cosmo->angDist(0,source->zsource)
+			/cosmo->angDist(lens->zlens,source->zsource)/cosmo->angDist(0,lens->zlens)/4/pi/Grav;
 
 	factor=oldSigma/lens->Sigma_crit;
 
-	lens->MpcToAsec=60*60*180*(1+lens->zsource)/pi/cosmo->angDist(0,lens->zlens);
+	lens->MpcToAsec=60*60*180*(1+source->zsource)/pi/cosmo->angDist(0,lens->zlens);
 	lens->host_ro=4*pi*pow(lens->host_sigma/2.99792e5,2)*cosmo->angDist(0,lens->zlens)
-			*cosmo->angDist(lens->zlens,lens->zsource)
-			  /cosmo->angDist(0,lens->zsource)/(1+lens->zlens);
+			*cosmo->angDist(lens->zlens,source->zsource)
+			  /cosmo->angDist(0,source->zsource)/(1+lens->zlens);
 
 	if(lens->Sigma_crit == oldSigma) return ;
 

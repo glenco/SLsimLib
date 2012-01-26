@@ -39,17 +39,18 @@
 #include <KistDriver.h>
 #include <peak_refinement.h>
 #include <analytic_lens.h>
+#include <multiplane.h>
+#include <lens.h>
 #include <tree_maintenance.h>
 #include <divide_images.h>
 #include <tree_maintenance.h>
 #include <grid_maintenance.h>
 #include <map_images.h>
 #include <source_models.h>
-#include <multiplane.h>
-
 #include <TreeNB.h>
 #include <forceTree.h>
 #include <simpleTree.h>
+#include <model.h>
 
 #include <fitlens.h>
 #include <galaxies.h>
