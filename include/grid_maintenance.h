@@ -5,9 +5,12 @@
  *      Author: bmetcalf
  */
 
+#include <model.h>
+#include <lens.h>
+
 GridHndl NewGrid(LensHndl lens,int Ngrid,double center[2],double range);
 void FreeGrid(GridHndl grid);
 void ReInitializeGrid(LensHndl lens,GridHndl grid);
 void TrimGrid(GridHndl grid,double highestres,bool useSB);
-void RefreshSurfaceBrightnesses(GridHndl grid,AnaLens *lens);
+void RefreshSurfaceBrightnesses(GridHndl grid,ModelHndl model);
 unsigned long NumberOfPoints(GridHndl grid);

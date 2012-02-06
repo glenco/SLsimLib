@@ -8,7 +8,7 @@
 #include <point.h>  // only reason is to define Point
 
 #ifndef kisttypes_declare
-	#define kisttypes_declare
+#define kisttypes_declare
 
 	typedef struct Point Data;  // change this to make a kist of other objects
 

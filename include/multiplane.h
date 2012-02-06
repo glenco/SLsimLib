@@ -10,11 +10,13 @@
 
 #include <forceTree.h>
 #include <lens.h>
+#include <cosmo.h>
 
 class haloM{
 public:
 	PosType **pos;
 	IndexType N;
+	IndexType *index;
 	float *masses;
 	float *sizes;
 	float *redshifts;
@@ -23,7 +25,7 @@ public:
 	~haloM();
 };
 
-typedef struct haloM *haloHndl;
+typedef haloM *haloHndl;
 
 class multiLens : public Lens{
 public:
@@ -32,14 +34,21 @@ public:
 	double *Sigma_crit;
 	double mass_scale;
 
+	haloHndl halo;
 	ForceTreeHndl *halo_tree;
 
 	multiLens(char*);
 	~multiLens();
 
 	void buildHaloTree();
-	void setInternalParams();
+	void setInternalParams(CosmoHndl,double);
 	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off);
 };
+
+void swap(float *a,float *b);
+void swap(PosType *a,PosType *b);
+void swap(IndexType a,IndexType b);
+void swap(IndexType *a,IndexType *b);
+void quicksort(IndexType *particles,float *redshifts,PosType **pos,float *sizes,float *masses,IndexType N);
 
 #endif /* MULTIPLANE_H_ */

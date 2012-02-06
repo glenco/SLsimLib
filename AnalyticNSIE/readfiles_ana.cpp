@@ -22,58 +22,6 @@
  * force calculation.
  */
 
-void AnaLens::setInternal(CosmoHndl cosmo){
-   /********************************/
-  /* set some internal parameters */
-  /********************************/
-  double NSubstructInRe = 0;
-
-  std::cout << "In setInternal(cosmo)\n";
-
-  sub_sigmaScale = host_sigma;
-  MpcToAsec = 60*60*180 / pi / cosmo->angDist(0,zlens);
-  std::cout << "Arcseconds/Mpc: " << MpcToAsec << std::endl;
-
-  // in degrees
-  host_pos_angle*=pi/180;
-
-  // in Mpc
-  host_ro=4*pi*pow(host_sigma/2.99792e5,2)*cosmo->angDist(0,zlens)
-		  *cosmo->angDist(zlens,zsource)
-		  /cosmo->angDist(0,zsource)/(1+zlens);
-
-  // find critical density
-  Sigma_crit=cosmo->angDist(0,zsource)/cosmo->angDist(zlens,zsource)
-		  /cosmo->angDist(0,zlens)/4/pi/Grav;
-  to = (1+zlens)*cosmo->angDist(0,zsource)
-		  /cosmo->angDist(zlens,zsource)/cosmo->angDist(0,zlens)
-		  /8.39428142e-10;
-
-  std::cout << "critical density is " << Sigma_crit << " Msun/Mpc^2    ro=" << host_ro << " Mpc  D_l = "
-       << cosmo->angDist(0,zlens) << " Mpc D_s = " << cosmo->angDist(0,zsource) << " Mpc  to = " << to << " days/Mpc^2" << std::endl;
-
-  NSubstructInRe = pi*pow(2*host_ro,2)*sub_Ndensity;
-
-  if(NSubstructInRe > 0){
-
-	  // include clumps that are beyond 2 Re
-	  /*
-	  NSubstruct = (int)(NSubstructInRe*FractionWithinRe(lens,2) + 0.5);
-	  Rmax = ro*2 + RmaxSubstruct
-		          + pow(2*MmaxSubstruct*ro/pi/Sigma_crit/1.0e-3,1./3.);
-	  NSubstruct = (int)(NdensitySubstruct*pi*Rmax*Rmax+0.5);
-	  */
-	  std::cout << "average number of clumps including outside Re: " << pi*pow(host_ro,2)*sub_Ndensity << std::endl;
-	  std::cout << "average clumps mass: " << averageSubMass() << " Msun" << std::endl;
-
-	  /*for(i=0;i<NSubstruct;++i){
-		  RcutSubstruct[i]=RmaxSubstruct;
-		  massSubstruct[i]=MmaxSubstruct;
-	  }*/
-
-  }
-}
-
 void AnaLens::ReadParams_AnaLens(char *filename){
   ifstream file_in(filename);
   char label[20];
@@ -212,86 +160,17 @@ void AnaLens::ReadParams_AnaLens(char *filename){
 
   file_in >> label >> star_massscale;
   std::cout << label << star_massscale << std::endl;
-
-  // source information
-  std::cout << "**Source structure**" << std::endl;
-
-  file_in >> label >> type;
-  source_sb_type = (SBModel)type;
-  std::cout << label << source_sb_type << std::endl;
-
-  if(source_sb_type == Uniform){
-		  source_sb_func = uniform_SB;
-		  std::cout << "uniform surface brightness source" << std::endl;
-  }else if(source_sb_type == Gaussian){
-		  source_sb_func = gaussian_SB;
-		  std::cout << "Gaussian surface brightness source" << std::endl;
-		  file_in >> label >> source_gauss_r2;
-		  std::cout << label << source_gauss_r2 << " Mpc" << std::endl;
-  }else{
-
-	  std::cout << "BLR surface brightness source" << std::endl;
-	  switch(source_sb_type){
-	  case BLR_Disk:
-		  source_sb_func = BLR_Disk_SB;
-		  std::cout << "disk model" << std::endl;
-		  break;
-	  case BLR_Sph1:
-		  source_sb_func = BLR_Sph1_SB;
-		  std::cout << "spherical with circular orbits" << std::endl;
-		  break;
-	  case BLR_Sph2:
-		  source_sb_func = BLR_Sph2_SB;
-		  std::cout << "spherical with Gaussian velocities" << std::endl;
-		  break;
-	  default:
-		  ERROR_MESSAGE();
-		  std::cout << "ERROR: no submass internal profile chosen" << std::endl;
-		  exit(1);
-		  break;
-	  }
-
-	  file_in >> label >> source_BHmass;
-	  std::cout << label << source_BHmass << " Msun" << std::endl;
-
-	  file_in >> label >> source_gamma;
-	  std::cout << label << source_gamma << std::endl;
-
-	  file_in >> label >> source_inclination;
-	  std::cout << label << source_inclination << " deg" << std::endl;
-
-	  file_in >> label >> source_opening_angle;
-	  std::cout << label << source_opening_angle << " deg" << std::endl;
-
-
-	  source_inclination *= pi/180;
-	  source_opening_angle *= pi/180;
-
-	  file_in >> label >> source_r_in;
-	  std::cout << label << source_r_in << " Mpc" << std::endl;
-
-	  file_in >> label >> source_r_out;
-	  std::cout << label << source_r_out << " Mpc" << std::endl;
-
-	  file_in >> label >> source_nuo;
-	  std::cout << label << source_nuo << " Hz" << std::endl;
-
-	  file_in >> label >> source_fK;
-	  std::cout << label << source_fK << " X V_Kepler" << std::endl;
-
-	  source_monocrome = false;  // default value
-
-  }
-
   // redshifts
 
   file_in >> label >> zlens;
   std::cout << label << zlens << std::endl;
-
-  file_in >> label >> zsource;
-  std::cout << label << zsource << std::endl;
   
   file_in.close();
+
+  sub_sigmaScale = host_sigma;
+
+  // in degrees
+  host_pos_angle*=pi/180;
 }
 
 /** \ingroup ImageFinding
@@ -434,16 +313,12 @@ void AnaLens::reNormSubstructure(double kappa_sub){
 }
 
 
-AnaLens::AnaLens(char filename[],CosmoHndl cosmo){
+AnaLens::AnaLens(char filename[]) : Source(filename), Lens(filename){
   ReadParams_AnaLens(filename);
-  setInternal(cosmo);
 
   set = true;
-  }
+}
 
-/** \ingroup Constructor
- *
- */
 AnaLens::~AnaLens(){
 	if(perturb_Nmodes > 0){
 	free(perturb_modes);

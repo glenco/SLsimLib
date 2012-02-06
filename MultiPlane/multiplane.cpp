@@ -7,11 +7,8 @@
 
 #include <slsimlib.h>
 
-extern CosmoHndl cosmo;
-extern multiLens *lens;
-
 haloM::haloM(double maxr, double zmax){
-	int i;
+	int i, n;
 	long seed;
 	double r, theta;
 
@@ -22,6 +19,7 @@ haloM::haloM(double maxr, double zmax){
 	masses = new float[N];
 	sizes = new float[N];
 	redshifts = new float[N];
+	index = new IndexType[N];
 
 	pos = PosTypeMatrix(0,N-1,0,2);
 
@@ -37,7 +35,11 @@ haloM::haloM(double maxr, double zmax){
 		sizes[i] = ran2(&seed) * 0.3;
 
 		masses[i] = ran2(&seed);
+
+		index[i] = i;
 	}
+
+	quicksort(index,redshifts,pos,sizes,masses,N);
 }
 
 haloM::~haloM(){
@@ -57,6 +59,7 @@ multiLens::multiLens(char filename[]) : Lens(filename){
 }
 
 multiLens::~multiLens(){
+	delete halo;
 	delete[] halo_tree;
 	delete[] Sigma_crit;
 	delete[] Dls;
@@ -66,51 +69,27 @@ multiLens::~multiLens(){
 }
 
 void multiLens::buildHaloTree(){
-	PosType **pos;
-	IndexType N;
-	float *masses;
-	float *sizes;
+	IndexType N, N_last;
 	double dz;
 	int i, j, n;
 
-    haloM *halo = new haloM(0.4, zsource);
+    halo = new haloM(0.4, 3.64);
 
     dz = redshift[1] - redshift[0];
 
-	for(j = 0; j < Nplanes; j++){
+	for(j = 0, N_last = 0; j < Nplanes; j++){
 
-		for(i = 0, N = 0; i < halo->N; i++){
+		for(i = 0, N = 0; i < halo->N; i++)
 			if(halo->redshifts[i] >= redshift[j] && halo->redshifts[i] < (redshift[j]+dz))
 				N++;
-		}
 
-		masses = new float[N];
-		sizes = new float[N];
-		pos = PosTypeMatrix(0,N-1,0,2);
+		halo_tree[j] = new ForceTree(&halo->pos[N_last + N],N,&halo->masses[N_last + N],&halo->sizes[N_last + N],true,true,5,2,true,0.1);
 
-		for(i = 0, n = 0; i < halo->N; i++){
-			if(halo->redshifts[i] >= redshift[j] && halo->redshifts[i] < (redshift[j]+dz)){
-				masses[n] = halo->masses[i];
-				sizes[n] = halo->sizes[i];
-				pos[n][0] = halo->pos[i][0];
-				pos[n][1] = halo->pos[i][1];
-				pos[n][2] = halo->pos[i][2];
-
-				n++;
-			}
-		}
-
-		halo_tree[j] = new ForceTree(pos,N,masses,sizes,true,true,5,2,true,0.1);
-
-		free_PosTypeMatrix(pos,0,N-1,0,2);
-		delete[] sizes;
-		delete[] masses;
+		N_last = N;
 	}
-
-	delete halo;
 }
 
-void multiLens::setInternalParams(){
+void multiLens::setInternalParams(CosmoHndl cosmo, double zsource){
 	int j;
 
 	mass_scale = 1.0;
@@ -123,4 +102,71 @@ void multiLens::setInternalParams(){
 		Sigma_crit[j]=cosmo->angDist(0,zsource)/cosmo->angDist(redshift[j],zsource)
 					/cosmo->angDist(0,redshift[j])/4/pi/Grav;
 	}
+}
+
+void swap(float *a,float *b){
+	float tmp;
+	tmp=*a;
+	*a=*b;
+	*b=tmp;
+}
+/*void swap(PosType *a,PosType *b){
+	PosType tmp;
+	tmp=*a;
+	*a=*b;
+	*b=tmp;
+}*/
+void swap(IndexType a,IndexType b){
+	IndexType tmp;
+	tmp=a;
+	a=b;
+	b=tmp;
+}
+void swap(IndexType *a,IndexType *b){
+	IndexType tmp;
+	tmp=*a;
+	*a=*b;
+	*b=tmp;
+}
+
+void quicksort(IndexType *particles,float *redshifts,PosType **pos,float *sizes,float *masses,IndexType N){
+	double pivotvalue;
+	unsigned long pivotindex,newpivotindex,i;
+
+	if(N <= 1) return ;
+
+	// pick pivot as the median of the first, last and middle values
+	if ((redshifts[0] >= redshifts[N/2] && redshifts[0] <= redshifts[N-1])
+			|| (redshifts[0] >= redshifts[N-1] && redshifts[0] <= redshifts[N/2])) pivotindex = 0;
+	else if ((redshifts[N/2] >= redshifts[0] && redshifts[N/2] <= redshifts[N-1])
+			|| (redshifts[N/2] >= redshifts[N-1] && redshifts[N/2] <= redshifts[0])) pivotindex = N/2;
+	else pivotindex = N-1;
+	pivotvalue=redshifts[pivotindex];
+
+	// move pivet to end of array
+	swap(&redshifts[pivotindex],&redshifts[N-1]);
+	swap(&particles[pivotindex],&particles[N-1]);
+	swap(pos[pivotindex],pos[N-1]);
+	swap(&sizes[pivotindex],&sizes[N-1]);
+	swap(&masses[pivotindex],&masses[N-1]);
+
+	newpivotindex=0;
+
+	// partition list and array
+	for(i=0;i<N;++i){
+		if(redshifts[i] <= pivotvalue){
+			swap(&redshifts[newpivotindex],&redshifts[i]);
+			swap(&particles[newpivotindex],&particles[i]);
+			swap(pos[pivotindex],pos[i]);
+			swap(&sizes[pivotindex],&sizes[i]);
+			swap(&masses[pivotindex],&masses[i]);
+			++newpivotindex;
+		}
+	}
+	--newpivotindex;
+
+	quicksort(particles,redshifts,pos,sizes,masses,newpivotindex);
+	quicksort(&particles[newpivotindex+1],&redshifts[newpivotindex+1],&pos[newpivotindex+1],&sizes[newpivotindex+1],&masses[newpivotindex+1],N-newpivotindex-1);
+
+	return ;
 }

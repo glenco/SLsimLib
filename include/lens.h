@@ -46,15 +46,20 @@ public:
 	  /// set to true to integrate over frequency
 	  bool source_monocrome;
 
-	  /// pointer to surface brightness function
-	  double (*source_sb_func)(double *y);
 	  SBModel source_sb_type;
 
 	  /// redshift of source
 	  double zsource;
+
+	  Source(char *);
+	  ~Source();
+
+	  void readParamfile(char*);
 };
 
-class Lens : public Source {
+typedef Source *SourceHndl;
+
+class Lens {
 protected:
 	int Nplanes;
 
@@ -66,6 +71,9 @@ public:
 
 	  /// redshift of lens
 	  double zlens;
+	  /// private: Einstein radius of host
+	  double host_ro;
+	  double host_sigma;
 
 	  // private derived quantities
 	  /// private: conversion factor between Mpc on the lens plane and arcseconds
@@ -79,10 +87,9 @@ public:
 	~Lens();
 
 	void readParamfile(char*);
-	void setInternal(CosmoHndl cosmo);
 	int getNplanes();
 
-	virtual void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off){};
+	virtual void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off) = 0;
 };
 
 typedef Lens *LensHndl;

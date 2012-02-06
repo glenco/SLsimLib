@@ -112,14 +112,6 @@ typedef struct simlens{
 
 #endif
 
-/** routines in TreeNBForce **/
-
-
-double alpha_o(double r,float sigma);
-double kappa_o(double r,float sigma);
-double gamma_o(double r,float sigma);
-
-
 /** routines in readfiles **/
 
 SimLens *readparams(char *filename,struct COSMOLOGY *cosmo);
