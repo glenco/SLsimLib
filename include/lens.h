@@ -17,7 +17,7 @@ protected:
 
 public:
 	  /// output file, not always used.
-	  char outputfile[100];
+	  string outputfile;
 	  /// marks if the lens has been setup.
 	  bool set;
 
@@ -36,11 +36,11 @@ public:
 	  double to;
 
 
-	Lens(char*);
+	Lens(string);
 	Lens();
 	~Lens();
 
-	void readParamfile(char*);
+	void readParamfile(string);
 	int getNplanes();
 
 	virtual void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off) = 0;

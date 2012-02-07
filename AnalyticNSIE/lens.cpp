@@ -6,10 +6,11 @@
  */
 
 #include <slsimlib.h>
+#include <sstream>
 
 using namespace std;
 
-Lens::Lens(char filename[]){
+Lens::Lens(string filename){
 	readParamfile(filename);
 
 	set = true;
@@ -26,54 +27,95 @@ int Lens::getNplanes(){
 	return Nplanes;
 }
 
-void Lens::readParamfile(char *filename){
-	  ifstream file_in(filename);
-	  char label[20];
+void Lens::readParamfile(string filename){
+      const int MAXPARAM = 10;
+	  string label[MAXPARAM], rlabel, rvalue;
+	  void *addr[MAXPARAM];
+	  int id[MAXPARAM];
+	  stringstream ss;
+	  int i ,n;
+	  int myint;
+	  double mydouble;
+	  string mystring;
 
-	  cout << "reading from " << filename << endl;
+	  n = 0;
 
+	  addr[n] = &outputfile;
+	  id[n] = 2;
+	  label[n++] = "outputfile";
+
+	  addr[n] = &Nplanes;
+	  id[n] = 2;
+	  label[n++] = "Nplanes";
+
+	  addr[n] = &zlens;
+	  id[n] = 1;
+	  label[n++] = "z_lens";
+
+	  cout << "basic lens: reading from " << filename << endl;
+
+	  ifstream file_in(filename.c_str());
 	  if(!file_in){
 	    cout << "Can't open file " << filename << endl;
 	    exit(1);
 	  }
 
+
 	  // output file
-	  file_in >> label >> outputfile;
-	  cout << label << " " << outputfile << endl << endl;
+	  while(!file_in.eof()){
+		  file_in >> rlabel >> rvalue;
 
-	  // Nplanes file
-	  file_in >> label >> Nplanes;
-	  cout << label << " " << Nplanes << endl << endl;
+		  for(i = 0; i < n; i++){
+			  if(rlabel == label[i]){
 
-	   // redshifts
-	   file_in >> label >> zlens;
-	   cout << label << " " << zlens << endl;
+				  ss << rvalue;
+
+				  switch(id[n]){
+				  case 0:
+					  ss >> mydouble;
+					  *((double *)addr[i]) = mydouble;
+					  break;
+				  case 1:
+					  ss >> myint;
+					  *((int *)addr[i]) = myint;
+					  break;
+				  case 2:
+					  ss >> mystring;
+					  *((string *)addr[i]) = mystring;
+					  break;
+				  }
+			  }
+		  }
+	  }
+
+
+	  file_in.close();
 }
 
 Source::Source(){
 }
 
-SourceUniform::SourceUniform(char *filename) : Source(){
+SourceUniform::SourceUniform(string filename) : Source(){
 	readParamfile(filename);
 }
 
-SourceGaussian::SourceGaussian(char *filename) : Source(){
+SourceGaussian::SourceGaussian(string filename) : Source(){
 	readParamfile(filename);
 }
 
-SourceBLR::SourceBLR(char *filename) : Source(){
+SourceBLR::SourceBLR(string filename) : Source(){
 	readParamfile(filename);
 }
 
-SourceBLRDisk::SourceBLRDisk(char *filename) : SourceBLR(filename){
+SourceBLRDisk::SourceBLRDisk(string filename) : SourceBLR(filename){
 
 }
 
-SourceBLRSph1::SourceBLRSph1(char *filename) : SourceBLR(filename){
+SourceBLRSph1::SourceBLRSph1(string filename) : SourceBLR(filename){
 
 }
 
-SourceBLRSph2::SourceBLRSph2(char *filename) : SourceBLR(filename){
+SourceBLRSph2::SourceBLRSph2(string filename) : SourceBLR(filename){
 
 }
 
@@ -98,127 +140,184 @@ SourceBLRSph1::~SourceBLRSph1(){
 SourceBLRSph2::~SourceBLRSph2(){
 }
 
-void SourceUniform::readParamfile(char *filename){
-	  ifstream file_in(filename);
-	  char label[20];
-	  int type;
+void SourceUniform::readParamfile(string filename){
+	  string label, rlabel, rvalue;
+	  stringstream ss;
+	  double mydouble;
 
-	  cout << "reading from " << filename << endl;
+	  label = "z_source";
 
+	  cout << "uniform source: reading from " << filename << endl;
+
+	  ifstream file_in(filename.c_str());
 	  if(!file_in){
 	    cout << "Can't open file " << filename << endl;
 	    exit(1);
 	  }
 
-	  // source information
-	   cout << "**Source structure**" << endl;
+	  // output file
+	  while(!file_in.eof()){
+		  file_in >> rlabel >> rvalue;
 
-	   file_in >> label >> type;
-	   source_sb_type = (SBModel)type;
-	   cout << label << " " << source_sb_type << endl;
+		  if(rlabel == label){
 
-	   // redshifts
-	   file_in >> label >> zsource;
-	   cout << label << " " << zsource << endl;
+			  ss << rvalue;
+
+			  ss >> mydouble;
+			  zsource = mydouble;
+
+			  ss.clear();
+			  ss.str(string());
+		  }
+	  }
+
+	  file_in.close();
+
+	  printSource();
 }
 
-void SourceGaussian::readParamfile(char *filename){
-	  ifstream file_in(filename);
-	  char label[20];
-	  int type;
+void SourceGaussian::readParamfile(string filename){
+	  string label[2], rlabel, rvalue;
+	  stringstream ss;
+	  void *addr[2];
+	  int i;
+	  double mydouble;
 
-	  cout << "reading from " << filename << endl;
+	  addr[0] = &zsource;
+	  label[0] = "z_source";
 
+	  addr[1] = &source_gauss_r2;
+	  label[1] = "gauss_r2";
+
+	  cout << "gaussian source: reading from " << filename << endl;
+
+	  ifstream file_in(filename.c_str());
 	  if(!file_in){
 	    cout << "Can't open file " << filename << endl;
 	    exit(1);
 	  }
 
-	  // source information
-	   cout << "**Source structure**" << endl;
+	  // output file
+	  while(!file_in.eof()){
+		  file_in >> rlabel >> rvalue;
 
-	   file_in >> label >> type;
-	   source_sb_type = (SBModel)type;
-	   cout << label << " " << source_sb_type << endl;
+		  for(i = 0; i < 2; i++){
 
-	   file_in >> label >> source_gauss_r2;
-	   cout << label << " " << source_gauss_r2 << " Mpc" << endl;
+			  if(rlabel == label[i]){
 
-	   // redshifts
-	   file_in >> label >> zsource;
-	   cout << label << " " << zsource << endl;
+				  ss << rvalue;
+				  ss >> mydouble;
+
+				  *((double *)addr[i]) = mydouble;
+
+				  ss.clear();
+				  ss.str(string());
+			  }
+		  }
+	  }
+
+	  file_in.close();
+
+	  printSource();
 }
 
-void SourceBLR::readParamfile(char *filename){
-	  ifstream file_in(filename);
-	  char label[20];
-	  int type;
+void SourceBLR::readParamfile(string filename){
+	  string label[9], rlabel, rvalue;
+	  stringstream ss;
+	  void *addr[9];
+	  int i, n;
+	  float myfloat;
 
-	  cout << "reading from " << filename << endl;
+	  n = 0;
 
+	  addr[n] = &zsource;
+	  label[n++] = "z_source";
+
+	  addr[n] = &source_BHmass;
+	  label[n++] = "BHmass";
+
+	  addr[n] = &source_gamma;
+	  label[n++] = "gamma";
+
+	  addr[n] = &source_inclination;
+	  label[n++] = "inclin";
+
+	  addr[n] = &source_opening_angle;
+	  label[n++] = "opening_ang";
+
+	  addr[n] = &source_r_in;
+	  label[n++] = "r_in";
+
+	  addr[n] = &source_r_out;
+	  label[n++] = "r_out";
+
+	  addr[n] = &source_nuo;
+	  label[n++] = "nuo";
+
+	  addr[n] = &source_fK;
+	  label[n++] = "source_sigma";
+
+	  cout << "BLR source: reading from " << filename << endl;
+
+	  ifstream file_in(filename.c_str());
 	  if(!file_in){
 	    cout << "Can't open file " << filename << endl;
 	    exit(1);
 	  }
 
-	  // source information
-	   cout << "**Source structure**" << endl;
+	  // output file
+	  while(!file_in.eof()){
+		  file_in >> rlabel >> rvalue;
 
-	   file_in >> label >> type;
-	   source_sb_type = (SBModel)type;
-	   cout << label << " " << source_sb_type << endl;
+		  for(i = 0; i < 9; i++){
 
-	   cout << "BLR surface brightness source" << endl;
+			  if(rlabel == label[i]){
 
-	   switch(source_sb_type){
-	   case BLR_Disk:
-		   cout << "disk model" << endl;
-		   break;
-	   case BLR_Sph1:
-		   cout << "spherical with circular orbits" << endl;
-		   break;
-	   case BLR_Sph2:
-		   cout << "spherical with Gaussian velocities" << endl;
-		   break;
-	   default:
-		   ERROR_MESSAGE();
-		   cout << "ERROR: no submass internal profile chosen" << endl;
-		   exit(1);
-		   break;
-	   }
+				  ss << rvalue;
+				  ss >> myfloat;
 
-	   file_in >> label >> source_BHmass;
-	   cout << label << " " << source_BHmass << " Msun" << endl;
+				  *((float *)addr[i]) = myfloat;
 
-	   file_in >> label >> source_gamma;
-	   cout << label << " " << source_gamma << endl;
+				  ss.clear();
+				  ss.str(string());
+			  }
+		  }
+	  }
 
-	   file_in >> label >> source_inclination;
-	   cout << label << " " << source_inclination << " deg" << endl;
+	  file_in.close();
 
-	   file_in >> label >> source_opening_angle;
-	   cout << label << " " << source_opening_angle << " deg" << endl;
+	  source_inclination *= pi/180;
+	  source_opening_angle *= pi/180;
+	  source_monocrome = false;
 
-	   source_inclination *= pi/180;
-	   source_opening_angle *= pi/180;
+	  printSource();
+}
 
-	   file_in >> label >> source_r_in;
-	   cout << label << " " << source_r_in << " Mpc" << endl;
+void SourceUniform::printSource(){
+	cout << endl << "**Source model**" << endl;
 
-	   file_in >> label >> source_r_out;
-	   cout << label << " " << source_r_out << " Mpc" << endl;
+	cout << "z_source " << zsource << endl << endl;
+}
 
-	   file_in >> label >> source_nuo;
-	   cout << label << " " << source_nuo << " Hz" << endl;
+void SourceGaussian::printSource(){
+	cout << endl << "**Source model**" << endl;
 
-	   file_in >> label >> source_fK;
-	   cout << label << " " << source_fK << " X V_Kepler" << endl;
+	cout << "z_source " << zsource << endl;
+	cout << "gauss_r2 " << source_gauss_r2 << endl << endl;
+}
 
-	   source_monocrome = false;  // default value
+void SourceBLR::printSource(){
+	cout << endl << "**Source model**" << endl;
 
-	   // redshifts
-	   file_in >> label >> zsource;
-	   cout << label << " " << zsource << endl;
+	cout << "z_source " << zsource << endl;
+	cout << "BHmass " << source_BHmass << endl;
+	cout << "gamma " << source_gamma << endl;
+	cout << "incl " << source_inclination << endl;
+	cout << "opening angl " << source_opening_angle << endl;
+	cout << "r_in " << source_r_in << endl;
+	cout << "r_out " << source_r_out << endl;
+	cout << "nuo " << source_nuo << endl;
+	cout << "source_sigma " << source_fK << endl << endl;
 }
 
 double SourceUniform::source_sb_func(double *y){

@@ -94,10 +94,10 @@ public:
   double *star_kappa;
   double **star_xdisk;
 
-  AnaLens(char *filename);
+  AnaLens(string);
   ~AnaLens();
 
-  void ReadParams_AnaLens(char *filename);
+  void readParamfile(string);
   void PrintAnaLens(bool show_substruct,bool show_stars);
 
   // in randoimize_lens.c
