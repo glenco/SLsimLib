@@ -30,7 +30,7 @@ GridHndl NewGrid(LensHndl lens, int Ngrid,double center[2],double range){
 	i_points = NewPointArray(Ngrid*Ngrid,true);
 	xygridpoints(i_points,range,center,Ngrid,0);
 	s_points=LinkToSourcePoints(i_points,Ngrid*Ngrid);
-	lens->rayshooterInternal(Ngrid*Ngrid,i_points,true);
+	lens->rayshooterInternal(Ngrid*Ngrid,i_points,false);
 	// Build trees
 	grid->i_tree = BuildTree(i_points,Ngrid*Ngrid);
 	grid->s_tree = BuildTree(s_points,Ngrid*Ngrid);
@@ -74,7 +74,7 @@ void ReInitializeGrid(LensHndl lens, GridHndl grid){
 	i_points = NewPointArray(Ngrid*Ngrid,true);
 	xygridpoints(i_points,range,center,Ngrid,0);
 	s_points=LinkToSourcePoints(i_points,Ngrid*Ngrid);
-	lens->rayshooterInternal(Ngrid*Ngrid,i_points,true);
+	lens->rayshooterInternal(Ngrid*Ngrid,i_points,false);
 	// fill trees
 	FillTree(grid->i_tree,i_points,Ngrid*Ngrid);
 	FillTree(grid->s_tree,s_points,Ngrid*Ngrid);
@@ -99,21 +99,15 @@ void TrimGrid(GridHndl grid,double highestres,bool useSB){
  * changes in the grid.
  * Both i_tree and s_tree are both changed although only s_tree shows up here.
  */
-void RefreshSurfaceBrightnesses(GridHndl grid,ModelHndl model){
+void RefreshSurfaceBrightnesses(SourceHndl source,GridHndl grid){
 	double y[2];
-
-	CosmoHndl cosmo;
-	SourceHndl source;
-
-	cosmo = model->cosmo;
-	source = model->source;
 
 	MoveToTopList(grid->s_tree->pointlist);
 	do{
 		y[0] = grid->s_tree->pointlist->current->x[0] - source->source_x[0];
 		y[1] = grid->s_tree->pointlist->current->x[1] - source->source_x[1];
 		grid->s_tree->pointlist->current->surface_brightness = grid->s_tree->pointlist->current->image->surface_brightness
-				= (model->*source_sb_func)(y);
+				= (source->source_sb_func)(y);
 		assert(grid->s_tree->pointlist->current->surface_brightness >= 0.0);
 		grid->s_tree->pointlist->current->in_image = grid->s_tree->pointlist->current->image->in_image
 				= false;

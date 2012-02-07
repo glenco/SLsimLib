@@ -5,15 +5,15 @@
  *      Author: bmetcalf
  */
 
-#include <analytic_lens.h>
-
 #ifndef source_declare
 #define source_declare
 
+#include <lens.h>
+
 // Separate files
-double blr_surface_brightness_spherical(double x,ModelHndl model);
-double blr_surface_brightness_spherical_random_motions(double x,ModelHndl model);
-double blr_surface_brightness_spherical_circular_motions(double x,ModelHndl model);
-double blr_surface_brightness_disk(double x[],ModelHndl model);
+double blr_surface_brightness_spherical(double x,SourceBLR *source);
+double blr_surface_brightness_spherical_random_motions(double x,SourceBLR *source);
+double blr_surface_brightness_spherical_circular_motions(double x,SourceBLR *source);
+double blr_surface_brightness_disk(double x[],SourceBLR *source);
 
 #endif

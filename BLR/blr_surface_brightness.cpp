@@ -14,7 +14,7 @@
 // normalization is arbitrary for now.
 
 // inputs are in Mpc,days,Hz,Hz
-double blr_surface_brightness_spherical(double x,ModelHndl model){
+double blr_surface_brightness_spherical(double x,SourceBLR *source){
 
 	// some constants which need to be set in the real version but will be
 	// plucked from the air here
@@ -24,9 +24,6 @@ double blr_surface_brightness_spherical(double x,ModelHndl model){
 	//static const float r_out = 4.2992021e-7; // Mpc
 	//static const float gam = -1.0;
 	float r,y,tau;
-	SourceHndl source;
-
-	source = model->source;
 
 	tau = source->source_tau*8.39428142e-10;  // convert days to Mpc
 
@@ -41,7 +38,7 @@ double blr_surface_brightness_spherical(double x,ModelHndl model){
 	return  x/pow(x*x + tau*tau,1.5) * pow(r/source->source_r_in,source->source_gamma-0.5);
 }
 
-double blr_surface_brightness_disk_old(double x[],ModelHndl model){
+double blr_surface_brightness_disk_old(double x[],SourceBLR *source){
 
 	/* computes the surface brightness associated with our simplest model
 	// for the BLR. x is the projected "distance from center" coordinate
@@ -74,20 +71,7 @@ double blr_surface_brightness_disk_old(double x[],ModelHndl model){
 	double zz_prime,xx_prime,yy_prime;
 	double sig_nu;
 
-	CosmoHndl cosmo;
-	SourceHndl source;
-	LensHndl lens;
-
-	cosmo = model->cosmo;
-	source = model->source;
-	lens = model->lens;
-
-	if(lens->zlens != oldzlens || source->zsource != oldzsource){
-		DlDs = cosmo->angDist(0,lens->zlens)
-        		/cosmo->angDist(0,source->zsource);
-		oldzlens = lens->zlens;
-		oldzsource = source->zsource;
-	}
+	DlDs = source->DlDs;
 
 	//printf("hi from BLR disk\n");
 

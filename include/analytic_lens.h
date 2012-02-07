@@ -4,6 +4,10 @@
  *  Created on: Dec 8, 2009
  *      Author: R.B. Metcalf
  */
+
+#ifndef analens_declare
+#define analens_declare
+
 #include <cosmo.h>
 #include <Tree.h>
 #include <forceTree.h>
@@ -13,13 +17,10 @@
 #define pi  3.141593
 #endif
 
-#ifndef analens_declare
-#define analens_declare
-
 /**\brief Analytic model for single plane lens
  *
  */
-class AnaLens : public Source, virtual public Lens{
+class AnaLens : public Lens{
 public:
   /// names of clump and sb models
   typedef enum {NFW,powerlaw,pointmass} ClumpInternal;
@@ -74,7 +75,7 @@ public:
     		,double *center,double Sigma_crit);
 
   /// stars
-  bool stars_implanted;
+
   IndexType stars_N;
   IndexType *stars;
   PosType **stars_xp;
@@ -84,9 +85,11 @@ public:
   float *star_masses;
   double star_fstars;
   double star_theta_force;
+  bool stars_implanted;
+  int star_Nregions;
 
  /// Number of regions to be subtracted to compensate for the mass in stars
-  int star_Nregions;
+
   double *star_region;
   double *star_kappa;
   double **star_xdisk;
@@ -98,12 +101,9 @@ public:
   void PrintAnaLens(bool show_substruct,bool show_stars);
 
   // in randoimize_lens.c
-
-  void RandomizeHost(double r_source_physical,long *seed,bool tables
-                  ,CosmoHndl cosmo);
+  void RandomizeHost(long *seed,bool tables);
   void RandomlyDistortLens(long *seed,int Nmodes);
   void AlignedRandomlyDistortLens(long *seed,double theta,int n);
-  double RandomFromTable(double *table,unsigned long Ntable,long *seed);
   void RandomizeSubstructure(double rangeInRei,long *seed);
   void RandomizeSubstructure2(double rangeInRei,long *seed);
   void RandomizeSubstructure3(double rangeInRei,long *seed);
@@ -113,10 +113,15 @@ public:
   // in readlens_ana.c
   void reNormSubstructure(double kappa_sub);
   void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off);
+  void substract_stars_disks(PosType *ray,PosType *alpha
+                  ,PosType *kappa,PosType *gamma);
 };
 
 #endif
 
+double RandomFromTable(double *table,unsigned long Ntable,long *seed);
+void setStars(AnaLens *lens, bool implanted);
+void implant_stars(AnaLens *lens,Point *images,unsigned long Nimages,long *seed);
 void alphaNSIE(double *alpha,double *xt,double f,double bc,double theta);
 double kappaNSIE(double *xt,double f,double bc,double theta);
 void gammaNSIE(double gam[2],double *xt,double f,double bc,double theta);
@@ -145,9 +150,9 @@ double lens_expand(double beta,double *mod,int Nmodes,double *x,double *alpha,do
 
 // in FullRange/implant_stars.c
 
-void implant_stars(AnaLens *lens,Point *images,unsigned long Nimages,long *seed);
-void substract_stars_disks(AnaLens *lens,PosType *ray,PosType *alpha
-                ,PosType *kappa,PosType *gamma);
+//void implant_stars(Point *images,unsigned long Nimages,long *seed);
+//void substract_stars_disks(AnaLens *lens,PosType *ray,PosType *alpha
+ //               ,PosType *kappa,PosType *gamma);
 
 // in mark_points.c
 void MarkPoints(TreeHndl s_tree,AnaLens *lens,bool sb_cut,short invert);

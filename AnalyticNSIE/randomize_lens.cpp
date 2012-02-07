@@ -17,10 +17,9 @@ const float sheartol = 1.0e-3;
 //extern COSMOLOGY cosmo;
 
 /** \ingroup ChangeLens
- *
  */
-void AnaLens::RandomizeHost(double r_source_phys,long *seed,bool tables
-		,CosmoHndl cosmo){
+
+void Model::RandomizeModel(double r_source_phys,long *seed,bool tables){
 	static double fo=0.0,*axisTable,*sigmaTable,**zTable;
 	int n,i;
 	static int init=0,NaxisTable,NreTable,NsigmaTable,NzTable;
@@ -98,22 +97,32 @@ void AnaLens::RandomizeHost(double r_source_phys,long *seed,bool tables
 	if(tables){
 		// choose random set of redshifts
 		i=(int)(NzTable*ran2(seed));
-		zsource = zTable[i][0];
-		zlens = zTable[i][1];
+		source->zsource = zTable[i][0];
+		lens->zlens = zTable[i][1];
 
 		//zlens = RandomFromTable(zlTable,NzlTable,seed);
 		//zsource = RandomFromTable(zsTable,NzsTable,seed);
 
 	
-		host_sigma = RandomFromTable(sigmaTable,NsigmaTable,seed);
-		host_ro = 4*pi*pow(host_sigma/2.99792e5,2)
-		*cosmo->angDist(zlens,zsource)*cosmo->angDist(0,zlens)
-		/cosmo->angDist(0,zsource);
-		Sigma_crit = pow(host_sigma/2.99792e5,2)/Grav/host_ro;
-		source_r = r_source_phys*cosmo->angDist(0,zlens)
-                                		/cosmo->angDist(0,zsource);
-		MpcToAsec=60*60*180*(1+zsource)/pi/cosmo->angDist(0,zlens);
+		lens->host_sigma = RandomFromTable(sigmaTable,NsigmaTable,seed);
+
+		setInternal();
+
+		source->source_r = r_source_phys*source->DlDs;
 	}
+
+	lens->RandomizeHost(seed,tables);
+
+	return ;
+}
+
+void AnaLens::RandomizeHost(long *seed,bool tables){
+	static double fo=0.0,*axisTable,*sigmaTable,**zTable;
+	int n,i;
+	static int init=0,NaxisTable,NreTable,NsigmaTable,NzTable;
+	ifstream file;
+	char *filename;
+	//double re_onsource;
 
 	if(fo==0.0) fo=host_axis_ratio;
 
@@ -458,7 +467,7 @@ void AnaLens::RandomizeSubstructure3(double rangeInRei,long *seed){
  * \brief Generates a random deviates drawn from approximately the same as the values of table
  *
  */
-double AnaLens::RandomFromTable(double *table,unsigned long Ntable,long *seed){
+double RandomFromTable(double *table,unsigned long Ntable,long *seed){
 	double y;
 	unsigned long j;
 

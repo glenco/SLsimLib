@@ -11,54 +11,6 @@
 #include <forceTree.h>
 #include <point.h>
 
-#ifndef lens_declare
-#define lens_declare
-
-class Source{
-public:
-	 /// names of clump and sb models
-	  typedef enum {Uniform,Gaussian,BLR_Disk,BLR_Sph1,BLR_Sph2} SBModel;
-
-	  // source parameters
-	  /// lag time
-	  double source_tau;
-	  /// frequency
-	  double source_nu;
-	  /// internal scale parameter
-	  double source_gauss_r2;
-	  /// total source size, ie no flux outside this radius
-	  double source_r;
-	  /// center of source
-	  double source_x[2];
-
-	  float source_nuo;
-	  /// inner radius of BLR
-	  float source_r_in;
-	  /// outer radius of BLR
-	  float source_r_out;
-	  ///inclination of BLR in radians, face on is
-	  float source_inclination;
-	  float source_opening_angle;
-	  float source_gamma;
-	  float source_BHmass;
-	  /// fraction of Keplerian velocity in random motions
-	  float source_fK;
-	  /// set to true to integrate over frequency
-	  bool source_monocrome;
-
-	  SBModel source_sb_type;
-
-	  /// redshift of source
-	  double zsource;
-
-	  Source(char *);
-	  ~Source();
-
-	  void readParamfile(char*);
-};
-
-typedef Source *SourceHndl;
-
 class Lens {
 protected:
 	int Nplanes;
@@ -83,17 +35,18 @@ public:
 	  /// private: the time delay scale in days/Mpc^2
 	  double to;
 
+
 	Lens(char*);
+	Lens();
 	~Lens();
 
 	void readParamfile(char*);
 	int getNplanes();
 
 	virtual void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off) = 0;
+	virtual void RandomizeHost(long *seed,bool tables) = 0;
 };
 
 typedef Lens *LensHndl;
-
-#endif
 
 #endif /* LENS_H_ */

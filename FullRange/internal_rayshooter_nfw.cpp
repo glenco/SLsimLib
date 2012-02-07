@@ -39,15 +39,6 @@
         exit(0);
       }
 
- /*   if(zsource != zs_old)
-      {
-        host_ro = 4*pi*pow(host_sigma/2.99792e5,2) * cosmo->angDist(0,zlens)
-  	*cosmo->angDist(zlens,zsource)
-  	/cosmo->angDist(0,zsource)/(1+zlens);
-
-        zs_old=zsource;
-      }*/
-
     convert_factor = star_massscale / Sigma_crit;
 
   #pragma omp parallel for private(x_rescale, dt, i)
@@ -62,7 +53,9 @@
   		 i,i_points[i].x[0],i_points[i].x[1]);
   	}
 
-        if(zsource <= zlens)
+
+        //TODO: fix this and add Dl and Ds to lens base class!!!
+/*        if(zsource <= zlens)
   	{
   	  i_points[i].image->x[0]=i_points[i].x[0];
   	  i_points[i].image->x[1]=i_points[i].x[1];
@@ -70,8 +63,8 @@
   	  i_points[i].gamma[0]=0.0; i_points[i].gamma[1]=0.0;
   	  i_points[i].invmag=1.0;
   	  i_points[i].dt = 0;
-  	}
-        else
+  	}*/
+    //    else
   	{
   	  // host lens
   	  if(host_ro > 0)
@@ -190,7 +183,7 @@
   	 // add stars for microlensing
         if(stars_N > 0 && stars_implanted)
   	{
-  	  substract_stars_disks(this,i_points[i].x,i_points[i].image->x,
+  	  substract_stars_disks(i_points[i].x,i_points[i].image->x,
   				&(i_points[i].kappa),i_points[i].gamma);
 
   	  // do stars with tree code

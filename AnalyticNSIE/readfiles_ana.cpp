@@ -9,6 +9,8 @@
 
 #include <slsimlib.h>
 
+using namespace std;
+
 /// added definition of Grav -- needed it setParams(cosmo)
 
 #ifndef Grav
@@ -28,74 +30,74 @@ void AnaLens::ReadParams_AnaLens(char *filename){
   int i, type;
   double tmp = 0;
   
-  std::cout << "reading from " << filename << std::endl;
+  cout << "reading from " << filename << endl;
 
   if(!file_in){
-    std::cout << "Can't open file " << filename << std::endl;
+    cout << "Can't open file " << filename << endl;
     exit(1);
   }
 
   // output file
   file_in >> label >> outputfile;
-  std::cout << label << outputfile << std::endl << std::endl;
+  cout << label << " " <<  outputfile << endl << endl;
 
   // parameters of host elliptical
-  std::cout << "Host lens model" << std::endl;
+  cout << "Host lens model" << endl;
 
   file_in >> label >> host_sigma;
-  std::cout << label << host_sigma << " km/s" << std::endl;
+  cout << label << " " <<  host_sigma << " km/s" << endl;
 
   file_in >> label >> host_core;
-  std::cout << label << host_core << " Mpc" << std::endl;
+  cout << label << " " <<  host_core << " Mpc" << endl;
 
   file_in >> label >> host_axis_ratio;
-  std::cout << label << host_axis_ratio << std::endl;
+  cout << label << " " <<  host_axis_ratio << endl;
 
   file_in >> label >> host_pos_angle;
-  std::cout << label << host_pos_angle << std::endl;
+  cout << label << " " <<  host_pos_angle << endl;
 
   // parameters of distortion to host elliptical
-  std::cout << "Distortion mode" << std::endl;
+  cout << "Distortion mode" << endl;
   
   file_in >> label >> perturb_Nmodes;
-  std::cout << label << perturb_Nmodes;
+  cout << label << " " <<  perturb_Nmodes;
 
   if(perturb_Nmodes > 0){
 	  perturb_modes=(double *)calloc(perturb_Nmodes+1,sizeof(double));
 	  perturb_rms=(double *)calloc(6,sizeof(double));
 
 	  file_in >> label >> perturb_beta;
-	  std::cout << label << perturb_beta << std::endl;
+	  cout << label << " " <<  perturb_beta << endl;
 
 	  // kappa
 	  file_in >> label >> perturb_rms[0];
-	  std::cout << label << perturb_rms[0] << std::endl;
+	  cout << label << " " <<  perturb_rms[0] << endl;
 	  // gamma
 	  file_in >> label >> perturb_rms[1];
-	  std::cout << label << perturb_rms[1] << std::endl;
+	  cout << label << " " <<  perturb_rms[1] << endl;
 	  // monopole
 	  file_in >> label >> perturb_rms[2];
-	  std::cout << label << perturb_rms[2] << std::endl;
+	  cout << label << " " <<  perturb_rms[2] << endl;
 	  // quadropole
 	  file_in >> label >> perturb_rms[3];
-	  std::cout << label << perturb_rms[3] << std::endl;
+	  cout << label << " " <<  perturb_rms[3] << endl;
 	  // hexopole
 	  file_in >> label >> perturb_rms[4];
-	  std::cout << label << perturb_rms[4] << std::endl;
+	  cout << label << " " <<  perturb_rms[4] << endl;
 	  // octopole
 	  file_in >> label >> perturb_rms[5];
-	  std::cout << label << perturb_rms[5] << std::endl;
+	  cout << label << " " <<  perturb_rms[5] << endl;
 
 	 }else{
   for(i=0;i<7;++i) file_in >> label >> tmp;
   }
 
   // parameters of substructures
-  std::cout << "**Substructures**" << std::endl;
+  cout << "**Substructures**" << endl;
   substruct_implanted = false;  // substructures are implanted later where mem is allocated
 
   file_in >> label >> sub_Ndensity;
-  std::cout << label << sub_Ndensity << std::endl;
+  cout << label << " " <<  sub_Ndensity << endl;
 
   file_in >> label >> sub_beta;
   file_in >> label >> sub_alpha;
@@ -106,12 +108,12 @@ void AnaLens::ReadParams_AnaLens(char *filename){
   sub_type = (ClumpInternal)type;
 
   if(sub_Ndensity > 0){
-    std::cout << label << sub_beta << std::endl;
-    std::cout << label << sub_alpha << std::endl;
-    std::cout << label << sub_Rmax << std::endl;
-    std::cout << label << sub_Mmax << std::endl;
-    std::cout << label << sub_Mmin << std::endl;
-    std::cout << label << sub_type << std::endl;
+    cout << label << " " <<  sub_beta << endl;
+    cout << label << " " <<  sub_alpha << endl;
+    cout << label << " " <<  sub_Rmax << endl;
+    cout << label << " " <<  sub_Mmax << endl;
+    cout << label << " " <<  sub_Mmin << endl;
+    cout << label << " " <<  sub_type << endl;
   }
 
   if(sub_Ndensity > 0){
@@ -122,26 +124,26 @@ void AnaLens::ReadParams_AnaLens(char *filename){
 		  sub_gamma_func = gammaNFW;
 		  sub_phi_func = 0;
 		  ERROR_MESSAGE();
-		  std::cout << "no time delay function defined for NFW" << std::endl;
-		  std::cout << "NFW clumps" << std::endl;
+		  cout << "no time delay function defined for NFW" << endl;
+		  cout << "NFW clumps" << endl;
 		  break;
 	  case powerlaw:
 		  sub_alpha_func = alphaPowLaw;
 		  sub_kappa_func = kappaPowLaw;
 		  sub_gamma_func = gammaPowLaw;
 		  sub_phi_func = phiPowLaw;
-		  std::cout << "Power Law clumps" << std::endl;
+		  cout << "Power Law clumps" << endl;
 		  break;
 	  case pointmass:
 		  sub_alpha_func = 0;
 		  sub_kappa_func = 0;
 		  sub_gamma_func = 0;
 		  sub_phi_func = 0;
-		  std::cout << "Point Mass clumps" << std::endl;
+		  cout << "Point Mass clumps" << endl;
 		  break;
 	  default:
 		  ERROR_MESSAGE();
-		  std::cout << "ERROR: no submass internal profile chosen" << std::endl;
+		  cout << "ERROR: no submass internal profile chosen" << endl;
 		  exit(1);
 		  break;
 	  }
@@ -149,21 +151,21 @@ void AnaLens::ReadParams_AnaLens(char *filename){
   }
 
   // parameters for stars
-  std::cout << "**Stars**" << std::endl;
+  cout << "**Stars**" << endl;
   stars_implanted = false; // stars are implanted later
 
   file_in >> label >> stars_N;
-  std::cout << label << stars_N << std::endl;
+  cout << label << " " <<  stars_N << endl;
 
   file_in >> label >> star_fstars;
-  std::cout << label << star_fstars << std::endl;
+  cout << label << " " <<  star_fstars << endl;
 
   file_in >> label >> star_massscale;
-  std::cout << label << star_massscale << std::endl;
+  cout << label << " " <<  star_massscale << endl;
   // redshifts
 
   file_in >> label >> zlens;
-  std::cout << label << zlens << std::endl;
+  cout << label << " " <<  zlens << endl;
   
   file_in.close();
 
@@ -179,123 +181,80 @@ void AnaLens::ReadParams_AnaLens(char *filename){
 void AnaLens::PrintAnaLens(bool show_substruct,bool show_stars){
 	int i;
 
-	std::cout << "Output file" << outputfile << std::endl;
+	cout << "Output file " << outputfile << endl;
 	// parameters of host elliptical
-	std::cout << "Host lens model" << std::endl;
-	std::cout << "sigma " << host_sigma << "km/s" << std::endl;
-	std::cout << "core " << host_core << " Mpc" << std::endl;
-	std::cout << "axis_ratio " << host_axis_ratio << std::endl;
-	std::cout << "position angle " <<host_pos_angle << std::endl;
-	std::cout << "r_source on lens plane " << source_r*1.0e6 << " pc" << std::endl;
+	cout << "Host lens model" << endl;
+	cout << "sigma " << host_sigma << "km/s" << endl;
+	cout << "core " << host_core << " Mpc" << endl;
+	cout << "axis_ratio " << host_axis_ratio << endl;
+	cout << "position angle " <<host_pos_angle << endl;
 
 			// parameters of distortion to host elliptical
-	std::cout << "Nmodes " << perturb_Nmodes << std::endl;
-	std::cout << "beta = " << perturb_beta << std::endl;
+	cout << "Nmodes " << perturb_Nmodes << endl;
+	cout << "beta = " << perturb_beta << endl;
 	if(perturb_Nmodes>0){
-		std::cout << "rms" << std::endl;
-		for(i=0;i<6;++i) std::cout << "  " << perturb_rms[i] << std::endl;
-		std::cout << "modes" << std::endl;
-		for(i=0;i<perturb_Nmodes;++i) std::cout << "  " << perturb_modes[i] << std::endl;
+		cout << "rms" << endl;
+		for(i=0;i<6;++i) cout << "  " << perturb_rms[i] << endl;
+		cout << "modes" << endl;
+		for(i=0;i<perturb_Nmodes;++i) cout << "  " << perturb_modes[i] << endl;
 	}
 
-	std::cout << "Source" << std::endl;
-
-	if(source_sb_type == Uniform){
-		std::cout << "uniform surface brightness source" << std::endl;
-	}else if(source_sb_type == Gaussian){
-		std::cout << "Gaussian surface brightness source" << std::endl;
-		std::cout << "sigma^2 = " << source_gauss_r2 << " Mpc^2" << std::endl;
-
-	  }else{
-
-	  std::cout << "BLR surface brightness source" << std::endl;
-		  switch(source_sb_type){
-		  std::cout << "      BH mass "<< source_BHmass << " Msun " << std::endl;
-		  std::cout << "      gamma "<< source_gamma << std::endl;
-		  std::cout << "      inner radius "<< source_r_in*1.0e6 << " pc" << std::endl;
-		  std::cout << "      outer radius "<< source_r_out*1.0e6 << " pc" << std::endl;
-		  case BLR_Disk:
-		    std::cout << "    disk model" << std::endl;
-			  std::cout << "      inclination "<<source_inclination << " rads" << std::endl;
-			  std::cout << "      disk opening angle "<<source_opening_angle << " rads" << std::endl;
-			  std::cout << "      turbulent/thermal dispersion "<<source_fK << " X V_Kepler" << std::endl;
-			  break;
-		  case BLR_Sph1:
-			  std::cout << "    spherical with circular orbits" << std::endl;
-			  break;
-		  case BLR_Sph2:
-			  std::cout << "    spherical with Gaussian velocities" << std::endl;
-			  std::cout << "      turbulent/thermal dispersion "<<source_fK << " x V_kepler" << std::endl;
-			  break;
-		  default:
-			  ERROR_MESSAGE();
-			  std::cout << "ERROR: no submass internal profile chosen" << std::endl;
-			  break;
-		  }
-
-
-		  if(source_monocrome) std::cout << "      monocromatic" << std::endl;
-		  else std::cout << "      center of line "<<source_nuo << " Hz" << std::endl;
-	  }
-
-
 	  // parameters of substructures
-	std::cout << "Substructures" << std::endl;
-	std::cout << "NdensitySubstruct "<<sub_Ndensity << std::endl;
-	std::cout << "NSubstruct "<<sub_N << std::endl;
+	cout << "Substructures" << endl;
+	cout << "NdensitySubstruct "<<sub_Ndensity << endl;
+	cout << "NSubstruct "<<sub_N << endl;
 
 	if(sub_N > 0){
-		std::cout << "betaSubstruct "<<sub_beta << std::endl;
-		std::cout << "alphaSubstruct "<<sub_alpha << std::endl;
-		std::cout << "RmaxSubstruct "<<sub_Rmax << " Mpc" << std::endl;
-		std::cout << "MmaxSubstruct "<<sub_Mmax << " Msun" << std::endl;
-		std::cout << "MminSubstruct "<<sub_Mmin << " Msun\n" << std::endl;
+		cout << "betaSubstruct "<<sub_beta << endl;
+		cout << "alphaSubstruct "<<sub_alpha << endl;
+		cout << "RmaxSubstruct "<<sub_Rmax << " Mpc" << endl;
+		cout << "MmaxSubstruct "<<sub_Mmax << " Msun" << endl;
+		cout << "MminSubstruct "<<sub_Mmin << " Msun\n" << endl;
 
 		if(show_substruct){
 			if(substruct_implanted){
 				for(i=0;i<sub_N;++i){
-				  std::cout << "RcutSubstruct "<<i << " " <<sub_Rcut[i] << " Mpc" << std::endl;
-				  std::cout << "massSubstruct "<<i<<" "<<sub_mass[i] << " Msun" << std::endl;
-				  std::cout << "xSubstruct "<<i<<" "<<sub_x[i][0]<<" "<<sub_x[i][1] << " Mpc" << std::endl;
+				  cout << "RcutSubstruct "<<i << " " <<sub_Rcut[i] << " Mpc" << endl;
+				  cout << "massSubstruct "<<i<<" "<<sub_mass[i] << " Msun" << endl;
+				  cout << "xSubstruct "<<i<<" "<<sub_x[i][0]<<" "<<sub_x[i][1] << " Mpc" << endl;
 					switch(sub_type){
 					case NFW:
-						std::cout << "  NFW clumps" << std::endl;
+						cout << "  NFW clumps" << endl;
 						break;
 					case powerlaw:
-						std::cout << "  Power Law clumps" << std::endl;
+						cout << "  Power Law clumps" << endl;
 						break;
 					case pointmass:
-						std::cout << "  Point Mass clumps" << std::endl;
+						cout << "  Point Mass clumps" << endl;
 						break;
 					default:
 						ERROR_MESSAGE();
-						std::cout << "ERROR: no submass internal profile chosen" << std::endl;
+						cout << "ERROR: no submass internal profile chosen" << endl;
 						exit(1);
 						break;
 					}
 				}
-			}else std::cout << "  substructures are implanted yet" << std::endl;
+			}else cout << "  substructures are implanted yet" << endl;
 		}
 	}
 	if(stars_N>0){
-		std::cout << "Nstars="<<stars_N << std::endl;
-		std::cout << "stars_Nregions "<<star_Nregions << std::endl;
-		std::cout << "stars_massscale "<<star_massscale << std::endl;
-		std::cout << "stars_fstars "<<star_fstars << std::endl;
-		std::cout << "stars_theta_force "<<star_theta_force << std::endl;
+		cout << "Nstars="<<stars_N << endl;
+		cout << "stars_Nregions "<<star_Nregions << endl;
+		cout << "stars_massscale "<<star_massscale << endl;
+		cout << "stars_fstars "<<star_fstars << endl;
+		cout << "stars_theta_force "<<star_theta_force << endl;
 		if(show_stars){
 			if(stars_implanted){
-			  for(i=0 ; i < stars_N ; ++i) std::cout << "    x["<<i<<"]="
-							    << stars_xp[i][0] << " " << stars_xp[i][1] << std::endl;
-			}else std::cout << " stars not implanted yet" << std::endl;
+			  for(i=0 ; i < stars_N ; ++i) cout << "    x["<<i<<"]="
+							    << stars_xp[i][0] << " " << stars_xp[i][1] << endl;
+			}else cout << " stars not implanted yet" << endl;
 		}
 	}
 
 	// redshifts
-	std::cout << "zlens " << zlens << std::endl;
-	std::cout << "zsource " << zsource << std::endl;
+	cout << "zlens " << zlens << endl;
 
-	std::cout << "critical density is " << Sigma_crit << " Msun/Mpc^2" << std::endl;
+	cout << "critical density is " << Sigma_crit << " Msun/Mpc^2" << endl;
 }
 
 void AnaLens::reNormSubstructure(double kappa_sub){
@@ -313,7 +272,7 @@ void AnaLens::reNormSubstructure(double kappa_sub){
 }
 
 
-AnaLens::AnaLens(char filename[]) : Source(filename), Lens(filename){
+AnaLens::AnaLens(char filename[]) : Lens(){
   ReadParams_AnaLens(filename);
 
   set = true;

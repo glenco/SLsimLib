@@ -55,14 +55,14 @@ void implant_stars(AnaLens *lens,Point *centers,unsigned long Nregions,long *see
 				/lens->star_massscale/(float)NstarsPerImage);
 
 		// cutoff based on comparison of star deflection to smooth component
-		//rcut = 4*sqrt(lens->star_massscale/pi/lens->Sigma_crit
+		//rcut = 4*sqrt(star_massscale/pi/Sigma_crit
 		//		/( centers[j].kappa+sqrt(pow(centers[j].gamma[0],2)+pow(centers[j].gamma[1],2)) ) );
 
 		lens->star_kappa[j] = lens->star_fstars*centers[j].kappa;
 		lens->star_xdisk[j][0] = centers[j].x[0];
 		lens->star_xdisk[j][1] = centers[j].x[1];
 
-		//printf("kappa = %e  star_region = %e\n",lens->star_kappa[j],lens->star_region[j]);
+		//printf("kappa = %e  star_region = %e\n",star_kappa[j],star_region[j]);
 
 		for(i=0;i<NstarsPerImage;++i,++m){
 			//m=j*NstarsPerImage+i;
@@ -83,14 +83,14 @@ void implant_stars(AnaLens *lens,Point *centers,unsigned long Nregions,long *see
 					--m;
 				}
 			}
-			//printf("%e %e\n",lens->stars_xp[m][0],lens->stars_xp[m][1]);
+			//printf("%e %e\n",stars_xp[m][0],stars_xp[m][1]);
 		}
 	}
 
 	assert(m <= lens->stars_N);
 	lens->stars_N = m;
 
-	//std::printf("last star x = %e %e\n",lens->stars_xp[lens->stars_N-1][0],lens->stars_xp[lens->stars_N-1][1]);
+	//std::printf("last star x = %e %e\n",stars_xp[stars_N-1][0],stars_xp[stars_N-1][1]);
 
 	float dummy=0;
 	lens->star_tree = new ForceTree(lens->stars_xp,lens->stars_N,lens->star_masses,&dummy
@@ -99,34 +99,38 @@ void implant_stars(AnaLens *lens,Point *centers,unsigned long Nregions,long *see
 	std::printf("projected with 2D tree\n");
 
 	// visit every branch to find center of mass and cutoff scale */
-	//lens->stars_implanted = true;
+	lens->stars_implanted = true;
 
 	return ;
 }
 
+void setStars(AnaLens *lens, bool implanted){
+	lens->stars_implanted = implanted;
+}
+
 /// subtracts the mass in stars from the smooth model to compensate
 /// for the mass of the stars the lensing quantities are all updated not replaced
-void substract_stars_disks(AnaLens *lens,PosType *ray,PosType *alpha
+void AnaLens::substract_stars_disks(PosType *ray,PosType *alpha
 		,PosType *kappa,PosType *gamma){
 
-	if(!(lens->stars_implanted)) return;
+	if(!(stars_implanted)) return;
 
 	PosType xcm,ycm,r,tmp;
 	double mass;
 	int i;
 
-	for(i=0;i<lens->star_Nregions;++i){
-		xcm = lens->star_xdisk[i][0] - ray[0];
-		ycm = lens->star_xdisk[i][1] - ray[1];
+	for(i=0;i<star_Nregions;++i){
+		xcm = star_xdisk[i][0] - ray[0];
+		ycm = star_xdisk[i][1] - ray[1];
 		r=sqrt(xcm*xcm + ycm*ycm);
 
-		if(r < lens->star_region[i]){
-			alpha[0] += lens->star_kappa[i]*xcm;
-			alpha[1] += lens->star_kappa[i]*ycm;
-			*kappa -= lens->star_kappa[i];
+		if(r < star_region[i]){
+			alpha[0] += star_kappa[i]*xcm;
+			alpha[1] += star_kappa[i]*ycm;
+			*kappa -= star_kappa[i];
 		}else{
 
-			mass = lens->star_kappa[i]*pow(lens->star_region[i],2)/r/r;
+			mass = star_kappa[i]*pow(star_region[i],2)/r/r;
 			alpha[0] += mass*xcm;
 			alpha[1] += mass*ycm;
 

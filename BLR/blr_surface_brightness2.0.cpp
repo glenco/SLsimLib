@@ -23,29 +23,16 @@
 
 // inputs are in Mpc,days,Hz,Hz
 
-double blr_surface_brightness_spherical_random_motions(double x,ModelHndl model){
+double blr_surface_brightness_spherical_random_motions(double x,SourceBLR *source){
 
 	// some constants which need to be set in the real version but will be
 	// plucked from the air here
-
-	CosmoHndl cosmo;
-	SourceHndl source;
-	LensHndl lens;
-
-	cosmo = model->cosmo;
-	source = model->source;
-	lens = model->lens;
 
 	float r,tau, sigma2, eta;
 	
 	static float DlDs;  //
 	static double oldzlens=0,oldzsource=0;
-	if(lens->zlens != oldzlens || source->zsource != oldzsource){
-		DlDs = cosmo->angDist(0,lens->zlens)
-      		/cosmo->angDist(0,source->zsource);
-		oldzlens = lens->zlens;
-		oldzsource = source->zsource;
-	}
+	DlDs = source->DlDs;
 
 	x /= DlDs;
 
@@ -74,26 +61,13 @@ double blr_surface_brightness_spherical_random_motions(double x,ModelHndl model)
 	return  pow(r/source->source_r_in,source->source_gamma)*eta*r/tau;
 }
 
-double blr_surface_brightness_spherical_circular_motions(double x,ModelHndl model){
-
-	CosmoHndl cosmo;
-	SourceHndl source;
-	LensHndl lens;
-
-	cosmo = model->cosmo;
-	source = model->source;
-	lens = model->lens;
+double blr_surface_brightness_spherical_circular_motions(double x,SourceBLR *source){
 
 	float r,tau, eta, sin_theta, nu_m;
 
 	static float DlDs;  //
 	static double oldzlens=0,oldzsource=0;
-	if(lens->zlens != oldzlens || source->zsource != oldzsource){
-		DlDs = cosmo->angDist(0,lens->zlens)
-        		/cosmo->angDist(0,source->zsource);
-		oldzlens = lens->zlens;
-		oldzsource = source->zsource;
-	}
+	DlDs=source->DlDs;
 
 	x /= DlDs;
 
@@ -120,15 +94,7 @@ double blr_surface_brightness_spherical_circular_motions(double x,ModelHndl mode
 	return  pow(r/source->source_r_in,source->source_gamma)*eta*r/tau;
 }
 
-double blr_surface_brightness_disk(double x[],ModelHndl model){
-
-	CosmoHndl cosmo;
-	SourceHndl source;
-	LensHndl lens;
-
-	cosmo = model->cosmo;
-	source = model->source;
-	lens = model->lens;
+double blr_surface_brightness_disk(double x[],SourceBLR *source){
 
 	/* computes the surface brightness associated with our simplest model
 	// for the BLR. x is the projected "distance from center" coordinate
@@ -170,12 +136,7 @@ double blr_surface_brightness_disk(double x[],ModelHndl model){
 
 	static float DlDs;  //
 	static double oldzlens=0,oldzsource=0;
-	if(lens->zlens != oldzlens || source->zsource != oldzsource){
-		DlDs = cosmo->angDist(0,lens->zlens)
-        		/cosmo->angDist(0,source->zsource);
-		oldzlens = lens->zlens;
-		oldzsource = source->zsource;
-	}
+	DlDs = source->DlDs;
 
 	//printf("hi from BLR disk\n");
 

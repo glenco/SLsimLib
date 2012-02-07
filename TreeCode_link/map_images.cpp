@@ -38,7 +38,7 @@ const float smallest = 0.1;
  */
 void map_images(
 	    /// model
-		ModelHndl model
+		LensHndl lens,SourceBLR *source
 		 /// Tree of grid points
 		,GridHndl grid
 		,int *Nimages /// number of images found
@@ -50,7 +50,7 @@ void map_images(
 		,bool kappa_off  /// turns off calculation of surface density, shear, magnification and time delay
 		){
 
-	assert(model->lens);
+	assert(lens);
 	assert(grid->s_tree);
 	assert(grid->i_tree);
 	assert(imageinfo->imagekist);
@@ -70,21 +70,21 @@ void map_images(
 	// flush in-source-markers and surface brightnesses
 	//sublist=NewList();
 
-	if(oldr==0) oldr=model->source->source_r;
-	if((oldy[0]==model->source->source_x[0])*(oldy[1]==model->source->source_x[1])*(oldr > model->source->source_r)) initial_size=oldr;
+	if(oldr==0) oldr=source->source_r;
+	if((oldy[0]==source->source_x[0])*(oldy[1]==source->source_x[1])*(oldr > source->source_r)) initial_size=oldr;
 
-	if(model->source->source_r <= 0.0){ERROR_MESSAGE(); std::printf("ERROR: find_images, point source must have a resolution target\n"); exit(1);}
+	if(source->source_r <= 0.0){ERROR_MESSAGE(); std::printf("ERROR: find_images, point source must have a resolution target\n"); exit(1);}
 
 
 	// do an initial refinement to find all images and refine grid
-	// the model->source->source_r_in is used as a characteristic small size for the source
-	assert(model->source->source_r_in > 0);
-	find_images_kist(model->lens,model->source->source_x,model->source->source_r_in,grid,Nimages
+	// the source->source_r_in is used as a characteristic small size for the source
+	assert(source->source_r_in > 0);
+	find_images_kist(lens,source->source_x,source->source_r_in,grid,Nimages
 			  ,imageinfo,NimageMax,&Nimagepoints,0,false,0,false,true);
 
 
 	// find kist of image points and divide into images
-	find_divide_images(grid->i_tree,grid->s_tree,model->source->source_x,model->source->source_r,imageinfo,Nimages,NimageMax);
+	find_divide_images(grid->i_tree,grid->s_tree,source->source_x,source->source_r,imageinfo,Nimages,NimageMax);
 
 	//printf("images identified\n");
 	//printf("Nimages = %i\n",*Nimages);
@@ -104,10 +104,10 @@ void map_images(
 		//printf("%li points in image %i\n",imageinfo[i].Npoints,i);
 		for(j = 0 ; j < imageinfo[i].imagekist->Nunits ; ++j,MoveDownKist(imageinfo[i].imagekist)){
 
-			y[0] = getCurrentKist(imageinfo[i].imagekist)->image->x[0] - model->source->source_x[0];
-			y[1] = getCurrentKist(imageinfo[i].imagekist)->image->x[1] - model->source->source_x[1];
-			getCurrentKist(imageinfo[i].imagekist)->surface_brightness = (model->*source_sb_func)(y);
-			//printf("%e  %e\n",getCurrentKist(imageinfo[i].imagekist)->surface_brightness,model->source->source_sb_func(y));
+			y[0] = getCurrentKist(imageinfo[i].imagekist)->image->x[0] - source->source_x[0];
+			y[1] = getCurrentKist(imageinfo[i].imagekist)->image->x[1] - source->source_x[1];
+			getCurrentKist(imageinfo[i].imagekist)->surface_brightness = (source->source_sb_func)(y);
+			//printf("%e  %e\n",getCurrentKist(imageinfo[i].imagekist)->surface_brightness,source->source_sb_func(y));
 			//assert(getCurrentKist(imageinfo[i].imagekist)->surface_brightness >= 0.0);
 			if(getCurrentKist(imageinfo[i].imagekist)->surface_brightness > 0.0){
 			//	printf(" %li %li sb = %e",i,j,getCurrentKist(imageinfo[i].imagekist)->surface_brightness);
@@ -131,7 +131,7 @@ void map_images(
 	 do{ assert(grid->i_tree->pointlist->current->leaf); ++i;}while(MoveDownList(grid->i_tree->pointlist));
 
 	i=0;
-	if(area_tot != 0.0) while( refine_grid_on_image(model,grid,imageinfo,*Nimages
+	if(area_tot != 0.0) while( refine_grid_on_image(lens,source,grid,imageinfo,*Nimages
 			,FracResTarget,criterion,kappa_off) ){ ++i;
 
 			/***************** test lines  **************************
@@ -143,9 +143,9 @@ void map_images(
 	//printf("i=%i Nold=%li\n",i,Nold);
 	//printf("%li\n",imagelist->Npoints);
 
-	oldy[0]=model->source->source_x[0];
-	oldy[1]=model->source->source_x[1];
-	oldr=model->source->source_r;
+	oldy[0]=source->source_x[0];
+	oldy[1]=source->source_x[1];
+	oldr=source->source_r;
 
 	oldNimages=*Nimages;
 
@@ -177,7 +177,7 @@ void map_images(
 	return ;
 }
 
-int refine_grid_on_image(ModelHndl model,GridHndl grid,ImageInfo *imageinfo
+int refine_grid_on_image(LensHndl lens,SourceHndl source,GridHndl grid,ImageInfo *imageinfo
 		,unsigned long Nimages,double res_target,ExitCriterion criterion
 		,bool kappa_off){
 
@@ -253,9 +253,9 @@ int refine_grid_on_image(ModelHndl model,GridHndl grid,ImageInfo *imageinfo
   					sbmin = sbmax = 0;
   					MoveToTopKist(nearest);
   					do{
-  						y[0] = getCurrentKist(nearest)->image->x[0] - model->source->source_x[0];
-  						y[1] = getCurrentKist(nearest)->image->x[1] - model->source->source_x[1];
-  						tmp = (model->*source_sb_func)(y)*pow(getCurrentKist(nearest)->gridsize,2);
+  						y[0] = getCurrentKist(nearest)->image->x[0] - source->source_x[0];
+  						y[1] = getCurrentKist(nearest)->image->x[1] - source->source_x[1];
+  						tmp = (source->source_sb_func)(y)*pow(getCurrentKist(nearest)->gridsize,2);
 
   						sbmax = MAX(sbmax,tmp);
   						//sbmin = MIN(sbmin,tmp);
@@ -339,8 +339,8 @@ int refine_grid_on_image(ModelHndl model,GridHndl grid,ImageInfo *imageinfo
 
       s_points = LinkToSourcePoints(i_points,(Ngrid_block*Ngrid_block-1)*Ncells);
 
-      // model->lens the added points
-      rayshooterInternal((Ngrid_block*Ngrid_block-1)*Ncells,i_points,kappa_off);
+      // lens the added points
+      lens->rayshooterInternal((Ngrid_block*Ngrid_block-1)*Ncells,i_points,kappa_off);
 
 		/***************** test lines  **************************
  	 do{ assert(grid->i_tree->pointlist->current->leaf);}while(MoveDownList(grid->i_tree->pointlist));
@@ -373,9 +373,9 @@ int refine_grid_on_image(ModelHndl model,GridHndl grid,ImageInfo *imageinfo
     	 for(j = 0 ; j < imageinfo[i].imagekist->Nunits ; ++j,MoveDownKist(imageinfo[i].imagekist) ){
     		 if(getCurrentKist(imageinfo[i].imagekist)->surface_brightness == -1){
     			 //PointCopyData(getCurrentKist(imageinfo[i].imagekist),getCurrentKist(imageinfo[i].imagekist)->image);
-    			 y[0] = getCurrentKist(imageinfo[i].imagekist)->image->x[0] - model->source->source_x[0];
-    			 y[1] = getCurrentKist(imageinfo[i].imagekist)->image->x[1] - model->source->source_x[1];
-    			 getCurrentKist(imageinfo[i].imagekist)->surface_brightness = (model->*source_sb_func)(y);
+    			 y[0] = getCurrentKist(imageinfo[i].imagekist)->image->x[0] - source->source_x[0];
+    			 y[1] = getCurrentKist(imageinfo[i].imagekist)->image->x[1] - source->source_x[1];
+    			 getCurrentKist(imageinfo[i].imagekist)->surface_brightness = (source->source_sb_func)(y);
     		 }
     		 imageinfo[i].area += pow(getCurrentKist(imageinfo[i].imagekist)->gridsize,2)
     				 * getCurrentKist(imageinfo[i].imagekist)->surface_brightness;

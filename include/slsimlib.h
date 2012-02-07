@@ -41,6 +41,7 @@
 #include <analytic_lens.h>
 #include <multiplane.h>
 #include <lens.h>
+#include <source.h>
 #include <tree_maintenance.h>
 #include <divide_images.h>
 #include <tree_maintenance.h>
