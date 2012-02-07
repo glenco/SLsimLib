@@ -20,7 +20,6 @@
     /* i_points need to be already linked to s_points */
     double x_rescale[2], tmp, dt = 0;
     static double zs_old=-1,convert_factor=0;
-    double convert_fac=0;
     long i,j;
 
     struct temp_data
