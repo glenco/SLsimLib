@@ -36,6 +36,9 @@ void AnaLens::readParamfile(string filename){
   int myint;
   double mydouble;
   string mystring;
+  string escape = "#";
+  char dummy[300];
+  int flag;
   
   perturb_rms=(double *)calloc(6,sizeof(double));
 
@@ -150,10 +153,17 @@ void AnaLens::readParamfile(string filename){
   // output file
   while(!file_in.eof()){
 	  file_in >> rlabel >> rvalue;
+	  file_in.getline(dummy,100);
+
+	  if(rlabel[0] == escape[0])
+		  continue;
+
+	  flag = 0;
 
 	  for(i = 0; i < n; i++){
 		  if(rlabel == label[i]){
 
+			  flag = 1;
 			  ss << rvalue;
 
 			  switch(id[i]){
@@ -174,7 +184,16 @@ void AnaLens::readParamfile(string filename){
 			  ss.clear();
 			  ss.str(string());
 
+			  id[i] = -1;
 		  }
+	  }
+  }
+
+  for(i = 0; i < n; i++){
+	  if(id[i] > 0){
+		  ERROR_MESSAGE();
+		  cout << "parameter " << label[i] << " needs to be set!" << endl;
+		  exit(0);
 	  }
   }
 
@@ -227,6 +246,8 @@ void AnaLens::readParamfile(string filename){
  */
 void AnaLens::PrintAnaLens(bool show_substruct,bool show_stars){
 	int i;
+
+	cout << endl << "outputfile "<< outputfile << endl;
 
 	// parameters of host elliptical
 	cout << endl << "**Host lens model**" << endl;

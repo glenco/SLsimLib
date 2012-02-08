@@ -35,16 +35,14 @@ public:
 	  /// private: the time delay scale in days/Mpc^2
 	  double to;
 
-
-	Lens(string);
 	Lens();
 	~Lens();
 
-	void readParamfile(string);
 	int getNplanes();
 
+	virtual void setInternalParams(CosmoHndl,double){};
 	virtual void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off) = 0;
-	virtual void RandomizeHost(long *seed,bool tables) = 0;
+	virtual void RandomizeHost(long *seed,bool tables){};
 };
 
 typedef Lens *LensHndl;
