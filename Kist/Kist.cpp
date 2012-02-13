@@ -38,6 +38,58 @@ KistHndl NewKist(void){
   return kist;
 }
 
+void EmptyKist(KistHndl kist){
+	// reduce kist to no elements.
+	// Note: Does not destroy data.
+	assert(kist);
+	while(kist->Nunits > 0) TakeOutCurrentKist(kist);
+	return;
+}
+
+/** \ingroup ConstructorL2
+*  deallocate memory for kist
+*  Note: Does not destroy data.  A handle must still point to the data.
+ * */
+void freeKist(KistHndl kist){
+	EmptyKist(kist);
+	free(kist);
+	return;
+}
+/** \ingroup ConstructorL2
+ *
+ * Deallocate memory for kist and all points in list.
+ * Note: Does destroys the data points.
+ */
+
+void FreeAllKist(KistHndl kist){
+	assert(kist);
+	Data *data[kist->Nunits];
+	unsigned long Nheads=0,Ndata=0,i,Nunits;
+
+	Nunits = kist->Nunits;
+	i=0;
+	while(kist->Nunits > 0){
+		data[i] = TakeOutCurrentKist(kist);
+		Ndata += data[i]->head;
+		if(data[i]->head) ++Nheads;
+		++i;
+	}
+
+	for(i = 0; i < Nheads ; ++i){
+		free(data[i]->x);
+		free(data[i]);
+	}
+
+	if(Nunits != Ndata){
+		ERROR_MESSAGE();
+		std::printf("FreeAllKist freed no all of data in kist\n");
+		exit(0);
+	}
+	return;
+}
+
+// Check state
+
 bool AtTopKist(KistHndl kist){
 	assert(kist);
 
@@ -50,6 +102,8 @@ bool AtBottomKist(KistHndl kist){
 	if(kist->current==kist->bottom) return true;
 	else return false;
 }
+
+// Insert and remove
 
 void InsertAfterCurrentKist(KistHndl kist,Data *data){
 	/* leaves current unchanged */
@@ -172,55 +226,6 @@ Data *TakeOutCurrentKist(KistHndl kist){
     return data;
 }
 
-void EmptyKist(KistHndl kist){
-	// reduce kist to no elements.
-	// Note: Does not destroy data.
-	assert(kist);
-	while(kist->Nunits > 0) TakeOutCurrentKist(kist);
-	return;
-}
-
-/** \ingroup ConstructorL2
-*  deallocate memory for kist
-*  Note: Does not destroy data.  A handle must still point to the data.
- * */
-void freeKist(KistHndl kist){
-	EmptyKist(kist);
-	free(kist);
-	return;
-}
-/** \ingroup ConstructorL2
- *
- * Deallocate memory for kist and all points in list.
- * Note: Does destroys the data points.
- */
-
-void FreeAllKist(KistHndl kist){
-	assert(kist);
-	Data *data[kist->Nunits];
-	unsigned long Nheads=0,Ndata=0,i,Nunits;
-
-	Nunits = kist->Nunits;
-	i=0;
-	while(kist->Nunits > 0){
-		data[i] = TakeOutCurrentKist(kist);
-		Ndata += data[i]->head;
-		if(data[i]->head) ++Nheads;
-		++i;
-	}
-
-	for(i = 0; i < Nheads ; ++i){
-		free(data[i]->x);
-		free(data[i]);
-	}
-
-	if(Nunits != Ndata){
-		ERROR_MESSAGE();
-		std::printf("FreeAllKist freed no all of data in kist\n");
-		exit(0);
-	}
-	return;
-}
 
 /*
  *  Moving through kist

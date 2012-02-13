@@ -312,3 +312,29 @@ void ForceTree::ChangeParticleProfile(PartProf partprof){
 		break;
 	}
 }
+/** \ingroup DeflectionL2
+\brief !!!! Not yet come up with a good way of doing this !!!!
+
+	 * gives the particles a third dimension depending on their size
+	 *  This is used to spread subhalos out into 3d so that their density
+	 *  is about one per smoothing length.  This is to avoid the big particle
+	 *  problem that slows the tree-force calculation.
+	 *
+	 *  Warning: This will erase the third coordinate of the particles.
+	 */
+void ForceTree::spread_particles(){
+
+
+	IndexType i;
+	TreeNBHndl tree;
+	float tmp=0;
+
+	for(i=0;i<Nparticles;++i){
+		//TODO: this needs to be fixed!!!
+		//dummy = NearestNeighborNB(tree,xp[i],1,&tmp);
+		tree->xp[i][2] = 4*pi*pow(tree->rsph[i*tree->MultiRadius],3)/pow(tmp,2)/3;
+	}
+
+	return;
+}
+

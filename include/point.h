@@ -30,7 +30,7 @@ typedef struct Point{
   struct Point *image;  // pointer to point on image or source plane
   unsigned long id;
   double kappa;        // surface density
-  double gamma[2];    // shear
+  double gamma[3];    // shear, third component is the rotation quantity that is only non-zero for multi-plane lensing
   double dt;          // time delay
   double invmag;     // inverse of magnification
   double *x;         // the position of the point

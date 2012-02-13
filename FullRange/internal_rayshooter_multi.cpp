@@ -18,6 +18,7 @@
  *
  * Dl[j = 0...Nplane] - The angular size distance between the observer and the jth plane not counting the observer plane.
  * 	                    Dl[0] is the first plane with mass on it and Dl[Nplane] is the distance to the source plane.
+ *
  * dDl[j = 0...Nplane] - The angular size distance between the jth and (j+1)th planes counting the observer plane as j=0.
  *                      dDl[0] = Dl[0], dDl[Nplane] is between the last plane with mass and the source plane.
  *

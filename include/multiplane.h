@@ -27,20 +27,22 @@ public:
 
 typedef haloM *haloHndl;
 
-class multiLens : public Lens{
+class MultiLens : public Lens{
 public:
+	/// Redshifts of lens planes, 0...Nplanes.  Last one is the source redshift.
 	double *redshift;
-	double *Ds, *Dl, *Dls; //sngular diameter distances
-	double *Sigma_crit;
+	double *Dl, *dDl; /// angular diameter distances
+	double charge;
 	double mass_scale;
+	int Nplanes;
 
 	haloHndl halo;
 	ForceTreeHndl *halo_tree;
 
-	multiLens(char*);
-	~multiLens();
+	MultiLens(char*);
+	~MultiLens();
 
-	void buildHaloTree();
+	void buildHaloTrees();
 	void setInternalParams(CosmoHndl,double);
 	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off);
 };

@@ -1,7 +1,7 @@
 /** \file
  * \ingroup \HighLevel
  *
- * \brief Header file for all routines in SLsimLib.
+ * \brief Master header file for all routines in SLsimLib.  Should be the only header file that needs to be included.
  *
  * assert() statements can be removed here.
  *

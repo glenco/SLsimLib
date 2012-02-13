@@ -42,15 +42,16 @@
 
   #pragma omp parallel for private(x_rescale, dt, i)
     for(i = 0; i < Npoints; i++)
-      {
-        i_points[i].dt = 0;
+    {
+    	i_points[i].dt = 0;
+        i_points[i].gamma[3] = 0;
 
         if(isnan(i_points[i].x[0]*i_points[i].x[1]))
-  	{
-  	  ERROR_MESSAGE();
-  	  std::printf("x nan in internal_rayshooter\n    i=%li x= %e %e\n",
-  		 i,i_points[i].x[0],i_points[i].x[1]);
-  	}
+        {
+        	ERROR_MESSAGE();
+        	std::printf("x nan in internal_rayshooter\n    i=%li x= %e %e\n",
+        			i,i_points[i].x[0],i_points[i].x[1]);
+        }
 
 
         //TODO: fix this and add Dl and Ds to lens base class!!!

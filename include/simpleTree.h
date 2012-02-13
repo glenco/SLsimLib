@@ -122,6 +122,7 @@ protected:
 	int Ndim,incell,incell2;
 	TreeNBHndl tree;
 	IndexType *index;
+	IndexType Nparticles;
 	bool median_cut;
 	int Nbucket;
 	PosType realray[2];

@@ -49,26 +49,25 @@ haloM::~haloM(){
 	delete[] masses;
 }
 
-multiLens::multiLens(char filename[]) : Lens(filename){
-	redshift = new double[Nplanes];
-	Ds = new double[Nplanes];
-	Dl = new double[Nplanes];
-	Dls = new double[Nplanes];
-	Sigma_crit = new double[Nplanes];
+MultiLens::MultiLens(char filename[]) : Lens(filename){
+	redshift = new double[Nplanes+1];
+
+	Dl = new double[Nplanes+1];
+	dDl = new double[Nplanes+1];
+	charge = mass_scale/4/pi/Grav;
+
 	halo_tree = new ForceTreeHndl[Nplanes];
 }
 
-multiLens::~multiLens(){
+MultiLens::~MultiLens(){
 	delete halo;
 	delete[] halo_tree;
-	delete[] Sigma_crit;
-	delete[] Dls;
 	delete[] Dl;
-	delete[] Ds;
+	delete[] dDl;
 	delete[] redshift;
 }
 
-void multiLens::buildHaloTree(){
+void MultiLens::buildHaloTrees(){
 	IndexType N, N_last;
 	double dz;
 	int i, j, n;
@@ -89,18 +88,13 @@ void multiLens::buildHaloTree(){
 	}
 }
 
-void multiLens::setInternalParams(CosmoHndl cosmo, double zsource){
+void MultiLens::setInternalParams(CosmoHndl cosmo, double zsource){
 	int j;
 
-	mass_scale = 1.0;
-
-	for(j = 0; j < Nplanes; j++){
-		Ds[j] = cosmo->angDist(0,zsource);
+	//mass_scale = 1.0;
+	for(j = 0; j < Nplanes+1; j++){
 		Dl[j] = cosmo->angDist(0,redshift[j]);
-		Dls[j] = cosmo->angDist(redshift[j],zsource);
-
-		Sigma_crit[j]=cosmo->angDist(0,zsource)/cosmo->angDist(redshift[j],zsource)
-					/cosmo->angDist(0,redshift[j])/4/pi/Grav;
+		dDl[j] = cosmo->angDist(redshift[j],redshift[j+1]);  // distance between jth plane and the next plane
 	}
 }
 

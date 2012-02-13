@@ -97,7 +97,13 @@
  * \brief These are routines that should never really be used by a user.
  */
 
+/** \defgroup cosmolib Cosmology Library
+ *
+ * \brief Library for calculating all things cosmological (distances, power spectra, mass function, etc.)
+ */
+
 /** \defgroup Utill Utilities
  *
  * \brief Useful general purpose utilities.
  */
+

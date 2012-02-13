@@ -67,12 +67,12 @@ typedef int TreeElement;
 
 /** \brief Structure for storing information about images or curves */
 typedef struct ImageInfo{
-    /// Array of points in image,  SHOULD NOT BE USED IN FAVOR OF imagekist!
+    /// Array of points in image,  SHOULD NOT BE USED IN FAVOR OF imagekist!  Still used by caustic finding routines.
   Point *points;
+  /// Number of points in image, SHOULD NOT BE USED IN FAVOR OF imagekist->Nunits.  Still used by caustic finding routines.
+  unsigned long Npoints;
   /// later addition, holds all points in image, will replace points eventually
   KistHndl imagekist;
-  /// Number of points in image, SHOULD NOT BE USED IN FAVOR OF imagekist->Nunits
-  unsigned long Npoints;
   /// gridrange[2] minimum grid size in image, gridrange[0] maximum grid size in outerborder, gridrange[1] maximum grid size in image
   double gridrange[3];
   /// Centroid of image

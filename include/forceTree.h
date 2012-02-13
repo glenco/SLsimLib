@@ -13,7 +13,16 @@
 
 enum PartProf {gaussian};
 /**
- * \brief A C++ class wrapper for the tree force calculator.
+ * \brief Object used to calculate the force or deflection caused by a collection
+ * of "particles" by the tree method.
+ *
+ * The particles can be point masses or have multiple sizes.  They can also have the
+ * same mass or multiple masses.
+ *
+ * xp[][], masses[] and rsph[] need to be allocated before constructing a ForceTree is
+ * constructed and de-allocated after it is destruction.  Multiple ForceTrees can be
+ * made from the same particles.  Do not rotate the particles without reconstructing
+ * a ForceTree.
  *
  * Most of the code in TreeNBForce.c is duplicated here as private methods and
  * a few public ones.
@@ -41,6 +50,7 @@ private:
 
 	void CalcMoments();
 	void rotate_coordinates(PosType **coord);
+	void spread_particles();
 };
 
 typedef ForceTree *ForceTreeHndl;

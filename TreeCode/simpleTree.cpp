@@ -35,6 +35,7 @@ SimpleTree::SimpleTree(PosType **xpt,IndexType Npoints,int bucket,int Ndimension
 	Nbucket = bucket;
 	Ndim = Ndimensions;
 	median_cut = median;
+	Nparticles = Npoints;
 
 	xp = xpt;
 
@@ -1027,3 +1028,4 @@ void SimpleTree::swap(unsigned long *a,unsigned long *b){
 	*a=*b;
 	*b=tmp;
 }
+
