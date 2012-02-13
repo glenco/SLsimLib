@@ -17,7 +17,7 @@ protected:
 
 public:
 	  /// output file, not always used.
-	  char outputfile[100];
+	  string outputfile;
 	  /// marks if the lens has been setup.
 	  bool set;
 
@@ -35,16 +35,14 @@ public:
 	  /// private: the time delay scale in days/Mpc^2
 	  double to;
 
-
-	Lens(char*);
 	Lens();
 	~Lens();
 
-	void readParamfile(char*);
 	int getNplanes();
 
+	virtual void setInternalParams(CosmoHndl,double){};
 	virtual void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off) = 0;
-	virtual void RandomizeHost(long *seed,bool tables) = 0;
+	virtual void RandomizeHost(long *seed,bool tables){};
 };
 
 typedef Lens *LensHndl;

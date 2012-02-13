@@ -39,13 +39,18 @@ public:
 	haloHndl halo;
 	ForceTreeHndl *halo_tree;
 
-	MultiLens(char*);
+	MultiLens(string);
 	~MultiLens();
 
-	void buildHaloTrees();
+	void setRedshift(double);
+	void printMultiLens();
+	void readParamfile(string);
+
 	void setInternalParams(CosmoHndl,double);
 	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off);
 };
+
+void buildHaloTrees(MultiLens *);
 
 void swap(float *a,float *b);
 void swap(PosType *a,PosType *b);
