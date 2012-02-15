@@ -7,57 +7,112 @@
 
 #include <slsimlib.h>
 #include <sstream>
+#include <utilities.h>
 
-haloM::haloM(double maxr, double zmax){
-	int i, n;
-	long seed;
-	double r, theta;
+haloM::haloM(double zsource  /// source redshift
+		,CosmoHndl cosmo     /// cosmology
+		,MultiLens *lens     /// lens
+		,double fieldofview  /// field of view in square degree
+		,int mfty            /// type of mass function PS (0) and ST (1) default is ST
+		){
 
-	seed = 2203;
+    long seed = 2203;
 
-	N = 100;
+    HALO ha(cosmo,lens->mass_resolution,0.);
+
+    int iterator;
+    std::vector<double> vmasses,vsizes,vredshifts;
+    std::vector<int> vindex;
+    Logm.resize(Nmassbin);
+    Nhaloes.resize(Nmassbin);
+
+	std:: vector<double> Dli;
+	/* fill the log(mass) vector */
+	fill_linear(Logm,Nmassbin,log10(lens->mass_resolution),MaxLogm);
+
+	for(int i=0;i<lens->getNplanes();i++){
+		double Nhaloestot;
+		float Nhaloestotf;
+
+		double z1, z2;
+
+		if(i == 0) z1 = 0.0;
+		else z1 = 0.5*(lens->redshift[i] - lens->redshift[i-1]);
+
+		if(i == lens->getNplanes()) z2 = zsource;
+		else z2 = 0.5*(lens->redshift[i+1] - lens->redshift[i]);
+
+		for(int k=0;k<Nmassbin;k++){
+			// cumulative number density in one square degree
+			Nhaloes[k]=cosmo->number(Logm[k],z1,z2,mfty)*fieldofview;
+			if(k == 0) Nhaloestot = Nhaloes[k];
+			// normalize the cumulative distribution to one
+			Nhaloes[k] = Nhaloes[k]/Nhaloestot;
+		}
+		Nhaloestotf=poidev(float(Nhaloestot), &seed);
+		lens->NhalosinPlane[i] = Nhaloestotf;
+		for(int k=0;k<Nhaloestotf;k++){
+			iterator++;
+			double ni = ran2 (&seed);
+			// compute the mass inverting the cumulative distribution
+		    double logmi = getY(Nhaloes,Logm,ni);
+		    double mi = pow(10.,logmi);
+		    vmasses.push_back(mi);
+		    vindex.push_back(iterator);
+		    double zi = z1+(z2-z1)*ran2 (&seed);
+		    vredshifts.push_back(zi);
+		    ha.reset(mi,zi);
+		    double Rvir = ha.getRvir();
+		    vsizes.push_back(Rvir);
+		    Dli.push_back(cosmo->angDist(0,zi));
+		}
+	}
+	N = vmasses.size();
 
 	masses = new float[N];
 	sizes = new float[N];
 	redshifts = new float[N];
-	index = new IndexType[N];
 
+	double r,theta,maxr;
 	pos = PosTypeMatrix(0,N-1,0,2);
-
-	for(i = 0; i < N; i++){
+	for(int i = 0; i < N; i++){
+		maxr = sqrt(fieldofview/M_PI)*Dli[i]*M_PI/180;
 		r = maxr*ran2(&seed);
 		theta=2*pi*ran2(&seed);
 		pos[i][0] = r*cos(theta);
 		pos[i][1] = r*sin(theta);
 		pos[i][2] = 0.0;
 
-		redshifts[i] = ran2(&seed) * zmax;
-
-		sizes[i] = ran2(&seed) * 0.3;
-
-		masses[i] = ran2(&seed);
-
-		index[i] = i;
+		masses[i] = vmasses[i];
+		sizes[i] = vsizes[i];
+		redshifts[i] = vredshifts[i];
 	}
 
-	quicksort(index,redshifts,pos,sizes,masses,N);
+	vmasses.clear();
+	vsizes.clear();
+	vredshifts.clear();
 }
 
 haloM::~haloM(){
 	free_PosTypeMatrix(pos,0,N-1,0,2);
-	delete[] redshifts;
-	delete[] sizes;
 	delete[] masses;
+	delete[] sizes;
+	delete[] redshifts;
 }
 
 
 MultiLens::MultiLens(string filename) : Lens(){
 	readParamfile(filename);
 
-	Dl = new double[Nplanes+1];
-	dDl = new double[Nplanes+1];
-	charge = mass_scale/4/pi/Grav;
 	redshift = new double[Nplanes+1];
+
+	Dl = new double[Nplanes+1];
+
+	NhalosinPlane = new unsigned long[Nplanes];
+
+	dDl = new double[Nplanes+1];
+
+	charge = mass_scale/4/pi/Grav;
 
 	halo_tree = new ForceTreeHndl[Nplanes];
 }
@@ -89,6 +144,10 @@ void MultiLens::readParamfile(string filename){
 	  addr[n] = &zlens;
 	  id[n] = 0;
 	  label[n++] = "z_lens";
+
+	  addr[n] = &mass_resolution;
+	  id[n] = 0;
+	  label[n++] = "mass_resolution";
 
 	  cout << "Multi lens: reading from " << filename << endl;
 
@@ -154,61 +213,54 @@ void MultiLens::readParamfile(string filename){
 
 
 void MultiLens::printMultiLens(){
-	cout << endl << "outputfile "<< outputfile << endl;
+	cout << endl << "outputfile " << outputfile << endl;
 
 	cout << endl << "**multi lens model**" << endl;
 
 	cout << "Nplanes " << Nplanes << endl;
+
 	cout << "z_lens " << zlens << endl << endl;
+
+	cout << "mass_resolution " << mass_resolution << endl << endl;
 }
 
 MultiLens::~MultiLens(){
-	delete halo;
 	delete[] halo_tree;
+	delete[] NhalosinPlane;
 	delete[] Dl;
-	delete[] dDl;
 	delete[] redshift;
+	delete[] dDl;
 }
 
-void buildHaloTrees(MultiLens *lens){
-	IndexType N, N_last, Nplanes;
-	double dz;
-	int i, j, n;
+void buildHaloTree(MultiLens *lens,CosmoHndl cosmo, double zsource,double fieldofview){
+	IndexType N, N_last;
+	haloHndl halo;
+    halo = new haloM(zsource,cosmo,lens,fieldofview,1);
 
-    lens->halo = new haloM(0.4, 3.64);
-
-    dz = lens->redshift[1] - lens->redshift[0];
-
-    Nplanes = lens->getNplanes();
-
-	for(j = 0, N_last = 0; j < Nplanes; j++){
-
-		for(i = 0, N = 0; i < lens->halo->N; i++)
-			if(lens->halo->redshifts[i] >= lens->redshift[j] && lens->halo->redshifts[i] < (lens->redshift[j]+dz))
-				N++;
-
-		lens->halo_tree[j] = new ForceTree(&lens->halo->pos[N_last + N],N,&lens->halo->masses[N_last + N],&lens->halo->sizes[N_last + N],true,true,5,2,true,0.1);
+	for(int j = 0, N_last = 0; j < lens->getNplanes(); j++){
+		N = lens->NhalosinPlane[j];
+		lens->halo_tree[j] = new ForceTree(&halo->pos[N_last + N],N,&halo->masses[N_last + N],&halo->sizes[N_last + N],true,true,5,2,true,0.1);
 
 		N_last = N;
 	}
+
 }
 
 void MultiLens::setRedshift(double zsource){
-	int i;
-	double dz;
+	std:: vector<double> lz;
+	/* fill the redshift vector logarithmically */
+	fill_linear(lz,Nplanes+2,0.,zsource);
 
-	dz = zsource / (Nplanes+1);
-
-	for(i = 0; i < Nplanes; i++)
-		redshift[i] = (i + 1)*dz;
+	for(int i = 1; i < Nplanes+2; i++)
+		redshift[i-1] = -1 + pow(10.,lz[i]);
 }
 
 void MultiLens::setInternalParams(CosmoHndl cosmo, double zsource){
 	int j;
 
-	setRedshift(zsource);
-
 	mass_scale = 1.0;
+
+	setRedshift(zsource);
 
 	for(j = 0; j < Nplanes; j++){
 		Dl[j] = cosmo->angDist(0,redshift[j]);
@@ -216,18 +268,21 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, double zsource){
 	}
 }
 
+/*
 void swap(float *a,float *b){
 	float tmp;
 	tmp=*a;
 	*a=*b;
 	*b=tmp;
 }
+/*
 /*void swap(PosType *a,PosType *b){
 	PosType tmp;
 	tmp=*a;
 	*a=*b;
 	*b=tmp;
 }*/
+/*
 void swap(IndexType a,IndexType b){
 	IndexType tmp;
 	tmp=a;
@@ -282,3 +337,4 @@ void quicksort(IndexType *particles,float *redshifts,PosType **pos,float *sizes,
 
 	return ;
 }
+*/
