@@ -48,38 +48,6 @@ void Model::RandomizeModel(double r_source_phys,long *seed,bool tables){
 		for(n=0;n<NzTable;++n) file >> zTable[n][0] >> zTable[n][1];
 
 		file.close();
-
-		filename = "GalaxyData/slacs_sigma.dat";
-		std::cout << "reading from " << filename << std::endl;
-		file.open(filename);
-
-		if(!file){
-			std::cout << "Can't open file " << filename << std::endl;
-			exit(1);
-		}
-
-		file >> NsigmaTable;
-		sigmaTable=(double *)calloc(NsigmaTable,sizeof(double));
-
-		for(n=0;n<NsigmaTable;++n) file >> sigmaTable[n];
-
-		file.close();
-
-		filename = "GalaxyData/slacs_f.dat";
-		std::cout << "reading from " << filename << std::endl;
-		file.open(filename);
-
-		if(!file){
-			std::cout << "Can't open file " << filename << std::endl;
-			exit(1);
-		}
-
-		file >> NaxisTable;
-
-		axisTable=(double *)calloc(NaxisTable,sizeof(double));
-
-		for(n=0;n<NaxisTable;++n) file >> axisTable[n];
-		file.close();
 	}
 
 
@@ -103,8 +71,7 @@ void Model::RandomizeModel(double r_source_phys,long *seed,bool tables){
 		//zlens = RandomFromTable(zlTable,NzlTable,seed);
 		//zsource = RandomFromTable(zsTable,NzsTable,seed);
 
-	
-		lens->host_sigma = RandomFromTable(sigmaTable,NsigmaTable,seed);
+		lens->RandomizeSigma(seed,tables);
 
 		setInternal();
 
@@ -116,13 +83,55 @@ void Model::RandomizeModel(double r_source_phys,long *seed,bool tables){
 	return ;
 }
 
-void AnaLens::RandomizeHost(long *seed,bool tables){
+void AnaLens::RandomizeSigma(long *seed,bool tables){
 	static double fo=0.0,*axisTable,*sigmaTable,**zTable;
 	int n,i;
 	static int init=0,NaxisTable,NreTable,NsigmaTable,NzTable;
 	ifstream file;
 	char *filename;
+
+	filename = "GalaxyData/slacs_sigma.dat";
+	std::cout << "reading from " << filename << std::endl;
+	file.open(filename);
+
+	if(!file){
+		std::cout << "Can't open file " << filename << std::endl;
+		exit(1);
+	}
+
+	file >> NsigmaTable;
+	sigmaTable=(double *)calloc(NsigmaTable,sizeof(double));
+
+	for(n=0;n<NsigmaTable;++n) file >> sigmaTable[n];
+
+	file.close();
+
+	host_sigma = RandomFromTable(sigmaTable,NsigmaTable,seed);
+}
+
+void AnaLens::RandomizeHost(long *seed,bool tables){
+	double fo=0.0,*axisTable;
+	int n,i;
+	int NaxisTable;
+	ifstream file;
+	string filename;
 	//double re_onsource;
+
+	filename = "GalaxyData/slacs_f.dat";
+	std::cout << "reading from " << filename << std::endl;
+	file.open(filename.c_str());
+
+	if(!file){
+		std::cout << "Can't open file " << filename << std::endl;
+		exit(1);
+	}
+
+	file >> NaxisTable;
+
+	axisTable=(double *)calloc(NaxisTable,sizeof(double));
+
+	for(n=0;n<NaxisTable;++n) file >> axisTable[n];
+	file.close();
 
 	if(fo==0.0) fo=host_axis_ratio;
 

@@ -75,6 +75,8 @@ void SourceUniform::readParamfile(string filename){
 	    exit(1);
 	  }
 
+	  flag = 1;
+
 	  // output file
 	  while(!file_in.eof()){
 		  file_in >> rlabel >> rvalue;
@@ -82,8 +84,6 @@ void SourceUniform::readParamfile(string filename){
 
 		  if(rlabel[0] == escape[0])
 			  continue;
-
-		  flag = 1;
 
 		  if(rlabel == label){
 

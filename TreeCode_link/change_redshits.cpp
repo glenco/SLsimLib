@@ -27,12 +27,13 @@
  * \brief SHOULD BE TESTED Changes source and/or source redshits and recalculates the
  * the source points.  DOES NOT YET RECALCULATE SOURCE TREE
  */
+/*
 void Model::change_redshifts(TreeHndl i_tree,TreeHndl s_tree,double z_source
 		,double z_lens){
 	double oldSigma=0,factor=0;
 
 	oldSigma=lens->Sigma_crit;
-	source->source_r *= cosmo->angDist(0,z_source)/Ds;
+	source->source_r *= cosmo->angDist(0,z_source)/cosmo->angDist(0,source->zsource);
 
 	// chnage the redshifts
 	lens->zlens=z_lens;
@@ -60,4 +61,4 @@ void Model::change_redshifts(TreeHndl i_tree,TreeHndl s_tree,double z_source
 	_BuildTree(s_tree);
 
 	return ;
-}
+}*/

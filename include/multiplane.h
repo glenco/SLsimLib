@@ -14,7 +14,7 @@
 #include <halo.h>
 #include <utilities.h>
 
-const int Nmassbin=256;
+const int Nmassbin=32;
 const double MaxLogm=16.;
 
 class MultiLens : public Lens{
@@ -28,6 +28,8 @@ public:
 	//haloHndl halo;
 	ForceTreeHndl *halo_tree;
 	double mass_resolution;
+	AnaLens *analens;
+	int flag_analens;
 
 	MultiLens(string);
 	~MultiLens();

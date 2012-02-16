@@ -28,9 +28,12 @@ haloM::haloM(double zsource  /// source redshift
 
 	std:: vector<double> Dli;
 	/* fill the log(mass) vector */
-	fill_linear(Logm,Nmassbin,log10(lens->mass_resolution),MaxLogm);
+	fill_linear(Logm,Nmassbin,9.0,MaxLogm);
 
-	for(int i=0;i<lens->getNplanes();i++){
+	int Nplanes = lens->getNplanes();
+
+	for(int i=0;i<Nplanes;i++){
+
 		double Nhaloestot;
 		float Nhaloestotf;
 
@@ -39,12 +42,12 @@ haloM::haloM(double zsource  /// source redshift
 		if(i == 0) z1 = 0.0;
 		else z1 = 0.5*(lens->redshift[i] - lens->redshift[i-1]);
 
-		if(i == lens->getNplanes()) z2 = zsource;
+		if(i == Nplanes) z2 = zsource;
 		else z2 = 0.5*(lens->redshift[i+1] - lens->redshift[i]);
 
 		for(int k=0;k<Nmassbin;k++){
 			// cumulative number density in one square degree
-			Nhaloes[k]=cosmo->number(Logm[k],z1,z2,mfty)*fieldofview;
+			Nhaloes[k]=cosmo->number(pow(10,Logm[k]),z1,z2,mfty)*fieldofview;
 			if(k == 0) Nhaloestot = Nhaloes[k];
 			// normalize the cumulative distribution to one
 			Nhaloes[k] = Nhaloes[k]/Nhaloestot;
@@ -86,6 +89,8 @@ haloM::haloM(double zsource  /// source redshift
 		masses[i] = vmasses[i];
 		sizes[i] = vsizes[i];
 		redshifts[i] = vredshifts[i];
+
+		cout << redshifts[i] << " " << masses[i] << endl;
 	}
 
 	vmasses.clear();
@@ -108,7 +113,7 @@ MultiLens::MultiLens(string filename) : Lens(){
 
 	Dl = new double[Nplanes+1];
 
-	NhalosinPlane = new unsigned long[Nplanes];
+	NhalosinPlane = new IndexType[Nplanes];
 
 	dDl = new double[Nplanes+1];
 
@@ -198,7 +203,7 @@ void MultiLens::readParamfile(string filename){
 	  }
 
 	  for(i = 0; i < n; i++){
-		  if(id[i] > 0){
+		  if(id[i] >= 0){
 			  ERROR_MESSAGE();
 			  cout << "parameter " << label[i] << " needs to be set!" << endl;
 			  exit(0);
@@ -235,6 +240,7 @@ MultiLens::~MultiLens(){
 void buildHaloTree(MultiLens *lens,CosmoHndl cosmo, double zsource,double fieldofview){
 	IndexType N, N_last;
 	haloHndl halo;
+
     halo = new haloM(zsource,cosmo,lens,fieldofview,1);
 
 	for(int j = 0, N_last = 0; j < lens->getNplanes(); j++){
@@ -261,6 +267,8 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, double zsource){
 	mass_scale = 1.0;
 
 	setRedshift(zsource);
+
+	zlens = redshift[0];
 
 	for(j = 0; j < Nplanes; j++){
 		Dl[j] = cosmo->angDist(0,redshift[j]);

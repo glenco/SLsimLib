@@ -339,6 +339,21 @@ void AnaLens::reNormSubstructure(double kappa_sub){
 	  return ;
 }
 
+void AnaLens::setInternalParams(CosmoHndl cosmo, double zsource){
+	double Ds, Dl, Dls;
+
+	Dl = cosmo->angDist(0,zlens);
+	Ds = cosmo->angDist(0,zsource);
+	Dls = cosmo->angDist(zlens,zsource);
+
+	MpcToAsec = 60*60*180 / pi / Dl;
+		// in Mpc
+	host_ro=4*pi*pow(host_sigma/2.99792e5,2)*Dl
+		*Dls/Ds/(1+zlens);
+	// find critical density
+	Sigma_crit=Ds/Dls/Dl/4/pi/Grav;
+	to = (1+zlens)*Ds/Dls/Dl/8.39428142e-10;
+}
 
 AnaLens::AnaLens(string filename) : Lens(){
   readParamfile(filename);

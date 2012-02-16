@@ -18,7 +18,7 @@ public:
 	SourceHndl source;
 	CosmoHndl cosmo;
 
-	double Dl, Ds, Dls;
+	//double Dl, Ds, Dls;
 
 	Model(LensHndl,SourceHndl,CosmoHndl);
 	~Model();

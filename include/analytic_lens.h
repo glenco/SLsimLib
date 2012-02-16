@@ -25,6 +25,18 @@ public:
   /// names of clump and sb models
   typedef enum {NFW,powerlaw,pointmass} ClumpInternal;
 
+  /// private: Einstein radius of host
+  double host_ro;
+  double host_sigma;
+
+  // private derived quantities
+  /// private: conversion factor between Mpc on the lens plane and arcseconds
+  double MpcToAsec;
+  /// private: critical surface density
+  double Sigma_crit;
+  /// private: the time delay scale in days/Mpc^2
+  double to;
+
   // host elliptical
   double *host_x;    /// not used yet
   double host_core;
@@ -97,11 +109,13 @@ public:
   AnaLens(string);
   ~AnaLens();
 
+  void setInternalParams(CosmoHndl,double) = 0;
   void readParamfile(string);
   void PrintAnaLens(bool show_substruct,bool show_stars);
 
   // in randoimize_lens.c
   void RandomizeHost(long *seed,bool tables);
+  void RandomizeSigma(long *seed,bool tables);
   void RandomlyDistortLens(long *seed,int Nmodes);
   void AlignedRandomlyDistortLens(long *seed,double theta,int n);
   void RandomizeSubstructure(double rangeInRei,long *seed);
