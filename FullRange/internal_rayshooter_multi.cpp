@@ -39,6 +39,9 @@ void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
 
     Nplanes = getNplanes();
 
+#ifdef _OPENMP
+#pragma omp parallel for private(i)
+#endif
     for(i = 0; i< Npoints; i++){
     	i_points[i].image->x[0] = i_points[i].x[0];
     	i_points[i].image->x[1] = i_points[i].x[0];
@@ -47,10 +50,9 @@ void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
     	i_points[i].gamma[1] = 0.0;
     }
 
-
-    for(i = 0; i< Npoints; i++){
-     }
-
+#ifdef _OPENMP
+#pragma omp parallel for private(i,xminus,xplus,alpha,kappa,gamma,kappa_minus,gamma_minus,kappa_plus,gamma_plus)
+#endif
 	for(i = 0; i< Npoints; i++){
 
 		// find position on first lens plane
@@ -71,7 +73,7 @@ void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
 		i_points[i].gamma[1] = 0;
 		i_points[i].gamma[2] = 0;
 
-		for(j = 1; j < Nplanes+1; j++){
+		for(j = 1; j < Nplanes; j++){
 
     		halo_tree[j]->force2D(i_points[i].image->x,&alpha[0],&kappa,&gamma[0],false);
 

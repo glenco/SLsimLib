@@ -40,7 +40,9 @@
 
     convert_factor = star_massscale / Sigma_crit;
 
-  #pragma omp parallel for private(x_rescale, dt, i)
+#ifdef _OPENMP
+#pragma omp parallel for private(x_rescale, dt, i)
+#endif
     for(i = 0; i < Npoints; i++)
     {
     	i_points[i].dt = 0;
@@ -203,7 +205,9 @@
 
       }
 
-  #pragma omp parallel for private(i)
+#ifdef _OPENMP
+#pragma omp parallel for private(i)
+#endif
       for(i = 0; i < Npoints; i++)
         {
   	i_points[i].image->invmag=i_points[i].invmag;

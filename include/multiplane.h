@@ -23,11 +23,12 @@ public:
 	double *redshift;
 	double *Dl, *dDl; /// angular diameter distances
 	double charge;
+	/// mass scaleå
 	double mass_scale;
 	unsigned long *NhalosinPlane;
-	//haloHndl halo;
 	ForceTreeHndl *halo_tree;
-	double mass_resolution;
+	/// min mass for the halo model
+	double min_mass;
 	AnaLens *analens;
 	int flag_analens;
 
@@ -57,7 +58,7 @@ private:
 
 typedef haloM *haloHndl;
 
-void buildHaloTree(MultiLens *, CosmoHndl,double,double);
+haloHndl buildHaloTree(MultiLens *, CosmoHndl,double,double);
 
 void swap(float *a,float *b);
 void swap(PosType *a,PosType *b);
