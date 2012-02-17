@@ -90,14 +90,15 @@ void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
 				bb = dDl[j+1]*Dl[j-1]/dDl[j]/Dl[j+1];
 				cc = charge*dDl[j+1]*Dl[j]/Dl[j+1];
 
+				// still not positive about sign convention
 				kappa_plus = aa*i_points[i].kappa - bb*kappa_minus
-						- cc*(kappa*i_points[i].kappa + gamma[0]*i_points[i].gamma[0] + gamma[1]*i_points[i].gamma[1]);
+						- cc*(kappa*i_points[i].kappa - gamma[0]*i_points[i].gamma[0] - gamma[1]*i_points[i].gamma[1]);
 				gamma_plus[0] = aa*i_points[i].gamma[0] - bb*gamma_minus[0]
-						- cc*(kappa*i_points[i].gamma[0] + gamma[0]*i_points[i].kappa - gamma[1]*i_points[i].gamma[3]);
+						- cc*(-kappa*i_points[i].gamma[0] + gamma[0]*i_points[i].kappa + gamma[1]*i_points[i].gamma[3]);
 				gamma_plus[1] = aa*i_points[i].gamma[1] - bb*gamma_minus[1]
-						- cc*(kappa*i_points[i].gamma[1] + gamma[1]*i_points[i].kappa - gamma[0]*i_points[i].gamma[3]);
+						- cc*(-kappa*i_points[i].gamma[1] + gamma[1]*i_points[i].kappa - gamma[0]*i_points[i].gamma[3]);
 				gamma_plus[2] = aa*i_points[i].gamma[2] - bb*gamma_minus[2]
-						- cc*(kappa*i_points[i].gamma[2] + gamma[0]*i_points[i].gamma[1] - gamma[1]*i_points[i].gamma[0]);
+						- cc*(kappa*i_points[i].gamma[2] - gamma[0]*i_points[i].gamma[1] + gamma[1]*i_points[i].gamma[0]);
 
 				kappa_minus = i_points[i].kappa;
 				gamma_minus[0] = i_points[i].gamma[0];
