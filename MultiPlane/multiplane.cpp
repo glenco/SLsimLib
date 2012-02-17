@@ -264,7 +264,7 @@ void MultiLens::setRedshift(double zsource){
 void MultiLens::setInternalParams(CosmoHndl cosmo, double zsource){
 	int j;
 
-	mass_scale = 1.0;
+	mass_scale = 1.0;  /// REMEBER TO TAKE THIS LINE OUT
 
 	setRedshift(zsource);
 
@@ -275,74 +275,3 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, double zsource){
 		dDl[j] = cosmo->angDist(redshift[j],redshift[j+1]);  // distance between jth plane and the next plane
 	}
 }
-
-/*
-void swap(float *a,float *b){
-	float tmp;
-	tmp=*a;
-	*a=*b;
-	*b=tmp;
-}
-/*
-/*void swap(PosType *a,PosType *b){
-	PosType tmp;
-	tmp=*a;
-	*a=*b;
-	*b=tmp;
-}*/
-/*
-void swap(IndexType a,IndexType b){
-	IndexType tmp;
-	tmp=a;
-	a=b;
-	b=tmp;
-}
-void swap(IndexType *a,IndexType *b){
-	IndexType tmp;
-	tmp=*a;
-	*a=*b;
-	*b=tmp;
-}
-
-void quicksort(IndexType *particles,float *redshifts,PosType **pos,float *sizes,float *masses,IndexType N){
-	double pivotvalue;
-	unsigned long pivotindex,newpivotindex,i;
-
-	if(N <= 1) return ;
-
-	// pick pivot as the median of the first, last and middle values
-	if ((redshifts[0] >= redshifts[N/2] && redshifts[0] <= redshifts[N-1])
-			|| (redshifts[0] >= redshifts[N-1] && redshifts[0] <= redshifts[N/2])) pivotindex = 0;
-	else if ((redshifts[N/2] >= redshifts[0] && redshifts[N/2] <= redshifts[N-1])
-			|| (redshifts[N/2] >= redshifts[N-1] && redshifts[N/2] <= redshifts[0])) pivotindex = N/2;
-	else pivotindex = N-1;
-	pivotvalue=redshifts[pivotindex];
-
-	// move pivet to end of array
-	swap(&redshifts[pivotindex],&redshifts[N-1]);
-	swap(&particles[pivotindex],&particles[N-1]);
-	swap(pos[pivotindex],pos[N-1]);
-	swap(&sizes[pivotindex],&sizes[N-1]);
-	swap(&masses[pivotindex],&masses[N-1]);
-
-	newpivotindex=0;
-
-	// partition list and array
-	for(i=0;i<N;++i){
-		if(redshifts[i] <= pivotvalue){
-			swap(&redshifts[newpivotindex],&redshifts[i]);
-			swap(&particles[newpivotindex],&particles[i]);
-			swap(pos[pivotindex],pos[i]);
-			swap(&sizes[pivotindex],&sizes[i]);
-			swap(&masses[pivotindex],&masses[i]);
-			++newpivotindex;
-		}
-	}
-	--newpivotindex;
-
-	quicksort(particles,redshifts,pos,sizes,masses,newpivotindex);
-	quicksort(&particles[newpivotindex+1],&redshifts[newpivotindex+1],&pos[newpivotindex+1],&sizes[newpivotindex+1],&masses[newpivotindex+1],N-newpivotindex-1);
-
-	return ;
-}
-*/

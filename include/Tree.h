@@ -33,20 +33,6 @@ typedef enum{TotalArea,EachImage,Resolution,FillHoles} ExitCriterion;
 #define SWAP(a,b) temp=(a);(a)=(b);(b)=temp;
 #endif
 
-/*
-typedef struct branchstruct2{
-  unsigned long points;        // list of points in Branch
-  unsigned long npoints;
-  double center[2];
-  int level;
-  double boundary_p1[2];
-  double boundary_p2[2];
-  int child1;
-  int child2;
-  int prev;
-} RelativeBranch;
-*/
-
 #ifndef treetypes_declare
 #define treetypes_declare
 
@@ -153,13 +139,18 @@ inline double MIN(double x,double y){
 inline double MAX(double x,double y){
 	return (x > y) ? x : y;
 };
-//inline double MIN(double x,double y);
-//inline double MAX(double x,double y);
-//inline double FurthestBorder(double *ray,double *p1,double *p2);
+
+/** \ingroup Utill
+ * \brief Separation squared between two positions in 2 dimensions.
+ */
+inline double sepSQR(double *xx,double *yy){
+	return pow(xx[0]-yy[0],2) + pow(xx[1]-yy[1],2);
+}
+
+/*  returns the distance from ray[] to the furthest point on the
+ *    border of the box,
+ */
 inline double FurthestBorder(double *ray,double *p1,double *p2){
-  /*  returns the distance from ray[] to the furthest point on the                                                  
-   *    border of the box,                                                                                          
-   */
 
   return sqrt( pow(MAX(ray[0]-p1[0],p2[0]-ray[0]),2) + pow(MAX(ray[1]-p1[1],p2[1]-ray[1]),2) );
 };
