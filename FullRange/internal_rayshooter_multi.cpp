@@ -16,11 +16,11 @@
  * Needs to be calculated before calling:
  *
  *
- * Dl[j = 0...Nplane] - The angular size distance between the observer and the jth plane not counting the observer plane.
- * 	                    Dl[0] is the first plane with mass on it and Dl[Nplane] is the distance to the source plane.
+ * Dl[j = 0...Nplanes-1] - The angular size distance between the observer and the jth plane not counting the observer plane.
+ * 	                    Dl[0] is the first plane with mass on it and Dl[Nplane-1] is the distance to the source plane.
  *
- * dDl[j = 0...Nplane] - The angular size distance between the jth and (j+1)th planes counting the observer plane as j=0.
- *                      dDl[0] = Dl[0], dDl[Nplane] is between the last plane with mass and the source plane.
+ * dDl[j = 0...Nplanes-1] - The angular size distance between the (j-1)th and jth planes counting the observer plane as j = -1.
+ *                      dDl[0] = Dl[0], dDl[Nplane-1] is between the last plane with mass and the source plane.
  *
  * charge = 4*G*mass_scale/c^2 in units of Mpc
  *
@@ -32,7 +32,7 @@
 void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off){
 	unsigned long i;
 	int j;
-	double kappa,a,b,c;
+	double kappa,aa,bb,cc;
     double alpha[2], gamma[2];
     double xminus[2],xplus[2];
     double kappa_minus,gamma_minus[3],kappa_plus,gamma_plus[3];
@@ -40,22 +40,11 @@ void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
     Nplanes = getNplanes();
 
 #ifdef _OPENMP
-#pragma omp parallel for private(i)
-#endif
-    for(i = 0; i< Npoints; i++){
-    	i_points[i].image->x[0] = i_points[i].x[0];
-    	i_points[i].image->x[1] = i_points[i].x[0];
-    	i_points[i].kappa = 0.0;
-    	i_points[i].gamma[0] = 0.0;
-    	i_points[i].gamma[1] = 0.0;
-    }
-
-#ifdef _OPENMP
 #pragma omp parallel for private(i,xminus,xplus,alpha,kappa,gamma,kappa_minus,gamma_minus,kappa_plus,gamma_plus)
 #endif
 	for(i = 0; i< Npoints; i++){
 
-		// find position on first lens plane
+		// find position on first lens plane in physical units
 		i_points[i].image->x[0] = i_points[i].x[0]*Dl[0];
        	i_points[i].image->x[1] = i_points[i].x[1]*Dl[0];
 
@@ -73,16 +62,20 @@ void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
 		i_points[i].gamma[1] = 0;
 		i_points[i].gamma[2] = 0;
 
-		for(j = 1; j < Nplanes; j++){
+		for(j = 0; j < Nplanes-1 ; j++){  // each iteration leaves i_point[i].image on plane (j+1)
 
-    		halo_tree[j]->force2D(i_points[i].image->x,&alpha[0],&kappa,&gamma[0],false);
+    		halo_tree[j]->force2D(i_points[i].image->x,&alpha[0],&kappa,&gamma[0],kappa_off);
 
-       		xplus[0] = i_points[i].image->x[0]*(dDl[j]+dDl[j-1])/dDl[j-1]
-        				                 - xminus[0]*dDl[j]/dDl[j-1]
-        		                         - charge*dDl[j]*alpha[0];
-       		xplus[1] = i_points[i].image->x[1]*(dDl[j]+dDl[j-1])/dDl[j-1]
-        				                 - xminus[1]*dDl[j]/dDl[j-1]
-        		                         - charge*dDl[j]*alpha[1];
+			aa = (dDl[j+1]+dDl[j])/dDl[j];
+			bb = dDl[j+1]/dDl[j];
+			cc = dDl[j+1];
+
+			xplus[0] = aa*i_points[i].image->x[0]
+        				    - bb*xminus[0]
+        		            - charge*cc*alpha[0];
+       		xplus[1] = aa*i_points[i].image->x[1]
+        				    - bb*xminus[1]
+        		            - charge*cc*alpha[1];
 
 			xminus[0] = i_points[i].image->x[0];
 			xminus[1] = i_points[i].image->x[1];
@@ -93,18 +86,18 @@ void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
 			if(!kappa_off)
     		{
 
-				a = (1+dDl[j]+dDl[j-1])*Dl[j-1]/dDl[j-1]/Dl[j];
-				b = dDl[j]*Dl[j-2]/dDl[j-1]/Dl[j];
-				c = charge*dDl[j]*Dl[j-1]/Dl[j];
+				aa = (dDl[j+1]+dDl[j])*Dl[j]/dDl[j]/Dl[j+1];
+				bb = dDl[j+1]*Dl[j-1]/dDl[j]/Dl[j+1];
+				cc = charge*dDl[j+1]*Dl[j]/Dl[j+1];
 
-				kappa_plus = a*i_points[i].kappa - b*kappa_minus
-						- c*(kappa*i_points[i].kappa + gamma[0]*i_points[i].gamma[0] + gamma[1]*i_points[i].gamma[1]);
-				gamma_plus[0] = a*i_points[i].gamma[0] - b*gamma_minus[0]
-						- c*(kappa*i_points[i].gamma[0] + gamma[0]*i_points[i].kappa - gamma[1]*i_points[i].gamma[3]);
-				gamma_plus[1] = a*i_points[i].gamma[1] - b*gamma_minus[1]
-						- c*(kappa*i_points[i].gamma[1] + gamma[1]*i_points[i].kappa - gamma[0]*i_points[i].gamma[3]);
-				gamma_plus[2] = a*i_points[i].gamma[2] - b*gamma_minus[2]
-						- c*(kappa*i_points[i].gamma[2] + gamma[0]*i_points[i].gamma[1] - gamma[1]*i_points[i].gamma[0]);
+				kappa_plus = aa*i_points[i].kappa - bb*kappa_minus
+						- cc*(kappa*i_points[i].kappa + gamma[0]*i_points[i].gamma[0] + gamma[1]*i_points[i].gamma[1]);
+				gamma_plus[0] = aa*i_points[i].gamma[0] - bb*gamma_minus[0]
+						- cc*(kappa*i_points[i].gamma[0] + gamma[0]*i_points[i].kappa - gamma[1]*i_points[i].gamma[3]);
+				gamma_plus[1] = aa*i_points[i].gamma[1] - bb*gamma_minus[1]
+						- cc*(kappa*i_points[i].gamma[1] + gamma[1]*i_points[i].kappa - gamma[0]*i_points[i].gamma[3]);
+				gamma_plus[2] = aa*i_points[i].gamma[2] - bb*gamma_minus[2]
+						- cc*(kappa*i_points[i].gamma[2] + gamma[0]*i_points[i].gamma[1] - gamma[1]*i_points[i].gamma[0]);
 
 				kappa_minus = i_points[i].kappa;
 				gamma_minus[0] = i_points[i].gamma[0];
@@ -120,8 +113,8 @@ void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
 		}
 		// Convert units back to angles.
 
-		i_points[i].image->x[0] /= Dl[Nplanes];
-		i_points[i].image->x[1] /= Dl[Nplanes];
+		i_points[i].image->x[0] /= Dl[Nplanes-1];
+		i_points[i].image->x[1] /= Dl[Nplanes-1];
 
 		i_points[i].kappa = 1 - i_points[i].kappa;
     }

@@ -46,7 +46,7 @@
     for(i = 0; i < Npoints; i++)
     {
     	i_points[i].dt = 0;
-        i_points[i].gamma[3] = 0;
+        i_points[i].gamma[2] = 0;
 
         if(isnan(i_points[i].x[0]*i_points[i].x[1]))
         {

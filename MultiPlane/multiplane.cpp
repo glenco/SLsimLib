@@ -138,6 +138,7 @@ MultiLens::MultiLens(string filename) : Lens(){
 	charge = mass_scale/4/pi/Grav;
 
 	halo_tree = new ForceTreeHndl[Nplanes];
+
 }
 
 void MultiLens::readParamfile(string filename){
@@ -296,12 +297,19 @@ void MultiLens::setRedshift(double zsource){
 void MultiLens::setInternalParams(CosmoHndl cosmo, double zsource){
 	int j;
 
+	if( (cosmo->getOmega_matter() + cosmo->getOmega_lambda()) != 1.0 ){
+		printf("ERROR: MultiLens can only handle flat universes at present.  Must change cosmology.\n");
+		exit(1);
+	}
 	setRedshift(zsource);
 
 	zlens = redshift[0];
 
-	for(j = 0; j < Nplanes; j++){
+	Dl[0] = cosmo->angDist(0,redshift[0]);
+	dDl[0] = Dl[0];  // distance between jth plane and the next plane
+	for(j = 1; j < Nplanes; j++){
 		Dl[j] = cosmo->angDist(0,redshift[j]);
-		dDl[j] = cosmo->angDist(redshift[j],redshift[j+1]);  // distance between jth plane and the next plane
+		dDl[j] = cosmo->angDist(redshift[j-1],redshift[j]);  // distance between jth plane and the next plane
 	}
+
 }
