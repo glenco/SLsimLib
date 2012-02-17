@@ -14,12 +14,15 @@
 #ifndef _SLSIMLIB_DECLARE_
 #define _SLSIMLIB_DECLARE_
 
+#define _OPENMP
 #define NDEBUG  // Un-commenting this line will remove all assert() statements in the executable.
 
 #include <iostream>
 //#include <cstdio>
 #include <fstream>
+#ifdef _OPENMP
 #include <omp.h>
+#endif
 
 #include <math.h>
 #include <assert.h>

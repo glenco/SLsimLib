@@ -701,7 +701,6 @@ void split_images(TreeHndl i_tree,ImageInfo *images,int Maximages
 			assert(image_number_array);
 			for(j=0,maxN=0;j<TmpNimages;++j) if(borders[j].Nencircled % 2 == 0 && borders[j].Nencircled > maxN) maxN=borders[j].Nencircled;
 			// sort points into images
-			//#pragma omp parallel for private(j)
 
 			// mark each point with which image it is in
 			for(k=0;k<Npoints_tot;++k){
@@ -868,7 +867,6 @@ void split_images3(TreeHndl i_tree,ImageInfo *images,int Maximages
 			image_number_array=(double *)malloc(Npoints_tot*sizeof(double));
 			assert(image_number_array);
 			// sort points into images
-			//#pragma omp parallel for private(j)
 
 			// mark each point with which image it is in
 			for(k=0;k<Npoints_tot;++k){

@@ -641,7 +641,6 @@ ImageInfo *NewImageInfo(int Nimages){
   imageinfo=(ImageInfo *) malloc(Nimages*sizeof(ImageInfo));
   assert(imageinfo);
 
-//#pragma omp parallel for private(i)
   for(i = 0;i < Nimages; i++)
   {
 	imageinfo[i].imagekist = NewKist();

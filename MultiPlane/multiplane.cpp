@@ -18,7 +18,7 @@ haloM::haloM(double zsource  /// source redshift
 
     long seed = 2203;
 
-    HALO ha(cosmo,lens->mass_resolution,0.);
+    HALO ha(cosmo,lens->min_mass,0.);
 
     int iterator;
     std::vector<double> vmasses,vsizes,vredshifts;
@@ -28,7 +28,7 @@ haloM::haloM(double zsource  /// source redshift
 
 	std:: vector<double> Dli;
 	/* fill the log(mass) vector */
-	fill_linear(Logm,Nmassbin,9.0,MaxLogm);
+	fill_linear(Logm,Nmassbin,lens->min_mass,MaxLogm);
 
 	int Nplanes = lens->getNplanes();
 
@@ -40,20 +40,32 @@ haloM::haloM(double zsource  /// source redshift
 		double z1, z2;
 
 		if(i == 0) z1 = 0.0;
-		else z1 = 0.5*(lens->redshift[i] - lens->redshift[i-1]);
+		else z1 = lens->redshift[i] - 0.5*(lens->redshift[i] - lens->redshift[i-1]);
 
 		if(i == Nplanes) z2 = zsource;
-		else z2 = 0.5*(lens->redshift[i+1] - lens->redshift[i]);
+		else z2 = lens->redshift[i] + 0.5*(lens->redshift[i+1] - lens->redshift[i]);
 
-		for(int k=0;k<Nmassbin;k++){
+		Nhaloes[0]=cosmo->number(pow(10,Logm[0]),z1,z2,mfty)*fieldofview;
+		Nhaloestot = Nhaloes[0];
+		int k;
+#ifdef _OPENMP
+#pragma omp parallel for private(k)
+#endif
+		for(k=1;k<Nmassbin;k++){
 			// cumulative number density in one square degree
 			Nhaloes[k]=cosmo->number(pow(10,Logm[k]),z1,z2,mfty)*fieldofview;
-			if(k == 0) Nhaloestot = Nhaloes[k];
 			// normalize the cumulative distribution to one
 			Nhaloes[k] = Nhaloes[k]/Nhaloestot;
 		}
 		Nhaloestotf=poidev(float(Nhaloestot), &seed);
 		lens->NhalosinPlane[i] = Nhaloestotf;
+		//cout << "Plane " << i << " z1 = " << z1 << " z2 = " << z2 << " Nhalos in plane = " << Nhaloestotf << endl;
+
+		/*stringstream filename;
+		filename << "output_" << i << ".dat";
+		string f = filename.str();
+		ofstream file_test(f.c_str());*/
+
 		for(int k=0;k<Nhaloestotf;k++){
 			iterator++;
 			double ni = ran2 (&seed);
@@ -68,7 +80,11 @@ haloM::haloM(double zsource  /// source redshift
 		    double Rvir = ha.getRvir();
 		    vsizes.push_back(Rvir);
 		    Dli.push_back(cosmo->angDist(0,zi));
+
+			//file_test << mi << endl;
 		}
+
+		//file_test.close();
 	}
 	N = vmasses.size();
 
@@ -78,7 +94,11 @@ haloM::haloM(double zsource  /// source redshift
 
 	double r,theta,maxr;
 	pos = PosTypeMatrix(0,N-1,0,2);
-	for(int i = 0; i < N; i++){
+	int i;
+#ifdef _OPENMP
+#pragma omp parallel for private(i)
+#endif
+	for(i = 0; i < N; i++){
 		maxr = sqrt(fieldofview/M_PI)*Dli[i]*M_PI/180;
 		r = maxr*ran2(&seed);
 		theta=2*pi*ran2(&seed);
@@ -89,8 +109,6 @@ haloM::haloM(double zsource  /// source redshift
 		masses[i] = vmasses[i];
 		sizes[i] = vsizes[i];
 		redshifts[i] = vredshifts[i];
-
-		cout << redshifts[i] << " " << masses[i] << endl;
 	}
 
 	vmasses.clear();
@@ -109,13 +127,13 @@ haloM::~haloM(){
 MultiLens::MultiLens(string filename) : Lens(){
 	readParamfile(filename);
 
-	redshift = new double[Nplanes+1];
+	redshift = new double[Nplanes];
 
-	Dl = new double[Nplanes+1];
+	Dl = new double[Nplanes];
 
 	NhalosinPlane = new IndexType[Nplanes];
 
-	dDl = new double[Nplanes+1];
+	dDl = new double[Nplanes];
 
 	charge = mass_scale/4/pi/Grav;
 
@@ -150,9 +168,13 @@ void MultiLens::readParamfile(string filename){
 	  id[n] = 0;
 	  label[n++] = "z_lens";
 
-	  addr[n] = &mass_resolution;
+	  addr[n] = &min_mass;
 	  id[n] = 0;
-	  label[n++] = "mass_resolution";
+	  label[n++] = "min_mass";
+
+	  addr[n] = &mass_scale;
+	  id[n] = 0;
+	  label[n++] = "mass_scale";
 
 	  cout << "Multi lens: reading from " << filename << endl;
 
@@ -224,9 +246,11 @@ void MultiLens::printMultiLens(){
 
 	cout << "Nplanes " << Nplanes << endl;
 
-	cout << "z_lens " << zlens << endl << endl;
+	cout << "z_lens " << zlens << endl;
 
-	cout << "mass_resolution " << mass_resolution << endl << endl;
+	cout << "mass scale " << mass_scale << endl;
+
+	cout << "min mass " << min_mass << endl << endl;
 }
 
 MultiLens::~MultiLens(){
@@ -237,34 +261,40 @@ MultiLens::~MultiLens(){
 	delete[] dDl;
 }
 
-void buildHaloTree(MultiLens *lens,CosmoHndl cosmo, double zsource,double fieldofview){
+haloHndl buildHaloTree(MultiLens *lens /// the multi lens model
+		,CosmoHndl cosmo /// the cosmology
+		,double zsource /// the source resdhift
+		,double fieldofview // the field of view in square degrees
+		){
 	IndexType N, N_last;
-	haloHndl halo;
+	haloHndl haloModel;
 
-    halo = new haloM(zsource,cosmo,lens,fieldofview,1);
+    haloModel = new haloM(zsource,cosmo,lens,fieldofview,1);
 
 	for(int j = 0, N_last = 0; j < lens->getNplanes(); j++){
 		N = lens->NhalosinPlane[j];
-		lens->halo_tree[j] = new ForceTree(&halo->pos[N_last + N],N,&halo->masses[N_last + N],&halo->sizes[N_last + N],true,true,5,2,true,0.1);
+		lens->halo_tree[j] = new ForceTree(&haloModel->pos[N_last + N],N,&haloModel->masses[N_last + N],&haloModel->sizes[N_last + N],true,true,5,2,true,0.1);
 
 		N_last = N;
 	}
 
+	return haloModel;
 }
 
 void MultiLens::setRedshift(double zsource){
 	std:: vector<double> lz;
 	/* fill the redshift vector logarithmically */
-	fill_linear(lz,Nplanes+2,0.,zsource);
+	fill_linear(lz,Nplanes+1,0.,zsource);
 
-	for(int i = 1; i < Nplanes+2; i++)
-		redshift[i-1] = -1 + pow(10.,lz[i]);
+	for(int i = 1; i < Nplanes+1; i++){
+		redshift[i-1] = lz[i];
+		cout << redshift[i-1] << " ";
+	}
+	cout << endl;
 }
 
 void MultiLens::setInternalParams(CosmoHndl cosmo, double zsource){
 	int j;
-
-	mass_scale = 1.0;  /// REMEBER TO TAKE THIS LINE OUT
 
 	setRedshift(zsource);
 
