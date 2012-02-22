@@ -23,7 +23,7 @@
 /** \ingroup ImageFindingL2
  *  divide_images
  *
- * \brief Divides the image points up into separate images that are linked by cell
+ * \brief `Reorders the image points up into separate images that are linked by cell
  * neighbors.
  *
  * Should scale like NlogN  instead of N^2.  This is achieved with a recursive
@@ -45,12 +45,12 @@
 void divide_images(TreeHndl i_tree,ImageInfo *imageinfo
 		,int *Nimages,int Nimagesmax){
 	unsigned long i,j,Ntemp;
-	KistHndl new_imagekist = NewKist();
+	KistHndl new_imagekist = new Kist;
 	double tmp = 0;
 
-	if(imageinfo->imagekist->Nunits < 2){
+	if(imageinfo->imagekist->Nunits() < 2){
 		*Nimages = 1;
-		imageinfo->Npoints = imageinfo->imagekist->Nunits;
+		imageinfo->Npoints = imageinfo->imagekist->Nunits();
 
 		return ;
 	}
@@ -86,7 +86,7 @@ void divide_images(TreeHndl i_tree,ImageInfo *imageinfo
 
 		// take out points that got un-marked in partition_images
 
-		Ntemp = imageinfo->imagekist->Nunits;
+		Ntemp = imageinfo->imagekist->Nunits();
 		imageinfo[i].area = imageinfo[i].area_error = 0.0;
 		for( j=0,MoveToTopKist(imageinfo->imagekist) ; j < Ntemp ; ++j,MoveDownKist(imageinfo->imagekist) ){
 			if(getCurrentKist(imageinfo->imagekist)->in_image == 0){
@@ -103,7 +103,7 @@ void divide_images(TreeHndl i_tree,ImageInfo *imageinfo
 		imageinfo[i].area_error /= imageinfo[i].area;
 
 		++i;
-	}while(imageinfo->imagekist->Nunits > 0 && i < Nimagesmax);
+	}while(imageinfo->imagekist->Nunits() > 0 && i < Nimagesmax);
 
 	*Nimages = i;
 
@@ -117,14 +117,21 @@ void divide_images(TreeHndl i_tree,ImageInfo *imageinfo
 		}while(MoveDownKist(imageinfo->imagekist));
 	}
 
-	assert(imageinfo->imagekist->Nunits == 0);
+	assert(imageinfo->imagekist->Nunits() == 0);
 
-	imageinfo->imagekist->Nunits = new_imagekist->Nunits;
+	new_imagekist->MoveToTop();
+	while(new_imagekist->Nunits() > 0){
+		imageinfo->imagekist->InsertAfterCurrent(new_imagekist->TakeOutCurrent());
+		imageinfo->imagekist->Down();
+	}
+	/*
+	imageinfo->imagekist->Nunits() = new_imagekist->Nunits();
 	imageinfo->imagekist->top = new_imagekist->top;
 	imageinfo->imagekist->bottom = new_imagekist->bottom;
 	imageinfo->imagekist->current = new_imagekist->current;
+	*/
 
-	free(new_imagekist);
+	delete new_imagekist;
 
 
 	MoveToTopKist(imageinfo->imagekist);
@@ -163,12 +170,12 @@ void divide_images(TreeHndl i_tree,ImageInfo *imageinfo
  */
 void divide_images_kist(TreeHndl i_tree,ImageInfo *imageinfo,int *Nimages,int Nimagesmax){
 	unsigned long i,j,Ntemp,Ntest;
-	KistHndl new_imagekist = NewKist();
+	KistHndl new_imagekist = new Kist;
 	double tmp = 0;
 
-	if(imageinfo->imagekist->Nunits < 2){
+	if(imageinfo->imagekist->Nunits() < 2){
 		*Nimages = 1;
-		imageinfo->Npoints = imageinfo->imagekist->Nunits;
+		imageinfo->Npoints = imageinfo->imagekist->Nunits();
 
 		return ;
 	}
@@ -176,8 +183,8 @@ void divide_images_kist(TreeHndl i_tree,ImageInfo *imageinfo,int *Nimages,int Ni
 	// mark points in tree as in image and transfer points to temporary temporary new_imagekist
 	assert(imageinfo->imagekist->top->data);
 	MoveToTopKist(imageinfo->imagekist);
-	Ntest = imageinfo->imagekist->Nunits;
-	while(imageinfo->imagekist->Nunits > 0){
+	Ntest = imageinfo->imagekist->Nunits();
+	while(imageinfo->imagekist->Nunits() > 0){
 		getCurrentKist(imageinfo->imagekist)->in_image = true;
 		getCurrentKist(imageinfo->imagekist)->image->in_image = true;
 		InsertAfterCurrentKist(new_imagekist,TakeOutCurrentKist(imageinfo->imagekist));
@@ -187,14 +194,14 @@ void divide_images_kist(TreeHndl i_tree,ImageInfo *imageinfo,int *Nimages,int Ni
 	i=0;
 	do{
 
-		//printf("   new_imagekist %li\n",new_imagekist->Nunits);
+		//printf("   new_imagekist %li\n",new_imagekist->Nunits());
 		imageinfo[i].area = partition_images_kist(getCurrentKist(new_imagekist),imageinfo[i].imagekist,i_tree);
-		assert(imageinfo[i].imagekist->Nunits <= new_imagekist->Nunits);  // check that no more than
+		assert(imageinfo[i].imagekist->Nunits() <= new_imagekist->Nunits());  // check that no more than
 
-		imageinfo[i].Npoints = imageinfo[i].imagekist->Nunits;
+		imageinfo[i].Npoints = imageinfo[i].imagekist->Nunits();
 		// take out points that got un-marked in partition_images
 
-		Ntemp = new_imagekist->Nunits;
+		Ntemp = new_imagekist->Nunits();
 		imageinfo[i].area = imageinfo[i].area_error = 0.0;
 
 		for( j=0,MoveToTopKist(new_imagekist) ; j < Ntemp ; ++j){
@@ -215,14 +222,14 @@ void divide_images_kist(TreeHndl i_tree,ImageInfo *imageinfo,int *Nimages,int Ni
 				MoveDownKist(new_imagekist);
 			}
 
-			//printf("%li %li\n",new_imagekist->Nunits,imageinfo[i].imagekist->Nunits);
+			//printf("%li %li\n",new_imagekist->Nunits(),imageinfo[i].imagekist->Nunits());
 		}
 		imageinfo[i].area_error /= imageinfo[i].area;
 
-		assert((Ntemp - new_imagekist->Nunits - imageinfo[i].imagekist->Nunits) == 0);
+		assert((Ntemp - new_imagekist->Nunits() - imageinfo[i].imagekist->Nunits()) == 0);
 		assert(AtBottomKist(new_imagekist));
 		++i;
-	}while(new_imagekist->Nunits > 0 && i < Nimagesmax);
+	}while(new_imagekist->Nunits() > 0 && i < Nimagesmax);
 
 	*Nimages = i;
 
@@ -233,11 +240,11 @@ void divide_images_kist(TreeHndl i_tree,ImageInfo *imageinfo,int *Nimages,int Ni
 			InsertAfterCurrentKist(imageinfo[i-1].imagekist,TakeOutCurrentKist(new_imagekist));
 			MoveDownKist(imageinfo[i-1].imagekist);
 			++(imageinfo[i-1].Npoints);
-		}while(new_imagekist->Nunits > 0);
+		}while(new_imagekist->Nunits() > 0);
 	}
 
-	assert(new_imagekist->Nunits == 0);
-	freeKist(new_imagekist);
+	assert(new_imagekist->Nunits() == 0);
+	delete new_imagekist;
 
 	// mark all image points
 	for(i=0;i<*Nimages;++i){
@@ -265,7 +272,7 @@ void find_divide_images(TreeHndl i_tree,TreeHndl s_tree
 	PointsWithinKist(s_tree,source_x,source_r,imageinfo->imagekist,0);
 
 	// no image points found
-	if(imageinfo->imagekist->Nunits == 0){
+	if(imageinfo->imagekist->Nunits() == 0){
 		*Nimages = 0;
 		return;
 	}
@@ -273,7 +280,7 @@ void find_divide_images(TreeHndl i_tree,TreeHndl s_tree
 	// move from source plane to image plane
 	TranformPlanesKist(imageinfo->imagekist);
 
-	if(imageinfo->imagekist->Nunits == 1){
+	if(imageinfo->imagekist->Nunits() == 1){
 		*Nimages = 1;
 		imageinfo->Npoints = 1;
 		return;
@@ -294,7 +301,7 @@ void partition_images(Point *point,unsigned long *N_in_image,TreeHndl i_tree){
 	assert(point);
 	assert(i_tree);
 
-	KistHndl neighbors = NewKist();
+	KistHndl neighbors = new Kist;
 
 	// find all the neighbors of point
 	FindAllBoxNeighborsKist(i_tree,point,neighbors);
@@ -302,7 +309,7 @@ void partition_images(Point *point,unsigned long *N_in_image,TreeHndl i_tree){
 	// remove neighbors that are not marked as in image
 	//  It reduces the memory usage to do this before recursion
 
-	for(MoveToTopKist(neighbors) ; neighbors->Nunits > 0 ;){
+	for(MoveToTopKist(neighbors) ; neighbors->Nunits() > 0 ;){
 		if(getCurrentKist(neighbors)->in_image == false){
 			TakeOutCurrentKist(neighbors);
 		}else{
@@ -310,7 +317,7 @@ void partition_images(Point *point,unsigned long *N_in_image,TreeHndl i_tree){
 		}
 	}
 
-	while(neighbors->Nunits > 0){
+	while(neighbors->Nunits() > 0){
 		if(getCurrentKist(neighbors)->in_image == true){
 			getCurrentKist(neighbors)->in_image = false;
 			getCurrentKist(neighbors)->image->in_image = false;
@@ -322,8 +329,8 @@ void partition_images(Point *point,unsigned long *N_in_image,TreeHndl i_tree){
 
 	//printf("exiting partition_images\n");
 
-	assert(neighbors->Nunits == 0);
-	freeKist(neighbors);
+	assert(neighbors->Nunits() == 0);
+	delete neighbors;
 
 	return;
 }
@@ -341,7 +348,7 @@ double partition_images_kist(Point *point,KistHndl imagekist,TreeHndl i_tree){
 	assert(point->in_image == true);
 
 	double area = 0.0;
-	KistHndl neighbors = NewKist();
+	KistHndl neighbors = new Kist;
 
 	EmptyKist(imagekist);
 
@@ -357,7 +364,7 @@ double partition_images_kist(Point *point,KistHndl imagekist,TreeHndl i_tree){
 			FindAllBoxNeighborsKist(i_tree,getCurrentKist(imagekist),neighbors);
 
 			// remove neighbors that are not marked as in image
-			for(MoveToTopKist(neighbors) ; neighbors->Nunits > 0 ;){
+			for(MoveToTopKist(neighbors) ; neighbors->Nunits() > 0 ;){
 				if(getCurrentKist(neighbors)->in_image == false){
 					TakeOutCurrentKist(neighbors);
 				}else{
@@ -372,8 +379,8 @@ double partition_images_kist(Point *point,KistHndl imagekist,TreeHndl i_tree){
 
 	//assert(AreDataUniqueKist(imagekist));
 
-	assert(neighbors->Nunits == 0);
-	freeKist(neighbors);
+	assert(neighbors->Nunits() == 0);
+	delete neighbors;
 
 	return area;
 }

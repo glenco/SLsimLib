@@ -66,7 +66,7 @@ int refine_grid(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imagein
 
     	// cells on border
 		MoveToTopKist(imageinfo[i].outerborder);
-    	for(j=0;j<imageinfo[i].outerborder->Nunits;++j){
+    	for(j=0;j<imageinfo[i].outerborder->Nunits();++j){
     		if( getCurrentKist(imageinfo[i].outerborder)->gridsize > 1.01*rmax/Ngrid_block ){
     			// border point is marked to prevent refining more than once
     			//   it will be unmarked by the end of refine grid
@@ -108,7 +108,7 @@ int refine_grid(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imagein
       /* loop through outer border of ith image */
 
       MoveToTopKist(imageinfo[i].outerborder);
-      for(j=0;j<imageinfo[i].outerborder->Nunits;++j){
+      for(j=0;j<imageinfo[i].outerborder->Nunits();++j){
     	  if( getCurrentKist(imageinfo[i].outerborder)->gridsize > 1.01*rmax/Ngrid_block){/* only refine largest grid size in image*/
 
     		  point = getCurrentKist(imageinfo[i].outerborder);
@@ -188,7 +188,7 @@ long refine_edges(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,ImageInfo *image
 	for(i=0,Ncells=0;i<Nimages;++i){
 
 		MoveToTopKist(imageinfo[i].outerborder);
-		for(j=0;j<imageinfo[i].outerborder->Nunits;++j){
+		for(j=0;j<imageinfo[i].outerborder->Nunits();++j){
 			if( ( criterion==0 && pow(getCurrentKist(imageinfo[i].outerborder)->gridsize,2)/imageinfo[i].area > res_target )
 							|| ( criterion==1 && getCurrentKist(imageinfo[i].outerborder)->gridsize > res_target)
 							|| ( criterion==2 && pow(getCurrentKist(imageinfo[i].outerborder)->gridsize,2)/area_total > res_target) ){
@@ -201,7 +201,7 @@ long refine_edges(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,ImageInfo *image
 			MoveDownKist(imageinfo[i].outerborder);
 		}
 		MoveToTopKist(imageinfo[i].innerborder);
-		for(j=0;j<imageinfo[i].innerborder->Nunits;++j){
+		for(j=0;j<imageinfo[i].innerborder->Nunits();++j){
 			if( criterion==0 && pow(getCurrentKist(imageinfo[i].innerborder)->gridsize,2)/imageinfo[i].area > res_target ) ++Ncells;
 			if( criterion==1 && getCurrentKist(imageinfo[i].innerborder)->gridsize > res_target) ++Ncells;
 			if( criterion==2 && pow(getCurrentKist(imageinfo[i].innerborder)->gridsize,2)/area_total > res_target ) ++Ncells;
@@ -220,7 +220,7 @@ long refine_edges(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,ImageInfo *image
 			/* loop through outer border of ith image */
 
 		MoveToTopKist(imageinfo[i].outerborder);
-		for(j=0;j<imageinfo[i].outerborder->Nunits;++j){
+		for(j=0;j<imageinfo[i].outerborder->Nunits();++j){
 
 			//if( imageinfo[i].outerborder->current->gridsize > res_target){
 			if( ( criterion==0 && pow(getCurrentKist(imageinfo[i].outerborder)->gridsize,2)/imageinfo[i].area > res_target )
@@ -251,7 +251,7 @@ long refine_edges(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,ImageInfo *image
 		}
 
 		MoveToTopKist(imageinfo[i].innerborder);
-		for(j=0;j<imageinfo[i].innerborder->Nunits;++j){
+		for(j=0;j<imageinfo[i].innerborder->Nunits();++j){
 
 			//if( getCurrentKist(imageinfo[i].innerborderkist)->gridsize > res_target){
 			if( ( criterion==0 && pow(getCurrentKist(imageinfo[i].innerborder)->gridsize,2)/imageinfo[i].area > res_target )
@@ -327,7 +327,7 @@ long refine_edges2(LensHndl lens,double *y_source,double r_source,TreeHndl i_tre
 
 	long i,j,k,n,Ncells=0,Ncells_o=0,count=0,Npoints=0;
 	Point *i_points,*s_points,*point;
-	KistHndl neighborkist = NewKist();
+	KistHndl neighborkist = new Kist;
 	double tmp_area=0,area_total=0;
 	bool addinner;
 
@@ -342,7 +342,7 @@ long refine_edges2(LensHndl lens,double *y_source,double r_source,TreeHndl i_tre
 
 		// count border points that needs to be refined
 		MoveToTopKist(imageinfo[i].outerborder);
-		for(j=0,Ncells=0;j<imageinfo[i].outerborder->Nunits;++j){
+		for(j=0,Ncells=0;j<imageinfo[i].outerborder->Nunits();++j){
 			if( ( criterion==0 && pow( getCurrentKist(imageinfo[i].outerborder)->gridsize,2)/imageinfo[i].area > res_target )
 					|| ( criterion==1 && getCurrentKist(imageinfo[i].outerborder)->gridsize > res_target)
 					|| ( criterion==2 && pow( getCurrentKist(imageinfo[i].outerborder)->gridsize,2)/area_total > res_target)){
@@ -355,14 +355,14 @@ long refine_edges2(LensHndl lens,double *y_source,double r_source,TreeHndl i_tre
 			MoveDownKist(imageinfo[i].outerborder);
 		}
 		MoveToTopKist(imageinfo[i].innerborder);
-		for(j=0;j<imageinfo[i].innerborder->Nunits;++j){
+		for(j=0;j<imageinfo[i].innerborder->Nunits();++j){
 			if( criterion==0 && pow(getCurrentKist(imageinfo[i].innerborder)->gridsize,2)/imageinfo[i].area > res_target ) ++Ncells;
 			if( criterion==1 && getCurrentKist(imageinfo[i].innerborder)->gridsize > res_target) ++Ncells;
 			if( criterion==2 && pow(getCurrentKist(imageinfo[i].innerborder)->gridsize,2)/area_total > res_target ) ++Ncells;
 			MoveDownKist(imageinfo[i].innerborder);
 		}
 		//printf("Ncells=%i total \n",Ncells);
-		//printf("       %i Nouter=%i Ninner=%i\n",i,imageinfo[i].outerborder->Npoints,imageinfo[i].innerborderkist->Nunits);
+		//printf("       %i Nouter=%i Ninner=%i\n",i,imageinfo[i].outerborder->Npoints,imageinfo[i].innerborderkist->Nunits());
 
 		EmptyKist(neighborkist);
 
@@ -372,7 +372,7 @@ long refine_edges2(LensHndl lens,double *y_source,double r_source,TreeHndl i_tre
 			Ncells_o=Ncells;
 
 			MoveToTopKist(imageinfo[i].outerborder);
-			for(j=0,Ncells=0;j<imageinfo[i].outerborder->Nunits;++j){
+			for(j=0,Ncells=0;j<imageinfo[i].outerborder->Nunits();++j){
 
 			//if( imageinfo[i].outerborder->current->gridsize > res_target){
 				if( ( criterion==0 && pow( getCurrentKist(imageinfo[i].outerborder)->gridsize,2)/imageinfo[i].area > res_target )
@@ -404,7 +404,7 @@ long refine_edges2(LensHndl lens,double *y_source,double r_source,TreeHndl i_tre
 
 			MoveToTopKist(imageinfo[i].innerborder);
 			tmp_area=imageinfo[i].area;
-			for(j=0;j<imageinfo[i].innerborder->Nunits;++j){
+			for(j=0;j<imageinfo[i].innerborder->Nunits();++j){
 
 			//if( getCurrentKist(imageinfo[i].innerborderkist)->gridsize > res_target){
 				if( ( criterion == 0 && pow(getCurrentKist(imageinfo[i].innerborder)->gridsize,2)/tmp_area > res_target )
@@ -441,7 +441,7 @@ long refine_edges2(LensHndl lens,double *y_source,double r_source,TreeHndl i_tre
 			}
 
 		//printf("image %i Ncells=%i after splitting process\n",i,Ncells);
-		//printf("image %i area = %e  inner %i outer %i\n",i,imageinfo[i].area,imageinfo[i].innerborderkist->Nunits,
+		//printf("image %i area = %e  inner %i outer %i\n",i,imageinfo[i].area,imageinfo[i].innerborderkist->Nunits(),
 		//		imageinfo[i].outerborder->Npoints);
 		//if(tmp_area==imageinfo[i].area){printf("no subtraction of area\n"); exit(0);}
 
@@ -494,7 +494,7 @@ long refine_edges2(LensHndl lens,double *y_source,double r_source,TreeHndl i_tre
 			//if(Ncells){
 			EmptyKist(imageinfo[i].outerborder);
 
-			Npoints=imageinfo[i].innerborder->Nunits;
+			Npoints=imageinfo[i].innerborder->Nunits();
 			MoveToTopKist(imageinfo[i].innerborder);
 			for(j=0;j<Npoints;++j){
 				addinner=false;
@@ -510,17 +510,17 @@ long refine_edges2(LensHndl lens,double *y_source,double r_source,TreeHndl i_tre
 				FindAllBoxNeighborsKist(i_tree,getCurrentKist(imageinfo[i].innerborder),neighborkist);
 
 				MoveToTopKist(neighborkist);
-				for(k=0;k < neighborkist->Nunits ;++k){
+				for(k=0;k < neighborkist->Nunits() ;++k){
 					if(getCurrentKist(neighborkist)->in_image == false){
 						addinner=true;
 
 						MoveToTopKist(imageinfo[i].outerborder);
-						for(n=0;n<imageinfo[i].outerborder->Nunits;++n){
+						for(n=0;n<imageinfo[i].outerborder->Nunits();++n){
 							if(getCurrentKist(imageinfo[i].outerborder) == getCurrentKist(neighborkist)) break;
 								MoveDownKist(imageinfo[i].outerborder);
 							}
 							// add to outer border
-						if(n==imageinfo[i].outerborder->Nunits){
+						if(n==imageinfo[i].outerborder->Nunits()){
 							InsertBeforeCurrentKist(imageinfo[i].outerborder,getCurrentKist(neighborkist));
 							MoveUpKist(imageinfo[i].outerborder);
 						}
@@ -538,7 +538,7 @@ long refine_edges2(LensHndl lens,double *y_source,double r_source,TreeHndl i_tre
 		}
 	}  // end loop through images
 
-	freeKist(neighborkist);
+	delete neighborkist;
 
 	return count;
 }
@@ -564,7 +564,7 @@ void findborders2(TreeHndl i_tree,ImageInfo *imageinfo){
 
 	if(imageinfo->Npoints < 1) return;
 
-	KistHndl neighborkist = NewKist();
+	KistHndl neighborkist = new Kist;
 
 	for(j=0;j<imageinfo->Npoints;++j){
 
@@ -578,7 +578,7 @@ void findborders2(TreeHndl i_tree,ImageInfo *imageinfo){
 		FindAllBoxNeighborsKist(i_tree,&(imageinfo->points[j]),neighborkist);
 
 		MoveToTopKist(neighborkist);
-		for(i=0;i<neighborkist->Nunits;++i){
+		for(i=0;i<neighborkist->Nunits();++i){
 
 			for(l=0;l<imageinfo->Npoints;++l) if( getCurrentKist(neighborkist)->id
 					== imageinfo->points[l].id) break;
@@ -587,11 +587,11 @@ void findborders2(TreeHndl i_tree,ImageInfo *imageinfo){
 				addinner=true;
 				// check if point is already in list
 				MoveToTopKist(imageinfo->outerborder);
-				for(m=0;m<imageinfo->outerborder->Nunits;++m){
+				for(m=0;m<imageinfo->outerborder->Nunits();++m){
 					if( getCurrentKist(imageinfo->outerborder) == getCurrentKist(neighborkist) ) break;
 					MoveDownKist(imageinfo->outerborder);
 				}
-				if(m==imageinfo->outerborder->Nunits){
+				if(m==imageinfo->outerborder->Nunits()){
 				// add point to outerborder
 					InsertAfterCurrentKist(imageinfo->outerborder,getCurrentKist(neighborkist));
 					MoveDownKist(imageinfo->outerborder);
@@ -698,7 +698,7 @@ void findborders2(TreeHndl i_tree,ImageInfo *imageinfo){
 
 	//checkTree(i_tree);
 	//printf("exiting findborders2\n");
-	freeKist(neighborkist);
+	delete neighborkist;
 
 	return;
 }
@@ -727,7 +727,7 @@ void findborders3(TreeHndl i_tree,ImageInfo *imageinfo){
 
 	if(imageinfo->Npoints < 1) return;
 
-	KistHndl neighborkist = NewKist();
+	KistHndl neighborkist = new Kist;
 
 	for(j=0;j<imageinfo->Npoints;++j){
 
@@ -741,17 +741,17 @@ void findborders3(TreeHndl i_tree,ImageInfo *imageinfo){
 		FindAllBoxNeighborsKist(i_tree,&(imageinfo->points[j]),neighborkist);
 
 		MoveToTopKist(neighborkist);
-		for(i=0;i<neighborkist->Nunits;++i){
+		for(i=0;i<neighborkist->Nunits();++i){
 
 			if( getCurrentKist(neighborkist)->in_image == false){  // point is a neighbor
 				addinner=true;
 				// check if point is already in list
 				MoveToTopKist(imageinfo->outerborder);
-				for(m=0;m<imageinfo->outerborder->Nunits;++m){
+				for(m=0;m<imageinfo->outerborder->Nunits();++m){
 					if( getCurrentKist(imageinfo->outerborder) == getCurrentKist(neighborkist) ) break;
 					MoveDownKist(imageinfo->outerborder);
 				}
-				if(m==imageinfo->outerborder->Nunits){
+				if(m==imageinfo->outerborder->Nunits()){
 				// add point to outerborder
 					InsertAfterCurrentKist(imageinfo->outerborder,getCurrentKist(neighborkist));
 					MoveDownKist(imageinfo->outerborder);
@@ -767,7 +767,7 @@ void findborders3(TreeHndl i_tree,ImageInfo *imageinfo){
 		}
 	}
 
-	freeKist(neighborkist);
+	delete neighborkist;
 
 	return;
 }
@@ -837,11 +837,11 @@ void combineCloseImages(double linkinglength,ImageInfo *imageinfo,int *Nimages
 
 				// combine points in image and on borders
 				MoveToBottomKist(imageinfo[j].imagekist);
-				while(imageinfo[j].imagekist->Nunits > 0) InsertAfterCurrentKist(imageinfo[i].imagekist,TakeOutCurrentKist(imageinfo[j].imagekist) );
+				while(imageinfo[j].imagekist->Nunits() > 0) InsertAfterCurrentKist(imageinfo[i].imagekist,TakeOutCurrentKist(imageinfo[j].imagekist) );
 				MoveToBottomKist(imageinfo[j].innerborder );
-				while(imageinfo[j].innerborder ->Nunits > 0) InsertAfterCurrentKist(imageinfo[i].innerborder ,TakeOutCurrentKist(imageinfo[j].innerborder) );
+				while(imageinfo[j].innerborder ->Nunits() > 0) InsertAfterCurrentKist(imageinfo[i].innerborder ,TakeOutCurrentKist(imageinfo[j].innerborder) );
 				MoveToBottomKist(imageinfo[j].outerborder );
-				while(imageinfo[j].outerborder ->Nunits > 0) InsertAfterCurrentKist(imageinfo[i].outerborder ,TakeOutCurrentKist(imageinfo[j].outerborder) );
+				while(imageinfo[j].outerborder ->Nunits() > 0) InsertAfterCurrentKist(imageinfo[i].outerborder ,TakeOutCurrentKist(imageinfo[j].outerborder) );
 
 				// images that are smaller than the target error are not included
 				if(DMIN(imageinfo[i].area,imageinfo[j].area)

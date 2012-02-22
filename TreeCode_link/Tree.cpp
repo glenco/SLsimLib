@@ -643,10 +643,10 @@ ImageInfo *NewImageInfo(int Nimages){
 
   for(i = 0;i < Nimages; i++)
   {
-	imageinfo[i].imagekist = NewKist();
+	imageinfo[i].imagekist = new Kist;
 	imageinfo[i].Npoints=0;
-    imageinfo[i].innerborder = NewKist();
-    imageinfo[i].outerborder = NewKist();
+    imageinfo[i].innerborder = new Kist;
+    imageinfo[i].outerborder = new Kist;
   }
 
   return imageinfo;
@@ -660,9 +660,9 @@ void freeImageInfo(ImageInfo *imageinfo,int Nimages){
 
 	//freeKist(imageinfo->imagekist);
 	for(i=0;i<Nimages;++i){
-		freeKist(imageinfo[i].imagekist);
-	    freeKist(imageinfo[i].innerborder);
-	    freeKist(imageinfo[i].outerborder);
+		delete imageinfo[i].imagekist;
+	    delete imageinfo[i].innerborder;
+	    delete imageinfo[i].outerborder;
 	}
 	free(imageinfo);
 }

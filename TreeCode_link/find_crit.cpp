@@ -99,13 +99,13 @@ ImageInfo *find_crit(LensHndl lens,GridHndl grid,int *Ncrits,double resolution,b
 
     /* make inner border the image */
     MoveToTopKist(critcurve[0].innerborder);
-    for(i=0,maxgridsize=0.0,mingridsize=1.0e99;i<critcurve[0].innerborder->Nunits;++i){
+    for(i=0,maxgridsize=0.0,mingridsize=1.0e99;i<critcurve[0].innerborder->Nunits();++i){
     	PointCopyData(&(critcurve[0].points[i]),getCurrentKist(critcurve[0].innerborder));
     	if(critcurve[0].points[i].gridsize > maxgridsize) maxgridsize=critcurve[0].points[i].gridsize;
     	if(critcurve[0].points[i].gridsize < mingridsize) mingridsize=critcurve[0].points[i].gridsize;
     	MoveDownKist(critcurve[0].innerborder);
     }
-    critcurve[0].Npoints=critcurve[0].innerborder->Nunits;
+    critcurve[0].Npoints=critcurve[0].innerborder->Nunits();
 
     // find borders again to properly define outer border
     //std::printf("going into findborders 2\n");

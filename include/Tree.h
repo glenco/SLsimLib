@@ -55,7 +55,7 @@ typedef int TreeElement;
 typedef struct ImageInfo{
     /// Array of points in image,  SHOULD NOT BE USED IN FAVOR OF imagekist!  Still used by caustic finding routines.
   Point *points;
-  /// Number of points in image, SHOULD NOT BE USED IN FAVOR OF imagekist->Nunits.  Still used by caustic finding routines.
+  /// Number of points in image, SHOULD NOT BE USED IN FAVOR OF imagekist->Nunits().  Still used by caustic finding routines.
   unsigned long Npoints;
   /// later addition, holds all points in image, will replace points eventually
   KistHndl imagekist;

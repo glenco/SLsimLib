@@ -161,7 +161,7 @@ void PointsWithinEllipKist(
 
 	cs = cos(posangle);
 	sn = sin(posangle);
-	Ntmp = neighborkist->Nunits;
+	Ntmp = neighborkist->Nunits();
 	for(i=0,MoveToTopKist(neighborkist);i<Ntmp;++i,MoveDownKist(neighborkist) ){
 		xtmp = getCurrentKist(neighborkist)->x;
 		x = xtmp[0]*cs - xtmp[1]*sn;
@@ -389,7 +389,7 @@ Point *NearestNeighborKist(TreeHndl tree,double *ray,int Nneighbors,KistHndl nei
 		MoveDownList(neighborlist);
 	}
 
-	assert(neighborlist->Npoints == neighborkist->Nunits);
+	assert(neighborlist->Npoints == neighborkist->Nunits()());
 
 	EmptyList(neighborlist);
 	free(neighborlist);

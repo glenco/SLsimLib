@@ -1281,8 +1281,8 @@ void PrintImages(ImageInfo *images,long Nimages){
 
 	std::printf("%li",Nimages);
 	for(i=0;i<Nimages;++i){
-		std::printf("%li\n",images[i].imagekist->Nunits);
-		for(j=0,MoveToTopKist(images[i].imagekist);j<images[i].imagekist->Nunits;++j,MoveDownKist(images[i].imagekist))
+		std::printf("%li\n",images[i].imagekist->Nunits());
+		for(j=0,MoveToTopKist(images[i].imagekist);j<images[i].imagekist->Nunits();++j,MoveDownKist(images[i].imagekist))
 			std::printf("%e %e  %e\n",getCurrentKist(images[i].imagekist)->x[0],getCurrentKist(images[i].imagekist)->x[1]
 			                         ,getCurrentKist(images[i].imagekist)->gridsize);
 	}
@@ -1291,7 +1291,7 @@ void PrintImages(ImageInfo *images,long Nimages){
 void PrintImageInfo(ImageInfo *image){
 
 	std::printf(" PrintImageInfo\n");
-	std::printf("  Npoints = %li  area = %e +/- %e\n",image->imagekist->Nunits,image->area,image->area_error);
+	std::printf("  Npoints = %li  area = %e +/- %e\n",image->imagekist->Nunits(),image->area,image->area_error);
 	std::printf("  gridrange = %e %e %e\n",image->gridrange[0],image->gridrange[1],image->gridrange[2]);
-	std::printf("  borders inner N = %li  outer N = %li\n",image->innerborder->Nunits,image->outerborder->Nunits);
+	std::printf("  borders inner N = %li  outer N = %li\n",image->innerborder->Nunits(),image->outerborder->Nunits());
 }

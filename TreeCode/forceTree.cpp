@@ -196,12 +196,10 @@ float * ForceTree::CalculateSPHsmoothing(int N){
 
 /** TreeNBForce2D calculates the defection, convergence and shear using
  *   the plane-lens approximation with 3D SPH smoothing of the density
- *   rsph must be calculated before doing this with FindRSPH
+ *   rsph must be calculated before doing this with FindRSPH or by other means.
  *   tangent[3] - the direction of light rays or orientation of the simulation
  *   tree can be either a 3d or 2d tree although 2d is more efficient
  *       need to change the projected cm in _TreeNBForce to us 3d tree
- *
- *   negative rsph give a screened potential
  * */
 
 void ForceTree::force2D(double *ray,double *alpha,double *kappa,double *gamma,bool no_kappa){

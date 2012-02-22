@@ -102,7 +102,7 @@ void map_images(
 		MoveToTopKist(imageinfo[i].imagekist);
 		imageinfo[i].area = 0.0;
 		//printf("%li points in image %i\n",imageinfo[i].Npoints,i);
-		for(j = 0 ; j < imageinfo[i].imagekist->Nunits ; ++j,MoveDownKist(imageinfo[i].imagekist)){
+		for(j = 0 ; j < imageinfo[i].imagekist->Nunits() ; ++j,MoveDownKist(imageinfo[i].imagekist)){
 
 			y[0] = getCurrentKist(imageinfo[i].imagekist)->image->x[0] - source->source_x[0];
 			y[1] = getCurrentKist(imageinfo[i].imagekist)->image->x[1] - source->source_x[1];
@@ -156,7 +156,7 @@ void map_images(
 		tmp=0.0;
 		imageinfo[i].centroid[0] = 0.0;
 		imageinfo[i].centroid[1] = 0.0;
-		for(j = 0 ; j < imageinfo[i].imagekist->Nunits ; ++j,MoveDownKist(imageinfo[i].imagekist) ){
+		for(j = 0 ; j < imageinfo[i].imagekist->Nunits() ; ++j,MoveDownKist(imageinfo[i].imagekist) ){
 			tmp += pow(getCurrentKist(imageinfo[i].imagekist)->gridsize,2)*getCurrentKist(imageinfo[i].imagekist)->surface_brightness;
 			imageinfo[i].centroid[0] += getCurrentKist(imageinfo[i].imagekist)->x[0]*pow(getCurrentKist(imageinfo[i].imagekist)->gridsize,2)
 					*getCurrentKist(imageinfo[i].imagekist)->surface_brightness;
@@ -202,16 +202,16 @@ int refine_grid_on_image(LensHndl lens,SourceHndl source,GridHndl grid,ImageInfo
   unsigned long Ncells,Nold,Ntmp;
 
   for(i=0,total_area=0;i<Nimages;++i) total_area += imageinfo[i].area;
-  for(i=0,Nold=0;i<Nimages;++i) Nold += imageinfo[i].imagekist->Nunits;
+  for(i=0,Nold=0;i<Nimages;++i) Nold += imageinfo[i].imagekist->Nunits();
   if(total_area == 0.0) return 0;
 
-  KistHndl nearest=NewKist();
+  KistHndl nearest=new Kist;
 
   number_of_refined=0;
   for(i=0,Ncells=0;i<Nimages;++i){
 	MoveToTopKist(imageinfo[i].imagekist);
 	if(imageinfo[i].area > 0.0){
-		for(j = 0 ; j < imageinfo[i].imagekist->Nunits ; ++j,MoveDownKist(imageinfo[i].imagekist) ){
+		for(j = 0 ; j < imageinfo[i].imagekist->Nunits() ; ++j,MoveDownKist(imageinfo[i].imagekist) ){
 
 			// count number of gridcells to be refined
 			// cells in image
@@ -288,7 +288,7 @@ int refine_grid_on_image(LensHndl lens,SourceHndl source,GridHndl grid,ImageInfo
 	}
   }
 
-  freeKist(nearest);
+  delete nearest;
   if(Ncells == 0) return 0;
 
   if(Ncells > 0){
@@ -297,7 +297,7 @@ int refine_grid_on_image(LensHndl lens,SourceHndl source,GridHndl grid,ImageInfo
  	  i_points = NewPointArray((Ngrid_block*Ngrid_block-1)*Ncells,true);
 
 	  for(i=0,Ncells=0 ; i < Nimages ; ++i){
-		  Ntmp = imageinfo[i].imagekist->Nunits;
+		  Ntmp = imageinfo[i].imagekist->Nunits();
 	 	  MoveToTopKist(imageinfo[i].imagekist);
 		  for(j = 0,Nold = 0; j < Ntmp ; ++j){
 
@@ -370,7 +370,7 @@ int refine_grid_on_image(LensHndl lens,SourceHndl source,GridHndl grid,ImageInfo
      for(i=0,Ncells=0;i<Nimages;++i){
     	 imageinfo[i].area = 0.0;
     	 MoveToTopKist(imageinfo[i].imagekist);
-    	 for(j = 0 ; j < imageinfo[i].imagekist->Nunits ; ++j,MoveDownKist(imageinfo[i].imagekist) ){
+    	 for(j = 0 ; j < imageinfo[i].imagekist->Nunits() ; ++j,MoveDownKist(imageinfo[i].imagekist) ){
     		 if(getCurrentKist(imageinfo[i].imagekist)->surface_brightness == -1){
     			 //PointCopyData(getCurrentKist(imageinfo[i].imagekist),getCurrentKist(imageinfo[i].imagekist)->image);
     			 y[0] = getCurrentKist(imageinfo[i].imagekist)->image->x[0] - source->source_x[0];

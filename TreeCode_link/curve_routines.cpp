@@ -658,20 +658,20 @@ void split_images(TreeHndl i_tree,ImageInfo *images,int Maximages
 	// copy outer borders to borders array
 	borders=(ImageInfo *) malloc(Maximages*sizeof(ImageInfo));
 	assert(borders);
-	Npoints=images->outerborder->Nunits;
+	Npoints=images->outerborder->Nunits();
 
 	// make a copy of the border points in a point array
 	borders->points=NewPointArray(Npoints,false);
 	// copy outer borders of images to border
 	MoveToTopKist(images->outerborder);
-	for(i=0;i<images->outerborder->Nunits;++i){
+	for(i=0;i<images->outerborder->Nunits();++i){
 		PointCopyData(&(borders[0].points[i]),getCurrentKist(images->outerborder));
 		MoveDownKist(images->outerborder);
 	}
-	borders->Npoints = images->outerborder->Nunits;
+	borders->Npoints = images->outerborder->Nunits();
 
 	std::printf("borders  %i  images %i  outerborder %i\n",borders->Npoints,images->Npoints
-			,images->outerborder->Nunits);
+			,images->outerborder->Nunits());
 
 	split_order_curve(borders,Maximages,&TmpNimages);
 
@@ -826,20 +826,20 @@ void split_images3(TreeHndl i_tree,ImageInfo *images,int Maximages
 	// copy inner borders to borders array
 	borders=(ImageInfo *) malloc(Maximages*sizeof(ImageInfo));
 	assert(borders);
-	Npoints=images->innerborder->Nunits;
+	Npoints=images->innerborder->Nunits();
 
 	// make a copy of the border points in a point array
 	borders->points=NewPointArray(Npoints,false);
 	// copy inner borders of images to border
 	MoveToTopKist(images->innerborder);
-	for(i=0;i<images->innerborder->Nunits;++i){
+	for(i=0;i<images->innerborder->Nunits();++i){
 		PointCopyData(&(borders[0].points[i]),getCurrentKist(images->innerborder));
 		MoveDownKist(images->innerborder);
 	}
-	borders->Npoints = images->innerborder->Nunits;
+	borders->Npoints = images->innerborder->Nunits();
 
 	//std::printf("borders  %li  images %li  innerborder %li\n",borders->Npoints,images->Npoints
-	//		,images->innerborderkist->Nunits);
+	//		,images->innerborderkist->Nunits());
 	// split up into separable curves
 	splitter(borders,Maximages,Nimages);
 

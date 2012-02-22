@@ -22,6 +22,46 @@
 /** \ingroup ConstructorL2
  *
  */
+
+Kist::Kist(){
+	  top=NULL;
+	  Number=0;
+	  bottom = top;
+	  current = top;
+
+	  return;
+}
+
+/** \ingroup ConstructorL2
+ *
+ * Note: Does not destroy data.
+ */
+Kist::~Kist(){
+
+	Kist::Empty();
+
+	return;
+}
+/// Copy constructor.  Two lists can point to the same data.
+Kist::Kist(Kist &a){
+	Unit *current;
+
+	top=NULL;
+	Number=0;
+	bottom = top;
+	current = top;
+
+	current = a.current;
+	a.MoveToTop();
+	do{
+		InsertAfterCurrent(a.getCurrent());
+		Down();
+	}while(a.Down());
+	assert(a.Nunits() == Nunits());
+	a.current = current;
+}
+/*
+ * This is the obsolete C style constructor.
 KistHndl NewKist(void){
   KistHndl kist;
 
@@ -37,77 +77,98 @@ KistHndl NewKist(void){
 
   return kist;
 }
+*/
+
+/** \ingroup ConstructorL2
+ * \brief Removes all elements from list without destroy the data.
+ */
+void Kist::Empty(){
+
+	while(Number > 0) TakeOutCurrent();
+	return;
+}
 
 void EmptyKist(KistHndl kist){
-	// reduce kist to no elements.
-	// Note: Does not destroy data.
-	assert(kist);
-	while(kist->Nunits > 0) TakeOutCurrentKist(kist);
+
+	kist->Empty();
+
 	return;
 }
 
 /** \ingroup ConstructorL2
 *  deallocate memory for kist
 *  Note: Does not destroy data.  A handle must still point to the data.
- * */
+ * *
 void freeKist(KistHndl kist){
 	EmptyKist(kist);
 	free(kist);
 	return;
-}
-/** \ingroup ConstructorL2
+}*/
+/**
  *
- * Deallocate memory for kist and all points in list.
- * Note: Does destroys the data points.
+ * Deallocate memory for all points in list.
+ * Note: Does destroy the data points.  Leaves Kist
+ * in empty state.
  */
 
-void FreeAllKist(KistHndl kist){
-	assert(kist);
-	Data *data[kist->Nunits];
-	unsigned long Nheads=0,Ndata=0,i,Nunits;
+void Kist::FreeAll(){
+	Data *data_t[Number];
+	unsigned long Nheads=0,Ndata=0,i,Nunits_t;
 
-	Nunits = kist->Nunits;
+	Nunits_t = Number;
 	i=0;
-	while(kist->Nunits > 0){
-		data[i] = TakeOutCurrentKist(kist);
-		Ndata += data[i]->head;
-		if(data[i]->head) ++Nheads;
+	while(Number > 0){
+		data_t[i] = Kist::TakeOutCurrent();
+		Ndata += data_t[i]->head;
+		if(data_t[i]->head) ++Nheads;
 		++i;
 	}
 
 	for(i = 0; i < Nheads ; ++i){
-		free(data[i]->x);
-		free(data[i]);
+		std::free(data_t[i]->x);
+		std::free(data_t[i]);
 	}
 
-	if(Nunits != Ndata){
+	if(Number != Ndata){
 		ERROR_MESSAGE();
-		std::printf("FreeAllKist freed no all of data in kist\n");
+		std::printf("FreeAllKist freed not all of data in kist\n");
 		exit(0);
 	}
 	return;
 }
+void FreeAllKist(KistHndl kist){
+	assert(kist);
+
+	kist->FreeAll();
+
+	return;
+}
 
 // Check state
-
+bool Kist::AtTop(){
+	if(current==top) return true;
+	else return false;
+}
 bool AtTopKist(KistHndl kist){
 	assert(kist);
 
-	if(kist->current==kist->top) return true;
+	return kist->AtTop();
+}
+
+bool Kist::AtBottom(){
+	if(current==bottom) return true;
 	else return false;
 }
 bool AtBottomKist(KistHndl kist){
 	assert(kist);
 
-	if(kist->current==kist->bottom) return true;
-	else return false;
+	return kist->AtBottom();
 }
 
 // Insert and remove
 
-void InsertAfterCurrentKist(KistHndl kist,Data *data){
+void Kist::InsertAfterCurrent(Data *data){
 	/* leaves current unchanged */
-	assert(kist);
 	assert(data);
 
     Unit *unit = (Unit *)malloc(sizeof(Unit));
@@ -116,31 +177,37 @@ void InsertAfterCurrentKist(KistHndl kist,Data *data){
 
     unit->data = data;
 
-    if(kist->Nunits > 0){
-      assert(kist->current);
+    if(Number > 0){
+      assert(current);
 
-      unit->prev = kist->current;
-      unit->next = kist->current->next;
+      unit->prev = current;
+      unit->next = current->next;
 
-      if(kist->current == kist->bottom) kist->bottom = unit;
-      else kist->current->next->prev=unit;
-      kist->current->next=unit;
+      if(current == bottom) bottom = unit;
+      else current->next->prev=unit;
+      current->next=unit;
     }else{  // empty kist case
-      kist->current=unit;
-      kist->top=unit;
-      kist->bottom=unit;
+      current=unit;
+      top=unit;
+      bottom=unit;
 
       unit->prev = NULL;
       unit->next = NULL;
     }
 
-    kist->Nunits++;
+    Number++;
+    return;
+}
+void InsertAfterCurrentKist(KistHndl kist,Data *data){
+	/* leaves current unchanged */
+	assert(kist);
+
+	kist->InsertAfterCurrent(data);
     return;
 }
 
-void InsertBeforeCurrentKist(KistHndl kist,Data *data){
+void Kist::InsertBeforeCurrent(Data *data){
 	// leaves current unchanged
-	assert(kist);
 	assert(data);
 
 	Unit *unit;
@@ -150,80 +217,98 @@ void InsertBeforeCurrentKist(KistHndl kist,Data *data){
 
 	unit->data=data;
 
-    if(kist->Nunits > 0){
-      assert(kist->current);
+    if(Number > 0){
+      assert(current);
 
-      unit->prev=kist->current->prev;
-      unit->next=kist->current;
-      if(kist->current == kist->top) kist->top=unit;
-      else kist->current->prev->next=unit;
-      kist->current->prev=unit;
+      unit->prev=current->prev;
+      unit->next=current;
+      if(current == top) top=unit;
+      else current->prev->next=unit;
+      current->prev=unit;
     }else{  /* empty kist case */
-      kist->current=unit;
-      kist->top=unit;
-      kist->bottom=unit;
+      current=unit;
+      top=unit;
+      bottom=unit;
 
       unit->prev = NULL;
       unit->next = NULL;
     }
 
-    kist->Nunits++;
+    Number++;
     return;
 }
-
-void MoveCurrentToBottomKist(KistHndl kist){
+void InsertBeforeCurrentKist(KistHndl kist,Data *data){
+	// leaves current unchanged
 	assert(kist);
+
+	kist->InsertBeforeCurrent(data);
+    return;
+}
+/**
+ * Swaps current data with bottom data
+ */
+void Kist::SwapCurrentWithBottom(){
 
 	Data *data;
 	// leaves current one above former current
 
-	data=kist->current->data;
-	kist->current->data=kist->bottom->data;
-	kist->bottom->data=data;
-	MoveUpKist(kist);
+	data=current->data;
+	current->data=bottom->data;
+	bottom->data=data;
+	Up();
+}
+void SwapCurrentWithBottomKist(KistHndl kist){
+	assert(kist);
+
+	kist->SwapCurrentWithBottom();
 }
 
-Data *TakeOutCurrentKist(KistHndl kist){
-	assert(kist);
+/**
+ * \brief Takes out current data and set current to data previous
+* except at top where current is set to new top.
+* Returns pointer to removed data.
+*/
+Data *Kist::TakeOutCurrent(){
 
     Data *data;
     Unit *unit;
 
-    /* takes out current data and set current to data previous */
-    /* Except at top where current is set to new top */
-    /* returns dataer to removed data */
+    if( Number <= 0) return NULL;
 
-    if(kist == NULL || kist->Nunits <= 0) return NULL;
+    assert(current);
+    assert(top);
+    assert(bottom);
 
-    assert(kist->current);
-    assert(kist->top);
-    assert(kist->bottom);
+    data = current->data;
+    unit = current;
 
-    data = kist->current->data;
-    unit = kist->current;
-
-    if(kist->top == kist->bottom){  /* last data */
-      kist->current=NULL;
-      kist->top=NULL;
-      kist->bottom=NULL;
-    }else if(kist->current==kist->top){
-      kist->top=kist->top->next;
-      kist->current=kist->top;
-      kist->top->prev=NULL;
-    } else if(kist->current==kist->bottom){
-      kist->bottom=kist->bottom->prev;
-      kist->current=kist->bottom;
-      kist->bottom->next=NULL;
+    if(top == bottom){  /* last data */
+      current=NULL;
+      top=NULL;
+      bottom=NULL;
+    }else if(current==top){
+      top=top->next;
+      current=top;
+      top->prev=NULL;
+    } else if(current==bottom){
+      bottom=bottom->prev;
+      current=bottom;
+      bottom->next=NULL;
     }else{
-      kist->current->prev->next=kist->current->next;
-      kist->current->next->prev=kist->current->prev;
-      kist->current=kist->current->prev;
+      current->prev->next=current->next;
+      current->next->prev=current->prev;
+      current=current->prev;
     }
     
-    free(unit);
-    kist->Nunits--;
+    std::free(unit);
+    Number--;
 
     return data;
+}
+Data *TakeOutCurrentKist(KistHndl kist){
+	assert(kist);
+
+	return kist->TakeOutCurrent();
 }
 
 
@@ -231,57 +316,85 @@ Data *TakeOutCurrentKist(KistHndl kist){
  *  Moving through kist
  */
 
+/// Moves jump elements down from current if possible. Negative jump moves up list.
+/// Returns false if and of list is reached before jump is finished.
+bool Kist::JumpDown(int jump){
+	int i;
+	bool ans;
+
+	if(jump > 0) for(i=0;i<jump;++i) ans=Down();
+	if(jump < 0) for(i=0;i<abs(jump);++i) ans=Up();
+	return ans;
+}
 void JumpDownKist(KistHndl kist,int jump){
 	assert(kist);
-	int i;
 
-	if(jump > 0) for(i=0;i<jump;++i) MoveDownKist(kist);
-	if(jump < 0) for(i=0;i<abs(jump);++i) MoveUpKist(kist);
+	kist->JumpDown(jump);
 	return ;
 }
+/// Move current down the list. Returns false when at the bottom of the list.
+bool Kist::Down(){
 
+	if(Number == 0) return false;
+	if(current==bottom) return false;
+	current=current->next;
+
+	return true;
+}
 bool MoveDownKist(KistHndl kist){
 	assert(kist);
 
-	if(kist->Nunits == 0) return false;
-	if(kist->current==kist->bottom) return false;
-	kist->current=kist->current->next;
+	return kist->Down();
+}
+/// Move current up the list. Returns false when at the top of the list.
+bool Kist::Up(){
+
+	if(Number == 0) return false;
+	if(current==top) return false;
+	current=current->prev;
 
 	return true;
 }
-
 bool MoveUpKist(KistHndl kist){
 	assert(kist);
 
-	if(kist->Nunits == 0) return false;
-	if(kist->current==kist->top) return false;
-	kist->current=kist->current->prev;
-
-	return true;
+	return kist->Up();
 }
 
 
+void Kist::MoveToTop(){
+	current=top;
+}
 void MoveToTopKist(KistHndl kist){
 	assert(kist);
-	kist->current=kist->top;
+	kist->MoveToTop();
+}
+
+void Kist::MoveToBottom(){
+	current=bottom;
 }
 void MoveToBottomKist(KistHndl kist){
 	assert(kist);
-	kist->current=kist->bottom;
+	kist->SwapCurrentWithBottom();
 }
 
-void FillKist(KistHndl kist,Data *data_array,unsigned long N){
+/** \brief Put an array of data into a kist.
+ * */
+void Kist::Fill(Data *data_array,unsigned long N){
   unsigned long i;
-  /* add N data to to end of kist */
-  /* id numbers are given in order from idmin */
-  /* this is used to initialize kist */
 
    for(i=1;i<N;++i){
-    InsertAfterCurrentKist(kist,&(data_array[i]));
-    MoveDownKist(kist);
+    InsertAfterCurrent(&(data_array[i]));
+    Kist::Down();
   }
 }
+void FillKist(KistHndl kist,Data *data_array,unsigned long N){
+	assert(kist);
 
+	kist->Fill(data_array,N);
+}
+
+/*
 void SwapDataInKist(KistHndl kist,Unit *p1,Unit *p2){
 	assert(kist);
 	assert(p1);
@@ -295,39 +408,51 @@ void SwapDataInKist(KistHndl kist,Unit *p1,Unit *p2){
 
 	return;
  }
-
+*/
 /*********************************/
 /*  data extraction routines */
 /*********************************/
+Data * Kist::getCurrent(){
+	assert(current);
+	assert(current->data);
+
+	return current->data;
+}
 Data *getCurrentKist(KistHndl kist){
 	assert(kist);
-	assert(kist->current);
-	assert(kist->current->data);
 
-	return kist->current->data;
+	return kist->getCurrent();
 }
 
 /*********************************
  * specific to image points
  * ******************************/
+/**
+ *\brief Transform all points in kist from image to source plane or vis versus
+ */
+void Kist::TranformPlanes(){
 
-void TranformPlanesKist(KistHndl kist){
-	assert(kist);
-
-	if(kist->Nunits == 0) return;
-	MoveToTopKist(kist);
+	if(Number == 0) return;
+	MoveToTop();
 	do{
-		assert(kist->current->data);
-		assert(kist->current->data->image);
-		kist->current->data = kist->current->data->image;
-	}while(MoveDownKist(kist));
+		assert(current->data);
+		assert(current->data->image);
+		current->data = current->data->image;
+	}while(Down());
 
 	return;
 }
+void TranformPlanesKist(KistHndl kist){
+	assert(kist);
 
+	kist->TranformPlanes();
+	return;
+}
+
+/*
 bool AreDataUniqueKist(KistHndl kist){
 	assert(kist);
-	if(kist->Nunits < 2) return true;
+	if(kist->Nunits() < 2) return true;
 
 	unsigned long i,j;
 	KistHndl tmpkist = NewKist();
@@ -335,12 +460,12 @@ bool AreDataUniqueKist(KistHndl kist){
 	// clone kist
 	//  the two lists use the same units as well
 	//  as data.
-	tmpkist->Nunits = kist->Nunits;
+	tmpkist->Nunits() = kist->Nunits();
 	tmpkist->top = kist->top;
 	tmpkist->bottom = kist->bottom;
 
 	MoveToTopKist(kist);
-	for(i=0;i<kist->Nunits;++i,MoveDownKist(kist)){
+	for(i=0;i<kist->Nunits();++i,MoveDownKist(kist)){
 		MoveToTopKist(tmpkist);
 		for(j=0;j<i;++j,MoveDownKist(tmpkist)){
 			if( getCurrentKist(kist) == getCurrentKist(tmpkist) ){
@@ -353,3 +478,4 @@ bool AreDataUniqueKist(KistHndl kist){
 	free(tmpkist);
 	return true;
 }
+*/
