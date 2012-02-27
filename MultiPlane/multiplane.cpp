@@ -32,7 +32,7 @@ haloM::haloM(double zsource  /// source redshift
 
 	int Nplanes = lens->getNplanes();
 
-	for(int i=0;i<Nplanes;i++){
+	for(int i=0;i<Nplanes-1;i++){
 
 		double Nhaloestot;
 		float Nhaloestotf;
@@ -42,21 +42,27 @@ haloM::haloM(double zsource  /// source redshift
 		if(i == 0) z1 = 0.0;
 		else z1 = lens->redshift[i] - 0.5*(lens->redshift[i] - lens->redshift[i-1]);
 
-		if(i == Nplanes) z2 = zsource;
+		if(i == Nplanes-2) z2 = zsource;
 		else z2 = lens->redshift[i] + 0.5*(lens->redshift[i+1] - lens->redshift[i]);
 
 		Nhaloes[0]=cosmo->haloNumberDensityOnSky(pow(10,Logm[0]),z1,z2,mfty)*fieldofview;
 		Nhaloestot = Nhaloes[0];
 		int k;
+
 #ifdef _OPENMP
 #pragma omp parallel for private(k)
 #endif
 		for(k=1;k<Nmassbin;k++){
+			//if(omp_get_thread_num() == 0) cout << "k " << k << endl;
 			// cumulative number density in one square degree
 			Nhaloes[k]=cosmo->haloNumberDensityOnSky(pow(10,Logm[k]),z1,z2,mfty)*fieldofview;
 			// normalize the cumulative distribution to one
 			Nhaloes[k] = Nhaloes[k]/Nhaloestot;
 		}
+#ifdef _OPENMP
+#pragma omp barrier
+#endif
+
 		Nhaloestotf=poidev(float(Nhaloestot), &seed);
 		lens->NhalosinPlane[i] = Nhaloestotf;
 		//cout << "Plane " << i << " z1 = " << z1 << " z2 = " << z2 << " Nhalos in plane = " << Nhaloestotf << endl;
@@ -96,7 +102,7 @@ haloM::haloM(double zsource  /// source redshift
 	pos = PosTypeMatrix(0,N-1,0,2);
 	int i;
 #ifdef _OPENMP
-#pragma omp parallel for private(i)
+#pragma omp parallel for private(i,maxr,r,theta)
 #endif
 	for(i = 0; i < N; i++){
 		maxr = sqrt(fieldofview/M_PI)*Dli[i]*M_PI/180;
@@ -128,16 +134,13 @@ MultiLens::MultiLens(string filename) : Lens(){
 	readParamfile(filename);
 
 	redshift = new double[Nplanes];
-
 	Dl = new double[Nplanes];
-
-	NhalosinPlane = new IndexType[Nplanes];
-
 	dDl = new double[Nplanes];
 
 	charge = 4*Grav*mass_scale;
 
-	halo_tree = new ForceTreeHndl[Nplanes];
+	halo_tree = new ForceTreeHndl[Nplanes-1];
+	NhalosinPlane = new IndexType[Nplanes-1];
 
 }
 
@@ -272,7 +275,7 @@ haloHndl buildHaloTree(MultiLens *lens /// the multi lens model
 
     haloModel = new haloM(zsource,cosmo,lens,fieldofview,1);
 
-	for(int j = 0, N_last = 0; j < lens->getNplanes(); j++){
+	for(int j = 0, N_last = 0; j < lens->getNplanes()-1; j++){
 		N = lens->NhalosinPlane[j];
 		lens->halo_tree[j] = new ForceTree(&haloModel->pos[N_last + N],N,&haloModel->masses[N_last + N],&haloModel->sizes[N_last + N],true,true,5,2,true,0.1);
 

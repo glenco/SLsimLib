@@ -46,7 +46,7 @@ void pixelize(
 	Point *points;
 	static TreeHndl ptree;
 
-	std::printf("%d %g %g %g\n", Npixels, range, center[0], center[1]);
+	//std::printf("%d %g %g %g\n", Npixels, range, center[0], center[1]);
 
 	if( (Npixels & (Npixels-1)) != 0){
 		ERROR_MESSAGE();

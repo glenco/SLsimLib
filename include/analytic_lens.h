@@ -37,6 +37,8 @@ public:
   /// private: the time delay scale in days/Mpc^2
   double to;
 
+  double Dl;
+
   // host elliptical
   double *host_x;    /// not used yet
   double host_core;
@@ -109,7 +111,7 @@ public:
   AnaLens(string);
   ~AnaLens();
 
-  void setInternalParams(CosmoHndl,double) = 0;
+  void setInternalParams(CosmoHndl,double);
   void readParamfile(string);
   void PrintAnaLens(bool show_substruct,bool show_stars);
 

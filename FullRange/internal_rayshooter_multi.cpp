@@ -37,8 +37,6 @@ void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
     double xminus[2],xplus[2];
     double kappa_minus,gamma_minus[3],kappa_plus,gamma_plus[3];
 
-    Nplanes = getNplanes();
-
 #ifdef _OPENMP
 #pragma omp parallel for private(i,xminus,xplus,alpha,kappa,gamma,kappa_minus,gamma_minus,kappa_plus,gamma_plus)
 #endif
@@ -68,14 +66,14 @@ void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
 
 			aa = (dDl[j+1]+dDl[j])/dDl[j];
 			bb = dDl[j+1]/dDl[j];
-			cc = dDl[j+1];
+			cc = charge*dDl[j+1];
 
 			xplus[0] = aa*i_points[i].image->x[0]
         				    - bb*xminus[0]
-        		            - charge*cc*alpha[0];
+        		            - cc*alpha[0];
        		xplus[1] = aa*i_points[i].image->x[1]
         				    - bb*xminus[1]
-        		            - charge*cc*alpha[1];
+        		            - cc*alpha[1];
 
 			xminus[0] = i_points[i].image->x[0];
 			xminus[1] = i_points[i].image->x[1];
@@ -87,7 +85,9 @@ void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
     		{
 
 				aa = (dDl[j+1]+dDl[j])*Dl[j]/dDl[j]/Dl[j+1];
+
 				bb = dDl[j+1]*Dl[ (j < 1) ? 0 : j-1]/dDl[j]/Dl[j+1];
+
 				cc = charge*dDl[j+1]*Dl[j]/Dl[j+1];
 
 				// still not positive about sign convention

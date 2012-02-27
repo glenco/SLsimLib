@@ -23,7 +23,7 @@ public:
 	double *redshift;
 	double *Dl, *dDl; /// angular diameter distances
 	double charge;
-	/// mass scaleå
+	/// mass scale
 	double mass_scale;
 	unsigned long *NhalosinPlane;
 	ForceTreeHndl *halo_tree;
