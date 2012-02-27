@@ -340,7 +340,7 @@ void AnaLens::reNormSubstructure(double kappa_sub){
 }
 
 void AnaLens::setInternalParams(CosmoHndl cosmo, double zsource){
-	double Ds, Dl, Dls;
+	double Ds, Dls;
 
 	Dl = cosmo->angDist(0,zlens);
 	Ds = cosmo->angDist(0,zsource);

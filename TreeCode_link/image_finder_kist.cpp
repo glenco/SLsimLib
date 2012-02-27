@@ -41,7 +41,7 @@ extern const double initialgridsize;
  *	 routine run much faster, but has the disadvantage that the number of images will not change during the final
  *	 stage of refinement.  This is the setting generally recommended.
  *
- *  kappa_off - This is used to turn off the calculation of surface density, shear, magnification and std::time delay.
+ *  kappa_off - This is used to turn off the calculation of surface density, shear, magnification and time delay.
  *  When finding a finite sized source these quantities are generally not required and slow down the routine.
  *
  *
@@ -60,7 +60,7 @@ void find_images_kist(
 		,bool splitimages  /// TRUE each image is refined to target accuracy, otherwise all images are treated as one
 		,short edge_refinement  /// see comment
 		,bool verbose  /// verbose
-		,bool kappa_off /// turns off calculation of surface density, shear, magnification and std::time delay
+		,bool kappa_off /// turns off calculation of surface density, shear, magnification and time delay
 		){
 
 
@@ -70,7 +70,7 @@ void find_images_kist(
 	short moved,flag;
 	int i,j,k;
 	//Point *i_points,*s_points,*point;
-	std::time_t to,t1,t2,t3,now;
+	time_t to,t1,t2,t3,now;
 	//KistHndl tmp_border_kist;
 	bool image_overlap;
 	static int oldNimages=0;
@@ -79,9 +79,9 @@ void find_images_kist(
 	//unsigned long Ntmp;
 	//Point *point,*closestpoint;
 
-	if(r_source==0.0){ERROR_MESSAGE(); std::printf("ERROR: find_images, point source must have a resolution target\n"); exit(1);}
+	if(r_source==0.0){ERROR_MESSAGE(); printf("ERROR: find_images, point source must have a resolution target\n"); exit(1);}
 
-	if(verbose) std::printf("initialgridsize=%e\n",initialgridsize);
+	if(verbose) printf("initialgridsize=%e\n",initialgridsize);
 	if(initial_size==0) initial_size=initialgridsize;
 
 	if(oldr==0){ oldr=r_source; Npoints_old = grid->i_tree->pointlist->Npoints;}
@@ -102,11 +102,11 @@ void find_images_kist(
 	// starting with a larger source size make sure all the grid sizes are small enough to find it
 	KistHndl subkist = NewKist();//,pointkist = NewKist();
 
-	if(verbose) std::printf("entering find_image\n");
-	std::time(&to);
+	if(verbose) printf("entering find_image\n");
+	time(&to);
 
 
-    if(verbose) std::printf("Ntemp=%li\n",Nsizes);
+    if(verbose) printf("Ntemp=%li\n",Nsizes);
 
     ClearAllMarks(grid->i_tree);
 
@@ -121,35 +121,36 @@ void find_images_kist(
 				;rtemp >= r_source
 				;rtemp /= Ngrid_block ){
 
-			std::time(&t1);
-			std::time(&t3);
+			time(&t1);
+			time(&t2);
+			time(&t3);
 			if(verbose)
-			std::printf("\n   new source size = %e    telescoping rsource = %e\n",rtemp,r_source);
+			printf("\n   new source size = %e    telescoping rsource = %e\n",rtemp,r_source);
 
 			do{
-				std::time(&t1);
-				if(verbose) std::printf("      std::time in refine grid %f sec\n",std::difftime(t1,t2));
+				time(&t1);
+				if(verbose) printf("      time in refine grid %f sec\n",difftime(t1,t2));
 
 				moved = image_finder_kist(lens,y_source,rtemp,grid->s_tree,grid->i_tree
 						  ,Nimages,imageinfo,NimageMax,Nimagepoints,-1,0);
 
-				std::time(&t2);
-				if(verbose)	std::printf("      std::time in image_finder %f sec\n        Nimagepoints=%li\n"
-						,std::difftime(t2,t1),*Nimagepoints);
+				time(&t2);
+				if(verbose)	printf("      time in image_finder %f sec\n        Nimagepoints=%li\n"
+						,difftime(t2,t1),*Nimagepoints);
 
 			}while(refine_grid_kist(lens,grid->i_tree,grid->s_tree,imageinfo,*Nimages,rtemp*mumin/Ngrid_block,2,kappa_off,true,dummy_pnt));
 
 
-			std::time(&t1);
-			if(verbose)	std::printf("      std::time in refine grid %f sec\n",std::difftime(t1,t2));
+			time(&t1);
+			if(verbose)	printf("      time in refine grid %f sec\n",difftime(t1,t2));
 
-			std::time(&now);
-			if(verbose) std::printf("    std::time for one source size %f sec\n",std::difftime(now,t3));
+			time(&now);
+			if(verbose) printf("    time for one source size %f sec\n",difftime(now,t3));
 		}
 
-	std::time(&now);
-	if(verbose) std::printf(" std::time for source size reduction %f sec\n",std::difftime(now,to));
-	std::time(&to);
+	time(&now);
+	if(verbose) printf(" time for source size reduction %f sec\n",difftime(now,to));
+	time(&to);
 
 
 	////////////////////////////////////////////////////////////////////////////////*/
@@ -165,15 +166,15 @@ void find_images_kist(
 
 	flag = 1; // Changed so that each image always has at least 100 points.
 
-	std::time(&now);
+	time(&now);
 
 	// do an initial uniform refinement to make sure there are enough point in
 	//  the images
 	do{
-		std::time(&t3);
+		time(&t3);
 		if(verbose)
-			std::printf("     std::time in image refinement %f min\n           points in grid=%li\n"
-					,fabs(std::difftime(t3,now)/60.),grid->i_tree->pointlist->Npoints);
+			printf("     time in image refinement %f min\n           points in grid=%li\n"
+					,fabs(difftime(t3,now)/60.),grid->i_tree->pointlist->Npoints);
 
 		// mark image points in tree
 		PointsWithinKist(grid->s_tree,y_source,r_source,subkist,1);
@@ -181,14 +182,14 @@ void find_images_kist(
 		moved=image_finder_kist(lens,y_source,fabs(r_source),grid->s_tree,grid->i_tree
 				,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
 
-		if(*Nimages < 1) std::printf("  Nimages=%i i=%i\n",*Nimages,i);
+		if(*Nimages < 1) printf("  Nimages=%i i=%i\n",*Nimages,i);
 
-		std::time(&now);
+		time(&now);
 		if(verbose){
-			std::printf("\n    i=%i\n     std::time in finding images %f min\n          Nimages=%i   Nimagepoints=%li\n"
-					,i,std::difftime(now,t3)/60.,*Nimages,*Nimagepoints);
-			std::printf("     image   # of points    error in area\n");
-			for(j=0;j<*Nimages;++j) std::printf("       %i        %li         %e\n",j,imageinfo[j].imagekist->Nunits,imageinfo[j].area_error);
+			printf("\n    i=%i\n     time in finding images %f min\n          Nimages=%i   Nimagepoints=%li\n"
+					,i,difftime(now,t3)/60.,*Nimages,*Nimagepoints);
+			printf("     image   # of points    error in area\n");
+			for(j=0;j<*Nimages;++j) printf("       %i        %li         %e\n",j,imageinfo[j].imagekist->Nunits,imageinfo[j].area_error);
 		}
 		++i;
 	}while( refine_grid_kist(lens,grid->i_tree,grid->s_tree,imageinfo,*Nimages,1.0e-1,flag,kappa_off,true,dummy_pnt)
@@ -199,7 +200,7 @@ void find_images_kist(
 		if(imageinfo[j].imagekist->Nunits < 1){
 			ERROR_MESSAGE();
 			for(k=j+1;k<*Nimages;++k) SwapImages(&imageinfo[k-1],&imageinfo[k]);
-			//std::printf("image %i has no points\n",j);
+			//printf("image %i has no points\n",j);
 			--*Nimages;
 			--j;
 		}
@@ -207,7 +208,7 @@ void find_images_kist(
 	/////////////////////////////////////////////
 	// refine just image edges to high resolution
 	/////////////////////////////////////////////
-	std::time(&now);
+	time(&now);
 
 	if(splitimages) flag = 0; else flag = 2;
 
@@ -232,7 +233,7 @@ void find_images_kist(
 					,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
 
 			//for(i = 0; i < *Nimages; ++i) PrintImageInfo(&(imageinfo[i]));
-			//std::printf("\n");
+			//printf("\n");
 
 			++i;
 		}while( refine_edges(lens,grid->i_tree,grid->s_tree,imageinfo,*Nimages,FracResTarget,flag,kappa_off)
@@ -252,11 +253,11 @@ void find_images_kist(
 	// unmark image points so new source can be used
 	PointsWithinKist(grid->s_tree,y_source,r_source,subkist,-1);
 
-	if(verbose) std::printf("finished edge refinement i=%i\n",i);
+	if(verbose) printf("finished edge refinement i=%i\n",i);
 
 
-	std::time(&t3);
-	if(verbose) std::printf("     std::time in image refinement %f min\n",std::difftime(t3,now)/60.);
+	time(&t3);
+	if(verbose) printf("     time in image refinement %f min\n",difftime(t3,now)/60.);
 
 	// if point source take only closest image point
 	if(r_source <= 0){
@@ -264,8 +265,8 @@ void find_images_kist(
 		exit(1);
 	}
 
-	std::time(&now);
-	if(verbose) std::printf("std::time in find_images %f min\n",std::difftime(now,to)/60.);
+	time(&now);
+	if(verbose) printf("time in find_images %f min\n",difftime(now,to)/60.);
 
 	oldy[0]=y_source[0];
 	oldy[1]=y_source[1];
@@ -285,7 +286,7 @@ void find_images_kist(
 			assert(*Nimages < NimageMax);
 			ERROR_MESSAGE();
 			for(k=j+1;k<*Nimages;++k) SwapImages(&imageinfo[k-1],&imageinfo[k]);
-			//std::printf("image %i has no points\n",j);
+			//printf("image %i has no points\n",j);
 			--*Nimages;
 			--j;
 		}
@@ -318,7 +319,10 @@ void find_images_kist(
 	ClearAllMarks(grid->i_tree);
 
 	//freeKist(pointkist);
-	//for(i = 0; i < *Nimages; ++i) PrintImageInfo(&(imageinfo[i]));
+
+	if(verbose)
+		for(i = 0; i < *Nimages; ++i) PrintImageInfo(&(imageinfo[i]));
+
 
 	return;
 }
@@ -349,13 +353,13 @@ short image_finder_kist(LensHndl lens, double *y_source,double r_source,TreeHndl
 
   //if(count==0) oldy[0]=oldy[1]=0;
 
-  if(splitparities==1){ ERROR_MESSAGE(); std::printf("ERROR: image_finger, option splitparaties==1 is obsolete\n"); exit(1); }
+  if(splitparities==1){ ERROR_MESSAGE(); printf("ERROR: image_finger, option splitparaties==1 is obsolete\n"); exit(1); }
   if(r_source <= 0.0){
 	  ERROR_MESSAGE();
-	  std::printf("ERROR: cannot do point source right now \n");
+	  printf("ERROR: cannot do point source right now \n");
 	  exit(1);
   }
-//  std::printf("in image_finder\n");
+//  printf("in image_finder\n");
   if( (oldy[0] != y_source[0]) ||  (oldy[1] != y_source[1]) ){
     oldy[0] = y_source[0];
     oldy[1] = y_source[1];
@@ -486,7 +490,7 @@ short image_finder_kist(LensHndl lens, double *y_source,double r_source,TreeHndl
 	  EmptyKist(imageinfo[i].outerborder);
   }
 
-	//for(i=0;i<*Nimages;++i) std::printf("  image %i  Npoints = %li Ninner = %li Noutter = %li  area = %e\n",i
+	//for(i=0;i<*Nimages;++i) printf("  image %i  Npoints = %li Ninner = %li Noutter = %li  area = %e\n",i
   //,imageinfo[i].Npoints,imageinfo[i].innerborder->Nunits,imageinfo[i].outerborder->Nunits,imageinfo[i].area);
 
    return moved;
@@ -515,7 +519,7 @@ int refine_grid_kist(LensHndl lens, TreeHndl i_tree,TreeHndl s_tree,ImageInfo *i
 		,short criterion,bool kappa_off,bool shootrays,Point **point_pnt){
 
 
-	//std::printf("entering refine_grid\n");
+	//printf("entering refine_grid\n");
 
   if(Nimages < 1) return 0;
 
@@ -554,7 +558,7 @@ int refine_grid_kist(LensHndl lens, TreeHndl i_tree,TreeHndl s_tree,ImageInfo *i
     		if( getCurrentKist(imageinfo[i].imagekist)->gridsize > 1.01*rmax/Ngrid_block) ++Ncells;
     	}while( MoveDownKist(imageinfo[i].imagekist) );
 
-    	//std::printf("   initial image point refinements count = %li\n",Ncells);
+    	//printf("   initial image point refinements count = %li\n",Ncells);
        	// cells on border
     	if(imageinfo[i].outerborder->Nunits > 0){
     		MoveToTopKist(imageinfo[i].outerborder);
@@ -566,7 +570,7 @@ int refine_grid_kist(LensHndl lens, TreeHndl i_tree,TreeHndl s_tree,ImageInfo *i
     				++Ncells;
     			}
     		}while( MoveDownKist(imageinfo[i].outerborder) );
-    		//std::printf("   initial outer border refinements count = %li\n",Ncells);
+    		//printf("   initial outer border refinements count = %li\n",Ncells);
     	}
     }
   }
@@ -586,7 +590,7 @@ int refine_grid_kist(LensHndl lens, TreeHndl i_tree,TreeHndl s_tree,ImageInfo *i
 
 	  // make sure no border point has a lower res than any image point
 
-	  //std::printf("imageinfo[%i].area_error=%e N=%i\n",i,imageinfo[i].area_error,imageinfo[i].Npoints);
+	  //printf("imageinfo[%i].area_error=%e N=%i\n",i,imageinfo[i].area_error,imageinfo[i].Npoints);
 	  if( pass || imageinfo[i].gridrange[0]>1.01*imageinfo[i].gridrange[1]){
 
 		  rmax=MAX(imageinfo[i].gridrange[1],imageinfo[i].gridrange[0]);
@@ -622,7 +626,7 @@ int refine_grid_kist(LensHndl lens, TreeHndl i_tree,TreeHndl s_tree,ImageInfo *i
 							  SwapPointsInArray(&i_points[Nmarker + kk - Nout],&i_points[Nmarker + Ngrid_block*Ngrid_block - 2 - Nout]);
 							  ++Nout;
 
-							  //std::printf("  point taken out\n");
+							  //printf("  point taken out\n");
 							  //ERROR_MESSAGE();
 						  }
 					  }
@@ -639,7 +643,7 @@ int refine_grid_kist(LensHndl lens, TreeHndl i_tree,TreeHndl s_tree,ImageInfo *i
 			  }
 		  }
 
-		  //std::printf("   actual image point refinements count = %li\n",Ncells);
+		  //printf("   actual image point refinements count = %li\n",Ncells);
 		  // * loop through outer border of ith image *
 
 		  MoveToTopKist(imageinfo[i].outerborder);
@@ -666,7 +670,7 @@ int refine_grid_kist(LensHndl lens, TreeHndl i_tree,TreeHndl s_tree,ImageInfo *i
 								  SwapPointsInArray(&i_points[Nmarker + kk - Nout],&i_points[Nmarker + Ngrid_block*Ngrid_block - 2 - Nout]);
 								  ++Nout;
 
-								  //std::printf("  point taken out\n");
+								  //printf("  point taken out\n");
 								  //ERROR_MESSAGE();
 							  }
 						  }
@@ -686,7 +690,7 @@ int refine_grid_kist(LensHndl lens, TreeHndl i_tree,TreeHndl s_tree,ImageInfo *i
 		  }
 
 
-      //std::printf("should be Ncells=%i Ngrid_block=%i   %i\n",Ncells,Ngrid_block,
+      //printf("should be Ncells=%i Ngrid_block=%i   %i\n",Ncells,Ngrid_block,
       //		(Ngrid_block*Ngrid_block-1)*Ncells);
 
     }
@@ -742,7 +746,7 @@ void findborders4(TreeHndl i_tree,ImageInfo *imageinfo){
 
 	if(i_tree->pointlist->Npoints == imageinfo->imagekist->Nunits) allin = true;    // all points on the grid are in the image
 
-	//std::printf("beginning findborders2\n");
+	//printf("beginning findborders2\n");
 	//checkTree(i_tree);
 
 	//point=(Point *)malloc(sizeof(Point));
