@@ -160,7 +160,6 @@ TreeHndl NewTree(
 /** \ingroup ConstructorL2
  * \brief Free tree and the linked list of points in it.
  */
-
 short freeTree(TreeHndl tree){
 
 	emptyTree(tree);

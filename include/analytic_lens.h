@@ -8,7 +8,7 @@
 #ifndef analens_declare
 #define analens_declare
 
-#include <cosmo.h>
+//#include <cosmo.h>
 #include <Tree.h>
 #include <forceTree.h>
 #include <lens.h>

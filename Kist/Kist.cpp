@@ -19,10 +19,7 @@
 
 /***** Structs *****/
 
-/** \ingroup ConstructorL2
- *
- */
-
+/// constructor
 Kist::Kist(){
 	  top=NULL;
 	  Number=0;
@@ -32,10 +29,7 @@ Kist::Kist(){
 	  return;
 }
 
-/** \ingroup ConstructorL2
- *
- * Note: Does not destroy data.
- */
+/// Destructor.  Needs to remove all the units.
 Kist::~Kist(){
 
 	Kist::Empty();
@@ -79,7 +73,7 @@ KistHndl NewKist(void){
 }
 */
 
-/** \ingroup ConstructorL2
+/** \ingroup ImageFindingL2
  * \brief Removes all elements from list without destroy the data.
  */
 void Kist::Empty(){
@@ -95,7 +89,7 @@ void EmptyKist(KistHndl kist){
 	return;
 }
 
-/** \ingroup ConstructorL2
+/* \ingroup ConstructorL2
 *  deallocate memory for kist
 *  Note: Does not destroy data.  A handle must still point to the data.
  * *
@@ -104,13 +98,12 @@ void freeKist(KistHndl kist){
 	free(kist);
 	return;
 }*/
+
 /**
- *
- * Deallocate memory for all points in list.
+ * \brief Deallocate memory for all points in list.
  * Note: Does destroy the data points.  Leaves Kist
  * in empty state.
  */
-
 void Kist::FreeAll(){
 	Data *data_t[Number];
 	unsigned long Nheads=0,Ndata=0,i,Nunits_t;
@@ -167,8 +160,8 @@ bool AtBottomKist(KistHndl kist){
 
 // Insert and remove
 
+/// Insert data into kist.  Leaves current unchanged.
 void Kist::InsertAfterCurrent(Data *data){
-	/* leaves current unchanged */
 	assert(data);
 
     Unit *unit = (Unit *)malloc(sizeof(Unit));
@@ -205,7 +198,7 @@ void InsertAfterCurrentKist(KistHndl kist,Data *data){
 	kist->InsertAfterCurrent(data);
     return;
 }
-
+/// Insert data into kist.  Leaves current unchanged.
 void Kist::InsertBeforeCurrent(Data *data){
 	// leaves current unchanged
 	assert(data);
@@ -412,6 +405,7 @@ void SwapDataInKist(KistHndl kist,Unit *p1,Unit *p2){
 /*********************************/
 /*  data extraction routines */
 /*********************************/
+/// Return pointer to data in current element.
 Data * Kist::getCurrent(){
 	assert(current);
 	assert(current->data);

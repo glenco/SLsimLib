@@ -51,8 +51,11 @@ typedef struct TreeStruct{
 typedef struct TreeStruct *TreeHndl;
 typedef int TreeElement;
 
+#include <grid_maintenance.h>
+
 /** \brief Structure for storing information about images or curves */
 typedef struct ImageInfo{
+
     /// Array of points in image,  SHOULD NOT BE USED IN FAVOR OF imagekist!  Still used by caustic finding routines.
   Point *points;
   /// Number of points in image, SHOULD NOT BE USED IN FAVOR OF imagekist->Nunits().  Still used by caustic finding routines.
@@ -72,23 +75,9 @@ typedef struct ImageInfo{
   /// the points on the outer border of the image, i.e. not in the image
   KistHndl outerborder;
   short Nencircled;
+
 } ImageInfo;
 
-/**
- * \brief Structure to contain both source and image trees.
- * It is not yet used, but may be useful.
- */
-typedef struct Grid{
-	/// tree on image plane
-	TreeHndl i_tree;
-	/// tree on source plane
-	TreeHndl s_tree;
-	/// one dimensional size of grid
-	int Ngrid;
-	bool initialized;
-} Grid;
-
-typedef struct Grid *GridHndl;
 
 //#include <point.h>
 //#include <List.h>

@@ -19,8 +19,8 @@
 		struct Unit *prev;
 	} Unit;
 
-	/** \brief
-	 * A Kist is a linked list of Units which each point to a Data type.
+	/** \ingroup ImageFindingL2
+	 * \brief A Kist is a linked list of Units which each point to a Data type.
 	 *
 	 * In this implementation the Data type is set to Point type, but this could
 	 * be changed for other applications.  Multiple Kists of the same points can be
@@ -30,8 +30,8 @@
 	public:
 
 		Kist();
-		~Kist();
 		Kist(Kist &a);
+		~Kist();
 
 		Data *getCurrent();
 

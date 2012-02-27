@@ -1,4 +1,4 @@
-/* \file
+/** \file
  * doc.h
  *
  * \brief This is a file to define doxygen groups for documentation purposes

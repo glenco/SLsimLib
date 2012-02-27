@@ -22,7 +22,7 @@ static double oldsm;//,tang[2],length,yot[2],radsourceT;
 /** \ingroup FitLens
  *
 *  \brief Wrapper that allows simple lens to be found with a single
- * lens and translates result into data structures used in the other code.
+ * lens with a single source and translates result into data structures used in the other code.
  *
  * The lens is centered on [0,0] source position in lens is updated along with all the modes.
  *
@@ -30,8 +30,8 @@ static double oldsm;//,tang[2],length,yot[2],radsourceT;
 
 void FindLensSimple(
 		AnaLens *lens  /// lens model, modes will be changed on return
+		,ImageInfo *imageinfo  // Positions of images.  Only imageinfo[].centoid[] is used.
 		,int Nimages   /// input number of images
-		,Point *image_positions  /// input image positions
 		,double *y               /// output source position
 		,double **dx_sub         /// pre-calculated deflections caused by substructures or external masses at each image
 		){
@@ -52,8 +52,8 @@ void FindLensSimple(
 
 	if(Nimages == 1){
 		for(i=1;i<lens->perturb_Nmodes;++i) lens->perturb_modes[i] = 0.0;
-		y[0] = image_positions[0].x[0];
-		y[1] = image_positions[1].x[1];
+		y[0] = imageinfo[0].centroid[0];
+		y[1] = imageinfo[0].centroid[1];
 
 		return ;
 	}
@@ -71,14 +71,14 @@ void FindLensSimple(
 
 	// calculate scale to re-normalize.  Otherwise the linear algebra routines will fail.
 	for(i=0,scale=0;i<Nimages;++i)
-		scale = DMAX(scale,sqrt( pow(image_positions[0].x[0] - image_positions[i].x[0],2)
-		    	 + pow(image_positions[0].x[1] - image_positions[i].x[1],2) ) );
+		scale = DMAX(scale,sqrt( pow(imageinfo[0].centroid[0] - imageinfo[i].centroid[0],2)
+		    	 + pow(imageinfo[0].centroid[1] - imageinfo[i].centroid[1],2) ) );
 
 	for(i=0;i<Nimages;++i){
 
 		pairing[i] = 1;
-		xob[i][0] = image_positions[i].x[0]/scale;
-		xob[i][1] = image_positions[i].x[1]/scale;
+		xob[i][0] = imageinfo[i].centroid[0]/scale;
+		xob[i][1] = imageinfo[i].centroid[1]/scale;
 
 		dx_sub[i][0] /= scale;
 		dx_sub[i][1] /= scale;
@@ -121,8 +121,7 @@ void FindLensSimple(
 }
 
 /** \ingroup FitLensL2
- * ***********************************
-\brief Find most elliptical lens
+* \brief Find most elliptical lens
 *
 ******
 ***  Output:
@@ -151,7 +150,7 @@ double ElliptisizeLens(
 		,double sigG  /// amount by which the center of the lens is allowed to vary
 		,double beta  /// - slope of density profile  kappa propto r^-beta
 		,int Nmod    /// number of modes used in lens fitting,  this must be greater then ???
-		,double *mod  /// 0,Nimages-1][0,1] deflection offset for each image caused by any masses not included in the host model (ex substructure)
+		,double *mod  /// Axial modes of lens model
 		,double **dx_sub  /// [0,Nimages-1][0,1] deflection offset for each image caused by any masses not included in the host model (ex substructure)
 		,double *re2     /// Einstein radius of additional lens
 		,double *q       /// output, see comment
@@ -281,8 +280,8 @@ double ElliptisizeLens(
 	return sm;
 }
 
+/// minimized to find model closest to elliptical
 double minEllip(double *par){
-	// minimized to find model closest to elliptical
 	double K,E,q,theta,sm,r,s;
 	int i;
 	static double x_center[2];

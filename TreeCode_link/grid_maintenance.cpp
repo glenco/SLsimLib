@@ -4,15 +4,6 @@
  *  Created on: Oct 12, 2011
  *      Author: bmetcalf
  */
-/*#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <point.h>
-#include <Tree.h>
-#include <tree_maintenance.h>
-#include <grid_maintenance.h>
-*/
 
 #include <slsimlib.h>
 
@@ -21,6 +12,26 @@
  *
  * Note: Defelection solver must be specified before creating a Grid.
  */
+Grid::Grid(
+		LensHndl lens      /// lens model for initializing grid
+		,int N1d           /// Initial number of grid points in each dimension.
+		,double center[2]  /// Center of grid.
+		,double range      /// Full width of grid in whatever units will be used.
+		 ){
+
+	Point *i_points,*s_points;
+
+	Ngrid = N1d;
+
+	i_points = NewPointArray(Ngrid*Ngrid,true);
+	xygridpoints(i_points,range,center,Ngrid,0);
+	s_points=LinkToSourcePoints(i_points,Ngrid*Ngrid);
+	lens->rayshooterInternal(Ngrid*Ngrid,i_points,false);
+	// Build trees
+	i_tree = BuildTree(i_points,Ngrid*Ngrid);
+	s_tree = BuildTree(s_points,Ngrid*Ngrid);
+}
+/*
 GridHndl NewGrid(LensHndl lens, int Ngrid,double center[2],double range){
 	GridHndl grid = (Grid *)malloc(sizeof(Grid));
 	Point *i_points,*s_points;
@@ -37,10 +48,16 @@ GridHndl NewGrid(LensHndl lens, int Ngrid,double center[2],double range){
 
 	return grid;
 }
-
+*/
 /** \ingroup Constructor
  * \brief Destructor for a Grid.  Frees all memory.
  */
+Grid::~Grid(){
+	freeTree(i_tree);
+	freeTree(s_tree);
+	return;
+}
+/*
 void FreeGrid(GridHndl grid){
 	freeTree(grid->i_tree);
 	freeTree(grid->s_tree);
@@ -48,26 +65,27 @@ void FreeGrid(GridHndl grid){
 
 	return;
 }
+*/
 /** \ingroup ImageFinding
  *  \brief Reinitializes the grid so that it is back to the original coarse grid, but if
  *  the lens has changed the source positions will be updated.
  */
-void ReInitializeGrid(LensHndl lens, GridHndl grid){
+void Grid::ReInitializeGrid(LensHndl lens){
 
 	Point *i_points,*s_points;
 	double range,center[2];
 	int Ngrid;
 
-	range = grid->i_tree->top->boundary_p2[0] - grid->i_tree->top->boundary_p1[0];
-	center[0] = (grid->i_tree->top->boundary_p2[0] + grid->i_tree->top->boundary_p1[0])/2;
-	center[1] = (grid->i_tree->top->boundary_p2[1] + grid->i_tree->top->boundary_p1[1])/2;
-	Ngrid = grid->Ngrid;
+	range = i_tree->top->boundary_p2[0] - i_tree->top->boundary_p1[0];
+	center[0] = (i_tree->top->boundary_p2[0] + i_tree->top->boundary_p1[0])/2;
+	center[1] = (i_tree->top->boundary_p2[1] + i_tree->top->boundary_p1[1])/2;
+	Ngrid = Ngrid;
 
 	//////////////////////////////
 	  // redo grid with stars in it
 	  // free old tree to speed up image finding
-	emptyTree(grid->i_tree);
-	emptyTree(grid->s_tree);
+	emptyTree(i_tree);
+	emptyTree(s_tree);
 
 
 	// build new initial grid
@@ -76,19 +94,17 @@ void ReInitializeGrid(LensHndl lens, GridHndl grid){
 	s_points=LinkToSourcePoints(i_points,Ngrid*Ngrid);
 	lens->rayshooterInternal(Ngrid*Ngrid,i_points,false);
 	// fill trees
-	FillTree(grid->i_tree,i_points,Ngrid*Ngrid);
-	FillTree(grid->s_tree,s_points,Ngrid*Ngrid);
-
-	return;
+	FillTree(i_tree,i_points,Ngrid*Ngrid);
+	FillTree(s_tree,s_points,Ngrid*Ngrid);
 }
+
 /** \ingroup ImageFinding
  *
  * \brief DOES NOT WORK YET !!!!
  */
-void TrimGrid(GridHndl grid,double highestres,bool useSB){
+void Grid::TrimGrid(double highestres,bool useSB){
 
-	PruneTrees(grid->i_tree,grid->s_tree,highestres,useSB);
-	return;
+	PruneTrees(i_tree,s_tree,highestres,useSB);
 }
 
 /** \ingroup ImageFinding
@@ -99,27 +115,26 @@ void TrimGrid(GridHndl grid,double highestres,bool useSB){
  * changes in the grid.
  * Both i_tree and s_tree are both changed although only s_tree shows up here.
  */
-void RefreshSurfaceBrightnesses(SourceHndl source,GridHndl grid){
+void Grid::RefreshSurfaceBrightnesses(SourceHndl source){
 	double y[2];
 
-	MoveToTopList(grid->s_tree->pointlist);
+	MoveToTopList(s_tree->pointlist);
 	do{
-		y[0] = grid->s_tree->pointlist->current->x[0] - source->source_x[0];
-		y[1] = grid->s_tree->pointlist->current->x[1] - source->source_x[1];
-		grid->s_tree->pointlist->current->surface_brightness = grid->s_tree->pointlist->current->image->surface_brightness
+		y[0] = s_tree->pointlist->current->x[0] - source->source_x[0];
+		y[1] = s_tree->pointlist->current->x[1] - source->source_x[1];
+		s_tree->pointlist->current->surface_brightness = s_tree->pointlist->current->image->surface_brightness
 				= (source->source_sb_func)(y);
-		assert(grid->s_tree->pointlist->current->surface_brightness >= 0.0);
-		grid->s_tree->pointlist->current->in_image = grid->s_tree->pointlist->current->image->in_image
+		assert(s_tree->pointlist->current->surface_brightness >= 0.0);
+		s_tree->pointlist->current->in_image = s_tree->pointlist->current->image->in_image
 				= false;
-	}while( MoveDownList(grid->s_tree->pointlist) );
+	}while( MoveDownList(s_tree->pointlist) );
 
-	return;
 }
 
 /** \ingroup ImageFinding
  * \brief Returns number of points on image plane.
  */
-unsigned long NumberOfPoints(GridHndl grid){
-	assert(grid->i_tree->top->npoints == grid->s_tree->top->npoints);
-	return grid->i_tree->top->npoints;
+unsigned long Grid::NumberOfPoints(){
+	assert(i_tree->top->npoints == s_tree->top->npoints);
+	return i_tree->top->npoints;
 }

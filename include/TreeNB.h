@@ -75,7 +75,7 @@ typedef struct branchNBstruct2{
 /* } Point; */
 
 /** \brief Structure for a lens consisting of simulation particles */
-typedef struct simlens{
+typedef struct SimLens{
   double zlens;
   double zsource;
 

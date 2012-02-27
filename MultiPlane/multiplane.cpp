@@ -45,7 +45,7 @@ haloM::haloM(double zsource  /// source redshift
 		if(i == Nplanes) z2 = zsource;
 		else z2 = lens->redshift[i] + 0.5*(lens->redshift[i+1] - lens->redshift[i]);
 
-		Nhaloes[0]=cosmo->number(pow(10,Logm[0]),z1,z2,mfty)*fieldofview;
+		Nhaloes[0]=cosmo->haloNumberDensityOnSky(pow(10,Logm[0]),z1,z2,mfty)*fieldofview;
 		Nhaloestot = Nhaloes[0];
 		int k;
 #ifdef _OPENMP
@@ -53,7 +53,7 @@ haloM::haloM(double zsource  /// source redshift
 #endif
 		for(k=1;k<Nmassbin;k++){
 			// cumulative number density in one square degree
-			Nhaloes[k]=cosmo->number(pow(10,Logm[k]),z1,z2,mfty)*fieldofview;
+			Nhaloes[k]=cosmo->haloNumberDensityOnSky(pow(10,Logm[k]),z1,z2,mfty)*fieldofview;
 			// normalize the cumulative distribution to one
 			Nhaloes[k] = Nhaloes[k]/Nhaloestot;
 		}
@@ -135,7 +135,7 @@ MultiLens::MultiLens(string filename) : Lens(){
 
 	dDl = new double[Nplanes];
 
-	charge = mass_scale/4/pi/Grav;
+	charge = 4*Grav*mass_scale;
 
 	halo_tree = new ForceTreeHndl[Nplanes];
 

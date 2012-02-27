@@ -11,6 +11,7 @@
 #ifndef _tree_maintenance_declare_
 #define _tree_maintenance_declare_
 
+
 TreeHndl BuildTree(Point *xp,unsigned long Npoints);
 void _BuildTree(TreeHndl tree);
 void FillTree(TreeHndl tree,Point *xp,unsigned long Npoints);

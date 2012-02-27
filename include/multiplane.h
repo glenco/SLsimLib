@@ -8,11 +8,11 @@
 #ifndef MULTIPLANE_H_
 #define MULTIPLANE_H_
 
-#include <forceTree.h>
+//#include <forceTree.h>
 #include <lens.h>
-#include <cosmo.h>
-#include <halo.h>
-#include <utilities.h>
+//#include <cosmo.h>
+//#include <halo.h>
+//#include <utilities.h>
 
 const int Nmassbin=32;
 const double MaxLogm=16.;
