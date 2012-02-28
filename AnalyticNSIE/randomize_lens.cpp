@@ -66,7 +66,7 @@ void Model::RandomizeModel(double r_source_phys,long *seed,bool tables){
 		// choose random set of redshifts
 		i=(int)(NzTable*ran2(seed));
 		source->zsource = zTable[i][0];
-		lens->zlens = zTable[i][1];
+		lens->setZlens(zTable[i][1]);
 
 		//zlens = RandomFromTable(zlTable,NzlTable,seed);
 		//zsource = RandomFromTable(zsTable,NzsTable,seed);

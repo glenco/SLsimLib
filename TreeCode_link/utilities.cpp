@@ -8,6 +8,8 @@
 
 #include <slsimlib.h>
 
+#define DLTABLE	256
+std::vector<double> zz, da;
 
 int windings2(double *x,Point *points,unsigned long Npoints,double *area,short image){
 	/* slow obsolete version
@@ -218,4 +220,15 @@ unsigned long prevpower(unsigned long k){
 	for (i=1; i<sizeof(unsigned long)*CHAR_BIT; i<<=1)
 		k = k | k >> i;
 	return (k+1)/2;
+}
+
+
+void makeDlTable(CosmoHndl cosmo, double zmax){
+	fill_linear(zz,DLTABLE,0.1,zmax);
+
+	da.resize(DLTABLE);
+
+	for(int i = 0; i < DLTABLE; i++){
+		da[i] = cosmo->angDist(0, zz[i]);
+	}
 }

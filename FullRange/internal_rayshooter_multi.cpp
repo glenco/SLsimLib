@@ -32,15 +32,13 @@
 void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off){
 	unsigned long i;
 	int j;
-	double kappa,aa,bb,cc;
-    double alpha[2], gamma[2];
-    double xminus[2],xplus[2];
-    double kappa_minus,gamma_minus[3],kappa_plus,gamma_plus[3];
 
-#ifdef _OPENMP
-#pragma omp parallel for private(i,xminus,xplus,alpha,kappa,gamma,kappa_minus,gamma_minus,kappa_plus,gamma_plus)
-#endif
 	for(i = 0; i< Npoints; i++){
+
+		double kappa,aa,bb,cc;
+	    double alpha[2], gamma[2];
+	    double xminus[2],xplus[2];
+	    double kappa_minus,gamma_minus[3],kappa_plus,gamma_plus[3];
 
 		// find position on first lens plane in physical units
 		i_points[i].image->x[0] = i_points[i].x[0]*Dl[0];
@@ -62,11 +60,17 @@ void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
 
 		for(j = 0; j < Nplanes-1 ; j++){  // each iteration leaves i_point[i].image on plane (j+1)
 
-    		halo_tree[j]->force2D(i_points[i].image->x,&alpha[0],&kappa,&gamma[0],kappa_off);
+			if(flag_analens && j == flag_analens){
+				analens->rayshooterInternal(i_points[i].image->x,&alpha[0],&gamma[0],&kappa,kappa_off);
+				cc = dDl[j+1];
+			}
+			else{
+				halo_tree[j]->force2D(i_points[i].image->x,&alpha[0],&kappa,&gamma[0],kappa_off);
+				cc = charge*dDl[j+1];
+			}
 
 			aa = (dDl[j+1]+dDl[j])/dDl[j];
 			bb = dDl[j+1]/dDl[j];
-			cc = charge*dDl[j+1];
 
 			xplus[0] = aa*i_points[i].image->x[0]
         				    - bb*xminus[0]

@@ -222,3 +222,103 @@
     return ;
   }
 
+
+/** \ingroup DeflectionL2
+   *
+   * \brief Routine for calculating the deflection and other lensing quantities for
+   * a analytic one plane lens (AnaLens), for just one ray!!
+   *
+*/
+void AnaLens::rayshooterInternal(double *ray, double *alpha, double *gamma, double *kappa, bool kappa_off){
+// TODO: need to set the units of alpha, gamma, and kappa!!!
+
+     double x_rescale[2], tmp, dt = 0;
+     long j;
+     double gamma_tmp[3], alpha_tmp[2];
+
+     gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
+     alpha_tmp[0] = alpha_tmp[1] = 0.0;
+
+     alpha[0] = alpha[1] = 0.0;
+     gamma[0] = gamma[1] = gamma[2] = 0.0;
+     *kappa = 0.0;
+
+     double convert_factor = star_massscale / Sigma_crit;
+
+     if(host_ro > 0){
+    	 x_rescale[0] = ray[0] / host_ro;
+    	 x_rescale[1] = ray[1] / host_ro;
+
+    	 alphaNSIE(alpha, x_rescale, host_axis_ratio,
+    			 host_core / host_ro, host_pos_angle);
+
+    	 if(!kappa_off){
+    		 gammaNSIE(gamma,x_rescale,host_axis_ratio
+    				 ,host_core/host_ro,host_pos_angle);
+    		 *kappa=kappaNSIE(x_rescale,host_axis_ratio
+    				 ,host_core/host_ro,host_pos_angle);
+    	 }
+
+    	 alpha[0] *= host_ro;
+    	 alpha[1] *= host_ro;
+
+     }
+
+  // perturbations of host lens
+     if(perturb_Nmodes > 0){
+    	 *kappa += lens_expand(perturb_beta,perturb_modes
+    			 ,perturb_Nmodes,ray,alpha_tmp,gamma_tmp,&dt);
+
+    	 alpha[0] += alpha_tmp[0];
+    	 alpha[1] += alpha_tmp[1];
+
+   	      if(!kappa_off){
+   	    	  gamma[0] += gamma_tmp[0];
+   	    	  gamma[1] += gamma_tmp[1];
+   	      }
+     }
+
+     gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
+     alpha_tmp[0] = alpha_tmp[1] = 0.0;
+
+     // add substructure
+     if(substruct_implanted){
+    	 for(j=0;j<sub_N;++j){
+    		 sub_alpha_func(alpha_tmp,ray,sub_Rcut[j],sub_mass[j],sub_beta,sub_x[j],Sigma_crit);
+
+    		 alpha[0] += alpha_tmp[0];
+    		 alpha[1] += alpha_tmp[1];
+
+    		 if(!kappa_off){
+    			 *kappa += sub_kappa_func(ray,sub_Rcut[j],sub_mass[j],sub_beta,sub_x[j],Sigma_crit);
+    			 sub_gamma_func(gamma_tmp,ray,sub_Rcut[j],sub_mass[j],sub_beta,sub_x[j],Sigma_crit);
+
+    			 gamma[0] += gamma_tmp[0];
+    			 gamma[1] += gamma_tmp[1];
+    		 }
+    	 }
+     }
+
+     gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
+     alpha_tmp[0] = alpha_tmp[1] = 0.0;
+
+     // add stars for microlensing
+     if(stars_N > 0 && stars_implanted){
+    	 substract_stars_disks(ray,alpha_tmp,kappa,gamma_tmp);
+
+    	 // do stars with tree code
+    	 star_tree->force2D(ray,alpha_tmp,&tmp,gamma_tmp,true);
+
+    	 alpha[0] += convert_factor*alpha_tmp[0];
+    	 alpha[1] += convert_factor*alpha_tmp[1];
+
+    	 if(!kappa_off){
+    		 *kappa += convert_factor*tmp;
+    		 gamma[0] += convert_factor*gamma_tmp[0];
+    		 gamma[1] += convert_factor*gamma_tmp[1];
+    	 }
+     }
+
+
+     return ;
+}

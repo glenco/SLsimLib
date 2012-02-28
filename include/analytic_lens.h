@@ -8,10 +8,8 @@
 #ifndef analens_declare
 #define analens_declare
 
-//#include <cosmo.h>
 #include <Tree.h>
 #include <forceTree.h>
-#include <lens.h>
 
 #ifndef pi
 #define pi  3.141593
@@ -29,6 +27,8 @@ public:
   double host_ro;
   double host_sigma;
 
+  /// redshift of lens
+  double zlens;
   // private derived quantities
   /// private: conversion factor between Mpc on the lens plane and arcseconds
   double MpcToAsec;
@@ -111,9 +111,12 @@ public:
   AnaLens(string);
   ~AnaLens();
 
+  double getZlens();
+  void setZlens(double zlens);
   void setInternalParams(CosmoHndl,double);
   void readParamfile(string);
   void PrintAnaLens(bool show_substruct,bool show_stars);
+  void rayshooterInternal(double *ray, double *alpha, double *gamma, double *kappa, bool kappa_off);
 
   // in randoimize_lens.c
   void RandomizeHost(long *seed,bool tables);

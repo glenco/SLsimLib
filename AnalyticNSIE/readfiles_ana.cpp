@@ -241,6 +241,14 @@ void AnaLens::readParamfile(string filename){
   PrintAnaLens(true,true);
 }
 
+double AnaLens::getZlens(){
+	return zlens;
+}
+
+void AnaLens::setZlens(double z){
+	zlens = z;
+}
+
 /** \ingroup ImageFinding
  * \brief Prints the parameters of the analytic lens to stdout
  */
@@ -251,6 +259,8 @@ void AnaLens::PrintAnaLens(bool show_substruct,bool show_stars){
 
 	// parameters of host elliptical
 	cout << endl << "**Host lens model**" << endl;
+	// redshifts
+	cout << "zlens " << zlens << endl;
 
 	cout << "sigma " << host_sigma << "km/s" << endl;
 	cout << "core " << host_core << " Mpc" << endl;
@@ -258,9 +268,9 @@ void AnaLens::PrintAnaLens(bool show_substruct,bool show_stars){
 	cout << "position angle " <<host_pos_angle << endl;
 
 			// parameters of distortion to host elliptical
-	cout << "Nmodes " << perturb_Nmodes << endl;
-	cout << "beta = " << perturb_beta << endl;
+	cout << endl << "Nmodes " << perturb_Nmodes << endl;
 	if(perturb_Nmodes>0){
+		cout << "beta = " << perturb_beta << endl;
 		cout << "rms" << endl;
 		for(i=0;i<6;++i) cout << "  " << perturb_rms[i] << endl;
 		cout << "modes" << endl;
@@ -268,19 +278,19 @@ void AnaLens::PrintAnaLens(bool show_substruct,bool show_stars){
 	}
 
 	  // parameters of substructures
-	cout << "Substructures" << endl;
-	cout << "NdensitySubstruct "<<sub_Ndensity << endl;
-	cout << "NSubstruct "<<sub_N << endl;
-
-	if(sub_N > 0){
+	cout << endl << "NdensitySubstruct "<< sub_Ndensity << endl;
+	if(sub_Ndensity > 0){
 		cout << "betaSubstruct "<<sub_beta << endl;
 		cout << "alphaSubstruct "<<sub_alpha << endl;
 		cout << "RmaxSubstruct "<<sub_Rmax << " Mpc" << endl;
 		cout << "MmaxSubstruct "<<sub_Mmax << " Msun" << endl;
 		cout << "MminSubstruct "<<sub_Mmin << " Msun\n" << endl;
+	}
 
+	if(sub_N > 0){
+		cout << endl << "NSubstruct "<< sub_N << endl;
 		if(show_substruct){
-			if(substruct_implanted){
+			if(substruct_implanted || sub_N > 0){
 				for(i=0;i<sub_N;++i){
 				  cout << "RcutSubstruct "<<i << " " <<sub_Rcut[i] << " Mpc" << endl;
 				  cout << "massSubstruct "<<i<<" "<<sub_mass[i] << " Msun" << endl;
@@ -302,12 +312,14 @@ void AnaLens::PrintAnaLens(bool show_substruct,bool show_stars){
 						break;
 					}
 				}
-			}else cout << "substructures are implanted yet" << endl;
+			}else cout << "substructures are not implanted yet" << endl;
 		}
 	}
+
 	if(stars_N>0){
-		cout << "Nstars "<<stars_N << endl;
-		cout << "stars_Nregions "<<star_Nregions << endl;
+		cout << endl << "Nstars "<<stars_N << endl;
+		if(star_Nregions > 0)
+			cout << "stars_Nregions "<<star_Nregions << endl;
 		cout << "stars_massscale "<<star_massscale << endl;
 		cout << "stars_fstars "<<star_fstars << endl;
 		cout << "stars_theta_force "<<star_theta_force << endl;
@@ -315,14 +327,12 @@ void AnaLens::PrintAnaLens(bool show_substruct,bool show_stars){
 			if(stars_implanted){
 			  for(i=0 ; i < stars_N ; ++i) cout << "    x["<<i<<"]="
 							    << stars_xp[i][0] << " " << stars_xp[i][1] << endl;
-			}else cout << "stars not implanted yet" << endl;
+			}else cout << "stars are not implanted yet" << endl;
 		}
 	}
 
-	// redshifts
-	cout << "zlens " << zlens << endl;
-
-	cout << "critical density is " << Sigma_crit << " Msun/Mpc^2" << endl << endl;
+	if(Sigma_crit)
+		cout << "critical density is " << Sigma_crit << " Msun/Mpc^2" << endl << endl;
 }
 
 void AnaLens::reNormSubstructure(double kappa_sub){

@@ -8,12 +8,11 @@
 #ifndef MULTIPLANE_H_
 #define MULTIPLANE_H_
 
-//#include <forceTree.h>
-#include <lens.h>
 #include <analytic_lens.h>
-//#include <cosmo.h>
-//#include <halo.h>
-//#include <utilities.h>
+#include <cosmo.h>
+#include <halo.h>
+#include <utilities.h>
+
 
 const int Nmassbin=32;
 const double MaxLogm=16.;
@@ -38,6 +37,8 @@ public:
 	MultiLens(string);
 	~MultiLens();
 
+	double getZlens();
+	void setZlens(double zlens);
 	void setRedshift(double);
 	void printMultiLens();
 	void readParamfile(string);
