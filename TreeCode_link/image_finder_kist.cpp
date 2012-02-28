@@ -189,7 +189,7 @@ void find_images_kist(
 			printf("\n    i=%i\n     time in finding images %f min\n          Nimages=%i   Nimagepoints=%li\n"
 					,i,difftime(now,t3)/60.,*Nimages,*Nimagepoints);
 			printf("     image   # of points    error in area\n");
-			for(j=0;j<*Nimages;++j) printf("       %i        %li         %e\n",j,imageinfo[j].imagekist->Nunits,imageinfo[j].area_error);
+			for(j=0;j<*Nimages;++j) printf("       %i        %li         %e\n",j,imageinfo[j].imagekist->Nunits(),imageinfo[j].area_error);
 		}
 		++i;
 	}while( refine_grid_kist(lens,grid->i_tree,grid->s_tree,imageinfo,*Nimages,1.0e-1,flag,kappa_off,true,dummy_pnt)
@@ -491,13 +491,9 @@ short image_finder_kist(LensHndl lens, double *y_source,double r_source,TreeHndl
 	  EmptyKist(imageinfo[i].outerborder);
   }
 
-<<<<<<< local
-	//for(i=0;i<*Nimages;++i) std::printf("  image %i  Npoints = %li Ninner = %li Noutter = %li  area = %e\n",i
-  //,imageinfo[i].Npoints,imageinfo[i].innerborder->Nunits(),imageinfo[i].outerborder->Nunits(),imageinfo[i].area);
-=======
 	//for(i=0;i<*Nimages;++i) printf("  image %i  Npoints = %li Ninner = %li Noutter = %li  area = %e\n",i
   //,imageinfo[i].Npoints,imageinfo[i].innerborder->Nunits,imageinfo[i].outerborder->Nunits,imageinfo[i].area);
->>>>>>> other
+
 
    return moved;
 }

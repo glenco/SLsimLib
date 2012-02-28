@@ -133,8 +133,6 @@ public:
                   ,PosType *kappa,PosType *gamma);
 };
 
-#endif
-
 double RandomFromTable(double *table,unsigned long Ntable,long *seed);
 void setStars(AnaLens *lens, bool implanted);
 void implant_stars(AnaLens *lens,Point *images,unsigned long Nimages,long *seed);
@@ -175,3 +173,4 @@ void MarkPoints(TreeHndl s_tree,AnaLens *lens,bool sb_cut,short invert);
 void _MarkPoints(TreeHndl s_tree,AnaLens *lens,bool *sbcut);
 bool InSource(double *ray,AnaLens *lens,bool surfacebright);
 
+#endif

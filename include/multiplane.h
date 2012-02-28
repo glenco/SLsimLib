@@ -10,12 +10,15 @@
 
 //#include <forceTree.h>
 #include <lens.h>
+#include <analytic_lens.h>
 //#include <cosmo.h>
 //#include <halo.h>
 //#include <utilities.h>
 
 const int Nmassbin=32;
 const double MaxLogm=16.;
+
+//class AnaLens;  // forward declaration - I have no idea why this is required.
 
 class MultiLens : public Lens{
 public:
@@ -25,7 +28,7 @@ public:
 	double charge;
 	/// mass scale
 	double mass_scale;
-	unsigned long *NhalosinPlane;
+	IndexType *NhalosinPlane;
 	ForceTreeHndl *halo_tree;
 	/// min mass for the halo model
 	double min_mass;

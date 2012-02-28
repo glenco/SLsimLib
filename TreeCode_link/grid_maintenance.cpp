@@ -74,12 +74,10 @@ void Grid::ReInitializeGrid(LensHndl lens){
 
 	Point *i_points,*s_points;
 	double range,center[2];
-	int Ngrid;
 
 	range = i_tree->top->boundary_p2[0] - i_tree->top->boundary_p1[0];
 	center[0] = (i_tree->top->boundary_p2[0] + i_tree->top->boundary_p1[0])/2;
 	center[1] = (i_tree->top->boundary_p2[1] + i_tree->top->boundary_p1[1])/2;
-	Ngrid = Ngrid;
 
 	//////////////////////////////
 	  // redo grid with stars in it

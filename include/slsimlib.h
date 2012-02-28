@@ -35,6 +35,8 @@
 #include <nrD.h>
 
 #include <cosmo.h>
+#include <halo.h>
+
 #include <point.h>
 #include <List1.h>
 #include <Tree.h>
