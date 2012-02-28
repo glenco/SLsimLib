@@ -5,11 +5,13 @@
  *      Author: bmetcalf
  */
 
-#ifndef FORCE_TREE_H_
-#define FORCE_TREE_H_
+
 
 #include <list.h>
 #include "simpleTree.h"
+
+#ifndef FORCE_TREE_H_
+#define FORCE_TREE_H_
 
 enum PartProf {gaussian};
 /**

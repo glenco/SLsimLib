@@ -8,7 +8,7 @@
 #ifndef source_declare
 #define source_declare
 
-#include <lens.h>
+#include <source.h>
 
 // Separate files
 double blr_surface_brightness_spherical(double x,SourceBLR *source);

@@ -4,11 +4,12 @@
  *      Author: mpetkova
  */
 
-#ifndef LENS_H_
-#define LENS_H_
-
 #include <cosmo.h>
 #include <forceTree.h>
+#include <point.h>
+
+#ifndef LENS_H_
+#define LENS_H_
 
 class Lens {
 protected:

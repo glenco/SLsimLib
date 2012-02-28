@@ -11,6 +11,7 @@
 #include <nrD.h>
 #include <nr.h>
 #include "galaxies.h"
+#include <point.h>
 /**
  * Returns a Sersic profile
  */

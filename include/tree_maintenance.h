@@ -5,12 +5,10 @@
  *      Author: bmetcalf
  */
 
-#include <Tree.h>
-#include <analytic_lens.h>
-
 #ifndef _tree_maintenance_declare_
 #define _tree_maintenance_declare_
 
+#include <Tree.h>
 
 TreeHndl BuildTree(Point *xp,unsigned long Npoints);
 void _BuildTree(TreeHndl tree);

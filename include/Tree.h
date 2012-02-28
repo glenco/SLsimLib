@@ -6,7 +6,6 @@
  the tree can be expended dynamically
  */
 #include <math.h>
-#include <point.h>
 #include <Kist.h>
 #include <List1.h>
 #include <lens.h>

@@ -5,12 +5,12 @@
  *      Author: mpetkova
  */
 
-#ifndef MODEL_H_
-#define MODEL_H_
-
 #include <analytic_lens.h>
 #include <multiplane.h>
 #include <source.h>
+
+#ifndef MODEL_H_
+#define MODEL_H_
 
 class Model{
 public:

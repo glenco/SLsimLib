@@ -4,7 +4,6 @@
  *  Created on: Oct 6, 2010
  *      Author: bmetcalf
  */
-#include <Tree.h>
 #include <model.h>
 
 void map_images(LensHndl lens,SourceHndl source,GridHndl grid,int *Nimages,ImageInfo *imageinfo

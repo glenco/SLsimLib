@@ -9,9 +9,7 @@
 #ifndef _grid_maintenance_declare_
 #define _grid_maintenance_declare_
 
-#include <source.h>
 #include <model.h>
-#include <lens.h>
 
 /** \ingroup ImageFinding
  * \brief Structure to contain both source and image trees.
