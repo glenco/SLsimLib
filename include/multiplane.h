@@ -17,7 +17,7 @@
 const int Nmassbin=32;
 const double MaxLogm=16.;
 
-//class AnaLens;  // forward declaration - I have no idea why this is required.
+//class AnaLens;  // forward declaration - I have no idea why this is required!
 
 class MultiLens : public Lens{
 public:

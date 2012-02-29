@@ -82,7 +82,7 @@ Point *LinkToSourcePoints(Point *i_points,unsigned long Npoints){
   return s_points;
 }
 
-void findarea(ImageInfo *imageinfo){
+void findarea(OldImageInfo *imageinfo){
   unsigned long j;
 
   for(j=0,imageinfo->area=0,imageinfo->area_error=0;j<imageinfo->Npoints;++j){

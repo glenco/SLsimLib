@@ -112,21 +112,26 @@ void Grid::TrimGrid(double highestres,bool useSB){
  * This is useful when changing the source model while preserving
  * changes in the grid.
  * Both i_tree and s_tree are both changed although only s_tree shows up here.
+ *
+ * returns the sum of the surface brightnesses
  */
-void Grid::RefreshSurfaceBrightnesses(SourceHndl source){
-	double y[2];
+double Grid::RefreshSurfaceBrightnesses(SourceHndl source){
+	double y[2],total=0,tmp;
 
 	MoveToTopList(s_tree->pointlist);
 	do{
 		y[0] = s_tree->pointlist->current->x[0] - source->source_x[0];
 		y[1] = s_tree->pointlist->current->x[1] - source->source_x[1];
+		tmp = (source->source_sb_func)(y);
 		s_tree->pointlist->current->surface_brightness = s_tree->pointlist->current->image->surface_brightness
-				= (source->source_sb_func)(y);
+				= tmp;
+		total += tmp;
 		assert(s_tree->pointlist->current->surface_brightness >= 0.0);
 		s_tree->pointlist->current->in_image = s_tree->pointlist->current->image->in_image
 				= false;
 	}while( MoveDownList(s_tree->pointlist) );
 
+	return total;
 }
 
 /** \ingroup ImageFinding

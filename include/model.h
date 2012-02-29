@@ -23,6 +23,9 @@ public:
 	Model(LensHndl,SourceHndl,CosmoHndl);
 	~Model();
 
+	double getZsource(){return source->zsource;}
+	double getZlens(){return lens->getZlens();}
+
     void setInternal();
     void change_redshifts(TreeHndl i_tree,TreeHndl s_tree,double z_source,double z_lens);
     void RandomizeModel(double r_source_physical,long *seed,bool tables);
