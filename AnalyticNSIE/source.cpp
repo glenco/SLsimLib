@@ -183,12 +183,13 @@ void SourceBLR::readParamfile(string filename){
 	  int id[9];
 	  int i, n;
 	  float myfloat;
+	  double mydouble;
 	  int flag;
 
 	  n = 0;
 
 	  addr[n] = &zsource;
-	  id[n] = 0;
+	  id[n] = 1;
 	  label[n++] = "z_source";
 
 	  addr[n] = &source_BHmass;
@@ -241,14 +242,22 @@ void SourceBLR::readParamfile(string filename){
 
 		  flag = 1;
 
-		  for(i = 0; i < 9; i++){
+		  for(i = 0; i < n; i++){
 			  if(rlabel == label[i]){
 
 				  flag = 0;
 				  ss << rvalue;
-				  ss >> myfloat;
 
-				  *((float *)addr[i]) = myfloat;
+				  switch(id[i]){
+				  case 0:
+					  ss >> myfloat;
+					  *((float *)addr[i]) = myfloat;
+					  break;
+				  case 1:
+					  ss >> mydouble;
+					  *((double *)addr[i]) = mydouble;
+					  break;
+				  }
 
 				  ss.clear();
 				  ss.str(string());
