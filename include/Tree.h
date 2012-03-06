@@ -22,6 +22,11 @@
 #define PRINT_LINE() printf("file: %s line: %i\n",__FILE__,__LINE__)
 #endif
 
+#ifndef gate_declare
+#define gate_declare
+typedef enum{unchecked,yes,no} GATE;
+#endif
+
 #ifndef criterion_declare
 #define criterion_declare
 typedef enum{TotalArea,EachImage,Resolution,FillHoles} ExitCriterion;
@@ -75,7 +80,12 @@ typedef struct ImageInfo{
   KistHndl innerborder;
   /// the points on the outer border of the image, i.e. not in the image
   KistHndl outerborder;
-  short Nencircled;
+  //short Nencircled;
+
+  /// Flag for stopping refinement but also used for other temporary purposes.
+  short ShouldNotRefine;
+  /// Flag for showing when the distortion of an image can be considered linear.
+  GATE uniform_mag;
 
   /// returns number of points currently in the image
   unsigned long getNimagePoints(){return imagekist->Nunits();}
@@ -110,7 +120,7 @@ typedef struct OldImageInfo{
   KistHndl innerborder;
   /// the points on the outer border of the image, i.e. not in the image
   KistHndl outerborder;
-  short Nencircled;
+  short ShouldNotRefine;
 
 } OldImageInfo;
 
@@ -134,6 +144,7 @@ bool atTop(TreeHndl tree);
 inline bool atLeaf(TreeHndl tree){
   return( (tree->current->child1==NULL)*(tree->current->child2==NULL) );
 };
+bool BoxInCircle(double *ray,double radius,double *p1,double *p2);
 bool offEnd(TreeHndl tree);
 bool CurrentIsSquareTree(TreeHndl tree);
 bool noChild(TreeHndl tree);
@@ -176,7 +187,6 @@ inline double sepSQR(double *xx,double *yy){
  *    border of the box,
  */
 inline double FurthestBorder(double *ray,double *p1,double *p2){
-
   return sqrt( pow(MAX(ray[0]-p1[0],p2[0]-ray[0]),2) + pow(MAX(ray[1]-p1[1],p2[1]-ray[1]),2) );
 };
 void PointsInCurrent(TreeHndl tree,unsigned long *ids,double **x);
@@ -197,7 +207,6 @@ Point *NearestNeighbor(TreeHndl tree,double *ray,int Nneighbors,ListHndl neighbo
 //inline int inbox(double ray[2],double *p1,double *p2);
 /* return 1 (0) if ray is (not) in the cube */
 inline int inbox(double *ray,double *p1,double *p2){
-
   return (ray[0]>=p1[0])*(ray[0]<=p2[0])*(ray[1]>=p1[1])*(ray[1]<=p2[1]);
 };
 bool boxinbox(Branch *branch1,Branch *branch2);
@@ -206,6 +215,9 @@ int cutbox(double ray[2],double *p1,double *p2,double rmax);
 void FindBoxPoint(TreeHndl tree,double *ray,Point *point);
 void _FindBox(TreeHndl tree,double *ray);
 bool AreBoxNeighbors(Point *point1,Point *point2);
+bool CircleInBox(double *ray,double radius,double *p1,double *p2);
+bool BoxInCircle(double *ray,double radius,double *p1,double *p2);
+void _FindLeaf(TreeHndl tree,double *ray,unsigned long Nadd);
 
 // Point arrays
 
@@ -273,12 +285,13 @@ void find_images_kist(LensHndl lens,double *y_source,double r_source,GridHndl gr
 		,double initial_size,bool splitimages,short edge_refinement
 		,bool verbose,bool kappa_off);
 
-short image_finder_kist(LensHndl lens,double *y_source,double r_source,TreeHndl s_tree,TreeHndl i_tree
+short image_finder_kist(LensHndl lens, double *y_source,double r_source,GridHndl grid
 		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
 		,short splitparities,short true_images);
 
-int refine_grid_kist(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo
+int refine_grid_kist(LensHndl lens,GridHndl grid,ImageInfo *imageinfo
 		,unsigned long Nimages,double res_target,short criterion,bool kappa_off,bool shootrays,Point **i_points);
+
 void findborders4(TreeHndl i_tree,ImageInfo *imageinfo);
 
 // in find_crit.c
@@ -320,18 +333,16 @@ inline float isLeft( Point *p0, Point *p1, double *x ){
 unsigned long prevpower(unsigned long k);
 
 // in curve_routines.c
-void nesting_curve(ImageInfo *curves,int Ncurves);
-void split_order_curve(ImageInfo *curves,int Maxcurves,int *Ncurves);
-void split_order_curve2(ImageInfo *curves,int Maxcurves,int *Ncurves);
-void split_order_curve3(ImageInfo *curves,int Maxcurves,int *Ncurves);
+void nesting_curve(OldImageInfo *curves,int Ncurves);
+void split_order_curve(OldImageInfo *curves,int Maxcurves,int *Ncurves);
+void split_order_curve2(OldImageInfo *curves,int Maxcurves,int *Ncurves);
+void split_order_curve3(OldImageInfo *curves,int Maxcurves,int *Ncurves);
 void split_order_curve4(OldImageInfo *curves,int Maxcurves,int *Ncurves);
 void walkcurve(Point *points,long Npoints,long *j,long *end);
 short backtrack(Point *points,long Npoints,long *j,long jold,long *end);
 void split_images(TreeHndl i_tree,ImageInfo *images,int Maximages,int *Nimages,bool sortallpoints);
-void split_images2(TreeHndl i_tree,ImageInfo *images,int Maximages
-		,int *Nimages);
-void split_images3(TreeHndl i_tree,ImageInfo *images,int Maximages
-		,int *Nimages,bool sortallpoints);
+void split_images2(TreeHndl i_tree,ImageInfo *images,int Maximages,int *Nimages);
+void split_images3(TreeHndl i_tree,ImageInfo *images,int Maximages,int *Nimages,bool sortallpoints);
 void splitter(OldImageInfo *images,int Maximages,int *Nimages);
 void splitlist(ListHndl imagelist,OldImageInfo *images,int *Nimages,int Maximages);
 

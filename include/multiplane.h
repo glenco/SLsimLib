@@ -17,8 +17,7 @@
 const int Nmassbin=32;
 const double MaxLogm=16.;
 
-//class AnaLens;  // forward declaration - I have no idea why this is required!
-
+/// A class to represents a lens with multiple planes.
 class MultiLens : public Lens{
 public:
 	/// Redshifts of lens planes, 0...Nplanes.  Last one is the source redshift.
@@ -47,6 +46,7 @@ public:
 	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off);
 };
 
+/// Class to hold information about the halos' number, positions, masses, etc.
 class haloM{
 public:
 	PosType **pos;

@@ -20,6 +20,7 @@
 #include <iostream>
 //#include <cstdio>
 #include <fstream>
+#include <cfloat>
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -59,7 +60,6 @@
 
 #include <peak_refinement.h>
 #include <map_images.h>
-
 
 #include <fitlens.h>
 #include <galaxies.h>

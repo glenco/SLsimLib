@@ -604,17 +604,17 @@ void nesting_curve(OldImageInfo *curves,int Ncurves){
 	int i,k;
 
 	if(Ncurves==1){
-		curves->Nencircled=0;
+		curves->ShouldNotRefine=0;
 		return;
 	}
 
 	for(k=0;k<Ncurves;++k){
 		// calculate how many curves enclose k-th curve
-		curves[k].Nencircled=0;
+		curves[k].ShouldNotRefine=0;
 		for(i=0;i<Ncurves;++i){
 			if( (k != i) &&
 				(abs(windings(curves[k].points[0].x,curves[i].points,curves[i].Npoints,&(curves[i].area),0)) > 0) ){
-				++curves[k].Nencircled;
+				++curves[k].ShouldNotRefine;
 			}
 		}
 	}
@@ -682,7 +682,7 @@ void split_images(TreeHndl i_tree,OldImageInfo *images,int Maximages
 	nesting_curve(borders,TmpNimages);
 	// if border is encircled by an even number of other borders count it as an
 	//      outer border of an image
-	for(i=0,*Nimages=0;i<TmpNimages;++i) if(borders[i].Nencircled % 2 == 0){
+	for(i=0,*Nimages=0;i<TmpNimages;++i) if(borders[i].ShouldNotRefine % 2 == 0){
 		images[*Nimages].area=borders[i].area;  // only an estimate of the area
 		++*Nimages;
 	}
@@ -693,23 +693,23 @@ void split_images(TreeHndl i_tree,OldImageInfo *images,int Maximages
 		if(*Nimages > 1){
 			image_number_array=(double *)malloc(Npoints_tot*sizeof(double));
 			assert(image_number_array);
-			for(j=0,maxN=0;j<TmpNimages;++j) if(borders[j].Nencircled % 2 == 0 && borders[j].Nencircled > maxN) maxN=borders[j].Nencircled;
+			for(j=0,maxN=0;j<TmpNimages;++j) if(borders[j].ShouldNotRefine % 2 == 0 && borders[j].ShouldNotRefine > maxN) maxN=borders[j].ShouldNotRefine;
 			// sort points into images
 
 			// mark each point with which image it is in
 			for(k=0;k<Npoints_tot;++k){
 				image_number_array[k]=-1;
 				for(j=0;j<TmpNimages;++j){
-					if(borders[j].Nencircled % 2 == 0){  // j is a outer image border
+					if(borders[j].ShouldNotRefine % 2 == 0){  // j is a outer image border
 
 						if( abs(windings(images->points[k].x,borders[j].points,borders[j].Npoints
 								,&(images[i].area),0) ) == 1){
 							// point is in j
 							if(image_number_array[k] == -1 ||
-									borders[(int)(image_number_array[k]+0.5)].Nencircled < borders[j].Nencircled){
+									borders[(int)(image_number_array[k]+0.5)].ShouldNotRefine < borders[j].ShouldNotRefine){
 								image_number_array[k]=(double) j;
 							// if point can't be in another move on to next image point
-								if(borders[j].Nencircled == maxN) j=TmpNimages;
+								if(borders[j].ShouldNotRefine == maxN) j=TmpNimages;
 							}
 						}
 					}
@@ -725,7 +725,7 @@ void split_images(TreeHndl i_tree,OldImageInfo *images,int Maximages
 
 				for(k=0,jold=0,i=0;k<TmpNimages;++k){
 					//for(i=1,jold=0;i<*Nimages;++i){
-					if(borders[k].Nencircled % 2 == 0){
+					if(borders[k].ShouldNotRefine % 2 == 0){
 						if(i>0){
 							locateD(image_number_array-1,Npoints_tot,k-0.5,&j);
 							images[i].points=&(images[0].points[j]);
@@ -740,7 +740,7 @@ void split_images(TreeHndl i_tree,OldImageInfo *images,int Maximages
 
 			}else{
 				// when there are two images there is a faster way of sorting
-				for(i=0;i<TmpNimages;++i) if(borders[i].Nencircled % 2 == 0) break;
+				for(i=0;i<TmpNimages;++i) if(borders[i].ShouldNotRefine % 2 == 0) break;
 				//std::printf("i=%i\n",i);
 				for(k=0,j=images[0].Npoints-1,images[1].Npoints=0;k<j;++k){
 					if(image_number_array[k] > i+0.5){
@@ -766,7 +766,7 @@ void split_images(TreeHndl i_tree,OldImageInfo *images,int Maximages
 			for(i=0;i<*Nimages;++i){
 				if(images[i].Npoints==0){
 					for(j=i;j<*Nimages-1;++j){
-						images[j].Nencircled=images[j+1].Nencircled;
+						images[j].ShouldNotRefine=images[j+1].ShouldNotRefine;
 						images[j].Npoints=images[j+1].Npoints;
 						images[j].points=images[j+1].points;
 						images[j].area=images[j+1].area;
@@ -920,7 +920,7 @@ void split_images3(TreeHndl i_tree,OldImageInfo *images,int Maximages
 			for(i=0;i<*Nimages;++i){
 				if(images[i].Npoints==0){
 					for(j=i;j<*Nimages-1;++j){
-						images[j].Nencircled=images[j+1].Nencircled;
+						images[j].ShouldNotRefine=images[j+1].ShouldNotRefine;
 						images[j].Npoints=images[j+1].Npoints;
 						images[j].points=images[j+1].points;
 						images[j].area=images[j+1].area;
@@ -1020,7 +1020,7 @@ void splitter(OldImageInfo *images,int Maximages,int *Nimages){
 	for(i=0;i<*Nimages;++i){
 		if(images[i].Npoints==0){
 			for(j=i;j<*Nimages-1;++j){
-				images[j].Nencircled=images[j+1].Nencircled;
+				images[j].ShouldNotRefine=images[j+1].ShouldNotRefine;
 				images[j].Npoints=images[j+1].Npoints;
 				images[j].points=images[j+1].points;
 				images[j].area=images[j+1].area;

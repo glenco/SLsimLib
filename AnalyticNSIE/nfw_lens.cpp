@@ -1,6 +1,4 @@
-/*
- * nfw_lens.c
- *
+/** 
  *  Created on: Aug 26, 2010
  *      Author: R.B. Metcalf
  */
@@ -8,6 +6,7 @@
 #include <math.h>
 #include "analytic_lens.h"
 
+/// deflection caused by NFW halo
 void alphaNFW(double *alpha,double *x,double Rtrunc,double mass,double r_scale
 		,double *center,double Sigma_crit){
 	double r,b=0;
@@ -34,6 +33,7 @@ void alphaNFW(double *alpha,double *x,double Rtrunc,double mass,double r_scale
 
 	return ;
 }
+/// Convergence for an NFW halo
 double kappaNFW(double *x,double Rtrunc,double mass,double r_scale
 		,double *center,double Sigma_crit){
 	double r;
@@ -54,7 +54,7 @@ double kappaNFW(double *x,double Rtrunc,double mass,double r_scale
 	return b*mass/(2*pi*pow(r_scale,2)*Sigma_crit);
 }
 
-// this might have a flaw in it
+/// Shear for and NFW halo. this might have a flaw in it
 void gammaNFW(double *gamma,double *x,double Rtrunc,double mass,double r_scale
 		,double *center,double Sigma_crit){
 	double r,gt=0;

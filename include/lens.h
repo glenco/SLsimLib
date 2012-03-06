@@ -11,6 +11,7 @@
 #ifndef LENS_H_
 #define LENS_H_
 
+/// An abstract base class to represent a gravitational lens.
 class Lens {
 protected:
 	int Nplanes;

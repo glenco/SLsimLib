@@ -44,6 +44,21 @@ void implant_stars(AnaLens *lens,Point *centers,unsigned long Nregions,long *see
 		delete lens->star_tree;
 	}
 
+	if(lens->stars_N < 1  || lens->star_fstars <= 0){
+		lens->stars_implanted = true;
+		lens->stars_N = 0;
+		lens->star_fstars = 0.0;
+
+		for(j=0,m=0;j<Nregions;++j){
+			lens->star_region[j] = 0.0;
+			lens->star_kappa[j] = 0.0;
+			lens->star_xdisk[j][0] = centers[j].x[0];
+			lens->star_xdisk[j][1] = centers[j].x[1];
+
+		}
+		return;
+	}
+
 //#pragma omp parallel for private(j, NstarsPerImage, r, theta, m) firstprivate(i, k)
 	for(j=0;j<Nregions;++j){
 		m = 0;

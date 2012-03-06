@@ -70,13 +70,13 @@ int refine_grid(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,OldImageInfo *imag
     		if( getCurrentKist(imageinfo[i].outerborder)->gridsize > 1.01*rmax/Ngrid_block ){
     			// border point is marked to prevent refining more than once
     			//   it will be unmarked by the end of refine grid
-    			getCurrentKist(imageinfo[i].outerborder)->in_image = true;
+    			getCurrentKist(imageinfo[i].outerborder)->in_image = TRUE;
     			++Ncells;
     		}
     		MoveDownKist(imageinfo[i].outerborder);
     	}
 
-        i_points=NewPointArray((Ngrid_block*Ngrid_block-1)*Ncells,true);
+        //i_points=NewPointArray((Ngrid_block*Ngrid_block-1)*Ncells,true);
 
 		Ncells_o=Ncells;
     	//printf("should be Ncells=%i Ngrid_block=%i\n",Ncells,Ngrid_block);
@@ -90,18 +90,20 @@ int refine_grid(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,OldImageInfo *imag
     			point = imageinfo[i].points[j].image->image;
     			assert(point->gridsize > 0);
 
+    			i_points = RefineLeaf(lens,i_tree,s_tree,point,Ngrid_block,kappa_off);
     			imageinfo[i].points[j].gridsize /= Ngrid_block;
     			++count;
 
+	           /*
     			xygridpoints(&i_points[(Ngrid_block*Ngrid_block-1)*Ncells]
     			                       ,point->gridsize*(Ngrid_block-1)/Ngrid_block
     			                       ,imageinfo[i].points[j].x,Ngrid_block,1);
-
+                */
     			++Ncells;
-
+/*
     			point->gridsize /= Ngrid_block;
     			point->image->gridsize /= Ngrid_block;
-
+*/
     		}
     	}
 
@@ -117,43 +119,45 @@ int refine_grid(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,OldImageInfo *imag
     		  if(point->in_image){ /* point has not been refined yet */
     			  ++count;
 
-    			  xygridpoints(&i_points[(Ngrid_block*Ngrid_block-1)*Ncells]
+    			  i_points = RefineLeaf(lens,i_tree,s_tree,point,Ngrid_block,kappa_off);
+/*    			  xygridpoints(&i_points[(Ngrid_block*Ngrid_block-1)*Ncells]
     			                         ,point->gridsize*(Ngrid_block-1)/Ngrid_block
     			                         ,point->x,Ngrid_block,1);
-
-    			  if( inbox(i_points[(Ngrid_block*Ngrid_block-1)*Ncells ].x
-    					  ,i_tree->top->boundary_p1,i_tree->top->boundary_p2) == 0 ){
+*/
+    		      //if( inbox(i_points[(Ngrid_block*Ngrid_block-1)*Ncells ].x
+   		 	  	  if( inbox(i_points->x
+      					  ,i_tree->top->boundary_p1,i_tree->top->boundary_p2) == 0 ){
     				  ERROR_MESSAGE();
     			  }
     			  ++Ncells;
-       			  point->gridsize /= Ngrid_block;
-       			  point->image->gridsize /= Ngrid_block;
-       			  point->in_image = false;  // unmak so that it wouldn't bouble refine
+       			  //point->gridsize /= Ngrid_block;
+       			  //point->image->gridsize /= Ngrid_block;
+       			  point->in_image = FALSE;  // unmak so that it wouldn't bouble refine
     		  }
     		  //imageinfo[i].outerborderlist->current->gridsize /= Ngrid_block;/**/
     	  }
     	  MoveDownKist(imageinfo[i].outerborder);
       }
 
-      if(Ncells != Ncells_o){
-       	  i_points=AddPointToArray(i_points,(Ngrid_block*Ngrid_block-1)*Ncells
-       			  ,(Ngrid_block*Ngrid_block-1)*Ncells_o);
-      }
+//      if(Ncells != Ncells_o){
+//       	  i_points=AddPointToArray(i_points,(Ngrid_block*Ngrid_block-1)*Ncells
+//       			  ,(Ngrid_block*Ngrid_block-1)*Ncells_o);
+//      }
 
-      s_points=LinkToSourcePoints(i_points,(Ngrid_block*Ngrid_block-1)*Ncells);
+      //s_points=LinkToSourcePoints(i_points,(Ngrid_block*Ngrid_block-1)*Ncells);
 
       // lens the added points
       //printf("refine_grid\n");
-      lens->rayshooterInternal((Ngrid_block*Ngrid_block-1)*Ncells,i_points,kappa_off);
+      //lens->rayshooterInternal((Ngrid_block*Ngrid_block-1)*Ncells,i_points,kappa_off);
 
       //printf("should be Ncells=%i Ngrid_block=%i   %i\n",Ncells,Ngrid_block,
       //		(Ngrid_block*Ngrid_block-1)*Ncells);
 
       // add points to trees
       //printf("refine grid\n");
-		AddPointsToTree(i_tree,i_points,Ncells*(Ngrid_block*Ngrid_block-1));
+		//AddPointsToTree(i_tree,i_points,Ncells*(Ngrid_block*Ngrid_block-1));
 		//printf("   s-plane\n");
-		AddPointsToTree(s_tree,s_points,Ncells*(Ngrid_block*Ngrid_block-1));
+		//AddPointsToTree(s_tree,s_points,Ncells*(Ngrid_block*Ngrid_block-1));
     }
 
     if(count > 0) ++number_of_refined;
@@ -179,7 +183,7 @@ long refine_edges(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,ImageInfo *image
 	if(Nimages < 1) return 0;
 
 	long i,j,Ncells=0,Ncells_o=0,count=0;
-	Point *i_points,*s_points,*point;
+	Point *i_points,*point;
 	double area_total=0;
 
 	// count border points
@@ -193,7 +197,7 @@ long refine_edges(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,ImageInfo *image
 							|| ( criterion==1 && getCurrentKist(imageinfo[i].outerborder)->gridsize > res_target)
 							|| ( criterion==2 && pow(getCurrentKist(imageinfo[i].outerborder)->gridsize,2)/area_total > res_target) ){
 				++Ncells;
-				getCurrentKist(imageinfo[i].outerborder)->in_image = true;  // Temporarily mark point so they are not double refined
+				getCurrentKist(imageinfo[i].outerborder)->in_image = TRUE;  // Temporarily mark point so they are not double refined
 			}
 			//if( criterion==0 && pow( getCurrentKist(imageinfo[i].outerborder)->gridsize,2)/imageinfo[i].area > res_target) ++Ncells;
 			//if( criterion==1 && getCurrentKist(imageinfo[i].outerborder)->gridsize > res_target) ++Ncells;
@@ -213,7 +217,7 @@ long refine_edges(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,ImageInfo *image
 
 	if(Ncells==0) return 0;
 
-	i_points=NewPointArray((Ngrid_block*Ngrid_block-1)*Ncells,true);
+	//i_points=NewPointArray((Ngrid_block*Ngrid_block-1)*Ncells,true);
 	Ncells_o=Ncells;
 
 	for(i=0,Ncells=0;i<Nimages;++i){
@@ -234,14 +238,16 @@ long refine_edges(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,ImageInfo *image
 				if(point->in_image){ // point has not been refined yet
 					++count;
 
-					xygridpoints(&i_points[(Ngrid_block*Ngrid_block-1)*Ncells]
+					i_points = RefineLeaf(lens,i_tree,s_tree,point,Ngrid_block,kappa_off);
+
+/*					xygridpoints(&i_points[(Ngrid_block*Ngrid_block-1)*Ncells]
 						              ,point->gridsize*(Ngrid_block-1)/Ngrid_block
 					                  ,point->x,Ngrid_block,1);
 
 					point->gridsize /= Ngrid_block;
 					point->image->gridsize /= Ngrid_block;
-
-					point->in_image = false;
+*/
+					point->in_image = FALSE;
 
 					++Ncells;
 				}
@@ -258,19 +264,21 @@ long refine_edges(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,ImageInfo *image
 					|| (criterion==1 && getCurrentKist(imageinfo[i].innerborder)->gridsize > res_target)
 					|| (criterion==2 && pow(getCurrentKist(imageinfo[i].innerborder)->gridsize,2)/area_total > res_target) ){
 
-				point = getCurrentKist(imageinfo[i].innerborder);
+				//point = getCurrentKist(imageinfo[i].innerborder);
     			assert(point->gridsize > 0);
 
 				//if( getCurrentKist(imageinfo[i].innerborderkist)->gridsize == point->gridsize){ /* point has not been refined yet */
     			++count;
 
+   			i_points = RefineLeaf(lens,i_tree,s_tree,getCurrentKist(imageinfo[i].innerborder),Ngrid_block,kappa_off);
+/*
     			xygridpoints(&i_points[(Ngrid_block*Ngrid_block-1)*Ncells]
     			                       ,point->gridsize*(Ngrid_block-1)/Ngrid_block
     			                       ,point->x,Ngrid_block,1);
 
 				point->gridsize /= Ngrid_block;
     			point->image->gridsize /= Ngrid_block;
-
+*/
        			++Ncells;
 				//}
 				//getCurrentKist(imageinfo[i].innerborderkist)->gridsize /= Ngrid_block;
@@ -280,21 +288,24 @@ long refine_edges(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,ImageInfo *image
 
 	}
 
-    if(Ncells != Ncells_o){
+/*    if(Ncells != Ncells_o){
      	  i_points=AddPointToArray(i_points,(Ngrid_block*Ngrid_block-1)*Ncells
      			  ,(Ngrid_block*Ngrid_block-1)*Ncells_o);
     }
+*/
 
 	/* lens the added points */
+	/*
 	s_points=LinkToSourcePoints(i_points,(Ngrid_block*Ngrid_block-1)*Ncells);
 	//printf("refine_edges\n");
 	lens->rayshooterInternal((Ngrid_block*Ngrid_block-1)*Ncells,i_points,kappa_off);
 
-	/* add points to trees */
+	/* add points to trees *
 	//printf("edges1\n");
 	AddPointsToTree(i_tree,i_points,Ncells*(Ngrid_block*Ngrid_block-1));
 	//printf("   s-plane\n");
 	AddPointsToTree(s_tree,s_points,Ncells*(Ngrid_block*Ngrid_block-1));
+*/
 
 	return count;
 }
@@ -326,7 +337,7 @@ long refine_edges2(LensHndl lens,double *y_source,double r_source,TreeHndl i_tre
 	if(Nimages < 1) return 0;
 
 	long i,j,k,n,Ncells=0,Ncells_o=0,count=0,Npoints=0;
-	Point *i_points,*s_points,*point;
+	Point *i_points,*point;
 	KistHndl neighborkist = new Kist;
 	double tmp_area=0,area_total=0;
 	bool addinner;
@@ -347,7 +358,7 @@ long refine_edges2(LensHndl lens,double *y_source,double r_source,TreeHndl i_tre
 					|| ( criterion==1 && getCurrentKist(imageinfo[i].outerborder)->gridsize > res_target)
 					|| ( criterion==2 && pow( getCurrentKist(imageinfo[i].outerborder)->gridsize,2)/area_total > res_target)){
 				++Ncells;
-				getCurrentKist(imageinfo[i].outerborder)->in_image = true; // temporary mark
+				getCurrentKist(imageinfo[i].outerborder)->in_image = TRUE; // temporary mark
 			}
 			/*if( criterion==0 && pow( getCurrentKist(imageinfo[i].outerborder)->gridsize,2)/imageinfo[i].area > res_target ) ++Ncells;
 			if( criterion==1 && getCurrentKist(imageinfo[i].outerborder)->gridsize > res_target) ++Ncells;
@@ -368,7 +379,7 @@ long refine_edges2(LensHndl lens,double *y_source,double r_source,TreeHndl i_tre
 
 		if(Ncells > 0){
 
-			i_points=NewPointArray((Ngrid_block*Ngrid_block-1)*Ncells,true);
+			//i_points=NewPointArray((Ngrid_block*Ngrid_block-1)*Ncells,true);
 			Ncells_o=Ncells;
 
 			MoveToTopKist(imageinfo[i].outerborder);
@@ -386,6 +397,9 @@ long refine_edges2(LensHndl lens,double *y_source,double r_source,TreeHndl i_tre
 					if(point->in_image){
 						++count;
 
+						i_points = RefineLeaf(lens,i_tree,s_tree,point,Ngrid_block,kappa_off);
+/*
+						point->leaf->refined = true;
 						xygridpoints(&i_points[(Ngrid_block*Ngrid_block-1)*Ncells]
 					                       ,point->gridsize*(Ngrid_block-1)/Ngrid_block
 					                       ,point->x,Ngrid_block,1);
@@ -393,8 +407,33 @@ long refine_edges2(LensHndl lens,double *y_source,double r_source,TreeHndl i_tre
 						++Ncells;
 						point->gridsize /= Ngrid_block;
 						point->image->gridsize /= Ngrid_block;
+*/
+						//  sort new points into in and out of image
+						//    and add them to inner and outer borders
+						for(j=0;j<(Ngrid_block*Ngrid_block-1);++j){
+							if( sqrt(pow(i_points[j].image->x[0]-y_source[0],2)
+									+ pow(i_points[j].image->x[1]-y_source[1],2)) < r_source){
 
-						point->in_image = false;
+								// mark points
+								i_points[j].in_image = TRUE;
+								i_points[j].image->in_image = TRUE;
+
+								InsertAfterCurrentKist(imageinfo[i].innerborder,&(i_points[j]));
+								InsertAfterCurrentKist(imageinfo[i].imagekist,&(i_points[j]));
+								MoveDownKist(imageinfo[i].innerborder);
+								//PointCopyData(imageinfo[i].innerborder->current,&(i_points[j]));
+
+								imageinfo[i].area += pow(i_points[j].gridsize,2);
+							}else{
+
+								// un-mark points
+								i_points[j].in_image = FALSE;
+								i_points[j].image->in_image = FALSE;
+
+							}
+						}
+
+						point->in_image = FALSE;
 					}else *image_overlap=true;
 
 				}
@@ -419,16 +458,45 @@ long refine_edges2(LensHndl lens,double *y_source,double r_source,TreeHndl i_tre
 					//if( getCurrentKist(imageinfo[i].innerborderkist)->gridsize == point->gridsize){
 						++count;
 
+						i_points = RefineLeaf(lens,i_tree,s_tree,point,Ngrid_block,kappa_off);
+/*
+						point->leaf->refined = true;
 						xygridpoints(&i_points[(Ngrid_block*Ngrid_block-1)*Ncells]
 					                       ,point->gridsize*(Ngrid_block-1)/Ngrid_block
 					                       ,point->x,Ngrid_block,1);
 
-						++Ncells;
 						point->gridsize /= Ngrid_block;
 						point->image->gridsize /= Ngrid_block;
+*/
 
+						++Ncells;
 						// subtract area of new points from image area
 						imageinfo[i].area += pow(point->gridsize,2)*(1-Ngrid_block*Ngrid_block);
+
+						//  sort new points into in and out of image
+						//    and add them to inner and outer borders
+						for(j=0;j<(Ngrid_block*Ngrid_block-1);++j){
+							if( sqrt(pow(i_points[j].image->x[0]-y_source[0],2)
+									+ pow(i_points[j].image->x[1]-y_source[1],2)) < r_source){
+
+								// mark points
+								i_points[j].in_image = TRUE;
+								i_points[j].image->in_image = TRUE;
+
+								InsertAfterCurrentKist(imageinfo[i].innerborder,&(i_points[j]));
+								InsertAfterCurrentKist(imageinfo[i].imagekist,&(i_points[j]));
+								MoveDownKist(imageinfo[i].innerborder);
+								//PointCopyData(imageinfo[i].innerborder->current,&(i_points[j]));
+
+								imageinfo[i].area += pow(i_points[j].gridsize,2);
+							}else{
+
+								// un-mark points
+								i_points[j].in_image = FALSE;
+								i_points[j].image->in_image = FALSE;
+
+							}
+						}
 
 					//}else *image_overlap = true;
 
@@ -445,32 +513,32 @@ long refine_edges2(LensHndl lens,double *y_source,double r_source,TreeHndl i_tre
 		//		imageinfo[i].outerborder->Npoints);
 		//if(tmp_area==imageinfo[i].area){printf("no subtraction of area\n"); exit(0);}
 
-			if(Ncells != Ncells_o){
+			/*if(Ncells != Ncells_o){
 				i_points=AddPointToArray(i_points,(Ngrid_block*Ngrid_block-1)*Ncells
 						,(Ngrid_block*Ngrid_block-1)*Ncells_o);
-			}
+			}*/
 
 			//if(Ncells == 0){
 			// lens the added points
-			s_points=LinkToSourcePoints(i_points,(Ngrid_block*Ngrid_block-1)*Ncells);
+/*			s_points=LinkToSourcePoints(i_points,(Ngrid_block*Ngrid_block-1)*Ncells);
 			lens->rayshooterInternal((Ngrid_block*Ngrid_block-1)*Ncells,i_points,kappa_off);
 
 			// add points to trees
 			AddPointsToTree(i_tree,i_points,Ncells*(Ngrid_block*Ngrid_block-1));
 			AddPointsToTree(s_tree,s_points,Ncells*(Ngrid_block*Ngrid_block-1));
-
+*/
 			//  Update image borders and area
 			if(Ncells) imageinfo[i].gridrange[0]/=Ngrid_block; /* maximum grid size in outerborder */
 
-			//  sort new points into in and out of image
+/*			//  sort new points into in and out of image
 			//    and add them to inner and outer borders
 			for(j=0;j<(Ngrid_block*Ngrid_block-1)*Ncells;++j){
 				if( sqrt(pow(i_points[j].image->x[0]-y_source[0],2)
 						+ pow(i_points[j].image->x[1]-y_source[1],2)) < r_source){
 
 					// mark points
-					i_points[j].in_image = true;
-					i_points[j].image->in_image = true;
+					i_points[j].in_image = TRUE;
+					i_points[j].image->in_image = TRUE;
 
 					InsertAfterCurrentKist(imageinfo[i].innerborder,&(i_points[j]));
 					InsertAfterCurrentKist(imageinfo[i].imagekist,&(i_points[j]));
@@ -481,12 +549,12 @@ long refine_edges2(LensHndl lens,double *y_source,double r_source,TreeHndl i_tre
 				}else{
 
 					// un-mark points
-					i_points[j].in_image = false;
-					i_points[j].image->in_image = false;
+					i_points[j].in_image = FALSE;
+					i_points[j].image->in_image = FALSE;
 
 				}
 			}
-
+*/
 			/*
 			 *     Weed out of the borders the points that are no longer on the border
 			 */
@@ -511,7 +579,7 @@ long refine_edges2(LensHndl lens,double *y_source,double r_source,TreeHndl i_tre
 
 				MoveToTopKist(neighborkist);
 				for(k=0;k < neighborkist->Nunits() ;++k){
-					if(getCurrentKist(neighborkist)->in_image == false){
+					if(getCurrentKist(neighborkist)->in_image == FALSE){
 						addinner=true;
 
 						MoveToTopKist(imageinfo[i].outerborder);
@@ -743,7 +811,7 @@ void findborders3(TreeHndl i_tree,OldImageInfo *imageinfo){
 		MoveToTopKist(neighborkist);
 		for(i=0;i<neighborkist->Nunits();++i){
 
-			if( getCurrentKist(neighborkist)->in_image == false){  // point is a neighbor
+			if( getCurrentKist(neighborkist)->in_image == FALSE){  // point is a neighbor
 				addinner=true;
 				// check if point is already in list
 				MoveToTopKist(imageinfo->outerborder);
@@ -873,9 +941,9 @@ void SwapImages(OldImageInfo *image1,OldImageInfo *image2){
 	Npoints = image1->Npoints;
 	image1->Npoints = image2->Npoints;
 	image2->Npoints = Npoints;
-	Npoints = image1->Nencircled;
-	image1->Nencircled = image2->Nencircled;
-	image2->Nencircled = Npoints;
+	Npoints = image1->ShouldNotRefine;
+	image1->ShouldNotRefine = image2->ShouldNotRefine;
+	image2->ShouldNotRefine = Npoints;
 
 	tmp = image1->area;
 	image1->area = image2->area;

@@ -221,7 +221,7 @@ void SourceBLR::readParamfile(string filename){
 
 	  addr[n] = &source_fK;
 	  id[n] = 0;
-	  label[n++] = "source_sigma";
+	  label[n++] = "source_fk";
 
 	  cout << "BLR source: reading from " << filename << endl;
 
@@ -239,7 +239,36 @@ void SourceBLR::readParamfile(string filename){
 		  if(rlabel[0] == escape[0])
 			  continue;
 
-		  flag = 1;
+		  flag = 0;
+
+		  for(i = 0; i < n; i++){
+			  if(rlabel == label[i]){
+
+				  flag = 1;
+				  ss << rvalue;
+
+				  switch(id[i]){
+				  case 0:
+					  ss >> mydouble;
+					  *((double *)addr[i]) = mydouble;
+					  break;
+				  case 1:
+					  ss >> myint;
+					  *((int *)addr[i]) = myint;
+					  break;
+				  case 2:
+					  ss >> mystring;
+					  *((string *)addr[i]) = mystring;
+					  break;
+				  }
+
+				  ss.clear();
+				  ss.str(string());
+
+				  id[i] = -1;
+			  }
+		  }
+/*		  flag = 1;
 
 		  for(i = 0; i < 9; i++){
 			  if(rlabel == label[i]){
@@ -248,14 +277,15 @@ void SourceBLR::readParamfile(string filename){
 				  ss << rvalue;
 				  ss >> myfloat;
 
-				  *((float *)addr[i]) = myfloat;
+	                 *((float *)addr[i]) = myfloat;
+	                 //*(static_cast<float *>addr[i]) = myfloat;
 
 				  ss.clear();
 				  ss.str(string());
 
 				  id[i] = -1;
 			  }
-		  }
+		  }*/
 	  }
 
 	  file_in.close();
@@ -294,12 +324,12 @@ void SourceBLR::printSource(){
 	cout << "z_source " << zsource << endl;
 	cout << "BHmass " << source_BHmass << endl;
 	cout << "gamma " << source_gamma << endl;
-	cout << "incl " << source_inclination << endl;
-	cout << "opening angl " << source_opening_angle << endl;
+	cout << "incl " << source_inclination*180/pi << endl;
+	cout << "opening angl " << source_opening_angle*180/pi << endl;
 	cout << "r_in " << source_r_in << endl;
 	cout << "r_out " << source_r_out << endl;
 	cout << "nuo " << source_nuo << endl;
-	cout << "source_sigma " << source_fK << endl << endl;
+	cout << "source_fK " << source_fK << endl << endl;
 }
 
 double SourceUniform::source_sb_func(double *y){

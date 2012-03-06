@@ -1,11 +1,11 @@
-/*
+/** \ingroup FitLensL2
  * lens_expand.c
  *
  *  Created on: Feb 22, 2010
  *      Author: R.B. Metcalf
  *
 
-  calculate the sources position, surface density and magnification at x
+\brief  calculate the sources position, surface density and magnification at x
         given lens model mod
         mod[0] uniform kappa sheet
         mod[1] first component of background shear

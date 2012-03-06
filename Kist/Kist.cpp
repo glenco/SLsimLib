@@ -110,11 +110,11 @@ void Kist::FreeAll(){
 
 	Nunits_t = Number;
 	i=0;
+	Nheads = 0;
 	while(Number > 0){
-		data_t[i] = Kist::TakeOutCurrent();
+		data_t[Nheads] = Kist::TakeOutCurrent();
 		Ndata += data_t[i]->head;
-		if(data_t[i]->head) ++Nheads;
-		++i;
+		if(data_t[Nheads]->head) ++Nheads;
 	}
 
 	for(i = 0; i < Nheads ; ++i){

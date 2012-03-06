@@ -9,19 +9,26 @@
 
 #define NMAXCRITS 100
 
-  /** \ingroup ImageFinding
-   *
-   * \brief Finds critical curves and caustics.
-   *
-   *  resolution is the resolution on the image plane
-  * the inner out outer boundaries of the result are the estimated critical curves
+/** \ingroup ImageFinding
+  *
+  * \brief Finds critical curves and caustics.
+  *
   * OUTPUT: each critical curve is in a array of IamgeInfo's
   *         result.parity = 1 tangential caustic, 2 radial, 0 not enough points to determine
+  *  the inner out outer boundaries of the result are the estimated critical curves
   *
   * This routine needs to be updated.  It still uses List instead of kist and perhaps some
   * older and slower image splitting and ordering.
   */
-ImageInfo *find_crit(LensHndl lens,GridHndl grid,int *Ncrits,double resolution,bool *orderingsuccess,bool ordercurve,bool verbose){
+ImageInfo *find_crit(
+	    LensHndl lens
+		,GridHndl grid             /// The grid.  It must be initialized.
+		,int *Ncrits              /// The number of critical curves found.
+		,double resolution        /// The target resolution that the critical curve is mapped on the image plane.
+		,bool *orderingsuccess    /// true if ordering was successful.
+		,bool ordercurve          /// Order the curve so that it can be drawn or used to find the winding number.
+		,bool verbose
+		){
 
   Point *minpoint;
   ImageInfo *critexport;
@@ -33,7 +40,6 @@ ImageInfo *find_crit(LensHndl lens,GridHndl grid,int *Ncrits,double resolution,b
   ListHndl negpointlist;
 
   negpointlist=NewList();
-  //critcurve = NewImageInfo(NMAXCRITS);
   minpoint=NewPoint(x,0);
   minpoint->invmag=1.0e99;
   /*point=NmewPoint(x,0);*/
@@ -68,6 +74,7 @@ ImageInfo *find_crit(LensHndl lens,GridHndl grid,int *Ncrits,double resolution,b
 	  if(Npoints == 0){
 		  if(minpoint->gridsize <= resolution){  // no caustic found at this resolution
 			  *Ncrits=0;
+			  delete[] critcurve;
 			  critexport = new ImageInfo[1];
 			  return critexport;
 		  }
@@ -77,7 +84,7 @@ ImageInfo *find_crit(LensHndl lens,GridHndl grid,int *Ncrits,double resolution,b
 		  //critcurve[0].points=(Point *) malloc(sizeof(Point));
 		  //critcurve[0].points->head=1;
 		  critcurve[0].points=NewPointArray(1,false);
-		  critcurve[0].points->in_image=false;
+		  critcurve[0].points->in_image = FALSE;
 		  critcurve[0].Npoints=1;
 		  PointCopyData(critcurve[0].points,minpoint);
 	  }else{
@@ -174,13 +181,12 @@ ImageInfo *find_crit(LensHndl lens,GridHndl grid,int *Ncrits,double resolution,b
   free(minpoint);
 
   // resize crit array so it doesn't use more mem than necessary
-  //critexport=NewImageInfo(*Ncrits);
   critexport= new ImageInfo[*Ncrits];
   for(i=0;i<*Ncrits;++i){
-	  critexport[i].Nencircled=critcurve[i].Nencircled;
+	  critexport[i].ShouldNotRefine = critcurve[i].ShouldNotRefine;
 	  //critexport[i].Npoints=critcurve[i].Npoints;
-	  critexport[i].area=critcurve[i].area;
-	  critexport[i].area_error=critcurve[i].area_error;
+	  critexport[i].area = critcurve[i].area;
+	  critexport[i].area_error = critcurve[i].area_error;
 	  //critexport[i].points=critcurve[i].points;
 
 	  for(j=0;j<critcurve[i].Npoints;++j){

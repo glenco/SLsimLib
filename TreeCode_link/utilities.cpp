@@ -108,15 +108,17 @@ void findarea(OldImageInfo *imageinfo){
   imageinfo->area_error /= imageinfo->area;
 }
 
+/**  /ingroup Utill
+ *
+ *  make a new 2d grid with logarithmically distributed radii
+ * Ngrid - both the radial and asmuthal number of points,
+ * 	     total number of points is Ngrid*Ngrid
+ * WARRNING: This should not be used as initial grid for adaptive
+ *           grid calculations!  These need to be done on a rectolinear
+ *           grid.  For testing the ray shooter only.
+ */
 
 void log_polar_grid(Point *i_points,double rmax,double rmin,double *center,long Ngrid){
-  /* make a new 2d grid with logarithmically distributed radii
-   * Ngrid - both the radial and asmuthal number of points,
-   * 	     total number of points is Ngrid*Ngrid
-   * WARRNING: This should not be used as initial grid for adaptive
-   *           grid calculations!  These need to be done on a rectolinear
-   *           grid.  For testing the ray shooter only.
-   */
   long i;
   double r,theta;
   static long id=0;
@@ -135,7 +137,8 @@ void log_polar_grid(Point *i_points,double rmax,double rmin,double *center,long 
   return;
 }
 
-/*
+/** \ingroup Utill
+ *
  * The two functions below are inverses of each other for converting
  *   between a 1d array index and a square grid of positions
  *   Npixels in the number of point is 1 dimension
@@ -156,6 +159,9 @@ long IndexFromPosition(double *x,long Npixels,double range,double *center){
 	  if( (ix>-1)*(ix<Npixels) && (iy>-1)*(iy<Npixels) ) return ix+Npixels*iy;
 	  return -1;
 }
+/** \ingroup Utill
+ *
+ */
 void PositionFromIndex(unsigned long i,double *x,long Npixels,double range,double *center){
     x[0] = center[0] + range*( 1.0*(i%Npixels)/(Npixels-1) - 0.5 );
     x[1] = center[1] + range*( 1.0*(i/Npixels)/(Npixels-1) - 0.5 );
@@ -207,7 +213,6 @@ int windings(double *x,Point *points,unsigned long Npoints,double *area,short im
 	//if(abs(wn) > 0) exit(0);
 	return wn;
 }
-
 
 /** \ingroup Utill
  * This function finds the largest power of 2 that is < k

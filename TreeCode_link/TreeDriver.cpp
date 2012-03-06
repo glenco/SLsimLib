@@ -269,6 +269,8 @@ void _NearestNeighbor(TreeHndl tree,double *ray,int Nneighbors,Point **neighborp
 // returns true if branch1 is fully inside barnch2
 bool boxinbox(Branch *branch1,Branch *branch2){
 
+	if( branch1 == branch2 ) return true;
+
 	if(inbox(branch1->boundary_p1,branch2->boundary_p1,branch2->boundary_p2) == 0) return false;
 	if(inbox(branch1->boundary_p2,branch2->boundary_p1,branch2->boundary_p2) == 0) return false;
 
@@ -325,20 +327,45 @@ int cutbox(double *ray,double *p1,double *p2,double rmax){
   return 3;  // box intersects circle
 }
 
+/**
+ * \brief If the circle centered at ray with radius is entirely within the box
+ * returns true.
+ *
+ */
+bool CircleInBox(double *ray,double radius,double *p1,double *p2){
 
+	if(!inbox(ray,p1,p2)) return false;
 
+	double close[2];
+	int i;
+
+	if((ray[0] + radius) > p2[0] ) return false;
+	if((ray[0] - radius) < p1[0] ) return false;
+	if((ray[1] + radius) > p2[1] ) return false;
+	if((ray[1] - radius) < p1[1] ) return false;
+
+	return true;
+}
+
+bool BoxInCircle(double *ray,double radius,double *p1,double *p2){
+
+	double rad2 = radius*radius;
+
+	if((pow(p1[0] - ray[0],2) + pow(p1[1] - ray[1],2)) > rad2) return false;
+	if((pow(p2[0] - ray[0],2) + pow(p2[1] - ray[1],2)) > rad2) return false;
+	if((pow(p1[0] - ray[0],2) + pow(p2[1] - ray[1],2)) > rad2) return false;
+	if((pow(p2[0] - ray[0],2) + pow(p1[1] - ray[1],2)) > rad2) return false;
+
+	return true;
+}
+
+/**
+ *   Finds the leaf the ray is in and adds Nadd to all of is parent leaves
+*/
 
 void _FindLeaf(TreeHndl tree,double *ray,unsigned long Nadd){
-	/*
-	 *  Finds the leaf the ray is in and adds Nadd to all of is parent leaves
-	 */
+
 	bool contin;
-/*   std::printf("***********************\n"); */
-/*   std::printf("level = %i  npoints = %i incell=%i\n", tree->current->level,tree->current->npoints,incell); */
-/*   std::printf("p1= [%f,%f]\n", tree->current->boundary_p1[0],tree->current->boundary_p1[1]); */
-/*   std::printf("p2= [%f,%f]\n", tree->current->boundary_p2[0],tree->current->boundary_p2[1]); */
-/*   std::printf("first point = %i x= %f %f\n",tree->current->points->id,tree->current->points->x[0],tree->current->points->x[1]); */
-/*   std::printf("ray = %f %f\n",ray[0],ray[1]); */
 
 	assert(inbox(ray,tree->current->boundary_p1,tree->current->boundary_p2) );
 	do{
@@ -359,20 +386,7 @@ void _FindLeaf(TreeHndl tree,double *ray,unsigned long Nadd){
 			contin=true;
 		}
 	}while(contin);
-/*
-  if(tree->current->child1 !=NULL){
-    if( inbox(ray,tree->current->child1->boundary_p1,tree->current->child1->boundary_p2) ){
-      moveToChild(tree,1);
-      _FindLeaf(tree,ray,Nadd);
-    }
-  }
-  if(tree->current->child2 !=NULL){
-    if( inbox(ray,tree->current->child2->boundary_p1,tree->current->child2->boundary_p2) ){
-      moveToChild(tree,2);
-      _FindLeaf(tree,ray,Nadd);
-    }
-  }
-*/
+
   return;
 }
 
@@ -541,11 +555,11 @@ void PointsWithin_iter(TreeHndl tree,double *ray,float rmax,ListHndl neighborlis
 		   	  tree->pointlist->current=tree->current->points;
     		  for(i=0;i<tree->current->npoints;++i){
      			  if(markpoints == 1){
-     				  tree->pointlist->current->in_image=true;
-     				  tree->pointlist->current->image->in_image=true;
+     				  tree->pointlist->current->in_image=TRUE;
+     				  tree->pointlist->current->image->in_image=TRUE;
      			  }else if(markpoints == -1){
-     				  tree->pointlist->current->in_image=false;
-     				  tree->pointlist->current->image->in_image=false;
+     				  tree->pointlist->current->in_image=FALSE;
+     				  tree->pointlist->current->image->in_image=FALSE;
 					  tree->pointlist->current->surface_brightness = tree->pointlist->current->image->surface_brightness = 0.0;
     			  }else if(markpoints == 0){
      				  InsertAfterCurrent(neighborlist,tree->pointlist->current->x
@@ -568,11 +582,11 @@ void PointsWithin_iter(TreeHndl tree,double *ray,float rmax,ListHndl neighborlis
 	    			  for(j=0,radius=0.0;j<2;++j) radius+=pow(tree->pointlist->current->x[j]-ray[j],2);
 	    			  if( radius < rmax*rmax ){
 	       				  if(markpoints == 1){
-	       					  tree->pointlist->current->in_image=true;
-	      					  tree->pointlist->current->image->in_image=true;
+	       					  tree->pointlist->current->in_image=TRUE;
+	      					  tree->pointlist->current->image->in_image=TRUE;
 	      				  }else if(markpoints == -1){
-	      					  tree->pointlist->current->in_image=false;
-	     					  tree->pointlist->current->image->in_image=false;
+	      					  tree->pointlist->current->in_image=FALSE;
+	     					  tree->pointlist->current->image->in_image=FALSE;
 	     					  tree->pointlist->current->surface_brightness = tree->pointlist->current->image->surface_brightness = 0.0;
 	       				  }else if(markpoints == 0){
 	         				  InsertAfterCurrent(neighborlist,tree->pointlist->current->x
@@ -602,7 +616,6 @@ double ClosestBorder(double *ray,double *p1,double *p2){
 
 	return MIN(p2[1]-ray[1],length);
 }
-
 
 void _PointsWithin(TreeHndl tree,double *ray,float *rmax,ListHndl neighborlist,short markpoints){
 
@@ -640,11 +653,11 @@ void _PointsWithin(TreeHndl tree,double *ray,float *rmax,ListHndl neighborlist,s
     			  for(j=0,radius=0.0;j<2;++j) radius+=pow(tree->pointlist->current->x[j]-ray[j],2);
     			  if( radius < *rmax**rmax ){
        				  if(markpoints == 1){
-       					  tree->pointlist->current->in_image=true;
-      					  tree->pointlist->current->image->in_image=true;
+       					  tree->pointlist->current->in_image=TRUE;
+      					  tree->pointlist->current->image->in_image=TRUE;
       				  }else if(markpoints == -1){
-      					  tree->pointlist->current->in_image=false;
-     					  tree->pointlist->current->image->in_image=false;
+      					  tree->pointlist->current->in_image=FALSE;
+     					  tree->pointlist->current->image->in_image=FALSE;
      					  tree->pointlist->current->surface_brightness = tree->pointlist->current->image->surface_brightness = 0.0;
        				  }else if(markpoints == 0){
          				  InsertAfterCurrent(neighborlist,tree->pointlist->current->x
@@ -660,11 +673,11 @@ void _PointsWithin(TreeHndl tree,double *ray,float *rmax,ListHndl neighborlist,s
     	  }else{ // put all of points in box into neighborlist
        		  for(i=0;i<tree->current->npoints;++i){
        			  if(markpoints == 1){
-       				  tree->pointlist->current->in_image=true;
-       				  tree->pointlist->current->image->in_image=true;
+       				  tree->pointlist->current->in_image=TRUE;
+       				  tree->pointlist->current->image->in_image=TRUE;
        			  }else if(markpoints == -1){
-       				  tree->pointlist->current->in_image=false;
-       				  tree->pointlist->current->image->in_image=false;
+       				  tree->pointlist->current->in_image=FALSE;
+       				  tree->pointlist->current->image->in_image=FALSE;
  					  tree->pointlist->current->surface_brightness = tree->pointlist->current->image->surface_brightness = 0.0;
       			  }else if(markpoints == 0){
        				  InsertAfterCurrent(neighborlist,tree->pointlist->current->x
@@ -729,11 +742,11 @@ void _PointsWithin(TreeHndl tree,double *ray,float *rmax,ListHndl neighborlist,s
 				  for(j=0,radius=0.0;j<2;++j) radius+=pow(tree->pointlist->current->x[j]-ray[j],2);
 				  if( radius < *rmax**rmax ){
 					  if(markpoints==1){
-						  tree->pointlist->current->in_image=true;
-						  tree->pointlist->current->image->in_image=true;
+						  tree->pointlist->current->in_image=TRUE;
+						  tree->pointlist->current->image->in_image=TRUE;
 					  }else if(markpoints==-1){
-						  tree->pointlist->current->in_image=false;
-						  tree->pointlist->current->image->in_image=false;
+						  tree->pointlist->current->in_image=FALSE;
+						  tree->pointlist->current->image->in_image=FALSE;
      					  tree->pointlist->current->surface_brightness = tree->pointlist->current->image->surface_brightness = 0.0;
 					  }else if(markpoints==0){
 						  InsertAfterCurrent(neighborlist,tree->pointlist->current->x
@@ -751,11 +764,11 @@ void _PointsWithin(TreeHndl tree,double *ray,float *rmax,ListHndl neighborlist,s
 
 			  for(i=0;i<tree->current->npoints;++i){
   				  if(markpoints==1){
-   					  tree->pointlist->current->in_image=true;
-  					  tree->pointlist->current->image->in_image=true;
+   					  tree->pointlist->current->in_image=TRUE;
+  					  tree->pointlist->current->image->in_image=TRUE;
   				  }else if(markpoints==-1){
-  					  tree->pointlist->current->in_image=false;
- 					  tree->pointlist->current->image->in_image=false;
+  					  tree->pointlist->current->in_image=FALSE;
+ 					  tree->pointlist->current->image->in_image=FALSE;
  					  tree->pointlist->current->surface_brightness = tree->pointlist->current->image->surface_brightness = 0.0;
    				  }else if(markpoints==0){
    					  InsertAfterCurrent(neighborlist,tree->pointlist->current->x
@@ -1202,8 +1215,8 @@ void ClearAllMarks(TreeHndl tree){
 
 	MoveToTopList(tree->pointlist);
 	for(i=0;i<tree->pointlist->Npoints;++i){
-		tree->pointlist->current->in_image=false;
-		tree->pointlist->current->image->in_image=false;
+		tree->pointlist->current->in_image=FALSE;
+		tree->pointlist->current->image->in_image=FALSE;
 		MoveDownList(tree->pointlist);
 	}
 }

@@ -13,6 +13,7 @@
 #include <math.h>
 #include "analytic_lens.h"
 
+///
 void alphaPowLaw(double *alpha,double *x,double R,double mass,double beta,double *center,double Sigma_crit){
 	double r,b=0;
 
@@ -29,6 +30,7 @@ void alphaPowLaw(double *alpha,double *x,double R,double mass,double beta,double
 
 	return ;
 }
+///
 double kappaPowLaw(double *x,double R,double mass,double beta,double *center,double Sigma_crit){
 	double r;
 
@@ -37,6 +39,7 @@ double kappaPowLaw(double *x,double R,double mass,double beta,double *center,dou
 	if(r < 1.0-20) r=1.0e-20;
 	return (beta+2)*mass*pow(r/R,beta)/(2*pi*pow(R,2)*Sigma_crit);
 }
+///
 void gammaPowLaw(double *gamma,double *x,double R,double mass,double beta
 		,double *center,double Sigma_crit){
 	double r,gt=0;
@@ -54,7 +57,7 @@ void gammaPowLaw(double *gamma,double *x,double R,double mass,double beta
 
 	return ;
 }
-
+///
 double phiPowLaw(double *x,double R,double mass,double beta
 		,double *center,double Sigma_crit){
 	double b,r;

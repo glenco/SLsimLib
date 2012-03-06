@@ -18,6 +18,11 @@
 #define ERROR_MESSAGE() std::printf("ERROR: file: %s line: %i\n",__FILE__,__LINE__)
 #endif
 
+#ifndef bool_declare
+#define bool_declare
+typedef enum {FALSE, TRUE, MAYBE} Boo;
+#endif
+
 #ifndef pointtypes_declare
 #define pointtypes_declare
 
@@ -31,7 +36,7 @@ typedef struct Point{
   unsigned long id;
   double *x;         // the position of the point
   unsigned long head;         // marks beginning of allocated array of points for easy deallocation
-  bool in_image; // marks if point is in image
+  Boo in_image; // marks if point is in image
 
   // redundant information in image and source points
   double kappa;        // surface density
@@ -57,6 +62,8 @@ struct branchstruct{
   struct branchstruct *child2;
   struct branchstruct *brother;
   struct branchstruct *prev;
+  /// Marks point as start of a level of refinement
+  bool refined;
 } ;
 
 typedef struct branchstruct Branch;

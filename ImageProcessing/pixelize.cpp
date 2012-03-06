@@ -155,7 +155,8 @@ void _SplitFluxIntoPixels(TreeHndl ptree,Branch *leaf,double *leaf_sb){
 	area = BoxIntersection(leaf,ptree->current);
 
 	if(area > 0.0){
-		if(ptree->current->child1 == NULL && ptree->current->child2 == NULL){
+		if(atLeaf(ptree)){
+		
 			assert(ptree->current->npoints == 1);
 			ptree->current->points->surface_brightness += (*leaf_sb)*area;
 			//ptree->current->points->surface_brightness = *leaf_sb;

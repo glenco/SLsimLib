@@ -21,17 +21,27 @@ typedef struct Grid{
 	~Grid();
 
 	void ReInitializeGrid(LensHndl lens);
-	void TrimGrid(double highestres,bool useSB);
+	unsigned long PruneTrees(double resolution,bool useSB,double fluxlimit);
+	unsigned long PrunePointsOutside(double resolution,double *y,double r_in ,double r_out);
+
 	double RefreshSurfaceBrightnesses(SourceHndl source);
 	unsigned long NumberOfPoints();
+
 
 	/// tree on image plane
 	TreeHndl i_tree;
 	/// tree on source plane
 	TreeHndl s_tree;
+
+	int getNgrid(){return Ngrid;}
+	int getNgrid_block(){return Ngrid_block;}
+
+private:
 	/// one dimensional size of grid
 	int Ngrid;
+	int Ngrid_block;
 	bool initialized;
+	KistHndl trashkist;
 };
 
 typedef struct Grid *GridHndl;

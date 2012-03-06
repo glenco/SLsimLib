@@ -110,26 +110,6 @@ double blr_surface_brightness_disk(double x[],SourceBLR *source){
 	*/
 //***
 
-	//static const float r_in = 8.8439753e+15; // cm
-	//static const float r_out = 4.0e18 ; // cm
-	//static const float gam = 0.0;
-        //static float sigma_0 = 2.0e-3; // in units of c
-
-  //BEN - I'VE REMOVED THE FIXED FLOOR SIGMA_0 SINCE THE THERMAL/TURBULENT CONTRIBUTION IS MORE ELEGANT AND SOLVES THIS PROBLEM
-
-	//static const float inc=30. * 3.14159/180 ; // in radians
-	//static const float opening_angle = 5. * 3.14159/180 ; //in radians
-	//static float MBH = 1.0e9 ; // black hole mass, in Msun
-	//static const float CLIGHT = 3.0e10 ; // speed of light in cm/s
-	//static const float GNEWTON = 6.67259e-8 ; // grav. constant
-	//static const float MSUN = 1.989e33 ; // Solar mass
-
-	//EXTRA THINGS THIS ROUTINE NEEDS TO KNOW: 
-	// mass = MASS OF EMITTING ION, IN UNITS OF HYDROGEN MASS
-        // temp = TEMPERATURE FOR THERMAL BROADENING IN KELVIN
-        // turb = TURBULENT BROADENING INSIEDE CLOUD IN CM/S
-	//I AM ASSUMING THAT source_nuo is in Hz
-
 	double R,r,Z,tau;
 	double zz_prime,xx_prime;//,yy_prime;
 	double sigma2,eta;
@@ -197,9 +177,10 @@ double blr_surface_brightness_disk(double x[],SourceBLR *source){
 	//sigma2 = pow(source->source_nuo*source->source_sigma,2)*1.1126501e-11;
 	sigma2 = pow(source->source_nuo*v_Kep*source->source_fK,2);
 	//                                                  1/c^2 in km/s
+	eta = pow( source->source_nu*(1+source->zsource) - source->source_nuo - nu_shift ,2) / sigma2;
+	if(eta > 9) return 0.0;  // prevents frequencies very far off the line from causing unnecessary refinements
+	eta = pow(source->source_nuo*(1+source->zsource),2) * exp(-0.5 * eta) / sqrt(sigma2);
 
-	eta = source->source_nuo*(1+source->zsource) * exp(-0.5 * pow( source->source_nu*(1+source->zsource) - source->source_nuo - nu_shift ,2) / sigma2) / sqrt(sigma2);
-	 //  1/sqrt(2pi)
 
 	return pow(r/source->source_r_in,source->source_gamma)*eta*r/tau;
 	//}

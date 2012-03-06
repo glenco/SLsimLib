@@ -56,6 +56,7 @@ Branch *NewBranch(Point *points,unsigned long npoints
     branch->child2 = NULL;
     branch->brother = NULL;
     branch->prev = NULL;
+    branch->refined = false;
 
     return branch;
 }
@@ -83,14 +84,15 @@ Point *NewPointArray(
   points = (Point *) calloc(N, sizeof(Point));
   if(NewXs) points[0].x = (double *) calloc(2,sizeof(double));
   points[0].head = N;
-  points[0].in_image = false;
+  points[0].in_image = FALSE;
+  points[0].surface_brightness = 0;
   points[0].leaf = NULL;
 
   for(i = 1; i < N; i++)
   	  {
 	  	  if(NewXs) points[i].x = (double *) calloc(2,sizeof(double));
 	  	  points[i].head = 0;
-	  	  points[i].in_image = false;
+	  	  points[i].in_image = FALSE;
 	  	  points[i].surface_brightness = 0;
 	  	  points[i].leaf = NULL;
   	  }
@@ -235,7 +237,7 @@ bool offEnd(TreeHndl tree){
 bool CurrentIsSquareTree(TreeHndl tree){
 	if( fabs(1 - (tree->current->boundary_p2[0] - tree->current->boundary_p1[0])
 			    /(tree->current->boundary_p2[1] - tree->current->boundary_p1[1]) )
-			< 0.001){
+			< 0.05){
 		return true;
 	}
 
@@ -511,6 +513,8 @@ int checkBranch(Branch *branch){
 Point *AddPointToArray(Point *points,unsigned long N,unsigned long Nold){
   unsigned long i;
 
+  if(N==Nold) return points;
+
   if(Nold==0){
 	  points = NewPointArray(N,true);
   }else{
@@ -521,7 +525,7 @@ Point *AddPointToArray(Point *points,unsigned long N,unsigned long Nold){
 		  points[i].x=(double *) malloc(2*sizeof(double));
 		  assert(points[i].x);
 		  points[i].head=0;
-		  points[i].in_image=false;
+		  points[i].in_image=FALSE;
 		  points[i].leaf=NULL;
 	  }
 	  if(N>0) points[0].head=N;
@@ -539,7 +543,7 @@ Point *NewPoint(double *x,unsigned long id){
   point->head = 1;
   point->id=id;
   point->x=x;
-  point->in_image=false;
+  point->in_image=FALSE;
 
   if (!point){
     ERROR_MESSAGE(); std::fprintf(stderr,"allocation failure in NewPoint()\n");
@@ -638,6 +642,13 @@ ImageInfo::ImageInfo(){
   imagekist = new Kist;
   innerborder = new Kist;
   outerborder = new Kist;
+  
+  ShouldNotRefine = 0;
+  uniform_mag = unchecked;
+
+  area = area_error = 0.0;
+  centroid[0] = centroid[1] = 0.0;
+  gridrange[0] = gridrange[1] = gridrange[2] = 0.0;
 }
 
 /*ImageInfo *NewImageInfo(int Nimages){
@@ -712,185 +723,3 @@ bool TreeWalkStep(TreeHndl tree,bool allowDescent){
 	return false;
 }
 
-
-/**************************************************************************
-   routines for saving and restoring tree structure
-*************************************************************************/
-/*
-void saveTree(TreeHndl tree,char *filename){
-  RelativeBranch *tree_arr;
-  double *x,*y;
-  unsigned long *point_id,i;
-  void _saveTree(TreeHndl tree,RelativeBranch *tree_arr);
-  FILE *file;
-
-  tree_arr=(RelativeBranch *)malloc(tree->Nbranches*sizeof(RelativeBranch));
-  x=(double *)malloc(tree->pointlist->Npoints*sizeof(double));
-  y=(double *)malloc(tree->pointlist->Npoints*sizeof(double));
-  point_id=(unsigned long *)malloc(tree->pointlist->Npoints*sizeof(unsigned long));
-
-  // write linked list to arrays
-  MoveToTopList(tree->pointlist);
-  for(i=0;i<tree->pointlist->Npoints;++i){
-    x[i]=tree->pointlist->current->x[0];
-    y[i]=tree->pointlist->current->x[1];
-    point_id[i]=tree->pointlist->current->id;
-    MoveDownList(tree->pointlist);
-  }
-
-  file=fopen(filename,"w");
-  fwrite(&(tree->top->npoints),sizeof(unsigned long),1,file);
-  fwrite(&(tree->Nbranches),sizeof(unsigned long),1,file);
-  fwrite(point_id,sizeof(unsigned long),tree->top->npoints,file);
-  fwrite(x,sizeof(double),tree->top->npoints,file);
-  fwrite(y,sizeof(double),tree->top->npoints,file);
-   fclose(file);
-
-  // free(tree_arr);
-  free(x);
-  free(y);
-  free(point_id);
-
-  return;
-}*/
-
-/* void _saveTree(TreeHndl tree,RelativeBranch *tree_arr){ */
-/*   int i; */
-/*   unsigned long current; */
-
-/*   current=tree->current->number; */
-
-/*   /\* count down list to branch's first point *\/ */
-/*   MoveToTopList(tree->pointlist); */
-/*   tree_arr[current].points=0; */
-/*   while(tree->pointlist->current != tree->current->points){ */
-/*     MoveDownList(tree->pointlist); */
-/*     ++tree_arr[current].points; */
-/*   } */
-
-/*   tree_arr[current].npoints=tree->current->npoints; */
-/*   for(i=0;i<2;++i){ */
-/*     tree_arr[current].center[i]=tree->current->center[i]; */
-/*     tree_arr[current].boundary_p1[i]=tree->current->boundary_p1[i]; */
-/*     tree_arr[current].boundary_p2[i]=tree->current->boundary_p2[i]; */
-/*   } */
-
-/*   if(current>0) tree_arr[current].prev=tree->current->prev->number; */
-
-/*   if(tree->current->child1 == NULL){ */
-/*     tree_arr[current].child1=-1; */
-/*     return; */
-/*   }else{ */
-/*     tree_arr[current].child1=tree->current->child1->number; */
-/*     moveToChild(tree,1); */
-/*     _saveTree(tree,tree_arr); */
-/*     moveUp(tree); */
-/*   } */
-
-/*   if(tree->current->child2 == NULL){ */
-/*     tree_arr[current].child2=-1; */
-/*     return; */
-/*   }else{ */
-/*     tree_arr[current].child2=tree->current->child2->number; */
-/*     moveToChild(tree,2); */
-/*     _saveTree(tree,tree_arr); */
-/*     moveUp(tree); */
-/*   } */
-
-/*   return; */
-/* } */
-/*
-TreeHndl readTree(char *filename){
-  RelativeBranch *tree_arr;
-  TreeHndl tree;
-  FILE *file;
-  double *x,*y;
-  Point *xp;
-  unsigned long Npoints,Nbranches,*point_id,i;
-  void _readTree(TreeHndl tree,RelativeBranch *tree_arr,unsigned long *points
-		 ,unsigned long current);
-
-  file=fopen(filename,"r");
-
-  fread(&Npoints,sizeof(unsigned long),1,file);
-  fread(&Nbranches,sizeof(unsigned long),1,file);
-  std::printf("npoints %i   Nbranches %i\n",Npoints,Nbranches);
-
-  x=(double *)malloc(Npoints*sizeof(double));
-  y=(double *)malloc(Npoints*sizeof(double));
-  point_id=(unsigned long *)malloc(Npoints*sizeof(unsigned long));
-
-  fread(point_id,sizeof(unsigned long),Npoints,file);
-  fread(x,sizeof(double),Npoints,file);
-  fread(y,sizeof(double),Npoints,file);
-  //fread(tree_arr,sizeof(RelativeBranch),Nbranches,file);
-  fclose(file);
-
-  xp=(Point *) malloc(Npoints*sizeof(Point));
-  for(i=0;i<Npoints;++i){
-    xp[i].x[0]=x[i];
-    xp[i].x[1]=y[i];
-  }
-  free(x);
-  free(y);
-
-
-  // make linked list of points
-
-  tree=BuildTree(xp,Npoints);
-
-  /* re-assign particle ids */
-/*   MoveToTopList(tree->pointlist); */
-/*   for(i=0;i<tree->pointlist->Npoints;++i){ */
-/*     std::printf("i=%i   %i\n",i,point_id[i]); */
-/*      if( (tree->pointlist->current->x[0] == xp[i][0])*(tree->pointlist->current->x[1] == xp[i][1]) ){ */
-/*       tree->pointlist->current->id=point_id[i]; */
-/*      }else{ */
-/*       ERROR_MESSAGE();
-/*       std::printf("ERROR in readtree: reconstructed tree is not the same as saved one\n"); */
-/*       exit(1); */
-/*     } */
-/*     MoveDownList(tree->pointlist); */
-/*   } */
-
-//  return tree;
-//}
-/*
-void _readTree(TreeHndl tree,RelativeBranch *tree_arr,ListHndl points
-	       ,unsigned long current){
-  int i;
-
-  tree->current->number=current;
-  tree->current->points=&points[tree_arr[current].points];
-  tree->current->npoints=tree_arr[current].npoints;
-  tree->current->level=tree_arr[current].level;
-
-  for(i=0;i<2;++i){
-    tree->current->center[i]=tree_arr[current].center[i];
-    tree->current->boundary_p1[i]=tree_arr[current].boundary_p1[i];
-    tree->current->boundary_p2[i]=tree_arr[current].boundary_p2[i];
-  }
-
-  if(tree_arr[current].child1==-1){
-    tree->current->child1=NULL;
-    return;
-  }else{
-    insertChildToCurrent(tree,&current,0,&dummy,&dummy,&dummy,1);
-    moveToChild(tree,1);
-    _readTree(tree,tree_arr,points,tree_arr[current].child1);
-    moveUp(tree);
-  }
-
-  if(tree_arr[current].child2==-1){
-    tree->current->child2=NULL;
-    return;
-  }else{
-    insertChildToCurrent(tree,&current,0,&dummy,&dummy,&dummy,2);
-    moveToChild(tree,2);
-    _readTree(tree,tree_arr,points,tree_arr[current].child2);
-    moveUp(tree);
-  }
-
-  return;
-}
-*/

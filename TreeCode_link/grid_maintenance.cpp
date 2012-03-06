@@ -10,7 +10,7 @@
 /** \ingroup Constructor
  * \brief Constructor for initializing grid.
  *
- * Note: Defelection solver must be specified before creating a Grid.
+ * Note: Deflection solver must be specified before creating a Grid.
  */
 Grid::Grid(
 		LensHndl lens      /// lens model for initializing grid
@@ -22,6 +22,8 @@ Grid::Grid(
 	Point *i_points,*s_points;
 
 	Ngrid = N1d;
+	Ngrid_block = 3;  // never been tested with anything other than 3
+	
 
 	i_points = NewPointArray(Ngrid*Ngrid,true);
 	xygridpoints(i_points,range,center,Ngrid,0);
@@ -30,6 +32,8 @@ Grid::Grid(
 	// Build trees
 	i_tree = BuildTree(i_points,Ngrid*Ngrid);
 	s_tree = BuildTree(s_points,Ngrid*Ngrid);
+	
+	trashkist = new Kist;
 }
 /*
 GridHndl NewGrid(LensHndl lens, int Ngrid,double center[2],double range){
@@ -55,6 +59,9 @@ GridHndl NewGrid(LensHndl lens, int Ngrid,double center[2],double range){
 Grid::~Grid(){
 	freeTree(i_tree);
 	freeTree(s_tree);
+	
+	delete trashkist;
+	
 	return;
 }
 /*
@@ -100,10 +107,6 @@ void Grid::ReInitializeGrid(LensHndl lens){
  *
  * \brief DOES NOT WORK YET !!!!
  */
-void Grid::TrimGrid(double highestres,bool useSB){
-
-	PruneTrees(i_tree,s_tree,highestres,useSB);
-}
 
 /** \ingroup ImageFinding
  * \brief Recalculate surface brightness at every point without changing the positions of the grid or any lens properties.
@@ -122,13 +125,13 @@ double Grid::RefreshSurfaceBrightnesses(SourceHndl source){
 	do{
 		y[0] = s_tree->pointlist->current->x[0] - source->source_x[0];
 		y[1] = s_tree->pointlist->current->x[1] - source->source_x[1];
-		tmp = (source->source_sb_func)(y);
+		tmp = source->source_sb_func(y);
 		s_tree->pointlist->current->surface_brightness = s_tree->pointlist->current->image->surface_brightness
 				= tmp;
 		total += tmp;
 		assert(s_tree->pointlist->current->surface_brightness >= 0.0);
 		s_tree->pointlist->current->in_image = s_tree->pointlist->current->image->in_image
-				= false;
+				= FALSE;
 	}while( MoveDownList(s_tree->pointlist) );
 
 	return total;
@@ -139,5 +142,8 @@ double Grid::RefreshSurfaceBrightnesses(SourceHndl source){
  */
 unsigned long Grid::NumberOfPoints(){
 	assert(i_tree->top->npoints == s_tree->top->npoints);
+	assert(i_tree->top->npoints == i_tree->pointlist->Npoints);
+	assert(s_tree->top->npoints == s_tree->pointlist->Npoints);
+
 	return i_tree->top->npoints;
 }

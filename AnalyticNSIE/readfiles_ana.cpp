@@ -44,6 +44,8 @@ void AnaLens::readParamfile(string filename){
 
   n = 0;
 
+  // id[] = 0 double, 1 int, 2 string
+
   addr[n] = &outputfile;
   id[n] = 2;
   label[n++] = "outputfile";

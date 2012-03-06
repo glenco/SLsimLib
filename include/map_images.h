@@ -6,8 +6,18 @@
  */
 #include <model.h>
 
-void map_images(LensHndl lens,SourceHndl source,GridHndl grid,int *Nimages,ImageInfo *imageinfo
-		,int Nimagesmax,double initial_size,bool splitimages
-		,ExitCriterion criterion,bool kappa_off);
-int refine_grid_on_image(LensHndl lens,SourceHndl source,GridHndl grid,ImageInfo *imageinfo
-		,unsigned long Nimages,double res_target,ExitCriterion criterion,bool kappa_off);
+void map_images(LensHndl lens,SourceBLR *source,GridHndl grid,int *Nimages,ImageInfo *imageinfo
+		,int Nimagesmax,double xmax,double xmin,double initial_size
+		,ExitCriterion criterion,bool kappa_off,bool FindCenter,bool divide_images);
+
+int refine_grid_on_image(Lens *lens,SourceBLR *source,GridHndl grid,ImageInfo *imageinfo,int *Nimages
+		,ImageInfo *sourceinfo,int Nsources,int NimageMax,const double res_target,ExitCriterion criterion
+		,bool kappa_off,bool divide_images);
+
+bool RefinePoint(Point *point,TreeHndl i_tree,double image_area,double total_area,ExitCriterion criterion
+		,double res_target,KistHndl nearest);
+bool RefinePoint2(Point *point,TreeHndl i_tree,double image_area,double total_area,ExitCriterion criterion
+		,double res_target,KistHndl nearest);
+void UniformMagCheck(ImageInfo *imageinfo);
+Point * RefineLeaf(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,Point *point,int Ngrids,bool kappa_off);
+
