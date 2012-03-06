@@ -33,6 +33,8 @@ void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
 	unsigned long i;
 	int j;
 
+	double dl = analens->Dl * (1 + analens->zlens);
+
 	for(i = 0; i< Npoints; i++){
 
 		double kappa,aa,bb,cc;
@@ -61,19 +63,26 @@ void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
 		for(j = 0; j < Nplanes-1 ; j++){  // each iteration leaves i_point[i].image on plane (j+1)
 
 			if(j == flag_analens && j > 0){
-				analens->rayshooterInternal(i_points[i].image->x,&alpha[0],&gamma[0],&kappa,kappa_off);
+				double xx[2];
+				xx[0] = i_points[i].image->x[0] / (1+redshift[j]);
+				xx[1] = i_points[i].image->x[1] / (1+redshift[j]);
+				//analens->rayshooterInternal(i_points[i].image->x,&alpha[0],&gamma[0],&kappa,kappa_off);
+				analens->rayshooterInternal(&xx[0],&alpha[0],&gamma[0],&kappa,kappa_off);
 				cc = dDl[j+1];
 			}
 			else{
-				halo_tree[j]->force2D(i_points[i].image->x,&alpha[0],&kappa,&gamma[0],kappa_off);
-				cc = charge*dDl[j+1];
+				//halo_tree[j]->force2D(i_points[i].image->x,&alpha[0],&kappa,&gamma[0],kappa_off);
+				//cc = charge*dDl[j+1];
+				alpha[0] = alpha[1] = 0.0;
+				gamma[0] = gamma[1] = gamma[2] = 0.0;
+				kappa = 0.0;
 			}
 
 			aa = (dDl[j+1]+dDl[j])/dDl[j];
 			bb = dDl[j+1]/dDl[j];
 
-			xplus[0] = aa*i_points[i].image->x[0] - bb*xminus[0] + cc*alpha[0];
-       		xplus[1] = aa*i_points[i].image->x[1] - bb*xminus[1] + cc*alpha[1];
+			xplus[0] = aa*i_points[i].image->x[0] - bb*xminus[0] - cc*alpha[0];
+       		xplus[1] = aa*i_points[i].image->x[1] - bb*xminus[1] - cc*alpha[1];
 
 			xminus[0] = i_points[i].image->x[0];
 			xminus[1] = i_points[i].image->x[1];
@@ -88,7 +97,7 @@ void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
 
 				bb = dDl[j+1]*Dl[ (j < 1) ? 0 : j-1]/dDl[j]/Dl[j+1];
 
-				cc = - dDl[j+1]*Dl[j]/Dl[j+1];
+				cc = dDl[j+1]*Dl[j]/Dl[j+1];
 
 				// still not positive about sign convention
 				kappa_plus = aa*i_points[i].kappa - bb*kappa_minus
@@ -126,7 +135,7 @@ void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
 		  	    - i_points[i].gamma[0]*i_points[i].gamma[0] - i_points[i].gamma[1]*i_points[i].gamma[1];
 
 		if(i<10){
-			cout << i_points[i].x[0] << " " << i_points[i].x[1] << " " << i_points[i].image->x[0] << " " << i_points[i].image->x[1] << " ";
+			cout << i_points[i].x[0]*dl  << " " << i_points[i].x[1]*dl << " " << i_points[i].image->x[0]*dl  << " " << i_points[i].image->x[1]*dl  << " ";
 			cout << i_points[i].invmag << " " << i_points[i].kappa << " " << i_points[i].gamma[0] << " " << i_points[i].gamma[1] << " " << i_points[i].gamma[2] << endl;
 			}
     }

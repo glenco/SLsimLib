@@ -197,7 +197,6 @@ void AnaLens::readParamfile(string filename){
 	  }
   }
 
-
   file_in.close();
 
   if(sub_Ndensity > 0){
@@ -316,8 +315,8 @@ void AnaLens::PrintAnaLens(bool show_substruct,bool show_stars){
 		}
 	}
 
+	cout << endl << "Nstars "<<stars_N << endl << endl;
 	if(stars_N>0){
-		cout << endl << "Nstars "<<stars_N << endl;
 		if(star_Nregions > 0)
 			cout << "stars_Nregions "<<star_Nregions << endl;
 		cout << "stars_massscale "<<star_massscale << endl;
@@ -359,7 +358,7 @@ void AnaLens::setInternalParams(CosmoHndl cosmo, double zsource){
 	MpcToAsec = 60*60*180 / pi / Dl;
 		// in Mpc
 	host_ro=4*pi*pow(host_sigma/2.99792e5,2)*Dl
-		*Dls/Ds/(1+zlens);
+		*Dls/Ds;
 	// find critical density
 	Sigma_crit=Ds/Dls/Dl/4/pi/Grav;
 	to = (1+zlens)*Ds/Dls/Dl/8.39428142e-10;

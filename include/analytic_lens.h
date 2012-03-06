@@ -90,7 +90,7 @@ public:
 
   /// stars
 
-  IndexType stars_N;
+  int stars_N;
   IndexType *stars;
   PosType **stars_xp;
   ForceTree *star_tree;
