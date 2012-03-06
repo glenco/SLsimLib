@@ -23,7 +23,7 @@ void AnaLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool ka
     long i,j;
 
     struct temp_data{
-    	double alpha[2], gamma[2];
+    	double alpha[2], gamma[3];
     } *temp;
 
     temp = (struct temp_data *) malloc(Npoints * sizeof(struct temp_data));
@@ -169,10 +169,10 @@ void AnaLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool ka
     	  i_points[i].image->gamma[0]=i_points[i].gamma[0];
     	  i_points[i].image->gamma[1]=i_points[i].gamma[1];
     	  i_points[i].image->dt = i_points[i].dt;
-    	 if(i<10){
+    	/* if(i<10){
     		  cout << i_points[i].x[0] << " " << i_points[i].x[1] << " " << i_points[i].image->x[0] << " " << i_points[i].image->x[1] << " ";
     		  cout << i_points[i].invmag << " " << i_points[i].kappa << " " << i_points[i].gamma[0] << " " << i_points[i].gamma[1] << " " << i_points[i].gamma[2] << endl;
-    	  }
+    	  }*/
       }
 
       free(temp);
@@ -218,6 +218,11 @@ void AnaLens::rayshooterInternal(double *ray, double *alpha, double *gamma, doub
     	     gamma[0] = gamma[1] = gamma[2] = 0.0;
     	     *kappa = 0.0;
     	 }
+
+    	 *kappa *= 4*pi*pow(host_sigma/2.99792e5,2) / host_ro;
+    	 gamma[0] *= 4*pi*pow(host_sigma/2.99792e5,2) / host_ro;
+    	 gamma[1] *= 4*pi*pow(host_sigma/2.99792e5,2) / host_ro;
+    	 gamma[2] *= 4*pi*pow(host_sigma/2.99792e5,2) / host_ro;
 
     	 alpha[0] *= host_ro;
     	 alpha[1] *= host_ro;
