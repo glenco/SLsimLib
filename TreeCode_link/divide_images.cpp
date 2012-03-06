@@ -15,7 +15,7 @@
 */
 #include <slsimlib.h>
 
-/**
+/*
  * divide images
  * reordered functions to ensure they are found, when called
  */
@@ -41,7 +41,7 @@
  *     imageinfo[i].Npoints is set to number of points in ith image
  *	   image point flags in_image == true
  *	   the area and area_error of each image is calculated
- */
+ *
 void divide_images(TreeHndl i_tree,ImageInfo *imageinfo
 		,int *Nimages,int Nimagesmax){
 	unsigned long i,j,Ntemp;
@@ -50,7 +50,7 @@ void divide_images(TreeHndl i_tree,ImageInfo *imageinfo
 
 	if(imageinfo->imagekist->Nunits() < 2){
 		*Nimages = 1;
-		imageinfo->Npoints = imageinfo->imagekist->Nunits();
+		//imageinfo->Npoints = imageinfo->imagekist->Nunits();
 
 		return ;
 	}
@@ -65,13 +65,6 @@ void divide_images(TreeHndl i_tree,ImageInfo *imageinfo
 
 	assert(imageinfo->imagekist->top->data);
 
-/*	MoveToTopList(imagelist);
-	do{
-		imagelist->current->image->in_image = true;
-		imagelist->current->image->image->in_image = true;
-	}while(MoveDownList(imagelist));
-*/
-
 	i=0;
 	do{
 		//imageinfo[i].points = getCurrentKist(imageinfo->imagekist);
@@ -81,6 +74,7 @@ void divide_images(TreeHndl i_tree,ImageInfo *imageinfo
 		imageinfo[i].Npoints = 1;
 
 		assert(imageinfo->imagekist->top->data);
+
 		partition_images(getCurrentKist(imageinfo->imagekist),&(imageinfo[i].Npoints),i_tree);
 		assert(imageinfo->imagekist->top->data);
 
@@ -124,15 +118,8 @@ void divide_images(TreeHndl i_tree,ImageInfo *imageinfo
 		imageinfo->imagekist->InsertAfterCurrent(new_imagekist->TakeOutCurrent());
 		imageinfo->imagekist->Down();
 	}
-	/*
-	imageinfo->imagekist->Nunits() = new_imagekist->Nunits();
-	imageinfo->imagekist->top = new_imagekist->top;
-	imageinfo->imagekist->bottom = new_imagekist->bottom;
-	imageinfo->imagekist->current = new_imagekist->current;
-	*/
 
 	delete new_imagekist;
-
 
 	MoveToTopKist(imageinfo->imagekist);
 	do{
@@ -142,10 +129,10 @@ void divide_images(TreeHndl i_tree,ImageInfo *imageinfo
 
 
 	return;
-}
+}*/
 /** \ingroup ImageFindingL2
  *
- *  divide_images
+ *  divide_images_kist
  *
  * \brief Divides the image points up into separate images that are linked by cell
  * neighbors.
@@ -175,8 +162,6 @@ void divide_images_kist(TreeHndl i_tree,ImageInfo *imageinfo,int *Nimages,int Ni
 
 	if(imageinfo->imagekist->Nunits() < 2){
 		*Nimages = 1;
-		imageinfo->Npoints = imageinfo->imagekist->Nunits();
-
 		return ;
 	}
 
@@ -198,7 +183,6 @@ void divide_images_kist(TreeHndl i_tree,ImageInfo *imageinfo,int *Nimages,int Ni
 		imageinfo[i].area = partition_images_kist(getCurrentKist(new_imagekist),imageinfo[i].imagekist,i_tree);
 		assert(imageinfo[i].imagekist->Nunits() <= new_imagekist->Nunits());  // check that no more than
 
-		imageinfo[i].Npoints = imageinfo[i].imagekist->Nunits();
 		// take out points that got un-marked in partition_images
 
 		Ntemp = new_imagekist->Nunits();
@@ -239,7 +223,6 @@ void divide_images_kist(TreeHndl i_tree,ImageInfo *imageinfo,int *Nimages,int Ni
 		do{
 			InsertAfterCurrentKist(imageinfo[i-1].imagekist,TakeOutCurrentKist(new_imagekist));
 			MoveDownKist(imageinfo[i-1].imagekist);
-			++(imageinfo[i-1].Npoints);
 		}while(new_imagekist->Nunits() > 0);
 	}
 
@@ -282,7 +265,6 @@ void find_divide_images(TreeHndl i_tree,TreeHndl s_tree
 
 	if(imageinfo->imagekist->Nunits() == 1){
 		*Nimages = 1;
-		imageinfo->Npoints = 1;
 		return;
 	}
 

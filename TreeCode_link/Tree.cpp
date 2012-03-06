@@ -633,7 +633,14 @@ void PrintPoint(Point *point){
 /** \ingroup Constructor
  * Make an array of imageinfo types.
  */
-ImageInfo *NewImageInfo(int Nimages){
+ImageInfo::ImageInfo(){
+
+  imagekist = new Kist;
+  innerborder = new Kist;
+  outerborder = new Kist;
+}
+
+/*ImageInfo *NewImageInfo(int Nimages){
   ImageInfo *imageinfo;
   int i;
 
@@ -649,11 +656,17 @@ ImageInfo *NewImageInfo(int Nimages){
   }
 
   return imageinfo;
-}
+}*/
 
 /** \ingroup Constructor
- * Free an array of imageinfo types.
+ * Destructor of imageinfo types.
  */
+ImageInfo::~ImageInfo(){
+	delete imagekist;
+    delete innerborder;
+    delete outerborder;
+}
+/*
 void freeImageInfo(ImageInfo *imageinfo,int Nimages){
 	int i;
 
@@ -664,6 +677,17 @@ void freeImageInfo(ImageInfo *imageinfo,int Nimages){
 	    delete imageinfo[i].outerborder;
 	}
 	free(imageinfo);
+}
+*/
+
+OldImageInfo::OldImageInfo(){
+
+  innerborder = new Kist;
+  outerborder = new Kist;
+}
+OldImageInfo::~OldImageInfo(){
+    delete innerborder;
+    delete outerborder;
 }
 
 /** \ingroup LowLevel

@@ -4,18 +4,10 @@
  *  Created on: Jan 15, 2010
  *      Author: R.B. Metcalf
  */
-/*#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <omp.h>
-#include <nrutil.h>
-#include <nrD.h>
-#include "Tree.h"
-*/
+
 #include <slsimlib.h>
 
-void split_order_curve4(ImageInfo *curves,int Maxcurves,int *Ncurves){
+void split_order_curve4(OldImageInfo *curves,int Maxcurves,int *Ncurves){
 /*  orders points in a curve, separates disconnected curves
  *   curves[0...Maxcurves] must be allocated before
  *
@@ -24,6 +16,8 @@ void split_order_curve4(ImageInfo *curves,int Maxcurves,int *Ncurves){
  *
  *  can break down for crescent curves
  */
+
+	//OldImageInfo* curves = new OldImageInfo(curves_in);
 
 	long i,m,j,end;
 	//short spur,closed,attach;
@@ -143,7 +137,7 @@ void split_order_curve4(ImageInfo *curves,int Maxcurves,int *Ncurves){
 	return ;
 }
 
-void split_order_curve3(ImageInfo *curves,int Maxcurves,int *Ncurves){
+void split_order_curve3(OldImageInfo *curves,int Maxcurves,int *Ncurves){
 /*  orders points in a curve, separates disconnected curves
  *   curves[0...Maxcurves] must be allocated before
  *
@@ -305,7 +299,7 @@ void split_order_curve3(ImageInfo *curves,int Maxcurves,int *Ncurves){
 	return ;
 }
 
-void split_order_curve(ImageInfo *curves,int Maxcurves,int *Ncurves){
+void split_order_curve(OldImageInfo *curves,int Maxcurves,int *Ncurves){
 /*  orders points in a curve, separates disconnected curves
  *   curves[0...Maxcurves] must be allocated before
  *
@@ -363,7 +357,7 @@ void split_order_curve(ImageInfo *curves,int Maxcurves,int *Ncurves){
 
 }
 
-void split_order_curve2(ImageInfo *curves,int Maxcurves,int *Ncurves){
+void split_order_curve2(OldImageInfo *curves,int Maxcurves,int *Ncurves){
 /*  orders points in a curve, separates disconnected curves, cuts off spurs
  *   curves[0...Maxcurves] must be allocated before
  *
@@ -486,7 +480,7 @@ void split_order_curve2(ImageInfo *curves,int Maxcurves,int *Ncurves){
 
 }
 
-void order_curve(ImageInfo *curve){
+void order_curve(OldImageInfo *curve){
 /*  orders points in a curve,
  *
  *   must already be a connected set of points
@@ -604,7 +598,7 @@ short backtrack(Point *points,long Npoints,long *j,long jold,long *end){
 	  return 0;
 }
 
-void nesting_curve(ImageInfo *curves,int Ncurves){
+void nesting_curve(OldImageInfo *curves,int Ncurves){
 	/* determine which curves are enclosed in another curve
 	 */
 	int i,k;
@@ -627,7 +621,7 @@ void nesting_curve(ImageInfo *curves,int Ncurves){
 
 }
 
-void split_images(TreeHndl i_tree,ImageInfo *images,int Maximages
+void split_images(TreeHndl i_tree,OldImageInfo *images,int Maximages
 		,int *Nimages,bool sortallpoints){
 	/*
 	 * splits images by edge method to avoid FOF
@@ -642,7 +636,7 @@ void split_images(TreeHndl i_tree,ImageInfo *images,int Maximages
 		return ;
 	}
 	unsigned long Npoints,Npoints_tot,i,j,k,jold;
-	ImageInfo *borders;
+	OldImageInfo *borders;
 	int TmpNimages=0,maxN,m;
 	double *image_number_array,tmp;
 
@@ -656,7 +650,7 @@ void split_images(TreeHndl i_tree,ImageInfo *images,int Maximages
 	findborders3(i_tree,images);
 
 	// copy outer borders to borders array
-	borders=(ImageInfo *) malloc(Maximages*sizeof(ImageInfo));
+	borders=(OldImageInfo *) malloc(Maximages*sizeof(OldImageInfo));
 	assert(borders);
 	Npoints=images->outerborder->Nunits();
 
@@ -797,7 +791,7 @@ void split_images(TreeHndl i_tree,ImageInfo *images,int Maximages
 	//std::printf("exiting split_images\n");
 }
 
-void split_images3(TreeHndl i_tree,ImageInfo *images,int Maximages
+void split_images3(TreeHndl i_tree,OldImageInfo *images,int Maximages
 		,int *Nimages,bool sortallpoints){
 	/*
 	 * splits images by edge method to avoid FOF
@@ -814,7 +808,7 @@ void split_images3(TreeHndl i_tree,ImageInfo *images,int Maximages
 		return ;
 	}
 	unsigned long Npoints,Npoints_tot,i,j,k,jold;
-	ImageInfo *borders;
+	OldImageInfo *borders;
 	int TmpNimages=0,maxN,m;
 	double *image_number_array,tmp,r,rmin;
 
@@ -824,7 +818,7 @@ void split_images3(TreeHndl i_tree,ImageInfo *images,int Maximages
 	findborders3(i_tree,images);
 
 	// copy inner borders to borders array
-	borders=(ImageInfo *) malloc(Maximages*sizeof(ImageInfo));
+	borders=(OldImageInfo *) malloc(Maximages*sizeof(OldImageInfo));
 	assert(borders);
 	Npoints=images->innerborder->Nunits();
 
@@ -951,7 +945,7 @@ void split_images3(TreeHndl i_tree,ImageInfo *images,int Maximages
 }
 
 
-void split_images2(TreeHndl i_tree,ImageInfo *images,int Maximages,int *Nimages){
+void split_images2(TreeHndl i_tree,OldImageInfo *images,int Maximages,int *Nimages){
 	int i;
 	/* brute force method of splitting images by doing neighbors-of-neighbors
 	 * on all the points.  Dependable, but slow.
@@ -974,7 +968,7 @@ void split_images2(TreeHndl i_tree,ImageInfo *images,int Maximages,int *Nimages)
 	return ;
 }
 
-void splitter(ImageInfo *images,int Maximages,int *Nimages){
+void splitter(OldImageInfo *images,int Maximages,int *Nimages){
 	/* meant to be a sure fire way to split all points into separate images or
 	 *   curves into separate curves
 	 */
@@ -1041,7 +1035,7 @@ void splitter(ImageInfo *images,int Maximages,int *Nimages){
 	return ;
 }
 
-void splitlist(ListHndl imagelist,ImageInfo *images,int *Nimages,int Maximages){
+void splitlist(ListHndl imagelist,OldImageInfo *images,int *Nimages,int Maximages){
 	/* reorders imagelist into separate images using reliable
 	 *      neighbor-of-neighbor method
 	 *

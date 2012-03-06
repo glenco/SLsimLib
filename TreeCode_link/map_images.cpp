@@ -164,7 +164,7 @@ void map_images(
 					*getCurrentKist(imageinfo[i].imagekist)->surface_brightness;
 			getCurrentKist(imageinfo[i].imagekist)->in_image = false;  // re-set marks
 		}
-		if(imageinfo[i].Npoints > 0 ){
+		if(imageinfo[i].getNimagePoints() > 0 ){
 			imageinfo[i].centroid[0] /= tmp;
 			imageinfo[i].centroid[1] /= tmp;
 		}
@@ -334,7 +334,7 @@ int refine_grid_on_image(LensHndl lens,SourceHndl source,GridHndl grid,ImageInfo
 			  }
 			  MoveDownKist(imageinfo[i].imagekist);
 		  }
-		  imageinfo[i].Npoints += Nold;
+		  //imageinfo[i].Npoints += Nold;
 	  }
 
       s_points = LinkToSourcePoints(i_points,(Ngrid_block*Ngrid_block-1)*Ncells);

@@ -22,7 +22,7 @@ typedef struct Grid{
 
 	void ReInitializeGrid(LensHndl lens);
 	void TrimGrid(double highestres,bool useSB);
-	void RefreshSurfaceBrightnesses(SourceHndl source);
+	double RefreshSurfaceBrightnesses(SourceHndl source);
 	unsigned long NumberOfPoints();
 
 	/// tree on image plane

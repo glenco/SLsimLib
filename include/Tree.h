@@ -55,10 +55,12 @@ typedef int TreeElement;
 /** \brief Structure for storing information about images or curves */
 typedef struct ImageInfo{
 
+	ImageInfo();
+	~ImageInfo();
     /// Array of points in image,  SHOULD NOT BE USED IN FAVOR OF imagekist!  Still used by caustic finding routines.
-  Point *points;
+  //Point *points;
   /// Number of points in image, SHOULD NOT BE USED IN FAVOR OF imagekist->Nunits().  Still used by caustic finding routines.
-  unsigned long Npoints;
+  //unsigned long Npoints;
   /// later addition, holds all points in image, will replace points eventually
   KistHndl imagekist;
   /// gridrange[2] minimum grid size in image, gridrange[0] maximum grid size in outerborder, gridrange[1] maximum grid size in image
@@ -75,7 +77,42 @@ typedef struct ImageInfo{
   KistHndl outerborder;
   short Nencircled;
 
+  /// returns number of points currently in the image
+  unsigned long getNimagePoints(){return imagekist->Nunits();}
+
 } ImageInfo;
+
+/** \brief This is an old version that should not be used anymore in favor of ImageInfo.
+ *
+ * This type is still used in the critical curve finding and handling routines.  The results of these
+ * routines should be returned in the form of and array of ImageInfo's now.
+ */
+typedef struct OldImageInfo{
+
+	OldImageInfo();
+	~OldImageInfo();
+
+    /// Array of points in image,  SHOULD NOT BE USED IN FAVOR OF imagekist!  Still used by caustic finding routines.
+  Point *points;
+  /// Number of points in image, SHOULD NOT BE USED IN FAVOR OF imagekist->Nunits().  Still used by caustic finding routines.
+  unsigned long Npoints;
+  /// later addition, holds all points in image, will replace points eventually
+  //KistHndl imagekist;
+  /// gridrange[2] minimum grid size in image, gridrange[0] maximum grid size in outerborder, gridrange[1] maximum grid size in image
+  double gridrange[3];
+  /// Centroid of image
+  double centroid[2];
+  /// area of image or, when using map_images(), the total brightness of the image
+  double area;
+  /// error on the estimate of area
+  double area_error;
+  /// the points on the inner border of the image
+  KistHndl innerborder;
+  /// the points on the outer border of the image, i.e. not in the image
+  KistHndl outerborder;
+  short Nencircled;
+
+} OldImageInfo;
 
 
 //#include <point.h>
@@ -182,11 +219,12 @@ void PointCopyData(Point *pcopy,Point *pins);
 
 // image info routines
 
-ImageInfo *NewImageInfo(int Nimages);
-void freeImageInfo(ImageInfo *imageinfo,int Nimages);
+//ImageInfo *NewImageInfo(int Nimages);
+//void freeImageInfo(ImageInfo *imageinfo,int Nimages);
 void combineCloseImages(double linkinglength,ImageInfo *imageinfo,int *Nimages
 		,int *NewNimages,int NimageMax);
 void SwapImages(ImageInfo *image1,ImageInfo *image2);
+void SwapImages(OldImageInfo *image1,OldImageInfo *image2);
 void PrintImages(ImageInfo *images,long Nimages);
 void PrintImageInfo(ImageInfo *image);
 
@@ -215,7 +253,7 @@ void FindAllBoxNeighbors(TreeHndl tree,Point *point,ListHndl neighbors);
 short image_finder(double *y_source,double r_source,TreeHndl s_tree,TreeHndl i_tree
 		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
 		,short splitparities,short true_images);*/
-int refine_grid(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo
+int refine_grid(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,OldImageInfo *imageinfo
 		,unsigned long Nimages,double res_target,short criterion,bool kappa_off);
 long refine_edges(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo
 		,unsigned long Nimages,double res_target,short criterion,bool kappa_off);
@@ -225,8 +263,8 @@ long refine_edges2(LensHndl lens,double *y_source,double r_source,TreeHndl i_tre
 void xygridpoints(Point *points,double range,double *center,long Ngrid
 		,short remove_center);
 void initialize_grid(double center[],double range,long Ngrid,TreeHndl s_tree,TreeHndl i_tree);
-void findborders2(TreeHndl i_tree,ImageInfo *imageinfo);
-void findborders3(TreeHndl i_tree,ImageInfo *imageinfo);
+void findborders2(TreeHndl i_tree,OldImageInfo *imageinfo);
+void findborders3(TreeHndl i_tree,OldImageInfo *imageinfo);
 
 // in image_finder_kist.c
 
@@ -286,7 +324,7 @@ void nesting_curve(ImageInfo *curves,int Ncurves);
 void split_order_curve(ImageInfo *curves,int Maxcurves,int *Ncurves);
 void split_order_curve2(ImageInfo *curves,int Maxcurves,int *Ncurves);
 void split_order_curve3(ImageInfo *curves,int Maxcurves,int *Ncurves);
-void split_order_curve4(ImageInfo *curves,int Maxcurves,int *Ncurves);
+void split_order_curve4(OldImageInfo *curves,int Maxcurves,int *Ncurves);
 void walkcurve(Point *points,long Npoints,long *j,long *end);
 short backtrack(Point *points,long Npoints,long *j,long jold,long *end);
 void split_images(TreeHndl i_tree,ImageInfo *images,int Maximages,int *Nimages,bool sortallpoints);
@@ -294,8 +332,8 @@ void split_images2(TreeHndl i_tree,ImageInfo *images,int Maximages
 		,int *Nimages);
 void split_images3(TreeHndl i_tree,ImageInfo *images,int Maximages
 		,int *Nimages,bool sortallpoints);
-void splitter(ImageInfo *images,int Maximages,int *Nimages);
-void splitlist(ListHndl imagelist,ImageInfo *images,int *Nimages,int Maximages);
+void splitter(OldImageInfo *images,int Maximages,int *Nimages);
+void splitlist(ListHndl imagelist,OldImageInfo *images,int *Nimages,int Maximages);
 
 /* externally provided functions */
 /*********************************/

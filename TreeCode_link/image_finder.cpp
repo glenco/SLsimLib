@@ -23,7 +23,7 @@ static const float FracResTarget = 1.0e-4;
 double initialgridsize=0;
 
 
-int refine_grid(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo
+int refine_grid(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,OldImageInfo *imageinfo
 		,unsigned long Nimages,double res_target,short criterion,bool kappa_off){
 
 	/* criterion = 0 stops refining when error in total area reaches res_target
@@ -543,7 +543,7 @@ long refine_edges2(LensHndl lens,double *y_source,double r_source,TreeHndl i_tre
 	return count;
 }
 
-void findborders2(TreeHndl i_tree,ImageInfo *imageinfo){
+void findborders2(TreeHndl i_tree,OldImageInfo *imageinfo){
 	/* finds inner and outer borders of an image using
 	 * bordering box method
 	 */
@@ -703,7 +703,7 @@ void findborders2(TreeHndl i_tree,ImageInfo *imageinfo){
 	return;
 }
 
-void findborders3(TreeHndl i_tree,ImageInfo *imageinfo){
+void findborders3(TreeHndl i_tree,OldImageInfo *imageinfo){
 	/* finds inner and outer borders of an image using
 	 * bordering box method
 	 *   same as findborder2() but it uses the in_image markers
@@ -860,7 +860,7 @@ void combineCloseImages(double linkinglength,ImageInfo *imageinfo,int *Nimages
 	return ;
 }
 
-void SwapImages(ImageInfo *image1,ImageInfo *image2){
+void SwapImages(OldImageInfo *image1,OldImageInfo *image2){
 	Point *point;
 	unsigned long Npoints,i;
 	double tmp;
@@ -897,9 +897,9 @@ void SwapImages(ImageInfo *image1,ImageInfo *image2){
 		image2->centroid[i] = tmp;
 	}
 
-	list = image1->imagekist;
-	image1->imagekist = image2->imagekist;
-	image2->imagekist = list;
+	//list = image1->imagekist;
+	//image1->imagekist = image2->imagekist;
+	//image2->imagekist = list;
 
 	list = image1->innerborder;
 	image1->innerborder = image2->innerborder;

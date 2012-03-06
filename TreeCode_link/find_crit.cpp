@@ -24,19 +24,22 @@
 ImageInfo *find_crit(LensHndl lens,GridHndl grid,int *Ncrits,double resolution,bool *orderingsuccess,bool ordercurve,bool verbose){
 
   Point *minpoint;
-  ImageInfo *critcurve,*critexport;
+  ImageInfo *critexport;
   //unsigned long j,k,m,jold;
-  unsigned long Npoints,i=0;
+  unsigned long Npoints,i=0,j;
   short refinements;
   //short spur,closed;
   double maxgridsize,mingridsize,x[2];
   ListHndl negpointlist;
 
   negpointlist=NewList();
-  critcurve=NewImageInfo(NMAXCRITS);
+  //critcurve = NewImageInfo(NMAXCRITS);
   minpoint=NewPoint(x,0);
   minpoint->invmag=1.0e99;
   /*point=NmewPoint(x,0);*/
+
+  OldImageInfo *critcurve = new OldImageInfo[NMAXCRITS];
+
 
   for(;;){
 
@@ -65,7 +68,8 @@ ImageInfo *find_crit(LensHndl lens,GridHndl grid,int *Ncrits,double resolution,b
 	  if(Npoints == 0){
 		  if(minpoint->gridsize <= resolution){  // no caustic found at this resolution
 			  *Ncrits=0;
-			  return critcurve;
+			  critexport = new ImageInfo[1];
+			  return critexport;
 		  }
 
 		  /* if there is no negative magnification points use maximum mag point */
@@ -170,15 +174,22 @@ ImageInfo *find_crit(LensHndl lens,GridHndl grid,int *Ncrits,double resolution,b
   free(minpoint);
 
   // resize crit array so it doesn't use more mem than necessary
-  critexport=NewImageInfo(*Ncrits);
+  //critexport=NewImageInfo(*Ncrits);
+  critexport= new ImageInfo[*Ncrits];
   for(i=0;i<*Ncrits;++i){
 	  critexport[i].Nencircled=critcurve[i].Nencircled;
-	  critexport[i].Npoints=critcurve[i].Npoints;
+	  //critexport[i].Npoints=critcurve[i].Npoints;
 	  critexport[i].area=critcurve[i].area;
 	  critexport[i].area_error=critcurve[i].area_error;
-	  critexport[i].points=critcurve[i].points;
+	  //critexport[i].points=critcurve[i].points;
+
+	  for(j=0;j<critcurve[i].Npoints;++j){
+		  critexport[i].imagekist->InsertAfterCurrent(&(critcurve[i].points[j]));
+	  }
   }
-  freeImageInfo(critcurve,NMAXCRITS);
+
+  //freeImageInfo(critcurve,NMAXCRITS);
+  delete[] critcurve;
   return critexport;
 }
 

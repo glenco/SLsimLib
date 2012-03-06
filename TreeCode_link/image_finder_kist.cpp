@@ -400,7 +400,7 @@ short image_finder_kist(LensHndl lens, double *y_source,double r_source,TreeHndl
 
 	  if(imageinfo->imagekist->Nunits() < 1  && true_images ){  // no points in the source
 		  //EmptyKist(imageinfo->imagekist);
-		  imageinfo->Npoints=0;
+		  //imageinfo->Npoints=0;
 		  *Nimages=0;
 		  Nimagepoints=0;
 		  return moved;
@@ -435,7 +435,7 @@ short image_finder_kist(LensHndl lens, double *y_source,double r_source,TreeHndl
 	  divide_images_kist(i_tree,imageinfo,Nimages,NimageMax);
   }else{
 	  *Nimages = 1;
-	  imageinfo->Npoints = 0;
+	  //imageinfo->Npoints = 0;
 	  imageinfo->area = 0.0;
 	  MoveToTopKist(imageinfo->imagekist);
 	  do{
@@ -445,7 +445,7 @@ short image_finder_kist(LensHndl lens, double *y_source,double r_source,TreeHndl
 
   // don't copy information into array
 //#pragma omp parallel for private(i)
-  for(i=0;i<*Nimages;++i) imageinfo[i].Npoints = 0;  // to make sure points array is not read beyond length
+  //for(i=0;i<*Nimages;++i) imageinfo[i].Npoints = 0;  // to make sure points array is not read beyond length
 
   // find borders
   if( splitparities == 0 ) for(i=0;i<*Nimages;++i) findborders4(i_tree,&imageinfo[i]);
@@ -821,5 +821,50 @@ void findborders4(TreeHndl i_tree,ImageInfo *imageinfo){
 	delete neighborkist;
 
 	return;
+}
+
+void SwapImages(ImageInfo *image1,ImageInfo *image2){
+	Point *point;
+	unsigned long Npoints,i;
+	double tmp;
+	KistHndl list;
+
+	Npoints = image1->Nencircled;
+	image1->Nencircled = image2->Nencircled;
+	image2->Nencircled = Npoints;
+
+	tmp = image1->area;
+	image1->area = image2->area;
+	image2->area = tmp;
+
+	tmp = image1->area_error;
+	image1->area_error = image2->area_error;
+	image2->area_error = tmp;
+
+	for(i=0;i<3;++i){
+		tmp = image1->gridrange[i];
+		image1->gridrange[i] = image2->gridrange[i];
+		image2->gridrange[i] = tmp;
+	}
+
+	for(i=0;i<2;++i){
+		tmp = image1->centroid[i];
+		image1->centroid[i] = image2->centroid[i];
+		image2->centroid[i] = tmp;
+	}
+
+	list = image1->imagekist;
+	image1->imagekist = image2->imagekist;
+	image2->imagekist = list;
+
+	list = image1->innerborder;
+	image1->innerborder = image2->innerborder;
+	image2->innerborder = list;
+
+	list = image1->outerborder;
+	image1->outerborder = image2->outerborder;
+	image2->outerborder = list;
+
+	return ;
 }
 
