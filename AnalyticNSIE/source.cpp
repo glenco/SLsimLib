@@ -183,12 +183,12 @@ void SourceBLR::readParamfile(string filename){
 	  int id[9];
 	  int i, n;
 	  float myfloat;
-	  int flag;
+	  double mydouble;
 
 	  n = 0;
 
 	  addr[n] = &zsource;
-	  id[n] = 0;
+	  id[n] = 1;
 	  label[n++] = "z_source";
 
 	  addr[n] = &source_BHmass;
@@ -239,26 +239,19 @@ void SourceBLR::readParamfile(string filename){
 		  if(rlabel[0] == escape[0])
 			  continue;
 
-		  flag = 0;
-
 		  for(i = 0; i < n; i++){
 			  if(rlabel == label[i]){
 
-				  flag = 1;
 				  ss << rvalue;
 
 				  switch(id[i]){
 				  case 0:
-					  ss >> mydouble;
-					  *((double *)addr[i]) = mydouble;
+					  ss >> myfloat;
+					  *((float *)addr[i]) = myfloat;
 					  break;
 				  case 1:
-					  ss >> myint;
-					  *((int *)addr[i]) = myint;
-					  break;
-				  case 2:
-					  ss >> mystring;
-					  *((string *)addr[i]) = mystring;
+					  ss >> mydouble;
+					  *((double *)addr[i]) = mydouble;
 					  break;
 				  }
 
@@ -268,24 +261,6 @@ void SourceBLR::readParamfile(string filename){
 				  id[i] = -1;
 			  }
 		  }
-/*		  flag = 1;
-
-		  for(i = 0; i < 9; i++){
-			  if(rlabel == label[i]){
-
-				  flag = 0;
-				  ss << rvalue;
-				  ss >> myfloat;
-
-	                 *((float *)addr[i]) = myfloat;
-	                 //*(static_cast<float *>addr[i]) = myfloat;
-
-				  ss.clear();
-				  ss.str(string());
-
-				  id[i] = -1;
-			  }
-		  }*/
 	  }
 
 	  file_in.close();

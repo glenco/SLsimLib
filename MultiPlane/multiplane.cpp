@@ -235,6 +235,9 @@ void MultiLens::readParamfile(string filename){
 
 	  file_in.close();
 
+	  if(flag_analens)
+		  Nplanes++;
+
 	  printMultiLens();
 }
 
@@ -336,12 +339,20 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, double zsource){
 
 	setRedshift(zsource);
 
-	Dl[0] = cosmo->angDist(0,redshift[0]);
+	Dl[0] = cosmo->coorDist(0,redshift[0]);
 	dDl[0] = Dl[0];  // distance between jth plane and the next plane
 	for(j = 1; j < Nplanes; j++){
-		Dl[j] = cosmo->angDist(0,redshift[j]);
-		dDl[j] = cosmo->angDist(redshift[j-1],redshift[j]);  // distance between jth plane and the next plane
+		Dl[j] = cosmo->coorDist(0,redshift[j]);
+		dDl[j] = Dl[j] - Dl[j-1]; // distance between jth plane and the next plane
 	}
+
+	for(j = 0; j < Nplanes; j++)
+		cout << Dl[j] << " ";
+	cout << endl;
+
+	for(j = 0; j < Nplanes; j++)
+		cout << dDl[j] << " ";
+	cout << endl;
 
 	if(flag_analens)
 		analens->setInternalParams(cosmo,zsource);
