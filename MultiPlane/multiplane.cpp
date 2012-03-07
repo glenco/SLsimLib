@@ -12,9 +12,10 @@
 haloM::haloM(double zsource  /// source redshift
 		,CosmoHndl cosmo     /// cosmology
 		,MultiLens *lens     /// lens
-		,double fieldofview  /// field of view in square degree
-		,int mfty            /// type of mass function PS (0) and ST (1) default is ST
 		){
+
+	double fov = lens->fieldofview;
+	int mfty = lens->mass_func_type;
 
     long seed = 2203;
 
@@ -48,14 +49,14 @@ haloM::haloM(double zsource  /// source redshift
 		if(i == Nplanes-2) z2 = zsource;
 		else z2 = lens->redshift[i] + 0.5*(lens->redshift[i+1] - lens->redshift[i]);
 
-		Nhaloes[0]=cosmo->haloNumberDensityOnSky(pow(10,Logm[0]),z1,z2,mfty)*fieldofview;
+		Nhaloes[0]=cosmo->haloNumberDensityOnSky(pow(10,Logm[0]),z1,z2,mfty)*fov;
 		Nhaloestot = Nhaloes[0];
 		int k;
 
 		for(k=1;k<Nmassbin;k++){
 			//if(omp_get_thread_num() == 0) cout << "k " << k << endl;
 			// cumulative number density in one square degree
-			Nhaloes[k]=cosmo->haloNumberDensityOnSky(pow(10,Logm[k]),z1,z2,mfty)*fieldofview;
+			Nhaloes[k]=cosmo->haloNumberDensityOnSky(pow(10,Logm[k]),z1,z2,mfty)*fov;
 			// normalize the cumulative distribution to one
 			Nhaloes[k] = Nhaloes[k]/Nhaloestot;
 		}
@@ -97,7 +98,7 @@ haloM::haloM(double zsource  /// source redshift
 
 	pos = PosTypeMatrix(0,N-1,0,2);
 	for(int i = 0; i < N; i++){
-		double maxr = sqrt(fieldofview/M_PI)*Dli[i]*M_PI/180;
+		double maxr = sqrt(fov/M_PI)*Dli[i]*M_PI/180;
 		double r = maxr*ran2(&seed);
 		double theta=2*pi*ran2(&seed);
 
@@ -177,6 +178,14 @@ void MultiLens::readParamfile(string filename){
 	  id[n] = 1;
 	  label[n++] = "flag_analens";
 
+	  addr[n] = &fieldofview;
+	  id[n] = 0;
+	  label[n++] = "fov";
+
+	  addr[n] = &mass_func_type;
+	  id[n] = 1;
+	  label[n++] = "mass_func_type";
+
 	  cout << "Multi lens: reading from " << filename << endl;
 
 	  ifstream file_in(filename.c_str());
@@ -254,7 +263,11 @@ void MultiLens::printMultiLens(){
 
 	cout << "min mass " << min_mass << endl;
 
-	cout << "flag analens " << flag_analens << endl << endl;
+	cout << "flag analens " << flag_analens << endl;
+
+	cout << "field of view " << fieldofview << endl;
+
+	cout << "mass function type " << mass_func_type << endl << endl;
 }
 
 MultiLens::~MultiLens(){
@@ -271,11 +284,10 @@ MultiLens::~MultiLens(){
 
 void MultiLens::buildHaloTree(CosmoHndl cosmo /// the cosmology
 		,double zsource /// the source resdhift
-		,double fieldofview // the field of view in square degrees
 		){
 	IndexType N, N_last;
 
-    haloModel = new haloM(zsource,cosmo,this,fieldofview,1);
+    haloModel = new haloM(zsource,cosmo,this);
 
 	for(int j = 0, N_last = 0; j < Nplanes-1; j++){
 		if(flag_analens && j==flag_analens)
@@ -357,7 +369,7 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, double zsource){
 	cout << endl << endl;
 
 
-	buildHaloTree(cosmo,zsource,0.01);
+	buildHaloTree(cosmo,zsource);
 
 	if(flag_analens)
 		analens->setInternalParams(cosmo,zsource);
