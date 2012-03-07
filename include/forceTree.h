@@ -13,7 +13,15 @@
 #ifndef FORCE_TREE_H_
 #define FORCE_TREE_H_
 
-enum PartProf {gaussian};
+enum PartProf {gaussian,powerlaw};
+
+struct HaloInternal{
+	float mass;
+	float Rmax;
+	float rscale;
+	float beta;
+};
+
 /**
  * \brief Object used to calculate the force or deflection caused by a collection
  * of "particles" by the tree method.
@@ -56,5 +64,15 @@ private:
 };
 
 typedef ForceTree *ForceTreeHndl;
+
+// Internal profiles for the particles/halos
+double alpha_o(double r2,float sigma);
+double kappa_o(double r2,float sigma);
+double gamma_o(double r2,float sigma);
+
+double alphaPowLaw(double r,double *alpha,HaloInternal &par);
+double kappaPowLaw(double r,HaloInternal &par);
+double gammaPowLaw(double r,HaloInternal &par);
+double phiPowLaw(double r,HaloInternal &par);
 
 #endif /* FORCE_TREE_H_ */

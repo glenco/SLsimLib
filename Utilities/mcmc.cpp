@@ -12,6 +12,7 @@ const int MAX = 10000;
 #define UNIFORM (rand() + 0.5)/(RAND_MAX + 1.0) 
 #define PLUS(x,y) (x>y ? x+log(1+exp(y-x)) : y+log(1+exp(x-y)))
 
+
 class my_data{
 public:
   double x[N_data], value[N_data], error[N_data];
