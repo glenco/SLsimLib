@@ -23,14 +23,9 @@ Model::~Model(){
 }
 
 void Model::setInternal(){
-	/*Dl = cosmo->angDist(0,lens->zlens);
-	Ds = cosmo->angDist(0,source->zsource);
-	Dls = cosmo->angDist(lens->zlens,source->zsource);*/
+	lens->setInternalParams(cosmo,source->zsource);
 
 	double zlens = lens->getZlens();
-
 	source->DlDs = cosmo->angDist(0,zlens) / cosmo->angDist(0,source->zsource);
-
-	lens->setInternalParams(cosmo,source->zsource);
 }
 
