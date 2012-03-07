@@ -33,8 +33,6 @@ void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
 	unsigned long i;
 	int j;
 
-	double dl = analens->Dl;
-
 	for(i = 0; i< Npoints; i++){
 
 		double kappa,aa,bb,cc;
@@ -137,10 +135,12 @@ void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
 
 		i_points[i].kappa = 1 - i_points[i].kappa;
 
-		i_points[i].kappa /= (analens->zlens + 1);
-		i_points[i].gamma[0] /= (analens->zlens + 1);
-		i_points[i].gamma[1] /= (analens->zlens + 1);
-		i_points[i].gamma[2] /= (analens->zlens + 1);
+		if(flag_analens){
+			i_points[i].kappa /= (analens->zlens + 1);
+			i_points[i].gamma[0] /= (analens->zlens + 1);
+			i_points[i].gamma[1] /= (analens->zlens + 1);
+			i_points[i].gamma[2] /= (analens->zlens + 1);
+		}
 
 
 		i_points[i].invmag = (1-i_points[i].kappa)*(1-i_points[i].kappa)

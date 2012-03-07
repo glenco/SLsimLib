@@ -219,11 +219,6 @@ void AnaLens::rayshooterInternal(double *ray, double *alpha, double *gamma, doub
     	     *kappa = 0.0;
     	 }
 
-    	 *kappa *= 4*pi*pow(host_sigma/2.99792e5,2) / host_ro;
-    	 gamma[0] *= 4*pi*pow(host_sigma/2.99792e5,2) / host_ro;
-    	 gamma[1] *= 4*pi*pow(host_sigma/2.99792e5,2) / host_ro;
-    	 gamma[2] *= 4*pi*pow(host_sigma/2.99792e5,2) / host_ro;
-
     	 alpha[0] *= host_ro;
     	 alpha[1] *= host_ro;
 
@@ -284,9 +279,17 @@ void AnaLens::rayshooterInternal(double *ray, double *alpha, double *gamma, doub
     	 }
      }
 
+     // final operations on results
+     convert_factor = 4*pi*pow(host_sigma/2.99792e5,2) / host_ro;
 
-	 alpha[0] *= 4*pi*pow(host_sigma/2.99792e5,2) / host_ro;
-	 alpha[1] *= 4*pi*pow(host_sigma/2.99792e5,2) / host_ro;
+	 *kappa *= convert_factor;
+
+	 gamma[0] *= convert_factor;
+	 gamma[1] *= convert_factor;
+	 gamma[2] *= convert_factor;
+
+	 alpha[0] *= convert_factor;
+	 alpha[1] *= convert_factor;
 
      return ;
 }

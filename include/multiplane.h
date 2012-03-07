@@ -17,7 +17,8 @@
 const int Nmassbin=32;
 const double MaxLogm=16.;
 
-//class AnaLens;  // forward declaration - I have no idea why this is required!
+class haloM;  // forward declaration
+typedef haloM *haloHndl;
 
 class MultiLens : public Lens{
 public:
@@ -33,10 +34,12 @@ public:
 	double min_mass;
 	AnaLens *analens;
 	int flag_analens;
+	haloM *haloModel;
 
 	MultiLens(string);
 	~MultiLens();
 
+	void buildHaloTree(CosmoHndl,double,double);
 	double getZlens();
 	void setZlens(double zlens);
 	void setRedshift(double);
@@ -59,10 +62,6 @@ public:
 private:
 	std:: vector<double> Logm,Nhaloes;
 };
-
-typedef haloM *haloHndl;
-
-haloHndl buildHaloTree(MultiLens *, CosmoHndl,double,double);
 
 void swap(float *a,float *b);
 void swap(PosType *a,PosType *b);

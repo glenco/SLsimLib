@@ -263,32 +263,30 @@ MultiLens::~MultiLens(){
 	delete[] Dl;
 	delete[] redshift;
 	delete[] dDl;
+	delete haloModel;
 
 	if(flag_analens)
 		delete analens;
 }
 
-haloHndl buildHaloTree(MultiLens *lens /// the multi lens model
-		,CosmoHndl cosmo /// the cosmology
+void MultiLens::buildHaloTree(CosmoHndl cosmo /// the cosmology
 		,double zsource /// the source resdhift
 		,double fieldofview // the field of view in square degrees
 		){
 	IndexType N, N_last;
-	haloHndl haloModel;
 
-    haloModel = new haloM(zsource,cosmo,lens,fieldofview,1);
+    haloModel = new haloM(zsource,cosmo,this,fieldofview,1);
 
-	for(int j = 0, N_last = 0; j < lens->getNplanes()-1; j++){
-		if(lens->flag_analens && j==lens->flag_analens)
+	for(int j = 0, N_last = 0; j < Nplanes-1; j++){
+		if(flag_analens && j==flag_analens)
 			continue;
 
-		N = lens->NhalosinPlane[j];
-		lens->halo_tree[j] = new ForceTree(&haloModel->pos[N_last + N],N,&haloModel->masses[N_last + N],&haloModel->sizes[N_last + N],true,true,5,2,true,0.1);
+		N = NhalosinPlane[j];
+		halo_tree[j] = new ForceTree(&haloModel->pos[N_last + N],N,&haloModel->masses[N_last + N],&haloModel->sizes[N_last + N],true,true,5,2,true,0.1);
 
 		N_last = N;
 	}
 
-	return haloModel;
 }
 
 void MultiLens::setRedshift(double zsource){
@@ -357,6 +355,9 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, double zsource){
 	for(j = 0; j < Nplanes; j++)
 		cout << dDl[j] << " ";
 	cout << endl << endl;
+
+
+	buildHaloTree(cosmo,zsource,0.01);
 
 	if(flag_analens)
 		analens->setInternalParams(cosmo,zsource);
