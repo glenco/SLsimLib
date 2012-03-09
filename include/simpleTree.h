@@ -84,15 +84,15 @@ typedef struct TreeNBStruct{
   /// Dimension of tree, 2 or 3.  This will dictate how the force is calculated.
   short Ndimensions;
   /// true if particles have different masses.
-  bool MultiMass;
+  //bool MultiMass;
   /// true if particles have different sizes.
-  bool MultiRadius;
+  //bool MultiRadius;
   /// Array of particle positions
   PosType **xp;
   /// Array of particle sizes
-  float *rsph;
+  //float *rsph;
   /// Array of particle masses
-  float *masses;
+  //float *masses;
 } TreeNBStruct;
 
 typedef struct TreeNBStruct * TreeNBHndl;
@@ -108,7 +108,7 @@ typedef int TreeNBElement;
 class SimpleTree {
 public:
 	SimpleTree(PosType **xp,IndexType Npoints,int bucket = 5,int dimensions = 2,bool median = true);
-	~SimpleTree();
+	virtual ~SimpleTree();
 
 	/// \brief Finds the points within a circle around center and puts their index numbers in a list
 	void PointsWithinCircle(PosType center[2],float radius,list<unsigned long> &neighborkist);

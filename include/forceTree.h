@@ -13,16 +13,17 @@
 #ifndef FORCE_TREE_H_
 #define FORCE_TREE_H_
 
-enum PartProf {gaussian,powerlaw};
+///enum PartProf {gaussian,powerlaw};
 
-struct HaloInternal{
+/// Structure used for the internal properties of "halos" in the ForceTree deflection solver
+struct HaloStructure{
 	float mass;
 	float Rmax;
 	float rscale;
-	float beta;
 };
 
-/**
+/** \ingroup DeflectionL2
+ *
  * \brief Object used to calculate the force or deflection caused by a collection
  * of "particles" by the tree method.
  *
@@ -42,37 +43,148 @@ public:
 	ForceTree(PosType **xp,IndexType Npoints,float *masses,float *rsph,bool Multimass,bool Multisize
 			,int bucket = 5,int dimensions = 2,bool median = false,PosType theta = 0.1
 			);
-	~ForceTree();
+	virtual ~ForceTree();
 
 	/// calculated sph smoothing and store them in the tree, also provide pointer to them
 	float * CalculateSPHsmoothing(int N);
 	/// calculate the deflection and lensing properties
 	void force2D(PosType *ray,PosType *alpha,PosType *kappa,PosType *gamma,bool no_kappa = true);
 	/// provides a way to change the profiles of the particles, by default Gaussian
-	void ChangeParticleProfile(PartProf partprof);
+	//void ChangeParticleProfile(PartProf partprof);
 
-private:
+protected:
+
+	bool init;
+
+	/// true if particles have different masses.
+	bool MultiMass;
+	/// true if particles have different sizes.
+	bool MultiRadius;
+	/// Array of particle masses
+	float *masses;
+	/// Array of particle sizes
+	float *rsph;
+
 
 	PosType force_theta;
-	PosType (*alpha_internal)(PosType r,float rmax);
-	PosType (*kappa_internal)(PosType r,float rmax);
-	PosType (*gamma_internal)(PosType r,float rmax);
+
+	//PosType (*alpha_particle)(PosType r,float rmax);
+	//PosType (*kappa_particle)(PosType r,float rmax);
+	//PosType (*gamma_particle)(PosType r,float rmax);
+
+	//PosType (*alpha_halo)(PosType r,HaloInternal &par);
+	//PosType (*kappa_halo)(PosType r,HaloInternal &par);
+	//PosType (*gamma_halo)(PosType r,HaloInternal &par);
 
 	void CalcMoments();
 	void rotate_coordinates(PosType **coord);
 	void spread_particles();
+
+	// Internal profiles for a Gaussian particle
+	double alpha_o(double r2,float sigma);
+	double kappa_o(double r2,float sigma);
+	double gamma_o(double r2,float sigma);
+	double phi_o(double r2,float sigma);
+
+	/// These will be overridden in a derived class with a specific halo internal structures
+	virtual double alpha_h(double r2,HaloStructure &par){return 0.0;}
+	virtual double kappa_h(double r2,HaloStructure &par){return 0.0;}
+	virtual double gamma_h(double r2,HaloStructure &par){return 0.0;}
+	virtual double phi_h(double r2,HaloStructure &par){return 0.0;}
+
+	bool haloON;
+	HaloStructure *halo_params;
 };
 
 typedef ForceTree *ForceTreeHndl;
 
-// Internal profiles for the particles/halos
-double alpha_o(double r2,float sigma);
-double kappa_o(double r2,float sigma);
-double gamma_o(double r2,float sigma);
+/** \ingroup DeflectionL2
+ *
+ * \brief A class for calculating the deflection, kappa and gamma caused by a collection of halos
+ * with truncated power-law mass profiles.
+ *
+ * Derived from the ForceTree class.  The "particles" are replaced with spherical halos.
+ *The truncation is in 2d not 3d. \f$ \Sigma \propto r^\beta
+ *
+ */
+class ForceTreePowerLaw : public ForceTree{
 
-double alphaPowLaw(double r,double *alpha,HaloInternal &par);
-double kappaPowLaw(double r,HaloInternal &par);
-double gammaPowLaw(double r,HaloInternal &par);
-double phiPowLaw(double r,HaloInternal &par);
+public:
+	ForceTreePowerLaw(float beta,PosType **xp,IndexType Npoints,HaloStructure *par_internals,bool Multisize = true
+			,int bucket = 5,int dimensions = 2,bool median = false,PosType theta = 0.1
+			);
+	~ForceTreePowerLaw();
+
+private:
+	float beta; // logorithmic slop of 2d mass profile
+
+	// Override internal structure of halos
+	double alpha_h(double r2,HaloStructure &par);
+	double kappa_h(double r2,HaloStructure &par);
+	double gamma_h(double r2,HaloStructure &par);
+	double phi_h(double r2,HaloStructure &par);
+};
+
+/** \ingroup DeflectionL2
+ *
+ * \brief A class for calculating the deflection, kappa and gamma caused by a collection of NFW
+ * halos.
+ *
+ * Derived from the ForceTree class.  The "particles" are replaced with spherical NFW halos.
+ *
+ * This class uses the true expressions for the NFW profile.  This is
+ * time consuming and not usually necessary. See ForceTreePseudoNFW for a faster alternative.
+ */
+class ForceTreeNFW : public ForceTree{
+
+public:
+	ForceTreeNFW(PosType **xp,IndexType Npoints,HaloStructure *par_internals,bool Multisize = true
+			,int bucket = 5,int dimensions = 2,bool median = false,PosType theta = 0.1
+			);
+	~ForceTreeNFW();
+
+private:
+
+	// Override internal structure of halos
+	double alpha_h(double r2,HaloStructure &par);
+	double kappa_h(double r2,HaloStructure &par);
+	double gamma_h(double r2,HaloStructure &par);
+	double phi_h(double r2,HaloStructure &par);
+
+	double gfunction(double x);
+	double ffunction(double x);
+	double g2function(double x);
+};
+
+/** \ingroup DeflectionL2
+ *
+ * \brief A class for calculating the deflection, kappa and gamma caused by a collection of
+ * halos with a double power-law mass profile.
+ *
+ * Derived from the ForceTree class.  The "particles" are replaced with spherical halos
+ * with \f$ \Sigma \propto 1/(1 + (r/rscale) )^\beta \f$.
+ *
+ * An NFW profile is approximated beta = 2 .
+ */
+class ForceTreePseudoNFW : public ForceTree{
+
+public:
+	ForceTreePseudoNFW(float beta,PosType **xp,IndexType Npoints,HaloStructure *par_internals,bool Multisize = true
+			,int bucket = 5,int dimensions = 2,bool median = false,PosType theta = 0.1
+			);
+	~ForceTreePseudoNFW();
+
+private:
+
+	double beta;
+
+	// Override internal structure of halos
+	double alpha_h(double r2,HaloStructure &par);
+	double kappa_h(double r2,HaloStructure &par);
+	double gamma_h(double r2,HaloStructure &par);
+	double phi_h(double r2,HaloStructure &par);
+
+	double mhat(double y);
+};
 
 #endif /* FORCE_TREE_H_ */
