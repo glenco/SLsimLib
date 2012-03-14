@@ -81,7 +81,7 @@ haloM::haloM(double zsource  /// source redshift
 		    double zi = z1+(z2-z1)*ran2 (&seed);
 		    vredshifts.push_back(zi);
 		    ha.reset(mi,zi);
-		    double Rvir = ha.getRvir();
+		    double Rvir = ha.getRvir()*(1+zi); // making Rvir comoving
 		    vsizes.push_back(Rvir);
 		    Dli.push_back(cosmo->coorDist(0,zi)); // distances are comoving!
 
