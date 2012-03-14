@@ -9,18 +9,14 @@
 
 #include <list.h>
 #include "simpleTree.h"
+#include <multiplane.h>
 
 #ifndef FORCE_TREE_H_
 #define FORCE_TREE_H_
 
 ///enum PartProf {gaussian,powerlaw};
 
-/// Structure used for the internal properties of "halos" in the ForceTree deflection solver
-struct HaloStructure{
-	float mass;
-	float Rmax;
-	float rscale;
-};
+struct HaloStructure;
 
 /** \ingroup DeflectionL2
  *

@@ -73,7 +73,8 @@ void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
 				cc = charge*dDl[j+1];
 
 				/* multiply by the scale factor to obtain 1/comoving_distance/physical_distance
-				 * such that a multiplication with the charge will result in a 1/comoving_distance quantity */
+				 * such that a multiplication with the charge (in units of physical distance)
+				 * will result in a 1/comoving_distance quantity */
 				kappa/=(1+redshift[j]);
 				gamma[0]/=(1+redshift[j]);
 				gamma[1]/=(1+redshift[j]);

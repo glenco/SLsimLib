@@ -8,7 +8,7 @@
 #include <math.h>
 #include "forceTree.h"
 
-const float pi = 3.141593;
+//const float pi = 3.141593;
 
 ForceTree::ForceTree(
 		PosType **xp

@@ -188,8 +188,6 @@ void AnaLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool ka
    *
 */
 void AnaLens::rayshooterInternal(double *ray, double *alpha, double *gamma, double *kappa, bool kappa_off){
-// TODO: need to set the units of alpha, gamma, and kappa!!!
-
      double x_rescale[2], tmp, dt = 0;
      long j;
      double gamma_tmp[3], alpha_tmp[2];
