@@ -31,7 +31,6 @@
 
 void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off){
 	unsigned long i;
-	int j;
 
 	for(i = 0; i< Npoints; i++){
 
@@ -58,7 +57,7 @@ void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
 		i_points[i].gamma[1] = 0;
 		i_points[i].gamma[2] = 0;
 
-		for(j = 0; j < Nplanes-1 ; j++){  // each iteration leaves i_point[i].image on plane (j+1)
+		for(int j = 0; j < Nplanes-1 ; j++){  // each iteration leaves i_point[i].image on plane (j+1)
 
 			if(j == flag_analens && j > 0){
 				// convert to physical coorditanes
@@ -93,8 +92,9 @@ void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
 
 				//bb = dDl[j+1]*Dl[ (j < 1) ? 0 : j-1]/dDl[j]/Dl[j+1];
 				// removed the line above because Dl[-1] = observer plane = 0 and is different from Dl[0]
-				if(j>0)
+				if(j>0){
 					bb = dDl[j+1]*Dl[j-1]/dDl[j]/Dl[j+1];
+				}
 				else
 					bb = 0;
 
@@ -135,22 +135,16 @@ void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
 
 		i_points[i].kappa = 1 - i_points[i].kappa;
 
-		if(flag_analens){
-			i_points[i].kappa /= (analens->zlens + 1);
-			i_points[i].gamma[0] /= (analens->zlens + 1);
-			i_points[i].gamma[1] /= (analens->zlens + 1);
-			i_points[i].gamma[2] /= (analens->zlens + 1);
-		}
-
-
 		i_points[i].invmag = (1-i_points[i].kappa)*(1-i_points[i].kappa)
 		  	    - i_points[i].gamma[0]*i_points[i].gamma[0]
 		  	    - i_points[i].gamma[1]*i_points[i].gamma[1]
 		  	    - i_points[i].gamma[2]*i_points[i].gamma[2];
 
 		/*if(i<10){
-			cout << i_points[i].x[0]*dl  << " " << i_points[i].x[1]*dl << " " << i_points[i].image->x[0]*dl  << " " << i_points[i].image->x[1]*dl  << " ";
-			cout << i_points[i].invmag << " " << i_points[i].kappa << " " << i_points[i].gamma[0] << " " << i_points[i].gamma[1] << " " << i_points[i].gamma[2] << endl;
+			cout << i_points[i].x[0]*analens->Dl  << " " << i_points[i].x[1]*analens->Dl  << " ";
+			cout << i_points[i].image->x[0]*analens->Dl   << " " << i_points[i].image->x[1]*analens->Dl   << " ";
+			cout << i_points[i].invmag << " " << i_points[i].kappa << " ";
+			cout << i_points[i].gamma[0] << " " << i_points[i].gamma[1] << " " << i_points[i].gamma[2] << endl;
 			}*/
     }
 

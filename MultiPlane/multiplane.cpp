@@ -83,7 +83,7 @@ haloM::haloM(double zsource  /// source redshift
 		    ha.reset(mi,zi);
 		    double Rvir = ha.getRvir();
 		    vsizes.push_back(Rvir);
-		    Dli.push_back(cosmo->angDist(0,zi));
+		    Dli.push_back(cosmo->coorDist(0,zi)); // distances are comoving!
 
 			//file_test << mi << endl;
 		}
@@ -98,7 +98,7 @@ haloM::haloM(double zsource  /// source redshift
 
 	pos = PosTypeMatrix(0,N-1,0,2);
 	for(int i = 0; i < N; i++){
-		double maxr = sqrt(fov/M_PI)*Dli[i]*M_PI/180;
+		double maxr = sqrt(fov/M_PI)*Dli[i]*M_PI/180; // distances are comoving!
 		double r = maxr*ran2(&seed);
 		double theta=2*pi*ran2(&seed);
 
@@ -110,6 +110,9 @@ haloM::haloM(double zsource  /// source redshift
 		sizes[i] = vsizes[i];
 		redshifts[i] = vredshifts[i];
 	}
+
+	cout << endl << "Created " << N << " halos in an the field of view of " << fov;
+	cout << " square degrees, up to redshift " << zsource << endl << endl;
 
 	vmasses.clear();
 	vsizes.clear();
@@ -333,11 +336,19 @@ void MultiLens::setRedshift(double zsource){
 }
 
 double MultiLens::getZlens(){
-	return redshift[0];
+	if(flag_analens)
+		return analens->zlens;
+	else
+		return redshift[0];
 }
 
 void MultiLens::setZlens(double z){
-
+	if(flag_analens)
+		analens->zlens = z;
+	else{
+		cout << "ERROR in setZlens() -- there is no analytic lens!" << endl;
+		exit(1);
+	}
 }
 
 void MultiLens::setInternalParams(CosmoHndl cosmo, double zsource){
@@ -351,11 +362,11 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, double zsource){
 	setRedshift(zsource);
 
 	Dl[0] = cosmo->coorDist(0,redshift[0]);
-	dDl[0] = Dl[0];  // distance between jth plane and the next plane
+	dDl[0] = Dl[0];  // distance between jth plane and the previous plane
 	for(j = 1; j < Nplanes; j++){
 
 		Dl[j] = cosmo->coorDist(0,redshift[j]);
-		dDl[j] = Dl[j] - Dl[j-1]; // distance between jth plane and the next plane
+		dDl[j] = Dl[j] - Dl[j-1]; // distance between jth plane and the previous plane
 	}
 
 	cout << "Dl: ";

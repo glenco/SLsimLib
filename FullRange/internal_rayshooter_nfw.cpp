@@ -169,7 +169,7 @@ void AnaLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool ka
     	  i_points[i].image->gamma[0]=i_points[i].gamma[0];
     	  i_points[i].image->gamma[1]=i_points[i].gamma[1];
     	  i_points[i].image->dt = i_points[i].dt;
-    	/* if(i<10){
+    	/*if(i<10){
     		  cout << i_points[i].x[0] << " " << i_points[i].x[1] << " " << i_points[i].image->x[0] << " " << i_points[i].image->x[1] << " ";
     		  cout << i_points[i].invmag << " " << i_points[i].kappa << " " << i_points[i].gamma[0] << " " << i_points[i].gamma[1] << " " << i_points[i].gamma[2] << endl;
     	  }*/
@@ -201,27 +201,21 @@ void AnaLens::rayshooterInternal(double *ray, double *alpha, double *gamma, doub
      gamma[0] = gamma[1] = gamma[2] = 0.0;
      *kappa = 0.0;
 
-     double convert_factor = star_massscale / Sigma_crit;
+     double convert_factor = star_massscale/Sigma_crit;
 
      if(host_ro > 0){
-    	 x_rescale[0] = ray[0] / host_ro;
-    	 x_rescale[1] = ray[1] / host_ro;
+    	 x_rescale[0] = ray[0]/host_ro;
+    	 x_rescale[1] = ray[1]/host_ro;
 
-    	 alphaNSIE(alpha, x_rescale, host_axis_ratio, host_core / host_ro, host_pos_angle);
+    	 alphaNSIE(alpha,x_rescale,host_axis_ratio,host_core/host_ro,host_pos_angle);
 
     	 if(!kappa_off){
     		 gammaNSIE(gamma,x_rescale,host_axis_ratio,host_core/host_ro,host_pos_angle);
     		 *kappa=kappaNSIE(x_rescale,host_axis_ratio,host_core/host_ro,host_pos_angle);
     	 }
-    	 else{
-    		 alpha[0] = alpha[1] = 0.0;
-    	     gamma[0] = gamma[1] = gamma[2] = 0.0;
-    	     *kappa = 0.0;
-    	 }
 
     	 alpha[0] *= host_ro;
     	 alpha[1] *= host_ro;
-
      }
 
   // perturbations of host lens
@@ -236,10 +230,10 @@ void AnaLens::rayshooterInternal(double *ray, double *alpha, double *gamma, doub
    	    	  gamma[0] += gamma_tmp[0];
    	    	  gamma[1] += gamma_tmp[1];
    	      }
-     }
 
-     gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
-     alpha_tmp[0] = alpha_tmp[1] = 0.0;
+   	     gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
+   	     alpha_tmp[0] = alpha_tmp[1] = 0.0;
+     }
 
      // add substructure
      if(substruct_implanted){
@@ -257,10 +251,10 @@ void AnaLens::rayshooterInternal(double *ray, double *alpha, double *gamma, doub
     			 gamma[1] += gamma_tmp[1];
     		 }
     	 }
-     }
 
-     gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
-     alpha_tmp[0] = alpha_tmp[1] = 0.0;
+         gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
+         alpha_tmp[0] = alpha_tmp[1] = 0.0;
+     }
 
      // add stars for microlensing
      if(stars_N > 0 && stars_implanted){
@@ -280,16 +274,19 @@ void AnaLens::rayshooterInternal(double *ray, double *alpha, double *gamma, doub
      }
 
      // final operations on results
-     convert_factor = 4*pi*pow(host_sigma/2.99792e5,2) / host_ro;
+     convert_factor = 4*pi*Grav*Sigma_crit;
 
-	 *kappa *= convert_factor;
-
-	 gamma[0] *= convert_factor;
-	 gamma[1] *= convert_factor;
-	 gamma[2] *= convert_factor;
-
+     // convert from physical distance on the lens plane to an angle
 	 alpha[0] *= convert_factor;
 	 alpha[1] *= convert_factor;
+
+	 // in the multi-plane formalism G^i=partial deflection_angle^i / partial x^i
+	 // therefore the quantities need to be in units (1/comoving_distance)
+	 // --> convert from unitless quantity to (1/comoving_distance)
+	 *kappa *= convert_factor/(1+zlens);
+	 gamma[0] *= convert_factor/(1+zlens);
+	 gamma[1] *= convert_factor/(1+zlens);
+	 gamma[2] *= convert_factor/(1+zlens);
 
      return ;
 }

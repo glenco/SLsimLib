@@ -40,7 +40,7 @@ void AnaLens::readParamfile(string filename){
   char dummy[300];
   int flag;
   
-  perturb_rms=(double *)calloc(6,sizeof(double));
+  perturb_rms = new double[6];
 
   n = 0;
 
@@ -238,6 +238,8 @@ void AnaLens::readParamfile(string filename){
 
   // in degrees
   host_pos_angle*=pi/180;
+  if(perturb_Nmodes)
+	  perturb_modes = new double[perturb_Nmodes+1];
 
   PrintAnaLens(true,true);
 }
@@ -373,9 +375,9 @@ AnaLens::AnaLens(string filename) : Lens(){
 }
 
 AnaLens::~AnaLens(){
-	free(perturb_rms);
+	delete[] perturb_rms;
 	if(perturb_Nmodes > 0){
-	free(perturb_modes);
+		delete[] perturb_modes;
 	}
 	if(sub_N > 0 && substruct_implanted){
 	  free_dmatrix(sub_x,0,sub_N-1,0,1);

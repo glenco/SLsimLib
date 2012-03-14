@@ -19,8 +19,6 @@
 
 #include <slsimlib.h>
 
-double area=0;
-
 /** \ingroup Image
  * \brief Takes images and pixelizes the flux into regular pixels.
  *
@@ -40,13 +38,12 @@ void pixelize(
 		){
 
 	long ix;
-	double sb=1.0,resolution=0;
+	double sb,resolution=0;
 	unsigned long i,ii;
-	static unsigned long count=0;
 	Point *points;
-	static TreeHndl ptree;
+	TreeHndl ptree;
 
-	//std::printf("%d %g %g %g\n", Npixels, range, center[0], center[1]);
+	//printf("%d %g %g %g\n", Npixels, range, center[0], center[1]);
 
 	if( (Npixels & (Npixels-1)) != 0){
 		ERROR_MESSAGE();
@@ -54,40 +51,25 @@ void pixelize(
 		exit(1);
 	}
 
-	++count;
 	resolution=range/(Npixels-1);
 
 	// initialize pixel tree
-	if(count==1){
-		points=NewPointArray(Npixels*Npixels,true);
-		xygridpoints(points,range,center,Npixels,false);
-		ptree=BuildTree(points,Npixels*Npixels);
+	points=NewPointArray(Npixels*Npixels,true);
+	xygridpoints(points,range,center,Npixels,false);
+	ptree=BuildTree(points,Npixels*Npixels);
+
+	MoveToTopList(ptree->pointlist);
+	for(i=0 ; i < ptree->pointlist->Npoints ; ++i){
+		ptree->pointlist->current->surface_brightness = 0.0;
+		MoveDownList(ptree->pointlist);
 	}
 
-	if(cleanmap){
-
-		if(count > 1){
-			// rebuild pixel tree
-			emptyTree(ptree);
-			points=NewPointArray(Npixels*Npixels,true);
-			xygridpoints(points,range,center,Npixels,0);
-			FillTree(ptree,points,Npixels*Npixels);
-			//ptree=BuildTree(points,Npixels*Npixels);
-		}
-
-		MoveToTopList(ptree->pointlist);
-		for(i=0 ; i < ptree->pointlist->Npoints ; ++i){
-			ptree->pointlist->current->surface_brightness = 0.0;
-			MoveDownList(ptree->pointlist);
-		}
+	if(cleanmap)
 		for(i=0 ; i < Npixels*Npixels ; ++i) map[i]=0.0;
-	}
-
 
 	sb = 1;
 	for(ii=0;ii<Nimages;++ii){
 		MoveToTopKist(imageinfo[ii].imagekist);
-
 		do{
 
 			if(!constant_sb) sb = getCurrentKist(imageinfo[ii].imagekist)->surface_brightness;
@@ -96,51 +78,25 @@ void pixelize(
 			moveTop(ptree);
 			_SplitFluxIntoPixels(ptree,getCurrentKist(imageinfo[ii].imagekist)->leaf,&sb);
 
-/*
-			getCurrentKist(imageinfo[ii].imagekist)->gridsize = getCurrentKist(imageinfo[ii].imagekist)->leaf->boundary_p2[0]
-		                             - getCurrentKist(imageinfo[ii].imagekist)->leaf->boundary_p1[0];
-			if( boxinbox(getCurrentKist(imageinfo[ii].imagekist)->leaf,ptree->top) ){
-
-
-				moveTop(ptree);
-				_FindBox(ptree,getCurrentKist(imageinfo[ii].imagekist)->x);
-				//ptree->current->points->surface_brightness += sb;// *pow(getCurrentKist(imageinfo[ii].imagekist)->gridsize,2);
-
-				if(boxinbox(getCurrentKist(imageinfo[ii].imagekist)->leaf,ptree->current) == true){
-					// entire cell is inside pixel
-					//ptree->current->points->surface_brightness += sb*pow(getCurrentKist(imageinfo[ii].imagekist)->gridsize/resolution,2);
-					ptree->current->points->surface_brightness = sb;
-
-				}else{  // image cell is in multiple pixels
-
-					moveUp(ptree);
-
-					// find a super-pixel that contains all of the cell
-					while(boxinbox(getCurrentKist(imageinfo[ii].imagekist)->leaf,ptree->current) == false) moveUp(ptree);
-
-					assert((ptree->current->boundary_p1[0]-getCurrentKist(imageinfo[ii].imagekist)->leaf->boundary_p1[0]) < 0);
-					assert((ptree->current->boundary_p1[1]-getCurrentKist(imageinfo[ii].imagekist)->leaf->boundary_p1[1]) < 0);
-					assert((ptree->current->boundary_p2[0]-getCurrentKist(imageinfo[ii].imagekist)->leaf->boundary_p2[0]) > 0);
-					assert((ptree->current->boundary_p2[1]-getCurrentKist(imageinfo[ii].imagekist)->leaf->boundary_p2[1]) > 0);
-
-					_SplitFluxIntoPixels(ptree,getCurrentKist(imageinfo[ii].imagekist)->leaf,&sb);
-				}
-				// TODO fix above so that flux is distributed in pixels correctly
-				//ptree->current->points->surface_brightness = getCurrentKist(imageinfo[ii].imagekist)->surface_brightness;
-			}
-*/
-
 		}while(MoveDownKist(imageinfo[ii].imagekist));
 	}
 
+	int mycount;
 	MoveToTopList(ptree->pointlist);
-	for(i=0;i<ptree->pointlist->Npoints;++i){
+	for(i=0,mycount=0;i<ptree->pointlist->Npoints;++i){
 		if(ptree->pointlist->current->surface_brightness > 0.0){
 			ix = IndexFromPosition(ptree->pointlist->current->x,Npixels,range,center);
-			if(ix > -1) map[ix] =  ptree->pointlist->current->surface_brightness/resolution/resolution;
+			if(ix > -1){
+				mycount++;
+				map[ix] =  ptree->pointlist->current->surface_brightness/resolution/resolution;
+			}
 		}
 		MoveDownList(ptree->pointlist);
 	}
+
+	FreePointArray(points);
+
+	cout << "Found " << mycount << " pixels!" << endl;
 
 	return;
 }
@@ -152,7 +108,7 @@ void pixelize(
  */
 void _SplitFluxIntoPixels(TreeHndl ptree,Branch *leaf,double *leaf_sb){
 
-	area = BoxIntersection(leaf,ptree->current);
+	double area = BoxIntersection(leaf,ptree->current);
 
 	if(area > 0.0){
 		if(atLeaf(ptree)){

@@ -41,6 +41,9 @@ ForceTree::ForceTree(
 	//gamma_particle = gamma_o;
 }
 
+ForceTree::~ForceTree(){
+}
+
 
 // calculates moments of the mass and the cutoff scale for each box
 void ForceTree::CalcMoments(){
@@ -356,6 +359,9 @@ ForceTreePowerLaw::ForceTreePowerLaw(
 	CalcMoments();
 }
 
+ForceTreePowerLaw::~ForceTreePowerLaw(){
+}
+
 ForceTreeNFW::ForceTreeNFW(
 		PosType **xp               /// positions of the halos xp[0..Npoints-1][0..1 or 2]
 		,IndexType Npoints         /// number of halos
@@ -373,6 +379,9 @@ ForceTreeNFW::ForceTreeNFW(
 	halo_params = h_params;
 
 	CalcMoments();
+}
+
+ForceTreeNFW::~ForceTreeNFW(){
 }
 
 ForceTreePseudoNFW::ForceTreePseudoNFW(
@@ -393,4 +402,7 @@ ForceTreePseudoNFW::ForceTreePseudoNFW(
 	halo_params = h_params;
 
 	CalcMoments();
+}
+
+ForceTreePseudoNFW::~ForceTreePseudoNFW(){
 }
