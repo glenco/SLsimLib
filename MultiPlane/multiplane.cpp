@@ -81,9 +81,9 @@ haloM::haloM(double zsource  /// source redshift
 		    double zi = z1+(z2-z1)*ran2 (&seed);
 		    vredshifts.push_back(zi);
 		    ha.reset(mi,zi);
-		    double Rvir = ha.getRvir()*(1+zi); // making Rvir comoving
+		    double Rvir = ha.getRvir();
 		    vsizes.push_back(Rvir);
-		    Dli.push_back(cosmo->coorDist(0,zi)); // distances are comoving!
+		    Dli.push_back(cosmo->angDist(0,zi));
 
 			//file_test << mi << endl;
 		}
@@ -98,7 +98,7 @@ haloM::haloM(double zsource  /// source redshift
 
 	pos = PosTypeMatrix(0,N-1,0,2);
 	for(int i = 0; i < N; i++){
-		double maxr = sqrt(fov/M_PI)*Dli[i]*M_PI/180; // distances are comoving!
+		double maxr = sqrt(fov/M_PI)*Dli[i]*M_PI/180;
 		double r = maxr*ran2(&seed);
 		double theta=2*pi*ran2(&seed);
 
@@ -134,7 +134,7 @@ MultiLens::MultiLens(string filename) : Lens(){
 	Dl = new double[Nplanes];
 	dDl = new double[Nplanes];
 
-	charge = 4*Grav*mass_scale;
+	charge = 4*pi*Grav*mass_scale;
 
 	halo_tree = new ForceTreeHndl[Nplanes-1];
 	NhalosinPlane = new IndexType[Nplanes-1];

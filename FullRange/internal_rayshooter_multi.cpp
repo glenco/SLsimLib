@@ -59,18 +59,25 @@ void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
 
 		for(int j = 0; j < Nplanes-1 ; j++){  // each iteration leaves i_point[i].image on plane (j+1)
 
-			if(j == flag_analens && j > 0){
-				// convert to physical coorditanes
-				double xx[2];
-				xx[0] = i_points[i].image->x[0]/(1+redshift[j]);
-				xx[1] = i_points[i].image->x[1]/(1+redshift[j]);
+			// convert to physical coorditanes on the plane j
+			double xx[2];
+			xx[0] = i_points[i].image->x[0]/(1+redshift[j]);
+			xx[1] = i_points[i].image->x[1]/(1+redshift[j]);
 
+			if(j == flag_analens && j > 0){
 				analens->rayshooterInternal(&xx[0],&alpha[0],&gamma[0],&kappa,kappa_off);
 				cc = dDl[j+1];
 			}
 			else{
-				halo_tree[j]->force2D(i_points[i].image->x,&alpha[0],&kappa,&gamma[0],kappa_off);
+				halo_tree[j]->force2D(&xx[0],&alpha[0],&kappa,&gamma[0],kappa_off);
 				cc = charge*dDl[j+1];
+
+				/* multiply by the scale factor to obtain 1/comoving_distance/physical_distance
+				 * such that a multiplication with the charge will result in a 1/comoving_distance quantity */
+				kappa/=(1+redshift[j]);
+				gamma[0]/=(1+redshift[j]);
+				gamma[1]/=(1+redshift[j]);
+				gamma[2]/=(1+redshift[j]);
 			}
 
 			aa = (dDl[j+1]+dDl[j])/dDl[j];
