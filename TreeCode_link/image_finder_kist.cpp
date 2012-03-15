@@ -184,7 +184,7 @@ void find_images_kist(
 			for(j=0;j<*Nimages;++j) printf("       %i        %li         %e\n",j,imageinfo[j].imagekist->Nunits(),imageinfo[j].area_error);
 		}
 		++i;
-	}while( refine_grid_kist(lens,grid,imageinfo,*Nimages,1.0e-1,flag,kappa_off,true,dummy_pnt)
+	}while( refine_grid_kist(lens,grid,imageinfo,*Nimages,FracResTarget,flag,kappa_off,true,dummy_pnt)
 			|| moved );
 
 	// remove images with no points in them

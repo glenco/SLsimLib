@@ -8,7 +8,7 @@
 #include <math.h>
 #include "forceTree.h"
 
-const float pi = 3.141593;
+//const float pi = 3.141593;
 
 ForceTree::ForceTree(
 		PosType **xp
@@ -39,6 +39,9 @@ ForceTree::ForceTree(
 	//alpha_particle = alpha_o;
 	//kappa_particle = kappa_o;
 	//gamma_particle = gamma_o;
+}
+
+ForceTree::~ForceTree(){
 }
 
 
@@ -356,6 +359,9 @@ ForceTreePowerLaw::ForceTreePowerLaw(
 	CalcMoments();
 }
 
+ForceTreePowerLaw::~ForceTreePowerLaw(){
+}
+
 ForceTreeNFW::ForceTreeNFW(
 		PosType **xp               /// positions of the halos xp[0..Npoints-1][0..1 or 2]
 		,IndexType Npoints         /// number of halos
@@ -373,6 +379,9 @@ ForceTreeNFW::ForceTreeNFW(
 	halo_params = h_params;
 
 	CalcMoments();
+}
+
+ForceTreeNFW::~ForceTreeNFW(){
 }
 
 ForceTreePseudoNFW::ForceTreePseudoNFW(
@@ -393,4 +402,7 @@ ForceTreePseudoNFW::ForceTreePseudoNFW(
 	halo_params = h_params;
 
 	CalcMoments();
+}
+
+ForceTreePseudoNFW::~ForceTreePseudoNFW(){
 }

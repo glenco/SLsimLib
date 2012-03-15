@@ -18,28 +18,36 @@ const int Nmassbin=32;
 const double MaxLogm=16.;
 
 class haloM;  // forward declaration
-typedef haloM *haloHndl;
+typedef haloM *haloMHndl;
 
 /// A class to represents a lens with multiple planes.
 class MultiLens : public Lens{
 public:
 	/// Redshifts of lens planes, 0...Nplanes.  Last one is the source redshift.
 	double *redshift;
-	double *Dl, *dDl; /// angular diameter distances
+	/// angular diameter distances
+	double *Dl, *dDl;
+	/// charge for the tree force solver (4*pi*G*mass_scale)
 	double charge;
+	/// an array of pointers to the halo models on each plane
+	haloMHndl *haloModel;
+	/// an array of pointers to halo trees on each plane, uses the haloModel in the construction
+	ForceTreeHndl *halo_tree;
+	/// a poiner to the analytical lens
+	AnaLens *analens;
+
+	/* the following parameters are read in from the parameter file */
+
+	/// field of view in square degrees
+	double fieldofview;
+	/// type of mass function PS (0) and ST (1) default is ST
+	int mass_func_type;
 	/// mass scale
 	double mass_scale;
-	IndexType *NhalosinPlane;
-	ForceTreeHndl *halo_tree;
 	/// min mass for the halo model
 	double min_mass;
-	AnaLens *analens;
+	/// if = 1 there is an analytical lens, if = 0 there is no analytic lens
 	int flag_analens;
-	haloM *haloModel; ///halo model
-
-	// to be read in from the parameter file
-	double fieldofview; /// field of view in square degrees
-	int mass_func_type; /// type of mass function PS (0) and ST (1) default is ST
 
 
 	MultiLens(string);
@@ -56,18 +64,26 @@ public:
 	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off);
 };
 
-/// Class to hold information about the halos' number, positions, masses, etc.
+/// structure to hold information about the halos' positions, masses, etc.
+struct HaloStructure{
+	/// internal halo parameters
+    float mass,Rmax,rscale;
+};
+
 class haloM{
 public:
+	/// halo positions
 	PosType **pos;
-	IndexType N;
+	/// halo structure with internal halo parameters such as mass, size, etc.
+	HaloStructure *halos;
+	/// number of halos in the halo model on the plane
+	IndexType Nhalos;
 
-    float *masses,*sizes,*redshifts;
-    IndexType *index;
-	haloM(double zsource,CosmoHndl cosmo,MultiLens* lens);
+	haloM(int jplane,double zsource,CosmoHndl cosmo,MultiLens* lens);
 	~haloM();
 private:
-	std:: vector<double> Logm,Nhaloes;
+	/// variables for internal calculations
+	std:: vector<double> Logm,Nhalosbin;
 };
 
 void swap(float *a,float *b);
