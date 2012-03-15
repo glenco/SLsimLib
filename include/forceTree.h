@@ -104,7 +104,7 @@ typedef ForceTree *ForceTreeHndl;
  * with truncated power-law mass profiles.
  *
  * Derived from the ForceTree class.  The "particles" are replaced with spherical halos.
- *The truncation is in 2d not 3d. \f$ \Sigma \propto r^\beta
+ *The truncation is in 2d not 3d. \f$ \Sigma \propto r^\beta \f$ so beta would usually be negative.
  *
  */
 class ForceTreePowerLaw : public ForceTree{
@@ -162,7 +162,7 @@ private:
  * halos with a double power-law mass profile.
  *
  * Derived from the ForceTree class.  The "particles" are replaced with spherical halos
- * with \f$ \Sigma \propto 1/(1 + (r/rscale) )^\beta \f$.
+ * with \f$ \Sigma \propto 1/(1 + (r/rscale) )^\beta \f$ so beta would usually be positive.
  *
  * An NFW profile is approximated beta = 2 .
  */
