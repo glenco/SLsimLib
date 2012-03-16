@@ -27,6 +27,29 @@ double ForceTree::phi_o(double r2,float sigma){
 	return 0;
 }
 
+/** gaussian profiles
+ *  All quantities should be divided by Sigma_crit to get the usual
+ */
+double ForceTreeGauss::alpha_h(double r2,HaloStructure &par){
+	if(r2==0) return 0.0;
+	if(par.Rmax <= 0.0 ) return -1.0*par.mass/r2/pi;
+	return ( exp(-r2/par.Rmax/par.Rmax/2) - 1.0 )*par.mass/r2/pi;
+}
+double ForceTreeGauss::kappa_h(double r2,HaloStructure &par){
+	if(par.Rmax <= 0.0) return 0.0;
+	return exp(-r2/par.Rmax/par.Rmax/2)*par.mass/2/pi/par.Rmax/par.Rmax;
+}
+double ForceTreeGauss::gamma_h(double r2,HaloStructure &par){
+	if(r2==0) return 0.0;
+	if(par.Rmax <= 0.0) return -2.0*par.mass/pi/pow(r2,2);
+	return (-2.0 + (2.0 + r2/par.Rmax/par.Rmax)*exp(-r2/par.Rmax/par.Rmax/2) )*par.mass/pi/pow(r2,2);
+}
+double ForceTreeGauss::phi_h(double r2,HaloStructure &par){
+	ERROR_MESSAGE();  // not yet written
+	exit(1);
+	return 0;
+}
+
 /** power-law profiles
  *  All quantities should be divided by Sigma_crit to get the usual
  */
