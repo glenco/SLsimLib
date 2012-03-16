@@ -9,7 +9,7 @@
 #include <sstream>
 #include <utilities.h>
 
-haloM::haloM(int jplane /// the index of the plane that holds the halos
+HaloData::HaloData(int jplane /// the index of the plane that holds the halos
 		,double zsource  /// source redshift
 		,CosmoHndl cosmo     /// cosmology
 		,MultiLens *lens     /// lens
@@ -98,7 +98,7 @@ haloM::haloM(int jplane /// the index of the plane that holds the halos
 	vscale.clear();
 }
 
-haloM::~haloM(){
+HaloData::~HaloData(){
 	free_PosTypeMatrix(pos,0,Nhalos-1,0,2);
 	delete[] halos;
 }
@@ -269,7 +269,7 @@ void MultiLens::buildHaloTree(CosmoHndl cosmo /// the cosmology
 	for(j=0,Ntot=0;j<Nplanes-1;j++){
 		if(flag_analens && j==flag_analens)
 			continue;
-		haloModel[j] = new haloM(j,zsource,cosmo,this);
+		haloModel[j] = new HaloData(j,zsource,cosmo,this);
 		halo_tree[j] = new ForceTreePowerLaw(2.0,&haloModel[j]->pos[0],haloModel[j]->Nhalos,haloModel[j]->halos);
 		Ntot+=haloModel[j]->Nhalos;
 	}

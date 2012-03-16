@@ -17,8 +17,8 @@
 const int Nmassbin=32;
 const double MaxLogm=16.;
 
-class haloM;  // forward declaration
-typedef haloM *haloMHndl;
+class HaloData;  // forward declaration
+typedef HaloData *haloMHndl;
 
 /// A class to represents a lens with multiple planes.
 class MultiLens : public Lens{
@@ -70,7 +70,8 @@ struct HaloStructure{
     float mass,Rmax,rscale;
 };
 
-class haloM{
+/// Class that holds all the information about the halos' positions and their internal parameters.
+class HaloData{
 public:
 	/// halo positions
 	PosType **pos;
@@ -79,8 +80,8 @@ public:
 	/// number of halos in the halo model on the plane
 	IndexType Nhalos;
 
-	haloM(int jplane,double zsource,CosmoHndl cosmo,MultiLens* lens);
-	~haloM();
+	HaloData(int jplane,double zsource,CosmoHndl cosmo,MultiLens* lens);
+	~HaloData();
 private:
 	/// variables for internal calculations
 	std:: vector<double> Logm,Nhalosbin;
