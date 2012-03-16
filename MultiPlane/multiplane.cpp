@@ -77,15 +77,13 @@ HaloData::HaloData(int jplane /// the index of the plane that holds the halos
 	}
 
 	halos = new HaloStructure[Nhalos];
-
 	pos = PosTypeMatrix(0,Nhalos-1,0,2);
 	for(int i = 0; i < Nhalos; i++){
-		double maxr = sqrt(fov/M_PI)*Dli[i]*M_PI/180;
-		double r = maxr*ran2(&seed);
-		double theta=2*pi*ran2(&seed);
-
-		pos[i][0] = r*cos(theta);
-		pos[i][1] = r*sin(theta);
+		double maxr = pi*sqrt(fov)/180*Dli[i];
+		double x = maxr*ran2(&seed) - 0.5*maxr;
+		pos[i][0] = x;
+		double y = maxr*ran2(&seed) - 0.5*maxr;
+		pos[i][1] = y;
 		pos[i][2] = 0.0;
 
 		halos[i].mass = vmasses[i];
@@ -96,6 +94,22 @@ HaloData::HaloData(int jplane /// the index of the plane that holds the halos
 	vmasses.clear();
 	vsizes.clear();
 	vscale.clear();
+
+	/*stringstream f;
+	f << "halos_" << jplane << ".data";
+	string filename = f.str();
+	ofstream file_area(filename.c_str());
+	if(!file_area){
+		cout << "unable to create file " << filename << endl;
+		exit(1);
+	}
+
+	for(int i = 0; i < Nhalos; i++){
+		file_area << i << " " << halos[i].mass << " " << halos[i].Rmax << " ";
+		file_area << pos[i][0] << " " << pos[i][1] << endl;
+	}
+	file_area.close();*/
+
 }
 
 HaloData::~HaloData(){
@@ -269,8 +283,13 @@ void MultiLens::buildHaloTree(CosmoHndl cosmo /// the cosmology
 	for(j=0,Ntot=0;j<Nplanes-1;j++){
 		if(flag_analens && j==flag_analens)
 			continue;
+
 		haloModel[j] = new HaloData(j,zsource,cosmo,this);
+
 		halo_tree[j] = new ForceTreePowerLaw(2.0,&haloModel[j]->pos[0],haloModel[j]->Nhalos,haloModel[j]->halos);
+		//halo_tree[j] = new ForceTreeNFW(&haloModel[j]->pos[0],haloModel[j]->Nhalos,haloModel[j]->halos);
+		//halo_tree[j] = new ForceTreeGauss(&haloModel[j]->pos[0],haloModel[j]->Nhalos,haloModel[j]->halos);
+
 		Ntot+=haloModel[j]->Nhalos;
 	}
 
