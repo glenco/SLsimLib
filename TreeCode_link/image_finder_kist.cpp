@@ -174,7 +174,7 @@ void find_images_kist(
 		moved=image_finder_kist(lens,y_source,fabs(r_source),grid
 				,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
 
-		if(*Nimages < 1) printf("  Nimages=%i i=%i\n",*Nimages,i);
+		//if(*Nimages < 1) printf("  Nimages=%i i=%i\n",*Nimages,i);
 
 		time(&now);
 		if(verbose){

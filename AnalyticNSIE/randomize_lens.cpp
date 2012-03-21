@@ -20,21 +20,18 @@ const float sheartol = 1.0e-3;
  */
 
 void Model::RandomizeModel(double r_source_phys,long *seed,bool tables){
-	static double fo=0.0,*axisTable,*sigmaTable,**zTable;
-	int n,i;
-	static int init=0,NaxisTable,NreTable,NsigmaTable,NzTable;
+	double *zlTable,*zsTable;
+	int n,i,NzTable;
 	ifstream file;
 	char *filename;
-	//double re_onsource;
 
-	if(init==0 && tables){
+	if(tables){
 
-		std::cout << "reading lens distribution tables";
-		++init;
+		cout << "reading lens distribution tables" << endl;
+
 		// read in Einstein radius projected onto the source plane
 
 		filename = "GalaxyData/z_table.txt";
-		std::cout << "reading from " << filename <<"\n";
 		file.open(filename);
 
 		if(!file){
@@ -44,32 +41,22 @@ void Model::RandomizeModel(double r_source_phys,long *seed,bool tables){
 
 		file >> NzTable;
 
-		zTable=(double **) dmatrix(0,NzTable-1,0,1);
-		for(n=0;n<NzTable;++n) file >> zTable[n][0] >> zTable[n][1];
+		zsTable=new double[NzTable];
+		zlTable=new double[NzTable];
+
+		for(n=0;n<NzTable;++n) file >> zsTable[n] >> zlTable[n];
 
 		file.close();
-	}
 
-
-	//if(tables){
-	//	re_onsource=RandomFromTable(reTable,NreTable,seed);
-	//}else{
-	//re_onsource=1.2e-2 + 5.5e-3*gasdev(seed);
-	//}
-	//do{ re_onsource=12.0e-3 + 5.5e-3*gasdev(seed);
-	//}while(re_onsource < 1.0e-3 || re_onsource > 25.0e-3);
-
-	//r_source=r_source_phys*ro/re_onsource;
-
-	// random host sigma
-	if(tables){
 		// choose random set of redshifts
-		i=(int)(NzTable*ran2(seed));
-		source->zsource = zTable[i][0];
-		lens->setZlens(zTable[i][1]);
+		double zlens = RandomFromTable(zlTable,NzTable,seed);
+		double zsource = RandomFromTable(zsTable,NzTable,seed);
 
-		//zlens = RandomFromTable(zlTable,NzlTable,seed);
-		//zsource = RandomFromTable(zsTable,NzsTable,seed);
+		delete[] zsTable;
+		delete[] zlTable;
+
+		source->zsource = zsource;
+		lens->setZlens(zlens);
 
 		lens->RandomizeSigma(seed,tables);
 
@@ -84,14 +71,12 @@ void Model::RandomizeModel(double r_source_phys,long *seed,bool tables){
 }
 
 void AnaLens::RandomizeSigma(long *seed,bool tables){
-	static double fo=0.0,*axisTable,*sigmaTable,**zTable;
-	int n,i;
-	static int init=0,NaxisTable,NreTable,NsigmaTable,NzTable;
+	double *sigmaTable;
+	int n,NsigmaTable;
 	ifstream file;
 	char *filename;
 
 	filename = "GalaxyData/slacs_sigma.dat";
-	std::cout << "reading from " << filename << std::endl;
 	file.open(filename);
 
 	if(!file){
@@ -100,25 +85,30 @@ void AnaLens::RandomizeSigma(long *seed,bool tables){
 	}
 
 	file >> NsigmaTable;
-	sigmaTable=(double *)calloc(NsigmaTable,sizeof(double));
+	sigmaTable=new double[NsigmaTable];
 
 	for(n=0;n<NsigmaTable;++n) file >> sigmaTable[n];
 
 	file.close();
 
 	host_sigma = RandomFromTable(sigmaTable,NsigmaTable,seed);
+
+	delete[] sigmaTable;
+}
+
+void MultiLens::RandomizeSigma(long *seed,bool tables){
+	if(flag_analens)
+		analens->RandomizeSigma(seed,tables);
 }
 
 void AnaLens::RandomizeHost(long *seed,bool tables){
-	double fo=0.0,*axisTable;
-	int n,i;
+	double fo,*axisTable;
+	int n;
 	int NaxisTable;
 	ifstream file;
 	string filename;
-	//double re_onsource;
 
 	filename = "GalaxyData/slacs_f.dat";
-	std::cout << "reading from " << filename << std::endl;
 	file.open(filename.c_str());
 
 	if(!file){
@@ -128,19 +118,19 @@ void AnaLens::RandomizeHost(long *seed,bool tables){
 
 	file >> NaxisTable;
 
-	axisTable=(double *)calloc(NaxisTable,sizeof(double));
+	axisTable=new double[NaxisTable];
 
 	for(n=0;n<NaxisTable;++n) file >> axisTable[n];
 	file.close();
 
-	if(fo==0.0) fo=host_axis_ratio;
+	fo=host_axis_ratio;
 
 	// random host ellipticity
 	do{
 		if(tables) host_axis_ratio = RandomFromTable(axisTable,NaxisTable,seed);
 		else host_axis_ratio = fo + 0.1*gasdev(seed);
 		//std::cout << "f=%e\n",axis_ratio);
-	} while(host_axis_ratio < 0.0 || host_axis_ratio > 1.0);
+	}while(host_axis_ratio < 0.0 || host_axis_ratio > 1.0);
 
 	// unaligned shear modes
 	if(perturb_Nmodes > 0) RandomlyDistortLens(seed,3);
@@ -148,11 +138,16 @@ void AnaLens::RandomizeHost(long *seed,bool tables){
 	if(perturb_Nmodes > 0){
 		for(n=3;n<6;++n) AlignedRandomlyDistortLens(seed
 			,host_pos_angle+3*pi*gasdev(seed)/180,n);
-//		for(n=3;n<6;++n) AlignedRandomlyDistortLens(lens,seed
-//			,theta+2*pi*ran2(seed),n);
 	}
 
+	delete[] axisTable;
+
 	return ;
+}
+
+void MultiLens::RandomizeHost(long *seed,bool tables){
+	if(flag_analens)
+		analens->RandomizeHost(seed,tables);
 }
 
 /** \ingroup ChangeLens

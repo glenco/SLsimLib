@@ -48,12 +48,16 @@ public:
 	double min_mass;
 	/// if = 1 there is an analytical lens, if = 0 there is no analytic lens
 	int flag_analens;
+	/// internal profile type, 0=Gauss,1=powerlaw,2=nfw,3=pseudoNfw
+	int internal_profile;
 
 
 	MultiLens(string);
 	~MultiLens();
 
 	void buildHaloTree(CosmoHndl cosmo,double zsource);
+	void RandomizeHost(long *seed,bool tables);
+	void RandomizeSigma(long *seed,bool tables);
 	double getZlens();
 	void setZlens(double zlens);
 	void setRedshift(double zsource);
