@@ -168,7 +168,7 @@ double ForceTreeNFW::gfunction(double x){
 double ForceTreeNFW::ffunction(double x){
 	double ans;
 
-	if(x==1.0){ return 1.0;}
+	if(x==1.0){ return 0.0;}
 	if(x>1.0){  ans = (1-2*atan(sqrt((x-1)/(x+1)))/sqrt(x*x-1))/(x*x-1); return ans;}
 	if(x<1.0){  ans = (1-2*atanh(sqrt((1-x)/(x+1)))/sqrt(1-x*x))/(x*x-1); return ans;}
 	return 0.0;

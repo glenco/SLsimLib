@@ -64,7 +64,7 @@ void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
 			xx[0] = i_points[i].image->x[0]/(1+redshift[j]);
 			xx[1] = i_points[i].image->x[1]/(1+redshift[j]);
 
-			if(j == flag_analens && j > 0){
+			if(flag_analens && j == (flag_analens % Nplanes)){
 				analens->rayshooterInternal(&xx[0],&alpha[0],&gamma[0],&kappa,kappa_off);
 				cc = dDl[j+1];
 			}
@@ -79,9 +79,9 @@ void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
 				gamma[0]/=(1+redshift[j]);
 				gamma[1]/=(1+redshift[j]);
 				gamma[2]/=(1+redshift[j]);
-			    // alpha[0] = alpha[1] = 0.0;
-			    // gamma[0] = gamma[1] = gamma[2] = 0.0;
-			   //  kappa = 0.0;
+				//alpha[0] = alpha[1] = 0.0;
+				//gamma[0] = gamma[1] = gamma[2] = 0.0;
+				//kappa = 0.0;
 			}
 
 			aa = (dDl[j+1]+dDl[j])/dDl[j];
