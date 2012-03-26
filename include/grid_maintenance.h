@@ -33,8 +33,12 @@ typedef struct Grid{
 	/// tree on source plane
 	TreeHndl s_tree;
 
+	/// return initial number of grid points in each direction
 	int getNgrid(){return Ngrid;}
+	/// return number of cells in each dimension into which each cell is divided when a refinement is made
 	int getNgrid_block(){return Ngrid_block;}
+	/// return initial range of gridded region
+	double getInitRange(){return i_tree->top->boundary_p2[0] - i_tree->top->boundary_p1[0];}
 
 private:
 	/// one dimensional size of grid

@@ -130,7 +130,7 @@ void find_images_kist(
 				if(verbose)	printf("      time in image_finder %f sec\n        Nimagepoints=%li\n"
 						,difftime(t2,t1),*Nimagepoints);
 
-			}while(refine_grid_kist(lens,grid,imageinfo,*Nimages,rtemp*mumin/Ngrid_block,2,kappa_off,true,dummy_pnt));
+			}while(refine_grid_kist(lens,grid,imageinfo,*Nimages,rtemp*mumin/Ngrid_block,2,kappa_off,NULL));
 
 
 			time(&t1);
@@ -184,7 +184,7 @@ void find_images_kist(
 			for(j=0;j<*Nimages;++j) printf("       %i        %li         %e\n",j,imageinfo[j].imagekist->Nunits(),imageinfo[j].area_error);
 		}
 		++i;
-	}while( refine_grid_kist(lens,grid,imageinfo,*Nimages,FracResTarget,flag,kappa_off,true,dummy_pnt)
+	}while( refine_grid_kist(lens,grid,imageinfo,*Nimages,FracResTarget,flag,kappa_off,NULL)
 			|| moved );
 
 	// remove images with no points in them
@@ -213,7 +213,7 @@ void find_images_kist(
 			moved=image_finder_kist(lens,y_source,fabs(r_source),grid
 					,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
 			++i;
-		}while( refine_grid_kist(lens,grid,imageinfo,*Nimages,FracResTarget,0,kappa_off,true,dummy_pnt)
+		}while( refine_grid_kist(lens,grid,imageinfo,*Nimages,FracResTarget,0,kappa_off,NULL)
 				|| moved );
 
 	}else if(edge_refinement==1){
@@ -492,10 +492,6 @@ short image_finder_kist(LensHndl lens, double *y_source,double r_source,GridHndl
  * Same as refine_grid with additions
  *     - uses imageinfo->imagekist instead of imageinfo->points[]
  *     - can export rayshooting
- *         when shootrays == false no rayshooting is done and points_pnt is the array
- *             of point that are being added, if there are more than one image this
- *             will be a pointer only to the new points in the first image.  Source
- *             points are NOT added to s_tree.
  *
  *     - Does not affect imageinfo->points in any way
  *     - Allows for refinements to be done on the borders of the initial grid region
@@ -515,12 +511,12 @@ int refine_grid_kist(
 	,unsigned long Nimages
 	,double res_target
 	,short criterion
-	,bool kappa_off
-	,bool shootrays
-	,Point **point_pnt
+	,bool kappa_off          /// true = no kappa, gamma and dt are calculated
+	,KistHndl newpointskist  /// returns a Kist of the points that were added to the grid on this pass, if == NULL will not be added
 	){
 
 
+	newpointskist->Empty();
 	//printf("entering refine_grid\n");
 
   if(Nimages < 1) return 0;
@@ -528,9 +524,9 @@ int refine_grid_kist(
   TreeHndl i_tree = grid->i_tree,s_tree = grid->s_tree;
   int Ngrid_block = grid->getNgrid_block();
 
-  int i,j,number_of_refined,count,kk;
+  int i,j,k,number_of_refined,count;
   double rmax,total_area;
-  Point *s_points,*point;
+  Point *point;
   short pass=0;
   long Ncells=0,Ncells_o=0;
   Point *i_points;
@@ -617,6 +613,7 @@ int refine_grid_kist(
 				  ++count;
 
 				  i_points = RefineLeaf(lens,i_tree,s_tree,getCurrentKist(imageinfo[i].imagekist),Ngrid_block,kappa_off);
+				  if(newpointskist) for(k=0;k< Ngrid_block*Ngrid_block; ++k) newpointskist->InsertAfterCurrent(&i_points[k]);
 
 				  //xygridpoints(&i_points[Nmarker],point->gridsize*(Ngrid_block-1)/Ngrid_block,point->x,Ngrid_block,1);
 
@@ -665,6 +662,8 @@ int refine_grid_kist(
 					  ++count;
 
 					  i_points = RefineLeaf(lens,i_tree,s_tree,point,Ngrid_block,kappa_off);
+					  if(newpointskist) for(k=0;k< Ngrid_block*Ngrid_block; ++k) newpointskist->InsertAfterCurrent(&i_points[k]);
+
 
 					  //xygridpoints(&i_points[Nmarker],point->gridsize*(Ngrid_block-1)/Ngrid_block,point->x,Ngrid_block,1);
 

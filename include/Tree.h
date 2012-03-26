@@ -290,7 +290,7 @@ short image_finder_kist(LensHndl lens, double *y_source,double r_source,GridHndl
 		,short splitparities,short true_images);
 
 int refine_grid_kist(LensHndl lens,GridHndl grid,ImageInfo *imageinfo
-		,unsigned long Nimages,double res_target,short criterion,bool kappa_off,bool shootrays,Point **i_points);
+		,unsigned long Nimages,double res_target,short criterion,bool kappa_off,KistHndl newpointkist);
 
 void findborders4(TreeHndl i_tree,ImageInfo *imageinfo);
 
