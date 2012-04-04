@@ -17,8 +17,30 @@
 const int Nmassbin=32;
 const double MaxLogm=16.;
 
-class HaloM;  // forward declaration
-typedef HaloM *haloMHndl;
+/// structure to hold information about the halos' positions, masses, etc.
+struct HaloStructure{
+	/// internal halo parameters
+    float mass,Rmax,rscale;
+};
+
+/// Class that holds all the information about the halos' positions and their internal parameters.
+class HaloM{
+public:
+	/// halo positions
+	PosType **pos;
+	/// halo structure with internal halo parameters such as mass, size, etc.
+	HaloStructure *halos;
+	/// number of halos in the halo model on the plane
+	IndexType Nhalos;
+
+	HaloM(int jplane,double zsource,CosmoHndl cosmo,int Nplanes,double fov, int mfty, double min_mass,double* redshift, long* seed);
+	~HaloM();
+private:
+	/// variables for internal calculations
+	std:: vector<double> Logm,Nhalosbin;
+};
+
+typedef HaloM *HaloMHndl;
 
 /// A class to represents a lens with multiple planes.
 class MultiLens : public Lens{
@@ -30,7 +52,7 @@ public:
 	/// charge for the tree force solver (4*pi*G*mass_scale)
 	double charge;
 	/// an array of pointers to the halo models on each plane
-	haloMHndl *haloModel;
+	HaloMHndl *haloModel;
 	/// an array of pointers to halo trees on each plane, uses the haloModel in the construction
 	ForceTreeHndl *halo_tree;
 	/// a poiner to the analytical lens
@@ -51,6 +73,7 @@ public:
 	/// internal profile type, 0=Gauss,1=powerlaw,2=nfw,3=pseudoNfw
 	int internal_profile;
 
+	long seed;
 
 	MultiLens(string);
 	~MultiLens();
@@ -66,29 +89,6 @@ public:
 
 	void setInternalParams(CosmoHndl,double zsource);
 	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off);
-};
-
-/// structure to hold information about the halos' positions, masses, etc.
-struct HaloStructure{
-	/// internal halo parameters
-    float mass,Rmax,rscale;
-};
-
-/// Class that holds all the information about the halos' positions and their internal parameters.
-class HaloM{
-public:
-	/// halo positions
-	PosType **pos;
-	/// halo structure with internal halo parameters such as mass, size, etc.
-	HaloStructure *halos;
-	/// number of halos in the halo model on the plane
-	IndexType Nhalos;
-
-	HaloM(int jplane,double zsource,CosmoHndl cosmo,MultiLens* lens);
-	~HaloM();
-private:
-	/// variables for internal calculations
-	std:: vector<double> Logm,Nhalosbin;
 };
 
 void swap(float *a,float *b);

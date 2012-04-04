@@ -7,7 +7,7 @@
 
 #include <slsimlib.h>
 
-#define NMAXCRITS 100
+#define NMAXCRITS 1000
 
 /** \ingroup ImageFinding
   *
@@ -127,6 +127,8 @@ ImageInfo *find_crit(
      //std::printf("  Npoints=%i\n",critcurve->Npoints);
 	refinements=refine_grid(lens,grid->i_tree,grid->s_tree,critcurve,1,resolution,2,false);
     if(verbose) std::printf("find_crit, came out of refine_grid\n");
+
+    if(verbose) cout << "Npoints " << critcurve[0].Npoints << endl;
 
      if(refinements==0){
       break;

@@ -49,8 +49,11 @@ void Model::RandomizeModel(double r_source_phys,long *seed,bool tables){
 		file.close();
 
 		// choose random set of redshifts
-		double zlens = RandomFromTable(zlTable,NzTable,seed);
-		double zsource = RandomFromTable(zsTable,NzTable,seed);
+		double zlens, zsource;
+		do{
+			zlens = RandomFromTable(zlTable,NzTable,seed);
+			zsource = RandomFromTable(zsTable,NzTable,seed);
+		}while(zsource < zlens);
 
 		delete[] zsTable;
 		delete[] zlTable;

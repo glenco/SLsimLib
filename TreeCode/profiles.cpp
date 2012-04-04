@@ -168,7 +168,7 @@ double ForceTreeNFW::gfunction(double x){
 double ForceTreeNFW::ffunction(double x){
 	double ans;
 
-	if(x==1.0){ return 0.0;}
+	if(x==1.0){ return 1.0;}
 	if(x>1.0){  ans = (1-2*atan(sqrt((x-1)/(x+1)))/sqrt(x*x-1))/(x*x-1); return ans;}
 	if(x<1.0){  ans = (1-2*atanh(sqrt((1-x)/(x+1)))/sqrt(1-x*x))/(x*x-1); return ans;}
 	return 0.0;
@@ -228,5 +228,5 @@ double ForceTreePseudoNFW::phi_h(double r2,HaloStructure &par){
 }
 
 double ForceTreePseudoNFW::mhat(double y){
-	return (1 + ( 1 + (beta-1)*y)/pow(y+1,beta-1)  )/(beta-2)/(beta-1);
+	return (1 + (beta-1)*y)/pow(y+1,beta-1)/(beta-2)/(beta-1);
 }
