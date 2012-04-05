@@ -33,7 +33,7 @@ public:
 	/// number of halos in the halo model on the plane
 	IndexType Nhalos;
 
-	HaloM(int jplane,double zsource,CosmoHndl cosmo,int Nplanes,double fov, int mfty, double min_mass,double* redshift, long* seed);
+	HaloM(CosmoHndl cosmo,double *dz,double fov, int mfty, double min_mass,long* seed);
 	~HaloM();
 private:
 	/// variables for internal calculations

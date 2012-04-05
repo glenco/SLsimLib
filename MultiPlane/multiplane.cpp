@@ -9,14 +9,11 @@
 #include <sstream>
 #include <utilities.h>
 
-HaloM::HaloM(int jplane /// the index of the plane that holds the halos
-		,double zsource  /// source redshift
-		,CosmoHndl cosmo     /// cosmology
-		,int Nplanes
+HaloM::HaloM(CosmoHndl cosmo     /// cosmology
+		,double *dz
 		,double fov
 		,int mfty
 		,double min_mass
-		,double* redshift
 		,long* seed
 		){
 
@@ -36,12 +33,7 @@ HaloM::HaloM(int jplane /// the index of the plane that holds the halos
 	float Nhaloestotf;
 
 	double z1, z2;
-
-	if(jplane == 0) z1 = 0.01;
-	else z1 = redshift[jplane] - 0.5*(redshift[jplane] - redshift[jplane-1]);
-
-	if(jplane == Nplanes-2) z2 = zsource;
-	else z2 = redshift[jplane] + 0.5*(redshift[jplane+1] - redshift[jplane]);
+	z1=dz[0]; z2=dz[1];
 
 	Nhalosbin[0]=cosmo->haloNumberDensityOnSky(pow(10,Logm[0])/cosmo->gethubble(),z1,z2,mfty)*fov;
 	Nhaloestot = Nhalosbin[0];
@@ -62,8 +54,8 @@ HaloM::HaloM(int jplane /// the index of the plane that holds the halos
 		double ni = ran2 (seed);
 		// compute the mass inverting the cumulative distribution
 		double logmi = getY(Nhalosbin,Logm,ni);
-		if(logmi > 11)
-			continue;
+		//if(logmi > 11)
+			//continue;
 		double mi = pow(10.,logmi);
 		vmasses.push_back(mi);
 		vindex.push_back(iterator);
@@ -97,9 +89,9 @@ HaloM::HaloM(int jplane /// the index of the plane that holds the halos
 		halos[i].rscale = vsizes[i]/vscale[i]; // get the Rscale=Rmax/c
 	}
 
-
+/*
 	stringstream f;
-	f << "halos_" << jplane << ".data";
+	f << "halos_" << z1 << ".data";
 	string filename = f.str();
 	ofstream file_area(filename.c_str());
 	if(!file_area){
@@ -115,7 +107,7 @@ HaloM::HaloM(int jplane /// the index of the plane that holds the halos
 		//cout << i << " " << vz[i] << " " << halos[i].mass << " " << halos[i].Rmax << " " << halos[i].rscale << endl;
 	}
 	file_area.close();
-
+*/
 
 }
 
@@ -312,14 +304,24 @@ void MultiLens::buildHaloTree(CosmoHndl cosmo /// the cosmology
 		,double zsource /// the source resdhift
 		){
 	int j, Ntot;
+	double dz[2];
+	dz[0]=dz[1]=0.0;
 
 	for(j=0,Ntot=0;j<Nplanes-1;j++){
 		if(flag_analens && j == (flag_analens % Nplanes))
 			continue;
 
+		if(j == 0) dz[0] = 0.01;
+		else dz[0] = redshift[j] - 0.5*(redshift[j] - redshift[j-1]);
+		if(j-1 == (flag_analens % Nplanes)) dz[0] -= 0.5*(redshift[j] - redshift[j-1]);
+
+		if(j == Nplanes-2) dz[1] = zsource;
+		else dz[1] = redshift[j] + 0.5*(redshift[j+1] - redshift[j]);
+		if(j-1 == (flag_analens % Nplanes)) dz[1] += 0.5*(redshift[j+1] - redshift[j]);
+
 		seed += 1;
 
-		haloModel[j] = new HaloM(j,zsource,cosmo,Nplanes,fieldofview,mass_func_type,min_mass,redshift,&seed);
+		haloModel[j] = new HaloM(cosmo,dz,fieldofview,mass_func_type,min_mass,&seed);
 
 		switch(internal_profile){
 		case 1:
@@ -443,10 +445,6 @@ double MultiLens::getZlens(){
 void MultiLens::setZlens(double z){
 	if(flag_analens)
 		analens->zlens = z;
-	else{
-		cout << "ERROR in setZlens() -- there is no analytic lens!" << endl;
-		exit(1);
-	}
 }
 
 void MultiLens::setInternalParams(CosmoHndl cosmo, double zsource){
