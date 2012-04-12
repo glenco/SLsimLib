@@ -401,7 +401,7 @@ void MultiLens::buildHaloTrees(
 			/// Use other constructor to create halo data
 			halodata[j] = new HaloData(&halos[j1],&halo_pos[j1],j2-j1);
 
-			for(int i = 0; i<10 ;++i) cout << "Rmax:" << halos[j1+i].Rmax << "mass:" << halos[j1+i].mass << "rscale:" << halos[j1+i].rscale << "x = " << halo_pos[j1+i][0] << " " << halo_pos[j1+i][1] << endl;
+			//for(int i = 0; i<10 ;++i) cout << "Rmax:" << halos[j1+i].Rmax << "mass:" << halos[j1+i].mass << "rscale:" << halos[j1+i].rscale << "x = " << halo_pos[j1+i][0] << " " << halo_pos[j1+i][1] << endl;
 
 			Ntot += halodata[j]->Nhalos;
 		}
@@ -429,9 +429,6 @@ void MultiLens::buildHaloTrees(
 			halo_tree[j] = new ForceTreeGauss(&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos);
 			break;
 		}
-
-		halo_tree[j]->force2D(x,alph,&kappa,gamma);
-		assert(!isnan(alph[0]));
 	}
 
 	/*
