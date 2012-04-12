@@ -17,55 +17,75 @@
 const int Nmassbin=32;
 const double MaxLogm=16.;
 
-class HaloM;  // forward declaration
-typedef HaloM *haloMHndl;
+class HaloData;  // forward declaration
+typedef HaloData *HaloDataHndl;
 
 /// A class to represents a lens with multiple planes.
 class MultiLens : public Lens{
 public:
-	/// Redshifts of lens planes, 0...Nplanes.  Last one is the source redshift.
-	double *redshift;
-	/// angular diameter distances
-	double *Dl, *dDl;
-	/// charge for the tree force solver (4*pi*G*mass_scale)
-	double charge;
-	/// an array of pointers to the halo models on each plane
-	haloMHndl *haloModel;
-	/// an array of pointers to halo trees on each plane, uses the haloModel in the construction
-	ForceTreeHndl *halo_tree;
-	/// a poiner to the analytical lens
-	AnaLens *analens;
 
-	/* the following parameters are read in from the parameter file */
-
-	/// field of view in square degrees
-	double fieldofview;
-	/// type of mass function PS (0) and ST (1) default is ST
-	int mass_func_type;
-	/// mass scale
-	double mass_scale;
-	/// min mass for the halo model
-	double min_mass;
-	/// if = 1 there is an analytical lens, if = 0 there is no analytic lens
-	int flag_analens;
-	/// internal profile type, 0=Gauss,1=powerlaw,2=nfw,3=pseudoNfw
-	int internal_profile;
-
-
-	MultiLens(string);
+	MultiLens(string,long *);
 	~MultiLens();
 
-	void buildHaloTree(CosmoHndl cosmo,double zsource);
+	void buildHaloTrees(CosmoHndl cosmo,double zsource);
 	void RandomizeHost(long *seed,bool tables);
 	void RandomizeSigma(long *seed,bool tables);
 	double getZlens();
 	void setZlens(double zlens);
 	void setRedshift(double zsource);
 	void printMultiLens();
-	void readParamfile(string);
 
 	void setInternalParams(CosmoHndl,double zsource);
 	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off);
+
+	/// a poiner to the analytical lens
+	AnaLens *analens;
+	/// field of view in square degrees
+	double fieldofview;
+	/// if = 1 there is an analytical lens, if = 0 there is no analytic lens
+	int flag_analens;
+
+private:
+
+	void readParamfile(string);
+	/// Redshifts of lens planes, 0...Nplanes.  Last one is the source redshift.
+	double *plane_redshifts;
+	/// angular diameter distances
+	double *Dl, *dDl;
+	/// charge for the tree force solver (4*pi*G*mass_scale)
+	double charge;
+	/// an array of pointers to the halo models on each plane
+	HaloDataHndl *halodata;
+	/// an array of pointers to halo trees on each plane, uses the haloModel in the construction
+	ForceTreeHndl *halo_tree;
+
+	/* the following parameters are read in from the parameter file */
+
+	/// type of mass function PS (0) and ST (1) default is ST
+	int mass_func_type;
+	/// mass scale
+	double mass_scale;
+	/// min mass for the halo model
+	double min_mass;
+	/// internal profile type, 0=Gauss,1=powerlaw,2=nfw,3=pseudoNfw
+	int internal_profile;
+
+	/// read particle/halo data in from a file
+	void readInputSimFile(CosmoHndl cosmo);
+
+	string input_sim_file;
+	bool sim_input_flag;
+
+	/// pointer to first of all the halo internal structures
+	HaloStructure *halos;
+	/// number of halos on all the planes
+	IndexType Nhalos;
+	double *halo_zs;
+	double **halo_pos;
+
+	long *seed;
+
+	void quicksort(HaloStructure *halos,double **brr,double *arr,unsigned long N);
 };
 
 /// structure to hold information about the halos' positions, masses, etc.
@@ -74,8 +94,8 @@ struct HaloStructure{
     float mass,Rmax,rscale;
 };
 
-/// Class that holds all the information about the halos' positions and their internal parameters.
-class HaloM{
+/// Class that holds all the information about the halos' positions and their internal parameters on one plane.
+class HaloData{
 public:
 	/// halo positions
 	PosType **pos;
@@ -84,11 +104,17 @@ public:
 	/// number of halos in the halo model on the plane
 	IndexType Nhalos;
 
-	HaloM(int jplane,double zsource,CosmoHndl cosmo,MultiLens* lens);
-	~HaloM();
+	//HaloData(int jplane,double zsource,CosmoHndl cosmo,MultiLens* lens);
+	HaloData(double fov,double min_mass,double z1,double z2,int mass_func_type,CosmoHndl cosmo,long *seed);
+	HaloData(HaloStructure *halostrucs,double **positions,unsigned long Nhaloss);
+	~HaloData();
+
+
 private:
 	/// variables for internal calculations
 	std:: vector<double> Logm,Nhalosbin;
+	/// flag which is set to indicate which constructor is used and thus how the the destructor should work.
+	bool allocation_flag;
 };
 
 void swap(float *a,float *b);

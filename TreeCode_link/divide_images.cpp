@@ -201,7 +201,7 @@ void divide_images_kist(
 	}
 
 	// mark points in tree as in image and transfer points to temporary temporary new_imagekist
-	assert(imageinfo->imagekist->top->data);
+
 	MoveToTopKist(imageinfo->imagekist);
 	Ntest = imageinfo->imagekist->Nunits();
 	while(imageinfo->imagekist->Nunits() > 0){

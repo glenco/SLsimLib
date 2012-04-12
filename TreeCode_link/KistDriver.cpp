@@ -521,7 +521,7 @@ Point *NearestNeighborKist(TreeHndl tree,double *ray,int Nneighbors,KistHndl nei
 		MoveDownList(neighborlist);
 	}
 
-	assert(neighborlist->Npoints == neighborkist->Nunits()());
+	assert(neighborlist->Npoints == neighborkist->Nunits());
 
 	EmptyList(neighborlist);
 	free(neighborlist);

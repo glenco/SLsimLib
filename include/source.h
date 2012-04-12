@@ -14,10 +14,6 @@ public:
 	  typedef enum {Uniform,Gaussian,BLR_Disk,BLR_Sph1,BLR_Sph2} SBModel;
 
 	  // source parameters
-	  /// lag time
-	  double source_tau;
-	  /// frequency
-	  double source_nu;
 	  /// total source size, ie no flux outside this radius
 	  double source_r;
 	  /// center of source
@@ -74,6 +70,10 @@ public:
 
 class SourceBLR : public Source{
 public:
+	  /// lag time
+	  double source_tau;
+	  /// frequency
+	  double source_nu;
 	  float source_nuo;
 	  /// inner radius of BLR
 	  float source_r_in;

@@ -31,6 +31,7 @@
 
 void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off){
 	unsigned long i;
+	double xx[2];
 
 	for(i = 0; i< Npoints; i++){
 
@@ -60,9 +61,8 @@ void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
 		for(int j = 0; j < Nplanes-1 ; j++){  // each iteration leaves i_point[i].image on plane (j+1)
 
 			// convert to physical coorditanes on the plane j
-			double xx[2];
-			xx[0] = i_points[i].image->x[0]/(1+redshift[j]);
-			xx[1] = i_points[i].image->x[1]/(1+redshift[j]);
+			xx[0] = i_points[i].image->x[0]/(1+plane_redshifts[j]);
+			xx[1] = i_points[i].image->x[1]/(1+plane_redshifts[j]);
 
 			if(flag_analens && j == (flag_analens % Nplanes)){
 				analens->rayshooterInternal(&xx[0],&alpha[0],&gamma[0],&kappa,kappa_off);
@@ -75,10 +75,10 @@ void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
 				/* multiply by the scale factor to obtain 1/comoving_distance/physical_distance
 				 * such that a multiplication with the charge (in units of physical distance)
 				 * will result in a 1/comoving_distance quantity */
-				kappa/=(1+redshift[j]);
-				gamma[0]/=(1+redshift[j]);
-				gamma[1]/=(1+redshift[j]);
-				gamma[2]/=(1+redshift[j]);
+				kappa/=(1+plane_redshifts[j]);
+				gamma[0]/=(1+plane_redshifts[j]);
+				gamma[1]/=(1+plane_redshifts[j]);
+				gamma[2]/=(1+plane_redshifts[j]);
 				//alpha[0] = alpha[1] = 0.0;
 				//gamma[0] = gamma[1] = gamma[2] = 0.0;
 				//kappa = 0.0;
@@ -151,12 +151,6 @@ void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
 		  	    - i_points[i].gamma[1]*i_points[i].gamma[1]
 		  	    - i_points[i].gamma[2]*i_points[i].gamma[2];
 
-		/*if(i<10){
-			cout << i_points[i].x[0]*analens->Dl  << " " << i_points[i].x[1]*analens->Dl  << " ";
-			cout << i_points[i].image->x[0]*analens->Dl   << " " << i_points[i].image->x[1]*analens->Dl   << " ";
-			cout << i_points[i].invmag << " " << i_points[i].kappa << " ";
-			cout << i_points[i].gamma[0] << " " << i_points[i].gamma[1] << " " << i_points[i].gamma[2] << endl;
-			}*/
     }
 
     return;

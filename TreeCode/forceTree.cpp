@@ -374,6 +374,13 @@ ForceTreeNFW::ForceTreeNFW(
 		) :
 		ForceTree(xp,Npoints,NULL,NULL,false,Multisize,bucket,dimension,median,theta)
 {
+	for(unsigned long i=0;i<Npoints;++i){
+		if(h_params[i].Rmax <= 0.0 || h_params[i].rscale <= 0.0){
+			ERROR_MESSAGE();
+			cout << "Illegal values for halo internal valuables." << endl;
+			exit(1);
+		}
+	}
 
 	haloON = true;
 	halo_params = h_params;
@@ -420,6 +427,14 @@ ForceTreePseudoNFW::ForceTreePseudoNFW(
 		ForceTree(xp,Npoints,NULL,NULL,false,Multisize,bucket,dimension,median,theta), beta(beta)
 {
 
+	// Check for values that would make the rayshooter return nan.
+	for(unsigned long i=0;i<Npoints;++i){
+		if(h_params[i].Rmax <= 0.0 || h_params[i].rscale <= 0.0){
+			ERROR_MESSAGE();
+			cout << "Illegal values for halo internal valuables." << endl;
+			exit(1);
+		}
+	}
 	haloON = true;
 	halo_params = h_params;
 

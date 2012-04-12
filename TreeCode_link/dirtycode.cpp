@@ -51,7 +51,6 @@ void _DirtyFoF(KistHndl neighbors,KistHndl wholekist,double linkinglength){
 	double ll2 = linkinglength*linkinglength;
 	bool check = false;
 
-	assert(neighbors->current);
 	assert(neighbors->Nunits() == 1);
 	do{
 		MoveToTopKist(wholekist);
@@ -60,8 +59,6 @@ void _DirtyFoF(KistHndl neighbors,KistHndl wholekist,double linkinglength){
 				MoveUpKist(wholekist);
 				check=false;
 			}
-			assert(neighbors->current);
-			assert(wholekist->current);
 			if(linkinglength <= 0) ll2 = 2.01*pow(getCurrentKist(neighbors)->gridsize + getCurrentKist(wholekist)->gridsize,2);
 			if( ll2 > pow(getCurrentKist(neighbors)->x[0] - getCurrentKist(wholekist)->x[0],2)
 					+ pow(getCurrentKist(neighbors)->x[1] - getCurrentKist(wholekist)->x[1],2)   ){

@@ -613,7 +613,7 @@ int refine_grid_kist(
 				  ++count;
 
 				  i_points = RefineLeaf(lens,i_tree,s_tree,getCurrentKist(imageinfo[i].imagekist),Ngrid_block,kappa_off);
-				  if(newpointskist) for(k=0;k< Ngrid_block*Ngrid_block; ++k) newpointskist->InsertAfterCurrent(&i_points[k]);
+				  if(newpointskist) for(k=0; k < i_points->head ; ++k) newpointskist->InsertAfterCurrent(&i_points[k]);
 
 				  //xygridpoints(&i_points[Nmarker],point->gridsize*(Ngrid_block-1)/Ngrid_block,point->x,Ngrid_block,1);
 
@@ -662,8 +662,7 @@ int refine_grid_kist(
 					  ++count;
 
 					  i_points = RefineLeaf(lens,i_tree,s_tree,point,Ngrid_block,kappa_off);
-					  if(newpointskist) for(k=0;k< Ngrid_block*Ngrid_block; ++k) newpointskist->InsertAfterCurrent(&i_points[k]);
-
+					  if(newpointskist) for(k=0;k < i_points->head; ++k) newpointskist->InsertAfterCurrent(&i_points[k]);
 
 					  //xygridpoints(&i_points[Nmarker],point->gridsize*(Ngrid_block-1)/Ngrid_block,point->x,Ngrid_block,1);
 

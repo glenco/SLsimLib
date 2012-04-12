@@ -15,7 +15,7 @@
 #define _SLSIMLIB_DECLARE_
 
 //#define _OPENMP
-#define NDEBUG  // Un-commenting this line will remove all assert() statements in the executable.
+//#define NDEBUG  // Un-commenting this line will remove all assert() statements in the executable.
 
 #include <iostream>
 //#include <cstdio>

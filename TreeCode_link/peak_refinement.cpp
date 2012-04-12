@@ -79,7 +79,7 @@ short find_peaks(
 				imageinfo->imagekist->Down();
 			}
 		}
-		assert(imageinfo->imagekist->Nunits <= Ntemp);
+		assert(imageinfo->imagekist->Nunits() <= Ntemp);
 
 		//printf("restarget = %e gridrange[2] = %e  gridrange[1] = %e\n",res_target,imageinfo->gridrange[2],imageinfo->gridrange[1]);
 
@@ -91,14 +91,14 @@ short find_peaks(
 		Nnewpoints = refine_grid_kist(lens,grid,imageinfo,1,res_target,2,true,newpointskist);
 
 
-		while(Nnewpoints > 0){
+		while(newpointskist->Nunits() > 0){
 
 			// add new points that are above the threshold to image
-			newpointskist->MoveToTop();
-			do{
+
+			while(newpointskist->Nunits() > 0){
 				if(newpointskist->getCurrent()->kappa > threshold){
 
-					InsertAfterCurrentKist(imageinfo->imagekist,newpointskist->getCurrent());
+					InsertAfterCurrentKist(imageinfo->imagekist,newpointskist->TakeOutCurrent());
 					imageinfo->imagekist->Down();
 					imageinfo->imagekist->getCurrent()->in_image = TRUE;
 
@@ -108,9 +108,9 @@ short find_peaks(
 						imageinfo->gridrange[2] = imageinfo->imagekist->getCurrent()->gridsize;
 
 				}else{
-					newpointskist->getCurrent()->in_image = FALSE;
+					newpointskist->TakeOutCurrent()->in_image = FALSE;
 				}
-			}while(newpointskist->Down());
+			}
 
 			// find borders
 			findborders4(grid->i_tree,imageinfo);

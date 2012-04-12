@@ -186,7 +186,7 @@ private:
  * halos with a double power-law mass profile.
  *
  * Derived from the ForceTree class.  The "particles" are replaced with spherical halos
- * with \f$ \Sigma \propto 1/(1 + (r/rscale) )^\beta \f$ so beta would usually be positive.
+ * with \f$ \Sigma \propto 1/(1 + r/r_s )^\beta \f$ so beta would usually be positive.
  *
  * An NFW profile is approximated beta = 2 .
  */
