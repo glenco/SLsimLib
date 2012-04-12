@@ -17,7 +17,36 @@
 const int Nmassbin=32;
 const double MaxLogm=16.;
 
-class HaloData;  // forward declaration
+
+/// structure to hold information about the halos' positions, masses, etc.
+struct HaloStructure{
+	/// internal halo parameters
+    float mass,Rmax,rscale;
+};
+
+/// Class that holds all the information about the halos' positions and their internal parameters on one plane.
+class HaloData{
+public:
+	/// halo positions
+	PosType **pos;
+	/// halo structure with internal halo parameters such as mass, size, etc.
+	HaloStructure *halos;
+	/// number of halos in the halo model on the plane
+	IndexType Nhalos;
+
+	//HaloData(int jplane,double zsource,CosmoHndl cosmo,MultiLens* lens);
+	HaloData(double fov,double min_mass,double z1,double z2,int mass_func_type,CosmoHndl cosmo,long *seed);
+	HaloData(HaloStructure *halostrucs,double **positions,unsigned long Nhaloss);
+	~HaloData();
+
+
+private:
+	/// variables for internal calculations
+	std:: vector<double> Logm,Nhalosbin;
+	/// flag which is set to indicate which constructor is used and thus how the the destructor should work.
+	bool allocation_flag;
+};
+
 typedef HaloData *HaloDataHndl;
 
 /// A class to represents a lens with multiple planes.
@@ -56,7 +85,8 @@ private:
 	double charge;
 	/// an array of pointers to the halo models on each plane
 	HaloDataHndl *halodata;
-	/// an array of pointers to halo trees on each plane, uses the haloModel in the construction
+
+/// an array of pointers to halo trees on each plane, uses the haloModel in the construction
 	ForceTreeHndl *halo_tree;
 
 	/* the following parameters are read in from the parameter file */
@@ -88,34 +118,6 @@ private:
 	void quicksort(HaloStructure *halos,double **brr,double *arr,unsigned long N);
 };
 
-/// structure to hold information about the halos' positions, masses, etc.
-struct HaloStructure{
-	/// internal halo parameters
-    float mass,Rmax,rscale;
-};
-
-/// Class that holds all the information about the halos' positions and their internal parameters on one plane.
-class HaloData{
-public:
-	/// halo positions
-	PosType **pos;
-	/// halo structure with internal halo parameters such as mass, size, etc.
-	HaloStructure *halos;
-	/// number of halos in the halo model on the plane
-	IndexType Nhalos;
-
-	//HaloData(int jplane,double zsource,CosmoHndl cosmo,MultiLens* lens);
-	HaloData(double fov,double min_mass,double z1,double z2,int mass_func_type,CosmoHndl cosmo,long *seed);
-	HaloData(HaloStructure *halostrucs,double **positions,unsigned long Nhaloss);
-	~HaloData();
-
-
-private:
-	/// variables for internal calculations
-	std:: vector<double> Logm,Nhalosbin;
-	/// flag which is set to indicate which constructor is used and thus how the the destructor should work.
-	bool allocation_flag;
-};
 
 void swap(float *a,float *b);
 void swap(PosType *a,PosType *b);

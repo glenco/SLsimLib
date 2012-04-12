@@ -515,7 +515,7 @@ int refine_grid_kist(
 	,KistHndl newpointskist  /// returns a Kist of the points that were added to the grid on this pass, if == NULL will not be added
 	){
 
-
+  if(newpointskist)
 	newpointskist->Empty();
 	//printf("entering refine_grid\n");
 

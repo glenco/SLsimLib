@@ -10,6 +10,7 @@
 #include <string>
 #include <utilities.h>
 
+
 HaloData::HaloData(HaloStructure *halostrucs,PosType **positions,unsigned long Nhaloss):
 	pos(positions), halos(halostrucs), Nhalos(Nhaloss)
 {
@@ -44,7 +45,7 @@ HaloData::HaloData(
     HALO ha(cosmo,min_mass,0.);
 
     int iterator;
-    std::vector<double> vmasses,vsizes,vscale;
+    std::vector<double> vmasses,vsizes,vscale,vz;
     std::vector<int> vindex;
 
     Logm.resize(Nmassbin);
@@ -52,33 +53,21 @@ HaloData::HaloData(
 
 	std:: vector<double> Dli;
 	/* fill the log(mass) vector */
-	//fill_linear(Logm,Nmassbin,lens->min_mass,MaxLogm);
-	fill_linear(Logm,Nmassbin,min_mass,MaxLogm);
 
-	//int Nplanes = lens->getNplanes();
+	fill_linear(Logm,Nmassbin,min_mass,MaxLogm);
 
 	double Nhaloestot;
 	float Nhaloestotf;
-/*
-	double z1, z2;
-
-	if(jplane == 0) z1 = 0.0;
-	else z1 = lens->redshift[jplane] - 0.5*(lens->redshift[jplane] - lens->redshift[jplane-1]);
-
-	if(jplane == Nplanes-2) z2 = zsource;
-	else z2 = lens->redshift[jplane] + 0.5*(lens->redshift[jplane+1] - lens->redshift[jplane]);
-*/
-
 	//Nhalosbin[0] = cosmo->haloNumberDensityOnSky(pow(10,Logm[0]),z1,z2,mfty)*fov;
-	Nhalosbin[0] = cosmo->haloNumberDensityOnSky(pow(10,Logm[0]),z1,z2,mass_func_type)*fov;
+	Nhalosbin[0] = cosmo->haloNumberDensityOnSky(pow(10,Logm[0])/cosmo->gethubble(),z1,z2,mass_func_type)*fov;
 
 	Nhaloestot = Nhalosbin[0];
+	Nhalosbin[0] = 1;
 	int k;
 
 	for(k=1;k<Nmassbin;k++){
 		// cumulative number density in one square degree
-		//Nhalosbin[k] = cosmo->haloNumberDensityOnSky(pow(10,Logm[k]),z1,z2,mfty)*fov;
-		Nhalosbin[k] = cosmo->haloNumberDensityOnSky(pow(10,Logm[k]),z1,z2,mass_func_type)*fov;
+		Nhalosbin[k] = cosmo->haloNumberDensityOnSky(pow(10,Logm[k])/cosmo->gethubble(),z1,z2,mass_func_type)*fov;
 		// normalize the cumulative distribution to one
 		Nhalosbin[k] = Nhalosbin[k]/Nhaloestot;
 	}
@@ -91,10 +80,13 @@ HaloData::HaloData(
 		double ni = ran2 (seed);
 		// compute the mass inverting the cumulative distribution
 		double logmi = getY(Nhalosbin,Logm,ni);
+		//if(logmi > 11)
+			//continue;
 		double mi = pow(10.,logmi);
 		vmasses.push_back(mi);
 		vindex.push_back(iterator);
 		double zi = z1+(z2-z1)*ran2 (seed);
+		vz.push_back(zi);
 		ha.reset(mi,zi);
 		double Rvir = ha.getRvir();
 		vsizes.push_back(Rvir);
@@ -103,6 +95,8 @@ HaloData::HaloData(
 		vscale.push_back(scale);
 		Dli.push_back(cosmo->angDist(0,zi));
 	}
+
+	Nhalos = vmasses.size();
 
 	halos = new HaloStructure[Nhalos];
 	pos = PosTypeMatrix(0,Nhalos-1,0,2);
@@ -122,9 +116,9 @@ HaloData::HaloData(
 		halos[i].rscale = vsizes[i]/vscale[i]; // get the Rscale=Rmax/c
 	}
 
-	/*
+/*
 	stringstream f;
-	f << "halos_" << jplane << ".data";
+	f << "halos_" << z1 << ".data";
 	string filename = f.str();
 	ofstream file_area(filename.c_str());
 	if(!file_area){
@@ -132,11 +126,15 @@ HaloData::HaloData(
 		exit(1);
 	}
 
+
 	for(int i = 0; i < Nhalos; i++){
-		file_area << i << " " << halos[i].mass << " " << halos[i].Rmax << " ";
-		file_area << pos[i][0] << " " << pos[i][1] << endl;
+		file_area << i << " " << halos[i].mass << " " << 3600*180/pi*halos[i].Rmax/Dli[i] << " " << 3600*180/pi*halos[i].rscale/Dli[i] << " ";
+		file_area << 3600*180/pi*pos[i][0]/Dli[i] << " " << 3600*180/pi*pos[i][1]/Dli[i] << endl;
+
+		//cout << i << " " << vz[i] << " " << halos[i].mass << " " << halos[i].Rmax << " " << halos[i].rscale << endl;
 	}
 	file_area.close();
+
 	*/
 }
 
@@ -163,6 +161,7 @@ MultiLens::MultiLens(string filename,long *my_seed) : Lens(){
 	charge = 4*pi*Grav*mass_scale;
 
 	halo_tree = new ForceTreeHndl[Nplanes-1];
+
 	halodata = new HaloDataHndl[Nplanes-1];
 
 	if(flag_analens){
@@ -309,6 +308,9 @@ void MultiLens::readParamfile(string filename){
 		  Nplanes++;
 
 	  printMultiLens();
+
+	  // convert to square degrees
+	  fieldofview /= 3600. * 3600.;
 }
 
 
@@ -330,20 +332,19 @@ void MultiLens::printMultiLens(){
 
 	cout << "internal profile type " << internal_profile << endl;
 	switch(internal_profile){
+	case 0:
+		cout << "  Gaussian internal profile " << endl;
+		break;
 	case 1:
-		cout << "     Power-law profile" << endl;
+		cout << "  Power law internal profile " << endl;
 		break;
 	case 2:
-		cout << "     NFW profile" << endl;
+		cout << "  NFW internal profile " << endl;
 		break;
 	case 3:
-		cout << "     Pseudo NFW profile" << endl;
-		break;
-	case 0:
-		cout << "     Gaussian profile" << endl;
+		cout << "  Pseudo NFW internal profile " << endl;
 		break;
 	}
-
 
 	cout << "mass function type " << mass_func_type << endl << endl;
 }
@@ -367,8 +368,10 @@ void MultiLens::buildHaloTrees(
 			// redshift range
 			if(j == 0) z1 = 0.0;
 			else z1 = plane_redshifts[j] - 0.5*(plane_redshifts[j] - plane_redshifts[j-1]);
+			if(j-1 == (flag_analens % Nplanes)) z1 -= 0.5*(plane_redshifts[j] - plane_redshifts[j-1]);
 			if(j == Nplanes-2) z2 = zsource;
 			else z2 = plane_redshifts[j] + 0.5*(plane_redshifts[j+1] - plane_redshifts[j]);
+			if(j-1 == (flag_analens % Nplanes)) z2 += 0.5*(plane_redshifts[j+1] - plane_redshifts[j]);
 
 			halodata[j] = new HaloData(fieldofview,min_mass,z1,z2,mass_func_type,cosmo,seed);
 
@@ -388,8 +391,10 @@ void MultiLens::buildHaloTrees(
 			// redshift range
 			if(j == 0) z1 = 0.0;
 			else z1 = plane_redshifts[j] - 0.5*(plane_redshifts[j] - plane_redshifts[j-1]);
+			if(j-1 == (flag_analens % Nplanes)) z1 -= 0.5*(plane_redshifts[j] - plane_redshifts[j-1]);
 			if(j == Nplanes-2) z2 = zsource;
 			else z2 = plane_redshifts[j] + 0.5*(plane_redshifts[j+1] - plane_redshifts[j]);
+			if(j-1 == (flag_analens % Nplanes)) z2 += 0.5*(plane_redshifts[j+1] - plane_redshifts[j]);
 
 			/// Find which halos are in redshift range
 
@@ -408,13 +413,10 @@ void MultiLens::buildHaloTrees(
 
 	}
 
-	double x[2],alph[2],kappa,gamma[3];
-	x[0]=x[1]=0.0;
-
 	for(j=0;j<Nplanes-1;j++){
 		if(flag_analens && j == (flag_analens % Nplanes))
 			continue;
-		assert(halodata[j]->Nhalos > 0);
+
 		switch(internal_profile){
 		case 1:
 			halo_tree[j] = new ForceTreePowerLaw(1.9,&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos);
@@ -515,12 +517,14 @@ void MultiLens::setRedshift(double zsource){
 		j++;
 	}
 
-	/*
+	if(flag_analens)
+		cout << "zlens " << analens->zlens << " on plane number " << (flag_analens % Nplanes) << endl;
+
 	cout << "z: ";
 	for(int i = 0; i < Nplanes; i++)
-		cout << redshift[i] << " ";
+		cout << plane_redshifts[i] << " ";
 	cout << endl;
-	*/
+
 }
 
 double MultiLens::getZlens(){
@@ -533,10 +537,6 @@ double MultiLens::getZlens(){
 void MultiLens::setZlens(double z){
 	if(flag_analens)
 		analens->zlens = z;
-	else{
-		cout << "ERROR in setZlens() -- there is no analytic lens!" << endl;
-		exit(1);
-	}
 }
 
 // sets the redshifts and distances for the lens planes
@@ -558,7 +558,6 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, double zsource){
 		dDl[j] = Dl[j] - Dl[j-1]; // distance between jth plane and the previous plane
 	}
 
-	/*
 	cout << "Dl: ";
 	for(j = 0; j < Nplanes; j++)
 		cout << Dl[j] << " ";
@@ -568,7 +567,6 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, double zsource){
 	for(j = 0; j < Nplanes; j++)
 		cout << dDl[j] << " ";
 	cout << endl << endl;
-	*/
 
 	buildHaloTrees(cosmo,zsource);
 

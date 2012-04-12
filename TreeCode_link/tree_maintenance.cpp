@@ -434,11 +434,11 @@ int AddPointsToTree(TreeHndl tree,Point *xpoint,unsigned long Nadd){
 
     	// add only that are inside original grid
     	if( inbox(xpoint[j].x,tree->top->boundary_p1,tree->top->boundary_p2) == 0 ){
-    		ERROR_MESSAGE();
+    		/*ERROR_MESSAGE();
     		std::printf("ERROR: in AddPointToTree, ray is not inside the simulation box x = %e %e Nadd=%li\n  not adding it to tree\n",
     				   xpoint[j].x[0],xpoint[j].x[1],Nadd);
     		std::printf("root of tree\n");
-       		printBranch(tree->top);
+       		printBranch(tree->top);*/
         		//exit(0);
     		//return 0;
     	}else{

@@ -65,11 +65,14 @@ void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
 			xx[1] = i_points[i].image->x[1]/(1+plane_redshifts[j]);
 
 			if(flag_analens && j == (flag_analens % Nplanes)){
-				analens->rayshooterInternal(&xx[0],&alpha[0],&gamma[0],&kappa,kappa_off);
+				analens->rayshooterInternal(xx,alpha,gamma,&kappa,kappa_off);
 				cc = dDl[j+1];
+				//alpha[0] = alpha[1] = 0.0;
+				//gamma[0] = gamma[1] = gamma[2] = 0.0;
+				//kappa = 0.0;
 			}
 			else{
-				halo_tree[j]->force2D(&xx[0],&alpha[0],&kappa,&gamma[0],kappa_off);
+				halo_tree[j]->force2D(xx,alpha,&kappa,gamma,kappa_off);
 				cc = charge*dDl[j+1];
 
 				/* multiply by the scale factor to obtain 1/comoving_distance/physical_distance
@@ -109,7 +112,7 @@ void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
 				else
 					bb = 0;
 
-				if(j == flag_analens && j > 0)
+				if(flag_analens && j == (flag_analens % Nplanes))
 					cc = dDl[j+1]*Dl[j]/Dl[j+1];
 				else
 					cc = charge*dDl[j+1]*Dl[j]/Dl[j+1];

@@ -32,7 +32,7 @@ Grid::Grid(
 	// Build trees
 	i_tree = BuildTree(i_points,Ngrid*Ngrid);
 	s_tree = BuildTree(s_points,Ngrid*Ngrid);
-	
+
 	trashkist = new Kist;
 }
 /*
