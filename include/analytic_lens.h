@@ -108,13 +108,13 @@ public:
   double *star_kappa;
   double **star_xdisk;
 
-  AnaLens(string);
+  AnaLens(std::string);
   ~AnaLens();
 
   double getZlens();
   void setZlens(double zlens);
   void setInternalParams(CosmoHndl,double);
-  void readParamfile(string);
+  void readParamfile(std::string);
   void PrintAnaLens(bool show_substruct,bool show_stars);
   void rayshooterInternal(double *ray, double *alpha, double *gamma, double *kappa, bool kappa_off);
 

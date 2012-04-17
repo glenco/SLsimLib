@@ -39,7 +39,7 @@ public:
 	  Source();
 	  ~Source();
 
-	  virtual void readParamfile(string) = 0;
+	  virtual void readParamfile(std::string) = 0;
 	  virtual void printSource() = 0;
 };
 
@@ -48,10 +48,10 @@ typedef Source *SourceHndl;
 class SourceUniform : public Source{
 public:
 	double source_sb_func(double *y);
-	void readParamfile(string);
+	void readParamfile(std::string);
 	void printSource();
 
-	SourceUniform(string);
+	SourceUniform(std::string);
 	~SourceUniform();
 };
 
@@ -61,10 +61,10 @@ public:
 	  double source_gauss_r2;
 
 	  double source_sb_func(double *y);
-	  void readParamfile(string);
+	  void readParamfile(std::string);
 	  void printSource();
 
-	  SourceGaussian(string);
+	  SourceGaussian(std::string);
 	  ~SourceGaussian();
 };
 
@@ -89,10 +89,10 @@ public:
 	  /// set to true to integrate over frequency
 	  bool source_monocrome;
 
-	  void readParamfile(string);
+	  void readParamfile(std::string);
 	  void printSource();
 
-	  SourceBLR(string);
+	  SourceBLR(std::string);
 	  ~SourceBLR();
 };
 
@@ -100,7 +100,7 @@ class SourceBLRDisk : public SourceBLR{
 public:
 	double source_sb_func(double *y);
 
-	SourceBLRDisk(string);
+	SourceBLRDisk(std::string);
 	~SourceBLRDisk();
 };
 
@@ -108,7 +108,7 @@ class SourceBLRSph1 : public SourceBLR{
 public:
 	double source_sb_func(double *y);
 
-	SourceBLRSph1(string);
+	SourceBLRSph1(std::string);
 	~SourceBLRSph1();
 };
 
@@ -116,7 +116,7 @@ class SourceBLRSph2 : public SourceBLR{
 public:
 	double source_sb_func(double *y);
 
-	SourceBLRSph2(string);
+	SourceBLRSph2(std::string);
 	~SourceBLRSph2();
 };
 

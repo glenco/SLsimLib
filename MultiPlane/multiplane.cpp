@@ -10,6 +10,7 @@
 #include <string>
 #include <utilities.h>
 
+using namespace std;
 
 HaloData::HaloData(HaloStructure *halostrucs,PosType **positions,unsigned long Nhaloss):
 	pos(positions), halos(halostrucs), Nhalos(Nhaloss)
@@ -20,13 +21,7 @@ HaloData::HaloData(HaloStructure *halostrucs,PosType **positions,unsigned long N
 /**
  *  \brief In this constructor the halos are created from a mass function and given random positions on the lens plane
  */
-HaloData::HaloData(
-/*		int jplane /// the index of the plane that holds the halos
-		,double zsource  /// source redshift
-		,CosmoHndl cosmo     /// cosmology
-		,MultiLens *lens     /// lens
-		){*/
-		double fov            /// field of view
+HaloData::HaloData(double fov            /// field of view
 		,double min_mass      /// Minimum mass of a halo
 		,double z1            /// lowest redshift
 		,double z2            /// highest redshift
@@ -37,11 +32,6 @@ HaloData::HaloData(
 	{
 
 	allocation_flag = true;
-	//double fov = lens->fieldofview;
-	//int mfty = lens->mass_func_type;
-    //long seed = 2203;        What !!!!!
-
-    //HALO ha(cosmo,lens->min_mass,0.);
     HALO ha(cosmo,min_mass,0.);
 
     int iterator;
@@ -58,7 +48,7 @@ HaloData::HaloData(
 
 	double Nhaloestot;
 	float Nhaloestotf;
-	//Nhalosbin[0] = cosmo->haloNumberDensityOnSky(pow(10,Logm[0]),z1,z2,mfty)*fov;
+
 	Nhalosbin[0] = cosmo->haloNumberDensityOnSky(pow(10,Logm[0])/cosmo->gethubble(),z1,z2,mass_func_type)*fov;
 
 	Nhaloestot = Nhalosbin[0];
@@ -80,8 +70,6 @@ HaloData::HaloData(
 		double ni = ran2 (seed);
 		// compute the mass inverting the cumulative distribution
 		double logmi = getY(Nhalosbin,Logm,ni);
-		//if(logmi > 11)
-			//continue;
 		double mi = pow(10.,logmi);
 		vmasses.push_back(mi);
 		vindex.push_back(iterator);
@@ -162,7 +150,7 @@ MultiLens::MultiLens(string filename,long *my_seed) : Lens(){
 
 	halo_tree = new ForceTreeHndl[Nplanes-1];
 
-	halodata = new HaloDataHndl[Nplanes-1];
+	halo_data = new HaloDataHndl[Nplanes-1];
 
 	if(flag_analens){
 		analens = new AnaLens(filename);
@@ -177,8 +165,11 @@ MultiLens::~MultiLens(){
 	delete[] Dl;
 	delete[] plane_redshifts;
 	delete[] dDl;
-	for(int j=0;j<Nplanes-1;j++) delete halodata[j];
-	delete[] halodata;
+	for(int j=0;j<Nplanes-1;j++){
+		delete halo_data[j];
+		delete halo_tree[j];
+	}
+	delete[] halo_data;
 	if(sim_input_flag){  // Otherwise these deallocations are done in the destructor of halodata's
 		delete[] halos;
 		delete[] halo_zs;
@@ -373,9 +364,9 @@ void MultiLens::buildHaloTrees(
 			else z2 = plane_redshifts[j] + 0.5*(plane_redshifts[j+1] - plane_redshifts[j]);
 			if(j-1 == (flag_analens % Nplanes)) z2 += 0.5*(plane_redshifts[j+1] - plane_redshifts[j]);
 
-			halodata[j] = new HaloData(fieldofview,min_mass,z1,z2,mass_func_type,cosmo,seed);
+			halo_data[j] = new HaloData(fieldofview,min_mass,z1,z2,mass_func_type,cosmo,seed);
 
-			Ntot+=halodata[j]->Nhalos;
+			Ntot+=halo_data[j]->Nhalos;
 		}
 
 	}else{
@@ -404,11 +395,11 @@ void MultiLens::buildHaloTrees(
 			if(j2 == Nhalos) j2 = Nhalos-1;
 
 			/// Use other constructor to create halo data
-			halodata[j] = new HaloData(&halos[j1],&halo_pos[j1],j2-j1);
+			halo_data[j] = new HaloData(&halos[j1],&halo_pos[j1],j2-j1);
 
 			//for(int i = 0; i<10 ;++i) cout << "Rmax:" << halos[j1+i].Rmax << "mass:" << halos[j1+i].mass << "rscale:" << halos[j1+i].rscale << "x = " << halo_pos[j1+i][0] << " " << halo_pos[j1+i][1] << endl;
 
-			Ntot += halodata[j]->Nhalos;
+			Ntot += halo_data[j]->Nhalos;
 		}
 
 	}
@@ -419,16 +410,16 @@ void MultiLens::buildHaloTrees(
 
 		switch(internal_profile){
 		case 1:
-			halo_tree[j] = new ForceTreePowerLaw(1.9,&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos);
+			halo_tree[j] = new ForceTreePowerLaw(1.9,&halo_data[j]->pos[0],halo_data[j]->Nhalos,halo_data[j]->halos);
 			break;
 		case 2:
-			halo_tree[j] = new ForceTreeNFW(&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos);
+			halo_tree[j] = new ForceTreeNFW(&halo_data[j]->pos[0],halo_data[j]->Nhalos,halo_data[j]->halos);
 			break;
 		case 3:
-			halo_tree[j] = new ForceTreePseudoNFW(1.9,&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos);
+			halo_tree[j] = new ForceTreePseudoNFW(1.9,&halo_data[j]->pos[0],halo_data[j]->Nhalos,halo_data[j]->halos);
 			break;
 		case 0:
-			halo_tree[j] = new ForceTreeGauss(&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos);
+			halo_tree[j] = new ForceTreeGauss(&halo_data[j]->pos[0],halo_data[j]->Nhalos,halo_data[j]->halos);
 			break;
 		}
 	}

@@ -8,6 +8,8 @@
 #include <slsimlib.h>
 #include <sstream>
 
+using namespace std;
+
 const string escape = "#";
 char dummy[300];
 

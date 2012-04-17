@@ -9,6 +9,8 @@
 
 const float sheartol = 1.0e-3;
 
+using namespace std;
+
 /*
  * routines for making random, close to elliptical
  *     lenses

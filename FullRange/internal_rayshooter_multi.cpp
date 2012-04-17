@@ -158,3 +158,146 @@ void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
 
     return;
 }
+
+
+void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off, properties *pixels, double range){
+	unsigned long i;
+	double xx[2];
+	int Npixels = (int)sqrt(Npoints);
+	double center[2]={0.0,0.0};
+
+	for(i = 0; i< Npoints; i++){
+
+		double kappa,aa,bb,cc;
+	    double alpha[2], gamma[3];
+	    double xminus[2],xplus[2];
+	    double kappa_minus,gamma_minus[3],kappa_plus,gamma_plus[3];
+
+		// find position on first lens plane in comoving units
+		i_points[i].image->x[0] = i_points[i].x[0]*Dl[0];
+       	i_points[i].image->x[1] = i_points[i].x[1]*Dl[0];
+
+       	xminus[0] = 0;
+		xminus[1] = 0;
+
+		// Set magnification matrix on first plane.  Also the default if kappa_off == false
+		kappa_minus = 0;
+		gamma_minus[0] = 0;
+		gamma_minus[1] = 0;
+		gamma_minus[2] = 0;
+
+		i_points[i].kappa = 1;  // This is actually 1-kappa until after the loop through the planes.
+		i_points[i].gamma[0] = 0;
+		i_points[i].gamma[1] = 0;
+		i_points[i].gamma[2] = 0;
+
+		for(int j = 0; j < Nplanes-1 ; j++){  // each iteration leaves i_point[i].image on plane (j+1)
+
+			// convert to physical coorditanes on the plane j
+			xx[0] = i_points[i].image->x[0]/(1+plane_redshifts[j]);
+			xx[1] = i_points[i].image->x[1]/(1+plane_redshifts[j]);
+
+			if(flag_analens && j == (flag_analens % Nplanes)){
+
+				int index = IndexFromPosition(xx,Npixels,range,center);
+
+				alpha[0] = pixels[index].alpha[0];
+				alpha[1] = pixels[index].alpha[1];
+				gamma[0] = pixels[index].gamma[0];
+				gamma[1] = pixels[index].gamma[1];
+				gamma[2] = pixels[index].gamma[2];
+				kappa = pixels[index].kappa;
+
+				cc = dDl[j+1];
+				//alpha[0] = alpha[1] = 0.0;
+				//gamma[0] = gamma[1] = gamma[2] = 0.0;
+				//kappa = 0.0;
+			}
+			else{
+				halo_tree[j]->force2D(xx,alpha,&kappa,gamma,kappa_off);
+				cc = charge*dDl[j+1];
+
+				/* multiply by the scale factor to obtain 1/comoving_distance/physical_distance
+				 * such that a multiplication with the charge (in units of physical distance)
+				 * will result in a 1/comoving_distance quantity */
+				kappa/=(1+plane_redshifts[j]);
+				gamma[0]/=(1+plane_redshifts[j]);
+				gamma[1]/=(1+plane_redshifts[j]);
+				gamma[2]/=(1+plane_redshifts[j]);
+				//alpha[0] = alpha[1] = 0.0;
+				//gamma[0] = gamma[1] = gamma[2] = 0.0;
+				//kappa = 0.0;
+			}
+
+			aa = (dDl[j+1]+dDl[j])/dDl[j];
+			bb = dDl[j+1]/dDl[j];
+
+			xplus[0] = aa*i_points[i].image->x[0] - bb*xminus[0] - cc*alpha[0];
+       		xplus[1] = aa*i_points[i].image->x[1] - bb*xminus[1] - cc*alpha[1];
+
+			xminus[0] = i_points[i].image->x[0];
+			xminus[1] = i_points[i].image->x[1];
+
+			i_points[i].image->x[0] = xplus[0];
+			i_points[i].image->x[1] = xplus[1];
+
+			if(!kappa_off)
+    		{
+
+				aa = (dDl[j+1]+dDl[j])*Dl[j]/dDl[j]/Dl[j+1];
+
+				//bb = dDl[j+1]*Dl[ (j < 1) ? 0 : j-1]/dDl[j]/Dl[j+1];
+				// removed the line above because Dl[-1] = observer plane = 0 and is different from Dl[0]
+				if(j>0){
+					bb = dDl[j+1]*Dl[j-1]/dDl[j]/Dl[j+1];
+				}
+				else
+					bb = 0;
+
+				if(flag_analens && j == (flag_analens % Nplanes))
+					cc = dDl[j+1]*Dl[j]/Dl[j+1];
+				else
+					cc = charge*dDl[j+1]*Dl[j]/Dl[j+1];
+
+				// still not positive about sign convention
+				kappa_plus = aa*i_points[i].kappa - bb*kappa_minus
+						- cc*(kappa*i_points[i].kappa - gamma[0]*i_points[i].gamma[0] - gamma[1]*i_points[i].gamma[1]);
+
+				gamma_plus[0] = aa*i_points[i].gamma[0] - bb*gamma_minus[0]
+						+ cc*(gamma[0]*i_points[i].kappa - kappa*i_points[i].gamma[0] + gamma[1]*i_points[i].gamma[2]);
+
+				gamma_plus[1] = aa*i_points[i].gamma[1] - bb*gamma_minus[1]
+						+ cc*(gamma[1]*i_points[i].kappa - kappa*i_points[i].gamma[1] - gamma[0]*i_points[i].gamma[2]);
+
+				gamma_plus[2] = aa*i_points[i].gamma[2] - bb*gamma_minus[2]
+						+ cc*(gamma[1]*i_points[i].gamma[0] - gamma[0]*i_points[i].gamma[1] - kappa*i_points[i].gamma[2]);
+
+				kappa_minus = i_points[i].kappa;
+				gamma_minus[0] = i_points[i].gamma[0];
+				gamma_minus[1] = i_points[i].gamma[1];
+				gamma_minus[2] = i_points[i].gamma[2];
+
+				i_points[i].kappa = kappa_plus;
+				i_points[i].gamma[0] = gamma_plus[0];
+				i_points[i].gamma[1] = gamma_plus[1];
+				i_points[i].gamma[2] = gamma_plus[2];
+    		}
+
+		}
+		// Convert units back to angles.
+
+		i_points[i].image->x[0] /= Dl[Nplanes-1];
+		i_points[i].image->x[1] /= Dl[Nplanes-1];
+
+		i_points[i].kappa = 1 - i_points[i].kappa;
+
+		i_points[i].invmag = (1-i_points[i].kappa)*(1-i_points[i].kappa)
+		  	    - i_points[i].gamma[0]*i_points[i].gamma[0]
+		  	    - i_points[i].gamma[1]*i_points[i].gamma[1]
+		  	    - i_points[i].gamma[2]*i_points[i].gamma[2];
+
+    }
+
+    return;
+}
+
