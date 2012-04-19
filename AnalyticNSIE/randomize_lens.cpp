@@ -291,8 +291,9 @@ void AnaLens::RandomizeSubstructure2(double rangeInRei,long *seed){
 
 		do{
 			if(sub_alpha == -1.0){
+				float ratio = sub_Mmax/sub_Mmin;
 				sub_mass[k] = sub_Mmin*scale
-						*pow(sub_Mmax/sub_Mmin,ran2(seed));
+						*pow(ratio,ran2(seed));
 			}else{
 				sub_mass[k] = sub_Mmin*scale
 						*pow(ran2(seed)*(pow(sub_Mmax/sub_Mmin,sub_alpha+1)-1)+1.0
@@ -407,8 +408,9 @@ void AnaLens::RandomizeSubstructure3(double rangeInRei,long *seed){
 
 		do{
 			if(sub_alpha == -1.0){
+				float ratio = sub_Mmax/sub_Mmin;
 				sub_mass[k] = sub_Mmin
-						*pow(sub_Mmax/sub_Mmin,ran2(seed));
+						*pow(ratio,ran2(seed));
 			}else{
 				sub_mass[k] = sub_Mmin
 						*pow(ran2(seed)*(pow(sub_Mmax/sub_Mmin,sub_alpha+1)-1)+1.0

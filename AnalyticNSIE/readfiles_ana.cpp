@@ -236,12 +236,17 @@ void AnaLens::readParamfile(string filename){
   
   sub_sigmaScale = host_sigma;
 
+  if(sub_Ndensity == 0)
+	  sub_N = 0;
+
+  Sigma_crit = 0;
+
   // in degrees
   host_pos_angle*=pi/180;
   if(perturb_Nmodes)
 	  perturb_modes = new double[perturb_Nmodes+1];
 
-  PrintAnaLens(true,true);
+  PrintAnaLens(false,false);
 }
 
 double AnaLens::getZlens(){

@@ -43,7 +43,7 @@ void AnaLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool ka
     	i_points[i].dt = 0;
     	i_points[i].gamma[2] = 0;
 
-    	if(isnan(i_points[i].x[0]*i_points[i].x[1])){
+    	if(std::isnan(i_points[i].x[0]*i_points[i].x[1])){
     		ERROR_MESSAGE();
     		std::printf("x nan in internal_rayshooter\n    i=%li x= %e %e\n",
     				i,i_points[i].x[0],i_points[i].x[1]);

@@ -12,16 +12,10 @@
 #include <cosmo.h>
 #include <halo.h>
 #include <utilities.h>
-
+#include <valarray>
 
 const int Nmassbin=32;
 const double MaxLogm=16.;
-
-typedef struct properties{
-	double gamma[3];
-	double kappa;
-	double alpha[2];
-};
 
 /// structure to hold information about the halos' positions, masses, etc.
 struct HaloStructure{
@@ -70,7 +64,7 @@ public:
 
 	void setInternalParams(CosmoHndl,double zsource);
 	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off);
-	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off, properties *pixels, double range);
+	void rayshooterInternal(unsigned long Npixels, Point *i_points, bool kappa_off, float*,float*,float*,float*,float*, double* center,double range);
 
 	/// a poiner to the analytical lens
 	AnaLens *analens;

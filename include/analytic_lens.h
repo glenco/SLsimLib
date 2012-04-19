@@ -46,7 +46,7 @@ public:
   double host_pos_angle;    /// position angle
 
   // perturbations to host
-  long perturb_Nmodes;    /// this includes two for external shear
+  int perturb_Nmodes;    /// this includes two for external shear
   double perturb_beta;
   double *perturb_rms;
   double *perturb_modes;  ///first two are shear

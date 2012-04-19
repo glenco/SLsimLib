@@ -160,13 +160,28 @@ void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
 }
 
 
-void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off, properties *pixels, double range){
+void MultiLens::rayshooterInternal(unsigned long Npixels
+		,Point *i_points
+		,bool kappa_off
+		,float* alpha1
+		,float* alpha2
+		,float* gamma1
+		,float* gamma2
+		,float* kappa1
+		,double* center
+		,double range){
+
 	unsigned long i;
 	double xx[2];
-	int Npixels = (int)sqrt(Npoints);
-	double center[2]={0.0,0.0};
+	unsigned long Npoints;
+	long outside;
 
-	for(i = 0; i< Npoints; i++){
+	Npoints = Npixels*Npixels;
+
+	for(i = 0, outside = 0; i< Npoints; i++){
+
+		if((i % 1000) == 0)
+			cout << i << endl;
 
 		double kappa,aa,bb,cc;
 	    double alpha[2], gamma[3];
@@ -199,19 +214,24 @@ void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
 
 			if(flag_analens && j == (flag_analens % Nplanes)){
 
-				int index = IndexFromPosition(xx,Npixels,range,center);
+				long index = IndexFromPosition(xx,Npixels,range,center);
 
-				alpha[0] = pixels[index].alpha[0];
-				alpha[1] = pixels[index].alpha[1];
-				gamma[0] = pixels[index].gamma[0];
-				gamma[1] = pixels[index].gamma[1];
-				gamma[2] = pixels[index].gamma[2];
-				kappa = pixels[index].kappa;
+				if(index >= 0 && index < Npoints){
+					alpha[0] = alpha1[index];
+					alpha[1] = alpha2[index];
+					gamma[0] = gamma1[index];
+					gamma[1] = gamma2[index];
+					gamma[2] = 0.0;
+					kappa = kappa1[index];
+				}
+				else{
+					outside++;
+					alpha[0] = alpha[1] = 0.0;
+					gamma[0] = gamma[1] = gamma[2] = 0.0;
+					kappa = 0.0;
+				}
 
 				cc = dDl[j+1];
-				//alpha[0] = alpha[1] = 0.0;
-				//gamma[0] = gamma[1] = gamma[2] = 0.0;
-				//kappa = 0.0;
 			}
 			else{
 				halo_tree[j]->force2D(xx,alpha,&kappa,gamma,kappa_off);
@@ -295,8 +315,9 @@ void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
 		  	    - i_points[i].gamma[0]*i_points[i].gamma[0]
 		  	    - i_points[i].gamma[1]*i_points[i].gamma[1]
 		  	    - i_points[i].gamma[2]*i_points[i].gamma[2];
-
     }
+
+	cout << "outside " << outside/(float)Npoints << endl;
 
     return;
 }
