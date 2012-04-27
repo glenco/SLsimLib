@@ -23,13 +23,17 @@ static const float FracResTarget = 1.0e-4;
 double initialgridsize=0;
 
 
+/**
+ * This routine has been replaced by refine_grid_kist().  It is kept only for compatibility
+ * with find_crit().
+ *
+ *  criterion = 0 stops refining when error in total area reaches res_target
+ * 	         = 1 stops refining when each image reaches error limit or is smaller than res_target
+ *           = 2 stops refining when grid resolution is smaller than res_target in all images
+ */
 int refine_grid(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,OldImageInfo *imageinfo
 		,unsigned long Nimages,double res_target,short criterion,bool kappa_off){
 
-	/* criterion = 0 stops refining when error in total area reaches res_target
-	 * 	         = 1 stops refining when each image reaches error limit or is smaller than res_target
-	 *           = 2 stops refining when grid resolution is smaller than res_target in all images
-	 */
 
 	//printf("entering refine_grid\n");
 
@@ -611,10 +615,12 @@ long refine_edges2(LensHndl lens,double *y_source,double r_source,TreeHndl i_tre
 	return count;
 }
 
+/** Finds inner and outer border of image by bordering box neighbor method.
+ * Maintained only for find_crit().  Not very efficient.
+ * Should be replaced with findborder4() in any new implementation.
+ */
+
 void findborders2(TreeHndl i_tree,OldImageInfo *imageinfo){
-	/* finds inner and outer borders of an image using
-	 * bordering box method
-	 */
 	int i;
 	unsigned long l,m,j;
 	bool addinner;
@@ -771,13 +777,17 @@ void findborders2(TreeHndl i_tree,OldImageInfo *imageinfo){
 	return;
 }
 
+/**
+ * Finds inner and outer borders of an image using
+ * bordering box method
+ *   same as findborder2() but it uses the in_image markers
+ *   which makes it faster
+ *   Note:  markers in_image must be set
+ *
+ *   Maintained only for find_crit().  Uses imageinfo->points[] array instead of imageinfo->imagekist
+ * Should be replaced with findborder4() in any new implementation.
+ */
 void findborders3(TreeHndl i_tree,OldImageInfo *imageinfo){
-	/* finds inner and outer borders of an image using
-	 * bordering box method
-	 *   same as findborder2() but it uses the in_image markers
-	 *   which makes it faster
-	 *   Note:  markers in_image must be set
-	 */
 	int i;
 	unsigned long m,j;
 	bool addinner;

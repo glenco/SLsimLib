@@ -31,18 +31,18 @@ double ForceTree::phi_o(double r2,float sigma){
  *  All quantities should be divided by Sigma_crit to get the usual
  */
 double ForceTreeGauss::alpha_h(double r2,HaloStructure &par){
-	if(r2==0) return 0.0;
-	if(par.Rmax <= 0.0 ) return -1.0*par.mass/r2/pi;
-	return ( exp(-r2/par.Rmax/par.Rmax/2) - 1.0 )*par.mass/r2/pi;
+	if(r2<=0) return 0.0;
+	if(par.Rmax*par.Rmax <= r2 ) return -1.0*par.mass/r2/pi;
+	return ( exp(-r2/par.rscale/par.rscale/2) - 1.0 )*par.mass/r2/pi;
 }
 double ForceTreeGauss::kappa_h(double r2,HaloStructure &par){
-	if(par.Rmax <= 0.0) return 0.0;
-	return exp(-r2/par.Rmax/par.Rmax/2)*par.mass/2/pi/par.Rmax/par.Rmax;
+	if(par.Rmax*par.Rmax <= r2) return 0.0;
+	return exp(-r2/par.rscale/par.rscale/2)*par.mass/2/pi/par.rscale/par.rscale;
 }
 double ForceTreeGauss::gamma_h(double r2,HaloStructure &par){
 	if(r2==0) return 0.0;
-	if(par.Rmax <= 0.0) return -2.0*par.mass/pi/pow(r2,2);
-	return (-2.0 + (2.0 + r2/par.Rmax/par.Rmax)*exp(-r2/par.Rmax/par.Rmax/2) )*par.mass/pi/pow(r2,2);
+	if(par.Rmax*par.Rmax <= r2) return -2.0*par.mass/pi/pow(r2,2);
+	return (-2.0 + (2.0 + r2/par.rscale/par.rscale)*exp(-r2/par.rscale/par.rscale/2) )*par.mass/pi/pow(r2,2);
 }
 double ForceTreeGauss::phi_h(double r2,HaloStructure &par){
 	ERROR_MESSAGE();  // not yet written
@@ -192,7 +192,7 @@ double ForceTreeNFW::g2function(double x){
 
 double ForceTreePseudoNFW::alpha_h(double r2,HaloStructure &par){
 
-	if(r2==0) return 0.0;
+	if(r2<=0) return 0.0;
 
 	double b=0,r = sqrt(r2);
 

@@ -10,7 +10,7 @@
 
 #define DLTABLE	256
 std::vector<double> zz, da;
-
+/*
 int windings2(double *x,Point *points,unsigned long Npoints,double *area,short image){
 	/* slow obsolete version
 
@@ -18,7 +18,7 @@ int windings2(double *x,Point *points,unsigned long Npoints,double *area,short i
   *   also calculates the area within the curve
   *   is image > 0 the images of the points are used
    *   if x is one of the border points it returns 1
-   *   */
+   *
 
   double s[2],so[2],m,mo,windings;
   unsigned long i;
@@ -54,12 +54,12 @@ int windings2(double *x,Point *points,unsigned long Npoints,double *area,short i
     mo=m;
   }
 
-  /*std::printf("  windings: area=%e windings/2/pi=%e\n",*area,windings/2/pi); */
+  //std::printf("  windings: area=%e windings/2/pi=%e\n",*area,windings/2/pi);
 
   *area=fabs(*area)/2;
   return (int)(fabs(windings)/2/pi + 0.5);
 }
-
+*/
 
 Point *LinkToSourcePoints(Point *i_points,unsigned long Npoints){
   Point *s_points;
@@ -82,6 +82,7 @@ Point *LinkToSourcePoints(Point *i_points,unsigned long Npoints){
   return s_points;
 }
 
+// Calculates the area in the image by simply adding up all the cells in the imageinfo->point array
 void findarea(OldImageInfo *imageinfo){
   unsigned long j;
 
@@ -168,9 +169,24 @@ void PositionFromIndex(unsigned long i,double *x,long Npixels,double range,doubl
     return;
 }
 
-// windings(): winding number test for a point in a polygon
-// Return: wn = the oriented winding number (=0 only if P is outside V[])
-int windings(double *x,Point *points,unsigned long Npoints,double *area,short image){
+/** \ingroup Utill
+ * windings(): winding number test for a point in a polygon
+ * Return: wn = the oriented winding number,
+ *
+ * The number of times the curve loops around a point is calculated.  This can be
+ * negative depending on if the looping in clockwise or counter clockwise.
+ *
+ * The area of a self-intersecting curve will be the area of the regions encircled in
+ * a clockwise direction minus the regions encircled in a counterclockwise direction - an
+ * infinity symbol has zero area.
+ */
+int windings(
+		double *x              /// Point for which the winding number is calculated
+		,Point *points         /// The points on the border.  These must be ordered.
+		,unsigned long Npoints /// number of points in curve
+		,double *area          /// returns absolute the area within the curve with oriented border
+		,short image           /// if == 0 the image of the curve is uses as the curve
+		){
 	int wn=0;
 	unsigned long k,i;
 
@@ -211,6 +227,45 @@ int windings(double *x,Point *points,unsigned long Npoints,double *area,short im
 	*area = fabs(*area)*0.5;
 	//std::printf("wn = %i\n",wn);
 	//if(abs(wn) > 0) exit(0);
+	return wn;
+}
+int windings(
+		double *x              /// Point for which the winding number is calculated
+		,KistHndl kist         /// Kist of points on the border.  These must be ordered.
+		,double *area          /// returns absolute the area within the curve with oriented border
+		,short image           /// if == 0 the image of the curve is uses as the curve
+		){
+	int wn=0;
+	unsigned long k,i;
+	unsigned long Npoints = kist->Nunits();
+
+	*area=0.0;
+	if(Npoints < 3) return 0;
+
+	Point **points = new Point*[Npoints];
+
+	kist->MoveToTop();
+	for(i=0;i<Npoints;++i,kist->Down()){
+		if(image) points[i] = kist->getCurrent()->image;
+		else points[i] = kist->getCurrent();
+	}
+
+	for(i=0;i<Npoints;++i){
+		k = i < Npoints-1 ? i+1 : 0;
+		*area+=(points[i]->x[0] + points[k]->x[0])*(points[i]->x[1] - points[k]->x[1]);
+
+		if(points[i]->x[1] <= x[1]){
+			if(points[k]->x[1] > x[1])
+				if( isLeft(points[i],points[k],x) > 0) ++wn;
+		}else{
+			if(points[k]->x[1] <= x[1])
+				if( isLeft(points[i],points[k],x) < 0) --wn;
+		}
+	}
+
+	*area = fabs(*area)*0.5;
+	delete points;
+
 	return wn;
 }
 

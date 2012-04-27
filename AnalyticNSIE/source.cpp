@@ -330,3 +330,31 @@ double SourceBLRSph2::source_sb_func(double *y){
 void in_source(double *y_source,ListHndl sourcelist){
   return;
 }
+
+// Source model for a analytic galaxy model
+SourceAnaGalaxy::SourceAnaGalaxy(
+		double mag              /// Total magnitude
+		,double BtoT            /// Bulge to total ratio
+		,double Reff         /// Bulge half light radius (arcs)
+		,double Rh           /// disk scale hight (arcs)
+		,double PA           /// Position angle (radians)
+		,double inclination  /// inclination of disk (radians)
+		): Source(){
+	mem_allocated = true;
+	galaxy = new OverGalaxy(mag,BtoT,Reff,Rh,PA,inclination);
+}
+/// Constructor for passing in a pointer to the galaxy model instead of constructing on internally.  Useful when there is a long list of sources.
+SourceAnaGalaxy::SourceAnaGalaxy(
+		OverGalaxy *my_galaxy
+		): Source(){
+	mem_allocated = false;
+	galaxy = my_galaxy;
+}
+SourceAnaGalaxy::~SourceAnaGalaxy(){
+	if(mem_allocated) delete galaxy;
+}
+void SourceAnaGalaxy::printSource(){
+	cout << "Overzier Galaxy Model" << endl;
+	galaxy->print();
+}
+

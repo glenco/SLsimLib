@@ -9,14 +9,10 @@
 
 const float sheartol = 1.0e-3;
 
-/*
- * routines for making random, close to elliptical
- *     lenses
- */
-
-//extern COSMOLOGY cosmo;
-
 /** \ingroup ChangeLens
+* \brief routines for randomizing the lens.  How the lens is randomized is specified in the specific
+* derived lens class that was used to construct the model.
+ *
  */
 
 void Model::RandomizeModel(double r_source_phys,long *seed,bool tables){
@@ -63,10 +59,11 @@ void Model::RandomizeModel(double r_source_phys,long *seed,bool tables){
 
 		lens->RandomizeSigma(seed,tables);
 
-		setInternal();
-
 		source->source_r = r_source_phys*source->DlDs;
 	}
+
+	// This randomizes the halos if they are not read from an external source
+	setInternal();
 
 	lens->RandomizeHost(seed,tables);
 

@@ -42,6 +42,7 @@
 		void FreeAll();
 		void Fill(Data * data,unsigned long N);
 		void SwapCurrentWithBottom();
+		void MoveCurrentToBottom();
 
 		// movement
 		bool JumpDown(int jump);

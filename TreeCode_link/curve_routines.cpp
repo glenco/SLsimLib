@@ -7,8 +7,7 @@
 
 #include <slsimlib.h>
 
-void split_order_curve4(OldImageInfo *curves,int Maxcurves,int *Ncurves){
-/*  orders points in a curve, separates disconnected curves
+/**  orders points in a curve, separates disconnected curves
  *   curves[0...Maxcurves] must be allocated before
  *
  *	uses neighbors-of-neighbors to split into curves and then
@@ -16,6 +15,8 @@ void split_order_curve4(OldImageInfo *curves,int Maxcurves,int *Ncurves){
  *
  *  can break down for crescent curves
  */
+
+void split_order_curve4(OldImageInfo *curves,int Maxcurves,int *Ncurves){
 
 	//OldImageInfo* curves = new OldImageInfo(curves_in);
 
@@ -136,14 +137,93 @@ void split_order_curve4(OldImageInfo *curves,int Maxcurves,int *Ncurves){
 
 	return ;
 }
+/** \ingroup Utill
+ *
+ * \brief Orders points on a closed curve.
+ *
+ * The algorithm first finds the "center" of the curve. It then does a rough ordering according to the angle
+ * around this center. It then walks the curve jumping to a neighbor cell each step choosing a neighbor along
+ * one of the x or y-axis before taking a diagonal step.  If it comes to the point where there is no more neighbors
+ * (as may occur after going through a self-intersection and then returning to it) the algorithm backtracks until
+ * it finds a point in the ordered list that is also a neighbor to a point in the not yet ordered list and attaches
+ * this to the end of the ordered list and continuous to walk.  This algorithm works well at finding a closed loop.  It
+ * can cut off points from the curve that are either in loops or if four cells intersect and are all on the curve as
+ * can happen when there is a lot of structure in the curve that is not resolved at the gridsize used.  The points that are
+ * cut of are at the end of the array in no guaranteed order.
+ *
+ * Returns true if a closed loop is found which incorporates all of the points.
+ *
+ * This algorithm could be improve by inserting the remaining points, if any, into the existing curve and recursively calling itself.
+ */
+bool order_curve4(Point *curve,long Npoints){
 
-void split_order_curve3(OldImageInfo *curves,int Maxcurves,int *Ncurves){
+	long m,j,end;
+	double center[2],*theta;
+
+	//std::printf("entering split_order_curve\n");
+	if(Npoints < 3) return false;
+
+
+	// order curve points
+	theta=(double *)malloc(Npoints*sizeof(double));
+	assert(theta);
+
+
+	// sort points by angle around center point
+	center[0]=center[1]=0;
+	for(m=0;m<Npoints;++m){
+		center[0]+=curve[m].x[0];
+		center[1]+=curve[m].x[1];
+	}
+	center[0]/=Npoints;
+	center[1]/=Npoints;
+
+	for(m=0;m<Npoints;++m){
+		theta[m]=atan2(curve[m].x[1]-center[1]
+		                                    ,curve[m].x[0]-center[0]);
+	}
+	quicksortPoints(curve,theta,Npoints);
+
+	// check to make sure the center is inside the curves
+	//assert(abs(windings(center,curve,Npoints,&tmp1,0)));
+
+	//std::printf("N=%i\n",Npoints);
+	//assert(abs(windings(center,curve,Npoints,&tmp1,0)) > 0 );
+
+	// find the last point that is a neighbor of the first point
+	m=Npoints-1;
+	while(!AreBoxNeighbors(&(curve[0]),&(curve[m]))) --m;
+	end=m;
+	//assert(m > 0);
+
+	//std::printf("windings = %i\n",windings(center,curve,Npoints,&tmp1,0));
+	// walk curve to remove shadowing effect
+	j=0;
+	m=0;
+	while(j < Npoints-1){
+		walkcurve(curve,Npoints,&j,&end);
+		//std::printf("i = %i Npoints = %i end+1 = %i j = %i\n",i,Npoints,end+1,j);
+		if(j < Npoints-1)
+			backtrack(curve,Npoints,&j,-1,&end);
+		++m;
+		assert(m < Npoints);
+	}
+	//std::printf("i = %i Npoints = %i end+1 = %i j=%i\n",i,Npoints,end+1,j);
+	Npoints=end+1;
+
+	free(theta);
+
+	if(end+1 != Npoints) return false;
+	return true;
+}
+
 /*  orders points in a curve, separates disconnected curves
  *   curves[0...Maxcurves] must be allocated before
  *
  *	 uses list instead of arrays
  *   does not attempt to remove spurs
  */
+void split_order_curve3(OldImageInfo *curves,int Maxcurves,int *Ncurves){
 
 	long i,k=0,m;
 	short spur,closed,attach;
@@ -522,13 +602,13 @@ void order_curve(OldImageInfo *curve){
 
 }
 
+/*
+ * orders curve by finding closest point ahead in list
+ *   tries x/y jump before diagonal jump
+ *   exits when it cannot find a cell neighbor ahead in array
+ *   leaves j as the last point in curves
+ */
 void walkcurve(Point *points,long Npoints,long *j,long *end){
-	/*
-	 * orders curve by finding closest point ahead in list
-	 *   tries x/y jump before diagonal jump
-	 *   exits when it cannot find a cell neighbor ahead in array
-	 *   leaves j as the last point in curves
-	 */
 
 	long i,k;
 	short step;
@@ -554,7 +634,6 @@ void walkcurve(Point *points,long Npoints,long *j,long *end){
 		if(delta){
 			if(i==(*end)) *end=(*j)+1;
 			for(k=i;k>(*j)+1;--k) SwapPointsInArray( &(points[k]) , &(points[k-1]) );
-			//SwapPointsInArray( &(points[(*j)+1]) , &(points[i]) );
 			++(*j);
 			i=(*j);
 			step=1;

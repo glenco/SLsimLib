@@ -13,7 +13,7 @@
 #include "galaxies.h"
 #include <point.h>
 /**
- * Returns a Sersic profile
+ * Returns a Sersic profile made out of individual equally luminous points
  */
 void create_sersic(int n,double Ro,double f,double *center,double theta,double **x,long Nsources){
 	static long seed=19282;

@@ -4,6 +4,7 @@
  *  Created on: Feb 6, 2012
  *      Author: mpetkova
  */
+#include <galaxies.h>
 
 #ifndef SOURCE_H_
 #define SOURCE_H_
@@ -29,12 +30,6 @@ public:
 
 	  // in lens.cpp
 	  virtual double source_sb_func(double *y) = 0;
-
-	/*  double uniform_SB(double *y);
-	  double gaussian_SB(double *y);
-	  double BLR_Disk_SB(double *y);
-	  double BLR_Sph1_SB(double *y);
-	  double BLR_Sph2_SB(double *y);*/
 
 	  Source();
 	  ~Source();
@@ -118,6 +113,23 @@ public:
 
 	SourceBLRSph2(string);
 	~SourceBLRSph2();
+};
+/**
+ * \brief Source that represents an analytic galaxy surface brightness model.  It encapsulates a
+ * OverGalaxy which is a model from R.Oversier with a bulge and a disk.
+ */
+class SourceAnaGalaxy: public Source{
+public:
+	double source_sb_func(double *y){return galaxy->SurfaceBrightness(y);}
+	void printSource();
+
+	SourceAnaGalaxy(double mag, double BtoT, double Reff, double Rh, double PA, double inclination);
+	SourceAnaGalaxy(OverGalaxy *my_galaxy);
+	~SourceAnaGalaxy();
+
+private:
+	bool mem_allocated;
+	OverGalaxy *galaxy;
 };
 
 /// pointer to surface brightness function

@@ -41,8 +41,6 @@ public:
 
 
 private:
-	/// variables for internal calculations
-	std:: vector<double> Logm,Nhalosbin;
 	/// flag which is set to indicate which constructor is used and thus how the the destructor should work.
 	bool allocation_flag;
 };
@@ -84,10 +82,12 @@ private:
 	/// charge for the tree force solver (4*pi*G*mass_scale)
 	double charge;
 	/// an array of pointers to the halo models on each plane
-	HaloDataHndl *halodata;
+//	HaloDataHndl *halodata;
+	auto_ptr<HaloData> *halodata;
 
 /// an array of pointers to halo trees on each plane, uses the haloModel in the construction
-	ForceTreeHndl *halo_tree;
+	//ForceTreeHndl *halo_tree;
+	auto_ptr<ForceTree> *halo_tree;
 
 	/* the following parameters are read in from the parameter file */
 

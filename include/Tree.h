@@ -224,7 +224,7 @@ void _FindLeaf(TreeHndl tree,double *ray,unsigned long Nadd);
 void PrintPoint(Point *point);
 Point *NewPointArray(unsigned long N,bool NewXs);
 Point *AddPointToArray(Point *points,unsigned long N,unsigned long Nold);
-void FreePointArray(Point *array);
+void FreePointArray(Point *array,bool NewXs = true);
 void SwapPointsInArray(Point *p1,Point *p2);
 void PointCopy(Point *pcopy,Point *pins);
 void PointCopyData(Point *pcopy,Point *pins);
@@ -299,6 +299,8 @@ void findborders(TreeHndl i_tree,ImageInfo *imageinfo);
 
 ImageInfo *find_crit(LensHndl lens,GridHndl grid,int *Ncrits,double resolution,bool *orderingsuccess
 		,bool ordercurve,bool verbose);
+void find_crit_kist(LensHndl lens,GridHndl grid,ImageInfo *critcurve,int maxNcrits,int *Ncrits
+		,double resolution,bool *orderingsuccess,bool ordercurve,bool verbose);
 
 /* in double_sort.c */
 void double_sort(unsigned long n, double *arr, unsigned long *brr);
@@ -316,6 +318,8 @@ Point *LinkToSourcePoints(Point *i_points,unsigned long Npoints);
 void log_polar_grid(Point *i_points,double rmax,double rmin,double *center,long Ngrid);
 void findarea(ImageInfo *imageinfo);
 int windings(double *x,Point *points,unsigned long Npoints,double *area,short image);
+int windings(double *x,KistHndl kist,double *area,short image);
+
 long IndexFromPosition(double *x,long Npixels,double range,double *center);
 void PositionFromIndex(unsigned long i,double *x,long Npixels,double range,double *center);
 //inline float isLeft( Point *p0, Point *p1, double *x );
@@ -338,6 +342,7 @@ void split_order_curve(OldImageInfo *curves,int Maxcurves,int *Ncurves);
 void split_order_curve2(OldImageInfo *curves,int Maxcurves,int *Ncurves);
 void split_order_curve3(OldImageInfo *curves,int Maxcurves,int *Ncurves);
 void split_order_curve4(OldImageInfo *curves,int Maxcurves,int *Ncurves);
+bool order_curve4(Point *curve,long Npoints);
 void walkcurve(Point *points,long Npoints,long *j,long *end);
 short backtrack(Point *points,long Npoints,long *j,long jold,long *end);
 void split_images(TreeHndl i_tree,ImageInfo *images,int Maximages,int *Nimages,bool sortallpoints);

@@ -16,24 +16,23 @@ struct OverGalaxy{
 
 	OverGalaxy(){};
 	OverGalaxy(double mag,double BtoT,double Reff,double Rh,double PA,double inclination);
-	~OverGalaxy();
+	~OverGalaxy(){};
 
 	void setInternals(double mag,double BtoT,double Reff,double Rh,double PA,double inclination);
 	double SurfaceBrightness(double *x);
+	void print();
 
 private:
 	/// bulge half light radius
 	double Reff;
 	/// disk scale hight
 	double Rh;
-	/// position angle
-	double PA;
-	/// inclination
-	double incl;
+
+	double cxx,cyy,cxy;
 	/// internal valuable mag-2.5*log10(1-BtoT)+5*log10(Rh)+1.9955
-	double muDo;
+	double sbDo;
 	/// internal valuable mag-2.5*log10(BtoT)+5*log10(Reff)-4.93884
-	double muSo;
+	double sbSo;
 };
 
 void create_sersic(int n,double Ro,double f,double *center,double theta,double **x,long Nsources);

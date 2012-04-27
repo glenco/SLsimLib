@@ -238,12 +238,11 @@ void InsertBeforeCurrentKist(KistHndl kist,Data *data){
     return;
 }
 /**
- * Swaps current data with bottom data
+ * Swaps current data with bottom data leaving current one above former current.
  */
 void Kist::SwapCurrentWithBottom(){
 
 	Data *data;
-	// leaves current one above former current
 
 	data=current->data;
 	current->data=bottom->data;
@@ -254,6 +253,17 @@ void SwapCurrentWithBottomKist(KistHndl kist){
 	assert(kist);
 
 	kist->SwapCurrentWithBottom();
+}
+/**
+ * Moves current to the bottom of the kist.  Current
+ * is left at the bottom
+ */
+void Kist::MoveCurrentToBottom(){
+
+	Data *data = TakeOutCurrent();
+	MoveToBottom();
+	InsertAfterCurrent(data);
+	Down();
 }
 
 /**
@@ -443,6 +453,13 @@ void TranformPlanesKist(KistHndl kist){
 	return;
 }
 
+void Kist::Print(){
+	cout << Nunits() << endl;
+	MoveToTop();
+	do{
+		cout << getCurrent()->x[0] <<  "  " << getCurrent()->x[1] << "  " << getCurrent()->gridsize << endl;
+	}while(Down());
+}
 /*
 bool AreDataUniqueKist(KistHndl kist){
 	assert(kist);

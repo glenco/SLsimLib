@@ -26,7 +26,7 @@ HaloData::HaloData(
 		,CosmoHndl cosmo     /// cosmology
 		,MultiLens *lens     /// lens
 		){*/
-		double fov            /// field of view
+		double fov            /// field of view in square degrees
 		,double min_mass      /// Minimum mass of a halo
 		,double z1            /// lowest redshift
 		,double z2            /// highest redshift
@@ -37,21 +37,19 @@ HaloData::HaloData(
 	{
 
 	allocation_flag = true;
-	//double fov = lens->fieldofview;
-	//int mfty = lens->mass_func_type;
-    //long seed = 2203;        What !!!!!
 
     //HALO ha(cosmo,lens->min_mass,0.);
     HALO ha(cosmo,min_mass,0.);
 
-    int iterator;
-    std::vector<double> vmasses,vsizes,vscale,vz;
+    //int iterator;
+    //std::vector<double> vmasses,vsizes,vscale,vz;
     std::vector<int> vindex;
+	std::vector<double> Logm,Nhalosbin;
+	std::vector<double> Dli;
 
     Logm.resize(Nmassbin);
     Nhalosbin.resize(Nmassbin);
 
-	std:: vector<double> Dli;
 	/* fill the log(mass) vector */
 
 	fill_linear(Logm,Nmassbin,min_mass,MaxLogm);
@@ -72,10 +70,11 @@ HaloData::HaloData(
 		Nhalosbin[k] = Nhalosbin[k]/Nhaloestot;
 	}
 
-	Nhaloestotf=poidev(float(Nhaloestot), seed);
-	Nhalos = Nhaloestotf;
+	Nhalos = (long)(poidev(float(Nhaloestot), seed) + 0.5);
 
-	for(int k=0;k<Nhaloestotf;k++){
+	// This is a mess !!!!!!!!
+
+/*	for(int k=0;k<Nhalos;k++){
 		iterator++;
 		double ni = ran2 (seed);
 		// compute the mass inverting the cumulative distribution
@@ -95,25 +94,35 @@ HaloData::HaloData(
 		vscale.push_back(scale);
 		Dli.push_back(cosmo->angDist(0,zi));
 	}
-
 	Nhalos = vmasses.size();
+*/
+
 
 	halos = new HaloStructure[Nhalos];
 	pos = PosTypeMatrix(0,Nhalos-1,0,2);
-	double x,y;
+	double rr,theta,maxr,zi;
 	for(unsigned long i = 0; i < Nhalos; i++){
-		double maxr = pi*sqrt(fov*0.5/pi)/180*Dli[i]; // fov is a circle
-		do{
+		//maxr = pi*sqrt(fov*0.5/pi)/180*Dli[i]; // fov is a circle
+		zi = z1+(z2-z1)*ran2 (seed);
+		Dli.push_back(cosmo->angDist(0,zi));
+		maxr = pi*sqrt(fov/pi)/180*Dli[i]; // fov is a circle
+		rr = maxr*sqrt(ran2(seed));
+		theta = 2*pi*ran2(seed);
+		/*do{
 			x = 2*maxr*ran2(seed) - maxr;
 			y = 2*maxr*ran2(seed) - maxr;
-		}while((x*x+y*y) > (maxr*maxr));
-		pos[i][0] = x;
-		pos[i][1] = y;
+		}while((x*x+y*y) > (maxr*maxr));*/
+		pos[i][0] = rr*cos(theta);
+		pos[i][1] = rr*sin(theta);
 		pos[i][2] = 0.0;
 
-		halos[i].mass = vmasses[i];
-		halos[i].Rmax = vsizes[i];
-		halos[i].rscale = vsizes[i]/vscale[i]; // get the Rscale=Rmax/c
+		halos[i].mass = pow(10,InterpolateYvec(Nhalosbin,Logm,ran2 (seed)));
+		ha.reset(halos[i].mass,zi);
+		//halos[i].mass = vmasses[i];
+		//halos[i].Rmax = vsizes[i];
+		halos[i].Rmax = ha.getRvir()*cosmo->gethubble();
+		//halos[i].rscale = vsizes[i]/vscale[i]; // get the Rscale=Rmax/c
+		halos[i].rscale = halos[i].Rmax/ha.getConcentration(0); // get the Rscale=Rmax/c
 	}
 
 /*
@@ -126,13 +135,15 @@ HaloData::HaloData(
 		exit(1);
 	}
 
-
-	for(int i = 0; i < Nhalos; i++){
-		file_area << i << " " << halos[i].mass << " " << 3600*180/pi*halos[i].Rmax/Dli[i] << " " << 3600*180/pi*halos[i].rscale/Dli[i] << " ";
-		file_area << 3600*180/pi*pos[i][0]/Dli[i] << " " << 3600*180/pi*pos[i][1]/Dli[i] << endl;
+*/
+/*	for(int i = 0; i < Nhalos; i++){
+		cout << i << " " << halos[i].mass << " " << 3600*180/pi*halos[i].Rmax/Dli[i] << " " << 3600*180/pi*halos[i].rscale/Dli[i] << " ";
+		cout << 3600*180/pi*pos[i][0]/Dli[i] << " " << 3600*180/pi*pos[i][1]/Dli[i] << endl;
 
 		//cout << i << " " << vz[i] << " " << halos[i].mass << " " << halos[i].Rmax << " " << halos[i].rscale << endl;
 	}
+*/
+	/*
 	file_area.close();
 
 	*/
@@ -160,9 +171,11 @@ MultiLens::MultiLens(string filename,long *my_seed) : Lens(){
 
 	charge = 4*pi*Grav*mass_scale;
 
-	halo_tree = new ForceTreeHndl[Nplanes-1];
+	//halo_tree = new ForceTreeHndl[Nplanes-1];
+	halo_tree = new auto_ptr<ForceTree>[Nplanes-1];
 
-	halodata = new HaloDataHndl[Nplanes-1];
+	//halodata = new HaloDataHndl[Nplanes-1];
+	halodata = new auto_ptr<HaloData>[Nplanes-1];
 
 	if(flag_analens){
 		analens = new AnaLens(filename);
@@ -174,10 +187,11 @@ MultiLens::MultiLens(string filename,long *my_seed) : Lens(){
 MultiLens::~MultiLens(){
 
 	delete[] halo_tree;
+	for(int j=0;j<Nplanes-1;j++) delete &(halo_tree[j]);
 	delete[] Dl;
 	delete[] plane_redshifts;
 	delete[] dDl;
-	for(int j=0;j<Nplanes-1;j++) delete halodata[j];
+	for(int j=0;j<Nplanes-1;j++) delete &(halodata[j]);
 	delete[] halodata;
 	if(sim_input_flag){  // Otherwise these deallocations are done in the destructor of halodata's
 		delete[] halos;
@@ -363,8 +377,6 @@ void MultiLens::buildHaloTrees(
 			if(flag_analens && j == (flag_analens % Nplanes))
 				continue;
 
-			//halodata[j] = new HaloData(j,zsource,cosmo,this);
-
 			// redshift range
 			if(j == 0) z1 = 0.0;
 			else z1 = plane_redshifts[j] - 0.5*(plane_redshifts[j] - plane_redshifts[j-1]);
@@ -373,7 +385,8 @@ void MultiLens::buildHaloTrees(
 			else z2 = plane_redshifts[j] + 0.5*(plane_redshifts[j+1] - plane_redshifts[j]);
 			if(j-1 == (flag_analens % Nplanes)) z2 += 0.5*(plane_redshifts[j+1] - plane_redshifts[j]);
 
-			halodata[j] = new HaloData(fieldofview,min_mass,z1,z2,mass_func_type,cosmo,seed);
+			//halodata[j] = new HaloData(fieldofview,min_mass,z1,z2,mass_func_type,cosmo,seed);
+			halodata[j] = auto_ptr<HaloData>(new HaloData(fieldofview,min_mass,z1,z2,mass_func_type,cosmo,seed));
 
 			Ntot+=halodata[j]->Nhalos;
 		}
@@ -404,7 +417,8 @@ void MultiLens::buildHaloTrees(
 			if(j2 == Nhalos) j2 = Nhalos-1;
 
 			/// Use other constructor to create halo data
-			halodata[j] = new HaloData(&halos[j1],&halo_pos[j1],j2-j1);
+			//halodata[j] = new HaloData(&halos[j1],&halo_pos[j1],j2-j1);
+			halodata[j] = auto_ptr<HaloData>(new HaloData(&halos[j1],&halo_pos[j1],j2-j1));
 
 			//for(int i = 0; i<10 ;++i) cout << "Rmax:" << halos[j1+i].Rmax << "mass:" << halos[j1+i].mass << "rscale:" << halos[j1+i].rscale << "x = " << halo_pos[j1+i][0] << " " << halo_pos[j1+i][1] << endl;
 
@@ -413,22 +427,27 @@ void MultiLens::buildHaloTrees(
 
 	}
 
+	// *** these are not freed if this routine in used repeatedly
 	for(j=0;j<Nplanes-1;j++){
 		if(flag_analens && j == (flag_analens % Nplanes))
 			continue;
 
 		switch(internal_profile){
 		case 1:
-			halo_tree[j] = new ForceTreePowerLaw(1.9,&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos);
+			//halo_tree[j] = new ForceTreePowerLaw(1.9,&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos);
+			halo_tree[j] = auto_ptr<ForceTree>(new ForceTreePowerLaw(1.9,&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos));
 			break;
 		case 2:
-			halo_tree[j] = new ForceTreeNFW(&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos);
+			//halo_tree[j] = new ForceTreeNFW(&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos);
+			halo_tree[j] = auto_ptr<ForceTree>(new ForceTreeNFW(&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos));
 			break;
 		case 3:
-			halo_tree[j] = new ForceTreePseudoNFW(1.9,&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos);
+			//halo_tree[j] = new ForceTreePseudoNFW(1.9,&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos);
+			halo_tree[j] = auto_ptr<ForceTree>(new ForceTreePseudoNFW(1.9,&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos));
 			break;
 		case 0:
-			halo_tree[j] = new ForceTreeGauss(&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos);
+			//halo_tree[j] = new ForceTreeGauss(&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos);
+			halo_tree[j] = auto_ptr<ForceTree>(new ForceTreeGauss(&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos));
 			break;
 		}
 	}

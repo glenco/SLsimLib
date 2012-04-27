@@ -103,12 +103,12 @@ Point *NewPointArray(
 /** \ingroup ConstructorL2
  *
  */
-void FreePointArray(Point *array){
+void FreePointArray(Point *array,bool NewXs){
   /* Note: this deallocates positions!! */
   unsigned long i;
 
   if(array[0].head){
-	  for(i=0;i<array[0].head;++i) free(array[i].x);
+	  if(NewXs) for(i=0;i<array[0].head;++i) free(array[i].x);
 	  free(array);
   }else{
 	  ERROR_MESSAGE();
