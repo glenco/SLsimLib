@@ -26,6 +26,8 @@ short find_peaks(
 		,GridHndl grid        /// Grid to be refined.  It must be initialized.
 		,double rEinsteinMin  /// the Einstein radius of the smallest lens that should be resolved, sets resolution target
 		,double kappa_max     /// highest kappa to be refined to, 1 or 2 is probably good enough
+		,ImageInfo *imageinfo /// the image
+		,int *Nimages		/// number of peaks
 		){
 
 
@@ -33,7 +35,7 @@ short find_peaks(
 	double res_target = 0,threshold;
 	long Nnewpoints = 0,Ntemp;
 	unsigned long i;
-	ImageInfo *imageinfo = new ImageInfo;
+	//ImageInfo *imageinfo = new ImageInfo;
 	KistHndl newpointskist = new Kist;
 
 	if(grid->getInitRange() != grid->NumberOfPoints() ) grid->ReInitializeGrid(lens);
@@ -123,11 +125,15 @@ short find_peaks(
 		}
 	}
 
+	int NimageMax = 1000;
+
+	divide_images_kist(grid->i_tree,imageinfo,Nimages,NimageMax);
+
 	// need some way of returning all the points
 
 	// free memory in grids, trees and images
 	//free(imageinfo->points);
-	delete imageinfo;
+	//delete imageinfo;
 	delete newpointskist;
 
 	return 1;

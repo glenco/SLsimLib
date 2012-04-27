@@ -18,7 +18,7 @@ protected:
 
 public:
 	  /// output file, not always used.
-	  string outputfile;
+	  std::string outputfile;
 	  /// marks if the lens has been setup.
 	  bool set;
 

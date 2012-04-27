@@ -10,6 +10,7 @@
 #include <string>
 #include <utilities.h>
 
+using namespace std;
 
 HaloData::HaloData(HaloStructure *halostrucs,PosType **positions,unsigned long Nhaloss):
 	pos(positions), halos(halostrucs), Nhalos(Nhaloss)
@@ -20,12 +21,8 @@ HaloData::HaloData(HaloStructure *halostrucs,PosType **positions,unsigned long N
 /**
  *  \brief In this constructor the halos are created from a mass function and given random positions on the lens plane
  */
+
 HaloData::HaloData(
-/*		int jplane /// the index of the plane that holds the halos
-		,double zsource  /// source redshift
-		,CosmoHndl cosmo     /// cosmology
-		,MultiLens *lens     /// lens
-		){*/
 		double fov            /// field of view in square degrees
 		,double min_mass      /// Minimum mass of a halo
 		,double z1            /// lowest redshift
@@ -38,7 +35,6 @@ HaloData::HaloData(
 
 	allocation_flag = true;
 
-    //HALO ha(cosmo,lens->min_mass,0.);
     HALO ha(cosmo,min_mass,0.);
 
     //int iterator;
@@ -56,7 +52,7 @@ HaloData::HaloData(
 
 	double Nhaloestot;
 	float Nhaloestotf;
-	//Nhalosbin[0] = cosmo->haloNumberDensityOnSky(pow(10,Logm[0]),z1,z2,mfty)*fov;
+
 	Nhalosbin[0] = cosmo->haloNumberDensityOnSky(pow(10,Logm[0])/cosmo->gethubble(),z1,z2,mass_func_type)*fov;
 
 	Nhaloestot = Nhalosbin[0];
@@ -79,8 +75,6 @@ HaloData::HaloData(
 		double ni = ran2 (seed);
 		// compute the mass inverting the cumulative distribution
 		double logmi = getY(Nhalosbin,Logm,ni);
-		//if(logmi > 11)
-			//continue;
 		double mi = pow(10.,logmi);
 		vmasses.push_back(mi);
 		vindex.push_back(iterator);
@@ -193,6 +187,7 @@ MultiLens::~MultiLens(){
 	delete[] dDl;
 	for(int j=0;j<Nplanes-1;j++) delete &(halodata[j]);
 	delete[] halodata;
+
 	if(sim_input_flag){  // Otherwise these deallocations are done in the destructor of halodata's
 		delete[] halos;
 		delete[] halo_zs;
@@ -388,7 +383,7 @@ void MultiLens::buildHaloTrees(
 			//halodata[j] = new HaloData(fieldofview,min_mass,z1,z2,mass_func_type,cosmo,seed);
 			halodata[j] = auto_ptr<HaloData>(new HaloData(fieldofview,min_mass,z1,z2,mass_func_type,cosmo,seed));
 
-			Ntot+=halodata[j]->Nhalos;
+			Ntot+=halo_data[j]->Nhalos;
 		}
 
 	}else{
@@ -417,12 +412,13 @@ void MultiLens::buildHaloTrees(
 			if(j2 == Nhalos) j2 = Nhalos-1;
 
 			/// Use other constructor to create halo data
+
 			//halodata[j] = new HaloData(&halos[j1],&halo_pos[j1],j2-j1);
 			halodata[j] = auto_ptr<HaloData>(new HaloData(&halos[j1],&halo_pos[j1],j2-j1));
 
 			//for(int i = 0; i<10 ;++i) cout << "Rmax:" << halos[j1+i].Rmax << "mass:" << halos[j1+i].mass << "rscale:" << halos[j1+i].rscale << "x = " << halo_pos[j1+i][0] << " " << halo_pos[j1+i][1] << endl;
 
-			Ntot += halodata[j]->Nhalos;
+			Ntot += halo_data[j]->Nhalos;
 		}
 
 	}

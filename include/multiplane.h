@@ -12,11 +12,10 @@
 #include <cosmo.h>
 #include <halo.h>
 #include <utilities.h>
-
+#include <valarray>
 
 const int Nmassbin=32;
 const double MaxLogm=16.;
-
 
 /// structure to hold information about the halos' positions, masses, etc.
 struct HaloStructure{
@@ -34,7 +33,6 @@ public:
 	/// number of halos in the halo model on the plane
 	IndexType Nhalos;
 
-	//HaloData(int jplane,double zsource,CosmoHndl cosmo,MultiLens* lens);
 	HaloData(double fov,double min_mass,double z1,double z2,int mass_func_type,CosmoHndl cosmo,long *seed);
 	HaloData(HaloStructure *halostrucs,double **positions,unsigned long Nhaloss);
 	~HaloData();
@@ -51,7 +49,7 @@ typedef HaloData *HaloDataHndl;
 class MultiLens : public Lens{
 public:
 
-	MultiLens(string,long *);
+	MultiLens(std::string,long *);
 	~MultiLens();
 
 	void buildHaloTrees(CosmoHndl cosmo,double zsource);
@@ -64,6 +62,7 @@ public:
 
 	void setInternalParams(CosmoHndl,double zsource);
 	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off);
+	void rayshooterInternal(unsigned long Npixels, Point *i_points, bool kappa_off, float*,float*,float*,float*,float*, double* center,double range);
 
 	/// a poiner to the analytical lens
 	AnaLens *analens;
@@ -74,18 +73,17 @@ public:
 
 private:
 
-	void readParamfile(string);
+	void readParamfile(std::string);
 	/// Redshifts of lens planes, 0...Nplanes.  Last one is the source redshift.
 	double *plane_redshifts;
 	/// angular diameter distances
 	double *Dl, *dDl;
 	/// charge for the tree force solver (4*pi*G*mass_scale)
 	double charge;
-	/// an array of pointers to the halo models on each plane
-//	HaloDataHndl *halodata;
+	/// an array of smart pointers to the halo models on each plane
+	//HaloDataHndl *halodata;
 	auto_ptr<HaloData> *halodata;
-
-/// an array of pointers to halo trees on each plane, uses the haloModel in the construction
+	/// an array of smart pointers to halo trees on each plane, uses the haloModel in the construction
 	//ForceTreeHndl *halo_tree;
 	auto_ptr<ForceTree> *halo_tree;
 
@@ -103,7 +101,7 @@ private:
 	/// read particle/halo data in from a file
 	void readInputSimFile(CosmoHndl cosmo);
 
-	string input_sim_file;
+	std::string input_sim_file;
 	bool sim_input_flag;
 
 	/// pointer to first of all the halo internal structures
