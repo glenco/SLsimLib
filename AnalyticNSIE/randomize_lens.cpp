@@ -65,12 +65,13 @@ void Model::RandomizeModel(double r_source_phys,long *seed,bool tables){
 		lens->setZlens(zlens);
 
 		lens->RandomizeSigma(seed,tables);
-
-		source->source_r = r_source_phys*source->DlDs;
 	}
 
 	// This randomizes the halos if they are not read from an external source
 	setInternal();
+
+	// This need to be done after source->DlDs has been set in setInternal()
+	source->source_r = r_source_phys*source->DlDs;
 
 	lens->RandomizeHost(seed,tables);
 
