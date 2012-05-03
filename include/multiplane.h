@@ -61,7 +61,7 @@ public:
 	void printMultiLens();
 
 	void setInternalParams(CosmoHndl,double zsource);
-	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off);
+	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off, double zsource=-1);
 	void rayshooterInternal(unsigned long Npixels, Point *i_points, bool kappa_off, float*,float*,float*,float*,float*, double* center,double range);
 
 	/// a poiner to the analytical lens
@@ -82,10 +82,10 @@ private:
 	double charge;
 	/// an array of smart pointers to the halo models on each plane
 	//HaloDataHndl *halodata;
-	auto_ptr<HaloData> *halodata;
+	std::auto_ptr<HaloData> *halodata;
 	/// an array of smart pointers to halo trees on each plane, uses the haloModel in the construction
 	//ForceTreeHndl *halo_tree;
-	auto_ptr<ForceTree> *halo_tree;
+	std::auto_ptr<ForceTree> *halo_tree;
 
 	/* the following parameters are read in from the parameter file */
 

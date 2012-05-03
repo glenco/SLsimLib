@@ -131,7 +131,7 @@ public:
 
   // in readlens_ana.c
   void reNormSubstructure(double kappa_sub);
-  void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off);
+  void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off, double zsource=-1);
   void substract_stars_disks(PosType *ray,PosType *alpha
                   ,PosType *kappa,PosType *gamma);
 };

@@ -383,7 +383,7 @@ void MultiLens::buildHaloTrees(
 			//halodata[j] = new HaloData(fieldofview,min_mass,z1,z2,mass_func_type,cosmo,seed);
 			halodata[j] = auto_ptr<HaloData>(new HaloData(fieldofview,min_mass,z1,z2,mass_func_type,cosmo,seed));
 
-			Ntot+=halo_data[j]->Nhalos;
+			Ntot+=halodata[j]->Nhalos;
 		}
 
 	}else{
@@ -418,7 +418,7 @@ void MultiLens::buildHaloTrees(
 
 			//for(int i = 0; i<10 ;++i) cout << "Rmax:" << halos[j1+i].Rmax << "mass:" << halos[j1+i].mass << "rscale:" << halos[j1+i].rscale << "x = " << halo_pos[j1+i][0] << " " << halo_pos[j1+i][1] << endl;
 
-			Ntot += halo_data[j]->Nhalos;
+			Ntot += halodata[j]->Nhalos;
 		}
 
 	}

@@ -29,7 +29,7 @@
  * Warning: Is not valid for a non-flat universe.
  */
 
-void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off){
+void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off, double zsource){
 	unsigned long i;
 	double xx[2];
 
@@ -59,6 +59,9 @@ void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
 		i_points[i].gamma[2] = 0;
 
 		for(int j = 0; j < Nplanes-1 ; j++){  // each iteration leaves i_point[i].image on plane (j+1)
+
+			if(zsource == plane_redshifts[j])
+				break;
 
 			// convert to physical coorditanes on the plane j
 			xx[0] = i_points[i].image->x[0]/(1+plane_redshifts[j]);
@@ -140,7 +143,6 @@ void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
 				i_points[i].gamma[1] = gamma_plus[1];
 				i_points[i].gamma[2] = gamma_plus[2];
     		}
-
 		}
 		// Convert units back to angles.
 
