@@ -445,9 +445,11 @@ void MultiLens::buildHaloTrees(
 
 		for(i = 0; i < halodata[j]->Nhalos; i++){
 
+			double fac = 180/pi/3600./Dl[j]*(1+plane_redshifts[j]);
+
 			file_area << plane_redshifts[j] << " ";
-			file_area << i << " " << halodata[j]->halos[i].mass << " " << halodata[j]->halos[i].Rmax << " " << halodata[j]->halos[i].rscale << " ";
-			file_area << halodata[j]->pos[i][0] << " " << halodata[j]->pos[i][1] << endl;
+			file_area << i << " " << halodata[j]->halos[i].mass << " " << fac*halodata[j]->halos[i].Rmax << " " << fac*halodata[j]->halos[i].rscale << " ";
+			file_area << fac*halodata[j]->pos[i][0] << " " << fac*halodata[j]->pos[i][1] << endl;
 
 		}
 	}
