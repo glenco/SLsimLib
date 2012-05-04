@@ -119,28 +119,6 @@ HaloData::HaloData(
 		halos[i].rscale = halos[i].Rmax/ha.getConcentration(0); // get the Rscale=Rmax/c
 	}
 
-/*
-	stringstream f;
-	f << "halos_" << z1 << ".data";
-	string filename = f.str();
-	ofstream file_area(filename.c_str());
-	if(!file_area){
-		cout << "unable to create file " << filename << endl;
-		exit(1);
-	}
-
-*/
-/*	for(int i = 0; i < Nhalos; i++){
-		cout << i << " " << halos[i].mass << " " << 3600*180/pi*halos[i].Rmax/Dli[i] << " " << 3600*180/pi*halos[i].rscale/Dli[i] << " ";
-		cout << 3600*180/pi*pos[i][0]/Dli[i] << " " << 3600*180/pi*pos[i][1]/Dli[i] << endl;
-
-		//cout << i << " " << vz[i] << " " << halos[i].mass << " " << halos[i].Rmax << " " << halos[i].rscale << endl;
-	}
-*/
-	/*
-	file_area.close();
-
-	*/
 }
 
 HaloData::~HaloData(){
@@ -363,7 +341,7 @@ void MultiLens::buildHaloTrees(
 		CosmoHndl cosmo /// the cosmology
 		,double zsource /// the source resdhift
 		){
-	int j, Ntot;
+	int i, j, Ntot;
 	double z1, z2;
 
 	if(!sim_input_flag){   /// If no input file is provided synthesize halos
@@ -448,6 +426,35 @@ void MultiLens::buildHaloTrees(
 		}
 	}
 
+
+	cout << "constructed " << Ntot << " halos" << endl;
+
+	stringstream f;
+	f << "halos_" << zsource << ".data";
+	string filename = f.str();
+	ofstream file_area(filename.c_str());
+	if(!file_area){
+		cout << "unable to create file " << filename << endl;
+		exit(1);
+	}
+
+	for(j = 0; j < Nplanes-1; j++){
+
+		if(flag_analens && j == (flag_analens % Nplanes))
+			continue;
+
+		for(i = 0; i < halodata[j]->Nhalos; i++){
+
+			file_area << plane_redshifts[j] << " ";
+			file_area << i << " " << halodata[j]->halos[i].mass << " " << halodata[j]->halos[i].Rmax << " " << halodata[j]->halos[i].rscale << " ";
+			file_area << halodata[j]->pos[i][0] << " " << halodata[j]->pos[i][1] << endl;
+
+		}
+	}
+
+
+	file_area.close();
+
 	/*
 	double xp,x,xo;
 	double yp,y,yo;
@@ -499,7 +506,6 @@ void MultiLens::buildHaloTrees(
 	cout << xo << " " << yo << " " << x << " " << y << endl << endl;
 	*/
 
-	cout << "constructed " << Ntot << " halos" << endl;
 }
 
 void MultiLens::setRedshift(double zsource){
