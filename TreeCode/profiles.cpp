@@ -192,7 +192,52 @@ double ForceTreeNFW::g2function(double x){
 
 double ForceTreePseudoNFW::alpha_h(double r2,HaloStructure &par){
 
-	if(r2<=0) return 0.0;
+	if(r2<=0.0) return 0.0;
+
+	double b=0,r = sqrt(r2);
+
+	b = -par.mass/r2/pi;
+	if(r < par.Rmax) b *= mhat(r/par.rscale)/mhat(par.Rmax/par.rscale);
+
+	return b;
+}
+double ForceTreePseudoNFW::kappa_h(double r2,HaloStructure &par){
+
+	if(r2 > par.Rmax*par.Rmax) return 0.0;
+	if(r2 < 1.0-20) r2=1.0e-20;
+	return par.mass/(2*pi*pow(par.rscale,2)*mhat(par.Rmax/par.rscale))/pow(1+sqrt(r2)/par.rscale,beta);
+}
+
+double ForceTreePseudoNFW::gamma_h(double r2,HaloStructure &par){
+	double gt=0;
+
+	if( r2 <= 0.0) return 0.0;
+	gt = -par.mass/pi/r2;
+	if(r2 < par.Rmax*par.Rmax){
+		double y = sqrt(r2)/par.rscale;
+		gt *= 1.0/pow(par.rscale,2)/mhat(par.Rmax/par.rscale)/pow(1+y,beta);
+	}
+
+	return gt;
+}
+
+double ForceTreePseudoNFW::phi_h(double r2,HaloStructure &par){
+
+	ERROR_MESSAGE();
+	cout << "time delay has not been fixed for NFW profile yet." << endl;
+	exit(1);
+	return 0.0;
+}
+
+double ForceTreePseudoNFW::mhat(double y){
+	return log(1+y) - y/(1+y);
+}
+
+/*
+ *
+double ForceTreePseudoNFW::alpha_h(double r2,HaloStructure &par){
+
+	if(r2<=0.0) return 0.0;
 
 	double b=0,r = sqrt(r2);
 
@@ -228,5 +273,6 @@ double ForceTreePseudoNFW::phi_h(double r2,HaloStructure &par){
 }
 
 double ForceTreePseudoNFW::mhat(double y){
-	return (1 + (beta-1)*y)/pow(y+1,beta-1)/(beta-2)/(beta-1);
+	return (1 + ( 1 + (beta-1)*y)/pow(y+1,beta-1)  )/(beta-2)/(beta-1);
 }
+*/

@@ -417,7 +417,7 @@ void MultiLens::buildHaloTrees(
 			break;
 		case 3:
 			//halo_tree[j] = new ForceTreePseudoNFW(1.9,&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos);
-			halo_tree[j] = auto_ptr<ForceTree>(new ForceTreePseudoNFW(1.9,&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos));
+			halo_tree[j] = auto_ptr<ForceTree>(new ForceTreePseudoNFW(2.0,&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos));
 			break;
 		case 0:
 			//halo_tree[j] = new ForceTreeGauss(&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos);

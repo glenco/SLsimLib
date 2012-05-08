@@ -225,8 +225,6 @@ void ForceTree::force2D(double *ray,double *alpha,double *kappa,double *gamma,bo
 
 	  rcm2 = xcm*xcm + ycm*ycm;
 
-	  //cout << xcm << " " << ycm << endl;
-
 	  /* if the box is close enough that the smoothing scale could be important
 	   * add those particles individually and subtract their point particle contribution
 	   * that will be added later
