@@ -180,10 +180,9 @@ void MultiLens::rayshooterInternal(unsigned long Npixels
 
 	Npoints = Npixels*Npixels;
 
-	for(i = 0, outside = 0; i< Npoints; i++){
+	Npoints = 10;
 
-		if((i % 1000) == 0)
-			cout << i << endl;
+	for(i = 0, outside = 0; i< Npoints; i++){
 
 		double kappa,aa,bb,cc;
 	    double alpha[2], gamma[3];
@@ -319,7 +318,7 @@ void MultiLens::rayshooterInternal(unsigned long Npixels
 		  	    - i_points[i].gamma[2]*i_points[i].gamma[2];
     }
 
-	cout << "outside " << outside/(float)Npoints << endl;
+	cout << endl <<  "outside " << outside/(float)Npoints << endl;
 
     return;
 }
