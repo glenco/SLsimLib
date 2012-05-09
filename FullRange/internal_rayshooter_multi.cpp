@@ -180,8 +180,6 @@ void MultiLens::rayshooterInternal(unsigned long Npixels
 
 	Npoints = Npixels*Npixels;
 
-	Npoints = 10;
-
 	for(i = 0, outside = 0; i< Npoints; i++){
 
 		double kappa,aa,bb,cc;
