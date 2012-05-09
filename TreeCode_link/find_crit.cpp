@@ -326,6 +326,8 @@ void find_crit_kist(
   Npoints = critcurve->imagekist->Nunits();
   *orderingsuccess = true;
   if(ordercurve){
+
+	  unsigned long NewNumber;
 	  divide_images_kist(grid->i_tree,critcurve,Ncrits,maxNcrits);
 
 	  // order points in curve
@@ -338,6 +340,9 @@ void find_crit_kist(
 		  //copy points into a point array for compatibility with curve ordering routines
 		  for(ii=0; ii < critcurve[i].imagekist->Nunits() ; ++ii, critcurve[i].imagekist->Down())
 			  PointCopyData(&tmp_points[ii],getCurrentKist(critcurve[i].imagekist));
+
+		  NewNumber = order_curve4(tmp_points,critcurve[i].imagekist->Nunits());
+
 		  // order the curve
 		  if(!order_curve4(tmp_points,critcurve[i].imagekist->Nunits()) ) *orderingsuccess = false;
 
@@ -347,12 +352,19 @@ void find_crit_kist(
 		  }else critcurve[i].area=0;
 
 		  // resort points in imagekist
-		  for(ii=0;ii<critcurve[i].imagekist->Nunits();++ii){
+		  for(ii=0;ii<NewNumber;++ii){
 			  critcurve[i].imagekist->MoveToTop();
 			  do{
 				  if(tmp_points[ii].id == critcurve[i].imagekist->getCurrent()->id)
 					  critcurve[i].imagekist->MoveCurrentToBottom();
 			  }while(critcurve[i].imagekist->Down());
+		  }
+		  // remove points that were not linked up into a closed curve
+		  critcurve[i].imagekist->MoveToTop();
+		  critcurve[i].imagekist->JumpDown(NewNumber);
+		  while(critcurve[i].imagekist->Nunits() > NewNumber){
+			  critcurve[i].imagekist->TakeOutCurrent();
+			  critcurve[i].imagekist->Down();
 		  }
 	  }
 	  FreePointArray(tmp_points,false);
