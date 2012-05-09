@@ -26,7 +26,7 @@ void split_order_curve4(OldImageInfo *curves,int Maxcurves,int *Ncurves){
 	double center[2],*theta;
 	//bool delta,tmp,step;
 	//ListHndl reservoir,orderedlist;
-	Point *newpointarray;
+	//Point *newpointarray;
 
 	//std::printf("entering split_order_curve\n");
 	if(curves[0].Npoints==0){
@@ -155,7 +155,7 @@ void split_order_curve4(OldImageInfo *curves,int Maxcurves,int *Ncurves){
  *
  * This algorithm could be improve by inserting the remaining points, if any, into the existing curve and recursively calling itself.
  */
-bool order_curve4(Point *curve,long Npoints){
+unsigned long order_curve4(Point *curve,long Npoints){
 
 	long m,j,end;
 	double center[2],*theta;
@@ -180,15 +180,11 @@ bool order_curve4(Point *curve,long Npoints){
 
 	for(m=0;m<Npoints;++m){
 		theta[m]=atan2(curve[m].x[1]-center[1]
-		                                    ,curve[m].x[0]-center[0]);
+		              ,curve[m].x[0]-center[0]);
 	}
 	quicksortPoints(curve,theta,Npoints);
 
 	// check to make sure the center is inside the curves
-	//assert(abs(windings(center,curve,Npoints,&tmp1,0)));
-
-	//std::printf("N=%i\n",Npoints);
-	//assert(abs(windings(center,curve,Npoints,&tmp1,0)) > 0 );
 
 	// find the last point that is a neighbor of the first point
 	m=Npoints-1;
@@ -208,14 +204,235 @@ bool order_curve4(Point *curve,long Npoints){
 		++m;
 		assert(m < Npoints);
 	}
-	//std::printf("i = %i Npoints = %i end+1 = %i j=%i\n",i,Npoints,end+1,j);
-	Npoints=end+1;
 
 	free(theta);
 
-	if(end+1 != Npoints) return false;
+	return end+1;
+}
+/// Overloads and is dependent on version that takes a point array
+bool order_curve4(KistHndl curve){
+	Point *tmpcurve = NewPointArray(curve->Nunits(),false);
+	unsigned long i=0,Npoints = curve->Nunits();
+	bool bo;
+
+	curve->MoveToTop();
+	do{
+		PointCopyData(&tmpcurve[i++],curve->getCurrent());
+	}while(curve->Down());
+
+	bo = order_curve4(tmpcurve,curve->Nunits());
+
+	// resort points in imagekist
+	for(i=0;i<Npoints;++i){
+		curve->MoveToTop();
+		do{
+			if(tmpcurve[i].id == curve->getCurrent()->id)
+				  curve->MoveCurrentToBottom();
+		}while(curve->Down());
+	}
+
+	FreePointArray(tmpcurve,false);
+
+	return bo;
+}
+/**
+ *
+ *
+ * I can think of one pathological case in which this routine would fail
+ */
+bool order_ExteriorBoundary(
+		Point *curve           /// Array of points representing the curve
+		,long Npoints          /// Number of points in curve
+		,long *NewNpoints      /// Number of points in the exterior boundary, *NewNpoints <= Npoints
+		,double *area          /// Area within exterior boundary
+		){
+
+	long m,j,end,k;
+	double center[2],*theta,tmp;
+
+	cout << AreBoxNeighbors(&(curve[0]),&(curve[Npoints-1])) << endl;
+
+	//std::printf("entering split_order_curve\n");
+	if(Npoints < 3) return false;
+
+
+	// order curve points
+	theta=(double *)malloc(Npoints*sizeof(double));
+	assert(theta);
+
+
+	// sort points by angle around center point
+	center[0]=center[1]=0;
+	for(m=0;m<Npoints;++m){
+		center[0]+=curve[m].x[0];
+		center[1]+=curve[m].x[1];
+	}
+	center[0]/=Npoints;
+	center[1]/=Npoints;
+
+	// check to make sure the center is inside the curves
+	assert(abs(windings(center,curve,Npoints,&tmp,0)));
+
+//	for(m=0;m<Npoints;++m){
+//		theta[m]=atan2(curve[m].x[1]-center[1]
+//		              ,curve[m].x[0]-center[0]);
+//	}
+//	quicksortPoints(curve,theta,Npoints);
+	free(theta);
+
+	cout << AreBoxNeighbors(&(curve[0]),&(curve[Npoints-1])) << endl;
+
+	// make bottom most point the first point
+	double ymin = curve[0].x[1];
+	long imin = 0;
+	for(m=1;m<Npoints;++m){
+		if(ymin > curve[m].x[1]){
+			ymin = curve[m].x[1];
+			imin = m;
+		}
+	}
+	// Cyclic permutation of points until bottom point is first
+	for(m=0;m<imin;++m){
+		for(k=0;k<Npoints-1;++k) SwapPointsInArrayData( &(curve[k]) , &(curve[k+1]) );
+	}
+
+	cout << AreBoxNeighbors(&(curve[0]),&(curve[Npoints-1])) << endl;
+	cout << AreBoxNeighbors(&(curve[Npoints-imin]),&(curve[Npoints-imin-1])) << endl;
+
+	// find the last point that is a neighbor of the first point
+	j=0;
+	do{
+		m = Npoints-1;
+		while(!AreBoxNeighbors(&(curve[j]),&(curve[m]))) --m;
+		end = m;
+		++j;
+	}while(end == 0);
+
+	// walk curve to remove shadowing effect
+	j=0;
+	m=0;
+	while(j < end){
+		walkcurveRight(curve,Npoints,&j,&end);
+		//std::printf("i = %i Npoints = %i end+1 = %i j = %i\n",i,Npoints,end+1,j);
+		if(j < Npoints-1)
+			backtrack(curve,Npoints,&j,0,&end);
+		++m;
+		if(m > Npoints-1){
+			*NewNpoints = 0;
+			return false;  // did not succeed
+		}
+	}
+	//std::printf("i = %i Npoints = %i end+1 = %i j=%i\n",i,Npoints,end+1,j);
+	*NewNpoints = end + 1;
+
+	windings(curve[0].x,curve,*NewNpoints,area,0);
+
 	return true;
 }
+/**\ingroup Utill
+ *
+ * \brief Finds area within a curve by summing every cell.
+ *
+ * Should work every time provided the curve ordering is correct.
+ * Testing if each cell is inside the curve can be slow.
+ */
+double findAreaOfCurve(TreeHndl tree,ImageInfo *curve,int NimageMax){
+
+	if(curve->imagekist->Nunits() < 3) return 0.0;
+
+	int Nimages,i,imax=0;
+	double xcm[2],area,tmp;
+	ImageInfo *borders = new ImageInfo[NimageMax];
+
+	// find borders of curve
+	findborders4(tree,curve);
+	// copy outer borders into borders->imagekist
+	curve->outerborder->MoveToTop();
+	do{
+		borders->imagekist->InsertAfterCurrent(curve->outerborder->getCurrent());
+	}while(curve->outerborder->Down());
+
+	borders->imagekist->Print();
+exit(0);
+	// split borders up
+	divide_images_kist(tree,borders,&Nimages,NimageMax);
+
+
+
+	area = 0.0;
+	xcm[0]=xcm[1]=0.0;
+	for(i=0;i<Nimages;++i){
+		// order the curve
+		order_curve4(borders[i].imagekist);
+		windings(xcm,borders[i].imagekist,&tmp,0);
+		if(tmp < area){
+			tmp = area;
+			imax=i;
+		}
+	}
+
+	borders[imax].imagekist->Print();
+
+	exit(0);
+
+	delete[] borders;
+
+	return area;
+}
+	/*******
+	// find "center" of curve
+	xcm[0]=xcm[1]=0.0;
+	curve->MoveToTop();
+	do{
+		xcm[0] += curve->getCurrent()->x[0];
+		xcm[1] += curve->getCurrent()->x[1];
+	}while(curve->Down());
+	xcm[0] /= curve->Nunits();
+	xcm[1] /= curve->Nunits();
+
+	//cout << "windings " << windings(xcm,curve,&tmp,0) << endl;
+
+	// find farthest point on curve from center
+	rmax = 0.0;
+	curve->MoveToTop();
+	do{
+		r = pow(xcm[0] - curve->getCurrent()->x[0],2)
+				+ pow(xcm[1] - curve->getCurrent()->x[1],2);
+		if(r>rmax){
+			rmax=r;
+		}
+	}while(curve->Down());
+
+	PointsWithinKist(tree,xcm,sqrt(rmax),subkist,0);
+
+	area = 0.0;
+	subkist->MoveToTop();
+	do{
+		if(windings(subkist->getCurrent()->x,curve,&tmp,0)){
+			area += (subkist->getCurrent()->leaf->boundary_p2[0] - subkist->getCurrent()->leaf->boundary_p1[0])
+				*(subkist->getCurrent()->leaf->boundary_p2[1] - subkist->getCurrent()->leaf->boundary_p1[1]);
+
+		}else{
+			subkist->TakeOutCurrent();
+		}
+	}while(subkist->Down());
+
+	subkist->MoveToTop();
+	cout << subkist->Nunits() << endl;
+	do{
+		cout << subkist->getCurrent()->leaf->boundary_p1[0]
+		        << "  " << subkist->getCurrent()->leaf->boundary_p1[1]
+				<< "   " << subkist->getCurrent()->leaf->boundary_p2[0]
+				<< "  " << subkist->getCurrent()->leaf->boundary_p2[1]
+				                          << endl;
+	}while(subkist->Down());
+	assert(area >= 0.0);
+	delete subkist;
+
+	return area;
+}
+
+*/
 
 /*  orders points in a curve, separates disconnected curves
  *   curves[0...Maxcurves] must be allocated before
@@ -607,6 +824,10 @@ void order_curve(OldImageInfo *curve){
  *   tries x/y jump before diagonal jump
  *   exits when it cannot find a cell neighbor ahead in array
  *   leaves j as the last point in curves
+ *
+ *   If the *end point is found to be in the curve it is moved with its point.  The
+ *   walking continues beyond end in which case *j > *end.
+ *
  */
 void walkcurve(Point *points,long Npoints,long *j,long *end){
 
@@ -646,16 +867,67 @@ void walkcurve(Point *points,long Npoints,long *j,long *end){
 		}
 	}
 }
+/*
+ * orders curve by finding closest point ahead in array.
+ *   Tries to make the most right hand turn as possible at
+ *   each step in the sense that the angle between the rays connecting
+ *   the end point to the one behind it and connecting the end point to
+ *   the next point is the minimum of the endpoint's neighbors.
+ *
+ *   If at the beginning of the array, it will try to walk down and to
+ *   the right first.
+ *
+ *   If the *end point is found to be in the curve it is moved with its point.  The
+ *   walking continues beyond end in which case *j > *end.
+ */
 
+void walkcurveRight(Point *points,long Npoints,long *j,long *end){
+
+	long i,k,i_next;
+	double mintheta,x,y,phi;
+
+	if(*j == 0) phi = pi/2;
+	else phi = atan2(points[*j].x[1] - points[*j-1].x[1] , points[*j].x[0] - points[*j-1].x[0]);
+	i_next = -1;
+
+	while(*j < Npoints){
+		for(i=(*j)+1;i<Npoints ;++i){
+
+			// find neighbor with minimum forward angle with rerspect to the last two points
+			if( AreBoxNeighbors(&(points[i]),&(points[(*j)])) ){
+				x = (points[i].x[0] - points[*j].x[0])*cos(phi) + (points[i].x[1] - points[*j].x[1])*sin(phi);
+				y = (points[i].x[0] - points[*j].x[0])*sin(phi) - (points[i].x[1] - points[*j].x[1])*cos(phi);
+				if(mintheta > atan2(y,x)){
+					i_next = i;
+					mintheta = atan2(y,x);
+				}
+			}
+		}
+		if(i_next != -1){  // did find the next point
+			if(i_next == (*end)) *end=(*j)+1;
+			for(k=i_next;k>(*j)+1;--k) SwapPointsInArray( &(points[k]) , &(points[k-1]) );
+			++(*j);
+			mintheta = 2*pi;
+			phi = atan2(points[*j].x[1] - points[*j-1].x[1] , points[*j].x[0] - points[*j-1].x[0]);
+		}else{
+			break;  // did not find next point
+		}
+		i_next = -1;
+	}
+}
+
+/* work backward along curve to find point with another neighbor
+ * further along in the array
+ * end - the index of the point where end has been moved to
+ *       if the end point of the path is already known points > end
+ *       are spurs
+ *  Does not change order of any point < j
+ *  will not go back past jold
+ *
+ *   If the *end point is found to be the next point in the curve it is moved
+ *   with its point and *j = *end.
+ */
 short backtrack(Point *points,long Npoints,long *j,long jold,long *end){
-	  /* work backward along curve to find point with another neighbor
-	   * further along in the array
-	   * end - the index of the point where end has been moved to
-	   *       if the end point of the path is already known points > end
-	   *       are spurs
-	   *  Does not change order of any point < j
-	   *  will not go back past jold
-	   */
 
 	long m,i,k;
 
@@ -1172,3 +1444,103 @@ void splitlist(ListHndl imagelist,OldImageInfo *images,int *Nimages,int Maximage
 	//std::printf("imagelist = %il\n",imagelist->Npoints);
 	return;
 }
+
+/** \ingroup Utill
+ * \brief windings(): winding number test for a point in a polygon
+ * Returns: Number of times a curves winds around the point x.
+ *
+ * The number of times the curve loops around a point is calculated.
+ *
+ * The area of a self-intersecting curve will be the area of the regions encircled in
+ * a clockwise direction minus the regions encircled in a counterclockwise direction - an
+ * infinity symbol has zero area.
+ */
+int windings(
+		double *x              /// Point for which the winding number is calculated
+		,Point *points         /// The points on the border.  These must be ordered.
+		,unsigned long Npoints /// number of points in curve
+		,double *area          /// returns absolute the area within the curve with oriented border
+		,short image           /// if == 1 the image of the curve is uses as the curve
+		){
+	int wn=0;
+	unsigned long k,i;
+
+	*area=0.0;
+	if(Npoints < 3) return 0;
+
+	if(image){
+		for(i=0;i<Npoints;++i){
+			k= i < Npoints-1 ? i+1 : 0;
+			*area+=(points[i].image->x[0] + points[k].image->x[0])
+					*(points[i].image->x[1] - points[k].image->x[1]);
+
+			if(points[i].image->x[1] <= x[1]){
+				if(points[k].image->x[1] > x[1])
+					if( isLeft(points[i].image,points[k].image,x) > 0) ++wn;
+			}else{
+				if(points[k].image->x[1] <= x[1])
+					if( isLeft(points[i].image,points[k].image,x) < 0) --wn;
+			}
+		}
+	}else{
+
+		for(i=0;i<Npoints;++i){
+			k= i < Npoints-1 ? i+1 : 0;
+			*area+=(points[i].x[0] + points[k].x[0])*(points[i].x[1] - points[k].x[1]);
+
+			if(points[i].x[1] <= x[1]){
+				if(points[k].x[1] > x[1])
+					if( isLeft(&points[i],&points[k],x) > 0) ++wn;
+			}else{
+				if(points[k].x[1] <= x[1])
+					if( isLeft(&points[i],&points[k],x) < 0) --wn;
+			}
+		}
+
+	}
+
+	*area = fabs(*area)*0.5;
+	//std::printf("wn = %i\n",wn);
+	//if(abs(wn) > 0) exit(0);
+	return wn;
+}
+int windings(
+		double *x              /// Point for which the winding number is calculated
+		,KistHndl kist         /// Kist of points on the border.  These must be ordered.
+		,double *area          /// returns absolute the area within the curve with oriented border
+		,short image           /// if == 1 the image of the curve is uses as the curve
+		){
+	int wn=0;
+	unsigned long k,i;
+	unsigned long Npoints = kist->Nunits();
+
+	*area=0.0;
+	if(Npoints < 3) return 0;
+
+	Point **points = new Point*[Npoints];
+
+	kist->MoveToTop();
+	for(i=0;i<Npoints;++i,kist->Down()){
+		if(image) points[i] = kist->getCurrent()->image;
+		else points[i] = kist->getCurrent();
+	}
+
+	for(i=0;i<Npoints;++i){
+		k = i < Npoints-1 ? i+1 : 0;
+		*area += (points[i]->x[0] + points[k]->x[0])*(points[i]->x[1] - points[k]->x[1]);
+
+		if(points[i]->x[1] <= x[1]){
+			if(points[k]->x[1] > x[1])
+				if( isLeft(points[i],points[k],x) > 0) ++wn;
+		}else{
+			if(points[k]->x[1] <= x[1])
+				if( isLeft(points[i],points[k],x) < 0) --wn;
+		}
+	}
+
+	*area = fabs(*area)*0.5;
+	delete points;
+
+	return wn;
+}
+
