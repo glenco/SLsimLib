@@ -319,6 +319,7 @@ void log_polar_grid(Point *i_points,double rmax,double rmin,double *center,long 
 void findarea(ImageInfo *imageinfo);
 int windings(double *x,Point *points,unsigned long Npoints,double *area,short image);
 int windings(double *x,KistHndl kist,double *area,short image);
+int windings2(double *x,Point *points,unsigned long Npoints,double *area,short image);
 
 long IndexFromPosition(double *x,long Npixels,double range,double *center);
 void PositionFromIndex(unsigned long i,double *x,long Npixels,double range,double *center);
