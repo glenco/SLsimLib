@@ -319,6 +319,8 @@ void quickPartitionPoints(double pivotvalue,unsigned long *pivotindex
 Point *LinkToSourcePoints(Point *i_points,unsigned long Npoints);
 void log_polar_grid(Point *i_points,double rmax,double rmin,double *center,long Ngrid);
 void findarea(ImageInfo *imageinfo);
+int windings2(double *x,Point *points,unsigned long Npoints,double *area,short image);
+
 long IndexFromPosition(double *x,long Npixels,double range,double *center);
 void PositionFromIndex(unsigned long i,double *x,long Npixels,double range,double *center);
 //inline float isLeft( Point *p0, Point *p1, double *x );

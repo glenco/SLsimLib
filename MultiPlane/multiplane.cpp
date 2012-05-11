@@ -353,10 +353,13 @@ void MultiLens::buildHaloTrees(
 			// redshift range
 			if(j == 0) z1 = 0.0;
 			else z1 = plane_redshifts[j] - 0.5*(plane_redshifts[j] - plane_redshifts[j-1]);
-			if(j-1 == (flag_analens % Nplanes)) z1 -= 0.5*(plane_redshifts[j] - plane_redshifts[j-1]);
+
+			if(j-1 == (flag_analens % Nplanes)) z1 = plane_redshifts[j] - 0.5*(plane_redshifts[j] - plane_redshifts[j-2]);
+
 			if(j == Nplanes-2) z2 = zsource;
 			else z2 = plane_redshifts[j] + 0.5*(plane_redshifts[j+1] - plane_redshifts[j]);
-			if(j-1 == (flag_analens % Nplanes)) z2 += 0.5*(plane_redshifts[j+1] - plane_redshifts[j]);
+
+			if(j+1 == (flag_analens % Nplanes)) z2 = plane_redshifts[j] + 0.5*(plane_redshifts[j+2] - plane_redshifts[j]);
 
 			//halodata[j] = new HaloData(fieldofview,min_mass,z1,z2,mass_func_type,cosmo,seed);
 			halodata[j] = auto_ptr<HaloData>(new HaloData(fieldofview,min_mass,z1,z2,mass_func_type,cosmo,seed));
@@ -377,10 +380,13 @@ void MultiLens::buildHaloTrees(
 			// redshift range
 			if(j == 0) z1 = 0.0;
 			else z1 = plane_redshifts[j] - 0.5*(plane_redshifts[j] - plane_redshifts[j-1]);
-			if(j-1 == (flag_analens % Nplanes)) z1 -= 0.5*(plane_redshifts[j] - plane_redshifts[j-1]);
+
+			if(j-1 == (flag_analens % Nplanes)) z1 = plane_redshifts[j] - 0.5*(plane_redshifts[j] - plane_redshifts[j-2]);
+
 			if(j == Nplanes-2) z2 = zsource;
 			else z2 = plane_redshifts[j] + 0.5*(plane_redshifts[j+1] - plane_redshifts[j]);
-			if(j-1 == (flag_analens % Nplanes)) z2 += 0.5*(plane_redshifts[j+1] - plane_redshifts[j]);
+
+			if(j+1 == (flag_analens % Nplanes)) z2 = plane_redshifts[j] + 0.5*(plane_redshifts[j+2] - plane_redshifts[j]);
 
 			/// Find which halos are in redshift range
 

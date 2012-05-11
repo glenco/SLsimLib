@@ -182,6 +182,9 @@ void MultiLens::rayshooterInternal(unsigned long Npixels
 
 	for(i = 0, outside = 0; i< Npoints; i++){
 
+		if(i % 10000 == 0)
+			cout << i << endl;
+
 		double kappa,aa,bb,cc;
 	    double alpha[2], gamma[3];
 	    double xminus[2],xplus[2];
