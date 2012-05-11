@@ -15,9 +15,12 @@
 
 #include <slsimlib.h>
 
+using namespace std;
+
 static double betaT,*modT,**xobT,**dx_subT,sigGT,*modTT,*modoT,**vT,x_centerT[2],**xgT,**dx_subTt;
 static int NmodT,NsourcesT,NimagesT,*pairingT,degenT,Nmin;
 static double oldsm;//,tang[2],length,yot[2],radsourceT;
+
 
 /** \ingroup FitLens
  *
@@ -628,7 +631,7 @@ double regularize(int Nmax,int Nmin,int N,int Nsources,int degen
 
   for(i=Nmin,Dsum=0;i<=Nmax;i+=1){
     if(i<=3) Dsum += pow( mod[i]-modo[i],2);
-    else Dsum += pow(1-pow(i/2,2),2)*pow( mod[i]-modo[i],2);
+    else Dsum += pow(1-pow(i/2,2.),2)*pow( mod[i]-modo[i],2);
   }
   sumold=Dsum;
 
@@ -638,12 +641,12 @@ double regularize(int Nmax,int Nmin,int N,int Nsources,int degen
     	/** renormalize model **/
     	for(i=3,sum=0.0;i<=Nmax;++i){
     		if(i<=3) sum += mod[i]*modo[i];
-    		else  sum += pow(1-pow(i/2,2),2)*mod[i]*modo[i];
+    		else  sum += pow(1-pow(i/2,2.),2)*mod[i]*modo[i];
     	}
     	aa=sum;
     	for(i=3,sum=0.0;i<=Nmax;++i){
     		if(i<=3) sum += modo[i]*modo[i];
-    		else  sum += pow(1-pow(i/2,2),2)*modo[i]*modo[i];
+    		else  sum += pow(1-pow(i/2,2.),2.)*modo[i]*modo[i];
     	}
     	aa/=sum;
 
@@ -653,12 +656,12 @@ double regularize(int Nmax,int Nmin,int N,int Nsources,int degen
 	for(j=1;j<=degen;++j){
       for(i=Nmin,sum=0.0;i<=Nmax;i+=1){
     	  if(i<=3) sum += ( mod[i] - modo[i]  )*v[i][j];
-    	  else sum += pow(1-pow(i/2,2),2)*( mod[i] - modo[i]  )*v[i][j];
+    	  else sum += pow(1-pow(i/2,2.),2.)*( mod[i] - modo[i]  )*v[i][j];
       }
       weights[j]=-sum;
       for(i=Nmin,sum=0.0;i<=Nmax;i+=1){
     	  if(i<=3) sum += v[i][j]*v[i][j];
-    	  else sum += pow(1-pow(i/2,2),2)*v[i][j]*v[i][j];
+    	  else sum += pow(1-pow(i/2,2.),2)*v[i][j]*v[i][j];
       }
       weights[j] /= sum;
 
@@ -672,7 +675,7 @@ double regularize(int Nmax,int Nmin,int N,int Nsources,int degen
 
     for(i=Nmin,sum=0.0;i<=Nmax;i+=1){
       if(i<=3) sum += pow(mod[i]-modo[i],2);
-      else sum += pow(1-pow(i/2,2),2)*pow(mod[i]-modo[i],2);
+      else sum += pow(1-pow(i/2,2.),2.)*pow(mod[i]-modo[i],2);
     }
     Dsum=fabs(sumold-sum);
     /*std::printf("%e\n",sumold-sum);*/

@@ -55,7 +55,7 @@ void find_images_kist(
 		){
 
 
-	long Nsizes;
+	int Nsizes;
 	double rtemp,tmp,maxgridsize;
 	static double oldy[2],oldr=0;
 	short moved,flag;
@@ -66,7 +66,7 @@ void find_images_kist(
 	bool image_overlap;
 	static int oldNimages=0;
 	static unsigned long Npoints_old = 0;
-	Point **dummy_pnt = NULL;
+	//Point **dummy_pnt = NULL;
 	//unsigned long Ntmp;
 	//Point *point,*closestpoint;
 
@@ -83,10 +83,10 @@ void find_images_kist(
 			(oldr > r_source)  // and source size has gotten smaller
 	){
 		Nsizes=(int)( log(oldr/r_source)/log(Ngrid_block) ); // round up
-	    rtemp = r_source*pow(Ngrid_block,Nsizes);
+	    rtemp = r_source*pow(1.0*Ngrid_block,Nsizes);
 	}else{
 		Nsizes=(int)(log(initial_size/sqrt(pi)/fabs(r_source*mumin))/log(Ngrid_block) ) + 1 ; // round up
-	    rtemp = r_source*pow(Ngrid_block,Nsizes);
+	    rtemp = r_source*pow(1.0*Ngrid_block,Nsizes);
 	}
 
 	Npoints_old = grid->i_tree->pointlist->Npoints;
@@ -169,7 +169,15 @@ void find_images_kist(
 					,fabs(difftime(t3,now)/60.),grid->i_tree->pointlist->Npoints);
 
 		// mark image points in tree
-		maxgridsize = PointsWithinKist(grid->s_tree,y_source,r_source,subkist,1);
+		PointsWithinKist(grid->s_tree,y_source,r_source,subkist,1);
+
+		 //***************************** test *****************************
+		subkist->AreDataUnique();
+		PointsWithinKist(grid->s_tree,y_source,r_source,subkist,0);
+		assert(subkist->AreDataUnique());
+		cout << "remember me" << endl;
+		subkist->Empty();
+		//***************************************************************
 
 		moved=image_finder_kist(lens,y_source,fabs(r_source),grid
 				,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
@@ -596,24 +604,21 @@ int refine_grid_kist(
 
 		  rmax=MAX(imageinfo[i].gridrange[1],imageinfo[i].gridrange[0]);
 
-       // loop through points in ith image
+		  // loop through points in ith image
 		//for(j=0,Ncells=0;j<imageinfo[i].Npoints;++j){
 		  MoveToTopKist(imageinfo[i].imagekist);
 		  for(j=0 ; j<imageinfo[i].imagekist->Nunits() ; ++j,MoveDownKist(imageinfo[i].imagekist) ){
 
+
 			//if( imageinfo[i].points[j].gridsize > 1.01*rmax/Ngrid_block){  /* only refine largest grid size in image*/
 			  if( getCurrentKist(imageinfo[i].imagekist)->gridsize > 1.01*rmax/Ngrid_block){  /* only refine largest grid size in image*/
-
-				  // get real point in tree
-				  //point = imageinfo[i].points[j].image->image;
-				  //point = getCurrentKist(imageinfo[i].imagekist);
-				  //assert(point->gridsize > 0);
 
 				  //imageinfo[i].points[j].gridsize /= Ngrid_block;
 				  ++count;
 
 				  i_points = RefineLeaf(lens,i_tree,s_tree,getCurrentKist(imageinfo[i].imagekist),Ngrid_block,kappa_off);
 				  if(newpointskist) for(k=0; k < i_points->head ; ++k) newpointskist->InsertAfterCurrent(&i_points[k]);
+
 
 				  //xygridpoints(&i_points[Nmarker],point->gridsize*(Ngrid_block-1)/Ngrid_block,point->x,Ngrid_block,1);
 

@@ -107,13 +107,13 @@ typedef ForceTree *ForceTreeHndl;
 class ForceTreePowerLaw : public ForceTree{
 
 public:
-	ForceTreePowerLaw(float beta,PosType **xp,IndexType Npoints,HaloStructure *par_internals,bool Multisize = true
+	ForceTreePowerLaw(double my_beta,PosType **xp,IndexType Npoints,HaloStructure *par_internals,bool Multisize = true
 			,int bucket = 5,int dimensions = 2,bool median = false,PosType theta = 0.1
 			);
 	~ForceTreePowerLaw();
 
 private:
-	float beta; // logorithmic slop of 2d mass profile
+	double beta; // logorithmic slop of 2d mass profile
 
 	// Override internal structure of halos
 	double alpha_h(double r2,HaloStructure &par);

@@ -869,7 +869,7 @@ bool RefinePoint2(Point *point,TreeHndl i_tree,double image_area,double total_ar
 
 	EmptyKist(nearest);
 	// Prevent cell from getting so small that precision error prevents everything from working
-	if(point->gridsize <= pow(10,1 - DBL_DIG)) return false;  // this shouldn't be necessary every time
+	if(point->gridsize <= pow(10.,1 - DBL_DIG)) return false;  // this shouldn't be necessary every time
 
 	if( image_area < target_all*res_target*total_area ) return false;
 
@@ -990,7 +990,7 @@ Point * RefineLeaf(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,Point *point,in
 	int Nout,kk;
 
 	assert(point->leaf->child1 == NULL && point->leaf->child2 == NULL);
-	assert(point->gridsize > pow(10,-DBL_DIG) ); // If cells are too small they will cause problems.
+	assert(point->gridsize > pow(10.,-DBL_DIG) ); // If cells are too small they will cause problems.
 
 	point->leaf->refined = true;
 	xygridpoints(i_points,point->gridsize*(Ngrid-1)/Ngrid
@@ -1021,6 +1021,7 @@ Point * RefineLeaf(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,Point *point,in
 
 	//*** these could be mode more efficient by starting at the current in tree
 	AddPointsToTree(i_tree,i_points,Ngrid*Ngrid-1-Nout);
+
 	AddPointsToTree(s_tree,s_points,Ngrid*Ngrid-1-Nout);
 
 	return i_points;

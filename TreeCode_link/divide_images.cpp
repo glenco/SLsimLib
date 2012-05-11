@@ -171,10 +171,8 @@ void divide_images(TreeHndl i_tree,ImageInfo *imageinfo
  *        are not in the image.  Not required that points in the image be
  *        flagged.
  * on exit:
- * 	   imagelist[i] contains all points in that image
  *     Nimages is updataed
- *     imageinfo[i].points are not changed
- *     imageinfo[i].Npoints is set to number of points in ith image
+ *     imageinfo[i].imagekist is set to the points in ith image
  *	   image point flags in_image == TRUE
  *	   the area and area_error of each image are calculated
  *

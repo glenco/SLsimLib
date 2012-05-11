@@ -6,13 +6,6 @@
  *
  *      routines imported from TreeDriver.c made to use Kist instead of List
  */
-/*#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
-#include <assert.h>
-#include <Tree.h>
-#include <Kist.h>
-#include <KistDriver.h>*/
 
 #include <slsimlib.h>
 
@@ -196,19 +189,19 @@ double PointsWithinKist(
 	realray[0]=ray[0];
 	realray[1]=ray[1];
 
-  moveTop(tree);
-  if( inbox(ray,tree->current->boundary_p1,tree->current->boundary_p2) == 0 ){
-    std::printf("Warning: in PointsWithinKist, ray is not inside the simulation box\n    should work in any case\n      ray= %e %e\n     boundary p1 = %e %e p2 = %e %e\n",ray[0],ray[1]
+	moveTop(tree);
+	if( inbox(ray,tree->current->boundary_p1,tree->current->boundary_p2) == 0 ){
+		std::printf("Warning: in PointsWithinKist, ray is not inside the simulation box\n    should work in any case\n      ray= %e %e\n     boundary p1 = %e %e p2 = %e %e\n",ray[0],ray[1]
 	   ,tree->current->boundary_p1[0],tree->current->boundary_p1[1]
 	   ,tree->current->boundary_p2[0],tree->current->boundary_p2[1]);
 
-    ray[0]=MAX(ray[0],tree->current->boundary_p1[0]);
-    ray[0]=MIN(ray[0],tree->current->boundary_p2[0]);
+		ray[0]=MAX(ray[0],tree->current->boundary_p1[0]);
+		ray[0]=MIN(ray[0],tree->current->boundary_p2[0]);
 
-    ray[1]=MAX(ray[1],tree->current->boundary_p1[1]);
-    ray[1]=MIN(ray[1],tree->current->boundary_p2[1]);
-  }
-  incell=1;
+		ray[1]=MAX(ray[1],tree->current->boundary_p1[1]);
+		ray[1]=MIN(ray[1],tree->current->boundary_p2[1]);
+	}
+	incell=1;
 
 	maxgridsize = 0;
     _PointsWithinKist(tree,ray,&rmax,neighborkist,markpoints,&maxgridsize);
@@ -224,6 +217,7 @@ void _PointsWithinKist(TreeHndl tree,double *ray,float *rmax,KistHndl neighborki
   double radius;
   short pass;
 
+  if(tree->current->npoints == 0) return;
 
   //std::printf("**************************************\nlevel %i\n",tree->current->level);
   //   std::printf("   %i incell=%i\n",tree->current->points->id,incell);
@@ -342,8 +336,13 @@ void _PointsWithinKist(TreeHndl tree,double *ray,float *rmax,KistHndl neighborki
 			  }
 		  }else if(pass==1){ // whole box is inside radius
 
+			  tree->pointlist->current = tree->current->points;
 			  for(i=0;i<tree->current->npoints;++i){
-  				  if(markpoints==1){
+
+				  //assert( inbox(tree->pointlist->current->x,tree->current->boundary_p1,tree->current->boundary_p2) );
+				  //assert( *rmax**rmax >= (pow(tree->pointlist->current->x[0] - ray[0],2) + pow(tree->pointlist->current->x[1] - ray[1],2) ));
+
+				  if(markpoints==1){
    					  tree->pointlist->current->in_image=TRUE;
   					  tree->pointlist->current->image->in_image=TRUE;
   				  }else if(markpoints==-1){
@@ -448,8 +447,6 @@ void PointsWithinKist_iter(TreeHndl tree,double *ray,float rmin,float rmax,KistH
 
 				if(tree->current->points != NULL){
 					tree->pointlist->current = tree->current->points;
-				}else{
-					assert(tree->current->npoints == 0);
 				}
 
 				for(i=0;i<tree->current->npoints;++i){
@@ -468,20 +465,10 @@ void PointsWithinKist_iter(TreeHndl tree,double *ray,float rmin,float rmax,KistH
 				decend = false;
 				if(tree->current->points != NULL){
 					tree->pointlist->current = tree->current->points;
-				}else{
-					assert(tree->current->npoints == 0);
 				}
 
 				for(i=0;i<tree->current->npoints;++i){
 					InsertAfterCurrentKist(neighborkist,tree->pointlist->current);
-					if(tree->pointlist->current->id == 596087){
-						ERROR_MESSAGE();
-						if(inbox(tree->pointlist->current->x,tree->current->boundary_p1,tree->current->boundary_p2)) printf("in box\n");
-						else printf("out of box\n");
-						printf("hi\n");
-						branch = tree->current;
-					}
-
 					MoveDownList(tree->pointlist);
 				}
 

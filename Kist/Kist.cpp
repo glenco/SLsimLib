@@ -167,6 +167,10 @@ void Kist::InsertAfterCurrent(Data *data){
     Unit *unit = (Unit *)malloc(sizeof(Unit));
 
     assert(unit);
+    assert(data);
+    assert(data->x);
+    assert(data->gridsize >= 0);
+
 
     unit->data = data;
 
@@ -200,8 +204,10 @@ void InsertAfterCurrentKist(KistHndl kist,Data *data){
 }
 /// Insert data into kist.  Leaves current unchanged.
 void Kist::InsertBeforeCurrent(Data *data){
-	// leaves current unchanged
+
 	assert(data);
+    assert(data->x);
+    assert(data->gridsize >= 0);
 
 	Unit *unit;
 
@@ -460,33 +466,35 @@ void Kist::Print(){
 		cout << getCurrent()->x[0] <<  "  " << getCurrent()->x[1] << "  " << getCurrent()->gridsize << endl;
 	}while(Down());
 }
-/*
-bool AreDataUniqueKist(KistHndl kist){
-	assert(kist);
-	if(kist->Nunits() < 2) return true;
+
+bool Kist::AreDataUnique(){
+
+	if(Nunits() < 2) return true;
+	Unit *unit = current;
 
 	unsigned long i,j;
-	KistHndl tmpkist = NewKist();
+	Data **data = new Data*[Nunits()];
 
-	// clone kist
-	//  the two lists use the same units as well
-	//  as data.
-	tmpkist->Nunits() = kist->Nunits();
-	tmpkist->top = kist->top;
-	tmpkist->bottom = kist->bottom;
+	MoveToTop();
+	for(i=0;i<Nunits();++i,Down()){
+		data[i]=getCurrent();
+	}
 
-	MoveToTopKist(kist);
-	for(i=0;i<kist->Nunits();++i,MoveDownKist(kist)){
-		MoveToTopKist(tmpkist);
-		for(j=0;j<i;++j,MoveDownKist(tmpkist)){
-			if( getCurrentKist(kist) == getCurrentKist(tmpkist) ){
-				free(tmpkist);
+	MoveToTop();
+	for(i=0;i<Nunits();++i,Down()){
+		for(j=0;j<i;++j){
+			if( getCurrent() == data[j] ){
+				current = unit;
+				delete[] data;
 				return false;
 			}
 		}
 	}
 
-	free(tmpkist);
+	delete[] data;
+	current = unit;
 	return true;
 }
-*/
+
+
+

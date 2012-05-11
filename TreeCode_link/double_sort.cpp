@@ -87,7 +87,7 @@ void double_sort(unsigned long n, double *arr, unsigned long *brr)
   }
 }
 
-/** \brief Sorts points in a apoint array.
+/** \brief Sorts points in a point array.
  *
  *  arr array uses NR standard indexing i.e arr[1...n]
 * but brr[0..n-1]
@@ -130,30 +130,30 @@ void double_sort_points(unsigned long n, double *arr, Point *brr){
     } else {
       k=(l+ir) >> 1;
       SWAP(arr[k],arr[l+1])
-	SwapPointsInArray(&brr[k-1],&brr[l]);
-	if (arr[l] > arr[ir]) {
-	  SWAP(arr[l],arr[ir])
-	    SwapPointsInArray(&brr[l-1],&brr[ir-1]);
-	    }
+      SwapPointsInArray(&brr[k-1],&brr[l]);
+      if (arr[l] > arr[ir]) {
+    	  SWAP(arr[l],arr[ir]);
+	      SwapPointsInArray(&brr[l-1],&brr[ir-1]);
+      }
       if (arr[l+1] > arr[ir]) {
-	SWAP(arr[l+1],arr[ir])
-	  SwapPointsInArray(&brr[l],&brr[ir-1]);
+    	  SWAP(arr[l+1],arr[ir]);
+    	  SwapPointsInArray(&brr[l],&brr[ir-1]);
 	  }
       if (arr[l] > arr[l+1]) {
-	SWAP(arr[l],arr[l+1])
-	  SwapPointsInArray(&brr[l-1],&brr[l]);
+    	  SWAP(arr[l],arr[l+1]);
+    	  SwapPointsInArray(&brr[l-1],&brr[l]);
 	  }
       i=l+1;
       j=ir;
       a=arr[l+1];
       /*b=brr[l];*/
-       PointCopy(&b,&brr[l]);
+      PointCopy(&b,&brr[l]);
       for (;;) {
-	do i++; while (arr[i] < a);
-	do j--; while (arr[j] > a);
-	if (j < i) break;
-	SWAP(arr[i],arr[j])
-	  SwapPointsInArray(&brr[i-1],&brr[j-1]);
+    	  do i++; while (arr[i] < a);
+    	  do j--; while (arr[j] > a);
+    	  if (j < i) break;
+    	  SWAP(arr[i],arr[j]);
+    	  SwapPointsInArray(&brr[i-1],&brr[j-1]);
 	  }
       arr[l+1]=arr[j];
       arr[j]=a;
@@ -164,13 +164,13 @@ void double_sort_points(unsigned long n, double *arr, Point *brr){
       jstack += 2;
       if (jstack > NSTACK) nrerror("NSTACK too small in double_sort_points");
       if (ir-i+1 >= j-l) {
-	istack[jstack]=ir;
-	istack[jstack-1]=i;
-	ir=j-1;
+    	  istack[jstack]=ir;
+    	  istack[jstack-1]=i;
+    	  ir=j-1;
       } else {
-	istack[jstack]=j-1;
-	istack[jstack-1]=l;
-	l=i;
+    	  istack[jstack]=j-1;
+    	  istack[jstack-1]=l;
+    	  l=i;
       }
     }
   }
@@ -181,6 +181,10 @@ void double_sort_points(unsigned long n, double *arr, Point *brr){
 #undef SWAP
 #undef NRANSI
 
+/** \ingroup Utill
+ * \brief Sorts points from smallest to largest according to the value of arr[].
+ * Sorts arr[] and pointarray[] simultaneously.
+ */
 
 void quicksortPoints(Point *pointarray,double *arr,unsigned long N){
 	double pivotvalue;
@@ -197,7 +201,7 @@ void quicksortPoints(Point *pointarray,double *arr,unsigned long N){
 	else pivotindex = N-1;
 	pivotvalue=arr[pivotindex];
 
-	// move pivet to end of array
+	// move pivot to end of array
 	swap(&arr[pivotindex],&arr[N-1]);
 	SwapPointsInArray(&pointarray[pivotindex],&pointarray[N-1]);
 	newpivotindex=0;

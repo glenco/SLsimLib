@@ -50,6 +50,7 @@ typedef struct TreeStruct{
   PointList *pointlist;
   /// number of points allowed in leaves of tree
   int Nbucket;
+  short median_cut;
 } TreeStruct;
 
 typedef struct TreeStruct *TreeHndl;
@@ -226,6 +227,7 @@ Point *NewPointArray(unsigned long N,bool NewXs);
 Point *AddPointToArray(Point *points,unsigned long N,unsigned long Nold);
 void FreePointArray(Point *array,bool NewXs = true);
 void SwapPointsInArray(Point *p1,Point *p2);
+void SwapPointsInArrayData(Point *p1,Point *p2);
 void PointCopy(Point *pcopy,Point *pins);
 void PointCopyData(Point *pcopy,Point *pins);
 
@@ -290,7 +292,7 @@ short image_finder_kist(LensHndl lens, double *y_source,double r_source,GridHndl
 		,short splitparities,short true_images);
 
 int refine_grid_kist(LensHndl lens,GridHndl grid,ImageInfo *imageinfo
-		,unsigned long Nimages,double res_target,short criterion,bool kappa_off,KistHndl newpointkist);
+		,unsigned long Nimages,double res_target,short criterion,bool kappa_off,KistHndl newpointkist = NULL);
 
 void findborders4(TreeHndl i_tree,ImageInfo *imageinfo);
 
@@ -317,9 +319,6 @@ void quickPartitionPoints(double pivotvalue,unsigned long *pivotindex
 Point *LinkToSourcePoints(Point *i_points,unsigned long Npoints);
 void log_polar_grid(Point *i_points,double rmax,double rmin,double *center,long Ngrid);
 void findarea(ImageInfo *imageinfo);
-int windings(double *x,Point *points,unsigned long Npoints,double *area,short image);
-int windings(double *x,KistHndl kist,double *area,short image);
-
 long IndexFromPosition(double *x,long Npixels,double range,double *center);
 void PositionFromIndex(unsigned long i,double *x,long Npixels,double range,double *center);
 //inline float isLeft( Point *p0, Point *p1, double *x );
@@ -342,14 +341,20 @@ void split_order_curve(OldImageInfo *curves,int Maxcurves,int *Ncurves);
 void split_order_curve2(OldImageInfo *curves,int Maxcurves,int *Ncurves);
 void split_order_curve3(OldImageInfo *curves,int Maxcurves,int *Ncurves);
 void split_order_curve4(OldImageInfo *curves,int Maxcurves,int *Ncurves);
-bool order_curve4(Point *curve,long Npoints);
+unsigned long order_curve4(Point *curve,long Npoints);
+bool order_curve4(KistHndl curve);
+bool order_ExteriorBoundary(Point *curve,long Npoints,long *NewNpoints,double *area);
+double findAreaOfCurve(TreeHndl tree,ImageInfo *curve,int NimageMax);
 void walkcurve(Point *points,long Npoints,long *j,long *end);
+void walkcurveRight(Point *points,long Npoints,long *j,long *end);
 short backtrack(Point *points,long Npoints,long *j,long jold,long *end);
 void split_images(TreeHndl i_tree,ImageInfo *images,int Maximages,int *Nimages,bool sortallpoints);
 void split_images2(TreeHndl i_tree,ImageInfo *images,int Maximages,int *Nimages);
 void split_images3(TreeHndl i_tree,ImageInfo *images,int Maximages,int *Nimages,bool sortallpoints);
 void splitter(OldImageInfo *images,int Maximages,int *Nimages);
 void splitlist(ListHndl imagelist,OldImageInfo *images,int *Nimages,int Maximages);
+int windings(double *x,Point *points,unsigned long Npoints,double *area,short image);
+int windings(double *x,KistHndl kist,double *area,short image);
 
 /* externally provided functions */
 /*********************************/

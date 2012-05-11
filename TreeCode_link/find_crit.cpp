@@ -341,10 +341,9 @@ void find_crit_kist(
 		  for(ii=0; ii < critcurve[i].imagekist->Nunits() ; ++ii, critcurve[i].imagekist->Down())
 			  PointCopyData(&tmp_points[ii],getCurrentKist(critcurve[i].imagekist));
 
-		  NewNumber = order_curve4(tmp_points,critcurve[i].imagekist->Nunits());
-
 		  // order the curve
-		  if(!order_curve4(tmp_points,critcurve[i].imagekist->Nunits()) ) *orderingsuccess = false;
+		  NewNumber = order_curve4(tmp_points,critcurve[i].imagekist->Nunits());
+		  if(NewNumber != critcurve[i].imagekist->Nunits() ) *orderingsuccess = false;
 
 		  // find area of critical curves
 		  if(critcurve[i].imagekist->Nunits() > 5){

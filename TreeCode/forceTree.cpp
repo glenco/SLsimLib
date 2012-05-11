@@ -338,7 +338,7 @@ void ForceTree::spread_particles(){
 }
 
 ForceTreePowerLaw::ForceTreePowerLaw(
-		float beta                 /// slop of mass profile \f$ \Sigma \propto r^\beta \f$
+		double my_beta                 /// slop of mass profile \f$ \Sigma \propto r^\beta \f$
 		,PosType **xp              /// positions of the halos xp[0..Npoints-1][0..1 or 2]
 		,IndexType Npoints         /// number of halos
 		,HaloStructure *h_params   /// array with internal properties of halos
@@ -348,7 +348,7 @@ ForceTreePowerLaw::ForceTreePowerLaw(
 		,bool median               /// If true will divide branches at the median position of the particles, if false an equal area cut is used, default false
 		,PosType theta             /// Opening angle used in tree force calculation, default 0.1
 		) :
-		ForceTree(xp,Npoints,NULL,NULL,false,Multisize,bucket,dimension,median,theta), beta(beta)
+		ForceTree(xp,Npoints,NULL,NULL,false,Multisize,bucket,dimension,median,theta), beta(my_beta)
 {
 
 	haloON = true;

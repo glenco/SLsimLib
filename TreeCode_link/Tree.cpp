@@ -558,7 +558,7 @@ Point *NewPoint(double *x,unsigned long id){
 void SwapPointsInArray(Point *p1,Point *p2){
   /* SWAPS information in points without changing */
   /* pointers to prev and next */
-  /* chnages links of image points to fallow*/ 
+  /* chnages links of image points to follow*/
   Point pt;
 
   if(p1==p2) return;
@@ -566,6 +566,18 @@ void SwapPointsInArray(Point *p1,Point *p2){
   PointCopy(&pt,p1);
   PointCopy(p1,p2);
   PointCopy(p2,&pt);
+}
+void SwapPointsInArrayData(Point *p1,Point *p2){
+  /* SWAPS information in points without changing */
+  /* pointers to prev and next */
+  /* Does not change links of image points to follow*/
+  Point pt;
+
+  if(p1==p2) return;
+
+  PointCopyData(&pt,p1);
+  PointCopyData(p1,p2);
+  PointCopyData(p2,&pt);
 }
 
 void PointCopy(Point *pcopy,Point *pin){

@@ -372,8 +372,8 @@ void _FindLeaf(TreeHndl tree,double *ray,unsigned long Nadd){
 		tree->current->npoints += Nadd;
 
 		/* change center of mass */
-		tree->current->center[0]=(tree->current->center[0]*(tree->current->npoints-1) + ray[0])/tree->current->npoints;
-		tree->current->center[1]=(tree->current->center[1]*(tree->current->npoints-1) + ray[1])/tree->current->npoints;
+		//tree->current->center[0]=(tree->current->center[0]*(tree->current->npoints-1) + ray[0])/tree->current->npoints;
+		//tree->current->center[1]=(tree->current->center[1]*(tree->current->npoints-1) + ray[1])/tree->current->npoints;
 
 		contin=false;
 		if(tree->current->child1 != NULL &&

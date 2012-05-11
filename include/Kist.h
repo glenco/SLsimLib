@@ -61,7 +61,6 @@
 		void TranformPlanes();
 		bool AreDataUnique();
 
-
 	private:
 
 		unsigned long Number;

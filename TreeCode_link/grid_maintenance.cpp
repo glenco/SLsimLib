@@ -31,7 +31,7 @@ Grid::Grid(
 	lens->rayshooterInternal(Ngrid*Ngrid,i_points,false);
 	// Build trees
 	i_tree = BuildTree(i_points,Ngrid*Ngrid);
-	s_tree = BuildTree(s_points,Ngrid*Ngrid);
+	s_tree = BuildTree(s_points,Ngrid*Ngrid);  // make tree on source plane a area splitting tree
 
 	trashkist = new Kist;
 }
@@ -81,6 +81,7 @@ void Grid::ReInitializeGrid(LensHndl lens){
 
 	Point *i_points,*s_points;
 	double range,center[2];
+	unsigned long i;
 
 	range = i_tree->top->boundary_p2[0] - i_tree->top->boundary_p1[0];
 	center[0] = (i_tree->top->boundary_p2[0] + i_tree->top->boundary_p1[0])/2;
@@ -98,9 +99,36 @@ void Grid::ReInitializeGrid(LensHndl lens){
 	xygridpoints(i_points,range,center,Ngrid,0);
 	s_points=LinkToSourcePoints(i_points,Ngrid*Ngrid);
 	lens->rayshooterInternal(Ngrid*Ngrid,i_points,false);
+
+	// need to resize root of source tree.  It can change in size
+	s_tree->top->boundary_p1[0]=s_points[0].x[0]; s_tree->top->boundary_p1[1]=s_points[0].x[1];
+	s_tree->top->boundary_p2[0]=s_points[0].x[0]; s_tree->top->boundary_p2[1]=s_points[0].x[1];
+
+	for(i=0;i<Ngrid*Ngrid;++i){
+
+	    /* find X boundary */
+		if(s_points[i].x[0] < s_tree->top->boundary_p1[0] ) s_tree->top->boundary_p1[0]=s_points[i].x[0];
+	    if(s_points[i].x[0] > s_tree->top->boundary_p2[0] ) s_tree->top->boundary_p2[0]=s_points[i].x[0];
+
+	    /* find Y boundary */
+	    if(s_points[i].x[1] < s_tree->top->boundary_p1[1] ) s_tree->top->boundary_p1[1]=s_points[i].x[1];
+	    if(s_points[i].x[1] > s_tree->top->boundary_p2[1] ) s_tree->top->boundary_p2[1]=s_points[i].x[1];
+	  }
+
+	  // a little extra room for future points
+	  s_tree->top->boundary_p1[0] -=  range/Ngrid;
+	  s_tree->top->boundary_p1[1] -=  range/Ngrid;
+	  s_tree->top->boundary_p2[0] +=  range/Ngrid;
+	  s_tree->top->boundary_p2[1] +=  range/Ngrid;
+
+	  s_tree->top->center[0] = (s_tree->top->boundary_p1[0]+s_tree->top->boundary_p2[0])/2;
+	  s_tree->top->center[1] = (s_tree->top->boundary_p1[1]+s_tree->top->boundary_p2[1])/2;
+
 	// fill trees
 	FillTree(i_tree,i_points,Ngrid*Ngrid);
 	FillTree(s_tree,s_points,Ngrid*Ngrid);
+
+	return;
 }
 
 /** \ingroup ImageFinding
