@@ -171,14 +171,6 @@ void find_images_kist(
 		// mark image points in tree
 		PointsWithinKist(grid->s_tree,y_source,r_source,subkist,1);
 
-		 //***************************** test *****************************
-		subkist->AreDataUnique();
-		PointsWithinKist(grid->s_tree,y_source,r_source,subkist,0);
-		assert(subkist->AreDataUnique());
-		cout << "remember me" << endl;
-		subkist->Empty();
-		//***************************************************************
-
 		moved=image_finder_kist(lens,y_source,fabs(r_source),grid
 				,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
 
