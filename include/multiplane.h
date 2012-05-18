@@ -70,6 +70,8 @@ public:
 	double fieldofview;
 	/// if = 1 there is an analytical lens, if = 0 there is no analytic lens
 	int flag_analens;
+	/// the name of the MOKA input file
+	std::string MOKA_input_file;
 
 private:
 

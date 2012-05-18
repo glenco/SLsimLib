@@ -63,11 +63,11 @@ void ForceTree::CalcMoments(){
 
 		// calculate mass
 		for(i=0,cbranch->mass=0;i<cbranch->nparticles;++i)
-			cbranch->mass +=  haloON ? halo_params[cbranch->particles[i]*MultiMass].mass : masses[cbranch->particles[i]*MultiMass];
+			cbranch->mass +=  haloON ? halo_params[cbranch->particles[i]*MultiRadius].mass : masses[cbranch->particles[i]*MultiMass];
 		  // calculate center of mass
 		cbranch->center[0]=cbranch->center[1]=0;
 		for(i=0;i<cbranch->nparticles;++i){
-			tmp = haloON ? halo_params[cbranch->particles[i]*MultiMass].mass : masses[cbranch->particles[i]*MultiMass];
+			tmp = haloON ? halo_params[cbranch->particles[i]*MultiRadius].mass : masses[cbranch->particles[i]*MultiMass];
 			cbranch->center[0] += tmp*tree->xp[cbranch->particles[i]][0]/cbranch->mass;
 			cbranch->center[1] += tmp*tree->xp[cbranch->particles[i]][1]/cbranch->mass;
 		}
@@ -79,7 +79,7 @@ void ForceTree::CalcMoments(){
 			xcm[0]=tree->xp[cbranch->particles[i]][0]-cbranch->center[0];
 			xcm[1]=tree->xp[cbranch->particles[i]][1]-cbranch->center[1];
 			xcut=pow(xcm[0],2) + pow(xcm[1],2);
-			tmp = haloON ? halo_params[cbranch->particles[i]*MultiMass].mass : masses[cbranch->particles[i]*MultiMass];
+			tmp = haloON ? halo_params[cbranch->particles[i]*MultiRadius].mass : masses[cbranch->particles[i]*MultiMass];
 			cbranch->quad[0] += (xcut-2*xcm[0]*xcm[0])*tmp;
 			cbranch->quad[1] += (xcut-2*xcm[1]*xcm[1])*tmp;
 			cbranch->quad[2] += -2*xcm[0]*xcm[1]*tmp;
@@ -98,7 +98,7 @@ void ForceTree::CalcMoments(){
 		if(MultiRadius){
 
 			for(i=0,cbranch->maxrsph=0.0;i<cbranch->nparticles;++i){
-				tmp = haloON ? halo_params[cbranch->particles[i]*MultiMass].Rmax : rsph[cbranch->particles[i]*MultiMass];
+				tmp = haloON ? halo_params[cbranch->particles[i]*MultiRadius].Rmax : rsph[cbranch->particles[i]*MultiMass];
 				if(cbranch->maxrsph <= tmp ){
 					cbranch->maxrsph = tmp;
 				}
@@ -200,7 +200,7 @@ float * ForceTree::CalculateSPHsmoothing(int N){
  *       need to change the projected cm in _TreeNBForce to us 3d tree
  * */
 
-void ForceTree::force2D(double *ray,double *alpha,double *kappa,double *gamma,bool no_kappa){
+unsigned long  ForceTree::force2D(double *ray,double *alpha,double *kappa,double *gamma,bool no_kappa){
 
   PosType xcm,ycm,rcm2,tmp;
   int OpenBox(TreeNBHndl tree,PosType r);
@@ -294,7 +294,7 @@ void ForceTree::force2D(double *ray,double *alpha,double *kappa,double *gamma,bo
 
   }while(TreeNBWalkStep(tree,allowDescent));
 
-  return;
+  return count;
 }
 /*
 void ForceTree::ChangeParticleProfile(PartProf partprof){
