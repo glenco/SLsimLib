@@ -63,11 +63,11 @@ void ForceTree::CalcMoments(){
 
 		// calculate mass
 		for(i=0,cbranch->mass=0;i<cbranch->nparticles;++i)
-			cbranch->mass +=  haloON ? halo_params[cbranch->particles[i]*MultiMass].mass : masses[cbranch->particles[i]*MultiMass];
+			cbranch->mass +=  haloON ? halo_params[cbranch->particles[i]*MultiRadius].mass : masses[cbranch->particles[i]*MultiMass];
 		  // calculate center of mass
 		cbranch->center[0]=cbranch->center[1]=0;
 		for(i=0;i<cbranch->nparticles;++i){
-			tmp = haloON ? halo_params[cbranch->particles[i]*MultiMass].mass : masses[cbranch->particles[i]*MultiMass];
+			tmp = haloON ? halo_params[cbranch->particles[i]*MultiRadius].mass : masses[cbranch->particles[i]*MultiMass];
 			cbranch->center[0] += tmp*tree->xp[cbranch->particles[i]][0]/cbranch->mass;
 			cbranch->center[1] += tmp*tree->xp[cbranch->particles[i]][1]/cbranch->mass;
 		}
@@ -79,7 +79,7 @@ void ForceTree::CalcMoments(){
 			xcm[0]=tree->xp[cbranch->particles[i]][0]-cbranch->center[0];
 			xcm[1]=tree->xp[cbranch->particles[i]][1]-cbranch->center[1];
 			xcut=pow(xcm[0],2) + pow(xcm[1],2);
-			tmp = haloON ? halo_params[cbranch->particles[i]*MultiMass].mass : masses[cbranch->particles[i]*MultiMass];
+			tmp = haloON ? halo_params[cbranch->particles[i]*MultiRadius].mass : masses[cbranch->particles[i]*MultiMass];
 			cbranch->quad[0] += (xcut-2*xcm[0]*xcm[0])*tmp;
 			cbranch->quad[1] += (xcut-2*xcm[1]*xcm[1])*tmp;
 			cbranch->quad[2] += -2*xcm[0]*xcm[1]*tmp;
@@ -98,7 +98,7 @@ void ForceTree::CalcMoments(){
 		if(MultiRadius){
 
 			for(i=0,cbranch->maxrsph=0.0;i<cbranch->nparticles;++i){
-				tmp = haloON ? halo_params[cbranch->particles[i]*MultiMass].Rmax : rsph[cbranch->particles[i]*MultiMass];
+				tmp = haloON ? halo_params[cbranch->particles[i]*MultiRadius].Rmax : rsph[cbranch->particles[i]*MultiMass];
 				if(cbranch->maxrsph <= tmp ){
 					cbranch->maxrsph = tmp;
 				}
@@ -248,17 +248,17 @@ void ForceTree::force2D(double *ray,double *alpha,double *kappa,double *gamma,bo
 
 				  index = MultiRadius*tree->current->particles[i];
 				  if(haloON) tmp = alpha_h(rcm2,halo_params[index]);
-				  else tmp =  alpha_o(rcm2,rsph[index])*masses[index];
+				  else tmp =  alpha_o(rcm2,rsph[index])*masses[MultiMass*tree->current->particles[i]];
 				  alpha[0] += tmp*xcm;
 				  alpha[1] += tmp*ycm;
 
 				  // can turn off kappa and gamma calculations to save times
 				  if(!no_kappa){
 					  if(haloON) *kappa += kappa_h(rcm2,halo_params[index]);
-					  else *kappa += kappa_o(rcm2,rsph[index])*masses[index];
+					  else *kappa += kappa_o(rcm2,rsph[index])*masses[MultiMass*tree->current->particles[i]];
 
 					  if(haloON) tmp = gamma_h(rcm2,halo_params[index]);
-					  else tmp = gamma_o(rcm2,rsph[index])*masses[index];
+					  else tmp = gamma_o(rcm2,rsph[index])*masses[MultiMass*tree->current->particles[i]];
 					  gamma[0] += 0.5*(xcm*xcm-ycm*ycm)*tmp;
 					  gamma[1] += xcm*ycm*tmp;
 				  }

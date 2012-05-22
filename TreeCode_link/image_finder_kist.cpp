@@ -530,7 +530,7 @@ int refine_grid_kist(
   short pass=0;
   long Ncells=0,Ncells_o=0;
   Point *i_points;
-  unsigned long Nmarker = 0,Nout = 0;
+  //unsigned long Nmarker = 0,Nout = 0;
 
   total_area=0;
 //#pragma omp parallel reduction(+:total_area)
@@ -579,7 +579,7 @@ int refine_grid_kist(
   Ncells_o = Ncells;
 
   //i_points = NewPointArray((Ngrid_block*Ngrid_block-1)*Ncells,true);
-  Nmarker = 0;
+  //Nmarker = 0;
   Ncells = 0;
 
   for(i=0,Ncells=0;i<Nimages;++i){
@@ -635,8 +635,8 @@ int refine_grid_kist(
 				  }
 */
 
-				  assert(Nout >= 0);
-				  Nmarker += (Ngrid_block*Ngrid_block-1) - Nout;
+				  //assert(Nout >= 0);
+				  //Nmarker += (Ngrid_block*Ngrid_block-1) - Nout;
 				  ++Ncells;
 
 				  //point->gridsize /= Ngrid_block;
@@ -683,8 +683,8 @@ int refine_grid_kist(
 
 					  }
 */
-					  assert(Nout >= 0);
-					  Nmarker += (Ngrid_block*Ngrid_block-1) - Nout;
+					  //assert(Nout >= 0);
+					  //Nmarker += (Ngrid_block*Ngrid_block-1) - Nout;
 
 					  ++Ncells;
 					  //point->gridsize /= Ngrid_block;
@@ -702,7 +702,7 @@ int refine_grid_kist(
     if(count > 0) ++number_of_refined;
   } // end of image loop
 
-  assert( Nmarker <= (Ngrid_block*Ngrid_block-1)*Ncells_o );
+  //assert( Nmarker <= (Ngrid_block*Ngrid_block-1)*Ncells_o );
   //if( Nmarker != (Ngrid_block*Ngrid_block-1)*Ncells_o ) i_points = AddPointToArray(i_points,Nmarker,(Ngrid_block*Ngrid_block-1)*Ncells_o);
 
   //s_points=LinkToSourcePoints(i_points,Nmarker);
