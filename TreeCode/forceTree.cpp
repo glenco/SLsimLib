@@ -200,7 +200,7 @@ float * ForceTree::CalculateSPHsmoothing(int N){
  *       need to change the projected cm in _TreeNBForce to us 3d tree
  * */
 
-void ForceTree::force2D(double *ray,double *alpha,double *kappa,double *gamma,bool no_kappa){
+unsigned long  ForceTree::force2D(double *ray,double *alpha,double *kappa,double *gamma,bool no_kappa){
 
   PosType xcm,ycm,rcm2,tmp;
   int OpenBox(TreeNBHndl tree,PosType r);
@@ -294,7 +294,7 @@ void ForceTree::force2D(double *ray,double *alpha,double *kappa,double *gamma,bo
 
   }while(TreeNBWalkStep(tree,allowDescent));
 
-  return;
+  return count;
 }
 /*
 void ForceTree::ChangeParticleProfile(PartProf partprof){

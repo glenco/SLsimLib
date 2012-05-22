@@ -177,10 +177,11 @@ void MultiLens::rayshooterInternal(unsigned long Npixels
 	double xx[2];
 	unsigned long Npoints;
 	long outside;
+	unsigned long count;
 
 	Npoints = Npixels*Npixels;
 
-	for(i = 0, outside = 0; i< Npoints; i++){
+	for(i = 0, outside = 0, count = 0; i< Npoints; i++){
 
 		if(i % 10000 == 0)
 			cout << i << endl;
@@ -218,7 +219,7 @@ void MultiLens::rayshooterInternal(unsigned long Npixels
 
 				long index = IndexFromPosition(xx,Npixels,range,center);
 
-				if(index >= 0 && index < Npoints){
+				if(index > -1){
 					alpha[0] = alpha1[index];
 					alpha[1] = alpha2[index];
 					gamma[0] = gamma1[index];
@@ -236,7 +237,7 @@ void MultiLens::rayshooterInternal(unsigned long Npixels
 				cc = dDl[j+1];
 			}
 			else{
-				halo_tree[j]->force2D(xx,alpha,&kappa,gamma,kappa_off);
+				count += halo_tree[j]->force2D(xx,alpha,&kappa,gamma,kappa_off);
 				cc = charge*dDl[j+1];
 
 				/* multiply by the scale factor to obtain 1/comoving_distance/physical_distance
@@ -319,7 +320,8 @@ void MultiLens::rayshooterInternal(unsigned long Npixels
 		  	    - i_points[i].gamma[2]*i_points[i].gamma[2];
     }
 
-	cout << endl <<  "outside " << outside/(float)Npoints << endl;
+	cout << endl <<  "fraction outside " << outside/(float)Npoints << endl;
+	cout << "tree interactions count " << count << endl;
 
     return;
 }
