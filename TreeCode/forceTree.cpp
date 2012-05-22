@@ -98,7 +98,7 @@ void ForceTree::CalcMoments(){
 		if(MultiRadius){
 
 			for(i=0,cbranch->maxrsph=0.0;i<cbranch->nparticles;++i){
-				tmp = haloON ? halo_params[cbranch->particles[i]*MultiRadius].Rmax : rsph[cbranch->particles[i]*MultiMass];
+				tmp = haloON ? halo_params[cbranch->particles[i]].Rmax : rsph[cbranch->particles[i]];
 				if(cbranch->maxrsph <= tmp ){
 					cbranch->maxrsph = tmp;
 				}

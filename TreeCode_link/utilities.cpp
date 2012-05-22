@@ -171,8 +171,8 @@ void PositionFromIndex(unsigned long i,double *x,long Npixels,double range,doubl
 
 /*
  *  \ingoup Utill
- *  determines the whether a point is inside a curve, that has been stretched 1.2 times
- *  returns the area of the tretched curve
+ *  determines whether a point is inside a curve, that has been stretched 1.2 times
+ *  returns the area of the stretched curve
  */
 
 int windings2(

@@ -108,7 +108,6 @@ HaloData::HaloData(
 		}while((x*x+y*y) > (maxr*maxr));*/
 		pos[i][0] = rr*cos(theta);
 		pos[i][1] = rr*sin(theta);
-		pos[i][2] = 0.0;
 
 		halos[i].mass = pow(10,InterpolateYvec(Nhalosbin,Logm,ran2 (seed)));
 		ha.reset(halos[i].mass,zi);
@@ -117,6 +116,7 @@ HaloData::HaloData(
 		halos[i].Rmax = ha.getRvir()*cosmo->gethubble();
 		//halos[i].rscale = vsizes[i]/vscale[i]; // get the Rscale=Rmax/c
 		halos[i].rscale = halos[i].Rmax/ha.getConcentration(0); // get the Rscale=Rmax/c
+		pos[i][2] = 0.0;//halos[i].Rmax;
 	}
 
 }
@@ -427,6 +427,7 @@ void MultiLens::buildHaloTrees(
 			break;
 		case 3:
 			//halo_tree[j] = new ForceTreePseudoNFW(1.9,&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos);
+			//halo_tree[j] = auto_ptr<ForceTree>(new ForceTreePseudoNFW(2.0,&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos,true,5,3,false,0.1));
 			halo_tree[j] = auto_ptr<ForceTree>(new ForceTreePseudoNFW(2.0,&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos));
 			break;
 		case 0:
@@ -466,6 +467,46 @@ void MultiLens::buildHaloTrees(
 
 
 	file_area.close();
+
+	/*
+	for(int l=0; l < 100; l++){
+	double ray[2];
+
+	double fac = l/100.;
+
+	ray[0] = fac*sqrt(fieldofview);
+	ray[1] = ray[0];
+
+	ray[0] = ray[0]*pi/180.;
+	ray[1] = ray[1]*pi/180.;
+
+	double xx[2]={0.0,0.0};
+
+	int halos;
+
+	for(j = 0, halos = 0; j < Nplanes-1; j++){
+
+		if(flag_analens && j == (flag_analens % Nplanes))
+			continue;
+
+		xx[0] = ray[0]*Dl[j]/(1+plane_redshifts[j]);
+		xx[1] = ray[1]*Dl[j]/(1+plane_redshifts[j]);
+
+		for(i = 0; i < halodata[j]->Nhalos; i++){
+			double r2 = (halodata[j]->pos[i][0] - xx[0])*(halodata[j]->pos[i][0] - xx[0])
+						+ (halodata[j]->pos[i][1] - xx[1])*(halodata[j]->pos[i][1] - xx[1]);
+
+			if(r2 <= halodata[j]->halos[i].Rmax*halodata[j]->halos[i].Rmax)
+				halos++;
+		}
+
+	}
+
+
+	cout << "ray: x " << ray[0]*180/pi << " y " << ray[1]*180/pi << ", halos: " << halos/float(Ntot) << endl;
+	}
+
+	 */
 
 	/*
 	double xp,x,xo;
