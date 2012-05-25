@@ -78,6 +78,10 @@ void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
 				halo_tree[j]->force2D(xx,alpha,&kappa,gamma,kappa_off);
 				cc = charge*dDl[j+1];
 
+				//cout << kappa - halodata[j]->kappa << endl;
+
+				kappa -= halodata[j]->kappa;
+
 				/* multiply by the scale factor to obtain 1/comoving_distance/physical_distance
 				 * such that a multiplication with the charge (in units of physical distance)
 				 * will result in a 1/comoving_distance quantity */
@@ -177,11 +181,10 @@ void MultiLens::rayshooterInternal(unsigned long Npixels
 	double xx[2];
 	unsigned long Npoints;
 	long outside;
-	unsigned long count;
 
 	Npoints = Npixels*Npixels;
 
-	for(i = 0, outside = 0, count = 0; i< Npoints; i++){
+	for(i = 0, outside = 0; i< Npoints; i++){
 
 		if(i % 10000 == 0)
 			cout << i << endl;
@@ -217,9 +220,10 @@ void MultiLens::rayshooterInternal(unsigned long Npixels
 
 			if(flag_analens && j == (flag_analens % Nplanes)){
 
+				range *= Dl[j];
 				long index = IndexFromPosition(xx,Npixels,range,center);
 
-				if(index > -1){
+				if(index >= 0 && index < Npoints){
 					alpha[0] = alpha1[index];
 					alpha[1] = alpha2[index];
 					gamma[0] = gamma1[index];
@@ -237,8 +241,10 @@ void MultiLens::rayshooterInternal(unsigned long Npixels
 				cc = dDl[j+1];
 			}
 			else{
-				count += halo_tree[j]->force2D(xx,alpha,&kappa,gamma,kappa_off);
+				halo_tree[j]->force2D(xx,alpha,&kappa,gamma,kappa_off);
 				cc = charge*dDl[j+1];
+
+				kappa -= halodata[j]->kappa;
 
 				/* multiply by the scale factor to obtain 1/comoving_distance/physical_distance
 				 * such that a multiplication with the charge (in units of physical distance)
@@ -320,8 +326,7 @@ void MultiLens::rayshooterInternal(unsigned long Npixels
 		  	    - i_points[i].gamma[2]*i_points[i].gamma[2];
     }
 
-	cout << endl <<  "fraction outside " << outside/(float)Npoints << endl;
-	cout << "tree interactions count " << count << endl;
+	cout << endl <<  "outside " << outside/(float)Npoints << endl;
 
     return;
 }

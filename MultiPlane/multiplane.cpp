@@ -25,6 +25,7 @@ HaloData::HaloData(HaloStructure *halostrucs,PosType **positions,unsigned long N
 HaloData::HaloData(
 		double fov            /// field of view in square degrees
 		,double min_mass      /// Minimum mass of a halo
+		,double mass_scale      /// mass scale
 		,double z1            /// lowest redshift
 		,double z2            /// highest redshift
 		,int mass_func_type   /// mass function type: 0 Press-Schechter, 1 Sheth-Tormen
@@ -51,7 +52,6 @@ HaloData::HaloData(
 	fill_linear(Logm,Nmassbin,min_mass,MaxLogm);
 
 	double Nhaloestot;
-	float Nhaloestotf;
 
 	Nhalosbin[0] = cosmo->haloNumberDensityOnSky(pow(10,Logm[0])/cosmo->gethubble(),z1,z2,mass_func_type)*fov;
 
@@ -68,34 +68,11 @@ HaloData::HaloData(
 
 	Nhalos = (long)(poidev(float(Nhaloestot), seed) + 0.5);
 
-	// This is a mess !!!!!!!!
-
-/*	for(int k=0;k<Nhalos;k++){
-		iterator++;
-		double ni = ran2 (seed);
-		// compute the mass inverting the cumulative distribution
-		double logmi = getY(Nhalosbin,Logm,ni);
-		double mi = pow(10.,logmi);
-		vmasses.push_back(mi);
-		vindex.push_back(iterator);
-		double zi = z1+(z2-z1)*ran2 (seed);
-		vz.push_back(zi);
-		ha.reset(mi,zi);
-		double Rvir = ha.getRvir();
-		vsizes.push_back(Rvir);
-		double scale = ha.getConcentration(0);
-
-		vscale.push_back(scale);
-		Dli.push_back(cosmo->angDist(0,zi));
-	}
-	Nhalos = vmasses.size();
-*/
-
-
 	halos = new HaloStructure[Nhalos];
 	pos = PosTypeMatrix(0,Nhalos-1,0,2);
 	double rr,theta,maxr,zi;
-	for(unsigned long i = 0; i < Nhalos; i++){
+	unsigned long i;
+	for(i = 0, kappa = 0.0; i < Nhalos; i++){
 		//maxr = pi*sqrt(fov*0.5/pi)/180*Dli[i]; // fov is a circle
 		zi = z1+(z2-z1)*ran2 (seed);
 		Dli.push_back(cosmo->angDist(0,zi));
@@ -111,12 +88,17 @@ HaloData::HaloData(
 
 		halos[i].mass = pow(10,InterpolateYvec(Nhalosbin,Logm,ran2 (seed)));
 		ha.reset(halos[i].mass,zi);
+		halos[i].mass /= mass_scale;
 		//halos[i].mass = vmasses[i];
 		//halos[i].Rmax = vsizes[i];
 		halos[i].Rmax = ha.getRvir()*cosmo->gethubble();
 		//halos[i].rscale = vsizes[i]/vscale[i]; // get the Rscale=Rmax/c
 		halos[i].rscale = halos[i].Rmax/ha.getConcentration(0); // get the Rscale=Rmax/c
 		pos[i][2] = 0.0;//halos[i].Rmax;
+
+
+		/* calculate the mass density on the plane */
+		kappa += halos[i].mass;
 	}
 
 }
@@ -366,7 +348,7 @@ void MultiLens::buildHaloTrees(
 			if(j+1 == (flag_analens % Nplanes)) z2 = plane_redshifts[j] + 0.5*(plane_redshifts[j+2] - plane_redshifts[j]);
 
 			//halodata[j] = new HaloData(fieldofview,min_mass,z1,z2,mass_func_type,cosmo,seed);
-			halodata[j] = auto_ptr<HaloData>(new HaloData(fieldofview,min_mass,z1,z2,mass_func_type,cosmo,seed));
+			halodata[j] = auto_ptr<HaloData>(new HaloData(fieldofview,min_mass,mass_scale,z1,z2,mass_func_type,cosmo,seed));
 
 			Ntot+=halodata[j]->Nhalos;
 		}
@@ -435,6 +417,11 @@ void MultiLens::buildHaloTrees(
 			halo_tree[j] = auto_ptr<ForceTree>(new ForceTreeGauss(&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos));
 			break;
 		}
+
+		/* to obtain 1/physical_distance^2
+		 * to be compatible with the rayshooter*/
+		double area = fieldofview * pow(pi/180*Dl[j]/(1+plane_redshifts[j]),2.0);
+		halodata[j]->kappa /= area;
 	}
 
 
@@ -699,6 +686,8 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 			cout << "Rmax:" << halos[j].Rmax << endl;
 			halos[j].rscale = halos[j].Rmax/cosmo->NFW_Concentration(vmax,halos[j].mass,halos[j].Rmax);
 			halo_zs[j] = z;
+
+			halos[j].mass /= mass_scale;
 
 			halo_pos[j][0] = ra;
 			halo_pos[j][1] = dec;
