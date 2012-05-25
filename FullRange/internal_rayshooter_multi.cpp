@@ -80,7 +80,7 @@ void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
 
 				//cout << kappa - halodata[j]->kappa << endl;
 
-				kappa -= halodata[j]->kappa;
+				//kappa -= halodata[j]->kappa;
 
 				/* multiply by the scale factor to obtain 1/comoving_distance/physical_distance
 				 * such that a multiplication with the charge (in units of physical distance)
@@ -244,10 +244,7 @@ void MultiLens::rayshooterInternal(unsigned long Npixels
 				halo_tree[j]->force2D(xx,alpha,&kappa,gamma,kappa_off);
 				cc = charge*dDl[j+1];
 
-				if((kappa - halodata[j]->kappa) > 0)
-					cout << charge*dDl[j+1]*Dl[j]/Dl[j+1]*(kappa - halodata[j]->kappa) << " " << charge*dDl[j+1]*Dl[j]/Dl[j+1]*kappa << endl;
-
-				kappa -= halodata[j]->kappa;
+				//kappa -= halodata[j]->kappa;
 
 				/* multiply by the scale factor to obtain 1/comoving_distance/physical_distance
 				 * such that a multiplication with the charge (in units of physical distance)

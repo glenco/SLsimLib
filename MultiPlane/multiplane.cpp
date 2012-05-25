@@ -422,6 +422,10 @@ void MultiLens::buildHaloTrees(
 		 * to be compatible with the rayshooter*/
 		double area = fieldofview * pow(pi/180*Dl[j]/(1+plane_redshifts[j]),2.0);
 		halodata[j]->kappa /= area;
+
+		cout << halodata[j]->kappa << endl;
+
+		halo_tree[j]->kappa = halodata[j]->kappa;
 	}
 
 
