@@ -45,9 +45,11 @@ public:
 	/// calculated sph smoothing and store them in the tree, also provide pointer to them
 	float * CalculateSPHsmoothing(int N);
 	/// calculate the deflection and lensing properties
-	unsigned long  force2D(PosType *ray,PosType *alpha,PosType *kappa,PosType *gamma,bool no_kappa = true);
+	void force2D(PosType *ray,PosType *alpha,PosType *kappa,PosType *gamma,bool no_kappa = true);
 	/// provides a way to change the profiles of the particles, by default Gaussian
 	//void ChangeParticleProfile(PartProf partprof);
+
+	double kappa;
 
 protected:
 
@@ -107,13 +109,13 @@ typedef ForceTree *ForceTreeHndl;
 class ForceTreePowerLaw : public ForceTree{
 
 public:
-	ForceTreePowerLaw(double my_beta,PosType **xp,IndexType Npoints,HaloStructure *par_internals,bool Multisize = true
+	ForceTreePowerLaw(float beta,PosType **xp,IndexType Npoints,HaloStructure *par_internals,bool Multisize = true
 			,int bucket = 5,int dimensions = 2,bool median = false,PosType theta = 0.1
 			);
 	~ForceTreePowerLaw();
 
 private:
-	double beta; // logorithmic slop of 2d mass profile
+	float beta; // logorithmic slop of 2d mass profile
 
 	// Override internal structure of halos
 	double alpha_h(double r2,HaloStructure &par);
