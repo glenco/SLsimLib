@@ -27,7 +27,7 @@ double ForceTree::phi_o(double r2,float sigma){
 	return 0;
 }
 
-/** gaussian profiles
+/** Gaussian profiles
  *  All quantities should be divided by Sigma_crit to get the usual
  */
 double ForceTreeGauss::alpha_h(double r2,HaloStructure &par){
