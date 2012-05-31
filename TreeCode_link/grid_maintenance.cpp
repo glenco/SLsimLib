@@ -62,7 +62,7 @@ Grid::Grid(
 	i_points = NewPointArray(Ngrid*Ngrid,true);
 	xygridpoints(i_points,range,center,Ngrid,0);
 	s_points=LinkToSourcePoints(i_points,Ngrid*Ngrid);
-	lens->rayshooterInternal(Ngrid*Ngrid,i_points,false,alpha1,alpha2,gamma1,gamma2,kappa,center,range);
+	lens->rayshooterInternal(Ngrid,i_points,false,alpha1,alpha2,gamma1,gamma2,kappa,center,range);
 	// Build trees
 	i_tree = BuildTree(i_points,Ngrid*Ngrid);
 	s_tree = BuildTree(s_points,Ngrid*Ngrid);  // make tree on source plane a area splitting tree

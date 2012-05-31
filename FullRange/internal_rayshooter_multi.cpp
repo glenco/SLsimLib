@@ -184,6 +184,8 @@ void MultiLens::rayshooterInternal(unsigned long Npixels
 
 	Npoints = Npixels*Npixels;
 
+	cout << Npoints << endl;
+
 	for(i = 0, outside = 0; i< Npoints; i++){
 
 		if(i % 10000 == 0)
@@ -223,7 +225,7 @@ void MultiLens::rayshooterInternal(unsigned long Npixels
 				range *= Dl[j];
 				long index = IndexFromPosition(xx,Npixels,range,center);
 
-				if(index >= 0 && index < Npoints){
+				if(index > -1){
 					alpha[0] = alpha1[index];
 					alpha[1] = alpha2[index];
 					gamma[0] = gamma1[index];
