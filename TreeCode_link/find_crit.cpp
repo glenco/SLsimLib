@@ -70,7 +70,7 @@ ImageInfo *find_crit(
 	  }
 
 	  Npoints=negpointlist->Npoints;
-	  critcurve[0].Npoints=Npoints;
+	  critcurve->Npoints=Npoints;
 
 	  //std::cout << "Npoints " << Npoints << "\n";
 
@@ -84,17 +84,17 @@ ImageInfo *find_crit(
 
 		  /* if there is no negative magnification points use maximum mag point */
 		  ++Npoints;
-		  critcurve[0].points=NewPointArray(1,false);
-		  critcurve[0].points->in_image = FALSE;
-		  critcurve[0].Npoints=1;
-		  PointCopyData(critcurve[0].points,minpoint);
+		  critcurve->points=NewPointArray(1,false);
+		  critcurve->points->in_image = FALSE;
+		  critcurve->Npoints=1;
+		  PointCopyData(critcurve->points,minpoint);
 	  }else{
 
-		  critcurve[0].points=NewPointArray(Npoints,false);
+		  critcurve->points=NewPointArray(Npoints,false);
 
 		  MoveToTopList(negpointlist);
 		  for(i=0;i<negpointlist->Npoints;++i){
-			  PointCopyData(&(critcurve[0].points[i]),negpointlist->current);
+			  PointCopyData(&(critcurve->points[i]),negpointlist->current);
  			  MoveDownList(negpointlist);
 		  }
 	  }
@@ -107,15 +107,15 @@ ImageInfo *find_crit(
 
 
 	  /* make inner border the image */
-	  MoveToTopKist(critcurve[0].innerborder);
-	  for(i=0,maxgridsize=0.0,mingridsize=1.0e99;i<critcurve[0].innerborder->Nunits();++i){
-		  PointCopyData(&(critcurve[0].points[i]),getCurrentKist(critcurve[0].innerborder));
-		  if(critcurve[0].points[i].gridsize > maxgridsize) maxgridsize=critcurve[0].points[i].gridsize;
-		  if(critcurve[0].points[i].gridsize < mingridsize) mingridsize=critcurve[0].points[i].gridsize;
+	  MoveToTopKist(critcurve->innerborder);
+	  for(i=0,maxgridsize=0.0,mingridsize=1.0e99;i<critcurve->innerborder->Nunits();++i){
+		  PointCopyData(&(critcurve->points[i]),getCurrentKist(critcurve->innerborder));
+		  if(critcurve->points[i].gridsize > maxgridsize) maxgridsize=critcurve->points[i].gridsize;
+		  if(critcurve->points[i].gridsize < mingridsize) mingridsize=critcurve->points[i].gridsize;
 
-		  MoveDownKist(critcurve[0].innerborder);
+		  MoveDownKist(critcurve->innerborder);
 	  }
-	  critcurve[0].Npoints=critcurve[0].innerborder->Nunits();
+	  critcurve->Npoints=critcurve->innerborder->Nunits();
 
 	  // find borders again to properly define outer border
 	  //std::printf("going into findborders 2\n");
@@ -127,14 +127,14 @@ ImageInfo *find_crit(
 	  refinements=refine_grid(lens,grid->i_tree,grid->s_tree,critcurve,1,resolution,2,false);
 	  if(verbose) std::printf("find_crit, came out of refine_grid\n");
 
-	  if(verbose) cout << "Npoints " << critcurve[0].Npoints << endl;
+	  if(verbose) cout << "Npoints " << critcurve->Npoints << endl;
 
 	  if(refinements==0){
 		  break;
-	  }else free(critcurve[0].points);
+	  }else free(critcurve->points);
   }
 
-  if(verbose) std::printf("find_crit, number of caustic points: %li\n",critcurve[0].Npoints);
+  if(verbose) std::printf("find_crit, number of caustic points: %li\n",critcurve->Npoints);
 
 // order points in curve
   if(ordercurve) split_order_curve4(critcurve,NMAXCRITS,Ncrits);
@@ -166,7 +166,7 @@ ImageInfo *find_crit(
   }else{ *orderingsuccess=true;}
 
   if(*Ncrits > NMAXCRITS){ERROR_MESSAGE(); std::printf("ERROR: in find_crit, too many critical curves Ncrits=%i > NMAXCRITS gridsize=%e\n"
-			       ,*Ncrits,critcurve[0].points[0].gridsize); exit(1);}
+			       ,*Ncrits,critcurve->points[0].gridsize); exit(1);}
 
   /* find area of critical curves */
   x[0]=x[1]=0.0;
@@ -212,123 +212,119 @@ void find_crit_kist(
 
   //ImageInfo *critexport;
   //unsigned long j,k,m,jold;
-  unsigned long Npoints,i=0;
+  unsigned long i=0;
   short refinements;
   //short spur,closed;
   double maxgridsize,mingridsize,x[2];
-  //KistHndl negpointkist = new Kist;
+  ImageInfo negimage;
   Point *minpoint = NewPoint(x,0);
-  Kist tmp_kist;
+  Kist newpoint_kist;
 
   minpoint->invmag=1.0e99;
   /*point=NmewPoint(x,0);*/
 
+  // find list of points with negative magnification
+  negimage.imagekist->Empty();
+  MoveToTopList(grid->i_tree->pointlist);
+  minpoint = grid->i_tree->pointlist->current;
+  for(i=0;i<grid->i_tree->pointlist->Npoints;++i){
+	  if(grid->i_tree->pointlist->current->invmag < 0){
+
+		  //InsertAfterCurrent(negpointlist,grid->i_tree->pointlist->current->x,grid->i_tree->pointlist->current->id
+		  //		  ,grid->i_tree->pointlist->current->image);
+		  //MoveDownList(negpointlist);
+		  //PointCopyData(negpointlist->current,grid->i_tree->pointlist->current);
+		  negimage.imagekist->InsertAfterCurrent(grid->i_tree->pointlist->current);
+		  negimage.imagekist->Down();
+	  }
+
+	  // record point of maximum kappa
+	  if(grid->i_tree->pointlist->current->kappa > minpoint->kappa) minpoint = grid->i_tree->pointlist->current;
+	  MoveDownList(grid->i_tree->pointlist);
+  }
+
+  if(negimage.imagekist ->Nunits() == 0){
+	  if(minpoint->gridsize <= resolution){  // no caustic found at this resolution
+		  *Ncrits=0;
+		  *orderingsuccess = false;
+		  return;
+	  }
+
+	  /* if there is no negative magnification points use maximum mag point */
+	  negimage.imagekist->InsertAfterCurrent(minpoint);
+  }
+
   for(;;){
-
-	  // find list of points with negative magnification
-	  //EmptyList(negpointlist);
-	  critcurve->imagekist->Empty();
-	  MoveToTopList(grid->i_tree->pointlist);
-	  minpoint = grid->i_tree->pointlist->current;
-	  for(i=0;i<grid->i_tree->pointlist->Npoints;++i){
-		  if(grid->i_tree->pointlist->current->invmag < 0){
-
-			  //InsertAfterCurrent(negpointlist,grid->i_tree->pointlist->current->x,grid->i_tree->pointlist->current->id
-			  //		  ,grid->i_tree->pointlist->current->image);
-			  //MoveDownList(negpointlist);
-			  //PointCopyData(negpointlist->current,grid->i_tree->pointlist->current);
-			  critcurve[0].imagekist->InsertAfterCurrent(grid->i_tree->pointlist->current);
-			  critcurve[0].imagekist->Down();
-			  critcurve->imagekist->getCurrent()->in_image = TRUE;
-		  }
-
-		  // record point of maximum kappa
-		  if(grid->i_tree->pointlist->current->kappa > minpoint->kappa) minpoint = grid->i_tree->pointlist->current;
-		  MoveDownList(grid->i_tree->pointlist);
-	  }
-
-	  Npoints=critcurve->imagekist->Nunits();
-
-	  if(Npoints == 0){
-		  if(minpoint->gridsize <= resolution){  // no caustic found at this resolution
-			  *Ncrits=0;
-			  *orderingsuccess = false;
-			  return;
-		  }
-
-		  /* if there is no negative magnification points use maximum mag point */
-		  ++Npoints;
-		  critcurve[0].imagekist->InsertAfterCurrent(minpoint);
-	  }else{
-
-		  //MoveToTopList(negpointlist);
-		  critcurve->imagekist->MoveToTop();
-		  //for(i=0;i<negpointlist->Npoints;++i){
-		  for(i=0;i<critcurve->imagekist->Nunits();++i){
-			  //PointCopyData(&(critcurve[0].points[i]),negpointlist->current);
- 			  //MoveDownList(negpointlist);
-			  critcurve->imagekist->Down();
-		  }
-	  }
 
 	  //EmptyList(negpointlist);
 	  //negpointkist->Empty();
 
+	  negimage.imagekist->MoveToTop();
+	  do{negimage.imagekist ->getCurrent()->in_image = TRUE;} while(negimage.imagekist->Down());
+
 	  if(verbose) std::printf("find_crit, going into findborders 1\n");
 	  //findborders2(grid->i_tree,critcurve);
-	  findborders4(grid->i_tree,critcurve);
+	  findborders4(grid->i_tree,&negimage);
 	  if(verbose) std::printf("find_crit, came out of findborders 1\n");
 
 	  // unmark image points
-	  critcurve->imagekist->MoveToTop();
-	  do{critcurve->imagekist->getCurrent()->in_image = FALSE;} while(critcurve->imagekist->Down());
+	  negimage.imagekist->MoveToTop();
+	  do{negimage.imagekist->getCurrent()->in_image = FALSE;} while(negimage.imagekist->Down());
 
-	  /* make inner border the image */
+	  // make inner border of the image
 	  critcurve->imagekist->Empty();
-	  MoveToTopKist(critcurve[0].innerborder);
-	  for(i=0,maxgridsize=0.0,mingridsize=1.0e99;i<critcurve[0].innerborder->Nunits();++i){
-		  //PointCopyData(&(critcurve[0].points[i]),getCurrentKist(critcurve[0].innerborder));
-		  //if(critcurve[0].points[i].gridsize > maxgridsize) maxgridsize=critcurve[0].points[i].gridsize;
-		  //if(critcurve[0].points[i].gridsize < mingridsize) mingridsize=critcurve[0].points[i].gridsize;
+	  MoveToTopKist(negimage.innerborder);
+	  for(i=0,maxgridsize=0.0,mingridsize=1.0e99;i<negimage.innerborder->Nunits();++i){
+		  //PointCopyData(&(critcurve->points[i]),getCurrentKist(negpoints.innerborder));
+		  //if(critcurve->points[i].gridsize > maxgridsize) maxgridsize=critcurve->points[i].gridsize;
+		  //if(critcurve->points[i].gridsize < mingridsize) mingridsize=critcurve->points[i].gridsize;
 
-		  if(getCurrentKist(critcurve[0].innerborder)->gridsize > maxgridsize) maxgridsize = getCurrentKist(critcurve[0].innerborder)->gridsize;
-		  if(getCurrentKist(critcurve[0].innerborder)->gridsize < mingridsize) mingridsize = getCurrentKist(critcurve[0].innerborder)->gridsize;
+		  if(getCurrentKist(negimage.innerborder)->gridsize > maxgridsize) maxgridsize = getCurrentKist(negimage.innerborder)->gridsize;
+		  if(getCurrentKist(negimage.innerborder)->gridsize < mingridsize) mingridsize = getCurrentKist(negimage.innerborder)->gridsize;
 
-		  critcurve->imagekist->InsertAfterCurrent(getCurrentKist(critcurve[0].innerborder));
+		  critcurve->imagekist->InsertAfterCurrent(getCurrentKist(negimage.innerborder));
 		  critcurve->imagekist->Down();
 		  critcurve->imagekist->getCurrent()->in_image = TRUE;
 
-		  MoveDownKist(critcurve[0].innerborder);
+		  MoveDownKist(negimage.innerborder);
 	  }
-	  //critcurve[0].Npoints=critcurve[0].innerborder->Nunits();
-
-	  // find borders again to properly define outer border
-	  //std::printf("going into findborders 2\n");
-	  //findborders2(grid->i_tree,critcurve);
 	  findborders4(grid->i_tree,critcurve);
 	  //std::printf("came out of findborders 2\n");
 
 	  if(verbose) std::printf("find_crit, going into refine_grid\n");
      //std::printf("  Npoints=%i\n",critcurve->Npoints);
 	  //refinements=refine_grid(lens,grid->i_tree,grid->s_tree,critcurve,1,resolution,2,false);
-	  refinements=refine_grid_kist(lens,grid,critcurve,1,resolution,2,false,&tmp_kist);
+	  refinements=refine_grid_kist(lens,grid,critcurve,1,resolution,2,false,&newpoint_kist);
 	  if(verbose) std::printf("find_crit, came out of refine_grid\n");
 
 	  if(verbose) cout << "Npoints " << critcurve->imagekist->Nunits() << endl;
 
 	  if(refinements==0) break;
-	  //}else free(critcurve[0].points);
+	  //}else free(critcurve->points);
+
+	  // add new negative points to negpoints
+	  newpoint_kist.MoveToTop();
+	  negimage.imagekist->MoveToBottom();
+	  do{
+		  if(newpoint_kist.getCurrent()->invmag < 0)
+			  negimage.imagekist->InsertAfterCurrent(newpoint_kist.getCurrent());
+	  }while(newpoint_kist.Down());
   }
-  tmp_kist.Empty();
+  newpoint_kist.Empty();
+  critcurve->imagekist->MoveToTop();
+  do{critcurve->imagekist->getCurrent()->in_image = FALSE;}while(critcurve->imagekist->Down());
 
   if(verbose) std::printf("find_crit, number of caustic points: %li\n",critcurve->imagekist->Nunits());
 
-  Npoints = critcurve->imagekist->Nunits();
   *orderingsuccess = true;
   if(ordercurve){
 
+	  unsigned long Npoints = critcurve->imagekist->Nunits();
 	  unsigned long NewNumber;
 	  divide_images_kist(grid->i_tree,critcurve,Ncrits,maxNcrits);
+
+	  if(*Ncrits > maxNcrits){ERROR_MESSAGE(); std::printf("ERROR: in find_crit, too many critical curves Ncrits=%i > maxNcrits gridsize=%e\n"
+				       ,*Ncrits,critcurve->imagekist->getCurrent()->gridsize); exit(1);}
 
 	  // order points in curve
 
@@ -336,6 +332,10 @@ void find_crit_kist(
 	  Point *tmp_points = NewPointArray(Npoints,false);
 	  unsigned long ii;
 	  for(i=0;i<*Ncrits;++i){
+		  // return in_image value to false
+		  critcurve[i].imagekist->MoveToTop();
+		  do{critcurve[i].imagekist->getCurrent()->in_image = FALSE;}while(critcurve[i].imagekist->Down());
+
 		  critcurve[i].imagekist->MoveToTop();
 		  //copy points into a point array for compatibility with curve ordering routines
 		  for(ii=0; ii < critcurve[i].imagekist->Nunits() ; ++ii, critcurve[i].imagekist->Down())
@@ -365,14 +365,12 @@ void find_crit_kist(
 			  critcurve[i].imagekist->TakeOutCurrent();
 			  critcurve[i].imagekist->Down();
 		  }
+
 	  }
 	  FreePointArray(tmp_points,false);
 	  //split_order_curve4(critcurve,maxNcrits,Ncrits);
   }else if(critcurve->imagekist->Nunits() > 0) *Ncrits=1;
   if(critcurve->imagekist->Nunits() == 0) *Ncrits=0;
-
-  if(*Ncrits > maxNcrits){ERROR_MESSAGE(); std::printf("ERROR: in find_crit, too many critical curves Ncrits=%i > maxNcrits gridsize=%e\n"
-			       ,*Ncrits,critcurve->imagekist->getCurrent()->gridsize); exit(1);}
 
   return ;
 }

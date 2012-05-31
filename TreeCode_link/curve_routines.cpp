@@ -240,7 +240,7 @@ bool order_curve4(KistHndl curve){
  *
  * I can think of one pathological case in which this routine would fail
  */
-bool order_ExteriorBoundary(
+/*bool order_ExteriorBoundary(
 		Point *curve           /// Array of points representing the curve
 		,long Npoints          /// Number of points in curve
 		,long *NewNpoints      /// Number of points in the exterior boundary, *NewNpoints <= Npoints
@@ -328,7 +328,7 @@ bool order_ExteriorBoundary(
 	windings(curve[0].x,curve,*NewNpoints,area,0);
 
 	return true;
-}
+}*/
 /**\ingroup Utill
  *
  * \brief Finds area within a curve by summing every cell.
@@ -336,7 +336,7 @@ bool order_ExteriorBoundary(
  * Should work every time provided the curve ordering is correct.
  * Testing if each cell is inside the curve can be slow.
  */
-double findAreaOfCurve(TreeHndl tree,ImageInfo *curve,int NimageMax){
+/*double findAreaOfCurve(TreeHndl tree,ImageInfo *curve,int NimageMax){
 
 	if(curve->imagekist->Nunits() < 3) return 0.0;
 
@@ -431,7 +431,6 @@ exit(0);
 
 	return area;
 }
-
 */
 
 /*  orders points in a curve, separates disconnected curves
@@ -440,7 +439,7 @@ exit(0);
  *	 uses list instead of arrays
  *   does not attempt to remove spurs
  */
-void split_order_curve3(OldImageInfo *curves,int Maxcurves,int *Ncurves){
+/*void split_order_curve3(OldImageInfo *curves,int Maxcurves,int *Ncurves){
 
 	long i,k=0,m;
 	short spur,closed,attach;
@@ -523,10 +522,10 @@ void split_order_curve3(OldImageInfo *curves,int Maxcurves,int *Ncurves){
 	    				// reverse the order of the spur
 	    				// this insures that if the code returns to the start
 	    				// the points will still be in a order
-	    				/*JumpDownList(lists[k],m);
-	    				MoveCurrentToBottom(lists[k]);
-	    				MoveToBottomList(lists[k]);
-	*/
+	    				//JumpDownList(lists[k],m);
+	    				//MoveCurrentToBottom(lists[k]);
+	    				//MoveToBottomList(lists[k]);
+
 	    				MoveToTopList(lists[Maxcurves]);
 	    				do{
 	    					if( AreBoxNeighbors(lists[k]->current,lists[Maxcurves]->current) ){
@@ -594,14 +593,14 @@ void split_order_curve3(OldImageInfo *curves,int Maxcurves,int *Ncurves){
 	free(lists[Maxcurves]);
 	free(point);
 	return ;
-}
+}/*
 
-void split_order_curve(OldImageInfo *curves,int Maxcurves,int *Ncurves){
-/*  orders points in a curve, separates disconnected curves
+/**  orders points in a curve, separates disconnected curves
  *   curves[0...Maxcurves] must be allocated before
  *
  *   does not attempt to remove spurs
  */
+/*void split_order_curve(OldImageInfo *curves,int Maxcurves,int *Ncurves){
 
 	long j,k=0,jold,end=0;
 	short spur,closed;
@@ -652,14 +651,14 @@ void split_order_curve(OldImageInfo *curves,int Maxcurves,int *Ncurves){
 	*Ncurves=k;
 	//std::printf("exiting split_order_curve\n");
 
-}
+}*/
 
-void split_order_curve2(OldImageInfo *curves,int Maxcurves,int *Ncurves){
 /*  orders points in a curve, separates disconnected curves, cuts off spurs
  *   curves[0...Maxcurves] must be allocated before
  *
  *   Attempts to remove spurs,  does not always work
  */
+/*void split_order_curve2(OldImageInfo *curves,int Maxcurves,int *Ncurves){
 
 	long i,j,k=0,jold,m,end;
 	short spur,closed;
@@ -685,31 +684,32 @@ void split_order_curve2(OldImageInfo *curves,int Maxcurves,int *Ncurves){
 	    	spur=0;
 	    	walkcurve(curves[0].points,Maxpoint,&j,&end);
 
-	    	/*
-	    	for(i=j+1,step=1,rmin=1.0e99;i<Maxpoint;++i){
-	    		if( j+1 > Npoints-1 || i==j){ ERROR_MESSAGE(); std::printf("ERROR: i=%l j=%i\n",i,j); exit(1);}
 
-	    		if(step){
-	    			delta = sqrt( pow(curves[0].points[j].x[0]-curves[0].points[i].x[0],2)
-		    			  + pow(curves[0].points[j].x[1]-curves[0].points[i].x[1],2) )
-		    			  < 1.01*(curves[0].points[j].gridsize + curves[0].points[i].gridsize)/2;
-	    		}else{
-	    			delta = AreBoxNeighbors(&(curves[0].points[i]),&(curves[0].points[j]) );
-	    		}
+//	    	for(i=j+1,step=1,rmin=1.0e99;i<Maxpoint;++i){
+//	    		if( j+1 > Npoints-1 || i==j){ ERROR_MESSAGE(); std::printf("ERROR: i=%l j=%i\n",i,j); exit(1);}
+//
+//	    		if(step){
+//	    			delta = sqrt( pow(curves[0].points[j].x[0]-curves[0].points[i].x[0],2)
+//		    			  + pow(curves[0].points[j].x[1]-curves[0].points[i].x[1],2) )
+//		    			  < 1.01*(curves[0].points[j].gridsize + curves[0].points[i].gridsize)/2;
+//	    		}else{
+//	    			delta = AreBoxNeighbors(&(curves[0].points[i]),&(curves[0].points[j]) );
+//	    		}
+//
+//	    		if(delta){
+//	    			SwapPointsInArray( &(curves[0].points[j+1]) , &(curves[0].points[i]) );
+//	    			++j;
+//	    			i=j;
+//	    			step=1;
+//	    		}
+//
+//	    		// try larger linking length
+//	    		if( (i == Maxpoint-1) && step){
+//	    			i=j;
+//	    			step=0;
+//	    		}
+//	    	}
 
-	    		if(delta){
-	    			SwapPointsInArray( &(curves[0].points[j+1]) , &(curves[0].points[i]) );
-	    			++j;
-	    			i=j;
-	    			step=1;
-	    		}
-
-	    		// try larger linking length
-	    		if( (i == Maxpoint-1) && step){
-	    			i=j;
-	    			step=0;
-	    		}
-	    	}*/
 
 	      // check if curve is closed
 
@@ -775,15 +775,15 @@ void split_order_curve2(OldImageInfo *curves,int Maxcurves,int *Ncurves){
 	*Ncurves=k;
 	//std::printf("exiting split_order_curve\n");
 
-}
+}*/
 
-void order_curve(OldImageInfo *curve){
 /*  orders points in a curve,
  *
  *   must already be a connected set of points
  *
  *   does not attempt to remove spurs
  */
+/*void order_curve(OldImageInfo *curve){
 
 	long j,jold,end=0;
 	short spur,closed;
@@ -817,7 +817,7 @@ void order_curve(OldImageInfo *curve){
 	//std::printf("  end of loop j=%i k=%i i=%i Npoints=%i\n",j,k,i,Npoints);
 	//std::printf("exiting split_order_curve\n");
 
-}
+}*/
 
 /*
  * orders curve by finding closest point ahead in list
@@ -881,7 +881,7 @@ void walkcurve(Point *points,long Npoints,long *j,long *end){
  *   walking continues beyond end in which case *j > *end.
  */
 
-void walkcurveRight(Point *points,long Npoints,long *j,long *end){
+/*void walkcurveRight(Point *points,long Npoints,long *j,long *end){
 
 	long i,k,i_next;
 	double mintheta,x,y,phi;
@@ -914,7 +914,7 @@ void walkcurveRight(Point *points,long Npoints,long *j,long *end){
 		}
 		i_next = -1;
 	}
-}
+}*/
 
 /* work backward along curve to find point with another neighbor
  * further along in the array
@@ -949,9 +949,9 @@ short backtrack(Point *points,long Npoints,long *j,long jold,long *end){
 	  return 0;
 }
 
-void nesting_curve(OldImageInfo *curves,int Ncurves){
-	/* determine which curves are enclosed in another curve
-	 */
+/*void nesting_curve(OldImageInfo *curves,int Ncurves){
+	// determine which curves are enclosed in another curve
+
 	int i,k;
 
 	if(Ncurves==1){
@@ -970,17 +970,17 @@ void nesting_curve(OldImageInfo *curves,int Ncurves){
 		}
 	}
 
-}
+}*/
 
-void split_images(TreeHndl i_tree,OldImageInfo *images,int Maximages
+/*
+ * splits images by edge method to avoid FOF
+ *    start: all image points should be under image[0].points
+ *
+ *    Note: points in tree must be marked as inside or outside image previously
+ *    this can be changed by changing findborder3 to findborder2
+ */
+/*void split_images(TreeHndl i_tree,OldImageInfo *images,int Maximages
 		,int *Nimages,bool sortallpoints){
-	/*
-	 * splits images by edge method to avoid FOF
-	 *    start: all image points should be under image[0].points
-	 *
-	 *    Note: points in tree must be marked as inside or outside image previously
-	 *    this can be changed by changing findborder3 to findborder2
-	 */
 
 	if(images->Npoints == 0){
 		*Nimages=0;
@@ -1140,19 +1140,19 @@ void split_images(TreeHndl i_tree,OldImageInfo *images,int Maximages
 
 	//checkTree(i_tree);
 	//std::printf("exiting split_images\n");
-}
+}*/
 
-void split_images3(TreeHndl i_tree,OldImageInfo *images,int Maximages
+/*
+ * splits images by edge method to avoid FOF
+ *    start: all image points should be under image[0].points
+ *
+ *    Note: points in tree must be marked as inside or outside image previously
+ *    this can be changed by changing findborder3 to findborder2
+ *
+ *    Warning: works only with simply connect images
+ */
+/*void split_images3(TreeHndl i_tree,OldImageInfo *images,int Maximages
 		,int *Nimages,bool sortallpoints){
-	/*
-	 * splits images by edge method to avoid FOF
-	 *    start: all image points should be under image[0].points
-	 *
-	 *    Note: points in tree must be marked as inside or outside image previously
-	 *    this can be changed by changing findborder3 to findborder2
-	 *
-	 *    Warning: works only with simply connect images
-	 */
 
 	if(images->Npoints == 0){
 		*Nimages=0;
@@ -1192,10 +1192,10 @@ void split_images3(TreeHndl i_tree,OldImageInfo *images,int Maximages
 	//std::printf("*Nimages=%i\n",TmpNimages);
 
 	// order points in each curve
-	/*for(i=0;i<TmpNimages;++i){
-		order_curve(&(borders[i]));
-		std::printf("%i\n",borders[i].Npoints);
-	}*/
+//	for(i=0;i<TmpNimages;++i){
+//		order_curve(&(borders[i]));
+//		std::printf("%i\n",borders[i].Npoints);
+//	}
 	//std::printf("number of borders = %i\n",TmpNimages);
 	// classify curves into those that are inside another curve or not
 	//nesting_curve(borders,TmpNimages);
@@ -1293,16 +1293,16 @@ void split_images3(TreeHndl i_tree,OldImageInfo *images,int Maximages
 
 	//checkTree(i_tree);
 	//std::printf("exiting split_images\n");
-}
+}*/
 
 
-void split_images2(TreeHndl i_tree,OldImageInfo *images,int Maximages,int *Nimages){
+/* brute force method of splitting images by doing neighbors-of-neighbors
+ * on all the points.  Dependable, but slow.
+ *
+ * in_image markers must be set
+ */
+/*void split_images2(TreeHndl i_tree,OldImageInfo *images,int Maximages,int *Nimages){
 	int i;
-	/* brute force method of splitting images by doing neighbors-of-neighbors
-	 * on all the points.  Dependable, but slow.
-	 *
-	 * in_image markers must be set
-	 */
 
 	if(images[0].Npoints==0){
 		*Nimages=0;
@@ -1317,12 +1317,12 @@ void split_images2(TreeHndl i_tree,OldImageInfo *images,int Maximages,int *Nimag
 	//std::printf("Out split_image2\n");
 
 	return ;
-}
+}*/
 
+/** meant to be a sure fire way to split all points into separate images or
+ *   curves into separate curves
+ */
 void splitter(OldImageInfo *images,int Maximages,int *Nimages){
-	/* meant to be a sure fire way to split all points into separate images or
-	 *   curves into separate curves
-	 */
 	long i,m,j;
 	ListHndl imagelist=NewList();
 	unsigned long NpointsTotal=0;
@@ -1386,14 +1386,14 @@ void splitter(OldImageInfo *images,int Maximages,int *Nimages){
 	return ;
 }
 
+/* reorders imagelist into separate images using reliable
+ *      neighbor-of-neighbor method
+ *
+ * in images the number of points in each image is updated
+ *      and the pointer to the first point in each image
+ *
+ */
 void splitlist(ListHndl imagelist,OldImageInfo *images,int *Nimages,int Maximages){
-	/* reorders imagelist into separate images using reliable
-	 *      neighbor-of-neighbor method
-	 *
-	 * in images the number of points in each image is updated
-	 *      and the pointer to the first point in each image
-	 *
-	 */
 	unsigned long i=0,m=0;
 	ListHndl orderedlist = NewList();
 
@@ -1544,10 +1544,10 @@ int windings(
 	return wn;
 }
 
-/*
- *  \ingoup Utill
- *  determines the whether a point is inside a curve, that has been stretched 1.2 times
- *  returns the area of the tretched curve
+/** \ingroup Utill
+ *
+ *  \brief determines the whether a point is inside a curve, that has been stretched 1.2 times
+ *  returns the area of the stretched curve
  */
 
 int windings2(

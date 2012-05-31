@@ -169,7 +169,6 @@ void PositionFromIndex(unsigned long i,double *x,long Npixels,double range,doubl
     return;
 }
 
-
 /** \ingroup Utill
  * This function finds the largest power of 2 that is < k
  */
