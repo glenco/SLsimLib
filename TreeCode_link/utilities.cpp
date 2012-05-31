@@ -169,69 +169,6 @@ void PositionFromIndex(unsigned long i,double *x,long Npixels,double range,doubl
     return;
 }
 
-/*
- *  \ingoup Utill
- *  determines whether a point is inside a curve, that has been stretched 1.2 times
- *  returns the area of the stretched curve
- */
-
-int windings2(
-		double *x              /// Point for which the winding number is calculated
-		,Point *points_original         /// The points on the border.  These must be ordered.
-		,unsigned long Npoints /// number of points in curve
-		,double *area          /// returns absolute the area within the curve with oriented border
-		,short image           /// if == 0 the image of the curve is uses as the curve
-		){
-	int wn=0;
-	unsigned long k,i;
-	double center[2];
-
-	center[0] = center[1] = 0.0;
-
-	*area=0.0;
-	if(Npoints < 3) return 0;
-
-	Point **points = new Point*[Npoints];
-
-	for(i=0;i<Npoints;++i){
-		if(image) points[i] = points_original[i].image;
-		else points[i] = &points_original[i];
-
-		center[0] += points[i]->x[0];
-		center[1] += points[i]->x[1];
-	}
-
-	center[0] /= Npoints;
-	center[1] /= Npoints;
-
-	for(i=0;i<Npoints;++i){
-		points[i]->x[0] -= center[0];
-		points[i]->x[1] -= center[1];
-
-		points[i]->x[0] *= 1.2;
-		points[i]->x[1] *= 1.2;
-
-		points[i]->x[0] += center[0];
-		points[i]->x[1] += center[1];
-
-		k = i < Npoints-1 ? i+1 : 0;
-		*area+=(points[i]->x[0] + points[k]->x[0])*(points[i]->x[1] - points[k]->x[1]);
-
-		if(points[i]->x[1] <= x[1]){
-			if(points[k]->x[1] > x[1])
-				if( isLeft(points[i],points[k],x) > 0) ++wn;
-		}else{
-			if(points[k]->x[1] <= x[1])
-				if( isLeft(points[i],points[k],x) < 0) --wn;
-		}
-	}
-
-	*area = fabs(*area)*0.5;
-	delete points;
-
-	return wn;
-}
-
 /** \ingroup Utill
  * This function finds the largest power of 2 that is < k
  */

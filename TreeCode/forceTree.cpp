@@ -256,17 +256,17 @@ void ForceTree::force2D(double *ray,double *alpha,double *kappa,double *gamma,bo
 
 				  index = MultiRadius*tree->current->particles[i];
 				  if(haloON) tmp = alpha_h(rcm2,halo_params[index]);
-				  else tmp =  alpha_o(rcm2,rsph[index])*masses[index];
+				  else tmp =  alpha_o(rcm2,rsph[index])*masses[MultiMass*tree->current->particles[i]];
 				  alpha[0] += tmp*xcm;
 				  alpha[1] += tmp*ycm;
 
 				  // can turn off kappa and gamma calculations to save times
 				  if(!no_kappa){
 					  if(haloON) *kappa += kappa_h(rcm2,halo_params[index]);
-					  else *kappa += kappa_o(rcm2,rsph[index])*masses[index];
+					  else *kappa += kappa_o(rcm2,rsph[index])*masses[MultiMass*tree->current->particles[i]];
 
 					  if(haloON) tmp = gamma_h(rcm2,halo_params[index]);
-					  else tmp = gamma_o(rcm2,rsph[index])*masses[index];
+					  else tmp = gamma_o(rcm2,rsph[index])*masses[MultiMass*tree->current->particles[i]];
 					  gamma[0] += 0.5*(xcm*xcm-ycm*ycm)*tmp;
 					  gamma[1] += xcm*ycm*tmp;
 				  }
