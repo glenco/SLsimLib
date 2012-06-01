@@ -37,7 +37,7 @@ struct HaloStructure;
 class ForceTree : public SimpleTree {
 public:
 	ForceTree(PosType **xp,IndexType Npoints,float *masses,float *rsph,bool Multimass,bool Multisize
-			,int bucket = 5,int dimensions = 2,bool median = false,PosType theta = 0.1
+			,double my_kappa_background = 0,int bucket = 5,int dimensions = 2,bool median = false,PosType theta = 0.1
 			);
 
 	virtual ~ForceTree();
@@ -49,7 +49,6 @@ public:
 	/// provides a way to change the profiles of the particles, by default Gaussian
 	//void ChangeParticleProfile(PartProf partprof);
 
-	double kappa;
 
 protected:
 
@@ -63,6 +62,7 @@ protected:
 	float *masses;
 	/// Array of particle sizes
 	float *rsph;
+	double kappa_background;
 
 
 	PosType force_theta;

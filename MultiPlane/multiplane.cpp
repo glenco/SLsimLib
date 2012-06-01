@@ -72,17 +72,12 @@ HaloData::HaloData(
 	pos = PosTypeMatrix(0,Nhalos-1,0,2);
 	double rr,theta,maxr,zi;
 	unsigned long i;
-	for(i = 0, kappa = 0.0; i < Nhalos; i++){
-		//maxr = pi*sqrt(fov*0.5/pi)/180*Dli[i]; // fov is a circle
+	for(i = 0, kappa_background = 0.0; i < Nhalos; i++){
 		zi = z1+(z2-z1)*ran2 (seed);
 		Dli.push_back(cosmo->angDist(0,zi));
 		maxr = pi*sqrt(fov/pi)/180*Dli[i]; // fov is a circle
 		rr = maxr*sqrt(ran2(seed));
 		theta = 2*pi*ran2(seed);
-		/*do{
-			x = 2*maxr*ran2(seed) - maxr;
-			y = 2*maxr*ran2(seed) - maxr;
-		}while((x*x+y*y) > (maxr*maxr));*/
 		pos[i][0] = rr*cos(theta);
 		pos[i][1] = rr*sin(theta);
 
@@ -97,9 +92,10 @@ HaloData::HaloData(
 		pos[i][2] = 0.0;//halos[i].Rmax;
 
 
-		/* calculate the mass density on the plane */
-		kappa += halos[i].mass;
 	}
+
+	// calculate the mass density on the plane
+	kappa_background = ha.***()*cosmo->coorDist(z1,z2);
 
 }
 
@@ -420,12 +416,9 @@ void MultiLens::buildHaloTrees(
 
 		/* to obtain 1/physical_distance^2
 		 * to be compatible with the rayshooter*/
-		double area = fieldofview * pow(pi/180*Dl[j]/(1+plane_redshifts[j]),2.0);
-		halodata[j]->kappa /= area;
+		cout << halodata[j]->kappa_background << endl;
 
-		cout << halodata[j]->kappa << endl;
-
-		halo_tree[j]->kappa = halodata[j]->kappa;
+		halo_tree[j]->kappa_background = halodata[j]->kappa_background;
 	}
 
 

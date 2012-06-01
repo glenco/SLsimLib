@@ -33,7 +33,7 @@ public:
 	/// number of halos in the halo model on the plane
 	IndexType Nhalos;
 	/// mean mass density
-	double kappa;
+	double kappa_background;
 
 	HaloData(double fov,double min_mass,double mass_scale,double z1,double z2,int mass_func_type,CosmoHndl cosmo,long *seed);
 	HaloData(HaloStructure *halostrucs,double **positions,unsigned long Nhaloss);

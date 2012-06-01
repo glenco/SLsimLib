@@ -69,24 +69,7 @@ Grid::Grid(
 
 	trashkist = new Kist;
 }
-/*
-GridHndl NewGrid(LensHndl lens, int Ngrid,double center[2],double range){
-	GridHndl grid = (Grid *)malloc(sizeof(Grid));
-	Point *i_points,*s_points;
 
-	grid->Ngrid = Ngrid;
-
-	i_points = NewPointArray(Ngrid*Ngrid,true);
-	xygridpoints(i_points,range,center,Ngrid,0);
-	s_points=LinkToSourcePoints(i_points,Ngrid*Ngrid);
-	lens->rayshooterInternal(Ngrid*Ngrid,i_points,false);
-	// Build trees
-	grid->i_tree = BuildTree(i_points,Ngrid*Ngrid);
-	grid->s_tree = BuildTree(s_points,Ngrid*Ngrid);
-
-	return grid;
-}
-*/
 /** \ingroup Constructor
  * \brief Destructor for a Grid.  Frees all memory.
  */
