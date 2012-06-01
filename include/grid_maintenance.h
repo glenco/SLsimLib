@@ -18,7 +18,6 @@
 typedef struct Grid{
 
 	Grid(LensHndl lens,int N1d,double center[2],double range);
-	Grid(LensHndl lens,int N1d,double center[2],double range,float *a1,float *a2,float *g1,float *g2,float *k);
 	~Grid();
 
 	void ReInitializeGrid(LensHndl lens);

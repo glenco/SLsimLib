@@ -64,8 +64,6 @@ public:
 
 	void setInternalParams(CosmoHndl,double zsource);
 	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off, double zsource=-1);
-	void rayshooterInternal(unsigned long Npixels, Point *i_points, bool kappa_off, float*,float*,float*,float*,float*, double* center,double range);
-
 	/// a poiner to the analytical lens
 	AnaLens *analens;
 	/// field of view in square degrees
@@ -75,7 +73,9 @@ public:
 	/// the name of the MOKA input file
 	std::string MOKA_input_file;
 
-private:
+protected:
+
+	long *seed;
 
 	void readParamfile(std::string);
 	/// Redshifts of lens planes, 0...Nplanes.  Last one is the source redshift.
@@ -115,11 +115,29 @@ private:
 	double *halo_zs;
 	double **halo_pos;
 
-	long *seed;
-
 	void quicksort(HaloStructure *halos,double **brr,double *arr,unsigned long N);
 };
 
+
+/// A class to represents a lens with multiple planes, for the MOKA project
+class MultiLensMOKA : public MultiLens{
+public:
+
+	MultiLensMOKA(std::string,long *);
+	~MultiLensMOKA();
+
+	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off, double zsource=-1);
+
+	/// values for the map
+	float* alpha1;
+	float* alpha2;
+	float* gamma1;
+	float* gamma2;
+	float* kappa1;
+	double* center;
+	double range;
+	long Npixels;
+};
 
 void swap(float *a,float *b);
 void swap(PosType *a,PosType *b);

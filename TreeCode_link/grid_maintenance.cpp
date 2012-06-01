@@ -35,40 +35,6 @@ Grid::Grid(
 
 	trashkist = new Kist;
 }
-
-/** \ingroup Constructor
- * \brief Constructor for initializing grid.
- *
- * Note: for the MOKA convergence calculator
- */
-Grid::Grid(
-		LensHndl lens      /// lens model for initializing grid
-		,int N1d           /// Initial number of grid points in each dimension.
-		,double center[2]  /// Center of grid.
-		,double range      /// Full width of grid in whatever units will be used.
-		,float *alpha1
-		,float *alpha2
-		,float *gamma1
-		,float *gamma2
-		,float *kappa
-		 ){
-
-	Point *i_points,*s_points;
-
-	Ngrid = N1d;
-	Ngrid_block = 3;  // never been tested with anything other than 3
-
-
-	i_points = NewPointArray(Ngrid*Ngrid,true);
-	xygridpoints(i_points,range,center,Ngrid,0);
-	s_points=LinkToSourcePoints(i_points,Ngrid*Ngrid);
-	lens->rayshooterInternal(Ngrid,i_points,false,alpha1,alpha2,gamma1,gamma2,kappa,center,range);
-	// Build trees
-	i_tree = BuildTree(i_points,Ngrid*Ngrid);
-	s_tree = BuildTree(s_points,Ngrid*Ngrid);  // make tree on source plane a area splitting tree
-
-	trashkist = new Kist;
-}
 /*
 GridHndl NewGrid(LensHndl lens, int Ngrid,double center[2],double range){
 	GridHndl grid = (Grid *)malloc(sizeof(Grid));

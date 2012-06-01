@@ -112,6 +112,11 @@ HaloData::~HaloData(){
 }
 
 
+MultiLensMOKA::MultiLensMOKA(string filename,long *my_seed) : MultiLens(filename,seed){
+}
+MultiLensMOKA::~MultiLensMOKA(){
+}
+
 MultiLens::MultiLens(string filename,long *my_seed) : Lens(){
 	readParamfile(filename);
 
@@ -605,48 +610,6 @@ void MultiLens::setZlens(double z){
 }
 
 // sets the redshifts and distances for the lens planes
-void MultiLens::setInternalParams(CosmoHndl cosmo, double zsource){
-	int j;
-
-	if( (cosmo->getOmega_matter() + cosmo->getOmega_lambda()) != 1.0 ){
-		printf("ERROR: MultiLens can only handle flat universes at present.  Must change cosmology.\n");
-		exit(1);
-	}
-
-	setRedshift(zsource);
-
-	Dl[0] = cosmo->coorDist(0,plane_redshifts[0]);
-	dDl[0] = Dl[0];  // distance between jth plane and the previous plane
-	for(j = 1; j < Nplanes; j++){
-
-		Dl[j] = cosmo->coorDist(0,plane_redshifts[j]);
-		dDl[j] = Dl[j] - Dl[j-1]; // distance between jth plane and the previous plane
-	}
-
-	cout << "Dl: ";
-	for(j = 0; j < Nplanes; j++)
-		cout << Dl[j] << " ";
-	cout << endl;
-
-	cout << "dDl: ";
-	for(j = 0; j < Nplanes; j++)
-		cout << dDl[j] << " ";
-	cout << endl << endl;
-
-	buildHaloTrees(cosmo,zsource);
-
-	if(flag_analens)
-		analens->setInternalParams(cosmo,zsource);
-}
-
-/** \brief Read in information from a Virgo Millennium Data Base http://gavo.mpa-garching.mpg.de/MyMillennium/
- *
- * query select * from MockLensing.dbo.m21_20_39_021_bc03_Ben_halos
- *
- * This is information on the dark matter halos only.  There are 13 entries in each line separated by commas.
- * The comments must be removed from the beginning of the data file and the total number of halos must be added
- * as the first line.
- */
 void MultiLens::readInputSimFile(CosmoHndl cosmo){
 
 	char c;
@@ -706,6 +669,48 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 
 }
 
+void MultiLens::setInternalParams(CosmoHndl cosmo, double zsource){
+	int j;
+
+	if( (cosmo->getOmega_matter() + cosmo->getOmega_lambda()) != 1.0 ){
+		printf("ERROR: MultiLens can only handle flat universes at present.  Must change cosmology.\n");
+		exit(1);
+	}
+
+	setRedshift(zsource);
+
+	Dl[0] = cosmo->coorDist(0,plane_redshifts[0]);
+	dDl[0] = Dl[0];  // distance between jth plane and the previous plane
+	for(j = 1; j < Nplanes; j++){
+
+		Dl[j] = cosmo->coorDist(0,plane_redshifts[j]);
+		dDl[j] = Dl[j] - Dl[j-1]; // distance between jth plane and the previous plane
+	}
+
+	cout << "Dl: ";
+	for(j = 0; j < Nplanes; j++)
+		cout << Dl[j] << " ";
+	cout << endl;
+
+	cout << "dDl: ";
+	for(j = 0; j < Nplanes; j++)
+		cout << dDl[j] << " ";
+	cout << endl << endl;
+
+	buildHaloTrees(cosmo,zsource);
+
+	if(flag_analens)
+		analens->setInternalParams(cosmo,zsource);
+}
+
+/** \brief Read in information from a Virgo Millennium Data Base http://gavo.mpa-garching.mpg.de/MyMillennium/
+ *
+ * query select * from MockLensing.dbo.m21_20_39_021_bc03_Ben_halos
+ *
+ * This is information on the dark matter halos only.  There are 13 entries in each line separated by commas.
+ * The comments must be removed from the beginning of the data file and the total number of halos must be added
+ * as the first line.
+ */
 /// Sort halos[] and brr[][] by content off arr[]
 void MultiLens::quicksort(HaloStructure *halos,double **brr,double *arr,unsigned long N){
 	double pivotvalue;
