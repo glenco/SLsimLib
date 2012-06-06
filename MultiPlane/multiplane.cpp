@@ -71,8 +71,6 @@ HaloData::HaloData(
 
 	Nhalos = (long)(poidev(float(Nhaloestot), seed) + 0.5);
 
-	cout << "here 2" << endl;
-
 	halos = new HaloStructure[Nhalos];
 	pos = PosTypeMatrix(0,Nhalos-1,0,2);
 	double rr,theta,maxr,zi;
