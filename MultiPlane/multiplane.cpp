@@ -36,7 +36,10 @@ HaloData::HaloData(
 
 	allocation_flag = true;
 
-    HALO ha(cosmo,min_mass,0.);
+    HALO ha(cosmo,min_mass,(z1+z2)/2);
+
+	// calculate the mass density on the plane
+	kappa_background = ha.totalMassDensityinHalos(0,1,0)*cosmo->radDist(z1,z2);
 
     //int iterator;
     //std::vector<double> vmasses,vsizes,vscale,vz;
@@ -72,7 +75,7 @@ HaloData::HaloData(
 	pos = PosTypeMatrix(0,Nhalos-1,0,2);
 	double rr,theta,maxr,zi;
 	unsigned long i;
-	for(i = 0, kappa_background = 0.0; i < Nhalos; i++){
+	for(i = 0; i < Nhalos; i++){
 		zi = z1+(z2-z1)*ran2 (seed);
 		Dli.push_back(cosmo->angDist(0,zi));
 		maxr = pi*sqrt(fov/pi)/180*Dli[i]; // fov is a circle
@@ -90,12 +93,7 @@ HaloData::HaloData(
 		//halos[i].rscale = vsizes[i]/vscale[i]; // get the Rscale=Rmax/c
 		halos[i].rscale = halos[i].Rmax/ha.getConcentration(0); // get the Rscale=Rmax/c
 		pos[i][2] = 0.0;//halos[i].Rmax;
-
-
 	}
-
-	// calculate the mass density on the plane
-	kappa_background = ha.***()*cosmo->coorDist(z1,z2);
 
 }
 
@@ -107,6 +105,11 @@ HaloData::~HaloData(){
 	}
 }
 
+
+MultiLensMOKA::MultiLensMOKA(string filename,long *my_seed) : MultiLens(filename,seed){
+}
+MultiLensMOKA::~MultiLensMOKA(){
+}
 
 MultiLens::MultiLens(string filename,long *my_seed) : Lens(){
 	readParamfile(filename);
@@ -397,28 +400,30 @@ void MultiLens::buildHaloTrees(
 		switch(internal_profile){
 		case 1:
 			//halo_tree[j] = new ForceTreePowerLaw(1.9,&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos);
-			halo_tree[j] = auto_ptr<ForceTree>(new ForceTreePowerLaw(1.9,&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos));
+			halo_tree[j] = auto_ptr<ForceTree>(new ForceTreePowerLaw(1.9,&halodata[j]->pos[0],halodata[j]->Nhalos
+					,halodata[j]->halos,true,halodata[j]->kappa_background));
 			break;
 		case 2:
 			//halo_tree[j] = new ForceTreeNFW(&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos);
-			halo_tree[j] = auto_ptr<ForceTree>(new ForceTreeNFW(&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos));
+			halo_tree[j] = auto_ptr<ForceTree>(new ForceTreeNFW(&halodata[j]->pos[0],halodata[j]->Nhalos
+					,halodata[j]->halos,true,halodata[j]->kappa_background));
 			break;
 		case 3:
 			//halo_tree[j] = new ForceTreePseudoNFW(1.9,&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos);
 			//halo_tree[j] = auto_ptr<ForceTree>(new ForceTreePseudoNFW(2.0,&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos,true,5,3,false,0.1));
-			halo_tree[j] = auto_ptr<ForceTree>(new ForceTreePseudoNFW(2.0,&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos));
+			halo_tree[j] = auto_ptr<ForceTree>(new ForceTreePseudoNFW(2.0,&halodata[j]->pos[0],halodata[j]->Nhalos
+					,halodata[j]->halos,true,halodata[j]->kappa_background));
 			break;
 		case 0:
 			//halo_tree[j] = new ForceTreeGauss(&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos);
-			halo_tree[j] = auto_ptr<ForceTree>(new ForceTreeGauss(&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos));
+			halo_tree[j] = auto_ptr<ForceTree>(new ForceTreeGauss(&halodata[j]->pos[0],halodata[j]->Nhalos
+					,halodata[j]->halos,true,halodata[j]->kappa_background));
 			break;
 		}
 
 		/* to obtain 1/physical_distance^2
 		 * to be compatible with the rayshooter*/
 		cout << halodata[j]->kappa_background << endl;
-
-		halo_tree[j]->kappa_background = halodata[j]->kappa_background;
 	}
 
 
@@ -598,48 +603,6 @@ void MultiLens::setZlens(double z){
 }
 
 // sets the redshifts and distances for the lens planes
-void MultiLens::setInternalParams(CosmoHndl cosmo, double zsource){
-	int j;
-
-	if( (cosmo->getOmega_matter() + cosmo->getOmega_lambda()) != 1.0 ){
-		printf("ERROR: MultiLens can only handle flat universes at present.  Must change cosmology.\n");
-		exit(1);
-	}
-
-	setRedshift(zsource);
-
-	Dl[0] = cosmo->coorDist(0,plane_redshifts[0]);
-	dDl[0] = Dl[0];  // distance between jth plane and the previous plane
-	for(j = 1; j < Nplanes; j++){
-
-		Dl[j] = cosmo->coorDist(0,plane_redshifts[j]);
-		dDl[j] = Dl[j] - Dl[j-1]; // distance between jth plane and the previous plane
-	}
-
-	cout << "Dl: ";
-	for(j = 0; j < Nplanes; j++)
-		cout << Dl[j] << " ";
-	cout << endl;
-
-	cout << "dDl: ";
-	for(j = 0; j < Nplanes; j++)
-		cout << dDl[j] << " ";
-	cout << endl << endl;
-
-	buildHaloTrees(cosmo,zsource);
-
-	if(flag_analens)
-		analens->setInternalParams(cosmo,zsource);
-}
-
-/** \brief Read in information from a Virgo Millennium Data Base http://gavo.mpa-garching.mpg.de/MyMillennium/
- *
- * query select * from MockLensing.dbo.m21_20_39_021_bc03_Ben_halos
- *
- * This is information on the dark matter halos only.  There are 13 entries in each line separated by commas.
- * The comments must be removed from the beginning of the data file and the total number of halos must be added
- * as the first line.
- */
 void MultiLens::readInputSimFile(CosmoHndl cosmo){
 
 	char c;
@@ -699,6 +662,48 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 
 }
 
+void MultiLens::setInternalParams(CosmoHndl cosmo, double zsource){
+	int j;
+
+	if( (cosmo->getOmega_matter() + cosmo->getOmega_lambda()) != 1.0 ){
+		printf("ERROR: MultiLens can only handle flat universes at present.  Must change cosmology.\n");
+		exit(1);
+	}
+
+	setRedshift(zsource);
+
+	Dl[0] = cosmo->coorDist(0,plane_redshifts[0]);
+	dDl[0] = Dl[0];  // distance between jth plane and the previous plane
+	for(j = 1; j < Nplanes; j++){
+
+		Dl[j] = cosmo->coorDist(0,plane_redshifts[j]);
+		dDl[j] = Dl[j] - Dl[j-1]; // distance between jth plane and the previous plane
+	}
+
+	cout << "Dl: ";
+	for(j = 0; j < Nplanes; j++)
+		cout << Dl[j] << " ";
+	cout << endl;
+
+	cout << "dDl: ";
+	for(j = 0; j < Nplanes; j++)
+		cout << dDl[j] << " ";
+	cout << endl << endl;
+
+	buildHaloTrees(cosmo,zsource);
+
+	if(flag_analens)
+		analens->setInternalParams(cosmo,zsource);
+}
+
+/** \brief Read in information from a Virgo Millennium Data Base http://gavo.mpa-garching.mpg.de/MyMillennium/
+ *
+ * query select * from MockLensing.dbo.m21_20_39_021_bc03_Ben_halos
+ *
+ * This is information on the dark matter halos only.  There are 13 entries in each line separated by commas.
+ * The comments must be removed from the beginning of the data file and the total number of halos must be added
+ * as the first line.
+ */
 /// Sort halos[] and brr[][] by content off arr[]
 void MultiLens::quicksort(HaloStructure *halos,double **brr,double *arr,unsigned long N){
 	double pivotvalue;

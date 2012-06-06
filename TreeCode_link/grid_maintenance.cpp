@@ -36,39 +36,6 @@ Grid::Grid(
 	trashkist = new Kist;
 }
 
-/** \ingroup Constructor
- * \brief Constructor for initializing grid.
- *
- * Note: for the MOKA convergence calculator
- */
-Grid::Grid(
-		LensHndl lens      /// lens model for initializing grid
-		,int N1d           /// Initial number of grid points in each dimension.
-		,double center[2]  /// Center of grid.
-		,double range      /// Full width of grid in whatever units will be used.
-		,float *alpha1
-		,float *alpha2
-		,float *gamma1
-		,float *gamma2
-		,float *kappa
-		 ){
-
-	Point *i_points,*s_points;
-
-	Ngrid = N1d;
-	Ngrid_block = 3;  // never been tested with anything other than 3
-
-
-	i_points = NewPointArray(Ngrid*Ngrid,true);
-	xygridpoints(i_points,range,center,Ngrid,0);
-	s_points=LinkToSourcePoints(i_points,Ngrid*Ngrid);
-	lens->rayshooterInternal(Ngrid*Ngrid,i_points,false,alpha1,alpha2,gamma1,gamma2,kappa,center,range);
-	// Build trees
-	i_tree = BuildTree(i_points,Ngrid*Ngrid);
-	s_tree = BuildTree(s_points,Ngrid*Ngrid);  // make tree on source plane a area splitting tree
-
-	trashkist = new Kist;
-}
 
 /** \ingroup Constructor
  * \brief Destructor for a Grid.  Frees all memory.
@@ -81,15 +48,7 @@ Grid::~Grid(){
 	
 	return;
 }
-/*
-void FreeGrid(GridHndl grid){
-	freeTree(grid->i_tree);
-	freeTree(grid->s_tree);
-	free(grid);
 
-	return;
-}
-*/
 /** \ingroup ImageFinding
  *  \brief Reinitializes the grid so that it is back to the original coarse grid, but if
  *  the lens has changed the source positions will be updated.

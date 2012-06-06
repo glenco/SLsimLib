@@ -67,9 +67,6 @@ void ForceTree::CalcMoments(){
 		for(i=0,cbranch->mass=0;i<cbranch->nparticles;++i)
 			cbranch->mass +=  haloON ? halo_params[cbranch->particles[i]*MultiRadius].mass : masses[cbranch->particles[i]*MultiMass];
 
-		/// subtract the mean mass
-		cbranch->mass -= kappa_background * (cbranch->boundary_p1[1] - cbranch->boundary_p1[0]) * (cbranch->boundary_p2[1] - cbranch->boundary_p2[0]);
-
 		// calculate center of mass
 		cbranch->center[0]=cbranch->center[1]=0;
 		for(i=0;i<cbranch->nparticles;++i){
@@ -86,9 +83,6 @@ void ForceTree::CalcMoments(){
 			xcm[1]=tree->xp[cbranch->particles[i]][1]-cbranch->center[1];
 			xcut=pow(xcm[0],2) + pow(xcm[1],2);
 			tmp = haloON ? halo_params[cbranch->particles[i]*MultiRadius].mass : masses[cbranch->particles[i]*MultiMass];
-
-			/// subtract the mean mass
-			tmp -= kappa_background * (cbranch->boundary_p1[1] - cbranch->boundary_p1[0]) * (cbranch->boundary_p2[1] - cbranch->boundary_p2[0]);
 
 			cbranch->quad[0] += (xcut-2*xcm[0]*xcm[0])*tmp;
 			cbranch->quad[1] += (xcut-2*xcm[1]*xcm[1])*tmp;
@@ -208,6 +202,11 @@ float * ForceTree::CalculateSPHsmoothing(int N){
  *   tangent[3] - the direction of light rays or orientation of the simulation
  *   tree can be either a 3d or 2d tree although 2d is more efficient
  *       need to change the projected cm in _TreeNBForce to us 3d tree
+ *
+ *       The output alpha[] is in units of mass_scale/Mpc, ie it needs to be
+ *       divided by Sigma_crit and multiplied by mass_scale to be the defelction
+ *       in the lens equation expressed on the lens plane or multiplied by
+ *       4*pi*G*mass_scale to get the deflection angle caused by the plane lens.
  * */
 
 void ForceTree::force2D(double *ray,double *alpha,double *kappa,double *gamma,bool no_kappa){
@@ -304,6 +303,14 @@ void ForceTree::force2D(double *ray,double *alpha,double *kappa,double *gamma,bo
 
   }while(TreeNBWalkStep(tree,allowDescent));
 
+  // Subtract off uniform mass sheet to compensate for the extra mass
+  //  added to the universe in the halos.
+  alpha[0] += ray[0]*kappa_background;
+  alpha[1] += ray[1]*kappa_background;
+  if(!no_kappa){      //  taken out to speed up
+	  *kappa -= kappa_background;
+  }
+
   return;
 }
 /*
@@ -353,13 +360,13 @@ ForceTreePowerLaw::ForceTreePowerLaw(
 		,IndexType Npoints         /// number of halos
 		,HaloStructure *h_params   /// array with internal properties of halos
 		,bool Multisize            /// flag false if only one halo size and structure should be used, default is true
+		,double my_kappa_bk        /// Background convergence to be subtracted
 		,int bucket                /// maximum number of halos in a leaf of the tree
 		,int dimension             /// 2 or 3, dimension of tree, default 2
 		,bool median               /// If true will divide branches at the median position of the particles, if false an equal area cut is used, default false
 		,PosType theta             /// Opening angle used in tree force calculation, default 0.1
-		,double my_kappa_bk
 		) :
-		ForceTree(xp,Npoints,NULL,NULL,false,Multisize,***,bucket,dimension,median,theta), beta(beta)
+		ForceTree(xp,Npoints,NULL,NULL,false,Multisize,my_kappa_bk,bucket,dimension,median,theta), beta(beta)
 {
 
 	haloON = true;
@@ -376,13 +383,13 @@ ForceTreeNFW::ForceTreeNFW(
 		,IndexType Npoints         /// number of halos
 		,HaloStructure *h_params   /// array with internal properties of halos
 		,bool Multisize            /// flag false if only one halo size and structure should be used, default is true
+		,double my_kappa_bk        /// Background convergence to be subtracted
 		,int bucket                /// maximum number of halos in a leaf of the tree
 		,int dimension             /// 2 or 3, dimension of tree, default 2
 		,bool median               /// If true will divide branches at the median position of the particles, if false an equal area cut is used, default false
 		,PosType theta             /// Opening angle used in tree force calculation, default 0.1
-		,double my_kappa_bk
 		) :
-		ForceTree(xp,Npoints,NULL,NULL,false,Multisize,***,bucket,dimension,median,theta)
+		ForceTree(xp,Npoints,NULL,NULL,false,Multisize,my_kappa_bk,bucket,dimension,median,theta)
 {
 	for(unsigned long i=0;i<Npoints;++i){
 		if(h_params[i].Rmax <= 0.0 || h_params[i].rscale <= 0.0){
@@ -406,13 +413,13 @@ ForceTreeGauss::ForceTreeGauss(
 		,IndexType Npoints         /// number of halos
 		,HaloStructure *h_params   /// array with internal properties of halos
 		,bool Multisize            /// flag false if only one halo size and structure should be used, default is true
+		,double my_kappa_bk       /// Background convergence to be subtracted
 		,int bucket                /// maximum number of halos in a leaf of the tree
 		,int dimension             /// 2 or 3, dimension of tree, default 2
 		,bool median               /// If true will divide branches at the median position of the particles, if false an equal area cut is used, default false
 		,PosType theta             /// Opening angle used in tree force calculation, default 0.1
-		,double my_kappa_bk
 		) :
-		ForceTree(xp,Npoints,NULL,NULL,false,Multisize,***,bucket,dimension,median,theta)
+		ForceTree(xp,Npoints,NULL,NULL,false,Multisize,my_kappa_bk,bucket,dimension,median,theta)
 {
 
 	haloON = true;
@@ -430,13 +437,13 @@ ForceTreePseudoNFW::ForceTreePseudoNFW(
 		,IndexType Npoints         /// number of halos
 		,HaloStructure *h_params   /// array with internal properties of halos
 		,bool Multisize            /// flag false if only one halo size and structure should be used, default is true
+		,double my_kappa_bk       /// Background convergence to be subtracted
 		,int bucket                /// maximum number of halos in a leaf of the tree
 		,int dimension             /// 2 or 3, dimension of tree, default 2
 		,bool median               /// If true will divide branches at the median position of the particles, if false an equal area cut is used, default false
 		,PosType theta             /// Opening angle used in tree force calculation, default 0.1
-		,double my_kappa_bk
 		) :
-		ForceTree(xp,Npoints,NULL,NULL,false,Multisize,***,bucket,dimension,median,theta), beta(beta)
+		ForceTree(xp,Npoints,NULL,NULL,false,Multisize,my_kappa_bk,bucket,dimension,median,theta), beta(beta)
 {
 
 	// Check for values that would make the rayshooter return nan.

@@ -165,24 +165,11 @@ void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
     return;
 }
 
-
-void MultiLens::rayshooterInternal(unsigned long Npixels
-		,Point *i_points
-		,bool kappa_off
-		,float* alpha1
-		,float* alpha2
-		,float* gamma1
-		,float* gamma2
-		,float* kappa1
-		,double* center
-		,double range){
+void MultiLensMOKA::rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off, double zsource){
 
 	unsigned long i;
 	double xx[2];
-	unsigned long Npoints;
 	long outside;
-
-	Npoints = Npixels*Npixels;
 
 	for(i = 0, outside = 0; i< Npoints; i++){
 
@@ -223,7 +210,7 @@ void MultiLens::rayshooterInternal(unsigned long Npixels
 				range *= Dl[j];
 				long index = IndexFromPosition(xx,Npixels,range,center);
 
-				if(index >= 0 && index < Npoints){
+				if(index > -1){
 					alpha[0] = alpha1[index];
 					alpha[1] = alpha2[index];
 					gamma[0] = gamma1[index];

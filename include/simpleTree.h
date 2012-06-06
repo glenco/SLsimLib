@@ -177,7 +177,7 @@ protected:
 	void swap(IndexType a,IndexType b);
 	void swap(unsigned long *a,unsigned long *b);
 
-	TreeNBHndl rotate_simulation(PosType **xp,IndexType Nparticles,IndexType *particles
+	/*TreeNBHndl rotate_simulation(PosType **xp,IndexType Nparticles,IndexType *particles
 			,double **coord,double theta,float *rsph,float *mass
 			,bool MultiRadius,bool MultiMass);
 	TreeNBHndl rotate_project(PosType **xp,IndexType Nparticles,IndexType *particles
@@ -185,7 +185,7 @@ protected:
 			,bool MultiRadius,bool MultiMass);
 	TreeNBHndl spread_particles(PosType **xp,IndexType Nparticles,IndexType *particles
 			,double theta,float *rsph,float *mass,bool MultiRadius,bool MultiMass);
-	 void cuttoffscale(TreeNBHndl tree,double *theta);
+	 void cuttoffscale(TreeNBHndl tree,double *theta);*/
 };
 
 #endif /* SIMP_TREE_H_ */

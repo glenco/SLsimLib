@@ -62,8 +62,9 @@ protected:
 	float *masses;
 	/// Array of particle sizes
 	float *rsph;
+	/// A uniform mass sheet in units of mass_scale/Mpc^2 used to subtract of the contribution
+	/// of the particles to the mean density of the universe
 	double kappa_background;
-
 
 	PosType force_theta;
 
@@ -109,8 +110,9 @@ typedef ForceTree *ForceTreeHndl;
 class ForceTreePowerLaw : public ForceTree{
 
 public:
-	ForceTreePowerLaw(float beta,PosType **xp,IndexType Npoints,HaloStructure *par_internals,bool Multisize = true
-			,int bucket = 5,int dimensions = 2,bool median = false,PosType theta = 0.1
+	ForceTreePowerLaw(float beta,PosType **xp,IndexType Npoints,HaloStructure *par_internals
+			,bool Multisize = true,double my_kappa_bk=0.0,int bucket = 5,int dimensions = 2
+			,bool median = false,PosType theta = 0.1
 			);
 	~ForceTreePowerLaw();
 
@@ -137,7 +139,8 @@ private:
 class ForceTreeNFW : public ForceTree{
 
 public:
-	ForceTreeNFW(PosType **xp,IndexType Npoints,HaloStructure *par_internals,bool Multisize = true
+	ForceTreeNFW(PosType **xp,IndexType Npoints,HaloStructure *par_internals
+			,bool Multisize = true,double my_kappa_bk = 0.0
 			,int bucket = 5,int dimensions = 2,bool median = false,PosType theta = 0.1
 			);
 	~ForceTreeNFW();
@@ -168,8 +171,9 @@ private:
 class ForceTreeGauss : public ForceTree{
 
 public:
-	ForceTreeGauss(PosType **xp,IndexType Npoints,HaloStructure *par_internals,bool Multisize = true
-			,int bucket = 5,int dimensions = 2,bool median = false,PosType theta = 0.1
+	ForceTreeGauss(PosType **xp,IndexType Npoints,HaloStructure *par_internals
+			,bool Multisize = true,double my_kappa_bk = 0.0,int bucket = 5,int dimensions = 2
+			,bool median = false,PosType theta = 0.1
 			);
 	~ForceTreeGauss();
 
@@ -195,8 +199,9 @@ private:
 class ForceTreePseudoNFW : public ForceTree{
 
 public:
-	ForceTreePseudoNFW(float beta,PosType **xp,IndexType Npoints,HaloStructure *par_internals,bool Multisize = true
-			,int bucket = 5,int dimensions = 2,bool median = false,PosType theta = 0.1
+	ForceTreePseudoNFW(float beta,PosType **xp,IndexType Npoints,HaloStructure *par_internals
+			,bool Multisize = true,double my_kappa_bk = 0.0,int bucket = 5,int dimensions = 2
+			,bool median = false,PosType theta = 0.1
 			);
 	~ForceTreePseudoNFW();
 
