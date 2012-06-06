@@ -33,6 +33,10 @@ struct HaloStructure;
  *
  * Most of the code in TreeNBForce.c is duplicated here as private methods and
  * a few public ones.
+ *
+ * The default value of theta = 0.1 generally gives better than 1% accuracy on alpha, but
+ * only ~ 20% accuracy on gamma.  For high accuracy gamma use theta <~ 0.01
+ *
  */
 class ForceTree : public SimpleTree {
 public:
@@ -106,6 +110,8 @@ typedef ForceTree *ForceTreeHndl;
  * Derived from the ForceTree class.  The "particles" are replaced with spherical halos.
  *The truncation is in 2d not 3d. \f$ \Sigma \propto r^\beta \f$ so beta would usually be negative.
  *
+ * The default value of theta = 0.1 generally gives better than 1% accuracy on alpha, but
+ * only ~ 20% accuracy on gamma.  For high accuracy gamma use theta <~ 0.01
  */
 class ForceTreePowerLaw : public ForceTree{
 
@@ -135,6 +141,9 @@ private:
  *
  * This class uses the true expressions for the NFW profile.  This is
  * time consuming and not usually necessary. See ForceTreePseudoNFW for a faster alternative.
+ *
+ * The default value of theta = 0.1 generally gives better than 1% accuracy on alpha, but
+ * only ~ 20% accuracy on gamma.  For high accuracy gamma use theta <~ 0.01
  */
 class ForceTreeNFW : public ForceTree{
 
@@ -167,6 +176,9 @@ private:
  * Derived from the ForceTree class.  The "particles" are replaced with spherical NFW halos.
  *
  * This class uses the true expressions for a Gaussin profile.
+
+ * The default value of theta = 0.1 generally gives better than 1% accuracy on alpha, but
+ * only ~ 20% accuracy on gamma.  For high accuracy gamma use theta <~ 0.01
  */
 class ForceTreeGauss : public ForceTree{
 
@@ -195,6 +207,9 @@ private:
  * with \f$ \Sigma \propto 1/(1 + r/r_s )^\beta \f$ so beta would usually be positive.
  *
  * An NFW profile is approximated beta = 2 .
+ *
+ * The default value of theta = 0.1 generally gives better than 1% accuracy on alpha, but
+ * only ~ 20% accuracy on gamma.  For high accuracy gamma use theta <~ 0.01
  */
 class ForceTreePseudoNFW : public ForceTree{
 

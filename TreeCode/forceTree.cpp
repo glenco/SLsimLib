@@ -364,7 +364,7 @@ ForceTreePowerLaw::ForceTreePowerLaw(
 		,int bucket                /// maximum number of halos in a leaf of the tree
 		,int dimension             /// 2 or 3, dimension of tree, default 2
 		,bool median               /// If true will divide branches at the median position of the particles, if false an equal area cut is used, default false
-		,PosType theta             /// Opening angle used in tree force calculation, default 0.1
+		,PosType theta             /// Opening angle used in tree force calculation
 		) :
 		ForceTree(xp,Npoints,NULL,NULL,false,Multisize,my_kappa_bk,bucket,dimension,median,theta), beta(beta)
 {
@@ -387,7 +387,7 @@ ForceTreeNFW::ForceTreeNFW(
 		,int bucket                /// maximum number of halos in a leaf of the tree
 		,int dimension             /// 2 or 3, dimension of tree, default 2
 		,bool median               /// If true will divide branches at the median position of the particles, if false an equal area cut is used, default false
-		,PosType theta             /// Opening angle used in tree force calculation, default 0.1
+		,PosType theta             /// Opening angle used in tree force calculation
 		) :
 		ForceTree(xp,Npoints,NULL,NULL,false,Multisize,my_kappa_bk,bucket,dimension,median,theta)
 {
@@ -417,7 +417,7 @@ ForceTreeGauss::ForceTreeGauss(
 		,int bucket                /// maximum number of halos in a leaf of the tree
 		,int dimension             /// 2 or 3, dimension of tree, default 2
 		,bool median               /// If true will divide branches at the median position of the particles, if false an equal area cut is used, default false
-		,PosType theta             /// Opening angle used in tree force calculation, default 0.1
+		,PosType theta             /// Opening angle used in tree force calculation
 		) :
 		ForceTree(xp,Npoints,NULL,NULL,false,Multisize,my_kappa_bk,bucket,dimension,median,theta)
 {
@@ -441,7 +441,7 @@ ForceTreePseudoNFW::ForceTreePseudoNFW(
 		,int bucket                /// maximum number of halos in a leaf of the tree
 		,int dimension             /// 2 or 3, dimension of tree, default 2
 		,bool median               /// If true will divide branches at the median position of the particles, if false an equal area cut is used, default false
-		,PosType theta             /// Opening angle used in tree force calculation, default 0.1
+		,PosType theta             /// Opening angle used in tree force calculation
 		) :
 		ForceTree(xp,Npoints,NULL,NULL,false,Multisize,my_kappa_bk,bucket,dimension,median,theta), beta(beta)
 {
