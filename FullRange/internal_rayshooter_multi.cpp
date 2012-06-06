@@ -78,10 +78,6 @@ void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
 				halo_tree[j]->force2D(xx,alpha,&kappa,gamma,kappa_off);
 				cc = charge*dDl[j+1];
 
-				//cout << kappa - halodata[j]->kappa << endl;
-
-				//kappa -= halodata[j]->kappa;
-
 				/* multiply by the scale factor to obtain 1/comoving_distance/physical_distance
 				 * such that a multiplication with the charge (in units of physical distance)
 				 * will result in a 1/comoving_distance quantity */
@@ -230,8 +226,6 @@ void MultiLensMOKA::rayshooterInternal(unsigned long Npoints, Point *i_points, b
 			else{
 				halo_tree[j]->force2D(xx,alpha,&kappa,gamma,kappa_off);
 				cc = charge*dDl[j+1];
-
-				//kappa -= halodata[j]->kappa;
 
 				/* multiply by the scale factor to obtain 1/comoving_distance/physical_distance
 				 * such that a multiplication with the charge (in units of physical distance)

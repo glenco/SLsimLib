@@ -106,7 +106,7 @@ HaloData::~HaloData(){
 }
 
 
-MultiLensMOKA::MultiLensMOKA(string filename,long *my_seed) : MultiLens(filename,seed){
+MultiLensMOKA::MultiLensMOKA(string filename,long *my_seed) : MultiLens(filename,my_seed){
 }
 MultiLensMOKA::~MultiLensMOKA(){
 }
