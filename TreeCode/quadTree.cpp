@@ -417,7 +417,7 @@ void QuadTree::force2D(double *ray,double *alpha,double *kappa,double *gamma,boo
 
 				  index = MultiRadius*tree->current->particles[i];
 				  if(haloON) tmp = alpha_h(rcm2,halo_params[index]);
-				  else tmp =  alpha_o(rcm2,sizes[index])*masses[index];
+				  else tmp =  alpha_o(rcm2,sizes[index])*masses[MultiMass*tree->current->particles[i]];
 				  alpha[0] += tmp*xcm;
 				  alpha[1] += tmp*ycm;
 
