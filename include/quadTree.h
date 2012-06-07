@@ -314,13 +314,13 @@ private:
 class QuadTreePseudoNFW : public QuadTree{
 
 public:
-	QuadTreePseudoNFW(float beta,PosType **xp,IndexType Npoints,HaloStructure *par_internals
+	QuadTreePseudoNFW(int beta,PosType **xp,IndexType Npoints,HaloStructure *par_internals
 			,double my_kappa_bk = 0.0,int bucket = 5,PosType theta = 0.1);
 	~QuadTreePseudoNFW();
 
 private:
 
-	double beta;
+	int beta;
 
 	// Override internal structure of halos
 	double alpha_h(double r2,HaloStructure &par);

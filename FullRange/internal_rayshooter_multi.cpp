@@ -169,9 +169,6 @@ void MultiLensMOKA::rayshooterInternal(unsigned long Npoints, Point *i_points, b
 
 	for(i = 0, outside = 0; i< Npoints; i++){
 
-		if(i % 10000 == 0)
-			cout << i << endl;
-
 		double kappa,aa,bb,cc;
 	    double alpha[2], gamma[3];
 	    double xminus[2],xplus[2];
@@ -203,7 +200,6 @@ void MultiLensMOKA::rayshooterInternal(unsigned long Npoints, Point *i_points, b
 
 			if(flag_analens && j == (flag_analens % Nplanes)){
 
-				range *= Dl[j];
 				long index = IndexFromPosition(xx,Npixels,range,center);
 
 				if(index > -1){
@@ -307,7 +303,7 @@ void MultiLensMOKA::rayshooterInternal(unsigned long Npoints, Point *i_points, b
 		  	    - i_points[i].gamma[2]*i_points[i].gamma[2];
     }
 
-	cout << endl <<  "outside " << outside/(float)Npoints << endl;
+	//cout << endl <<  "outside " << outside/(float)Npoints << endl;
 
     return;
 }

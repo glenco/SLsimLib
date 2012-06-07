@@ -13,6 +13,7 @@
 #include <halo.h>
 #include <utilities.h>
 #include <valarray>
+#include <quadTree.h>
 
 const int Nmassbin=32;
 const double MaxLogm=16.;
@@ -89,7 +90,7 @@ protected:
 	std::auto_ptr<HaloData> *halodata;
 	/// an array of smart pointers to halo trees on each plane, uses the haloModel in the construction
 	//ForceTreeHndl *halo_tree;
-	std::auto_ptr<ForceTree> *halo_tree;
+	std::auto_ptr<QuadTree> *halo_tree;
 
 	/* the following parameters are read in from the parameter file */
 

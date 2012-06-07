@@ -39,7 +39,9 @@ HaloData::HaloData(
     HALO ha(cosmo,min_mass,(z1+z2)/2);
 
 	// calculate the mass density on the plane
-	kappa_background = ha.totalMassDensityinHalos(0,1,0)*cosmo->radDist(z1,z2);
+    // and convert it to physical 1/physical_distance^2
+	kappa_background = ha.totalMassDensityinHalos(0,1,0)/cosmo->gethubble()*pow(1+(z1+z2)/2,3);
+	kappa_background *= cosmo->radDist(z1,z2)/mass_scale;
 
     //int iterator;
     //std::vector<double> vmasses,vsizes,vscale,vz;
@@ -125,7 +127,8 @@ MultiLens::MultiLens(string filename,long *my_seed) : Lens(){
 	charge = 4*pi*Grav*mass_scale;
 
 	//halo_tree = new ForceTreeHndl[Nplanes-1];
-	halo_tree = new auto_ptr<ForceTree>[Nplanes-1];
+	//halo_tree = new auto_ptr<ForceTree>[Nplanes-1];
+	halo_tree = new auto_ptr<QuadTree>[Nplanes-1];
 
 	//halodata = new HaloDataHndl[Nplanes-1];
 	halodata = new auto_ptr<HaloData>[Nplanes-1];
@@ -400,30 +403,35 @@ void MultiLens::buildHaloTrees(
 		switch(internal_profile){
 		case 1:
 			//halo_tree[j] = new ForceTreePowerLaw(1.9,&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos);
-			halo_tree[j] = auto_ptr<ForceTree>(new ForceTreePowerLaw(1.9,&halodata[j]->pos[0],halodata[j]->Nhalos
-					,halodata[j]->halos,true,halodata[j]->kappa_background));
+			//halo_tree[j] = auto_ptr<ForceTree>(new ForceTreePowerLaw(1.9,&halodata[j]->pos[0],halodata[j]->Nhalos
+				//	,halodata[j]->halos,true,halodata[j]->kappa_background));
+			halo_tree[j] = auto_ptr<QuadTree>(new QuadTreePowerLaw(1.9,&halodata[j]->pos[0],halodata[j]->Nhalos
+								,halodata[j]->halos,true,halodata[j]->kappa_background));
 			break;
 		case 2:
 			//halo_tree[j] = new ForceTreeNFW(&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos);
-			halo_tree[j] = auto_ptr<ForceTree>(new ForceTreeNFW(&halodata[j]->pos[0],halodata[j]->Nhalos
+			//halo_tree[j] = auto_ptr<ForceTree>(new ForceTreeNFW(&halodata[j]->pos[0],halodata[j]->Nhalos
+				//	,halodata[j]->halos,true,halodata[j]->kappa_background));
+			halo_tree[j] = auto_ptr<QuadTree>(new QuadTreeNFW(&halodata[j]->pos[0],halodata[j]->Nhalos
 					,halodata[j]->halos,true,halodata[j]->kappa_background));
 			break;
 		case 3:
-			//halo_tree[j] = new ForceTreePseudoNFW(1.9,&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos);
-			//halo_tree[j] = auto_ptr<ForceTree>(new ForceTreePseudoNFW(2.0,&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos,true,5,3,false,0.1));
-			halo_tree[j] = auto_ptr<ForceTree>(new ForceTreePseudoNFW(2.0,&halodata[j]->pos[0],halodata[j]->Nhalos
-					,halodata[j]->halos,true,halodata[j]->kappa_background));
+			//halo_tree[j] = new ForceTreePseudoNFW(2,&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos);
+			//halo_tree[j] = auto_ptr<ForceTree>(new ForceTreePseudoNFW(2,&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos,true,5,3,false,0.1));
+			//halo_tree[j] = auto_ptr<ForceTree>(new ForceTreePseudoNFW(2,&halodata[j]->pos[0],halodata[j]->Nhalos
+				//	,halodata[j]->halos,true,halodata[j]->kappa_background));
+			halo_tree[j] = auto_ptr<QuadTree>(new QuadTreePseudoNFW(2,&halodata[j]->pos[0],halodata[j]->Nhalos
+							,halodata[j]->halos,true,halodata[j]->kappa_background));
 			break;
 		case 0:
 			//halo_tree[j] = new ForceTreeGauss(&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos);
-			halo_tree[j] = auto_ptr<ForceTree>(new ForceTreeGauss(&halodata[j]->pos[0],halodata[j]->Nhalos
+			//halo_tree[j] = auto_ptr<ForceTree>(new ForceTreeGauss(&halodata[j]->pos[0],halodata[j]->Nhalos
+				//	,halodata[j]->halos,true,halodata[j]->kappa_background));
+			halo_tree[j] = auto_ptr<QuadTree>(new QuadTreeGauss(&halodata[j]->pos[0],halodata[j]->Nhalos
 					,halodata[j]->halos,true,halodata[j]->kappa_background));
 			break;
 		}
 
-		/* to obtain 1/physical_distance^2
-		 * to be compatible with the rayshooter*/
-		cout << halodata[j]->kappa_background << endl;
 	}
 
 

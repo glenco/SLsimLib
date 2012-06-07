@@ -432,7 +432,7 @@ ForceTreeGauss::~ForceTreeGauss(){
 }
 
 ForceTreePseudoNFW::ForceTreePseudoNFW(
-		float beta                 /// outer slope of profile is \f$ \Sigma \propto r^{-\beta} \f$
+		int my_beta                 /// outer slope of profile is \f$ \Sigma \propto r^{-\beta} \f$
 		,PosType **xp              /// positions of the halos xp[0..Npoints-1][0..1 or 2]
 		,IndexType Npoints         /// number of halos
 		,HaloStructure *h_params   /// array with internal properties of halos
@@ -443,8 +443,13 @@ ForceTreePseudoNFW::ForceTreePseudoNFW(
 		,bool median               /// If true will divide branches at the median position of the particles, if false an equal area cut is used, default false
 		,PosType theta             /// Opening angle used in tree force calculation, default 0.1
 		) :
-		ForceTree(xp,Npoints,NULL,NULL,false,Multisize,my_kappa_bk,bucket,dimension,median,theta), beta(beta)
+		ForceTree(xp,Npoints,NULL,NULL,false,Multisize,my_kappa_bk,bucket,dimension,median,theta), beta(my_beta)
 {
+
+	if(beta == 0){
+		cout << "The slope can not be zero!" << endl;
+		exit(1);
+	}
 
 	// Check for values that would make the rayshooter return nan.
 	for(unsigned long i=0;i<Npoints;++i){
