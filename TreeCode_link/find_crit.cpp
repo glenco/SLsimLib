@@ -299,6 +299,11 @@ void find_crit_kist(
 
 	  if(verbose) cout << "Npoints " << critcurve->imagekist->Nunits() << endl;
 
+	  /* to limit the size of the crit curve *
+	  if(critcurve->imagekist->Nunits() > 20000)
+		  break;
+	  /* */
+
 	  if(refinements==0) break;
 	  //}else free(critcurve->points);
 

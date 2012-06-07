@@ -214,7 +214,7 @@ private:
 class ForceTreePseudoNFW : public ForceTree{
 
 public:
-	ForceTreePseudoNFW(float beta,PosType **xp,IndexType Npoints,HaloStructure *par_internals
+	ForceTreePseudoNFW(int beta,PosType **xp,IndexType Npoints,HaloStructure *par_internals
 			,bool Multisize = true,double my_kappa_bk = 0.0,int bucket = 5,int dimensions = 2
 			,bool median = false,PosType theta = 0.1
 			);
@@ -222,7 +222,7 @@ public:
 
 private:
 
-	double beta;
+	int beta;
 
 	// Override internal structure of halos
 	double alpha_h(double r2,HaloStructure &par);

@@ -230,7 +230,17 @@ double ForceTreePseudoNFW::phi_h(double r2,HaloStructure &par){
 }
 
 double ForceTreePseudoNFW::mhat(double y){
-	return log(1+y) - y/(1+y);
+	switch(beta){
+	case 1:
+		return 1 - log(1+y);
+		break;
+	case 2:
+		return log(1+y) - y/(1+y);
+		break;
+	default:
+		return - y/(beta-2)/pow(1+y,beta-1) - 1/(beta-2)/(beta-1)/pow(1+y,beta-1);
+		break;
+	}
 }
 
 /*
