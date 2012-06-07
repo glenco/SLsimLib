@@ -406,14 +406,14 @@ void MultiLens::buildHaloTrees(
 			//halo_tree[j] = auto_ptr<ForceTree>(new ForceTreePowerLaw(1.9,&halodata[j]->pos[0],halodata[j]->Nhalos
 				//	,halodata[j]->halos,true,halodata[j]->kappa_background));
 			halo_tree[j] = auto_ptr<QuadTree>(new QuadTreePowerLaw(1.9,&halodata[j]->pos[0],halodata[j]->Nhalos
-								,halodata[j]->halos,true,halodata[j]->kappa_background));
+								,halodata[j]->halos,halodata[j]->kappa_background));
 			break;
 		case 2:
 			//halo_tree[j] = new ForceTreeNFW(&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos);
 			//halo_tree[j] = auto_ptr<ForceTree>(new ForceTreeNFW(&halodata[j]->pos[0],halodata[j]->Nhalos
 				//	,halodata[j]->halos,true,halodata[j]->kappa_background));
 			halo_tree[j] = auto_ptr<QuadTree>(new QuadTreeNFW(&halodata[j]->pos[0],halodata[j]->Nhalos
-					,halodata[j]->halos,true,halodata[j]->kappa_background));
+					,halodata[j]->halos,halodata[j]->kappa_background));
 			break;
 		case 3:
 			//halo_tree[j] = new ForceTreePseudoNFW(2,&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos);
@@ -421,14 +421,14 @@ void MultiLens::buildHaloTrees(
 			//halo_tree[j] = auto_ptr<ForceTree>(new ForceTreePseudoNFW(2,&halodata[j]->pos[0],halodata[j]->Nhalos
 				//	,halodata[j]->halos,true,halodata[j]->kappa_background));
 			halo_tree[j] = auto_ptr<QuadTree>(new QuadTreePseudoNFW(2,&halodata[j]->pos[0],halodata[j]->Nhalos
-							,halodata[j]->halos,true,halodata[j]->kappa_background));
+							,halodata[j]->halos,halodata[j]->kappa_background));
 			break;
 		case 0:
 			//halo_tree[j] = new ForceTreeGauss(&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos);
 			//halo_tree[j] = auto_ptr<ForceTree>(new ForceTreeGauss(&halodata[j]->pos[0],halodata[j]->Nhalos
 				//	,halodata[j]->halos,true,halodata[j]->kappa_background));
 			halo_tree[j] = auto_ptr<QuadTree>(new QuadTreeGauss(&halodata[j]->pos[0],halodata[j]->Nhalos
-					,halodata[j]->halos,true,halodata[j]->kappa_background));
+					,halodata[j]->halos,halodata[j]->kappa_background));
 			break;
 		}
 
@@ -437,6 +437,7 @@ void MultiLens::buildHaloTrees(
 
 	cout << "constructed " << Ntot << " halos" << endl;
 
+	/*
 	stringstream f;
 	f << "halos_" << zsource << ".data";
 	string filename = f.str();
@@ -464,7 +465,7 @@ void MultiLens::buildHaloTrees(
 
 
 	file_area.close();
-
+	*/
 	/*
 	for(int l=0; l < 100; l++){
 	double ray[2];
