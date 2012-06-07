@@ -11,20 +11,6 @@
 #include <quadTree.h>
 #include <TreeNB.h>
 
-QBranchNB::QBranchNB(){
-	static unsigned long n=0;
-	child0 = NULL;
-	child1 = NULL;
-	child2 = NULL;
-	child3 = NULL;
-	prev = NULL;
-	brother = NULL;
-	particles = NULL;
-	nparticles = 0;
-	number = n;
-	++n;
-}
-QBranchNB::~QBranchNB(){};
 
 /** \brief Constructor meant for point particles, simulation particles
  */
@@ -109,7 +95,7 @@ QTreeNBHndl QuadTree::BuildQTreeNB(PosType **xp,IndexType Nparticles,IndexType *
   }
 
   /* Initialize tree root */
-  QTreeNBHndl tree = new QTreeNB(xp,particles,Nparticles,p1,p2);
+  tree = new QTreeNB(xp,particles,Nparticles,p1,p2);
 
   /* build the tree */
   _BuildQTreeNB(Nparticles,particles);
@@ -144,21 +130,25 @@ void QuadTree::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
 	// find particles too big to be in children
 
 	double *x = new double[cbranch->nparticles];
-	IndexType i;
+	IndexType i,cut;
 
 	cbranch->Nbig_particles=0;
+
 	if(MultiRadius){
 		// store the particles that are too large to be in a child at the end of the list of particles in cbranch
 		for(i=0;i<cbranch->nparticles;++i) x[i] =  haloON ? halo_params[particles[i]].Rmax
 				: sizes[particles[i]];
-		quicksort(particles,x,cbranch->nparticles);
-		double s = haloON ? halo_params[particles[cbranch->nparticles-1]].Rmax : sizes[particles[cbranch->nparticles-1]];
-		for(i=cbranch->nparticles-1; s > (cbranch->boundary_p2[0]-cbranch->boundary_p1[0])/2 ;--i){
-			s = haloON ? halo_params[particles[i]].Rmax : sizes[particles[i]];
-			if(s > (cbranch->boundary_p2[0]-cbranch->boundary_p1[0])/2) ++(cbranch->Nbig_particles);
-		}
+
+		double maxsize = (cbranch->boundary_p2[0]-cbranch->boundary_p1[0])/2;
+
+		// sort particles in size
+		//quicksort(particles,x,cbranch->nparticles);
+		quickPartition(maxsize,&cut,particles,x,cbranch->nparticles);
+
+		cbranch->Nbig_particles = cbranch->nparticles - cut;
 	}
 
+	assert( cbranch->nparticles >= cbranch->Nbig_particles );
 	IndexType NpInChildren = cbranch->nparticles - cbranch->Nbig_particles;
 	assert(NpInChildren >= 0);
 
@@ -236,7 +226,7 @@ void QuadTree::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
 
 	if(cuty < NpInChildren){
 	  // divide second group in the x direction
-	  for(i=cuty;i<NpInChildren;++i) x[i] = tree->xp[particles[i]][0];
+	  for(i=cuty;i<NpInChildren;++i) x[i-cuty] = tree->xp[particles[i]][0];
 	  quickPartition(xcut,&cutx,&particles[cuty],x,NpInChildren-cuty);
 
 	  child1->nparticles=cutx;
@@ -248,7 +238,7 @@ void QuadTree::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
 	  child0->nparticles=NpInChildren - cuty - cutx;
 	  assert(child0->nparticles >= 0);
 	  if(child0->nparticles > 0)
-		  child0->particles=&particles[cuty + cutx];
+		  child0->particles = &particles[cuty + cutx];
 	  else child0->particles = NULL;
 
 	}else{
@@ -278,294 +268,6 @@ void QuadTree::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
 	tree->moveUp();
 
 	return;
-}
-
-/************************************************************************
- * NewQTreeNB
- * Returns pointer to new QTreeNB struct.  Initializes top, last, and
- * current pointers to NULL.  Sets NbranchNBes field to 0.  Exported.
- ************************************************************************/
-QTreeNB::QTreeNB(PosType **xp,IndexType *particles,IndexType nparticles
-		 ,PosType boundary_p1[],PosType boundary_p2[]){
-
-    top = new QBranchNB();
-
-    top->boundary_p1[0] = boundary_p1[0];
-    top->boundary_p1[1] = boundary_p1[1];
-    top->boundary_p2[0] = boundary_p2[0];
-    top->boundary_p2[1] = boundary_p2[1];
-
-    top->nparticles = nparticles;
-    top->level = 0;
-    top->particles = particles;
-
-    top->center[0] = (boundary_p1[0] + boundary_p2[0])/2;
-    top->center[1] = (boundary_p1[1] + boundary_p2[1])/2;
-
-    Nbranches = 1;
-    current = top;
-}
-
-QTreeNB::~QTreeNB(){
-//	void QuadTree::freeQTreeNB(QTreeNBHndl tree){
-	/* free treeNB
-	 *  does not free the particle positions, masses or sizes
-	 */
-
-	empty();
-  	delete top;
-
-	return;
-}
-
-short QTreeNB::empty(){
-
-	moveTop();
-	_freeQTree(0);
-
-	assert(Nbranches == 1);
-
-	return 1;
-}
-
-void QTreeNB::_freeQTree(short child){
-	QBranchNB *branch;
-
-	assert(current);
-
-	if(current->child0 != NULL){
-		moveToChild(0);
-		_freeQTree(0);
-	}
-
-	if(current->child1 != NULL){
-		moveToChild(1);
-		_freeQTree(1);
-	}
-
-    if(current->child2 != NULL){
-      moveToChild(2);
-      _freeQTree(2);
-    }
-
-    if(current->child3 != NULL){
-      moveToChild(3);
-      _freeQTree(3);
-    }
-
-    if( atLeaf() ){
-
-    	if(atTop()) return;
-
-    	branch = current;
-    	moveUp();
-       	delete branch;
-
-    	/*printf("*** removing branch %i number of branches %i\n",branch->number
-			,Nbranches-1);*/
-
-      	if(child==0) current->child0 = NULL;
-      	if(child==1) current->child1 = NULL;
-       	if(child==2) current->child2 = NULL;
-       	if(child==3) current->child3 = NULL;
-
-    	--Nbranches;
-
-    	return;
-    }
-
-    return;
-}
-
-/************************************************************************
- * isEmpty
- * Returns "true" if the QTreeNB is empty and "false" otherwise.  Exported.
- ************************************************************************/
-bool QTreeNB::isEmpty(){
-
-    return(Nbranches == 0);
-}
-
-/************************************************************************
- * atTop
- * Returns "true" if current is the same as top and "false" otherwise.
- * Exported.
- * Pre: !isEmptyNB(tree)
- ************************************************************************/
-bool QTreeNB::atTop(){
-
-    if( isEmpty() ){
-    	ERROR_MESSAGE();
-    	fprintf(stderr, "QTreeNB Error: calling atTop() on empty tree\n");
-    	exit(1);
-    }
-    return(current == top);
-}
-
-/************************************************************************
- * offEndNB
- * Returns "true" if current is off end and "false" otherwise.  Exported.
- ************************************************************************/
-bool QTreeNB::offEnd(){
-
-    return(current == NULL);
-}
-
-/************************************************************************
- * getCurrentNB
- * Returns the particles of current.  Exported.
- * Pre: !offEnd()
- ************************************************************************/
-void QTreeNB::getCurrent(IndexType *particles,IndexType *nparticles){
-
-    if( offEnd() ){
-    	ERROR_MESSAGE(); fprintf(stderr, "QTreeNB Error: calling getCurrent() when current is off end\n");
-    	exit(1);
-    }
-
-    *nparticles = current->nparticles;
-    particles = current->particles;
-
-    return;
-}
-
-/************************************************************************
- * getNbranches
- * Returns the NbranchNBes of tree.  Exported.
- ************************************************************************/
-unsigned long QTreeNB::getNbranches(){
-
-    return(Nbranches);
-}
-
-/***** Manipulation procedures *****/
-
-/************************************************************************
- * moveTop
- * Moves current to the front of tree.  Exported.
- * Pre: !isEmpty(tree)
- ************************************************************************/
-void QTreeNB::moveTop(){
-	//std::cout << tree << std::endl;
-	//std::cout << tree->current << std::endl;
-	//std::cout << tree->top << std::endl;
-
-    if( isEmpty() ){
-    	ERROR_MESSAGE(); fprintf(stderr, "QTreeNB Error: calling moveTop() on empty tree\n");
-    	exit(1);
-    }
-
-    current = top;
-
-	return;
-}
-
-/************************************************************************
- * movePrev
- * Moves current to the branchNB before it in tree.  This can move current
- * off end.  Exported.
- * Pre: !offEndNB(tree)
- ************************************************************************/
-void QTreeNB::moveUp(){
-    
-	if( offEnd() ){
-		ERROR_MESSAGE(); fprintf(stderr, "QTreeNB Error: call to moveUp() when current is off end\n");
-		exit(1);
-    }
-    if( current == top ){
-      ERROR_MESSAGE(); fprintf(stderr, "QTreeNB Error: call to moveUp() tried to move off the top\n");
-      exit(1);
-    }
-
-    current = current->prev;  /* can move off end */
-    return;
-}
-
-/************************************************************************
- * moveToChild
- * Moves current to child branchNB after it in tree.  This can move current off
- * end.  Exported.
- * Pre: !offEnd(tree)
- ************************************************************************/
-void QTreeNB::moveToChild(int child){
-
-    if( offEnd() ){
-    	ERROR_MESSAGE(); fprintf(stderr, "QTreeNB Error: calling moveChildren() when current is off end\n");
-    	exit(1);
-    }
-    if(child==0){
-      if( current->child0 == NULL ){
-    	  ERROR_MESSAGE(); fprintf(stderr, "QTreeNB Error: moveToChild() typing to move to child1 when it doesn't exist\n");
-    	  exit(1);
-      }
-      current = current->child0;
-    }
-    if(child==1){
-      if( current->child1 == NULL ){
-    	  ERROR_MESSAGE(); fprintf(stderr, "QTreeNB Error: moveToChild() typing to move to child1 when it doesn't exist\n");
-    	  exit(1);
-      }
-      current = current->child1;
-    }
-    if(child==2){
-      if( current->child2 == NULL ){
-    	  ERROR_MESSAGE(); fprintf(stderr, "QTreeNB Error: moveToChild() typing to move to child2 when it doesn't exist\n");
-    	  exit(1);
-      }
-      current = current->child2;
-    }
-    if(child==3){
-      if( current->child3 == NULL ){
-    	  ERROR_MESSAGE(); fprintf(stderr, "QTreeNB Error: moveToChild() typing to move to child2 when it doesn't exist\n");
-    	  exit(1);
-      }
-      current = current->child3;
-    }
-    return;
-}
-
-
-void QTreeNB::attachChildrenToCurrent(QBranchNB *branch0,QBranchNB *branch1
-		,QBranchNB *branch2,QBranchNB *branch3){
-
-	Nbranches += 4;
-	current->child0 = branch0;
-	current->child1 = branch1;
-	current->child2 = branch2;
-	current->child3 = branch3;
-
-	int level = current->level+1;
-	branch0->level = level;
-	branch1->level = level;
-	branch2->level = level;
-	branch3->level = level;
-
-	  // work out brothers for children
-	branch0->brother = branch1;
-	branch1->brother = branch2;
-	branch2->brother = branch3;
-	branch3->brother = current->brother;
-
-	branch0->prev = current;
-	branch1->prev = current;
-	branch2->prev = current;
-	branch3->prev = current;
-
-	return;
-}
-
-// step for walking tree by iteration instead of recursion
-bool QTreeNB::WalkStep(bool allowDescent){
-	if(allowDescent && current->child0 != NULL){
-		moveToChild(0);
-		return true;
-	}
-
-	if(current->brother != NULL){
-		current=current->brother;
-		return true;
-	}
-	return false;
 }
 
 // calculates moments of the mass and the cutoff scale for each box
@@ -608,6 +310,8 @@ void QuadTree::CalcMoments(){
 			cbranch->quad[0] += (xcut-2*xcm[0]*xcm[0])*tmp;
 			cbranch->quad[1] += (xcut-2*xcm[1]*xcm[1])*tmp;
 			cbranch->quad[2] += -2*xcm[0]*xcm[1]*tmp;
+
+			assert(inbox(tree->xp[cbranch->particles[i]],tree->current->boundary_p1,tree->current->boundary_p2));
 		}
 
 		// largest distance from center of mass of cell
@@ -697,35 +401,37 @@ void QuadTree::force2D(double *ray,double *alpha,double *kappa,double *gamma,boo
 		  // includes rcrit_particle constraint
 		  allowDescent=true;
 
-		  //printf("right place\n");
+		  if(tree->current->nparticles > 0){
 
-		  // Add big particles individually or all the particles in the case of a leaf
-		  unsigned long min;
-		  if(tree->atLeaf()) min = 0;
-		  else min = tree->current->nparticles - tree->current->Nbig_particles;
+			  // Add big particles individually or all the particles in the case of a leaf
+			  unsigned long min;
+			  if(tree->atLeaf()) min = 0;
+			  else min = tree->current->nparticles - tree->current->Nbig_particles;
 
-		  for(i=tree->current->nparticles-1; i >= min ; --i){
+			  for(i = min ; i < tree->current->nparticles ; ++i){
 
-			  xcm = tree->xp[tree->current->particles[i]][0] - ray[0];
-			  ycm = tree->xp[tree->current->particles[i]][1] - ray[1];
+				  xcm = tree->xp[tree->current->particles[i]][0] - ray[0];
+				  ycm = tree->xp[tree->current->particles[i]][1] - ray[1];
 
-			  rcm2 = xcm*xcm + ycm*ycm;
+				  rcm2 = xcm*xcm + ycm*ycm;
 
-			  index = MultiRadius*tree->current->particles[i];
-			  if(haloON) tmp = alpha_h(rcm2,halo_params[index]);
-			  else tmp =  alpha_o(rcm2,sizes[index])*masses[MultiMass*tree->current->particles[i]];
-			  alpha[0] += tmp*xcm;
-			  alpha[1] += tmp*ycm;
+				  index = MultiRadius*tree->current->particles[i];
+				  if(haloON) tmp = alpha_h(rcm2,halo_params[index]);
+				  else tmp =  alpha_o(rcm2,sizes[index])*masses[index];
+				  alpha[0] += tmp*xcm;
+				  alpha[1] += tmp*ycm;
 
-			  // can turn off kappa and gamma calculations to save times
-			  if(!no_kappa){
-				  if(haloON) *kappa += kappa_h(rcm2,halo_params[index]);
-				  else *kappa += kappa_o(rcm2,sizes[index])*masses[MultiMass*tree->current->particles[i]];
+				  // can turn off kappa and gamma calculations to save times
+				  if(!no_kappa){
+					  if(haloON) *kappa += kappa_h(rcm2,halo_params[index]);
+					  else *kappa += kappa_o(rcm2,sizes[index])*masses[MultiMass*tree->current->particles[i]];
 
-				  if(haloON) tmp = gamma_h(rcm2,halo_params[index]);
-				  else tmp = gamma_o(rcm2,sizes[index])*masses[MultiMass*tree->current->particles[i]];
-				  gamma[0] += 0.5*(xcm*xcm-ycm*ycm)*tmp;
-				  gamma[1] += xcm*ycm*tmp;
+					  if(haloON) tmp = gamma_h(rcm2,halo_params[index]);
+					  else tmp = gamma_o(rcm2,sizes[index])*masses[MultiMass*tree->current->particles[i]];
+
+					  gamma[0] += 0.5*(xcm*xcm-ycm*ycm)*tmp;
+					  gamma[1] += xcm*ycm*tmp;
+				  }
 			  }
 		  }
 
@@ -770,6 +476,22 @@ void QuadTree::force2D(double *ray,double *alpha,double *kappa,double *gamma,boo
   return;
 }
 
+void QuadTree::printParticlesInBranch(unsigned long number){
+	unsigned long i;
+
+	tree->moveTop();
+	do{
+		if(tree->current->number == number){
+			cout << tree->current->nparticles << endl;
+			for(i=0;i<tree->current->nparticles;++i){
+				cout << xp[tree->current->particles[i]][0] << "  " << xp[tree->current->particles[i]][1] << endl;
+			}
+			return;
+		}
+	}while(tree->WalkStep(true));
+
+	return;
+}
 /// Utility functions
 void QuadTree::quicksort(unsigned long *particles,double *arr,unsigned long N){
 	double pivotvalue;

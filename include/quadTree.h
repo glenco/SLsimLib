@@ -126,6 +126,10 @@ typedef int QTreeNBElement;
  * the tree is built in such a way the large particles are stored in branches that are no smaller
  * than their size.  In this way particles are stored on all levels of the tree and not just in the
  * leaves.  This improves efficiency when particles of a wide range of sizes overlap in 2D.
+ *
+ * The default value of theta = 0.1 generally gives better than 1% accuracy on alpha, but
+ * only ~ 5% accuracy on gamma.  For high accuracy gamma use theta <~ 0.02
+ *
  */
 class QuadTree {
 public:
@@ -136,7 +140,7 @@ public:
 			,IndexType Npoints
 			,bool Multimass
 			,bool Multisize
-			,double my_kappa_background = 0/// background kappa that is subtracted
+			,double my_kappa_background = 0
 			,int bucket = 5
 			,double theta_force = 0.1
 			);
@@ -144,13 +148,14 @@ public:
 			PosType **xpt
 			,HaloStructure *my_halo_params
 			,IndexType Npoints
-			,double my_kappa_background = 0/// background kappa that is subtracted
+			,double my_kappa_background = 0
 			,int bucket = 5
 			,double theta_force = 0.1
 			);
 	virtual ~QuadTree();
 
 	void force2D(double *ray,double *alpha,double *kappa,double *gamma,bool no_kappa);
+	void printParticlesInBranch(unsigned long number);
 
 protected:
 
@@ -226,6 +231,9 @@ protected:
  * Derived from the QuadTree class.  The "particles" are replaced with spherical halos.
  *The truncation is in 2d not 3d. \f$ \Sigma \propto r^\beta \f$ so beta would usually be negative.
  *
+ *
+ * The default value of theta = 0.1 generally gives better than 1% accuracy on alpha, but
+ * only ~ 5% accuracy on gamma.  For high accuracy gamma use theta <~ 0.02
  */
 class QuadTreePowerLaw : public QuadTree{
 
@@ -254,6 +262,9 @@ private:
  *
  * This class uses the true expressions for the NFW profile.  This is
  * time consuming and not usually necessary. See QuadTreePseudoNFW for a faster alternative.
+ *
+ * The default value of theta = 0.1 generally gives better than 1% accuracy on alpha, but
+ * only ~ 5% accuracy on gamma.  For high accuracy gamma use theta <~ 0.02
  */
 class QuadTreeNFW : public QuadTree{
 
@@ -284,6 +295,9 @@ private:
  * Derived from the QuadTree class.  The "particles" are replaced with spherical NFW halos.
  *
  * This class uses the true expressions for a Gaussin profile.
+ *
+ * The default value of theta = 0.1 generally gives better than 1% accuracy on alpha, but
+ * only ~ 5% accuracy on gamma.  For high accuracy gamma use theta <~ 0.02
  */
 class QuadTreeGauss : public QuadTree{
 
@@ -310,6 +324,9 @@ private:
  * with \f$ \Sigma \propto 1/(1 + r/r_s )^\beta \f$ so beta would usually be positive.
  *
  * An NFW profile is approximated beta = 2 .
+ *
+ * The default value of theta = 0.1 generally gives better than 1% accuracy on alpha, but
+ * only ~ 5% accuracy on gamma.  For high accuracy gamma use theta <~ 0.02
  */
 class QuadTreePseudoNFW : public QuadTree{
 
