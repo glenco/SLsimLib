@@ -127,8 +127,8 @@ typedef int QTreeNBElement;
  * than their size.  In this way particles are stored on all levels of the tree and not just in the
  * leaves.  This improves efficiency when particles of a wide range of sizes overlap in 2D.
  *
- * The default value of theta = 0.1 generally gives better than 1% accuracy on alpha, but
- * only ~ 5% accuracy on gamma.  For high accuracy gamma use theta <~ 0.02
+  * The default value of theta = 0.2 generally gives better than 1% accuracy on alpha.
+ * The shear and kappa is always more accurate than the deflection.
  *
  */
 class QuadTree {
@@ -142,7 +142,7 @@ public:
 			,bool Multisize
 			,double my_kappa_background = 0
 			,int bucket = 5
-			,double theta_force = 0.1
+			,double theta_force = 0.2
 			);
 	QuadTree(
 			PosType **xpt
@@ -150,7 +150,7 @@ public:
 			,IndexType Npoints
 			,double my_kappa_background = 0
 			,int bucket = 5
-			,double theta_force = 0.1
+			,double theta_force = 0.2
 			);
 	virtual ~QuadTree();
 

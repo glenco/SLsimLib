@@ -75,7 +75,7 @@ double ForceTreePowerLaw::gamma_h(double r2,HaloStructure &par){
 	double gt=0;
 
 	if( r2 <= 0.0) return 0.0;
-	gt = -par.mass/pi/pow(r2,2);
+	gt = -2.0*par.mass/pi/pow(r2,2);
 	if(r2 < par.Rmax*par.Rmax) gt *= -beta*pow(r2/par.Rmax/par.Rmax,beta/2+1)/2;
 
 	return gt;
@@ -137,7 +137,7 @@ double ForceTreeNFW::gamma_h(double r2,HaloStructure &par){
 
 	double r = sqrt(r2);
 
-	gt = -par.mass/pi/pow(r2,2);
+	gt = -2.0*par.mass/pi/pow(r2,2);
 	if(r < par.Rmax){
 		double y;
 
@@ -212,7 +212,7 @@ double ForceTreePseudoNFW::gamma_h(double r2,HaloStructure &par){
 	double gt=0;
 
 	if( r2 <= 0.0) return 0.0;
-	gt = -par.mass/pi/r2;
+	gt = -2.0*par.mass/pi/r2/r2;
 	if(r2 < par.Rmax*par.Rmax){
 		double y = sqrt(r2)/par.rscale;
 		gt *= 1.0/pow(par.rscale,2)/mhat(par.Rmax/par.rscale)/pow(1+y,beta);

@@ -475,7 +475,9 @@ void QuadTree::force2D(double *ray,double *alpha,double *kappa,double *gamma,boo
 
   return;
 }
-
+/** This is a diagnostic routine that prints the position of every point in a
+ * given branch of the tree.
+ */
 void QuadTree::printParticlesInBranch(unsigned long number){
 	unsigned long i;
 

@@ -34,14 +34,14 @@ struct HaloStructure;
  * Most of the code in TreeNBForce.c is duplicated here as private methods and
  * a few public ones.
  *
- * The default value of theta = 0.1 generally gives better than 1% accuracy on alpha, but
- * only ~ 20% accuracy on gamma.  For high accuracy gamma use theta <~ 0.01
+ * The default value of theta = 0.2 generally gives better than 1% accuracy on alpha.
+ * The shear and kappa is always more accurate than the deflection.
  *
  */
 class ForceTree : public SimpleTree {
 public:
 	ForceTree(PosType **xp,IndexType Npoints,float *masses,float *rsph,bool Multimass,bool Multisize
-			,double my_kappa_background = 0,int bucket = 5,int dimensions = 2,bool median = false,PosType theta = 0.1
+			,double my_kappa_background = 0,int bucket = 5,int dimensions = 2,bool median = false,PosType theta = 0.2
 			);
 
 	virtual ~ForceTree();
