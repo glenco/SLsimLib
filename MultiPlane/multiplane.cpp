@@ -561,7 +561,7 @@ void MultiLens::buildHaloTrees(
 
 void MultiLens::setRedshift(double zsource){
 	std:: vector<double> lz;
-	int Np;
+	int i, Np;
 	if(flag_analens)
 		Np = Nplanes;
 	else
@@ -576,7 +576,7 @@ void MultiLens::setRedshift(double zsource){
 		flag = 1;
 		j++;
 	}
-	for(int i=1; i<Np; i++){
+	for(i=1; i<Np; i++){
 		plane_redshifts[j] = lz[i];
 
 		if(flag_analens && flag == 0)
@@ -587,6 +587,20 @@ void MultiLens::setRedshift(double zsource){
 				flag = 1;
 			}
 		j++;
+	}
+
+	for(i=0; i<Nplanes-2; i++){
+		if(flag_analens && i == (flag_analens % Nplanes)){
+
+			plane_redshifts[i+1] = plane_redshifts[i] + 0.5*(plane_redshifts[i+2]-plane_redshifts[i]);
+
+			if(i == 1)
+				plane_redshifts[0] = 0.5*plane_redshifts[1];
+			else
+				plane_redshifts[i-1] = plane_redshifts[i-2] + 0.5*(plane_redshifts[i]-plane_redshifts[i-2]);
+
+			break;
+		}
 	}
 
 	if(flag_analens)
