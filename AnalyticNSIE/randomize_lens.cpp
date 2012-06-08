@@ -105,8 +105,8 @@ void AnaLens::RandomizeSigma(long *seed,bool tables){
 }
 
 void MultiLens::RandomizeSigma(long *seed,bool tables){
-	if(flag_analens)
-		analens->RandomizeSigma(seed,tables);
+	if(flag_input_lens)
+		input_lens->RandomizeSigma(seed,tables);
 }
 
 void AnaLens::RandomizeHost(long *seed,bool tables){
@@ -154,8 +154,8 @@ void AnaLens::RandomizeHost(long *seed,bool tables){
 }
 
 void MultiLens::RandomizeHost(long *seed,bool tables){
-	if(flag_analens)
-		analens->RandomizeHost(seed,tables);
+	if(flag_input_lens)
+		input_lens->RandomizeHost(seed,tables);
 }
 
 /** \ingroup ChangeLens

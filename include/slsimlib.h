@@ -56,6 +56,7 @@
 #include <forceTree.h>
 #include <simpleTree.h>
 #include <multiplane.h>
+#include <MOKAlens.h>
 #include <quadTree.h>
 
 #include <peak_refinement.h>

@@ -107,12 +107,6 @@ HaloData::~HaloData(){
 	}
 }
 
-
-MultiLensMOKA::MultiLensMOKA(string filename,long *my_seed) : MultiLens(filename,my_seed){
-}
-MultiLensMOKA::~MultiLensMOKA(){
-}
-
 MultiLens::MultiLens(string filename,long *my_seed) : Lens(){
 	readParamfile(filename);
 
@@ -133,8 +127,13 @@ MultiLens::MultiLens(string filename,long *my_seed) : Lens(){
 	//halodata = new HaloDataHndl[Nplanes-1];
 	halodata = new auto_ptr<HaloData>[Nplanes-1];
 
-	if(flag_analens){
-		analens = new AnaLens(filename);
+	switch(flag_input_lens){
+	case 1:
+		input_lens = new AnaLens(filename);
+		break;
+	case 2:
+		input_lens = new MOKALens(filename);
+		break;
 	}
 
 	seed = my_seed;
@@ -157,8 +156,8 @@ MultiLens::~MultiLens(){
 	}
 
 
-	if(flag_analens)
-		delete analens;
+	if(flag_input_lens)
+		delete input_lens;
 }
 
 void MultiLens::readParamfile(string filename){
@@ -193,9 +192,9 @@ void MultiLens::readParamfile(string filename){
 	  id[n] = 0;
 	  label[n++] = "mass_scale";
 
-	  addr[n] = &flag_analens;
+	  addr[n] = &flag_input_lens;
 	  id[n] = 1;
-	  label[n++] = "flag_analens";
+	  label[n++] = "flag_input_lens";
 
 	  addr[n] = &fieldofview;
 	  id[n] = 0;
@@ -278,8 +277,8 @@ void MultiLens::readParamfile(string filename){
 	  // to compensate for the lst plane, which is the source plane
 	  Nplanes++;
 
-	  // to compenstate for analytic lens plane
-	  if(flag_analens)
+	  // to compenstate for additional lens plane
+	  if(flag_input_lens)
 		  Nplanes++;
 
 	  printMultiLens();
@@ -301,7 +300,7 @@ void MultiLens::printMultiLens(){
 
 	cout << "min mass " << min_mass << endl;
 
-	cout << "flag analens " << flag_analens << endl;
+	cout << "flag input lens " << flag_input_lens << endl;
 
 	cout << "field of view " << fieldofview << endl;
 
@@ -324,7 +323,14 @@ void MultiLens::printMultiLens(){
 	cout << "mass function type " << mass_func_type << endl << endl;
 }
 
-/// Populates the lensing planes with halos and builds force trees
+/*
+ * Populates the planes with halos by dividing the space around the planes into
+ * equal redshift distances, where the plane with the input lens is excluded
+ * since it will not contain any halos
+ *
+ * Then the halo trees are built, depending on the internal profile model that
+ * has been chosen in the parameter file
+ */
 void MultiLens::buildHaloTrees(
 		CosmoHndl cosmo /// the cosmology
 		,double zsource /// the source resdhift
@@ -335,19 +341,23 @@ void MultiLens::buildHaloTrees(
 	if(!sim_input_flag){   /// If no input file is provided synthesize halos
 
 		for(j=0,Ntot=0;j<Nplanes-1;j++){
-			if(flag_analens && j == (flag_analens % Nplanes))
+			if(flag_input_lens && j == (flag_input_lens % Nplanes))
 				continue;
 
-			// redshift range
+			/*
+			 * Setting the redshift range
+			 * If there is a plane with an input lens on it, it is skipped over
+			 * since it will not contain any halos
+			 */
 			if(j == 0) z1 = 0.0;
 			else z1 = plane_redshifts[j] - 0.5*(plane_redshifts[j] - plane_redshifts[j-1]);
 
-			if(j-1 == (flag_analens % Nplanes)) z1 = plane_redshifts[j] - 0.5*(plane_redshifts[j] - plane_redshifts[j-2]);
+			if(j-1 == (flag_input_lens % Nplanes)) z1 = plane_redshifts[j] - 0.5*(plane_redshifts[j] - plane_redshifts[j-2]);
 
 			if(j == Nplanes-2) z2 = zsource;
 			else z2 = plane_redshifts[j] + 0.5*(plane_redshifts[j+1] - plane_redshifts[j]);
 
-			if(j+1 == (flag_analens % Nplanes)) z2 = plane_redshifts[j] + 0.5*(plane_redshifts[j+2] - plane_redshifts[j]);
+			if(j+1 == (flag_input_lens % Nplanes)) z2 = plane_redshifts[j] + 0.5*(plane_redshifts[j+2] - plane_redshifts[j]);
 
 			//halodata[j] = new HaloData(fieldofview,min_mass,z1,z2,mass_func_type,cosmo,seed);
 			halodata[j] = auto_ptr<HaloData>(new HaloData(fieldofview,min_mass,mass_scale,z1,z2,mass_func_type,cosmo,seed));
@@ -362,19 +372,23 @@ void MultiLens::buildHaloTrees(
 		unsigned long j1,j2;
 
 		for(j=0,Ntot=0;j<Nplanes-1;j++){
-			if(flag_analens && j == (flag_analens % Nplanes))
+			if(flag_input_lens && j == (flag_input_lens % Nplanes))
 				continue;
 
-			// redshift range
+			/*
+			 * Setting the redshift range
+			 * If there is a plane with an input lens on it, it is skipped over
+			 * since it will not contain any halos
+			 */
 			if(j == 0) z1 = 0.0;
 			else z1 = plane_redshifts[j] - 0.5*(plane_redshifts[j] - plane_redshifts[j-1]);
 
-			if(j-1 == (flag_analens % Nplanes)) z1 = plane_redshifts[j] - 0.5*(plane_redshifts[j] - plane_redshifts[j-2]);
+			if(j-1 == (flag_input_lens % Nplanes)) z1 = plane_redshifts[j] - 0.5*(plane_redshifts[j] - plane_redshifts[j-2]);
 
 			if(j == Nplanes-2) z2 = zsource;
 			else z2 = plane_redshifts[j] + 0.5*(plane_redshifts[j+1] - plane_redshifts[j]);
 
-			if(j+1 == (flag_analens % Nplanes)) z2 = plane_redshifts[j] + 0.5*(plane_redshifts[j+2] - plane_redshifts[j]);
+			if(j+1 == (flag_input_lens % Nplanes)) z2 = plane_redshifts[j] + 0.5*(plane_redshifts[j+2] - plane_redshifts[j]);
 
 			/// Find which halos are in redshift range
 
@@ -397,7 +411,7 @@ void MultiLens::buildHaloTrees(
 
 	// *** these are not freed if this routine in used repeatedly
 	for(j=0;j<Nplanes-1;j++){
-		if(flag_analens && j == (flag_analens % Nplanes))
+		if(flag_input_lens && j == (flag_input_lens % Nplanes))
 			continue;
 
 		switch(internal_profile){
@@ -559,52 +573,53 @@ void MultiLens::buildHaloTrees(
 
 }
 
+/*
+ * Set the redshifts of the planes by dividing the redshift space into equal intervals
+ * and then plugging the input plane inbetween
+ *
+ * After this flag_input_lens will hold the index of the plane it is on
+ * In case it is on the first plane, it will hold the index Nplanes, to make
+ * sure that it is not zero (i.e. not set)
+ */
 void MultiLens::setRedshift(double zsource){
 	std:: vector<double> lz;
 	int i, Np;
-	if(flag_analens)
+
+	if(flag_input_lens)
 		Np = Nplanes;
 	else
 		Np = Nplanes+1;
 
+	/// spaces lz equally up to the source, including 0 and zsource
+	/// therefore we need Nplanes+1 values
+	/// however, if there is an input plane, we will need Nplanes values, sine the input plane will take up a value itself
 	fill_linear(lz,Np,0.,zsource);
 
+	/// puts the input plane first if the case
 	int j=0, flag=0;
-	if(flag_analens && analens->zlens < lz[1]){
-		plane_redshifts[j] = analens->zlens;
-		flag_analens = Nplanes;
+	if(flag_input_lens && input_lens->getZlens() < lz[1]){
+		plane_redshifts[j] = input_lens->getZlens();
+		flag_input_lens = Nplanes;
 		flag = 1;
 		j++;
 	}
+
+	/// assigns the redshifts and plugs in the input plane
 	for(i=1; i<Np; i++){
 		plane_redshifts[j] = lz[i];
 
-		if(flag_analens && flag == 0)
-			if(analens->zlens > lz[i] && analens->zlens <= lz[i+1]){
+		if(flag_input_lens && flag == 0)
+			if(input_lens->getZlens() > lz[i] && input_lens->getZlens() <= lz[i+1]){
 				plane_redshifts[j] = lz[i];
-				plane_redshifts[++j] = analens->zlens;
-				flag_analens = j;
+				plane_redshifts[++j] = input_lens->getZlens();
+				flag_input_lens = j;
 				flag = 1;
 			}
 		j++;
 	}
 
-	for(i=0; i<Nplanes-2; i++){
-		if(flag_analens && i == (flag_analens % Nplanes)){
-
-			plane_redshifts[i+1] = plane_redshifts[i] + 0.5*(plane_redshifts[i+2]-plane_redshifts[i]);
-
-			if(i == 1)
-				plane_redshifts[0] = 0.5*plane_redshifts[1];
-			else
-				plane_redshifts[i-1] = plane_redshifts[i-2] + 0.5*(plane_redshifts[i]-plane_redshifts[i-2]);
-
-			break;
-		}
-	}
-
-	if(flag_analens)
-		cout << "zlens " << analens->zlens << " on plane number " << (flag_analens % Nplanes) << endl;
+	if(flag_input_lens)
+		cout << "zlens " << input_lens->getZlens() << " on plane number " << (flag_input_lens % Nplanes) << endl;
 
 	cout << "z: ";
 	for(int i = 0; i < Nplanes; i++)
@@ -614,15 +629,19 @@ void MultiLens::setRedshift(double zsource){
 }
 
 double MultiLens::getZlens(){
-	if(flag_analens)
-		return analens->zlens;
+	if(flag_input_lens)
+		return input_lens->getZlens();
 	else
 		return plane_redshifts[0];
 }
 
 void MultiLens::setZlens(double z){
-	if(flag_analens)
-		analens->zlens = z;
+	if(flag_input_lens)
+		input_lens->setZlens(z);
+	else{
+		cout << "It is not possible to set the redshift of the input plane in this case" << endl;
+		ERROR_MESSAGE();
+	}
 }
 
 // sets the redshifts and distances for the lens planes
@@ -685,6 +704,13 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 
 }
 
+/*
+ * Sets the internal parameters of the multiple lens model
+ * first the redshifts of the planes are calculated
+ * then the coordinate distances to the different planes
+ * the planes are populated by halos and the halo trees are built
+ * and finally the internal params of the input plane are set, in case there is one
+ */
 void MultiLens::setInternalParams(CosmoHndl cosmo, double zsource){
 	int j;
 
@@ -715,8 +741,8 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, double zsource){
 
 	buildHaloTrees(cosmo,zsource);
 
-	if(flag_analens)
-		analens->setInternalParams(cosmo,zsource);
+	if(flag_input_lens)
+		input_lens->setInternalParams(cosmo,zsource);
 }
 
 /** \brief Read in information from a Virgo Millennium Data Base http://gavo.mpa-garching.mpg.de/MyMillennium/

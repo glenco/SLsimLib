@@ -17,18 +17,21 @@ protected:
 	int Nplanes;
 
 public:
-	  /// output file, not always used.
-	  std::string outputfile;
-	  /// marks if the lens has been setup.
-	  bool set;
+	double zlens;
+	/// output file, not always used.
+	std::string outputfile;
+	/// marks if the lens has been setup.
+	bool set;
 
-	  Lens();
-	  ~Lens();
+	Lens();
+	virtual ~Lens();
 
-	  int getNplanes();
+	int getNplanes();
 
 	virtual void setInternalParams(CosmoHndl,double) = 0;
 	virtual void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off, double zsource=-1){};
+	virtual void rayshooterInternal(double *ray, double *alpha, double *gamma, double *kappa, bool kappa_off){};
+	virtual void setParams(float *a1,float *a2,float *g1,float *g2, float *k, double *center,double range,long Np){};
 	virtual void RandomizeHost(long *seed,bool tables){};
 	virtual void RandomizeSigma(long *seed,bool tables){};
 	virtual double getZlens() = 0;
