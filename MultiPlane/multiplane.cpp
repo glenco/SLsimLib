@@ -156,7 +156,6 @@ MultiLens::~MultiLens(){
 		free_PosTypeMatrix(halo_pos,0,Nhalos-1,0,2);
 	}
 
-
 	if(flag_analens)
 		delete analens;
 }
@@ -685,6 +684,9 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 
 }
 
+/**
+ * Called from the Model class.
+ */
 void MultiLens::setInternalParams(CosmoHndl cosmo, double zsource){
 	int j;
 
@@ -700,7 +702,7 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, double zsource){
 	for(j = 1; j < Nplanes; j++){
 
 		Dl[j] = cosmo->coorDist(0,plane_redshifts[j]);
-		dDl[j] = Dl[j] - Dl[j-1]; // distance between jth plane and the previous plane
+		dDl[j] = cosmo->coorDist(plane_redshifts[j-1],plane_redshifts[j]); // distance between jth plane and the previous plane
 	}
 
 	cout << "Dl: ";

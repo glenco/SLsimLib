@@ -7,6 +7,7 @@
 
 #include <Tree.h>
 #include <forceTree.h>
+#include <quadTree.h>
 
 #ifndef analens_declare
 #define analens_declare
@@ -93,7 +94,8 @@ public:
   int stars_N;
   IndexType *stars;
   PosType **stars_xp;
-  ForceTree *star_tree;
+  //ForceTree *star_tree;
+  QuadTree *star_tree;
   double star_massscale;
   /// star masses relative to star_massscles
   float *star_masses;

@@ -108,8 +108,10 @@ void implant_stars(AnaLens *lens,Point *centers,unsigned long Nregions,long *see
 	//std::printf("last star x = %e %e\n",stars_xp[stars_N-1][0],stars_xp[stars_N-1][1]);
 
 	float dummy=0;
-	lens->star_tree = new ForceTree(lens->stars_xp,lens->stars_N,lens->star_masses,&dummy
-			,false,false,5,2,false,lens->star_theta_force);
+	//lens->star_tree = new ForceTree(lens->stars_xp,lens->stars_N,lens->star_masses,&dummy
+	//		,false,false,5,2,false,lens->star_theta_force);
+	lens->star_tree = new QuadTree(lens->stars_xp,lens->star_masses,&dummy,lens->stars_N
+			,false,false,0,4,lens->star_theta_force);
 
 	std::printf("projected with 2D tree\n");
 

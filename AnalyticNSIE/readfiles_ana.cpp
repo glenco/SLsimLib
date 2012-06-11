@@ -233,6 +233,8 @@ void AnaLens::readParamfile(string filename){
 
   // parameters for stars
   stars_implanted = false; // stars are implanted later
+  star_theta_force = 0.1;
+  sub_theta_force = 0.1;
   
   sub_sigmaScale = host_sigma;
 
