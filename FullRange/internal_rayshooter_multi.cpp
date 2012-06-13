@@ -63,7 +63,7 @@ void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
 			if(zsource == plane_redshifts[j])
 				break;
 
-			// convert to physical coorditanes on the plane j
+			// convert to physical coordinates on the plane j
 			xx[0] = i_points[i].image->x[0]/(1+plane_redshifts[j]);
 			xx[1] = i_points[i].image->x[1]/(1+plane_redshifts[j]);
 

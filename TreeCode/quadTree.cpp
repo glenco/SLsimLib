@@ -494,6 +494,23 @@ void QuadTree::printParticlesInBranch(unsigned long number){
 
 	return;
 }
+/**
+ * Prints to stdout the borders of each branch in the tree below level.
+ * If level < 0 or not specified the whole tree will be printed.
+ */
+void QuadTree::printBranchs(int level){
+
+	bool decend = true;
+	tree->moveTop();
+	do{
+		cout << tree->current->boundary_p1[0] << "  " << tree->current->boundary_p1[1] << "   "
+		     << tree->current->boundary_p2[0] << "  " << tree->current->boundary_p2[1] << endl;
+		if(tree->current->level == level) decend = false;
+		else decend = true;
+	}while(tree->WalkStep(decend));
+
+	return;
+}
 /// Utility functions
 void QuadTree::quicksort(unsigned long *particles,double *arr,unsigned long N){
 	double pivotvalue;

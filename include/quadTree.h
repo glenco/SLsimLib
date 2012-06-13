@@ -156,6 +156,7 @@ public:
 
 	void force2D(double *ray,double *alpha,double *kappa,double *gamma,bool no_kappa);
 	void printParticlesInBranch(unsigned long number);
+	void printBranchs(int level = -1);
 
 protected:
 
