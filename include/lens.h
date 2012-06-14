@@ -36,6 +36,7 @@ public:
 	virtual void RandomizeSigma(long *seed,bool tables){};
 	virtual double getZlens() = 0;
 	virtual void setZlens(double zlens) = 0;
+	virtual std::string getInputFile(){};
 
 };
 

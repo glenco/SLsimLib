@@ -73,8 +73,6 @@ public:
 	/// if = 0 there is no input lens, if = 1 there is an analytic lens, if = 2 there is a MOKA lens
 	int flag_input_lens;
 
-	/// the name of the MOKA input file
-	std::string MOKA_input_file;
 
 private:
 

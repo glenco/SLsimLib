@@ -212,10 +212,6 @@ void MultiLens::readParamfile(string filename){
 	  id[n] = 2;
 	  label[n++] = "input_simulation_file";
 
-	  addr[n] = &MOKA_input_file;
-	  id[n] = 2;
-	  label[n++] = "MOKA_input_file";
-
 	  cout << "Multi lens: reading from " << filename << endl;
 
 	  ifstream file_in(filename.c_str());
@@ -265,7 +261,7 @@ void MultiLens::readParamfile(string filename){
 	  }
 
 	  for(i = 0; i < n; i++){
-		  if(id[i] >= 0 && addr[i] != &input_sim_file && addr[i] != &MOKA_input_file){
+		  if(id[i] >= 0 && addr[i] != &input_sim_file){
 			  ERROR_MESSAGE();
 			  cout << "parameter " << label[i] << " needs to be set!" << endl;
 			  exit(0);

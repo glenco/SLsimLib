@@ -64,6 +64,10 @@ void MOKALens::readParamfile(std::string filename){
   id[n] = 0;
   label[n++] = "z_lens";
 
+  addr[n] = &MOKA_input_file;
+  id[n] = 2;
+  label[n++] = "MOKA_input_file";
+
   ifstream file_in(filename.c_str());
   if(!file_in){
     cout << "Can't open file " << filename << endl;
