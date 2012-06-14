@@ -287,35 +287,6 @@ private:
 	double g2function(double x);
 };
 
-
-/** \ingroup DeflectionL2
- *
- * \brief A class for calculating the deflection, kappa and gamma caused by a collection of NFW
- * halos.
- *
- * Derived from the QuadTree class.  The "particles" are replaced with spherical NFW halos.
- *
- * This class uses the true expressions for a Gaussin profile.
- *
- * The default value of theta = 0.1 generally gives better than 1% accuracy on alpha.
- * The shear and kappa is always more accurate than the deflection.
- */
-class QuadTreeGauss : public QuadTree{
-
-public:
-	QuadTreeGauss(PosType **xp,IndexType Npoints,HaloStructure *par_internals
-			,double my_kappa_bk = 0.0,int bucket = 5,PosType theta = 0.1);
-	~QuadTreeGauss();
-
-private:
-
-	// Override internal structure of halos
-	double alpha_h(double r2,HaloStructure &par);
-	double kappa_h(double r2,HaloStructure &par);
-	double gamma_h(double r2,HaloStructure &par);
-	double phi_h(double r2,HaloStructure &par);
-};
-
 /** \ingroup DeflectionL2
  *
  * \brief A class for calculating the deflection, kappa and gamma caused by a collection of

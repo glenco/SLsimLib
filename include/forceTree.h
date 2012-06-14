@@ -167,37 +167,6 @@ private:
 	double g2function(double x);
 };
 
-
-/** \ingroup DeflectionL2
- *
- * \brief A class for calculating the deflection, kappa and gamma caused by a collection of NFW
- * halos.
- *
- * Derived from the ForceTree class.  The "particles" are replaced with spherical NFW halos.
- *
- * This class uses the true expressions for a Gaussin profile.
-
- * The default value of theta = 0.1 generally gives better than 1% accuracy on alpha, but
- * only ~ 20% accuracy on gamma.  For high accuracy gamma use theta <~ 0.01
- */
-class ForceTreeGauss : public ForceTree{
-
-public:
-	ForceTreeGauss(PosType **xp,IndexType Npoints,HaloStructure *par_internals
-			,bool Multisize = true,double my_kappa_bk = 0.0,int bucket = 5,int dimensions = 2
-			,bool median = false,PosType theta = 0.1
-			);
-	~ForceTreeGauss();
-
-private:
-
-	// Override internal structure of halos
-	double alpha_h(double r2,HaloStructure &par);
-	double kappa_h(double r2,HaloStructure &par);
-	double gamma_h(double r2,HaloStructure &par);
-	double phi_h(double r2,HaloStructure &par);
-};
-
 /** \ingroup DeflectionL2
  *
  * \brief A class for calculating the deflection, kappa and gamma caused by a collection of

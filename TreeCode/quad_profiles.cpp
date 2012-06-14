@@ -28,29 +28,6 @@ double QuadTree::phi_o(double r2,float sigma){
 	return 0;
 }
 
-/** Gaussian profiles
- *  All quantities should be divided by Sigma_crit to get the usual
- */
-double QuadTreeGauss::alpha_h(double r2,HaloStructure &par){
-	if(r2<=0) return 0.0;
-	if(par.Rmax*par.Rmax <= r2 ) return -1.0*par.mass/r2/pi;
-	return ( exp(-r2/par.rscale/par.rscale/2) - 1.0 )*par.mass/r2/pi;
-}
-double QuadTreeGauss::kappa_h(double r2,HaloStructure &par){
-	if(par.Rmax*par.Rmax <= r2) return 0.0;
-	return exp(-r2/par.rscale/par.rscale/2)*par.mass/2/pi/par.rscale/par.rscale;
-}
-double QuadTreeGauss::gamma_h(double r2,HaloStructure &par){
-	if(r2==0) return 0.0;
-	if(par.Rmax*par.Rmax <= r2) return -2.0*par.mass/pi/pow(r2,2);
-	return (-2.0 + (2.0 + r2/par.rscale/par.rscale)*exp(-r2/par.rscale/par.rscale/2) )*par.mass/pi/pow(r2,2);
-}
-double QuadTreeGauss::phi_h(double r2,HaloStructure &par){
-	ERROR_MESSAGE();  // not yet written
-	exit(1);
-	return 0;
-}
-
 /** power-law profiles
  *  All quantities should be divided by Sigma_crit to get the usual
  */

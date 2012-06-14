@@ -49,21 +49,6 @@ QuadTreeNFW::QuadTreeNFW(
 QuadTreeNFW::~QuadTreeNFW(){
 }
 
-QuadTreeGauss::QuadTreeGauss(
-		PosType **xp              /// positions of the halos xp[0..Npoints-1][0..1 or 2]
-		,IndexType Npoints         /// number of halos
-		,HaloStructure *h_params   /// array with internal properties of halos
-		,double my_kappa_bk       /// Background convergence to be subtracted
-		,int bucket                /// maximum number of halos in a leaf of the tree
-		,PosType theta             /// Opening angle used in tree force calculation, default 0.1
-		) :
-		QuadTree(xp,h_params,Npoints,my_kappa_bk,bucket,theta)
-{
-}
-
-QuadTreeGauss::~QuadTreeGauss(){
-}
-
 QuadTreePseudoNFW::QuadTreePseudoNFW(
 		int my_beta                 /// outer slope of profile is \f$ \Sigma \propto r^{-\beta} \f$
 		,PosType **xp              /// positions of the halos xp[0..Npoints-1][0..1 or 2]

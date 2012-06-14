@@ -433,12 +433,9 @@ void MultiLens::buildHaloTrees(
 			halo_tree[j] = auto_ptr<QuadTree>(new QuadTreePseudoNFW(2,&halodata[j]->pos[0],halodata[j]->Nhalos
 							,halodata[j]->halos,halodata[j]->kappa_background));
 			break;
-		case 0:
-			//halo_tree[j] = new ForceTreeGauss(&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos);
-			//halo_tree[j] = auto_ptr<ForceTree>(new ForceTreeGauss(&halodata[j]->pos[0],halodata[j]->Nhalos
-				//	,halodata[j]->halos,true,halodata[j]->kappa_background));
-			halo_tree[j] = auto_ptr<QuadTree>(new QuadTreeGauss(&halodata[j]->pos[0],halodata[j]->Nhalos
-					,halodata[j]->halos,halodata[j]->kappa_background));
+		default:
+			cout << "There is no such case for the halo trees" << endl;
+			ERROR_MESSAGE();
 			break;
 		}
 
