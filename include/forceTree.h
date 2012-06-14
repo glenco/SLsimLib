@@ -165,6 +165,7 @@ private:
 	double gfunction(double x);
 	double ffunction(double x);
 	double g2function(double x);
+	double rhos(double x);
 };
 
 /** \ingroup DeflectionL2
