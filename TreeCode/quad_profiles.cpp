@@ -216,7 +216,7 @@ double QuadTreePseudoNFW::gamma_h(double r2,HaloStructure &par){
 	gt = -2.0*par.mass/pi/r2/r2;
 	if(r2 < par.Rmax*par.Rmax){
 		double y = sqrt(r2)/par.rscale;
-		gt *= 1.0/pow(par.rscale,2)/mhat(par.Rmax/par.rscale)/pow(1+y,beta);
+		gt *=r2/pow(par.rscale,2)/mhat(par.Rmax/par.rscale)/pow(1+y,beta);
 	}
 
 	return gt;
