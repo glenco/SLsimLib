@@ -34,6 +34,7 @@ struct QBranchNB{
 
 	/// array of particles in QBranchNB
   IndexType *particles;
+  IndexType *big_particles;
   IndexType nparticles;
   /// the number of particles that aren't in children
   IndexType Nbig_particles;

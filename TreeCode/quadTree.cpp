@@ -123,7 +123,8 @@ void QuadTree::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
 
 	// leaf case
 	if(cbranch->nparticles <= Nbucket){
-		cbranch->Nbig_particles=0;
+		cbranch->Nbig_particles = nparticles;
+		cbranch->big_particles = particles;
 		return;
 	}
 
@@ -146,10 +147,13 @@ void QuadTree::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
 		quickPartition(maxsize,&cut,particles,x,cbranch->nparticles);
 
 		cbranch->Nbig_particles = cbranch->nparticles - cut;
+
+		cbranch->big_particles = new IndexType[cbranch->Nbig_particles];
+		for(i=cut;i<cbranch->nparticles;++i) cbranch->big_particles[i-cut] = particles[i];
 	}
 
 	assert( cbranch->nparticles >= cbranch->Nbig_particles );
-	IndexType NpInChildren = cbranch->nparticles - cbranch->Nbig_particles;
+	IndexType NpInChildren = cbranch->nparticles;// - cbranch->Nbig_particles;
 	assert(NpInChildren >= 0);
 
 	if(NpInChildren == 0){
@@ -340,7 +344,7 @@ void QuadTree::CalcMoments(){
 			cbranch->maxrsph = haloON ? halo_params[0].Rmax : sizes[0];
 			cbranch->rcrit_part = rcom + 2*cbranch->maxrsph;
 		}
-		cbranch->rcrit_angle += cbranch->rcrit_part;
+		//cbranch->rcrit_angle += cbranch->rcrit_part;
 
 	}while(tree->WalkStep(true));
 
@@ -378,7 +382,7 @@ void QuadTree::rotate_coordinates(double **coord){
 
 void QuadTree::force2D(double *ray,double *alpha,double *kappa,double *gamma,bool no_kappa){
 
-  PosType xcm,ycm,rcm2,tmp;
+  PosType xcm,ycm,rcm2,tmp,boxsize;
   IndexType i;
   bool allowDescent=true;
   unsigned long count=0,index;
@@ -392,77 +396,117 @@ void QuadTree::force2D(double *ray,double *alpha,double *kappa,double *gamma,boo
   do{
 
 	  ++count;
-	  xcm=tree->current->center[0]-ray[0];
-	  ycm=tree->current->center[1]-ray[1];
+	  allowDescent=false;
+	  if(tree->current->nparticles > 0){
 
-	  rcm2 = xcm*xcm + ycm*ycm;
+		  xcm=tree->current->center[0]-ray[0];
+		  ycm=tree->current->center[1]-ray[1];
 
-	  if( rcm2 < pow(tree->current->rcrit_angle,2) ){
-		  // includes rcrit_particle constraint
-		  allowDescent=true;
+		  rcm2 = xcm*xcm + ycm*ycm;
 
-		  if(tree->current->nparticles > 0){
+		  boxsize2 = pow(cbranch->boundary_p2[0]-cbranch->boundary_p1[0],2);
+
+		  if( rcm2 < pow(tree->current->rcrit_angle,2) || rcm2 < 1.457*boxsize2){
+			  // includes rcrit_particle constraint
+			  allowDescent=true;
 
 			  // Add big particles individually or all the particles in the case of a leaf
-			  unsigned long min;
-			  if(tree->atLeaf()) min = 0;
-			  else min = tree->current->nparticles - tree->current->Nbig_particles;
+			  if(tree->atLeaf()){
 
-			  for(i = min ; i < tree->current->nparticles ; ++i){
+				  for(i = 0 ; i < tree->current->nparticles ; ++i){
 
-				  xcm = tree->xp[tree->current->particles[i]][0] - ray[0];
-				  ycm = tree->xp[tree->current->particles[i]][1] - ray[1];
+					  xcm = tree->xp[tree->current->particles[i]][0] - ray[0];
+					  ycm = tree->xp[tree->current->particles[i]][1] - ray[1];
 
-				  rcm2 = xcm*xcm + ycm*ycm;
+					  rcm2 = xcm*xcm + ycm*ycm;
 
-				  index = MultiRadius*tree->current->particles[i];
-				  if(haloON) tmp = alpha_h(rcm2,halo_params[index]);
-				  else tmp =  alpha_o(rcm2,sizes[index])*masses[MultiMass*tree->current->particles[i]];
-				  alpha[0] += tmp*xcm;
-				  alpha[1] += tmp*ycm;
+					  index = MultiRadius*tree->current->particles[i];
+					  if(haloON){
+						  tmp = alpha_o(rcm2,0)*halo_params[index].mass;
+					  }else{
+						  tmp = alpha_o(rcm2,0)*masses[MultiMass*tree->current->particles[i]];
+					  }
+					  alpha[0] += tmp*xcm;
+					  alpha[1] += tmp*ycm;
 
-				  // can turn off kappa and gamma calculations to save times
-				  if(!no_kappa){
-					  if(haloON) *kappa += kappa_h(rcm2,halo_params[index]);
-					  else *kappa += kappa_o(rcm2,sizes[index])*masses[MultiMass*tree->current->particles[i]];
+					  // can turn off kappa and gamma calculations to save times
+					  if(!no_kappa){
+						  if(haloON) tmp = gamma_o(rcm2,0)*halo_params[index].mass;
+						  else tmp = gamma_o(rcm2,0)*masses[MultiMass*tree->current->particles[i]];
 
-					  if(haloON) tmp = gamma_h(rcm2,halo_params[index]);
-					  else tmp = gamma_o(rcm2,sizes[index])*masses[MultiMass*tree->current->particles[i]];
-
-					  gamma[0] += 0.5*(xcm*xcm-ycm*ycm)*tmp;
-					  gamma[1] += xcm*ycm*tmp;
+						  gamma[0] += 0.5*(xcm*xcm-ycm*ycm)*tmp;
+						  gamma[1] += xcm*ycm*tmp;
+					  }
 				  }
 			  }
-		  }
 
-	  }else{ // use whole cell
-		  allowDescent=false;
+			  if(MultiRadius && rcm2 < 1.457*boxsize2){
+				  for(i = 0 ; i < tree->current->Nbig_particles ; ++i){
 
-		  tmp = -1.0*tree->current->mass/rcm2/pi;
+					  xcm = tree->xp[tree->current->big_particles[i]][0] - ray[0];
+					  ycm = tree->xp[tree->current->big_particles[i]][1] - ray[1];
 
-		  alpha[0] += tmp*xcm;
-		  alpha[1] += tmp*ycm;
+					  rcm2 = xcm*xcm + ycm*ycm;
 
-		  if(!no_kappa){      //  taken out to speed up
-			  tmp=-2.0*tree->current->mass/pi/rcm2/rcm2;
-			  gamma[0] += 0.5*(xcm*xcm-ycm*ycm)*tmp;
-			  gamma[1] += xcm*ycm*tmp;
-		  }
+					  index = tree->current->big_particles[i];
+					  if(haloON) tmp = sizes[index];
+					  else tmp = halo_params[index].Rmax;
 
-		  // quadrapole contribution
-		  //   the kappa and gamma are not calculated to this order
-		  alpha[0] -= (tree->current->quad[0]*xcm + tree->current->quad[2]*ycm)
+					  if(rcm2 < tmp*tmp){
+						  if(haloON){
+							  tmp = alpha_h(rcm2,halo_params[index])
+								  - alpha_o(rcm2,0)*halo_params[index].mass;
+						  }else{
+							  tmp =  (alpha_o(rcm2,sizes[index]) - alpha_o(rcm2,0))
+								  *masses[MultiMass*tree->current->big_particles[i]];
+						  }
+						  alpha[0] += tmp*xcm;
+						  alpha[1] += tmp*ycm;
+
+						  // can turn off kappa and gamma calculations to save times
+						  if(!no_kappa){
+							  if(haloON) *kappa += kappa_h(rcm2,halo_params[index]);
+							  else *kappa += kappa_o(rcm2,sizes[index])*masses[MultiMass*tree->current->big_particles[i]];
+
+							  if(haloON) tmp = gamma_h(rcm2,halo_params[index]) - gamma_o(rcm2,0)*halo_params[index].mass;
+							  else tmp = (gamma_o(rcm2,sizes[index])-gamma_o(rcm2,0))
+										  *masses[MultiMass*tree->current->big_particles[i]];
+
+							  gamma[0] += 0.5*(xcm*xcm-ycm*ycm)*tmp;
+							  gamma[1] += xcm*ycm*tmp;
+						  }
+					  }
+				  }
+			  }
+
+		  }else{ // use whole cell
+			  allowDescent=false;
+
+			  tmp = -1.0*tree->current->mass/rcm2/pi;
+
+			  alpha[0] += tmp*xcm;
+			  alpha[1] += tmp*ycm;
+
+			  if(!no_kappa){      //  taken out to speed up
+				  tmp=-2.0*tree->current->mass/pi/rcm2/rcm2;
+				  gamma[0] += 0.5*(xcm*xcm-ycm*ycm)*tmp;
+				  gamma[1] += xcm*ycm*tmp;
+			  }
+
+			  // quadrapole contribution
+			  //   the kappa and gamma are not calculated to this order
+			  alpha[0] -= (tree->current->quad[0]*xcm + tree->current->quad[2]*ycm)
     				  /pow(rcm2,2)/pi;
-		  alpha[1] -= (tree->current->quad[1]*ycm + tree->current->quad[2]*xcm)
+			  alpha[1] -= (tree->current->quad[1]*ycm + tree->current->quad[2]*xcm)
     				  /pow(rcm2,2)/pi;
 
-		  tmp = 4*(tree->current->quad[0]*xcm*xcm + tree->current->quad[1]*ycm*ycm
+			  tmp = 4*(tree->current->quad[0]*xcm*xcm + tree->current->quad[1]*ycm*ycm
 				  + 2*tree->current->quad[2]*xcm*ycm)/pow(rcm2,3)/pi;
 
-		  alpha[0] += tmp*xcm;
-		  alpha[1] += tmp*ycm;
+			  alpha[0] += tmp*xcm;
+			  alpha[1] += tmp*ycm;
+		  }
 	  }
-
   }while(tree->WalkStep(allowDescent));
 
   // Subtract off uniform mass sheet to compensate for the extra mass

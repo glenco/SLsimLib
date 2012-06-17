@@ -15,6 +15,7 @@ QBranchNB::QBranchNB(){
 	prev = NULL;
 	brother = NULL;
 	particles = NULL;
+	big_particles = NULL;
 	nparticles = 0;
 	number = n;
 	++n;
@@ -73,6 +74,7 @@ void QTreeNB::_freeQTree(short child){
 	QBranchNB *branch;
 
 	assert(current);
+	delete current->big_particles;
 
 	if(current->child0 != NULL){
 		moveToChild(0);
