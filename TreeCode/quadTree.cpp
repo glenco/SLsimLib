@@ -131,7 +131,7 @@ void QuadTree::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
 	// find particles too big to be in children
 
 	double *x = new double[cbranch->nparticles];
-	IndexType i,cut;
+	IndexType i,cut,cut2;
 
 	cbranch->Nbig_particles=0;
 
@@ -146,10 +146,14 @@ void QuadTree::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
 		//quicksort(particles,x,cbranch->nparticles);
 		quickPartition(maxsize,&cut,particles,x,cbranch->nparticles);
 
-		cbranch->Nbig_particles = cbranch->nparticles - cut;
+		if(cut < cbranch->nparticles){
+			quickPartition(2*maxsize,&cut2,&particles[cut],&x[cut],cbranch->nparticles-cut);
 
-		cbranch->big_particles = new IndexType[cbranch->Nbig_particles];
-		for(i=cut;i<cbranch->nparticles;++i) cbranch->big_particles[i-cut] = particles[i];
+			cbranch->Nbig_particles = cut2;
+
+			cbranch->big_particles = new IndexType[cbranch->Nbig_particles];
+			for(i=cut;i<(cut+cut2);++i) cbranch->big_particles[i-cut] = particles[i];
+		}
 	}
 
 	assert( cbranch->nparticles >= cbranch->Nbig_particles );
@@ -382,7 +386,7 @@ void QuadTree::rotate_coordinates(double **coord){
 
 void QuadTree::force2D(double *ray,double *alpha,double *kappa,double *gamma,bool no_kappa){
 
-  PosType xcm,ycm,rcm2,tmp,boxsize;
+  PosType xcm,ycm,rcm2,rcm2cell,tmp,boxsize2;
   IndexType i;
   bool allowDescent=true;
   unsigned long count=0,index;
@@ -402,15 +406,15 @@ void QuadTree::force2D(double *ray,double *alpha,double *kappa,double *gamma,boo
 		  xcm=tree->current->center[0]-ray[0];
 		  ycm=tree->current->center[1]-ray[1];
 
-		  rcm2 = xcm*xcm + ycm*ycm;
+		  rcm2cell = xcm*xcm + ycm*ycm;
 
-		  boxsize2 = pow(cbranch->boundary_p2[0]-cbranch->boundary_p1[0],2);
+		  boxsize2 = pow(tree->current->boundary_p2[0]-tree->current->boundary_p1[0],2);
 
-		  if( rcm2 < pow(tree->current->rcrit_angle,2) || rcm2 < 1.457*boxsize2){
+		  if( rcm2cell < pow(tree->current->rcrit_angle,2) || rcm2cell < 5.83*boxsize2){
 			  // includes rcrit_particle constraint
 			  allowDescent=true;
 
-			  // Add big particles individually or all the particles in the case of a leaf
+			  // Treat all particles in a leaf as a point particle
 			  if(tree->atLeaf()){
 
 				  for(i = 0 ; i < tree->current->nparticles ; ++i){
@@ -440,17 +444,19 @@ void QuadTree::force2D(double *ray,double *alpha,double *kappa,double *gamma,boo
 				  }
 			  }
 
-			  if(MultiRadius && rcm2 < 1.457*boxsize2){
+			  // Fined the particles that are intersect with ray and add them individually.
+			  if(MultiRadius && rcm2cell < 5.83*boxsize2){
 				  for(i = 0 ; i < tree->current->Nbig_particles ; ++i){
 
-					  xcm = tree->xp[tree->current->big_particles[i]][0] - ray[0];
-					  ycm = tree->xp[tree->current->big_particles[i]][1] - ray[1];
+					  index = tree->current->big_particles[i];
+
+					  xcm = tree->xp[index][0] - ray[0];
+					  ycm = tree->xp[index][1] - ray[1];
 
 					  rcm2 = xcm*xcm + ycm*ycm;
 
-					  index = tree->current->big_particles[i];
-					  if(haloON) tmp = sizes[index];
-					  else tmp = halo_params[index].Rmax;
+					  if(haloON) tmp = halo_params[index].Rmax;
+					  else tmp = sizes[index];
 
 					  if(rcm2 < tmp*tmp){
 						  if(haloON){
@@ -458,7 +464,7 @@ void QuadTree::force2D(double *ray,double *alpha,double *kappa,double *gamma,boo
 								  - alpha_o(rcm2,0)*halo_params[index].mass;
 						  }else{
 							  tmp =  (alpha_o(rcm2,sizes[index]) - alpha_o(rcm2,0))
-								  *masses[MultiMass*tree->current->big_particles[i]];
+								  *masses[MultiMass*index];
 						  }
 						  alpha[0] += tmp*xcm;
 						  alpha[1] += tmp*ycm;
@@ -466,11 +472,11 @@ void QuadTree::force2D(double *ray,double *alpha,double *kappa,double *gamma,boo
 						  // can turn off kappa and gamma calculations to save times
 						  if(!no_kappa){
 							  if(haloON) *kappa += kappa_h(rcm2,halo_params[index]);
-							  else *kappa += kappa_o(rcm2,sizes[index])*masses[MultiMass*tree->current->big_particles[i]];
+							  else *kappa += kappa_o(rcm2,sizes[index])*masses[MultiMass*index];
 
 							  if(haloON) tmp = gamma_h(rcm2,halo_params[index]) - gamma_o(rcm2,0)*halo_params[index].mass;
 							  else tmp = (gamma_o(rcm2,sizes[index])-gamma_o(rcm2,0))
-										  *masses[MultiMass*tree->current->big_particles[i]];
+										  *masses[MultiMass*index];
 
 							  gamma[0] += 0.5*(xcm*xcm-ycm*ycm)*tmp;
 							  gamma[1] += xcm*ycm*tmp;
