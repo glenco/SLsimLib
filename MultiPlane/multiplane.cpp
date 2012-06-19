@@ -139,6 +139,7 @@ MultiLens::MultiLens(string filename,long *my_seed) : Lens(){
 	case 2:
 		input_lens = new MOKALens(filename);
 		mokalens = static_cast<MOKALens*>(input_lens);
+		setFOV(pow(mokalens->map->boxl*180/pi,2.0));
 		break;
 	}
 
@@ -160,7 +161,6 @@ MultiLens::~MultiLens(){
 		delete[] halo_zs;
 		free_PosTypeMatrix(halo_pos,0,Nhalos-1,0,2);
 	}
-
 
 	if(flag_input_lens)
 		delete input_lens;
