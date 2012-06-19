@@ -661,7 +661,7 @@ void _AddPoint(TreeHndl tree){
 		moveUp(tree);
 		while(tree->current->points == oldfirstpoint){
 			tree->current->points = newfirstpoint;
-			moveUp(tree);
+			if(!moveUp(tree)) break;
 		}
 		tree->current = current;
 	}

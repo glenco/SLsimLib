@@ -49,7 +49,7 @@ short find_peaks(
 
 	// increase threshold while increasing angular resolution
 	for(threshold =  rEinsteinMin*(grid->getNgrid())/(grid->getInitRange())/4 ; threshold <= kappa_max ; threshold *= 3){
-
+		cout << "threshold " << threshold << endl;
 		res_target = rEinsteinMin/threshold/2;  // keeps resolution below size of smallest lens
 
 		imageinfo->gridrange[2] = 1.0e99;
