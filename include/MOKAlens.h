@@ -5,9 +5,10 @@
  *      Author: mpetkova
  */
 
-#include <lens.h>
-#include <cosmo.h>
-#include <Tree.h>
+#include <slsimlib.h>
+#include <MOKAfits.h>
+#include "profile.h"
+
 
 #ifndef MOKALENS_H_
 #define MOKALENS_H_
@@ -25,21 +26,14 @@ public:
 
 	void readParamfile(std::string);
 	void rayshooterInternal(double *ray, double *alpha, double *gamma, double *kappa, bool kappa_off);
-	void setParams(float *a1,float *a2,float *g1,float *g2, float *k, double *center,double range,long Np);
 	void setZlens(double zlens);
 	double getZlens();
-	void setInternalParams(CosmoHndl,double);
-	std::string getInputFile(){return MOKA_input_file;};
+	void setInternalParams(CosmoHndl,SourceHndl);
+	void saveImage(GridHndl grid, bool saveprofile=true);
+	void saveProfile();
 
-	/// values for the map
-	float* alpha1;
-	float* alpha2;
-	float* gamma1;
-	float* gamma2;
-	float* kappa1;
-	double* center;
-	double range;
-	long Npixels;
+	MOKAmap *map;
+
 };
 
 #endif /* MOKALENS_H_ */

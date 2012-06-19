@@ -7,6 +7,7 @@
 #include <cosmo.h>
 #include <forceTree.h>
 #include <point.h>
+#include <source.h>
 
 #ifndef LENS_H_
 #define LENS_H_
@@ -28,15 +29,13 @@ public:
 
 	int getNplanes();
 
-	virtual void setInternalParams(CosmoHndl,double) = 0;
+	virtual void setInternalParams(CosmoHndl,SourceHndl) = 0;
 	virtual void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off, double zsource=-1){};
 	virtual void rayshooterInternal(double *ray, double *alpha, double *gamma, double *kappa, bool kappa_off){};
-	virtual void setParams(float *a1,float *a2,float *g1,float *g2, float *k, double *center,double range,long Np){};
 	virtual void RandomizeHost(long *seed,bool tables){};
 	virtual void RandomizeSigma(long *seed,bool tables){};
 	virtual double getZlens() = 0;
 	virtual void setZlens(double zlens) = 0;
-	virtual std::string getInputFile(){};
 
 };
 

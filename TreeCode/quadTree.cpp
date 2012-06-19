@@ -389,6 +389,8 @@ void QuadTree::force2D(double *ray,double *alpha,double *kappa,double *gamma,boo
   alpha[0]=alpha[1]=gamma[0]=gamma[1]=gamma[2]=0.0;
   *kappa=0.0;
 
+
+
   do{
 
 	  ++count;

@@ -130,9 +130,11 @@ MultiLens::MultiLens(string filename,long *my_seed) : Lens(){
 	switch(flag_input_lens){
 	case 1:
 		input_lens = new AnaLens(filename);
+		analens = static_cast<AnaLens*>(input_lens);
 		break;
 	case 2:
 		input_lens = new MOKALens(filename);
+		mokalens = static_cast<MOKALens*>(input_lens);
 		break;
 	}
 
@@ -704,15 +706,18 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
  * the planes are populated by halos and the halo trees are built
  * and finally the internal params of the input plane are set, in case there is one
  */
-void MultiLens::setInternalParams(CosmoHndl cosmo, double zsource){
+void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 	int j;
+
+	if(flag_input_lens)
+		input_lens->setInternalParams(cosmo,source);
 
 	if( (cosmo->getOmega_matter() + cosmo->getOmega_lambda()) != 1.0 ){
 		printf("ERROR: MultiLens can only handle flat universes at present.  Must change cosmology.\n");
 		exit(1);
 	}
 
-	setRedshift(zsource);
+	setRedshift(source->zsource);
 
 	Dl[0] = cosmo->coorDist(0,plane_redshifts[0]);
 	dDl[0] = Dl[0];  // distance between jth plane and the previous plane
@@ -732,10 +737,7 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, double zsource){
 		cout << dDl[j] << " ";
 	cout << endl << endl;
 
-	buildHaloTrees(cosmo,zsource);
-
-	if(flag_input_lens)
-		input_lens->setInternalParams(cosmo,zsource);
+	buildHaloTrees(cosmo,source->zsource);
 }
 
 /** \brief Read in information from a Virgo Millennium Data Base http://gavo.mpa-garching.mpg.de/MyMillennium/

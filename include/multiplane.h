@@ -9,7 +9,7 @@
 #define MULTIPLANE_H_
 
 #include <analytic_lens.h>
-#include <MOKALens.h>
+#include <MOKAlens.h>
 #include <cosmo.h>
 #include <halo.h>
 #include <utilities.h>
@@ -64,10 +64,12 @@ public:
 	void setRedshift(double zsource);
 	void printMultiLens();
 
-	void setInternalParams(CosmoHndl,double zsource);
+	void setInternalParams(CosmoHndl,SourceHndl);
 	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off, double zsource=-1);
 	/// a poiner to the analytical lens
 	LensHndl input_lens;
+	AnaLens *analens;
+	MOKALens *mokalens;
 	/// field of view in square degrees
 	double fieldofview;
 	/// if = 0 there is no input lens, if = 1 there is an analytic lens, if = 2 there is a MOKA lens

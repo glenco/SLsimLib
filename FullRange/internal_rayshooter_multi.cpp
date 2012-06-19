@@ -161,31 +161,4 @@ void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
     return;
 }
 
-/** \ingroup DeflectionL2
-   *
-   * \brief Routine for obtaining the deflection and other lensing quantities for
-   * a MOKA map (MOKALens), for just one ray!!
-   *
-*/
-void MOKALens::rayshooterInternal(double *xx, double *alpha, double *gamma, double *kappa, bool kappa_off){
-
-	long index = IndexFromPosition(xx,Npixels,range,center);
-
-	if(index > -1){
-		alpha[0] = alpha1[index];
-		alpha[1] = alpha2[index];
-		gamma[0] = gamma1[index];
-		gamma[1] = gamma2[index];
-		gamma[2] = 0.0;
-		*kappa = kappa1[index];
-	}
-	else{
-		alpha[0] = alpha[1] = 0.0;
-		gamma[0] = gamma[1] = gamma[2] = 0.0;
-		*kappa = 0.0;
-	}
-
-
-	return;
-}
 
