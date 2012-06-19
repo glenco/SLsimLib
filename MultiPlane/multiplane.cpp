@@ -107,6 +107,10 @@ HaloData::~HaloData(){
 	}
 }
 
+/*
+ * \ingroup Constructor
+ * allocates space for the halo trees and the inout lens, if there is any
+ */
 MultiLens::MultiLens(string filename,long *my_seed) : Lens(){
 	readParamfile(filename);
 
