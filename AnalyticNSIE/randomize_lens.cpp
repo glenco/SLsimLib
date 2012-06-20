@@ -22,7 +22,12 @@ using namespace std;
  *
  */
 
-void Model::RandomizeModel(double r_source_phys,long *seed,bool tables){
+void Model::RandomizeModel(
+		double r_source_phys
+		,long *seed
+		,bool tables
+		,double angle_factor ///
+		){
 	double *zlTable,*zsTable;
 	int n,i,NzTable;
 	ifstream file;
@@ -71,7 +76,7 @@ void Model::RandomizeModel(double r_source_phys,long *seed,bool tables){
 	setInternal();
 
 	// This need to be done after source->DlDs has been set in setInternal()
-	source->source_r = r_source_phys*source->DlDs;
+	source->source_r = r_source_phys*source->DlDs/angle_factor;
 
 	lens->RandomizeHost(seed,tables);
 
@@ -105,8 +110,8 @@ void AnaLens::RandomizeSigma(long *seed,bool tables){
 }
 
 void MultiLens::RandomizeSigma(long *seed,bool tables){
-	if(flag_analens)
-		analens->RandomizeSigma(seed,tables);
+	if(flag_input_lens)
+		input_lens->RandomizeSigma(seed,tables);
 }
 
 void AnaLens::RandomizeHost(long *seed,bool tables){
@@ -154,8 +159,8 @@ void AnaLens::RandomizeHost(long *seed,bool tables){
 }
 
 void MultiLens::RandomizeHost(long *seed,bool tables){
-	if(flag_analens)
-		analens->RandomizeHost(seed,tables);
+	if(flag_input_lens)
+		input_lens->RandomizeHost(seed,tables);
 }
 
 /** \ingroup ChangeLens

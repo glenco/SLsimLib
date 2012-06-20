@@ -28,29 +28,6 @@ double QuadTree::phi_o(double r2,float sigma){
 	return 0;
 }
 
-/** Gaussian profiles
- *  All quantities should be divided by Sigma_crit to get the usual
- */
-double QuadTreeGauss::alpha_h(double r2,HaloStructure &par){
-	if(r2<=0) return 0.0;
-	if(par.Rmax*par.Rmax <= r2 ) return -1.0*par.mass/r2/pi;
-	return ( exp(-r2/par.rscale/par.rscale/2) - 1.0 )*par.mass/r2/pi;
-}
-double QuadTreeGauss::kappa_h(double r2,HaloStructure &par){
-	if(par.Rmax*par.Rmax <= r2) return 0.0;
-	return exp(-r2/par.rscale/par.rscale/2)*par.mass/2/pi/par.rscale/par.rscale;
-}
-double QuadTreeGauss::gamma_h(double r2,HaloStructure &par){
-	if(r2==0) return 0.0;
-	if(par.Rmax*par.Rmax <= r2) return -2.0*par.mass/pi/pow(r2,2);
-	return (-2.0 + (2.0 + r2/par.rscale/par.rscale)*exp(-r2/par.rscale/par.rscale/2) )*par.mass/pi/pow(r2,2);
-}
-double QuadTreeGauss::phi_h(double r2,HaloStructure &par){
-	ERROR_MESSAGE();  // not yet written
-	exit(1);
-	return 0;
-}
-
 /** power-law profiles
  *  All quantities should be divided by Sigma_crit to get the usual
  */
@@ -70,7 +47,7 @@ double QuadTreePowerLaw::kappa_h(double r2,HaloStructure &par){
 
 	if(r2 > par.Rmax*par.Rmax) return 0.0;
 	if(r2 < 1.0-20) r2=1.0e-20;
-	return (beta+2)*par.mass*pow(r2/par.Rmax/par.Rmax,beta/2)/(2*pi*pow(par.Rmax,2));
+	return (beta+2)*par.mass*pow(r2/par.Rmax/par.Rmax,beta/2)/(pi*pow(par.Rmax,2));
 }
 double QuadTreePowerLaw::gamma_h(double r2,HaloStructure &par){
 	double gt=0;
@@ -105,9 +82,9 @@ double QuadTreeNFW::alpha_h(double r2,HaloStructure &par){
 		double y;
 
 		y = par.Rmax/par.rscale;
-		b/= gfunction(y);
+		b = rhos(y);
 		y = r/par.rscale;
-		b*= gfunction(y);
+		b*= gfunction(y)/par.rscale;
 	}
 
 	return b;
@@ -121,13 +98,13 @@ double QuadTreeNFW::kappa_h(double r2,HaloStructure &par){
 
 	double y,b;
 
-	b=1.0;
+	b = par.mass/2/pi/par.rscale;
 	y = par.Rmax/par.rscale;
-	b/= gfunction(y);
+	b *= rhos(y);
 	y = r/par.rscale;
 	b*= ffunction(y);
 
-	return b*par.mass/(2*pi*pow(par.rscale,2));
+	return b;
 }
 
 /// Shear for and NFW halo. this might have a flaw in it
@@ -138,14 +115,15 @@ double QuadTreeNFW::gamma_h(double r2,HaloStructure &par){
 
 	double r = sqrt(r2);
 
-	gt = -2.0*par.mass/pi/pow(r2,2);
-	if(r < par.Rmax){
+	if(r > par.Rmax)
+		gt = -2.0*par.mass/pi/pow(r2,2);
+	else{
 		double y;
-
+		gt = par.mass/2/pi/par.rscale;
 		y = par.Rmax/par.rscale;
-		gt /= gfunction(y);
+		gt *= rhos(y);
 		y = r/par.rscale;
-		gt *= gfunction(y)*g2function(y)*pow(y,2);
+		gt *= g2function(y);
 	}
 
 	return gt;
@@ -176,17 +154,25 @@ double QuadTreeNFW::ffunction(double x){
 }
 
 double QuadTreeNFW::g2function(double x){
-	double ans,y;
+	double ans;
 
-	if(x==1) return 10/2. + 4*log(0.5);
-	y=x*x-1;
-	ans=4*log(x/2)/x/x -2/y;
-	if(x<1.0){ ans+= 4*(2/x/x+1/y)*atanh(sqrt((1-x)/(x+1)))/sqrt(-y); return ans;}
-	if(x>1.0){ ans+= 4*(2/x/x+1/y)*atan(sqrt((x-1)/(x+1)))/sqrt(y); return ans;}
+	if(x==1) return 10/3. + 4*log(0.5);
+
+	ans=4*log(x/2.0)/x/x - 2/(x*x-1);
+	if(x<1.0){ ans+= 4*(2/x/x+1/(x*x-1))*atanh(sqrt((1-x)/(x+1)))/sqrt(1-x*x); return ans;}
+	if(x>1.0){ ans+= 4*(2/x/x+1/(x*x-1))*atan(sqrt((x-1)/(x+1)))/sqrt(x*x-1); return ans;}
 
 	return 0.0;
 }
 
+double QuadTreeNFW::rhos(double x){
+	double ans;
+
+	ans = 1.0;
+	ans /= log(1+x) - x/(1+x);
+
+	return ans;
+}
 /* Profiles with a flat interior and a power-law drop after rscale
  *  All quantities should be divided by Sigma_crit to get the usual lens plane units.
  */

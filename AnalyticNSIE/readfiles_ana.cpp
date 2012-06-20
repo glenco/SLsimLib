@@ -359,12 +359,12 @@ void AnaLens::reNormSubstructure(double kappa_sub){
 	  return ;
 }
 
-void AnaLens::setInternalParams(CosmoHndl cosmo, double zsource){
+void AnaLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 	double Ds, Dls;
 
 	Dl = cosmo->angDist(0,zlens);
-	Ds = cosmo->angDist(0,zsource);
-	Dls = cosmo->angDist(zlens,zsource);
+	Ds = cosmo->angDist(0,source->zsource);
+	Dls = cosmo->angDist(zlens,source->zsource);
 
 	MpcToAsec = 60*60*180 / pi / Dl;
 		// in Mpc

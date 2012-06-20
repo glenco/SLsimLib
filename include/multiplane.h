@@ -9,6 +9,7 @@
 #define MULTIPLANE_H_
 
 #include <analytic_lens.h>
+#include <MOKAlens.h>
 #include <cosmo.h>
 #include <halo.h>
 #include <utilities.h>
@@ -60,21 +61,23 @@ public:
 	void RandomizeSigma(long *seed,bool tables);
 	double getZlens();
 	void setZlens(double zlens);
+	void setFOV(double fov){fieldofview = fov;};
 	void setRedshift(double zsource);
 	void printMultiLens();
 
-	void setInternalParams(CosmoHndl,double zsource);
+	void setInternalParams(CosmoHndl,SourceHndl);
 	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off, double zsource=-1);
 	/// a poiner to the analytical lens
+	LensHndl input_lens;
 	AnaLens *analens;
+	MOKALens *mokalens;
 	/// field of view in square degrees
 	double fieldofview;
-	/// if = 1 there is an analytical lens, if = 0 there is no analytic lens
-	int flag_analens;
-	/// the name of the MOKA input file
-	std::string MOKA_input_file;
+	/// if = 0 there is no input lens, if = 1 there is an analytic lens, if = 2 there is a MOKA lens
+	int flag_input_lens;
 
-protected:
+
+private:
 
 	long *seed;
 
@@ -117,27 +120,6 @@ protected:
 	double **halo_pos;
 
 	void quicksort(HaloStructure *halos,double **brr,double *arr,unsigned long N);
-};
-
-
-/// A class to represents a lens with multiple planes, for the MOKA project
-class MultiLensMOKA : public MultiLens{
-public:
-
-	MultiLensMOKA(std::string,long *);
-	~MultiLensMOKA();
-
-	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off, double zsource=-1);
-
-	/// values for the map
-	float* alpha1;
-	float* alpha2;
-	float* gamma1;
-	float* gamma2;
-	float* kappa1;
-	double* center;
-	double range;
-	long Npixels;
 };
 
 void swap(float *a,float *b);

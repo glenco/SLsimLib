@@ -406,29 +406,6 @@ ForceTreeNFW::ForceTreeNFW(
 ForceTreeNFW::~ForceTreeNFW(){
 }
 
-ForceTreeGauss::ForceTreeGauss(
-		PosType **xp              /// positions of the halos xp[0..Npoints-1][0..1 or 2]
-		,IndexType Npoints         /// number of halos
-		,HaloStructure *h_params   /// array with internal properties of halos
-		,bool Multisize            /// flag false if only one halo size and structure should be used, default is true
-		,double my_kappa_bk       /// Background convergence to be subtracted
-		,int bucket                /// maximum number of halos in a leaf of the tree
-		,int dimension             /// 2 or 3, dimension of tree, default 2
-		,bool median               /// If true will divide branches at the median position of the particles, if false an equal area cut is used, default false
-		,PosType theta             /// Opening angle used in tree force calculation
-		) :
-		ForceTree(xp,Npoints,NULL,NULL,false,Multisize,my_kappa_bk,bucket,dimension,median,theta)
-{
-
-	haloON = true;
-	halo_params = h_params;
-
-	CalcMoments();
-}
-
-ForceTreeGauss::~ForceTreeGauss(){
-}
-
 ForceTreePseudoNFW::ForceTreePseudoNFW(
 		int my_beta                 /// outer slope of profile is \f$ \Sigma \propto r^{-\beta} \f$
 		,PosType **xp              /// positions of the halos xp[0..Npoints-1][0..1 or 2]

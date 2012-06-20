@@ -8,6 +8,8 @@
 #include <Tree.h>
 #include <forceTree.h>
 #include <quadTree.h>
+#include <source.h>
+
 
 #ifndef analens_declare
 #define analens_declare
@@ -115,7 +117,7 @@ public:
 
   double getZlens();
   void setZlens(double zlens);
-  void setInternalParams(CosmoHndl,double);
+  void setInternalParams(CosmoHndl,SourceHndl);
   void readParamfile(std::string);
   void PrintAnaLens(bool show_substruct,bool show_stars);
   void rayshooterInternal(double *ray, double *alpha, double *gamma, double *kappa, bool kappa_off);
