@@ -22,7 +22,7 @@ using namespace std;
  *
  */
 
-void Model::RandomizeModel(double r_source_phys,long *seed,bool tables){
+void Model::RandomizeModel(double r_source_phys,long *seed,bool tables, double angle_factor){
 	double *zlTable,*zsTable;
 	int n,i,NzTable;
 	ifstream file;
@@ -71,7 +71,7 @@ void Model::RandomizeModel(double r_source_phys,long *seed,bool tables){
 	setInternal();
 
 	// This need to be done after source->DlDs has been set in setInternal()
-	source->source_r = r_source_phys*source->DlDs;
+	source->source_r = r_source_phys*source->DlDs/angle_factor;
 
 	lens->RandomizeHost(seed,tables);
 

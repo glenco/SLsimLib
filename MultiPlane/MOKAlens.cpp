@@ -21,9 +21,31 @@ MOKALens::MOKALens(std::string paramfile) : Lens(){
 
 	readParamfile(paramfile);
 
-	readImage(map,MOKA_input_file);
+	getDims(MOKA_input_file,&(map->nx),&(map->ny));
+
+	map->convergence.resize(map->nx*map->ny);
+	map->alpha1.resize(map->nx*map->ny);
+	map->alpha2.resize(map->nx*map->ny);
+	map->gamma1.resize(map->nx*map->ny);
+	map->gamma2.resize(map->nx*map->ny);
+	map->gamma3.resize(map->nx*map->ny);
+
+	readImage(MOKA_input_file
+			,&map->convergence
+			,&map->alpha1
+			,&map->alpha2
+			,&map->gamma1
+			,&map->gamma2
+			,&(map->boxl)
+			,&(map->boxlMpc)
+			,&(map->zlens)
+			,&(map->zsource)
+			,&(map->omegam)
+			,&(map->omegal)
+			,&(map->h));
 
 	map->center[0] = map->center[1] = 0.0;
+	map->boxlMpc /= map->h;
 
 	/// to radians
 	map->boxl *= pi/180/3600.;
@@ -44,7 +66,7 @@ void MOKALens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 
 	double Ds = cosmo->angDist(0,map->zsource);
 	double Dl = cosmo->angDist(0,map->zlens);
-	double Dls = cosmo->angDist(zlens,map->zsource);
+	double Dls = cosmo->angDist(map->zlens,map->zsource);
 	double fac = Ds/Dls/Dl;
 
 	/// converts to the code units
@@ -183,7 +205,22 @@ void MOKALens::saveImage(GridHndl grid,bool saveprofiles){
 		}
 	}while(MoveDownList(grid->i_tree->pointlist)==true);
 
-	writeImage(map,filename);
+	map->boxl *= 180/pi*3600;
+
+	writeImage(filename
+			,map->convergence
+			,map->gamma1
+			,map->gamma2
+			,map->gamma3
+			,map->nx
+			,map->ny
+			,map->boxl
+			,map->boxlMpc
+			,map->zlens
+			,map->zsource
+			,map->omegam
+			,map->omegal
+			,map->h);
 
 	if(saveprofiles == true)
 		saveProfile();

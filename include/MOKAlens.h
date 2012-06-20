@@ -13,6 +13,22 @@
 #ifndef MOKALENS_H_
 #define MOKALENS_H_
 
+/*
+ * the MOKA map structure, containing all quanitites that define it
+ */
+struct MOKAmap{
+	/// values for the map
+	std::valarray<float> convergence;
+	std::valarray<float> alpha1;
+	std::valarray<float> alpha2;
+	std::valarray<float> gamma1;
+	std::valarray<float> gamma2;
+	std::valarray<float> gamma3;
+
+	int nx,ny;
+	double boxl,boxlMpc,zlens,zsource,omegam,omegal,h;
+	double center[2];
+};
 
 /// A class to represents the MOKA lens map
 class MOKALens : public Lens{
