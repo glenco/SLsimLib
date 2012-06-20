@@ -52,6 +52,12 @@ MOKALens::MOKALens(std::string paramfile) : Lens(){
 }
 
 MOKALens::~MOKALens(){
+	map->convergence.resize(0);
+	map->alpha1.resize(0);
+	map->alpha2.resize(0);
+	map->gamma1.resize(0);
+	map->gamma2.resize(0);
+	map->gamma3.resize(0);
 	delete map;
 }
 
@@ -222,14 +228,16 @@ void MOKALens::saveImage(GridHndl grid,bool saveprofiles){
 			,map->omegal
 			,map->h);
 
-	if(saveprofiles == true)
-		saveProfile();
+	if(saveprofiles == true){
+		saveKappaProfile();
+		saveGammaProfile();
+	}
 }
 
 /*
  * computing and saving the radial profile of the convergence
  */
-void MOKALens::saveProfile(){
+void MOKALens::saveKappaProfile(){
 
 	/* measuring the differential and cumulative profile*/
 	double xmin = -map->boxlMpc*0.5;
@@ -246,7 +254,7 @@ void MOKALens::saveProfile(){
 	std:: cout << "   " << std:: endl;
 	std:: cout << " nbins = " << nbin << "  dr0 = " << dr0 << std:: endl;
 	std:: cout << " ______________________________________________________ " << std:: endl;
-	std:: cout << " computing profiles assuming spherical simmetry";
+	std:: cout << " computing profiles assuming spherical symmetry";
 	// - - - - - - - - - - - - - - - - -
 	double *kprofr = estprof(map->convergence,map->nx,map->ny,pxdist,dr0,xmax);
 	double *sigmakprof = estsigmaprof(map->convergence,map->nx,map->ny,pxdist,dr0,xmax,kprofr);
@@ -258,7 +266,47 @@ void MOKALens::saveProfile(){
 	std:: string filenameprof = fprof.str();
 	filoutprof.open(filenameprof.c_str());
 	filoutprof <<"# r      kappa     sig_k     ckappa     sig_ck" << std:: endl;
-	for(int l=0;l<nbin;l++){
+	int l;
+	for(l=0;l<nbin;l++){
+		filoutprof << dr0*l + dr0/2. << "  "
+				<< kprofr[l] << "  " << sigmakprof[l] << "  "
+				<< ckprofr[l] << "  " << sigmackprof[l] <<
+				std:: endl;
+	}
+	filoutprof.close();
+}
+
+void MOKALens::saveGammaProfile(){
+
+	/* measuring the differential and cumulative profile*/
+	double xmin = -map->boxlMpc*0.5;
+	double xmax =  map->boxlMpc*0.5;
+	double drpix = map->boxlMpc/map->nx;
+	std::valarray<float> pxdist(map->nx*map->ny);
+	for(int i=0; i<map->nx; i++ ) for(int j=0; j<map->ny; j++ ){
+		pxdist[i+map->ny*j]= sqrt(pow((xmin+(drpix*0.5)+i*drpix),2) +
+				pow((xmin+(drpix*0.5)+j*drpix),2));
+	}
+	double dr0 = 8.*(0.5*map->boxlMpc)/(map->nx/2.);
+	int nbin = int(0.5*map->boxlMpc/dr0);
+	//
+	std:: cout << "   " << std:: endl;
+	std:: cout << " nbins = " << nbin << "  dr0 = " << dr0 << std:: endl;
+	std:: cout << " ______________________________________________________ " << std:: endl;
+	std:: cout << " computing profiles assuming spherical symmetry";
+	// - - - - - - - - - - - - - - - - -
+	double *kprofr = estprof(map->gamma2,map->nx,map->ny,pxdist,dr0,xmax);
+	double *sigmakprof = estsigmaprof(map->gamma2,map->nx,map->ny,pxdist,dr0,xmax,kprofr);
+	double *ckprofr = estcprof(map->gamma2,map->nx,map->ny,pxdist,dr0,xmax);
+	double *sigmackprof = estsigmacprof(map->gamma2,map->nx,map->ny,pxdist,dr0,xmax,kprofr);
+	std::ostringstream fprof;
+	fprof << "MAP_radial_prof_" << MOKA_input_file << ".dat";
+	std:: ofstream filoutprof;
+	std:: string filenameprof = fprof.str();
+	filoutprof.open(filenameprof.c_str());
+	filoutprof <<"# r      kappa     sig_k     ckappa     sig_ck" << std:: endl;
+	int l;
+	for(l=0;l<nbin;l++){
 		filoutprof << dr0*l + dr0/2. << "  "
 				<< kprofr[l] << "  " << sigmakprof[l] << "  "
 				<< ckprofr[l] << "  " << sigmackprof[l] <<

@@ -40,8 +40,8 @@ HaloData::HaloData(
 
 	// calculate the mass density on the plane
     // and convert it to physical 1/physical_distance^2
-	kappa_background = ha.totalMassDensityinHalos(0,1,0)/cosmo->gethubble()*pow(1+(z1+z2)/2,3);
-	kappa_background *= cosmo->radDist(z1,z2)/mass_scale;
+	kappa_background = ha.totalMassDensityinHalos(0,1,0)*pow(cosmo->gethubble(),2)*pow(1+(z1+z2)/2,3);
+	kappa_background *= cosmo->getOmega_matter()*cosmo->angDist(z1,z2)/mass_scale;
 
     //int iterator;
     //std::vector<double> vmasses,vsizes,vscale,vz;
