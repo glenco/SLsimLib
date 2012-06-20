@@ -261,7 +261,7 @@ void MOKALens::saveKappaProfile(){
 	double *ckprofr = estcprof(map->convergence,map->nx,map->ny,pxdist,dr0,xmax);
 	double *sigmackprof = estsigmacprof(map->convergence,map->nx,map->ny,pxdist,dr0,xmax,kprofr);
 	std::ostringstream fprof;
-	fprof << "MAP_radial_prof_" << MOKA_input_file << ".dat";
+	fprof << "MAP_radial_prof_kappa_" << MOKA_input_file << ".dat";
 	std:: ofstream filoutprof;
 	std:: string filenameprof = fprof.str();
 	filoutprof.open(filenameprof.c_str());
@@ -300,7 +300,7 @@ void MOKALens::saveGammaProfile(){
 	double *ckprofr = estcprof(map->gamma2,map->nx,map->ny,pxdist,dr0,xmax);
 	double *sigmackprof = estsigmacprof(map->gamma2,map->nx,map->ny,pxdist,dr0,xmax,kprofr);
 	std::ostringstream fprof;
-	fprof << "MAP_radial_prof_" << MOKA_input_file << ".dat";
+	fprof << "MAP_radial_prof_gamma_" << MOKA_input_file << ".dat";
 	std:: ofstream filoutprof;
 	std:: string filenameprof = fprof.str();
 	filoutprof.open(filenameprof.c_str());
