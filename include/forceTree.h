@@ -82,7 +82,7 @@ protected:
 
 	void CalcMoments();
 	void rotate_coordinates(PosType **coord);
-	void spread_particles();
+	//void spread_particles();
 
 	// Internal profiles for a Gaussian particle
 	double alpha_o(double r2,float sigma);

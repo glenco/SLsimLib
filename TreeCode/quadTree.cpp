@@ -11,7 +11,6 @@
 #include <quadTree.h>
 #include <TreeNB.h>
 
-
 /** \brief Constructor meant for point particles, simulation particles
  */
 QuadTree::QuadTree(
@@ -115,23 +114,33 @@ inline short QuadTree::WhichQuad(double *x,QBranchNB &branch){
 void QuadTree::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
 
 	QBranchNB *cbranch = tree->current; /* pointer to current branch */
+	IndexType i,j,cut,cut2;
 
 	cbranch->center[0] = (cbranch->boundary_p1[0] + cbranch->boundary_p2[0])/2;
 	cbranch->center[1] = (cbranch->boundary_p1[1] + cbranch->boundary_p2[1])/2;
 	cbranch->quad[0]=cbranch->quad[1]=cbranch->quad[2]=0;
 	cbranch->mass = 0.0;
 
+
 	// leaf case
 	if(cbranch->nparticles <= Nbucket){
-		cbranch->Nbig_particles = nparticles;
-		cbranch->big_particles = particles;
+		PosType r;
+		cbranch->Nbig_particles = 0;
+		for(i=0;i<cbranch->nparticles;++i){
+			r = haloON ? halo_params[particles[i]].Rmax	: sizes[particles[i]];
+			if(r < (cbranch->boundary_p2[0]-cbranch->boundary_p1[0])) ++cbranch->Nbig_particles;
+		}
+		cbranch->big_particles = new IndexType[cbranch->Nbig_particles];
+		for(i=0,j=0;i<cbranch->nparticles;++i){
+			r = haloON ? halo_params[particles[i]].Rmax	: sizes[particles[i]];
+			if(r < (cbranch->boundary_p2[0]-cbranch->boundary_p1[0])) cbranch->big_particles[j++] = particles[i];
+		}
 		return;
 	}
 
 	// find particles too big to be in children
 
 	double *x = new double[cbranch->nparticles];
-	IndexType i,cut,cut2;
 
 	cbranch->Nbig_particles=0;
 
@@ -150,9 +159,18 @@ void QuadTree::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
 			quickPartition(2*maxsize,&cut2,&particles[cut],&x[cut],cbranch->nparticles-cut);
 
 			cbranch->Nbig_particles = cut2;
+			if(tree->atTop()) cut2 = cbranch->nparticles-cut;
 
 			cbranch->big_particles = new IndexType[cbranch->Nbig_particles];
 			for(i=cut;i<(cut+cut2);++i) cbranch->big_particles[i-cut] = particles[i];
+		}
+
+	}else{
+		x[0] =  haloON ? halo_params[0].Rmax : sizes[0];
+		if(x[0] > (cbranch->boundary_p2[0]-cbranch->boundary_p1[0])/2
+				&& x[0] < (cbranch->boundary_p2[0]-cbranch->boundary_p1[0])){
+			cbranch->Nbig_particles = cbranch->nparticles;
+			cbranch->big_particles = cbranch->particles;
 		}
 	}
 
@@ -312,14 +330,12 @@ void QuadTree::CalcMoments(){
 		for(i=0;i<cbranch->nparticles;++i){
 			xcm[0]=tree->xp[cbranch->particles[i]][0]-cbranch->center[0];
 			xcm[1]=tree->xp[cbranch->particles[i]][1]-cbranch->center[1];
-			xcut=pow(xcm[0],2) + pow(xcm[1],2);
+			xcut = pow(xcm[0],2) + pow(xcm[1],2);
 			tmp = haloON ? halo_params[cbranch->particles[i]*MultiRadius].mass : masses[cbranch->particles[i]*MultiMass];
 
 			cbranch->quad[0] += (xcut-2*xcm[0]*xcm[0])*tmp;
 			cbranch->quad[1] += (xcut-2*xcm[1]*xcm[1])*tmp;
 			cbranch->quad[2] += -2*xcm[0]*xcm[1]*tmp;
-
-			assert(inbox(tree->xp[cbranch->particles[i]],tree->current->boundary_p1,tree->current->boundary_p2));
 		}
 
 		// largest distance from center of mass of cell
@@ -331,8 +347,7 @@ void QuadTree::CalcMoments(){
 		if(force_theta > 0.0) cbranch->rcrit_angle = 1.15470*rcom/(force_theta);
 		else  cbranch->rcrit_angle=1.0e100;
 
-
-		if(MultiRadius){
+		/*if(MultiRadius){
 
 			for(i=0,cbranch->maxrsph=0.0;i<cbranch->nparticles;++i){
 				tmp = haloON ? halo_params[cbranch->particles[i]].Rmax : sizes[cbranch->particles[i]];
@@ -347,7 +362,7 @@ void QuadTree::CalcMoments(){
 			// single size case
 			cbranch->maxrsph = haloON ? halo_params[0].Rmax : sizes[0];
 			cbranch->rcrit_part = rcom + 2*cbranch->maxrsph;
-		}
+		}*/
 		//cbranch->rcrit_angle += cbranch->rcrit_part;
 
 	}while(tree->WalkStep(true));
@@ -386,7 +401,7 @@ void QuadTree::rotate_coordinates(double **coord){
 
 void QuadTree::force2D(double *ray,double *alpha,double *kappa,double *gamma,bool no_kappa){
 
-  PosType xcm,ycm,rcm2,rcm2cell,tmp,boxsize2;
+  PosType xcm,ycm,rcm2cell,rcm2,tmp,boxsize2;
   IndexType i;
   bool allowDescent=true;
   unsigned long count=0,index;
@@ -411,8 +426,10 @@ void QuadTree::force2D(double *ray,double *alpha,double *kappa,double *gamma,boo
 		  boxsize2 = pow(tree->current->boundary_p2[0]-tree->current->boundary_p1[0],2);
 
 		  if( rcm2cell < pow(tree->current->rcrit_angle,2) || rcm2cell < 5.83*boxsize2){
+
 			  // includes rcrit_particle constraint
 			  allowDescent=true;
+
 
 			  // Treat all particles in a leaf as a point particle
 			  if(tree->atLeaf()){
@@ -445,7 +462,7 @@ void QuadTree::force2D(double *ray,double *alpha,double *kappa,double *gamma,boo
 			  }
 
 			  // Fined the particles that are intersect with ray and add them individually.
-			  if(MultiRadius && rcm2cell < 5.83*boxsize2){
+			  if(rcm2cell < 5.83*boxsize2){
 				  for(i = 0 ; i < tree->current->Nbig_particles ; ++i){
 
 					  index = tree->current->big_particles[i];
@@ -488,13 +505,13 @@ void QuadTree::force2D(double *ray,double *alpha,double *kappa,double *gamma,boo
 		  }else{ // use whole cell
 			  allowDescent=false;
 
-			  tmp = -1.0*tree->current->mass/rcm2/pi;
+			  tmp = -1.0*tree->current->mass/rcm2cell/pi;
 
 			  alpha[0] += tmp*xcm;
 			  alpha[1] += tmp*ycm;
 
 			  if(!no_kappa){      //  taken out to speed up
-				  tmp=-2.0*tree->current->mass/pi/rcm2/rcm2;
+				  tmp=-2.0*tree->current->mass/pi/rcm2cell/rcm2cell;
 				  gamma[0] += 0.5*(xcm*xcm-ycm*ycm)*tmp;
 				  gamma[1] += xcm*ycm*tmp;
 			  }
@@ -502,12 +519,12 @@ void QuadTree::force2D(double *ray,double *alpha,double *kappa,double *gamma,boo
 			  // quadrapole contribution
 			  //   the kappa and gamma are not calculated to this order
 			  alpha[0] -= (tree->current->quad[0]*xcm + tree->current->quad[2]*ycm)
-    				  /pow(rcm2,2)/pi;
+    				  /pow(rcm2cell,2)/pi;
 			  alpha[1] -= (tree->current->quad[1]*ycm + tree->current->quad[2]*xcm)
-    				  /pow(rcm2,2)/pi;
+    				  /pow(rcm2cell,2)/pi;
 
 			  tmp = 4*(tree->current->quad[0]*xcm*xcm + tree->current->quad[1]*ycm*ycm
-				  + 2*tree->current->quad[2]*xcm*ycm)/pow(rcm2,3)/pi;
+				  + 2*tree->current->quad[2]*xcm*ycm)/pow(rcm2cell,3)/pi;
 
 			  alpha[0] += tmp*xcm;
 			  alpha[1] += tmp*ycm;
