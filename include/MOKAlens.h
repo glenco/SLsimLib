@@ -46,7 +46,8 @@ public:
 	double getZlens();
 	void setInternalParams(CosmoHndl,SourceHndl);
 	void saveImage(GridHndl grid, bool saveprofile=true);
-	void saveProfile();
+	void saveKappaProfile();
+	void saveGammaProfile();
 
 	MOKAmap *map;
 
