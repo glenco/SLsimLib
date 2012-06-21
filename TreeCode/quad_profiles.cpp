@@ -226,7 +226,7 @@ double QuadTreePseudoNFW::dmhat(double y){
 		return pow(y/(1+y),2);
 		break;
 	default:
-		return y*y*(beta-1)/(beta-2)/pow(1+y,beta) + y/(beta-2)/pow(1+y,beta);
+		return - y/(beta-2)/pow(1+y,beta-1) + y*y*(beta-1)/(beta-2)/pow(1+y,beta) + y/(beta-2)/pow(1+y,beta);
 		break;
 	}
 }
