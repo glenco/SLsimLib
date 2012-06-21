@@ -6,6 +6,7 @@
  */
 
 #include <MOKAlens.h>
+#include <MOKAfits.h>
 #include <string>
 #include <sstream>
 #include <fstream>

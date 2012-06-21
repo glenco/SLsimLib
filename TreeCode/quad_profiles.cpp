@@ -203,7 +203,7 @@ double QuadTreePseudoNFW::gamma_h(double r2,HaloStructure &par){
 	if(r2 < par.Rmax*par.Rmax){
 		double y = sqrt(r2)/par.rscale;
 		//gt *= (1+2*y)*r2/pow(par.rscale,2)/mhat(par.Rmax/par.rscale)/pow(1+y,beta);
-		gt *= -(pow(y/(1+y),2) - 2*mhat(y))/mhat(par.Rmax/par.rscale)/2;
+		gt *= -(dmhat(y) - 2*mhat(y))/mhat(par.Rmax/par.rscale)/2;
 	}
 
 	return gt;
@@ -215,6 +215,20 @@ double QuadTreePseudoNFW::phi_h(double r2,HaloStructure &par){
 	cout << "time delay has not been fixed for NFW profile yet." << endl;
 	exit(1);
 	return 0.0;
+}
+
+double QuadTreePseudoNFW::dmhat(double y){
+	switch(beta){
+	case 1:
+		return y - y/(1+y);
+		break;
+	case 2:
+		return pow(y/(1+y),2);
+		break;
+	default:
+		return y*y*(beta-1)/(beta-2)/pow(1+y,beta) + y/(beta-2)/pow(1+y,beta);
+		break;
+	}
 }
 
 double QuadTreePseudoNFW::mhat(double y){

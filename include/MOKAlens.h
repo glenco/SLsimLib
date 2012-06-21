@@ -6,7 +6,6 @@
  */
 
 #include <slsimlib.h>
-#include <MOKAfits.h>
 #include "profile.h"
 
 
