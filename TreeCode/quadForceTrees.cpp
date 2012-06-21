@@ -62,7 +62,11 @@ QuadTreePseudoNFW::QuadTreePseudoNFW(
 {
 
 	if(beta == 0){
-		cout << "The slope can not be zero!" << endl;
+		cout << "QuadTreePseudoNFW: The slope can not be zero!" << endl;
+		exit(1);
+	}
+	if(beta != 2){
+		cout << "QuadTreePseudoNFW: The slope must be 2 for now!" << endl;
 		exit(1);
 	}
 
