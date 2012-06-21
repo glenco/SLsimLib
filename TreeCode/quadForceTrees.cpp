@@ -65,11 +65,6 @@ QuadTreePseudoNFW::QuadTreePseudoNFW(
 		cout << "QuadTreePseudoNFW: The slope can not be zero!" << endl;
 		exit(1);
 	}
-	if(beta != 2){
-		cout << "QuadTreePseudoNFW: The slope must be 2 for now!" << endl;
-		exit(1);
-	}
-
 
 	// Check for values that would make the rayshooter return nan.
 	for(unsigned long i=0;i<Npoints;++i){

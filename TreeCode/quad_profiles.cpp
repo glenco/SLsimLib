@@ -203,7 +203,7 @@ double QuadTreePseudoNFW::gamma_h(double r2,HaloStructure &par){
 	if(r2 < par.Rmax*par.Rmax){
 		double y = sqrt(r2)/par.rscale;
 		//gt *= (1+2*y)*r2/pow(par.rscale,2)/mhat(par.Rmax/par.rscale)/pow(1+y,beta);
-		gt *= -(pow(y/(1+y),2) - 2*mhat(y))/mhat(par.Rmax/par.rscale)/2;
+		gt *= -(y*y/pow(1+y,beta) - 2*mhat(y))/mhat(par.Rmax/par.rscale)/2;
 	}
 
 	return gt;
@@ -226,7 +226,8 @@ double QuadTreePseudoNFW::mhat(double y){
 		return log(1+y) - y/(1+y);
 		break;
 	default:
-		return - y/(beta-2)/pow(1+y,beta-1) - 1/(beta-2)/(beta-1)/pow(1+y,beta-1);
+		return ( (1 - beta)*y + pow(1+y,beta-1) - 1)/(beta-2)/(beta-1)/pow(1+y,beta-1);
+		//return - y/(beta-2)/pow(1+y,beta-1) - 1/(beta-2)/(beta-1)/pow(1+y,beta-1);
 		break;
 	}
 }
