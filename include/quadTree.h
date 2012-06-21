@@ -321,7 +321,6 @@ private:
 	double phi_h(double r2,HaloStructure &par);
 
 	double mhat(double y);
-	double dmhat(double y);
 };
 
 #endif /* QUAD_TREE_H_ */
