@@ -25,7 +25,7 @@ struct MOKAmap{
 	std::valarray<float> gamma3;
 
 	int nx,ny;
-	double boxl,boxlMpc,zlens,zsource,omegam,omegal,h;
+	double boxl,boxlMpc,zlens,zsource,omegam,omegal,h,DL;
 	double center[2];
 };
 

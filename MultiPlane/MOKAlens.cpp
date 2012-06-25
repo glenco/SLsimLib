@@ -43,7 +43,8 @@ MOKALens::MOKALens(std::string paramfile) : Lens(){
 			,&(map->zsource)
 			,&(map->omegam)
 			,&(map->omegal)
-			,&(map->h));
+			,&(map->h)
+			,&(map->DL));
 
 	map->center[0] = map->center[1] = 0.0;
 	map->boxlMpc /= map->h;
@@ -227,7 +228,8 @@ void MOKALens::saveImage(GridHndl grid,bool saveprofiles){
 			,map->zsource
 			,map->omegam
 			,map->omegal
-			,map->h);
+			,map->h
+			,map->DL);
 
 	if(saveprofiles == true){
 		saveKappaProfile();
