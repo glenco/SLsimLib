@@ -704,16 +704,13 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 }
 
 
-/**
- * Called from the Model class.
- *
- * Sets the internal parameters of the multiple lens model
+
+/** * Sets the internal parameters of the multiple lens model
  * first the redshifts of the planes are calculated
  * then the coordinate distances to the different planes
  * the planes are populated by halos and the halo trees are built
  * and finally the internal params of the input plane are set, in case there is one
  */
-
 void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 
 	int j;
