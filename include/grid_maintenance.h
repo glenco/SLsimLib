@@ -5,11 +5,14 @@
  *      Author: bmetcalf
  */
 
-
 #ifndef _grid_maintenance_declare_
 #define _grid_maintenance_declare_
 
-#include <model.h>
+#include <lens.h>
+#include <source.h>
+#include <Kist.h>
+#include <Tree.h>
+#include <image_info.h>
 
 /** \ingroup ImageFinding
  * \brief Structure to contain both source and image trees.
@@ -50,7 +53,23 @@ private:
 
 typedef struct Grid *GridHndl;
 
-//GridHndl NewGrid(LensHndl lens,int Ngrid,double center[2],double range);
-//void FreeGrid(GridHndl grid);
+// in image_finder_kist.c
 
+void find_images_kist(LensHndl lens,double *y_source,double r_source,GridHndl grid
+		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
+		,double initial_size,bool splitimages,short edge_refinement
+		,bool verbose,bool kappa_off);
+
+short image_finder_kist(LensHndl lens, double *y_source,double r_source,GridHndl grid
+		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
+		,short splitparities,short true_images);
+
+int refine_grid_kist(LensHndl lens,GridHndl grid,ImageInfo *imageinfo
+		,unsigned long Nimages,double res_target,short criterion,bool kappa_off,KistHndl newpointkist = NULL);
+
+ImageInfo *find_crit(LensHndl lens,GridHndl grid,int *Ncrits,double resolution,bool *orderingsuccess
+		,bool ordercurve,bool verbose);
+
+void find_crit_kist(LensHndl lens,GridHndl grid,ImageInfo *critcurve,int maxNcrits,int *Ncrits
+		,double resolution,bool *orderingsuccess,bool ordercurve,bool verbose);
 #endif

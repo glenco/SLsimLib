@@ -9,6 +9,10 @@
  *      The Branch type needs to be defined here so that point.leaf can be defined.
  */
 
+
+#ifndef pointtypes_declare
+#define pointtypes_declare
+
 #ifndef pi
 #define pi  3.141593
 #endif
@@ -22,9 +26,6 @@
 #define bool_declare
 typedef enum {FALSE, TRUE, MAYBE} Boo;
 #endif
-
-#ifndef pointtypes_declare
-#define pointtypes_declare
 
 struct branchstruct;
 

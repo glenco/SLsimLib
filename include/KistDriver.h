@@ -5,6 +5,14 @@
  *      Author: bmetcalf
  */
 
+#ifndef KIST_DRIVER_H_
+#define KIST_DRIVER_H_
+
+#include <Tree.h>
+#include <point.h>
+#include <Kist.h>
+#include <image_info.h>
+
 void FindAllBoxNeighborsKist(TreeHndl tree,Point *point,KistHndl neighbors);
 void _FindAllBoxNeighborsKist(TreeHndl tree,Branch *leaf,KistHndl neighbors);
 void _FindAllBoxNeighborsKist_iter(TreeHndl tree,Branch *leaf,KistHndl neighbors);
@@ -18,3 +26,5 @@ void DirtyFoF(ImageInfo *imageinfo ,int *Nimages ,double linkinglength ,int MaxN
 void _DirtyFoF(KistHndl neighbors,KistHndl wholekist,double linkinglength);
 void DirtyDivider(ImageInfo *imageinfo,int *Nimages ,int MaxNimages ,int Ngroup);
 void _DirtyDivider(KistHndl neighbors,KistHndl wholekist,int Ngroup);
+
+#endif

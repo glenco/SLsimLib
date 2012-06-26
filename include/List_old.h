@@ -5,10 +5,10 @@
  *      Author: bmetcalf
  */
 
-#include <point.h>
-
 #ifndef pointlist_declare
 #define pointlist_declare
+
+#include <point.h>
 
 /** \brief link list for points, uses the linking pointers within the Point type unlike  Kist */
 typedef struct PointList{

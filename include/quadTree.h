@@ -5,11 +5,10 @@
  *      Author: bmetcalf
  */
 
-#include <list.h>
-#include "forceTree.h"
-
 #ifndef QUAD_TREE_H_
 #define QUAD_TREE_H_
+
+#include <simpleTree.h>
 
 #ifndef PosType_declare
 #define PosType_declare

@@ -38,6 +38,7 @@ TreeCode/quadTree.cpp \
 TreeCode/quad_profiles.cpp \
 TreeCode/readfiles.cpp \
 TreeCode/simpleTree.cpp \
+TreeCode_link/List/List.cpp \
 TreeCode_link/KistDriver.cpp \
 TreeCode_link/Tree.cpp \
 TreeCode_link/TreeDriver.cpp \

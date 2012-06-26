@@ -5,10 +5,15 @@
  *      Author: bmetcalf
  */
 
-#include <list.h>
-
 #ifndef SIMP_TREE_H_
 #define SIMP_TREE_H_
+
+#include <assert.h>
+#include <list.h>
+
+#ifndef pi
+#define pi  3.141593
+#endif
 
 #ifndef PosType_declare
 #define PosType_declare
@@ -24,6 +29,12 @@ typedef unsigned long IndexType;
 #define error_message
 #define ERROR_MESSAGE() std::printf("ERROR: file: %s line: %i\n",__FILE__,__LINE__)
 #endif
+
+/// structure to hold information about the halos' positions, masses, etc.
+struct HaloStructure{
+	/// internal halo parameters
+    float mass,Rmax,rscale;
+};
 
 //short const treeNBdim = 2;
 

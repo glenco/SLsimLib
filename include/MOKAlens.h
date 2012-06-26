@@ -5,12 +5,14 @@
  *      Author: mpetkova
  */
 
-#include <slsimlib.h>
-#include "profile.h"
-
-
 #ifndef MOKALENS_H_
 #define MOKALENS_H_
+
+#include <cosmo.h>
+#include <source.h>
+#include <grid_maintenance.h>
+#include <profile.h>
+#include <valarray>
 
 /*
  * the MOKA map structure, containing all quanitites that define it

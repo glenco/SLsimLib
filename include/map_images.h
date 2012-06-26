@@ -4,7 +4,17 @@
  *  Created on: Oct 6, 2010
  *      Author: bmetcalf
  */
-#include <model.h>
+
+#ifndef MAP_IMAGES_H_
+#define MAP_IMAGES_H_
+
+#include <lens.h>
+#include <source.h>
+#include <grid_maintenance.h>
+#include <image_info.h>
+#include <Tree.h>
+#include <point.h>
+#include <Kist.h>
 
 void map_images(LensHndl lens,SourceBLR *source,GridHndl grid,int *Nimages,ImageInfo *imageinfo
 		,int Nimagesmax,double xmax,double xmin,double initial_size
@@ -21,3 +31,4 @@ bool RefinePoint2(Point *point,TreeHndl i_tree,double image_area,double total_ar
 void UniformMagCheck(ImageInfo *imageinfo);
 Point * RefineLeaf(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,Point *point,int Ngrids,bool kappa_off);
 
+#endif

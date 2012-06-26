@@ -9,6 +9,7 @@
 #define _tree_maintenance_declare_
 
 #include <Tree.h>
+#include <point.h>
 
 TreeHndl BuildTree(Point *xp,unsigned long Npoints,short my_median_cut = 1);
 void _BuildTree(TreeHndl tree);

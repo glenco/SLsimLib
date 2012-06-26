@@ -5,10 +5,12 @@
  *      Author: bmetcalf
  */
 
-#include <Tree.h>
-
 #ifndef beamtypes_declare
 #define beamtypes_declare
+
+#include <lens.h>
+#include <grid_maintenance.h>
+#include <image_info.h>
 
 /** \brief A simplified data structure for use in interface with other codes. */
 typedef struct Beam{

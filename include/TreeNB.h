@@ -5,6 +5,9 @@
  * Comments:                           
  */
 
+#ifndef treeNBtypes_declare
+#define treeNBtypes_declare
+
 #include <Tree.h>
 #include <cosmo.h>
 
@@ -30,8 +33,6 @@ typedef unsigned long IndexType;
 
 /***** Exported Types *****/
 
-#ifndef treeNBtypes_declare
-#define treeNBtypes_declare
 /** \brief
  * Branch of treeNB for tree in force calculation.
  *

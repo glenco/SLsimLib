@@ -5,73 +5,71 @@
  *      Author: R.B. Metcalf
  */
 
-#include <point.h>  // only reason is to define Point
-
 #ifndef kisttypes_declare
 #define kisttypes_declare
 
-	typedef struct Point Data;  // change this to make a kist of other objects
+typedef struct Point Data;  // change this to make a kist of other objects
 
-	/** \brief Used as internal container in Kist */
-	typedef struct Unit{
-		Data * data;
-		struct Unit *next;
-		struct Unit *prev;
-	} Unit;
+/** \brief Used as internal container in Kist */
+typedef struct Unit{
+	Data * data;
+	struct Unit *next;
+	struct Unit *prev;
+} Unit;
 
-	/** \ingroup ImageFindingL2
-	 * \brief A Kist is a linked list of Units which each point to a Data type.
-	 *
-	 * In this implementation the Data type is set to Point type, but this could
-	 * be changed for other applications.  Multiple Kists of the same points can be
-	 * made without copying data.
-	 */
-	typedef struct Kist{
-	public:
+/** \ingroup ImageFindingL2
+ * \brief A Kist is a linked list of Units which each point to a Data type.
+ *
+ * In this implementation the Data type is set to Point type, but this could
+ * be changed for other applications.  Multiple Kists of the same points can be
+ * made without copying data.
+ */
+typedef struct Kist{
+public:
 
-		Kist();
-		Kist(Kist &a);
-		~Kist();
+	Kist();
+	Kist(Kist &a);
+	~Kist();
 
-		Data *getCurrent();
+	Data *getCurrent();
 
-		void InsertAfterCurrent(Data * data);
-		void InsertBeforeCurrent(Data * data);
-		Data *TakeOutCurrent();
-		void Empty();
-		void FreeAll();
-		void Fill(Data * data,unsigned long N);
-		void SwapCurrentWithBottom();
-		void MoveCurrentToBottom();
+	void InsertAfterCurrent(Data * data);
+	void InsertBeforeCurrent(Data * data);
+	Data *TakeOutCurrent();
+	void Empty();
+	void FreeAll();
+	void Fill(Data * data,unsigned long N);
+	void SwapCurrentWithBottom();
+	void MoveCurrentToBottom();
 
-		// movement
-		bool JumpDown(int jump);
-		bool Down();
-		bool Up();
-		void MoveToTop();
-		void MoveToBottom();
+	// movement
+	bool JumpDown(int jump);
+	bool Down();
+	bool Up();
+	void MoveToTop();
+	void MoveToBottom();
 
-		// status
-		/// Number of elements in list.
-		unsigned long Nunits(){return Number;}
-		bool AtTop();
-		bool AtBottom();
-		void Print();
+	// status
+	/// Number of elements in list.
+	unsigned long Nunits(){return Number;}
+	bool AtTop();
+	bool AtBottom();
+	void Print();
 
-		void TranformPlanes();
-		bool AreDataUnique();
+	void TranformPlanes();
+	bool AreDataUnique();
 
-	private:
+private:
 
-		unsigned long Number;
+	unsigned long Number;
 
-		Unit *top;
-		Unit *bottom;
-		Unit *current;
+	Unit *top;
+	Unit *bottom;
+	Unit *current;
 
-	} Kist;
+} Kist;
 
-	typedef struct Kist *KistHndl;
+typedef struct Kist *KistHndl;
 
 #endif
 

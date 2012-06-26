@@ -13,17 +13,11 @@
 #include <cosmo.h>
 #include <halo.h>
 #include <utilities.h>
-#include <valarray>
 #include <quadTree.h>
+#include <forceTree.h>
 
 const int Nmassbin=32;
 const double MaxLogm=16.;
-
-/// structure to hold information about the halos' positions, masses, etc.
-struct HaloStructure{
-	/// internal halo parameters
-    float mass,Rmax,rscale;
-};
 
 /// Class that holds all the information about the halos' positions and their internal parameters on one plane.
 class HaloData{

@@ -4,11 +4,8 @@
  *  Created on: Oct 18, 2011
  *      Author: bmetcalf
  */
-#include <assert.h>
 #include <math.h>
-#include "forceTree.h"
-
-//const float pi = 3.141593;
+#include <forceTree.h>
 
 ForceTree::ForceTree(
 		PosType **xp

@@ -5,7 +5,6 @@
  *      Author: bmetcalf
  */
 
-
 #ifndef pointlist_declare
 #define pointlist_declare
 
