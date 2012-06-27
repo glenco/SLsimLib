@@ -1,9 +1,4 @@
-INCL = -I./include/ \
-	-I$(NR_DIR)/include \
-	-I$(COSMOLIB_DIR)/include \
-	-I$(MOKAFITS_DIR)/include \
-	-I$(CFITS)/include \
-	-I$(CCFITS)/include
+INCL = -I./include/ $(NRINCL) $(COSMOLIBINCL) $(CFITSINCL) $(CCFITSINCL)
 
 OUT = libSLsimLib.a
 
@@ -27,6 +22,7 @@ Galaxies/overzier_galaxy.cpp \
 ImageProcessing/pixelize.cpp \
 Kist/Kist.cpp \
 MultiPlane/MOKAlens.cpp \
+MultiPlane/MOKAfits.cpp \
 MultiPlane/model.cpp \
 MultiPlane/multiplane.cpp \
 MultiPlane/profile.cpp \
@@ -70,7 +66,7 @@ CC = g++
 RM = rm -fr
 #
 
-CFLAGS = $(INCL) $(DEBUG) $(OPT)  -Wno-deprecated
+CFLAGS = $(INCL) $(DEBUG) $(OPT)  -Wno-deprecated -imacros config.h
 #
 CLEAR = clear
 

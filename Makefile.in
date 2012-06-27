@@ -65,11 +65,11 @@ AWK = @AWK@
 # compiler  
 CC = g++
 CCDEPMODE = @CCDEPMODE@
-CCFITS = @CCFITS@
-CFITS = @CFITS@
+CCFITSINCL = @CCFITSINCL@
+CFITSINCL = @CFITSINCL@
 #
-CFLAGS = $(INCL) $(DEBUG) $(OPT)  -Wno-deprecated
-COSMOLIB_DIR = @COSMOLIB_DIR@
+CFLAGS = $(INCL) $(DEBUG) $(OPT)  -Wno-deprecated -imacros config.h
+COSMOLIBINCL = @COSMOLIBINCL@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
@@ -95,8 +95,7 @@ LIBS = @LIBS@
 LTLIBOBJS = @LTLIBOBJS@
 MAKEINFO = @MAKEINFO@
 MKDIR_P = @MKDIR_P@
-MOKAFITS_DIR = @MOKAFITS_DIR@
-NR_DIR = @NR_DIR@
+NRINCL = @NRINCL@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
@@ -151,13 +150,7 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-INCL = -I./include/ \
-	-I$(NR_DIR)/include \
-	-I$(COSMOLIB_DIR)/include \
-	-I$(MOKAFITS_DIR)/include \
-	-I$(CFITS)/include \
-	-I$(CCFITS)/include
-
+INCL = -I./include/ $(NRINCL) $(COSMOLIBINCL) $(CFITSINCL) $(CCFITSINCL)
 OUT = libSLsimLib.a
 SRC = AnalyticNSIE/expanded_powerlaw.cpp \
 AnalyticNSIE/lens.cpp \
@@ -179,6 +172,7 @@ Galaxies/overzier_galaxy.cpp \
 ImageProcessing/pixelize.cpp \
 Kist/Kist.cpp \
 MultiPlane/MOKAlens.cpp \
+MultiPlane/MOKAfits.cpp \
 MultiPlane/model.cpp \
 MultiPlane/multiplane.cpp \
 MultiPlane/profile.cpp \

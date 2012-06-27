@@ -65,11 +65,11 @@ AWK = awk
 # compiler  
 CC = g++
 CCDEPMODE = depmode=none
-CCFITS = /usr/local/CCfitsion
-CFITS = /ars/local/cfitsio
+CCFITSINCL = -I/usr/local/CCfitsio/include
+CFITSINCL = -I/usr/local/cfitsio/include
 #
-CFLAGS = $(INCL) $(DEBUG) $(OPT)  -Wno-deprecated
-COSMOLIB_DIR = /Users/mpetkova/Code/CosmoLib
+CFLAGS = $(INCL) $(DEBUG) $(OPT)  -Wno-deprecated -imacros config.h
+COSMOLIBINCL = -I/Users/mpetkova/Code/CosmoLib/include
 CPP = gcc -E
 CPPFLAGS = 
 CXX = g++
@@ -95,8 +95,7 @@ LIBS =
 LTLIBOBJS = 
 MAKEINFO = ${SHELL} /Users/mpetkova/Code/SLsimLib/missing --run makeinfo
 MKDIR_P = ./install-sh -c -d
-MOKAFITS_DIR = /Users/mpetkova/Code/MOKAfits
-NR_DIR = /Users/mpetkova/Code/NR
+NRINCL = -I/Users/mpetkova/Code/NR/include
 OBJEXT = o
 PACKAGE = slsimlib
 PACKAGE_BUGREPORT = margie.petkova@gmail.com
@@ -151,13 +150,7 @@ sysconfdir = ${prefix}/etc
 target_alias = 
 top_builddir = .
 top_srcdir = .
-INCL = -I./include/ \
-	-I$(NR_DIR)/include \
-	-I$(COSMOLIB_DIR)/include \
-	-I$(MOKAFITS_DIR)/include \
-	-I$(CFITS)/include \
-	-I$(CCFITS)/include
-
+INCL = -I./include/ $(NRINCL) $(COSMOLIBINCL) $(CFITSINCL) $(CCFITSINCL)
 OUT = libSLsimLib.a
 SRC = AnalyticNSIE/expanded_powerlaw.cpp \
 AnalyticNSIE/lens.cpp \
@@ -179,6 +172,7 @@ Galaxies/overzier_galaxy.cpp \
 ImageProcessing/pixelize.cpp \
 Kist/Kist.cpp \
 MultiPlane/MOKAlens.cpp \
+MultiPlane/MOKAfits.cpp \
 MultiPlane/model.cpp \
 MultiPlane/multiplane.cpp \
 MultiPlane/profile.cpp \

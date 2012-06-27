@@ -57,7 +57,9 @@
 #include <forceTree.h>
 #include <simpleTree.h>
 #include <multiplane.h>
+#ifdef WITH_MOKA
 #include <MOKAlens.h>
+#endif
 #include <quadTree.h>
 
 #include <peak_refinement.h>

@@ -5,6 +5,8 @@
  *      Author: mpetkova
  */
 
+#ifdef WITH_MOKA
+
 #include <MOKAlens.h>
 #include <MOKAfits.h>
 #include <string>
@@ -345,3 +347,4 @@ void MOKALens::rayshooterInternal(double *xx, double *alpha, double *gamma, doub
 
 	return;
 }
+#endif

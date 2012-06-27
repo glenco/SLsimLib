@@ -667,7 +667,7 @@ double regularize(int Nmax,int Nmin,int N,int Nsources,int degen
 
       for(i=1;i<=N+2*Nsources;++i){
     	  //std::printf("i=%i j=%i w=%e v=%e\n",i,j,weights[j],v[i][j]);
-    	  if( !std::isnan(weights[j]) ) mod[i] += weights[j]*v[i][j];
+    	  if( !isnan(weights[j]) ) mod[i] += weights[j]*v[i][j];
       }
       if(sum < 0) std::printf("max found\n");
       /*std::printf("weights[%i]=%e\n",j,weights[j]);*/

@@ -698,11 +698,10 @@ am__fastdepCC_FALSE
 CPP
 GREP
 EGREP
-NR_DIR
-MOKAFITS_DIR
-COSMOLIB_DIR
-CFITS
-CCFITS
+NRINCL
+COSMOLIBINCL
+CFITSINCL
+CCFITSINCL
 LIBOBJS
 LTLIBOBJS'
 ac_subst_files=''
@@ -1295,16 +1294,15 @@ Optional Features:
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   --disable-dependency-tracking  speeds up one-time build
   --enable-dependency-tracking   do not reject slow dependency extractors
+  --enable-moka
+          Enable MOKA fits file handling
+
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-nr
               location of nr
-
-  --with-mokafits
-
-                          location of MOKAfits
 
   --with-cosmolib
 
@@ -5017,23 +5015,12 @@ fi
 
 # Check whether --with-nr was given.
 if test "${with_nr+set}" = set; then
-  withval=$with_nr; NR_DIR="$withval"
+  withval=$with_nr; NRINCL="-I$withval/include"
 
 else
-  NR_DIR=""
-fi
-
-
-
-
-# Get the MOKAfits include path
-
-# Check whether --with-mokafits was given.
-if test "${with_mokafits+set}" = set; then
-  withval=$with_mokafits; MOKAFITS_DIR="$withval"
-
-else
-  MOKAFITS_DIR=""
+  { { echo "$as_me:$LINENO: error: Need to specify the NR path" >&5
+echo "$as_me: error: Need to specify the NR path" >&2;}
+   { (exit 1); exit 1; }; }
 fi
 
 
@@ -5043,36 +5030,77 @@ fi
 
 # Check whether --with-cosmolib was given.
 if test "${with_cosmolib+set}" = set; then
-  withval=$with_cosmolib; COSMOLIB_DIR="$withval"
+  withval=$with_cosmolib; COSMOLIBINCL="-I$withval/include"
 
 else
-  COSMOLIB_DIR=""
+  { { echo "$as_me:$LINENO: error: Need to specify the CosmoLib path" >&5
+echo "$as_me: error: Need to specify the CosmoLib path" >&2;}
+   { (exit 1); exit 1; }; }
 fi
 
 
+
+#Check is MOKA fits files handling is enabled
+# Check whether --enable-moka was given.
+if test "${enable_moka+set}" = set; then
+  enableval=$enable_moka; okM=yes
+
+else
+  okM=no
+fi
+
+if test "$okM" = "yes"; then
+
+cat >>confdefs.h <<\_ACEOF
+#define WITH_MOKA 1
+_ACEOF
+
+fi
 
 # Get the CFITS include path
 
 # Check whether --with-cfits was given.
 if test "${with_cfits+set}" = set; then
-  withval=$with_cfits; CFITS="$withval"
+  withval=$with_cfits; ok=yes
 
 else
-  CFITS="/usr/local/cfitsio"
+  ok=no
 fi
 
+if test "$ok" = "no"; then
+   if test "$okM" = "no"; then
+      CFITSINCL=""
+   else
+      { { echo "$as_me:$LINENO: error: Need to specify the cfits path" >&5
+echo "$as_me: error: Need to specify the cfits path" >&2;}
+   { (exit 1); exit 1; }; }
+   fi
+else
+   CFITSINCL="-I$withval/include"
+fi
 
 
 # Get the CCFITS include path
 
 # Check whether --with-CCfits was given.
 if test "${with_CCfits+set}" = set; then
-  withval=$with_CCfits; CCFITS="$withval"
+  withval=$with_CCfits; ok=yes
 
 else
-  CCFITS="/usr/local/CCfits"
+  ok=no
 fi
 
+if test "$ok" = "no"; then
+   if test "$okM" = "yes"; then
+      { { echo "$as_me:$LINENO: error: Need to specify the CCfits path" >&5
+echo "$as_me: error: Need to specify the CCfits path" >&2;}
+   { (exit 1); exit 1; }; }
+   else
+      CCFITSINCL=""
+   fi
+else
+   CCFITSINCL="-I$withval/include"
+fi
 
 
 
@@ -6379,16 +6407,15 @@ am__fastdepCC_FALSE!$am__fastdepCC_FALSE$ac_delim
 CPP!$CPP$ac_delim
 GREP!$GREP$ac_delim
 EGREP!$EGREP$ac_delim
-NR_DIR!$NR_DIR$ac_delim
-MOKAFITS_DIR!$MOKAFITS_DIR$ac_delim
-COSMOLIB_DIR!$COSMOLIB_DIR$ac_delim
-CFITS!$CFITS$ac_delim
-CCFITS!$CCFITS$ac_delim
+NRINCL!$NRINCL$ac_delim
+COSMOLIBINCL!$COSMOLIBINCL$ac_delim
+CFITSINCL!$CFITSINCL$ac_delim
+CCFITSINCL!$CCFITSINCL$ac_delim
 LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 91; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 90; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5
