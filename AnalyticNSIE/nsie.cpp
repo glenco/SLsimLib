@@ -61,7 +61,7 @@ void alphaNSIE(double *alpha,double *xt,double f,double bc,double theta){
 
   rotation(alpha,angle,-theta);
 
-  if(std::isnan(alpha[0]) || std::isnan(alpha[1]) ){
+  if(alpha[0] != alpha[0] || alpha[1] != alpha[1] ){
 	  printf("alpha is %e %e in nsie.c \n fp=%e b2=%e r=%e bc=%e f=%e theta=%e\n x = %e %e xt= %e %e\n"
 			  ,alpha[0],alpha[1],fp,b2,r,bc,f,theta,x[0],x[1],xt[0],xt[1]);
 	  printf("angle=%e %e Qp=%e Qm=%e RCphase=%e SCphase=%e\n",angle[0],angle[1],Qp,Qm
