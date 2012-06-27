@@ -7,8 +7,6 @@
 
 #include <lens.h>
 
-using namespace std;
-
 Lens::Lens(){
 }
 

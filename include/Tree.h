@@ -5,26 +5,28 @@
  * Comments:  This version uses a linked list for the points so that
  the tree can be expended dynamically
  */
+
+#ifndef treetypes_declare
+#define treetypes_declare
+
 #include <math.h>
 #include <Kist.h>
 #include <List1.h>
 #include <lens.h>
+#include <image_info.h>
+#include <iostream>
+#include <cstdlib>
 
 /***** Exported Types *****/
 
 #ifndef error_message
 #define error_message
-#define ERROR_MESSAGE() printf("ERROR: file: %s line: %i\n",__FILE__,__LINE__)
+#define ERROR_MESSAGE() std::cout << "ERROR: file: " << __FILE__ << " line: " << __LINE__ << std::endl;
 #endif
 
 #ifndef line_message
 #define line_message
-#define PRINT_LINE() printf("file: %s line: %i\n",__FILE__,__LINE__)
-#endif
-
-#ifndef gate_declare
-#define gate_declare
-typedef enum{unchecked,yes,no} GATE;
+#define PRINT_LINE() std::cout << "file: " << __FILE__ << " line: " << __LINE__ << std::endl;
 #endif
 
 #ifndef criterion_declare
@@ -36,9 +38,6 @@ typedef enum{TotalArea,EachImage,Resolution,FillHoles} ExitCriterion;
 #define swap_declare
 #define SWAP(a,b) temp=(a);(a)=(b);(b)=temp;
 #endif
-
-#ifndef treetypes_declare
-#define treetypes_declare
 
 /** \brief Tree: Exported struct */
 typedef struct TreeStruct{
@@ -56,80 +55,6 @@ typedef struct TreeStruct{
 typedef struct TreeStruct *TreeHndl;
 typedef int TreeElement;
 
-#include <grid_maintenance.h>
-
-/** \brief Structure for storing information about images or curves */
-typedef struct ImageInfo{
-
-	ImageInfo();
-	~ImageInfo();
-    /// Array of points in image,  SHOULD NOT BE USED IN FAVOR OF imagekist!  Still used by caustic finding routines.
-  //Point *points;
-  /// Number of points in image, SHOULD NOT BE USED IN FAVOR OF imagekist->Nunits().  Still used by caustic finding routines.
-  //unsigned long Npoints;
-  /// later addition, holds all points in image, will replace points eventually
-  KistHndl imagekist;
-  /// gridrange[2] minimum grid size in image, gridrange[0] maximum grid size in outerborder, gridrange[1] maximum grid size in image
-  double gridrange[3];
-  /// Centroid of image
-  double centroid[2];
-  /// area of image or, when using map_images(), the total brightness of the image
-  double area;
-  /// error on the estimate of area
-  double area_error;
-  /// the points on the inner border of the image
-  KistHndl innerborder;
-  /// the points on the outer border of the image, i.e. not in the image
-  KistHndl outerborder;
-  //short Nencircled;
-
-  /// Flag for stopping refinement but also used for other temporary purposes.
-  short ShouldNotRefine;
-  /// Flag for showing when the distortion of an image can be considered linear.
-  GATE uniform_mag;
-
-  /// returns number of points currently in the image
-  unsigned long getNimagePoints(){return imagekist->Nunits();}
-
-} ImageInfo;
-
-/** \brief This is an old version that should not be used anymore in favor of ImageInfo.
- *
- * This type is still used in the critical curve finding and handling routines.  The results of these
- * routines should be returned in the form of and array of ImageInfo's now.
- */
-typedef struct OldImageInfo{
-
-	OldImageInfo();
-	~OldImageInfo();
-
-    /// Array of points in image,  SHOULD NOT BE USED IN FAVOR OF imagekist!  Still used by caustic finding routines.
-  Point *points;
-  /// Number of points in image, SHOULD NOT BE USED IN FAVOR OF imagekist->Nunits().  Still used by caustic finding routines.
-  unsigned long Npoints;
-  /// later addition, holds all points in image, will replace points eventually
-  //KistHndl imagekist;
-  /// gridrange[2] minimum grid size in image, gridrange[0] maximum grid size in outerborder, gridrange[1] maximum grid size in image
-  double gridrange[3];
-  /// Centroid of image
-  double centroid[2];
-  /// area of image or, when using map_images(), the total brightness of the image
-  double area;
-  /// error on the estimate of area
-  double area_error;
-  /// the points on the inner border of the image
-  KistHndl innerborder;
-  /// the points on the outer border of the image, i.e. not in the image
-  KistHndl outerborder;
-  short ShouldNotRefine;
-
-} OldImageInfo;
-
-
-//#include <point.h>
-//#include <List.h>
-//#include <Kist.h>
-//#include <KistDriver.h>
 
 /*  *** Constructor****/
 TreeHndl NewTree(Point *xp,unsigned long npoints
@@ -282,27 +207,10 @@ void findborders3(TreeHndl i_tree,OldImageInfo *imageinfo);
 
 // in image_finder_kist.c
 
-void find_images_kist(LensHndl lens,double *y_source,double r_source,GridHndl grid
-		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
-		,double initial_size,bool splitimages,short edge_refinement
-		,bool verbose,bool kappa_off);
-
-short image_finder_kist(LensHndl lens, double *y_source,double r_source,GridHndl grid
-		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
-		,short splitparities,short true_images);
-
-int refine_grid_kist(LensHndl lens,GridHndl grid,ImageInfo *imageinfo
-		,unsigned long Nimages,double res_target,short criterion,bool kappa_off,KistHndl newpointkist = NULL);
-
 void findborders4(TreeHndl i_tree,ImageInfo *imageinfo);
 
 // in find_crit.c
 void findborders(TreeHndl i_tree,ImageInfo *imageinfo);
-
-ImageInfo *find_crit(LensHndl lens,GridHndl grid,int *Ncrits,double resolution,bool *orderingsuccess
-		,bool ordercurve,bool verbose);
-void find_crit_kist(LensHndl lens,GridHndl grid,ImageInfo *critcurve,int maxNcrits,int *Ncrits
-		,double resolution,bool *orderingsuccess,bool ordercurve,bool verbose);
 
 /* in double_sort.c */
 void double_sort(unsigned long n, double *arr, unsigned long *brr);

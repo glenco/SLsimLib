@@ -4,10 +4,9 @@
  *  Created on: Dec 8, 2009
  *      Author: R.B. Metcalf
  */
-#include <cosmo.h>
-
 #ifndef simple_analens_declare
 #define simple_analens_declare
+
 /** \brief A simplified version of AnaLens */
 typedef struct simple_analytic_lens{
   char outputfile[40];

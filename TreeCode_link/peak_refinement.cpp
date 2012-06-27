@@ -13,6 +13,8 @@
 
 #include <slsimlib.h>
 
+using namespace std;
+
 /** \ingroup
  *
  *  \brief Refines the grid based on the convergence so that high density regions have high resolution.

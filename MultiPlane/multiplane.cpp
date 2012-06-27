@@ -757,9 +757,6 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 void MultiLens::quicksort(HaloStructure *halos,double **brr,double *arr,unsigned long N){
 	double pivotvalue;
 	unsigned long pivotindex,newpivotindex,i;
-	void swap(double *a,double *b);
-	void swap(double **a,double **b);
-	//void swapLong(unsigned long *a,unsigned long *b);
 
 	if(N <= 1) return ;
 
@@ -829,3 +826,4 @@ void swap(double **a,double **b){
 	*a=*b;
 	*b=tmp;
 }
+

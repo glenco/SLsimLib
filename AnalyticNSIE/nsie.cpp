@@ -6,9 +6,10 @@
  */
 
 #include <math.h>
+#include <cmath>
 #include <cstdio>
 #include <cstdlib>
-#include "analytic_lens.h"
+#include <analytic_lens.h>
 
 void alphaNSIE(double *alpha,double *xt,double f,double bc,double theta){
   double x[2],angle[2],fp,b2,r,Qp,Qm,RCphase,SCphase;

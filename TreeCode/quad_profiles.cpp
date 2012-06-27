@@ -5,7 +5,6 @@
  *      Author: bmetcalf
  */
 #include <slsimlib.h>
-#include <quadTree.h>
 
 /// Gaussian particles
 double QuadTree::alpha_o(double r2,float sigma){
@@ -130,7 +129,7 @@ double QuadTreeNFW::gamma_h(double r2,HaloStructure &par){
 }
 double QuadTreeNFW::phi_h(double r2,HaloStructure &par){
 	ERROR_MESSAGE();
-	cout << "time delay has not been fixed for NFW profile yet." << endl;
+	std::cout << "time delay has not been fixed for NFW profile yet." << std::endl;
 	exit(1);
 	return 0.0;
 }
@@ -212,7 +211,7 @@ double QuadTreePseudoNFW::gamma_h(double r2,HaloStructure &par){
 double QuadTreePseudoNFW::phi_h(double r2,HaloStructure &par){
 
 	ERROR_MESSAGE();
-	cout << "time delay has not been fixed for NFW profile yet." << endl;
+	std::cout << "time delay has not been fixed for NFW profile yet." << std::endl;
 	exit(1);
 	return 0.0;
 }
@@ -266,7 +265,7 @@ double QuadTreePseudoNFW::gamma_h(double r2,HaloStructure &par){
 double QuadTreePseudoNFW::phi_h(double r2,HaloStructure &par){
 
 	ERROR_MESSAGE();
-	cout << "time delay has not been fixed for NFW profile yet." << endl;
+	std::cout << "time delay has not been fixed for NFW profile yet." << std::endl;
 	exit(1);
 	return 0.0;
 }

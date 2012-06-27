@@ -5,11 +5,12 @@
  *      Author: bmetcalf
  */
 
-#include <list.h>
-#include "forceTree.h"
-
 #ifndef QUAD_TREE_H_
 #define QUAD_TREE_H_
+
+#include <simpleTree.h>
+#include <cstdlib>
+#include <iostream>
 
 #ifndef PosType_declare
 #define PosType_declare
@@ -23,7 +24,7 @@ typedef unsigned long IndexType;
 
 #ifndef error_message
 #define error_message
-#define ERROR_MESSAGE() std::printf("ERROR: file: %s line: %i\n",__FILE__,__LINE__)
+#define ERROR_MESSAGE() std::cout << "ERROR: file: " << __FILE__ << " line: " << __LINE__ << std::endl;
 #endif
 
 //short const treeNBdim = 2;

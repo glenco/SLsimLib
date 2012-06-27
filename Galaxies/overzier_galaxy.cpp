@@ -45,5 +45,5 @@ double OverGalaxy::SurfaceBrightness(double *x){
 }
 
 void OverGalaxy::print(){
-	cout << "bulge half light radius: " << Reff << " arcs   disk scale hight: " << Rh << " arcs" << endl;
+	std::cout << "bulge half light radius: " << Reff << " arcs   disk scale hight: " << Rh << " arcs" << std::endl;
 }

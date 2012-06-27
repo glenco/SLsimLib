@@ -4,13 +4,12 @@
  *      Author: mpetkova
  */
 
-#include <cosmo.h>
-#include <forceTree.h>
-#include <point.h>
-#include <source.h>
-
 #ifndef LENS_H_
 #define LENS_H_
+
+#include <cosmo.h>
+#include <point.h>
+#include <source.h>
 
 /// An abstract base class to represent a gravitational lens.
 class Lens {

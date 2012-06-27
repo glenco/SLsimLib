@@ -5,14 +5,13 @@
  *      Author: R.B. Metcalf
  */
 
+#ifndef analens_declare
+#define analens_declare
+
 #include <Tree.h>
 #include <forceTree.h>
 #include <quadTree.h>
 #include <source.h>
-
-
-#ifndef analens_declare
-#define analens_declare
 
 #ifndef pi
 #define pi  3.141593

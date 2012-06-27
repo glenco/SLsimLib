@@ -48,6 +48,7 @@
 #include <divide_images.h>
 #include <tree_maintenance.h>
 #include <grid_maintenance.h>
+#include <image_info.h>
 #include <source_models.h>
 #include <analytic_lens.h>
 

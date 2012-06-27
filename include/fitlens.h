@@ -5,6 +5,12 @@
  *      Author: RB Metcalf
  */
 
+#ifndef FITLENS_H_
+#define FITLENS_H_
+
+#include <analytic_lens.h>
+#include <point.h>
+
 double ElliptisizeLens(int Nimages,int Nsources,int Nlenses,int *pairing,double **xob
 		       ,double *xc,double **xg,double sigG,double beta,int Nmod
 		       ,double *mod,double **dx,double *re2,double *q);
@@ -30,3 +36,4 @@ int find_image_number(double *yo,double *x_center,double *mod,int Nmod,int Nlens
 double finiteMag(double radsource,double *xo,double *mod,int Nmod,int Nlenses,double Re2,double *x2t);
 void FindLensSimple(AnaLens *lens,int Nimages,Point *image_positions,double *y,double **dx_sub);
 
+#endif

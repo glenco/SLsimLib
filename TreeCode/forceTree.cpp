@@ -4,11 +4,9 @@
  *  Created on: Oct 18, 2011
  *      Author: bmetcalf
  */
-#include <assert.h>
 #include <math.h>
-#include "forceTree.h"
-
-//const float pi = 3.141593;
+#include <forceTree.h>
+#include <iostream>
 
 ForceTree::ForceTree(
 		PosType **xp
@@ -392,7 +390,7 @@ ForceTreeNFW::ForceTreeNFW(
 	for(unsigned long i=0;i<Npoints;++i){
 		if(h_params[i].Rmax <= 0.0 || h_params[i].rscale <= 0.0){
 			ERROR_MESSAGE();
-			cout << "Illegal values for halo internal valuables." << endl;
+			std::cout << "Illegal values for halo internal valuables." << std::endl;
 			exit(1);
 		}
 	}
@@ -422,7 +420,7 @@ ForceTreePseudoNFW::ForceTreePseudoNFW(
 {
 
 	if(beta == 0){
-		cout << "The slope can not be zero!" << endl;
+		std::cout << "The slope can not be zero!" << std::endl;
 		exit(1);
 	}
 
@@ -430,7 +428,7 @@ ForceTreePseudoNFW::ForceTreePseudoNFW(
 	for(unsigned long i=0;i<Npoints;++i){
 		if(h_params[i].Rmax <= 0.0 || h_params[i].rscale <= 0.0){
 			ERROR_MESSAGE();
-			cout << "Illegal values for halo internal valuables." << endl;
+			std::cout << "Illegal values for halo internal valuables." << std::endl;
 			exit(1);
 		}
 	}

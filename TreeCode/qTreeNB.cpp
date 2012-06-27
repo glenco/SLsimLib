@@ -140,7 +140,7 @@ bool QTreeNB::atTop(){
 
     if( isEmpty() ){
     	ERROR_MESSAGE();
-    	fprintf(stderr, "QTreeNB Error: calling atTop() on empty tree\n");
+    	std::cout << "QTreeNB Error: calling atTop() on empty tree" << std::endl;
     	exit(1);
     }
     return(current == top);
@@ -163,7 +163,8 @@ bool QTreeNB::offEnd(){
 void QTreeNB::getCurrent(IndexType *particles,IndexType *nparticles){
 
     if( offEnd() ){
-    	ERROR_MESSAGE(); fprintf(stderr, "QTreeNB Error: calling getCurrent() when current is off end\n");
+    	ERROR_MESSAGE();
+    	std::cout << "QTreeNB Error: calling getCurrent() when current is off end" << std::endl;
     	exit(1);
     }
 
@@ -195,7 +196,8 @@ void QTreeNB::moveTop(){
 	//std::cout << tree->top << std::endl;
 
     if( isEmpty() ){
-    	ERROR_MESSAGE(); fprintf(stderr, "QTreeNB Error: calling moveTop() on empty tree\n");
+    	ERROR_MESSAGE();
+    	std::cout << "QTreeNB Error: calling moveTop() on empty tree" << std::endl;
     	exit(1);
     }
 
@@ -213,11 +215,13 @@ void QTreeNB::moveTop(){
 void QTreeNB::moveUp(){
 
 	if( offEnd() ){
-		ERROR_MESSAGE(); fprintf(stderr, "QTreeNB Error: call to moveUp() when current is off end\n");
+		ERROR_MESSAGE();
+		std::cout << "QTreeNB Error: call to moveUp() when current is off end" << std::endl;
 		exit(1);
     }
     if( current == top ){
-      ERROR_MESSAGE(); fprintf(stderr, "QTreeNB Error: call to moveUp() tried to move off the top\n");
+      ERROR_MESSAGE();
+      std::cout << "QTreeNB Error: call to moveUp() tried to move off the top" << std::endl;
       exit(1);
     }
 
@@ -234,33 +238,33 @@ void QTreeNB::moveUp(){
 void QTreeNB::moveToChild(int child){
 
     if( offEnd() ){
-    	ERROR_MESSAGE(); fprintf(stderr, "QTreeNB Error: calling moveChildren() when current is off end\n");
+    	ERROR_MESSAGE(); std::cout << "QTreeNB Error: calling moveChildren() when current is off end" << std::endl;
     	exit(1);
     }
     if(child==0){
       if( current->child0 == NULL ){
-    	  ERROR_MESSAGE(); fprintf(stderr, "QTreeNB Error: moveToChild() typing to move to child1 when it doesn't exist\n");
+    	  ERROR_MESSAGE(); std::cout << "QTreeNB Error: moveToChild() typing to move to child1 when it doesn't exist" << std::endl;
     	  exit(1);
       }
       current = current->child0;
     }
     if(child==1){
       if( current->child1 == NULL ){
-    	  ERROR_MESSAGE(); fprintf(stderr, "QTreeNB Error: moveToChild() typing to move to child1 when it doesn't exist\n");
+    	  ERROR_MESSAGE(); std::cout << "QTreeNB Error: moveToChild() typing to move to child1 when it doesn't exist" << std::endl;
     	  exit(1);
       }
       current = current->child1;
     }
     if(child==2){
       if( current->child2 == NULL ){
-    	  ERROR_MESSAGE(); fprintf(stderr, "QTreeNB Error: moveToChild() typing to move to child2 when it doesn't exist\n");
+    	  ERROR_MESSAGE(); std::cout << "QTreeNB Error: moveToChild() typing to move to child2 when it doesn't exist" << std::endl;
     	  exit(1);
       }
       current = current->child2;
     }
     if(child==3){
       if( current->child3 == NULL ){
-    	  ERROR_MESSAGE(); fprintf(stderr, "QTreeNB Error: moveToChild() typing to move to child2 when it doesn't exist\n");
+    	  ERROR_MESSAGE(); std::cout << "QTreeNB Error: moveToChild() typing to move to child2 when it doesn't exist" << std::endl;
     	  exit(1);
       }
       current = current->child3;

@@ -5,18 +5,12 @@
  *      Author: bmetcalf
  */
 
-
-
-#include <list.h>
-#include "simpleTree.h"
-#include <multiplane.h>
-
 #ifndef FORCE_TREE_H_
 #define FORCE_TREE_H_
 
-///enum PartProf {gaussian,powerlaw};
+#include <simpleTree.h>
 
-struct HaloStructure;
+///enum PartProf {gaussian,powerlaw};
 
 /** \ingroup DeflectionL2
  *

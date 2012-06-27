@@ -4,10 +4,11 @@
  *  Created on: Feb 6, 2012
  *      Author: mpetkova
  */
-#include <galaxies.h>
 
 #ifndef SOURCE_H_
 #define SOURCE_H_
+
+#include <galaxies.h>
 
 class Source{
 public:

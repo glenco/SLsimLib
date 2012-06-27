@@ -1,9 +1,4 @@
-/*#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include "TreeNB.h"
-#include <cosmo.h>
-#include <nrutil.h>*/
+
 
 #include <slsimlib.h>
 
@@ -159,13 +154,13 @@ PosType **PosTypeMatrix(long nrl, long nrh, long ncl, long nch)
 
 	/* allocate pointers to rows */
 	m=(PosType **) malloc((size_t)((nrow+NR_END)*sizeof(PosType*)));
-	if (!m) {ERROR_MESSAGE(); std::printf("ERROR: PosTypeMatrix\n  allocation failure 1\n\n"); exit(0);}
+	if (!m) {ERROR_MESSAGE(); std::cout << "ERROR: PosTypeMatrix" << std::endl << "allocation failure 1" << std::endl << std::endl; exit(0);}
 	m += NR_END;
 	m -= nrl;
 
 	/* allocate rows and set pointers to them */
 	m[nrl]=(PosType *) malloc((size_t)((nrow*ncol+NR_END)*sizeof(PosType)));
-	if (!m[nrl]) {ERROR_MESSAGE(); std::printf("ERROR: PosTypeMatrix\n  allocation failure 2\n\n"); exit(0);}
+	if (!m[nrl]) {ERROR_MESSAGE();  std::cout << "ERROR: PosTypeMatrix" << std::endl << "allocation failure 2" << std::endl << std::endl; exit(0);}
 	m[nrl] += NR_END;
 	m[nrl] -= ncl;
 
