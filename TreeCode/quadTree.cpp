@@ -2,12 +2,10 @@
  * Programmer:    R Ben Metcalf
  */
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <iostream>
 #include <assert.h>
 #include <math.h>
-#include <list.h>
-#include <vector.h>
+#include <vector>
 #include <quadTree.h>
 #include <TreeNB.h>
 
@@ -553,9 +551,9 @@ void QuadTree::printParticlesInBranch(unsigned long number){
 	tree->moveTop();
 	do{
 		if(tree->current->number == number){
-			cout << tree->current->nparticles << endl;
+			std::cout << tree->current->nparticles << std::endl;
 			for(i=0;i<tree->current->nparticles;++i){
-				cout << xp[tree->current->particles[i]][0] << "  " << xp[tree->current->particles[i]][1] << endl;
+				std::cout << xp[tree->current->particles[i]][0] << "  " << xp[tree->current->particles[i]][1] << std::endl;
 			}
 			return;
 		}
@@ -572,8 +570,8 @@ void QuadTree::printBranchs(int level){
 	bool decend = true;
 	tree->moveTop();
 	do{
-		cout << tree->current->boundary_p1[0] << "  " << tree->current->boundary_p1[1] << "   "
-		     << tree->current->boundary_p2[0] << "  " << tree->current->boundary_p2[1] << endl;
+		std::cout << tree->current->boundary_p1[0] << "  " << tree->current->boundary_p1[1] << "   "
+		     << tree->current->boundary_p2[0] << "  " << tree->current->boundary_p2[1] << std::endl;
 		if(tree->current->level == level) decend = false;
 		else decend = true;
 	}while(tree->WalkStep(decend));

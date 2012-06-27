@@ -14,17 +14,19 @@
 #include <List1.h>
 #include <lens.h>
 #include <image_info.h>
+#include <iostream>
+#include <cstdlib>
 
 /***** Exported Types *****/
 
 #ifndef error_message
 #define error_message
-#define ERROR_MESSAGE() printf("ERROR: file: %s line: %i\n",__FILE__,__LINE__)
+#define ERROR_MESSAGE() std::cout << "ERROR: file: " << __FILE__ << " line: " << __LINE__ << std::endl;
 #endif
 
 #ifndef line_message
 #define line_message
-#define PRINT_LINE() printf("file: %s line: %i\n",__FILE__,__LINE__)
+#define PRINT_LINE() std::cout << "file: " << __FILE__ << " line: " << __LINE__ << std::endl;
 #endif
 
 #ifndef criterion_declare

@@ -9,6 +9,8 @@
 
 #define NMAXCRITS 1000
 
+using namespace std;
+
 /** \ingroup ImageFinding
   *
   * \brief Finds critical curves and caustics.

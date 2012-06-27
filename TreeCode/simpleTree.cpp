@@ -10,9 +10,8 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <math.h>
-//#include "../SLsimLib/include/Kist.h"
-#include <list.h>
-#include <vector.h>
+#include <vector>
+#include <list>
 #include "simpleTree.h"
 #include <TreeNB.h>
 
@@ -58,7 +57,7 @@ void SimpleTree::PointsWithinEllipse(
 	,float rmax      /// major axis
 	,float rmin     /// minor axis
 	,float posangle  /// position angle of major axis, smallest angle between the x-axis and the long axis
-	,list <unsigned long> &neighborlist  /// output neighbor list, will be emptied if it contains anything on entry
+	,std::list <unsigned long> &neighborlist  /// output neighbor list, will be emptied if it contains anything on entry
 	){
 	double x,y,cs,sn;
 
@@ -73,7 +72,7 @@ void SimpleTree::PointsWithinEllipse(
 	cs = cos(posangle);
 	sn = sin(posangle);
 	// go through points within the circle and reject points outside the ellipse
-	for(  list<unsigned long>::iterator it = neighborlist.begin();it != neighborlist.end();){
+	for(  std::list<unsigned long>::iterator it = neighborlist.begin();it != neighborlist.end();){
 		x = xp[*it][0]*cs - xp[*it][1]*sn;
 		y = xp[*it][0]*sn + xp[*it][1]*cs;
 		if( ( pow(x/rmax,2) + pow(y/rmin,2) ) > 1) it = neighborlist.erase(it);
@@ -84,7 +83,7 @@ void SimpleTree::PointsWithinEllipse(
 void SimpleTree::PointsWithinCircle(
 		PosType *ray     /// center of circle
 		,float rmax      /// radius of circle
-		,list <unsigned long> &neighborlist  /// output neighbor list, will be emptied if it contains anything on entry
+		,std::list <unsigned long> &neighborlist  /// output neighbor list, will be emptied if it contains anything on entry
 		){
 
   neighborlist.clear();
@@ -117,7 +116,7 @@ void SimpleTree::PointsWithinCircle(
 }
 /**
  * Used in PointsWithinKist() to walk tree.*/
-void SimpleTree::_PointsWithin(PosType *ray,float *rmax,list <unsigned long> &neighborlist){
+void SimpleTree::_PointsWithin(PosType *ray,float *rmax,std::list <unsigned long> &neighborlist){
 
   int j,incell2=1;
   unsigned long i;

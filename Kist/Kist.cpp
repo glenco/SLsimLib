@@ -460,10 +460,10 @@ void TranformPlanesKist(KistHndl kist){
 }
 
 void Kist::Print(){
-	cout << Nunits() << endl;
+	std::cout << Nunits() << std::endl;
 	MoveToTop();
 	do{
-		cout << getCurrent()->x[0] <<  "  " << getCurrent()->x[1] << "  " << getCurrent()->gridsize << endl;
+		std::cout << getCurrent()->x[0] <<  "  " << getCurrent()->x[1] << "  " << getCurrent()->gridsize << std::endl;
 	}while(Down());
 }
 

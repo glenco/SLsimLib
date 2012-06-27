@@ -177,7 +177,7 @@ unsigned long prevpower(unsigned long k){
 	if (k == 0)
 		return 1;
 	k--;
-	for (i=1; i<sizeof(unsigned long)*CHAR_BIT; i<<=1)
+	for (i=1; i<sizeof(unsigned long)*sizeof(char); i<<=1)
 		k = k | k >> i;
 	return (k+1)/2;
 }

@@ -12,6 +12,8 @@
 #include <nr.h>
 #include "galaxies.h"
 #include <point.h>
+#include <cstdlib>
+
 /**
  * Returns a Sersic profile made out of individual equally luminous points
  */

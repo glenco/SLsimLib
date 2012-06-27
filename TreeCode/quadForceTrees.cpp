@@ -6,8 +6,9 @@
  */
 #include <assert.h>
 #include <math.h>
-#include "forceTree.h"
-#include "quadTree.h"
+#include <forceTree.h>
+#include <quadTree.h>
+#include <iostream>
 
 
 QuadTreePowerLaw::QuadTreePowerLaw(
@@ -40,7 +41,7 @@ QuadTreeNFW::QuadTreeNFW(
 	for(unsigned long i=0;i<Npoints;++i){
 		if(h_params[i].Rmax <= 0.0 || h_params[i].rscale <= 0.0){
 			ERROR_MESSAGE();
-			cout << "Illegal values for halo internal valuables." << endl;
+			std::cout << "Illegal values for halo internal valuables." << std::endl;
 			exit(1);
 		}
 	}
@@ -62,7 +63,7 @@ QuadTreePseudoNFW::QuadTreePseudoNFW(
 {
 
 	if(beta == 0){
-		cout << "QuadTreePseudoNFW: The slope can not be zero!" << endl;
+		std::cout << "QuadTreePseudoNFW: The slope can not be zero!" << std::endl;
 		exit(1);
 	}
 
@@ -71,7 +72,7 @@ QuadTreePseudoNFW::QuadTreePseudoNFW(
 	for(unsigned long i=0;i<Npoints;++i){
 		if(h_params[i].Rmax <= 0.0 || h_params[i].rscale <= 0.0){
 			ERROR_MESSAGE();
-			cout << "Illegal values for halo internal valuables." << endl;
+			std::cout << "Illegal values for halo internal valuables." << std::endl;
 			exit(1);
 		}
 	}

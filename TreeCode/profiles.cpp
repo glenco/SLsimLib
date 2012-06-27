@@ -129,7 +129,7 @@ double ForceTreeNFW::gamma_h(double r2,HaloStructure &par){
 }
 double ForceTreeNFW::phi_h(double r2,HaloStructure &par){
 	ERROR_MESSAGE();
-	cout << "time delay has not been fixed for NFW profile yet." << endl;
+	std::cout << "time delay has not been fixed for NFW profile yet." << std::endl;
 	exit(1);
 	return 0.0;
 }
@@ -212,7 +212,7 @@ double ForceTreePseudoNFW::gamma_h(double r2,HaloStructure &par){
 double ForceTreePseudoNFW::phi_h(double r2,HaloStructure &par){
 
 	ERROR_MESSAGE();
-	cout << "time delay has not been fixed for NFW profile yet." << endl;
+	std::cout << "time delay has not been fixed for NFW profile yet." << std::endl;
 	exit(1);
 	return 0.0;
 }
@@ -265,7 +265,7 @@ double ForceTreePseudoNFW::gamma_h(double r2,HaloStructure &par){
 double ForceTreePseudoNFW::phi_h(double r2,HaloStructure &par){
 
 	ERROR_MESSAGE();
-	cout << "time delay has not been fixed for NFW profile yet." << endl;
+	std::cout << "time delay has not been fixed for NFW profile yet." << std::endl;
 	exit(1);
 	return 0.0;
 }

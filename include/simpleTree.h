@@ -9,7 +9,9 @@
 #define SIMP_TREE_H_
 
 #include <assert.h>
-#include <list.h>
+#include <iostream>
+#include <cstdlib>
+#include <list>
 
 #ifndef pi
 #define pi  3.141593
@@ -27,7 +29,7 @@ typedef unsigned long IndexType;
 
 #ifndef error_message
 #define error_message
-#define ERROR_MESSAGE() std::printf("ERROR: file: %s line: %i\n",__FILE__,__LINE__)
+#define ERROR_MESSAGE() std::cout << "ERROR: file: " << __FILE__ << " line: " << __LINE__ << std::endl;
 #endif
 
 /// structure to hold information about the halos' positions, masses, etc.
@@ -122,9 +124,9 @@ public:
 	virtual ~SimpleTree();
 
 	/// \brief Finds the points within a circle around center and puts their index numbers in a list
-	void PointsWithinCircle(PosType center[2],float radius,list<unsigned long> &neighborkist);
+	void PointsWithinCircle(PosType center[2],float radius,std::list<unsigned long> &neighborkist);
 	/// \brief Finds the points within an ellipse around center and puts their index numbers in a list
-	void PointsWithinEllipse(PosType center[2],float a_max,float a_min,float posangle,list<unsigned long> &neighborkist);
+	void PointsWithinEllipse(PosType center[2],float a_max,float a_min,float posangle,std::list<unsigned long> &neighborkist);
 	/// \brief Finds the nearest N neighbors and puts their index numbers in an array, also returns the distance to the Nth neighbor for calculating smoothing
 	void NearestNeighbors(PosType *ray,int Nneighbors,float *rsph,IndexType *neighbors);
 
@@ -143,7 +145,7 @@ protected:
 	TreeNBHndl BuildTreeNB(PosType **xp,IndexType Nparticles,IndexType *particles,int Ndimensions,double theta);
 	void _BuildTreeNB(TreeNBHndl tree,IndexType nparticles,IndexType *particles);
 
-	void _PointsWithin(PosType *ray,float *rmax,list<unsigned long> &neighborkist);
+	void _PointsWithin(PosType *ray,float *rmax,std::list<unsigned long> &neighborkist);
 	void _NearestNeighbors(double *ray,int Nneighbors,unsigned long *neighbors,PosType *rneighbors);
 
 	BranchNB *NewBranchNB(IndexType *particles,IndexType nparticles

@@ -4,18 +4,6 @@
  *  Created on: Feb 27, 2010
  *      Author: R.B. Metcalf
  */
-/*#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-#include <assert.h>
-#include <omp.h>
-#include <nr.h>
-#include <nrutil.h>
-#include <Kist.h>
-#include <Tree.h>
-#include <tree_maintenance.h>
-#include "image_processing.h"*/
 
 #include <slsimlib.h>
 
@@ -96,7 +84,7 @@ void pixelize(
 
 	FreePointArray(points);
 
-	cout << "Found " << mycount << " pixels!" << endl;
+	std::cout << "Found " << mycount << " pixels!" << std::endl;
 
 	return;
 }

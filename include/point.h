@@ -13,13 +13,15 @@
 #ifndef pointtypes_declare
 #define pointtypes_declare
 
+#include <cstdlib>
+
 #ifndef pi
 #define pi  3.141593
 #endif
 
 #ifndef error_message
 #define error_message
-#define ERROR_MESSAGE() std::printf("ERROR: file: %s line: %i\n",__FILE__,__LINE__)
+#define ERROR_MESSAGE() std::cout << "ERROR: file: " << __FILE__ << " line: " << __LINE__ << std::endl;
 #endif
 
 #ifndef bool_declare
