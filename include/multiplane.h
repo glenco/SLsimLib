@@ -73,13 +73,14 @@ public:
 	MOKALens *mokalens;
 	/// field of view in square degrees
 	double fieldofview;
-	/// if = 0 there is no input lens, if = 1 there is an analytic lens, if = 2 there is a MOKA lens
-	int flag_input_lens;
 
+	void ImplantSource(CosmoHndl cosmo,double z,double theta[],SourceAnaGalaxy &ana_source);
 
 private:
 
 	long *seed;
+	/// if = 0 there is no input lens, if = 1 there is an analytic lens, if = 2 there is a MOKA lens
+	int flag_input_lens;
 
 	void readParamfile(std::string);
 	/// Redshifts of lens planes, 0...Nplanes.  Last one is the source redshift.
@@ -118,6 +119,11 @@ private:
 	IndexType Nhalos;
 	double *halo_zs;
 	double **halo_pos;
+
+	// Variables for implanted source
+	std::auto_ptr<SourceAnaGalaxy> anasource;
+	double dDs_implant,zs_implant,ys_implant[2];
+	int flag_implanted_source;
 
 	void quicksort(HaloStructure *halos,double **brr,double *arr,unsigned long N);
 };

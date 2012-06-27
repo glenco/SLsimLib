@@ -143,6 +143,7 @@ MultiLens::MultiLens(string filename,long *my_seed) : Lens(){
 		break;
 	}
 
+	flag_implanted_source = 0;
 	seed = my_seed;
 }
 
@@ -703,8 +704,6 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 
 }
 
-
-
 /** * Sets the internal parameters of the multiple lens model
  * first the redshifts of the planes are calculated
  * then the coordinate distances to the different planes
@@ -796,6 +795,33 @@ void MultiLens::quicksort(HaloStructure *halos,double **brr,double *arr,unsigned
 
 	return ;
 }
+/**
+ * \brief Pull a source into the simulated volume.  When rays are subsequently shot through the
+ * simulation the surface brightness of the source will be added to the point->surface_brightness.
+ * Sources can be implanted without altering the existing lens or rays.  The rays need to be re-shot
+ * after each source is implanted.  Past sources are removed when a new source is implanted.
+ */
+void MultiLens::ImplantSource(CosmoHndl cosmo,double z,double theta[],OverGalaxy *ana_source){
+
+	if(z > plane_redshifts[Nplanes-1]){
+		cout << "Warning: Implanted source is at higher redshift than simulation was constructed for." << endl
+		<< "It is not being added." << endl;
+		return;
+	}
+	double Ds = cosmo->angDist(0,z);
+	zs_implant = z;
+
+	ys_implant[0] = Ds*theta[0];
+	ys_implant[1] = Ds*theta[1];
+
+	locateD(plane_redshifts-1,Nplanes,zs_implant,&j);
+
+	dDs_implant = cosmo->coorDist(z,plane_redshifts[j]);
+
+	anasource = auto_ptr<SourceAnaGalaxy>(new SourceAnaGalaxy(ana_source));
+	flag_implanted_source = j;
+}
+
 
 void swap(double **a,double **b){
 	double *tmp;

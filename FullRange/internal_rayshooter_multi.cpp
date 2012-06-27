@@ -63,18 +63,16 @@ void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
 			if(zsource == plane_redshifts[j])
 				break;
 
-			// convert to physical coorditanes on the plane j
+
+			// convert to physical coordinates on the plane j
 			xx[0] = i_points[i].image->x[0]/(1+plane_redshifts[j]);
 			xx[1] = i_points[i].image->x[1]/(1+plane_redshifts[j]);
 
 			if(flag_input_lens && j == (flag_input_lens % Nplanes)){
 				input_lens->rayshooterInternal(xx,alpha,gamma,&kappa,kappa_off);
 				cc = dDl[j+1];
-				//alpha[0] = alpha[1] = 0.0;
-				//gamma[0] = gamma[1] = gamma[2] = 0.0;
-				//kappa = 0.0;
-			}
-			else{
+			}else{
+
 				halo_tree[j]->force2D(xx,alpha,&kappa,gamma,kappa_off);
 				cc = charge*dDl[j+1];
 
@@ -85,9 +83,6 @@ void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
 				gamma[0]/=(1+plane_redshifts[j]);
 				gamma[1]/=(1+plane_redshifts[j]);
 				gamma[2]/=(1+plane_redshifts[j]);
-				//alpha[0] = alpha[1] = 0.0;
-				//gamma[0] = gamma[1] = gamma[2] = 0.0;
-				//kappa = 0.0;
 			}
 
 			aa = (dDl[j+1]+dDl[j])/dDl[j];
@@ -101,6 +96,15 @@ void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
 
 			i_points[i].image->x[0] = xplus[0];
 			i_points[i].image->x[1] = xplus[1];
+
+			// If ray passes through a source add its surface brightness
+			if(flag_implanted_source && j == (flag_implanted_source % Nplanes) ){
+;
+				xx[0] = ( (1 - dDs_implant/dDl[j+1])*xminus[0] + dDs_implant*xplus[0]/dDl[j+1] )/(1+zs_implant) - ys_implant[0];
+				xx[1] = ( (1 - dDs_implant/dDl[j+1])*xminus[1] + dDs_implant*xplus[1]/dDl[j+1] )/(1+zs_implant) - ys_implant[1];
+
+				i_points[i].surface_brightness += anasource->source_sb(xx);
+			}
 
 			if(!kappa_off)
     		{
