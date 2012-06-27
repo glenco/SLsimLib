@@ -99,11 +99,11 @@ void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
 
 			// If ray passes through a source add its surface brightness
 			if(flag_implanted_source && j == (flag_implanted_source % Nplanes) ){
-;
+
 				xx[0] = ( (1 - dDs_implant/dDl[j+1])*xminus[0] + dDs_implant*xplus[0]/dDl[j+1] )/(1+zs_implant) - ys_implant[0];
 				xx[1] = ( (1 - dDs_implant/dDl[j+1])*xminus[1] + dDs_implant*xplus[1]/dDl[j+1] )/(1+zs_implant) - ys_implant[1];
 
-				i_points[i].surface_brightness += anasource->source_sb(xx);
+				i_points[i].surface_brightness += anasource->source_sb_func(xx);
 			}
 
 			if(!kappa_off)

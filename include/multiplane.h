@@ -68,7 +68,7 @@ public:
 	/// field of view in square degrees
 	double fieldofview;
 
-	void ImplantSource(CosmoHndl cosmo,double z,double theta[],SourceAnaGalaxy &ana_source);
+	void ImplantSource(CosmoHndl cosmo,double z,double theta[],OverGalaxy *ana_source);
 
 private:
 

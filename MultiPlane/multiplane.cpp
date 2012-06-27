@@ -9,6 +9,7 @@
 #include <sstream>
 #include <string>
 #include <utilities.h>
+#include <source.h>
 
 using namespace std;
 
@@ -798,7 +799,13 @@ void MultiLens::quicksort(HaloStructure *halos,double **brr,double *arr,unsigned
  * Sources can be implanted without altering the existing lens or rays.  The rays need to be re-shot
  * after each source is implanted.  Past sources are removed when a new source is implanted.
  */
-void MultiLens::ImplantSource(CosmoHndl cosmo,double z,double theta[],OverGalaxy *ana_source){
+void MultiLens::ImplantSource(
+		CosmoHndl cosmo           /// cosmology
+		,double z                 /// redshift of implanted source
+		,double theta[]           /// position of source in angle on the sky (rad)
+		,OverGalaxy *ana_source   /// model for source surface brightness distribution
+		){
+	unsigned long j;
 
 	if(z > plane_redshifts[Nplanes-1]){
 		cout << "Warning: Implanted source is at higher redshift than simulation was constructed for." << endl

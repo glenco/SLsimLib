@@ -123,6 +123,7 @@ class SourceAnaGalaxy: public Source{
 public:
 	double source_sb_func(double *y){return galaxy->SurfaceBrightness(y);}
 	void printSource();
+	void readParamfile(std::string){};
 
 	SourceAnaGalaxy(double mag, double BtoT, double Reff, double Rh, double PA, double inclination);
 	SourceAnaGalaxy(OverGalaxy *my_galaxy);
