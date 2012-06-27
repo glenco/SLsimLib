@@ -5,6 +5,8 @@
  *      Author: mpetkova
  */
 
+#ifdef WITH_MOKA
+
 #ifndef MOKALENS_H_
 #define MOKALENS_H_
 
@@ -55,3 +57,5 @@ public:
 };
 
 #endif /* MOKALENS_H_ */
+
+#endif
