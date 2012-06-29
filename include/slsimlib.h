@@ -17,7 +17,7 @@
 //#define NDEBUG  // Un-commenting this line will remove all assert() statements in the executable.
 
 #include <iostream>
-//#include <cstdio>
+#include <cstdio>
 #include <fstream>
 #include <cfloat>
 #ifdef _OPENMP
