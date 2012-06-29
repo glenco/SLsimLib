@@ -55,7 +55,6 @@ public:
 	void RandomizeSigma(long *seed,bool tables);
 	double getZlens();
 	void setZlens(double zlens);
-	void setFOV(double fov){fieldofview = fov;};
 	void setRedshift(double zsource);
 	void printMultiLens();
 

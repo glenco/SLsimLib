@@ -141,7 +141,7 @@ MultiLens::MultiLens(string filename,long *my_seed) : Lens(){
 #ifdef WITH_MOKA
 		input_lens = new MOKALens(filename);
 		mokalens = static_cast<MOKALens*>(input_lens);
-		setFOV(pow(1.5*mokalens->map->boxl*180/pi,2.0));
+		fieldofview = pow(1.5*mokalens->map->boxl*180/pi,2.0);
 #else
 		cout << "Enable the MOKA fits handling first" << endl;
 		exit(1);
@@ -290,10 +290,10 @@ void MultiLens::readParamfile(string filename){
 	  if(flag_input_lens)
 		  Nplanes++;
 
-	  printMultiLens();
-
 	  // convert to square degrees
 	  fieldofview /= 3600. * 3600.;
+
+	  printMultiLens();
 }
 
 
