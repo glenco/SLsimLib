@@ -154,10 +154,12 @@ void QuadTree::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
 		quickPartition(maxsize,&cut,particles,x,cbranch->nparticles);
 
 		if(cut < cbranch->nparticles){
-			quickPartition(2*maxsize,&cut2,&particles[cut],&x[cut],cbranch->nparticles-cut);
-
-			cbranch->Nbig_particles = cut2;
-			if(tree->atTop()) cut2 = cbranch->nparticles-cut;
+			if(tree->atTop()){
+				cbranch->Nbig_particles = cut2 = cbranch->nparticles-cut;
+			}else{
+				quickPartition(2*maxsize,&cut2,&particles[cut],&x[cut],cbranch->nparticles-cut);
+				cbranch->Nbig_particles = cut2;
+			}
 
 			cbranch->big_particles = new IndexType[cbranch->Nbig_particles];
 			for(i=cut;i<(cut+cut2);++i) cbranch->big_particles[i-cut] = particles[i];
