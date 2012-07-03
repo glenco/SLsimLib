@@ -31,7 +31,7 @@ public:
 	/// mean mass density
 	double kappa_background;
 
-	HaloData(double fov,double min_mass,double mass_scale,double z1,double z2,int mass_func_type,CosmoHndl cosmo,long *seed);
+	HaloData(double fov,double min_mass,double mass_scale,double z1,double z2,int mass_func_type,double alpha,CosmoHndl cosmo,long *seed);
 	HaloData(HaloStructure *halostrucs,double **positions,unsigned long Nhaloss);
 	~HaloData();
 
@@ -73,9 +73,13 @@ public:
 
 private:
 
+	typedef enum {PS, ST, PL} MassFuncType;
+	typedef enum {PowerLaw, NFW, PseudoNFW} IntProfType;
+	typedef enum {null, ana_lens, moka_lens} InputLens;
+
 	long *seed;
 	/// if = 0 there is no input lens, if = 1 there is an analytic lens, if = 2 there is a MOKA lens
-	int flag_input_lens;
+	InputLens flag_input_lens;
 
 	void readParamfile(std::string);
 	/// Redshifts of lens planes, 0...Nplanes.  Last one is the source redshift.
@@ -93,14 +97,16 @@ private:
 
 	/* the following parameters are read in from the parameter file */
 
-	/// type of mass function PS (0) and ST (1) default is ST
-	int mass_func_type;
+	/// type of mass function PS (0), ST (1), and power law (2) default is ST
+	MassFuncType mass_func_type;
+	/// slope of the mass function is mass_func_type == 2
+	double pw_alpha;
 	/// mass scale
 	double mass_scale;
 	/// min mass for the halo model
 	double min_mass;
-	/// internal profile type, 0=Gauss,1=powerlaw,2=nfw,3=pseudoNfw
-	int internal_profile;
+	/// internal profile type, 0=powerlaw,1=nfw,2=pseudoNfw
+	IntProfType internal_profile;
 
 	/// read particle/halo data in from a file
 	void readInputSimFile(CosmoHndl cosmo);
