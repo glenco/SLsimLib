@@ -293,10 +293,10 @@ void MultiLens::readParamfile(string filename){
 
 	  file_in.close();
 
-	  // to compensate for the lst plane, which is the source plane
+	  // to compensate for the last plane, which is the source plane
 	  Nplanes++;
 
-	  // to compenstate for additional lens plane
+	  // to compenstate for additional lens planes
 	  if(flag_input_lens)
 		  Nplanes++;
 

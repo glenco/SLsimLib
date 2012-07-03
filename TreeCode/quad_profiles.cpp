@@ -81,9 +81,9 @@ double QuadTreeNFW::alpha_h(double r2,HaloStructure &par){
 		double y;
 
 		y = par.Rmax/par.rscale;
-		b = rhos(y);
+		b *= rhos(y);
 		y = r/par.rscale;
-		b*= gfunction(y)/par.rscale;
+		b*= gfunction(y);
 	}
 
 	return b;
@@ -97,7 +97,7 @@ double QuadTreeNFW::kappa_h(double r2,HaloStructure &par){
 
 	double y,b;
 
-	b = par.mass/2/pi/par.rscale;
+	b = par.mass/2/pi/pow(par.rscale,2);
 	y = par.Rmax/par.rscale;
 	b *= rhos(y);
 	y = r/par.rscale;
@@ -118,7 +118,7 @@ double QuadTreeNFW::gamma_h(double r2,HaloStructure &par){
 		gt = -2.0*par.mass/pi/pow(r2,2);
 	else{
 		double y;
-		gt = par.mass/2/pi/par.rscale;
+		gt = par.mass/4/pi/pow(par.rscale,2);
 		y = par.Rmax/par.rscale;
 		gt *= rhos(y);
 		y = r/par.rscale;
