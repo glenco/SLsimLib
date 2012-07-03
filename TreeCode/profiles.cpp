@@ -118,7 +118,7 @@ double ForceTreeNFW::gamma_h(double r2,HaloStructure &par){
 		gt = -2.0*par.mass/pi/pow(r2,2);
 	else{
 		double y;
-		gt = par.mass/4/pi/pow(par.rscale,2);
+		gt = par.mass/4/pi/pow(par.rscale,2)/r2;
 		y = par.Rmax/par.rscale;
 		gt *= rhos(y);
 		y = r/par.rscale;
