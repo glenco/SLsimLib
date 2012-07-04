@@ -29,7 +29,12 @@
  * Warning: Is not valid for a non-flat universe.
  */
 
-void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off, double zsource){
+void MultiLens::rayshooterInternal(
+		unsigned long Npoints   /// number of points to be shot
+		,Point *i_points        /// point on the image plane
+		,bool kappa_off         /// turns calculation of convergence and shear off to save time.
+		,double zsource         // TODO Margarita. Comment this!  Why is this here?
+		){
 	unsigned long i;
 	double xx[2];
 

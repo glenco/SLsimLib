@@ -15,7 +15,7 @@
 
 using namespace std;
 
-/** \ingroup
+/** \ingroup ImageFinding
  *
  *  \brief Refines the grid based on the convergence so that high density regions have high resolution.
  *
@@ -136,6 +136,97 @@ short find_peaks(
 	// free memory in grids, trees and images
 	//free(imageinfo->points);
 	//delete imageinfo;
+	delete newpointskist;
+
+	return 1;
+}
+
+/** \ingroup ImageFinding
+ *
+ *  \brief Refines the grid based on the flux from implanted sources.
+ *
+ *
+ */
+// TODO Add function declaration to header.
+short refine_on_implanted_source(
+		MultiLens &lens        /// MultiLens model
+		,GridHndl grid         /// Grid to be refined.  It must be initialized.
+		,double *theta         /// position on the sky
+		,double radius         /// size of region to look for image
+		,double res_target     /// the final grid resolution that is required
+		,ImageInfo *imageinfo  /// the output image
+		,int *Nimages		   /// number of images
+		,bool kappa_off        /// turn off convergence and shear calculation to save time
+		){
+
+	long Nnewpoints = 0;
+	KistHndl newpointskist = new Kist;
+
+	imageinfo->imagekist->Empty();
+	imageinfo->gridrange[2] = 1.0e99;
+	imageinfo->gridrange[0] = imageinfo->gridrange[1]  = 0.0;
+
+	PointsWithinKist(grid->i_tree,theta,radius,newpointskist,0);
+
+	newpointskist->MoveToTop();
+	do{
+		// re-shoot rays to add in surface brightness from implanted sources
+		lens.rayshooterInternal(1,imageinfo->imagekist->getCurrent(),kappa_off);
+
+		if(newpointskist->getCurrent()->surface_brightness != 0){
+			imageinfo->imagekist->InsertAfterCurrent(newpointskist->getCurrent());
+			newpointskist->getCurrent()->in_image = TRUE;
+
+			imageinfo->imagekist->Down();
+			if(imageinfo->imagekist->getCurrent()->gridsize > imageinfo->gridrange[1])
+				imageinfo->gridrange[1] = imageinfo->imagekist->getCurrent()->gridsize;
+
+			if(imageinfo->imagekist->getCurrent()->gridsize < imageinfo->gridrange[2])
+				imageinfo->gridrange[2] = imageinfo->imagekist->getCurrent()->gridsize;
+
+		}
+	}while(newpointskist->Down());
+
+	// if there are no points
+	if(newpointskist->Nunits() == 0){
+		NearestNeighborKist(grid->i_tree,theta,8,imageinfo->imagekist);
+	}
+
+	// TODO Deal with case where the image is not found initially so that multiple refinements can be made before reaching the scale.
+
+	newpointskist->Empty();
+
+	findborders4(grid->i_tree,imageinfo);
+
+	// refine grid to wanted resolution
+	Nnewpoints = 1;
+	while(Nnewpoints){
+		Nnewpoints = refine_grid_kist(&lens,grid,imageinfo,1,res_target,2,true,newpointskist);
+		if(Nnewpoints > 0){
+			newpointskist->MoveToTop();
+			do{
+				if(newpointskist->getCurrent()->surface_brightness != 0){
+					imageinfo->imagekist->InsertAfterCurrent(newpointskist->getCurrent());
+					newpointskist->getCurrent()->in_image = TRUE;
+
+					imageinfo->imagekist->Down();
+					if(imageinfo->imagekist->getCurrent()->gridsize > imageinfo->gridrange[1])
+						imageinfo->gridrange[1] = imageinfo->imagekist->getCurrent()->gridsize;
+
+					if(imageinfo->imagekist->getCurrent()->gridsize < imageinfo->gridrange[2])
+						imageinfo->gridrange[2] = imageinfo->imagekist->getCurrent()->gridsize;
+				}
+			}while(newpointskist->Down());
+
+			findborders4(grid->i_tree,imageinfo);
+		}
+	}
+
+	imageinfo->imagekist->MoveToTop();
+	do{
+		imageinfo->imagekist->getCurrent()->in_image = FALSE;
+	}while(imageinfo->imagekist->Down());
+
 	delete newpointskist;
 
 	return 1;

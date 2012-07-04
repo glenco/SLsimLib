@@ -46,7 +46,7 @@ double QuadTreePowerLaw::kappa_h(double r2,HaloStructure &par){
 
 	if(r2 > par.Rmax*par.Rmax) return 0.0;
 	if(r2 < 1.0-20) r2=1.0e-20;
-	return (beta+2)*par.mass*pow(r2/par.Rmax/par.Rmax,beta/2)/(pi*pow(par.Rmax,2));
+	return (beta+2)*par.mass*pow(r2/par.Rmax/par.Rmax,beta/2)/(2*pi*pow(par.Rmax,2));
 }
 double QuadTreePowerLaw::gamma_h(double r2,HaloStructure &par){
 	double gt=0;

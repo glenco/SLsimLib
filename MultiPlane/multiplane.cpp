@@ -26,11 +26,11 @@ HaloData::HaloData(HaloStructure *halostrucs,PosType **positions,unsigned long N
 HaloData::HaloData(
 		double fov            /// field of view in square degrees
 		,double min_mass      /// Minimum mass of a halo
-		,double mass_scale      /// mass scale
+		,double mass_scale    /// mass scale
 		,double z1            /// lowest redshift
 		,double z2            /// highest redshift
 		,int mass_func_type   /// mass function type: 0 Press-Schechter, 1 Sheth-Tormen
-		,CosmoHndl cosmo     /// cosmology
+		,CosmoHndl cosmo      /// cosmology
 		,long *seed
 	)
 	{
