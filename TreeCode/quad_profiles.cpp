@@ -169,22 +169,26 @@ double QuadTreeNFW::gfunctionRmax(double rm,double x){
 	double xx = sqrt(1-x*x);
 	double xxx = sqrt(x*x-1);
 	double rmm = sqrt(rm*rm-1);
+	double rmx = sqrt(rm*rm+x*x);
 
-	if(x==1.0){ ans = 1.0; return ans;}
-	if(x>1.0){  ans = rm*(atan(x/rmm)-atan(x/rmm/sqrt(rm*rm+x*x)))/rmm +
-		x*(atan(rm/xxx)-atan(rm/xxx/sqrt(rm*rm+x*x)))/xxx; return ans;}
-	if(x<1.0){  ans = rm*(atan(x/rmm)-atan(x/rmm/sqrt(rm*rm+x*x)))/rmm +
-		x*(atanh(rm/xx)-atanh(rm/xx/sqrt(rm*rm+x*x)))/xx; return ans;}
+	ans = atanh(rm)-atanh(rmx/rm);
+	if(x==1.0){ ans += rmx/rm - 1/rm; return ans;}
+	if(x>1.0){  ans += (atan(rm/xxx)-atan(rm/xxx/rmx))/xxx; return ans;}
+	if(x<1.0){  ans -= (atanh(rm/xx)-atanh(rm/xx/rmx))/xx; return ans;}
 	return 0.0;
 }
 double QuadTreeNFW::ffunctionRmax(double rm,double x){
 	double ans;
 	double xx = sqrt(1-x*x);
 	double xxx = sqrt(x*x-1);
+	double rmx = sqrt(rm*rm+x*x);
 
-	if(x==1.0){ return 0.0;}
-	if(x>1.0){  ans = (rm*(sqrt(rm*rm+x*x)-1)/(rm*rm+x*x-1)-(atan(rm/xxx)-atan(rm/xxx/sqrt(rm*rm+x*x)))/xx)/(x*x-1); return ans;}
-	if(x<1.0){  ans = (rm*(sqrt(rm*rm+x*x)-1)/(rm*rm+x*x-1)+(atanh(rm/xx)-atanh(rm/xx/sqrt(rm*rm+x*x)))/xxx)/(x*x-1); return ans;}
+	if(x==1.0){ ans = (-2-rm*rm+rm*rm*rm*rm+2*rmx)/3.0/rm*rm*rm/rmx; return ans; }
+
+	ans = rm*(sqrt(rm*rm+x*x)-1)/(rm*rm+x*x-1)/(x*x-1);
+
+	if(x>1.0){  ans += ((atan(rm/xxx)-atan(rm/xxx/rmx))/xx)/(x*x-1); return ans;}
+	if(x<1.0){  ans -= ((atanh(rm/xx)-atanh(rm/xx/rmx))/xxx)/(x*x-1); return ans;}
 	return 0.0;
 }
 
@@ -192,7 +196,7 @@ double QuadTreeNFW::g2functionRmax(double rm,double x){
 	double ans;
 
 	if(x>0)
-		ans = 4*gfunctionRmax(rm,x)/x/x-2*ffunctionRmax(rm,x);
+		ans = 4.0*gfunctionRmax(rm,x)/x/x-2.0*ffunctionRmax(rm,x);
 	else ans = 0.0;
 
 	return ans;
