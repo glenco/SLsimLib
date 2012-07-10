@@ -74,7 +74,7 @@ void gammaNFW(double *gamma,double *x,double Rtrunc,double mass,double r_scale
 		y = Rtrunc/r_scale;
 		gt /= gfunction(y);
 		y = r/r_scale;
-		gt *= gfunction(y)*g2function(y)*pow(y,2);
+		gt *= g2function(y)*pow(y,2);
 	}
 
 	gamma[0]=-gt*(pow(x[0]-center[0],2)-pow(x[1]-center[1],2))/r/r;
@@ -95,7 +95,7 @@ double gfunction(double x){
 double ffunction(double x){
 	double ans;
 
-	if(x==1.0){ return 1.0;}
+	if(x==1.0){ return 1.0/3.0;}
 	if(x>1.0){  ans = (1-2*atan(sqrt((x-1)/(x+1)))/sqrt(x*x-1))/(x*x-1); return ans;}
 	if(x<1.0){  ans = (1-2*atanh(sqrt((1-x)/(x+1)))/sqrt(1-x*x))/(x*x-1); return ans;}
 	return 0.0;
@@ -104,7 +104,7 @@ double ffunction(double x){
 double g2function(double x){
 	double ans,y;
 
-	if(x==1) return 10/2. + 4*log(0.5);
+	if(x==1) return 10/3. + 4*log(0.5);
 	y=x*x-1;
 	ans=4*log(x/2)/x/x -2/y;
 	if(x<1.0){ ans+= 4*(2/x/x+1/y)*atanh(sqrt((1-x)/(x+1)))/sqrt(-y); return ans;}

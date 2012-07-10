@@ -114,13 +114,12 @@ double QuadTreeNFW::gamma_h(double r2,HaloStructure &par){
 
 	double r = sqrt(r2);
 
-	if(r > par.Rmax)
-		gt = -2.0*par.mass/pi/pow(r2,2);
-	else{
+	gt = -2.0*par.mass/pi/r2/r2;
+
+	if(r > par.Rmax){
 		double y;
-		gt = par.mass/4/pi/pow(par.rscale,2)/r2;
 		y = par.Rmax/par.rscale;
-		gt *= rhos(y);
+		gt *= rhos(y)*pow(r/par.rscale,2)/8.0;
 		y = r/par.rscale;
 		gt *= g2function(y);
 	}
@@ -146,7 +145,7 @@ double QuadTreeNFW::gfunction(double x){
 double QuadTreeNFW::ffunction(double x){
 	double ans;
 
-	if(x==1.0){ return 1.0;}
+	if(x==1.0){ return 1.0/3.0;}
 	if(x>1.0){  ans = (1-2*atan(sqrt((x-1)/(x+1)))/sqrt(x*x-1))/(x*x-1); return ans;}
 	if(x<1.0){  ans = (1-2*atanh(sqrt((1-x)/(x+1)))/sqrt(1-x*x))/(x*x-1); return ans;}
 	return 0.0;
@@ -207,10 +206,8 @@ double QuadTreeNFW::g2functionRmax(double rm,double x){
 
 	ans = 4.0/x/x*(atanh(rm)-atanh(rmx/rm))-2.0*rm*(rmx-1)/(rmx*rmx-1)/(x*x-1);
 
-	if(x>1.0){ans += 4.0/x/x*(atan(rm/xxx)-atan(rm/xxx/rmx))/xxx
-		-2.0*((atan(rm/xxx)-atan(rm/xxx/rmx))/xxx)/(x*x-1); return ans;}
-	if(x<1.0){ans -= 4.0/x/x*(atanh(rm/xx)-atanh(rm/xx/rmx))/xx
-		-2.0*((atanh(rm/xx)-atanh(rm/xx/rmx))/xx)/(x*x-1); return ans;}
+	if(x>1.0){ans += 1/xxx*(4.0/x/x-2.0/(x*x-1.0))*(atan(rm/xxx)-atan(rm/xxx/rmx)); return ans;}
+	if(x<1.0){ans -= 1/xx*(4.0/x/x-2.0/(x*x-1.0))*(atanh(rm/xx)-atanh(rm/xx/rmx)); return ans;}
 
 	return ans;
 }
