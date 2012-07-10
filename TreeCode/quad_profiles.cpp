@@ -183,7 +183,7 @@ double QuadTreeNFW::ffunctionRmax(double rm,double x){
 	double xxx = sqrt(x*x-1);
 	double rmx = sqrt(rm*rm+x*x);
 
-	if(x==1.0){ ans = (-2-rm*rm+rm*rm*rm*rm+2*rmx)/3.0/rm*rm*rm/rmx; return ans; }
+	if(x==1.0){ ans = (-2-rm*rm+rm*rm*rm*rm+2*rmx)/3.0/rm/rm/rm/rmx; return ans; }
 
 	ans = rm*(sqrt(rm*rm+x*x)-1)/(rm*rm+x*x-1)/(x*x-1);
 
