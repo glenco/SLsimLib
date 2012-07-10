@@ -288,6 +288,10 @@ private:
 	double gfunction(double x);
 	double ffunction(double x);
 	double g2function(double x);
+
+	double gfunctionRmax(double rm,double x);
+	double ffunctionRmax(double rm,double x);
+	double g2functionRmax(double rm,double x);
 	double rhos(double x);
 };
 
