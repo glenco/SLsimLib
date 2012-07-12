@@ -119,7 +119,7 @@ double QuadTreeNFW::gamma_h(double r2,HaloStructure &par){
 	if(r < par.Rmax){
 		double y;
 		y = par.Rmax/par.rscale;
-		gt *= rhos(y)*pow(r/par.rscale,2)/8.0;
+		gt *= rhos(y)*pow(r/par.rscale,2)/2.0;
 		y = r/par.rscale;
 		gt *= g2function(y);
 	}
