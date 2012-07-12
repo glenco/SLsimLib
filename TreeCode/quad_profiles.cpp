@@ -116,7 +116,7 @@ double QuadTreeNFW::gamma_h(double r2,HaloStructure &par){
 
 	gt = -2.0*par.mass/pi/r2/r2;
 
-	if(r > par.Rmax){
+	if(r < par.Rmax){
 		double y;
 		y = par.Rmax/par.rscale;
 		gt *= rhos(y)*pow(r/par.rscale,2)/8.0;
@@ -167,13 +167,13 @@ double QuadTreeNFW::gfunctionRmax(double rm,double x){
 	double ans;
 	double xx = sqrt(1-x*x);
 	double xxx = sqrt(x*x-1);
-	double rmm = sqrt(rm*rm-1);
+	double rmm = log(rm*rm-1);
 	double rmx = sqrt(rm*rm+x*x);
 
-	ans = atanh(rm)-atanh(rmx/rm);
+	ans = atanh(1.0/rm)-atanh(rm/rmx)+0.5*rmm;
 	if(x==1.0){ ans += rmx/rm - 1/rm; return ans;}
 	if(x>1.0){  ans += (atan(rm/xxx)-atan(rm/xxx/rmx))/xxx; return ans;}
-	if(x<1.0){  ans -= (atanh(rm/xx)-atanh(rm/xx/rmx))/xx; return ans;}
+	if(x<1.0){  ans -= (atanh(xx/rm)-atanh(xx*rmx/rm))/xx; return ans;}
 	return 0.0;
 }
 double QuadTreeNFW::ffunctionRmax(double rm,double x){
@@ -187,7 +187,7 @@ double QuadTreeNFW::ffunctionRmax(double rm,double x){
 	ans = rm*(rmx-1)/(rmx*rmx-1)/(x*x-1);
 
 	if(x>1.0){  ans += ((atan(rm/xxx)-atan(rm/xxx/rmx))/xxx)/(x*x-1); return ans;}
-	if(x<1.0){  ans -= ((atanh(rm/xx)-atanh(rm/xx/rmx))/xx)/(x*x-1); return ans;}
+	if(x<1.0){  ans -= ((atanh(xx/rm)-atanh(xx*rmx/rm))/xx)/(x*x-1); return ans;}
 	return 0.0;
 }
 
@@ -198,16 +198,16 @@ double QuadTreeNFW::g2functionRmax(double rm,double x){
 
 	double xx = sqrt(1-x*x);
 	double xxx = sqrt(x*x-1);
-	double rmm = sqrt(rm*rm-1);
+	double rmm = log(rm*rm-1);
 	double rmx = sqrt(rm*rm+x*x);
 
-	if(x==1.0){ans = 4.0*(atanh(rm)-atanh(rmx/rm)+rmx/rm-1/rm)-
-		2.0*(-2-rm*rm+rm*rm*rm*rm+2*rmx)/3.0/rm/rm/rm/rmx; return ans;}
+	if(x==1.0){ans =  2./3.*(-2./rm/rm/rm-6./rm+2./rm/rm/rm/rmx+7./rm/rmx+
+			5.*rm/rmx+6.*atanh(1./rm)-6.*atanh(rm/rmx)+3.*rmm); return ans;}
 
-	ans = 4.0/x/x*(atanh(rm)-atanh(rmx/rm))-2.0*rm*(rmx-1)/(rmx*rmx-1)/(x*x-1);
+	ans = 4.0/x/x*(atanh(1.0/rm)-atanh(rm/rmx)+0.5*rmm)-2.0*rm*(rmx-1)/(rmx*rmx-1)/(x*x-1);
 
-	if(x>1.0){ans += 1/xxx*(4.0/x/x-2.0/(x*x-1.0))*(atan(rm/xxx)-atan(rm/xxx/rmx)); return ans;}
-	if(x<1.0){ans -= 1/xx*(4.0/x/x-2.0/(x*x-1.0))*(atanh(rm/xx)-atanh(rm/xx/rmx)); return ans;}
+	if(x>1.0){ans += 1/xxx*(4.0/x/x+2.0/(x*x-1.0))*(atan(rm/xxx)-atan(rm/xxx/rmx)); return ans;}
+	if(x<1.0){ans -= 1/xx*(4.0/x/x+2.0/(x*x-1.0))*(atanh(xx/rm)-atanh(xx*rmx/xx)); return ans;}
 
 	return ans;
 }
