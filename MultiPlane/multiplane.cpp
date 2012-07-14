@@ -481,6 +481,7 @@ void MultiLens::buildHaloTrees(
 		default:
 			cout << "There is no such case for the halo trees" << endl;
 			ERROR_MESSAGE();
+			exit(1);
 			break;
 		}
 
