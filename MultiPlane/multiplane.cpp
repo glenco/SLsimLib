@@ -231,6 +231,14 @@ void MultiLens::readParamfile(string filename){
 	  id[n] = 0;
 	  label[n++] = "alpha";
 
+	  addr[n] = &pw_beta;
+	  id[n] = 0;
+	  label[n++] = "internal_slope_pw";
+
+	  addr[n] = &pnfw_beta;
+	  id[n] = 1;
+	  label[n++] = "internal_slope_pnfw";
+
 	  cout << "Multi lens: reading from " << filename << endl;
 
 	  ifstream file_in(filename.c_str());
@@ -280,7 +288,8 @@ void MultiLens::readParamfile(string filename){
 	  }
 
 	  for(i = 0; i < n; i++){
-		  if(id[i] >= 0 && addr[i] != &input_sim_file && addr[i] != &pw_alpha){
+		  if(id[i] >= 0 && addr[i] != &input_sim_file &&
+				  addr[i] != &pw_alpha && addr[i] != &pw_beta && addr[i] != &pnfw_beta){
 			  ERROR_MESSAGE();
 			  cout << "parameter " << label[i] << " needs to be set!" << endl;
 			  exit(0);
@@ -288,6 +297,12 @@ void MultiLens::readParamfile(string filename){
 
 		  if(id[i] >= 0 && addr[i] == &pw_alpha){
 			  pw_alpha = 1./6.;
+		  }
+		  if(id[i] >= 0 && addr[i] == &pw_beta){
+			  pw_beta = -1.9;
+		  }
+		  if(id[i] >= 0 && addr[i] == &pnfw_beta){
+			  pnfw_beta = 2;
 		  }
 	  }
 
@@ -460,7 +475,7 @@ void MultiLens::buildHaloTrees(
 			//halo_tree[j] = new ForceTreePowerLaw(1.9,&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos);
 			//halo_tree[j] = auto_ptr<ForceTree>(new ForceTreePowerLaw(1.9,&halodata[j]->pos[0],halodata[j]->Nhalos
 				//	,halodata[j]->halos,true,halodata[j]->kappa_background));
-			halo_tree[j] = auto_ptr<QuadTree>(new QuadTreePowerLaw(1.9,&halodata[j]->pos[0],halodata[j]->Nhalos
+			halo_tree[j] = auto_ptr<QuadTree>(new QuadTreePowerLaw(pw_beta,&halodata[j]->pos[0],halodata[j]->Nhalos
 								,halodata[j]->halos,halodata[j]->kappa_background));
 			break;
 		case NFW:
@@ -475,7 +490,7 @@ void MultiLens::buildHaloTrees(
 			//halo_tree[j] = auto_ptr<ForceTree>(new ForceTreePseudoNFW(2,&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos,true,5,3,false,0.1));
 			//halo_tree[j] = auto_ptr<ForceTree>(new ForceTreePseudoNFW(2,&halodata[j]->pos[0],halodata[j]->Nhalos
 				//	,halodata[j]->halos,true,halodata[j]->kappa_background));
-			halo_tree[j] = auto_ptr<QuadTree>(new QuadTreePseudoNFW(2,&halodata[j]->pos[0],halodata[j]->Nhalos
+			halo_tree[j] = auto_ptr<QuadTree>(new QuadTreePseudoNFW(pnfw_beta,&halodata[j]->pos[0],halodata[j]->Nhalos
 							,halodata[j]->halos,halodata[j]->kappa_background));
 			break;
 		default:

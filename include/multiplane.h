@@ -77,6 +77,9 @@ private:
 	typedef enum {PowerLaw, NFW, PseudoNFW} IntProfType;
 	typedef enum {null, ana_lens, moka_lens} InputLens;
 
+	double pw_beta;
+	int pnfw_beta;
+
 	long *seed;
 	/// if = 0 there is no input lens, if = 1 there is an analytic lens, if = 2 there is a MOKA lens
 	InputLens flag_input_lens;
