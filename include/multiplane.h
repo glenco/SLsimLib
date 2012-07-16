@@ -77,9 +77,6 @@ private:
 	typedef enum {PowerLaw, NFW, PseudoNFW} IntProfType;
 	typedef enum {null, ana_lens, moka_lens} InputLens;
 
-	double pw_beta;
-	int pnfw_beta;
-
 	long *seed;
 	/// if = 0 there is no input lens, if = 1 there is an analytic lens, if = 2 there is a MOKA lens
 	InputLens flag_input_lens;
@@ -110,6 +107,10 @@ private:
 	double min_mass;
 	/// internal profile type, 0=powerlaw,1=nfw,2=pseudoNfw
 	IntProfType internal_profile;
+	/// power law internal profile slope, need to be <= 0
+	double pw_beta;
+	/// pseudo NFW internal profile slope, needs to be a whole number and > 0
+	double pnfw_beta;
 
 	/// read particle/halo data in from a file
 	void readInputSimFile(CosmoHndl cosmo);
