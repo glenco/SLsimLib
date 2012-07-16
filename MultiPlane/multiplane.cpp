@@ -308,6 +308,18 @@ void MultiLens::readParamfile(string filename){
 
 	  file_in.close();
 
+	  if(pw_beta >= 0){
+		  ERROR_MESSAGE();
+		  cout << "Internal slope >=0 not possible." << endl;
+		  exit(1);
+	  }
+
+	  if(pnfw_beta <= 0){
+		  ERROR_MESSAGE();
+		  cout << "Internal slope <=0 not possible." << endl;
+		  exit(1);
+	  }
+
 	  // to compensate for the last plane, which is the source plane
 	  Nplanes++;
 
