@@ -298,7 +298,7 @@ void MultiLens::readParamfile(string filename){
 			  pw_alpha = 1./6.;
 		  }
 		  if(id[i] >= 0 && addr[i] == &pw_beta){
-			  pw_beta = -1.9;
+			  pw_beta = -1.0;
 		  }
 		  if(id[i] >= 0 && addr[i] == &pnfw_beta){
 			  pnfw_beta = 2.0;

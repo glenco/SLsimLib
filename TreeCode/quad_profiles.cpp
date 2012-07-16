@@ -53,7 +53,7 @@ double QuadTreePowerLaw::gamma_h(double r2,HaloStructure &par){
 
 	if( r2 <= 0.0) return 0.0;
 	gt = -2.0*par.mass/pi/pow(r2,2);
-	if(r2 < par.Rmax*par.Rmax) gt *= -beta*pow(r2/par.Rmax/par.Rmax,beta/2+1)/2;
+	if(r2 < par.Rmax*par.Rmax) gt *= (beta+1)*pow(r2/par.Rmax/par.Rmax,0.5*beta+1)/2.0;
 
 	return gt;
 }
