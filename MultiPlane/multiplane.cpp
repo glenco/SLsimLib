@@ -175,7 +175,7 @@ MultiLens::~MultiLens(){
 }
 
 void MultiLens::readParamfile(string filename){
-      const int MAXPARAM = 11;
+      const int MAXPARAM = 50;
 	  string label[MAXPARAM], rlabel, rvalue;
 	  void *addr[MAXPARAM];
 	  int id[MAXPARAM];
@@ -236,7 +236,7 @@ void MultiLens::readParamfile(string filename){
 	  label[n++] = "internal_slope_pw";
 
 	  addr[n] = &pnfw_beta;
-	  id[n] = 1;
+	  id[n] = 0;
 	  label[n++] = "internal_slope_pnfw";
 
 	  cout << "Multi lens: reading from " << filename << endl;
@@ -246,7 +246,6 @@ void MultiLens::readParamfile(string filename){
 	    cout << "Can't open file " << filename << endl;
 	    exit(1);
 	  }
-
 
 	  // output file
 	  while(!file_in.eof()){
@@ -371,12 +370,14 @@ void MultiLens::printMultiLens(){
 	switch(internal_profile){
 	case PowerLaw:
 		cout << "  Power law internal profile " << endl;
+		cout << "  slope: " << pw_beta << endl;
 		break;
 	case NFW:
 		cout << "  NFW internal profile " << endl;
 		break;
 	case PseudoNFW:
 		cout << "  Pseudo NFW internal profile " << endl;
+		cout << "  slope: " << pnfw_beta << endl;
 		break;
 	}
 
