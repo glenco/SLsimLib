@@ -265,18 +265,9 @@ double QuadTreePseudoNFW::phi_h(double r2,HaloStructure &par){
 }
 
 double QuadTreePseudoNFW::mhat(double y){
-	switch(beta){
-	case 1:
-		return y - log(1+y);
-		break;
-	case 2:
-		return log(1+y) - y/(1+y);
-		break;
-	default:
-		return ( (1 - beta)*y + pow(1+y,beta-1) - 1)/(beta-2)/(beta-1)/pow(1+y,beta-1);
-		//return - y/(beta-2)/pow(1+y,beta-1) - 1/(beta-2)/(beta-1)/pow(1+y,beta-1);
-		break;
-	}
+	if(beta == 1.0) return y - log(1+y);
+	if(beta == 2.0) return log(1+y) - y/(1+y);
+	if(beta>=3.0) return ( (1 - beta)*y + pow(1+y,beta-1) - 1)/(beta-2)/(beta-1)/pow(1+y,beta-1);
 }
 
 /*

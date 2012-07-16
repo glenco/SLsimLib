@@ -302,7 +302,7 @@ void MultiLens::readParamfile(string filename){
 			  pw_beta = -1.9;
 		  }
 		  if(id[i] >= 0 && addr[i] == &pnfw_beta){
-			  pnfw_beta = 2;
+			  pnfw_beta = 2.0;
 		  }
 	  }
 
@@ -317,6 +317,12 @@ void MultiLens::readParamfile(string filename){
 	  if(pnfw_beta <= 0){
 		  ERROR_MESSAGE();
 		  cout << "Internal slope <=0 not possible." << endl;
+		  exit(1);
+	  }
+
+	  if(pnfw_beta / floor(pnfw_beta) > 1.0){
+		  ERROR_MESSAGE();
+		  cout << "Internal slope needs to be a whole number." << endl;
 		  exit(1);
 	  }
 

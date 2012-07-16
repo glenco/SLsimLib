@@ -51,7 +51,7 @@ QuadTreeNFW::~QuadTreeNFW(){
 }
 
 QuadTreePseudoNFW::QuadTreePseudoNFW(
-		int my_beta                 /// outer slope of profile is \f$ \Sigma \propto r^{-\beta} \f$
+		double my_beta                 /// outer slope of profile is \f$ \Sigma \propto r^{-\beta} \f$
 		,PosType **xp              /// positions of the halos xp[0..Npoints-1][0..1 or 2]
 		,IndexType Npoints         /// number of halos
 		,HaloStructure *h_params   /// array with internal properties of halos
@@ -62,7 +62,7 @@ QuadTreePseudoNFW::QuadTreePseudoNFW(
 		QuadTree(xp,h_params,Npoints,my_kappa_bk,bucket,theta), beta(my_beta)
 {
 
-	if(beta == 0){
+	if(beta == 0.0){
 		std::cout << "QuadTreePseudoNFW: The slope can not be zero!" << std::endl;
 		exit(1);
 	}
