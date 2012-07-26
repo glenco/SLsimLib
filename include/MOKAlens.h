@@ -15,6 +15,7 @@
 #include <grid_maintenance.h>
 #include <profile.h>
 #include <valarray>
+#include <MOKAfits.h>
 
 /*
  * the MOKA map structure, containing all quanitites that define it
@@ -31,6 +32,7 @@ struct MOKAmap{
 	int nx,ny;
 	double boxl,boxlMpc,zlens,zsource,omegam,omegal,h,DL;
 	double center[2];
+        struct LensHalo LH;
 };
 
 /// A class to represents the MOKA lens map
@@ -51,6 +53,7 @@ public:
 	void saveImage(GridHndl grid, bool saveprofile=true);
 	void saveKappaProfile();
 	void saveGammaProfile();
+	void saveProfiles();
 
 	MOKAmap *map;
 

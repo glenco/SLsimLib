@@ -8,10 +8,10 @@
 #ifdef WITH_MOKA
 
 #include <MOKAlens.h>
-#include <MOKAfits.h>
 #include <string>
 #include <sstream>
 #include <fstream>
+#include <utilities.h>
 
 using namespace std;
 
@@ -32,13 +32,14 @@ MOKALens::MOKALens(std::string paramfile) : Lens(){
 	map->gamma1.resize(map->nx*map->ny);
 	map->gamma2.resize(map->nx*map->ny);
 	map->gamma3.resize(map->nx*map->ny);
-
 	readImage(MOKA_input_file
 			,&map->convergence
 			,&map->alpha1
 			,&map->alpha2
 			,&map->gamma1
 			,&map->gamma2
+    		        ,&map->LH);
+		  /*
 			,&(map->boxl)
 			,&(map->boxlMpc)
 			,&(map->zlens)
@@ -47,8 +48,19 @@ MOKALens::MOKALens(std::string paramfile) : Lens(){
 			,&(map->omegal)
 			,&(map->h)
 			,&(map->DL));
+		  */
 
+	map->boxl = map->LH.boxlarcsec;
+	map->zlens = map->LH.zl;
+	map->zsource = map->LH.zs;
+	map->omegam = map->LH.omegam;
+	map->omegal = map->LH.omegal;
+	map->DL = map->LH.DL;
 	map->center[0] = map->center[1] = 0.0;
+
+	map->boxlMpc = map->LH.boxlMpc;
+	map->h = map->LH.h;
+
 	map->boxlMpc /= map->h;
 
 	/// to radians
@@ -69,14 +81,14 @@ MOKALens::~MOKALens(){
  * sets the cosmology and the lens and the source according to the MOKA map parameters
  */
 void MOKALens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
-	cosmo->setOmega_matter(map->omegam,true);
-	cosmo->sethubble(map->h);
-	setZlens(map->zlens);
-	source->zsource = map->zsource;
+	cosmo->setOmega_matter(map->LH.omegam,true);
+	cosmo->sethubble(map->LH.h);
+	setZlens(map->LH.zl);
+	source->zsource = map->LH.zs;
 
-	double Ds = cosmo->angDist(0,map->zsource);
-	double Dl = cosmo->angDist(0,map->zlens);
-	double Dls = cosmo->angDist(map->zlens,map->zsource);
+	double Ds = cosmo->angDist(0,map->LH.zs);
+	double Dl = cosmo->angDist(0,map->LH.zl);
+	double Dls = cosmo->angDist(map->LH.zl,map->LH.zs);
 	double fac = Ds/Dls/Dl;
 
 	/// converts to the code units
@@ -204,6 +216,7 @@ void MOKALens::saveImage(GridHndl grid,bool saveprofiles){
 	filename = f.str();
 
 	MoveToTopList(grid->i_tree->pointlist);
+
 	do{
 		long index = IndexFromPosition(grid->i_tree->pointlist->current->x,map->nx,map->boxl,map->center);
 		if(index > -1){
@@ -224,6 +237,8 @@ void MOKALens::saveImage(GridHndl grid,bool saveprofiles){
 			,map->gamma3
 			,map->nx
 			,map->ny
+   		        ,map->LH);
+	/*
 			,map->boxl
 			,map->boxlMpc
 			,map->zlens
@@ -232,10 +247,13 @@ void MOKALens::saveImage(GridHndl grid,bool saveprofiles){
 			,map->omegal
 			,map->h
 			,map->DL);
+	*/
 
 	if(saveprofiles == true){
-		saveKappaProfile();
-		saveGammaProfile();
+	  std:: cout << " saving profile " << std:: endl;
+	            saveProfiles();
+		 // saveKappaProfile();
+		 // saveGammaProfile();
 	}
 }
 
@@ -245,16 +263,16 @@ void MOKALens::saveImage(GridHndl grid,bool saveprofiles){
 void MOKALens::saveKappaProfile(){
 
 	/* measuring the differential and cumulative profile*/
-	double xmin = -map->boxlMpc*0.5;
-	double xmax =  map->boxlMpc*0.5;
-	double drpix = map->boxlMpc/map->nx;
+	double xmin = -map->boxlMpc*0.5*map->h;
+	double xmax =  map->boxlMpc*0.5*map->h;
+	double drpix = map->boxlMpc/map->nx*map->h;
 	std::valarray<float> pxdist(map->nx*map->ny);
 	for(int i=0; i<map->nx; i++ ) for(int j=0; j<map->ny; j++ ){
 		pxdist[i+map->ny*j]= sqrt(pow((xmin+(drpix*0.5)+i*drpix),2) +
 				pow((xmin+(drpix*0.5)+j*drpix),2));
 	}
-	double dr0 = 8.*(0.5*map->boxlMpc)/(map->nx/2.);
-	int nbin = int(0.5*map->boxlMpc/dr0);
+	double dr0 = 8.*(0.5*map->boxlMpc*map->h)/(map->nx/2.);
+	int nbin = int(0.5*map->boxlMpc*map->h/dr0);
 	//
 	std:: cout << "   " << std:: endl;
 	std:: cout << " nbins = " << nbin << "  dr0 = " << dr0 << std:: endl;
@@ -284,16 +302,16 @@ void MOKALens::saveKappaProfile(){
 void MOKALens::saveGammaProfile(){
 
 	/* measuring the differential and cumulative profile*/
-	double xmin = -map->boxlMpc*0.5;
-	double xmax =  map->boxlMpc*0.5;
-	double drpix = map->boxlMpc/map->nx;
+	double xmin = -map->boxlMpc*0.5*map->h;
+	double xmax =  map->boxlMpc*0.5*map->h;
+	double drpix = map->boxlMpc/map->nx*map->h;
 	std::valarray<float> pxdist(map->nx*map->ny);
 	for(int i=0; i<map->nx; i++ ) for(int j=0; j<map->ny; j++ ){
 		pxdist[i+map->ny*j]= sqrt(pow((xmin+(drpix*0.5)+i*drpix),2) +
 				pow((xmin+(drpix*0.5)+j*drpix),2));
 	}
-	double dr0 = 8.*(0.5*map->boxlMpc)/(map->nx/2.);
-	int nbin = int(0.5*map->boxlMpc/dr0);
+	double dr0 = 8.*(0.5*map->boxlMpc*map->h)/(map->nx/2.);
+	int nbin = int(0.5*map->boxlMpc*map->h/dr0);
 	//
 	std:: cout << "   " << std:: endl;
 	std:: cout << " nbins = " << nbin << "  dr0 = " << dr0 << std:: endl;
@@ -318,6 +336,78 @@ void MOKALens::saveGammaProfile(){
 				std:: endl;
 	}
 	filoutprof.close();
+}
+
+void MOKALens::saveProfiles(){
+	/* measuring the differential and cumulative profile*/
+	double xmin = -map->boxlMpc*0.5*map->h;
+	double xmax =  map->boxlMpc*0.5*map->h;
+	double drpix = map->boxlMpc/map->nx*map->h;
+	std:: vector<double> x(map->nx);	
+	fill_linear (x,map->nx,xmin,xmax); // physical
+	std::valarray<float> pxdist(map->nx*map->ny);
+	std::valarray<float> red_sgE(map->nx*map->ny),red_sgB(map->nx*map->ny),sgm(map->nx*map->ny); 
+	for(int i=0; i<map->nx; i++ ) for(int j=0; j<map->ny; j++ ){
+		pxdist[i+map->ny*j]= sqrt(pow((xmin+(drpix*0.5)+i*drpix),2) +
+				pow((xmin+(drpix*0.5)+j*drpix),2));
+		// reduced shear E a B
+		double dx=x[i];
+		double dy=x[j];
+		double p=atan2( dy, dx ); // check gamma 1 and gamma 2 definition
+		red_sgE[i+map->ny*j] = (-map->gamma1[i+map->ny*j]*cos(2*p)-map->gamma2[i+map->ny*j]*sin(2*p))/(1.-map->convergence[i+map->ny*j]);
+		red_sgB[i+map->ny*j] = (map->gamma1[i+map->ny*j]*sin(2*p)-map->gamma2[i+map->ny*j]*cos(2*p))/(1.-map->convergence[i+map->ny*j]);
+		sgm[i+map->ny*j] = sqrt(pow(map->gamma1[i+map->ny*j],2) + pow(map->gamma2[i+map->ny*j],2));
+	}
+
+	double dr0 = 8.*(0.5*map->boxlMpc*map->h)/(map->nx/2.);
+	int nbin = int(xmax/dr0);                           
+	double inarcsec  = 10800./M_PI/map->LH.DL*60.;                             
+	//                                                                                           
+	std:: cout << "   " << std:: endl;                                                           
+	std:: cout << " nbins = " << nbin << "  dr0 = " << dr0 << std:: endl;                        
+	std:: cout << " ______________________________________________________ " << std:: endl;      
+	std:: cout << " computing profiles assuming spherical symmetry";                                
+	// - - - - - - - - - - - - - - - - -                                                         
+	double *kprofr = estprof(map->convergence,map->nx,map->ny,pxdist,dr0,xmax);                                          
+	double *sigmakprof = estsigmaprof(map->convergence,map->nx,map->ny,pxdist,dr0,xmax,kprofr);                          
+	double *ckprofr = estcprof(map->convergence,map->nx,map->ny,pxdist,dr0,xmax);                                          
+	double *sigmackprof = estsigmacprof(map->convergence,map->nx,map->ny,pxdist,dr0,xmax,kprofr);                          
+	double *gamma1profr = estprof(red_sgE,map->nx,map->ny,pxdist,dr0,xmax); // reduced shear
+	double *sigmagamma1prof = estsigmaprof(red_sgE,map->nx,map->ny,pxdist,dr0,xmax,gamma1profr);              
+	double *gamma0profr = estprof(red_sgB,map->nx,map->ny,pxdist,dr0,xmax);  
+	double *sigmagamma0prof = estsigmaprof(red_sgB,map->nx,map->ny,pxdist,dr0,xmax,gamma0profr);              
+	double *gamma2profr = estprof(sgm,map->nx,map->ny,pxdist,dr0,xmax);  
+	double *sigmagamma2prof = estsigmaprof(sgm,map->nx,map->ny,pxdist,dr0,xmax,gamma2profr);              
+	std::ostringstream fprof;
+	fprof << "MAP_radial_prof_" << MOKA_input_file << ".dat";
+	std:: ofstream filoutprof;
+	std:: string filenameprof = fprof.str();
+	filoutprof.open(filenameprof.c_str());
+	filoutprof <<"# r      kappa     sig_k     ckappa     sig_ck    redgE   sig_redgE   redgB   sig_redgE   g   sig_g   theta   Anulus_area" << std:: endl;
+	for(int l=0;l<nbin;l++){
+	  double Aanulus = M_PI*((dr0*l+dr0)*(dr0*l+dr0)-(dr0*l)*(dr0*l)); 
+	  filoutprof << dr0*l + dr0/2. << "  " 
+		     << kprofr[l] << "  " << sigmakprof[l] << "  " 
+		     << ckprofr[l] << "  " << sigmackprof[l] << "   " 
+		     << gamma1profr[l] << "  " << sigmagamma1prof[l] << "  " 
+		     << gamma0profr[l] << "  " << sigmagamma0prof[l] << "  " 
+	    	     << gamma2profr[l] << "  " << sigmagamma2prof[l] << "   "
+		     << (dr0*l + dr0/2.)*inarcsec << "   "  << Aanulus*inarcsec*inarcsec << "   " <<  
+	    std:: endl;
+	}
+	filoutprof.close();
+	/*
+	delete[] kprofr;
+	delete[] sigmakprof;
+	delete[] ckprofr;
+	delete[] sigmackprof;
+	delete[] gamma0profr;
+	delete[] sigmagamma0prof;
+	delete[] gamma1profr;
+	delete[] sigmagamma1prof;
+	delete[] gamma2profr;
+	delete[] sigmagamma2prof;
+	*/
 }
 
 /** \ingroup DeflectionL2

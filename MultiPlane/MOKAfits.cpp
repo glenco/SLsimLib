@@ -13,8 +13,8 @@
 using namespace CCfits;
 
 void getDims(std::string fn
-		,int *nx
-		,int *ny){
+	     ,int *nx
+	     ,int *ny){
 
 	try{
 		std::auto_ptr<FITS> ff(new FITS (fn, Read));
@@ -39,7 +39,9 @@ void readImage(std::string fn
 		,std::valarray<float> *alpha2
 		,std::valarray<float> *gamma1
 		,std::valarray<float> *gamma2
-		,double *boxl
+	       ,struct LensHalo *LH){ 
+  /*
+                ,double *boxl
 		,double *boxlMpc
 		,double *zlens
 		,double *zsource
@@ -47,6 +49,7 @@ void readImage(std::string fn
 		,double *omegal
 		,double *h
 		,double *DL){
+  */
 
 	int nx,ny;
 
@@ -58,6 +61,22 @@ void readImage(std::string fn
 	ny=h0->axis(1);
 
 	h0->read(*convergence);
+
+	h0->readKey ("SIDEL",LH->boxlarcsec);
+	h0->readKey ("SIDEL2",LH->boxlMpc);
+	h0->readKey ("ZLENS",LH->zl);
+	h0->readKey ("ZSOURCE",LH->zs);
+	h0->readKey ("OMEGA",LH->omegam);
+	h0->readKey ("LAMBDA",LH->omegal);
+	h0->readKey ("H",LH->h);
+	h0->readKey ("W",LH->wq);
+	h0->readKey ("MSTAR",LH->mstar);  
+	h0->readKey ("MVIR",LH->m);  
+	h0->readKey ("CONCENTRATION",LH->c);
+	h0->readKey ("DL",LH->DL);
+	h0->readKey ("DLS",LH->DLS);
+	h0->readKey ("DS",LH->DS);
+	/*
 	h0->readKey ("SIDEL",*boxl);
 	h0->readKey ("SIDEL2",*boxlMpc);
 	h0->readKey ("ZLENS",*zlens);
@@ -65,7 +84,7 @@ void readImage(std::string fn
 	h0->readKey ("OMEGA",*omegam);
 	h0->readKey ("LAMBDA",*omegal);
 	h0->readKey ("H",*h);
-
+	*/
 	ExtHDU &h1=ff->extension(1);
 	h1.read(*alpha1);
 	ExtHDU &h2=ff->extension(2);
@@ -88,6 +107,8 @@ void writeImage(std::string filename
 		,std::valarray<float> gamma3
 		,int nx
 		,int ny
+		,struct LensHalo LH){ 
+  /*
 		,double boxl
 		,double boxlMpc
 		,double zlens
@@ -96,6 +117,7 @@ void writeImage(std::string filename
 		,double omegal
 		,double h
 		,double DL){
+  */
 
 	long naxis=2;
 	long naxes[2]={nx,ny};
@@ -117,13 +139,21 @@ void writeImage(std::string filename
 
 	phout->write( 1,nx*ny,convergence );
 
-	phout->addKey ("SIDEL",boxl,"arcsec");
-	phout->addKey ("SIDEL2",boxlMpc,"Mpc/h");
-	phout->addKey ("ZLENS",zlens,"lens redshift");
-	phout->addKey ("ZSOURCE",zsource, "source redshift");
-	phout->addKey ("OMEGA",omegam,"density parameter");
-	phout->addKey ("LAMBDA",omegal,"omega lamda");
-	phout->addKey ("H",h,"hubble/100");
+	phout->addKey ("SIDEL",LH.boxlarcsec,"arcsec");
+	phout->addKey ("SIDEL2",LH.boxlMpc,"Mpc/h");
+	phout->addKey ("ZLENS",LH.zl,"lens redshift");
+	phout->addKey ("ZSOURCE",LH.zs, "source redshift");
+	phout->addKey ("OMEGA",LH.omegam,"omega matter");
+	phout->addKey ("LAMBDA",LH.omegal,"omega lamda");
+	phout->addKey ("H",LH.h,"hubble/100");
+	phout->addKey ("W",LH.wq,"dark energy equation of state parameter");
+	phout->addKey ("MSTAR",LH.mstar,"stellar mass of the BCG in Msun/h");  
+	phout->addKey ("MVIR",LH.m,"virial mass of the halo in Msun/h");  
+	phout->addKey ("CONCENTRATION",LH.c,"NFW concentration");
+	phout->addKey ("DL",LH.DL,"Mpc/h");
+	phout->addKey ("DLS",LH.DLS,"Mpc/h");
+	phout->addKey ("DS",LH.DS,"Mpc/h");
+	
 
 	ExtHDU *eh1=fout->addImage("gamma1", FLOAT_IMG, naxex);
 	eh1->write(1,nx*ny,gamma1);

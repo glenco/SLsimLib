@@ -171,7 +171,7 @@ MultiLens::~MultiLens(){
 	}
 
 	if(flag_input_lens)
-		delete input_lens;
+     	        delete input_lens;
 }
 
 void MultiLens::readParamfile(string filename){
@@ -505,7 +505,7 @@ void MultiLens::buildHaloTrees(
 					,halodata[j]->halos,halodata[j]->kappa_background));
 			break;
 		case PseudoNFW:
-			//halo_tree[j] = new ForceTreePseudoNFW(2,&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos);
+			//Halo_tree[j] = new ForceTreePseudoNFW(2,&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos);
 			//halo_tree[j] = auto_ptr<ForceTree>(new ForceTreePseudoNFW(2,&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos,true,5,3,false,0.1));
 			//halo_tree[j] = auto_ptr<ForceTree>(new ForceTreePseudoNFW(2,&halodata[j]->pos[0],halodata[j]->Nhalos
 				//	,halodata[j]->halos,true,halodata[j]->kappa_background));
@@ -816,6 +816,7 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 	cout << endl << endl;
 
 	buildHaloTrees(cosmo,source->zsource);
+	std:: cout << " done " << std:: endl;
 }
 
 /** \brief Read in information from a Virgo Millennium Data Base http://gavo.mpa-garching.mpg.de/MyMillennium/
