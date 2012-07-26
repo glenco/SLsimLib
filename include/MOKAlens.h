@@ -5,7 +5,7 @@
  *      Author: mpetkova
  */
 
-#ifdef WITH_MOKA
+//#ifdef WITH_MOKA
 
 #ifndef MOKALENS_H_
 #define MOKALENS_H_
@@ -16,8 +16,8 @@
 #include <profile.h>
 #include <valarray>
 
-/*
- * the MOKA map structure, containing all quanitites that define it
+/**
+ * \brief the MOKA map structure, containing all quantities that define it
  */
 struct MOKAmap{
 	/// values for the map
@@ -33,7 +33,10 @@ struct MOKAmap{
 	double center[2];
 };
 
-/// A class to represents the MOKA lens map
+/**
+ *  \brief A class to represents the MOKA lens map
+ *
+ */
 class MOKALens : public Lens{
 public:
 
@@ -58,4 +61,4 @@ public:
 
 #endif /* MOKALENS_H_ */
 
-#endif
+//#endif

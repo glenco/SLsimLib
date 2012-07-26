@@ -147,7 +147,7 @@ short find_peaks(
  *
  *
  */
-// TODO Add function declaration to header.
+// TODO Add function declaration to header file.  Maybe move this function to another file.
 short refine_on_implanted_source(
 		MultiLens &lens        /// MultiLens model
 		,GridHndl grid         /// Grid to be refined.  It must be initialized.

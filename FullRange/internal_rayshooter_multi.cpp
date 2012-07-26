@@ -33,7 +33,8 @@ void MultiLens::rayshooterInternal(
 		unsigned long Npoints   /// number of points to be shot
 		,Point *i_points        /// point on the image plane
 		,bool kappa_off         /// turns calculation of convergence and shear off to save time.
-		,double zsource         // TODO Margarita. Comment this!  Why is this here?
+		,double zsource         // TODO Margarita. Comment this!  Why is this here?   This seems to be to stop the ray-tracing at some plane, but is zsource is
+		                        // not exactly equal to one of the plane's redshifts it wont stop.  Why not put the planes index or make it stop at the next plane?
 		){
 	unsigned long i;
 	double xx[2];

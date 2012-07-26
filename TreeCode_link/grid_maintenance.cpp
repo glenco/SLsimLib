@@ -21,6 +21,12 @@ Grid::Grid(
 
 	Point *i_points,*s_points;
 
+	assert(N1d > 0);
+	assert(range > 0);
+
+	if(N1d <= 0){ERROR_MESSAGE(); std::cout << "cannot make Grid with no points" << std::endl; exit(1);}
+	if(range <= 0){ERROR_MESSAGE(); std::cout << "cannot make Grid with no range" << std::endl; exit(1);}
+
 	Ngrid = N1d;
 	Ngrid_block = 3;  // never been tested with anything other than 3
 	

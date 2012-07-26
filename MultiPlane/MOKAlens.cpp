@@ -15,8 +15,7 @@
 
 using namespace std;
 
-/*
- * \ingroup Constructor
+/**
  * \brief allocates and reads the MOKA map in
  */
 MOKALens::MOKALens(std::string paramfile) : Lens(){
@@ -65,8 +64,7 @@ MOKALens::~MOKALens(){
 	delete map;
 }
 
-/*
- * sets the cosmology and the lens and the source according to the MOKA map parameters
+/** \brief sets the cosmology and the lens and the source according to the MOKA map parameters
  */
 void MOKALens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 	cosmo->setOmega_matter(map->omegam,true);
@@ -191,7 +189,7 @@ void MOKALens::setZlens(double z){
 	zlens = z;
 }
 
-/*
+/**
  * saves the image, by rading off the calues from the image tree
  * and then saving to a fits file and computing the radial profile
  * of the convergence
@@ -239,7 +237,7 @@ void MOKALens::saveImage(GridHndl grid,bool saveprofiles){
 	}
 }
 
-/*
+/**
  * computing and saving the radial profile of the convergence
  */
 void MOKALens::saveKappaProfile(){
