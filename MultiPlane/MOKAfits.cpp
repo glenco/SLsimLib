@@ -40,16 +40,6 @@ void readImage(std::string fn
 		,std::valarray<float> *gamma1
 		,std::valarray<float> *gamma2
 	       ,struct LensHalo *LH){ 
-  /*
-                ,double *boxl
-		,double *boxlMpc
-		,double *zlens
-		,double *zsource
-		,double *omegam
-		,double *omegal
-		,double *h
-		,double *DL){
-  */
 
 	int nx,ny;
 
@@ -76,15 +66,7 @@ void readImage(std::string fn
 	h0->readKey ("DL",LH->DL);
 	h0->readKey ("DLS",LH->DLS);
 	h0->readKey ("DS",LH->DS);
-	/*
-	h0->readKey ("SIDEL",*boxl);
-	h0->readKey ("SIDEL2",*boxlMpc);
-	h0->readKey ("ZLENS",*zlens);
-	h0->readKey ("ZSOURCE",*zsource);
-	h0->readKey ("OMEGA",*omegam);
-	h0->readKey ("LAMBDA",*omegal);
-	h0->readKey ("H",*h);
-	*/
+
 	ExtHDU &h1=ff->extension(1);
 	h1.read(*alpha1);
 	ExtHDU &h2=ff->extension(2);
@@ -108,16 +90,6 @@ void writeImage(std::string filename
 		,int nx
 		,int ny
 		,struct LensHalo LH){ 
-  /*
-		,double boxl
-		,double boxlMpc
-		,double zlens
-		,double zsource
-		,double omegam
-		,double omegal
-		,double h
-		,double DL){
-  */
 
 	long naxis=2;
 	long naxes[2]={nx,ny};
@@ -164,6 +136,89 @@ void writeImage(std::string filename
 
 	std::cout << *phout << std::endl;
 
+}
+
+void make_friendship(int ii,int ji,int np,std:: vector<int> &friends, std:: vector<double> &pointdist){
+  for(int jj=0;jj<np;jj++){
+    if(friends[ji+np*jj]!=0){
+      if(friends[ji+np*jj]<0){
+	friends[ii+np*jj]=-(ii+1);	
+      }
+      else{
+	friends[ii+np*jj]=(ii+1);
+      }
+      friends[ji+np*jj]=0;
+    }
+  }  
+  friends[ii+np*ji]=-(ii+1);
+}
+
+int fof(double l,std:: vector<double> xci, std:: vector<double> yci, std:: vector<int> &groupid){
+  int np = xci.size();
+  std:: vector<int> friends(np*np);
+  std:: vector<double> pointdist(np*np);
+  for(int ii = 0;ii<np; ii++) for(int ji = 0;ji<np; ji++){
+      pointdist[ii+np*ji] = sqrt( pow(xci[ii] - xci[ji],2) + pow(yci[ii] - yci[ji],2));
+      groupid[ii] = 0;
+      friends[ii+np*ji]=0;
+    }
+  for(int ii=0;ii<np;ii++) for(int ji = 0;ji<np; ji++){
+      if(pointdist[ii+np*ji]<=1.5*l) friends[ii+np*ji] = ii+1;
+    }
+  for(int ii=0;ii<np;ii++){
+    int r = 0;
+    while(r==0){
+      r=1;
+      for(int ji=0;ji<np;ji++){
+	if(friends[ii+np*ji]>0){
+	  if(ii!=ji){
+	    make_friendship(ii,ji,np,friends,pointdist);
+	    r=0;
+	  }
+	}
+      }
+    }
+  }
+  for(int ii=0;ii<np;ii++){
+    int p=0;
+    for(int ji=0;ji<np;ji++){
+      if(friends[ji+np*ii]!=0) p++;
+      if(p==2){
+	std:: cout << ji << "  " << ii << ":  "  << friends[ji+np*ii] << "  " << friends[ii+np*ji] << std:: endl;
+	exit(1);
+      }
+    }
+  }
+  // count the particles in each group
+  int kt = 0;
+  int ng= 0;
+  for(int ii=0;ii<np;ii++){
+    int k = 0;
+    for(int ji=0;ji<np;ji++){
+      if(friends[ii+np*ji]!=0){
+	k++;
+	groupid[ji]=ii+1;
+      }
+    }
+    if(k>0){
+      ng++;
+    }
+    kt = kt + k;
+  }
+  if(kt != np){
+    std:: cout << " number of screaned particles : " << kt << std:: endl;
+    std:: cout << " differes from the number of particles : " << np << std:: endl;
+    std:: cout << " number of group found : " << ng << std:: endl;
+    std:: cout << "     " << std:: endl;
+    std:: cout << " I will STOP here!!! " << std:: endl;
+    exit(1);
+  }
+  /* Make a histogram of the data */
+  std::vector< int > histogram(np,0);
+  std::vector< int >::iterator it = groupid.begin();
+  while(it != groupid.end()) histogram[*it++]++;
+  int mode = std::max_element(histogram.begin(),histogram.end()) - histogram.begin();
+  return mode;
 }
 
 #endif

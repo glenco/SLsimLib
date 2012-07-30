@@ -39,16 +39,6 @@ MOKALens::MOKALens(std::string paramfile) : Lens(){
 			,&map->gamma1
 			,&map->gamma2
     		        ,&map->LH);
-		  /*
-			,&(map->boxl)
-			,&(map->boxlMpc)
-			,&(map->zlens)
-			,&(map->zsource)
-			,&(map->omegam)
-			,&(map->omegal)
-			,&(map->h)
-			,&(map->DL));
-		  */
 
 	map->boxl = map->LH.boxlarcsec;
 	map->zlens = map->LH.zl;
@@ -65,6 +55,11 @@ MOKALens::MOKALens(std::string paramfile) : Lens(){
 
 	/// to radians
 	map->boxl *= pi/180/3600.;
+
+	double xmin = -map->boxlMpc*0.5*map->h;
+	double xmax =  map->boxlMpc*0.5*map->h;
+	fill_linear (map->x,map->nx,xmin,xmax); // physical
+	map->inarcsec  = 10800./M_PI/map->LH.DL*60.;                             
 }
 
 MOKALens::~MOKALens(){
@@ -238,22 +233,23 @@ void MOKALens::saveImage(GridHndl grid,bool saveprofiles){
 			,map->nx
 			,map->ny
    		        ,map->LH);
-	/*
-			,map->boxl
-			,map->boxlMpc
-			,map->zlens
-			,map->zsource
-			,map->omegam
-			,map->omegal
-			,map->h
-			,map->DL);
-	*/
 
 	if(saveprofiles == true){
 	  std:: cout << " saving profile " << std:: endl;
 	            saveProfiles();
-		 // saveKappaProfile();
-		 // saveGammaProfile();
+		    estSignLambdas(); 
+		    double RE1,RE2;
+		    EinsteinRadii(RE1,RE2);
+		    std::ostringstream fEinr;
+		    fEinr << "Einstein.radii_" << MOKA_input_file << ".dat";
+		    std:: ofstream filoutEinr;
+		    std:: string filenameEinr = fEinr.str();
+		    filoutEinr.open(filenameEinr.c_str());
+		    filoutEinr << "# effective        median " << std:: endl;
+		    filoutEinr << RE1 << "   " << RE2 << std:: endl;
+		    filoutEinr.close();
+		    // saveKappaProfile();
+		    // saveGammaProfile();
 	}
 }
 
@@ -267,7 +263,8 @@ void MOKALens::saveKappaProfile(){
 	double xmax =  map->boxlMpc*0.5*map->h;
 	double drpix = map->boxlMpc/map->nx*map->h;
 	std::valarray<float> pxdist(map->nx*map->ny);
-	for(int i=0; i<map->nx; i++ ) for(int j=0; j<map->ny; j++ ){
+	int i, j;
+	for(i=0; i<map->nx; i++ ) for(j=0; j<map->ny; j++ ){
 		pxdist[i+map->ny*j]= sqrt(pow((xmin+(drpix*0.5)+i*drpix),2) +
 				pow((xmin+(drpix*0.5)+j*drpix),2));
 	}
@@ -306,7 +303,8 @@ void MOKALens::saveGammaProfile(){
 	double xmax =  map->boxlMpc*0.5*map->h;
 	double drpix = map->boxlMpc/map->nx*map->h;
 	std::valarray<float> pxdist(map->nx*map->ny);
-	for(int i=0; i<map->nx; i++ ) for(int j=0; j<map->ny; j++ ){
+	int i, j;
+	for(i=0; i<map->nx; i++ ) for(j=0; j<map->ny; j++ ){
 		pxdist[i+map->ny*j]= sqrt(pow((xmin+(drpix*0.5)+i*drpix),2) +
 				pow((xmin+(drpix*0.5)+j*drpix),2));
 	}
@@ -343,16 +341,16 @@ void MOKALens::saveProfiles(){
 	double xmin = -map->boxlMpc*0.5*map->h;
 	double xmax =  map->boxlMpc*0.5*map->h;
 	double drpix = map->boxlMpc/map->nx*map->h;
-	std:: vector<double> x(map->nx);	
-	fill_linear (x,map->nx,xmin,xmax); // physical
+
 	std::valarray<float> pxdist(map->nx*map->ny);
 	std::valarray<float> red_sgE(map->nx*map->ny),red_sgB(map->nx*map->ny),sgm(map->nx*map->ny); 
-	for(int i=0; i<map->nx; i++ ) for(int j=0; j<map->ny; j++ ){
+	int i, j;
+	for(i=0; i<map->nx; i++ ) for(j=0; j<map->ny; j++ ){
 		pxdist[i+map->ny*j]= sqrt(pow((xmin+(drpix*0.5)+i*drpix),2) +
 				pow((xmin+(drpix*0.5)+j*drpix),2));
 		// reduced shear E a B
-		double dx=x[i];
-		double dy=x[j];
+		double dx=map->x[i];
+		double dy=map->x[j];
 		double p=atan2( dy, dx ); // check gamma 1 and gamma 2 definition
 		red_sgE[i+map->ny*j] = (-map->gamma1[i+map->ny*j]*cos(2*p)-map->gamma2[i+map->ny*j]*sin(2*p))/(1.-map->convergence[i+map->ny*j]);
 		red_sgB[i+map->ny*j] = (map->gamma1[i+map->ny*j]*sin(2*p)-map->gamma2[i+map->ny*j]*cos(2*p))/(1.-map->convergence[i+map->ny*j]);
@@ -361,7 +359,7 @@ void MOKALens::saveProfiles(){
 
 	double dr0 = 8.*(0.5*map->boxlMpc*map->h)/(map->nx/2.);
 	int nbin = int(xmax/dr0);                           
-	double inarcsec  = 10800./M_PI/map->LH.DL*60.;                             
+
 	//                                                                                           
 	std:: cout << "   " << std:: endl;                                                           
 	std:: cout << " nbins = " << nbin << "  dr0 = " << dr0 << std:: endl;                        
@@ -384,7 +382,8 @@ void MOKALens::saveProfiles(){
 	std:: string filenameprof = fprof.str();
 	filoutprof.open(filenameprof.c_str());
 	filoutprof <<"# r      kappa     sig_k     ckappa     sig_ck    redgE   sig_redgE   redgB   sig_redgE   g   sig_g   theta   Anulus_area" << std:: endl;
-	for(int l=0;l<nbin;l++){
+	int l;
+	for(l=0;l<nbin;l++){
 	  double Aanulus = M_PI*((dr0*l+dr0)*(dr0*l+dr0)-(dr0*l)*(dr0*l)); 
 	  filoutprof << dr0*l + dr0/2. << "  " 
 		     << kprofr[l] << "  " << sigmakprof[l] << "  " 
@@ -392,22 +391,10 @@ void MOKALens::saveProfiles(){
 		     << gamma1profr[l] << "  " << sigmagamma1prof[l] << "  " 
 		     << gamma0profr[l] << "  " << sigmagamma0prof[l] << "  " 
 	    	     << gamma2profr[l] << "  " << sigmagamma2prof[l] << "   "
-		     << (dr0*l + dr0/2.)*inarcsec << "   "  << Aanulus*inarcsec*inarcsec << "   " <<  
+		     << (dr0*l + dr0/2.)*map->inarcsec << "   "  << Aanulus*map->inarcsec*map->inarcsec << "   " <<  
 	    std:: endl;
 	}
 	filoutprof.close();
-	/*
-	delete[] kprofr;
-	delete[] sigmakprof;
-	delete[] ckprofr;
-	delete[] sigmackprof;
-	delete[] gamma0profr;
-	delete[] sigmagamma0prof;
-	delete[] gamma1profr;
-	delete[] sigmagamma1prof;
-	delete[] gamma2profr;
-	delete[] sigmagamma2prof;
-	*/
 }
 
 /** \ingroup DeflectionL2
@@ -436,5 +423,151 @@ void MOKALens::rayshooterInternal(double *xx, double *alpha, double *gamma, doub
 
 
 	return;
+}
+
+void MOKALens::estSignLambdas(){
+  map->Signlambdar.resize(map->nx*map->ny);
+  map->Signlambdat.resize(map->nx*map->ny);
+  double gamma,lambdar,lambdat;
+  int i, j;
+  for(i=0;i<map->nx;i++)
+    for(j=0;j<map->ny;j++){
+      gamma = sqrt(pow(map->gamma1[i+map->ny*j],2) + 
+			  pow(map->gamma2[i+map->ny*j],2));
+      lambdat=1-map->convergence[i+map->ny*j]-gamma;
+      lambdar=1-map->convergence[i+map->ny*j]+gamma;
+      
+      if(lambdar>=0) map->Signlambdar[i+map->ny*j]=1;
+      else map->Signlambdar[i+map->ny*j]=-1;
+      
+      if(lambdat>=0) map->Signlambdat[i+map->ny*j]=1;
+      else map->Signlambdat[i+map->ny*j]=-1;     
+    }
+}
+
+void MOKALens::EinsteinRadii(double &RE1, double &RE2){
+  double signV;
+  std:: vector<double> xci1,yci1;
+  std:: vector<double> xci2,yci2;
+  // open file readable by ds9
+  std::ostringstream fcrit;
+  fcrit << "Criticals_" << MOKA_input_file << ".reg";
+  std:: ofstream filoutcrit;
+  std:: string filenamecrit = fcrit.str();
+  filoutcrit.open(filenamecrit.c_str());
+  // define the critical points in the map
+  int i, j;
+  for(i=1;i<map->nx-1;i++)
+    for(j=1;j<map->ny-1;j++){
+      signV=map->Signlambdar[i-1+map->ny*j]+map->Signlambdar[i+map->ny*(j-1)]+
+	map->Signlambdar[i+1+map->ny*j]+map->Signlambdar[i+map->ny*(j+1)];      
+      if(fabs(signV)<4.){
+	xci1.push_back(map->x[i]);
+	yci1.push_back(map->x[j]);
+	filoutcrit << "circle(" << i << "," << j << ",0.5)" << std:: endl;
+      }
+      signV=map->Signlambdat[i-1+map->ny*j]+map->Signlambdat[i+map->ny*(j-1)]+
+	map->Signlambdat[i+1+map->ny*j]+map->Signlambdat[i+map->ny*(j+1)];      
+      if(fabs(signV)<4.){
+	xci2.push_back(map->x[i]);
+	yci2.push_back(map->x[j]);
+	filoutcrit << "circle(" << i << "," << j << ",0.5)" << std:: endl;
+      }
+    }
+  filoutcrit.close();
+  double pixDinL = map->boxlMpc*map->h/double(map->nx);
+  /* measure the Einstein radius */
+  std:: vector<double> xci,yci;	
+  for(int ii=0;ii<xci1.size();ii++){
+    xci.push_back(xci1[ii]);
+    yci.push_back(yci1[ii]);
+  }
+  for(int ii=0;ii<xci2.size();ii++){
+    xci.push_back(xci2[ii]);
+    yci.push_back(yci2[ii]);
+  }
+  xci1.clear();
+  yci1.clear();
+  xci2.clear();
+  yci2.clear();
+  int nc = xci.size();
+  std:: vector<int> groupid(nc);
+  int largestgroupid = fof(pixDinL,xci,yci,groupid);
+  std:: vector<double> xcpoints,ycpoints;
+  for(int ii=0;ii<nc;ii++){
+    if(groupid[ii] == largestgroupid){
+      xcpoints.push_back(xci[ii]);
+      ycpoints.push_back(yci[ii]);
+    }
+  }
+  nc = xcpoints.size();
+  if(nc>0){
+    std:: vector<double>::iterator maxit, minit; 
+    // find the min and max elements in the vector
+    maxit = max_element(xcpoints.begin(), xcpoints.end());
+    minit = min_element(xcpoints.begin(), xcpoints.end());
+    double xmincpoints,xmaxcpoints;
+    xmaxcpoints = *maxit;
+    xmincpoints = *minit;
+    int imin = locate(map->x,xmincpoints);
+    int imax = locate(map->x,xmaxcpoints);
+    std:: vector<double> ysup,yinf,xsup,xinf;
+    for(int ii=imin;ii<=imax;ii++){
+      std:: vector<double>ybut;
+      int condition=0;
+      for(int ji=0;ji<nc;ji++){
+	if(fabs(xcpoints[ji]-map->x[ii])<pixDinL/2){
+	  if(condition==0){
+	    xsup.push_back(xcpoints[ji]);
+	    xinf.push_back(xcpoints[ji]);
+	    condition=1;
+	  }
+	  ybut.push_back(ycpoints[ji]);
+	}
+      }
+      if(ybut.size()>0){
+	std:: vector<double>::iterator ymax, ymin; 
+	// Find the min and max elements in the vector
+	ymax = max_element(ybut.begin(), ybut.end());
+	ymin = min_element(ybut.begin(), ybut.end());
+	double ymincpoints,ymaxcpoints;
+	ymaxcpoints = *ymax;
+	ymincpoints = *ymin;  
+	ysup.push_back(ymaxcpoints);
+	yinf.push_back(ymincpoints);
+      }  
+      if(ybut.size()==1){
+	double ymincpoints,ymaxcpoints;
+	ymaxcpoints = ybut[0];
+	ymincpoints = ybut[0];
+	ysup.push_back(ymaxcpoints);
+	yinf.push_back(ymincpoints);
+      }  
+    }
+    nc = yinf.size();
+    int npixIN=0;
+    std:: vector<double> RE;
+    for(int ii=0;ii<nc;ii++){
+      RE.push_back(sqrt(pow(xinf[ii],2.) + pow(yinf[ii],2)));
+      std:: vector<double> ycounts;
+      for(int ji=0;ji<map->nx;ji++){
+	if(map->x[ji]>=yinf[ii] && map->x[ji]<=ysup[ii]){
+	  ycounts.push_back(map->x[ji]);
+	}
+      }
+      int ncounts = ycounts.size();
+      npixIN=npixIN+ncounts;
+    }
+    for(int ii=nc-1;ii>=0;ii--){
+      RE.push_back(sqrt(pow(xsup[ii],2) + pow(ysup[ii],2)));
+    }
+    RE1=map->inarcsec*sqrt(pixDinL*pixDinL*npixIN/M_PI);
+    RE2=map->inarcsec*median(RE);
+    if(RE2!=RE2) RE2=0.;
+  }
+  else{
+    RE1=0.;
+    RE2=0.;
+  }
 }
 #endif

@@ -11,6 +11,7 @@
 #define MOKALENS_H_
 
 #include <cosmo.h>
+#include <utilities.h>
 #include <source.h>
 #include <grid_maintenance.h>
 #include <profile.h>
@@ -28,9 +29,12 @@ struct MOKAmap{
 	std::valarray<float> gamma1;
 	std::valarray<float> gamma2;
 	std::valarray<float> gamma3;
-
+	std::valarray<float> Signlambdar;
+	std::valarray<float> Signlambdat;
+	std:: vector<double> x;	 
 	int nx,ny;
 	double boxl,boxlMpc,zlens,zsource,omegam,omegal,h,DL;
+        double inarcsec;
 	double center[2];
         struct LensHalo LH;
 };
@@ -57,6 +61,8 @@ public:
 
 	MOKAmap *map;
 
+	void estSignLambdas();
+	void EinsteinRadii(double &RE1, double &RE2);
 };
 
 #endif /* MOKALENS_H_ */

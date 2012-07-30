@@ -12,6 +12,7 @@
 
 #include <iostream>
 #include <valarray>
+#include <vector>
 
 struct LensHalo{
   double zl,m,zs,DL,DLS,DS,c,cS,fsub,mstar,minsubmass;   // lens and source properties
@@ -35,16 +36,6 @@ void readImage(std::string fn
 		,std::valarray<float> *gamma1
 		,std::valarray<float> *gamma2
 	       ,struct LensHalo *LH);
-/*
-		,double *boxl
-		,double *boxlMpc
-		,double *zlens
-		,double *zsource
-		,double *omegam
-		,double *omegal
-		,double *h
-		,double *DL);
-*/
 
 void writeImage(std::string filename
 		,std::valarray<float> convergence
@@ -54,16 +45,12 @@ void writeImage(std::string filename
 		,int nx
 		,int ny
 		,struct LensHalo LH);
-/*
-		,double boxl
-		,double boxlMpc
-		,double zlens
-		,double zsource
-		,double omegam
-		,double omegal
-		,double h
-		,double DL);
-*/
+
+
+void make_friendship(int ii,int ji,int np,std:: vector<int> &friends, std:: vector<double> &pointdist);
+
+int fof(double l,std:: vector<double> xci, std:: vector<double> yci, std:: vector<int> &groupid);
+
 #endif /* FITS_H_ */
 
 #endif
