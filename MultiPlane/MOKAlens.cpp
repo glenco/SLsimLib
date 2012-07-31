@@ -207,7 +207,7 @@ void MOKALens::saveImage(GridHndl grid,bool saveprofiles){
 	std::stringstream f;
 	std::string filename;
 
-	f << "noisy_" << MOKA_input_file;
+	f << MOKA_input_file << "_noisy.fits";
 	filename = f.str();
 
 	MoveToTopList(grid->i_tree->pointlist);
@@ -241,7 +241,7 @@ void MOKALens::saveImage(GridHndl grid,bool saveprofiles){
 		    double RE1,RE2;
 		    EinsteinRadii(RE1,RE2);
 		    std::ostringstream fEinr;
-		    fEinr << "Einstein.radii_" << MOKA_input_file << ".dat";
+		    fEinr << MOKA_input_file << "_noisy_Einstein.radii.dat";
 		    std:: ofstream filoutEinr;
 		    std:: string filenameEinr = fEinr.str();
 		    filoutEinr.open(filenameEinr.c_str());
@@ -281,7 +281,7 @@ void MOKALens::saveKappaProfile(){
 	double *ckprofr = estcprof(map->convergence,map->nx,map->ny,pxdist,dr0,xmax);
 	double *sigmackprof = estsigmacprof(map->convergence,map->nx,map->ny,pxdist,dr0,xmax,kprofr);
 	std::ostringstream fprof;
-	fprof << "MAP_radial_prof_kappa_" << MOKA_input_file << ".dat";
+	fprof << MOKA_input_file << "_noisy_MAP_radial_prof_kappa.dat";
 	std:: ofstream filoutprof;
 	std:: string filenameprof = fprof.str();
 	filoutprof.open(filenameprof.c_str());
@@ -296,6 +296,9 @@ void MOKALens::saveKappaProfile(){
 	filoutprof.close();
 }
 
+/*
+ * computing and saving the radial profile of the shear
+ */
 void MOKALens::saveGammaProfile(){
 
 	/* measuring the differential and cumulative profile*/
@@ -321,7 +324,7 @@ void MOKALens::saveGammaProfile(){
 	double *ckprofr = estcprof(map->gamma2,map->nx,map->ny,pxdist,dr0,xmax);
 	double *sigmackprof = estsigmacprof(map->gamma2,map->nx,map->ny,pxdist,dr0,xmax,kprofr);
 	std::ostringstream fprof;
-	fprof << "MAP_radial_prof_gamma_" << MOKA_input_file << ".dat";
+	fprof << MOKA_input_file << "_noisy_MAP_radial_prof_gamma.dat";
 	std:: ofstream filoutprof;
 	std:: string filenameprof = fprof.str();
 	filoutprof.open(filenameprof.c_str());
@@ -336,6 +339,10 @@ void MOKALens::saveGammaProfile(){
 	filoutprof.close();
 }
 
+
+/*
+ * computing and saving the radial profile of the convergence, reduced tangential and parallel shear and of the shear
+ */
 void MOKALens::saveProfiles(){
 	/* measuring the differential and cumulative profile*/
 	double xmin = -map->boxlMpc*0.5*map->h;
@@ -377,7 +384,7 @@ void MOKALens::saveProfiles(){
 	double *gamma2profr = estprof(sgm,map->nx,map->ny,pxdist,dr0,xmax);  
 	double *sigmagamma2prof = estsigmaprof(sgm,map->nx,map->ny,pxdist,dr0,xmax,gamma2profr);              
 	std::ostringstream fprof;
-	fprof << "MAP_radial_prof_" << MOKA_input_file << ".dat";
+	fprof << MOKA_input_file << "_noisy_MAP_radial_prof.dat";
 	std:: ofstream filoutprof;
 	std:: string filenameprof = fprof.str();
 	filoutprof.open(filenameprof.c_str());
@@ -425,6 +432,9 @@ void MOKALens::rayshooterInternal(double *xx, double *alpha, double *gamma, doub
 	return;
 }
 
+/*
+ * compute the signal of \lambda_r and \lambda_t
+ */
 void MOKALens::estSignLambdas(){
   map->Signlambdar.resize(map->nx*map->ny);
   map->Signlambdat.resize(map->nx*map->ny);
@@ -445,13 +455,17 @@ void MOKALens::estSignLambdas(){
     }
 }
 
+/*
+ * measure the effective and the median Einstein radii of the connected critical 
+ * points present at the halo center
+ */
 void MOKALens::EinsteinRadii(double &RE1, double &RE2){
   double signV;
   std:: vector<double> xci1,yci1;
   std:: vector<double> xci2,yci2;
   // open file readable by ds9
   std::ostringstream fcrit;
-  fcrit << "Criticals_" << MOKA_input_file << ".reg";
+  fcrit << MOKA_input_file << "_noisy_Criticals.reg";
   std:: ofstream filoutcrit;
   std:: string filenamecrit = fcrit.str();
   filoutcrit.open(filenamecrit.c_str());

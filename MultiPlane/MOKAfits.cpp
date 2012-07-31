@@ -138,6 +138,10 @@ void writeImage(std::string filename
 
 }
 
+/*
+ * routine used by fof to link nearby grid cell points
+ */
+
 void make_friendship(int ii,int ji,int np,std:: vector<int> &friends, std:: vector<double> &pointdist){
   for(int jj=0;jj<np;jj++){
     if(friends[ji+np*jj]!=0){
@@ -153,6 +157,11 @@ void make_friendship(int ii,int ji,int np,std:: vector<int> &friends, std:: vect
   friends[ii+np*ji]=-(ii+1);
 }
 
+/*
+ * given a a set of grid points xci and yci and an interpixeld distance l return the id of the 
+ * fof group of each cell point
+ */
+
 int fof(double l,std:: vector<double> xci, std:: vector<double> yci, std:: vector<int> &groupid){
   int np = xci.size();
   std:: vector<int> friends(np*np);
@@ -163,6 +172,7 @@ int fof(double l,std:: vector<double> xci, std:: vector<double> yci, std:: vecto
       friends[ii+np*ji]=0;
     }
   for(int ii=0;ii<np;ii++) for(int ji = 0;ji<np; ji++){
+      // consider as friends grid points less distant than 1.5 x l
       if(pointdist[ii+np*ji]<=1.5*l) friends[ii+np*ji] = ii+1;
     }
   for(int ii=0;ii<np;ii++){
