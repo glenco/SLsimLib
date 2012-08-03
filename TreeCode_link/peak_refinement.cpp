@@ -145,67 +145,117 @@ short find_peaks(
  *
  *  \brief Refines the grid based on the flux from implanted sources.
  *
- *
+ *  If a source has been implanted into a MultiLens this routine will refine the
+ *  grid around that image until the grid anywhere on the image and on the border
+ *  reaches the resolution target.  The images are stored in imageinfo[0,...,*Nimages-1]->imagekist.
+ *  The image must be within radius of the point theta[2].
  */
-// TODO Add function declaration to header file.  Maybe move this function to another file.
 short refine_on_implanted_source(
-		MultiLens &lens        /// MultiLens model
+		MultiLensHndl lens        /// MultiLens model
 		,GridHndl grid         /// Grid to be refined.  It must be initialized.
 		,double *theta         /// position on the sky
 		,double radius         /// size of region to look for image
 		,double res_target     /// the final grid resolution that is required
 		,ImageInfo *imageinfo  /// the output image
 		,int *Nimages		   /// number of images
+		,int NimageMax         /// Maximum number of images.
 		,bool kappa_off        /// turn off convergence and shear calculation to save time
+		,double threshold      /// the surface brightness threshold above which the grid is refined, default is 0
 		){
 
-	long Nnewpoints = 0;
 	KistHndl newpointskist = new Kist;
+	bool foundimage;
+	double tmp;
 
+	SetInImage(imageinfo->imagekist,FALSE);
 	imageinfo->imagekist->Empty();
 	imageinfo->gridrange[2] = 1.0e99;
 	imageinfo->gridrange[0] = imageinfo->gridrange[1]  = 0.0;
 
+	//TODO What if new source overlaps with an old source?  Image will increase to include both.
+
+	/** test lines **********************************
+	unsigned long Ntmp;
+	MoveToTopList(grid->i_tree->pointlist);
+	Ntmp = 0;
+	do{
+		if(grid->i_tree->pointlist->current->in_image == TRUE) ++Ntmp;
+	}while(MoveDownList(grid->i_tree->pointlist));
+	assert(Ntmp == imageinfo->imagekist->Nunits());
+	/*******************************************************/
+
 	PointsWithinKist(grid->i_tree,theta,radius,newpointskist,0);
+	if(newpointskist->Nunits() == 0) NearestNeighborKist(grid->i_tree,theta,8,newpointskist);
 
 	newpointskist->MoveToTop();
 	do{
+		tmp = newpointskist->getCurrent()->surface_brightness;
 		// re-shoot rays to add in surface brightness from implanted sources
-		lens.rayshooterInternal(1,imageinfo->imagekist->getCurrent(),kappa_off);
+		lens->rayshooterInternal(1,newpointskist->getCurrent(),kappa_off);
 
-		if(newpointskist->getCurrent()->surface_brightness != 0){
+		if(fabs(newpointskist->getCurrent()->surface_brightness - tmp) > threshold){
 			imageinfo->imagekist->InsertAfterCurrent(newpointskist->getCurrent());
-			newpointskist->getCurrent()->in_image = TRUE;
-
 			imageinfo->imagekist->Down();
+
 			if(imageinfo->imagekist->getCurrent()->gridsize > imageinfo->gridrange[1])
 				imageinfo->gridrange[1] = imageinfo->imagekist->getCurrent()->gridsize;
 
 			if(imageinfo->imagekist->getCurrent()->gridsize < imageinfo->gridrange[2])
 				imageinfo->gridrange[2] = imageinfo->imagekist->getCurrent()->gridsize;
 
+		}else{
+			newpointskist->getCurrent()->in_image = FALSE;
 		}
 	}while(newpointskist->Down());
 
+	newpointskist->Empty();
+
 	// if there are no points
-	if(newpointskist->Nunits() == 0){
+	if(imageinfo->imagekist->Nunits() == 0){
 		NearestNeighborKist(grid->i_tree,theta,8,imageinfo->imagekist);
+		foundimage = false;
+	}else{
+		foundimage = true;
 	}
 
-	// TODO Deal with case where the image is not found initially so that multiple refinements can be made before reaching the scale.
+	/** test lines **********************************
+	MoveToTopList(grid->i_tree->pointlist);
+	Ntmp = 0;
+	do{
+		if(grid->i_tree->pointlist->current->in_image == TRUE) ++Ntmp;
+	}while(MoveDownList(grid->i_tree->pointlist));
+	assert(Ntmp == 0);
+	/*******************************************************/
 
-	newpointskist->Empty();
+	SetInImage(imageinfo->imagekist,TRUE);
+
+	/** test lines **********************************
+	assert(imageinfo->imagekist->AreDataUnique());
+	MoveToTopList(grid->i_tree->pointlist);
+	Ntmp = 0;
+	do{
+		if(grid->i_tree->pointlist->current->in_image == TRUE) ++Ntmp;
+	}while(MoveDownList(grid->i_tree->pointlist));
+	assert(Ntmp == imageinfo->imagekist->Nunits());
+	/*******************************************************/
 
 	findborders4(grid->i_tree,imageinfo);
 
 	// refine grid to wanted resolution
-	Nnewpoints = 1;
-	while(Nnewpoints){
-		Nnewpoints = refine_grid_kist(&lens,grid,imageinfo,1,res_target,2,true,newpointskist);
+	int refinements = 0;
+	long Nnewpoints = 1;
+	while(Nnewpoints || foundimage == false){
+		Nnewpoints = refine_grid_kist(lens,grid,imageinfo,1,res_target,2,true,newpointskist);
 		if(Nnewpoints > 0){
 			newpointskist->MoveToTop();
 			do{
-				if(newpointskist->getCurrent()->surface_brightness != 0){
+				if(newpointskist->getCurrent()->surface_brightness > threshold){
+					if(!foundimage){  // Take out points in imageinfo that are not on source.
+						SetInImage(imageinfo->imagekist,FALSE);
+						imageinfo->imagekist->Empty();
+						foundimage = true;
+					}
+
 					imageinfo->imagekist->InsertAfterCurrent(newpointskist->getCurrent());
 					newpointskist->getCurrent()->in_image = TRUE;
 
@@ -215,17 +265,62 @@ short refine_on_implanted_source(
 
 					if(imageinfo->imagekist->getCurrent()->gridsize < imageinfo->gridrange[2])
 						imageinfo->gridrange[2] = imageinfo->imagekist->getCurrent()->gridsize;
+
 				}
 			}while(newpointskist->Down());
 
+			if(!foundimage){
+				SetInImage(imageinfo->imagekist,FALSE);
+				NearestNeighborKist(grid->i_tree,theta,8,imageinfo->imagekist);
+				SetInImage(imageinfo->imagekist,TRUE);
+				imageinfo->imagekist->MoveToTop();
+				do{
+					if(imageinfo->imagekist->getCurrent()->gridsize > imageinfo->gridrange[1])
+						imageinfo->gridrange[1] = imageinfo->imagekist->getCurrent()->gridsize;
+
+					if(imageinfo->imagekist->getCurrent()->gridsize < imageinfo->gridrange[2])
+						imageinfo->gridrange[2] = imageinfo->imagekist->getCurrent()->gridsize;
+				}while(imageinfo->imagekist->Down());
+			}
+
 			findborders4(grid->i_tree,imageinfo);
 		}
+
+		/** test lines **********************************
+		MoveToTopList(grid->i_tree->pointlist);
+		Ntmp = 0;
+		do{
+			if(grid->i_tree->pointlist->current->in_image == TRUE) ++Ntmp;
+		}while(MoveDownList(grid->i_tree->pointlist));
+		assert(Ntmp == imageinfo->imagekist->Nunits());
+		/*******************************************************/
+
+		++refinements;
+		if(refinements > 50) break;
 	}
 
-	imageinfo->imagekist->MoveToTop();
+	if(!foundimage){
+		*Nimages = 0;
+		SetInImage(imageinfo->imagekist,FALSE);
+		imageinfo->imagekist->Empty();
+		delete newpointskist;
+
+		return 0;
+	}
+
+	/** test lines **********************************
+	MoveToTopList(grid->i_tree->pointlist);
+	Ntmp = 0;
 	do{
-		imageinfo->imagekist->getCurrent()->in_image = FALSE;
-	}while(imageinfo->imagekist->Down());
+		if(grid->i_tree->pointlist->current->in_image == TRUE) ++Ntmp;
+	}while(MoveDownList(grid->i_tree->pointlist));
+	assert(Ntmp == imageinfo->imagekist->Nunits());
+	/*******************************************************/
+
+	divide_images_kist(grid->i_tree,imageinfo,Nimages,NimageMax);
+
+	for(int i = 0;i<*Nimages;++i) SetInImage(imageinfo[i].imagekist,FALSE);
+
 
 	delete newpointskist;
 

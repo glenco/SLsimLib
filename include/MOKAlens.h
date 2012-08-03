@@ -5,7 +5,7 @@
  *      Author: mpetkova
  */
 
-//#ifdef WITH_MOKA
+#ifdef WITH_MOKA
 
 #ifndef MOKALENS_H_
 #define MOKALENS_H_
@@ -15,9 +15,12 @@
 #include <grid_maintenance.h>
 #include <profile.h>
 #include <valarray>
-
+//TODO Improve this comment.
 /**
  * \brief the MOKA map structure, containing all quantities that define it
+ *
+ * Note: To use this class requires setting the WITH_MOKA compiler flag and linking
+ * the cfits library.
  */
 struct MOKAmap{
 	/// values for the map
@@ -32,10 +35,12 @@ struct MOKAmap{
 	double boxl,boxlMpc,zlens,zsource,omegam,omegal,h,DL;
 	double center[2];
 };
-
+//TODO Improve this comment.
 /**
  *  \brief A class to represents the MOKA lens map
  *
+ * Note: To use this class requires setting the WITH_MOKA compiler flag and linking
+ * the cfits library.
  */
 class MOKALens : public Lens{
 public:
@@ -61,4 +66,4 @@ public:
 
 #endif /* MOKALENS_H_ */
 
-//#endif
+#endif

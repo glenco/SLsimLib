@@ -315,7 +315,7 @@ void _BuildTree(TreeHndl tree){
   /* same order as the linked list */
   unsigned long i,cut,dimension;
   Branch *cbranch,branch1,branch2;
-  double *x,xcut;
+  double xcut;
 
   cbranch=tree->current; /* pointer to current branch */
 
@@ -326,8 +326,6 @@ void _BuildTree(TreeHndl tree){
 	  return;
   }
 
-  x=(double *)malloc(cbranch->npoints*sizeof(double));
-  assert(x);
 
   /* initialize boundaries to old boundaries */
   for(i=0;i<2;++i){
@@ -341,7 +339,10 @@ void _BuildTree(TreeHndl tree){
   /* set dimension to cut box */
   dimension=(cbranch->level % 2);
 
-  /* reorder points */
+  double *x = new double[cbranch->npoints];
+  assert(x);
+
+   /* reorder points */
   tree->pointlist->current=tree->current->points;
   for(i=0;i<cbranch->npoints;++i){
     x[i]=tree->pointlist->current->x[dimension];
@@ -381,6 +382,7 @@ void _BuildTree(TreeHndl tree){
       //locateD(x-1,cbranch->npoints,xcut,&cut);
   }
 
+
   /* set point numbers and pointers to points */
   branch1.npoints=cut;
   assert(tree->current->points->next || tree->current->points->prev);
@@ -391,7 +393,8 @@ void _BuildTree(TreeHndl tree){
   JumpDownList(tree->pointlist,cut);
   branch2.points=tree->pointlist->current;
 
-  free(x);
+  delete[] x;
+
 
 	/* use geometric center */
 	branch1.center[0] = (branch1.boundary_p1[0] + branch1.boundary_p2[0])/2;

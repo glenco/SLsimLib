@@ -817,11 +817,12 @@ void MultiLens::ImplantSource(
 		<< "It is not being added." << endl;
 		return;
 	}
-	double Ds = cosmo->angDist(0,z);
+
+	Ds_implant = cosmo->angDist(0,z);
 	zs_implant = z;
 
-	ys_implant[0] = Ds*theta[0];
-	ys_implant[1] = Ds*theta[1];
+	ys_implant[0] = Ds_implant*theta[0];
+	ys_implant[1] = Ds_implant*theta[1];
 
 	locateD(plane_redshifts-1,Nplanes,zs_implant,&j);
 

@@ -51,7 +51,7 @@ private:
 	KistHndl trashkist;
 };
 
-typedef struct Grid *GridHndl;
+typedef struct Grid* GridHndl;
 
 // in image_finder_kist.c
 

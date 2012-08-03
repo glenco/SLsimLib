@@ -109,6 +109,9 @@ void MultiLens::rayshooterInternal(
 				xx[0] = ( (1 - dDs_implant/dDl[j+1])*xminus[0] + dDs_implant*xplus[0]/dDl[j+1] )/(1+zs_implant) - ys_implant[0];
 				xx[1] = ( (1 - dDs_implant/dDl[j+1])*xminus[1] + dDs_implant*xplus[1]/dDl[j+1] )/(1+zs_implant) - ys_implant[1];
 
+				xx[0] /= Ds_implant;
+				xx[1] /= Ds_implant;
+
 				i_points[i].surface_brightness += anasource->source_sb_func(xx);
 			}
 

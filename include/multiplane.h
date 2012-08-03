@@ -117,11 +117,13 @@ private:
 
 	// Variables for implanted source
 	std::auto_ptr<SourceAnaGalaxy> anasource;
-	double dDs_implant,zs_implant,ys_implant[2];
+	double dDs_implant,zs_implant,ys_implant[2],Ds_implant;
 	int flag_implanted_source;
 
 	void quicksort(HaloStructure *halos,double **brr,double *arr,unsigned long N);
 };
+
+typedef  MultiLens* MultiLensHndl;
 
 void swap(float *a,float *b);
 void swap(PosType *a,PosType *b);

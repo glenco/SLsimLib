@@ -233,8 +233,9 @@ void _PointsWithinKist(TreeHndl tree,double *ray,float *rmax,KistHndl neighborki
 
     	  incell=0;
 
-    	  // this sets ray back to real value once closest leaf bax is found
-    	  if( (ray[0]!=realray[0])*(ray[1]!=realray[1]) ){ std::printf("ray != realray _PointsWithinKist\n"); exit(0);}
+    	  // this sets ray back to real value once closest leaf box is found
+    	  //assert((ray[0] == realray[0])*(ray[1] == realray[1]));
+    	  //if( (ray[0]!=realray[0])*(ray[1]!=realray[1]) ){ std::printf("ray != realray _PointsWithinKist\n"); exit(0);}
 
     	  ray[0]=realray[0];
     	  ray[1]=realray[1];
@@ -514,4 +515,19 @@ Point *NearestNeighborKist(TreeHndl tree,double *ray,int Nneighbors,KistHndl nei
 	free(neighborlist);
 
 	return point;
+}
+/**
+ * \brief Set the in_image variable in every member of kist to value.
+ *
+ * Does not return current to previous value.
+ */
+void SetInImage(KistHndl kist,Boo value){
+	assert(kist);
+	if(kist->Nunits() == 0) return;
+
+	kist->MoveToTop();
+	do{
+		kist->getCurrent()->in_image = value;
+		kist->getCurrent()->image->in_image = value;
+	}while(kist->Down());
 }

@@ -214,6 +214,8 @@ void divide_images_kist(
 
 		//printf("   new_imagekist %li\n",new_imagekist->Nunits());
 		imageinfo[i].area = partition_images_kist(getCurrentKist(new_imagekist),imageinfo[i].imagekist,i_tree);
+
+		//TODO Why was this added and not taken out later?  AreDataUnique() takes a lot of time to run.
 		if(imageinfo[i].imagekist->Nunits() > new_imagekist->Nunits()){
 			bool test1,test2;
 			test1 = new_imagekist->AreDataUnique();

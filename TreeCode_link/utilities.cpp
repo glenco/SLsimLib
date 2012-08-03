@@ -10,56 +10,6 @@
 
 #define DLTABLE	256
 std::vector<double> zz, da;
-/*
-int windings2(double *x,Point *points,unsigned long Npoints,double *area,short image){
-	/* slow obsolete version
-
-  * returns the number of times the curve defined by points winds around point x
-  *   also calculates the area within the curve
-  *   is image > 0 the images of the points are used
-   *   if x is one of the border points it returns 1
-   *
-
-  double s[2],so[2],m,mo,windings;
-  unsigned long i;
-
-  if(image){
-    so[0]=points[0].image->x[0]-x[0];
-    so[1]=points[0].image->x[1]-x[1];
-  }else{
-    so[0]=points[0].x[0]-x[0];
-    so[1]=points[0].x[1]-x[1];
-  }
-  mo=sqrt(so[0]*so[0] + so[1]*so[1]);
-
-  if(fabs(mo) == 0 ) return 1;
-
-  for(i=1,windings=0,*area=0;i<Npoints;++i){
-    if(image){
-      s[0]=points[i].image->x[0]-x[0];
-      s[1]=points[i].image->x[1]-x[1];
-    }else{
-      s[0]=points[i].x[0]-x[0];
-      s[1]=points[i].x[1]-x[1];
-    }
-    m=sqrt(s[0]*s[0] + s[1]*s[1]);
-
-    if(fabs(m) == 0 ) return 1;
-
-    windings+=asin(s[1]*so[0]-s[0]*so[1])/m/mo;
-    *area+=s[1]*so[0]-s[0]*so[1];
-
-    so[0]=s[0];
-    so[1]=s[1];
-    mo=m;
-  }
-
-  //std::printf("  windings: area=%e windings/2/pi=%e\n",*area,windings/2/pi);
-
-  *area=fabs(*area)/2;
-  return (int)(fabs(windings)/2/pi + 0.5);
-}
-*/
 
 Point *LinkToSourcePoints(Point *i_points,unsigned long Npoints){
   Point *s_points;
