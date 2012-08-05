@@ -8,6 +8,7 @@
 #ifdef WITH_MOKA
 
 #include <MOKAfits.h>
+#include <fstream>
 #include <CCfits/CCfits>
 
 using namespace CCfits;
@@ -42,6 +43,19 @@ void readImage(std::string fn
 	       ,struct LensHalo *LH){ 
 
 	int nx,ny;
+
+	std:: cout << " reading MOKA file: " << fn << std:: endl;
+
+	std::ostringstream checkfout;
+	checkfout << fn << "_noisy.fits";	
+	std:: string checkfilenameout = checkfout.str();
+	std:: ifstream checkfileout;
+	checkfileout.open(checkfilenameout.c_str());
+	if(checkfileout.is_open()){
+	  std:: cout << checkfilenameout << " exists I will STOP here " << std:: endl;
+	  std:: cout << "     halo already processed! " << std:: endl;
+	  exit(1);
+	}
 
 	std::auto_ptr<FITS> ff(new FITS (fn, Read));
 
