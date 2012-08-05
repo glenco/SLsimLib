@@ -405,14 +405,13 @@ void QuadTree::force2D(double *ray,double *alpha,double *kappa,double *gamma,boo
   IndexType i;
   bool allowDescent=true;
   unsigned long count=0,index;
+  double rcm, arg1, arg2, prefac, prefacg;
 
   assert(tree);
   tree->moveTop();
 
   alpha[0]=alpha[1]=gamma[0]=gamma[1]=gamma[2]=0.0;
   *kappa=0.0;
-
-
 
   do{
 
@@ -442,20 +441,23 @@ void QuadTree::force2D(double *ray,double *alpha,double *kappa,double *gamma,boo
 					  ycm = tree->xp[tree->current->particles[i]][1] - ray[1];
 
 					  rcm2 = xcm*xcm + ycm*ycm;
+					  if(rcm2 < 1e-20) rcm2 = 1e-20;
 
 					  index = MultiRadius*tree->current->particles[i];
-					  if(haloON){
-						  tmp = alpha_o(rcm2,0)*halo_params[index].mass;
-					  }else{
-						  tmp = alpha_o(rcm2,0)*masses[MultiMass*tree->current->particles[i]];
-					  }
+
+					  if(haloON) prefac = halo_params[index].mass/rcm2/pi;
+					  else prefac = masses[MultiMass*tree->current->particles[i]]/rcm2/pi;
+
+					  prefacg = prefac/rcm2;
+
+					  tmp = -1.0*prefac;
+
 					  alpha[0] += tmp*xcm;
 					  alpha[1] += tmp*ycm;
 
 					  // can turn off kappa and gamma calculations to save times
 					  if(!no_kappa){
-						  if(haloON) tmp = gamma_o(rcm2,0)*halo_params[index].mass;
-						  else tmp = gamma_o(rcm2,0)*masses[MultiMass*tree->current->particles[i]];
+						  tmp = -2.0*prefacg;
 
 						  gamma[0] += 0.5*(xcm*xcm-ycm*ycm)*tmp;
 						  gamma[1] += xcm*ycm*tmp;
@@ -473,29 +475,35 @@ void QuadTree::force2D(double *ray,double *alpha,double *kappa,double *gamma,boo
 					  ycm = tree->xp[index][1] - ray[1];
 
 					  rcm2 = xcm*xcm + ycm*ycm;
+					  if(rcm2 < 1e-20) rcm2 = 1e-20;
+					  rcm = sqrt(rcm2);
 
-					  if(haloON) tmp = halo_params[index].Rmax;
-					  else tmp = sizes[index];
+					  if(haloON){
+						  prefac = halo_params[index].mass/rcm2/pi;
+						  arg1 = rcm/halo_params[index].rscale;
+						  arg2 = halo_params[index].Rmax/halo_params[index].rscale;
+						  tmp = halo_params[index].Rmax;
+					  }
+					  else{
+						  prefac = masses[MultiMass*tree->current->particles[i]]/rcm2/pi;
+						  arg1 = rcm2/(sizes[index]*sizes[index]);
+						  arg2 = sizes[index];
+						  tmp = sizes[index];
+					  }
 
+					  prefacg = prefac/rcm2;
+
+					  /// intersecting, subtract the point particle
 					  if(rcm2 < tmp*tmp){
-						  if(haloON){
-							  tmp = alpha_h(rcm2,halo_params[index])
-								  - alpha_o(rcm2,0)*halo_params[index].mass;
-						  }else{
-							  tmp =  (alpha_o(rcm2,sizes[index]) - alpha_o(rcm2,0))
-								  *masses[MultiMass*index];
-						  }
+						  tmp = (alpha_h(arg1,arg2) + 1.0)*prefac;
 						  alpha[0] += tmp*xcm;
 						  alpha[1] += tmp*ycm;
 
 						  // can turn off kappa and gamma calculations to save times
 						  if(!no_kappa){
-							  if(haloON) *kappa += kappa_h(rcm2,halo_params[index]);
-							  else *kappa += kappa_o(rcm2,sizes[index])*masses[MultiMass*index];
+							  *kappa += kappa_h(arg1,arg2)*prefac;
 
-							  if(haloON) tmp = gamma_h(rcm2,halo_params[index]) - gamma_o(rcm2,0)*halo_params[index].mass;
-							  else tmp = (gamma_o(rcm2,sizes[index])-gamma_o(rcm2,0))
-										  *masses[MultiMass*index];
+							  tmp = (gamma_h(arg1,arg2) + 2.0)*prefacg;
 
 							  gamma[0] += 0.5*(xcm*xcm-ycm*ycm)*tmp;
 							  gamma[1] += xcm*ycm*tmp;

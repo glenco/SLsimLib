@@ -126,11 +126,9 @@ MultiLens::MultiLens(string filename,long *my_seed) : Lens(){
 
 	charge = 4*pi*Grav*mass_scale;
 
-	//halo_tree = new ForceTreeHndl[Nplanes-1];
 	//halo_tree = new auto_ptr<ForceTree>[Nplanes-1];
 	halo_tree = new auto_ptr<QuadTree>[Nplanes-1];
 
-	//halodata = new HaloDataHndl[Nplanes-1];
 	halodata = new auto_ptr<HaloData>[Nplanes-1];
 
 	switch(flag_input_lens){
@@ -152,6 +150,15 @@ MultiLens::MultiLens(string filename,long *my_seed) : Lens(){
 
 	flag_implanted_source = 0;
 	seed = my_seed;
+
+	if(internal_profile == NFW && tables_set != true){
+		make_tables_nfw();
+		tables_set = true;
+	}
+	if(internal_profile == PseudoNFW && tables_set != true){
+		make_tables_pseudonfw(pnfw_beta);
+		tables_set = true;
+	}
 }
 
 MultiLens::~MultiLens(){
@@ -171,7 +178,12 @@ MultiLens::~MultiLens(){
 	}
 
 	if(flag_input_lens)
-     	        delete input_lens;
+		delete input_lens;
+
+	if(tables_set == true){
+		if(internal_profile == NFW) delete_tables_nfw();
+		if(internal_profile == PseudoNFW) delete_tables_pseudonfw();
+	}
 }
 
 void MultiLens::readParamfile(string filename){
@@ -491,24 +503,20 @@ void MultiLens::buildHaloTrees(
 
 		switch(internal_profile){
 		case PowerLaw:
-			//halo_tree[j] = new ForceTreePowerLaw(1.9,&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos);
 			//halo_tree[j] = auto_ptr<ForceTree>(new ForceTreePowerLaw(1.9,&halodata[j]->pos[0],halodata[j]->Nhalos
-				//	,halodata[j]->halos,true,halodata[j]->kappa_background));
+			//		,halodata[j]->halos,true,halodata[j]->kappa_background));
 			halo_tree[j] = auto_ptr<QuadTree>(new QuadTreePowerLaw(pw_beta,&halodata[j]->pos[0],halodata[j]->Nhalos
 								,halodata[j]->halos,halodata[j]->kappa_background));
 			break;
 		case NFW:
-			//halo_tree[j] = new ForceTreeNFW(&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos);
 			//halo_tree[j] = auto_ptr<ForceTree>(new ForceTreeNFW(&halodata[j]->pos[0],halodata[j]->Nhalos
-				//	,halodata[j]->halos,true,halodata[j]->kappa_background));
+			//		,halodata[j]->halos,true,halodata[j]->kappa_background));
 			halo_tree[j] = auto_ptr<QuadTree>(new QuadTreeNFW(&halodata[j]->pos[0],halodata[j]->Nhalos
 					,halodata[j]->halos,halodata[j]->kappa_background));
 			break;
 		case PseudoNFW:
-			//Halo_tree[j] = new ForceTreePseudoNFW(2,&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos);
-			//halo_tree[j] = auto_ptr<ForceTree>(new ForceTreePseudoNFW(2,&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos,true,5,3,false,0.1));
 			//halo_tree[j] = auto_ptr<ForceTree>(new ForceTreePseudoNFW(2,&halodata[j]->pos[0],halodata[j]->Nhalos
-				//	,halodata[j]->halos,true,halodata[j]->kappa_background));
+			//		,halodata[j]->halos,true,halodata[j]->kappa_background));
 			halo_tree[j] = auto_ptr<QuadTree>(new QuadTreePseudoNFW(pnfw_beta,&halodata[j]->pos[0],halodata[j]->Nhalos
 							,halodata[j]->halos,halodata[j]->kappa_background));
 			break;

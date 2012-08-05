@@ -11,7 +11,7 @@
  *   curves[0...Maxcurves] must be allocated before
  *
  *	uses neighbors-of-neighbors to split into curves and then
- *	uses sorts by angle and then walks the list sorting
+ *	uses sorts by angle and then walks the ist sorting
  *
  *  can break down for crescent curves
  */

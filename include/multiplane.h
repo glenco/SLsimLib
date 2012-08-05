@@ -89,10 +89,8 @@ private:
 	/// charge for the tree force solver (4*pi*G*mass_scale)
 	double charge;
 	/// an array of smart pointers to the halo models on each plane
-	//HaloDataHndl *halodata;
 	std::auto_ptr<HaloData> *halodata;
 	/// an array of smart pointers to halo trees on each plane, uses the haloModel in the construction
-	//ForceTreeHndl *halo_tree;
 	std::auto_ptr<QuadTree> *halo_tree;
 
 	/* the following parameters are read in from the parameter file */
@@ -129,6 +127,9 @@ private:
 	std::auto_ptr<SourceAnaGalaxy> anasource;
 	double dDs_implant,zs_implant,ys_implant[2];
 	int flag_implanted_source;
+
+	/// nfw tables
+	bool tables_set;
 
 	void quicksort(HaloStructure *halos,double **brr,double *arr,unsigned long N);
 };

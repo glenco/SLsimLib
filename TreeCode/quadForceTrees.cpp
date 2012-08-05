@@ -45,6 +45,8 @@ QuadTreeNFW::QuadTreeNFW(
 			exit(1);
 		}
 	}
+
+	point_tables();
 }
 
 QuadTreeNFW::~QuadTreeNFW(){
@@ -75,6 +77,8 @@ QuadTreePseudoNFW::QuadTreePseudoNFW(
 			exit(1);
 		}
 	}
+
+	point_tables();
 }
 
 QuadTreePseudoNFW::~QuadTreePseudoNFW(){

@@ -214,6 +214,7 @@ void ForceTree::force2D(double *ray,double *alpha,double *kappa,double *gamma,bo
   IndexType i;
   bool allowDescent=true;
   unsigned long count=0,index;
+  double rcm, arg1, arg2, prefac, prefacg;
 
   assert(tree);
   moveTopNB(tree);
@@ -252,20 +253,34 @@ void ForceTree::force2D(double *ray,double *alpha,double *kappa,double *gamma,bo
 				  ycm = tree->xp[tree->current->particles[i]][1] - ray[1];
 
 				  rcm2 = xcm*xcm + ycm*ycm;
+				  if(rcm2 < 1e-20) rcm2 = 1e-20;
 
 				  index = MultiRadius*tree->current->particles[i];
-				  if(haloON) tmp = alpha_h(rcm2,halo_params[index]);
-				  else tmp =  alpha_o(rcm2,rsph[index])*masses[MultiMass*tree->current->particles[i]];
+
+				  rcm = sqrt(rcm2);
+
+				  if(haloON){
+					  prefac = halo_params[index].mass/rcm2/pi;
+					  arg1 = rcm/halo_params[index].rscale;
+					  arg2 = halo_params[index].Rmax/halo_params[index].rscale;
+				  }
+				  else{
+					  prefac = masses[MultiMass*tree->current->particles[i]]/rcm2/pi;
+					  arg1 = rcm2/(rsph[index]*rsph[index]);
+					  arg2 = rsph[index];
+				  }
+
+				  prefacg = prefac/rcm2;
+
+				  tmp = alpha_h(arg1,arg2)*prefac;
 				  alpha[0] += tmp*xcm;
 				  alpha[1] += tmp*ycm;
 
 				  // can turn off kappa and gamma calculations to save times
 				  if(!no_kappa){
-					  if(haloON) *kappa += kappa_h(rcm2,halo_params[index]);
-					  else *kappa += kappa_o(rcm2,rsph[index])*masses[MultiMass*tree->current->particles[i]];
+					  *kappa += kappa_h(arg1,arg2)*prefac;
 
-					  if(haloON) tmp = gamma_h(rcm2,halo_params[index]);
-					  else tmp = gamma_o(rcm2,rsph[index])*masses[MultiMass*tree->current->particles[i]];
+					  tmp = gamma_h(arg1,arg2)*prefacg;
 					  gamma[0] += 0.5*(xcm*xcm-ycm*ycm)*tmp;
 					  gamma[1] += xcm*ycm*tmp;
 				  }
@@ -398,6 +413,8 @@ ForceTreeNFW::ForceTreeNFW(
 	haloON = true;
 	halo_params = h_params;
 
+	point_tables();
+
 	CalcMoments();
 }
 
@@ -405,7 +422,7 @@ ForceTreeNFW::~ForceTreeNFW(){
 }
 
 ForceTreePseudoNFW::ForceTreePseudoNFW(
-		int my_beta                 /// outer slope of profile is \f$ \Sigma \propto r^{-\beta} \f$
+		double my_beta                 /// outer slope of profile is \f$ \Sigma \propto r^{-\beta} \f$
 		,PosType **xp              /// positions of the halos xp[0..Npoints-1][0..1 or 2]
 		,IndexType Npoints         /// number of halos
 		,HaloStructure *h_params   /// array with internal properties of halos
@@ -419,8 +436,8 @@ ForceTreePseudoNFW::ForceTreePseudoNFW(
 		ForceTree(xp,Npoints,NULL,NULL,false,Multisize,my_kappa_bk,bucket,dimension,median,theta), beta(my_beta)
 {
 
-	if(beta == 0){
-		std::cout << "The slope can not be zero!" << std::endl;
+	if(beta <= 0){
+		std::cout << "The slope can not be less or equal to zero!" << std::endl;
 		exit(1);
 	}
 
@@ -435,8 +452,11 @@ ForceTreePseudoNFW::ForceTreePseudoNFW(
 	haloON = true;
 	halo_params = h_params;
 
+	point_tables();
+
 	CalcMoments();
 }
 
 ForceTreePseudoNFW::~ForceTreePseudoNFW(){
 }
+
