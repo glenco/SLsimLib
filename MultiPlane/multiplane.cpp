@@ -321,7 +321,7 @@ void MultiLens::readParamfile(string filename){
 			  pnfw_beta = 2.0;
 		  }
 		  if(id[i] >= 0 && addr[i] == &flag_MOKA_analyze){
-			  flag_MOKA_analyze = 0;
+			  flag_MOKA_analyze = 1;
 		  }
 	  }
 
