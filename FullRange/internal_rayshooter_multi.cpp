@@ -83,6 +83,7 @@ void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
 				gamma[0]/=(1+plane_redshifts[j]);
 				gamma[1]/=(1+plane_redshifts[j]);
 				gamma[2]/=(1+plane_redshifts[j]);
+				//kappa = alpha[0] = alpha[1] = gamma[0] = gamma[1] = gamma[2] = 0.0;
 			}
 
 			aa = (dDl[j+1]+dDl[j])/dDl[j];

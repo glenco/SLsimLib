@@ -6,165 +6,77 @@
  */
 #include <slsimlib.h>
 
-/// Gaussian particles
-double ForceTree::alpha_o(double r2,float sigma){
-  if(r2==0) return 0.0;
-  if(sigma <= 0.0 ) return -1.0/r2/pi;
-  return ( exp(-r2/sigma/sigma/2) - 1.0 )/r2/pi;
-}
-double ForceTree::kappa_o(double r2,float sigma){
-  if(sigma <= 0.0) return 0.0;
-  return exp(-r2/sigma/sigma/2)/2/pi/sigma/sigma;
-}
-double ForceTree::gamma_o(double r2,float sigma){
-  if(r2==0) return 0.0;
-  if(sigma <= 0.0) return -2.0/pi/pow(r2,2);
-  return (-2.0 + (2.0 + r2/sigma/sigma)*exp(-r2/sigma/sigma/2) )/pi/pow(r2,2);
-}
-double ForceTree::phi_o(double r2,float sigma){
-	ERROR_MESSAGE();  // not yet written
-	exit(1);
-	return 0;
-}
+/// tables for the g,f,and g2 NFW functions
+double *ftable, *gtable, *g2table, *mhattable;
+const long NTABLE = 1000;
+const double maxrm = 100.0;
 
-/** power-law profiles
- *  All quantities should be divided by Sigma_crit to get the usual
- */
+void make_tables_nfw(){
+	int i;
+	double x, dx = maxrm/(double)NTABLE;
 
-double ForceTreePowerLaw::alpha_h(double r2,HaloStructure &par){
+	ftable = new double[NTABLE];
+	gtable = new double[NTABLE];
+	g2table = new double[NTABLE];
 
-	if(r2==0) return 0.0;
-
-	double b=0,r = sqrt(r2);
-
-	b = -par.mass/r2/pi;
-	if(r < par.Rmax) b *= pow(r/par.Rmax,beta+2);
-
-	return b;
-}
-double ForceTreePowerLaw::kappa_h(double r2,HaloStructure &par){
-
-	if(r2 > par.Rmax*par.Rmax) return 0.0;
-	if(r2 < 1.0-20) r2=1.0e-20;
-	return (beta+2)*par.mass*pow(r2/par.Rmax/par.Rmax,beta/2)/(2*pi*pow(par.Rmax,2));
-}
-double ForceTreePowerLaw::gamma_h(double r2,HaloStructure &par){
-	double gt=0;
-
-	if( r2 <= 0.0) return 0.0;
-	gt = -2.0*par.mass/pi/pow(r2,2);
-	if(r2 < par.Rmax*par.Rmax) gt *= -beta*pow(r2/par.Rmax/par.Rmax,beta/2+1)/2;
-
-	return gt;
-}
-double ForceTreePowerLaw::phi_h(double r2,HaloStructure &par){
-	double b;
-
-	b=par.mass/pi;
-	double r = sqrt(r2);
-	if(r <= par.Rmax) return b*pow(r/par.Rmax,beta+2);
-	return b*(log(r/par.Rmax) + 1);
-}
-
-// NFW profile
-
-// Gives the magnitude of the deflection angle modulo Sigma_crit
-double ForceTreeNFW::alpha_h(double r2,HaloStructure &par){
-	double b=0;
-
-	if(r2 <= 0) return 0.0;
-
-	b = -par.mass/r2/pi;
-
-	double r = sqrt(r2);
-	if(r < par.Rmax){
-		double y;
-
-		y = par.Rmax/par.rscale;
-		b *= rhos(y);
-		y = r/par.rscale;
-		b*= gfunction(y);
+	for(i = 0 ; i< NTABLE; i++){
+		x = (i+1)*dx;
+		ftable[i] = ffunction(x);
+		gtable[i] = gfunction(x);
+		g2table[i] = g2function(x);
 	}
-
-	return b;
-}
-/// Convergence for an NFW halo
-double ForceTreeNFW::kappa_h(double r2,HaloStructure &par){
-	double r = sqrt(r2);
-
-	if(r >= par.Rmax) return 0.0;
-	if(r < 1.0-20) r=1.0e-20;
-
-	double y,b;
-
-	b = par.mass/2/pi/pow(par.rscale,2);
-	y = par.Rmax/par.rscale;
-	b *= rhos(y);
-	y = r/par.rscale;
-	b*= ffunction(y);
-
-	return b;
 }
 
-/// Shear for and NFW halo. this might have a flaw in it
-double ForceTreeNFW::gamma_h(double r2,HaloStructure &par){
-	double gt=0;
+void delete_tables_nfw(){
+	delete[] gtable;
+	delete[] ftable;
+	delete[] g2table;
+}
 
-	if(r2 <= 0.0) return 0.0;
 
-	double r = sqrt(r2);
+void make_tables_pseudonfw(double beta){
+	int i;
+	double x, dx = maxrm/(double)NTABLE;
 
-	if(r > par.Rmax)
-		gt = -2.0*par.mass/pi/pow(r2,2);
-	else{
-		double y;
-		gt = par.mass/4/pi/pow(par.rscale,2)/r2;
-		y = par.Rmax/par.rscale;
-		gt *= rhos(y);
-		y = r/par.rscale;
-		gt *= g2function(y);
+	mhattable = new double[NTABLE];
+
+	for(i = 0 ; i< NTABLE; i++){
+		x = (i+1)*dx;
+		mhattable[i] = mhat(x,beta);
 	}
-
-	return gt;
-}
-double ForceTreeNFW::phi_h(double r2,HaloStructure &par){
-	ERROR_MESSAGE();
-	std::cout << "time delay has not been fixed for NFW profile yet." << std::endl;
-	exit(1);
-	return 0.0;
 }
 
-double ForceTreeNFW::gfunction(double x){
-	double ans;
-
-	ans=log(x/2);
-	if(x==1.0){ ans += 1.0; return ans;}
-	if(x>1.0){  ans +=  2*atan(sqrt((x-1)/(x+1)))/sqrt(x*x-1);; return ans;}
-	if(x<1.0){  ans += 2*atanh(sqrt((1-x)/(x+1)))/sqrt(1-x*x);; return ans;}
-	return 0.0;
-}
-double ForceTreeNFW::ffunction(double x){
-	double ans;
-
-	if(x==1.0){ return 1.0;}
-	if(x>1.0){  ans = (1-2*atan(sqrt((x-1)/(x+1)))/sqrt(x*x-1))/(x*x-1); return ans;}
-	if(x<1.0){  ans = (1-2*atanh(sqrt((1-x)/(x+1)))/sqrt(1-x*x))/(x*x-1); return ans;}
-	return 0.0;
+void delete_tables_pseudonfw(){
+	delete[] mhattable;
 }
 
-double ForceTreeNFW::g2function(double x){
-	double ans;
-
-	if(x==1) return 10/3. + 4*log(0.5);
-
-	ans=4*log(x/2.0)/x/x - 2/(x*x-1);
-	if(x<1.0){ ans+= 4*(2/x/x+1/(x*x-1))*atanh(sqrt((1-x)/(x+1)))/sqrt(1-x*x); return ans;}
-	if(x>1.0){ ans+= 4*(2/x/x+1/(x*x-1))*atan(sqrt((x-1)/(x+1)))/sqrt(x*x-1); return ans;}
-
-	return 0.0;
+double InterpolateFromTable(double *table, double y){
+	int j;
+	j=(int)(y/maxrm*NTABLE);
+	return (table[j+1]-table[j])*(y-j) + table[j];
 }
 
-double ForceTreeNFW::rhos(double x){
+void ForceTreeNFW::point_tables(){
+	gt = gtable;
+	ft = ftable;
+	g2t= g2table;
+}
+
+void ForceTreePseudoNFW::point_tables(){
+	mhatt = mhattable;
+}
+
+void QuadTreeNFW::point_tables(){
+	gt = gtable;
+	ft = ftable;
+	g2t= g2table;
+}
+
+void QuadTreePseudoNFW::point_tables(){
+	mhatt = mhattable;
+}
+
+double rhos(double x){
 	double ans;
 
 	ans = 1.0;
@@ -172,105 +84,9 @@ double ForceTreeNFW::rhos(double x){
 
 	return ans;
 }
-/* Profiles with a flat interior and a power-law drop after rscale
- *  All quantities should be divided by Sigma_crit to get the usual lens plane units.
- */
-
-double ForceTreePseudoNFW::alpha_h(double r2,HaloStructure &par){
-
-	if(r2<=0.0) return 0.0;
-
-	double b=0,r = sqrt(r2);
-
-	b = -par.mass/r2/pi;
-	if(r < par.Rmax) b *= mhat(r/par.rscale)/mhat(par.Rmax/par.rscale);
-
-	return b;
-}
-double ForceTreePseudoNFW::kappa_h(double r2,HaloStructure &par){
-
-	if(r2 > par.Rmax*par.Rmax) return 0.0;
-	if(r2 < 1.0-20) r2=1.0e-20;
-	return par.mass/(2*pi*pow(par.rscale,2)*mhat(par.Rmax/par.rscale))/pow(1+sqrt(r2)/par.rscale,beta);
+double mhat(double y, double beta){
+	if(beta == 1.0) return y - log(1+y);
+	if(beta == 2.0) return log(1+y) - y/(1+y);
+	if(beta>=3.0) return ( (1 - beta)*y + pow(1+y,beta-1) - 1)/(beta-2)/(beta-1)/pow(1+y,beta-1);
 }
 
-double ForceTreePseudoNFW::gamma_h(double r2,HaloStructure &par){
-	double gt=0;
-
-	if( r2 <= 0.0) return 0.0;
-	gt = -2.0*par.mass/pi/r2/r2;
-	if(r2 < par.Rmax*par.Rmax){
-		double y = sqrt(r2)/par.rscale;
-		//gt *= r2/pow(par.rscale,2)/mhat(par.Rmax/par.rscale)/pow(1+y,beta);
-		gt *= -(y*y/pow(1+y,beta) - 2*mhat(y))/mhat(par.Rmax/par.rscale)/2;
-	}
-
-	return gt;
-}
-
-double ForceTreePseudoNFW::phi_h(double r2,HaloStructure &par){
-
-	ERROR_MESSAGE();
-	std::cout << "time delay has not been fixed for NFW profile yet." << std::endl;
-	exit(1);
-	return 0.0;
-}
-
-double ForceTreePseudoNFW::mhat(double y){
-	switch(beta){
-	case 1:
-		return y - log(1+y);
-		break;
-	case 2:
-		return log(1+y) - y/(1+y);
-		break;
-	default:
-		return ( (1 - beta)*y + pow(1+y,beta-1) - 1)/(beta-2)/(beta-1)/pow(1+y,beta-1);
-		//return - y/(beta-2)/pow(1+y,beta-1) - 1/(beta-2)/(beta-1)/pow(1+y,beta-1);
-		break;
-	}
-}
-
-/*
- *
-double ForceTreePseudoNFW::alpha_h(double r2,HaloStructure &par){
-
-	if(r2<=0.0) return 0.0;
-
-	double b=0,r = sqrt(r2);
-
-	b = -par.mass/r2/pi;
-	if(r < par.Rmax) b *= mhat(r/par.rscale)/mhat(par.Rmax/par.rscale);
-
-	return b;
-}
-double ForceTreePseudoNFW::kappa_h(double r2,HaloStructure &par){
-
-	if(r2 > par.Rmax*par.Rmax) return 0.0;
-	if(r2 < 1.0-20) r2=1.0e-20;
-	return par.mass/(2*pi*pow(par.rscale,2)*mhat(par.Rmax/par.rscale))/pow(1+sqrt(r2)/par.rscale,beta);
-}
-double ForceTreePseudoNFW::gamma_h(double r2,HaloStructure &par){
-	double gt=0;
-
-	if( r2 <= 0.0) return 0.0;
-	gt = -par.mass/pi/pow(r2,2);
-	if(r2 < par.Rmax*par.Rmax){
-		double y = sqrt(r2)/par.rscale;
-		gt *= (mhat(y) - 0.5*y*y/pow(1+y,beta))/mhat(sqrt(r2)/par.Rmax);
-	}
-
-	return gt;
-}
-double ForceTreePseudoNFW::phi_h(double r2,HaloStructure &par){
-
-	ERROR_MESSAGE();
-	std::cout << "time delay has not been fixed for NFW profile yet." << std::endl;
-	exit(1);
-	return 0.0;
-}
-
-double ForceTreePseudoNFW::mhat(double y){
-	return (1 + ( 1 + (beta-1)*y)/pow(y+1,beta-1)  )/(beta-2)/(beta-1);
-}
-*/
