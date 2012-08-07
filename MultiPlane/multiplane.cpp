@@ -251,6 +251,10 @@ void MultiLens::readParamfile(string filename){
 	  id[n] = 0;
 	  label[n++] = "internal_slope_pnfw";
 
+	  addr[n] = &flag_MOKA_analyze;
+	  id[n] = 1;
+	  label[n++] = "MOKA_analyze";
+
 	  cout << "Multi lens: reading from " << filename << endl;
 
 	  ifstream file_in(filename.c_str());
@@ -300,7 +304,8 @@ void MultiLens::readParamfile(string filename){
 
 	  for(i = 0; i < n; i++){
 		  if(id[i] >= 0 && addr[i] != &input_sim_file &&
-				  addr[i] != &pw_alpha && addr[i] != &pw_beta && addr[i] != &pnfw_beta){
+				  addr[i] != &pw_alpha && addr[i] != &pw_beta && addr[i] != &pnfw_beta &&
+				  addr[i] != &flag_MOKA_analyze){
 			  ERROR_MESSAGE();
 			  cout << "parameter " << label[i] << " needs to be set!" << endl;
 			  exit(0);
@@ -314,6 +319,9 @@ void MultiLens::readParamfile(string filename){
 		  }
 		  if(id[i] >= 0 && addr[i] == &pnfw_beta){
 			  pnfw_beta = 2.0;
+		  }
+		  if(id[i] >= 0 && addr[i] == &flag_MOKA_analyze){
+			  flag_MOKA_analyze = 0;
 		  }
 	  }
 
@@ -373,6 +381,8 @@ void MultiLens::printMultiLens(){
 		break;
 	case moka_lens:
 		cout << "  MOKALens " << endl;
+		if(flag_MOKA_analyze == 0)
+			cout << "      !!! analyzis only !!!" << endl;
 		break;
 	}
 
@@ -823,7 +833,7 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 		cout << dDl[j] << " ";
 	cout << endl << endl;
 
-	buildHaloTrees(cosmo,source->zsource);
+	if(flag_MOKA_analyze > 0) buildHaloTrees(cosmo,source->zsource);
 	std:: cout << " done " << std:: endl;
 }
 

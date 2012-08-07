@@ -128,6 +128,9 @@ private:
 	double dDs_implant,zs_implant,ys_implant[2];
 	int flag_implanted_source;
 
+	///
+	int flag_MOKA_analyze;
+
 	/// nfw tables
 	bool tables_set;
 
