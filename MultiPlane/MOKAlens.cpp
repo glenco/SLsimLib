@@ -507,14 +507,20 @@ void MOKALens::EinsteinRadii(double &RE1, double &RE2){
   int nc = xci.size();
   std:: vector<int> groupid(nc);
   int largestgroupid = fof(pixDinL,xci,yci,groupid);
+
   std:: vector<double> xcpoints,ycpoints;
+  double xercm,yercm;
   for(int ii=0;ii<nc;ii++){
     if(groupid[ii] == largestgroupid){
       xcpoints.push_back(xci[ii]);
       ycpoints.push_back(yci[ii]);
+      xercm+=xci[ii];
+      yercm+=yci[ii];
     }
   }
   nc = xcpoints.size();
+  xercm=xercm/double(nc);
+  yercm=yercm/double(nc);
   if(nc>0){
     std:: vector<double>::iterator maxit, minit; 
     // find the min and max elements in the vector
@@ -562,7 +568,7 @@ void MOKALens::EinsteinRadii(double &RE1, double &RE2){
     int npixIN=0;
     std:: vector<double> RE;
     for(int ii=0;ii<nc;ii++){
-      RE.push_back(sqrt(pow(xinf[ii],2.) + pow(yinf[ii],2)));
+      RE.push_back(sqrt(pow(xinf[ii]-xercm,2.) + pow(yinf[ii]-yercm,2)));
       std:: vector<double> ycounts;
       for(int ji=0;ji<map->nx;ji++){
 	if(map->x[ji]>=yinf[ii] && map->x[ji]<=ysup[ii]){
@@ -573,7 +579,7 @@ void MOKALens::EinsteinRadii(double &RE1, double &RE2){
       npixIN=npixIN+ncounts;
     }
     for(int ii=nc-1;ii>=0;ii--){
-      RE.push_back(sqrt(pow(xsup[ii],2) + pow(ysup[ii],2)));
+      RE.push_back(sqrt(pow(xsup[ii]-xercm,2) + pow(ysup[ii]-yercm,2)));
     }
     RE1=map->inarcsec*sqrt(pixDinL*pixDinL*npixIN/M_PI);
     RE2=map->inarcsec*median(RE);
