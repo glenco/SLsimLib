@@ -225,7 +225,7 @@ private:
 		return (r < rm) ? -1.0*InterpolateFromTable(mhatt,r)/InterpolateFromTable(mhatt,rm) : -1.0;
 	}
 	inline double kappa_h(double r,double rm){
-		return (r < rm) ? 0.5*r*r*InterpolateFromTable(mhatt,rm)/pow(1+r,beta) : 0.0;
+		return (r < rm) ? 0.5*r*r/InterpolateFromTable(mhatt,rm)/pow(1+r,beta) : 0.0;
 	}
 	inline double gamma_h(double r,double rm){
 		return (r < rm) ? (0.5*r*r/pow(1+r,beta) - InterpolateFromTable(mhatt,r))/InterpolateFromTable(mhatt,rm) : -2.0;

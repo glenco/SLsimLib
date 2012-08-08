@@ -53,7 +53,7 @@ void delete_tables_pseudonfw(){
 double InterpolateFromTable(double *table, double y){
 	int j;
 	j=(int)(y/maxrm*NTABLE);
-	return (table[j+1]-table[j])*(y-j) + table[j];
+	return (table[j+1]-table[j])*(y-j*maxrm/float(NTABLE)) + table[j];
 }
 
 void ForceTreeNFW::point_tables(){

@@ -350,7 +350,7 @@ private:
 		return -1.0*InterpolateFromTable(mhatt,r)/InterpolateFromTable(mhatt,rm);
 	}
 	inline double kappa_h(double r,double rm){
-		return 0.5*r*r*InterpolateFromTable(mhatt,rm)/pow(1+r,beta);
+		return 0.5*r*r/InterpolateFromTable(mhatt,rm)/pow(1+r,beta);
 	}
 	inline double gamma_h(double r,double rm){
 		return (0.5*r*r/pow(1+r,beta) - InterpolateFromTable(mhatt,r))/InterpolateFromTable(mhatt,rm);
