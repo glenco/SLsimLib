@@ -64,6 +64,7 @@ public:
 	/// a poiner to the analytical lens
 	LensHndl input_lens;
 	AnaLens *analens;
+	int flag_MOKA_analyze;
 #ifdef WITH_MOKA
 	MOKALens *mokalens;
 #endif
@@ -128,9 +129,6 @@ private:
 	std::auto_ptr<SourceAnaGalaxy> anasource;
 	double dDs_implant,zs_implant,ys_implant[2];
 	int flag_implanted_source;
-
-	/// 0: perform analyzis only, 1: create a new map with contaminators
-	int flag_MOKA_analyze;
 
 	/// nfw tables
 	bool tables_set;

@@ -536,4 +536,59 @@ void MOKALens::EinsteinRadii(double &RE1, double &RE2){
     RE2=0.;
   }
 }
+/*
+ * saves MAP properties, computing the radial profile
+ * of the convergence and shear
+ */
+void MOKALens::saveImage(bool saveprofiles){
+        std::stringstream f;
+        std::string filename;
+  
+	f << MOKA_input_file << "_noisy.fits";
+	filename = f.str();
+	/*
+ 	MoveToTopList(grid->i_tree->pointlist);
+
+	do{
+		long index = IndexFromPosition(grid->i_tree->pointlist->current->x,map->nx,map->boxl,map->center);
+		if(index > -1){
+
+			map->convergence[index] = grid->i_tree->pointlist->current->kappa;
+			map->gamma1[index] = grid->i_tree->pointlist->current->gamma[0];
+			map->gamma2[index] = grid->i_tree->pointlist->current->gamma[1];
+			map->gamma3[index] = grid->i_tree->pointlist->current->gamma[2];
+		}
+	}while(MoveDownList(grid->i_tree->pointlist)==true);
+	*/
+	map->boxl *= 180/pi*3600;
+
+	writeImage(filename
+		   ,map->convergence
+		   ,map->gamma1
+		   ,map->gamma2
+		   ,map->gamma3
+		   ,map->nx
+		   ,map->ny
+		   ,map->LH);
+	
+	if(saveprofiles == true){
+	  std:: cout << " saving profile " << std:: endl;
+                    double RE3;
+	            saveProfiles(RE3);
+		    estSignLambdas(); 
+		    double RE1,RE2;
+		    EinsteinRadii(RE1,RE2);
+		    std::ostringstream fEinr;
+		    fEinr << MOKA_input_file << "_noisy_Einstein.radii.dat";
+		    std:: ofstream filoutEinr;
+		    std:: string filenameEinr = fEinr.str();
+		    filoutEinr.open(filenameEinr.c_str());
+		    filoutEinr << "# effective        median      from_profles" << std:: endl;
+		    filoutEinr << RE1 << "   " << RE2 << "    " << RE3 << std:: endl;
+		    filoutEinr.close();
+		    // saveKappaProfile();
+		    // saveGammaProfile();
+	}
+}
+
 #endif

@@ -57,11 +57,14 @@ public:
 	double getZlens();
 	void setInternalParams(CosmoHndl,SourceHndl);
 	void saveImage(GridHndl grid, bool saveprofile=true);
+	void saveImage(bool saveprofile=true);
+	void saveKappaProfile();
+	void saveGammaProfile();
 	void saveProfiles(double &RE3);
 	void initMap();
 
 	MOKAmap *map;
-    LensHalo *LH;
+	LensHalo *LH;
 
 	void estSignLambdas();
 	void EinsteinRadii(double &RE1, double &RE2);
