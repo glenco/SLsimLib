@@ -13,6 +13,33 @@
 
 using namespace std;
 
+HaloData::HaloData(CosmoHndl cosmo
+		,double mass
+		,double zlens){
+	allocation_flag = true;
+	kappa_background = 0.0;
+	Nhalos = 1;
+	halos = new HaloStructure[Nhalos];
+	pos = PosTypeMatrix(0,Nhalos-1,0,2);
+
+	HALO *ha = new HALO(cosmo,mass,zlens);
+
+	int i;
+	for(i = 0; i < Nhalos; i++){
+		pos[i][0] = 0.0;
+		pos[i][1] = 0.0;
+		pos[i][2] = 0.0;
+
+		halos[i].mass = mass;
+		halos[i].Rmax = ha->getRvir()*cosmo->gethubble();
+		halos[i].rscale = halos[i].Rmax/ha->getConcentration(0);
+
+		cout << endl << halos[i].mass  << " " << halos[i].Rmax << " " << halos[i].rscale << endl;
+	}
+
+	delete ha;
+}
+
 HaloData::HaloData(HaloStructure *halostrucs,PosType **positions,unsigned long Nhaloss):
 	pos(positions), halos(halostrucs), Nhalos(Nhaloss)
 {
@@ -29,19 +56,20 @@ HaloData::HaloData(
 		,double mass_scale    /// mass scale
 		,double z1            /// lowest redshift
 		,double z2            /// highest redshift
-		,int mass_func_type   /// mass function type: 0 Press-Schechter, 1 Sheth-Tormen
-		,CosmoHndl cosmo      /// cosmology
+		,int mass_func_type   /// mass function type: 0 Press-Schechter, 1 Sheth-Tormen, 2 Power Law
+		,double alpha		/// slope of the Power Law
+		,CosmoHndl cosmo     /// cosmology
 		,long *seed
 	)
 	{
 
 	allocation_flag = true;
 
-    HALO ha(cosmo,min_mass,(z1+z2)/2);
+    HALO *ha = new HALO(cosmo,min_mass,(z1+z2)/2);
 
 	// calculate the mass density on the plane
     // and convert it to physical 1/physical_distance^2
-	kappa_background = ha.totalMassDensityinHalos(0,1,0)*pow(cosmo->gethubble(),2)*pow(1+(z1+z2)/2,3);
+	kappa_background = ha->totalMassDensityinHalos(0,1,alpha)*pow(cosmo->gethubble(),2)*pow(1+(z1+z2)/2,3);
 	kappa_background *= cosmo->getOmega_matter()*cosmo->angDist(z1,z2)/mass_scale;
 
     //int iterator;
@@ -59,7 +87,7 @@ HaloData::HaloData(
 
 	double Nhaloestot;
 
-	Nhalosbin[0] = cosmo->haloNumberDensityOnSky(pow(10,Logm[0])/cosmo->gethubble(),z1,z2,mass_func_type)*fov;
+	Nhalosbin[0] = cosmo->haloNumberDensityOnSky(pow(10,Logm[0])/cosmo->gethubble(),z1,z2,mass_func_type,alpha)*fov;
 
 	Nhaloestot = Nhalosbin[0];
 	Nhalosbin[0] = 1;
@@ -67,7 +95,7 @@ HaloData::HaloData(
 
 	for(k=1;k<Nmassbin;k++){
 		// cumulative number density in one square degree
-		Nhalosbin[k] = cosmo->haloNumberDensityOnSky(pow(10,Logm[k])/cosmo->gethubble(),z1,z2,mass_func_type)*fov;
+		Nhalosbin[k] = cosmo->haloNumberDensityOnSky(pow(10,Logm[k])/cosmo->gethubble(),z1,z2,mass_func_type,alpha)*fov;
 		// normalize the cumulative distribution to one
 		Nhalosbin[k] = Nhalosbin[k]/Nhaloestot;
 	}
@@ -88,16 +116,17 @@ HaloData::HaloData(
 		pos[i][1] = rr*sin(theta);
 
 		halos[i].mass = pow(10,InterpolateYvec(Nhalosbin,Logm,ran2 (seed)));
-		ha.reset(halos[i].mass,zi);
+		ha->reset(halos[i].mass,zi);
 		halos[i].mass /= mass_scale;
 		//halos[i].mass = vmasses[i];
 		//halos[i].Rmax = vsizes[i];
-		halos[i].Rmax = ha.getRvir()*cosmo->gethubble();
+		halos[i].Rmax = ha->getRvir()*cosmo->gethubble();
 		//halos[i].rscale = vsizes[i]/vscale[i]; // get the Rscale=Rmax/c
-		halos[i].rscale = halos[i].Rmax/ha.getConcentration(0); // get the Rscale=Rmax/c
+		halos[i].rscale = halos[i].Rmax/ha->getConcentration(0); // get the Rscale=Rmax/c
 		pos[i][2] = 0.0;//halos[i].Rmax;
 	}
 
+	delete ha;
 }
 
 HaloData::~HaloData(){
@@ -125,19 +154,17 @@ MultiLens::MultiLens(string filename,long *my_seed) : Lens(){
 
 	charge = 4*pi*Grav*mass_scale;
 
-	//halo_tree = new ForceTreeHndl[Nplanes-1];
 	//halo_tree = new auto_ptr<ForceTree>[Nplanes-1];
 	halo_tree = new auto_ptr<QuadTree>[Nplanes-1];
 
-	//halodata = new HaloDataHndl[Nplanes-1];
 	halodata = new auto_ptr<HaloData>[Nplanes-1];
 
 	switch(flag_input_lens){
-	case 1:
+	case ana_lens:
 		input_lens = new AnaLens(filename);
 		analens = static_cast<AnaLens*>(input_lens);
 		break;
-	case 2:
+	case moka_lens:
 #ifdef WITH_MOKA
 		input_lens = new MOKALens(filename);
 		mokalens = static_cast<MOKALens*>(input_lens);
@@ -151,6 +178,15 @@ MultiLens::MultiLens(string filename,long *my_seed) : Lens(){
 
 	flag_implanted_source = 0;
 	seed = my_seed;
+
+	if(internal_profile == NFW && tables_set != true){
+		make_tables_nfw();
+		tables_set = true;
+	}
+	if(internal_profile == PseudoNFW && tables_set != true){
+		make_tables_pseudonfw(pnfw_beta);
+		tables_set = true;
+	}
 }
 
 MultiLens::~MultiLens(){
@@ -171,10 +207,15 @@ MultiLens::~MultiLens(){
 
 	if(flag_input_lens)
 		delete input_lens;
+
+	if(tables_set == true){
+		if(internal_profile == NFW) delete_tables_nfw();
+		if(internal_profile == PseudoNFW) delete_tables_pseudonfw();
+	}
 }
 
 void MultiLens::readParamfile(string filename){
-      const int MAXPARAM = 11;
+      const int MAXPARAM = 50;
 	  string label[MAXPARAM], rlabel, rvalue;
 	  void *addr[MAXPARAM];
 	  int id[MAXPARAM];
@@ -189,6 +230,7 @@ void MultiLens::readParamfile(string filename){
 
 	  n = 0;
 
+	  /// id[] = 2 = string, 1 = int, 0 = double
 	  addr[n] = &outputfile;
 	  id[n] = 2;
 	  label[n++] = "outputfile";
@@ -225,6 +267,18 @@ void MultiLens::readParamfile(string filename){
 	  id[n] = 2;
 	  label[n++] = "input_simulation_file";
 
+	  addr[n] = &pw_alpha;
+	  id[n] = 0;
+	  label[n++] = "alpha";
+
+	  addr[n] = &pw_beta;
+	  id[n] = 0;
+	  label[n++] = "internal_slope_pw";
+
+	  addr[n] = &pnfw_beta;
+	  id[n] = 0;
+	  label[n++] = "internal_slope_pnfw";
+
 	  cout << "Multi lens: reading from " << filename << endl;
 
 	  ifstream file_in(filename.c_str());
@@ -232,7 +286,6 @@ void MultiLens::readParamfile(string filename){
 	    cout << "Can't open file " << filename << endl;
 	    exit(1);
 	  }
-
 
 	  // output file
 	  while(!file_in.eof()){
@@ -274,19 +327,48 @@ void MultiLens::readParamfile(string filename){
 	  }
 
 	  for(i = 0; i < n; i++){
-		  if(id[i] >= 0 && addr[i] != &input_sim_file){
+		  if(id[i] >= 0 && addr[i] != &input_sim_file &&
+				  addr[i] != &pw_alpha && addr[i] != &pw_beta && addr[i] != &pnfw_beta){
 			  ERROR_MESSAGE();
 			  cout << "parameter " << label[i] << " needs to be set!" << endl;
 			  exit(0);
+		  }
+
+		  if(id[i] >= 0 && addr[i] == &pw_alpha){
+			  pw_alpha = 1./6.;
+		  }
+		  if(id[i] >= 0 && addr[i] == &pw_beta){
+			  pw_beta = -1.0;
+		  }
+		  if(id[i] >= 0 && addr[i] == &pnfw_beta){
+			  pnfw_beta = 2.0;
 		  }
 	  }
 
 	  file_in.close();
 
-	  // to compensate for the lst plane, which is the source plane
+	  if(pw_beta >= 0){
+		  ERROR_MESSAGE();
+		  cout << "Internal slope >=0 not possible." << endl;
+		  exit(1);
+	  }
+
+	  if(pnfw_beta <= 0){
+		  ERROR_MESSAGE();
+		  cout << "Internal slope <=0 not possible." << endl;
+		  exit(1);
+	  }
+
+	  if(pnfw_beta / floor(pnfw_beta) > 1.0){
+		  ERROR_MESSAGE();
+		  cout << "Internal slope needs to be a whole number." << endl;
+		  exit(1);
+	  }
+
+	  // to compensate for the last plane, which is the source plane
 	  Nplanes++;
 
-	  // to compenstate for additional lens plane
+	  // to compenstate for additional lens planes
 	  if(flag_input_lens)
 		  Nplanes++;
 
@@ -310,26 +392,50 @@ void MultiLens::printMultiLens(){
 	cout << "min mass " << min_mass << endl;
 
 	cout << "flag input lens " << flag_input_lens << endl;
+	switch(flag_input_lens){
+	case null:
+		cout << "  No input lens specified " << endl;
+		break;
+	case ana_lens:
+		cout << "  AnaLens " << endl;
+		break;
+	case moka_lens:
+		cout << "  MOKALens " << endl;
+		break;
+	}
 
 	cout << "field of view " << fieldofview << endl;
 
 	cout << "internal profile type " << internal_profile << endl;
 	switch(internal_profile){
-	case 0:
-		cout << "  Gaussian internal profile " << endl;
-		break;
-	case 1:
+	case PowerLaw:
 		cout << "  Power law internal profile " << endl;
+		cout << "  slope: " << pw_beta << endl;
 		break;
-	case 2:
+	case NFW:
 		cout << "  NFW internal profile " << endl;
 		break;
-	case 3:
+	case PseudoNFW:
 		cout << "  Pseudo NFW internal profile " << endl;
+		cout << "  slope: " << pnfw_beta << endl;
 		break;
 	}
 
-	cout << "mass function type " << mass_func_type << endl << endl;
+	cout << "mass function type " << mass_func_type << endl;
+	switch(mass_func_type){
+		case PS:
+			cout << "  Press-Schechter mass function " << endl;
+			break;
+		case ST:
+			cout << "  Sheth-Tormen mass function " << endl;
+			break;
+		case PL:
+			cout << "  Power law mass function " << endl;
+			cout << "  slope: " << pw_alpha << endl;
+			break;
+		}
+
+	cout << endl;
 }
 
 /*
@@ -369,7 +475,7 @@ void MultiLens::buildHaloTrees(
 			if(j+1 == (flag_input_lens % Nplanes)) z2 = plane_redshifts[j] + 0.5*(plane_redshifts[j+2] - plane_redshifts[j]);
 
 			//halodata[j] = new HaloData(fieldofview,min_mass,z1,z2,mass_func_type,cosmo,seed);
-			halodata[j] = auto_ptr<HaloData>(new HaloData(fieldofview,min_mass,mass_scale,z1,z2,mass_func_type,cosmo,seed));
+			halodata[j] = auto_ptr<HaloData>(new HaloData(fieldofview,min_mass,mass_scale,z1,z2,mass_func_type,pw_alpha,cosmo,seed));
 
 			Ntot+=halodata[j]->Nhalos;
 		}
@@ -424,31 +530,28 @@ void MultiLens::buildHaloTrees(
 			continue;
 
 		switch(internal_profile){
-		case 1:
-			//halo_tree[j] = new ForceTreePowerLaw(1.9,&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos);
+		case PowerLaw:
 			//halo_tree[j] = auto_ptr<ForceTree>(new ForceTreePowerLaw(1.9,&halodata[j]->pos[0],halodata[j]->Nhalos
-				//	,halodata[j]->halos,true,halodata[j]->kappa_background));
-			halo_tree[j] = auto_ptr<QuadTree>(new QuadTreePowerLaw(1.9,&halodata[j]->pos[0],halodata[j]->Nhalos
+			//		,halodata[j]->halos,true,halodata[j]->kappa_background));
+			halo_tree[j] = auto_ptr<QuadTree>(new QuadTreePowerLaw(pw_beta,&halodata[j]->pos[0],halodata[j]->Nhalos
 								,halodata[j]->halos,halodata[j]->kappa_background));
 			break;
-		case 2:
-			//halo_tree[j] = new ForceTreeNFW(&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos);
+		case NFW:
 			//halo_tree[j] = auto_ptr<ForceTree>(new ForceTreeNFW(&halodata[j]->pos[0],halodata[j]->Nhalos
-				//	,halodata[j]->halos,true,halodata[j]->kappa_background));
+			//		,halodata[j]->halos,true,halodata[j]->kappa_background));
 			halo_tree[j] = auto_ptr<QuadTree>(new QuadTreeNFW(&halodata[j]->pos[0],halodata[j]->Nhalos
 					,halodata[j]->halos,halodata[j]->kappa_background));
 			break;
-		case 3:
-			//halo_tree[j] = new ForceTreePseudoNFW(2,&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos);
-			//halo_tree[j] = auto_ptr<ForceTree>(new ForceTreePseudoNFW(2,&halodata[j]->pos[0],halodata[j]->Nhalos,halodata[j]->halos,true,5,3,false,0.1));
+		case PseudoNFW:
 			//halo_tree[j] = auto_ptr<ForceTree>(new ForceTreePseudoNFW(2,&halodata[j]->pos[0],halodata[j]->Nhalos
-				//	,halodata[j]->halos,true,halodata[j]->kappa_background));
-			halo_tree[j] = auto_ptr<QuadTree>(new QuadTreePseudoNFW(2,&halodata[j]->pos[0],halodata[j]->Nhalos
+			//		,halodata[j]->halos,true,halodata[j]->kappa_background));
+			halo_tree[j] = auto_ptr<QuadTree>(new QuadTreePseudoNFW(pnfw_beta,&halodata[j]->pos[0],halodata[j]->Nhalos
 							,halodata[j]->halos,halodata[j]->kappa_background));
 			break;
 		default:
 			cout << "There is no such case for the halo trees" << endl;
 			ERROR_MESSAGE();
+			exit(1);
 			break;
 		}
 
@@ -605,7 +708,7 @@ void MultiLens::setRedshift(double zsource){
 	int j=0, flag=0;
 	if(flag_input_lens && input_lens->getZlens() < lz[1]){
 		plane_redshifts[j] = input_lens->getZlens();
-		flag_input_lens = Nplanes;
+		flag_input_lens = (InputLens)Nplanes;
 		flag = 1;
 		j++;
 	}
@@ -618,7 +721,7 @@ void MultiLens::setRedshift(double zsource){
 			if(input_lens->getZlens() > lz[i] && input_lens->getZlens() <= lz[i+1]){
 				plane_redshifts[j] = lz[i];
 				plane_redshifts[++j] = input_lens->getZlens();
-				flag_input_lens = j;
+				flag_input_lens = (InputLens)j;
 				flag = 1;
 			}
 		j++;
@@ -749,6 +852,8 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 	cout << endl << endl;
 
 	buildHaloTrees(cosmo,source->zsource);
+
+	std:: cout << " done " << std:: endl;
 }
 
 /** \brief Read in information from a Virgo Millennium Data Base http://gavo.mpa-garching.mpg.de/MyMillennium/

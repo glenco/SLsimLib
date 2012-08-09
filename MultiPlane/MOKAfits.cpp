@@ -8,13 +8,14 @@
 #ifdef WITH_MOKA
 
 #include <MOKAfits.h>
+#include <fstream>
 #include <CCfits/CCfits>
 
 using namespace CCfits;
 
 void getDims(std::string fn
-		,int *nx
-		,int *ny){
+	     ,int *nx
+	     ,int *ny){
 
 	try{
 		std::auto_ptr<FITS> ff(new FITS (fn, Read));
@@ -39,16 +40,26 @@ void readImage(std::string fn
 		,std::valarray<float> *alpha2
 		,std::valarray<float> *gamma1
 		,std::valarray<float> *gamma2
-		,double *boxl
-		,double *boxlMpc
-		,double *zlens
-		,double *zsource
-		,double *omegam
-		,double *omegal
-		,double *h
-		,double *DL){
+	    ,LensHalo *LH){
 
 	int nx,ny;
+
+	std:: cout << " reading MOKA file: " << fn << std:: endl;
+	std::ostringstream checkfout;
+	checkfout << fn << "_noisy.fits";	
+	std:: string checkfilenameout = checkfout.str();
+	std:: ifstream checkfileout;
+	checkfileout.open(checkfilenameout.c_str());
+	if(checkfileout.is_open()){
+	  std:: cout << "  " << std:: endl;
+	  // std:: cout << checkfilenameout << " exists I will STOP here " << std:: endl;
+	  std:: cout << "     halo already processed! " << std:: endl;
+	  std:: cout << "   I will measure the map proprieties only " << std:: endl;
+	  // exit(1);
+	  fn = fn + "_noisy.fits";	
+	  std:: cout << " I am reading " << fn << std:: endl;
+	  std:: cout << "  " << std:: endl;
+	}
 
 	std::auto_ptr<FITS> ff(new FITS (fn, Read));
 
@@ -58,13 +69,21 @@ void readImage(std::string fn
 	ny=h0->axis(1);
 
 	h0->read(*convergence);
-	h0->readKey ("SIDEL",*boxl);
-	h0->readKey ("SIDEL2",*boxlMpc);
-	h0->readKey ("ZLENS",*zlens);
-	h0->readKey ("ZSOURCE",*zsource);
-	h0->readKey ("OMEGA",*omegam);
-	h0->readKey ("LAMBDA",*omegal);
-	h0->readKey ("H",*h);
+
+	h0->readKey ("SIDEL",LH->boxlarcsec);
+	h0->readKey ("SIDEL2",LH->boxlMpc);
+	h0->readKey ("ZLENS",LH->zl);
+	h0->readKey ("ZSOURCE",LH->zs);
+	h0->readKey ("OMEGA",LH->omegam);
+	h0->readKey ("LAMBDA",LH->omegal);
+	h0->readKey ("H",LH->h);
+	h0->readKey ("W",LH->wq);
+	h0->readKey ("MSTAR",LH->mstar);  
+	h0->readKey ("MVIR",LH->m);  
+	h0->readKey ("CONCENTRATION",LH->c);
+	h0->readKey ("DL",LH->DL);
+	h0->readKey ("DLS",LH->DLS);
+	h0->readKey ("DS",LH->DS);
 
 	ExtHDU &h1=ff->extension(1);
 	h1.read(*alpha1);
@@ -88,14 +107,7 @@ void writeImage(std::string filename
 		,std::valarray<float> gamma3
 		,int nx
 		,int ny
-		,double boxl
-		,double boxlMpc
-		,double zlens
-		,double zsource
-		,double omegam
-		,double omegal
-		,double h
-		,double DL){
+		,LensHalo *LH){
 
 	long naxis=2;
 	long naxes[2]={nx,ny};
@@ -117,13 +129,21 @@ void writeImage(std::string filename
 
 	phout->write( 1,nx*ny,convergence );
 
-	phout->addKey ("SIDEL",boxl,"arcsec");
-	phout->addKey ("SIDEL2",boxlMpc,"Mpc/h");
-	phout->addKey ("ZLENS",zlens,"lens redshift");
-	phout->addKey ("ZSOURCE",zsource, "source redshift");
-	phout->addKey ("OMEGA",omegam,"density parameter");
-	phout->addKey ("LAMBDA",omegal,"omega lamda");
-	phout->addKey ("H",h,"hubble/100");
+	phout->addKey ("SIDEL",LH->boxlarcsec,"arcsec");
+	phout->addKey ("SIDEL2",LH->boxlMpc,"Mpc/h");
+	phout->addKey ("ZLENS",LH->zl,"lens redshift");
+	phout->addKey ("ZSOURCE",LH->zs, "source redshift");
+	phout->addKey ("OMEGA",LH->omegam,"omega matter");
+	phout->addKey ("LAMBDA",LH->omegal,"omega lamda");
+	phout->addKey ("H",LH->h,"hubble/100");
+	phout->addKey ("W",LH->wq,"dark energy equation of state parameter");
+	phout->addKey ("MSTAR",LH->mstar,"stellar mass of the BCG in Msun/h");
+	phout->addKey ("MVIR",LH->m,"virial mass of the halo in Msun/h");
+	phout->addKey ("CONCENTRATION",LH->c,"NFW concentration");
+	phout->addKey ("DL",LH->DL,"Mpc/h");
+	phout->addKey ("DLS",LH->DLS,"Mpc/h");
+	phout->addKey ("DS",LH->DS,"Mpc/h");
+	
 
 	ExtHDU *eh1=fout->addImage("gamma1", FLOAT_IMG, naxex);
 	eh1->write(1,nx*ny,gamma1);
@@ -134,6 +154,99 @@ void writeImage(std::string filename
 
 	std::cout << *phout << std::endl;
 
+}
+
+/*
+ * routine used by fof to link nearby grid cell points
+ */
+
+void make_friendship(int ii,int ji,int np,std:: vector<int> &friends, std:: vector<double> &pointdist){
+  for(int jj=0;jj<np;jj++){
+    if(friends[ji+np*jj]!=0){
+      if(friends[ji+np*jj]<0){
+	friends[ii+np*jj]=-(ii+1);	
+      }
+      else{
+	friends[ii+np*jj]=(ii+1);
+      }
+      friends[ji+np*jj]=0;
+    }
+  }  
+  friends[ii+np*ji]=-(ii+1);
+}
+
+/*
+ * given a a set of grid points xci and yci and an interpixeld distance l return the id of the 
+ * fof group of each cell point
+ */
+
+int fof(double l,std:: vector<double> xci, std:: vector<double> yci, std:: vector<int> &groupid){
+  int np = xci.size();
+  std:: vector<int> friends(np*np);
+  std:: vector<double> pointdist(np*np);
+  for(int ii = 0;ii<np; ii++) for(int ji = 0;ji<np; ji++){
+      pointdist[ii+np*ji] = sqrt( pow(xci[ii] - xci[ji],2) + pow(yci[ii] - yci[ji],2));
+      groupid[ii] = 0;
+      friends[ii+np*ji]=0;
+    }
+  for(int ii=0;ii<np;ii++) for(int ji = 0;ji<np; ji++){
+      // consider as friends grid points less distant than 1.5 x l
+      if(pointdist[ii+np*ji]<=1.5*l) friends[ii+np*ji] = ii+1;
+    }
+  for(int ii=0;ii<np;ii++){
+    int r = 0;
+    while(r==0){
+      r=1;
+      for(int ji=0;ji<np;ji++){
+	if(friends[ii+np*ji]>0){
+	  if(ii!=ji){
+	    make_friendship(ii,ji,np,friends,pointdist);
+	    r=0;
+	  }
+	}
+      }
+    }
+  }
+  for(int ii=0;ii<np;ii++){
+    int p=0;
+    for(int ji=0;ji<np;ji++){
+      if(friends[ji+np*ii]!=0) p++;
+      if(p==2){
+	std:: cout << ji << "  " << ii << ":  "  << friends[ji+np*ii] << "  " << friends[ii+np*ji] << std:: endl;
+	exit(1);
+      }
+    }
+  }
+  // count the particles in each group
+  int kt = 0;
+  int ng= 0;
+  for(int ii=0;ii<np;ii++){
+    int k = 0;
+    for(int ji=0;ji<np;ji++){
+      if(friends[ii+np*ji]!=0){
+	k++;
+	groupid[ji]=ii+1;
+      }
+    }
+    if(k>0){
+      ng++;
+    }
+    kt = kt + k;
+  }
+  if(kt != np){
+    std:: cout << " number of screaned particles : " << kt << std:: endl;
+    std:: cout << " differes from the number of particles : " << np << std:: endl;
+    std:: cout << " number of group found : " << ng << std:: endl;
+    std:: cout << "     " << std:: endl;
+    std:: cout << " I will STOP here!!! " << std:: endl;
+    exit(1);
+  }
+  /* Make a histogram of the data */
+  std::vector< int > histogram(np,0);
+  std::vector< int >::iterator it = groupid.begin();
+  while(it != groupid.end()) histogram[*it++]++;
+  int mode = std::max_element(histogram.begin(),histogram.end()) - histogram.begin();
+  return mode;
 }
 
 #endif

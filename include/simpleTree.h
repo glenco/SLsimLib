@@ -9,6 +9,7 @@
 #define SIMP_TREE_H_
 
 #include <assert.h>
+#include <cmath>
 #include <iostream>
 #include <cstdlib>
 #include <list>
@@ -31,6 +32,13 @@ typedef unsigned long IndexType;
 #define error_message
 #define ERROR_MESSAGE() std::cout << "ERROR: file: " << __FILE__ << " line: " << __LINE__ << std::endl;
 #endif
+
+/// for the PseudoNFW and NFW tables
+void make_tables_nfw();
+void delete_tables_nfw();
+void make_tables_pseudonfw(double beta);
+void delete_tables_pseudonfw();
+double InterpolateFromTable(double *table, double y);
 
 /// structure to hold information about the halos' positions, masses, etc.
 struct HaloStructure{

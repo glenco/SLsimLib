@@ -206,16 +206,20 @@ protected:
 	void rotate_coordinates(double **coord);
 
 	// Internal profiles for a Gaussian particle
-	double alpha_o(double r2,float sigma);
-	double kappa_o(double r2,float sigma);
-	double gamma_o(double r2,float sigma);
-	double phi_o(double r2,float sigma);
-
-	/// These will be overridden in a derived class with a specific halo internal structures
-	virtual double alpha_h(double r2,HaloStructure &par){return 0.0;}
-	virtual double kappa_h(double r2,HaloStructure &par){return 0.0;}
-	virtual double gamma_h(double r2,HaloStructure &par){return 0.0;}
-	virtual double phi_h(double r2,HaloStructure &par){return 0.0;}
+	virtual inline double alpha_h(double r2s2,double sigma){
+	  return (sigma > 0.0 ) ? ( exp(-0.5*r2s2) - 1.0 ) : -1.0;
+	}
+	virtual inline double kappa_h(double r2s2,double sigma){
+	  return 0.5*r2s2*exp(-0.5*r2s2);
+	}
+	virtual inline double gamma_h(double r2s2,double sigma){
+	  return (sigma > 0.0 ) ? (-2.0 + (2.0 + r2s2)*exp(-0.5*r2s2) ) : -2.0;
+	}
+	virtual inline double phi_h(double r2s2,double sigma){
+		ERROR_MESSAGE();  // not yet written
+		exit(1);
+		return 0;
+	}
 
 	QTreeNBHndl rotate_simulation(PosType **xp,IndexType Nparticles,IndexType *particles
 			,double **coord,double theta,float *rsph,float *mass
@@ -250,10 +254,21 @@ private:
 	float beta; // logorithmic slop of 2d mass profile
 
 	// Override internal structure of halos
-	double alpha_h(double r2,HaloStructure &par);
-	double kappa_h(double r2,HaloStructure &par);
-	double gamma_h(double r2,HaloStructure &par);
-	double phi_h(double r2,HaloStructure &par);
+	inline double alpha_h(double r,double rm){
+		return -1.0*pow(r/rm,beta+2);
+	}
+	inline double kappa_h(double r,double rm){
+		return (beta+2)*pow(r/rm,beta)*r*r/(rm*rm);
+	}
+	inline double gamma_h(double r,double rm){
+		return -0.5*beta*pow(r/rm,beta+2);
+	}
+	inline double phi_h(double r,double rm){
+		ERROR_MESSAGE();
+		std::cout << "time delay has not been fixed for PowerLaw profile yet." << std::endl;
+		exit(1);
+		return 0.0;
+	}
 };
 
 /** \ingroup DeflectionL2
@@ -279,16 +294,29 @@ public:
 
 private:
 
-	// Override internal structure of halos
-	double alpha_h(double r2,HaloStructure &par);
-	double kappa_h(double r2,HaloStructure &par);
-	double gamma_h(double r2,HaloStructure &par);
-	double phi_h(double r2,HaloStructure &par);
+	double *ft, *gt, *g2t;
 
-	double gfunction(double x);
-	double ffunction(double x);
-	double g2function(double x);
-	double rhos(double x);
+	// Override internal structure of halos
+	inline double alpha_h(double r,double rm){
+		return -1.0*InterpolateFromTable(gt,r)/InterpolateFromTable(gt,rm);
+	}
+	inline double kappa_h(double r,double rm){
+		return 0.5*r*r*InterpolateFromTable(ft,r)/InterpolateFromTable(gt,rm);
+	}
+	inline double gamma_h(double r,double rm){
+		return -0.25*r*r*InterpolateFromTable(g2t,r)/InterpolateFromTable(gt,rm);
+	}
+	inline double phi_h(double r,double rm){
+		ERROR_MESSAGE();
+		std::cout << "time delay has not been fixed for NFW profile yet." << std::endl;
+		exit(1);
+		return 0.0;
+	}
+	void point_tables();
+
+	double gfunctionRmax(double rm,double x);
+	double ffunctionRmax(double rm,double x);
+	double g2functionRmax(double rm,double x);
 };
 
 /** \ingroup DeflectionL2
@@ -307,21 +335,33 @@ private:
 class QuadTreePseudoNFW : public QuadTree{
 
 public:
-	QuadTreePseudoNFW(int beta,PosType **xp,IndexType Npoints,HaloStructure *par_internals
+	QuadTreePseudoNFW(double beta,PosType **xp,IndexType Npoints,HaloStructure *par_internals
 			,double my_kappa_bk = 0.0,int bucket = 5,PosType theta = 0.1);
 	~QuadTreePseudoNFW();
 
 private:
 
-	int beta;
+	double beta;
+
+	double *mhatt;
 
 	// Override internal structure of halos
-	double alpha_h(double r2,HaloStructure &par);
-	double kappa_h(double r2,HaloStructure &par);
-	double gamma_h(double r2,HaloStructure &par);
-	double phi_h(double r2,HaloStructure &par);
-
-	double mhat(double y);
+	inline double alpha_h(double r,double rm){
+		return -1.0*InterpolateFromTable(mhatt,r)/InterpolateFromTable(mhatt,rm);
+	}
+	inline double kappa_h(double r,double rm){
+		return 0.5*r*r/InterpolateFromTable(mhatt,rm)/pow(1+r,beta);
+	}
+	inline double gamma_h(double r,double rm){
+		return (0.5*r*r/pow(1+r,beta) - InterpolateFromTable(mhatt,r))/InterpolateFromTable(mhatt,rm);
+	}
+	inline double phi_h(double r,double rm){
+		ERROR_MESSAGE();
+		std::cout << "time delay has not been fixed for PseudoNFW profile yet." << std::endl;
+		exit(1);
+		return 0.0;
+	}
+	void point_tables();
 };
 
 #endif /* QUAD_TREE_H_ */

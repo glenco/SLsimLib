@@ -11,16 +11,21 @@
 #define MOKALENS_H_
 
 #include <cosmo.h>
+#include <utilities.h>
 #include <source.h>
 #include <grid_maintenance.h>
 #include <profile.h>
 #include <valarray>
-//TODO Improve this comment.
+
+//TODO Improve this comment with more complete description of what a MOKAmap is used for.
 /**
  * \brief the MOKA map structure, containing all quantities that define it
  *
  * Note: To use this class requires setting the WITH_MOKA compiler flag and linking
  * the cfits library.
+
+#include <MOKAfits.h>
+
  */
 struct MOKAmap{
 	/// values for the map
@@ -30,9 +35,12 @@ struct MOKAmap{
 	std::valarray<float> gamma1;
 	std::valarray<float> gamma2;
 	std::valarray<float> gamma3;
-
+	std::valarray<float> Signlambdar;
+	std::valarray<float> Signlambdat;
+	std:: vector<double> x;	 
 	int nx,ny;
 	double boxl,boxlMpc,zlens,zsource,omegam,omegal,h,DL;
+	double inarcsec;
 	double center[2];
 };
 //TODO Improve this comment.
@@ -45,11 +53,15 @@ struct MOKAmap{
 class MOKALens : public Lens{
 public:
 
+
 	MOKALens(std::string);
+	MOKALens(std::string paramfile,LensHalo *LH);
+
 	~MOKALens();
 
 	bool set;	/// the name of the MOKA input file
 	std::string MOKA_input_file;
+	int flag_MOKA_analyze;
 
 	void readParamfile(std::string);
 	void rayshooterInternal(double *ray, double *alpha, double *gamma, double *kappa, bool kappa_off);
@@ -57,11 +69,17 @@ public:
 	double getZlens();
 	void setInternalParams(CosmoHndl,SourceHndl);
 	void saveImage(GridHndl grid, bool saveprofile=true);
+	void saveImage(bool saveprofile=true);
 	void saveKappaProfile();
 	void saveGammaProfile();
+	void saveProfiles(double &RE3);
+	void initMap();
 
 	MOKAmap *map;
+	LensHalo *LH;
 
+	void estSignLambdas();
+	void EinsteinRadii(double &RE1, double &RE2);
 };
 
 #endif /* MOKALENS_H_ */
