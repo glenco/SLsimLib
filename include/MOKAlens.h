@@ -50,6 +50,7 @@ public:
 
 	bool set;	/// the name of the MOKA input file
 	std::string MOKA_input_file;
+	int flag_MOKA_analyze;
 
 	void readParamfile(std::string);
 	void rayshooterInternal(double *ray, double *alpha, double *gamma, double *kappa, bool kappa_off);

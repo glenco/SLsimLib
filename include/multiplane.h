@@ -64,7 +64,6 @@ public:
 	/// a poiner to the analytical lens
 	LensHndl input_lens;
 	AnaLens *analens;
-	int flag_MOKA_analyze;
 #ifdef WITH_MOKA
 	MOKALens *mokalens;
 #endif

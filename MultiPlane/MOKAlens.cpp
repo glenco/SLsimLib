@@ -160,6 +160,10 @@ void MOKALens::readParamfile(std::string filename){
   id[n] = 2;
   label[n++] = "MOKA_input_file";
 
+  addr[n] = &flag_MOKA_analyze;
+  id[n] = 1;
+  label[n++] = "MOKA_analyze";
+
   std::ifstream file_in(filename.c_str());
   if(!file_in){
     cout << "Can't open file " << filename << endl;
@@ -206,12 +210,18 @@ void MOKALens::readParamfile(std::string filename){
   }
 
   for(i = 0; i < n; i++){
-	  if(id[i] > 0){
+	  if(id[i] > 0 && addr[i] != &flag_MOKA_analyze){
 		  ERROR_MESSAGE();
 		  cout << "parameter " << label[i] << " needs to be set!" << endl;
 		  exit(0);
 	  }
+
+	  if(id[i] >= 0 && addr[i] == &flag_MOKA_analyze){
+		  flag_MOKA_analyze = 1;
+	  }
+
   }
+
 
   file_in.close();
 
