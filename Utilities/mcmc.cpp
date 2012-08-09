@@ -1,6 +1,6 @@
 #include <iostream>
 #include <math.h>
-
+#include <cstdlib>
 using namespace std;
 
 const int N_data = 64;
