@@ -34,17 +34,18 @@ struct MOKAmap{
 	std:: vector<double> x;	 
 	int nx,ny;
 	double boxl,boxlMpc,zlens,zsource,omegam,omegal,h,DL;
-        double inarcsec;
+	double inarcsec;
 	double center[2];
-        struct LensHalo LH;
 };
 
 /// A class to represents the MOKA lens map
 class MOKALens : public Lens{
 public:
 
-        MOKALens(std::string);
-  
+
+	MOKALens(std::string);
+	MOKALens(std::string paramfile,LensHalo *LH);
+
 	~MOKALens();
 
 	bool set;	/// the name of the MOKA input file
@@ -56,11 +57,11 @@ public:
 	double getZlens();
 	void setInternalParams(CosmoHndl,SourceHndl);
 	void saveImage(GridHndl grid, bool saveprofile=true);
-	void saveKappaProfile();
-	void saveGammaProfile();
 	void saveProfiles(double &RE3);
+	void initMap();
 
 	MOKAmap *map;
+    LensHalo *LH;
 
 	void estSignLambdas();
 	void EinsteinRadii(double &RE1, double &RE2);

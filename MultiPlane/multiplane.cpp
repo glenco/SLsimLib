@@ -13,6 +13,33 @@
 
 using namespace std;
 
+HaloData::HaloData(CosmoHndl cosmo
+		,double mass
+		,double zlens){
+	allocation_flag = true;
+	kappa_background = 0.0;
+	Nhalos = 1;
+	halos = new HaloStructure[Nhalos];
+	pos = PosTypeMatrix(0,Nhalos-1,0,2);
+
+	HALO *ha = new HALO(cosmo,mass,zlens);
+
+	int i;
+	for(i = 0; i < Nhalos; i++){
+		pos[i][0] = 0.0;
+		pos[i][1] = 0.0;
+		pos[i][2] = 0.0;
+
+		halos[i].mass = mass;
+		halos[i].Rmax = ha->getRvir()*cosmo->gethubble();
+		halos[i].rscale = halos[i].Rmax/ha->getConcentration(0);
+
+		cout << endl << halos[i].mass  << " " << halos[i].Rmax << " " << halos[i].rscale << endl;
+	}
+
+	delete ha;
+}
+
 HaloData::HaloData(HaloStructure *halostrucs,PosType **positions,unsigned long Nhaloss):
 	pos(positions), halos(halostrucs), Nhalos(Nhaloss)
 {
@@ -38,11 +65,11 @@ HaloData::HaloData(
 
 	allocation_flag = true;
 
-    HALO ha(cosmo,min_mass,(z1+z2)/2);
+    HALO *ha = new HALO(cosmo,min_mass,(z1+z2)/2);
 
 	// calculate the mass density on the plane
     // and convert it to physical 1/physical_distance^2
-	kappa_background = ha.totalMassDensityinHalos(0,1,alpha)*pow(cosmo->gethubble(),2)*pow(1+(z1+z2)/2,3);
+	kappa_background = ha->totalMassDensityinHalos(0,1,alpha)*pow(cosmo->gethubble(),2)*pow(1+(z1+z2)/2,3);
 	kappa_background *= cosmo->getOmega_matter()*cosmo->angDist(z1,z2)/mass_scale;
 
     //int iterator;
@@ -89,16 +116,17 @@ HaloData::HaloData(
 		pos[i][1] = rr*sin(theta);
 
 		halos[i].mass = pow(10,InterpolateYvec(Nhalosbin,Logm,ran2 (seed)));
-		ha.reset(halos[i].mass,zi);
+		ha->reset(halos[i].mass,zi);
 		halos[i].mass /= mass_scale;
 		//halos[i].mass = vmasses[i];
 		//halos[i].Rmax = vsizes[i];
-		halos[i].Rmax = ha.getRvir()*cosmo->gethubble();
+		halos[i].Rmax = ha->getRvir()*cosmo->gethubble();
 		//halos[i].rscale = vsizes[i]/vscale[i]; // get the Rscale=Rmax/c
-		halos[i].rscale = halos[i].Rmax/ha.getConcentration(0); // get the Rscale=Rmax/c
+		halos[i].rscale = halos[i].Rmax/ha->getConcentration(0); // get the Rscale=Rmax/c
 		pos[i][2] = 0.0;//halos[i].Rmax;
 	}
 
+	delete ha;
 }
 
 HaloData::~HaloData(){

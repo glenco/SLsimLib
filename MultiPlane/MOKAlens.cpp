@@ -22,6 +22,7 @@ using namespace std;
 MOKALens::MOKALens(std::string paramfile) : Lens(){
 
 	map = new MOKAmap;
+	LH = new LensHalo;
 
 	readParamfile(paramfile);
 
@@ -33,33 +34,38 @@ MOKALens::MOKALens(std::string paramfile) : Lens(){
 	map->gamma1.resize(map->nx*map->ny);
 	map->gamma2.resize(map->nx*map->ny);
 	map->gamma3.resize(map->nx*map->ny);
+
 	readImage(MOKA_input_file
 			,&map->convergence
 			,&map->alpha1
 			,&map->alpha2
 			,&map->gamma1
 			,&map->gamma2
-    		        ,&map->LH);
-	map->boxl = map->LH.boxlarcsec;
-	map->zlens = map->LH.zl;
-	map->zsource = map->LH.zs;
-	map->omegam = map->LH.omegam;
-	map->omegal = map->LH.omegal;
-	map->DL = map->LH.DL;
-	map->center[0] = map->center[1] = 0.0;
+			,LH);
 
-	map->boxlMpc = map->LH.boxlMpc;
-	map->h = map->LH.h;
+	initMap();
+}
 
-	map->boxlMpc /= map->h;
+/*
+ * \ingroup Constructor
+ * \brief allocates and reads the MOKA map in
+ */
+MOKALens::MOKALens(std::string paramfile,LensHalo *halo) : Lens(){
+	map = new MOKAmap;
+	LH = halo;
 
-	/// to radians
-	map->boxl *= pi/180/3600.;
+	readParamfile(paramfile);
 
-	double xmin = -map->boxlMpc*0.5*map->h;
-	double xmax =  map->boxlMpc*0.5*map->h;
-	fill_linear (map->x,map->nx,xmin,xmax); // physical
-	map->inarcsec  = 10800./M_PI/map->LH.DL*60.;                             
+	map->nx = map->ny = LH->npix;
+
+	map->convergence.resize(map->nx*map->ny);
+	map->alpha1.resize(map->nx*map->ny);
+	map->alpha2.resize(map->nx*map->ny);
+	map->gamma1.resize(map->nx*map->ny);
+	map->gamma2.resize(map->nx*map->ny);
+	map->gamma3.resize(map->nx*map->ny);
+
+	initMap();
 }
 
 MOKALens::~MOKALens(){
@@ -70,20 +76,44 @@ MOKALens::~MOKALens(){
 	map->gamma2.resize(0);
 	map->gamma3.resize(0);
 	delete map;
+	delete LH;
+}
+
+void MOKALens::initMap(){
+	map->boxl = LH->boxlarcsec;
+	map->zlens = LH->zl;
+	map->zsource = LH->zs;
+	map->omegam = LH->omegam;
+	map->omegal = LH->omegal;
+	map->DL =LH->DL;
+	map->center[0] = map->center[1] = 0.0;
+
+	map->boxlMpc = LH->boxlMpc;
+	map->h = LH->h;
+
+	map->boxlMpc /= map->h;
+
+	/// to radians
+	map->boxl *= pi/180/3600.;
+
+	double xmin = -map->boxlMpc*0.5*map->h;
+	double xmax =  map->boxlMpc*0.5*map->h;
+	fill_linear (map->x,map->nx,xmin,xmax); // physical
+	map->inarcsec  = 10800./M_PI/LH->DL*60.;
 }
 
 /*
  * sets the cosmology and the lens and the source according to the MOKA map parameters
  */
 void MOKALens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
-	cosmo->setOmega_matter(map->LH.omegam,true);
-	cosmo->sethubble(map->LH.h);
-	setZlens(map->LH.zl);
-	source->zsource = map->LH.zs;
+	cosmo->setOmega_matter(map->omegam,true);
+	cosmo->sethubble(map->h);
+	setZlens(map->zlens);
+	source->zsource = map->zsource;
 
-	double Ds = cosmo->angDist(0,map->LH.zs);
-	double Dl = cosmo->angDist(0,map->LH.zl);
-	double Dls = cosmo->angDist(map->LH.zl,map->LH.zs);
+	double Ds = cosmo->angDist(0,map->zsource);
+	double Dl = cosmo->angDist(0,map->zlens);
+	double Dls = cosmo->angDist(map->zlens,map->zsource);
 	double fac = Ds/Dls/Dl;
 
 	/// converts to the code units
@@ -215,7 +245,6 @@ void MOKALens::saveImage(GridHndl grid,bool saveprofiles){
 	do{
 		long index = IndexFromPosition(grid->i_tree->pointlist->current->x,map->nx,map->boxl,map->center);
 		if(index > -1){
-
 			map->convergence[index] = grid->i_tree->pointlist->current->kappa;
 			map->gamma1[index] = grid->i_tree->pointlist->current->gamma[0];
 			map->gamma2[index] = grid->i_tree->pointlist->current->gamma[1];
@@ -232,9 +261,10 @@ void MOKALens::saveImage(GridHndl grid,bool saveprofiles){
 			,map->gamma3
 			,map->nx
 			,map->ny
-   		        ,map->LH);
+		    ,LH);
 
 	if(saveprofiles == true){
+
 	  std:: cout << " saving profile " << std:: endl;
                     double RE3;
 	            saveProfiles(RE3);
@@ -249,97 +279,8 @@ void MOKALens::saveImage(GridHndl grid,bool saveprofiles){
 		    filoutEinr << "# effective        median      from_profles" << std:: endl;
 		    filoutEinr << RE1 << "   " << RE2 << "    " << RE3 << std:: endl;
 		    filoutEinr.close();
-		    // saveKappaProfile();
-		    // saveGammaProfile();
 	}
 }
-
-/*
- * computing and saving the radial profile of the convergence
- */
-void MOKALens::saveKappaProfile(){
-
-	/* measuring the differential and cumulative profile*/
-	double xmin = -map->boxlMpc*0.5*map->h;
-	double xmax =  map->boxlMpc*0.5*map->h;
-	double drpix = map->boxlMpc/map->nx*map->h;
-	std::valarray<float> pxdist(map->nx*map->ny);
-	int i, j;
-	for(i=0; i<map->nx; i++ ) for(j=0; j<map->ny; j++ ){
-		pxdist[i+map->ny*j]= sqrt(pow((xmin+(drpix*0.5)+i*drpix),2) +
-				pow((xmin+(drpix*0.5)+j*drpix),2));
-	}
-	double dr0 = 8.*(0.5*map->boxlMpc*map->h)/(map->nx/2.);
-	int nbin = int(0.5*map->boxlMpc*map->h/dr0);
-	//
-	std:: cout << "   " << std:: endl;
-	std:: cout << " nbins = " << nbin << "  dr0 = " << dr0 << std:: endl;
-	std:: cout << " ______________________________________________________ " << std:: endl;
-	std:: cout << " computing profiles assuming spherical symmetry";
-	// - - - - - - - - - - - - - - - - -
-	double *kprofr = estprof(map->convergence,map->nx,map->ny,pxdist,dr0,xmax);
-	double *sigmakprof = estsigmaprof(map->convergence,map->nx,map->ny,pxdist,dr0,xmax,kprofr);
-	double *ckprofr = estcprof(map->convergence,map->nx,map->ny,pxdist,dr0,xmax);
-	double *sigmackprof = estsigmacprof(map->convergence,map->nx,map->ny,pxdist,dr0,xmax,kprofr);
-	std::ostringstream fprof;
-	fprof << MOKA_input_file << "_noisy_MAP_radial_prof_kappa.dat";
-	std:: ofstream filoutprof;
-	std:: string filenameprof = fprof.str();
-	filoutprof.open(filenameprof.c_str());
-	filoutprof <<"# r      kappa     sig_k     ckappa     sig_ck" << std:: endl;
-	int l;
-	for(l=0;l<nbin;l++){
-		filoutprof << dr0*l + dr0/2. << "  "
-				<< kprofr[l] << "  " << sigmakprof[l] << "  "
-				<< ckprofr[l] << "  " << sigmackprof[l] <<
-				std:: endl;
-	}
-	filoutprof.close();
-}
-
-/*
- * computing and saving the radial profile of the shear
- */
-void MOKALens::saveGammaProfile(){
-
-	/* measuring the differential and cumulative profile*/
-	double xmin = -map->boxlMpc*0.5*map->h;
-	double xmax =  map->boxlMpc*0.5*map->h;
-	double drpix = map->boxlMpc/map->nx*map->h;
-	std::valarray<float> pxdist(map->nx*map->ny);
-	int i, j;
-	for(i=0; i<map->nx; i++ ) for(j=0; j<map->ny; j++ ){
-		pxdist[i+map->ny*j]= sqrt(pow((xmin+(drpix*0.5)+i*drpix),2) +
-				pow((xmin+(drpix*0.5)+j*drpix),2));
-	}
-	double dr0 = 8.*(0.5*map->boxlMpc*map->h)/(map->nx/2.);
-	int nbin = int(0.5*map->boxlMpc*map->h/dr0);
-	//
-	std:: cout << "   " << std:: endl;
-	std:: cout << " nbins = " << nbin << "  dr0 = " << dr0 << std:: endl;
-	std:: cout << " ______________________________________________________ " << std:: endl;
-	std:: cout << " computing profiles assuming spherical symmetry";
-	// - - - - - - - - - - - - - - - - -
-	double *kprofr = estprof(map->gamma2,map->nx,map->ny,pxdist,dr0,xmax);
-	double *sigmakprof = estsigmaprof(map->gamma2,map->nx,map->ny,pxdist,dr0,xmax,kprofr);
-	double *ckprofr = estcprof(map->gamma2,map->nx,map->ny,pxdist,dr0,xmax);
-	double *sigmackprof = estsigmacprof(map->gamma2,map->nx,map->ny,pxdist,dr0,xmax,kprofr);
-	std::ostringstream fprof;
-	fprof << MOKA_input_file << "_noisy_MAP_radial_prof_gamma.dat";
-	std:: ofstream filoutprof;
-	std:: string filenameprof = fprof.str();
-	filoutprof.open(filenameprof.c_str());
-	filoutprof <<"# r      kappa     sig_k     ckappa     sig_ck" << std:: endl;
-	int l;
-	for(l=0;l<nbin;l++){
-		filoutprof << dr0*l + dr0/2. << "  "
-				<< kprofr[l] << "  " << sigmakprof[l] << "  "
-				<< ckprofr[l] << "  " << sigmackprof[l] <<
-				std:: endl;
-	}
-	filoutprof.close();
-}
-
 
 /*
  * computing and saving the radial profile of the convergence, reduced tangential and parallel shear and of the shear

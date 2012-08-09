@@ -40,7 +40,7 @@ void readImage(std::string fn
 		,std::valarray<float> *alpha2
 		,std::valarray<float> *gamma1
 		,std::valarray<float> *gamma2
-	       ,struct LensHalo *LH){ 
+	    ,LensHalo *LH){
 
 	int nx,ny;
 
@@ -107,7 +107,7 @@ void writeImage(std::string filename
 		,std::valarray<float> gamma3
 		,int nx
 		,int ny
-		,struct LensHalo LH){ 
+		,LensHalo *LH){
 
 	long naxis=2;
 	long naxes[2]={nx,ny};
@@ -129,20 +129,20 @@ void writeImage(std::string filename
 
 	phout->write( 1,nx*ny,convergence );
 
-	phout->addKey ("SIDEL",LH.boxlarcsec,"arcsec");
-	phout->addKey ("SIDEL2",LH.boxlMpc,"Mpc/h");
-	phout->addKey ("ZLENS",LH.zl,"lens redshift");
-	phout->addKey ("ZSOURCE",LH.zs, "source redshift");
-	phout->addKey ("OMEGA",LH.omegam,"omega matter");
-	phout->addKey ("LAMBDA",LH.omegal,"omega lamda");
-	phout->addKey ("H",LH.h,"hubble/100");
-	phout->addKey ("W",LH.wq,"dark energy equation of state parameter");
-	phout->addKey ("MSTAR",LH.mstar,"stellar mass of the BCG in Msun/h");  
-	phout->addKey ("MVIR",LH.m,"virial mass of the halo in Msun/h");  
-	phout->addKey ("CONCENTRATION",LH.c,"NFW concentration");
-	phout->addKey ("DL",LH.DL,"Mpc/h");
-	phout->addKey ("DLS",LH.DLS,"Mpc/h");
-	phout->addKey ("DS",LH.DS,"Mpc/h");
+	phout->addKey ("SIDEL",LH->boxlarcsec,"arcsec");
+	phout->addKey ("SIDEL2",LH->boxlMpc,"Mpc/h");
+	phout->addKey ("ZLENS",LH->zl,"lens redshift");
+	phout->addKey ("ZSOURCE",LH->zs, "source redshift");
+	phout->addKey ("OMEGA",LH->omegam,"omega matter");
+	phout->addKey ("LAMBDA",LH->omegal,"omega lamda");
+	phout->addKey ("H",LH->h,"hubble/100");
+	phout->addKey ("W",LH->wq,"dark energy equation of state parameter");
+	phout->addKey ("MSTAR",LH->mstar,"stellar mass of the BCG in Msun/h");
+	phout->addKey ("MVIR",LH->m,"virial mass of the halo in Msun/h");
+	phout->addKey ("CONCENTRATION",LH->c,"NFW concentration");
+	phout->addKey ("DL",LH->DL,"Mpc/h");
+	phout->addKey ("DLS",LH->DLS,"Mpc/h");
+	phout->addKey ("DS",LH->DS,"Mpc/h");
 	
 
 	ExtHDU *eh1=fout->addImage("gamma1", FLOAT_IMG, naxex);

@@ -34,8 +34,8 @@ void readImage(std::string fn
 		,std::valarray<float> *alpha1
 		,std::valarray<float> *alpha2
 		,std::valarray<float> *gamma1
-		,std::valarray<float> *gamma2
-	       ,struct LensHalo *LH);
+		,std::valarray<float> *gamma3
+		,LensHalo *LH);
 
 void writeImage(std::string filename
 		,std::valarray<float> convergence
@@ -44,7 +44,7 @@ void writeImage(std::string filename
 		,std::valarray<float> gamma3
 		,int nx
 		,int ny
-		,struct LensHalo LH);
+		,LensHalo *LH);
 
 
 void make_friendship(int ii,int ji,int np,std:: vector<int> &friends, std:: vector<double> &pointdist);

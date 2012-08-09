@@ -33,6 +33,7 @@ public:
 
 	HaloData(double fov,double min_mass,double mass_scale,double z1,double z2,int mass_func_type,double alpha,CosmoHndl cosmo,long *seed);
 	HaloData(HaloStructure *halostrucs,double **positions,unsigned long Nhaloss);
+	HaloData(CosmoHndl cosmo,double mass,double zlens);
 	~HaloData();
 
 
@@ -128,7 +129,7 @@ private:
 	double dDs_implant,zs_implant,ys_implant[2];
 	int flag_implanted_source;
 
-	///
+	/// 0: perform analyzis only, 1: create a new map with contaminators
 	int flag_MOKA_analyze;
 
 	/// nfw tables
