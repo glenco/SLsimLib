@@ -20,6 +20,7 @@ using namespace std;
  * \brief allocates and reads the MOKA map in
  */
 MOKALens::MOKALens(std::string paramfile) : Lens(){
+
 	map = new MOKAmap;
 
 	readParamfile(paramfile);
@@ -39,7 +40,6 @@ MOKALens::MOKALens(std::string paramfile) : Lens(){
 			,&map->gamma1
 			,&map->gamma2
     		        ,&map->LH);
-
 	map->boxl = map->LH.boxlarcsec;
 	map->zlens = map->LH.zl;
 	map->zsource = map->LH.zs;
@@ -236,7 +236,8 @@ void MOKALens::saveImage(GridHndl grid,bool saveprofiles){
 
 	if(saveprofiles == true){
 	  std:: cout << " saving profile " << std:: endl;
-	            saveProfiles();
+                    double RE3;
+	            saveProfiles(RE3);
 		    estSignLambdas(); 
 		    double RE1,RE2;
 		    EinsteinRadii(RE1,RE2);
@@ -245,8 +246,8 @@ void MOKALens::saveImage(GridHndl grid,bool saveprofiles){
 		    std:: ofstream filoutEinr;
 		    std:: string filenameEinr = fEinr.str();
 		    filoutEinr.open(filenameEinr.c_str());
-		    filoutEinr << "# effective        median " << std:: endl;
-		    filoutEinr << RE1 << "   " << RE2 << std:: endl;
+		    filoutEinr << "# effective        median      from_profles" << std:: endl;
+		    filoutEinr << RE1 << "   " << RE2 << "    " << RE3 << std:: endl;
 		    filoutEinr.close();
 		    // saveKappaProfile();
 		    // saveGammaProfile();
@@ -343,7 +344,7 @@ void MOKALens::saveGammaProfile(){
 /*
  * computing and saving the radial profile of the convergence, reduced tangential and parallel shear and of the shear
  */
-void MOKALens::saveProfiles(){
+void MOKALens::saveProfiles(double &RE3){
 	/* measuring the differential and cumulative profile*/
 	double xmin = -map->boxlMpc*0.5*map->h;
 	double xmax =  map->boxlMpc*0.5*map->h;
@@ -390,6 +391,7 @@ void MOKALens::saveProfiles(){
 	filoutprof.open(filenameprof.c_str());
 	filoutprof <<"# r      kappa     sig_k     ckappa     sig_ck    redgE   sig_redgE   redgB   sig_redgE   g   sig_g   theta   Anulus_area" << std:: endl;
 	int l;
+	std:: vector<double> lrOFr(nbin),lprofFORre(nbin);
 	for(l=0;l<nbin;l++){
 	  double Aanulus = M_PI*((dr0*l+dr0)*(dr0*l+dr0)-(dr0*l)*(dr0*l)); 
 	  filoutprof << dr0*l + dr0/2. << "  " 
@@ -400,8 +402,12 @@ void MOKALens::saveProfiles(){
 	    	     << gamma2profr[l] << "  " << sigmagamma2prof[l] << "   "
 		     << (dr0*l + dr0/2.)*map->inarcsec << "   "  << Aanulus*map->inarcsec*map->inarcsec << "   " <<  
 	    std:: endl;
+	  lprofFORre[l] = log10(kprofr[l] + gamma2profr[l]);
+	  lrOFr[l] = log10(dr0*l + dr0/2.);
 	}
 	filoutprof.close();
+	RE3 = InterpolateYvec(lprofFORre,lrOFr,0.);  
+	RE3 = pow(10.,RE3)*map->inarcsec;
 }
 
 /** \ingroup DeflectionL2
@@ -461,7 +467,7 @@ void MOKALens::estSignLambdas(){
  */
 void MOKALens::EinsteinRadii(double &RE1, double &RE2){
   double signV;
-  std:: vector<double> xci1,yci1;
+  //  std:: vector<double> xci1,yci1;
   std:: vector<double> xci2,yci2;
   // open file readable by ds9
   std::ostringstream fcrit;
@@ -476,8 +482,8 @@ void MOKALens::EinsteinRadii(double &RE1, double &RE2){
       signV=map->Signlambdar[i-1+map->ny*j]+map->Signlambdar[i+map->ny*(j-1)]+
 	map->Signlambdar[i+1+map->ny*j]+map->Signlambdar[i+map->ny*(j+1)];      
       if(fabs(signV)<4.){
-	xci1.push_back(map->x[i]);
-	yci1.push_back(map->x[j]);
+	// xci1.push_back(map->x[i]);
+	// yci1.push_back(map->x[j]);
 	filoutcrit << "circle(" << i << "," << j << ",0.5)" << std:: endl;
       }
       signV=map->Signlambdat[i-1+map->ny*j]+map->Signlambdat[i+map->ny*(j-1)]+
@@ -492,22 +498,21 @@ void MOKALens::EinsteinRadii(double &RE1, double &RE2){
   double pixDinL = map->boxlMpc*map->h/double(map->nx);
   /* measure the Einstein radius */
   std:: vector<double> xci,yci;	
-  for(int ii=0;ii<xci1.size();ii++){
-    xci.push_back(xci1[ii]);
-    yci.push_back(yci1[ii]);
-  }
+  //for(int ii=0;ii<xci1.size();ii++){
+  //  xci.push_back(xci1[ii]);
+  //  yci.push_back(yci1[ii]);
+  //}
   for(int ii=0;ii<xci2.size();ii++){
     xci.push_back(xci2[ii]);
     yci.push_back(yci2[ii]);
   }
-  xci1.clear();
-  yci1.clear();
+  // xci1.clear();
+  // yci1.clear();
   xci2.clear();
   yci2.clear();
   int nc = xci.size();
   std:: vector<int> groupid(nc);
   int largestgroupid = fof(pixDinL,xci,yci,groupid);
-
   std:: vector<double> xcpoints,ycpoints;
   double xercm,yercm;
   for(int ii=0;ii<nc;ii++){

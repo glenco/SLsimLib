@@ -43,7 +43,8 @@ struct MOKAmap{
 class MOKALens : public Lens{
 public:
 
-	MOKALens(std::string);
+        MOKALens(std::string);
+  
 	~MOKALens();
 
 	bool set;	/// the name of the MOKA input file
@@ -57,7 +58,7 @@ public:
 	void saveImage(GridHndl grid, bool saveprofile=true);
 	void saveKappaProfile();
 	void saveGammaProfile();
-	void saveProfiles();
+	void saveProfiles(double &RE3);
 
 	MOKAmap *map;
 
