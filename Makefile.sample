@@ -37,13 +37,13 @@ MultiPlane/MOKAlens.cpp \
 MultiPlane/MOKAfits.cpp \
 MultiPlane/model.cpp \
 MultiPlane/multiplane.cpp \
+MultiPlane/singlelens.cpp \
 MultiPlane/profile.cpp \
 TreeCode/forceTree.cpp \
 TreeCode/profiles.cpp \
 TreeCode/qTreeNB.cpp \
 TreeCode/quadForceTrees.cpp \
 TreeCode/quadTree.cpp \
-TreeCode/quad_profiles.cpp \
 TreeCode/readfiles.cpp \
 TreeCode/simpleTree.cpp \
 TreeCode_link/List/List.cpp \
