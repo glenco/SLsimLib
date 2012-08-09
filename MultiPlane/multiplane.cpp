@@ -851,7 +851,8 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 		cout << dDl[j] << " ";
 	cout << endl << endl;
 
-	if(flag_MOKA_analyze > 0) buildHaloTrees(cosmo,source->zsource);
+	buildHaloTrees(cosmo,source->zsource);
+
 	std:: cout << " done " << std:: endl;
 }
 

@@ -579,7 +579,7 @@ void MOKALens::saveImage(bool saveprofiles){
 		   ,map->gamma3
 		   ,map->nx
 		   ,map->ny
-		   ,map->LH);
+		   ,LH);
 	
 	if(saveprofiles == true){
 	  std:: cout << " saving profile " << std:: endl;
