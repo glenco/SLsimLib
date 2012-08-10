@@ -217,7 +217,7 @@ void MOKALens::readParamfile(std::string filename){
 	  }
 
 	  if(id[i] >= 0 && addr[i] == &flag_MOKA_analyze){
-		  flag_MOKA_analyze = 1;
+		  flag_MOKA_analyze = 0; //false, no analyzis, prepare for ray-shooting
 	  }
 
   }
