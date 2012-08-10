@@ -115,14 +115,16 @@ void MOKALens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 	double fac = Ds/Dls/Dl;
 
 	/// converts to the code units
-	int i, j;
-	for(i=0;i<map->nx;i++)
-		for(j=0;j<map->ny;j++){
-			int index = i+map->ny*j;
-			map->convergence[index] *= fac;
-			map->gamma1[index] *= fac;
-			map->gamma2[index] *= fac;
-		}
+	if(flag_MOKA_analyze>0){
+	  int i, j;
+	  for(i=0;i<map->nx;i++)
+	    for(j=0;j<map->ny;j++){
+	      int index = i+map->ny*j;
+	      map->convergence[index] *= fac;
+	      map->gamma1[index] *= fac;
+	      map->gamma2[index] *= fac;
+	    }
+	}
 }
 
 
@@ -284,7 +286,7 @@ void MOKALens::saveImage(GridHndl grid,bool saveprofiles){
 		    std:: ofstream filoutEinr;
 		    std:: string filenameEinr = fEinr.str();
 		    filoutEinr.open(filenameEinr.c_str());
-		    filoutEinr << "# effective        median      from_profles" << std:: endl;
+		    filoutEinr << "# effective        median      from_profiles" << std:: endl;
 		    filoutEinr << RE1 << "   " << RE2 << "    " << RE3 << std:: endl;
 		    filoutEinr.close();
 	}
