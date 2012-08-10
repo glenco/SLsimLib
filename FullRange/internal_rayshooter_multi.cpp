@@ -29,7 +29,13 @@
  * Warning: Is not valid for a non-flat universe.
  */
 
-void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off, double zsource){
+void MultiLens::rayshooterInternal(
+		unsigned long Npoints   /// number of points to be shot
+		,Point *i_points        /// point on the image plane
+		,bool kappa_off         /// turns calculation of convergence and shear off to save time.
+		,double zsource         // TODO Margarita. Comment this!  Why is this here?   This seems to be to stop the ray-tracing at some plane, but is zsource is
+		                        // not exactly equal to one of the plane's redshifts it wont stop.  Why not put the planes index or make it stop at the next plane?
+		){
 	unsigned long i;
 	double xx[2];
 
@@ -106,6 +112,9 @@ void MultiLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool 
 
 				xx[0] = ( (1 - dDs_implant/dDl[j+1])*xminus[0] + dDs_implant*xplus[0]/dDl[j+1] )/(1+zs_implant) - ys_implant[0];
 				xx[1] = ( (1 - dDs_implant/dDl[j+1])*xminus[1] + dDs_implant*xplus[1]/dDl[j+1] )/(1+zs_implant) - ys_implant[1];
+
+				xx[0] /= Ds_implant;
+				xx[1] /= Ds_implant;
 
 				i_points[i].surface_brightness += anasource->source_sb_func(xx);
 			}

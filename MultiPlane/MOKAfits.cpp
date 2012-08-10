@@ -31,8 +31,8 @@ void getDims(std::string fn
 	}
 }
 
-/*
- * reads in the fits file for the MOKA map and saves it in the structure map
+/**
+ * \brief reads in the fits file for the MOKA map and saves it in the structure map
  */
 void readImage(std::string fn
 		,std::valarray<float> *convergence
@@ -97,8 +97,8 @@ void readImage(std::string fn
 	std::cout << *h0 << h1 << h2 << h3  << h4 << std::endl;
 }
 
-/*
- * write the fits file of the new MOKA map from the structure map
+/**
+ * \brief write the fits file of the new MOKA map from the structure map
  */
 void writeImage(std::string filename
 		,std::valarray<float> convergence

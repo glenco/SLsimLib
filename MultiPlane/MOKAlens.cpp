@@ -15,8 +15,7 @@
 
 using namespace std;
 
-/*
- * \ingroup Constructor
+/**
  * \brief allocates and reads the MOKA map in
  */
 MOKALens::MOKALens(std::string paramfile) : Lens(){
@@ -46,7 +45,7 @@ MOKALens::MOKALens(std::string paramfile) : Lens(){
 	initMap();
 }
 
-/*
+/**
  * \ingroup Constructor
  * \brief allocates and reads the MOKA map in
  */
@@ -102,8 +101,7 @@ void MOKALens::initMap(){
 	map->inarcsec  = 10800./M_PI/LH->DL*60.;
 }
 
-/*
- * sets the cosmology and the lens and the source according to the MOKA map parameters
+/** \brief sets the cosmology and the lens and the source according to the MOKA map parameters
  */
 void MOKALens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 	cosmo->setOmega_matter(map->omegam,true);
@@ -240,7 +238,7 @@ void MOKALens::setZlens(double z){
 	zlens = z;
 }
 
-/*
+/**
  * saves the image, by rading off the calues from the image tree
  * and then saving to a fits file and computing the radial profile
  * of the convergence
@@ -294,9 +292,10 @@ void MOKALens::saveImage(GridHndl grid,bool saveprofiles){
 	}
 }
 
-/*
+
+/**
  * computing and saving the radial profile of the convergence, reduced tangential and parallel shear and of the shear
- */
+ *  */
 void MOKALens::saveProfiles(double &RE3){
 	/* measuring the differential and cumulative profile*/
 	double xmin = -map->boxlMpc*0.5*map->h;
@@ -391,7 +390,7 @@ void MOKALens::rayshooterInternal(double *xx, double *alpha, double *gamma, doub
 	return;
 }
 
-/*
+/**
  * compute the signal of \lambda_r and \lambda_t
  */
 void MOKALens::estSignLambdas(){
@@ -414,7 +413,7 @@ void MOKALens::estSignLambdas(){
     }
 }
 
-/*
+/**
  * measure the effective and the median Einstein radii of the connected critical 
  * points present at the halo center
  */
@@ -548,7 +547,7 @@ void MOKALens::EinsteinRadii(double &RE1, double &RE2){
     RE2=0.;
   }
 }
-/*
+/**
  * saves MAP properties, computing the radial profile
  * of the convergence and shear
  */

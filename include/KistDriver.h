@@ -22,6 +22,7 @@ void _PointsWithinKist(TreeHndl tree,double *ray,float *rmax,KistHndl neighborki
 		,short markpoints,double *maxgridsize);
 void PointsWithinKist_iter(TreeHndl tree,double *ray,float rmin,float rmax,KistHndl neighborkist);
 Point *NearestNeighborKist(TreeHndl tree,double *ray,int Nneighbors,KistHndl neighborkist);
+void SetInImage(KistHndl kist,Boo value);
 void DirtyFoF(ImageInfo *imageinfo ,int *Nimages ,double linkinglength ,int MaxNimages );
 void _DirtyFoF(KistHndl neighbors,KistHndl wholekist,double linkinglength);
 void DirtyDivider(ImageInfo *imageinfo,int *Nimages ,int MaxNimages ,int Ngroup);

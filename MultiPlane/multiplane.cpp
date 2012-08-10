@@ -53,7 +53,7 @@ HaloData::HaloData(HaloStructure *halostrucs,PosType **positions,unsigned long N
 HaloData::HaloData(
 		double fov            /// field of view in square degrees
 		,double min_mass      /// Minimum mass of a halo
-		,double mass_scale      /// mass scale
+		,double mass_scale    /// mass scale
 		,double z1            /// lowest redshift
 		,double z2            /// highest redshift
 		,int mass_func_type   /// mass function type: 0 Press-Schechter, 1 Sheth-Tormen, 2 Power Law
@@ -931,11 +931,12 @@ void MultiLens::ImplantSource(
 		<< "It is not being added." << endl;
 		return;
 	}
-	double Ds = cosmo->angDist(0,z);
+
+	Ds_implant = cosmo->angDist(0,z);
 	zs_implant = z;
 
-	ys_implant[0] = Ds*theta[0];
-	ys_implant[1] = Ds*theta[1];
+	ys_implant[0] = Ds_implant*theta[0];
+	ys_implant[1] = Ds_implant*theta[1];
 
 	locateD(plane_redshifts-1,Nplanes,zs_implant,&j);
 

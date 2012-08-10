@@ -565,7 +565,7 @@ Point *NewPoint(double *x,unsigned long id){
 void SwapPointsInArray(Point *p1,Point *p2){
   /* SWAPS information in points without changing */
   /* pointers to prev and next */
-  /* chnages links of image points to follow*/
+  /* changes links of image points to follow*/
   Point pt;
 
   if(p1==p2) return;

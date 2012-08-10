@@ -973,7 +973,8 @@ bool RefinePoint(Point *point,TreeHndl i_tree,double image_area,double total_are
  *
  * \brief Fundamental function used to divide a leaf in the tree into nine subcells.
  *
- * Ngrid*Ngrid-1 source points are created, linked, shot and added to the trees.
+ * Source and image points are created, linked, shot and added to the trees.  The leaf
+ * pointers of the points including the input are assigned.
  *
  * If some of the of the points are outside the original grid they will not be added in
  * which case THERE WILL BE LESS THEN Ngrid*Ngrid-1 points added.  The true number will
@@ -1003,7 +1004,7 @@ Point * RefineLeaf(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,Point *point,in
 	if( (point->x[0] == i_tree->top->boundary_p1[0]) || (point->x[0] == i_tree->top->boundary_p2[0])
 			|| (point->x[1] == i_tree->top->boundary_p1[1]) || (point->x[1] == i_tree->top->boundary_p2[1]) ){
 
-		  // remove the points that are outside initial grid
+		  // remove the points that are outside initial image grid
 		  for(kk=0,Nout=0;kk < (Ngrid*Ngrid-1);++kk){
 			  if( !inbox(i_points[kk - Nout].x,i_tree->top->boundary_p1,i_tree->top->boundary_p2) ){
 				  SwapPointsInArray(&i_points[kk - Nout],&i_points[Ngrid*Ngrid - 2 - Nout]);
@@ -1013,16 +1014,44 @@ Point * RefineLeaf(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,Point *point,in
 		  assert(Nout > 0);
 	}
 
-	if(Nout > 0) i_points = AddPointToArray(i_points,Ngrid*Ngrid-1-Nout,Ngrid*Ngrid-1);
+	//if(Nout > 0) i_points = AddPointToArray(i_points,Ngrid*Ngrid-1-Nout,Ngrid*Ngrid-1);
 
-	s_points = LinkToSourcePoints(i_points,Ngrid*Ngrid-1-Nout);
+	int  Ntemp = Ngrid*Ngrid-1-Nout;
 
-	lens->rayshooterInternal(Ngrid*Ngrid-1-Nout,i_points,kappa_off);
+	s_points = LinkToSourcePoints(i_points,Ntemp);
+	lens->rayshooterInternal(Ntemp,i_points,kappa_off);
+
+	// remove the points that are outside initial source grid
+	for(kk=0,Nout=0;kk < Ntemp;++kk){
+		if( !inbox(s_points[kk - Nout].x,s_tree->top->boundary_p1,s_tree->top->boundary_p2) ){
+			SwapPointsInArray(&i_points[kk - Nout],&i_points[Ntemp - 1 - Nout]);
+			SwapPointsInArray(&s_points[kk - Nout],&s_points[Ntemp - 1 - Nout]);
+			++Nout;
+		}
+	}
+
+	// free memory of points that where outside image and source regions
+	Nout = Ngrid*Ngrid - 1 - Ntemp + Nout;
+	if(Nout > 0){
+		i_points = AddPointToArray(i_points,Ngrid*Ngrid-1-Nout,Ngrid*Ngrid-1);
+		s_points = AddPointToArray(s_points,Ngrid*Ngrid-1-Nout,Ntemp);
+	}
+
 
 	//*** these could be mode more efficient by starting at the current in tree
 	AddPointsToTree(i_tree,i_points,Ngrid*Ngrid-1-Nout);
-
 	AddPointsToTree(s_tree,s_points,Ngrid*Ngrid-1-Nout);
+
+	// re-assign leaf of point that was to be refined
+	i_tree->current = point->leaf;
+	_FindLeaf(i_tree,point->x,0);
+	point->leaf = i_tree->current;
+
+	s_tree->current = point->image->leaf;
+	_FindLeaf(s_tree,point->image->x,0);
+	point->image->leaf = s_tree->current;
+
+	assert(point->leaf->child1 == NULL && point->leaf->child2 == NULL);
 
 	return i_points;
 }

@@ -214,12 +214,14 @@ void divide_images_kist(
 
 		//printf("   new_imagekist %li\n",new_imagekist->Nunits());
 		imageinfo[i].area = partition_images_kist(getCurrentKist(new_imagekist),imageinfo[i].imagekist,i_tree);
-		if(imageinfo[i].imagekist->Nunits() > new_imagekist->Nunits()){
+
+/*		if(imageinfo[i].imagekist->Nunits() > new_imagekist->Nunits()){
 			bool test1,test2;
 			test1 = new_imagekist->AreDataUnique();
 			test2 = imageinfo[i].imagekist->AreDataUnique();
 			assert(imageinfo[i].imagekist->Nunits() <= new_imagekist->Nunits());  // check that no more than
 		}
+*/
 
 		// take out points that got un-marked in partition_images
 

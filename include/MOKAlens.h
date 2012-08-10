@@ -16,10 +16,16 @@
 #include <grid_maintenance.h>
 #include <profile.h>
 #include <valarray>
+
+//TODO Improve this comment with more complete description of what a MOKAmap is used for.
+/**
+ * \brief the MOKA map structure, containing all quantities that define it
+ *
+ * Note: To use this class requires setting the WITH_MOKA compiler flag and linking
+ * the cfits library.
+
 #include <MOKAfits.h>
 
-/*
- * the MOKA map structure, containing all quanitites that define it
  */
 struct MOKAmap{
 	/// values for the map
@@ -37,8 +43,15 @@ struct MOKAmap{
 	double inarcsec;
 	double center[2];
 };
+//TODO Improve this comment.
+/**
+ *  \brief A class to represents the MOKA lens map
+ *
+ * Note: To use this class requires setting the WITH_MOKA compiler flag and linking
+ * the cfits library.
+ */
 
-/// A class to represents the MOKA lens map
+//TODO Change to physical length units !!!!
 class MOKALens : public Lens{
 public:
 
@@ -50,7 +63,7 @@ public:
 
 	bool set;	/// the name of the MOKA input file
 	std::string MOKA_input_file;
-	int flag_MOKA_analyze;
+	int flag_MOKA_analyze;  //TODO What is this?
 
 	void readParamfile(std::string);
 	void rayshooterInternal(double *ray, double *alpha, double *gamma, double *kappa, bool kappa_off);
@@ -69,6 +82,7 @@ public:
 
 	void estSignLambdas();
 	void EinsteinRadii(double &RE1, double &RE2);
+
 };
 
 #endif /* MOKALENS_H_ */

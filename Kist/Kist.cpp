@@ -466,7 +466,9 @@ void Kist::Print(){
 		std::cout << getCurrent()->x[0] <<  "  " << getCurrent()->x[1] << "  " << getCurrent()->gridsize << std::endl;
 	}while(Down());
 }
-
+/**
+ * \brief return true if all the points in the kist are unique.
+ */
 bool Kist::AreDataUnique(){
 
 	if(Nunits() < 2) return true;

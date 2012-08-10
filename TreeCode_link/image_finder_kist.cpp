@@ -489,6 +489,9 @@ short image_finder_kist(LensHndl lens, double *y_source,double r_source,GridHndl
 
 /** \ingroup ImageFindingL2
  *
+ *\brief Refines every point in the given image and its outer border that satisfies the refinement criterion.
+ *
+ *
  * Same as refine_grid with additions
  *     - uses imageinfo->imagekist instead of imageinfo->points[]
  *     - can export rayshooting
@@ -496,6 +499,8 @@ short image_finder_kist(LensHndl lens, double *y_source,double r_source,GridHndl
  *     - Does not affect imageinfo->points in any way
  *     - Allows for refinements to be done on the borders of the initial grid region
  *          The initial grid region is never expanded.
+ *
+ * The borders of the image must be found previously.
  *
  * criterion = 0 stops refining when error in total area reaches res_target
  * 	         = 1 stops refining when each image reaches error limit or is smaller than res_target
