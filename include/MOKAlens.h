@@ -50,6 +50,8 @@ struct MOKAmap{
  * Note: To use this class requires setting the WITH_MOKA compiler flag and linking
  * the cfits library.
  */
+
+//TODO Change to physical length units !!!!
 class MOKALens : public Lens{
 public:
 
@@ -61,7 +63,7 @@ public:
 
 	bool set;	/// the name of the MOKA input file
 	std::string MOKA_input_file;
-	int flag_MOKA_analyze;
+	int flag_MOKA_analyze;  //TODO What is this?
 
 	void readParamfile(std::string);
 	void rayshooterInternal(double *ray, double *alpha, double *gamma, double *kappa, bool kappa_off);
@@ -80,6 +82,7 @@ public:
 
 	void estSignLambdas();
 	void EinsteinRadii(double &RE1, double &RE2);
+
 };
 
 #endif /* MOKALENS_H_ */

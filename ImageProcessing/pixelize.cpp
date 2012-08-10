@@ -157,7 +157,7 @@ void PixelMap::_SplitFluxIntoPixels(TreeHndl ptree,Branch *leaf,double *leaf_sb)
  *
  * \brief Smoothes a map with a Gaussian kernel. Needs to be tested.
  */
-//TODO This should be improved and made a member of PixelMap
+//TODO Ben, This should be improved and made a member of PixelMap
 void smoothmap(double *map_out,double *map_in,long Npixels,double range,double sigma){
 	double sum=0,**mask;
 	unsigned long i=0;

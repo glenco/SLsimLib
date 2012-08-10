@@ -16,7 +16,7 @@
 #include <quadTree.h>
 #include <forceTree.h>
 #include <multiplane.h>
-
+//TODO Margarita, This comment does not fully explain the classes use according to the repository comment.  How is it different than MultiLens, etc.
 /// A class to represents a lens with multiple planes.
 class SingleLens : public Lens{
 public:

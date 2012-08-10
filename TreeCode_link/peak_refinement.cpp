@@ -172,8 +172,6 @@ short refine_on_implanted_source(
 	imageinfo->gridrange[2] = 1.0e99;
 	imageinfo->gridrange[0] = imageinfo->gridrange[1]  = 0.0;
 
-	//TODO What if new source overlaps with an old source?  Image will increase to include both.
-
 	/** test lines **********************************
 	unsigned long Ntmp;
 	MoveToTopList(grid->i_tree->pointlist);
