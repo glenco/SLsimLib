@@ -132,6 +132,9 @@ private:
 	/// nfw tables
 	bool tables_set;
 
+	/// if >= 1, deflection in the rayshooting is wtiched if
+	int flag_switch_deflection_off;
+
 	void quicksort(HaloStructure *halos,double **brr,double *arr,unsigned long N);
 };
 

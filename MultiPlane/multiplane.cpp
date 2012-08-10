@@ -279,6 +279,11 @@ void MultiLens::readParamfile(string filename){
 	  id[n] = 0;
 	  label[n++] = "internal_slope_pnfw";
 
+	  addr[n] = &flag_switch_deflection_off;
+	  id[n] = 1;
+	  label[n++] = "deflection_off";
+
+
 	  cout << "Multi lens: reading from " << filename << endl;
 
 	  ifstream file_in(filename.c_str());
@@ -328,7 +333,8 @@ void MultiLens::readParamfile(string filename){
 
 	  for(i = 0; i < n; i++){
 		  if(id[i] >= 0 && addr[i] != &input_sim_file &&
-				  addr[i] != &pw_alpha && addr[i] != &pw_beta && addr[i] != &pnfw_beta){
+				  addr[i] != &pw_alpha && addr[i] != &pw_beta && addr[i] != &pnfw_beta &&
+				  addr[i] != &flag_switch_deflection_off){
 			  ERROR_MESSAGE();
 			  cout << "parameter " << label[i] << " needs to be set!" << endl;
 			  exit(0);
@@ -342,6 +348,9 @@ void MultiLens::readParamfile(string filename){
 		  }
 		  if(id[i] >= 0 && addr[i] == &pnfw_beta){
 			  pnfw_beta = 2.0;
+		  }
+		  if(id[i] >= 0 && addr[i] == &flag_switch_deflection_off){
+			  flag_switch_deflection_off = 0; //false, deflection is on
 		  }
 	  }
 
