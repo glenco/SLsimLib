@@ -466,7 +466,8 @@ void MOKALens::EinsteinRadii(double &RE1, double &RE2){
   std:: vector<int> groupid(nc);
   int largestgroupid = fof(pixDinL,xci,yci,groupid);
   std:: vector<double> xcpoints,ycpoints;
-  double xercm,yercm;
+  double xercm=0;
+  double yercm=0;
   for(int ii=0;ii<nc;ii++){
     if(groupid[ii] == largestgroupid){
       xcpoints.push_back(xci[ii]);
