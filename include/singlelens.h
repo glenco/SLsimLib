@@ -17,7 +17,9 @@
 #include <forceTree.h>
 #include <multiplane.h>
 //TODO Margarita, This comment does not fully explain the classes use according to the repository comment.  How is it different than MultiLens, etc.
-/// A class to represents a lens with multiple planes.
+/**
+ * \brief A test class. Produces one halo centered at {0,0}.
+ * */
 class SingleLens : public Lens{
 public:
 
@@ -67,7 +69,7 @@ private:
 	/// number of halos on all the planes
 	IndexType Nhalos;
 
-	bool tables_set;
+	//bool tables_set;
 
 	void quicksort(HaloStructure *halos,double **brr,double *arr,unsigned long N);
 };

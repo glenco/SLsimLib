@@ -39,7 +39,7 @@ QuadTree::QuadTree(
 
 	return;
 }
-/** \brief Constructor meant for halos
+/** \brief Constructor meant for halos with internal structure parameters.
  */
 QuadTree::QuadTree(
 		PosType **xpt

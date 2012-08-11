@@ -22,24 +22,24 @@ SingleLens::SingleLens(string filename,long *my_seed) : Lens(){
 
 	seed = my_seed;
 
-	if(internal_profile == NFW && tables_set != true){
+	/*if(internal_profile == NFW && tables_set != true){
 		make_tables_nfw();
 		tables_set = true;
 	}
 	if(internal_profile == PseudoNFW && tables_set != true){
 		make_tables_pseudonfw(pnfw_beta);
 		tables_set = true;
-	}
+	}*/
 }
 
 SingleLens::~SingleLens(){
 	delete halo_tree;
 	delete halodata;
 
-	if(tables_set == true){
+	/*if(tables_set == true){
 		if(internal_profile == NFW) delete_tables_nfw();
 		if(internal_profile == PseudoNFW) delete_tables_pseudonfw();
-	}
+	}*/
 }
 
 
@@ -177,7 +177,6 @@ void SingleLens::buildHaloTrees(
 		CosmoHndl cosmo /// the cosmology
 		,double zsource /// the source resdhift
 		){
-	int i, j;
 
 	halodata = new HaloData(cosmo,mass,zlens);
 
@@ -228,7 +227,7 @@ void SingleLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool
 	/* i_points need to be already linked to s_points */
 	double kappa;
     double alpha[2], gamma[3];
-    long i,j;
+    unsigned long i;
 
 	for(i = 0; i< Npoints; i++){
 

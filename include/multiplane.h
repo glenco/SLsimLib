@@ -130,7 +130,7 @@ private:
 	int flag_implanted_source;
 
 	/// nfw tables
-	bool tables_set;
+	//bool tables_set;
 
 	void quicksort(HaloStructure *halos,double **brr,double *arr,unsigned long N);
 };

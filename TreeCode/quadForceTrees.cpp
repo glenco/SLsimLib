@@ -28,6 +28,9 @@ QuadTreePowerLaw::QuadTreePowerLaw(
 QuadTreePowerLaw::~QuadTreePowerLaw(){
 }
 
+long QuadTreeNFW::ob_count = 0;
+double *QuadTreeNFW::ftable = NULL,*QuadTreeNFW::gtable = NULL,*QuadTreeNFW::g2table = NULL;
+
 QuadTreeNFW::QuadTreeNFW(
 		PosType **xp               /// positions of the halos xp[0..Npoints-1][0..1 or 2]
 		,IndexType Npoints         /// number of halos
@@ -46,11 +49,22 @@ QuadTreeNFW::QuadTreeNFW(
 		}
 	}
 
-	point_tables();
+	// make halo profile lookup tables if this is the first instance of a QuadTreeNFW
+	if(ob_count == 0) make_tables();
+	++ob_count;
 }
 
 QuadTreeNFW::~QuadTreeNFW(){
+	--ob_count;
+	if(ob_count == 0){
+		delete[] gtable;
+		delete[] ftable;
+		delete[] g2table;
+	}
 }
+
+long QuadTreePseudoNFW::ob_count = 0;
+double * QuadTreePseudoNFW::mhattable = NULL;
 
 QuadTreePseudoNFW::QuadTreePseudoNFW(
 		double my_beta                 /// outer slope of profile is \f$ \Sigma \propto r^{-\beta} \f$
@@ -78,8 +92,12 @@ QuadTreePseudoNFW::QuadTreePseudoNFW(
 		}
 	}
 
-	point_tables();
+	// make halo profile lookup tables if this is the first instance of a QuadTreePseudoNFW
+	if(ob_count == 0) make_tables();
+	++ob_count;
 }
 
 QuadTreePseudoNFW::~QuadTreePseudoNFW(){
+	--ob_count;
+	if(ob_count == 0) delete[] mhattable;
 }

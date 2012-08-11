@@ -34,9 +34,9 @@ typedef unsigned long IndexType;
 #endif
 
 /// for the PseudoNFW and NFW tables
-void make_tables_nfw();
+//void make_tables_nfw();
 void delete_tables_nfw();
-void make_tables_pseudonfw(double beta);
+//void make_tables_pseudonfw(double beta);
 void delete_tables_pseudonfw();
 double InterpolateFromTable(double *table, double y);
 

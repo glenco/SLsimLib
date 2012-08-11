@@ -179,7 +179,9 @@ MultiLens::MultiLens(string filename,long *my_seed) : Lens(){
 	flag_implanted_source = 0;
 	seed = my_seed;
 
-	if(internal_profile == NFW && tables_set != true){
+	//TODO The construction and destruction of the halo profile lookup tables has been moved into the constructors for a QuadTreeNFW, etc.
+	// This eliminates having to remember to construct them before creating a class that is derived from this class.
+/*	if(internal_profile == NFW && tables_set != true){
 		make_tables_nfw();
 		tables_set = true;
 	}
@@ -187,6 +189,7 @@ MultiLens::MultiLens(string filename,long *my_seed) : Lens(){
 		make_tables_pseudonfw(pnfw_beta);
 		tables_set = true;
 	}
+	*/
 }
 
 MultiLens::~MultiLens(){
@@ -208,10 +211,10 @@ MultiLens::~MultiLens(){
 	if(flag_input_lens)
 		delete input_lens;
 
-	if(tables_set == true){
+	/*if(tables_set == true){
 		if(internal_profile == NFW) delete_tables_nfw();
 		if(internal_profile == PseudoNFW) delete_tables_pseudonfw();
-	}
+	}*/
 }
 
 void MultiLens::readParamfile(string filename){
@@ -534,13 +537,13 @@ void MultiLens::buildHaloTrees(
 			//halo_tree[j] = auto_ptr<ForceTree>(new ForceTreePowerLaw(1.9,&halodata[j]->pos[0],halodata[j]->Nhalos
 			//		,halodata[j]->halos,true,halodata[j]->kappa_background));
 			halo_tree[j] = auto_ptr<QuadTree>(new QuadTreePowerLaw(pw_beta,&halodata[j]->pos[0],halodata[j]->Nhalos
-								,halodata[j]->halos,halodata[j]->kappa_background));
+							,halodata[j]->halos,halodata[j]->kappa_background));
 			break;
 		case NFW:
 			//halo_tree[j] = auto_ptr<ForceTree>(new ForceTreeNFW(&halodata[j]->pos[0],halodata[j]->Nhalos
 			//		,halodata[j]->halos,true,halodata[j]->kappa_background));
 			halo_tree[j] = auto_ptr<QuadTree>(new QuadTreeNFW(&halodata[j]->pos[0],halodata[j]->Nhalos
-					,halodata[j]->halos,halodata[j]->kappa_background));
+							,halodata[j]->halos,halodata[j]->kappa_background));
 			break;
 		case PseudoNFW:
 			//halo_tree[j] = auto_ptr<ForceTree>(new ForceTreePseudoNFW(2,&halodata[j]->pos[0],halodata[j]->Nhalos
@@ -549,7 +552,7 @@ void MultiLens::buildHaloTrees(
 							,halodata[j]->halos,halodata[j]->kappa_background));
 			break;
 		default:
-			cout << "There is no such case for the halo trees" << endl;
+			cout << "There is no such case for the halo trees." << endl;
 			ERROR_MESSAGE();
 			exit(1);
 			break;

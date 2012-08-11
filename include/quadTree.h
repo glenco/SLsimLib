@@ -133,6 +133,7 @@ typedef int QTreeNBElement;
  * The shear and kappa is always more accurate than the deflection.
  *
  */
+//TODO This doesn't work for the case with one particle.  Should resort to p-p calculation when number of particles is small.
 class QuadTree {
 public:
 	QuadTree(
@@ -294,17 +295,20 @@ public:
 
 private:
 
-	double *ft, *gt, *g2t;
+	//static double *ft, *gt, *g2t;
+	static double *ftable,*gtable,*g2table;
+	static long ob_count;
+
 
 	// Override internal structure of halos
 	inline double alpha_h(double r,double rm){
-		return -1.0*InterpolateFromTable(gt,r)/InterpolateFromTable(gt,rm);
+		return -1.0*InterpolateFromTable(gtable,r)/InterpolateFromTable(gtable,rm);
 	}
 	inline double kappa_h(double r,double rm){
-		return 0.5*r*r*InterpolateFromTable(ft,r)/InterpolateFromTable(gt,rm);
+		return 0.5*r*r*InterpolateFromTable(ftable,r)/InterpolateFromTable(gtable,rm);
 	}
 	inline double gamma_h(double r,double rm){
-		return -0.25*r*r*InterpolateFromTable(g2t,r)/InterpolateFromTable(gt,rm);
+		return -0.25*r*r*InterpolateFromTable(g2table,r)/InterpolateFromTable(gtable,rm);
 	}
 	inline double phi_h(double r,double rm){
 		ERROR_MESSAGE();
@@ -312,7 +316,7 @@ private:
 		exit(1);
 		return 0.0;
 	}
-	void point_tables();
+	void make_tables();
 
 	double gfunctionRmax(double rm,double x);
 	double ffunctionRmax(double rm,double x);
@@ -342,18 +346,19 @@ public:
 private:
 
 	double beta;
+	static double *mhattable;
+	static long ob_count;
 
-	double *mhatt;
 
 	// Override internal structure of halos
 	inline double alpha_h(double r,double rm){
-		return -1.0*InterpolateFromTable(mhatt,r)/InterpolateFromTable(mhatt,rm);
+		return -1.0*InterpolateFromTable(mhattable,r)/InterpolateFromTable(mhattable,rm);
 	}
 	inline double kappa_h(double r,double rm){
-		return 0.5*r*r/InterpolateFromTable(mhatt,rm)/pow(1+r,beta);
+		return 0.5*r*r/InterpolateFromTable(mhattable,rm)/pow(1+r,beta);
 	}
 	inline double gamma_h(double r,double rm){
-		return (0.5*r*r/pow(1+r,beta) - InterpolateFromTable(mhatt,r))/InterpolateFromTable(mhatt,rm);
+		return (0.5*r*r/pow(1+r,beta) - InterpolateFromTable(mhattable,r))/InterpolateFromTable(mhattable,rm);
 	}
 	inline double phi_h(double r,double rm){
 		ERROR_MESSAGE();
@@ -361,7 +366,7 @@ private:
 		exit(1);
 		return 0.0;
 	}
-	void point_tables();
+	void make_tables();
 };
 
 #endif /* QUAD_TREE_H_ */

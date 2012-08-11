@@ -8,6 +8,7 @@
 #include <forceTree.h>
 #include <iostream>
 
+
 ForceTree::ForceTree(
 		PosType **xp
 		,IndexType Npoints
@@ -342,28 +343,6 @@ void ForceTree::ChangeParticleProfile(PartProf partprof){
 	}
 }
 */
-/* \ingroup DeflectionL2
-\brief !!!! Not yet come up with a good way of doing this !!!!
-
-	 * gives the particles a third dimension depending on their size
-	 *  This is used to spread subhalos out into 3d so that their density
-	 *  is about one per smoothing length.  This is to avoid the big particle
-	 *  problem that slows the tree-force calculation.
-	 *
-	 *  Warning: This will erase the third coordinate of the particles.
-	 *
-void ForceTree::spread_particles(){
-
-	IndexType i;
-	TreeNBHndl tree;
-	float tmp=0;
-
-	for(i=0;i<Nparticles;++i){
-		tree->xp[i][2] = 4*pi*pow(rsph[i*MultiRadius],3)/pow(tmp,2)/3;
-	}
-
-	return;
-}*/
 
 ForceTreePowerLaw::ForceTreePowerLaw(
 		float beta                 /// slop of mass profile \f$ \Sigma \propto r^\beta \f$
@@ -389,6 +368,9 @@ ForceTreePowerLaw::ForceTreePowerLaw(
 ForceTreePowerLaw::~ForceTreePowerLaw(){
 }
 
+long ForceTreeNFW::ob_count = 0;
+double *ForceTreeNFW::ftable = NULL,*ForceTreeNFW::gtable = NULL,*ForceTreeNFW::g2table = NULL;
+
 ForceTreeNFW::ForceTreeNFW(
 		PosType **xp               /// positions of the halos xp[0..Npoints-1][0..1 or 2]
 		,IndexType Npoints         /// number of halos
@@ -413,13 +395,24 @@ ForceTreeNFW::ForceTreeNFW(
 	haloON = true;
 	halo_params = h_params;
 
-	point_tables();
+	if(ob_count == 0) make_tables();
 
 	CalcMoments();
+	++ob_count;
 }
 
 ForceTreeNFW::~ForceTreeNFW(){
+	--ob_count;
+	if(ob_count == 0){
+		// remove tables made in make_tables()
+		delete[] gtable;
+		delete[] ftable;
+		delete[] g2table;
+	}
 }
+
+long ForceTreePseudoNFW::ob_count = 0;
+double * ForceTreePseudoNFW::mhattable = NULL;
 
 ForceTreePseudoNFW::ForceTreePseudoNFW(
 		double my_beta                 /// outer slope of profile is \f$ \Sigma \propto r^{-\beta} \f$
@@ -452,11 +445,15 @@ ForceTreePseudoNFW::ForceTreePseudoNFW(
 	haloON = true;
 	halo_params = h_params;
 
-	point_tables();
+	if(ob_count == 0) make_tables();
 
 	CalcMoments();
+	++ob_count;
 }
 
 ForceTreePseudoNFW::~ForceTreePseudoNFW(){
+	--ob_count;
+	// remove tables made in make_tables()
+	if(ob_count == 0) delete[] mhattable;
 }
 

@@ -79,7 +79,6 @@ protected:
 	void rotate_coordinates(PosType **coord);
 	//void spread_particles();
 
-	// Internal profiles for a Gaussian particle
 	inline virtual double alpha_h(double r2s2,double sigma){
 	  return (sigma > 0.0 ) ? ( exp(-0.5*r2s2) - 1.0 ) : -1.0;
 	}
@@ -126,16 +125,16 @@ private:
 	float beta; // logorithmic slop of 2d mass profile
 
 	// Override internal structure of halos
-	inline double alpha_h(double r,double rm){
-		return (r < rm) ? -1.0*pow(r/rm,beta+2) : -1.0;
+	inline double alpha_h(double r,double rmax){
+		return (r < rmax) ? -1.0*pow(r/rmax,beta+2) : -1.0;
 	}
-	inline double kappa_h(double r,double rm){
-		return (r < rm) ? (beta+2)*pow(r/rm,beta)*r*r/(rm*rm) : 0.0;
+	inline double kappa_h(double r,double rmax){
+		return (r < rmax) ? (beta+2)*pow(r/rmax,beta)*r*r/(rmax*rmax) : 0.0;
 	}
-	inline double gamma_h(double r,double rm){
-		return (r < rm) ? -0.5*beta*pow(r/rm,beta+2) : -2.0;
+	inline double gamma_h(double r,double rmax){
+		return (r < rmax) ? -0.5*beta*pow(r/rmax,beta+2) : -2.0;
 	}
-	inline double phi_h(double r,double rm){
+	inline double phi_h(double r,double rmax){
 		ERROR_MESSAGE();
 		std::cout << "time delay has not been fixed for PowerLaw profile yet." << std::endl;
 		exit(1);
@@ -167,26 +166,29 @@ public:
 
 private:
 
-	double *ft, *gt, *g2t;
+	//double *ft, *gt, *g2t;
+	static double *ftable,*gtable,*g2table;
+	static long ob_count;
+
 
 	// Override internal structure of halos
-	inline double alpha_h(double r,double rm){
-		return (r < rm) ? -1.0*InterpolateFromTable(gt,r)/InterpolateFromTable(gt,rm) : -1.0;
+	inline double alpha_h(double r,double rmax){
+		return (r < rmax) ? -1.0*InterpolateFromTable(gtable,r)/InterpolateFromTable(gtable,rmax) : -1.0;
 	}
-	inline double kappa_h(double r,double rm){
-		return (r < rm) ? 0.5*r*r*InterpolateFromTable(ft,r)/InterpolateFromTable(gt,rm) : 0.0;
+	inline double kappa_h(double r,double rmax){
+		return (r < rmax) ? 0.5*r*r*InterpolateFromTable(ftable,r)/InterpolateFromTable(gtable,rmax) : 0.0;
 	}
-	inline double gamma_h(double r,double rm){
-		return (r < rm) ? -0.25*r*r*InterpolateFromTable(g2t,r)/InterpolateFromTable(gt,rm) : -2.0;
+	inline double gamma_h(double r,double rmax){
+		return (r < rmax) ? -0.25*r*r*InterpolateFromTable(g2table,r)/InterpolateFromTable(gtable,rmax) : -2.0;
 	}
-	inline double phi_h(double r,double rm){
+	inline double phi_h(double r,double rmax){
 		ERROR_MESSAGE();
 		std::cout << "time delay has not been fixed for NFW profile yet." << std::endl;
 		exit(1);
 		return 0.0;
 	}
-	void point_tables();
 
+	void make_tables();
 };
 
 double gfunction(double x);
@@ -219,27 +221,32 @@ public:
 private:
 
 	double beta;
-	double *mhatt;
+	static double *mhattable;
+	static long ob_count;
+
 
 	// Override internal structure of halos
-	inline double alpha_h(double r,double rm){
-		return (r < rm) ? -1.0*InterpolateFromTable(mhatt,r)/InterpolateFromTable(mhatt,rm) : -1.0;
+	inline double alpha_h(double r,double rmax){
+		return (r < rmax) ? -1.0*InterpolateFromTable(mhattable,r)/InterpolateFromTable(mhattable,rmax) : -1.0;
 	}
-	inline double kappa_h(double r,double rm){
-		return (r < rm) ? 0.5*r*r/InterpolateFromTable(mhatt,rm)/pow(1+r,beta) : 0.0;
+	inline double kappa_h(double r,double rmax){
+		return (r < rmax) ? 0.5*r*r/InterpolateFromTable(mhattable,rmax)/pow(1+r,beta) : 0.0;
 	}
-	inline double gamma_h(double r,double rm){
-		return (r < rm) ? (0.5*r*r/pow(1+r,beta) - InterpolateFromTable(mhatt,r))/InterpolateFromTable(mhatt,rm) : -2.0;
+	inline double gamma_h(double r,double rmax){
+		return (r < rmax) ? (0.5*r*r/pow(1+r,beta) - InterpolateFromTable(mhattable,r))/InterpolateFromTable(mhattable,rmax) : -2.0;
 	}
-	inline double phi_h(double r,double rm){
+	inline double phi_h(double r,double rmax){
 		ERROR_MESSAGE();
 		std::cout << "time delay has not been fixed for PseudoNFW profile yet." << std::endl;
 		exit(1);
 		return 0.0;
 	}
-	void point_tables();
+
+	void make_tables();
+
 };
 
 double mhat(double y, double beta);
+
 
 #endif /* FORCE_TREE_H_ */
