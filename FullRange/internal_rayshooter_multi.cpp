@@ -92,6 +92,9 @@ void MultiLens::rayshooterInternal(
 				//kappa = alpha[0] = alpha[1] = gamma[0] = gamma[1] = gamma[2] = 0.0;
 			}
 
+			if(flag_switch_deflection_off > 0)
+				alpha[0] = alpha[1] = 0.0;
+
 			aa = (dDl[j+1]+dDl[j])/dDl[j];
 			bb = dDl[j+1]/dDl[j];
 
