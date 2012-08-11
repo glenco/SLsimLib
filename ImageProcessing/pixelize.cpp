@@ -89,6 +89,62 @@ void PixelMap::AddImages(
 
 	return;
 }
+/// Add an image to the map with Gaussian smoothing
+void PixelMap::AddImages(
+		ImageInfo *imageinfo   /// An array of ImageInfo-s.  There is no reason to separate images for this routine
+		,int Nimages           /// Number of images on input.
+		,double sigma          /// Gaussion width of smoothing kernal
+		){
+
+	if(sigma < resolution){
+		ERROR_MESSAGE();
+		std::cout << "ERROR in PixelMap::AddImages(), Smoothing scale must be larger than resolution of final image." << std::endl;
+		exit(1);
+	}
+	if(Nimages <= 0) return;
+	if(imageinfo->imagekist->Nunits() == 0) return;
+
+	double sb,r[2],res,norm=0;
+	KistHndl kist = new Kist();
+
+	// find numerical normalization of mask on grid
+	PointsWithinKist(ptree,center,3*sigma,kist,0);
+	kist->MoveToTop();
+	do{
+		r[0] = kist->getCurrent()->x[0] - center[0];
+		r[1] = kist->getCurrent()->x[1] - center[1];
+		norm += exp(-0.5*(r[0]*r[0] + r[1]*r[1] )/sigma/sigma);
+	}while(kist->Down());
+
+
+	for(long ii=0;ii<Nimages;++ii){
+		if(imageinfo->imagekist->Nunits() > 0){
+			MoveToTopKist(imageinfo[ii].imagekist);
+			do{
+
+				sb = getCurrentKist(imageinfo[ii].imagekist)->surface_brightness;
+				res = getCurrentKist(imageinfo[ii].imagekist)->gridsize;
+
+				if(res >= resolution){
+					ERROR_MESSAGE();
+					std::cout << "ERROR in PixelMap::AddImages(), Resolution of simulation must be higher than resolution of final image." << std::endl;
+					exit(1);
+				}
+				PointsWithinKist(ptree,imageinfo[ii].imagekist->getCurrent()->x,3*sigma,kist,0);
+				kist->MoveToTop();
+				do{
+					r[0] = kist->getCurrent()->x[0] - imageinfo[ii].imagekist->getCurrent()->x[0];
+					r[1] = kist->getCurrent()->x[1] - imageinfo[ii].imagekist->getCurrent()->x[1];
+					kist->getCurrent()->surface_brightness += sb*res*res*exp(-0.5*(r[0]*r[0] + r[1]*r[1] )/sigma/sigma)/norm;
+				}while(kist->Down());
+
+			}while(MoveDownKist(imageinfo[ii].imagekist));
+		}
+	}
+
+	delete kist;
+	return;
+}
 
 void PixelMap::Convert(){
 	long ix;
@@ -156,9 +212,9 @@ void PixelMap::_SplitFluxIntoPixels(TreeHndl ptree,Branch *leaf,double *leaf_sb)
 /** \ingroup Image
  *
  * \brief Smoothes a map with a Gaussian kernel. Needs to be tested.
+ *  This smoothes onto a map of the same resolution
  */
-//TODO Ben, This should be improved and made a member of PixelMap
-void smoothmap(double *map_out,double *map_in,long Npixels,double range,double sigma){
+void PixelMap::smooth(double *map_out,double sigma){
 	double sum=0,**mask;
 	unsigned long i=0;
 	long j,k,ix,iy;
@@ -186,7 +242,7 @@ void smoothmap(double *map_out,double *map_in,long Npixels,double range,double s
 					iy=i/Npixels + k-Nmask/2;
 					if( (iy>-1)*(iy<Npixels) ){
 
-						map_out[ix+Npixels*iy] += mask[ix][iy]*map_in[i];
+						map_out[ix+Npixels*iy] += mask[ix][iy]*map[i];
 					}
 				}
 			}

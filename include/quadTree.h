@@ -133,7 +133,8 @@ typedef int QTreeNBElement;
  * The shear and kappa is always more accurate than the deflection.
  *
  */
-//TODO This doesn't work for the case with one particle.  Should resort to p-p calculation when number of particles is small.
+//TODO Margarita:  I can't seem to reproduce the problem you told us about when QuadTree is made with just one particle.
+// Does it crash or give the wrong answer?
 class QuadTree {
 public:
 	QuadTree(

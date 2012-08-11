@@ -16,6 +16,7 @@
 #include <grid_maintenance.h>
 #include <profile.h>
 #include <valarray>
+#include <MOKAfits.h>
 
 //TODO Improve this comment with more complete description of what a MOKAmap is used for.
 /**

@@ -84,6 +84,7 @@ QTreeNBHndl QuadTree::BuildQTreeNB(PosType **xp,IndexType Nparticles,IndexType *
     p2[j]=xp[0][j];
   }
 
+  // Find borders that enclose all particles
   for(i=0;i<Nparticles;++i){
     for(j=0;j<2;++j){
       if(xp[i][j] < p1[j] ) p1[j]=xp[i][j];
@@ -108,7 +109,7 @@ inline short QuadTree::WhichQuad(double *x,QBranchNB &branch){
 	return (x[0] < branch.center[0]) + 2*(x[1] < branch.center[1]);
 }
 
-// tree must be created and first branch must be set before start
+/// tree must be created and first branch must be set before start
 void QuadTree::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
 
 	QBranchNB *cbranch = tree->current; /* pointer to current branch */

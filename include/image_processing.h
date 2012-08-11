@@ -30,7 +30,9 @@ public:
 
 	void Clean();
 	void AddImages(ImageInfo *imageinfo,int Nimages,bool constant_sb);
+	void AddImages(ImageInfo *imageinfo,int Nimages,double sigma);
 	void print();
+	void smooth(double *map_out,double sigma);
 
 private:
 	double *map;
