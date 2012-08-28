@@ -41,6 +41,7 @@ inline void MoveToTopList(ListHndl list){
 inline void MoveToBottomList(ListHndl list){
   list->current=list->bottom;
 };
+
 #endif
 /***********************************************************
    routines for linked list of points

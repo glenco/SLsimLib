@@ -11,7 +11,10 @@
 #include <analytic_lens.h>
 #include <multiplane.h>
 #include <source.h>
-
+/**
+ * \brief A class to group the lens, source and cosmology models into one package and allows for additional
+ * initialization to occur that requires a combination of the above structures.
+ */
 class Model{
 public:
 	LensHndl lens;

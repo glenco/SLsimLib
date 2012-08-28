@@ -41,9 +41,9 @@ typedef unsigned long IndexType;
  */
 
 
-/** \brief
+/* \brief
  * Obsolete - Version of branchNBstruct used to save the tree to disk.
- */
+ *
 typedef struct branchNBstruct2{
 	 // list of particles in BranchNB
   IndexType particles;
@@ -59,6 +59,7 @@ typedef struct branchNBstruct2{
   int child2;
   int prev;
 } RelativeBranchNB;
+*/
 
 /** \brief
  * TreeNB: Tree structure used for force calculation with particles (i.e. stars, Nbody or halos).

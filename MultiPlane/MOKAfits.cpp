@@ -156,18 +156,17 @@ void writeImage(std::string filename
 
 }
 
-/*
+/**
  * routine used by fof to link nearby grid cell points
  */
-
 void make_friendship(int ii,int ji,int np,std:: vector<int> &friends, std:: vector<double> &pointdist){
   for(int jj=0;jj<np;jj++){
     if(friends[ji+np*jj]!=0){
       if(friends[ji+np*jj]<0){
-	friends[ii+np*jj]=-(ii+1);	
+    	  friends[ii+np*jj]=-(ii+1);
       }
       else{
-	friends[ii+np*jj]=(ii+1);
+    	  friends[ii+np*jj]=(ii+1);
       }
       friends[ji+np*jj]=0;
     }

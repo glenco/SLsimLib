@@ -133,7 +133,7 @@ typedef int QTreeNBElement;
  * The shear and kappa is always more accurate than the deflection.
  *
  */
-//TODO Margarita:  I can't seem to reproduce the problem you told us about when QuadTree is made with just one particle.
+//TODO MARGARITA  I can't seem to reproduce the problem you told us about when QuadTree is made with just one particle.
 // Does it crash or give the wrong answer?
 class QuadTree {
 public:

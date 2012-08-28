@@ -118,7 +118,9 @@ void _NearestNeighbor(TreeHndl tree,double *ray,int Nneighbors,Point **neighborp
     		/*std::printf("found box with %i points\n",tree->current->npoints);*/
 
     		/* this sets ray back to real value once closest leaf bax is found */
-    		if( (ray[0]!=realray[0])*(ray[1]!=realray[1]) ){ std::printf("ray != realray _NearestNeighbor\n"); exit(0);}
+    		//TODO BEN This should be improved so this works.
+    		//if( (ray[0]!=realray[0])*(ray[1]!=realray[1]) ){ std::printf("ray != realray _NearestNeighbor\n"); ERROR_MESSAGE();}
+    		//assert( (ray[0] == realray[0]) && (ray[1] == realray[1]) ); //TODO test line
 
     		ray[0]=realray[0];
     		ray[1]=realray[1];
@@ -640,7 +642,7 @@ void _PointsWithin(TreeHndl tree,double *ray,float *rmax,ListHndl neighborlist,s
     	  //std::printf("found box with %i points\n",tree->current->npoints);
 
     	  // this sets ray back to real value once closest leaf bax is found
-    	  if( (ray[0]!=realray[0])*(ray[1]!=realray[1]) ){ std::printf("ray != realray _PointsWithin\n"); exit(0);}
+    	  if( (ray[0]!=realray[0])*(ray[1]!=realray[1]) ){ std::printf("ray != realray _PointsWithin\n"); ERROR_MESSAGE(); exit(0);}
 
     	  ray[0]=realray[0];
     	  ray[1]=realray[1];
@@ -955,7 +957,7 @@ void _PointsWithin2(TreeHndl tree,double *ray,float *rmax,ListHndl neighborlist
     	  //std::printf("found box with %i points\n",tree->current->npoints);
 
     	  // this sets ray back to real value once closest leaf bax is found
-    	  if( (ray[0]!=realray[0])*(ray[1]!=realray[1]) ){ std::printf("ray != realray _PointsWithin\n"); exit(0);}
+    	  if( (ray[0]!=realray[0])*(ray[1]!=realray[1]) ){ std::printf("ray != realray _PointsWithin2\n"); ERROR_MESSAGE(); exit(0);}
 
     	  ray[0]=realray[0];
     	  ray[1]=realray[1];

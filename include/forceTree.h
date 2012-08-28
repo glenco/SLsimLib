@@ -125,6 +125,7 @@ private:
 	float beta; // logorithmic slop of 2d mass profile
 
 	// Override internal structure of halos
+	///TODO MARGARITA In this case they are no longer r and rmax which makes this version somewhat inconsistent with the new versions for NFW and PseudoNFW.
 	inline double alpha_h(double r,double rmax){
 		return (r < rmax) ? -1.0*pow(r/rmax,beta+2) : -1.0;
 	}
@@ -172,6 +173,7 @@ private:
 
 
 	// Override internal structure of halos
+	///TODO MARGARITA From what I understand these are no longer r and rmax, but r/rs and r/rmax.  If so rename them to prevent confusion.
 	inline double alpha_h(double r,double rmax){
 		return (r < rmax) ? -1.0*InterpolateFromTable(gtable,r)/InterpolateFromTable(gtable,rmax) : -1.0;
 	}
@@ -226,6 +228,7 @@ private:
 
 
 	// Override internal structure of halos
+	///TODO MARGARITA From what I understand these are no longer r and rmax, but r/rs and r/rmax.  If so rename them to prevent confusion.
 	inline double alpha_h(double r,double rmax){
 		return (r < rmax) ? -1.0*InterpolateFromTable(mhattable,r)/InterpolateFromTable(mhattable,rmax) : -1.0;
 	}

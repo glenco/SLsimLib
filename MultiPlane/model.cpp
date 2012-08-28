@@ -7,7 +7,7 @@
 
 #include <model.h>
 #include <source_models.h>
-
+/// Sets some distances and passes cosmo and source into the initialization of lens.
 Model::Model(LensHndl my_lens, SourceHndl my_source, CosmoHndl my_cosmo){
 	lens = my_lens;
 	source = my_source;

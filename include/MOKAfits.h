@@ -13,18 +13,29 @@
 #include <iostream>
 #include <valarray>
 #include <vector>
-
+//TODO Carlo/Margarita: What is this structure for?  It would be better to rename it because we have other structures that start with Lens and this is not related.
 struct LensHalo{
-  double zl,m,zs,DL,DLS,DS,c,cS,fsub,mstar,minsubmass;   // lens and source properties
-  int nsub;                                              // subhalo number
-  double ea,eb,ec;                                       // axes 
-  double Ermed,Ereff;                                    // median and effective Einstein radius
-  double beta;                                           // inner slope of the main halo density profile
-  double boxlMpc,boxlarcsec;                             // boxsize
-  double omegam,omegal,h,wq;                             // cosmology
-  int npix;                                              // number of pixels
+	/// lens and source properties
+  double zl,m,zs,DL,DLS,DS,c,cS,fsub,mstar,minsubmass;
+  /// subhalo number
+  int nsub;
+  /// axes
+  double ea,eb,ec;
+  /// median Einstein radius
+  double Ermed;
+  /// effective Einstein radius
+  double Ereff;
+  /// inner slope of the main halo density profile
+  double beta;
+  /// boxsize
+  double boxlMpc,boxlarcsec;
+  /// cosmology
+  double omegam,omegal,h,wq;
+  /// number of pixels
+  int npix;
 };
 
+//TODO Could these be made into methods for a class?  It would help to organize things more clearly.
 void getDims(std::string fn
 		,int *nx
 		,int *ny);

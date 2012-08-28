@@ -7,7 +7,8 @@
 
 #include "profile.h"
 
-// create profile of the maps for each lensing component - spherical simmetry is assumed
+//TODO CARLO Could this be made methods of a class?
+/// create profile of the maps for each lensing component - spherical simmetry is assumed
 double * estprof(std:: valarray<float> q,int nx,int ny, std:: valarray<float> r, double dr0, double xmax){
   int nbin = int(xmax/dr0);
   //std:: cout << " nbins (in estprof) = " << nbin << std:: endl;
@@ -29,7 +30,8 @@ double * estprof(std:: valarray<float> q,int nx,int ny, std:: valarray<float> r,
   return kr; // return the pointer
 }
 
-// variance of the profile
+//TODO CARLO Could this be made methods of a class?
+/// variance of the profile
 double * estsigmaprof(std:: valarray<float> q,int nx,int ny, std:: valarray<float> r, double dr0, double xmax, \
  double* qm){
   int nbin = int(xmax/dr0);
@@ -55,7 +57,8 @@ double * estsigmaprof(std:: valarray<float> q,int nx,int ny, std:: valarray<floa
   return kr; // return the pointer
 }
 
-// create cumulative profile of the maps for each lensing component - spherical simmetry is assumed
+//TODO CARLO Could this be made methods of a class?
+/// create cumulative profile of the maps for each lensing component - spherical simmetry is assumed
 double * estcprof(std:: valarray<float> q,int nx,int ny, std:: valarray<float> r, double dr0, double xmax){
   int nbin = int(xmax/dr0);
   //std:: cout << " nbins (in estprof) = " << nbin << std:: endl;
@@ -78,7 +81,7 @@ double * estcprof(std:: valarray<float> q,int nx,int ny, std:: valarray<float> r
   return kr; // return the pointer
 }
 
-// variance of the profile
+/// variance of the profile
 double * estsigmacprof(std:: valarray<float> q,int nx,int ny, std:: valarray<float> r, double dr0, double xmax, \
  double* qm){
   int nbin = int(xmax/dr0);

@@ -59,6 +59,13 @@ public:
 	void TranformPlanes();
 	bool AreDataUnique();
 
+	/// Returns a pointer to the current data
+	Data *operator*(){return getCurrent();}
+	/// Same as Up()
+	bool operator++(){return Up();}
+	/// Same as Down()
+	bool operator--(){return Down();}
+
 private:
 
 	unsigned long Number;
@@ -74,11 +81,10 @@ typedef struct Kist *KistHndl;
 #endif
 
 /*
- * These functions are provided for backwards compatibility, but the kist methods
+ * These functions are provided for backwards compatibility, but the kist member methods
  * should be used in the future.
  */
 
-//KistHndl NewKist(void);
 void InsertAfterCurrentKist(KistHndl kist,Data * data);
 void InsertBeforeCurrentKist(KistHndl kist,Data * data);
 bool AtTopKist(KistHndl kist);
@@ -89,13 +95,11 @@ bool MoveUpKist(KistHndl kist);
 void MoveToTopKist(KistHndl kist);
 void MoveToBottomKist(KistHndl kist);
 void FillKist(KistHndl kist,Data * data,unsigned long N);
-//void SwapDataInKist(KistHndl kist,Unit *p1,Unit *p2);
 void PrintKist(KistHndl kist);
 void SwapCurrentWithBottomKist(KistHndl kist);
 Data *TakeOutCurrentKist(KistHndl kist);
 Data *GetCurrentKist(KistHndl kist);
 void EmptyKist(KistHndl kist);
-//void freeKist(KistHndl kist);
 void FreeAllKist(KistHndl kist);
 //void UnionKist(KistHndl kist1,KistHndl kist2);
 //bool AreDataUniqueKist(KistHndl kist);

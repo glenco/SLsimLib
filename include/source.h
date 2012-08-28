@@ -30,7 +30,7 @@ public:
 	  double DlDs;
 
 	  // in lens.cpp
-	  virtual double source_sb_func(double *y) = 0;
+	  virtual double SurfaceBrightness(double *y) = 0;
 
 	  Source();
 	  ~Source();
@@ -43,7 +43,7 @@ typedef Source *SourceHndl;
 
 class SourceUniform : public Source{
 public:
-	double source_sb_func(double *y);
+	double SurfaceBrightness(double *y);
 	void readParamfile(std::string);
 	void printSource();
 
@@ -56,7 +56,7 @@ public:
 	  /// internal scale parameter
 	  double source_gauss_r2;
 
-	  double source_sb_func(double *y);
+	  double SurfaceBrightness(double *y);
 	  void readParamfile(std::string);
 	  void printSource();
 
@@ -94,7 +94,7 @@ public:
 
 class SourceBLRDisk : public SourceBLR{
 public:
-	double source_sb_func(double *y);
+	double SurfaceBrightness(double *y);
 
 	SourceBLRDisk(std::string);
 	~SourceBLRDisk();
@@ -102,7 +102,7 @@ public:
 
 class SourceBLRSph1 : public SourceBLR{
 public:
-	double source_sb_func(double *y);
+	double SurfaceBrightness(double *y);
 
 	SourceBLRSph1(std::string);
 	~SourceBLRSph1();
@@ -110,31 +110,13 @@ public:
 
 class SourceBLRSph2 : public SourceBLR{
 public:
-	double source_sb_func(double *y);
+	double SurfaceBrightness(double *y);
 
 	SourceBLRSph2(std::string);
 	~SourceBLRSph2();
 };
-/**
- * \brief Source that represents an analytic galaxy surface brightness model.  It encapsulates a
- * OverGalaxy which is a model from R.Oversier et al. 2012 with a bulge and a disk.
- */
-class SourceAnaGalaxy: public Source{
-public:
-	double source_sb_func(double *y){return galaxy->SurfaceBrightness(y);}
-	void printSource();
-	void readParamfile(std::string){};
-
-	SourceAnaGalaxy(double mag, double BtoT, double Reff, double Rh, double PA, double inclination);
-	SourceAnaGalaxy(OverGalaxy *my_galaxy);
-	~SourceAnaGalaxy();
-
-private:
-	bool mem_allocated;
-	OverGalaxy *galaxy;
-};
 
 /// pointer to surface brightness function
-//double (Source::*source_sb_func)(double *y);
+//double (Source::*SurfaceBrightness)(double *y);
 
 #endif /* SOURCE_H_ */

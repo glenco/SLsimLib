@@ -16,24 +16,41 @@ OverGalaxy::OverGalaxy(
 		,double my_Rh           /// disk scale hight (arcs)
 		,double my_PA           /// Position angle (radians)
 		,double my_inclination  /// inclination of disk (radians)
+		,double my_z            /// optional redshift
+		,double *my_theta          /// optional angular position on the sky
 		){
-	setInternals(mag,my_BtoT,my_Reff,my_Rh,my_PA,my_inclination);
+	setInternals(mag,my_BtoT,my_Reff,my_Rh,my_PA,my_inclination,my_z,my_theta);
 }
 /// Sets internal variables.  If default constructor is used this must be called before the surface brightness function.
-void OverGalaxy::setInternals(double mag,double BtoT,double my_Reff,double my_Rh,double PA,double incl){
+void OverGalaxy::setInternals(double mag,double BtoT,double my_Reff,double my_Rh,double PA,double incl,double my_z,double *my_theta){
 
 	Reff = my_Reff*pi/180/60/60;
 	Rh = my_Rh*pi/180/60/60;
 
-	cxx = ( pow(cos(PA),2) + pow(sin(PA)/cos(incl),2) )/Rh/Rh;
-	cyy = ( pow(sin(PA),2) + pow(cos(PA)/cos(incl),2) )/Rh/Rh;
-	cxy = ( 2*cos(PA)*sin(PA)*(1-pow(1/cos(incl),2)) )/Rh/Rh;
+	if(Rh > 0.0){
+		cxx = ( pow(cos(PA),2) + pow(sin(PA)/cos(incl),2) )/Rh/Rh;
+		cyy = ( pow(sin(PA),2) + pow(cos(PA)/cos(incl),2) )/Rh/Rh;
+		cxy = ( 2*cos(PA)*sin(PA)*(1-pow(1/cos(incl),2)) )/Rh/Rh;
+	}else{
+		cxx = cyy = cxy = 0.0;
+	}
 
 	//muDo = mag-2.5*log10(1-BtoT)+5*log10(Rh)+1.9955;
 	//muSo = mag-2.5*log10(BtoT)+5*log10(Reff)-4.9384;
 
-	sbDo = pow(10,-mag/2.5)*0.159148*(1-BtoT)/pow(Rh,2);
-	sbSo = pow(10,-mag/2.5)*94.484376*BtoT/pow(Reff,2);
+	if(Rh > 0.0) sbDo = pow(10,-mag/2.5)*0.159148*(1-BtoT)/pow(Rh,2);
+	else sbDo = 0.0;
+	if(Reff > 0.0) sbSo = pow(10,-mag/2.5)*94.484376*BtoT/pow(Reff,2);
+	else sbSo = 0.0;
+
+	z = my_z;
+	if(my_theta != NULL){
+		theta[0] = my_theta[0];
+		theta[1] = my_theta[1];
+	}else{
+		theta[0] = 0;
+		theta[1] = 0;
+	}
 }
 /// Surface brightness normalized so that the total luminosity is 10^(-mag/2.5). x should be in units of radians
 double OverGalaxy::SurfaceBrightness(
@@ -44,7 +61,8 @@ double OverGalaxy::SurfaceBrightness(
 	R = sqrt(R);
 
 	//sb = sbDo*exp(-(R)) + sbSo*exp(-7.6693*pow(R/Reff,0.25));
-	sb = sbDo*exp(-R) + sbSo*exp(-7.6693*pow((x[0]*x[0] + x[1]*x[1])/Reff/Reff,0.125));
+	sb = sbDo*exp(-R);
+	if(Reff > 0.0) sb += sbSo*exp(-7.6693*pow((x[0]*x[0] + x[1]*x[1])/Reff/Reff,0.125));
 	if(sb < 1.0e-3*(sbDo + sbSo) ) return 0.0;
 	return sb;
 }

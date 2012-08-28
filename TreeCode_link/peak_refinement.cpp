@@ -319,7 +319,6 @@ short refine_on_implanted_source(
 
 	for(int i = 0;i<*Nimages;++i) SetInImage(imageinfo[i].imagekist,FALSE);
 
-
 	delete newpointskist;
 
 	return 1;

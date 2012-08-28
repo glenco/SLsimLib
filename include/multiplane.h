@@ -15,6 +15,7 @@
 #include <utilities.h>
 #include <quadTree.h>
 #include <forceTree.h>
+#include <sourceAnaGalaxy.h>
 
 const int Nmassbin=32;
 const double MaxLogm=16.;
@@ -70,7 +71,17 @@ public:
 	/// field of view in square degrees
 	double fieldofview;
 
+	// methods used for use with implanted sources
 	void ImplantSource(CosmoHndl cosmo,double z,double theta[],OverGalaxy *ana_source);
+	void ImplantSource(unsigned long index,CosmoHndl cosmo);
+	double *getImplantedSourceX(){
+		assert(gal_input_flag);
+		return anasource->get_theta();
+	}
+	unsigned long getImplantedNsources(){
+		assert(gal_input_flag);
+		return anasource->getNumberOfGalaxies();
+	}
 
 private:
 
@@ -86,7 +97,9 @@ private:
 	/// Redshifts of lens planes, 0...Nplanes.  Last one is the source redshift.
 	double *plane_redshifts;
 	/// angular diameter distances
-	double *Dl, *dDl;
+	double *Dl;
+	/// dDl[j] is the distance between plane j-1 and j
+	double *dDl;
 	/// charge for the tree force solver (4*pi*G*mass_scale)
 	double charge;
 	/// an array of smart pointers to the halo models on each plane
@@ -116,6 +129,8 @@ private:
 
 	std::string input_sim_file;
 	bool sim_input_flag;
+	std::string input_gal_file;
+	bool gal_input_flag;
 
 	/// pointer to first of all the halo internal structures
 	HaloStructure *halos;
@@ -126,7 +141,10 @@ private:
 
 	// Variables for implanted source
 	std::auto_ptr<SourceAnaGalaxy> anasource;
-	double dDs_implant,zs_implant,ys_implant[2],Ds_implant;
+	/// the distance from the source to the next plane
+	double dDs_implant;
+	double zs_implant,ys_implant[2],Ds_implant;
+	/// This is the index of the plane one ahead of the source
 	int flag_implanted_source;
 
 	/// nfw tables

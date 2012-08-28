@@ -103,7 +103,7 @@ void map_images(
 		xx[0] = xx[1] = 0.0;
 		for(i=0;i<Ntmp*Ntmp;++i){
 			PositionFromIndex(i,y,Ntmp,2*xmax,xx);
-			sb = source->source_sb_func(y);
+			sb = source->SurfaceBrightness(y);
 			//printf(" sb = %e  y = %e %e\n",sb,y[0],y[1]);
 			if(sb > 0.0){
 
@@ -160,7 +160,7 @@ void map_images(
 						+ pow(getCurrentKist(sourceinfo[i].imagekist)->x[1] - sourceinfo[i].centroid[1],2) );
 				xx[0] = getCurrentKist(sourceinfo[i].imagekist)->x[0] - source->source_x[0];
 				xx[1] = getCurrentKist(sourceinfo[i].imagekist)->x[1] - source->source_x[1];
-				sourceinfo[i].area += source->source_sb_func(xx)*pow(2*xmax/(Ntmp-1),2);
+				sourceinfo[i].area += source->SurfaceBrightness(xx)*pow(2*xmax/(Ntmp-1),2);
 
 			}while(MoveDownKist(sourceinfo[i].imagekist));
 
@@ -224,7 +224,7 @@ void map_images(
 		EmptyKist(imageinfo->imagekist);
 		for(i=0;i<Ntmp*Ntmp;++i){
 			points[i].image = &points[i];
-			if(source->source_sb_func(points[i].x) > 0.0){
+			if(source->SurfaceBrightness(points[i].x) > 0.0){
 				InsertAfterCurrentKist(imageinfo->imagekist,&points[i]);
 			}
 		}
@@ -253,7 +253,7 @@ void map_images(
 				centers[i][0] += getCurrentKist(imageinfo[i].imagekist)->x[0];
 				centers[i][1] += getCurrentKist(imageinfo[i].imagekist)->x[1];
 				printf("      id = %li x = %e %e sb = %e\n",getCurrentKist(imageinfo->imagekist)->id,getCurrentKist(imageinfo[i].imagekist)->x[0]
-				          ,getCurrentKist(imageinfo[i].imagekist)->x[1],source->source_sb_func(getCurrentKist(imageinfo[i].imagekist)->x));
+				          ,getCurrentKist(imageinfo[i].imagekist)->x[1],source->SurfaceBrightness(getCurrentKist(imageinfo[i].imagekist)->x));
 
 			}while(MoveDownKist(imageinfo[i].imagekist));
 			centers[i][0] /= imageinfo[i].imagekist->Nunits();
@@ -266,7 +266,7 @@ void map_images(
 						              + pow(centers[i][1] - getCurrentKist(imageinfo[i].imagekist)->x[1],2) ) );
 			}while(MoveDownKist(imageinfo[i].imagekist));
 
-			printf(" sb = %e\n",source->source_sb_func(centers[i]));
+			printf(" sb = %e\n",source->SurfaceBrightness(centers[i]));
 			centers[i][0] += source->source_x[0];
 			centers[i][1] += source->source_x[1];
 
@@ -339,7 +339,7 @@ void map_images(
 					//find surface brightnesses
 					y[0] = point->image->x[0] - source->source_x[0];
 					y[1] = point->image->x[1] - source->source_x[1];
-					point->surface_brightness = source->source_sb_func(y);
+					point->surface_brightness = source->SurfaceBrightness(y);
 					point->image->surface_brightness  = point->surface_brightness;
 
 					// Find new center and source size
@@ -675,7 +675,7 @@ int refine_grid_on_image(Lens *lens,SourceBLR *source,GridHndl grid,ImageInfo *i
 
 					  y[0] = i_points[k].image->x[0] - source->source_x[0];
 					  y[1] = i_points[k].image->x[1] - source->source_x[1];
-					  i_points[k].surface_brightness = source->source_sb_func(y);
+					  i_points[k].surface_brightness = source->SurfaceBrightness(y);
 					  i_points[k].image->surface_brightness  = i_points[k].surface_brightness;
 
 					  // if new point has flux add to image
@@ -741,7 +741,7 @@ int refine_grid_on_image(Lens *lens,SourceBLR *source,GridHndl grid,ImageInfo *i
 						  // put point into image imageinfo[i].outerborder
 						  y[0] = i_points[k].image->x[0] - source->source_x[0];
 						  y[1] = i_points[k].image->x[1] - source->source_x[1];
-						  i_points[k].surface_brightness = source->source_sb_func(y);
+						  i_points[k].surface_brightness = source->SurfaceBrightness(y);
 						  i_points[k].image->surface_brightness  = i_points[k].surface_brightness;
 
 						  // if new point has flux add to image
@@ -1023,6 +1023,7 @@ Point * RefineLeaf(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,Point *point,in
 
 	// remove the points that are outside initial source grid
 	for(kk=0,Nout=0;kk < Ntemp;++kk){
+		assert(s_points[kk - Nout].x[0] == s_points[kk - Nout].x[0]);
 		if( !inbox(s_points[kk - Nout].x,s_tree->top->boundary_p1,s_tree->top->boundary_p2) ){
 			SwapPointsInArray(&i_points[kk - Nout],&i_points[Ntemp - 1 - Nout]);
 			SwapPointsInArray(&s_points[kk - Nout],&s_points[Ntemp - 1 - Nout]);
@@ -1043,10 +1044,12 @@ Point * RefineLeaf(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,Point *point,in
 	AddPointsToTree(s_tree,s_points,Ngrid*Ngrid-1-Nout);
 
 	// re-assign leaf of point that was to be refined
+	assert(inbox(point->x,i_tree->top->boundary_p1,i_tree->top->boundary_p2));
 	i_tree->current = point->leaf;
 	_FindLeaf(i_tree,point->x,0);
 	point->leaf = i_tree->current;
 
+	assert(inbox(point->image->x,s_tree->top->boundary_p1,s_tree->top->boundary_p2));
 	s_tree->current = point->image->leaf;
 	_FindLeaf(s_tree,point->image->x,0);
 	point->image->leaf = s_tree->current;

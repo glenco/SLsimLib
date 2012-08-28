@@ -10,6 +10,7 @@
 #include <string>
 #include <utilities.h>
 #include <source.h>
+#include <sourceAnaGalaxy.h>
 
 using namespace std;
 
@@ -44,6 +45,7 @@ HaloData::HaloData(HaloStructure *halostrucs,PosType **positions,unsigned long N
 	pos(positions), halos(halostrucs), Nhalos(Nhaloss)
 {
 	allocation_flag = false;
+	kappa_background = 0.0;  //TODO This should be set properly at some point.
 }
 
 /**
@@ -148,6 +150,13 @@ MultiLens::MultiLens(string filename,long *my_seed) : Lens(){
 	if(input_sim_file.size() < 1) sim_input_flag = false;
 	else sim_input_flag = true;
 
+	std::cout << input_sim_file.c_str() << std::endl;
+
+	if(input_gal_file.size() < 1) gal_input_flag = false;
+	else gal_input_flag = true;
+
+	std::cout << input_gal_file.c_str() << std::endl;
+
 	plane_redshifts = new double[Nplanes];
 	Dl = new double[Nplanes];
 	dDl = new double[Nplanes];
@@ -156,7 +165,6 @@ MultiLens::MultiLens(string filename,long *my_seed) : Lens(){
 
 	//halo_tree = new auto_ptr<ForceTree>[Nplanes-1];
 	halo_tree = new auto_ptr<QuadTree>[Nplanes-1];
-
 	halodata = new auto_ptr<HaloData>[Nplanes-1];
 
 	switch(flag_input_lens){
@@ -179,7 +187,7 @@ MultiLens::MultiLens(string filename,long *my_seed) : Lens(){
 	flag_implanted_source = 0;
 	seed = my_seed;
 
-	//TODO The construction and destruction of the halo profile lookup tables has been moved into the constructors for a QuadTreeNFW, etc.
+	//TODO MARGARITA The construction and destruction of the halo profile lookup tables has been moved into the constructors for a QuadTreeNFW, etc.
 	// This eliminates having to remember to construct them before creating a class that is derived from this class.
 /*	if(internal_profile == NFW && tables_set != true){
 		make_tables_nfw();
@@ -190,6 +198,17 @@ MultiLens::MultiLens(string filename,long *my_seed) : Lens(){
 		tables_set = true;
 	}
 	*/
+
+	// In the case of implanted sources from a file initialize.
+	cout << "In MultiLens" << endl;
+	if(gal_input_flag) anasource = auto_ptr<SourceAnaGalaxy>(new SourceAnaGalaxy(input_gal_file));
+
+	/************** test lines ***********************
+	anasource->setIndex(10);
+	double x[2];
+	x[0] = x[1] = 0.0;
+	std::cout << "Test surface brightness " << anasource->SurfaceBrightness(anasource->get_theta()) << std::endl;
+	/***********************************************/
 }
 
 MultiLens::~MultiLens(){
@@ -270,6 +289,10 @@ void MultiLens::readParamfile(string filename){
 	  id[n] = 2;
 	  label[n++] = "input_simulation_file";
 
+	  addr[n] = &input_gal_file;
+	  id[n] = 2;
+	  label[n++] = "input_galaxy_file";
+
 	  addr[n] = &pw_alpha;
 	  id[n] = 0;
 	  label[n++] = "alpha";
@@ -335,14 +358,15 @@ void MultiLens::readParamfile(string filename){
 	  }
 
 	  for(i = 0; i < n; i++){
-		  if(id[i] >= 0 && addr[i] != &input_sim_file &&
+		  if(id[i] >= 0 && addr[i] != &input_sim_file && addr[i] != &input_gal_file &&
 				  addr[i] != &pw_alpha && addr[i] != &pw_beta && addr[i] != &pnfw_beta &&
 				  addr[i] != &flag_switch_deflection_off){
 			  ERROR_MESSAGE();
-			  cout << "parameter " << label[i] << " needs to be set!" << endl;
+			  cout << "parameter " << label[i] << " needs to be set in the parameter file " << filename << endl;
 			  exit(0);
 		  }
 
+		  //TODO MARGARITA Default values?
 		  if(id[i] >= 0 && addr[i] == &pw_alpha){
 			  pw_alpha = 1./6.;
 		  }
@@ -450,7 +474,7 @@ void MultiLens::printMultiLens(){
 	cout << endl;
 }
 
-/*
+/**
  * Populates the planes with halos by dividing the space around the planes into
  * equal redshift distances, where the plane with the input lens is excluded
  * since it will not contain any halos
@@ -536,7 +560,6 @@ void MultiLens::buildHaloTrees(
 
 	}
 
-	// *** these are not freed if this routine in used repeatedly
 	for(j=0;j<Nplanes-1;j++){
 		if(flag_input_lens && j == (flag_input_lens % Nplanes))
 			continue;
@@ -694,7 +717,7 @@ void MultiLens::buildHaloTrees(
 
 }
 
-/*
+/**
  * Set the redshifts of the planes by dividing the redshift space into equal intervals
  * and then plugging the input plane inbetween
  *
@@ -765,17 +788,22 @@ void MultiLens::setZlens(double z){
 	}
 }
 
-// sets the redshifts and distances for the lens planes
+/// read in halos from a simulation file
 void MultiLens::readInputSimFile(CosmoHndl cosmo){
 
 	char c;
-	int type;
-	double ra,dec,z,zob,mass,massct,vmax,vdisp,r_halfmass;
+	double ra,dec,z,vmax,vdisp,r_halfmass;
 	string strg;
 	unsigned long i,j;
 	unsigned long id,np;
 
 	//int index;
+
+	if(internal_profile != PowerLaw){
+		std::cout << "The internal profile of the halos while using simulation input files must be a Power Law."
+				<< std::endl << "Change this is parameter file" << std::endl;
+		exit(1);
+	}
 
 	ifstream file_in(input_sim_file.c_str());
 	if(!file_in){
@@ -783,53 +811,95 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 		exit(1);
 	}
 
+	// skip through header information in data file
+	while(file_in.peek() == '#'){
+		file_in.ignore(10000,'\n');
+		++i;
+	}
+	std::cout << "skipped "<< i << " comment lines in " << input_sim_file << std::endl;
 
-	file_in >> Nhalos;
+	//file_in >> Nhalos;
+	//Nhalos = 10;
+	//cout << Nhalos << endl;
 
-	cout << Nhalos << endl;
+	std::vector<HaloStructure> halo_vec;
+	std::vector<double> halo_zs_vec;
+	std::vector<double *> halo_pos_vec;
+
+	// read in data
+	double mass_max=0,R_max=0,V_max=0;
+	double *theta;
+	HaloStructure halo;
+
+	for(i=0,j=0 ; c != '#'; ++i){
+
+		// read a line of data
+		file_in >> id >> c >> id >> c >> ra >> c >> dec >> c >> z
+				 >> c >> np >> c >> vdisp >> c >> vmax >> c >> r_halfmass >> c;  //TODO the GalID will miss the first digit using this method.  No other method stops at the end of file.
+		//std::cout << id << c << id << c << ra << c << dec << c << z
+		//				 << c << np << c << vdisp << c << vmax << c << r_halfmass << std::endl;
+		//cout << i << "  z: " << z << " np: " << np << " vmax:" << vmax << "  " << file_in.peek() << endl;
+
+		if(np > 0.0 && vdisp > 0.0){
+
+			halo_vec.push_back(halo);
+
+			halo_vec[j].mass = np*1.0e10*cosmo->gethubble();
+			halo_vec[j].Rmax = halo_vec[j].mass*4.7788e-20/2/pow(vdisp/2.9979e5,2);  // SIS value
+			halo_vec[j].rscale = halo_vec[j].Rmax;   //TODO This is a kluge.  It should no be necessary to remember to do this whenever the PowerLaw model is used.
+
+			if(halo_vec[j].mass > mass_max) mass_max = halo_vec[j].mass;
+			if(halo_vec[j].Rmax > R_max) R_max = halo_vec[j].Rmax;
+			if(vdisp > V_max) V_max = vdisp;
+			/*
+			halo_vec[j].mass = mass*1.0e10*cosmo->gethubble();
+			halo_vec[j].Rmax = cosmo->R200(z,mass*1.0e10*cosmo->gethubble());
+			assert(halo_vec[j].Rmax > 0.0);
+			cout << "Rmax:" << halo_vec[j].Rmax << endl;
+			halo_vec[j].rscale = halo_vec[j].Rmax/cosmo->NFW_Concentration(vmax,halo_vec[j].mass,halo_vec[j].Rmax);
+			 */
+
+			halo_zs_vec.push_back(z);
+
+			halo_vec[j].mass /= mass_scale;
+
+			theta = new double[2];
+			theta[0] = ra;
+			theta[1] = dec;
+			halo_pos_vec.push_back(theta);
+
+			++j;
+		}
+	}
+	file_in.close();
+	std::cout << halo_vec.size() << " halos read in."<< std::endl
+			<< "Max input mass = " << mass_max << "  R max = " << R_max << "  V max = " << V_max << std::endl;
+
+	Nhalos = halo_vec.size();
 
 	halos = new HaloStructure[Nhalos];
 	halo_zs = new double[Nhalos];
 	halo_pos = PosTypeMatrix(0,Nhalos-1,0,2);
 
-	// read in data
-	for(i=0,j=0 ; i < Nhalos && !file_in.eof() ; ++i){
-
-		// rerad a line of data
-		file_in >> id >> c >> id >> c >> type >> c >> ra >> c >> dec >> c >> z >> c >> zob
-				 >> c >> np >> c >> mass >> c >> massct >> c >> vmax >> c >> vdisp >> c >> r_halfmass;
-		//cout << id << c << id << c << type << c << ra << c << dec << c << z << c << zob
-		  //		 << c << np << c << r200 << c << mass << c << vmax << c << vdisp << c << r_halfmass << endl;
-		cout << "z:" << z << " np:" << mass*1.0e10/np << " mass:" << mass*1.0e10 << " vmax:" << vmax << endl;
-
-		if(mass > 0.0){
-			halos[j].mass = mass*1.0e10*cosmo->gethubble();
-			halos[j].Rmax = cosmo->R200(z,mass*1.0e10*cosmo->gethubble());
-			assert(halos[j].Rmax > 0.0);
-			cout << "Rmax:" << halos[j].Rmax << endl;
-			halos[j].rscale = halos[j].Rmax/cosmo->NFW_Concentration(vmax,halos[j].mass,halos[j].Rmax);
-			halo_zs[j] = z;
-
-			halos[j].mass /= mass_scale;
-
-			halo_pos[j][0] = ra;
-			halo_pos[j][1] = dec;
-			++j;
-		}
+	for(i=0;i<Nhalos;++i){
+		halo_zs[i] = halo_zs_vec[i];
+		halo_pos[i] = halo_pos_vec[i];
+		halos[i] = halo_vec[i];
 	}
 
-	Nhalos = j;  // There is some waisted memory here which would have contained the halos with zero mass.
+	cout << halos[9].Rmax << endl;
 
 	// sort the halos by readshift
 	MultiLens::quicksort(halos,halo_pos,halo_zs,Nhalos);
 
 }
 
-/** * Sets the internal parameters of the multiple lens model
+
+/** Sets the internal parameters of the multiple lens model
  * first the redshifts of the planes are calculated
  * then the coordinate distances to the different planes
  * the planes are populated by halos and the halo trees are built
- * and finally the internal params of the input plane are set, in case there is one
+ * and finally the internal parameters of the input plane are set, in case there is one
  */
 void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 
@@ -864,7 +934,6 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 	cout << endl << endl;
 
 	buildHaloTrees(cosmo,source->zsource);
-
 	std:: cout << " done " << std:: endl;
 }
 
@@ -946,6 +1015,51 @@ void MultiLens::ImplantSource(
 	dDs_implant = cosmo->coorDist(z,plane_redshifts[j]);
 
 	anasource = auto_ptr<SourceAnaGalaxy>(new SourceAnaGalaxy(ana_source));
+	flag_implanted_source = j;
+}
+/**
+ * \brief Change the implanted source in the Multilens.
+ *
+ * When rays are subsequently shot through the simulation the surface brightness of the source will
+ * be added to the point->surface_brightness.  Sources can be implanted without altering the existing
+ * lens or rays.  The rays need to be re-shot after the index is re-shot.
+ *
+ * This is meant for use when the internal AnaSource has already been initialized with multiple sources.
+ */
+void MultiLens::ImplantSource(
+		unsigned long index        /// the index of the galaxy to be made the current galaxy
+		,CosmoHndl cosmo           /// cosmology
+		){
+
+	if(!gal_input_flag){
+		ERROR_MESSAGE();
+		std::cout << "The AnaSource has not been constructed within MultiLens" << std::endl;
+		exit(1);
+	}
+	unsigned long j;
+	double z;
+
+	anasource->setIndex(index);
+	z = anasource->getz();
+
+	if(anasource->getz() > plane_redshifts[Nplanes-1]){
+		cout << "Warning: Implanted source is at higher redshift than simulation was constructed for." << endl
+		<< "It is not being added." << endl;
+		return;
+	}
+
+	Ds_implant = cosmo->angDist(0,z);
+	zs_implant = z;
+
+	//ys_implant[0] = Ds_implant*anasource->get_theta()[0];
+	//ys_implant[1] = Ds_implant*anasource->get_theta()[1];
+
+	ys_implant[0] = ys_implant[1] = 0.0;
+
+	locateD(plane_redshifts-1,Nplanes,zs_implant,&j);
+
+	dDs_implant = cosmo->coorDist(z,plane_redshifts[j]);
+
 	flag_implanted_source = j;
 }
 

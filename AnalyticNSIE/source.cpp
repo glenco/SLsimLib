@@ -309,54 +309,27 @@ void SourceBLR::printSource(){
 	cout << "source_fK " << source_fK << endl << endl;
 }
 
-double SourceUniform::source_sb_func(double *y){
+double SourceUniform::SurfaceBrightness(double *y){
 	return (double)( (y[0]*y[0] + y[1]*y[1]) < source_r*source_r );
 }
 
-double SourceGaussian::source_sb_func(double *y){
+double SourceGaussian::SurfaceBrightness(double *y){
 	return exp( -(y[0]*y[0] + y[1]*y[1])/source_gauss_r2 );
 }
 
 // surface brightness for models of the Broad Line Region
-double SourceBLRDisk::source_sb_func(double *y){
+double SourceBLRDisk::SurfaceBrightness(double *y){
 	return blr_surface_brightness_disk(y,this);
 }
 
-double SourceBLRSph1::source_sb_func(double *y){
+double SourceBLRSph1::SurfaceBrightness(double *y){
 	return blr_surface_brightness_spherical_circular_motions(sqrt(y[0]*y[0] + y[1]*y[1]),this);
 }
-double SourceBLRSph2::source_sb_func(double *y){
+double SourceBLRSph2::SurfaceBrightness(double *y){
 	return blr_surface_brightness_spherical_random_motions(sqrt(y[0]*y[0] + y[1]*y[1]),this);
 }
 
 void in_source(double *y_source,ListHndl sourcelist){
   return;
-}
-
-// Source model for a analytic galaxy model
-SourceAnaGalaxy::SourceAnaGalaxy(
-		double mag              /// Total magnitude
-		,double BtoT            /// Bulge to total ratio
-		,double Reff         /// Bulge half light radius (arcs)
-		,double Rh           /// disk scale hight (arcs)
-		,double PA           /// Position angle (radians)
-		,double inclination  /// inclination of disk (radians)
-		): Source(){
-	mem_allocated = true;
-	galaxy = new OverGalaxy(mag,BtoT,Reff,Rh,PA,inclination);
-}
-/// Constructor for passing in a pointer to the galaxy model instead of constructing on internally.  Useful when there is a long list of sources.
-SourceAnaGalaxy::SourceAnaGalaxy(
-		OverGalaxy *my_galaxy
-		): Source(){
-	mem_allocated = false;
-	galaxy = my_galaxy;
-}
-SourceAnaGalaxy::~SourceAnaGalaxy(){
-	if(mem_allocated) delete galaxy;
-}
-void SourceAnaGalaxy::printSource(){
-	cout << "Overzier Galaxy Model" << endl;
-	galaxy->print();
 }
 
