@@ -78,10 +78,13 @@ public:
 		assert(gal_input_flag);
 		return anasource->get_theta();
 	}
+<<<<<<< local
+=======
 	unsigned long getImplantedNsources(){
 		assert(gal_input_flag);
 		return anasource->getNumberOfGalaxies();
 	}
+>>>>>>> other
 
 private:
 

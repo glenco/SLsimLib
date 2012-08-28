@@ -119,8 +119,12 @@ void _NearestNeighbor(TreeHndl tree,double *ray,int Nneighbors,Point **neighborp
 
     		/* this sets ray back to real value once closest leaf bax is found */
     		//TODO BEN This should be improved so this works.
+<<<<<<< local
+    		if( (ray[0]!=realray[0])*(ray[1]!=realray[1]) ){ std::printf("ray != realray _NearestNeighbor\n"); exit(0);}
+=======
     		//if( (ray[0]!=realray[0])*(ray[1]!=realray[1]) ){ std::printf("ray != realray _NearestNeighbor\n"); ERROR_MESSAGE();}
     		//assert( (ray[0] == realray[0]) && (ray[1] == realray[1]) ); //TODO test line
+>>>>>>> other
 
     		ray[0]=realray[0];
     		ray[1]=realray[1];

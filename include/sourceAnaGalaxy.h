@@ -35,6 +35,7 @@ public:
 	 */
 	OverGalaxy& setIndex (const unsigned long my_index){
 		if(my_index < 0 || my_index > galaxies.size()-1) return *galaxies[0];
+
 		index = my_index;
 		return *galaxies[my_index];
 	}
@@ -44,13 +45,16 @@ public:
 	OverGalaxy& operator[] (const unsigned long my_index){
 		if(my_index < 0 || my_index > galaxies.size()-1) return *galaxies[0];
 		index = my_index;
+
 		return *galaxies[my_index];
 	}
 
 	/// Return redshift of current source.
 	double getz(){return galaxies[index]->z;}
+
 	/// Set redshift of current source.
 	void setz(double my_z){galaxies[index]->z = my_z;}
+
 	/// Return angular position of current source.
 	double *get_theta(){return galaxies[index]->theta;}
 	/// Set angular position of current source.
@@ -59,6 +63,7 @@ public:
 
 private:
 	unsigned long index;
+
 	bool mem_allocated;
 	std::vector<OverGalaxy*> galaxies;
 
