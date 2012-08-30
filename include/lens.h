@@ -29,7 +29,7 @@ public:
 	int getNplanes();
 
 	virtual void setInternalParams(CosmoHndl,SourceHndl) = 0;
-	virtual void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off, double zsource=-1){};
+	virtual void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off){};
 	virtual void rayshooterInternal(double *ray, double *alpha, double *gamma, double *kappa, bool kappa_off){};
 	virtual void RandomizeHost(long *seed,bool tables){};
 	virtual void RandomizeSigma(long *seed,bool tables){};

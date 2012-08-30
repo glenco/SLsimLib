@@ -16,7 +16,7 @@
  * to particle lens model.  This transition needs to be made more automatic and
  * fail safe.
  */
-void AnaLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off, double zsource){
+void AnaLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off){
 	/* i_points need to be already linked to s_points */
 	double x_rescale[2], tmp, dt = 0;
 	static double zs_old=-1,convert_factor=0;

@@ -57,11 +57,10 @@ public:
 	void RandomizeSigma(long *seed,bool tables);
 	double getZlens();
 	void setZlens(double zlens);
-	void setRedshift(double zsource);
 	void printMultiLens();
 
 	void setInternalParams(CosmoHndl,SourceHndl);
-	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off, double zsource=-1);
+	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off);
 	/// a poiner to the analytical lens
 	LensHndl input_lens;
 	AnaLens *analens;
@@ -78,19 +77,25 @@ public:
 		assert(gal_input_flag);
 		return anasource->get_theta();
 	}
-<<<<<<< local
-=======
+
 	unsigned long getImplantedNsources(){
 		assert(gal_input_flag);
 		return anasource->getNumberOfGalaxies();
 	}
->>>>>>> other
 
 private:
 
 	typedef enum {PS, ST, PL} MassFuncType;
 	typedef enum {PowerLaw, NFW, PseudoNFW} IntProfType;
 	typedef enum {null, ana_lens, moka_lens} InputLens;
+
+	void setRedshifts();
+	void setCoorDist(CosmoHndl cosmo, double zsource);
+	double QuickFindFromTable(double y);
+
+	static double *coorDist_table;
+	static long ob_count;
+	void make_table(CosmoHndl cosmo);
 
 	long *seed;
 	/// if = 0 there is no input lens, if = 1 there is an analytic lens, if = 2 there is a MOKA lens

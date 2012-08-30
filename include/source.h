@@ -12,16 +12,12 @@
 
 class Source{
 public:
-	 /// names of clump and sb models
-	  typedef enum {Uniform,Gaussian,BLR_Disk,BLR_Sph1,BLR_Sph2} SBModel;
 
 	  // source parameters
 	  /// total source size, ie no flux outside this radius
 	  double source_r;
 	  /// center of source
 	  double source_x[2];
-
-	  SBModel source_sb_type;
 
 	  /// redshift of source
 	  double zsource;
