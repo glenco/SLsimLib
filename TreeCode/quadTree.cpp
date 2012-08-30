@@ -482,7 +482,7 @@ void QuadTree::force2D(double *ray,double *alpha,double *kappa,double *gamma,boo
 					  if(haloON){
 						  prefac = halo_params[index].mass/rcm2/pi;
 						  arg1 = rcm/halo_params[index].rscale;
-						  arg2 = halo_params[index].Rmax/halo_params[index].rscale;  //TODO MARGARITA What about in the case of a power law.  This should not depend on rscale.
+						  arg2 = halo_params[index].Rmax/halo_params[index].rscale;
 						  tmp = halo_params[index].Rmax;
 					  }
 					  else{

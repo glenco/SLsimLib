@@ -13,7 +13,12 @@
 
 using namespace std;
 
-/// Sets some distances and passes cosmo and source into the initialization of lens.
+/// TODO: MARGARITA/BEN the constructor has to be done in a smart way, so that it knows what kind of Lens and Source to create
+/*
+ * This creates a model and constructs a Lens, a Source, and a Cosmology.
+ * The Type of the lens is determined by multi_lens, the type of the source is read in from the parameter file
+ * and the the cosmology is the standard one
+ */
 Model::Model(std::string paramfile  /// parameterfile
 		,long *my_seed		/// the seed, set in the main()
 		,bool multi_lens	/// if true, then create a multi lens plane, if false -- stick to an analytic lens and single plane

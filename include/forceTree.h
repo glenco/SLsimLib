@@ -67,9 +67,9 @@ protected:
 
 	PosType force_theta;
 
-	//PosType (*alpha_particle)(PosType r,float rmax);
-	//PosType (*kappa_particle)(PosType r,float rmax);
-	//PosType (*gamma_particle)(PosType r,float rmax);
+	//PosType (*alpha_particle)(PosType r,float xmax);
+	//PosType (*kappa_particle)(PosType r,float xmax);
+	//PosType (*gamma_particle)(PosType r,float xmax);
 
 	//PosType (*alpha_halo)(PosType r,HaloInternal &par);
 	//PosType (*kappa_halo)(PosType r,HaloInternal &par);
@@ -125,17 +125,16 @@ private:
 	float beta; // logorithmic slop of 2d mass profile
 
 	// Override internal structure of halos
-	///TODO MARGARITA In this case they are no longer r and rmax which makes this version somewhat inconsistent with the new versions for NFW and PseudoNFW.
-	inline double alpha_h(double r,double rmax){
-		return (r < rmax) ? -1.0*pow(r/rmax,beta+2) : -1.0;
+	inline double alpha_h(double x,double xmax){
+		return (x < xmax) ? -1.0*pow(x/xmax,beta+2) : -1.0;
 	}
-	inline double kappa_h(double r,double rmax){
-		return (r < rmax) ? (beta+2)*pow(r/rmax,beta)*r*r/(rmax*rmax) : 0.0;
+	inline double kappa_h(double x,double xmax){
+		return (x < xmax) ? (beta+2)*pow(x/xmax,beta)*x*x/(xmax*xmax) : 0.0;
 	}
-	inline double gamma_h(double r,double rmax){
-		return (r < rmax) ? -0.5*beta*pow(r/rmax,beta+2) : -2.0;
+	inline double gamma_h(double x,double xmax){
+		return (x < xmax) ? -0.5*beta*pow(x/xmax,beta+2) : -2.0;
 	}
-	inline double phi_h(double r,double rmax){
+	inline double phi_h(double x,double xmax){
 		ERROR_MESSAGE();
 		std::cout << "time delay has not been fixed for PowerLaw profile yet." << std::endl;
 		exit(1);
@@ -173,17 +172,16 @@ private:
 
 
 	// Override internal structure of halos
-	///TODO MARGARITA From what I understand these are no longer r and rmax, but r/rs and r/rmax.  If so rename them to prevent confusion.
-	inline double alpha_h(double r,double rmax){
-		return (r < rmax) ? -1.0*InterpolateFromTable(gtable,r)/InterpolateFromTable(gtable,rmax) : -1.0;
+	inline double alpha_h(double x,double xmax){
+		return (x < xmax) ? -1.0*InterpolateFromTable(gtable,x)/InterpolateFromTable(gtable,xmax) : -1.0;
 	}
-	inline double kappa_h(double r,double rmax){
-		return (r < rmax) ? 0.5*r*r*InterpolateFromTable(ftable,r)/InterpolateFromTable(gtable,rmax) : 0.0;
+	inline double kappa_h(double x,double xmax){
+		return (x < xmax) ? 0.5*x*x*InterpolateFromTable(ftable,x)/InterpolateFromTable(gtable,xmax) : 0.0;
 	}
-	inline double gamma_h(double r,double rmax){
-		return (r < rmax) ? -0.25*r*r*InterpolateFromTable(g2table,r)/InterpolateFromTable(gtable,rmax) : -2.0;
+	inline double gamma_h(double x,double xmax){
+		return (x < xmax) ? -0.25*x*x*InterpolateFromTable(g2table,x)/InterpolateFromTable(gtable,xmax) : -2.0;
 	}
-	inline double phi_h(double r,double rmax){
+	inline double phi_h(double x,double xmax){
 		ERROR_MESSAGE();
 		std::cout << "time delay has not been fixed for NFW profile yet." << std::endl;
 		exit(1);
@@ -228,17 +226,16 @@ private:
 
 
 	// Override internal structure of halos
-	///TODO MARGARITA From what I understand these are no longer r and rmax, but r/rs and r/rmax.  If so rename them to prevent confusion.
-	inline double alpha_h(double r,double rmax){
-		return (r < rmax) ? -1.0*InterpolateFromTable(mhattable,r)/InterpolateFromTable(mhattable,rmax) : -1.0;
+	inline double alpha_h(double x,double xmax){
+		return (x < xmax) ? -1.0*InterpolateFromTable(mhattable,x)/InterpolateFromTable(mhattable,xmax) : -1.0;
 	}
-	inline double kappa_h(double r,double rmax){
-		return (r < rmax) ? 0.5*r*r/InterpolateFromTable(mhattable,rmax)/pow(1+r,beta) : 0.0;
+	inline double kappa_h(double x,double xmax){
+		return (x < xmax) ? 0.5*x*x/InterpolateFromTable(mhattable,xmax)/pow(1+x,beta) : 0.0;
 	}
-	inline double gamma_h(double r,double rmax){
-		return (r < rmax) ? (0.5*r*r/pow(1+r,beta) - InterpolateFromTable(mhattable,r))/InterpolateFromTable(mhattable,rmax) : -2.0;
+	inline double gamma_h(double x,double xmax){
+		return (x < xmax) ? (0.5*x*x/pow(1+x,beta) - InterpolateFromTable(mhattable,x))/InterpolateFromTable(mhattable,xmax) : -2.0;
 	}
-	inline double phi_h(double r,double rmax){
+	inline double phi_h(double r,double xmax){
 		ERROR_MESSAGE();
 		std::cout << "time delay has not been fixed for PseudoNFW profile yet." << std::endl;
 		exit(1);

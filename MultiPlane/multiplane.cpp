@@ -206,18 +206,6 @@ MultiLens::MultiLens(string filename,long *my_seed) : Lens(){
 	flag_implanted_source = 0;
 	seed = my_seed;
 
-	//TODO MARGARITA The construction and destruction of the halo profile lookup tables has been moved into the constructors for a QuadTreeNFW, etc.
-	// This eliminates having to remember to construct them before creating a class that is derived from this class.
-/*	if(internal_profile == NFW && tables_set != true){
-		make_tables_nfw();
-		tables_set = true;
-	}
-	if(internal_profile == PseudoNFW && tables_set != true){
-		make_tables_pseudonfw(pnfw_beta);
-		tables_set = true;
-	}
-	*/
-
 	// In the case of implanted sources from a file initialize.
 	cout << "In MultiLens" << endl;
 	if(gal_input_flag) anasource = auto_ptr<SourceAnaGalaxy>(new SourceAnaGalaxy(input_gal_file));
@@ -249,11 +237,6 @@ MultiLens::~MultiLens(){
 
 	if(flag_input_lens)
 		delete input_lens;
-
-	/*if(tables_set == true){
-		if(internal_profile == NFW) delete_tables_nfw();
-		if(internal_profile == PseudoNFW) delete_tables_pseudonfw();
-	}*/
 
 	--ob_count;
 	if(ob_count == 0){
@@ -392,7 +375,8 @@ void MultiLens::readParamfile(string filename){
 			  exit(0);
 		  }
 
-		  //TODO MARGARITA Default values?
+		  /// DEFAULT VALUES
+		  /// in case they are not set in the parameter file
 		  if(id[i] >= 0 && addr[i] == &pw_alpha){
 			  pw_alpha = 1./6.;
 		  }
