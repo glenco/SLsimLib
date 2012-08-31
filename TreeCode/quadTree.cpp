@@ -400,7 +400,7 @@ void QuadTree::rotate_coordinates(double **coord){
  *       4*pi*G*mass_scale to get the deflection angle caused by the plane lens.
  * */
 
-void QuadTree::force2D(double *ray,double *alpha,float *kappa,float *gamma,bool no_kappa){
+void QuadTree::force2D(double *ray,double *alpha,double *kappa,double *gamma,bool no_kappa){
 
   QTreeNBHndl mytree = tree;
 
@@ -416,13 +416,8 @@ void QuadTree::force2D(double *ray,double *alpha,float *kappa,float *gamma,bool 
   alpha[0]=alpha[1]=gamma[0]=gamma[1]=gamma[2]=0.0;
   *kappa=0.0;
 
-#pragma omp parallel
-  {
-#pragma omp single nowait
-	  {
-  while(mytree->WalkStep(allowDescent)){
-#pragma omp task
-	  {
+  do{
+
 	  ++count;
 	  allowDescent=false;
 	  if(mytree->current->nparticles > 0){
@@ -547,11 +542,8 @@ void QuadTree::force2D(double *ray,double *alpha,float *kappa,float *gamma,bool 
 			  alpha[0] += tmp*xcm;
 			  alpha[1] += tmp*ycm;
 		  }
-		  }
 	  }
-  }
-  }
-  }
+  }while(mytree->WalkStep(allowDescent));
 
   // Subtract off uniform mass sheet to compensate for the extra mass
   //  added to the universe in the halos.
