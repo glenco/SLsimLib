@@ -874,13 +874,45 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 	halo_zs = new double[Nhalos];
 	halo_pos = PosTypeMatrix(0,Nhalos-1,0,2);
 
+<<<<<<< local
+	// read in data
+	for(i=0,j=0 ; i < Nhalos && !file_in.eof() ; ++i){
+
+		// read a line of data
+		file_in >> id >> c >> id >> c >> type >> c >> ra >> c >> dec >> c >> z >> c >> zob
+				 >> c >> np >> c >> mass >> c >> massct >> c >> vmax >> c >> vdisp >> c >> r_halfmass;
+		//cout << id << c << id << c << type << c << ra << c << dec << c << z << c << zob
+		  //		 << c << np << c << r200 << c << mass << c << vmax << c << vdisp << c << r_halfmass << endl;
+		cout << "z:" << z << " np:" << mass*1.0e10/np << " mass:" << mass*1.0e10 << " vmax:" << vmax << endl;
+
+		if(mass > 0.0){
+			halos[j].mass = mass*1.0e10*cosmo->gethubble();
+			halos[j].Rmax = cosmo->R200(z,mass*1.0e10*cosmo->gethubble());
+			assert(halos[j].Rmax > 0.0);
+			cout << "Rmax:" << halos[j].Rmax << endl;
+			halos[j].rscale = halos[j].Rmax/cosmo->NFW_Concentration(vmax,halos[j].mass,halos[j].Rmax);
+			halo_zs[j] = z;
+
+			halos[j].mass /= mass_scale;
+
+			halo_pos[j][0] = ra;
+			halo_pos[j][1] = dec;
+			++j;
+		}
+=======
 	for(i=0;i<Nhalos;++i){
 		halo_zs[i] = halo_zs_vec[i];
 		halo_pos[i] = halo_pos_vec[i];
 		halos[i] = halo_vec[i];
+>>>>>>> other
 	}
 
+<<<<<<< local
+	file_in.close();
+	Nhalos = j;  // There is some waisted memory here which would have contained the halos with zero mass.
+=======
 	cout << halos[9].Rmax << endl;
+>>>>>>> other
 
 	// sort the halos by readshift
 	MultiLens::quicksort(halos,halo_pos,halo_zs,Nhalos);
@@ -1044,10 +1076,15 @@ void MultiLens::ImplantSource(
 	Ds_implant = cosmo->angDist(0,z);
 	zs_implant = z;
 
+<<<<<<< local
+	ys_implant[0] = Ds_implant*anasource->get_theta()[0];
+	ys_implant[1] = Ds_implant*anasource->get_theta()[1];
+=======
 	//ys_implant[0] = Ds_implant*anasource->get_theta()[0];
 	//ys_implant[1] = Ds_implant*anasource->get_theta()[1];
 
 	ys_implant[0] = ys_implant[1] = 0.0;
+>>>>>>> other
 
 	locateD(plane_redshifts-1,Nplanes,zs_implant,&j);
 

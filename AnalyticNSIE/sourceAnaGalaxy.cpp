@@ -78,7 +78,6 @@ void MultiSourceAnaGalaxy::readDataFile(std::string input_gal_file,double mag_li
 	}
 
 	std::cout << "Reading from galaxy data file " << input_gal_file.c_str() << std::endl;
-
 	//file_in >> Ngalaxies;
 	//std::cout << "Number of source galaxies: " << Ngalaxies << std::endl;
 
@@ -93,6 +92,7 @@ void MultiSourceAnaGalaxy::readDataFile(std::string input_gal_file,double mag_li
 
 	mag_limit = 25;  //TODO find a better way of passing this in
 	double theta[2] = {0.0,0.0};
+
 	// read in data
 	for(i=0,j=0 ; c != '#' ; ++i){
 
@@ -136,12 +136,12 @@ void MultiSourceAnaGalaxy::readDataFile(std::string input_gal_file,double mag_li
 			//		<< " disk size arcsec " << diskradius_arcsec << " position angle " << pa << " inclination " << inclination
 			//		<< " theta = " << theta[i][0] << " " << theta[i][1] << std::endl;
 
-
 			++j;
 		}
 	}
 
 	file_in.close();
+
 	std::cout << galaxies.size() << " galaxies read in."<< std::endl;
 
 	Ngalaxies = galaxies.size();
