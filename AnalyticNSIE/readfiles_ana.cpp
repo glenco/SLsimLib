@@ -363,8 +363,8 @@ void AnaLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 	double Ds, Dls;
 
 	Dl = cosmo->angDist(0,zlens);
-	Ds = cosmo->angDist(0,source->zsource);
-	Dls = cosmo->angDist(zlens,source->zsource);
+	Ds = cosmo->angDist(0,source->getZ());
+	Dls = cosmo->angDist(zlens,source->getZ());
 
 	MpcToAsec = 60*60*180 / pi / Dl;
 		// in Mpc

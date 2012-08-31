@@ -71,13 +71,13 @@ double blr_surface_brightness_disk_old(double x[],SourceBLR *source){
 	double zz_prime,xx_prime,yy_prime;
 	double sig_nu;
 
-	DlDs = source->DlDs;
+	DlDs = source->getDlDs();
 
 	//printf("hi from BLR disk\n");
 
 	if(source->source_nuo <= 0.0){ERROR_MESSAGE(); exit(1); }
 
-	tau = source->source_tau*8.39428142e-10/(1+source->zsource);  // convert days to Mpc and account for time dilation
+	tau = source->source_tau*8.39428142e-10/(1+source->getZ());  // convert days to Mpc and account for time dilation
 
 	// first get the "r" and "z" coordinates
 
@@ -131,13 +131,13 @@ double blr_surface_brightness_disk_old(double x[],SourceBLR *source){
 
 		nu_shift = v_shift_z * source->source_nuo;
 
-		return pow(source->source_r_in,2)*exp( -0.5*pow( (source->source_nu*(1+source->zsource) - source->source_nuo - nu_shift)/sig_nu ,2) )
+		return pow(source->source_r_in,2)*exp( -0.5*pow( (source->source_nu*(1+source->getZ()) - source->source_nuo - nu_shift)/sig_nu ,2) )
 					* rho / (r*r + tau*tau)/sig_nu;
 	}
 
 	// isotropic circular Keplerian orbits
 
-	v_shift_yprime = ( source->source_nuo/source->source_nu/(1+source->zsource) - 1 ) * R/r;  // convert to tangent of sphere
+	v_shift_yprime = ( source->source_nuo/source->source_nu/(1+source->getZ()) - 1 ) * R/r;  // convert to tangent of sphere
 
 	if( fabs(v_shift_yprime) > vr ) return 0.0;
 

@@ -128,7 +128,7 @@ void setStars(AnaLens *lens, bool implanted){
 /// subtracts the mass in stars from the smooth model to compensate
 /// for the mass of the stars the lensing quantities are all updated not replaced
 void AnaLens::substract_stars_disks(PosType *ray,PosType *alpha
-		,PosType *kappa,PosType *gamma){
+		,float *kappa,float *gamma){
 
 	if(!(stars_implanted)) return;
 

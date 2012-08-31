@@ -41,8 +41,9 @@ void MultiLens::rayshooterInternal(
 
 	for(i = 0; i< Npoints; i++){
 
-		double kappa,aa,bb,cc;
-	    double alpha[2], gamma[3];
+		double aa,bb,cc;
+	    double alpha[2];
+	    float kappa,gamma[3];
 	    double xminus[2],xplus[2];
 	    double kappa_minus,gamma_minus[3],kappa_plus,gamma_plus[3];
 

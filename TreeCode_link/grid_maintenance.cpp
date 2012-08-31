@@ -152,8 +152,8 @@ double Grid::RefreshSurfaceBrightnesses(SourceHndl source){
 
 	MoveToTopList(s_tree->pointlist);
 	do{
-		y[0] = s_tree->pointlist->current->x[0] - source->source_x[0];
-		y[1] = s_tree->pointlist->current->x[1] - source->source_x[1];
+		y[0] = s_tree->pointlist->current->x[0] - source->getX()[0];
+		y[1] = s_tree->pointlist->current->x[1] - source->getX()[1];
 		tmp = source->SurfaceBrightness(y);
 		s_tree->pointlist->current->surface_brightness = s_tree->pointlist->current->image->surface_brightness
 				= tmp;

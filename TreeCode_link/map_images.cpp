@@ -47,7 +47,7 @@ void map_images(
 		,ImageInfo *imageinfo   /// information on each image
 		,int NimageMax          /// Size of imageinfo array on entry.  This could increase if more images are found
 		,double xmax            /// Maximum size of source on image plane.  The entire source must be within this distance from
-		                        ///  source->source_x[]
+		                        ///  source->getX()[]
 		,double xmin            /// The smallest scale of the source measured on the lens plane.  The more accurate these
 			                    /// 2 parameters are the less likely it is that an image will be missed.
 		,double initial_size    /// Initial size of source for telescoping, 0 to start from the initial grid size.
@@ -57,7 +57,7 @@ void map_images(
 		,bool kappa_off         /// turns off calculation of surface density, shear, magnification and time delay
 		,bool FindCenter        /// if the center of the source is not known this can be set to true and it will attempt to
 		                        /// find the center, find the size of the source and determine if there is more than one source
-			                    /// The entire source must be within xmax of source->source_x because this is the only
+			                    /// The entire source must be within xmax of source->getX() because this is the only
 			                    /// region that will be scanned.
 		,bool divide_images    /// if true will divide images and apply the exit criterion to them separately.
 		){
@@ -108,8 +108,8 @@ void map_images(
 			if(sb > 0.0){
 
 				newpoint = NewPointArray(1,true);
-				newpoint->x[0] = y[0] + source->source_x[0];
-				newpoint->x[1] = y[1] + source->source_x[1];
+				newpoint->x[0] = y[0] + source->getX()[0];
+				newpoint->x[1] = y[1] + source->getX()[1];
 				newpoint->image = newpoint;
 				newpoint->surface_brightness = sb;
 				newpoint->gridsize = 2*xmax/(Ntmp-1);
@@ -158,8 +158,8 @@ void map_images(
 			do{
 				rs[i] = MAX(rs[i],pow(getCurrentKist(sourceinfo[i].imagekist)->x[0] - sourceinfo[i].centroid[0],2)
 						+ pow(getCurrentKist(sourceinfo[i].imagekist)->x[1] - sourceinfo[i].centroid[1],2) );
-				xx[0] = getCurrentKist(sourceinfo[i].imagekist)->x[0] - source->source_x[0];
-				xx[1] = getCurrentKist(sourceinfo[i].imagekist)->x[1] - source->source_x[1];
+				xx[0] = getCurrentKist(sourceinfo[i].imagekist)->x[0] - source->getX()[0];
+				xx[1] = getCurrentKist(sourceinfo[i].imagekist)->x[1] - source->getX()[1];
 				sourceinfo[i].area += source->SurfaceBrightness(xx)*pow(2*xmax/(Ntmp-1),2);
 
 			}while(MoveDownKist(sourceinfo[i].imagekist));
@@ -168,8 +168,8 @@ void map_images(
 
 			// filling factor or holiness of source
 			printf("holiness of source %e\n",sourceinfo[i].imagekist->Nunits()*pow(2*xmax/(Ntmp-1)/rs[i],2)/pi);
-			printf("     dx = %e %e rs = %e Npoints = %li\n",(source->source_x[0]-sourceinfo[i].centroid[0])/xmin
-			                                               ,(source->source_x[1]-sourceinfo[i].centroid[1])/xmin
+			printf("     dx = %e %e rs = %e Npoints = %li\n",(source->getX()[0]-sourceinfo[i].centroid[0])/xmin
+			                                               ,(source->getX()[1]-sourceinfo[i].centroid[1])/xmin
 			                                               ,rs[i],sourceinfo[i].imagekist->Nunits());
 
 		}
@@ -182,8 +182,8 @@ void map_images(
 			center[0] = sourceinfo[0].centroid[0];
 			center[1] = sourceinfo[0].centroid[1];
 		}else{
-			center[0] = source->source_x[0];
-			center[1] = source->source_x[1];
+			center[0] = source->getX()[0];
+			center[1] = source->getX()[1];
 		}
 		find_images_kist(lens,center,rs[0],grid,Nimages,imageinfo,NimageMax,&Nimagepoints,initial_size,true,0,false,true);
 		for(i=1;i<Nsources;++i){
@@ -191,8 +191,8 @@ void map_images(
 				center[0] = sourceinfo[i].centroid[0];
 				center[1] = sourceinfo[i].centroid[1];
 			}else{
-				center[0] = source->source_x[0];
-				center[1] = source->source_x[1];
+				center[0] = source->getX()[0];
+				center[1] = source->getX()[1];
 			}
 			find_images_kist(lens,center,rs[i],grid,Nimages,imageinfo,NimageMax,&Nimagepoints,xmax,true,0,false,true);
 		}
@@ -201,7 +201,7 @@ void map_images(
 		free(rs);
 	/*}else{
 		Maybe this should be removed
-		find_images_kist(source->source_x,xmin,grid,Nimages,imageinfo,&NimageMax,&Nimagepoints
+		find_images_kist(source->getX(),xmin,grid,Nimages,imageinfo,&NimageMax,&Nimagepoints
 				,initial_size,true,0,false,true);
 	}*/
 
@@ -267,8 +267,8 @@ void map_images(
 			}while(MoveDownKist(imageinfo[i].imagekist));
 
 			printf(" sb = %e\n",source->SurfaceBrightness(centers[i]));
-			centers[i][0] += source->source_x[0];
-			centers[i][1] += source->source_x[1];
+			centers[i][0] += source->getX()[0];
+			centers[i][1] += source->getX()[1];
 
 			if(rs[i] == 0.0) rs[i] = 2*source->source_r_out/Ntmp;
 		}
@@ -283,13 +283,13 @@ void map_images(
 		freeTree(tree);
 	}else{
 
-		find_images_kist(source->source_x,xmin,grid,Nimages
+		find_images_kist(source->getX(),xmin,grid,Nimages
 			  ,imageinfo,NimageMax,&Nimagepoints,initial_size,true,0,false,true);
 	}
 */
 
 	//if(oldr==0) oldr=source->source_r_out;
-	//if((oldy[0]==source->source_x[0])*(oldy[1]==source->source_x[1])*(oldr > source->source_r_out)) initial_size=oldr;
+	//if((oldy[0]==source->getX()[0])*(oldy[1]==source->getX()[1])*(oldr > source->source_r_out)) initial_size=oldr;
 
 	if(source->source_r_out <= 0.0){ERROR_MESSAGE(); printf("ERROR: find_images, point source must have a resolution target\n"); exit(1);}
 
@@ -317,8 +317,8 @@ void map_images(
 		xsMin[0] = xsMin[1] = 1.0e100;
 		sbmax = 0;
 		ssize = 0.0;
-		center[0] = source->source_x[0];
-		center[1] = source->source_x[1];
+		center[0] = source->getX()[0];
+		center[1] = source->getX()[1];
 		r_source = xmin;
 
 		ClearAllMarks(grid->i_tree);
@@ -337,8 +337,8 @@ void map_images(
 					point = getCurrentKist(imageinfo->imagekist);
 
 					//find surface brightnesses
-					y[0] = point->image->x[0] - source->source_x[0];
-					y[1] = point->image->x[1] - source->source_x[1];
+					y[0] = point->image->x[0] - source->getX()[0];
+					y[1] = point->image->x[1] - source->getX()[1];
 					point->surface_brightness = source->SurfaceBrightness(y);
 					point->image->surface_brightness  = point->surface_brightness;
 
@@ -395,7 +395,7 @@ void map_images(
 	tmp = grid->RefreshSurfaceBrightnesses(source);
 
 	/*/********** test lines **********************
-	PointsWithinKist_iter(grid->s_tree,source->source_x,0,source->source_r_out,imageinfo->imagekist);
+	PointsWithinKist_iter(grid->s_tree,source->getX(),0,source->source_r_out,imageinfo->imagekist);
 	Ntmp = imageinfo->imagekist->Nunits();
 	for(i=0,MoveToTopKist(imageinfo->imagekist); i < Ntmp ; ++i ){
 
@@ -414,8 +414,8 @@ void map_images(
 	printf("number of sources %i\n",*Nimages);
 	/*******************************************************/
 
-	//PointsWithinKist(grid->s_tree,source->source_x,source->source_r_out,imageinfo->imagekist,0);
-	PointsWithinKist_iter(grid->s_tree,source->source_x,0,source->source_r_out,imageinfo->imagekist);
+	//PointsWithinKist(grid->s_tree,source->getX(),source->source_r_out,imageinfo->imagekist,0);
+	PointsWithinKist_iter(grid->s_tree,source->getX(),0,source->source_r_out,imageinfo->imagekist);
 
 
 	// move from source plane to image plane
@@ -523,9 +523,9 @@ void map_images(
 	//printf("i=%i Nold=%li\n",i,Nold);
 	//printf("%li\n",imagelist->Npoints);
 
-	oldy[0] = source->source_x[0];
-	oldy[1] = source->source_x[1];
-	oldr = source->source_r;
+	oldy[0] = source->getX()[0];
+	oldy[1] = source->getX()[1];
+	oldr = source->getRadius();
 
 	oldNimages=*Nimages;
 
@@ -673,8 +673,8 @@ int refine_grid_on_image(Lens *lens,SourceBLR *source,GridHndl grid,ImageInfo *i
 
 					  // put point into image imageinfo[i].imagekist
 
-					  y[0] = i_points[k].image->x[0] - source->source_x[0];
-					  y[1] = i_points[k].image->x[1] - source->source_x[1];
+					  y[0] = i_points[k].image->x[0] - source->getX()[0];
+					  y[1] = i_points[k].image->x[1] - source->getX()[1];
 					  i_points[k].surface_brightness = source->SurfaceBrightness(y);
 					  i_points[k].image->surface_brightness  = i_points[k].surface_brightness;
 
@@ -739,8 +739,8 @@ int refine_grid_on_image(Lens *lens,SourceBLR *source,GridHndl grid,ImageInfo *i
 					  for(k=0;k < Ngrid_block*Ngrid_block-1 ;++k){
 
 						  // put point into image imageinfo[i].outerborder
-						  y[0] = i_points[k].image->x[0] - source->source_x[0];
-						  y[1] = i_points[k].image->x[1] - source->source_x[1];
+						  y[0] = i_points[k].image->x[0] - source->getX()[0];
+						  y[1] = i_points[k].image->x[1] - source->getX()[1];
 						  i_points[k].surface_brightness = source->SurfaceBrightness(y);
 						  i_points[k].image->surface_brightness  = i_points[k].surface_brightness;
 

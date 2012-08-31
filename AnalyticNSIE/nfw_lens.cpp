@@ -34,7 +34,7 @@ void alphaNFW(double *alpha,double *x,double Rtrunc,double mass,double r_scale
 	return ;
 }
 /// Convergence for an NFW halo
-double kappaNFW(double *x,double Rtrunc,double mass,double r_scale
+float kappaNFW(double *x,double Rtrunc,double mass,double r_scale
 		,double *center,double Sigma_crit){
 	double r;
 	double gfunction(double),ffunction(double);
@@ -55,7 +55,7 @@ double kappaNFW(double *x,double Rtrunc,double mass,double r_scale
 }
 
 /// Shear for and NFW halo. this might have a flaw in it
-void gammaNFW(double *gamma,double *x,double Rtrunc,double mass,double r_scale
+void gammaNFW(float *gamma,double *x,double Rtrunc,double mass,double r_scale
 		,double *center,double Sigma_crit){
 	double r,gt=0;
 	double g2function(double x);

@@ -12,36 +12,49 @@
 
 class Source{
 public:
-	 /// names of clump and sb models
-	  typedef enum {Uniform,Gaussian,BLR_Disk,BLR_Sph1,BLR_Sph2} SBModel;
+	  Source();
+	  ~Source();
+
+	  /// names of clump and sb models
+	  typedef enum {Uniform,Gaussian,BLR_Disk,BLR_Sph1,BLR_Sph2,MultiAnaSource} SBModel;
+
+	  // in lens.cpp
+	  virtual double SurfaceBrightness(double *y) = 0;
+	  virtual void readParamfile(std::string) = 0;
+	  virtual void printSource() = 0;
+
+	  // accessor functions that will sometimes be over ridden in class derivatives
+	  /// Redshift of source
+	  virtual inline double getZ(){return zsource;}
+	  virtual void setZ(double my_z){zsource = my_z;}
+	  /// Radius of source TODO units?
+	  virtual inline double getRadius(){return source_r;}
+	  virtual void setRadius(double my_radius){source_r = my_radius;}
+	  /// position of source TODO units?
+	  virtual inline double* getX(){return source_x;}
+	  /// In the case of a single plane lens, the ratio of angular size distances
+	  virtual inline double getDlDs(){return DlDs;}
+	  //TODO BEN I think this need only be in the BLR source models
+	  virtual void setDlDs(double my_DlDs){DlDs = my_DlDs;}
+
+protected:
+	  SBModel source_sb_type;
 
 	  // source parameters
 	  /// total source size, ie no flux outside this radius
 	  double source_r;
 	  /// center of source
 	  double source_x[2];
-
-	  SBModel source_sb_type;
-
 	  /// redshift of source
 	  double zsource;
-
-	  // Dl / Ds -- needed for the blr source models
+	  /// Dl / Ds -- needed for the blr source models
+	  //TODO Could this be moved into the BLR classes because they are the only ones that use it.
 	  double DlDs;
-
-	  // in lens.cpp
-	  virtual double SurfaceBrightness(double *y) = 0;
-
-	  Source();
-	  ~Source();
-
-	  virtual void readParamfile(std::string) = 0;
-	  virtual void printSource() = 0;
 };
 
 typedef Source *SourceHndl;
 
-class SourceUniform : public Source{
+class SourceUniform : private Source{
 public:
 	double SurfaceBrightness(double *y);
 	void readParamfile(std::string);

@@ -31,7 +31,7 @@ void alphaPowLaw(double *alpha,double *x,double R,double mass,double beta,double
 	return ;
 }
 ///
-double kappaPowLaw(double *x,double R,double mass,double beta,double *center,double Sigma_crit){
+float kappaPowLaw(double *x,double R,double mass,double beta,double *center,double Sigma_crit){
 	double r;
 
 	r=sqrt(pow(x[0]-center[0],2) + pow(x[1]-center[1],2));
@@ -40,7 +40,7 @@ double kappaPowLaw(double *x,double R,double mass,double beta,double *center,dou
 	return (beta+2)*mass*pow(r/R,beta)/(2*pi*pow(R,2)*Sigma_crit);
 }
 ///
-void gammaPowLaw(double *gamma,double *x,double R,double mass,double beta
+void gammaPowLaw(float *gamma,double *x,double R,double mass,double beta
 		,double *center,double Sigma_crit){
 	double r,gt=0;
 
@@ -58,7 +58,7 @@ void gammaPowLaw(double *gamma,double *x,double R,double mass,double beta
 	return ;
 }
 ///
-double phiPowLaw(double *x,double R,double mass,double beta
+float phiPowLaw(double *x,double R,double mass,double beta
 		,double *center,double Sigma_crit){
 	double b,r;
 

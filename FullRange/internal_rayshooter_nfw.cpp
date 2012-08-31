@@ -18,12 +18,14 @@
  */
 void AnaLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off, double zsource){
 	/* i_points need to be already linked to s_points */
-	double x_rescale[2], tmp, dt = 0;
-	static double zs_old=-1,convert_factor=0;
+	double x_rescale[2];
+	static double convert_factor=0;
     long i,j;
+    float dt = 0,tmp;
 
     struct temp_data{
-    	double alpha[2], gamma[3];
+    	double alpha[2];
+    	float gamma[3];
     } *temp;
 
     temp = (struct temp_data *) malloc(Npoints * sizeof(struct temp_data));
@@ -181,10 +183,11 @@ void AnaLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool ka
    * a analytic one plane lens (AnaLens), for just one ray!!
    *
 */
-void AnaLens::rayshooterInternal(double *ray, double *alpha, double *gamma, double *kappa, bool kappa_off){
-     double x_rescale[2], tmp, dt = 0;
+void AnaLens::rayshooterInternal(double *ray, double *alpha, float *gamma, float *kappa, bool kappa_off){
+     double x_rescale[2];
      long j;
-     double gamma_tmp[3], alpha_tmp[2];
+     double alpha_tmp[2];
+     float gamma_tmp[3], dt = 0,tmp;
 
      gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
      alpha_tmp[0] = alpha_tmp[1] = 0.0;

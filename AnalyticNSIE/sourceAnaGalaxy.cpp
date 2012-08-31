@@ -5,9 +5,10 @@
  *      Author: bmetcalf
  */
 #include <slsimlib.h>
+#include <sstream>
 
 /// Source model for a single analytic galaxy model.
-SourceAnaGalaxy::SourceAnaGalaxy(
+MultiSourceAnaGalaxy::MultiSourceAnaGalaxy(
 		double mag              /// Total magnitude
 		,double BtoT            /// Bulge to total ratio
 		,double Reff            /// Bulge half light radius (arcs)
@@ -17,35 +18,44 @@ SourceAnaGalaxy::SourceAnaGalaxy(
 		,double my_z               /// redshift of source
 		,double *my_theta          /// position on the sky
 		): Source(),index(0){
+
+	source_sb_type = MultiAnaSource;
 	mem_allocated = true;
 	galaxies.push_back(new OverGalaxy(mag,BtoT,Reff,Rh,PA,inclination,my_z,my_theta));
 }
 /** Constructor for passing in a pointer to the galaxy model or a list of galaxies instead of constructing it internally.
 *   Useful when there is a list of pre-allocated sources.  The redshifts and sky positions need to be set separately.
 */
-SourceAnaGalaxy::SourceAnaGalaxy(
+MultiSourceAnaGalaxy::MultiSourceAnaGalaxy(
 		OverGalaxy *my_galaxy
 		): Source(),index(0){
+
+	source_sb_type = MultiAnaSource;
 	mem_allocated = false;
 	galaxies.push_back(my_galaxy);
 }
 /// Constructor for importing from data file.
-SourceAnaGalaxy::SourceAnaGalaxy(
-		std::string input_gal_file   /// Input data file for galaxies
-		,double my_mag_limit
+MultiSourceAnaGalaxy::MultiSourceAnaGalaxy(
+		std::string filename   /// Input data file for galaxies
+		,double my_mag_limit   /// Apparent Magnitude limit
 		){
+
+	source_sb_type = MultiAnaSource;
+	readParamfile(filename);
+
 	mem_allocated = true;
-	std::cout << "in SourceAnaGalaxy" << std::endl;
-	readFile(input_gal_file,my_mag_limit);
+	std::cout << "Constructing SourceAnaGalaxy" << std::endl;
+
+	readDataFile(input_gal_file,my_mag_limit);
 }
 
-SourceAnaGalaxy::~SourceAnaGalaxy(){
+MultiSourceAnaGalaxy::~MultiSourceAnaGalaxy(){
 	if(mem_allocated)
 		for(unsigned long i=0;i<galaxies.size();++i) delete galaxies[i];
 }
 
 /// read in galaxies from a Millennium simulation file
-void SourceAnaGalaxy::readFile(std::string input_gal_file,double mag_limit){
+void MultiSourceAnaGalaxy::readDataFile(std::string input_gal_file,double mag_limit){
 
 	char c='0';
 	//int type;
@@ -138,8 +148,90 @@ void SourceAnaGalaxy::readFile(std::string input_gal_file,double mag_limit){
 
 	return;
 }
+void MultiSourceAnaGalaxy::readParamfile(std::string filename){
+      const int MAXPARAM = 50;
+	  std::string label[MAXPARAM], rlabel, rvalue;
+	  void *addr[MAXPARAM];
+	  int id[MAXPARAM];
+	  std::stringstream ss;
+	  int i ,n;
+	  int myint;
+	  double mydouble;
+	  std::string mystring;
+	  char dummy[100];
+	  std::string escape = "#";
+	  int flag;
+
+	  n = 0;
+
+	  /// id[] = 2 = string, 1 = int, 0 = double
+
+	  addr[n] = &input_gal_file;
+	  id[n] = 2;
+	  label[n++] = "input_galaxy_file";
+
+	  std::cout << "MultiSourceAnaGalaxy reading from " << filename << std::endl;
+
+	  std::ifstream file_in(filename.c_str());
+	  if(!file_in){
+	    std::cout << "Can't open file " << filename << std::endl;
+	    exit(1);
+	  }
+
+	  // output file
+	  while(!file_in.eof()){
+		  file_in >> rlabel >> rvalue;
+		  file_in.getline(dummy,100);
+
+		  if(rlabel[0] == escape[0])
+			  continue;
+
+		  flag = 0;
+
+		  for(i = 0; i < n; i++){
+			  if(rlabel == label[i]){
+
+				  flag = 1;
+				  ss << rvalue;
+
+				  switch(id[i]){
+				  case 0:
+					  ss >> mydouble;
+					  *((double *)addr[i]) = mydouble;
+					  break;
+				  case 1:
+					  ss >> myint;
+					  *((int *)addr[i]) = myint;
+					  break;
+				  case 2:
+					  ss >> mystring;
+					  *((std::string *)addr[i]) = mystring;
+					  break;
+				  }
+
+				  ss.clear();
+				  ss.str(std::string());
+
+				  id[i] = -1;
+			  }
+		  }
+	  }
+
+	  for(i = 0; i < n; i++){
+		  if(id[i] >= 0){
+			  ERROR_MESSAGE();
+			  std::cout << "parameter " << label[i] << " needs to be set in the parameter file "
+					  << filename << std::endl;
+			  exit(0);
+		  }
+	  }
+
+	  file_in.close();
+
+}
+
 /// Print info on current source parameters
-void SourceAnaGalaxy::printSource(){
+void MultiSourceAnaGalaxy::printSource(){
 	std::cout << "Overzier Galaxy Model" << std::endl;
 	galaxies[index]->print();
 }

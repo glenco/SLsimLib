@@ -201,14 +201,7 @@ MultiLens::MultiLens(string filename,long *my_seed) : Lens(){
 
 	// In the case of implanted sources from a file initialize.
 	cout << "In MultiLens" << endl;
-	if(gal_input_flag) anasource = auto_ptr<SourceAnaGalaxy>(new SourceAnaGalaxy(input_gal_file));
-
-	/************** test lines ***********************
-	anasource->setIndex(10);
-	double x[2];
-	x[0] = x[1] = 0.0;
-	std::cout << "Test surface brightness " << anasource->SurfaceBrightness(anasource->get_theta()) << std::endl;
-	/***********************************************/
+	if(gal_input_flag) anasource = auto_ptr<MultiSourceAnaGalaxy>(new MultiSourceAnaGalaxy(input_gal_file));
 }
 
 MultiLens::~MultiLens(){
@@ -844,7 +837,7 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 
 			halo_vec.push_back(halo);
 
-			halo_vec[j].mass = np*1.0e10*cosmo->gethubble();
+			halo_vec[j].mass = np*8.6e8/cosmo->gethubble();
 			halo_vec[j].Rmax = halo_vec[j].mass*4.7788e-20/2/pow(vdisp/2.9979e5,2);  // SIS value
 			halo_vec[j].rscale = halo_vec[j].Rmax;   //TODO This is a kluge.  It should no be necessary to remember to do this whenever the PowerLaw model is used.
 
@@ -913,7 +906,7 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 		exit(1);
 	}
 
-	setRedshift(source->zsource);
+	setRedshift(source->getZ());
 
 	Dl[0] = cosmo->coorDist(0,plane_redshifts[0]);
 	dDl[0] = Dl[0];  // distance between jth plane and the previous plane
@@ -933,7 +926,7 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 		cout << dDl[j] << " ";
 	cout << endl << endl;
 
-	buildHaloTrees(cosmo,source->zsource);
+	buildHaloTrees(cosmo,source->getZ());
 	std:: cout << " done " << std:: endl;
 }
 
@@ -1014,7 +1007,7 @@ void MultiLens::ImplantSource(
 
 	dDs_implant = cosmo->coorDist(z,plane_redshifts[j]);
 
-	anasource = auto_ptr<SourceAnaGalaxy>(new SourceAnaGalaxy(ana_source));
+	anasource = auto_ptr<MultiSourceAnaGalaxy>(new MultiSourceAnaGalaxy(ana_source));
 	flag_implanted_source = j;
 }
 /**
@@ -1040,9 +1033,9 @@ void MultiLens::ImplantSource(
 	double z;
 
 	anasource->setIndex(index);
-	z = anasource->getz();
+	z = anasource->getZ();
 
-	if(anasource->getz() > plane_redshifts[Nplanes-1]){
+	if(anasource->getZ() > plane_redshifts[Nplanes-1]){
 		cout << "Warning: Implanted source is at higher redshift than simulation was constructed for." << endl
 		<< "It is not being added." << endl;
 		return;

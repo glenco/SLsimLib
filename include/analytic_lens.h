@@ -81,13 +81,13 @@ public:
   void (*sub_alpha_func)(double *alpha,double *x,double Rtrunc,double mass,double r_scale
 			,double *center,double Sigma_crit);
   /// pointer to function for calculating the convergence caused by a subclump
-  double (*sub_kappa_func)(double *x,double Rtrunc,double mass,double r_scale
+  float (*sub_kappa_func)(double *x,double Rtrunc,double mass,double r_scale
   		,double *center,double Sigma_crit);
   /// pointer to function for calculating the shear caused by a subclump
-  void (*sub_gamma_func)(double *gamma,double *x,double Rtrunc,double mass,double r_scale
+  void (*sub_gamma_func)(float *gamma,double *x,double Rtrunc,double mass,double r_scale
     		,double *center,double Sigma_crit);
   /// pointer to function for calculating the surface potential caused by a subclump
-  double (*sub_phi_func)(double *x,double Rtrunc,double mass,double r_scale
+  float (*sub_phi_func)(double *x,double Rtrunc,double mass,double r_scale
     		,double *center,double Sigma_crit);
 
   /// stars
@@ -119,7 +119,7 @@ public:
   void setInternalParams(CosmoHndl,SourceHndl);
   void readParamfile(std::string);
   void PrintAnaLens(bool show_substruct,bool show_stars);
-  void rayshooterInternal(double *ray, double *alpha, double *gamma, double *kappa, bool kappa_off);
+  void rayshooterInternal(double *ray, double *alpha, float *gamma, float *kappa, bool kappa_off);
 
   // in randoimize_lens.c
   void RandomizeHost(long *seed,bool tables);
@@ -136,37 +136,38 @@ public:
   void reNormSubstructure(double kappa_sub);
   void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off, double zsource=-1);
   void substract_stars_disks(PosType *ray,PosType *alpha
-                  ,PosType *kappa,PosType *gamma);
+                  ,float *kappa,float *gamma);
 };
 
 double RandomFromTable(double *table,unsigned long Ntable,long *seed);
 void setStars(AnaLens *lens, bool implanted);
 void implant_stars(AnaLens *lens,Point *images,unsigned long Nimages,long *seed);
 void alphaNSIE(double *alpha,double *xt,double f,double bc,double theta);
-double kappaNSIE(double *xt,double f,double bc,double theta);
-void gammaNSIE(double gam[2],double *xt,double f,double bc,double theta);
+float kappaNSIE(double *xt,double f,double bc,double theta);
+void gammaNSIE(float gam[2],double *xt,double f,double bc,double theta);
 double invmagNSIE(double *x,double f,double bc,double theta
-                     ,double *gam,double kap);
+                     ,float *gam,float kap);
+void rotation(float *xout,float *xin,double theta);
 void rotation(double *xout,double *xin,double theta);
 
 //  in powerlow.c
 
 void alphaPowLaw(double *alpha,double *x,double R,double mass,double beta,double *center,double Sigma_crit);
-double kappaPowLaw(double *x,double R,double mass,double beta,double *center,double Sigma_crit);
-void gammaPowLaw(double *gamma,double *x,double R,double mass,double beta,double *center,double Sigma_crit);
-double phiPowLaw(double *x,double R,double mass,double beta,double *center,double Sigma_crit);
+float kappaPowLaw(double *x,double R,double mass,double beta,double *center,double Sigma_crit);
+void gammaPowLaw(float *gamma,double *x,double R,double mass,double beta,double *center,double Sigma_crit);
+float phiPowLaw(double *x,double R,double mass,double beta,double *center,double Sigma_crit);
 
 // in nfw_lens.c
 void alphaNFW(double *alpha,double *x,double Rtrunc,double mass,double r_scale
                 ,double *center,double Sigma_crit);
-double kappaNFW(double *x,double Rtrunc,double mass,double r_scale
+float kappaNFW(double *x,double Rtrunc,double mass,double r_scale
                 ,double *center,double Sigma_crit);
-void gammaNFW(double *gamma,double *x,double Rtrunc,double mass,double r_scale
+void gammaNFW(float *gamma,double *x,double Rtrunc,double mass,double r_scale
                 ,double *center,double Sigma_crit);
 
 // in lens_expand.c
 
-double lens_expand(double beta,double *mod,int Nmodes,double *x,double *alpha,double *gamma,double *phi);
+double lens_expand(double beta,double *mod,int Nmodes,double *x,double *alpha,float *gamma,float *phi);
 
 // in FullRange/implant_stars.c
 

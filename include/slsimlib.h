@@ -71,6 +71,7 @@
 #include <galaxies.h>
 #include <image_processing.h>
 #include <nsie.h>
+#include <InputParameters.h>
 
 #ifndef pi
 #define pi  3.1415926

@@ -12,12 +12,12 @@
  * \brief Source that represents an analytic galaxy surface brightness model.  It encapsulates a
  * OverGalaxy which is a model from R.Oversier et al. 2012 with a bulge and a disk.
  */
-class SourceAnaGalaxy: public Source{
+class MultiSourceAnaGalaxy: public Source{
 public:
-	SourceAnaGalaxy(double mag, double BtoT, double Reff, double Rh, double PA, double inclination,double my_z,double *my_theta);
-	SourceAnaGalaxy(OverGalaxy *my_galaxy);
-	SourceAnaGalaxy(std::string input_gal_file,double my_mag_limit = 100);
-	~SourceAnaGalaxy();
+	MultiSourceAnaGalaxy(double mag, double BtoT, double Reff, double Rh, double PA, double inclination,double my_z,double *my_theta);
+	MultiSourceAnaGalaxy(OverGalaxy *my_galaxy);
+	MultiSourceAnaGalaxy(std::string input_gal_file,double my_mag_limit = 100);
+	~MultiSourceAnaGalaxy();
 
 	/// Surface brightness of current galaxy in coordinates not centered on current galaxy.
 	double SurfaceBrightness(double *y){
@@ -26,7 +26,8 @@ public:
 	}
 
 	void printSource();
-	void readParamfile(std::string){};
+	//TODO Does this need to be public?
+	void readParamfile(std::string);
 	//TODO Write the definition of this
 	void AddAGalaxy(OverGalaxy *my_galaxy);
 
@@ -48,21 +49,22 @@ public:
 	}
 
 	/// Return redshift of current source.
-	double getz(){return galaxies[index]->z;}
+	double getZ(){return galaxies[index]->z;}
 	/// Set redshift of current source.
-	void setz(double my_z){galaxies[index]->z = my_z;}
+	void setZ(double my_z){galaxies[index]->z = my_z;}
 	/// Return angular position of current source.
-	double *get_theta(){return galaxies[index]->theta;}
+	double *getX(){return galaxies[index]->theta;}
 	/// Set angular position of current source.
-	void set_theta(double my_theta[2]){galaxies[index]->theta[0] = my_theta[0]; galaxies[index]->theta[1] = my_theta[1];}
+	void setX(double my_theta[2]){galaxies[index]->theta[0] = my_theta[0]; galaxies[index]->theta[1] = my_theta[1];}
 	unsigned long getNumberOfGalaxies(){return galaxies.size();}
 
 private:
 	unsigned long index;
 	bool mem_allocated;
 	std::vector<OverGalaxy*> galaxies;
+	std::string input_gal_file;
 
-	void readFile(std::string input_gal_file,double my_mag_limit = 100);
+	void readDataFile(std::string input_gal_file,double my_mag_limit = 100);
 };
 
 #endif /* SOURCE_H_ */

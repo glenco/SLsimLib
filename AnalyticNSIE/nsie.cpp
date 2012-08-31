@@ -72,7 +72,7 @@ void alphaNSIE(double *alpha,double *xt,double f,double bc,double theta){
 }
 
 /* surface density */
-double kappaNSIE(double *xt,double f,double bc,double theta){
+float kappaNSIE(double *xt,double f,double bc,double theta){
   double x[2],b2;
   void rotation(double *xout,double *xin,double theta);
 
@@ -86,9 +86,8 @@ double kappaNSIE(double *xt,double f,double bc,double theta){
   return 0.5*sqrt(f/(b2+bc*bc));
 }
      /* shear */
-void gammaNSIE(double gam[2],double *xt,double f,double bc,double theta){
+void gammaNSIE(float gam[2],double *xt,double f,double bc,double theta){
   double x[2],fp,P,b2,r;
-  void rotation(double *xout,double *xin,double theta);
 
   r=sqrt(xt[0]*xt[0]+xt[1]*xt[1]);
 
@@ -117,21 +116,25 @@ void gammaNSIE(double gam[2],double *xt,double f,double bc,double theta){
 
      /* inverse magnification */
 double invmagNSIE(double *x,double f,double bc,double theta
-		     ,double *gam,double kap){
+		     ,float *gam,float kap){
 
   gammaNSIE(gam,x,f,bc,theta);
   kap=kappaNSIE(x,f,bc,theta);
   return pow(1-kap,2) - gam[0]*gam[0] - gam[1]*gam[1];
 }
 
+void rotation(float *xout,float *xin,double theta){
+
+  xout[0]=xin[0]*cos(theta)-xin[1]*sin(theta);
+  xout[1]=xin[1]*cos(theta)+xin[0]*sin(theta);
+}
 void rotation(double *xout,double *xin,double theta){
 
   xout[0]=xin[0]*cos(theta)-xin[1]*sin(theta);
   xout[1]=xin[1]*cos(theta)+xin[0]*sin(theta);
 }
-
 /* potential in Mpc^2 */
-double phiNSIE(double *xt,double f,double bc,double theta){
+float phiNSIE(double *xt,double f,double bc,double theta){
 
 	return 0.0;
 }

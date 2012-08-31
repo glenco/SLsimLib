@@ -150,7 +150,7 @@ void PixelMap::Convert(){
 	long ix;
 
 	unsigned long i;
-	if(map == NULL) map = new double[Npixels*Npixels];
+	if(map == NULL) map = new float[Npixels*Npixels];
 	for(i=0 ; i < Npixels*Npixels ; ++i) map[i]=0.0;
 
 	MoveToTopList(ptree->pointlist);
@@ -171,6 +171,9 @@ void PixelMap::print(){
 	std::cout << Npixels << "  " << range << std::endl;
 	for(unsigned long i=0;i < Npixels*Npixels; ++i) std::cout << map[i] << std::endl;
 	std::cout << Npixels << "  " << range << std::endl;
+
+	delete map;
+	map = NULL;
 
 	return;
 }

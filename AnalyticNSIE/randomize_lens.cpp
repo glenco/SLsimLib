@@ -66,7 +66,7 @@ void Model::RandomizeModel(
 		delete[] zsTable;
 		delete[] zlTable;
 
-		source->zsource = zsource;
+		source->setZ(zsource);
 		lens->setZlens(zlens);
 
 		lens->RandomizeSigma(seed,tables);
@@ -76,7 +76,7 @@ void Model::RandomizeModel(
 	setInternal();
 
 	// This need to be done after source->DlDs has been set in setInternal()
-	source->source_r = r_source_phys*source->DlDs/angle_factor;
+	source->setRadius(r_source_phys*source->getDlDs()/angle_factor);
 
 	lens->RandomizeHost(seed,tables);
 

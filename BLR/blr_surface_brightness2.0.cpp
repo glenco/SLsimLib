@@ -32,12 +32,12 @@ double blr_surface_brightness_spherical_random_motions(double x,SourceBLR *sourc
 	
 	static float DlDs;  //
 	static double oldzlens=0,oldzsource=0;
-	DlDs = source->DlDs;
+	DlDs = source->getDlDs();
 
 	x /= DlDs;
 
 
-	tau = source->source_tau*8.39428142e-10/(1+source->zsource);  // convert days to Mpc
+	tau = source->source_tau*8.39428142e-10/(1+source->getZ());  // convert days to Mpc
 
 	r = (x*x + tau*tau)/(2*tau);
 
@@ -55,7 +55,7 @@ double blr_surface_brightness_spherical_random_motions(double x,SourceBLR *sourc
 
 	sigma2 = pow(source->source_nuo*v_Kep*source->source_fK,2);
 
-	eta = source->source_nuo *(1+source->zsource)* exp(-0.5 * pow( source->source_nu*(1+source->zsource) - source->source_nuo ,2) / sigma2) / sqrt(sigma2);
+	eta = source->source_nuo *(1+source->getZ())* exp(-0.5 * pow( source->source_nu*(1+source->getZ()) - source->source_nuo ,2) / sigma2) / sqrt(sigma2);
 	  //  1/sqrt(2pi)
 
 	return  pow(r/source->source_r_in,source->source_gamma)*eta*r/tau;
@@ -67,11 +67,11 @@ double blr_surface_brightness_spherical_circular_motions(double x,SourceBLR *sou
 
 	static float DlDs;  //
 	static double oldzlens=0,oldzsource=0;
-	DlDs=source->DlDs;
+	DlDs=source->getDlDs();
 
 	x /= DlDs;
 
-	tau = source->source_tau*8.39428142e-10/(1+source->zsource);  // convert days to Mpc
+	tau = source->source_tau*8.39428142e-10/(1+source->getZ());  // convert days to Mpc
 
 	r = (x*x + tau*tau)/(2*tau);
 
@@ -86,9 +86,9 @@ double blr_surface_brightness_spherical_circular_motions(double x,SourceBLR *sou
 	// maximum frequency at theta
 	nu_m = source->source_nuo * sqrt( 4.7788e-20 * source->source_BHmass /r ) * sin_theta;
 
-	if ( fabs(source->source_nu*(1+source->zsource) - source->source_nuo) > nu_m ) return 0.0;
+	if ( fabs(source->source_nu*(1+source->getZ()) - source->source_nuo) > nu_m ) return 0.0;
 
-	eta = source->source_nuo *(1+source->zsource)/sqrt( 1. - pow( (source->source_nu*(1+source->zsource) - source->source_nuo)/nu_m ,2) )/nu_m/pi;
+	eta = source->source_nuo *(1+source->getZ())/sqrt( 1. - pow( (source->source_nu*(1+source->getZ()) - source->source_nuo)/nu_m ,2) )/nu_m/pi;
 
 	//printf("tau = %e eta =%e r=%e xi=%e\n",tau,eta,r,pow(r/source->source_r_in,source->source_gamma));
 	return  pow(r/source->source_r_in,source->source_gamma)*eta*r/tau;
@@ -116,13 +116,13 @@ double blr_surface_brightness_disk(double x[],SourceBLR *source){
 
 	static float DlDs;  //
 	static double oldzlens=0,oldzsource=0;
-	DlDs = source->DlDs;
+	DlDs = source->getDlDs();
 
 	//printf("hi from BLR disk\n");
 
 	if(source->source_nuo <= 0.0){ERROR_MESSAGE(); exit(1); }
 
-	tau = source->source_tau*8.39428142e-10/(1+source->zsource);  // convert days to Mpc and account for time dilation
+	tau = source->source_tau*8.39428142e-10/(1+source->getZ());  // convert days to Mpc and account for time dilation
 
 	// first get the "r", "R" and "Z" coordinates
 
@@ -177,9 +177,9 @@ double blr_surface_brightness_disk(double x[],SourceBLR *source){
 	//sigma2 = pow(source->source_nuo*source->source_sigma,2)*1.1126501e-11;
 	sigma2 = pow(source->source_nuo*v_Kep*source->source_fK,2);
 	//                                                  1/c^2 in km/s
-	eta = pow( source->source_nu*(1+source->zsource) - source->source_nuo - nu_shift ,2) / sigma2;
+	eta = pow( source->source_nu*(1+source->getZ()) - source->source_nuo - nu_shift ,2) / sigma2;
 	if(eta > 9) return 0.0;  // prevents frequencies very far off the line from causing unnecessary refinements
-	eta = pow(source->source_nuo*(1+source->zsource),2) * exp(-0.5 * eta) / sqrt(sigma2);
+	eta = pow(source->source_nuo*(1+source->getZ()),2) * exp(-0.5 * eta) / sqrt(sigma2);
 
 
 	return pow(r/source->source_r_in,source->source_gamma)*eta*r/tau;
@@ -189,7 +189,7 @@ double blr_surface_brightness_disk(double x[],SourceBLR *source){
 	// BEN - AM I CORRECT THAT THIS IS NOW REDUNDANT?
 	
 		/*
-	v_shift_yprime = ( source->source_nuo/source->source_nu/(1+source->zsource) - 1 ) * R/r;  // convert to tangent of sphere
+	v_shift_yprime = ( source->source_nuo/source->source_nu/(1+source->getZ()) - 1 ) * R/r;  // convert to tangent of sphere
 
 	if( fabs(v_shift_yprime) > vr ) return 0.0;
 

@@ -251,7 +251,7 @@ void SingleLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool
 }
 
 void SingleLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
-	buildHaloTrees(cosmo,source->zsource);
+	buildHaloTrees(cosmo,source->getZ());
 }
 
 

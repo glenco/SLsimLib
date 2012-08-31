@@ -24,7 +24,7 @@ public:
 	Model(LensHndl,SourceHndl,CosmoHndl);
 	~Model();
 
-	double getZsource(){return source->zsource;}
+	double getZsource(){return source->getZ();}
 	double getZlens(){return lens->getZlens();}
 
     void RandomizeModel(double r_source_physical,long *seed,bool tables, double angle_factor=1.0);

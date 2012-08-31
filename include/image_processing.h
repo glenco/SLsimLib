@@ -35,7 +35,7 @@ public:
 	void smooth(double *map_out,double sigma);
 
 private:
-	double *map;
+	float *map;
 	unsigned long Npixels;
 	TreeHndl ptree;
 	double resolution,range,center[2];

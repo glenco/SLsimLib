@@ -76,7 +76,7 @@ public:
 	void ImplantSource(unsigned long index,CosmoHndl cosmo);
 	double *getImplantedSourceX(){
 		assert(gal_input_flag);
-		return anasource->get_theta();
+		return anasource->getX();
 	}
 	unsigned long getImplantedNsources(){
 		assert(gal_input_flag);
@@ -140,7 +140,7 @@ private:
 	double **halo_pos;
 
 	// Variables for implanted source
-	std::auto_ptr<SourceAnaGalaxy> anasource;
+	std::auto_ptr<MultiSourceAnaGalaxy> anasource;
 	/// the distance from the source to the next plane
 	double dDs_implant;
 	double zs_implant,ys_implant[2],Ds_implant;
