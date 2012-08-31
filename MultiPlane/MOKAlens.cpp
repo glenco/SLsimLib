@@ -107,7 +107,7 @@ void MOKALens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 	cosmo->setOmega_matter(map->omegam,true);
 	cosmo->sethubble(map->h);
 	setZlens(map->zlens);
-	source->zsource = map->zsource;
+	source->setZ(map->zsource);
 
 	double Ds = cosmo->angDist(0,map->zsource);
 	double Dl = cosmo->angDist(0,map->zlens);

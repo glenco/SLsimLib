@@ -977,7 +977,7 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 
 	/// makes the oordinate distance table for the calculation of the redshifts of the different planes
 	if(ob_count == 0) make_table(cosmo);
-	setCorDist(cosmo,source->zsource);
+	setCoorDist(cosmo,source->getZ());
 	setRedshifts();
 
 	buildHaloTrees(cosmo,source->getZ());

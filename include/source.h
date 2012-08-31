@@ -56,7 +56,7 @@ protected:
 
 typedef Source *SourceHndl;
 
-class SourceUniform : private Source{
+class SourceUniform : public Source{
 public:
 	double SurfaceBrightness(double *y);
 	void readParamfile(std::string);

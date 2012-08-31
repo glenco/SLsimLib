@@ -402,52 +402,59 @@ void QuadTree::rotate_coordinates(double **coord){
 
 void QuadTree::force2D(double *ray,double *alpha,float *kappa,float *gamma,bool no_kappa){
 
+  QTreeNBHndl mytree = tree;
+
   PosType xcm,ycm,rcm2cell,rcm2,tmp,boxsize2;
   IndexType i;
   bool allowDescent=true;
   unsigned long count=0,index;
   double rcm, arg1, arg2, prefac, prefacg;
 
-  assert(tree);
-  tree->moveTop();
+  assert(mytree);
+  mytree->moveTop();
 
   alpha[0]=alpha[1]=gamma[0]=gamma[1]=gamma[2]=0.0;
   *kappa=0.0;
 
-  do{
-
+#pragma omp parallel
+  {
+#pragma omp single nowait
+	  {
+  while(mytree->WalkStep(allowDescent)){
+#pragma omp task
+	  {
 	  ++count;
 	  allowDescent=false;
-	  if(tree->current->nparticles > 0){
+	  if(mytree->current->nparticles > 0){
 
-		  xcm=tree->current->center[0]-ray[0];
-		  ycm=tree->current->center[1]-ray[1];
+		  xcm=mytree->current->center[0]-ray[0];
+		  ycm=mytree->current->center[1]-ray[1];
 
 		  rcm2cell = xcm*xcm + ycm*ycm;
 
-		  boxsize2 = pow(tree->current->boundary_p2[0]-tree->current->boundary_p1[0],2);
+		  boxsize2 = pow(mytree->current->boundary_p2[0]-mytree->current->boundary_p1[0],2);
 
-		  if( rcm2cell < pow(tree->current->rcrit_angle,2) || rcm2cell < 5.83*boxsize2){
+		  if( rcm2cell < pow(mytree->current->rcrit_angle,2) || rcm2cell < 5.83*boxsize2){
 
 			  // includes rcrit_particle constraint
 			  allowDescent=true;
 
 
 			  // Treat all particles in a leaf as a point particle
-			  if(tree->atLeaf()){
+			  if(mytree->atLeaf()){
 
-				  for(i = 0 ; i < tree->current->nparticles ; ++i){
+				  for(i = 0 ; i < mytree->current->nparticles ; ++i){
 
-					  xcm = tree->xp[tree->current->particles[i]][0] - ray[0];
-					  ycm = tree->xp[tree->current->particles[i]][1] - ray[1];
+					  xcm = mytree->xp[mytree->current->particles[i]][0] - ray[0];
+					  ycm = mytree->xp[mytree->current->particles[i]][1] - ray[1];
 
 					  rcm2 = xcm*xcm + ycm*ycm;
 					  if(rcm2 < 1e-20) rcm2 = 1e-20;
 
-					  index = MultiRadius*tree->current->particles[i];
+					  index = MultiRadius*mytree->current->particles[i];
 
 					  if(haloON) prefac = halo_params[index].mass/rcm2/pi;
-					  else prefac = masses[MultiMass*tree->current->particles[i]]/rcm2/pi;
+					  else prefac = masses[MultiMass*mytree->current->particles[i]]/rcm2/pi;
 
 					  prefacg = prefac/rcm2;
 
@@ -468,12 +475,12 @@ void QuadTree::force2D(double *ray,double *alpha,float *kappa,float *gamma,bool 
 
 			  // Fined the particles that are intersect with ray and add them individually.
 			  if(rcm2cell < 5.83*boxsize2){
-				  for(i = 0 ; i < tree->current->Nbig_particles ; ++i){
+				  for(i = 0 ; i < mytree->current->Nbig_particles ; ++i){
 
-					  index = tree->current->big_particles[i];
+					  index = mytree->current->big_particles[i];
 
-					  xcm = tree->xp[index][0] - ray[0];
-					  ycm = tree->xp[index][1] - ray[1];
+					  xcm = mytree->xp[index][0] - ray[0];
+					  ycm = mytree->xp[index][1] - ray[1];
 
 					  rcm2 = xcm*xcm + ycm*ycm;
 					  if(rcm2 < 1e-20) rcm2 = 1e-20;
@@ -486,7 +493,7 @@ void QuadTree::force2D(double *ray,double *alpha,float *kappa,float *gamma,bool 
 						  tmp = halo_params[index].Rmax;
 					  }
 					  else{
-						  prefac = masses[MultiMass*tree->current->particles[i]]/rcm2/pi;
+						  prefac = masses[MultiMass*mytree->current->particles[i]]/rcm2/pi;
 						  arg1 = rcm2/(sizes[index]*sizes[index]);
 						  arg2 = sizes[index];
 						  tmp = sizes[index];
@@ -516,32 +523,35 @@ void QuadTree::force2D(double *ray,double *alpha,float *kappa,float *gamma,bool 
 		  }else{ // use whole cell
 			  allowDescent=false;
 
-			  tmp = -1.0*tree->current->mass/rcm2cell/pi;
+			  tmp = -1.0*mytree->current->mass/rcm2cell/pi;
 
 			  alpha[0] += tmp*xcm;
 			  alpha[1] += tmp*ycm;
 
 			  if(!no_kappa){      //  taken out to speed up
-				  tmp=-2.0*tree->current->mass/pi/rcm2cell/rcm2cell;
+				  tmp=-2.0*mytree->current->mass/pi/rcm2cell/rcm2cell;
 				  gamma[0] += 0.5*(xcm*xcm-ycm*ycm)*tmp;
 				  gamma[1] += xcm*ycm*tmp;
 			  }
 
 			  // quadrapole contribution
 			  //   the kappa and gamma are not calculated to this order
-			  alpha[0] -= (tree->current->quad[0]*xcm + tree->current->quad[2]*ycm)
+			  alpha[0] -= (mytree->current->quad[0]*xcm + mytree->current->quad[2]*ycm)
     				  /pow(rcm2cell,2)/pi;
-			  alpha[1] -= (tree->current->quad[1]*ycm + tree->current->quad[2]*xcm)
+			  alpha[1] -= (mytree->current->quad[1]*ycm + mytree->current->quad[2]*xcm)
     				  /pow(rcm2cell,2)/pi;
 
-			  tmp = 4*(tree->current->quad[0]*xcm*xcm + tree->current->quad[1]*ycm*ycm
-				  + 2*tree->current->quad[2]*xcm*ycm)/pow(rcm2cell,3)/pi;
+			  tmp = 4*(mytree->current->quad[0]*xcm*xcm + mytree->current->quad[1]*ycm*ycm
+				  + 2*mytree->current->quad[2]*xcm*ycm)/pow(rcm2cell,3)/pi;
 
 			  alpha[0] += tmp*xcm;
 			  alpha[1] += tmp*ycm;
 		  }
+		  }
 	  }
-  }while(tree->WalkStep(allowDescent));
+  }
+  }
+  }
 
   // Subtract off uniform mass sheet to compensate for the extra mass
   //  added to the universe in the halos.
