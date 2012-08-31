@@ -14,6 +14,9 @@
 
 using namespace std;
 
+const long NTABLE = 1000;
+const double maxz = 5.0;
+
 HaloData::HaloData(CosmoHndl cosmo
 		,double mass
 		,double zlens){
@@ -139,6 +142,22 @@ HaloData::~HaloData(){
 	}
 }
 
+
+double *MultiLens::coorDist_table = NULL;
+long MultiLens::ob_count = 0;
+
+void MultiLens::make_table(CosmoHndl cosmo){
+	int i;
+	double x, dx = maxz/(double)NTABLE;
+
+	coorDist_table = new double[NTABLE];
+
+	for(i = 0 ; i< NTABLE; i++){
+		x = (i+1)*dx;
+		coorDist_table[i] = cosmo->coorDist(0,x);
+	}
+}
+
 /*
  * \ingroup Constructor
  * allocates space for the halo trees and the inout lens, if there is any
@@ -187,21 +206,10 @@ MultiLens::MultiLens(string filename,long *my_seed) : Lens(){
 	flag_implanted_source = 0;
 	seed = my_seed;
 
-	//TODO MARGARITA The construction and destruction of the halo profile lookup tables has been moved into the constructors for a QuadTreeNFW, etc.
-	// This eliminates having to remember to construct them before creating a class that is derived from this class.
-/*	if(internal_profile == NFW && tables_set != true){
-		make_tables_nfw();
-		tables_set = true;
-	}
-	if(internal_profile == PseudoNFW && tables_set != true){
-		make_tables_pseudonfw(pnfw_beta);
-		tables_set = true;
-	}
-	*/
-
 	// In the case of implanted sources from a file initialize.
 	cout << "In MultiLens" << endl;
 	if(gal_input_flag) anasource = auto_ptr<MultiSourceAnaGalaxy>(new MultiSourceAnaGalaxy(input_gal_file));
+
 }
 
 MultiLens::~MultiLens(){
@@ -223,10 +231,11 @@ MultiLens::~MultiLens(){
 	if(flag_input_lens)
 		delete input_lens;
 
-	/*if(tables_set == true){
-		if(internal_profile == NFW) delete_tables_nfw();
-		if(internal_profile == PseudoNFW) delete_tables_pseudonfw();
-	}*/
+	--ob_count;
+	if(ob_count == 0){
+		// remove tables for the coordiante distances
+		delete[] coorDist_table;
+	}
 }
 
 void MultiLens::readParamfile(string filename){
@@ -359,7 +368,8 @@ void MultiLens::readParamfile(string filename){
 			  exit(0);
 		  }
 
-		  //TODO MARGARITA Default values?
+		  /// DEFAULT VALUES
+		  /// in case they are not set in the parameter file
 		  if(id[i] >= 0 && addr[i] == &pw_alpha){
 			  pw_alpha = 1./6.;
 		  }
@@ -711,15 +721,60 @@ void MultiLens::buildHaloTrees(
 }
 
 /**
- * Set the redshifts of the planes by dividing the redshift space into equal intervals
+ * Set the redshifts of the planes by mapping the correct
+ * redshift by using the coordinate distance table
+ */
+void MultiLens::setRedshifts(){
+	int i;
+	/// assigns the redshifts and plugs in the input plane
+
+	cout << "z: ";
+	for(i=0; i<Nplanes; i++){
+		plane_redshifts[i] = QuickFindFromTable(Dl[i]);
+		cout << plane_redshifts[i] << " ";
+	}
+	cout << endl;
+}
+
+/**
+ * Uses a quick bi-division search to find the index of the coordinate distance from the
+ * table that matches the coordinate distance of the plane in interest and returns the
+ * redshift, by averaging the two closest values of the redshift
+ *
+ * This need to be done, rather than a simple interpolation, since delta coordinate
+ * distance in the table is not constant
+ */
+double MultiLens::QuickFindFromTable(double Dplane){
+	int j, j_min, j_max, j_mean;
+
+	j_max = NTABLE-1;
+	j_min = 0;
+
+	do{
+		j_mean = int((j_max-j_min)/2.0 + j_min);
+
+		if(Dplane > coorDist_table[j_mean]){
+			j_min = j_mean;
+		}
+		else{
+			j_max = j_mean;
+		}
+	}while(j_max - j_min > 1);
+
+	/// return the redshift, adding +2 to the indexes since in make_tables() the indexing starts from 1, not 0
+	return maxz/float(NTABLE)*0.5*(j_max+j_min+2);
+}
+
+/**
+ * Set the coordinate distances of the planes by dividing the coordinate distance space into equal intervals
  * and then plugging the input plane inbetween
  *
  * After this flag_input_lens will hold the index of the plane it is on
  * In case it is on the first plane, it will hold the index Nplanes, to make
  * sure that it is not zero (i.e. not set)
  */
-void MultiLens::setRedshift(double zsource){
-	std:: vector<double> lz;
+void MultiLens::setCoorDist(CosmoHndl cosmo, double zsource){
+	std:: vector<double> lD;
 	int i, Np;
 
 	if(flag_input_lens)
@@ -727,15 +782,18 @@ void MultiLens::setRedshift(double zsource){
 	else
 		Np = Nplanes+1;
 
-	/// spaces lz equally up to the source, including 0 and zsource
+	double Ds = cosmo->coorDist(0,zsource);
+	double Dlens = cosmo->coorDist(0,input_lens->getZlens());
+
+	/// spaces lD equally up to the source, including 0 and Ds
 	/// therefore we need Nplanes+1 values
-	/// however, if there is an input plane, we will need Nplanes values, sine the input plane will take up a value itself
-	fill_linear(lz,Np,0.,zsource);
+	/// however, if there is an input plane, we will need Nplanes values, since the input plane will take up a value itself
+	fill_linear(lD,Np,0.,Ds);
 
 	/// puts the input plane first if the case
 	int j=0, flag=0;
-	if(flag_input_lens && input_lens->getZlens() < lz[1]){
-		plane_redshifts[j] = input_lens->getZlens();
+	if(flag_input_lens && Dlens < lD[1]){
+		Dl[j] = Dlens;
 		flag_input_lens = (InputLens)Nplanes;
 		flag = 1;
 		j++;
@@ -743,25 +801,35 @@ void MultiLens::setRedshift(double zsource){
 
 	/// assigns the redshifts and plugs in the input plane
 	for(i=1; i<Np; i++){
-		plane_redshifts[j] = lz[i];
+		Dl[j] = lD[i];
 
 		if(flag_input_lens && flag == 0)
-			if(input_lens->getZlens() > lz[i] && input_lens->getZlens() <= lz[i+1]){
-				plane_redshifts[j] = lz[i];
-				plane_redshifts[++j] = input_lens->getZlens();
+			if(Dlens > lD[i] && Dlens <= lD[i+1]){
+				Dl[j] = lD[i];
+				Dl[++j] = Dlens;
 				flag_input_lens = (InputLens)j;
 				flag = 1;
 			}
 		j++;
 	}
 
+	dDl[0] = Dl[0];  // distance between jth plane and the previous plane
+	for(j = 1; j < Nplanes; j++){
+		dDl[j] = Dl[j] - Dl[j-1]; // distance between jth plane and the previous plane
+	}
+
 	if(flag_input_lens)
 		cout << "zlens " << input_lens->getZlens() << " on plane number " << (flag_input_lens % Nplanes) << endl;
 
-	cout << "z: ";
-	for(int i = 0; i < Nplanes; i++)
-		cout << plane_redshifts[i] << " ";
+	cout << "Dl: ";
+	for(j = 0; j < Nplanes; j++)
+		cout << Dl[j] << " ";
 	cout << endl;
+
+	cout << "dDl: ";
+	for(j = 0; j < Nplanes; j++)
+		cout << dDl[j] << " ";
+	cout << endl << endl;
 
 }
 
@@ -874,45 +942,14 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 	halo_zs = new double[Nhalos];
 	halo_pos = PosTypeMatrix(0,Nhalos-1,0,2);
 
-<<<<<<< local
-	// read in data
-	for(i=0,j=0 ; i < Nhalos && !file_in.eof() ; ++i){
 
-		// read a line of data
-		file_in >> id >> c >> id >> c >> type >> c >> ra >> c >> dec >> c >> z >> c >> zob
-				 >> c >> np >> c >> mass >> c >> massct >> c >> vmax >> c >> vdisp >> c >> r_halfmass;
-		//cout << id << c << id << c << type << c << ra << c << dec << c << z << c << zob
-		  //		 << c << np << c << r200 << c << mass << c << vmax << c << vdisp << c << r_halfmass << endl;
-		cout << "z:" << z << " np:" << mass*1.0e10/np << " mass:" << mass*1.0e10 << " vmax:" << vmax << endl;
-
-		if(mass > 0.0){
-			halos[j].mass = mass*1.0e10*cosmo->gethubble();
-			halos[j].Rmax = cosmo->R200(z,mass*1.0e10*cosmo->gethubble());
-			assert(halos[j].Rmax > 0.0);
-			cout << "Rmax:" << halos[j].Rmax << endl;
-			halos[j].rscale = halos[j].Rmax/cosmo->NFW_Concentration(vmax,halos[j].mass,halos[j].Rmax);
-			halo_zs[j] = z;
-
-			halos[j].mass /= mass_scale;
-
-			halo_pos[j][0] = ra;
-			halo_pos[j][1] = dec;
-			++j;
-		}
-=======
 	for(i=0;i<Nhalos;++i){
 		halo_zs[i] = halo_zs_vec[i];
 		halo_pos[i] = halo_pos_vec[i];
 		halos[i] = halo_vec[i];
->>>>>>> other
 	}
 
-<<<<<<< local
-	file_in.close();
-	Nhalos = j;  // There is some waisted memory here which would have contained the halos with zero mass.
-=======
 	cout << halos[9].Rmax << endl;
->>>>>>> other
 
 	// sort the halos by readshift
 	MultiLens::quicksort(halos,halo_pos,halo_zs,Nhalos);
@@ -938,25 +975,10 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 		exit(1);
 	}
 
-	setRedshift(source->getZ());
-
-	Dl[0] = cosmo->coorDist(0,plane_redshifts[0]);
-	dDl[0] = Dl[0];  // distance between jth plane and the previous plane
-	for(j = 1; j < Nplanes; j++){
-
-		Dl[j] = cosmo->coorDist(0,plane_redshifts[j]);
-		dDl[j] = cosmo->coorDist(plane_redshifts[j-1],plane_redshifts[j]); // distance between jth plane and the previous plane
-	}
-
-	cout << "Dl: ";
-	for(j = 0; j < Nplanes; j++)
-		cout << Dl[j] << " ";
-	cout << endl;
-
-	cout << "dDl: ";
-	for(j = 0; j < Nplanes; j++)
-		cout << dDl[j] << " ";
-	cout << endl << endl;
+	/// makes the oordinate distance table for the calculation of the redshifts of the different planes
+	if(ob_count == 0) make_table(cosmo);
+	setCorDist(cosmo,source->zsource);
+	setRedshifts();
 
 	buildHaloTrees(cosmo,source->getZ());
 	std:: cout << " done " << std:: endl;
@@ -1076,15 +1098,12 @@ void MultiLens::ImplantSource(
 	Ds_implant = cosmo->angDist(0,z);
 	zs_implant = z;
 
-<<<<<<< local
-	ys_implant[0] = Ds_implant*anasource->get_theta()[0];
-	ys_implant[1] = Ds_implant*anasource->get_theta()[1];
-=======
+
 	//ys_implant[0] = Ds_implant*anasource->get_theta()[0];
 	//ys_implant[1] = Ds_implant*anasource->get_theta()[1];
 
 	ys_implant[0] = ys_implant[1] = 0.0;
->>>>>>> other
+
 
 	locateD(plane_redshifts-1,Nplanes,zs_implant,&j);
 

@@ -256,16 +256,16 @@ private:
 	float beta; // logorithmic slop of 2d mass profile
 
 	// Override internal structure of halos
-	inline double alpha_h(double r,double rm){
-		return -1.0*pow(r/rm,beta+2);
+	inline double alpha_h(double x,double xmax){
+		return -1.0*pow(x/xmax,beta+2);
 	}
-	inline double kappa_h(double r,double rm){
-		return (beta+2)*pow(r/rm,beta)*r*r/(rm*rm);
+	inline double kappa_h(double x,double xmax){
+		return (beta+2)*pow(x/xmax,beta)*x*x/(xmax*xmax);
 	}
-	inline double gamma_h(double r,double rm){
-		return -0.5*beta*pow(r/rm,beta+2);
+	inline double gamma_h(double x,double xmax){
+		return -0.5*beta*pow(x/xmax,beta+2);
 	}
-	inline double phi_h(double r,double rm){
+	inline double phi_h(double x,double xmax){
 		ERROR_MESSAGE();
 		std::cout << "time delay has not been fixed for PowerLaw profile yet." << std::endl;
 		exit(1);
@@ -302,16 +302,16 @@ private:
 
 
 	// Override internal structure of halos
-	inline double alpha_h(double r,double rm){
-		return -1.0*InterpolateFromTable(gtable,r)/InterpolateFromTable(gtable,rm);
+	inline double alpha_h(double x,double xmax){
+		return -1.0*InterpolateFromTable(gtable,x)/InterpolateFromTable(gtable,xmax);
 	}
-	inline double kappa_h(double r,double rm){
-		return 0.5*r*r*InterpolateFromTable(ftable,r)/InterpolateFromTable(gtable,rm);
+	inline double kappa_h(double x,double xmax){
+		return 0.5*x*x*InterpolateFromTable(ftable,x)/InterpolateFromTable(gtable,xmax);
 	}
-	inline double gamma_h(double r,double rm){
-		return -0.25*r*r*InterpolateFromTable(g2table,r)/InterpolateFromTable(gtable,rm);
+	inline double gamma_h(double x,double xmax){
+		return -0.25*x*x*InterpolateFromTable(g2table,x)/InterpolateFromTable(gtable,xmax);
 	}
-	inline double phi_h(double r,double rm){
+	inline double phi_h(double x,double xmax){
 		ERROR_MESSAGE();
 		std::cout << "time delay has not been fixed for NFW profile yet." << std::endl;
 		exit(1);
@@ -352,16 +352,16 @@ private:
 
 
 	// Override internal structure of halos
-	inline double alpha_h(double r,double rm){
-		return -1.0*InterpolateFromTable(mhattable,r)/InterpolateFromTable(mhattable,rm);
+	inline double alpha_h(double x,double xmax){
+		return -1.0*InterpolateFromTable(mhattable,x)/InterpolateFromTable(mhattable,xmax);
 	}
-	inline double kappa_h(double r,double rm){
-		return 0.5*r*r/InterpolateFromTable(mhattable,rm)/pow(1+r,beta);
+	inline double kappa_h(double x,double xmax){
+		return 0.5*x*x/InterpolateFromTable(mhattable,xmax)/pow(1+x,beta);
 	}
-	inline double gamma_h(double r,double rm){
-		return (0.5*r*r/pow(1+r,beta) - InterpolateFromTable(mhattable,r))/InterpolateFromTable(mhattable,rm);
+	inline double gamma_h(double x,double xmax){
+		return (0.5*x*x/pow(1+x,beta) - InterpolateFromTable(mhattable,x))/InterpolateFromTable(mhattable,xmax);
 	}
-	inline double phi_h(double r,double rm){
+	inline double phi_h(double x,double xmax){
 		ERROR_MESSAGE();
 		std::cout << "time delay has not been fixed for PseudoNFW profile yet." << std::endl;
 		exit(1);

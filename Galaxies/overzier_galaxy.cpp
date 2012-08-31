@@ -42,8 +42,7 @@ void OverGalaxy::setInternals(double mag,double BtoT,double my_Reff,double my_Rh
 	else sbDo = 0.0;
 	if(Reff > 0.0) sbSo = pow(10,-mag/2.5)*94.484376*BtoT/pow(Reff,2);
 	else sbSo = 0.0;
-<<<<<<< local
-=======
+
 
 	z = my_z;
 	if(my_theta != NULL){
@@ -53,7 +52,6 @@ void OverGalaxy::setInternals(double mag,double BtoT,double my_Reff,double my_Rh
 		theta[0] = 0;
 		theta[1] = 0;
 	}
->>>>>>> other
 }
 /// Surface brightness normalized so that the total luminosity is 10^(-mag/2.5). x should be in units of radians
 double OverGalaxy::SurfaceBrightness(

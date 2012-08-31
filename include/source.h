@@ -12,6 +12,7 @@
 
 class Source{
 public:
+
 	  Source();
 	  ~Source();
 
@@ -45,6 +46,7 @@ protected:
 	  double source_r;
 	  /// center of source
 	  double source_x[2];
+
 	  /// redshift of source
 	  double zsource;
 	  /// Dl / Ds -- needed for the blr source models
