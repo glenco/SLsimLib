@@ -35,10 +35,13 @@ void MultiLens::rayshooterInternal(
 		,bool kappa_off         /// turns calculation of convergence and shear off to save time.
 		){
 	unsigned long i;
-	double xx[2];
 
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
 	for(i = 0; i< Npoints; i++){
 
+		double xx[2];
 		double aa,bb,cc;
 	    double alpha[2];
 	    float kappa,gamma[3];
@@ -80,6 +83,7 @@ void MultiLens::rayshooterInternal(
 				cc = dDl[j+1];
 			}else{
 
+				//halo_tree[j]->force2D_recur(xx,alpha,&kappa,gamma,kappa_off);
 				halo_tree[j]->force2D(xx,alpha,&kappa,gamma,kappa_off);
 				cc = charge*dDl[j+1];
 
@@ -90,6 +94,7 @@ void MultiLens::rayshooterInternal(
 				gamma[0]/=(1+plane_redshifts[j]);
 				gamma[1]/=(1+plane_redshifts[j]);
 				gamma[2]/=(1+plane_redshifts[j]);
+
 				//kappa = alpha[0] = alpha[1] = gamma[0] = gamma[1] = gamma[2] = 0.0;
 			}
 

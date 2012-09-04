@@ -105,7 +105,10 @@ struct QTreeNB{
 		return (current->child0 == NULL)*(current->child1 == NULL)
 				*(current->child2 == NULL)*(current->child3 == NULL);
 	}
-
+	inline bool atLeaf(QBranchNB *branch){
+		return (branch->child0 == NULL)*(branch->child1 == NULL)
+				*(branch->child2 == NULL)*(branch->child3 == NULL);
+	}
 	QBranchNB *top;
 	QBranchNB *current;
 	/// number of branches in tree
@@ -159,6 +162,7 @@ public:
 	virtual ~QuadTree();
 
 	void force2D(double *ray,double *alpha,float *kappa,float *gamma,bool no_kappa);
+	void force2D_recur(double *ray,double *alpha,float *kappa,float *gamma,bool no_kappa);
 	void printParticlesInBranch(unsigned long number);
 	void printBranchs(int level = -1);
 
@@ -230,6 +234,8 @@ protected:
 			,double **coord,double theta,float *rsph,float *mass
 			,bool MultiRadius,bool MultiMass);
 	 void cuttoffscale(QTreeNBHndl tree,double *theta);
+
+	 void walkTree_recur(QBranchNB *branch,double *ray,double *alpha,float *kappa,float *gamma,bool no_kappa);
 };
 
 /** \ingroup DeflectionL2

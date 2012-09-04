@@ -1,4 +1,11 @@
 /*
+ * quadTree.cpp
+ *
+ *  Created on: Sep 4, 2012
+ *      Author: mpetkova
+ */
+
+/*
  * Programmer:    R Ben Metcalf
  */
 
@@ -554,6 +561,169 @@ void QuadTree::force2D(double *ray,double *alpha,float *kappa,float *gamma,bool 
 
   return;
 }
+
+/** \brief Force2D calculates the defection, convergence and shear using
+ *   the plane-lens approximation.
+ *
+ *       The output alpha[] is in units of mass_scale/Mpc, ie it needs to be
+ *       divided by Sigma_crit and multiplied by mass_scale to be the defelction
+ *       in the lens equation expressed on the lens plane or multiplied by
+ *       4*pi*G*mass_scale to get the deflection angle caused by the plane lens.
+ * */
+
+void QuadTree::force2D_recur(double *ray,double *alpha,float *kappa,float *gamma,bool no_kappa){
+
+  assert(tree);
+
+  alpha[0]=alpha[1]=gamma[0]=gamma[1]=gamma[2]=0.0;
+  *kappa=0.0;
+
+  walkTree_recur(tree->top,&ray[0],&alpha[0],kappa,&gamma[0],&no_kappa);
+
+  // Subtract off uniform mass sheet to compensate for the extra mass
+  //  added to the universe in the halos.
+  alpha[0] += ray[0]*kappa_background;
+  alpha[1] += ray[1]*kappa_background;
+  if(!no_kappa){      //  taken out to speed up
+	  *kappa -= kappa_background;
+  }
+
+  return;
+}
+
+void QuadTree::walkTree_recur(QBranchNB *branch,double *ray,double *alpha,float *kappa,float *gamma,bool no_kappa){
+
+	PosType xcm,ycm,rcm2cell,rcm2,tmp,boxsize2;
+	IndexType i;
+	unsigned long count=0,index;
+	double rcm, arg1, arg2, prefac, prefacg;
+
+	xcm=branch->center[0]-ray[0];
+	ycm=branch->center[1]-ray[1];
+
+	rcm2cell = xcm*xcm + ycm*ycm;
+
+	boxsize2 = pow(branch->boundary_p2[0]-branch->boundary_p1[0],2);
+
+	if( rcm2cell < pow(branch->rcrit_angle,2) || rcm2cell < 5.83*boxsize2){
+
+		// Treat all particles in a leaf as a point particle
+		if(tree->atLeaf(branch)){
+
+			for(i = 0 ; i < branch->nparticles ; ++i){
+
+				xcm = tree->xp[branch->particles[i]][0] - ray[0];
+				ycm = tree->xp[branch->particles[i]][1] - ray[1];
+
+				rcm2 = xcm*xcm + ycm*ycm;
+				if(rcm2 < 1e-20) rcm2 = 1e-20;
+
+				index = MultiRadius*branch->particles[i];
+
+				if(haloON) prefac = halo_params[index].mass/rcm2/pi;
+				else prefac = masses[MultiMass*branch->particles[i]]/rcm2/pi;
+
+				prefacg = prefac/rcm2;
+
+				tmp = -1.0*prefac;
+
+				alpha[0] += tmp*xcm;
+				alpha[1] += tmp*ycm;
+
+				// can turn off kappa and gamma calculations to save times
+				if(!no_kappa){
+					tmp = -2.0*prefacg;
+
+					gamma[0] += 0.5*(xcm*xcm-ycm*ycm)*tmp;
+					gamma[1] += xcm*ycm*tmp;
+				}
+			}
+		}
+
+		// Fined the particles that are intersect with ray and add them individually.
+		if(rcm2cell < 5.83*boxsize2){
+			for(i = 0 ; i < branch->Nbig_particles ; ++i){
+
+				index = branch->big_particles[i];
+
+				xcm = tree->xp[index][0] - ray[0];
+				ycm = tree->xp[index][1] - ray[1];
+
+				rcm2 = xcm*xcm + ycm*ycm;
+				if(rcm2 < 1e-20) rcm2 = 1e-20;
+				rcm = sqrt(rcm2);
+
+				if(haloON){
+					prefac = halo_params[index].mass/rcm2/pi;
+					arg1 = rcm/halo_params[index].rscale;
+					arg2 = halo_params[index].Rmax/halo_params[index].rscale;
+					tmp = halo_params[index].Rmax;
+				}
+				else{
+					prefac = masses[MultiMass*branch->particles[i]]/rcm2/pi;
+					arg1 = rcm2/(sizes[index]*sizes[index]);
+					arg2 = sizes[index];
+					tmp = sizes[index];
+				}
+
+				prefacg = prefac/rcm2;
+
+				/// intersecting, subtract the point particle
+				if(rcm2 < tmp*tmp){
+					tmp = (alpha_h(arg1,arg2) + 1.0)*prefac;
+					alpha[0] += tmp*xcm;
+					alpha[1] += tmp*ycm;
+
+					// can turn off kappa and gamma calculations to save times
+					if(!no_kappa){
+						*kappa += kappa_h(arg1,arg2)*prefac;
+
+						tmp = (gamma_h(arg1,arg2) + 2.0)*prefacg;
+
+						gamma[0] += 0.5*(xcm*xcm-ycm*ycm)*tmp;
+						gamma[1] += xcm*ycm*tmp;
+					}
+				}
+			}
+		}
+
+		if(branch->child0 != NULL)
+			walkTree_recur(branch->child0,&ray[0],&alpha[0],kappa,&gamma[0],&no_kappa);
+		if(branch->child1 != NULL)
+			walkTree_recur(branch->child1,&ray[0],&alpha[0],kappa,&gamma[0],&no_kappa);
+		if(branch->child2 != NULL)
+			walkTree_recur(branch->child2,&ray[0],&alpha[0],kappa,&gamma[0],&no_kappa);
+		if(branch->child3 != NULL)
+			walkTree_recur(branch->child3,&ray[0],&alpha[0],kappa,&gamma[0],&no_kappa);
+
+	}else{ // use whole cell
+		tmp = -1.0*branch->mass/rcm2cell/pi;
+
+		alpha[0] += tmp*xcm;
+		alpha[1] += tmp*ycm;
+
+		if(!no_kappa){      //  taken out to speed up
+			tmp=-2.0*branch->mass/pi/rcm2cell/rcm2cell;
+			gamma[0] += 0.5*(xcm*xcm-ycm*ycm)*tmp;
+			gamma[1] += xcm*ycm*tmp;
+		}
+
+		// quadrapole contribution
+		//   the kappa and gamma are not calculated to this order
+		alpha[0] -= (branch->quad[0]*xcm + branch->quad[2]*ycm)
+	    						  /pow(rcm2cell,2)/pi;
+		alpha[1] -= (branch->quad[1]*ycm + branch->quad[2]*xcm)
+	    						  /pow(rcm2cell,2)/pi;
+
+		tmp = 4*(branch->quad[0]*xcm*xcm + branch->quad[1]*ycm*ycm
+				+ 2*branch->quad[2]*xcm*ycm)/pow(rcm2cell,3)/pi;
+
+		alpha[0] += tmp*xcm;
+		alpha[1] += tmp*ycm;
+	}
+
+}
+
 /** This is a diagnostic routine that prints the position of every point in a
  * given branch of the tree.
  */
