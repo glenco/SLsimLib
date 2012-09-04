@@ -356,7 +356,7 @@ void pixelize(
 
 		quantity.resize(0);
 #else
-		std::cout << "Please enable the preprocessor flag CCFITS !" << std::endl;
+		std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
 		exit(1);
 #endif
 	}
