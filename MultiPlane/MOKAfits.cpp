@@ -100,6 +100,45 @@ void readImage(std::string fn
 /**
  * \brief write the fits file of the new MOKA map from the structure map
  */
+void writeImage(std::string filename /// fiename for the FITS file
+		,std::valarray<float> quantity /// the quantity to be written
+		,int nx /// the x num of pixels
+		,int ny /// the y num of pixels
+		){
+
+	long naxis=2;
+	long naxes[2]={nx,ny};
+
+	std::auto_ptr<FITS> fout(0);
+
+	try{
+		fout.reset(new FITS(filename,FLOAT_IMG,naxis,naxes));
+	}
+	catch(FITS::CantCreate){
+		exit(1);
+	}
+
+	std::vector<long> naxex(2);
+	naxex[0]=nx;
+	naxex[1]=ny;
+
+	PHDU *phout=&fout->pHDU();
+
+	/// TODO: BEN/MARGARITA quantity has to be substituted with the correct name, for clarity
+	phout->write( 1,nx*ny,quantity );
+
+	/* TODO: BEN/MARGARITA here goes the header writing
+	phout->addKey ("SIDEL",LH->boxlarcsec,"arcsec");
+	 */
+
+	std::cout << *phout << std::endl;
+
+}
+
+
+/**
+ * \brief write the fits file of the new MOKA map from the structure map
+ */
 void writeImage(std::string filename
 		,std::valarray<float> convergence
 		,std::valarray<float> gamma1
@@ -143,7 +182,7 @@ void writeImage(std::string filename
 	phout->addKey ("DL",LH->DL,"Mpc/h");
 	phout->addKey ("DLS",LH->DLS,"Mpc/h");
 	phout->addKey ("DS",LH->DS,"Mpc/h");
-	
+
 
 	ExtHDU *eh1=fout->addImage("gamma1", FLOAT_IMG, naxex);
 	eh1->write(1,nx*ny,gamma1);
@@ -155,6 +194,7 @@ void writeImage(std::string filename
 	std::cout << *phout << std::endl;
 
 }
+
 
 /**
  * routine used by fof to link nearby grid cell points

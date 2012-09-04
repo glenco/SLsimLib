@@ -268,6 +268,8 @@ void pixelize(
 		,bool constant_sb  /// true - all images will have surface brightness = 1,
 		                      /// false - surface brightness is taken from surface_brighness in  the image points
 		,bool cleanmap     ///  true - erases previous pixel map, false - adds new flux to map
+		,bool write_for_skymaker /// true -- produces a fits map in the proper Skymaker format
+		,std::string filename /// the filename for the FITS file
 		){
 
 	if(imageinfo->imagekist->Nunits() == 0) return;
@@ -332,6 +334,32 @@ void pixelize(
 	FreePointArray(points);
 
 	std::cout << "Found " << mycount << " pixels!" << std::endl;
+
+	if(write_for_skymaker == true){
+#ifdef CCFITS
+		if(filename == ""){
+			std::cout << "Please enter a valid filename for the FITS file output" << std::endl;
+			exit(1);
+		}
+
+		std::valarray<float> quantity;
+		quantity.resize(Npixels*Npixels);
+
+		int j;
+		for(i=0; i<Npixels; i++)
+			for(j=0; j<Npixels; j++)
+				quantity[j+i*Npixels] = map[j+i*Npixels];
+
+		int Np = (int)Npixels;
+
+		writeImage(filename,quantity,Np,Np);
+
+		quantity.resize(0);
+#else
+		std::cout << "Please enable the preprocessor flag CCFITS !" << std::endl;
+		exit(1);
+#endif
+	}
 
 	return;
 }

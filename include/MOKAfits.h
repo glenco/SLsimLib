@@ -5,7 +5,7 @@
  *      Author: mpetkova
  */
 
-#ifdef WITH_MOKA
+#ifdef CCFITS
 
 #ifndef FITS_H_
 #define FITS_H_
@@ -57,6 +57,11 @@ void writeImage(std::string filename
 		,int ny
 		,LensHalo *LH);
 
+
+void writeImage(std::string filename
+		,std::valarray<float> quantity
+		,int nx
+		,int ny);
 
 void make_friendship(int ii,int ji,int np,std:: vector<int> &friends, std:: vector<double> &pointdist);
 

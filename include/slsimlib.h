@@ -59,8 +59,9 @@
 #include <simpleTree.h>
 #include <multiplane.h>
 #include <singlelens.h>
-#ifdef WITH_MOKA
+#ifdef CCFITS
 #include <MOKAlens.h>
+#include <MOKAfits.h>
 #endif
 #include <quadTree.h>
 
