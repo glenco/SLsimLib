@@ -5,7 +5,7 @@
  *      Author: mpetkova
  */
 
-#ifdef WITH_MOKA
+#ifdef ENABLE_FITS
 
 #ifndef MOKALENS_H_
 #define MOKALENS_H_
@@ -22,7 +22,7 @@
 /**
  * \brief the MOKA map structure, containing all quantities that define it
  *
- * Note: To use this class requires setting the WITH_MOKA compiler flag and linking
+ * Note: To use this class requires setting the ENABLE_FITS compiler flag and linking
  * the cfits library.
 
 #include <MOKAfits.h>
@@ -48,7 +48,7 @@ struct MOKAmap{
 /**
  *  \brief A class to represents the MOKA lens map
  *
- * Note: To use this class requires setting the WITH_MOKA compiler flag and linking
+ * Note: To use this class requires setting the ENABLE_FITS compiler flag and linking
  * the cfits library.
  */
 

@@ -336,7 +336,7 @@ void pixelize(
 	std::cout << "Found " << mycount << " pixels!" << std::endl;
 
 	if(write_for_skymaker == true){
-#ifdef CCFITS
+#ifdef ENABLE_FITS
 		if(filename == ""){
 			std::cout << "Please enter a valid filename for the FITS file output" << std::endl;
 			exit(1);

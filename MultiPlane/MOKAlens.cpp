@@ -5,7 +5,7 @@
  *      Author: mpetkova
  */
 
-#ifdef WITH_MOKA
+#ifdef ENABLE_FITS
 
 #include <MOKAlens.h>
 #include <string>

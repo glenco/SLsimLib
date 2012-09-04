@@ -192,12 +192,12 @@ MultiLens::MultiLens(string filename,long *my_seed) : Lens(){
 		analens = static_cast<AnaLens*>(input_lens);
 		break;
 	case moka_lens:
-#ifdef WITH_MOKA
+#ifdef ENABLE_FITS
 		input_lens = new MOKALens(filename);
 		mokalens = static_cast<MOKALens*>(input_lens);
 		fieldofview = pow(1.5*mokalens->map->boxl*180/pi,2.0);
 #else
-		cout << "Enable the MOKA fits handling first" << endl;
+		cout << "Enable the CCFITS handling first" << endl;
 		exit(1);
 #endif
 		break;

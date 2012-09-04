@@ -64,7 +64,7 @@ public:
 	/// a poiner to the analytical lens
 	LensHndl input_lens;
 	AnaLens *analens;
-#ifdef WITH_MOKA
+#ifdef ENABLE_FITS
 	MOKALens *mokalens;
 #endif
 	/// field of view in square degrees

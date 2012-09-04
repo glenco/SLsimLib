@@ -5,7 +5,7 @@
  *      Author: mpetkova
  */
 
-#ifdef CCFITS
+#ifdef ENABLE_FITS
 
 #ifndef FITS_H_
 #define FITS_H_

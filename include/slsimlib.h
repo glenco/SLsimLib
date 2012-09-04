@@ -59,7 +59,7 @@
 #include <simpleTree.h>
 #include <multiplane.h>
 #include <singlelens.h>
-#ifdef CCFITS
+#ifdef ENABLE_FITS
 #include <MOKAlens.h>
 #include <MOKAfits.h>
 #endif
