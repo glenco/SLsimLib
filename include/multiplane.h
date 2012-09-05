@@ -61,6 +61,7 @@ public:
 
 	void setInternalParams(CosmoHndl,SourceHndl);
 	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off);
+	void rayshooterInternal(double *ray, double *alpha, float *gamma, float *kappa, bool kappa_off){ERROR_MESSAGE(); exit(1);};
 	/// a poiner to the analytical lens
 	LensHndl input_lens;
 	AnaLens *analens;

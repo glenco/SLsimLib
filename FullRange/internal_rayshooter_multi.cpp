@@ -83,8 +83,8 @@ void MultiLens::rayshooterInternal(
 				cc = dDl[j+1];
 			}else{
 
-				//halo_tree[j]->force2D_recur(xx,alpha,&kappa,gamma,kappa_off);
-				halo_tree[j]->force2D(xx,alpha,&kappa,gamma,kappa_off);
+				halo_tree[j]->force2D_recur(xx,alpha,&kappa,gamma,kappa_off);
+				//halo_tree[j]->force2D(xx,alpha,&kappa,gamma,kappa_off);
 				cc = charge*dDl[j+1];
 
 				/* multiply by the scale factor to obtain 1/comoving_distance/physical_distance

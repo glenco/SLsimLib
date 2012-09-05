@@ -68,7 +68,8 @@ public:
 	int flag_MOKA_analyze;
 
 	void readParamfile(std::string);
-	void rayshooterInternal(double *ray, double *alpha, double *gamma, double *kappa, bool kappa_off);
+	void rayshooterInternal(double *ray, double *alpha, float *gamma, float *kappa, bool kappa_off);
+	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off){ERROR_MESSAGE(); exit(1);};
 	void setZlens(double zlens);
 	double getZlens();
 	void setInternalParams(CosmoHndl,SourceHndl);

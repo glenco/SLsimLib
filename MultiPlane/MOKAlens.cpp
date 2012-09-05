@@ -115,7 +115,7 @@ void MOKALens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 	double fac = Ds/Dls/Dl;
 
 	/// converts to the code units
-	if(flag_MOKA_analyze>0){
+	if(flag_MOKA_analyze == 0){
 	  int i, j;
 	  for(i=0;i<map->nx;i++)
 	    for(j=0;j<map->ny;j++){
@@ -276,19 +276,19 @@ void MOKALens::saveImage(GridHndl grid,bool saveprofiles){
 	if(saveprofiles == true){
 
 	  std:: cout << " saving profile " << std:: endl;
-                    double RE3;
-	            saveProfiles(RE3);
-		    estSignLambdas(); 
-		    double RE1,RE2;
-		    EinsteinRadii(RE1,RE2);
-		    std::ostringstream fEinr;
-		    fEinr << MOKA_input_file << "_noisy_Einstein.radii.dat";
-		    std:: ofstream filoutEinr;
-		    std:: string filenameEinr = fEinr.str();
-		    filoutEinr.open(filenameEinr.c_str());
-		    filoutEinr << "# effective        median      from_profiles" << std:: endl;
-		    filoutEinr << RE1 << "   " << RE2 << "    " << RE3 << std:: endl;
-		    filoutEinr.close();
+	  double RE3;
+	  saveProfiles(RE3);
+	  estSignLambdas();
+	  double RE1,RE2;
+	  EinsteinRadii(RE1,RE2);
+	  std::ostringstream fEinr;
+	  fEinr << MOKA_input_file << "_noisy_Einstein.radii.dat";
+	  std:: ofstream filoutEinr;
+	  std:: string filenameEinr = fEinr.str();
+	  filoutEinr.open(filenameEinr.c_str());
+	  filoutEinr << "# effective        median      from_profiles" << std:: endl;
+	  filoutEinr << RE1 << "   " << RE2 << "    " << RE3 << std:: endl;
+	  filoutEinr.close();
 	}
 }
 
@@ -368,7 +368,7 @@ void MOKALens::saveProfiles(double &RE3){
    * a MOKA map (MOKALens), for just one ray!!
    *
 */
-void MOKALens::rayshooterInternal(double *xx, double *alpha, double *gamma, double *kappa, bool kappa_off){
+void MOKALens::rayshooterInternal(double *xx, double *alpha, float *gamma, float *kappa, bool kappa_off){
 
 	long index = IndexFromPosition(xx,map->nx,map->boxlMpc,map->center);
 
