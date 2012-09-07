@@ -59,7 +59,6 @@ void implant_stars(AnaLens *lens,Point *centers,unsigned long Nregions,long *see
 		return;
 	}
 
-//#pragma omp parallel for private(j, NstarsPerImage, r, theta, m) firstprivate(i, k)
 	for(j=0;j<Nregions;++j){
 		m = 0;
 		assert( centers[j].kappa > 0.0);

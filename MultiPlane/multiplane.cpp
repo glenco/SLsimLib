@@ -98,9 +98,13 @@ HaloData::HaloData(
 	Nhalosbin[0] = 1;
 	int k;
 
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
 	for(k=1;k<Nmassbin;k++){
+		double m = pow(10,Logm[k])/cosmo->gethubble();
 		// cumulative number density in one square degree
-		Nhalosbin[k] = cosmo->haloNumberDensityOnSky(pow(10,Logm[k])/cosmo->gethubble(),z1,z2,mass_func_type,alpha)*fov;
+		Nhalosbin[k] = cosmo->haloNumberDensityOnSky(m,z1,z2,mass_func_type,alpha)*fov;
 		// normalize the cumulative distribution to one
 		Nhalosbin[k] = Nhalosbin[k]/Nhaloestot;
 	}
@@ -152,6 +156,9 @@ void MultiLens::make_table(CosmoHndl cosmo){
 
 	coorDist_table = new double[NTABLE];
 
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
 	for(i = 0 ; i< NTABLE; i++){
 		x = (i+1)*dx;
 		coorDist_table[i] = cosmo->coorDist(0,x);

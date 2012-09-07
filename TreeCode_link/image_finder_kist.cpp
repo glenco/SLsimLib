@@ -286,7 +286,6 @@ void find_images_kist(
 	}
 
 	// calculate the centroid of the images assuming uniform surface brightness
-//#pragma omp parallel for schedule(dynamic) private(i, tmp)
 	for(i=0;i<*Nimages;++i){
 		tmp=0.0;
 		imageinfo[i].centroid[0] = 0.0;
@@ -433,7 +432,6 @@ short image_finder_kist(LensHndl lens, double *y_source,double r_source,GridHndl
   }
 
   // don't copy information into array
-//#pragma omp parallel for private(i)
   //for(i=0;i<*Nimages;++i) imageinfo[i].Npoints = 0;  // to make sure points array is not read beyond length
 
   // find borders
@@ -441,7 +439,6 @@ short image_finder_kist(LensHndl lens, double *y_source,double r_source,GridHndl
 
   //assert(*Nimages < NimageMax-1);
 
-  //#pragma omp parallel for firstprivate(i_tree)
 
   for(i=0;i<*Nimages;++i){
 
@@ -538,11 +535,9 @@ int refine_grid_kist(
   //unsigned long Nmarker = 0,Nout = 0;
 
   total_area=0;
-//#pragma omp parallel reduction(+:total_area)
   for(i=0;i<Nimages;++i) total_area += imageinfo[i].area;
 
   number_of_refined = Ncells = 0;
-//#pragma omp parallel for schedule(dynamic) private(i, count, rmax, pass) reduction(+:Ncells)
   for(i=0;i<Nimages;++i){
     count=0;
 
