@@ -22,10 +22,9 @@ public:
 	SourceHndl source;
 	CosmoHndl cosmo;
 
-	MultiLens *multilens;
-	AnaLens *analens;
-
-	Model(std::string paramfile, long *seed, bool multi_lens);
+	Model(LensHndl mylens  /// lens
+			,SourceHndl mysource /// source
+			,CosmoHndl mycosmo);
 	~Model();
 
 	double getZsource(){return source->getZ();}
@@ -35,13 +34,8 @@ public:
 
 private:
 
-	/// names of clump and sb models
-	typedef enum {Uniform,Gaussian,BLR_Disk,BLR_Sph1,BLR_Sph2} SourceSBModel;
-
     void setInternal();
     void change_redshifts(TreeHndl i_tree,TreeHndl s_tree,double z_source,double z_lens);
-    void readParamfile(std::string paramfile);
-	SourceSBModel sb_type;
 };
 
 typedef Model *ModelHndl;
