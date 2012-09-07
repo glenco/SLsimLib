@@ -240,9 +240,14 @@ void AnaLens::rayshooterInternal(double *ray, double *alpha, float *gamma, float
          alpha_tmp[0] = alpha_tmp[1] = 0.0;
      }
 
+     /// TODO: MARGARITA/BEN make sure units here are OK!!!
      // add stars for microlensing
      if(stars_N > 0 && stars_implanted){
-    	 substract_stars_disks(ray,alpha_tmp,kappa,gamma_tmp);
+
+    	 std::cout << "MAke sure the units here are OK (the substract disk) , then delete this line" << std::endl;
+    	 exit(1);
+
+    	 substract_stars_disks(ray,alpha,kappa,gamma);
 
     	 // do stars with tree code
     	 //star_tree->force2D(ray,alpha_tmp,&tmp,gamma_tmp,true);
