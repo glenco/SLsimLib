@@ -182,7 +182,11 @@ void MultiLens::rayshooterInternal(
 
     }
 
-    return;
+#ifdef _OPENMP
+#pragma omp barrier
+#endif
+
+	return;
 }
 
 

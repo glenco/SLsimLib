@@ -109,6 +109,10 @@ HaloData::HaloData(
 		Nhalosbin[k] = Nhalosbin[k]/Nhaloestot;
 	}
 
+#ifdef _OPENMP
+#pragma omp barrier
+#endif
+
 	Nhalos = (long)(poidev(float(Nhaloestot), seed) + 0.5);
 
 	halos = new HaloStructure[Nhalos];
@@ -163,6 +167,10 @@ void MultiLens::make_table(CosmoHndl cosmo){
 		x = (i+1)*dx;
 		coorDist_table[i] = cosmo->coorDist(0,x);
 	}
+
+#ifdef _OPENMP
+#pragma omp barrier
+#endif
 }
 
 /*

@@ -162,6 +162,10 @@ void AnaLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool ka
     	i_points[i].image->dt = i_points[i].dt;
     }
 
+#ifdef _OPENMP
+#pragma omp barrier
+#endif
+
     return ;
 }
 
