@@ -218,13 +218,11 @@ MultiLens::MultiLens(string filename,long *my_seed) : Lens(){
 		break;
 	}
 
-	flag_implanted_source = 0;
+	// initially let source be the one inputed from parameter file
+	index_of_new_sourceplane = -1;
+	toggle_source_plane = false;
+
 	seed = my_seed;
-
-	// In the case of implanted sources from a file initialize.
-	cout << "In MultiLens" << endl;
-	if(gal_input_flag) anasource = auto_ptr<MultiSourceAnaGalaxy>(new MultiSourceAnaGalaxy(input_gal_file));
-
 }
 
 MultiLens::~MultiLens(){
@@ -741,8 +739,7 @@ void MultiLens::buildHaloTrees(
  */
 void MultiLens::setRedshifts(){
 	int i;
-	/// assigns the redshifts and plugs in the input plane
-
+	// assigns the redshifts and plugs in the input plane
 	cout << "z: ";
 	for(i=0; i<Nplanes; i++){
 		plane_redshifts[i] = QuickFindFromTable(Dl[i]);
@@ -760,7 +757,7 @@ void MultiLens::setRedshifts(){
  * distance in the table is not constant
  */
 double MultiLens::QuickFindFromTable(double Dplane){
-	int j, j_min, j_max, j_mean;
+	int j_min, j_max, j_mean;
 
 	j_max = NTABLE-1;
 	j_min = 0;
@@ -782,7 +779,7 @@ double MultiLens::QuickFindFromTable(double Dplane){
 
 /**
  * Set the coordinate distances of the planes by dividing the coordinate distance space into equal intervals
- * and then plugging the input plane inbetween
+ * and then plugging the input plane in between.
  *
  * After this flag_input_lens will hold the index of the plane it is on
  * In case it is on the first plane, it will hold the index Nplanes, to make
@@ -809,6 +806,7 @@ void MultiLens::setCoorDist(CosmoHndl cosmo, double zsource){
 	int j=0, flag=0;
 	if(flag_input_lens && Dlens < lD[1]){
 		Dl[j] = Dlens;
+		// TODO Margarita:  I don't understand why you cast an integer to an InputLens type.  I am curious.
 		flag_input_lens = (InputLens)Nplanes;
 		flag = 1;
 		j++;
@@ -1047,20 +1045,22 @@ void MultiLens::quicksort(HaloStructure *halos,double **brr,double *arr,unsigned
 	return ;
 }
 /**
- * \brief Pull a source into the simulated volume.  When rays are subsequently shot through the
- * simulation the surface brightness of the source will be added to the point->surface_brightness.
- * Sources can be implanted without altering the existing lens or rays.  The rays need to be re-shot
- * after each source is implanted.  Past sources are removed when a new source is implanted.
+ * \brief Changes the maximum redshift that the rays are shot to.
+ *
+ * The multilens must have been initially constructed with a source redshift that is higher
+ * than this redshift.  This is used to rayshoot to a source that is within the simulation
+ * volume.  To revert the source redshift to its original value use MultiLens::RevertSourcePlane().
+ *
  */
-void MultiLens::ImplantSource(
+void MultiLens::ResetSourcePlane(
 		CosmoHndl cosmo           /// cosmology
 		,double z                 /// redshift of implanted source
-		,double theta[]           /// position of source in angle on the sky (rad)
-		,OverGalaxy *ana_source   /// model for source surface brightness distribution
 		){
 	unsigned long j;
 
-	if(z > plane_redshifts[Nplanes-1]){
+	toggle_source_plane = true;
+
+	if(z > plane_redshifts[Nplanes]){
 		cout << "Warning: Implanted source is at higher redshift than simulation was constructed for." << endl
 		<< "It is not being added." << endl;
 		return;
@@ -1069,16 +1069,17 @@ void MultiLens::ImplantSource(
 	Ds_implant = cosmo->angDist(0,z);
 	zs_implant = z;
 
-	ys_implant[0] = Ds_implant*theta[0];
-	ys_implant[1] = Ds_implant*theta[1];
-
 	locateD(plane_redshifts-1,Nplanes,zs_implant,&j);
 
-	dDs_implant = cosmo->coorDist(z,plane_redshifts[j]);
+	assert(plane_redshifts[j] > z);
+	if(j > 0) dDs_implant = cosmo->coorDist(plane_redshifts[j-1],z);
+	else  dDs_implant = Ds_implant;
 
-	anasource = auto_ptr<MultiSourceAnaGalaxy>(new MultiSourceAnaGalaxy(ana_source));
-	flag_implanted_source = j;
+	//anasource = auto_ptr<MultiSourceAnaGalaxy>(new MultiSourceAnaGalaxy(ana_source));
+	index_of_new_sourceplane = j;
 }
+
+
 /**
  * \brief Change the implanted source in the Multilens.
  *
@@ -1087,7 +1088,7 @@ void MultiLens::ImplantSource(
  * lens or rays.  The rays need to be re-shot after the index is re-shot.
  *
  * This is meant for use when the internal AnaSource has already been initialized with multiple sources.
- */
+ *
 void MultiLens::ImplantSource(
 		unsigned long index        /// the index of the galaxy to be made the current galaxy
 		,CosmoHndl cosmo           /// cosmology
@@ -1124,9 +1125,9 @@ void MultiLens::ImplantSource(
 
 	dDs_implant = cosmo->coorDist(z,plane_redshifts[j]);
 
-	flag_implanted_source = j;
+	index_of_new_sourceplane = j;
 }
-
+*/
 
 void swap(double **a,double **b){
 	double *tmp;

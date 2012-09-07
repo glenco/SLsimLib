@@ -35,6 +35,24 @@ void MultiLens::rayshooterInternal(
 		,bool kappa_off         /// turns calculation of convergence and shear off to save time.
 		){
 	unsigned long i;
+	int NLastPlane;
+	double tmpDs,tmpdDs,tmpZs;
+
+	// If a lower redshift source is being used
+	if(toggle_source_plane){
+		NLastPlane = index_of_new_sourceplane + 1;
+
+		tmpDs = Dl[index_of_new_sourceplane];
+		tmpdDs = dDl[index_of_new_sourceplane];
+		tmpZs = plane_redshifts[index_of_new_sourceplane];
+
+		Dl[index_of_new_sourceplane] = Ds_implant;
+		dDl[index_of_new_sourceplane] = dDs_implant;
+		plane_redshifts[index_of_new_sourceplane] = zs_implant;
+	}else{
+		NLastPlane = Nplanes;
+	}
+
 
 #ifdef _OPENMP
 #pragma omp parallel for
@@ -47,6 +65,7 @@ void MultiLens::rayshooterInternal(
 	    float kappa,gamma[3];
 	    double xminus[2],xplus[2];
 	    double kappa_minus,gamma_minus[3],kappa_plus,gamma_plus[3];
+	    int j;
 
 		// find position on first lens plane in comoving units
 		i_points[i].image->x[0] = i_points[i].x[0]*Dl[0];
@@ -66,7 +85,7 @@ void MultiLens::rayshooterInternal(
 		i_points[i].gamma[1] = 0;
 		i_points[i].gamma[2] = 0;
 
-		for(int j = 0; j < Nplanes-1 ; j++){  // each iteration leaves i_point[i].image on plane (j+1)
+		for(j = 0; j < NLastPlane-1 ; j++){  // each iteration leaves i_point[i].image on plane (j+1)
 
 			/// TODO: need to find out a way to stop the ray tracing at the source redshift, for th EUCLID project
 			/*
@@ -77,7 +96,7 @@ void MultiLens::rayshooterInternal(
 			// convert to physical coordinates on the plane j
 			xx[0] = i_points[i].image->x[0]/(1+plane_redshifts[j]);
 			xx[1] = i_points[i].image->x[1]/(1+plane_redshifts[j]);
-
+			//TODO I don't know if this is still right now that NLastPlane has replaced Nplanes
 			if(flag_input_lens && j == (flag_input_lens % Nplanes)){
 				input_lens->rayshooterInternal(xx,alpha,gamma,&kappa,kappa_off);
 				cc = dDl[j+1];
@@ -112,19 +131,6 @@ void MultiLens::rayshooterInternal(
 
 			i_points[i].image->x[0] = xplus[0];
 			i_points[i].image->x[1] = xplus[1];
-
-			// If ray passes through a source add its surface brightness
-			if(flag_implanted_source && j == flag_implanted_source - 1 ){
-
-				xx[0] = ( (1 - dDs_implant/dDl[j+1])*xminus[0] + dDs_implant*xplus[0]/dDl[j+1] )/(1+zs_implant) - ys_implant[0];
-				xx[1] = ( (1 - dDs_implant/dDl[j+1])*xminus[1] + dDs_implant*xplus[1]/dDl[j+1] )/(1+zs_implant) - ys_implant[1];
-
-				// convert back to radians on the unlensed sky
-				xx[0] /= Ds_implant;
-				xx[1] /= Ds_implant;
-
-				i_points[i].surface_brightness += anasource->SurfaceBrightness(xx);
-			}
 
 			if(!kappa_off)
     		{
@@ -168,10 +174,10 @@ void MultiLens::rayshooterInternal(
 				i_points[i].gamma[2] = gamma_plus[2];
     		}
 		}
-		// Convert units back to angles.
 
-		i_points[i].image->x[0] /= Dl[Nplanes-1];
-		i_points[i].image->x[1] /= Dl[Nplanes-1];
+		// Convert units back to angles.
+		i_points[i].image->x[0] /= Dl[NLastPlane-1];
+		i_points[i].image->x[1] /= Dl[NLastPlane-1];
 
 		i_points[i].kappa = 1 - i_points[i].kappa;
 
@@ -186,7 +192,15 @@ void MultiLens::rayshooterInternal(
 #pragma omp barrier
 #endif
 
-	return;
+	if(toggle_source_plane){
+		// The initial values for the plane are reset here
+		Dl[index_of_new_sourceplane] = tmpDs;
+		dDl[index_of_new_sourceplane] = tmpdDs;
+		plane_redshifts[index_of_new_sourceplane] = tmpZs;
+	}
+
+    return;
+
 }
 
 

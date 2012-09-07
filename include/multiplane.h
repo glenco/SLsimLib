@@ -20,8 +20,10 @@
 const int Nmassbin=32;
 const double MaxLogm=16.;
 
-/// Class that holds all the information about the halos' positions and their internal parameters on one plane.
-class HaloData{
+/** \brief Class that holds all the information about the halos' positions and their internal parameters on one plane.
+ *
+ */
+ class HaloData{
 public:
 	/// halo positions
 	PosType **pos;
@@ -45,7 +47,22 @@ private:
 
 typedef HaloData *HaloDataHndl;
 
-/// A class to represents a lens with multiple planes.
+/** \brief A class to represents a lens with multiple planes.
+ *
+ * Lens plane indexing scheme
+ *
+ *              --------------------------------  i = Nplanes-1 = source plane, No mass
+ *
+ *              --------------------------------  i = Nplanes-2 last plane with mass on it
+ *
+ *
+ *              --------------------------------  i = j == (flag_input_lens % Nplanes)
+ *
+ *
+ *              --------------------------------  i = 0 first plane with mass on it at finite distance from observer
+ *
+ */
+
 class MultiLens : public Lens{
 public:
 
@@ -72,16 +89,16 @@ public:
 	double fieldofview;
 
 	// methods used for use with implanted sources
-	void ImplantSource(CosmoHndl cosmo,double z,double theta[],OverGalaxy *ana_source);
-	void ImplantSource(unsigned long index,CosmoHndl cosmo);
-	double *getImplantedSourceX(){
-		assert(gal_input_flag);
-		return anasource->getX();
-	}
-
-	unsigned long getImplantedNsources(){
-		assert(gal_input_flag);
-		return anasource->getNumberOfGalaxies();
+	void ResetSourcePlane(CosmoHndl cosmo,double z);
+	/// Revert the source redshift to the value it was when the MultiLens was created.
+	void RevertSourcePlane(){ toggle_source_plane = false;}
+	//void ImplantSource(unsigned long index,CosmoHndl cosmo);
+	double getSourceZ(){
+		if(toggle_source_plane){
+			return zs_implant;
+		}else{
+			return plane_redshifts[Nplanes];
+		}
 	}
 
 private:
@@ -105,9 +122,9 @@ private:
 	void readParamfile(std::string);
 	/// Redshifts of lens planes, 0...Nplanes.  Last one is the source redshift.
 	double *plane_redshifts;
-	/// angular diameter distances
+	/// Dl[j = 0...]angular diameter distances
 	double *Dl;
-	/// dDl[j] is the distance between plane j-1 and j
+	/// dDl[j] is the distance between plane j-1 and j plane
 	double *dDl;
 	/// charge for the tree force solver (4*pi*G*mass_scale)
 	double charge;
@@ -149,12 +166,14 @@ private:
 	double **halo_pos;
 
 	// Variables for implanted source
-	std::auto_ptr<MultiSourceAnaGalaxy> anasource;
+	//std::auto_ptr<MultiSourceAnaGalaxy> anasource;
+	/// turns source plane on and off
+	bool toggle_source_plane;
 	/// the distance from the source to the next plane
 	double dDs_implant;
-	double zs_implant,ys_implant[2],Ds_implant;
-	/// This is the index of the plane one ahead of the source
-	int flag_implanted_source;
+	double zs_implant,Ds_implant;
+	/// This is the index of the plane at one larger distance than the new source distance
+	int index_of_new_sourceplane;
 
 	/// nfw tables
 	//bool tables_set;
