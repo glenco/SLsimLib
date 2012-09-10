@@ -34,6 +34,7 @@ public:
 	  /// position of source TODO units?
 	  virtual inline double* getX(){return source_x;}
 	  virtual inline void setX(double *xx){source_x[0] = xx[0]; source_x[1] = xx[1];}
+	  void setX(double my_x,double my_y){source_x[0] = my_x; source_x[1] = my_y;}
 	  /// In the case of a single plane lens, the ratio of angular size distances
 	  virtual inline double getDlDs(){return DlDs;}
 	  //TODO BEN I think this need only be in the BLR source models

@@ -60,6 +60,7 @@ public:
 	double *getX(){return galaxies[index]->theta;}
 	/// Set angular position of current source.
 	void setX(double my_theta[2]){galaxies[index]->theta[0] = my_theta[0]; galaxies[index]->theta[1] = my_theta[1];}
+	void setX(double my_x,double my_y){galaxies[index]->theta[0] = my_x; galaxies[index]->theta[1] = my_y;}
 	unsigned long getNumberOfGalaxies(){return galaxies.size();}
 
 private:

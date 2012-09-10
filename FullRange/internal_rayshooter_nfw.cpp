@@ -33,7 +33,7 @@ void AnaLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool ka
 #endif
     for(i = 0; i < Npoints; i++){
     	double x_rescale[2];
-        long i,j;
+        long j;
         float dt = 0,tmp = 0;
     	double alpha[2];
     	float gamma[3];
