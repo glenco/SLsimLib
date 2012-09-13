@@ -22,6 +22,9 @@
  */
 class AnaLens : public Lens{
 public:
+	AnaLens(std::string);
+	~AnaLens();
+
   /// names of clump and sb models
   typedef enum {NFW,powerlaw,pointmass} ClumpInternal;
 
@@ -111,9 +114,6 @@ public:
   double *star_kappa;
   double **star_xdisk;
 
-  AnaLens(std::string);
-  ~AnaLens();
-
   double getZlens();
   void setZlens(double zlens);
   void setInternalParams(CosmoHndl,SourceHndl);
@@ -142,11 +142,13 @@ public:
 double RandomFromTable(double *table,unsigned long Ntable,long *seed);
 void setStars(AnaLens *lens, bool implanted);
 void implant_stars(AnaLens *lens,Point *images,unsigned long Nimages,long *seed);
+
 void alphaNSIE(double *alpha,double *xt,double f,double bc,double theta);
 float kappaNSIE(double *xt,double f,double bc,double theta);
 void gammaNSIE(float gam[2],double *xt,double f,double bc,double theta);
 double invmagNSIE(double *x,double f,double bc,double theta
                      ,float *gam,float kap);
+
 void rotation(float *xout,float *xin,double theta);
 void rotation(double *xout,double *xin,double theta);
 

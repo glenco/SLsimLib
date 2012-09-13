@@ -376,4 +376,14 @@ private:
 	void make_tables();
 };
 
+
+class QuadTreeSIE : public QuadTree{
+	  QuadTreeSIE(PosType **xp,IndexType Npoints,HaloStructure *par_internals
+				,double my_kappa_bk = 0.0,int bucket = 5,PosType theta = 0.1);
+	  ~QuadTreeSIE();
+
+private:
+
+};
+
 #endif /* QUAD_TREE_H_ */

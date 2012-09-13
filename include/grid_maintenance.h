@@ -42,6 +42,7 @@ typedef struct Grid{
 	int getNgrid_block(){return Ngrid_block;}
 	/// return initial range of gridded region
 	double getInitRange(){return i_tree->top->boundary_p2[0] - i_tree->top->boundary_p1[0];}
+	Point * RefineLeaf(LensHndl lens,Point *point,bool kappa_off);
 
 private:
 	/// one dimensional size of grid
@@ -72,4 +73,16 @@ ImageInfo *find_crit(LensHndl lens,GridHndl grid,int *Ncrits,double resolution,b
 
 void find_crit_kist(LensHndl lens,GridHndl grid,ImageInfo *critcurve,int maxNcrits,int *Ncrits
 		,double resolution,bool *orderingsuccess,bool ordercurve,bool verbose);
+
+int refine_grid(LensHndl lens,GridHndl grid,OldImageInfo *imageinfo
+		,unsigned long Nimages,double res_target,short criterion,bool kappa_off);
+long refine_edges(LensHndl lens,GridHndl grid,ImageInfo *imageinfo
+		,unsigned long Nimages,double res_target,short criterion,bool kappa_off);
+long refine_edges2(LensHndl lens,double *y_source,double r_source,GridHndl grid
+		,ImageInfo *imageinfo,bool *image_overlap,unsigned long Nimages,double res_target
+		,short criterion,bool kappa_off);
+void xygridpoints(Point *points,double range,double *center,long Ngrid
+		,short remove_center);
+//void initialize_grid(double center[],double range,long Ngrid,TreeHndl s_tree,TreeHndl i_tree);
+
 #endif

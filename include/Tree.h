@@ -192,16 +192,6 @@ void FindAllBoxNeighbors(TreeHndl tree,Point *point,ListHndl neighbors);
 short image_finder(double *y_source,double r_source,TreeHndl s_tree,TreeHndl i_tree
 		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
 		,short splitparities,short true_images);*/
-int refine_grid(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,OldImageInfo *imageinfo
-		,unsigned long Nimages,double res_target,short criterion,bool kappa_off);
-long refine_edges(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo
-		,unsigned long Nimages,double res_target,short criterion,bool kappa_off);
-long refine_edges2(LensHndl lens,double *y_source,double r_source,TreeHndl i_tree,TreeHndl s_tree
-		,ImageInfo *imageinfo,bool *image_overlap,unsigned long Nimages,double res_target
-		,short criterion,bool kappa_off);
-void xygridpoints(Point *points,double range,double *center,long Ngrid
-		,short remove_center);
-void initialize_grid(double center[],double range,long Ngrid,TreeHndl s_tree,TreeHndl i_tree);
 void findborders2(TreeHndl i_tree,OldImageInfo *imageinfo);
 void findborders3(TreeHndl i_tree,OldImageInfo *imageinfo);
 

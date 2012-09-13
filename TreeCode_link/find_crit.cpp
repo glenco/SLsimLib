@@ -126,7 +126,7 @@ ImageInfo *find_crit(
 
 	  if(verbose) std::printf("find_crit, going into refine_grid\n");
      //std::printf("  Npoints=%i\n",critcurve->Npoints);
-	  refinements=refine_grid(lens,grid->i_tree,grid->s_tree,critcurve,1,resolution,2,false);
+	  refinements=refine_grid(lens,grid,critcurve,1,resolution,2,false);
 	  if(verbose) std::printf("find_crit, came out of refine_grid\n");
 
 	  if(verbose) cout << "Npoints " << critcurve->Npoints << endl;

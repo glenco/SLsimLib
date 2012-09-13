@@ -1,13 +1,4 @@
-/*#include <math.h>
-#include <time.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <assert.h>
-#include <nrutil.h>
-#include <Tree.h>
-#include <KistDriver.h>
-#include <divide_images.h>
-#include <tree_maintenance.h>*/
+
 
 #include <slsimlib.h>
 
@@ -31,8 +22,10 @@ double initialgridsize=0;
  * 	         = 1 stops refining when each image reaches error limit or is smaller than res_target
  *           = 2 stops refining when grid resolution is smaller than res_target in all images
  */
-int refine_grid(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,OldImageInfo *imageinfo
-		,unsigned long Nimages,double res_target,short criterion,bool kappa_off){
+//int refine_grid(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,OldImageInfo *imageinfo
+//		,unsigned long Nimages,double res_target,short criterion,bool kappa_off){
+int refine_grid(LensHndl lens,GridHndl grid,OldImageInfo *imageinfo
+			,unsigned long Nimages,double res_target,short criterion,bool kappa_off){
 
 
 	//printf("entering refine_grid\n");
@@ -94,7 +87,8 @@ int refine_grid(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,OldImageInfo *imag
     			point = imageinfo[i].points[j].image->image;
     			assert(point->gridsize > 0);
 
-    			i_points = RefineLeaf(lens,i_tree,s_tree,point,Ngrid_block,kappa_off);
+    			//i_points = RefineLeaf(lens,i_tree,s_tree,point,Ngrid_block,kappa_off);
+    			i_points = grid->RefineLeaf(lens,point,kappa_off);
     			imageinfo[i].points[j].gridsize /= Ngrid_block;
     			++count;
 
@@ -123,14 +117,14 @@ int refine_grid(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,OldImageInfo *imag
     		  if(point->in_image){ /* point has not been refined yet */
     			  ++count;
 
-    			  i_points = RefineLeaf(lens,i_tree,s_tree,point,Ngrid_block,kappa_off);
+    			  i_points = grid->RefineLeaf(lens,point,kappa_off);
 /*    			  xygridpoints(&i_points[(Ngrid_block*Ngrid_block-1)*Ncells]
     			                         ,point->gridsize*(Ngrid_block-1)/Ngrid_block
     			                         ,point->x,Ngrid_block,1);
 */
     		      //if( inbox(i_points[(Ngrid_block*Ngrid_block-1)*Ncells ].x
    		 	  	  if( inbox(i_points->x
-      					  ,i_tree->top->boundary_p1,i_tree->top->boundary_p2) == 0 ){
+      					  ,grid->i_tree->top->boundary_p1,grid->i_tree->top->boundary_p2) == 0 ){
     				  ERROR_MESSAGE();
     			  }
     			  ++Ncells;
@@ -172,7 +166,7 @@ int refine_grid(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,OldImageInfo *imag
 
 
 
-long refine_edges(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,ImageInfo *imageinfo
+long refine_edges(LensHndl lens,GridHndl grid,ImageInfo *imageinfo
 		,unsigned long Nimages,double res_target,short criterion,bool kappa_off){
 	/*	refines only inner and outer edges of all images
 	 *
@@ -242,7 +236,7 @@ long refine_edges(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,ImageInfo *image
 				if(point->in_image){ // point has not been refined yet
 					++count;
 
-					i_points = RefineLeaf(lens,i_tree,s_tree,point,Ngrid_block,kappa_off);
+					i_points = grid->RefineLeaf(lens,point,kappa_off);
 
 /*					xygridpoints(&i_points[(Ngrid_block*Ngrid_block-1)*Ncells]
 						              ,point->gridsize*(Ngrid_block-1)/Ngrid_block
@@ -274,7 +268,7 @@ long refine_edges(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,ImageInfo *image
 				//if( getCurrentKist(imageinfo[i].innerborderkist)->gridsize == point->gridsize){ /* point has not been refined yet */
     			++count;
 
-   			i_points = RefineLeaf(lens,i_tree,s_tree,getCurrentKist(imageinfo[i].innerborder),Ngrid_block,kappa_off);
+   			i_points = grid->RefineLeaf(lens,getCurrentKist(imageinfo[i].innerborder),kappa_off);
 /*
     			xygridpoints(&i_points[(Ngrid_block*Ngrid_block-1)*Ncells]
     			                       ,point->gridsize*(Ngrid_block-1)/Ngrid_block
@@ -314,7 +308,7 @@ long refine_edges(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,ImageInfo *image
 	return count;
 }
 
-long refine_edges2(LensHndl lens,double *y_source,double r_source,TreeHndl i_tree,TreeHndl s_tree
+long refine_edges2(LensHndl lens,double *y_source,double r_source,GridHndl grid
 		,ImageInfo *imageinfo,bool *image_overlap,unsigned long Nimages,double res_target
 		,short criterion,bool kappa_off){
 
@@ -401,7 +395,7 @@ long refine_edges2(LensHndl lens,double *y_source,double r_source,TreeHndl i_tre
 					if(point->in_image){
 						++count;
 
-						i_points = RefineLeaf(lens,i_tree,s_tree,point,Ngrid_block,kappa_off);
+						i_points = grid->RefineLeaf(lens,point,kappa_off);
 /*
 						point->leaf->refined = true;
 						xygridpoints(&i_points[(Ngrid_block*Ngrid_block-1)*Ncells]
@@ -462,7 +456,7 @@ long refine_edges2(LensHndl lens,double *y_source,double r_source,TreeHndl i_tre
 					//if( getCurrentKist(imageinfo[i].innerborderkist)->gridsize == point->gridsize){
 						++count;
 
-						i_points = RefineLeaf(lens,i_tree,s_tree,point,Ngrid_block,kappa_off);
+						i_points = grid->RefineLeaf(lens,point,kappa_off);
 /*
 						point->leaf->refined = true;
 						xygridpoints(&i_points[(Ngrid_block*Ngrid_block-1)*Ncells]
@@ -574,12 +568,12 @@ long refine_edges2(LensHndl lens,double *y_source,double r_source,TreeHndl i_tre
 				// update leaf pointer of inner border point if necessary
 				//  *** don't think this is necessary anymore
 				if(getCurrentKist(imageinfo[i].innerborder)->leaf->npoints > 1){
-					i_tree->current = getCurrentKist(imageinfo[i].innerborder)->leaf;
-					_FindBox(i_tree,getCurrentKist(imageinfo[i].innerborder)->x);
-					getCurrentKist(imageinfo[i].innerborder)->leaf = i_tree->current;
+					grid->i_tree->current = getCurrentKist(imageinfo[i].innerborder)->leaf;
+					_FindBox(grid->i_tree,getCurrentKist(imageinfo[i].innerborder)->x);
+					getCurrentKist(imageinfo[i].innerborder)->leaf = grid->i_tree->current;
 				}
 
-				FindAllBoxNeighborsKist(i_tree,getCurrentKist(imageinfo[i].innerborder),neighborkist);
+				FindAllBoxNeighborsKist(grid->i_tree,getCurrentKist(imageinfo[i].innerborder),neighborkist);
 
 				MoveToTopKist(neighborkist);
 				for(k=0;k < neighborkist->Nunits() ;++k){

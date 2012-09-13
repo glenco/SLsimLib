@@ -26,8 +26,8 @@ const double FracResTarget = 3.0e-5;
 const double target_all = 1.0e-3;
 //const int MinPoints = 100;  // Minimum number of points per image
 const float tol_UniformMag = 1.0e-3;
-
 double maxflux;
+const bool verbos = true;
 
 /** \ingroup ImageFinding
  *  \brief Find images and refine them based on their surface brightness distribution.
@@ -200,10 +200,10 @@ void map_images(
 		delete[] rs;
 	}else{
 		// TODO Maybe this should be removed?
-		std::cout << "number of grid points before find_images_kist: "<< grid->getNumberOfPoints() << std::endl;
+		if(verbos) std::cout << "number of grid points before find_images_kist: "<< grid->getNumberOfPoints() << std::endl;
 		find_images_kist(lens,source->getX(),xmin,grid,Nimages,imageinfo,NimageMax,&Nimagepoints
 				,0,true,0,false,true);
-		std::cout << "number of grid points after find_images_kist: "<< grid->getNumberOfPoints() << std::endl;
+		if(verbos) std::cout << "number of grid points after find_images_kist: "<< grid->getNumberOfPoints() << std::endl;
 		Nsources = 1;
 		sourceinfo->centroid[0] = source->getX()[0];
 		sourceinfo->centroid[1] = source->getX()[1];
@@ -391,7 +391,7 @@ void map_images(
 
 	}*/
 
-	printf("total number of points after telescope: %li\n",grid->getNumberOfPoints());
+	if(verbos) printf("total number of points after telescope: %li\n",grid->getNumberOfPoints());
 
 	// Set all in_image flags to false.  This should not be necessary.  !!!!!!
 	ClearAllMarks(grid->i_tree);
@@ -429,7 +429,7 @@ void map_images(
 	TranformPlanesKist(imageinfo->imagekist);
 
 	// take out points with no flux
-	printf("before taking out zero surface brightness points: %li\n",imageinfo->imagekist->Nunits());
+	if(verbos) printf("before taking out zero surface brightness points: %li\n",imageinfo->imagekist->Nunits());
 	Ntmp = imageinfo->imagekist->Nunits();
 	for(i=0,MoveToTopKist(imageinfo->imagekist),area_tot=0,maxflux=0.0; i < Ntmp ; ++i ){
 
@@ -452,7 +452,7 @@ void map_images(
 
 	}
 	if(maxflux == 0 ) maxflux = 1.0;
-	printf("after taking out zero surface brightness points: %li\n",imageinfo->imagekist->Nunits());
+	if(verbos) printf("after taking out zero surface brightness points: %li\n",imageinfo->imagekist->Nunits());
 
 	if(imageinfo->imagekist->Nunits() == 0){
 		*Nimages = 0;
@@ -463,7 +463,7 @@ void map_images(
 	// divide up images
 	if(divide_images) divide_images_kist(grid->i_tree,imageinfo,Nimages,NimageMax);
 	else *Nimages = 1;
-	printf("number of images after first division is %i\n",*Nimages);
+	if(verbos) printf("number of images after first division is %i\n",*Nimages);
 
 	/////////////////////////////////////////////
 	// link image points lists for each image
@@ -667,8 +667,7 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
 
 				  assert(imageinfo[i].area >= 0);
 
-				  i_points = RefineLeaf(lens,grid->i_tree,grid->s_tree,getCurrentKist(imageinfo[i].imagekist),Ngrid_block
-  						,kappa_off);
+				  i_points = grid->RefineLeaf(lens,getCurrentKist(imageinfo[i].imagekist),kappa_off);
 				  imageinfo[i].ShouldNotRefine = 0;   // mark to continue refinement on next round
 
 				  imageinfo[i].area +=  pow(getCurrentKist(imageinfo[i].imagekist)->gridsize,2)
@@ -736,8 +735,7 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
 					  reborder = true;  // Since the border has been refined, re do the borders.
 					  ++Ncells;
 
-					  i_points = RefineLeaf(lens,grid->i_tree,grid->s_tree,getCurrentKist(imageinfo[i].outerborder)
-								  ,Ngrid_block,kappa_off);
+					  i_points = grid->RefineLeaf(lens,getCurrentKist(imageinfo[i].outerborder),kappa_off);
 					  imageinfo[i].ShouldNotRefine = 0;   // mark for another look next time
 
 					  // link new points into image kist and calculate surface brightnesses
@@ -977,95 +975,6 @@ bool RefinePoint(Point *point,TreeHndl i_tree,double image_area,double total_are
 	return false;
 }
 
-/**  \ingroup ImageFindingL2
- *
- * \brief Fundamental function used to divide a leaf in the tree into nine subcells.
- *
- * Source and image points are created, linked, shot and added to the trees.  The leaf
- * pointers of the points including the input are assigned.
- *
- * If some of the of the points are outside the original grid they will not be added in
- * which case THERE WILL BE LESS THEN Ngrid*Ngrid-1 points added.  The true number will
- * always be result->head.
- *
- * Returns a pointer to the list of image points that have been added.  This array can then be
- * used for calculating the surface brightness or marking them as in the image.
- */
-
-Point * RefineLeaf(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,Point *point,int Ngrid,bool kappa_off){
-
-	Point *i_points = NewPointArray(Ngrid*Ngrid-1,true);
-	Point *s_points;
-	int Nout,kk;
-
-	assert(point->leaf->child1 == NULL && point->leaf->child2 == NULL);
-	assert(point->gridsize > pow(10.,-DBL_DIG) ); // If cells are too small they will cause problems.
-
-	point->leaf->refined = true;
-	xygridpoints(i_points,point->gridsize*(Ngrid-1)/Ngrid
-	      ,point->x,Ngrid,1);
-	point->gridsize /= Ngrid;
-	point->image->gridsize /= Ngrid;
-
-	// take out points that are outside of original grid
-	Nout = 0;
-	if( (point->x[0] == i_tree->top->boundary_p1[0]) || (point->x[0] == i_tree->top->boundary_p2[0])
-			|| (point->x[1] == i_tree->top->boundary_p1[1]) || (point->x[1] == i_tree->top->boundary_p2[1]) ){
-
-		  // remove the points that are outside initial image grid
-		  for(kk=0,Nout=0;kk < (Ngrid*Ngrid-1);++kk){
-			  if( !inbox(i_points[kk - Nout].x,i_tree->top->boundary_p1,i_tree->top->boundary_p2) ){
-				  SwapPointsInArray(&i_points[kk - Nout],&i_points[Ngrid*Ngrid - 2 - Nout]);
-				  ++Nout;
-			  }
-		  }
-		  assert(Nout > 0);
-	}
-
-	//if(Nout > 0) i_points = AddPointToArray(i_points,Ngrid*Ngrid-1-Nout,Ngrid*Ngrid-1);
-
-	int  Ntemp = Ngrid*Ngrid-1-Nout;
-
-	s_points = LinkToSourcePoints(i_points,Ntemp);
-	lens->rayshooterInternal(Ntemp,i_points,kappa_off);
-
-	// remove the points that are outside initial source grid
-	for(kk=0,Nout=0;kk < Ntemp;++kk){
-		assert(s_points[kk - Nout].x[0] == s_points[kk - Nout].x[0]);
-		if( !inbox(s_points[kk - Nout].x,s_tree->top->boundary_p1,s_tree->top->boundary_p2) ){
-			SwapPointsInArray(&i_points[kk - Nout],&i_points[Ntemp - 1 - Nout]);
-			SwapPointsInArray(&s_points[kk - Nout],&s_points[Ntemp - 1 - Nout]);
-			++Nout;
-		}
-	}
-
-	// free memory of points that where outside image and source regions
-	Nout = Ngrid*Ngrid - 1 - Ntemp + Nout;
-	if(Nout > 0){
-		i_points = AddPointToArray(i_points,Ngrid*Ngrid-1-Nout,Ngrid*Ngrid-1);
-		s_points = AddPointToArray(s_points,Ngrid*Ngrid-1-Nout,Ntemp);
-	}
-
-
-	//*** these could be mode more efficient by starting at the current in tree
-	AddPointsToTree(i_tree,i_points,Ngrid*Ngrid-1-Nout);
-	AddPointsToTree(s_tree,s_points,Ngrid*Ngrid-1-Nout);
-
-	// re-assign leaf of point that was to be refined
-	assert(inbox(point->x,i_tree->top->boundary_p1,i_tree->top->boundary_p2));
-	i_tree->current = point->leaf;
-	_FindLeaf(i_tree,point->x,0);
-	point->leaf = i_tree->current;
-
-	assert(inbox(point->image->x,s_tree->top->boundary_p1,s_tree->top->boundary_p2));
-	s_tree->current = point->image->leaf;
-	_FindLeaf(s_tree,point->image->x,0);
-	point->image->leaf = s_tree->current;
-
-	assert(point->leaf->child1 == NULL && point->leaf->child2 == NULL);
-
-	return i_points;
-}
 
 /** \ingroup mageFindingL2
  * \brief Checks to see if the image has a nearly uniform magnification across it and thus can be considered linearly

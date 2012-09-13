@@ -228,12 +228,12 @@ void find_images_kist(
 			//printf("\n");
 
 			++i;
-		}while( refine_edges(lens,grid->i_tree,grid->s_tree,imageinfo,*Nimages,FracResTarget,flag,kappa_off)
+		}while( refine_edges(lens,grid,imageinfo,*Nimages,FracResTarget,flag,kappa_off)
 				|| moved );
 
 	}else if(edge_refinement==2){
 		++i;
-		while(refine_edges2(lens,y_source,r_source,grid->i_tree,grid->s_tree
+		while(refine_edges2(lens,y_source,r_source,grid
 				,imageinfo,&image_overlap,*Nimages,FracResTarget,flag,kappa_off)){
 			// if an overlap is detected find the images again
 
@@ -608,7 +608,8 @@ int refine_grid_kist(
 				  //imageinfo[i].points[j].gridsize /= Ngrid_block;
 				  ++count;
 
-				  i_points = RefineLeaf(lens,i_tree,s_tree,getCurrentKist(imageinfo[i].imagekist),Ngrid_block,kappa_off);
+				  //i_points = RefineLeaf(lens,i_tree,s_tree,getCurrentKist(imageinfo[i].imagekist),Ngrid_block,kappa_off);
+				  i_points = grid->RefineLeaf(lens,getCurrentKist(imageinfo[i].imagekist),kappa_off);
 				  if(newpointskist) for(k=0; k < i_points->head ; ++k) newpointskist->InsertAfterCurrent(&i_points[k]);
 
 
@@ -658,7 +659,7 @@ int refine_grid_kist(
 				  if(point->in_image){ // point has not been refined yet as border of another image
 					  ++count;
 
-					  i_points = RefineLeaf(lens,i_tree,s_tree,point,Ngrid_block,kappa_off);
+					  i_points = grid->RefineLeaf(lens,point,kappa_off);
 					  if(newpointskist) for(k=0;k < i_points->head; ++k) newpointskist->InsertAfterCurrent(&i_points[k]);
 
 					  //xygridpoints(&i_points[Nmarker],point->gridsize*(Ngrid_block-1)/Ngrid_block,point->x,Ngrid_block,1);
