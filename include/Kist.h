@@ -46,8 +46,8 @@ public:
 	bool JumpDown(int jump);
 	bool Down();
 	bool Up();
-	void MoveToTop();
-	void MoveToBottom();
+	bool MoveToTop();
+	bool MoveToBottom();
 
 	// status
 	/// Number of elements in list.
@@ -92,8 +92,8 @@ bool AtBottomKist(KistHndl kist);
 void JumpDownKist(KistHndl kist,int jump);
 bool MoveDownKist(KistHndl kist);
 bool MoveUpKist(KistHndl kist);
-void MoveToTopKist(KistHndl kist);
-void MoveToBottomKist(KistHndl kist);
+bool MoveToTopKist(KistHndl kist);
+bool MoveToBottomKist(KistHndl kist);
 void FillKist(KistHndl kist,Data * data,unsigned long N);
 void PrintKist(KistHndl kist);
 void SwapCurrentWithBottomKist(KistHndl kist);

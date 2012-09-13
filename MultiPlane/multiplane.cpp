@@ -795,7 +795,9 @@ void MultiLens::setCoorDist(CosmoHndl cosmo, double zsource){
 		Np = Nplanes+1;
 
 	double Ds = cosmo->coorDist(0,zsource);
-	double Dlens = cosmo->coorDist(0,input_lens->getZlens());
+	double Dlens;
+	if(flag_input_lens) Dlens = cosmo->coorDist(0,input_lens->getZlens());
+	else Dlens = Ds;
 
 	/// spaces lD equally up to the source, including 0 and Ds
 	/// therefore we need Nplanes+1 values
@@ -854,12 +856,9 @@ double MultiLens::getZlens(){
 }
 
 void MultiLens::setZlens(double z){
-	if(flag_input_lens)
-		input_lens->setZlens(z);
-	else{
-		cout << "It is not possible to set the redshift of the input plane in this case" << endl;
-		ERROR_MESSAGE();
-	}
+	cout << "It is not possible to reset the redshift of the input AnaLens plane a MultiLens" << endl;
+	ERROR_MESSAGE();
+	exit(1);
 }
 
 /// read in halos from a simulation file
@@ -886,11 +885,12 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 	}
 
 	// skip through header information in data file
+	i=0;
 	while(file_in.peek() == '#'){
 		file_in.ignore(10000,'\n');
 		++i;
 	}
-	std::cout << "skipped "<< i << " comment lines in " << input_sim_file << std::endl;
+	std::cout << "skipped "<< i << " comment lines in file " << input_sim_file << std::endl;
 
 	//file_in >> Nhalos;
 	//Nhalos = 10;
@@ -1060,9 +1060,10 @@ void MultiLens::ResetSourcePlane(
 
 	toggle_source_plane = true;
 
-	if(z > plane_redshifts[Nplanes]){
+	if(z > plane_redshifts[Nplanes-1]){
 		cout << "Warning: Implanted source is at higher redshift than simulation was constructed for." << endl
-		<< "It is not being added." << endl;
+		<< "It is not being added. " << plane_redshifts[Nplanes-1] << " < " << z << endl;
+
 		return;
 	}
 

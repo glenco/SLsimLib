@@ -8,9 +8,11 @@
 #ifndef IMAGE_PROCESSING_H_
 #define IMAGE_PROCESSING_H_
 
+#include <slsimlib.h>
 #include <image_info.h>
 #include <Tree.h>
 #include <point.h>
+#include <valarray>
 
 /** \ingroup Image
  * \brief Takes images and pixelizes the flux into regular pixel grid.
@@ -31,11 +33,12 @@ public:
 	void Clean();
 	void AddImages(ImageInfo *imageinfo,int Nimages,bool constant_sb);
 	void AddImages(ImageInfo *imageinfo,int Nimages,double sigma);
-	void print();
+	void printASCII();
+	void printFITS(std::string filename);
 	void smooth(double *map_out,double sigma);
 
 private:
-	float *map;
+	std::valarray<float> map;
 	unsigned long Npixels;
 	TreeHndl ptree;
 	double resolution,range,center[2];

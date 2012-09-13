@@ -40,7 +40,7 @@ short find_peaks(
 	//ImageInfo *imageinfo = new ImageInfo;
 	KistHndl newpointskist = new Kist;
 
-	if(grid->getInitRange() != grid->NumberOfPoints() ) grid->ReInitializeGrid(lens);
+	if(grid->getInitRange() != grid->getNumberOfPoints() ) grid->ReInitializeGrid(lens);
 
 	// Add all points to imageinfo
 	MoveToTopList(grid->i_tree->pointlist);
@@ -50,7 +50,7 @@ short find_peaks(
 
 
 	// increase threshold while increasing angular resolution
-	for(threshold =  rEinsteinMin*(grid->getNgrid())/(grid->getInitRange())/4 ; threshold <= kappa_max ; threshold *= 3){
+	for(threshold =  rEinsteinMin*(grid->getInitNgrid())/(grid->getInitRange())/4 ; threshold <= kappa_max ; threshold *= 3){
 		cout << "threshold " << threshold << endl;
 		res_target = rEinsteinMin/threshold/2;  // keeps resolution below size of smallest lens
 

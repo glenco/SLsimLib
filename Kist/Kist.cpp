@@ -341,7 +341,7 @@ void JumpDownKist(KistHndl kist,int jump){
 	kist->JumpDown(jump);
 	return ;
 }
-/// Move current down the list. Returns false when at the bottom of the list.
+/// Move down the list. Returns false when at the bottom of the list.
 bool Kist::Down(){
 
 	if(Number == 0) return false;
@@ -355,7 +355,7 @@ bool MoveDownKist(KistHndl kist){
 
 	return kist->Down();
 }
-/// Move current up the list. Returns false when at the top of the list.
+/// Move up the list. Returns false when at the top of the list.
 bool Kist::Up(){
 
 	if(Number == 0) return false;
@@ -370,21 +370,25 @@ bool MoveUpKist(KistHndl kist){
 	return kist->Up();
 }
 
-
-void Kist::MoveToTop(){
+/// Moves to the top.  Returns false if the kist is empty.
+bool Kist::MoveToTop(){
+	if(!Number)return false;
 	current=top;
+	return true;
 }
-void MoveToTopKist(KistHndl kist){
-	assert(kist);
-	kist->MoveToTop();
+bool MoveToTopKist(KistHndl kist){
+	return kist->MoveToTop();
 }
 
-void Kist::MoveToBottom(){
+/// Moves to the top.  Returns false if the kist is empty.
+bool Kist::MoveToBottom(){
+	if(!Number)return false;
 	current=bottom;
+	return true;
 }
-void MoveToBottomKist(KistHndl kist){
+bool MoveToBottomKist(KistHndl kist){
 	assert(kist);
-	kist->SwapCurrentWithBottom();
+	kist->MoveToBottom();
 }
 
 /** \brief Put an array of data into a kist.

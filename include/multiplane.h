@@ -66,7 +66,7 @@ typedef HaloData *HaloDataHndl;
 class MultiLens : public Lens{
 public:
 
-	MultiLens(std::string,long *);
+	MultiLens(std::string paramfile,long *seed);
 	~MultiLens();
 
 	void buildHaloTrees(CosmoHndl cosmo,double zsource);
@@ -97,9 +97,12 @@ public:
 		if(toggle_source_plane){
 			return zs_implant;
 		}else{
-			return plane_redshifts[Nplanes];
+			return plane_redshifts[Nplanes-1];
 		}
 	}
+	double getZmax(){return plane_redshifts[Nplanes-1];}
+
+
 
 private:
 

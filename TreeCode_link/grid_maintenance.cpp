@@ -152,9 +152,9 @@ double Grid::RefreshSurfaceBrightnesses(SourceHndl source){
 
 	MoveToTopList(s_tree->pointlist);
 	do{
-		y[0] = s_tree->pointlist->current->x[0] - source->getX()[0];
-		y[1] = s_tree->pointlist->current->x[1] - source->getX()[1];
-		tmp = source->SurfaceBrightness(y);
+		//y[0] = s_tree->pointlist->current->x[0]; - source->getX()[0];
+		//y[1] = s_tree->pointlist->current->x[1]; - source->getX()[1];
+		tmp = source->SurfaceBrightness(s_tree->pointlist->current->x);
 		s_tree->pointlist->current->surface_brightness = s_tree->pointlist->current->image->surface_brightness
 				= tmp;
 		total += tmp;
@@ -169,7 +169,7 @@ double Grid::RefreshSurfaceBrightnesses(SourceHndl source){
 /** \ingroup ImageFinding
  * \brief Returns number of points on image plane.
  */
-unsigned long Grid::NumberOfPoints(){
+unsigned long Grid::getNumberOfPoints(){
 	assert(i_tree->top->npoints == s_tree->top->npoints);
 	assert(i_tree->top->npoints == i_tree->pointlist->Npoints);
 	assert(s_tree->top->npoints == s_tree->pointlist->Npoints);

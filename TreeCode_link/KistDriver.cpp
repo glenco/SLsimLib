@@ -498,7 +498,7 @@ Point *NearestNeighborKist(TreeHndl tree,double *ray,int Nneighbors,KistHndl nei
 	Point *point = 0;
 	unsigned long i;
 
-	//TODO BEN Make this better!
+	//TODO BEN Make this better!  NearestNeighbor() should be replaced.
 	point = NearestNeighbor(tree,ray,Nneighbors,neighborlist,0);
 
 	// convert from point array to exported point kist

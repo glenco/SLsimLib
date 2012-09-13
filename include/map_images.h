@@ -16,11 +16,11 @@
 #include <point.h>
 #include <Kist.h>
 
-void map_images(LensHndl lens,SourceBLR *source,GridHndl grid,int *Nimages,ImageInfo *imageinfo
+void map_images(LensHndl lens,Source *source,GridHndl grid,int *Nimages,ImageInfo *imageinfo
 		,int Nimagesmax,double xmax,double xmin,double initial_size
 		,ExitCriterion criterion,bool kappa_off,bool FindCenter,bool divide_images);
 
-int refine_grid_on_image(Lens *lens,SourceBLR *source,GridHndl grid,ImageInfo *imageinfo,int *Nimages
+int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imageinfo,int *Nimages
 		,ImageInfo *sourceinfo,int Nsources,int NimageMax,const double res_target,ExitCriterion criterion
 		,bool kappa_off,bool divide_images);
 

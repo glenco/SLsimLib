@@ -24,12 +24,13 @@ public:
 		double x[2] = {y[0]-galaxies[index]->theta[0] , y[1]-galaxies[index]->theta[1]};
 		return galaxies[index]->SurfaceBrightness(x);
 	}
+	/// Total flux coming from the current galaxy in arbitrary units
+	double getTotalFlux(){return pow(10,-(galaxies[index]->getMag())/2.5);}
 
 	void printSource();
-	//TODO Does this need to be public?
 	void readParamfile(std::string);
-	//TODO Write the definition of this
-	void AddAGalaxy(OverGalaxy *my_galaxy);
+	// Add a pre-constructed galaxy to the source collection
+	void AddAGalaxy(OverGalaxy *my_galaxy){galaxies.push_back(my_galaxy);}
 
 	/** Used to change the "current" source that is returned when the surface brightness is subsequently
 	 * called.  It also returns a reference to the particular OverGalaxy source model.
@@ -52,7 +53,8 @@ public:
 
 	/// Return redshift of current source.
 	double getZ(){return galaxies[index]->z;}
-
+	//double getRadius(){return max(galaxies[index]->Reff,galaxies[index]->Rh);}
+	double getRadius(){return galaxies[index]->getRadius();}
 	/// Set redshift of current source.
 	void setZ(double my_z){galaxies[index]->z = my_z;}
 

@@ -562,11 +562,15 @@ void QuadTree::force2D(double *ray,double *alpha,float *kappa,float *gamma,bool 
   return;
 }
 
-/** \brief Force2D calculates the defection, convergence and shear using
+/** \brief Force2D_recur calculates the defection, convergence and shear using
  *   the plane-lens approximation.
  *
+ *  This function should do the same work as QuadTree::force2D() accept it is
+ *  done recursively instead of iteratively.  This is done to enable multi-threading
+ *  of the force calculation.
+ *
  *       The output alpha[] is in units of mass_scale/Mpc, ie it needs to be
- *       divided by Sigma_crit and multiplied by mass_scale to be the defelction
+ *       divided by Sigma_crit and multiplied by mass_scale to be the deflection
  *       in the lens equation expressed on the lens plane or multiplied by
  *       4*pi*G*mass_scale to get the deflection angle caused by the plane lens.
  * */

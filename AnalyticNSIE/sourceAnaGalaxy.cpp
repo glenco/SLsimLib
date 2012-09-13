@@ -47,6 +47,7 @@ MultiSourceAnaGalaxy::MultiSourceAnaGalaxy(
 	std::cout << "Constructing SourceAnaGalaxy" << std::endl;
 
 	readDataFile(input_gal_file,my_mag_limit);
+	index = 0;
 }
 
 MultiSourceAnaGalaxy::~MultiSourceAnaGalaxy(){
@@ -64,7 +65,7 @@ void MultiSourceAnaGalaxy::readDataFile(std::string input_gal_file,double mag_li
 	,acs435 ,acs606 ,acs775,acs850,acs435_bulge,acs606_bulge,acs775_bulge,acs850_bulge
 	,mvir,rvir,vmax,stellarmass,bulgemass,stellardiskradius,bulgesize
 	,inclination,pa,angdist,diskradius_arcsec,bulgesize_arcsec;*/
-	unsigned long i,j,Ngalaxies;
+	unsigned long i,j;
 
 	unsigned long GalID,HaloID;
 	double ra,dec,z_cosm,z_app,Dlum,inclination,pa,Rh,Ref,SDSS_u,SDSS_g,SDSS_r,SDSS_i,SDSS_z
@@ -82,7 +83,6 @@ void MultiSourceAnaGalaxy::readDataFile(std::string input_gal_file,double mag_li
 	//std::cout << "Number of source galaxies: " << Ngalaxies << std::endl;
 
 	//TODO Using a vector of pointer to OverGalaxy is inefficient for mem.  check that a default copy would work for adding galaxies
-	//galaxies.resize(Ngalaxies);// = new OverGalaxy[Ngalaxies];
 	i=0;
 	while(file_in.peek() == '#'){
 		file_in.ignore(10000,'\n');
@@ -90,7 +90,6 @@ void MultiSourceAnaGalaxy::readDataFile(std::string input_gal_file,double mag_li
 	}
 	std::cout << "skipped "<< i << " comment lines in " << input_gal_file << std::endl;
 
-	mag_limit = 25;  //TODO find a better way of passing this in
 	double theta[2] = {0.0,0.0};
 
 	// read in data
@@ -113,7 +112,7 @@ void MultiSourceAnaGalaxy::readDataFile(std::string input_gal_file,double mag_li
 		>> c >> i2_Bulge >> c;  //TODO the GalID will miss the first digit using this method.  No other method stops at the end of file.
 
 			//TODO  BEN this needs to be selected from the parameter file
-		if(SDSS_r < mag_limit){
+		if(SDSS_u < mag_limit){
 			/*
 			std::cout << galid << c << haloid << c << cx << c << cy << c << cz << c << ra << c << dec << c << z_geo << c << z_app
 			<< c << dlum << c << vlos << c << incl
@@ -129,12 +128,12 @@ void MultiSourceAnaGalaxy::readDataFile(std::string input_gal_file,double mag_li
 
 			/***************************/
 			galaxies.push_back(
-					new OverGalaxy(SDSS_r,pow(10,-(SDSS_r_Bulge-SDSS_r)/2.5),Ref,Rh
+					new OverGalaxy(SDSS_u,pow(10,-(SDSS_u_Bulge-SDSS_u)/2.5),Ref,Rh
 							,pa,inclination,z_cosm,theta)
 			);
-			//std::cout << "z:" << z[i] << " mag " << acs435 << " Bulge to total " << pow(10,-(acs435_bulge-acs435)/2.5) << " bulge size arcsec " << bulgesize_arcsec
-			//		<< " disk size arcsec " << diskradius_arcsec << " position angle " << pa << " inclination " << inclination
-			//		<< " theta = " << theta[i][0] << " " << theta[i][1] << std::endl;
+			//std::cout << "z:" << z_cosm << " mag " << SDSS_u << " Bulge to total " << pow(10,-(SDSS_u_Bulge-SDSS_u)/2.5)
+			//		<< " bulge size arcsec " << Ref  << " disk size arcsec " << pa << " position angle " << pa << " inclination " << inclination
+			//		<< " theta = " << theta[0] << " " << theta[1] << std::endl;
 
 			++j;
 		}
@@ -144,10 +143,9 @@ void MultiSourceAnaGalaxy::readDataFile(std::string input_gal_file,double mag_li
 
 	std::cout << galaxies.size() << " galaxies read in."<< std::endl;
 
-	Ngalaxies = galaxies.size();
-
 	return;
 }
+
 void MultiSourceAnaGalaxy::readParamfile(std::string filename){
       const int MAXPARAM = 50;
 	  std::string label[MAXPARAM], rlabel, rvalue;

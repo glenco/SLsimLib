@@ -28,7 +28,7 @@ typedef struct Grid{
 	unsigned long PrunePointsOutside(double resolution,double *y,double r_in ,double r_out);
 
 	double RefreshSurfaceBrightnesses(SourceHndl source);
-	unsigned long NumberOfPoints();
+	unsigned long getNumberOfPoints();
 
 
 	/// tree on image plane
@@ -37,7 +37,7 @@ typedef struct Grid{
 	TreeHndl s_tree;
 
 	/// return initial number of grid points in each direction
-	int getNgrid(){return Ngrid;}
+	int getInitNgrid(){return Ngrid;}
 	/// return number of cells in each dimension into which each cell is divided when a refinement is made
 	int getNgrid_block(){return Ngrid_block;}
 	/// return initial range of gridded region

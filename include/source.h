@@ -21,6 +21,7 @@ public:
 
 	  // in lens.cpp
 	  virtual double SurfaceBrightness(double *y) = 0;
+	  virtual double getTotalFlux() = 0;
 	  virtual void readParamfile(std::string) = 0;
 	  virtual void printSource() = 0;
 
@@ -83,7 +84,16 @@ public:
 
 class SourceBLR : public Source{
 public:
-	  /// lag time
+
+	  SourceBLR(std::string);
+	  ~SourceBLR();
+
+	  void readParamfile(std::string);
+	  void printSource();
+
+	  virtual inline double getRadius(){return source_r_out;}
+
+	/// lag time
 	  double source_tau;
 	  /// frequency
 	  double source_nu;
@@ -101,12 +111,6 @@ public:
 	  float source_fK;
 	  /// set to true to integrate over frequency
 	  bool source_monocrome;
-
-	  void readParamfile(std::string);
-	  void printSource();
-
-	  SourceBLR(std::string);
-	  ~SourceBLR();
 };
 
 class SourceBLRDisk : public SourceBLR{

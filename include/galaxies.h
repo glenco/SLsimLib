@@ -20,11 +20,14 @@ struct OverGalaxy{
 	void setInternals(double mag,double BtoT,double Reff,double Rh,double PA,double inclination,double my_z=0,double *my_theta=NULL);
 	double SurfaceBrightness(double *x);
 	void print();
+	double getMag(){return mag;}
 
 	/// redshift
 	double z;
 	/// position on the sky
 	double theta[2];
+	/// returns the maximum radius of the source galaxy TODO This needs to be done better.
+	double getRadius(){return 4*(Reff > Rh ? Reff : Rh);}
 private:
 	/// bulge half light radius
 	double Reff;
@@ -36,6 +39,7 @@ private:
 	double sbDo;
 	/// internal valuable mag-2.5*log10(BtoT)+5*log10(Reff)-4.93884
 	double sbSo;
+	double mag;
 
 	// optional position variables
 };

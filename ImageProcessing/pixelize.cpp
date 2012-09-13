@@ -6,6 +6,9 @@
  */
 
 #include <slsimlib.h>
+#include <MOKAfits.h>
+#include <fstream>
+#include <CCfits/CCfits>
 
 
 PixelMap::PixelMap(
@@ -37,20 +40,18 @@ PixelMap::PixelMap(
 		MoveDownList(ptree->pointlist);
 	}
 
-	map = NULL;
-
 	return;
 }
 PixelMap::~PixelMap(){
 
 	freeTree(ptree);
-	if(map != NULL) delete[] map;
+	map.resize(0);
 }
 /// Zero the whole map
 void PixelMap::Clean(){
 	unsigned long i;
 
-	if(map != NULL) for(i=0;i < Npixels*Npixels; ++i) map[i] = 0.0;
+	map = 0.0;
 
 	MoveToTopList(ptree->pointlist);
 	for(i=0 ; i < ptree->pointlist->Npoints ; ++i){
@@ -150,7 +151,8 @@ void PixelMap::Convert(){
 	long ix;
 
 	unsigned long i;
-	if(map == NULL) map = new float[Npixels*Npixels];
+	map.resize(Npixels*Npixels);
+//	if(map == NULL) map = new float[Npixels*Npixels];
 	for(i=0 ; i < Npixels*Npixels ; ++i) map[i]=0.0;
 
 	MoveToTopList(ptree->pointlist);
@@ -164,20 +166,81 @@ void PixelMap::Convert(){
 
 	return;
 }
-
-void PixelMap::print(){
+/// Print an ASCII table of all the pixel values.
+void PixelMap::printASCII(){
 
 	Convert();
 	std::cout << Npixels << "  " << range << std::endl;
 	for(unsigned long i=0;i < Npixels*Npixels; ++i) std::cout << map[i] << std::endl;
 	std::cout << Npixels << "  " << range << std::endl;
 
-	delete map;
-	map = NULL;
-
+	map.resize(0);
 	return;
 }
+// Output the pixel map as a fits file.  TODO Needs to be written.
+void PixelMap::printFITS(std::string filename){
 
+#ifdef ENABLE_FITS
+		if(filename == ""){
+			std::cout << "Please enter a valid filename for the FITS file output" << std::endl;
+			exit(1);
+		}
+		Convert();
+
+		//int Np = (int)Npixels;
+		//writeImage(filename,map,Np,Np);
+
+		long naxis=2;
+		long naxes[2] = {Npixels,Npixels};
+
+		std::auto_ptr<CCfits::FITS> fout(0);
+
+		try{
+			fout.reset(new CCfits::FITS(filename,FLOAT_IMG,naxis,naxes));
+		}
+		catch(CCfits::FITS::CantCreate){
+			exit(1);
+		}
+
+		long seed;
+
+		ran2(&seed)*1000;
+
+		std::vector<long> naxex(2);
+		naxex[0]=Npixels;
+		naxex[1]=Npixels;
+
+		CCfits::PHDU *phout = &fout->pHDU();
+
+		/// TODO: BEN/MARGARITA quantity has to be substituted with the correct name, for clarity
+		phout->write( 1,Npixels*Npixels,map );
+
+		// TODO: BEN/MARGARITA here goes the header writing
+		phout->addKey ("CRPIX1",naxex[0]/2,"");
+		phout->addKey ("CRPIX2",naxex[1]/2,"");
+		phout->addKey ("CRVAL1",0.0,"");
+		phout->addKey ("CRVAL2",0.0,"");
+		phout->addKey ("CDELT1",-180*range/(Npixels-1)/pi,"degrees");
+		phout->addKey ("CDELT2", 180*range/(Npixels-1)/pi,"degrees");
+		phout->addKey ("CTYPE1","RA--TAN","");
+		phout->addKey ("CTYPE2","RA-TAN","");
+		phout->addKey ("CROTA2",0.0,"");
+		phout->addKey ("CD1_1",-180*range/(Npixels-1)/pi,"degrees");
+		phout->addKey ("CD1_2",0.0,"");
+		phout->addKey ("CD2_1",0.0,"");
+		phout->addKey ("CD2_2", 180*range/(Npixels-1)/pi,"degrees");
+
+		phout->addKey ("Npixels", Npixels,"");
+		phout->addKey ("range ", range," radians");
+
+		std::cout << *phout << std::endl;
+
+		map.resize(0);
+#else
+		std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
+		exit(1);
+#endif
+}
 
 /** \ingroup LowLevel
  *  Recursively determine which pixels a leaf intersects with
@@ -257,7 +320,7 @@ void PixelMap::smooth(double *map_out,double sigma){
 	return ;
 }
 
-
+/*
 void pixelize(
 		double *map    /// Output map in one dimensional array. It is always square. map[0...Npixels*Npixels-1]
 		,long Npixels   /// Number of pixels in one dimension of map.
@@ -363,3 +426,4 @@ void pixelize(
 
 	return;
 }
+*/
