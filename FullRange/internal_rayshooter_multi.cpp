@@ -29,14 +29,25 @@
  * Warning: Is not valid for a non-flat universe.
  */
 
+#define CHUNKSIZE 1
+
 void MultiLens::rayshooterInternal(
 		unsigned long Npoints   /// number of points to be shot
 		,Point *i_points        /// point on the image plane
 		,bool kappa_off         /// turns calculation of convergence and shear off to save time.
 		){
 	unsigned long i;
+
+	int j;
 	int NLastPlane;
 	double tmpDs,tmpdDs,tmpZs;
+
+	double xx[2];
+	double aa,bb,cc;
+    double alpha[2];
+    float kappa,gamma[3];
+    double xminus[2],xplus[2];
+    double kappa_minus,gamma_minus[3],kappa_plus,gamma_plus[3];
 
 	// If a lower redshift source is being used
 	if(toggle_source_plane){
@@ -55,17 +66,9 @@ void MultiLens::rayshooterInternal(
 
 
 #ifdef _OPENMP
-#pragma omp parallel for
+#pragma omp parallel for schedule(dynamic,CHUNKSIZE) default(shared) private(i,j,xx,aa,bb,cc,alpha,kappa,gamma,xminus,xplus,kappa_minus,gamma_minus,kappa_plus,gamma_plus)
 #endif
 	for(i = 0; i< Npoints; i++){
-
-		double xx[2];
-		double aa,bb,cc;
-	    double alpha[2];
-	    float kappa,gamma[3];
-	    double xminus[2],xplus[2];
-	    double kappa_minus,gamma_minus[3],kappa_plus,gamma_plus[3];
-	    int j;
 
 		// find position on first lens plane in comoving units
 		i_points[i].image->x[0] = i_points[i].x[0]*Dl[0];
@@ -87,16 +90,10 @@ void MultiLens::rayshooterInternal(
 
 		for(j = 0; j < NLastPlane-1 ; j++){  // each iteration leaves i_point[i].image on plane (j+1)
 
-			/// TODO: need to find out a way to stop the ray tracing at the source redshift, for th EUCLID project
-			/*
-			if(zsource == plane_redshifts[j])
-				break;
-			 */
-
 			// convert to physical coordinates on the plane j
 			xx[0] = i_points[i].image->x[0]/(1+plane_redshifts[j]);
 			xx[1] = i_points[i].image->x[1]/(1+plane_redshifts[j]);
-			//TODO I don't know if this is still right now that NLastPlane has replaced Nplanes
+
 			if(flag_input_lens && j == (flag_input_lens % Nplanes)){
 				input_lens->rayshooterInternal(xx,alpha,gamma,&kappa,kappa_off);
 				cc = dDl[j+1];
@@ -104,6 +101,7 @@ void MultiLens::rayshooterInternal(
 
 				halo_tree[j]->force2D_recur(xx,alpha,&kappa,gamma,kappa_off);
 				//halo_tree[j]->force2D(xx,alpha,&kappa,gamma,kappa_off);
+
 				cc = charge*dDl[j+1];
 
 				/* multiply by the scale factor to obtain 1/comoving_distance/physical_distance
@@ -137,8 +135,6 @@ void MultiLens::rayshooterInternal(
 
 				aa = (dDl[j+1]+dDl[j])*Dl[j]/dDl[j]/Dl[j+1];
 
-				//bb = dDl[j+1]*Dl[ (j < 1) ? 0 : j-1]/dDl[j]/Dl[j+1];
-				// removed the line above because Dl[-1] = observer plane = 0 and is different from Dl[0]
 				if(j>0){
 					bb = dDl[j+1]*Dl[j-1]/dDl[j]/Dl[j+1];
 				}
@@ -186,11 +182,14 @@ void MultiLens::rayshooterInternal(
 		  	    - i_points[i].gamma[1]*i_points[i].gamma[1]
 		  	    - i_points[i].gamma[2]*i_points[i].gamma[2];
 
-    }
+		if(i_points[i].image->x[0] != i_points[i].image->x[0] ||
+				i_points[i].image->x[1] != i_points[i].image->x[1] ||
+				i_points[i].invmag != i_points[i].invmag){
+			ERROR_MESSAGE();
+			exit(1);
+		}
 
-#ifdef _OPENMP
-#pragma omp barrier
-#endif
+    }
 
 	if(toggle_source_plane){
 		// The initial values for the plane are reset here
@@ -200,7 +199,6 @@ void MultiLens::rayshooterInternal(
 	}
 
     return;
-
 }
 
 
