@@ -99,19 +99,15 @@ HaloData::HaloData(
 	int k;
 
 #ifdef _OPENMP
-#pragma omp parallel for
+#pragma omp parallel for default(shared) private(k)
 #endif
 	for(k=1;k<Nmassbin;k++){
-		double m = pow(10,Logm[k])/cosmo->gethubble();
 		// cumulative number density in one square degree
-		Nhalosbin[k] = cosmo->haloNumberDensityOnSky(m,z1,z2,mass_func_type,alpha)*fov;
+		Nhalosbin[k] = cosmo->haloNumberDensityOnSky(pow(10,Logm[k])/cosmo->gethubble(),z1,z2,mass_func_type,alpha)*fov;
 		// normalize the cumulative distribution to one
 		Nhalosbin[k] = Nhalosbin[k]/Nhaloestot;
 	}
 
-#ifdef _OPENMP
-#pragma omp barrier
-#endif
 
 	Nhalos = (long)(poidev(float(Nhaloestot), seed) + 0.5);
 
@@ -161,16 +157,13 @@ void MultiLens::make_table(CosmoHndl cosmo){
 	coorDist_table = new double[NTABLE];
 
 #ifdef _OPENMP
-#pragma omp parallel for
+#pragma omp parallel for default(shared) private(i,x)
 #endif
 	for(i = 0 ; i< NTABLE; i++){
 		x = (i+1)*dx;
 		coorDist_table[i] = cosmo->coorDist(0,x);
 	}
 
-#ifdef _OPENMP
-#pragma omp barrier
-#endif
 }
 
 /*
@@ -199,9 +192,12 @@ MultiLens::MultiLens(string filename,long *my_seed) : Lens(){
 
 	//halo_tree = new auto_ptr<ForceTree>[Nplanes-1];
 	halo_tree = new auto_ptr<QuadTree>[Nplanes-1];
-	halodata = new auto_ptr<HaloData>[Nplanes-1];
+	halo_data = new auto_ptr<HaloData>[Nplanes-1];
 
 	switch(flag_input_lens){
+	case null:
+		input_lens = NULL;
+		break;
 	case ana_lens:
 		input_lens = new AnaLens(filename);
 		analens = static_cast<AnaLens*>(input_lens);
@@ -212,9 +208,16 @@ MultiLens::MultiLens(string filename,long *my_seed) : Lens(){
 		mokalens = static_cast<MOKALens*>(input_lens);
 		fieldofview = pow(1.5*mokalens->map->boxl*180/pi,2.0);
 #else
+		ERROR_MESSAGE();
 		cout << "Enable the CCFITS handling first" << endl;
 		exit(1);
 #endif
+		break;
+	default:
+		ERROR_MESSAGE();
+		cout << "Incorrect flag_input_lens selected! Please choose from:" << endl;
+		cout << "0: no lens, 1: AnaLens, 2: MOKALens" << endl;
+		exit(1);
 		break;
 	}
 
@@ -232,10 +235,10 @@ MultiLens::~MultiLens(){
 	delete[] Dl;
 	delete[] plane_redshifts;
 	delete[] dDl;
-	for(int j=0;j<Nplanes-1;j++) delete &(halodata[j]);
-	delete[] halodata;
+	for(int j=0;j<Nplanes-1;j++) delete &(halo_data[j]);
+	delete[] halo_data;
 
-	if(sim_input_flag){  // Otherwise these deallocations are done in the destructor of halodata's
+	if(sim_input_flag){  // Otherwise these deallocations are done in the destructor of halo_data's
 		delete[] halos;
 		delete[] halo_zs;
 		free_PosTypeMatrix(halo_pos,0,Nhalos-1,0,2);
@@ -526,10 +529,10 @@ void MultiLens::buildHaloTrees(
 
 			if(j+1 == (flag_input_lens % Nplanes)) z2 = plane_redshifts[j] + 0.5*(plane_redshifts[j+2] - plane_redshifts[j]);
 
-			//halodata[j] = new HaloData(fieldofview,min_mass,z1,z2,mass_func_type,cosmo,seed);
-			halodata[j] = auto_ptr<HaloData>(new HaloData(fieldofview,min_mass,mass_scale,z1,z2,mass_func_type,pw_alpha,cosmo,seed));
+			//halo_data[j] = new HaloData(fieldofview,min_mass,z1,z2,mass_func_type,cosmo,seed);
+			halo_data[j] = auto_ptr<HaloData>(new HaloData(fieldofview,min_mass,mass_scale,z1,z2,mass_func_type,pw_alpha,cosmo,seed));
 
-			Ntot+=halodata[j]->Nhalos;
+			Ntot+=halo_data[j]->Nhalos;
 		}
 
 	}else{
@@ -566,12 +569,12 @@ void MultiLens::buildHaloTrees(
 
 			/// Use other constructor to create halo data
 
-			//halodata[j] = new HaloData(&halos[j1],&halo_pos[j1],j2-j1);
-			halodata[j] = auto_ptr<HaloData>(new HaloData(&halos[j1],&halo_pos[j1],j2-j1));
+			//halo_data[j] = new HaloData(&halos[j1],&halo_pos[j1],j2-j1);
+			halo_data[j] = auto_ptr<HaloData>(new HaloData(&halos[j1],&halo_pos[j1],j2-j1));
 
 			//for(int i = 0; i<10 ;++i) cout << "Rmax:" << halos[j1+i].Rmax << "mass:" << halos[j1+i].mass << "rscale:" << halos[j1+i].rscale << "x = " << halo_pos[j1+i][0] << " " << halo_pos[j1+i][1] << endl;
 
-			Ntot += halodata[j]->Nhalos;
+			Ntot += halo_data[j]->Nhalos;
 		}
 
 	}
@@ -582,26 +585,27 @@ void MultiLens::buildHaloTrees(
 
 		switch(internal_profile){
 		case PowerLaw:
-			//halo_tree[j] = auto_ptr<ForceTree>(new ForceTreePowerLaw(1.9,&halodata[j]->pos[0],halodata[j]->Nhalos
-			//		,halodata[j]->halos,true,halodata[j]->kappa_background));
-			halo_tree[j] = auto_ptr<QuadTree>(new QuadTreePowerLaw(pw_beta,&halodata[j]->pos[0],halodata[j]->Nhalos
-							,halodata[j]->halos,halodata[j]->kappa_background));
+			//halo_tree[j] = auto_ptr<ForceTree>(new ForceTreePowerLaw(1.9,&halo_data[j]->pos[0],halo_data[j]->Nhalos
+			//		,halo_data[j]->halos,true,halo_data[j]->kappa_background));
+			halo_tree[j] = auto_ptr<QuadTree>(new QuadTreePowerLaw(pw_beta,&halo_data[j]->pos[0],halo_data[j]->Nhalos
+							,halo_data[j]->halos,halo_data[j]->kappa_background));
 			break;
 		case NFW:
-			//halo_tree[j] = auto_ptr<ForceTree>(new ForceTreeNFW(&halodata[j]->pos[0],halodata[j]->Nhalos
-			//		,halodata[j]->halos,true,halodata[j]->kappa_background));
-			halo_tree[j] = auto_ptr<QuadTree>(new QuadTreeNFW(&halodata[j]->pos[0],halodata[j]->Nhalos
-							,halodata[j]->halos,halodata[j]->kappa_background));
+			//halo_tree[j] = auto_ptr<ForceTree>(new ForceTreeNFW(&halo_data[j]->pos[0],halo_data[j]->Nhalos
+			//		,halo_data[j]->halos,true,halo_data[j]->kappa_background));
+			halo_tree[j] = auto_ptr<QuadTree>(new QuadTreeNFW(&halo_data[j]->pos[0],halo_data[j]->Nhalos
+							,halo_data[j]->halos,halo_data[j]->kappa_background));
 			break;
 		case PseudoNFW:
-			//halo_tree[j] = auto_ptr<ForceTree>(new ForceTreePseudoNFW(2,&halodata[j]->pos[0],halodata[j]->Nhalos
-			//		,halodata[j]->halos,true,halodata[j]->kappa_background));
-			halo_tree[j] = auto_ptr<QuadTree>(new QuadTreePseudoNFW(pnfw_beta,&halodata[j]->pos[0],halodata[j]->Nhalos
-							,halodata[j]->halos,halodata[j]->kappa_background));
+			//halo_tree[j] = auto_ptr<ForceTree>(new ForceTreePseudoNFW(2,&halo_data[j]->pos[0],halo_data[j]->Nhalos
+			//		,halo_data[j]->halos,true,halo_data[j]->kappa_background));
+			halo_tree[j] = auto_ptr<QuadTree>(new QuadTreePseudoNFW(pnfw_beta,&halo_data[j]->pos[0],halo_data[j]->Nhalos
+							,halo_data[j]->halos,halo_data[j]->kappa_background));
 			break;
 		default:
-			cout << "There is no such case for the halo trees." << endl;
 			ERROR_MESSAGE();
+			cout << "There is no such case for the halo trees. Please choose from:" << endl;
+			cout << "0: PowerLaw, 1: NFW, 2: PseudoNFW" << endl;
 			exit(1);
 			break;
 		}
@@ -626,13 +630,13 @@ void MultiLens::buildHaloTrees(
 		if(flag_analens && j == (flag_analens % Nplanes))
 			continue;
 
-		for(i = 0; i < halodata[j]->Nhalos; i++){
+		for(i = 0; i < halo_data[j]->Nhalos; i++){
 
 			double fac = 180/pi/3600./Dl[j]*(1+plane_redshifts[j]);
 
 			file_area << plane_redshifts[j] << " ";
-			file_area << i << " " << halodata[j]->halos[i].mass << " " << fac*halodata[j]->halos[i].Rmax << " " << fac*halodata[j]->halos[i].rscale << " ";
-			file_area << fac*halodata[j]->pos[i][0] << " " << fac*halodata[j]->pos[i][1] << endl;
+			file_area << i << " " << halo_data[j]->halos[i].mass << " " << fac*halo_data[j]->halos[i].Rmax << " " << fac*halo_data[j]->halos[i].rscale << " ";
+			file_area << fac*halo_data[j]->pos[i][0] << " " << fac*halo_data[j]->pos[i][1] << endl;
 
 		}
 	}
@@ -664,11 +668,11 @@ void MultiLens::buildHaloTrees(
 		xx[0] = ray[0]*Dl[j]/(1+plane_redshifts[j]);
 		xx[1] = ray[1]*Dl[j]/(1+plane_redshifts[j]);
 
-		for(i = 0; i < halodata[j]->Nhalos; i++){
-			double r2 = (halodata[j]->pos[i][0] - xx[0])*(halodata[j]->pos[i][0] - xx[0])
-						+ (halodata[j]->pos[i][1] - xx[1])*(halodata[j]->pos[i][1] - xx[1]);
+		for(i = 0; i < halo_data[j]->Nhalos; i++){
+			double r2 = (halo_data[j]->pos[i][0] - xx[0])*(halo_data[j]->pos[i][0] - xx[0])
+						+ (halo_data[j]->pos[i][1] - xx[1])*(halo_data[j]->pos[i][1] - xx[1]);
 
-			if(r2 <= halodata[j]->halos[i].Rmax*halodata[j]->halos[i].Rmax)
+			if(r2 <= halo_data[j]->halos[i].Rmax*halo_data[j]->halos[i].Rmax)
 				halos++;
 		}
 
@@ -795,6 +799,7 @@ void MultiLens::setCoorDist(CosmoHndl cosmo, double zsource){
 		Np = Nplanes+1;
 
 	double Ds = cosmo->coorDist(0,zsource);
+
 	double Dlens;
 	if(flag_input_lens) Dlens = cosmo->coorDist(0,input_lens->getZlens());
 	else Dlens = Ds;

@@ -26,20 +26,21 @@ void AnaLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool ka
     }
 
 	double convert_factor = star_massscale / Sigma_crit;
-	int i;
+	long i;
+
+	double x_rescale[2];
+    long j;
+    float dt,kappa;
+	double alpha[2];
+	float gamma[3];
 
 #ifdef _OPENMP
-#pragma omp parallel for
+#pragma parallel omp for default(shared) private(i,j,x_rescale,dt,kappa,alpha,gamma)
 #endif
     for(i = 0; i < Npoints; i++){
-    	double x_rescale[2];
-        long j;
-        float dt = 0,tmp = 0;
-    	double alpha[2];
-    	float gamma[3];
-
     	alpha[0]=alpha[1]=0.0;
     	gamma[0]=gamma[1]=gamma[2]=0.0;
+    	dt = kappa = 0.0;
 
     	i_points[i].dt = 0.0;
     	i_points[i].gamma[2] = 0.0;
@@ -136,14 +137,14 @@ void AnaLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool ka
     				&(i_points[i].kappa),i_points[i].gamma);
 
     		// do stars with tree code
-    		//star_tree->force2D(i_points[i].x,temp[i].alpha,&tmp,temp[i].gamma,true);
-    		star_tree->force2D_recur(i_points[i].x,alpha,&tmp,gamma,true);
+    		star_tree->force2D(i_points[i].x,alpha,&kappa,gamma,true);
+    		//star_tree->force2D_recur(i_points[i].x,alpha,&kappa,gamma,true);
 
     		i_points[i].image->x[0] += convert_factor*alpha[0];
     		i_points[i].image->x[1] += convert_factor*alpha[1];
 
     		if(!kappa_off){
-    			i_points[i].kappa += convert_factor*tmp;
+    			i_points[i].kappa += convert_factor*kappa;
     			i_points[i].gamma[0] += convert_factor*gamma[0];
     			i_points[i].gamma[1] += convert_factor*gamma[1];
     		}
@@ -160,11 +161,9 @@ void AnaLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool ka
     	i_points[i].image->gamma[0]=i_points[i].gamma[0];
     	i_points[i].image->gamma[1]=i_points[i].gamma[1];
     	i_points[i].image->dt = i_points[i].dt;
-    }
 
-#ifdef _OPENMP
-#pragma omp barrier
-#endif
+
+    }
 
     return ;
 }
@@ -254,8 +253,8 @@ void AnaLens::rayshooterInternal(double *ray, double *alpha, float *gamma, float
     	 substract_stars_disks(ray,alpha,kappa,gamma);
 
     	 // do stars with tree code
-    	 //star_tree->force2D(ray,alpha_tmp,&tmp,gamma_tmp,true);
-    	 star_tree->force2D_recur(ray,alpha_tmp,&tmp,gamma_tmp,true);
+    	 star_tree->force2D(ray,alpha_tmp,&tmp,gamma_tmp,true);
+    	 //star_tree->force2D_recur(ray,alpha_tmp,&tmp,gamma_tmp,true);
 
     	 alpha[0] += convert_factor*alpha_tmp[0];
     	 alpha[1] += convert_factor*alpha_tmp[1];
