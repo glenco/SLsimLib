@@ -178,6 +178,26 @@ void PixelMap::printASCII(){
 	map.resize(0);
 	return;
 }
+/// Print an ASCII table of all the pixel values.
+void PixelMap::printASCIItoFile(std::string filename){
+	std::ofstream file_map(filename.c_str());
+
+	if(!file_map){
+		std::cout << "unable to open file " << filename << std::endl;
+		exit(0);
+	}
+
+	Convert();
+	std::cout << Npixels << "  " << range << std::endl;
+	for(unsigned long i=0;i < Npixels*Npixels; ++i) file_map << map[i] << std::endl;
+	std::cout << Npixels << "  " << range << std::endl;
+
+	map.resize(0);
+
+	file_map.close();
+
+	return;
+}
 // Output the pixel map as a fits file.  TODO Needs to be written.
 void PixelMap::printFITS(std::string filename){
 
@@ -213,10 +233,8 @@ void PixelMap::printFITS(std::string filename){
 
 		CCfits::PHDU *phout = &fout->pHDU();
 
-		/// TODO: BEN/MARGARITA quantity has to be substituted with the correct name, for clarity
 		phout->write( 1,Npixels*Npixels,map );
 
-		// TODO: BEN/MARGARITA here goes the header writing
 		phout->addKey ("CRPIX1",naxex[0]/2,"");
 		phout->addKey ("CRPIX2",naxex[1]/2,"");
 		phout->addKey ("CRVAL1",0.0,"");
