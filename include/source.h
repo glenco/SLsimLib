@@ -64,6 +64,7 @@ public:
 	double SurfaceBrightness(double *y);
 	void readParamfile(std::string);
 	void printSource();
+	double getTotalFlux(){return 0.0;};
 
 	SourceUniform(std::string);
 	~SourceUniform();
@@ -77,6 +78,7 @@ public:
 	  double SurfaceBrightness(double *y);
 	  void readParamfile(std::string);
 	  void printSource();
+	  double getTotalFlux(){return 0.0;};
 
 	  SourceGaussian(std::string);
 	  ~SourceGaussian();
@@ -116,6 +118,7 @@ public:
 class SourceBLRDisk : public SourceBLR{
 public:
 	double SurfaceBrightness(double *y);
+	double getTotalFlux(){return 0.0;};
 
 	SourceBLRDisk(std::string);
 	~SourceBLRDisk();
@@ -124,6 +127,7 @@ public:
 class SourceBLRSph1 : public SourceBLR{
 public:
 	double SurfaceBrightness(double *y);
+	double getTotalFlux(){return 0.0;};
 
 	SourceBLRSph1(std::string);
 	~SourceBLRSph1();
@@ -132,6 +136,7 @@ public:
 class SourceBLRSph2 : public SourceBLR{
 public:
 	double SurfaceBrightness(double *y);
+	double getTotalFlux(){return 0.0;};
 
 	SourceBLRSph2(std::string);
 	~SourceBLRSph2();
