@@ -209,7 +209,7 @@ MultiLens::MultiLens(string filename,long *my_seed) : Lens(){
 		fieldofview = pow(1.5*mokalens->map->boxl*180/pi,2.0);
 #else
 		ERROR_MESSAGE();
-		cout << "Enable the CCFITS handling first" << endl;
+		cout << "Please enable the preprocessor flag ENABLE_FITS !" << endl;
 		exit(1);
 #endif
 		break;

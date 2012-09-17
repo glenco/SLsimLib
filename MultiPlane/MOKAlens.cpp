@@ -19,7 +19,7 @@ using namespace std;
  */
 MOKALens::MOKALens(std::string paramfile) : Lens(){
 #ifndef ENABLE_FITS
-	std::cout << "Please set ENABLE_FITS first!" << std::endl;
+	std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
 	exit(1);
 #endif
 
