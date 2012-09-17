@@ -862,7 +862,7 @@ double MultiLens::getZlens(){
 
 void MultiLens::setZlens(double z){
 	if(flag_input_lens)
-		return input_lens->setZlens(z);
+		input_lens->setZlens(z);
 	else{
 		cout << "It is not possible to reset the redshift of the input AnaLens plane a MultiLens" << endl;
 		ERROR_MESSAGE();
