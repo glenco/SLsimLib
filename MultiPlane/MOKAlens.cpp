@@ -5,7 +5,6 @@
  *      Author: mpetkova
  */
 
-#ifdef ENABLE_FITS
 
 #include <MOKAlens.h>
 #include <string>
@@ -19,6 +18,10 @@ using namespace std;
  * \brief allocates and reads the MOKA map in
  */
 MOKALens::MOKALens(std::string paramfile) : Lens(){
+#ifndef ENABLE_FITS
+	std::cout << "Please set ENABLE_FITS first!" << std::endl;
+	exit(1);
+#endif
 
 	map = new MOKAmap;
 	LH = new LensHalo;
@@ -603,4 +606,3 @@ void MOKALens::saveImage(bool saveprofiles){
 	}
 }
 
-#endif

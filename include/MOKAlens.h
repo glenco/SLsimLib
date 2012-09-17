@@ -5,7 +5,6 @@
  *      Author: mpetkova
  */
 
-#ifdef ENABLE_FITS
 
 #ifndef MOKALENS_H_
 #define MOKALENS_H_
@@ -90,4 +89,3 @@ public:
 
 #endif /* MOKALENS_H_ */
 
-#endif

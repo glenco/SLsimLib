@@ -5,7 +5,6 @@
  *      Author: mpetkova
  */
 
-#ifdef ENABLE_FITS
 
 #ifndef FITS_H_
 #define FITS_H_
@@ -58,15 +57,9 @@ void writeImage(std::string filename
 		,LensHalo *LH);
 
 
-void writeImage(std::string filename
-		,std::valarray<float> quantity
-		,int nx
-		,int ny);
-
 void make_friendship(int ii,int ji,int np,std:: vector<int> &friends, std:: vector<double> &pointdist);
 
 int fof(double l,std:: vector<double> xci, std:: vector<double> yci, std:: vector<int> &groupid);
 
 #endif /* FITS_H_ */
 
-#endif

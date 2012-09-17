@@ -6,10 +6,11 @@
  */
 
 #include <slsimlib.h>
-#include <MOKAfits.h>
 #include <fstream>
-#include <CCfits/CCfits>
 
+#ifdef ENABLE_FITS
+#include <CCfits/CCfits>
+#endif
 
 PixelMap::PixelMap(
 		unsigned long my_Npixels  /// Number of pixels in one dimension of map.
