@@ -20,6 +20,7 @@ public:
 	  typedef enum {Uniform,Gaussian,BLR_Disk,BLR_Sph1,BLR_Sph2,MultiAnaSource} SBModel;
 
 	  // in lens.cpp
+	  // TODO BEN This needs to be changed everywhere to accept gird coordinates instead of source centered coordinates
 	  virtual double SurfaceBrightness(double *y) = 0;
 	  virtual double getTotalFlux() = 0;
 	  virtual void readParamfile(std::string) = 0;

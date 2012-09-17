@@ -11,7 +11,14 @@
 #include <cstdlib>
 #include <analytic_lens.h>
 
-void alphaNSIE(double *alpha,double *xt,double f,double bc,double theta){
+/// deflection angle for non-singular isothermal ellipsoid
+void alphaNSIE(
+		double *alpha /// Deflection angle in units of the Einstein radius
+		,double *xt   /// position on the image plane in Einstein radius units
+		,double f     /// axis ratio of mass
+		,double bc    /// core size in units of Einstein radius
+		,double theta /// position angle of ellipsoid
+		){
   double x[2],angle[2],fp,b2,r,Qp,Qm,RCphase,SCphase;
   void rotation(double *xout,double *xin,double theta);
 
@@ -71,8 +78,13 @@ void alphaNSIE(double *alpha,double *xt,double f,double bc,double theta){
   }
 }
 
-/* surface density */
-float kappaNSIE(double *xt,double f,double bc,double theta){
+/// convergence for non-singular isothermal ellipsoid
+float kappaNSIE(
+		double *xt     /// position on the image plane in Einstein radius units
+		,double f      /// axis ratio of mass
+		,double bc     /// core size in units of Einstein radius
+		,double theta  /// position angle of ellipsoid
+		){
   double x[2],b2;
   void rotation(double *xout,double *xin,double theta);
 
@@ -85,8 +97,14 @@ float kappaNSIE(double *xt,double f,double bc,double theta){
   if(b2>1.0e20 ) return 0.0;
   return 0.5*sqrt(f/(b2+bc*bc));
 }
-     /* shear */
-void gammaNSIE(float gam[2],double *xt,double f,double bc,double theta){
+/// shear for non-singular isothermal ellipsoid
+void gammaNSIE(
+		float gam[2]    /// output shear
+		,double *xt     /// position on the image plane in Einstein radius units
+		,double f       /// axis ratio of mass
+		,double bc      /// core size in units of Einstein radius
+		,double theta   /// position angle of ellipsoid
+		){
   double x[2],fp,P,b2,r;
 
   r=sqrt(xt[0]*xt[0]+xt[1]*xt[1]);
@@ -115,8 +133,14 @@ void gammaNSIE(float gam[2],double *xt,double f,double bc,double theta){
 }
 
      /* inverse magnification */
-double invmagNSIE(double *x,double f,double bc,double theta
-		     ,float *gam,float kap){
+double invmagNSIE(
+		double *x
+		,double f
+		,double bc
+		,double theta
+		,float *gam
+		,float kap
+		){
 
   gammaNSIE(gam,x,f,bc,theta);
   kap=kappaNSIE(x,f,bc,theta);

@@ -43,9 +43,27 @@ double InterpolateFromTable(double *table, double y);
 /// structure to hold information about the halos' positions, masses, etc.
 struct HaloStructure{
 	/// internal halo parameters
-    float mass,Rmax,rscale;
+	/// Mass in solar masses
+    float mass;
+    /// Radius
+    float Rmax;
+    /// scale length or core size.  Different meaning in different cases
+    float rscale;
 };
+typedef struct HaloStructure * HaloStructHndl;
 
+/// internal structure for a Non-Singular Isothermal Ellipsoid
+struct NIEStructure: public HaloStructure{
+	/// Einstein radius
+	double re;
+	/// Actual edge of mass distribution, Rmax is the range beyond which the halo is a point mass
+	double Rsize;
+	/// axis ratio of surface mass distribution
+	double fratio;
+	/// position angle on sky, radians
+	double pa;
+};
+typedef struct NIEStructure * NIEStructHndl;
 //short const treeNBdim = 2;
 
 struct BranchNB{

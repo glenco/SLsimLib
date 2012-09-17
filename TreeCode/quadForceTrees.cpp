@@ -102,17 +102,21 @@ QuadTreePseudoNFW::~QuadTreePseudoNFW(){
 	if(ob_count == 0) delete[] mhattable;
 }
 
-QuadTreeSIE::QuadTreeSIE(
+QuadTreeNSIE::QuadTreeNSIE(
 		PosType **xp              /// positions of the halos xp[0..Npoints-1][0..1 or 2]
 		,IndexType Npoints         /// number of halos
-		,HaloStructure *h_params   /// array with internal properties of halos
+		,NIEStructure *h_params   /// array with internal properties of halos
 		,double my_kappa_bk       /// Background convergence to be subtracted
 		,int bucket                /// maximum number of halos in a leaf of the tree
 		,PosType theta             /// Opening angle used in tree force calculation, default 0.1
 		) :
 		QuadTree(xp,h_params,Npoints,my_kappa_bk,bucket,theta)
 {
+	re = new float[Npoints];
 	//** TODO Needs to override alpha_h etc and somehow get a two dimensional version into force2D()
 	//TODO Needs also to deal with two different Rmax's one here and on in tree algorithem.
-	for(long i=0;i<Npoints;++i) h_params[i].rscale = 2*pi*Grav*h_params[i].mass/h_params[i].Rmax;
+	for(long i=0;i<Npoints;++i) re[i] = 2*pi*Grav*h_params[i].mass/h_params[i].Rmax;
+}
+QuadTreeNSIE::~QuadTreeNSIE(){
+	delete[] re;
 }
