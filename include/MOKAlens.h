@@ -9,6 +9,7 @@
 #ifndef MOKALENS_H_
 #define MOKALENS_H_
 
+#include <MOKAfits.h>
 #include <cosmo.h>
 #include <utilities.h>
 #include <source.h>
@@ -54,7 +55,6 @@ struct MOKAmap{
 //TODO Change to physical length units !!!!
 class MOKALens : public Lens{
 public:
-
 
 	MOKALens(std::string);
 	MOKALens(std::string paramfile,LensHalo *LH);
