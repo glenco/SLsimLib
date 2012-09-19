@@ -315,25 +315,3 @@ bool QTreeNB::WalkStep(bool allowDescent){
 	}
 	return false;
 }
-
-void QTreeNB::printTree(){
-  int i;
-
-  current = top;
-
-  do{
-	  printBranch(current);
-  }while(WalkStep(true));
-
-
-  return;
-}
-
-void QTreeNB::printBranch(QBranchNB *data){
-  std::cout << "******* branch *******" << std::endl;
-  std::cout << "level=" << data->level << " number=" << data->number << std::endl;
-  std::cout << "center = [" << data->center[0] << "," << data->center[1] << "]" << std::endl;
-  std::cout << "p1 = [" << data->boundary_p1[0] << "," << data->boundary_p1[1] << "]" << std::endl;
-  std::cout << "p2 = [" << data->boundary_p2[0] << "," << data->boundary_p2[1] << "]" << std::endl;
-  std::cout<< "number of points = " << data->nparticles << std::endl;
-}

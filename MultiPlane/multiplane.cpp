@@ -532,7 +532,7 @@ void MultiLens::buildHaloTrees(
 			if(j+1 == (flag_input_lens % Nplanes)) z2 = plane_redshifts[j] + 0.5*(plane_redshifts[j+2] - plane_redshifts[j]);
 
 			if(halo_set)
-				delete halo_data[j];
+				delete &(halo_data[j]);
 
 			halo_data[j] = auto_ptr<HaloData>(new HaloData(fieldofview,min_mass,mass_scale,z1,z2,mass_func_type,pw_alpha,cosmo,seed));
 
@@ -574,7 +574,7 @@ void MultiLens::buildHaloTrees(
 			/// Use other constructor to create halo data
 
 			if(halo_set)
-				delete halo_data[j];
+				delete &(halo_data[j]);
 
 			halo_data[j] = auto_ptr<HaloData>(new HaloData(&halos[j1],&halo_pos[j1],j2-j1));
 
@@ -590,7 +590,7 @@ void MultiLens::buildHaloTrees(
 			continue;
 
 		if(halo_set)
-			delete halo_tree[j];
+			delete &(halo_tree[j]);
 
 		switch(internal_profile){
 		case PowerLaw:
