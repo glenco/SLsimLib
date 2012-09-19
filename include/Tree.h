@@ -155,6 +155,7 @@ void SwapPointsInArray(Point *p1,Point *p2);
 void SwapPointsInArrayData(Point *p1,Point *p2);
 void PointCopy(Point *pcopy,Point *pins);
 void PointCopyData(Point *pcopy,Point *pins);
+void PointCopyAll(Point *pcopy,Point *pins);
 
 // image info routines
 
@@ -228,6 +229,7 @@ Point *LinkToSourcePoints(Point *i_points,unsigned long Npoints);
 void log_polar_grid(Point *i_points,double rmax,double rmin,double *center,long Ngrid);
 void findarea(ImageInfo *imageinfo);
 int windings2(double *x,Point *points,unsigned long Npoints,double *area,short image);
+void writeCurves(int m, ImageInfo *critical, int Ncrit, int index);
 
 long IndexFromPosition(double *x,long Npixels,double range,double *center);
 void PositionFromIndex(unsigned long i,double *x,long Npixels,double range,double *center);
@@ -272,5 +274,6 @@ int windings(double *x,KistHndl kist,double *area,short image);
 /*  void rayshooterInternal(double *x,double *alpha,double *gamma,double *kappa,double *invmag);*/
 void rayshooterInternal(unsigned long Npoints,Point *i_points,bool kappa_off);
 void in_source(double *y_source,ListHndl sourcelist);
+bool tree_count_test(TreeHndl tree);
 
 #endif
