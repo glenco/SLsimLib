@@ -45,6 +45,17 @@ MOKALens::MOKALens(std::string paramfile) : Lens(){
 			,&map->gamma2
 			,LH);
 
+
+	int i,j;
+	if(flag_background_field==1){
+	  for(i=0;i<map->nx;i++) for(j=0;j<map->ny;){
+	      map->convergence[i+map->nx*j] = 0;
+	      map->alpha1[i+map->nx*j] = 0;
+	      map->alpha2[i+map->nx*j] = 0;
+	      map->gamma1[i+map->nx*j] = 0;
+	      map->gamma2[i+map->nx*j] = 0;
+	    }
+	}
 	initMap();
 }
 
@@ -166,6 +177,10 @@ void MOKALens::readParamfile(std::string filename){
   addr[n] = &flag_MOKA_analyze;
   id[n] = 1;
   label[n++] = "MOKA_analyze";
+
+  addr[n] = &flag_background_field;
+  id[n] = 1;
+  label[n++] = "background_field";
 
   std::ifstream file_in(filename.c_str());
   if(!file_in){

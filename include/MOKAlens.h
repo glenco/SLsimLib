@@ -65,6 +65,7 @@ public:
 	std::string MOKA_input_file;
 	/// if >=1 (true), do analyzis only; if = 0 (false) change units to internal GLAMER units and prepare for ray-shooting
 	int flag_MOKA_analyze;
+	int flag_background_field;
 
 	void readParamfile(std::string);
 	void rayshooterInternal(double *ray, double *alpha, float *gamma, float *kappa, bool kappa_off);
