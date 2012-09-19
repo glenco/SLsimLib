@@ -567,7 +567,11 @@ void _AddPoint(TreeHndl tree){
 		tree->pointlist->current = tree->current->points;
 
 		assert(tree->current->points->next || tree->current->points->prev);
-		assert(tree->current->npoints <= 2*tree->Nbucket);
+		//assert(tree->current->npoints <= 2*tree->Nbucket);
+		if(tree->current->npoints > 2*tree->Nbucket){
+			std::cout << tree->current->npoints << std::endl;
+			exit(1);
+		}
 
 		for(i=0;i<tree->current->npoints;++i){
 			x[i] = tree->pointlist->current->x[dimension];

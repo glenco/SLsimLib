@@ -256,6 +256,8 @@ void find_crit_kist(
 	  negimage.imagekist->InsertAfterCurrent(minpoint);
   }
 
+  free(minpoint);
+
   for(;;){
 
 	  //EmptyList(negpointlist);

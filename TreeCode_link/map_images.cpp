@@ -1046,6 +1046,7 @@ Point * RefineLeaf(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,Point *point,in
 		s_points = AddPointToArray(s_points,Ngrid*Ngrid-1-Nout,Ntemp);
 	}
 
+	assert(Ngrid*Ngrid-1-Nout < Ngrid*Ngrid);
 
 	//*** these could be mode more efficient by starting at the current in tree
 	AddPointsToTree(i_tree,i_points,Ngrid*Ngrid-1-Nout);
