@@ -136,11 +136,17 @@ void QuadTree::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
 			r = haloON ? halo_params[particles[i]*MultiRadius].Rmax	: sizes[particles[i]*MultiRadius];
 			if(r < (cbranch->boundary_p2[0]-cbranch->boundary_p1[0])) ++cbranch->Nbig_particles;
 		}
-		cbranch->big_particles = new IndexType[cbranch->Nbig_particles];
-		for(i=0,j=0;i<cbranch->nparticles;++i){
-			r = haloON ? halo_params[particles[i]*MultiRadius].Rmax	: sizes[particles[i]*MultiRadius];
-			if(r < (cbranch->boundary_p2[0]-cbranch->boundary_p1[0])) cbranch->big_particles[j++] = particles[i];
+		if(cbranch->Nbig_particles){
+			cbranch->big_particles = new IndexType[cbranch->Nbig_particles];
+			for(i=0,j=0;i<cbranch->nparticles;++i){
+				r = haloON ? halo_params[particles[i]*MultiRadius].Rmax	: sizes[particles[i]*MultiRadius];
+				if(r < (cbranch->boundary_p2[0]-cbranch->boundary_p1[0])) cbranch->big_particles[j++] = particles[i];
+			}
 		}
+		else{
+			cbranch->big_particles = NULL;
+		}
+
 		return;
 	}
 
@@ -700,6 +706,163 @@ void QuadTree::walkTree_recur(QBranchNB *branch,double *ray,double *alpha,float 
 				walkTree_recur(branch->child2,&ray[0],&alpha[0],kappa,&gamma[0],no_kappa);
 			if(branch->child3 != NULL)
 				walkTree_recur(branch->child3,&ray[0],&alpha[0],kappa,&gamma[0],no_kappa);
+
+		}else{ // use whole cell
+			tmp = -1.0*branch->mass/rcm2cell/pi;
+
+			alpha[0] += tmp*xcm;
+			alpha[1] += tmp*ycm;
+
+			if(!no_kappa){      //  taken out to speed up
+				tmp=-2.0*branch->mass/pi/rcm2cell/rcm2cell;
+				gamma[0] += 0.5*(xcm*xcm-ycm*ycm)*tmp;
+				gamma[1] += xcm*ycm*tmp;
+			}
+
+			// quadrapole contribution
+			//   the kappa and gamma are not calculated to this order
+			alpha[0] -= (branch->quad[0]*xcm + branch->quad[2]*ycm)
+	    								  /pow(rcm2cell,2)/pi;
+			alpha[1] -= (branch->quad[1]*ycm + branch->quad[2]*xcm)
+	    								  /pow(rcm2cell,2)/pi;
+
+			tmp = 4*(branch->quad[0]*xcm*xcm + branch->quad[1]*ycm*ycm
+					+ 2*branch->quad[2]*xcm*ycm)/pow(rcm2cell,3)/pi;
+
+			alpha[0] += tmp*xcm;
+			alpha[1] += tmp*ycm;
+
+			return;
+		}
+	}
+	return;
+}
+
+void force2D_recur(QuadTreeHndl qtree, double *ray,double *alpha,float *kappa,float *gamma,bool no_kappa){
+
+  assert(qtree->tree);
+
+  alpha[0]=alpha[1]=gamma[0]=gamma[1]=gamma[2]=0.0;
+  *kappa=0.0;
+
+  walkTree_recur(qtree,qtree->tree->top,&ray[0],&alpha[0],kappa,&gamma[0],no_kappa);
+
+  // Subtract off uniform mass sheet to compensate for the extra mass
+  //  added to the universe in the halos.
+  alpha[0] += ray[0]*qtree->kappa_background;
+  alpha[1] += ray[1]*qtree->kappa_background;
+  if(!no_kappa){      //  taken out to speed up
+	  *kappa -= qtree->kappa_background;
+  }
+
+  return;
+}
+
+void walkTree_recur(QuadTreeHndl qtree, QBranchNB *branch,double *ray,double *alpha,float *kappa,float *gamma,bool no_kappa){
+
+	PosType xcm,ycm,rcm2cell,rcm2,tmp,boxsize2;
+	IndexType i;
+	unsigned long count=0,index;
+	double rcm, arg1, arg2, prefac, prefacg;
+
+	if(branch->nparticles > 0){
+		xcm=branch->center[0]-ray[0];
+		ycm=branch->center[1]-ray[1];
+
+		rcm2cell = xcm*xcm + ycm*ycm;
+
+		boxsize2 = pow(branch->boundary_p2[0]-branch->boundary_p1[0],2);
+
+		if( rcm2cell < pow(branch->rcrit_angle,2) || rcm2cell < 5.83*boxsize2){
+
+			// Treat all particles in a leaf as a point particle
+			if(qtree->tree->atLeaf(branch)){
+
+				for(i = 0 ; i < branch->nparticles ; ++i){
+
+					xcm = qtree->tree->xp[branch->particles[i]][0] - ray[0];
+					ycm = qtree->tree->xp[branch->particles[i]][1] - ray[1];
+
+					rcm2 = xcm*xcm + ycm*ycm;
+					if(rcm2 < 1e-20) rcm2 = 1e-20;
+
+					index = qtree->MultiMass*branch->particles[i];
+
+					if(qtree->haloON) prefac = qtree->halo_params[index].mass/rcm2/pi;
+					else prefac = qtree->masses[index]/rcm2/pi;
+
+					prefacg = prefac/rcm2;
+
+					tmp = -1.0*prefac;
+
+					alpha[0] += tmp*xcm;
+					alpha[1] += tmp*ycm;
+
+					// can turn off kappa and gamma calculations to save times
+					if(!no_kappa){
+						tmp = -2.0*prefacg;
+
+						gamma[0] += 0.5*(xcm*xcm-ycm*ycm)*tmp;
+						gamma[1] += xcm*ycm*tmp;
+					}
+				}
+			}
+
+			// Fined the particles that are intersect with ray and add them individually.
+			if(rcm2cell < 5.83*boxsize2){
+				for(i = 0 ; i < branch->Nbig_particles ; ++i){
+
+					index = branch->big_particles[i];
+
+					xcm = qtree->tree->xp[index][0] - ray[0];
+					ycm = qtree->tree->xp[index][1] - ray[1];
+
+					rcm2 = xcm*xcm + ycm*ycm;
+					if(rcm2 < 1e-20) rcm2 = 1e-20;
+					rcm = sqrt(rcm2);
+
+					if(qtree->haloON){
+						prefac = qtree->halo_params[index*qtree->MultiMass].mass/rcm2/pi;
+						arg1 = rcm/qtree->halo_params[index*qtree->MultiRadius].rscale;
+						arg2 = qtree->halo_params[index*qtree->MultiRadius].Rmax/qtree->halo_params[index*qtree->MultiRadius].rscale;
+						tmp = qtree->halo_params[index*qtree->MultiRadius].Rmax;
+					}
+					else{
+						prefac = qtree->masses[index*qtree->MultiMass]/rcm2/pi;
+						arg1 = rcm2/(qtree->sizes[index*qtree->MultiRadius]*qtree->sizes[index*qtree->MultiRadius]);
+						arg2 = qtree->sizes[index*qtree->MultiRadius];
+						tmp = qtree->sizes[index*qtree->MultiRadius];
+					}
+
+					prefacg = prefac/rcm2;
+
+					/// intersecting, subtract the point particle
+					if(rcm2 < tmp*tmp){
+						tmp = (qtree->alpha_h(arg1,arg2) + 1.0)*prefac;
+						alpha[0] += tmp*xcm;
+						alpha[1] += tmp*ycm;
+
+						// can turn off kappa and gamma calculations to save times
+						if(!no_kappa){
+							*kappa += qtree->kappa_h(arg1,arg2)*prefac;
+
+							tmp = (qtree->gamma_h(arg1,arg2) + 2.0)*prefacg;
+
+							gamma[0] += 0.5*(xcm*xcm-ycm*ycm)*tmp;
+							gamma[1] += xcm*ycm*tmp;
+						}
+					}
+				}
+			}
+
+			if(branch->child0 != NULL)
+				walkTree_recur(qtree,branch->child0,&ray[0],&alpha[0],kappa,&gamma[0],no_kappa);
+			if(branch->child1 != NULL)
+				walkTree_recur(qtree,branch->child1,&ray[0],&alpha[0],kappa,&gamma[0],no_kappa);
+			if(branch->child2 != NULL)
+				walkTree_recur(qtree,branch->child2,&ray[0],&alpha[0],kappa,&gamma[0],no_kappa);
+			if(branch->child3 != NULL)
+				walkTree_recur(qtree,branch->child3,&ray[0],&alpha[0],kappa,&gamma[0],no_kappa);
 
 		}else{ // use whole cell
 			tmp = -1.0*branch->mass/rcm2cell/pi;
