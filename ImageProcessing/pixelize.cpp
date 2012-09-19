@@ -188,9 +188,9 @@ void PixelMap::printASCIItoFile(std::string filename){
 	}
 
 	Convert();
-	std::cout << Npixels << "  " << range << std::endl;
-	for(unsigned long i=0;i < Npixels*Npixels; ++i) file_map << map[i] << std::endl;
-	std::cout << Npixels << "  " << range << std::endl;
+	file_map << Npixels << "  " << range << std::endl;
+	for(unsigned long i=0;i < Npixels*Npixels; ++i) file_map << std::scientific << map[i] << std::endl;
+	file_map << Npixels << "  " << range << std::endl;
 
 	map.resize(0);
 
