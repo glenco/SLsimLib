@@ -16,27 +16,21 @@
 
 void implant_stars(AnaLens *lens,Point *centers,unsigned long Nregions,long *seed){
 	PosType r,theta,NstarsPerImage;
-	static PosType **coord;
 	unsigned long i,j,m,k;
 
 	if(lens->stars_N < 1.0  || lens->star_fstars <= 0) return;
 	if(lens->star_fstars > 1.0){ std::printf("fstars > 1.0\n"); exit(0); }
 	if(!(lens->stars_implanted) ){
 
-		coord = PosTypeMatrix(0,2,0,2);
-		coord[0][0] = coord[1][1] = coord[2][2] = 1.0;
-		coord[0][1] = coord[0][2] = coord[1][0] = coord[1][2] = 0.0;
-		coord[2][0] = coord[2][1] = 0.0;
-
-		lens->star_masses = (float *) calloc(lens->stars_N,sizeof(float));
-		lens->stars = (unsigned long *) calloc(lens->stars_N,sizeof(unsigned long));
+		lens->star_masses = new float[lens->stars_N];
+		lens->stars = new unsigned long[lens->stars_N];
 		lens->stars_xp = PosTypeMatrix(0,lens->stars_N-1,0,2);
 		lens->star_theta_force = 1.0e-1;
 
 		assert(Nregions > 0);
 		lens->star_Nregions = Nregions;
-		lens->star_region = (double *)calloc(Nregions,sizeof(double));
-		lens->star_kappa = (double *)calloc(Nregions,sizeof(double));
+		lens->star_region = new double[Nregions];
+		lens->star_kappa = new double[Nregions];
 		lens->star_xdisk = dmatrix(0,Nregions-1,0,1);
 
 	}else{
@@ -101,6 +95,7 @@ void implant_stars(AnaLens *lens,Point *centers,unsigned long Nregions,long *see
 		}
 	}
 
+
 	assert(m <= lens->stars_N);
 	lens->stars_N = m;
 
@@ -109,10 +104,11 @@ void implant_stars(AnaLens *lens,Point *centers,unsigned long Nregions,long *see
 	float dummy=0;
 	//lens->star_tree = new ForceTree(lens->stars_xp,lens->stars_N,lens->star_masses,&dummy
 	//		,false,false,5,2,false,lens->star_theta_force);
+
 	lens->star_tree = new QuadTree(lens->stars_xp,lens->star_masses,&dummy,lens->stars_N
 			,false,false,0,4,lens->star_theta_force);
 
-	std::printf("projected with 2D tree\n");
+	std::cout<<"projected with 2D tree"<<std::endl;
 
 	// visit every branch to find center of mass and cutoff scale */
 	lens->stars_implanted = true;
@@ -126,12 +122,13 @@ void setStars(AnaLens *lens, bool implanted){
 
 /// subtracts the mass in stars from the smooth model to compensate
 /// for the mass of the stars the lensing quantities are all updated not replaced
-void AnaLens::substract_stars_disks(PosType *ray,PosType *alpha
+void AnaLens::substract_stars_disks(double *ray,double *alpha
 		,float *kappa,float *gamma){
 
 	if(!(stars_implanted)) return;
 
-	PosType xcm,ycm,r,tmp;
+	double xcm,ycm,r;
+	float tmp;
 	double mass;
 	int i;
 
