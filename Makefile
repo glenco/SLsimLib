@@ -1,10 +1,10 @@
-NR_DIR = /Users/mpetkova/Code/NR
-COSMOLIB_DIR = /Users/mpetkova/Code/CosmoLib
+NR_DIR = /Users/cgiocoli/Dropbox/Astro/Codes/EclipseWorkspace/NR
+COSMOLIB_DIR = /Users/cgiocoli/Dropbox/Astro/Codes/EclipseWorkspace/CosmoLib
 
 OPT = -DENABLE_FITS
 
-CFITS_DIR = /usr/local/cfitsio
-CCFITS_DIR = /usr/local/CCfitsio
+CFITS_DIR = /Users/cgiocoli/Library/CppLib/cfitsio
+CCFITS_DIR = /Users/cgiocoli/Library/CppLib/CCfits
 
 INCL = -I./include/ \
 	-I$(NR_DIR)/include \

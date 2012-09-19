@@ -45,6 +45,17 @@ MOKALens::MOKALens(std::string paramfile) : Lens(){
 			,&map->gamma2
 			,LH);
 
+
+	int i,j;
+	if(flag_background_field==1){
+	  for(i=0;i<map->nx;i++) for(j=0;j<map->ny;){
+	      map->convergence[i+map->nx*j] = 0;
+	      map->alpha1[i+map->nx*j] = 0;
+	      map->alpha2[i+map->nx*j] = 0;
+	      map->gamma1[i+map->nx*j] = 0;
+	      map->gamma2[i+map->nx*j] = 0;
+	    }
+	}
 	initMap();
 }
 
@@ -93,13 +104,13 @@ void MOKALens::initMap(){
 	map->boxlMpc = LH->boxlMpc;
 	map->h = LH->h;
 
-	map->boxlMpc /= map->h;
+	map->boxlMpc *= map->h;
 
 	/// to radians
 	map->boxl *= pi/180/3600.;
 
-	double xmin = -map->boxlMpc*0.5*map->h;
-	double xmax =  map->boxlMpc*0.5*map->h;
+	double xmin = -map->boxlMpc*0.5/map->h;
+	double xmax =  map->boxlMpc*0.5/map->h;
 	fill_linear (map->x,map->nx,xmin,xmax); // physical
 	map->inarcsec  = 10800./M_PI/LH->DL*60.;
 }
@@ -166,6 +177,10 @@ void MOKALens::readParamfile(std::string filename){
   addr[n] = &flag_MOKA_analyze;
   id[n] = 1;
   label[n++] = "MOKA_analyze";
+
+  addr[n] = &flag_background_field;
+  id[n] = 1;
+  label[n++] = "background_field";
 
   std::ifstream file_in(filename.c_str());
   if(!file_in){
@@ -301,9 +316,9 @@ void MOKALens::saveImage(GridHndl grid,bool saveprofiles){
  *  */
 void MOKALens::saveProfiles(double &RE3){
 	/* measuring the differential and cumulative profile*/
-	double xmin = -map->boxlMpc*0.5*map->h;
-	double xmax =  map->boxlMpc*0.5*map->h;
-	double drpix = map->boxlMpc/map->nx*map->h;
+	double xmin = -map->boxlMpc*0.5/map->h;
+	double xmax =  map->boxlMpc*0.5/map->h;
+	double drpix = map->boxlMpc/map->nx/map->h;
 
 	std::valarray<float> pxdist(map->nx*map->ny);
 	std::valarray<float> red_sgE(map->nx*map->ny),red_sgB(map->nx*map->ny),sgm(map->nx*map->ny); 
@@ -320,7 +335,7 @@ void MOKALens::saveProfiles(double &RE3){
 		sgm[i+map->ny*j] = sqrt(pow(map->gamma1[i+map->ny*j],2) + pow(map->gamma2[i+map->ny*j],2));
 	}
 
-	double dr0 = 8.*(0.5*map->boxlMpc*map->h)/(map->nx/2.);
+	double dr0 = 8.*(0.5*map->boxlMpc/map->h)/(map->nx/2.);
 	int nbin = int(xmax/dr0);                           
 
 	//                                                                                           
@@ -450,7 +465,7 @@ void MOKALens::EinsteinRadii(double &RE1, double &RE2){
       }
     }
   filoutcrit.close();
-  double pixDinL = map->boxlMpc*map->h/double(map->nx);
+  double pixDinL = map->boxlMpc/map->h/double(map->nx);
   /* measure the Einstein radius */
   std:: vector<double> xci,yci;	
   //for(int ii=0;ii<xci1.size();ii++){
