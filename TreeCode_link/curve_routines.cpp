@@ -6,6 +6,7 @@
  */
 
 #include <slsimlib.h>
+#include <sstream>
 
 /**  orders points in a curve, separates disconnected curves
  *   curves[0...Maxcurves] must be allocated before
@@ -1607,3 +1608,95 @@ int windings2(
 	return wn;
 }
 
+/*
+ * writes in four files the critical curves and the caustics for all the curves found and also for a
+ * specified one (ind_causic)
+ */
+void writeCurves(int m			/// part of te filename, could be the number/index of the main lens
+		,ImageInfo *critical	/// the crit curve
+		,int Ncrit				/// the number of crit curves
+		,int ind_caustic		/// the index of the cuvre of interest
+		){
+
+
+		  // caustic points of the fov
+
+		  std::stringstream f;
+		  f << "caustic_points_fov_" << m << ".data";
+		  std::string filecrit = f.str();
+		  std::ofstream file_crit(filecrit.c_str());
+		  if(!file_crit){
+			  std::cout << "unable to open file " << filecrit << std::endl;
+			exit(1);
+		  }
+
+		  int ii,l;
+
+		  for(ii=0;ii<Ncrit;++ii){
+			  for(critical[ii].imagekist->MoveToTop(),l=0;l<critical[ii].imagekist->Nunits();l++,critical[ii].imagekist->Down()){
+				  file_crit << 180/pi*3600.*critical[ii].imagekist->getCurrent()->image->x[0] << " ";
+				  file_crit << 180/pi*3600.*critical[ii].imagekist->getCurrent()->image->x[1] << std::endl;
+			  }
+		  }
+
+		  file_crit.close();
+
+		  // critical points of the fov
+
+		  f.clear();
+		  f.str("");
+		  f << "critical_points_fov_" << m << ".data";
+		  filecrit = f.str();
+		  file_crit.open(filecrit.c_str());
+		  if(!file_crit){
+			  std::cout << "unable to open file " << filecrit << std::endl;
+			  exit(1);
+		  }
+
+	 	  for(ii=0;ii<Ncrit;++ii){
+			  for(critical[ii].imagekist->MoveToTop(),l=0;l<critical[ii].imagekist->Nunits();l++,critical[ii].imagekist->Down()){
+				  file_crit << 180/pi*3600.*critical[ii].imagekist->getCurrent()->x[0] << " ";
+				  file_crit << 180/pi*3600.*critical[ii].imagekist->getCurrent()->x[1] << std::endl;
+			  }
+		  }
+		  file_crit.close();
+
+		  // caustic points of the analens
+
+		  f.clear();
+		  f.str("");
+		  f << "caustic_points_" << m << ".data";
+		  filecrit = f.str();
+		  file_crit.open(filecrit.c_str());
+		  if(!file_crit){
+			  std::cout << "unable to open file " << filecrit << std::endl;
+			  exit(1);
+		  }
+
+		  for(critical[ind_caustic].imagekist->MoveToTop(),l=0;l<critical[ind_caustic].imagekist->Nunits();l++,critical[ind_caustic].imagekist->Down()){
+			  file_crit << 180/pi*3600.*critical[ind_caustic].imagekist->getCurrent()->image->x[0] << " ";
+			  file_crit << 180/pi*3600.*critical[ind_caustic].imagekist->getCurrent()->image->x[1] << std::endl;
+		  }
+
+		  file_crit.close();
+
+		  // critical points of the analens
+
+		  f.clear();
+		  f.str("");
+		  f << "critical_points_" << m << ".data";
+		  filecrit = f.str();
+		  file_crit.open(filecrit.c_str());
+		  if(!file_crit){
+			  std::cout << "unable to open file " << filecrit << std::endl;
+			  exit(1);
+		  }
+
+		  for(critical[ind_caustic].imagekist->MoveToTop(),l=0;l<critical[ind_caustic].imagekist->Nunits();l++,critical[ind_caustic].imagekist->Down()){
+			  file_crit << 180/pi*3600.*critical[ind_caustic].imagekist->getCurrent()->x[0] << " ";
+			  file_crit << 180/pi*3600.*critical[ind_caustic].imagekist->getCurrent()->x[1] << std::endl;
+		  }
+
+		  file_crit.close();
+
+}
