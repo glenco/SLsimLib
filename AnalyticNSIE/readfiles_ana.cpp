@@ -39,8 +39,6 @@ void AnaLens::readParamfile(string filename){
   string escape = "#";
   char dummy[300];
   int flag;
-  
-  perturb_rms = new double[6];
 
   n = 0;
 
@@ -74,27 +72,27 @@ void AnaLens::readParamfile(string filename){
   id[n] = 0;
   label[n++] = "beta_perturb";
 
-  addr[n] = perturb_rms++;
+  addr[n] = &perturb_rms[0];
   id[n] = 0;
   label[n++] = "kappa_peturb";
 
-  addr[n] = perturb_rms++;
+  addr[n] = &perturb_rms[1];
   id[n] = 0;
   label[n++] = "gamma_peturb";
 
-  addr[n] = perturb_rms++;
+  addr[n] = &perturb_rms[2];
   id[n] = 0;
   label[n++] = "monopole_peturb";
 
-  addr[n] = perturb_rms++;
+  addr[n] = &perturb_rms[3];
   id[n] = 0;
   label[n++] = "quadrapole_peturb";
 
-  addr[n] = perturb_rms++;
+  addr[n] = &perturb_rms[4];
   id[n] = 0;
   label[n++] = "hexopole_peturb";
 
-  addr[n] = perturb_rms++;
+  addr[n] = &perturb_rms[5];
   id[n] = 0;
   label[n++] = "octopole_peturb";
 
@@ -217,10 +215,10 @@ void AnaLens::readParamfile(string filename){
 		  sub_phi_func = phiPowLaw;
 		  break;
 	  case pointmass:
-		  sub_alpha_func = 0;
-		  sub_kappa_func = 0;
-		  sub_gamma_func = 0;
-		  sub_phi_func = 0;
+		  sub_alpha_func = NULL;
+		  sub_kappa_func = NULL;
+		  sub_gamma_func = NULL;
+		  sub_phi_func = NULL;
 		  break;
 	  default:
 		  ERROR_MESSAGE();
@@ -376,29 +374,38 @@ void AnaLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 }
 
 AnaLens::AnaLens(string filename) : Lens(){
+
+  perturb_rms = new double[6];
+
   readParamfile(filename);
 
   set = true;
 }
 
+
 AnaLens::~AnaLens(){
+	cout << "deleting lens" << endl;
+
 	delete[] perturb_rms;
+
 	if(perturb_Nmodes > 0){
+		cout << "deleting modes" << endl;
 		delete[] perturb_modes;
 	}
 	if(sub_N > 0 && substruct_implanted){
-	  free_dmatrix(sub_x,0,sub_N-1,0,1);
-	  free(sub_Rcut);
-	  free(sub_mass);
-	  free(sub_substructures);
-	  
+		cout << "deleting subs" << endl;
+		free_dmatrix(sub_x,0,sub_N-1,0,1);
+		delete[] sub_Rcut;
+		delete[] sub_mass;
+		delete[] sub_substructures;
 	}
 	if(stars_N > 0 && stars_implanted){
-		free(star_masses);
-		free(stars);
+		cout << "deleting stars" << endl;
+		delete[] star_masses;
+		delete[] stars;
 		free_PosTypeMatrix(stars_xp,0,stars_N-1,0,2);
-		free(star_region);
-		free(star_kappa);
+		delete[] star_region;
+		delete[] star_kappa;
 		free_dmatrix(star_xdisk,0,star_Nregions-1,0,1);
 		delete star_tree;
 	}

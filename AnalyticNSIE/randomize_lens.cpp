@@ -278,9 +278,9 @@ void AnaLens::RandomizeSubstructure2(double rangeInRei,long *seed){
 		NsubMax=(unsigned long)(ndensity*pi*Rmax*Rmax + 5*sqrt(ndensity*pi*Rmax*Rmax) );
 		if(NsubMax > 0){
 			sub_x=dmatrix(0,NsubMax-1,0,1);
-			sub_Rcut=(float *)calloc(NsubMax,sizeof(float));
-			sub_mass=(float *)calloc(NsubMax,sizeof(float));
-			sub_substructures = (IndexType *)calloc(NsubMax,sizeof(IndexType));
+			sub_Rcut=new float[NsubMax];
+			sub_mass=new float[NsubMax];
+			sub_substructures = new IndexType[NsubMax];
 		}
 		substruct_implanted=true;
 	}
@@ -394,10 +394,10 @@ void AnaLens::RandomizeSubstructure3(double rangeInRei,long *seed){
 	if(!substruct_implanted){
 		NsubMax=(unsigned long)(sub_Ndensity*pi*Rmax*Rmax*(1+5/sqrt(sub_Ndensity*pi*Rmax*Rmax)) );
 		sub_x=dmatrix(0,NsubMax-1,0,1);
-		sub_Rcut=(float *)calloc(NsubMax,sizeof(float));
-		sub_mass=(float *)calloc(NsubMax,sizeof(float));
+		sub_Rcut=new float[NsubMax];
+		sub_mass=new float[NsubMax];
 		substruct_implanted=true;
-		sub_substructures = (IndexType *)calloc(NsubMax,sizeof(IndexType));
+		sub_substructures = new IndexType[NsubMax];
 	}
 	//std::cout << "Rmax/re = %e\n",Rmax/ro);
 	//for(i=0;i<12;++i) std::cout << "%f %f\n",poidev(ndensity*pi*Rmax*Rmax,seed),ndensity*pi*Rmax*Rmax);

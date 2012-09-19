@@ -86,7 +86,7 @@ float kappaNSIE(double *xt,double f,double bc,double theta){
   return 0.5*sqrt(f/(b2+bc*bc));
 }
      /* shear */
-void gammaNSIE(float gam[2],double *xt,double f,double bc,double theta){
+void gammaNSIE(float *gam,double *xt,double f,double bc,double theta){
   double x[2],fp,P,b2,r;
 
   r=sqrt(xt[0]*xt[0]+xt[1]*xt[1]);
