@@ -133,6 +133,8 @@ private:
 	double charge;
 	/// an array of smart pointers to the halo models on each plane
 	std::auto_ptr<HaloData> *halo_data;
+	/// true if halo trees alrady exit, false if not (default is false)
+	bool halo_set;
 	/// an array of smart pointers to halo trees on each plane, uses the haloModel in the construction
 	std::auto_ptr<QuadTree> *halo_tree;
 
