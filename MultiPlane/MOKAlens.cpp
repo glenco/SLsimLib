@@ -48,7 +48,7 @@ MOKALens::MOKALens(std::string paramfile) : Lens(){
 
 	int i,j;
 	if(flag_background_field==1){
-	  for(i=0;i<map->nx;i++) for(j=0;j<map->ny;){
+	  for(i=0;i<map->nx;i++) for(j=0;j<map->ny;j++){
 	      map->convergence[i+map->nx*j] = 0;
 	      map->alpha1[i+map->nx*j] = 0;
 	      map->alpha2[i+map->nx*j] = 0;
@@ -104,13 +104,13 @@ void MOKALens::initMap(){
 	map->boxlMpc = LH->boxlMpc;
 	map->h = LH->h;
 
-	map->boxlMpc *= map->h;
+	map->boxlMpc /= map->h;
 
 	/// to radians
 	map->boxl *= pi/180/3600.;
 
-	double xmin = -map->boxlMpc*0.5/map->h;
-	double xmax =  map->boxlMpc*0.5/map->h;
+	double xmin = -map->boxlMpc*0.5*map->h;
+	double xmax =  map->boxlMpc*0.5*map->h;
 	fill_linear (map->x,map->nx,xmin,xmax); // physical
 	map->inarcsec  = 10800./M_PI/LH->DL*60.;
 }
@@ -265,7 +265,8 @@ void MOKALens::saveImage(GridHndl grid,bool saveprofiles){
 	std::stringstream f;
 	std::string filename;
 
-	f << MOKA_input_file << "_noisy.fits";
+	if(flag_background_field==1) f << MOKA_input_file << "_only_noise.fits";
+	else f << MOKA_input_file << "_noisy.fits";
 	filename = f.str();
 
 	MoveToTopList(grid->i_tree->pointlist);
@@ -300,7 +301,8 @@ void MOKALens::saveImage(GridHndl grid,bool saveprofiles){
 	  double RE1,RE2;
 	  EinsteinRadii(RE1,RE2);
 	  std::ostringstream fEinr;
-	  fEinr << MOKA_input_file << "_noisy_Einstein.radii.dat";
+	  if(flag_background_field==1) fEinr << MOKA_input_file << "_only_noise_Einstein.radii.dat";
+	  else fEinr << MOKA_input_file << "_noisy_Einstein.radii.dat";
 	  std:: ofstream filoutEinr;
 	  std:: string filenameEinr = fEinr.str();
 	  filoutEinr.open(filenameEinr.c_str());
@@ -316,9 +318,9 @@ void MOKALens::saveImage(GridHndl grid,bool saveprofiles){
  *  */
 void MOKALens::saveProfiles(double &RE3){
 	/* measuring the differential and cumulative profile*/
-	double xmin = -map->boxlMpc*0.5/map->h;
-	double xmax =  map->boxlMpc*0.5/map->h;
-	double drpix = map->boxlMpc/map->nx/map->h;
+	double xmin = -map->boxlMpc*0.5*map->h;
+	double xmax =  map->boxlMpc*0.5*map->h;
+	double drpix = map->boxlMpc/map->nx*map->h;
 
 	std::valarray<float> pxdist(map->nx*map->ny);
 	std::valarray<float> red_sgE(map->nx*map->ny),red_sgB(map->nx*map->ny),sgm(map->nx*map->ny); 
@@ -335,27 +337,68 @@ void MOKALens::saveProfiles(double &RE3){
 		sgm[i+map->ny*j] = sqrt(pow(map->gamma1[i+map->ny*j],2) + pow(map->gamma2[i+map->ny*j],2));
 	}
 
-	double dr0 = 8.*(0.5*map->boxlMpc/map->h)/(map->nx/2.);
+	double dr0 = 8.*(0.5*map->boxlMpc*map->h)/(map->nx/2.);
 	int nbin = int(xmax/dr0);                           
-
+	int nbggal=0;
+	int ih;
+	// check if backgroundgalXarcmin2.d file exist
+	std:: string filebgXarcmin2 = "backgroundgalXarcmin2.d";
+	std:: ifstream infilebgXarcmin2;
+	infilebgXarcmin2.open(filebgXarcmin2.c_str());
+	// ... if so it read it!
+	if(infilebgXarcmin2.is_open()){
+	  std:: cout << " I will read  backgroundgalXarcmin2.d file" << std:: endl;
+	  infilebgXarcmin2 >> nbggal;
+	  infilebgXarcmin2 >> ih;
+	  std:: cout << "  and consider " << nbggal <<  " per arcmin2 as background points " << std:: endl;
+	  std:: cout << " in building the cluster profile" << std:: endl;
+	  infilebgXarcmin2.close();
+	}    
+	double dntbggal=double(nbggal)*(map->boxl*map->boxl)/3600.;
+	int ntbggal=int(dntbggal+0.5);
+	std:: vector<int> runi,runj;
+	int ibut;
+	int lrun;
+	if(ntbggal>0){
+	  std:: cout << " ~ ~ ~ " << ntbggal << " number of bg gal in the field" << std:: endl;
+	  // fill the vector with random coordinates of background galaxies
+	  srand(ih+94108);
+	  for(lrun=0;lrun<ntbggal;lrun++){
+	    ibut = rand()%map->nx;
+	    if(ibut>map->nx || ibut<0) std:: cout << "1. ibut out of npix range = " << ibut << std:: endl;
+	    runi.push_back(ibut);
+	    ibut = rand()%map->nx;
+	    if(ibut>map->nx || ibut<0) std:: cout << "2. ibut out of npix range = " << ibut << std:: endl;
+	    runj.push_back(ibut);
+	  }
+	  if(runi.size()>ntbggal || runj.size()>ntbggal){
+	    std:: cout << " random points in the field out of range " << std:: endl;
+	    std:: cout << " runi.size() = " << runi.size() << std:: endl;
+	    std:: cout << " runj.size() = " << runj.size() << std:: endl;	      
+	  }
+	  dr0 = nXbin*(0.5*map->boxlMpc*map->h)/(0.5*ntbggal);
+	  nbin = int(xmax/dr0);                                                        
+	}
 	//                                                                                           
 	std:: cout << "   " << std:: endl;                                                           
 	std:: cout << " nbins = " << nbin << "  dr0 = " << dr0 << std:: endl;                        
 	std:: cout << " ______________________________________________________ " << std:: endl;      
 	std:: cout << " computing profiles assuming spherical symmetry";                                
 	// - - - - - - - - - - - - - - - - -                                                         
-	double *kprofr = estprof(map->convergence,map->nx,map->ny,pxdist,dr0,xmax);                                          
-	double *sigmakprof = estsigmaprof(map->convergence,map->nx,map->ny,pxdist,dr0,xmax,kprofr);                          
-	double *ckprofr = estcprof(map->convergence,map->nx,map->ny,pxdist,dr0,xmax);                                          
-	double *sigmackprof = estsigmacprof(map->convergence,map->nx,map->ny,pxdist,dr0,xmax,kprofr);                          
-	double *gamma1profr = estprof(red_sgE,map->nx,map->ny,pxdist,dr0,xmax); // reduced shear
-	double *sigmagamma1prof = estsigmaprof(red_sgE,map->nx,map->ny,pxdist,dr0,xmax,gamma1profr);              
-	double *gamma0profr = estprof(red_sgB,map->nx,map->ny,pxdist,dr0,xmax);  
-	double *sigmagamma0prof = estsigmaprof(red_sgB,map->nx,map->ny,pxdist,dr0,xmax,gamma0profr);              
-	double *gamma2profr = estprof(sgm,map->nx,map->ny,pxdist,dr0,xmax);  
-	double *sigmagamma2prof = estsigmaprof(sgm,map->nx,map->ny,pxdist,dr0,xmax,gamma2profr);              
+	double *kprofr = estprof(map->convergence,map->nx,map->ny,pxdist,dr0,xmax,runi,runj,ntbggal);                                          
+	double *sigmakprof = estsigmaprof(map->convergence,map->nx,map->ny,pxdist,dr0,xmax,runi,runj,ntbggal,kprofr);                          
+	double *ckprofr = estcprof(map->convergence,map->nx,map->ny,pxdist,dr0,xmax,runi,runj,ntbggal);                                          
+	double *sigmackprof = estsigmacprof(map->convergence,map->nx,map->ny,pxdist,dr0,xmax,runi,runj,ntbggal,kprofr);                          
+	double *gamma1profr = estprof(red_sgE,map->nx,map->ny,pxdist,dr0,xmax,runi,runj,ntbggal); // reduced shear
+	double *sigmagamma1prof = estsigmaprof(red_sgE,map->nx,map->ny,pxdist,dr0,xmax,runi,runj,ntbggal,gamma1profr);              
+	double *gamma0profr = estprof(red_sgB,map->nx,map->ny,pxdist,dr0,xmax,runi,runj,ntbggal);  
+	double *sigmagamma0prof = estsigmaprof(red_sgB,map->nx,map->ny,pxdist,dr0,xmax,runi,runj,ntbggal,gamma0profr);              
+	double *gamma2profr = estprof(sgm,map->nx,map->ny,pxdist,dr0,xmax,runi,runj,ntbggal);  
+	double *sigmagamma2prof = estsigmaprof(sgm,map->nx,map->ny,pxdist,dr0,xmax,runi,runj,ntbggal,gamma2profr);              
 	std::ostringstream fprof;
-	fprof << MOKA_input_file << "_noisy_MAP_radial_prof.dat";
+
+	if(flag_background_field==1) fprof << MOKA_input_file << "_only_noise_MAP_radial_prof.dat";
+	else fprof << MOKA_input_file << "_noisy_MAP_radial_prof.dat";
 	std:: ofstream filoutprof;
 	std:: string filenameprof = fprof.str();
 	filoutprof.open(filenameprof.c_str());
@@ -441,7 +484,8 @@ void MOKALens::EinsteinRadii(double &RE1, double &RE2){
   std:: vector<double> xci2,yci2;
   // open file readable by ds9
   std::ostringstream fcrit;
-  fcrit << MOKA_input_file << "_noisy_Criticals.reg";
+  if(flag_background_field==1) fcrit << MOKA_input_file << "_only_noise_Criticals.reg";
+  else fcrit << MOKA_input_file << "_noisy_Criticals.reg";
   std:: ofstream filoutcrit;
   std:: string filenamecrit = fcrit.str();
   filoutcrit.open(filenamecrit.c_str());
@@ -465,7 +509,7 @@ void MOKALens::EinsteinRadii(double &RE1, double &RE2){
       }
     }
   filoutcrit.close();
-  double pixDinL = map->boxlMpc/map->h/double(map->nx);
+  double pixDinL = map->boxlMpc*map->h/double(map->nx);
   /* measure the Einstein radius */
   std:: vector<double> xci,yci;	
   //for(int ii=0;ii<xci1.size();ii++){
@@ -506,7 +550,13 @@ void MOKALens::EinsteinRadii(double &RE1, double &RE2){
     xmaxcpoints = *maxit;
     xmincpoints = *minit;
     int imin = locate(map->x,xmincpoints);
+    imin = ((imin > 0) ? imin:0);
+    imin = ((imin < map->nx-1) ? imin:map->nx-1);
+    // imin=GSL_MIN( GSL_MAX( imin, 0 ), map->nx-1 );
     int imax = locate(map->x,xmaxcpoints);
+    imax = ((imax > 0) ? imax:0);
+    imax = ((imax < map->nx-1) ? imax:map->nx-1);
+    // imax=GSL_MIN( GSL_MAX( imax, 0 ), map->nx-1 );
     std:: vector<double> ysup,yinf,xsup,xinf;
     for(int ii=imin;ii<=imax;ii++){
       std:: vector<double>ybut;
@@ -572,9 +622,9 @@ void MOKALens::EinsteinRadii(double &RE1, double &RE2){
  */
 void MOKALens::saveImage(bool saveprofiles){
         std::stringstream f;
-        std::string filename;
-  
-	f << MOKA_input_file << "_noisy.fits";
+        std::string filename;  
+	if(flag_background_field==1) f << MOKA_input_file << "_only_noise.fits";
+	else f << MOKA_input_file << "_noisy.fits";
 	filename = f.str();
 	/*
  	MoveToTopList(grid->i_tree->pointlist);
@@ -609,7 +659,8 @@ void MOKALens::saveImage(bool saveprofiles){
 		    double RE1,RE2;
 		    EinsteinRadii(RE1,RE2);
 		    std::ostringstream fEinr;
-		    fEinr << MOKA_input_file << "_noisy_Einstein.radii.dat";
+		    if(flag_background_field==1) fEinr << MOKA_input_file << "_only_noise_Einstein.radii.dat";
+		    else fEinr << MOKA_input_file << "_noisy_Einstein.radii.dat";
 		    std:: ofstream filoutEinr;
 		    std:: string filenameEinr = fEinr.str();
 		    filoutEinr.open(filenameEinr.c_str());
