@@ -45,8 +45,6 @@ private:
 	bool allocation_flag;
 };
 
-typedef HaloData *HaloDataHndl;
-
 /** \brief A class to represents a lens with multiple planes.
  *
  * Lens plane indexing scheme
@@ -82,9 +80,7 @@ public:
 	/// a poiner to the analytical lens
 	LensHndl input_lens;
 	AnaLens *analens;
-#ifdef ENABLE_FITS
 	MOKALens *mokalens;
-#endif
 	/// field of view in square degrees
 	double fieldofview;
 
@@ -114,8 +110,8 @@ private:
 	void setCoorDist(CosmoHndl cosmo, double zsource);
 	double QuickFindFromTable(double y);
 
-	static double *coorDist_table;
-	static long ob_count;
+	double *coorDist_table;
+	bool table_set;
 	void make_table(CosmoHndl cosmo);
 
 	long *seed;
@@ -133,8 +129,6 @@ private:
 	double charge;
 	/// an array of smart pointers to the halo models on each plane
 	std::auto_ptr<HaloData> *halo_data;
-	/// true if halo trees alrady exit, false if not (default is false)
-	bool halo_set;
 	/// an array of smart pointers to halo trees on each plane, uses the haloModel in the construction
 	std::auto_ptr<QuadTree> *halo_tree;
 

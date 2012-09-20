@@ -146,10 +146,6 @@ HaloData::~HaloData(){
 	}
 }
 
-
-double *MultiLens::coorDist_table = NULL;
-long MultiLens::ob_count = 0;
-
 void MultiLens::make_table(CosmoHndl cosmo){
 	int i;
 	double x, dx = maxz/(double)NTABLE;
@@ -164,6 +160,8 @@ void MultiLens::make_table(CosmoHndl cosmo){
 		coorDist_table[i] = cosmo->coorDist(0,x);
 	}
 
+	table_set = true;
+
 }
 
 /*
@@ -172,6 +170,8 @@ void MultiLens::make_table(CosmoHndl cosmo){
  */
 MultiLens::MultiLens(string filename,long *my_seed) : Lens(){
 	readParamfile(filename);
+
+	table_set = false;
 
 	// flag to determine if halos are created randomly or read in from a external simulation.
 	if(input_sim_file.size() < 1) sim_input_flag = false;
@@ -190,11 +190,8 @@ MultiLens::MultiLens(string filename,long *my_seed) : Lens(){
 
 	charge = 4*pi*Grav*mass_scale;
 
-	//halo_tree = new auto_ptr<ForceTree>[Nplanes-1];
 	halo_tree = new auto_ptr<QuadTree>[Nplanes-1];
 	halo_data = new auto_ptr<HaloData>[Nplanes-1];
-
-	halo_set = false;
 
 	switch(flag_input_lens){
 	case null:
@@ -205,15 +202,9 @@ MultiLens::MultiLens(string filename,long *my_seed) : Lens(){
 		analens = static_cast<AnaLens*>(input_lens);
 		break;
 	case moka_lens:
-#ifdef ENABLE_FITS
 		input_lens = new MOKALens(filename);
 		mokalens = static_cast<MOKALens*>(input_lens);
 		fieldofview = pow(1.5*mokalens->map->boxl*180/pi,2.0);
-#else
-		ERROR_MESSAGE();
-		cout << "Please enable the preprocessor flag ENABLE_FITS !" << endl;
-		exit(1);
-#endif
 		break;
 	default:
 		ERROR_MESSAGE();
@@ -231,14 +222,12 @@ MultiLens::MultiLens(string filename,long *my_seed) : Lens(){
 }
 
 MultiLens::~MultiLens(){
-
-	for(int j=0;j<Nplanes-1;j++) delete &(halo_tree[j]);
 	delete[] halo_tree;
+	delete[] halo_data;
+
 	delete[] Dl;
 	delete[] plane_redshifts;
 	delete[] dDl;
-	for(int j=0;j<Nplanes-1;j++) delete &(halo_data[j]);
-	delete[] halo_data;
 
 	if(sim_input_flag){  // Otherwise these deallocations are done in the destructor of halo_data's
 		delete[] halos;
@@ -249,11 +238,7 @@ MultiLens::~MultiLens(){
 	if(flag_input_lens)
 		delete input_lens;
 
-	--ob_count;
-	if(ob_count == 0){
-		// remove tables for the coordiante distances
-		delete[] coorDist_table;
-	}
+	delete[] coorDist_table;
 }
 
 void MultiLens::readParamfile(string filename){
@@ -531,10 +516,7 @@ void MultiLens::buildHaloTrees(
 
 			if(j+1 == (flag_input_lens % Nplanes)) z2 = plane_redshifts[j] + 0.5*(plane_redshifts[j+2] - plane_redshifts[j]);
 
-			if(halo_set)
-				delete &(halo_data[j]);
-
-			halo_data[j] = auto_ptr<HaloData>(new HaloData(fieldofview,min_mass,mass_scale,z1,z2,mass_func_type,pw_alpha,cosmo,seed));
+			halo_data[j].reset(new HaloData(fieldofview,min_mass,mass_scale,z1,z2,mass_func_type,pw_alpha,cosmo,seed));
 
 			Ntot+=halo_data[j]->Nhalos;
 		}
@@ -573,10 +555,7 @@ void MultiLens::buildHaloTrees(
 
 			/// Use other constructor to create halo data
 
-			if(halo_set)
-				delete &(halo_data[j]);
-
-			halo_data[j] = auto_ptr<HaloData>(new HaloData(&halos[j1],&halo_pos[j1],j2-j1));
+			halo_data[j].reset(new HaloData(&halos[j1],&halo_pos[j1],j2-j1));
 
 			//for(int i = 0; i<10 ;++i) cout << "Rmax:" << halos[j1+i].Rmax << "mass:" << halos[j1+i].mass << "rscale:" << halos[j1+i].rscale << "x = " << halo_pos[j1+i][0] << " " << halo_pos[j1+i][1] << endl;
 
@@ -589,26 +568,17 @@ void MultiLens::buildHaloTrees(
 		if(flag_input_lens && j == (flag_input_lens % Nplanes))
 			continue;
 
-		if(halo_set)
-			delete &(halo_tree[j]);
-
 		switch(internal_profile){
 		case PowerLaw:
-			//halo_tree[j] = auto_ptr<ForceTree>(new ForceTreePowerLaw(1.9,&halo_data[j]->pos[0],halo_data[j]->Nhalos
-			//		,halo_data[j]->halos,true,halo_data[j]->kappa_background));
-			halo_tree[j] = auto_ptr<QuadTreePowerLaw>(new QuadTreePowerLaw(pw_beta,&halo_data[j]->pos[0],halo_data[j]->Nhalos
+			halo_tree[j].reset(new QuadTreePowerLaw(pw_beta,&halo_data[j]->pos[0],halo_data[j]->Nhalos
 							,halo_data[j]->halos,halo_data[j]->kappa_background));
 			break;
 		case NFW:
-			//halo_tree[j] = auto_ptr<ForceTree>(new ForceTreeNFW(&halo_data[j]->pos[0],halo_data[j]->Nhalos
-			//		,halo_data[j]->halos,true,halo_data[j]->kappa_background));
-			halo_tree[j] = auto_ptr<QuadTreeNFW>(new QuadTreeNFW(&halo_data[j]->pos[0],halo_data[j]->Nhalos
+			halo_tree[j].reset(new QuadTreeNFW(&halo_data[j]->pos[0],halo_data[j]->Nhalos
 							,halo_data[j]->halos,halo_data[j]->kappa_background));
 			break;
 		case PseudoNFW:
-			//halo_tree[j] = auto_ptr<ForceTree>(new ForceTreePseudoNFW(2,&halo_data[j]->pos[0],halo_data[j]->Nhalos
-			//		,halo_data[j]->halos,true,halo_data[j]->kappa_background));
-			halo_tree[j] = auto_ptr<QuadTreePseudoNFW>(new QuadTreePseudoNFW(pnfw_beta,&halo_data[j]->pos[0],halo_data[j]->Nhalos
+			halo_tree[j].reset(new QuadTreePseudoNFW(pnfw_beta,&halo_data[j]->pos[0],halo_data[j]->Nhalos
 							,halo_data[j]->halos,halo_data[j]->kappa_background));
 			break;
 		default:
@@ -620,8 +590,6 @@ void MultiLens::buildHaloTrees(
 		}
 
 	}
-
-	halo_set = true;
 
 	cout << "constructed " << Ntot << " halos" << endl;
 
@@ -1008,7 +976,7 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 	}
 
 	/// makes the oordinate distance table for the calculation of the redshifts of the different planes
-	if(ob_count == 0) make_table(cosmo);
+	if(table_set == false) make_table(cosmo);
 	setCoorDist(cosmo,source->getZ());
 	setRedshifts();
 

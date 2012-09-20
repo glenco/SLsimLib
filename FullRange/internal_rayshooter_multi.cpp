@@ -29,8 +29,6 @@
  * Warning: Is not valid for a non-flat universe.
  */
 
-#define CHUNKSIZE 1
-
 void MultiLens::rayshooterInternal(
 		unsigned long Npoints   /// number of points to be shot
 		,Point *i_points        /// point on the image plane
@@ -66,7 +64,7 @@ void MultiLens::rayshooterInternal(
 
 
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,CHUNKSIZE) default(shared) private(i,j,xx,aa,bb,cc,alpha,kappa,gamma,xminus,xplus,kappa_minus,gamma_minus,kappa_plus,gamma_plus)
+#pragma omp parallel for default(shared) private(i,j,xx,aa,bb,cc,alpha,kappa,gamma,xminus,xplus,kappa_minus,gamma_minus,kappa_plus,gamma_plus)
 #endif
 	for(i = 0; i< Npoints; i++){
 

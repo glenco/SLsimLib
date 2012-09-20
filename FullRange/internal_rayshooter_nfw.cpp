@@ -137,8 +137,8 @@ void AnaLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool ka
     				&(i_points[i].kappa),i_points[i].gamma);
 
     		// do stars with tree code
-    		star_tree->force2D(i_points[i].x,alpha,&kappa,gamma,true);
-    		//star_tree->force2D_recur(i_points[i].x,alpha,&kappa,gamma,true);
+    		//star_tree->force2D(i_points[i].x,alpha,&kappa,gamma,true);
+    		star_tree->force2D_recur(i_points[i].x,alpha,&kappa,gamma,true);
 
     		i_points[i].image->x[0] += convert_factor*alpha[0];
     		i_points[i].image->x[1] += convert_factor*alpha[1];
