@@ -3,7 +3,7 @@ COSMOLIB_DIR = ../CosmoLib
 CFITS_DIR =
 CCFITS_DIR =
 
-OPT = -fopenmp ##-DENABLE_FITS
+OPT = ##-fopenmp ##-DENABLE_FITS
 
 INCL = 	-I$(COSMOLIB_DIR)/include \
 	-I$(NR_DIR)/include \
