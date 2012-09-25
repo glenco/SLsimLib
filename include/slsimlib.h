@@ -23,6 +23,7 @@
 #ifdef _OPENMP
 #include <omp.h>
 #endif
+#include <pthread.h>
 
 #include <math.h>
 #include <assert.h>
