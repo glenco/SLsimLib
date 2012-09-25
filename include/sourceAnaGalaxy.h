@@ -55,8 +55,8 @@ public:
 	double getZ(){return galaxies[index]->z;}
 	//double getRadius(){return max(galaxies[index]->Reff,galaxies[index]->Rh);}
 	double getRadius(){return galaxies[index]->getRadius();}
-	/// Set redshift of current source.
-	void setZ(double my_z){galaxies[index]->z = my_z;}
+	/// Set redshift of current source.  Only changes the redshift while leaving position fixed.
+	void setZ(double my_z){	galaxies[index]->z = my_z;}
 
 	/// Return angular position of current source.
 	double *getX(){return galaxies[index]->theta;}
@@ -73,6 +73,7 @@ private:
 	std::string input_gal_file;
 
 	void readDataFile(std::string input_gal_file,double my_mag_limit = 100);
+
 };
 
 #endif /* SOURCE_H_ */

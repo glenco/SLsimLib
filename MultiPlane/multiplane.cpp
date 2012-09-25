@@ -517,14 +517,18 @@ void MultiLens::buildHaloTrees(
 			 * since it will not contain any halos
 			 */
 			if(j == 0) z1 = 0.0;
-			else z1 = plane_redshifts[j] - 0.5*(plane_redshifts[j] - plane_redshifts[j-1]);
+			else z1 = 1.0/cosmo->scalefactor(Dl[j] - dDl[j]/2) - 1;
+			//else z1 = plane_redshifts[j] - 0.5*(plane_redshifts[j] - plane_redshifts[j-1]);
 
-			if(j-1 == (flag_input_lens % Nplanes)) z1 = plane_redshifts[j] - 0.5*(plane_redshifts[j] - plane_redshifts[j-2]);
+			if(j-1 == (flag_input_lens % Nplanes)) //z1 = plane_redshifts[j] - 0.5*(plane_redshifts[j] - plane_redshifts[j-2]);
+				z1 = 1.0/cosmo->scalefactor(Dl[j] - 0.5*(Dl[j] - Dl[j-2])) - 1;
 
 			if(j == Nplanes-2) z2 = zsource;
-			else z2 = plane_redshifts[j] + 0.5*(plane_redshifts[j+1] - plane_redshifts[j]);
+			else z2 = 1.0/cosmo->scalefactor(Dl[j] + dDl[j+1]/2) - 1;
+			//else z2 = plane_redshifts[j] + 0.5*(plane_redshifts[j+1] - plane_redshifts[j]);
 
-			if(j+1 == (flag_input_lens % Nplanes)) z2 = plane_redshifts[j] + 0.5*(plane_redshifts[j+2] - plane_redshifts[j]);
+			if(j+1 == (flag_input_lens % Nplanes)) //z2 = plane_redshifts[j] + 0.5*(plane_redshifts[j+2] - plane_redshifts[j]);
+				z2 = 1.0/cosmo->scalefactor(Dl[j] + 0.5*(Dl[j+2] - Dl[j])) - 1;
 
 			//halodata[j] = new HaloData(fieldofview,min_mass,z1,z2,mass_func_type,cosmo,seed);
 			halodata[j] = auto_ptr<HaloData>(new HaloData(fieldofview,min_mass,mass_scale,z1,z2,mass_func_type,pw_alpha,cosmo,seed));
@@ -548,14 +552,18 @@ void MultiLens::buildHaloTrees(
 			 * since it will not contain any halos
 			 */
 			if(j == 0) z1 = 0.0;
-			else z1 = plane_redshifts[j] - 0.5*(plane_redshifts[j] - plane_redshifts[j-1]);
+			else z1 = 1.0/cosmo->scalefactor(Dl[j] - dDl[j]/2) - 1;
+			//else z1 = plane_redshifts[j] - 0.5*(plane_redshifts[j] - plane_redshifts[j-1]);
 
-			if(j-1 == (flag_input_lens % Nplanes)) z1 = plane_redshifts[j] - 0.5*(plane_redshifts[j] - plane_redshifts[j-2]);
+			if(j-1 == (flag_input_lens % Nplanes)) //z1 = plane_redshifts[j] - 0.5*(plane_redshifts[j] - plane_redshifts[j-2]);
+				z1 = 1.0/cosmo->scalefactor(Dl[j] - 0.5*(Dl[j] - Dl[j-2])) - 1;
 
 			if(j == Nplanes-2) z2 = zsource;
-			else z2 = plane_redshifts[j] + 0.5*(plane_redshifts[j+1] - plane_redshifts[j]);
+			else z2 = 1.0/cosmo->scalefactor(Dl[j] + dDl[j+1]/2) - 1;
+			//else z2 = plane_redshifts[j] + 0.5*(plane_redshifts[j+1] - plane_redshifts[j]);
 
-			if(j+1 == (flag_input_lens % Nplanes)) z2 = plane_redshifts[j] + 0.5*(plane_redshifts[j+2] - plane_redshifts[j]);
+			if(j+1 == (flag_input_lens % Nplanes)) //z2 = plane_redshifts[j] + 0.5*(plane_redshifts[j+2] - plane_redshifts[j]);
+				z2 = 1.0/cosmo->scalefactor(Dl[j] + 0.5*(Dl[j+2] - Dl[j])) - 1;
 
 			/// Find which halos are in redshift range
 
@@ -779,7 +787,7 @@ double MultiLens::QuickFindFromTable(double Dplane){
 
 /**
  * Set the coordinate distances of the planes by dividing the coordinate distance space into equal intervals
- * and then plugging the input plane in between.
+ * and then plugging the analytic input plane in between.
  *
  * After this flag_input_lens will hold the index of the plane it is on
  * In case it is on the first plane, it will hold the index Nplanes, to make
@@ -808,7 +816,6 @@ void MultiLens::setCoorDist(CosmoHndl cosmo, double zsource){
 	int j=0, flag=0;
 	if(flag_input_lens && Dlens < lD[1]){
 		Dl[j] = Dlens;
-		// TODO Margarita:  I don't understand why you cast an integer to an InputLens type.  I am curious.
 		flag_input_lens = (InputLens)Nplanes;
 		flag = 1;
 		j++;
@@ -1055,6 +1062,9 @@ void MultiLens::quicksort(HaloStructure *halos,double **brr,double *arr,unsigned
 void MultiLens::ResetSourcePlane(
 		CosmoHndl cosmo           /// cosmology
 		,double z                 /// redshift of implanted source
+		,bool nearest             /// If true, set the source plane to the nearest (in coordinate distance)
+			                      /// lensing plane that was created already.  This can be used to avoid self-lensing
+			                      /// by the halo of the source.
 		){
 	unsigned long j;
 
@@ -1067,12 +1077,16 @@ void MultiLens::ResetSourcePlane(
 		return;
 	}
 
+
+	// j is the index of the next plane at higher redshift
+	locateD(plane_redshifts-1,Nplanes,zs_implant,&j);
+	assert(plane_redshifts[j] > z);
+
+	if(j > 0) z = cosmo->coorDist(plane_redshifts[j-1],z) > cosmo->coorDist(z,plane_redshifts[j])
+			? plane_redshifts[j] : plane_redshifts[j-1];
+
 	Ds_implant = cosmo->angDist(0,z);
 	zs_implant = z;
-
-	locateD(plane_redshifts-1,Nplanes,zs_implant,&j);
-
-	assert(plane_redshifts[j] > z);
 	if(j > 0) dDs_implant = cosmo->coorDist(plane_redshifts[j-1],z);
 	else  dDs_implant = Ds_implant;
 
