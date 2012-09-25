@@ -100,7 +100,7 @@ public:
 
 
 
-private:
+//private:
 
 	typedef enum {PS, ST, PL} MassFuncType;
 	typedef enum {PowerLaw, NFW, PseudoNFW} IntProfType;

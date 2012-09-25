@@ -13,7 +13,7 @@
 
 /// An abstract base class to represent a gravitational lens.
 class Lens {
-protected:
+public:
 	int Nplanes;
 
 public:

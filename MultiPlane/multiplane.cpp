@@ -151,7 +151,7 @@ void MultiLens::make_table(CosmoHndl cosmo){
 	double x, dx = maxz/(double)NTABLE;
 
 	coorDist_table = new double[NTABLE];
-
+	
 #ifdef _OPENMP
 #pragma omp parallel for default(shared) private(i,x)
 #endif
@@ -976,7 +976,7 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 	}
 
 	/// makes the oordinate distance table for the calculation of the redshifts of the different planes
-	if(table_set == false) make_table(cosmo);
+	if(table_set == false) {std::cout << "making tables" << std::endl; make_table(cosmo);}
 	setCoorDist(cosmo,source->getZ());
 	setRedshifts();
 
