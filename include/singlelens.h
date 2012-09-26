@@ -16,9 +16,15 @@
 #include <quadTree.h>
 #include <forceTree.h>
 #include <multiplane.h>
-//TODO MARGARITA This comment does not fully explain the classes use according to the repository comment.  How is it different than MultiLens, etc.
 /**
- * \brief A test class. Produces one halo centered at {0,0}.
+ * \brief A test class. Produces one halo (NFW, PeudoNFW, or PowerLaw) centered at {0,0}.
+ *
+ * This class is or testing the convergence, deflection, and shear of the three halo profiles that
+ * we work with. On a single plane a halo is placed in the center.
+ *
+ * A grid can be created in the executable and then use the function saveProfiles to save the convergence
+ * and so on, as a function of radius.
+ *
  * */
 class SingleLens : public Lens{
 public:
