@@ -13,9 +13,13 @@
 #include <valarray>
 #include <iostream>
 
-double * estprof(std:: valarray<float> q,int nx,int ny, std:: valarray<float> r, double dr0, double xmax);
-double * estsigmaprof(std:: valarray<float> q,int nx,int ny, std:: valarray<float> r, double dr0, double xmax, double* qm);
-double * estcprof(std:: valarray<float> q,int nx,int ny, std:: valarray<float> r, double dr0, double xmax);
-double * estsigmacprof(std:: valarray<float> q,int nx,int ny, std:: valarray<float> r, double dr0, double xmax, double* qm);
+double *estprof(std:: valarray<float> q,int nx,int ny, std:: valarray<float> r, double dr0, 
+		double xmax,std:: vector<int> &vi, std:: vector<int> &vj,int ngal);
+double *estsigmaprof(std:: valarray<float> q,int nx,int ny, std:: valarray<float> r, double dr0, 
+		     double xmax, std:: vector<int> &vi, std:: vector<int> &vj, int ngal, double* qm);
+double *estcprof(std:: valarray<float> q,int nx,int ny, std:: valarray<float> r, double dr0, 
+		 double xmax, std:: vector<int> &vi, std:: vector<int> &vj, int ngal);
+double *estsigmacprof(std:: valarray<float> q,int nx,int ny, std:: valarray<float> r, double dr0, 
+		      double xmax, std:: vector<int> &vi, std:: vector<int> &vj, int ngal, double* qm);
 
 #endif /* PROFILE_H_ */
