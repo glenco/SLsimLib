@@ -200,6 +200,20 @@ ImageInfo *find_crit(
   return critexport;
 }
 
+/** \ingroup ImageFinding
+  *
+  * \brief Finds critical curves and caustics.
+  *
+  * OUTPUT: each critical curve is in a array of IamgeInfo's
+  *         result.parity = 1 tangential caustic, 2 radial, 0 not enough points to determine
+  *  the inner out outer boundaries of the result are the estimated critical curves
+  *
+  * The critical curve is found by refining the edges of regions of negative magnification.
+  * If there are no regions of negative magnification in the original grid the grid is refined
+  * around the point of highest kappa.  If there are other points of high kappa that are not of
+  * interest one should be careful that the region of interest is not missed.
+  */
+
 void find_crit_kist(
 	    LensHndl lens             /// The lens model.
 		,GridHndl grid            /// The grid.  It must be initialized.

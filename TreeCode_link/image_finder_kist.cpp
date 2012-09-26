@@ -55,6 +55,18 @@ void find_images_kist(
 		){
 
 
+	if(  grid->s_tree->top->boundary_p1[0] > (y_source[0] + r_source)
+	  || grid->s_tree->top->boundary_p2[0] < (y_source[0] - r_source)
+	  || grid->s_tree->top->boundary_p1[1] > (y_source[1] + r_source)
+	  || grid->s_tree->top->boundary_p2[1] < (y_source[1] - r_source)
+	){
+		// source is not within initialized grid
+		*Nimages = 0;
+		std::cout << "source not within initialized grid" << std::endl;
+		ERROR_MESSAGE();
+		return;
+	}
+
 	int Nsizes;
 	double rtemp,tmp,maxgridsize;
 	static double oldy[2],oldr=0;
@@ -69,6 +81,7 @@ void find_images_kist(
 	//Point **dummy_pnt = NULL;
 	//unsigned long Ntmp;
 	//Point *point,*closestpoint;
+
 
 	int Ngrid_block = grid->getNgrid_block();
 
@@ -143,7 +156,6 @@ void find_images_kist(
 	time(&now);
 	if(verbose) printf(" time for source size reduction %f sec\n",difftime(now,to));
 	time(&to);
-
 
 	////////////////////////////////////////////////////////////////////////////////*/
 	//////////////////////////////////////////////////////////////////////////////////

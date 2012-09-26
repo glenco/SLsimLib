@@ -87,7 +87,6 @@ void MultiLens::rayshooterInternal(
 
 		for(j = 0; j < NLastPlane-1 ; j++){  // each iteration leaves i_point[i].image on plane (j+1)
 
-			/// TODO: need to find out a way to stop the ray tracing at the source redshift, for th EUCLID project
 			/*
 			if(zsource == plane_redshifts[j])
 				break;
@@ -96,7 +95,7 @@ void MultiLens::rayshooterInternal(
 			// convert to physical coordinates on the plane j
 			xx[0] = i_points[i].image->x[0]/(1+plane_redshifts[j]);
 			xx[1] = i_points[i].image->x[1]/(1+plane_redshifts[j]);
-			//TODO I don't know if this is still right now that NLastPlane has replaced Nplanes
+
 			if(flag_input_lens && j == (flag_input_lens % Nplanes)){
 				input_lens->rayshooterInternal(xx,alpha,gamma,&kappa,kappa_off);
 				cc = dDl[j+1];
@@ -104,6 +103,7 @@ void MultiLens::rayshooterInternal(
 
 				halo_tree[j]->force2D_recur(xx,alpha,&kappa,gamma,kappa_off);
 				//halo_tree[j]->force2D(xx,alpha,&kappa,gamma,kappa_off);
+
 				cc = charge*dDl[j+1];
 
 				/* multiply by the scale factor to obtain 1/comoving_distance/physical_distance

@@ -29,6 +29,5 @@ bool RefinePoint(Point *point,TreeHndl i_tree,double image_area,double total_are
 bool RefinePoint2(Point *point,TreeHndl i_tree,double image_area,double total_area,ExitCriterion criterion
 		,double res_target,KistHndl nearest);
 void UniformMagCheck(ImageInfo *imageinfo);
-//Point * RefineLeaf(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,Point *point,int Ngrids,bool kappa_off);
 
 #endif

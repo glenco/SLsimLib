@@ -29,6 +29,7 @@ public:
 	PosType **pos;
 	/// halo structure with internal halo parameters such as mass, size, etc.
 	HaloStructure *halos;
+	//NSIEstructure *nsiehalos;
 	/// number of halos in the halo model on the plane
 	IndexType Nhalos;
 	/// mean mass density
@@ -36,6 +37,7 @@ public:
 
 	HaloData(double fov,double min_mass,double mass_scale,double z1,double z2,int mass_func_type,double alpha,CosmoHndl cosmo,long *seed);
 	HaloData(HaloStructure *halostrucs,double **positions,unsigned long Nhaloss);
+	//HaloData(NSIEstructure *halostrucs,double **positions,unsigned long Nhaloss);
 	HaloData(CosmoHndl cosmo,double mass,double zlens);
 	~HaloData();
 
@@ -107,7 +109,7 @@ public:
 private:
 
 	typedef enum {PS, ST, PL} MassFuncType;
-	typedef enum {PowerLaw, NFW, PseudoNFW} IntProfType;
+	typedef enum {PowerLaw, NFW, PseudoNFW, NSIE} IntProfType;
 	typedef enum {null, ana_lens, moka_lens} InputLens;
 
 	void setRedshifts();

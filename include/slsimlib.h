@@ -78,4 +78,8 @@
 #define pi  3.1415926
 #endif
 
+#ifndef Grav
+#define Grav  4.7788e-20  // G/c^2 in Mpc
+#endif
+
 #endif

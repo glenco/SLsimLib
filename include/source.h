@@ -20,7 +20,7 @@ public:
 	  typedef enum {Uniform,Gaussian,BLR_Disk,BLR_Sph1,BLR_Sph2,MultiAnaSource} SBModel;
 
 	  // in lens.cpp
-	  // TODO BEN This needs to be changed everywhere to accept gird coordinates instead of source centered coordinates
+	  /// Surface brightness of source in grid coordinates not source centered coordinates.
 	  virtual double SurfaceBrightness(double *y) = 0;
 	  virtual double getTotalFlux() = 0;
 	  virtual void readParamfile(std::string) = 0;
@@ -65,6 +65,7 @@ public:
 	double SurfaceBrightness(double *y);
 	void readParamfile(std::string);
 	void printSource();
+	double getTotalFlux(){return pi*source_r*source_r;}
 
 	SourceUniform(std::string);
 	~SourceUniform();
@@ -78,6 +79,7 @@ public:
 	  double SurfaceBrightness(double *y);
 	  void readParamfile(std::string);
 	  void printSource();
+	  double getTotalFlux(){std::cout << "No total flux in SourceGaussian yet" << std::endl; exit(1);}
 
 	  SourceGaussian(std::string);
 	  ~SourceGaussian();
@@ -91,6 +93,7 @@ public:
 
 	  void readParamfile(std::string);
 	  void printSource();
+	  double getTotalFlux(){std::cout << "No total flux in SourceBLR yet" << std::endl; exit(1);}
 
 	  virtual inline double getRadius(){return source_r_out;}
 
@@ -117,6 +120,7 @@ public:
 class SourceBLRDisk : public SourceBLR{
 public:
 	double SurfaceBrightness(double *y);
+	double getTotalFlux(){std::cout << "No total flux in SourceBLRDisk yet" << std::endl; exit(1);}
 
 	SourceBLRDisk(std::string);
 	~SourceBLRDisk();
@@ -125,6 +129,7 @@ public:
 class SourceBLRSph1 : public SourceBLR{
 public:
 	double SurfaceBrightness(double *y);
+	double getTotalFlux(){std::cout << "No total flux in SourceBLRSph1 yet" << std::endl; exit(1);}
 
 	SourceBLRSph1(std::string);
 	~SourceBLRSph1();
@@ -133,6 +138,7 @@ public:
 class SourceBLRSph2 : public SourceBLR{
 public:
 	double SurfaceBrightness(double *y);
+	double getTotalFlux(){std::cout << "No total flux in SourceBLRSph2 yet" << std::endl; exit(1);}
 
 	SourceBLRSph2(std::string);
 	~SourceBLRSph2();

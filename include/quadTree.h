@@ -9,7 +9,7 @@
 #define QUAD_TREE_H_
 
 #include <simpleTree.h>
-#include <analytic_lens.h>
+//#include <analytic_lens.h>
 #include <cstdlib>
 #include <iostream>
 
@@ -88,7 +88,6 @@ struct QTreeNB{
 			 ,PosType boundary_p1[],PosType boundary_p2[]);
 	~QTreeNB();
 
-	//void freeQTreeNB();
 	short empty();
 	bool isEmpty();
 	bool atTop();
@@ -152,14 +151,6 @@ public:
 			,int bucket = 5
 			,double theta_force = 0.1
 			);
-	QuadTree(
-			PosType **xpt
-			,HaloStructure *my_halo_params
-			,IndexType Npoints
-			,double my_kappa_background = 0
-			,int bucket = 5
-			,double theta_force = 0.1
-			);
 	virtual ~QuadTree();
 
 	void force2D(double *ray,double *alpha,float *kappa,float *gamma,bool no_kappa);
@@ -168,6 +159,15 @@ public:
 	void printBranchs(int level = -1);
 
 protected:
+
+	QuadTree(
+			PosType **xpt
+			,HaloStructure *my_halo_params
+			,IndexType Npoints
+			,double my_kappa_background = 0
+			,int bucket = 5
+			,double theta_force = 0.1
+			);
 
 	PosType **xp;
 	bool MultiMass;
@@ -212,7 +212,7 @@ protected:
 	void CalcMoments();
 	void rotate_coordinates(double **coord);
 
-	void force_halo(double *alpha,float kappa,float *gamma,double *xcm,HaloStructHndl halo_params);
+	virtual void force_halo(double *alpha,float *kappa,float *gamma,double *xcm,HaloStructure& halo_params,bool no_kappa);
 
 	// Internal profiles for a Gaussian particle
 	virtual inline double alpha_h(double r2s2,double sigma){
@@ -385,46 +385,30 @@ private:
  *
  */
 class QuadTreeNSIE : public QuadTree{
-	  QuadTreeNSIE(PosType **xp,IndexType Npoints,NIEStructure *par_internals
+public:
+	  QuadTreeNSIE(PosType **xp,IndexType Npoints,HaloStructure *par_internals
 				,double my_kappa_bk = 0.0,int bucket = 5,PosType theta = 0.1);
 	  ~QuadTreeNSIE();
 
 private:
 	  double xt[2],tmp[2];
-	  //void alphaNSIE(double *alpha,double *xt,double f,double bc,double theta);
-	  //float kappaNSIE(double *xt,double f,double bc,double theta);
-	  // void gammaNSIE(float gam[2],double *xt,double f,double bc,double theta);
 
-	  //TODO Ben I'm not sure this will really override the force_halo in force2D_recur() because of the different signature
-	  void force_halo(double *alpha,float kappa,float *gamma,double *xcm
-	  		,NIEStructHndl halo_params,bool no_kappa){
+	  void force_halo(double *alpha,float *kappa,float *gamma,double *xcm
+	  		,HaloStructure& halo_params,bool no_kappa);
+	  /*void force_halo(double *alpha,float *kappa,float *gamma,double *xcm
+	  		,HaloStructure& halo_params,bool no_kappa)
+	  {
+		  force_halo_nsie(alpha,kappa,gamma,xcm,static_cast<NSIEstructure &>(halo_params),no_kappa);
+	  }*/
 
-			double rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
-			if(rcm2 < 1e-20) rcm2 = 1e-20;
-
-			/// intersecting, subtract the point particle
-			if(rcm2 < halo_params->Rmax*halo_params->Rmax){
-
-				xt[0]=xcm[0]/halo_params->re;
-				xt[1]=xcm[1]/halo_params->re;
-				alphaNSIE(tmp,xt,halo_params->fratio,halo_params->rscale,halo_params->pa);
-				alpha[0] += tmp[0]*halo_params->re;
-				alpha[1] += tmp[1]*halo_params->re;
-				if(!no_kappa){
-					kappa += kappaNSIE(xt,halo_params->fratio,halo_params->rscale,halo_params->pa);
-					gammaNSIE(xt,tmp,halo_params->fratio,halo_params->rscale,halo_params->pa);
-					gamma[0] += tmp[0];
-					gamma[1] += tmp[1];
-				}
-			}
-			return;
-	  }
-
-		inline double alpha_h(double x,double xmax){assert(0); return 0.0;}
-		inline double kappa_h(double x,double xmax){assert(0); return 0.0;}
-		inline double gamma_h(double x,double xmax){assert(0); return 0.0;}
-		inline double phi_h(double x,double){assert(0); return 0.0;}
-
+	  /// not used
+	  inline double alpha_h(double x,double xmax){assert(0); return 0.0;}
+	  /// not used
+	  inline double kappa_h(double x,double xmax){assert(0); return 0.0;}
+	  /// not used
+	  inline double gamma_h(double x,double xmax){assert(0); return 0.0;}
+	  /// not used
+	  inline double phi_h(double x,double){assert(0); return 0.0;}
 };
 
 #endif /* QUAD_TREE_H_ */

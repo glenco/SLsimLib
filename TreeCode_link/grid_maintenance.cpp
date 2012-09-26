@@ -27,17 +27,17 @@ Grid::Grid(
 	if(N1d <= 0){ERROR_MESSAGE(); std::cout << "cannot make Grid with no points" << std::endl; exit(1);}
 	if(range <= 0){ERROR_MESSAGE(); std::cout << "cannot make Grid with no range" << std::endl; exit(1);}
 
-	Ngrid = N1d;
+	Ngrid_init = N1d;
 	Ngrid_block = 3;  // never been tested with anything other than 3
 	
 
-	i_points = NewPointArray(Ngrid*Ngrid,true);
-	xygridpoints(i_points,range,center,Ngrid,0);
-	s_points=LinkToSourcePoints(i_points,Ngrid*Ngrid);
-	lens->rayshooterInternal(Ngrid*Ngrid,i_points,false);
+	i_points = NewPointArray(Ngrid_init*Ngrid_init,true);
+	xygridpoints(i_points,range,center,Ngrid_init,0);
+	s_points=LinkToSourcePoints(i_points,Ngrid_init*Ngrid_init);
+	lens->rayshooterInternal(Ngrid_init*Ngrid_init,i_points,false);
 	// Build trees
-	i_tree = BuildTree(i_points,Ngrid*Ngrid);
-	s_tree = BuildTree(s_points,Ngrid*Ngrid);  // make tree on source plane a area splitting tree
+	i_tree = BuildTree(i_points,Ngrid_init*Ngrid_init);
+	s_tree = BuildTree(s_points,Ngrid_init*Ngrid_init);  // make tree on source plane a area splitting tree
 
 	trashkist = new Kist;
 }
@@ -96,16 +96,16 @@ void Grid::ReInitializeGrid(LensHndl lens){
 
 
 	// build new initial grid
-	i_points = NewPointArray(Ngrid*Ngrid,true);
-	xygridpoints(i_points,range,center,Ngrid,0);
-	s_points=LinkToSourcePoints(i_points,Ngrid*Ngrid);
-	lens->rayshooterInternal(Ngrid*Ngrid,i_points,false);
+	i_points = NewPointArray(Ngrid_init*Ngrid_init,true);
+	xygridpoints(i_points,range,center,Ngrid_init,0);
+	s_points=LinkToSourcePoints(i_points,Ngrid_init*Ngrid_init);
+	lens->rayshooterInternal(Ngrid_init*Ngrid_init,i_points,false);
 
 	// need to resize root of source tree.  It can change in size
 	s_tree->top->boundary_p1[0]=s_points[0].x[0]; s_tree->top->boundary_p1[1]=s_points[0].x[1];
 	s_tree->top->boundary_p2[0]=s_points[0].x[0]; s_tree->top->boundary_p2[1]=s_points[0].x[1];
 
-	for(i=0;i<Ngrid*Ngrid;++i){
+	for(i=0;i<Ngrid_init*Ngrid_init;++i){
 
 	    /* find X boundary */
 		if(s_points[i].x[0] < s_tree->top->boundary_p1[0] ) s_tree->top->boundary_p1[0]=s_points[i].x[0];
@@ -117,17 +117,17 @@ void Grid::ReInitializeGrid(LensHndl lens){
 	  }
 
 	  // a little extra room for future points
-	  s_tree->top->boundary_p1[0] -=  range/Ngrid;
-	  s_tree->top->boundary_p1[1] -=  range/Ngrid;
-	  s_tree->top->boundary_p2[0] +=  range/Ngrid;
-	  s_tree->top->boundary_p2[1] +=  range/Ngrid;
+	  s_tree->top->boundary_p1[0] -=  range/Ngrid_init;
+	  s_tree->top->boundary_p1[1] -=  range/Ngrid_init;
+	  s_tree->top->boundary_p2[0] +=  range/Ngrid_init;
+	  s_tree->top->boundary_p2[1] +=  range/Ngrid_init;
 
 	  s_tree->top->center[0] = (s_tree->top->boundary_p1[0]+s_tree->top->boundary_p2[0])/2;
 	  s_tree->top->center[1] = (s_tree->top->boundary_p1[1]+s_tree->top->boundary_p2[1])/2;
 
 	// fill trees
-	FillTree(i_tree,i_points,Ngrid*Ngrid);
-	FillTree(s_tree,s_points,Ngrid*Ngrid);
+	FillTree(i_tree,i_points,Ngrid_init*Ngrid_init);
+	FillTree(s_tree,s_points,Ngrid_init*Ngrid_init);
 
 	return;
 }
@@ -151,17 +151,17 @@ double Grid::RefreshSurfaceBrightnesses(SourceHndl source){
 	double y[2],total=0,tmp;
 
 	MoveToTopList(s_tree->pointlist);
-	do{
+	for(unsigned long i=0;i<s_tree->pointlist->Npoints;++i,MoveDownList(s_tree->pointlist)){
 		//y[0] = s_tree->pointlist->current->x[0]; - source->getX()[0];
 		//y[1] = s_tree->pointlist->current->x[1]; - source->getX()[1];
 		tmp = source->SurfaceBrightness(s_tree->pointlist->current->x);
 		s_tree->pointlist->current->surface_brightness = s_tree->pointlist->current->image->surface_brightness
 				= tmp;
-		total += tmp;
+		total += tmp;//*pow( s_tree->pointlist->current->gridsize,2);
 		assert(s_tree->pointlist->current->surface_brightness >= 0.0);
 		s_tree->pointlist->current->in_image = s_tree->pointlist->current->image->in_image
 				= FALSE;
-	}while( MoveDownList(s_tree->pointlist) );
+	}
 
 	return total;
 }
@@ -195,7 +195,7 @@ unsigned long Grid::getNumberOfPoints(){
 Point * Grid::RefineLeaf(LensHndl lens,Point *point,bool kappa_off){
 	//Point * RefineLeaf(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,Point *point,int Ngrid,bool kappa_off){
 
-	Point *i_points = NewPointArray(Ngrid*Ngrid-1,true);
+	Point *i_points = NewPointArray(Ngrid_block*Ngrid_block-1,true);
 	Point *s_points;
 	int Nout,kk;
 
@@ -240,17 +240,26 @@ Point * Grid::RefineLeaf(LensHndl lens,Point *point,bool kappa_off){
 		}
 	}
 
+	assert(i_points->head == Ngrid_block*Ngrid_block-1);
+	assert(s_points->head == Ntemp);
+
 	// free memory of points that where outside image and source regions
 	Nout = Ngrid_block*Ngrid_block - 1 - Ntemp + Nout;
 	if(Nout > 0){
-		i_points = AddPointToArray(i_points,Ngrid_block*Ngrid_block-1-Nout,Ngrid_block*Ngrid_block-1);
-		s_points = AddPointToArray(s_points,Ngrid_block*Ngrid_block-1-Nout,Ntemp);
-	}
+		//i_points = AddPointToArray(i_points,Ngrid_block*Ngrid_block-1-Nout,Ngrid_block*Ngrid_block-1);
+		//s_points = AddPointToArray(s_points,Ngrid_block*Ngrid_block-1-Nout,Ntemp);
 
+		i_points = AddPointToArray(i_points,Ngrid_block*Ngrid_block-1-Nout,i_points->head);
+		s_points = AddPointToArray(s_points,Ngrid_block*Ngrid_block-1-Nout,s_points->head);
+	}
+	assert(i_points->head == s_points->head);
 
 	//*** these could be mode more efficient by starting at the current in tree
-	AddPointsToTree(i_tree,i_points,Ngrid_block*Ngrid_block-1-Nout);
-	AddPointsToTree(s_tree,s_points,Ngrid_block*Ngrid_block-1-Nout);
+	AddPointsToTree(i_tree,i_points,i_points->head);
+	AddPointsToTree(s_tree,s_points,s_points->head);
+
+	//AddPointsToTree(i_tree,i_points,Ngrid_block*Ngrid_block-1-Nout);
+	//AddPointsToTree(s_tree,s_points,Ngrid_block*Ngrid_block-1-Nout);
 
 	// re-assign leaf of point that was to be refined
 	assert(inbox(point->x,i_tree->top->boundary_p1,i_tree->top->boundary_p2));

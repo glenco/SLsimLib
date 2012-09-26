@@ -13,13 +13,6 @@
  * \brief These are routines that can be used without having to muck around in the internals.
  */
 
-/** \defgroup Constructor Constructors and Destructors
- * \ingroup HighLevel
- *
- * \brief Routines for initializing and freeing the data types
- *
- */
-
 
 /** \defgroup ImageFinding Image Finding
  * \ingroup HighLevel
@@ -59,7 +52,8 @@
 /** \defgroup ConstructorL2 Constructors and Destructors
  * \ingroup MidLevel
  *
- * \brief Routines for initializing and freeing the data types
+ * \brief Routines for initializing and freeing the data types.  These have not yet been moved to C++
+ * form.  They a left over from C.
  *
  */
 
@@ -105,5 +99,11 @@
 /** \defgroup Utill Utilities
  *
  * \brief Useful general purpose utilities.
+ */
+
+/** \defgroup function Functions
+ *
+ * \brief Global functions.  They are not all documented.
+ *
  */
 

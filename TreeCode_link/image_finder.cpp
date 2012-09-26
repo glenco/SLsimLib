@@ -408,7 +408,8 @@ long refine_edges2(LensHndl lens,double *y_source,double r_source,GridHndl grid
 */
 						//  sort new points into in and out of image
 						//    and add them to inner and outer borders
-						for(j=0;j<(Ngrid_block*Ngrid_block-1);++j){
+						//for(j=0;j<(Ngrid_block*Ngrid_block-1);++j){
+						for(j=0;j<i_points->head;++j){
 							if( sqrt(pow(i_points[j].image->x[0]-y_source[0],2)
 									+ pow(i_points[j].image->x[1]-y_source[1],2)) < r_source){
 
@@ -469,11 +470,13 @@ long refine_edges2(LensHndl lens,double *y_source,double r_source,GridHndl grid
 
 						++Ncells;
 						// subtract area of new points from image area
-						imageinfo[i].area += pow(point->gridsize,2)*(1-Ngrid_block*Ngrid_block);
+						//imageinfo[i].area += pow(point->gridsize,2)*(1-Ngrid_block*Ngrid_block);
+						imageinfo[i].area -= pow(point->gridsize,2)*i_points->head;
 
 						//  sort new points into in and out of image
 						//    and add them to inner and outer borders
-						for(j=0;j<(Ngrid_block*Ngrid_block-1);++j){
+						//for(j=0;j<(Ngrid_block*Ngrid_block-1);++j){
+						for(j=0;j<i_points->head;++j){
 							if( sqrt(pow(i_points[j].image->x[0]-y_source[0],2)
 									+ pow(i_points[j].image->x[1]-y_source[1],2)) < r_source){
 

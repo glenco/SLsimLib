@@ -37,7 +37,7 @@ typedef struct Grid{
 	TreeHndl s_tree;
 
 	/// return initial number of grid points in each direction
-	int getInitNgrid(){return Ngrid;}
+	int getInitNgrid(){return Ngrid_init;}
 	/// return number of cells in each dimension into which each cell is divided when a refinement is made
 	int getNgrid_block(){return Ngrid_block;}
 	/// return initial range of gridded region
@@ -45,8 +45,9 @@ typedef struct Grid{
 	Point * RefineLeaf(LensHndl lens,Point *point,bool kappa_off);
 
 private:
-	/// one dimensional size of grid
-	int Ngrid;
+	/// one dimensional size of initial grid
+	int Ngrid_init;
+	/// one dimensional number of cells a cell will be divided into on each refinement step
 	int Ngrid_block;
 	bool initialized;
 	KistHndl trashkist;

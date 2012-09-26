@@ -40,31 +40,40 @@ void delete_tables_nfw();
 void delete_tables_pseudonfw();
 double InterpolateFromTable(double *table, double y);
 
-/// structure to hold information about the halos' positions, masses, etc.
+/// structure to hold information about the halos' internal parameters
 struct HaloStructure{
-	/// internal halo parameters
 	/// Mass in solar masses
     float mass;
     /// Radius
     float Rmax;
     /// scale length or core size.  Different meaning in different cases
     float rscale;
+
+// the below are not used except for NSIE
+	/// velocity dispersion
+	float sigma;
+	/// Actual edge of mass distribution in elliptical radius, Rmax is the range beyond which the halo is a point mass
+	float Rsize;
+	/// axis ratio of surface mass distribution
+	float fratio;
+	/// position angle on sky, radians
+	float pa;
+
 };
 typedef struct HaloStructure * HaloStructHndl;
 
 /// internal structure for a Non-Singular Isothermal Ellipsoid
-struct NIEStructure: public HaloStructure{
-	/// Einstein radius
-	double re;
-	/// Actual edge of mass distribution, Rmax is the range beyond which the halo is a point mass
+/*struct NSIEstructure: public HaloStructure{
+	/// velocity dispersion
+	double sigma;
+	/// Actual edge of mass distribution in elliptical radius, Rmax is the range beyond which the halo is a point mass
 	double Rsize;
 	/// axis ratio of surface mass distribution
 	double fratio;
 	/// position angle on sky, radians
 	double pa;
 };
-typedef struct NIEStructure * NIEStructHndl;
-//short const treeNBdim = 2;
+typedef struct NSIEstructure * NIEStructHndl;*/
 
 struct BranchNB{
   BranchNB(int Ndim);
@@ -106,7 +115,7 @@ struct BranchNB{
   PosType rcrit_part;
   //PosType cm[2]; /* projected center of mass */
 
-}; //BranchNB;
+};
 
 /** \brief
  * TreeNB: Tree structure used for force calculation with particles (i.e. stars, Nbody or halos).
@@ -122,16 +131,8 @@ typedef struct TreeNBStruct{
   unsigned long Nbranches;
   /// Dimension of tree, 2 or 3.  This will dictate how the force is calculated.
   short Ndimensions;
-  /// true if particles have different masses.
-  //bool MultiMass;
-  /// true if particles have different sizes.
-  //bool MultiRadius;
   /// Array of particle positions
   PosType **xp;
-  /// Array of particle sizes
-  //float *rsph;
-  /// Array of particle masses
-  //float *masses;
 } TreeNBStruct;
 
 typedef struct TreeNBStruct * TreeNBHndl;
@@ -203,7 +204,6 @@ protected:
 	void quicksort(unsigned long *particles,double *arr,unsigned long N);
 	void quickPartition(double pivotvalue,unsigned long *pivotindex,unsigned long *particles
 			,double *arr,unsigned long N);
-	//inline bool atLeaf();
 	inline bool atLeaf(){
 		return (tree->current->child1 == NULL)*(tree->current->child2 == NULL);
 	}

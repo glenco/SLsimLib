@@ -46,7 +46,8 @@ QuadTree::QuadTree(
 
 	return;
 }
-/** \brief Constructor meant for halos with internal structure parameters.
+/** \brief Constructor meant for halos with internal structure parameters.  This is a protected constructor because
+ * it should only be invoked from the derived classes that have specific defined halo models.
  */
 QuadTree::QuadTree(
 		PosType **xpt
@@ -402,9 +403,12 @@ void QuadTree::rotate_coordinates(double **coord){
  *   the plane-lens approximation.
  *
  *       The output alpha[] is in units of mass_scale/Mpc, ie it needs to be
- *       divided by Sigma_crit and multiplied by mass_scale to be the defelction
+ *       divided by Sigma_crit and multiplied by mass_scale to be the deflection
  *       in the lens equation expressed on the lens plane or multiplied by
  *       4*pi*G*mass_scale to get the deflection angle caused by the plane lens.
+ *
+ *       kappa and gamma need to by multiplied by mass_scale/Sigma_crit to get
+ *       the traditional units for these where Sigma_crit are in the mass/units(ray)^2
  * */
 
 void QuadTree::force2D(double *ray,double *alpha,float *kappa,float *gamma,bool no_kappa){
@@ -413,7 +417,7 @@ void QuadTree::force2D(double *ray,double *alpha,float *kappa,float *gamma,bool 
   IndexType i;
   bool allowDescent=true;
   unsigned long count=0,index;
-  double rcm, arg1, arg2, prefac, prefacg;
+  double rcm, arg1, arg2, prefac;
 
   assert(tree);
   tree->moveTop();
@@ -456,7 +460,7 @@ void QuadTree::force2D(double *ray,double *alpha,float *kappa,float *gamma,bool 
 					  if(haloON) prefac = halo_params[index].mass/rcm2/pi;
 					  else prefac = masses[MultiMass*tree->current->particles[i]]/rcm2/pi;
 
-					  prefacg = prefac/rcm2;
+					  //prefacg = prefac/rcm2;
 
 					  tmp = -1.0*prefac;
 
@@ -465,7 +469,7 @@ void QuadTree::force2D(double *ray,double *alpha,float *kappa,float *gamma,bool 
 
 					  // can turn off kappa and gamma calculations to save times
 					  if(!no_kappa){
-						  tmp = -2.0*prefacg;
+						  tmp = -2.0*prefac/rcm2;
 
 						  gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 						  gamma[1] += xcm[0]*xcm[1]*tmp;
@@ -482,39 +486,34 @@ void QuadTree::force2D(double *ray,double *alpha,float *kappa,float *gamma,bool 
 					  xcm[0] = tree->xp[index][0] - ray[0];
 					  xcm[1] = tree->xp[index][1] - ray[1];
 
-					  rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
-					  if(rcm2 < 1e-20) rcm2 = 1e-20;
-					  rcm = sqrt(rcm2);
-
 					  if(haloON){
-						  prefac = halo_params[index].mass/rcm2/pi;
-						  arg1 = rcm/halo_params[index].rscale;
-						  arg2 = halo_params[index].Rmax/halo_params[index].rscale;
-						  tmp = halo_params[index].Rmax;
-					  }
-					  else{
+						  force_halo(alpha,kappa,gamma,xcm,halo_params[index],no_kappa);
+					  }else{  // case of no halos just particles and no class derived from QuadTree
+
+						  rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
+						  if(rcm2 < 1e-20) rcm2 = 1e-20;
+						  rcm = sqrt(rcm2);
+
 						  prefac = masses[MultiMass*tree->current->particles[i]]/rcm2/pi;
 						  arg1 = rcm2/(sizes[index]*sizes[index]);
 						  arg2 = sizes[index];
 						  tmp = sizes[index];
-					  }
 
-					  prefacg = prefac/rcm2;
+						  /// intersecting, subtract the point particle
+						  if(rcm2 < tmp*tmp){
+							  tmp = (alpha_h(arg1,arg2) + 1.0)*prefac;
+							  alpha[0] += tmp*xcm[0];
+							  alpha[1] += tmp*xcm[1];
 
-					  /// intersecting, subtract the point particle
-					  if(rcm2 < tmp*tmp){
-						  tmp = (alpha_h(arg1,arg2) + 1.0)*prefac;
-						  alpha[0] += tmp*xcm[0];
-						  alpha[1] += tmp*xcm[1];
+							  // can turn off kappa and gamma calculations to save times
+							  if(!no_kappa){
+								  *kappa += kappa_h(arg1,arg2)*prefac;
 
-						  // can turn off kappa and gamma calculations to save times
-						  if(!no_kappa){
-							  *kappa += kappa_h(arg1,arg2)*prefac;
+								  tmp = (gamma_h(arg1,arg2) + 2.0)*prefac/rcm2;
 
-							  tmp = (gamma_h(arg1,arg2) + 2.0)*prefacg;
-
-							  gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
-							  gamma[1] += xcm[0]*xcm[1]*tmp;
+								  gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+								  gamma[1] += xcm[0]*xcm[1]*tmp;
+							  }
 						  }
 					  }
 				  }
@@ -573,6 +572,9 @@ void QuadTree::force2D(double *ray,double *alpha,float *kappa,float *gamma,bool 
  *       divided by Sigma_crit and multiplied by mass_scale to be the deflection
  *       in the lens equation expressed on the lens plane or multiplied by
  *       4*pi*G*mass_scale to get the deflection angle caused by the plane lens.
+ *
+ *       kappa and gamma need to by multiplied by mass_scale/Sigma_crit to get
+ *       the traditional units for these where Sigma_crit are in the mass/units(ray)^2
  * */
 
 void QuadTree::force2D_recur(double *ray,double *alpha,float *kappa,float *gamma,bool no_kappa){
@@ -627,16 +629,15 @@ void QuadTree::walkTree_recur(QBranchNB *branch,double *ray,double *alpha,float 
 				if(haloON) prefac = halo_params[index].mass/rcm2/pi;
 				else prefac = masses[MultiMass*branch->particles[i]]/rcm2/pi;
 
-				prefacg = prefac/rcm2;
+				//prefacg = prefac/rcm2;
+				//tmp = -1.0*prefac;
 
-				tmp = -1.0*prefac;
-
-				alpha[0] += tmp*xcm[0];
-				alpha[1] += tmp*xcm[1];
+				alpha[0] += -1.0*prefac*xcm[0];
+				alpha[1] += -1.0*prefac*xcm[1];
 
 				// can turn off kappa and gamma calculations to save times
 				if(!no_kappa){
-					tmp = -2.0*prefacg;
+					tmp = -2.0*prefac/rcm2;
 
 					gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 					gamma[1] += xcm[0]*xcm[1]*tmp;
@@ -655,7 +656,7 @@ void QuadTree::walkTree_recur(QBranchNB *branch,double *ray,double *alpha,float 
 
 				/////////////////////////////////////////
 				if(haloON){
-					force_halo(alpha,kappa,gamma,xcm,&halo_params[index],no_kappa);
+					force_halo(alpha,kappa,gamma,xcm,halo_params[index],no_kappa);
 				}else{  // case of no halos just particles and no class derived from QuadTree
 
 					rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
@@ -723,18 +724,26 @@ void QuadTree::walkTree_recur(QBranchNB *branch,double *ray,double *alpha,float 
 
 }
 
-/// This method is to be overridden by any derived class with asymetric halos
-void QuadTree::force_halo(double *alpha,float kappa,float *gamma,double *xcm
-		,HaloStructHndl halo_params,bool no_kappa){
+/** This method does the single halo calculation force calculation.
+ * It is to be overridden by any derived class with asymetric halos.
+ */
+void QuadTree::force_halo(
+		double *alpha     /// mass/Mpc
+		,float *kappa
+		,float *gamma
+		,double *xcm
+		,HaloStructure & halo_params
+		,bool no_kappa
+		){
 
 	double rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
 	if(rcm2 < 1e-20) rcm2 = 1e-20;
 
 	/// intersecting, subtract the point particle
-	if(rcm2 < halo_params->Rmax*halo_params->Rmax){
-		double prefac = halo_params->mass/rcm2/pi;
-		double arg1 = rcm/halo_params->rscale;
-		double arg2 = halo_params->Rmax/halo_params->rscale;
+	if(rcm2 < halo_params.Rmax*halo_params.Rmax){
+		double prefac = halo_params.mass/rcm2/pi;
+		double arg1 = sqrt(rcm2)/halo_params.rscale;
+		double arg2 = halo_params.Rmax/halo_params.rscale;
 
 		double tmp = (alpha_h(arg1,arg2) + 1.0)*prefac;
 		alpha[0] += tmp*xcm[0];

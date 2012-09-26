@@ -199,10 +199,12 @@ void map_images(
 		// free array of sourceinfo's'
 		delete[] rs;
 	}else{
-		// TODO Maybe this should be removed?
+// TODO BEN This runs away probably when the source is mostly off the grid
 		if(verbos) std::cout << "number of grid points before find_images_kist: "<< grid->getNumberOfPoints() << std::endl;
+		//find_images_kist(lens,source->getX(),xmin,grid,Nimages,imageinfo,NimageMax,&Nimagepoints
+		//		,0,true,0,false,true);
 		find_images_kist(lens,source->getX(),xmin,grid,Nimages,imageinfo,NimageMax,&Nimagepoints
-				,0,true,0,false,true);
+				,0,false,0,false,true);
 		if(verbos) std::cout << "number of grid points after find_images_kist: "<< grid->getNumberOfPoints() << std::endl;
 		Nsources = 1;
 		sourceinfo->centroid[0] = source->getX()[0];
@@ -399,7 +401,7 @@ void map_images(
 	//freeKist(subkist);
 
 	tmp = grid->RefreshSurfaceBrightnesses(source);
-	assert(tmp > 0.0);
+//	assert(tmp > 0.0 || imageinfo->imagekist->Nunits() == 0);
 
 	/*/********** test lines **********************
 	PointsWithinKist_iter(grid->s_tree,source->getX(),0,source->source_r_out,imageinfo->imagekist);
@@ -737,6 +739,7 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
 
 					  i_points = grid->RefineLeaf(lens,getCurrentKist(imageinfo[i].outerborder),kappa_off);
 					  imageinfo[i].ShouldNotRefine = 0;   // mark for another look next time
+					  assert(i_points->head <= grid->getNgrid_block()*grid->getNgrid_block()-1);
 
 					  // link new points into image kist and calculate surface brightnesses
 					  for(k=0;k < i_points->head ;++k){
@@ -976,7 +979,7 @@ bool RefinePoint(Point *point,TreeHndl i_tree,double image_area,double total_are
 }
 
 
-/** \ingroup mageFindingL2
+/** \ingroup imageFindingL2 \ingroup function
  * \brief Checks to see if the image has a nearly uniform magnification across it and thus can be considered linearly
  * distorted.
  */

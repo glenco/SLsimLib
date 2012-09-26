@@ -112,7 +112,7 @@ void MultiSourceAnaGalaxy::readDataFile(std::string input_gal_file,double mag_li
 		>> c >> i2_Bulge >> c;  //TODO the GalID will miss the first digit using this method.  No other method stops at the end of file.
 
 			//TODO  BEN this needs to be selected from the parameter file
-		if(SDSS_u < mag_limit){
+		if(SDSS_i < mag_limit){
 			/*
 			std::cout << galid << c << haloid << c << cx << c << cy << c << cz << c << ra << c << dec << c << z_geo << c << z_app
 			<< c << dlum << c << vlos << c << incl
@@ -128,7 +128,7 @@ void MultiSourceAnaGalaxy::readDataFile(std::string input_gal_file,double mag_li
 
 			/***************************/
 			galaxies.push_back(
-					new OverGalaxy(SDSS_u,pow(10,-(SDSS_u_Bulge-SDSS_u)/2.5),Ref,Rh
+					new OverGalaxy(SDSS_i,pow(10,-(SDSS_i_Bulge-SDSS_i)/2.5),Ref,Rh
 							,pa,inclination,z_cosm,theta)
 			);
 			//std::cout << "z:" << z_cosm << " mag " << SDSS_u << " Bulge to total " << pow(10,-(SDSS_u_Bulge-SDSS_u)/2.5)

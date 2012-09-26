@@ -51,6 +51,13 @@ HaloData::HaloData(HaloStructure *halostrucs,PosType **positions,unsigned long N
 	kappa_background = 0.0;  //TODO This should be set properly at some point.
 }
 
+/*HaloData::HaloData(NSIEstructure *halostrucs,PosType **positions,unsigned long Nhaloss):
+	pos(positions), halos(NULL), nsiehalos(halostrucs), Nhalos(Nhaloss)
+{
+	allocation_flag = false;
+	kappa_background = 0.0;  //TODO This should be set properly at some point.
+}*/
+
 /**
  *  \brief In this constructor the halos are created from a mass function and given random positions on the lens plane
  */
@@ -471,6 +478,9 @@ void MultiLens::printMultiLens(){
 		cout << "  Pseudo NFW internal profile " << endl;
 		cout << "  slope: " << pnfw_beta << endl;
 		break;
+	case NSIE:
+		cout << "  NonSingular Isothermal Ellipsoid internal profile " << endl;
+		break;
 	}
 
 	cout << "mass function type " << mass_func_type << endl;
@@ -597,6 +607,10 @@ void MultiLens::buildHaloTrees(
 			//halo_tree[j] = auto_ptr<ForceTree>(new ForceTreePseudoNFW(2,&halodata[j]->pos[0],halodata[j]->Nhalos
 			//		,halodata[j]->halos,true,halodata[j]->kappa_background));
 			halo_tree[j] = auto_ptr<QuadTree>(new QuadTreePseudoNFW(pnfw_beta,&halodata[j]->pos[0],halodata[j]->Nhalos
+							,halodata[j]->halos,halodata[j]->kappa_background));
+			break;
+		case NSIE:
+			halo_tree[j] = auto_ptr<QuadTree>(new QuadTreeNSIE(&halodata[j]->pos[0],halodata[j]->Nhalos
 							,halodata[j]->halos,halodata[j]->kappa_background));
 			break;
 		default:
@@ -872,7 +886,7 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 
 	//int index;
 
-	if(internal_profile != PowerLaw){
+	if(internal_profile != NSIE && internal_profile != PowerLaw){
 		std::cout << "The internal profile of the halos while using simulation input files must be a Power Law."
 				<< std::endl << "Change this is parameter file" << std::endl;
 		exit(1);
@@ -896,6 +910,7 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 	//Nhalos = 10;
 	//cout << Nhalos << endl;
 
+	//std::vector<HaloStructure> halo_vec;
 	std::vector<HaloStructure> halo_vec;
 	std::vector<double> halo_zs_vec;
 	std::vector<double *> halo_pos_vec;
@@ -919,9 +934,25 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 			halo_vec.push_back(halo);
 
 			halo_vec[j].mass = np*8.6e8/cosmo->gethubble();
-			halo_vec[j].Rmax = halo_vec[j].mass*4.7788e-20/2/pow(vdisp/2.9979e5,2);  // SIS value
-			halo_vec[j].rscale = halo_vec[j].Rmax;   //TODO This is a kluge.  It should no be necessary to remember to do this whenever the PowerLaw model is used.
-
+			halo_vec[j].Rmax = halo_vec[j].mass*Grav/2/pow(vdisp/lightspeed,2);  // SIS value
+			if(internal_profile == NSIE){
+				halo_vec[j].sigma = vdisp;
+				halo_vec[j].fratio = (ran2(seed)+1)*0.5;  //TODO This is a kluge.
+				halo_vec[j].pa = 2*pi*ran2(seed);  //TODO This is a kluge.
+				  // TODO Needs to be changed.
+				//if(halo_vec[j].mass > 1.0e14) halo_vec[j].rscale = halo_vec[j].Rmax*0.1*pow(halo_vec[j].mass/1.0e14,0.25);
+				//else
+					halo_vec[j].rscale = 0.0;
+				halo_vec[j].Rsize = rmaxNSIE(halo_vec[j].sigma,halo_vec[j].mass,halo_vec[j].fratio,halo_vec[j].rscale);
+				halo_vec[j].Rmax = MAX(1.0,1.0/halo_vec[j].fratio)*halo_vec[j].Rsize;  // redefine
+			}else{
+				// initialize unused variables to harmless values in PowerLaw case
+				halo_vec[j].Rsize = halo_vec[j].Rmax;
+				halo_vec[j].rscale = halo_vec[j].Rmax;
+				halo_vec[j].fratio = 0;
+				halo_vec[j].pa = 0;
+				halo_vec[j].sigma = 0;
+			}
 			if(halo_vec[j].mass > mass_max) mass_max = halo_vec[j].mass;
 			if(halo_vec[j].Rmax > R_max) R_max = halo_vec[j].Rmax;
 			if(vdisp > V_max) V_max = vdisp;
@@ -966,7 +997,6 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 
 	// sort the halos by readshift
 	MultiLens::quicksort(halos,halo_pos,halo_zs,Nhalos);
-
 }
 
 
@@ -1067,7 +1097,7 @@ void MultiLens::ResetSourcePlane(
 		return;
 	}
 
-	Ds_implant = cosmo->angDist(0,z);
+	Ds_implant = cosmo->coorDist(0,z);
 	zs_implant = z;
 
 	locateD(plane_redshifts-1,Nplanes,zs_implant,&j);

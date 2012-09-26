@@ -40,6 +40,34 @@ public:
 
 };
 
+/**
+ * \brief This is a lens that does no lensing.  It is useful for testing and for running refinement code on sources.
+ */
+class DummyLens: public Lens{
+public:
+	DummyLens(): Lens(){};
+	~DummyLens(){};
+
+	virtual void setInternalParams(CosmoHndl,SourceHndl){}
+	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off){
+		for(unsigned long i=0;i<Npoints;++i){
+			i_points[i].image->x[0] = i_points[i].x[0];
+			i_points[i].image->x[1] = i_points[i].x[1];
+			i_points[i].image->kappa = i_points[i].kappa = 0.0;
+			i_points[i].image->gamma[0] = i_points[i].gamma[0] = 0.0;
+			i_points[i].image->gamma[1] = i_points[i].gamma[1] = 0.0;
+			i_points[i].image->gamma[2] = i_points[i].gamma[2] = 0.0;
+		}
+	}
+	void rayshooterInternal(double *ray, double *alpha, float *gamma, float *kappa, bool kappa_off){
+		alpha[0] = alpha[1] = 0.0;
+		gamma[0] = gamma[1] = 0.0;
+		*kappa = 0.0;
+	}
+	virtual double getZlens(){return 0.0;}
+	virtual void setZlens(double zlens){std::cout << "Why would you want to change the lens redshift in a DummyLens?" << std::endl; exit(1);}
+};
+
 typedef Lens *LensHndl;
 
 #endif /* LENS_H_ */

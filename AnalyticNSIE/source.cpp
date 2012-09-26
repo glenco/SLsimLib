@@ -310,26 +310,26 @@ void SourceBLR::printSource(){
 }
 
 double SourceUniform::SurfaceBrightness(double *y){
-	return (double)( (y[0]*y[0] + y[1]*y[1]) < source_r*source_r );
+	return (double)( (pow(y[0]-getX()[0],2) + pow(y[1]-getX()[1],2)) < source_r*source_r );
 }
 
 double SourceGaussian::SurfaceBrightness(double *y){
-	return exp( -(y[0]*y[0] + y[1]*y[1])/source_gauss_r2 );
+	return exp( -(pow(y[0]-getX()[0],2) + pow(y[1]-getX()[1],2))/source_gauss_r2 );
 }
-
 // surface brightness for models of the Broad Line Region
 double SourceBLRDisk::SurfaceBrightness(double *y){
-	return blr_surface_brightness_disk(y,this);
+	double x[2] = {y[0]-getX()[0],y[1]-getX()[1]};
+	return blr_surface_brightness_disk(x,this);
 }
 
 double SourceBLRSph1::SurfaceBrightness(double *y){
-	return blr_surface_brightness_spherical_circular_motions(sqrt(y[0]*y[0] + y[1]*y[1]),this);
+	return blr_surface_brightness_spherical_circular_motions(sqrt((pow(y[0]-getX()[0],2) + pow(y[1]-getX()[1],2))),this);
 }
 double SourceBLRSph2::SurfaceBrightness(double *y){
-	return blr_surface_brightness_spherical_random_motions(sqrt(y[0]*y[0] + y[1]*y[1]),this);
+	return blr_surface_brightness_spherical_random_motions(sqrt((pow(y[0]-getX()[0],2) + pow(y[1]-getX()[1],2))),this);
 }
 
-void in_source(double *y_source,ListHndl sourcelist){
-  return;
-}
+//void in_source(double *y_source,ListHndl sourcelist){
+//  return;
+//}
 

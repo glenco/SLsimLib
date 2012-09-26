@@ -590,13 +590,14 @@ void SwapPointsInArrayData(Point *p1,Point *p2){
 void PointCopy(Point *pcopy,Point *pin){
   /* copies information in point without copying
   * pointers to prev and next, but moving the link
-  * to the image point */
+  * to the image point, does not touch head */
   pcopy->id = pin->id;
   pcopy->image = pin->image;
   pcopy->invmag = pin->invmag;
   pcopy->kappa = pin->kappa;
   pcopy->gamma[0] = pin->gamma[0];
   pcopy->gamma[1] = pin->gamma[1];
+  pcopy->gamma[2] = pin->gamma[2];
   pcopy->dt = pin->dt;
   pcopy->x = pin->x;
   pcopy->gridsize = pin->gridsize;
@@ -609,13 +610,14 @@ void PointCopy(Point *pcopy,Point *pin){
 void PointCopyData(Point *pcopy,Point *pin){
   /* copies information in point without copying */
   /* pointers to prev and next */
-  /* does copy image pointer */
+  /* does copy image pointer, does not touch head */
   pcopy->id = pin->id;
   pcopy->image = pin->image;
   pcopy->invmag = pin->invmag;
   pcopy->kappa = pin->kappa;
   pcopy->gamma[0] = pin->gamma[0];
   pcopy->gamma[1] = pin->gamma[1];
+  pcopy->gamma[2] = pin->gamma[2];
   pcopy->dt = pin->dt;
   pcopy->x = pin->x;
 //  pcopy->x[0] = pin->x[0];
