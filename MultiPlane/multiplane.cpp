@@ -38,7 +38,7 @@ HaloData::HaloData(CosmoHndl cosmo
 		halos[i].Rmax = ha->getRvir()*cosmo->gethubble();
 		halos[i].rscale = halos[i].Rmax/ha->getConcentration(0);
 
-		cout << endl << halos[i].mass  << " " << halos[i].Rmax << " " << halos[i].rscale << endl;
+		cout << endl << "mass: " << halos[i].mass  << ", Rmax: " << halos[i].Rmax << ", rscale: " << halos[i].rscale << endl;
 	}
 
 	delete ha;

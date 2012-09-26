@@ -16,9 +16,15 @@
 #include <quadTree.h>
 #include <forceTree.h>
 #include <multiplane.h>
-//TODO MARGARITA This comment does not fully explain the classes use according to the repository comment.  How is it different than MultiLens, etc.
 /**
- * \brief A test class. Produces one halo centered at {0,0}.
+ * \brief A test class. Produces one halo (NFW, PeudoNFW, or PowerLaw) centered at {0,0}.
+ *
+ * This class is or testing the convergence, deflection, and shear of the three halo profiles that
+ * we work with. On a single plane a halo is placed in the center.
+ *
+ * A grid can be created in the executable and then use the function saveProfiles to save the convergence
+ * and so on, as a function of radius.
+ *
  * */
 class SingleLens : public Lens{
 public:
@@ -35,7 +41,8 @@ public:
 	void printSingleLens();
 
 	void setInternalParams(CosmoHndl,SourceHndl);
-	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off, double zsource=-1);
+	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off);
+	void rayshooterInternal(double*, double*, float*, float*, bool){};
 
 private:
 	typedef enum {PowerLaw, NFW, PseudoNFW} IntProfType;
@@ -48,9 +55,9 @@ private:
 	/// charge for the tree force solver (4*pi*G*mass_scale)
 	double charge;
 	/// an array of smart pointers to the halo models on each plane
-	HaloData *halodata;
+	HaloData *halo_data;
 	/// an array of smart pointers to halo trees on each plane, uses the haloModel in the construction
-	ForceTree *halo_tree;
+	QuadTree *halo_tree;
 
 	/* the following parameters are read in from the parameter file */
 	///mass of the galaxy or cluster
@@ -73,5 +80,8 @@ private:
 
 	void quicksort(HaloStructure *halos,double **brr,double *arr,unsigned long N);
 };
+
+
+void saveProfiles(PointList *points, double boxlMpc,int nx, int ny);
 
 #endif /* SINGLELENS_H_ */

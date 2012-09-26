@@ -5,7 +5,8 @@
  *      Author: mpetkova
  */
 
-#include <slsimlib.h>
+#include "slsimlib.h"
+#include "utilities.h"
 #include <sstream>
 #include <string>
 
@@ -21,25 +22,11 @@ SingleLens::SingleLens(string filename,long *my_seed) : Lens(){
 	charge = 4*pi*Grav*mass_scale;
 
 	seed = my_seed;
-
-	/*if(internal_profile == NFW && tables_set != true){
-		make_tables_nfw();
-		tables_set = true;
-	}
-	if(internal_profile == PseudoNFW && tables_set != true){
-		make_tables_pseudonfw(pnfw_beta);
-		tables_set = true;
-	}*/
 }
 
 SingleLens::~SingleLens(){
 	delete halo_tree;
-	delete halodata;
-
-	/*if(tables_set == true){
-		if(internal_profile == NFW) delete_tables_nfw();
-		if(internal_profile == PseudoNFW) delete_tables_pseudonfw();
-	}*/
+	delete halo_data;
 }
 
 
@@ -178,29 +165,8 @@ void SingleLens::buildHaloTrees(
 		,double zsource /// the source resdhift
 		){
 
-	halodata = new HaloData(cosmo,mass,zlens);
+	halo_data = new HaloData(cosmo,mass,zlens);
 
-	switch(internal_profile){
-	case PowerLaw:
-		halo_tree = new ForceTreePowerLaw(pw_beta,&halodata->pos[0],halodata->Nhalos
-				,halodata->halos,true,halodata->kappa_background);
-		break;
-	case NFW:
-		halo_tree = new ForceTreeNFW(&halodata->pos[0],halodata->Nhalos
-				,halodata->halos,true,halodata->kappa_background);
-		break;
-	case PseudoNFW:
-		halo_tree = new ForceTreePseudoNFW(pnfw_beta,&halodata->pos[0],halodata->Nhalos
-				,halodata->halos,true,halodata->kappa_background);
-		break;
-	default:
-		cout << "There is no such case for the halo trees" << endl;
-		ERROR_MESSAGE();
-		exit(1);
-		break;
-	}
-
-	/*
 	switch(internal_profile){
 	case PowerLaw:
 		halo_tree = new QuadTreePowerLaw(pw_beta,&halo_data->pos[0],halo_data->Nhalos
@@ -220,10 +186,10 @@ void SingleLens::buildHaloTrees(
 		exit(1);
 		break;
 	}
-	*/
+
 }
 
-void SingleLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off, double zsource){
+void SingleLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off){
 	/* i_points need to be already linked to s_points */
 	float kappa, gamma[3];
     double alpha[2];
@@ -232,10 +198,10 @@ void SingleLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool
 	for(i = 0; i< Npoints; i++){
 
 		// do stars with tree code
-		halo_tree->force2D(i_points[i].x,alpha,&kappa,gamma,kappa_off);
+		halo_tree->force2D_recur(i_points[i].x,alpha,&kappa,gamma,kappa_off);
 
-		i_points[i].image->x[0] += alpha[0];
-		i_points[i].image->x[1] += alpha[1];
+		i_points[i].image->x[0] = alpha[0];
+		i_points[i].image->x[1] = alpha[1];
 
 		if(!kappa_off){
 			i_points[i].kappa = kappa;
@@ -290,5 +256,94 @@ void SingleLens::printSingleLens(){
 		cout << endl;
 }
 
+void saveProfiles(PointList *points, double boxlMpc, int nx, int ny){
+	double *estprofM(std:: valarray<float> q,int nx,int ny, std:: valarray<float> r, double dr0, double xmax);
+
+	/* measuring the differential and cumulative profile*/
+	Point *i_points = NewPointArray(nx*ny,true);
+	double center[2]={0,0};
+	long ind;
+
+	MoveToTopList(points);
+	do{
+		ind = IndexFromPosition(points->current->x,nx,boxlMpc,center);
+		i_points[ind].kappa = points->current->kappa;
+		i_points[ind].gamma[0] = points->current->gamma[0];
+		i_points[ind].gamma[1] = points->current->gamma[1];
+		i_points[ind].x[0] = points->current->image->x[0];
+		i_points[ind].x[1] = points->current->image->x[1];
+		MoveDownList(points);
+	}while(AtBottomList(points) == false);
+
+	double xmin = -boxlMpc*0.5;
+	double xmax =  boxlMpc*0.5;
+	double drpix = boxlMpc/nx;
+
+	std::valarray<float> pxdist(nx*ny),convergence(nx*ny), sgm(nx*ny), defl(nx*ny);
+
+	int i, j;
+	for(i=0; i<nx; i++ ) for(j=0; j<ny; j++ ){
+		convergence[i+ny*j] = i_points[i+ny*j].kappa;
+		pxdist[i+ny*j]= sqrt(pow((xmin+(drpix*0.5)+i*drpix),2) +
+				pow((xmin+(drpix*0.5)+j*drpix),2));
+		sgm[i+ny*j] = sqrt(pow(i_points[i+ny*j].gamma[0],2) + pow(i_points[i+ny*j].gamma[1],2));
+		defl[i+ny*j] =sqrt(pow(i_points[i+ny*j].x[0],2) + pow(i_points[i+ny*j].x[1],2));
+	}
+
+	double dr0 = 8.*(0.5*boxlMpc)/(nx/2.);
+	int nbin = int(xmax/dr0);
+
+	//
+	std:: cout << "   " << std:: endl;
+	std:: cout << " nbins = " << nbin << "  dr0 = " << dr0 << std:: endl;
+	std:: cout << " ______________________________________________________ " << std:: endl;
+	std:: cout << " computing profiles assuming spherical symmetry";
+	// - - - - - - - - - - - - - - - - -
+	double *kprofr = estprofM(convergence,nx,ny,pxdist,dr0,xmax);
+	double *gammaprofr = estprofM(sgm,nx,ny,pxdist,dr0,xmax);
+	double *deflprofr = estprofM(defl,nx,ny,pxdist,dr0,xmax);
+	std::ostringstream fprof;
+	fprof << "profiles.dat";
+	std:: ofstream filoutprof;
+	std:: string filenameprof = fprof.str();
+	filoutprof.open(filenameprof.c_str());
+	filoutprof <<"# r      alpha     kappa      gamma  " << std:: endl;
+	int l;
+	for(l=0;l<nbin;l++){
+	  filoutprof << dr0*l + dr0/2. << "  "
+		     << deflprofr[l] << " " << kprofr[l] << "  "  << gammaprofr[l] << std:: endl;
+	}
+	filoutprof.close();
+
+	FreePointArray(i_points,true);
+	delete[] kprofr;
+	delete[] gammaprofr;
+	delete[] deflprofr;
+	pxdist.resize(0);
+	convergence.resize(0);
+	sgm.resize(0);
+}
+
 void SingleLens::RandomizeHost(long *seed,bool tables){};
 void SingleLens::RandomizeSigma(long *seed,bool tables){};
+
+double *estprofM(std:: valarray<float> q,int nx,int ny, std:: valarray<float> r, double dr0, double xmax){
+	int nbin = int(xmax/dr0);
+	//std:: cout << " nbins (in estprof) = " << nbin << std:: endl;
+	double *kr = new double[nbin];
+	for (int k=0;k<nbin;k++){
+		int contapx=0;
+		kr[k] = 0;
+		// for each bin in r estimate the mean value
+		for( int i=0; i<nx; i++ )
+			for( int j=0; j<ny; j++ ){
+				if(r[i+ny*j]>dr0*double(k) && r[i+ny*j]<=dr0*double(k+1)){
+					contapx = contapx + 1;
+					kr[k] = kr[k] + q[i+ny*j];
+				}
+			}
+		kr[k] = kr[k]/double(contapx);
+		if(contapx==0) kr[k]=0.;
+	}
+	return kr; // return the pointer
+}

@@ -100,6 +100,13 @@ QTreeNBHndl QuadTree::BuildQTreeNB(PosType **xp,IndexType Nparticles,IndexType *
     }
   }
 
+  if(Nparticles == 1){
+	  p1[0]=-0.25;
+	  p1[1]=-0.25;
+	  p2[0]=0.25;
+	  p2[1]=0.25;
+  }
+
   /* Initialize tree root */
   tree = new QTreeNB(xp,particles,Nparticles,p1,p2);
 
