@@ -420,7 +420,8 @@ void MOKALens::saveProfiles(double &RE3){
 	}
 	filoutprof.close();
 	RE3 = InterpolateYvec(lprofFORre,lrOFr,0.);  
-	RE3 = pow(10.,RE3)*map->inarcsec;
+	if((RE3-lrOFr[0])<1e-4 || (RE3-lrOFr[nbin-1])<1e-4) RE3=0;
+	else RE3 = pow(10.,RE3)*map->inarcsec;
 }
 
 /** \ingroup DeflectionL2
@@ -526,22 +527,23 @@ void MOKALens::EinsteinRadii(double &RE1, double &RE2){
   yci2.clear();
   int nc = xci.size();
   std:: vector<int> groupid(nc);
-  int largestgroupid = fof(pixDinL,xci,yci,groupid);
-  std:: vector<double> xcpoints,ycpoints;
-  double xercm=0;
-  double yercm=0;
-  for(int ii=0;ii<nc;ii++){
-    if(groupid[ii] == largestgroupid){
-      xcpoints.push_back(xci[ii]);
-      ycpoints.push_back(yci[ii]);
-      xercm+=xci[ii];
-      yercm+=yci[ii];
+  int nearest0groupid = fof(pixDinL,xci,yci,groupid);
+  if(nearest0groupid>0){
+    std:: vector<double> xcpoints,ycpoints;
+    double xercm=0;
+    double yercm=0;
+    for(int ii=0;ii<nc;ii++){
+      if(groupid[ii] == nearest0groupid){
+	xcpoints.push_back(xci[ii]);
+	ycpoints.push_back(yci[ii]);
+	xercm+=xci[ii];
+	yercm+=yci[ii];
+      }
     }
-  }
-  nc = xcpoints.size();
-  xercm=xercm/double(nc);
-  yercm=yercm/double(nc);
-  if(nc>0){
+    nc = xcpoints.size();
+    xercm=xercm/double(nc);
+    yercm=yercm/double(nc);
+    double distcentre=sqrt(xercm*xercm+yercm*yercm)*map->inarcsec;
     std:: vector<double>::iterator maxit, minit; 
     // find the min and max elements in the vector
     maxit = max_element(xcpoints.begin(), xcpoints.end());
@@ -609,6 +611,11 @@ void MOKALens::EinsteinRadii(double &RE1, double &RE2){
     }
     RE1=map->inarcsec*sqrt(pixDinL*pixDinL*npixIN/M_PI);
     RE2=map->inarcsec*median(RE);
+    // is not in the centre
+    if(distcentre>RE2){
+      RE1=-RE1;
+      RE2=-RE2;
+    }
     if(RE2!=RE2) RE2=0.;
   }
   else{

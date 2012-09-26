@@ -133,6 +133,8 @@ HaloData::HaloData(
 		//halos[i].rscale = vsizes[i]/vscale[i]; // get the Rscale=Rmax/c
 		halos[i].rscale = halos[i].Rmax/ha->getConcentration(0); // get the Rscale=Rmax/c
 		pos[i][2] = 0.0;//halos[i].Rmax;
+		/* -> if you want to print the masses and redshift
+		std:: cout << halos[i].mass << "   " << zi << std:: endl; */		
 	}
 
 	delete ha;
