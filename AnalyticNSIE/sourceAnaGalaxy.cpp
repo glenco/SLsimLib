@@ -22,6 +22,7 @@ MultiSourceAnaGalaxy::MultiSourceAnaGalaxy(
 	source_sb_type = MultiAnaSource;
 	mem_allocated = true;
 	galaxies.push_back(new OverGalaxy(mag,BtoT,Reff,Rh,PA,inclination,my_z,my_theta));
+	rescale = 1.0;
 }
 /** Constructor for passing in a pointer to the galaxy model or a list of galaxies instead of constructing it internally.
 *   Useful when there is a list of pre-allocated sources.  The redshifts and sky positions need to be set separately.
@@ -33,6 +34,7 @@ MultiSourceAnaGalaxy::MultiSourceAnaGalaxy(
 	source_sb_type = MultiAnaSource;
 	mem_allocated = false;
 	galaxies.push_back(my_galaxy);
+	rescale = 1.0;
 }
 /// Constructor for importing from data file.
 MultiSourceAnaGalaxy::MultiSourceAnaGalaxy(
@@ -48,6 +50,7 @@ MultiSourceAnaGalaxy::MultiSourceAnaGalaxy(
 
 	readDataFile(input_gal_file,my_mag_limit);
 	index = 0;
+	rescale = 1.0;
 }
 
 MultiSourceAnaGalaxy::~MultiSourceAnaGalaxy(){

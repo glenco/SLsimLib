@@ -91,7 +91,7 @@ public:
 	double fieldofview;
 
 	// methods used for use with implanted sources
-	void ResetSourcePlane(CosmoHndl cosmo,double z);
+	void ResetSourcePlane(CosmoHndl cosmo,double z,bool nearest = false);
 	/// Revert the source redshift to the value it was when the MultiLens was created.
 	void RevertSourcePlane(){ toggle_source_plane = false;}
 	//void ImplantSource(unsigned long index,CosmoHndl cosmo);
