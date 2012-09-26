@@ -51,6 +51,7 @@ void readImage(std::string fn
 	int nx,ny;
 
 	std:: cout << " reading MOKA file: " << fn << std:: endl;
+	/*
 	std::ostringstream checkfout;
 	checkfout << fn << "_noisy.fits";	
 	std:: string checkfilenameout = checkfout.str();
@@ -66,7 +67,7 @@ void readImage(std::string fn
 	  std:: cout << " I am reading " << fn << std:: endl;
 	  std:: cout << "  " << std:: endl;
 	}
-
+	*/
 	std::auto_ptr<FITS> ff(new FITS (fn, Read));
 
 	PHDU *h0=&ff->pHDU();
@@ -191,7 +192,7 @@ void make_friendship(int ii,int ji,int np,std:: vector<int> &friends, std:: vect
 
 /*
  * given a a set of grid points xci and yci and an interpixeld distance l return the id of the 
- * fof group of each cell point
+ * fof group nearest to the centre
  */
 
 int fof(double l,std:: vector<double> xci, std:: vector<double> yci, std:: vector<int> &groupid){
@@ -204,7 +205,6 @@ int fof(double l,std:: vector<double> xci, std:: vector<double> yci, std:: vecto
       friends[ii+np*ji]=0;
     }
   for(int ii=0;ii<np;ii++) for(int ji = 0;ji<np; ji++){
-      // consider as friends grid points less distant than 1.5 x l
       if(pointdist[ii+np*ji]<=1.5*l) friends[ii+np*ji] = ii+1;
     }
   for(int ii=0;ii<np;ii++){
@@ -234,16 +234,26 @@ int fof(double l,std:: vector<double> xci, std:: vector<double> yci, std:: vecto
   // count the particles in each group
   int kt = 0;
   int ng= 0;
+  std:: vector<double> distcentre;
+  std:: vector<int> idgroup;
   for(int ii=0;ii<np;ii++){
     int k = 0;
+    double xcm=0;
+    double ycm=0;
     for(int ji=0;ji<np;ji++){
       if(friends[ii+np*ji]!=0){
 	k++;
 	groupid[ji]=ii+1;
+	xcm += xci[ji];
+	ycm += yci[ji];
       }
     }
     if(k>0){
       ng++;
+      xcm/=k;
+      ycm/=k;
+      distcentre.push_back(sqrt(xcm*xcm+ycm*ycm));
+      idgroup.push_back(ii+1);
     }
     kt = kt + k;
   }
@@ -255,10 +265,24 @@ int fof(double l,std:: vector<double> xci, std:: vector<double> yci, std:: vecto
     std:: cout << " I will STOP here!!! " << std:: endl;
     exit(1);
   }
+  if(idgroup.size()>0){
+    std:: vector<double>::iterator it = min_element(distcentre.begin(), distcentre.end());
+    int minpos = idgroup[distance(distcentre.begin(), it)];
+    return minpos;
+  }
+  else return 0;
   /* Make a histogram of the data */
+  /*
   std::vector< int > histogram(np,0);
   std::vector< int >::iterator it = groupid.begin();
   while(it != groupid.end()) histogram[*it++]++;
+  /* Print out the frequencies of the values in v */
+  // std::copy(histogram.begin(),histogram.end(),std::ostream_iterator< int >(std::cout, " "));
+  // std::cout << std::endl;
+  /* Find the mode */
+  /*
   int mode = std::max_element(histogram.begin(),histogram.end()) - histogram.begin();
   return mode;
+  */
 }
+
