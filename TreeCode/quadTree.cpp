@@ -615,7 +615,7 @@ void QuadTree::walkTree_recur(QBranchNB *branch,double *ray,double *alpha,float 
 	PosType xcm[2],rcm2cell,rcm2,tmp,boxsize2;
 	IndexType i;
 	unsigned long count=0,index;
-	double rcm, arg1, arg2, prefac, prefacg;
+	double rcm, arg1, arg2, prefac;
 
 	if(branch->nparticles > 0){
 		xcm[0]=branch->center[0]-ray[0];

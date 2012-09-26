@@ -1100,7 +1100,6 @@ void MultiLens::ResetSourcePlane(
 
 	if(z<=0.0){
 		cout << "Warning: Source redshift cann't be set to " << z << " in MultiLens::ResetSourcePlane." << endl;
-
 		return;
 	}
 
@@ -1112,7 +1111,7 @@ void MultiLens::ResetSourcePlane(
 	}
 
 	// j is the index of the next plane at higher redshift
-	locateD(plane_redshifts-1,Nplanes,zs_implant,&j);
+	locateD(plane_redshifts-1,Nplanes,z,&j);
 	assert(plane_redshifts[j] > z);
 
 	if(j > 0) z = cosmo->coorDist(plane_redshifts[j-1],z) > cosmo->coorDist(z,plane_redshifts[j])

@@ -47,8 +47,6 @@ void alphaNSIE(
 
   fp=sqrt(1-f*f);
   b2=x[0]*x[0]+f*f*x[1]*x[1];
-  r=sqrt(x[0]*x[0]+x[1]*x[1]);
-
 
   double Qp=( pow(fp*sqrt(b2+bc*bc)+x[0],2) + f*f*f*f*x[1]*x[1] )
     /( pow(f*r*r+fp*bc*x[0],2)+fp*fp*bc*bc*x[1]*x[1] );
@@ -56,7 +54,7 @@ void alphaNSIE(
   double Qm=( pow(fp*sqrt(b2+bc*bc)-x[0],2) + f*f*f*f*x[1]*x[1] )
     /( pow(f*r*r-fp*bc*x[0],2)+fp*fp*bc*bc*x[1]*x[1] );
 
-  /*  printf("Q = %e %e\n",Qp,Qm);*/
+  //printf("Q = %e %e\n",Qp,Qm);
 
   //double QpQm = ( pow(f*r*r-fp*bc*x[0],2)+fp*fp*bc*bc*x[1]*x[1] )/( pow(f*r*r+fp*bc*x[0],2)+fp*fp*bc*bc*x[1]*x[1] );
 
@@ -77,7 +75,7 @@ void alphaNSIE(
   if(alpha[0] != alpha[0] || alpha[1] != alpha[1] ){
 	  printf("alpha is %e %e in nsie.c \n fp=%e b2=%e r=%e bc=%e f=%e theta=%e\n x = %e %e xt= %e %e\n"
 			  ,alpha[0],alpha[1],fp,b2,r,bc,f,theta,x[0],x[1],xt[0],xt[1]);
-	  printf("angle=%e %e Qp=%e Qm=%e RCphase=%e SCphase=%e\n",angle[0],angle[1],RCphase,SCphase);
+	  printf("angle=%e %e Qp=%e Qm=%e RCphase=%e SCphase=%e\n",angle[0],angle[1],Qp,Qm,RCphase,SCphase);
 	  ERROR_MESSAGE();
 	  exit(0);
 	  alpha[0]=alpha[1]=0;
