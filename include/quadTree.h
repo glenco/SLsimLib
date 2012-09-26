@@ -269,7 +269,7 @@ private:
 		return -1.0*pow(x/xmax,beta+2);
 	}
 	inline double kappa_h(double x,double xmax){
-		return (beta+2)*pow(x/xmax,beta)*x*x/(xmax*xmax);
+		return 0.5*(beta+2)*pow(x/xmax,beta)*x*x/(xmax*xmax);
 	}
 	inline double gamma_h(double x,double xmax){
 		return -0.5*beta*pow(x/xmax,beta+2);
