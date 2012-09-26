@@ -44,7 +44,7 @@ public:
 	/// calculated sph smoothing and store them in the tree, also provide pointer to them
 	float * CalculateSPHsmoothing(int N);
 	/// calculate the deflection and lensing properties
-	void force2D(PosType *ray,PosType *alpha,PosType *kappa,PosType *gamma,bool no_kappa = true);
+	void force2D(double *ray,double *alpha,float *kappa,float *gamma,bool no_kappa = true);
 	/// provides a way to change the profiles of the particles, by default Gaussian
 	//void ChangeParticleProfile(PartProf partprof);
 

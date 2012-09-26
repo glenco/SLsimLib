@@ -34,6 +34,7 @@ public:
 	void AddImages(ImageInfo *imageinfo,int Nimages,bool constant_sb);
 	void AddImages(ImageInfo *imageinfo,int Nimages,double sigma);
 	void printASCII();
+	void printASCIItoFile(std::string filename);
 	void printFITS(std::string filename);
 	void smooth(double *map_out,double sigma);
 

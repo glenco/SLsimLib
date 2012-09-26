@@ -203,16 +203,16 @@ void SingleLens::buildHaloTrees(
 	/*
 	switch(internal_profile){
 	case PowerLaw:
-		halo_tree = new QuadTreePowerLaw(pw_beta,&halodata->pos[0],halodata->Nhalos
-								,halodata->halos,halodata->kappa_background);
+		halo_tree = new QuadTreePowerLaw(pw_beta,&halo_data->pos[0],halo_data->Nhalos
+								,halo_data->halos,halo_data->kappa_background);
 		break;
 	case NFW:
-		halo_tree = new QuadTreeNFW(&halodata->pos[0],halodata->Nhalos
-				,halodata->halos,halodata->kappa_background);
+		halo_tree = new QuadTreeNFW(&halo_data->pos[0],halo_data->Nhalos
+				,halo_data->halos,halo_data->kappa_background);
 		break;
 	case PseudoNFW:
-		halo_tree = new QuadTreePseudoNFW(pnfw_beta,&halodata->pos[0],halodata->Nhalos
-				,halodata->halos,halodata->kappa_background);
+		halo_tree = new QuadTreePseudoNFW(pnfw_beta,&halo_data->pos[0],halo_data->Nhalos
+				,halo_data->halos,halo_data->kappa_background);
 		break;
 	default:
 		cout << "There is no such case for the halo trees" << endl;
@@ -225,8 +225,8 @@ void SingleLens::buildHaloTrees(
 
 void SingleLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off, double zsource){
 	/* i_points need to be already linked to s_points */
-	double kappa;
-    double alpha[2], gamma[3];
+	float kappa, gamma[3];
+    double alpha[2];
     unsigned long i;
 
 	for(i = 0; i< Npoints; i++){

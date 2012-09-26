@@ -5,18 +5,20 @@
  *      Author: mpetkova
  */
 
-#ifdef ENABLE_FITS
-
 #include <MOKAfits.h>
 #include <fstream>
+
+#ifdef ENABLE_FITS
 #include <CCfits/CCfits>
 
 using namespace CCfits;
 
+#endif
+
 void getDims(std::string fn
 	     ,int *nx
 	     ,int *ny){
-
+#ifdef ENABLE_FITS
 	try{
 		std::auto_ptr<FITS> ff(new FITS (fn, Read));
 
@@ -29,6 +31,10 @@ void getDims(std::string fn
 		std::cout << "can not open " << fn << std::endl;
 		exit(1);
 	}
+#else
+	std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
+	exit(1);
+#endif
 }
 
 /**
@@ -41,7 +47,7 @@ void readImage(std::string fn
 		,std::valarray<float> *gamma1
 		,std::valarray<float> *gamma2
 	    ,LensHalo *LH){
-
+#ifdef ENABLE_FITS
 	int nx,ny;
 
 	std:: cout << " reading MOKA file: " << fn << std:: endl;
@@ -95,44 +101,10 @@ void readImage(std::string fn
 	h4.read(*gamma2);
 
 	std::cout << *h0 << h1 << h2 << h3  << h4 << std::endl;
-}
-
-/**
- * \brief write the fits file of the new MOKA map from the structure map
- */
-void writeImage(std::string filename /// fiename for the FITS file
-		,std::valarray<float> quantity /// the quantity to be written
-		,int nx /// the x num of pixels
-		,int ny /// the y num of pixels
-		){
-
-	long naxis=2;
-	long naxes[2]={nx,ny};
-
-	std::auto_ptr<FITS> fout(0);
-
-	try{
-		fout.reset(new FITS(filename,FLOAT_IMG,naxis,naxes));
-	}
-	catch(FITS::CantCreate){
-		exit(1);
-	}
-
-	std::vector<long> naxex(2);
-	naxex[0]=nx;
-	naxex[1]=ny;
-
-	PHDU *phout=&fout->pHDU();
-
-	/// TODO: BEN/MARGARITA quantity has to be substituted with the correct name, for clarity
-	phout->write( 1,nx*ny,quantity );
-
-	/* TODO: BEN/MARGARITA here goes the header writing
-	phout->addKey ("SIDEL",LH->boxlarcsec,"arcsec");
-	 */
-
-	std::cout << *phout << std::endl;
-
+#else
+	std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
+	exit(1);
+#endif
 }
 
 
@@ -147,7 +119,7 @@ void writeImage(std::string filename
 		,int nx
 		,int ny
 		,LensHalo *LH){
-
+#ifdef ENABLE_FITS
 	long naxis=2;
 	long naxes[2]={nx,ny};
 
@@ -192,7 +164,10 @@ void writeImage(std::string filename
 	eh3->write(1,nx*ny,gamma3);
 
 	std::cout << *phout << std::endl;
-
+#else
+	std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
+	exit(1);
+#endif
 }
 
 
@@ -287,5 +262,3 @@ int fof(double l,std:: vector<double> xci, std:: vector<double> yci, std:: vecto
   int mode = std::max_element(histogram.begin(),histogram.end()) - histogram.begin();
   return mode;
 }
-
-#endif

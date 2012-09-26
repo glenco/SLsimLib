@@ -75,7 +75,7 @@ void QTreeNB::_freeQTree(short child){
 
 	assert(current);
 	if(current->particles != current->big_particles
-			&& current->Nbig_particles > 0) delete current->big_particles;
+			&& current->big_particles != NULL) delete[] current->big_particles;
 
 	if(current->child0 != NULL){
 		moveToChild(0);

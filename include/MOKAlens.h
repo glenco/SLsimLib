@@ -5,11 +5,11 @@
  *      Author: mpetkova
  */
 
-#ifdef ENABLE_FITS
 
 #ifndef MOKALENS_H_
 #define MOKALENS_H_
 
+#include <MOKAfits.h>
 #include <cosmo.h>
 #include <utilities.h>
 #include <source.h>
@@ -56,7 +56,6 @@ struct MOKAmap{
 class MOKALens : public Lens{
 public:
 
-
 	MOKALens(std::string);
 	MOKALens(std::string paramfile,LensHalo *LH);
 
@@ -66,6 +65,7 @@ public:
 	std::string MOKA_input_file;
 	/// if >=1 (true), do analyzis only; if = 0 (false) change units to internal GLAMER units and prepare for ray-shooting
 	int flag_MOKA_analyze;
+	int flag_background_field;
 
 	void readParamfile(std::string);
 	void rayshooterInternal(double *ray, double *alpha, float *gamma, float *kappa, bool kappa_off);
@@ -90,4 +90,3 @@ public:
 
 #endif /* MOKALENS_H_ */
 
-#endif

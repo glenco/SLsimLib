@@ -16,8 +16,19 @@
  * to particle lens model.  This transition needs to be made more automatic and
  * fail safe.
  */
+
+void *compute_rays_parallel_nfw(void *_p);
+
+struct params{
+	Point *i_points;
+	bool kappa_off;
+	int tid;
+	int start;
+	int size;
+	AnaLens *lens;
+};
+
 void AnaLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off){
-	/* i_points need to be already linked to s_points */
 
     if(this == NULL || !set){
     	ERROR_MESSAGE();
@@ -25,148 +36,189 @@ void AnaLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool ka
     	exit(0);
     }
 
-	double convert_factor = star_massscale / Sigma_crit;
-	int i;
+    int nthreads, rc;
 
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-    for(i = 0; i < Npoints; i++){
-    	double x_rescale[2];
-        long j;
-        float dt = 0,tmp = 0;
-    	double alpha[2];
-    	float gamma[3];
+    nthreads = 4;
 
+    int chunk_size;
+    do{
+      chunk_size = (int)Npoints/nthreads;
+      if(chunk_size == 0) nthreads /= 2;
+    }while(chunk_size == 0);
+
+    pthread_t threads[nthreads];
+    params *thread_params = new params[nthreads];
+
+    for(int i=0; i<nthreads;i++){
+      thread_params[i].i_points = i_points;
+      thread_params[i].kappa_off = kappa_off;
+      thread_params[i].size = chunk_size;
+      if(i == nthreads-1)
+        thread_params[i].size = (int)Npoints - (nthreads-1)*chunk_size;
+      thread_params[i].start = i*chunk_size;
+      thread_params[i].tid = i;
+      thread_params[i].lens = this;
+      rc = pthread_create(&threads[i], NULL, compute_rays_parallel_nfw, (void*) &thread_params[i]);
+      assert(rc==0);
+    }
+
+    for(int i = 0; i < nthreads; i++){
+      rc = pthread_join(threads[i], NULL);
+      assert(rc==0);
+    }
+
+    delete[] thread_params;
+}
+
+void *compute_rays_parallel_nfw(void *_p){
+	params *p = (params *) _p;
+	bool kappa_off = p->kappa_off;
+	AnaLens *lens = p->lens;
+	int tid        = p->tid;
+	int chunk_size = p->size;
+	int start      = p->start;
+	int end        = start + chunk_size;
+
+	/* i_points need to be already linked to s_points */
+
+	double convert_factor = lens->star_massscale / lens->Sigma_crit;
+	long i;
+
+	double x_rescale[2];
+    long j;
+    float dt,kappa;
+	double alpha[2];
+	float gamma[3];
+
+    for(i = start; i < end; i++){
     	alpha[0]=alpha[1]=0.0;
     	gamma[0]=gamma[1]=gamma[2]=0.0;
+    	dt = kappa = 0.0;
 
-    	i_points[i].dt = 0.0;
-    	i_points[i].gamma[2] = 0.0;
+    	p->i_points[i].dt = 0.0;
+    	p->i_points[i].gamma[2] = 0.0;
 
     	// host lens
-    	if(host_ro > 0){
-    		x_rescale[0] = i_points[i].x[0] / host_ro;
-    		x_rescale[1] = i_points[i].x[1] / host_ro;
+    	if(lens->host_ro > 0){
+    		x_rescale[0] = p->i_points[i].x[0] / lens->host_ro;
+    		x_rescale[1] = p->i_points[i].x[1] / lens->host_ro;
 
-    		alphaNSIE(i_points[i].image->x, x_rescale, host_axis_ratio,
-    				host_core / host_ro, host_pos_angle);
+    		alphaNSIE(p->i_points[i].image->x, x_rescale, lens->host_axis_ratio,
+    				lens->host_core/ lens->host_ro, lens->host_pos_angle);
 
     		if(!kappa_off){
-    			gammaNSIE(i_points[i].gamma,x_rescale,host_axis_ratio
-    					,host_core/host_ro,host_pos_angle);
-    			i_points[i].kappa=kappaNSIE(x_rescale,host_axis_ratio
-    					,host_core/host_ro,host_pos_angle);
-    			i_points[i].dt = phiNSIE(x_rescale,host_axis_ratio
-    					,host_core/host_ro,host_pos_angle);
+    			gammaNSIE(p->i_points[i].gamma,x_rescale,lens->host_axis_ratio
+    					,lens->host_core/lens->host_ro,lens->host_pos_angle);
+    			p->i_points[i].kappa=kappaNSIE(x_rescale,lens->host_axis_ratio
+    					,lens->host_core/lens->host_ro,lens->host_pos_angle);
+    			p->i_points[i].dt = phiNSIE(x_rescale,lens->host_axis_ratio
+    					,lens->host_core/lens->host_ro,lens->host_pos_angle);
     		}
     		else{
-    			i_points[i].kappa=0;
-    			i_points[i].gamma[0]=i_points[i].gamma[1]=0.0;
-    			i_points[i].dt = 0.0;
+    			p->i_points[i].kappa=0;
+    			p->i_points[i].gamma[0]=p->i_points[i].gamma[1]=0.0;
+    			p->i_points[i].dt = 0.0;
     		}
 
-    		i_points[i].image->x[0] *= host_ro;
-    		i_points[i].image->x[1] *= host_ro;
+    		p->i_points[i].image->x[0] *= lens->host_ro;
+    		p->i_points[i].image->x[1] *= lens->host_ro;
 
     	}
     	else{
-    		i_points[i].image->x[0] = 0.0;
-    		i_points[i].image->x[1] = 0.0;
-    		i_points[i].kappa=0;
-    		i_points[i].gamma[0]=i_points[i].gamma[1]=0;
-    		i_points[i].dt = 0.0;
+    		p->i_points[i].image->x[0] = 0.0;
+    		p->i_points[i].image->x[1] = 0.0;
+    		p->i_points[i].kappa=0;
+    		p->i_points[i].gamma[0]=p->i_points[i].gamma[1]=0;
+    		p->i_points[i].dt = 0.0;
     	}
 
     	// perturbations of host lens
-    	if(perturb_Nmodes > 0){
-    		i_points[i].kappa += lens_expand(perturb_beta,perturb_modes
-    				,perturb_Nmodes,i_points[i].x,alpha,gamma,&dt);
+    	if(lens->perturb_Nmodes > 0){
+    		p->i_points[i].kappa += lens_expand(lens->perturb_beta,lens->perturb_modes
+    				,lens->perturb_Nmodes,p->i_points[i].x,alpha,gamma,&dt);
 
-    		i_points[i].image->x[0] += alpha[0];
-    		i_points[i].image->x[1] += alpha[1];
+    		p->i_points[i].image->x[0] += alpha[0];
+    		p->i_points[i].image->x[1] += alpha[1];
 
     		if(!kappa_off){
-    			i_points[i].gamma[0] += gamma[0];
-    			i_points[i].gamma[1] += gamma[1];
-    			i_points[i].dt += dt;
+    			p->i_points[i].gamma[0] += gamma[0];
+    			p->i_points[i].gamma[1] += gamma[1];
+    			p->i_points[i].dt += dt;
     		}
     		else
-    			i_points[i].kappa = 0;
+    			p->i_points[i].kappa = 0;
     	} // end of perturb modes
 
     	alpha[0]=alpha[1]=0.0;
     	gamma[0]=gamma[1]=gamma[2]=0.0;
 
     	// add substructure
-    	if(substruct_implanted){
-    		for(j=0;j<sub_N;++j){
-    			sub_alpha_func(alpha,i_points[i].x,sub_Rcut[j],sub_mass[j],sub_beta,sub_x[j],Sigma_crit);
+    	if(lens->substruct_implanted){
+    		for(j=0;j<lens->sub_N;++j){
+    			lens->sub_alpha_func(alpha,p->i_points[i].x,lens->sub_Rcut[j],lens->sub_mass[j],lens->sub_beta,lens->sub_x[j],lens->Sigma_crit);
 
-    			i_points[i].image->x[0] += alpha[0];
-    			i_points[i].image->x[1] += alpha[1];
+    			p->i_points[i].image->x[0] += alpha[0];
+    			p->i_points[i].image->x[1] += alpha[1];
 
     			if(!kappa_off){
-    				i_points[i].kappa += sub_kappa_func(i_points[i].x,sub_Rcut[j],sub_mass[j],sub_beta,sub_x[j],Sigma_crit);
-    				sub_gamma_func(gamma,i_points[i].x,sub_Rcut[j],sub_mass[j],sub_beta,sub_x[j],Sigma_crit);
-    				i_points[i].gamma[0] += gamma[0];
-    				i_points[i].gamma[1] += gamma[1];
-    				i_points[i].dt += sub_phi_func(i_points[i].x,sub_Rcut[j],sub_mass[j],sub_beta,sub_x[j],Sigma_crit);
+    				p->i_points[i].kappa += lens->sub_kappa_func(p->i_points[i].x,lens->sub_Rcut[j],lens->sub_mass[j],lens->sub_beta,lens->sub_x[j],lens->Sigma_crit);
+    				lens->sub_gamma_func(gamma,p->i_points[i].x,lens->sub_Rcut[j],lens->sub_mass[j],lens->sub_beta,lens->sub_x[j],lens->Sigma_crit);
+    				p->i_points[i].gamma[0] += gamma[0];
+    				p->i_points[i].gamma[1] += gamma[1];
+    				p->i_points[i].dt += lens->sub_phi_func(p->i_points[i].x,lens->sub_Rcut[j],lens->sub_mass[j],lens->sub_beta,lens->sub_x[j],lens->Sigma_crit);
 
     			}
     		}
     	} // end of substructure
 
     	if(!kappa_off){
-    		i_points[i].dt = 0.5*(i_points[i].image->x[0]*i_points[i].image->x[0]
-    		                     + i_points[i].image->x[1]*i_points[i].image->x[1])
-      		                     - i_points[i].dt;
-    		i_points[i].dt *= to;
+    		p->i_points[i].dt = 0.5*(p->i_points[i].image->x[0]*p->i_points[i].image->x[0]
+    		                     + p->i_points[i].image->x[1]*p->i_points[i].image->x[1])
+      		                     - p->i_points[i].dt;
+    		p->i_points[i].dt *= lens->to;
     	}
 
-    	i_points[i].image->x[0] = i_points[i].x[0] - i_points[i].image->x[0];
-    	i_points[i].image->x[1] = i_points[i].x[1] - i_points[i].image->x[1];
+    	p->i_points[i].image->x[0] = p->i_points[i].x[0] - p->i_points[i].image->x[0];
+    	p->i_points[i].image->x[1] = p->i_points[i].x[1] - p->i_points[i].image->x[1];
 
     	alpha[0]=alpha[1]=0.0;
     	gamma[0]=gamma[1]=gamma[2]=0.0;
 
-    	if(stars_N > 0 && stars_implanted){
+    	if(lens->stars_N > 0 && lens->stars_implanted){
     		// add stars for microlensing
-    		substract_stars_disks(i_points[i].x,i_points[i].image->x,
-    				&(i_points[i].kappa),i_points[i].gamma);
+    		lens->substract_stars_disks(p->i_points[i].x,p->i_points[i].image->x,
+    				&(p->i_points[i].kappa),p->i_points[i].gamma);
 
     		// do stars with tree code
-    		//star_tree->force2D(i_points[i].x,temp[i].alpha,&tmp,temp[i].gamma,true);
-    		star_tree->force2D_recur(i_points[i].x,alpha,&tmp,gamma,true);
+    		//star_tree->force2D(p->i_points[i].x,alpha,&kappa,gamma,true);
+    		lens->star_tree->force2D_recur(p->i_points[i].x,alpha,&kappa,gamma,true);
 
-    		i_points[i].image->x[0] += convert_factor*alpha[0];
-    		i_points[i].image->x[1] += convert_factor*alpha[1];
+    		p->i_points[i].image->x[0] += convert_factor*alpha[0];
+    		p->i_points[i].image->x[1] += convert_factor*alpha[1];
 
     		if(!kappa_off){
-    			i_points[i].kappa += convert_factor*tmp;
-    			i_points[i].gamma[0] += convert_factor*gamma[0];
-    			i_points[i].gamma[1] += convert_factor*gamma[1];
+    			p->i_points[i].kappa += convert_factor*kappa;
+    			p->i_points[i].gamma[0] += convert_factor*gamma[0];
+    			p->i_points[i].gamma[1] += convert_factor*gamma[1];
     		}
 
     	} // end of stars
 
 
 		// final operations to get the inverse magnification
-		i_points[i].invmag = (1-i_points[i].kappa)*(1-i_points[i].kappa)
-				- i_points[i].gamma[0]*i_points[i].gamma[0] - i_points[i].gamma[1]*i_points[i].gamma[1];
+		p->i_points[i].invmag = (1-p->i_points[i].kappa)*(1-p->i_points[i].kappa)
+				- p->i_points[i].gamma[0]*p->i_points[i].gamma[0] - p->i_points[i].gamma[1]*p->i_points[i].gamma[1];
 
-    	i_points[i].image->invmag=i_points[i].invmag;
-    	i_points[i].image->kappa=i_points[i].kappa;
-    	i_points[i].image->gamma[0]=i_points[i].gamma[0];
-    	i_points[i].image->gamma[1]=i_points[i].gamma[1];
-    	i_points[i].image->dt = i_points[i].dt;
+    	p->i_points[i].image->invmag=p->i_points[i].invmag;
+    	p->i_points[i].image->kappa=p->i_points[i].kappa;
+    	p->i_points[i].image->gamma[0]=p->i_points[i].gamma[0];
+    	p->i_points[i].image->gamma[1]=p->i_points[i].gamma[1];
+    	p->i_points[i].image->dt = p->i_points[i].dt;
+
+
     }
 
-#ifdef _OPENMP
-#pragma omp barrier
-#endif
-
-    return ;
+    return 0;
 }
 
 

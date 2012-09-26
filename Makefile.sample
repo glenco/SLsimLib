@@ -1,16 +1,15 @@
-NR_DIR = /Users/mpetkova/Code/NR
-COSMOLIB_DIR = /Users/mpetkova/Code/CosmoLib
+NR_DIR = ../NR
+COSMOLIB_DIR = ../CosmoLib
+CFITS_DIR =
+CCFITS_DIR =
 
-OPT = -DWITH_MOKA
+OPT = ##-fopenmp ##-DENABLE_FITS
 
-CFITS_DIR = /usr/local/cfitsio
-CCFITS_DIR = /usr/local/CCfitsio
-
-INCL = -I./include/ \
+INCL = 	-I$(COSMOLIB_DIR)/include \
 	-I$(NR_DIR)/include \
-	-I$(COSMOLIB_DIR)/include \
 	-I$(CFITS_DIR)/include \
-	-I$(CCFITS_DIR)/include
+	-I$(CCFITS_DIR)/include \
+	-I./include/
 
 OUT = libSLsimLib.a
 

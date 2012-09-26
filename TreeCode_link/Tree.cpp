@@ -461,7 +461,7 @@ void printBranch(Branch *data){
   std::cout << "level=" << data->level << " number=" << data->number << std::endl;
   std::cout << "center = [" << data->center[0] << "," << data->center[1] << "]" << std::endl;
   std::cout << "p1 = [" << data->boundary_p1[0] << "," << data->boundary_p1[1] << "]" << std::endl;
-  std::cout << "p1 = [" << data->boundary_p2[0] << "," << data->boundary_p2[1] << "]" << std::endl;
+  std::cout << "p2 = [" << data->boundary_p2[0] << "," << data->boundary_p2[1] << "]" << std::endl;
   std::cout<< "number of points = " << data->npoints << std::endl;
 }
 /****************************************************************
@@ -528,6 +528,7 @@ Point *AddPointToArray(Point *points,unsigned long N,unsigned long Nold){
 	  if(points[0].head != Nold){ ERROR_MESSAGE(); std::cout << "ERROR: AddPointToArray head not set correctly" << std::endl; exit(0);}
 	  for(i=N;i<Nold;++i) free(points[i].x);
 	  points=(Point *) realloc(points,N*sizeof(Point));
+	  assert(points);
 	  for(i=Nold;i<N;++i){
 		  points[i].x=(double *) malloc(2*sizeof(double));
 		  assert(points[i].x);

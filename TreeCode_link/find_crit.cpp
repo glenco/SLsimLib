@@ -233,16 +233,15 @@ void find_crit_kist(
   //short spur,closed;
   double maxgridsize,mingridsize,x[2];
   ImageInfo negimage;
-  Point *minpoint = NewPoint(x,0);
+  //Point *minpoint = NewPoint(x,0);
   Kist newpoint_kist;
 
-  minpoint->invmag=1.0e99;
   /*point=NmewPoint(x,0);*/
 
   // find list of points with negative magnification
   negimage.imagekist->Empty();
   MoveToTopList(grid->i_tree->pointlist);
-  minpoint = grid->i_tree->pointlist->current;
+  Point *minpoint = grid->i_tree->pointlist->current;
   for(i=0;i<grid->i_tree->pointlist->Npoints;++i){
 	  if(grid->i_tree->pointlist->current->invmag < 0){
 

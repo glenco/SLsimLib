@@ -978,8 +978,8 @@ bool RefinePoint(Point *point,TreeHndl i_tree,double image_area,double total_are
 	return false;
 }
 
-
-/** \ingroup imageFindingL2 \ingroup function
+/** \ingroup mageFindingL2
+>>>>>>> other
  * \brief Checks to see if the image has a nearly uniform magnification across it and thus can be considered linearly
  * distorted.
  */

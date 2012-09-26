@@ -107,6 +107,7 @@ float kappaNSIE(
   if(b2>1.0e20 ) return 0.0;
   return 0.5*sqrt(f/(b2+bc*bc));
 }
+
 /**\ingroup DeflectionL2 \ingroup function
  * \brief Shear for non-singular isothermal ellipsoid, units \f$ \frac{r_{einstein}}{units(x)} \f$
 * or \f$ \frac{\sigma^2}{\Sigma_{crit}G\, units(xt) } \f$

@@ -13,7 +13,6 @@
 
 using namespace std;
 
-/// TODO: MARGARITA/BEN the constructor has to be done in a smart way, so that it knows what kind of Lens and Source to create
 /*
  * This creates a model and constructs a Lens, a Source, and a Cosmology.
  * The Type of the lens is determined by multi_lens, the type of the source is read in from the parameter file

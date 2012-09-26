@@ -29,47 +29,109 @@
  * Warning: Is not valid for a non-flat universe.
  */
 
+void *compute_rays_parallel(void *_p);
+
+struct params{
+  Point *i_points;
+  bool kappa_off;
+  int tid;
+  int start;
+  int size;
+  int NLastPlane;
+  MultiLens *lens;
+};
+
 void MultiLens::rayshooterInternal(
 		unsigned long Npoints   /// number of points to be shot
 		,Point *i_points        /// point on the image plane
 		,bool kappa_off         /// turns calculation of convergence and shear off to save time.
 		){
-	unsigned long i;
-	int NLastPlane;
-	double tmpDs,tmpdDs,tmpZs;
+  int NLastPlane;
+  double tmpDs,tmpdDs,tmpZs;
+// If a lower redshift source is being used
+  if(toggle_source_plane){
+    NLastPlane = index_of_new_sourceplane + 1;
 
+    tmpDs = Dl[index_of_new_sourceplane];
+    tmpdDs = dDl[index_of_new_sourceplane];
+    tmpZs = plane_redshifts[index_of_new_sourceplane];
+
+    Dl[index_of_new_sourceplane] = Ds_implant;
+    dDl[index_of_new_sourceplane] = dDs_implant;
+    plane_redshifts[index_of_new_sourceplane] = zs_implant;
+  }else{
+    NLastPlane = Nplanes;
+  }
+
+  int nthreads, rc;
+
+  nthreads = 4;
+
+  int chunk_size;
+  do{
+    chunk_size = (int)Npoints/nthreads;
+    if(chunk_size == 0) nthreads /= 2;
+  }while(chunk_size == 0);
+    
+  pthread_t threads[nthreads];
+  params *thread_params = new params[nthreads];
+
+  for(int i=0; i<nthreads;i++){
+    thread_params[i].i_points = i_points;
+    thread_params[i].kappa_off = kappa_off;
+    thread_params[i].size = chunk_size;
+    if(i == nthreads-1)
+      thread_params[i].size = (int)Npoints - (nthreads-1)*chunk_size;
+    thread_params[i].start = i*chunk_size;
+    thread_params[i].tid = i;
+    thread_params[i].lens = this;
+    thread_params[i].NLastPlane = NLastPlane;
+    rc = pthread_create(&threads[i], NULL, compute_rays_parallel, (void*) &thread_params[i]);
+    assert(rc==0);
+  }
+  
+  for(int i = 0; i < nthreads; i++){
+    rc = pthread_join(threads[i], NULL);
+    assert(rc==0);
+  }
+  
+  delete[] thread_params;
+
+
+  if(toggle_source_plane){
+    // The initial values for the plane are reset here
+    Dl[index_of_new_sourceplane] = tmpDs;
+    dDl[index_of_new_sourceplane] = tmpdDs;
+    plane_redshifts[index_of_new_sourceplane] = tmpZs;
+  }
+
+}
+
+void *compute_rays_parallel(void *_p){
+  params *p = (params *) _p;
+  bool kappa_off = p->kappa_off;
+  MultiLens *lens = p->lens;
+  int tid        = p->tid;
+  int chunk_size = p->size;
+  int start      = p->start;
+  int end        = start + chunk_size;
+  
+  int i, j;
+  
+  double xx[2];
+  double aa,bb,cc;
+  double alpha[2];
+  float kappa,gamma[3];
+  double xminus[2],xplus[2];
+  double kappa_minus,gamma_minus[3],kappa_plus,gamma_plus[3];
+  
 	// If a lower redshift source is being used
-	if(toggle_source_plane){
-		NLastPlane = index_of_new_sourceplane + 1;
 
-		tmpDs = Dl[index_of_new_sourceplane];
-		tmpdDs = dDl[index_of_new_sourceplane];
-		tmpZs = plane_redshifts[index_of_new_sourceplane];
-
-		Dl[index_of_new_sourceplane] = Ds_implant;
-		dDl[index_of_new_sourceplane] = dDs_implant;
-		plane_redshifts[index_of_new_sourceplane] = zs_implant;
-	}else{
-		NLastPlane = Nplanes;
-	}
-
-
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-	for(i = 0; i< Npoints; i++){
-
-		double xx[2];
-		double aa,bb,cc;
-	    double alpha[2];
-	    float kappa,gamma[3];
-	    double xminus[2],xplus[2];
-	    double kappa_minus,gamma_minus[3],kappa_plus,gamma_plus[3];
-	    int j;
+	for(i = start; i< end; i++){
 
 		// find position on first lens plane in comoving units
-		i_points[i].image->x[0] = i_points[i].x[0]*Dl[0];
-       	i_points[i].image->x[1] = i_points[i].x[1]*Dl[0];
+		p->i_points[i].image->x[0] = p->i_points[i].x[0]*lens->Dl[0];
+       	p->i_points[i].image->x[1] = p->i_points[i].x[1]*lens->Dl[0];
 
        	xminus[0] = 0;
 		xminus[1] = 0;
@@ -80,126 +142,116 @@ void MultiLens::rayshooterInternal(
 		gamma_minus[1] = 0;
 		gamma_minus[2] = 0;
 
-		i_points[i].kappa = 1;  // This is actually 1-kappa until after the loop through the planes.
-		i_points[i].gamma[0] = 0;
-		i_points[i].gamma[1] = 0;
-		i_points[i].gamma[2] = 0;
+		p->i_points[i].kappa = 1;  // This is actually 1-kappa until after the loop through the planes.
+		p->i_points[i].gamma[0] = 0;
+		p->i_points[i].gamma[1] = 0;
+		p->i_points[i].gamma[2] = 0;
 
-		for(j = 0; j < NLastPlane-1 ; j++){  // each iteration leaves i_point[i].image on plane (j+1)
-
-			/*
-			if(zsource == plane_redshifts[j])
-				break;
-			 */
+		for(j = 0; j < p->NLastPlane-1 ; j++){  // each iteration leaves i_point[i].image on plane (j+1)
 
 			// convert to physical coordinates on the plane j
-			xx[0] = i_points[i].image->x[0]/(1+plane_redshifts[j]);
-			xx[1] = i_points[i].image->x[1]/(1+plane_redshifts[j]);
 
-			if(flag_input_lens && j == (flag_input_lens % Nplanes)){
-				input_lens->rayshooterInternal(xx,alpha,gamma,&kappa,kappa_off);
-				cc = dDl[j+1];
+			xx[0] = p->i_points[i].image->x[0]/(1+lens->plane_redshifts[j]);
+			xx[1] = p->i_points[i].image->x[1]/(1+lens->plane_redshifts[j]);
+
+
+
+			if(lens->flag_input_lens && j == (lens->flag_input_lens % lens->Nplanes)){
+				lens->input_lens->rayshooterInternal(xx,alpha,gamma,&kappa,kappa_off);
+				cc = lens->dDl[j+1];
 			}else{
-
-				halo_tree[j]->force2D_recur(xx,alpha,&kappa,gamma,kappa_off);
+				lens->halo_tree[j]->force2D_recur(xx,alpha,&kappa,gamma,kappa_off);
 				//halo_tree[j]->force2D(xx,alpha,&kappa,gamma,kappa_off);
 
-				cc = charge*dDl[j+1];
+				cc = lens->charge*lens->dDl[j+1];
 
 				/* multiply by the scale factor to obtain 1/comoving_distance/physical_distance
 				 * such that a multiplication with the charge (in units of physical distance)
 				 * will result in a 1/comoving_distance quantity */
-				kappa/=(1+plane_redshifts[j]);
-				gamma[0]/=(1+plane_redshifts[j]);
-				gamma[1]/=(1+plane_redshifts[j]);
-				gamma[2]/=(1+plane_redshifts[j]);
+				kappa/=(1+lens->plane_redshifts[j]);
+				gamma[0]/=(1+lens->plane_redshifts[j]);
+				gamma[1]/=(1+lens->plane_redshifts[j]);
+				gamma[2]/=(1+lens->plane_redshifts[j]);
 
 				//kappa = alpha[0] = alpha[1] = gamma[0] = gamma[1] = gamma[2] = 0.0;
 			}
 
-			if(flag_switch_deflection_off > 0)
+			if(lens->flag_switch_deflection_off > 0)
 				alpha[0] = alpha[1] = 0.0;
 
-			aa = (dDl[j+1]+dDl[j])/dDl[j];
-			bb = dDl[j+1]/dDl[j];
+			aa = (lens->dDl[j+1]+lens->dDl[j])/lens->dDl[j];
+			bb = lens->dDl[j+1]/lens->dDl[j];
 
-			xplus[0] = aa*i_points[i].image->x[0] - bb*xminus[0] - cc*alpha[0];
-       		xplus[1] = aa*i_points[i].image->x[1] - bb*xminus[1] - cc*alpha[1];
+			xplus[0] = aa*p->i_points[i].image->x[0] - bb*xminus[0] - cc*alpha[0];
+       		xplus[1] = aa*p->i_points[i].image->x[1] - bb*xminus[1] - cc*alpha[1];
 
- 			xminus[0] = i_points[i].image->x[0];
-			xminus[1] = i_points[i].image->x[1];
+ 			xminus[0] = p->i_points[i].image->x[0];
+			xminus[1] = p->i_points[i].image->x[1];
 
-			i_points[i].image->x[0] = xplus[0];
-			i_points[i].image->x[1] = xplus[1];
+			p->i_points[i].image->x[0] = xplus[0];
+			p->i_points[i].image->x[1] = xplus[1];
 
-			if(!kappa_off)
-    		{
+			if(!kappa_off){
 
-				aa = (dDl[j+1]+dDl[j])*Dl[j]/dDl[j]/Dl[j+1];
+				aa = (lens->dDl[j+1]+lens->dDl[j])*lens->Dl[j]/lens->dDl[j]/lens->Dl[j+1];
 
-				//bb = dDl[j+1]*Dl[ (j < 1) ? 0 : j-1]/dDl[j]/Dl[j+1];
-				// removed the line above because Dl[-1] = observer plane = 0 and is different from Dl[0]
 				if(j>0){
-					bb = dDl[j+1]*Dl[j-1]/dDl[j]/Dl[j+1];
+					bb = lens->dDl[j+1]*lens->Dl[j-1]/lens->dDl[j]/lens->Dl[j+1];
 				}
 				else
 					bb = 0;
 
-				if(flag_input_lens && j == (flag_input_lens % Nplanes))
-					cc = dDl[j+1]*Dl[j]/Dl[j+1];
+				if(lens->flag_input_lens && j == (lens->flag_input_lens % lens->Nplanes))
+					cc = lens->dDl[j+1]*lens->Dl[j]/lens->Dl[j+1];
 				else
-					cc = charge*dDl[j+1]*Dl[j]/Dl[j+1];
+					cc = lens->charge*lens->dDl[j+1]*lens->Dl[j]/lens->Dl[j+1];
 
 				// still not positive about sign convention
-				kappa_plus = aa*i_points[i].kappa - bb*kappa_minus
-						- cc*(kappa*i_points[i].kappa - gamma[0]*i_points[i].gamma[0] - gamma[1]*i_points[i].gamma[1]);
+				kappa_plus = aa*p->i_points[i].kappa - bb*kappa_minus
+						- cc*(kappa*p->i_points[i].kappa - gamma[0]*p->i_points[i].gamma[0] - gamma[1]*p->i_points[i].gamma[1]);
 
-				gamma_plus[0] = aa*i_points[i].gamma[0] - bb*gamma_minus[0]
-						+ cc*(gamma[0]*i_points[i].kappa - kappa*i_points[i].gamma[0] + gamma[1]*i_points[i].gamma[2]);
+				gamma_plus[0] = aa*p->i_points[i].gamma[0] - bb*gamma_minus[0]
+						+ cc*(gamma[0]*p->i_points[i].kappa - kappa*p->i_points[i].gamma[0] + gamma[1]*p->i_points[i].gamma[2]);
 
-				gamma_plus[1] = aa*i_points[i].gamma[1] - bb*gamma_minus[1]
-						+ cc*(gamma[1]*i_points[i].kappa - kappa*i_points[i].gamma[1] - gamma[0]*i_points[i].gamma[2]);
+				gamma_plus[1] = aa*p->i_points[i].gamma[1] - bb*gamma_minus[1]
+						+ cc*(gamma[1]*p->i_points[i].kappa - kappa*p->i_points[i].gamma[1] - gamma[0]*p->i_points[i].gamma[2]);
 
-				gamma_plus[2] = aa*i_points[i].gamma[2] - bb*gamma_minus[2]
-						+ cc*(gamma[1]*i_points[i].gamma[0] - gamma[0]*i_points[i].gamma[1] - kappa*i_points[i].gamma[2]);
+				gamma_plus[2] = aa*p->i_points[i].gamma[2] - bb*gamma_minus[2]
+						+ cc*(gamma[1]*p->i_points[i].gamma[0] - gamma[0]*p->i_points[i].gamma[1] - kappa*p->i_points[i].gamma[2]);
 
-				kappa_minus = i_points[i].kappa;
-				gamma_minus[0] = i_points[i].gamma[0];
-				gamma_minus[1] = i_points[i].gamma[1];
-				gamma_minus[2] = i_points[i].gamma[2];
+				kappa_minus = p->i_points[i].kappa;
+				gamma_minus[0] = p->i_points[i].gamma[0];
+				gamma_minus[1] = p->i_points[i].gamma[1];
+				gamma_minus[2] = p->i_points[i].gamma[2];
 
-				i_points[i].kappa = kappa_plus;
-				i_points[i].gamma[0] = gamma_plus[0];
-				i_points[i].gamma[1] = gamma_plus[1];
-				i_points[i].gamma[2] = gamma_plus[2];
+				p->i_points[i].kappa = kappa_plus;
+				p->i_points[i].gamma[0] = gamma_plus[0];
+				p->i_points[i].gamma[1] = gamma_plus[1];
+				p->i_points[i].gamma[2] = gamma_plus[2];
     		}
 		}
 
 		// Convert units back to angles.
-		i_points[i].image->x[0] /= Dl[NLastPlane-1];
-		i_points[i].image->x[1] /= Dl[NLastPlane-1];
+		p->i_points[i].image->x[0] /= lens->Dl[p->NLastPlane-1];
+		p->i_points[i].image->x[1] /= lens->Dl[p->NLastPlane-1];
 
-		i_points[i].kappa = 1 - i_points[i].kappa;
+		p->i_points[i].kappa = 1 - p->i_points[i].kappa;
 
-		i_points[i].invmag = (1-i_points[i].kappa)*(1-i_points[i].kappa)
-		  	    - i_points[i].gamma[0]*i_points[i].gamma[0]
-		  	    - i_points[i].gamma[1]*i_points[i].gamma[1]
-		  	    - i_points[i].gamma[2]*i_points[i].gamma[2];
+		p->i_points[i].invmag = (1-p->i_points[i].kappa)*(1-p->i_points[i].kappa)
+		  	    - p->i_points[i].gamma[0]*p->i_points[i].gamma[0]
+		  	    - p->i_points[i].gamma[1]*p->i_points[i].gamma[1]
+		  	    - p->i_points[i].gamma[2]*p->i_points[i].gamma[2];
+
+		if(p->i_points[i].image->x[0] != p->i_points[i].image->x[0] ||
+				p->i_points[i].image->x[1] != p->i_points[i].image->x[1] ||
+				p->i_points[i].invmag != p->i_points[i].invmag){
+			ERROR_MESSAGE();
+			exit(1);
+		}
 
     }
 
-#ifdef _OPENMP
-#pragma omp barrier
-#endif
-
-	if(toggle_source_plane){
-		// The initial values for the plane are reset here
-		Dl[index_of_new_sourceplane] = tmpDs;
-		dDl[index_of_new_sourceplane] = tmpdDs;
-		plane_redshifts[index_of_new_sourceplane] = tmpZs;
-	}
-
-    return;
+	return 0;
 
 }
 

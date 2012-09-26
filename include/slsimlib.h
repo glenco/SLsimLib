@@ -23,6 +23,7 @@
 #ifdef _OPENMP
 #include <omp.h>
 #endif
+#include <pthread.h>
 
 #include <math.h>
 #include <assert.h>
@@ -59,10 +60,8 @@
 #include <simpleTree.h>
 #include <multiplane.h>
 #include <singlelens.h>
-#ifdef ENABLE_FITS
 #include <MOKAlens.h>
 #include <MOKAfits.h>
-#endif
 #include <quadTree.h>
 
 #include <peak_refinement.h>
