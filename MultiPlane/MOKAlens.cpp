@@ -321,6 +321,7 @@ void MOKALens::saveProfiles(double &RE3){
 	double xmin = -map->boxlMpc*0.5*map->h;
 	double xmax =  map->boxlMpc*0.5*map->h;
 	double drpix = map->boxlMpc/map->nx*map->h;
+	int galaxiesPerBin = 64;
 
 	std::valarray<float> pxdist(map->nx*map->ny);
 	std::valarray<float> red_sgE(map->nx*map->ny),red_sgB(map->nx*map->ny),sgm(map->nx*map->ny); 
@@ -376,7 +377,7 @@ void MOKALens::saveProfiles(double &RE3){
 	    std:: cout << " runi.size() = " << runi.size() << std:: endl;
 	    std:: cout << " runj.size() = " << runj.size() << std:: endl;	      
 	  }
-	  dr0 = nXbin*(0.5*map->boxlMpc*map->h)/(0.5*ntbggal);
+	  dr0 = galaxiesPerBin*(0.5*map->boxlMpc*map->h)/(0.5*ntbggal);
 	  nbin = int(xmax/dr0);                                                        
 	}
 	//                                                                                           

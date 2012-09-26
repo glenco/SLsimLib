@@ -671,9 +671,9 @@ void QuadTree::walkTree_recur(QBranchNB *branch,double *ray,double *alpha,float 
 						rcm = sqrt(rcm2);
 
 						prefac = masses[MultiMass*branch->particles[i]]/rcm2/pi;
-						arg1 = rcm2/(sizes[index]*sizes[index]);
-						arg2 = sizes[index];
-						tmp = sizes[index];
+						arg1 = rcm2/(sizes[index*MultiRadius]*sizes[index*MultiRadius]);
+						arg2 = sizes[index*MultiRadius];
+						tmp = sizes[index*MultiRadius];
 
 						/// intersecting, subtract the point particle
 						if(rcm2 < tmp*tmp){
