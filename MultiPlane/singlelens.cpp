@@ -315,6 +315,8 @@ void saveProfiles(PointList *points, double boxlMpc, int nx, int ny){
 	}
 	filoutprof.close();
 
+	std::cout << std:: endl << std:: endl;
+
 	FreePointArray(i_points,true);
 	delete[] kprofr;
 	delete[] gammaprofr;

@@ -29,6 +29,10 @@
  * Warning: Is not valid for a non-flat universe.
  */
 
+#ifndef N_THREADS
+#define N_THREADS 1
+#endif
+
 void *compute_rays_parallel(void *_p);
 
 struct params{
@@ -65,7 +69,7 @@ void MultiLens::rayshooterInternal(
 
   int nthreads, rc;
 
-  nthreads = 4;
+  nthreads = N_THREADS;
 
   int chunk_size;
   do{

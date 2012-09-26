@@ -378,6 +378,7 @@ void MOKALens::saveProfiles(double &RE3){
 	    std:: cout << " runi.size() = " << runi.size() << std:: endl;
 	    std:: cout << " runj.size() = " << runj.size() << std:: endl;	      
 	  }
+
 	  dr0 = galaxiesPerBin*(0.5*map->boxlMpc*map->h)/(0.5*ntbggal);
 
 	  nbin = int(xmax/dr0);                                                        
