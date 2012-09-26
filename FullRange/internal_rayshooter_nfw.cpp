@@ -17,6 +17,10 @@
  * fail safe.
  */
 
+#ifndef N_THREADS
+#define N_THREADS 1
+#endif
+
 void *compute_rays_parallel_nfw(void *_p);
 
 struct params{
@@ -38,7 +42,7 @@ void AnaLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool ka
 
     int nthreads, rc;
 
-    nthreads = 4;
+    nthreads = N_THREADS;
 
     int chunk_size;
     do{
@@ -60,6 +64,7 @@ void AnaLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool ka
       thread_params[i].lens = this;
       rc = pthread_create(&threads[i], NULL, compute_rays_parallel_nfw, (void*) &thread_params[i]);
       assert(rc==0);
+      std::cout << "thread " << i << std::endl;
     }
 
     for(int i = 0; i < nthreads; i++){
