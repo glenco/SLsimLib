@@ -323,6 +323,11 @@ void MultiLens::readParamfile(string filename){
 	  id[n] = 1;
 	  label[n++] = "deflection_off";
 
+	  addr[n] = &zsource;
+	  id[n] = 0;
+	  label[n++] = "z_source";
+
+	  assert(n < MAXPARAM);
 
 	  cout << "Multi lens: reading from " << filename << endl;
 
@@ -502,10 +507,11 @@ void MultiLens::printMultiLens(){
  */
 void MultiLens::buildHaloTrees(
 		CosmoHndl cosmo /// the cosmology
-		,double zsource /// the source resdhift
 		){
 	int i, j, Ntot;
 	double z1, z2;
+
+	std::cout << "MultiLens::buildHaloTrees zsource = " << zsource << std::endl;
 
 	if(!sim_input_flag){   /// If no input file is provided synthesize halos
 
@@ -553,18 +559,20 @@ void MultiLens::buildHaloTrees(
 			 * since it will not contain any halos
 			 */
 			if(j == 0) z1 = 0.0;
-			else z1 = 1.0/cosmo->scalefactor(Dl[j] - dDl[j]/2) - 1;
-			//else z1 = plane_redshifts[j] - 0.5*(plane_redshifts[j] - plane_redshifts[j-1]);
+			//else z1 = 1.0/cosmo->scalefactor(Dl[j] - dDl[j]/2) - 1;
+			else z1 = plane_redshifts[j] - 0.5*(plane_redshifts[j] - plane_redshifts[j-1]);
 
-			if(j-1 == (flag_input_lens % Nplanes)) //z1 = plane_redshifts[j] - 0.5*(plane_redshifts[j] - plane_redshifts[j-2]);
-				z1 = 1.0/cosmo->scalefactor(Dl[j] - 0.5*(Dl[j] - Dl[j-2])) - 1;
+			if(j-1 == (flag_input_lens % Nplanes))
+				z1 = plane_redshifts[j] - 0.5*(plane_redshifts[j] - plane_redshifts[j-2]);
+				//z1 = 1.0/cosmo->scalefactor(Dl[j] - 0.5*(Dl[j] - Dl[j-2])) - 1;
 
 			if(j == Nplanes-2) z2 = zsource;
-			else z2 = 1.0/cosmo->scalefactor(Dl[j] + dDl[j+1]/2) - 1;
-			//else z2 = plane_redshifts[j] + 0.5*(plane_redshifts[j+1] - plane_redshifts[j]);
+			//else z2 = 1.0/cosmo->scalefactor(Dl[j] + dDl[j+1]/2) - 1;
+			else z2 = plane_redshifts[j] + 0.5*(plane_redshifts[j+1] - plane_redshifts[j]);
 
-			if(j+1 == (flag_input_lens % Nplanes)) //z2 = plane_redshifts[j] + 0.5*(plane_redshifts[j+2] - plane_redshifts[j]);
-				z2 = 1.0/cosmo->scalefactor(Dl[j] + 0.5*(Dl[j+2] - Dl[j])) - 1;
+			if(j+1 == (flag_input_lens % Nplanes))
+				z2 = plane_redshifts[j] + 0.5*(plane_redshifts[j+2] - plane_redshifts[j]);
+				//z2 = 1.0/cosmo->scalefactor(Dl[j] + 0.5*(Dl[j+2] - Dl[j])) - 1;
 
 			/// Find which halos are in redshift range
 
@@ -585,6 +593,8 @@ void MultiLens::buildHaloTrees(
 	}
 
 	for(j=0;j<Nplanes-1;j++){
+
+		std::cout << "  Building tree on plane " << j << " number of halos: " << halo_data[j]->Nhalos << std::endl;
 		if(flag_input_lens && j == (flag_input_lens % Nplanes))
 			continue;
 
@@ -608,7 +618,7 @@ void MultiLens::buildHaloTrees(
 		default:
 			ERROR_MESSAGE();
 			cout << "There is no such case for the halo trees. Please choose from:" << endl;
-			cout << "0: PowerLaw, 1: NFW, 2: PseudoNFW" << endl;
+			cout << "0: PowerLaw, 1: NFW, 2: PseudoNFW, 3: NSIE" << endl;
 			exit(1);
 			break;
 		}
@@ -791,7 +801,7 @@ double MultiLens::QuickFindFromTable(double Dplane){
  * In case it is on the first plane, it will hold the index Nplanes, to make
  * sure that it is not zero (i.e. not set)
  */
-void MultiLens::setCoorDist(CosmoHndl cosmo, double zsource){
+void MultiLens::setCoorDist(CosmoHndl cosmo){
 	std:: vector<double> lD;
 	int i, Np;
 
@@ -989,10 +999,11 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 		halos[i] = halo_vec[i];
 	}
 
-	cout << halos[9].Rmax << endl;
-
+	std::cout << "sourting in MultiLens::readInputSimFile()" << std::endl;
 	// sort the halos by readshift
 	MultiLens::quicksort(halos,halo_pos,halo_zs,Nhalos);
+
+	std::cout << "leaving MultiLens::readInputSimFile()" << std::endl;
 }
 
 
@@ -1004,8 +1015,6 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
  */
 void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 
-	int j;
-
 	if(flag_input_lens)
 		input_lens->setInternalParams(cosmo,source);
 
@@ -1016,10 +1025,10 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 
 	/// makes the oordinate distance table for the calculation of the redshifts of the different planes
 	if(table_set == false) {std::cout << "making tables" << std::endl; make_table(cosmo);}
-	setCoorDist(cosmo,source->getZ());
+	setCoorDist(cosmo);
 	setRedshifts();
 
-	buildHaloTrees(cosmo,source->getZ());
+	buildHaloTrees(cosmo);
 	std:: cout << " done " << std:: endl;
 }
 
@@ -1088,6 +1097,12 @@ void MultiLens::ResetSourcePlane(
 	unsigned long j;
 
 	toggle_source_plane = true;
+
+	if(z<=0.0){
+		cout << "Warning: Source redshift cann't be set to " << z << " in MultiLens::ResetSourcePlane." << endl;
+
+		return;
+	}
 
 	if(z > plane_redshifts[Nplanes-1]){
 		cout << "Warning: Implanted source is at higher redshift than simulation was constructed for." << endl

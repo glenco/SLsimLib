@@ -69,7 +69,7 @@ public:
 	MultiLens(std::string paramfile,long *seed);
 	~MultiLens();
 
-	void buildHaloTrees(CosmoHndl cosmo,double zsource);
+	void buildHaloTrees(CosmoHndl cosmo);
 	void RandomizeHost(long *seed,bool tables);
 	void RandomizeSigma(long *seed,bool tables);
 	double getZlens();
@@ -109,7 +109,7 @@ public:
 	typedef enum {null, ana_lens, moka_lens} InputLens;
 
 	void setRedshifts();
-	void setCoorDist(CosmoHndl cosmo, double zsource);
+	void setCoorDist(CosmoHndl cosmo);
 	double QuickFindFromTable(double y);
 
 	double *coorDist_table;
@@ -176,6 +176,8 @@ public:
 	/// This is the index of the plane at one larger distance than the new source distance
 	int index_of_new_sourceplane;
 
+	/// This is the source redshift that is read in from the parameter file and becomes the maximum redshift
+	double zsource;
 	/// nfw tables
 	//bool tables_set;
 
