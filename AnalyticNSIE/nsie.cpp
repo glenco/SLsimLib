@@ -49,21 +49,21 @@ void alphaNSIE(
   b2=x[0]*x[0]+f*f*x[1]*x[1];
   r=sqrt(x[0]*x[0]+x[1]*x[1]);
 
-  /*
-  Qp=( pow(fp*sqrt(b2+bc*bc)+x[0],2) + f*f*f*f*x[1]*x[1] ) 
+
+  double Qp=( pow(fp*sqrt(b2+bc*bc)+x[0],2) + f*f*f*f*x[1]*x[1] )
     /( pow(f*r*r+fp*bc*x[0],2)+fp*fp*bc*bc*x[1]*x[1] );
 
-  Qm=( pow(fp*sqrt(b2+bc*bc)-x[0],2) + f*f*f*f*x[1]*x[1] ) 
+  double Qm=( pow(fp*sqrt(b2+bc*bc)-x[0],2) + f*f*f*f*x[1]*x[1] )
     /( pow(f*r*r-fp*bc*x[0],2)+fp*fp*bc*bc*x[1]*x[1] );
-*/
+
   /*  printf("Q = %e %e\n",Qp,Qm);*/
 
-  double QpQm = ( pow(f*r*r-fp*bc*x[0],2)+fp*fp*bc*bc*x[1]*x[1] )/( pow(f*r*r+fp*bc*x[0],2)+fp*fp*bc*bc*x[1]*x[1] );
+  //double QpQm = ( pow(f*r*r-fp*bc*x[0],2)+fp*fp*bc*bc*x[1]*x[1] )/( pow(f*r*r+fp*bc*x[0],2)+fp*fp*bc*bc*x[1]*x[1] );
 
   //printf(" fp=%e f=%e \n",fp,f);
   //printf("Qp=%e Qm=%e\n",Qp,Qm);
   //printf("Qp/Qm=%e log(Qp/Qm)=%e %e\n",Qp/Qm,log((float)(Qp/Qm)),log(6.853450e-02));
-  angle[0]=0.25*sqrt(f)*log(QpQm)/fp;
+  angle[0]=0.25*sqrt(f)*log(Qp/Qm)/fp;
 
   //printf("angle[0]=%e Qp=%e Qm=%e\n",angle[0],Qp,Qm);
   //exit(0);
