@@ -257,6 +257,8 @@ void SingleLens::printSingleLens(){
 }
 
 void saveProfiles(PointList *points, double boxlMpc, int nx, int ny){
+	double *estprofM(std:: valarray<float> q,int nx,int ny, std:: valarray<float> r, double dr0, double xmax);
+
 	/* measuring the differential and cumulative profile*/
 	Point *i_points = NewPointArray(nx*ny,true);
 	double center[2]={0,0};
@@ -297,9 +299,9 @@ void saveProfiles(PointList *points, double boxlMpc, int nx, int ny){
 	std:: cout << " ______________________________________________________ " << std:: endl;
 	std:: cout << " computing profiles assuming spherical symmetry";
 	// - - - - - - - - - - - - - - - - -
-	double *kprofr = estprof(convergence,nx,ny,pxdist,dr0,xmax);
-	double *gammaprofr = estprof(sgm,nx,ny,pxdist,dr0,xmax);
-	double *deflprofr = estprof(defl,nx,ny,pxdist,dr0,xmax);
+	double *kprofr = estprofM(convergence,nx,ny,pxdist,dr0,xmax);
+	double *gammaprofr = estprofM(sgm,nx,ny,pxdist,dr0,xmax);
+	double *deflprofr = estprofM(defl,nx,ny,pxdist,dr0,xmax);
 	std::ostringstream fprof;
 	fprof << "profiles.dat";
 	std:: ofstream filoutprof;
@@ -324,3 +326,24 @@ void saveProfiles(PointList *points, double boxlMpc, int nx, int ny){
 
 void SingleLens::RandomizeHost(long *seed,bool tables){};
 void SingleLens::RandomizeSigma(long *seed,bool tables){};
+
+double *estprofM(std:: valarray<float> q,int nx,int ny, std:: valarray<float> r, double dr0, double xmax){
+	int nbin = int(xmax/dr0);
+	//std:: cout << " nbins (in estprof) = " << nbin << std:: endl;
+	double *kr = new double[nbin];
+	for (int k=0;k<nbin;k++){
+		int contapx=0;
+		kr[k] = 0;
+		// for each bin in r estimate the mean value
+		for( int i=0; i<nx; i++ )
+			for( int j=0; j<ny; j++ ){
+				if(r[i+ny*j]>dr0*double(k) && r[i+ny*j]<=dr0*double(k+1)){
+					contapx = contapx + 1;
+					kr[k] = kr[k] + q[i+ny*j];
+				}
+			}
+		kr[k] = kr[k]/double(contapx);
+		if(contapx==0) kr[k]=0.;
+	}
+	return kr; // return the pointer
+}
