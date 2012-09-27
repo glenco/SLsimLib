@@ -199,7 +199,6 @@ void map_images(
 		// free array of sourceinfo's'
 		delete[] rs;
 	}else{
-// TODO BEN This runs away probably when the source is mostly off the grid
 		if(verbos) std::cout << "number of grid points before find_images_kist: "<< grid->getNumberOfPoints() << std::endl;
 		//find_images_kist(lens,source->getX(),xmin,grid,Nimages,imageinfo,NimageMax,&Nimagepoints
 		//		,0,true,0,false,true);

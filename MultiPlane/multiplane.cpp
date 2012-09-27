@@ -955,7 +955,7 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 				  // TODO Needs to be changed.
 				//if(halo_vec[j].mass > 1.0e14) halo_vec[j].rscale = halo_vec[j].Rmax*0.1*pow(halo_vec[j].mass/1.0e14,0.25);
 				//else
-					halo_vec[j].rscale = 0.0;
+				halo_vec[j].rscale = 0.0;
 				halo_vec[j].Rsize = rmaxNSIE(halo_vec[j].sigma,halo_vec[j].mass,halo_vec[j].fratio,halo_vec[j].rscale);
 				halo_vec[j].Rmax = MAX(1.0,1.0/halo_vec[j].fratio)*halo_vec[j].Rsize;  // redefine
 			}else{

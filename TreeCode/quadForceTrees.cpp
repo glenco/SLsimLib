@@ -131,7 +131,6 @@ void QuadTreeNSIE::force_halo(
 	  	,bool no_kappa
 	  	){
 
-	double xt[2], tmp[2];
 	double rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
 	if(rcm2 < 1e-20) rcm2 = 1e-20;
 

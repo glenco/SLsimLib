@@ -167,8 +167,7 @@ void find_images_kist(
 	i=0;
 
 	if(splitimages) flag = 1; else flag = 0;
-
-	flag = 1; // Changed so that each image always has at least 100 points.
+	//flag = 1; // Changed so that each image always has at least 100 points.
 
 	time(&now);
 
@@ -196,7 +195,7 @@ void find_images_kist(
 			for(j=0;j<*Nimages;++j) printf("       %i        %li         %e\n",j,imageinfo[j].imagekist->Nunits(),imageinfo[j].area_error);
 		}
 		++i;
-	}while( refine_grid_kist(lens,grid,imageinfo,*Nimages,FracResTarget,flag,kappa_off,NULL)
+	}while( refine_grid_kist(lens,grid,imageinfo,*Nimages,0.01,flag,kappa_off,NULL)
 			|| moved );
 
 	// remove images with no points in them
