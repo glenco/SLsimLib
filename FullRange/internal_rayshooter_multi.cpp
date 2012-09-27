@@ -158,7 +158,7 @@ void *compute_rays_parallel(void *_p){
 			xx[0] = p->i_points[i].image->x[0]/(1+lens->plane_redshifts[j]);
 			xx[1] = p->i_points[i].image->x[1]/(1+lens->plane_redshifts[j]);
 
-
+			assert(xx[0] == xx[0] && xx[1] == xx[1]);
 
 			if(lens->flag_input_lens && j == (lens->flag_input_lens % lens->Nplanes)){
 				lens->input_lens->rayshooterInternal(xx,alpha,gamma,&kappa,kappa_off);
@@ -166,6 +166,7 @@ void *compute_rays_parallel(void *_p){
 			}else{
 				lens->halo_tree[j]->force2D_recur(xx,alpha,&kappa,gamma,kappa_off);
 				//halo_tree[j]->force2D(xx,alpha,&kappa,gamma,kappa_off);
+				assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
 
 				cc = lens->charge*lens->dDl[j+1];
 
@@ -176,6 +177,9 @@ void *compute_rays_parallel(void *_p){
 				gamma[0]/=(1+lens->plane_redshifts[j]);
 				gamma[1]/=(1+lens->plane_redshifts[j]);
 				gamma[2]/=(1+lens->plane_redshifts[j]);
+
+				assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
+				assert(kappa == kappa);
 
 				//kappa = alpha[0] = alpha[1] = gamma[0] = gamma[1] = gamma[2] = 0.0;
 			}
@@ -241,15 +245,20 @@ void *compute_rays_parallel(void *_p){
 
 		p->i_points[i].kappa = 1 - p->i_points[i].kappa;
 
-		p->i_points[i].invmag = (1-p->i_points[i].kappa)*(1-p->i_points[i].kappa)
+		if(!kappa_off) p->i_points[i].invmag = (1-p->i_points[i].kappa)*(1-p->i_points[i].kappa)
 		  	    - p->i_points[i].gamma[0]*p->i_points[i].gamma[0]
 		  	    - p->i_points[i].gamma[1]*p->i_points[i].gamma[1]
-		  	    - p->i_points[i].gamma[2]*p->i_points[i].gamma[2];
+		  	    + p->i_points[i].gamma[2]*p->i_points[i].gamma[2];
+		else p->i_points[i].invmag = 0.0;
 
 		if(p->i_points[i].image->x[0] != p->i_points[i].image->x[0] ||
 				p->i_points[i].image->x[1] != p->i_points[i].image->x[1] ||
 				p->i_points[i].invmag != p->i_points[i].invmag){
 			ERROR_MESSAGE();
+			std::cout << p->i_points[i].image->x[0] << "  " << p->i_points[i].image->x[1] << "  " << p->i_points[i].invmag << std::endl;
+			std::cout << p->i_points[i].gamma[0] << "  " << p->i_points[i].gamma[1] << "  " <<
+							p->i_points[i].kappa << "  "  << kappa_off << std::endl;
+
 			exit(1);
 		}
 
