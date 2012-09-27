@@ -1127,12 +1127,16 @@ void MultiLens::ResetSourcePlane(
 	locateD(plane_redshifts-1,Nplanes,z,&j);
 	if(j > Nplanes-1) j = Nplanes-1;
 
+	if(j > 0) assert(z < plane_redshifts[j] && z > plane_redshifts[j-1]);
+
 	//if(nearest && j < Nplane-1) z = cosmo->coorDist(plane_redshifts[j-1],z) > cosmo->coorDist(z,plane_redshifts[j])
 	//		? plane_redshifts[j] : plane_redshifts[j-1];
 	// TODO This should be changed to the nearest plane in coordinate distance when it is changed in the halo sorting
-	if(nearest && j < Nplanes-1) z = (z-plane_redshifts[j-1]) > (plane_redshifts[j]-z)
+	if(nearest && (j < Nplanes-1) ){
+		if(j > 0) z = ( (z-plane_redshifts[j-1]) > (plane_redshifts[j]-z) )
 			? plane_redshifts[j] : plane_redshifts[j-1];
-
+		else z = plane_redshifts[0];
+	}
 	Ds_implant = cosmo->coorDist(0,z);
 
 	zs_implant = z;
