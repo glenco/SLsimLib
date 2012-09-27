@@ -1083,16 +1083,21 @@ void MultiLens::quicksort(HaloStructure *halos,double **brr,double *arr,unsigned
  * \brief Changes the maximum redshift that the rays are shot to.
  *
  * The multilens must have been initially constructed with a source redshift that is higher
- * than this redshift.  This is used to rayshoot to a source that is within the simulation
- * volume.  To revert the source redshift to its original value use MultiLens::RevertSourcePlane().
+ * than this redshift.  This is used to rayshoot to a source whose line of sight passes through the
+ * simulation volume.  The source can be at higher redshift than the simulation volume.
+ *
+ * To revert the source redshift to its original value use MultiLens::RevertSourcePlane().
  *
  */
 void MultiLens::ResetSourcePlane(
 		CosmoHndl cosmo           /// cosmology
 		,double z                 /// redshift of implanted source
-		,bool nearest             /// If true, set the source plane to the nearest (in coordinate distance)
-			                      /// lensing plane that was created already.  This can be used to avoid self-lensing
-			                      /// by the halo of the source.
+		,bool nearest             /** If true, set the source plane to the nearest (in coordinate distance)
+			                      * lensing plane that was created already.  This can be used to avoid self-lensing
+			                      * by the halo of the source.  If the source is at higher redshift than the simulation
+			                      * volume the source will be at its real redshift.
+			                      */
+
 		){
 	unsigned long j;
 
@@ -1102,19 +1107,22 @@ void MultiLens::ResetSourcePlane(
 		cout << "Warning: Source redshift cann't be set to " << z << " in MultiLens::ResetSourcePlane." << endl;
 		return;
 	}
-
+/*
 	if(z > plane_redshifts[Nplanes-1]){
 		cout << "Warning: Implanted source is at higher redshift than simulation was constructed for." << endl
 		<< "It is not being added. " << plane_redshifts[Nplanes-1] << " < " << z << endl;
 
 		return;
 	}
-
-	// j is the index of the next plane at higher redshift
+*/
+	// j is the index of the next plane at higher redshift, This plane will be temporarily replaced and used as a source plane.
 	locateD(plane_redshifts-1,Nplanes,z,&j);
-	assert(plane_redshifts[j] > z);
+	if(j > Nplanes-1) j = Nplanes-1;
 
-	if(j > 0) z = cosmo->coorDist(plane_redshifts[j-1],z) > cosmo->coorDist(z,plane_redshifts[j])
+	//if(nearest && j < Nplane-1) z = cosmo->coorDist(plane_redshifts[j-1],z) > cosmo->coorDist(z,plane_redshifts[j])
+	//		? plane_redshifts[j] : plane_redshifts[j-1];
+	// TODO This should be changed to the nearest plane in coordinate distance when it is changed in the halo sorting
+	if(nearest && j < Nplanes-1) z = (z-plane_redshifts[j-1]) > (plane_redshifts[j]-z)
 			? plane_redshifts[j] : plane_redshifts[j-1];
 
 	Ds_implant = cosmo->angDist(0,z);

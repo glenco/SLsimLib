@@ -250,18 +250,18 @@ void *compute_rays_parallel(void *_p){
 		  	    - p->i_points[i].gamma[1]*p->i_points[i].gamma[1]
 		  	    + p->i_points[i].gamma[2]*p->i_points[i].gamma[2];
 		else p->i_points[i].invmag = 0.0;
-
+/*
 		if(p->i_points[i].image->x[0] != p->i_points[i].image->x[0] ||
 				p->i_points[i].image->x[1] != p->i_points[i].image->x[1] ||
 				p->i_points[i].invmag != p->i_points[i].invmag){
 			ERROR_MESSAGE();
 			std::cout << p->i_points[i].image->x[0] << "  " << p->i_points[i].image->x[1] << "  " << p->i_points[i].invmag << std::endl;
-			std::cout << p->i_points[i].gamma[0] << "  " << p->i_points[i].gamma[1] << "  " <<
+			std::cout << p->i_points[i].gamma[0] << "  " << p->i_points[i].gamma[1] << "  " << p->i_points[i].gamma[2] << "  " <<
 							p->i_points[i].kappa << "  "  << kappa_off << std::endl;
-
+			assert(0);
 			exit(1);
 		}
-
+*/
     }
 
 	return 0;

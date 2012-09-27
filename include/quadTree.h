@@ -391,7 +391,6 @@ public:
 	  ~QuadTreeNSIE();
 
 private:
-	  double xt[2],tmp[2];
 
 	  void force_halo(double *alpha,float *kappa,float *gamma,double *xcm
 	  		,HaloStructure& halo_params,bool no_kappa);
