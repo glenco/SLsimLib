@@ -14,8 +14,7 @@
 
 using namespace std;
 
-const long NTABLE = 1000;
-const double maxz = 5.0;
+const long NTABLE = 10000;
 
 HaloData::HaloData(CosmoHndl cosmo
 		,double mass
@@ -157,7 +156,7 @@ HaloData::~HaloData(){
 
 void MultiLens::make_table(CosmoHndl cosmo){
 	int i;
-	double x, dx = maxz/(double)NTABLE;
+	double x, dx = zsource/(double)NTABLE;
 
 	coorDist_table = new double[NTABLE];
 	
@@ -198,6 +197,7 @@ MultiLens::MultiLens(string filename,long *my_seed) : Lens(){
 	dDl = new double[Nplanes];
 
 	charge = 4*pi*Grav*mass_scale;
+	std::cout << "charge: " << charge << std::endl;
 
 	halo_tree = new auto_ptr<QuadTree>[Nplanes-1];
 	halo_data = new auto_ptr<HaloData>[Nplanes-1];
@@ -797,7 +797,7 @@ double MultiLens::QuickFindFromTable(double Dplane){
 	}while(j_max - j_min > 1);
 
 	/// return the redshift, adding +2 to the indexes since in make_tables() the indexing starts from 1, not 0
-	return maxz/float(NTABLE)*0.5*(j_max+j_min+2);
+	return zsource/float(NTABLE)*0.5*(j_max+j_min+2);
 }
 
 /**
@@ -1132,7 +1132,7 @@ void MultiLens::ResetSourcePlane(
 	if(nearest && j < Nplanes-1) z = (z-plane_redshifts[j-1]) > (plane_redshifts[j]-z)
 			? plane_redshifts[j] : plane_redshifts[j-1];
 
-	Ds_implant = cosmo->angDist(0,z);
+	Ds_implant = cosmo->coorDist(0,z);
 
 	zs_implant = z;
 	if(j > 0) dDs_implant = cosmo->coorDist(plane_redshifts[j-1],z);
