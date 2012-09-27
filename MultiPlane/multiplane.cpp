@@ -213,7 +213,7 @@ MultiLens::MultiLens(string filename,long *my_seed) : Lens(){
 	case moka_lens:
 		input_lens = new MOKALens(filename);
 		mokalens = static_cast<MOKALens*>(input_lens);
-		fieldofview = pow(1.5*mokalens->map->boxl*180/pi,2.0);
+		fieldofview = pow(1.5*mokalens->map->boxlrad*180/pi,2.0);
 		break;
 	default:
 		ERROR_MESSAGE();

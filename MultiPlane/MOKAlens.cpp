@@ -34,7 +34,7 @@ MOKALens::MOKALens(std::string paramfile) : Lens(){
 	map->alpha1.resize(map->nx*map->ny);
 	map->alpha2.resize(map->nx*map->ny);
 	map->gamma1.resize(map->nx*map->ny);
-	map->gamma2.resize(map->nx*map->ny);
+	map->gamma2.resize(map->nx*map->ny); 
 	map->gamma3.resize(map->nx*map->ny);
 
 	readImage(MOKA_input_file
@@ -93,24 +93,19 @@ MOKALens::~MOKALens(){
 }
 
 void MOKALens::initMap(){
-	map->boxl = LH->boxlarcsec;
+	map->boxlarcsec = LH->boxlarcsec;
 	map->zlens = LH->zl;
 	map->zsource = LH->zs;
 	map->omegam = LH->omegam;
 	map->omegal = LH->omegal;
 	map->DL =LH->DL;
 	map->center[0] = map->center[1] = 0.0;
-
 	map->boxlMpc = LH->boxlMpc;
 	map->h = LH->h;
+	map->boxlrad = map->boxlarcsec*pi/180/3600.;
 
-	map->boxlMpc /= map->h;
-
-	/// to radians
-	map->boxl *= pi/180/3600.;
-
-	double xmin = -map->boxlMpc*0.5*map->h;
-	double xmax =  map->boxlMpc*0.5*map->h;
+	double xmin = -map->boxlMpc*0.5;
+	double xmax =  map->boxlMpc*0.5;
 	fill_linear (map->x,map->nx,xmin,xmax); // physical
 	map->inarcsec  = 10800./M_PI/LH->DL*60.;
 }
@@ -257,7 +252,7 @@ void MOKALens::setZlens(double z){
 }
 
 /**
- * saves the image, by rading off the calues from the image tree
+ * saves the image, by reading off the calues from the image tree
  * and then saving to a fits file and computing the radial profile
  * of the convergence
  */
@@ -272,7 +267,7 @@ void MOKALens::saveImage(GridHndl grid,bool saveprofiles){
 	MoveToTopList(grid->i_tree->pointlist);
 
 	do{
-		long index = IndexFromPosition(grid->i_tree->pointlist->current->x,map->nx,map->boxl,map->center);
+		long index = IndexFromPosition(grid->i_tree->pointlist->current->x,map->nx,map->boxlrad,map->center);
 		if(index > -1){
 			map->convergence[index] = grid->i_tree->pointlist->current->kappa;
 			map->gamma1[index] = grid->i_tree->pointlist->current->gamma[0];
@@ -280,8 +275,6 @@ void MOKALens::saveImage(GridHndl grid,bool saveprofiles){
 			map->gamma3[index] = grid->i_tree->pointlist->current->gamma[2];
 		}
 	}while(MoveDownList(grid->i_tree->pointlist)==true);
-
-	map->boxl *= 180/pi*3600;
 
 	writeImage(filename
 			,map->convergence
@@ -318,9 +311,9 @@ void MOKALens::saveImage(GridHndl grid,bool saveprofiles){
  *  */
 void MOKALens::saveProfiles(double &RE3){
 	/* measuring the differential and cumulative profile*/
-	double xmin = -map->boxlMpc*0.5*map->h;
-	double xmax =  map->boxlMpc*0.5*map->h;
-	double drpix = map->boxlMpc/map->nx*map->h;
+	double xmin = -map->boxlMpc*0.5;
+	double xmax =  map->boxlMpc*0.5;
+	double drpix = map->boxlMpc/map->nx;
 
 	int galaxiesPerBin = 64;
 
@@ -339,7 +332,7 @@ void MOKALens::saveProfiles(double &RE3){
 		sgm[i+map->ny*j] = sqrt(pow(map->gamma1[i+map->ny*j],2) + pow(map->gamma2[i+map->ny*j],2));
 	}
 
-	double dr0 = 8.*(0.5*map->boxlMpc*map->h)/(map->nx/2.);
+	double dr0 = 8.*(0.5*map->boxlMpc)/(map->nx/2.);
 	int nbin = int(xmax/dr0);                           
 	int nbggal=0;
 	int ih;
@@ -356,7 +349,8 @@ void MOKALens::saveProfiles(double &RE3){
 	  std:: cout << " in building the cluster profile" << std:: endl;
 	  infilebgXarcmin2.close();
 	}    
-	double dntbggal=double(nbggal)*(map->boxl*map->boxl)/3600.;
+    // number of galaxies per arcminsquare
+	double dntbggal=double(nbggal)*(map->boxlarcsec*map->boxlarcsec)/3600.;
 	int ntbggal=int(dntbggal+0.5);
 	std:: vector<int> runi,runj;
 	int ibut;
@@ -379,7 +373,7 @@ void MOKALens::saveProfiles(double &RE3){
 	    std:: cout << " runj.size() = " << runj.size() << std:: endl;	      
 	  }
 
-	  dr0 = galaxiesPerBin*(0.5*map->boxlMpc*map->h)/(0.5*ntbggal);
+	  dr0 = galaxiesPerBin*(0.5*map->boxlMpc)/(0.5*ntbggal);
 
 	  nbin = int(xmax/dr0);                                                        
 	}
@@ -435,8 +429,8 @@ void MOKALens::saveProfiles(double &RE3){
    *
 */
 void MOKALens::rayshooterInternal(double *xx, double *alpha, float *gamma, float *kappa, bool kappa_off){
-
-	long index = IndexFromPosition(xx,map->nx,map->boxlMpc,map->center);
+    
+	long index = IndexFromPosition(xx,map->nx,map->boxlMpc/map->h,map->center);
 
 	if(index > -1){
 		alpha[0] = map->alpha1[index];
@@ -514,7 +508,7 @@ void MOKALens::EinsteinRadii(double &RE1, double &RE2){
       }
     }
   filoutcrit.close();
-  double pixDinL = map->boxlMpc*map->h/double(map->nx);
+  double pixDinL = map->boxlMpc/double(map->nx);
   /* measure the Einstein radius */
   std:: vector<double> xci,yci;	
   //for(int ii=0;ii<xci1.size();ii++){
@@ -637,21 +631,6 @@ void MOKALens::saveImage(bool saveprofiles){
 	if(flag_background_field==1) f << MOKA_input_file << "_only_noise.fits";
 	else f << MOKA_input_file << "_noisy.fits";
 	filename = f.str();
-	/*
- 	MoveToTopList(grid->i_tree->pointlist);
-
-	do{
-		long index = IndexFromPosition(grid->i_tree->pointlist->current->x,map->nx,map->boxl,map->center);
-		if(index > -1){
-
-			map->convergence[index] = grid->i_tree->pointlist->current->kappa;
-			map->gamma1[index] = grid->i_tree->pointlist->current->gamma[0];
-			map->gamma2[index] = grid->i_tree->pointlist->current->gamma[1];
-			map->gamma3[index] = grid->i_tree->pointlist->current->gamma[2];
-		}
-	}while(MoveDownList(grid->i_tree->pointlist)==true);
-	*/
-	map->boxl *= 180/pi*3600;
 
 	writeImage(filename
 		   ,map->convergence

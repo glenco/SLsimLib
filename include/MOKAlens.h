@@ -39,8 +39,9 @@ struct MOKAmap{
 	std::valarray<float> Signlambdar;
 	std::valarray<float> Signlambdat;
 	std:: vector<double> x;	 
-	int nx,ny;
-	double boxl,boxlMpc,zlens,zsource,omegam,omegal,h,DL;
+    int nx,ny;
+    // boxlMpc is Mpc/h for MOKA
+    double boxlarcsec,boxlMpc,boxlrad,zlens,zsource,omegam,omegal,h,DL;
 	double inarcsec;
 	double center[2];
 };

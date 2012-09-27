@@ -51,23 +51,6 @@ void readImage(std::string fn
 	int nx,ny;
 
 	std:: cout << " reading MOKA file: " << fn << std:: endl;
-	/*
-	std::ostringstream checkfout;
-	checkfout << fn << "_noisy.fits";	
-	std:: string checkfilenameout = checkfout.str();
-	std:: ifstream checkfileout;
-	checkfileout.open(checkfilenameout.c_str());
-	if(checkfileout.is_open()){
-	  std:: cout << "  " << std:: endl;
-	  // std:: cout << checkfilenameout << " exists I will STOP here " << std:: endl;
-	  std:: cout << "     halo already processed! " << std:: endl;
-	  std:: cout << "   I will measure the map proprieties only " << std:: endl;
-	  // exit(1);
-	  fn = fn + "_noisy.fits";	
-	  std:: cout << " I am reading " << fn << std:: endl;
-	  std:: cout << "  " << std:: endl;
-	}
-	*/
 	std::auto_ptr<FITS> ff(new FITS (fn, Read));
 
 	PHDU *h0=&ff->pHDU();
