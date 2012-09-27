@@ -15,7 +15,7 @@
 using namespace std;
 
 const long NTABLE = 1000;
-const double maxz = 5.0;
+const double maxz = 10.0;
 
 HaloData::HaloData(CosmoHndl cosmo
 		,double mass
@@ -1132,7 +1132,7 @@ void MultiLens::ResetSourcePlane(
 	if(nearest && j < Nplanes-1) z = (z-plane_redshifts[j-1]) > (plane_redshifts[j]-z)
 			? plane_redshifts[j] : plane_redshifts[j-1];
 
-	Ds_implant = cosmo->angDist(0,z);
+	Ds_implant = cosmo->coorDist(0,z);
 
 	zs_implant = z;
 	if(j > 0) dDs_implant = cosmo->coorDist(plane_redshifts[j-1],z);
