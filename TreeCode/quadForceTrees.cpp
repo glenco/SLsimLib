@@ -150,16 +150,15 @@ void QuadTreeNSIE::force_halo(
 			  gamma[1] += xcm[0]*xcm[1]*prefac;
 		  }
 	}else{
-		double xt[2],tmp[2];
-		double rscale = halo_params.mass/halo_params.Rsize/pi;
-		xt[0]=xcm[0]/rscale;
-		xt[1]=xcm[1]/rscale;
+		double xt[2]={0,0},tmp[2]={0,0};
+		float units = 0.5*pow(halo_params.sigma/lightspeed,2)/Grav; // mass/distance(physical)
+		xt[0]=xcm[0];
+		xt[1]=xcm[1];
 		alphaNSIE(tmp,xt,halo_params.fratio,halo_params.rscale,halo_params.pa);
-		alpha[0] -= tmp[0]*rscale;
-		alpha[1] -= tmp[1]*rscale;
+		alpha[0] -= units*tmp[0];
+		alpha[1] -= units*tmp[1];
 		if(!no_kappa){
-			float tmp[2],units = halo_params.mass/halo_params.Rsize/2;
-			//TODO These need to be rescaled to agree with units of internal_rayshooter_multi.cpp
+			float tmp[2]={0,0};
 			*kappa += units*kappaNSIE(xt,halo_params.fratio,halo_params.rscale,halo_params.pa);
 			gammaNSIE(tmp,xt,halo_params.fratio,halo_params.rscale,halo_params.pa);
 			gamma[0] += units*tmp[0];
