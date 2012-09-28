@@ -574,8 +574,8 @@ void MultiLens::buildHaloTrees(
 			//else z1 = plane_redshifts[j] - 0.5*(plane_redshifts[j] - plane_redshifts[j-1]);
 
 			if(j-1 == (flag_input_lens % Nplanes))
-				z1 = plane_redshifts[j] - 0.5*(plane_redshifts[j] - plane_redshifts[j-2]);
-				//z1 = QuickFindFromTable(Dl[j] - 0.5*(Dl[j] - Dl[j-2]));
+				//z1 = plane_redshifts[j] - 0.5*(plane_redshifts[j] - plane_redshifts[j-2]);
+				z1 = QuickFindFromTable(Dl[j] - 0.5*(Dl[j] - Dl[j-2]));
 
 			if(j == Nplanes-2) z2 = zsource;
 			else z2 = QuickFindFromTable(Dl[j] + 0.5*dDl[j+1]);

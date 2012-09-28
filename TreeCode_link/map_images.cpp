@@ -27,7 +27,7 @@ const double target_all = 1.0e-3;
 //const int MinPoints = 100;  // Minimum number of points per image
 const float tol_UniformMag = 1.0e-3;
 double maxflux;
-const bool verbos = true;
+const bool verbos = false;
 
 /** \ingroup ImageFinding
  *  \brief Find images and refine them based on their surface brightness distribution.
