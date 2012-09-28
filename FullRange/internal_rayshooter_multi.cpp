@@ -232,10 +232,14 @@ void *compute_rays_parallel(void *_p){
 				gamma_minus[1] = p->i_points[i].gamma[1];
 				gamma_minus[2] = p->i_points[i].gamma[2];
 
+				assert(kappa_plus==kappa_plus && gamma_minus[0]==gamma_minus[0] &&gamma_minus[1]==gamma_minus[1] && gamma_minus[2]==gamma_minus[2]);
+
 				p->i_points[i].kappa = kappa_plus;
 				p->i_points[i].gamma[0] = gamma_plus[0];
 				p->i_points[i].gamma[1] = gamma_plus[1];
 				p->i_points[i].gamma[2] = gamma_plus[2];
+
+
     		}
 		}
 
@@ -250,7 +254,7 @@ void *compute_rays_parallel(void *_p){
 		  	    - p->i_points[i].gamma[1]*p->i_points[i].gamma[1]
 		  	    + p->i_points[i].gamma[2]*p->i_points[i].gamma[2];
 		else p->i_points[i].invmag = 0.0;
-/*
+
 		if(p->i_points[i].image->x[0] != p->i_points[i].image->x[0] ||
 				p->i_points[i].image->x[1] != p->i_points[i].image->x[1] ||
 				p->i_points[i].invmag != p->i_points[i].invmag){
@@ -258,10 +262,10 @@ void *compute_rays_parallel(void *_p){
 			std::cout << p->i_points[i].image->x[0] << "  " << p->i_points[i].image->x[1] << "  " << p->i_points[i].invmag << std::endl;
 			std::cout << p->i_points[i].gamma[0] << "  " << p->i_points[i].gamma[1] << "  " << p->i_points[i].gamma[2] << "  " <<
 							p->i_points[i].kappa << "  "  << kappa_off << std::endl;
-			assert(0);
+		//	assert(0);
 			exit(1);
 		}
-*/
+
     }
 
 	return 0;

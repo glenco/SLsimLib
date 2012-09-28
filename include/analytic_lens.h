@@ -145,7 +145,7 @@ void implant_stars(AnaLens *lens,Point *images,unsigned long Nimages,long *seed)
 
 void alphaNSIE(double *alpha,double *xt,double f,double bc,double theta);
 float kappaNSIE(double *xt,double f,double bc,double theta);
-void gammaNSIE(float gam[2],double *xt,double f,double bc,double theta);
+void gammaNSIE(float *gam,double *xt,double f,double bc,double theta);
 double invmagNSIE(double *x,double f,double bc,double theta
                      ,float *gam,float kap);
 double rmaxNSIE(double sigma,double mass,double f,double rc );
