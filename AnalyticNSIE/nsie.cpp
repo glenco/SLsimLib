@@ -111,7 +111,7 @@ float kappaNSIE(
 * or \f$ \frac{\sigma^2}{\Sigma_{crit}G\, units(xt) } \f$
 * */
 void gammaNSIE(
-		float gam[2]    /// output shear
+		float *gam    /// output shear
 		,double *xt     /// position on the image plane in Einstein radius units
 		,double f       /// axis ratio of mass
 		,double bc      /// core size in units of Einstein radius

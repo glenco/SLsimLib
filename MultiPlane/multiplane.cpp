@@ -533,18 +533,20 @@ void MultiLens::buildHaloTrees(
 			 * since it will not contain any halos
 			 */
 			if(j == 0) z1 = 0.0;
-			//else z1 = 1.0/cosmo->scalefactor(Dl[j] - dDl[j]/2) - 1;
-			else z1 = plane_redshifts[j] - 0.5*(plane_redshifts[j] - plane_redshifts[j-1]);
+			else z1 = QuickFindFromTable(Dl[j] - 0.5*dDl[j]);
+			//else z1 = plane_redshifts[j] - 0.5*(plane_redshifts[j] - plane_redshifts[j-1]);
 
-			if(j-1 == (flag_input_lens % Nplanes)) z1 = plane_redshifts[j] - 0.5*(plane_redshifts[j] - plane_redshifts[j-2]);
-				//z1 = 1.0/cosmo->scalefactor(Dl[j] - 0.5*(Dl[j] - Dl[j-2])) - 1;
+			if(j-1 == (flag_input_lens % Nplanes))
+				//z1 = plane_redshifts[j] - 0.5*(plane_redshifts[j] - plane_redshifts[j-2]);
+				z1 = QuickFindFromTable(Dl[j] - 0.5*(Dl[j] - Dl[j-2]));
 
 			if(j == Nplanes-2) z2 = zsource;
-			//else z2 = 1.0/cosmo->scalefactor(Dl[j] + dDl[j+1]/2) - 1;
-			else z2 = plane_redshifts[j] + 0.5*(plane_redshifts[j+1] - plane_redshifts[j]);
+			else z2 = QuickFindFromTable(Dl[j] + 0.5*dDl[j+1]);
+			//else z2 = plane_redshifts[j] + 0.5*(plane_redshifts[j+1] - plane_redshifts[j]);
 
-			if(j+1 == (flag_input_lens % Nplanes)) z2 = plane_redshifts[j] + 0.5*(plane_redshifts[j+2] - plane_redshifts[j]);
-				//z2 = 1.0/cosmo->scalefactor(Dl[j] + 0.5*(Dl[j+2] - Dl[j])) - 1;
+			if(j+1 == (flag_input_lens % Nplanes))
+				//z2 = plane_redshifts[j] + 0.5*(plane_redshifts[j+2] - plane_redshifts[j]);
+				z2 = QuickFindFromTable(Dl[j] + 0.5*(Dl[j+2] - Dl[j]));
 
 			halo_data[j].reset(new HaloData(fieldofview,min_mass,mass_scale,z1,z2,mass_func_type,pw_alpha,cosmo,seed));
 
@@ -567,20 +569,20 @@ void MultiLens::buildHaloTrees(
 			 * since it will not contain any halos
 			 */
 			if(j == 0) z1 = 0.0;
-			//else z1 = 1.0/cosmo->scalefactor(Dl[j] - dDl[j]/2) - 1;
-			else z1 = plane_redshifts[j] - 0.5*(plane_redshifts[j] - plane_redshifts[j-1]);
+			else z1 = QuickFindFromTable(Dl[j] - 0.5*dDl[j]);
+			//else z1 = plane_redshifts[j] - 0.5*(plane_redshifts[j] - plane_redshifts[j-1]);
 
 			if(j-1 == (flag_input_lens % Nplanes))
-				z1 = plane_redshifts[j] - 0.5*(plane_redshifts[j] - plane_redshifts[j-2]);
-				//z1 = 1.0/cosmo->scalefactor(Dl[j] - 0.5*(Dl[j] - Dl[j-2])) - 1;
+				//z1 = plane_redshifts[j] - 0.5*(plane_redshifts[j] - plane_redshifts[j-2]);
+				z1 = QuickFindFromTable(Dl[j] - 0.5*(Dl[j] - Dl[j-2]));
 
 			if(j == Nplanes-2) z2 = zsource;
-			//else z2 = 1.0/cosmo->scalefactor(Dl[j] + dDl[j+1]/2) - 1;
-			else z2 = plane_redshifts[j] + 0.5*(plane_redshifts[j+1] - plane_redshifts[j]);
+			else z2 = QuickFindFromTable(Dl[j] + 0.5*dDl[j+1]);
+			//else z2 = plane_redshifts[j] + 0.5*(plane_redshifts[j+1] - plane_redshifts[j]);
 
 			if(j+1 == (flag_input_lens % Nplanes))
-				z2 = plane_redshifts[j] + 0.5*(plane_redshifts[j+2] - plane_redshifts[j]);
-				//z2 = 1.0/cosmo->scalefactor(Dl[j] + 0.5*(Dl[j+2] - Dl[j])) - 1;
+				//z2 = plane_redshifts[j] + 0.5*(plane_redshifts[j+2] - plane_redshifts[j]);
+				z2 = QuickFindFromTable(Dl[j] + 0.5*(Dl[j+2] - Dl[j]));
 
 			/// Find which halos are in redshift range
 
@@ -1127,7 +1129,9 @@ void MultiLens::ResetSourcePlane(
 	locateD(plane_redshifts-1,Nplanes,z,&j);
 	if(j > Nplanes-1) j = Nplanes-1;
 
-	if(j > 0) assert(z < plane_redshifts[j] && z > plane_redshifts[j-1]);
+	if(j > 0  && j < Nplanes-1){
+		assert(z < plane_redshifts[j] && z > plane_redshifts[j-1]);
+	}
 
 	//if(nearest && j < Nplane-1) z = cosmo->coorDist(plane_redshifts[j-1],z) > cosmo->coorDist(z,plane_redshifts[j])
 	//		? plane_redshifts[j] : plane_redshifts[j-1];
@@ -1143,7 +1147,7 @@ void MultiLens::ResetSourcePlane(
 	if(j > 0) dDs_implant = cosmo->coorDist(plane_redshifts[j-1],z);
 	else  dDs_implant = Ds_implant;
 
-	//anasource = auto_ptr<MultiSourceAnaGalaxy>(new MultiSourceAnaGalaxy(ana_source));
+	std::cout << "Source on plane " << j << std::endl;
 	index_of_new_sourceplane = j;
 }
 

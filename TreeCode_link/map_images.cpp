@@ -888,7 +888,7 @@ bool RefinePoint2(Point *point,TreeHndl i_tree,double image_area,double total_ar
 	//if(point->surface_brightness > 0 && pow(point->gridsize,2)*point->surface_brightness == 0) return false;
 
 	FindAllBoxNeighborsKist(i_tree,point,nearest);
-	assert(nearest->Nunits() < 300);
+	//assert(nearest->Nunits() < 300);
 
 	flux = point->surface_brightness*pow(point->gridsize,2);
 	maxdiff = 0.0;
