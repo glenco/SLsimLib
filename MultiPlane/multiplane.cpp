@@ -1127,7 +1127,9 @@ void MultiLens::ResetSourcePlane(
 	locateD(plane_redshifts-1,Nplanes,z,&j);
 	if(j > Nplanes-1) j = Nplanes-1;
 
-	if(j > 0) assert(z < plane_redshifts[j] && z > plane_redshifts[j-1]);
+	if(j > 0  && j < Nplanes-1){
+		assert(z < plane_redshifts[j] && z > plane_redshifts[j-1]);
+	}
 
 	//if(nearest && j < Nplane-1) z = cosmo->coorDist(plane_redshifts[j-1],z) > cosmo->coorDist(z,plane_redshifts[j])
 	//		? plane_redshifts[j] : plane_redshifts[j-1];
@@ -1143,7 +1145,7 @@ void MultiLens::ResetSourcePlane(
 	if(j > 0) dDs_implant = cosmo->coorDist(plane_redshifts[j-1],z);
 	else  dDs_implant = Ds_implant;
 
-	//anasource = auto_ptr<MultiSourceAnaGalaxy>(new MultiSourceAnaGalaxy(ana_source));
+	std::cout << "Source on plane " << j << std::endl;
 	index_of_new_sourceplane = j;
 }
 
