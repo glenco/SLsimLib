@@ -1137,7 +1137,7 @@ void MultiLens::ResetSourcePlane(
 
 	locateD(Dl-1,Nplanes,Ds,&j);
 	if(j >= Nplanes-1){
-		j = Nplanes-2;
+		--j;// = Nplanes-2;
 	}
 	else{
 		if(nearest) j = ((Ds-Dl[j-1]) > (Dl[j]-Ds)) ? j : j-1;
@@ -1157,13 +1157,18 @@ void MultiLens::ResetSourcePlane(
 	*/
 
 	/// TODO BEN/MARGARITA: this ensures the source in on a plane, but it can be changed such that the source just has its own redhsift
-	z = plane_redshifts[j];
 
-	Ds_implant = Dl[j];
-
-	zs_implant = z;
-	if(j > 0) dDs_implant = dDl[j];
-	else  dDs_implant = Ds_implant;
+	if(nearest && j < Nplanes-1 ){
+		z = plane_redshifts[j];
+		Ds_implant = Dl[j];
+		if(j > 0) dDs_implant = dDl[j];
+		else  dDs_implant = Ds_implant;
+	}else{
+		Ds_implant = Ds;
+		zs_implant = z;
+		if(j > 0) dDs_implant = cosmo->coorDist(plane_redshifts[j-1],z);
+		else  dDs_implant = Ds;
+	}
 
 	std::cout << "Source on plane " << j << std::endl;
 	index_of_new_sourceplane = j;

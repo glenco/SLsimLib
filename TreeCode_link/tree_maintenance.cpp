@@ -524,6 +524,7 @@ int AddPointsToTree(TreeHndl tree,Point *xpoint,unsigned long Nadd){
        		//parent_branch = tree->current;
    			if(tree->current->npoints > 1) _AddPoint(tree);
     	}
+    	assert(inbox(xpoint[j].x,xpoint[j].leaf->boundary_p1,xpoint[j].leaf->boundary_p2));
    }
 
    return 1;
