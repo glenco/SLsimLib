@@ -368,7 +368,6 @@ void _FindLeaf(TreeHndl tree,double *ray,unsigned long Nadd){
 
 	bool contin;
 
-	std::cout << "level on tree " << tree->current->level << std::endl;
 	assert(inbox(ray,tree->current->boundary_p1,tree->current->boundary_p2) );
 	do{
 		tree->current->npoints += Nadd;

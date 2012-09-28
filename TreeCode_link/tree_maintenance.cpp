@@ -91,7 +91,7 @@ TreeHndl BuildTree(Point *xp,unsigned long Npoints,short my_median_cut){
 
   /************************** test routine *****************************/
   moveTop(tree);
-  tree_count_test(tree);
+  //tree_count_test(tree);
 
   return tree;
 }
@@ -321,7 +321,7 @@ void _BuildTree(TreeHndl tree){
 
     /* leaf case */
   if(cbranch->npoints <= tree->Nbucket){
-	  tree->current->points->leaf=tree->current;
+	  tree->current->points->leaf = tree->current;
 	  if(cbranch->npoints == 0) cbranch->points = NULL;
 	  return;
   }
@@ -464,6 +464,7 @@ int AddPointsToTree(TreeHndl tree,Point *xpoint,unsigned long Nadd){
     	}else{
 
     		moveTop(tree);
+    		assert(inbox(xpoint[j].x,tree->current->boundary_p1,tree->current->boundary_p2) );
     		_FindLeaf(tree,xpoint[j].x,1);
     		//parent_branch = tree->current->prev->prev;
 

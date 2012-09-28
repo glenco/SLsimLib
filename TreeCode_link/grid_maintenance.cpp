@@ -256,30 +256,30 @@ Point * Grid::RefineLeaf(LensHndl lens,Point *point,bool kappa_off){
 
 	//*** these could be mode more efficient by starting at the current in tree
 	//TODO test line
-	std::cout << "adding i_points to tree" << std::endl;
 	AddPointsToTree(i_tree,i_points,i_points->head);
-	std::cout << "adding s_points to tree" << std::endl;
 	AddPointsToTree(s_tree,s_points,s_points->head);
 
+	assert(s_points->head > 0);
 	//AddPointsToTree(i_tree,i_points,Ngrid_block*Ngrid_block-1-Nout);
 	//AddPointsToTree(s_tree,s_points,Ngrid_block*Ngrid_block-1-Nout);
 
 	// re-assign leaf of point that was to be refined
 	assert(inbox(point->x,i_tree->top->boundary_p1,i_tree->top->boundary_p2));
 	i_tree->current = point->leaf;
-	std::cout << "reassigning leaf for i_point" << std::endl;
+	//TODO This line should not be necessary!! It is repairing the leaf that has been assigned incorrectly somewhere
+	if(!inbox(point->x,i_tree->current->boundary_p1,i_tree->current->boundary_p2) ) moveTop(i_tree);
 	_FindLeaf(i_tree,point->x,0);
 	point->leaf = i_tree->current;
 
 	assert(inbox(point->image->x,s_tree->top->boundary_p1,s_tree->top->boundary_p2));
 	s_tree->current = point->image->leaf;
-	std::cout << "reassigning leaf for s_point" << std::endl;
+	//TODO This line should not be necessary!! It is repairing the leaf that has been assigned incorrectly somewhere
+	if(!inbox(point->image->x,s_tree->current->boundary_p1,s_tree->current->boundary_p2) ) moveTop(s_tree);
 	_FindLeaf(s_tree,point->image->x,0);
 	point->image->leaf = s_tree->current;
 
 	assert(point->leaf->child1 == NULL && point->leaf->child2 == NULL);
 
-	std::cout << "" << std::endl;
 	return i_points;
 }
 
