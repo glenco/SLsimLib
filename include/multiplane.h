@@ -34,9 +34,10 @@ public:
 	IndexType Nhalos;
 	/// mean mass density
 	double kappa_background;
+	double *z;
 
 	HaloData(double fov,double min_mass,double mass_scale,double z1,double z2,int mass_func_type,double alpha,CosmoHndl cosmo,long *seed);
-	HaloData(HaloStructure *halostrucs,double **positions,unsigned long Nhaloss);
+	HaloData(HaloStructure *halostrucs,double **positions,double *z, unsigned long Nhaloss);
 	//HaloData(NSIEstructure *halostrucs,double **positions,unsigned long Nhaloss);
 	HaloData(CosmoHndl cosmo,double mass,double zlens);
 	~HaloData();

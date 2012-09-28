@@ -44,8 +44,8 @@ HaloData::HaloData(CosmoHndl cosmo
 	delete ha;
 }
 
-HaloData::HaloData(HaloStructure *halostrucs,PosType **positions,unsigned long Nhaloss):
-	pos(positions), halos(halostrucs), Nhalos(Nhaloss)
+HaloData::HaloData(HaloStructure *halostrucs,PosType **positions, double *zz, unsigned long Nhaloss):
+	pos(positions), halos(halostrucs), Nhalos(Nhaloss),z(zz)
 {
 	allocation_flag = false;
 	kappa_background = 0.0;  //TODO This should be set properly at some point.
@@ -557,7 +557,7 @@ void MultiLens::buildHaloTrees(
 		// If input file is provided, read it in and put the halos onto lens planes.
 
 		readInputSimFile(cosmo);
-		unsigned long j1,j2;
+		unsigned long j1=0,j2=0;
 
 		for(j=0,Ntot=0;j<Nplanes-1;j++){
 			if(flag_input_lens && j == (flag_input_lens % Nplanes))
@@ -586,19 +586,24 @@ void MultiLens::buildHaloTrees(
 				z2 = QuickFindFromTable(Dl[j] + 0.5*(Dl[j+2] - Dl[j]));
 
 			/// Find which halos are in redshift range
-
-			locateD(halo_zs-1,Nhalos,z1,&j1);
-			if(j1 == Nhalos) j1 = Nhalos-1;
+			if(j>0 && j != (flag_input_lens % Nplanes)) j1=j2;
+			else{
+				locateD(halo_zs-1,Nhalos,z1,&j1);
+				if(j1 == Nhalos) j1 = Nhalos-1;
+			}
 			locateD(halo_zs-1,Nhalos,z2,&j2);
 			if(j2 == Nhalos) j2 = Nhalos-1;
 
 			/// Use other constructor to create halo data
 
-			halo_data[j].reset(new HaloData(&halos[j1],&halo_pos[j1],j2-j1));
+			halo_data[j].reset(new HaloData(&halos[j1],&halo_pos[j1],&halo_zs[j1],j2-j1));
 
 			//for(int i = 0; i<10 ;++i) cout << "Rmax:" << halos[j1+i].Rmax << "mass:" << halos[j1+i].mass << "rscale:" << halos[j1+i].rscale << "x = " << halo_pos[j1+i][0] << " " << halo_pos[j1+i][1] << endl;
 
 			Ntot += halo_data[j]->Nhalos;
+			///TODO: MARGARITA/BEN can be removed when the self-lensing problem is fixed 100%
+			cout << "z1: " << z1 << " j1: " << j1 << " z2: " << z2 << " j2: " << j2 << endl;
+
 		}
 
 	}
@@ -1003,7 +1008,6 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 	halo_zs = new double[Nhalos];
 	halo_pos = PosTypeMatrix(0,Nhalos-1,0,2);
 
-
 	for(i=0;i<Nhalos;++i){
 		halo_zs[i] = halo_zs_vec[i];
 		halo_pos[i] = halo_pos_vec[i];
@@ -1126,30 +1130,39 @@ void MultiLens::ResetSourcePlane(
 		return;
 	}
 */
-	// j is the index of the next plane at higher redshift, This plane will be temporarily replaced and used as a source plane.
-	locateD(plane_redshifts-1,Nplanes,z,&j);
-	if(j > Nplanes-1) j = Nplanes-1;
+	// j is the index of the next plane at higher redshift, This plane will be temporarily replaced and used as a source plane
 
-	if(j > 0  && j < Nplanes-1){
-		assert(z < plane_redshifts[j] && z > plane_redshifts[j-1]);
+
+	double Ds = cosmo->coorDist(0,z);
+
+	locateD(Dl-1,Nplanes,Ds,&j);
+	if(j >= Nplanes-1){
+		j = Nplanes-2;
+	}
+	else{
+		if(nearest) j = ((Ds-Dl[j-1]) > (Dl[j]-Ds)) ? j : j-1;
 	}
 
-	if(nearest && (j < Nplanes-1)){
-		z = cosmo->coorDist(plane_redshifts[j-1],z) > cosmo->coorDist(z,plane_redshifts[j])
-			? plane_redshifts[j] : plane_redshifts[j-1];
-	}else{
-		z = plane_redshifts[0];
+	///TODO: MARGARITA/BEN can be removed when the self-lensing problem is fixed 100%
+	/*
+ 	for(int l=0; l<Nplanes; l++){
+		for(int m=0; m<halo_data[l]->Nhalos;m++){
+			if(halo_data[l]->z[m] == z){
+				cout << l << " " << plane_redshifts[l] << " " << Dl[l] << endl;
+				cout << j << " " << z << " " << Ds << endl;
+				cout << j << " " << plane_redshifts[j] << " " << Dl[j] << endl;
+			}
+		}
 	}
-	// TODO This should be changed to the nearest plane in coordinate distance when it is changed in the halo sorting
-	//if(nearest && (j < Nplanes-1) ){
-	//	if(j > 0) z = ( (z-plane_redshifts[j-1]) > (plane_redshifts[j]-z) )
-	//		? plane_redshifts[j] : plane_redshifts[j-1];
-	//	else z = plane_redshifts[0];
-	//}
-	Ds_implant = cosmo->coorDist(0,z);
+	*/
+
+	/// TODO BEN/MARGARITA: this ensures the source in on a plane, but it can be changed such that the source just has its own redhsift
+	z = plane_redshifts[j];
+
+	Ds_implant = Dl[j];
 
 	zs_implant = z;
-	if(j > 0) dDs_implant = cosmo->coorDist(plane_redshifts[j-1],z);
+	if(j > 0) dDs_implant = dDl[j];
 	else  dDs_implant = Ds_implant;
 
 	std::cout << "Source on plane " << j << std::endl;
