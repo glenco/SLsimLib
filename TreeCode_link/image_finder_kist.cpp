@@ -620,12 +620,12 @@ int refine_grid_kist(
 				  ++count;
 
 				  //i_points = RefineLeaf(lens,i_tree,s_tree,getCurrentKist(imageinfo[i].imagekist),Ngrid_block,kappa_off);
-				  // TODO Test lines
-				  if(getCurrentKist(imageinfo[i].imagekist)->leaf->child1 != NULL){
+
+				  /*if(getCurrentKist(imageinfo[i].imagekist)->leaf->child1 != NULL){
 					  printBranch(getCurrentKist(imageinfo[i].imagekist)->leaf);
 					  printBranch(getCurrentKist(imageinfo[i].imagekist)->leaf->child1);
 					  printBranch(getCurrentKist(imageinfo[i].imagekist)->leaf->child2);
-				  }
+				  }*/
 				  assert(getCurrentKist(imageinfo[i].imagekist)->leaf->child1 == NULL);
 				  assert(getCurrentKist(imageinfo[i].imagekist)->leaf->child2 == NULL);
 				  i_points = grid->RefineLeaf(lens,getCurrentKist(imageinfo[i].imagekist),kappa_off);

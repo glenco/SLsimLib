@@ -129,7 +129,6 @@ void Grid::ReInitializeGrid(LensHndl lens){
 	FillTree(i_tree,i_points,Ngrid_init*Ngrid_init);
 	FillTree(s_tree,s_points,Ngrid_init*Ngrid_init);
 
-	//TODO Test line
 	/*for(i=0;i<Ngrid_init*Ngrid_init;++i){
 		assert(i_points[i].leaf->child1 == NULL && i_points[i].leaf->child2 == NULL);
 		assert(s_points[i].leaf->child1 == NULL && s_points[i].leaf->child2 == NULL);
@@ -262,22 +261,19 @@ Point * Grid::RefineLeaf(LensHndl lens,Point *point,bool kappa_off){
 	assert(i_points->head == s_points->head);
 
 	//*** these could be mode more efficient by starting at the current in tree
-	//TODO test line
 	AddPointsToTree(i_tree,i_points,i_points->head);
-	//TODO test lines
-	for(int i=0;i<i_points->head;++i){
+/*	for(int i=0;i<i_points->head;++i){
 		assert(i_points[i].leaf->child1 == NULL && i_points[i].leaf->child2 == NULL);
 		assert(inbox(i_points[i].x,i_points[i].leaf->boundary_p1,i_points[i].leaf->boundary_p2));
-	}
+	}*/
 	AddPointsToTree(s_tree,s_points,s_points->head);
-	//TODO test lines
-	for(int i=0;i<s_points->head;++i){
+	/*for(int i=0;i<s_points->head;++i){
 		assert(s_points[i].leaf->child1 == NULL && s_points[i].leaf->child2 == NULL);
 		assert(inbox(s_points[i].x,s_points[i].leaf->boundary_p1,s_points[i].leaf->boundary_p2));
 	}
 	for(int i=0;i<i_points->head;++i)
 		assert(i_points[i].image->leaf->child1 == NULL && i_points[i].image->leaf->child2 == NULL);
-
+*/
 	assert(s_points->head > 0);
 	//AddPointsToTree(i_tree,i_points,Ngrid_block*Ngrid_block-1-Nout);
 	//AddPointsToTree(s_tree,s_points,Ngrid_block*Ngrid_block-1-Nout);

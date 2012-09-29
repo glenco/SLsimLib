@@ -1136,8 +1136,9 @@ void MultiLens::ResetSourcePlane(
 	double Ds = cosmo->coorDist(0,z);
 
 	locateD(Dl-1,Nplanes,Ds,&j);
+	assert(j <= Nplanes && j >=0);
 	if(j >= Nplanes-1){
-		--j;// = Nplanes-2;
+		j = Nplanes-2;  // TODO It should be possible to make j = Nplane -1 but this seems to cause an error
 	}
 	else if(j > 0){
 		if(nearest) j = ((Ds-Dl[j-1]) > (Dl[j]-Ds)) ? j : j-1;
