@@ -27,7 +27,7 @@ const double target_all = 1.0e-3;
 //const int MinPoints = 100;  // Minimum number of points per image
 const float tol_UniformMag = 1.0e-3;
 double maxflux;
-const bool verbos = false;
+const bool verbos = true;
 
 /** \ingroup ImageFinding
  *  \brief Find images and refine them based on their surface brightness distribution.
@@ -668,6 +668,8 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
 
 				  assert(imageinfo[i].area >= 0);
 
+				  assert(imageinfo[i].imagekist->getCurrent()->leaf->child1 == NULL);
+				  assert(imageinfo[i].imagekist->getCurrent()->leaf->child2 == NULL);
 				  i_points = grid->RefineLeaf(lens,getCurrentKist(imageinfo[i].imagekist),kappa_off);
 				  imageinfo[i].ShouldNotRefine = 0;   // mark to continue refinement on next round
 
@@ -736,6 +738,8 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
 					  reborder = true;  // Since the border has been refined, re do the borders.
 					  ++Ncells;
 
+					  assert(imageinfo[i].outerborder->getCurrent()->leaf->child1 == NULL);
+					  assert(imageinfo[i].outerborder->getCurrent()->leaf->child2 == NULL);
 					  i_points = grid->RefineLeaf(lens,getCurrentKist(imageinfo[i].outerborder),kappa_off);
 					  imageinfo[i].ShouldNotRefine = 0;   // mark for another look next time
 					  assert(i_points->head <= grid->getNgrid_block()*grid->getNgrid_block()-1);

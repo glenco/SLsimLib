@@ -129,6 +129,11 @@ void Grid::ReInitializeGrid(LensHndl lens){
 	FillTree(i_tree,i_points,Ngrid_init*Ngrid_init);
 	FillTree(s_tree,s_points,Ngrid_init*Ngrid_init);
 
+	//TODO Test line
+	/*for(i=0;i<Ngrid_init*Ngrid_init;++i){
+		assert(i_points[i].leaf->child1 == NULL && i_points[i].leaf->child2 == NULL);
+		assert(s_points[i].leaf->child1 == NULL && s_points[i].leaf->child2 == NULL);
+	}*/
 	return;
 }
 
@@ -200,6 +205,8 @@ Point * Grid::RefineLeaf(LensHndl lens,Point *point,bool kappa_off){
 	int Nout,kk;
 
 	assert(point->leaf->child1 == NULL && point->leaf->child2 == NULL);
+	assert(point->image->leaf->child1 == NULL && point->image->leaf->child2 == NULL);
+
 	assert(point->gridsize > pow(10.,-DBL_DIG) ); // If cells are too small they will cause problems.
 
 	point->leaf->refined = true;
@@ -257,7 +264,19 @@ Point * Grid::RefineLeaf(LensHndl lens,Point *point,bool kappa_off){
 	//*** these could be mode more efficient by starting at the current in tree
 	//TODO test line
 	AddPointsToTree(i_tree,i_points,i_points->head);
+	//TODO test lines
+	for(int i=0;i<i_points->head;++i){
+		assert(i_points[i].leaf->child1 == NULL && i_points[i].leaf->child2 == NULL);
+		assert(inbox(i_points[i].x,i_points[i].leaf->boundary_p1,i_points[i].leaf->boundary_p2));
+	}
 	AddPointsToTree(s_tree,s_points,s_points->head);
+	//TODO test lines
+	for(int i=0;i<s_points->head;++i){
+		assert(s_points[i].leaf->child1 == NULL && s_points[i].leaf->child2 == NULL);
+		assert(inbox(s_points[i].x,s_points[i].leaf->boundary_p1,s_points[i].leaf->boundary_p2));
+	}
+	for(int i=0;i<i_points->head;++i)
+		assert(i_points[i].image->leaf->child1 == NULL && i_points[i].image->leaf->child2 == NULL);
 
 	assert(s_points->head > 0);
 	//AddPointsToTree(i_tree,i_points,Ngrid_block*Ngrid_block-1-Nout);
@@ -266,19 +285,23 @@ Point * Grid::RefineLeaf(LensHndl lens,Point *point,bool kappa_off){
 	// re-assign leaf of point that was to be refined
 	assert(inbox(point->x,i_tree->top->boundary_p1,i_tree->top->boundary_p2));
 	i_tree->current = point->leaf;
+	assert(inbox(point->x,i_tree->current->boundary_p1,i_tree->current->boundary_p2));
 	//TODO This line should not be necessary!! It is repairing the leaf that has been assigned incorrectly somewhere
 	if(!inbox(point->x,i_tree->current->boundary_p1,i_tree->current->boundary_p2) ) moveTop(i_tree);
 	_FindLeaf(i_tree,point->x,0);
 	point->leaf = i_tree->current;
 
 	assert(inbox(point->image->x,s_tree->top->boundary_p1,s_tree->top->boundary_p2));
+	assert(inbox(point->image->x,s_tree->top->boundary_p1,s_tree->top->boundary_p2));
 	s_tree->current = point->image->leaf;
+	assert(inbox(point->image->x,s_tree->current->boundary_p1,s_tree->current->boundary_p2));
 	//TODO This line should not be necessary!! It is repairing the leaf that has been assigned incorrectly somewhere
 	if(!inbox(point->image->x,s_tree->current->boundary_p1,s_tree->current->boundary_p2) ) moveTop(s_tree);
 	_FindLeaf(s_tree,point->image->x,0);
 	point->image->leaf = s_tree->current;
 
 	assert(point->leaf->child1 == NULL && point->leaf->child2 == NULL);
+	assert(point->image->leaf->child1 == NULL && point->image->leaf->child2 == NULL);
 
 	return i_points;
 }

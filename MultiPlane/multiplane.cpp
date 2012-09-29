@@ -1139,7 +1139,7 @@ void MultiLens::ResetSourcePlane(
 	if(j >= Nplanes-1){
 		--j;// = Nplanes-2;
 	}
-	else{
+	else if(j > 0){
 		if(nearest) j = ((Ds-Dl[j-1]) > (Dl[j]-Ds)) ? j : j-1;
 	}
 
@@ -1158,7 +1158,7 @@ void MultiLens::ResetSourcePlane(
 
 	/// TODO BEN/MARGARITA: this ensures the source in on a plane, but it can be changed such that the source just has its own redhsift
 
-	if(nearest && j < Nplanes-1 ){
+	if(nearest && (j < Nplanes-1) ){
 		z = plane_redshifts[j];
 		Ds_implant = Dl[j];
 		if(j > 0) dDs_implant = dDl[j];
