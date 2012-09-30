@@ -44,11 +44,23 @@ HaloData::HaloData(CosmoHndl cosmo
 	delete ha;
 }
 
-HaloData::HaloData(HaloStructure *halostrucs,PosType **positions, double *zz, unsigned long Nhaloss):
+HaloData::HaloData(CosmoHndl cosmo,HaloStructure *halostrucs,PosType **positions
+		, double *zz, unsigned long Nhaloss,double z1,double z2,double mass_scale):
 	pos(positions), halos(halostrucs), Nhalos(Nhaloss),z(zz)
 {
 	allocation_flag = false;
-	kappa_background = 0.0;  //TODO This should be set properly at some point.
+
+	// Set background convergence
+	double min_mass = halos[0].mass;
+	for(long i=0;i<Nhalos;++i)
+		if(halos[i].mass < min_mass) min_mass = halos[i].mass;
+	double zave =(z1+z2)/2;
+	HALO *ha = new HALO(cosmo,min_mass,zave);
+
+	// calculate the mass density on the plane
+	// and convert it to physical 1/physical_distance^2
+	kappa_background = ha->totalMassDensityinHalos(0,1)*pow(cosmo->gethubble(),2)*pow(1+zave,3);
+	kappa_background *= cosmo->getOmega_matter()*cosmo->angDist(z1,z2)/mass_scale;
 }
 
 /*HaloData::HaloData(NSIEstructure *halostrucs,PosType **positions,unsigned long Nhaloss):
@@ -592,7 +604,7 @@ void MultiLens::buildHaloTrees(
 
 			/// Use other constructor to create halo data
 
-			halo_data[j].reset(new HaloData(&halos[j1],&halo_pos[j1],&halo_zs[j1],j2-j1));
+			halo_data[j].reset(new HaloData(cosmo,&halos[j1],&halo_pos[j1],&halo_zs[j1],j2-j1,z1,z2,mass_scale));
 
 			//for(int i = 0; i<10 ;++i) cout << "Rmax:" << halos[j1+i].Rmax << "mass:" << halos[j1+i].mass << "rscale:" << halos[j1+i].rscale << "x = " << halo_pos[j1+i][0] << " " << halo_pos[j1+i][1] << endl;
 
@@ -1135,7 +1147,6 @@ void MultiLens::ResetSourcePlane(
 	assert(j <= Nplanes && j >=0);
 	if(j >= Nplanes-1){
 		j--;
-//		j = Nplanes-2;  // TODO It should be possible to make j = Nplane -1 but this seems to cause an error
 	}
 	else if(j > 0){
 		if(nearest) j = ((Ds-Dl[j-1]) > (Dl[j]-Ds)) ? j : j-1;
