@@ -481,8 +481,8 @@ int AddPointsToTree(TreeHndl tree,Point *xpoint,unsigned long Nadd){
 
   for(j=0;j<Nadd;++j){
 
-	  //TODO Test lines
-	   if(!testLeafs(tree)){ERROR_MESSAGE(); std::cout << "Beginning of AddPointsToTree "<< std::endl; exit(1);}
+	  // Test lines
+	   //if(!testLeafs(tree)){ERROR_MESSAGE(); std::cout << "Beginning of AddPointsToTree "<< std::endl; exit(1);}
 
 	   // add only that are inside original grid
     	if( !inbox(xpoint[j].x,tree->top->boundary_p1,tree->top->boundary_p2) ){
@@ -542,8 +542,8 @@ int AddPointsToTree(TreeHndl tree,Point *xpoint,unsigned long Nadd){
 
     			// case of points already in leaf
        			assert(tree->current->points->next || tree->current->points->prev);
-       	    	//TODO Test lines
-       	    	if(!testLeafs(tree)){ERROR_MESSAGE(); std::cout << "before _addPoint of AddPointsToTree "<< std::endl; exit(1);}
+       	    	// Test lines
+       	    	//if(!testLeafs(tree)){ERROR_MESSAGE(); std::cout << "before _addPoint of AddPointsToTree "<< std::endl; exit(1);}
 
        			// adds point to end of branches list, note that tree->current->npoints has already been increased
     			tree->pointlist->current = tree->current->points;
@@ -553,20 +553,20 @@ int AddPointsToTree(TreeHndl tree,Point *xpoint,unsigned long Nadd){
     			tree->pointlist->current = tree->current->points;
     			xpoint[j].leaf = tree->current;
 
-    			// TODO Test lines
+    			/*/ Test lines
     			tree->pointlist->current = tree->current->points;
     			for(int k = 0; k< tree->current->npoints ; ++k,MoveDownList(tree->pointlist)){
     				assert(inbox(tree->pointlist->current->x
     					,tree->current->boundary_p1,tree->current->boundary_p2));
     			}
-    			////////////////////////////////////
+    			///////////////////////////////////*/
 
           		Branch *parent_branch = tree->current;
        			_AddPoint(tree);
       			assert(parent_branch->child1->points->leaf = parent_branch->child1);
       			assert(parent_branch->child2->points->leaf = parent_branch->child2);
       	    	assert(inbox(xpoint[j].x,xpoint[j].leaf->boundary_p1,xpoint[j].leaf->boundary_p2));
-      	    	//TODO Test lines
+      	    	/*/  Test lines
       	    	if(!testLeafs(tree)){
       	    		ERROR_MESSAGE();
       	    		tree->pointlist->current = parent_branch->points;
@@ -574,18 +574,30 @@ int AddPointsToTree(TreeHndl tree,Point *xpoint,unsigned long Nadd){
       	    			std::cout << "points in split branch " << tree->pointlist->current->id << std::endl;
       	    		}
       	    		std::cout << "Adding point " << xpoint[j].id << " branch " << parent_branch << std::endl;
-      	    		std::cout << "End of AddPointsToTree "<< std::endl; exit(1);}
-   		}
+      	    		std::cout << "End of AddPointsToTree "<< std::endl; exit(1);
+      	    	}
+      	    	//////////////////////////////////////////*/
+
+    		}
 
     	}
     	assert(inbox(xpoint[j].x,xpoint[j].leaf->boundary_p1,xpoint[j].leaf->boundary_p2));
-    	//TODO Test lines
+    	/*/ Test lines
     	if(!testLeafs(tree)){ERROR_MESSAGE(); std::cout << "End of AddPointsToTree "<< std::endl; exit(1);}
+    	///////////////////////*/
   }
     return 1;
 }
 
 void _AddPoint(TreeHndl tree){
+
+		/*/ Test lines
+		tree->pointlist->current = tree->current->points;
+		for(int k = 0; k< tree->current->npoints ; ++k,MoveDownList(tree->pointlist)){
+			assert(inbox(tree->pointlist->current->x
+				,tree->current->boundary_p1,tree->current->boundary_p2));
+		}
+		///////////////////////////////////*/
 
 	unsigned long i;
 	if(tree->current->npoints == 0){
@@ -594,7 +606,6 @@ void _AddPoint(TreeHndl tree){
 		tree->pointlist->current = tree->current->points;
 		for(i=0;i<tree->current->npoints;i++){
 			tree->pointlist->current->leaf = tree->current;
-			// TODO Test line
 			assert(inbox(tree->pointlist->current->x
 					,tree->pointlist->current->leaf->boundary_p1
 					,tree->pointlist->current->leaf->boundary_p2));
@@ -620,6 +631,15 @@ void _AddPoint(TreeHndl tree){
 			branch2.boundary_p2[i] = tree->current->boundary_p2[i];
 		}
 
+		/*/ Test lines
+		tree->pointlist->current = tree->current->points;
+		for(int k = 0; k< tree->current->npoints ; ++k,MoveDownList(tree->pointlist)){
+			assert(inbox(tree->pointlist->current->x
+				,tree->current->boundary_p1,tree->current->boundary_p2));
+		}
+		tree->pointlist->current = tree->current->points;
+		///////////////////////////////////*/
+
 		// set dimension to cut box
 		dimension=(tree->current->level % 2);
 
@@ -627,20 +647,50 @@ void _AddPoint(TreeHndl tree){
 		tree->pointlist->current = tree->current->points;
 
 		assert(tree->current->points->next || tree->current->points->prev);
-		//assert(tree->current->npoints <= 2*tree->Nbucket);
-		if(tree->current->npoints > 2*tree->Nbucket){
-			std::cout << tree->current->npoints << std::endl;
-			exit(1);
-		}
 
 		for(i=0;i<tree->current->npoints;++i){
 			x[i] = tree->pointlist->current->x[dimension];
 			MoveDownList(tree->pointlist);
 		}
 
+		/*/ Test lines
+		tree->pointlist->current = tree->current->points;
+		for(int k = 0; k< tree->current->npoints ; ++k,MoveDownList(tree->pointlist)){
+			assert(inbox(tree->pointlist->current->x
+				,tree->current->boundary_p1,tree->current->boundary_p2));
+		}
+		tree->pointlist->current = tree->current->points;
+		///////////////////////////////////*/
+
 		oldfirstpoint = tree->current->points;
-		tree->current->points = sortList(tree->current->npoints,x,tree->pointlist,tree->current->points);
+		if(tree->current->npoints == 2){
+			tree->pointlist->current = tree->current->points;
+			if(tree->pointlist->current->x[dimension] > tree->pointlist->current->next->x[dimension]){
+				tree->pointlist->current = tree->current->points;
+				bool attop=AtTopList(tree->pointlist);
+				Point *point = TakeOutCurrent(tree->pointlist);
+				if(!attop) MoveDownList(tree->pointlist);
+				InsertPointAfterCurrent(tree->pointlist,point);
+				tree->current->points = point->prev;
+				double tmp = x[1];
+				x[1] = x[0];
+				x[0] = tmp;
+			}
+		}else{
+			ERROR_MESSAGE();
+			std::cout << "This is prone to errors and this should never happen!" << std::endl;
+			exit(1);
+			tree->current->points = sortList(tree->current->npoints,x,tree->pointlist,tree->current->points);
+		}
 		newfirstpoint = tree->current->points;
+		/*/ Test lines
+		tree->pointlist->current = tree->current->points;
+		for(int k = 0; k< tree->current->npoints ; ++k,MoveDownList(tree->pointlist)){
+			assert(inbox(tree->pointlist->current->x
+				,tree->current->boundary_p1,tree->current->boundary_p2));
+		}
+		tree->pointlist->current = tree->current->points;
+		///////////////////////////////////*/
 
 		cut = tree->current->npoints/2;
 
@@ -651,16 +701,34 @@ void _AddPoint(TreeHndl tree){
 			dimension=!dimension;
 
 			tree->pointlist->current = tree->current->points;
-
 			for(i=0;i<tree->current->npoints;i++){
 				x[i]=tree->pointlist->current->x[dimension];
 				MoveDownList(tree->pointlist);
 			}
 
-			tree->current->points = sortList(tree->current->npoints,x,tree->pointlist,tree->current->points);
+			if(tree->current->npoints == 2){
+				tree->pointlist->current = tree->current->points;
+				if(tree->pointlist->current->x[dimension] > tree->pointlist->current->next->x[dimension]){
+					tree->pointlist->current = tree->current->points;
+					bool attop=AtTopList(tree->pointlist);
+					Point *point = TakeOutCurrent(tree->pointlist);
+					if(!attop) MoveDownList(tree->pointlist);
+					InsertPointAfterCurrent(tree->pointlist,point);
+					tree->current->points = point->prev;
+					double tmp = x[1];
+					x[1] = x[0];
+					x[0] = tmp;
+				}
+			}else{
+				ERROR_MESSAGE();
+				std::cout << "This is prone to errors and this should never happen!" << std::endl;
+				exit(1);
+				tree->current->points = sortList(tree->current->npoints,x,tree->pointlist,tree->current->points);
+			}
 			newfirstpoint=tree->current->points;
 		}
 
+		assert(x[0] != x[1]);
 		if(tree->median_cut){
 			cut=tree->current->npoints/2;
 
@@ -675,6 +743,14 @@ void _AddPoint(TreeHndl tree){
 			locateD(x-1,tree->current->npoints,xcut,&cut);
 		}
 		delete[] x;
+		/*/  Test lines
+		tree->pointlist->current = tree->current->points;
+		for(int k = 0; k< tree->current->npoints ; ++k,MoveDownList(tree->pointlist)){
+			assert(inbox(tree->pointlist->current->x
+				,tree->current->boundary_p1,tree->current->boundary_p2));
+		}
+		tree->pointlist->current = tree->current->points;
+		///////////////////////////////////*/
 
 		assert(cut <= tree->current->npoints);
 
@@ -692,6 +768,14 @@ void _AddPoint(TreeHndl tree){
 		}else{
 			branch2.points = NULL;
 		}
+		/*/ Test lines
+		tree->pointlist->current = tree->current->points;
+		for(int k = 0; k< tree->current->npoints ; ++k,MoveDownList(tree->pointlist)){
+			assert(inbox(tree->pointlist->current->x
+				,tree->current->boundary_p1,tree->current->boundary_p2));
+		}
+		tree->pointlist->current = tree->current->points;
+		///////////////////////////////////*/
 
 		// use geometric center
 		branch1.center[0] = (branch1.boundary_p1[0] + branch1.boundary_p2[0])/2;
@@ -700,8 +784,19 @@ void _AddPoint(TreeHndl tree){
 		branch2.center[0] = (branch2.boundary_p1[0] + branch2.boundary_p2[0])/2;
 		branch2.center[1] = (branch2.boundary_p1[1] + branch2.boundary_p2[1])/2;
 
-		// TODO Test lines
-		if(branch1.npoints > 0 )assert(inbox(branch1.points->x,branch1.boundary_p1,branch1.boundary_p2));
+		/*/ Test lines
+		if(branch1.npoints > 0 && !inbox(branch1.points->x,branch1.boundary_p1,branch1.boundary_p2)){
+			printBranch(tree->current);
+			printBranch(&branch1);
+			printBranch(&branch2);
+			tree->pointlist->current = tree->current->points;
+			for(i=0;i<tree->current->npoints;i++){
+				std::cout << tree->pointlist->current->x[0] << "  " << tree->pointlist->current->x[1] << std::endl;
+				MoveDownList(tree->pointlist);
+			}
+			ERROR_MESSAGE();
+			exit(0);
+		}
 		if(branch2.npoints > 0 && !inbox(branch2.points->x,branch2.boundary_p1,branch2.boundary_p2)){
 			printBranch(tree->current);
 			printBranch(&branch1);
@@ -714,6 +809,7 @@ void _AddPoint(TreeHndl tree){
 			ERROR_MESSAGE();
 			exit(0);
 		}
+		/////////////////////////////////////////////////////
 		/* centers of mass *
 
 	for(i=0;i<2;++i) branch1.center[i]=0;
