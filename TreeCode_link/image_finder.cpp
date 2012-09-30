@@ -300,9 +300,9 @@ long refine_edges(LensHndl lens,GridHndl grid,ImageInfo *imageinfo
 
 	/* add points to trees *
 	//printf("edges1\n");
-	AddPointsToTree(i_tree,i_points,Ncells*(Ngrid_block*Ngrid_block-1));
+	//AddPointsToTree(i_tree,i_points,Ncells*(Ngrid_block*Ngrid_block-1));
 	//printf("   s-plane\n");
-	AddPointsToTree(s_tree,s_points,Ncells*(Ngrid_block*Ngrid_block-1));
+	//AddPointsToTree(s_tree,s_points,Ncells*(Ngrid_block*Ngrid_block-1));
 */
 
 	return count;
@@ -569,12 +569,12 @@ long refine_edges2(LensHndl lens,double *y_source,double r_source,GridHndl grid
 				addinner=false;
 
 				// update leaf pointer of inner border point if necessary
-				//  *** don't think this is necessary anymore
+				/*** don't think this is necessary anymore
 				if(getCurrentKist(imageinfo[i].innerborder)->leaf->npoints > 1){
 					grid->i_tree->current = getCurrentKist(imageinfo[i].innerborder)->leaf;
 					_FindBox(grid->i_tree,getCurrentKist(imageinfo[i].innerborder)->x);
 					getCurrentKist(imageinfo[i].innerborder)->leaf = grid->i_tree->current;
-				}
+				}*/
 
 				FindAllBoxNeighborsKist(grid->i_tree,getCurrentKist(imageinfo[i].innerborder),neighborkist);
 

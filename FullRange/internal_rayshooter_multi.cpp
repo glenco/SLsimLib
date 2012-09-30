@@ -56,6 +56,7 @@ void MultiLens::rayshooterInternal(
   if(toggle_source_plane){
     NLastPlane = index_of_new_sourceplane + 1;
 
+    assert(NLastPlane <= Nplanes);
     tmpDs = Dl[index_of_new_sourceplane];
     tmpdDs = dDl[index_of_new_sourceplane];
     tmpZs = plane_redshifts[index_of_new_sourceplane];

@@ -265,5 +265,6 @@ int windings(double *x,KistHndl kist,double *area,short image);
 void rayshooterInternal(unsigned long Npoints,Point *i_points,bool kappa_off);
 void in_source(double *y_source,ListHndl sourcelist);
 bool tree_count_test(TreeHndl tree);
+bool testLeafs(TreeHndl tree);
 
 #endif

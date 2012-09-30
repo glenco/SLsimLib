@@ -743,8 +743,8 @@ int refine_grid_kist(
   }
 
   // add points to trees
-  AddPointsToTree(i_tree,i_points,Nmarker);
-  if(shootrays) AddPointsToTree(s_tree,s_points,Nmarker);
+  //AddPointsToTree(i_tree,i_points,Nmarker);
+  //if(shootrays) AddPointsToTree(s_tree,s_points,Nmarker);
 
   if(!shootrays) *point_pnt = i_points;
   */

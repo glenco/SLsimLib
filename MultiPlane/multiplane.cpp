@@ -568,7 +568,6 @@ void MultiLens::buildHaloTrees(
 			 * If there is a plane with an input lens on it, it is skipped over
 			 * since it will not contain any halos
 			 */
-			// TODO These need to be changed back to coordinate distance
 			if(j == 0) z1 = 0.0;
 			else z1 = QuickFindFromTable(Dl[j] - 0.5*dDl[j]);
 			//else z1 = plane_redshifts[j] - 0.5*(plane_redshifts[j] - plane_redshifts[j-1]);
@@ -1135,8 +1134,8 @@ void MultiLens::ResetSourcePlane(
 	locateD(Dl-1,Nplanes,Ds,&j);
 	assert(j <= Nplanes && j >=0);
 	if(j >= Nplanes-1){
-
-		j = Nplanes-2;  // TODO It should be possible to make j = Nplane -1 but this seems to cause an error
+		j--;
+//		j = Nplanes-2;  // TODO It should be possible to make j = Nplane -1 but this seems to cause an error
 	}
 	else if(j > 0){
 		if(nearest) j = ((Ds-Dl[j-1]) > (Dl[j]-Ds)) ? j : j-1;
@@ -1158,7 +1157,7 @@ void MultiLens::ResetSourcePlane(
 	/// TODO BEN/MARGARITA: this ensures the source in on a plane, but it can be changed such that the source just has its own redhsift
 
 	if(nearest && (j < Nplanes-1) ){
-		z = plane_redshifts[j];
+		zs_implant = plane_redshifts[j];
 		Ds_implant = Dl[j];
 		if(j > 0) dDs_implant = dDl[j];
 		else  dDs_implant = Ds_implant;

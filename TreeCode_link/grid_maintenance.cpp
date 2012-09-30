@@ -203,6 +203,10 @@ Point * Grid::RefineLeaf(LensHndl lens,Point *point,bool kappa_off){
 	Point *s_points;
 	int Nout,kk;
 
+	//TODO Test lines
+	if(!testLeafs(i_tree)){ERROR_MESSAGE(); exit(1);}
+	if(!testLeafs(s_tree)){ERROR_MESSAGE(); exit(1);}
+
 	assert(point->leaf->child1 == NULL && point->leaf->child2 == NULL);
 	assert(point->image->leaf->child1 == NULL && point->image->leaf->child2 == NULL);
 
@@ -262,18 +266,24 @@ Point * Grid::RefineLeaf(LensHndl lens,Point *point,bool kappa_off){
 
 	//*** these could be mode more efficient by starting at the current in tree
 	AddPointsToTree(i_tree,i_points,i_points->head);
-/*	for(int i=0;i<i_points->head;++i){
+	// TODO test lines ////////////////////////////////////////////////
+	for(int i=0;i<i_points->head;++i){
 		assert(i_points[i].leaf->child1 == NULL && i_points[i].leaf->child2 == NULL);
 		assert(inbox(i_points[i].x,i_points[i].leaf->boundary_p1,i_points[i].leaf->boundary_p2));
-	}*/
+	}
+	if(!testLeafs(i_tree)){ERROR_MESSAGE(); std::cout << "point id "<< point->id << std::endl; exit(1);}
+	////////////////////////////////////////////////
 	AddPointsToTree(s_tree,s_points,s_points->head);
-	/*for(int i=0;i<s_points->head;++i){
+	// TODO test lines ////////////////////////////////////////////////
+	for(int i=0;i<s_points->head;++i){
 		assert(s_points[i].leaf->child1 == NULL && s_points[i].leaf->child2 == NULL);
 		assert(inbox(s_points[i].x,s_points[i].leaf->boundary_p1,s_points[i].leaf->boundary_p2));
 	}
 	for(int i=0;i<i_points->head;++i)
 		assert(i_points[i].image->leaf->child1 == NULL && i_points[i].image->leaf->child2 == NULL);
-*/
+	if(!testLeafs(s_tree)){ERROR_MESSAGE(); std::cout << "point id "<< point->image->id << std::endl; exit(1);}
+	////////////////////////////////////////////////
+
 	assert(s_points->head > 0);
 	//AddPointsToTree(i_tree,i_points,Ngrid_block*Ngrid_block-1-Nout);
 	//AddPointsToTree(s_tree,s_points,Ngrid_block*Ngrid_block-1-Nout);
@@ -283,7 +293,7 @@ Point * Grid::RefineLeaf(LensHndl lens,Point *point,bool kappa_off){
 	i_tree->current = point->leaf;
 	assert(inbox(point->x,i_tree->current->boundary_p1,i_tree->current->boundary_p2));
 	//TODO This line should not be necessary!! It is repairing the leaf that has been assigned incorrectly somewhere
-	if(!inbox(point->x,i_tree->current->boundary_p1,i_tree->current->boundary_p2) ) moveTop(i_tree);
+	//if(!inbox(point->x,i_tree->current->boundary_p1,i_tree->current->boundary_p2) ) moveTop(i_tree);
 	_FindLeaf(i_tree,point->x,0);
 	point->leaf = i_tree->current;
 
@@ -292,12 +302,16 @@ Point * Grid::RefineLeaf(LensHndl lens,Point *point,bool kappa_off){
 	s_tree->current = point->image->leaf;
 	assert(inbox(point->image->x,s_tree->current->boundary_p1,s_tree->current->boundary_p2));
 	//TODO This line should not be necessary!! It is repairing the leaf that has been assigned incorrectly somewhere
-	if(!inbox(point->image->x,s_tree->current->boundary_p1,s_tree->current->boundary_p2) ) moveTop(s_tree);
+	//if(!inbox(point->image->x,s_tree->current->boundary_p1,s_tree->current->boundary_p2) ) moveTop(s_tree);
 	_FindLeaf(s_tree,point->image->x,0);
 	point->image->leaf = s_tree->current;
 
+	//TODO Test lines
 	assert(point->leaf->child1 == NULL && point->leaf->child2 == NULL);
 	assert(point->image->leaf->child1 == NULL && point->image->leaf->child2 == NULL);
+	//TODO Test lines
+	if(!testLeafs(i_tree)){ERROR_MESSAGE(); std::cout << "point id "<< point->id; exit(1);}
+	if(!testLeafs(s_tree)){ERROR_MESSAGE(); std::cout << "point id "<< point->image->id; exit(1);}
 
 	return i_points;
 }
