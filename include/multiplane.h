@@ -114,6 +114,8 @@ public:
 	double QuickFindFromTable(double y);
 
 	double *coorDist_table;
+	double *redshift_table;
+	unsigned long NTABLE;
 	bool table_set;
 	void make_table(CosmoHndl cosmo);
 
