@@ -58,6 +58,8 @@ public:
 	/// Set redshift of current source.  Only changes the redshift while leaving position fixed.
 	void setZ(double my_z){	galaxies[index]->z = my_z;}
 
+	unsigned long getID(){return galaxies[index]->haloID;}
+
 	/// Return angular position of current source.
 	double *getX(){return galaxies[index]->theta;}
 	/// Set angular position of current source.

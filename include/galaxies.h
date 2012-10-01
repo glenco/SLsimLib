@@ -14,14 +14,16 @@
 struct OverGalaxy{
 
 	OverGalaxy(){};
-	OverGalaxy(double mag,double BtoT,double Reff,double Rh,double PA,double inclination,double my_z=0,double *theta=NULL);
+	OverGalaxy(double mag,double BtoT,double Reff,double Rh,double PA,double inclination,unsigned long my_id,double my_z=0,double *theta=NULL);
 	~OverGalaxy(){};
 
-	void setInternals(double mag,double BtoT,double Reff,double Rh,double PA,double inclination,double my_z=0,double *my_theta=NULL);
+	void setInternals(double mag,double BtoT,double Reff,double Rh,double PA,double inclination,unsigned long my_id,double my_z=0,double *my_theta=NULL);
 	double SurfaceBrightness(double *x);
 	void print();
 	double getMag(){return mag;}
 
+	/// haloID
+	unsigned long haloID;
 	/// redshift
 	double z;
 	/// position on the sky
