@@ -943,13 +943,13 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 	double *theta;
 	HaloStructure halo;
 
-	for(i=0,j=0 ; i<21152; ++i){
-
+	//for(i=0,j=0 ; i<21152; ++i){
+	for(i=0,j=0 ; c!='#'; ++i){
 		// read a line of data
-		file_in >> haloid >>  id >>  ra >>  dec >>  z
-				 >>  np >>  vdisp >>  vmax >>  r_halfmass;
-		//file_in >> c >> haloid >> c >> id >> c >> ra >> c >> dec >> c >> z
-			//	 >> c >> np >> c >> vdisp >> c >> vmax >> c >> r_halfmass >> c;  //TODO the GalID will miss the first digit using this method.  No other method stops at the end of file.
+		//file_in >> haloid >>  id >>  ra >>  dec >>  z
+			//	 >>  np >>  vdisp >>  vmax >>  r_halfmass;
+		file_in >> c >> haloid >> c >> id >> c >> ra >> c >> dec >> c >> z
+				 >> c >> np >> c >> vdisp >> c >> vmax >> c >> r_halfmass >> c;  //TODO the GalID will miss the first digit using this method.  No other method stops at the end of file.
 		//std::cout << id << c << id << c << ra << c << dec << c << z
 		//				 << c << np << c << vdisp << c << vmax << c << r_halfmass << std::endl;
 		//cout << i << "  z: " << z << " np: " << np << " vmax:" << vmax << "  " << file_in.peek() << endl;
@@ -1169,6 +1169,8 @@ short MultiLens::ResetSourcePlane(
 
 	///TODO: MARGARITA/BEN can be removed when the self-lensing problem is fixed 100%
 
+	/*
+	//////////////// DOES NOT WORK ATM!!!! DO NOT USE
 	int l, flag;
 
  	for(l=0,flag=0; l<Nplanes-1; l++){
@@ -1186,7 +1188,7 @@ short MultiLens::ResetSourcePlane(
 	}
 
 	if(flag == 0 && j<Nplanes-1) out = 0;
-
+*/
 
 	/// TODO BEN/MARGARITA: this ensures the source in on a plane, but it can be changed such that the source just has its own redhsift
 
