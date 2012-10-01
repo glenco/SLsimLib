@@ -1175,33 +1175,9 @@ short MultiLens::ResetSourcePlane(
 		//if(nearest) j = ((z-plane_redshifts[j-1]) > (plane_redshifts[j]-z)) ? j : j-1;
 		//if(nearest) j = ((Ds-Dl[j-1]) > (Dl[j]-Ds)) ? j : j-1;
 
-		if(nearest) j = (z>=z1) ? j : j-1;
+		//if(nearest)
+		j = (z>=z1) ? j : j-1;
 	}
-
-	///TODO: MARGARITA/BEN can be removed when the self-lensing problem is fixed 100%
-
-	/*
-	//////////////// DOES NOT WORK ATM!!!! DO NOT USE
-	int l, flag;
-
- 	for(l=0,flag=0; l<Nplanes-1; l++){
-		for(int m=0; m<halo_data[l]->Nhalos;m++){
-			if(halo_data[l]->haloID[m] == GalID){
-				flag = 1;
-				if(j>l){
-					cout << l << " " << plane_redshifts[l] << " " << Dl[l] << endl;
-					cout << j << " " << z << " " << Ds << endl;
-					cout << j << " " << plane_redshifts[j] << " " << Dl[j] << endl;
-					exit(1);
-				}
-			}
-		}
-	}
-
-	if(flag == 0 && j<Nplanes-1) out = 0;
-*/
-
-	/// TODO BEN/MARGARITA: this ensures the source in on a plane, but it can be changed such that the source just has its own redhsift
 
 	if(nearest && (j < Nplanes-1) ){
 		zs_implant = plane_redshifts[j];
