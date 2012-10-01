@@ -198,6 +198,7 @@ void swap(float *a,float *b);
 void swap(PosType *a,PosType *b);
 void swap(IndexType a,IndexType b);
 void swap(IndexType *a,IndexType *b);
+void swap(HaloStructure& a,HaloStructure& b);
 void quicksort(IndexType *particles,float *redshifts,PosType **pos,float *sizes,float *masses,IndexType N);
 
 #endif /* MULTIPLANE_H_ */

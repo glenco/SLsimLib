@@ -42,6 +42,22 @@ double InterpolateFromTable(double *table, double y);
 
 /// structure to hold information about the halos' internal parameters
 struct HaloStructure{
+
+	// assignment operator
+	/*HaloStructure & operator= (const HaloStructure &halosource){
+		if(this == &halosource) return *this;
+
+		mass = halosource.mass;
+		Rmax = halosource.Rmax;
+		rscale = halosource.rscale;
+		sigma = halosource.sigma;
+		Rsize = halosource.Rsize;
+		fratio = halosource.fratio;
+		pa = halosource.pa;
+
+		return *this;
+	}*/
+
 	/// Mass in solar masses
     float mass;
     /// Radius

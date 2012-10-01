@@ -1037,9 +1037,23 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 	}
 
 	std::cout << "sourting in MultiLens::readInputSimFile()" << std::endl;
-	// sort the halos by readshift
+
+	/*for(i=0;i<5;++i){
+		std::cout << halo_id[i] << "  " << halo_zs[i] << "  " << halo_pos[i][0]
+		         << "  " << halos[i].Rmax << "  " << halos[i].mass
+				<< std::endl;
+	}
+	std::cout << std::endl;*/
+
+	// sort the halos by redshift
 	MultiLens::quicksort(halos,halo_pos,halo_zs,halo_id,Nhalos);
 
+	/*for(i=0;i<5;++i){
+		std::cout << halo_id[i] << "  " << halo_zs[i] << "  " << halo_pos[i][0]
+		         << "  " << halos[i].Rmax << "  " << halos[i].mass
+				<< std::endl;
+	}
+	exit(0);*/
 	std::cout << "leaving MultiLens::readInputSimFile()" << std::endl;
 }
 
@@ -1095,7 +1109,7 @@ void MultiLens::quicksort(HaloStructure *halos,double **brr,double *arr,unsigned
 	// move pivet to end of array
 	swap(&arr[pivotindex],&arr[N-1]);
 	//SwapPointsInArray(&pointarray[pivotindex],&pointarray[N-1]);
-	swap(&halos[pivotindex],&halos[N-1]);
+	swap(halos[pivotindex],halos[N-1]);
 	swap(&brr[pivotindex][0],&brr[N-1][0]);
 	swap(&brr[pivotindex][1],&brr[N-1][1]);
 	swap(&id[pivotindex],&id[N-1]);
@@ -1106,7 +1120,7 @@ void MultiLens::quicksort(HaloStructure *halos,double **brr,double *arr,unsigned
 		if(arr[i] <= pivotvalue){
 			swap(&arr[newpivotindex],&arr[i]);
 			//SwapPointsInArray(&pointarray[newpivotindex],&pointarray[i]);
-			swap(&halos[newpivotindex],&halos[i]);
+			swap(halos[newpivotindex],halos[i]);
 			swap(&brr[newpivotindex][0],&brr[i][0]);
 			swap(&brr[newpivotindex][1],&brr[i][1]);
 			swap(&id[newpivotindex],&id[i]);
@@ -1295,6 +1309,13 @@ void swap(unsigned long *a,unsigned long *b){
 	tmp=*a;
 	*a=*b;
 	*b=tmp;
+}
+
+void swap(HaloStructure& a,HaloStructure& b){
+	HaloStructure tmp;
+	tmp=a;
+	a=b;
+	b=tmp;
 }
 
 
