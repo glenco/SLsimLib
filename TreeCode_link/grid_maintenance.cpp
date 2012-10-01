@@ -190,7 +190,7 @@ unsigned long Grid::getNumberOfPoints(){
  *
  * If some of the of the points are outside the original grid they will not be added in
  * which case THERE WILL BE LESS THEN Ngrid*Ngrid-1 points added.  The true number will
- * always be result->head.
+ * be result->head or, if no points are added, result = NULL.
  *
  * Returns a pointer to the list of image points that have been added.  This array can then be
  * used for calculating the surface brightness or marking them as in the image.
@@ -256,6 +256,16 @@ Point * Grid::RefineLeaf(LensHndl lens,Point *point,bool kappa_off){
 
 	// free memory of points that where outside image and source regions
 	Nout = Ngrid_block*Ngrid_block - 1 - Ntemp + Nout;
+	if(Ngrid_block*Ngrid_block-1-Nout <=0){
+		FreePointArray(i_points);
+		FreePointArray(s_points);
+		point->leaf->refined = false;
+		point->gridsize *= Ngrid_block;
+		point->image->gridsize *= Ngrid_block;
+
+		return NULL;
+	}
+
 	if(Nout > 0){
 		//i_points = AddPointToArray(i_points,Ngrid_block*Ngrid_block-1-Nout,Ngrid_block*Ngrid_block-1);
 		//s_points = AddPointToArray(s_points,Ngrid_block*Ngrid_block-1-Nout,Ntemp);

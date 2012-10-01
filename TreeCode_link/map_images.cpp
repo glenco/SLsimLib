@@ -676,33 +676,35 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
 				  imageinfo[i].area +=  pow(getCurrentKist(imageinfo[i].imagekist)->gridsize,2)
 						  *(getCurrentKist(imageinfo[i].imagekist)->surface_brightness/maxflux);
 
-				  // link new points into image kist and calculate surface brightnesses
-				  for(k=0;k < i_points->head;++k){
+				  if(i_points != NULL){
+					  // link new points into image kist and calculate surface brightnesses
+					  for(k=0;k < i_points->head;++k){
 
-					  // put point into image imageinfo[i].imagekist
+						  // put point into image imageinfo[i].imagekist
 
-					  //y[0] = i_points[k].image->x[0];// - source->getX()[0];
-					  //y[1] = i_points[k].image->x[1];// - source->getX()[1];
-					  i_points[k].surface_brightness = source->SurfaceBrightness(i_points[k].image->x);
-					  i_points[k].image->surface_brightness  = i_points[k].surface_brightness;
+						  //y[0] = i_points[k].image->x[0];// - source->getX()[0];
+						  //y[1] = i_points[k].image->x[1];// - source->getX()[1];
+						  i_points[k].surface_brightness = source->SurfaceBrightness(i_points[k].image->x);
+						  i_points[k].image->surface_brightness  = i_points[k].surface_brightness;
 
-					  // if new point has flux add to image
-					  if(i_points[k].surface_brightness > 0.0){
-						  InsertAfterCurrentKist(imageinfo[i].imagekist,&(i_points[k]));
-						  MoveDownKist(imageinfo[i].imagekist);
+						  // if new point has flux add to image
+						  if(i_points[k].surface_brightness > 0.0){
+							  InsertAfterCurrentKist(imageinfo[i].imagekist,&(i_points[k]));
+							  MoveDownKist(imageinfo[i].imagekist);
 
-						  i_points[k].in_image = TRUE;
-						  i_points[k].image->in_image = TRUE;
+							  i_points[k].in_image = TRUE;
+							  i_points[k].image->in_image = TRUE;
 
-						  imageinfo[i].area += pow(i_points[k].gridsize,2)*(i_points[k].surface_brightness/maxflux);
+							  imageinfo[i].area += pow(i_points[k].gridsize,2)*(i_points[k].surface_brightness/maxflux);
 
-					  }else{
-						  i_points[k].in_image =  i_points[k].image->in_image = FALSE;
+						  }else{
+							  i_points[k].in_image =  i_points[k].image->in_image = FALSE;
+						  }
+
+						  ++number_of_refined;
 					  }
-
-					  ++number_of_refined;
+					  Nold += i_points->head;
 				  }
-				  Nold += i_points->head;
 			  }
 
 		  }
@@ -742,33 +744,34 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
 					  assert(imageinfo[i].outerborder->getCurrent()->leaf->child2 == NULL);
 					  i_points = grid->RefineLeaf(lens,getCurrentKist(imageinfo[i].outerborder),kappa_off);
 					  imageinfo[i].ShouldNotRefine = 0;   // mark for another look next time
-					  assert(i_points->head <= grid->getNgrid_block()*grid->getNgrid_block()-1);
 
-					  // link new points into image kist and calculate surface brightnesses
-					  for(k=0;k < i_points->head ;++k){
+					  if(i_points != NULL){
+						  // link new points into image kist and calculate surface brightnesses
+						  for(k=0;k < i_points->head ;++k){
 
-						  // put point into image imageinfo[i].outerborder
-						  //y[0] = i_points[k].image->x[0] - source->getX()[0];
-						  //y[1] = i_points[k].image->x[1] - source->getX()[1];
-						  i_points[k].surface_brightness = source->SurfaceBrightness(i_points[k].image->x);
-						  i_points[k].image->surface_brightness  = i_points[k].surface_brightness;
+							  // put point into image imageinfo[i].outerborder
+							  //y[0] = i_points[k].image->x[0] - source->getX()[0];
+							  //y[1] = i_points[k].image->x[1] - source->getX()[1];
+							  i_points[k].surface_brightness = source->SurfaceBrightness(i_points[k].image->x);
+							  i_points[k].image->surface_brightness  = i_points[k].surface_brightness;
 
-						  // if new point has flux add to image
-						  if(i_points[k].surface_brightness > 0.0){
-							  InsertAfterCurrentKist(imageinfo[i].imagekist,&(i_points[k]));
-							  MoveDownKist(imageinfo[i].imagekist);
+							  // if new point has flux add to image
+							  if(i_points[k].surface_brightness > 0.0){
+								  InsertAfterCurrentKist(imageinfo[i].imagekist,&(i_points[k]));
+								  MoveDownKist(imageinfo[i].imagekist);
 
-							  i_points[k].in_image = TRUE;
-							  i_points[k].image->in_image = TRUE;
-							  imageinfo[i].area += pow(i_points[k].gridsize,2)*(i_points[k].surface_brightness/maxflux);
+								  i_points[k].in_image = TRUE;
+								  i_points[k].image->in_image = TRUE;
+								  imageinfo[i].area += pow(i_points[k].gridsize,2)*(i_points[k].surface_brightness/maxflux);
 
-						  }else{
-							  i_points[k].in_image =  i_points[k].image->in_image = FALSE;
+							  }else{
+								  i_points[k].in_image =  i_points[k].image->in_image = FALSE;
+							  }
+
+							  ++number_of_refined;
 						  }
-
-						  ++number_of_refined;
+						  Nold += i_points->head;
 					  }
-					  Nold += i_points->head;
 				  }else{
 					/// there is an overlap in images so the images will need to be re-divided
 					  redivide = true;
