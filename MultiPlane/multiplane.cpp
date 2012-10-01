@@ -903,7 +903,7 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 	double ra,dec,z,vmax,vdisp,r_halfmass;
 	string strg;
 	unsigned long i,j;
-	unsigned long haloid,id,np;
+	unsigned long haloid,idd,np;
 
 	//int index;
 
@@ -946,9 +946,9 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 	//for(i=0,j=0 ; i<21152; ++i){
 	for(i=0,j=0 ; c!='#'; ++i){
 		// read a line of data
-		/*file_in >> haloid >>  id >>  ra >>  dec >>  z
-				 >>  np >>  vdisp >>  vmax >>  r_halfmass;*/
-		file_in >> c >> haloid >> c >> id >> c >> ra >> c >> dec >> c >> z
+		//file_in >> haloid >>  id >>  ra >>  dec >>  z
+		//		 >>  np >>  vdisp >>  vmax >>  r_halfmass;
+		file_in >> c >> haloid >> c >> idd >> c >> ra >> c >> dec >> c >> z
 				 >> c >> np >> c >> vdisp >> c >> vmax >> c >> r_halfmass >> c;  //TODO the GalID will miss the first digit using this method.  No other method stops at the end of file.
 		//std::cout << id << c << id << c << ra << c << dec << c << z
 		//				 << c << np << c << vdisp << c << vmax << c << r_halfmass << std::endl;
@@ -1008,7 +1008,7 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 	}
 	file_in.close();
 	std::cout << halo_vec.size() << " halos read in."<< std::endl
-			<< "Max input mass = " << mass_max << " max haloID " << halo_id_vec[j_max] << "  R max = " << R_max << "  V max = " << V_max << std::endl;
+			<< "Max input mass = " << mass_max << " max haloID " << halo_id_vec[j_max] << "  R max = " << R_max/cosmo->angDist(0,halo_zs_vec[j_max]) << "  V max = " << V_max << std::endl;
 
 	Nhalos = halo_vec.size();
 
@@ -1022,11 +1022,16 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 		halo_zs[i] = halo_zs_vec[i];
 		halo_pos[i] = halo_pos_vec[i];
 		halos[i] = halo_vec[i];
+//		cout << halo_zs[i] << " " << halo_pos[i][0] << " " << halo_pos[i][1] << " " << halos[i].mass << endl;
 	}
 
 	std::cout << "sourting in MultiLens::readInputSimFile()" << std::endl;
 	// sort the halos by readshift
-	MultiLens::quicksort(halos,halo_pos,halo_zs,halo_id,Nhalos);
+	MultiLens::quicksort(&halos[0],halo_pos,halo_zs,halo_id,Nhalos);
+
+//	for(i=0;i<Nhalos;++i){
+//		cout << halo_zs[i] << " " << halo_pos[i][0] << " " << halo_pos[i][1] << " " << halos[i].mass << endl;
+//	}
 
 	std::cout << "leaving MultiLens::readInputSimFile()" << std::endl;
 }
@@ -1066,6 +1071,7 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
  * as the first line.
  */
 /// Sort halos[] and brr[][] by content off arr[]
+void swaph(HaloStructure *a,HaloStructure *b);
 void MultiLens::quicksort(HaloStructure *halos,double **brr,double *arr,unsigned long  *id,unsigned long N){
 	double pivotvalue;
 	unsigned long pivotindex,newpivotindex,i;
@@ -1083,7 +1089,7 @@ void MultiLens::quicksort(HaloStructure *halos,double **brr,double *arr,unsigned
 	// move pivet to end of array
 	swap(&arr[pivotindex],&arr[N-1]);
 	//SwapPointsInArray(&pointarray[pivotindex],&pointarray[N-1]);
-	swap(&halos[pivotindex],&halos[N-1]);
+	swaph(&halos[pivotindex],&halos[N-1]);
 	swap(&brr[pivotindex][0],&brr[N-1][0]);
 	swap(&brr[pivotindex][1],&brr[N-1][1]);
 	swap(&id[pivotindex],&id[N-1]);
@@ -1094,7 +1100,7 @@ void MultiLens::quicksort(HaloStructure *halos,double **brr,double *arr,unsigned
 		if(arr[i] <= pivotvalue){
 			swap(&arr[newpivotindex],&arr[i]);
 			//SwapPointsInArray(&pointarray[newpivotindex],&pointarray[i]);
-			swap(&halos[newpivotindex],&halos[i]);
+			swaph(&halos[newpivotindex],&halos[i]);
 			swap(&brr[newpivotindex][0],&brr[i][0]);
 			swap(&brr[newpivotindex][1],&brr[i][1]);
 			swap(&id[newpivotindex],&id[i]);
@@ -1103,11 +1109,12 @@ void MultiLens::quicksort(HaloStructure *halos,double **brr,double *arr,unsigned
 	}
 	--newpivotindex;
 
-	quicksort(halos,brr,arr,id,newpivotindex);
+	quicksort(&halos[0],brr,arr,id,newpivotindex);
 	quicksort(&halos[newpivotindex+1],&brr[newpivotindex+1],&arr[newpivotindex+1],&id[newpivotindex+1],N-newpivotindex-1);
 
 	return ;
 }
+
 /**
  * \brief Changes the maximum redshift that the rays are shot to.
  *
@@ -1178,16 +1185,17 @@ short MultiLens::ResetSourcePlane(
 
  	for(l=0,flag=0; l<Nplanes-1; l++){
 		for(int m=0; m<halo_data[l]->Nhalos;m++){
-			if(halo_data[l]->pos[m][0] == xx[0] && halo_data[l]->pos[m][1] == xx[1]){
-				cout << halo_data[l]->pos[m][0]*180/pi << " " << xx[0]*180/pi << " " << halo_data[l]->pos[m][1]*180/pi << " " << xx[1]*180/pi << endl;
-				cout << l << " " << halo_data[l]->haloID[m] << " " << j << " " << GalID << endl;
-			}
+
 			if(halo_data[l]->haloID[m] == GalID){
-				if(halo_data[l]->haloID[m] == 210000069000013){
-					cout << l << " " << plane_redshifts[l] << " " << Dl[l] << endl;
+				if(GalID == 210000069000013){
+					if(j!=3) exit(1);
+
+					cout << l << " " << z << " " << halo_data[l]->z[m] << endl;
 					cout << halo_data[l]->pos[m][0] << " " << halo_data[l]->pos[m][1] << endl;
 					cout << xx[0] << " " << xx[1] << endl << endl;
+
 				}
+
 				flag = 1;
 				if(j>l){
 					cout << l << " " << plane_redshifts[l] << " " << Dl[l] << endl;
@@ -1199,7 +1207,9 @@ short MultiLens::ResetSourcePlane(
 		}
 	}
 
-	if(flag == 0 && j<Nplanes-1) out = 0;
+	if(flag == 0 && j<Nplanes-1){
+		out = 0;
+	}
 */
 
 	/// TODO BEN/MARGARITA: this ensures the source in on a plane, but it can be changed such that the source just has its own redhsift
@@ -1218,6 +1228,8 @@ short MultiLens::ResetSourcePlane(
 
 	//std::cout << "Source on plane " << j << " zs " << zs_implant << " Ds " << Ds << " dDs " << dDs_implant << std::endl;
 	index_of_new_sourceplane = j;
+
+	out = j;
 
 	return out;
 }
@@ -1284,5 +1296,10 @@ void swap(unsigned long *a,unsigned long *b){
 	*a=*b;
 	*b=tmp;
 }
-
+void swaph(HaloStructure *a,HaloStructure *b){
+	HaloStructure tmp;
+	tmp=*a;
+	*a=*b;
+	*b=tmp;
+}
 
