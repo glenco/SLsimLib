@@ -1139,7 +1139,7 @@ short MultiLens::ResetSourcePlane(
 			                      * volume the source will be at its real redshift.
 			                      */
 		//,double *xx
-		//,unsigned long GalID
+		,unsigned long GalID
 
 		){
 	unsigned long j;
