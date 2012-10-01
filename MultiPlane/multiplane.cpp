@@ -1138,7 +1138,7 @@ short MultiLens::ResetSourcePlane(
 			                      * by the halo of the source.  If the source is at higher redshift than the simulation
 			                      * volume the source will be at its real redshift.
 			                      */
-		//,double *xx
+		,double *xx
 		,unsigned long GalID
 
 		){

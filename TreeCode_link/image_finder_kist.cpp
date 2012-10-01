@@ -629,7 +629,7 @@ int refine_grid_kist(
 				  assert(getCurrentKist(imageinfo[i].imagekist)->leaf->child1 == NULL);
 				  assert(getCurrentKist(imageinfo[i].imagekist)->leaf->child2 == NULL);
 				  i_points = grid->RefineLeaf(lens,getCurrentKist(imageinfo[i].imagekist),kappa_off);
-				  if(newpointskist && i_point != NULL) for(k=0; k < i_points->head ; ++k) newpointskist->InsertAfterCurrent(&i_points[k]);
+				  if(newpointskist && i_points != NULL) for(k=0; k < i_points->head ; ++k) newpointskist->InsertAfterCurrent(&i_points[k]);
 
 
 				  //xygridpoints(&i_points[Nmarker],point->gridsize*(Ngrid_block-1)/Ngrid_block,point->x,Ngrid_block,1);
@@ -681,7 +681,7 @@ int refine_grid_kist(
 					  assert(point->leaf->child1 == NULL);
 					  assert(point->leaf->child2 == NULL);
 					  i_points = grid->RefineLeaf(lens,point,kappa_off);
-					  if(newpointskist && i_point != NULL) for(k=0;k < i_points->head; ++k) newpointskist->InsertAfterCurrent(&i_points[k]);
+					  if(newpointskist && i_points != NULL) for(k=0;k < i_points->head; ++k) newpointskist->InsertAfterCurrent(&i_points[k]);
 
 					  //xygridpoints(&i_points[Nmarker],point->gridsize*(Ngrid_block-1)/Ngrid_block,point->x,Ngrid_block,1);
 
