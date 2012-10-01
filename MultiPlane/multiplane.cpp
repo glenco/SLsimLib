@@ -946,8 +946,8 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 	//for(i=0,j=0 ; i<21152; ++i){
 	for(i=0,j=0 ; c!='#'; ++i){
 		// read a line of data
-		//file_in >> haloid >>  id >>  ra >>  dec >>  z
-			//	 >>  np >>  vdisp >>  vmax >>  r_halfmass;
+		/*file_in >> haloid >>  id >>  ra >>  dec >>  z
+				 >>  np >>  vdisp >>  vmax >>  r_halfmass;*/
 		file_in >> c >> haloid >> c >> id >> c >> ra >> c >> dec >> c >> z
 				 >> c >> np >> c >> vdisp >> c >> vmax >> c >> r_halfmass >> c;  //TODO the GalID will miss the first digit using this method.  No other method stops at the end of file.
 		//std::cout << id << c << id << c << ra << c << dec << c << z
@@ -1008,7 +1008,7 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 	}
 	file_in.close();
 	std::cout << halo_vec.size() << " halos read in."<< std::endl
-			<< "Max input mass = " << mass_max << " zmax " << j_max << "  R max = " << R_max << "  V max = " << V_max << std::endl;
+			<< "Max input mass = " << mass_max << " max haloID " << halo_id_vec[j_max] << "  R max = " << R_max << "  V max = " << V_max << std::endl;
 
 	Nhalos = halo_vec.size();
 
@@ -1084,7 +1084,8 @@ void MultiLens::quicksort(HaloStructure *halos,double **brr,double *arr,unsigned
 	swap(&arr[pivotindex],&arr[N-1]);
 	//SwapPointsInArray(&pointarray[pivotindex],&pointarray[N-1]);
 	swap(&halos[pivotindex],&halos[N-1]);
-	swap(&brr[pivotindex],&brr[N-1]);
+	swap(&brr[pivotindex][0],&brr[N-1][0]);
+	swap(&brr[pivotindex][1],&brr[N-1][1]);
 	swap(&id[pivotindex],&id[N-1]);
 	newpivotindex=0;
 
@@ -1094,7 +1095,8 @@ void MultiLens::quicksort(HaloStructure *halos,double **brr,double *arr,unsigned
 			swap(&arr[newpivotindex],&arr[i]);
 			//SwapPointsInArray(&pointarray[newpivotindex],&pointarray[i]);
 			swap(&halos[newpivotindex],&halos[i]);
-			swap(&brr[newpivotindex],&brr[i]);
+			swap(&brr[newpivotindex][0],&brr[i][0]);
+			swap(&brr[newpivotindex][1],&brr[i][1]);
 			swap(&id[newpivotindex],&id[i]);
 			++newpivotindex;
 		}
@@ -1124,6 +1126,7 @@ short MultiLens::ResetSourcePlane(
 			                      * by the halo of the source.  If the source is at higher redshift than the simulation
 			                      * volume the source will be at its real redshift.
 			                      */
+		,double *xx
 		,unsigned long GalID
 
 		){
@@ -1169,13 +1172,22 @@ short MultiLens::ResetSourcePlane(
 
 	///TODO: MARGARITA/BEN can be removed when the self-lensing problem is fixed 100%
 
-	/*
-	//////////////// DOES NOT WORK ATM!!!! DO NOT USE
+/*
+	///////////////
 	int l, flag;
 
  	for(l=0,flag=0; l<Nplanes-1; l++){
 		for(int m=0; m<halo_data[l]->Nhalos;m++){
+			if(halo_data[l]->pos[m][0] == xx[0] && halo_data[l]->pos[m][1] == xx[1]){
+				cout << halo_data[l]->pos[m][0]*180/pi << " " << xx[0]*180/pi << " " << halo_data[l]->pos[m][1]*180/pi << " " << xx[1]*180/pi << endl;
+				cout << l << " " << halo_data[l]->haloID[m] << " " << j << " " << GalID << endl;
+			}
 			if(halo_data[l]->haloID[m] == GalID){
+				if(halo_data[l]->haloID[m] == 210000069000013){
+					cout << l << " " << plane_redshifts[l] << " " << Dl[l] << endl;
+					cout << halo_data[l]->pos[m][0] << " " << halo_data[l]->pos[m][1] << endl;
+					cout << xx[0] << " " << xx[1] << endl << endl;
+				}
 				flag = 1;
 				if(j>l){
 					cout << l << " " << plane_redshifts[l] << " " << Dl[l] << endl;
