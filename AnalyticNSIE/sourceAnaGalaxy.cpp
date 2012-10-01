@@ -19,9 +19,10 @@ MultiSourceAnaGalaxy::MultiSourceAnaGalaxy(
 		,double *my_theta          /// position on the sky
 		): Source(),index(0){
 
+	unsigned long dummy;
 	source_sb_type = MultiAnaSource;
 	mem_allocated = true;
-	galaxies.push_back(new OverGalaxy(mag,BtoT,Reff,Rh,PA,inclination,my_z,my_theta));
+	galaxies.push_back(new OverGalaxy(mag,BtoT,Reff,Rh,PA,inclination,dummy,my_z,my_theta));
 }
 /** Constructor for passing in a pointer to the galaxy model or a list of galaxies instead of constructing it internally.
 *   Useful when there is a list of pre-allocated sources.  The redshifts and sky positions need to be set separately.
@@ -93,7 +94,7 @@ void MultiSourceAnaGalaxy::readDataFile(std::string input_gal_file,double mag_li
 	double theta[2] = {0.0,0.0};
 
 	// read in data
-	for(i=0,j=0 ; c != '#' ; ++i){
+	for(i=0,j=0 ; i<12638 ; ++i){
 
 		// read a line of data
 		/*file_in >> galid >> c >> haloid >> c >> cx >> c >> cy >> c >> cz >> c >> ra >> c >> dec >> c >> z_geo >> c >> z_app
@@ -104,12 +105,17 @@ void MultiSourceAnaGalaxy::readDataFile(std::string input_gal_file,double mag_li
 		>> c >> stellardiskradius >> c >> bulgesize
 		>> c >> inclination >> c >> pa >> c >> angdist >> c >> diskradius_arcsec >> c >> bulgesize_arcsec >> c;
 		*/
+		file_in >> GalID  >> HaloID  >> ra  >> dec  >> z_cosm  >> z_app  >> Dlum  >> inclination
+				 >> pa  >> Rh  >> Ref  >> SDSS_u  >> SDSS_g  >> SDSS_r  >> SDSS_i  >> SDSS_z
+				 >> J  >> H  >> Ks  >> i1  >> i2  >> SDSS_u_Bulge  >> SDSS_g_Bulge  >> SDSS_r_Bulge
+				 >> SDSS_i_Bulge  >> SDSS_z_Bulge  >> J_Bulge  >> H_Bulge  >> Ks_Bulge  >> i1_Bulge
+				 >> i2_Bulge ;
 
-		file_in >> GalID >> c >> HaloID >> c >> ra >> c >> dec >> c >> z_cosm >> c >> z_app >> c >> Dlum >> c >> inclination
-		>> c >> pa >> c >> Rh >> c >> Ref >> c >> SDSS_u >> c >> SDSS_g >> c >> SDSS_r >> c >> SDSS_i >> c >> SDSS_z
-		>> c >> J >> c >> H >> c >> Ks >> c >> i1 >> c >> i2 >> c >> SDSS_u_Bulge >> c >> SDSS_g_Bulge >> c >> SDSS_r_Bulge
-		>> c >> SDSS_i_Bulge >> c >> SDSS_z_Bulge >> c >> J_Bulge >> c >> H_Bulge >> c >> Ks_Bulge >> c >> i1_Bulge
-		>> c >> i2_Bulge >> c;  //TODO the GalID will miss the first digit using this method.  No other method stops at the end of file.
+		//file_in >> GalID >> c >> HaloID >> c >> ra >> c >> dec >> c >> z_cosm >> c >> z_app >> c >> Dlum >> c >> inclination
+	//	>> c >> pa >> c >> Rh >> c >> Ref >> c >> SDSS_u >> c >> SDSS_g >> c >> SDSS_r >> c >> SDSS_i >> c >> SDSS_z
+	//	>> c >> J >> c >> H >> c >> Ks >> c >> i1 >> c >> i2 >> c >> SDSS_u_Bulge >> c >> SDSS_g_Bulge >> c >> SDSS_r_Bulge
+//		>> c >> SDSS_i_Bulge >> c >> SDSS_z_Bulge >> c >> J_Bulge >> c >> H_Bulge >> c >> Ks_Bulge >> c >> i1_Bulge
+//		>> c >> i2_Bulge >> c;  //TODO the GalID will miss the first digit using this method.  No other method stops at the end of file.
 
 			//TODO  BEN this needs to be selected from the parameter file
 		if(SDSS_i < mag_limit){
@@ -129,7 +135,7 @@ void MultiSourceAnaGalaxy::readDataFile(std::string input_gal_file,double mag_li
 			/***************************/
 			galaxies.push_back(
 					new OverGalaxy(SDSS_i,pow(10,-(SDSS_i_Bulge-SDSS_i)/2.5),Ref,Rh
-							,pa,inclination,z_cosm,theta)
+							,pa,inclination,HaloID,z_cosm,theta)
 			);
 			//std::cout << "z:" << z_cosm << " mag " << SDSS_u << " Bulge to total " << pow(10,-(SDSS_u_Bulge-SDSS_u)/2.5)
 			//		<< " bulge size arcsec " << Ref  << " disk size arcsec " << pa << " position angle " << pa << " inclination " << inclination

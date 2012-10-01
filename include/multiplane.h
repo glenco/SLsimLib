@@ -35,9 +35,10 @@ public:
 	/// mean mass density
 	double kappa_background;
 	double *z;
+	unsigned long *haloID;
 
 	HaloData(double fov,double min_mass,double mass_scale,double z1,double z2,int mass_func_type,double alpha,CosmoHndl cosmo,long *seed);
-	HaloData(HaloStructure *halostrucs,double **positions,double *z, unsigned long Nhaloss);
+	HaloData(HaloStructure *halostrucs,double **positions,double *z, unsigned long *haloID,unsigned long Nhaloss);
 	//HaloData(NSIEstructure *halostrucs,double **positions,unsigned long Nhaloss);
 	HaloData(CosmoHndl cosmo,double mass,double zlens);
 	~HaloData();
@@ -88,7 +89,7 @@ public:
 	double fieldofview;
 
 	// methods used for use with implanted sources
-	void ResetSourcePlane(CosmoHndl cosmo,double z,bool nearest = false);
+	short ResetSourcePlane(CosmoHndl cosmo,double z,bool nearest,unsigned long id);
 	/// Revert the source redshift to the value it was when the MultiLens was created.
 	void RevertSourcePlane(){ toggle_source_plane = false;}
 	//void ImplantSource(unsigned long index,CosmoHndl cosmo);
@@ -168,6 +169,7 @@ public:
 	IndexType Nhalos;
 	double *halo_zs;
 	double **halo_pos;
+	unsigned long *halo_id;
 
 	// Variables for implanted source
 	//std::auto_ptr<MultiSourceAnaGalaxy> anasource;
@@ -187,7 +189,7 @@ public:
 	/// if >= 1, deflection in the rayshooting is wtiched if
 	int flag_switch_deflection_off;
 
-	void quicksort(HaloStructure *halos,double **brr,double *arr,unsigned long N);
+	void quicksort(HaloStructure *halos,double **brr,double *arr,unsigned long *id,unsigned long N);
 };
 
 typedef  MultiLens* MultiLensHndl;

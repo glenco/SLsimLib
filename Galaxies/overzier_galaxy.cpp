@@ -16,13 +16,16 @@ OverGalaxy::OverGalaxy(
 		,double my_Rh           /// disk scale hight (arcs)
 		,double my_PA           /// Position angle (radians)
 		,double my_inclination  /// inclination of disk (radians)
+		,unsigned long my_id          /// optional angular position on the sky
 		,double my_z            /// optional redshift
 		,double *my_theta          /// optional angular position on the sky
 		){
-	setInternals(my_mag,my_BtoT,my_Reff,my_Rh,my_PA,my_inclination,my_z,my_theta);
+	setInternals(my_mag,my_BtoT,my_Reff,my_Rh,my_PA,my_inclination,my_id,my_z,my_theta);
 }
 /// Sets internal variables.  If default constructor is used this must be called before the surface brightness function.
-void OverGalaxy::setInternals(double my_mag,double BtoT,double my_Reff,double my_Rh,double PA,double incl,double my_z,double *my_theta){
+void OverGalaxy::setInternals(double my_mag,double BtoT,double my_Reff,double my_Rh,double PA,double incl,unsigned long my_id,double my_z,double *my_theta){
+
+	haloID = my_id;
 
 	Reff = my_Reff*pi/180/60/60;
 	Rh = my_Rh*pi/180/60/60;
