@@ -633,7 +633,7 @@ void MultiLens::buildHaloTrees(
 
 			/// Use other constructor to create halo data
 
-			halo_data[j].reset(new HaloData(cosmo,&halos[j1],&halo_pos[j1],&halo_zs[j1],&halo_zs[j1],j2-j1,z1,z2,mass_scale));
+			halo_data[j].reset(new HaloData(cosmo,&halos[j1],&halo_pos[j1],&halo_zs[j1],&halo_id[j1],j2-j1,z1,z2,mass_scale));
 
 			//for(int i = 0; i<10 ;++i) cout << "Rmax:" << halos[j1+i].Rmax << "mass:" << halos[j1+i].mass << "rscale:" << halos[j1+i].rscale << "x = " << halo_pos[j1+i][0] << " " << halo_pos[j1+i][1] << endl;
 
