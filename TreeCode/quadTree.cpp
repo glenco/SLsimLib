@@ -507,10 +507,10 @@ void QuadTree::force2D(double *ray,double *alpha,float *kappa,float *gamma,bool 
 						  if(rcm2 < 1e-20) rcm2 = 1e-20;
 						  rcm = sqrt(rcm2);
 
-						  prefac = masses[MultiMass*tree->current->particles[i]]/rcm2/pi;
-						  arg1 = rcm2/(sizes[index]*sizes[index]);
-						  arg2 = sizes[index];
-						  tmp = sizes[index];
+						  prefac = masses[MultiMass*index]/rcm2/pi;
+						  arg1 = rcm2/(sizes[index*MultiRadius]*sizes[index*MultiRadius]);
+						  arg2 = sizes[index*MultiRadius];
+						  tmp = sizes[index*MultiRadius];
 
 						  /// intersecting, subtract the point particle
 						  if(rcm2 < tmp*tmp){
