@@ -846,8 +846,8 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 		//		 >>  np >>  vdisp >>  vmax >>  r_halfmass;
 		//file_in >> c >> haloid >> c >> idd >> c >> ra >> c >> dec >> c >> z
 		//		 >> c >> np >> c >> vdisp >> c >> vmax >> c >> r_halfmass >> c;  //TODO the GalID will miss the first digit using this method.  No other method stops at the end of file.
-		cout << haloid << c << idd << c << ra << c << dec << c << z
-						 << c << np << c << vdisp << c << vmax << c << r_halfmass << std::endl;
+		//cout << haloid << c << idd << c << ra << c << dec << c << z
+		//				 << c << np << c << vdisp << c << vmax << c << r_halfmass << std::endl;
 		//cout << i << "  z: " << z << " np: " << np << " vmax:" << vmax << "  " << file_in.peek() << endl;
 
 		if(np > 0.0 && vdisp > 0.0 && z <= zsource){
