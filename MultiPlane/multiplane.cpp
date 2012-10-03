@@ -757,9 +757,8 @@ void MultiLens::setZlens(double z){
 /// read in halos from a simulation file
 void MultiLens::readInputSimFile(CosmoHndl cosmo){
 
-	char c;
+	char c =' ';
 	double ra,dec,z,vmax,vdisp,r_halfmass;
-	string strg;
 	unsigned long i,j;
 	unsigned long haloid,idd,np;
 
@@ -785,11 +784,6 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 	}
 	std::cout << "skipped "<< i << " comment lines in file " << input_sim_file << std::endl;
 
-	//file_in >> Nhalos;
-	//Nhalos = 10;
-	//cout << Nhalos << endl;
-
-	//std::vector<HaloStructure> halo_vec;
 	std::vector<HaloStructure> halo_vec;
 	std::vector<double> halo_zs_vec;
 	std::vector<double *> halo_pos_vec;
@@ -800,18 +794,61 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 	double mass_max=0,R_max=0,V_max=0;
 	double *theta;
 	HaloStructure halo;
+	int ncolumns = 9;
 
-	//for(i=0,j=0 ; i<21152; ++i){
-	for(i=0,j=0 ; c!='#'; ++i){
+	void *addr[ncolumns];
+	addr[0] = &haloid;
+	addr[1] = &idd;
+	addr[2] = &ra;
+	addr[3] = &dec;
+	addr[4] = &z;
+	addr[5] = &np;
+	addr[6] = &vdisp;
+	addr[7] = &vmax;
+	addr[8] = &r_halfmass;
+
+	unsigned long myint;
+	double mydouble;
+	std::string myline;
+	std::string strg;
+	std::string f=",";
+	std::stringstream buffer;
+	size_t length;
+
+	for(i=0,j=0 ; ; ++i){
 		// read a line of data
+		myline.clear();
+		getline(file_in,myline);
+
+		if(myline[0] == '#')
+			break;
+
+		for(int l=0;l<ncolumns; l++){
+			int pos = myline.find(f);
+			strg.assign(myline,0,pos);
+			buffer << strg;
+			if(l == 0 || l == 1 || l == 5){
+				buffer >> myint;
+				*((unsigned long *)addr[l]) = myint;
+			}
+			else{
+				buffer >> mydouble;
+				*((double *)addr[l]) = mydouble;
+			}
+			myline.erase(0,pos+1);
+			strg.clear();
+			buffer.clear();
+			buffer.str(std::string());
+		}
+
+
 		//file_in >> haloid >>  idd >>  ra >>  dec >>  z
 		//		 >>  np >>  vdisp >>  vmax >>  r_halfmass;
-		file_in >> c >> haloid >> c >> idd >> c >> ra >> c >> dec >> c >> z
-				 >> c >> np >> c >> vdisp >> c >> vmax >> c >> r_halfmass >> c;  //TODO the GalID will miss the first digit using this method.  No other method stops at the end of file.
-		//std::cout << id << c << id << c << ra << c << dec << c << z
-		//				 << c << np << c << vdisp << c << vmax << c << r_halfmass << std::endl;
+		//file_in >> c >> haloid >> c >> idd >> c >> ra >> c >> dec >> c >> z
+		//		 >> c >> np >> c >> vdisp >> c >> vmax >> c >> r_halfmass >> c;  //TODO the GalID will miss the first digit using this method.  No other method stops at the end of file.
+		cout << haloid << c << idd << c << ra << c << dec << c << z
+						 << c << np << c << vdisp << c << vmax << c << r_halfmass << std::endl;
 		//cout << i << "  z: " << z << " np: " << np << " vmax:" << vmax << "  " << file_in.peek() << endl;
-
 
 		if(np > 0.0 && vdisp > 0.0 && z <= zsource){
 			halo_vec.push_back(halo);
