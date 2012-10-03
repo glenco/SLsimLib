@@ -119,7 +119,7 @@ void MultiSourceAnaGalaxy::readDataFile(std::string input_gal_file,double mag_li
 	addr[19] = &i1;
 	addr[20] = &i2;
 	addr[21] = &SDSS_u_Bulge;
-	addr[21] = &SDSS_g_Bulge;
+	addr[22] = &SDSS_g_Bulge;
 	addr[23] = &SDSS_r_Bulge;
 	addr[24] = &SDSS_i_Bulge;
 	addr[25] = &SDSS_z_Bulge;
