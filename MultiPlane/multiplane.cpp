@@ -166,7 +166,7 @@ HaloData::~HaloData(){
 
 void MultiLens::make_table(CosmoHndl cosmo){
 	int i;
-	double x, dx = 10.0/(double)NTABLE;
+	double x, dx = zsource/(double)NTABLE;
 
 	coorDist_table = new double[NTABLE];
 	redshift_table = new double[NTABLE];
@@ -546,31 +546,23 @@ void MultiLens::buildHaloTrees(
 			 * since it will not contain any halos
 			 */
 			if(j == 0) z1 = 0.0;
-			//else z1 = QuickFindFromTable(Dl[j] - 0.5*dDl[j]);
-			//else z1 = plane_redshifts[j] - 0.5*(plane_redshifts[j] - plane_redshifts[j-1]);
 			else{
 				locateD(coorDist_table-1,NTABLE,(Dl[j]-0.5*dDl[j]),&ind);
 				z1 = redshift_table[ind];
 			}
 
 			if(flag_input_lens && j-1 == (flag_input_lens % Nplanes)){
-				//z1 = plane_redshifts[j] - 0.5*(plane_redshifts[j] - plane_redshifts[j-2]);
-				//z1 = QuickFindFromTable(Dl[j] - 0.5*(Dl[j] - Dl[j-2]));
 				locateD(coorDist_table-1,NTABLE,(Dl[j] - 0.5*(Dl[j] - Dl[j-2])),&ind);
 				z1 = redshift_table[ind];
 			}
 
 			if(j == Nplanes-2) z2 = zsource;
-			//else z2 = QuickFindFromTable(Dl[j] + 0.5*dDl[j+1]);
-			//else z2 = plane_redshifts[j] + 0.5*(plane_redshifts[j+1] - plane_redshifts[j]);
 			else{
 				locateD(coorDist_table-1,NTABLE,(Dl[j] + 0.5*dDl[j+1]),&ind);
 				z2 = redshift_table[ind];
 			}
 
 			if(flag_input_lens && j+1 == (flag_input_lens % Nplanes)){
-				//z2 = plane_redshifts[j] + 0.5*(plane_redshifts[j+2] - plane_redshifts[j]);
-				//z2 = QuickFindFromTable(Dl[j] + 0.5*(Dl[j+2] - Dl[j]));
 				locateD(coorDist_table-1,NTABLE,(Dl[j] + 0.5*(Dl[j+2] - Dl[j])),&ind);
 				z2 = redshift_table[ind];
 			}
@@ -596,31 +588,23 @@ void MultiLens::buildHaloTrees(
 			 * since it will not contain any halos
 			 */
 			if(j == 0) z1 = 0.0;
-			//else z1 = QuickFindFromTable(Dl[j] - 0.5*dDl[j]);
-			//else z1 = plane_redshifts[j] - 0.5*(plane_redshifts[j] - plane_redshifts[j-1]);
 			else{
 				locateD(coorDist_table-1,NTABLE,(Dl[j]-0.5*dDl[j]),&ind);
 				z1 = redshift_table[ind];
 			}
 
 			if(flag_input_lens && j-1 == (flag_input_lens % Nplanes)){
-				//z1 = plane_redshifts[j] - 0.5*(plane_redshifts[j] - plane_redshifts[j-2]);
-				//z1 = QuickFindFromTable(Dl[j] - 0.5*(Dl[j] - Dl[j-2]));
 				locateD(coorDist_table-1,NTABLE,(Dl[j] - 0.5*(Dl[j] - Dl[j-2])),&ind);
 				z1 = redshift_table[ind];
 			}
 
 			if(j == Nplanes-2) z2 = zsource;
-			//else z2 = QuickFindFromTable(Dl[j] + 0.5*dDl[j+1]);
-			//else z2 = plane_redshifts[j] + 0.5*(plane_redshifts[j+1] - plane_redshifts[j]);
 			else{
 				locateD(coorDist_table-1,NTABLE,(Dl[j] + 0.5*dDl[j+1]),&ind);
 				z2 = redshift_table[ind];
 			}
 
 			if(flag_input_lens && j+1 == (flag_input_lens % Nplanes)){
-				//z2 = plane_redshifts[j] + 0.5*(plane_redshifts[j+2] - plane_redshifts[j]);
-				//z2 = QuickFindFromTable(Dl[j] + 0.5*(Dl[j+2] - Dl[j]));
 				locateD(coorDist_table-1,NTABLE,(Dl[j] + 0.5*(Dl[j+2] - Dl[j])),&ind);
 				z2 = redshift_table[ind];
 			}
@@ -635,12 +619,7 @@ void MultiLens::buildHaloTrees(
 
 			halo_data[j].reset(new HaloData(cosmo,&halos[j1],&halo_pos[j1],&halo_zs[j1],&halo_id[j1],j2-j1,z1,z2,mass_scale));
 
-			//for(int i = 0; i<10 ;++i) cout << "Rmax:" << halos[j1+i].Rmax << "mass:" << halos[j1+i].mass << "rscale:" << halos[j1+i].rscale << "x = " << halo_pos[j1+i][0] << " " << halo_pos[j1+i][1] << endl;
-
 			Ntot += halo_data[j]->Nhalos;
-			///TODO: MARGARITA/BEN can be removed when the self-lensing problem is fixed 100%
-			cout << "j: " << j << " z1: " << z1 << " j1: " << j1 << " z2: " << z2 << " j2: " << j2 << endl;
-			//cout << "j: " << j << " z1: " << Dl[j] - 0.5*dDl[j] << " j1: " << j1 << " z2: " << Dl[j] + 0.5*dDl[j+1] << " j2: " << j2 << endl;
 
 		}
 
@@ -680,127 +659,6 @@ void MultiLens::buildHaloTrees(
 	}
 
 	cout << "constructed " << Ntot << " halos" << endl;
-
-	/*
-	stringstream f;
-	f << "halos_" << zsource << ".data";
-	string filename = f.str();
-	ofstream file_area(filename.c_str());
-	if(!file_area){
-		cout << "unable to create file " << filename << endl;
-		exit(1);
-	}
-
-	for(j = 0; j < Nplanes-1; j++){
-
-		if(flag_analens && j == (flag_analens % Nplanes))
-			continue;
-
-		for(i = 0; i < halo_data[j]->Nhalos; i++){
-
-			double fac = 180/pi/3600./Dl[j]*(1+plane_redshifts[j]);
-
-			file_area << plane_redshifts[j] << " ";
-			file_area << i << " " << halo_data[j]->halos[i].mass << " " << fac*halo_data[j]->halos[i].Rmax << " " << fac*halo_data[j]->halos[i].rscale << " ";
-			file_area << fac*halo_data[j]->pos[i][0] << " " << fac*halo_data[j]->pos[i][1] << endl;
-
-		}
-	}
-
-
-	file_area.close();
-	*/
-	/*
-	for(int l=0; l < 100; l++){
-	double ray[2];
-
-	double fac = l/100.;
-
-	ray[0] = fac*sqrt(fieldofview);
-	ray[1] = ray[0];
-
-	ray[0] = ray[0]*pi/180.;
-	ray[1] = ray[1]*pi/180.;
-
-	double xx[2]={0.0,0.0};
-
-	int halos;
-
-	for(j = 0, halos = 0; j < Nplanes-1; j++){
-
-		if(flag_analens && j == (flag_analens % Nplanes))
-			continue;
-
-		xx[0] = ray[0]*Dl[j]/(1+plane_redshifts[j]);
-		xx[1] = ray[1]*Dl[j]/(1+plane_redshifts[j]);
-
-		for(i = 0; i < halo_data[j]->Nhalos; i++){
-			double r2 = (halo_data[j]->pos[i][0] - xx[0])*(halo_data[j]->pos[i][0] - xx[0])
-						+ (halo_data[j]->pos[i][1] - xx[1])*(halo_data[j]->pos[i][1] - xx[1]);
-
-			if(r2 <= halo_data[j]->halos[i].Rmax*halo_data[j]->halos[i].Rmax)
-				halos++;
-		}
-
-	}
-
-
-	cout << "ray: x " << ray[0]*180/pi << " y " << ray[1]*180/pi << ", halos: " << halos/float(Ntot) << endl;
-	}
-
-	 */
-
-	/*
-	double xp,x,xo;
-	double yp,y,yo;
-	double alpha_x_one, alpha_x_two;
-	double alpha_y_one, alpha_y_two;
-
-	double fac_one = (Dl[Nplanes-1]-Dl[0])/Dl[Nplanes-1];
-	double fac_two = (Dl[Nplanes-1]-Dl[1])/Dl[Nplanes-1];
-
-	x=xo=0; y=yo=0;
-
-	xp = x*Dl[0]/(1+redshift[0]);
-	yp = y*Dl[0]/(1+redshift[0]);
-
-	xp = haloModel[0]->pos[0][0]-xp;
-	yp = haloModel[0]->pos[0][1]-yp;
-
-	double r2 = xp*xp+yp*yp;
-
-	double ratio = 0.5*r2/haloModel[0]->halos[0].Rmax/haloModel[0]->halos[0].Rmax;
-
-	alpha_x_one = 4*Grav*haloModel[0]->halos[0].mass*xp*(exp(-ratio)-1)/r2;
-	alpha_y_one = 4*Grav*haloModel[0]->halos[0].mass*yp*(exp(-ratio)-1)/r2;
-
-	double fac = (Dl[1]-Dl[0])/Dl[1];
-
-	// angle on the second plane
-	x = xo - fac*alpha_x_one;
-	y = yo - fac*alpha_y_one;
-
-	xp = x*Dl[1]/(1+redshift[1]);
-	yp = y*Dl[1]/(1+redshift[1]);
-
-	xp = haloModel[1]->pos[0][0]-xp;
-	yp = haloModel[1]->pos[0][1]-yp;
-
-	r2 = xp*xp+yp*yp;
-
-	ratio = 0.5*r2/haloModel[1]->halos[0].Rmax/haloModel[1]->halos[0].Rmax;
-
-	alpha_x_two = 4*Grav*haloModel[1]->halos[0].mass*xp*(exp(-ratio)-1)/r2;
-	alpha_y_two = 4*Grav*haloModel[1]->halos[0].mass*yp*(exp(-ratio)-1)/r2;
-
-	x = xo - fac_one*alpha_x_one - fac_two*alpha_x_two;
-	y = yo - fac_one*alpha_y_one - fac_two*alpha_y_two;
-
-	cout << "0 " << alpha_x_one << " " << alpha_y_one << endl;
-	cout << "1 " << alpha_x_two << " " << alpha_y_two << endl;
-	cout << xo << " " << yo << " " << x << " " << y << endl << endl;
-	*/
-
 }
 
 /**
@@ -911,11 +769,10 @@ void MultiLens::setZlens(double z){
 /// read in halos from a simulation file
 void MultiLens::readInputSimFile(CosmoHndl cosmo){
 
-	char c;
+	char c =' ';
 	double ra,dec,z,vmax,vdisp,r_halfmass;
-	string strg;
 	unsigned long i,j;
-	unsigned long haloid,id,np;
+	unsigned long haloid,idd,np;
 
 	//int index;
 
@@ -939,11 +796,6 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 	}
 	std::cout << "skipped "<< i << " comment lines in file " << input_sim_file << std::endl;
 
-	//file_in >> Nhalos;
-	//Nhalos = 10;
-	//cout << Nhalos << endl;
-
-	//std::vector<HaloStructure> halo_vec;
 	std::vector<HaloStructure> halo_vec;
 	std::vector<double> halo_zs_vec;
 	std::vector<double *> halo_pos_vec;
@@ -954,21 +806,63 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 	double mass_max=0,R_max=0,V_max=0;
 	double *theta;
 	HaloStructure halo;
+	int ncolumns = 9;
 
-	//for(i=0,j=0 ; i<21152; ++i){
-	for(i=0,j=0 ; c!='#'; ++i){
+	void *addr[ncolumns];
+	addr[0] = &haloid;
+	addr[1] = &idd;
+	addr[2] = &ra;
+	addr[3] = &dec;
+	addr[4] = &z;
+	addr[5] = &np;
+	addr[6] = &vdisp;
+	addr[7] = &vmax;
+	addr[8] = &r_halfmass;
+
+	unsigned long myint;
+	double mydouble;
+	std::string myline;
+	std::string strg;
+	std::string f=",";
+	std::stringstream buffer;
+	size_t length;
+
+	for(i=0,j=0 ; ; ++i){
 		// read a line of data
-		/*file_in >> haloid >>  id >>  ra >>  dec >>  z
-				 >>  np >>  vdisp >>  vmax >>  r_halfmass;*/
-		file_in >> c >> haloid >> c >> id >> c >> ra >> c >> dec >> c >> z
-				 >> c >> np >> c >> vdisp >> c >> vmax >> c >> r_halfmass >> c;  //TODO the GalID will miss the first digit using this method.  No other method stops at the end of file.
-		//std::cout << id << c << id << c << ra << c << dec << c << z
+		myline.clear();
+		getline(file_in,myline);
+
+		if(myline[0] == '#')
+			break;
+
+		for(int l=0;l<ncolumns; l++){
+			int pos = myline.find(f);
+			strg.assign(myline,0,pos);
+			buffer << strg;
+			if(l == 0 || l == 1 || l == 5){
+				buffer >> myint;
+				*((unsigned long *)addr[l]) = myint;
+			}
+			else{
+				buffer >> mydouble;
+				*((double *)addr[l]) = mydouble;
+			}
+			myline.erase(0,pos+1);
+			strg.clear();
+			buffer.clear();
+			buffer.str(std::string());
+		}
+
+
+		//file_in >> haloid >>  idd >>  ra >>  dec >>  z
+		//		 >>  np >>  vdisp >>  vmax >>  r_halfmass;
+		//file_in >> c >> haloid >> c >> idd >> c >> ra >> c >> dec >> c >> z
+		//		 >> c >> np >> c >> vdisp >> c >> vmax >> c >> r_halfmass >> c;  //TODO the GalID will miss the first digit using this method.  No other method stops at the end of file.
+		//cout << haloid << c << idd << c << ra << c << dec << c << z
 		//				 << c << np << c << vdisp << c << vmax << c << r_halfmass << std::endl;
 		//cout << i << "  z: " << z << " np: " << np << " vmax:" << vmax << "  " << file_in.peek() << endl;
 
-
-		if(np > 0.0 && vdisp > 0.0){
-
+		if(np > 0.0 && vdisp > 0.0 && z <= zsource){
 			halo_vec.push_back(halo);
 
 			halo_vec[j].mass = np*8.6e8/cosmo->gethubble();
@@ -1010,9 +904,12 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 
 			halo_vec[j].mass /= mass_scale;
 
+			/// pos in radians
 			theta = new double[2];
-			theta[0] = ra*pi/180.;
-			theta[1] = dec*pi/180.;
+			/// pos in physical Mpc
+			double Dang = cosmo->angDist(0,z);
+			theta[0] = ra*pi/180.*Dang;
+			theta[1] = dec*pi/180.*Dang;
 			halo_pos_vec.push_back(theta);
 
 			++j;
@@ -1020,7 +917,7 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 	}
 	file_in.close();
 	std::cout << halo_vec.size() << " halos read in."<< std::endl
-			<< "Max input mass = " << mass_max << " max haloID " << halo_id_vec[j_max] << "  R max = " << R_max << "  V max = " << V_max << std::endl;
+			<< "Max input mass = " << mass_max << "  R max = " << R_max << "  V max = " << V_max << std::endl;
 
 	Nhalos = halo_vec.size();
 
@@ -1038,15 +935,9 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 
 	std::cout << "sourting in MultiLens::readInputSimFile()" << std::endl;
 
-	/*for(i=0;i<5;++i){
-		std::cout << halo_id[i] << "  " << halo_zs[i] << "  " << halo_pos[i][0]
-		         << "  " << halos[i].Rmax << "  " << halos[i].mass
-				<< std::endl;
-	}
-	std::cout << std::endl;*/
-
 	// sort the halos by redshift
 	MultiLens::quicksort(halos,halo_pos,halo_zs,halo_id,Nhalos);
+
 
 	/*for(i=0;i<5;++i){
 		std::cout << halo_id[i] << "  " << halo_zs[i] << "  " << halo_pos[i][0]
@@ -1092,6 +983,7 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
  * as the first line.
  */
 /// Sort halos[] and brr[][] by content off arr[]
+void swaph(HaloStructure *a,HaloStructure *b);
 void MultiLens::quicksort(HaloStructure *halos,double **brr,double *arr,unsigned long  *id,unsigned long N){
 	double pivotvalue;
 	unsigned long pivotindex,newpivotindex,i;
@@ -1109,6 +1001,7 @@ void MultiLens::quicksort(HaloStructure *halos,double **brr,double *arr,unsigned
 	// move pivet to end of array
 	swap(&arr[pivotindex],&arr[N-1]);
 	//SwapPointsInArray(&pointarray[pivotindex],&pointarray[N-1]);
+
 	swap(halos[pivotindex],halos[N-1]);
 	swap(&brr[pivotindex][0],&brr[N-1][0]);
 	swap(&brr[pivotindex][1],&brr[N-1][1]);
@@ -1129,11 +1022,12 @@ void MultiLens::quicksort(HaloStructure *halos,double **brr,double *arr,unsigned
 	}
 	--newpivotindex;
 
-	quicksort(halos,brr,arr,id,newpivotindex);
+	quicksort(&halos[0],brr,arr,id,newpivotindex);
 	quicksort(&halos[newpivotindex+1],&brr[newpivotindex+1],&arr[newpivotindex+1],&id[newpivotindex+1],N-newpivotindex-1);
 
 	return ;
 }
+
 /**
  * \brief Changes the maximum redshift that the rays are shot to.
  *
@@ -1152,12 +1046,9 @@ short MultiLens::ResetSourcePlane(
 			                      * by the halo of the source.  If the source is at higher redshift than the simulation
 			                      * volume the source will be at its real redshift.
 			                      */
-		,double *xx
-		,unsigned long GalID
-
 		){
 	unsigned long j;
-	short out = 1;
+	short out;
 
 	toggle_source_plane = true;
 
@@ -1165,21 +1056,13 @@ short MultiLens::ResetSourcePlane(
 		cout << "Warning: Source redshift cann't be set to " << z << " in MultiLens::ResetSourcePlane." << endl;
 		return 0;
 	}
-/*
-	if(z > plane_redshifts[Nplanes-1]){
-		cout << "Warning: Implanted source is at higher redshift than simulation was constructed for." << endl
-		<< "It is not being added. " << plane_redshifts[Nplanes-1] << " < " << z << endl;
 
-		return;
-	}
-*/
 	// j is the index of the next plane at higher redshift, This plane will be temporarily replaced and used as a source plane
 
 	double Ds = cosmo->coorDist(0,z);
-
-	//locateD(plane_redshifts-1,Nplanes,z,&j);
 	locateD(Dl-1,Nplanes,Ds,&j);
 	assert(j <= Nplanes && j >=0);
+
 	if(j >= Nplanes-1){
 		j--;
 	}
@@ -1189,46 +1072,8 @@ short MultiLens::ResetSourcePlane(
 		locateD(coorDist_table-1,NTABLE,(Dl[j]-0.5*dDl[j]),&ind);
 		double z1 = redshift_table[ind];
 
-		//if(nearest) j = ((z-plane_redshifts[j-1]) > (plane_redshifts[j]-z)) ? j : j-1;
-		//if(nearest) j = ((Ds-Dl[j-1]) > (Dl[j]-Ds)) ? j : j-1;
-
-		//if(nearest)
 		j = (z>=z1) ? j : j-1;
 	}
-
-	///TODO: MARGARITA/BEN can be removed when the self-lensing problem is fixed 100%
-
-/*
-	///////////////
-	int l, flag;
-
- 	for(l=0,flag=0; l<Nplanes-1; l++){
-		for(int m=0; m<halo_data[l]->Nhalos;m++){
-			if(halo_data[l]->pos[m][0] == xx[0] && halo_data[l]->pos[m][1] == xx[1]){
-				cout << halo_data[l]->pos[m][0]*180/pi << " " << xx[0]*180/pi << " " << halo_data[l]->pos[m][1]*180/pi << " " << xx[1]*180/pi << endl;
-				cout << l << " " << halo_data[l]->haloID[m] << " " << j << " " << GalID << endl;
-			}
-			if(halo_data[l]->haloID[m] == GalID){
-				if(halo_data[l]->haloID[m] == 210000069000013){
-					cout << l << " " << plane_redshifts[l] << " " << Dl[l] << endl;
-					cout << halo_data[l]->pos[m][0] << " " << halo_data[l]->pos[m][1] << endl;
-					cout << xx[0] << " " << xx[1] << endl << endl;
-				}
-				flag = 1;
-				if(j>l){
-					cout << l << " " << plane_redshifts[l] << " " << Dl[l] << endl;
-					cout << j << " " << z << " " << Ds << endl;
-					cout << j << " " << plane_redshifts[j] << " " << Dl[j] << endl;
-					exit(1);
-				}
-			}
-		}
-	}
-
-	if(flag == 0 && j<Nplanes-1) out = 0;
-*/
-
-	/// TODO BEN/MARGARITA: this ensures the source in on a plane, but it can be changed such that the source just has its own redhsift
 
 	if(nearest && (j < Nplanes-1) ){
 		zs_implant = plane_redshifts[j];
@@ -1242,9 +1087,10 @@ short MultiLens::ResetSourcePlane(
 		else  dDs_implant = Ds;
 	}
 
-	//std::cout << "Source on plane " << j << " zs " << zs_implant << " Ds " << Ds << " dDs " << dDs_implant << std::endl;
+	std::cout << "Source on plane " << j << " zs " << zs_implant << " Ds " << Ds << " dDs " << dDs_implant << std::endl;
 	index_of_new_sourceplane = j;
 
+	out = j;
 	return out;
 }
 
@@ -1310,6 +1156,12 @@ void swap(unsigned long *a,unsigned long *b){
 	*a=*b;
 	*b=tmp;
 }
+void swaph(HaloStructure *a,HaloStructure *b){
+	HaloStructure tmp;
+	tmp=*a;
+	*a=*b;
+	*b=tmp;
+}
 
 void swap(HaloStructure& a,HaloStructure& b){
 	HaloStructure tmp;
@@ -1317,5 +1169,4 @@ void swap(HaloStructure& a,HaloStructure& b){
 	a=b;
 	b=tmp;
 }
-
 

@@ -6,6 +6,7 @@
  */
 #include <slsimlib.h>
 #include <sstream>
+#include <string>
 
 /// Source model for a single analytic galaxy model.
 MultiSourceAnaGalaxy::MultiSourceAnaGalaxy(
@@ -93,9 +94,74 @@ void MultiSourceAnaGalaxy::readDataFile(std::string input_gal_file,double mag_li
 
 	double theta[2] = {0.0,0.0};
 
+	int ncolumns = 31;
+
+	void *addr[ncolumns];
+	addr[0] = &GalID;
+	addr[1] = &HaloID;
+	addr[2] = &ra;
+	addr[3] = &dec;
+	addr[4] = &z_cosm;
+	addr[5] = &z_app;
+	addr[6] = &Dlum;
+	addr[7] = &inclination;
+	addr[8] = &pa;
+	addr[9] = &Rh;
+	addr[10] = &Ref;
+	addr[11] = &SDSS_u;
+	addr[12] = &SDSS_g;
+	addr[13] = &SDSS_r;
+	addr[14] = &SDSS_i;
+	addr[15] = &SDSS_z;
+	addr[16] = &J;
+	addr[17] = &H;
+	addr[18] = &Ks;
+	addr[19] = &i1;
+	addr[20] = &i2;
+	addr[21] = &SDSS_u_Bulge;
+	addr[22] = &SDSS_g_Bulge;
+	addr[23] = &SDSS_r_Bulge;
+	addr[24] = &SDSS_i_Bulge;
+	addr[25] = &SDSS_z_Bulge;
+	addr[26] = &J_Bulge;
+	addr[27] = &H_Bulge;
+	addr[28] = &Ks_Bulge;
+	addr[29] = &i1_Bulge;
+	addr[30] = &i2_Bulge;
+
+	unsigned long myint;
+	double mydouble;
+	std::string myline;
+	std::string strg;
+	std::string f=",";
+	std::stringstream buffer;
+	size_t length;
+
 	// read in data
-	//for(i=0,j=0 ; i<12638 ; ++i){
-	for(i=0,j=0 ; c!='#'; ++i){
+	for(i=0,j=0 ; ; ++i){
+		myline.clear();
+		getline(file_in,myline);
+
+		if(myline[0] == '#')
+			break;
+
+		for(int l=0;l<ncolumns; l++){
+			int pos = myline.find(f);
+			strg.assign(myline,0,pos);
+			buffer << strg;
+			if(l == 0 || l == 1 ){
+				buffer >> myint;
+				*((unsigned long *)addr[l]) = myint;
+			}
+			else{
+				buffer >> mydouble;
+				*((double *)addr[l]) = mydouble;
+			}
+			myline.erase(0,pos+1);
+			strg.clear();
+			buffer.clear();
+			buffer.str(std::string());
+		}
 
 		// read a line of data
 		/*file_in >> galid >> c >> haloid >> c >> cx >> c >> cy >> c >> cz >> c >> ra >> c >> dec >> c >> z_geo >> c >> z_app
@@ -111,13 +177,13 @@ void MultiSourceAnaGalaxy::readDataFile(std::string input_gal_file,double mag_li
 				 >> J  >> H  >> Ks  >> i1  >> i2  >> SDSS_u_Bulge  >> SDSS_g_Bulge  >> SDSS_r_Bulge
 				 >> SDSS_i_Bulge  >> SDSS_z_Bulge  >> J_Bulge  >> H_Bulge  >> Ks_Bulge  >> i1_Bulge
 				 >> i2_Bulge ;
-*/
+
 		file_in >> GalID >> c >> HaloID >> c >> ra >> c >> dec >> c >> z_cosm >> c >> z_app >> c >> Dlum >> c >> inclination
 		>> c >> pa >> c >> Rh >> c >> Ref >> c >> SDSS_u >> c >> SDSS_g >> c >> SDSS_r >> c >> SDSS_i >> c >> SDSS_z
 		>> c >> J >> c >> H >> c >> Ks >> c >> i1 >> c >> i2 >> c >> SDSS_u_Bulge >> c >> SDSS_g_Bulge >> c >> SDSS_r_Bulge
 		>> c >> SDSS_i_Bulge >> c >> SDSS_z_Bulge >> c >> J_Bulge >> c >> H_Bulge >> c >> Ks_Bulge >> c >> i1_Bulge
 		>> c >> i2_Bulge >> c;  //TODO the GalID will miss the first digit using this method.  No other method stops at the end of file.
-
+*/
 			//TODO  BEN this needs to be selected from the parameter file
 		if(SDSS_i < mag_limit){
 			/*
