@@ -59,7 +59,6 @@
 #include <forceTree.h>
 #include <simpleTree.h>
 #include <multiplane.h>
-#include <singlelens.h>
 #include <MOKAlens.h>
 #include <MOKAfits.h>
 #include <quadTree.h>

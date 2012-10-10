@@ -37,16 +37,10 @@ public:
 	double *z;
 	unsigned long *haloID;
 
-	HaloData(double fov,double min_mass,double mass_scale,double z1,double z2,int mass_func_type,double alpha,CosmoHndl cosmo,long *seed);
-	  HaloData(CosmoHndl cosmo,HaloStructure *halostrucs,double **positions,double *z, unsigned long *haloID, unsigned long Nhaloss,double z1,double z2,double mass_scales);
+	//HaloData(double fov,double min_mass,double mass_scale,double z1,double z2,int mass_func_type,double alpha,CosmoHndl cosmo,long *seed);
+	HaloData(HaloStructure *halostrucs,double kb,double **positions,double *z, unsigned long *haloID,unsigned long Nhaloss);
 	//HaloData(NSIEstructure *halostrucs,double **positions,unsigned long Nhaloss);
-	HaloData(CosmoHndl cosmo,double mass,double zlens);
 	~HaloData();
-
-
-private:
-	/// flag which is set to indicate which constructor is used and thus how the the destructor should work.
-	bool allocation_flag;
 };
 
 /** \brief A class to represents a lens with multiple planes.
@@ -72,6 +66,7 @@ public:
 	~MultiLens();
 
 	void buildHaloTrees(CosmoHndl cosmo);
+	void createHaloData(CosmoHndl cosmo,long *seed);
 	void RandomizeHost(long *seed,bool tables);
 	void RandomizeSigma(long *seed,bool tables);
 	double getZlens();
@@ -124,6 +119,8 @@ public:
 	/// if = 0 there is no input lens, if = 1 there is an analytic lens, if = 2 there is a MOKA lens
 	InputLens flag_input_lens;
 
+	bool analens_from_cone;
+
 	void readParamfile(std::string);
 	/// Redshifts of lens planes, 0...Nplanes.  Last one is the source redshift.
 	double *plane_redshifts;
@@ -162,6 +159,7 @@ public:
 	bool sim_input_flag;
 	std::string input_gal_file;
 	bool gal_input_flag;
+	bool read_sim_gal_file;
 
 	/// pointer to first of all the halo internal structures
 	HaloStructure *halos;
@@ -198,7 +196,6 @@ void swap(float *a,float *b);
 void swap(PosType *a,PosType *b);
 void swap(IndexType a,IndexType b);
 void swap(IndexType *a,IndexType *b);
-void swap(HaloStructure& a,HaloStructure& b);
 void quicksort(IndexType *particles,float *redshifts,PosType **pos,float *sizes,float *masses,IndexType N);
 
 #endif /* MULTIPLANE_H_ */
