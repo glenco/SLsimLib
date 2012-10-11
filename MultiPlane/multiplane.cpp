@@ -849,7 +849,7 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 
 	// read in data
 	int j_max;
-	double mass_max=0,R_max=0,V_max=0;
+	double mass_max=0,R_max=0,V_max=0,minmass=0;
 	double *theta;
 	HaloStructure halo;
 	int ncolumns = 9;
@@ -935,6 +935,9 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 				mass_max = halo_vec[j].mass;
 				j_max = j;
 			}
+			if(halo_vec[j].mass < minmass) {
+				minmass = halo_vec[j].mass;
+			}
 			if(halo_vec[j].Rmax > R_max) R_max = halo_vec[j].Rmax;
 			if(vdisp > V_max) V_max = vdisp;
 			/*
@@ -966,6 +969,9 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 			<< "Max input mass = " << mass_max << "  R max = " << R_max << "  V max = " << V_max << std::endl;
 
 	Nhalos = halo_vec.size();
+
+	/// setting the minimum halo mass in the simulation
+	min_mass = minmass;
 
 	halos = new HaloStructure[Nhalos];
 	halo_zs = new double[Nhalos];
@@ -1032,7 +1038,7 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
  * as the first line.
  */
 /// Sort halos[] and brr[][] by content off arr[]
-void swaph(HaloStructure *a,HaloStructure *b);
+void swaph(HaloStructure& a,HaloStructure& b);
 void MultiLens::quicksort(HaloStructure *halos,double **brr,double *arr,unsigned long  *id,unsigned long N){
 	double pivotvalue;
 	unsigned long pivotindex,newpivotindex,i;
@@ -1050,7 +1056,7 @@ void MultiLens::quicksort(HaloStructure *halos,double **brr,double *arr,unsigned
 	// move pivet to end of array
 	swap(&arr[pivotindex],&arr[N-1]);
 	//SwapPointsInArray(&pointarray[pivotindex],&pointarray[N-1]);
-	swaph(&halos[pivotindex],&halos[N-1]);
+	swaph(halos[pivotindex],halos[N-1]);
 	swap(&brr[pivotindex][0],&brr[N-1][0]);
 	swap(&brr[pivotindex][1],&brr[N-1][1]);
 	swap(&id[pivotindex],&id[N-1]);
@@ -1061,7 +1067,7 @@ void MultiLens::quicksort(HaloStructure *halos,double **brr,double *arr,unsigned
 		if(arr[i] <= pivotvalue){
 			swap(&arr[newpivotindex],&arr[i]);
 			//SwapPointsInArray(&pointarray[newpivotindex],&pointarray[i]);
-			swaph(&halos[newpivotindex],&halos[i]);
+			swaph(halos[newpivotindex],halos[i]);
 			swap(&brr[newpivotindex][0],&brr[i][0]);
 			swap(&brr[newpivotindex][1],&brr[i][1]);
 			swap(&id[newpivotindex],&id[i]);
@@ -1203,10 +1209,10 @@ void swap(unsigned long *a,unsigned long *b){
 	*a=*b;
 	*b=tmp;
 }
-void swaph(HaloStructure *a,HaloStructure *b){
+void swaph(HaloStructure& a,HaloStructure& b){
 	HaloStructure tmp;
-	tmp=*a;
-	*a=*b;
-	*b=tmp;
+	tmp=a;
+	a=b;
+	b=tmp;
 }
 
