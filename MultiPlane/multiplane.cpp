@@ -496,11 +496,13 @@ void MultiLens::createHaloData(
 
 	fill_linear(Logm,Nmassbin,min_mass,MaxLogm);
 
+	int Nsample = 15;
+
 	double dz, z1, z2, mass_max;
-	dz = zsource/(Nplanes);
+	dz = zsource/(Nsample);
 	int np;
 	unsigned long h_index=0,j_max;
-	for(np=0,mass_max=0;np<Nplanes;np++){
+	for(np=0,mass_max=0;np<Nsample;np++){
 		double Nhaloestot;
 		z1 = np*dz;
 		z2 = z1+dz;
@@ -587,18 +589,17 @@ void MultiLens::createHaloData(
 		halo_zs[i] = halo_zs_vec[i];
 		halo_pos[i] = halo_pos_vec[i];
 		halos[i] = halo_vec[i];
-
+		/*
 		double r = sqrt(halo_pos[i][0]*halo_pos[i][0]+halo_pos[i][1]*halo_pos[i][1]);
 		if(r <= halos[i].Rmax){
-			//if(r <= halos[i].rscale)
-			halos[i].mass = 1e8;
-			cout << " here " << r/halos[i].Rmax << " " << r/halos[i].rscale << " " 
-			     << halos[i].Rmax << " " << halos[i].rscale << " " << halos[i].mass << endl;
+		  if(r <= halos[i].rscale)
+		    halos[i].mass = 1e8;
 		}
 
 		if(halo_id[i] == j_max){
 			if(analens_from_cone) halos[i].mass = 0.0;
 		}
+		*/
 	}
 
 	std::cout << "sorting in MultiLens::createHaloData()" << std::endl;
