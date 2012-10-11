@@ -8,6 +8,7 @@
 #ifndef SOURCE_ANA_H_
 #define SOURCE_ANA_H_
 
+enum Band {SDSS_U,SDSS_G,SDSS_R,SDSS_I,SDSS_Z,J,H,Ks,i1,i2};
 /**
  * \brief Source that represents an analytic galaxy surface brightness model.  It encapsulates a
  * OverGalaxy which is a model from R.Oversier et al. 2012 with a bulge and a disk.
@@ -16,7 +17,7 @@ class MultiSourceAnaGalaxy: public Source{
 public:
 	MultiSourceAnaGalaxy(double mag, double BtoT, double Reff, double Rh, double PA, double inclination,double my_z,double *my_theta);
 	MultiSourceAnaGalaxy(OverGalaxy *my_galaxy);
-	MultiSourceAnaGalaxy(std::string input_gal_file,double my_mag_limit = 100);
+	MultiSourceAnaGalaxy(std::string input_gal_file,Band band,double my_mag_limit = 100);
 	~MultiSourceAnaGalaxy();
 
 	/// Surface brightness of current galaxy in coordinates not centered on current galaxy.
@@ -74,7 +75,7 @@ private:
 	std::vector<OverGalaxy*> galaxies;
 	std::string input_gal_file;
 
-	void readDataFile(std::string input_gal_file,double my_mag_limit = 100);
+	void readDataFile(std::string input_gal_file,Band band,double my_mag_limit = 100);
 
 };
 

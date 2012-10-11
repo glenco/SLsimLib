@@ -39,6 +39,7 @@ MultiSourceAnaGalaxy::MultiSourceAnaGalaxy(
 /// Constructor for importing from data file.
 MultiSourceAnaGalaxy::MultiSourceAnaGalaxy(
 		std::string filename   /// Input data file for galaxies
+		,Band band             /// Filter to be used, example, SDSS_i, J, Ks, etc.
 		,double my_mag_limit   /// Apparent Magnitude limit
 		){
 
@@ -48,7 +49,7 @@ MultiSourceAnaGalaxy::MultiSourceAnaGalaxy(
 	mem_allocated = true;
 	std::cout << "Constructing SourceAnaGalaxy" << std::endl;
 
-	readDataFile(input_gal_file,my_mag_limit);
+	readDataFile(input_gal_file,band,my_mag_limit);
 	index = 0;
 }
 
@@ -58,7 +59,8 @@ MultiSourceAnaGalaxy::~MultiSourceAnaGalaxy(){
 }
 
 /// read in galaxies from a Millennium simulation file
-void MultiSourceAnaGalaxy::readDataFile(std::string input_gal_file,double mag_limit){
+// TODO BEN/Margarita We need to be able to choose the band and
+void MultiSourceAnaGalaxy::readDataFile(std::string input_gal_file,Band band,double mag_limit){
 
 	char c='0';
 	//int type;
@@ -71,8 +73,8 @@ void MultiSourceAnaGalaxy::readDataFile(std::string input_gal_file,double mag_li
 
 	unsigned long GalID,HaloID;
 	double ra,dec,z_cosm,z_app,Dlum,inclination,pa,Rh,Ref,SDSS_u,SDSS_g,SDSS_r,SDSS_i,SDSS_z
-	,J,H,Ks,i1,i2,SDSS_u_Bulge,SDSS_g_Bulge,SDSS_r_Bulge,SDSS_i_Bulge,SDSS_z_Bulge
-	,J_Bulge,H_Bulge,Ks_Bulge,i1_Bulge,i2_Bulge;
+	,J_band,H_band,Ks_band,i1,i2,SDSS_u_Bulge,SDSS_g_Bulge,SDSS_r_Bulge,SDSS_i_Bulge,SDSS_z_Bulge
+	,J_band_Bulge,H_band_Bulge,Ks_band_Bulge,i1_Bulge,i2_Bulge;
 
 	std::ifstream file_in(input_gal_file.c_str());
 	if(!file_in){
@@ -113,9 +115,9 @@ void MultiSourceAnaGalaxy::readDataFile(std::string input_gal_file,double mag_li
 	addr[13] = &SDSS_r;
 	addr[14] = &SDSS_i;
 	addr[15] = &SDSS_z;
-	addr[16] = &J;
-	addr[17] = &H;
-	addr[18] = &Ks;
+	addr[16] = &J_band;
+	addr[17] = &H_band;
+	addr[18] = &Ks_band;
 	addr[19] = &i1;
 	addr[20] = &i2;
 	addr[21] = &SDSS_u_Bulge;
@@ -123,9 +125,9 @@ void MultiSourceAnaGalaxy::readDataFile(std::string input_gal_file,double mag_li
 	addr[23] = &SDSS_r_Bulge;
 	addr[24] = &SDSS_i_Bulge;
 	addr[25] = &SDSS_z_Bulge;
-	addr[26] = &J_Bulge;
-	addr[27] = &H_Bulge;
-	addr[28] = &Ks_Bulge;
+	addr[26] = &J_band_Bulge;
+	addr[27] = &H_band_Bulge;
+	addr[28] = &Ks_band_Bulge;
 	addr[29] = &i1_Bulge;
 	addr[30] = &i2_Bulge;
 
@@ -136,6 +138,8 @@ void MultiSourceAnaGalaxy::readDataFile(std::string input_gal_file,double mag_li
 	std::string f=",";
 	std::stringstream buffer;
 	size_t length;
+
+	double mag,mag_bulge;
 
 	// read in data
 	for(i=0,j=0 ; ; ++i){
@@ -174,18 +178,64 @@ void MultiSourceAnaGalaxy::readDataFile(std::string input_gal_file,double mag_li
 		*/
 		/*file_in >> GalID  >> HaloID  >> ra  >> dec  >> z_cosm  >> z_app  >> Dlum  >> inclination
 				 >> pa  >> Rh  >> Ref  >> SDSS_u  >> SDSS_g  >> SDSS_r  >> SDSS_i  >> SDSS_z
-				 >> J  >> H  >> Ks  >> i1  >> i2  >> SDSS_u_Bulge  >> SDSS_g_Bulge  >> SDSS_r_Bulge
-				 >> SDSS_i_Bulge  >> SDSS_z_Bulge  >> J_Bulge  >> H_Bulge  >> Ks_Bulge  >> i1_Bulge
+				 >> J_band  >> H_band  >> Ks_band  >> i1  >> i2  >> SDSS_u_Bulge  >> SDSS_g_Bulge  >> SDSS_r_Bulge
+				 >> SDSS_i_Bulge  >> SDSS_z_Bulge  >> J_band_Bulge  >> H_band_Bulge  >> Ks_band_Bulge  >> i1_Bulge
 				 >> i2_Bulge ;
 
 		file_in >> GalID >> c >> HaloID >> c >> ra >> c >> dec >> c >> z_cosm >> c >> z_app >> c >> Dlum >> c >> inclination
 		>> c >> pa >> c >> Rh >> c >> Ref >> c >> SDSS_u >> c >> SDSS_g >> c >> SDSS_r >> c >> SDSS_i >> c >> SDSS_z
-		>> c >> J >> c >> H >> c >> Ks >> c >> i1 >> c >> i2 >> c >> SDSS_u_Bulge >> c >> SDSS_g_Bulge >> c >> SDSS_r_Bulge
-		>> c >> SDSS_i_Bulge >> c >> SDSS_z_Bulge >> c >> J_Bulge >> c >> H_Bulge >> c >> Ks_Bulge >> c >> i1_Bulge
-		>> c >> i2_Bulge >> c;  //TODO the GalID will miss the first digit using this method.  No other method stops at the end of file.
+		>> c >> J_band >> c >> H_band >> c >> Ks_band >> c >> i1 >> c >> i2 >> c >> SDSS_u_Bulge >> c >> SDSS_g_Bulge >> c >> SDSS_r_Bulge
+		>> c >> SDSS_i_Bulge >> c >> SDSS_z_Bulge >> c >> J_band_Bulge >> c >> H_band_Bulge >> c >> Ks_band_Bulge >> c >> i1_Bulge
+		>> c >> i2_Bulge >> c;
 */
+		switch (band){
+		case SDSS_U:
+			mag = SDSS_u;
+			mag_bulge = SDSS_u_Bulge;
+			break;
+		case SDSS_G:
+			mag = SDSS_g;
+			mag_bulge = SDSS_g_Bulge;
+			break;
+		case SDSS_R:
+			mag = SDSS_r;
+			mag_bulge = SDSS_r_Bulge;
+			break;
+		case SDSS_I:
+			mag = SDSS_i;
+			mag_bulge = SDSS_i_Bulge;
+			break;
+		case SDSS_Z:
+			mag = SDSS_z;
+			mag_bulge = SDSS_z_Bulge;
+			break;
+		case J:
+			mag = J_band;
+			mag_bulge = J_band_Bulge;
+			break;
+		case H:
+			mag = H_band;
+			mag_bulge = H_band_Bulge;
+			break;
+		case Ks:
+			mag = Ks_band;
+			mag_bulge = Ks_band_Bulge;
+			break;
+		/*case i1:
+			mag = i1;
+			mag_bulge = i1_Bulge;
+			break;
+		case i2:
+			mag = i2;
+			mag_bulge = i2_Bulge;
+			break;*/
+		default:
+			std::cout << "Requested band is not an available option." << std::endl;
+			ERROR_MESSAGE();
+			exit(1);
+		}
 			//TODO  BEN this needs to be selected from the parameter file
-		if(SDSS_i < mag_limit){
+		if(mag < mag_limit){
 			/*
 			std::cout << galid << c << haloid << c << cx << c << cy << c << cz << c << ra << c << dec << c << z_geo << c << z_app
 			<< c << dlum << c << vlos << c << incl
@@ -201,7 +251,7 @@ void MultiSourceAnaGalaxy::readDataFile(std::string input_gal_file,double mag_li
 
 			/***************************/
 			galaxies.push_back(
-					new OverGalaxy(SDSS_i,pow(10,-(SDSS_i_Bulge-SDSS_i)/2.5),Ref,Rh
+					new OverGalaxy(mag,pow(10,-(mag_bulge-mag)/2.5),Ref,Rh
 							,pa,inclination,HaloID,z_cosm,theta)
 			);
 			//std::cout << "z:" << z_cosm << " mag " << SDSS_u << " Bulge to total " << pow(10,-(SDSS_u_Bulge-SDSS_u)/2.5)

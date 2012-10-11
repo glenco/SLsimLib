@@ -18,7 +18,7 @@
 #endif
 
 /**\brief Analytic model for single plane lens
- *
+ * TODO BEN more explanation!!!
  */
 class AnaLens : public Lens{
 public:
