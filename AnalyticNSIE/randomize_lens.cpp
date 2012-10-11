@@ -21,12 +21,13 @@ using namespace std;
 * derived lens class that was used to construct the model.
  *
  */
-
 void Model::RandomizeModel(
 		double r_source_phys
 		,long *seed
 		,bool tables
-		,double angle_factor ///
+		,bool randomize_host_z
+		,bool randomize_source_z
+		,bool in_radians
 		){
 	double *zlTable,*zsTable;
 	int n,i,NzTable;
@@ -66,8 +67,8 @@ void Model::RandomizeModel(
 		delete[] zsTable;
 		delete[] zlTable;
 
-		source->setZ(zsource);
-		lens->setZlens(zlens);
+		if(randomize_source_z) source->setZ(zsource);
+		if(randomize_host_z) lens->setZlens(zlens);
 
 		lens->RandomizeSigma(seed,tables);
 	}
@@ -76,12 +77,16 @@ void Model::RandomizeModel(
 	setInternal();
 
 	// This need to be done after source->DlDs has been set in setInternal()
-	source->setRadius(r_source_phys*source->getDlDs()/angle_factor);
+	if(in_radians)
+		source->setRadius(r_source_phys/cosmo->angDist(0,source->getZ()));
+	else
+		source->setRadius(r_source_phys*source->getDlDs());
 
 	lens->RandomizeHost(seed,tables);
 
 	return ;
 }
+
 
 void AnaLens::RandomizeSigma(long *seed,bool tables){
 	double *sigmaTable;

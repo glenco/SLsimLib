@@ -14,50 +14,10 @@
 
 using namespace std;
 
-HaloData::HaloData(CosmoHndl cosmo
-		,double mass
-		,double zlens){
-	allocation_flag = true;
-	kappa_background = 0.0;
-	Nhalos = 1;
-	halos = new HaloStructure[Nhalos];
-	pos = PosTypeMatrix(0,Nhalos-1,0,2);
-
-	HALO *ha = new HALO(cosmo,mass,zlens);
-
-	int i;
-	for(i = 0; i < Nhalos; i++){
-		pos[i][0] = 0.0;
-		pos[i][1] = 0.0;
-		pos[i][2] = 0.0;
-
-		halos[i].mass = mass;
-		halos[i].Rmax = ha->getRvir()*cosmo->gethubble();
-		halos[i].rscale = halos[i].Rmax/ha->getConcentration(0);
-
-		cout << endl << "mass: " << halos[i].mass  << ", Rmax: " << halos[i].Rmax << ", rscale: " << halos[i].rscale << endl;
-	}
-
-	delete ha;
-}
-
-HaloData::HaloData(CosmoHndl cosmo,HaloStructure *halostrucs,PosType **positions
-		   , double *zz, unsigned long *id, unsigned long Nhaloss,double z1,double z2,double mass_scale):
-	pos(positions), halos(halostrucs), Nhalos(Nhaloss),z(zz)
+HaloData::HaloData(HaloStructure *halostrucs,double kb,PosType **positions, double *zz, unsigned long *id,unsigned long Nhaloss):
+	pos(positions), halos(halostrucs), Nhalos(Nhaloss),z(zz),haloID(id),kappa_background(kb)
 {
-	allocation_flag = false;
 
-	// Set background convergence
-	double min_mass = halos[0].mass;
-	for(long i=0;i<Nhalos;++i)
-		if(halos[i].mass < min_mass) min_mass = halos[i].mass;
-	double zave =(z1+z2)/2;
-	HALO *ha = new HALO(cosmo,min_mass,zave);
-
-	// calculate the mass density on the plane
-	// and convert it to physical 1/physical_distance^2
-	kappa_background = ha->totalMassDensityinHalos(0,1)*pow(cosmo->gethubble(),2)*pow(1+zave,3);
-	kappa_background *= cosmo->getOmega_matter()*cosmo->angDist(z1,z2)/mass_scale;
 }
 
 /*HaloData::HaloData(NSIEstructure *halostrucs,PosType **positions,unsigned long Nhaloss):
@@ -67,10 +27,7 @@ HaloData::HaloData(CosmoHndl cosmo,HaloStructure *halostrucs,PosType **positions
 	kappa_background = 0.0;  //TODO This should be set properly at some point.
 }*/
 
-/**
- *  \brief In this constructor the halos are created from a mass function and given random positions on the lens plane
- */
-
+/*
 HaloData::HaloData(
 		double fov            /// field of view in square degrees
 		,double min_mass      /// Minimum mass of a halo
@@ -102,7 +59,7 @@ HaloData::HaloData(
     Logm.resize(Nmassbin);
     Nhalosbin.resize(Nmassbin);
 
-	/* fill the log(mass) vector */
+	/// fill the log(mass) vector
 
 	fill_linear(Logm,Nmassbin,min_mass,MaxLogm);
 
@@ -149,19 +106,15 @@ HaloData::HaloData(
 		//halos[i].rscale = vsizes[i]/vscale[i]; // get the Rscale=Rmax/c
 		halos[i].rscale = halos[i].Rmax/ha->getConcentration(0); // get the Rscale=Rmax/c
 		pos[i][2] = 0.0;//halos[i].Rmax;
-		/* -> if you want to print the masses and redshift
-		std:: cout << halos[i].mass << "   " << zi << std:: endl; */		
+		// -> if you want to print the masses and redshift
+		//std:: cout << halos[i].mass << "   " << zi << std:: endl;
 	}
 
 	delete ha;
 }
+*/
 
 HaloData::~HaloData(){
-
-	if(allocation_flag){
-		free_PosTypeMatrix(pos,0,Nhalos-1,0,2);
-		delete[] halos;
-	}
 }
 
 void MultiLens::make_table(CosmoHndl cosmo){
@@ -200,6 +153,7 @@ MultiLens::MultiLens(string filename,long *my_seed) : Lens(){
 
 	if(input_gal_file.size() < 1) gal_input_flag = false;
 	else gal_input_flag = true;
+	read_sim_gal_file = false;
 
 	std::cout << input_gal_file.c_str() << std::endl;
 
@@ -249,12 +203,10 @@ MultiLens::~MultiLens(){
 	delete[] plane_redshifts;
 	delete[] dDl;
 
-	if(sim_input_flag){  // Otherwise these deallocations are done in the destructor of halo_data's
-		delete[] halos;
-		delete[] halo_zs;
-		delete[] halo_id;
-		free_PosTypeMatrix(halo_pos,0,Nhalos-1,0,2);
-	}
+	delete[] halos;
+	delete[] halo_zs;
+	delete[] halo_id;
+	free_PosTypeMatrix(halo_pos,0,Nhalos-1,0,2);
 
 	if(flag_input_lens)
 		delete input_lens;
@@ -518,6 +470,149 @@ void MultiLens::printMultiLens(){
 }
 
 /**
+ *  \brief In this constructor the halos are created from a mass function
+ *
+ *  The lightcone is populated by dividing it into small redshifts bins and creating halos,
+ *  which then are sorted according to redshift
+ */
+void MultiLens::createHaloData(
+		CosmoHndl cosmo     /// cosmology
+		,long *seed
+	){
+
+    HALO *ha = new HALO(cosmo,min_mass,0.0);
+
+	std::vector<double> Logm,Nhalosbin;
+	std::vector<HaloStructure> halo_vec;
+	std::vector<double> halo_zs_vec;
+	std::vector<double *> halo_pos_vec;
+	std::vector<unsigned long> halo_id_vec;
+	double *pos, pos_max[2], z_max;
+
+    Logm.resize(Nmassbin);
+    Nhalosbin.resize(Nmassbin);
+
+	/* fill the log(mass) vector */
+
+	fill_linear(Logm,Nmassbin,min_mass,MaxLogm);
+
+	int Nsample = 15;
+
+	double dz, z1, z2, mass_max;
+	dz = zsource/(Nsample);
+	int np;
+	unsigned long h_index=0,j_max;
+	for(np=0,mass_max=0;np<Nsample;np++){
+		double Nhaloestot;
+		z1 = np*dz;
+		z2 = z1+dz;
+
+		Nhalosbin[0] = cosmo->haloNumberDensityOnSky(pow(10,Logm[0])/cosmo->gethubble(),z1,z2,mass_func_type,pw_alpha)*fieldofview;
+
+		Nhaloestot = Nhalosbin[0];
+		Nhalosbin[0] = 1;
+		int k;
+#ifdef _OPENMP
+#pragma omp parallel for default(shared) private(k)
+#endif
+		for(k=1;k<Nmassbin;k++){
+			// cumulative number density in one square degree
+			Nhalosbin[k] = cosmo->haloNumberDensityOnSky(pow(10,Logm[k])/cosmo->gethubble(),z1,z2,mass_func_type,pw_alpha)*fieldofview;
+			// normalize the cumulative distribution to one
+			Nhalosbin[k] = Nhalosbin[k]/Nhaloestot;
+		}
+
+		long Nh = (long)(poidev(float(Nhaloestot), seed) + 0.5);
+
+		double rr,theta,maxr,zi;
+		unsigned long i;
+		for(i = 0,mass_max=0; i < Nh; i++){
+			HaloStructure halo;
+
+			halo_id_vec.push_back(h_index);
+			h_index++;
+
+			zi = z1+(z2-z1)*ran2 (seed);
+
+			halo_zs_vec.push_back(zi);
+
+			maxr = pi*sqrt(fieldofview/pi)/180*cosmo->angDist(0,zi); // fov is a circle
+			rr = maxr*sqrt(ran2(seed));
+
+			theta = 2*pi*ran2(seed);
+
+			pos = new double[3];
+			pos[0] = rr*cos(theta);
+			pos[1] = rr*sin(theta);
+			pos[2] = 0.0;
+
+			halo_pos_vec.push_back(pos);
+
+			halo.mass = pow(10,InterpolateYvec(Nhalosbin,Logm,ran2 (seed)));
+			ha->reset(halo.mass,zi);
+			halo.mass /= mass_scale;
+			halo.Rmax = ha->getRvir()*cosmo->gethubble();
+			halo.rscale = halo.Rmax/ha->getConcentration(0);
+
+			if(halo.mass > mass_max) {
+				mass_max = halo.mass;
+				j_max = halo_id_vec[i];
+				pos_max[0] = pos[0];
+				pos_max[1] = pos[1];
+				z_max = zi;
+			}
+
+			halo_vec.push_back(halo);
+
+		}
+
+		Nhalosbin.empty();
+	}
+
+	delete ha;
+
+	Nhalos = halo_vec.size();
+
+	std::cout << Nhalos << " halos created."<< std::endl
+			<< "Max input mass = " << mass_max << "  R max = " << halo_vec[j_max].Rmax
+			<< " at z = " << z_max << std::endl;
+
+	halos = new HaloStructure[Nhalos];
+	halo_zs = new double[Nhalos];
+	halo_id = new unsigned long[Nhalos];
+	halo_pos = PosTypeMatrix(0,Nhalos-1,0,2);
+
+	analens_from_cone = false;
+
+	for(int i=0;i<Nhalos;++i){
+		halo_id[i] = halo_id_vec[i];
+		halo_zs[i] = halo_zs_vec[i];
+		halo_pos[i] = halo_pos_vec[i];
+		halos[i] = halo_vec[i];
+		/*
+		double r = sqrt(halo_pos[i][0]*halo_pos[i][0]+halo_pos[i][1]*halo_pos[i][1]);
+		if(r <= halos[i].Rmax){
+		  if(r <= halos[i].rscale)
+		    halos[i].mass = 1e8;
+		}
+
+		if(halo_id[i] == j_max){
+			if(analens_from_cone) halos[i].mass = 0.0;
+		}
+		*/
+	}
+
+	std::cout << "sorting in MultiLens::createHaloData()" << std::endl;
+	// sort the halos by readshift
+	MultiLens::quicksort(&halos[0],halo_pos,halo_zs,halo_id,Nhalos);
+
+	std::cout << "leaving MultiLens::createHaloData()" << std::endl;
+
+	if(analens_from_cone) setZlens(z_max);
+
+}
+
+/**
  * Populates the planes with halos by dividing the space around the planes into
  * equal redshift distances, where the plane with the input lens is excluded
  * since it will not contain any halos
@@ -531,103 +626,54 @@ void MultiLens::buildHaloTrees(
 	int i, j, Ntot;
 	unsigned long ind;
 	double z1, z2;
+	unsigned long j1,j2;
 
 	std::cout << "MultiLens::buildHaloTrees zsource = " << zsource << std::endl;
 
-	if(!sim_input_flag){   /// If no input file is provided synthesize halos
-
-		for(j=0,Ntot=0;j<Nplanes-1;j++){
-			if(flag_input_lens && j == (flag_input_lens % Nplanes))
-				continue;
-
-			/*
-			 * Setting the redshift range
-			 * If there is a plane with an input lens on it, it is skipped over
-			 * since it will not contain any halos
-			 */
-			if(j == 0) z1 = 0.0;
-			else{
-				locateD(coorDist_table-1,NTABLE,(Dl[j]-0.5*dDl[j]),&ind);
-				z1 = redshift_table[ind];
-			}
-
-			if(flag_input_lens && j-1 == (flag_input_lens % Nplanes)){
-				locateD(coorDist_table-1,NTABLE,(Dl[j] - 0.5*(Dl[j] - Dl[j-2])),&ind);
-				z1 = redshift_table[ind];
-			}
-
-			if(j == Nplanes-2) z2 = zsource;
-			else{
-				locateD(coorDist_table-1,NTABLE,(Dl[j] + 0.5*dDl[j+1]),&ind);
-				z2 = redshift_table[ind];
-			}
-
-			if(flag_input_lens && j+1 == (flag_input_lens % Nplanes)){
-				locateD(coorDist_table-1,NTABLE,(Dl[j] + 0.5*(Dl[j+2] - Dl[j])),&ind);
-				z2 = redshift_table[ind];
-			}
-
-			halo_data[j].reset(new HaloData(fieldofview,min_mass,mass_scale,z1,z2,mass_func_type,pw_alpha,cosmo,seed));
-
-			Ntot+=halo_data[j]->Nhalos;
-		}
-
-	}else{
-		// If input file is provided, read it in and put the halos onto lens planes.
-
-		readInputSimFile(cosmo);
-		unsigned long j1=0,j2=0;
-
-		for(j=0,Ntot=0;j<Nplanes-1;j++){
-			if(flag_input_lens && j == (flag_input_lens % Nplanes))
-				continue;
-
-			/*
-			 * Setting the redshift range
-			 * If there is a plane with an input lens on it, it is skipped over
-			 * since it will not contain any halos
-			 */
-			if(j == 0) z1 = 0.0;
-			else{
-				locateD(coorDist_table-1,NTABLE,(Dl[j]-0.5*dDl[j]),&ind);
-				z1 = redshift_table[ind];
-			}
-
-			if(flag_input_lens && j-1 == (flag_input_lens % Nplanes)){
-				locateD(coorDist_table-1,NTABLE,(Dl[j] - 0.5*(Dl[j] - Dl[j-2])),&ind);
-				z1 = redshift_table[ind];
-			}
-
-			if(j == Nplanes-2) z2 = zsource;
-			else{
-				locateD(coorDist_table-1,NTABLE,(Dl[j] + 0.5*dDl[j+1]),&ind);
-				z2 = redshift_table[ind];
-			}
-
-			if(flag_input_lens && j+1 == (flag_input_lens % Nplanes)){
-				locateD(coorDist_table-1,NTABLE,(Dl[j] + 0.5*(Dl[j+2] - Dl[j])),&ind);
-				z2 = redshift_table[ind];
-			}
-
-			/// Find which halos are in redshift range
-			locateD(halo_zs-1,Nhalos,z1,&j1);
-			if(j1 == Nhalos) j1 = Nhalos-1;
-			locateD(halo_zs-1,Nhalos,z2,&j2);
-			if(j2 == Nhalos) j2 = Nhalos-1;
-
-			/// Use other constructor to create halo data
-
-			halo_data[j].reset(new HaloData(cosmo,&halos[j1],&halo_pos[j1],&halo_zs[j1],&halo_id[j1],j2-j1,z1,z2,mass_scale));
-
-			Ntot += halo_data[j]->Nhalos;
-
-		}
-
-	}
-
-	for(j=0;j<Nplanes-1;j++){
+	for(j=0,Ntot=0;j<Nplanes-1;j++){
 		if(flag_input_lens && j == (flag_input_lens % Nplanes))
 			continue;
+
+		/*
+		 * Setting the redshift range
+		 * If there is a plane with an input lens on it, it is skipped over
+		 * since it will not contain any halos
+		 */
+		if(j == 0) z1 = 0.0;
+		else{
+			locateD(coorDist_table-1,NTABLE,(Dl[j]-0.5*dDl[j]),&ind);
+			z1 = redshift_table[ind];
+		}
+
+		if(flag_input_lens && j-1 == (flag_input_lens % Nplanes)){
+			locateD(coorDist_table-1,NTABLE,(Dl[j] - 0.5*(Dl[j] - Dl[j-2])),&ind);
+			z1 = redshift_table[ind];
+		}
+
+		if(j == Nplanes-2) z2 = zsource;
+		else{
+			locateD(coorDist_table-1,NTABLE,(Dl[j] + 0.5*dDl[j+1]),&ind);
+			z2 = redshift_table[ind];
+		}
+
+		if(flag_input_lens && j+1 == (flag_input_lens % Nplanes)){
+			locateD(coorDist_table-1,NTABLE,(Dl[j] + 0.5*(Dl[j+2] - Dl[j])),&ind);
+			z2 = redshift_table[ind];
+		}
+
+		/// Find which halos are in redshift range
+		locateD(halo_zs-1,Nhalos,z1,&j1);
+		if(j1 == Nhalos) j1 = Nhalos-1;
+		locateD(halo_zs-1,Nhalos,z2,&j2);
+		if(j2 == Nhalos) j2 = Nhalos-1;
+
+		/*
+		 * finding the average mass density in halos
+		 */
+		double kb = cosmo->totalMassDensityinHalos(mass_func_type,pw_alpha,min_mass,plane_redshifts[j],z1,z2);
+
+		/// Use other constructor to create halo data
+		halo_data[j].reset(new HaloData(&halos[j1],kb,&halo_pos[j1],&halo_zs[j1],&halo_id[j1],j2-j1));
 
 		std::cout << "  Building tree on plane " << j << " number of halos: " << halo_data[j]->Nhalos << std::endl;
 
@@ -658,7 +704,7 @@ void MultiLens::buildHaloTrees(
 
 	}
 
-	cout << "constructed " << Ntot << " halos" << endl;
+	cout << "constructed " << Nhalos << " halos" << endl;
 }
 
 /**
@@ -933,19 +979,13 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 		halos[i] = halo_vec[i];
 	}
 
-	std::cout << "sourting in MultiLens::readInputSimFile()" << std::endl;
+	std::cout << "sorting in MultiLens::readInputSimFile()" << std::endl;
+	// sort the halos by readshift
+	MultiLens::quicksort(&halos[0],halo_pos,halo_zs,halo_id,Nhalos);
 
-	// sort the halos by redshift
-	MultiLens::quicksort(halos,halo_pos,halo_zs,halo_id,Nhalos);
-
-
-	/*for(i=0;i<5;++i){
-		std::cout << halo_id[i] << "  " << halo_zs[i] << "  " << halo_pos[i][0]
-		         << "  " << halos[i].Rmax << "  " << halos[i].mass
-				<< std::endl;
-	}
-	exit(0);*/
 	std::cout << "leaving MultiLens::readInputSimFile()" << std::endl;
+
+	read_sim_gal_file = true;
 }
 
 
@@ -957,13 +997,22 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
  */
 void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 
-	if(flag_input_lens)
-		input_lens->setInternalParams(cosmo,source);
-
 	if( (cosmo->getOmega_matter() + cosmo->getOmega_lambda()) != 1.0 ){
 		printf("ERROR: MultiLens can only handle flat universes at present.  Must change cosmology.\n");
 		exit(1);
 	}
+
+	zsource = source->getZ();
+
+	if(sim_input_flag){
+		if(read_sim_gal_file == false) readInputSimFile(cosmo);
+	}
+	else{
+		createHaloData(cosmo,seed);
+	}
+
+	if(flag_input_lens)
+		input_lens->setInternalParams(cosmo,source);
 
 	/// makes the oordinate distance table for the calculation of the redshifts of the different planes
 	if(table_set == false) {std::cout << "making tables" << std::endl; make_table(cosmo);}
@@ -1001,8 +1050,7 @@ void MultiLens::quicksort(HaloStructure *halos,double **brr,double *arr,unsigned
 	// move pivet to end of array
 	swap(&arr[pivotindex],&arr[N-1]);
 	//SwapPointsInArray(&pointarray[pivotindex],&pointarray[N-1]);
-
-	swap(halos[pivotindex],halos[N-1]);
+	swaph(&halos[pivotindex],&halos[N-1]);
 	swap(&brr[pivotindex][0],&brr[N-1][0]);
 	swap(&brr[pivotindex][1],&brr[N-1][1]);
 	swap(&id[pivotindex],&id[N-1]);
@@ -1013,7 +1061,7 @@ void MultiLens::quicksort(HaloStructure *halos,double **brr,double *arr,unsigned
 		if(arr[i] <= pivotvalue){
 			swap(&arr[newpivotindex],&arr[i]);
 			//SwapPointsInArray(&pointarray[newpivotindex],&pointarray[i]);
-			swap(halos[newpivotindex],halos[i]);
+			swaph(&halos[newpivotindex],&halos[i]);
 			swap(&brr[newpivotindex][0],&brr[i][0]);
 			swap(&brr[newpivotindex][1],&brr[i][1]);
 			swap(&id[newpivotindex],&id[i]);
@@ -1071,8 +1119,7 @@ short MultiLens::ResetSourcePlane(
 
 		locateD(coorDist_table-1,NTABLE,(Dl[j]-0.5*dDl[j]),&ind);
 		double z1 = redshift_table[ind];
-
-		j = (z>=z1) ? j : j-1;
+		if(nearest) j = (z>=z1) ? j : j-1;
 	}
 
 	if(nearest && (j < Nplanes-1) ){
@@ -1161,12 +1208,5 @@ void swaph(HaloStructure *a,HaloStructure *b){
 	tmp=*a;
 	*a=*b;
 	*b=tmp;
-}
-
-void swap(HaloStructure& a,HaloStructure& b){
-	HaloStructure tmp;
-	tmp=a;
-	a=b;
-	b=tmp;
 }
 

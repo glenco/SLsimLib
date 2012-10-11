@@ -129,10 +129,10 @@ private:
 		return (x < xmax) ? -1.0*pow(x/xmax,beta+2) : -1.0;
 	}
 	inline double kappa_h(double x,double xmax){
-		return (x < xmax) ? (beta+2)*pow(x/xmax,beta)*x*x/(xmax*xmax) : 0.0;
+		return (x < xmax) ? 0.5*(beta+2)*pow(x/xmax,beta)*x*x/(xmax*xmax) : 0.0;
 	}
 	inline double gamma_h(double x,double xmax){
-		return (x < xmax) ? -0.5*beta*pow(x/xmax,beta+2) : -2.0;
+		return (x < xmax) ? 0.5*beta*pow(x/xmax,beta+2) : -2.0;
 	}
 	inline double phi_h(double x,double xmax){
 		ERROR_MESSAGE();

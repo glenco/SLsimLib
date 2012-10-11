@@ -272,7 +272,7 @@ private:
 		return 0.5*(beta+2)*pow(x/xmax,beta)*x*x/(xmax*xmax);
 	}
 	inline double gamma_h(double x,double xmax){
-		return -0.5*beta*pow(x/xmax,beta+2);
+		return 0.5*beta*pow(x/xmax,beta+2);
 	}
 	inline double phi_h(double x,double xmax){
 		ERROR_MESSAGE();
