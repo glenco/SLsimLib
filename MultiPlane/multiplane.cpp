@@ -529,12 +529,7 @@ void MultiLens::createHaloData(
 		for(i = 0,mass_max=0; i < Nh; i++){
 			HaloStructure halo;
 
-			halo_id_vec.push_back(h_index);
-			h_index++;
-
 			zi = z1+(z2-z1)*ran2 (seed);
-
-			halo_zs_vec.push_back(zi);
 
 			maxr = pi*sqrt(fieldofview/pi)/180*cosmo->angDist(0,zi); // fov is a circle
 			rr = maxr*sqrt(ran2(seed));
@@ -546,24 +541,31 @@ void MultiLens::createHaloData(
 			pos[1] = rr*sin(theta);
 			pos[2] = 0.0;
 
-			halo_pos_vec.push_back(pos);
-
 			halo.mass = pow(10,InterpolateYvec(Nhalosbin,Logm,ran2 (seed)));
 			ha->reset(halo.mass,zi);
 			halo.mass /= mass_scale;
 			halo.Rmax = ha->getRvir()*cosmo->gethubble();
 			halo.rscale = halo.Rmax/ha->getConcentration(0);
 
-			if(halo.mass > mass_max) {
-				mass_max = halo.mass;
-				j_max = halo_id_vec[i];
-				pos_max[0] = pos[0];
-				pos_max[1] = pos[1];
-				z_max = zi;
+			double r = sqrt(pos[0]*pos[0]+pos[1]*pos[1]);
+
+			//if((r <= halo.Rmax && halo.mass*mass_scale < 1e11) || r > halo.Rmax) {
+			{
+			  if(halo.mass > mass_max) {
+			    mass_max = halo.mass;
+			    j_max = h_index;
+			    pos_max[0] = pos[0];
+			    pos_max[1] = pos[1];
+			    z_max = zi;
+			  }
+			  
+			  halo_vec.push_back(halo);
+			  halo_zs_vec.push_back(zi);
+			  halo_pos_vec.push_back(pos);
+			  halo_id_vec.push_back(h_index);
+			  h_index++;
+			  
 			}
-
-			halo_vec.push_back(halo);
-
 		}
 
 		Nhalosbin.empty();
@@ -849,7 +851,7 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 
 	// read in data
 	int j_max;
-	double mass_max=0,R_max=0,V_max=0,minmass=0;
+	double mass_max=0,R_max=0,V_max=0,minmass=1e30;
 	double *theta;
 	HaloStructure halo;
 	int ncolumns = 9;
