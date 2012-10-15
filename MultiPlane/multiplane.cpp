@@ -549,8 +549,8 @@ void MultiLens::createHaloData(
 
 			double r = sqrt(pos[0]*pos[0]+pos[1]*pos[1]);
 
-			if((r <= halo.Rmax && halo.mass*mass_scale < 1e11) || r > halo.Rmax) {
-			//{
+			//if((r <= halo.Rmax && halo.mass*mass_scale < 1e11) || r > halo.Rmax) {
+			{
 			  if(halo.mass > mass_max) {
 			    mass_max = halo.mass;
 			    j_max = h_index;
