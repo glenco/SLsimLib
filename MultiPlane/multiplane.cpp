@@ -674,7 +674,9 @@ void MultiLens::buildHaloTrees(
 		/*
 		 * finding the average mass density in halos
 		 */
-		double kb = cosmo->totalMassDensityinHalos(mass_func_type,pw_alpha,min_mass,plane_redshifts[j],z1,z2);
+		//double kb = cosmo->totalMassDensityinHalos(mass_func_type,pw_alpha,min_mass,plane_redshifts[j],z1,z2);
+		double kb = 0.;
+		std:: cout << " kb = " << kb << std:: endl;
 		/// Use other constructor to create halo data
 		std::cout << "  Building tree on plane " << j << " number of halos: " << halo_data[j]->Nhalos << std::endl;
 
