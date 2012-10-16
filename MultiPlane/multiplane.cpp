@@ -131,6 +131,7 @@ void MultiLens::make_table(CosmoHndl cosmo){
 		x = (i+1)*dx;
 		redshift_table[i] = x;
 		coorDist_table[i] = cosmo->coorDist(0,x);
+		//coorDist_table[i] = cosmo->emptyDist(0,x);
 	}
 	table_set=true;
 }
@@ -532,6 +533,7 @@ void MultiLens::createHaloData(
 			zi = z1+(z2-z1)*ran2 (seed);
 
 			maxr = pi*sqrt(fieldofview/pi)/180*cosmo->angDist(0,zi); // fov is a circle
+			//maxr = pi*sqrt(fieldofview/pi)/180*cosmo->emptyDist(0,zi)/(1+zi); // fov is a circle
 			rr = maxr*sqrt(ran2(seed));
 
 			theta = 2*pi*ran2(seed);
@@ -550,7 +552,7 @@ void MultiLens::createHaloData(
 			double r = sqrt(pos[0]*pos[0]+pos[1]*pos[1]);
 
 			//if((r <= halo.Rmax && halo.mass*mass_scale < 1e11) || r > halo.Rmax) {
-			{
+			  {
 			  if(halo.mass > mass_max) {
 			    mass_max = halo.mass;
 			    j_max = h_index;
@@ -673,19 +675,10 @@ void MultiLens::buildHaloTrees(
 		 * finding the average mass density in halos
 		 */
 		double kb = cosmo->totalMassDensityinHalos(mass_func_type,pw_alpha,min_mass,plane_redshifts[j],z1,z2);
-
-		/*
-		double kb_halos=0.0;
-		for(i=0;i<j2-j1;i++)
-		  kb_halos += halos[i+j1].mass;
-		kb_halos /= fieldofview*pow(pi/180.0*cosmo->angDist(0,plane_redshifts[j]),2);
-
-		cout << kb << " " << kb_halos << endl;
-		*/
+		
 		/// Use other constructor to create halo data
 		halo_data[j].reset(new HaloData(&halos[j1],kb,&halo_pos[j1],&halo_zs[j1],&halo_id[j1],j2-j1));
-		//	halo_data[j].reset(new HaloData(&halos[j1],kb_halos,&halo_pos[j1],&halo_zs[j1],&halo_id[j1],j2-j1));
-
+		
 		std::cout << "  Building tree on plane " << j << " number of halos: " << halo_data[j]->Nhalos << std::endl;
 
 		switch(internal_profile){
@@ -753,9 +746,11 @@ void MultiLens::setCoorDist(CosmoHndl cosmo){
 		Np = Nplanes+1;
 
 	double Ds = cosmo->coorDist(0,zsource);
+	//double Ds = cosmo->emptyDist(0,zsource);
 
 	double Dlens;
 	if(flag_input_lens) Dlens = cosmo->coorDist(0,input_lens->getZlens());
+	//if(flag_input_lens) Dlens = cosmo->emptyDist(0,input_lens->getZlens());
 	else Dlens = Ds;
 
 	/// spaces lD equally up to the source, including 0 and Ds
