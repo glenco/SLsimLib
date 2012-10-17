@@ -676,7 +676,7 @@ void MultiLens::buildHaloTrees(
 		 */
 		double kb = cosmo->totalMassDensityinHalos(mass_func_type,pw_alpha,min_mass,plane_redshifts[j],z1,z2);
 
-		cout << kb << endl;
+		//cout << kb << endl;
 
 		halo_data[j].reset(new HaloData(&halos[j1],kb,&halo_pos[j1],&halo_zs[j1],&halo_id[j1],j2-j1));
 
