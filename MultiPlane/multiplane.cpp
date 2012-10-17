@@ -131,7 +131,6 @@ void MultiLens::make_table(CosmoHndl cosmo){
 		x = (i+1)*dx;
 		redshift_table[i] = x;
 		coorDist_table[i] = cosmo->coorDist(0,x);
-		//coorDist_table[i] = cosmo->emptyDist(0,x);
 	}
 	table_set=true;
 }
@@ -533,7 +532,6 @@ void MultiLens::createHaloData(
 			zi = z1+(z2-z1)*ran2 (seed);
 
 			maxr = pi*sqrt(fieldofview/pi)/180*cosmo->angDist(0,zi); // fov is a circle
-			//maxr = pi*sqrt(fieldofview/pi)/180*cosmo->emptyDist(0,zi)/(1+zi); // fov is a circle
 			rr = maxr*sqrt(ran2(seed));
 
 			theta = 2*pi*ran2(seed);
@@ -548,26 +546,21 @@ void MultiLens::createHaloData(
 			halo.mass /= mass_scale;
 			halo.Rmax = ha->getRvir()*cosmo->gethubble();
 			halo.rscale = halo.Rmax/ha->getConcentration(0);
-
-			double r = sqrt(pos[0]*pos[0]+pos[1]*pos[1]);
-
-			//if((r <= halo.Rmax && halo.mass*mass_scale < 1e11) || r > halo.Rmax) {
-			  {
-			  if(halo.mass > mass_max) {
-			    mass_max = halo.mass;
-			    j_max = h_index;
-			    pos_max[0] = pos[0];
-			    pos_max[1] = pos[1];
-			    z_max = zi;
-			  }
-			  
-			  halo_vec.push_back(halo);
-			  halo_zs_vec.push_back(zi);
-			  halo_pos_vec.push_back(pos);
-			  halo_id_vec.push_back(h_index);
-			  h_index++;
-			  
+			
+			if(halo.mass > mass_max) {
+			  mass_max = halo.mass;
+			  j_max = h_index;
+			  pos_max[0] = pos[0];
+			  pos_max[1] = pos[1];
+			  z_max = zi;
 			}
+			  
+			halo_vec.push_back(halo);
+			halo_zs_vec.push_back(zi);
+			halo_pos_vec.push_back(pos);
+			halo_id_vec.push_back(h_index);
+			h_index++;
+			
 		}
 
 		Nhalosbin.empty();
@@ -586,24 +579,11 @@ void MultiLens::createHaloData(
 	halo_id = new unsigned long[Nhalos];
 	halo_pos = PosTypeMatrix(0,Nhalos-1,0,2);
 
-	analens_from_cone = false;
-
 	for(int i=0;i<Nhalos;++i){
 		halo_id[i] = halo_id_vec[i];
 		halo_zs[i] = halo_zs_vec[i];
 		halo_pos[i] = halo_pos_vec[i];
 		halos[i] = halo_vec[i];
-		/*
-		double r = sqrt(halo_pos[i][0]*halo_pos[i][0]+halo_pos[i][1]*halo_pos[i][1]);
-		if(r <= halos[i].Rmax){
-		  if(r <= halos[i].rscale)
-		    halos[i].mass = 1e8;
-		}
-
-		if(halo_id[i] == j_max){
-			if(analens_from_cone) halos[i].mass = 0.0;
-		}
-		*/
 	}
 
 	std::cout << "sorting in MultiLens::createHaloData()" << std::endl;
@@ -676,8 +656,6 @@ void MultiLens::buildHaloTrees(
 		 */
 		double kb = cosmo->totalMassDensityinHalos(mass_func_type,pw_alpha,min_mass,plane_redshifts[j],z1,z2);
 
-		//cout << kb << endl;
-
 		halo_data[j].reset(new HaloData(&halos[j1],kb,&halo_pos[j1],&halo_zs[j1],&halo_id[j1],j2-j1));
 
 		/// Use other constructor to create halo data
@@ -748,11 +726,9 @@ void MultiLens::setCoorDist(CosmoHndl cosmo){
 		Np = Nplanes+1;
 
 	double Ds = cosmo->coorDist(0,zsource);
-	//double Ds = cosmo->emptyDist(0,zsource);
 
 	double Dlens;
 	if(flag_input_lens) Dlens = cosmo->coorDist(0,input_lens->getZlens());
-	//if(flag_input_lens) Dlens = cosmo->emptyDist(0,input_lens->getZlens());
 	else Dlens = Ds;
 
 	/// spaces lD equally up to the source, including 0 and Ds
