@@ -369,7 +369,7 @@ ForceTreePowerLaw::~ForceTreePowerLaw(){
 }
 
 long ForceTreeNFW::ob_count = 0;
-double *ForceTreeNFW::ftable = NULL,*ForceTreeNFW::gtable = NULL,*ForceTreeNFW::g2table = NULL;
+double *ForceTreeNFW::ftable = NULL,*ForceTreeNFW::gtable = NULL,*ForceTreeNFW::g2table = NULL,*ForceTreeNFW::xtable = NULL;
 
 ForceTreeNFW::ForceTreeNFW(
 		PosType **xp               /// positions of the halos xp[0..Npoints-1][0..1 or 2]
@@ -405,6 +405,7 @@ ForceTreeNFW::~ForceTreeNFW(){
 	--ob_count;
 	if(ob_count == 0){
 		// remove tables made in make_tables()
+	  delete[] xtable;
 		delete[] gtable;
 		delete[] ftable;
 		delete[] g2table;
@@ -412,7 +413,7 @@ ForceTreeNFW::~ForceTreeNFW(){
 }
 
 long ForceTreePseudoNFW::ob_count = 0;
-double * ForceTreePseudoNFW::mhattable = NULL;
+double * ForceTreePseudoNFW::mhattable = NULL,*ForceTreePseudoNFW::xtable = NULL;
 
 ForceTreePseudoNFW::ForceTreePseudoNFW(
 		double my_beta                 /// outer slope of profile is \f$ \Sigma \propto r^{-\beta} \f$
@@ -454,6 +455,9 @@ ForceTreePseudoNFW::ForceTreePseudoNFW(
 ForceTreePseudoNFW::~ForceTreePseudoNFW(){
 	--ob_count;
 	// remove tables made in make_tables()
-	if(ob_count == 0) delete[] mhattable;
+	if(ob_count == 0) {
+	  delete[] xtable;
+	  delete[] mhattable;
+	}
 }
 
