@@ -38,7 +38,7 @@ typedef unsigned long IndexType;
 void delete_tables_nfw();
 //void make_tables_pseudonfw(double beta);
 void delete_tables_pseudonfw();
-double InterpolateFromTable(double *table, double y);
+double InterpolateFromTable(double *table, double *xtable, double y);
 
 /// structure to hold information about the halos' internal parameters
 struct HaloStructure{

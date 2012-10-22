@@ -15,12 +15,14 @@ void QuadTreeNFW::make_tables(){
 	int i;
 	double x, dx = maxrm/(double)NTABLE;
 
+	xtable = new double[NTABLE];
 	ftable = new double[NTABLE];
 	gtable = new double[NTABLE];
 	g2table = new double[NTABLE];
 
 	for(i = 0 ; i< NTABLE; i++){
-		x = (i+1)*dx;
+	        x = i*dx;
+		xtable[i] = x;
 		ftable[i] = ffunction(x);
 		gtable[i] = gfunction(x);
 		g2table[i] = g2function(x);
@@ -32,10 +34,12 @@ void QuadTreePseudoNFW::make_tables(){
 	int i;
 	double x, dx = maxrm/(double)NTABLE;
 
+	xtable = new double[NTABLE];
 	mhattable = new double[NTABLE];
 
 	for(i = 0 ; i< NTABLE; i++){
-		x = (i+1)*dx;
+		x = i*dx;
+		xtable[i] = x;
 		mhattable[i] = mhat(x,beta);
 	}
 }
@@ -45,12 +49,14 @@ void ForceTreeNFW::make_tables(){
 	int i;
 	double x, dx = maxrm/(double)NTABLE;
 
+	xtable = new double[NTABLE];
 	ftable = new double[NTABLE];
 	gtable = new double[NTABLE];
 	g2table = new double[NTABLE];
 
 	for(i = 0 ; i< NTABLE; i++){
-		x = (i+1)*dx;
+		x = i*dx;
+		xtable[i] = x;
 		ftable[i] = ffunction(x);
 		gtable[i] = gfunction(x);
 		g2table[i] = g2function(x);
@@ -61,10 +67,12 @@ void ForceTreePseudoNFW::make_tables(){
 	int i;
 	double x, dx = maxrm/(double)NTABLE;
 
+	xtable = new double[NTABLE];
 	mhattable = new double[NTABLE];
 
 	for(i = 0 ; i< NTABLE; i++){
-		x = (i+1)*dx;
+		x = i*dx;
+		xtable[i] = x;
 		mhattable[i] = mhat(x,beta);
 	}
 }
@@ -89,6 +97,7 @@ double rhos(double x){
 }
 /// Auxiliary function for PseudoNFW profile
 double mhat(double y, double beta){
+  if(y==0) y=1e-5;
 	if(beta == 1.0) return y - log(1+y);
 	if(beta == 2.0) return log(1+y) - y/(1+y);
 	if(beta>=3.0) return ( (1 - beta)*y + pow(1+y,beta-1) - 1)/(beta-2)/(beta-1)/pow(1+y,beta-1);
@@ -99,9 +108,10 @@ double mhat(double y, double beta){
 	return 0.0;
 }
 
-double InterpolateFromTable(double *table, double y){
+double InterpolateFromTable(double *table, double *x, double y){
 	int j;
 	j=(int)(y/maxrm*NTABLE);
-	return (table[j+1]-table[j])*(y-j*maxrm/float(NTABLE)) + table[j];
+	assert(y>=x[j] && y<=x[j+1]);
+	return (table[j+1]-table[j])/(x[j+1]-x[j])*(y-x[j]) + table[j];
 }
 

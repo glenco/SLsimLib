@@ -126,12 +126,15 @@ private:
 
 	// Override internal structure of halos
 	inline double alpha_h(double x,double xmax){
+	  if(x==0) x=1e-5;
 		return (x < xmax) ? -1.0*pow(x/xmax,beta+2) : -1.0;
 	}
 	inline double kappa_h(double x,double xmax){
+	  if(x==0) x=1e-5;
 		return (x < xmax) ? 0.5*(beta+2)*pow(x/xmax,beta)*x*x/(xmax*xmax) : 0.0;
 	}
 	inline double gamma_h(double x,double xmax){
+	  if(x==0) x=1e-5;
 		return (x < xmax) ? 0.5*beta*pow(x/xmax,beta+2) : -2.0;
 	}
 	inline double phi_h(double x,double xmax){
@@ -167,19 +170,19 @@ public:
 private:
 
 	//double *ft, *gt, *g2t;
-	static double *ftable,*gtable,*g2table;
+	static double *ftable,*gtable,*g2table,*xtable;
 	static long ob_count;
 
 
 	// Override internal structure of halos
 	inline double alpha_h(double x,double xmax){
-		return (x < xmax) ? -1.0*InterpolateFromTable(gtable,x)/InterpolateFromTable(gtable,xmax) : -1.0;
+	  return (x < xmax) ? -1.0*InterpolateFromTable(gtable,xtable,x)/InterpolateFromTable(gtable,xtable,xmax) : -1.0;
 	}
 	inline double kappa_h(double x,double xmax){
-		return (x < xmax) ? 0.5*x*x*InterpolateFromTable(ftable,x)/InterpolateFromTable(gtable,xmax) : 0.0;
+	  return (x < xmax) ? 0.5*x*x*InterpolateFromTable(ftable,xtable,x)/InterpolateFromTable(gtable,xtable,xmax) : 0.0;
 	}
 	inline double gamma_h(double x,double xmax){
-		return (x < xmax) ? -0.25*x*x*InterpolateFromTable(g2table,x)/InterpolateFromTable(gtable,xmax) : -2.0;
+	  return (x < xmax) ? -0.25*x*x*InterpolateFromTable(g2table,xtable,x)/InterpolateFromTable(gtable,xtable,xmax) : -2.0;
 	}
 	inline double phi_h(double x,double xmax){
 		ERROR_MESSAGE();
@@ -221,19 +224,19 @@ public:
 private:
 
 	double beta;
-	static double *mhattable;
+	static double *mhattable,*xtable;
 	static long ob_count;
 
 
 	// Override internal structure of halos
 	inline double alpha_h(double x,double xmax){
-		return (x < xmax) ? -1.0*InterpolateFromTable(mhattable,x)/InterpolateFromTable(mhattable,xmax) : -1.0;
+		return (x < xmax) ? -1.0*InterpolateFromTable(mhattable,xtable,x)/InterpolateFromTable(mhattable,xtable,xmax) : -1.0;
 	}
 	inline double kappa_h(double x,double xmax){
-		return (x < xmax) ? 0.5*x*x/InterpolateFromTable(mhattable,xmax)/pow(1+x,beta) : 0.0;
+		return (x < xmax) ? 0.5*x*x/InterpolateFromTable(mhattable,xtable,xmax)/pow(1+x,beta) : 0.0;
 	}
 	inline double gamma_h(double x,double xmax){
-		return (x < xmax) ? (0.5*x*x/pow(1+x,beta) - InterpolateFromTable(mhattable,x))/InterpolateFromTable(mhattable,xmax) : -2.0;
+		return (x < xmax) ? (0.5*x*x/pow(1+x,beta) - InterpolateFromTable(mhattable,xtable,x))/InterpolateFromTable(mhattable,xtable,xmax) : -2.0;
 	}
 	inline double phi_h(double r,double xmax){
 		ERROR_MESSAGE();
