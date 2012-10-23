@@ -119,8 +119,6 @@ public:
 	/// if = 0 there is no input lens, if = 1 there is an analytic lens, if = 2 there is a MOKA lens
 	InputLens flag_input_lens;
 
-	bool analens_from_cone;
-
 	void readParamfile(std::string);
 	/// Redshifts of lens planes, 0...Nplanes.  Last one is the source redshift.
 	double *plane_redshifts;
