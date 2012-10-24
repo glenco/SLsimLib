@@ -35,7 +35,7 @@ public:
 	void print();
 	/// Returns total number of parameters.
 	unsigned int Nparams(){return labels.size();}
-	void PrintToFile();
+	void PrintToFile(std::string filename);
 
 private:
 	std::string paramfile_name;

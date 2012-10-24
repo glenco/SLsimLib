@@ -82,6 +82,21 @@ void InputParams::print(){
 	}
 }
 
+/// Print all parameters and values to stdout.
+void InputParams::PrintToFile(std::string filename){
+
+	paramfile_name = filename;
+	std::ofstream file_out(paramfile_name.c_str());
+
+	std::cout << "Creating parameter file: " << paramfile_name;
+	file_out << "# This parameter file was created by GLAMER."<< std::endl;
+	file_out << "# It can be used as an input parameter file."<< std::endl;
+	file_out << "# number of parameters: " << labels.size() << std::endl << std::endl;
+	for(int i=0;i<labels.size();++i){
+		file_out << labels[i] << "               " << char_values[i] << std::endl;
+	}
+}
+
 /** Returns assigns to value the value of the parameter called label.
  * If this parameter label does not appear in the parameter file false
  * is returned.  If the parameter in the file does not "match" the type
