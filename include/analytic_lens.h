@@ -42,6 +42,7 @@ public:
   /// private: the time delay scale in days/Mpc^2
   double to;
 
+  /// Angular size distance to lens plane
   double Dl;
 
   // host elliptical
