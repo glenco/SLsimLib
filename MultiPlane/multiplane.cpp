@@ -591,9 +591,6 @@ void MultiLens::createHaloData(
 	MultiLens::quicksort(&halos[0],halo_pos,halo_zs,halo_id,Nhalos);
 
 	std::cout << "leaving MultiLens::createHaloData()" << std::endl;
-
-	if(analens_from_cone) setZlens(z_max);
-
 }
 
 /**
