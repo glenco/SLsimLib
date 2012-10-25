@@ -42,4 +42,3 @@ void Model::setInternal(){
 	lens->setInternalParams(cosmo,source);
 	source->setDlDs(cosmo->angDist(0,lens->getZlens()) / cosmo->angDist(0,source->getZ()));
 }
-

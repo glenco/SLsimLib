@@ -13,6 +13,3 @@ Lens::Lens(){
 Lens::~Lens(){
 }
 
-int Lens::getNplanes(){
-	return Nplanes;
-}

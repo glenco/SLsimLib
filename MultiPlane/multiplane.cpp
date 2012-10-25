@@ -135,6 +135,28 @@ void MultiLens::make_table(CosmoHndl cosmo){
 	table_set=true;
 }
 
+void MultiLens::resetNplanes(CosmoHndl cosmo, int Np){
+  Nplanes = Np;
+
+  delete[] halo_tree;
+  delete[] halo_data;
+  
+  delete[] Dl;
+  delete[] plane_redshifts;
+  delete[] dDl;
+  
+  plane_redshifts = new double[Nplanes];
+  Dl = new double[Nplanes];
+  dDl = new double[Nplanes];
+  
+  halo_tree = new auto_ptr<QuadTree>[Nplanes-1];
+  halo_data = new auto_ptr<HaloData>[Nplanes-1];
+
+  setCoorDist(cosmo);
+  setRedshifts();
+  buildHaloTrees(cosmo);
+}
+
 /*
  * \ingroup Constructor
  * allocates space for the halo trees and the inout lens, if there is any

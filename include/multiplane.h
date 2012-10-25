@@ -66,6 +66,8 @@ public:
 	MultiLens(std::string paramfile,long *seed);
 	~MultiLens();
 
+	void resetNplanes(CosmoHndl cosmo, int Np);
+	
 	void buildHaloTrees(CosmoHndl cosmo);
 	void createHaloData(CosmoHndl cosmo,long *seed);
 	void RandomizeHost(long *seed,bool tables);

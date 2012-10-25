@@ -16,7 +16,6 @@ class Lens {
 public:
 	int Nplanes;
 
-public:
 	double zlens;
 	/// output file, not always used.
 	std::string outputfile;
@@ -26,7 +25,9 @@ public:
 	Lens();
 	virtual ~Lens();
 
-	int getNplanes();
+	int getNplanes(){return Nplanes;};
+
+	virtual void resetNplanes(CosmoHndl cosmo, int Np){};
 
 	virtual void setInternalParams(CosmoHndl,SourceHndl) = 0;
 

@@ -56,6 +56,14 @@ void writeImage(std::string filename
 		,int ny
 		,LensHalo *LH);
 
+void writeImage(std::string filename
+		,std::valarray<float> convergence
+		,std::valarray<float> gamma1
+		,std::valarray<float> gamma2
+		,std::valarray<float> gamma3
+		,int nx
+		,int ny);
+
 
 void make_friendship(int ii,int ji,int np,std:: vector<int> &friends, std:: vector<double> &pointdist);
 
