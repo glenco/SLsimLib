@@ -128,7 +128,7 @@ void InputParams::PrintToFile(std::string filename){
 	}
 }
 
-/** Returns assigns to value the value of the parameter called label.
+/** \brief Assigns to "value" the value of the parameter called "label".
  * If this parameter label does not appear in the parameter file false
  * is returned.  If the parameter in the file does not "match" the type
  * of value false will also be returned and a warning printed to stdout.
@@ -155,7 +155,7 @@ bool InputParams::get(std::string label,bool& value){
 	std::cout << label << " in parameter file " << paramfile_name << " needs to be 1 or 0 representing true or false!"<< std::endl;
 	return false;
 }
-/** Returns assigns to value the value of the parameter called label.
+/** \brief Assigns to "value" the value of the parameter called "label".
  * If this parameter label does not appear in the parameter file false
  * is returned.  If the parameter in the file does not "match" the type
  * of value false will also be returned and a warning printed to stdout.
@@ -193,7 +193,7 @@ bool InputParams::get(std::string label,IntProfType& value){
 	return false;
 }
 
-/** Returns assigns to value the value of the parameter called label.
+/** \brief Assigns to "value" the value of the parameter called "label".
  * If this parameter label does not appear in the parameter file false
  * is returned.  If the parameter in the file does not "match" the type
  * of value false will also be returned and a warning printed to stdout.
@@ -225,7 +225,7 @@ bool InputParams::get(std::string label,MassFuncType& value){
 	std::cout << label << " in parameter file " << paramfile_name << " needs to be 0, 1 or 2 or PS, ST or PowLaw!"<< std::endl;
 	return false;
 }
-/** Returns assigns to value the value of the parameter called label.
+/** \brief Assigns to "value" the value of the parameter called "label".
  * If this parameter label does not appear in the parameter file false
  * is returned.  If the parameter in the file does not "match" the type
  * of value false will also be returned and a warning printed to stdout.
@@ -258,7 +258,7 @@ bool InputParams::get(std::string label,InputLens& value){
 	std::cout << label << " in parameter file " << paramfile_name << " needs to be 0, 1 or 2 or nolens, AnaLens or MOKALens!"<< std::endl;
 	return false;
 }
-/** Returns assigns to value the value of the parameter called label.
+/** \brief Assigns to "value" the value of the parameter called "label".
  * If this parameter label does not appear in the parameter file false
  * is returned.  If the parameter in the file does not "match" the type
  * of value false will also be returned and a warning printed to stdout.
@@ -292,12 +292,12 @@ bool InputParams::get(std::string label,ClumpInternal& value){
 	return false;
 }
 
-/** Returns assigns to value the value of the parameter called label.
+/** \brief Assigns to "value" the value of the parameter called "label".
  * If this parameter label does not appear in the parameter file false
  * is returned.
  *
  * If there is an entry in the parameter file this function will always
- * return it in string format - no type checking
+ * return it in string format - no type checking.
  */
 bool InputParams::get(std::string label,std::string& value){
 	unsigned int i;
@@ -309,13 +309,13 @@ bool InputParams::get(std::string label,std::string& value){
 	use_number[i]++;
 	return true;
 }
-/** Returns assigns to value the value of the parameter called label.
+/** \brief Assigns to "value" the value of the parameter called "label".
  * If this parameter label does not appear in the parameter file false
  * is returned.  If the parameter in the file does not "match" the type
  * of value false will also be returned and a warning printed to stdout.
  *
  * The entry in the parameter file must have a numerical value.  If it
- * doesn't an exception message is printed and false is returned.
+ * does not, an exception message is printed and false is returned.
  */
 bool InputParams::get(std::string label,double& value){
 	unsigned int i;
@@ -333,13 +333,13 @@ bool InputParams::get(std::string label,double& value){
 	use_number[i]++;
 	return true;
 }
-/** Returns assigns to value the value of the parameter called label.
+/** \brief Assigns to "value" the value of the parameter called "label".
  * If this parameter label does not appear in the parameter file false
  * is returned.  If the parameter in the file does not "match" the type
  * of value false will also be returned and a warning printed to stdout.
  *
  * The entry in the parameter file must have a numerical value.  If it
- * doesn't an exception message is printed and false is returned.
+ * does not, an exception message is printed and false is returned.
  */
 bool InputParams::get(std::string label,float& value){
 	unsigned int i;
@@ -357,7 +357,7 @@ bool InputParams::get(std::string label,float& value){
 	use_number[i]++;
 	return true;
 }
-/** Returns assigns to value the value of the parameter called label.
+/** \brief Assigns to "value" the value of the parameter called "label".
  * If this parameter label does not appear in the parameter file false
  * is returned.  If the parameter in the file does not "match" the type
  * of value false will also be returned and a warning printed to stdout.

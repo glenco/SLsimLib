@@ -48,8 +48,13 @@ public:
 	~HaloData();
 };
 
+
+class MOKALens;  // Don't know why these forward declaration is necessary.
+class AnaLens;
+
 /** \brief A class to represents a lens with multiple planes.
  *
+ *<pre>
  * Lens plane indexing scheme
  *
  *              --------------------------------  i = Nplanes-1 = source plane, No mass
@@ -62,10 +67,8 @@ public:
  *
  *              --------------------------------  i = 0 first plane with mass on it at finite distance from observer
  *
+ * </pre>
  */
-
-class MOKALens;  // Don't know why these forward declaration is necessary.
-class AnaLens;
 
 class MultiLens : public Lens{
 public:

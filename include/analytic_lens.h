@@ -19,8 +19,50 @@
 #define pi  3.141593
 #endif
 
-/**\brief Analytic model for single plane lens
- * TODO BEN more explanation!!!
+/**
+ * \brief An "analytic" model to represent a lens on a single plane.
+ *
+ * The lens consists of a "host" lens which is a non-singular isothermal ellipsoid (NSIE) plus axial distortion
+ * modes, substructures and stars.
+ *
+ *<pre>
+ * Input Paramaters:
+ *
+ *  **** NSIE parameters
+ * 	sigma                  Velocity dispersion of host NSIE.
+ *	core                   Core size
+ *  axis_ratio             Axis ratio
+ *	pos_angle              Position angle
+ *	z_lens                 Redshift of lens
+ *
+ *  **** Distortion parameters
+ *	NDistortionModes       Number of distortion modes to be used.  If zero the other distortion parameters are not needed.
+ *	beta_perturb
+ *	kappa_peturb
+ *	gamma_peturb
+ *	monopole_peturb
+ *	quadrapole_peturb
+ *	hexopole_peturb
+ *	octopole_peturb
+ *
+ *	**** Substructure parameters
+ *	NdensitySubstruct      Number density of substructures.  They are distributed uniformly.  If zero the other substructure parameters are not needed.
+ *	beta_sub
+ *	alpha_sub
+ *	R_submax
+ *	mass_max
+ *	mass_min
+ *	sub_type
+ *
+ * **** Stars parameters
+ *	Nstars                 Total number of stars that will be used in the simulation.  If zero the other star parameters are not needed.
+ *	fstars                 Fraction of surface denity in stars.
+ *	stars_mass             Mass of stars.
+ *
+ * The stars are not initially present.  They must be implanted later.
+ *</pre>
+ *
+ * TODO BEN finish this.
  */
 class AnaLens : public Lens{
 public:
