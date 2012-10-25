@@ -135,6 +135,28 @@ void MultiLens::make_table(CosmoHndl cosmo){
 	table_set=true;
 }
 
+void MultiLens::resetNplanes(CosmoHndl cosmo, int Np){
+  Nplanes = Np;
+
+  delete[] halo_tree;
+  delete[] halo_data;
+  
+  delete[] Dl;
+  delete[] plane_redshifts;
+  delete[] dDl;
+  
+  plane_redshifts = new double[Nplanes];
+  Dl = new double[Nplanes];
+  dDl = new double[Nplanes];
+  
+  halo_tree = new auto_ptr<QuadTree>[Nplanes-1];
+  halo_data = new auto_ptr<HaloData>[Nplanes-1];
+
+  setCoorDist(cosmo);
+  setRedshifts();
+  buildHaloTrees(cosmo);
+}
+
 /*
  * \ingroup Constructor
  * allocates space for the halo trees and the inout lens, if there is any
@@ -408,7 +430,7 @@ void MultiLens::createHaloData(
 		z1 = np*dz;
 		z2 = z1+dz;
 
-		Nhalosbin[0] = cosmo->haloNumberDensityOnSky(pow(10,Logm[0])/cosmo->gethubble(),z1,z2,mass_func_type,pw_alpha)*fieldofview;
+		Nhalosbin[0] = cosmo->haloNumberDensityOnSky(pow(10,Logm[0])*cosmo->gethubble(),z1,z2,mass_func_type,pw_alpha)*fieldofview;
 
 		Nhaloestot = Nhalosbin[0];
 		Nhalosbin[0] = 1;
@@ -418,7 +440,7 @@ void MultiLens::createHaloData(
 #endif
 		for(k=1;k<Nmassbin;k++){
 			// cumulative number density in one square degree
-			Nhalosbin[k] = cosmo->haloNumberDensityOnSky(pow(10,Logm[k])/cosmo->gethubble(),z1,z2,mass_func_type,pw_alpha)*fieldofview;
+			Nhalosbin[k] = cosmo->haloNumberDensityOnSky(pow(10,Logm[k])*cosmo->gethubble(),z1,z2,mass_func_type,pw_alpha)*fieldofview;
 			// normalize the cumulative distribution to one
 			Nhalosbin[k] = Nhalosbin[k]/Nhaloestot;
 		}
@@ -445,7 +467,7 @@ void MultiLens::createHaloData(
 			halo.mass = pow(10,InterpolateYvec(Nhalosbin,Logm,ran2 (seed)));
 			ha->reset(halo.mass,zi);
 			halo.mass /= mass_scale;
-			halo.Rmax = ha->getRvir()*cosmo->gethubble();
+			halo.Rmax = ha->getRvir();
 			halo.rscale = halo.Rmax/ha->getConcentration(0);
 			
 			if(halo.mass > mass_max) {

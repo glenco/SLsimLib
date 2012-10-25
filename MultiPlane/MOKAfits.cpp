@@ -154,6 +154,50 @@ void writeImage(std::string filename
 #endif
 }
 
+void writeImage(std::string filename
+		,std::valarray<float> convergence
+		,std::valarray<float> gamma1
+		,std::valarray<float> gamma2
+		,std::valarray<float> gamma3
+		,int nx
+		,int ny){
+#ifdef ENABLE_FITS
+	long naxis=2;
+	long naxes[2]={nx,ny};
+
+	std::auto_ptr<FITS> fout(0);
+
+	try{
+		fout.reset(new FITS(filename,FLOAT_IMG,naxis,naxes));
+	}
+	catch(FITS::CantCreate){
+		exit(1);
+	}
+
+	std::vector<long> naxex(2);
+	naxex[0]=nx;
+	naxex[1]=ny;
+
+	PHDU *phout=&fout->pHDU();
+
+	phout->write( 1,nx*ny,convergence );
+
+	phout->addKey ("NX",nx,"pixel");
+
+	ExtHDU *eh1=fout->addImage("gamma1", FLOAT_IMG, naxex);
+	eh1->write(1,nx*ny,gamma1);
+	ExtHDU *eh2=fout->addImage("gamma2", FLOAT_IMG, naxex);
+	eh2->write(1,nx*ny,gamma2);
+	ExtHDU *eh3=fout->addImage("gamma3", FLOAT_IMG, naxex);
+	eh3->write(1,nx*ny,gamma3);
+
+	std::cout << *phout << std::endl;
+#else
+	std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
+	exit(1);
+#endif
+}
+
 
 /**
  * routine used by fof to link nearby grid cell points
