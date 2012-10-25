@@ -58,6 +58,7 @@ public:
  *              --------------------------------  i = 0 first plane with mass on it at finite distance from observer
  *
  */
+typedef enum {PowerLaw, NFW, PseudoNFW, NSIE} IntProfType;
 
 class MultiLens : public Lens{
 public:
@@ -102,7 +103,6 @@ public:
 //private:
 
 	typedef enum {PS, ST, PL} MassFuncType;
-	typedef enum {PowerLaw, NFW, PseudoNFW, NSIE} IntProfType;
 	typedef enum {null, ana_lens, moka_lens} InputLens;
 
 	void setRedshifts();

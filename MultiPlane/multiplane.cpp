@@ -1106,7 +1106,7 @@ short MultiLens::ResetSourcePlane(
 
 		locateD(coorDist_table-1,NTABLE,(Dl[j]-0.5*dDl[j]),&ind);
 		double z1 = redshift_table[ind];
-		if(nearest) j = (z>=z1) ? j : j-1;
+		if(nearest) j = (z>=z1) ? j : j-1;  // reset j to the nearest plane
 	}
 
 	if(nearest && (j < Nplanes-1) ){
@@ -1115,6 +1115,7 @@ short MultiLens::ResetSourcePlane(
 		if(j > 0) dDs_implant = dDl[j];
 		else  dDs_implant = Ds_implant;
 	}else{
+		// if nearest==false or the source is at higher redshift than the last plane use the real redshift
 		Ds_implant = Ds;
 		zs_implant = z;
 		if(j > 0) dDs_implant = cosmo->coorDist(plane_redshifts[j-1],z);

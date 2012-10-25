@@ -35,7 +35,10 @@
 
 void *compute_rays_parallel(void *_p);
 
-struct params{
+/**
+ * A data structure for temporarily distribute the data amongst threads.
+ */
+struct TmpParams{
   Point *i_points;
   bool kappa_off;
   int tid;
@@ -79,7 +82,7 @@ void MultiLens::rayshooterInternal(
   }while(chunk_size == 0);
     
   pthread_t threads[nthreads];
-  params *thread_params = new params[nthreads];
+  TmpParams *thread_params = new TmpParams[nthreads];
 
   for(int i=0; i<nthreads;i++){
     thread_params[i].i_points = i_points;
@@ -113,7 +116,7 @@ void MultiLens::rayshooterInternal(
 }
 
 void *compute_rays_parallel(void *_p){
-  params *p = (params *) _p;
+  TmpParams *p = (TmpParams *) _p;
   bool kappa_off = p->kappa_off;
   MultiLens *lens = p->lens;
   int tid        = p->tid;
