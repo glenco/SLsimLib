@@ -173,11 +173,7 @@ MultiLens::MultiLens(InputParams& params,long *my_seed) : Lens(){
 
 	std::cout << input_sim_file.c_str() << std::endl;
 
-	if(input_gal_file.size() < 1) gal_input_flag = false;
-	else gal_input_flag = true;
-	read_sim_gal_file = false;
-
-	std::cout << input_gal_file.c_str() << std::endl;
+	read_sim_file = false;
 
 	plane_redshifts = new double[Nplanes];
 	Dl = new double[Nplanes];
@@ -272,20 +268,18 @@ void MultiLens::assignParams(InputParams& params){
 			  cout << "parameter mass_func_type needs to be set in the parameter file " << params.filename() << endl;
 			  exit(0);
 		}
+		if(!params.get("min_mass",min_mass)){
+			  ERROR_MESSAGE();
+			  cout << "parameter min_mass needs to be set in the parameter file " << params.filename() << endl;
+			  exit(0);
+		}
 	}
 
-	if(!params.get("min_mass",min_mass)){
-		  ERROR_MESSAGE();
-		  cout << "parameter min_mass needs to be set in the parameter file " << params.filename() << endl;
-		  exit(0);
-	}
 	if(!params.get("mass_scale",mass_scale)){
 		  ERROR_MESSAGE();
 		  cout << "parameter mass_scale needs to be set in the parameter file " << params.filename() << endl;
 		  exit(0);
 	}
-
-	params.get("input_galaxy_file",input_gal_file);
 
 	// parameters with default values
 	if(!params.get("alpha",pw_alpha))                pw_alpha = 1./6.;
@@ -895,7 +889,7 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 
 	std::cout << "leaving MultiLens::readInputSimFile()" << std::endl;
 
-	read_sim_gal_file = true;
+	read_sim_file = true;
 }
 
 
@@ -915,7 +909,7 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 	zsource = source->getZ();
 
 	if(sim_input_flag){
-		if(read_sim_gal_file == false) readInputSimFile(cosmo);
+		if(read_sim_file == false) readInputSimFile(cosmo);
 	}
 	else{
 		createHaloData(cosmo,seed);

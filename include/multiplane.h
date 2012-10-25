@@ -52,10 +52,17 @@ public:
 class MOKALens;  // Don't know why these forward declaration is necessary.
 class AnaLens;
 
-/** \brief A class to represents a lens with multiple planes.
+/**
+ * \brief A class to represents a lens with multiple planes.
  *
  *<pre>
- * Lens plane indexing scheme
+ *	The rays are traced through multiple deflections.  On each plane there is a deflection
+ *	solver.  An AnaLens or MOKALens can be put on one of the planes.  The other planes can be
+ *	populated with random halos drawn from a mass function or they can be retrieved from an
+ *	external catalog.
+ *
+ *
+ *	Lens plane indexing scheme
  *
  *              --------------------------------  i = Nplanes-1 = source plane, No mass
  *
@@ -66,6 +73,18 @@ class AnaLens;
  *
  *
  *              --------------------------------  i = 0 first plane with mass on it at finite distance from observer
+ *
+ *   Input Parameters:
+ *
+ *	Nplanes                     Number of lens planes
+ *	flag_input_lens             1 through
+ *	fov                         Field of view for the simulation region (not nessisarily the grided region)
+ *	internal_profile            The internal profile type for the halos, 0 or PowerLaw,1 or NFW,2 or PseudoNFW, 3 or NSIE
+ *	z_source                    The "source" redshift, but actually the redshift of the last plane in the simulation.  The source can be at higher or lower redshift (see ResetSourcePlane)
+ *	input_simulation_file       File that contains the input catalog of halos.  If it is missing a random set of halos will be generated.
+ *	mass_func_type              The mass function used to generate random halos 0 through 2 or PS (Press & Schechter), ST (Sheth & Torman) or PowLaw (Power-law).  Not needed if input_simulation_file is provided.
+ *	min_mass                    Minimum mass of halo when mass function is used (solar masses).  Not used when catalog is used.
+ *	mass_scale                  The conversion between the mass units used and solar masses.  Usually 1.
  *
  * </pre>
  */
@@ -154,7 +173,7 @@ private:
 	double mass_scale;
 	/// min mass for the halo model
 	double min_mass;
-	/// internal profile type, 0=powerlaw,1=nfw,2=pseudoNfw
+	/// internal profile type, 0=powerlaw,1=nfw,2=pseudoNfw, 3=NSIE
 	IntProfType internal_profile;
 	/// power law internal profile slope, need to be <= 0
 	double pw_beta;
@@ -166,9 +185,9 @@ private:
 
 	std::string input_sim_file;
 	bool sim_input_flag;
-	std::string input_gal_file;
-	bool gal_input_flag;
-	bool read_sim_gal_file;
+	//std::string input_gal_file;
+	//bool gal_input_flag;
+	bool read_sim_file;
 
 	/// pointer to first of all the halo internal structures
 	HaloStructure *halos;

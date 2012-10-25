@@ -31,7 +31,7 @@
  *  **** NSIE parameters
  * 	sigma                  Velocity dispersion of host NSIE.
  *	core                   Core size
- *  axis_ratio             Axis ratio
+ *	axis_ratio             Axis ratio of mass
  *	pos_angle              Position angle
  *	z_lens                 Redshift of lens
  *
@@ -45,16 +45,16 @@
  *	hexopole_peturb
  *	octopole_peturb
  *
- *	**** Substructure parameters
+ *  **** Substructure parameters
  *	NdensitySubstruct      Number density of substructures.  They are distributed uniformly.  If zero the other substructure parameters are not needed.
- *	beta_sub
- *	alpha_sub
- *	R_submax
- *	mass_max
- *	mass_min
- *	sub_type
+ *	beta_sub               Logorithmic slope of the internal clump profile.  Used if sub_type == powerlaw
+ *	alpha_sub              Logorithmic slope of the mass function.
+ *	R_submax               Maximum radius of most massive substructure (see Metcalf & Amara 2012)
+ *	mass_max               Maximum mass
+ *	mass_min               Minimum mass
+ *	sub_type               Mass profile of clumps - 0 or nfw,1 or powerlaw, 2 or pointmass
  *
- * **** Stars parameters
+ *  **** Stars parameters
  *	Nstars                 Total number of stars that will be used in the simulation.  If zero the other star parameters are not needed.
  *	fstars                 Fraction of surface denity in stars.
  *	stars_mass             Mass of stars.
