@@ -38,13 +38,18 @@ MultiSourceAnaGalaxy::MultiSourceAnaGalaxy(
 }
 /// Constructor for importing from data file.
 MultiSourceAnaGalaxy::MultiSourceAnaGalaxy(
-		std::string filename   /// Input data file for galaxies
+		InputParams& params   /// Input data file for galaxies
 		,Band band             /// Filter to be used, example, SDSS_i, J, Ks, etc.
 		,double my_mag_limit   /// Apparent Magnitude limit
 		){
 
 	source_sb_type = MultiAnaSource;
-	readParamfile(filename);
+	if(!params.get("input_galaxy_file",input_gal_file)){
+		std::cout << "ERROR: input_galaxy_file not found in parameter file " << params.filename() << std::endl;
+		exit(1);
+	}
+
+	assignParams(params);
 
 	mem_allocated = true;
 	std::cout << "Constructing SourceAnaGalaxy" << std::endl;
@@ -59,7 +64,6 @@ MultiSourceAnaGalaxy::~MultiSourceAnaGalaxy(){
 }
 
 /// read in galaxies from a Millennium simulation file
-// TODO BEN/Margarita We need to be able to choose the band and
 void MultiSourceAnaGalaxy::readDataFile(std::string input_gal_file,Band band,double mag_limit){
 
 	char c='0';
@@ -269,86 +273,13 @@ void MultiSourceAnaGalaxy::readDataFile(std::string input_gal_file,Band band,dou
 	return;
 }
 
-void MultiSourceAnaGalaxy::readParamfile(std::string filename){
-      const int MAXPARAM = 50;
-	  std::string label[MAXPARAM], rlabel, rvalue;
-	  void *addr[MAXPARAM];
-	  int id[MAXPARAM];
-	  std::stringstream ss;
-	  int i ,n;
-	  int myint;
-	  double mydouble;
-	  std::string mystring;
-	  char dummy[100];
-	  std::string escape = "#";
-	  int flag;
-
-	  n = 0;
-
-	  /// id[] = 2 = string, 1 = int, 0 = double
-
-	  addr[n] = &input_gal_file;
-	  id[n] = 2;
-	  label[n++] = "input_galaxy_file";
-
-	  std::cout << "MultiSourceAnaGalaxy reading from " << filename << std::endl;
-
-	  std::ifstream file_in(filename.c_str());
-	  if(!file_in){
-	    std::cout << "Can't open file " << filename << std::endl;
-	    exit(1);
+void MultiSourceAnaGalaxy::assignParams(InputParams& params){
+	if(!params.get("input_galaxy_file",input_gal_file)){
+		  ERROR_MESSAGE();
+		  std::cout << "parameter input_galaxy_file needs to be set in the parameter file "
+				  << params.filename() << std::endl;
+		  exit(0);
 	  }
-
-	  // output file
-	  while(!file_in.eof()){
-		  file_in >> rlabel >> rvalue;
-		  file_in.getline(dummy,100);
-
-		  if(rlabel[0] == escape[0])
-			  continue;
-
-		  flag = 0;
-
-		  for(i = 0; i < n; i++){
-			  if(rlabel == label[i]){
-
-				  flag = 1;
-				  ss << rvalue;
-
-				  switch(id[i]){
-				  case 0:
-					  ss >> mydouble;
-					  *((double *)addr[i]) = mydouble;
-					  break;
-				  case 1:
-					  ss >> myint;
-					  *((int *)addr[i]) = myint;
-					  break;
-				  case 2:
-					  ss >> mystring;
-					  *((std::string *)addr[i]) = mystring;
-					  break;
-				  }
-
-				  ss.clear();
-				  ss.str(std::string());
-
-				  id[i] = -1;
-			  }
-		  }
-	  }
-
-	  for(i = 0; i < n; i++){
-		  if(id[i] >= 0){
-			  ERROR_MESSAGE();
-			  std::cout << "parameter " << label[i] << " needs to be set in the parameter file "
-					  << filename << std::endl;
-			  exit(0);
-		  }
-	  }
-
-	  file_in.close();
-
 }
 
 /// Print info on current source parameters

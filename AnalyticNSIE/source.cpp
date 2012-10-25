@@ -16,27 +16,27 @@ char dummy[300];
 Source::Source(){
 }
 
-SourceUniform::SourceUniform(string filename) : Source(){
-	readParamfile(filename);
+SourceUniform::SourceUniform(InputParams& params) : Source(){
+	assignParams(params);
 }
 
-SourceGaussian::SourceGaussian(string filename) : Source(){
-	readParamfile(filename);
+SourceGaussian::SourceGaussian(InputParams& params) : Source(){
+	assignParams(params);
 }
 
-SourceBLR::SourceBLR(string filename) : Source(){
-	readParamfile(filename);
+SourceBLR::SourceBLR(InputParams& params) : Source(){
+	assignParams(params);
 }
 
-SourceBLRDisk::SourceBLRDisk(string filename) : SourceBLR(filename){
-
-}
-
-SourceBLRSph1::SourceBLRSph1(string filename) : SourceBLR(filename){
+SourceBLRDisk::SourceBLRDisk(InputParams& params) : SourceBLR(params){
 
 }
 
-SourceBLRSph2::SourceBLRSph2(string filename) : SourceBLR(filename){
+SourceBLRSph1::SourceBLRSph1(InputParams& params) : SourceBLR(params){
+
+}
+
+SourceBLRSph2::SourceBLRSph2(InputParams& params) : SourceBLR(params){
 
 }
 
@@ -61,225 +61,92 @@ SourceBLRSph1::~SourceBLRSph1(){
 SourceBLRSph2::~SourceBLRSph2(){
 }
 
-void SourceUniform::readParamfile(string filename){
-	  string label, rlabel, rvalue;
-	  stringstream ss;
-	  double mydouble;
-	  int flag;
+void SourceUniform::assignParams(InputParams& params){
 
-	  label = "z_source";
-
-	  cout << "uniform source: reading from " << filename << endl;
-
-	  ifstream file_in(filename.c_str());
-	  if(!file_in){
-	    cout << "Can't open file " << filename << endl;
-	    exit(1);
-	  }
-
-	  flag = 1;
-
-	  // output file
-	  while(!file_in.eof()){
-		  file_in >> rlabel >> rvalue;
-		  file_in.getline(dummy,100);
-
-		  if(rlabel[0] == escape[0])
-			  continue;
-
-		  if(rlabel == label){
-
-			  flag = 0;
-			  ss << rvalue;
-
-			  ss >> mydouble;
-			  zsource = mydouble;
-
-			  ss.clear();
-			  ss.str(string());
-		  }
-	  }
-
-	  file_in.close();
-
-
-	  if(flag > 0){
+	if(!params.get("z_source",zsource)){
 		  ERROR_MESSAGE();
-		  cout << "parameter " << label << " needs to be set!" << endl;
+		  cout << "parameter z_source needs to be set in parameter file " << params.filename() << endl;
 		  exit(0);
 	  }
 
 	  printSource();
 }
 
-void SourceGaussian::readParamfile(string filename){
-	  string label[2], rlabel, rvalue;
-	  stringstream ss;
-	  void *addr[2];
-	  int id[2];
-	  int i;
-	  double mydouble;
-	  int flag;
+void SourceGaussian::assignParams(InputParams& params){
 
-	  addr[0] = &zsource;
-	  id[0] = 0;
-	  label[0] = "z_source";
 
-	  addr[1] = &source_gauss_r2;
-	  id[1] = 0;
-	  label[1] = "gauss_r2";
-
-	  cout << "gaussian source: reading from " << filename << endl;
-
-	  ifstream file_in(filename.c_str());
-	  if(!file_in){
-	    cout << "Can't open file " << filename << endl;
-	    exit(1);
+	if(!params.get("z_source",zsource)){
+		  ERROR_MESSAGE();
+		  cout << "parameter z_source needs to be set in parameter file " << params.filename() << endl;
+		  exit(0);
 	  }
 
-	  // output file
-	  while(!file_in.eof()){
-		  file_in >> rlabel >> rvalue;
-		  file_in.getline(dummy,100);
-
-		  if(rlabel[0] == escape[0])
-			  continue;
-
-		  flag = 1;
-
-		  for(i = 0; i < 2; i++){
-
-			  if(rlabel == label[i]){
-
-				  flag = 0;
-				  ss << rvalue;
-				  ss >> mydouble;
-
-				  *((double *)addr[i]) = mydouble;
-
-				  ss.clear();
-				  ss.str(string());
-			  }
-
-			  id[i] = -1;
-		  }
-	  }
-
-	  file_in.close();
-
-	  for(i = 0; i < 2; i++){
-		  if(id[i] > 0){
-			  ERROR_MESSAGE();
-			  cout << "parameter " << label[i] << " needs to be set!" << endl;
-			  exit(0);
-		  }
+	if(!params.get("gauss_r2",source_gauss_r2)){
+		  ERROR_MESSAGE();
+		  cout << "parameter gauss_r2 needs to be set in parameter file " << params.filename() << endl;
+		  exit(0);
 	  }
 
 	  printSource();
 }
 
-void SourceBLR::readParamfile(string filename){
-	  string label[9], rlabel, rvalue;
-	  stringstream ss;
-	  void *addr[9];
-	  int id[9];
-	  int i, n;
-	  float myfloat;
-	  double mydouble;
+void SourceBLR::assignParams(InputParams& params){
 
-	  n = 0;
-
-	  addr[n] = &zsource;
-	  id[n] = 1;
-	  label[n++] = "z_source";
-
-	  addr[n] = &source_BHmass;
-	  id[n] = 0;
-	  label[n++] = "BHmass";
-
-	  addr[n] = &source_gamma;
-	  id[n] = 0;
-	  label[n++] = "gamma";
-
-	  addr[n] = &source_inclination;
-	  id[n] = 0;
-	  label[n++] = "inclin";
-
-	  addr[n] = &source_opening_angle;
-	  id[n] = 0;
-	  label[n++] = "opening_ang";
-
-	  addr[n] = &source_r_in;
-	  id[n] = 0;
-	  label[n++] = "r_in";
-
-	  addr[n] = &source_r_out;
-	  id[n] = 0;
-	  label[n++] = "r_out";
-
-	  addr[n] = &source_nuo;
-	  id[n] = 0;
-	  label[n++] = "nuo";
-
-	  addr[n] = &source_fK;
-	  id[n] = 0;
-	  label[n++] = "source_fk";
-
-	  cout << "BLR source: reading from " << filename << endl;
-
-	  ifstream file_in(filename.c_str());
-	  if(!file_in){
-	    cout << "Can't open file " << filename << endl;
-	    exit(1);
+	bool fail = false;
+	if(!params.get("source_z_source",zsource)){
+		  ERROR_MESSAGE();
+		  cout << "parameter source_z_source needs to be set in parameter file " << params.filename() << endl;
+		  fail = true;
+	  }
+	if(!params.get("source_BHmass",source_BHmass)){
+		  ERROR_MESSAGE();
+		  cout << "parameter source_BHmass needs to be set in parameter file " << params.filename() << endl;
+		  fail = true;
 	  }
 
-	  // output file
-	  while(!file_in.eof()){
-		  file_in >> rlabel >> rvalue;
-		  file_in.getline(dummy,100);
-
-		  if(rlabel[0] == escape[0])
-			  continue;
-
-		  for(i = 0; i < n; i++){
-			  if(rlabel == label[i]){
-
-				  ss << rvalue;
-
-				  switch(id[i]){
-				  case 0:
-					  ss >> myfloat;
-					  *((float *)addr[i]) = myfloat;
-					  break;
-				  case 1:
-					  ss >> mydouble;
-					  *((double *)addr[i]) = mydouble;
-					  break;
-				  }
-
-				  ss.clear();
-				  ss.str(string());
-
-				  id[i] = -1;
-			  }
-		  }
+	if(!params.get("source_gamma",source_gamma)){
+		  ERROR_MESSAGE();
+		  cout << "parameter source_gamma needs to be set in parameter file " << params.filename() << endl;
+		  fail = true;
+	  }
+	if(!params.get("source_inclin",source_inclination)){
+		  ERROR_MESSAGE();
+		  cout << "parameter source_inclin needs to be set in parameter file " << params.filename() << endl;
+		  fail = true;
+	  }
+	if(!params.get("source_opening_ang",source_opening_angle)){
+		  ERROR_MESSAGE();
+		  cout << "parameter source_opening_ang needs to be set in parameter file " << params.filename() << endl;
+		  fail = true;
+	  }
+	if(!params.get("source_r_in",source_r_in)){
+		  ERROR_MESSAGE();
+		  cout << "parameter source_r_in needs to be set in parameter file " << params.filename() << endl;
+		  fail = true;
+	  }
+	if(!params.get("source_r_out",source_r_out)){
+		  ERROR_MESSAGE();
+		  cout << "parameter source_r_out needs to be set in parameter file " << params.filename() << endl;
+		  fail = true;
+	  }
+	if(!params.get("source_nuo",source_nuo)){
+		  ERROR_MESSAGE();
+		  cout << "parameter source_nuo needs to be set in parameter file " << params.filename() << endl;
+		  fail = true;
+	  }
+	if(!params.get("source_fK",source_fK)){
+		  ERROR_MESSAGE();
+		  cout << "parameter source_fK needs to be set in parameter file " << params.filename() << endl;
+		  fail = true;
 	  }
 
-	  file_in.close();
+	if(fail) exit(1);
 
-	  for(i = 0; i < n; i++){
-		  if(id[i] > 0){
-			  ERROR_MESSAGE();
-			  cout << "parameter " << label[i] << " needs to be set!" << endl;
-			  exit(0);
-		  }
-	  }
+	source_inclination *= pi/180;
+	source_opening_angle *= pi/180;
+	source_monocrome = false;
 
-	  source_inclination *= pi/180;
-	  source_opening_angle *= pi/180;
-	  source_monocrome = false;
-
-	  printSource();
+	printSource();
 }
 
 void SourceUniform::printSource(){

@@ -8,13 +8,14 @@
 #ifndef SOURCE_H_
 #define SOURCE_H_
 
+#include <InputParams.h>
 #include <galaxies.h>
 
 class Source{
 public:
 
 	  Source();
-	  ~Source();
+	  virtual ~Source();
 
 	  /// names of clump and sb models
 	  typedef enum {Uniform,Gaussian,BLR_Disk,BLR_Sph1,BLR_Sph2,MultiAnaSource} SBModel;
@@ -23,7 +24,6 @@ public:
 	  /// Surface brightness of source in grid coordinates not source centered coordinates.
 	  virtual double SurfaceBrightness(double *y) = 0;
 	  virtual double getTotalFlux() = 0;
-	  virtual void readParamfile(std::string) = 0;
 	  virtual void printSource() = 0;
 
 	  // accessor functions that will sometimes be over ridden in class derivatives
@@ -44,6 +44,7 @@ public:
 
 protected:
 	  SBModel source_sb_type;
+	  virtual void assignParams(InputParams& params) = 0;
 
 	  // source parameters
 	  /// total source size, ie no flux outside this radius
@@ -62,36 +63,35 @@ typedef Source *SourceHndl;
 
 class SourceUniform : public Source{
 public:
+	SourceUniform(InputParams& params);
+	~SourceUniform();
+
 	double SurfaceBrightness(double *y);
-	void readParamfile(std::string);
+	void assignParams(InputParams& params);
 	void printSource();
 	double getTotalFlux(){return pi*source_r*source_r;}
-
-	SourceUniform(std::string);
-	~SourceUniform();
 };
 
 class SourceGaussian : public Source{
 public:
+	  SourceGaussian(InputParams& params);
+	  ~SourceGaussian();
+
 	  /// internal scale parameter
 	  double source_gauss_r2;
 
 	  double SurfaceBrightness(double *y);
-	  void readParamfile(std::string);
+	  void assignParams(InputParams& params);
 	  void printSource();
 	  double getTotalFlux(){std::cout << "No total flux in SourceGaussian yet" << std::endl; exit(1);}
-
-	  SourceGaussian(std::string);
-	  ~SourceGaussian();
 };
 
 class SourceBLR : public Source{
 public:
 
-	  SourceBLR(std::string);
+	  SourceBLR(InputParams& params);
 	  ~SourceBLR();
 
-	  void readParamfile(std::string);
 	  void printSource();
 	  double getTotalFlux(){std::cout << "No total flux in SourceBLR yet" << std::endl; exit(1);}
 
@@ -115,6 +115,8 @@ public:
 	  float source_fK;
 	  /// set to true to integrate over frequency
 	  bool source_monocrome;
+private:
+	  void assignParams(InputParams& params);
 };
 
 class SourceBLRDisk : public SourceBLR{
@@ -122,7 +124,7 @@ public:
 	double SurfaceBrightness(double *y);
 	double getTotalFlux(){std::cout << "No total flux in SourceBLRDisk yet" << std::endl; exit(1);}
 
-	SourceBLRDisk(std::string);
+	SourceBLRDisk(InputParams&);
 	~SourceBLRDisk();
 };
 
@@ -131,7 +133,7 @@ public:
 	double SurfaceBrightness(double *y);
 	double getTotalFlux(){std::cout << "No total flux in SourceBLRSph1 yet" << std::endl; exit(1);}
 
-	SourceBLRSph1(std::string);
+	SourceBLRSph1(InputParams&);
 	~SourceBLRSph1();
 };
 
@@ -140,7 +142,7 @@ public:
 	double SurfaceBrightness(double *y);
 	double getTotalFlux(){std::cout << "No total flux in SourceBLRSph2 yet" << std::endl; exit(1);}
 
-	SourceBLRSph2(std::string);
+	SourceBLRSph2(InputParams&);
 	~SourceBLRSph2();
 };
 

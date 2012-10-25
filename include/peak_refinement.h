@@ -8,6 +8,7 @@
 #ifndef beamtypes_declare
 #define beamtypes_declare
 
+#include <slsimlib.h>
 #include <lens.h>
 #include <grid_maintenance.h>
 #include <image_info.h>

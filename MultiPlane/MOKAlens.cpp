@@ -17,7 +17,8 @@ using namespace std;
 /**
  * \brief allocates and reads the MOKA map in
  */
-MOKALens::MOKALens(std::string paramfile) : Lens(){
+//MOKALens::MOKALens(std::string paramfile) : Lens(){
+MOKALens::MOKALens(InputParams& params) : Lens(){
 #ifndef ENABLE_FITS
 	std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
 	exit(1);
@@ -26,7 +27,7 @@ MOKALens::MOKALens(std::string paramfile) : Lens(){
 	map = new MOKAmap;
 	LH = new LensHalo;
 
-	readParamfile(paramfile);
+	assignParams(params);
 
 	getDims(MOKA_input_file,&(map->nx),&(map->ny));
 
@@ -63,11 +64,12 @@ MOKALens::MOKALens(std::string paramfile) : Lens(){
  * \ingroup Constructor
  * \brief allocates and reads the MOKA map in
  */
-MOKALens::MOKALens(std::string paramfile,LensHalo *halo) : Lens(){
+//MOKALens::MOKALens(std::string paramfile,LensHalo *halo) : Lens(){
+MOKALens::MOKALens(InputParams& params,LensHalo *halo) : Lens(){
 	map = new MOKAmap;
 	LH = halo;
 
-	readParamfile(paramfile);
+	assignParams(params);
 
 	map->nx = map->ny = LH->npix;
 
@@ -136,112 +138,35 @@ void MOKALens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 	}
 }
 
-
-/** \ingroup ImageFinding
- * \brief Reads in a parameter file and sets up a MOKA lens map.
- *
+/**
  * Sets many parameters within the MOKA lens model
  */
 
-void MOKALens::readParamfile(std::string filename){
-  const int MAXPARAM = 50;
-  string label[MAXPARAM], rlabel, rvalue;
-  void *addr[MAXPARAM];
-  int id[MAXPARAM];
-  std::stringstream ss;
-  int i, n;
-  int myint;
-  double mydouble;
-  string mystring;
-  string escape = "#";
-  char dummy[300];
-  int flag;
+void MOKALens::assignParams(InputParams& params){
 
-  n = 0;
 
-  // id[] = 0 double, 1 int, 2 string
-
-  addr[n] = &zlens;
-  id[n] = 0;
-  label[n++] = "z_lens";
-
-  addr[n] = &MOKA_input_file;
-  id[n] = 2;
-  label[n++] = "MOKA_input_file";
-
-  addr[n] = &flag_MOKA_analyze;
-  id[n] = 1;
-  label[n++] = "MOKA_analyze";
-
-  addr[n] = &flag_background_field;
-  id[n] = 1;
-  label[n++] = "background_field";
-
-  std::ifstream file_in(filename.c_str());
-  if(!file_in){
-    cout << "Can't open file " << filename << endl;
-    exit(1);
+  if(!params.get("z_lens",zlens)){
+	  ERROR_MESSAGE();
+	  std::cout << "parameter z_lens needs to be set in parameter file " << params.filename() << std::endl;
+	  exit(0);
   }
 
-  // output file
-  while(!file_in.eof()){
-	  file_in >> rlabel >> rvalue;
-	  file_in.getline(dummy,100);
-
-	  if(rlabel[0] == escape[0])
-		  continue;
-
-	  flag = 0;
-
-	  for(i = 0; i < n; i++){
-		  if(rlabel == label[i]){
-
-			  flag = 1;
-			  ss << rvalue;
-
-			  switch(id[i]){
-			  case 0:
-				  ss >> mydouble;
-				  *((double *)addr[i]) = mydouble;
-				  break;
-			  case 1:
-				  ss >> myint;
-				  *((int *)addr[i]) = myint;
-				  break;
-			  case 2:
-				  ss >> mystring;
-				  *((string *)addr[i]) = mystring;
-				  break;
-			  }
-
-			  ss.clear();
-			  ss.str(std::string());
-
-			  id[i] = -1;
-		  }
-	  }
+  if(!params.get("MOKA_input_file",MOKA_input_file)){
+	  ERROR_MESSAGE();
+	  std::cout << "parameter MOKA_input_file needs to be set in parameter file " << params.filename() << std::endl;
+	  exit(0);
   }
 
-  for(i = 0; i < n; i++){
-	  if(id[i] > 0 && addr[i] != &flag_MOKA_analyze){
-		  ERROR_MESSAGE();
-		  cout << "parameter " << label[i] << " needs to be set!" << endl;
-		  exit(0);
-	  }
-
-	  if(id[i] >= 0 && addr[i] == &flag_MOKA_analyze){
-		  flag_MOKA_analyze = 0; //false, no analyzis, prepare for ray-shooting
-	  }
-
+  if(!params.get("background_field",flag_background_field)){
+	  ERROR_MESSAGE();
+	  std::cout << "parameter background_field needs to be set in parameter file " << params.filename() << std::endl;
+	  exit(0);
   }
 
-
-  file_in.close();
+  if(!params.get("MOKA_analyze",flag_MOKA_analyze)) flag_MOKA_analyze = 0;
 
   set = true;
-
 }
-
 
 double MOKALens::getZlens(){
 	return zlens;
@@ -382,7 +307,9 @@ void MOKALens::saveProfiles(double &RE3){
 	std:: cout << " nbins = " << nbin << "  dr0 = " << dr0 << std:: endl;                        
 	std:: cout << " ______________________________________________________ " << std:: endl;      
 	std:: cout << " computing profiles assuming spherical symmetry";                                
-	// - - - - - - - - - - - - - - - - -                                                         
+	// - - - - - - - - - - - - - - - - -
+
+	// TODO Carlo:  These are all memory leaks!  They are never deleted!
 	double *kprofr = estprof(map->convergence,map->nx,map->ny,pxdist,dr0,xmax,runi,runj,ntbggal);                                          
 	double *sigmakprof = estsigmaprof(map->convergence,map->nx,map->ny,pxdist,dr0,xmax,runi,runj,ntbggal,kprofr);                          
 	double *ckprofr = estcprof(map->convergence,map->nx,map->ny,pxdist,dr0,xmax,runi,runj,ntbggal);                                          

@@ -19,7 +19,7 @@ public:
 public:
 	double zlens;
 	/// output file, not always used.
-	std::string outputfile;
+	//std::string outputfile;
 	/// marks if the lens has been setup.
 	bool set;
 

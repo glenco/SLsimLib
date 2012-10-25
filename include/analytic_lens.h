@@ -8,10 +8,12 @@
 #ifndef analens_declare
 #define analens_declare
 
+#include <slsimlib.h>
 #include <Tree.h>
 #include <forceTree.h>
 #include <quadTree.h>
 #include <source.h>
+#include <string>
 
 #ifndef pi
 #define pi  3.141593
@@ -22,11 +24,9 @@
  */
 class AnaLens : public Lens{
 public:
-	AnaLens(std::string);
+	//AnaLens(std::string);
+	AnaLens(InputParams& params);
 	~AnaLens();
-
-  /// names of clump and sb models
-  typedef enum {NFW,powerlaw,pointmass} ClumpInternal;
 
   /// private: Einstein radius of host
   double host_ro;
@@ -118,7 +118,8 @@ public:
   double getZlens();
   void setZlens(double zlens);
   void setInternalParams(CosmoHndl,SourceHndl);
-  void readParamfile(std::string);
+  void assignParams(InputParams& params);
+  void error_message1(std::string name,std::string filename);
   void PrintAnaLens(bool show_substruct,bool show_stars);
   void rayshooterInternal(double *ray, double *alpha, float *gamma, float *kappa, bool kappa_off);
 

@@ -18,236 +18,105 @@ using namespace std;
 #define Grav 4.7788e-20
 #endif
 
-/** \ingroup ImageFinding
+/**
  * \brief Reads in a parameter file and sets up an analytic lens.
  *
  * Sets many parameters within the lens model, source model and
  * force calculation.
  */
+void AnaLens::assignParams(InputParams& params){
 
-void AnaLens::readParamfile(string filename){
-  const int MAXPARAM = 50;
-  string label[MAXPARAM], rlabel, rvalue;
-  void *addr[MAXPARAM];
-  int id[MAXPARAM];
-  stringstream ss;
-  int i, n, type;
-  double tmp = 0;
-  int myint;
-  double mydouble;
-  string mystring;
-  string escape = "#";
-  char dummy[300];
-  int flag;
-
-  n = 0;
-
-  // id[] = 0 double, 1 int, 2 string
-
-  addr[n] = &outputfile;
-  id[n] = 2;
-  label[n++] = "outputfile";
-
-  addr[n] = &host_sigma;
-  id[n] = 0;
-  label[n++] = "sigma";
-
-  addr[n] = &host_core;
-  id[n] = 0;
-  label[n++] = "core";
-
-  addr[n] = &host_axis_ratio;
-  id[n] = 0;
-  label[n++] = "axis_ratio";
-
-  addr[n] = &host_pos_angle;
-  id[n] = 0;
-  label[n++] = "pos_angle";
-
-  addr[n] = &perturb_Nmodes;
-  id[n] = 1;
-  label[n++] = "NDistortionModes";
-
-  addr[n] = &perturb_beta;
-  id[n] = 0;
-  label[n++] = "beta_perturb";
-
-  addr[n] = &perturb_rms[0];
-  id[n] = 0;
-  label[n++] = "kappa_peturb";
-
-  addr[n] = &perturb_rms[1];
-  id[n] = 0;
-  label[n++] = "gamma_peturb";
-
-  addr[n] = &perturb_rms[2];
-  id[n] = 0;
-  label[n++] = "monopole_peturb";
-
-  addr[n] = &perturb_rms[3];
-  id[n] = 0;
-  label[n++] = "quadrapole_peturb";
-
-  addr[n] = &perturb_rms[4];
-  id[n] = 0;
-  label[n++] = "hexopole_peturb";
-
-  addr[n] = &perturb_rms[5];
-  id[n] = 0;
-  label[n++] = "octopole_peturb";
-
-  addr[n] = &sub_Ndensity;
-  id[n] = 0;
-  label[n++] = "NdensitySubstruct";
-
-  addr[n] = &sub_beta;
-  id[n] = 0;
-  label[n++] = "beta_sub";
-
-  addr[n] = &sub_alpha;
-  id[n] = 0;
-  label[n++] = "alpha_sub";
-
-  addr[n] = &sub_Rmax;
-  id[n] = 0;
-  label[n++] = "R_submax";
-
-  addr[n] = &sub_Mmax;
-  id[n] = 0;
-  label[n++] = "mass_max";
-
-  addr[n] = &sub_Mmin;
-  id[n] = 0;
-  label[n++] = "mass_min";
-
-  addr[n] = &sub_type;
-  id[n] = 1;
-  label[n++] = "sub_type";
-
-  addr[n] = &stars_N;
-  id[n] = 1;
-  label[n++] = "Nstars";
-
-  addr[n] = &star_fstars;
-  id[n] = 0;
-  label[n++] = "fstars";
-
-  addr[n] = &star_massscale;
-  id[n] = 0;
-  label[n++] = "stars_mass";
-
-  addr[n] = &zlens;
-  id[n] = 0;
-  label[n++] = "z_lens";
+	// Host lens parameters
+	if(!params.get("sigma",host_sigma)) error_message1("sigma",params.filename());
+	if(!params.get("core",host_core)) error_message1("core",params.filename());
+	if(!params.get("axis_ratio",host_axis_ratio)) error_message1("axis_ratio",params.filename());
+	if(!params.get("pos_angle",host_pos_angle)) error_message1("pos_angle",params.filename());
+	if(!params.get("z_lens",zlens)) error_message1("z_lens",params.filename());
 
 
-  // opening file
-  cout << "analytic lens: reading from " << filename << endl;
+	// Distortion of host lens parameters
+	if(!params.get("NDistortionModes",perturb_Nmodes)) error_message1("NDistortionModes",params.filename());
+	else if(perturb_Nmodes > 0){
+		if(!params.get("beta_perturb",perturb_beta)) error_message1("beta_perturb",params.filename());
+		if(!params.get("kappa_peturb",perturb_rms[0])) error_message1("kappa_peturb",params.filename());
+		if(!params.get("gamma_peturb",perturb_rms[1])) error_message1("gamma_peturb",params.filename());
+		if(!params.get("monopole_peturb",perturb_rms[2])) error_message1("monopole_peturb",params.filename());
+		if(!params.get("quadrapole_peturb",perturb_rms[3])) error_message1("quadrapole_peturb",params.filename());
+		if(!params.get("hexopole_peturb",perturb_rms[4])) error_message1("hexopole_peturb",params.filename());
+		if(!params.get("octopole_peturb",perturb_rms[5])) error_message1("octopole_peturb",params.filename());
+	}
+    // Substructure parameters
+    if(!params.get("NdensitySubstruct",sub_Ndensity)) error_message1("NdensitySubstruct",params.filename());
+    else if(sub_Ndensity > 0){
+    	if(!params.get("beta_sub",sub_beta)) error_message1("beta_sub",params.filename());
+    	if(!params.get("alpha_sub",sub_alpha)) error_message1("alpha_sub",params.filename());
+    	if(!params.get("R_submax",sub_Rmax)) error_message1("R_submax",params.filename());
+    	if(!params.get("mass_max",sub_Mmax)) error_message1("mass_max",params.filename());
+    	if(!params.get("mass_min",sub_Mmin)) error_message1("mass_min",params.filename());
+    	if(!params.get("sub_type",sub_type)) error_message1("sub_type",params.filename());
+    }
+	  // Stars parameters
+    if(!params.get("Nstars",stars_N)) error_message1("Nstars",params.filename());
+    else if(stars_N){
+    	if(!params.get("fstars",star_fstars)) error_message1("fstars",params.filename());
+    	if(!params.get("stars_mass",star_massscale)) error_message1("stars_mass",params.filename());
+    }
 
-  ifstream file_in(filename.c_str());
-  if(!file_in){
-    cout << "Can't open file " << filename << endl;
-    exit(1);
-  }
-
-  // output file
-  while(!file_in.eof()){
-	  file_in >> rlabel >> rvalue;
-	  file_in.getline(dummy,100);
-
-	  if(rlabel[0] == escape[0])
-		  continue;
-
-	  flag = 0;
-
-	  for(i = 0; i < n; i++){
-		  if(rlabel == label[i]){
-
-			  flag = 1;
-			  ss << rvalue;
-
-			  switch(id[i]){
-			  case 0:
-				  ss >> mydouble;
-				  *((double *)addr[i]) = mydouble;
-				  break;
-			  case 1:
-				  ss >> myint;
-				  *((int *)addr[i]) = myint;
-				  break;
-			  case 2:
-				  ss >> mystring;
-				  *((string *)addr[i]) = mystring;
-				  break;
-			  }
-
-			  ss.clear();
-			  ss.str(string());
-
-			  id[i] = -1;
-		  }
-	  }
-  }
-
-  for(i = 0; i < n; i++){
-	  if(id[i] > 0){
-		  ERROR_MESSAGE();
-		  cout << "parameter " << label[i] << " needs to be set!" << endl;
-		  exit(0);
-	  }
-  }
-
-  file_in.close();
-
-  if(sub_Ndensity > 0){
-	  switch(sub_type){
-	  case NFW:
+    if(sub_Ndensity > 0){
+    	switch(sub_type){
+    	case nfw:
 		  sub_alpha_func = alphaNFW;
 		  sub_kappa_func = kappaNFW;
 		  sub_gamma_func = gammaNFW;
 		  sub_phi_func = 0;
 		  ERROR_MESSAGE();
 		  break;
-	  case powerlaw:
+    	case powerlaw:
 		  sub_alpha_func = alphaPowLaw;
 		  sub_kappa_func = kappaPowLaw;
 		  sub_gamma_func = gammaPowLaw;
 		  sub_phi_func = phiPowLaw;
 		  break;
-	  case pointmass:
+    	case pointmass:
 		  sub_alpha_func = NULL;
 		  sub_kappa_func = NULL;
 		  sub_gamma_func = NULL;
 		  sub_phi_func = NULL;
 		  break;
-	  default:
+    	default:
 		  ERROR_MESSAGE();
 		  cout << "ERROR: no submass internal profile chosen" << endl;
 		  exit(1);
 		  break;
-	  }
+    	}
+    }
 
-  }
+    // parameters for stars
+    stars_implanted = false; // stars are implanted later
+    star_theta_force = 0.1;
+    sub_theta_force = 0.1;
 
-  // parameters for stars
-  stars_implanted = false; // stars are implanted later
-  star_theta_force = 0.1;
-  sub_theta_force = 0.1;
-  
-  sub_sigmaScale = host_sigma;
+    sub_sigmaScale = host_sigma;
 
-  if(sub_Ndensity == 0)
+    if(sub_Ndensity == 0)
 	  sub_N = 0;
 
-  Sigma_crit = 0;
+    Sigma_crit = 0;
 
-  // in degrees
-  host_pos_angle*=pi/180;
-  if(perturb_Nmodes)
-	  perturb_modes = new double[perturb_Nmodes+1];
+    // in degrees
+    host_pos_angle*=pi/180;
+    if(perturb_Nmodes)
+    	perturb_modes = new double[perturb_Nmodes+1];
 
-  PrintAnaLens(false,false);
+    PrintAnaLens(false,false);
 }
+
+void AnaLens::error_message1(std::string parameter,std::string file){
+		  ERROR_MESSAGE();
+		  std::cout << "Parameter " << parameter << " is needed to construct a AnaLens.  It needs to be set in parameter file " << file << "!" << endl;
+		  exit(0);
+}
+
 
 double AnaLens::getZlens(){
 	return zlens;
@@ -262,8 +131,6 @@ void AnaLens::setZlens(double z){
  */
 void AnaLens::PrintAnaLens(bool show_substruct,bool show_stars){
 	int i;
-
-	cout << endl << "outputfile "<< outputfile << endl;
 
 	// parameters of host elliptical
 	cout << endl << "**Host lens model**" << endl;
@@ -304,7 +171,7 @@ void AnaLens::PrintAnaLens(bool show_substruct,bool show_stars){
 				  cout << "massSubstruct "<<i<<" "<<sub_mass[i] << " Msun" << endl;
 				  cout << "xSubstruct "<<i<<" "<<sub_x[i][0]<<" "<<sub_x[i][1] << " Mpc" << endl;
 					switch(sub_type){
-					case NFW:
+					case nfw:
 						cout << "  NFW clumps" << endl;
 						break;
 					case powerlaw:
@@ -373,11 +240,11 @@ void AnaLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 	to = (1+zlens)*Ds/Dls/Dl/8.39428142e-10;
 }
 
-AnaLens::AnaLens(string filename) : Lens(){
+AnaLens::AnaLens(InputParams& params) : Lens(){
 
   perturb_rms = new double[6];
 
-  readParamfile(filename);
+  assignParams(params);
 
   set = true;
 }

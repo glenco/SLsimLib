@@ -9,14 +9,11 @@
 #ifndef MOKALENS_H_
 #define MOKALENS_H_
 
+#include <slsimlib.h>
+#include <InputParams.h>
 #include <MOKAfits.h>
-#include <cosmo.h>
-#include <utilities.h>
-#include <source.h>
-#include <grid_maintenance.h>
 #include <profile.h>
 #include <valarray>
-#include <MOKAfits.h>
 
 //TODO Improve this comment with more complete description of what a MOKAmap is used for.
 /**
@@ -57,8 +54,10 @@ struct MOKAmap{
 class MOKALens : public Lens{
 public:
 
-	MOKALens(std::string);
-	MOKALens(std::string paramfile,LensHalo *LH);
+	//MOKALens(std::string);
+	//MOKALens(std::string paramfile,LensHalo *LH);
+	MOKALens(InputParams& params);
+	MOKALens(InputParams& params,LensHalo *LH);
 
 	~MOKALens();
 
@@ -68,7 +67,7 @@ public:
 	int flag_MOKA_analyze;
 	int flag_background_field;
 
-	void readParamfile(std::string);
+	void assignParams(InputParams& params);
 	void rayshooterInternal(double *ray, double *alpha, float *gamma, float *kappa, bool kappa_off);
 	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off){ERROR_MESSAGE(); exit(1);};
 	void setZlens(double zlens);

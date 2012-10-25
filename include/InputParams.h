@@ -20,6 +20,13 @@
  *
  * The get() methods are used to retrieve parameter values and test if they exist.
  */
+typedef enum {PowerLaw, NFW, PseudoNFW, NSIE} IntProfType;
+typedef enum {PS, ST, PL} MassFuncType;
+typedef enum {null, ana_lens, moka_lens} InputLens;
+/// names of clump and sb models
+typedef enum {nfw,powerlaw,pointmass} ClumpInternal;
+
+
 class InputParams {
 public:
 	InputParams(std::string paramfile);
@@ -29,19 +36,30 @@ public:
 	bool get(std::string label,std::string& value);
 	bool get(std::string label,int& value);
 	bool get(std::string label,double& value);
+	bool get(std::string label,float& value);
 	bool get(std::string label,IntProfType& value);
+	bool get(std::string label,MassFuncType& value);
+	bool get(std::string label,InputLens& value);
+	bool get(std::string label,ClumpInternal& value);
 
 	bool exist(std::string label);
 	void print();
+	void print_used();
+	void print_unused();
 	/// Returns total number of parameters.
 	unsigned int Nparams(){return labels.size();}
 	void PrintToFile(std::string filename);
+	/// Return name of the parameter file.
+	std::string filename(){return paramfile_name;}
 
 private:
 	std::string paramfile_name;
 
 	std::vector<std::string> labels;
 	std::vector<std::string> char_values;
+	std::vector<std::string> comments;
+	// The number of times a parameter was retrieved by get
+	std::vector<int> use_number;
 
 	double string_to_double( const std::string& s,bool& numeric);
 	int string_to_int( const std::string& s,bool& numeric);

@@ -13,6 +13,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <list>
+#include<TreeNB.h>
 
 #ifndef pi
 #define pi  3.141593

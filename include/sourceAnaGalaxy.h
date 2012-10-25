@@ -17,7 +17,7 @@ class MultiSourceAnaGalaxy: public Source{
 public:
 	MultiSourceAnaGalaxy(double mag, double BtoT, double Reff, double Rh, double PA, double inclination,double my_z,double *my_theta);
 	MultiSourceAnaGalaxy(OverGalaxy *my_galaxy);
-	MultiSourceAnaGalaxy(std::string input_gal_file,Band band,double my_mag_limit = 100);
+	MultiSourceAnaGalaxy(InputParams& params,Band band,double my_mag_limit = 100);
 	~MultiSourceAnaGalaxy();
 
 	/// Surface brightness of current galaxy in coordinates not centered on current galaxy.
@@ -29,7 +29,6 @@ public:
 	double getTotalFlux(){return pow(10,-(galaxies[index]->getMag())/2.5);}
 
 	void printSource();
-	void readParamfile(std::string);
 	// Add a pre-constructed galaxy to the source collection
 	void AddAGalaxy(OverGalaxy *my_galaxy){galaxies.push_back(my_galaxy);}
 
@@ -76,6 +75,7 @@ private:
 	std::string input_gal_file;
 
 	void readDataFile(std::string input_gal_file,Band band,double my_mag_limit = 100);
+	void assignParams(InputParams& params);
 
 };
 

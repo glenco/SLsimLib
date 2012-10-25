@@ -139,8 +139,8 @@ void MultiLens::make_table(CosmoHndl cosmo){
  * \ingroup Constructor
  * allocates space for the halo trees and the inout lens, if there is any
  */
-MultiLens::MultiLens(string filename,long *my_seed) : Lens(){
-	readParamfile(filename);
+MultiLens::MultiLens(InputParams& params,long *my_seed) : Lens(){
+	assignParams(params);
 
 	NTABLE=1000;
 	table_set = false;
@@ -172,11 +172,12 @@ MultiLens::MultiLens(string filename,long *my_seed) : Lens(){
 		input_lens = NULL;
 		break;
 	case ana_lens:
-		input_lens = new AnaLens(filename);
+		input_lens = new AnaLens(params);
 		analens = static_cast<AnaLens*>(input_lens);
 		break;
 	case moka_lens:
-		input_lens = new MOKALens(filename);
+		//input_lens = new MOKALens(params.filename());
+		input_lens = new MOKALens(params);
 		mokalens = static_cast<MOKALens*>(input_lens);
 		fieldofview = pow(1.5*mokalens->map->boxlrad*180/pi,2.0);
 		break;
@@ -215,159 +216,62 @@ MultiLens::~MultiLens(){
 	delete[] redshift_table;
 }
 
-void MultiLens::readParamfile(string filename){
-      const int MAXPARAM = 50;
-	  string label[MAXPARAM], rlabel, rvalue;
-	  void *addr[MAXPARAM];
-	  int id[MAXPARAM];
-	  stringstream ss;
-	  int i ,n;
-	  int myint;
-	  double mydouble;
-	  string mystring;
-	  char dummy[100];
-	  string escape = "#";
-	  int flag;
+void MultiLens::assignParams(InputParams& params){
 
-	  n = 0;
+	if(!params.get("Nplanes",Nplanes)){
+		  ERROR_MESSAGE();
+		  cout << "parameter Nplanes needs to be set in the parameter file " << params.filename() << endl;
+		  exit(0);
+	}
+	if(!params.get("flag_input_lens",flag_input_lens)){
+		  ERROR_MESSAGE();
+		  cout << "parameter flag_input_lens needs to be set in the parameter file " << params.filename() << endl;
+		  exit(0);
+	}
+	if(!params.get("fov",fieldofview)){
+		  ERROR_MESSAGE();
+		  cout << "parameter fov needs to be set in the parameter file " << params.filename() << endl;
+		  exit(0);
+	}
+	if(!params.get("internal_profile",internal_profile)){
+		  ERROR_MESSAGE();
+		  cout << "parameter internal_profile needs to be set in the parameter file " << params.filename() << endl;
+		  exit(0);
+	}
+	if(!params.get("z_source",zsource)){
+		  ERROR_MESSAGE();
+		  cout << "parameter z_source needs to be set in the parameter file " << params.filename() << endl;
+		  exit(0);
+	}
 
-	  /// id[] = 2 = string, 1 = int, 0 = double
-	  addr[n] = &outputfile;
-	  id[n] = 2;
-	  label[n++] = "outputfile";
-
-	  addr[n] = &Nplanes;
-	  id[n] = 1;
-	  label[n++] = "Nplanes";
-
-	  addr[n] = &min_mass;
-	  id[n] = 0;
-	  label[n++] = "min_mass";
-
-	  addr[n] = &mass_scale;
-	  id[n] = 0;
-	  label[n++] = "mass_scale";
-
-	  addr[n] = &flag_input_lens;
-	  id[n] = 1;
-	  label[n++] = "flag_input_lens";
-
-	  addr[n] = &fieldofview;
-	  id[n] = 0;
-	  label[n++] = "fov";
-
-	  addr[n] = &mass_func_type;
-	  id[n] = 1;
-	  label[n++] = "mass_func_type";
-
-	  addr[n] = &internal_profile;
-	  id[n] = 1;
-	  label[n++] = "internal_profile";
-
-	  addr[n] = &input_sim_file;
-	  id[n] = 2;
-	  label[n++] = "input_simulation_file";
-
-	  addr[n] = &input_gal_file;
-	  id[n] = 2;
-	  label[n++] = "input_galaxy_file";
-
-	  addr[n] = &pw_alpha;
-	  id[n] = 0;
-	  label[n++] = "alpha";
-
-	  addr[n] = &pw_beta;
-	  id[n] = 0;
-	  label[n++] = "internal_slope_pw";
-
-	  addr[n] = &pnfw_beta;
-	  id[n] = 0;
-	  label[n++] = "internal_slope_pnfw";
-
-	  addr[n] = &flag_switch_deflection_off;
-	  id[n] = 1;
-	  label[n++] = "deflection_off";
-
-	  addr[n] = &zsource;
-	  id[n] = 0;
-	  label[n++] = "z_source";
-
-	  assert(n < MAXPARAM);
-
-	  cout << "Multi lens: reading from " << filename << endl;
-
-	  ifstream file_in(filename.c_str());
-	  if(!file_in){
-	    cout << "Can't open file " << filename << endl;
-	    exit(1);
-	  }
-
-	  // output file
-	  while(!file_in.eof()){
-		  file_in >> rlabel >> rvalue;
-		  file_in.getline(dummy,100);
-
-		  if(rlabel[0] == escape[0])
-			  continue;
-
-		  flag = 0;
-
-		  for(i = 0; i < n; i++){
-			  if(rlabel == label[i]){
-
-				  flag = 1;
-				  ss << rvalue;
-
-				  switch(id[i]){
-				  case 0:
-					  ss >> mydouble;
-					  *((double *)addr[i]) = mydouble;
-					  break;
-				  case 1:
-					  ss >> myint;
-					  *((int *)addr[i]) = myint;
-					  break;
-				  case 2:
-					  ss >> mystring;
-					  *((string *)addr[i]) = mystring;
-					  break;
-				  }
-
-				  ss.clear();
-				  ss.str(string());
-
-				  id[i] = -1;
-			  }
-		  }
-	  }
-
-	  for(i = 0; i < n; i++){
-		  if(id[i] >= 0 && addr[i] != &input_sim_file && addr[i] != &input_gal_file &&
-				  addr[i] != &pw_alpha && addr[i] != &pw_beta && addr[i] != &pnfw_beta &&
-				  addr[i] != &flag_switch_deflection_off){
+	if(!params.get("input_simulation_file",input_sim_file)){
+		if(!params.get("mass_func_type",mass_func_type)){
 			  ERROR_MESSAGE();
-			  cout << "parameter " << label[i] << " needs to be set in the parameter file " << filename << endl;
+			  cout << "parameter mass_func_type needs to be set in the parameter file " << params.filename() << endl;
 			  exit(0);
-		  }
+		}
+	}
 
-		  /// DEFAULT VALUES
-		  /// in case they are not set in the parameter file
-		  if(id[i] >= 0 && addr[i] == &pw_alpha){
-			  pw_alpha = 1./6.;
-		  }
-		  if(id[i] >= 0 && addr[i] == &pw_beta){
-			  pw_beta = -1.0;
-		  }
-		  if(id[i] >= 0 && addr[i] == &pnfw_beta){
-			  pnfw_beta = 2.0;
-		  }
-		  if(id[i] >= 0 && addr[i] == &flag_switch_deflection_off){
-			  flag_switch_deflection_off = 0; //false, deflection is on
-		  }
-	  }
+	if(!params.get("min_mass",min_mass)){
+		  ERROR_MESSAGE();
+		  cout << "parameter min_mass needs to be set in the parameter file " << params.filename() << endl;
+		  exit(0);
+	}
+	if(!params.get("mass_scale",mass_scale)){
+		  ERROR_MESSAGE();
+		  cout << "parameter mass_scale needs to be set in the parameter file " << params.filename() << endl;
+		  exit(0);
+	}
 
-	  file_in.close();
+	params.get("input_galaxy_file",input_gal_file);
 
+	// parameters with default values
+	if(!params.get("alpha",pw_alpha))                pw_alpha = 1./6.;
+	if(!params.get("internal_slope_pw",pw_beta))     pw_beta = -1.0;
+	if(!params.get("internal_slope_pnfw",pnfw_beta)) pnfw_beta = 2.0;
+	if(!params.get("deflection_off",flag_switch_deflection_off)) flag_switch_deflection_off = 0;
+
+	// Some checks for valid parameters
 	  if(pw_beta >= 0){
 		  ERROR_MESSAGE();
 		  cout << "Internal slope >=0 not possible." << endl;
@@ -396,7 +300,7 @@ void MultiLens::readParamfile(string filename){
 	  // to compensate for the last plane, which is the source plane
 	  Nplanes++;
 
-	  // to compenstate for additional lens planes
+	  // to compensate for additional lens planes
 	  if(flag_input_lens)
 		  Nplanes++;
 
@@ -406,10 +310,7 @@ void MultiLens::readParamfile(string filename){
 	  printMultiLens();
 }
 
-
-
 void MultiLens::printMultiLens(){
-	cout << endl << "outputfile " << outputfile << endl;
 
 	cout << endl << "**multi lens model**" << endl;
 

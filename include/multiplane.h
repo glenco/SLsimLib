@@ -8,7 +8,9 @@
 #ifndef MULTIPLANE_H_
 #define MULTIPLANE_H_
 
+#include <slsimlib.h>
 #include <analytic_lens.h>
+#include <MOKAfits.h>
 #include <MOKAlens.h>
 #include <cosmo.h>
 #include <halo.h>
@@ -17,8 +19,11 @@
 #include <forceTree.h>
 #include <sourceAnaGalaxy.h>
 
+
 const int Nmassbin=32;
 const double MaxLogm=16.;
+
+//typedef enum {PowerLaw, NFW, PseudoNFW, NSIE} IntProfType;
 
 /** \brief Class that holds all the information about the halos' positions and their internal parameters on one plane.
  *
@@ -58,12 +63,15 @@ public:
  *              --------------------------------  i = 0 first plane with mass on it at finite distance from observer
  *
  */
-typedef enum {PowerLaw, NFW, PseudoNFW, NSIE} IntProfType;
+
+class MOKALens;  // Don't know why these forward declaration is necessary.
+class AnaLens;
 
 class MultiLens : public Lens{
 public:
 
-	MultiLens(std::string paramfile,long *seed);
+	//MultiLens(std::string paramfile,long *seed);
+	MultiLens(InputParams& params,long *seed);
 	~MultiLens();
 
 	void buildHaloTrees(CosmoHndl cosmo);
@@ -98,12 +106,22 @@ public:
 	}
 	double getZmax(){return plane_redshifts[Nplanes-1];}
 
+	/// if = 0 there is no input lens, if = 1 there is an analytic lens, if = 2 there is a MOKA lens
+	InputLens flag_input_lens;
+	/// Dl[j = 0...]angular diameter distances
+	double *Dl;
+	/// Redshifts of lens planes, 0...Nplanes.  Last one is the source redshift.
+	double *plane_redshifts;
+	/// dDl[j] is the distance between plane j-1 and j plane
+	double *dDl;
+	/// charge for the tree force solver (4*pi*G*mass_scale)
+	double charge;
+	/// an array of smart pointers to halo trees on each plane, uses the haloModel in the construction
+	std::auto_ptr<QuadTree> *halo_tree;
+	/// if >= 1, deflection in the rayshooting is wtiched if
+	int flag_switch_deflection_off;
 
-
-//private:
-
-	typedef enum {PS, ST, PL} MassFuncType;
-	typedef enum {null, ana_lens, moka_lens} InputLens;
+private:
 
 	void setRedshifts();
 	void setCoorDist(CosmoHndl cosmo);
@@ -116,22 +134,10 @@ public:
 	void make_table(CosmoHndl cosmo);
 
 	long *seed;
-	/// if = 0 there is no input lens, if = 1 there is an analytic lens, if = 2 there is a MOKA lens
-	InputLens flag_input_lens;
 
-	void readParamfile(std::string);
-	/// Redshifts of lens planes, 0...Nplanes.  Last one is the source redshift.
-	double *plane_redshifts;
-	/// Dl[j = 0...]angular diameter distances
-	double *Dl;
-	/// dDl[j] is the distance between plane j-1 and j plane
-	double *dDl;
-	/// charge for the tree force solver (4*pi*G*mass_scale)
-	double charge;
+	void assignParams(InputParams& params);
 	/// an array of smart pointers to the halo models on each plane
 	std::auto_ptr<HaloData> *halo_data;
-	/// an array of smart pointers to halo trees on each plane, uses the haloModel in the construction
-	std::auto_ptr<QuadTree> *halo_tree;
 
 	/* the following parameters are read in from the parameter file */
 
@@ -181,9 +187,6 @@ public:
 	double zsource;
 	/// nfw tables
 	//bool tables_set;
-
-	/// if >= 1, deflection in the rayshooting is wtiched if
-	int flag_switch_deflection_off;
 
 	void quicksort(HaloStructure *halos,double **brr,double *arr,unsigned long *id,unsigned long N);
 };

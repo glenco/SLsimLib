@@ -30,11 +30,14 @@
 #include <time.h>
 #include <limits>
 #include <cstring>
+#include <string>
+#include <vector>
 
 #include <nrutil.h>
 #include <nr.h>
 #include <nrD.h>
 
+#include <InputParams.h>
 #include <cosmo.h>
 #include <halo.h>
 
@@ -63,14 +66,14 @@
 #include <MOKAfits.h>
 #include <quadTree.h>
 
-#include <peak_refinement.h>
+//#include <peak_refinement.h>
 #include <map_images.h>
 
 #include <fitlens.h>
 #include <galaxies.h>
 #include <image_processing.h>
 #include <nsie.h>
-#include <InputParams.h>
+
 
 #ifndef pi
 #define pi  3.1415926
