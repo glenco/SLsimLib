@@ -52,6 +52,11 @@ public:
 	/// Return name of the parameter file.
 	std::string filename(){return paramfile_name;}
 
+	void put(std::string label,std::string value,std::string comment = "");
+	void put(std::string label,int value,std::string comment = "");
+	void put(std::string label,float value,std::string comment = "");
+	void put(std::string label,double value,std::string comment = "");
+
 private:
 	std::string paramfile_name;
 

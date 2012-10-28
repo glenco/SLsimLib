@@ -234,6 +234,7 @@ MultiLens::~MultiLens(){
 	delete[] redshift_table;
 }
 
+/// Retrieve input parameters for construction
 void MultiLens::assignParams(InputParams& params){
 
 	if(!params.get("Nplanes",Nplanes)){
@@ -273,6 +274,8 @@ void MultiLens::assignParams(InputParams& params){
 			  cout << "parameter min_mass needs to be set in the parameter file " << params.filename() << endl;
 			  exit(0);
 		}
+	}else{
+		min_mass = 0.0;
 	}
 
 	if(!params.get("mass_scale",mass_scale)){
@@ -709,8 +712,15 @@ void MultiLens::setZlens(double z){
 		exit(1);
 	}
 }
-
-/// read in halos from a simulation file
+/**
+ * \brief Read in information from a Virgo Millennium Data Base http://gavo.mpa-garching.mpg.de/MyMillennium/
+ *
+ * query select * from MockLensing.dbo.m21_20_39_021_bc03_Ben_halos
+ *
+ * This is information on the dark matter halos only.  There are 13 entries in each line separated by commas.
+ * The comments must be removed from the beginning of the data file and the total number of halos must be added
+ * as the first line.
+ */
 void MultiLens::readInputSimFile(CosmoHndl cosmo){
 
 	char c =' ';
@@ -893,7 +903,8 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 }
 
 
-/** Sets the internal parameters of the multiple lens model
+/**
+ * Sets the internal parameters of the multiple lens model
  * first the redshifts of the planes are calculated
  * then the coordinate distances to the different planes
  * the planes are populated by halos and the halo trees are built
@@ -927,14 +938,6 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 	std:: cout << " done " << std:: endl;
 }
 
-/** \brief Read in information from a Virgo Millennium Data Base http://gavo.mpa-garching.mpg.de/MyMillennium/
- *
- * query select * from MockLensing.dbo.m21_20_39_021_bc03_Ben_halos
- *
- * This is information on the dark matter halos only.  There are 13 entries in each line separated by commas.
- * The comments must be removed from the beginning of the data file and the total number of halos must be added
- * as the first line.
- */
 /// Sort halos[] and brr[][] by content off arr[]
 void swaph(HaloStructure& a,HaloStructure& b);
 void MultiLens::quicksort(HaloStructure *halos,double **brr,double *arr,unsigned long  *id,unsigned long N){
@@ -1045,56 +1048,6 @@ short MultiLens::ResetSourcePlane(
 	out = j;
 	return out;
 }
-
-
-/**
- * \brief Change the implanted source in the Multilens.
- *
- * When rays are subsequently shot through the simulation the surface brightness of the source will
- * be added to the point->surface_brightness.  Sources can be implanted without altering the existing
- * lens or rays.  The rays need to be re-shot after the index is re-shot.
- *
- * This is meant for use when the internal AnaSource has already been initialized with multiple sources.
- *
-void MultiLens::ImplantSource(
-		unsigned long index        /// the index of the galaxy to be made the current galaxy
-		,CosmoHndl cosmo           /// cosmology
-		){
-
-	if(!gal_input_flag){
-		ERROR_MESSAGE();
-		std::cout << "The AnaSource has not been constructed within MultiLens" << std::endl;
-		exit(1);
-	}
-	unsigned long j;
-	double z;
-
-	anasource->setIndex(index);
-	z = anasource->getZ();
-
-	if(anasource->getZ() > plane_redshifts[Nplanes-1]){
-		cout << "Warning: Implanted source is at higher redshift than simulation was constructed for." << endl
-		<< "It is not being added." << endl;
-		return;
-	}
-
-	Ds_implant = cosmo->angDist(0,z);
-	zs_implant = z;
-
-
-	//ys_implant[0] = Ds_implant*anasource->get_theta()[0];
-	//ys_implant[1] = Ds_implant*anasource->get_theta()[1];
-
-	ys_implant[0] = ys_implant[1] = 0.0;
-
-
-	locateD(plane_redshifts-1,Nplanes,zs_implant,&j);
-
-	dDs_implant = cosmo->coorDist(z,plane_redshifts[j]);
-
-	index_of_new_sourceplane = j;
-}
-*/
 
 void swap(double **a,double **b){
 	double *tmp;

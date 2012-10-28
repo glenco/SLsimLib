@@ -384,6 +384,70 @@ bool InputParams::get(std::string label,int& value){
 	use_number[i]++;
 	return true;
 }
+/**
+ * Add a new parameter to the parameter list.
+ */
+void InputParams::put(std::string label,std::string value,std::string comment){
+
+	labels.push_back(label);
+	use_number.push_back(0);
+	char_values.push_back(value);
+	if(comment == "") comments.push_back("");
+	else comments.push_back("#" + comment);
+
+	return;
+}
+/**
+ * Add a new parameter to the parameter list.
+ */
+void InputParams::put(std::string label,int value,std::string comment){
+
+	labels.push_back(label);
+	use_number.push_back(0);
+
+	// convert to string
+	std::ostringstream strs;
+	strs << value;
+	char_values.push_back(strs.str());
+	if(comment == "") comments.push_back("");
+	else comments.push_back("#" + comment);
+
+	return;
+}
+/**
+ * Add a new parameter to the parameter list.
+ */
+void InputParams::put(std::string label,float value,std::string comment){
+
+	labels.push_back(label);
+	use_number.push_back(0);
+
+	// convert to string
+	std::ostringstream strs;
+	strs << value;
+	char_values.push_back(strs.str());
+	if(comment == "") comments.push_back("");
+	else comments.push_back("#" + comment);
+
+	return;
+}
+/**
+ * Add a new parameter to the parameter list.
+ */
+void InputParams::put(std::string label,double value,std::string comment){
+
+	labels.push_back(label);
+	use_number.push_back(0);
+
+	// convert to string
+	std::ostringstream strs;
+	strs << value;
+	char_values.push_back(strs.str());
+	if(comment == "") comments.push_back("");
+	else comments.push_back("#" + comment);
+
+	return;
+}
 
 // Check to see if parameter exists.
 bool InputParams::exist(std::string label){
