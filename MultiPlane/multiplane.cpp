@@ -430,7 +430,7 @@ void MultiLens::createHaloData(
 		z1 = np*dz;
 		z2 = z1+dz;
 
-		Nhalosbin[0] = cosmo->haloNumberDensityOnSky(pow(10,Logm[0])*cosmo->gethubble(),z1,z2,mass_func_type,pw_alpha)*fieldofview;
+		Nhalosbin[0] = cosmo->haloNumberDensityOnSky(pow(10,Logm[0]),z1,z2,mass_func_type,pw_alpha)*fieldofview;
 
 		Nhaloestot = Nhalosbin[0];
 		Nhalosbin[0] = 1;
@@ -440,7 +440,7 @@ void MultiLens::createHaloData(
 #endif
 		for(k=1;k<Nmassbin;k++){
 			// cumulative number density in one square degree
-			Nhalosbin[k] = cosmo->haloNumberDensityOnSky(pow(10,Logm[k])*cosmo->gethubble(),z1,z2,mass_func_type,pw_alpha)*fieldofview;
+			Nhalosbin[k] = cosmo->haloNumberDensityOnSky(pow(10,Logm[k]),z1,z2,mass_func_type,pw_alpha)*fieldofview;
 			// normalize the cumulative distribution to one
 			Nhalosbin[k] = Nhalosbin[k]/Nhaloestot;
 		}
