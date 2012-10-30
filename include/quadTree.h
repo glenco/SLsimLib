@@ -261,7 +261,7 @@ public:
 
 	~QuadTreePowerLaw();
 
-private:
+protected:
 	float beta; // logorithmic slop of 2d mass profile
 
 	// Override internal structure of halos
@@ -306,7 +306,7 @@ public:
 			,double my_kappa_bk = 0.0,int bucket = 5,PosType theta = 0.1);
 	~QuadTreeNFW();
 
-private:
+protected:
 
 	//static double *ft, *gt, *g2t;
 	static double *ftable,*gtable,*g2table,*xtable;
@@ -356,7 +356,7 @@ public:
 			,double my_kappa_bk = 0.0,int bucket = 5,PosType theta = 0.1);
 	~QuadTreePseudoNFW();
 
-private:
+protected:
 
 	double beta;
 	static double *mhattable,*xtable;
@@ -393,16 +393,11 @@ public:
 				,double my_kappa_bk = 0.0,int bucket = 5,PosType theta = 0.1);
 	  ~QuadTreeNSIE();
 
-private:
+protected:
 
-	  void force_halo(double *alpha,float *kappa,float *gamma,double *xcm
+	  virtual void force_halo(double *alpha,float *kappa,float *gamma,double *xcm
 	  		,HaloStructure& halo_params,bool no_kappa);
-	  /*void force_halo(double *alpha,float *kappa,float *gamma,double *xcm
-	  		,HaloStructure& halo_params,bool no_kappa)
-	  {
-		  force_halo_nsie(alpha,kappa,gamma,xcm,static_cast<NSIEstructure &>(halo_params),no_kappa);
-	  }*/
-
+private:
 	  /// not used
 	  inline double alpha_h(double x,double xmax){assert(0); return 0.0;}
 	  /// not used
@@ -411,6 +406,24 @@ private:
 	  inline double gamma_h(double x,double xmax){assert(0); return 0.0;}
 	  /// not used
 	  inline double phi_h(double x,double){assert(0); return 0.0;}
+};
+
+/** \ingroup DeflectionL2
+ *
+ * \brief A class for calculating the deflection, kappa and gamma caused by a collection of
+ * halos that are each non-singular isothermal ellipsoids.
+ *
+ */
+class QuadTreeNFW_NSIE : public QuadTreeNFW,public QuadTreeNSIE{
+public:
+	  QuadTreeNFW_NSIE(PosType **xp,IndexType Npoints,HaloStructure *par_internals
+				,double my_kappa_bk = 0.0,int bucket = 5,PosType theta = 0.1);
+	  ~QuadTreeNFW_NSIE();
+
+protected:
+
+	  virtual void force_halo(double *alpha,float *kappa,float *gamma,double *xcm
+	  		,HaloStructure& halo_params,bool no_kappa);
 };
 
 #endif /* QUAD_TREE_H_ */

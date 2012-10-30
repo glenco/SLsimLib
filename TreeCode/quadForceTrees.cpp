@@ -171,3 +171,41 @@ void QuadTreeNSIE::force_halo(
 	}
 	return;
 }
+
+QuadTreeNFW_NSIE::QuadTreeNFW_NSIE(
+		PosType **xp              /// positions of the halos xp[0..Npoints-1][0..1 or 2]
+		,IndexType Npoints         /// number of halos
+		,HaloStructure *h_params   /// array with internal properties of halos
+		,double my_kappa_bk       /// Background convergence to be subtracted
+		,int bucket                /// maximum number of halos in a leaf of the tree
+		,PosType theta             /// Opening angle used in tree force calculation, default 0.1
+		) :
+		QuadTreeNFW(xp,Npoints,h_params,my_kappa_bk,bucket,theta),
+		QuadTreeNSIE(xp,Npoints,h_params,my_kappa_bk,bucket,theta)
+{
+
+}
+QuadTreeNFW_NSIE::~QuadTreeNFW_NSIE(){
+}
+void QuadTreeNFW_NSIE::force_halo(
+		double *alpha
+		,float *kappa
+		,float *gamma
+		,double *xcm
+	  	,HaloStructure &halo_params
+	  	,bool no_kappa
+	  	){
+	float tmp_kappa,tmp_gamma[2];
+	double tmp_alpha[2];
+
+	QuadTreeNSIE::force_halo(tmp_alpha,&tmp_kappa,tmp_gamma,xcm,halo_parms,no_kappa);
+	QuadTreeNFW::force_halo(alpha,kappa,gamma,xcm,halo_parms,no_kappa);
+
+	alpha[0] += tmp_alpha[0];
+	alpha[1] += tmp_alpha[1];
+
+	gamma[0] += tmp_gamma[0];
+	gamma[1] += tmp_gamma[1];
+
+	*kappa += tmp_kappa;
+}
