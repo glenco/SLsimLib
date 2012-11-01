@@ -79,7 +79,7 @@ class AnaLens;
  *	Nplanes                     Number of lens planes
  *	flag_input_lens             1 through
  *	fov                         Field of view for the simulation region (not nessisarily the grided region)
- *	internal_profile            The internal profile type for the halos, 0 or PowerLaw,1 or NFW,2 or PseudoNFW, 3 or NSIE
+ *	internal_profile            The internal profile type for the halos, 0 or PowerLaw,1 or NFW,2 or PseudoNFW, 3 or NSIE, 4 or NFW_NSIE
  *	z_source                    The "source" redshift, but actually the redshift of the last plane in the simulation.  The source can be at higher or lower redshift (see ResetSourcePlane)
  *	input_simulation_file       File that contains the input catalog of halos.  If it is missing a random set of halos will be generated.
  *	mass_func_type              The mass function used to generate random halos 0 through 2 or PS (Press & Schechter), ST (Sheth & Torman) or PowLaw (Power-law).  Not needed if input_simulation_file is provided.

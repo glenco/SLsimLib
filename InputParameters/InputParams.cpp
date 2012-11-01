@@ -160,7 +160,7 @@ bool InputParams::get(std::string label,bool& value){
  * is returned.  If the parameter in the file does not "match" the type
  * of value false will also be returned and a warning printed to stdout.
  *
- * IntProfType entries in the parameter file must be 0 through 3 or PowerLaw, NFW, PseudoNFW or NSIE.
+ * IntProfType entries in the parameter file must be 0 through 4 or PowerLaw, NFW, PseudoNFW, NSIE or NFW_NSIE.
  */
 bool InputParams::get(std::string label,IntProfType& value){
 	unsigned int i;
@@ -188,8 +188,14 @@ bool InputParams::get(std::string label,IntProfType& value){
 		use_number[i]++;
 		return true;
 	}
+	if(!char_values[i].compare("4") || !char_values[i].compare("NFW_NSIE")){
+		value = NFW_NSIE;
+		use_number[i]++;
+		return true;
+	}
 
-	std::cout << label << " in parameter file " << paramfile_name << " needs to be 0, 1, 2 or 3 or PowerLaw, NFW, PseudoNFW or NSIE!"<< std::endl;
+	std::cout << label << " in parameter file " << paramfile_name
+			<< " needs to be 0 or PowerLaw, 1 or NFW, 2 or PseudoNFW, 3 or NSIE, 4 or NFW_NSIE!"<< std::endl;
 	return false;
 }
 

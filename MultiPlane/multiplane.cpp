@@ -595,10 +595,14 @@ void MultiLens::buildHaloTrees(
 			halo_tree[j].reset(new QuadTreeNSIE(&halo_data[j]->pos[0],halo_data[j]->Nhalos
 							,halo_data[j]->halos,halo_data[j]->kappa_background));
 			break;
+		case NFW_NSIE:
+			halo_tree[j].reset(new QuadTreeNFW_NSIE(&halo_data[j]->pos[0],halo_data[j]->Nhalos
+							,halo_data[j]->halos,halo_data[j]->kappa_background));
+			break;
 		default:
 			ERROR_MESSAGE();
 			cout << "There is no such case for the halo trees. Please choose from:" << endl;
-			cout << "0: PowerLaw, 1: NFW, 2: PseudoNFW, 3: NSIE" << endl;
+			cout << "0: PowerLaw, 1: NFW, 2: PseudoNFW, 3: NSIE, 4: NFW_NSIE" << endl;
 			exit(1);
 			break;
 		}
@@ -724,14 +728,15 @@ void MultiLens::setZlens(double z){
 void MultiLens::readInputSimFile(CosmoHndl cosmo){
 
 	char c =' ';
-	double ra,dec,z,vmax,vdisp,r_halfmass;
+	float ra,dec,z,vmax,vdisp,r_halfmass;
 	unsigned long i,j;
 	unsigned long haloid,idd,np;
 
 	//int index;
 
-	if(internal_profile != NSIE && internal_profile != PowerLaw){
-		std::cout << "The internal profile of the halos while using simulation input files must be a Power Law."
+	if(internal_profile == PseudoNFW){
+		ERROR_MESSAGE();
+		std::cout << "Input to MultiLens is not yet enabled for PseudoNFW profiles"
 				<< std::endl << "Change this is parameter file" << std::endl;
 		exit(1);
 	}
@@ -821,24 +826,7 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 
 			halo_vec[j].mass = np*8.6e8/cosmo->gethubble();
 			halo_vec[j].Rmax = halo_vec[j].mass*Grav/2/pow(vdisp/lightspeed,2);  // SIS value
-			if(internal_profile == NSIE){
-				halo_vec[j].sigma = vdisp;
-				halo_vec[j].fratio = (ran2(seed)+1)*0.5;  //TODO This is a kluge.
-				halo_vec[j].pa = 2*pi*ran2(seed);  //TODO This is a kluge.
-				  // TODO Needs to be changed.
-				//if(halo_vec[j].mass > 1.0e14) halo_vec[j].rscale = halo_vec[j].Rmax*0.1*pow(halo_vec[j].mass/1.0e14,0.25);
-				//else
-				halo_vec[j].rscale = 0.0;
-				halo_vec[j].Rsize = rmaxNSIE(halo_vec[j].sigma,halo_vec[j].mass,halo_vec[j].fratio,halo_vec[j].rscale);
-				halo_vec[j].Rmax = MAX(1.0,1.0/halo_vec[j].fratio)*halo_vec[j].Rsize;  // redefine
-			}else{
-				// initialize unused variables to harmless values in PowerLaw case
-				halo_vec[j].Rsize = halo_vec[j].Rmax;
-				halo_vec[j].rscale = halo_vec[j].Rmax;
-				halo_vec[j].fratio = 0;
-				halo_vec[j].pa = 0;
-				halo_vec[j].sigma = 0;
-			}
+
 			if(halo_vec[j].mass > mass_max) {
 				mass_max = halo_vec[j].mass;
 				j_max = j;
@@ -846,6 +834,51 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 			if(halo_vec[j].mass < minmass) {
 				minmass = halo_vec[j].mass;
 			}
+
+			if(internal_profile == NFW || internal_profile == NFW_NSIE){
+				NFW_Utility nfw_util;
+
+				// Find the NFW profile with the same mass, Vmax and R_halfmass
+				nfw_util.match_nfw(vmax,r_halfmass*cosmo->gethubble(),halo_vec[j].mass
+						,&(halo_vec[j].rscale),&(halo_vec[j].Rmax));
+				halo_vec[j].rscale *= halo_vec[j].Rmax; // Was the concentration
+			}
+
+			if(internal_profile == NSIE || internal_profile == NFW_NSIE){
+				NFW_Utility nfw_util;
+
+				if(internal_profile == NFW_NSIE){
+					halo_vec[j].mass_nsie = halo_vec[j].mass/10;   //TODO This is a kluge.
+					halo_vec[j].mass *= 0.9;
+				}else{
+					halo_vec[j].mass_nsie = halo_vec[j].mass;   //TODO This is a kluge.
+					halo_vec[j].rscale = 0.0;
+					halo_vec[j].mass = 0.0;
+				}
+
+				halo_vec[j].sigma_nsie = vdisp;   //TODO This is a kluge.
+				halo_vec[j].fratio_nsie = (ran2(seed)+1)*0.5;  //TODO This is a kluge.
+				halo_vec[j].pa_nsie = 2*pi*ran2(seed);  //TODO This is a kluge.
+				halo_vec[j].Rsize_nsie = rmaxNSIE(halo_vec[j].sigma_nsie,halo_vec[j].mass_nsie
+						,halo_vec[j].fratio_nsie,halo_vec[j].rcore_nsie);
+
+				if(internal_profile == NSIE)
+					halo_vec[j].Rmax = MAX(1.0,1.0/halo_vec[j].fratio_nsie)*halo_vec[j].Rsize_nsie;  // redefine
+
+				assert(halo_vec[j].Rmax > halo_vec[j].Rsize_nsie); // If this should allowable then the tree Rmax and the NFW profile Rmax need to be separated.
+
+			}else{
+				// initialize unused variables to harmless values
+				halo_vec[j].Rsize_nsie = halo_vec[j].Rmax;
+				halo_vec[j].rcore_nsie = halo_vec[j].Rmax;
+				halo_vec[j].fratio_nsie = 0;
+				halo_vec[j].pa_nsie = 0;
+				halo_vec[j].sigma_nsie = 0;
+			}
+
+			// initialize unused variables to harmless values in PowerLaw case
+			if(internal_profile == PowerLaw) halo_vec[j].rscale = 0.0;
+
 			if(halo_vec[j].Rmax > R_max) R_max = halo_vec[j].Rmax;
 			if(vdisp > V_max) V_max = vdisp;
 			/*

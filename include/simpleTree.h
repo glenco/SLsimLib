@@ -59,22 +59,27 @@ struct HaloStructure{
 		return *this;
 	}*/
 
-	/// Mass in solar masses
+	/// Mass in solar masses of the part of the object that is not an NSIE
     float mass;
-    /// Radius
+    /// Radius of halo and NSIE if it exists,  This is the radius used in the tree force solver
+    /// to determine when a ray intersects an object.
     float Rmax;
-    /// scale length or core size.  Different meaning in different cases
+    /// scale length or core size.  Different meaning in different cases.  Not used in NSIE case.
     float rscale;
 
-// the below are not used except for NSIE
-	/// velocity dispersion
-	float sigma;
+// the below are not used except for NSIE.  These parameters are not used if there is no NSIE.
+    /// Mass of the NSIE
+    float mass_nsie;
+	/// velocity dispersion of NSIE
+	float sigma_nsie;
 	/// Actual edge of mass distribution in elliptical radius, Rmax is the range beyond which the halo is a point mass
-	float Rsize;
+	float Rsize_nsie;
 	/// axis ratio of surface mass distribution
-	float fratio;
+	float fratio_nsie;
 	/// position angle on sky, radians
-	float pa;
+	float pa_nsie;
+	/// core size of NSIE
+	float rcore_nsie;
 
 };
 typedef struct HaloStructure * HaloStructHndl;

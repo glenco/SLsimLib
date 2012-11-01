@@ -118,7 +118,7 @@ QuadTreeNSIE::QuadTreeNSIE(
 {
 
 	for(long i=0;i<Npoints;++i){
-		h_params[i].Rsize = rmaxNSIE(h_params[i].sigma,h_params[i].mass,h_params[i].fratio,h_params[i].rscale);
+		h_params[i].Rsize_nsie = rmaxNSIE(h_params[i].sigma_nsie,h_params[i].mass,h_params[i].fratio_nsie,h_params[i].rscale);
 	}
 }
 QuadTreeNSIE::~QuadTreeNSIE(){
@@ -138,10 +138,10 @@ void QuadTreeNSIE::force_halo(
 	double rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
 	if(rcm2 < 1e-20) rcm2 = 1e-20;
 
-	double ellipR = ellipticRadiusNSIE(xcm,halo_params.fratio,halo_params.pa);
-	if(ellipR > halo_params.Rsize){
+	double ellipR = ellipticRadiusNSIE(xcm,halo_params.fratio_nsie,halo_params.pa_nsie);
+	if(ellipR > halo_params.Rsize_nsie){
 		// if the ray misses the halo treat it as a point mass
-		  double prefac = -1.0*halo_params.mass/rcm2/pi;
+		  double prefac = -1.0*halo_params.mass_nsie/rcm2/pi;
 
 		  alpha[0] += prefac*xcm[0];
 		  alpha[1] += prefac*xcm[1];
@@ -155,16 +155,16 @@ void QuadTreeNSIE::force_halo(
 		  }
 	}else{
 		double xt[2]={0,0},tmp[2]={0,0};
-		float units = 0.5*pow(halo_params.sigma/lightspeed,2)/Grav; // mass/distance(physical)
+		float units = 0.5*pow(halo_params.sigma_nsie/lightspeed,2)/Grav; // mass/distance(physical)
 		xt[0]=xcm[0];
 		xt[1]=xcm[1];
-		alphaNSIE(tmp,xt,halo_params.fratio,halo_params.rscale,halo_params.pa);
+		alphaNSIE(tmp,xt,halo_params.fratio_nsie,halo_params.rscale,halo_params.pa_nsie);
 		alpha[0] -= units*tmp[0];
 		alpha[1] -= units*tmp[1];
 		if(!no_kappa){
 			float tmp[2]={0,0};
-			*kappa += units*kappaNSIE(xt,halo_params.fratio,halo_params.rscale,halo_params.pa);
-			gammaNSIE(tmp,xt,halo_params.fratio,halo_params.rscale,halo_params.pa);
+			*kappa += units*kappaNSIE(xt,halo_params.fratio_nsie,halo_params.rcore_nsie,halo_params.pa_nsie);
+			gammaNSIE(tmp,xt,halo_params.fratio_nsie,halo_params.rcore_nsie,halo_params.pa_nsie);
 			gamma[0] += units*tmp[0];
 			gamma[1] += units*tmp[1];
 		}
@@ -198,8 +198,8 @@ void QuadTreeNFW_NSIE::force_halo(
 	float tmp_kappa,tmp_gamma[2];
 	double tmp_alpha[2];
 
-	QuadTreeNSIE::force_halo(tmp_alpha,&tmp_kappa,tmp_gamma,xcm,halo_parms,no_kappa);
-	QuadTreeNFW::force_halo(alpha,kappa,gamma,xcm,halo_parms,no_kappa);
+	QuadTreeNSIE::force_halo(tmp_alpha,&tmp_kappa,tmp_gamma,xcm,halo_params,no_kappa);
+	QuadTreeNFW::force_halo(alpha,kappa,gamma,xcm,halo_params,no_kappa);
 
 	alpha[0] += tmp_alpha[0];
 	alpha[1] += tmp_alpha[1];
