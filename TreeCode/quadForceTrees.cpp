@@ -180,26 +180,57 @@ QuadTreeNFW_NSIE::QuadTreeNFW_NSIE(
 		,int bucket                /// maximum number of halos in a leaf of the tree
 		,PosType theta             /// Opening angle used in tree force calculation, default 0.1
 		) :
-		QuadTreeNFW(xp,Npoints,h_params,my_kappa_bk,bucket,theta),
-		QuadTreeNSIE(xp,Npoints,h_params,my_kappa_bk,bucket,theta)
+		QuadTreeNFW(xp,Npoints,h_params,my_kappa_bk,bucket,theta)
 {
-
+	qtreensie = new QuadTreeNSIE(xp,Npoints,h_params,my_kappa_bk,bucket,theta);
 }
 QuadTreeNFW_NSIE::~QuadTreeNFW_NSIE(){
+	delete qtreensie;
 }
-void QuadTreeNFW_NSIE::force_halo(
-		double *alpha
+
+//virtual void force2D(double *ray,double *alpha,float *kappa,float *gamma,bool no_kappa);
+//virtual void force2D_recur();
+
+void QuadTreeNFW_NSIE::force2D_recur(
+		double *ray
+		,double *alpha
 		,float *kappa
 		,float *gamma
-		,double *xcm
-	  	,HaloStructure &halo_params
-	  	,bool no_kappa
-	  	){
+		,bool no_kappa
+		){
+
 	float tmp_kappa,tmp_gamma[2];
 	double tmp_alpha[2];
 
-	QuadTreeNSIE::force_halo(tmp_alpha,&tmp_kappa,tmp_gamma,xcm,halo_params,no_kappa);
-	QuadTreeNFW::force_halo(alpha,kappa,gamma,xcm,halo_params,no_kappa);
+	// TODO BEN Worry about background subtraction so that it isn't redundant.
+	// TODO Worry about multi threading
+
+	qtreensie->force2D_recur(ray,tmp_alpha,&tmp_kappa,tmp_gamma,no_kappa);
+	QuadTree::force2D_recur(ray,alpha,kappa,gamma,no_kappa);
+
+	alpha[0] += tmp_alpha[0];
+	alpha[1] += tmp_alpha[1];
+
+	gamma[0] += tmp_gamma[0];
+	gamma[1] += tmp_gamma[1];
+
+	*kappa += tmp_kappa;
+}
+void QuadTreeNFW_NSIE::force2D(
+		double *ray
+		,double *alpha
+		,float *kappa
+		,float *gamma
+		,bool no_kappa
+		){
+
+	float tmp_kappa,tmp_gamma[2];
+	double tmp_alpha[2];
+
+	// TODO BEN Worry about background subtraction so that it isn't redundant.
+
+	qtreensie->force2D(ray,tmp_alpha,&tmp_kappa,tmp_gamma,no_kappa);
+	QuadTree::force2D(ray,alpha,kappa,gamma,no_kappa);
 
 	alpha[0] += tmp_alpha[0];
 	alpha[1] += tmp_alpha[1];

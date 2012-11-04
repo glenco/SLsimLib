@@ -153,10 +153,10 @@ public:
 			);
 	virtual ~QuadTree();
 
-	void force2D(double *ray,double *alpha,float *kappa,float *gamma,bool no_kappa);
-	void force2D_recur(double *ray,double *alpha,float *kappa,float *gamma,bool no_kappa);
-	void printParticlesInBranch(unsigned long number);
-	void printBranchs(int level = -1);
+	virtual void force2D(double *ray,double *alpha,float *kappa,float *gamma,bool no_kappa);
+	virtual void force2D_recur(double *ray,double *alpha,float *kappa,float *gamma,bool no_kappa);
+	virtual void printParticlesInBranch(unsigned long number);
+	virtual void printBranchs(int level = -1);
 
 protected:
 
@@ -414,16 +414,18 @@ private:
  * halos that are each non-singular isothermal ellipsoids.
  *
  */
-class QuadTreeNFW_NSIE : public QuadTreeNFW,public QuadTreeNSIE{
+class QuadTreeNFW_NSIE : public QuadTreeNFW{
 public:
 	  QuadTreeNFW_NSIE(PosType **xp,IndexType Npoints,HaloStructure *par_internals
 				,double my_kappa_bk = 0.0,int bucket = 5,PosType theta = 0.1);
 	  ~QuadTreeNFW_NSIE();
 
+	  virtual void force2D(double *ray,double *alpha,float *kappa,float *gamma,bool no_kappa);
+	  virtual void force2D_recur(double *ray,double *alpha,float *kappa,float *gamma,bool no_kappa);
+
 protected:
 
-	  virtual void force_halo(double *alpha,float *kappa,float *gamma,double *xcm
-	  		,HaloStructure& halo_params,bool no_kappa);
+	  QuadTreeNSIE* qtreensie;
 };
 
 #endif /* QUAD_TREE_H_ */
