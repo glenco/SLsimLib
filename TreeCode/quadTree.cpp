@@ -9,12 +9,7 @@
  * Programmer:    R Ben Metcalf
  */
 
-#include <iostream>
-#include <assert.h>
-#include <math.h>
-#include <vector>
-#include <quadTree.h>
-#include <TreeNB.h>
+#include "slsimlib.h"
 
 /** \brief Constructor meant for point particles, simulation particles
  */
@@ -422,6 +417,7 @@ void QuadTree::rotate_coordinates(double **coord){
  *
  *       kappa and gamma need to by multiplied by mass_scale/Sigma_crit to get
  *       the traditional units for these where Sigma_crit are in the mass/units(ray)^2
+ *       NB : the units of kappa_backgound need to be mass/units(ray)^2
  * */
 
 void QuadTree::force2D(double *ray,double *alpha,float *kappa,float *gamma,bool no_kappa){
@@ -588,6 +584,7 @@ void QuadTree::force2D(double *ray,double *alpha,float *kappa,float *gamma,bool 
  *
  *       kappa and gamma need to by multiplied by mass_scale/Sigma_crit to get
  *       the traditional units for these where Sigma_crit are in the mass/units(ray)^2
+ *       NB : the units of kappa_backgound need to be mass/units(ray)^2
  * */
 
 void QuadTree::force2D_recur(double *ray,double *alpha,float *kappa,float *gamma,bool no_kappa){

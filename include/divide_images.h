@@ -8,10 +8,7 @@
 #ifndef DIVIDE_IMAGES_H_
 #define DIVIDE_IMAGES_H_
 
-#include <Tree.h>
-#include <point.h>
-#include <Kist.h>
-#include <image_info.h>
+#include "Tree.h"
 
 void find_divide_images(TreeHndl i_tree,TreeHndl s_tree,double *source_x,double source_r
 		,ImageInfo *imageinfo,int *Nimages,int Nimagesmax);

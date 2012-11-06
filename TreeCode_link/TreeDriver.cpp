@@ -1,5 +1,5 @@
 
-#include <slsimlib.h>
+#include "slsimlib.h"
 
 /* median_cut determines how the cells are subdivided */
 /*    if ==0  equal volume cuts, Warning this option causes an error*/

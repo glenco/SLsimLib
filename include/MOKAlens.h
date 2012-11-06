@@ -9,11 +9,10 @@
 #ifndef MOKALENS_H_
 #define MOKALENS_H_
 
-#include <slsimlib.h>
-#include <InputParams.h>
-#include <MOKAfits.h>
-#include <profile.h>
-#include <valarray>
+#include "standard.h"
+#include "MOKAfits.h"
+#include "profile.h"
+#include "InputParams.h"
 
 //TODO Improve this comment with more complete description of what a MOKAmap is used for.
 /**

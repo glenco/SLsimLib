@@ -4,10 +4,8 @@
  *  Created on: Oct 18, 2011
  *      Author: bmetcalf
  */
-#include <math.h>
-#include <forceTree.h>
-#include <iostream>
 
+#include "slsimlib.h"
 
 ForceTree::ForceTree(
 		PosType **xp

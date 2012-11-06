@@ -4,9 +4,7 @@
  *  Created on: Oct 17, 2012
  *      Author: bmetcalf
  */
-#include <slsimlib.h>
-#include <InputParams.h>
-#include <sstream>
+#include "slsimlib.h"
 
 /// The constructor reads in all the lines from the parameter file and stores the labels and values of each parameter.
 InputParams::InputParams(std::string paramfile) {

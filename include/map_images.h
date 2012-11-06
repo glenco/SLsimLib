@@ -9,12 +9,7 @@
 #define MAP_IMAGES_H_
 
 #include <lens.h>
-#include <source.h>
 #include <grid_maintenance.h>
-#include <image_info.h>
-#include <Tree.h>
-#include <point.h>
-#include <Kist.h>
 
 void map_images(LensHndl lens,Source *source,GridHndl grid,int *Nimages,ImageInfo *imageinfo
 		,int Nimagesmax,double xmax,double xmin,double initial_size

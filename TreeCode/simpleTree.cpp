@@ -7,14 +7,7 @@
  * Comments:                           
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <math.h>
-#include <vector>
-#include <list>
-#include "simpleTree.h"
-#include <TreeNB.h>
+#include "slsimlib.h"
 
 
 //double dummy;

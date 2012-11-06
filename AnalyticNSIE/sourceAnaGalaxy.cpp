@@ -4,9 +4,7 @@
  *  Created on: Aug 13, 2012
  *      Author: bmetcalf
  */
-#include <slsimlib.h>
-#include <sstream>
-#include <string>
+#include "slsimlib.h"
 
 /// Source model for a single analytic galaxy model.
 MultiSourceAnaGalaxy::MultiSourceAnaGalaxy(
@@ -39,7 +37,7 @@ MultiSourceAnaGalaxy::MultiSourceAnaGalaxy(
 /// Constructor for importing from data file.
 MultiSourceAnaGalaxy::MultiSourceAnaGalaxy(
 		InputParams& params   /// Input data file for galaxies
-		){
+		): Source(),index(0){
 
 	source_sb_type = MultiAnaSource;
 	if(!params.get("input_galaxy_file",input_gal_file)){

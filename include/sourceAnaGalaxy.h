@@ -8,6 +8,8 @@
 #ifndef SOURCE_ANA_H_
 #define SOURCE_ANA_H_
 
+#include "source.h"
+
 /**
  * \brief Source that represents an analytic galaxy surface brightness model.  It encapsulates a
  * OverGalaxy which is a model from R.Oversier et al. 2012 with a bulge and a disk.

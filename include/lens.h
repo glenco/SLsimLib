@@ -7,8 +7,7 @@
 #ifndef LENS_H_
 #define LENS_H_
 
-#include <cosmo.h>
-#include <point.h>
+#include <pointlist.h>
 #include <source.h>
 
 /// An abstract base class to represent a gravitational lens.

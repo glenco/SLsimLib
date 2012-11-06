@@ -8,16 +8,11 @@
 #ifndef analens_declare
 #define analens_declare
 
-#include <slsimlib.h>
+#include <lens.h>
 #include <Tree.h>
 #include <forceTree.h>
 #include <quadTree.h>
 #include <source.h>
-#include <string>
-
-#ifndef pi
-#define pi  3.141593
-#endif
 
 /**
  * \brief An "analytic" model to represent a lens on a single plane.

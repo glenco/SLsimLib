@@ -8,8 +8,9 @@
 #ifndef SOURCE_H_
 #define SOURCE_H_
 
-#include <InputParams.h>
-#include <galaxies.h>
+#include "standard.h"
+#include "galaxies.h"
+#include "InputParams.h"
 
 class Source{
 public:

@@ -7,16 +7,9 @@
  *      reads parameters for analytic lens model
  */
 
-#include <slsimlib.h>
-#include <sstream>
+#include "slsimlib.h"
 
 using namespace std;
-
-/// added definition of Grav -- needed it setParams(cosmo)
-
-#ifndef Grav
-#define Grav 4.7788e-20
-#endif
 
 /**
  * \brief Reads in a parameter file and sets up an analytic lens.

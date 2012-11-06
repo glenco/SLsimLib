@@ -8,15 +8,9 @@
 #ifndef MULTIPLANE_H_
 #define MULTIPLANE_H_
 
-#include <slsimlib.h>
 #include <analytic_lens.h>
-#include <MOKAfits.h>
 #include <MOKAlens.h>
-#include <cosmo.h>
-#include <halo.h>
-#include <utilities.h>
 #include <quadTree.h>
-#include <forceTree.h>
 #include <sourceAnaGalaxy.h>
 
 
@@ -47,10 +41,6 @@ public:
 	//HaloData(NSIEstructure *halostrucs,double **positions,unsigned long Nhaloss);
 	~HaloData();
 };
-
-
-class MOKALens;  // Don't know why these forward declaration is necessary.
-class AnaLens;
 
 /**
  * \brief A class to represents a lens with multiple planes.
@@ -96,6 +86,8 @@ public:
 	MultiLens(InputParams& params,long *seed);
 	~MultiLens();
 
+	std::string outputfile;
+
 	void resetNplanes(CosmoHndl cosmo, int Np);
 	
 	void buildHaloTrees(CosmoHndl cosmo);
@@ -117,7 +109,7 @@ public:
 	double fieldofview;
 
 	// methods used for use with implanted sources
-	short ResetSourcePlane(CosmoHndl cosmo,double z,bool nearest);
+	short ResetSourcePlane(CosmoHndl cosmo,double z,bool nearest, unsigned long GalID=0, double *xx=NULL);
 	/// Revert the source redshift to the value it was when the MultiLens was created.
 	void RevertSourcePlane(){ toggle_source_plane = false;}
 	//void ImplantSource(unsigned long index,CosmoHndl cosmo);

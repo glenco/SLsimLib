@@ -4,16 +4,7 @@
  *  Created on: Nov 11, 2010
  *      Author: R.B. Metcalf
  */
-/*
-#include <stdlib.h>
-#include <assert.h>
-#include <math.h>
-#include <Tree.h>
-#include <Kist.h>
-#include <KistDriver.h>
-#include <divide_images.h>
-*/
-#include <slsimlib.h>
+#include "slsimlib.h"
 
 /** \ingroup ImageFindingL2
  * \brief finds the points that are within the circular source and divides

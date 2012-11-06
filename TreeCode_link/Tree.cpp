@@ -6,8 +6,7 @@
  * Comments:                           
  */
 
-#include <Tree.h>
-#include <tree_maintenance.h>
+#include "slsimlib.h"
 
 /***** Structs *****/
 

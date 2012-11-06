@@ -6,13 +6,7 @@
  *  Created on: Feb 28, 2010
  *      Author: R.B. Metcalf
  */
-#include <iostream>
-#include <math.h>
-#include <nrD.h>
-#include <nr.h>
-#include "galaxies.h"
-#include <point.h>
-#include <cstdlib>
+#include "slsimlib.h"
 
 /**
  * Returns a Sersic profile made out of individual equally luminous points

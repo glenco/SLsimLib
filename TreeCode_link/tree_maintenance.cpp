@@ -12,7 +12,7 @@
 /*    if ==0  equal volume cuts, Warning this option causes an error*/
 /*    if ==1  median point cuts */
 
-#include <slsimlib.h>
+#include "slsimlib.h"
 /************************** test routine *****************************/
 bool tree_count_test(TreeHndl tree){
 	int i,nbranches=0;

@@ -4,7 +4,8 @@
  *  Created on: Jun 6, 2012
  *      Author: bmetcalf
  */
-#include <quadTree.h>
+
+#include "slsimlib.h"
 
 QBranchNB::QBranchNB(){
 	static unsigned long n=0;

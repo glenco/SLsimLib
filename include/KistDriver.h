@@ -8,10 +8,7 @@
 #ifndef KIST_DRIVER_H_
 #define KIST_DRIVER_H_
 
-#include <Tree.h>
-#include <point.h>
-#include <Kist.h>
-#include <image_info.h>
+#include "Tree.h"
 
 void FindAllBoxNeighborsKist(TreeHndl tree,Point *point,KistHndl neighbors);
 void _FindAllBoxNeighborsKist(TreeHndl tree,Branch *leaf,KistHndl neighbors);

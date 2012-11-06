@@ -5,7 +5,7 @@
  *      Author: bmetcalf
  */
 
-#include <slsimlib.h>
+#include "slsimlib.h"
 
 /** \ingroup Constructor
  * \brief Constructor for initializing grid.

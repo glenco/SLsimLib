@@ -5,7 +5,7 @@
  *      Author: mpetkova
  */
 
-#include <lens.h>
+#include "lens.h"
 
 Lens::Lens(){
 }

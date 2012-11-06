@@ -15,7 +15,6 @@
 
         came from previous program lensexpand1.1.c
 ***************************************************************/
-#include <math.h>
 #include "analytic_lens.h"
 
 double deflection_model(double beta,double *mod,int Nmodes,double *x,double *y,double *mag){

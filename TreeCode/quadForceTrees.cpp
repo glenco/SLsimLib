@@ -4,12 +4,8 @@
  *  Created on: Oct 18, 2011
  *      Author: bmetcalf
  */
-#include <assert.h>
-#include <math.h>
-#include <slsimlib.h>
-//#include <quadTree.h>
-#include <iostream>
 
+#include "slsimlib.h"
 
 QuadTreePowerLaw::QuadTreePowerLaw(
 		float beta                 /// slop of mass profile \f$ \Sigma \propto r^\beta \f$

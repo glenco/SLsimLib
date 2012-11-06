@@ -4,21 +4,7 @@
  *  Created on: Oct 6, 2010
  *      Author: bmetcalf
  */
-/*#include <math.h>
-#include <time.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <assert.h>
-#include <nrutil.h>
-#include <Tree.h>
-#include <analytic_lens.h>
-#include <Kist.h>
-#include <KistDriver.h>
-#include <divide_images.h>
-#include <map_images.h>
-#include <tree_maintenance.h>*/
-
-#include <slsimlib.h>
+#include "slsimlib.h"
 
 //const float mumin = 0.3;  // actually the sqrt of the minimum magnification
 const double FracResTarget = 3.0e-5;

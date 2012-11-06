@@ -8,11 +8,8 @@
 #ifndef _grid_maintenance_declare_
 #define _grid_maintenance_declare_
 
-#include <lens.h>
-#include <source.h>
-#include <Kist.h>
-#include <Tree.h>
-#include <image_info.h>
+#include "lens.h"
+#include "Tree.h"
 
 /** \ingroup ImageFinding
  * \brief Structure to contain both source and image trees.

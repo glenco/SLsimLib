@@ -5,13 +5,9 @@
  *      Author: mpetkova
  */
 
-#include <slsimlib.h>
-#include <sstream>
+#include "slsimlib.h"
 
 using namespace std;
-
-const string escape = "#";
-char dummy[300];
 
 Source::Source(){
 }

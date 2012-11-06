@@ -8,31 +8,8 @@
 #ifndef SIMP_TREE_H_
 #define SIMP_TREE_H_
 
-#include <assert.h>
-#include <cmath>
-#include <iostream>
-#include <cstdlib>
-#include <list>
-#include<TreeNB.h>
+#include "standard.h"
 
-#ifndef pi
-#define pi  3.141593
-#endif
-
-#ifndef PosType_declare
-#define PosType_declare
-typedef double PosType;
-#endif
-
-#ifndef IndexType_declare
-#define IndexType_declare
-typedef unsigned long IndexType;
-#endif
-
-#ifndef error_message
-#define error_message
-#define ERROR_MESSAGE() std::cout << "ERROR: file: " << __FILE__ << " line: " << __LINE__ << std::endl;
-#endif
 
 /// for the PseudoNFW and NFW tables
 //void make_tables_nfw();
@@ -248,5 +225,8 @@ protected:
 			,double theta,float *rsph,float *mass,bool MultiRadius,bool MultiMass);
 	 void cuttoffscale(TreeNBHndl tree,double *theta);*/
 };
+
+PosType **PosTypeMatrix(long nrl, long nrh, long ncl, long nch);
+void free_PosTypeMatrix(PosType **m, long nrl, long nrh, long ncl, long nch);
 
 #endif /* SIMP_TREE_H_ */
