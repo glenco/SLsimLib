@@ -370,6 +370,9 @@ void MultiLens::printMultiLens(){
 	case NSIE:
 		cout << "  NonSingular Isothermal Ellipsoid internal profile " << endl;
 		break;
+	case NFW_NSIE:
+		cout << "  NFW plus NonSingular Isothermal Ellipsoid internal profile " << endl;
+		break;
 	}
 
 	cout << "mass function type " << mass_func_type << endl;
@@ -524,7 +527,7 @@ void MultiLens::createHaloData(
 void MultiLens::buildHaloTrees(
 		CosmoHndl cosmo /// the cosmology
 		){
-	int i, j, Ntot;
+	int j, Ntot;
 	unsigned long ind;
 	double z1, z2;
 	unsigned long j1,j2;
@@ -727,8 +730,7 @@ void MultiLens::setZlens(double z){
  */
 void MultiLens::readInputSimFile(CosmoHndl cosmo){
 
-	char c =' ';
-	float ra,dec,z,vmax,vdisp,r_halfmass;
+	double ra,dec,z,vmax,vdisp,r_halfmass;
 	unsigned long i,j;
 	unsigned long haloid,idd,np;
 
@@ -784,7 +786,6 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 	std::string strg;
 	std::string f=",";
 	std::stringstream buffer;
-	size_t length;
 
 	for(i=0,j=0 ; ; ++i){
 		// read a line of data
@@ -793,6 +794,7 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 
 		if(myline[0] == '#')
 			break;
+		std::cout << i << "  " ;
 
 		for(int l=0;l<ncolumns; l++){
 			int pos = myline.find(f);
@@ -819,13 +821,14 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 		//		 >> c >> np >> c >> vdisp >> c >> vmax >> c >> r_halfmass >> c;  //TODO the GalID will miss the first digit using this method.  No other method stops at the end of file.
 		//cout << haloid << c << idd << c << ra << c << dec << c << z
 		//				 << c << np << c << vdisp << c << vmax << c << r_halfmass << std::endl;
-		//cout << i << "  z: " << z << " np: " << np << " vmax:" << vmax << "  " << file_in.peek() << endl;
+		//std::cout << i << "  z: " << z << " np: " << np << " vmax :" << vmax << " vdisp: " << vdisp << "  " << file_in.peek() << std::endl;
 
 		if(np > 0.0 && vdisp > 0.0 && z <= zsource){
+			assert(vmax > 0.0);
 			halo_vec.push_back(halo);
 
 			halo_vec[j].mass = np*8.6e8/cosmo->gethubble();
-			halo_vec[j].Rmax = halo_vec[j].mass*Grav/2/pow(vdisp/lightspeed,2);  // SIS value
+			halo_vec[j].Rmax = halo_vec[j].mass*Grav/2/pow(vmax/lightspeed,2);  // SIS value
 
 			if(halo_vec[j].mass > mass_max) {
 				mass_max = halo_vec[j].mass;
@@ -841,26 +844,31 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 				// Find the NFW profile with the same mass, Vmax and R_halfmass
 				nfw_util.match_nfw(vmax,r_halfmass*cosmo->gethubble(),halo_vec[j].mass
 						,&(halo_vec[j].rscale),&(halo_vec[j].Rmax));
-				halo_vec[j].rscale *= halo_vec[j].Rmax; // Was the concentration
+				halo_vec[j].rscale = halo_vec[j].Rmax/halo_vec[j].rscale; // Was the concentration
+
+				std::cout << "Rmax: " << halo_vec[j].Rmax << " rscale: " << halo_vec[j].rscale << std::endl;
 			}
 
 			if(internal_profile == NSIE || internal_profile == NFW_NSIE){
 				NFW_Utility nfw_util;
 
 				if(internal_profile == NFW_NSIE){
-					halo_vec[j].mass_nsie = halo_vec[j].mass/10;   //TODO This is a kluge.
-					halo_vec[j].mass *= 0.9;
+					halo_vec[j].mass_nsie = halo_vec[j].mass*0.20;   //TODO This is a kluge.
+					halo_vec[j].mass *= 0.8;
 				}else{
-					halo_vec[j].mass_nsie = halo_vec[j].mass;   //TODO This is a kluge.
+					halo_vec[j].mass_nsie = halo_vec[j].mass;
 					halo_vec[j].rscale = 0.0;
 					halo_vec[j].mass = 0.0;
 				}
 
-				halo_vec[j].sigma_nsie = vdisp;   //TODO This is a kluge.
+				halo_vec[j].sigma_nsie = vmax;   //TODO This is a kluge.
 				halo_vec[j].fratio_nsie = (ran2(seed)+1)*0.5;  //TODO This is a kluge.
 				halo_vec[j].pa_nsie = 2*pi*ran2(seed);  //TODO This is a kluge.
 				halo_vec[j].Rsize_nsie = rmaxNSIE(halo_vec[j].sigma_nsie,halo_vec[j].mass_nsie
 						,halo_vec[j].fratio_nsie,halo_vec[j].rcore_nsie);
+
+				//std::cout << "sigma_nsie: " << halo_vec[j].sigma_nsie << " fratio_nsie: " << halo_vec[j].fratio_nsie
+				//		<< " pa_nsie: " << halo_vec[j].pa_nsie << " Rsize_nsie: " << halo_vec[j].Rsize_nsie << std::endl;
 
 				if(internal_profile == NSIE)
 					halo_vec[j].Rmax = MAX(1.0,1.0/halo_vec[j].fratio_nsie)*halo_vec[j].Rsize_nsie;  // redefine

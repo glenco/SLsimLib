@@ -25,12 +25,13 @@ typedef enum {PS, ST, PL} MassFuncType;
 typedef enum {null, ana_lens, moka_lens} InputLens;
 /// names of clump and sb models
 typedef enum {nfw,powerlaw,pointmass} ClumpInternal;
+enum Band {SDSS_U,SDSS_G,SDSS_R,SDSS_I,SDSS_Z,J,H,Ks,i1,i2};
 
 
 class InputParams {
 public:
 	InputParams(std::string paramfile);
-	virtual ~InputParams();
+	~InputParams();
 
 	bool get(std::string label,bool& value);
 	bool get(std::string label,std::string& value);
@@ -41,6 +42,7 @@ public:
 	bool get(std::string label,MassFuncType& value);
 	bool get(std::string label,InputLens& value);
 	bool get(std::string label,ClumpInternal& value);
+	bool get(std::string label,Band& value);
 
 	bool exist(std::string label);
 	void print();
@@ -49,6 +51,7 @@ public:
 	/// Returns total number of parameters.
 	unsigned int Nparams(){return labels.size();}
 	void PrintToFile(std::string filename);
+	void PrintUsedToFile(std::string filename);
 	/// Return name of the parameter file.
 	std::string filename(){return paramfile_name;}
 

@@ -182,7 +182,8 @@ QuadTreeNFW_NSIE::QuadTreeNFW_NSIE(
 		) :
 		QuadTreeNFW(xp,Npoints,h_params,my_kappa_bk,bucket,theta)
 {
-	qtreensie = new QuadTreeNSIE(xp,Npoints,h_params,my_kappa_bk,bucket,theta);
+	// The background should be taken care of in the QuadTreeNFW part
+	qtreensie = new QuadTreeNSIE(xp,Npoints,h_params,0.0,bucket,theta);
 }
 QuadTreeNFW_NSIE::~QuadTreeNFW_NSIE(){
 	delete qtreensie;

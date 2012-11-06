@@ -113,7 +113,7 @@ void InputParams::print_unused(){
 	std::cout << std::endl << n << " Parameters where UNUSED out of a total of " << labels.size() << " paramaters read from the parameter file. " << std::endl;
 }
 
-/// Print all parameters and values to stdout.
+/// Print all parameters to a file in the format needed for an input parameter file
 void InputParams::PrintToFile(std::string filename){
 
 	paramfile_name = filename;
@@ -125,6 +125,22 @@ void InputParams::PrintToFile(std::string filename){
 	file_out << "# number of parameters: " << labels.size() << std::endl << std::endl;
 	for(int i=0;i<labels.size();++i){
 		file_out << labels[i] << "               " << char_values[i] << "         " << comments[i] << std::endl;
+	}
+}
+
+/// Print all parameters to a file in the format needed for an input parameter file.
+/// Only the parameters that were accessed at least once are printed.
+void InputParams::PrintUsedToFile(std::string filename){
+
+	paramfile_name = filename;
+	std::ofstream file_out(paramfile_name.c_str());
+
+	std::cout << "Creating parameter file: " << paramfile_name;
+	file_out << "# This parameter file was created by GLAMER."<< std::endl;
+	file_out << "# It can be used as an input parameter file."<< std::endl;
+	file_out << "# number of parameters: " << labels.size() << std::endl << std::endl;
+	for(int i=0;i<labels.size();++i){
+		if(use_number[i] > 0) file_out << labels[i] << "               " << char_values[i] << "         " << comments[i] << std::endl;
 	}
 }
 
@@ -295,6 +311,74 @@ bool InputParams::get(std::string label,ClumpInternal& value){
 	}
 
 	std::cout << label << " in parameter file " << paramfile_name << " needs to be 0, 1 or 2 or nfw, powerlaw, or pointmass!"<< std::endl;
+	return false;
+}
+/** \brief Assigns to "value" the value of the parameter called "label".
+ * If this parameter label does not appear in the parameter file false
+ * is returned.  If the parameter in the file does not "match" the type
+ * of value false will also be returned and a warning printed to stdout.
+ *
+ * InputLens entries in the parameter file must be SDSS_U,SDSS_G,SDSS_R,SDSS_I,SDSS_Z,J,H,Ks,i1, or i2
+ */
+
+bool InputParams::get(std::string label,Band& value){
+	unsigned int i;
+	for(i=0;i<labels.size();++i)
+		if(labels[i] == label) break;
+	if(i==labels.size()) return false;
+
+	if(!char_values[i].compare("SDSS_U")){
+		value = SDSS_U;
+		use_number[i]++;
+		return true;
+	}
+	if(!char_values[i].compare("SDSS_G")){
+		value = SDSS_G;
+		use_number[i]++;
+		return true;
+	}
+	if(!char_values[i].compare("SDSS_R")){
+		value = SDSS_R;
+		use_number[i]++;
+		return true;
+	}
+	if(!char_values[i].compare("SDSS_I")){
+		value = SDSS_I;
+		use_number[i]++;
+		return true;
+	}
+	if(!char_values[i].compare("SDSS_Z")){
+		value = SDSS_Z;
+		use_number[i]++;
+		return true;
+	}
+	if(!char_values[i].compare("J")){
+		value = J;
+		use_number[i]++;
+		return true;
+	}
+	if(!char_values[i].compare("H")){
+		value = H;
+		use_number[i]++;
+		return true;
+	}
+	if(!char_values[i].compare("Ks")){
+		value = Ks;
+		use_number[i]++;
+		return true;
+	}
+	if(!char_values[i].compare("i1")){
+		value = i1;
+		use_number[i]++;
+		return true;
+	}
+	if(!char_values[i].compare("i2")){
+		value = i2;
+		use_number[i]++;
+		return true;
+	}
+
+	std::cout << label << " in parameter file " << paramfile_name << " needs to be SDSS_U,SDSS_G,SDSS_R,SDSS_I,SDSS_Z,J,H,Ks,i1, or i2!"<< std::endl;
 	return false;
 }
 

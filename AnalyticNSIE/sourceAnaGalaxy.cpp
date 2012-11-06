@@ -39,8 +39,6 @@ MultiSourceAnaGalaxy::MultiSourceAnaGalaxy(
 /// Constructor for importing from data file.
 MultiSourceAnaGalaxy::MultiSourceAnaGalaxy(
 		InputParams& params   /// Input data file for galaxies
-		,Band band             /// Filter to be used, example, SDSS_i, J, Ks, etc.
-		,double my_mag_limit   /// Apparent Magnitude limit
 		){
 
 	source_sb_type = MultiAnaSource;
@@ -54,7 +52,7 @@ MultiSourceAnaGalaxy::MultiSourceAnaGalaxy(
 	mem_allocated = true;
 	std::cout << "Constructing SourceAnaGalaxy" << std::endl;
 
-	readDataFile(input_gal_file,band,my_mag_limit);
+	readDataFile(input_gal_file);
 	index = 0;
 }
 
@@ -64,7 +62,7 @@ MultiSourceAnaGalaxy::~MultiSourceAnaGalaxy(){
 }
 
 /// read in galaxies from a Millennium simulation file
-void MultiSourceAnaGalaxy::readDataFile(std::string input_gal_file,Band band,double mag_limit){
+void MultiSourceAnaGalaxy::readDataFile(std::string input_gal_file){
 
 	char c='0';
 	//int type;
@@ -238,7 +236,6 @@ void MultiSourceAnaGalaxy::readDataFile(std::string input_gal_file,Band band,dou
 			ERROR_MESSAGE();
 			exit(1);
 		}
-			//TODO  BEN this needs to be selected from the parameter file
 		if(mag < mag_limit){
 			/*
 			std::cout << galid << c << haloid << c << cx << c << cy << c << cz << c << ra << c << dec << c << z_geo << c << z_app
@@ -280,6 +277,16 @@ void MultiSourceAnaGalaxy::assignParams(InputParams& params){
 				  << params.filename() << std::endl;
 		  exit(0);
 	  }
+	if(!params.get("source_band",band)){
+		std::cout << "ERROR: Must assign source_band in parameter file " << params.filename() << std::endl;
+		std::cout << "Could be that specified band is not available " << std::endl;
+		exit(1);
+	}
+	if(!params.get("source_mag_limit",mag_limit)){
+		std::cout << "ERROR: Must assign source_mag_limit in parameter file " << params.filename() << std::endl;
+		exit(1);
+	}
+
 }
 
 /// Print info on current source parameters
