@@ -1,9 +1,10 @@
 NR_DIR = ../NR
 COSMOLIB_DIR = ../CosmoLib
-CFITS_DIR =
-CCFITS_DIR =
 
-OPT = ##-fopenmp ##-DENABLE_FITS
+CFITS_DIR = /usr/local/cfitsio
+CCFITS_DIR = /usr/local/CCfitsio
+
+OPT = -fopenmp -pthread -DN_THREADS=4 -DENABLE_FITS
 
 INCL = 	-I$(COSMOLIB_DIR)/include \
 	-I$(NR_DIR)/include \
@@ -22,6 +23,7 @@ AnalyticNSIE/powerlaw.cpp \
 AnalyticNSIE/randomize_lens.cpp \
 AnalyticNSIE/readfiles_ana.cpp \
 AnalyticNSIE/source.cpp \
+AnalyticNSIE/sourceAnaGalaxy.cpp \
 BLR/blr_surface_brightness.cpp \
 BLR/blr_surface_brightness2.0.cpp \
 Fitlens/fitlens.cpp \
