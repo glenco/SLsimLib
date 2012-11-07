@@ -9,9 +9,15 @@
 
 using namespace std;
 
-HaloData::HaloData(HaloStructure *halostrucs,double kb,PosType **positions, double *zz, unsigned long *id,unsigned long Nhaloss):
+HaloData::HaloData(HaloStructure *halostrucs,double kb,PosType **positions, double *zz, unsigned long *id,unsigned long Nhaloss,double Dl):
 	pos(positions), halos(halostrucs), Nhalos(Nhaloss),z(zz),haloID(id),kappa_background(kb)
 {
+  //convert to physical Mpc on the plane 
+  for(int i=0; i<Nhalos; i++){
+    pos[i][0]*=Dl;
+    pos[i][1]*=Dl;
+  }
+
 }
 
 HaloData::~HaloData(){
@@ -36,6 +42,14 @@ void MultiLens::make_table(CosmoHndl cosmo){
 }
 
 void MultiLens::resetNplanes(CosmoHndl cosmo, int Np){
+  
+  ///revert back to radians
+  for(int j=0; j<Nplanes-1; j++)
+    for(int i=0; i<halo_data[j]->Nhalos; i++){
+      halo_data[j]->pos[i][0]/=Dl[j]/(1+plane_redshifts[j]);
+      halo_data[j]->pos[i][1]/=Dl[j]/(1+plane_redshifts[j]);
+    }
+
   Nplanes = Np;
 
   delete[] halo_tree;
@@ -51,7 +65,7 @@ void MultiLens::resetNplanes(CosmoHndl cosmo, int Np){
   
   halo_tree = new auto_ptr<QuadTree>[Nplanes-1];
   halo_data = new auto_ptr<HaloData>[Nplanes-1];
-
+   
   setCoorDist(cosmo);
   buildHaloTrees(cosmo);
 }
@@ -358,7 +372,7 @@ void MultiLens::createHaloData(
 
 			zi = z1+(z2-z1)*ran2 (seed);
 
-			maxr = pi*sqrt(fieldofview/pi)/180.; // fov is a circle
+			maxr = pi*sqrt(fieldofview/pi)/180.*cosmo->angDist(0,zi); // fov is a circle
 			rr = maxr*sqrt(ran2(seed));
 
 			theta = 2*pi*ran2(seed);
@@ -373,11 +387,6 @@ void MultiLens::createHaloData(
 			halo.mass /= mass_scale;
 			halo.Rmax = ha->getRvir();
 			halo.rscale = halo.Rmax/ha->getConcentration(0);
-			
-			/// convert to radians
-			double Ds = cosmo->angDist(0,zi);
-			halo.Rmax/=Ds;
-			halo.rscale/=Ds;
 			
 			if(halo.mass > mass_max) {
 			  mass_max = halo.mass;
@@ -485,7 +494,7 @@ void MultiLens::buildHaloTrees(
 		 */
 		double kb = cosmo->totalMassDensityinHalos(mass_func_type,pw_alpha,min_mass,plane_redshifts[j],z1,z2);
 
-		halo_data[j].reset(new HaloData(&halos[j1],kb,&halo_pos[j1],&halo_zs[j1],&halo_id[j1],j2-j1));
+		halo_data[j].reset(new HaloData(&halos[j1],kb,&halo_pos[j1],&halo_zs[j1],&halo_id[j1],j2-j1,Dl[j]/(1+plane_redshifts[j])));
 
 		/// Use other constructor to create halo data
 		std::cout << "  Building tree on plane " << j << " number of halos: " << halo_data[j]->Nhalos << std::endl;
@@ -742,11 +751,11 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 
 				// Find the NFW profile with the same mass, Vmax and R_halfmass
 				nfw_util.match_nfw(vmax,r_halfmass*cosmo->gethubble(),halo_vec[j].mass
-						,&(halo_vec[j].rscale),&(halo_vec[j].Rmax));
+						   ,&(halo_vec[j].rscale),&(halo_vec[j].Rmax));
 				halo_vec[j].rscale = halo_vec[j].Rmax/halo_vec[j].rscale; // Was the concentration
-				//std::cout << "Rmax: " << halo_vec[j].Rmax << " rscale: " << halo_vec[j].rscale << std::endl;
+				//std::cout << "z: " << z << " vmax:" << vmax << " Rmax: " << halo_vec[j].Rmax << " rscale: " << halo_vec[j].rscale << std::endl;
 			}
-
+			
 			if(internal_profile == NSIE || internal_profile == NFW_NSIE){
 				NFW_Utility nfw_util;
 
@@ -806,14 +815,6 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 			theta[0] = ra*pi/180.;
 			theta[1] = dec*pi/180.;
 			halo_pos_vec.push_back(theta);
-
-
-			/// convert to radians
-			double Dang = cosmo->angDist(0,z);
-			halo_vec[j].Rmax/=Dang;
-			halo_vec[j].rscale/=Dang;
-			halo_vec[j].Rsize_nsie/=Dang;
-			halo_vec[j].rcore_nsie/=Dang;
 
 			++j;
 		

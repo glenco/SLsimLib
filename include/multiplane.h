@@ -37,7 +37,7 @@ public:
 	unsigned long *haloID;
 
 	//HaloData(double fov,double min_mass,double mass_scale,double z1,double z2,int mass_func_type,double alpha,CosmoHndl cosmo,long *seed);
-	HaloData(HaloStructure *halostrucs,double kb,double **positions,double *z, unsigned long *haloID,unsigned long Nhaloss);
+	HaloData(HaloStructure *halostrucs,double kb,double **positions,double *z, unsigned long *haloID,unsigned long Nhaloss,double Dl);
 	//HaloData(NSIEstructure *halostrucs,double **positions,unsigned long Nhaloss);
 	~HaloData();
 };
