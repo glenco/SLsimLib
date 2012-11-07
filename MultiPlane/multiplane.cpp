@@ -50,6 +50,8 @@ void MultiLens::resetNplanes(CosmoHndl cosmo, int Np){
   int i,j;
   ///revert back to radians
   for(j=0; j<Nplanes-1; j++){
+    if(flag_input_lens && j == (flag_input_lens % Nplanes))
+      continue;
 #ifdef _OPENMP
 #pragma omp parallel for default(shared) private(i)
 #endif
