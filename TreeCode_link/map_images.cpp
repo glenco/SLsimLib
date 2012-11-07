@@ -790,8 +790,6 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
 				  do{
 					  getCurrentKist(imageinfo[i].outerborder)->in_image = FALSE;
 					  if(getCurrentKist(imageinfo[i].outerborder)->surface_brightness > 0) point = getCurrentKist(imageinfo[i].outerborder);
-					  // TODO This was taken out and i'm not sure if it was needed.
-					  //assert(getCurrentKist(imageinfo[i].outerborder)->surface_brightness == 0);
 				  }while(MoveDownKist(imageinfo[i].outerborder));
 			  }
 			  findborders4(grid->i_tree,&(imageinfo[i]));

@@ -24,7 +24,7 @@ HaloData::HaloData(HaloStructure *halostrucs,double kb,PosType **positions, doub
 	pos(positions), halos(NULL), nsiehalos(halostrucs), Nhalos(Nhaloss)
 {
 	allocation_flag = false;
-	kappa_background = 0.0;  //TODO This should be set properly at some point.
+	kappa_background = 0.0;
 }*/
 
 /*
@@ -534,6 +534,8 @@ void MultiLens::buildHaloTrees(
 
 	std::cout << "MultiLens::buildHaloTrees zsource = " << zsource << std::endl;
 
+	assert(plane_redshifts[Nplanes-1] == zsource);
+
 	for(j=0,Ntot=0;j<Nplanes-1;j++){
 		if(flag_input_lens && j == (flag_input_lens % Nplanes))
 			continue;
@@ -818,7 +820,7 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 		//file_in >> haloid >>  idd >>  ra >>  dec >>  z
 		//		 >>  np >>  vdisp >>  vmax >>  r_halfmass;
 		//file_in >> c >> haloid >> c >> idd >> c >> ra >> c >> dec >> c >> z
-		//		 >> c >> np >> c >> vdisp >> c >> vmax >> c >> r_halfmass >> c;  //TODO the GalID will miss the first digit using this method.  No other method stops at the end of file.
+		//		 >> c >> np >> c >> vdisp >> c >> vmax >> c >> r_halfmass >> c;
 		//cout << haloid << c << idd << c << ra << c << dec << c << z
 		//				 << c << np << c << vdisp << c << vmax << c << r_halfmass << std::endl;
 		//std::cout << i << "  z: " << z << " np: " << np << " vmax :" << vmax << " vdisp: " << vdisp << "  " << file_in.peek() << std::endl;
@@ -872,8 +874,7 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 
 				if(internal_profile == NSIE)
 					halo_vec[j].Rmax = MAX(1.0,1.0/halo_vec[j].fratio_nsie)*halo_vec[j].Rsize_nsie;  // redefine
-
-				assert(halo_vec[j].Rmax > halo_vec[j].Rsize_nsie); // If this should allowable then the tree Rmax and the NFW profile Rmax need to be separated.
+				assert(halo_vec[j].Rmax >= halo_vec[j].Rsize_nsie); // If this should allowable then the tree Rmax and the NFW profile Rmax need to be separated.
 
 			}else{
 				// initialize unused variables to harmless values

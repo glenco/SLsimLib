@@ -44,7 +44,7 @@ struct TmpParams{
   int tid;
   int start;
   int size;
-  int NLastPlane;
+  int NPlanes;
   MultiLens *lens;
 };
 
@@ -93,7 +93,7 @@ void MultiLens::rayshooterInternal(
     thread_params[i].start = i*chunk_size;
     thread_params[i].tid = i;
     thread_params[i].lens = this;
-    thread_params[i].NLastPlane = NLastPlane;
+    thread_params[i].NPlanes = NLastPlane;
     rc = pthread_create(&threads[i], NULL, compute_rays_parallel, (void*) &thread_params[i]);
     assert(rc==0);
   }
@@ -133,6 +133,7 @@ void *compute_rays_parallel(void *_p){
   double xminus[2],xplus[2];
   double kappa_minus,gamma_minus[3],kappa_plus,gamma_plus[3];
   
+  assert(p->NPlanes > 0);
 	// If a lower redshift source is being used
 
 	for(i = start; i< end; i++){
@@ -155,7 +156,7 @@ void *compute_rays_parallel(void *_p){
 		p->i_points[i].gamma[1] = 0;
 		p->i_points[i].gamma[2] = 0;
 
-		for(j = 0; j < p->NLastPlane-1 ; j++){  // each iteration leaves i_point[i].image on plane (j+1)
+		for(j = 0; j < p->NPlanes-1 ; j++){  // each iteration leaves i_point[i].image on plane (j+1)
 
 			// convert to physical coordinates on the plane j
 
@@ -248,8 +249,8 @@ void *compute_rays_parallel(void *_p){
 		}
 
 		// Convert units back to angles.
-		p->i_points[i].image->x[0] /= lens->Dl[p->NLastPlane-1];
-		p->i_points[i].image->x[1] /= lens->Dl[p->NLastPlane-1];
+		p->i_points[i].image->x[0] /= lens->Dl[p->NPlanes-1];
+		p->i_points[i].image->x[1] /= lens->Dl[p->NPlanes-1];
 
 		p->i_points[i].kappa = 1 - p->i_points[i].kappa;
 

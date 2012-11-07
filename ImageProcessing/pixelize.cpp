@@ -198,7 +198,7 @@ void PixelMap::printASCIItoFile(std::string filename){
 
 	return;
 }
-// Output the pixel map as a fits file.  TODO Needs to be written.
+// Output the pixel map as a fits file.
 void PixelMap::printFITS(std::string filename){
 
 #ifdef ENABLE_FITS

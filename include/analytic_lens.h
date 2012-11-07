@@ -62,7 +62,7 @@
  * The stars are not initially present.  They must be implanted later.
  *</pre>
  *
- * TODO BEN finish this.
+ * TODO BEN finish this documentation.
  */
 class AnaLens : public Lens{
 public:

@@ -12,7 +12,7 @@
 #include <iostream>
 #include <valarray>
 #include <vector>
-//TODO Carlo/Margarita: What is this structure for?  It would be better to rename it because we have other structures that start with Lens and this is not related.
+//TODO Carlo/Margarita: Add a comment! What is this structure for?  It would be better to rename it because we have other structures that start with Lens and this is not related.
 struct LensHalo{
 	/// lens and source properties
   double zl,m,zs,DL,DLS,DS,c,cS,fsub,mstar,minsubmass;

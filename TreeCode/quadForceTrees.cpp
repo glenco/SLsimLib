@@ -114,12 +114,12 @@ QuadTreeNSIE::QuadTreeNSIE(
 		,int bucket                /// maximum number of halos in a leaf of the tree
 		,PosType theta             /// Opening angle used in tree force calculation, default 0.1
 		) :
-		QuadTree(xp,h_params,Npoints,my_kappa_bk,bucket,theta)
+		QuadTree(xp,h_params,Npoints,my_kappa_bk,bucket,theta,true)
 {
 
-	for(long i=0;i<Npoints;++i){
-		h_params[i].Rsize_nsie = rmaxNSIE(h_params[i].sigma_nsie,h_params[i].mass,h_params[i].fratio_nsie,h_params[i].rscale);
-	}
+	//for(unsigned long i=0;i<Npoints;++i){
+	//	h_params[i].Rsize_nsie = rmaxNSIE(h_params[i].sigma_nsie,h_params[i].mass,h_params[i].fratio_nsie,h_params[i].rscale);
+	//}
 }
 QuadTreeNSIE::~QuadTreeNSIE(){
 }
@@ -139,7 +139,7 @@ void QuadTreeNSIE::force_halo(
 	if(rcm2 < 1e-20) rcm2 = 1e-20;
 
 	double ellipR = ellipticRadiusNSIE(xcm,halo_params.fratio_nsie,halo_params.pa_nsie);
-	if(ellipR > halo_params.Rsize_nsie){
+	if(ellipR > halo_params.Rsize_nsie*MAX(1.0,1.0/halo_params.fratio_nsie)){
 		// if the ray misses the halo treat it as a point mass
 		  double prefac = -1.0*halo_params.mass_nsie/rcm2/pi;
 
@@ -202,9 +202,6 @@ void QuadTreeNFW_NSIE::force2D_recur(
 
 	float tmp_kappa,tmp_gamma[2];
 	double tmp_alpha[2];
-
-	// TODO BEN Worry about background subtraction so that it isn't redundant.
-	// TODO Worry about multi threading
 
 	qtreensie->force2D_recur(ray,tmp_alpha,&tmp_kappa,tmp_gamma,no_kappa);
 	QuadTree::force2D_recur(ray,alpha,kappa,gamma,no_kappa);

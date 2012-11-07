@@ -136,8 +136,7 @@ typedef int QTreeNBElement;
  * The shear and kappa is always more accurate than the deflection.
  *
  */
-//TODO MARGARITA  I can't seem to reproduce the problem you told us about when QuadTree is made with just one particle.
-// Does it crash or give the wrong answer?
+
 class QuadTree {
 public:
 	QuadTree(
@@ -167,6 +166,7 @@ protected:
 			,double my_kappa_background = 0
 			,int bucket = 5
 			,double theta_force = 0.1
+			,bool NSIE_ON = false
 			);
 
 	PosType **xp;
@@ -185,6 +185,7 @@ protected:
 	IndexType *index;
 
 	bool haloON;
+	bool NSIE_ON;
 	HaloStructure *halo_params;
 
 	PosType realray[2];

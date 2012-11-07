@@ -29,7 +29,7 @@ struct OverGalaxy{
 	/// position on the sky
 	double theta[2];
 	/// returns the maximum radius of the source galaxy TODO This needs to be done better.
-	double getRadius(){return 4*(Reff > Rh ? Reff : Rh);}
+	double getRadius(){return 6*(Reff > Rh ? Reff : Rh);}
 private:
 	/// bulge half light radius
 	double Reff;

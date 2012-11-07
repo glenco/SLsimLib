@@ -303,7 +303,6 @@ void AnaLens::rayshooterInternal(double *ray, double *alpha, float *gamma, float
          alpha_tmp[0] = alpha_tmp[1] = 0.0;
      }
 
-     /// TODO: MARGARITA/BEN make sure units here are OK!!!
      // add stars for microlensing
      if(stars_N > 0 && stars_implanted){
 
