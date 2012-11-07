@@ -3,7 +3,6 @@
  *      Author: R.B. Metcalf
  */
 
-#include <math.h>
 #include "analytic_lens.h"
 
 /// deflection caused by NFW halo

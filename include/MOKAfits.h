@@ -9,9 +9,8 @@
 #ifndef FITS_H_
 #define FITS_H_
 
-#include <iostream>
-#include <valarray>
-#include <vector>
+#include "standard.h"
+
 //TODO Carlo/Margarita: Add a comment! What is this structure for?  It would be better to rename it because we have other structures that start with Lens and this is not related.
 struct LensHalo{
 	/// lens and source properties

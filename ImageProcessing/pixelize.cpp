@@ -5,8 +5,7 @@
  *      Author: R.B. Metcalf
  */
 
-#include <slsimlib.h>
-#include <fstream>
+#include "slsimlib.h"
 
 #ifdef ENABLE_FITS
 #include <CCfits/CCfits>

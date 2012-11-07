@@ -6,11 +6,7 @@
  */
 
 
-#include <MOKAlens.h>
-#include <string>
-#include <sstream>
-#include <fstream>
-#include <utilities.h>
+#include "slsimlib.h"
 
 using namespace std;
 

@@ -5,8 +5,7 @@
  *      Author: R.B. Metcalf
  */
 
-#include <slsimlib.h>
-#include <sstream>
+#include "slsimlib.h"
 
 /**  orders points in a curve, separates disconnected curves
  *   curves[0...Maxcurves] must be allocated before

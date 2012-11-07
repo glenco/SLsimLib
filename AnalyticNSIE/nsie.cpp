@@ -5,11 +5,7 @@
 *  convention here is gamma_1 = -(Axx-Ayy)/2 and gamma_2= -Axy
 */
 
-#include <math.h>
-#include <cmath>
-#include <cstdio>
-#include <cstdlib>
-#include <analytic_lens.h>
+#include "analytic_lens.h"
 
 /** \ingroup DeflectionL2 \ingroup function
  * \brief Deflection angle for non-singular isothermal ellipsoid in units of Einstein radii

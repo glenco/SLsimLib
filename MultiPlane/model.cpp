@@ -5,11 +5,7 @@
  *      Author: mpetkova
  */
 
-#include <model.h>
-#include <source_models.h>
-#include <sstream>
-#include <string>
-#include <fstream>
+#include "slsimlib.h"
 
 using namespace std;
 

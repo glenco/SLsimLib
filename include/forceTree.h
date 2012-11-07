@@ -8,7 +8,7 @@
 #ifndef FORCE_TREE_H_
 #define FORCE_TREE_H_
 
-#include <simpleTree.h>
+#include "simpleTree.h"
 
 //enum PartProf {gaussian,powerlaw};
 

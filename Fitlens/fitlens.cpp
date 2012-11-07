@@ -1,19 +1,5 @@
-/*#include <math.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <time.h>
-#include <string.h>
-#include <float.h>
-#include <assert.h>
 
-#include <nr.h>
-#include <nrutil.h>
-#include <nrD.h>
-
-#include <analytic_lens.h>
-#include <fitlens.h>*/
-
-#include <slsimlib.h>
+#include "slsimlib.h"
 
 using namespace std;
 

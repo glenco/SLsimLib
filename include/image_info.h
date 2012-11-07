@@ -9,7 +9,7 @@
 #define IMAGE_INFO_H_
 
 #include <Kist.h>
-#include <point.h>
+#include <pointlist.h>
 
 #ifndef gate_declare
 #define gate_declare

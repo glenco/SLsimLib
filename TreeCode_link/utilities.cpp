@@ -6,7 +6,7 @@
  */
 
 
-#include <slsimlib.h>
+#include "slsimlib.h"
 
 Point *LinkToSourcePoints(Point *i_points,unsigned long Npoints){
   Point *s_points;

@@ -5,7 +5,7 @@
  *      Author: R.B. Metcalf
  */
 
-#include <slsimlib.h>
+#include "slsimlib.h"
 
 const float sheartol = 1.0e-3;
 

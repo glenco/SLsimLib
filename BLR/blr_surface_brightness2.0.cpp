@@ -5,14 +5,8 @@
  *      Author: bmetcalf
  *      revised by S. Sim Sep 1, 2011
  */
-/*#include <math.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <assert.h>
-#include <analytic_lens.h>
-#include <Tree.h> */
 
-#include <slsimlib.h>
+#include "slsimlib.h"
 
 // computes the surface brightness associated with our simplest model
 // for the BLR. x is the projected "distance from center" coordinate

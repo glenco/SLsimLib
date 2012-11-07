@@ -5,7 +5,7 @@
  *      Author: mpetkova, bmetcalf
  */
 
-#include <slsimlib.h>
+#include "slsimlib.h"
 
 /** \ingroup DeflectionL2
  *
@@ -126,7 +126,7 @@ void *compute_rays_parallel(void *_p){
   
   int i, j;
   
-  double xx[2];
+  double xx[2],fac;
   double aa,bb,cc;
   double alpha[2];
   float kappa,gamma[3];
@@ -169,24 +169,26 @@ void *compute_rays_parallel(void *_p){
 				lens->input_lens->rayshooterInternal(xx,alpha,gamma,&kappa,kappa_off);
 				cc = lens->dDl[j+1];
 			}else{
-				lens->halo_tree[j]->force2D_recur(xx,alpha,&kappa,gamma,kappa_off);
-				//halo_tree[j]->force2D(xx,alpha,&kappa,gamma,kappa_off);
-				assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
 
-				cc = lens->charge*lens->dDl[j+1];
-
-				/* multiply by the scale factor to obtain 1/comoving_distance/physical_distance
-				 * such that a multiplication with the charge (in units of physical distance)
-				 * will result in a 1/comoving_distance quantity */
-				kappa/=(1+lens->plane_redshifts[j]);
-				gamma[0]/=(1+lens->plane_redshifts[j]);
-				gamma[1]/=(1+lens->plane_redshifts[j]);
-				gamma[2]/=(1+lens->plane_redshifts[j]);
-
-				assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
-				assert(kappa == kappa);
-
-				//kappa = alpha[0] = alpha[1] = gamma[0] = gamma[1] = gamma[2] = 0.0;
+			  lens->halo_tree[j]->force2D_recur(xx,alpha,&kappa,gamma,kappa_off);
+			  //halo_tree[j]->force2D(xx,alpha,&kappa,gamma,kappa_off);
+			  assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
+			  
+			  cc = lens->charge*lens->dDl[j+1];
+			  
+			  fac = 1/(1+lens->plane_redshifts[j]);
+			  /* multiply by fac to obtain 1/comoving_distance/physical_distance
+			   * such that a multiplication with the charge (in units of physical distance)
+			   * will result in a 1/comoving_distance quantity */
+			  kappa*=fac;
+			  gamma[0]*=fac;
+			  gamma[1]*=fac;
+			  gamma[2]*=fac;
+			  
+			  assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
+			  assert(kappa == kappa);
+			  
+			  //kappa = alpha[0] = alpha[1] = gamma[0] = gamma[1] = gamma[2] = 0.0;
 			}
 
 			if(lens->flag_switch_deflection_off > 0)

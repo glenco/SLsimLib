@@ -20,6 +20,9 @@
  *
  * The get() methods are used to retrieve parameter values and test if they exist.
  */
+
+#include "standard.h"
+
 typedef enum {PowerLaw, NFW, PseudoNFW, NSIE, NFW_NSIE} IntProfType;
 typedef enum {PS, ST, PL} MassFuncType;
 typedef enum {null, ana_lens, moka_lens} InputLens;

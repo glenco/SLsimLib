@@ -4,12 +4,7 @@
  *  Created on: Nov 15, 2010
  *      Author: bmetcalf
  */
-/*#include <stdlib.h>
-#include <stdio.h>
-#include <assert.h>
-#include "List.h"*/
-
-#include <slsimlib.h>
+#include "slsimlib.h"
 
 /***********************************************************
    routines for linked list of points

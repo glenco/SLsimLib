@@ -4,7 +4,7 @@
  *  Created on: Mar 6, 2012
  *      Author: bmetcalf
  */
-#include <slsimlib.h>
+#include "slsimlib.h"
 
 /// tables for the g,f,and g2 NFW functions
 //double *ftable, *gtable, *g2table, *mhattable;

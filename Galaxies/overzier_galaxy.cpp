@@ -7,7 +7,7 @@
  *      This surface brightness model comes from Roderik Overzier in private communication although it
  *      is probably written into a paper somewhere.
  */
-#include <slsimlib.h>
+#include "slsimlib.h"
 
 OverGalaxy::OverGalaxy(
 		double my_mag              /// Total magnitude

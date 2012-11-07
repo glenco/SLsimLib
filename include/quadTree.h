@@ -8,25 +8,7 @@
 #ifndef QUAD_TREE_H_
 #define QUAD_TREE_H_
 
-#include <simpleTree.h>
-//#include <analytic_lens.h>
-#include <cstdlib>
-#include <iostream>
-
-#ifndef PosType_declare
-#define PosType_declare
-typedef double PosType;
-#endif
-
-#ifndef IndexType_declare
-#define IndexType_declare
-typedef unsigned long IndexType;
-#endif
-
-#ifndef error_message
-#define error_message
-#define ERROR_MESSAGE() std::cout << "ERROR: file: " << __FILE__ << " line: " << __LINE__ << std::endl;
-#endif
+#include "simpleTree.h"
 
 //short const treeNBdim = 2;
 

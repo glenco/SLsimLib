@@ -5,7 +5,7 @@
  *      Author: R.B. Metcalf
  */
 
-#include <slsimlib.h>
+#include "slsimlib.h"
 
 #define NMAXCRITS 1000
 

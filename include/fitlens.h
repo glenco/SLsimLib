@@ -9,7 +9,6 @@
 #define FITLENS_H_
 
 #include <analytic_lens.h>
-#include <point.h>
 
 double ElliptisizeLens(int Nimages,int Nsources,int Nlenses,int *pairing,double **xob
 		       ,double *xc,double **xg,double sigG,double beta,int Nmod

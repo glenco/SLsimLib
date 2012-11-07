@@ -9,34 +9,15 @@
 #ifndef treetypes_declare
 #define treetypes_declare
 
-#include <math.h>
-#include <Kist.h>
-#include <List1.h>
-#include <lens.h>
-#include <image_info.h>
-#include <iostream>
-#include <cstdlib>
+#include "pointlist.h"
+#include "Kist.h"
+#include "image_info.h"
 
 /***** Exported Types *****/
-
-#ifndef error_message
-#define error_message
-#define ERROR_MESSAGE() std::cout << "ERROR: file: " << __FILE__ << " line: " << __LINE__ << std::endl;
-#endif
-
-#ifndef line_message
-#define line_message
-#define PRINT_LINE() std::cout << "file: " << __FILE__ << " line: " << __LINE__ << std::endl;
-#endif
 
 #ifndef criterion_declare
 #define criterion_declare
 typedef enum{TotalArea,EachImage,Resolution,FillHoles} ExitCriterion;
-#endif
-
-#ifndef swap_declare
-#define swap_declare
-#define SWAP(a,b) temp=(a);(a)=(b);(b)=temp;
 #endif
 
 /** \brief Tree: Exported struct */

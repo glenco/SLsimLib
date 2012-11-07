@@ -8,11 +8,7 @@
 #ifndef IMAGE_PROCESSING_H_
 #define IMAGE_PROCESSING_H_
 
-#include <slsimlib.h>
-#include <image_info.h>
-#include <Tree.h>
-#include <point.h>
-#include <valarray>
+#include "Tree.h"
 
 /** \ingroup Image
  * \brief Takes images and pixelizes the flux into regular pixel grid.

@@ -5,7 +5,7 @@
  *      Author: R.B. Metcalf
  */
 
-#include <slsimlib.h>
+#include "slsimlib.h"
 
 /** \ingroup DeflectionL2
  *
