@@ -50,6 +50,8 @@ void MultiLens::resetNplanes(CosmoHndl cosmo, int Np){
   int i,j;
   ///revert back to radians
   for(j=0; j<Nplanes-1; j++){
+    if(flag_input_lens && j == (flag_input_lens % Nplanes))
+      continue;
 #ifdef _OPENMP
 #pragma omp parallel for default(shared) private(i)
 #endif
@@ -1001,9 +1003,9 @@ short MultiLens::ResetSourcePlane(
 		else  dDs_implant = Ds;
 	}
 
-	std::cout << "Source on plane " << j << " zs " << zs_implant << " Ds " << Ds << " dDs " << dDs_implant << std::endl;
+	//std::cout << "Source on plane " << j << " zs " << zs_implant << " Ds " << Ds << " dDs " << dDs_implant << std::endl;
 	index_of_new_sourceplane = j;
-	/*
+	
 	out=1;
 	int flag=0;
 	for(int l=0; l < Nplanes-1; l++){
@@ -1020,8 +1022,7 @@ short MultiLens::ResetSourcePlane(
 	if(flag==0){ 
 	  std::cout << "Source on plane " << j << " zs " << zs_implant << " Ds " << Ds << " dDs " << dDs_implant << std::endl;
 	}
-	//	*/
-	out = j;
+	//		out = j;
 	return out;
 }
 
