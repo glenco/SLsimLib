@@ -383,8 +383,9 @@ void MultiLens::createHaloData(
 			HaloStructure halo;
 
 			zi = z1+(z2-z1)*ran2 (seed);
-
-			maxr = pi*sqrt(fieldofview/pi)/180.*cosmo->angDist(0,zi); // fov is a circle
+			
+			/// positions need to be in radians initially
+			maxr = pi*sqrt(fieldofview/pi)/180.; // fov is a circle
 			rr = maxr*sqrt(ran2(seed));
 
 			theta = 2*pi*ran2(seed);
