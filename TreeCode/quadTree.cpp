@@ -51,10 +51,10 @@ QuadTree::QuadTree(
 		,double my_kappa_background /// background kappa that is subtracted
 		,int bucket
 		,double theta_force
-		,bool myNSIE               /// This flag causes the tree build to use Rnsie in the my_halo_params instead of Rmax as the halo's maximum size
+		,bool myNSIE_ON               /// This flag causes the tree build to use Rnsie in the my_halo_params instead of Rmax as the halo's maximum size
 		):
 	xp(xpt),MultiMass(true),MultiRadius(true),masses(NULL),sizes(NULL),Nparticles(Npoints),
-	kappa_background(my_kappa_background),Nbucket(bucket),force_theta(theta_force),halo_params(my_halo_params),NSIE_ON(myNSIE)
+	kappa_background(my_kappa_background),Nbucket(bucket),force_theta(theta_force),halo_params(my_halo_params),NSIE_ON(myNSIE_ON)
 {
 	index = new IndexType[Npoints];
 	IndexType ii;
@@ -124,7 +124,7 @@ inline short QuadTree::WhichQuad(double *x,QBranchNB &branch){
 void QuadTree::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
 
 	QBranchNB *cbranch = tree->current; /* pointer to current branch */
-	IndexType i,j,cut,cut2;
+	IndexType i,j,cut,cut2,jt;
 
 	cbranch->center[0] = (cbranch->boundary_p1[0] + cbranch->boundary_p2[0])/2;
 	cbranch->center[1] = (cbranch->boundary_p1[1] + cbranch->boundary_p2[1])/2;
@@ -137,18 +137,24 @@ void QuadTree::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
 		PosType r;
 		cbranch->Nbig_particles = 0;
 		for(i=0;i<cbranch->nparticles;++i){
-			j = particles[i]*MultiRadius;
-			if(haloON){ r = NSIE_ON ? halo_params[j].Rsize_nsie*MAX(1.0,1.0/halo_params[j].fratio_nsie) : halo_params[j].Rmax;
-			}else r = sizes[j];
+			jt = particles[i]*MultiRadius;
+			if(haloON){
+				r = NSIE_ON ? halo_params[jt].Rsize_nsie*MAX(1.0,1.0/halo_params[jt].fratio_nsie) : halo_params[jt].Rmax;
+			}else{
+				r = sizes[jt];
+			}
 			//r = haloON ? halo_params[particles[i]*MultiRadius].Rmax	: sizes[particles[i]*MultiRadius];
 			if(r < (cbranch->boundary_p2[0]-cbranch->boundary_p1[0])) ++cbranch->Nbig_particles;
 		}
 		if(cbranch->Nbig_particles){
 			cbranch->big_particles = new IndexType[cbranch->Nbig_particles];
 			for(i=0,j=0;i<cbranch->nparticles;++i){
-				j = particles[i]*MultiRadius;
-				if(haloON){ r = NSIE_ON ? halo_params[j].Rsize_nsie*MAX(1.0,1.0/halo_params[j].fratio_nsie) : halo_params[j].Rmax;
-				}else r = sizes[j];
+				jt = particles[i]*MultiRadius;
+				if(haloON){
+					r = NSIE_ON ? halo_params[jt].Rsize_nsie*MAX(1.0,1.0/halo_params[jt].fratio_nsie) : halo_params[jt].Rmax;
+				}else{
+					r = sizes[jt];
+				}
 				//r = haloON ? halo_params[particles[i]*MultiRadius].Rmax	: sizes[particles[i]*MultiRadius];
 				if(r < (cbranch->boundary_p2[0]-cbranch->boundary_p1[0])) cbranch->big_particles[j++] = particles[i];
 			}
@@ -169,8 +175,11 @@ void QuadTree::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
 	if(MultiRadius){
 		// store the particles that are too large to be in a child at the end of the list of particles in cbranch
 		for(i=0;i<cbranch->nparticles;++i){
-			if(haloON){ x[i] = NSIE_ON ? halo_params[particles[i]].Rsize_nsie*MAX(1.0,1.0/halo_params[particles[i]].fratio_nsie) : halo_params[particles[i]].Rmax;
-			}else x[i] = sizes[particles[i]];
+			if(haloON){
+				x[i] = NSIE_ON ? halo_params[particles[i]].Rsize_nsie*MAX(1.0,1.0/halo_params[particles[i]].fratio_nsie) : halo_params[particles[i]].Rmax;
+			}else{
+				x[i] = sizes[particles[i]];
+			}
 			//x[i] =  haloON ? halo_params[particles[i]].Rmax : sizes[particles[i]];
 		}
 		double maxsize = (cbranch->boundary_p2[0]-cbranch->boundary_p1[0])/2;
@@ -192,8 +201,11 @@ void QuadTree::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
 		}
 
 	}else{
-		if(haloON){ x[i] = NSIE_ON ? halo_params[0].Rsize_nsie*MAX(1.0,1.0/halo_params[0].fratio_nsie) : halo_params[0].Rmax;
-		}else x[i] = sizes[0];
+		if(haloON){
+			x[0] = NSIE_ON ? halo_params[0].Rsize_nsie*MAX(1.0,1.0/halo_params[0].fratio_nsie) : halo_params[0].Rmax;
+		}else{
+			x[0] = sizes[0];
+		}
 		//x[0] =  haloON ? halo_params[0].Rmax : sizes[0];
 		if(x[0] > (cbranch->boundary_p2[0]-cbranch->boundary_p1[0])/2
 				&& x[0] < (cbranch->boundary_p2[0]-cbranch->boundary_p1[0])){
@@ -342,12 +354,22 @@ void QuadTree::CalcMoments(){
 
 		// calculate mass
 		for(i=0,cbranch->mass=0;i<cbranch->nparticles;++i)
-			cbranch->mass +=  haloON ? halo_params[cbranch->particles[i]*MultiMass].mass : masses[cbranch->particles[i]*MultiMass];
+			if(haloON ){
+				cbranch->mass +=  NSIE_ON ? halo_params[cbranch->particles[i]*MultiMass].mass_nsie : halo_params[cbranch->particles[i]*MultiMass].mass;
+			}else{
+				cbranch->mass += masses[cbranch->particles[i]*MultiMass];
+			}
+			//cbranch->mass +=  haloON ? halo_params[cbranch->particles[i]*MultiMass].mass : masses[cbranch->particles[i]*MultiMass];
 
 		// calculate center of mass
 		cbranch->center[0]=cbranch->center[1]=0;
 		for(i=0;i<cbranch->nparticles;++i){
-			tmp = haloON ? halo_params[cbranch->particles[i]*MultiMass].mass : masses[cbranch->particles[i]*MultiMass];
+			if(haloON ){
+				tmp = NSIE_ON ? halo_params[cbranch->particles[i]*MultiMass].mass_nsie : halo_params[cbranch->particles[i]*MultiMass].mass;
+			}else{
+				tmp = masses[cbranch->particles[i]*MultiMass];
+			}
+			//tmp = haloON ? halo_params[cbranch->particles[i]*MultiMass].mass : masses[cbranch->particles[i]*MultiMass];
 			cbranch->center[0] += tmp*tree->xp[cbranch->particles[i]][0]/cbranch->mass;
 			cbranch->center[1] += tmp*tree->xp[cbranch->particles[i]][1]/cbranch->mass;
 		}
@@ -359,7 +381,12 @@ void QuadTree::CalcMoments(){
 			xcm[0]=tree->xp[cbranch->particles[i]][0]-cbranch->center[0];
 			xcm[1]=tree->xp[cbranch->particles[i]][1]-cbranch->center[1];
 			xcut = pow(xcm[0],2) + pow(xcm[1],2);
-			tmp = haloON ? halo_params[cbranch->particles[i]*MultiMass].mass : masses[cbranch->particles[i]*MultiMass];
+			if(haloON ){
+				tmp = NSIE_ON ? halo_params[cbranch->particles[i]*MultiMass].mass_nsie : halo_params[cbranch->particles[i]*MultiMass].mass;
+			}else{
+				tmp = masses[cbranch->particles[i]*MultiMass];
+			}
+			//tmp = haloON ? halo_params[cbranch->particles[i]*MultiMass].mass : masses[cbranch->particles[i]*MultiMass];
 
 			cbranch->quad[0] += (xcut-2*xcm[0]*xcm[0])*tmp;
 			cbranch->quad[1] += (xcut-2*xcm[1]*xcm[1])*tmp;
@@ -477,8 +504,15 @@ void QuadTree::force2D(double *ray,double *alpha,float *kappa,float *gamma,bool 
 
 					  index = MultiMass*tree->current->particles[i];
 
-					  if(haloON) prefac = halo_params[index].mass/rcm2/pi;
-					  else prefac = masses[index]/rcm2/pi;
+					  if(haloON ){
+						  prefac = NSIE_ON ? halo_params[index].mass_nsie : halo_params[index].mass;
+					  }else{
+						  prefac = masses[index];
+					  }
+					  prefac /= rcm2*pi;
+
+					  //if(haloON) prefac = halo_params[index].mass/rcm2/pi;
+					  //else prefac = masses[index]/rcm2/pi;
 
 					  //prefacg = prefac/rcm2;
 
@@ -648,8 +682,16 @@ void QuadTree::walkTree_recur(QBranchNB *branch,double *ray,double *alpha,float 
 
 					index = MultiMass*branch->particles[i];
 
-					if(haloON) prefac = halo_params[index].mass/rcm2/pi;
-					else prefac = masses[index]/rcm2/pi;
+
+					  if(haloON ){
+						  prefac = NSIE_ON ? halo_params[index].mass_nsie : halo_params[index].mass;
+					  }else{
+						  prefac = masses[index];
+					  }
+					  prefac /= rcm2*pi;
+
+					  //if(haloON) prefac = halo_params[index].mass/rcm2/pi;
+					//else prefac = masses[index]/rcm2/pi;
 
 					//prefacg = prefac/rcm2;
 					//tmp = -1.0*prefac;
@@ -764,6 +806,7 @@ void QuadTree::force_halo(
 	double rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
 	if(rcm2 < 1e-20) rcm2 = 1e-20;
 
+	//Rmax = NSIE_ON ?  halo_params.Rsize_nsie*MAX(1.0,1.0/halo_params.fratio_nsie) : halo_params.Rmax;
 	/// intersecting, subtract the point particle
 	if(rcm2 < halo_params.Rmax*halo_params.Rmax){
 		double prefac = halo_params.mass/rcm2/pi;
