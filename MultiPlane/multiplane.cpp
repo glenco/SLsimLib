@@ -13,7 +13,11 @@ HaloData::HaloData(HaloStructure *halostrucs,double kb,PosType **positions, doub
 	pos(positions), halos(halostrucs), Nhalos(Nhaloss),z(zz),haloID(id),kappa_background(kb)
 {
   //convert to physical Mpc on the plane 
-  for(int i=0; i<Nhalos; i++){
+  int i;
+#ifdef _OPENMP
+#pragma omp parallel for default(shared) private(i)
+#endif
+for(i=0; i<Nhalos; i++){
     pos[i][0]*=Dl;
     pos[i][1]*=Dl;
   }
@@ -43,12 +47,20 @@ void MultiLens::make_table(CosmoHndl cosmo){
 
 void MultiLens::resetNplanes(CosmoHndl cosmo, int Np){
   
+  int i,j;
   ///revert back to radians
-  for(int j=0; j<Nplanes-1; j++)
-    for(int i=0; i<halo_data[j]->Nhalos; i++){
+  for(j=0; j<Nplanes-1; j++){
+#ifdef _OPENMP
+#pragma omp parallel for default(shared) private(i)
+#endif
+    for(i=0; i<halo_data[j]->Nhalos; i++){
       halo_data[j]->pos[i][0]/=Dl[j]/(1+plane_redshifts[j]);
       halo_data[j]->pos[i][1]/=Dl[j]/(1+plane_redshifts[j]);
     }
+#ifdef _OPENMP
+#pragma omp barrier
+#endif
+  }
 
   Nplanes = Np;
 
