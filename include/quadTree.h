@@ -376,6 +376,7 @@ public:
 				,double my_kappa_bk = 0.0,int bucket = 5,PosType theta = 0.1);
 	  ~QuadTreeNSIE();
 
+	  void test_force_halo(HaloStructure &halo_params);
 protected:
 
 	  virtual void force_halo(double *alpha,float *kappa,float *gamma,double *xcm

@@ -120,6 +120,31 @@ QuadTreeNSIE::QuadTreeNSIE(
 QuadTreeNSIE::~QuadTreeNSIE(){
 }
 
+/// Testing function
+void QuadTreeNSIE::test_force_halo(
+	  	HaloStructure &halo_params
+		){
+	double alpha[2];
+	float kappa, gamma[2];
+	double xcm[2];
+	int N = 200;
+
+	std::cout << N << std::endl;
+
+	for(int i = 0; i<N ; ++i){
+		xcm[0] = 2.5*halo_params.Rsize_nsie*(i*1.0/(N-1) - 0.5);
+		for(int j = 0; j<N ; ++j){
+			xcm[1] = 2.5*halo_params.Rsize_nsie*(j*1.0/(N-1) - 0.5);
+
+			alpha[0]=alpha[1] = 0.0;
+			gamma[0]=gamma[1] = 0.0;
+			force_halo(alpha,&kappa,gamma,xcm,halo_params,true);
+
+			std::cout << xcm[0] << " " << xcm[1] << "     " << alpha[0] << "  " << alpha[1] << std::endl;
+		}
+	}
+
+}
 
 /// This is the function that override QuadTree::force_halo to make it 2D.
 void QuadTreeNSIE::force_halo(
@@ -135,8 +160,9 @@ void QuadTreeNSIE::force_halo(
 	if(rcm2 < 1e-20) rcm2 = 1e-20;
 
 	double ellipR = ellipticRadiusNSIE(xcm,halo_params.fratio_nsie,halo_params.pa_nsie);
-	if(ellipR > halo_params.Rsize_nsie*MAX(1.0,1.0/halo_params.fratio_nsie)){
-		// if the ray misses the halo treat it as a point mass
+	if(ellipR > halo_params.Rsize_nsie){
+		// This is the case when the ray is within the NSIE's circular region of influence but outside its elliptical truncation
+		  // if the ray misses the halo treat it as a point mass
 		  double prefac = -1.0*halo_params.mass_nsie/rcm2/pi;
 
 		  alpha[0] += prefac*xcm[0];
@@ -149,9 +175,23 @@ void QuadTreeNSIE::force_halo(
 			  gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*prefac;
 			  gamma[1] += xcm[0]*xcm[1]*prefac;
 		  }
+// TODO !!!!! Need to test this !!!!
+		  // add quadrapole terms to deflection
+/*		  double quad[3];
+		  quadMomNSIE(halo_params.mass_nsie,halo_params.Rsize_nsie,halo_params.fratio_nsie,halo_params.rcore_nsie,halo_params.pa_nsie,quad);
+
+		  alpha[0] -= (quad[0]*xcm[0] + quad[2]*xcm[1])/pow(rcm2,2)/pi;
+		  alpha[1] -= (quad[1]*xcm[1] + quad[2]*xcm[0])/pow(rcm2,2)/pi;
+
+		  double tmp = 4*(quad[0]*xcm[0]*xcm[0] + quad[1]*xcm[1]*xcm[1]
+			             + 2*quad[2]*xcm[0]*xcm[1])/pow(rcm2,3)/pi;
+
+		  alpha[0] += tmp*xcm[0];
+		  alpha[1] += tmp*xcm[1];
+*/
 	}else{
 		double xt[2]={0,0},tmp[2]={0,0};
-		float units = 0.5*pow(halo_params.sigma_nsie/lightspeed,2)/Grav; // mass/distance(physical)
+		float units = pow(halo_params.sigma_nsie/lightspeed,2)/Grav; // mass/distance(physical)
 		xt[0]=xcm[0];
 		xt[1]=xcm[1];
 		alphaNSIE(tmp,xt,halo_params.fratio_nsie,halo_params.rscale,halo_params.pa_nsie);
