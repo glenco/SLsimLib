@@ -272,7 +272,7 @@ void PixelMap::_SplitFluxIntoPixels(TreeHndl ptree,Branch *leaf,double *leaf_sb)
 		if(atLeaf(ptree)){
 		
 			assert(ptree->current->npoints == 1);
-			ptree->current->points->surface_brightness += (*leaf_sb)*area;
+			ptree->current->points->surface_brightness += (*leaf_sb)*area*resolution*resolution;
 			//ptree->current->points->surface_brightness = *leaf_sb;
 
 			return;

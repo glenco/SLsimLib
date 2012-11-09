@@ -33,7 +33,10 @@ public:
 	/// Surface brightness of current galaxy in coordinates not centered on current galaxy.
 	double SurfaceBrightness(double *y){
 		double x[2] = {y[0]-galaxies[index]->theta[0] , y[1]-galaxies[index]->theta[1]};
-		return galaxies[index]->SurfaceBrightness(x);
+		double s = galaxies[index]->SurfaceBrightness(x);
+		if (s < pow(10,-0.4*(48.6+sb_limit))*pi/4/hplanck*pow(180*60*60/pi,2)) return 0.;
+		return s;
+
 	}
 	/// Total flux coming from the current galaxy in arbitrary units
 	double getTotalFlux(){return pow(10,-(galaxies[index]->getMag())/2.5);}
@@ -81,6 +84,7 @@ private:
 	Band band;
 	float mag_limit;
 	unsigned long index;
+	float sb_limit;
 
 	bool mem_allocated;
 	std::vector<OverGalaxy*> galaxies;

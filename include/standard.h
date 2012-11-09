@@ -41,6 +41,10 @@
 #define Grav  4.7788e-20  // G/c^2 in Mpc
 #endif
 
+#ifndef hplanck
+#define hplanck  6.626068e-27  // in erg*sec
+#endif
+
 #ifndef error_message
 #define error_message
 #define ERROR_MESSAGE() std::cout << "ERROR: file: " << __FILE__ << " line: " << __LINE__ << std::endl;
