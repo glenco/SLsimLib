@@ -211,17 +211,13 @@ void quadMomNSIE(
 		,double *quad   /// output
 	){
 
-	ERROR_MESSAGE();
-	// TODO This needs to be corrected
-	exit(0);
-
 	double m3,b;
 	b = rc/Rmax;
-	m3 = Rmax*Rmax*mass*f*f*(f*f-1)*( (1-2*b*b)*sqrt(1+b*b) +2*b*b)/(sqrt(1+b*b)-b)/6;
+	m3 = f*Rmax*Rmax*mass*(1-f*f)*( (1-2*b*b)*sqrt(1+b*b) +2*b*b*b)/(sqrt(1+b*b)-b)/6/f/f;
 
-	quad[0] = m3*cos(2*theta);
-	quad[1] = -m3*cos(2*theta);
-	quad[2] = m3*sin(2*theta);
+	quad[0] = m3*cos(-2*theta);
+	quad[1] = -m3*cos(-2*theta);
+	quad[2] = m3*sin(-2*theta);
 
 	return;
 }
