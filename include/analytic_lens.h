@@ -189,6 +189,7 @@ double invmagNSIE(double *x,double f,double bc,double theta
                      ,float *gam,float kap);
 double rmaxNSIE(double sigma,double mass,double f,double rc );
 double ellipticRadiusNSIE(double *x,double f,double pa);
+void quadMomNSIE(float mass,float Rmax,float f,float rc,float theta,double *quad);
 
 void rotation(float *xout,float *xin,double theta);
 void rotation(double *xout,double *xin,double theta);

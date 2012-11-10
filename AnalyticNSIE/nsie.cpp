@@ -148,7 +148,7 @@ double rmaxNSIE(
 		,double f       /// axis ratio
 		,double rc      /// core radius Mpc
 		){
-	return sqrt( pow(mass*Grav*f*lightspeed*lightspeed/pi/sigma/sigma + rc,2) - rc*rc );
+	return sqrt( pow(mass*Grav*lightspeed*lightspeed*f/pi/sigma/sigma + rc,2) - rc*rc );
 }
 /** \ingroup function
  *  \brief Elliptical radius \f$ R^2 = x^2 + f^2 y^2 \f$ given f and position angle of model
@@ -195,4 +195,33 @@ void rotation(double *xout,double *xin,double theta){
 float phiNSIE(double *xt,double f,double bc,double theta){
 
 	return 0.0;
+}
+
+/**\ingroup function
+ *
+ * Quadropole moment of an elliptically truncated NSIE
+ * Units are unit[mass]*unit[Rmax]^2
+ */
+void quadMomNSIE(
+		float mass     /// total mass
+		,float Rmax    /// elliptical maximum radius
+		,float f       /// axis ratio of mass
+		,float rc      /// core size in same units as Rmax
+		,float theta   /// position angle of ellipsoid
+		,double *quad   /// output
+	){
+
+	ERROR_MESSAGE();
+	// TODO This needs to be corrected
+	exit(0);
+
+	double m3,b;
+	b = rc/Rmax;
+	m3 = Rmax*Rmax*mass*f*f*(f*f-1)*( (1-2*b*b)*sqrt(1+b*b) +2*b*b)/(sqrt(1+b*b)-b)/6;
+
+	quad[0] = m3*cos(2*theta);
+	quad[1] = -m3*cos(2*theta);
+	quad[2] = m3*sin(2*theta);
+
+	return;
 }
