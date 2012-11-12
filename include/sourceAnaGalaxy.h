@@ -39,7 +39,7 @@ public:
 
 	}
 	/// Total flux coming from the current galaxy in arbitrary units
-	double getTotalFlux(){return pow(10,-(48.6+galaxies[index]->getMag())/2.5);}
+	double getTotalFlux(){return pow(10,-(48.6+galaxies[index]->getMag())/2.5)/hplanck;}
 
 	void printSource();
 	// Add a pre-constructed galaxy to the source collection
