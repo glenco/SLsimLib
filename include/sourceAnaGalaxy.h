@@ -34,12 +34,12 @@ public:
 	double SurfaceBrightness(double *y){
 		double x[2] = {y[0]-galaxies[index]->theta[0] , y[1]-galaxies[index]->theta[1]};
 		double s = galaxies[index]->SurfaceBrightness(x);
-		if (s < pow(10,-0.4*(48.6+sb_limit))*pi/4/hplanck*pow(180*60*60/pi,2)) return 0.;
+		if (s < pow(10,-0.4*(48.6+sb_limit))/hplanck*pow(180*60*60/pi,2)) return 0.;
 		return s;
 
 	}
 	/// Total flux coming from the current galaxy in arbitrary units
-	double getTotalFlux(){return pow(10,-(galaxies[index]->getMag())/2.5);}
+	double getTotalFlux(){return pow(10,-(48.6+galaxies[index]->getMag())/2.5);}
 
 	void printSource();
 	// Add a pre-constructed galaxy to the source collection
