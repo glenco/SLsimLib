@@ -159,7 +159,7 @@ void PixelMap::Convert(){
 	for(i=0;i<ptree->pointlist->Npoints;++i){
 		if(ptree->pointlist->current->surface_brightness > 0.0){
 			ix = IndexFromPosition(ptree->pointlist->current->x,Npixels,range,center);
-			if(ix > -1)	map[ix] =  ptree->pointlist->current->surface_brightness/resolution/resolution;
+			if(ix > -1)	map[ix] =  ptree->pointlist->current->surface_brightness;
 		}
 		MoveDownList(ptree->pointlist);
 	}
@@ -272,7 +272,7 @@ void PixelMap::_SplitFluxIntoPixels(TreeHndl ptree,Branch *leaf,double *leaf_sb)
 		if(atLeaf(ptree)){
 		
 			assert(ptree->current->npoints == 1);
-			ptree->current->points->surface_brightness += (*leaf_sb)*area*resolution*resolution;
+			ptree->current->points->surface_brightness += (*leaf_sb)*area;
 			//ptree->current->points->surface_brightness = *leaf_sb;
 
 			return;
