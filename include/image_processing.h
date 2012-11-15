@@ -37,11 +37,10 @@ public:
 private:
 	std::valarray<float> map;
 	unsigned long Npixels;
-	TreeHndl ptree;
 	double resolution,range,center[2];
 
-	void Convert();
-	void _SplitFluxIntoPixels(TreeHndl ptree,Branch *leaf,double *leaf_sb);
+	double LeafPixelArea(IndexType i,Branch * branch1);
+	void PointsWithinLeaf(PosType * x, float side, std::list <unsigned long> &neighborlist);
 };
 
 void pixelize(double *map,long Npixels,double range,double *center
