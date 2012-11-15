@@ -188,7 +188,7 @@ void QuadTreeNSIE::force_halo(
 
 			alpha_in[0] = alpha_in[1] = 0;
 			float units = pow(halo_params.sigma_nsie/lightspeed,2)/Grav/sqrt(halo_params.fratio_nsie); // mass/distance(physical)
-			alphaNSIE(alpha_in,x_in,halo_params.fratio_nsie,halo_params.rscale,halo_params.pa_nsie);
+			alphaNSIE(alpha_in,x_in,halo_params.fratio_nsie,halo_params.rcore_nsie,halo_params.pa_nsie);
 			alpha_in[0] *= -units;
 			alpha_in[1] *= -units;
 
@@ -224,7 +224,7 @@ void QuadTreeNSIE::force_halo(
 		float units = pow(halo_params.sigma_nsie/lightspeed,2)/Grav/sqrt(halo_params.fratio_nsie); // mass/distance(physical)
 		xt[0]=xcm[0];
 		xt[1]=xcm[1];
-		alphaNSIE(tmp,xt,halo_params.fratio_nsie,halo_params.rscale,halo_params.pa_nsie);
+		alphaNSIE(tmp,xt,halo_params.fratio_nsie,halo_params.rcore_nsie,halo_params.pa_nsie);
 		alpha[0] -= units*tmp[0];
 		alpha[1] -= units*tmp[1];
 		if(!no_kappa){

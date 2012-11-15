@@ -55,6 +55,9 @@ void MultiLens::rayshooterInternal(
 		){
   int NLastPlane;
   double tmpDs,tmpdDs,tmpZs;
+
+  if(Npoints == 0) return;
+
 // If a lower redshift source is being used
   if(toggle_source_plane){
     NLastPlane = index_of_new_sourceplane + 1;

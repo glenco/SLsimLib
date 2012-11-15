@@ -779,10 +779,12 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 				if(internal_profile == NFW_NSIE){
 					halo_vec[j].mass_nsie = halo_vec[j].mass*0.20;   //TODO This is a kluge.
 					halo_vec[j].mass *= 0.8;
+					halo_vec[j].rcore_nsie = 0.0;
 				}else{
 					halo_vec[j].mass_nsie = halo_vec[j].mass;
 					halo_vec[j].rscale = 0.0;
 					halo_vec[j].mass = 0.0;
+					halo_vec[j].rcore_nsie = 0.0;
 				}
 
 				halo_vec[j].sigma_nsie = vmax;   //TODO This is a kluge.

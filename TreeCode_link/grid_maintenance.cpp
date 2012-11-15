@@ -326,4 +326,135 @@ Point * Grid::RefineLeaf(LensHndl lens,Point *point,bool kappa_off){
 	*/
 	return i_points;
 }
+/**
+ * Same as RefineLeaf() but multiple points can be passed.  The rays are shot all together so that more
+ * parallelization can be achieved in the rayshooting.
+ */
+Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa_off){
+
+	assert(0);
+	if(points.size() == 0) return NULL;
+
+	long Nleaves = points.size();
+	Point *i_points = NewPointArray((Ngrid_block*Ngrid_block-1)*Nleaves,true);
+	Point *s_points;
+	int Nout,kk,ii,addedtocell[Nleaves];
+	long Nadded;
+
+	for(ii=0,Nadded=0;ii<Nleaves;++ii){
+		assert(points[ii]->leaf->child1 == NULL && points[ii]->leaf->child2 == NULL);
+		assert(points[ii]->image->leaf->child1 == NULL && points[ii]->image->leaf->child2 == NULL);
+
+		assert(points[ii]->gridsize > pow(10.,-DBL_DIG) ); // If cells are too small they will cause problems.
+
+		points[ii]->leaf->refined = true;
+		xygridpoints(&i_points[Nadded],points[ii]->gridsize*(Ngrid_block-1)/Ngrid_block
+				,points[ii]->x,Ngrid_block,1);
+		points[ii]->gridsize /= Ngrid_block;
+		points[ii]->image->gridsize /= Ngrid_block;
+
+		// take out points that are outside of original grid
+		Nout = 0;
+		if( (points[ii]->x[0] == i_tree->top->boundary_p1[0]) || (points[ii]->x[0] == i_tree->top->boundary_p2[0])
+			|| (points[ii]->x[1] == i_tree->top->boundary_p1[1]) || (points[ii]->x[1] == i_tree->top->boundary_p2[1]) ){
+
+			// remove the points that are outside initial image grid
+			for(kk=0,Nout=0;kk < (Ngrid_block*Ngrid_block-1);++kk){
+				if( !inbox(i_points[Nadded + kk - Nout].x,i_tree->top->boundary_p1,i_tree->top->boundary_p2) ){
+					SwapPointsInArray(&i_points[Nadded + kk - Nout],&i_points[(Ngrid_block*Ngrid_block-1)*Nleaves - 1 - Nout]);
+					/////////////////////////*****************************/////////////////////////////////
+					//this is a problem -  It will mix the points in the images.
+					++Nout;
+				}
+			}
+			assert(Nout > 0);
+		}
+
+		Nadded += Ngrid_block*Ngrid_block-1 - Nout;
+		addedtocell[ii] = Ngrid_block*Ngrid_block-1 - Nout;
+		//if(Nout > 0) i_points = AddPointToArray(i_points,Ngrid_block*Ngrid_block-1-Nout,Ngrid_block*Ngrid_block-1);
+	}
+
+	s_points = LinkToSourcePoints(i_points,Nadded);
+	lens->rayshooterInternal(Nadded,i_points,kappa_off);
+
+	// remove the points that are outside initial source grid
+	int j,Noutcell;
+	for(ii=0,kk=0,Nout=0;ii<Nleaves;++ii){
+		for(j = 0,Noutcell=0; j < addedtocell[ii]; ++j){
+			if( !inbox(s_points[kk - Nout].x,s_tree->top->boundary_p1,s_tree->top->boundary_p2) ){
+				SwapPointsInArray(&i_points[kk - Nout],&i_points[Nadded - 1 - Nout]);
+				SwapPointsInArray(&s_points[kk - Nout],&s_points[Nadded - 1 - Nout]);
+				++Nout;
+				++Noutcell;
+			}
+			++kk;
+		}
+		addedtocell[ii] -= Noutcell;
+		if(addedtocell[ii] == 0){  // case where all of parent cell is out of source plane region
+			points[ii]->leaf->refined = false;
+			points[ii]->gridsize *= Ngrid_block;
+			points[ii]->image->gridsize *= Ngrid_block;
+		}
+	}
+
+	Nadded -= Nout;
+/*
+	for(kk=0,Nout=0;kk < Nadded;++kk){
+		assert(s_points[kk - Nout].x[0] == s_points[kk - Nout].x[0]);
+		if( !inbox(s_points[kk - Nout].x,s_tree->top->boundary_p1,s_tree->top->boundary_p2) ){
+			SwapPointsInArray(&i_points[kk - Nout],&i_points[Nadded - 1 - Nout]);
+			SwapPointsInArray(&s_points[kk - Nout],&s_points[Nadded - 1 - Nout]);
+			++Nout;
+		}
+	}
+*/
+	assert(i_points->head == (Ngrid_block*Ngrid_block-1)*Nleaves);
+	assert(s_points->head == Nadded);
+
+
+	assert(Nadded >= 0);
+	// free memory of points that where outside image and source regions
+	if(Nadded == 0){
+		FreePointArray(i_points);
+		FreePointArray(s_points);
+		return NULL;
+	}
+
+	if(Nout > 0){
+		i_points = AddPointToArray(i_points,Nadded,i_points->head);
+		s_points = AddPointToArray(s_points,Nadded,s_points->head);
+	}
+	assert(i_points->head == s_points->head);
+
+	//*** these could be mode more efficient by starting at the current in tree
+	AddPointsToTree(i_tree,i_points,i_points->head);
+	AddPointsToTree(s_tree,s_points,s_points->head);
+
+	assert(s_points->head > 0);
+/*
+	// This loop should not be necessary!! It is repairing the leaf that has been assigned incorrectly somewhere
+	//if(!inbox(point[ii].x,i_tree->current->boundary_p1,i_tree->current->boundary_p2) ) moveTop(i_tree);
+	for(ii=0;ii < Nleaves;++ii){
+		// re-assign leaf of point that was to be refined
+		assert(inbox(points[ii]->x,i_tree->top->boundary_p1,i_tree->top->boundary_p2));
+		i_tree->current = points[ii]->leaf;
+		assert(inbox(points[ii]->x,i_tree->current->boundary_p1,i_tree->current->boundary_p2));
+		_FindLeaf(i_tree,points[ii]->x,0);
+		points[ii]->leaf = i_tree->current;
+
+		assert(inbox(points[ii]->image->x,s_tree->top->boundary_p1,s_tree->top->boundary_p2));
+		assert(inbox(points[ii]->image->x,s_tree->top->boundary_p1,s_tree->top->boundary_p2));
+		s_tree->current = points[ii]->image->leaf;
+		assert(inbox(points[ii]->image->x,s_tree->current->boundary_p1,s_tree->current->boundary_p2));
+		_FindLeaf(s_tree,points[ii]->image->x,0);
+		points[ii]->image->leaf = s_tree->current;
+
+		//Test lines
+		assert(points[ii]->leaf->child1 == NULL && points[ii]->leaf->child2 == NULL);
+		assert(points[ii]->image->leaf->child1 == NULL && points[ii]->image->leaf->child2 == NULL);
+	}
+*/
+	return i_points;
+}
 

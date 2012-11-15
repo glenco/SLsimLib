@@ -35,6 +35,71 @@ void find_divide_images(TreeHndl i_tree,TreeHndl s_tree
 	return;
 }
 
+/** \ingroup functions
+ *
+ *	Returns the genus of an image by counting the number of disconnected outer borders.
+ *	The in_image flag must be set to FALSE for all points on the grid and are returned to
+ *	that value.  The outer border of the image must be found first;
+ */
+int ImageGenus(TreeHndl i_tree,ImageInfo *imageinfo){
+	assert(imageinfo->outerborder);
+
+	KistHndl kist = imageinfo->outerborder;
+	KistHndl tmp_kist = new Kist,new_kist = new Kist;
+	int number,Nimagesmax=100;
+	unsigned long Ntemp,j;
+
+
+	if(kist->Nunits() < 2){
+		return 0;
+	}
+
+	// mark points in tree as in image and transfer points to temporary temporary new_imagekist
+
+	kist->MoveToTop();
+	do{
+		getCurrentKist(kist)->in_image = TRUE;
+		getCurrentKist(kist)->image->in_image = TRUE;
+		InsertAfterCurrentKist(new_kist,kist->getCurrent());
+		MoveDownKist(new_kist);
+	}while(kist->Down());
+
+	number=0;
+	do{
+
+		//printf("   new_imagekist %li\n",new_imagekist->Nunits());
+		partition_images_kist(getCurrentKist(new_kist),tmp_kist,i_tree);
+
+		// take out points that got un-marked in partition_images
+
+		Ntemp = new_kist->Nunits();
+
+		for( j=0,MoveToTopKist(new_kist) ; j < Ntemp ; ++j){
+			if(getCurrentKist(new_kist)->in_image == FALSE){
+
+			    if(AtTopKist(new_kist)){
+			    	TakeOutCurrentKist(new_kist);
+			    }else{
+			    	TakeOutCurrentKist(new_kist);
+			    	MoveDownKist(new_kist);
+			    }
+			}else{
+				MoveDownKist(new_kist);
+			}
+		}
+
+		assert(AtBottomKist(new_kist));
+		++number;
+	}while(new_kist->Nunits() > 0 && number < Nimagesmax);
+
+	assert(new_kist->Nunits() == 0);
+	delete new_kist;
+	delete tmp_kist;
+
+	return number-1;
+}
+
+
 /* \ingroup ImageFindingL2
  *  divide_images
  *

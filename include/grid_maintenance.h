@@ -40,6 +40,7 @@ typedef struct Grid{
 	/// return initial range of gridded region
 	double getInitRange(){return i_tree->top->boundary_p2[0] - i_tree->top->boundary_p1[0];}
 	Point * RefineLeaf(LensHndl lens,Point *point,bool kappa_off);
+	Point * RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa_off);
 
 private:
 	/// one dimensional size of initial grid
@@ -64,7 +65,7 @@ short image_finder_kist(LensHndl lens, double *y_source,double r_source,GridHndl
 		,short splitparities,short true_images);
 
 int refine_grid_kist(LensHndl lens,GridHndl grid,ImageInfo *imageinfo
-		,unsigned long Nimages,double res_target,short criterion,bool kappa_off,KistHndl newpointkist = NULL);
+		,unsigned long Nimages,double res_target,short criterion,bool kappa_off,KistHndl newpointkist = NULL,bool batch=false);
 
 ImageInfo *find_crit(LensHndl lens,GridHndl grid,int *Ncrits,double resolution,bool *orderingsuccess
 		,bool ordercurve,bool verbose);
@@ -73,12 +74,13 @@ void find_crit_kist(LensHndl lens,GridHndl grid,ImageInfo *critcurve,int maxNcri
 		,double resolution,bool *orderingsuccess,bool ordercurve,bool verbose);
 
 int refine_grid(LensHndl lens,GridHndl grid,OldImageInfo *imageinfo
-		,unsigned long Nimages,double res_target,short criterion,bool kappa_off);
+		,unsigned long Nimages,double res_target,short criterion,bool kappa_off,bool batch=false);
 long refine_edges(LensHndl lens,GridHndl grid,ImageInfo *imageinfo
-		,unsigned long Nimages,double res_target,short criterion,bool kappa_off);
+		,unsigned long Nimages,double res_target,short criterion,bool kappa_off,bool batch=false);
 long refine_edges2(LensHndl lens,double *y_source,double r_source,GridHndl grid
 		,ImageInfo *imageinfo,bool *image_overlap,unsigned long Nimages,double res_target
-		,short criterion,bool kappa_off);
+		,short criterion,bool kappa_off,bool batch=false);
+void sort_out_points(Point *i_points,ImageInfo *imageinfo,double r_source,double y_source[]);
 void xygridpoints(Point *points,double range,double *center,long Ngrid
 		,short remove_center);
 //void initialize_grid(double center[],double range,long Ngrid,TreeHndl s_tree,TreeHndl i_tree);

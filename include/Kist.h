@@ -67,6 +67,10 @@ public:
 	bool operator++(){return Up();}
 	/// Same as Down()
 	bool operator--(){return Down();}
+	/// Same as Up()
+	bool operator++(int x){return Up();}
+	/// Same as Down()
+	bool operator--(int x){return Down();}
 
 private:
 

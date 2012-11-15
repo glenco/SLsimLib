@@ -581,6 +581,10 @@ int AddPointsToTree(TreeHndl tree,Point *xpoint,unsigned long Nadd){
     		}
 
     	}
+
+    	while( !inbox(xpoint[j].x,tree->current->boundary_p1,tree->current->boundary_p2) ) moveUp(tree);
+    	_FindLeaf(tree,xpoint[j].x,0);
+    	xpoint[j].leaf = tree->current;
     	assert(inbox(xpoint[j].x,xpoint[j].leaf->boundary_p1,xpoint[j].leaf->boundary_p2));
     	/*/ Test lines
     	if(!testLeafs(tree)){ERROR_MESSAGE(); std::cout << "End of AddPointsToTree "<< std::endl; exit(1);}
