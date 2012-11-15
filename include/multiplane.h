@@ -32,12 +32,12 @@ public:
 	/// number of halos in the halo model on the plane
 	IndexType Nhalos;
 	/// mean mass density
-	double kappa_background;
+	double sigma_background;
 	double *z;
 	unsigned long *haloID;
 
 	//HaloData(double fov,double min_mass,double mass_scale,double z1,double z2,int mass_func_type,double alpha,CosmoHndl cosmo,long *seed);
-	HaloData(HaloStructure *halostrucs,double kb,double **positions,double *z, unsigned long *haloID,unsigned long Nhaloss,double Dl);
+	HaloData(HaloStructure *halostrucs,double sb,double **positions,double *z, unsigned long *haloID,unsigned long Nhaloss,double Dl);
 	//HaloData(NSIEstructure *halostrucs,double **positions,unsigned long Nhaloss);
 	~HaloData();
 };
@@ -81,6 +81,8 @@ public:
 
 class MultiLens : public Lens{
 public:
+
+  void unusedHalos();
 
 	//MultiLens(std::string paramfile,long *seed);
 	MultiLens(InputParams& params,long *seed);
