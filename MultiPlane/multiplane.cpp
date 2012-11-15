@@ -1005,24 +1005,10 @@ short MultiLens::ResetSourcePlane(
 		else  dDs_implant = Ds;
 	}
 
-	//std::cout << "Source on plane " << j << " zs " << zs_implant << " Ds " << Ds << " dDs " << dDs_implant << std::endl;
+	std::cout << "Source on plane " << j << " zs " << zs_implant << " Ds " << Ds << " dDs " << dDs_implant << std::endl;
 	index_of_new_sourceplane = j;
-	
-	double fov = pi/180.*0.0025;
-	double r2 = sqrt(xx[0]*xx[0]+xx[1]*xx[1]);
-	out=1;
-	for(int l=0; l < Nplanes-1; l++){
-	  for(int i=0; i<halo_data[l]->Nhalos; i++){
-	    if(halo_data[l]->haloID[i] == GalID && zs_implant <= 3.0){
-	      halo_data[l]->haloID[i] = 0;
-	      out=0;
-	    }
-	  }
-	}
-	
-	if(r2 > fov && out == 1) out = 0;
 
-	//out = j;
+	out = j;
 	return out;
 }
 
