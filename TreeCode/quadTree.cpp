@@ -374,10 +374,9 @@ void QuadTree::CalcMoments(){
 			cbranch->center[0] += tmp*tree->xp[cbranch->particles[i]][0]/cbranch->mass;
 			cbranch->center[1] += tmp*tree->xp[cbranch->particles[i]][1]/cbranch->mass;
 		}
-		
-		/// subtract the "background" mass
-		cbranch->mass -=  sigma_background*(cbranch->boundary_p2[0]-cbranch->boundary_p1[0])*(cbranch->boundary_p2[1]-cbranch->boundary_p1[1]);
 
+		//	cbranch->mass -= sigma_background*pow(cbranch->boundary_p2[0]-cbranch->boundary_p1[0],2);
+		  
 		//////////////////////////////////////////////
 		// calculate quadropole moment of branch
 		//////////////////////////////////////////////
@@ -393,8 +392,7 @@ void QuadTree::CalcMoments(){
 			}
 			//tmp = haloON ? halo_params[cbranch->particles[i]*MultiMass].mass : masses[cbranch->particles[i]*MultiMass];
 
-		/// subtract the "background" mass
-		tmp -=  sigma_background*(cbranch->boundary_p2[0]-cbranch->boundary_p1[0])*(cbranch->boundary_p2[1]-cbranch->boundary_p1[1]);
+			//tmp -= sigma_background*pow(cbranch->boundary_p2[0]-cbranch->boundary_p1[0],2);
 
 			cbranch->quad[0] += (xcut-2*xcm[0]*xcm[0])*tmp;
 			cbranch->quad[1] += (xcut-2*xcm[1]*xcm[1])*tmp;
@@ -640,6 +638,9 @@ void QuadTree::force2D_recur(double *ray,double *alpha,float *kappa,float *gamma
 
   walkTree_recur(tree->top,&ray[0],&alpha[0],kappa,&gamma[0],no_kappa);
 
+  if(!no_kappa)
+    *kappa -= sigma_background;
+
   return;
 }
 
@@ -673,16 +674,14 @@ void QuadTree::walkTree_recur(QBranchNB *branch,double *ray,double *alpha,float 
 	  
 	  index = MultiMass*branch->particles[i];
 	  
-	  
 	  if(haloON ){
 	    prefac = NSIE_ON ? halo_params[index].mass_nsie : halo_params[index].mass;
+	    //prefac -= sigma_background*pow(halo_params[index].Rmax,2)*pi;
 	  }else{
 	    prefac = masses[index];
+	    //prefac -= sigma_background*pow(sizes[index],2)*pi;
 	  }
-	  prefac /= rcm2*pi;
-	  
-	  /// subtract the "background" mass
-	  prefac -= sigma_background;
+	  prefac /= rcm2*pi;	
 	  
 	  alpha[0] += -1.0*prefac*xcm[0];
 	  alpha[1] += -1.0*prefac*xcm[1];
@@ -697,9 +696,9 @@ void QuadTree::walkTree_recur(QBranchNB *branch,double *ray,double *alpha,float 
 	}
       }
       
-      // Fined the particles that intersect with ray and add them individually.
+      // Find the particles that intersect with ray and add them individually.
       if(rcm2cell < 5.83*boxsize2){
-	for(i = 0 ; i < branch->Nbig_particles ; ++i){
+	for(i = 0 ; i < branch->Nbig_particles ; ++i) {
 	  
 	  index = branch->big_particles[i];
 	  
@@ -715,11 +714,9 @@ void QuadTree::walkTree_recur(QBranchNB *branch,double *ray,double *alpha,float 
 	    if(rcm2 < 1e-20) rcm2 = 1e-20;
 	    rcm = sqrt(rcm2);
 	    
+	    //prefac = (masses[MultiMass*index]-sigma_background*pow(sizes[index],2)*pi)/rcm2/pi;
 	    prefac = masses[MultiMass*index]/rcm2/pi;
-	    
-	    /// subtract the "background" mass
-	    prefac -= sigma_background;
-	    
+
 	    arg1 = rcm2/(sizes[index*MultiRadius]*sizes[index*MultiRadius]);
 	    arg2 = sizes[index*MultiRadius];
 	    tmp = sizes[index*MultiRadius];
@@ -764,6 +761,7 @@ void QuadTree::walkTree_recur(QBranchNB *branch,double *ray,double *alpha,float 
 	gamma[1] += xcm[0]*xcm[1]*tmp;
       }
       
+      
       // quadrapole contribution
       //   the kappa and gamma are not calculated to this order
       alpha[0] -= (branch->quad[0]*xcm[0] + branch->quad[2]*xcm[1])
@@ -801,11 +799,8 @@ void QuadTree::force_halo(
 	//Rmax = NSIE_ON ?  halo_params.Rsize_nsie*MAX(1.0,1.0/halo_params.fratio_nsie) : halo_params.Rmax;
 	/// intersecting, subtract the point particle
 	if(rcm2 < halo_params.Rmax*halo_params.Rmax){
+	  //double prefac = (halo_params.mass-sigma_background*halo_params.Rmax*halo_params.Rmax*pi)/rcm2/pi;	
 	  double prefac = halo_params.mass/rcm2/pi;
-
-	  /// subtract the "background" mass
-	  prefac -= sigma_background;
-	
 	  double arg1 = sqrt(rcm2)/halo_params.rscale;
 	  double arg2 = halo_params.Rmax/halo_params.rscale;
 	  
