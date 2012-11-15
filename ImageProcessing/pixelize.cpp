@@ -29,35 +29,16 @@ PixelMap::PixelMap(
 
 	resolution=range/(Npixels-1);
 
-	// initialize pixel tree
-	Point *points=NewPointArray(Npixels*Npixels,true);
-	xygridpoints(points,range,center,Npixels,false);
-	ptree=BuildTree(points,Npixels*Npixels);
-
-	MoveToTopList(ptree->pointlist);
-	for(unsigned long i=0 ; i < ptree->pointlist->Npoints ; ++i){
-		ptree->pointlist->current->surface_brightness = 0.0;
-		MoveDownList(ptree->pointlist);
-	}
-
+	map.resize(Npixels*Npixels);
 	return;
 }
 PixelMap::~PixelMap(){
 
-	freeTree(ptree);
 	map.resize(0);
 }
 /// Zero the whole map
 void PixelMap::Clean(){
-	unsigned long i;
-
 	map = 0.0;
-
-	MoveToTopList(ptree->pointlist);
-	for(i=0 ; i < ptree->pointlist->Npoints ; ++i){
-		ptree->pointlist->current->surface_brightness = 0.0;
-		MoveDownList(ptree->pointlist);
-	}
 
 	return;
 }
@@ -81,15 +62,95 @@ void PixelMap::AddImages(
 				if(!constant_sb) sb = getCurrentKist(imageinfo[ii].imagekist)->surface_brightness;
 
 				assert(getCurrentKist(imageinfo[ii].imagekist)->leaf);
-				moveTop(ptree);
-				_SplitFluxIntoPixels(ptree,getCurrentKist(imageinfo[ii].imagekist)->leaf,&sb);
+				float rmax = getCurrentKist(imageinfo[ii].imagekist)->gridsize;
+				std::list <unsigned long> neighborlist;
+				PointsWithinLeaf(getCurrentKist(imageinfo[ii].imagekist)->x,rmax,neighborlist);
 
+				for(  std::list<unsigned long>::iterator it = neighborlist.begin();it != neighborlist.end();it++){
+					float area = LeafPixelArea(*it,getCurrentKist(imageinfo[ii].imagekist)->leaf);
+					map[*it] += sb*area;
+				}
 			}while(MoveDownKist(imageinfo[ii].imagekist));
 		}
 	}
 
 	return;
 }
+
+void PixelMap::PointsWithinLeaf(PosType * x_center, float side, std::list <unsigned long> &neighborlist){
+	long i0,i1,i2,i3;
+	PosType ** x_corner;
+
+	neighborlist.clear();
+
+	x_corner = new PosType*[4];
+	for (int i = 0; i<4; ++i){x_corner[i] = new PosType[2];}
+
+	x_corner[0][0] = x_center[0] - side/2.;
+	x_corner[0][1] = x_center[1] - side/2.;
+	x_corner[1][0] = x_center[0] + side/2.;
+	x_corner[1][1] = x_center[1] - side/2.;
+	x_corner[2][0] = x_center[0] - side/2.;
+	x_corner[2][1] = x_center[1] + side/2.;
+	x_corner[3][0] = x_center[0] + side/2.;
+	x_corner[3][1] = x_center[1] + side/2.;
+//std::cout << x_center[0] << "  " << x_center[1] << std::endl;
+	i0 = IndexFromPosition(x_corner[0],Npixels,range,center);
+	i1 = IndexFromPosition(x_corner[1],Npixels,range,center);
+	i2 = IndexFromPosition(x_corner[2],Npixels,range,center);
+	i3 = IndexFromPosition(x_corner[3],Npixels,range,center);
+//std::cout << i0 << "  " << i1 << "  " << i2 << "  " << i3 << std::endl;
+	int line_s,line_e,col_s,col_e;
+	if (i0==-1 && i2==-1) line_s = 0;
+	else line_s = long(MAX(i0,i2))%Npixels;
+	if (i0==-1 && i1==-1) col_s = 0;
+	else col_s = long(MAX(i0,i1))/Npixels;
+	if (i1==-1 && i3==-1) line_e = Npixels;
+	else line_e = long(MAX(i1,i3))%Npixels;
+	if (i2==-1 && i3==-1) col_e = Npixels;
+	else col_e = long(MAX(i2,i3))/Npixels;
+//std::cout << line_s << "  " << line_e << "  " << col_s << "  " << col_e << std::endl;
+
+	for (int iy = col_s; iy<= col_e; ++iy)
+	{
+		for (int ix = line_s; ix <= line_e; ++ix)
+			{
+				neighborlist.push_back(ix+Npixels*iy);
+				//std::cout << ix+Npixels*iy << std::endl;
+			}
+		}
+	for (int i = 0; i<4; ++i){delete[] x_corner[i];}
+	delete[] x_corner;
+}
+
+
+double PixelMap::LeafPixelArea(IndexType i,Branch * branch1){
+	double area=0;
+	PosType * p = new PosType[2];
+	PosType * p1 = new PosType[2];
+	PosType * p2 = new PosType[2];
+//std::cout<< "Calculating common area with pixel  " << i <<std::endl;
+	PositionFromIndex(i,p,Npixels,range,center);
+//std::cout << p[0] << "  " << p[1] << std::endl;
+	p1[0] = p[0] - .5*resolution;
+	p1[1] = p[1] - .5*resolution;
+	p2[0] = p[0] + .5*resolution;
+	p2[1] = p[1] + .5*resolution;
+	area = MIN(p2[0],branch1->boundary_p2[0])
+	     - MAX(p1[0],branch1->boundary_p1[0]);
+	if(area < 0) return 0.0;
+
+	area *= MIN(p2[1],branch1->boundary_p2[1])
+	      - MAX(p1[1],branch1->boundary_p1[1]);
+	if(area < 0) return 0.0;
+
+	delete [] p;
+	delete [] p1;
+	delete [] p2;
+	return area;
+
+}
+
 /// Add an image to the map with Gaussian smoothing
 void PixelMap::AddImages(
 		ImageInfo *imageinfo   /// An array of ImageInfo-s.  There is no reason to separate images for this routine
@@ -109,7 +170,7 @@ void PixelMap::AddImages(
 	KistHndl kist = new Kist();
 
 	// find numerical normalization of mask on grid
-	PointsWithinKist(ptree,center,3*sigma,kist,0);
+//	PointsWithinKist(ptree,center,3*sigma,kist,0);
 	kist->MoveToTop();
 	do{
 		r[0] = kist->getCurrent()->x[0] - center[0];
@@ -131,7 +192,7 @@ void PixelMap::AddImages(
 					std::cout << "ERROR in PixelMap::AddImages(), Resolution of simulation must be higher than resolution of final image." << std::endl;
 					exit(1);
 				}
-				PointsWithinKist(ptree,imageinfo[ii].imagekist->getCurrent()->x,3*sigma,kist,0);
+//				PointsWithinKist(ptree,imageinfo[ii].imagekist->getCurrent()->x,3*sigma,kist,0);
 				kist->MoveToTop();
 				do{
 					r[0] = kist->getCurrent()->x[0] - imageinfo[ii].imagekist->getCurrent()->x[0];
@@ -147,29 +208,9 @@ void PixelMap::AddImages(
 	return;
 }
 
-void PixelMap::Convert(){
-	long ix;
-
-	unsigned long i;
-	map.resize(Npixels*Npixels);
-//	if(map == NULL) map = new float[Npixels*Npixels];
-	for(i=0 ; i < Npixels*Npixels ; ++i) map[i]=0.0;
-
-	MoveToTopList(ptree->pointlist);
-	for(i=0;i<ptree->pointlist->Npoints;++i){
-		if(ptree->pointlist->current->surface_brightness > 0.0){
-			ix = IndexFromPosition(ptree->pointlist->current->x,Npixels,range,center);
-			if(ix > -1)	map[ix] =  ptree->pointlist->current->surface_brightness;
-		}
-		MoveDownList(ptree->pointlist);
-	}
-
-	return;
-}
 /// Print an ASCII table of all the pixel values.
 void PixelMap::printASCII(){
 
-	Convert();
 	std::cout << Npixels << "  " << range << std::endl;
 	for(unsigned long i=0;i < Npixels*Npixels; ++i) std::cout << map[i] << std::endl;
 	std::cout << Npixels << "  " << range << std::endl;
@@ -186,7 +227,6 @@ void PixelMap::printASCIItoFile(std::string filename){
 		exit(0);
 	}
 
-	Convert();
 	file_map << Npixels << "  " << range << std::endl;
 	for(unsigned long i=0;i < Npixels*Npixels; ++i) file_map << std::scientific << map[i] << std::endl;
 	file_map << Npixels << "  " << range << std::endl;
@@ -205,7 +245,6 @@ void PixelMap::printFITS(std::string filename){
 			std::cout << "Please enter a valid filename for the FITS file output" << std::endl;
 			exit(1);
 		}
-		Convert();
 
 		//int Np = (int)Npixels;
 		//writeImage(filename,map,Np,Np);
@@ -260,39 +299,6 @@ void PixelMap::printFITS(std::string filename){
 #endif
 }
 
-/** \ingroup LowLevel
- *  Recursively determine which pixels a leaf intersects with
- *  and add flux to that pixel.  Used in pixelizer().
- */
-void PixelMap::_SplitFluxIntoPixels(TreeHndl ptree,Branch *leaf,double *leaf_sb){
-
-	double area = BoxIntersection(leaf,ptree->current);
-
-	if(area > 0.0){
-		if(atLeaf(ptree)){
-		
-			assert(ptree->current->npoints == 1);
-			ptree->current->points->surface_brightness += (*leaf_sb)*area;
-			//ptree->current->points->surface_brightness = *leaf_sb;
-
-			return;
-		}
-
-		if(ptree->current->child1 != NULL){
-			moveToChild(ptree,1);
-			_SplitFluxIntoPixels(ptree,leaf,leaf_sb);
-			moveUp(ptree);
-		}
-
-		if(ptree->current->child2 != NULL){
-			moveToChild(ptree,2);
-			_SplitFluxIntoPixels(ptree,leaf,leaf_sb);
-			moveUp(ptree);
-		}
-	}
-
-	return;
-}
 /** \ingroup Image
  *
  * \brief Smoothes a map with a Gaussian kernel. Needs to be tested.
