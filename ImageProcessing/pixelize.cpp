@@ -65,7 +65,6 @@ void PixelMap::AddImages(
 				float rmax = getCurrentKist(imageinfo[ii].imagekist)->gridsize;
 				std::list <unsigned long> neighborlist;
 				PointsWithinLeaf(getCurrentKist(imageinfo[ii].imagekist)->x,rmax,neighborlist);
-
 				for(  std::list<unsigned long>::iterator it = neighborlist.begin();it != neighborlist.end();it++){
 					float area = LeafPixelArea(*it,getCurrentKist(imageinfo[ii].imagekist)->leaf);
 					map[*it] += sb*area;
@@ -126,9 +125,8 @@ void PixelMap::PointsWithinLeaf(PosType * x_center, float side, std::list <unsig
 
 double PixelMap::LeafPixelArea(IndexType i,Branch * branch1){
 	double area=0;
-	PosType * p = new PosType[2];
-	PosType * p1 = new PosType[2];
-	PosType * p2 = new PosType[2];
+	PosType p[2],p1[2],p2[2];
+
 //std::cout<< "Calculating common area with pixel  " << i <<std::endl;
 	PositionFromIndex(i,p,Npixels,range,center);
 //std::cout << p[0] << "  " << p[1] << std::endl;
@@ -144,9 +142,6 @@ double PixelMap::LeafPixelArea(IndexType i,Branch * branch1){
 	      - MAX(p1[1],branch1->boundary_p1[1]);
 	if(area < 0) return 0.0;
 
-	delete [] p;
-	delete [] p1;
-	delete [] p2;
 	return area;
 
 }
@@ -215,7 +210,7 @@ void PixelMap::printASCII(){
 	for(unsigned long i=0;i < Npixels*Npixels; ++i) std::cout << map[i] << std::endl;
 	std::cout << Npixels << "  " << range << std::endl;
 
-	map.resize(0);
+	//map.resize(0);
 	return;
 }
 /// Print an ASCII table of all the pixel values.
@@ -231,7 +226,7 @@ void PixelMap::printASCIItoFile(std::string filename){
 	for(unsigned long i=0;i < Npixels*Npixels; ++i) file_map << std::scientific << map[i] << std::endl;
 	file_map << Npixels << "  " << range << std::endl;
 
-	map.resize(0);
+	//map.resize(0);
 
 	file_map.close();
 
@@ -292,7 +287,7 @@ void PixelMap::printFITS(std::string filename){
 
 		std::cout << *phout << std::endl;
 
-		map.resize(0);
+		//map.resize(0);
 #else
 		std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
 		exit(1);

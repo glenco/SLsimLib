@@ -9,13 +9,8 @@
 
 using namespace std;
 
-<<<<<<< local
-HaloData::HaloData(HaloStructure *halostrucs,double kappa_back,PosType **positions, double *zz, unsigned long *id,unsigned long Nhaloss,double Dl):
-	pos(positions), halos(halostrucs), Nhalos(Nhaloss),z(zz),haloID(id),kappa_background(kappa_back)
-=======
-HaloData::HaloData(HaloStructure *halostrucs,double sb,PosType **positions, double *zz, unsigned long *id,unsigned long Nhaloss,double Dl):
-	pos(positions), halos(halostrucs), Nhalos(Nhaloss),z(zz),haloID(id),sigma_background(sb)
->>>>>>> other
+HaloData::HaloData(HaloStructure *halostrucs,double sigma_back,PosType **positions, double *zz, unsigned long *id,unsigned long Nhaloss,double Dl):
+	pos(positions), halos(halostrucs), Nhalos(Nhaloss),z(zz),haloID(id),sigma_background(sigma_back)
 {
   //convert to physical Mpc on the plane 
   int i;

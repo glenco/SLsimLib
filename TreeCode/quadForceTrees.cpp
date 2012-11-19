@@ -205,21 +205,6 @@ void QuadTreeNSIE::force_halo(
 			gamma[1] += xcm[0]*xcm[1]*prefac;
 		}
 
-// TODO !!!!! Need to test this !!!!
-		  // add quadrapole terms to deflection
-/*		  double quad[3];
-		  quadMomNSIE(halo_params.mass_nsie,halo_params.Rsize_nsie,halo_params.fratio_nsie
-				  ,halo_params.rcore_nsie,halo_params.pa_nsie,quad);
-
-		  alpha[0] -= (quad[0]*xcm[0] + quad[2]*xcm[1])/pow(rcm2,2)/pi;
-		  alpha[1] -= (quad[1]*xcm[1] + quad[2]*xcm[0])/pow(rcm2,2)/pi;
-
-		  double tmp = 4*(quad[0]*xcm[0]*xcm[0] + quad[1]*xcm[1]*xcm[1]
-			             + 2*quad[2]*xcm[0]*xcm[1])/pow(rcm2,3)/pi;
-
-		  alpha[0] += tmp*xcm[0];
-		  alpha[1] += tmp*xcm[1];
-*/
 	}else{
 		double xt[2]={0,0},tmp[2]={0,0};
 		float units = pow(halo_params.sigma_nsie/lightspeed,2)/Grav/sqrt(halo_params.fratio_nsie); // mass/distance(physical)

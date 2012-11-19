@@ -332,7 +332,7 @@ Point * Grid::RefineLeaf(LensHndl lens,Point *point,bool kappa_off){
  */
 Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa_off){
 
-	assert(0);
+	assert(0);  // Not finished yet !!!!
 	if(points.size() == 0) return NULL;
 
 	long Nleaves = points.size();
