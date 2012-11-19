@@ -128,7 +128,7 @@ public:
 			,IndexType Npoints
 			,bool Multimass
 			,bool Multisize
-			,double my_kappa_background = 0
+			,double my_sigma_background = 0
 			,int bucket = 5
 			,double theta_force = 0.1
 			);
@@ -145,7 +145,7 @@ protected:
 			PosType **xpt
 			,HaloStructure *my_halo_params
 			,IndexType Npoints
-			,double my_kappa_background = 0
+			,double my_sigma_background = 0
 			,int bucket = 5
 			,double theta_force = 0.1
 			,bool NSIE_ON = false
@@ -158,7 +158,7 @@ protected:
 	float *sizes;
 
 	IndexType Nparticles;
-	double kappa_background;
+	double sigma_background;
 	int Nbucket;
 
 	double force_theta;
@@ -240,7 +240,7 @@ class QuadTreePowerLaw : public QuadTree{
 
 public:
 	QuadTreePowerLaw(float beta,PosType **xp,IndexType Npoints,HaloStructure *par_internals
-			,double my_kappa_bk=0.0,int bucket = 5,PosType theta = 0.1);
+			,double my_sigma_bk=0.0,int bucket = 5,PosType theta = 0.1);
 
 	~QuadTreePowerLaw();
 
@@ -286,7 +286,7 @@ class QuadTreeNFW : public QuadTree{
 
 public:
 	QuadTreeNFW(PosType **xp,IndexType Npoints,HaloStructure *par_internals
-			,double my_kappa_bk = 0.0,int bucket = 5,PosType theta = 0.1);
+			,double my_sigma_bk = 0.0,int bucket = 5,PosType theta = 0.1);
 	~QuadTreeNFW();
 
 protected:
@@ -336,7 +336,7 @@ class QuadTreePseudoNFW : public QuadTree{
 
 public:
 	QuadTreePseudoNFW(double beta,PosType **xp,IndexType Npoints,HaloStructure *par_internals
-			,double my_kappa_bk = 0.0,int bucket = 5,PosType theta = 0.1);
+			,double my_sigma_bk = 0.0,int bucket = 5,PosType theta = 0.1);
 	~QuadTreePseudoNFW();
 
 protected:
@@ -373,7 +373,7 @@ protected:
 class QuadTreeNSIE : public QuadTree{
 public:
 	  QuadTreeNSIE(PosType **xp,IndexType Npoints,HaloStructure *par_internals
-				,double my_kappa_bk = 0.0,int bucket = 5,PosType theta = 0.1);
+				,double my_sigma_bk = 0.0,int bucket = 5,PosType theta = 0.1);
 	  ~QuadTreeNSIE();
 
 	  void test_force_halo(HaloStructure &halo_params);
@@ -401,7 +401,7 @@ private:
 class QuadTreeNFW_NSIE : public QuadTreeNFW{
 public:
 	  QuadTreeNFW_NSIE(PosType **xp,IndexType Npoints,HaloStructure *par_internals
-				,double my_kappa_bk = 0.0,int bucket = 5,PosType theta = 0.1);
+				,double my_sigma_bk = 0.0,int bucket = 5,PosType theta = 0.1);
 	  ~QuadTreeNFW_NSIE();
 
 	  virtual void force2D(double *ray,double *alpha,float *kappa,float *gamma,bool no_kappa);

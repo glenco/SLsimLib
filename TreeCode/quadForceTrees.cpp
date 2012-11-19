@@ -12,11 +12,11 @@ QuadTreePowerLaw::QuadTreePowerLaw(
 		,PosType **xp              /// positions of the halos xp[0..Npoints-1][0..1 or 2]
 		,IndexType Npoints         /// number of halos
 		,HaloStructure *h_params   /// array with internal properties of halos
-		,double my_kappa_bk        /// Background convergence to be subtracted
+		,double my_sigma_bk        /// Background convergence to be subtracted
 		,int bucket                /// maximum number of halos in a leaf of the tree
 		,PosType theta             /// Opening angle used in tree force calculation, default 0.1
 		) :
-		QuadTree(xp,h_params,Npoints,my_kappa_bk,bucket,theta), beta(beta)
+		QuadTree(xp,h_params,Npoints,my_sigma_bk,bucket,theta), beta(beta)
 {
 
 }
@@ -31,11 +31,11 @@ QuadTreeNFW::QuadTreeNFW(
 		PosType **xp               /// positions of the halos xp[0..Npoints-1][0..1 or 2]
 		,IndexType Npoints         /// number of halos
 		,HaloStructure *h_params   /// array with internal properties of halos
-		,double my_kappa_bk        /// Background convergence to be subtracted
+		,double my_sigma_bk        /// Background convergence to be subtracted
 		,int bucket                /// maximum number of halos in a leaf of the tree
 		,PosType theta             /// Opening angle used in tree force calculation, default 0.1
 		) :
-		QuadTree(xp,h_params,Npoints,my_kappa_bk,bucket,theta)
+		QuadTree(xp,h_params,Npoints,my_sigma_bk,bucket,theta)
 {
 	for(unsigned long i=0;i<Npoints;++i){
 		if(h_params[i].Rmax <= 0.0 || h_params[i].rscale <= 0.0){
@@ -68,11 +68,11 @@ QuadTreePseudoNFW::QuadTreePseudoNFW(
 		,PosType **xp              /// positions of the halos xp[0..Npoints-1][0..1 or 2]
 		,IndexType Npoints         /// number of halos
 		,HaloStructure *h_params   /// array with internal properties of halos
-		,double my_kappa_bk       /// Background convergence to be subtracted
+		,double my_sigma_bk       /// Background convergence to be subtracted
 		,int bucket                /// maximum number of halos in a leaf of the tree
 		,PosType theta             /// Opening angle used in tree force calculation, default 0.1
 		) :
-		QuadTree(xp,h_params,Npoints,my_kappa_bk,bucket,theta), beta(my_beta)
+		QuadTree(xp,h_params,Npoints,my_sigma_bk,bucket,theta), beta(my_beta)
 {
 
 	if(beta == 0.0){
@@ -106,11 +106,11 @@ QuadTreeNSIE::QuadTreeNSIE(
 		PosType **xp              /// positions of the halos xp[0..Npoints-1][0..1 or 2]
 		,IndexType Npoints         /// number of halos
 		,HaloStructure *h_params   /// array with internal properties of halos
-		,double my_kappa_bk       /// Background convergence to be subtracted
+		,double my_sigma_bk       /// Background convergence to be subtracted
 		,int bucket                /// maximum number of halos in a leaf of the tree
 		,PosType theta             /// Opening angle used in tree force calculation, default 0.1
 		) :
-		QuadTree(xp,h_params,Npoints,my_kappa_bk,bucket,theta,true)
+		QuadTree(xp,h_params,Npoints,my_sigma_bk,bucket,theta,true)
 {
 
 	//for(unsigned long i=0;i<Npoints;++i){
@@ -119,6 +119,7 @@ QuadTreeNSIE::QuadTreeNSIE(
 }
 QuadTreeNSIE::~QuadTreeNSIE(){
 }
+
 
 /// Testing function
 void QuadTreeNSIE::test_force_halo(
@@ -242,11 +243,11 @@ QuadTreeNFW_NSIE::QuadTreeNFW_NSIE(
 		PosType **xp              /// positions of the halos xp[0..Npoints-1][0..1 or 2]
 		,IndexType Npoints         /// number of halos
 		,HaloStructure *h_params   /// array with internal properties of halos
-		,double my_kappa_bk       /// Background convergence to be subtracted
+		,double my_sigma_bk       /// Background convergence to be subtracted
 		,int bucket                /// maximum number of halos in a leaf of the tree
 		,PosType theta             /// Opening angle used in tree force calculation, default 0.1
 		) :
-		QuadTreeNFW(xp,Npoints,h_params,my_kappa_bk,bucket,theta)
+		QuadTreeNFW(xp,Npoints,h_params,my_sigma_bk,bucket,theta)
 {
 	// The background should be taken care of in the QuadTreeNFW part
 	qtreensie = new QuadTreeNSIE(xp,Npoints,h_params,0.0,bucket,theta);
