@@ -9,13 +9,8 @@
 
 using namespace std;
 
-<<<<<<< local
-HaloData::HaloData(HaloStructure *halostrucs,double kappa_back,PosType **positions, double *zz, unsigned long *id,unsigned long Nhaloss,double Dl):
-	pos(positions), halos(halostrucs), Nhalos(Nhaloss),z(zz),haloID(id),kappa_background(kappa_back)
-=======
 HaloData::HaloData(HaloStructure *halostrucs,double sb,PosType **positions, double *zz, unsigned long *id,unsigned long Nhaloss,double Dl):
 	pos(positions), halos(halostrucs), Nhalos(Nhaloss),z(zz),haloID(id),sigma_background(sb)
->>>>>>> other
 {
   //convert to physical Mpc on the plane 
   int i;
@@ -375,6 +370,12 @@ void MultiLens::createHaloData(
 		z2 = z1+dz;
 
 		Nhalosbin[0] = cosmo->haloNumberDensityOnSky(pow(10,Logm[0]),z1,z2,mass_func_type,pw_alpha)*fieldofview;
+
+		/*
+		std::cout << z1 << " " << z2 << " " << z2-z1<< std::endl;
+		std::cout << "old " << cosmo->haloNumberDensityOnSkyOld(pow(10,Logm[0]),z1,z2,mass_func_type,pw_alpha)*fieldofview << std::endl;
+		std::cout << "new " << cosmo->haloNumberDensityOnSky(pow(10,Logm[0]),z1,z2,mass_func_type,pw_alpha)*fieldofview << std::endl;
+		*/
 
 		Nhaloestot = Nhalosbin[0];
 		Nhalosbin[0] = 1;

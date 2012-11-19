@@ -609,6 +609,14 @@ void QuadTree::force2D(double *ray,double *alpha,float *kappa,float *gamma,bool 
 	  }
   }while(tree->WalkStep(allowDescent));
 
+  // Subtract off uniform mass sheet to compensate for the extra mass
+  //  added to the universe in the halos.
+  alpha[0] += ray[0]*sigma_background;
+  alpha[1] += ray[1]*sigma_background;
+  if(!no_kappa){      //  taken out to speed up
+    *kappa -= sigma_background;
+  }
+  
   return;
 }
 
@@ -638,8 +646,13 @@ void QuadTree::force2D_recur(double *ray,double *alpha,float *kappa,float *gamma
 
   walkTree_recur(tree->top,&ray[0],&alpha[0],kappa,&gamma[0],no_kappa);
 
-  if(!no_kappa)
+  // Subtract off uniform mass sheet to compensate for the extra mass
+  //  added to the universe in the halos.
+  alpha[0] += ray[0]*sigma_background;
+  alpha[1] += ray[1]*sigma_background;
+  if(!no_kappa){      //  taken out to speed up
     *kappa -= sigma_background;
+  }
 
   return;
 }
@@ -698,7 +711,7 @@ void QuadTree::walkTree_recur(QBranchNB *branch,double *ray,double *alpha,float 
       
       // Find the particles that intersect with ray and add them individually.
       if(rcm2cell < 5.83*boxsize2){
-	for(i = 0 ; i < branch->Nbig_particles ; ++i) {
+	for(i = 0 ; i < branch->Nbig_particles ; ++i){
 	  
 	  index = branch->big_particles[i];
 	  
@@ -819,124 +832,6 @@ void QuadTree::force_halo(
 	  }
 	}
 	
-	return;
-}
-
-/// Testing function
-void QuadTreeNSIE::test_force_halo(
-	  	HaloStructure &halo_params
-		){
-	double alpha[2];
-	float kappa, gamma[2];
-	double xcm[2];
-	int N = 200;
-
-	std::cout << N << std::endl;
-
-	for(int i = 0; i<N ; ++i){
-		xcm[0] = 2.5*halo_params.Rsize_nsie*MAX(1.0,1.0/halo_params.fratio_nsie)*(i*1.0/(N-1) - 0.5);
-		for(int j = 0; j<N ; ++j){
-			xcm[1] = 2.5*halo_params.Rsize_nsie*MAX(1.0,1.0/halo_params.fratio_nsie)
-			*(j*1.0/(N-1) - 0.5);
-
-			alpha[0]=alpha[1] = 0.0;
-			gamma[0]=gamma[1] = 0.0;
-			force_halo(alpha,&kappa,gamma,xcm,halo_params,true);
-
-			std::cout << xcm[0] << " " << xcm[1] << "     " << alpha[0] << "  " << alpha[1] << std::endl;
-		}
-	}
-
-}
-
-/// This is the function that override QuadTree::force_halo to make it 2D.
-void QuadTreeNSIE::force_halo(
-		double *alpha
-		,float *kappa
-		,float *gamma
-		,double *xcm
-	  	,HaloStructure &halo_params
-	  	,bool no_kappa
-	  	){
-
-	double rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
-	if(rcm2 < 1e-20) rcm2 = 1e-20;
-
-	double ellipR = ellipticRadiusNSIE(xcm,halo_params.fratio_nsie,halo_params.pa_nsie);
-	if(ellipR > halo_params.Rsize_nsie){
-		double rout = halo_params.Rsize_nsie*MAX(1.0,1.0/halo_params.fratio_nsie);
-		// This is the case when the ray is within the NSIE's circular region of influence but outside its elliptical truncation
-		  // if the ray misses the halo treat it as a point mass
-		double prefac = -1.0*halo_params.mass_nsie/rcm2/pi;
-
-		if(rcm2 > rout*rout){
-			alpha[0] += prefac*xcm[0];
-			alpha[1] += prefac*xcm[1];
-		}else{
-			double alpha_out[2],alpha_in[2],rin,x_in[2];
-			double prefac = -1.0*halo_params.mass_nsie/rout/pi;
-			double r = sqrt(rcm2);
-
-			alpha_out[0] = prefac*xcm[0]/r;
-			alpha_out[1] = prefac*xcm[1]/r;
-
-			rotation(x_in,xcm,halo_params.pa_nsie);
-			rin = r*halo_params.Rsize_nsie
-					  /sqrt( x_in[0]*x_in[0] + pow(halo_params.fratio_nsie*x_in[1],2) );
-			//rin = halo_params.Rsize_nsie;
-
-			x_in[0] = rin*xcm[0]/r;
-			x_in[1] = rin*xcm[1]/r;
-
-			alpha_in[0] = alpha_in[1] = 0;
-			float units = pow(halo_params.sigma_nsie/lightspeed,2)/Grav/sqrt(halo_params.fratio_nsie); // mass/distance(physical)
-			alphaNSIE(alpha_in,x_in,halo_params.fratio_nsie,halo_params.rcore_nsie,halo_params.pa_nsie);
-			alpha_in[0] *= -units;
-			alpha_in[1] *= -units;
-
-			alpha[0] += (r - rin)*(alpha_out[0] - alpha_in[0])/(rout - rin) + alpha_in[0];
-			alpha[1] += (r - rin)*(alpha_out[1] - alpha_in[1])/(rout - rin) + alpha_in[1];
-		}
-
-		// can turn off kappa and gamma calculations to save times
-		if(!no_kappa){
-			prefac *= 2.0/rcm2;
-
-			gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*prefac;
-			gamma[1] += xcm[0]*xcm[1]*prefac;
-		}
-
-// TODO !!!!! Need to test this !!!!
-		  // add quadrapole terms to deflection
-/*		  double quad[3];
-		  quadMomNSIE(halo_params.mass_nsie,halo_params.Rsize_nsie,halo_params.fratio_nsie
-				  ,halo_params.rcore_nsie,halo_params.pa_nsie,quad);
-
-		  alpha[0] -= (quad[0]*xcm[0] + quad[2]*xcm[1])/pow(rcm2,2)/pi;
-		  alpha[1] -= (quad[1]*xcm[1] + quad[2]*xcm[0])/pow(rcm2,2)/pi;
-
-		  double tmp = 4*(quad[0]*xcm[0]*xcm[0] + quad[1]*xcm[1]*xcm[1]
-			             + 2*quad[2]*xcm[0]*xcm[1])/pow(rcm2,3)/pi;
-
-		  alpha[0] += tmp*xcm[0];
-		  alpha[1] += tmp*xcm[1];
-*/
-	}else{
-		double xt[2]={0,0},tmp[2]={0,0};
-		float units = pow(halo_params.sigma_nsie/lightspeed,2)/Grav/sqrt(halo_params.fratio_nsie); // mass/distance(physical)
-		xt[0]=xcm[0];
-		xt[1]=xcm[1];
-		alphaNSIE(tmp,xt,halo_params.fratio_nsie,halo_params.rcore_nsie,halo_params.pa_nsie);
-		alpha[0] -= units*tmp[0];
-		alpha[1] -= units*tmp[1];
-		if(!no_kappa){
-			float tmp[2]={0,0};
-			*kappa += units*kappaNSIE(xt,halo_params.fratio_nsie,halo_params.rcore_nsie,halo_params.pa_nsie);
-			gammaNSIE(tmp,xt,halo_params.fratio_nsie,halo_params.rcore_nsie,halo_params.pa_nsie);
-			gamma[0] += units*tmp[0];
-			gamma[1] += units*tmp[1];
-		}
-	}
 	return;
 }
 
