@@ -9,8 +9,13 @@
 
 using namespace std;
 
+<<<<<<< local
+HaloData::HaloData(HaloStructure *halostrucs,double kappa_back,PosType **positions, double *zz, unsigned long *id,unsigned long Nhaloss,double Dl):
+	pos(positions), halos(halostrucs), Nhalos(Nhaloss),z(zz),haloID(id),kappa_background(kappa_back)
+=======
 HaloData::HaloData(HaloStructure *halostrucs,double sb,PosType **positions, double *zz, unsigned long *id,unsigned long Nhaloss,double Dl):
 	pos(positions), halos(halostrucs), Nhalos(Nhaloss),z(zz),haloID(id),sigma_background(sb)
+>>>>>>> other
 {
   //convert to physical Mpc on the plane 
   int i;
@@ -344,20 +349,27 @@ void MultiLens::createHaloData(
 	std::vector<unsigned long> halo_id_vec;
 	double *pos, pos_max[2], z_max;
 
-    Logm.resize(Nmassbin);
+
+	/* TODO M & C I think it would be better to find all the redshifts first be drawing them from the
+	 * redshift distribution first.  Then sort them in redshift. Then bin them in redshift and then
+	 * assign them masses according to the mass distribution in that redshift bin.
+	 */
+
+
+	Logm.resize(Nmassbin);
     Nhalosbin.resize(Nmassbin);
 
 	/* fill the log(mass) vector */
 
 	fill_linear(Logm,Nmassbin,min_mass,MaxLogm);
 
-	int Nsample = 15;
+	int Nsample = 15;  // TODO M & C Maybe this should just be larger?
 
 	double dz, z1, z2, mass_max;
 	dz = zsource/(Nsample);
 	int np;
 	unsigned long h_index=0,j_max;
-	for(np=0,mass_max=0;np<Nsample;np++){
+	for(np=0,mass_max=0;np<Nsample;np++){ // TODO M & C These are bins uniform in redshift not distance.
 		double Nhaloestot;
 		z1 = np*dz;
 		z2 = z1+dz;
@@ -384,7 +396,7 @@ void MultiLens::createHaloData(
 		for(i = 0,mass_max=0; i < Nh; i++){
 			HaloStructure halo;
 
-			zi = z1+(z2-z1)*ran2 (seed);
+			zi = z1+(z2-z1)*ran2 (seed);  // TODO M & C This is not true because of the cone shape or the binning by distance.
 			
 			/// positions need to be in radians initially
 			maxr = pi*sqrt(fieldofview/pi)/180.; // fov is a circle
@@ -509,9 +521,10 @@ void MultiLens::buildHaloTrees(
 		/*
 		 * finding the average mass surface density in halos
 		 */
-		double sb = cosmo->totalMassDensityinHalos(mass_func_type,pw_alpha,min_mass,plane_redshifts[j],z1,z2)/mass_scale;
 
-		halo_data[j].reset(new HaloData(&halos[j1],sb,&halo_pos[j1],&halo_zs[j1],&halo_id[j1],j2-j1,Dl[j]/(1+plane_redshifts[j])));
+		double kappa_back = cosmo->totalMassDensityinHalos(mass_func_type,pw_alpha,min_mass,plane_redshifts[j],z1,z2)/mass_scale;
+
+		halo_data[j].reset(new HaloData(&halos[j1],kappa_back,&halo_pos[j1],&halo_zs[j1],&halo_id[j1],j2-j1,Dl[j]/(1+plane_redshifts[j])));
 
 		/// Use other constructor to create halo data
 		std::cout << "  Building tree on plane " << j << " number of halos: " << halo_data[j]->Nhalos << std::endl;
@@ -787,7 +800,7 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 					halo_vec[j].rcore_nsie = 0.0;
 				}
 
-				halo_vec[j].sigma_nsie = vmax;   //TODO This is a kluge.
+				halo_vec[j].sigma_nsie = vmax/sqrt(2.0);   //TODO This is a kluge.
 				halo_vec[j].fratio_nsie = (ran2(seed)+1)*0.5;  //TODO This is a kluge.
 				halo_vec[j].pa_nsie = 2*pi*ran2(seed);  //TODO This is a kluge.
 				halo_vec[j].Rsize_nsie = rmaxNSIE(halo_vec[j].sigma_nsie,halo_vec[j].mass_nsie

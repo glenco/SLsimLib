@@ -339,7 +339,7 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa
 	Point *i_points = NewPointArray((Ngrid_block*Ngrid_block-1)*Nleaves,true);
 	Point *s_points;
 	int Nout,kk,ii,addedtocell[Nleaves];
-	long Nadded;
+	long Nadded,Nout_tot;
 
 	for(ii=0,Nadded=0;ii<Nleaves;++ii){
 		assert(points[ii]->leaf->child1 == NULL && points[ii]->leaf->child2 == NULL);
@@ -355,25 +355,30 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa
 
 		// take out points that are outside of original grid
 		Nout = 0;
+		Nout_tot=0;
 		if( (points[ii]->x[0] == i_tree->top->boundary_p1[0]) || (points[ii]->x[0] == i_tree->top->boundary_p2[0])
 			|| (points[ii]->x[1] == i_tree->top->boundary_p1[1]) || (points[ii]->x[1] == i_tree->top->boundary_p2[1]) ){
 
 			// remove the points that are outside initial image grid
 			for(kk=0,Nout=0;kk < (Ngrid_block*Ngrid_block-1);++kk){
 				if( !inbox(i_points[Nadded + kk - Nout].x,i_tree->top->boundary_p1,i_tree->top->boundary_p2) ){
-					SwapPointsInArray(&i_points[Nadded + kk - Nout],&i_points[(Ngrid_block*Ngrid_block-1)*Nleaves - 1 - Nout]);
-					/////////////////////////*****************************/////////////////////////////////
-					//this is a problem -  It will mix the points in the images.
+					//SwapPointsInArray(&i_points[Nadded + kk - Nout],&i_points[(Ngrid_block*Ngrid_block-1)*Nleaves - 1 - Nout]);
+
+					// This maintains the ordering in parent cells, but is rather inefficient
+					for(unsigned long nn=Nadded + kk - Nout ; nn < (Ngrid_block*Ngrid_block-1)*Nleaves - 1 - Nout - Nout_tot ; ++nn)
+						SwapPointsInArray(&i_points[nn],&i_points[nn + 1]);
 					++Nout;
 				}
 			}
 			assert(Nout > 0);
 		}
 
+		Nout_tot += Nout;
 		Nadded += Ngrid_block*Ngrid_block-1 - Nout;
 		addedtocell[ii] = Ngrid_block*Ngrid_block-1 - Nout;
 		//if(Nout > 0) i_points = AddPointToArray(i_points,Ngrid_block*Ngrid_block-1-Nout,Ngrid_block*Ngrid_block-1);
 	}
+	assert(Nadded == (Ngrid_block*Ngrid_block-1)*Nleaves-Nout_tot);
 
 	s_points = LinkToSourcePoints(i_points,Nadded);
 	lens->rayshooterInternal(Nadded,i_points,kappa_off);
@@ -383,20 +388,27 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa
 	for(ii=0,kk=0,Nout=0;ii<Nleaves;++ii){
 		for(j = 0,Noutcell=0; j < addedtocell[ii]; ++j){
 			if( !inbox(s_points[kk - Nout].x,s_tree->top->boundary_p1,s_tree->top->boundary_p2) ){
-				SwapPointsInArray(&i_points[kk - Nout],&i_points[Nadded - 1 - Nout]);
-				SwapPointsInArray(&s_points[kk - Nout],&s_points[Nadded - 1 - Nout]);
+				//SwapPointsInArray(&i_points[kk - Nout],&i_points[Nadded - 1 - Nout]);
+				//SwapPointsInArray(&s_points[kk - Nout],&s_points[Nadded - 1 - Nout]);
+				for(unsigned long nn = kk - Nout; nn < Nadded - 2 - Nout;++nn){
+					SwapPointsInArray(&i_points[nn],&i_points[nn+1]);
+					SwapPointsInArray(&s_points[nn],&s_points[nn+1]);
+				}
 				++Nout;
 				++Noutcell;
 			}
 			++kk;
 		}
 		addedtocell[ii] -= Noutcell;
-		if(addedtocell[ii] == 0){  // case where all of parent cell is out of source plane region
+		if(addedtocell[ii] == 0){  // case where all of the parent cell is out of source plane region
 			points[ii]->leaf->refined = false;
 			points[ii]->gridsize *= Ngrid_block;
 			points[ii]->image->gridsize *= Ngrid_block;
 		}
 	}
+
+	assert(i_points->head == (Ngrid_block*Ngrid_block-1)*Nleaves);
+	assert(s_points->head == Nadded);
 
 	Nadded -= Nout;
 /*
@@ -409,11 +421,7 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa
 		}
 	}
 */
-	assert(i_points->head == (Ngrid_block*Ngrid_block-1)*Nleaves);
-	assert(s_points->head == Nadded);
 
-
-	assert(Nadded >= 0);
 	// free memory of points that where outside image and source regions
 	if(Nadded == 0){
 		FreePointArray(i_points);
@@ -421,7 +429,7 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa
 		return NULL;
 	}
 
-	if(Nout > 0){
+	if(Nadded < (Ngrid_block*Ngrid_block-1)*Nleaves){
 		i_points = AddPointToArray(i_points,Nadded,i_points->head);
 		s_points = AddPointToArray(s_points,Nadded,s_points->head);
 	}
