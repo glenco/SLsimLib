@@ -122,7 +122,7 @@ void MOKALens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 	double fac = Ds/Dls/Dl;
 
 	/// converts to the code units
-	if(flag_MOKA_analyze == 0){
+	if(flag_MOKA_analyze == 0 || flag_MOKA_analyze == 2){
 	  int i, j;
 	  for(i=0;i<map->nx;i++)
 	    for(j=0;j<map->ny;j++){
@@ -362,7 +362,7 @@ void MOKALens::saveProfiles(double &RE3){
 */
 void MOKALens::rayshooterInternal(double *xx, double *alpha, float *gamma, float *kappa, bool kappa_off){
     
-	long index = IndexFromPosition(xx,map->nx,map->boxlMpc/map->h,map->center);
+  long index = IndexFromPosition(xx,map->nx,map->boxlMpc/map->h,map->center);
 
 	if(index > -1){
 		alpha[0] = map->alpha1[index];
