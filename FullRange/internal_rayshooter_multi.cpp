@@ -257,7 +257,7 @@ void *compute_rays_parallel(void *_p){
     p->i_points[i].image->x[1] /= lens->Dl[p->NPlanes-1];
     
     p->i_points[i].kappa = 1 - p->i_points[i].kappa;
-    
+
     if(!kappa_off) p->i_points[i].invmag = (1-p->i_points[i].kappa)*(1-p->i_points[i].kappa)
 		     - p->i_points[i].gamma[0]*p->i_points[i].gamma[0]
 		     - p->i_points[i].gamma[1]*p->i_points[i].gamma[1]
