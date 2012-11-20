@@ -333,12 +333,12 @@ void AnaLens::rayshooterInternal(double *ray, double *alpha, float *gamma, float
 	 alpha[1] *= convert_factor;
 
 	 // in the multi-plane formalism G^i=partial deflection_angle^i / partial x^i
-	 // therefore the quantities need to be in units (1/comoving_distance)
-	 // --> convert from unitless quantity to (1/comoving_distance)
-	 *kappa *= convert_factor/(1+zlens);
-	 gamma[0] *= convert_factor/(1+zlens);
-	 gamma[1] *= convert_factor/(1+zlens);
-	 gamma[2] *= convert_factor/(1+zlens);
+	 // therefore the quantities need to be in units (1/physical_distance)
+	 // --> convert from unitless quantity to (1/physical_distance)
+	 *kappa *= convert_factor;
+	 gamma[0] *= convert_factor;
+	 gamma[1] *= convert_factor;
+	 gamma[2] *= convert_factor;
 
      return ;
 }

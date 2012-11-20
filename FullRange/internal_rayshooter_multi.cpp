@@ -171,13 +171,19 @@ void *compute_rays_parallel(void *_p){
 	lens->input_lens->rayshooterInternal(xx,alpha,gamma,&kappa,kappa_off);
 	cc = lens->dDl[j+1];
       }else{
-	
-	lens->halo_tree[j]->force2D_recur(xx,alpha,&kappa,gamma,kappa_off);
-	//halo_tree[j]->force2D(xx,alpha,&kappa,gamma,kappa_off);
-	assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
-	
 	cc = lens->charge*lens->dDl[j+1];
 	
+	if(lens->flag_switch_background_off == 0){
+	  lens->halo_tree[j]->force2D_recur(xx,alpha,&kappa,gamma,kappa_off);
+	  //halo_tree[j]->force2D(xx,alpha,&kappa,gamma,kappa_off);
+	  assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
+	}
+	else{
+	  kappa = alpha[0] = alpha[1] = gamma[0] = gamma[1] = gamma[2] = 0.0;
+	}
+      }
+
+      if(!kappa_off){
 	fac = 1/(1+lens->plane_redshifts[j]);
 	/* multiply by fac to obtain 1/comoving_distance/physical_distance
 	 * such that a multiplication with the charge (in units of physical distance)
@@ -189,8 +195,6 @@ void *compute_rays_parallel(void *_p){
 	
 	assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
 	assert(kappa == kappa);
-	
-	//kappa = alpha[0] = alpha[1] = gamma[0] = gamma[1] = gamma[2] = 0.0;
       }
       
       if(lens->flag_switch_deflection_off > 0)
@@ -257,7 +261,7 @@ void *compute_rays_parallel(void *_p){
     p->i_points[i].image->x[1] /= lens->Dl[p->NPlanes-1];
     
     p->i_points[i].kappa = 1 - p->i_points[i].kappa;
-    
+
     if(!kappa_off) p->i_points[i].invmag = (1-p->i_points[i].kappa)*(1-p->i_points[i].kappa)
 		     - p->i_points[i].gamma[0]*p->i_points[i].gamma[0]
 		     - p->i_points[i].gamma[1]*p->i_points[i].gamma[1]

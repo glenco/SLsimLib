@@ -104,8 +104,8 @@ void MOKALens::initMap(){
 
 	double xmin = -map->boxlMpc*0.5;
 	double xmax =  map->boxlMpc*0.5;
-	fill_linear (map->x,map->nx,xmin,xmax); // physical
-	map->inarcsec  = 10800./M_PI/LH->DL*60.;
+	fill_linear (map->x,map->nx,xmin,xmax); // physical Mpc/h
+	map->inarcsec  = 10800./M_PI/LH->DL*60.; // Mpc/h to arcsec
 }
 
 /** \brief sets the cosmology and the lens and the source according to the MOKA map parameters
@@ -116,17 +116,15 @@ void MOKALens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 	setZlens(map->zlens);
 	source->setZ(map->zsource);
 
-	double Ds = cosmo->angDist(0,map->zsource);
-	double Dl = cosmo->angDist(0,map->zlens);
-	double Dls = cosmo->angDist(map->zlens,map->zsource);
-	double fac = Ds/Dls/Dl;
+	double fac = LH->DS/LH->DLS/LH->DL*LH->h;
 
 	/// converts to the code units
-	if(flag_MOKA_analyze == 0){
+	if(flag_MOKA_analyze == 0 || flag_MOKA_analyze == 2){
 	  int i, j;
+	  std::cout << "converting the units of the MOKA map" << std::endl;
 	  for(i=0;i<map->nx;i++)
 	    for(j=0;j<map->ny;j++){
-	      int index = i+map->ny*j;
+	      int index = i*map->ny+j;
 	      map->convergence[index] *= fac;
 	      map->gamma1[index] *= fac;
 	      map->gamma2[index] *= fac;
@@ -182,7 +180,10 @@ void MOKALens::saveImage(GridHndl grid,bool saveprofiles){
 	std::string filename;
 
 	if(flag_background_field==1) f << MOKA_input_file << "_only_noise.fits";
-	else f << MOKA_input_file << "_noisy.fits";
+	else{
+	  if(flag_MOKA_analyze == 0) f << MOKA_input_file << "_noisy.fits";
+	  else f << MOKA_input_file << "_no_noise.fits";
+	}
 	filename = f.str();
 
 	MoveToTopList(grid->i_tree->pointlist);
@@ -216,7 +217,10 @@ void MOKALens::saveImage(GridHndl grid,bool saveprofiles){
 	  EinsteinRadii(RE1,RE2);
 	  std::ostringstream fEinr;
 	  if(flag_background_field==1) fEinr << MOKA_input_file << "_only_noise_Einstein.radii.dat";
-	  else fEinr << MOKA_input_file << "_noisy_Einstein.radii.dat";
+	  else{
+	    if(flag_MOKA_analyze == 0) fEinr << MOKA_input_file << "_noisy_Einstein.radii.dat";
+	    else fEinr << MOKA_input_file << "_no_noise_Einstein.radii.dat";
+	  }
 	  std:: ofstream filoutEinr;
 	  std:: string filenameEinr = fEinr.str();
 	  filoutEinr.open(filenameEinr.c_str());
@@ -319,7 +323,10 @@ void MOKALens::saveProfiles(double &RE3){
 	std::ostringstream fprof;
 
 	if(flag_background_field==1) fprof << MOKA_input_file << "_only_noise_MAP_radial_prof.dat";
-	else fprof << MOKA_input_file << "_noisy_MAP_radial_prof.dat";
+	else{
+	  if(flag_MOKA_analyze == 0) fprof << MOKA_input_file << "_noisy_MAP_radial_prof.dat";
+	  else fprof << MOKA_input_file << "_no_noise_MAP_radial_prof.dat";
+	}
 	std:: ofstream filoutprof;
 	std:: string filenameprof = fprof.str();
 	filoutprof.open(filenameprof.c_str());
@@ -353,7 +360,7 @@ void MOKALens::saveProfiles(double &RE3){
 */
 void MOKALens::rayshooterInternal(double *xx, double *alpha, float *gamma, float *kappa, bool kappa_off){
     
-	long index = IndexFromPosition(xx,map->nx,map->boxlMpc/map->h,map->center);
+  long index = IndexFromPosition(xx,map->nx,map->boxlMpc/map->h,map->center);
 
 	if(index > -1){
 		alpha[0] = map->alpha1[index];
@@ -407,7 +414,10 @@ void MOKALens::EinsteinRadii(double &RE1, double &RE2){
   // open file readable by ds9
   std::ostringstream fcrit;
   if(flag_background_field==1) fcrit << MOKA_input_file << "_only_noise_Criticals.reg";
-  else fcrit << MOKA_input_file << "_noisy_Criticals.reg";
+  else{
+    if(flag_MOKA_analyze == 0) fcrit << MOKA_input_file << "_noisy_Criticals.reg";
+    else fcrit << MOKA_input_file << "_no_noise_Criticals.reg";
+  }
   std:: ofstream filoutcrit;
   std:: string filenamecrit = fcrit.str();
   filoutcrit.open(filenamecrit.c_str());
@@ -552,7 +562,10 @@ void MOKALens::saveImage(bool saveprofiles){
         std::stringstream f;
         std::string filename;  
 	if(flag_background_field==1) f << MOKA_input_file << "_only_noise.fits";
-	else f << MOKA_input_file << "_noisy.fits";
+	else{
+	  if(flag_MOKA_analyze == 0) f << MOKA_input_file << "_noisy.fits";
+	  else f << MOKA_input_file << "_no_noise.fits";
+	}
 	filename = f.str();
 
 	writeImage(filename
@@ -573,7 +586,10 @@ void MOKALens::saveImage(bool saveprofiles){
 		    EinsteinRadii(RE1,RE2);
 		    std::ostringstream fEinr;
 		    if(flag_background_field==1) fEinr << MOKA_input_file << "_only_noise_Einstein.radii.dat";
-		    else fEinr << MOKA_input_file << "_noisy_Einstein.radii.dat";
+		    else{
+		      if(flag_MOKA_analyze == 0) fEinr << MOKA_input_file << "_noisy_Einstein.radii.dat";
+		      else fEinr << MOKA_input_file << "_no_noise_Einstein.radii.dat";
+		    }
 		    std:: ofstream filoutEinr;
 		    std:: string filenameEinr = fEinr.str();
 		    filoutEinr.open(filenameEinr.c_str());
