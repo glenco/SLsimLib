@@ -13,7 +13,7 @@ const double target_all = 1.0e-3;
 //const int MinPoints = 100;  // Minimum number of points per image
 const float tol_UniformMag = 1.0e-3;
 double maxflux;
-const bool verbos = true;
+const bool verbose = false;
 
 /** \ingroup ImageFinding
  *  \brief Find images and refine them based on their surface brightness distribution.
@@ -116,12 +116,12 @@ void map_images(
 		}else{
 			DirtyFoF(sourceinfo,&Nsources,0,NimageMax);
 		}
-		printf(" number of source points found %li in %i sources\n",sourceinfo->imagekist->Nunits(),Nsources);
+		if(verbose) printf(" number of source points found %li in %i sources\n",sourceinfo->imagekist->Nunits(),Nsources);
 
 		// brakes source into four if there is only one
 		//if(Nsources == 1 && sourceinfo->imagekist->Nunits() > 100) DirtyDivider(sourceinfo,&Nsources,NimageMax,(sourceinfo->imagekist->Nunits()/4+1));
 
-		printf(" number of source points found %li in %i sources divided\n",sourceinfo->imagekist->Nunits(),Nsources);
+		if(verbose) printf(" number of source points found %li in %i sources divided\n",sourceinfo->imagekist->Nunits(),Nsources);
 
 		// split source into groups
 
@@ -152,8 +152,8 @@ void map_images(
 			rs[i] = (rs[i] == 0) ? xmin : sqrt(rs[i]);
 
 			// filling factor or holiness of source
-			printf("holiness of source %e\n",sourceinfo[i].imagekist->Nunits()*pow(2*xmax/(Ntmp-1)/rs[i],2)/pi);
-			printf("     dx = %e %e rs = %e Npoints = %li\n",(source->getX()[0]-sourceinfo[i].centroid[0])/xmin
+			if(verbose) printf("holiness of source %e\n",sourceinfo[i].imagekist->Nunits()*pow(2*xmax/(Ntmp-1)/rs[i],2)/pi);
+			if(verbose) printf("     dx = %e %e rs = %e Npoints = %li\n",(source->getX()[0]-sourceinfo[i].centroid[0])/xmin
 			                                               ,(source->getX()[1]-sourceinfo[i].centroid[1])/xmin
 			                                               ,rs[i],sourceinfo[i].imagekist->Nunits());
 
@@ -185,12 +185,12 @@ void map_images(
 		// free array of sourceinfo's'
 		delete[] rs;
 	}else{
-		if(verbos) std::cout << "number of grid points before find_images_kist: "<< grid->getNumberOfPoints() << std::endl;
+		if(verbose) std::cout << "number of grid points before find_images_kist: "<< grid->getNumberOfPoints() << std::endl;
 		//find_images_kist(lens,source->getX(),xmin,grid,Nimages,imageinfo,NimageMax,&Nimagepoints
 		//		,0,true,0,false,true);
 		find_images_kist(lens,source->getX(),xmin,grid,Nimages,imageinfo,NimageMax,&Nimagepoints
 				,0,false,0,false,true);
-		if(verbos) std::cout << "number of grid points after find_images_kist: "<< grid->getNumberOfPoints() << std::endl;
+		if(verbose) std::cout << "number of grid points after find_images_kist: "<< grid->getNumberOfPoints() << std::endl;
 		Nsources = 1;
 		sourceinfo->centroid[0] = source->getX()[0];
 		sourceinfo->centroid[1] = source->getX()[1];
@@ -378,7 +378,7 @@ void map_images(
 
 	}*/
 
-	if(verbos) printf("total number of points after telescope: %li\n",grid->getNumberOfPoints());
+	if(verbose) printf("total number of points after telescope: %li\n",grid->getNumberOfPoints());
 
 	// Set all in_image flags to false.  This should not be necessary.  !!!!!!
 	ClearAllMarks(grid->i_tree);
@@ -416,7 +416,7 @@ void map_images(
 	TranformPlanesKist(imageinfo->imagekist);
 
 	// take out points with no flux
-	if(verbos) printf("before taking out zero surface brightness points: %li\n",imageinfo->imagekist->Nunits());
+	if(verbose) printf("before taking out zero surface brightness points: %li\n",imageinfo->imagekist->Nunits());
 	Ntmp = imageinfo->imagekist->Nunits();
 	for(i=0,MoveToTopKist(imageinfo->imagekist),area_tot=0,maxflux=0.0; i < Ntmp ; ++i ){
 
@@ -439,7 +439,7 @@ void map_images(
 
 	}
 	if(maxflux == 0 ) maxflux = 1.0;
-	if(verbos) printf("after taking out zero surface brightness points: %li\n",imageinfo->imagekist->Nunits());
+	if(verbose) printf("after taking out zero surface brightness points: %li\n",imageinfo->imagekist->Nunits());
 
 	if(imageinfo->imagekist->Nunits() == 0){
 		*Nimages = 0;
@@ -450,7 +450,7 @@ void map_images(
 	// divide up images
 	if(divide_images) divide_images_kist(grid->i_tree,imageinfo,Nimages,NimageMax);
 	else *Nimages = 1;
-	if(verbos) printf("number of images after first division is %i\n",*Nimages);
+	if(verbose) printf("number of images after first division is %i\n",*Nimages);
 
 	/////////////////////////////////////////////
 	// link image points lists for each image
@@ -603,7 +603,7 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
   int Ngrid_block = grid->getNgrid_block();
   std::vector<Point *> points_to_refine;
 
-  printf(" entering refine_on_image(), number of points %li\n",grid->getNumberOfPoints());
+  if(verbose) printf(" entering refine_on_image(), number of points %li\n",grid->getNumberOfPoints());
 
   number_of_refined=0;
   for(i=0,Ncells=0;i<(*Nimages);++i){
@@ -627,7 +627,7 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
 			  assert(sourceinfo[k].area > 0);
 			  assert(fabs(getCurrentKist(imageinfo[i].imagekist)->invmag) > 0.0);
 			  imageinfo[i].area = sourceinfo[k].area/fabs(getCurrentKist(imageinfo[i].imagekist)->invmag)/maxflux;
-			  printf("magnification is uniform for image %i\n",i);
+			  if(verbose) printf("magnification is uniform for image %i\n",i);
 		  }
 	  }
 
