@@ -171,26 +171,30 @@ void *compute_rays_parallel(void *_p){
 	lens->input_lens->rayshooterInternal(xx,alpha,gamma,&kappa,kappa_off);
 	cc = lens->dDl[j+1];
       }else{
-	
-	lens->halo_tree[j]->force2D_recur(xx,alpha,&kappa,gamma,kappa_off);
-	//halo_tree[j]->force2D(xx,alpha,&kappa,gamma,kappa_off);
-	assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
-	
 	cc = lens->charge*lens->dDl[j+1];
 	
-	fac = 1/(1+lens->plane_redshifts[j]);
-	/* multiply by fac to obtain 1/comoving_distance/physical_distance
-	 * such that a multiplication with the charge (in units of physical distance)
-	 * will result in a 1/comoving_distance quantity */
-	kappa*=fac;
-	gamma[0]*=fac;
-	gamma[1]*=fac;
-	gamma[2]*=fac;
-	
-	assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
-	assert(kappa == kappa);
-	
-	//kappa = alpha[0] = alpha[1] = gamma[0] = gamma[1] = gamma[2] = 0.0;
+	if(lens->flag_switch_background_off == 0){
+	  lens->halo_tree[j]->force2D_recur(xx,alpha,&kappa,gamma,kappa_off);
+	  //halo_tree[j]->force2D(xx,alpha,&kappa,gamma,kappa_off);
+	  assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
+	  
+	  if(!kappa_off){
+	    fac = 1/(1+lens->plane_redshifts[j]);
+	    /* multiply by fac to obtain 1/comoving_distance/physical_distance
+	     * such that a multiplication with the charge (in units of physical distance)
+	     * will result in a 1/comoving_distance quantity */
+	    kappa*=fac;
+	    gamma[0]*=fac;
+	    gamma[1]*=fac;
+	    gamma[2]*=fac;
+	    
+	    assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
+	    assert(kappa == kappa);
+	  }
+	}
+	else{
+	  kappa = alpha[0] = alpha[1] = gamma[0] = gamma[1] = gamma[2] = 0.0;
+	}
       }
       
       if(lens->flag_switch_deflection_off > 0)

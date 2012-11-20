@@ -220,6 +220,7 @@ void MultiLens::assignParams(InputParams& params){
 	if(!params.get("internal_slope_pw",pw_beta))     pw_beta = -1.0;
 	if(!params.get("internal_slope_pnfw",pnfw_beta)) pnfw_beta = 2.0;
 	if(!params.get("deflection_off",flag_switch_deflection_off)) flag_switch_deflection_off = 0;
+	if(!params.get("background_off",flag_switch_background_off)) flag_switch_background_off = 0;
 
 	// Some checks for valid parameters
 	  if(pw_beta >= 0){
