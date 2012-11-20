@@ -29,7 +29,7 @@ HaloData::~HaloData(){
 
 void MultiLens::make_table(CosmoHndl cosmo){
 	int i;
-	double x, dx = zsource/(double)NTABLE;
+	double x, dx = (zsource+1.0)/(double)NTABLE;
 
 	coorDist_table = new double[NTABLE];
 	redshift_table = new double[NTABLE];
@@ -38,7 +38,7 @@ void MultiLens::make_table(CosmoHndl cosmo){
 #pragma omp parallel for default(shared) private(i,x)
 #endif
 	for(i = 0 ; i< NTABLE; i++){
-		x = (i+1)*dx;
+		x = i*dx;
 		redshift_table[i] = x;
 		coorDist_table[i] = cosmo->coorDist(0,x);
 	}
@@ -643,12 +643,13 @@ void MultiLens::setCoorDist(CosmoHndl cosmo){
 	unsigned long k;
 	// assigns the redshifts and plugs in the input plane
 	cout << "z: ";
-	for(i=0; i<Nplanes; i++){
+	for(i=0; i<Nplanes-1; i++){
 		locateD(coorDist_table-1,NTABLE,Dl[i],&k);
 		plane_redshifts[i] = redshift_table[k];
 		cout << plane_redshifts[i] << " ";
 	}
-	cout << endl;
+	plane_redshifts[Nplanes-1] = zsource;
+	cout << plane_redshifts[i] << " " << std::endl;
 }
 
 double MultiLens::getZlens(){
@@ -906,6 +907,10 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 
 	/// makes the oordinate distance table for the calculation of the redshifts of the different planes
 	if(table_set == false) {std::cout << "making tables" << std::endl; make_table(cosmo);}
+	
+	if(flag_input_lens)
+	  input_lens->setInternalParams(cosmo,source);
+	
 	setCoorDist(cosmo);
 
 	if(sim_input_flag){
@@ -914,9 +919,6 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 	else{
 		createHaloData(cosmo,seed);
 	}
-
-	if(flag_input_lens)
-		input_lens->setInternalParams(cosmo,source);
 
 	buildHaloTrees(cosmo);
 	std:: cout << " done " << std:: endl;

@@ -104,8 +104,8 @@ void MOKALens::initMap(){
 
 	double xmin = -map->boxlMpc*0.5;
 	double xmax =  map->boxlMpc*0.5;
-	fill_linear (map->x,map->nx,xmin,xmax); // physical
-	map->inarcsec  = 10800./M_PI/LH->DL*60.;
+	fill_linear (map->x,map->nx,xmin,xmax); // physical Mpc/h
+	map->inarcsec  = 10800./M_PI/LH->DL*60.; // Mpc/h to arcsec
 }
 
 /** \brief sets the cosmology and the lens and the source according to the MOKA map parameters
@@ -116,17 +116,15 @@ void MOKALens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 	setZlens(map->zlens);
 	source->setZ(map->zsource);
 
-	double Ds = cosmo->angDist(0,map->zsource);
-	double Dl = cosmo->angDist(0,map->zlens);
-	double Dls = cosmo->angDist(map->zlens,map->zsource);
-	double fac = Ds/Dls/Dl;
+	double fac = LH->DS/LH->DLS/LH->DL*LH->h;
 
 	/// converts to the code units
 	if(flag_MOKA_analyze == 0 || flag_MOKA_analyze == 2){
 	  int i, j;
+	  std::cout << "converting the units of the MOKA map" << std::endl;
 	  for(i=0;i<map->nx;i++)
 	    for(j=0;j<map->ny;j++){
-	      int index = i+map->ny*j;
+	      int index = i*map->ny+j;
 	      map->convergence[index] *= fac;
 	      map->gamma1[index] *= fac;
 	      map->gamma2[index] *= fac;
