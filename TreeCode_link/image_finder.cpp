@@ -393,8 +393,8 @@ long refine_edges2(LensHndl lens,double *y_source,double r_source,GridHndl grid
 						if(batch){
 							points_to_refine.push_back(point);
 							// subtract area of new points from image area
-							imageinfo[i].area -= (pow(grid->getNgrid_block(),2)-1)*pow(point->gridsize/3,2);
-							if(imageinfo[i].gridrange[2] == point->gridsize)
+							imageinfo[i].area -= (pow(grid->getNgrid_block(),2)-1)*pow(point->gridsize/grid->getNgrid_block(),2);
+							if(imageinfo[i].gridrange[2] == point->gridsize/grid->getNgrid_block())
 								imageinfo[i].gridrange[2] = point->gridsize/grid->getNgrid_block();
 						}else{
 							i_points = grid->RefineLeaf(lens,point,kappa_off);
@@ -444,7 +444,7 @@ long refine_edges2(LensHndl lens,double *y_source,double r_source,GridHndl grid
 				points_to_refine.clear();
 			}
 
-			if(Ncells) imageinfo[i].gridrange[0]/=Ngrid_block; /* maximum grid size in outerborder */
+			if(Ncells) imageinfo[i].gridrange[0]/=grid->getNgrid_block(); // maximum grid size in outerborder
 
 			/*
 			 *     Weed out of the borders the points that are no longer on the border

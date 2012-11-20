@@ -8,7 +8,7 @@
 
 //const float mumin = 0.3;  // actually the sqrt of the minimum magnification
 const double FracResTarget = 3.0e-5;
-//const float FracResTarget = 1.0e-3;
+//const float FracResTarget = 1.0e-4;
 const double target_all = 1.0e-3;
 //const int MinPoints = 100;  // Minimum number of points per image
 const float tol_UniformMag = 1.0e-3;
@@ -667,6 +667,9 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
 				  assert(imageinfo[i].imagekist->getCurrent()->leaf->child2 == NULL);
 				  if(batch){
 					  points_to_refine.push_back(getCurrentKist(imageinfo[i].imagekist));
+
+					  imageinfo[i].area +=  pow(getCurrentKist(imageinfo[i].imagekist)->gridsize/grid->getNgrid_block(),2)
+							  *(getCurrentKist(imageinfo[i].imagekist)->surface_brightness/maxflux);
 				  }else{
 					  i_points = grid->RefineLeaf(lens,getCurrentKist(imageinfo[i].imagekist),kappa_off);
 					  check_sb_add(source,&imageinfo[i],i_points,Nold,number_of_refined);
@@ -701,12 +704,11 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
 						  Nold += i_points->head;
 					  }*/
 
+					  imageinfo[i].area +=  pow(getCurrentKist(imageinfo[i].imagekist)->gridsize,2)
+							  *(getCurrentKist(imageinfo[i].imagekist)->surface_brightness/maxflux);
 				  }
 
 				  imageinfo[i].ShouldNotRefine = 0;   // mark to continue refinement on next round
-
-				  imageinfo[i].area +=  pow(getCurrentKist(imageinfo[i].imagekist)->gridsize,2)
-						  *(getCurrentKist(imageinfo[i].imagekist)->surface_brightness/maxflux);
 
 			  }
 
@@ -752,7 +754,7 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
 					  assert(imageinfo[i].outerborder->getCurrent()->leaf->child1 == NULL);
 					  assert(imageinfo[i].outerborder->getCurrent()->leaf->child2 == NULL);
 					  if(batch){
-						  points_to_refine.push_back(getCurrentKist(imageinfo[i].imagekist));
+						  points_to_refine.push_back(getCurrentKist(imageinfo[i].outerborder));
 					  }else{
 						  i_points = grid->RefineLeaf(lens,getCurrentKist(imageinfo[i].outerborder),kappa_off);
 						  check_sb_add(source,&imageinfo[i],i_points,Nold,number_of_refined);

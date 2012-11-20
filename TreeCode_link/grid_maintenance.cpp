@@ -332,7 +332,6 @@ Point * Grid::RefineLeaf(LensHndl lens,Point *point,bool kappa_off){
  */
 Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa_off){
 
-	assert(0);  // Not finished yet !!!!
 	if(points.size() == 0) return NULL;
 
 	long Nleaves = points.size();
@@ -341,6 +340,7 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa
 	int Nout,kk,ii,addedtocell[Nleaves];
 	long Nadded,Nout_tot;
 
+	Nout_tot=0;
 	for(ii=0,Nadded=0;ii<Nleaves;++ii){
 		assert(points[ii]->leaf->child1 == NULL && points[ii]->leaf->child2 == NULL);
 		assert(points[ii]->image->leaf->child1 == NULL && points[ii]->image->leaf->child2 == NULL);
@@ -355,7 +355,6 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa
 
 		// take out points that are outside of original grid
 		Nout = 0;
-		Nout_tot=0;
 		if( (points[ii]->x[0] == i_tree->top->boundary_p1[0]) || (points[ii]->x[0] == i_tree->top->boundary_p2[0])
 			|| (points[ii]->x[1] == i_tree->top->boundary_p1[1]) || (points[ii]->x[1] == i_tree->top->boundary_p2[1]) ){
 
@@ -368,6 +367,7 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa
 					for(unsigned long nn=Nadded + kk - Nout ; nn < (Ngrid_block*Ngrid_block-1)*Nleaves - 1 - Nout - Nout_tot ; ++nn)
 						SwapPointsInArray(&i_points[nn],&i_points[nn + 1]);
 					++Nout;
+					//std::cout << "Nout_tot = " << Nout_tot << std::endl;
 				}
 			}
 			assert(Nout > 0);

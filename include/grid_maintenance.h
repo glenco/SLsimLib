@@ -65,7 +65,7 @@ short image_finder_kist(LensHndl lens, double *y_source,double r_source,GridHndl
 		,short splitparities,short true_images);
 
 int refine_grid_kist(LensHndl lens,GridHndl grid,ImageInfo *imageinfo
-		,unsigned long Nimages,double res_target,short criterion,bool kappa_off,KistHndl newpointkist = NULL,bool batch=false);
+		,unsigned long Nimages,double res_target,short criterion,bool kappa_off,KistHndl newpointkist = NULL,bool batch=true);
 
 ImageInfo *find_crit(LensHndl lens,GridHndl grid,int *Ncrits,double resolution,bool *orderingsuccess
 		,bool ordercurve,bool verbose);
@@ -74,12 +74,12 @@ void find_crit_kist(LensHndl lens,GridHndl grid,ImageInfo *critcurve,int maxNcri
 		,double resolution,bool *orderingsuccess,bool ordercurve,bool verbose);
 
 int refine_grid(LensHndl lens,GridHndl grid,OldImageInfo *imageinfo
-		,unsigned long Nimages,double res_target,short criterion,bool kappa_off,bool batch=false);
+		,unsigned long Nimages,double res_target,short criterion,bool kappa_off,bool batch=true);
 long refine_edges(LensHndl lens,GridHndl grid,ImageInfo *imageinfo
-		,unsigned long Nimages,double res_target,short criterion,bool kappa_off,bool batch=false);
+		,unsigned long Nimages,double res_target,short criterion,bool kappa_off,bool batch=true);
 long refine_edges2(LensHndl lens,double *y_source,double r_source,GridHndl grid
 		,ImageInfo *imageinfo,bool *image_overlap,unsigned long Nimages,double res_target
-		,short criterion,bool kappa_off,bool batch=false);
+		,short criterion,bool kappa_off,bool batch=true);
 void sort_out_points(Point *i_points,ImageInfo *imageinfo,double r_source,double y_source[]);
 void xygridpoints(Point *points,double range,double *center,long Ngrid
 		,short remove_center);
