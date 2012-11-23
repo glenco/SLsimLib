@@ -277,8 +277,6 @@ void QuadTreeNFW_NSIE::force2D(
 	float tmp_kappa,tmp_gamma[2];
 	double tmp_alpha[2];
 
-	// TODO BEN Worry about background subtraction so that it isn't redundant.
-
 	qtreensie->force2D(ray,tmp_alpha,&tmp_kappa,tmp_gamma,no_kappa);
 	QuadTree::force2D(ray,alpha,kappa,gamma,no_kappa);
 

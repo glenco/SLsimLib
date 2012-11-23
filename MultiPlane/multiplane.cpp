@@ -219,8 +219,8 @@ void MultiLens::assignParams(InputParams& params){
 	if(!params.get("alpha",pw_alpha))                pw_alpha = 1./6.;
 	if(!params.get("internal_slope_pw",pw_beta))     pw_beta = -1.0;
 	if(!params.get("internal_slope_pnfw",pnfw_beta)) pnfw_beta = 2.0;
-	if(!params.get("deflection_off",flag_switch_deflection_off)) flag_switch_deflection_off = 0;
-	if(!params.get("background_off",flag_switch_background_off)) flag_switch_background_off = 0;
+	if(!params.get("deflection_off",flag_switch_deflection_off)) flag_switch_deflection_off = false;
+	if(!params.get("background_off",flag_switch_background_off)) flag_switch_background_off = false;
 
 	// Some checks for valid parameters
 	  if(pw_beta >= 0){
@@ -343,6 +343,8 @@ void MultiLens::createHaloData(
   std::vector<double *> halo_pos_vec;
   std::vector<unsigned long> halo_id_vec;
   double *pos, pos_max[2], z_max;
+  const int Nmassbin=128;
+  const double MaxLogm=17.;
 
 
   /* TODO M & C I think it would be better to find all the redshifts first be drawing them from the
@@ -358,13 +360,15 @@ void MultiLens::createHaloData(
   
   fill_linear(Logm,Nmassbin,min_mass*mass_scale,MaxLogm);
   
-  int Nsample = 50; 
+  int Nsample = 50;
   
-  double dDl, Dl1, Dl2, z1, z2, mass_max;
+  double dDl, Dl1, Dl2, z1, z2, mass_max,mass_tot;
   dDl = cosmo->coorDist(0,zsource)/(Nsample);
   int np;
   unsigned long h_index=0,j_max,k;
-  for(np=0,mass_max=0;np<Nsample;np++){ 
+  for(np=0,mass_max=0;np<Nsample;np++){
+
+	mass_tot = 0.0;
     double Nhaloestot;
     if(np == 0){
       z1 = 0.0;
@@ -388,12 +392,13 @@ void MultiLens::createHaloData(
 #ifdef _OPENMP
 #pragma omp parallel for default(shared) private(k)
 #endif
-    for(k=1;k<Nmassbin;k++){
+    for(k=1;k<Nmassbin-1;k++){
       // cumulative number density in one square degree
       Nhalosbin[k] = cosmo->haloNumberDensityOnSky(pow(10,Logm[k]),z1,z2,mass_func_type,pw_alpha)*fieldofview;
       // normalize the cumulative distribution to one
       Nhalosbin[k] = Nhalosbin[k]/Nhaloestot;
     }
+    Nhalosbin[Nmassbin-1] = 0;
     
     long Nh = (long)(poidev(float(Nhaloestot), seed) + 0.5);
     
@@ -422,11 +427,11 @@ void MultiLens::createHaloData(
       halo.rscale = halo.Rmax/ha->getConcentration(0);
 
       if(halo.mass > mass_max) {
-	mass_max = halo.mass;
-	j_max = h_index;
-	pos_max[0] = pos[0];
-	pos_max[1] = pos[1];
-	z_max = zi;
+    	  mass_max = halo.mass;
+    	  j_max = h_index;
+    	  pos_max[0] = pos[0];
+    	  pos_max[1] = pos[1];
+    	  z_max = zi;
       }
       
       halo_vec.push_back(halo);
@@ -435,11 +440,20 @@ void MultiLens::createHaloData(
       halo_id_vec.push_back(h_index);
       h_index++;
       
+      mass_tot += halo.mass;
     }
     
     Nhalosbin.empty();
+
+    /*
+    // Test lines
+     std::cout <<
+       mass_tot << "  "<< (cosmo->totalMassDensityinHalos(mass_func_type,pw_alpha,pow(10,Logm[0]),(z1+z2)/2,z1,z2)
+       		*pow(cosmo->angDist(0,(z1+z2)/2),2)*fieldofview*pow(pi/180,2) - mass_tot)
+       << " number of halo = " << Nh << std::endl;
+
   }
-  
+  */
   delete ha;
   
   Nhalos = halo_vec.size();
@@ -459,7 +473,8 @@ void MultiLens::createHaloData(
     halo_pos[i] = halo_pos_vec[i];
     halos[i] = halo_vec[i];
   }
-  
+
+
   std::cout << "sorting in MultiLens::createHaloData()" << std::endl;
   // sort the halos by readshift
   MultiLens::quicksort(&halos[0],halo_pos,halo_zs,halo_id,Nhalos);

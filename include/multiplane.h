@@ -13,10 +13,6 @@
 #include <quadTree.h>
 #include <sourceAnaGalaxy.h>
 
-
-const int Nmassbin=32;
-const double MaxLogm=16.;
-
 //typedef enum {PowerLaw, NFW, PseudoNFW, NSIE} IntProfType;
 
 /** \brief Class that holds all the information about the halos' positions and their internal parameters on one plane.
@@ -139,9 +135,9 @@ public:
 	/// an array of smart pointers to halo trees on each plane, uses the haloModel in the construction
 	std::auto_ptr<QuadTree> *halo_tree;
 	/// if >= 1, deflection in the rayshooting is wtiched if
-	int flag_switch_deflection_off;
+	bool flag_switch_deflection_off;
 	/// if >= 1, the background is switched of and only the main lens is present
-	int flag_switch_background_off;
+	bool flag_switch_background_off;
 
 private:
 
