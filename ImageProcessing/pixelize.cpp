@@ -104,9 +104,9 @@ void PixelMap::PointsWithinLeaf(PosType * x_center, float side, std::list <unsig
 	else line_s = long(MAX(i0,i2))%Npixels;
 	if (i0==-1 && i1==-1) col_s = 0;
 	else col_s = long(MAX(i0,i1))/Npixels;
-	if (i1==-1 && i3==-1) line_e = Npixels;
+	if (i1==-1 && i3==-1) line_e = Npixels-1;
 	else line_e = long(MAX(i1,i3))%Npixels;
-	if (i2==-1 && i3==-1) col_e = Npixels;
+	if (i2==-1 && i3==-1) col_e = Npixels-1;
 	else col_e = long(MAX(i2,i3))/Npixels;
 //std::cout << line_s << "  " << line_e << "  " << col_s << "  " << col_e << std::endl;
 
