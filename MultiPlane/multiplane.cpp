@@ -470,9 +470,8 @@ void MultiLens::createHaloData(
    		<< " in tail above 1.0e14 = " << cosmo->totalMassDensityinHalos(mass_func_type,pw_alpha,1.0e14,(z1+z2)/2,z1,z2)
 		*pow(cosmo->angDist(0,(z1+z2)/2),2)*fieldofview*pow(pi/180,2)/mftot
 		<< " Msun  number of halo = " << Nh << std::endl;
-
   }
-
+  
   delete ha;
   
   Nhalos = halo_vec.size();
