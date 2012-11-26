@@ -27,7 +27,8 @@ PixelMap::PixelMap(
 	center[0] = my_center[0];
 	center[1] = my_center[1];
 
-	resolution=range/(Npixels-1);
+	resolution=range/Npixels;
+	range = range - resolution;
 
 	map.resize(Npixels*Npixels);
 	return;
@@ -93,8 +94,8 @@ void PixelMap::PointsWithinLeaf(PosType * x_center, float side, std::list <unsig
 	x_corner[2][1] = x_center[1] + side/2.;
 	x_corner[3][0] = x_center[0] + side/2.;
 	x_corner[3][1] = x_center[1] + side/2.;
-//std::cout << x_center[0] << "  " << x_center[1] << std::endl;
-	i0 = IndexFromPosition(x_corner[0],Npixels,range,center);
+
+    i0 = IndexFromPosition(x_corner[0],Npixels,range,center);
 	i1 = IndexFromPosition(x_corner[1],Npixels,range,center);
 	i2 = IndexFromPosition(x_corner[2],Npixels,range,center);
 	i3 = IndexFromPosition(x_corner[3],Npixels,range,center);
