@@ -343,6 +343,7 @@ void MultiLens::createHaloData(
   std::vector<double *> halo_pos_vec;
   std::vector<unsigned long> halo_id_vec;
   double *pos, pos_max[2], z_max;
+
   const int Nmassbin=128;
   const double MaxLogm=17.;
 
@@ -358,7 +359,7 @@ void MultiLens::createHaloData(
   
   /* fill the log(mass) vector */
   
-  fill_linear(Logm,Nmassbin,min_mass*mass_scale,MaxLogm);
+  fill_linear(Logm,Nmassbin,log10(min_mass*mass_scale),MaxLogm);
   
   int Nsample = 50;
   
@@ -543,11 +544,11 @@ void MultiLens::buildHaloTrees(
 		 * finding the average mass surface density in halos
 		 */
 
-		double kappa_back = cosmo->totalMassDensityinHalos(mass_func_type,pw_alpha,min_mass*mass_scale,plane_redshifts[j],z1,z2)/mass_scale;
+		double sigma_back = cosmo->totalMassDensityinHalos(mass_func_type,pw_alpha,min_mass*mass_scale,plane_redshifts[j],z1,z2)/mass_scale;
 
-		std::cout << kappa_back << std::endl;
+		std::cout << sigma_back << std::endl;
 
-		halo_data[j].reset(new HaloData(&halos[j1],kappa_back,&halo_pos[j1],&halo_zs[j1],&halo_id[j1],j2-j1,Dl[j]/(1+plane_redshifts[j])));
+		halo_data[j].reset(new HaloData(&halos[j1],sigma_back,&halo_pos[j1],&halo_zs[j1],&halo_id[j1],j2-j1,Dl[j]/(1+plane_redshifts[j])));
 
 		/// Use other constructor to create halo data
 		std::cout << "  Building tree on plane " << j << " number of halos: " << halo_data[j]->Nhalos << std::endl;
