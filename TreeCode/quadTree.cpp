@@ -606,10 +606,8 @@ void QuadTree::force2D(double *ray,double *alpha,float *kappa,float *gamma,bool 
 
   // Subtract off uniform mass sheet to compensate for the extra mass
   //  added to the universe in the halos.
-  alpha[0] += ray[0]*sigma_background;
-  alpha[1] += ray[1]*sigma_background;
-  //alpha[0] -= ray[0]*sigma_background;
-  //alpha[1] -= ray[1]*sigma_background;
+  alpha[0] -= ray[0]*sigma_background;
+  alpha[1] -= ray[1]*sigma_background;
   if(!no_kappa){      //  taken out to speed up
 	  *kappa -= sigma_background;
   }
@@ -645,10 +643,8 @@ void QuadTree::force2D_recur(double *ray,double *alpha,float *kappa,float *gamma
 
   // Subtract off uniform mass sheet to compensate for the extra mass
   //  added to the universe in the halos.
-  alpha[0] += ray[0]*sigma_background;
-  alpha[1] += ray[1]*sigma_background;
-  //alpha[0] -= ray[0]*sigma_background;
-  //alpha[1] -= ray[1]*sigma_background;
+  alpha[0] -= ray[0]*sigma_background;
+  alpha[1] -= ray[1]*sigma_background;
   if(!no_kappa){      //  taken out to speed up
 	  *kappa -= sigma_background;
   }
