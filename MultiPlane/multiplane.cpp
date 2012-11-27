@@ -344,7 +344,7 @@ void MultiLens::createHaloData(
   std::vector<unsigned long> halo_id_vec;
   double *pos, pos_max[2], z_max;
 
-  const int Nmassbin=128;
+  const int Nmassbin=32;
   const double MaxLogm=17.;
 
 
@@ -546,7 +546,13 @@ void MultiLens::buildHaloTrees(
 
 		double sigma_back = cosmo->totalMassDensityinHalos(mass_func_type,pw_alpha,min_mass*mass_scale,plane_redshifts[j],z1,z2)/mass_scale;
 
-		std::cout << sigma_back << std::endl;
+		double sb=0.0;
+		for(int m=0;m<j2-j1;m++){
+		  sb+=halos[j1+m].mass;
+		}
+		sb /= fieldofview*pow(pi/180.*Dl[j]/(1+plane_redshifts[j]),2);
+
+		std::cout << sigma_back << " " << sb << " " << sb/sigma_back << std::endl;
 
 		halo_data[j].reset(new HaloData(&halos[j1],sigma_back,&halo_pos[j1],&halo_zs[j1],&halo_id[j1],j2-j1,Dl[j]/(1+plane_redshifts[j])));
 
@@ -613,7 +619,14 @@ void MultiLens::setCoorDist(CosmoHndl cosmo){
 	/// spaces lD equally up to the source, including 0 and Ds
 	/// therefore we need Nplanes+1 values
 	/// however, if there is an input plane, we will need Nplanes values, since the input plane will take up a value itself
-	fill_linear(lD,Np,0.,Ds);
+	fill_linear(lD,Np-1,0.,Ds);
+
+	/// ensures that the first plane and the last before the source plane have the same volume
+	/// as all ther planes
+	double dlD = lD[1]-lD[0];
+	for(i=0; i<Np; i++){
+	  lD[i] -= 0.5*dlD;
+	}
 
 	/// puts the input plane first if the case
 	int j=0, flag=0;
@@ -625,7 +638,7 @@ void MultiLens::setCoorDist(CosmoHndl cosmo){
 	}
 
 	/// assigns the redshifts and plugs in the input plane
-	for(i=1; i<Np; i++){
+	for(i=1; i<Np-1; i++){
 		Dl[j] = lD[i];
 
 		if(flag_input_lens && flag == 0)
@@ -637,6 +650,8 @@ void MultiLens::setCoorDist(CosmoHndl cosmo){
 			}
 		j++;
 	}
+
+	Dl[Nplanes-1] = Ds;
 
 	dDl[0] = Dl[0];  // distance between jth plane and the previous plane
 	for(j = 1; j < Nplanes; j++){
