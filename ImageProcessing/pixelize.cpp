@@ -300,7 +300,7 @@ void PixelMap::smooth(double *map_out,double sigma){
 	if(Nmask < 4 ) std::printf("WARNING: pixels are large compare to psf Nmask=%i\n",Nmask);
 
 	// set up mask
-	mask=dmatrix(0,Nmask,0,Nmask);
+	Matrix(mask,Nmask,Nmask);
 	for(j=-Nmask/2,sum=0;j<=Nmask/2;++j){
 		for(k=-Nmask/2;k<=Nmask/2;++k){
 			mask[j+Nmask/2][k+Nmask/2]= exp(-(pow(j*range/(Npixels-1),2)
@@ -325,7 +325,7 @@ void PixelMap::smooth(double *map_out,double sigma){
 		}
 	}
 
-	free_dmatrix(mask,0,Nmask,0,Nmask);
+	free_Matrix(mask,Nmask,Nmask);
 
 	return ;
 }

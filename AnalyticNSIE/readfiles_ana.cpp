@@ -254,7 +254,7 @@ AnaLens::~AnaLens(){
 	}
 	if(sub_N > 0 && substruct_implanted){
 		cout << "deleting subs" << endl;
-		free_dmatrix(sub_x,0,sub_N-1,0,1);
+		free_PosTypeMatrix(sub_x,sub_N,2);
 		delete[] sub_Rcut;
 		delete[] sub_mass;
 		delete[] sub_substructures;
@@ -263,10 +263,10 @@ AnaLens::~AnaLens(){
 		cout << "deleting stars" << endl;
 		delete[] star_masses;
 		delete[] stars;
-		free_PosTypeMatrix(stars_xp,0,stars_N-1,0,2);
+		free_PosTypeMatrix(stars_xp,stars_N,2);
 		delete[] star_region;
 		delete[] star_kappa;
-		free_dmatrix(star_xdisk,0,star_Nregions-1,0,1);
+		free_PosTypeMatrix(star_xdisk,star_Nregions,2);
 		delete star_tree;
 	}
 }

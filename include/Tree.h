@@ -118,7 +118,6 @@ inline int inbox(double *ray,double *p1,double *p2){
 };
 bool boxinbox(Branch *branch1,Branch *branch2);
 double BoxIntersection(Branch *branch1,Branch *branch2);
-int cutbox(double ray[2],double *p1,double *p2,double rmax);
 void FindBoxPoint(TreeHndl tree,double *ray,Point *point);
 void _FindBox(TreeHndl tree,double *ray);
 bool AreBoxNeighbors(Point *point1,Point *point2);
@@ -193,6 +192,7 @@ void quickPartition(double pivotvalue,unsigned long *pivotindex,unsigned long *p
 		,double *arr,unsigned long N);
 void quickPartitionPoints(double pivotvalue,unsigned long *pivotindex
 		,Point *pointsarray,double *arr,unsigned long N);
+int cutbox(PosType *ray,PosType *p1,PosType *p2,float rmax);
 
 /* in utilities.c */
 
