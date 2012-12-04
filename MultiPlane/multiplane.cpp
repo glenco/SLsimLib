@@ -151,7 +151,7 @@ MultiLens::~MultiLens(){
 	delete[] halos;
 	delete[] halo_zs;
 	delete[] halo_id;
-	free_PosTypeMatrix(halo_pos,Nhalos,2);
+	free_PosTypeMatrix(halo_pos,Nhalos,3);
 	
 	if(flag_input_lens)
 		delete input_lens;
@@ -466,7 +466,7 @@ void MultiLens::createHaloData(
   halos = new HaloStructure[Nhalos];
   halo_zs = new double[Nhalos];
   halo_id = new unsigned long[Nhalos];
-  halo_pos = PosTypeMatrix(Nhalos,2);
+  halo_pos = PosTypeMatrix(Nhalos,3);
   
   for(int i=0;i<Nhalos;++i){
     halo_id[i] = halo_id_vec[i];
@@ -903,7 +903,7 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 	halos = new HaloStructure[Nhalos];
 	halo_zs = new double[Nhalos];
 	halo_id = new unsigned long[Nhalos];
-	halo_pos = PosTypeMatrix(Nhalos,2);
+	halo_pos = PosTypeMatrix(Nhalos,3);
 
 	for(i=0;i<Nhalos;++i){
 		halo_id[i] = halo_id_vec[i];

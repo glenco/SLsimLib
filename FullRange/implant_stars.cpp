@@ -24,7 +24,7 @@ void implant_stars(AnaLens *lens,Point *centers,unsigned long Nregions,long *see
 
 		lens->star_masses = new float[lens->stars_N];
 		lens->stars = new unsigned long[lens->stars_N];
-		lens->stars_xp = PosTypeMatrix(lens->stars_N,2);
+		lens->stars_xp = PosTypeMatrix(lens->stars_N,3);
 		lens->star_theta_force = 1.0e-1;
 
 		assert(Nregions > 0);

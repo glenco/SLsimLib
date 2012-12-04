@@ -263,7 +263,7 @@ AnaLens::~AnaLens(){
 		cout << "deleting stars" << endl;
 		delete[] star_masses;
 		delete[] stars;
-		free_PosTypeMatrix(stars_xp,stars_N,2);
+		free_PosTypeMatrix(stars_xp,stars_N,3);
 		delete[] star_region;
 		delete[] star_kappa;
 		free_PosTypeMatrix(star_xdisk,star_Nregions,2);
