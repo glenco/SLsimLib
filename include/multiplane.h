@@ -90,6 +90,7 @@ public:
 	
 	void buildHaloTrees(CosmoHndl cosmo);
 	void createHaloData(CosmoHndl cosmo,long *seed);
+	void createHaloData2(CosmoHndl cosmo,long *seed);
 	void RandomizeHost(long *seed,bool tables);
 	void RandomizeSigma(long *seed,bool tables);
 	double getZlens();
@@ -205,6 +206,7 @@ private:
 	double zsource;
 	/// nfw tables
 	//bool tables_set;
+	double field_buffer;
 
 	void quicksort(HaloStructure *halos,double **brr,double *arr,unsigned long *id,unsigned long N);
 };
