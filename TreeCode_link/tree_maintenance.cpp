@@ -393,8 +393,8 @@ void _BuildTree(TreeHndl tree){
 /*   } */
 
   if(tree->median_cut){
-	  double_sort_points(cbranch->npoints,x-1,tree->current->points);
-	  //quicksortPoints(tree->current->points,x,cbranch->npoints);
+    //double_sort_points(cbranch->npoints,x-1,tree->current->points);
+	  quicksortPoints(tree->current->points,x,cbranch->npoints);
 
 	  cut=cbranch->npoints/2;
       branch1.boundary_p2[dimension]=(x[cut]+x[cut-1])/2;

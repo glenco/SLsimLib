@@ -45,7 +45,6 @@ TreeCode/profiles.cpp \
 TreeCode/qTreeNB.cpp \
 TreeCode/quadForceTrees.cpp \
 TreeCode/quadTree.cpp \
-TreeCode/readfiles.cpp \
 TreeCode/simpleTree.cpp \
 TreeCode_link/List/List.cpp \
 TreeCode_link/KistDriver.cpp \

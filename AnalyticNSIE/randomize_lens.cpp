@@ -282,7 +282,7 @@ void AnaLens::RandomizeSubstructure2(double rangeInRei,long *seed){
 	if(!(substruct_implanted) && ndensity > 0){
 		NsubMax=(unsigned long)(ndensity*pi*Rmax*Rmax + 5*sqrt(ndensity*pi*Rmax*Rmax) );
 		if(NsubMax > 0){
-			sub_x=dmatrix(0,NsubMax-1,0,1);
+			sub_x=PosTypeMatrix(NsubMax,2);
 			sub_Rcut=new float[NsubMax];
 			sub_mass=new float[NsubMax];
 			sub_substructures = new IndexType[NsubMax];
@@ -398,7 +398,7 @@ void AnaLens::RandomizeSubstructure3(double rangeInRei,long *seed){
 
 	if(!substruct_implanted){
 		NsubMax=(unsigned long)(sub_Ndensity*pi*Rmax*Rmax*(1+5/sqrt(sub_Ndensity*pi*Rmax*Rmax)) );
-		sub_x=dmatrix(0,NsubMax-1,0,1);
+		sub_x=PosTypeMatrix(NsubMax,2);
 		sub_Rcut=new float[NsubMax];
 		sub_mass=new float[NsubMax];
 		substruct_implanted=true;

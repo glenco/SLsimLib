@@ -24,14 +24,14 @@ void implant_stars(AnaLens *lens,Point *centers,unsigned long Nregions,long *see
 
 		lens->star_masses = new float[lens->stars_N];
 		lens->stars = new unsigned long[lens->stars_N];
-		lens->stars_xp = PosTypeMatrix(0,lens->stars_N-1,0,2);
+		lens->stars_xp = PosTypeMatrix(lens->stars_N,3);
 		lens->star_theta_force = 1.0e-1;
 
 		assert(Nregions > 0);
 		lens->star_Nregions = Nregions;
 		lens->star_region = new double[Nregions];
 		lens->star_kappa = new double[Nregions];
-		lens->star_xdisk = dmatrix(0,Nregions-1,0,1);
+		lens->star_xdisk = PosTypeMatrix(Nregions,2);
 
 	}else{
 		// free star_tree

@@ -300,7 +300,6 @@ void SimpleTree::_NearestNeighbors(double *ray,int Nneighbors,unsigned long *nei
     			neighbors[i]=tree->current->particles[i];
     		}
 
-    		//double_sort_vectors(tree->current->nparticles,rneighbors-1,neighbors-1);
     		quicksort(neighbors,rneighbors,tree->current->nparticles);
 
     	}else{ /* keep going down the tree */
@@ -348,7 +347,6 @@ void SimpleTree::_NearestNeighbors(double *ray,int Nneighbors,unsigned long *nei
     			neighbors[i]=tree->current->particles[i-Nneighbors];
     		}
 
-    		//double_sort_vectors(Nneighbors+Nbucket,rneighbors-1,neighbors-1);
        		quicksort(neighbors,rneighbors,Nneighbors+Nbucket);
 
     	}else{
@@ -446,8 +444,6 @@ void SimpleTree::_BuildTreeNB(TreeNBHndl tree,IndexType nparticles,IndexType *pa
 
   x=(double *)malloc((cbranch->nparticles-cbranch->big_particle)*sizeof(double));
   for(i=cbranch->big_particle;i<cbranch->nparticles;++i) x[i]=tree->xp[particles[i]][dimension];
-
- //double_sort(cbranch->nparticles-cbranch->big_particle,x-1,particles-1+cbranch->big_particle);
 
   if(median_cut){
 	  quicksort(particles,x,cbranch->nparticles-cbranch->big_particle);
@@ -896,129 +892,5 @@ bool SimpleTree::TreeNBWalkStep(TreeNBHndl tree,bool allowDescent){
 		return true;
 	}
 	return false;
-}
-
-
-
-/// Utility functions
-void SimpleTree::quicksort(unsigned long *particles,double *arr,unsigned long N){
-	double pivotvalue;
-	unsigned long pivotindex,newpivotindex,i;
-
-	if(N <= 1) return ;
-
-	// pick pivot as the median of the first, last and middle values
-	if ((arr[0] >= arr[N/2] && arr[0] <= arr[N-1])
-			|| (arr[0] >= arr[N-1] && arr[0] <= arr[N/2])) pivotindex = 0;
-	else if ((arr[N/2] >= arr[0] && arr[N/2] <= arr[N-1])
-			|| (arr[N/2] >= arr[N-1] && arr[N/2] <= arr[0])) pivotindex = N/2;
-	else pivotindex = N-1;
-	pivotvalue=arr[pivotindex];
-
-	// move pivet to end of array
-	swap(&arr[pivotindex],&arr[N-1]);
-	//SwapPointsInArray(&pointarray[pivotindex],&pointarray[N-1]);
-	swap(&particles[pivotindex],&particles[N-1]);
-	newpivotindex=0;
-
-	// partition list and array
-	for(i=0;i<N;++i){
-		if(arr[i] <= pivotvalue){
-			swap(&arr[newpivotindex],&arr[i]);
-			//SwapPointsInArray(&pointarray[newpivotindex],&pointarray[i]);
-			swap(&particles[newpivotindex],&particles[i]);
-			++newpivotindex;
-		}
-	}
-	--newpivotindex;
-
-	quicksort(particles,arr,newpivotindex);
-	quicksort(&particles[newpivotindex+1],&arr[newpivotindex+1],N-newpivotindex-1);
-
-	return ;
-}
-
-/*
- * Partitions arr[] and particles[] into those with x <= pivotvalue and those with
- *  x > pivotvalue  pivotindex is left at first array value with x > pivotvalue
- */
-void SimpleTree::quickPartition(double pivotvalue,unsigned long *pivotindex,unsigned long *particles
-		,double *arr,unsigned long N){
-	unsigned long i;
-
-	*pivotindex=0;
-
-	for(i=0;i<N;++i){
-		if(arr[i] <= pivotvalue){
-			swap(&arr[*pivotindex],&arr[i]);
-			swap(&particles[*pivotindex],&particles[i]);
-			++(*pivotindex);
-		}
-	}
-
-	return ;
-}
-
-// return 1 (0) if box is (not) within rmax of ray
-int SimpleTree::cutbox(PosType *ray,PosType *p1,PosType *p2,float rmax){
-	/*  returns:  0 if whole box is outside rmax from ray[]
-	 *            1 if whole box is inside circle but ray is not in the box
-	 *            2 if ray[] is inside box
-	 *            3 if box intersects circle but ray[] is not inside box
-	 */
-  short i,tick=0;
-  double close[2],rtmp;
-  double tmp1,tmp2;
-
-  // find closest point on box borders to ray[]
-  for(i=0;i<2;++i){
-    if( ray[i] < p1[i] ){
-      close[i]=p1[i];
-    }else if(ray[i] > p2[i]){
-      close[i]=p2[i];
-    }else{
-      close[i]=ray[i];
-      ++tick;
-    }
-  }
-
-  if(tick==2) return 2;  // ray is inside box
-
-  for(i=0,rtmp=0;i<2;++i) rtmp += pow(ray[i] - close[i],2);
-
-  if(rtmp>rmax*rmax) return 0;  // box is all outside circle
-
-  // find farthest point on box border from ray[]
-  for(i=0,rtmp=0;i<2;++i) rtmp += ((tmp1 = pow(ray[i]-p1[i],2)) > (tmp2=pow(ray[i]-p2[i],2))) ? tmp1 : tmp2;
-  //for(i=0,rtmp=0;i<2;++i) rtmp += DMAX(pow(ray[i]-p1[i],2),pow(ray[i]-p2[i],2));
-
-  if(rtmp<rmax*rmax) return 1;  // box is all inside circle
-
-  return 3;  // box intersects circle
-}
-
-void SimpleTree::swap(double *a,double *b){
-	double tmp;
-	tmp=*a;
-	*a=*b;
-	*b=tmp;
-}
-void SimpleTree::swap(PosType a,PosType b){
-	PosType tmp;
-	tmp=a;
-	a=b;
-	b=tmp;
-}
-void SimpleTree::swap(IndexType a,IndexType b){
-	IndexType tmp;
-	tmp=a;
-	a=b;
-	b=tmp;
-}
-void SimpleTree::swap(unsigned long *a,unsigned long *b){
-	unsigned long tmp;
-	tmp=*a;
-	*a=*b;
-	*b=tmp;
 }
 

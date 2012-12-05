@@ -178,20 +178,12 @@ protected:
 
 	inline short WhichQuad(double *x,QBranchNB &branch);
 
-	// Things that could be in a utilities file.
-	void quicksort(unsigned long *particles,double *arr,unsigned long N);
-	void quickPartition(double pivotvalue,unsigned long *pivotindex,unsigned long *particles
-			,double *arr,unsigned long N);
 	//inline bool atLeaf();
 	inline bool inbox(PosType *ray,PosType *p1,PosType *p2){
 	  return (ray[0]>=p1[0])*(ray[0]<=p2[0])*(ray[1]>=p1[1])*(ray[1]<=p2[1]);
 	}
 	int cutbox(PosType *ray,PosType *p1,PosType *p2,float rmax);
-	void swap(double *a,double *b);
-	void swap(PosType a,PosType b);
-	void swap(IndexType a,IndexType b);
-	void swap(unsigned long *a,unsigned long *b);
-
+	
 	void CalcMoments();
 	void rotate_coordinates(double **coord);
 

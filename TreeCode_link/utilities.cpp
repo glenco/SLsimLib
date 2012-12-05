@@ -126,3 +126,19 @@ unsigned long prevpower(unsigned long k){
 	return (k+1)/2;
 }
 
+
+PosType **PosTypeMatrix(long rows, long cols)
+{
+  PosType **matrix = new PosType*[rows];
+  matrix[0] = new PosType[rows*cols];
+  for (long i = 1; i < rows; ++i)
+    matrix[i] = matrix[0] + i * cols;
+
+  return matrix;
+}
+
+
+void free_PosTypeMatrix(PosType **matrix, long rows, long cols){
+  if(rows) delete[] matrix[0];
+  delete[] matrix;
+}

@@ -18,16 +18,11 @@ PixelMap::PixelMap(
 		): Npixels(my_Npixels), range(my_range)
 		{
 
-	if( (Npixels & (Npixels-1)) != 0){
-		ERROR_MESSAGE();
-		std::printf("ERROR: pixelsize, Npixels is not a power of 2\n");
-		exit(1);
-	}
-
 	center[0] = my_center[0];
 	center[1] = my_center[1];
 
-	resolution=range/(Npixels-1);
+	resolution=range/Npixels;
+	range = range - resolution;
 
 	map.resize(Npixels*Npixels);
 	return;
@@ -95,29 +90,27 @@ void PixelMap::PointsWithinLeaf(PosType * x_center, float side, std::list <unsig
 	x_corner[2][1] = x_center[1] + side/2.;
 	x_corner[3][0] = x_center[0] + side/2.;
 	x_corner[3][1] = x_center[1] + side/2.;
-//std::cout << x_center[0] << "  " << x_center[1] << std::endl;
-	i0 = IndexFromPosition(x_corner[0],Npixels,range,center);
+
+    i0 = IndexFromPosition(x_corner[0],Npixels,range,center);
 	i1 = IndexFromPosition(x_corner[1],Npixels,range,center);
 	i2 = IndexFromPosition(x_corner[2],Npixels,range,center);
 	i3 = IndexFromPosition(x_corner[3],Npixels,range,center);
-//std::cout << i0 << "  " << i1 << "  " << i2 << "  " << i3 << std::endl;
+
 	int line_s,line_e,col_s,col_e;
 	if (i0==-1 && i2==-1) line_s = 0;
 	else line_s = long(MAX(i0,i2))%Npixels;
 	if (i0==-1 && i1==-1) col_s = 0;
 	else col_s = long(MAX(i0,i1))/Npixels;
-	if (i1==-1 && i3==-1) line_e = Npixels;
+	if (i1==-1 && i3==-1) line_e = Npixels-1;
 	else line_e = long(MAX(i1,i3))%Npixels;
-	if (i2==-1 && i3==-1) col_e = Npixels;
+	if (i2==-1 && i3==-1) col_e = Npixels-1;
 	else col_e = long(MAX(i2,i3))/Npixels;
-//std::cout << line_s << "  " << line_e << "  " << col_s << "  " << col_e << std::endl;
 
 	for (int iy = col_s; iy<= col_e; ++iy)
 	{
 		for (int ix = line_s; ix <= line_e; ++ix)
 			{
 				neighborlist.push_back(ix+Npixels*iy);
-				//std::cout << ix+Npixels*iy << std::endl;
 			}
 		}
 	for (int i = 0; i<4; ++i){delete[] x_corner[i];}
@@ -129,9 +122,7 @@ double PixelMap::LeafPixelArea(IndexType i,Branch * branch1){
 	double area=0;
 	PosType p[2],p1[2],p2[2];
 
-//std::cout<< "Calculating common area with pixel  " << i <<std::endl;
 	PositionFromIndex(i,p,Npixels,range,center);
-//std::cout << p[0] << "  " << p[1] << std::endl;
 	p1[0] = p[0] - .5*resolution;
 	p1[1] = p[1] - .5*resolution;
 	p2[0] = p[0] + .5*resolution;
@@ -311,7 +302,7 @@ void PixelMap::smooth(double *map_out,double sigma){
 	if(Nmask < 4 ) std::printf("WARNING: pixels are large compare to psf Nmask=%i\n",Nmask);
 
 	// set up mask
-	mask=dmatrix(0,Nmask,0,Nmask);
+	Matrix(mask,Nmask,Nmask);
 	for(j=-Nmask/2,sum=0;j<=Nmask/2;++j){
 		for(k=-Nmask/2;k<=Nmask/2;++k){
 			mask[j+Nmask/2][k+Nmask/2]= exp(-(pow(j*range/(Npixels-1),2)
@@ -336,7 +327,7 @@ void PixelMap::smooth(double *map_out,double sigma){
 		}
 	}
 
-	free_dmatrix(mask,0,Nmask,0,Nmask);
+	free_Matrix(mask,Nmask,Nmask);
 
 	return ;
 }

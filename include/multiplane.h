@@ -13,28 +13,26 @@
 #include <quadTree.h>
 #include <sourceAnaGalaxy.h>
 
-//typedef enum {PowerLaw, NFW, PseudoNFW, NSIE} IntProfType;
 
 /** \brief Class that holds all the information about the halos' positions and their internal parameters on one plane.
  *
  */
  class HaloData{
 public:
+	/// number of halos in the halo model on the plane
+	IndexType Nhalos;
 	/// halo positions
 	PosType **pos;
 	/// halo structure with internal halo parameters such as mass, size, etc.
 	HaloStructure *halos;
-	//NSIEstructure *nsiehalos;
-	/// number of halos in the halo model on the plane
-	IndexType Nhalos;
 	/// mean mass density
 	double sigma_background;
+	/// redshifts
 	double *z;
+	/// ids
 	unsigned long *haloID;
 
-	//HaloData(double fov,double min_mass,double mass_scale,double z1,double z2,int mass_func_type,double alpha,CosmoHndl cosmo,long *seed);
 	HaloData(HaloStructure *halostrucs,double sb,double **positions,double *z, unsigned long *haloID,unsigned long Nhaloss,double Dl);
-	//HaloData(NSIEstructure *halostrucs,double **positions,unsigned long Nhaloss);
 	~HaloData();
 };
 
@@ -80,7 +78,6 @@ public:
 
   void unusedHalos();
 
-	//MultiLens(std::string paramfile,long *seed);
 	MultiLens(InputParams& params,long *seed);
 	~MultiLens();
 
@@ -100,7 +97,7 @@ public:
 	void setInternalParams(CosmoHndl,SourceHndl);
 	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off);
 	void rayshooterInternal(double *ray, double *alpha, float *gamma, float *kappa, bool kappa_off){ERROR_MESSAGE(); exit(1);};
-	/// a poiner to the analytical lens
+	
 	LensHndl input_lens;
 	AnaLens *analens;
 	MOKALens *mokalens;
@@ -142,10 +139,8 @@ public:
 
 private:
 
-	void setRedshifts();
 	void setCoorDist(CosmoHndl cosmo);
-	double QuickFindFromTable(double y);
-
+	
 	double *coorDist_table;
 	double *redshift_table;
 	unsigned long NTABLE;
@@ -204,6 +199,7 @@ private:
 
 	/// This is the source redshift that is read in from the parameter file and becomes the maximum redshift
 	double zsource;
+
 	/// nfw tables
 	//bool tables_set;
 	double field_buffer;
@@ -212,11 +208,5 @@ private:
 };
 
 typedef  MultiLens* MultiLensHndl;
-
-void swap(float *a,float *b);
-void swap(PosType *a,PosType *b);
-void swap(IndexType a,IndexType b);
-void swap(IndexType *a,IndexType *b);
-void quicksort(IndexType *particles,float *redshifts,PosType **pos,float *sizes,float *masses,IndexType N);
 
 #endif /* MULTIPLANE_H_ */

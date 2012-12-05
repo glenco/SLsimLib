@@ -63,9 +63,7 @@ void MultiLens::resetNplanes(CosmoHndl cosmo, int Np){
 #pragma omp barrier
 #endif
   }
-
-  Nplanes = Np;
-
+  
   delete[] halo_tree;
   delete[] halo_data;
   
@@ -73,6 +71,8 @@ void MultiLens::resetNplanes(CosmoHndl cosmo, int Np){
   delete[] plane_redshifts;
   delete[] dDl;
   
+  Nplanes = Np;
+
   plane_redshifts = new double[Nplanes];
   Dl = new double[Nplanes];
   dDl = new double[Nplanes];
@@ -151,8 +151,8 @@ MultiLens::~MultiLens(){
 	delete[] halos;
 	delete[] halo_zs;
 	delete[] halo_id;
-	free_PosTypeMatrix(halo_pos,0,Nhalos-1,0,2);
-
+	free_PosTypeMatrix(halo_pos,Nhalos,3);
+	
 	if(flag_input_lens)
 		delete input_lens;
 
@@ -345,9 +345,10 @@ void MultiLens::createHaloData(
   std::vector<double> halo_zs_vec;
   std::vector<double *> halo_pos_vec;
   std::vector<unsigned long> halo_id_vec;
-  double *pos, pos_max[2], z_max,tailarea;
-  const int Nmassbin=128;
-  const double MaxLogm=16.;
+
+  double *pos, pos_max[2], z_max;
+  const int Nmassbin=32;
+  const double MaxLogm=17.;
 
 
   /* TODO M & C I think it would be better to find all the redshifts first be drawing them from the
@@ -361,7 +362,7 @@ void MultiLens::createHaloData(
   
   /* fill the log(mass) vector */
   
-  fill_linear(Logm,Nmassbin,min_mass*mass_scale,MaxLogm);
+  fill_linear(Logm,Nmassbin,log10(min_mass*mass_scale),MaxLogm);
   
   int Nsample = 50;
   
@@ -382,7 +383,8 @@ void MultiLens::createHaloData(
       locateD(coorDist_table-1,NTABLE,Dl1,&k);
       z1 = redshift_table[k];
     }
-      Dl2 = Dl1+tmp_dDl;
+
+    Dl2 = Dl1+tmp_dDl;
     
     locateD(coorDist_table-1,NTABLE,Dl2,&k);
     z2 = redshift_table[k];
@@ -484,7 +486,7 @@ void MultiLens::createHaloData(
   halos = new HaloStructure[Nhalos];
   halo_zs = new double[Nhalos];
   halo_id = new unsigned long[Nhalos];
-  halo_pos = PosTypeMatrix(0,Nhalos-1,0,2);
+  halo_pos = PosTypeMatrix(Nhalos,3);
   
   for(int i=0;i<Nhalos;++i){
     halo_id[i] = halo_id_vec[i];
@@ -496,7 +498,7 @@ void MultiLens::createHaloData(
 
   std::cout << "sorting in MultiLens::createHaloData()" << std::endl;
   // sort the halos by readshift
-  MultiLens::quicksort(&halos[0],halo_pos,halo_zs,halo_id,Nhalos);
+  MultiLens::quicksort(halos,halo_pos,halo_zs,halo_id,Nhalos);
   
   std::cout << "leaving MultiLens::createHaloData()" << std::endl;
 }
@@ -699,14 +701,20 @@ void MultiLens::buildHaloTrees(
 		 * finding the average mass surface density in halos
 		 */
 
-		double kappa_back = cosmo->totalMassDensityinHalos(mass_func_type,pw_alpha,min_mass*mass_scale,plane_redshifts[j],z1,z2)/mass_scale;
 		// TODO Ben: test this
-		//kappa_back = cosmo->haloMassInBufferedCone(min_mass*mass_scale,z1,z2,fieldofview*pow(pi/180,2),field_buffer,mass_func_type,pw_alpha)
+		//double sigma_back = cosmo->haloMassInBufferedCone(min_mass*mass_scale,z1,z2,fieldofview*pow(pi/180,2),field_buffer,mass_func_type,pw_alpha)
 		//		/(pi*pow(sqrt(fieldofview/pi)*pi*Dl[j]/180 + field_buffer,2))/mass_scale;
+		double sigma_back = cosmo->totalMassDensityinHalos(mass_func_type,pw_alpha,min_mass*mass_scale,plane_redshifts[j],z1,z2)/mass_scale;
 
-		std::cout << kappa_back << std::endl;
+		double sb=0.0;
+		for(int m=0;m<j2-j1;m++){
+		  sb+=halos[j1+m].mass;
+		}
+		sb /= fieldofview*pow(pi/180.*Dl[j]/(1+plane_redshifts[j]),2);
 
-		halo_data[j].reset(new HaloData(&halos[j1],kappa_back,&halo_pos[j1],&halo_zs[j1],&halo_id[j1],j2-j1,Dl[j]/(1+plane_redshifts[j])));
+		std::cout << sigma_back << " " << sb << " " << sb/sigma_back << std::endl;
+
+		halo_data[j].reset(new HaloData(&halos[j1],sigma_back,&halo_pos[j1],&halo_zs[j1],&halo_id[j1],j2-j1,Dl[j]/(1+plane_redshifts[j])));
 
 		/// Use other constructor to create halo data
 		std::cout << "  Building tree on plane " << j << " number of halos: " << halo_data[j]->Nhalos << std::endl;
@@ -758,9 +766,9 @@ void MultiLens::setCoorDist(CosmoHndl cosmo){
 	int i, Np;
 
 	if(flag_input_lens)
-		Np = Nplanes;
+		Np = Nplanes-1;
 	else
-		Np = Nplanes+1;
+		Np = Nplanes;
 
 	double Ds = cosmo->coorDist(0,zsource);
 
@@ -772,6 +780,13 @@ void MultiLens::setCoorDist(CosmoHndl cosmo){
 	/// therefore we need Nplanes+1 values
 	/// however, if there is an input plane, we will need Nplanes values, since the input plane will take up a value itself
 	fill_linear(lD,Np,0.,Ds);
+
+	/// ensures that the first plane and the last before the source plane have the same volume
+	/// as all ther planes
+	double dlD = lD[1]-lD[0];
+	for(i=0; i<Np; i++){
+	  lD[i] -= 0.5*dlD;
+	}
 
 	/// puts the input plane first if the case
 	int j=0, flag=0;
@@ -795,6 +810,8 @@ void MultiLens::setCoorDist(CosmoHndl cosmo){
 			}
 		j++;
 	}
+
+	Dl[Nplanes-1] = Ds;
 
 	dDl[0] = Dl[0];  // distance between jth plane and the previous plane
 	for(j = 1; j < Nplanes; j++){
@@ -1046,7 +1063,7 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 	halos = new HaloStructure[Nhalos];
 	halo_zs = new double[Nhalos];
 	halo_id = new unsigned long[Nhalos];
-	halo_pos = PosTypeMatrix(0,Nhalos-1,0,2);
+	halo_pos = PosTypeMatrix(Nhalos,3);
 
 	for(i=0;i<Nhalos;++i){
 		halo_id[i] = halo_id_vec[i];
@@ -1057,7 +1074,7 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 
 	std::cout << "sorting in MultiLens::readInputSimFile()" << std::endl;
 	// sort the halos by readshift
-	MultiLens::quicksort(&halos[0],halo_pos,halo_zs,halo_id,Nhalos);
+	MultiLens::quicksort(halos,halo_pos,halo_zs,halo_id,Nhalos);
 
 	std::cout << "leaving MultiLens::readInputSimFile()" << std::endl;
 
@@ -1099,8 +1116,7 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 	std:: cout << " done " << std:: endl;
 }
 
-/// Sort halos[] and brr[][] by content off arr[]
-void swaph(HaloStructure& a,HaloStructure& b);
+/// Sort halos[], brr[][], and id[] by content off arr[]
 void MultiLens::quicksort(HaloStructure *halos,double **brr,double *arr,unsigned long  *id,unsigned long N){
 	double pivotvalue;
 	unsigned long pivotindex,newpivotindex,i;
@@ -1116,29 +1132,25 @@ void MultiLens::quicksort(HaloStructure *halos,double **brr,double *arr,unsigned
 	pivotvalue=arr[pivotindex];
 
 	// move pivet to end of array
-	swap(&arr[pivotindex],&arr[N-1]);
-	//SwapPointsInArray(&pointarray[pivotindex],&pointarray[N-1]);
-	swaph(halos[pivotindex],halos[N-1]);
-	swap(&brr[pivotindex][0],&brr[N-1][0]);
-	swap(&brr[pivotindex][1],&brr[N-1][1]);
-	swap(&id[pivotindex],&id[N-1]);
+	std::swap(arr[pivotindex],arr[N-1]);
+	std::swap(halos[pivotindex],halos[N-1]);
+	std::swap(brr[pivotindex],brr[N-1]);
+	std::swap(id[pivotindex],id[N-1]);
 	newpivotindex=0;
 
 	// partition list and array
 	for(i=0;i<N;++i){
 		if(arr[i] <= pivotvalue){
-			swap(&arr[newpivotindex],&arr[i]);
-			//SwapPointsInArray(&pointarray[newpivotindex],&pointarray[i]);
-			swaph(halos[newpivotindex],halos[i]);
-			swap(&brr[newpivotindex][0],&brr[i][0]);
-			swap(&brr[newpivotindex][1],&brr[i][1]);
-			swap(&id[newpivotindex],&id[i]);
+			std::swap(arr[newpivotindex],arr[i]);
+			std::swap(halos[newpivotindex],halos[i]);
+			std::swap(brr[newpivotindex],brr[i]);
+			std::swap(id[newpivotindex],id[i]);
 			++newpivotindex;
 		}
 	}
 	--newpivotindex;
 
-	quicksort(&halos[0],brr,arr,id,newpivotindex);
+	quicksort(halos,brr,arr,id,newpivotindex);
 	quicksort(&halos[newpivotindex+1],&brr[newpivotindex+1],&arr[newpivotindex+1],&id[newpivotindex+1],N-newpivotindex-1);
 
 	return ;
@@ -1233,22 +1245,4 @@ void MultiLens::unusedHalos(){
 
 }
 
-void swap(double **a,double **b){
-	double *tmp;
-	tmp=*a;
-	*a=*b;
-	*b=tmp;
-}
-void swap(unsigned long *a,unsigned long *b){
-	unsigned long tmp;
-	tmp=*a;
-	*a=*b;
-	*b=tmp;
-}
-void swaph(HaloStructure& a,HaloStructure& b){
-	HaloStructure tmp;
-	tmp=a;
-	a=b;
-	b=tmp;
-}
 

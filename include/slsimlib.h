@@ -14,6 +14,8 @@
 #ifndef _SLSIMLIB_DECLARE_
 #define _SLSIMLIB_DECLARE_
 
+#include "utilities.h"
+
 #include <KistDriver.h>
 
 #include <divide_images.h>
