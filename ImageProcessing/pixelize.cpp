@@ -86,8 +86,10 @@ void PixelMap::PointsWithinLeaf(PosType * p1, PosType * p2, std::list <unsigned 
 
 	line_s = std::max(0,LineFromPosition(p1[0],Npixels,range,center[0]));
 	col_s = std::max(0,ColumnFromPosition(p1[1],Npixels,range,center[1]));
-	line_e = std::min(int(Npixels-1),LineFromPosition(p2[0],Npixels,range,center[0]));
-	col_e = std::min(int(Npixels-1),ColumnFromPosition(p2[1],Npixels,range,center[1]));
+	line_e = LineFromPosition(p2[0],Npixels,range,center[0]);
+	col_e = ColumnFromPosition(p2[1],Npixels,range,center[1]);
+	if (line_e < 0) line_e = Npixels-1;
+	if (col_e < 0) col_e = Npixels-1;
 
 	for (int iy = col_s; iy<= col_e; ++iy)
 	{
