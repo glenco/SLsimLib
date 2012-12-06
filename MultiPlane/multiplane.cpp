@@ -205,6 +205,7 @@ void MultiLens::assignParams(InputParams& params){
 			  cout << "parameter min_mass needs to be set in the parameter file " << params.filename() << endl;
 			  exit(0);
 		}
+		//log_min_mass = log10(log_min_mass);
 	}else{
 		min_mass = 0.0;
 	}
@@ -338,7 +339,7 @@ void MultiLens::createHaloData(
 		,long *seed
 	){
 
-  HALO *ha = new HALO(cosmo,min_mass*mass_scale,0.0);
+  HALO *halo_calc = new HALO(cosmo,min_mass*mass_scale,0.0);
   
   std::vector<double> Logm,Nhalosbin;
   std::vector<HaloStructure> halo_vec;
@@ -350,12 +351,6 @@ void MultiLens::createHaloData(
   const int Nmassbin=32;
   const double MaxLogm=17.;
 
-
-  /* TODO M & C I think it would be better to find all the redshifts first be drawing them from the
-   * redshift distribution first.  Then sort them in redshift. Then bin them in redshift and then
-   * assign them masses according to the mass distribution in that redshift bin.
-   */
-  
   
   Logm.resize(Nmassbin);
   Nhalosbin.resize(Nmassbin);
@@ -364,6 +359,8 @@ void MultiLens::createHaloData(
   
   fill_linear(Logm,Nmassbin,log10(min_mass*mass_scale),MaxLogm);
   
+  std::cout << Logm[0] << "  " << Logm[Nmassbin-1] << std::endl;
+
   int Nsample = 50;
   
   double tmp_dDl, Dl1, Dl2, z1, z2, mass_max,mass_tot;
@@ -389,7 +386,7 @@ void MultiLens::createHaloData(
     locateD(coorDist_table-1,NTABLE,Dl2,&k);
     z2 = redshift_table[k];
 
-    tailarea = cosmo->haloNumberDensityOnSky(pow(10,MaxLogm),z1,z2,mass_func_type,pw_alpha)*fieldofview;
+    double tailarea = cosmo->haloNumberDensityOnSky(pow(10,MaxLogm),z1,z2,mass_func_type,pw_alpha)*fieldofview;
     Nhalosbin[0] = cosmo->haloNumberDensityOnSky(pow(10,Logm[0]),z1,z2,mass_func_type,pw_alpha)*fieldofview;
     
     std::cout << "tail = " << tailarea << "  " << tailarea/Nhalosbin[0] << " % "<< std::endl;
@@ -423,8 +420,7 @@ void MultiLens::createHaloData(
       HaloStructure halo;
       
       zi = z1+(z2-z1)*ran2 (seed); 
-      
-      /// positions need to be in radians initially
+       /// positions need to be in radians initially
       maxr = pi*sqrt(fieldofview/pi)/180.; // fov is a circle
       rr = maxr*sqrt(ran2(seed));
       
@@ -435,11 +431,12 @@ void MultiLens::createHaloData(
       pos[1] = rr*sin(theta);
       pos[2] = 0.0;
       
-      halo.mass = pow(10,InterpolateYvec(Nhalosbin,Logm,ran2 (seed)));
-      ha->reset(halo.mass,zi);
+      // TODO Ben - this will never work for NSIE or NFW+NSIE models fix it
+     halo.mass = pow(10,InterpolateYvec(Nhalosbin,Logm,ran2 (seed)));
+      halo_calc->reset(halo.mass,zi);
       halo.mass /= mass_scale;
-      halo.Rmax = ha->getRvir();
-      halo.rscale = halo.Rmax/ha->getConcentration(0);
+      halo.Rmax = halo_calc->getRvir();
+      halo.rscale = halo.Rmax/halo_calc->getConcentration(0);
 
       if(halo.mass > mass_max) {
     	  mass_max = halo.mass;
@@ -475,7 +472,7 @@ void MultiLens::createHaloData(
 		<< " Msun  number of halo = " << Nh << std::endl;
   }
   
-  delete ha;
+  delete halo_calc;
   
   Nhalos = halo_vec.size();
   
@@ -503,29 +500,30 @@ void MultiLens::createHaloData(
   std::cout << "leaving MultiLens::createHaloData()" << std::endl;
 }
 
-void MultiLens::createHaloData2(
+void MultiLens::createHaloData_buffered(
 		CosmoHndl cosmo     /// cosmology
 		,long *seed
 	){
 
-	const int Nzbins=128;
-	const int Nmassbin=128;
+	const int Nzbins=64;
+	const int Nmassbin=64;
 	int NZSamples = 50;
 	std::vector<double> zbins(Nzbins),Nhalosbin(Nzbins);
 	unsigned long i,k,j_max,k1,k2;
 	std::vector<double> Logm;
-	double pos_max[2], z_max,tailarea;
+	double pos_max[2], z_max;
 	const double MaxLogm=16.;
 	double z1, z2, mass_max,mass_tot,Nhaloestot;
 	int np;
 	double rr,theta,maxr;
-	HALO *ha = new HALO(cosmo,min_mass*mass_scale,0.0);
+	HALO *halo_calc = new HALO(cosmo,min_mass*mass_scale,0.0);
 
 	double aveNhalos = cosmo->haloNumberInBufferedCone(min_mass,0,zsource,fieldofview*pow(pi/180,2),field_buffer,mass_func_type,pw_alpha);
 
 	// construct redshift distribution table
 	Nhalosbin[0] = 1;
 	zbins[0] = 0;
+
 #ifdef _OPENMP
 #pragma omp parallel for default(shared) private(k)
 #endif
@@ -542,22 +540,24 @@ void MultiLens::createHaloData2(
 	halo_zs = new double[Nhalos];
 	halos = new HaloStructure[Nhalos];
 	halo_id = new unsigned long[Nhalos];
-	halo_pos = PosTypeMatrix(0,Nhalos-1,0,2);
+	halo_pos = PosTypeMatrix(Nhalos,3);
 
 	// assign redsshifts to halos and sort them
 #ifdef _OPENMP
 #pragma omp parallel for default(shared) private(k)
 #endif
-
 	for(i=0;i < Nhalos;++i){
 		halo_zs[i] = InterpolateYvec(Nhalosbin,zbins,ran2(seed));
 	}
-	sortD(Nhalos,halo_zs-1);
+	std::sort(halo_zs,halo_zs + Nhalos);
+
+	assert(halo_zs[0] < halo_zs[1]);
+	assert(halo_zs[0] < halo_zs[Nhalos-1]);
 
 	// fill the log(mass) vector
 	Logm.resize(Nmassbin);
 	Nhalosbin.resize(Nmassbin);
-	fill_linear(Logm,Nmassbin,min_mass*mass_scale,MaxLogm);
+	fill_linear(Logm,Nmassbin,log10(min_mass*mass_scale),MaxLogm);
 
 	for(np=0,mass_max=0;np<NZSamples;np++){
 
@@ -569,9 +569,8 @@ void MultiLens::createHaloData2(
 		locateD(halo_zs-1,Nhalos,z2,&k2);
 		if(k2 > Nhalos-1) k2 = Nhalos-1;
 
-		tailarea = cosmo->haloNumberDensityOnSky(pow(10,MaxLogm),z1,z2,mass_func_type,pw_alpha)*fieldofview;
-		Nhaloestot = cosmo->haloNumberDensityOnSky(pow(10,Logm[0]),z1,z2,mass_func_type,pw_alpha)*fieldofview;
-		Nhaloestot -= tailarea;
+		Nhaloestot = cosmo->haloNumberInBufferedCone(pow(10,Logm[0]),z1,z2,fieldofview*pow(pi/180,2),field_buffer,mass_func_type,pw_alpha);
+
 		Nhalosbin[0] = 1;
 
 #ifdef _OPENMP
@@ -579,15 +578,18 @@ void MultiLens::createHaloData2(
 #endif
 		for(k=1;k<Nmassbin-1;k++){
 			// cumulative number density in one square degree
-			Nhalosbin[k] = (cosmo->haloNumberDensityOnSky(pow(10,Logm[k]),z1,z2,mass_func_type,pw_alpha)*fieldofview-tailarea)/Nhaloestot;
+			Nhalosbin[k] = cosmo->haloNumberInBufferedCone(pow(10,Logm[k]),z1,z2,fieldofview*pow(pi/180,2),field_buffer,mass_func_type,pw_alpha)
+					/Nhaloestot;
 		}
 		Nhalosbin[Nmassbin-1] = 0;
 
-		for(i = k1,mass_max=0; i < k2; i++){
+		for(i = k1; i < k2; i++){
 // TODO Ben - this will never work for NSIE or NFW+NSIE models fix it
 			/// positions need to be in radians initially
-			maxr = pi*sqrt(fieldofview/pi)/180. + (1+halo_zs[i])*field_buffer; // fov is a circle
+			maxr = pi*sqrt(fieldofview/pi)/180. + field_buffer/cosmo->angDist(0,halo_zs[i]); // fov is a circle
 			rr = maxr*sqrt(ran2(seed));
+
+			assert(rr == rr);
 
 			theta = 2*pi*ran2(seed);
 
@@ -595,10 +597,10 @@ void MultiLens::createHaloData2(
 			halo_pos[i][1] = rr*sin(theta);
 
 			halos[i].mass = pow(10,InterpolateYvec(Nhalosbin,Logm,ran2 (seed)));
-			ha->reset(halos[i].mass,halo_zs[i]);
+			halo_calc->reset(halos[i].mass,halo_zs[i]);
 			halos[i].mass /= mass_scale;
-			halos[i].Rmax = ha->getRvir();
-			halos[i].rscale = halos[i].Rmax/ha->getConcentration(0);
+			halos[i].Rmax = halo_calc->getRvir();
+			halos[i].rscale = halos[i].Rmax/halo_calc->getConcentration(0);
 
 			if(halos[i].mass > mass_max) {
 				mass_max = halos[i].mass;
@@ -615,7 +617,7 @@ void MultiLens::createHaloData2(
 
 		Nhalosbin.empty();
 
-
+/*
 		double mftot = cosmo->totalMassDensityinHalos(mass_func_type,pw_alpha,pow(10,Logm[0]),(z1+z2)/2,z1,z2)
        	       		*pow(cosmo->angDist(0,(z1+z2)/2),2)*fieldofview*pow(pi/180,2);
 		// Test lines
@@ -628,16 +630,16 @@ void MultiLens::createHaloData2(
 				<< " in tail above 1.0e14 = " << cosmo->totalMassDensityinHalos(mass_func_type,pw_alpha,1.0e14,(z1+z2)/2,z1,z2)
 				*pow(cosmo->angDist(0,(z1+z2)/2),2)*fieldofview*pow(pi/180,2)/mftot
 				<< " Msun  number of halo in bin = " << k2-k1 << std::endl;
+				*/
 	}
 
-	delete ha;
+	delete halo_calc;
 
 	std::cout << Nhalos << " halos created." << std::endl
 	    << "Max input mass = " << mass_max << "  R max = " << halos[j_max].Rmax
 	    << " at z = " << z_max << std::endl;
 
-	std::cout << "sorting in MultiLens::createHaloData()" << std::endl;
-	std::cout << "leaving MultiLens::createHaloData()" << std::endl;
+	std::cout << "leaving MultiLens::createHaloData_buffered()" << std::endl;
 }
 
 /**
@@ -702,15 +704,19 @@ void MultiLens::buildHaloTrees(
 		 */
 
 		// TODO Ben: test this
-		//double sigma_back = cosmo->haloMassInBufferedCone(min_mass*mass_scale,z1,z2,fieldofview*pow(pi/180,2),field_buffer,mass_func_type,pw_alpha)
-		//		/(pi*pow(sqrt(fieldofview/pi)*pi*Dl[j]/180 + field_buffer,2))/mass_scale;
-		double sigma_back = cosmo->totalMassDensityinHalos(mass_func_type,pw_alpha,min_mass*mass_scale,plane_redshifts[j],z1,z2)/mass_scale;
+		double sigma_back;
+		if(field_buffer > 0.0)
+			sigma_back = cosmo->haloMassInBufferedCone(min_mass*mass_scale,z1,z2,fieldofview*pow(pi/180,2),field_buffer,mass_func_type,pw_alpha)
+			             /(pi*pow(sqrt(fieldofview/pi)*pi*Dl[j]/180/(1+plane_redshifts[j]) + field_buffer,2))/mass_scale;
+		else sigma_back = cosmo->totalMassDensityinHalos(mass_func_type,pw_alpha,min_mass*mass_scale,plane_redshifts[j],z1,z2)/mass_scale;
 
 		double sb=0.0;
 		for(int m=0;m<j2-j1;m++){
 		  sb+=halos[j1+m].mass;
 		}
-		sb /= fieldofview*pow(pi/180.*Dl[j]/(1+plane_redshifts[j]),2);
+		if(field_buffer > 0.0) sb /= (pi*pow(sqrt(fieldofview/pi)*pi*Dl[j]/180/(1+plane_redshifts[j]) + field_buffer,2));
+		else sb /= fieldofview*pow(pi/180.*Dl[j]/(1+plane_redshifts[j]),2);
+		//else sb /= fieldofview*pow(pi/180.*Dl[j],2);
 
 		std::cout << sigma_back << " " << sb << " " << sb/sigma_back << std::endl;
 
@@ -1109,7 +1115,8 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 	}
 	else{
 		// TODO Ben swap function here or provide toggle
-		createHaloData(cosmo,seed);
+		if(field_buffer > 0.0) createHaloData_buffered(cosmo,seed);
+		else createHaloData(cosmo,seed);
 	}
 
 	buildHaloTrees(cosmo);

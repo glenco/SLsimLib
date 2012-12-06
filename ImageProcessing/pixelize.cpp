@@ -52,16 +52,26 @@ void PixelMap::AddImages(
 	float rmax;
 	std::list <unsigned long> neighborlist;
 	std::list<unsigned long>::iterator it;
+	double x[2];
 	for(long ii=0;ii<Nimages;++ii){
-		rmax = getCurrentKist(imageinfo[ii].imagekist)->gridsize;
+
 		if(imageinfo->imagekist->Nunits() > 0){
 			MoveToTopKist(imageinfo[ii].imagekist);
+			std::cout << "N in image " << imageinfo[ii].imagekist->Nunits() << std::endl;
+			x[0] = getCurrentKist(imageinfo[ii].imagekist)->x[0];
+			x[1] = getCurrentKist(imageinfo[ii].imagekist)->x[1];
 			do{
-
+				rmax = getCurrentKist(imageinfo[ii].imagekist)->gridsize;
+				std::cout << "rmax = " << rmax << "  range = " << range << "x = " << getCurrentKist(imageinfo[ii].imagekist)->x[0] - x[0]
+				         << "  " << getCurrentKist(imageinfo[ii].imagekist)->x[1] - x[1]
+				         << " center = " << center[0] << "  " << center[1]
+				         << " pointer = " << getCurrentKist(imageinfo[ii].imagekist) << std::endl;
 				if(!constant_sb) sb = getCurrentKist(imageinfo[ii].imagekist)->surface_brightness;
 
 				assert(getCurrentKist(imageinfo[ii].imagekist)->leaf);
+
 				PointsWithinLeaf(getCurrentKist(imageinfo[ii].imagekist)->x,rmax,neighborlist);
+				std::cout << "number of neighbors " << neighborlist.size() << std::endl;
 				for(  it = neighborlist.begin();it != neighborlist.end();it++){
 					float area = LeafPixelArea(*it,getCurrentKist(imageinfo[ii].imagekist)->leaf);
 					map[*it] += sb*area;

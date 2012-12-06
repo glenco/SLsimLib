@@ -217,7 +217,7 @@ protected:
 	 void cuttoffscale(TreeNBHndl tree,double *theta);*/
 };
 
-PosType **PosTypeMatrix(long nrl, long nrh, long ncl, long nch);
-void free_PosTypeMatrix(PosType **m, long nrl, long nrh, long ncl, long nch);
+//PosType **PosTypeMatrix(long nrl, long nrh, long ncl, long nch);
+//void free_PosTypeMatrix(PosType **m, long nrl, long nrh, long ncl, long nch);
 
 #endif /* SIMP_TREE_H_ */

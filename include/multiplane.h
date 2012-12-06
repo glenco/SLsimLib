@@ -69,6 +69,7 @@ public:
  *	mass_func_type              The mass function used to generate random halos 0 through 2 or PS (Press & Schechter), ST (Sheth & Torman) or PowLaw (Power-law).  Not needed if input_simulation_file is provided.
  *	min_mass                    Minimum mass of halo when mass function is used (solar masses).  Not used when catalog is used.
  *	mass_scale                  The conversion between the mass units used and solar masses.  Usually 1.
+ *	field_buffer                Field of view buffer in physical, rest frame Mpc.  Default is 0. Set to provide a buffer to the field of view so that halos that are centered outside the conical field of view but overlap it will be included.
  *
  * </pre>
  */
@@ -87,7 +88,7 @@ public:
 	
 	void buildHaloTrees(CosmoHndl cosmo);
 	void createHaloData(CosmoHndl cosmo,long *seed);
-	void createHaloData2(CosmoHndl cosmo,long *seed);
+	void createHaloData_buffered(CosmoHndl cosmo,long *seed);
 	void RandomizeHost(long *seed,bool tables);
 	void RandomizeSigma(long *seed,bool tables);
 	double getZlens();

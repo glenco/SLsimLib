@@ -14,7 +14,7 @@
 #ifndef _SLSIMLIB_DECLARE_
 #define _SLSIMLIB_DECLARE_
 
-#include "utilities.h"
+#include "utilities_slsim.h"
 
 #include <KistDriver.h>
 
