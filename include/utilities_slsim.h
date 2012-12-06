@@ -3,6 +3,8 @@
 
 #include "standard.h"
 
+//typedef double PosType;
+
 template <class T>
 void Matrix(T **matrix, long rows, long cols){
   matrix = new T*[rows];
