@@ -38,9 +38,11 @@ private:
 	std::valarray<float> map;
 	unsigned long Npixels;
 	double resolution,range,center[2];
+	double map_boundary_p1[2],map_boundary_p2[2];
 
 	double LeafPixelArea(IndexType i,Branch * branch1);
-	void PointsWithinLeaf(PosType * x, float side, std::list <unsigned long> &neighborlist);
+	void PointsWithinLeaf(PosType *p1, PosType *p2, std::list <unsigned long> &neighborlist);
+	bool inMapBox(PosType *p1, PosType *p2);
 };
 
 void pixelize(double *map,long Npixels,double range,double *center

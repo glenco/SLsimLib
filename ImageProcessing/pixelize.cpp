@@ -22,6 +22,11 @@ PixelMap::PixelMap(
 	center[1] = my_center[1];
 
 	resolution=range/Npixels;
+	map_boundary_p1[0] = center[0]-range/2.;
+	map_boundary_p1[1] = center[1]-range/2.;
+	map_boundary_p2[0] = center[0]+range/2.;
+	map_boundary_p2[1] = center[1]+range/2.;
+
 	range = range - resolution;
 
 	map.resize(Npixels*Npixels);
@@ -48,6 +53,8 @@ void PixelMap::AddImages(
 	if(Nimages <= 0) return;
 	if(imageinfo->imagekist->Nunits() == 0) return;
 
+	std::list <unsigned long> neighborlist;
+
 	double sb = 1;
 	for(long ii=0;ii<Nimages;++ii){
 		if(imageinfo->imagekist->Nunits() > 0){
@@ -57,12 +64,12 @@ void PixelMap::AddImages(
 				if(!constant_sb) sb = getCurrentKist(imageinfo[ii].imagekist)->surface_brightness;
 
 				assert(getCurrentKist(imageinfo[ii].imagekist)->leaf);
-				float rmax = getCurrentKist(imageinfo[ii].imagekist)->gridsize;
-				std::list <unsigned long> neighborlist;
-				PointsWithinLeaf(getCurrentKist(imageinfo[ii].imagekist)->x,rmax,neighborlist);
-				for(  std::list<unsigned long>::iterator it = neighborlist.begin();it != neighborlist.end();it++){
-					float area = LeafPixelArea(*it,getCurrentKist(imageinfo[ii].imagekist)->leaf);
-					map[*it] += sb*area;
+				if ((inMapBox(getCurrentKist(imageinfo[ii].imagekist)->leaf->boundary_p1,getCurrentKist(imageinfo[ii].imagekist)->leaf->boundary_p2)) == true){
+					PointsWithinLeaf(getCurrentKist(imageinfo[ii].imagekist)->leaf->boundary_p1,getCurrentKist(imageinfo[ii].imagekist)->leaf->boundary_p2,neighborlist);
+					for(  std::list<unsigned long>::iterator it = neighborlist.begin();it != neighborlist.end();it++){
+						float area = LeafPixelArea(*it,getCurrentKist(imageinfo[ii].imagekist)->leaf);
+						map[*it] += sb*area;
+					}
 				}
 			}while(MoveDownKist(imageinfo[ii].imagekist));
 		}
@@ -71,40 +78,16 @@ void PixelMap::AddImages(
 	return;
 }
 
-void PixelMap::PointsWithinLeaf(PosType * x_center, float side, std::list <unsigned long> &neighborlist){
-	long i0,i1,i2,i3;
-	PosType ** x_corner;
+void PixelMap::PointsWithinLeaf(PosType * p1, PosType * p2, std::list <unsigned long> &neighborlist){
 
 	neighborlist.clear();
 
-	x_corner = new PosType*[4];
-	for (int i = 0; i<4; ++i){x_corner[i] = new PosType[2];}
-
-	x_corner[0][0] = x_center[0] - side/2.;
-	x_corner[0][1] = x_center[1] - side/2.;
-	x_corner[1][0] = x_center[0] + side/2.;
-	x_corner[1][1] = x_center[1] - side/2.;
-	x_corner[2][0] = x_center[0] - side/2.;
-	x_corner[2][1] = x_center[1] + side/2.;
-	x_corner[3][0] = x_center[0] + side/2.;
-	x_corner[3][1] = x_center[1] + side/2.;
-
-    i0 = IndexFromPosition(x_corner[0],Npixels,range,center);
-	i1 = IndexFromPosition(x_corner[1],Npixels,range,center);
-	i2 = IndexFromPosition(x_corner[2],Npixels,range,center);
-	i3 = IndexFromPosition(x_corner[3],Npixels,range,center);
-
-	if ((i0 < 0) && (i1 < 0) && (i2 < 0) && (i3 < 0)) return;
-
 	int line_s,line_e,col_s,col_e;
-	if (i0==-1 && i2==-1) line_s = 0;
-	else line_s = long(MAX(i0,i2))%Npixels;
-	if (i0==-1 && i1==-1) col_s = 0;
-	else col_s = long(MAX(i0,i1))/Npixels;
-	if (i1==-1 && i3==-1) line_e = Npixels-1;
-	else line_e = long(MAX(i1,i3))%Npixels;
-	if (i2==-1 && i3==-1) col_e = Npixels-1;
-	else col_e = long(MAX(i2,i3))/Npixels;
+
+	line_s = std::max(0,LineFromPosition(p1[0],Npixels,range,center[0]));
+	col_s = std::max(0,ColumnFromPosition(p1[1],Npixels,range,center[1]));
+	line_e = std::min(int(Npixels-1),LineFromPosition(p2[0],Npixels,range,center[0]));
+	col_e = std::min(int(Npixels-1),ColumnFromPosition(p2[1],Npixels,range,center[1]));
 
 	for (int iy = col_s; iy<= col_e; ++iy)
 	{
@@ -113,10 +96,13 @@ void PixelMap::PointsWithinLeaf(PosType * x_center, float side, std::list <unsig
 				neighborlist.push_back(ix+Npixels*iy);
 			}
 		}
-	for (int i = 0; i<4; ++i){delete[] x_corner[i];}
-	delete[] x_corner;
 }
 
+bool PixelMap::inMapBox(PosType *p1, PosType *p2){
+	if (p1[0] > map_boundary_p2[0] || p2[0] < map_boundary_p1[0]) return false;
+	if (p1[1] > map_boundary_p2[1] || p2[1] < map_boundary_p1[1]) return false;
+	return true;
+}
 
 double PixelMap::LeafPixelArea(IndexType i,Branch * branch1){
 	double area=0;
