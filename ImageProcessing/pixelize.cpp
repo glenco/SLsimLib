@@ -64,8 +64,8 @@ void PixelMap::AddImages(
 				if(!constant_sb) sb = getCurrentKist(imageinfo[ii].imagekist)->surface_brightness;
 
 				assert(getCurrentKist(imageinfo[ii].imagekist)->leaf);
-				if ((inMapBox(getCurrentKist(imageinfo[ii].imagekist)->leaf->boundary_p1,getCurrentKist(imageinfo[ii].imagekist)->leaf->boundary_p2)) == true){
-					PointsWithinLeaf(getCurrentKist(imageinfo[ii].imagekist)->leaf->boundary_p1,getCurrentKist(imageinfo[ii].imagekist)->leaf->boundary_p2,neighborlist);
+				if ((inMapBox(getCurrentKist(imageinfo[ii].imagekist)->leaf)) == true){
+					PointsWithinLeaf(getCurrentKist(imageinfo[ii].imagekist)->leaf,neighborlist);
 					for(  std::list<unsigned long>::iterator it = neighborlist.begin();it != neighborlist.end();it++){
 						float area = LeafPixelArea(*it,getCurrentKist(imageinfo[ii].imagekist)->leaf);
 						map[*it] += sb*area;
@@ -78,16 +78,16 @@ void PixelMap::AddImages(
 	return;
 }
 
-void PixelMap::PointsWithinLeaf(PosType * p1, PosType * p2, std::list <unsigned long> &neighborlist){
+void PixelMap::PointsWithinLeaf(Branch * branch1, std::list <unsigned long> &neighborlist){
 
 	neighborlist.clear();
 
 	int line_s,line_e,col_s,col_e;
 
-	line_s = std::max(0,LineFromPosition(p1[0],Npixels,range,center[0]));
-	col_s = std::max(0,ColumnFromPosition(p1[1],Npixels,range,center[1]));
-	line_e = LineFromPosition(p2[0],Npixels,range,center[0]);
-	col_e = ColumnFromPosition(p2[1],Npixels,range,center[1]);
+	line_s = std::max(0,IndexFromPosition(branch1->boundary_p1[0],Npixels,range,center[0]));
+	col_s = std::max(0,IndexFromPosition(branch1->boundary_p1[1],Npixels,range,center[1]));
+	line_e = IndexFromPosition(branch1->boundary_p2[0],Npixels,range,center[0]);
+	col_e = IndexFromPosition(branch1->boundary_p2[1],Npixels,range,center[1]);
 	if (line_e < 0) line_e = Npixels-1;
 	if (col_e < 0) col_e = Npixels-1;
 
@@ -100,9 +100,9 @@ void PixelMap::PointsWithinLeaf(PosType * p1, PosType * p2, std::list <unsigned 
 		}
 }
 
-bool PixelMap::inMapBox(PosType *p1, PosType *p2){
-	if (p1[0] > map_boundary_p2[0] || p2[0] < map_boundary_p1[0]) return false;
-	if (p1[1] > map_boundary_p2[1] || p2[1] < map_boundary_p1[1]) return false;
+bool PixelMap::inMapBox(Branch * branch1){
+	if (branch1->boundary_p1[0] > map_boundary_p2[0] || branch1->boundary_p2[0] < map_boundary_p1[0]) return false;
+	if (branch1->boundary_p1[1] > map_boundary_p2[1] || branch1->boundary_p2[1] < map_boundary_p1[1]) return false;
 	return true;
 }
 
