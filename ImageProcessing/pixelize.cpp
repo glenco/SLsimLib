@@ -56,13 +56,8 @@ void PixelMap::AddImages(
 
 		if(imageinfo->imagekist->Nunits() > 0){
 			MoveToTopKist(imageinfo[ii].imagekist);
-			std::cout << "N in image " << imageinfo[ii].imagekist->Nunits() << std::endl;
 			do{
 				rmax = getCurrentKist(imageinfo[ii].imagekist)->gridsize;
-				/*std::cout << "rmax = " << rmax << "  range = " << range << "x = " << getCurrentKist(imageinfo[ii].imagekist)->x[0] - x[0]
-				         << "  " << getCurrentKist(imageinfo[ii].imagekist)->x[1] - x[1]
-				         << " center = " << center[0] << "  " << center[1]
-				         << " pointer = " << getCurrentKist(imageinfo[ii].imagekist) << std::endl;*/
 				if(!constant_sb) sb = getCurrentKist(imageinfo[ii].imagekist)->surface_brightness;
 
 				assert(getCurrentKist(imageinfo[ii].imagekist)->leaf);
