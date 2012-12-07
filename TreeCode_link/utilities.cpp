@@ -113,6 +113,25 @@ void PositionFromIndex(unsigned long i,double *x,long Npixels,double range,doubl
     return;
 }
 
+// 1d version
+int IndexFromPosition(double x,long Npixels,double range,double center){
+	int ix;
+
+	  ix=(int)( ((x - center)/range + 0.5)*(Npixels-1)+0.5);
+
+	  if( (ix>-1)*(ix<Npixels)) return ix;
+	  return -1;
+}
+/*
+int ColumnFromPosition(double x,long Npixels,double range,double center){
+	int iy;
+
+	  iy=(int)( ((x - center)/range + 0.5)*(Npixels-1)+0.5);
+
+	  if((iy>-1)*(iy<Npixels) ) return iy;
+	  return -1;
+}
+*/
 /** \ingroup Utill
  * This function finds the largest power of 2 that is < k
  */

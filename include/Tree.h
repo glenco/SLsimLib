@@ -204,6 +204,7 @@ void writeCurves(int m, ImageInfo *critical, int Ncrit, int index);
 
 long IndexFromPosition(double *x,long Npixels,double range,double *center);
 void PositionFromIndex(unsigned long i,double *x,long Npixels,double range,double *center);
+int IndexFromPosition(double x,long Npixels,double range,double center);
 //inline float isLeft( Point *p0, Point *p1, double *x );
 
 // isLeft(): tests if a point is Left|On|Right of an infinite line.
