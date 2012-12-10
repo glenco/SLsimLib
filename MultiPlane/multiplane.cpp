@@ -527,7 +527,7 @@ void MultiLens::createHaloData_buffered(
 	const int Nzbins=64;
 	const int Nmassbin=64;
 	int NZSamples = 50;
-	std::vector<double> zbins(Nzbins),Nhalosbin(Nzbins);
+	std::vector<double> zbins,Nhalosbin(Nzbins);
 	unsigned long i,k,j_max,k1,k2;
 	std::vector<double> Logm;
 	double pos_max[2], z_max;
@@ -539,6 +539,7 @@ void MultiLens::createHaloData_buffered(
 
 	double aveNhalos = cosmo->haloNumberInBufferedCone(min_mass*mass_scale,0,zsource,fieldofview*pow(pi/180,2),field_buffer,mass_func_type,pw_alpha);
 
+	fill_linear(zbins,Nzbins,0.0,zsource);
 	// construct redshift distribution table
 	Nhalosbin[0] = 1;
 	zbins[0] = 0;
@@ -547,11 +548,10 @@ void MultiLens::createHaloData_buffered(
 #pragma omp parallel for default(shared) private(k)
 #endif
 	for(k=1;k<Nzbins-1;++k){
-		zbins[k] = k * zsource/(Nzbins-1);
 		Nhalosbin[k] = cosmo->haloNumberInBufferedCone(min_mass*mass_scale,zbins[k],zsource,fieldofview*pow(pi/180,2),field_buffer,mass_func_type,pw_alpha)/aveNhalos;
 	}
 	zbins[Nzbins-1] = zsource;
-	Nhalosbin[k] = 0;
+	Nhalosbin[Nzbins-1] = 0.0;
 
 	Nhalos = (long)(poidev(float(aveNhalos), seed) );
 
@@ -562,11 +562,9 @@ void MultiLens::createHaloData_buffered(
 	halo_pos = PosTypeMatrix(Nhalos,3);
 
 	// assign redsshifts to halos and sort them
-#ifdef _OPENMP
-#pragma omp parallel for default(shared) private(k)
-#endif
-	for(k=0;k < Nhalos;++k){
-		halo_zs[k] = InterpolateYvec(Nhalosbin,zbins,ran2(seed));
+
+	for(i=0;i < Nhalos;++i){
+		halo_zs[i] = InterpolateYvec(Nhalosbin,zbins,ran2(seed));
 	}
 	std::sort(halo_zs,halo_zs + Nhalos);
 

@@ -178,7 +178,6 @@ public:
   void implant_stars(Point *centers,unsigned long Nregions,long *seed);
   void toggleStars(bool implanted);
 
-private:
   bool stars_implanted;
 };
 
