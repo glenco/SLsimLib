@@ -54,7 +54,11 @@ void PixelMap::AddImages(
 	if(imageinfo->imagekist->Nunits() == 0) return;
 
 	double sb = 1;
+<<<<<<< local
+	float rmax;
+=======
 	std::list <unsigned long> neighborlist;
+>>>>>>> other
 	std::list<unsigned long>::iterator it;
 	for(long ii=0;ii<Nimages;++ii){
 
