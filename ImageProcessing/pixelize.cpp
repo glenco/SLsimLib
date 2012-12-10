@@ -54,7 +54,6 @@ void PixelMap::AddImages(
 	if(imageinfo->imagekist->Nunits() == 0) return;
 
 	double sb = 1;
-	float rmax;
 	std::list <unsigned long> neighborlist;
 	std::list<unsigned long>::iterator it;
 	for(long ii=0;ii<Nimages;++ii){
@@ -62,14 +61,13 @@ void PixelMap::AddImages(
 		if(imageinfo->imagekist->Nunits() > 0){
 			MoveToTopKist(imageinfo[ii].imagekist);
 			do{
-				rmax = getCurrentKist(imageinfo[ii].imagekist)->gridsize;
 				if(!constant_sb) sb = getCurrentKist(imageinfo[ii].imagekist)->surface_brightness;
 
 				assert(getCurrentKist(imageinfo[ii].imagekist)->leaf);
 
 				if ((inMapBox(getCurrentKist(imageinfo[ii].imagekist)->leaf)) == true){
 					PointsWithinLeaf(getCurrentKist(imageinfo[ii].imagekist)->leaf,neighborlist);
-					for(  std::list<unsigned long>::iterator it = neighborlist.begin();it != neighborlist.end();it++){
+					for(it = neighborlist.begin();it != neighborlist.end();it++){
 						float area = LeafPixelArea(*it,getCurrentKist(imageinfo[ii].imagekist)->leaf);
 						map[*it] += sb*area;
 					}
