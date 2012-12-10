@@ -2,7 +2,7 @@
  * halo_model.cpp
  *
  *  Created on: Jan 14, 2012
- *      Author: mpetkova
+ *      Author: mpetkova, bmetcalf
  */
 
 #include "slsimlib.h"
@@ -339,6 +339,11 @@ void MultiLens::createHaloData(
 		,long *seed
 	){
 
+	if(internal_profile == NSIE || internal_profile == NFW_NSIE){
+		std::cout << "ERROR: MultiLens Cann't make NSIE halos without input file yet" << std::endl;
+		ERROR_MESSAGE();
+		exit(1);
+	}
   HALO *halo_calc = new HALO(cosmo,min_mass*mass_scale,0.0);
   
   std::vector<double> Logm,Nhalosbin;
@@ -505,6 +510,12 @@ void MultiLens::createHaloData_buffered(
 		,long *seed
 	){
 
+	if(internal_profile == NSIE || internal_profile == NFW_NSIE){
+		std::cout << "ERROR: MultiLens Cann't make NSIE halos without input file yet" << std::endl;
+		ERROR_MESSAGE();
+		exit(1);
+	}
+
 	const int Nzbins=64;
 	const int Nmassbin=64;
 	int NZSamples = 50;
@@ -518,7 +529,7 @@ void MultiLens::createHaloData_buffered(
 	double rr,theta,maxr;
 	HALO *halo_calc = new HALO(cosmo,min_mass*mass_scale,0.0);
 
-	double aveNhalos = cosmo->haloNumberInBufferedCone(min_mass,0,zsource,fieldofview*pow(pi/180,2),field_buffer,mass_func_type,pw_alpha);
+	double aveNhalos = cosmo->haloNumberInBufferedCone(min_mass*mass_scale,0,zsource,fieldofview*pow(pi/180,2),field_buffer,mass_func_type,pw_alpha);
 
 	// construct redshift distribution table
 	Nhalosbin[0] = 1;
@@ -528,8 +539,8 @@ void MultiLens::createHaloData_buffered(
 #pragma omp parallel for default(shared) private(k)
 #endif
 	for(k=1;k<Nzbins-1;++k){
-		zbins[k] = zbins[k-1] + zsource/(Nzbins-1);
-		Nhalosbin[k] = cosmo->haloNumberInBufferedCone(min_mass,zbins[k],zsource,fieldofview*pow(pi/180,2),field_buffer,mass_func_type,pw_alpha)/aveNhalos;
+		zbins[k] = k * zsource/(Nzbins-1);
+		Nhalosbin[k] = cosmo->haloNumberInBufferedCone(min_mass*mass_scale,zbins[k],zsource,fieldofview*pow(pi/180,2),field_buffer,mass_func_type,pw_alpha)/aveNhalos;
 	}
 	zbins[Nzbins-1] = zsource;
 	Nhalosbin[k] = 0;
@@ -546,28 +557,32 @@ void MultiLens::createHaloData_buffered(
 #ifdef _OPENMP
 #pragma omp parallel for default(shared) private(k)
 #endif
-	for(i=0;i < Nhalos;++i){
-		halo_zs[i] = InterpolateYvec(Nhalosbin,zbins,ran2(seed));
+	for(k=0;k < Nhalos;++k){
+		halo_zs[k] = InterpolateYvec(Nhalosbin,zbins,ran2(seed));
 	}
 	std::sort(halo_zs,halo_zs + Nhalos);
 
 	assert(halo_zs[0] < halo_zs[1]);
 	assert(halo_zs[0] < halo_zs[Nhalos-1]);
 
+	std::cout << halo_zs[Nhalos-1] << std::endl;;
+
 	// fill the log(mass) vector
 	Logm.resize(Nmassbin);
 	Nhalosbin.resize(Nmassbin);
 	fill_linear(Logm,Nmassbin,log10(min_mass*mass_scale),MaxLogm);
 
+	k2 = 0;
 	for(np=0,mass_max=0;np<NZSamples;np++){
 
 		z1 = np*zsource/(NZSamples);
 		z2 = (np+1)*zsource/(NZSamples);
 
 		locateD(halo_zs-1,Nhalos,z1,&k1);
-		if(k1 > Nhalos-1) k1 = Nhalos-1;
+		if(k1 > Nhalos) k1 = Nhalos;
+		assert(k1 == k2);
 		locateD(halo_zs-1,Nhalos,z2,&k2);
-		if(k2 > Nhalos-1) k2 = Nhalos-1;
+		if(k2 > Nhalos) k2 = Nhalos;
 
 		Nhaloestot = cosmo->haloNumberInBufferedCone(pow(10,Logm[0]),z1,z2,fieldofview*pow(pi/180,2),field_buffer,mass_func_type,pw_alpha);
 
@@ -595,6 +610,7 @@ void MultiLens::createHaloData_buffered(
 
 			halo_pos[i][0] = rr*cos(theta);
 			halo_pos[i][1] = rr*sin(theta);
+			halo_pos[i][3] = 0;
 
 			halos[i].mass = pow(10,InterpolateYvec(Nhalosbin,Logm,ran2 (seed)));
 			halo_calc->reset(halos[i].mass,halo_zs[i]);
@@ -633,6 +649,7 @@ void MultiLens::createHaloData_buffered(
 				*/
 	}
 
+	assert(k2 == Nhalos);
 	delete halo_calc;
 
 	std::cout << Nhalos << " halos created." << std::endl
@@ -718,7 +735,8 @@ void MultiLens::buildHaloTrees(
 		else sb /= fieldofview*pow(pi/180.*Dl[j]/(1+plane_redshifts[j]),2);
 		//else sb /= fieldofview*pow(pi/180.*Dl[j],2);
 
-		std::cout << sigma_back << " " << sb << " " << sb/sigma_back << std::endl;
+		std::cout << sigma_back << " " << sb << " " << sb/sigma_back - 1 << std::endl;
+		if(sim_input_flag) sigma_back = sb;
 
 		halo_data[j].reset(new HaloData(&halos[j1],sigma_back,&halo_pos[j1],&halo_zs[j1],&halo_id[j1],j2-j1,Dl[j]/(1+plane_redshifts[j])));
 
@@ -754,6 +772,18 @@ void MultiLens::buildHaloTrees(
 			break;
 		}
 
+		//***** test lines **********
+		double ray[2],alpha[2];
+		float kappa,gamma[2];
+		ray[0] = ray[1] = 0.0;
+		std::cout << "j = " << j << std::endl;
+		halo_tree[j]->force2D_recur(ray,alpha,&kappa,gamma,false);
+		assert(alpha[0] == alpha[0]);
+		assert(alpha[1] == alpha[1]);
+		assert(kappa == kappa);
+		assert(gamma[0] == gamma[0]);
+		assert(gamma[1] == gamma[1]);
+		//**************************
 	}
 
 	cout << "constructed " << Nhalos << " halos" << endl;
@@ -879,6 +909,8 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 	double ra,dec,z,vmax,vdisp,r_halfmass;
 	unsigned long i,j;
 	unsigned long haloid,idd,np;
+
+	double rmax=0,rtmp=0;
 
 	//int index;
 
@@ -1053,6 +1085,7 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 			theta[1] = dec*pi/180.;
 			halo_pos_vec.push_back(theta);
 
+			if(rmax < (rtmp = theta[0]*theta[0]+theta[1]*theta[1])) rmax = rtmp;
 			++j;
 		
 		}
@@ -1065,6 +1098,11 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 
 	/// setting the minimum halo mass in the simulation
 	min_mass = minmass;
+	if(field_buffer > 0.0){
+		std::cout << "Overiding field_buffer to make it 0 because halos are read in." << endl;
+		field_buffer = 0.0;
+	}
+	fieldofview = pi*rmax*pow(180/pi,2);  // Resets field of view to estimate of inputed one
 
 	halos = new HaloStructure[Nhalos];
 	halo_zs = new double[Nhalos];

@@ -189,7 +189,7 @@ void map_images(
 		//find_images_kist(lens,source->getX(),xmin,grid,Nimages,imageinfo,NimageMax,&Nimagepoints
 		//		,0,true,0,false,true);
 		find_images_kist(lens,source->getX(),xmin,grid,Nimages,imageinfo,NimageMax,&Nimagepoints
-				,0,false,0,false,true);
+				,0,false,0,false,kappa_off);
 		if(verbose) std::cout << "number of grid points after find_images_kist: "<< grid->getNumberOfPoints() << std::endl;
 		Nsources = 1;
 		sourceinfo->centroid[0] = source->getX()[0];

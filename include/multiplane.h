@@ -70,6 +70,8 @@ public:
  *	min_mass                    Minimum mass of halo when mass function is used (solar masses).  Not used when catalog is used.
  *	mass_scale                  The conversion between the mass units used and solar masses.  Usually 1.
  *	field_buffer                Field of view buffer in physical, rest frame Mpc.  Default is 0. Set to provide a buffer to the field of view so that halos that are centered outside the conical field of view but overlap it will be included.
+ *	deflection_off              If true turns deflection off for testing purposes, default if false.
+ *  background_off              If true turns deflection caused by background surface density off for testing purposes, default if false
  *
  * </pre>
  */
@@ -133,7 +135,7 @@ public:
 	double charge;
 	/// an array of smart pointers to halo trees on each plane, uses the haloModel in the construction
 	std::auto_ptr<QuadTree> *halo_tree;
-	/// if >= 1, deflection in the rayshooting is wtiched if
+	/// if >= 1, deflection in the rayshooting is switched if
 	bool flag_switch_deflection_off;
 	/// if >= 1, the background is switched of and only the main lens is present
 	bool flag_switch_background_off;
