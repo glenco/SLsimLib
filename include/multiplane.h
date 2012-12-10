@@ -64,6 +64,7 @@ public:
  *	flag_input_lens             1 through
  *	fov                         Field of view for the simulation region (not nessisarily the grided region)
  *	internal_profile            The internal profile type for the halos, 0 or PowerLaw,1 or NFW,2 or PseudoNFW, 3 or NSIE, 4 or NFW_NSIE
+ *  halo_to_galaxy_ratio        If NFW_NSIE is chosen this must be set to the ratio of the mass put in each component.
  *	z_source                    The "source" redshift, but actually the redshift of the last plane in the simulation.  The source can be at higher or lower redshift (see ResetSourcePlane)
  *	input_simulation_file       File that contains the input catalog of halos.  If it is missing a random set of halos will be generated.
  *	mass_func_type              The mass function used to generate random halos 0 through 2 or PS (Press & Schechter), ST (Sheth & Torman) or PowLaw (Power-law).  Not needed if input_simulation_file is provided.
@@ -72,8 +73,8 @@ public:
  *	field_buffer                Field of view buffer in physical, rest frame Mpc.  Default is 0. Set to provide a buffer to the field of view so that halos that are centered outside the conical field of view but overlap it will be included.
  *	deflection_off              If true turns deflection off for testing purposes, default if false.
  *  background_off              If true turns deflection caused by background surface density off for testing purposes, default if false
- *
- * </pre>
+
+  * </pre>
  */
 
 class MultiLens : public Lens{
@@ -172,6 +173,8 @@ private:
 	double pw_beta;
 	/// pseudo NFW internal profile slope, needs to be a whole number and > 0
 	double pnfw_beta;
+	double galaxy_mass_fraction;
+
 
 	/// read particle/halo data in from a file
 	void readInputSimFile(CosmoHndl cosmo);

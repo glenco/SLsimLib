@@ -80,6 +80,8 @@ public:
 	void setX(double my_x,double my_y){galaxies[index]->theta[0] = my_x; galaxies[index]->theta[1] = my_y;}
 	unsigned long getNumberOfGalaxies(){return galaxies.size();}
 
+	void multiplier(double z,double mag_cut,long *seed);
+
 private:
 	Band band;
 	float mag_limit;

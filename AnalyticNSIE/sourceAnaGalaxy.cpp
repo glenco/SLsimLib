@@ -293,6 +293,50 @@ void MultiSourceAnaGalaxy::assignParams(InputParams& params){
 	}
 
 }
+/** \brief Artificially increase the number of sources to increase the incidence of strong lenses.
+ *
+ * Sources above the limiting redshift and below the limiting magnitude are copied and given random
+ * position angles, inclinations and positions within the field of view.  The field of view is determined
+ * directly from the range of already existing source positions.  The field is assumed to be rectangular.
+ */
+void MultiSourceAnaGalaxy::multiplier(
+		double z                /// limiting redshift, only sources above this redshift are copied
+		,double mag_cut         /// limiting magnitude, only sources with magnitudes below this limit will be copied
+		,long *seed    /// random number seed
+		){
+	unsigned long Nold = galaxies.size(),NtoAdd=0;
+	double x1[2],x2[2],theta[2];
+
+	for(unsigned long i=0;i<Nold;++i){
+		if(galaxies[i]->theta[0] < x1[0]) x1[0] = galaxies[i]->theta[0];
+		if(galaxies[i]->theta[0] > x2[0]) x2[0] = galaxies[i]->theta[0];
+		if(galaxies[i]->theta[1] < x1[1]) x1[1] = galaxies[i]->theta[1];
+		if(galaxies[i]->theta[1] > x2[1]) x2[1] = galaxies[i]->theta[1];
+
+		if(galaxies[i]->z > z && galaxies[i]->getMag() < mag_cut) ++NtoAdd;
+	}
+
+	OverGalaxy *newgalaxies = new OverGalaxy[NtoAdd];
+
+	NtoAdd = 0;
+	for(unsigned long i=0;i<Nold;++i){
+		if(galaxies[i]->z > z && galaxies[i]->getMag() < mag_cut){
+			theta[0] = x1[0] + (x2[0] - x1[0])*ran2(seed);
+			theta[1] = x1[1] + (x2[1] - x1[1])*ran2(seed);
+
+			newgalaxies[NtoAdd].setInternals(galaxies[i]->getMag(),galaxies[i]->getBtoT(),galaxies[i]->getReff()
+					,galaxies[i]->getRh(),ran2(seed)*pi,ran2(seed)*2*pi
+					,Nold+NtoAdd,galaxies[i]->z,theta);
+
+			galaxies.push_back(&newgalaxies[NtoAdd]);
+
+			++NtoAdd;
+		}
+	}
+
+
+
+}
 
 /// Print info on current source parameters
 void MultiSourceAnaGalaxy::printSource(){

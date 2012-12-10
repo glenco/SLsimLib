@@ -143,7 +143,6 @@ public:
   float *star_masses;
   double star_fstars;
   double star_theta_force;
-  bool stars_implanted;
   int star_Nregions;
 
  /// Number of regions to be subtracted to compensate for the mass in stars
@@ -176,11 +175,14 @@ public:
   void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off);
   void substract_stars_disks(PosType *ray,PosType *alpha
                   ,float *kappa,float *gamma);
+  void implant_stars(Point *centers,unsigned long Nregions,long *seed);
+  void toggleStars(bool implanted);
+
+private:
+  bool stars_implanted;
 };
 
 double RandomFromTable(double *table,unsigned long Ntable,long *seed);
-void setStars(AnaLens *lens, bool implanted);
-void implant_stars(AnaLens *lens,Point *images,unsigned long Nimages,long *seed);
 
 void alphaNSIE(double *alpha,double *xt,double f,double bc,double theta);
 float kappaNSIE(double *xt,double f,double bc,double theta);

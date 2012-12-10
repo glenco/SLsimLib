@@ -239,6 +239,7 @@ AnaLens::AnaLens(InputParams& params) : Lens(){
 
   assignParams(params);
 
+  stars_implanted = false;
   set = true;
 }
 

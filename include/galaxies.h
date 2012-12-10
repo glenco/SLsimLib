@@ -21,6 +21,12 @@ struct OverGalaxy{
 	double SurfaceBrightness(double *x);
 	void print();
 	double getMag(){return mag;}
+	/// bulge half light radius
+	double getReff(){return Reff;}
+	/// disk scale height
+	double getRh(){return Rh;}
+	double getBtoT(){return  pow(10,-(mag -sbDo +5*log10(Reff)-4.93884)/2.5);}
+
 
 	/// haloID
 	unsigned long haloID;
@@ -33,7 +39,7 @@ struct OverGalaxy{
 private:
 	/// bulge half light radius
 	double Reff;
-	/// disk scale hight
+	/// disk scale height
 	double Rh;
 
 	double cxx,cyy,cxy;

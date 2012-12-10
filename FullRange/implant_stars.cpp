@@ -14,40 +14,40 @@
  * allocates all memory for stars
  */
 
-void implant_stars(AnaLens *lens,Point *centers,unsigned long Nregions,long *seed){
+void AnaLens::implant_stars(Point *centers,unsigned long Nregions,long *seed){
 	PosType r,theta,NstarsPerImage;
 	unsigned long i,j,m,k;
 
-	if(lens->stars_N < 1.0  || lens->star_fstars <= 0) return;
-	if(lens->star_fstars > 1.0){ std::printf("fstars > 1.0\n"); exit(0); }
-	if(!(lens->stars_implanted) ){
+	if(stars_N < 1.0  || star_fstars <= 0) return;
+	if(star_fstars > 1.0){ std::printf("fstars > 1.0\n"); exit(0); }
+	if(!(stars_implanted) ){
 
-		lens->star_masses = new float[lens->stars_N];
-		lens->stars = new unsigned long[lens->stars_N];
-		lens->stars_xp = PosTypeMatrix(lens->stars_N,3);
-		lens->star_theta_force = 1.0e-1;
+		star_masses = new float[stars_N];
+		stars = new unsigned long[stars_N];
+		stars_xp = PosTypeMatrix(stars_N,3);
+		star_theta_force = 1.0e-1;
 
 		assert(Nregions > 0);
-		lens->star_Nregions = Nregions;
-		lens->star_region = new double[Nregions];
-		lens->star_kappa = new double[Nregions];
-		lens->star_xdisk = PosTypeMatrix(Nregions,2);
+		star_Nregions = Nregions;
+		star_region = new double[Nregions];
+		star_kappa = new double[Nregions];
+		star_xdisk = PosTypeMatrix(Nregions,2);
 
 	}else{
 		// free star_tree
-		delete lens->star_tree;
+		delete star_tree;
 	}
 
-	if(lens->stars_N < 1  || lens->star_fstars <= 0){
-		lens->stars_implanted = true;
-		lens->stars_N = 0;
-		lens->star_fstars = 0.0;
+	if(stars_N < 1  || star_fstars <= 0){
+		stars_implanted = true;
+		stars_N = 0;
+		star_fstars = 0.0;
 
 		for(j=0,m=0;j<Nregions;++j){
-			lens->star_region[j] = 0.0;
-			lens->star_kappa[j] = 0.0;
-			lens->star_xdisk[j][0] = centers[j].x[0];
-			lens->star_xdisk[j][1] = centers[j].x[1];
+			star_region[j] = 0.0;
+			star_kappa[j] = 0.0;
+			star_xdisk[j][0] = centers[j].x[0];
+			star_xdisk[j][1] = centers[j].x[1];
 
 		}
 		return;
@@ -57,35 +57,35 @@ void implant_stars(AnaLens *lens,Point *centers,unsigned long Nregions,long *see
 		m = 0;
 		assert( centers[j].kappa > 0.0);
 
-		NstarsPerImage = lens->stars_N/lens->star_Nregions;
+		NstarsPerImage = stars_N/star_Nregions;
 
-		lens->star_region[j] = 1.0/sqrt(pi*lens->star_fstars*centers[j].kappa*lens->Sigma_crit
-				/lens->star_massscale/(float)NstarsPerImage);
+		star_region[j] = 1.0/sqrt(pi*star_fstars*centers[j].kappa*Sigma_crit
+				/star_massscale/(float)NstarsPerImage);
 
 		// cutoff based on comparison of star deflection to smooth component
 		//rcut = 4*sqrt(star_massscale/pi/Sigma_crit
 		//		/( centers[j].kappa+sqrt(pow(centers[j].gamma[0],2)+pow(centers[j].gamma[1],2)) ) );
 
-		lens->star_kappa[j] = lens->star_fstars*centers[j].kappa;
-		lens->star_xdisk[j][0] = centers[j].x[0];
-		lens->star_xdisk[j][1] = centers[j].x[1];
+		star_kappa[j] = star_fstars*centers[j].kappa;
+		star_xdisk[j][0] = centers[j].x[0];
+		star_xdisk[j][1] = centers[j].x[1];
 
 		//printf("kappa = %e  star_region = %e\n",star_kappa[j],star_region[j]);
 
 		for(i=0;i<NstarsPerImage;++i,++m){
 			//m=j*NstarsPerImage+i;
-			r = lens->star_region[j]*sqrt(ran2(seed));
+			r = star_region[j]*sqrt(ran2(seed));
 			theta=2*pi*ran2(seed);
-			lens->stars_xp[m][0] = centers[j].x[0] + r*cos(theta);
-			lens->stars_xp[m][1] = centers[j].x[1] + r*sin(theta);
-			lens->stars_xp[m][2] = 0.0;
-			lens->star_masses[m] = 1.0;
+			stars_xp[m][0] = centers[j].x[0] + r*cos(theta);
+			stars_xp[m][1] = centers[j].x[1] + r*sin(theta);
+			stars_xp[m][2] = 0.0;
+			star_masses[m] = 1.0;
 
 			// check to make see if star is in another centers region
 			//   and remove it
 			for(k=0;k<j;++k){
-				if(  lens->star_region[k] > sqrt(pow(centers[k].x[0]-lens->stars_xp[m][0],2)
-						+ pow(centers[k].x[1]-lens->stars_xp[m][1],2)) ){
+				if(  star_region[k] > sqrt(pow(centers[k].x[0]-stars_xp[m][0],2)
+						+ pow(centers[k].x[1]-stars_xp[m][1],2)) ){
 					--NstarsPerImage;
 					--i;
 					--m;
@@ -96,28 +96,29 @@ void implant_stars(AnaLens *lens,Point *centers,unsigned long Nregions,long *see
 	}
 
 
-	assert(m <= lens->stars_N);
-	lens->stars_N = m;
+	assert(m <= stars_N);
+	stars_N = m;
 
 	//std::printf("last star x = %e %e\n",stars_xp[stars_N-1][0],stars_xp[stars_N-1][1]);
 
 	float dummy=0;
-	//lens->star_tree = new ForceTree(lens->stars_xp,lens->stars_N,lens->star_masses,&dummy
-	//		,false,false,5,2,false,lens->star_theta_force);
+	//star_tree = new ForceTree(stars_xp,stars_N,star_masses,&dummy
+	//		,false,false,5,2,false,star_theta_force);
 
-	lens->star_tree = new QuadTree(lens->stars_xp,lens->star_masses,&dummy,lens->stars_N
-			,false,false,0,4,lens->star_theta_force);
+	star_tree = new QuadTree(stars_xp,star_masses,&dummy,stars_N
+			,false,false,0,4,star_theta_force);
 
 	std::cout<<"projected with 2D tree"<<std::endl;
 
 	// visit every branch to find center of mass and cutoff scale */
-	lens->stars_implanted = true;
+	stars_implanted = true;
 
 	return ;
 }
 
-void setStars(AnaLens *lens, bool implanted){
-	lens->stars_implanted = implanted;
+/// This allows the stars to be turned off after they have been implanted.
+void AnaLens::toggleStars(bool implanted){
+	stars_implanted = implanted;
 }
 
 /// subtracts the mass in stars from the smooth model to compensate

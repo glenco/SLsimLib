@@ -178,15 +178,17 @@ void MultiLens::assignParams(InputParams& params){
 		  cout << "parameter flag_input_lens needs to be set in the parameter file " << params.filename() << endl;
 		  exit(0);
 	}
-	if(!params.get("fov",fieldofview)){
-		  ERROR_MESSAGE();
-		  cout << "parameter fov needs to be set in the parameter file " << params.filename() << endl;
-		  exit(0);
-	}
 	if(!params.get("internal_profile",internal_profile)){
 		  ERROR_MESSAGE();
 		  cout << "parameter internal_profile needs to be set in the parameter file " << params.filename() << endl;
 		  exit(0);
+	}
+	if(internal_profile == NFW_NSIE){
+		if(!params.get("galaxy_mass_fraction",galaxy_mass_fraction)){
+			  ERROR_MESSAGE();
+			  cout << "to construct a NFW + NSIE model the parameter halo_to_galaxy_ratio needs to be set in the parameter file " << params.filename() << endl;
+			  exit(0);
+		}
 	}
 	if(!params.get("z_source",zsource)){
 		  ERROR_MESSAGE();
@@ -195,6 +197,8 @@ void MultiLens::assignParams(InputParams& params){
 	}
 
 	if(!params.get("input_simulation_file",input_sim_file)){
+
+		// No simulation input file provided
 		if(!params.get("mass_func_type",mass_func_type)){
 			  ERROR_MESSAGE();
 			  cout << "parameter mass_func_type needs to be set in the parameter file " << params.filename() << endl;
@@ -205,7 +209,15 @@ void MultiLens::assignParams(InputParams& params){
 			  cout << "parameter min_mass needs to be set in the parameter file " << params.filename() << endl;
 			  exit(0);
 		}
-		//log_min_mass = log10(log_min_mass);
+		if(!params.get("fov",fieldofview)){
+			  ERROR_MESSAGE();
+			  cout << "parameter fov needs to be set in the parameter file " << params.filename() << endl;
+			  exit(0);
+		}
+		if(!params.get("field_buffer",field_buffer)){
+			field_buffer = 0.0;
+			cout << "default field buffer of 0 Mpc is being used." << endl;
+		}
 	}else{
 		min_mass = 0.0;
 	}
@@ -214,10 +226,6 @@ void MultiLens::assignParams(InputParams& params){
 		  ERROR_MESSAGE();
 		  cout << "parameter mass_scale needs to be set in the parameter file " << params.filename() << endl;
 		  exit(0);
-	}
-	if(!params.get("field_buffer",field_buffer)){
-		field_buffer = 0.0;
-		cout << "default field buffer of 0 Mpc is being used." << endl;
 	}
 	// parameters with default values
 	if(!params.get("alpha",pw_alpha))                pw_alpha = 1./6.;
@@ -772,18 +780,6 @@ void MultiLens::buildHaloTrees(
 			break;
 		}
 
-		//***** test lines **********
-		double ray[2],alpha[2];
-		float kappa,gamma[2];
-		ray[0] = ray[1] = 0.0;
-		std::cout << "j = " << j << std::endl;
-		halo_tree[j]->force2D_recur(ray,alpha,&kappa,gamma,false);
-		assert(alpha[0] == alpha[0]);
-		assert(alpha[1] == alpha[1]);
-		assert(kappa == kappa);
-		assert(gamma[0] == gamma[0]);
-		assert(gamma[1] == gamma[1]);
-		//**************************
 	}
 
 	cout << "constructed " << Nhalos << " halos" << endl;
@@ -1028,8 +1024,8 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 				NFW_Utility nfw_util;
 
 				if(internal_profile == NFW_NSIE){
-					halo_vec[j].mass_nsie = halo_vec[j].mass*0.20;   //TODO This is a kluge.
-					halo_vec[j].mass *= 0.8;
+					halo_vec[j].mass_nsie = halo_vec[j].mass*galaxy_mass_fraction;   //TODO This is a kluge. A mass dependent ratio would be better
+					halo_vec[j].mass *= (1-galaxy_mass_fraction);
 					halo_vec[j].rcore_nsie = 0.0;
 				}else{
 					halo_vec[j].mass_nsie = halo_vec[j].mass;
