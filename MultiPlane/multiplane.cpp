@@ -903,6 +903,7 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 	double ra,dec,z,vmax,vdisp,r_halfmass;
 	unsigned long i,j;
 	unsigned long haloid,idd,np;
+	double mo=7.3113e10,M1=2.8575e10,gam1=7.17,gam2=0.201,beta=0.557;
 
 	double rmax=0,rtmp=0;
 
@@ -1022,6 +1023,10 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 				NFW_Utility nfw_util;
 
 				if(internal_profile == NFW_NSIE){
+					// Stellar mass fraction in from Moster et al. 2010
+					galaxy_mass_fraction = mo*pow(halo_vec[j].mass/M1,gam1)
+					  /pow(1+pow(halo_vec[j].mass/M1,beta),(gam1-gam2)/beta)/halo_vec[j].mass;
+
 					halo_vec[j].mass_nsie = halo_vec[j].mass*galaxy_mass_fraction;   //TODO This is a kluge. A mass dependent ratio would be better
 					halo_vec[j].mass *= (1-galaxy_mass_fraction);
 					halo_vec[j].rcore_nsie = 0.0;
@@ -1033,7 +1038,8 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 				}
 
 				halo_vec[j].sigma_nsie = vmax/sqrt(2.0);   //TODO This is a kluge.
-				halo_vec[j].fratio_nsie = (ran2(seed)+1)*0.5;  //TODO This is a kluge.
+				halo_vec[j].sigma_nsie = 126*pow(halo_vec[j].mass_nsie/1.0e10,0.25); // From Tully-Fisher and Bell & de Jong 2001
+//				halo_vec[j].fratio_nsie = (ran2(seed)+1)*0.5;  //TODO This is a kluge.
 				halo_vec[j].pa_nsie = 2*pi*ran2(seed);  //TODO This is a kluge.
 				halo_vec[j].Rsize_nsie = rmaxNSIE(halo_vec[j].sigma_nsie,halo_vec[j].mass_nsie
 						,halo_vec[j].fratio_nsie,halo_vec[j].rcore_nsie);

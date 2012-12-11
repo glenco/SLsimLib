@@ -161,7 +161,6 @@ void _PointsWithin2(TreeHndl tree,double *ray,float *rmax,ListHndl neighborlist
 		   ,unsigned long *filter_place,short compliment);
 void _PointsWithin(TreeHndl tree,double *ray,float *rmax,ListHndl neighborlist
 		,short markpoints);
-void ClearAllMarks(TreeHndl tree);
 void FindAllBoxNeighbors(TreeHndl tree,Point *point,ListHndl neighbors);
 
 // in image_finder.c

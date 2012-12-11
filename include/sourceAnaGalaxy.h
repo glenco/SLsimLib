@@ -21,6 +21,8 @@
  *	input_galaxy_file       file with catalog of galaxies
  *	source_band             band that these sources are to be observed in
  *	source_mag_limit        magnitude limit
+ *	source_sb_limit         Minimum surface brightness limit for truncating sources.  By default it is 30. // TODO Fabio: What units is this?
+ *
  *</pre>
  */
 class MultiSourceAnaGalaxy: public Source{

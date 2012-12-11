@@ -41,6 +41,7 @@ typedef struct Grid{
 	double getInitRange(){return i_tree->top->boundary_p2[0] - i_tree->top->boundary_p1[0];}
 	Point * RefineLeaf(LensHndl lens,Point *point,bool kappa_off);
 	Point * RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa_off);
+	void ClearAllMarks();
 
 private:
 	/// one dimensional size of initial grid

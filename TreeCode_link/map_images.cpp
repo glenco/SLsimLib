@@ -314,7 +314,7 @@ void map_images(
 		center[1] = source->getX()[1];
 		r_source = xmin;
 
-		ClearAllMarks(grid->i_tree);
+		grid->ClearAllMarks();
 	    rtemp = r_source*pow(Ngrid_block,(int)(log(initial_size/sqrt(pi)/fabs(r_source*mumin))/log(Ngrid_block) ) + 1);
 
 		for( ; rtemp >= r_source*Ngrid_block ;rtemp /= Ngrid_block ){
@@ -381,7 +381,7 @@ void map_images(
 	if(verbose) printf("total number of points after telescope: %li\n",grid->getNumberOfPoints());
 
 	// Set all in_image flags to false.  This should not be necessary.  !!!!!!
-	ClearAllMarks(grid->i_tree);
+	grid->ClearAllMarks();
 
 	//freeKist(subkist);
 

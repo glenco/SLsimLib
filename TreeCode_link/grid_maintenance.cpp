@@ -466,3 +466,15 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa
 	return i_points;
 }
 
+/// Rest all in_image markers to False.
+void Grid::ClearAllMarks(){
+	unsigned long i;
+
+	MoveToTopList(i_tree->pointlist);
+	for(i=0;i<i_tree->pointlist->Npoints;++i){
+		i_tree->pointlist->current->in_image=FALSE;
+		i_tree->pointlist->current->image->in_image=FALSE;
+		MoveDownList(i_tree->pointlist);
+	}
+}
+
