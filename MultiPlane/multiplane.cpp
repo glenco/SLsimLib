@@ -1024,7 +1024,7 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 
 				if(internal_profile == NFW_NSIE){
 					// Stellar mass fraction in from Moster et al. 2010
-					galaxy_mass_fraction = mo*pow(halo_vec[j].mass/M1,gam1)
+					galaxy_mass_fraction = 2*mo*pow(halo_vec[j].mass/M1,gam1)
 					  /pow(1+pow(halo_vec[j].mass/M1,beta),(gam1-gam2)/beta)/halo_vec[j].mass;
 
 					halo_vec[j].mass_nsie = halo_vec[j].mass*galaxy_mass_fraction;   //TODO This is a kluge. A mass dependent ratio would be better
