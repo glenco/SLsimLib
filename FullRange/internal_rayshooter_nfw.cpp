@@ -197,7 +197,6 @@ void *compute_rays_parallel_nfw(void *_p){
     				&(p->i_points[i].kappa),p->i_points[i].gamma);
 
     		// do stars with tree code
-    		//star_tree->force2D(p->i_points[i].x,alpha,&kappa,gamma,true);
     		lens->star_tree->force2D_recur(p->i_points[i].x,alpha,&kappa,gamma,true);
 
     		p->i_points[i].image->x[0] += convert_factor*alpha[0];
@@ -306,13 +305,9 @@ void AnaLens::rayshooterInternal(double *ray, double *alpha, float *gamma, float
      // add stars for microlensing
      if(stars_N > 0 && stars_implanted){
 
-    	 std::cout << "MAke sure the units here are OK (the substract disk) , then delete this line" << std::endl;
-    	 exit(1);
-
     	 substract_stars_disks(ray,alpha,kappa,gamma);
 
     	 // do stars with tree code
-    	 //star_tree->force2D(ray,alpha_tmp,&tmp,gamma_tmp,true);
     	 star_tree->force2D_recur(ray,alpha_tmp,&tmp,gamma_tmp,true);
 
     	 alpha[0] += convert_factor*alpha_tmp[0];
