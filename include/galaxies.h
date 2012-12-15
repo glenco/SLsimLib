@@ -25,7 +25,7 @@ struct OverGalaxy{
 	double getReff(){return Reff;}
 	/// disk scale height
 	double getRh(){return Rh;}
-	double getBtoT(){return  pow(10,-(mag -sbDo +5*log10(Reff)-4.93884)/2.5);}
+	double getBtoT(){return  Reff*Reff*sbSo*pow(10,mag/2.5)/94.484376;}
 
 
 	/// haloID
@@ -43,9 +43,7 @@ private:
 	double Rh;
 
 	double cxx,cyy,cxy;
-	/// internal valuable mag-2.5*log10(1-BtoT)+5*log10(Rh)+1.9955
 	double sbDo;
-	/// internal valuable mag-2.5*log10(BtoT)+5*log10(Reff)-4.93884
 	double sbSo;
 	double mag;
 

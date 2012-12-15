@@ -47,7 +47,6 @@ void OverGalaxy::setInternals(double my_mag,double BtoT,double my_Reff,double my
 	if(Reff > 0.0) sbSo = pow(10,-my_mag/2.5)*94.484376*BtoT/pow(Reff,2);
 	else sbSo = 0.0;
 
-
 	z = my_z;
 	if(my_theta != NULL){
 		theta[0] = my_theta[0];
