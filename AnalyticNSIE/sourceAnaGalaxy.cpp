@@ -21,6 +21,7 @@ MultiSourceAnaGalaxy::MultiSourceAnaGalaxy(
 	unsigned long dummy;
 	source_sb_type = MultiAnaSource;
 	mem_allocated = true;
+	sb_limit = 30.;
 	galaxies.push_back(new OverGalaxy(mag,BtoT,Reff,Rh,PA,inclination,dummy,my_z,my_theta));
 }
 /** Constructor for passing in a pointer to the galaxy model or a list of galaxies instead of constructing it internally.
@@ -32,6 +33,7 @@ MultiSourceAnaGalaxy::MultiSourceAnaGalaxy(
 
 	source_sb_type = MultiAnaSource;
 	mem_allocated = false;
+	sb_limit = 30.;
 	galaxies.push_back(my_galaxy);
 }
 /// Constructor for importing from data file.

@@ -82,6 +82,8 @@ public:
 
 	void multiplier(double z,double mag_cut,long *seed);
 
+	void setSBlimit(float limit) {sb_limit = limit;}
+
 private:
 	Band band;
 	float mag_limit;
