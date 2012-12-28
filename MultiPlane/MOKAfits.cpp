@@ -113,6 +113,7 @@ void writeImage(std::string filename
 		fout.reset(new FITS(filename,FLOAT_IMG,naxis,naxes));
 	}
 	catch(FITS::CantCreate){
+		ERROR_MESSAGE();
 		exit(1);
 	}
 
@@ -171,6 +172,7 @@ void writeImage(std::string filename
 		fout.reset(new FITS(filename,FLOAT_IMG,naxis,naxes));
 	}
 	catch(FITS::CantCreate){
+		ERROR_MESSAGE();
 		exit(1);
 	}
 

@@ -27,7 +27,6 @@ struct OverGalaxy{
 	double getRh(){return Rh;}
 	double getBtoT(){return  Reff*Reff*sbSo*pow(10,mag/2.5)/94.484376;}
 
-
 	/// haloID
 	unsigned long haloID;
 	/// redshift
