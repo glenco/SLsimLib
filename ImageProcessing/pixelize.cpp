@@ -235,6 +235,7 @@ void PixelMap::printFITS(std::string filename){
 			fout.reset(new CCfits::FITS(filename,FLOAT_IMG,naxis,naxes));
 		}
 		catch(CCfits::FITS::CantCreate){
+			ERROR_MESSAGE();
 			exit(1);
 		}
 

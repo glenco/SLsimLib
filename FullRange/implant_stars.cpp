@@ -116,11 +116,11 @@ void AnaLens::implant_stars(Point *centers,unsigned long Nregions,long *seed){
 	return ;
 }
 
-/// This allows the stars to be turned off after they have been implanted.
-void AnaLens::toggleStars(bool implanted){
+// This allows the stars to be turned off after they have been implanted.
+/*void AnaLens::toggleStars(bool implanted){
 	stars_implanted = implanted;
 }
-
+*/
 /// subtracts the mass in stars from the smooth model to compensate
 /// for the mass of the stars the lensing quantities are all updated not replaced
 void AnaLens::substract_stars_disks(double *ray,double *alpha

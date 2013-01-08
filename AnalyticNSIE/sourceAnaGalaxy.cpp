@@ -304,6 +304,7 @@ void MultiSourceAnaGalaxy::assignParams(InputParams& params){
 void MultiSourceAnaGalaxy::multiplier(
 		double z                /// limiting redshift, only sources above this redshift are copied
 		,double mag_cut         /// limiting magnitude, only sources with magnitudes below this limit will be copied
+		,int multiplicity       /// the number of times each of these sources should be multiplied
 		,long *seed    /// random number seed
 		){
 	unsigned long Nold = galaxies.size(),NtoAdd=0;
@@ -318,25 +319,26 @@ void MultiSourceAnaGalaxy::multiplier(
 		if(galaxies[i]->z > z && galaxies[i]->getMag() < mag_cut) ++NtoAdd;
 	}
 
-	OverGalaxy *newgalaxies = new OverGalaxy[NtoAdd];
+	OverGalaxy *newgalaxies = new OverGalaxy[NtoAdd*multiplicity];
 
 	NtoAdd = 0;
 	for(unsigned long i=0;i<Nold;++i){
 		if(galaxies[i]->z > z && galaxies[i]->getMag() < mag_cut){
-			theta[0] = x1[0] + (x2[0] - x1[0])*ran2(seed);
-			theta[1] = x1[1] + (x2[1] - x1[1])*ran2(seed);
 
-			newgalaxies[NtoAdd].setInternals(galaxies[i]->getMag(),galaxies[i]->getBtoT(),galaxies[i]->getReff()
+			for(int j=0;j<multiplicity;++j){
+				theta[0] = x1[0] + (x2[0] - x1[0])*ran2(seed);
+				theta[1] = x1[1] + (x2[1] - x1[1])*ran2(seed);
+
+				newgalaxies[NtoAdd].setInternals(galaxies[i]->getMag(),galaxies[i]->getBtoT(),galaxies[i]->getReff()
 					,galaxies[i]->getRh(),ran2(seed)*pi,ran2(seed)*2*pi
 					,Nold+NtoAdd,galaxies[i]->z,theta);
 
-			galaxies.push_back(&newgalaxies[NtoAdd]);
+				galaxies.push_back(&newgalaxies[NtoAdd]);
 
-			++NtoAdd;
+				++NtoAdd;
+			}
 		}
 	}
-
-
 
 }
 

@@ -69,14 +69,9 @@ public:
   double host_ro;
   double host_sigma;
 
-  /// redshift of lens
-  double zlens;
-  // private derived quantities
-  /// private: conversion factor between Mpc on the lens plane and arcseconds
-  double MpcToAsec;
-  /// private: critical surface density
+  /// critical surface density
   double Sigma_crit;
-  /// private: the time delay scale in days/Mpc^2
+  /// the time delay scale in days/Mpc^2
   double to;
 
   /// Angular size distance to lens plane
@@ -97,7 +92,7 @@ public:
   // private derived quantities
 
   /// substructures
-  bool substruct_implanted;
+  bool AreSubStructImaplated(){return substruct_implanted;}
   double sub_sigmaScale;
   double sub_Ndensity;
   /// actual number of substructures
@@ -132,7 +127,7 @@ public:
     		,double *center,double Sigma_crit);
 
   /// stars
-
+  bool AreStarsImaplated(){return stars_implanted;}
   int stars_N;
   IndexType *stars;
   PosType **stars_xp;
@@ -145,11 +140,6 @@ public:
   double star_theta_force;
   int star_Nregions;
 
- /// Number of regions to be subtracted to compensate for the mass in stars
-
-  double *star_region;
-  double *star_kappa;
-  double **star_xdisk;
 
   double getZlens();
   void setZlens(double zlens);
@@ -176,9 +166,23 @@ public:
   void substract_stars_disks(PosType *ray,PosType *alpha
                   ,float *kappa,float *gamma);
   void implant_stars(Point *centers,unsigned long Nregions,long *seed);
-  void toggleStars(bool implanted);
+  //void toggleStars(bool implanted);
+
+private:
+  bool substruct_implanted;
 
   bool stars_implanted;
+  /// Number of regions to be subtracted to compensate for the mass in stars
+
+  double *star_region;
+  double *star_kappa;
+  double **star_xdisk;
+
+  /// redshift of lens
+   double zlens;
+   // private derived quantities
+   /// private: conversion factor between Mpc on the lens plane and arcseconds
+   double MpcToAsec;
 };
 
 double RandomFromTable(double *table,unsigned long Ntable,long *seed);

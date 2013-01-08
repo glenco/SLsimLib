@@ -160,7 +160,7 @@ void *compute_rays_parallel_nfw(void *_p){
     	gamma[0]=gamma[1]=gamma[2]=0.0;
 
     	// add substructure
-    	if(lens->substruct_implanted){
+    	if(lens->AreSubStructImaplated()){
     		for(j=0;j<lens->sub_N;++j){
     			lens->sub_alpha_func(alpha,p->i_points[i].x,lens->sub_Rcut[j],lens->sub_mass[j],lens->sub_beta,lens->sub_x[j],lens->Sigma_crit);
 
@@ -191,7 +191,7 @@ void *compute_rays_parallel_nfw(void *_p){
     	alpha[0]=alpha[1]=0.0;
     	gamma[0]=gamma[1]=gamma[2]=0.0;
 
-    	if(lens->stars_N > 0 && lens->stars_implanted){
+    	if(lens->stars_N > 0 && lens->AreStarsImaplated()){
     		// add stars for microlensing
     		lens->substract_stars_disks(p->i_points[i].x,p->i_points[i].image->x,
     				&(p->i_points[i].kappa),p->i_points[i].gamma);

@@ -19,8 +19,11 @@
  * Input Parameters:
  *
  *	input_galaxy_file       file with catalog of galaxies
- *	source_band             band that these sources are to be observed in
+ *	source_band             Band that these sources are to be observed in. Must be one of the following SDSS_U,SDSS_G,SDSS_R,SDSS_I,SDSS_Z,J,H,Ks,i1, or i2
+ *	source_band
  *	source_mag_limit        magnitude limit
+ *	source_sb_limit         Minimum surface brightness limit for truncating sources.  By default it is 30. // TODO Fabio: What units is this?
+ *
  *</pre>
  */
 class MultiSourceAnaGalaxy: public Source{
@@ -80,7 +83,7 @@ public:
 	void setX(double my_x,double my_y){galaxies[index]->theta[0] = my_x; galaxies[index]->theta[1] = my_y;}
 	unsigned long getNumberOfGalaxies(){return galaxies.size();}
 
-	void multiplier(double z,double mag_cut,long *seed);
+	void multiplier(double z,double mag_cut,int Multiplicity,long *seed);
 
 	void setSBlimit(float limit) {sb_limit = limit;}
 
