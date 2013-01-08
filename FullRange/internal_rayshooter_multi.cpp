@@ -229,10 +229,10 @@ void *compute_rays_parallel(void *_p){
 	
     	  // still not positive about sign convention
     	  kappa_plus = aa*p->i_points[i].kappa - bb*kappa_minus
-				- cc*(kappa*p->i_points[i].kappa - gamma[0]*p->i_points[i].gamma[0] - gamma[1]*p->i_points[i].gamma[1]);
+				- cc*(kappa*p->i_points[i].kappa + gamma[0]*p->i_points[i].gamma[0] + gamma[1]*p->i_points[i].gamma[1]);
 	
     	  gamma_plus[0] = aa*p->i_points[i].gamma[0] - bb*gamma_minus[0]
-    	          + cc*(gamma[0]*p->i_points[i].kappa - kappa*p->i_points[i].gamma[0] + gamma[1]*p->i_points[i].gamma[2]);
+    	          + cc*(-gamma[0]*p->i_points[i].kappa - kappa*p->i_points[i].gamma[0] - gamma[1]*p->i_points[i].gamma[2]);
 	
     	  gamma_plus[1] = aa*p->i_points[i].gamma[1] - bb*gamma_minus[1]
     	          + cc*(gamma[1]*p->i_points[i].kappa - kappa*p->i_points[i].gamma[1] - gamma[0]*p->i_points[i].gamma[2]);
