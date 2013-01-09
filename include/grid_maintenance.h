@@ -50,6 +50,14 @@ private:
 	int Ngrid_block;
 	bool initialized;
 	KistHndl trashkist;
+
+	double maglimit;
+	KistHndl neighbors;
+	bool find_mag_matrix(double *a,Point *p0,Point *p1,Point *p2);
+
+	bool uniform_mag_from_deflect(double *a,Point *point);
+	bool uniform_mag_from_shooter(double *a,Point *point);
+
 };
 
 typedef struct Grid* GridHndl;
