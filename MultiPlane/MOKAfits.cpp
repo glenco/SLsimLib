@@ -113,6 +113,7 @@ void writeImage(std::string filename
 		fout.reset(new FITS(filename,FLOAT_IMG,naxis,naxes));
 	}
 	catch(FITS::CantCreate){
+		std::cout << "Unable to open fits file " << filename << std::endl;
 		ERROR_MESSAGE();
 		exit(1);
 	}
@@ -172,6 +173,7 @@ void writeImage(std::string filename
 		fout.reset(new FITS(filename,FLOAT_IMG,naxis,naxes));
 	}
 	catch(FITS::CantCreate){
+		std::cout << "Unable to open fits file " << filename << std::endl;
 		ERROR_MESSAGE();
 		exit(1);
 	}
