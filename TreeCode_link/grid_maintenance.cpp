@@ -593,12 +593,12 @@ bool Grid::uniform_mag_from_deflect(
     point2 = neighbors->getCurrent();
     neighbors->Down();
 	while(!find_mag_matrix(a,point,point2,neighbors->getCurrent())) neighbors->Down();
-	std::cout << "deflection neighbors a" << std::endl;
+	//std::cout << "deflection neighbors a" << std::endl;
 	while(neighbors->Down()){
 		if(find_mag_matrix(ao,point,point2,neighbors->getCurrent())){
 			if( !( (fabs(a[0]-ao[0]) < maglimit)*(fabs(a[1]-ao[1]) < maglimit)
     				*(fabs(a[2]-ao[2]) < maglimit)*(fabs(a[3]-ao[3]) < maglimit) )) return false;
-			std::cout  << ao[0] << " " << ao[1] << " " << ao[2] << " " << ao[3] << std::endl;
+			//std::cout  << ao[0] << " " << ao[1] << " " << ao[2] << " " << ao[3] << std::endl;
 
 			a[0] = (count*a[0] + ao[0])/(count+1);
 			a[1] = (count*a[1] + ao[1])/(count+1);
