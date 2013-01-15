@@ -139,6 +139,8 @@ public:
   double star_fstars;
   double star_theta_force;
   int star_Nregions;
+  double *star_region;
+
 
 
   double getZlens();
@@ -174,7 +176,6 @@ private:
   bool stars_implanted;
   /// Number of regions to be subtracted to compensate for the mass in stars
 
-  double *star_region;
   double *star_kappa;
   double **star_xdisk;
 
