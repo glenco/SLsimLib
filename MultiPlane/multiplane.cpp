@@ -616,7 +616,7 @@ void MultiLens::createHaloData_buffered(
 
 			halo_pos[i][0] = rr*cos(theta);
 			halo_pos[i][1] = rr*sin(theta);
-			halo_pos[i][3] = 0;
+			halo_pos[i][2] = 0;
 
 			halos[i].mass = pow(10,InterpolateYvec(Nhalosbin,Logm,ran2 (seed)));
 			halo_calc->reset(halos[i].mass,halo_zs[i]);
@@ -663,6 +663,57 @@ void MultiLens::createHaloData_buffered(
 	    << " at z = " << z_max << std::endl;
 
 	std::cout << "leaving MultiLens::createHaloData_buffered()" << std::endl;
+}
+
+/*
+ * A test function that creates two halos, at random positions on the sky, but in
+ * such a way that they will be onto two separate lensing planes.
+ * This is used to test the convergence of the ray shooter.
+ *
+ */
+void MultiLens::createHaloData_test(
+		CosmoHndl cosmo     /// cosmology
+		,long *seed
+	){
+
+	HALO *halo_calc = new HALO(cosmo,min_mass*mass_scale,0.0);
+
+	Nhalos = 2;
+
+	// allocate memory for halos
+	halo_zs = new double[Nhalos];
+	halos = new HaloStructure[Nhalos];
+	halo_id = new unsigned long[Nhalos];
+	halo_pos = PosTypeMatrix(Nhalos,3);
+
+	for(int i=0;i<Nhalos;i++){
+		double maxr = pi*sqrt(fieldofview/pi)/180.; // fov is a circle
+		double rr = maxr*sqrt(ran2(seed));
+
+		assert(rr == rr);
+
+		double theta = 2*pi*ran2(seed);
+
+		halo_pos[i][0] = rr*cos(theta);
+		halo_pos[i][1] = rr*sin(theta);
+		halo_pos[i][2] = 0;
+
+		halo_zs[i] = ran2(seed)*(1/(double)Nhalos*zsource)+i/(double)Nhalos*zsource;
+		halos[i].mass = ran2(seed)*1e12;
+		halo_calc->reset(halos[i].mass,halo_zs[i]);
+		halos[i].mass /= mass_scale;
+		halos[i].Rmax = halo_calc->getRvir();
+		halos[i].rscale = halos[i].Rmax/halo_calc->getConcentration(0);
+
+		std::cout<< "halo z " << halo_zs[i] << std::endl;
+		std::cout<< "halo pos " << halo_pos[i][0] << " " << halo_pos[i][1] << std::endl;
+		std::cout<< "halo mass " << halos[i].mass*mass_scale << std::endl;
+		std::cout<< "halo Rmax and rscale " << halos[i].Rmax << " " << halos[i].rscale << std::endl;
+	}
+
+	delete halo_calc;
+
+	std::cout << "leaving MultiLens::createHaloData_test()" << std::endl;
 }
 
 /**
@@ -783,6 +834,151 @@ void MultiLens::buildHaloTrees(
 	cout << "constructed " << Nhalos << " halos" << endl;
 }
 
+/*
+ * Builds the halo trees for a test without an AnaLens and
+ * with just two lensing planes, used to test the convergence
+ * of the ray-shooter.
+ */
+void MultiLens::buildHaloTrees_test(
+		CosmoHndl cosmo /// the cosmology
+		){
+	int j, Ntot;
+	unsigned long ind;
+	double z1, z2;
+	unsigned long j1,j2;
+
+	std::cout << "MultiLens::buildHaloTrees zsource = " << zsource << std::endl;
+
+	assert(plane_redshifts[Nplanes-1] == zsource);
+
+	for(j=0,Ntot=0;j<Nplanes-1;j++){
+		/*
+		 * Setting the redshift range
+		 * If there is a plane with an input lens on it, it is skipped over
+		 * since it will not contain any halos
+		 */
+		if(j == 0) z1 = 0.0;
+		else{
+			locateD(coorDist_table-1,NTABLE,(Dl[j]-0.5*dDl[j]),&ind);
+			z1 = redshift_table[ind];
+		}
+
+		if(j == Nplanes-2) z2 = zsource;
+		else{
+			locateD(coorDist_table-1,NTABLE,(Dl[j] + 0.5*dDl[j+1]),&ind);
+			z2 = redshift_table[ind];
+		}
+
+		/// Find which halos are in redshift range
+		locateD(halo_zs-1,Nhalos,z1,&j1);
+		locateD(halo_zs-1,Nhalos,z2,&j2);
+
+		/*
+		 * finding the average mass surface density in halos
+		 */
+
+		// TODO Ben: test this
+		double sigma_back = 0.0;
+
+		halo_data[j].reset(new HaloData(&halos[j1],sigma_back,&halo_pos[j1],&halo_zs[j1],&halo_id[j1],j2-j1,Dl[j]/(1+plane_redshifts[j])));
+
+		/// Use other constructor to create halo data
+		std::cout << "  Building tree on plane " << j << " number of halos: " << halo_data[j]->Nhalos << std::endl;
+
+		switch(internal_profile){
+		case PowerLaw:
+			halo_tree[j].reset(new QuadTreePowerLaw(pw_beta,&halo_data[j]->pos[0],halo_data[j]->Nhalos
+							,halo_data[j]->halos,halo_data[j]->sigma_background));
+			break;
+		case NFW:
+			halo_tree[j].reset(new QuadTreeNFW(&halo_data[j]->pos[0],halo_data[j]->Nhalos
+							,halo_data[j]->halos,halo_data[j]->sigma_background));
+			break;
+		case PseudoNFW:
+			halo_tree[j].reset(new QuadTreePseudoNFW(pnfw_beta,&halo_data[j]->pos[0],halo_data[j]->Nhalos
+							,halo_data[j]->halos,halo_data[j]->sigma_background));
+			break;
+		case NSIE:
+			halo_tree[j].reset(new QuadTreeNSIE(&halo_data[j]->pos[0],halo_data[j]->Nhalos
+							,halo_data[j]->halos,halo_data[j]->sigma_background));
+			break;
+		case NFW_NSIE:
+			halo_tree[j].reset(new QuadTreeNFW_NSIE(&halo_data[j]->pos[0],halo_data[j]->Nhalos
+							,halo_data[j]->halos,halo_data[j]->sigma_background));
+			break;
+		default:
+			ERROR_MESSAGE();
+			cout << "There is no such case for the halo trees. Please choose from:" << endl;
+			cout << "0: PowerLaw, 1: NFW, 2: PseudoNFW, 3: NSIE, 4: NFW_NSIE" << endl;
+			exit(1);
+			break;
+		}
+
+	}
+
+	cout << "constructed " << Nhalos << " halos" << endl;
+}
+
+/*
+ * Calculates the relative error of the rayshooter to the
+ * analytical solution for a system with two lensing planes.
+ * The error values are saved instead of the real physical values.
+ */
+void MultiLens::calc_error_test(
+		GridHndl grid
+		){
+	double alpha0[2];
+	float kappa0,gamma0[3];
+	double alpha1[2];
+	float kappa1,gamma1[3];
+
+	double aa = charge*dDl[2]*Dl[1]/Dl[2];
+	double bb = charge*(Dl[2]-Dl[0])*Dl[0]/Dl[2];
+	double cc = charge*charge*dDl[2]*dDl[1]*Dl[0]/Dl[2];
+
+	double xx[2];
+
+	std::cout << aa << " " << bb << " " << cc << std::endl;
+
+	MoveToTopList(grid->i_tree->pointlist);
+	do{
+		halo_tree[0]->set_force_theta(0.0);
+		halo_tree[1]->set_force_theta(0.0);
+
+		xx[0] = grid->i_tree->pointlist->current->x[0]*Dl[0]/(1+plane_redshifts[0]);
+		xx[1] = grid->i_tree->pointlist->current->x[1]*Dl[0]/(1+plane_redshifts[0]);
+
+		halo_tree[0]->force2D_recur(xx,alpha0,&kappa0,gamma0,false);
+		double fac = 1/(1+plane_redshifts[0]);
+		kappa0*=fac;
+		gamma0[0]*=fac;
+		gamma0[1]*=fac;
+		gamma0[2]*=fac;
+
+		xx[0] = grid->i_tree->pointlist->current->x[0]*Dl[1]/(1+plane_redshifts[1]);
+		xx[1] = grid->i_tree->pointlist->current->x[1]*Dl[1]/(1+plane_redshifts[1]);
+
+		halo_tree[1]->force2D_recur(xx,alpha1,&kappa1,gamma1,false);
+		fac = 1/(1+plane_redshifts[1]);
+		kappa1*=fac;
+		gamma1[0]*=fac;
+		gamma1[1]*=fac;
+		gamma1[2]*=fac;
+
+		grid->i_tree->pointlist->current->kappa =
+				(aa*kappa1+bb*kappa0-cc*(kappa0*kappa1+gamma0[0]*gamma1[0]+gamma0[1]*gamma1[1]))/grid->i_tree->pointlist->current->kappa - 1.0;
+
+		grid->i_tree->pointlist->current->gamma[0] =
+				(-aa*gamma1[0]-bb*gamma0[0]+cc*(kappa0*gamma1[0]+gamma0[0]*kappa1))/grid->i_tree->pointlist->current->gamma[0] - 1.0;
+
+		grid->i_tree->pointlist->current->gamma[1] =
+				(-aa*gamma1[1]-bb*gamma0[1]+cc*(kappa0*gamma1[1]+gamma0[1]*kappa1))/grid->i_tree->pointlist->current->gamma[1] - 1.0;
+
+		grid->i_tree->pointlist->current->gamma[2] =
+				cc*(-gamma0[0]*gamma1[1]+gamma0[1]*gamma1[0])/grid->i_tree->pointlist->current->gamma[2] - 1.0;
+
+	}while(MoveDownList(grid->i_tree->pointlist));
+}
 /**
  * Set the coordinate distances of the planes by dividing the coordinate distance space into equal intervals
  * and then plugging the analytic input plane in between.
@@ -1155,10 +1351,12 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 	else{
 		// TODO Ben swap function here or provide toggle
 		if(field_buffer > 0.0) createHaloData_buffered(cosmo,seed);
+		//if(field_buffer > 0.0) createHaloData_test(cosmo,seed);
 		else createHaloData(cosmo,seed);
 	}
 
 	buildHaloTrees(cosmo);
+	//buildHaloTrees_test(cosmo);
 	std:: cout << " done " << std:: endl;
 }
 

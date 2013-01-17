@@ -89,9 +89,13 @@ public:
 
 	void resetNplanes(CosmoHndl cosmo, int Np);
 	
+	void calc_error_test(GridHndl grid);
+
 	void buildHaloTrees(CosmoHndl cosmo);
+	void buildHaloTrees_test(CosmoHndl cosmo);
 	void createHaloData(CosmoHndl cosmo,long *seed);
 	void createHaloData_buffered(CosmoHndl cosmo,long *seed);
+	void createHaloData_test(CosmoHndl cosmo,long *seed);
 	void RandomizeHost(long *seed,bool tables);
 	void RandomizeSigma(long *seed,bool tables);
 	double getZlens();
