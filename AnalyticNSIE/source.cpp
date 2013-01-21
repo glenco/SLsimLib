@@ -196,3 +196,105 @@ double SourceBLRSph2::SurfaceBrightness(double *y){
 //  return;
 //}
 
+PixelledSource::PixelledSource(double my_z, int my_Npixels, double my_range, double* my_center, double* arr_val)
+	:Source(), range(my_range), Npixels (my_Npixels){
+	zsource = my_z;
+	resolution = range/Npixels;
+	values.resize(Npixels*Npixels);
+	for (int i = 0; i < Npixels*Npixels; i++)
+			values[i] = arr_val[i];
+	source_r =  range/sqrt(2.);
+	source_x[0] = my_center[0];
+	source_x[1] = my_center[1];
+	calcTotalFlux();
+	calcCentroid();
+	calcEll();
+	calcSize();
+}
+
+PixelledSource::~PixelledSource(){
+}
+
+void PixelledSource::calcCentroid(){
+	double x_sum = 0;
+	double y_sum = 0;
+	double sum = 0;
+	double x[2];
+	for (unsigned long i = 0; i < Npixels*Npixels; i++)
+	{
+		PositionFromIndex(i,x,Npixels,range,source_x);
+		x_sum += x[0]*values[i];
+		y_sum += x[1]*values[i];
+		sum += values[i];
+	}
+	std::cout << x_sum << "  " << y_sum << "  " << sum << std::endl;
+	centroid[0] = x_sum/sum;
+	centroid[1] = y_sum/sum;
+}
+
+void PixelledSource::calcEll(){
+	double quad[2][2];
+	double sum = 0;
+	for (int j = 0; j < 2; j++)
+	{
+		for (int k = 0; k < 2; k++)
+		{
+			quad[j][k] = 0.;
+		}
+	}
+
+	double x[2];
+	for (unsigned long i = 0; i < Npixels*Npixels; i++)
+	{
+		PositionFromIndex(i,x,Npixels,range,source_x);
+		for (int j = 0; j < 2; j++)
+		{
+			for (int k = 0; k < 2; k++)
+			{
+				quad[j][k] += values[i]*(x[j]-centroid[j])*(x[k]-centroid[k]);
+			}
+		}
+	}
+
+	ell[0] = (quad[0][0] - quad[1][1])/(quad[0][0] + quad[1][1]);
+	ell[1] = 2*quad[0][1]/(quad[0][0] + quad[1][1]);
+}
+
+void PixelledSource::calcSize(){
+	double r_sum = 0.;
+	double sum = 0.;
+	double rad;
+	double x[2];
+
+	for (unsigned long i = 0; i < Npixels*Npixels; i++)
+	{
+		PositionFromIndex(i,x,Npixels,range,source_x);
+		rad = sqrt((x[0]-centroid[0])*(x[0]-centroid[0])+(x[1]-centroid[1])*(x[1]-centroid[1]));
+		r_sum += rad*values[i];
+		sum += values[i];
+	}
+	size = r_sum/sum;
+}
+
+double PixelledSource::SurfaceBrightness(double *y){
+	int ix = IndexFromPosition(y[0],Npixels,range,source_x[0]);
+	int iy = IndexFromPosition(y[1],Npixels,range,source_x[1]);
+	if (ix>-1 && iy>-1)
+	{
+//		std::cout << ix << "  " << iy << "  " << iy*Npixels+ix << "  " << values[iy*Npixels+ix] << std::endl;
+		return values[iy*Npixels+ix];
+	}
+	else
+		return 0.;
+}
+
+void PixelledSource::calcTotalFlux(){
+	double val_tot = 0.;
+	for (int i = 0; i < Npixels*Npixels; i++)
+		val_tot += values[i];
+	flux = val_tot*resolution*resolution;
+}
+
+void PixelledSource::printSource(){}
+void PixelledSource::assignParams(InputParams& params){}
+

@@ -34,6 +34,8 @@ public:
 	void printFITS(std::string filename);
 	void smooth(double *map_out,double sigma);
 
+//	inline double getValue(unsigned long i) {return map[i];}
+
 private:
 	std::valarray<float> map;
 	unsigned long Npixels;
