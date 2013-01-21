@@ -46,6 +46,11 @@ void AnaLens::assignParams(InputParams& params){
     	if(!params.get("R_submax",sub_Rmax)) error_message1("R_submax",params.filename());
     	if(!params.get("mass_max",sub_Mmax)) error_message1("mass_max",params.filename());
     	if(!params.get("mass_min",sub_Mmin)) error_message1("mass_min",params.filename());
+    	if(sub_Mmin < 1.0e3){
+    		ERROR_MESSAGE();
+    		std::cout << "Are you sure the minimum halo mass should be " << sub_Mmin << " Msun?" << std::endl;
+    		exit(1);
+    	}
     	if(!params.get("sub_type",sub_type)) error_message1("sub_type",params.filename());
     }
 	  // Stars parameters
