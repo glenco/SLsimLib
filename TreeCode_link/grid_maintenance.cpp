@@ -40,6 +40,8 @@ Grid::Grid(
 	s_tree = BuildTree(s_points,Ngrid_init*Ngrid_init);  // make tree on source plane a area splitting tree
 
 	trashkist = new Kist;
+	neighbors = new Kist;
+	maglimit = 1.0e-4;
 }
 
 /*
@@ -70,6 +72,7 @@ Grid::~Grid(){
 	freeTree(s_tree);
 	
 	delete trashkist;
+	delete neighbors;
 	
 	return;
 }
@@ -381,6 +384,66 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa
 	assert(Nadded == (Ngrid_block*Ngrid_block-1)*Nleaves-Nout_tot);
 
 	s_points = LinkToSourcePoints(i_points,Nadded);
+
+	// Here the points that are in uniform magnification regions are calculated by interpolation and marked with in_image = MAYBE
+	{
+		double aa[4],dx[2];
+		/*double a1[4],ss;
+		bool tmp;
+		Point *i_point = NewPointArray(1,true);
+		Point *s_point = LinkToSourcePoints(i_point,1);
+		 */
+
+		for(ii=0,kk=0;ii<Nleaves;++ii){
+
+			if(uniform_mag_from_deflect(aa,points[ii])){
+				/*
+				 tmp = uniform_mag_from_shooter(a1,points[ii]);
+
+				std::cout << "shooter    a = " << a1[0] << " " << a1[1] << " " << a1[2] << " " << a1[3] << std::endl;
+				std::cout << "deflection a = " << a2[0] << " " << a2[1] << " " << a2[2] << " " << a2[3] << std::endl;
+				std::cout << "          da = " << (a2[0]-a1[0]) << " " << (a2[1]-a1[1]) << " " << (a2[2]-a1[2])
+						<< " " << (a2[3]-a1[3]) << std::endl;
+				*/
+
+				for(unsigned long jj = kk; jj < addedtocell[ii] + kk; ++jj){
+					dx[0] = i_points[jj].x[0] - points[ii]->x[0];
+					dx[1] = i_points[jj].x[1] - points[ii]->x[1];
+
+					i_points[jj].image->x[0] = points[ii]->image->x[0] + aa[0]*dx[0] + aa[2]*dx[1];
+					i_points[jj].image->x[1] = points[ii]->image->x[1] + aa[3]*dx[0] + aa[1]*dx[1];
+					/*
+					i_point->x[0] = i_points[jj].x[0];
+					i_point->x[1] = i_points[jj].x[1];
+					lens->rayshooterInternal(1,i_point,false);
+
+					ss = sqrt( pow(i_point->image->x[0] - points[ii]->image->x[0],2)
+							+ pow(i_point->image->x[1] - points[ii]->image->x[1],2) );
+
+					std::cout << (i_point->image->x[0] - i_points[jj].image->x[0])/ss << "  "
+							  << (i_point->image->x[1] - i_points[jj].image->x[1])/ss  << std::endl;
+					 */
+
+					if(!kappa_off){
+						i_points[jj].kappa = i_points[jj].image->kappa = 1-0.5*(aa[0]+aa[1]);
+						i_points[jj].gamma[0] = i_points[jj].image->gamma[0] = -0.5*(aa[0]-aa[1]);
+						i_points[jj].gamma[1] = i_points[jj].image->gamma[1] = -0.5*(aa[2]+aa[3]);
+						i_points[jj].gamma[2] = i_points[jj].image->gamma[2] = -0.5*(aa[2]-aa[3]);
+					}
+					i_points[jj].in_image = MAYBE;
+
+				}
+
+				//std::cout << " " << std::endl;
+			}
+			kk += addedtocell[ii];
+		}
+
+		//FreePointArray(i_point);
+		//FreePointArray(s_point);
+
+	}
+
 	lens->rayshooterInternal(Nadded,i_points,kappa_off);
 
 	// remove the points that are outside initial source grid
@@ -466,3 +529,127 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa
 	return i_points;
 }
 
+/// Rest all in_image markers to False.
+void Grid::ClearAllMarks(){
+	unsigned long i;
+
+	MoveToTopList(i_tree->pointlist);
+	for(i=0;i<i_tree->pointlist->Npoints;++i){
+		i_tree->pointlist->current->in_image=FALSE;
+		i_tree->pointlist->current->image->in_image=FALSE;
+		MoveDownList(i_tree->pointlist);
+	}
+}
+/**
+ *\brief Find the magnification given three points.
+ *
+ * The points must have attached source/image points and
+ * they must not be colinear. Returns false if they are colinear
+ */
+bool Grid::find_mag_matrix(double *a,Point *p0,Point *p1,Point *p2){
+	double y1[2],y2[2],x1[2],x2[2];
+
+	x1[0] = p1->x[0] - p0->x[0];
+	x1[1] = p1->x[1] - p0->x[1];
+	x2[0] = p2->x[0] - p0->x[0];
+	x2[1] = p2->x[1] - p0->x[1];
+
+	y1[0] = p1->image->x[0] - p0->image->x[0];
+	y1[1] = p1->image->x[1] - p0->image->x[1];
+	y2[0] = p2->image->x[0] - p0->image->x[0];
+	y2[1] = p2->image->x[1] - p0->image->x[1];
+
+	double det = x1[0]*x2[1] - x1[1]*x2[0];
+	if(det == 0) return false;
+
+	// a[0] = a11, a[1] = a22, a[2] = a12, a[3] = a21
+	a[0] = (  x2[1]*y1[0] - x1[1]*y2[0] )/det;
+	a[3] = ( -x2[0]*y1[0] + x1[0]*y2[0] )/det;
+	a[2] = (  x2[1]*y1[1] - x1[1]*y2[1] )/det;
+	a[1] = ( -x2[0]*y1[1] + x1[0]*y2[1] )/det;
+
+	return true;
+}
+/** \brief Test if point is in a region of uniform magnification using only the deflections of the point and
+ * its neighbors.
+ *
+ * An estimate of the magnification matrix is returned if it returns true.  Otherwise the magnification
+ * matrix is unspecified.
+ *
+ * Magnification matrix elements are considered equal if their difference is smaller than maglimit which is
+ * set in the Grid constructor.
+ */
+bool Grid::uniform_mag_from_deflect(
+		double *a           /// Returned magnification matrix, not specified if returning false
+		,Point *point       /// point to be tested
+		){
+	Point *point2;
+	double ao[4];
+	int count=0;
+
+    FindAllBoxNeighborsKist(i_tree,point,neighbors);
+    assert(neighbors->Nunits() > 3);
+    neighbors->MoveToTop();
+    point2 = neighbors->getCurrent();
+    neighbors->Down();
+	while(!find_mag_matrix(a,point,point2,neighbors->getCurrent())) neighbors->Down();
+	//std::cout << "deflection neighbors a" << std::endl;
+	while(neighbors->Down()){
+		if(find_mag_matrix(ao,point,point2,neighbors->getCurrent())){
+			if( !( (fabs(a[0]-ao[0]) < maglimit)*(fabs(a[1]-ao[1]) < maglimit)
+    				*(fabs(a[2]-ao[2]) < maglimit)*(fabs(a[3]-ao[3]) < maglimit) )) return false;
+			//std::cout  << ao[0] << " " << ao[1] << " " << ao[2] << " " << ao[3] << std::endl;
+
+			a[0] = (count*a[0] + ao[0])/(count+1);
+			a[1] = (count*a[1] + ao[1])/(count+1);
+			a[2] = (count*a[2] + ao[2])/(count+1);
+			a[3] = (count*a[3] + ao[3])/(count+1);
+
+    		++count;
+    	}
+    }
+
+	if(count == 0) return false;  // This is the case where the point does not have enough non-colinear neighbors.
+    return true;
+}
+/** \brief Test if point is in a region of uniform magnification using the kappa and gamma calculated from the
+ * rayshooter.
+ *
+ * An estimate of the magnification matrix is returned if it returns true.  Otherwise the magnification
+ * matrix is unspecified.
+ *
+ * Magnification matrix elements are considered equal if their difference is smaller than maglimit which is
+ * set in the Grid constructor.
+ *
+ */
+bool Grid::uniform_mag_from_shooter(
+		double *a           /// Returned magnification matrix, not specified if returning false
+		,Point *point       /// point to be tested
+		){
+	Point *point2;
+
+    FindAllBoxNeighborsKist(i_tree,point,neighbors);
+    assert(neighbors->Nunits() > 1);
+    neighbors->MoveToTop();
+ 	do{
+ 		point2 = neighbors->getCurrent();
+ 		if( !( (fabs(point->kappa-point2->kappa) < maglimit)*(fabs(point->gamma[0]-point2->gamma[0]) < maglimit)
+ 				*(fabs(point->gamma[1]-point2->gamma[1]) < maglimit)*(fabs(point->gamma[2]-point2->gamma[2]) < maglimit) ) ) return false;
+    }while(neighbors->Down());
+
+    neighbors->MoveToTop();
+    std::cout << "shooter neighbors " << std::endl;
+  	do{
+  		point2 = neighbors->getCurrent();
+ 		std::cout << point->kappa-point2->kappa << "  " << point->gamma[0]-point2->gamma[0] << "   " <<
+  				point->gamma[1]-point2->gamma[1] << "  " << point->gamma[2]-point2->gamma[2] << std::endl;
+     }while(neighbors->Down());
+
+
+	a[0] = 1 - point->kappa - point->gamma[0];
+	a[1] = 1 - point->kappa + point->gamma[0];
+	a[2] = -point->gamma[1] - point->gamma[2];
+	a[3] = -point->gamma[1] + point->gamma[2];
+
+    return true;
+}

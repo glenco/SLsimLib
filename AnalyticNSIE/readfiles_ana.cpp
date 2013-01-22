@@ -31,12 +31,12 @@ void AnaLens::assignParams(InputParams& params){
 	if(!params.get("NDistortionModes",perturb_Nmodes)) error_message1("NDistortionModes",params.filename());
 	else if(perturb_Nmodes > 0){
 		if(!params.get("beta_perturb",perturb_beta)) error_message1("beta_perturb",params.filename());
-		if(!params.get("kappa_peturb",perturb_rms[0])) error_message1("kappa_peturb",params.filename());
-		if(!params.get("gamma_peturb",perturb_rms[1])) error_message1("gamma_peturb",params.filename());
-		if(!params.get("monopole_peturb",perturb_rms[2])) error_message1("monopole_peturb",params.filename());
-		if(!params.get("quadrapole_peturb",perturb_rms[3])) error_message1("quadrapole_peturb",params.filename());
-		if(!params.get("hexopole_peturb",perturb_rms[4])) error_message1("hexopole_peturb",params.filename());
-		if(!params.get("octopole_peturb",perturb_rms[5])) error_message1("octopole_peturb",params.filename());
+		if(!params.get("kappa_perturb",perturb_rms[0])) error_message1("kappa_perturb",params.filename());
+		if(!params.get("gamma_perturb",perturb_rms[1])) error_message1("gamma_perturb",params.filename());
+		if(!params.get("monopole_perturb",perturb_rms[2])) error_message1("monopole_perturb",params.filename());
+		if(!params.get("quadrapole_perturb",perturb_rms[3])) error_message1("quadrapole_perturb",params.filename());
+		if(!params.get("hexopole_perturb",perturb_rms[4])) error_message1("hexopole_perturb",params.filename());
+		if(!params.get("octopole_perturb",perturb_rms[5])) error_message1("octopole_perturb",params.filename());
 	}
     // Substructure parameters
     if(!params.get("NdensitySubstruct",sub_Ndensity)) error_message1("NdensitySubstruct",params.filename());
@@ -46,6 +46,11 @@ void AnaLens::assignParams(InputParams& params){
     	if(!params.get("R_submax",sub_Rmax)) error_message1("R_submax",params.filename());
     	if(!params.get("mass_max",sub_Mmax)) error_message1("mass_max",params.filename());
     	if(!params.get("mass_min",sub_Mmin)) error_message1("mass_min",params.filename());
+    	if(sub_Mmin < 1.0e3){
+    		ERROR_MESSAGE();
+    		std::cout << "Are you sure the minimum halo mass should be " << sub_Mmin << " Msun?" << std::endl;
+    		exit(1);
+    	}
     	if(!params.get("sub_type",sub_type)) error_message1("sub_type",params.filename());
     }
 	  // Stars parameters
@@ -100,8 +105,6 @@ void AnaLens::assignParams(InputParams& params){
     host_pos_angle*=pi/180;
     if(perturb_Nmodes)
     	perturb_modes = new double[perturb_Nmodes+1];
-
-    PrintAnaLens(false,false);
 }
 
 void AnaLens::error_message1(std::string parameter,std::string file){
@@ -241,8 +244,13 @@ AnaLens::AnaLens(InputParams& params) : Lens(){
   if(perturb_Nmodes > 0) for(int i=0;i< perturb_Nmodes+1; i++) perturb_modes[i] = 0;
 
 
+  // zero perturbation modes until use AnaLens::RandomlyDistortLens()
+  if(perturb_Nmodes > 0) for(int i=0;i< perturb_Nmodes+1 ;++i) perturb_modes[i] =  0;
+
   stars_implanted = false;
   set = true;
+
+  PrintAnaLens(false,false);
 }
 
 

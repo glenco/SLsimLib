@@ -114,7 +114,7 @@ void find_images_kist(
 
     if(verbose) printf("Ntemp=%li\n",Nsizes);
 
-    ClearAllMarks(grid->i_tree);
+    grid->ClearAllMarks();
 
     //////////////////////////////////////////
     // telescope source size down to target
@@ -162,7 +162,7 @@ void find_images_kist(
 	// target source size has been reached, do full image decomposition and refinement
 	/////////////////////////////////////////////////////////////////////////////////
 
-	ClearAllMarks(grid->i_tree);
+    grid->ClearAllMarks();
 
 	i=0;
 
@@ -319,7 +319,7 @@ void find_images_kist(
 		if(imageinfo[i].outerborder->Nunits() > 0 ) imageinfo[i].area_error = imageinfo[i].gridrange[2]/imageinfo[i].area;
 	}
 
-	ClearAllMarks(grid->i_tree);
+    grid->ClearAllMarks();
 
 	//freeKist(pointkist);
 
@@ -370,7 +370,7 @@ short image_finder_kist(LensHndl lens, double *y_source,double r_source,GridHndl
 
   ++count;
 
-  ClearAllMarks(i_tree);
+  grid->ClearAllMarks();
   assert(imageinfo->imagekist);
 
   //ListHndl list = NewList();

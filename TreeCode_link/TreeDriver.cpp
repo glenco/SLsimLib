@@ -1210,17 +1210,6 @@ void UnionList(ListHndl list1,ListHndl list2){
 	return ;
 }
 
-void ClearAllMarks(TreeHndl tree){
-	unsigned long i;
-
-	MoveToTopList(tree->pointlist);
-	for(i=0;i<tree->pointlist->Npoints;++i){
-		tree->pointlist->current->in_image=FALSE;
-		tree->pointlist->current->image->in_image=FALSE;
-		MoveDownList(tree->pointlist);
-	}
-}
-
 
 void FindAllBoxNeighbors(TreeHndl tree,Point *point,ListHndl neighbors){
 	// finds all the leaves that are neighboring branch

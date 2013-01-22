@@ -41,6 +41,7 @@ typedef struct Grid{
 	double getInitRange(){return i_tree->top->boundary_p2[0] - i_tree->top->boundary_p1[0];}
 	Point * RefineLeaf(LensHndl lens,Point *point,bool kappa_off);
 	Point * RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa_off);
+	void ClearAllMarks();
 
 private:
 	/// one dimensional size of initial grid
@@ -49,6 +50,14 @@ private:
 	int Ngrid_block;
 	bool initialized;
 	KistHndl trashkist;
+
+	double maglimit;
+	KistHndl neighbors;
+	bool find_mag_matrix(double *a,Point *p0,Point *p1,Point *p2);
+
+	bool uniform_mag_from_deflect(double *a,Point *point);
+	bool uniform_mag_from_shooter(double *a,Point *point);
+
 };
 
 typedef struct Grid* GridHndl;

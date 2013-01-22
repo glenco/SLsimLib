@@ -140,6 +140,9 @@ void *compute_rays_parallel(void *_p){
     
   for(i = start; i< end; i++){
     
+	  if(p->i_points[i].in_image == MAYBE)
+			 continue;
+
     // find position on first lens plane in comoving units
     p->i_points[i].image->x[0] = p->i_points[i].x[0]*lens->Dl[0];
     p->i_points[i].image->x[1] = p->i_points[i].x[1]*lens->Dl[0];
@@ -229,16 +232,16 @@ void *compute_rays_parallel(void *_p){
 	
     	  // still not positive about sign convention
     	  kappa_plus = aa*p->i_points[i].kappa - bb*kappa_minus
-				- cc*(kappa*p->i_points[i].kappa - gamma[0]*p->i_points[i].gamma[0] - gamma[1]*p->i_points[i].gamma[1]);
+		  - cc*(kappa*p->i_points[i].kappa + gamma[0]*p->i_points[i].gamma[0] + gamma[1]*p->i_points[i].gamma[1]);
 	
     	  gamma_plus[0] = aa*p->i_points[i].gamma[0] - bb*gamma_minus[0]
-    	          + cc*(gamma[0]*p->i_points[i].kappa - kappa*p->i_points[i].gamma[0] + gamma[1]*p->i_points[i].gamma[2]);
+    	          - cc*(gamma[0]*p->i_points[i].kappa + kappa*p->i_points[i].gamma[0] - gamma[1]*p->i_points[i].gamma[2]);
 	
     	  gamma_plus[1] = aa*p->i_points[i].gamma[1] - bb*gamma_minus[1]
-    	          + cc*(gamma[1]*p->i_points[i].kappa - kappa*p->i_points[i].gamma[1] - gamma[0]*p->i_points[i].gamma[2]);
+    	          - cc*(gamma[1]*p->i_points[i].kappa + kappa*p->i_points[i].gamma[1] + gamma[0]*p->i_points[i].gamma[2]);
 	
     	  gamma_plus[2] = aa*p->i_points[i].gamma[2] - bb*gamma_minus[2]
-    	          + cc*(gamma[1]*p->i_points[i].gamma[0] - gamma[0]*p->i_points[i].gamma[1] - kappa*p->i_points[i].gamma[2]);
+    	          - cc*(kappa*p->i_points[i].gamma[2] - gamma[1]*p->i_points[i].gamma[0] + gamma[0]*p->i_points[i].gamma[1]);
 	
     	  kappa_minus = p->i_points[i].kappa;
     	  gamma_minus[0] = p->i_points[i].gamma[0];

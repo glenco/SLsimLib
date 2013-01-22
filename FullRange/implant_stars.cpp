@@ -56,7 +56,7 @@ void AnaLens::implant_stars(Point *centers,unsigned long Nregions,long *seed){
 	}
 
 	for(j=0,m=0;j<Nregions;++j){
-		cout << "Stars implanted in Image " << j << endl;
+
 		assert( centers[j].kappa > 0.0);
 
 		NstarsPerImage = stars_N/star_Nregions;
@@ -97,9 +97,10 @@ void AnaLens::implant_stars(Point *centers,unsigned long Nregions,long *seed){
 			for(k=0;k<j;++k){
 				if(  star_region[k] > sqrt(pow(centers[k].x[0]-stars_xp[m][0],2)
 						+ pow(centers[k].x[1]-stars_xp[m][1],2)) ){
-					--NstarsPerImage;
-					--i;
+					//--NstarsPerImage;
+					//--i;
 					--m;
+					break;
 				}
 			}
 			fstars << scientific << stars_xp[m][0] << " " << stars_xp[m][1] << endl;
@@ -129,11 +130,11 @@ void AnaLens::implant_stars(Point *centers,unsigned long Nregions,long *seed){
 	return ;
 }
 
-/// This allows the stars to be turned off after they have been implanted.
-void AnaLens::toggleStars(bool implanted){
+// This allows the stars to be turned off after they have been implanted.
+/*void AnaLens::toggleStars(bool implanted){
 	stars_implanted = implanted;
 }
-
+*/
 /// subtracts the mass in stars from the smooth model to compensate
 /// for the mass of the stars the lensing quantities are all updated not replaced
 void AnaLens::substract_stars_disks(double *ray,double *alpha

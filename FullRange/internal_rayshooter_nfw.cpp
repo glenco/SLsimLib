@@ -160,7 +160,7 @@ void *compute_rays_parallel_nfw(void *_p){
     	gamma[0]=gamma[1]=gamma[2]=0.0;
 
     	// add substructure
-    	if(lens->substruct_implanted){
+    	if(lens->AreSubStructImaplated()){
     		for(j=0;j<lens->sub_N;++j){
     			lens->sub_alpha_func(alpha,p->i_points[i].x,lens->sub_Rcut[j],lens->sub_mass[j],lens->sub_beta,lens->sub_x[j],lens->Sigma_crit);
 
@@ -191,18 +191,17 @@ void *compute_rays_parallel_nfw(void *_p){
     	alpha[0]=alpha[1]=0.0;
     	gamma[0]=gamma[1]=gamma[2]=0.0;
 
-    	if(lens->stars_N > 0 && lens->stars_implanted){
 
+    	if(lens->stars_N > 0 && lens->AreStarsImaplated()){
     		// add stars for microlensing
     		lens->substract_stars_disks(p->i_points[i].x,p->i_points[i].image->x,
     				&(p->i_points[i].kappa),p->i_points[i].gamma);
 
     		// do stars with tree code
-    		//star_tree->force2D(p->i_points[i].x,alpha,&kappa,gamma,true);
     		lens->star_tree->force2D_recur(p->i_points[i].x,alpha,&kappa,gamma,true);
 
-    		p->i_points[i].image->x[0] += convert_factor*alpha[0];
-    		p->i_points[i].image->x[1] += convert_factor*alpha[1];
+    		p->i_points[i].image->x[0] -= convert_factor*alpha[0];
+    		p->i_points[i].image->x[1] -= convert_factor*alpha[1];
 
     		if(!kappa_off){
     			p->i_points[i].kappa += convert_factor*kappa;
@@ -307,17 +306,13 @@ void AnaLens::rayshooterInternal(double *ray, double *alpha, float *gamma, float
      // add stars for microlensing
      if(stars_N > 0 && stars_implanted){
 
-    	 std::cout << "MAke sure the units here are OK (the substract disk) , then delete this line" << std::endl;
-    	 exit(1);
-
     	 substract_stars_disks(ray,alpha,kappa,gamma);
 
     	 // do stars with tree code
-    	 //star_tree->force2D(ray,alpha_tmp,&tmp,gamma_tmp,true);
     	 star_tree->force2D_recur(ray,alpha_tmp,&tmp,gamma_tmp,true);
 
-    	 alpha[0] += convert_factor*alpha_tmp[0];
-    	 alpha[1] += convert_factor*alpha_tmp[1];
+    	 alpha[0] -= convert_factor*alpha_tmp[0];
+    	 alpha[1] -= convert_factor*alpha_tmp[1];
 
     	 if(!kappa_off){
     		 *kappa += convert_factor*tmp;

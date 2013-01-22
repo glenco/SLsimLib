@@ -314,7 +314,7 @@ void map_images(
 		center[1] = source->getX()[1];
 		r_source = xmin;
 
-		ClearAllMarks(grid->i_tree);
+		grid->ClearAllMarks();
 	    rtemp = r_source*pow(Ngrid_block,(int)(log(initial_size/sqrt(pi)/fabs(r_source*mumin))/log(Ngrid_block) ) + 1);
 
 		for( ; rtemp >= r_source*Ngrid_block ;rtemp /= Ngrid_block ){
@@ -381,7 +381,7 @@ void map_images(
 	if(verbose) printf("total number of points after telescope: %li\n",grid->getNumberOfPoints());
 
 	// Set all in_image flags to false.  This should not be necessary.  !!!!!!
-	ClearAllMarks(grid->i_tree);
+	grid->ClearAllMarks();
 
 	//freeKist(subkist);
 
@@ -665,6 +665,7 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
 
 				  assert(imageinfo[i].imagekist->getCurrent()->leaf->child1 == NULL);
 				  assert(imageinfo[i].imagekist->getCurrent()->leaf->child2 == NULL);
+
 				  if(batch){
 					  points_to_refine.push_back(getCurrentKist(imageinfo[i].imagekist));
 
@@ -725,7 +726,8 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
 			  if(imageinfo[i].outerborder->MoveToTop()){
 				  do{
 					  getCurrentKist(imageinfo[i].outerborder)->in_image = FALSE;
-					  if(getCurrentKist(imageinfo[i].outerborder)->surface_brightness > 0) point = getCurrentKist(imageinfo[i].outerborder);
+					  if(getCurrentKist(imageinfo[i].outerborder)->surface_brightness > 0)
+						  point = getCurrentKist(imageinfo[i].outerborder);
 				  }while(MoveDownKist(imageinfo[i].outerborder));
 			  }
 			  findborders4(grid->i_tree,&(imageinfo[i]));
@@ -933,7 +935,7 @@ void check_sb_add(Source *source,ImageInfo *imageinfo,Point *i_points,unsigned l
 bool RefinePoint2(Point *point,TreeHndl i_tree,double image_area,double total_area
 		,ExitCriterion criterion,double res_target,KistHndl nearest){
 
-	double borderSB = 0,error = 0,maxdiff,flux;
+	double borderSB = 0,error = 0,maxdiff_sb,flux;
 
 	EmptyKist(nearest);
 	// Prevent cell from getting so small that precision error prevents everything from working
@@ -951,11 +953,11 @@ bool RefinePoint2(Point *point,TreeHndl i_tree,double image_area,double total_ar
 	//assert(nearest->Nunits() < 300);
 
 	flux = point->surface_brightness*pow(point->gridsize,2);
-	maxdiff = 0.0;
+	maxdiff_sb = 0.0;
 	MoveToTopKist(nearest);
 	do{
 		borderSB += getCurrentKist(nearest)->surface_brightness;
-		maxdiff = MAX(fabs(getCurrentKist(nearest)->surface_brightness - point->surface_brightness),maxdiff);
+		maxdiff_sb = MAX(fabs(getCurrentKist(nearest)->surface_brightness - point->surface_brightness),maxdiff_sb);
 	}while(MoveDownKist(nearest));
 	borderSB /= nearest->Nunits();
 
@@ -968,6 +970,9 @@ bool RefinePoint2(Point *point,TreeHndl i_tree,double image_area,double total_ar
 	return false;
 }
 
+/*
+ * Requires that all neighbors to point have a flux below a
+ *
 bool RefinePoint(Point *point,TreeHndl i_tree,double image_area,double total_area
 		,ExitCriterion criterion,double res_target,KistHndl nearest){
 
@@ -1009,24 +1014,6 @@ bool RefinePoint(Point *point,TreeHndl i_tree,double image_area,double total_are
 							&& tmp > target_all*res_target*total_area){
 
 						return true;
-
-						/**************** test lines *** check if point to be refined is in images ***************
-						unit = imageinfo[i].imagekist->current;
-						found = false;
-						for(kk=0;kk<Nimages && !found;++kk){
-							MoveToTopKist(imageinfo[kk].imagekist);
-						for(jj = 0 ; jj < imageinfo[kk].imagekist->Nunits() && !found ; ++jj,MoveDownKist(imageinfo[kk].imagekist) ){
-							if(getCurrentKist(nearest) == getCurrentKist(imageinfo[kk].imagekist)){
-								found = true;
-								if(i != kk) printf("i=%li kk=%li\n",i,kk);
-							}
-						}
-					}
-					assert(found);
-					imageinfo[i].imagekist->current = unit;
-					**********************************************/
-
-						break;
 					}
 				}while( MoveDownKist(nearest) );
 
@@ -1036,7 +1023,7 @@ bool RefinePoint(Point *point,TreeHndl i_tree,double image_area,double total_are
 	}
 	return false;
 }
-
+*/
 /** \ingroup mageFindingL2
  * \brief Checks to see if the image has a nearly uniform magnification across it and thus can be considered linearly
  * distorted.

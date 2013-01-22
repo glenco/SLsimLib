@@ -54,6 +54,8 @@ int ImageGenus(TreeHndl i_tree,ImageInfo *imageinfo){
 		return 0;
 	}
 
+	GridHndl grid;
+
 	// mark points in tree as in image and transfer points to temporary temporary new_imagekist
 
 	kist->MoveToTop();
@@ -91,6 +93,9 @@ int ImageGenus(TreeHndl i_tree,ImageInfo *imageinfo){
 		assert(AtBottomKist(new_kist));
 		++number;
 	}while(new_kist->Nunits() > 0 && number < Nimagesmax);
+	if(number == Nimagesmax)
+		new_kist->Empty();
+
 
 	assert(new_kist->Nunits() == 0);
 	delete new_kist;
