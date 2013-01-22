@@ -170,6 +170,9 @@ public:
   void implant_stars(Point *centers,unsigned long Nregions,long *seed);
   //void toggleStars(bool implanted);
 
+  void FindLensSimple(int Nimages,Point *image_positions,double *y,double **dx_sub);
+  void FindLensSimple(ImageInfo *imageinfo ,int Nimages ,double *y,double **dx_sub);
+
 private:
   bool substruct_implanted;
 
