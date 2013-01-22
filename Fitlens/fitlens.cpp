@@ -16,36 +16,30 @@ static double oldsm;//,tang[2],length,yot[2],radsourceT;
  * The lens is centered on [0,0] source position in lens is updated along with all the modes.
  *
  */
-void FindLensSimple(AnaLens *lens,int Nimages,Point *image_positions,double *y,double **dx_sub){
+void AnaLens::FindLensSimple(int Nimages,Point *image_positions,double *y,double **dx_sub){
 	ImageInfo imageinfo[Nimages];
 
-<<<<<<< local
-=======
 	for(int i=0;i<Nimages;++i){
 		imageinfo[i].centroid[0] = image_positions[i].x[0];
 		imageinfo[i].centroid[1] = image_positions[i].x[1];
 	}
->>>>>>> other
 
-<<<<<<< local
-=======
-	FindLensSimple(lens,imageinfo,Nimages,y,dx_sub);
+	FindLensSimple(imageinfo,Nimages,y,dx_sub);
 }
->>>>>>> other
-void FindLensSimple(
-		AnaLens *lens  /// lens model, modes will be changed on return
-		,ImageInfo *imageinfo  // Positions of images.  Only imageinfo[].centoid[] is used.
-		,int Nimages   /// input number of images
+
+void AnaLens::FindLensSimple(
+		ImageInfo *imageinfo    /// Positions of images.  Only imageinfo[].centoid[] is used.
+		,int Nimages             /// input number of images
 		,double *y               /// output source position
-		,double **dx_sub         /// pre-calculated deflections caused by substructures or external masses at each image
+		,double **dx_sub         /// dx_sub[Nimages][2] pre-calculated deflections caused by substructures or external masses at each image
 		){
 
 	assert(Nimages < 200);
 
-	if(lens->perturb_Nmodes <= 0 || Nimages <= 0){
+	if(perturb_Nmodes <= 0 || Nimages <= 0){
 		ERROR_MESSAGE();
 		std::printf("must set perturb_Nmodes lens->perturb_Nmodes = %li Nimages = %i \n"
-				,lens->perturb_Nmodes,Nimages);
+				,perturb_Nmodes,Nimages);
 		exit(1);
 	}
 
@@ -55,7 +49,7 @@ void FindLensSimple(
 	//for(i=0;i<Nimages;++i) std::printf("  x = %e %e\n",image_positions[i].x[0],image_positions[i].x[1]);
 
 	if(Nimages == 1){
-		for(i=1;i<lens->perturb_Nmodes;++i) lens->perturb_modes[i] = 0.0;
+		for(i=1;i<perturb_Nmodes;++i) perturb_modes[i] = 0.0;
 		y[0] = imageinfo[0].centroid[0];
 		y[1] = imageinfo[0].centroid[1];
 
@@ -68,7 +62,7 @@ void FindLensSimple(
 
 	xob = dmatrix(0,Nimages-1,0,1);
 	xg = dmatrix(0,1,0,1);
-	mods=dvector(0,lens->perturb_Nmodes + 2*Nsources + 1 );
+	mods=dvector(0,perturb_Nmodes + 2*Nsources + 1 );
 
 	xg[0][0] = xg[0][1] = 0.0;
 	x_center[0] = x_center[1] = 0.0;
@@ -93,19 +87,19 @@ void FindLensSimple(
 	x_center[1] /= scale;
 
 	//ERROR_MESSAGE();
-	ElliptisizeLens(Nimages,Nsources,1,pairing,xob,x_center,xg,0,lens->perturb_beta
-			,lens->perturb_Nmodes-1,mods,dx_sub,&re2,q);
+	ElliptisizeLens(Nimages,Nsources,1,pairing,xob,x_center,xg,0,perturb_beta
+			,perturb_Nmodes-1,mods,dx_sub,&re2,q);
 
-	for(i=1;i<lens->perturb_Nmodes;++i) lens->perturb_modes[i] = mods[i];
+	for(i=1;i<perturb_Nmodes;++i) perturb_modes[i] = mods[i];
 
 	// source position
 	y[0] = mods[i]*scale;
 	y[1] = mods[i+1]*scale;
 
-	lens->perturb_modes[0] = 0.0;
-	lens->perturb_modes[1] *= -1;  // checked
-	lens->perturb_modes[2] *= -1;  // checked
-	for(i=3;i<lens->perturb_Nmodes;++i) lens->perturb_modes[i] *= scale; // checked
+	perturb_modes[0] = 0.0;
+	perturb_modes[1] *= -1;  // checked
+	perturb_modes[2] *= -1;  // checked
+	for(i=3;i<perturb_Nmodes;++i) perturb_modes[i] *= scale; // checked
 
 	for(i=0;i<Nimages;++i){
 		dx_sub[i][0] *= scale;
@@ -114,12 +108,12 @@ void FindLensSimple(
 	x_center[0] *= scale;
 	x_center[1] *= scale;
 
-	lens->host_ro = 0.0; // the monople is now included in the modes
-	lens->host_sigma = 0.0;
+	host_ro = 0.0; // the monople is now included in the modes
+	host_sigma = 0.0;
 
 	free_dmatrix(xob,0,Nimages-1,0,1);
 	free_dmatrix(xg,0,1,0,1);
-	free_dvector(mods,0,lens->perturb_Nmodes + 2*Nsources + 1);
+	free_dvector(mods,0,perturb_Nmodes + 2*Nsources + 1);
 
 	return ;
 }
