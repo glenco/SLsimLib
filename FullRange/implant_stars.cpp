@@ -53,8 +53,7 @@ void AnaLens::implant_stars(Point *centers,unsigned long Nregions,long *seed){
 		return;
 	}
 
-	for(j=0;j<Nregions;++j){
-		m = 0;
+	for(j=0,m=0;j<Nregions;++j){
 		assert( centers[j].kappa > 0.0);
 
 		NstarsPerImage = stars_N/star_Nregions;
@@ -86,9 +85,10 @@ void AnaLens::implant_stars(Point *centers,unsigned long Nregions,long *seed){
 			for(k=0;k<j;++k){
 				if(  star_region[k] > sqrt(pow(centers[k].x[0]-stars_xp[m][0],2)
 						+ pow(centers[k].x[1]-stars_xp[m][1],2)) ){
-					--NstarsPerImage;
-					--i;
+					//--NstarsPerImage;
+					//--i;
 					--m;
+					break;
 				}
 			}
 			//printf("%e %e\n",stars_xp[m][0],stars_xp[m][1]);
