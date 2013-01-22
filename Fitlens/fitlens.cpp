@@ -26,6 +26,7 @@ void AnaLens::FindLensSimple(int Nimages,Point *image_positions,double *y,double
 
 	FindLensSimple(imageinfo,Nimages,y,dx_sub);
 }
+
 void AnaLens::FindLensSimple(
 		ImageInfo *imageinfo    /// Positions of images relative to center of lens.  Only imageinfo[].centoid[] is used.
 		,int Nimages             /// input number of images

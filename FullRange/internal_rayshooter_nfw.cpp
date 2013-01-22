@@ -191,6 +191,7 @@ void *compute_rays_parallel_nfw(void *_p){
     	alpha[0]=alpha[1]=0.0;
     	gamma[0]=gamma[1]=gamma[2]=0.0;
 
+
     	if(lens->stars_N > 0 && lens->AreStarsImaplated()){
     		// add stars for microlensing
     		lens->substract_stars_disks(p->i_points[i].x,p->i_points[i].image->x,

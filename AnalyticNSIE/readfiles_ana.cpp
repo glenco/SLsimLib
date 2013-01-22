@@ -241,6 +241,8 @@ AnaLens::AnaLens(InputParams& params) : Lens(){
   perturb_rms = new double[6];
 
   assignParams(params);
+  if(perturb_Nmodes > 0) for(int i=0;i< perturb_Nmodes+1; i++) perturb_modes[i] = 0;
+
 
   // zero perturbation modes until use AnaLens::RandomlyDistortLens()
   if(perturb_Nmodes > 0) for(int i=0;i< perturb_Nmodes+1 ;++i) perturb_modes[i] =  0;

@@ -21,6 +21,7 @@ double deflection_model(double beta,double *mod,double *x,double *y,double *mag,
 		    ,int Nlenses,double Re2,double *x2);
 int find_image_number(double *yo,double *x_center,double *mod,int Nmod,int Nlenses,double Re2,double *x2);
 double finiteMag(double radsource,double *xo,double *mod,int Nmod,int Nlenses,double Re2,double *x2t);
+
 double minEllip(double *q);
 double minaxis(double thetaX);
 void RotateModel(double thetaX,double *mod,int N,int Nsources);
