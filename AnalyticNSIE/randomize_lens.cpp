@@ -500,7 +500,7 @@ double RandomFromTable(double *table,unsigned long Ntable,long *seed){
 	return (table[j+1]-table[j])*(y-j) + table[j];
 }
 
-double AnaLens::FractionWithinRe(double rangeInRei){
+double BaseAnaLens::FractionWithinRe(double rangeInRei){
 	double B;
 
 	B = (sub_Rmax/pow(sub_Mmax,1./3.)
@@ -517,7 +517,7 @@ double AnaLens::FractionWithinRe(double rangeInRei){
 				);
 }
 
-double AnaLens::averageSubMass(){
+double BaseAnaLens::averageSubMass(){
 	// average mass of substructures
 	return sub_Mmax*(sub_alpha+1)
 				  /(sub_alpha+2)*(1-pow(sub_Mmin/sub_Mmax,sub_alpha+2))/

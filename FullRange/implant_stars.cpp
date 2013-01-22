@@ -16,7 +16,7 @@ using namespace std;
  * allocates all memory for stars
  */
 
-void AnaLens::implant_stars(Point *centers,unsigned long Nregions,long *seed){
+void BaseAnaLens::implant_stars(Point *centers,unsigned long Nregions,long *seed){
 	PosType r,theta,NstarsPerImage;
 	unsigned long i,j,m,k;
 
@@ -137,7 +137,7 @@ void AnaLens::implant_stars(Point *centers,unsigned long Nregions,long *seed){
 */
 /// subtracts the mass in stars from the smooth model to compensate
 /// for the mass of the stars the lensing quantities are all updated not replaced
-void AnaLens::substract_stars_disks(double *ray,double *alpha
+void BaseAnaLens::substract_stars_disks(double *ray,double *alpha
 		,float *kappa,float *gamma){
 
 	if(!(stars_implanted)) return;

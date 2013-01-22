@@ -16,7 +16,7 @@ static double oldsm;//,tang[2],length,yot[2],radsourceT;
  * The lens is centered on [0,0] source position in lens is updated along with all the modes.
  *
  */
-void AnaLens::FindLensSimple(int Nimages,Point *image_positions,double *y,double **dx_sub){
+void BaseAnaLens::FindLensSimple(int Nimages,Point *image_positions,double *y,double **dx_sub){
 	ImageInfo imageinfo[Nimages];
 
 	for(int i=0;i<Nimages;++i){
@@ -27,7 +27,7 @@ void AnaLens::FindLensSimple(int Nimages,Point *image_positions,double *y,double
 	FindLensSimple(imageinfo,Nimages,y,dx_sub);
 }
 
-void AnaLens::FindLensSimple(
+void BaseAnaLens::FindLensSimple(
 		ImageInfo *imageinfo    /// Positions of images relative to center of lens.  Only imageinfo[].centoid[] is used.
 		,int Nimages             /// input number of images
 		,double *y               /// output source position

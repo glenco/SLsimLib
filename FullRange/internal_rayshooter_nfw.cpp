@@ -32,10 +32,10 @@ struct TmpParams{
 	int tid;
 	int start;
 	int size;
-	AnaLens *lens;
+	BaseAnaLens *lens;
 };
 
-void AnaLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off){
+void BaseAnaLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off){
 
     if(this == NULL || !set){
     	ERROR_MESSAGE();
@@ -80,7 +80,7 @@ void AnaLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool ka
 void *compute_rays_parallel_nfw(void *_p){
 	TmpParams *p = (TmpParams *) _p;
 	bool kappa_off = p->kappa_off;
-	AnaLens *lens = p->lens;
+	BaseAnaLens *lens = p->lens;
 	int tid        = p->tid;
 	int chunk_size = p->size;
 	int start      = p->start;
@@ -235,7 +235,7 @@ void *compute_rays_parallel_nfw(void *_p){
    * a analytic one plane lens (AnaLens), for just one ray!!
    *
 */
-void AnaLens::rayshooterInternal(double *ray, double *alpha, float *gamma, float *kappa, bool kappa_off){
+void BaseAnaLens::rayshooterInternal(double *ray, double *alpha, float *gamma, float *kappa, bool kappa_off){
      double x_rescale[2];
      long j;
      double alpha_tmp[2];
