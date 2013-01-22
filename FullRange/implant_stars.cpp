@@ -55,9 +55,8 @@ void AnaLens::implant_stars(Point *centers,unsigned long Nregions,long *seed){
 		return;
 	}
 
-	for(j=0;j<Nregions;++j){
+	for(j=0,m=0;j<Nregions;++j){
 		cout << "Stars implanted in Image " << j << endl;
-		m = 0;
 		assert( centers[j].kappa > 0.0);
 
 		NstarsPerImage = stars_N/star_Nregions;
@@ -65,12 +64,14 @@ void AnaLens::implant_stars(Point *centers,unsigned long Nregions,long *seed){
 
 		star_region[j] = 1.0/sqrt(pi*star_fstars*centers[j].kappa*Sigma_crit
 				/star_massscale/(float)NstarsPerImage);
-
+		cout << star_region[j] << " " << star_fstars <<  " " << centers[j].kappa << " " << Sigma_crit << " " << star_massscale << " " << NstarsPerImage << endl;
+		cout << "kappa_star= " << star_fstars*(float)NstarsPerImage*star_massscale/(pi*pow(star_region[j],2)) << endl;
 		// cutoff based on comparison of star deflection to smooth component
 		//rcut = 4*sqrt(star_massscale/pi/Sigma_crit
 		//		/( centers[j].kappa+sqrt(pow(centers[j].gamma[0],2)+pow(centers[j].gamma[1],2)) ) );
 
 		star_kappa[j] = star_fstars*centers[j].kappa;
+		cout << star_kappa[j]*Sigma_crit << endl;
 		star_xdisk[j][0] = centers[j].x[0];
 		star_xdisk[j][1] = centers[j].x[1];
 

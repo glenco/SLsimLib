@@ -17,6 +17,7 @@ static double oldsm;//,tang[2],length,yot[2],radsourceT;
  *
  */
 
+
 void FindLensSimple(
 		AnaLens *lens  /// lens model, modes will be changed on return
 		,ImageInfo *imageinfo  // Positions of images.  Only imageinfo[].centoid[] is used.
