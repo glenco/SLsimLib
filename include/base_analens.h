@@ -72,6 +72,8 @@ public:
   double get_to(){return to;}
    /// Angular size distance to lens plane
   double get_Dl(){return Dl;}
+  /// conversion factor from Mpc to Arcsec
+  double get_MpcToAsec(){return MpcToAsec;}
 
   // private derived quantities
 
