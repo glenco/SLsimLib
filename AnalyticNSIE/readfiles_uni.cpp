@@ -11,7 +11,7 @@
 using namespace std;
 
 /**
- * \brief Reads in a parameter file and sets up an analytic lens.
+ * \brief Reads in a parameter file and sets up an uniform lens.
  *
  * Sets many parameters within the lens model, source model and
  * force calculation.

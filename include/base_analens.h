@@ -22,14 +22,7 @@
  * modes, substructures and stars.
  *
  *<pre>
- * Input Paramaters:
- *
- *  **** NSIE parameters
- * 	sigma                  Velocity dispersion of host NSIE.
- *	core                   Core size
- *	axis_ratio             Axis ratio of mass
- *	pos_angle              Position angle
- *	z_lens                 Redshift of lens
+ * Input Parameters:
  *
  *  **** Distortion parameters
  *	NDistortionModes       Number of distortion modes to be used.  If zero the other distortion parameters are not needed.
@@ -43,8 +36,8 @@
  *
  *  **** Substructure parameters
  *	NdensitySubstruct      Number density of substructures.  They are distributed uniformly.  If zero the other substructure parameters are not needed.
- *	beta_sub               Logorithmic slope of the internal clump profile.  Used if sub_type == powerlaw
- *	alpha_sub              Logorithmic slope of the mass function.
+ *	beta_sub               Logarithmic slope of the internal clump profile.  Used if sub_type == powerlaw
+ *	alpha_sub              Logarithmic slope of the mass function.
  *	R_submax               Maximum radius of most massive substructure (see Metcalf & Amara 2012)
  *	mass_max               Maximum mass
  *	mass_min               Minimum mass

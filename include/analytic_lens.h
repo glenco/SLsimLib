@@ -22,7 +22,7 @@
  * modes, substructures and stars.
  *
  *<pre>
- * Input Paramaters:
+ * Input Parameters:
  *
  *  **** NSIE parameters
  * 	sigma                  Velocity dispersion of host NSIE.
@@ -43,8 +43,8 @@
  *
  *  **** Substructure parameters
  *	NdensitySubstruct      Number density of substructures.  They are distributed uniformly.  If zero the other substructure parameters are not needed.
- *	beta_sub               Logorithmic slope of the internal clump profile.  Used if sub_type == powerlaw
- *	alpha_sub              Logorithmic slope of the mass function.
+ *	beta_sub               Logarithmic slope of the internal clump profile.  Used if sub_type == powerlaw
+ *	alpha_sub              Logarithmic slope of the mass function.
  *	R_submax               Maximum radius of most massive substructure (see Metcalf & Amara 2012)
  *	mass_max               Maximum mass
  *	mass_min               Minimum mass
@@ -52,7 +52,7 @@
  *
  *  **** Stars parameters
  *	Nstars                 Total number of stars that will be used in the simulation.  If zero the other star parameters are not needed.
- *	fstars                 Fraction of surface denity in stars.
+ *	fstars                 Fraction of surface density in stars.
  *	stars_mass             Mass of stars.
  *
  * The stars are not initially present.  They must be implanted later.
@@ -64,7 +64,6 @@ class AnaLens : public BaseAnaLens{
 public:
 	AnaLens(InputParams& params);
 	~AnaLens();
-
 
   virtual void assignParams(InputParams& params);
   double FractionWithinRe(double rangeInRei);
