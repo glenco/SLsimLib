@@ -44,15 +44,31 @@ void AnaLens::assignParams(InputParams& params){
 
 /** \ingroup ImageFinding
  * \brief Prints the parameters of the analytic lens to stdout
- */
-void AnaLens::PrintAnaLens(bool show_substruct,bool show_stars){
+
+cout << endl << "Nstars "<<stars_N << endl << endl;
+	if(stars_N>0){
+		if(star_Nregions > 0)
+			cout << "stars_Nregions "<< star_Nregions << endl;
+		cout << "stars_massscale "<<star_massscale << endl;
+		cout << "stars_fstars "<<star_fstars << endl;
+		cout << "stars_theta_force "<<star_theta_force << endl;
+		if(show_stars){
+			if(stars_implanted){
+			  for(i=0 ; i < stars_N ; ++i) cout << "    x["<<i<<"]="
+							    << stars_xp[i][0] << " " << stars_xp[i][1] << endl;
+			}else cout << "stars are not implanted yet" << endl;
+		}
+	}
+*/
+
+void AnaLens::PrintLens(bool show_substruct,bool show_stars){
 	int i;
+
+	BaseAnaLens::PrintLens(show_substruct,show_stars);
 
 	// parameters of host elliptical
 	cout << endl << "**Host lens model**" << endl;
 	// redshifts
-	cout << "zlens " << zlens << endl;
-
 	cout << "sigma " << host_sigma << "km/s" << endl;
 	cout << "core " << host_core << " Mpc" << endl;
 	cout << "axis_ratio " << host_axis_ratio << endl;
@@ -68,62 +84,7 @@ void AnaLens::PrintAnaLens(bool show_substruct,bool show_stars){
 		for(i=0;i<perturb_Nmodes;++i) cout << "  " << perturb_modes[i] << endl;
 	}
 
-	  // parameters of substructures
-	cout << endl << "NdensitySubstruct "<< sub_Ndensity << endl;
-	if(sub_Ndensity > 0){
-		cout << "betaSubstruct "<<sub_beta << endl;
-		cout << "alphaSubstruct "<<sub_alpha << endl;
-		cout << "RmaxSubstruct "<<sub_Rmax << " Mpc" << endl;
-		cout << "MmaxSubstruct "<<sub_Mmax << " Msun" << endl;
-		cout << "MminSubstruct "<<sub_Mmin << " Msun\n" << endl;
-	}
 
-	if(sub_N > 0){
-		cout << endl << "NSubstruct "<< sub_N << endl;
-		if(show_substruct){
-			if(substruct_implanted || sub_N > 0){
-				for(i=0;i<sub_N;++i){
-				  cout << "RcutSubstruct "<<i << " " <<sub_Rcut[i] << " Mpc" << endl;
-				  cout << "massSubstruct "<<i<<" "<<sub_mass[i] << " Msun" << endl;
-				  cout << "xSubstruct "<<i<<" "<<sub_x[i][0]<<" "<<sub_x[i][1] << " Mpc" << endl;
-					switch(sub_type){
-					case nfw:
-						cout << "  NFW clumps" << endl;
-						break;
-					case powerlaw:
-						cout << "  Power Law clumps" << endl;
-						break;
-					case pointmass:
-						cout << "  Point Mass clumps" << endl;
-						break;
-					default:
-						ERROR_MESSAGE();
-						cout << "ERROR: no submass internal profile chosen" << endl;
-						exit(1);
-						break;
-					}
-				}
-			}else cout << "substructures are not implanted yet" << endl;
-		}
-	}
-
-	cout << endl << "Nstars "<<stars_N << endl << endl;
-	if(stars_N>0){
-		if(star_Nregions > 0)
-			cout << "stars_Nregions "<<star_Nregions << endl;
-		cout << "stars_massscale "<<star_massscale << endl;
-		cout << "stars_fstars "<<star_fstars << endl;
-		cout << "stars_theta_force "<<star_theta_force << endl;
-		if(show_stars){
-			if(stars_implanted){
-			  for(i=0 ; i < stars_N ; ++i) cout << "    x["<<i<<"]="
-							    << stars_xp[i][0] << " " << stars_xp[i][1] << endl;
-			}else cout << "stars are not implanted yet" << endl;
-		}
-	}
-
-	if(Sigma_crit)
-		cout << "critical density is " << Sigma_crit << " Msun/Mpc^2" << endl << endl;
 }
 
 
@@ -141,7 +102,7 @@ AnaLens::AnaLens(InputParams& params) : BaseAnaLens(params){
   host_pos_angle*=pi/180;
   set = true;
 
-  PrintAnaLens(false,false);
+  PrintLens(false,false);
 }
 
 

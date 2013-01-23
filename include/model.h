@@ -9,6 +9,7 @@
 #define MODEL_H_
 
 #include <analytic_lens.h>
+#include <uniform_lens.h>
 #include <multiplane.h>
 #include <source.h>
 /**

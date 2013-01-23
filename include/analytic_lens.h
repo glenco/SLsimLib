@@ -66,7 +66,7 @@ public:
 	~AnaLens();
 
   virtual void assignParams(InputParams& params);
-  void PrintAnaLens(bool show_substruct,bool show_stars);
+  void PrintLens(bool show_substruct,bool show_stars);
   double FractionWithinRe(double rangeInRei);
 
   // in randoimize_lens.c

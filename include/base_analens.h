@@ -130,6 +130,7 @@ public:
   void setInternalParams(CosmoHndl,SourceHndl);
   void setInternalParams(CosmoHndl,double);
   void assignParams(InputParams& params);
+  void PrintLens(bool show_substruct,bool show_stars);
   void error_message1(std::string name,std::string filename);
   void rayshooterInternal(double *ray, double *alpha, float *gamma, float *kappa, bool kappa_off);
 
