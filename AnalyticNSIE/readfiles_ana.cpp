@@ -27,7 +27,8 @@ void AnaLens::assignParams(InputParams& params){
 
 
 	// Distortion of host lens parameters
-	if(perturb_Nmodes > 0){
+	if(!params.get("NDistortionModes",perturb_Nmodes)) error_message1("NDistortionModes",params.filename());
+	else if(perturb_Nmodes > 0){
 		if(!params.get("beta_perturb",perturb_beta)) error_message1("beta_perturb",params.filename());
 		if(!params.get("kappa_perturb",perturb_rms[0])) error_message1("kappa_perturb",params.filename());
 		if(!params.get("gamma_perturb",perturb_rms[1])) error_message1("gamma_perturb",params.filename());
@@ -36,9 +37,6 @@ void AnaLens::assignParams(InputParams& params){
 		if(!params.get("hexopole_perturb",perturb_rms[4])) error_message1("hexopole_perturb",params.filename());
 		if(!params.get("octopole_perturb",perturb_rms[5])) error_message1("octopole_perturb",params.filename());
 	}
-
-	// Distortion of host lens parameters
-	if(!params.get("NDistortionModes",perturb_Nmodes)) error_message1("NDistortionModes",params.filename());
 
 }
 

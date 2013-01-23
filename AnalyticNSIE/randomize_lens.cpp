@@ -22,8 +22,7 @@ using namespace std;
  *
  */
 void Model::RandomizeModel(
-		CosmoHndl cosmo
-		,double r_source_phys
+		double r_source_phys
 		,long *seed
 		,bool tables
 		,bool randomize_host_z

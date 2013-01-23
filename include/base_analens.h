@@ -145,6 +145,7 @@ public:
   void implant_stars(Point *centers,unsigned long Nregions,long *seed);
   //void toggleStars(bool implanted);
 
+  double getHost_Dl(){return Dl;}
   double getHost_ro(){return host_ro;}
   double getHost_sigma(){return host_sigma;}
   //double *host_x;    /// not used yet

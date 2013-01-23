@@ -31,7 +31,7 @@ public:
 	double getZsource(){return source->getZ();}
 	double getZlens(){return lens->getZlens();}
 
-    void RandomizeModel(CosmoHndl cosmo,double r_source_physical,long *seed
+    void RandomizeModel(double r_source_physical,long *seed
     		,bool tables,bool randomize_host_z=true,bool randomize_source_z=true,bool in_radians=false);
 
 private:

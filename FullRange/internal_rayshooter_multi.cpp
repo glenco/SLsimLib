@@ -83,7 +83,7 @@ void MultiLens::rayshooterInternal(
     chunk_size = (int)Npoints/nthreads;
     if(chunk_size == 0) nthreads /= 2;
   }while(chunk_size == 0);
-    
+
   pthread_t threads[nthreads];
   TmpParams *thread_params = new TmpParams[nthreads];
   

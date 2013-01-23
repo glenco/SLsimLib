@@ -89,7 +89,7 @@ public:
 
 	void resetNplanes(CosmoHndl cosmo, int Np);
 	
-	void calc_error_test(GridHndl grid);
+	void calc_error_test(unsigned long Npoints,Point *point,bool kappa_off);
 
 	void buildHaloTrees(CosmoHndl cosmo);
 	void buildHaloTrees_test(CosmoHndl cosmo);
