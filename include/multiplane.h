@@ -63,7 +63,7 @@ public:
  *	Nplanes                     Number of lens planes
  *	flag_input_lens             1 through
  *	fov                         Field of view for the simulation region (not nessisarily the grided region)
- *	internal_profile            The internal profile type for the halos, 0 or PowerLaw,1 or NFW,2 or PseudoNFW, 3 or NSIE, 4 or NFW_NSIE
+ *	internal_profile            The internal profile type for the halos, 0 or PowerLaw,1 or NFW,2 or PseudoNFW, 3 or NSIE, 4 or NFW_NSIE .
  *  halo_to_galaxy_ratio        If NFW_NSIE is chosen this must be set to the ratio of the mass put in each component.
  *	z_source                    The "source" redshift, but actually the redshift of the last plane in the simulation.  The source can be at higher or lower redshift (see ResetSourcePlane)
  *	input_simulation_file       File that contains the input catalog of halos.  If it is missing a random set of halos will be generated.
@@ -73,8 +73,8 @@ public:
  *	field_buffer                Field of view buffer in physical, rest frame Mpc.  Default is 0. Set to provide a buffer to the field of view so that halos that are centered outside the conical field of view but overlap it will be included.
  *	deflection_off              If true turns deflection off for testing purposes, default if false.
  *  background_off              If true turns deflection caused by background surface density off for testing purposes, default if false
-
-  * </pre>
+ *
+ * </pre>
  */
 
 class MultiLens : public Lens{
@@ -99,7 +99,7 @@ public:
 	void RandomizeHost(long *seed,bool tables);
 	void RandomizeSigma(long *seed,bool tables);
 	double getZlens();
-	void setZlens(double zlens);
+	void setZlens(CosmoHndl cosmo,double zlens,double zsource);
 	void printMultiLens();
 
 	void setInternalParams(CosmoHndl,SourceHndl);

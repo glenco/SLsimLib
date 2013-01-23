@@ -37,6 +37,9 @@ void AnaLens::assignParams(InputParams& params){
 		if(!params.get("octopole_perturb",perturb_rms[5])) error_message1("octopole_perturb",params.filename());
 	}
 
+	// Distortion of host lens parameters
+	if(!params.get("NDistortionModes",perturb_Nmodes)) error_message1("NDistortionModes",params.filename());
+
 }
 
 /** \ingroup ImageFinding
@@ -127,6 +130,12 @@ void AnaLens::PrintAnaLens(bool show_substruct,bool show_stars){
 AnaLens::AnaLens(InputParams& params) : BaseAnaLens(params){
 
   assignParams(params);
+
+  if(perturb_Nmodes){
+  	perturb_modes = new double[perturb_Nmodes+1];
+  	// zero perturbation modes until use BaseAnaLens::RandomlyDistortLens()
+  	for(int i=0;i< perturb_Nmodes+1 ;++i) perturb_modes[i] =  0;
+  }
 
   // in degrees
   host_pos_angle*=pi/180;

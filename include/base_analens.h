@@ -66,29 +66,12 @@ public:
 	BaseAnaLens(InputParams& params);
 	virtual ~BaseAnaLens();
 
-  /// private: Einstein radius of host
-  double host_ro;
-  double host_sigma;
-
   /// critical surface density
-  double Sigma_crit;
+  double getSigma_crit(){return Sigma_crit;}
   /// the time delay scale in days/Mpc^2
-  double to;
-
-  /// Angular size distance to lens plane
-  double Dl;
-
-  // host elliptical
-  double *host_x;    /// not used yet
-  double host_core;
-  double host_axis_ratio;
-  double host_pos_angle;    /// position angle
-
-  // perturbations to host
-  int perturb_Nmodes;    /// this includes two for external shear
-  double perturb_beta;
-  double *perturb_rms;
-  double *perturb_modes;  ///first two are shear
+  double get_to(){return to;}
+   /// Angular size distance to lens plane
+  double get_Dl(){return Dl;}
 
   // private derived quantities
 
@@ -142,18 +125,16 @@ public:
   int star_Nregions;
   double *star_region;
 
-
-
   double getZlens();
-  void setZlens(double zlens);
+  void setZlens(CosmoHndl cosmo,double zlens,double zsource = 1000);
   void setInternalParams(CosmoHndl,SourceHndl);
+  void setInternalParams(CosmoHndl,double);
   void assignParams(InputParams& params);
   void error_message1(std::string name,std::string filename);
   void rayshooterInternal(double *ray, double *alpha, float *gamma, float *kappa, bool kappa_off);
 
   // in randoimize_lens.c
   double averageSubMass();
-  double FractionWithinRe(double rangeInRei);
 
   // in readlens_ana.c
   void reNormSubstructure(double kappa_sub);
@@ -163,10 +144,40 @@ public:
   void implant_stars(Point *centers,unsigned long Nregions,long *seed);
   //void toggleStars(bool implanted);
 
-  void FindLensSimple(int Nimages,Point *image_positions,double *y,double **dx_sub);
-  void FindLensSimple(ImageInfo *imageinfo ,int Nimages ,double *y,double **dx_sub);
+  double getHost_ro(){return host_ro;}
+  double getHost_sigma(){return host_sigma;}
+  //double *host_x;    /// not used yet
+  double getHost_core(){return host_core;}
+  double getHost_axis_ratio(){return host_axis_ratio;}
+  double getHost_position_angle(){return host_pos_angle;}    /// position angle
+
+  int getPerturb_Nmodes(){return perturb_Nmodes;}    /// this includes two for external shear
+  double getPerturb_beta(){return perturb_beta;}
+  double *perturb_modes;  ///first two are shear
 
 protected:
+
+  /// critical surface density
+   double Sigma_crit;
+   /// the time delay scale in days/Mpc^2
+   double to;
+   /// Angular size distance to lens plane
+   double Dl;
+
+  // host elliptical
+  /// private: Einstein radius of host
+  double host_ro;
+  double host_sigma;
+  //double *host_x;    /// not used yet
+  double host_core;
+  double host_axis_ratio;
+  double host_pos_angle;    /// position angle
+
+  // perturbations to host.  These are protected so that in some derived classes they can or cann't be changed.
+  int perturb_Nmodes;    /// this includes two for external shear
+  double perturb_beta;
+  double *perturb_rms;
+
   bool substruct_implanted;
 
   bool stars_implanted;

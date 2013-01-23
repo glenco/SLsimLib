@@ -22,7 +22,8 @@ using namespace std;
  *
  */
 void Model::RandomizeModel(
-		double r_source_phys
+		CosmoHndl cosmo
+		,double r_source_phys
 		,long *seed
 		,bool tables
 		,bool randomize_host_z
@@ -68,7 +69,7 @@ void Model::RandomizeModel(
 		delete[] zlTable;
 
 		if(randomize_source_z) source->setZ(zsource);
-		if(randomize_host_z) lens->setZlens(zlens);
+		if(randomize_host_z) lens->setZlens(cosmo,zlens,zsource);
 
 		lens->RandomizeSigma(seed,tables);
 	}
@@ -500,7 +501,7 @@ double RandomFromTable(double *table,unsigned long Ntable,long *seed){
 	return (table[j+1]-table[j])*(y-j) + table[j];
 }
 
-double BaseAnaLens::FractionWithinRe(double rangeInRei){
+double AnaLens::FractionWithinRe(double rangeInRei){
 	double B;
 
 	B = (sub_Rmax/pow(sub_Mmax,1./3.)

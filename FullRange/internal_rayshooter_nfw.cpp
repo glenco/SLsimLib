@@ -88,7 +88,7 @@ void *compute_rays_parallel_nfw(void *_p){
 
 	/* i_points need to be already linked to s_points */
 
-	double convert_factor = lens->star_massscale / lens->Sigma_crit;
+	double convert_factor = lens->star_massscale / lens->getSigma_crit();
 	long i;
 
 	double x_rescale[2];
@@ -106,20 +106,20 @@ void *compute_rays_parallel_nfw(void *_p){
     	p->i_points[i].gamma[2] = 0.0;
 
     	// host lens
-    	if(lens->host_ro > 0){
-    		x_rescale[0] = p->i_points[i].x[0] / lens->host_ro;
-    		x_rescale[1] = p->i_points[i].x[1] / lens->host_ro;
+    	if(lens->getHost_ro() > 0){
+    		x_rescale[0] = p->i_points[i].x[0] / lens->getHost_ro();
+    		x_rescale[1] = p->i_points[i].x[1] / lens->getHost_ro();
 
-    		alphaNSIE(p->i_points[i].image->x, x_rescale, lens->host_axis_ratio,
-    				lens->host_core/ lens->host_ro, lens->host_pos_angle);
+    		alphaNSIE(p->i_points[i].image->x, x_rescale, lens->getHost_axis_ratio(),
+    				lens->getHost_core()/ lens->getHost_ro(), lens->getHost_position_angle());
 
     		if(!kappa_off){
-    			gammaNSIE(p->i_points[i].gamma,x_rescale,lens->host_axis_ratio
-    					,lens->host_core/lens->host_ro,lens->host_pos_angle);
-    			p->i_points[i].kappa=kappaNSIE(x_rescale,lens->host_axis_ratio
-    					,lens->host_core/lens->host_ro,lens->host_pos_angle);
-    			p->i_points[i].dt = phiNSIE(x_rescale,lens->host_axis_ratio
-    					,lens->host_core/lens->host_ro,lens->host_pos_angle);
+    			gammaNSIE(p->i_points[i].gamma,x_rescale,lens->getHost_axis_ratio()
+    					,lens->getHost_core()/lens->getHost_ro(),lens->getHost_position_angle());
+    			p->i_points[i].kappa=kappaNSIE(x_rescale,lens->getHost_axis_ratio()
+    					,lens->getHost_core()/lens->getHost_ro(),lens->getHost_position_angle());
+    			p->i_points[i].dt = phiNSIE(x_rescale,lens->getHost_axis_ratio()
+    					,lens->getHost_core()/lens->getHost_ro(),lens->getHost_position_angle());
     		}
     		else{
     			p->i_points[i].kappa=0;
@@ -127,8 +127,8 @@ void *compute_rays_parallel_nfw(void *_p){
     			p->i_points[i].dt = 0.0;
     		}
 
-    		p->i_points[i].image->x[0] *= lens->host_ro;
-    		p->i_points[i].image->x[1] *= lens->host_ro;
+    		p->i_points[i].image->x[0] *= lens->getHost_ro();
+    		p->i_points[i].image->x[1] *= lens->getHost_ro();
 
     	}
     	else{
@@ -140,9 +140,9 @@ void *compute_rays_parallel_nfw(void *_p){
     	}
 
     	// perturbations of host lens
-    	if(lens->perturb_Nmodes > 0){
-    		p->i_points[i].kappa += lens_expand(lens->perturb_beta,lens->perturb_modes
-    				,lens->perturb_Nmodes,p->i_points[i].x,alpha,gamma,&dt);
+    	if(lens->getPerturb_Nmodes() > 0){
+    		p->i_points[i].kappa += lens_expand(lens->getPerturb_beta(),lens->perturb_modes
+    				,lens->getPerturb_Nmodes(),p->i_points[i].x,alpha,gamma,&dt);
 
     		p->i_points[i].image->x[0] += alpha[0];
     		p->i_points[i].image->x[1] += alpha[1];
@@ -162,17 +162,17 @@ void *compute_rays_parallel_nfw(void *_p){
     	// add substructure
     	if(lens->AreSubStructImaplated()){
     		for(j=0;j<lens->sub_N;++j){
-    			lens->sub_alpha_func(alpha,p->i_points[i].x,lens->sub_Rcut[j],lens->sub_mass[j],lens->sub_beta,lens->sub_x[j],lens->Sigma_crit);
+    			lens->sub_alpha_func(alpha,p->i_points[i].x,lens->sub_Rcut[j],lens->sub_mass[j],lens->sub_beta,lens->sub_x[j],lens->getSigma_crit());
 
     			p->i_points[i].image->x[0] += alpha[0];
     			p->i_points[i].image->x[1] += alpha[1];
 
     			if(!kappa_off){
-    				p->i_points[i].kappa += lens->sub_kappa_func(p->i_points[i].x,lens->sub_Rcut[j],lens->sub_mass[j],lens->sub_beta,lens->sub_x[j],lens->Sigma_crit);
-    				lens->sub_gamma_func(gamma,p->i_points[i].x,lens->sub_Rcut[j],lens->sub_mass[j],lens->sub_beta,lens->sub_x[j],lens->Sigma_crit);
+    				p->i_points[i].kappa += lens->sub_kappa_func(p->i_points[i].x,lens->sub_Rcut[j],lens->sub_mass[j],lens->sub_beta,lens->sub_x[j],lens->getSigma_crit());
+    				lens->sub_gamma_func(gamma,p->i_points[i].x,lens->sub_Rcut[j],lens->sub_mass[j],lens->sub_beta,lens->sub_x[j],lens->getSigma_crit());
     				p->i_points[i].gamma[0] += gamma[0];
     				p->i_points[i].gamma[1] += gamma[1];
-    				p->i_points[i].dt += lens->sub_phi_func(p->i_points[i].x,lens->sub_Rcut[j],lens->sub_mass[j],lens->sub_beta,lens->sub_x[j],lens->Sigma_crit);
+    				p->i_points[i].dt += lens->sub_phi_func(p->i_points[i].x,lens->sub_Rcut[j],lens->sub_mass[j],lens->sub_beta,lens->sub_x[j],lens->getSigma_crit());
 
     			}
     		}
@@ -182,7 +182,7 @@ void *compute_rays_parallel_nfw(void *_p){
     		p->i_points[i].dt = 0.5*(p->i_points[i].image->x[0]*p->i_points[i].image->x[0]
     		                     + p->i_points[i].image->x[1]*p->i_points[i].image->x[1])
       		                     - p->i_points[i].dt;
-    		p->i_points[i].dt *= lens->to;
+    		p->i_points[i].dt *= lens->get_to();
     	}
 
     	p->i_points[i].image->x[0] = p->i_points[i].x[0] - p->i_points[i].image->x[0];

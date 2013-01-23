@@ -113,7 +113,7 @@ void MOKALens::initMap(){
 void MOKALens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 	cosmo->setOmega_matter(map->omegam,true);
 	cosmo->sethubble(map->h);
-	setZlens(map->zlens);
+	setZlens(cosmo,map->zlens,source->getZ());
 	source->setZ(map->zsource);
 
 	double fac = LH->DS/LH->DLS/LH->DL*LH->h;
@@ -166,7 +166,7 @@ double MOKALens::getZlens(){
 	return zlens;
 }
 
-void MOKALens::setZlens(double z){
+void MOKALens::setZlens(CosmoHndl cosmo,double z,double dummy){
 	zlens = z;
 }
 

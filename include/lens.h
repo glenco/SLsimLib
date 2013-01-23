@@ -36,8 +36,7 @@ public:
 	virtual void RandomizeHost(long *seed,bool tables){};
 	virtual void RandomizeSigma(long *seed,bool tables){};
 	virtual double getZlens() = 0;
-	virtual void setZlens(double zlens) = 0;
-
+	virtual void setZlens(CosmoHndl cosmo,double zlens,double zsource = 1000) = 0;
 };
 
 /**

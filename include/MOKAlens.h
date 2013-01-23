@@ -69,7 +69,7 @@ public:
 	void assignParams(InputParams& params);
 	void rayshooterInternal(double *ray, double *alpha, float *gamma, float *kappa, bool kappa_off);
 	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off){ERROR_MESSAGE(); exit(1);};
-	void setZlens(double zlens);
+	void setZlens(CosmoHndl cosmo,double zlens,double zsource = 1000);
 	double getZlens();
 	void setInternalParams(CosmoHndl,SourceHndl);
 	void saveImage(GridHndl grid, bool saveprofile=true);

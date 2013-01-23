@@ -16,7 +16,13 @@ static double oldsm;//,tang[2],length,yot[2],radsourceT;
  * The lens is centered on [0,0] source position in lens is updated along with all the modes.
  *
  */
-void BaseAnaLens::FindLensSimple(int Nimages,Point *image_positions,double *y,double **dx_sub){
+
+void AnaLens::FindLensSimple(
+		int Nimages               /// Number of images to be fit
+		,Point *image_positions   /// Array of points with point[i].x set to the image positions
+		,double *y                /// output source position
+		,double **dx_sub          /// dx_sub[Nimages][2] pre-calculated deflections caused by substructures or external masses at each image
+		){
 	ImageInfo imageinfo[Nimages];
 
 	for(int i=0;i<Nimages;++i){
@@ -26,8 +32,16 @@ void BaseAnaLens::FindLensSimple(int Nimages,Point *image_positions,double *y,do
 
 	FindLensSimple(imageinfo,Nimages,y,dx_sub);
 }
+/** \ingroup FitLens
+ *
+*  \brief Wrapper that allows simple lens to be found with a single
+ * lens with a single source and translates result into data structures used in the other code.
+ *
+ * The lens is centered on [0,0] source position in lens is updated along with all the modes.
+ *
+ */
 
-void BaseAnaLens::FindLensSimple(
+void AnaLens::FindLensSimple(
 		ImageInfo *imageinfo    /// Positions of images relative to center of lens.  Only imageinfo[].centoid[] is used.
 		,int Nimages             /// input number of images
 		,double *y               /// output source position

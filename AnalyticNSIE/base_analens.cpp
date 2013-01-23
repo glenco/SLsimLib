@@ -20,10 +20,6 @@ void BaseAnaLens::assignParams(InputParams& params){
 	// Host lens parameters
 	if(!params.get("z_lens",zlens)) error_message1("z_lens",params.filename());
 
-
-	// Distortion of host lens parameters
-	if(!params.get("NDistortionModes",perturb_Nmodes)) error_message1("NDistortionModes",params.filename());
-
     // Substructure parameters
     if(!params.get("NdensitySubstruct",sub_Ndensity)) error_message1("NdensitySubstruct",params.filename());
     else if(sub_Ndensity > 0){
@@ -58,9 +54,10 @@ void BaseAnaLens::error_message1(std::string parameter,std::string file){
 double BaseAnaLens::getZlens(){
 	return zlens;
 }
-
-void BaseAnaLens::setZlens(double z){
-	zlens = z;
+/// resets Zl, Dl, Sigma_crit, MpcToAsec
+void BaseAnaLens::setZlens(CosmoHndl cosmo,double zl,double zsource){
+	zlens = zl;
+	setInternalParams(cosmo, zsource);
 }
 
 void BaseAnaLens::reNormSubstructure(double kappa_sub){
@@ -77,12 +74,17 @@ void BaseAnaLens::reNormSubstructure(double kappa_sub){
 	  return ;
 }
 
+/// Sets parameters within BaseLens that depend on the source redshift - Dl,Sigma_crit,etc.
 void BaseAnaLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
+	setInternalParams(cosmo,source->getZ());
+}
+void BaseAnaLens::setInternalParams(CosmoHndl cosmo, double zsource){
 	double Ds, Dls;
 
+	if(zsource < zlens) zsource = 1000;
 	Dl = cosmo->angDist(0,zlens);
-	Ds = cosmo->angDist(0,source->getZ());
-	Dls = cosmo->angDist(zlens,source->getZ());
+	Ds = cosmo->angDist(0,zsource);
+	Dls = cosmo->angDist(zlens,zsource);
 
 	MpcToAsec = 60*60*180 / pi / Dl;
 		// in Mpc
@@ -98,12 +100,6 @@ BaseAnaLens::BaseAnaLens(InputParams& params) : Lens(){
   perturb_rms = new double[6];
 
   assignParams(params);
-
-  if(perturb_Nmodes){
-  	perturb_modes = new double[perturb_Nmodes+1];
-  	// zero perturbation modes until use BaseAnaLens::RandomlyDistortLens()
-  	for(int i=0;i< perturb_Nmodes+1 ;++i) perturb_modes[i] =  0;
-  }
 
   if(sub_Ndensity > 0){
   	switch(sub_type){
@@ -139,6 +135,7 @@ BaseAnaLens::BaseAnaLens(InputParams& params) : Lens(){
   star_theta_force = 0.1;
   sub_theta_force = 0.1;
 
+  perturb_Nmodes = 0;
   sub_sigmaScale = host_sigma = host_pos_angle = host_ro = host_axis_ratio = host_core = 0.0;
 
   if(sub_Ndensity == 0)

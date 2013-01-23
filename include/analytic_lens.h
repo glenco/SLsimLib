@@ -62,12 +62,12 @@
  */
 class AnaLens : public BaseAnaLens{
 public:
-	//AnaLens(std::string);
 	AnaLens(InputParams& params);
 	~AnaLens();
 
-  void assignParams(InputParams& params);
+  virtual void assignParams(InputParams& params);
   void PrintAnaLens(bool show_substruct,bool show_stars);
+  double FractionWithinRe(double rangeInRei);
 
   // in randoimize_lens.c
   void RandomizeHost(long *seed,bool tables);
@@ -77,6 +77,9 @@ public:
   void RandomizeSubstructure(double rangeInRei,long *seed);
   void RandomizeSubstructure2(double rangeInRei,long *seed);
   void RandomizeSubstructure3(double rangeInRei,long *seed);
+
+  void FindLensSimple(int Nimages,Point *image_positions,double *y,double **dx_sub);
+  void FindLensSimple(ImageInfo *imageinfo ,int Nimages ,double *y,double **dx_sub);
 
 private:
    // Things added to manipulate and fit lenses.
