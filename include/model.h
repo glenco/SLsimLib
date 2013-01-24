@@ -9,6 +9,7 @@
 #define MODEL_H_
 
 #include <analytic_lens.h>
+#include <uniform_lens.h>
 #include <multiplane.h>
 #include <source.h>
 /**
@@ -30,7 +31,8 @@ public:
 	double getZsource(){return source->getZ();}
 	double getZlens(){return lens->getZlens();}
 
-    void RandomizeModel(double r_source_physical,long *seed,bool tables,bool randomize_host_z=true,bool randomize_source_z=true,bool in_radians=false);
+    void RandomizeModel(double r_source_physical,long *seed
+    		,bool tables,bool randomize_host_z=true,bool randomize_source_z=true,bool in_radians=false);
 
 private:
 

@@ -458,7 +458,7 @@ void QuadTree::rotate_coordinates(double **coord){
  *       NB : the units of sigma_backgound need to be mass/units(ray)^2
  * */
 
-void QuadTree::force2D(double *ray,double *alpha,float *kappa,float *gamma,bool no_kappa){
+void QuadTree::force2D(double *ray,double *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa){
 
   PosType xcm[2],rcm2cell,rcm2,tmp,boxsize2;
   IndexType i;
@@ -632,7 +632,7 @@ void QuadTree::force2D(double *ray,double *alpha,float *kappa,float *gamma,bool 
  *       NB : the units of sigma_backgound need to be mass/units(ray)^2
  * */
 
-void QuadTree::force2D_recur(double *ray,double *alpha,float *kappa,float *gamma,bool no_kappa){
+void QuadTree::force2D_recur(double *ray,double *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa){
 
   assert(tree);
 
@@ -652,7 +652,7 @@ void QuadTree::force2D_recur(double *ray,double *alpha,float *kappa,float *gamma
   return;
 }
 
-void QuadTree::walkTree_recur(QBranchNB *branch,double *ray,double *alpha,float *kappa,float *gamma,bool no_kappa){
+void QuadTree::walkTree_recur(QBranchNB *branch,double *ray,double *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa){
 
 	PosType xcm[2],rcm2cell,rcm2,tmp,boxsize2;
 	IndexType i;
@@ -796,8 +796,8 @@ void QuadTree::walkTree_recur(QBranchNB *branch,double *ray,double *alpha,float 
  */
 void QuadTree::force_halo(
 		double *alpha     /// mass/Mpc
-		,float *kappa
-		,float *gamma
+		,KappaType *kappa
+		,KappaType *gamma
 		,double *xcm
 		,HaloStructure & halo_params
 		,bool no_kappa

@@ -232,7 +232,8 @@ void MultiLens::assignParams(InputParams& params){
 	if(!params.get("internal_slope_pw",pw_beta))     pw_beta = -1.0;
 	if(!params.get("internal_slope_pnfw",pnfw_beta)) pnfw_beta = 2.0;
 	if(!params.get("deflection_off",flag_switch_deflection_off)) flag_switch_deflection_off = false;
-	if(!params.get("background_off",flag_switch_background_off)) flag_switch_background_off = false;
+	if(!params.get("background_off",flag_switch_background_off)) flag_switch_background_off = false;;
+	if(!params.get("twop_test",flag_run_twop_test)) flag_run_twop_test = false;
 
 	// Some checks for valid parameters
 	  if(pw_beta >= 0){
@@ -873,11 +874,6 @@ void MultiLens::buildHaloTrees_test(
 		locateD(halo_zs-1,Nhalos,z1,&j1);
 		locateD(halo_zs-1,Nhalos,z2,&j2);
 
-		/*
-		 * finding the average mass surface density in halos
-		 */
-
-		// TODO Ben: test this
 		double sigma_back = 0.0;
 
 		halo_data[j].reset(new HaloData(&halos[j1],sigma_back,&halo_pos[j1],&halo_zs[j1],&halo_id[j1],j2-j1,Dl[j]/(1+plane_redshifts[j])));
@@ -925,60 +921,86 @@ void MultiLens::buildHaloTrees_test(
  * The error values are saved instead of the real physical values.
  */
 void MultiLens::calc_error_test(
-		GridHndl grid
+		unsigned long Npoints
+		,Point *point
+		,bool kappa_off
 		){
+	double alpha[2];
+	KappaType kappa,gamma[3];
 	double alpha0[2];
-	float kappa0,gamma0[3];
+	KappaType kappa0,gamma0[3];
 	double alpha1[2];
-	float kappa1,gamma1[3];
+	KappaType kappa1,gamma1[3];
 
 	double aa = charge*dDl[2]*Dl[1]/Dl[2];
-	double bb = charge*(Dl[2]-Dl[0])*Dl[0]/Dl[2];
+	double bb = charge*(dDl[2]+dDl[1])*Dl[0]/Dl[2];
 	double cc = charge*charge*dDl[2]*dDl[1]*Dl[0]/Dl[2];
 
-	double xx[2];
+	double xx[2], xx0[2], xx1[2], xx2[2];
 
 	std::cout << aa << " " << bb << " " << cc << std::endl;
 
-	MoveToTopList(grid->i_tree->pointlist);
-	do{
-		halo_tree[0]->set_force_theta(0.0);
-		halo_tree[1]->set_force_theta(0.0);
+	for(unsigned long i=0; i<Npoints; i++){
+		//halo_tree[0]->set_force_theta(0.0);
+		//halo_tree[0]->CalcMoments();
+		//halo_tree[1]->set_force_theta(0.0);
+		//halo_tree[1]->CalcMoments();
 
-		xx[0] = grid->i_tree->pointlist->current->x[0]*Dl[0]/(1+plane_redshifts[0]);
-		xx[1] = grid->i_tree->pointlist->current->x[1]*Dl[0]/(1+plane_redshifts[0]);
+		xx[0] = point[i].x[0];
+		xx[1] = point[i].x[1];
 
-		halo_tree[0]->force2D_recur(xx,alpha0,&kappa0,gamma0,false);
+		rayshooterInternal(xx,alpha,gamma,&kappa,kappa_off);
+
+		xx0[0] = xx[0]*Dl[0]/(1+plane_redshifts[0]);
+		xx0[1] = xx[1]*Dl[0]/(1+plane_redshifts[0]);
+
+		halo_tree[0]->force2D_recur(xx0,alpha0,&kappa0,gamma0,kappa_off);
 		double fac = 1/(1+plane_redshifts[0]);
 		kappa0*=fac;
 		gamma0[0]*=fac;
 		gamma0[1]*=fac;
 		gamma0[2]*=fac;
 
-		xx[0] = grid->i_tree->pointlist->current->x[0]*Dl[1]/(1+plane_redshifts[1]);
-		xx[1] = grid->i_tree->pointlist->current->x[1]*Dl[1]/(1+plane_redshifts[1]);
+		if(flag_switch_deflection_off)
+			alpha0[0] = alpha0[1] = 0.0;
 
-		halo_tree[1]->force2D_recur(xx,alpha1,&kappa1,gamma1,false);
+		xx1[0] = (dDl[1]+dDl[0])/dDl[0]*xx0[0]*(1+plane_redshifts[0]) - charge*dDl[1]*alpha0[0];
+		xx1[1] = (dDl[1]+dDl[0])/dDl[0]*xx0[1]*(1+plane_redshifts[0]) - charge*dDl[1]*alpha0[1];
+
+		xx1[0] /= (1+plane_redshifts[1]);
+		xx1[1] /= (1+plane_redshifts[1]);
+
+		halo_tree[1]->force2D_recur(xx1,alpha1,&kappa1,gamma1,kappa_off);
 		fac = 1/(1+plane_redshifts[1]);
 		kappa1*=fac;
 		gamma1[0]*=fac;
 		gamma1[1]*=fac;
 		gamma1[2]*=fac;
 
-		grid->i_tree->pointlist->current->kappa =
-				(aa*kappa1+bb*kappa0-cc*(kappa0*kappa1+gamma0[0]*gamma1[0]+gamma0[1]*gamma1[1]))/grid->i_tree->pointlist->current->kappa - 1.0;
+		if(flag_switch_deflection_off)
+			alpha1[0] = alpha1[1] = 0.0;
 
-		grid->i_tree->pointlist->current->gamma[0] =
-				(-aa*gamma1[0]-bb*gamma0[0]+cc*(kappa0*gamma1[0]+gamma0[0]*kappa1))/grid->i_tree->pointlist->current->gamma[0] - 1.0;
+		xx2[0] = Dl[2]*xx[0]-(dDl[2]+dDl[1])*charge*alpha0[0]-dDl[2]*charge*alpha1[0]*(Dl[1]*xx[0]-dDl[1]*charge*alpha0[0]);
+		xx2[0] = Dl[2]*xx[1]-(dDl[2]+dDl[1])*charge*alpha0[1]-dDl[2]*charge*alpha1[1]*(Dl[1]*xx[1]-dDl[1]*charge*alpha0[1]);
 
-		grid->i_tree->pointlist->current->gamma[1] =
-				(-aa*gamma1[1]-bb*gamma0[1]+cc*(kappa0*gamma1[1]+gamma0[1]*kappa1))/grid->i_tree->pointlist->current->gamma[1] - 1.0;
+		xx2[0] /= Dl[2];
+		xx2[1] /= Dl[2];
 
-		grid->i_tree->pointlist->current->gamma[2] =
-				cc*(-gamma0[0]*gamma1[1]+gamma0[1]*gamma1[0])/grid->i_tree->pointlist->current->gamma[2] - 1.0;
+		point[i].image->x[0] = (xx2[0]/alpha[0] - 1.0);
 
-	}while(MoveDownList(grid->i_tree->pointlist));
+		point[i].image->x[1] = (xx2[1]/alpha[1] - 1.0);
+
+		point[i].kappa = ((aa*kappa1+bb*kappa0-cc*(kappa0*kappa1+gamma0[0]*gamma1[0]+gamma0[1]*gamma1[1]))/kappa - 1.0);
+
+		point[i].gamma[0] = ((-aa*gamma1[0]-bb*gamma0[0]+cc*(kappa0*gamma1[0]+gamma0[0]*kappa1))/gamma[0] - 1.0);
+
+		point[i].gamma[1] = ((-aa*gamma1[1]-bb*gamma0[1]+cc*(kappa0*gamma1[1]+gamma0[1]*kappa1))/gamma[1] - 1.0);
+
+		point[i].gamma[2] = (cc*(-gamma0[0]*gamma1[1]+gamma0[1]*gamma1[0])/gamma[2] - 1.0);
+
+	}
 }
+
 /**
  * Set the coordinate distances of the planes by dividing the coordinate distance space into equal intervals
  * and then plugging the analytic input plane in between.
@@ -1076,9 +1098,9 @@ double MultiLens::getZlens(){
 		return plane_redshifts[0];
 }
 
-void MultiLens::setZlens(double z){
+void MultiLens::setZlens(CosmoHndl cosmo,double z,double zsource){
 	if(flag_input_lens)
-		input_lens->setZlens(z);
+		input_lens->setZlens(cosmo,z,zsource);
 	else{
 		cout << "It is not possible to reset the redshift of the input AnaLens plane a MultiLens" << endl;
 		ERROR_MESSAGE();
@@ -1351,12 +1373,14 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 	else{
 		// TODO Ben swap function here or provide toggle
 		if(field_buffer > 0.0) createHaloData_buffered(cosmo,seed);
-		//if(field_buffer > 0.0) createHaloData_test(cosmo,seed);
-		else createHaloData(cosmo,seed);
+		else{
+			if(flag_run_twop_test) createHaloData_test(cosmo,seed);
+			else createHaloData(cosmo,seed);
+		}
 	}
 
-	buildHaloTrees(cosmo);
-	//buildHaloTrees_test(cosmo);
+	if(flag_run_twop_test) buildHaloTrees_test(cosmo);
+	else buildHaloTrees(cosmo);
 	std:: cout << " done " << std:: endl;
 }
 

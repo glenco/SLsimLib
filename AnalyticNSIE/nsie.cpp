@@ -84,7 +84,7 @@ void alphaNSIE(
  * \brief Convergence for non-singular isothermal ellipsoid, units \f$ \frac{r_{einstein}}{units(x)} \f$
  * or \f$ \frac{\sigma^2}{\Sigma_{crit}G\, units(xt) } \f$
  */
-float kappaNSIE(
+KappaType kappaNSIE(
 		double *xt     /// position on the image plane in Einstein radius units
 		,double f      /// axis ratio of mass
 		,double bc     /// core size in units of Einstein radius
@@ -107,7 +107,7 @@ float kappaNSIE(
 * or \f$ \frac{\sigma^2}{\Sigma_{crit}G\, units(xt) } \f$
 * */
 void gammaNSIE(
-		float *gam    /// output shear
+		KappaType *gam    /// output shear
 		,double *xt     /// position on the image plane in Einstein radius units
 		,double f       /// axis ratio of mass
 		,double bc      /// core size in units of Einstein radius
@@ -166,13 +166,13 @@ double ellipticRadiusNSIE(
 	return sqrt(y[0]*y[0] + f*f*y[1]*y[1]);
 }
      /* inverse magnification */
-double invmagNSIE(
+KappaType invmagNSIE(
 		double *x
 		,double f
 		,double bc
 		,double theta
-		,float *gam
-		,float kap
+		,KappaType *gam
+		,KappaType kap
 		){
 
   gammaNSIE(gam,x,f,bc,theta);
@@ -193,7 +193,7 @@ void rotation(double *xout,double *xin,double theta){
   xout[1]=xin[1]*cos(theta)+xin[0]*sin(theta);
 }
 /* potential in Mpc^2 */
-float phiNSIE(double *xt,double f,double bc,double theta){
+KappaType phiNSIE(double *xt,double f,double bc,double theta){
 
 	return 0.0;
 }

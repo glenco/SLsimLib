@@ -159,7 +159,7 @@ void MOKALens::initMap(){
 void MOKALens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 	cosmo->setOmega_matter(map->omegam,true);
 	cosmo->sethubble(map->h);
-	setZlens(map->zlens);
+	setZlens(cosmo,map->zlens,source->getZ());
 	source->setZ(map->zsource);
 
 	double fac = LH->DS/LH->DLS/LH->DL*LH->h;
@@ -212,7 +212,7 @@ double MOKALens::getZlens(){
 	return zlens;
 }
 
-void MOKALens::setZlens(double z){
+void MOKALens::setZlens(CosmoHndl cosmo,double z,double dummy){
 	zlens = z;
 }
 
@@ -422,7 +422,7 @@ void MOKALens::saveProfiles(double &RE3,double &xxc,double &yyc){
    * a MOKA map (MOKALens), for just one ray!!
    *
 */
-void MOKALens::rayshooterInternal(double *xx, double *alpha, float *gamma, float *kappa, bool kappa_off){
+void MOKALens::rayshooterInternal(double *xx, double *alpha, KappaType *gamma, KappaType *kappa, bool kappa_off){
     
   long index = IndexFromPosition(xx,map->nx,map->boxlMpc/map->h,map->center);
 

@@ -206,7 +206,7 @@ float * ForceTree::CalculateSPHsmoothing(int N){
  *       4*pi*G*mass_scale to get the deflection angle caused by the plane lens.
  * */
 
-void ForceTree::force2D(double *ray,double *alpha,float *kappa,float *gamma,bool no_kappa){
+void ForceTree::force2D(double *ray,double *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa){
 
   PosType xcm,ycm,rcm2,tmp;
   int OpenBox(TreeNBHndl tree,PosType r);
