@@ -926,11 +926,11 @@ void MultiLens::calc_error_test(
 		,bool kappa_off
 		){
 	double alpha[2];
-	float kappa,gamma[3];
+	KappaType kappa,gamma[3];
 	double alpha0[2];
-	float kappa0,gamma0[3];
+	KappaType kappa0,gamma0[3];
 	double alpha1[2];
-	float kappa1,gamma1[3];
+	KappaType kappa1,gamma1[3];
 
 	double aa = charge*dDl[2]*Dl[1]/Dl[2];
 	double bb = charge*(dDl[2]+dDl[1])*Dl[0]/Dl[2];
@@ -986,17 +986,17 @@ void MultiLens::calc_error_test(
 		xx2[0] /= Dl[2];
 		xx2[1] /= Dl[2];
 
-		point[i].image->x[0] = xx2[0]/alpha[0] - 1.0;
+		point[i].image->x[0] = (xx2[0]/alpha[0] - 1.0);
 
-		point[i].image->x[1] = xx2[1]/alpha[1] - 1.0;
+		point[i].image->x[1] = (xx2[1]/alpha[1] - 1.0);
 
-		point[i].kappa = (aa*kappa1+bb*kappa0-cc*(kappa0*kappa1+gamma0[0]*gamma1[0]+gamma0[1]*gamma1[1]))/kappa - 1.0;
+		point[i].kappa = ((aa*kappa1+bb*kappa0-cc*(kappa0*kappa1+gamma0[0]*gamma1[0]+gamma0[1]*gamma1[1]))/kappa - 1.0);
 
-		point[i].gamma[0] = (-aa*gamma1[0]-bb*gamma0[0]+cc*(kappa0*gamma1[0]+gamma0[0]*kappa1))/gamma[0] - 1.0;
+		point[i].gamma[0] = ((-aa*gamma1[0]-bb*gamma0[0]+cc*(kappa0*gamma1[0]+gamma0[0]*kappa1))/gamma[0] - 1.0);
 
-		point[i].gamma[1] = (-aa*gamma1[1]-bb*gamma0[1]+cc*(kappa0*gamma1[1]+gamma0[1]*kappa1))/gamma[1] - 1.0;
+		point[i].gamma[1] = ((-aa*gamma1[1]-bb*gamma0[1]+cc*(kappa0*gamma1[1]+gamma0[1]*kappa1))/gamma[1] - 1.0);
 
-		point[i].gamma[2] = cc*(-gamma0[0]*gamma1[1]+gamma0[1]*gamma1[0])/gamma[2] - 1.0;
+		point[i].gamma[2] = (cc*(-gamma0[0]*gamma1[1]+gamma0[1]*gamma1[0])/gamma[2] - 1.0);
 
 	}
 }

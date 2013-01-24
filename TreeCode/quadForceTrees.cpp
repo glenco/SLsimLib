@@ -126,7 +126,7 @@ void QuadTreeNSIE::test_force_halo(
 	  	HaloStructure &halo_params
 		){
 	double alpha[2];
-	float kappa, gamma[2];
+	KappaType kappa, gamma[2];
 	double xcm[2];
 	int N = 200;
 
@@ -151,8 +151,8 @@ void QuadTreeNSIE::test_force_halo(
 /// This is the function that override QuadTree::force_halo to make it 2D.
 void QuadTreeNSIE::force_halo(
 		double *alpha
-		,float *kappa
-		,float *gamma
+		,KappaType *kappa
+		,KappaType *gamma
 		,double *xcm
 	  	,HaloStructure &halo_params
 	  	,bool no_kappa
@@ -214,7 +214,7 @@ void QuadTreeNSIE::force_halo(
 		alpha[0] -= units*tmp[0];
 		alpha[1] -= units*tmp[1];
 		if(!no_kappa){
-			float tmp[2]={0,0};
+			KappaType tmp[2]={0,0};
 			*kappa += units*kappaNSIE(xt,halo_params.fratio_nsie,halo_params.rcore_nsie,halo_params.pa_nsie);
 			gammaNSIE(tmp,xt,halo_params.fratio_nsie,halo_params.rcore_nsie,halo_params.pa_nsie);
 			gamma[0] += units*tmp[0];
@@ -247,12 +247,12 @@ QuadTreeNFW_NSIE::~QuadTreeNFW_NSIE(){
 void QuadTreeNFW_NSIE::force2D_recur(
 		double *ray
 		,double *alpha
-		,float *kappa
-		,float *gamma
+		,KappaType *kappa
+		,KappaType *gamma
 		,bool no_kappa
 		){
 
-	float tmp_kappa,tmp_gamma[2];
+	KappaType tmp_kappa,tmp_gamma[2];
 	double tmp_alpha[2];
 
 	qtreensie->force2D_recur(ray,tmp_alpha,&tmp_kappa,tmp_gamma,no_kappa);
@@ -269,12 +269,12 @@ void QuadTreeNFW_NSIE::force2D_recur(
 void QuadTreeNFW_NSIE::force2D(
 		double *ray
 		,double *alpha
-		,float *kappa
-		,float *gamma
+		,KappaType *kappa
+		,KappaType *gamma
 		,bool no_kappa
 		){
 
-	float tmp_kappa,tmp_gamma[2];
+	KappaType tmp_kappa,tmp_gamma[2];
 	double tmp_alpha[2];
 
 	qtreensie->force2D(ray,tmp_alpha,&tmp_kappa,tmp_gamma,no_kappa);

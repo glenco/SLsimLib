@@ -28,9 +28,9 @@ typedef struct Point{
   Boo in_image; // marks if point is in image
 
   // redundant information in image and source points
-  float kappa;        // surface density
-  float gamma[3];    // shear, third component is the rotation quantity that is only non-zero for multi-plane lensing
-  float dt;          // time delay
+  KappaType kappa;        // surface density
+  KappaType gamma[3];    // shear, third component is the rotation quantity that is only non-zero for multi-plane lensing
+  KappaType dt;          // time delay
   float invmag;     // inverse of magnification
   double gridsize;   // the size of the most refined grid the point is in
   float surface_brightness;  // the surface brightness at this points

@@ -131,7 +131,7 @@ void *compute_rays_parallel(void *_p){
   double xx[2],fac;
   double aa,bb,cc;
   double alpha[2];
-  float kappa,gamma[3];
+  KappaType kappa,gamma[3];
   double xminus[2],xplus[2];
   double kappa_minus,gamma_minus[3],kappa_plus,gamma_plus[3];
   
@@ -286,14 +286,14 @@ void *compute_rays_parallel(void *_p){
   
 }
 
-void MultiLens::rayshooterInternal(double *ray, double *alpha, float *gamma, float *kappa, bool kappa_off){
+void MultiLens::rayshooterInternal(double *ray, double *alpha, KappaType *gamma, KappaType *kappa, bool kappa_off){
 
   int j;
 
   double xx[2],fac;
   double aa,bb,cc;
   double alpha_tmp[2];
-  float kappa_tmp,gamma_tmp[3];
+  KappaType kappa_tmp,gamma_tmp[3];
   double xminus[2],xplus[2];
   double kappa_tmp_minus,gamma_tmp_minus[3],kappa_tmp_plus,gamma_tmp_plus[3];
 
