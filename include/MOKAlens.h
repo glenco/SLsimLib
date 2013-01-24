@@ -76,14 +76,14 @@ public:
 	void saveImage(bool saveprofile=true);
 	void saveKappaProfile();
 	void saveGammaProfile();
-	void saveProfiles(double &RE3);
+	void saveProfiles(double &RE3, double &xxc, double &yyc);
 	void initMap();
 
 	MOKAmap *map;
 	LensHalo *LH;
 
 	void estSignLambdas();
-	void EinsteinRadii(double &RE1, double &RE2);
+	void EinsteinRadii(double &RE1, double &RE2, double &xxc, double &yyc);
 
 };
 
