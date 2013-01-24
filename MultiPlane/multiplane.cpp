@@ -924,6 +924,8 @@ void MultiLens::calc_error_test(
 		,Point *point
 		,bool kappa_off
 		){
+	double alpha[2];
+	float kappa,gamma[3];
 	double alpha0[2];
 	float kappa0,gamma0[3];
 	double alpha1[2];
@@ -933,11 +935,9 @@ void MultiLens::calc_error_test(
 	double bb = charge*(dDl[2]+dDl[1])*Dl[0]/Dl[2];
 	double cc = charge*charge*dDl[2]*dDl[1]*Dl[0]/Dl[2];
 
-	double xx0[2], xx1[2], xx2[2];
+	double xx[2], xx0[2], xx1[2], xx2[2];
 
 	std::cout << aa << " " << bb << " " << cc << std::endl;
-
-	rayshooterInternal(Npoints,point,kappa_off);
 
 	for(unsigned long i=0; i<Npoints; i++){
 		//halo_tree[0]->set_force_theta(0.0);
@@ -945,8 +945,13 @@ void MultiLens::calc_error_test(
 		//halo_tree[1]->set_force_theta(0.0);
 		//halo_tree[1]->CalcMoments();
 
-		xx0[0] = point[i].x[0]*Dl[0]/(1+plane_redshifts[0]);
-		xx0[1] = point[i].x[1]*Dl[0]/(1+plane_redshifts[0]);
+		xx[0] = point[i].x[0];
+		xx[1] = point[i].x[1];
+
+		rayshooterInternal(xx,alpha,gamma,&kappa,kappa_off);
+
+		xx0[0] = xx[0]*Dl[0]/(1+plane_redshifts[0]);
+		xx0[1] = xx[1]*Dl[0]/(1+plane_redshifts[0]);
 
 		halo_tree[0]->force2D_recur(xx0,alpha0,&kappa0,gamma0,kappa_off);
 		double fac = 1/(1+plane_redshifts[0]);
@@ -974,24 +979,23 @@ void MultiLens::calc_error_test(
 		if(flag_switch_deflection_off)
 			alpha1[0] = alpha1[1] = 0.0;
 
-		xx2[0] = Dl[2]*point[i].x[0]-(dDl[2]+dDl[1])*charge*alpha0[0]-dDl[2]*charge*alpha1[0]*(Dl[1]*point[i].x[0]-dDl[1]*charge*alpha0[0]);
-		xx2[0] = Dl[2]*point[i].x[1]-(dDl[2]+dDl[1])*charge*alpha0[1]-dDl[2]*charge*alpha1[1]*(Dl[1]*point[i].x[1]-dDl[1]*charge*alpha0[1]);
+		xx2[0] = Dl[2]*xx[0]-(dDl[2]+dDl[1])*charge*alpha0[0]-dDl[2]*charge*alpha1[0]*(Dl[1]*xx[0]-dDl[1]*charge*alpha0[0]);
+		xx2[0] = Dl[2]*xx[1]-(dDl[2]+dDl[1])*charge*alpha0[1]-dDl[2]*charge*alpha1[1]*(Dl[1]*xx[1]-dDl[1]*charge*alpha0[1]);
 
 		xx2[0] /= Dl[2];
 		xx2[1] /= Dl[2];
 
-		point[i].image->x[0] = xx2[0]/point[i].image->x[0] - 1.0;
+		point[i].image->x[0] = xx2[0]/alpha[0] - 1.0;
 
-		point[i].image->x[1] = xx2[1]/point[i].image->x[1] - 1.0;
+		point[i].image->x[1] = xx2[1]/alpha[1] - 1.0;
 
-		//if(point[i].kappa)
-		point[i].kappa = fabs((aa*kappa1+bb*kappa0-cc*(kappa0*kappa1+gamma0[0]*gamma1[0]+gamma0[1]*gamma1[1]))/point[i].kappa) - 1.0;
+		point[i].kappa = (aa*kappa1+bb*kappa0-cc*(kappa0*kappa1+gamma0[0]*gamma1[0]+gamma0[1]*gamma1[1]))/kappa - 1.0;
 
-		point[i].gamma[0] = (-aa*gamma1[0]-bb*gamma0[0]+cc*(kappa0*gamma1[0]+gamma0[0]*kappa1))/point[i].gamma[0] - 1.0;
+		point[i].gamma[0] = (-aa*gamma1[0]-bb*gamma0[0]+cc*(kappa0*gamma1[0]+gamma0[0]*kappa1))/gamma[0] - 1.0;
 
-		point[i].gamma[1] = (-aa*gamma1[1]-bb*gamma0[1]+cc*(kappa0*gamma1[1]+gamma0[1]*kappa1))/point[i].gamma[1] - 1.0;
+		point[i].gamma[1] = (-aa*gamma1[1]-bb*gamma0[1]+cc*(kappa0*gamma1[1]+gamma0[1]*kappa1))/gamma[1] - 1.0;
 
-		point[i].gamma[2] = cc*(-gamma0[0]*gamma1[1]+gamma0[1]*gamma1[0])/point[i].gamma[2] - 1.0;
+		point[i].gamma[2] = cc*(-gamma0[0]*gamma1[1]+gamma0[1]*gamma1[0])/gamma[2] - 1.0;
 
 	}
 }
