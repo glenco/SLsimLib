@@ -189,6 +189,8 @@ private:
 	//bool gal_input_flag;
 	bool read_sim_file;
 
+	bool flag_run_twop_test;
+
 	/// pointer to first of all the halo internal structures
 	HaloStructure *halos;
 	/// number of halos on all the planes

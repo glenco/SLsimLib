@@ -232,7 +232,8 @@ void MultiLens::assignParams(InputParams& params){
 	if(!params.get("internal_slope_pw",pw_beta))     pw_beta = -1.0;
 	if(!params.get("internal_slope_pnfw",pnfw_beta)) pnfw_beta = 2.0;
 	if(!params.get("deflection_off",flag_switch_deflection_off)) flag_switch_deflection_off = false;
-	if(!params.get("background_off",flag_switch_background_off)) flag_switch_background_off = false;
+	if(!params.get("background_off",flag_switch_background_off)) flag_switch_background_off = false;;
+	if(!params.get("twop_test",flag_run_twop_test)) flag_run_twop_test = false;
 
 	// Some checks for valid parameters
 	  if(pw_beta >= 0){
@@ -1371,13 +1372,15 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 	}
 	else{
 		// TODO Ben swap function here or provide toggle
-		//if(field_buffer > 0.0) createHaloData_buffered(cosmo,seed);
-		if(field_buffer > 0.0) createHaloData_test(cosmo,seed);
-		else createHaloData(cosmo,seed);
+		if(field_buffer > 0.0) createHaloData_buffered(cosmo,seed);
+		else{
+			if(flag_run_twop_test) createHaloData_test(cosmo,seed);
+			else createHaloData(cosmo,seed);
+		}
 	}
 
-	//buildHaloTrees(cosmo);
-	buildHaloTrees_test(cosmo);
+	if(flag_run_twop_test) buildHaloTrees_test(cosmo);
+	else buildHaloTrees(cosmo);
 	std:: cout << " done " << std:: endl;
 }
 
