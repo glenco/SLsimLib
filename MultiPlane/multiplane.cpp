@@ -980,23 +980,23 @@ void MultiLens::calc_error_test(
 		if(flag_switch_deflection_off)
 			alpha1[0] = alpha1[1] = 0.0;
 
-		xx2[0] = Dl[2]*xx[0]-(dDl[2]+dDl[1])*charge*alpha0[0]-dDl[2]*charge*alpha1[0]*(Dl[1]*xx[0]-dDl[1]*charge*alpha0[0]);
-		xx2[0] = Dl[2]*xx[1]-(dDl[2]+dDl[1])*charge*alpha0[1]-dDl[2]*charge*alpha1[1]*(Dl[1]*xx[1]-dDl[1]*charge*alpha0[1]);
+		xx2[0] = (dDl[2]+dDl[1])/dDl[1]*xx1[0]*(1+plane_redshifts[1]) - dDl[2]/dDl[1]*xx0[0]*(1+plane_redshifts[0]) - charge*dDl[2]*alpha1[0];
+		xx2[1] = (dDl[2]+dDl[1])/dDl[1]*xx1[1]*(1+plane_redshifts[1]) - dDl[2]/dDl[1]*xx0[0]*(1+plane_redshifts[0])  - charge*dDl[2]*alpha1[1];
 
 		xx2[0] /= Dl[2];
 		xx2[1] /= Dl[2];
 
-		point[i].image->x[0] = (xx2[0]/alpha[0] - 1.0);
+		point[i].image->x[0] = fabs(xx2[0]/alpha[0] - 1.0);
 
-		point[i].image->x[1] = (xx2[1]/alpha[1] - 1.0);
+		point[i].image->x[1] = fabs(xx2[1]/alpha[1] - 1.0);
 
-		point[i].kappa = ((aa*kappa1+bb*kappa0-cc*(kappa0*kappa1+gamma0[0]*gamma1[0]+gamma0[1]*gamma1[1]))/kappa - 1.0);
+		point[i].kappa = fabs((aa*kappa1+bb*kappa0-cc*(kappa0*kappa1+gamma0[0]*gamma1[0]+gamma0[1]*gamma1[1]))/kappa - 1.0);
 
-		point[i].gamma[0] = ((-aa*gamma1[0]-bb*gamma0[0]+cc*(kappa0*gamma1[0]+gamma0[0]*kappa1))/gamma[0] - 1.0);
+		point[i].gamma[0] = fabs((-aa*gamma1[0]-bb*gamma0[0]+cc*(kappa0*gamma1[0]+gamma0[0]*kappa1))/gamma[0] - 1.0);
 
-		point[i].gamma[1] = ((-aa*gamma1[1]-bb*gamma0[1]+cc*(kappa0*gamma1[1]+gamma0[1]*kappa1))/gamma[1] - 1.0);
+		point[i].gamma[1] = fabs((-aa*gamma1[1]-bb*gamma0[1]+cc*(kappa0*gamma1[1]+gamma0[1]*kappa1))/gamma[1] - 1.0);
 
-		point[i].gamma[2] = (cc*(-gamma0[0]*gamma1[1]+gamma0[1]*gamma1[0])/gamma[2] - 1.0);
+		point[i].gamma[2] = fabs(cc*(-gamma0[0]*gamma1[1]+gamma0[1]*gamma1[0])/gamma[2] - 1.0);
 
 	}
 }
