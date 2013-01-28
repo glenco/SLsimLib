@@ -1034,6 +1034,7 @@ void MultiLens::calc_error_test_multi(
 	for(j=1; j<Nhalos+1; j++)
 		dDl_halos[j] = Dl_halos[j] - Dl_halos[j-1];
 
+	rayshooterInternal(Npoints,i_points,kappa_off);
 	rayshooterInternal_halos_diff(Npoints,i_points,kappa_off,Dl_halos,dDl_halos);
 
 	delete[] Dl_halos;
