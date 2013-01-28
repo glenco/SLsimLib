@@ -831,6 +831,59 @@ void QuadTree::force_halo(
 	return;
 }
 
+/*
+ * External method (i.e. public to the class) that does a single halo calculation force calculation.
+ * For the moment it only works for the !!!non NSIE!!! halo profiles
+ */
+void QuadTree::force_halo_external(
+		double *alpha
+		,KappaType *kappa
+		,KappaType *gamma
+		,double *xcm
+		,double mass
+		,double Rmax
+		,double rscale
+		,bool no_kappa
+		){
+
+	double tmp, rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
+	if(rcm2 < 1e-20) rcm2 = 1e-20;
+	double prefac = mass/rcm2/pi;
+
+	if(rcm2 > Rmax*Rmax){
+		tmp = -1.0*prefac;
+		alpha[0] = tmp*xcm[0];
+		alpha[1] = tmp*xcm[1];
+
+		// can turn off kappa and gamma calculations to save times
+		if(!no_kappa){
+			*kappa = 0.0;
+
+			tmp = -2.0*prefac/rcm2;
+
+			gamma[0] = 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+			gamma[1] = xcm[0]*xcm[1]*tmp;
+		}
+	}else{
+		double arg1 = sqrt(rcm2)/rscale;
+		double arg2 = Rmax/rscale;
+
+		tmp = alpha_h(arg1,arg2)*prefac;
+		alpha[0] = tmp*xcm[0];
+		alpha[1] = tmp*xcm[1];
+
+		// can turn off kappa and gamma calculations to save times
+		if(!no_kappa){
+			*kappa = kappa_h(arg1,arg2)*prefac;
+
+			tmp = gamma_h(arg1,arg2)*prefac/rcm2;
+
+			gamma[0] = 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+			gamma[1] = xcm[0]*xcm[1]*tmp;
+		}
+	}
+	return;
+}
 /** This is a diagnostic routine that prints the position of every point in a
  * given branch of the tree.
  */

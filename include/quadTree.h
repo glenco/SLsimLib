@@ -138,7 +138,8 @@ public:
 	virtual void force2D_recur(double *ray,double *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa);
 	virtual void printParticlesInBranch(unsigned long number);
 	virtual void printBranchs(int level = -1);
-	void set_force_theta(double ft){force_theta=ft;};
+
+	virtual void force_halo_external(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,double mass, double Rmax,double rscale,bool no_kappa);
 
 protected:
 

@@ -90,6 +90,7 @@ public:
 	void resetNplanes(CosmoHndl cosmo, int Np);
 	
 	void calc_error_test(unsigned long Npoints,Point *point,bool kappa_off);
+	void calc_error_test_multi(unsigned long Npoints,Point *i_points,bool kappa_off,CosmoHndl cosmo);
 
 	void buildHaloTrees(CosmoHndl cosmo);
 	void buildHaloTrees_test(CosmoHndl cosmo);
@@ -105,6 +106,7 @@ public:
 	void setInternalParams(CosmoHndl,SourceHndl);
 	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off);
 	void rayshooterInternal(double *ray, double *alpha, KappaType *gamma, KappaType *kappa, bool kappa_off);
+	void rayshooterInternal_halos_diff(unsigned long Npoints, Point *i_points, bool kappa_off, double *Dl_halos, double *dDl_halos);
 	
 	LensHndl input_lens;
 	AnaLens *analens;
@@ -189,13 +191,17 @@ private:
 	//bool gal_input_flag;
 	bool read_sim_file;
 
+	/// enables to two plane test
 	bool flag_run_twop_test;
+	/// enables the multi planes halos test
+	bool flag_run_multip_test;
 
 	/// pointer to first of all the halo internal structures
 	HaloStructure *halos;
 	/// number of halos on all the planes
 	IndexType Nhalos;
 	double *halo_zs;
+	double **halo_pos_Mpc;
 	double **halo_pos;
 	unsigned long *halo_id;
 
