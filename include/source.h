@@ -65,17 +65,19 @@ typedef Source *SourceHndl;
 class PixelledSource: public Source{
 public:
 	PixelledSource(double my_z, int Npixels, double range, double* center, double* arr_val);
+	PixelledSource(InputParams& params);
 	~PixelledSource();
 	double SurfaceBrightness(double *y);
-	void assignParams(InputParams& params);
 	void printSource();
 	double getTotalFlux(){return flux;}
 	inline double getRadius(){return source_r;}
 	double* getEll(){return ell;};
+	double getQuad(int i, int j){return quad[i][j];};
 	double getSize(){return size;};
 	double* getCentroid(){return centroid;};
 	double getMag(){return -2.5*log10(flux*hplanck)-48.6;};
 private:
+	void assignParams(InputParams& params);
 	void calcEll();
 	void calcSize();
 	void calcCentroid();
@@ -84,6 +86,7 @@ private:
 	double range;
 	long Npixels;
 	double flux;
+	double quad[2][2];
 	double ell[2];
 	double size;
 	double centroid[2];

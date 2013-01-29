@@ -195,6 +195,8 @@ double SourceBLRSph2::SurfaceBrightness(double *y){
 //void in_source(double *y_source,ListHndl sourcelist){
 //  return;
 //}
+PixelledSource::PixelledSource(InputParams& params)
+{}
 
 PixelledSource::PixelledSource(double my_z, int my_Npixels, double my_range, double* my_center, double* arr_val)
 	:Source(), range(my_range), Npixels (my_Npixels){
@@ -227,13 +229,11 @@ void PixelledSource::calcCentroid(){
 		y_sum += x[1]*values[i];
 		sum += values[i];
 	}
-	std::cout << x_sum << "  " << y_sum << "  " << sum << std::endl;
 	centroid[0] = x_sum/sum;
 	centroid[1] = y_sum/sum;
 }
 
 void PixelledSource::calcEll(){
-	double quad[2][2];
 	double sum = 0;
 	for (int j = 0; j < 2; j++)
 	{
@@ -281,7 +281,6 @@ double PixelledSource::SurfaceBrightness(double *y){
 	int iy = IndexFromPosition(y[1],Npixels,range,source_x[1]);
 	if (ix>-1 && iy>-1)
 	{
-//		std::cout << ix << "  " << iy << "  " << iy*Npixels+ix << "  " << values[iy*Npixels+ix] << std::endl;
 		return values[iy*Npixels+ix];
 	}
 	else
