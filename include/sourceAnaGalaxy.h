@@ -12,7 +12,7 @@
 
 /**
  * \brief Source that represents an analytic galaxy surface brightness model.  It encapsulates a
- * OverGalaxy which is a model from R.Oversier et al. 2012 with a bulge and a disk.
+ * OverGalaxy which is a model from R.Overzier et al. 2012 with a bulge and a disk.
  *
  *<pre>
  * Input parameters are only needed if the third constructor is used so that an input catalog is read

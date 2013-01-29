@@ -279,12 +279,13 @@ int fof(double l,std:: vector<double> xci, std:: vector<double> yci, std:: vecto
 	ycm += yci[ji];
       }
     }
-    if(k>0){
+    if(k>4){
       ng++;
       xcm/=k;
       ycm/=k;
       distcentre.push_back(sqrt(xcm*xcm+ycm*ycm));
       idgroup.push_back(ii+1);
+      // std:: cout << "  " << ii+1 << "  " << k << "   " << sqrt(xcm*xcm+ycm*ycm) << std:: endl;
     }
     kt = kt + k;
   }
@@ -299,6 +300,7 @@ int fof(double l,std:: vector<double> xci, std:: vector<double> yci, std:: vecto
   if(idgroup.size()>0){
     std:: vector<double>::iterator it = min_element(distcentre.begin(), distcentre.end());
     int minpos = idgroup[distance(distcentre.begin(), it)];
+    // std:: cout << " nearest to the centre " << minpos << std:: endl;
     return minpos;
   }
   else return 0;

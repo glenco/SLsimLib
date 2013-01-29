@@ -68,7 +68,7 @@ void Model::RandomizeModel(
 		delete[] zlTable;
 
 		if(randomize_source_z) source->setZ(zsource);
-		if(randomize_host_z) lens->setZlens(zlens);
+		if(randomize_host_z) lens->setZlens(cosmo,zlens,zsource);
 
 		lens->RandomizeSigma(seed,tables);
 	}
@@ -517,7 +517,7 @@ double AnaLens::FractionWithinRe(double rangeInRei){
 				);
 }
 
-double AnaLens::averageSubMass(){
+double BaseAnaLens::averageSubMass(){
 	// average mass of substructures
 	return sub_Mmax*(sub_alpha+1)
 				  /(sub_alpha+2)*(1-pow(sub_Mmin/sub_Mmax,sub_alpha+2))/

@@ -12,16 +12,15 @@ using namespace std;
 HaloData::HaloData(HaloStructure *halostrucs,double sigma_back,PosType **positions, double *zz, unsigned long *id,unsigned long Nhaloss,double Dl):
 	pos(positions), halos(halostrucs), Nhalos(Nhaloss),z(zz),haloID(id),sigma_background(sigma_back)
 {
-  //convert to physical Mpc on the plane 
-  int i;
+	//convert to physical Mpc on the plane
+	int i;
 #ifdef _OPENMP
 #pragma omp parallel for default(shared) private(i)
 #endif
-for(i=0; i<Nhalos; i++){
-    pos[i][0]*=Dl;
-    pos[i][1]*=Dl;
-  }
-
+	for(i=0; i<Nhalos; i++){
+		pos[i][0]*=Dl;
+		pos[i][1]*=Dl;
+	}
 }
 
 HaloData::~HaloData(){
@@ -46,24 +45,23 @@ void MultiLens::make_table(CosmoHndl cosmo){
 }
 
 void MultiLens::resetNplanes(CosmoHndl cosmo, int Np){
-  
-  int i,j;
-  ///revert back to radians
-  for(j=0; j<Nplanes-1; j++){
-    if(flag_input_lens && j == (flag_input_lens % Nplanes))
-      continue;
+	int i,j;
+	///revert back to radians
+	for(j=0; j<Nplanes-1; j++){
+		if(flag_input_lens && j == (flag_input_lens % Nplanes))
+			continue;
 #ifdef _OPENMP
 #pragma omp parallel for default(shared) private(i)
 #endif
-    for(i=0; i<halo_data[j]->Nhalos; i++){
-      halo_data[j]->pos[i][0]/=Dl[j]/(1+plane_redshifts[j]);
-      halo_data[j]->pos[i][1]/=Dl[j]/(1+plane_redshifts[j]);
-    }
+		for(i=0; i<halo_data[j]->Nhalos; i++){
+			halo_data[j]->pos[i][0]/=Dl[j]/(1+plane_redshifts[j]);
+			halo_data[j]->pos[i][1]/=Dl[j]/(1+plane_redshifts[j]);
+		}
 #ifdef _OPENMP
 #pragma omp barrier
 #endif
-  }
-  
+	}
+
   delete[] halo_tree;
   delete[] halo_data;
   
@@ -152,6 +150,8 @@ MultiLens::~MultiLens(){
 	delete[] halo_zs;
 	delete[] halo_id;
 	free_PosTypeMatrix(halo_pos,Nhalos,3);
+	if(flag_run_multip_test)
+		free_PosTypeMatrix(halo_pos_Mpc,Nhalos,3);
 	
 	if(flag_input_lens)
 		delete input_lens;
@@ -233,6 +233,8 @@ void MultiLens::assignParams(InputParams& params){
 	if(!params.get("internal_slope_pnfw",pnfw_beta)) pnfw_beta = 2.0;
 	if(!params.get("deflection_off",flag_switch_deflection_off)) flag_switch_deflection_off = false;
 	if(!params.get("background_off",flag_switch_background_off)) flag_switch_background_off = false;
+	if(!params.get("twop_test",flag_run_twop_test)) flag_run_twop_test = false;
+	if(!params.get("multip_test",flag_run_multip_test)) flag_run_multip_test = false;
 
 	// Some checks for valid parameters
 	  if(pw_beta >= 0){
@@ -371,8 +373,6 @@ void MultiLens::createHaloData(
   /* fill the log(mass) vector */
   
   fill_linear(Logm,Nmassbin,log10(min_mass*mass_scale),MaxLogm);
-  
-  std::cout << Logm[0] << "  " << Logm[Nmassbin-1] << std::endl;
 
   int Nsample = 50;
   
@@ -402,6 +402,7 @@ void MultiLens::createHaloData(
     double tailarea = cosmo->haloNumberDensityOnSky(pow(10,MaxLogm),z1,z2,mass_func_type,pw_alpha)*fieldofview;
     Nhalosbin[0] = cosmo->haloNumberDensityOnSky(pow(10,Logm[0]),z1,z2,mass_func_type,pw_alpha)*fieldofview;
     
+    /*
     std::cout << "tail = " << tailarea << "  " << tailarea/Nhalosbin[0] << " % "<< std::endl;
     std::cout << "number tail above 1.0e16 = " << 100*cosmo->haloNumberDensityOnSky(1.0e16,z1,z2,mass_func_type,pw_alpha)*fieldofview/Nhalosbin[0]
      		<< " % "<< std::endl;
@@ -409,7 +410,7 @@ void MultiLens::createHaloData(
      		<< " % "<< std::endl;
     std::cout << "number tail above 1.0e14 = " << 100*cosmo->haloNumberDensityOnSky(1.0e14,z1,z2,mass_func_type,pw_alpha)*fieldofview/Nhalosbin[0]
      		<< " % "<< std::endl;
-
+     */
 
     Nhaloestot = Nhalosbin[0]-tailarea;
     Nhalosbin[0] = 1;
@@ -474,6 +475,7 @@ void MultiLens::createHaloData(
     double mftot = cosmo->totalMassDensityinHalos(mass_func_type,pw_alpha,pow(10,Logm[0]),(z1+z2)/2,z1,z2)
        	       		*pow(cosmo->angDist(0,(z1+z2)/2),2)*fieldofview*pow(pi/180,2);
     // Test lines
+    /*
      std::cout <<
        mass_tot << "  "<< (mftot - mass_tot) << std::endl
         << " in tail above 1.0e16 = " << cosmo->totalMassDensityinHalos(mass_func_type,pw_alpha,1.0e16,(z1+z2)/2,z1,z2)
@@ -483,6 +485,7 @@ void MultiLens::createHaloData(
    		<< " in tail above 1.0e14 = " << cosmo->totalMassDensityinHalos(mass_func_type,pw_alpha,1.0e14,(z1+z2)/2,z1,z2)
 		*pow(cosmo->angDist(0,(z1+z2)/2),2)*fieldofview*pow(pi/180,2)/mftot
 		<< " Msun  number of halo = " << Nh << std::endl;
+     */
   }
   
   delete halo_calc;
@@ -490,13 +493,15 @@ void MultiLens::createHaloData(
   Nhalos = halo_vec.size();
   
   std::cout << Nhalos << " halos created."<< std::endl
-	    << "Max input mass = " << mass_max << "  R max = " << halo_vec[j_max].Rmax
+	    << "Max input mass = " << mass_max*mass_scale << "  R max = " << halo_vec[j_max].Rmax
 	    << " at z = " << z_max << std::endl;
   
   halos = new HaloStructure[Nhalos];
   halo_zs = new double[Nhalos];
   halo_id = new unsigned long[Nhalos];
   halo_pos = PosTypeMatrix(Nhalos,3);
+  if(flag_run_multip_test)
+	  halo_pos_Mpc = PosTypeMatrix(Nhalos,3);
   
   for(int i=0;i<Nhalos;++i){
     halo_id[i] = halo_id_vec[i];
@@ -505,11 +510,18 @@ void MultiLens::createHaloData(
     halos[i] = halo_vec[i];
   }
 
-
   std::cout << "sorting in MultiLens::createHaloData()" << std::endl;
   // sort the halos by readshift
   MultiLens::quicksort(halos,halo_pos,halo_zs,halo_id,Nhalos);
   
+  if(flag_run_multip_test){
+	  for(int i=0;i<Nhalos;++i){
+		  double Dh = cosmo->angDist(0.0,halo_zs[i]);
+		  halo_pos_Mpc[i][0] = halo_pos[i][0]*Dh;
+		  halo_pos_Mpc[i][1] = halo_pos[i][1]*Dh;
+	  }
+  }
+
   std::cout << "leaving MultiLens::createHaloData()" << std::endl;
 }
 
@@ -794,6 +806,7 @@ void MultiLens::buildHaloTrees(
 
 		std::cout << sigma_back << " " << sb << " " << sb/sigma_back - 1 << std::endl;
 		if(sim_input_flag) sigma_back = sb;
+		if(flag_run_multip_test) sigma_back = 0.0;
 
 		halo_data[j].reset(new HaloData(&halos[j1],sigma_back,&halo_pos[j1],&halo_zs[j1],&halo_id[j1],j2-j1,Dl[j]/(1+plane_redshifts[j])));
 
@@ -873,11 +886,6 @@ void MultiLens::buildHaloTrees_test(
 		locateD(halo_zs-1,Nhalos,z1,&j1);
 		locateD(halo_zs-1,Nhalos,z2,&j2);
 
-		/*
-		 * finding the average mass surface density in halos
-		 */
-
-		// TODO Ben: test this
 		double sigma_back = 0.0;
 
 		halo_data[j].reset(new HaloData(&halos[j1],sigma_back,&halo_pos[j1],&halo_zs[j1],&halo_id[j1],j2-j1,Dl[j]/(1+plane_redshifts[j])));
@@ -925,60 +933,115 @@ void MultiLens::buildHaloTrees_test(
  * The error values are saved instead of the real physical values.
  */
 void MultiLens::calc_error_test(
-		GridHndl grid
+		unsigned long Npoints
+		,Point *point
+		,bool kappa_off
 		){
+	double alpha[2];
+	KappaType kappa,gamma[3];
 	double alpha0[2];
-	float kappa0,gamma0[3];
+	KappaType kappa0,gamma0[3];
 	double alpha1[2];
-	float kappa1,gamma1[3];
+	KappaType kappa1,gamma1[3];
 
 	double aa = charge*dDl[2]*Dl[1]/Dl[2];
-	double bb = charge*(Dl[2]-Dl[0])*Dl[0]/Dl[2];
+	double bb = charge*(dDl[2]+dDl[1])*Dl[0]/Dl[2];
 	double cc = charge*charge*dDl[2]*dDl[1]*Dl[0]/Dl[2];
 
-	double xx[2];
+	double xx[2], xx0[2], xx1[2], xx2[2];
 
 	std::cout << aa << " " << bb << " " << cc << std::endl;
 
-	MoveToTopList(grid->i_tree->pointlist);
-	do{
-		halo_tree[0]->set_force_theta(0.0);
-		halo_tree[1]->set_force_theta(0.0);
+	for(unsigned long i=0; i<Npoints; i++){
+		xx[0] = point[i].x[0];
+		xx[1] = point[i].x[1];
 
-		xx[0] = grid->i_tree->pointlist->current->x[0]*Dl[0]/(1+plane_redshifts[0]);
-		xx[1] = grid->i_tree->pointlist->current->x[1]*Dl[0]/(1+plane_redshifts[0]);
+		rayshooterInternal(xx,alpha,gamma,&kappa,kappa_off);
 
-		halo_tree[0]->force2D_recur(xx,alpha0,&kappa0,gamma0,false);
+		xx0[0] = xx[0]*Dl[0]/(1+plane_redshifts[0]);
+		xx0[1] = xx[1]*Dl[0]/(1+plane_redshifts[0]);
+
+		halo_tree[0]->force2D_recur(xx0,alpha0,&kappa0,gamma0,kappa_off);
 		double fac = 1/(1+plane_redshifts[0]);
 		kappa0*=fac;
 		gamma0[0]*=fac;
 		gamma0[1]*=fac;
 		gamma0[2]*=fac;
 
-		xx[0] = grid->i_tree->pointlist->current->x[0]*Dl[1]/(1+plane_redshifts[1]);
-		xx[1] = grid->i_tree->pointlist->current->x[1]*Dl[1]/(1+plane_redshifts[1]);
+		if(flag_switch_deflection_off)
+			alpha0[0] = alpha0[1] = 0.0;
 
-		halo_tree[1]->force2D_recur(xx,alpha1,&kappa1,gamma1,false);
+		xx1[0] = (dDl[1]+dDl[0])/dDl[0]*xx0[0]*(1+plane_redshifts[0]) - charge*dDl[1]*alpha0[0];
+		xx1[1] = (dDl[1]+dDl[0])/dDl[0]*xx0[1]*(1+plane_redshifts[0]) - charge*dDl[1]*alpha0[1];
+
+		xx1[0] /= (1+plane_redshifts[1]);
+		xx1[1] /= (1+plane_redshifts[1]);
+
+		halo_tree[1]->force2D_recur(xx1,alpha1,&kappa1,gamma1,kappa_off);
 		fac = 1/(1+plane_redshifts[1]);
 		kappa1*=fac;
 		gamma1[0]*=fac;
 		gamma1[1]*=fac;
 		gamma1[2]*=fac;
 
-		grid->i_tree->pointlist->current->kappa =
-				(aa*kappa1+bb*kappa0-cc*(kappa0*kappa1+gamma0[0]*gamma1[0]+gamma0[1]*gamma1[1]))/grid->i_tree->pointlist->current->kappa - 1.0;
+		if(flag_switch_deflection_off)
+			alpha1[0] = alpha1[1] = 0.0;
 
-		grid->i_tree->pointlist->current->gamma[0] =
-				(-aa*gamma1[0]-bb*gamma0[0]+cc*(kappa0*gamma1[0]+gamma0[0]*kappa1))/grid->i_tree->pointlist->current->gamma[0] - 1.0;
+		xx2[0] = (dDl[2]+dDl[1])/dDl[1]*xx1[0]*(1+plane_redshifts[1]) - dDl[2]/dDl[1]*xx0[0]*(1+plane_redshifts[0]) - charge*dDl[2]*alpha1[0];
+		xx2[1] = (dDl[2]+dDl[1])/dDl[1]*xx1[1]*(1+plane_redshifts[1]) - dDl[2]/dDl[1]*xx0[1]*(1+plane_redshifts[0]) - charge*dDl[2]*alpha1[1];
 
-		grid->i_tree->pointlist->current->gamma[1] =
-				(-aa*gamma1[1]-bb*gamma0[1]+cc*(kappa0*gamma1[1]+gamma0[1]*kappa1))/grid->i_tree->pointlist->current->gamma[1] - 1.0;
+		xx2[0] /= Dl[2];
+		xx2[1] /= Dl[2];
 
-		grid->i_tree->pointlist->current->gamma[2] =
-				cc*(-gamma0[0]*gamma1[1]+gamma0[1]*gamma1[0])/grid->i_tree->pointlist->current->gamma[2] - 1.0;
+		point[i].image->x[0] = (xx2[0]/alpha[0] - 1.0);
 
-	}while(MoveDownList(grid->i_tree->pointlist));
+		point[i].image->x[1] = (xx2[1]/alpha[1] - 1.0);
+
+		point[i].kappa = ((aa*kappa1+bb*kappa0-cc*(kappa0*kappa1+gamma0[0]*gamma1[0]+gamma0[1]*gamma1[1]))/kappa - 1.0);
+
+		point[i].gamma[0] = ((-aa*gamma1[0]-bb*gamma0[0]+cc*(kappa0*gamma1[0]+gamma0[0]*kappa1))/gamma[0] - 1.0);
+
+		point[i].gamma[1] = ((-aa*gamma1[1]-bb*gamma0[1]+cc*(kappa0*gamma1[1]+gamma0[1]*kappa1))/gamma[1] - 1.0);
+
+		point[i].gamma[2] = (cc*(-gamma0[0]*gamma1[1]+gamma0[1]*gamma1[0])/gamma[2] - 1.0);
+
+	}
 }
+
+
+/*
+ * Calculates the lensing properties of two sets of images planes, once
+ * using the standard multiplane rayshooter, and once using the halo by halo rayshooter.
+ * This way one can see the relative error between the plane approximation and the
+ * "analytical" solution of the lens equation.
+ */
+void MultiLens::calc_error_test_multi(
+		unsigned long Npoints
+		,Point *i_points
+		,bool kappa_off
+		,CosmoHndl cosmo
+		){
+
+	unsigned long i,j;
+
+	double *Dl_halos = new double[Nhalos+1];
+	double *dDl_halos = new double[Nhalos+1];
+
+	for(j=0; j<Nhalos; j++)
+		Dl_halos[j] = cosmo->coorDist(0.0,halo_zs[j]);
+	Dl_halos[Nhalos] = cosmo->coorDist(0.0,zsource);
+	dDl_halos[0] = Dl_halos[0];
+	for(j=1; j<Nhalos+1; j++)
+		dDl_halos[j] = Dl_halos[j] - Dl_halos[j-1];
+
+	rayshooterInternal(Npoints,i_points,kappa_off);
+	rayshooterInternal_halos_diff(Npoints,i_points,kappa_off,Dl_halos,dDl_halos);
+
+	delete[] Dl_halos;
+	delete[] dDl_halos;
+}
+
+
 /**
  * Set the coordinate distances of the planes by dividing the coordinate distance space into equal intervals
  * and then plugging the analytic input plane in between.
@@ -1076,9 +1139,9 @@ double MultiLens::getZlens(){
 		return plane_redshifts[0];
 }
 
-void MultiLens::setZlens(double z){
+void MultiLens::setZlens(CosmoHndl cosmo,double z,double zsource){
 	if(flag_input_lens)
-		input_lens->setZlens(z);
+		input_lens->setZlens(cosmo,z,zsource);
 	else{
 		cout << "It is not possible to reset the redshift of the input AnaLens plane a MultiLens" << endl;
 		ERROR_MESSAGE();
@@ -1351,12 +1414,14 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 	else{
 		// TODO Ben swap function here or provide toggle
 		if(field_buffer > 0.0) createHaloData_buffered(cosmo,seed);
-		//if(field_buffer > 0.0) createHaloData_test(cosmo,seed);
-		else createHaloData(cosmo,seed);
+		else{
+			if(flag_run_twop_test) createHaloData_test(cosmo,seed);
+			else createHaloData(cosmo,seed);
+		}
 	}
 
-	buildHaloTrees(cosmo);
-	//buildHaloTrees_test(cosmo);
+	if(flag_run_twop_test) buildHaloTrees_test(cosmo);
+	else buildHaloTrees(cosmo);
 	std:: cout << " done " << std:: endl;
 }
 

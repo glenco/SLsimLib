@@ -30,14 +30,13 @@ public:
 
 	virtual void setInternalParams(CosmoHndl,SourceHndl) = 0;
 
-	virtual void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off) = 0;
-	virtual void rayshooterInternal(double *ray, double *alpha, float *gamma, float *kappa, bool kappa_off) = 0;
+	virtual void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off){};
+	virtual void rayshooterInternal(double *ray, double *alpha, KappaType *gamma, KappaType *kappa, bool kappa_off){};
 
 	virtual void RandomizeHost(long *seed,bool tables){};
 	virtual void RandomizeSigma(long *seed,bool tables){};
 	virtual double getZlens() = 0;
-	virtual void setZlens(double zlens) = 0;
-
+	virtual void setZlens(CosmoHndl cosmo,double zlens,double zsource = 1000) = 0;
 };
 
 /**
@@ -59,7 +58,7 @@ public:
 			i_points[i].image->gamma[2] = i_points[i].gamma[2] = 0.0;
 		}
 	}
-	void rayshooterInternal(double *ray, double *alpha, float *gamma, float *kappa, bool kappa_off){
+	void rayshooterInternal(double *ray, double *alpha, KappaType *gamma, KappaType *kappa, bool kappa_off){
 		alpha[0] = alpha[1] = 0.0;
 		gamma[0] = gamma[1] = 0.0;
 		*kappa = 0.0;

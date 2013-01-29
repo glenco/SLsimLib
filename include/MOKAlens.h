@@ -67,23 +67,23 @@ public:
 	int flag_background_field;
 
 	void assignParams(InputParams& params);
-	void rayshooterInternal(double *ray, double *alpha, float *gamma, float *kappa, bool kappa_off);
+	void rayshooterInternal(double *ray, double *alpha, KappaType *gamma, KappaType *kappa, bool kappa_off);
 	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off){ERROR_MESSAGE(); exit(1);};
-	void setZlens(double zlens);
+	void setZlens(CosmoHndl cosmo,double zlens,double zsource = 1000);
 	double getZlens();
 	void setInternalParams(CosmoHndl,SourceHndl);
 	void saveImage(GridHndl grid, bool saveprofile=true);
 	void saveImage(bool saveprofile=true);
 	void saveKappaProfile();
 	void saveGammaProfile();
-	void saveProfiles(double &RE3);
+	void saveProfiles(double &RE3, double &xxc, double &yyc);
 	void initMap();
 
 	MOKAmap *map;
 	LensHalo *LH;
 
 	void estSignLambdas();
-	void EinsteinRadii(double &RE1, double &RE2);
+	void EinsteinRadii(double &RE1, double &RE2, double &xxc, double &yyc);
 
 };
 

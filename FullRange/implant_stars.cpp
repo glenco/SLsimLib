@@ -6,7 +6,9 @@
  */
 
 #include "slsimlib.h"
-
+#include <iostream.h> // remove
+#include <sstream> // remove
+using namespace std;
 /** \ingroup ChangeLens
  * \brief  Implants stars into the lens around the images.
  *
@@ -14,7 +16,7 @@
  * allocates all memory for stars
  */
 
-void AnaLens::implant_stars(Point *centers,unsigned long Nregions,long *seed){
+void BaseAnaLens::implant_stars(Point *centers,unsigned long Nregions,long *seed){
 	PosType r,theta,NstarsPerImage;
 	unsigned long i,j,m,k;
 
@@ -54,22 +56,32 @@ void AnaLens::implant_stars(Point *centers,unsigned long Nregions,long *seed){
 	}
 
 	for(j=0,m=0;j<Nregions;++j){
+
 		assert( centers[j].kappa > 0.0);
 
 		NstarsPerImage = stars_N/star_Nregions;
+		cout << "NstarsPerImage: " << NstarsPerImage << endl; // remove
 
 		star_region[j] = 1.0/sqrt(pi*star_fstars*centers[j].kappa*Sigma_crit
 				/star_massscale/(float)NstarsPerImage);
-
+		cout << star_region[j] << " " << star_fstars <<  " " << centers[j].kappa << " " << Sigma_crit << " " << star_massscale << " " << NstarsPerImage << endl;
+		cout << "kappa_star= " << star_fstars*(float)NstarsPerImage*star_massscale/(pi*pow(star_region[j],2)) << endl;
 		// cutoff based on comparison of star deflection to smooth component
 		//rcut = 4*sqrt(star_massscale/pi/Sigma_crit
 		//		/( centers[j].kappa+sqrt(pow(centers[j].gamma[0],2)+pow(centers[j].gamma[1],2)) ) );
 
 		star_kappa[j] = star_fstars*centers[j].kappa;
+		cout << star_kappa[j]*Sigma_crit << endl;
 		star_xdisk[j][0] = centers[j].x[0];
 		star_xdisk[j][1] = centers[j].x[1];
 
 		//printf("kappa = %e  star_region = %e\n",star_kappa[j],star_region[j]);
+		char *fname = "stars0.dat";
+		if(j==0){fname = "stars0.dat";}
+		if(j==1){fname = "stars1.dat";}
+		if(j==2){fname = "stars2.dat";}
+		if(j==3){fname = "stars3.dat";}
+		ofstream fstars(fname);
 
 		for(i=0;i<NstarsPerImage;++i,++m){
 			//m=j*NstarsPerImage+i;
@@ -91,14 +103,16 @@ void AnaLens::implant_stars(Point *centers,unsigned long Nregions,long *seed){
 					break;
 				}
 			}
+			fstars << scientific << stars_xp[m][0] << " " << stars_xp[m][1] << endl;
 			//printf("%e %e\n",stars_xp[m][0],stars_xp[m][1]);
 		}
+		fstars.close();
 	}
 
 
 	assert(m <= stars_N);
 	stars_N = m;
-
+	cout << stars_N;
 	//std::printf("last star x = %e %e\n",stars_xp[stars_N-1][0],stars_xp[stars_N-1][1]);
 
 	float dummy=0;
@@ -123,8 +137,8 @@ void AnaLens::implant_stars(Point *centers,unsigned long Nregions,long *seed){
 */
 /// subtracts the mass in stars from the smooth model to compensate
 /// for the mass of the stars the lensing quantities are all updated not replaced
-void AnaLens::substract_stars_disks(double *ray,double *alpha
-		,float *kappa,float *gamma){
+void BaseAnaLens::substract_stars_disks(double *ray,double *alpha
+		,KappaType *kappa,KappaType *gamma){
 
 	if(!(stars_implanted)) return;
 

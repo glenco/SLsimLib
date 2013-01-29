@@ -83,7 +83,7 @@ void MultiLens::rayshooterInternal(
     chunk_size = (int)Npoints/nthreads;
     if(chunk_size == 0) nthreads /= 2;
   }while(chunk_size == 0);
-    
+
   pthread_t threads[nthreads];
   TmpParams *thread_params = new TmpParams[nthreads];
   
@@ -131,7 +131,7 @@ void *compute_rays_parallel(void *_p){
   double xx[2],fac;
   double aa,bb,cc;
   double alpha[2];
-  float kappa,gamma[3];
+  KappaType kappa,gamma[3];
   double xminus[2],xplus[2];
   double kappa_minus,gamma_minus[3],kappa_plus,gamma_plus[3];
   
@@ -230,9 +230,8 @@ void *compute_rays_parallel(void *_p){
     	  else
     		  cc = lens->charge*lens->dDl[j+1]*lens->Dl[j]/lens->Dl[j+1];
 	
-    	  // still not positive about sign convention
     	  kappa_plus = aa*p->i_points[i].kappa - bb*kappa_minus
-		  - cc*(kappa*p->i_points[i].kappa + gamma[0]*p->i_points[i].gamma[0] + gamma[1]*p->i_points[i].gamma[1]);
+    			  - cc*(kappa*p->i_points[i].kappa + gamma[0]*p->i_points[i].gamma[0] + gamma[1]*p->i_points[i].gamma[1]);
 	
     	  gamma_plus[0] = aa*p->i_points[i].gamma[0] - bb*gamma_minus[0]
     	          - cc*(gamma[0]*p->i_points[i].kappa + kappa*p->i_points[i].gamma[0] - gamma[1]*p->i_points[i].gamma[2]);
@@ -287,4 +286,148 @@ void *compute_rays_parallel(void *_p){
   
 }
 
+void MultiLens::rayshooterInternal(double *ray, double *alpha, KappaType *gamma, KappaType *kappa, bool kappa_off){
 
+  int j;
+
+  double xx[2],fac;
+  double aa,bb,cc;
+  double alpha_tmp[2];
+  KappaType kappa_tmp,gamma_tmp[3];
+  double xminus[2],xplus[2];
+  double kappa_tmp_minus,gamma_tmp_minus[3],kappa_tmp_plus,gamma_tmp_plus[3];
+
+  assert(Nplanes > 0);
+  // If a lower redshift source is being used
+
+    // find position on first lens plane in comoving units
+    alpha[0] = ray[0]*Dl[0];
+    alpha[1] = ray[1]*Dl[0];
+
+    xminus[0] = 0;
+    xminus[1] = 0;
+
+    // Set magnification matrix on first plane.  Also the default if kappa_off == false
+    kappa_tmp_minus = 0;
+    gamma_tmp_minus[0] = 0;
+    gamma_tmp_minus[1] = 0;
+    gamma_tmp_minus[2] = 0;
+
+    *kappa = 1;  // This is actually 1-kappa_tmp until after the loop through the planes.
+    gamma[0] = 0;
+    gamma[1] = 0;
+    gamma[2] = 0;
+
+    for(j = 0; j < Nplanes-1 ; j++){  // each iteration leaves i_point[i].image on plane (j+1)
+
+      // convert to physical coordinates on the plane j
+
+      xx[0] = alpha[0]/(1+plane_redshifts[j]);
+      xx[1] = alpha[1]/(1+plane_redshifts[j]);
+
+      assert(xx[0] == xx[0] && xx[1] == xx[1]);
+
+      if(flag_input_lens && j == (flag_input_lens % Nplanes)){
+    	  input_lens->rayshooterInternal(xx,alpha_tmp,gamma_tmp,&kappa_tmp,kappa_off);
+    	  cc = dDl[j+1];
+      }else{
+    	  cc = charge*dDl[j+1];
+
+    	  if(flag_switch_background_off){
+    		  kappa_tmp = alpha_tmp[0] = alpha_tmp[1] = gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
+    	  }else{
+    		  halo_tree[j]->force2D_recur(xx,alpha_tmp,&kappa_tmp,gamma_tmp,kappa_off);
+    		  assert(alpha_tmp[0] == alpha_tmp[0] && alpha_tmp[1] == alpha_tmp[1]);
+    	  }
+      }
+
+
+      if(!kappa_off){
+    	  fac = 1/(1+plane_redshifts[j]);
+    	  /* multiply by fac to obtain 1/comoving_distance/physical_distance
+    	   * such that a multiplication with the charge (in units of physical distance)
+    	   * will result in a 1/comoving_distance quantity */
+    	  kappa_tmp*=fac;
+    	  gamma_tmp[0]*=fac;
+    	  gamma_tmp[1]*=fac;
+    	  gamma_tmp[2]*=fac;
+
+    	  assert(gamma_tmp[0] == gamma_tmp[0] && gamma_tmp[1] == gamma_tmp[1]);
+    	  assert(kappa_tmp == kappa_tmp);
+      }
+
+      if(flag_switch_deflection_off)
+    	  alpha_tmp[0] = alpha_tmp[1] = 0.0;
+
+      aa = (dDl[j+1]+dDl[j])/dDl[j];
+      bb = dDl[j+1]/dDl[j];
+
+      xplus[0] = aa*alpha[0] - bb*xminus[0] - cc*alpha_tmp[0];
+      xplus[1] = aa*alpha[1] - bb*xminus[1] - cc*alpha_tmp[1];
+
+      xminus[0] = alpha[0];
+      xminus[1] = alpha[1];
+
+      alpha[0] = xplus[0];
+      alpha[1] = xplus[1];
+
+      if(!kappa_off){
+
+    	  aa = (dDl[j+1]+dDl[j])*Dl[j]/dDl[j]/Dl[j+1];
+
+    	  if(j>0){
+    		  bb = dDl[j+1]*Dl[j-1]/dDl[j]/Dl[j+1];
+    	  }
+    	  else
+    		  bb = 0;
+
+    	  if(flag_input_lens && j == (flag_input_lens % Nplanes))
+    		  cc = dDl[j+1]*Dl[j]/Dl[j+1];
+    	  else
+    		  cc = charge*dDl[j+1]*Dl[j]/Dl[j+1];
+
+    	  kappa_tmp_plus = aa*(*kappa) - bb*kappa_tmp_minus
+    			  - cc*(kappa_tmp*(*kappa) + gamma_tmp[0]*gamma[0] + gamma_tmp[1]*gamma[1]);
+
+    	  gamma_tmp_plus[0] = aa*gamma[0] - bb*gamma_tmp_minus[0]
+    	          - cc*(gamma_tmp[0]*(*kappa) + kappa_tmp*gamma[0] - gamma_tmp[1]*gamma[2]);
+
+    	  gamma_tmp_plus[1] = aa*gamma[1] - bb*gamma_tmp_minus[1]
+    	          - cc*(gamma_tmp[1]*(*kappa) + kappa_tmp*gamma[1] + gamma_tmp[0]*gamma[2]);
+
+    	  gamma_tmp_plus[2] = aa*gamma[2] - bb*gamma_tmp_minus[2]
+    	          - cc*(kappa_tmp*gamma[2] - gamma_tmp[1]*gamma[0] + gamma_tmp[0]*gamma[1]);
+
+    	  kappa_tmp_minus = *kappa;
+    	  gamma_tmp_minus[0] = gamma[0];
+    	  gamma_tmp_minus[1] = gamma[1];
+    	  gamma_tmp_minus[2] = gamma[2];
+
+    	  assert(kappa_tmp_plus==kappa_tmp_plus && gamma_tmp_minus[0]==gamma_tmp_minus[0] &&gamma_tmp_minus[1]==gamma_tmp_minus[1] && gamma_tmp_minus[2]==gamma_tmp_minus[2]);
+
+    	  *kappa = kappa_tmp_plus;
+    	  gamma[0] = gamma_tmp_plus[0];
+    	  gamma[1] = gamma_tmp_plus[1];
+    	  gamma[2] = gamma_tmp_plus[2];
+
+      }
+    }
+
+    // Convert units back to angles.
+    alpha[0] /= Dl[Nplanes-1];
+    alpha[1] /= Dl[Nplanes-1];
+
+    *kappa = 1 - *kappa;
+
+    if(alpha[0] != alpha[0] ||
+       alpha[1] != alpha[1]){
+      ERROR_MESSAGE();
+      std::cout << alpha[0] << "  " << alpha[1] << "  " << std::endl;
+      std::cout << gamma[0] << "  " << gamma[1] << "  " << gamma[2] << "  " <<
+    		  *kappa << "  "  << kappa_off << std::endl;
+      //	assert(0);
+      exit(1);
+    }
+
+
+}
