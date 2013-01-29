@@ -79,6 +79,6 @@ typedef unsigned long IndexType;
 #define treeNBdim 2  // dimension of boxes in tree
 #endif
 
-typedef double KappaType;
+typedef float KappaType;
 
 #endif

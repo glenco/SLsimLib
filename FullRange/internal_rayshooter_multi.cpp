@@ -431,6 +431,3 @@ void MultiLens::rayshooterInternal(double *ray, double *alpha, KappaType *gamma,
 
 
 }
-
-
-
