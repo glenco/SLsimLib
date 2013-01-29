@@ -26,6 +26,9 @@ void cmass(int n, std::valarray<float> map, std:: vector<double> x, double &xcm,
   double rsel = x[n-1] - x[0];
   double xmin = x[0];
   double drpix = rsel/n;  
+  rsel/=2.;
+  // I will set in the centre with t width equal to 128 pixels
+  rsel = drpix*64.;
   //
   int nsel = n*n;
   int i,j;
@@ -306,9 +309,25 @@ void MOKALens::saveProfiles(double &RE3,double &xxc,double &yyc){
 	*/
 	// moving center
         double xcm,ycm;
-	cmass(map->ny,map->convergence,map->x,xcm,ycm);
+	if(flag_background_field==1){
+	  xcm = 0.;
+	  ycm = 0.;
+	}
+	else{
+	  cmass(map->ny,map->convergence,map->x,xcm,ycm);
+	}
 	xxc = xcm;
 	yyc = ycm;
+	int ai = locate(map->x,xxc);
+	ai = ((ai > 0) ? ai:0);
+	ai = ((ai < map->nx-1) ? ai:map->nx-1);
+	int bi = locate(map->x,yyc);
+	bi = ((bi > 0) ? bi:0);
+	bi = ((bi < map->nx-1) ? bi:map->nx-1);
+	std:: cout << "  ------------ center ------------- " << std:: endl;
+	std:: cout << "    " << xxc << "  " << yyc << std:: endl;
+	std:: cout << "    " << ai << "  " << bi << std:: endl;
+	std:: cout << "  ------------------r ------------- " << std:: endl;
 	for(i=0; i<map->nx; i++ ) for(j=0; j<map->ny; j++ ){
 	    pxdist[i+map->ny*j]= sqrt(pow((xmin+(drpix*0.5)+i*drpix-xcm),2) +
 				pow((xmin+(drpix*0.5)+j*drpix-ycm),2));
