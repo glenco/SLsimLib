@@ -429,6 +429,10 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa
 						i_points[jj].gamma[0] = i_points[jj].image->gamma[0] = -0.5*(aa[0]-aa[1]);
 						i_points[jj].gamma[1] = i_points[jj].image->gamma[1] = -0.5*(aa[2]+aa[3]);
 						i_points[jj].gamma[2] = i_points[jj].image->gamma[2] = -0.5*(aa[2]-aa[3]);
+						i_points[jj].invmag = (1-i_points[jj].kappa)*(1-i_points[jj].kappa)
+								     - i_points[jj].gamma[0]*i_points[jj].gamma[0]
+								     - i_points[jj].gamma[1]*i_points[jj].gamma[1]
+								     + i_points[jj].gamma[2]*i_points[jj].gamma[2];
 					}
 					i_points[jj].in_image = MAYBE;
 
