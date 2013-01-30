@@ -20,6 +20,7 @@
 class PixelMap{
 public:
 	PixelMap(unsigned long Npixels,double range,double *center);
+	PixelMap(std::string filename);
 	~PixelMap();
 
 	unsigned long getNpixels(){return Npixels;}
@@ -33,6 +34,8 @@ public:
 	void printASCIItoFile(std::string filename);
 	void printFITS(std::string filename);
 	void smooth(double *map_out,double sigma);
+
+	inline double getValue(unsigned long i) {return map[i];}
 
 private:
 	std::valarray<float> map;
