@@ -48,6 +48,7 @@ void UniLens::assignParams(InputParams& params){
 		if(!params.get("gamma_uniform_2",gamma_uniform[1])) error_message1("gamma_uniform_1",params.filename());
 	}
 
+	return;
 }
 
 /** \ingroup ImageFinding

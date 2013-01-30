@@ -122,7 +122,7 @@ public:
 	~ForceTreePowerLaw();
 
 private:
-	float beta; // logorithmic slop of 2d mass profile
+	double beta; // logorithmic slop of 2d mass profile
 
 	// Override internal structure of halos
 	inline double alpha_h(double x,double xmax){
