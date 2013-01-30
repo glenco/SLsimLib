@@ -809,6 +809,7 @@ void MultiLens::buildHaloTrees(
 		if(flag_run_multip_test) sigma_back = 0.0;
 
 		halo_data[j].reset(new HaloData(&halos[j1],sigma_back,&halo_pos[j1],&halo_zs[j1],&halo_id[j1],j2-j1,Dl[j]/(1+plane_redshifts[j])));
+		//halo_data[j].reset(new HaloData(&halos[j1],sigma_back,&halo_pos_Mpc[j1],&halo_zs[j1],&halo_id[j1],j2-j1,1.0));
 
 		/// Use other constructor to create halo data
 		std::cout << "  Building tree on plane " << j << " number of halos: " << halo_data[j]->Nhalos << std::endl;

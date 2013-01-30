@@ -268,7 +268,13 @@ void *compute_rays_parallel(void *_p){
 		     - p->i_points[i].gamma[1]*p->i_points[i].gamma[1]
 		     + p->i_points[i].gamma[2]*p->i_points[i].gamma[2];
     else p->i_points[i].invmag = 0.0;
-    
+
+    p->i_points[i].image->invmag=p->i_points[i].invmag;
+    p->i_points[i].image->kappa=p->i_points[i].kappa;
+    p->i_points[i].image->gamma[0]=p->i_points[i].gamma[0];
+    p->i_points[i].image->gamma[1]=p->i_points[i].gamma[1];
+    p->i_points[i].image->gamma[2]=p->i_points[i].gamma[2];
+
     if(p->i_points[i].image->x[0] != p->i_points[i].image->x[0] ||
        p->i_points[i].image->x[1] != p->i_points[i].image->x[1] ||
        p->i_points[i].invmag != p->i_points[i].invmag){
