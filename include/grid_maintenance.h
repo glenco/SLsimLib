@@ -43,6 +43,8 @@ typedef struct Grid{
 	Point * RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa_off);
 	void ClearAllMarks();
 
+	void test_mag_matrix();
+
 private:
 	/// one dimensional size of initial grid
 	int Ngrid_init;
