@@ -545,6 +545,9 @@ void Grid::ClearAllMarks(){
  *
  * The points must have attached source/image points and
  * they must not be colinear. Returns false if they are colinear
+ *
+ * 	 a[0] = a11, a[1] = a22, a[2] = a12, a[3] = a21
+ *
  */
 bool Grid::find_mag_matrix(double *a,Point *p0,Point *p1,Point *p2){
 	double y1[2],y2[2],x1[2],x2[2];
@@ -588,7 +591,7 @@ bool Grid::uniform_mag_from_deflect(
 	int count=0;
 
     FindAllBoxNeighborsKist(i_tree,point,neighbors);
-    assert(neighbors->Nunits() > 3);
+    if(neighbors->Nunits() <= 3) return false;  // This is the case where the point does not have enough neighbors.
     neighbors->MoveToTop();
     point2 = neighbors->getCurrent();
     neighbors->Down();

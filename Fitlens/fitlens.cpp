@@ -392,7 +392,8 @@ double minEllip(double *par){
 * - [2]=gamma2
 * - [3]=ao
 *******************************************************/
-void AnaLens::find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *x_center,double beta
+//void AnaLens::find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *x_center,double beta
+void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *x_center,double beta
 	       ,int Nmodes,int *degen,double *mod,double **v,double **dx_sub){
 
 	double **c,*b,*w,r,theta,wmax,**a,*y,*temp,**x;
