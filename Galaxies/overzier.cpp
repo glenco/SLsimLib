@@ -1,5 +1,5 @@
 /*
- * overier_galaxy.cpp
+ * Galaxies/overzier.cpp
  *
  *  Created on: Apr 12, 2012
  *      Author: bmetcalf

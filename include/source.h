@@ -19,7 +19,7 @@ public:
 	  virtual ~Source();
 
 	  /// names of clump and sb models
-	  typedef enum {Uniform,Gaussian,BLR_Disk,BLR_Sph1,BLR_Sph2,MultiAnaSource} SBModel;
+	  typedef enum {Uniform,Gaussian,BLR_Disk,BLR_Sph1,BLR_Sph2,MultiAnaSource,Pixelled} SBModel;
 
 	  // in lens.cpp
 	  /// Surface brightness of source in grid coordinates not source centered coordinates.
@@ -61,6 +61,37 @@ protected:
 };
 
 typedef Source *SourceHndl;
+
+class PixelledSource: public Source{
+public:
+	PixelledSource(double my_z, int Npixels, double range, double* center, double* arr_val);
+	PixelledSource(InputParams& params);
+	~PixelledSource();
+	double SurfaceBrightness(double *y);
+	void printSource();
+	double getTotalFlux(){return flux;}
+	inline double getRadius(){return source_r;}
+	double* getEll(){return ell;};
+	double getQuad(int i, int j){return quad[i][j];};
+	double getSize(){return size;};
+	double* getCentroid(){return centroid;};
+	double getMag(){return -2.5*log10(flux*hplanck)-48.6;};
+private:
+	void assignParams(InputParams& params);
+	void calcEll();
+	void calcSize();
+	void calcCentroid();
+	void calcTotalFlux();
+	double resolution;
+	double range;
+	long Npixels;
+	double flux;
+	double quad[2][2];
+	double ell[2];
+	double size;
+	double centroid[2];
+	std::valarray<float> values;
+};
 
 class SourceUniform : public Source{
 public:

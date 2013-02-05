@@ -516,7 +516,7 @@ void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *x_cent
 
 double AnaLens::deflect_translated(double beta,double *mod,double *x,double *y,double *mag,int Nmodes
 		  ,int Nlenses,double Re2,double *x2){
-	float kappa,gamma[2],dt;
+	KappaType kappa,gamma[2],dt;
 
 
   if(mod[0] != 0.0){ERROR_MESSAGE(); std::printf("background kappa should be zero\n"); exit(0);}

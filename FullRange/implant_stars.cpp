@@ -138,7 +138,7 @@ void BaseAnaLens::implant_stars(Point *centers,unsigned long Nregions,long *seed
 /// subtracts the mass in stars from the smooth model to compensate
 /// for the mass of the stars the lensing quantities are all updated not replaced
 void BaseAnaLens::substract_stars_disks(double *ray,double *alpha
-		,float *kappa,float *gamma){
+		,KappaType *kappa,KappaType *gamma){
 
 	if(!(stars_implanted)) return;
 

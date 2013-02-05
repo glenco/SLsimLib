@@ -1,7 +1,5 @@
-
-
 /*
- * create_elliptical.c
+ * Galaxies/sersic.c
  *
  *  Created on: Feb 28, 2010
  *      Author: R.B. Metcalf

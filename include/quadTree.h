@@ -134,11 +134,12 @@ public:
 			);
 	virtual ~QuadTree();
 
-	virtual void force2D(double *ray,double *alpha,float *kappa,float *gamma,bool no_kappa);
-	virtual void force2D_recur(double *ray,double *alpha,float *kappa,float *gamma,bool no_kappa);
+	virtual void force2D(double *ray,double *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa);
+	virtual void force2D_recur(double *ray,double *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa);
 	virtual void printParticlesInBranch(unsigned long number);
 	virtual void printBranchs(int level = -1);
-	void set_force_theta(double ft){force_theta=ft;};
+
+	virtual void force_halo_external(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,double mass, double Rmax,double rscale,bool no_kappa);
 
 protected:
 
@@ -188,7 +189,7 @@ protected:
 	void CalcMoments();
 	void rotate_coordinates(double **coord);
 
-	virtual void force_halo(double *alpha,float *kappa,float *gamma,double *xcm,HaloStructure& halo_params,bool no_kappa);
+	virtual void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,HaloStructure& halo_params,bool no_kappa);
 
 	// Internal profiles for a Gaussian particle
 	virtual inline double alpha_h(double r2s2,double sigma){
@@ -214,7 +215,7 @@ protected:
 			,bool MultiRadius,bool MultiMass);
 	 void cuttoffscale(QTreeNBHndl tree,double *theta);
 
-	 void walkTree_recur(QBranchNB *branch,double *ray,double *alpha,float *kappa,float *gamma,bool no_kappa);
+	 void walkTree_recur(QBranchNB *branch,double *ray,double *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa);
 };
 
 /** \ingroup DeflectionL2
@@ -372,7 +373,7 @@ public:
 	  void test_force_halo(HaloStructure &halo_params);
 protected:
 
-	  virtual void force_halo(double *alpha,float *kappa,float *gamma,double *xcm
+	  virtual void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm
 	  		,HaloStructure& halo_params,bool no_kappa);
 private:
 	  /// not used
@@ -397,8 +398,8 @@ public:
 				,double my_sigma_bk = 0.0,int bucket = 5,PosType theta = 0.1);
 	  ~QuadTreeNFW_NSIE();
 
-	  virtual void force2D(double *ray,double *alpha,float *kappa,float *gamma,bool no_kappa);
-	  virtual void force2D_recur(double *ray,double *alpha,float *kappa,float *gamma,bool no_kappa);
+	  virtual void force2D(double *ray,double *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa);
+	  virtual void force2D_recur(double *ray,double *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa);
 
 protected:
 
