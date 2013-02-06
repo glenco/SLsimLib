@@ -32,4 +32,6 @@
 #include <image_processing.h>
 #include <nsie.h>
 
+#include <image_likelihood.h>
+
 #endif

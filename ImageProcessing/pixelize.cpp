@@ -55,9 +55,7 @@ PixelMap::PixelMap(std::string filename)
 		h0->readKey("CRVAL1",center[0]);
 		h0->readKey("CRVAL2",center[1]);
 		h0->readKey("CDELT1",resolution);
-		std::cout << "Resolution is " << resolution << std::endl;
 		resolution = fabs(resolution)*pi/180.;
-		std::cout << "Resolution is " << resolution << std::endl;
 		range = resolution*Npixels;
 		map_boundary_p1[0] = center[0] - range/2.;
 		map_boundary_p1[1] = center[1] - range/2.;
@@ -65,7 +63,6 @@ PixelMap::PixelMap(std::string filename)
 		map_boundary_p2[1] = center[1] + range/2.;
 		range = range - resolution;
 		h0->read(map);
-		std::cout << "Resolution is " << resolution << std::endl;
 
 #else
 		std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
