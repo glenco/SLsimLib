@@ -1,8 +1,23 @@
 #ifndef _image_likelihood_declare_
 #define _image_likelihood_declare_
 
-#include <image_processing.h>
+class PixelMap;
 
-double chi_square (PixelMap data, PixelMap model, float background_subtract = 0., float background_noise = 0., float norm = 1., PixelMap* mask = NULL);
+double image_chi_square(
+	const PixelMap& data,
+	const PixelMap& model,
+	double background_subtract = 0,
+	double background_noise = 0,
+	double norm = 1
+);
+
+double image_chi_square(
+	const PixelMap& data,
+	const PixelMap& model,
+	const PixelMap& mask,
+	double background_subtract = 0,
+	double background_noise = 0,
+	double norm = 1
+);
 
 #endif
