@@ -141,36 +141,38 @@ public:
   //void toggleStars(bool implanted);
 
   double getHost_Dl(){return Dl;}
+
+  // These need to be in the base class because they are used in the rayshooter function which because of parrelleization is not a member function
   double getHost_ro(){return host_ro;}
   double getHost_sigma(){return host_sigma;}
   //double *host_x;    /// not used yet
   double getHost_core(){return host_core;}
   double getHost_axis_ratio(){return host_axis_ratio;}
   double getHost_position_angle(){return host_pos_angle;}    /// position angle
+  double getPerturb_beta(){return perturb_beta;}
 
   int getPerturb_Nmodes(){return perturb_Nmodes;}    /// this includes two for external shear
-  double getPerturb_beta(){return perturb_beta;}
   double *perturb_modes;  ///first two are shear
 
 protected:
 
   /// critical surface density
-   double Sigma_crit;
+  double Sigma_crit;
    /// the time delay scale in days/Mpc^2
-   double to;
+  double to;
    /// Angular size distance to lens plane
-   double Dl;
+  double Dl;
 
-  // host elliptical
-  /// private: Einstein radius of host
+   // host elliptical
+    /// private: Einstein radius of host
   double host_ro;
   double host_sigma;
-  //double *host_x;    /// not used yet
+    //double *host_x;    /// not used yet
   double host_core;
   double host_axis_ratio;
   double host_pos_angle;    /// position angle
 
-  // perturbations to host.  These are protected so that in some derived classes they can or cann't be changed.
+    // perturbations to host.  These are protected so that in some derived classes they can or cann't be changed.
   int perturb_Nmodes;    /// this includes two for external shear
   double perturb_beta;
   double *perturb_rms;
@@ -190,16 +192,16 @@ protected:
    double MpcToAsec;
 
    // Things added to manipulate and fit lenses.
-   int check_model(int Nimages,int Nsources,int Nlenses,int *pairing,double **xob,double *x_center
-   		,int Nmod,double *mod,double **xg,double Re2,double **dx_sub,double **Amag,double ytol);
-   double find_axis(double *mod,int Nmod);
-   double deflect_translated(double beta,double *mod,double *x,double *y,double *mag,int N
-      ,int Nlenses,double Re2,double *x2);
-   void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *xg,double beta
-   		 ,int N,int *degen,double *mod,double **v,double **dx);
-   double ElliptisizeLens(int Nimages,int Nsources,int Nlenses,int *pairing,double **xob
-   		       ,double *xc,double **xg,double sigG,double beta,int Nmod
-   		       ,double *mod,double **dx,double *re2,double *q);
+   //int check_model(int Nimages,int Nsources,int Nlenses,int *pairing,double **xob,double *x_center
+   //		,int Nmod,double *mod,double **xg,double Re2,double **dx_sub,double **Amag,double ytol);
+   //double find_axis(double *mod,int Nmod);
+   //double deflect_translated(double beta,double *mod,double *x,double *y,double *mag,int N
+   //   ,int Nlenses,double Re2,double *x2);
+   //void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *xg,double beta
+   //		 ,int N,int *degen,double *mod,double **v,double **dx);
+   //double ElliptisizeLens(int Nimages,int Nsources,int Nlenses,int *pairing,double **xob
+   //		       ,double *xc,double **xg,double sigG,double beta,int Nmod
+   //		       ,double *mod,double **dx,double *re2,double *q);
 
 };
 
