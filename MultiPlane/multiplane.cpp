@@ -219,6 +219,7 @@ void MultiLens::assignParams(InputParams& params){
 			cout << "default field buffer of 0 Mpc is being used." << endl;
 		}
 	}else{
+		if(!params.get("partial_cone",partial_cone))	partial_cone=false;
 		min_mass = 0.0;
 	}
 
@@ -235,6 +236,7 @@ void MultiLens::assignParams(InputParams& params){
 	if(!params.get("background_off",flag_switch_background_off)) flag_switch_background_off = false;
 	if(!params.get("twop_test",flag_run_twop_test)) flag_run_twop_test = false;
 	if(!params.get("multip_test",flag_run_multip_test)) flag_run_multip_test = false;
+	if(!params.get("print_halos",r_print_halos)) r_print_halos = 0.0;
 
 	// Some checks for valid parameters
 	  if(pw_beta >= 0){
@@ -271,6 +273,12 @@ void MultiLens::assignParams(InputParams& params){
 
 	  // convert to square degrees
 	  fieldofview /= 3600. * 3600.;
+
+	  if(partial_cone == true && flag_input_lens != 2){
+		  ERROR_MESSAGE();
+		  cout << "Partial cone selection is possible only with a MOKA lens!" << endl;
+		  exit(1);
+	  }
 
 	  printMultiLens();
 }
@@ -700,7 +708,7 @@ void MultiLens::createHaloData_test(
 
 	for(int i=0;i<Nhalos;i++){
 		double maxr = pi*sqrt(fieldofview/pi)/180.; // fov is a circle
-		double rr = maxr*sqrt(ran2(seed));
+		double rr = 0.5*maxr;
 
 		assert(rr == rr);
 
@@ -710,7 +718,7 @@ void MultiLens::createHaloData_test(
 		halo_pos[i][1] = rr*sin(theta);
 		halo_pos[i][2] = 0;
 
-		halo_zs[i] = ran2(seed)*(1/(double)Nhalos*zsource)+i/(double)Nhalos*zsource;
+		halo_zs[i] = plane_redshifts[i]+0.1;
 		halos[i].mass = ran2(seed)*1e12;
 		halo_calc->reset(halos[i].mass,halo_zs[i]);
 		halos[i].mass /= mass_scale;
@@ -745,6 +753,16 @@ void MultiLens::buildHaloTrees(
 	unsigned long j1,j2;
 
 	std::cout << "MultiLens::buildHaloTrees zsource = " << zsource << std::endl;
+
+
+	ofstream file_area("halos.dat");
+	if(r_print_halos){
+		if(!file_area){
+			cout << "unable to create file " << "halos.dat" << endl;
+			exit(1);
+		}
+		file_area << "redshift      mass        pos[0]       pos[1]" <<endl;
+	}
 
 	assert(plane_redshifts[Nplanes-1] == zsource);
 
@@ -799,6 +817,12 @@ void MultiLens::buildHaloTrees(
 		double sb=0.0;
 		for(int m=0;m<j2-j1;m++){
 		  sb+=halos[j1+m].mass;
+		  if(r_print_halos){
+			  // halo_pos is still in radians
+			  double r=sqrt(halo_pos[j1+m][0]*halo_pos[j1+m][0]+halo_pos[j1+m][1]*halo_pos[j1+m][1]);
+			  if(r < r_print_halos)
+				  file_area << halo_zs[j1+m] << " " << halos[j1+m].mass << " " << halo_pos[j1+m][0] << " " << halo_pos[j1+m][0] <<endl;
+		  }
 		}
 		if(field_buffer > 0.0) sb /= (pi*pow(sqrt(fieldofview/pi)*pi*Dl[j]/180/(1+plane_redshifts[j]) + field_buffer,2));
 		else sb /= fieldofview*pow(pi/180.*Dl[j]/(1+plane_redshifts[j]),2);
@@ -843,6 +867,10 @@ void MultiLens::buildHaloTrees(
 			break;
 		}
 
+	}
+
+	if(r_print_halos){
+		 file_area.close();
 	}
 
 	cout << "constructed " << Nhalos << " halos" << endl;
@@ -1245,6 +1273,17 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 			buffer.str(std::string());
 		}
 
+		/// pos in radians
+		theta = new double[2];
+		/// pos in physical radians
+		theta[0] = ra*pi/180.;
+		theta[1] = dec*pi/180.;
+
+		if(partial_cone){
+			double r = sqrt(theta[0]*theta[0]+theta[1]*theta[1]);
+			if(r > 1.5*mokalens->map->boxlrad)
+				continue;
+		}
 
 		//file_in >> haloid >>  idd >>  ra >>  dec >>  z
 		//		 >>  np >>  vdisp >>  vmax >>  r_halfmass;
@@ -1255,6 +1294,8 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 		//std::cout << i << "  z: " << z << " np: " << np << " vmax :" << vmax << " vdisp: " << vdisp << "  " << file_in.peek() << std::endl;
 
 		if(np > 0.0 && vdisp > 0.0 && z <= zsource){
+
+			halo_pos_vec.push_back(theta);
 			
 			halo_vec.push_back(halo);
 
@@ -1339,13 +1380,6 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 
 			halo_vec[j].mass /= mass_scale;
 
-			/// pos in radians
-			theta = new double[2];
-			/// pos in physical radians
-			theta[0] = ra*pi/180.;
-			theta[1] = dec*pi/180.;
-			halo_pos_vec.push_back(theta);
-
 			if(rmax < (rtmp = theta[0]*theta[0]+theta[1]*theta[1])) rmax = rtmp;
 			++j;
 		
@@ -1363,7 +1397,9 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 		std::cout << "Overiding field_buffer to make it 0 because halos are read in." << endl;
 		field_buffer = 0.0;
 	}
-	fieldofview = pi*rmax*pow(180/pi,2);  // Resets field of view to estimate of inputed one
+
+	if(partial_cone == false)
+		fieldofview = pi*rmax*pow(180/pi,2);  // Resets field of view to estimate of inputed one
 
 	halos = new HaloStructure[Nhalos];
 	halo_zs = new double[Nhalos];
