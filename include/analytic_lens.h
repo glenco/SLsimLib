@@ -88,8 +88,6 @@ private:
    double find_axis(double *mod,int Nmod);
    double deflect_translated(double beta,double *mod,double *x,double *y,double *mag,int N
       ,int Nlenses,double Re2,double *x2);
-   void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *xg,double beta
-   		 ,int N,int *degen,double *mod,double **v,double **dx);
    double ElliptisizeLens(int Nimages,int Nsources,int Nlenses,int *pairing,double **xob
    		       ,double *xc,double **xg,double sigG,double beta,int Nmod
    		       ,double *mod,double **dx,double *re2,double *q);
@@ -101,5 +99,8 @@ private:
 void MarkPoints(TreeHndl s_tree,AnaLens *lens,bool sb_cut,short invert);
 void _MarkPoints(TreeHndl s_tree,AnaLens *lens,bool *sbcut);
 bool InSource(double *ray,AnaLens *lens,bool surfacebright);
+
+void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *xg,double beta
+   		 ,int N,int *degen,double *mod,double **v,double **dx);
 
 #endif
