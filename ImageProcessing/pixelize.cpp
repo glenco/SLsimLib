@@ -32,6 +32,48 @@ PixelMap::PixelMap(
 	map.resize(Npixels*Npixels);
 	return;
 }
+
+PixelMap::PixelMap(std::string filename)
+		{
+#ifdef ENABLE_FITS
+
+		if(filename == ""){
+			std::cout << "Please enter a valid filename for the FITS file input" << std::endl;
+			exit(1);
+		}
+
+		std::auto_ptr<CCfits::FITS> fp (new CCfits::FITS (filename, CCfits::Read));
+		CCfits::PHDU *h0=&fp->pHDU();
+		const CCfits::ExtMap *h1=&fp->extension();
+		Npixels = h0->axis(0);
+		int ny=h0->axis(1);
+		if(Npixels != ny){
+			std::cout << "Only squared maps are allowed!" << std::endl;
+			exit(1);
+		}
+		map.resize(Npixels*Npixels);
+		h0->readKey("CRVAL1",center[0]);
+		h0->readKey("CRVAL2",center[1]);
+		h0->readKey("CDELT1",resolution);
+		std::cout << "Resolution is " << resolution << std::endl;
+		resolution = fabs(resolution)*pi/180.;
+		std::cout << "Resolution is " << resolution << std::endl;
+		range = resolution*Npixels;
+		map_boundary_p1[0] = center[0] - range/2.;
+		map_boundary_p1[1] = center[1] - range/2.;
+		map_boundary_p2[0] = center[0] + range/2.;
+		map_boundary_p2[1] = center[1] + range/2.;
+		range = range - resolution;
+		h0->read(map);
+		std::cout << "Resolution is " << resolution << std::endl;
+
+#else
+		std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
+		exit(1);
+#endif
+
+		}
+
 PixelMap::~PixelMap(){
 
 	map.resize(0);
@@ -251,7 +293,7 @@ void PixelMap::printFITS(std::string filename){
 		CCfits::PHDU *phout = &fout->pHDU();
 
 		phout->write( 1,Npixels*Npixels,map );
-
+std::cout<< range << "  " << resolution << "  " << Npixels << std::endl;
 		phout->addKey ("CRPIX1",naxex[0]/2,"");
 		phout->addKey ("CRPIX2",naxex[1]/2,"");
 		phout->addKey ("CRVAL1",0.0,"");
@@ -277,6 +319,7 @@ void PixelMap::printFITS(std::string filename){
 		exit(1);
 #endif
 }
+
 
 /** \ingroup Image
  *

@@ -247,8 +247,6 @@ void AnaLens::AlignedRandomlyDistortLens(long *seed,double theta,int Npole){
 		//		rms_perturb[k+1]);
 	}
 
-	//PrintAnaLens(lens,false,false);
-
 	return ;
 }
 /** \ingroup ChangeLens

@@ -96,13 +96,13 @@ public:
   void (*sub_alpha_func)(double *alpha,double *x,double Rtrunc,double mass,double r_scale
 			,double *center,double Sigma_crit);
   /// pointer to function for calculating the convergence caused by a subclump
-  float (*sub_kappa_func)(double *x,double Rtrunc,double mass,double r_scale
+  KappaType (*sub_kappa_func)(double *x,double Rtrunc,double mass,double r_scale
   		,double *center,double Sigma_crit);
   /// pointer to function for calculating the shear caused by a subclump
-  void (*sub_gamma_func)(float *gamma,double *x,double Rtrunc,double mass,double r_scale
+  void (*sub_gamma_func)(KappaType *gamma,double *x,double Rtrunc,double mass,double r_scale
     		,double *center,double Sigma_crit);
   /// pointer to function for calculating the surface potential caused by a subclump
-  float (*sub_phi_func)(double *x,double Rtrunc,double mass,double r_scale
+  KappaType (*sub_phi_func)(double *x,double Rtrunc,double mass,double r_scale
     		,double *center,double Sigma_crit);
 
   /// stars
@@ -127,7 +127,7 @@ public:
   void assignParams(InputParams& params);
   void PrintLens(bool show_substruct,bool show_stars);
   void error_message1(std::string name,std::string filename);
-  void rayshooterInternal(double *ray, double *alpha, float *gamma, float *kappa, bool kappa_off);
+  void rayshooterInternal(double *ray, double *alpha, KappaType *gamma, KappaType *kappa, bool kappa_off);
 
   // in randoimize_lens.c
   double averageSubMass();
@@ -136,41 +136,43 @@ public:
   void reNormSubstructure(double kappa_sub);
   void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off);
   void substract_stars_disks(PosType *ray,PosType *alpha
-                  ,float *kappa,float *gamma);
+                  ,KappaType *kappa,KappaType *gamma);
   void implant_stars(Point *centers,unsigned long Nregions,long *seed);
   //void toggleStars(bool implanted);
 
   double getHost_Dl(){return Dl;}
+
+  // These need to be in the base class because they are used in the rayshooter function which because of parrelleization is not a member function
   double getHost_ro(){return host_ro;}
   double getHost_sigma(){return host_sigma;}
   //double *host_x;    /// not used yet
   double getHost_core(){return host_core;}
   double getHost_axis_ratio(){return host_axis_ratio;}
   double getHost_position_angle(){return host_pos_angle;}    /// position angle
+  double getPerturb_beta(){return perturb_beta;}
 
   int getPerturb_Nmodes(){return perturb_Nmodes;}    /// this includes two for external shear
-  double getPerturb_beta(){return perturb_beta;}
   double *perturb_modes;  ///first two are shear
 
 protected:
 
   /// critical surface density
-   double Sigma_crit;
+  double Sigma_crit;
    /// the time delay scale in days/Mpc^2
-   double to;
+  double to;
    /// Angular size distance to lens plane
-   double Dl;
+  double Dl;
 
-  // host elliptical
-  /// private: Einstein radius of host
+   // host elliptical
+    /// private: Einstein radius of host
   double host_ro;
   double host_sigma;
-  //double *host_x;    /// not used yet
+    //double *host_x;    /// not used yet
   double host_core;
   double host_axis_ratio;
   double host_pos_angle;    /// position angle
 
-  // perturbations to host.  These are protected so that in some derived classes they can or cann't be changed.
+    // perturbations to host.  These are protected so that in some derived classes they can or cann't be changed.
   int perturb_Nmodes;    /// this includes two for external shear
   double perturb_beta;
   double *perturb_rms;
@@ -190,24 +192,24 @@ protected:
    double MpcToAsec;
 
    // Things added to manipulate and fit lenses.
-   int check_model(int Nimages,int Nsources,int Nlenses,int *pairing,double **xob,double *x_center
-   		,int Nmod,double *mod,double **xg,double Re2,double **dx_sub,double **Amag,double ytol);
-   double find_axis(double *mod,int Nmod);
-   double deflect_translated(double beta,double *mod,double *x,double *y,double *mag,int N
-      ,int Nlenses,double Re2,double *x2);
-   void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *xg,double beta
-   		 ,int N,int *degen,double *mod,double **v,double **dx);
-   double ElliptisizeLens(int Nimages,int Nsources,int Nlenses,int *pairing,double **xob
-   		       ,double *xc,double **xg,double sigG,double beta,int Nmod
-   		       ,double *mod,double **dx,double *re2,double *q);
+   //int check_model(int Nimages,int Nsources,int Nlenses,int *pairing,double **xob,double *x_center
+   //		,int Nmod,double *mod,double **xg,double Re2,double **dx_sub,double **Amag,double ytol);
+   //double find_axis(double *mod,int Nmod);
+   //double deflect_translated(double beta,double *mod,double *x,double *y,double *mag,int N
+   //   ,int Nlenses,double Re2,double *x2);
+   //void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *xg,double beta
+   //		 ,int N,int *degen,double *mod,double **v,double **dx);
+   //double ElliptisizeLens(int Nimages,int Nsources,int Nlenses,int *pairing,double **xob
+   //		       ,double *xc,double **xg,double sigG,double beta,int Nmod
+   //		       ,double *mod,double **dx,double *re2,double *q);
 
 };
 
 double RandomFromTable(double *table,unsigned long Ntable,long *seed);
 void alphaNSIE(double *alpha,double *xt,double f,double bc,double theta);
-float kappaNSIE(double *xt,double f,double bc,double theta);
-void gammaNSIE(float *gam,double *xt,double f,double bc,double theta);
-double invmagNSIE(double *x,double f,double bc,double theta
+KappaType kappaNSIE(double *xt,double f,double bc,double theta);
+void gammaNSIE(KappaType *gam,double *xt,double f,double bc,double theta);
+KappaType invmagNSIE(double *x,double f,double bc,double theta
                      ,float *gam,float kap);
 double rmaxNSIE(double sigma,double mass,double f,double rc );
 double ellipticRadiusNSIE(double *x,double f,double pa);
@@ -219,21 +221,21 @@ void rotation(double *xout,double *xin,double theta);
 //  in powerlow.c
 
 void alphaPowLaw(double *alpha,double *x,double R,double mass,double beta,double *center,double Sigma_crit);
-float kappaPowLaw(double *x,double R,double mass,double beta,double *center,double Sigma_crit);
-void gammaPowLaw(float *gamma,double *x,double R,double mass,double beta,double *center,double Sigma_crit);
-float phiPowLaw(double *x,double R,double mass,double beta,double *center,double Sigma_crit);
+KappaType kappaPowLaw(double *x,double R,double mass,double beta,double *center,double Sigma_crit);
+void gammaPowLaw(KappaType *gamma,double *x,double R,double mass,double beta,double *center,double Sigma_crit);
+KappaType phiPowLaw(double *x,double R,double mass,double beta,double *center,double Sigma_crit);
 
 // in nfw_lens.c
 void alphaNFW(double *alpha,double *x,double Rtrunc,double mass,double r_scale
                 ,double *center,double Sigma_crit);
-float kappaNFW(double *x,double Rtrunc,double mass,double r_scale
+KappaType kappaNFW(double *x,double Rtrunc,double mass,double r_scale
                 ,double *center,double Sigma_crit);
-void gammaNFW(float *gamma,double *x,double Rtrunc,double mass,double r_scale
+void gammaNFW(KappaType *gamma,double *x,double Rtrunc,double mass,double r_scale
                 ,double *center,double Sigma_crit);
 
 // in lens_expand.c
 
-double lens_expand(double beta,double *mod,int Nmodes,double *x,double *alpha,float *gamma,float *phi);
+double lens_expand(double beta,double *mod,int Nmodes,double *x,double *alpha,KappaType *gamma,KappaType *phi);
 
 // in FullRange/implant_stars.c
 

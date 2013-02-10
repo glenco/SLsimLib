@@ -10,6 +10,55 @@
 
 using namespace std;
 
+/*
+ * \brief center of mass of a map using the moving centre
+ */
+void cmass(int n, std::valarray<float> map, std:: vector<double> x, double &xcm, double &ycm){ 
+  double shrink = 1.02;
+  // 0.05% of the total number of pixels
+  int nstop = int(0.05*double(n)*double(n)/100.);
+  if(nstop<36) nstop = 36;
+  std:: cout << "nstop = " << nstop << std:: endl;
+  xcm = 0.;
+  ycm = 0.;
+  double tot = 0;
+  //
+  double rsel = x[n-1] - x[0];
+  double xmin = x[0];
+  double drpix = rsel/n;  
+  rsel/=2.;
+  // I will set in the centre with t width equal to 128 pixels
+  rsel = drpix*64.;
+  //
+  int nsel = n*n;
+  int i,j;
+  double dist;
+  while(nsel>nstop){
+    double nxcm = 0;
+    double nycm = 0;
+    double xi,yi;
+    tot = 0;
+    nsel = 0;
+    for(i=0;i<n;i++) for(j=0;j<n;j++){
+	xi = (xmin+(drpix*0.5)+i*drpix);
+	yi = (xmin+(drpix*0.5)+j*drpix);
+	dist = sqrt(pow(xi-xcm,2)+ pow(yi-ycm,2));
+	if(dist<=rsel){
+	  nxcm+=map[i+n*j]*xi;
+	  nycm+=map[i+n*j]*yi;
+	  tot+=map[i+n*j];
+	  nsel++;
+	}
+      }
+    nxcm/=tot;
+    nycm/=tot;
+    rsel = rsel / shrink;
+    // center of mass
+    xcm = nxcm;
+    ycm = nycm;
+  }
+}
+
 /**
  * \brief allocates and reads the MOKA map in
  */
@@ -210,11 +259,11 @@ void MOKALens::saveImage(GridHndl grid,bool saveprofiles){
 	if(saveprofiles == true){
 
 	  std:: cout << " saving profile " << std:: endl;
-	  double RE3;
-	  saveProfiles(RE3);
+	  double RE3,xxc,yyc;
+          saveProfiles(RE3,xxc,yyc);
 	  estSignLambdas();
 	  double RE1,RE2;
-	  EinsteinRadii(RE1,RE2);
+	  EinsteinRadii(RE1,RE2,xxc,yyc);
 	  std::ostringstream fEinr;
 	  if(flag_background_field==1) fEinr << MOKA_input_file << "_only_noise_Einstein.radii.dat";
 	  else{
@@ -234,7 +283,7 @@ void MOKALens::saveImage(GridHndl grid,bool saveprofiles){
 /**
  * computing and saving the radial profile of the convergence, reduced tangential and parallel shear and of the shear
  *  */
-void MOKALens::saveProfiles(double &RE3){
+void MOKALens::saveProfiles(double &RE3,double &xxc,double &yyc){
 	/* measuring the differential and cumulative profile*/
 	double xmin = -map->boxlMpc*0.5;
 	double xmax =  map->boxlMpc*0.5;
@@ -245,9 +294,43 @@ void MOKALens::saveProfiles(double &RE3){
 	std::valarray<float> pxdist(map->nx*map->ny);
 	std::valarray<float> red_sgE(map->nx*map->ny),red_sgB(map->nx*map->ny),sgm(map->nx*map->ny); 
 	int i, j;
+	/*
+	  measure the center of mass
+	  double xcm=0,ycm=0,tot=0;
+	  for(i=0; i<map->nx; i++ ) for(j=0; j<map->ny; j++ ){
+	  xcm+=map->convergence[i+map->ny*j]*(xmin+(drpix*0.5)+i*drpix);
+	  ycm+=map->convergence[i+map->ny*j]*(xmin+(drpix*0.5)+j*drpix);
+	  tot+=map->convergence[i+map->ny*j];
+	  }	
+	  xcm/=tot;
+	  ycm/=tot;
+	  xxc = xcm;
+	  yyc = ycm;
+	*/
+	// moving center
+        double xcm,ycm;
+	if(flag_background_field==1){
+	  xcm = 0.;
+	  ycm = 0.;
+	}
+	else{
+	  cmass(map->ny,map->convergence,map->x,xcm,ycm);
+	}
+	xxc = xcm;
+	yyc = ycm;
+	int ai = locate(map->x,xxc);
+	ai = ((ai > 0) ? ai:0);
+	ai = ((ai < map->nx-1) ? ai:map->nx-1);
+	int bi = locate(map->x,yyc);
+	bi = ((bi > 0) ? bi:0);
+	bi = ((bi < map->nx-1) ? bi:map->nx-1);
+	std:: cout << "  ------------ center ------------- " << std:: endl;
+	std:: cout << "    " << xxc << "  " << yyc << std:: endl;
+	std:: cout << "    " << ai << "  " << bi << std:: endl;
+	std:: cout << "  ------------------r ------------- " << std:: endl;
 	for(i=0; i<map->nx; i++ ) for(j=0; j<map->ny; j++ ){
-		pxdist[i+map->ny*j]= sqrt(pow((xmin+(drpix*0.5)+i*drpix),2) +
-				pow((xmin+(drpix*0.5)+j*drpix),2));
+	    pxdist[i+map->ny*j]= sqrt(pow((xmin+(drpix*0.5)+i*drpix-xcm),2) +
+				pow((xmin+(drpix*0.5)+j*drpix-ycm),2));
 		// reduced shear E a B
 		double dx=map->x[i];
 		double dy=map->x[j];
@@ -298,7 +381,7 @@ void MOKALens::saveProfiles(double &RE3){
 	    std:: cout << " runj.size() = " << runj.size() << std:: endl;	      
 	  }
 
-	  dr0 = galaxiesPerBin*(0.5*map->boxlMpc)/(0.5*ntbggal);
+	  dr0 = map->boxlMpc*sqrt(galaxiesPerBin/ntbggal);
 
 	  nbin = int(xmax/dr0);                                                        
 	}
@@ -358,7 +441,7 @@ void MOKALens::saveProfiles(double &RE3){
    * a MOKA map (MOKALens), for just one ray!!
    *
 */
-void MOKALens::rayshooterInternal(double *xx, double *alpha, float *gamma, float *kappa, bool kappa_off){
+void MOKALens::rayshooterInternal(double *xx, double *alpha, KappaType *gamma, KappaType *kappa, bool kappa_off){
     
   long index = IndexFromPosition(xx,map->nx,map->boxlMpc/map->h,map->center);
 
@@ -407,7 +490,7 @@ void MOKALens::estSignLambdas(){
  * measure the effective and the median Einstein radii of the connected critical 
  * points present at the halo center
  */
-void MOKALens::EinsteinRadii(double &RE1, double &RE2){
+void MOKALens::EinsteinRadii(double &RE1, double &RE2, double &xxc, double &yyc){
   double signV;
   //  std:: vector<double> xci1,yci1;
   std:: vector<double> xci2,yci2;
@@ -474,7 +557,7 @@ void MOKALens::EinsteinRadii(double &RE1, double &RE2){
     nc = xcpoints.size();
     xercm=xercm/double(nc);
     yercm=yercm/double(nc);
-    double distcentre=sqrt(xercm*xercm+yercm*yercm)*map->inarcsec;
+    double distcentre=sqrt((xercm-xxc)*(xercm-xxc)+(yercm-yyc)*(yercm-yyc))*map->inarcsec;
     std:: vector<double>::iterator maxit, minit; 
     // find the min and max elements in the vector
     maxit = max_element(xcpoints.begin(), xcpoints.end());
@@ -542,8 +625,9 @@ void MOKALens::EinsteinRadii(double &RE1, double &RE2){
     }
     RE1=map->inarcsec*sqrt(pixDinL*pixDinL*npixIN/M_PI);
     RE2=map->inarcsec*median(RE);
-    // is not in the centre
-    if(distcentre>RE2){
+    // if is not in the centre
+    std:: cout << "distance " <<  distcentre << std:: endl;
+    if(distcentre>1.5*RE2){
       RE1=-RE1;
       RE2=-RE2;
     }
@@ -579,11 +663,11 @@ void MOKALens::saveImage(bool saveprofiles){
 	
 	if(saveprofiles == true){
 	  std:: cout << " saving profile " << std:: endl;
-                    double RE3;
-	            saveProfiles(RE3);
+	            double RE3,xxc,yyc;
+	            saveProfiles(RE3,xxc,yyc);
 		    estSignLambdas(); 
 		    double RE1,RE2;
-		    EinsteinRadii(RE1,RE2);
+		    EinsteinRadii(RE1,RE2,xxc,yyc);
 		    std::ostringstream fEinr;
 		    if(flag_background_field==1) fEinr << MOKA_input_file << "_only_noise_Einstein.radii.dat";
 		    else{

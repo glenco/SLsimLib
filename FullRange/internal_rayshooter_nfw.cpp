@@ -93,9 +93,9 @@ void *compute_rays_parallel_nfw(void *_p){
 
 	double x_rescale[2];
     long j;
-    float dt,kappa;
+    KappaType dt,kappa;
 	double alpha[2];
-	float gamma[3];
+	KappaType gamma[3];
 
     for(i = start; i < end; i++){
     	alpha[0]=alpha[1]=0.0;
@@ -235,11 +235,11 @@ void *compute_rays_parallel_nfw(void *_p){
    * a analytic one plane lens (AnaLens), for just one ray!!
    *
 */
-void BaseAnaLens::rayshooterInternal(double *ray, double *alpha, float *gamma, float *kappa, bool kappa_off){
+void BaseAnaLens::rayshooterInternal(double *ray, double *alpha, KappaType *gamma, KappaType *kappa, bool kappa_off){
      double x_rescale[2];
      long j;
      double alpha_tmp[2];
-     float gamma_tmp[3], dt = 0,tmp = 0;
+     KappaType gamma_tmp[3], dt = 0,tmp = 0;
 
      gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
      alpha_tmp[0] = alpha_tmp[1] = 0.0;

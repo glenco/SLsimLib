@@ -131,7 +131,7 @@ void *compute_rays_parallel(void *_p){
   double xx[2],fac;
   double aa,bb,cc;
   double alpha[2];
-  float kappa,gamma[3];
+  KappaType kappa,gamma[3];
   double xminus[2],xplus[2];
   double kappa_minus,gamma_minus[3],kappa_plus,gamma_plus[3];
   
@@ -268,7 +268,13 @@ void *compute_rays_parallel(void *_p){
 		     - p->i_points[i].gamma[1]*p->i_points[i].gamma[1]
 		     + p->i_points[i].gamma[2]*p->i_points[i].gamma[2];
     else p->i_points[i].invmag = 0.0;
-    
+
+    p->i_points[i].image->invmag=p->i_points[i].invmag;
+    p->i_points[i].image->kappa=p->i_points[i].kappa;
+    p->i_points[i].image->gamma[0]=p->i_points[i].gamma[0];
+    p->i_points[i].image->gamma[1]=p->i_points[i].gamma[1];
+    p->i_points[i].image->gamma[2]=p->i_points[i].gamma[2];
+
     if(p->i_points[i].image->x[0] != p->i_points[i].image->x[0] ||
        p->i_points[i].image->x[1] != p->i_points[i].image->x[1] ||
        p->i_points[i].invmag != p->i_points[i].invmag){
@@ -286,14 +292,14 @@ void *compute_rays_parallel(void *_p){
   
 }
 
-void MultiLens::rayshooterInternal(double *ray, double *alpha, float *gamma, float *kappa, bool kappa_off){
+void MultiLens::rayshooterInternal(double *ray, double *alpha, KappaType *gamma, KappaType *kappa, bool kappa_off){
 
   int j;
 
   double xx[2],fac;
   double aa,bb,cc;
   double alpha_tmp[2];
-  float kappa_tmp,gamma_tmp[3];
+  KappaType kappa_tmp,gamma_tmp[3];
   double xminus[2],xplus[2];
   double kappa_tmp_minus,gamma_tmp_minus[3],kappa_tmp_plus,gamma_tmp_plus[3];
 
@@ -431,6 +437,3 @@ void MultiLens::rayshooterInternal(double *ray, double *alpha, float *gamma, flo
 
 
 }
-
-
-

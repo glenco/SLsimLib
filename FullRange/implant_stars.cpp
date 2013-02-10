@@ -65,7 +65,7 @@ void BaseAnaLens::implant_stars(Point *centers,unsigned long Nregions,long *seed
 		star_region[j] = 1.0/sqrt(pi*star_fstars*centers[j].kappa*Sigma_crit
 				/star_massscale/(float)NstarsPerImage);
 		cout << star_region[j] << " " << star_fstars <<  " " << centers[j].kappa << " " << Sigma_crit << " " << star_massscale << " " << NstarsPerImage << endl;
-		cout << "kappa_star= " << star_fstars*(float)NstarsPerImage*star_massscale/(pi*pow(star_region[j],2)) << endl;
+		cout << "Sigma_star= " << (float)NstarsPerImage*star_massscale/(pi*pow(star_region[j],2)) << endl;
 		// cutoff based on comparison of star deflection to smooth component
 		//rcut = 4*sqrt(star_massscale/pi/Sigma_crit
 		//		/( centers[j].kappa+sqrt(pow(centers[j].gamma[0],2)+pow(centers[j].gamma[1],2)) ) );
@@ -138,7 +138,7 @@ void BaseAnaLens::implant_stars(Point *centers,unsigned long Nregions,long *seed
 /// subtracts the mass in stars from the smooth model to compensate
 /// for the mass of the stars the lensing quantities are all updated not replaced
 void BaseAnaLens::substract_stars_disks(double *ray,double *alpha
-		,float *kappa,float *gamma){
+		,KappaType *kappa,KappaType *gamma){
 
 	if(!(stars_implanted)) return;
 

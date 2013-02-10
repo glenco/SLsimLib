@@ -429,6 +429,10 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa
 						i_points[jj].gamma[0] = i_points[jj].image->gamma[0] = -0.5*(aa[0]-aa[1]);
 						i_points[jj].gamma[1] = i_points[jj].image->gamma[1] = -0.5*(aa[2]+aa[3]);
 						i_points[jj].gamma[2] = i_points[jj].image->gamma[2] = -0.5*(aa[2]-aa[3]);
+						i_points[jj].invmag = i_points[jj].image->invmag = (1-i_points[jj].kappa)*(1-i_points[jj].kappa)
+								     - i_points[jj].gamma[0]*i_points[jj].gamma[0]
+								     - i_points[jj].gamma[1]*i_points[jj].gamma[1]
+								     + i_points[jj].gamma[2]*i_points[jj].gamma[2];
 					}
 					i_points[jj].in_image = MAYBE;
 
@@ -545,6 +549,9 @@ void Grid::ClearAllMarks(){
  *
  * The points must have attached source/image points and
  * they must not be colinear. Returns false if they are colinear
+ *
+ * 	 a[0] = a11, a[1] = a22, a[2] = a12, a[3] = a21
+ *
  */
 bool Grid::find_mag_matrix(double *a,Point *p0,Point *p1,Point *p2){
 	double y1[2],y2[2],x1[2],x2[2];
@@ -588,7 +595,7 @@ bool Grid::uniform_mag_from_deflect(
 	int count=0;
 
     FindAllBoxNeighborsKist(i_tree,point,neighbors);
-    assert(neighbors->Nunits() > 3);
+    if(neighbors->Nunits() <= 3) return false;  // This is the case where the point does not have enough neighbors.
     neighbors->MoveToTop();
     point2 = neighbors->getCurrent();
     neighbors->Down();
@@ -652,4 +659,46 @@ bool Grid::uniform_mag_from_shooter(
 	a[3] = -point->gamma[1] + point->gamma[2];
 
     return true;
+}
+void Grid::test_mag_matrix(){
+	double aa[4];
+	Point *point2;
+	double ao[4];
+	int count;
+	double kappa, gamma[3], invmag;
+
+	MoveToTopList(i_tree->pointlist);
+	do{
+		count=0;
+		FindAllBoxNeighborsKist(i_tree,i_tree->pointlist->current,neighbors);
+		assert(neighbors->Nunits() >= 3);
+		neighbors->MoveToTop();
+		point2 = neighbors->getCurrent();
+		neighbors->Down();
+		while(!find_mag_matrix(aa,i_tree->pointlist->current,point2,neighbors->getCurrent())) neighbors->Down();
+		//std::cout << "deflection neighbors a" << std::endl;
+		while(neighbors->Down()){
+			if(find_mag_matrix(ao,i_tree->pointlist->current,point2,neighbors->getCurrent())){
+				aa[0] = (count*aa[0] + ao[0])/(count+1);
+				aa[1] = (count*aa[1] + ao[1])/(count+1);
+				aa[2] = (count*aa[2] + ao[2])/(count+1);
+				aa[3] = (count*aa[3] + ao[3])/(count+1);
+
+				++count;
+			}
+		}
+
+		kappa = 1-0.5*(aa[0]+aa[1]);
+		gamma[0] = -0.5*(aa[0]-aa[1]);
+		gamma[1] = -0.5*(aa[2]+aa[3]);
+		gamma[2] = -0.5*(aa[2]-aa[3]);
+		invmag = (1-kappa)*(1-kappa)-gamma[0]*gamma[0]-gamma[1]*gamma[1]+gamma[2]*gamma[2];
+
+		i_tree->pointlist->current->kappa =  kappa/i_tree->pointlist->current->kappa - 1.0;
+		i_tree->pointlist->current->gamma[0] = gamma[0]/i_tree->pointlist->current->gamma[0] - 1.0;
+		i_tree->pointlist->current->gamma[1] = gamma[1]/i_tree->pointlist->current->gamma[1] - 1.0;
+		i_tree->pointlist->current->gamma[2] = gamma[2]/i_tree->pointlist->current->gamma[2] - 1.0;
+		i_tree->pointlist->current->invmag = invmag/i_tree->pointlist->current->invmag - 1.0;
+
+	}while(MoveDownList(i_tree->pointlist));
 }
