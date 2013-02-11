@@ -82,6 +82,30 @@ void MultiLens::resetNplanes(CosmoHndl cosmo, int Np){
   buildHaloTrees(cosmo);
 }
 
+void MultiLens::resetHalos(CosmoHndl cosmo){
+  delete[] halo_tree;
+  delete[] halo_data;
+  delete[] halos;
+
+  delete[] halo_zs;
+  delete[] halo_id;
+  free_PosTypeMatrix(halo_pos,Nhalos,3);
+  if(flag_run_multip_test)
+	  free_PosTypeMatrix(halo_pos_Mpc,Nhalos,3);
+
+  halo_tree = new auto_ptr<QuadTree>[Nplanes-1];
+  halo_data = new auto_ptr<HaloData>[Nplanes-1];
+
+  if(field_buffer > 0.0) createHaloData_buffered(cosmo,seed);
+  else{
+	  if(flag_run_twop_test) createHaloData_test(cosmo,seed);
+	  else createHaloData(cosmo,seed);
+  }
+
+  if(flag_run_twop_test) buildHaloTrees_test(cosmo);
+  else buildHaloTrees(cosmo);
+}
+
 /*
  * \ingroup Constructor
  * allocates space for the halo trees and the inout lens, if there is any

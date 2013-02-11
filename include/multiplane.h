@@ -88,6 +88,7 @@ public:
 	std::string outputfile;
 
 	void resetNplanes(CosmoHndl cosmo, int Np);
+	void resetHalos(CosmoHndl cosmo);
 	
 	void calc_error_test(unsigned long Npoints,Point *point,bool kappa_off);
 	void calc_error_test_multi(unsigned long Npoints,Point *i_points,bool kappa_off,CosmoHndl cosmo);
