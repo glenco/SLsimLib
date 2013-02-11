@@ -218,6 +218,7 @@ void MultiLens::assignParams(InputParams& params){
 			field_buffer = 0.0;
 			cout << "default field buffer of 0 Mpc is being used." << endl;
 		}
+		partial_cone=false;
 	}else{
 		if(!params.get("partial_cone",partial_cone))	partial_cone=false;
 		min_mass = 0.0;
