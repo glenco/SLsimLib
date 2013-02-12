@@ -28,7 +28,6 @@ UniLens::UniLens(InputParams& params) : BaseAnaLens(params){
   perturb_modes[1]=gamma_uniform[0];
   perturb_modes[2]=gamma_uniform[1];
 
-  // in degrees
   set = true;
 
   PrintLens(false,false);
@@ -41,13 +40,10 @@ UniLens::~UniLens(){
 
 void UniLens::assignParams(InputParams& params){
 
-	// Distortion of host lens parameters
-	if(perturb_Nmodes > 0){
-		if(!params.get("kappa_uniform",kappa_uniform)) error_message1("kappa_uniform",params.filename());
-		if(!params.get("gamma_uniform_1",gamma_uniform[0])) error_message1("gamma_uniform_0",params.filename());
-		if(!params.get("gamma_uniform_2",gamma_uniform[1])) error_message1("gamma_uniform_1",params.filename());
-	}
-
+	//if(perturb_Nmodes > 0){
+	if(!params.get("kappa_uniform",kappa_uniform)) error_message1("kappa_uniform",params.filename());
+	if(!params.get("gamma_uniform_1",gamma_uniform[0])) error_message1("gamma_uniform_1",params.filename());
+	if(!params.get("gamma_uniform_2",gamma_uniform[1])) error_message1("gamma_uniform_2",params.filename());
 	return;
 }
 
@@ -66,5 +62,20 @@ void UniLens::PrintLens(bool show_substruct,bool show_stars){
 	cout << "kappa " << kappa_uniform << endl;
 	cout << "gamma " << gamma_uniform[0] << " " << gamma_uniform[1] << endl;
 
+
 }
+
+void UniLens::implant_stars(double x, double y, unsigned long Nregions,long *seed){
+	Point *centers;
+	gamma_uniform[2]=0.0; // TODO gamma_uniform[2] determines rotation for multiplane lens, how shall it be implemented here?
+	centers = NewPointArray(Nregions,true);
+	centers[0].x[0]=x;
+	centers[0].x[1]=y;
+	centers[0].kappa=kappa_uniform;
+	centers[0].gamma[0]=gamma_uniform[0];
+	centers[0].gamma[1]=gamma_uniform[1];
+	centers[0].gamma[2]=gamma_uniform[2];
+	BaseAnaLens::implant_stars(centers,Nregions,seed);
+}
+
 

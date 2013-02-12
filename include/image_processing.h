@@ -23,9 +23,9 @@ public:
 	PixelMap(std::string filename);
 	~PixelMap();
 
-	unsigned long getNpixels(){return Npixels;}
-	double getRange(){return range;}
-	double getResolution(){return resolution;}
+	unsigned long getNpixels() const {return Npixels;}
+	double getRange() const {return range;}
+	double getResolution() const {return resolution;}
 
 	void Clean();
 	void AddImages(ImageInfo *imageinfo,int Nimages,bool constant_sb);
@@ -35,7 +35,7 @@ public:
 	void printFITS(std::string filename);
 	void smooth(double *map_out,double sigma);
 
-	inline double getValue(unsigned long i) {return map[i];}
+	inline double getValue(unsigned long i) const {return map[i];}
 
 private:
 	std::valarray<float> map;
