@@ -122,37 +122,38 @@ void find_images_kist(
     //////////////////////////////////////////
 	//if(!( (oldy[0]==y_source[0])*(oldy[1]==y_source[1])*(oldr < r_source) )){
 
-		for(
+    for(i=0
 				//for(rtemp = fabs(r_source/mumin)*pow(Ngrid_block,Nsizes),Nold=0
 		//		;rtemp >= 0.99*Ngrid_block*fabs(r_source)
-				;rtemp >= r_source
-				;rtemp /= Ngrid_block ){
+    		;rtemp >= r_source
+    		;rtemp /= Ngrid_block,++i ){
 
-			time(&t1);
-			time(&t3);
-			if(verbose)
-			printf("\n   new source size = %e    telescoping rsource = %e\n",rtemp,r_source);
-
-			do{
 				time(&t1);
-				if(verbose) printf("      time in refine grid %f sec\n",difftime(t1,t2));
+				time(&t3);
+				if(verbose)
+					printf("\n   new source size = %e    telescoping rsource = %e\n",rtemp,r_source);
 
-				moved = image_finder_kist(lens,y_source,rtemp,grid
+				j=0;
+				do{
+					time(&t1);
+					if(verbose) printf("      time in refine grid %f sec\n",difftime(t1,t2));
+
+					moved = image_finder_kist(lens,y_source,rtemp,grid
 						  ,Nimages,imageinfo,NimageMax,Nimagepoints,-1,0);
+					assert(*Nimages > 0);
 
-				time(&t2);
-				if(verbose)	printf("      time in image_finder %f sec\n        Nimagepoints=%li\n"
+					time(&t2);
+					if(verbose)	printf("      time in image_finder %f sec\n        Nimagepoints=%li\n"
 						,difftime(t2,t1),*Nimagepoints);
+					++j;
+				}while(refine_grid_kist(lens,grid,imageinfo,*Nimages,rtemp*mumin/Ngrid_block,2,kappa_off,NULL));
 
-			}while(refine_grid_kist(lens,grid,imageinfo,*Nimages,rtemp*mumin/Ngrid_block,2,kappa_off,NULL));
+				time(&t1);
+				if(verbose)	printf("      time in refine grid %f sec\n",difftime(t1,t2));
 
-
-			time(&t1);
-			if(verbose)	printf("      time in refine grid %f sec\n",difftime(t1,t2));
-
-			time(&now);
-			if(verbose) printf("    time for one source size %f sec\n",difftime(now,t3));
-		}
+				time(&now);
+				if(verbose) printf("    time for one source size %f sec\n",difftime(now,t3));
+    }
 
 	time(&now);
 	if(verbose) printf(" time for source size reduction %f sec\n",difftime(now,to));
@@ -172,8 +173,10 @@ void find_images_kist(
 
 	time(&now);
 
+	assert(*Nimages > 0);
 	// do an initial uniform refinement to make sure there are enough point in
 	//  the images
+	i=0;
 	do{
 		time(&t3);
 		if(verbose)
@@ -183,8 +186,10 @@ void find_images_kist(
 		// mark image points in tree
 		PointsWithinKist(grid->s_tree,y_source,r_source,subkist,1);
 
+		//moved=image_finder_kist(lens,y_source,fabs(r_source),grid
+		//		,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
 		moved=image_finder_kist(lens,y_source,fabs(r_source),grid
-				,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
+				,Nimages,imageinfo,NimageMax,Nimagepoints,0,0);
 
 		//if(*Nimages < 1) printf("  Nimages=%i i=%i\n",*Nimages,i);
 
@@ -195,9 +200,22 @@ void find_images_kist(
 			printf("     image   # of points    error in area\n");
 			for(j=0;j<*Nimages;++j) printf("       %i        %li         %e\n",j,imageinfo[j].imagekist->Nunits(),imageinfo[j].area_error);
 		}
+		if(i > 20 && *Nimagepoints == 100){
+			// case where no image is found at any size
+			*Nimages = 0;
+			*Nimagepoints = 0;
+			return ;
+		}
 		++i;
-	}while( refine_grid_kist(lens,grid,imageinfo,*Nimages,0.01,flag,kappa_off,NULL)
+	}while( refine_grid_kist(lens,grid,imageinfo,*Nimages,1.0/NpointsRequired,flag,kappa_off,NULL)
 			|| moved );
+	assert(*Nimages > 0);
+
+	// find points that are truly in the image and not just neighbors
+	moved=image_finder_kist(lens,y_source,fabs(r_source),grid
+			,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
+	assert(*Nimages > 0);
+
 
 	// remove images with no points in them
 	for(j=0;j<*Nimages;++j){
@@ -209,15 +227,18 @@ void find_images_kist(
 			--j;
 		}
 	}
+	assert(*Nimages > 0);
+
 	/////////////////////////////////////////////
-	// refine just image edges to high resolution
+	// second stage of refinement -
+	// depends of choice of edge_refinement
 	/////////////////////////////////////////////
 	time(&now);
 
 	if(splitimages) flag = 0; else flag = 2;
 
 	k=i;
-	if(edge_refinement==0){
+	if(edge_refinement==0){   // uniform refinement over image
 		do{
 			// mark image points in tree
 			PointsWithinKist(grid->s_tree,y_source,r_source,subkist,1);
@@ -228,7 +249,7 @@ void find_images_kist(
 		}while( refine_grid_kist(lens,grid,imageinfo,*Nimages,FracResTarget,0,kappa_off,NULL)
 				|| moved );
 
-	}else if(edge_refinement==1){
+	}else if(edge_refinement==1){    // edge refinement with image finding at each step
 		do{
 			// mark image points in tree
 			PointsWithinKist(grid->s_tree,y_source,r_source,subkist,1);
@@ -243,7 +264,7 @@ void find_images_kist(
 		}while( refine_edges(lens,grid,imageinfo,*Nimages,FracResTarget,flag,kappa_off)
 				|| moved );
 
-	}else if(edge_refinement==2){
+	}else if(edge_refinement==2){  // edge refinement with no image finding at each step
 		++i;
 		while(refine_edges2(lens,y_source,r_source,grid
 				,imageinfo,&image_overlap,*Nimages,FracResTarget,flag,kappa_off)){
@@ -259,6 +280,7 @@ void find_images_kist(
 
 	if(verbose) printf("finished edge refinement i=%i\n",i);
 
+	assert(*Nimages > 0);
 
 	time(&t3);
 	if(verbose) printf("     time in image refinement %f min\n",difftime(t3,now)/60.);
@@ -296,6 +318,7 @@ void find_images_kist(
 			--j;
 		}
 	}
+	assert(*Nimages > 0);
 
 	// calculate the centroid of the images assuming uniform surface brightness
 	for(i=0;i<*Nimages;++i){
@@ -410,8 +433,35 @@ short image_finder_kist(LensHndl lens, double *y_source,double r_source,GridHndl
   Nsource_points = imageinfo->imagekist->Nunits();
 
   // if there are not enough points in source find nearest ones
-  if(!true_images && imageinfo->imagekist->Nunits() < NpointsRequired)
-	  NearestNeighborKist(s_tree,y_source,NpointsRequired,imageinfo->imagekist);
+  if(!true_images && imageinfo->imagekist->Nunits() < NpointsRequired){
+	  if(imageinfo->imagekist->Nunits() == 0){
+		  NearestNeighborKist(s_tree,y_source,NpointsRequired,imageinfo->imagekist);
+	  }else{  // add nearest points to already found image points
+		  bool redundant = false;
+
+		  NearestNeighborKist(s_tree,y_source,NpointsRequired,imageinfo[1].imagekist);
+
+		  i=0;
+		  while(imageinfo[1].imagekist->Nunits() > 0){
+			  imageinfo->imagekist->MoveToTop();
+			  imageinfo->imagekist->JumpDown(i);
+			  redundant = false;
+			  do{
+				  if(imageinfo->imagekist->getCurrent() == imageinfo[1].imagekist->getCurrent()){
+					  imageinfo[1].imagekist->TakeOutCurrent();
+					  redundant = true;
+					  break;
+				  }
+			  }while(imageinfo->imagekist->Down());
+			  if( !redundant ){
+				  imageinfo->imagekist->MoveToTop();
+				  imageinfo->imagekist->InsertBeforeCurrent(imageinfo[1].imagekist->TakeOutCurrent());
+				  ++i;
+			  }
+
+		  }
+	  }
+  }
 
 
   // mark all image points

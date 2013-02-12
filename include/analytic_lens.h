@@ -58,7 +58,7 @@
  * The stars are not initially present.  They must be implanted later.
  *</pre>
  *
- * TODO BEN finish this documentation.
+ * TODO BEN finish this documentation for perturbation parameters.
  */
 class AnaLens : public BaseAnaLens{
 public:
