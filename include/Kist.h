@@ -8,7 +8,8 @@
 #ifndef kisttypes_declare
 #define kisttypes_declare
 
-#include "pointlist.h"
+//#include "pointlist.h"
+#include "point.h"
 
 typedef struct Point Data;  // change this to make a kist of other objects
 

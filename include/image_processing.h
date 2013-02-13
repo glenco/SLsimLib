@@ -9,6 +9,7 @@
 #define IMAGE_PROCESSING_H_
 
 #include "Tree.h"
+#include "point.h"
 
 /** \ingroup Image
  * \brief Takes images and pixelizes the flux into regular pixel grid.

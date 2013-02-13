@@ -9,6 +9,7 @@
 #define _grid_maintenance_declare_
 
 #include "lens.h"
+#include "point.h"
 #include "Tree.h"
 
 /** \ingroup ImageFinding

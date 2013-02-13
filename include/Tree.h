@@ -9,7 +9,8 @@
 #ifndef treetypes_declare
 #define treetypes_declare
 
-#include "pointlist.h"
+//#include "pointlist.h"
+#include "point.h"
 #include "Kist.h"
 #include "image_info.h"
 
@@ -67,12 +68,13 @@ bool moveUp(TreeHndl tree);
 
 bool moveToChild(TreeHndl tree,int child);
 
-void insertChildToCurrent(TreeHndl tree, Point *points,unsigned long npoints
-			  ,double boundary_p1[2],double boundary_p2[2]
-			  ,double center[2],int child);
+//void insertChildToCurrent(TreeHndl tree, Point *points,unsigned long npoints
+//			  ,double boundary_p1[2],double boundary_p2[2]
+//			  ,double center[2],int child);
+void insertChildToCurrent(TreeHndl tree,Branch *branch,int child);
 
-void attachChildToCurrent(TreeHndl tree,Branch data,int child);
-void attachChildrenToCurrent(TreeHndl tree,Branch child1,Branch child2);
+//void attachChildToCurrent(TreeHndl tree,Branch data,int child);
+void attachChildrenToCurrent(TreeHndl tree,Branch *child1,Branch *child2);
 bool TreeWalkStep(TreeHndl tree,bool allowDescent);
 double ClosestBorder(double *ray,double *p1,double *p2);
 

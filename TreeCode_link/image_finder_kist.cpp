@@ -666,6 +666,8 @@ int refine_grid_kist(
 
 				  assert(getCurrentKist(imageinfo[i].imagekist)->leaf->child1 == NULL);
 				  assert(getCurrentKist(imageinfo[i].imagekist)->leaf->child2 == NULL);
+				  assert(getCurrentKist(imageinfo[i].imagekist)->image->leaf->child1 == NULL);
+				  assert(getCurrentKist(imageinfo[i].imagekist)->image->leaf->child2 == NULL);
 
 				  if(batch){
 					  points_to_refine.push_back(getCurrentKist(imageinfo[i].imagekist));
@@ -693,6 +695,8 @@ int refine_grid_kist(
 
 					  assert(point->leaf->child1 == NULL);
 					  assert(point->leaf->child2 == NULL);
+					  assert(point->image->leaf->child1 == NULL);
+					  assert(point->image->leaf->child2 == NULL);
 
 					  if(batch){
 						  points_to_refine.push_back(point);
@@ -712,6 +716,7 @@ int refine_grid_kist(
   } // end of image loop
 
   if(batch){
+	  for(i=0;i<points_to_refine.size();++i) assert(points_to_refine[i]->leaf->child1 == NULL && points_to_refine[i]->leaf->child2 == NULL);
 	  i_points = grid->RefineLeaves(lens,points_to_refine,kappa_off);
 	  if(newpointskist && i_points != NULL) for(k=0;k < i_points->head; ++k) newpointskist->InsertAfterCurrent(&i_points[k]);
 
