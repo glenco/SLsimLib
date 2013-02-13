@@ -64,7 +64,7 @@ public:
 		*kappa = 0.0;
 	}
 	virtual double getZlens(){return 0.0;}
-	virtual void setZlens(double zlens){std::cout << "Why would you want to change the lens redshift in a DummyLens?" << std::endl; exit(1);}
+	virtual void setZlens(CosmoHndl, double, double = 1000){std::cout << "Why would you want to change the lens redshift in a DummyLens?" << std::endl; exit(1);}
 };
 
 typedef Lens *LensHndl;
