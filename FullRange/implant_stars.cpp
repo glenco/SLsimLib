@@ -113,7 +113,6 @@ void BaseAnaLens::implant_stars(Point *centers,unsigned long Nregions,long *seed
 
 	assert(m <= stars_N);
 	stars_N = m;
-	cout << stars_N;
 	//std::printf("last star x = %e %e\n",stars_xp[stars_N-1][0],stars_xp[stars_N-1][1]);
 
 	float dummy=0;
@@ -122,8 +121,6 @@ void BaseAnaLens::implant_stars(Point *centers,unsigned long Nregions,long *seed
 
 	star_tree = new QuadTree(stars_xp,star_masses,&dummy,stars_N
 			,false,false,0,4,star_theta_force);
-
-	std::cout<<"projected with 2D tree"<<std::endl;
 
 	// visit every branch to find center of mass and cutoff scale */
 	stars_implanted = true;

@@ -69,6 +69,7 @@ public:
 	void rayshooterInternal(unsigned long Npoints, bool kappa_off);
 	float getKappa_uniform(){return kappa_uniform;}
 	float* getGamma_uniform(){return gamma_uniform;}
+	double getAveMag(){ return 1.0/( pow(1-kappa_uniform,2) - gamma_uniform[0]*gamma_uniform[0] - gamma_uniform[1]*gamma_uniform[1]);}
 
 protected:
    float kappa_uniform;
