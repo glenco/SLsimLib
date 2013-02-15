@@ -19,14 +19,18 @@
 
 class PixelMap{
 public:
+	PixelMap();
 	PixelMap(unsigned long Npixels,double range,double *center);
 	PixelMap(std::string filename);
 	~PixelMap();
-
+	
+	bool valid() const;
+	
 	unsigned long getNpixels() const {return Npixels;}
 	double getRange() const {return range;}
+	const double* getCenter() const {return center;}
 	double getResolution() const {return resolution;}
-
+	
 	void Clean();
 	void AddImages(ImageInfo *imageinfo,int Nimages,bool constant_sb);
 	void AddImages(ImageInfo *imageinfo,int Nimages,double sigma);
@@ -34,10 +38,12 @@ public:
 	void printASCIItoFile(std::string filename);
 	void printFITS(std::string filename);
 	void smooth(double *map_out,double sigma);
-
+	
 	inline double getValue(unsigned long i) const {return map[i];}
-
+	
 private:
+	bool isvalid;
+	
 	std::valarray<float> map;
 	unsigned long Npixels;
 	double resolution,range,center[2];

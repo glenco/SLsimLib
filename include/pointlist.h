@@ -14,11 +14,13 @@
 #define pointtypes_declare
 
 #include "standard.h"
+#include <point.h>
 
-struct branchstruct;
+//struct Point;
+//struct Branch;
 
 /** \brief A point on the source or image plane that contains a position and the lensing quantities */
-typedef struct Point{
+/*typedef struct Point{
   struct Point *next;    // pointer to next point in linked list
   struct Point *prev;
   struct Point *image;  // pointer to point on image or source plane
@@ -35,10 +37,11 @@ typedef struct Point{
   double gridsize;   // the size of the most refined grid the point is in
   float surface_brightness;  // the surface brightness at this points
 
-  struct branchstruct *leaf;
+  struct Branch;
+  Branch *leaf;
 
 } Point;
-
+/*
 struct branchstruct{
   struct Point *points;        // pointer to first points in Branch
   unsigned long npoints;
@@ -56,70 +59,8 @@ struct branchstruct{
 } ;
 
 typedef struct branchstruct Branch;
+*/
 
-
-/** \brief link list for points, uses the linking pointers within the Point type unlike  Kist */
-typedef struct PointList{
-  Point *top;
-  Point *bottom;
-  Point *current;
-  unsigned long Npoints;
-} PointList;
-
-typedef struct PointList *ListHndl;
-//bool AtTopList(ListHndl list);
-//bool AtBottomList(ListHndl list);
-
-inline bool AtTopList(ListHndl list){
-	assert(list);
-	if(list->current==list->top) return true;
-	else return false;
-};
-inline bool AtBottomList(ListHndl list){
-	assert(list);
-	if(list->current==list->bottom) return true;
-	else return false;
-};
-//inline void MoveToTopList(ListHndl list);
-//inline void MoveToBottomList(ListHndl list);
-inline void MoveToTopList(ListHndl list){
-  list->current=list->top;
-};
-inline void MoveToBottomList(ListHndl list){
-  list->current=list->bottom;
-};
-
-/***********************************************************
-   routines for linked list of points
-************************************************************/
-
-ListHndl NewList(void);
-Point *NewPoint(double *x,unsigned long id);
-void InsertAfterCurrent(ListHndl list,double *x,unsigned long id,Point *image);
-void InsertBeforeCurrent(ListHndl list,double *x,unsigned long id,Point *image);
-void InsertPointAfterCurrent(ListHndl list,Point *);
-void InsertPointBeforeCurrent(ListHndl list,Point *);
-
-void JumpDownList(ListHndl list,int jump);
-bool MoveDownList(ListHndl list);
-bool MoveUpList(ListHndl list);
-void ShiftList(ListHndl list);
-
-
-void FillList(ListHndl list,double **x,unsigned long N
-	      ,unsigned long idmin);
-void SwapPointsInList(ListHndl list,Point *p1,Point *p2);
-void PrintList(ListHndl list);
-Point *sortList(long n, double arr[],ListHndl list,Point *firstpoint);
-void MoveCurrentToBottom(ListHndl list);
-Point *TakeOutCurrent(ListHndl list);
-void MergeLists(ListHndl list1,ListHndl list2);
-void InsertListAfterCurrent(ListHndl list1,ListHndl list2);
-void InsertListBeforeCurrent(ListHndl list1,ListHndl list2);
-void EmptyList(ListHndl list);
-void UnionList(ListHndl list1,ListHndl list2);
-bool ArePointsUniqueList(ListHndl list);
-bool IntersectionList(ListHndl list1,ListHndl list2,ListHndl intersection);
 
 
 #endif

@@ -39,6 +39,11 @@ void BaseAnaLens::assignParams(InputParams& params){
     if(!params.get("Nstars",stars_N)) error_message1("Nstars",params.filename());
     else if(stars_N){
     	if(!params.get("fstars",star_fstars)) error_message1("fstars",params.filename());
+    	if(star_fstars < 0 || star_fstars > 1){
+    		ERROR_MESSAGE();
+    		cout << "fstars cannot be less than 0 or larger than 1 in file " << params.filename() <<endl;
+    		exit(0);
+    	}
     	if(!params.get("stars_mass",star_massscale)) error_message1("stars_mass",params.filename());
     }
 

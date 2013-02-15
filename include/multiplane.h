@@ -88,6 +88,7 @@ public:
 	std::string outputfile;
 
 	void resetNplanes(CosmoHndl cosmo, int Np);
+	void resetHalos(CosmoHndl cosmo);
 	
 	void calc_error_test(unsigned long Npoints,Point *point,bool kappa_off);
 	void calc_error_test_multi(unsigned long Npoints,Point *i_points,bool kappa_off,CosmoHndl cosmo);
@@ -163,6 +164,8 @@ private:
 	/// an array of smart pointers to the halo models on each plane
 	std::auto_ptr<HaloData> *halo_data;
 
+	double r_print_halos;
+
 	/* the following parameters are read in from the parameter file */
 
 	/// type of mass function PS (0), ST (1), and power law (2) default is ST
@@ -190,6 +193,7 @@ private:
 	//std::string input_gal_file;
 	//bool gal_input_flag;
 	bool read_sim_file;
+	bool partial_cone;
 
 	/// enables to two plane test
 	bool flag_run_twop_test;
