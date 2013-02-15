@@ -12,9 +12,11 @@
 #endif
 
 PixelMap::PixelMap()
-: isvalid(false), Npixels(0), range(0), center({0,0}), resolution(0),
+: isvalid(false), Npixels(0), range(0), resolution(0),
   map_boundary_p1({0,0}), map_boundary_p2({0,0})
 {
+	center[0] = 0;
+	center[1] = 0;
 }
 
 PixelMap::PixelMap(
