@@ -11,11 +11,17 @@
 #include <CCfits/CCfits>
 #endif
 
+PixelMap::PixelMap()
+: isvalid(false), Npixels(0), range(0), center({0,0}), resolution(0),
+  map_boundary_p1({0,0}), map_boundary_p2({0,0})
+{
+}
+
 PixelMap::PixelMap(
 		unsigned long my_Npixels  /// Number of pixels in one dimension of map.
 		,double my_range          /// One dimensional range of map in whatever units the point positions are in
 		,double *my_center        /// The location of the center of the map
-		): Npixels(my_Npixels), range(my_range)
+		): isvalid(true), Npixels(my_Npixels), range(my_range)
 		{
 
 	center[0] = my_center[0];
@@ -29,11 +35,12 @@ PixelMap::PixelMap(
 
 	range = range - resolution;
 
-	map.resize(Npixels*Npixels);
+	map.resize(Npixels*Npixels, 0);
 	return;
 }
 
 PixelMap::PixelMap(std::string filename)
+: isvalid(false)
 		{
 #ifdef ENABLE_FITS
 
@@ -51,7 +58,7 @@ PixelMap::PixelMap(std::string filename)
 			std::cout << "Only squared maps are allowed!" << std::endl;
 			exit(1);
 		}
-		map.resize(Npixels*Npixels);
+		map.resize(Npixels*Npixels, 0);
 		h0->readKey("CRVAL1",center[0]);
 		h0->readKey("CRVAL2",center[1]);
 		h0->readKey("CDELT1",resolution);
@@ -66,6 +73,7 @@ PixelMap::PixelMap(std::string filename)
 		range = range - resolution;
 		h0->read(map);
 		std::cout << "Resolution is " << resolution << std::endl;
+		isvalid = true;
 
 #else
 		std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
@@ -78,6 +86,12 @@ PixelMap::~PixelMap(){
 
 	map.resize(0);
 }
+
+bool PixelMap::valid() const
+{
+	return isvalid;
+}
+
 /// Zero the whole map
 void PixelMap::Clean(){
 	map = 0.0;
@@ -452,7 +466,7 @@ void pixelize(
 		}
 
 		std::valarray<float> quantity;
-		quantity.resize(Npixels*Npixels);
+		quantity.resize(Npixels*Npixels, 0);
 
 		int j;
 		for(i=0; i<Npixels; i++)
