@@ -387,11 +387,12 @@ bool moveToChild(TreeHndl tree,int child){
 bool moveUp(TreeHndl tree){
 
     assert(tree != NULL);
-    if( offEnd(tree) ){
+    assert(!offEnd(tree));
+    /*if( offEnd(tree) ){
       ERROR_MESSAGE();
       std::cout << "Tree Error: calling moveUp() when current is off end" << std::endl;
       exit(1);
-    }
+    }*/
 
     if( tree->current == tree->top ) return false;
     assert(tree->current->prev);

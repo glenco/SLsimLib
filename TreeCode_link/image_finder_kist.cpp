@@ -6,10 +6,12 @@ static const int NpointsRequired = 100;  // number of points required to be with
 
 //static const float mumin = 0.5;  // actually the sqrt of the minimum magnification
 //static const float mumin = 0.45;  // actually the sqrt of the minimum magnification
+//static const float mumin = 0.1;
 static const float mumin = 0.3;
-//static const float mumin = 0.2;
 static const float FracResTarget = 4.0e-4;
 //static const float FracResTarget = 1.0e-4;
+static const float telescope_high = 1.0e-3;
+static const float telescope_low = 0.01;
 
 extern const double initialgridsize;
 
@@ -122,37 +124,97 @@ void find_images_kist(
     //////////////////////////////////////////
 	//if(!( (oldy[0]==y_source[0])*(oldy[1]==y_source[1])*(oldr < r_source) )){
 
+
+    float telescope_res = telescope_low;
+    int Nimages_old = 1,minN = 0;
+    bool redo = false;
     for(i=0
 				//for(rtemp = fabs(r_source/mumin)*pow(Ngrid_block,Nsizes),Nold=0
 		//		;rtemp >= 0.99*Ngrid_block*fabs(r_source)
     		;rtemp >= r_source
-    		;rtemp /= Ngrid_block,++i ){
+       		;rtemp /= Ngrid_block,++i ){
 
+
+ 			//************* method that seporates images ****************
+			// mark image points in tree
+			PointsWithinKist(grid->s_tree,y_source,rtemp,subkist,1);
+			moved = image_finder_kist(lens,y_source,rtemp,grid
+				  ,Nimages,imageinfo,NimageMax,Nimagepoints,0,0);
+			// unmark image points in tree
+			PointsWithinKist(grid->s_tree,y_source,rtemp,subkist,-1);
+			//***********************************************************/
+
+		   	if(!redo){
+		   		minN = imageinfo[0].getNimagePoints();
+		   		for(int k=1; k < *Nimages; ++k) minN = minN < imageinfo[k].getNimagePoints() ? minN : imageinfo[k].getNimagePoints();
+
+		   		if(minN < 5 && telescope_res > telescope_high){
+		   			// the size of the images jumped too quickly when the size changed so it needs to
+		   			//  be done again at a higher resolution
+		   			i -= 1;
+		   			rtemp *= Ngrid_block*Ngrid_block;
+		   			telescope_res = telescope_high;
+		   			redo = true;
+
+		   			printf("      source transition rescaling \n"
+						,difftime(t2,t1),*Nimagepoints,*Nimages);
+		   			for(int k=0; k < *Nimages; ++k){
+		   				std::cout << "   " << imageinfo[k].area << " " << imageinfo[k].area_error << " " << imageinfo[k].area/pi/rtemp/rtemp
+		   						<< " " << imageinfo[k].getNimagePoints() << std::endl;
+		   			}
+
+		   			continue;
+		   		}else{
+		   			telescope_res = telescope_low;
+		   		}
+		   	}
+
+		   	redo = false;
+
+			time(&t1);
+			time(&t3);
+			if(verbose)
+				printf("\n   new source size = %e    telescoping rsource = %e\n",rtemp,r_source);
+
+
+			j=0;
+			while(refine_grid_kist(lens,grid,imageinfo,*Nimages,telescope_res,1,kappa_off,NULL)){
 				time(&t1);
-				time(&t3);
-				if(verbose)
-					printf("\n   new source size = %e    telescoping rsource = %e\n",rtemp,r_source);
+				if(verbose) printf("      time in refine grid %f sec\n",difftime(t1,t2));
 
-				j=0;
-				do{
-					time(&t1);
-					if(verbose) printf("      time in refine grid %f sec\n",difftime(t1,t2));
+				//moved = image_finder_kist(lens,y_source,rtemp,grid
+				//		,Nimages,imageinfo,NimageMax,Nimagepoints,-1,0);
 
-					moved = image_finder_kist(lens,y_source,rtemp,grid
-						  ,Nimages,imageinfo,NimageMax,Nimagepoints,-1,0);
-					assert(*Nimages > 0);
+				//************* method that seporates images ****************
+				// mark image points in tree
+				PointsWithinKist(grid->s_tree,y_source,rtemp,subkist,1);
+				moved = image_finder_kist(lens,y_source,rtemp,grid
+						,Nimages,imageinfo,NimageMax,Nimagepoints,0,0);
+				// unmark image points in tree
+				PointsWithinKist(grid->s_tree,y_source,rtemp,subkist,-1);
+				//***********************************************************/
 
-					time(&t2);
-					if(verbose)	printf("      time in image_finder %f sec\n        Nimagepoints=%li\n"
-						,difftime(t2,t1),*Nimagepoints);
+				assert(*Nimages > 0);
+
+				time(&t2);
+				if(verbose){
+					printf("      time in image_finder %e sec\n        Nimagepoints=%li  Nimages = %i\n"
+						,difftime(t2,t1),*Nimagepoints,*Nimages);
+						for(int k=0; k < *Nimages; ++k){
+							std::cout << "   " << imageinfo[k].area << " " << imageinfo[k].area_error << " " << imageinfo[k].area/pi/rtemp/rtemp
+									<< " " << imageinfo[k].getNimagePoints() << std::endl;
+						}
+				}
 					++j;
-				}while(refine_grid_kist(lens,grid,imageinfo,*Nimages,rtemp*mumin/Ngrid_block,2,kappa_off,NULL));
+				//}while(refine_grid_kist(lens,grid,imageinfo,*Nimages,rtemp*mumin/Ngrid_block,2,kappa_off,NULL));
+			}
 
 				time(&t1);
 				if(verbose)	printf("      time in refine grid %f sec\n",difftime(t1,t2));
 
 				time(&now);
 				if(verbose) printf("    time for one source size %f sec\n",difftime(now,t3));
+				Nimages_old = *Nimages;
     }
 
 	time(&now);
@@ -562,7 +624,7 @@ short image_finder_kist(LensHndl lens, double *y_source,double r_source,GridHndl
  * The borders of the image must be found previously.
  *
  * criterion = 0 stops refining when error in total area reaches res_target
- * 	         = 1 stops refining when each image reaches error limit or is smaller than res_target
+ * 	         = 1 stops refining when each image reaches error limit or is smaller than res_target, (imageinfo[i].area_error > res_target)*(imageinfo[i].area > 1.0e-2*res_target*total_area)
  *           = 2 stops refining when grid resolution is smaller than res_target in all images
  *
  * Returns the number of points that were added to the grids.
