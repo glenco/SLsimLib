@@ -65,26 +65,14 @@ public:
 
 	virtual void assignParams(InputParams& params);
 	void PrintLens(bool show_substruct,bool show_stars);
-/*	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off){
-		for(unsigned long i=0;i<Npoints;++i){
-			i_points[i].image->kappa = i_points[i].kappa = kappa;
-			i_points[i].image->gamma[0] = i_points[i].gamma[0] = gamma[0];
-			i_points[i].image->gamma[1] = i_points[i].gamma[1] = gamma[1];
-			//i_points[i].image->gamma[2] = i_points[i].gamma[2] = 0.0;
-			i_points[i].image->x[0] = (1-kappa-gamma[0])*i_points[i].x[0]-gamma[1]*i_points[i].x[1];
-			i_points[i].image->x[1] = (1-kappa+gamma[0])*i_points[i].x[1]-gamma[1]*i_points[i].x[0];
-		}
-	}
-	void rayshooterInternal(double *ray, double *alpha, float *gamma, float *kappa, bool kappa_off){
-		alpha[0] = alpha[1] = 0.0;
-		gamma[0] = gamma[1] = 0.0;
-		*kappa = 0.0;
-	}*/
+	void implant_stars(double x,double y,unsigned long Nregions,long *seed);
+	void rayshooterInternal(unsigned long Npoints, bool kappa_off);
+	float getKappa_uniform(){return kappa_uniform;}
+	float* getGamma_uniform(){return gamma_uniform;}
 
-
-private:
+protected:
    float kappa_uniform;
-   float gamma_uniform[2];
+   float gamma_uniform[3];
 
 };
 

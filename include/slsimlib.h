@@ -32,6 +32,6 @@
 #include <image_processing.h>
 #include <nsie.h>
 
-#include <image_likelihood.h>
+#include <image_chi_square.h>
 
 #endif

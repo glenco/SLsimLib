@@ -22,15 +22,15 @@
  *
  * Gives each branch a unique number even if branches are destroed.
  */
-Branch *NewBranch(Point *points,unsigned long npoints
+/*Branch *NewBranch(Point *points,unsigned long npoints
 		  ,double boundary_p1[2],double boundary_p2[2]
 		  ,double center[2],int level){
 
-    Branch *branch;
+    //Branch *branch;
     int i;
     static unsigned long number = 0;
 
-    branch = (Branch *)malloc(sizeof(Branch));
+    //branch = (Branch *)malloc(sizeof(Branch));
     if (!branch){
       ERROR_MESSAGE(); std::cout << "allocation failure in NewBranch()" << std::endl;
       assert(branch);
@@ -57,18 +57,81 @@ Branch *NewBranch(Point *points,unsigned long npoints
     branch->prev = NULL;
     branch->refined = false;
 
-    return branch;
+    //return branch;
+}*/
+
+/// print out all member data for testing purposes
+void Point::print(){
+	 std::cout << "Point Data : " << std::endl;
+	 std::cout << "  next " << next << std::endl;
+	 std::cout << "  prev " << prev << std::endl;
+	 std::cout << "  image " << image << std::endl;
+	 std::cout << "  id " << id << std::endl;
+	 std::cout << "  x " << x[0] << "    " << x[1] << std::endl;
+	 std::cout << "  head " << head << std::endl;
+	 std::cout << "  in_image " << in_image << std::endl;
+	 std::cout << "  kappa " << kappa << std::endl;
+	 std::cout << "  gamma " << gamma[0] << " " << gamma[1] << " " << gamma[3] << std::endl;
+	 std::cout << "  dt " << dt << std::endl;
+	 std::cout << "  invmag " << invmag << std::endl;
+	 std::cout << "  gridsize " << gridsize << std::endl;
+	 std::cout << "  surface_brightness " << surface_brightness << std::endl;
+	 std::cout << "  leaf " << leaf << std::endl;
+}
+
+
+unsigned long Branch::countID = 0;
+
+Branch::Branch(Point *my_points,unsigned long my_npoints
+		  ,double my_boundary_p1[2],double my_boundary_p2[2]
+		  ,double my_center[2],int my_level){
+
+    points = my_points;
+    npoints = my_npoints;
+
+    center[0]=my_center[0];
+    center[1]=my_center[1];
+    level=my_level;
+
+    for(int i=0;i<2;++i){
+      boundary_p1[i]= my_boundary_p1[i];
+      boundary_p2[i]= my_boundary_p2[i];
+    }
+
+    number = countID++;
+
+    child1 = NULL;
+    child2 = NULL;
+    brother = NULL;
+    prev = NULL;
+    refined = false;
+}
+/// print out all member data for testing purposes
+void Branch::print(){
+	 std::cout << "Branch Data : " << std::endl;
+	 std::cout << "  points " << points << std::endl;
+	 std::cout << "  npoints " << npoints << std::endl;
+	 std::cout << "  level " << level << std::endl;
+	 std::cout << "  center " << center[0] << "    " << center[1] << std::endl;
+	 std::cout << "  number " << number << std::endl;
+	 std::cout << "  boundary_p1 " << boundary_p1[0] << "    " << boundary_p1[1] << std::endl;
+	 std::cout << "  boundary_p1 " << boundary_p2[0] << "    " << boundary_p2[1] << std::endl;
+	 std::cout << "  child1 " << child1 << std::endl;
+	 std::cout << "  child2 " << child2 << std::endl;
+	 std::cout << "  brother " << brother << std::endl;
+	 std::cout << "  prev " << prev << std::endl;
+	 std::cout << "  refined " << refined << std::endl;
 }
 
 /** \ingroup ConstructorL2
-*/
+*
 void FreeBranch(Branch *branch){
 
     assert( branch != NULL);
     free(branch);
 
     return;
-}
+}*/
 
   /** \ingroup ConstructorL2
  **/
@@ -147,7 +210,7 @@ TreeHndl NewTree(
     MoveDownList(tree->pointlist);
   }
 
-  tree->top=NewBranch(tree->pointlist->top,npoints,boundary_p1,boundary_p2
+  tree->top= new Branch(tree->pointlist->top,npoints,boundary_p1,boundary_p2
 		      ,center,0);
 
   tree->Nbranches = 1;
@@ -348,16 +411,16 @@ bool moveUp(TreeHndl tree){
  * data field of the new Branch to input.  Exported.
  * Pre: !offEnd(tree)
  ************************************************************************/
-void insertChildToCurrent(TreeHndl tree,Point *points,unsigned long npoints
+/*void insertChildToCurrent(TreeHndl tree,Point *points,unsigned long npoints
 			  ,double boundary_p1[2],double boundary_p2[2]
 			  ,double center[2],int child){
     
     Branch *branch;
 
-    /*printf("attaching child%i  current paricle number %i\n",child,tree->current->npoints);*/
-
-    branch = NewBranch(points,npoints,boundary_p1,boundary_p2,center
-		       ,tree->current->level+1);
+    //branch = NewBranch(points,npoints,boundary_p1,boundary_p2,center
+ 	//	       ,tree->current->level+1);
+    branch = new Branch(points,npoints,boundary_p1,boundary_p2,center
+ 		       ,tree->current->level+1);
 
     assert(tree != NULL);
     
@@ -391,23 +454,78 @@ void insertChildToCurrent(TreeHndl tree,Point *points,unsigned long npoints
     tree->Nbranches++;
 
     return;
+}*/
+void insertChildToCurrent(TreeHndl tree,Branch *branch,int child){
+
+    assert(tree != NULL);
+    assert(branch->boundary_p1[0] >= tree->current->boundary_p1[0]);
+    assert(branch->boundary_p1[1] >= tree->current->boundary_p1[1]);
+    assert(branch->boundary_p2[0] <= tree->current->boundary_p2[0]);
+    assert(branch->boundary_p2[1] <= tree->current->boundary_p2[1]);
+
+    if( offEnd(tree) ){
+    	ERROR_MESSAGE();
+        std::cout << "Tree Error: calling insertChildToCurrent() when current is off end" << std::endl;
+    	exit(1);
+    }
+
+    branch->prev = tree->current;
+
+    if(child==1){
+      if(tree->current->child1 != NULL){
+    	  ERROR_MESSAGE();
+          std::cout << "Tree Error: calling insertChildToCurrent() when child1 already exists" << std::endl;
+    	  exit(1);
+      }
+      tree->current->child1 = branch;
+      tree->current->child1->brother = tree->current->child2;
+    }
+    if(child==2){
+      if(tree->current->child2 != NULL){
+    	  ERROR_MESSAGE();
+          std::cout << "Tree Error: calling insertChildToCurrent() when child2 already exists" << std::endl;
+          exit(1);
+      }
+      tree->current->child2 = branch;
+      tree->current->child2->brother = tree->current->brother;
+    }
+
+    if(branch->npoints > 0){
+    	tree->pointlist->current = branch->points;
+    	for(unsigned long i=0;i<branch->npoints;++i){
+    		tree->pointlist->current->leaf = branch;
+    		MoveDownList(tree->pointlist);
+    	}
+    }
+
+    tree->Nbranches++;
+
+    return;
 }
 
   /* same as above but takes a branch structure */
-
+/*
 void attachChildToCurrent(TreeHndl tree,Branch data,int child){
 
-  insertChildToCurrent(tree,data.points,data.npoints,data.boundary_p1,data.boundary_p2,data.center,child);
+	  //insertChildToCurrent(tree,data.points,data.npoints,data.boundary_p1,data.boundary_p2,data.center,child);
+	  insertChildToCurrent(tree,data,child);
   return;
-}
+}*/
 
-void attachChildrenToCurrent(TreeHndl tree,Branch child1,Branch child2){
+void attachChildrenToCurrent(TreeHndl tree,Branch* child1,Branch* child2){
 	// this is an addition that keeps assigns the brother pointers
 
+	/*
 	insertChildToCurrent(tree,child1.points,child1.npoints
 			,child1.boundary_p1,child1.boundary_p2,child1.center,1);
 	insertChildToCurrent(tree,child2.points,child2.npoints
 			,child2.boundary_p1,child2.boundary_p2,child2.center,2);
+*/
+
+	assert(tree->current->child1 == NULL);
+	insertChildToCurrent(tree,child1,1);
+	assert(tree->current->child2 == NULL);
+	insertChildToCurrent(tree,child2,2);
 
 	tree->current->child1->brother = tree->current->child2;
 	tree->current->child2->brother = tree->current->brother;

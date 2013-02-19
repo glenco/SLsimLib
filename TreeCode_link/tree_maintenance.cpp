@@ -279,7 +279,8 @@ void _freeBranches(TreeHndl tree,short child){
 
     	branch=tree->current;
     	moveUp(tree);
-       	free(branch);
+       	//free(branch);
+       	delete branch;
 
     	/*std::printf("*** removing branch %i number of branches %i\n",branch->number
 			,tree->Nbranches-1);*/
@@ -343,7 +344,7 @@ void _BuildTree(TreeHndl tree){
   /* tree->pointlist must be both a linked list and an array of points in the */
   /* same order as the linked list */
   unsigned long i,cut,dimension;
-  Branch *cbranch,branch1,branch2;
+  Branch *cbranch;//,branch1,branch2;
   double xcut;
 
   cbranch=tree->current; /* pointer to current branch */
@@ -355,15 +356,20 @@ void _BuildTree(TreeHndl tree){
 	  return;
   }
 
+	Branch* branch1 = new Branch(NULL,0,cbranch->boundary_p1,cbranch->boundary_p2
+			,cbranch->center,cbranch->level+1);
+	Branch* branch2 = new Branch(NULL,0,cbranch->boundary_p1,cbranch->boundary_p2
+			,cbranch->center,cbranch->level+1);
 
-  /* initialize boundaries to old boundaries */
+
+  /* initialize boundaries to old boundaries
   for(i=0;i<2;++i){
-      branch1.boundary_p1[i]=cbranch->boundary_p1[i];
-      branch1.boundary_p2[i]=cbranch->boundary_p2[i];
+      branch1->boundary_p1[i]=cbranch->boundary_p1[i];
+      branch1->boundary_p2[i]=cbranch->boundary_p2[i];
 
-      branch2.boundary_p1[i]=cbranch->boundary_p1[i];
-      branch2.boundary_p2[i]=cbranch->boundary_p2[i];
-  }
+      branch2->boundary_p1[i]=cbranch->boundary_p1[i];
+      branch2->boundary_p2[i]=cbranch->boundary_p2[i];
+  }*/
 
   /* set dimension to cut box */
   dimension=(cbranch->level % 2);
@@ -397,14 +403,14 @@ void _BuildTree(TreeHndl tree){
 	  quicksortPoints(tree->current->points,x,cbranch->npoints);
 
 	  cut=cbranch->npoints/2;
-      branch1.boundary_p2[dimension]=(x[cut]+x[cut-1])/2;
-      branch2.boundary_p1[dimension]=(x[cut]+x[cut-1])/2;
+      branch1->boundary_p2[dimension]=(x[cut]+x[cut-1])/2;
+      branch2->boundary_p1[dimension]=(x[cut]+x[cut-1])/2;
 
   }else{
 
 	  xcut=(cbranch->boundary_p1[dimension]+cbranch->boundary_p2[dimension])/2;
-      branch1.boundary_p2[dimension]=xcut;
-      branch2.boundary_p1[dimension]=xcut;
+      branch1->boundary_p2[dimension]=xcut;
+      branch2->boundary_p1[dimension]=xcut;
 
 	  quickPartitionPoints(xcut,&cut,tree->current->points,x,cbranch->npoints);
 
@@ -413,53 +419,53 @@ void _BuildTree(TreeHndl tree){
 
 
   /* set point numbers and pointers to points */
-  branch1.npoints=cut;
+  branch1->npoints=cut;
   assert(tree->current->points->next || tree->current->points->prev);
-  branch1.points=tree->current->points;
+  branch1->points=tree->current->points;
 
-  branch2.npoints=cbranch->npoints - cut;
+  branch2->npoints=cbranch->npoints - cut;
   tree->pointlist->current=tree->current->points;
   JumpDownList(tree->pointlist,cut);
-  branch2.points=tree->pointlist->current;
+  branch2->points=tree->pointlist->current;
 
   delete[] x;
 
 
 	/* use geometric center */
-	branch1.center[0] = (branch1.boundary_p1[0] + branch1.boundary_p2[0])/2;
-	branch1.center[1] = (branch1.boundary_p1[1] + branch1.boundary_p2[1])/2;
+	branch1->center[0] = (branch1->boundary_p1[0] + branch1->boundary_p2[0])/2;
+	branch1->center[1] = (branch1->boundary_p1[1] + branch1->boundary_p2[1])/2;
 
-	branch2.center[0] = (branch2.boundary_p1[0] + branch2.boundary_p2[0])/2;
-	branch2.center[1] = (branch2.boundary_p1[1] + branch2.boundary_p2[1])/2;
+	branch2->center[0] = (branch2->boundary_p1[0] + branch2->boundary_p2[0])/2;
+	branch2->center[1] = (branch2->boundary_p1[1] + branch2->boundary_p2[1])/2;
 
   /* centers of mass *
 
-  for(i=0;i<2;++i) branch1.center[i]=0;
-  tree->pointlist->current=branch1.points;
+  for(i=0;i<2;++i) branch1->center[i]=0;
+  tree->pointlist->current=branch1->points;
   for(i=0;i<cut; ++i){
-	  branch1.center[0]+=tree->pointlist->current->x[0]/branch1.npoints;
-	  branch1.center[1]+=tree->pointlist->current->x[1]/branch1.npoints;
+	  branch1->center[0]+=tree->pointlist->current->x[0]/branch1->npoints;
+	  branch1->center[1]+=tree->pointlist->current->x[1]/branch1->npoints;
 	  MoveDownList(tree->pointlist);
   }
 
-  for(i=0;i<2;++i) branch2.center[i]=0;
-  tree->pointlist->current=branch2.points;
+  for(i=0;i<2;++i) branch2->center[i]=0;
+  tree->pointlist->current=branch2->points;
   for(i=cut;i<cbranch->npoints; ++i){
-	  branch2.center[0]+=tree->pointlist->current->x[0]/branch2.npoints;
-	  branch2.center[1]+=tree->pointlist->current->x[1]/branch2.npoints;
+	  branch2->center[0]+=tree->pointlist->current->x[0]/branch2->npoints;
+	  branch2->center[1]+=tree->pointlist->current->x[1]/branch2->npoints;
 	  MoveDownList(tree->pointlist);
   }/**/
 
   attachChildrenToCurrent(tree,branch1,branch2);
 
-  if( branch1.npoints > 0 ){
+  if( branch1->npoints > 0 ){
      //attachChildToCurrent(tree,branch1,1);
      moveToChild(tree,1);
      _BuildTree(tree);
      moveUp(tree);
   }
 
-  if(branch2.npoints > 0 ){
+  if(branch2->npoints > 0 ){
      //attachChildToCurrent(tree,branch2,2);
 	  moveToChild(tree,2);
 	  _BuildTree(tree);
@@ -537,7 +543,7 @@ int AddPointsToTree(TreeHndl tree,Point *xpoint,unsigned long Nadd){
        			//tree->current->points->leaf = tree->current;
 
        			assert(tree->current->points->next || tree->current->points->prev);
-    		}else{
+    		}else{ // case where the leaf needs to be divided
     			assert(tree->current->npoints > 1);
 
     			// case of points already in leaf
@@ -563,8 +569,9 @@ int AddPointsToTree(TreeHndl tree,Point *xpoint,unsigned long Nadd){
 
           		Branch *parent_branch = tree->current;
        			_AddPoint(tree);
-      			assert(parent_branch->child1->points->leaf = parent_branch->child1);
-      			assert(parent_branch->child2->points->leaf = parent_branch->child2);
+
+      			assert(parent_branch->child1->points->leaf == parent_branch->child1);
+      			assert(parent_branch->child2->points->leaf == parent_branch->child2);
       	    	assert(inbox(xpoint[j].x,xpoint[j].leaf->boundary_p1,xpoint[j].leaf->boundary_p2));
       	    	/*/  Test lines
       	    	if(!testLeafs(tree)){
@@ -584,13 +591,14 @@ int AddPointsToTree(TreeHndl tree,Point *xpoint,unsigned long Nadd){
 
     	while( !inbox(xpoint[j].x,tree->current->boundary_p1,tree->current->boundary_p2) ) moveUp(tree);
     	_FindLeaf(tree,xpoint[j].x,0);
+    	assert(atLeaf(tree));
     	xpoint[j].leaf = tree->current;
     	assert(inbox(xpoint[j].x,xpoint[j].leaf->boundary_p1,xpoint[j].leaf->boundary_p2));
     	/*/ Test lines
     	if(!testLeafs(tree)){ERROR_MESSAGE(); std::cout << "End of AddPointsToTree "<< std::endl; exit(1);}
     	///////////////////////*/
   }
-    return 1;
+  return 1;
 }
 
 void _AddPoint(TreeHndl tree){
@@ -607,6 +615,7 @@ void _AddPoint(TreeHndl tree){
 	if(tree->current->npoints == 0){
 		return;
 	}else if(tree->current->npoints <= tree->Nbucket){
+		/**** test lines *******************
 		tree->pointlist->current = tree->current->points;
 		for(i=0;i<tree->current->npoints;i++){
 			tree->pointlist->current->leaf = tree->current;
@@ -615,25 +624,32 @@ void _AddPoint(TreeHndl tree){
 					,tree->pointlist->current->leaf->boundary_p2));
 			MoveDownList(tree->pointlist);
 		}
+		/****************************************/
 		return;
 	}
 
 	if(atLeaf(tree)){
-		Branch branch1,branch2;
+		//Branch branch1,branch2;
 		Branch *current;
 		unsigned long dimension,cut;
 		double xcut;
 		Point *oldfirstpoint,*newfirstpoint;
 		double *x = new double[tree->current->npoints];
 
-		// initialize boundaries to old boundaries
-		for(i=0;i<2;++i){
-			branch1.boundary_p1[i] = tree->current->boundary_p1[i];
-			branch1.boundary_p2[i] = tree->current->boundary_p2[i];
+		Branch* branch1 = new Branch(NULL,0,tree->current->boundary_p1,tree->current->boundary_p2
+				,tree->current->center,tree->current->level+1);
+		Branch* branch2 = new Branch(NULL,0,tree->current->boundary_p1,tree->current->boundary_p2
+				,tree->current->center,tree->current->level+1);
 
-			branch2.boundary_p1[i] = tree->current->boundary_p1[i];
-			branch2.boundary_p2[i] = tree->current->boundary_p2[i];
-		}
+
+		// initialize boundaries to old boundaries
+		/*for(i=0;i<2;++i){
+			branch1->boundary_p1[i] = tree->current->boundary_p1[i];
+			branch1->boundary_p2[i] = tree->current->boundary_p2[i];
+
+			branch2->boundary_p1[i] = tree->current->boundary_p1[i];
+			branch2->boundary_p2[i] = tree->current->boundary_p2[i];
+		}*/
 
 		/*/ Test lines
 		tree->pointlist->current = tree->current->points;
@@ -736,13 +752,13 @@ void _AddPoint(TreeHndl tree){
 		if(tree->median_cut){
 			cut=tree->current->npoints/2;
 
-			branch1.boundary_p2[dimension]=(x[cut]+x[cut-1])/2;
-			branch2.boundary_p1[dimension]=(x[cut]+x[cut-1])/2;
+			branch1->boundary_p2[dimension]=(x[cut]+x[cut-1])/2;
+			branch2->boundary_p1[dimension]=(x[cut]+x[cut-1])/2;
 
 		}else{
 			xcut=(tree->current->boundary_p1[dimension]+tree->current->boundary_p2[dimension])/2;
-			branch1.boundary_p2[dimension]=xcut;
-			branch2.boundary_p1[dimension]=xcut;
+			branch1->boundary_p2[dimension]=xcut;
+			branch2->boundary_p1[dimension]=xcut;
 
 			locateD(x-1,tree->current->npoints,xcut,&cut);
 		}
@@ -759,18 +775,18 @@ void _AddPoint(TreeHndl tree){
 		assert(cut <= tree->current->npoints);
 
 		// set point numbers and pointers to points
-		branch1.npoints = cut;
-		if(branch1.npoints > 0) branch1.points = tree->current->points;
-		else branch1.points = NULL;
+		branch1->npoints = cut;
+		if(branch1->npoints > 0) branch1->points = tree->current->points;
+		else branch1->points = NULL;
 
-		branch2.npoints = tree->current->npoints - cut;
+		branch2->npoints = tree->current->npoints - cut;
 		tree->pointlist->current = tree->current->points;
 
-		if(branch2.npoints > 0){
+		if(branch2->npoints > 0){
 			JumpDownList(tree->pointlist,cut);
-			branch2.points = tree->pointlist->current;
+			branch2->points = tree->pointlist->current;
 		}else{
-			branch2.points = NULL;
+			branch2->points = NULL;
 		}
 		/*/ Test lines
 		tree->pointlist->current = tree->current->points;
@@ -782,14 +798,14 @@ void _AddPoint(TreeHndl tree){
 		///////////////////////////////////*/
 
 		// use geometric center
-		branch1.center[0] = (branch1.boundary_p1[0] + branch1.boundary_p2[0])/2;
-		branch1.center[1] = (branch1.boundary_p1[1] + branch1.boundary_p2[1])/2;
+		branch1->center[0] = (branch1->boundary_p1[0] + branch1->boundary_p2[0])/2;
+		branch1->center[1] = (branch1->boundary_p1[1] + branch1->boundary_p2[1])/2;
 
-		branch2.center[0] = (branch2.boundary_p1[0] + branch2.boundary_p2[0])/2;
-		branch2.center[1] = (branch2.boundary_p1[1] + branch2.boundary_p2[1])/2;
+		branch2->center[0] = (branch2->boundary_p1[0] + branch2->boundary_p2[0])/2;
+		branch2->center[1] = (branch2->boundary_p1[1] + branch2->boundary_p2[1])/2;
 
 		/*/ Test lines
-		if(branch1.npoints > 0 && !inbox(branch1.points->x,branch1.boundary_p1,branch1.boundary_p2)){
+		if(branch1->npoints > 0 && !inbox(branch1->points->x,branch1->boundary_p1,branch1->boundary_p2)){
 			printBranch(tree->current);
 			printBranch(&branch1);
 			printBranch(&branch2);
@@ -801,7 +817,7 @@ void _AddPoint(TreeHndl tree){
 			ERROR_MESSAGE();
 			exit(0);
 		}
-		if(branch2.npoints > 0 && !inbox(branch2.points->x,branch2.boundary_p1,branch2.boundary_p2)){
+		if(branch2->npoints > 0 && !inbox(branch2->points->x,branch2->boundary_p1,branch2->boundary_p2)){
 			printBranch(tree->current);
 			printBranch(&branch1);
 			printBranch(&branch2);
@@ -816,28 +832,45 @@ void _AddPoint(TreeHndl tree){
 		/////////////////////////////////////////////////////
 		/* centers of mass *
 
-	for(i=0;i<2;++i) branch1.center[i]=0;
-	tree->pointlist->current=branch1.points;
+	for(i=0;i<2;++i) branch1->center[i]=0;
+	tree->pointlist->current=branch1->points;
 	for(i=0;i<cut; ++i){
-		branch1.center[0]+=tree->pointlist->current->x[0]/branch1.npoints;
-		branch1.center[1]+=tree->pointlist->current->x[1]/branch1.npoints;
+		branch1->center[0]+=tree->pointlist->current->x[0]/branch1->npoints;
+		branch1->center[1]+=tree->pointlist->current->x[1]/branch1->npoints;
 		MoveDownList(tree->pointlist);
 	}
 
-	for(i=0;i<2;++i) branch2.center[i]=0;
-	tree->pointlist->current=branch2.points;
+	for(i=0;i<2;++i) branch2->center[i]=0;
+	tree->pointlist->current=branch2->points;
 	for(i=cut;i<tree->current->npoints; ++i){
-		branch2.center[0]+=tree->pointlist->current->x[0]/branch2.npoints;
-		branch2.center[1]+=tree->pointlist->current->x[1]/branch2.npoints;
+		branch2->center[0]+=tree->pointlist->current->x[0]/branch2->npoints;
+		branch2->center[1]+=tree->pointlist->current->x[1]/branch2->npoints;
 		MoveDownList(tree->pointlist);
 	}
 	*/
 
+	    assert(atLeaf(tree));
 		attachChildrenToCurrent(tree,branch1,branch2);
+
+		// TODO take these out when problem is fixed
+		assert(tree->current->child1->child1 == NULL);
+		assert(tree->current->child1->child2 == NULL);
+		assert(tree->current->child2->child1 == NULL);
+		assert(tree->current->child2->child2 == NULL);
 
 		assert( (tree->current->child1->npoints + tree->current->child2->npoints)
 				== tree->current->npoints );
 		assert(tree->current->child1->npoints == 1 && tree->current->child2->npoints == 1);
+
+		/******* test lines ***********
+		tree->pointlist->current = tree->current->points;
+		for(int n=0;n<tree->current->npoints;++n){
+			assert(tree->pointlist->current->leaf != tree->current);
+			assert(tree->pointlist->current->leaf == tree->current->child1 || tree->pointlist->current->leaf == tree->current->child2);
+			MoveDownList(tree->pointlist);
+		}
+		/*******************************************/
+
 
 		// If needed, change the particle pointer in all parent cells
 		current = tree->current;

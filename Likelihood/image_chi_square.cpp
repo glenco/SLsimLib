@@ -1,97 +1,77 @@
-#include "image_likelihood.h"
+#include "slsimlib.h"
 
-#include <cassert>
 #include <cmath>
-
-#include "image_processing.h"
 
 #ifndef NDEBUG
 #include <iostream>
 #endif
 
-inline double pixel_chi_square(
-	unsigned long i,
+double chi_square(
 	const PixelMap& data,
 	const PixelMap& model,
-	double bg,
+	double offset,
 	double noise,
 	double norm
 )
 {
-	double data_pixel = data.getValue(i);
-	double model_pixel = model.getValue(i);
+	std::size_t pixels = data.getNpixels();
 	
-	double diff = norm * (data_pixel - model_pixel - bg);
-	
-	double sigma = std::sqrt(norm * (data_pixel + noise));
-	
-	return diff*diff/sigma/sigma;
-}
-
-double image_chi_square(
-	const PixelMap& data,
-	const PixelMap& model,
-	double background_subtract,
-	double background_noise,
-	double norm
-)
-{
-	const unsigned long data_Npixels = data.getNpixels();
-	
-	if(data_Npixels != model.getNpixels())
+	if(model.getNpixels() != pixels)
 	{
 #ifndef NDEBUG
-		std::cerr << "Size of data and model do not agree!" << std::endl;
+		std::cerr << "chi_square: Size of data and model do not agree!" << std::endl;
 #endif
-		return 0;
+		return -1;
 	}
 	
 	double chi = 0;
+	std::size_t n = pixels*pixels;
 	
-	unsigned int n = data_Npixels*data_Npixels;
-	
-	for(unsigned long i = 0; i < n; ++i)
-		chi += pixel_chi_square(i, data, model, background_subtract, background_noise, norm);
+	for(std::size_t i = 0; i < n; ++i)
+		chi += std::pow(norm * (data[i] - model[i] - offset), 2)/(norm * (data[i] + noise));
 	
 	return chi/n;
 }
 
-double image_chi_square(
+double chi_square(
 	const PixelMap& data,
 	const PixelMap& model,
 	const PixelMap& mask,
-	double background_subtract,
-	double background_noise,
+	double offset,
+	double noise,
 	double norm
 )
 {
-	const unsigned long data_Npixels = data.getNpixels();
-
-	if(data_Npixels != model.getNpixels())
+	if(!mask.valid())
+		return chi_square(data, model, offset, noise, norm);
+	
+	std::size_t pixels = data.getNpixels();
+	
+	if(pixels != model.getNpixels())
 	{
 #ifndef NDEBUG
-		std::cerr << "Size of data and model do not agree!" << std::endl;
+		std::cerr << "chi_square: Size of data and model do not agree!" << std::endl;
 #endif
-		return 0;
+		return -1;
 	}
 	
-	if(data_Npixels != mask.getNpixels())
+	if(pixels != mask.getNpixels())
 	{
 #ifndef NDEBUG
-		std::cerr << "Size of data and mask do not agree!" << std::endl;
+		std::cerr << "chi_square: Size of data and mask do not agree!" << std::endl;
 #endif
-		return 0;
+		return -1;
 	}
 	
 	double chi = 0;
-	unsigned long dof = 0;
+	std::size_t dof = 0;
 	
-	for(unsigned long i = 0, n = data_Npixels*data_Npixels; i < n; ++i)
+	for(std::size_t i = 0, n = pixels*pixels; i < n; ++i)
 	{
-		if(!mask.getValue(i))
+		if(!mask[i])
 			continue;
 		
-		chi += pixel_chi_square(i, data, model, background_subtract, background_noise, norm);
+		chi += std::pow(norm * (data[i] - model[i] - offset), 2)/(norm * (data[i] + noise));
 		
 		++dof;
 	}

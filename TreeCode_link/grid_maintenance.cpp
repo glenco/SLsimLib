@@ -507,10 +507,36 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa
 	AddPointsToTree(s_tree,s_points,s_points->head);
 
 	assert(s_points->head > 0);
-/*
+
+	//********* This repairs the leaf pointer which for some reason does not point to a leaf for s_points on some occasions ***********
+	for(ii=0;ii < s_points->head;++ii){
+
+		if(i_points[ii].leaf->child1 != NULL || i_points[ii].leaf->child2 != NULL){
+			//std::cout << ii << std::endl;
+			//i_points[ii].print();
+			//i_points[ii].leaf->print();
+			i_tree->current = i_points[ii].leaf;
+			_FindLeaf(i_tree,i_points[ii].x,0);
+			assert(i_tree->current->npoints == 1);
+			i_points[ii].leaf = i_tree->current;
+		}
+
+		if(s_points[ii].leaf->child1 != NULL || s_points[ii].leaf->child2 != NULL){
+			//std::cout << ii << std::endl;
+			//s_points[ii].print();
+			//s_points[ii].leaf->print();
+			s_tree->current = s_points[ii].leaf;
+			_FindLeaf(s_tree,s_points[ii].x,0);
+			assert(s_tree->current->npoints == 1);
+			s_points[ii].leaf = s_tree->current;
+		}
+	}
+	//*********************************************************************
+
 	// This loop should not be necessary!! It is repairing the leaf that has been assigned incorrectly somewhere
 	//if(!inbox(point[ii].x,i_tree->current->boundary_p1,i_tree->current->boundary_p2) ) moveTop(i_tree);
-	for(ii=0;ii < Nleaves;++ii){
+	/*for(ii=0;ii < Nleaves;++ii){
+
 		// re-assign leaf of point that was to be refined
 		assert(inbox(points[ii]->x,i_tree->top->boundary_p1,i_tree->top->boundary_p2));
 		i_tree->current = points[ii]->leaf;
@@ -528,8 +554,8 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa
 		//Test lines
 		assert(points[ii]->leaf->child1 == NULL && points[ii]->leaf->child2 == NULL);
 		assert(points[ii]->image->leaf->child1 == NULL && points[ii]->image->leaf->child2 == NULL);
-	}
-*/
+	}*/
+
 	return i_points;
 }
 
