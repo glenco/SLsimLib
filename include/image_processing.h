@@ -20,6 +20,7 @@
 class PixelMap{
 public:
 	PixelMap(unsigned long Npixels,double range,double *center);
+	PixelMap(const PixelMap& pmap, double degrading_factor);
 	PixelMap(std::string filename);
 	~PixelMap();
 
@@ -34,6 +35,8 @@ public:
 	void printASCIItoFile(std::string filename);
 	void printFITS(std::string filename);
 	void smooth(double *map_out,double sigma);
+
+	void ApplyPSF(std::string psf_file, double oversample_n = 1);
 
 	inline double getValue(unsigned long i) const {return map[i];}
 
