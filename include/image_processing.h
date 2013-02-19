@@ -43,20 +43,14 @@ public:
 	void printASCIItoFile(std::string filename);
 	void printFITS(std::string filename);
 	void smooth(double *map_out,double sigma);
-<<<<<<< local
 
 	void ApplyPSF(std::string psf_file, double oversample_n = 1);
 
-	inline double getValue(unsigned long i) const {return map[i];}
-
-=======
-	
 	inline double getValue(std::size_t i) const { return map[i]; }
 	inline double operator[](std::size_t i) const { return map[i]; };
 	
 	friend void swap(PixelMap& x, PixelMap& y);
 	
->>>>>>> other
 private:
 	float* map;
 	std::size_t size;

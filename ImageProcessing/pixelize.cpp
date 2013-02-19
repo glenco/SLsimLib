@@ -139,7 +139,7 @@ PixelMap::PixelMap(const PixelMap& pmap, double degrading_factor)
 
 	resolution = degrading_factor*pmap.resolution;
 	range = pmap.range+pmap.resolution;
-	Npixels = int(range/resolution+1);
+	size = int(range/resolution+1);
 	range = range - resolution;
 	center[0] = pmap.center[0];
 	center[1] = pmap.center[1];
@@ -147,18 +147,18 @@ PixelMap::PixelMap(const PixelMap& pmap, double degrading_factor)
 	map_boundary_p1[1] = pmap.map_boundary_p1[1];
 	map_boundary_p2[0] = pmap.map_boundary_p2[0];
 	map_boundary_p2[1] = pmap.map_boundary_p2[1];
-	map.resize(Npixels*Npixels);
-	int old_Npixels = pmap.Npixels;
+	map = new float[size*size];
+	int old_Npixels = pmap.size;
 	int ix, iy;
 	double area;
 	double* old_p1 = new double[2];
 	double* old_p2 = new double[2];
 
-	for(unsigned long i=0;i < Npixels*Npixels; ++i)
+	for(unsigned long i=0;i < size*size; ++i)
 	{
-		ix = i%Npixels;
-		iy = i/Npixels;
-		map[ix+Npixels*iy] = 0.;
+		ix = i%size;
+		iy = i/size;
+		map[ix+size*iy] = 0.;
 		old_p1[0] = std::max(0,int(ix*degrading_factor));
 		old_p1[1] = std::max(0,int(iy*degrading_factor));
 		old_p2[0] = std::min(old_Npixels-1,int((ix+1.)*degrading_factor));
@@ -169,11 +169,11 @@ PixelMap::PixelMap(const PixelMap& pmap, double degrading_factor)
 				{
 					area = MIN(old_ix+0.5,(ix+1.)*degrading_factor-0.5) - MAX(old_ix-0.5,ix*degrading_factor-0.5);
 					area *= MIN(old_iy+0.5,(iy+1.)*degrading_factor-0.5) - MAX(old_iy-0.5,iy*degrading_factor-0.5);
-					map[ix+Npixels*iy] += area*pmap.map[old_ix+old_Npixels*old_iy];
+					map[ix+size*iy] += area*pmap.map[old_ix+old_Npixels*old_iy];
 				}
 			}
-	}
-
+		}
+}
 
 PixelMap::~PixelMap()
 {
@@ -483,16 +483,16 @@ void PixelMap::ApplyPSF(std::string psf_file, double oversample_n)
 #ifdef ENABLE_FFTW
 
 	fftw_plan p;
-	std::complex<double>* out=new std::complex<double> [Npixels*(Npixels/2+1)];
-	double* in = new double[Npixels*Npixels];
-	for (unsigned long i = 0; i < Npixels*Npixels; i++)
+	std::complex<double>* out=new std::complex<double> [size*(size/2+1)];
+	double* in = new double[size*size];
+	for (unsigned long i = 0; i < size*size; i++)
 	{
 		in[i] = map[i];
 	}
-	p = fftw_plan_dft_r2c_2d(Npixels,Npixels,in, reinterpret_cast<fftw_complex*>(out), FFTW_ESTIMATE);
+	p = fftw_plan_dft_r2c_2d(size,size,in, reinterpret_cast<fftw_complex*>(out), FFTW_ESTIMATE);
 	fftw_plan p2;
-	double* out2 = new double[Npixels*Npixels];
-	p2 = fftw_plan_dft_c2r_2d(Npixels,Npixels,reinterpret_cast<fftw_complex*>(out), out2, FFTW_ESTIMATE);
+	double* out2 = new double[size*size];
+	p2 = fftw_plan_dft_c2r_2d(size,size,reinterpret_cast<fftw_complex*>(out), out2, FFTW_ESTIMATE);
 	fftw_execute(p);
 
 	std::auto_ptr<CCfits::FITS> fp (new CCfits::FITS (psf_file.c_str(), CCfits::Read));
@@ -507,7 +507,7 @@ void PixelMap::ApplyPSF(std::string psf_file, double oversample_n)
 	{
 		map_norm += map_psf[i];
 	}
-	int psf_big_Npixels = static_cast<int>(Npixels*oversample_n);
+	int psf_big_Npixels = static_cast<int>(size*oversample_n);
 	double* psf_big = new double[psf_big_Npixels*psf_big_Npixels];
 	std::complex<double>* out_psf=new std::complex<double> [psf_big_Npixels*(psf_big_Npixels/2+1)];
 	p_psf = fftw_plan_dft_r2c_2d(psf_big_Npixels,psf_big_Npixels,psf_big, reinterpret_cast<fftw_complex*>(out_psf), FFTW_ESTIMATE);
@@ -529,22 +529,22 @@ void PixelMap::ApplyPSF(std::string psf_file, double oversample_n)
 	}
 	fftw_execute(p_psf);
 
-	for (unsigned long i = 0; i < Npixels*(Npixels/2+1); i++)
+	for (unsigned long i = 0; i < size*(size/2+1); i++)
 	{
-		ix = i/(Npixels/2+1);
-		iy = i%(Npixels/2+1);
-		if (ix>Npixels/2)
-			out[i] *= out_psf[(psf_big_Npixels-(Npixels-ix))*(psf_big_Npixels/2+1)+iy];
+		ix = i/(size/2+1);
+		iy = i%(size/2+1);
+		if (ix>size/2)
+			out[i] *= out_psf[(psf_big_Npixels-(size-ix))*(psf_big_Npixels/2+1)+iy];
 		else
 			out[i] *= out_psf[ix*(psf_big_Npixels/2+1)+iy];
 	}
 	fftw_execute(p2);
 
-	for (unsigned long i = 0; i < Npixels*Npixels; i++)
+	for (unsigned long i = 0; i < size*size; i++)
 	{
-		ix = i/Npixels;
-		iy = i%Npixels;
-		map[i] = out2[i]/double(Npixels*Npixels);
+		ix = i/size;
+		iy = i%size;
+		map[i] = out2[i]/double(size*size);
 	}
 #else
 		std::cout << "Please enable the preprocessor flag ENABLE_FFTW !" << std::endl;
