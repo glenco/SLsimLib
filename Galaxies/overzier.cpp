@@ -9,6 +9,14 @@
  */
 #include "slsimlib.h"
 
+OverGalaxy::OverGalaxy()
+: haloID(0), z(0), Reff(0), Rh(0),
+  cxx(0), cyy(0), cxy(0), sbDo(0), sbSo(0), mag(0)
+{
+	theta[0] = 0;
+	theta[1] = 0;
+}
+
 OverGalaxy::OverGalaxy(
 		double my_mag              /// Total magnitude
 		,double my_BtoT            /// Bulge to total ratio
@@ -22,6 +30,11 @@ OverGalaxy::OverGalaxy(
 		){
 	setInternals(my_mag,my_BtoT,my_Reff,my_Rh,my_PA,my_inclination,my_id,my_z,my_theta);
 }
+
+OverGalaxy::~OverGalaxy()
+{
+}
+
 /// Sets internal variables.  If default constructor is used this must be called before the surface brightness function.
 void OverGalaxy::setInternals(double my_mag,double BtoT,double my_Reff,double my_Rh,double PA,double incl,unsigned long my_id,double my_z,double *my_theta){
 

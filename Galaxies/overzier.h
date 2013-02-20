@@ -12,10 +12,9 @@
  * the Overzier model.
  */
 struct OverGalaxy{
-
-	OverGalaxy(){};
+	OverGalaxy();
 	OverGalaxy(double mag,double BtoT,double Reff,double Rh,double PA,double inclination,unsigned long my_id,double my_z=0,double *theta=0);
-	~OverGalaxy(){};
+	~OverGalaxy();
 
 	void setInternals(double mag,double BtoT,double Reff,double Rh,double PA,double inclination,unsigned long my_id,double my_z=0,double *my_theta=0);
 	double SurfaceBrightness(double *x);
