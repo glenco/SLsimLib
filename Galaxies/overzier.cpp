@@ -9,6 +9,43 @@
  */
 #include "slsimlib.h"
 
+OverGalaxy::parameters::parameters()
+: haloID(0), z(0), mag(0), BtoT(0), Reff(0), Rh(0), PA(0), inclination(0)
+{
+	theta[0] = 0;
+	theta[1] = 0;
+}
+
+bool get(const OverGalaxy& g, OverGalaxy::parameters& p)
+{
+	p.haloID = g.haloID;
+	p.z = g.z;
+	p.mag = g.mag;
+	p.BtoT = g.BtoT;
+	p.Reff = g.Reff/(pi/180/60/60); // TODO: this is not nice
+	p.Rh = g.Rh/(pi/180/60/60);
+	p.PA = g.PA;
+	p.inclination = g.inclination;
+	p.theta[0] = g.theta[0];
+	p.theta[1] = g.theta[1];
+	
+	return true;
+}
+
+bool set(OverGalaxy& g, const OverGalaxy::parameters& p)
+{
+	g.setInternals(p.mag, p.BtoT, p.Reff, p.Rh, p.PA, p.inclination, p.haloID, p.z, p.theta);
+	return true;
+}
+
+OverGalaxy::OverGalaxy()
+: haloID(0), z(0), Reff(0), Rh(0), BtoT(0), PA(0), inclination(0),
+  cxx(0), cyy(0), cxy(0), sbDo(0), sbSo(0), mag(0)
+{
+	theta[0] = 0;
+	theta[1] = 0;
+}
+
 OverGalaxy::OverGalaxy(
 		double my_mag              /// Total magnitude
 		,double my_BtoT            /// Bulge to total ratio
@@ -18,18 +55,26 @@ OverGalaxy::OverGalaxy(
 		,double my_inclination  /// inclination of disk (radians)
 		,unsigned long my_id          /// optional angular position on the sky
 		,double my_z            /// optional redshift
-		,double *my_theta          /// optional angular position on the sky
+		,const double *my_theta          /// optional angular position on the sky
 		){
 	setInternals(my_mag,my_BtoT,my_Reff,my_Rh,my_PA,my_inclination,my_id,my_z,my_theta);
 }
+
+OverGalaxy::~OverGalaxy()
+{
+}
+
 /// Sets internal variables.  If default constructor is used this must be called before the surface brightness function.
-void OverGalaxy::setInternals(double my_mag,double BtoT,double my_Reff,double my_Rh,double PA,double incl,unsigned long my_id,double my_z,double *my_theta){
+void OverGalaxy::setInternals(double my_mag,double my_BtoT,double my_Reff,double my_Rh,double my_PA,double incl,unsigned long my_id,double my_z,const double *my_theta){
 
 	haloID = my_id;
 
 	Reff = my_Reff*pi/180/60/60;
 	Rh = my_Rh*pi/180/60/60;
 	mag = my_mag;
+	BtoT = my_BtoT;
+	PA = my_PA;
+	inclination = incl;
 
 	if(Rh > 0.0){
 		cxx = ( pow(cos(PA),2) + pow(sin(PA)/cos(incl),2) )/Rh/Rh;

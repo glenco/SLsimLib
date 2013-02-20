@@ -12,12 +12,47 @@
  * the Overzier model.
  */
 struct OverGalaxy{
-
-	OverGalaxy(){};
-	OverGalaxy(double mag,double BtoT,double Reff,double Rh,double PA,double inclination,unsigned long my_id,double my_z=0,double *theta=0);
-	~OverGalaxy(){};
-
-	void setInternals(double mag,double BtoT,double Reff,double Rh,double PA,double inclination,unsigned long my_id,double my_z=0,double *my_theta=0);
+	struct parameters
+	{
+		/// haloID
+		unsigned long haloID;
+		
+		/// redshift
+		double z;
+		
+		/// total magnitude
+		double mag;
+		
+		/// bulge to total ratio
+		double BtoT;
+		
+		/// bulge half light radius (arcs)
+		double Reff;
+		
+		/// disk scale height (arcs)
+		double Rh;
+		
+		/// position angle (radians)
+		double PA;
+		
+		/// inclination of disk (radians)
+		double inclination;
+		
+		/// position on the sky
+		double theta[2];
+		
+		/// default constructor
+		parameters();
+	};
+	
+	friend bool get(const OverGalaxy& g, parameters& p);
+	friend bool set(OverGalaxy& g, const parameters& p);
+	
+	OverGalaxy();
+	OverGalaxy(double mag,double BtoT,double Reff,double Rh,double PA,double inclination,unsigned long my_id,double my_z=0,const double *theta=0);
+	~OverGalaxy();
+	
+	void setInternals(double mag,double BtoT,double Reff,double Rh,double PA,double inclination,unsigned long my_id,double my_z=0,const double *my_theta=0);
 	double SurfaceBrightness(double *x);
 	void print();
 	double getMag(){return mag;}
@@ -40,6 +75,10 @@ private:
 	double Reff;
 	/// disk scale height
 	double Rh;
+
+	double BtoT;
+	double PA;
+	double inclination;
 
 	double cxx,cyy,cxy;
 	double sbDo;

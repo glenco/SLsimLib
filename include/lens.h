@@ -44,6 +44,11 @@ public:
  */
 class DummyLens: public Lens{
 public:
+	struct parameters {};
+	
+	friend bool get(const DummyLens& l, DummyLens::parameters& p) { return true; }
+	friend bool set(DummyLens& l, const DummyLens::parameters& p) { return true; }
+	
 	DummyLens(): Lens(){};
 	~DummyLens(){};
 

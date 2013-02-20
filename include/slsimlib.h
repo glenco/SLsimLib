@@ -25,6 +25,8 @@
 
 #include <model.h>
 
+#include <parameters.h>
+
 #include <peak_refinement.h>
 #include <map_images.h>
 
@@ -33,5 +35,6 @@
 #include <nsie.h>
 
 #include <image_chi_square.h>
+#include <image_likelihood.h>
 
 #endif
