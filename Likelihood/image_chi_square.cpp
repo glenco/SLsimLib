@@ -1,49 +1,18 @@
 #include "slsimlib.h"
 
-#include <cmath>
-
-#ifndef NDEBUG
-#include <iostream>
-#endif
-
 double chi_square(
 	const PixelMap& data,
 	const PixelMap& model,
 	double offset,
 	double noise,
-	double norm
+	double norm,
+	PixelMap mask
 )
 {
-	std::size_t pixels = data.getNpixels();
+	using std::pow;
 	
-	if(model.getNpixels() != pixels)
-	{
-		SLSIMLIB_DEBUG("chi_square: Size of data and model do not agree!");
-		return -1;
-	}
-	
-	double chi = 0;
-	std::size_t n = pixels*pixels;
-	
-	for(std::size_t i = 0; i < n; ++i)
-		chi += std::pow(norm * (data[i] - model[i] - offset), 2)/(norm * (data[i] + noise));
-	
-	return chi/n;
-}
-
-double chi_square(
-	const PixelMap& data,
-	const PixelMap& model,
-	const PixelMap& mask,
-	double offset,
-	double noise,
-	double norm
-)
-{
-	if(!mask.valid())
-		return chi_square(data, model, offset, noise, norm);
-	
-	std::size_t pixels = data.getNpixels();
+	const std::size_t pixels = data.getNpixels();
+	const bool masked = mask.valid();
 	
 	if(pixels != model.getNpixels())
 	{
@@ -51,23 +20,31 @@ double chi_square(
 		return -1;
 	}
 	
-	if(pixels != mask.getNpixels())
+	if(masked && pixels != mask.getNpixels())
 	{
 		SLSIMLIB_DEBUG("chi_square: Size of data and mask do not agree!");
 		return -1;
 	}
 	
 	double chi = 0;
-	std::size_t dof = 0;
+	std::size_t dof = masked ? 0 : pixels*pixels;
 	
-	for(std::size_t i = 0, n = pixels*pixels; i < n; ++i)
+	if(masked)
 	{
-		if(!mask[i])
-			continue;
-		
-		chi += std::pow(norm * (data[i] - model[i] - offset), 2)/(norm * (data[i] + noise));
-		
-		++dof;
+		for(std::size_t i = 0, n = pixels*pixels; i < n; ++i)
+		{
+			if(!mask[i])
+				continue;
+			
+			chi += pow(norm * (data[i] - model[i] - offset), 2)/(norm * (data[i] + noise));
+			
+			++dof;
+		}
+	}
+	else
+	{
+		for(std::size_t i = 0, n = pixels*pixels; i < n; ++i)
+			chi += pow(norm * (data[i] - model[i] - offset), 2)/(norm * (data[i] + noise));
 	}
 	
 	return chi/dof;

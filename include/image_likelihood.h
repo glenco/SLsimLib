@@ -138,7 +138,7 @@ public:
 		PixelMap image(pixels, rng, ctr);
 		image.AddImages(images, image_count, false);
 		
-		return chi_square(dta, image, msk, off, ns, norm);
+		return chi_square(dta, image, off, ns, norm, msk);
 	}
 	
 private:
