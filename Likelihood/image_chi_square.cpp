@@ -18,9 +18,7 @@ double chi_square(
 	
 	if(model.getNpixels() != pixels)
 	{
-#ifndef NDEBUG
-		std::cerr << "chi_square: Size of data and model do not agree!" << std::endl;
-#endif
+		SLSIMLIB_DEBUG("chi_square: Size of data and model do not agree!");
 		return -1;
 	}
 	
@@ -49,17 +47,13 @@ double chi_square(
 	
 	if(pixels != model.getNpixels())
 	{
-#ifndef NDEBUG
-		std::cerr << "chi_square: Size of data and model do not agree!" << std::endl;
-#endif
+		SLSIMLIB_DEBUG("chi_square: Size of data and model do not agree!");
 		return -1;
 	}
 	
 	if(pixels != mask.getNpixels())
 	{
-#ifndef NDEBUG
-		std::cerr << "chi_square: Size of data and mask do not agree!" << std::endl;
-#endif
+		SLSIMLIB_DEBUG("chi_square: Size of data and mask do not agree!");
 		return -1;
 	}
 	

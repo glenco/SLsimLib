@@ -18,6 +18,8 @@
 
 #include <KistDriver.h>
 
+#include <debug.h>
+
 #include <divide_images.h>
 #include <tree_maintenance.h>
 #include <grid_maintenance.h>
