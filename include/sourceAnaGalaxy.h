@@ -28,12 +28,17 @@
  */
 class MultiSourceAnaGalaxy: public Source{
 public:
+	/**
+	 * Parameters for MultiSourceAnaGalaxy
+	 */
 	struct parameters
 	{
 		std::vector<OverGalaxy::parameters> galaxies;
 	};
 	
+	/// get MultiSourceAnaGalaxy parameters
 	friend bool get(const MultiSourceAnaGalaxy& s, parameters& p);
+	/// set MultiSourceAnaGalaxy parameters
 	friend bool set(MultiSourceAnaGalaxy& s, const parameters& p);
 	
 	MultiSourceAnaGalaxy(double mag, double BtoT, double Reff, double Rh, double PA, double inclination,double my_z,double *my_theta);

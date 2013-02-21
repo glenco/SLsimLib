@@ -12,6 +12,9 @@
  * the Overzier model.
  */
 struct OverGalaxy{
+	/**
+	 * Parameters for OverGalaxy
+	 */
 	struct parameters
 	{
 		/// haloID
@@ -45,7 +48,9 @@ struct OverGalaxy{
 		parameters();
 	};
 	
+	/// get OverGalaxy parameters
 	friend bool get(const OverGalaxy& g, parameters& p);
+	/// set OverGalaxy parameters
 	friend bool set(OverGalaxy& g, const parameters& p);
 	
 	OverGalaxy();
