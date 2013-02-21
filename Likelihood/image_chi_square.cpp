@@ -26,8 +26,7 @@ double chi_square(
 		return -1;
 	}
 	
-	double chi = 0;
-	std::size_t dof = masked ? 0 : pixels*pixels;
+	double chi2 = 0;
 	
 	if(masked)
 	{
@@ -36,16 +35,14 @@ double chi_square(
 			if(!mask[i])
 				continue;
 			
-			chi += pow(norm * (data[i] - model[i] - offset), 2)/(norm * (data[i] + noise));
-			
-			++dof;
+			chi2 += pow(norm * (data[i] - model[i] - offset), 2)/(norm * (data[i] + noise));
 		}
 	}
 	else
 	{
 		for(std::size_t i = 0, n = pixels*pixels; i < n; ++i)
-			chi += pow(norm * (data[i] - model[i] - offset), 2)/(norm * (data[i] + noise));
+			chi2 += pow(norm * (data[i] - model[i] - offset), 2)/(norm * (data[i] + noise));
 	}
 	
-	return chi/dof;
+	return chi2;
 }
