@@ -13,8 +13,7 @@
 #ifndef pointtypes_declare
 #define pointtypes_declare
 
-#include <cstdlib>
-#include <assert.h>
+#include <standard.h>
 
 #ifndef pi
 #define pi  3.141593
@@ -44,10 +43,10 @@ typedef struct Point{
   Boo in_image; // marks if point is in image
 
   // redundant information in image and source points
-  float kappa;        // surface density
-  float gamma[3];    // shear, third component is the rotation quantity that is only non-zero for multi-plane lensing
-  float dt;          // time delay
-  float invmag;     // inverse of magnification
+  KappaType kappa;        // surface density
+  KappaType gamma[3];    // shear, third component is the rotation quantity that is only non-zero for multi-plane lensing
+  KappaType dt;          // time delay
+  KappaType invmag;     // inverse of magnification
   double gridsize;   // the size of the most refined grid the point is in
   float surface_brightness;  // the surface brightness at this points
 
