@@ -31,11 +31,8 @@ Point *NearestNeighbor(TreeHndl tree,double *ray,int Nneighbors,ListHndl neighbo
 	  std::printf("ERROR: in NearestNeighbor, number of neighbors > total number of points\n");
 	  exit(1);
   }
-
-  if(Nneighbors <= 0){
-	  EmptyList(neighborlist);
-	  return NULL;
-  }
+  EmptyList(neighborlist);
+  if(Nneighbors <= 0) return NULL;
 
   if(count==0){
     /*std::printf("allocating memory\n");*/

@@ -65,6 +65,15 @@ bool testLeafs(TreeHndl tree){
 			tree->pointlist->current = point;
 			return false;
 		}
+		assert(tree->pointlist->current->prev != NULL || tree->pointlist->current->next != NULL );
+		if(!(tree->pointlist->current->image->prev != NULL || tree->pointlist->current->image->next != NULL) ){
+			std::cout << "point " << tree->pointlist->current->id << " image of point is not in image tree list!"
+					<< " leaf " << leaf << std::endl;
+			std::cout << "image " << tree->pointlist->current->image->id
+					<< " leaf " << tree->pointlist->current->image->leaf << std::endl;
+			tree->pointlist->current = point;
+			return false;
+		}
 		/*if(leaf->npoints != 1){
 			std::cout << "a point's leaf has more than one point in it!" << std::endl;
 			tree->pointlist->current = point;
@@ -480,15 +489,14 @@ void _BuildTree(TreeHndl tree){
  *  \brief Expands tree by adding points
 */
 int AddPointsToTree(TreeHndl tree,Point *xpoint,unsigned long Nadd){
-  unsigned long j;
+  unsigned long j,Ntest;
   //Branch *parent_branch;
 
   if(Nadd==0) return 1;
 
-  for(j=0;j<Nadd;++j){
+  Ntest = tree->pointlist->Npoints;
 
-	  // Test lines
-	   //if(!testLeafs(tree)){ERROR_MESSAGE(); std::cout << "Beginning of AddPointsToTree "<< std::endl; exit(1);}
+  for(j=0;j<Nadd;++j){
 
 	   // add only that are inside original grid
     	if( !inbox(xpoint[j].x,tree->top->boundary_p1,tree->top->boundary_p2) ){
@@ -523,10 +531,13 @@ int AddPointsToTree(TreeHndl tree,Point *xpoint,unsigned long Nadd){
        				Branch *tmp = tree->current;
 
        				// insert the point
-       				MoveUpList(tree->pointlist);
-          			InsertPointAfterCurrent(tree->pointlist,tree->current->points);
-
-          			// reassign parent first points
+       				if(MoveUpList(tree->pointlist)){
+       					InsertPointAfterCurrent(tree->pointlist,tree->current->points);
+       				}else{
+       					InsertPointBeforeCurrent(tree->pointlist,tree->current->points);
+       				}
+  					//InsertPointBeforeCurrent(tree->pointlist,tree->current->points);
+         			// reassign parent first points
           			moveUp(tree);
            			while(tree->current->points == oldpoint){
            				tree->current->points = &xpoint[j];
@@ -568,7 +579,9 @@ int AddPointsToTree(TreeHndl tree,Point *xpoint,unsigned long Nadd){
     			///////////////////////////////////*/
 
           		Branch *parent_branch = tree->current;
+          		//unsigned long n=tree->pointlist->Npoints;
        			_AddPoint(tree);
+       			//assert(n==tree->pointlist->Npoints);
 
       			assert(parent_branch->child1->points->leaf == parent_branch->child1);
       			assert(parent_branch->child2->points->leaf == parent_branch->child2);
@@ -598,6 +611,8 @@ int AddPointsToTree(TreeHndl tree,Point *xpoint,unsigned long Nadd){
     	if(!testLeafs(tree)){ERROR_MESSAGE(); std::cout << "End of AddPointsToTree "<< std::endl; exit(1);}
     	///////////////////////*/
   }
+
+  assert(tree->pointlist->Npoints == Ntest + Nadd);
   return 1;
 }
 
@@ -624,7 +639,7 @@ void _AddPoint(TreeHndl tree){
 					,tree->pointlist->current->leaf->boundary_p2));
 			MoveDownList(tree->pointlist);
 		}
-		/****************************************/
+		//****************************************/
 		return;
 	}
 
@@ -665,13 +680,19 @@ void _AddPoint(TreeHndl tree){
 
 		// reorder points
 		tree->pointlist->current = tree->current->points;
-
-		assert(tree->current->points->next || tree->current->points->prev);
-
 		for(i=0;i<tree->current->npoints;++i){
 			x[i] = tree->pointlist->current->x[dimension];
 			MoveDownList(tree->pointlist);
 		}
+		/*if(x[0] == x[1]){
+			dimension = !dimension;
+			tree->pointlist->current = tree->current->points;
+			for(i=0;i<tree->current->npoints;++i){
+				x[i] = tree->pointlist->current->x[dimension];
+				MoveDownList(tree->pointlist);
+			}
+			assert(tree->current->npoints == 2);
+		}*/
 
 		/*/ Test lines
 		tree->pointlist->current = tree->current->points;

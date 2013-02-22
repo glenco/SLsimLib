@@ -259,7 +259,7 @@ void divide_images_kist(
 		return ;
 	}
 
-	// mark points in tree as in image and transfer points to temporary temporary new_imagekist
+	  // mark points in tree as in image and transfer points to temporary temporary new_imagekist
 
 	MoveToTopKist(imageinfo->imagekist);
 	Ntest = imageinfo->imagekist->Nunits();
@@ -384,6 +384,9 @@ void partition_images(Point *point,unsigned long *N_in_image,TreeHndl i_tree){
 	assert(i_tree);
 
 	KistHndl neighbors = new Kist;
+	  /**************** TODO test line ******************
+	  ERROR_MESSAGE();
+	  // ****************  ******************/
 
 	// find all the neighbors of point
 	FindAllBoxNeighborsKist(i_tree,point,neighbors);
@@ -398,6 +401,9 @@ void partition_images(Point *point,unsigned long *N_in_image,TreeHndl i_tree){
 			if(!MoveDownKist(neighbors)) break;
 		}
 	}
+	  /**************** TODO test line ******************
+	  ERROR_MESSAGE();
+	  // ****************  ******************/
 
 	while(neighbors->Nunits() > 0){
 		if(getCurrentKist(neighbors)->in_image == TRUE){
@@ -413,6 +419,9 @@ void partition_images(Point *point,unsigned long *N_in_image,TreeHndl i_tree){
 
 	assert(neighbors->Nunits() == 0);
 	delete neighbors;
+	  /**************** TODO test line ******************
+	  ERROR_MESSAGE();
+	  // ****************  ******************/
 
 	return;
 }

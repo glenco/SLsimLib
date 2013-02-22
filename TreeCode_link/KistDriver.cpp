@@ -31,6 +31,7 @@ void FindAllBoxNeighborsKist(TreeHndl tree,Point *point,KistHndl neighbors){
 	// point is outside of initial region
 	if(!inbox(point->x,tree->top->boundary_p1,tree->top->boundary_p2)) return;
 
+	assert(point->leaf);
 	tree->current = point->leaf;
 
 	//std::cout << "tree current " << tree->current << std::endl;

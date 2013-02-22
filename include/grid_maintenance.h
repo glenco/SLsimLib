@@ -22,6 +22,8 @@ typedef struct Grid{
 	~Grid();
 
 	void ReInitializeGrid(LensHndl lens);
+	void zoom(LensHndl lens,double *center,double scale,bool kappa_off);
+
 	unsigned long PruneTrees(double resolution,bool useSB,double fluxlimit);
 	unsigned long PrunePointsOutside(double resolution,double *y,double r_in ,double r_out);
 

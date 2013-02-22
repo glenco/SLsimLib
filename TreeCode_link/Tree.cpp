@@ -636,28 +636,29 @@ int checkBranch(Branch *branch){
 }
 
 Point *AddPointToArray(Point *points,unsigned long N,unsigned long Nold){
-  unsigned long i;
 
   if(N==Nold) return points;
 
+  unsigned long i;
+  Point *newpoints;
+
   if(Nold==0){
-	  points = NewPointArray(N,true);
+	  newpoints = NewPointArray(N,true);
   }else{
 	  if(points[0].head != Nold){ ERROR_MESSAGE(); std::cout << "ERROR: AddPointToArray head not set correctly" << std::endl; exit(0);}
+	  newpoints = NewPointArray(N,false);
 	  for(i=N;i<Nold;++i) free(points[i].x);
-	  points=(Point *) realloc(points,N*sizeof(Point));
+
 	  assert(points);
-	  for(i=Nold;i<N;++i){
-		  points[i].x=(double *) malloc(2*sizeof(double));
-		  assert(points[i].x);
-		  points[i].head=0;
-		  points[i].in_image=FALSE;
-		  points[i].leaf=NULL;
+	  for(i=0;(i<N && i<Nold);++i){
+		  PointCopy(&newpoints[i],&points[i]);
+		  assert(newpoints[i].x);
 	  }
-	  if(N>0) points[0].head=N;
+	  for(i=Nold;i<N;++i) newpoints[i].x = (double *) malloc(2*sizeof(double));
   }
 
-  return points;
+  FreePointArray(points,false);
+  return newpoints;
 }
 
 Point *NewPoint(double *x,unsigned long id){

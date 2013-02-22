@@ -392,6 +392,18 @@ void find_crit_kist(
   }else if(critcurve->imagekist->Nunits() > 0) *Ncrits=1;
   if(critcurve->imagekist->Nunits() == 0) *Ncrits=0;
 
+  for(i=0;i<*Ncrits;++i){
+	  critcurve[i].centroid[0] = 0;
+	  critcurve[i].centroid[1] = 0;
+	  critcurve[i].imagekist->MoveToTop();
+	  do{
+		  critcurve[i].centroid[0] += critcurve[i].imagekist->getCurrent()->x[0];
+		  critcurve[i].centroid[1] += critcurve[i].imagekist->getCurrent()->x[1];
+	  }while(critcurve[i].imagekist->Down());
+	  critcurve[i].centroid[0] /= critcurve[i].imagekist->Nunits();
+	  critcurve[i].centroid[1] /= critcurve[i].imagekist->Nunits();
+  }
+
   return ;
 }
 

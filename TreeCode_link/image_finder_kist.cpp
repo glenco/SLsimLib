@@ -134,6 +134,7 @@ void find_images_kist(
     		;rtemp >= r_source
        		;rtemp /= Ngrid_block,++i ){
 
+    	time(&t3);
 
  			//************* method that seporates images ****************
 			// mark image points in tree
@@ -155,12 +156,13 @@ void find_images_kist(
 		   			rtemp *= Ngrid_block*Ngrid_block;
 		   			telescope_res = telescope_high;
 		   			redo = true;
-
-		   			printf("      source transition rescaling \n"
-						,difftime(t2,t1),*Nimagepoints,*Nimages);
-		   			for(int k=0; k < *Nimages; ++k){
-		   				std::cout << "   " << imageinfo[k].area << " " << imageinfo[k].area_error << " " << imageinfo[k].area/pi/rtemp/rtemp
-		   						<< " " << imageinfo[k].getNimagePoints() << std::endl;
+		   			if(verbose){
+		   				printf("      repeating telescoping source scale \n"
+		   						,difftime(t2,t1),*Nimagepoints,*Nimages);
+		   				for(int k=0; k < *Nimages; ++k){
+		   					std::cout << "   " << imageinfo[k].area << " " << imageinfo[k].area_error << " " << imageinfo[k].area/pi/rtemp/rtemp
+		   							<< " " << imageinfo[k].getNimagePoints() << std::endl;
+		   				}
 		   			}
 
 		   			continue;
@@ -172,15 +174,15 @@ void find_images_kist(
 		   	redo = false;
 
 			time(&t1);
-			time(&t3);
+			time(&t2);
 			if(verbose)
-				printf("\n   new source size = %e    telescoping rsource = %e\n",rtemp,r_source);
+				printf("\n   new source size = %e    Nimages = %i  telescoping rsource = %e\n",rtemp,*Nimages,r_source);
 
 
 			j=0;
 			while(refine_grid_kist(lens,grid,imageinfo,*Nimages,telescope_res,1,kappa_off,NULL)){
 				time(&t1);
-				if(verbose) printf("      time in refine grid %f sec\n",difftime(t1,t2));
+				if(verbose) std::cout << "    refined images" << std::endl;
 
 				//moved = image_finder_kist(lens,y_source,rtemp,grid
 				//		,Nimages,imageinfo,NimageMax,Nimagepoints,-1,0);
@@ -196,25 +198,23 @@ void find_images_kist(
 
 				assert(*Nimages > 0);
 
-				time(&t2);
 				if(verbose){
-					printf("      time in image_finder %e sec\n        Nimagepoints=%li  Nimages = %i\n"
-						,difftime(t2,t1),*Nimagepoints,*Nimages);
-						for(int k=0; k < *Nimages; ++k){
+					printf("      refound images after refinement\n        Nimagepoints=%li  Nimages = %i\n"
+						,*Nimagepoints,*Nimages);
+					for(int k=0; k < *Nimages; ++k){
 							std::cout << "   " << imageinfo[k].area << " " << imageinfo[k].area_error << " " << imageinfo[k].area/pi/rtemp/rtemp
 									<< " " << imageinfo[k].getNimagePoints() << std::endl;
-						}
+					}
 				}
 					++j;
 				//}while(refine_grid_kist(lens,grid,imageinfo,*Nimages,rtemp*mumin/Ngrid_block,2,kappa_off,NULL));
 			}
 
-				time(&t1);
-				if(verbose)	printf("      time in refine grid %f sec\n",difftime(t1,t2));
+			time(&t1);
+			if(verbose)	printf("      time in refine grid %f sec\n",difftime(t1,t2));
 
-				time(&now);
-				if(verbose) printf("    time for one source size %f sec\n",difftime(now,t3));
-				Nimages_old = *Nimages;
+			time(&now);
+			if(verbose) printf("    time for one source size %f sec\n",difftime(now,t3));
     }
 
 	time(&now);
@@ -432,7 +432,8 @@ void find_images_kist(
 short image_finder_kist(LensHndl lens, double *y_source,double r_source,GridHndl grid
 		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
 		,short splitparities,short true_images){
-   unsigned long i,Nsource_points=0;
+
+  unsigned long i,Nsource_points=0;
   static long count=0,Nold_images;
   static double oldy[2];
   short moved;
@@ -458,8 +459,6 @@ short image_finder_kist(LensHndl lens, double *y_source,double r_source,GridHndl
 
   grid->ClearAllMarks();
   assert(imageinfo->imagekist);
-
-  //ListHndl list = NewList();
 
   // if source has moved make sure low res grids are included in first source list
   if( moved && (initialgridsize > mumin*r_source) && !true_images){
@@ -499,6 +498,7 @@ short image_finder_kist(LensHndl lens, double *y_source,double r_source,GridHndl
 	  if(imageinfo->imagekist->Nunits() == 0){
 		  NearestNeighborKist(s_tree,y_source,NpointsRequired,imageinfo->imagekist);
 	  }else{  // add nearest points to already found image points
+
 		  bool redundant = false;
 
 		  NearestNeighborKist(s_tree,y_source,NpointsRequired,imageinfo[1].imagekist);
@@ -525,13 +525,13 @@ short image_finder_kist(LensHndl lens, double *y_source,double r_source,GridHndl
 	  }
   }
 
-
   // mark all image points
   if(imageinfo->imagekist->Nunits() > 0){
 	  MoveToTopKist(imageinfo->imagekist);
 	  do{
 		  getCurrentKist(imageinfo->imagekist)->in_image = TRUE;
 		  getCurrentKist(imageinfo->imagekist)->image->in_image = TRUE;
+
 	  }while(MoveDownKist(imageinfo->imagekist));
   }
 
@@ -560,9 +560,6 @@ short image_finder_kist(LensHndl lens, double *y_source,double r_source,GridHndl
 
   // find borders
   if( splitparities == 0 ) for(i=0;i<*Nimages;++i) findborders4(i_tree,&imageinfo[i]);
-
-  //assert(*Nimages < NimageMax-1);
-
 
   for(i=0;i<*Nimages;++i){
 

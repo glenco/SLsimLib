@@ -421,6 +421,7 @@ void SwapDataInKist(KistHndl kist,Unit *p1,Unit *p2){
 /*********************************/
 /// Return pointer to data in current element.
 Data * Kist::getCurrent(){
+	if(Number==0) return NULL;
 	assert(current);
 	assert(current->data);
 
