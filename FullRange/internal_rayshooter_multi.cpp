@@ -291,8 +291,17 @@ void *compute_rays_parallel(void *_p){
   return 0;
   
 }
-
-void MultiLens::rayshooterInternal(double *ray, double *alpha, KappaType *gamma, KappaType *kappa, bool kappa_off){
+/*
+ * Calculates the source plane position x_source, gamma, and kappa for a single ray (in radians)
+ *
+ */
+void MultiLens::rayshooterInternal(
+		double *ray 	  /// position on the image plane in radians
+		,double *x_source /// position on the source plane in radians
+		,KappaType *gamma
+		,KappaType *kappa
+		,bool kappa_off		/// if true -- no kappa and gamma values are calculated
+		){
 
   int j;
 
@@ -307,8 +316,8 @@ void MultiLens::rayshooterInternal(double *ray, double *alpha, KappaType *gamma,
   // If a lower redshift source is being used
 
     // find position on first lens plane in comoving units
-    alpha[0] = ray[0]*Dl[0];
-    alpha[1] = ray[1]*Dl[0];
+    x_source[0] = ray[0]*Dl[0];
+    x_source[1] = ray[1]*Dl[0];
 
     xminus[0] = 0;
     xminus[1] = 0;
@@ -328,8 +337,8 @@ void MultiLens::rayshooterInternal(double *ray, double *alpha, KappaType *gamma,
 
       // convert to physical coordinates on the plane j
 
-      xx[0] = alpha[0]/(1+plane_redshifts[j]);
-      xx[1] = alpha[1]/(1+plane_redshifts[j]);
+      xx[0] = x_source[0]/(1+plane_redshifts[j]);
+      xx[1] = x_source[1]/(1+plane_redshifts[j]);
 
       assert(xx[0] == xx[0] && xx[1] == xx[1]);
 
@@ -368,14 +377,14 @@ void MultiLens::rayshooterInternal(double *ray, double *alpha, KappaType *gamma,
       aa = (dDl[j+1]+dDl[j])/dDl[j];
       bb = dDl[j+1]/dDl[j];
 
-      xplus[0] = aa*alpha[0] - bb*xminus[0] - cc*alpha_tmp[0];
-      xplus[1] = aa*alpha[1] - bb*xminus[1] - cc*alpha_tmp[1];
+      xplus[0] = aa*x_source[0] - bb*xminus[0] - cc*alpha_tmp[0];
+      xplus[1] = aa*x_source[1] - bb*xminus[1] - cc*alpha_tmp[1];
 
-      xminus[0] = alpha[0];
-      xminus[1] = alpha[1];
+      xminus[0] = x_source[0];
+      xminus[1] = x_source[1];
 
-      alpha[0] = xplus[0];
-      alpha[1] = xplus[1];
+      x_source[0] = xplus[0];
+      x_source[1] = xplus[1];
 
       if(!kappa_off){
 
@@ -420,15 +429,15 @@ void MultiLens::rayshooterInternal(double *ray, double *alpha, KappaType *gamma,
     }
 
     // Convert units back to angles.
-    alpha[0] /= Dl[Nplanes-1];
-    alpha[1] /= Dl[Nplanes-1];
+    x_source[0] /= Dl[Nplanes-1];
+    x_source[1] /= Dl[Nplanes-1];
 
     *kappa = 1 - *kappa;
 
-    if(alpha[0] != alpha[0] ||
-       alpha[1] != alpha[1]){
+    if(x_source[0] != x_source[0] ||
+       x_source[1] != x_source[1]){
       ERROR_MESSAGE();
-      std::cout << alpha[0] << "  " << alpha[1] << "  " << std::endl;
+      std::cout << x_source[0] << "  " << x_source[1] << "  " << std::endl;
       std::cout << gamma[0] << "  " << gamma[1] << "  " << gamma[2] << "  " <<
     		  *kappa << "  "  << kappa_off << std::endl;
       //	assert(0);

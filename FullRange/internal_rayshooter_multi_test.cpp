@@ -33,11 +33,15 @@ struct TmpParamsHalos{
 };
 
 /*
- * A method that calculates the relative error between the lensing properties on the image plane,
- * by considering all lensing halos as single objects and the previously calculated properties
- * from the standard rayshooter.
+ * A method that calculates the lensing properties by considering all lensing halos as single objects,
+ * i.e. each halo is alone on a lensing plane.
+ *
+ * Dl_halos[j = 0...Nhalos-1] - The angular size distance between the observer and the jth halos.
+ *
+ * dDl_halos[j = 0...Nhalos-1] - The angular size distance between the (j-1)th and jth halos
+ *                      dDl_halos[0] = Dl_halos[0]
  */
-void MultiLens::rayshooterInternal_halos_diff(
+void MultiLens::rayshooterInternal_halos(
 		unsigned long Npoints   /// number of points to be shot
 		,Point *i_points        /// point on the image plane
 		,bool kappa_off         /// turns calculation of convergence and shear off to save time.
@@ -106,17 +110,14 @@ void *compute_rays_parallel_halos(void *_p){
 	  double xminus[2],xplus[2];
 	  double kappa_minus,gamma_minus[3],kappa_plus,gamma_plus[3];
 
-	  double new_image_x[2];
-	  KappaType new_kappa,new_gamma[3],new_invmag;
-
 	  for(i = start; i< end; i++){
 
 		  if(p->i_points[i].in_image == MAYBE)
 				 continue;
 
 	    // find position on first lens plane in comoving units
-	    new_image_x[0] = p->i_points[i].x[0]*p->Dl_halos[0];
-	    new_image_x[1] = p->i_points[i].x[1]*p->Dl_halos[0];
+	    p->i_points[i].image->x[0] = p->i_points[i].x[0]*p->Dl_halos[0];
+	    p->i_points[i].image->x[1] = p->i_points[i].x[1]*p->Dl_halos[0];
 
 	    xminus[0] = 0;
 	    xminus[1] = 0;
@@ -127,17 +128,17 @@ void *compute_rays_parallel_halos(void *_p){
 	    gamma_minus[1] = 0;
 	    gamma_minus[2] = 0;
 
-	    new_kappa = 1;  // This is actually 1-kappa until after the loop through the planes.
-	    new_gamma[0] = 0;
-	    new_gamma[1] = 0;
-	    new_gamma[2] = 0;
+	    p->i_points[i].kappa = 1;  // This is actually 1-kappa until after the loop through the planes.
+	    p->i_points[i].gamma[0] = 0;
+	    p->i_points[i].gamma[1] = 0;
+	    p->i_points[i].gamma[2] = 0;
 
 	    for(j = 0; j < p->Nhalos ; j++){  // each iteration leaves i_point[i].image on plane (j+1)
 
 	      // convert to physical coordinates on the plane j
 
-	      xx[0] = new_image_x[0]/(1+p->halo_zs[j]);
-	      xx[1] = new_image_x[1]/(1+p->halo_zs[j]);
+	      xx[0] = p->i_points[i].image->x[0]/(1+p->halo_zs[j]);
+	      xx[1] = p->i_points[i].image->x[1]/(1+p->halo_zs[j]);
 
 	      assert(xx[0] == xx[0] && xx[1] == xx[1]);
 
@@ -177,14 +178,14 @@ void *compute_rays_parallel_halos(void *_p){
 	      bb = p->dDl_halos[j+1]/p->dDl_halos[j];
     	  cc = lens->charge*p->dDl_halos[j+1];
 
-	      xplus[0] = aa*new_image_x[0] - bb*xminus[0] - cc*alpha[0];
-	      xplus[1] = aa*new_image_x[1] - bb*xminus[1] - cc*alpha[1];
+          xplus[0] = aa*p->i_points[i].image->x[0] - bb*xminus[0] - cc*alpha[0];
+          xplus[1] = aa*p->i_points[i].image->x[1] - bb*xminus[1] - cc*alpha[1];
 
-	      xminus[0] = new_image_x[0];
-	      xminus[1] = new_image_x[1];
+          xminus[0] = p->i_points[i].image->x[0];
+          xminus[1] = p->i_points[i].image->x[1];
 
-	      new_image_x[0] = xplus[0];
-	      new_image_x[1] = xplus[1];
+          p->i_points[i].image->x[0] = xplus[0];
+          p->i_points[i].image->x[1] = xplus[1];
 
 	      if(!kappa_off){
 
@@ -201,64 +202,61 @@ void *compute_rays_parallel_halos(void *_p){
 	    	  else
 	    		  cc = lens->charge*p->dDl_halos[j+1]*p->Dl_halos[j]/p->Dl_halos[j+1];
 
-	    	  kappa_plus = aa*new_kappa - bb*kappa_minus
-	    			  - cc*(kappa*new_kappa + gamma[0]*new_gamma[0] + gamma[1]*new_gamma[1]);
+	    	  kappa_plus = aa*p->i_points[i].kappa - bb*kappa_minus
+	    			  - cc*(kappa*p->i_points[i].kappa + gamma[0]*p->i_points[i].gamma[0] + gamma[1]*p->i_points[i].gamma[1]);
 
-	    	  gamma_plus[0] = aa*new_gamma[0] - bb*gamma_minus[0]
-	    	          - cc*(gamma[0]*new_kappa + kappa*new_gamma[0] - gamma[1]*new_gamma[2]);
+	    	  gamma_plus[0] = aa*p->i_points[i].gamma[0] - bb*gamma_minus[0]
+	    	          - cc*(gamma[0]*p->i_points[i].kappa + kappa*p->i_points[i].gamma[0] - gamma[1]*p->i_points[i].gamma[2]);
 
-	    	  gamma_plus[1] = aa*new_gamma[1] - bb*gamma_minus[1]
-	    	          - cc*(gamma[1]*new_kappa + kappa*new_gamma[1] + gamma[0]*new_gamma[2]);
+	    	  gamma_plus[1] = aa*p->i_points[i].gamma[1] - bb*gamma_minus[1]
+	    	          - cc*(gamma[1]*p->i_points[i].kappa + kappa*p->i_points[i].gamma[1] + gamma[0]*p->i_points[i].gamma[2]);
 
-	    	  gamma_plus[2] = aa*new_gamma[2] - bb*gamma_minus[2]
-	    	          - cc*(kappa*new_gamma[2] - gamma[1]*new_gamma[0] + gamma[0]*new_gamma[1]);
+	    	  gamma_plus[2] = aa*p->i_points[i].gamma[2] - bb*gamma_minus[2]
+	    	          - cc*(kappa*p->i_points[i].gamma[2] - gamma[1]*p->i_points[i].gamma[0] + gamma[0]*p->i_points[i].gamma[1]);
 
-	    	  kappa_minus = new_kappa;
-	    	  gamma_minus[0] = new_gamma[0];
-	    	  gamma_minus[1] = new_gamma[1];
-	    	  gamma_minus[2] = new_gamma[2];
+	    	  kappa_minus = p->i_points[i].kappa;
+	    	  gamma_minus[0] = p->i_points[i].gamma[0];
+	    	  gamma_minus[1] = p->i_points[i].gamma[1];
+	    	  gamma_minus[2] = p->i_points[i].gamma[2];
 
 	    	  assert(kappa_plus==kappa_plus && gamma_minus[0]==gamma_minus[0] &&gamma_minus[1]==gamma_minus[1] && gamma_minus[2]==gamma_minus[2]);
 
-	    	  new_kappa = kappa_plus;
-	    	  new_gamma[0] = gamma_plus[0];
-	    	  new_gamma[1] = gamma_plus[1];
-	    	  new_gamma[2] = gamma_plus[2];
+	    	  p->i_points[i].kappa = kappa_plus;
+	    	  p->i_points[i].gamma[0] = gamma_plus[0];
+	    	  p->i_points[i].gamma[1] = gamma_plus[1];
+	    	  p->i_points[i].gamma[2] = gamma_plus[2];
 
 	      }
 	    }
 
 	    // Convert units back to angles.
-	    new_image_x[0] /= p->Dl_halos[p->Nhalos];
-	    new_image_x[1] /= p->Dl_halos[p->Nhalos];
+	    p->i_points[i].image->x[0] /= p->Dl_halos[p->Nhalos];
+	    p->i_points[i].image->x[1] /= p->Dl_halos[p->Nhalos];
 
-	    new_kappa = 1 - new_kappa;
+	    p->i_points[i].kappa = 1 - p->i_points[i].kappa;
 
-	    if(!kappa_off) new_invmag = (1-new_kappa)*(1-new_kappa)
-			     - new_gamma[0]*new_gamma[0]
-			     - new_gamma[1]*new_gamma[1]
-			     + new_gamma[2]*new_gamma[2];
-	    else new_invmag = 0.0;
+	    if(!kappa_off) p->i_points[i].invmag = (1-p->i_points[i].kappa)*(1-p->i_points[i].kappa)
+			     - p->i_points[i].gamma[0]*p->i_points[i].gamma[0]
+			     - p->i_points[i].gamma[1]*p->i_points[i].gamma[1]
+			     + p->i_points[i].gamma[2]*p->i_points[i].gamma[2];
+	    else p->i_points[i].invmag = 0.0;
 
-	    if(new_image_x[0] != new_image_x[0] ||
-	       new_image_x[1] != new_image_x[1] ||
-	       new_invmag != new_invmag){
+	    p->i_points[i].image->invmag=p->i_points[i].invmag;
+	    p->i_points[i].image->kappa=p->i_points[i].kappa;
+	    p->i_points[i].image->gamma[0]=p->i_points[i].gamma[0];
+	    p->i_points[i].image->gamma[1]=p->i_points[i].gamma[1];
+	    p->i_points[i].image->gamma[2]=p->i_points[i].gamma[2];
+
+	    if(p->i_points[i].image->x[0] != p->i_points[i].image->x[0] ||
+	       p->i_points[i].image->x[1] != p->i_points[i].image->x[1] ||
+	       p->i_points[i].invmag != p->i_points[i].invmag){
 	      ERROR_MESSAGE();
-	      std::cout << new_image_x[0] << "  " << new_image_x[1] << "  " << new_invmag << std::endl;
-	      std::cout << new_gamma[0] << "  " << new_gamma[1] << "  " << new_gamma[2] << "  " <<
-	    		  new_kappa << "  "  << kappa_off << std::endl;
+	      std::cout << p->i_points[i].image->x[0] << "  " << p->i_points[i].image->x[1] << "  " << p->i_points[i].invmag << std::endl;
+	      std::cout << p->i_points[i].gamma[0] << "  " << p->i_points[i].gamma[1] << "  " << p->i_points[i].gamma[2] << "  " <<
+	    		  p->i_points[i].kappa << "  "  << kappa_off << std::endl;
 	      //	assert(0);
 	      exit(1);
 	    }
-
-	    p->i_points[i].image->x[0] = p->i_points[i].image->x[0]/new_image_x[0] - 1.0;
-	    p->i_points[i].image->x[1] = p->i_points[i].image->x[1]/new_image_x[1] - 1.0;
-	    p->i_points[i].kappa = p->i_points[i].kappa/new_kappa - 1.0;
-	    p->i_points[i].gamma[0] = p->i_points[i].gamma[0]/new_gamma[0] - 1.0;
-	    p->i_points[i].gamma[1] = p->i_points[i].gamma[1]/new_gamma[1] - 1.0;
-	    p->i_points[i].gamma[2] = p->i_points[i].gamma[2]/new_gamma[2] - 1.0;
-	    p->i_points[i].invmag = p->i_points[i].invmag/new_invmag - 1.0;
-
 	  }
 
 	  return 0;
