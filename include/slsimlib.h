@@ -18,12 +18,16 @@
 
 #include <KistDriver.h>
 
+#include <debug.h>
+
 #include <divide_images.h>
 #include <tree_maintenance.h>
 #include <grid_maintenance.h>
 #include <source_models.h>
 
 #include <model.h>
+
+#include <parameters.h>
 
 #include <peak_refinement.h>
 #include <map_images.h>
@@ -33,5 +37,6 @@
 #include <nsie.h>
 
 #include <image_chi_square.h>
+#include <image_likelihood.h>
 
 #endif
