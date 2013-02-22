@@ -90,12 +90,11 @@ public:
 	void data(PixelMap data)
 	{
 		// copy pixel map
-		using std::swap;
 		swap(dta, data);
 		
-		// calculate degrees of freedom
-		// TODO: take mask and number of parameters into account
-		dof = dta.getNpixels()*dta.getNpixels();
+		// check if mask is compatible or create empty
+		if(dta.size() != msk.base_size())
+			msk = PixelMask(dta.size());
 		
 		// change grid to match data
 		grid_range = dta.getRange();
@@ -103,6 +102,9 @@ public:
 		
 		// recreate grid
 		regrid();
+		
+		// recalculate degrees of freedom
+		redof();
 	}
 	
 	/** Get the constant background offset. */
@@ -120,10 +122,31 @@ public:
 	/** Set the pixel count normalization. */
 	void normalization(double n) { norm = n; }
 	
-	/** Get the mask PixelMap. */
-	PixelMap mask() const { return msk; }
-	/** Set the mask PixelMap. */
-	void mask(PixelMap mask) { using std::swap; swap(msk, mask); }
+	/** Get the mask. */
+	PixelMask mask() const { return msk; }
+	
+	/** Set the mask. */
+	bool mask(PixelMask mask)
+	{
+		// make sure size of data and mask PixelMap agree
+		if(dta.valid() && mask.base_size() != dta.size())
+			return false;
+		
+		// swap current mask and given one
+		swap(msk, mask);
+		
+		// recalculate degrees of freedom
+		redof();
+		
+		// success
+		return true;
+	}
+	
+	/** Set the mask using a PixelMap. */
+	bool mask(PixelMap mask_map)
+	{
+		return mask(PixelMask(mask_map));
+	}
 	
 	/** Get the maximum number of lensed images. */
 	std::size_t imagesSize() const { return images_size; }
@@ -193,6 +216,13 @@ public:
 	}
 	
 private:
+	inline void redof()
+	{
+		// calculate degrees of freedom
+		// TODO: take number of parameters into account
+		dof = static_cast<unsigned long>(msk.valid() ? dta.size() : msk.size());
+	}
+	
 	inline void regrid()
 	{
 		delete grid;
@@ -209,7 +239,7 @@ private:
 	double ns;
 	double norm;
 	
-	PixelMap msk;
+	PixelMask msk;
 	
 	std::size_t images_size;
 	ImageInfo* images;
