@@ -42,7 +42,7 @@ public:
 	void printASCII();
 	void printASCIItoFile(std::string filename);
 	void printFITS(std::string filename);
-	void smooth(double *map_out,double sigma);
+	void smooth(double sigma);
 
 	void ApplyPSF(std::string psf_file, double oversample_n = 1);
 

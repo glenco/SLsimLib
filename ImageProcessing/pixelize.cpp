@@ -139,7 +139,7 @@ PixelMap::PixelMap(const PixelMap& pmap, double degrading_factor)
 
 	resolution = degrading_factor*pmap.resolution;
 	range = pmap.range+pmap.resolution;
-	size = int(range/resolution+1);
+	size = size_t(range/resolution+1);
 	range = range - resolution;
 	center[0] = pmap.center[0];
 	center[1] = pmap.center[1];
@@ -431,47 +431,66 @@ std::cout<< range << "  " << resolution << "  " << size << std::endl;
 
 /** \ingroup Image
  *
- * \brief Smoothes a map with a Gaussian kernel. Needs to be tested.
- *  This smoothes onto a map of the same resolution
+ * \brief Smoothes a map with a Gaussian kernel of width sigma (in arcseconds)
  */
-void PixelMap::smooth(double *map_out,double sigma){
+void PixelMap::smooth(double sigma){
 	double sum=0,**mask;
-	std::size_t i=0;
-	long j,k,ix,iy;
-	std::size_t Nmask;
+	int ix,iy;
+	int Nmask,Nmask_half;
+	double *map_out;
+	int j_cen, k_cen;
 
-	Nmask=2*(int)(3*sigma*size/range + 1);
+	sigma /= 3600.*180/pi;
+	map_out = new double[size*size];
+	Nmask=2*(int)(3*sigma/resolution + 1);
 	if(Nmask < 4 ) std::cout << "WARNING: pixels are large compare to psf Nmask=" << Nmask << std::endl;
 
-	// set up mask
-	Matrix(mask,Nmask,Nmask);
-	for(j=-Nmask/2,sum=0;j<=Nmask/2;++j){
-		for(k=-Nmask/2;k<=Nmask/2;++k){
-			mask[j+Nmask/2][k+Nmask/2]= exp(-(pow(j*range/(size-1),2)
-					                        + pow(k*range/(size-1),2))/2/pow(sigma,2) );
-			sum+=mask[j+Nmask/2][k+Nmask/2];
+	Nmask_half = int(Nmask/2);
+	mask = new double*[Nmask];
+	for (int j = 0; j <Nmask; j++)
+		mask[j] = new double[Nmask];
+
+	for(int j=0;j<Nmask;j++)
+	{
+		for(int k=0;k<Nmask;k++)
+		{
+			j_cen = j - Nmask_half;
+			k_cen = k - Nmask_half;
+			mask[j][k]= exp(-(pow(j_cen*resolution,2) + pow(k_cen*resolution,2))/2/pow(sigma,2) );
+			sum+=mask[j][k];
 		}
 	}
-	for(j=-Nmask/2;j<=Nmask/2;++j) for(k=-Nmask/2;k<=Nmask/2;++k) mask[j+Nmask/2][k+Nmask/2]/=sum;
-
-	for(i=0;i<size*size;++i){
-		for(j=0;j<=Nmask;++j){
-			ix=i%size + j-Nmask/2;
-			if( (ix>-1)*(ix<size) ){
-				for(k=0;k<=Nmask;++k){
-					iy=i/size + k-Nmask/2;
-					if( (iy>-1)*(iy<size) ){
-
-						map_out[ix+size*iy] += mask[ix][iy]*map[i];
+	for(int j=0;j<Nmask;j++)
+	{
+		for(int k=0;k<Nmask;k++)
+		{
+			mask[j][k]/=sum;
+			std::cout << mask[j][k] << std::endl;
+		}
+	}
+	for(long i=0;i<size*size;i++){
+		std::cout << i << " " << map[i] << std::endl;
+		for(int j=0;j<Nmask;j++){
+			ix=i%size + j-Nmask_half;
+			if( (ix>-1) && (ix<size) ){
+				for(int k=0;k<Nmask;k++){
+					iy=i/size + k-Nmask_half;
+					if( (iy>-1) && (iy<size) ){
+						map_out[ix+size*iy] += mask[j][k]*map[i];
 					}
 				}
 			}
 		}
 	}
+	for(long i=0;i<size*size;i++){
+		map[i] = map_out[i];
+	}
 
-	free_Matrix(mask,Nmask,Nmask);
+	for (int j = 0; j <Nmask; j++)
+		delete mask[j];
+	delete [] mask;
+	delete [] map_out;
 
-	return ;
 }
 
 // Smooths the image with a PSF read from a fits file.
@@ -482,19 +501,23 @@ void PixelMap::ApplyPSF(std::string psf_file, double oversample_n)
 #ifdef ENABLE_FITS
 #ifdef ENABLE_FFTW
 
+	// creates plane for fft of map, sets properly input and output data, then performs fft
 	fftw_plan p;
-	std::complex<double>* out=new std::complex<double> [size*(size/2+1)];
 	double* in = new double[size*size];
+	std::complex<double>* out=new std::complex<double> [size*(size/2+1)];
 	for (unsigned long i = 0; i < size*size; i++)
 	{
 		in[i] = map[i];
 	}
 	p = fftw_plan_dft_r2c_2d(size,size,in, reinterpret_cast<fftw_complex*>(out), FFTW_ESTIMATE);
+	fftw_execute(p);
+
+	// creates plane for perform backward fft after convolution, sets output data
 	fftw_plan p2;
 	double* out2 = new double[size*size];
 	p2 = fftw_plan_dft_c2r_2d(size,size,reinterpret_cast<fftw_complex*>(out), out2, FFTW_ESTIMATE);
-	fftw_execute(p);
 
+	// reads psf fits file
 	std::auto_ptr<CCfits::FITS> fp (new CCfits::FITS (psf_file.c_str(), CCfits::Read));
 	CCfits::PHDU *h0=&fp->pHDU();
 	int side_psf = h0->axis(0);
@@ -507,6 +530,8 @@ void PixelMap::ApplyPSF(std::string psf_file, double oversample_n)
 	{
 		map_norm += map_psf[i];
 	}
+
+	// arrange psf data for fft, creates plane, then performs fft
 	int psf_big_Npixels = static_cast<int>(size*oversample_n);
 	double* psf_big = new double[psf_big_Npixels*psf_big_Npixels];
 	std::complex<double>* out_psf=new std::complex<double> [psf_big_Npixels*(psf_big_Npixels/2+1)];
@@ -529,6 +554,7 @@ void PixelMap::ApplyPSF(std::string psf_file, double oversample_n)
 	}
 	fftw_execute(p_psf);
 
+	// performs convolution in Fourier space, and transforms back to real space
 	for (unsigned long i = 0; i < size*(size/2+1); i++)
 	{
 		ix = i/(size/2+1);
@@ -540,6 +566,7 @@ void PixelMap::ApplyPSF(std::string psf_file, double oversample_n)
 	}
 	fftw_execute(p2);
 
+	// translates array of data in (normalised) counts map
 	for (unsigned long i = 0; i < size*size; i++)
 	{
 		ix = i/size;
