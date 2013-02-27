@@ -336,15 +336,18 @@ void find_crit_kist(
 
   if(verbose) std::printf("find_crit, number of caustic points: %li\n",critcurve->imagekist->Nunits());
 
+  unsigned long Npoints = critcurve->imagekist->Nunits();
+
+  divide_images_kist(grid->i_tree,critcurve,Ncrits,maxNcrits);
+
+  if(*Ncrits > maxNcrits){ERROR_MESSAGE(); std::printf("ERROR: in find_crit, too many critical curves Ncrits=%i > maxNcrits gridsize=%e\n"
+			       ,*Ncrits,critcurve->imagekist->getCurrent()->gridsize); exit(1);}
+
+  // TODO make sure divid_images_kist above can be outside ordercurve
   *orderingsuccess = true;
   if(ordercurve){
 
-	  unsigned long Npoints = critcurve->imagekist->Nunits();
 	  unsigned long NewNumber;
-	  divide_images_kist(grid->i_tree,critcurve,Ncrits,maxNcrits);
-
-	  if(*Ncrits > maxNcrits){ERROR_MESSAGE(); std::printf("ERROR: in find_crit, too many critical curves Ncrits=%i > maxNcrits gridsize=%e\n"
-				       ,*Ncrits,critcurve->imagekist->getCurrent()->gridsize); exit(1);}
 
 	  // order points in curve
 
@@ -389,7 +392,7 @@ void find_crit_kist(
 	  }
 	  FreePointArray(tmp_points,false);
 	  //split_order_curve4(critcurve,maxNcrits,Ncrits);
-  }else if(critcurve->imagekist->Nunits() > 0) *Ncrits=1;
+  }//else if(critcurve->imagekist->Nunits() > 0) *Ncrits=1;
   if(critcurve->imagekist->Nunits() == 0) *Ncrits=0;
 
   for(i=0;i<*Ncrits;++i){

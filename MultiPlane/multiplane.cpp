@@ -1370,7 +1370,7 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 				halo_vec[j].pa_nsie = 2*pi*ran2(seed);  //TODO This is a kluge.
 				halo_vec[j].Rsize_nsie = rmaxNSIE(halo_vec[j].sigma_nsie,halo_vec[j].mass_nsie
 						,halo_vec[j].fratio_nsie,halo_vec[j].rcore_nsie);
-				cout << halo_vec[j].Rmax << " " << halo_vec[j].Rsize_nsie << " " << vmax << " " << halo_vec[j].mass_nsie << " " << halo_vec[j].fratio_nsie << " " << halo_vec[j].rcore_nsie << endl;
+				//cout << halo_vec[j].Rmax << " " << halo_vec[j].Rsize_nsie << " " << vmax << " " << halo_vec[j].mass_nsie << " " << halo_vec[j].fratio_nsie << " " << halo_vec[j].rcore_nsie << endl;
 				//std::cout << "sigma_nsie: " << halo_vec[j].sigma_nsie << " fratio_nsie: " << halo_vec[j].fratio_nsie
 				//		<< " pa_nsie: " << halo_vec[j].pa_nsie << " Rsize_nsie: " << halo_vec[j].Rsize_nsie << std::endl;
 
