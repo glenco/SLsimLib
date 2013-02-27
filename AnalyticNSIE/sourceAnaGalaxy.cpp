@@ -6,6 +6,8 @@
  */
 #include "slsimlib.h"
 
+// TODO: set `mag_limit` and `band` to default values in all constructors
+
 /// Source model for a single analytic galaxy model.
 MultiSourceAnaGalaxy::MultiSourceAnaGalaxy(
 		double mag              /// Total magnitude
@@ -18,11 +20,9 @@ MultiSourceAnaGalaxy::MultiSourceAnaGalaxy(
 		,double *my_theta          /// position on the sky
 		): Source(),index(0){
 
-	unsigned long dummy;
 	source_sb_type = MultiAnaSource;
-	mem_allocated = true;
 	sb_limit = 30.;
-	galaxies.push_back(new OverGalaxy(mag,BtoT,Reff,Rh,PA,inclination,dummy,my_z,my_theta));
+	galaxies.push_back(OverGalaxy(mag,BtoT,Reff,Rh,PA,inclination,0,my_z,my_theta));
 }
 /** Constructor for passing in a pointer to the galaxy model or a list of galaxies instead of constructing it internally.
 *   Useful when there is a list of pre-allocated sources.  The redshifts and sky positions need to be set separately.
@@ -32,9 +32,8 @@ MultiSourceAnaGalaxy::MultiSourceAnaGalaxy(
 		): Source(),index(0){
 
 	source_sb_type = MultiAnaSource;
-	mem_allocated = false;
 	sb_limit = 30.;
-	galaxies.push_back(my_galaxy);
+	galaxies.push_back(*my_galaxy);
 }
 /// Constructor for importing from data file.
 MultiSourceAnaGalaxy::MultiSourceAnaGalaxy(
@@ -49,16 +48,14 @@ MultiSourceAnaGalaxy::MultiSourceAnaGalaxy(
 
 	assignParams(params);
 
-	mem_allocated = true;
 	std::cout << "Constructing SourceAnaGalaxy" << std::endl;
 
 	readDataFile(input_gal_file);
 	index = 0;
 }
 
-MultiSourceAnaGalaxy::~MultiSourceAnaGalaxy(){
-	if(mem_allocated)
-		for(unsigned long i=0;i<galaxies.size();++i) delete galaxies[i];
+MultiSourceAnaGalaxy::~MultiSourceAnaGalaxy()
+{
 }
 
 /// read in galaxies from a Millennium simulation file
@@ -252,7 +249,7 @@ void MultiSourceAnaGalaxy::readDataFile(std::string input_gal_file){
 
 			/***************************/
 			galaxies.push_back(
-					new OverGalaxy(mag,pow(10,-(mag_bulge-mag)/2.5),Ref,Rh
+					OverGalaxy(mag,pow(10,-(mag_bulge-mag)/2.5),Ref,Rh
 							,pa,inclination,HaloID,z_cosm,theta)
 			);
 			//std::cout << "z:" << z_cosm << " mag " << SDSS_u << " Bulge to total " << pow(10,-(SDSS_u_Bulge-SDSS_u)/2.5)
@@ -311,29 +308,25 @@ void MultiSourceAnaGalaxy::multiplier(
 	double x1[2],x2[2],theta[2];
 
 	for(unsigned long i=0;i<Nold;++i){
-		if(galaxies[i]->theta[0] < x1[0]) x1[0] = galaxies[i]->theta[0];
-		if(galaxies[i]->theta[0] > x2[0]) x2[0] = galaxies[i]->theta[0];
-		if(galaxies[i]->theta[1] < x1[1]) x1[1] = galaxies[i]->theta[1];
-		if(galaxies[i]->theta[1] > x2[1]) x2[1] = galaxies[i]->theta[1];
+		if(galaxies[i].theta[0] < x1[0]) x1[0] = galaxies[i].theta[0];
+		if(galaxies[i].theta[0] > x2[0]) x2[0] = galaxies[i].theta[0];
+		if(galaxies[i].theta[1] < x1[1]) x1[1] = galaxies[i].theta[1];
+		if(galaxies[i].theta[1] > x2[1]) x2[1] = galaxies[i].theta[1];
 
-		if(galaxies[i]->z > z && galaxies[i]->getMag() < mag_cut) ++NtoAdd;
+		if(galaxies[i].z > z && galaxies[i].getMag() < mag_cut) ++NtoAdd;
 	}
-
-	OverGalaxy *newgalaxies = new OverGalaxy[NtoAdd*multiplicity];
 
 	NtoAdd = 0;
 	for(unsigned long i=0;i<Nold;++i){
-		if(galaxies[i]->z > z && galaxies[i]->getMag() < mag_cut){
+		if(galaxies[i].z > z && galaxies[i].getMag() < mag_cut){
 
 			for(int j=0;j<multiplicity;++j){
 				theta[0] = x1[0] + (x2[0] - x1[0])*ran2(seed);
 				theta[1] = x1[1] + (x2[1] - x1[1])*ran2(seed);
 
-				newgalaxies[NtoAdd].setInternals(galaxies[i]->getMag(),galaxies[i]->getBtoT(),galaxies[i]->getReff()
-					,galaxies[i]->getRh(),ran2(seed)*pi,ran2(seed)*2*pi
-					,Nold+NtoAdd,galaxies[i]->z,theta);
-
-				galaxies.push_back(&newgalaxies[NtoAdd]);
+				galaxies.push_back(OverGalaxy(galaxies[i].getMag(),galaxies[i].getBtoT(),galaxies[i].getReff()
+					,galaxies[i].getRh(),ran2(seed)*pi,ran2(seed)*2*pi
+					,Nold+NtoAdd,galaxies[i].z,theta));
 
 				++NtoAdd;
 			}
@@ -345,5 +338,5 @@ void MultiSourceAnaGalaxy::multiplier(
 /// Print info on current source parameters
 void MultiSourceAnaGalaxy::printSource(){
 	std::cout << "Overzier Galaxy Model" << std::endl;
-	galaxies[index]->print();
+	galaxies[index].print();
 }

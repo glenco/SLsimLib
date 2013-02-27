@@ -292,12 +292,16 @@ void *compute_rays_parallel(void *_p){
   
 }
 
+/**
+ * Calculates the source plane position x_source, gamma, and kappa for a single ray (in radians)
+ *
+ */
 void MultiLens::rayshooterInternal(
-		double *ray    /// image plane position in radians
-		, double *x_source  /// source plane position in radians
-		, KappaType *gamma
-		, KappaType *kappa
-		, bool kappa_off
+		double *ray 	  /// position on the image plane in radians
+		,double *x_source /// position on the source plane in radians
+		,KappaType *gamma
+		,KappaType *kappa
+		,bool kappa_off		/// if true -- no kappa and gamma values are calculated
 		){
 
   int j;

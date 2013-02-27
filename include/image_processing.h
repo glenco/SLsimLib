@@ -9,7 +9,6 @@
 #define IMAGE_PROCESSING_H_
 
 #include "Tree.h"
-#include "point.h"
 
 /** \ingroup Image
  * \brief Takes images and pixelizes the flux into regular pixel grid.
@@ -18,16 +17,24 @@
  * of each point in the images.
  */
 
-class PixelMap{
+class PixelMap
+{
 public:
-	PixelMap(unsigned long Npixels,double range,double *center);
+	PixelMap();
+	PixelMap(const PixelMap& other);
+	PixelMap(std::size_t Npixels, double range, const double* center);
 	PixelMap(std::string filename);
 	~PixelMap();
-
-	unsigned long getNpixels() const {return Npixels;}
-	double getRange() const {return range;}
-	double getResolution() const {return resolution;}
-
+	
+	PixelMap& operator=(PixelMap other);
+	
+	inline bool valid() const { return !!size; };
+	
+	inline std::size_t getNpixels() const { return size; }
+	inline double getRange() const { return range; }
+	inline const double* getCenter() const { return center; }
+	inline double getResolution() const { return resolution; }
+	
 	void Clean();
 	void AddImages(ImageInfo *imageinfo,int Nimages,bool constant_sb);
 	void AddImages(ImageInfo *imageinfo,int Nimages,double sigma);
@@ -35,15 +42,19 @@ public:
 	void printASCIItoFile(std::string filename);
 	void printFITS(std::string filename);
 	void smooth(double *map_out,double sigma);
-
-	inline double getValue(unsigned long i) const {return map[i];}
-
+	
+	inline double getValue(std::size_t i) const { return map[i]; }
+	inline double operator[](std::size_t i) const { return map[i]; };
+	
+	friend void swap(PixelMap& x, PixelMap& y);
+	
 private:
-	std::valarray<float> map;
-	unsigned long Npixels;
+	float* map;
+	std::size_t size;
+	
 	double resolution,range,center[2];
 	double map_boundary_p1[2],map_boundary_p2[2];
-
+	
 	double LeafPixelArea(IndexType i,Branch * branch1);
 	void PointsWithinLeaf(Branch * branch1, std::list <unsigned long> &neighborlist);
 	bool inMapBox(Branch * branch1);
