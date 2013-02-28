@@ -6,6 +6,8 @@
  */
 #include "slsimlib.h"
 
+#include <numeric>
+
 namespace
 {
 	inline bool andand(bool a, bool b)
