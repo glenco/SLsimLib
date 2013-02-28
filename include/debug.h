@@ -2,10 +2,10 @@
 #define _slsimlib_debug_declare_
 
 #ifndef NDEBUG
-#include <iostream>
-#define SLSIMLIB_DEBUG(x) do { std::cerr << x << std::endl; } while(0)
+#include <cstdio>
+#define SLSIMLIB_DEBUG(x) std::fprintf(stderr, "%s:%d: debug: %s\n", __FILE__, __LINE__, x)
 #else
-#define SLSIMLIB_DEBUG(x) do {} while(0)
+#define SLSIMLIB_DEBUG(x) ((void)0)
 #endif
 
 #endif

@@ -13,13 +13,13 @@ double chi_square(
 	
 	if(data.getNpixels() != model.getNpixels())
 	{
-		SLSIMLIB_DEBUG("chi_square: Size of data and model do not agree!");
+		SLSIMLIB_DEBUG("Size of data and model do not agree!");
 		return -1;
 	}
 	
 	if(mask.valid() && data.size() != mask.base_size())
 	{
-		SLSIMLIB_DEBUG("chi_square: Size of data and mask do not agree!");
+		SLSIMLIB_DEBUG("Size of data and mask do not agree!");
 		return -1;
 	}
 	
