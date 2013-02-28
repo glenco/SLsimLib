@@ -28,9 +28,10 @@ public:
 	
 	PixelMap& operator=(PixelMap other);
 	
-	inline bool valid() const { return !!size; };
+	inline bool valid() const { return map_size; };
+	inline std::size_t size() const { return map_size; };
 	
-	inline std::size_t getNpixels() const { return size; }
+	inline std::size_t getNpixels() const { return Npixels; }
 	inline double getRange() const { return range; }
 	inline const double* getCenter() const { return center; }
 	inline double getResolution() const { return resolution; }
@@ -46,12 +47,13 @@ public:
 	inline double getValue(std::size_t i) const { return map[i]; }
 	inline double operator[](std::size_t i) const { return map[i]; };
 	
-	friend void swap(PixelMap& x, PixelMap& y);
+	friend void swap(PixelMap&, PixelMap&);
 	
 private:
+	std::size_t map_size;
 	float* map;
-	std::size_t size;
 	
+	std::size_t Npixels;
 	double resolution,range,center[2];
 	double map_boundary_p1[2],map_boundary_p2[2];
 	

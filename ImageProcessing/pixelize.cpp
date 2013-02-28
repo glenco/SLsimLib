@@ -20,10 +20,11 @@
 void swap(PixelMap& x, PixelMap& y)
 {
 	using std::swap;
-
-	swap(x.map, y.map);
-	swap(x.size, y.size);
 	
+	swap(x.map_size, y.map_size);
+	swap(x.map, y.map);
+	
+	swap(x.Npixels, y.Npixels);
 	swap(x.resolution, y.resolution);
 	swap(x.range, y.range);
 	
@@ -37,7 +38,7 @@ void swap(PixelMap& x, PixelMap& y)
 }
 
 PixelMap::PixelMap()
-: map(0), size(0), resolution(0), range(0)
+: map_size(0), map(0), Npixels(0), resolution(0), range(0)
 {
 	center[0] = 0;
 	center[1] = 0;
@@ -49,12 +50,13 @@ PixelMap::PixelMap()
 }
 
 PixelMap::PixelMap(const PixelMap& other)
-: map(0), size(other.size), resolution(other.resolution), range(other.range)
+: map_size(other.map_size), map(0),
+  Npixels(other.Npixels), resolution(other.resolution), range(other.range)
 {
-	if(size)
+	if(map_size)
 	{
-		map = new float[size*size];
-		std::copy(other.map, other.map + size*size, map);
+		map = new float[map_size];
+		std::copy(other.map, other.map + map_size, map);
 	}
 	
 	std::copy(other.center, other.center + 2, center);
@@ -64,10 +66,10 @@ PixelMap::PixelMap(const PixelMap& other)
 }
 
 PixelMap::PixelMap(
-		std::size_t size,     /// Number of pixels in one dimension of map.
+		std::size_t Npixels,  /// Number of pixels in one dimension of map.
 		double range,         /// One dimensional range of map in whatever units the point positions are in
 		const double* center  /// The location of the center of the map
-		): size(size), resolution(range/size), range(range)
+		): Npixels(Npixels), resolution(range/Npixels), range(range)
 		{
 
 	std::copy(center, center + 2, this->center);
@@ -80,8 +82,9 @@ PixelMap::PixelMap(
 	// is this good?
 	this->range = range - resolution;
 	
-	map = new float[size*size];
-	std::fill(map, map + size*size, 0);
+	map_size = Npixels*Npixels;
+	map = new float[map_size];
+	std::fill(map, map + map_size, 0);
 }
 
 PixelMap::PixelMap(std::string filename)
@@ -96,8 +99,8 @@ PixelMap::PixelMap(std::string filename)
 		std::auto_ptr<CCfits::FITS> fp (new CCfits::FITS (filename, CCfits::Read));
 		CCfits::PHDU *h0=&fp->pHDU();
 		//const CCfits::ExtMap *h1=&fp->extension();
-		size = h0->axis(0);
-		if(size != (std::size_t)h0->axis(1))
+		Npixels = h0->axis(0);
+		if(Npixels != (std::size_t)h0->axis(1))
 		{
 			std::cout << "Only squared maps are allowed!" << std::endl;
 			exit(1);
@@ -108,7 +111,7 @@ PixelMap::PixelMap(std::string filename)
 		std::cout << "Resolution is " << resolution << std::endl;
 		resolution = fabs(resolution)*pi/180.;
 		std::cout << "Resolution is " << resolution << std::endl;
-		range = resolution*size;
+		range = resolution*Npixels;
 		map_boundary_p1[0] = center[0] - range/2.;
 		map_boundary_p1[1] = center[1] - range/2.;
 		map_boundary_p2[0] = center[0] + range/2.;
@@ -117,8 +120,10 @@ PixelMap::PixelMap(std::string filename)
 		
 		std::valarray<float> image;
 		h0->read(image);
-		map = new float[size*size];
-		std::copy(&image[0], &image[0] + size*size, map);
+		
+		map_size = Npixels*Npixels;
+		map = new float[map_size];
+		std::copy(&image[0], &image[0] + map_size, map);
 		
 		std::cout << "Resolution is " << resolution << std::endl;
 		
@@ -143,7 +148,7 @@ PixelMap& PixelMap::operator=(PixelMap other)
 /// Zero the whole map
 void PixelMap::Clean()
 {
-	std::fill(map, map + size*size, 0);
+	std::fill(map, map + map_size, 0);
 }
 
 /// Add an image to the map
@@ -189,18 +194,18 @@ void PixelMap::PointsWithinLeaf(Branch * branch1, std::list <unsigned long> &nei
 
 	int line_s,line_e,col_s,col_e;
 
-	line_s = std::max(0,IndexFromPosition(branch1->boundary_p1[0],size,range,center[0]));
-	col_s = std::max(0,IndexFromPosition(branch1->boundary_p1[1],size,range,center[1]));
-	line_e = IndexFromPosition(branch1->boundary_p2[0],size,range,center[0]);
-	col_e = IndexFromPosition(branch1->boundary_p2[1],size,range,center[1]);
-	if (line_e < 0) line_e = size-1;
-	if (col_e < 0) col_e = size-1;
+	line_s = std::max(0,IndexFromPosition(branch1->boundary_p1[0],Npixels,range,center[0]));
+	col_s = std::max(0,IndexFromPosition(branch1->boundary_p1[1],Npixels,range,center[1]));
+	line_e = IndexFromPosition(branch1->boundary_p2[0],Npixels,range,center[0]);
+	col_e = IndexFromPosition(branch1->boundary_p2[1],Npixels,range,center[1]);
+	if (line_e < 0) line_e = Npixels-1;
+	if (col_e < 0) col_e = Npixels-1;
 
 	for (int iy = col_s; iy<= col_e; ++iy)
 	{
 		for (int ix = line_s; ix <= line_e; ++ix)
 			{
-				neighborlist.push_back(ix+size*iy);
+				neighborlist.push_back(ix+Npixels*iy);
 			}
 		}
 }
@@ -215,7 +220,7 @@ double PixelMap::LeafPixelArea(IndexType i,Branch * branch1){
 	double area=0;
 	PosType p[2],p1[2],p2[2];
 
-	PositionFromIndex(i,p,size,range,center);
+	PositionFromIndex(i,p,Npixels,range,center);
 	p1[0] = p[0] - .5*resolution;
 	p1[1] = p[1] - .5*resolution;
 	p2[0] = p[0] + .5*resolution;
@@ -292,9 +297,9 @@ void PixelMap::AddImages(
 /// Print an ASCII table of all the pixel values.
 void PixelMap::printASCII(){
 
-	std::cout << size << "  " << range << std::endl;
-	for(std::size_t i=0;i < size*size; ++i) std::cout << map[i] << std::endl;
-	std::cout << size << "  " << range << std::endl;
+	std::cout << Npixels << "  " << range << std::endl;
+	for(std::size_t i=0;i < map_size; ++i) std::cout << map[i] << std::endl;
+	std::cout << Npixels << "  " << range << std::endl;
 
 	//map.resize(0);
 	return;
@@ -308,9 +313,9 @@ void PixelMap::printASCIItoFile(std::string filename){
 		exit(0);
 	}
 
-	file_map << size << "  " << range << std::endl;
-	for(std::size_t i=0;i < size*size; ++i) file_map << std::scientific << map[i] << std::endl;
-	file_map << size << "  " << range << std::endl;
+	file_map << Npixels << "  " << range << std::endl;
+	for(std::size_t i=0;i < map_size; ++i) file_map << std::scientific << map[i] << std::endl;
+	file_map << Npixels << "  " << range << std::endl;
 
 	//map.resize(0);
 
@@ -327,11 +332,11 @@ void PixelMap::printFITS(std::string filename){
 			exit(1);
 		}
 
-		//int Np = (int)size;
+		//int Np = (int)Npixels;
 		//writeImage(filename,map,Np,Np);
 
 		long naxis=2;
-		long naxes[2] = {size,size};
+		long naxes[2] = {(long)Npixels,(long)Npixels};
 
 		std::auto_ptr<CCfits::FITS> fout(0);
 
@@ -349,27 +354,27 @@ void PixelMap::printFITS(std::string filename){
 		//ran2(&seed)*1000;
 
 		std::vector<long> naxex(2);
-		naxex[0]=size;
-		naxex[1]=size;
+		naxex[0]=Npixels;
+		naxex[1]=Npixels;
 
 		CCfits::PHDU *phout = &fout->pHDU();
-		phout->write(1, size*size, std::valarray<float>(map, size*size));
-std::cout<< range << "  " << resolution << "  " << size << std::endl;		
+		phout->write(1, map_size, std::valarray<float>(map, map_size));
+std::cout<< range << "  " << resolution << "  " << Npixels << std::endl;		
 		phout->addKey ("CRPIX1",naxex[0]/2,"");
 		phout->addKey ("CRPIX2",naxex[1]/2,"");
 		phout->addKey ("CRVAL1",0.0,"");
 		phout->addKey ("CRVAL2",0.0,"");
-		phout->addKey ("CDELT1",-180*range/(size-1)/pi,"degrees");
-		phout->addKey ("CDELT2", 180*range/(size-1)/pi,"degrees");
+		phout->addKey ("CDELT1",-180*range/(Npixels-1)/pi,"degrees");
+		phout->addKey ("CDELT2", 180*range/(Npixels-1)/pi,"degrees");
 		phout->addKey ("CTYPE1","RA--TAN","");
 		phout->addKey ("CTYPE2","RA-TAN","");
 		phout->addKey ("CROTA2",0.0,"");
-		phout->addKey ("CD1_1",-180*range/(size-1)/pi,"degrees");
+		phout->addKey ("CD1_1",-180*range/(Npixels-1)/pi,"degrees");
 		phout->addKey ("CD1_2",0.0,"");
 		phout->addKey ("CD2_1",0.0,"");
-		phout->addKey ("CD2_2", 180*range/(size-1)/pi,"degrees");
+		phout->addKey ("CD2_2", 180*range/(Npixels-1)/pi,"degrees");
 
-		phout->addKey ("Npixels", size,"");
+		phout->addKey ("Npixels", Npixels,"");
 		phout->addKey ("range ", range," radians");
 
 		std::cout << *phout << std::endl;
@@ -393,29 +398,29 @@ void PixelMap::smooth(double *map_out,double sigma){
 	long j,k,ix,iy;
 	std::size_t Nmask;
 
-	Nmask=2*(int)(3*sigma*size/range + 1);
+	Nmask=2*(int)(3*sigma*Npixels/range + 1);
 	if(Nmask < 4 ) std::cout << "WARNING: pixels are large compare to psf Nmask=" << Nmask << std::endl;
 
 	// set up mask
 	Matrix(mask,Nmask,Nmask);
 	for(j=-Nmask/2,sum=0;j<=Nmask/2;++j){
 		for(k=-Nmask/2;k<=Nmask/2;++k){
-			mask[j+Nmask/2][k+Nmask/2]= exp(-(pow(j*range/(size-1),2)
-					                        + pow(k*range/(size-1),2))/2/pow(sigma,2) );
+			mask[j+Nmask/2][k+Nmask/2]= exp(-(pow(j*range/(Npixels-1),2)
+					                        + pow(k*range/(Npixels-1),2))/2/pow(sigma,2) );
 			sum+=mask[j+Nmask/2][k+Nmask/2];
 		}
 	}
 	for(j=-Nmask/2;j<=Nmask/2;++j) for(k=-Nmask/2;k<=Nmask/2;++k) mask[j+Nmask/2][k+Nmask/2]/=sum;
 
-	for(i=0;i<size*size;++i){
+	for(i=0;i<map_size;++i){
 		for(j=0;j<=Nmask;++j){
-			ix=i%size + j-Nmask/2;
-			if( (ix>-1)*(ix<size) ){
+			ix=i%Npixels + j-Nmask/2;
+			if( (ix>-1)*(ix<Npixels) ){
 				for(k=0;k<=Nmask;++k){
-					iy=i/size + k-Nmask/2;
-					if( (iy>-1)*(iy<size) ){
+					iy=i/Npixels + k-Nmask/2;
+					if( (iy>-1)*(iy<Npixels) ){
 
-						map_out[ix+size*iy] += mask[ix][iy]*map[i];
+						map_out[ix+Npixels*iy] += mask[ix][iy]*map[i];
 					}
 				}
 			}
