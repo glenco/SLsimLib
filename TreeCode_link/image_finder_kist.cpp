@@ -136,7 +136,7 @@ void find_images_kist(
 
     	time(&t3);
 
- 			//************* method that seporates images ****************
+ 			/************* method that seporates images ****************
 			// mark image points in tree
 			PointsWithinKist(grid->s_tree,y_source,rtemp,subkist,1);
 			moved = image_finder_kist(lens,y_source,rtemp,grid
@@ -145,7 +145,7 @@ void find_images_kist(
 			PointsWithinKist(grid->s_tree,y_source,rtemp,subkist,-1);
 			//***********************************************************/
 
-		   	if(!redo){
+		   	/*if(!redo){
 		   		minN = imageinfo[0].getNimagePoints();
 		   		for(int k=1; k < *Nimages; ++k) minN = minN < imageinfo[k].getNimagePoints() ? minN : imageinfo[k].getNimagePoints();
 
@@ -169,7 +169,7 @@ void find_images_kist(
 		   		}else{
 		   			telescope_res = telescope_low;
 		   		}
-		   	}
+		   	}*/
 
 		   	redo = false;
 
@@ -180,14 +180,17 @@ void find_images_kist(
 
 
 			j=0;
-			while(refine_grid_kist(lens,grid,imageinfo,*Nimages,telescope_res,1,kappa_off,NULL)){
+			//while(refine_grid_kist(lens,grid,imageinfo,*Nimages,telescope_res,3,kappa_off,NULL)){
+			//while(refine_grid_kist(lens,grid,imageinfo,*Nimages,0.01,3,kappa_off,NULL)){
+			do{
 				time(&t1);
 				if(verbose) std::cout << "    refined images" << std::endl;
 
-				//moved = image_finder_kist(lens,y_source,rtemp,grid
-				//		,Nimages,imageinfo,NimageMax,Nimagepoints,-1,0);
+				//************* method that does not separate images ****************
+				moved = image_finder_kist(lens,y_source,rtemp,grid
+						,Nimages,imageinfo,NimageMax,Nimagepoints,-1,0);
 
-				//************* method that seporates images ****************
+				/************* method that separates images ****************
 				// mark image points in tree
 				PointsWithinKist(grid->s_tree,y_source,rtemp,subkist,1);
 				moved = image_finder_kist(lens,y_source,rtemp,grid
@@ -206,9 +209,10 @@ void find_images_kist(
 									<< " " << imageinfo[k].getNimagePoints() << std::endl;
 					}
 				}
-					++j;
-				//}while(refine_grid_kist(lens,grid,imageinfo,*Nimages,rtemp*mumin/Ngrid_block,2,kappa_off,NULL));
-			}
+
+				++j;
+			}while(refine_grid_kist(lens,grid,imageinfo,*Nimages,rtemp*mumin/Ngrid_block,2,kappa_off,NULL));
+			//}
 
 			time(&t1);
 			if(verbose)	printf("      time in refine grid %f sec\n",difftime(t1,t2));
@@ -667,6 +671,7 @@ int refine_grid_kist(
     if(criterion == 0) pass = imageinfo[i].area*imageinfo[i].area_error/total_area > res_target;
     if(criterion == 1) pass = (imageinfo[i].area_error > res_target)*(imageinfo[i].area > 1.0e-5*total_area);
     if(criterion == 2) pass = imageinfo[i].gridrange[1] > res_target;
+    if(criterion == 3) pass = (imageinfo[i].area_error > res_target)*(Nimages*imageinfo[i].area/total_area > 0.1);
 
     // make sure no border point has a lower res than any image point
 
