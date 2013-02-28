@@ -180,6 +180,9 @@ public:
 		set(*source, params.source);
 		set(*lens, params.lens);
 		
+		// flush the surface brightness
+		grid->RefreshSurfaceBrightnesses(source);
+		
 		// reinitialize the grid
 		grid->ReInitializeGrid(lens);
 		
