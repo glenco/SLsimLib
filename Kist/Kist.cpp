@@ -14,19 +14,36 @@
 /***** Structs *****/
 
 /// constructor
-Kist::Kist(){
+Kist::Kist(
+		unsigned long my_blocksize  /// optional argument with size of memory blocks used
+		){
 	  top=NULL;
 	  Number=0;
 	  bottom = top;
 	  current = top;
+	  blocksize = my_blocksize;
+
+	  reserve_top = NULL;
+	  Nreserve = 0;
 
 	  return;
 }
 
+
 /// Destructor.  Needs to remove all the units.
 Kist::~Kist(){
 
-	Kist::Empty();
+	//Kist::Empty();
+
+	Unit *units;
+	while(heads.size() > 0){
+		units = heads.back();
+		heads.pop_back();
+		delete[] units;
+	}
+	//units.clear();
+	//delete[] units;
+
 
 	return;
 }
@@ -48,31 +65,44 @@ Kist::Kist(Kist &a){
 	assert(a.Nunits() == Nunits());
 	a.current = current;
 }
-/*
- * This is the obsolete C style constructor.
-KistHndl NewKist(void){
-  KistHndl kist;
+/// Take a Unit out of the reservoir, expand reservoir if necessary
+Unit * Kist::pop_from_reserve(){
 
-  kist=(Kist *) malloc(sizeof(Kist));
-  if (!kist){
-    std::fprintf(stderr,"allocation failure in NewKist()\n");
-    exit(1);
-  }
-  kist->top=NULL;
-  kist->Nunits=0;
-  kist->bottom = kist->top;
-  kist->current = kist->top;
+	if(Nreserve <= 1){
+		// expand reservoir of Units for later use
+		  Unit *units = new Unit[blocksize];
+		  for(unsigned long i=0;i<blocksize-1;++i) units[i].next = &units[i+1];
+		  units[blocksize-1].next = NULL;
 
-  return kist;
+		  heads.push_back(units);  // keep list of first point in each block of memory
+		  if(Nreserve == 1) reserve_top->next = units;
+		  else reserve_top = units;
+		  Nreserve += blocksize;
+	}
+
+	Unit *unit = reserve_top;
+	reserve_top = unit->next;
+	--Nreserve;
+
+	return unit;
 }
-*/
+/// put a Unit into the reservoir
+void Kist::push_to_reserve(Unit *unit){
+	assert(reserve_top);
+	assert(Nreserve > 0);
 
+	unit->next = reserve_top;
+	reserve_top = unit;
+	++Nreserve;
+}
 /** \ingroup ImageFindingL2
  * \brief Removes all elements from list without destroy the data.
  */
 void Kist::Empty(){
 
 	while(Number > 0) TakeOutCurrent();
+	//Number = 0;
+	//top = bottom = current = NULL;
 	return;
 }
 
@@ -83,21 +113,11 @@ void EmptyKist(KistHndl kist){
 	return;
 }
 
-/* \ingroup ConstructorL2
-*  deallocate memory for kist
-*  Note: Does not destroy data.  A handle must still point to the data.
- * *
-void freeKist(KistHndl kist){
-	EmptyKist(kist);
-	free(kist);
-	return;
-}*/
-
 /**
  * \brief Deallocate memory for all points in list.
  * Note: Does destroy the data points.  Leaves Kist
  * in empty state.
- */
+ *
 void Kist::FreeAll(){
 	Data *data_t[Number];
 	unsigned long Nheads=0,Ndata=0,i,Nunits_t;
@@ -129,12 +149,12 @@ void FreeAllKist(KistHndl kist){
 	kist->FreeAll();
 
 	return;
-}
+}*/
 
 // Check state
 bool Kist::AtTop(){
 	if(current==top) return true;
-	else return false;
+	return false;
 }
 bool AtTopKist(KistHndl kist){
 	assert(kist);
@@ -156,15 +176,13 @@ bool AtBottomKist(KistHndl kist){
 
 /// Insert data into kist.  Leaves current unchanged.
 void Kist::InsertAfterCurrent(Data *data){
-	assert(data);
 
-    Unit *unit = (Unit *)malloc(sizeof(Unit));
-
-    assert(unit);
     assert(data);
     assert(data->x);
     assert(data->gridsize >= 0);
 
+    //Unit *unit = (Unit *)malloc(sizeof(Unit));
+    Unit *unit = pop_from_reserve();
 
     unit->data = data;
 
@@ -203,10 +221,8 @@ void Kist::InsertBeforeCurrent(Data *data){
     assert(data->x);
     assert(data->gridsize >= 0);
 
-	Unit *unit;
-
-	unit=(Unit *)malloc(sizeof(Unit));
-    assert(unit);
+    //Unit *unit = (Unit *)malloc(sizeof(Unit));
+    Unit *unit = pop_from_reserve();
 
 	unit->data=data;
 
@@ -303,7 +319,8 @@ Data *Kist::TakeOutCurrent(){
       current=current->prev;
     }
     
-    std::free(unit);
+    push_to_reserve(unit);
+    //std::free(unit);
     Number--;
 
     return data;
