@@ -371,7 +371,12 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa
 		addedtocell[ii] = Ngrid_block*Ngrid_block-1 - Nout;
 		//if(Nout > 0) i_points = AddPointToArray(i_points,Ngrid_block*Ngrid_block-1-Nout,Ngrid_block*Ngrid_block-1);
 	}
+
 	assert(Nadded == (Ngrid_block*Ngrid_block-1)*Nleaves-Nout_tot);
+	if(Nadded == 0){
+		FreePointArray(i_points,true);
+		return NULL;
+	}
 
 	s_points = LinkToSourcePoints(i_points,Nadded);
 
@@ -452,7 +457,7 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa
 			if( !inbox(s_points[kk - Nout].x,s_tree->top->boundary_p1,s_tree->top->boundary_p2) ){
 				//SwapPointsInArray(&i_points[kk - Nout],&i_points[Nadded - 1 - Nout]);
 				//SwapPointsInArray(&s_points[kk - Nout],&s_points[Nadded - 1 - Nout]);
-				for(unsigned long nn = kk - Nout; nn < Nadded - 2 - Nout;++nn){
+				for(long nn = kk - Nout; nn < Nadded - 1 - Nout;++nn){
 					assert(nn+1 < s_points[0].head);
 					SwapPointsInArray(&i_points[nn],&i_points[nn+1]);
 					SwapPointsInArray(&s_points[nn],&s_points[nn+1]);

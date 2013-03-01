@@ -6,7 +6,8 @@ static const int NpointsRequired = 100;  // number of points required to be with
 
 //static const float mumin = 0.5;  // actually the sqrt of the minimum magnification
 //static const float mumin = 0.45;  // actually the sqrt of the minimum magnification
-static const float mumin = 0.1;
+//static const float mumin = 0.1;
+static const float mumin = 0.05;
 //static const float mumin = 0.3;
 static const float FracResTarget = 4.0e-4;
 //static const float FracResTarget = 1.0e-4;
@@ -98,10 +99,10 @@ void find_images_kist(
 			(oldy[0]==y_source[0])*(oldy[1]==y_source[1])* // and source not moved
 			(oldr > r_source)  // and source size has gotten smaller
 	){
-		Nsizes=(int)( log(oldr/r_source)/log(Ngrid_block) ); // round up
+		Nsizes=(int)( log(oldr/r_source/mumin)/log(Ngrid_block) ); // round up
 	    rtemp = r_source*pow(1.0*Ngrid_block,Nsizes);
 	}else{
-		Nsizes=(int)(log(initial_size/sqrt(pi)/fabs(r_source*mumin))/log(Ngrid_block) ) + 1 ; // round up
+		Nsizes=(int)(log(initial_size/fabs(r_source*mumin))/log(Ngrid_block) ) + 1 ; // round up
 	    rtemp = r_source*pow(1.0*Ngrid_block,Nsizes);
 	}
 
@@ -181,17 +182,18 @@ void find_images_kist(
 
 			j=0;
 			//while(refine_grid_kist(lens,grid,imageinfo,*Nimages,telescope_res,3,kappa_off,NULL)){
-			while(refine_grid_kist(lens,grid,imageinfo,*Nimages,mumin/Ngrid_block/Ngrid_block,3,kappa_off,NULL)){
-			//do{
+			//while(refine_grid_kist(lens,grid,imageinfo,*Nimages,0.05/Ngrid_block/Ngrid_block,3,kappa_off,NULL)){
+			//while(refine_grid_kist(lens,grid,imageinfo,*Nimages,0.05/Ngrid_block/Ngrid_block,1,kappa_off,NULL)){
+			do{
 				time(&t1);
 				if(verbose) std::cout << "    refined images" << std::endl;
 
-				/************* method that does not separate images ****************
+				//************* method that does not separate images ****************
 				moved = image_finder_kist(lens,y_source,rtemp,grid
 						,Nimages,imageinfo,NimageMax,Nimagepoints,-1,0);
 				/************* method that separates images ****************/
 
-				//************* method that separates images ****************
+				/************* method that separates images ****************
 				// mark image points in tree
 				PointsWithinKist(grid->s_tree,y_source,rtemp,subkist,1);
 				moved = image_finder_kist(lens,y_source,rtemp,grid
@@ -212,8 +214,8 @@ void find_images_kist(
 				}
 
 				++j;
-			//}while(refine_grid_kist(lens,grid,imageinfo,*Nimages,rtemp*mumin/Ngrid_block,2,kappa_off,NULL));
-			}
+			}while(refine_grid_kist(lens,grid,imageinfo,*Nimages,rtemp*mumin/Ngrid_block,2,kappa_off,NULL));
+			//}
 
 			time(&t1);
 			if(verbose)	printf("      time in refine grid %f sec\n",difftime(t1,t2));
@@ -634,12 +636,12 @@ short image_finder_kist(LensHndl lens, double *y_source,double r_source,GridHndl
  * 
  */
 int refine_grid_kist(
-	LensHndl lens
-	,GridHndl grid
-	,ImageInfo *imageinfo
-	,unsigned long Nimages
-	,double res_target
-	,short criterion
+	LensHndl lens            /// the lens model
+	,GridHndl grid           /// the grid
+	,ImageInfo *imageinfo    /// images
+	,unsigned long Nimages   /// Number of images to refine
+	,double res_target       /// meaning depends on criterion, see general notes
+	,short criterion         /// see general notes
 	,bool kappa_off          /// true = no kappa, gamma and dt are calculated
 	,KistHndl newpointskist  /// returns a Kist of the points that were added to the grid on this pass, if == NULL will not be added
 	,bool batch              /// True, passes all points to rayshooter at once, False shoots rays each cell at a time and new points are in memory blocks of 8 or smaller
@@ -673,7 +675,7 @@ int refine_grid_kist(
     if(criterion == 0) pass = imageinfo[i].area*imageinfo[i].area_error/total_area > res_target;
     if(criterion == 1) pass = (imageinfo[i].area_error > res_target)*(imageinfo[i].area > 1.0e-5*total_area);
     if(criterion == 2) pass = imageinfo[i].gridrange[1] > res_target;
-    if(criterion == 3) pass = (imageinfo[i].area_error > res_target)*(Nimages*imageinfo[i].area/total_area > 0.1);
+    if(criterion == 3) pass = (imageinfo[i].area_error > res_target)*(Nimages*imageinfo[i].area/total_area > 0.05);
 
     // make sure no border point has a lower res than any image point
 
@@ -728,18 +730,19 @@ int refine_grid_kist(
 
 			  if( getCurrentKist(imageinfo[i].imagekist)->gridsize > 1.01*rmax/Ngrid_block){  /* only refine largest grid size in image*/
 
-				  ++count;
-
-				  assert(getCurrentKist(imageinfo[i].imagekist)->leaf->child1 == NULL);
-				  assert(getCurrentKist(imageinfo[i].imagekist)->leaf->child2 == NULL);
-				  assert(getCurrentKist(imageinfo[i].imagekist)->image->leaf->child1 == NULL);
-				  assert(getCurrentKist(imageinfo[i].imagekist)->image->leaf->child2 == NULL);
+				  //assert(getCurrentKist(imageinfo[i].imagekist)->leaf->child1 == NULL);
+				  //assert(getCurrentKist(imageinfo[i].imagekist)->leaf->child2 == NULL);
+				  //assert(getCurrentKist(imageinfo[i].imagekist)->image->leaf->child1 == NULL);
+				  //assert(getCurrentKist(imageinfo[i].imagekist)->image->leaf->child2 == NULL);
 
 				  if(batch){
 					  points_to_refine.push_back(getCurrentKist(imageinfo[i].imagekist));
 				  }else{
 					  i_points = grid->RefineLeaf(lens,getCurrentKist(imageinfo[i].imagekist),kappa_off);
-					  if(newpointskist && i_points != NULL) for(k=0; k < i_points->head ; ++k) newpointskist->InsertAfterCurrent(&i_points[k]);
+					  if(newpointskist && i_points != NULL){
+						  for(k=0; k < i_points->head ; ++k) newpointskist->InsertAfterCurrent(&i_points[k]);
+						  ++count;
+					  }
 				  }
 
 				  ++Ncells;
@@ -754,10 +757,9 @@ int refine_grid_kist(
 			  if( getCurrentKist(imageinfo[i].outerborder)->gridsize > 1.01*rmax/Ngrid_block){ // only refine largest grid size in image
 
 				  point = getCurrentKist(imageinfo[i].outerborder);
-				  assert(point->gridsize > 0);
+				  //assert(point->gridsize > 0);
 
 				  if(point->in_image){ // point has not been refined yet as border of another image
-					  ++count;
 
 					  assert(point->leaf->child1 == NULL);
 					  assert(point->leaf->child2 == NULL);
@@ -768,7 +770,10 @@ int refine_grid_kist(
 						  points_to_refine.push_back(point);
 					  }else{
 						  i_points = grid->RefineLeaf(lens,point,kappa_off);
-						  if(newpointskist && i_points != NULL) for(k=0;k < i_points->head; ++k) newpointskist->InsertAfterCurrent(&i_points[k]);
+						  if(newpointskist && i_points != NULL){
+							  for(k=0;k < i_points->head; ++k) newpointskist->InsertAfterCurrent(&i_points[k]);
+							  ++count;;
+						  }
 					  }
 
 					  ++Ncells;
@@ -782,9 +787,11 @@ int refine_grid_kist(
   } // end of image loop
 
   if(batch){
-	  for(i=0;i<points_to_refine.size();++i) assert(points_to_refine[i]->leaf->child1 == NULL && points_to_refine[i]->leaf->child2 == NULL);
+	  //for(i=0;i<points_to_refine.size();++i) assert(points_to_refine[i]->leaf->child1 == NULL && points_to_refine[i]->leaf->child2 == NULL);
 	  i_points = grid->RefineLeaves(lens,points_to_refine,kappa_off);
 	  if(newpointskist && i_points != NULL) for(k=0;k < i_points->head; ++k) newpointskist->InsertAfterCurrent(&i_points[k]);
+	  if(i_points == NULL) number_of_refined = 0;
+	  else number_of_refined = i_points->head;
 
 	  points_to_refine.clear();
   }
