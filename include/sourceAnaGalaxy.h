@@ -28,19 +28,6 @@
  */
 class MultiSourceAnaGalaxy: public Source{
 public:
-	/**
-	 * Parameters for MultiSourceAnaGalaxy
-	 */
-	struct parameters
-	{
-		std::vector<OverGalaxy::parameters> galaxies;
-	};
-	
-	/// get MultiSourceAnaGalaxy parameters
-	friend bool get(const MultiSourceAnaGalaxy& s, parameters& p);
-	/// set MultiSourceAnaGalaxy parameters
-	friend bool set(MultiSourceAnaGalaxy& s, const parameters& p);
-	
 	MultiSourceAnaGalaxy(double mag, double BtoT, double Reff, double Rh, double PA, double inclination,double my_z,double *my_theta);
 	MultiSourceAnaGalaxy(OverGalaxy *my_galaxy);
 	MultiSourceAnaGalaxy(InputParams& params);
@@ -77,6 +64,12 @@ public:
 			return galaxies[i];
 		return galaxies[index];
 	}
+	
+	const OverGalaxy& operator[] (std::size_t i) const {
+		if(i < galaxies.size())
+			return galaxies[i];
+		return galaxies[index];
+	}
 
 	/// Return redshift of current source.
 	double getZ(){return galaxies[index].z;}
@@ -92,7 +85,7 @@ public:
 	/// Set angular position of current source.
 	void setX(double my_theta[2]){galaxies[index].theta[0] = my_theta[0]; galaxies[index].theta[1] = my_theta[1];}
 	void setX(double my_x,double my_y){galaxies[index].theta[0] = my_x; galaxies[index].theta[1] = my_y;}
-	std::size_t getNumberOfGalaxies(){return galaxies.size();}
+	std::size_t getNumberOfGalaxies() const {return galaxies.size();}
 
 	void multiplier(double z,double mag_cut,int Multiplicity,long *seed);
 

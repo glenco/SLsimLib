@@ -1,7 +1,16 @@
 #ifndef IMAGE_LIKELIHOOD_H_
 #define IMAGE_LIKELIHOOD_H_
 
-#include "slsimlib.h"
+#include "parameters.h"
+#include "image_processing.h"
+#include "image_chi_square.h"
+
+#include <algorithm>
+#include <cstddef>
+#include <cmath>
+
+class Source;
+class Lens;
 
 /**
  * \brief Calculate the likelihood for a source and lens based on image data.
@@ -20,7 +29,7 @@
  * Each source can have a maximum number of lensed images (default: 100).
  * This maximum number can be changed using the `imagesSize()` method.
  */
-template<typename Source, typename Lens>
+template<typename SourceType, typename LensType>
 class ImageLikelihood
 {
 public:
@@ -32,7 +41,7 @@ public:
 	/**
 	 * Parameters for the source and lens.
 	 */
-	typedef SourceLensParameters<Source, Lens> parameter_type;
+	typedef SourceLensParameters<SourceType, LensType> parameter_type;
 	
 	/**
 	 * \brief Construct ImageLikelihood for the given source and lens.
@@ -47,7 +56,7 @@ public:
 	 * \param source The source object.
 	 * \param lens The lens object.
 	 */
-	ImageLikelihood(Source* source, Lens* lens)
+	ImageLikelihood(SourceType* source, LensType* lens)
 	: source(source), lens(lens),
 	  dof(0),
 	  off(0), ns(0), norm(1),
@@ -177,8 +186,8 @@ public:
 			return -1;
 		
 		// load parameters into source and lens
-		set(*source, params.source);
-		set(*lens, params.lens);
+		params.source >> (*source);
+		params.lens >> (*lens);
 		
 		// flush the surface brightness
 		grid->RefreshSurfaceBrightnesses(source);
@@ -232,8 +241,8 @@ private:
 		grid = new Grid(lens, (int)grid_points, grid_center, grid_range);
 	}
 	
-	Source* source;
-	Lens* lens;
+	SourceType* source;
+	LensType* lens;
 	
 	PixelMap dta;
 	unsigned long int dof;

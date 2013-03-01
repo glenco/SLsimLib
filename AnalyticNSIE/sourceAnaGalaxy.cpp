@@ -6,63 +6,6 @@
  */
 #include "slsimlib.h"
 
-#include <numeric>
-
-namespace
-{
-	inline bool andand(bool a, bool b)
-	{
-		return a && b;
-	}
-	
-	inline bool getget(const OverGalaxy& g, OverGalaxy::parameters& p)
-	{
-		return get(g, p);
-	}
-	
-	inline bool setset(OverGalaxy& g, const OverGalaxy::parameters& p)
-	{
-		return set(g, p);
-	}
-}
-
-bool get(const MultiSourceAnaGalaxy& s, MultiSourceAnaGalaxy::parameters& p)
-{
-	using std::transform;
-	using std::accumulate;
-	
-	// resize galaxy parameters to number of galaxies in source
-	p.galaxies.resize(s.galaxies.size());
-	
-	// success of parameter setting
-	std::vector<bool> success(s.galaxies.size(), false);
-	
-	// apply get operation
-	std::transform(s.galaxies.begin(), s.galaxies.end(), p.galaxies.begin(), success.begin(), getget);
-	
-	// return success
-	return std::accumulate(success.begin(), success.end(), true, andand);
-}
-
-bool set(MultiSourceAnaGalaxy& s, const MultiSourceAnaGalaxy::parameters& p)
-{
-	using std::transform;
-	using std::accumulate;
-	
-	// needs same size for source galaxies and galaxy parameters
-	if(s.galaxies.size() != p.galaxies.size())
-		return false;
-	
-	// success of parameter setting
-	std::vector<bool> success(s.galaxies.size(), false);
-	
-	// apply set operation
-	std::transform(s.galaxies.begin(), s.galaxies.end(), p.galaxies.begin(), success.begin(), setset);
-	
-	// return success
-	return std::accumulate(success.begin(), success.end(), true, andand);
-}
-
 // TODO: set `mag_limit` and `band` to default values in all constructors
 
 /// Source model for a single analytic galaxy model.
