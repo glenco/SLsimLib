@@ -58,7 +58,7 @@ public:
 	 */
 	ImageLikelihood(SourceType* source, LensType* lens)
 	: source(source), lens(lens),
-	  dof(0),
+	  dof(0), dim(0),
 	  off(0), ns(0), norm(1),
 	  images_size(100), images(0),
 	  grid_points(64), grid(0)
@@ -91,6 +91,12 @@ public:
 		
 		delete model; // deletes lens, source and cosmo
 	}
+	
+	/** Get the number of free parameters. */
+	unsigned long dimension() const { return dim; }
+	
+	/** Set the number of free parameters. */
+	void dimension(unsigned long n) { dim = n; redof(); }
 	
 	/** Get the data PixelMap. */
 	PixelMap data() const { return dta; }
@@ -231,8 +237,7 @@ private:
 	inline void redof()
 	{
 		// calculate degrees of freedom
-		// TODO: take number of parameters into account
-		dof = static_cast<unsigned long>(msk.valid() ? dta.size() : msk.size());
+		dof = static_cast<unsigned long>(msk.valid() ? dta.size() : msk.size()) - dim;
 	}
 	
 	inline void regrid()
@@ -245,7 +250,9 @@ private:
 	LensType* lens;
 	
 	PixelMap dta;
-	unsigned long int dof;
+	
+	unsigned long dof;
+	unsigned long dim;
 	
 	double off;
 	double ns;
