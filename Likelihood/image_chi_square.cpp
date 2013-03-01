@@ -1,4 +1,5 @@
 #include "slsimlib.h"
+#include "debug.h"
 
 double chi_square(
 	const PixelMap& data,
