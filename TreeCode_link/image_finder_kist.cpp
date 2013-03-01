@@ -136,7 +136,7 @@ void find_images_kist(
 
     	time(&t3);
 
- 			/************* method that seporates images ****************
+ 			//************* method that seporates images ****************
 			// mark image points in tree
 			PointsWithinKist(grid->s_tree,y_source,rtemp,subkist,1);
 			moved = image_finder_kist(lens,y_source,rtemp,grid
@@ -181,16 +181,17 @@ void find_images_kist(
 
 			j=0;
 			//while(refine_grid_kist(lens,grid,imageinfo,*Nimages,telescope_res,3,kappa_off,NULL)){
-			//while(refine_grid_kist(lens,grid,imageinfo,*Nimages,0.01,3,kappa_off,NULL)){
-			do{
+			while(refine_grid_kist(lens,grid,imageinfo,*Nimages,mumin/Ngrid_block/Ngrid_block,3,kappa_off,NULL)){
+			//do{
 				time(&t1);
 				if(verbose) std::cout << "    refined images" << std::endl;
 
-				//************* method that does not separate images ****************
+				/************* method that does not separate images ****************
 				moved = image_finder_kist(lens,y_source,rtemp,grid
 						,Nimages,imageinfo,NimageMax,Nimagepoints,-1,0);
+				/************* method that separates images ****************/
 
-				/************* method that separates images ****************
+				//************* method that separates images ****************
 				// mark image points in tree
 				PointsWithinKist(grid->s_tree,y_source,rtemp,subkist,1);
 				moved = image_finder_kist(lens,y_source,rtemp,grid
@@ -211,8 +212,8 @@ void find_images_kist(
 				}
 
 				++j;
-			}while(refine_grid_kist(lens,grid,imageinfo,*Nimages,rtemp*mumin/Ngrid_block,2,kappa_off,NULL));
-			//}
+			//}while(refine_grid_kist(lens,grid,imageinfo,*Nimages,rtemp*mumin/Ngrid_block,2,kappa_off,NULL));
+			}
 
 			time(&t1);
 			if(verbose)	printf("      time in refine grid %f sec\n",difftime(t1,t2));
@@ -627,6 +628,7 @@ short image_finder_kist(LensHndl lens, double *y_source,double r_source,GridHndl
  * criterion = 0 stops refining when error in total area reaches res_target
  * 	         = 1 stops refining when each image reaches error limit or is smaller than res_target, (imageinfo[i].area_error > res_target)*(imageinfo[i].area > 1.0e-2*res_target*total_area)
  *           = 2 stops refining when grid resolution is smaller than res_target in all images
+ *           = 3 stops refining when each image reaches error limit or until its fraction
  *
  * Returns the number of points that were added to the grids.
  * 

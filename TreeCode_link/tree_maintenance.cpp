@@ -183,7 +183,9 @@ void RebuildTreeFromList(TreeHndl tree){
 	MoveToTopList(tree->pointlist);
 	for(i=0;i<Npoints;++i,MoveDownList(tree->pointlist)){
 		tmp = points[i].x;
-		// PointCopy() copies the x pointer which is later freed in emptyTree() so the information needs to be copied
+		// PointCopy() copies the x pointer which is later freed in
+		// emptyTree() so the information needs to be copied
+
 		PointCopy(&(points[i]),tree->pointlist->current);
 		points[i].x = tmp;
 		points[i].x[0] = tree->pointlist->current->x[0];

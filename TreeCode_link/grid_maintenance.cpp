@@ -250,7 +250,11 @@ Point * Grid::RefineLeaf(LensHndl lens,Point *point,bool kappa_off){
 	for(kk=0,Nout=0;kk < Ntemp;++kk){
 		assert(s_points[kk - Nout].x[0] == s_points[kk - Nout].x[0]);
 		if( !inbox(s_points[kk - Nout].x,s_tree->top->boundary_p1,s_tree->top->boundary_p2) ){
+			assert(Ntemp - 1 - Nout < i_points[0].head);
+			assert(kk - Nout < i_points[0].head);
 			SwapPointsInArray(&i_points[kk - Nout],&i_points[Ntemp - 1 - Nout]);
+			assert(Ntemp - 1 - Nout < s_points[0].head);
+			assert(kk - Nout < s_points[0].head);
 			SwapPointsInArray(&s_points[kk - Nout],&s_points[Ntemp - 1 - Nout]);
 			++Nout;
 		}
@@ -350,8 +354,11 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa
 					//SwapPointsInArray(&i_points[Nadded + kk - Nout],&i_points[(Ngrid_block*Ngrid_block-1)*Nleaves - 1 - Nout]);
 
 					// This maintains the ordering in parent cells, but is rather inefficient
-					for(unsigned long nn=Nadded + kk - Nout ; nn < (Ngrid_block*Ngrid_block-1)*Nleaves - 1 - Nout - Nout_tot ; ++nn)
+					for(unsigned long nn=Nadded + kk - Nout
+							; nn < (Ngrid_block*Ngrid_block-1)*Nleaves - 1 - Nout - Nout_tot ; ++nn){
+						assert(nn+1 < i_points[0].head);
 						SwapPointsInArray(&i_points[nn],&i_points[nn + 1]);
+					}
 					++Nout;
 					//std::cout << "Nout_tot = " << Nout_tot << std::endl;
 				}
@@ -446,6 +453,7 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa
 				//SwapPointsInArray(&i_points[kk - Nout],&i_points[Nadded - 1 - Nout]);
 				//SwapPointsInArray(&s_points[kk - Nout],&s_points[Nadded - 1 - Nout]);
 				for(unsigned long nn = kk - Nout; nn < Nadded - 2 - Nout;++nn){
+					assert(nn+1 < s_points[0].head);
 					SwapPointsInArray(&i_points[nn],&i_points[nn+1]);
 					SwapPointsInArray(&s_points[nn],&s_points[nn+1]);
 				}
