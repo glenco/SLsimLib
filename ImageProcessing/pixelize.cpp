@@ -6,20 +6,19 @@
  */
 
 #include "slsimlib.h"
-#include <fstream>
+#include "debug.h"
 
 #ifdef ENABLE_FITS
 #include <CCfits/CCfits>
 #endif
+
 #ifdef ENABLE_FFTW
 #include "fftw3.h"
 #endif
 
-#if __cplusplus < 201103L
+#include <fstream>
 #include <algorithm>
-#else
 #include <utility>
-#endif
 
 void swap(PixelMap& x, PixelMap& y)
 {
@@ -646,6 +645,29 @@ PixelMask::PixelMask(const PixelMap& base, double threshold, ThresholdType type)
 	
 	mask_size = pixels.size();
 	pixels.resize(mask_size);
+}
+
+PixelMask::PixelMask(std::string file, double threshold, ThresholdType type)
+{
+#ifdef ENABLE_FITS
+	// get PixelMap for file
+	PixelMap map(file);
+	
+	// create PixelMask for map
+	PixelMask mask(map);
+	
+	// swap contents of mask into this
+	swap(*this, mask);
+#else
+	// warn about ENABLE_FITS
+	SLSIMLIB_DEBUG("FITS support disabled, use ENABLE_FITS flag");
+	
+	// default mask
+	PixelMask mask;
+	
+	// swap defaults into this
+	swap(*this, mask);
+#endif
 }
 
 PixelMask& PixelMask::operator=(PixelMask other)

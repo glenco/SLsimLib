@@ -120,6 +120,17 @@ public:
 	PixelMask(const PixelMap& base, double threshold = 0, ThresholdType type = Greater);
 	
 	/**
+	 * \brief Create a PixelMask from FITS file.
+	 * 
+	 * Create a new PixelMask from a FITS file using an intermediate PixelMap. 
+	 * 
+	 * \param base The base PixelMap to convert to a mask.
+	 * \param threshold Value that determines whether a pixel is unmasked.
+	 * \param type The method to compare a pixel and the threshold.
+	 */
+	PixelMask(std::string file, double threshold = 0, ThresholdType type = Greater);
+	
+	/**
 	 * Assignment operator.
 	 */
 	PixelMask& operator=(PixelMask other);
