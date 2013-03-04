@@ -36,8 +36,8 @@ Grid::Grid(
 	s_points=LinkToSourcePoints(i_points,Ngrid_init*Ngrid_init);
 	lens->rayshooterInternal(Ngrid_init*Ngrid_init,i_points,false);
 	// Build trees
-	i_tree = BuildTree(i_points,Ngrid_init*Ngrid_init);
-	s_tree = BuildTree(s_points,Ngrid_init*Ngrid_init);  // make tree on source plane a area splitting tree
+	i_tree = new TreeStruct(i_points,Ngrid_init*Ngrid_init);
+	s_tree = new TreeStruct(s_points,Ngrid_init*Ngrid_init);  // make tree on source plane a area splitting tree
 
 	trashkist = new Kist;
 	neighbors = new Kist;
@@ -68,8 +68,10 @@ GridHndl NewGrid(LensHndl lens, int Ngrid,double center[2],double range){
  * \brief Destructor for a Grid.  Frees all memory.
  */
 Grid::~Grid(){
-	freeTree(i_tree);
-	freeTree(s_tree);
+	//freeTree(i_tree);
+	//freeTree(s_tree);
+	delete i_tree;
+	delete s_tree;
 	
 	delete trashkist;
 	delete neighbors;
@@ -94,8 +96,9 @@ void Grid::ReInitializeGrid(LensHndl lens){
 	//////////////////////////////
 	  // redo grid with stars in it
 	  // free old tree to speed up image finding
-	emptyTree(i_tree);
-	emptyTree(s_tree);
+
+	i_tree->emptyTree();
+	s_tree->emptyTree();
 
 
 	// build new initial grid
@@ -129,8 +132,8 @@ void Grid::ReInitializeGrid(LensHndl lens){
 	  s_tree->top->center[1] = (s_tree->top->boundary_p1[1]+s_tree->top->boundary_p2[1])/2;
 
 	// fill trees
-	FillTree(i_tree,i_points,Ngrid_init*Ngrid_init);
-	FillTree(s_tree,s_points,Ngrid_init*Ngrid_init);
+	i_tree->FillTree(i_points,Ngrid_init*Ngrid_init);
+	s_tree->FillTree(s_points,Ngrid_init*Ngrid_init);
 
 	/*for(i=0;i<Ngrid_init*Ngrid_init;++i){
 		assert(i_points[i].leaf->child1 == NULL && i_points[i].leaf->child2 == NULL);
@@ -285,8 +288,8 @@ Point * Grid::RefineLeaf(LensHndl lens,Point *point,bool kappa_off){
 	assert(i_points->head == s_points->head);
 
 	//*** these could be mode more efficient by starting at the current in tree
-	AddPointsToTree(i_tree,i_points,i_points->head);
-	AddPointsToTree(s_tree,s_points,s_points->head);
+	i_tree->AddPointsToTree(i_points,i_points->head);
+	s_tree->AddPointsToTree(s_points,s_points->head);
 
 	assert(s_points->head > 0);
 
@@ -296,7 +299,7 @@ Point * Grid::RefineLeaf(LensHndl lens,Point *point,bool kappa_off){
 	assert(inbox(point->x,i_tree->current->boundary_p1,i_tree->current->boundary_p2));
 	// This line should not be necessary!! It is repairing the leaf that has been assigned incorrectly somewhere
 	//if(!inbox(point->x,i_tree->current->boundary_p1,i_tree->current->boundary_p2) ) moveTop(i_tree);
-	_FindLeaf(i_tree,point->x,0);
+	i_tree->_FindLeaf(point->x,0);
 	point->leaf = i_tree->current;
 
 	assert(inbox(point->image->x,s_tree->top->boundary_p1,s_tree->top->boundary_p2));
@@ -305,15 +308,9 @@ Point * Grid::RefineLeaf(LensHndl lens,Point *point,bool kappa_off){
 	assert(inbox(point->image->x,s_tree->current->boundary_p1,s_tree->current->boundary_p2));
 	// This line should not be necessary!! It is repairing the leaf that has been assigned incorrectly somewhere
 	//if(!inbox(point->image->x,s_tree->current->boundary_p1,s_tree->current->boundary_p2) ) moveTop(s_tree);
-	_FindLeaf(s_tree,point->image->x,0);
+	s_tree->_FindLeaf(point->image->x,0);
 	point->image->leaf = s_tree->current;
 
-	/*************** TODO Test lines *********************************************
-	  ERROR_MESSAGE();
-	if(!testLeafs(i_tree)){ERROR_MESSAGE(); std::cout << "point id "<< point->id; exit(1);}
-	  ERROR_MESSAGE();
-	if(!testLeafs(s_tree)){ERROR_MESSAGE(); std::cout << "point id "<< point->image->id; exit(1);}
-	//*****************************************************************************/
 	return i_points;
 }
 /**
@@ -505,8 +502,8 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa
 
 	//*****************************************************************************/
 	//*** these could be mode more efficient by starting at the current in tree
-	AddPointsToTree(i_tree,i_points,i_points->head);
-	AddPointsToTree(s_tree,s_points,s_points->head);
+	i_tree->AddPointsToTree(i_points,i_points->head);
+	s_tree->AddPointsToTree(s_points,s_points->head);
 
 	assert(s_points->head > 0);
 
@@ -518,7 +515,7 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa
 			//i_points[ii].print();
 			//i_points[ii].leaf->print();
 			i_tree->current = i_points[ii].leaf;
-			_FindLeaf(i_tree,i_points[ii].x,0);
+			i_tree->_FindLeaf(i_points[ii].x,0);
 			assert(i_tree->current->npoints == 1);
 			i_points[ii].leaf = i_tree->current;
 			assert(i_points[ii].prev != NULL || i_points[ii].next != NULL || s_points->head == 1);
@@ -530,7 +527,7 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa
 			//s_points[ii].print();
 			//s_points[ii].leaf->print();
 			s_tree->current = s_points[ii].leaf;
-			_FindLeaf(s_tree,s_points[ii].x,0);
+			s_tree->_FindLeaf(s_points[ii].x,0);
 			assert(s_tree->current->npoints == 1);
 			s_points[ii].leaf = s_tree->current;
 			assert(s_points[ii].prev != NULL || s_points[ii].next != NULL || s_points->head == 1);
@@ -626,7 +623,7 @@ bool Grid::uniform_mag_from_deflect(
 	double ao[4];
 	int count=0;
 
-    FindAllBoxNeighborsKist(i_tree,point,neighbors);
+    i_tree->FindAllBoxNeighborsKist(point,neighbors);
     if(neighbors->Nunits() <= 3) return false;  // This is the case where the point does not have enough neighbors.
     neighbors->MoveToTop();
     point2 = neighbors->getCurrent();
@@ -667,7 +664,7 @@ bool Grid::uniform_mag_from_shooter(
 		){
 	Point *point2;
 
-    FindAllBoxNeighborsKist(i_tree,point,neighbors);
+    i_tree->FindAllBoxNeighborsKist(point,neighbors);
     assert(neighbors->Nunits() > 1);
     neighbors->MoveToTop();
  	do{
@@ -702,7 +699,7 @@ void Grid::test_mag_matrix(){
 	MoveToTopList(i_tree->pointlist);
 	do{
 		count=0;
-		FindAllBoxNeighborsKist(i_tree,i_tree->pointlist->current,neighbors);
+		i_tree->FindAllBoxNeighborsKist(i_tree->pointlist->current,neighbors);
 		assert(neighbors->Nunits() >= 3);
 		neighbors->MoveToTop();
 		point2 = neighbors->getCurrent();
@@ -744,11 +741,11 @@ void Grid::zoom(
 		){
 
 	if(!inbox(center,i_tree->top->boundary_p1,i_tree->top->boundary_p2)) return;
-	moveTop(i_tree);
-	_FindLeaf(i_tree,center,0);
+	i_tree->moveTop();
+	i_tree->_FindLeaf(center,0);
 	while(i_tree->current->points->gridsize > scale){
 		RefineLeaf(lens,i_tree->current->points,kappa_off);
-		_FindLeaf(i_tree,center,0);
+		i_tree->_FindLeaf(center,0);
 		assert(i_tree->current->npoints == 1);
 	};
 

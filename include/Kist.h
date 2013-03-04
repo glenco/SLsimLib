@@ -62,6 +62,8 @@ public:
 
 	void TranformPlanes();
 	bool AreDataUnique();
+	void SetInImage(Boo value);
+
 
 	/// Returns a pointer to the current data
 	Data *operator*(){return getCurrent();}

@@ -172,8 +172,8 @@ short refine_on_implanted_source(
 	imageinfo->gridrange[2] = 1.0e99;
 	imageinfo->gridrange[0] = imageinfo->gridrange[1]  = 0.0;
 
-	PointsWithinKist(grid->i_tree,theta,radius,newpointskist,0);
-	if(newpointskist->Nunits() == 0) NearestNeighborKist(grid->i_tree,theta,8,newpointskist);
+	grid->i_tree->PointsWithinKist(theta,radius,newpointskist,0);
+	if(newpointskist->Nunits() == 0) grid->i_tree->NearestNeighborKist(theta,8,newpointskist);
 
 	newpointskist->MoveToTop();
 	do{
@@ -200,7 +200,7 @@ short refine_on_implanted_source(
 
 	// if there are no points
 	if(imageinfo->imagekist->Nunits() == 0){
-		NearestNeighborKist(grid->i_tree,theta,8,imageinfo->imagekist);
+		grid->i_tree->NearestNeighborKist(theta,8,imageinfo->imagekist);
 		foundimage = false;
 	}else{
 		foundimage = true;
@@ -240,7 +240,7 @@ short refine_on_implanted_source(
 
 			if(!foundimage){
 				SetInImage(imageinfo->imagekist,FALSE);
-				NearestNeighborKist(grid->i_tree,theta,8,imageinfo->imagekist);
+				grid->i_tree->NearestNeighborKist(theta,8,imageinfo->imagekist);
 				SetInImage(imageinfo->imagekist,TRUE);
 				imageinfo->imagekist->MoveToTop();
 				do{

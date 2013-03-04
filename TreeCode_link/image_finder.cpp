@@ -465,7 +465,7 @@ long refine_edges2(LensHndl lens,double *y_source,double r_source,GridHndl grid
 					getCurrentKist(imageinfo[i].innerborder)->leaf = grid->i_tree->current;
 				}*/
 
-				FindAllBoxNeighborsKist(grid->i_tree,getCurrentKist(imageinfo[i].innerborder),neighborkist);
+				grid->i_tree->FindAllBoxNeighborsKist(getCurrentKist(imageinfo[i].innerborder),neighborkist);
 
 				MoveToTopKist(neighborkist);
 				for(k=0;k < neighborkist->Nunits() ;++k){
@@ -560,7 +560,7 @@ void findborders2(TreeHndl i_tree,OldImageInfo *imageinfo){
 
 		addinner=false;
 
-		FindAllBoxNeighborsKist(i_tree,&(imageinfo->points[j]),neighborkist);
+		i_tree->FindAllBoxNeighborsKist(&(imageinfo->points[j]),neighborkist);
 
 		MoveToTopKist(neighborkist);
 		for(i=0;i<neighborkist->Nunits();++i){
@@ -727,7 +727,7 @@ void findborders3(TreeHndl i_tree,OldImageInfo *imageinfo){
 
 		addinner=false;
 
-		FindAllBoxNeighborsKist(i_tree,&(imageinfo->points[j]),neighborkist);
+		i_tree->FindAllBoxNeighborsKist(&(imageinfo->points[j]),neighborkist);
 
 		MoveToTopKist(neighborkist);
 		for(i=0;i<neighborkist->Nunits();++i){

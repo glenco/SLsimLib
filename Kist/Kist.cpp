@@ -474,7 +474,7 @@ void TranformPlanesKist(KistHndl kist){
 	kist->TranformPlanes();
 	return;
 }
-
+/// Print positions and gridsizes of all points in Kist to standard out
 void Kist::Print(){
 	std::cout << Nunits() << std::endl;
 	MoveToTop();
@@ -512,6 +512,22 @@ bool Kist::AreDataUnique(){
 	delete[] data;
 	current = unit;
 	return true;
+}
+
+/**
+ * \brief Set the in_image variable in every member of kist to value.
+ *
+ * Does not return current to previous value.
+ */
+void Kist::SetInImage(Boo value){
+
+	if(Nunits() == 0) return;
+
+	MoveToTop();
+	do{
+		getCurrent()->in_image = value;
+		getCurrent()->image->in_image = value;
+	}while(Down());
 }
 
 

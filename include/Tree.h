@@ -22,7 +22,21 @@ typedef enum{TotalArea,EachImage,Resolution,FillHoles} ExitCriterion;
 #endif
 
 /** \brief Tree: Exported struct */
-typedef struct TreeStruct{
+struct TreeStruct{
+
+	TreeStruct(Point *xp,unsigned long Npoints,short my_median_cut = 1);
+	TreeStruct(Point *xp,unsigned long npoints
+			 ,double boundary_p1[2],double boundary_p2[2]
+			 ,double center[2],int Nbucket);
+
+	 ~TreeStruct();
+
+	/*  *** Constructor****
+	TreeHndl NewTree(Point *xp,unsigned long npoints
+			 ,double boundary_p1[2],double boundary_p2[2]
+			 ,double center[2],int Nbucket);
+	short freeTree(TreeHndl tree);*/
+
   Branch *top;
   Branch *current;
   /// number of barnches in tree */
@@ -32,50 +46,95 @@ typedef struct TreeStruct{
   /// number of points allowed in leaves of tree
   int Nbucket;
   short median_cut;
-} TreeStruct;
+
+  void FindAllBoxNeighbors(Point *point,ListHndl neighbors);
+  void FindAllBoxNeighborsKist(Point *point,KistHndl neighbors);
+  void PointsWithinEllipKist(double *ray,float rmax,float rmin,float posangle,KistHndl neighborkist);
+  double PointsWithinKist(double *ray,float rmax,KistHndl neighborkist,short markpoints);
+  void PointsWithinKist_iter(double *ray,float rmin,float rmax,KistHndl neighborkist);
+  Point *NearestNeighborKist(double *ray,int Nneighbors,KistHndl neighborkist);
+
+  void PointsInCurrent(unsigned long *ids,double **x);
+
+  /***** Movement on tree *****/
+  inline void moveTop();
+  bool moveUp();
+  bool moveToChild(int child);
+  bool TreeWalkStep(bool allowDescent);
+
+  // Adding to branches to treee
+  void insertChildToCurrent(Branch *branch,int child);
+  void attachChildrenToCurrent(Branch *child1,Branch *child2);
+
+  // Higher level builds
+  void FillTree(Point *xp,unsigned long Npoints);
+  int AddPointsToTree(Point *xpoint,unsigned long Nadd);
+
+  short emptyTree();
+  short freeTree();
+  void RebuildTreeFromList();
+
+  /***** State of tree functions *****/
+  bool isEmpty();
+  bool atTop();
+  bool atLeaf(){ return( (current->child1==NULL)*(current->child2==NULL) ); }
+  bool offEnd();
+  bool CurrentIsSquareBranch();
+  bool noChild();
+
+  void getCurrent(Point *points,unsigned long *npoints);
+  unsigned long getNbranches();
+  void printTree();
+  void checkTree();
+
+  void FindBoxPoint(double *ray,Point *point);
+
+  void _FindLeaf(double *ray,unsigned long Nadd);
+
+private:
+  void construct(Point *xp,unsigned long npoints
+			 ,double boundary_p1[2],double boundary_p2[2]
+			 ,double center[2],int Nbucket);
+
+
+  void _FindAllBoxNeighbors(Branch *leaf,ListHndl neighbors);
+  void _FindAllBoxNeighborsKist(Branch *leaf,KistHndl neighbors);
+  void _FindAllBoxNeighborsKist_iter(Branch *leaf,KistHndl neighbors);
+  void _PointsWithinKist(double *ray,float *rmax,KistHndl neighborkist
+  		,short markpoints,double *maxgridsize);
+
+  void _freeBranches(short child);
+  void _freeBranches_iter();
+  void _AddPoint();
+  void _BuildTree();
+
+  void _checkTree(unsigned long *count);
+  void _FindBox(double *ray);
+
+  // Should be obsolete
+  Point *NearestNeighbor(double *ray,int Nneighbors,ListHndl neighborlist
+  		,short direction);
+  void _NearestNeighbor(double *ray,int Nneighbors,Point **neighborpoints,double *rneighbors,short *direction);
+
+
+  // Are obsolete
+ void PointsWithin(double *ray,float rmax,ListHndl neighborlist,short markpoints);
+  void PointsWithin_iter(double *ray,float rmax,ListHndl neighborlist,short markpoints);
+  void FriendsOfFriends(double *starting_point,float rlink
+  		      ,ListHndl neighborlist,Point *filter
+  		      ,unsigned long Nfilter,unsigned long *filter_place);
+  void _PointsWithin2(double *ray,float *rmax,ListHndl neighborlist
+  		   ,Point *filter,unsigned long Nfilter
+  		   ,unsigned long *filter_place,short compliment);
+  void _PointsWithin(double *ray,float *rmax,ListHndl neighborlist
+  		,short markpoints);
+
+};
 
 typedef struct TreeStruct *TreeHndl;
 typedef int TreeElement;
 
-
-/*  *** Constructor****/
-TreeHndl NewTree(Point *xp,unsigned long npoints
-		 ,double boundary_p1[2],double boundary_p2[2]
-		 ,double center[2],int Nbucket);
-short freeTree(TreeHndl tree);
-
-/***** Access functions *****/
-
-bool isEmpty(TreeHndl tree);
-bool atTop(TreeHndl tree);
-//inline bool atLeaf(TreeHndl tree);
-inline bool atLeaf(TreeHndl tree){
-  return( (tree->current->child1==NULL)*(tree->current->child2==NULL) );
-};
 bool BoxInCircle(double *ray,double radius,double *p1,double *p2);
-bool offEnd(TreeHndl tree);
-bool CurrentIsSquareTree(TreeHndl tree);
-bool noChild(TreeHndl tree);
-
-/*unsigned long *getCurrent(TreeHndl tree,unsigned long *npoints);*/
-void getCurrent(TreeHndl tree,Point *points,unsigned long *npoints);
-unsigned long getNbranches(TreeHndl tree);
-
-/***** Manipulation procedures *****/
-
-void moveTop(TreeHndl tree);
-bool moveUp(TreeHndl tree);
-
-bool moveToChild(TreeHndl tree,int child);
-
-//void insertChildToCurrent(TreeHndl tree, Point *points,unsigned long npoints
-//			  ,double boundary_p1[2],double boundary_p2[2]
-//			  ,double center[2],int child);
-void insertChildToCurrent(TreeHndl tree,Branch *branch,int child);
-
-//void attachChildToCurrent(TreeHndl tree,Branch data,int child);
-void attachChildrenToCurrent(TreeHndl tree,Branch *child1,Branch *child2);
-bool TreeWalkStep(TreeHndl tree,bool allowDescent);
 double ClosestBorder(double *ray,double *p1,double *p2);
 
 inline double MIN(double x,double y){
@@ -98,21 +157,15 @@ inline double sepSQR(double *xx,double *yy){
 inline double FurthestBorder(double *ray,double *p1,double *p2){
   return sqrt( pow(MAX(ray[0]-p1[0],p2[0]-ray[0]),2) + pow(MAX(ray[1]-p1[1],p2[1]-ray[1]),2) );
 };
-void PointsInCurrent(TreeHndl tree,unsigned long *ids,double **x);
 
 /***** Other operations *****/
-
-void printTree(TreeHndl tree);
 void printBranch(Branch *branch);
 
 void saveTree(TreeHndl tree,char *filename);
 TreeHndl readTree(char *filename);
-void checkTree(TreeHndl tree);
 
 /** routines in TreeDriver.c **/
 
-Point *NearestNeighbor(TreeHndl tree,double *ray,int Nneighbors,ListHndl neighborlist
-		,short direction);
 //inline int inbox(double ray[2],double *p1,double *p2);
 /* return 1 (0) if ray is (not) in the cube */
 inline int inbox(double *ray,double *p1,double *p2){
@@ -120,12 +173,9 @@ inline int inbox(double *ray,double *p1,double *p2){
 };
 bool boxinbox(Branch *branch1,Branch *branch2);
 double BoxIntersection(Branch *branch1,Branch *branch2);
-void FindBoxPoint(TreeHndl tree,double *ray,Point *point);
-void _FindBox(TreeHndl tree,double *ray);
 bool AreBoxNeighbors(Point *point1,Point *point2);
 bool CircleInBox(double *ray,double radius,double *p1,double *p2);
 bool BoxInCircle(double *ray,double radius,double *p1,double *p2);
-void _FindLeaf(TreeHndl tree,double *ray,unsigned long Nadd);
 
 // Point arrays
 
@@ -151,19 +201,6 @@ void PrintImages(ImageInfo *images,long Nimages);
 void PrintImageInfo(ImageInfo *image);
 
 // routines using tree
-
-void PointsWithin(TreeHndl tree,double *ray,float rmax,ListHndl neighborlist,short markpoints);
-void PointsWithin_iter(TreeHndl tree,double *ray,float rmax,ListHndl neighborlist,short markpoints);
-void NeighborsOfNeighbors(ListHndl neighbors,ListHndl wholelist);
-void FriendsOfFriends(TreeHndl tree,double *starting_point,float rlink
-		      ,ListHndl neighborlist,Point *filter
-		      ,unsigned long Nfilter,unsigned long *filter_place);
-void _PointsWithin2(TreeHndl tree,double *ray,float *rmax,ListHndl neighborlist
-		   ,Point *filter,unsigned long Nfilter
-		   ,unsigned long *filter_place,short compliment);
-void _PointsWithin(TreeHndl tree,double *ray,float *rmax,ListHndl neighborlist
-		,short markpoints);
-void FindAllBoxNeighbors(TreeHndl tree,Point *point,ListHndl neighbors);
 
 // in image_finder.c
 
@@ -249,5 +286,7 @@ void rayshooterInternal(unsigned long Npoints,Point *i_points,bool kappa_off);
 void in_source(double *y_source,ListHndl sourcelist);
 bool tree_count_test(TreeHndl tree);
 bool testLeafs(TreeHndl tree);
+
+void NeighborsOfNeighbors(ListHndl neighbors,ListHndl wholelist);
 
 #endif

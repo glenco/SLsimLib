@@ -409,7 +409,7 @@ void map_images(
 	/*******************************************************/
 
 	//PointsWithinKist(grid->s_tree,source->getX(),source->source_r_out,imageinfo->imagekist,0);
-	PointsWithinKist_iter(grid->s_tree,source->getX(),0,source->getRadius(),imageinfo->imagekist);
+	grid->s_tree->PointsWithinKist_iter(source->getX(),0,source->getRadius(),imageinfo->imagekist);
 
 
 	// move from source plane to image plane
@@ -648,7 +648,7 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
 
 				  // Determine if image point to be refined is a inner border point
 				  if(reborder == false){
-					  if(nearest->Nunits() == 0 ) FindAllBoxNeighborsKist(grid->i_tree,getCurrentKist(imageinfo[i].imagekist),nearest);
+					  if(nearest->Nunits() == 0 ) grid->i_tree->FindAllBoxNeighborsKist(getCurrentKist(imageinfo[i].imagekist),nearest);
 					  MoveToTopKist(nearest);
 					  do{
 						  if(getCurrentKist(nearest)->in_image != TRUE){
@@ -949,7 +949,7 @@ bool RefinePoint2(Point *point,TreeHndl i_tree,double image_area,double total_ar
 	// This stops the refinement when the cell is so small that the flux becomes zero because of underflow error.
 	//if(point->surface_brightness > 0 && pow(point->gridsize,2)*point->surface_brightness == 0) return false;
 
-	FindAllBoxNeighborsKist(i_tree,point,nearest);
+	i_tree->FindAllBoxNeighborsKist(point,nearest);
 	//assert(nearest->Nunits() < 300);
 
 	flux = point->surface_brightness*pow(point->gridsize,2);

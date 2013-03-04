@@ -6,7 +6,7 @@ static const int NpointsRequired = 100;  // number of points required to be with
 //static const float mumin = 0.5;  // actually the sqrt of the minimum magnification
 //static const float mumin = 0.45;  // actually the sqrt of the minimum magnification
 //static const float mumin = 0.1;
-const float mumin = 0.1;
+static const float mumin = 0.1;
 //static const float mumin = 0.3;
 
 static const float FracResTarget = 4.0e-4;
@@ -220,7 +220,7 @@ void find_images_kist(
 					,fabs(difftime(t3,now)/60.),grid->i_tree->pointlist->Npoints);
 
 		// mark image points in tree
-		PointsWithinKist(grid->s_tree,y_source,r_source,subkist,1);
+		grid->s_tree->PointsWithinKist(y_source,r_source,subkist,1);
 
 		//moved=image_finder_kist(lens,y_source,fabs(r_source),grid
 		//		,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
@@ -277,7 +277,7 @@ void find_images_kist(
 	if(edge_refinement==0){   // uniform refinement over image
 		do{
 			// mark image points in tree
-			PointsWithinKist(grid->s_tree,y_source,r_source,subkist,1);
+			grid->s_tree->PointsWithinKist(y_source,r_source,subkist,1);
 
 			moved=image_finder_kist(lens,y_source,fabs(r_source),grid
 					,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
@@ -288,7 +288,7 @@ void find_images_kist(
 	}else if(edge_refinement==1){    // edge refinement with image finding at each step
 		do{
 			// mark image points in tree
-			PointsWithinKist(grid->s_tree,y_source,r_source,subkist,1);
+			grid->s_tree->PointsWithinKist(y_source,r_source,subkist,1);
 
 			moved=image_finder_kist(lens,y_source,fabs(r_source),grid
 					,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
@@ -312,7 +312,7 @@ void find_images_kist(
 		}
 	}
 	// unmark image points so new source can be used
-	PointsWithinKist(grid->s_tree,y_source,r_source,subkist,-1);
+	grid->s_tree->PointsWithinKist(y_source,r_source,subkist,-1);
 
 	if(verbose) printf("finished edge refinement i=%i\n",i);
 
@@ -509,12 +509,14 @@ void find_images_microlens(
 
     	//************* method that seporates images ****************
     	// mark image points in tree
-    	PointsWithinKist(grid->s_tree,y_source,rtemp,subkist,1);
+    	grid->s_tree->PointsWithinKist(y_source,rtemp,subkist,1);
     	moved = image_finder_kist(lens,y_source,rtemp,grid
     			,Nimages,imageinfo,NimageMax,Nimagepoints,0,0);
     	// unmark image points in tree
-    	PointsWithinKist(grid->s_tree,y_source,rtemp,subkist,-1);
+    	grid->s_tree->PointsWithinKist(y_source,rtemp,subkist,-1);
     	//***********************************************************/
+
+    	imageinfo->imagekist->Print();
 
     	minN = imageinfo[0].getNimagePoints();
     	for(int k=1; k < *Nimages; ++k)
@@ -565,11 +567,11 @@ void find_images_microlens(
 
     		//************* method that separates images ****************
     		// mark image points in tree
-    		PointsWithinKist(grid->s_tree,y_source,rtemp,subkist,1);
+    		grid->s_tree->PointsWithinKist(y_source,rtemp,subkist,1);
     		moved = image_finder_kist(lens,y_source,rtemp,grid
     				,Nimages,imageinfo,NimageMax,Nimagepoints,0,0);
     		// unmark image points in tree
-    		PointsWithinKist(grid->s_tree,y_source,rtemp,subkist,-1);
+    		grid->s_tree->PointsWithinKist(y_source,rtemp,subkist,-1);
     		//***********************************************************/
 
     		assert(*Nimages > 0);
@@ -623,7 +625,7 @@ void find_images_microlens(
 					,fabs(difftime(t3,now)/60.),grid->i_tree->pointlist->Npoints);
 
 		// mark image points in tree
-		PointsWithinKist(grid->s_tree,y_source,r_source,subkist,1);
+		grid->s_tree->PointsWithinKist(y_source,r_source,subkist,1);
 
 		//moved=image_finder_kist(lens,y_source,fabs(r_source),grid
 		//		,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
@@ -680,7 +682,7 @@ void find_images_microlens(
 	if(edge_refinement==0){   // uniform refinement over image
 		do{
 			// mark image points in tree
-			PointsWithinKist(grid->s_tree,y_source,r_source,subkist,1);
+			grid->s_tree->PointsWithinKist(y_source,r_source,subkist,1);
 
 			moved=image_finder_kist(lens,y_source,fabs(r_source),grid
 					,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
@@ -691,7 +693,7 @@ void find_images_microlens(
 	}else if(edge_refinement==1){    // edge refinement with image finding at each step
 		do{
 			// mark image points in tree
-			PointsWithinKist(grid->s_tree,y_source,r_source,subkist,1);
+			grid->s_tree->PointsWithinKist(y_source,r_source,subkist,1);
 
 			moved=image_finder_kist(lens,y_source,fabs(r_source),grid
 					,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
@@ -715,7 +717,7 @@ void find_images_microlens(
 		}
 	}
 	// unmark image points so new source can be used
-	PointsWithinKist(grid->s_tree,y_source,r_source,subkist,-1);
+	grid->s_tree->PointsWithinKist(y_source,r_source,subkist,-1);
 
 	if(verbose) printf("finished edge refinement i=%i\n",i);
 
@@ -840,7 +842,7 @@ short image_finder_kist(LensHndl lens, double *y_source,double r_source,GridHndl
   // if source has moved make sure low res grids are included in first source list
   if( moved && (initialgridsize > mumin*r_source) && !true_images){
 	  // if new source position use larger image to make sure new images are found on the coarser grid
-	  PointsWithinKist(s_tree,y_source,initialgridsize/mumin,imageinfo->imagekist,0);
+	  s_tree->PointsWithinKist(y_source,initialgridsize/mumin,imageinfo->imagekist,0);
 
 	  MoveToTopKist(imageinfo->imagekist);
 	  for(i=0;i<imageinfo->imagekist->Nunits();++i){
@@ -855,7 +857,7 @@ short image_finder_kist(LensHndl lens, double *y_source,double r_source,GridHndl
 	  }
   }else{
 	  // if source hasn't moved just take points within image
-	  PointsWithinKist(s_tree,y_source,r_source,imageinfo->imagekist,0);
+	  s_tree->PointsWithinKist(y_source,r_source,imageinfo->imagekist,0);
 
 	  //	do something about non-circular sources
 	  // the points outside of non-circular are removed from sourcelist
@@ -873,12 +875,12 @@ short image_finder_kist(LensHndl lens, double *y_source,double r_source,GridHndl
   // if there are not enough points in source find nearest ones
   if(!true_images && imageinfo->imagekist->Nunits() < NpointsRequired){
 	  if(imageinfo->imagekist->Nunits() == 0){
-		  NearestNeighborKist(s_tree,y_source,NpointsRequired,imageinfo->imagekist);
+		  s_tree->NearestNeighborKist(y_source,NpointsRequired,imageinfo->imagekist);
 	  }else{  // add nearest points to already found image points
 
 		  bool redundant = false;
 
-		  NearestNeighborKist(s_tree,y_source,NpointsRequired,imageinfo[1].imagekist);
+		  s_tree->NearestNeighborKist(y_source,NpointsRequired,imageinfo[1].imagekist);
 
 		  i=0;
 		  while(imageinfo[1].imagekist->Nunits() > 0){
@@ -1219,7 +1221,7 @@ void findborders4(TreeHndl i_tree,ImageInfo *imageinfo){
 
 		addinner=false;
 
-		FindAllBoxNeighborsKist(i_tree,getCurrentKist(imagekist),neighborkist);
+		i_tree->FindAllBoxNeighborsKist(getCurrentKist(imagekist),neighborkist);
 
 		if( allin && neighborkist->Nunits() < 4){
 			InsertAfterCurrentKist(imageinfo->innerborder,getCurrentKist(imagekist));
