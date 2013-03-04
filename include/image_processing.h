@@ -45,6 +45,7 @@ public:
 	void smooth(double sigma);
 
 	void ApplyPSF(std::string psf_file, double oversample_n = 1);
+	void AddNoise(double diameter, double transmission, double time, double sky_mag);
 
 	inline double getValue(std::size_t i) const { return map[i]; }
 	inline double operator[](std::size_t i) const { return map[i]; };

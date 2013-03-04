@@ -138,15 +138,14 @@ PixelMap::PixelMap(const PixelMap& pmap, double degrading_factor)
 	{
 
 	resolution = degrading_factor*pmap.resolution;
-	range = pmap.range+pmap.resolution;
-	size = size_t(range/resolution+1);
-	range = range - resolution;
 	center[0] = pmap.center[0];
 	center[1] = pmap.center[1];
 	map_boundary_p1[0] = pmap.map_boundary_p1[0];
 	map_boundary_p1[1] = pmap.map_boundary_p1[1];
 	map_boundary_p2[0] = pmap.map_boundary_p2[0];
 	map_boundary_p2[1] = pmap.map_boundary_p2[1];
+	range = pmap.range;
+	size = size_t((map_boundary_p2[0]-map_boundary_p1[0])/resolution + 1);
 	map = new float[size*size];
 	int old_Npixels = pmap.size;
 	int ix, iy;
@@ -406,18 +405,18 @@ std::cout<< range << "  " << resolution << "  " << size << std::endl;
 		phout->addKey ("CRPIX2",naxex[1]/2,"");
 		phout->addKey ("CRVAL1",0.0,"");
 		phout->addKey ("CRVAL2",0.0,"");
-		phout->addKey ("CDELT1",-180*range/(size-1)/pi,"degrees");
-		phout->addKey ("CDELT2", 180*range/(size-1)/pi,"degrees");
+		phout->addKey ("CDELT1",-180*resolution/pi,"degrees");
+		phout->addKey ("CDELT2", 180*resolution/pi,"degrees");
 		phout->addKey ("CTYPE1","RA--TAN","");
 		phout->addKey ("CTYPE2","RA-TAN","");
 		phout->addKey ("CROTA2",0.0,"");
-		phout->addKey ("CD1_1",-180*range/(size-1)/pi,"degrees");
+		phout->addKey ("CD1_1",-180*resolution/pi,"degrees");
 		phout->addKey ("CD1_2",0.0,"");
 		phout->addKey ("CD2_1",0.0,"");
-		phout->addKey ("CD2_2", 180*range/(size-1)/pi,"degrees");
+		phout->addKey ("CD2_2", 180*resolution/pi,"degrees");
 
 		phout->addKey ("Npixels", size,"");
-		phout->addKey ("range ", range," radians");
+		phout->addKey ("range ", map_boundary_p2[0]-map_boundary_p1[0]," radians");
 
 		std::cout << *phout << std::endl;
 
@@ -443,6 +442,7 @@ void PixelMap::smooth(double sigma){
 	sigma /= 3600.*180/pi;
 	map_out = new double[size*size];
 	Nmask=2*(int)(3*sigma/resolution + 1);
+	std::cout << Nmask << std::endl;
 	if(Nmask < 4 ) std::cout << "WARNING: pixels are large compare to psf Nmask=" << Nmask << std::endl;
 
 	Nmask_half = int(Nmask/2);
@@ -469,7 +469,9 @@ void PixelMap::smooth(double sigma){
 		}
 	}
 	for(long i=0;i<size*size;i++){
-		std::cout << i << " " << map[i] << std::endl;
+		map_out[i] = 0.;
+	}
+	for(long i=0;i<size*size;i++){
 		for(int j=0;j<Nmask;j++){
 			ix=i%size + j-Nmask_half;
 			if( (ix>-1) && (ix<size) ){
@@ -585,6 +587,22 @@ void PixelMap::ApplyPSF(std::string psf_file, double oversample_n)
 
 }
 
+void PixelMap::AddNoise(double diameter, double transmission, double time, double sky_mag)
+{
+	double back_mean = pow(10,-0.4*(48.6+sky_mag))/hplanck/100.*diameter*diameter*time*transmission*pi/4.;
+	double rms, noise;
+	long seed = 24;
+	for (unsigned long i = 0; i < size*size; i++)
+	{
+		map[i] *= diameter*diameter*time*transmission*pi/4.;
+		rms = sqrt(map[i]+back_mean);
+		noise = gasdev(&seed)*rms;
+		map[i] += noise;
+		map[i] /= time;
+	}
+
+
+}
 /*
 void pixelize(
 		double *map    /// Output map in one dimensional array. It is always square. map[0...Npixels*Npixels-1]
