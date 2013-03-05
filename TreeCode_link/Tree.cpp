@@ -190,18 +190,18 @@ TreeStruct::TreeStruct(
 		,double boundary_p1[2]   /// bottom left hand corner of root
 		,double boundary_p2[2]   /// upper right hand corner of root
 		,double center[2]        /// center of root (this could be the center of mass)
-		,int Nbucket             /// maximum number of points allowed in a leaf
+		,int my_Nbucket             /// maximum number of points allowed in a leaf
 		){
-	construct(xp,npoints,boundary_p1,boundary_p2,center,Nbucket);
+	construct_root(xp,npoints,boundary_p1,boundary_p2,center,my_Nbucket);
 }
 /// Basic construction of root with all particles in it but no children
-void TreeStruct::construct(
+void TreeStruct::construct_root(
 		Point *xp   /// array of points to be added to the tree
 		,unsigned long npoints   /// number of points
 		,double boundary_p1[2]   /// bottom left hand corner of root
 		,double boundary_p2[2]   /// upper right hand corner of root
 		,double center[2]        /// center of root (this could be the center of mass)
-		,int Nbucket             /// maximum number of points allowed in a leaf
+		,int my_Nbucket             /// maximum number of points allowed in a leaf
 		){
   unsigned long i;
 
@@ -221,13 +221,13 @@ void TreeStruct::construct(
     MoveDownList(pointlist);
   }
 
-  top= new Branch(pointlist->top,npoints,boundary_p1,boundary_p2
+  top = new Branch(pointlist->top,npoints,boundary_p1,boundary_p2
 		      ,center,0);
 
   Nbranches = 1;
   current = top;
 
-  Nbucket = Nbucket;
+  Nbucket = my_Nbucket;
   //return(tree);
 }
 

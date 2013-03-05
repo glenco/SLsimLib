@@ -12,6 +12,5 @@
 
 //unsigned long PruneTrees(TreeHndl i_tree,TreeHndl s_tree,double resolution,bool useSB);
 unsigned long FreeBranchesBelow(TreeHndl i_tree,TreeHndl s_tree,KistHndl trashlist);
-Point *RemoveLeafFromTree(TreeHndl tree,unsigned long *Npoints);
 
 #endif

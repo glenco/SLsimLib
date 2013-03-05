@@ -31,21 +31,17 @@ public:
 
 	 ~TreeStruct();
 
-	/*  *** Constructor****
+	 /// root branch
+	 Branch *top;
+	 Branch *current;
+	 /// list of points
+	 PointList *pointlist;
+
+	 /*  *** Constructor****
 	TreeHndl NewTree(Point *xp,unsigned long npoints
 			 ,double boundary_p1[2],double boundary_p2[2]
 			 ,double center[2],int Nbucket);
 	short freeTree(TreeHndl tree);*/
-
-  Branch *top;
-  Branch *current;
-  /// number of barnches in tree */
-  unsigned long Nbranches;
-  /// list of points
-  PointList *pointlist;
-  /// number of points allowed in leaves of tree
-  int Nbucket;
-  short median_cut;
 
   void FindAllBoxNeighbors(Point *point,ListHndl neighbors);
   void FindAllBoxNeighborsKist(Point *point,KistHndl neighbors);
@@ -63,9 +59,10 @@ public:
   bool moveToChild(int child);
   bool TreeWalkStep(bool allowDescent);
 
-  // Adding to branches to treee
+  // Adding and removing to branches of tree
   void insertChildToCurrent(Branch *branch,int child);
   void attachChildrenToCurrent(Branch *child1,Branch *child2);
+  Point *RemoveLeafFromTree(unsigned long *Npoints);
 
   // Higher level builds
   void FillTree(Point *xp,unsigned long Npoints);
@@ -93,7 +90,14 @@ public:
   void _FindLeaf(double *ray,unsigned long Nadd);
 
 private:
-  void construct(Point *xp,unsigned long npoints
+
+  /// number of barnches in tree */
+  unsigned long Nbranches;
+   /// number of points allowed in leaves of tree
+  int Nbucket;
+  short median_cut;
+
+  void construct_root(Point *xp,unsigned long npoints
 			 ,double boundary_p1[2],double boundary_p2[2]
 			 ,double center[2],int Nbucket);
 

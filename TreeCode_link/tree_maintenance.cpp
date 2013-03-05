@@ -40,7 +40,7 @@ bool tree_count_test(TreeHndl tree){
 		++nbranches;
 		assert(nbranches <= tree->Nbranches);
 
-	}while(TreeWalkStep(true) && tree->current != branch->brother);
+	}while(tree->TreeWalkStep(true) && tree->current != branch->brother);
 
 	tree->current = branch;
 */
@@ -96,7 +96,7 @@ TreeStruct::TreeStruct(Point *xp,unsigned long Npoints,short my_median_cut){
   //TreeHndl tree;
   unsigned long i;
   double p1[2],p2[2],center[2];
-  const int Nbucket = 1;   // must be =1 if each leaf is to coincide with each cell
+  const int my_Nbucket = 1;   // must be =1 if each leaf is to coincide with each cell
 
   if( (Npoints & (Npoints-1)) != 0){
 	  ERROR_MESSAGE();
@@ -123,7 +123,7 @@ TreeStruct::TreeStruct(Point *xp,unsigned long Npoints,short my_median_cut){
 
   /* Initialize tree root */
   //tree=NewTree(xp,Npoints,p1,p2,center,Nbucket);
-  construct(xp,Npoints,p1,p2,center,Nbucket);
+  construct_root(xp,Npoints,p1,p2,center,my_Nbucket);
 
   median_cut = my_median_cut;
  /* build the tree */
@@ -1368,7 +1368,7 @@ unsigned long FreeBranchesBelow(TreeHndl i_tree,TreeHndl s_tree,KistHndl trashki
 	//_freeBranches_iter(s_tree);  // s_tree will no longer be valid on exit.  This is to make sure it isn't used later without a rebuild.
 
 	headbranch = i_tree->current;
-	//TreeWalkStep(i_tree,true);
+	//i_tree->TreeWalkStep(true);
 
 	while( (headbranch->child1 != NULL) || (headbranch->child2 != NULL) ){
 
@@ -1384,7 +1384,7 @@ unsigned long FreeBranchesBelow(TreeHndl i_tree,TreeHndl s_tree,KistHndl trashki
 			branch = i_tree->current->prev;
 			i = branch->npoints;
 
-			if(i_tree->current != headbranch) RemoveLeafFromTree(i_tree,&Ntmp);
+			if(i_tree->current != headbranch) i_tree->RemoveLeafFromTree(&Ntmp);
 
 			/***************** test line  **************************/
 			assert(i_tree->current == branch);
@@ -1452,9 +1452,9 @@ unsigned long FreeBranchesBelow(TreeHndl i_tree,TreeHndl s_tree,KistHndl trashki
 							if(s_tree->current->npoints == 0 && s_tree->current->prev->npoints == 1){
 								// only remove empty leaves if it will make its parent a leaf
 								assert(s_tree->atLeaf());
-								RemoveLeafFromTree(s_tree,&Ntmp);
+								s_tree->RemoveLeafFromTree(&Ntmp);
 								s_tree->TreeWalkStep(true);  // Go to other child.
-								RemoveLeafFromTree(s_tree,&Ntmp);
+								s_tree->RemoveLeafFromTree(&Ntmp);
 							}else{
 								s_tree->moveUp();
 							}
@@ -1545,18 +1545,18 @@ unsigned long FreeBranchesBelow(TreeHndl i_tree,TreeHndl s_tree,KistHndl trashki
  *  returns: Pointer to first in list of points that were reassigned.
  *           *Npoints = number of points reassigned.
  */
-Point *RemoveLeafFromTree(TreeHndl tree,unsigned long *Npoints){
+Point * TreeStruct::RemoveLeafFromTree(unsigned long *Npoints){
 
 	Branch *branch;
 	Point *point;
 	unsigned long i;
 
-	if(tree->atTop() || !(tree->atLeaf()) ) return NULL;
+	if(atTop() || !(atLeaf()) ) return NULL;
 
-	branch = tree->current;
-	tree->moveUp();
+	branch = current;
+	moveUp();
 
-	//if(tree->current->number == 2125226) branchaddress = NULL;
+	//if(current->number == 2125226) branchaddress = NULL;
 
 	if(branch == branch->prev->child1){
 		branch->prev->child1 = NULL;
@@ -1569,14 +1569,14 @@ Point *RemoveLeafFromTree(TreeHndl tree,unsigned long *Npoints){
 
 	// leaves of points in the father
 	if(branch->npoints >0){
-		tree->pointlist->current = branch->points;
-		assert(inbox(tree->pointlist->current->x,branch->boundary_p1,branch->boundary_p2));
+		pointlist->current = branch->points;
+		assert(inbox(pointlist->current->x,branch->boundary_p1,branch->boundary_p2));
 
-		for(i=0;i<branch->npoints;++i,MoveDownList(tree->pointlist)){
-			tree->pointlist->current->leaf = branch->prev;
+		for(i=0;i<branch->npoints;++i,MoveDownList(pointlist)){
+			pointlist->current->leaf = branch->prev;
 
-			assert(inbox(tree->pointlist->current->x,branch->boundary_p1,branch->boundary_p2));
-			assert(inbox(tree->pointlist->current->x,branch->prev->boundary_p1,branch->prev->boundary_p2));
+			assert(inbox(pointlist->current->x,branch->boundary_p1,branch->boundary_p2));
+			assert(inbox(pointlist->current->x,branch->prev->boundary_p1,branch->prev->boundary_p2));
 		}
 
 		assert(boxinbox(branch,branch->prev));
@@ -1585,7 +1585,7 @@ Point *RemoveLeafFromTree(TreeHndl tree,unsigned long *Npoints){
 	}
 	*Npoints = branch->npoints;
 	free(branch);
-	--(tree->Nbranches);
+	--Nbranches;
 
 	return point;
 }
