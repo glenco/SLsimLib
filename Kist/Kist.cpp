@@ -433,22 +433,6 @@ void SwapDataInKist(KistHndl kist,Unit *p1,Unit *p2){
 	return;
  }
 */
-/*********************************/
-/*  data extraction routines */
-/*********************************/
-/// Return pointer to data in current element.
-Data * Kist::getCurrent(){
-	if(Number==0) return NULL;
-	assert(current);
-	assert(current->data);
-
-	return current->data;
-}
-Data *getCurrentKist(KistHndl kist){
-	assert(kist);
-
-	return kist->getCurrent();
-}
 
 /*********************************
  * specific to image points

@@ -97,8 +97,6 @@ private:
 
 typedef struct Kist *KistHndl;
 
-#endif
-
 /*
  * These functions are provided for backwards compatibility, but the kist member methods
  * should be used in the future.
@@ -125,3 +123,26 @@ void EmptyKist(KistHndl kist);
 bool IntersectionKist(KistHndl kist1,KistHndl kist2,KistHndl intersection);
 Data *getCurrentKist(KistHndl kist);
 void TranformPlanesKist(KistHndl kist);
+
+/*
+ * Inline functions.
+ */
+
+/*********************************/
+/*  data extraction routines */
+/*********************************/
+/// Return pointer to data in current element.
+inline Data * Kist::getCurrent(){
+	if(Number==0) return NULL;
+	assert(current);
+	assert(current->data);
+	
+	return current->data;
+}
+inline Data *getCurrentKist(KistHndl kist){
+	assert(kist);
+	
+	return kist->getCurrent();
+}
+
+#endif
