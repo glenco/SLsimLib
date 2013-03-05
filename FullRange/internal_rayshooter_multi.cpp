@@ -291,7 +291,8 @@ void *compute_rays_parallel(void *_p){
   return 0;
   
 }
-/*
+
+/**
  * Calculates the source plane position x_source, gamma, and kappa for a single ray (in radians)
  *
  */

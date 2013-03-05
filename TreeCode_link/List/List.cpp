@@ -88,6 +88,7 @@ void InsertBeforeCurrent(ListHndl list,double *x,unsigned long id,Point *image){
       list->current=point;
       list->top=point;
       list->bottom=point;
+      point->prev = point->next = NULL;
     }
 
     list->Npoints++;
@@ -115,6 +116,7 @@ void InsertPointAfterCurrent(ListHndl list,Point *point){
       list->current=point;
       list->top=point;
       list->bottom=point;
+      point->prev = point->next = NULL;
     }
     list->Npoints++;
     return;

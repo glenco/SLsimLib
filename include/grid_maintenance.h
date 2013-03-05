@@ -22,6 +22,8 @@ typedef struct Grid{
 	~Grid();
 
 	void ReInitializeGrid(LensHndl lens);
+	void zoom(LensHndl lens,double *center,double scale,bool kappa_off);
+
 	unsigned long PruneTrees(double resolution,bool useSB,double fluxlimit);
 	unsigned long PrunePointsOutside(double resolution,double *y,double r_in ,double r_out);
 
@@ -68,6 +70,11 @@ typedef struct Grid* GridHndl;
 // in image_finder_kist.c
 
 void find_images_kist(LensHndl lens,double *y_source,double r_source,GridHndl grid
+		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
+		,double initial_size,bool splitimages,short edge_refinement
+		,bool verbose,bool kappa_off);
+
+void find_images_microlens(LensHndl lens,double *y_source,double r_source,GridHndl grid
 		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
 		,double initial_size,bool splitimages,short edge_refinement
 		,bool verbose,bool kappa_off);

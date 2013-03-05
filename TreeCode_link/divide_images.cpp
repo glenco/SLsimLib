@@ -15,7 +15,7 @@ void find_divide_images(TreeHndl i_tree,TreeHndl s_tree
 	,double *source_x,double source_r
 	,ImageInfo *imageinfo,int *Nimages,int Nimagesmax){
 
-	PointsWithinKist(s_tree,source_x,source_r,imageinfo->imagekist,0);
+	s_tree->PointsWithinKist(source_x,source_r,imageinfo->imagekist,0);
 
 	// no image points found
 	if(imageinfo->imagekist->Nunits() == 0){
@@ -259,7 +259,7 @@ void divide_images_kist(
 		return ;
 	}
 
-	// mark points in tree as in image and transfer points to temporary temporary new_imagekist
+	  // mark points in tree as in image and transfer points to temporary temporary new_imagekist
 
 	MoveToTopKist(imageinfo->imagekist);
 	Ntest = imageinfo->imagekist->Nunits();
@@ -384,9 +384,12 @@ void partition_images(Point *point,unsigned long *N_in_image,TreeHndl i_tree){
 	assert(i_tree);
 
 	KistHndl neighbors = new Kist;
+	  /**************** TODO test line ******************
+	  ERROR_MESSAGE();
+	  // ****************  ******************/
 
 	// find all the neighbors of point
-	FindAllBoxNeighborsKist(i_tree,point,neighbors);
+	i_tree->FindAllBoxNeighborsKist(point,neighbors);
 
 	// remove neighbors that are not marked as in image
 	//  It reduces the memory usage to do this before recursion
@@ -398,6 +401,9 @@ void partition_images(Point *point,unsigned long *N_in_image,TreeHndl i_tree){
 			if(!MoveDownKist(neighbors)) break;
 		}
 	}
+	  /**************** TODO test line ******************
+	  ERROR_MESSAGE();
+	  // ****************  ******************/
 
 	while(neighbors->Nunits() > 0){
 		if(getCurrentKist(neighbors)->in_image == TRUE){
@@ -413,6 +419,9 @@ void partition_images(Point *point,unsigned long *N_in_image,TreeHndl i_tree){
 
 	assert(neighbors->Nunits() == 0);
 	delete neighbors;
+	  /**************** TODO test line ******************
+	  ERROR_MESSAGE();
+	  // ****************  ******************/
 
 	return;
 }
@@ -443,7 +452,7 @@ double partition_images_kist(Point *point,KistHndl imagekist,TreeHndl i_tree){
 			area += pow(getCurrentKist(imagekist)->gridsize,2);
 
 			// find all the neighbors of point
-			FindAllBoxNeighborsKist(i_tree,getCurrentKist(imagekist),neighbors);
+			i_tree->FindAllBoxNeighborsKist(getCurrentKist(imagekist),neighbors);
 
 			// remove neighbors that are not marked as in image
 			for(MoveToTopKist(neighbors) ; neighbors->Nunits() > 0 ;){

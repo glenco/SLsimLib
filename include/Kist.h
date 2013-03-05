@@ -25,12 +25,13 @@ typedef struct Unit{
  *
  * In this implementation the Data type is set to Point type, but this could
  * be changed for other applications.  Multiple Kists of the same points can be
- * made without copying data.
+ * made without copying data.  Memory is allocated in blocks in held in a reservoir
+ * to improve efficiency when adding and removing data.
  */
 typedef struct Kist{
 public:
 
-	Kist();
+	Kist(unsigned long blocksize = 10000);
 	Kist(Kist &a);
 	~Kist();
 
@@ -40,7 +41,7 @@ public:
 	void InsertBeforeCurrent(Data * data);
 	Data *TakeOutCurrent();
 	void Empty();
-	void FreeAll();
+	//void FreeAll();
 	void Fill(Data * data,unsigned long N);
 	void SwapCurrentWithBottom();
 	void MoveCurrentToBottom();
@@ -61,6 +62,8 @@ public:
 
 	void TranformPlanes();
 	bool AreDataUnique();
+	void SetInImage(Boo value);
+
 
 	/// Returns a pointer to the current data
 	Data *operator*(){return getCurrent();}
@@ -75,7 +78,16 @@ public:
 
 private:
 
+	Unit * pop_from_reserve();
+	void push_to_reserve(Unit *unit);
+
 	unsigned long Number;
+	unsigned long blocksize;
+
+	std::vector<Unit *> heads;
+	//Unit *units;
+	Unit *reserve_top;
+	unsigned long Nreserve;
 
 	Unit *top;
 	Unit *bottom;
@@ -84,8 +96,6 @@ private:
 } Kist;
 
 typedef struct Kist *KistHndl;
-
-#endif
 
 /*
  * These functions are provided for backwards compatibility, but the kist member methods
@@ -107,9 +117,32 @@ void SwapCurrentWithBottomKist(KistHndl kist);
 Data *TakeOutCurrentKist(KistHndl kist);
 Data *GetCurrentKist(KistHndl kist);
 void EmptyKist(KistHndl kist);
-void FreeAllKist(KistHndl kist);
+//void FreeAllKist(KistHndl kist);
 //void UnionKist(KistHndl kist1,KistHndl kist2);
 //bool AreDataUniqueKist(KistHndl kist);
 bool IntersectionKist(KistHndl kist1,KistHndl kist2,KistHndl intersection);
 Data *getCurrentKist(KistHndl kist);
 void TranformPlanesKist(KistHndl kist);
+
+/*
+ * Inline functions.
+ */
+
+/*********************************/
+/*  data extraction routines */
+/*********************************/
+/// Return pointer to data in current element.
+inline Data * Kist::getCurrent(){
+	if(Number==0) return NULL;
+	assert(current);
+	assert(current->data);
+	
+	return current->data;
+}
+inline Data *getCurrentKist(KistHndl kist){
+	assert(kist);
+	
+	return kist->getCurrent();
+}
+
+#endif

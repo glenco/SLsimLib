@@ -10,15 +10,6 @@
 
 #include "Tree.h"
 
-void FindAllBoxNeighborsKist(TreeHndl tree,Point *point,KistHndl neighbors);
-void _FindAllBoxNeighborsKist(TreeHndl tree,Branch *leaf,KistHndl neighbors);
-void _FindAllBoxNeighborsKist_iter(TreeHndl tree,Branch *leaf,KistHndl neighbors);
-void PointsWithinEllipKist(TreeHndl tree,double *ray,float rmax,float rmin,float posangle,KistHndl neighborkist);
-double PointsWithinKist(TreeHndl tree,double *ray,float rmax,KistHndl neighborkist,short markpoints);
-void _PointsWithinKist(TreeHndl tree,double *ray,float *rmax,KistHndl neighborkist
-		,short markpoints,double *maxgridsize);
-void PointsWithinKist_iter(TreeHndl tree,double *ray,float rmin,float rmax,KistHndl neighborkist);
-Point *NearestNeighborKist(TreeHndl tree,double *ray,int Nneighbors,KistHndl neighborkist);
 void SetInImage(KistHndl kist,Boo value);
 void DirtyFoF(ImageInfo *imageinfo ,int *Nimages ,double linkinglength ,int MaxNimages );
 void _DirtyFoF(KistHndl neighbors,KistHndl wholekist,double linkinglength);

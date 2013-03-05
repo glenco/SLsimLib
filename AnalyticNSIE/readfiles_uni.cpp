@@ -66,6 +66,7 @@ void UniLens::PrintLens(bool show_substruct,bool show_stars){
 }
 
 void UniLens::implant_stars(double x, double y, unsigned long Nregions,long *seed){
+	if(Nregions <= 0) return;
 	Point *centers;
 	gamma_uniform[2]=0.0; // TODO gamma_uniform[2] determines rotation for multiplane lens, how shall it be implemented here?
 	centers = NewPointArray(Nregions,true);

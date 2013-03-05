@@ -172,18 +172,8 @@ short refine_on_implanted_source(
 	imageinfo->gridrange[2] = 1.0e99;
 	imageinfo->gridrange[0] = imageinfo->gridrange[1]  = 0.0;
 
-	/** test lines **********************************
-	unsigned long Ntmp;
-	MoveToTopList(grid->i_tree->pointlist);
-	Ntmp = 0;
-	do{
-		if(grid->i_tree->pointlist->current->in_image == TRUE) ++Ntmp;
-	}while(MoveDownList(grid->i_tree->pointlist));
-	assert(Ntmp == imageinfo->imagekist->Nunits());
-	/*******************************************************/
-
-	PointsWithinKist(grid->i_tree,theta,radius,newpointskist,0);
-	if(newpointskist->Nunits() == 0) NearestNeighborKist(grid->i_tree,theta,8,newpointskist);
+	grid->i_tree->PointsWithinKist(theta,radius,newpointskist,0);
+	if(newpointskist->Nunits() == 0) grid->i_tree->NearestNeighborKist(theta,8,newpointskist);
 
 	newpointskist->MoveToTop();
 	do{
@@ -210,32 +200,13 @@ short refine_on_implanted_source(
 
 	// if there are no points
 	if(imageinfo->imagekist->Nunits() == 0){
-		NearestNeighborKist(grid->i_tree,theta,8,imageinfo->imagekist);
+		grid->i_tree->NearestNeighborKist(theta,8,imageinfo->imagekist);
 		foundimage = false;
 	}else{
 		foundimage = true;
 	}
 
-	/** test lines **********************************
-	MoveToTopList(grid->i_tree->pointlist);
-	Ntmp = 0;
-	do{
-		if(grid->i_tree->pointlist->current->in_image == TRUE) ++Ntmp;
-	}while(MoveDownList(grid->i_tree->pointlist));
-	assert(Ntmp == 0);
-	/*******************************************************/
-
 	SetInImage(imageinfo->imagekist,TRUE);
-
-	/** test lines **********************************
-	assert(imageinfo->imagekist->AreDataUnique());
-	MoveToTopList(grid->i_tree->pointlist);
-	Ntmp = 0;
-	do{
-		if(grid->i_tree->pointlist->current->in_image == TRUE) ++Ntmp;
-	}while(MoveDownList(grid->i_tree->pointlist));
-	assert(Ntmp == imageinfo->imagekist->Nunits());
-	/*******************************************************/
 
 	findborders4(grid->i_tree,imageinfo);
 
@@ -269,7 +240,7 @@ short refine_on_implanted_source(
 
 			if(!foundimage){
 				SetInImage(imageinfo->imagekist,FALSE);
-				NearestNeighborKist(grid->i_tree,theta,8,imageinfo->imagekist);
+				grid->i_tree->NearestNeighborKist(theta,8,imageinfo->imagekist);
 				SetInImage(imageinfo->imagekist,TRUE);
 				imageinfo->imagekist->MoveToTop();
 				do{
@@ -284,15 +255,6 @@ short refine_on_implanted_source(
 			findborders4(grid->i_tree,imageinfo);
 		}
 
-		/** test lines **********************************
-		MoveToTopList(grid->i_tree->pointlist);
-		Ntmp = 0;
-		do{
-			if(grid->i_tree->pointlist->current->in_image == TRUE) ++Ntmp;
-		}while(MoveDownList(grid->i_tree->pointlist));
-		assert(Ntmp == imageinfo->imagekist->Nunits());
-		/*******************************************************/
-
 		++refinements;
 		if(refinements > 50) break;
 	}
@@ -305,15 +267,6 @@ short refine_on_implanted_source(
 
 		return 0;
 	}
-
-	/** test lines **********************************
-	MoveToTopList(grid->i_tree->pointlist);
-	Ntmp = 0;
-	do{
-		if(grid->i_tree->pointlist->current->in_image == TRUE) ++Ntmp;
-	}while(MoveDownList(grid->i_tree->pointlist));
-	assert(Ntmp == imageinfo->imagekist->Nunits());
-	/*******************************************************/
 
 	divide_images_kist(grid->i_tree,imageinfo,Nimages,NimageMax);
 

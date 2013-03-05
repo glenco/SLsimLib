@@ -60,19 +60,19 @@ void BaseAnaLens::implant_stars(Point *centers,unsigned long Nregions,long *seed
 		assert( centers[j].kappa > 0.0);
 
 		NstarsPerImage = stars_N/star_Nregions;
-		cout << "NstarsPerImage: " << NstarsPerImage << endl; // remove
+		//cout << "NstarsPerImage: " << NstarsPerImage << endl; // remove
 
 		star_region[j] = 1.0/sqrt(pi*star_fstars*centers[j].kappa*Sigma_crit
 				/star_massscale/(float)NstarsPerImage);
 
-		cout << star_region[j] << " " << star_fstars <<  " " << centers[j].kappa << " " << Sigma_crit << " " << star_massscale << " " << NstarsPerImage << endl;
-		cout << "Sigma_star= " << (float)NstarsPerImage*star_massscale/(pi*pow(star_region[j],2)) << endl;
+		//cout << star_region[j] << " " << star_fstars <<  " " << centers[j].kappa << " " << Sigma_crit << " " << star_massscale << " " << NstarsPerImage << endl;
+		//cout << "Sigma_star= " << (float)NstarsPerImage*star_massscale/(pi*pow(star_region[j],2)) << endl;
 		// cutoff based on comparison of star deflection to smooth component
 		//rcut = 4*sqrt(star_massscale/pi/Sigma_crit
 		//		/( centers[j].kappa+sqrt(pow(centers[j].gamma[0],2)+pow(centers[j].gamma[1],2)) ) );
 
 		star_kappa[j] = star_fstars*centers[j].kappa;
-		cout << star_kappa[j]*Sigma_crit << endl;
+
 		star_xdisk[j][0] = centers[j].x[0];
 		star_xdisk[j][1] = centers[j].x[1];
 
@@ -113,7 +113,6 @@ void BaseAnaLens::implant_stars(Point *centers,unsigned long Nregions,long *seed
 
 	assert(m <= stars_N);
 	stars_N = m;
-	cout << stars_N;
 	//std::printf("last star x = %e %e\n",stars_xp[stars_N-1][0],stars_xp[stars_N-1][1]);
 
 	float dummy=0;
@@ -122,8 +121,6 @@ void BaseAnaLens::implant_stars(Point *centers,unsigned long Nregions,long *seed
 
 	star_tree = new QuadTree(stars_xp,star_masses,&dummy,stars_N
 			,false,false,0,4,star_theta_force);
-
-	std::cout<<"projected with 2D tree"<<std::endl;
 
 	// visit every branch to find center of mass and cutoff scale */
 	stars_implanted = true;

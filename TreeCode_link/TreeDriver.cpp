@@ -9,7 +9,7 @@ static Point **temp_points,tmp;
 static double realray[2];
 //Point *point_global;
 
-Point *NearestNeighbor(TreeHndl tree,double *ray,int Nneighbors,ListHndl neighborlist,short direction){
+Point *TreeStruct::NearestNeighbor(double *ray,int Nneighbors,ListHndl neighborlist,short direction){
   /* nearest neighbor points in a given direction, direction != 0 should not */
   /*    be used except on a grid */
   /* direction = 0 distance */
@@ -18,75 +18,70 @@ Point *NearestNeighbor(TreeHndl tree,double *ray,int Nneighbors,ListHndl neighbo
   /*           = 3 to up */
   /*           = 4 to down */
   unsigned long i;
-  void _NearestNeighbor(TreeHndl tree,double *ray,int Nneighbors
-			,Point **neighborpoints,double *rneighbor,short *direction);
   static int count=0,oldNneighbors=-1;
   static double *rneighbors;
   static Point **neighborpoints;
 
   /*std::printf("entering NN\n");*/
 
-  if(tree->top->npoints <= Nneighbors){
+  if(top->npoints <= Nneighbors){
 	  ERROR_MESSAGE();
 	  std::printf("ERROR: in NearestNeighbor, number of neighbors > total number of points\n");
 	  exit(1);
   }
-
-  if(Nneighbors <= 0){
-	  EmptyList(neighborlist);
-	  return NULL;
-  }
+  EmptyList(neighborlist);
+  if(Nneighbors <= 0) return NULL;
 
   if(count==0){
     /*std::printf("allocating memory\n");*/
-    rneighbors=(double *)malloc((Nneighbors+tree->Nbucket)*sizeof(double));
+    rneighbors=(double *)malloc((Nneighbors+Nbucket)*sizeof(double));
     assert(rneighbors);
-    neighborpoints=(Point **)malloc((Nneighbors+tree->Nbucket)*sizeof(Point *));
+    neighborpoints=(Point **)malloc((Nneighbors+Nbucket)*sizeof(Point *));
     assert(neighborpoints);
-    temp_points=(Point **)malloc((Nneighbors+tree->Nbucket)*sizeof(Point *));
+    temp_points=(Point **)malloc((Nneighbors+Nbucket)*sizeof(Point *));
     assert(temp_points);
     ++count;
     oldNneighbors=Nneighbors;
 
   }else if(oldNneighbors < Nneighbors){ /* if the number of nearest neighbors goes up get more mem */
     /*std::printf("re-allocating memory\n");*/
-    rneighbors=(double *)realloc(rneighbors,(Nneighbors+tree->Nbucket)*sizeof(double));
-    neighborpoints=(Point **)realloc(neighborpoints,(Nneighbors+tree->Nbucket)*sizeof(Point *));
-    temp_points=(Point **)realloc(temp_points,(Nneighbors+tree->Nbucket)*sizeof(Point *));
+    rneighbors=(double *)realloc(rneighbors,(Nneighbors+Nbucket)*sizeof(double));
+    neighborpoints=(Point **)realloc(neighborpoints,(Nneighbors+Nbucket)*sizeof(Point *));
+    temp_points=(Point **)realloc(temp_points,(Nneighbors+Nbucket)*sizeof(Point *));
     oldNneighbors=Nneighbors;
   }
 
 
   /*   std::printf("Nneighbors=%i\n",Nneighbors); */
-  /*   std::printf("array sizes=%i\n",Nneighbors+tree->Nbucket); */
+  /*   std::printf("array sizes=%i\n",Nneighbors+Nbucket); */
 
   /* initalize distance to neighbors to a large number */
-  for(i=0;i<(tree->Nbucket+Nneighbors);++i){
-    rneighbors[i]=10*(tree->top->boundary_p2[0]-tree->top->boundary_p1[0]);
+  for(i=0;i<(Nbucket+Nneighbors);++i){
+    rneighbors[i]=10*(top->boundary_p2[0]-top->boundary_p1[0]);
   }
 
-  moveTop(tree);
-  //   std::printf("p1= [%f,%f]\n", tree->current->boundary_p1[0],tree->current->boundary_p1[1]);
-  //   std::printf("p2= [%f,%f]\n", tree->current->boundary_p2[0],tree->current->boundary_p2[1]);
+  moveTop();
+  //   std::printf("p1= [%f,%f]\n", current->boundary_p1[0],current->boundary_p1[1]);
+  //   std::printf("p2= [%f,%f]\n", current->boundary_p2[0],current->boundary_p2[1]);
 
   realray[0]=ray[0];
   realray[1]=ray[1];
 
-  if( inbox(ray,tree->current->boundary_p1,tree->current->boundary_p2) == 0 ){
+  if( inbox(ray,current->boundary_p1,current->boundary_p2) == 0 ){
     std::printf("Warning: in NearestNeighbor, ray is not inside the simulation box\n    should work in any case\n      ray= %e %e\n",ray[0],ray[1]);
 
-    ray[0]=DMAX(ray[0],tree->current->boundary_p1[0]);
-    ray[0]=DMIN(ray[0],tree->current->boundary_p2[0]);
+    ray[0]=DMAX(ray[0],current->boundary_p1[0]);
+    ray[0]=DMIN(ray[0],current->boundary_p2[0]);
 
-    ray[1]=DMAX(ray[1],tree->current->boundary_p1[1]);
-    ray[1]=DMIN(ray[1],tree->current->boundary_p2[1]);
+    ray[1]=DMAX(ray[1],current->boundary_p1[1]);
+    ray[1]=DMIN(ray[1],current->boundary_p2[1]);
   }
   incell=1;
 
   if(direction==0) EmptyList(neighborlist);
   if(direction==-1) direction=0;
 
-  _NearestNeighbor(tree,ray,Nneighbors,neighborpoints,rneighbors,&direction);
+  _NearestNeighbor(ray,Nneighbors,neighborpoints,rneighbors,&direction);
 
   /* convert from point array to exported point list */
 
@@ -99,23 +94,23 @@ Point *NearestNeighbor(TreeHndl tree,double *ray,int Nneighbors,ListHndl neighbo
   return neighborpoints[0];
 }
 
-void _NearestNeighbor(TreeHndl tree,double *ray,int Nneighbors,Point **neighborpoints,double *rneighbors,short *direction){
+void TreeStruct::_NearestNeighbor(double *ray,int Nneighbors,Point **neighborpoints,double *rneighbors,short *direction){
 
   int i,incell2=1;
-  unsigned long index[Nneighbors+tree->Nbucket];
+  unsigned long index[Nneighbors+Nbucket];
   double dx,dy;
 
-  //std::printf("**************************************\nlevel %i\n",tree->current->level);
-  //for(i=0;i<tree->current->npoints;++i) std::printf("   %i\n",tree->current->points[i]);
+  //std::printf("**************************************\nlevel %i\n",current->level);
+  //for(i=0;i<current->npoints;++i) std::printf("   %i\n",current->points[i]);
 
   if(incell){  /* not found cell yet */
 
-    if( inbox(ray,tree->current->boundary_p1,tree->current->boundary_p2) ){
+    if( inbox(ray,current->boundary_p1,current->boundary_p2) ){
 
     	// found the box small enough */
-    	if( tree->current->npoints <= (Nneighbors+tree->Nbucket) ){
+    	if( current->npoints <= (Nneighbors+Nbucket) ){
     		incell=0;
-    		/*std::printf("found box with %i points\n",tree->current->npoints);*/
+    		/*std::printf("found box with %i points\n",current->npoints);*/
 
     		//if( (ray[0]!=realray[0])*(ray[1]!=realray[1]) ){ std::printf("ray != realray _NearestNeighbor\n"); ERROR_MESSAGE();}
     		//assert( (ray[0] == realray[0]) && (ray[1] == realray[1]) );
@@ -125,11 +120,11 @@ void _NearestNeighbor(TreeHndl tree,double *ray,int Nneighbors,Point **neighborp
     		ray[1]=realray[1];
 
     		/* calculate the distance to all the points in cell */
-    		if(tree->current->points != NULL ) tree->pointlist->current=tree->current->points;
-    		for(i=0;i<tree->current->npoints;++i){
+    		if(current->points != NULL ) pointlist->current=current->points;
+    		for(i=0;i<current->npoints;++i){
 
-    			dx=tree->pointlist->current->x[0]-ray[0];
-    			dy=tree->pointlist->current->x[1]-ray[1];
+    			dx=pointlist->current->x[0]-ray[0];
+    			dy=pointlist->current->x[1]-ray[1];
 
     			switch(*direction){
     			case 0: /* distance */
@@ -154,37 +149,37 @@ void _NearestNeighbor(TreeHndl tree,double *ray,int Nneighbors,Point **neighborp
     			}
 
      			index[i]=i;
-    			temp_points[i]=tree->pointlist->current;
-    			MoveDownList(tree->pointlist);
+    			temp_points[i]=pointlist->current;
+    			MoveDownList(pointlist);
     		}
 
-    		if(tree->current->npoints > 0){
-    			double_sort(tree->current->npoints,rneighbors-1,index-1);
-    			for(i=0;i<tree->current->npoints;++i) neighborpoints[i] = temp_points[index[i]];
+    		if(current->npoints > 0){
+    			double_sort(current->npoints,rneighbors-1,index-1);
+    			for(i=0;i<current->npoints;++i) neighborpoints[i] = temp_points[index[i]];
     		}
 
       }else{  // keep going down the tree
 
-    	  if(tree->current->child1 !=NULL){
-    		  moveToChild(tree,1);
-    		  _NearestNeighbor(tree,ray,Nneighbors,neighborpoints,rneighbors,direction);
-    		  moveUp(tree);
+    	  if(current->child1 !=NULL){
+    		  moveToChild(1);
+    		  _NearestNeighbor(ray,Nneighbors,neighborpoints,rneighbors,direction);
+    		  moveUp();
 
     		  incell2=incell;
     	  }
 
-    	  if(tree->current->child2 !=NULL){
-    		  moveToChild(tree,2);
-    		  _NearestNeighbor(tree,ray,Nneighbors,neighborpoints,rneighbors,direction);
-    		  moveUp(tree);
+    	  if(current->child2 !=NULL){
+    		  moveToChild(2);
+    		  _NearestNeighbor(ray,Nneighbors,neighborpoints,rneighbors,direction);
+    		  moveUp();
     	  }
 
     	  // if ray found in second child go back to first to search for neighbors
     	  if( (incell2==1) && (incell==0) ){
-    		  if(tree->current->child1 !=NULL){
-    			  moveToChild(tree,1);
-    			  _NearestNeighbor(tree,ray,Nneighbors,neighborpoints,rneighbors,direction);
-    			  moveUp(tree);
+    		  if(current->child1 !=NULL){
+    			  moveToChild(1);
+    			  _NearestNeighbor(ray,Nneighbors,neighborpoints,rneighbors,direction);
+    			  moveUp();
     		  }
     	  }
 
@@ -194,22 +189,22 @@ void _NearestNeighbor(TreeHndl tree,double *ray,int Nneighbors,Point **neighborp
   }else{  /* already found cell */
 
 	  // does radius cut into the box
-	  if( cutbox(ray,tree->current->boundary_p1,tree->current->boundary_p2,rneighbors[Nneighbors-1]) ){
+	  if( cutbox(ray,current->boundary_p1,current->boundary_p2,rneighbors[Nneighbors-1]) ){
 
-		  if( atLeaf(tree) ){  /* leaf case */
+		  if( atLeaf() ){  /* leaf case */
 
 			  /* combine found neighbors with points in box and resort */
-			  if(tree->current->points != NULL) tree->pointlist->current=tree->current->points;
+			  if(current->points != NULL) pointlist->current=current->points;
 
 			  for(i=0;i<Nneighbors;++i){
 				  index[i]=i;
 				  temp_points[i]=neighborpoints[i];
 			  }
 
-			  for(i=Nneighbors;i<(tree->current->npoints+Nneighbors);++i){
+			  for(i=Nneighbors;i<(current->npoints+Nneighbors);++i){
 
-				  dx=tree->pointlist->current->x[0]-ray[0];
-				  dy=tree->pointlist->current->x[1]-ray[1];
+				  dx=pointlist->current->x[0]-ray[0];
+				  dy=pointlist->current->x[1]-ray[1];
 
 				  switch(*direction){
 				  case 0: /* distance */
@@ -234,29 +229,29 @@ void _NearestNeighbor(TreeHndl tree,double *ray,int Nneighbors,Point **neighborp
 				  }
 
 				  index[i]=i;
-				  temp_points[i]=tree->pointlist->current;
-				  MoveDownList(tree->pointlist);
+				  temp_points[i]=pointlist->current;
+				  MoveDownList(pointlist);
 			  }
 
 			  // sort the points found so far
-			  if(tree->current->npoints > 0){
-				  double_sort(tree->current->npoints+Nneighbors,rneighbors-1,index-1);
-				  for(i=0;i<(tree->current->npoints+Nneighbors);++i) neighborpoints[i] = temp_points[index[i]];
+			  if(current->npoints > 0){
+				  double_sort(current->npoints+Nneighbors,rneighbors-1,index-1);
+				  for(i=0;i<(current->npoints+Nneighbors);++i) neighborpoints[i] = temp_points[index[i]];
 			  }
 
 		  }else{
 
-			  if(tree->current->child1 !=NULL){
-				  moveToChild(tree,1);
-				  _NearestNeighbor(tree,ray,Nneighbors,neighborpoints,rneighbors,direction);
-				  moveUp(tree);
+			  if(current->child1 !=NULL){
+				  moveToChild(1);
+				  _NearestNeighbor(ray,Nneighbors,neighborpoints,rneighbors,direction);
+				  moveUp();
 			  }
 
-			  if(tree->current->child2 !=NULL){
-				  moveToChild(tree,2);
-				  _NearestNeighbor(tree,ray,Nneighbors,neighborpoints,rneighbors,direction);
-				  /*std::printf("moving up from level %i\n",tree->current->level);*/
-				  moveUp(tree);
+			  if(current->child2 !=NULL){
+				  moveToChild(2);
+				  _NearestNeighbor(ray,Nneighbors,neighborpoints,rneighbors,direction);
+				  /*std::printf("moving up from level %i\n",current->level);*/
+				  moveUp();
 			  }
 		  }
 
@@ -364,25 +359,25 @@ bool BoxInCircle(double *ray,double radius,double *p1,double *p2){
  *   Finds the leaf the ray is in and adds Nadd to all of is parent leaves
 */
 
-void _FindLeaf(TreeHndl tree,double *ray,unsigned long Nadd){
+void TreeStruct::_FindLeaf(double *ray,unsigned long Nadd){
 
 	bool contin;
 
 	do{
-		tree->current->npoints += Nadd;
+		current->npoints += Nadd;
 
 		/* change center of mass */
-		//tree->current->center[0]=(tree->current->center[0]*(tree->current->npoints-1) + ray[0])/tree->current->npoints;
-		//tree->current->center[1]=(tree->current->center[1]*(tree->current->npoints-1) + ray[1])/tree->current->npoints;
+		//current->center[0]=(current->center[0]*(current->npoints-1) + ray[0])/current->npoints;
+		//current->center[1]=(current->center[1]*(current->npoints-1) + ray[1])/current->npoints;
 
 		contin=false;
-		if(tree->current->child1 != NULL &&
-				inbox(ray,tree->current->child1->boundary_p1,tree->current->child1->boundary_p2) ){
-			moveToChild(tree,1);
+		if(current->child1 != NULL &&
+				inbox(ray,current->child1->boundary_p1,current->child1->boundary_p2) ){
+			moveToChild(1);
 			contin=true;
-		}else if(tree->current->child2 != NULL &&
-				inbox(ray,tree->current->child2->boundary_p1,tree->current->child2->boundary_p2) ){
-			moveToChild(tree,2);
+		}else if(current->child2 != NULL &&
+				inbox(ray,current->child2->boundary_p1,current->child2->boundary_p2) ){
+			moveToChild(2);
 			contin=true;
 		}
 	}while(contin);
@@ -399,26 +394,22 @@ bool AreBoxNeighbors(Point *point1,Point *point2){
 	return false;
 }
 
-void FindBoxPoint(TreeHndl tree,double *ray,Point *point){
-	// return the point that is in the same box as ray[2]
-	// if Nbuck > 1 the head of the point array is returned
-	void _FindBox(TreeHndl tree,double *ray);
+/** return the point that is in the same box as ray[2]
+ * if Nbuck > 1 the head of the point array is returned
+ */
+void TreeStruct::FindBoxPoint(double *ray,Point *point){
 	Branch *branch;
 
-	//point=(Point *)malloc(sizeof(Point));
-	//moveTop(tree);
-	//printTree(tree);
-
-	branch=tree->current;
-	moveTop(tree);
+	branch=current;
+	moveTop();
 	   // check if ray is outside initial box
-	if( inbox(ray,tree->current->boundary_p1,tree->current->boundary_p2) == 0 ){
+	if( inbox(ray,current->boundary_p1,current->boundary_p2) == 0 ){
 		std::printf("FindBox: ray outside of grided range\n");
 		return;
 	}
 
-	_FindBox(tree,ray);
-	PointCopyData(point,tree->current->points);
+	_FindBox(ray);
+	PointCopyData(point,current->points);
 
 	//if(foundpoint == 0){ std::printf("FindBoxPoint failed to find point\n"); exit(1);}
 	//PrintPoint(point);
@@ -434,24 +425,24 @@ void FindBoxPoint(TreeHndl tree,double *ray,Point *point){
 		exit(0);
 	}
 
-	tree->current=branch;
+	current=branch;
 	//return point;
 }
 
-void _FindBox(TreeHndl tree,double *ray){
+void TreeStruct::_FindBox(double *ray){
 	bool contin;
 
 	// replaced recursion with iteration
 	do{
 		contin=false;
-		if(tree->current->child1 !=NULL &&
-				inbox(ray,tree->current->child1->boundary_p1,tree->current->child1->boundary_p2) ){
-			moveToChild(tree,1);
+		if(current->child1 !=NULL &&
+				inbox(ray,current->child1->boundary_p1,current->child1->boundary_p2) ){
+			moveToChild(1);
 			contin=true;
 		}
-		if(tree->current->child2 !=NULL &&
-				inbox(ray,tree->current->child2->boundary_p1,tree->current->child2->boundary_p2) ){
-			moveToChild(tree,2);
+		if(current->child2 !=NULL &&
+				inbox(ray,current->child2->boundary_p1,current->child2->boundary_p2) ){
+			moveToChild(2);
 			contin=true;
 		}
 	}while(contin);
@@ -497,8 +488,7 @@ Point *sortList(long n, double *arr,ListHndl list,Point *firstpointin){
 }
 
 
-void PointsWithin(TreeHndl tree,double *ray,float rmax,ListHndl neighborlist,short markpoints){
-	void _PointsWithin(TreeHndl tree,double *ray,float *rmax,ListHndl neighborlist,short markpoints);
+void TreeStruct::PointsWithin(double *ray,float rmax,ListHndl neighborlist,short markpoints){
 /*
  *  finds all points in tree that lie within rmax of the point ray[]
  *   markpoints = 0  does not change in_image variable in any point, gives a list of neighbors
@@ -511,96 +501,95 @@ void PointsWithin(TreeHndl tree,double *ray,float rmax,ListHndl neighborlist,sho
   realray[0]=ray[0];
   realray[1]=ray[1];
 
-  moveTop(tree);
-  if( inbox(ray,tree->current->boundary_p1,tree->current->boundary_p2) == 0 ){
+  moveTop();
+  if( inbox(ray,current->boundary_p1,current->boundary_p2) == 0 ){
     std::printf("Warning: in PointsWithin, ray is not inside the simulation box\n    should work in any case\n      ray= %e %e\n     boundary p1 = %e %e p2 = %e %e\n",ray[0],ray[1]
-	   ,tree->current->boundary_p1[0],tree->current->boundary_p1[1]
-	   ,tree->current->boundary_p2[0],tree->current->boundary_p2[1]);
+	   ,current->boundary_p1[0],current->boundary_p1[1]
+	   ,current->boundary_p2[0],current->boundary_p2[1]);
 
-    ray[0]=DMAX(ray[0],tree->current->boundary_p1[0]);
-    ray[0]=DMIN(ray[0],tree->current->boundary_p2[0]);
+    ray[0]=DMAX(ray[0],current->boundary_p1[0]);
+    ray[0]=DMIN(ray[0],current->boundary_p2[0]);
 
-    ray[1]=DMAX(ray[1],tree->current->boundary_p1[1]);
-    ray[1]=DMIN(ray[1],tree->current->boundary_p2[1]);
+    ray[1]=DMAX(ray[1],current->boundary_p1[1]);
+    ray[1]=DMIN(ray[1],current->boundary_p2[1]);
   }
   incell=1;
 
-  _PointsWithin(tree,ray,&rmax,neighborlist,markpoints);
+  _PointsWithin(ray,&rmax,neighborlist,markpoints);
 }
 
-void PointsWithin_iter(TreeHndl tree,double *ray,float rmax,ListHndl neighborlist,short markpoints){
+void TreeStruct::PointsWithin_iter(double *ray,float rmax,ListHndl neighborlist,short markpoints){
 	bool descend;
 	short desition;
 	unsigned long i,j;
 	double radius,length;
 
 	assert(neighborlist);
-	assert(tree);
 
 	EmptyList(neighborlist);
 
-	moveTop(tree);
+	moveTop();
 
 	do{
 		descend = true;
-		desition = cutbox(ray,tree->current->boundary_p1,tree->current->boundary_p2,rmax);
-		length = FurthestBorder(ray,tree->current->boundary_p1,tree->current->boundary_p2);
-		if( FurthestBorder(ray,tree->current->boundary_p1,tree->current->boundary_p2) < rmax ){
+		desition = cutbox(ray,current->boundary_p1,current->boundary_p2,rmax);
+		length = FurthestBorder(ray,current->boundary_p1,current->boundary_p2);
+		if( FurthestBorder(ray,current->boundary_p1,current->boundary_p2) < rmax ){
 
-			//ClosestBorder(ray,tree->current->boundary_p1,tree->current->boundary_p2) < rmax) ){
+			//ClosestBorder(ray,current->boundary_p1,current->boundary_p2) < rmax) ){
 			// whole box is outside circle
 			descend = false;
 
 			// put all the points into neighborlist
-		   	  tree->pointlist->current=tree->current->points;
-    		  for(i=0;i<tree->current->npoints;++i){
+		   	  pointlist->current=current->points;
+    		  for(i=0;i<current->npoints;++i){
      			  if(markpoints == 1){
-     				  tree->pointlist->current->in_image=TRUE;
-     				  tree->pointlist->current->image->in_image=TRUE;
+     				  pointlist->current->in_image=TRUE;
+     				  pointlist->current->image->in_image=TRUE;
      			  }else if(markpoints == -1){
-     				  tree->pointlist->current->in_image=FALSE;
-     				  tree->pointlist->current->image->in_image=FALSE;
-					  tree->pointlist->current->surface_brightness = tree->pointlist->current->image->surface_brightness = 0.0;
+     				  pointlist->current->in_image=FALSE;
+     				  pointlist->current->image->in_image=FALSE;
+					  pointlist->current->surface_brightness = pointlist->current->image->surface_brightness = 0.0;
     			  }else if(markpoints == 0){
-     				  InsertAfterCurrent(neighborlist,tree->pointlist->current->x
-							  ,tree->pointlist->current->id,tree->pointlist->current->image);
+     				  InsertAfterCurrent(neighborlist,pointlist->current->x
+							  ,pointlist->current->id,pointlist->current->image);
 
 					  MoveDownList(neighborlist);
-					  PointCopyData(neighborlist->current,tree->pointlist->current);
+					  PointCopyData(neighborlist->current,pointlist->current);
 					  MoveUpList(neighborlist);
 				  }
 
-     			  MoveDownList(tree->pointlist);
+     			  MoveDownList(pointlist);
      		  }
 
-		}else if(cutbox(ray,tree->current->boundary_p1,tree->current->boundary_p2,rmax) == 0 ){  // whole box is outside circle
+		}else if(cutbox(ray,current->boundary_p1,current->boundary_p2,rmax) == 0 ){  // whole box is outside circle
 			descend = false;
-		}else if(tree->current->child1 == NULL){  // leaf case
+		}else if(current->child1 == NULL){  // leaf case
 
-		   	  tree->pointlist->current=tree->current->points;
-	   		  for(i=0;i<tree->current->npoints;++i){
-	    			  for(j=0,radius=0.0;j<2;++j) radius+=pow(tree->pointlist->current->x[j]-ray[j],2);
+		   	  pointlist->current=current->points;
+	   		  for(i=0;i<current->npoints;++i){
+	    			  for(j=0,radius=0.0;j<2;++j) radius+=pow(pointlist->current->x[j]-ray[j],2);
 	    			  if( radius < rmax*rmax ){
 	       				  if(markpoints == 1){
-	       					  tree->pointlist->current->in_image=TRUE;
-	      					  tree->pointlist->current->image->in_image=TRUE;
+	       					  pointlist->current->in_image=TRUE;
+	      					  pointlist->current->image->in_image=TRUE;
 	      				  }else if(markpoints == -1){
-	      					  tree->pointlist->current->in_image=FALSE;
-	     					  tree->pointlist->current->image->in_image=FALSE;
-	     					  tree->pointlist->current->surface_brightness = tree->pointlist->current->image->surface_brightness = 0.0;
+	      					  pointlist->current->in_image=FALSE;
+	     					  pointlist->current->image->in_image=FALSE;
+	     					  pointlist->current->surface_brightness = pointlist->current->image->surface_brightness = 0.0;
 	       				  }else if(markpoints == 0){
-	         				  InsertAfterCurrent(neighborlist,tree->pointlist->current->x
-	    						  ,tree->pointlist->current->id,tree->pointlist->current->image);
+	         				  InsertAfterCurrent(neighborlist,pointlist->current->x
+	    						  ,pointlist->current->id,pointlist->current->image);
 
 	         				  MoveDownList(neighborlist);
-	         				  PointCopyData(neighborlist->current,tree->pointlist->current);
+	         				  PointCopyData(neighborlist->current,pointlist->current);
 	         				  MoveUpList(neighborlist);
 	      				  }
 	    			  }
-	    			  MoveDownList(tree->pointlist);
+	    			  MoveDownList(pointlist);
 	    		  }
 		}
-	}while(TreeWalkStep(tree,descend));
+	}while(TreeWalkStep(descend));
 }
 
 double ClosestBorder(double *ray,double *p1,double *p2){
@@ -617,27 +606,27 @@ double ClosestBorder(double *ray,double *p1,double *p2){
 	return MIN(p2[1]-ray[1],length);
 }
 
-void _PointsWithin(TreeHndl tree,double *ray,float *rmax,ListHndl neighborlist,short markpoints){
+void TreeStruct::_PointsWithin(double *ray,float *rmax,ListHndl neighborlist,short markpoints){
 
   int i,j,incell2=1;
   double radius;
   short pass;
 
 
-  //std::printf("**************************************\nlevel %i\n",tree->current->level);
-  //   std::printf("   %i incell=%i\n",tree->current->points->id,incell);
+  //std::printf("**************************************\nlevel %i\n",current->level);
+  //   std::printf("   %i incell=%i\n",current->points->id,incell);
 
   if(incell){  // not found cell yet
 
-    if( inbox(ray,tree->current->boundary_p1,tree->current->boundary_p2) ){
+    if( inbox(ray,current->boundary_p1,current->boundary_p2) ){
 
       // found the box small enough
-    	if( cutbox(ray,tree->current->boundary_p1,tree->current->boundary_p2,*rmax)==1
-    			|| atLeaf(tree) ){
+    	if( cutbox(ray,current->boundary_p1,current->boundary_p2,*rmax)==1
+    			|| atLeaf() ){
     		// whole box in circle or a leaf with ray in it
 
     	  incell=0;
-    	  //std::printf("found box with %i points\n",tree->current->npoints);
+    	  //std::printf("found box with %i points\n",current->npoints);
 
     	  // this sets ray back to real value once closest leaf bax is found
     	  if( (ray[0]!=realray[0])*(ray[1]!=realray[1]) ){ std::printf("ray != realray _PointsWithin\n"); ERROR_MESSAGE(); exit(0);}
@@ -645,81 +634,81 @@ void _PointsWithin(TreeHndl tree,double *ray,float *rmax,ListHndl neighborlist,s
     	  ray[0]=realray[0];
     	  ray[1]=realray[1];
 
-    	  if(tree->current->points != NULL) tree->pointlist->current = tree->current->points;
+    	  if(current->points != NULL) pointlist->current = current->points;
 
-    	  if( atLeaf(tree) ){
+    	  if( atLeaf() ){
     	   	  // if leaf calculate the distance to all the points in cell
-    		  for(i=0;i<tree->current->npoints;++i){
-    			  for(j=0,radius=0.0;j<2;++j) radius+=pow(tree->pointlist->current->x[j]-ray[j],2);
+    		  for(i=0;i<current->npoints;++i){
+    			  for(j=0,radius=0.0;j<2;++j) radius+=pow(pointlist->current->x[j]-ray[j],2);
     			  if( radius < *rmax**rmax ){
        				  if(markpoints == 1){
-       					  tree->pointlist->current->in_image=TRUE;
-      					  tree->pointlist->current->image->in_image=TRUE;
+       					  pointlist->current->in_image=TRUE;
+      					  pointlist->current->image->in_image=TRUE;
       				  }else if(markpoints == -1){
-      					  tree->pointlist->current->in_image=FALSE;
-     					  tree->pointlist->current->image->in_image=FALSE;
-     					  tree->pointlist->current->surface_brightness = tree->pointlist->current->image->surface_brightness = 0.0;
+      					  pointlist->current->in_image=FALSE;
+     					  pointlist->current->image->in_image=FALSE;
+     					  pointlist->current->surface_brightness = pointlist->current->image->surface_brightness = 0.0;
        				  }else if(markpoints == 0){
-         				  InsertAfterCurrent(neighborlist,tree->pointlist->current->x
-    						  ,tree->pointlist->current->id,tree->pointlist->current->image);
+         				  InsertAfterCurrent(neighborlist,pointlist->current->x
+    						  ,pointlist->current->id,pointlist->current->image);
 
          				  MoveDownList(neighborlist);
-         				  PointCopyData(neighborlist->current,tree->pointlist->current);
+         				  PointCopyData(neighborlist->current,pointlist->current);
          				  MoveUpList(neighborlist);
       				  }
     			  }
-    			  MoveDownList(tree->pointlist);
+    			  MoveDownList(pointlist);
     		  }
     	  }else{ // put all of points in box into neighborlist
-       		  for(i=0;i<tree->current->npoints;++i){
+       		  for(i=0;i<current->npoints;++i){
        			  if(markpoints == 1){
-       				  tree->pointlist->current->in_image=TRUE;
-       				  tree->pointlist->current->image->in_image=TRUE;
+       				  pointlist->current->in_image=TRUE;
+       				  pointlist->current->image->in_image=TRUE;
        			  }else if(markpoints == -1){
-       				  tree->pointlist->current->in_image=FALSE;
-       				  tree->pointlist->current->image->in_image=FALSE;
- 					  tree->pointlist->current->surface_brightness = tree->pointlist->current->image->surface_brightness = 0.0;
+       				  pointlist->current->in_image=FALSE;
+       				  pointlist->current->image->in_image=FALSE;
+ 					  pointlist->current->surface_brightness = pointlist->current->image->surface_brightness = 0.0;
       			  }else if(markpoints == 0){
-       				  InsertAfterCurrent(neighborlist,tree->pointlist->current->x
-  							  ,tree->pointlist->current->id,tree->pointlist->current->image);
+       				  InsertAfterCurrent(neighborlist,pointlist->current->x
+  							  ,pointlist->current->id,pointlist->current->image);
 
   					  MoveDownList(neighborlist);
-  					  PointCopyData(neighborlist->current,tree->pointlist->current);
+  					  PointCopyData(neighborlist->current,pointlist->current);
   					  MoveUpList(neighborlist);
   				  }
 
-       			  MoveDownList(tree->pointlist);
+       			  MoveDownList(pointlist);
        		  }
     	  }
 
     	}else{ // keep going down the tree
 
-    	  //std::printf("moving to child1 from level %i\n",tree->current->level);
-    	  if(tree->current->child1 !=NULL){
-    		  moveToChild(tree,1);
-    		  _PointsWithin(tree,ray,rmax,neighborlist,markpoints);
-    		  //std::printf("moving up from level %i\n",tree->current->level);
-    		  moveUp(tree);
+    	  //std::printf("moving to child1 from level %i\n",current->level);
+    	  if(current->child1 !=NULL){
+    		  moveToChild(1);
+    		  _PointsWithin(ray,rmax,neighborlist,markpoints);
+    		  //std::printf("moving up from level %i\n",current->level);
+    		  moveUp();
 
     		  incell2=incell;
     	  }
 
-    	  if(tree->current->child2 !=NULL){
-    		  //std::printf("moving to child2 from level %i\n",tree->current->level);
-    		  moveToChild(tree,2);
-    		  _PointsWithin(tree,ray,rmax,neighborlist,markpoints);
-    		  //std::printf("moving up from level %i\n",tree->current->level);
-    		  moveUp(tree);
+    	  if(current->child2 !=NULL){
+    		  //std::printf("moving to child2 from level %i\n",current->level);
+    		  moveToChild(2);
+    		  _PointsWithin(ray,rmax,neighborlist,markpoints);
+    		  //std::printf("moving up from level %i\n",current->level);
+    		  moveUp();
     	  }
 
     	  // if ray found in second child go back to first to search for neighbors
     	  if( (incell2==1) && (incell==0) ){
-    		  if(tree->current->child1 !=NULL){
-    			  //std::printf("moving to child1 again from level %i\n",tree->current->level);
-    			  moveToChild(tree,1);
-    			  _PointsWithin(tree,ray,rmax,neighborlist,markpoints);
-    			  //std::printf("moving up from level %i\n",tree->current->level);
-    			  moveUp(tree);
+    		  if(current->child1 !=NULL){
+    			  //std::printf("moving to child1 again from level %i\n",current->level);
+    			  moveToChild(1);
+    			  _PointsWithin(ray,rmax,neighborlist,markpoints);
+    			  //std::printf("moving up from level %i\n",current->level);
+    			  moveUp();
     		  }
     	  }
       }
@@ -727,83 +716,83 @@ void _PointsWithin(TreeHndl tree,double *ray,float *rmax,ListHndl neighborlist,s
 
   }else{    // found cell
 
-	  //std::printf("finding neighboring boxes at level = %i\n",tree->current->level);
+	  //std::printf("finding neighboring boxes at level = %i\n",current->level);
 
-	  pass=cutbox(ray,tree->current->boundary_p1,tree->current->boundary_p2,*rmax);
+	  pass=cutbox(ray,current->boundary_p1,current->boundary_p2,*rmax);
 	  // does radius cut into the box
 	  if( pass ){
 
-		  if(tree->current->points != NULL) tree->pointlist->current = tree->current->points;
+		  if(current->points != NULL) pointlist->current = current->points;
 
-		  if( atLeaf(tree) ){  /* leaf case */
+		  if( atLeaf() ){  /* leaf case */
 
-			  for(i=0;i<tree->current->npoints;++i){
+			  for(i=0;i<current->npoints;++i){
 
-				  for(j=0,radius=0.0;j<2;++j) radius+=pow(tree->pointlist->current->x[j]-ray[j],2);
+				  for(j=0,radius=0.0;j<2;++j) radius+=pow(pointlist->current->x[j]-ray[j],2);
 				  if( radius < *rmax**rmax ){
 					  if(markpoints==1){
-						  tree->pointlist->current->in_image=TRUE;
-						  tree->pointlist->current->image->in_image=TRUE;
+						  pointlist->current->in_image=TRUE;
+						  pointlist->current->image->in_image=TRUE;
 					  }else if(markpoints==-1){
-						  tree->pointlist->current->in_image=FALSE;
-						  tree->pointlist->current->image->in_image=FALSE;
-     					  tree->pointlist->current->surface_brightness = tree->pointlist->current->image->surface_brightness = 0.0;
+						  pointlist->current->in_image=FALSE;
+						  pointlist->current->image->in_image=FALSE;
+     					  pointlist->current->surface_brightness = pointlist->current->image->surface_brightness = 0.0;
 					  }else if(markpoints==0){
-						  InsertAfterCurrent(neighborlist,tree->pointlist->current->x
-								  ,tree->pointlist->current->id,tree->pointlist->current->image);
+						  InsertAfterCurrent(neighborlist,pointlist->current->x
+								  ,pointlist->current->id,pointlist->current->image);
 
            				  MoveDownList(neighborlist);
-           				  PointCopyData(neighborlist->current,tree->pointlist->current);
+           				  PointCopyData(neighborlist->current,pointlist->current);
            				  MoveUpList(neighborlist);
       				  }
 
 				  }
-				  MoveDownList(tree->pointlist);
+				  MoveDownList(pointlist);
 			  }
 		  }else if(pass==1){ // whole box is inside radius
 
-			  for(i=0;i<tree->current->npoints;++i){
+			  for(i=0;i<current->npoints;++i){
   				  if(markpoints==1){
-   					  tree->pointlist->current->in_image=TRUE;
-  					  tree->pointlist->current->image->in_image=TRUE;
+   					  pointlist->current->in_image=TRUE;
+  					  pointlist->current->image->in_image=TRUE;
   				  }else if(markpoints==-1){
-  					  tree->pointlist->current->in_image=FALSE;
- 					  tree->pointlist->current->image->in_image=FALSE;
- 					  tree->pointlist->current->surface_brightness = tree->pointlist->current->image->surface_brightness = 0.0;
+  					  pointlist->current->in_image=FALSE;
+ 					  pointlist->current->image->in_image=FALSE;
+ 					  pointlist->current->surface_brightness = pointlist->current->image->surface_brightness = 0.0;
    				  }else if(markpoints==0){
-   					  InsertAfterCurrent(neighborlist,tree->pointlist->current->x
-   							  ,tree->pointlist->current->id,tree->pointlist->current->image);
+   					  InsertAfterCurrent(neighborlist,pointlist->current->x
+   							  ,pointlist->current->id,pointlist->current->image);
 
    					  MoveDownList(neighborlist);
-   					  PointCopyData(neighborlist->current,tree->pointlist->current);
+   					  PointCopyData(neighborlist->current,pointlist->current);
    					  MoveUpList(neighborlist);
    				  }
 
-				  MoveDownList(tree->pointlist);
+				  MoveDownList(pointlist);
 			  }
 		  }else{
-			  //std::printf("moving to child1 from level %i\n",tree->current->level);
-			  if(tree->current->child1 !=NULL){
-				  moveToChild(tree,1);
-				  _PointsWithin(tree,ray,rmax,neighborlist,markpoints);
-				  //std::printf("moving up from level %i\n",tree->current->level);
-				  moveUp(tree);
+			  //std::printf("moving to child1 from level %i\n",current->level);
+			  if(current->child1 !=NULL){
+				  moveToChild(1);
+				  _PointsWithin(ray,rmax,neighborlist,markpoints);
+				  //std::printf("moving up from level %i\n",current->level);
+				  moveUp();
 			  }
 
-			  if(tree->current->child2 !=NULL){
-				  //std::printf("moving to child2 from level %i\n",tree->current->level);
-				  moveToChild(tree,2);
-				  _PointsWithin(tree,ray,rmax,neighborlist,markpoints);
-				  //std::printf("moving up from level %i\n",tree->current->level);
-				  moveUp(tree);
+			  if(current->child2 !=NULL){
+				  //std::printf("moving to child2 from level %i\n",current->level);
+				  moveToChild(2);
+				  _PointsWithin(ray,rmax,neighborlist,markpoints);
+				  //std::printf("moving up from level %i\n",current->level);
+				  moveUp();
 			  }
 		  }
 
 	  }
   }
 
-	  //  std::printf("end of _PointsWithin incell=%i level=%i p1= %e %e %e\n",incell,tree->current->level
-	//	,tree->current->boundary_p1[0],tree->current->boundary_p1[1],tree->current->boundary_p1[2]);/**/
+	  //  std::printf("end of _PointsWithin incell=%i level=%i p1= %e %e %e\n",incell,current->level
+	//	,current->boundary_p1[0],current->boundary_p1[1],current->boundary_p1[2]);/**/
   return;
 }
 
@@ -835,7 +824,7 @@ void NeighborsOfNeighbors(ListHndl neighbors,ListHndl wholelist){
 	return ;
 }
 
-void FriendsOfFriends(TreeHndl tree,double *start_point,float linkinglength,ListHndl neighborlist
+void TreeStruct::FriendsOfFriends(double *start_point,float linkinglength,ListHndl neighborlist
 		      ,Point *filter,unsigned long Nfilter,unsigned long *filter_place){
   unsigned long Nlocal_filter,i;
   Point *placemark,*local_filter;
@@ -849,11 +838,11 @@ void FriendsOfFriends(TreeHndl tree,double *start_point,float linkinglength,List
 
 /*   if(filter != NULL){   */
 /*     std::printf("filter first id %i\n   x start = %e %e\n",filter[*filter_place].id,start_point[0],start_point[1]); */
-/*     MoveToTopList(tree->pointlist); */
-/*     for(i=0;i<tree->pointlist->Npoints;++i){ */
-/*       if(filter[*filter_place].id == tree->pointlist->current->id) std::printf("x in tree %e %e\n" */
-/* 					 ,tree->pointlist->current->x[0],tree->pointlist->current->x[1]); */
-/*       MoveDownList(tree->pointlist); */
+/*     MoveToTopList(pointlist); */
+/*     for(i=0;i<pointlist->Npoints;++i){ */
+/*       if(filter[*filter_place].id == pointlist->current->id) std::printf("x in tree %e %e\n" */
+/* 					 ,pointlist->current->x[0],pointlist->current->x[1]); */
+/*       MoveDownList(pointlist); */
 /*     } */
 /*   } */
 
@@ -861,8 +850,8 @@ void FriendsOfFriends(TreeHndl tree,double *start_point,float linkinglength,List
   realray[0]=start_point[0];
   realray[1]=start_point[1];
 
-  moveTop(tree);
-  _PointsWithin2(tree,start_point,&linkinglength,neighborlist,filter,Nfilter,filter_place,1);
+  moveTop();
+  _PointsWithin2(start_point,&linkinglength,neighborlist,filter,Nfilter,filter_place,1);
 
   if(filter == NULL &&  neighborlist->Npoints > 0){
     Nlocal_filter=neighborlist->Npoints;
@@ -886,7 +875,7 @@ void FriendsOfFriends(TreeHndl tree,double *start_point,float linkinglength,List
 	realray[0]=neighborlist->current->x[0];
 	realray[1]=neighborlist->current->x[1];
 
-	_PointsWithin2(tree,neighborlist->current->x,&linkinglength,neighborlist
+	_PointsWithin2(neighborlist->current->x,&linkinglength,neighborlist
 		      ,local_filter,Nlocal_filter,filter_place,0);
 
 	/* add found points to filter */
@@ -907,7 +896,7 @@ void FriendsOfFriends(TreeHndl tree,double *start_point,float linkinglength,List
 	realray[0]=neighborlist->current->x[0];
 	realray[1]=neighborlist->current->x[1];
 
-	_PointsWithin2(tree,neighborlist->current->x,&linkinglength,neighborlist,filter,Nfilter,filter_place,1);
+	_PointsWithin2(neighborlist->current->x,&linkinglength,neighborlist,filter,Nfilter,filter_place,1);
       }
 
       if(neighborlist->current == neighborlist->bottom) break;
@@ -925,7 +914,7 @@ void FriendsOfFriends(TreeHndl tree,double *start_point,float linkinglength,List
   return;
 }
 
-void _PointsWithin2(TreeHndl tree,double *ray,float *rmax,ListHndl neighborlist
+void TreeStruct::_PointsWithin2(double *ray,float *rmax,ListHndl neighborlist
 		   ,Point *filter,unsigned long Nfilter,unsigned long *filter_place,short compliment){
 
 /*   id numbers in filter[*filterplace ... Nfilter-1] */
@@ -942,17 +931,17 @@ void _PointsWithin2(TreeHndl tree,double *ray,float *rmax,ListHndl neighborlist
 
   if((filter != NULL) && (*filter_place >= Nfilter) ) return; // finished filter
 
-  //std::printf("**************************************\nlevel %i\n",tree->current->level);
-  //   std::printf("   %i incell=%i\n",tree->current->points->id,incell);
+  //std::printf("**************************************\nlevel %i\n",current->level);
+  //   std::printf("   %i incell=%i\n",current->points->id,incell);
 
   if(incell){  // not found cell yet
 
-    if( inbox(ray,tree->current->boundary_p1,tree->current->boundary_p2) ){
+    if( inbox(ray,current->boundary_p1,current->boundary_p2) ){
 
       // found the box small enough
-      if( (tree->current->child1 == NULL)*(tree->current->child2 == NULL)){  // leaf case
+      if( (current->child1 == NULL)*(current->child2 == NULL)){  // leaf case
     	  incell=0;
-    	  //std::printf("found box with %i points\n",tree->current->npoints);
+    	  //std::printf("found box with %i points\n",current->npoints);
 
     	  // this sets ray back to real value once closest leaf bax is found
     	  if( (ray[0]!=realray[0])*(ray[1]!=realray[1]) ){ std::printf("ray != realray _PointsWithin2\n"); ERROR_MESSAGE(); exit(0);}
@@ -962,29 +951,29 @@ void _PointsWithin2(TreeHndl tree,double *ray,float *rmax,ListHndl neighborlist
 
     	  // calculate the distance to all the points in cell
 
-    	  tree->pointlist->current=tree->current->points;
-    	  for(i=0;i<tree->current->npoints;++i){
+    	  pointlist->current=current->points;
+    	  for(i=0;i<current->npoints;++i){
 
-    		  for(j=0,radius=0.0;j<2;++j) radius+=pow(tree->pointlist->current->x[j]-ray[j],2);
+    		  for(j=0,radius=0.0;j<2;++j) radius+=pow(pointlist->current->x[j]-ray[j],2);
     		  if( radius < *rmax**rmax ){
     			  if(filter == NULL){
 
-    				  InsertAfterCurrent(neighborlist,tree->pointlist->current->x
-    						  ,tree->pointlist->current->id,tree->pointlist->current->image);
+    				  InsertAfterCurrent(neighborlist,pointlist->current->x
+    						  ,pointlist->current->id,pointlist->current->image);
 
     				  MoveDownList(neighborlist);
-    				  PointCopyData(neighborlist->current,tree->pointlist->current);
+    				  PointCopyData(neighborlist->current,pointlist->current);
     				  MoveUpList(neighborlist);
 
     			  }else if(compliment){
 
     				  for(k=*filter_place;k<Nfilter;++k){
-    					  if(tree->pointlist->current->id == filter[k].id){
-    						  InsertAfterCurrent(neighborlist,tree->pointlist->current->x
-    								  ,tree->pointlist->current->id,tree->pointlist->current->image);
+    					  if(pointlist->current->id == filter[k].id){
+    						  InsertAfterCurrent(neighborlist,pointlist->current->x
+    								  ,pointlist->current->id,pointlist->current->image);
 
     						  MoveDownList(neighborlist);
-    						  PointCopyData(neighborlist->current,tree->pointlist->current);
+    						  PointCopyData(neighborlist->current,pointlist->current);
     						  MoveUpList(neighborlist);
 
     						  // move point in filter to filter_place and increment filter_place
@@ -997,48 +986,48 @@ void _PointsWithin2(TreeHndl tree,double *ray,float *rmax,ListHndl neighborlist
     				  }
     			  }else{ // do compliment of filter
 
-    				  for(k=0;k<Nfilter;++k) if(tree->pointlist->current->id == filter[k].id) break;
+    				  for(k=0;k<Nfilter;++k) if(pointlist->current->id == filter[k].id) break;
     				  if(k==Nfilter){
-    					  InsertAfterCurrent(neighborlist,tree->pointlist->current->x
-    							  ,tree->pointlist->current->id,tree->pointlist->current->image);
+    					  InsertAfterCurrent(neighborlist,pointlist->current->x
+    							  ,pointlist->current->id,pointlist->current->image);
 
     					  MoveDownList(neighborlist);
-    					  PointCopyData(neighborlist->current,tree->pointlist->current);
+    					  PointCopyData(neighborlist->current,pointlist->current);
     					  MoveUpList(neighborlist);
     				  }
     			  }
 
     		  }
-    		  MoveDownList(tree->pointlist);
+    		  MoveDownList(pointlist);
     	  }
       }else{ // keep going down the tree
 
-    	  //std::printf("moving to child1 from level %i\n",tree->current->level);
-    	  if(tree->current->child1 !=NULL){
-    		  moveToChild(tree,1);
-    		  _PointsWithin2(tree,ray,rmax,neighborlist,filter,Nfilter,filter_place,1);
-    		  //std::printf("moving up from level %i\n",tree->current->level);
-    		  moveUp(tree);
+    	  //std::printf("moving to child1 from level %i\n",current->level);
+    	  if(current->child1 !=NULL){
+    		  moveToChild(1);
+    		  _PointsWithin2(ray,rmax,neighborlist,filter,Nfilter,filter_place,1);
+    		  //std::printf("moving up from level %i\n",current->level);
+    		  moveUp();
 
     		  incell2=incell;
     	  }
 
-    	  if(tree->current->child2 !=NULL){
-    		  //std::printf("moving to child2 from level %i\n",tree->current->level);
-    		  moveToChild(tree,2);
-    		  _PointsWithin2(tree,ray,rmax,neighborlist,filter,Nfilter,filter_place,1);
-    		  //std::printf("moving up from level %i\n",tree->current->level);
-    		  moveUp(tree);
+    	  if(current->child2 !=NULL){
+    		  //std::printf("moving to child2 from level %i\n",current->level);
+    		  moveToChild(2);
+    		  _PointsWithin2(ray,rmax,neighborlist,filter,Nfilter,filter_place,1);
+    		  //std::printf("moving up from level %i\n",current->level);
+    		  moveUp();
     	  }
 
     	  // if ray found in second child go back to first to search for neighbors
     	  if( (incell2==1) && (incell==0) ){
-    		  if(tree->current->child1 !=NULL){
-    			  //std::printf("moving to child1 again from level %i\n",tree->current->level);
-    			  moveToChild(tree,1);
-    			  _PointsWithin2(tree,ray,rmax,neighborlist,filter,Nfilter,filter_place,1);
-    			  //std::printf("moving up from level %i\n",tree->current->level);
-    			  moveUp(tree);
+    		  if(current->child1 !=NULL){
+    			  //std::printf("moving to child1 again from level %i\n",current->level);
+    			  moveToChild(1);
+    			  _PointsWithin2(ray,rmax,neighborlist,filter,Nfilter,filter_place,1);
+    			  //std::printf("moving up from level %i\n",current->level);
+    			  moveUp();
     		  }
     	  }
       }
@@ -1046,36 +1035,36 @@ void _PointsWithin2(TreeHndl tree,double *ray,float *rmax,ListHndl neighborlist
     //std::printf("not in box \n");}
   }else{    // found cell
 
-	  //std::printf("finding neighboring boxes at level = %i\n",tree->current->level);
+	  //std::printf("finding neighboring boxes at level = %i\n",current->level);
 
 	  // does radius cut into the box
-	  if( cutbox(ray,tree->current->boundary_p1,tree->current->boundary_p2,*rmax) ){
+	  if( cutbox(ray,current->boundary_p1,current->boundary_p2,*rmax) ){
 
-		  if( (tree->current->child1 == NULL)*(tree->current->child2 == NULL)){  /* leaf case */
+		  if( (current->child1 == NULL)*(current->child2 == NULL)){  /* leaf case */
 
-			  tree->pointlist->current=tree->current->points;
-			  for(i=0;i<tree->current->npoints;++i){
+			  pointlist->current=current->points;
+			  for(i=0;i<current->npoints;++i){
 
-				  for(j=0,radius=0.0;j<2;++j) radius+=pow(tree->pointlist->current->x[j]-ray[j],2);
+				  for(j=0,radius=0.0;j<2;++j) radius+=pow(pointlist->current->x[j]-ray[j],2);
 				  if( radius < *rmax**rmax ){
 					  if(filter == NULL){
 
-						  InsertAfterCurrent(neighborlist,tree->pointlist->current->x
-								  ,tree->pointlist->current->id,tree->pointlist->current->image);
+						  InsertAfterCurrent(neighborlist,pointlist->current->x
+								  ,pointlist->current->id,pointlist->current->image);
 
 						  MoveDownList(neighborlist);
-						  PointCopyData(neighborlist->current,tree->pointlist->current);
+						  PointCopyData(neighborlist->current,pointlist->current);
 						  MoveUpList(neighborlist);
 
 					  }else if(compliment){
 
 						  for(k=*filter_place;k<Nfilter;++k){
-							  if(tree->pointlist->current->id == filter[k].id){
-								  InsertAfterCurrent(neighborlist,tree->pointlist->current->x
-										  ,tree->pointlist->current->id,tree->pointlist->current->image);
+							  if(pointlist->current->id == filter[k].id){
+								  InsertAfterCurrent(neighborlist,pointlist->current->x
+										  ,pointlist->current->id,pointlist->current->image);
 
 								  MoveDownList(neighborlist);
-								  PointCopyData(neighborlist->current,tree->pointlist->current);
+								  PointCopyData(neighborlist->current,pointlist->current);
 								  MoveUpList(neighborlist);
 
 								  PointCopyData(&tmp,&filter[k]);
@@ -1088,44 +1077,44 @@ void _PointsWithin2(TreeHndl tree,double *ray,float *rmax,ListHndl neighborlist
 
 					  }else{ // do compliment of filter
 
-						  for(k=0;k<Nfilter;++k) if(tree->pointlist->current->id == filter[k].id) break;
+						  for(k=0;k<Nfilter;++k) if(pointlist->current->id == filter[k].id) break;
 						  if(k==Nfilter){
-							  InsertAfterCurrent(neighborlist,tree->pointlist->current->x
-									  ,tree->pointlist->current->id,tree->pointlist->current->image);
+							  InsertAfterCurrent(neighborlist,pointlist->current->x
+									  ,pointlist->current->id,pointlist->current->image);
 
 							  MoveDownList(neighborlist);
-							  PointCopyData(neighborlist->current,tree->pointlist->current);
+							  PointCopyData(neighborlist->current,pointlist->current);
 							  MoveUpList(neighborlist);
 
 						  }
 					  }
 				  }
-				  MoveDownList(tree->pointlist);
+				  MoveDownList(pointlist);
 			  }
 
 		  }else{
-			  //std::printf("moving to child1 from level %i\n",tree->current->level);
-			  if(tree->current->child1 !=NULL){
-				  moveToChild(tree,1);
-				  _PointsWithin2(tree,ray,rmax,neighborlist,filter,Nfilter,filter_place,1);
-				  //std::printf("moving up from level %i\n",tree->current->level);
-				  moveUp(tree);
+			  //std::printf("moving to child1 from level %i\n",current->level);
+			  if(current->child1 !=NULL){
+				  moveToChild(1);
+				  _PointsWithin2(ray,rmax,neighborlist,filter,Nfilter,filter_place,1);
+				  //std::printf("moving up from level %i\n",current->level);
+				  moveUp();
 			  }
 
-			  if(tree->current->child2 !=NULL){
-				  //std::printf("moving to child2 from level %i\n",tree->current->level);
-				  moveToChild(tree,2);
-				  _PointsWithin2(tree,ray,rmax,neighborlist,filter,Nfilter,filter_place,1);
-				  //std::printf("moving up from level %i\n",tree->current->level);
-				  moveUp(tree);
+			  if(current->child2 !=NULL){
+				  //std::printf("moving to child2 from level %i\n",current->level);
+				  moveToChild(2);
+				  _PointsWithin2(ray,rmax,neighborlist,filter,Nfilter,filter_place,1);
+				  //std::printf("moving up from level %i\n",current->level);
+				  moveUp();
 			  }
 		  }
 
-	  }//else{std::printf("box too distant at level %i\n",tree->current->level);}
+	  }//else{std::printf("box too distant at level %i\n",current->level);}
   }
 
-	  //  std::printf("end of _PointsWithin incell=%i level=%i p1= %e %e %e\n",incell,tree->current->level
-	//	,tree->current->boundary_p1[0],tree->current->boundary_p1[1],tree->current->boundary_p1[2]);/**/
+	  //  std::printf("end of _PointsWithin incell=%i level=%i p1= %e %e %e\n",incell,current->level
+	//	,current->boundary_p1[0],current->boundary_p1[1],current->boundary_p1[2]);/**/
   return;
 }
 
@@ -1211,89 +1200,84 @@ void UnionList(ListHndl list1,ListHndl list2){
 }
 
 
-void FindAllBoxNeighbors(TreeHndl tree,Point *point,ListHndl neighbors){
+void TreeStruct::FindAllBoxNeighbors(Point *point,ListHndl neighbors){
 	// finds all the leaves that are neighboring branch
 	// points outside of grid have no box neighbors
-	void _FindAllBoxNeighbors(TreeHndl tree,Branch *leaf,ListHndl neighbors);
 	static int count=0;
 
 	++count;
 	EmptyList(neighbors);
 
 	// point is outside of initial region
-	if(!inbox(point->x,tree->top->boundary_p1,tree->top->boundary_p2)) return;
+	if(!inbox(point->x,top->boundary_p1,top->boundary_p2)) return;
 
-	tree->current=point->leaf;
+	current=point->leaf;
 
 	// find smallest box that surrounds box and its neighbors
-	moveUp(tree);
-	while( (tree->current->boundary_p1[0]==point->leaf->boundary_p1[0] && point->leaf->boundary_p1[0] != tree->top->boundary_p1[0] )
-			|| (tree->current->boundary_p1[1]==point->leaf->boundary_p1[1] && point->leaf->boundary_p1[1] != tree->top->boundary_p1[1])
-			|| (tree->current->boundary_p2[0]==point->leaf->boundary_p2[0] && point->leaf->boundary_p2[0] != tree->top->boundary_p2[0])
-			|| (tree->current->boundary_p2[1]==point->leaf->boundary_p2[1] && point->leaf->boundary_p2[1] != tree->top->boundary_p2[1]) ){
-		moveUp(tree);
+	moveUp();
+	while( (current->boundary_p1[0]==point->leaf->boundary_p1[0] && point->leaf->boundary_p1[0] != top->boundary_p1[0] )
+			|| (current->boundary_p1[1]==point->leaf->boundary_p1[1] && point->leaf->boundary_p1[1] != top->boundary_p1[1])
+			|| (current->boundary_p2[0]==point->leaf->boundary_p2[0] && point->leaf->boundary_p2[0] != top->boundary_p2[0])
+			|| (current->boundary_p2[1]==point->leaf->boundary_p2[1] && point->leaf->boundary_p2[1] != top->boundary_p2[1]) ){
+		moveUp();
 	}
 
-	_FindAllBoxNeighbors(tree,point->leaf,neighbors);
+	_FindAllBoxNeighbors(point->leaf,neighbors);
 
 	return;
 }
 
 // this should be made into a loop instead of a recursion
-void _FindAllBoxNeighbors(TreeHndl tree,Branch *leaf,ListHndl neighbors){
+void TreeStruct::_FindAllBoxNeighbors(Branch *leaf,ListHndl neighbors){
 
-	if(  leaf->boundary_p1[0]<=tree->current->boundary_p2[0]
-	  && leaf->boundary_p2[0]>=tree->current->boundary_p1[0]
-	  && leaf->boundary_p1[1]<=tree->current->boundary_p2[1]
-	  && leaf->boundary_p2[1]>=tree->current->boundary_p1[1]){
+	if(  leaf->boundary_p1[0]<=current->boundary_p2[0]
+	  && leaf->boundary_p2[0]>=current->boundary_p1[0]
+	  && leaf->boundary_p1[1]<=current->boundary_p2[1]
+	  && leaf->boundary_p2[1]>=current->boundary_p1[1]){
 
-		if(tree->current->npoints == tree->Nbucket){
-			if(tree->current->number != leaf->number){
+		if(current->npoints == Nbucket){
+			if(current->number != leaf->number){
 
-				//InsertAfterCurrentKist(neighbors,tree->current->points);
+				//InsertAfterCurrentKist(neighbors,current->points);
 
-				InsertAfterCurrent(neighbors,tree->current->points->x
-					,tree->current->points->id
-					,tree->current->points->image);
+				InsertAfterCurrent(neighbors,current->points->x
+					,current->points->id
+					,current->points->image);
 				MoveDownList(neighbors);
-				PointCopyData(neighbors->current,tree->current->points);
+				PointCopyData(neighbors->current,current->points);
 
 			}
 			return;
 		}
 
-		if(tree->current->child1 !=NULL){
-			moveToChild(tree,1);
-			_FindAllBoxNeighbors(tree,leaf,neighbors);
-			moveUp(tree);
+		if(current->child1 !=NULL){
+			moveToChild(1);
+			_FindAllBoxNeighbors(leaf,neighbors);
+			moveUp();
 		}
 
-		if(tree->current->child2 !=NULL){
-			moveToChild(tree,2);
-			_FindAllBoxNeighbors(tree,leaf,neighbors);
-			moveUp(tree);
+		if(current->child2 !=NULL){
+			moveToChild(2);
+			_FindAllBoxNeighbors(leaf,neighbors);
+			moveUp();
 		}
 	}
 
 	return;
 }
-
+/// Print positions and gridsizes of all points in all the images to stdout
 void PrintImages(ImageInfo *images,long Nimages){
-	unsigned long i,j;
+	unsigned long i;
 
 	std::printf("%li",Nimages);
-	for(i=0;i<Nimages;++i){
-		std::printf("%li\n",images[i].imagekist->Nunits());
-		for(j=0,MoveToTopKist(images[i].imagekist);j<images[i].imagekist->Nunits();++j,MoveDownKist(images[i].imagekist))
-			std::printf("%e %e  %e\n",getCurrentKist(images[i].imagekist)->x[0],getCurrentKist(images[i].imagekist)->x[1]
-			                         ,getCurrentKist(images[i].imagekist)->gridsize);
-	}
+	for(i=0;i<Nimages;++i)	images[i].imagekist->Print();
 }
 
-void PrintImageInfo(ImageInfo *image){
+/// Print information about the image
+void ImageInfo::PrintImageInfo(){
 
 	std::printf(" PrintImageInfo\n");
-	std::printf("  Npoints = %li  area = %e +/- %e\n",image->imagekist->Nunits(),image->area,image->area_error);
-	std::printf("  gridrange = %e %e %e\n",image->gridrange[0],image->gridrange[1],image->gridrange[2]);
-	std::printf("  borders inner N = %li  outer N = %li\n",image->innerborder->Nunits(),image->outerborder->Nunits());
+	std::printf("  Npoints = %li  area = %e +/- %e\n",imagekist->Nunits(),area,area_error);
+	std::printf("  gridrange = %e %e %e\n",gridrange[0],gridrange[1],gridrange[2]);
+	std::printf("  borders inner N = %li  outer N = %li\n",innerborder->Nunits(),outerborder->Nunits());
 }
