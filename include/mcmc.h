@@ -8,6 +8,7 @@
 #include <monaco/metropolis.hpp>
 
 #include <list>
+#include <iterator>
 
 template<
 	typename Generator,
@@ -38,6 +39,19 @@ public:
 		chain.push_back(p);
 	}
 	
+	void add(const Parameters<source_type>& source, const Parameters<lens_type>& lens)
+	{
+		SourceLensParameters<source_type, lens_type> p;
+		p.source = source;
+		p.lens = lens;
+		chain.push_back(p);
+	}
+	
+	void add(const parameter_type& p)
+	{
+		chain.push_back(p);
+	}
+	
 	void step()
 	{
 		chain.push_back(metrop(chain.back()));
@@ -59,9 +73,31 @@ public:
 		return chain.end();
 	}
 	
+	parameter_type front() const
+	{
+		return chain.front();
+	}
+	
+	parameter_type back() const
+	{
+		return chain.back();
+	}
+	
 	std::size_t size() const
 	{
 		return chain.size();
+	}
+	
+	void clear()
+	{
+		chain.clear();
+	}
+	
+	void clear(std::ptrdiff_t count)
+	{
+		iterator end = (count > 0) ? chain.begin() : chain.end();
+		std::advance(end, count);
+		chain.erase(chain.begin(), end);
 	}
 	
 private:

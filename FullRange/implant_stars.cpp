@@ -6,7 +6,7 @@
  */
 
 #include "slsimlib.h"
-#include <iostream.h> // remove
+#include <iostream> // remove
 #include <sstream> // remove
 using namespace std;
 /** \ingroup ChangeLens

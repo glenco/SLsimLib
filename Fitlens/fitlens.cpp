@@ -23,7 +23,7 @@ void AnaLens::FindLensSimple(
 		,double *y                /// output source position
 		,double **dx_sub          /// dx_sub[Nimages][2] pre-calculated deflections caused by substructures or external masses at each image
 		){
-	ImageInfo imageinfo[Nimages];
+	ImageInfo* imageinfo = new ImageInfo[Nimages];
 
 	for(int i=0;i<Nimages;++i){
 		imageinfo[i].centroid[0] = image_positions[i].x[0];
@@ -31,6 +31,8 @@ void AnaLens::FindLensSimple(
 	}
 
 	FindLensSimple(imageinfo,Nimages,y,dx_sub);
+	
+	delete[] imageinfo;
 }
 /** \ingroup FitLens
  *
