@@ -6,8 +6,7 @@ static const int NpointsRequired = 100;  // number of points required to be with
 //static const float mumin = 0.5;  // actually the sqrt of the minimum magnification
 //static const float mumin = 0.45;  // actually the sqrt of the minimum magnification
 //static const float mumin = 0.1;
-static const float mumin = 0.1;
-//static const float mumin = 0.3;
+static const float mumin = 0.3;
 
 static const float FracResTarget = 4.0e-4;
 //static const float FracResTarget = 1.0e-4;

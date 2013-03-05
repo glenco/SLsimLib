@@ -6,6 +6,7 @@
  */
 
 #include "slsimlib.h"
+#include "Tree.h"
 Point *pointofinterest = NULL;
 /** \ingroup Constructor
  * \brief Constructor for initializing grid.

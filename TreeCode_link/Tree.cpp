@@ -344,15 +344,6 @@ unsigned long TreeStruct::getNbranches(){
 /***** Manipulation procedures *****/
 
 /************************************************************************
- * moveTop
- * Moves current to the front of tree.  Exported.
- * Pre: !isEmpty(tree)
- ************************************************************************/
-inline void TreeStruct::moveTop(){
-    current = top;
-}
-
-/************************************************************************
  * movePrev
  * Moves current to the branch before it in tree.  This can move current
  * off end.  Exported.

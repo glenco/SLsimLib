@@ -23,7 +23,7 @@ typedef enum{TotalArea,EachImage,Resolution,FillHoles} ExitCriterion;
 
 /** \brief Tree: Exported struct */
 struct TreeStruct{
-
+public:
 	TreeStruct(Point *xp,unsigned long Npoints,short my_median_cut = 1);
 	TreeStruct(Point *xp,unsigned long npoints
 			 ,double boundary_p1[2],double boundary_p2[2]
@@ -57,7 +57,8 @@ struct TreeStruct{
   void PointsInCurrent(unsigned long *ids,double **x);
 
   /***** Movement on tree *****/
-  inline void moveTop();
+
+  void moveTop(){ current = top;}
   bool moveUp();
   bool moveToChild(int child);
   bool TreeWalkStep(bool allowDescent);
