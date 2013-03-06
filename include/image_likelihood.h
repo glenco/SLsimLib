@@ -1,7 +1,16 @@
 #ifndef IMAGE_LIKELIHOOD_H_
 #define IMAGE_LIKELIHOOD_H_
 
-#include "slsimlib.h"
+#include "parameters.h"
+#include "image_processing.h"
+#include "image_chi_square.h"
+
+#include <algorithm>
+#include <cstddef>
+#include <cmath>
+
+class Source;
+class Lens;
 
 /**
  * \brief Calculate the likelihood for a source and lens based on image data.
@@ -20,7 +29,7 @@
  * Each source can have a maximum number of lensed images (default: 100).
  * This maximum number can be changed using the `imagesSize()` method.
  */
-template<typename Source, typename Lens>
+template<typename SourceType, typename LensType>
 class ImageLikelihood
 {
 public:
@@ -32,7 +41,7 @@ public:
 	/**
 	 * Parameters for the source and lens.
 	 */
-	typedef SourceLensParameters<Source, Lens> parameter_type;
+	typedef SourceLensParameters<SourceType, LensType> parameter_type;
 	
 	/**
 	 * \brief Construct ImageLikelihood for the given source and lens.
@@ -47,7 +56,7 @@ public:
 	 * \param source The source object.
 	 * \param lens The lens object.
 	 */
-	ImageLikelihood(Source* source, Lens* lens)
+	ImageLikelihood(SourceType* source, LensType* lens)
 	: source(source), lens(lens),
 	  dof(0),
 	  off(0), ns(0), norm(1),
@@ -90,12 +99,11 @@ public:
 	void data(PixelMap data)
 	{
 		// copy pixel map
-		using std::swap;
 		swap(dta, data);
 		
-		// calculate degrees of freedom
-		// TODO: take mask and number of parameters into account
-		dof = dta.getNpixels()*dta.getNpixels();
+		// check if mask is compatible or create empty
+		if(dta.size() != msk.base_size())
+			msk = PixelMask(dta.size());
 		
 		// change grid to match data
 		grid_range = dta.getRange();
@@ -103,6 +111,9 @@ public:
 		
 		// recreate grid
 		regrid();
+		
+		// recalculate degrees of freedom
+		redof();
 	}
 	
 	/** Get the constant background offset. */
@@ -120,10 +131,31 @@ public:
 	/** Set the pixel count normalization. */
 	void normalization(double n) { norm = n; }
 	
-	/** Get the mask PixelMap. */
-	PixelMap mask() const { return msk; }
-	/** Set the mask PixelMap. */
-	void mask(PixelMap mask) { using std::swap; swap(msk, mask); }
+	/** Get the mask. */
+	PixelMask mask() const { return msk; }
+	
+	/** Set the mask. */
+	bool mask(PixelMask mask)
+	{
+		// make sure size of data and mask PixelMap agree
+		if(dta.valid() && mask.base_size() != dta.size())
+			return false;
+		
+		// swap current mask and given one
+		swap(msk, mask);
+		
+		// recalculate degrees of freedom
+		redof();
+		
+		// success
+		return true;
+	}
+	
+	/** Set the mask using a PixelMap. */
+	bool mask(PixelMap mask_map)
+	{
+		return mask(PixelMask(mask_map));
+	}
 	
 	/** Get the maximum number of lensed images. */
 	std::size_t imagesSize() const { return images_size; }
@@ -154,8 +186,11 @@ public:
 			return -1;
 		
 		// load parameters into source and lens
-		set(*source, params.source);
-		set(*lens, params.lens);
+		params.source >> (*source);
+		params.lens >> (*lens);
+		
+		// flush the surface brightness
+		grid->RefreshSurfaceBrightnesses(source);
 		
 		// reinitialize the grid
 		grid->ReInitializeGrid(lens);
@@ -193,14 +228,21 @@ public:
 	}
 	
 private:
+	inline void redof()
+	{
+		// calculate degrees of freedom
+		// TODO: take number of parameters into account
+		dof = static_cast<unsigned long>(msk.valid() ? dta.size() : msk.size());
+	}
+	
 	inline void regrid()
 	{
 		delete grid;
 		grid = new Grid(lens, (int)grid_points, grid_center, grid_range);
 	}
 	
-	Source* source;
-	Lens* lens;
+	SourceType* source;
+	LensType* lens;
 	
 	PixelMap dta;
 	unsigned long int dof;
@@ -209,7 +251,7 @@ private:
 	double ns;
 	double norm;
 	
-	PixelMap msk;
+	PixelMask msk;
 	
 	std::size_t images_size;
 	ImageInfo* images;

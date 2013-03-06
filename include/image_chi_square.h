@@ -1,8 +1,6 @@
 #ifndef _image_chi_square_declare_
 #define _image_chi_square_declare_
 
-class PixelMap;
-
 /**
  * \brief Calculate the chi^2 between model PixelMap and data PixelMap.
  * 
@@ -35,7 +33,7 @@ double chi_square(
 	double offset = 0,
 	double noise = 0,
 	double norm = 1,
-	PixelMap mask = PixelMap()
+	PixelMask mask = PixelMask()
 );
 
 #endif

@@ -10,6 +10,36 @@
 
 #include "Tree.h"
 
+class Observation
+{
+public:
+	Observation(float exp_time, int exp_num, float back_mag, float diameter, float transmission, float ron);
+	Observation(float exp_time, int exp_num, float back_mag, float diameter, float transmission, float ron, float seeing);
+	Observation(float exp_time, int exp_num, float back_mag, float diameter, float transmission, float ron, std::string psf_file);
+	float getExpTime(){return exp_time;}
+	int getExpNum(){return exp_num;}
+	float getBackMag(){return back_mag;}
+	float getDiameter(){return diameter;}
+	float getTransmission(){return transmission;}
+	float getRon(){return ron;}
+	float getSeeing(){return seeing;}
+	std::valarray<float> getPSF(){return map_psf;}
+	int getPSF_size(){return psf_size;}
+
+private:
+	float exp_time;
+	int exp_num;
+	float ron;
+	float back_mag;
+	float diameter;
+	float transmission;
+	float seeing;
+	std::valarray<float> map_psf;
+	int psf_size;
+};
+
+
+
 /** \ingroup Image
  * \brief Takes images and pixelizes the flux into regular pixel grid.
  *
@@ -29,9 +59,10 @@ public:
 	
 	PixelMap& operator=(PixelMap other);
 	
-	inline bool valid() const { return !!size; };
+	inline bool valid() const { return map_size; };
+	inline std::size_t size() const { return map_size; };
 	
-	inline std::size_t getNpixels() const { return size; }
+	inline std::size_t getNpixels() const { return Npixels; }
 	inline double getRange() const { return range; }
 	inline const double* getCenter() const { return center; }
 	inline double getResolution() const { return resolution; }
@@ -44,24 +75,122 @@ public:
 	void printFITS(std::string filename);
 	void smooth(double sigma);
 
-	void ApplyPSF(std::string psf_file, double oversample_n = 1);
-	void AddNoise(double diameter, double transmission, double time, double sky_mag);
+	void ApplyPSF(std::valarray<float> map_psf, double oversample_n = 1);
+	void AddNoise(Observation obs);
 
 	inline double getValue(std::size_t i) const { return map[i]; }
 	inline double operator[](std::size_t i) const { return map[i]; };
 	
-	friend void swap(PixelMap& x, PixelMap& y);
+	friend void swap(PixelMap&, PixelMap&);
 	
 private:
+	std::size_t map_size;
 	float* map;
-	std::size_t size;
-	
+
+	std::size_t Npixels;
 	double resolution,range,center[2];
 	double map_boundary_p1[2],map_boundary_p2[2];
-	
+
 	double LeafPixelArea(IndexType i,Branch * branch1);
 	void PointsWithinLeaf(Branch * branch1, std::list <unsigned long> &neighborlist);
 	bool inMapBox(Branch * branch1);
+};
+
+/**
+ * \ingroup Image
+ * \brief Mask for PixelMap.
+ * 
+ * This class represents a mask that can be applied to a PixelMap to select
+ * only a subset of its pixels.
+ */
+class PixelMask
+{
+public:
+	/**
+	 * \brief Threshold types.
+	 * 
+	 * These values represent the different types of thresholds that can be
+	 * used when constructing a PixelMask from a PixelMap.
+	 */
+	enum ThresholdType
+	{
+		Greater,
+		GreaterOrEqual,
+		Less,
+		LessOrEqual
+	};
+	
+	/**
+	 * \brief Create an empty PixelMask.
+	 * 
+	 * This creates an invalid and empty PixelMask
+	 */
+	PixelMask();
+	
+	/**
+	 * \brief Create an PixelMask for a given size.
+	 * 
+	 * Create PixelMask for a number of pixels, all unmasked. The created mask
+	 * is thus empty and all pixels are visible.
+	 */
+	PixelMask(std::size_t map_size);
+	
+	/**
+	 * \brief Create a PixelMask from a PixelMap.
+	 * 
+	 * Create a new PixelMask given the pixel values from a PixelMap. The value
+	 * given as threshold determines when a pixel is considered unmaskes (ie.
+	 * visible), by applying the method given in threshold_type.
+	 * 
+	 * By default, all non-zero pixels are considered to be unmasked.
+	 * 
+	 * \param base The base PixelMap to convert to a mask.
+	 * \param threshold Value that determines whether a pixel is unmasked.
+	 * \param type The method to compare a pixel and the threshold.
+	 */
+	PixelMask(const PixelMap& base, double threshold = 0, ThresholdType type = Greater);
+	
+	/**
+	 * Assignment operator.
+	 */
+	PixelMask& operator=(PixelMask other);
+	
+	/**
+	 * Access unmasked pixel indices.
+	 */
+	std::size_t operator[](std::size_t i) const;
+	
+	/**
+	 * Check if mask is valid.
+	 */
+	bool valid() const;
+	
+	/**
+	 * Check if mask is empty.
+	 * 
+	 * An empty mask means that all pixels in a PixelMap are visible.
+	 */
+	bool empty() const;
+	
+	/**
+	 * Get the size of the mask.
+	 * 
+	 * \return The number of unmasked pixels.
+	 */
+	std::size_t size() const;
+	
+	/**
+	 * Get the size of the base PixelMap.
+	 * 
+	 * \return The total number of pixels.
+	 */
+	std::size_t base_size() const;
+	
+	friend void swap(PixelMask&, PixelMask&);
+	
+private:
+	std::size_t map_size, mask_size;
+	std::vector<std::size_t> pixels;
 };
 
 void pixelize(double *map,long Npixels,double range,double *center

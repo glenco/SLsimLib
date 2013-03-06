@@ -9,35 +9,6 @@
  */
 #include "slsimlib.h"
 
-OverGalaxy::parameters::parameters()
-: haloID(0), z(0), mag(0), BtoT(0), Reff(0), Rh(0), PA(0), inclination(0)
-{
-	theta[0] = 0;
-	theta[1] = 0;
-}
-
-bool get(const OverGalaxy& g, OverGalaxy::parameters& p)
-{
-	p.haloID = g.haloID;
-	p.z = g.z;
-	p.mag = g.mag;
-	p.BtoT = g.BtoT;
-	p.Reff = g.Reff/(pi/180/60/60); // TODO: this is not nice
-	p.Rh = g.Rh/(pi/180/60/60);
-	p.PA = g.PA;
-	p.inclination = g.inclination;
-	p.theta[0] = g.theta[0];
-	p.theta[1] = g.theta[1];
-	
-	return true;
-}
-
-bool set(OverGalaxy& g, const OverGalaxy::parameters& p)
-{
-	g.setInternals(p.mag, p.BtoT, p.Reff, p.Rh, p.PA, p.inclination, p.haloID, p.z, p.theta);
-	return true;
-}
-
 OverGalaxy::OverGalaxy()
 : haloID(0), z(0), Reff(0), Rh(0), BtoT(0), PA(0), inclination(0),
   cxx(0), cyy(0), cxy(0), sbDo(0), sbSo(0), mag(0)
