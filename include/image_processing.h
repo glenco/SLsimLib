@@ -10,6 +10,36 @@
 
 #include "Tree.h"
 
+class Observation
+{
+public:
+	Observation(float exp_time, int exp_num, float back_mag, float diameter, float transmission, float ron);
+	Observation(float exp_time, int exp_num, float back_mag, float diameter, float transmission, float ron, float seeing);
+	Observation(float exp_time, int exp_num, float back_mag, float diameter, float transmission, float ron, std::string psf_file);
+	float getExpTime(){return exp_time;}
+	int getExpNum(){return exp_num;}
+	float getBackMag(){return back_mag;}
+	float getDiameter(){return diameter;}
+	float getTransmission(){return transmission;}
+	float getRon(){return ron;}
+	float getSeeing(){return seeing;}
+	std::valarray<float> getPSF(){return map_psf;}
+	int getPSF_size(){return psf_size;}
+
+private:
+	float exp_time;
+	int exp_num;
+	float ron;
+	float back_mag;
+	float diameter;
+	float transmission;
+	float seeing;
+	std::valarray<float> map_psf;
+	int psf_size;
+};
+
+
+
 /** \ingroup Image
  * \brief Takes images and pixelizes the flux into regular pixel grid.
  *
@@ -45,7 +75,8 @@ public:
 	void printFITS(std::string filename);
 	void smooth(double sigma);
 
-	void ApplyPSF(std::string psf_file, double oversample_n = 1);
+	void ApplyPSF(std::valarray<float> map_psf, double oversample_n = 1);
+	void AddNoise(Observation obs);
 
 	inline double getValue(std::size_t i) const { return map[i]; }
 	inline double operator[](std::size_t i) const { return map[i]; };
@@ -55,11 +86,11 @@ public:
 private:
 	std::size_t map_size;
 	float* map;
-	
+
 	std::size_t Npixels;
 	double resolution,range,center[2];
 	double map_boundary_p1[2],map_boundary_p2[2];
-	
+
 	double LeafPixelArea(IndexType i,Branch * branch1);
 	void PointsWithinLeaf(Branch * branch1, std::list <unsigned long> &neighborlist);
 	bool inMapBox(Branch * branch1);

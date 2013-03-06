@@ -413,18 +413,18 @@ std::cout<< range << "  " << resolution << "  " << Npixels << std::endl;
 		phout->addKey ("CRPIX2",naxex[1]/2,"");
 		phout->addKey ("CRVAL1",0.0,"");
 		phout->addKey ("CRVAL2",0.0,"");
-		phout->addKey ("CDELT1",-180*range/(Npixels-1)/pi,"degrees");
-		phout->addKey ("CDELT2", 180*range/(Npixels-1)/pi,"degrees");
+		phout->addKey ("CDELT1",-180*resolution/pi,"degrees");
+		phout->addKey ("CDELT2", 180*resolution/pi,"degrees");
 		phout->addKey ("CTYPE1","RA--TAN","");
 		phout->addKey ("CTYPE2","RA-TAN","");
 		phout->addKey ("CROTA2",0.0,"");
-		phout->addKey ("CD1_1",-180*range/(Npixels-1)/pi,"degrees");
+		phout->addKey ("CD1_1",-180*resolution/pi,"degrees");
 		phout->addKey ("CD1_2",0.0,"");
 		phout->addKey ("CD2_1",0.0,"");
-		phout->addKey ("CD2_2", 180*range/(Npixels-1)/pi,"degrees");
+		phout->addKey ("CD2_2", 180*resolution/pi,"degrees");
 
 		phout->addKey ("Npixels", Npixels,"");
-		phout->addKey ("range ", range," radians");
+		phout->addKey ("range ", map_boundary_p2[0]-map_boundary_p1[0]," radians");
 
 		std::cout << *phout << std::endl;
 
@@ -450,6 +450,7 @@ void PixelMap::smooth(double sigma){
 	sigma /= 3600.*180/pi;
 	map_out = new double[map_size];
 	Nmask=2*(int)(3*sigma/resolution + 1);
+	std::cout << Nmask << std::endl;
 	if(Nmask < 4 ) std::cout << "WARNING: pixels are large compare to psf Nmask=" << Nmask << std::endl;
 
 	Nmask_half = int(Nmask/2);
@@ -476,7 +477,10 @@ void PixelMap::smooth(double sigma){
 		}
 	}
 	for(long i=0;i<map_size;i++){
-		std::cout << i << " " << map[i] << std::endl;
+		map_out[i] = 0.;
+	}
+
+	for(long i=0;i<map_size;i++){
 		for(int j=0;j<Nmask;j++){
 			ix=i%Npixels + j-Nmask_half;
 			if( (ix>-1) && (ix<Npixels) ){
@@ -500,10 +504,10 @@ void PixelMap::smooth(double sigma){
 
 }
 
-// Smooths the image with a PSF read from a fits file.
+// Smooths the image with a PSF map.
 // oversample_n allows for an oversampled psf image.
 // (In principle, this should be readable directly from the fits header.)
-void PixelMap::ApplyPSF(std::string psf_file, double oversample_n)
+void PixelMap::ApplyPSF(std::valarray<float> map_psf, double oversample_n)
 {
 #ifdef ENABLE_FITS
 #ifdef ENABLE_FFTW
@@ -524,19 +528,15 @@ void PixelMap::ApplyPSF(std::string psf_file, double oversample_n)
 	double* out2 = new double[map_size];
 	p2 = fftw_plan_dft_c2r_2d(Npixels,Npixels,reinterpret_cast<fftw_complex*>(out), out2, FFTW_ESTIMATE);
 
-	// reads psf fits file
-	std::auto_ptr<CCfits::FITS> fp (new CCfits::FITS (psf_file.c_str(), CCfits::Read));
-	CCfits::PHDU *h0=&fp->pHDU();
-	int side_psf = h0->axis(0);
-	int N_psf = side_psf*side_psf;
-	fftw_plan p_psf;
-	std::valarray<float> map_psf(N_psf);
-	h0->read(map_psf);
+	// calculates normalisation of psf
+	int N_psf = map_psf.size();
+	int side_psf = sqrt(N_psf);
 	double map_norm = 0.;
 	for (int i = 0; i < N_psf; i++)
 	{
 		map_norm += map_psf[i];
 	}
+	fftw_plan p_psf;
 
 	// arrange psf data for fft, creates plane, then performs fft
 	int psf_big_Npixels = static_cast<int>(Npixels*oversample_n);
@@ -592,8 +592,52 @@ void PixelMap::ApplyPSF(std::string psf_file, double oversample_n)
 
 }
 
-void swap(PixelMask& x, PixelMask& y)
+void PixelMap::AddNoise(Observation obs)
 {
+	float exp_time = obs.getExpTime();
+	int exp_num = obs.getExpNum();
+	float back_mag = obs.getBackMag();
+	float transmission = obs.getTransmission();
+	float diameter = obs.getDiameter();
+	float ron = obs.getRon();
+	double back_mean = pow(10,-0.4*(48.6+back_mag))/hplanck/100.*diameter*diameter*exp_time*transmission*pi/4.;
+	double rms, noise;
+	long seed = 24;
+	double norm_map, noised_map;
+	for (unsigned long i = 0; i < map_size; i++)
+	{
+		norm_map=map[i]*diameter*diameter*exp_time*transmission*pi/4.;
+		rms = sqrt(pow(exp_num*ron,2)+norm_map+back_mean);
+		noise = gasdev(&seed)*rms;
+		noised_map = norm_map + noise;
+		map[i] = noised_map/exp_time;
+		}
+	}
+
+Observation::Observation(float exp_time, int exp_num, float back_mag, float diameter, float transmission, float ron):
+		exp_time(exp_time), exp_num(exp_num), back_mag(back_mag), diameter(diameter), transmission(transmission), ron(ron)
+		{
+		}
+
+Observation::Observation(float exp_time, int exp_num, float back_mag, float diameter, float transmission, float ron, float seeing):
+		exp_time(exp_time), exp_num(exp_num), back_mag(back_mag), diameter(diameter), transmission(transmission), ron(ron), seeing(seeing)
+		{
+		}
+
+Observation::Observation(float exp_time, int exp_num, float back_mag, float diameter, float transmission, float ron, std::string psf_file):
+		exp_time(exp_time), exp_num(exp_num), back_mag(back_mag), diameter(diameter), transmission(transmission), ron(ron)
+		{
+	std::auto_ptr<CCfits::FITS> fp (new CCfits::FITS (psf_file.c_str(), CCfits::Read));
+	CCfits::PHDU *h0=&fp->pHDU();
+	int side_psf = h0->axis(0);
+	int N_psf = side_psf*side_psf;
+	map_psf.resize(N_psf);
+	h0->read(map_psf);
+		}
+
+void swap(PixelMask& x, PixelMask& y)
+	{
+
 	using std::swap;
 	
 	swap(x.map_size, y.map_size);
@@ -675,7 +719,6 @@ PixelMask& PixelMask::operator=(PixelMask other)
 	swap(*this, other);
 	return *this;
 }
-
 std::size_t PixelMask::operator[](std::size_t i) const
 {
 	return pixels[i];
