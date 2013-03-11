@@ -8,7 +8,6 @@
 
 // image-based mcmc
 #include "image_processing.h"
-#include "image_chi_square.h"
 #include "image_likelihood.h"
 
 /****
