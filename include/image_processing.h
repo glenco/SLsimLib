@@ -53,7 +53,7 @@ public:
 	PixelMap(const PixelMap& pmap, double degrading_factor);
 	PixelMap();
 	PixelMap(const PixelMap& other);
-	PixelMap(std::size_t Npixels, double range, const double* center);
+	PixelMap(const double* center, std::size_t Npixels, double resolution);
 	PixelMap(std::string filename);
 	~PixelMap();
 	
@@ -77,6 +77,7 @@ public:
 
 	void ApplyPSF(std::valarray<float> map_psf, double oversample_n = 1);
 	void AddNoise(Observation obs);
+	void PhotonToCounts(Observation obs);
 
 	inline double getValue(std::size_t i) const { return map[i]; }
 	inline double operator[](std::size_t i) const { return map[i]; };

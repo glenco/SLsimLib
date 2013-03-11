@@ -69,22 +69,20 @@ PixelMap::PixelMap(const PixelMap& other)
 }
 
 PixelMap::PixelMap(
+		const double* center,  /// The location of the center of the map
 		std::size_t Npixels,  /// Number of pixels in one dimension of map.
-		double range,         /// One dimensional range of map in whatever units the point positions are in
-		const double* center  /// The location of the center of the map
-		): Npixels(Npixels), resolution(range/Npixels), range(range)
+		double resolution        /// One dimensional range of map in whatever units the point positions are in
+		): Npixels(Npixels), resolution(resolution)
 		{
 
 	std::copy(center, center + 2, this->center);
+	range = resolution*(Npixels-1);
 	
-	map_boundary_p1[0] = center[0]-range/2.;
-	map_boundary_p1[1] = center[1]-range/2.;
-	map_boundary_p2[0] = center[0]+range/2.;
-	map_boundary_p2[1] = center[1]+range/2.;
-	
-	// is this good?
-	this->range = range - resolution;
-	
+	map_boundary_p1[0] = center[0]-(Npixels*resolution)/2.;
+	map_boundary_p1[1] = center[1]-(Npixels*resolution)/2.;
+	map_boundary_p2[0] = center[0]+(Npixels*resolution)/2.;
+	map_boundary_p2[1] = center[1]+(Npixels*resolution)/2.;
+
 	map_size = Npixels*Npixels;
 	map = new float[map_size];
 	std::fill(map, map + map_size, 0);
@@ -114,12 +112,11 @@ PixelMap::PixelMap(std::string filename)
 		std::cout << "Resolution is " << resolution << std::endl;
 		resolution = fabs(resolution)*pi/180.;
 		std::cout << "Resolution is " << resolution << std::endl;
-		range = resolution*Npixels;
-		map_boundary_p1[0] = center[0] - range/2.;
-		map_boundary_p1[1] = center[1] - range/2.;
-		map_boundary_p2[0] = center[0] + range/2.;
-		map_boundary_p2[1] = center[1] + range/2.;
-		range = range - resolution;
+		range = resolution*(Npixels-1);
+		map_boundary_p1[0] = center[0] - (Npixels*resolution)/2.;
+		map_boundary_p1[1] = center[1] - (Npixels*resolution)/2.;
+		map_boundary_p2[0] = center[0] + (Npixels*resolution)/2.;
+		map_boundary_p2[1] = center[1] + (Npixels*resolution)/2.;
 		
 		std::valarray<float> image;
 		h0->read(image);
@@ -142,15 +139,14 @@ PixelMap::PixelMap(const PixelMap& pmap, double degrading_factor)
 	{
 
 	resolution = degrading_factor*pmap.resolution;
-	range = pmap.range+pmap.resolution;
-	Npixels = size_t(range/resolution+1);
-	range = range - resolution;
+	Npixels = pmap.Npixels/degrading_factor + 1;
+	range = resolution*(Npixels-1);
 	center[0] = pmap.center[0];
 	center[1] = pmap.center[1];
-	map_boundary_p1[0] = pmap.map_boundary_p1[0];
-	map_boundary_p1[1] = pmap.map_boundary_p1[1];
-	map_boundary_p2[0] = pmap.map_boundary_p2[0];
-	map_boundary_p2[1] = pmap.map_boundary_p2[1];
+	map_boundary_p1[0] = center[0] - (Npixels*resolution)/2.;
+	map_boundary_p1[1] = center[1] - (Npixels*resolution)/2.;
+	map_boundary_p2[0] = center[0] + (Npixels*resolution)/2.;
+	map_boundary_p2[1] = center[1] + (Npixels*resolution)/2.;
 	
 	map_size = Npixels*Npixels;
 	map = new float[map_size];
@@ -613,6 +609,16 @@ void PixelMap::AddNoise(Observation obs)
 		map[i] = noised_map/exp_time;
 		}
 	}
+
+void PixelMap::PhotonToCounts(Observation obs)
+{
+	float transmission = obs.getTransmission();
+	float diameter = obs.getDiameter();
+	for (unsigned long i = 0; i < map_size; i++)
+	{
+		map[i]=map[i]*diameter*diameter*transmission*pi/4.;
+	}
+}
 
 Observation::Observation(float exp_time, int exp_num, float back_mag, float diameter, float transmission, float ron):
 		exp_time(exp_time), exp_num(exp_num), back_mag(back_mag), diameter(diameter), transmission(transmission), ron(ron)

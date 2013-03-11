@@ -223,14 +223,14 @@ public:
 		
 		// build the fit image
 		// TODO: loop for multi source
-		PixelMap image(dta.getNpixels(), dta.getRange(), dta.getCenter());
+		PixelMap image(dta.getCenter(),dta.getNpixels(),dta.getResolution());
 		image.AddImages(images, image_count, false);
 		
 		// calculate chi^2 for image and data
 		double chi2 = chi_square(dta, image, off, ns, norm, msk);
-		
+
 		// return chi^2 log-likelihood
-		return (-chi2/2) + log(chi2)*(0.5*dof - 1);
+		return (-chi2/2);//+ log(chi2)*(0.5*dof - 1);
 	}
 	
 private:
