@@ -83,6 +83,7 @@ public:
 	inline double operator[](std::size_t i) const { return map[i]; };
 	
 	friend void swap(PixelMap&, PixelMap&);
+	friend bool agree(const PixelMap& a, const PixelMap& b);
 	
 private:
 	std::size_t map_size;
@@ -204,6 +205,89 @@ private:
 	std::size_t map_size, mask_size;
 	std::vector<std::size_t> pixels;
 };
+
+/**
+ * \ingroup Image
+ * \brief Class collecting properties of observational image data.
+ * 
+ * A class that groups observational data, ie. the image, a mask for valid data,
+ * error estimates in each pixel, and various factors such as normalization and
+ * offset.
+ */
+class PixelData
+{
+public:
+	/**
+	 * \brief Construct PixelData from image and sigma map.
+	 * 
+	 * Construct a new PixelData object given an image PixelMap and a sigma
+	 * PixelMap specifying the standard deviation for each pixel.
+	 * 
+	 * Any normalization and offset values of the data can be specified with
+	 * the optional arguments to the constructor. The normalization factor is
+	 * multiplied to pixel values in simulated images when comparing them with
+	 * the data. The offset is substracted for each data pixel.
+	 * 
+	 * \param image The data image.
+	 * \param sigma A PixelMap containing the value of sigma for each pixel.
+	 * \param normalization The normalization factor.
+	 * 
+	 */
+	PixelData(PixelMap image, PixelMap sigma, double normalization = 1, double offset = 0);
+	
+	/**
+	 * Copy constructor.
+	 */
+	PixelData(const PixelData& other);
+	
+	/**
+	 * Assignment operator.
+	 */
+	PixelData& operator=(PixelData rhs);
+	
+	/** Get the data image. */
+	PixelMap image() const;
+	
+	/** Get range of data. */
+	std::size_t getNpixels() const;
+	
+	/** Get range of data. */
+	double getRange() const;
+	
+	/** Get center of data. */
+	const double* getCenter() const;
+	
+	/** Get resolution of data. */
+	double getResolution() const;
+	
+	/**
+	 * \brief Calculate the chi^2 value of a PixelMap.
+	 * 
+	 * Given a model PixelMap, this method calculates the chi^2 value with
+	 * respect to the image and sigma maps for the data.
+	 */
+	double chi_square(const PixelMap& model) const;
+	
+	/**
+	 * \brief Swap data between two PixelData objects.
+	 * 
+	 * Do a fast swap between the data of two PixelData objects. Does not copy
+	 * any elements.
+	 */
+	friend void swap(PixelData& a, PixelData& b);
+	
+private:
+	PixelMap img;
+	PixelMap sgm;
+	double norm;
+	double offs;
+};
+
+inline PixelMap PixelData::image() const { return img; }
+inline std::size_t PixelData::getNpixels() const { return img.getNpixels(); }
+inline double PixelData::getRange() const { return img.getRange(); }
+inline const double* PixelData::getCenter() const { return img.getCenter(); }
+inline double PixelData::getResolution() const { return img.getResolution(); }
 
 void pixelize(double *map,long Npixels,double range,double *center
 		,ImageInfo *imageinfo,int Nimages,bool constant_sb,bool cleanmap

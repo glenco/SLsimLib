@@ -6,7 +6,6 @@
  */
 
 #include "slsimlib.h"
-#include "debug.h"
 
 #ifdef ENABLE_FITS
 #include <CCfits/CCfits>
@@ -38,6 +37,12 @@ void swap(PixelMap& x, PixelMap& y)
 	swap(x.map_boundary_p1[1], y.map_boundary_p1[1]);
 	swap(x.map_boundary_p2[0], y.map_boundary_p2[0]);
 	swap(x.map_boundary_p2[1], y.map_boundary_p2[1]);
+}
+
+bool agree(const PixelMap& a, const PixelMap& b)
+{
+	return (a.Npixels == b.Npixels) && (a.range == b.range) &&
+		(a.center[0] == b.center[0] && a.center[1] == b.center[1]);
 }
 
 PixelMap::PixelMap()
@@ -748,6 +753,54 @@ std::size_t PixelMask::size() const
 std::size_t PixelMask::base_size() const
 {
 	return map_size;
+}
+
+void swap(PixelData& a, PixelData& b)
+{
+	using std::swap;
+	
+	swap(a.img, b.img);
+	swap(a.sgm, b.sgm);
+	swap(a.norm, b.norm);
+	swap(a.offs, b.offs);
+}
+
+PixelData::PixelData(PixelMap image, PixelMap sigma, double normalization, double offset)
+: img(image), sgm(sigma), norm(normalization), offs(offset)
+{
+	// must be a valid image
+	assert(img.valid());
+	
+	// must be a valid sigma map
+	assert(sgm.valid());
+	
+	// image and sigma need to agree
+	assert(agree(img, sgm));
+	
+	// make sure normalization is not faulty
+	assert(norm != 0);
+}
+
+PixelData::PixelData(const PixelData& other)
+: img(other.img), sgm(other.sgm), norm(other.norm), offs(other.offs)
+{
+}
+
+PixelData& PixelData::operator=(PixelData rhs)
+{
+	swap(rhs, *this);
+	return *this;
+}
+
+double PixelData::chi_square(const PixelMap &model) const
+{
+	assert(model.valid());
+	assert(agree(model, img));
+	
+	double chi2 = 0;
+	for(std::size_t i = 0, n = model.size(); i < n; ++i)
+		chi2 += std::pow(((norm * model[i]) - (img[i] - offs))/(sgm[i]), 2);
+	return chi2;
 }
 
 /*

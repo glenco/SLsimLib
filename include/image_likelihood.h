@@ -3,7 +3,6 @@
 
 #include "parameters.h"
 #include "image_processing.h"
-#include "image_chi_square.h"
 
 #include <algorithm>
 #include <cstddef>
@@ -55,13 +54,14 @@ public:
 	 * 
 	 * \param source The source object.
 	 * \param lens The lens object.
+	 * \param data The PixelData to be compared to simulated images.
 	 */
-	ImageLikelihood(SourceType* source, LensType* lens)
+	ImageLikelihood(SourceType* source, LensType* lens, PixelData data)
 	: source(source), lens(lens),
+	  dta(data),
 	  dof(0), dim(0),
-	  off(0), ns(0), norm(1),
 	  images_size(100), images(0),
-	  grid_points(64), grid(0)
+	  grid(0), grid_points(64)
 	{
 		// create ImageInfo array
 		images = new ImageInfo[images_size];
@@ -72,9 +72,15 @@ public:
 		// bind source, lens and cosmology together using model
 		model = new Model(lens, source, cosmo);
 		
-		// these are then set in data()
-		std::fill(grid_center, grid_center + 2, 0);
-		grid_range = 0;
+		// set grid to match data
+		grid_range = dta.getRange();
+		std::copy(dta.getCenter(), dta.getCenter() + 2, grid_center);
+		
+		// create grid
+		regrid();
+		
+		// calculate dof
+		redof();
 	}
 	
 	/**
@@ -99,17 +105,13 @@ public:
 	void dimension(unsigned long n) { dim = n; redof(); }
 	
 	/** Get the data PixelMap. */
-	PixelMap data() const { return dta; }
+	PixelData data() const { return dta; }
 	
 	/** Set the data PixelMap. */
-	void data(PixelMap data)
+	void data(PixelData data)
 	{
-		// copy pixel map
+		// copy data
 		swap(dta, data);
-		
-		// check if mask is compatible or create empty
-		if(dta.size() != msk.base_size())
-			msk = PixelMask(dta.size());
 		
 		// change grid to match data
 		grid_range = dta.getRange();
@@ -120,47 +122,6 @@ public:
 		
 		// recalculate degrees of freedom
 		redof();
-	}
-	
-	/** Get the constant background offset. */
-	double offset() const { return off; }
-	/** Set the constant background offset. */
-	void offset(double offset) { off = offset; }
-	
-	/** Get the constant background noise. */
-	double noise() const { return ns; }
-	/** Set the constant background noise. */
-	void noise(double noise) { ns = noise; }
-	
-	/** Get the pixel count normalization. */
-	double normalization() const { return norm; }
-	/** Set the pixel count normalization. */
-	void normalization(double n) { norm = n; }
-	
-	/** Get the mask. */
-	PixelMask mask() const { return msk; }
-	
-	/** Set the mask. */
-	bool mask(PixelMask mask)
-	{
-		// make sure size of data and mask PixelMap agree
-		if(dta.valid() && mask.base_size() != dta.size())
-			return false;
-		
-		// swap current mask and given one
-		swap(msk, mask);
-		
-		// recalculate degrees of freedom
-		redof();
-		
-		// success
-		return true;
-	}
-	
-	/** Set the mask using a PixelMap. */
-	bool mask(PixelMap mask_map)
-	{
-		return mask(PixelMask(mask_map));
 	}
 	
 	/** Get the maximum number of lensed images. */
@@ -186,10 +147,6 @@ public:
 	double operator()(const parameter_type& params)
 	{
 		using std::log;
-		
-		// make sure there is data
-		if(!dta.valid())
-			return -1;
 		
 		// load parameters into source and lens
 		params.source >> (*source);
@@ -227,8 +184,8 @@ public:
 		image.AddImages(images, image_count, false);
 		
 		// calculate chi^2 for image and data
-		double chi2 = chi_square(dta, image, off, ns, norm, msk);
-
+		double chi2 = dta.chi_square(image);
+		
 		// return chi^2 log-likelihood
 		return (-chi2/2);//+ log(chi2)*(0.5*dof - 1);
 	}
@@ -236,8 +193,8 @@ public:
 private:
 	inline void redof()
 	{
-		// calculate degrees of freedom
-		dof = static_cast<unsigned long>(msk.valid() ? dta.size() : msk.size()) - dim;
+		// TODO: calculate degrees of freedom from dta and dim
+		dof = 0;
 	}
 	
 	inline void regrid()
@@ -249,16 +206,10 @@ private:
 	SourceType* source;
 	LensType* lens;
 	
-	PixelMap dta;
+	PixelData dta;
 	
 	unsigned long dof;
 	unsigned long dim;
-	
-	double off;
-	double ns;
-	double norm;
-	
-	PixelMask msk;
 	
 	std::size_t images_size;
 	ImageInfo* images;
