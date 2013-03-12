@@ -8,6 +8,14 @@
 
 // TODO: set `mag_limit` and `band` to default values in all constructors
 
+/// Default constructor for empty MultiSourceAnaGalaxy
+MultiSourceAnaGalaxy::MultiSourceAnaGalaxy()
+: Source(), index(0)
+{
+	source_sb_type = MultiAnaSource;
+	sb_limit = 30.;
+	galaxies.push_back(OverGalaxy());
+}
 /// Source model for a single analytic galaxy model.
 MultiSourceAnaGalaxy::MultiSourceAnaGalaxy(
 		double mag              /// Total magnitude
