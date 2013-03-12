@@ -175,11 +175,8 @@ public:
 		PixelMap image(dta.getCenter(), dta.getNpixels(), dta.getResolution());
 		image.AddImages(images, image_count, false);
 		
-		// calculate chi^2 for image and data
-		double chi2 = dta.chi_square(image);
-		
-		// return chi^2 log-likelihood
-		return (-chi2/2) + log(chi2)*(0.5*dof - 1);
+		// return multinormal log-likelihood
+		return -0.5*dta.chi_square(image);
 	}
 	
 private:
