@@ -14,14 +14,14 @@ class Lens;
 /**
  * \brief Calculate the likelihood for a source and lens based on image data.
  * 
- * This class takes a source and lens, generates a PixelMap by simulating the
- * lensing, and compares it to a given data PixelMap. It uses the chi_square
- * function to calculate a likelihood.
+ * This class generates a PixelMap by simulating lensing for a given source and
+ * lens type, using the parameters provided, and compares the result to given
+ * PixelData. It uses the data's chi_square function to calculate a likelihood.
  * 
  * To render the image PixelMap from source and lens, an internal grid is
  * created with an initial number of points (default: 64) and a center and
- * range which are taken from the data PixelMap. The initial number of grid
- * points can be adjusted with the `gridPoints()` method. Changing the data or
+ * range which are taken from the PixelData. The initial number of grid points 
+ * can be adjusted with the `gridPoints()` method. Changing the data or
  * number of initial grid points will delete the current grid and create a new
  * instance with the given number of initial points, center and range.
  * 
@@ -43,34 +43,26 @@ public:
 	typedef SourceLensParameters<SourceType, LensType> parameter_type;
 	
 	/**
-	 * \brief Construct ImageLikelihood for the given source and lens.
+	 * Construct ImageLikelihood for the given data.
 	 * 
-	 * Use the provided source and lens to calculate the likelihood. The
-	 * ImageLikelihood takes ownership of both objects (due to Model) and will
-	 * delete them on destruction.
-	 * 
-	 * Before the likelihood can be calculated, the data PixelMap has to be set
-	 * using the `data()` method.
-	 * 
-	 * \param source The source object.
-	 * \param lens The lens object.
 	 * \param data The PixelData to be compared to simulated images.
 	 */
-	ImageLikelihood(SourceType* source, LensType* lens, PixelData data)
-	: source(source), lens(lens),
-	  dta(data),
+	ImageLikelihood(PixelData data)
+	: dta(data),
 	  dof(0), dim(0),
 	  images_size(100), images(0),
 	  grid(0), grid_points(64)
 	{
-		// create ImageInfo array
-		images = new ImageInfo[images_size];
-		
-		// create cosmology
+		// create source, lens and cosmology
+		source = new SourceType();
+		lens = new LensType();
 		cosmo = new COSMOLOGY();
 		
 		// bind source, lens and cosmology together using model
 		model = new Model(lens, source, cosmo);
+		
+		// create ImageInfo array
+		images = new ImageInfo[images_size];
 		
 		// set grid to match data
 		grid_range = dta.getRange();
@@ -180,21 +172,20 @@ public:
 		
 		// build the fit image
 		// TODO: loop for multi source
-		PixelMap image(dta.getCenter(),dta.getNpixels(),dta.getResolution());
+		PixelMap image(dta.getCenter(), dta.getNpixels(), dta.getResolution());
 		image.AddImages(images, image_count, false);
 		
 		// calculate chi^2 for image and data
 		double chi2 = dta.chi_square(image);
 		
 		// return chi^2 log-likelihood
-		return (-chi2/2);//+ log(chi2)*(0.5*dof - 1);
+		return (-chi2/2) + log(chi2)*(0.5*dof - 1);
 	}
 	
 private:
 	inline void redof()
 	{
-		// TODO: calculate degrees of freedom from dta and dim
-		dof = 0;
+		dof = dta.getNpixels()*dta.getNpixels() - dim;
 	}
 	
 	inline void regrid()
