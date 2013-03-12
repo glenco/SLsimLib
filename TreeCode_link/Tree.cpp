@@ -757,9 +757,9 @@ void PrintPoint(Point *point){
  */
 ImageInfo::ImageInfo(){
 
-  imagekist = new Kist;
-  innerborder = new Kist;
-  outerborder = new Kist;
+  imagekist = new Kist<Point>;
+  innerborder = new Kist<Point>;
+  outerborder = new Kist<Point>;
   
   ShouldNotRefine = 0;
   uniform_mag = unchecked;
@@ -778,10 +778,10 @@ ImageInfo::ImageInfo(){
 
   for(i = 0;i < Nimages; i++)
   {
-	imageinfo[i].imagekist = new Kist;
+	imageinfo[i].imagekist = new Kist<Point>;
 	imageinfo[i].Npoints=0;
-    imageinfo[i].innerborder = new Kist;
-    imageinfo[i].outerborder = new Kist;
+    imageinfo[i].innerborder = new Kist<Point>;
+    imageinfo[i].outerborder = new Kist<Point>;
   }
 
   return imageinfo;
@@ -811,8 +811,8 @@ void freeImageInfo(ImageInfo *imageinfo,int Nimages){
 
 OldImageInfo::OldImageInfo(){
 
-  innerborder = new Kist;
-  outerborder = new Kist;
+  innerborder = new Kist<Point>;
+  outerborder = new Kist<Point>;
 }
 OldImageInfo::~OldImageInfo(){
     delete innerborder;

@@ -1028,10 +1028,10 @@ unsigned long Grid::PrunePointsOutside(
 	long i,count = 0,j;
 	Point *point;
 	Branch *branch,*branch2;
-	KistHndl subkist = new Kist;
+	Kist<Point> * subkist = new Kist<Point>;
 	bool go = true;
 	unsigned long Ntmp;
-	Unit *unit;
+	//Unit *unit;
 
 	assert(trashkist);
 
@@ -1303,7 +1303,7 @@ unsigned long Grid::PrunePointsOutside(
  *     check=false all the point arrays are freed..
  *
  */
-void CollectTrash(KistHndl trashkist,bool check){
+void CollectTrash(Kist<Point> * trashkist,bool check){
 	bool go;
 	unsigned long i,j,Ntmp;
 	Point *points;
@@ -1351,7 +1351,7 @@ void CollectTrash(KistHndl trashkist,bool check){
  *          points and branches are also removed.
  */
 
-unsigned long FreeBranchesBelow(TreeHndl i_tree,TreeHndl s_tree,KistHndl trashkist){
+unsigned long FreeBranchesBelow(TreeHndl i_tree,TreeHndl s_tree,Kist<Point> * trashkist){
 
 	if(!i_tree->CurrentIsSquareBranch()) return 0;
 	if(i_tree->atLeaf()) return 0;

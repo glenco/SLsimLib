@@ -21,7 +21,7 @@ static double realray[2];
 * Warning: Does not take empty leaves into account.
 */
 
-void TreeStruct::FindAllBoxNeighborsKist(Point *point,KistHndl neighbors){
+void TreeStruct::FindAllBoxNeighborsKist(Point *point,Kist<Point> * neighbors){
 	static int count=0;
 
 	++count;
@@ -54,7 +54,7 @@ void TreeStruct::FindAllBoxNeighborsKist(Point *point,KistHndl neighbors){
  * A recessive function that was used in FindAllBoxNeighborsKist().
 *    It has been known to cause stack overflow. Use _FindAllBoxNeighborsKist_iter instead.
 */
-void TreeStruct::_FindAllBoxNeighborsKist(Branch *leaf,KistHndl neighbors){
+void TreeStruct::_FindAllBoxNeighborsKist(Branch *leaf,Kist<Point> * neighbors){
 
 	if(  leaf->boundary_p1[0] <= current->boundary_p2[0]
 	  && leaf->boundary_p2[0] >= current->boundary_p1[0]
@@ -90,7 +90,7 @@ void TreeStruct::_FindAllBoxNeighborsKist(Branch *leaf,KistHndl neighbors){
 /**  \ingroup LowLevel
  * Used in FindAllBoxNeighborsKist to walk tree for neighbors.
 */
-void TreeStruct::_FindAllBoxNeighborsKist_iter(Branch *leaf,KistHndl neighbors){
+void TreeStruct::_FindAllBoxNeighborsKist_iter(Branch *leaf,Kist<Point> * neighbors){
 
 	/** Iterative instead of recursive method for finding neighbors
 	 *   the current must be preset so that leaf is within it.
@@ -139,7 +139,7 @@ void TreeStruct::PointsWithinEllipKist(
 	,float rmax      /// major axis
 	,float rmin     /// minor axis
 	,float posangle  /// position angle of major axis, smallest angle between the x-axis and the long axis
-	,KistHndl neighborkist  /// output neighbor kist, will be emptied if it contains anything on entry
+	,Kist<Point> * neighborkist  /// output neighbor kist, will be emptied if it contains anything on entry
 	){
 	unsigned long i,Ntmp;
 	double *xtmp,x,y,cs,sn;
@@ -176,7 +176,7 @@ void TreeStruct::PointsWithinEllipKist(
 double TreeStruct::PointsWithinKist(
 		double *ray     /// center of circle
 		,float rmax      /// radius of circle
-		,KistHndl neighborkist  /// output neighbor kist, will be emptied if it contains anything on entry
+		,Kist<Point> * neighborkist  /// output neighbor kist, will be emptied if it contains anything on entry
 		,short markpoints       /// see comment
 		){
 
@@ -208,7 +208,7 @@ double TreeStruct::PointsWithinKist(
 }
 /** \ingroup LowLevel
  * Used in PointsWithinKist() to walk tree.*/
-void TreeStruct::_PointsWithinKist(double *ray,float *rmax,KistHndl neighborkist
+void TreeStruct::_PointsWithinKist(double *ray,float *rmax,Kist<Point> * neighborkist
 		,short markpoints,double *maxgridsize){
 
   int i,j,incell2=1;
@@ -381,7 +381,7 @@ void TreeStruct::_PointsWithinKist(double *ray,float *rmax,KistHndl neighborkist
  *
  */
 
-void TreeStruct::PointsWithinKist_iter(double *ray,float rmin,float rmax,KistHndl neighborkist){
+void TreeStruct::PointsWithinKist_iter(double *ray,float rmin,float rmax,Kist<Point> * neighborkist){
 	bool decend;
 	unsigned long i;
 	moveTop();
@@ -491,7 +491,7 @@ void TreeStruct::PointsWithinKist_iter(double *ray,float rmin,float rmax,KistHnd
  *    This is a kludge that relies on NearestNeighbor which uses a List and translates
  *    the list to a kist.  Could be rewritten.
  */
-Point * TreeStruct::NearestNeighborKist(double *ray,int Nneighbors,KistHndl neighborkist){
+Point * TreeStruct::NearestNeighborKist(double *ray,int Nneighbors,Kist<Point> * neighborkist){
 	ListHndl neighborlist = NewList();
 	Point *point = 0;
 	unsigned long i;

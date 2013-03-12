@@ -234,7 +234,7 @@ void find_crit_kist(
   double maxgridsize,mingridsize,x[2];
   ImageInfo negimage;
   //Point *minpoint = NewPoint(x,0);
-  Kist newpoint_kist;
+  Kist<Point> newpoint_kist;
 
   /*point=NmewPoint(x,0);*/
 

@@ -278,7 +278,7 @@ long refine_edges2(LensHndl lens,double *y_source,double r_source,GridHndl grid
 
 	long i,j,k,n,Ncells=0,Ncells_o=0,count=0,Npoints=0;
 	Point *i_points,*point;
-	KistHndl neighborkist = new Kist;
+	Kist<Point> * neighborkist = new Kist<Point>;
 	double tmp_area=0,area_total=0;
 	bool addinner;
 	std::vector<Point *> points_to_refine;
@@ -549,7 +549,7 @@ void findborders2(TreeHndl i_tree,OldImageInfo *imageinfo){
 
 	if(imageinfo->Npoints < 1) return;
 
-	KistHndl neighborkist = new Kist;
+	Kist<Point> * neighborkist = new Kist<Point>;
 
 	for(j=0;j<imageinfo->Npoints;++j){
 
@@ -716,7 +716,7 @@ void findborders3(TreeHndl i_tree,OldImageInfo *imageinfo){
 
 	if(imageinfo->Npoints < 1) return;
 
-	KistHndl neighborkist = new Kist;
+	Kist<Point> * neighborkist = new Kist<Point>;
 
 	for(j=0;j<imageinfo->Npoints;++j){
 
@@ -853,7 +853,7 @@ void SwapImages(OldImageInfo *image1,OldImageInfo *image2){
 	Point *point;
 	unsigned long Npoints,i;
 	double tmp;
-	KistHndl list;
+	Kist<Point> * list;
 
 	point = image1->points;
 	image1->points = image2->points;

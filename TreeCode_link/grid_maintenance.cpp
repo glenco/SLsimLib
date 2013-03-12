@@ -40,8 +40,8 @@ Grid::Grid(
 	i_tree = new TreeStruct(i_points,Ngrid_init*Ngrid_init);
 	s_tree = new TreeStruct(s_points,Ngrid_init*Ngrid_init);  // make tree on source plane a area splitting tree
 
-	trashkist = new Kist;
-	neighbors = new Kist;
+	trashkist = new Kist<Point>;
+	neighbors = new Kist<Point>;
 	maglimit = 1.0e-4;
 }
 
@@ -201,6 +201,8 @@ unsigned long Grid::getNumberOfPoints(){
  *
  * Returns a pointer to the list of image points that have been added.  This array can then be
  * used for calculating the surface brightness or marking them as in the image.
+ *
+ * i_tree current is left in one of the new subcells.
  */
 
 Point * Grid::RefineLeaf(LensHndl lens,Point *point,bool kappa_off){
@@ -733,19 +735,39 @@ void Grid::test_mag_matrix(){
 	}while(MoveDownList(i_tree->pointlist));
 }
 
-/// quickly refines the grid down to a specific scale at a given point
+/**
+ * \brief quickly refines the grid down to a specific scale at a given point
+ *
+ *   top is an optional argument that allows for the zooming to start part way
+ *   down the tree.  Default is to start at the root.  If the point is not within
+ *   top or the root nothing is done.  The point will not necessarily be in the center
+ *   of the smallest branch.
+ */
 void Grid::zoom(
 		LensHndl lens
-		,double *center
-		,double scale
-		,bool kappa_off
+		,double *center      /// center of point where grid is refined
+		,double min_scale    /// the smallest grid size to which the grid is refined
+		,bool kappa_off      /// turns the kappa and gamma calculation on or off
+		,Branch *top         /// where on the tree to start, if NULL it will start at the root
 		){
 
-	if(!inbox(center,i_tree->top->boundary_p1,i_tree->top->boundary_p2)) return;
-	i_tree->moveTop();
+	if(top==NULL){
+		if(!inbox(center,i_tree->top->boundary_p1,i_tree->top->boundary_p2)) return;
+		i_tree->moveTop();
+	}else{
+		if(!inbox(center,top->boundary_p1,top->boundary_p2)) return;
+		i_tree->current = top;
+	}
+	Branch *tmp=NULL;
+	Point *newpoints;
+
 	i_tree->_FindLeaf(center,0);
-	while(i_tree->current->points->gridsize > scale){
-		RefineLeaf(lens,i_tree->current->points,kappa_off);
+	while(i_tree->current->points->gridsize > min_scale ){
+		tmp = i_tree->current;
+		newpoints = RefineLeaf(lens,i_tree->current->points,kappa_off);
+		if(newpoints == NULL) break;  // case where all the new points where outside the region
+		i_tree->current = tmp;
+		assert(inbox(center,i_tree->current->boundary_p1,i_tree->current->boundary_p2));
 		i_tree->_FindLeaf(center,0);
 		assert(i_tree->current->npoints == 1);
 	};

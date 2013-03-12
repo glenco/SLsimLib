@@ -44,8 +44,9 @@ void find_divide_images(TreeHndl i_tree,TreeHndl s_tree
 int ImageGenus(TreeHndl i_tree,ImageInfo *imageinfo){
 	assert(imageinfo->outerborder);
 
-	KistHndl kist = imageinfo->outerborder;
-	KistHndl tmp_kist = new Kist,new_kist = new Kist;
+	Kist<Point> * kist = imageinfo->outerborder;
+	Kist<Point> * tmp_kist = new Kist<Point>;
+	Kist<Point> * new_kist = new Kist<Point>;
 	int number,Nimagesmax=100;
 	unsigned long Ntemp,j;
 
@@ -130,7 +131,7 @@ int ImageGenus(TreeHndl i_tree,ImageInfo *imageinfo){
 void divide_images(TreeHndl i_tree,ImageInfo *imageinfo
 		,int *Nimages,int Nimagesmax){
 	unsigned long i,j,Ntemp;
-	KistHndl new_imagekist = new Kist;
+	Kist<Point> * new_imagekist = new Kist<Point>;
 	double tmp = 0;
 
 	if(imageinfo->imagekist->Nunits() < 2){
@@ -251,7 +252,7 @@ void divide_images_kist(
 	    ,int Nimagesmax
 	    ){
 	unsigned long i,j,Ntemp,Ntest;
-	KistHndl new_imagekist = new Kist;
+	Kist<Point> * new_imagekist = new Kist<Point>;
 	double tmp = 0;
 
 	if(imageinfo->imagekist->Nunits() < 2){
@@ -383,7 +384,7 @@ void partition_images(Point *point,unsigned long *N_in_image,TreeHndl i_tree){
 	assert(point);
 	assert(i_tree);
 
-	KistHndl neighbors = new Kist;
+	Kist<Point> * neighbors = new Kist<Point>;
 	  /**************** TODO test line ******************
 	  ERROR_MESSAGE();
 	  // ****************  ******************/
@@ -433,13 +434,13 @@ void partition_images(Point *point,unsigned long *N_in_image,TreeHndl i_tree){
  *    is left in imagekist.  The in_image marks are NOT returned to their original
  *    values.  The ones that are put into imagekist are changed to in_image = FALSE
  */
-double partition_images_kist(Point *point,KistHndl imagekist,TreeHndl i_tree){
+double partition_images_kist(Point *point,Kist<Point> * imagekist,TreeHndl i_tree){
 	assert(point);
 	assert(i_tree);
 	assert(point->in_image == TRUE);
 
 	double area = 0.0;
-	KistHndl neighbors = new Kist;
+	Kist<Point> * neighbors = new Kist<Point>;
 
 	EmptyKist(imagekist);
 

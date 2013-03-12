@@ -599,7 +599,7 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
   if(total_area == 0.0) return 0;
 
   Point *point;
-  KistHndl nearest=new Kist;
+  Kist<Point> * nearest=new Kist<Point>;
   int Ngrid_block = grid->getNgrid_block();
   std::vector<Point *> points_to_refine;
 
@@ -933,7 +933,7 @@ void check_sb_add(Source *source,ImageInfo *imageinfo,Point *i_points,unsigned l
 }
 
 bool RefinePoint2(Point *point,TreeHndl i_tree,double image_area,double total_area
-		,ExitCriterion criterion,double res_target,KistHndl nearest){
+		,ExitCriterion criterion,double res_target,Kist<Point> * nearest){
 
 	double borderSB = 0,error = 0,maxdiff_sb,flux;
 
@@ -974,7 +974,7 @@ bool RefinePoint2(Point *point,TreeHndl i_tree,double image_area,double total_ar
  * Requires that all neighbors to point have a flux below a
  *
 bool RefinePoint(Point *point,TreeHndl i_tree,double image_area,double total_area
-		,ExitCriterion criterion,double res_target,KistHndl nearest){
+		,ExitCriterion criterion,double res_target,Kist<Point> * nearest){
 
 	double flux,tmp;
 

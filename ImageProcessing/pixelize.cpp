@@ -253,7 +253,7 @@ void PixelMap::AddImages(
 	if(imageinfo->imagekist->Nunits() == 0) return;
 
 	double sb,r[2],res,norm=0;
-	KistHndl kist = new Kist();
+	Kist<Point> * kist = new Kist<Point>();
 
 	// find numerical normalization of mask on grid
 //	PointsWithinKist(ptree,center,3*sigma,kist,0);

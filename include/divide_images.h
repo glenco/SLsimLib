@@ -16,6 +16,6 @@ int ImageGenus(TreeHndl i_tree,ImageInfo *imageinfo);
 void divide_images(TreeHndl i_tree,ImageInfo *imageinfo,int *Nimages,int Nimagesmax);
 void partition_images(Point *point,unsigned long *N_in_image,TreeHndl i_tree);
 void divide_images_kist(TreeHndl i_tree,ImageInfo *imageinfo,int *Nimages,int Nimagesmax);
-double partition_images_kist(Point *point,KistHndl imagekist,TreeHndl i_tree);
+double partition_images_kist(Point *point,Kist<Point> * imagekist,TreeHndl i_tree);
 
 #endif

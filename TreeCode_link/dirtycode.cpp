@@ -26,7 +26,7 @@ void DirtyFoF(
 		,int MaxNimages       /// Maximum size of imageinfo array
 		){
 
-	KistHndl wholekist = new Kist;
+	Kist<Point> * wholekist = new Kist<Point>;
 	unsigned long i;
 
 	*Nimages = 0;
@@ -47,7 +47,7 @@ void DirtyFoF(
 	delete wholekist;
 	return;
 }
-void _DirtyFoF(KistHndl neighbors,KistHndl wholekist,double linkinglength){
+void _DirtyFoF(Kist<Point> * neighbors,Kist<Point> * wholekist,double linkinglength){
 	double ll2 = linkinglength*linkinglength;
 	bool check = false;
 
@@ -97,7 +97,7 @@ void DirtyDivider(
 		return;
 	}
 
-	KistHndl wholekist = new Kist;
+	Kist<Point> * wholekist = new Kist<Point>;
 	unsigned long i;
 	double xmin;
 
@@ -126,7 +126,7 @@ void DirtyDivider(
 	delete wholekist;
 	return;
 }
-void _DirtyDivider(KistHndl neighbors,KistHndl wholekist,int Ngroup){
+void _DirtyDivider(Kist<Point> * neighbors,Kist<Point> * wholekist,int Ngroup){
 	bool check = false;
 	double xinit[2],rr[Ngroup+1],ll;
 	long i,j;
