@@ -13,21 +13,21 @@
 
 // Used as internal container in Kist
 template <class T>
-struct Unit{
+struct KistUnit{
 	T * data;
-	struct Unit<T> *next;
-	struct Unit<T> *prev;
+	struct KistUnit<T> *next;
+	struct KistUnit<T> *prev;
 };// Unit;
 
 //typedef struct Point Data;  // change this to make a kist of other objects
 
 /** \ingroup ImageFindingL2
- * \brief A Kist is a linked list of Units which each point to a Data type.
+ * \brief A Kist is a class template for a linked list of any data type (default is Point).
  *
- * In this implementation the Data type is set to Point type, but this could
- * be changed for other applications.  Multiple Kists of the same points can be
- * made without copying data.  Memory is allocated in blocks in held in a reservoir
- * to improve efficiency when adding and removing data.
+ * Multiple Kists of the same data can be made without copying data.  Memory is allocated in
+ * blocks and held in a reservoir to improve efficiency when adding and removing data.  This
+ * makes it faster then the STL list when data is repeatedly being added and subtracted from the
+ * list.
  */
 template <class Data = Point>
 struct Kist{
@@ -46,7 +46,7 @@ public:
 		  return;
 	};
 	Kist(Kist &a){
-		Unit<Data> *current;
+		KistUnit<Data> *current;
 
 		top=NULL;
 		Number=0;
@@ -63,7 +63,7 @@ public:
 		a.current = current;
 	};
 	~Kist(){
-		Unit<Data> *units;
+		KistUnit<Data> *units;
 		while(heads.size() > 0){
 			units = heads.back();
 			heads.pop_back();
@@ -114,27 +114,26 @@ public:
 
 private:
 
-	Unit<Data> * pop_from_reserve();
-	void push_to_reserve(Unit<Data> *unit);
+	KistUnit<Data> * pop_from_reserve();
+	void push_to_reserve(KistUnit<Data> *unit);
 
 	unsigned long Number;
 	unsigned long blocksize;
 
-	std::vector<Unit<Data> *> heads;
+	std::vector<KistUnit<Data> *> heads;
 	//Unit *units;
-	Unit<Data> *reserve_top;
+	KistUnit<Data> *reserve_top;
 	unsigned long Nreserve;
 
-	Unit<Data> *top;
-	Unit<Data> *bottom;
-	Unit<Data> *current;
+	KistUnit<Data> *top;
+	KistUnit<Data> *bottom;
+	KistUnit<Data> *current;
 
 };// Kist;
 
 //typedef struct Kist * Kist *;
 
-
-/** \ingroup ImageFindingL2
+/**
  * \brief Removes all elements from list without destroy the data.
  */
 template <class Data> void Kist<Data>::Empty(){
@@ -146,11 +145,11 @@ template <class Data> void Kist<Data>::Empty(){
 }
 
 /// Take a Unit out of the reservoir, expand reservoir if necessary
-template <class Data> Unit<Data> * Kist<Data>::pop_from_reserve(){
+template <class Data> KistUnit<Data> * Kist<Data>::pop_from_reserve(){
 
 	if(Nreserve <= 1){
 		// expand reservoir of Units for later use
-		  Unit<Data> *units = new Unit<Data>[blocksize];
+		  KistUnit<Data> *units = new KistUnit<Data>[blocksize];
 		  for(unsigned long i=0;i<blocksize-1;++i) units[i].next = &units[i+1];
 		  units[blocksize-1].next = NULL;
 
@@ -160,7 +159,7 @@ template <class Data> Unit<Data> * Kist<Data>::pop_from_reserve(){
 		  Nreserve += blocksize;
 	}
 
-	Unit<Data> *unit = reserve_top;
+	KistUnit<Data> *unit = reserve_top;
 	reserve_top = unit->next;
 	--Nreserve;
 
@@ -168,7 +167,7 @@ template <class Data> Unit<Data> * Kist<Data>::pop_from_reserve(){
 }
 
 /// put a Unit into the reservoir
-template <class Data> void Kist<Data>::push_to_reserve(Unit<Data> *unit){
+template <class Data> void Kist<Data>::push_to_reserve(KistUnit<Data> *unit){
 	assert(reserve_top);
 	assert(Nreserve > 0);
 
@@ -194,7 +193,7 @@ template <class Data> void Kist<Data>::InsertAfterCurrent(Data *data){
     assert(data->x);
     assert(data->gridsize >= 0);
 
-    Unit<Data> *unit = pop_from_reserve();
+    KistUnit<Data> *unit = pop_from_reserve();
 
     unit->data = data;
 
@@ -228,7 +227,7 @@ template <class Data> void Kist<Data>::InsertBeforeCurrent(Data *data){
     assert(data->gridsize >= 0);
 
     //Unit *unit = (Unit *)malloc(sizeof(Unit));
-    Unit<Data> *unit = pop_from_reserve();
+    KistUnit<Data> *unit = pop_from_reserve();
 
 	unit->data=data;
 
@@ -286,7 +285,7 @@ template <class Data> void Kist<Data>::MoveCurrentToBottom(){
 template <class Data> Data *Kist<Data>::TakeOutCurrent(){
 
     Data *data;
-    Unit<Data> *unit;
+    KistUnit<Data> *unit;
 
     if( Number <= 0) return NULL;
 
@@ -412,7 +411,7 @@ template <class Data> void Kist<Data>::Print(){
 template <class Data> bool Kist<Data>::AreDataUnique(){
 
 	if(Nunits() < 2) return true;
-	Unit<Data> *unit = current;
+	KistUnit<Data> *unit = current;
 
 	unsigned long i,j;
 	Data **data = new Data*[Nunits()];
@@ -458,27 +457,50 @@ template <class Data> void Kist<Data>::SetInImage(Boo value){
  * These functions are provided for backwards compatibility, but the kist member methods
  * should be used in the future.
  */
-
-void InsertAfterCurrentKist(Kist<Point> * kist,Point * data);
-void InsertBeforeCurrentKist(Kist<Point> * kist,Point * data);
-bool AtTopKist(Kist<Point> * kist);
-bool AtBottomKist(Kist<Point> * kist);
-void JumpDownKist(Kist<Point> * kist,int jump);
-bool MoveDownKist(Kist<Point> * kist);
-bool MoveUpKist(Kist<Point> * kist);
-bool MoveToTopKist(Kist<Point> * kist);
-bool MoveToBottomKist(Kist<Point> * kist);
-void FillKist(Kist<Point> * kist,Point * data,unsigned long N);
-void PrintKist(Kist<Point> * kist);
-void SwapCurrentWithBottomKist(Kist<Point> * kist);
-Point *TakeOutCurrentKist(Kist<Point> * kist);
-Point *GetCurrentKist(Kist<Point> * kist);
-void EmptyKist(Kist<Point> * kist);
-//void FreeAllKist(Kist<Point> * kist);
-//void UnionKist(Kist<Point> * kist1,Kist<Point> * kist2);
-//bool AreDataUniqueKist(Kist<Point> * kist);
-bool IntersectionKist(Kist<Point> * kist1,Kist<Point> * kist2,Kist<Point> * intersection);
-Point *getCurrentKist(Kist<Point> * kist);
-void TranformPlanesKist(Kist<Point> * kist);
+inline void EmptyKist(Kist<Point> * kist){
+	kist->Empty();
+}
+inline bool AtTopKist(Kist<Point> * kist){
+	return kist->AtTop();
+}
+inline bool AtBottomKist(Kist<Point> * kist){
+	return kist->AtBottom();
+}
+inline void InsertAfterCurrentKist(Kist<Point> * kist,Point *data){
+	kist->InsertAfterCurrent(data);
+}
+inline void InsertBeforeCurrentKist(Kist<Point> * kist,Point *data){
+	kist->InsertBeforeCurrent(data);
+}
+inline void SwapCurrentWithBottomKist(Kist<Point> * kist){
+	kist->SwapCurrentWithBottom();
+}
+inline Point *TakeOutCurrentKist(Kist<Point> * kist){
+	return kist->TakeOutCurrent();
+}
+inline void JumpDownKist(Kist<Point> * kist,int jump){
+	kist->JumpDown(jump);
+}
+inline bool MoveDownKist(Kist<Point> * kist){
+	return kist->Down();
+}
+inline bool MoveUpKist(Kist<Point> * kist){
+	return kist->Up();
+}
+inline bool MoveToTopKist(Kist<Point> * kist){
+	return kist->MoveToTop();
+}
+inline bool MoveToBottomKist(Kist<Point> * kist){
+	return kist->MoveToBottom();
+}
+inline void FillKist(Kist<Point> * kist,Point *data_array,unsigned long N){
+	kist->Fill(data_array,N);
+}
+inline Point *getCurrentKist(Kist<Point> * kist){
+	return kist->getCurrent();
+}
+inline void TranformPlanesKist(Kist<Point> * kist){
+	kist->TranformPlanes();
+}
 
 #endif
