@@ -13,9 +13,9 @@
 class Observation
 {
 public:
-	Observation(float exp_time, int exp_num, float back_mag, float diameter, float transmission, float ron);
-	Observation(float exp_time, int exp_num, float back_mag, float diameter, float transmission, float ron, float seeing);
-	Observation(float exp_time, int exp_num, float back_mag, float diameter, float transmission, float ron, std::string psf_file);
+	Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron);
+	Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, float seeing);
+	Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, std::string psf_file);
 	float getExpTime(){return exp_time;}
 	int getExpNum(){return exp_num;}
 	float getBackMag(){return back_mag;}
@@ -23,6 +23,7 @@ public:
 	float getTransmission(){return transmission;}
 	float getRon(){return ron;}
 	float getSeeing(){return seeing;}
+	float getZeropoint(){return mag_zeropoint;}
 	std::valarray<float> getPSF(){return map_psf;}
 	int getPSF_size(){return psf_size;}
 
@@ -34,6 +35,7 @@ private:
 	float diameter;
 	float transmission;
 	float seeing;
+	float mag_zeropoint;
 	std::valarray<float> map_psf;
 	int psf_size;
 };

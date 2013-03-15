@@ -72,7 +72,7 @@ void OverGalaxy::setInternals(double my_mag,double my_BtoT,double my_Reff,double
 		theta[1] = 0;
 	}
 }
-/// Surface brightness in photon counts/cm^2/sec/rad^2/Hz
+/// Surface brightness in erg/cm^2/sec/rad^2/Hz
 double OverGalaxy::SurfaceBrightness(
 		double *x  /// position in radians relative to center of source
 		){
@@ -84,7 +84,7 @@ double OverGalaxy::SurfaceBrightness(
 	sb = sbDo*exp(-R);
 	if(Reff > 0.0) sb += sbSo*exp(-7.6693*pow((x[0]*x[0] + x[1]*x[1])/Reff/Reff,0.125));
 //	if(sb < 1.0e-4*(sbDo + sbSo) ) return 0.0;
-	sb *= 1./hplanck*pow(10,-0.4*48.6);
+	sb *= pow(10,-0.4*48.6);
 	return sb;
 }
 

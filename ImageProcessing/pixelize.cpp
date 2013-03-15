@@ -598,46 +598,51 @@ void PixelMap::AddNoise(Observation obs)
 	float exp_time = obs.getExpTime();
 	int exp_num = obs.getExpNum();
 	float back_mag = obs.getBackMag();
-	float transmission = obs.getTransmission();
-	float diameter = obs.getDiameter();
 	float ron = obs.getRon();
-	double back_mean = pow(10,-0.4*(48.6+back_mag))/hplanck/100.*diameter*diameter*exp_time*transmission*pi/4.;
+	float mag_zeropoint = obs.getZeropoint();
+	double Q = pow(10,0.4*(mag_zeropoint+48.6));
+	double res_in_arcsec = resolution*180.*60.*60/pi;
+	double back_mean = pow(10,-0.4*(48.6+back_mag))*res_in_arcsec*res_in_arcsec*Q*exp_time;
 	double rms, noise;
 	long seed = 24;
 	double norm_map, noised_map;
 	for (unsigned long i = 0; i < map_size; i++)
 	{
-		norm_map=map[i]*diameter*diameter*exp_time*transmission*pi/4.;
-		rms = sqrt(pow(exp_num*ron,2)+norm_map+back_mean);
+		map[i]*= exp_time;
+		rms = sqrt(pow(exp_num*ron,2)+map[i]+back_mean);
 		noise = gasdev(&seed)*rms;
-		noised_map = norm_map + noise;
-		map[i] = noised_map/exp_time;
+		map[i] += noise;
+		map[i] /= exp_time;
 		}
 	}
 
 void PixelMap::PhotonToCounts(Observation obs)
 {
-	float transmission = obs.getTransmission();
-	float diameter = obs.getDiameter();
+	float mag_zeropoint = obs.getZeropoint();
+	double Q = pow(10,0.4*(mag_zeropoint+48.6));
 	for (unsigned long i = 0; i < map_size; i++)
 	{
-		map[i]=map[i]*diameter*diameter*transmission*pi/4.;
+		map[i]=map[i]*Q;
 	}
 }
 
-Observation::Observation(float exp_time, int exp_num, float back_mag, float diameter, float transmission, float ron):
+Observation::Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron):
 		exp_time(exp_time), exp_num(exp_num), back_mag(back_mag), diameter(diameter), transmission(transmission), ron(ron)
 		{
+			mag_zeropoint = 2.5*log10(diameter*diameter*transmission*pi/4./hplanck) - 48.6;
 		}
 
-Observation::Observation(float exp_time, int exp_num, float back_mag, float diameter, float transmission, float ron, float seeing):
+Observation::Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, float seeing):
 		exp_time(exp_time), exp_num(exp_num), back_mag(back_mag), diameter(diameter), transmission(transmission), ron(ron), seeing(seeing)
 		{
+			mag_zeropoint = 2.5*log10(diameter*diameter*transmission*pi/4./hplanck) - 48.6;
 		}
 
-Observation::Observation(float exp_time, int exp_num, float back_mag, float diameter, float transmission, float ron, std::string psf_file):
+Observation::Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, std::string psf_file):
 		exp_time(exp_time), exp_num(exp_num), back_mag(back_mag), diameter(diameter), transmission(transmission), ron(ron)
 		{
+	mag_zeropoint = 2.5*log10(diameter*diameter*exp_time*transmission*pi/4./hplanck) - 48.6;
+
 	std::auto_ptr<CCfits::FITS> fp (new CCfits::FITS (psf_file.c_str(), CCfits::Read));
 	CCfits::PHDU *h0=&fp->pHDU();
 	int side_psf = h0->axis(0);

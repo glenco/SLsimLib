@@ -75,7 +75,7 @@ public:
 	double getQuad(int i, int j){return quad[i][j];};
 	double getSize(){return size;};
 	double* getCentroid(){return centroid;};
-	double getMag(){return -2.5*log10(flux*hplanck)-48.6;};
+	double getMag(){return -2.5*log10(flux)-48.6;};
 private:
 	void assignParams(InputParams& params);
 	void calcEll();
