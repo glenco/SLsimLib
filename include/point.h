@@ -55,6 +55,7 @@ typedef struct Point{
   Branch *leaf;
 
   void print();
+  void Print();
 
 } Point;
 

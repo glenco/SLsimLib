@@ -61,7 +61,7 @@
 }*/
 
 /// print out all member data for testing purposes
-void Point::print(){
+void Point::Print(){
 	 std::cout << "Point Data : " << std::endl;
 	 std::cout << "  next " << next << std::endl;
 	 std::cout << "  prev " << prev << std::endl;
@@ -78,6 +78,11 @@ void Point::print(){
 	 std::cout << "  surface_brightness " << surface_brightness << std::endl;
 	 std::cout << "  leaf " << leaf << std::endl;
 }
+/// print just position and gridsize
+void Point::print(){
+	std::cout << x[0] <<  "  " << x[1] << "  " << gridsize << std::endl;
+}
+
 
 
 unsigned long Branch::countID = 0;

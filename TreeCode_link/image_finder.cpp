@@ -292,6 +292,7 @@ long refine_edges2(LensHndl lens,double *y_source,double r_source,GridHndl grid
 
 	for(i=0;i<Nimages;++i){
 
+        if(!(imageinfo[i].ShouldNotRefine)){
 		// count border points that needs to be refined
 		MoveToTopKist(imageinfo[i].outerborder);
 		for(j=0,Ncells=0;j<imageinfo[i].outerborder->Nunits();++j){
@@ -494,6 +495,7 @@ long refine_edges2(LensHndl lens,double *y_source,double r_source,GridHndl grid
 				}
 			}
 		}
+        }
 	}  // end loop through images
 
 	delete neighborkist;

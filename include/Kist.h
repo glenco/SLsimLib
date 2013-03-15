@@ -33,7 +33,8 @@ template <class Data = Point>
 struct Kist{
 public:
 
-	Kist(unsigned long my_blocksize = 10000){
+	Kist(unsigned long my_blocksize = 10000   /// Number of KistUnits allocated at one time.  Larger it is the less time spent allocating memory, but memory will be waisted for small Kists
+			){
 		  top=NULL;
 		  Number=0;
 		  bottom = top;
@@ -101,7 +102,7 @@ public:
 	void SetInImage(Boo value);
 
 
-	/// Returns a pointer to the current data
+	/// Returns a pointer to the current data.  Same as getCurrent.
 	Data *operator*(){return getCurrent();}
 	/// Same as Up()
 	bool operator++(){return Up();}
@@ -175,12 +176,12 @@ template <class Data> void Kist<Data>::push_to_reserve(KistUnit<Data> *unit){
 	reserve_top = unit;
 	++Nreserve;
 }
-
+/// True if current is at top of list
 template <class Data> bool Kist<Data>::AtTop(){
 	if(current==top) return true;
 	return false;
 }
-
+/// True if current is at bottom of list
 template <class Data> bool Kist<Data>::AtBottom(){
 	if(current==bottom) return true;
 	else return false;
@@ -252,9 +253,7 @@ template <class Data> void Kist<Data>::InsertBeforeCurrent(Data *data){
     return;
 }
 
-/**
- * Swaps current data with bottom data leaving current one above former current.
- */
+/// Swaps current data with bottom data leaving current one above former current.
 template <class Data> void Kist<Data>::SwapCurrentWithBottom(){
 
 	Data *data;
@@ -265,10 +264,8 @@ template <class Data> void Kist<Data>::SwapCurrentWithBottom(){
 	Up();
 }
 
-/**
- * Moves current to the bottom of the kist.  Current
- * is left at the bottom
- */
+
+/// Moves data at current location to the bottom of the kist.  Current is left at the bottom
 template <class Data> void Kist<Data>::MoveCurrentToBottom(){
 
 	Data *data = TakeOutCurrent();
@@ -320,7 +317,7 @@ template <class Data> Data *Kist<Data>::TakeOutCurrent(){
 
     return data;
 }
-
+/// Move down the list jump units from current position
 template <class Data> bool Kist<Data>::JumpDown(int jump){
 	int i;
 	bool ans;
@@ -361,8 +358,7 @@ template <class Data> bool Kist<Data>::MoveToBottom(){
 	return true;
 }
 
-/** \brief Put an array of data into a kist.
- * */
+/// Put an array of data into a kist.
 template <class Data> void Kist<Data>::Fill(Data *data_array,unsigned long N){
   unsigned long i;
 
@@ -381,9 +377,9 @@ template <class Data> inline Data * Kist<Data>::getCurrent(){
 /*********************************
  * specific to image points
  * ******************************/
-/**
- *\brief Transform all points in kist from image to source plane or vis versus
- */
+ /** \brief Transform all points in kist from image to source plane or vis versus.
+  * Data type must have a "image" attribute.
+*/
 template <class Data> void Kist<Data>::TranformPlanes(){
 
 	if(Number == 0) return;
@@ -396,18 +392,16 @@ template <class Data> void Kist<Data>::TranformPlanes(){
 
 	return;
 }
-
-/// Print positions and gridsizes of all points in Kist to standard out
+/// \brief Print data to stdout. Data type must have a "print()" public function.
 template <class Data> void Kist<Data>::Print(){
 	std::cout << Nunits() << std::endl;
 	MoveToTop();
 	do{
-		std::cout << getCurrent()->x[0] <<  "  " << getCurrent()->x[1] << "  " << getCurrent()->gridsize << std::endl;
+		getCurrent()->print();
 	}while(Down());
 }
-/**
- * \brief return true if all the points in the kist are unique.
- */
+
+ /// returns true if all the members have unique addresses.  Warning: This can be slow.
 template <class Data> bool Kist<Data>::AreDataUnique(){
 
 	if(Nunits() < 2) return true;
@@ -440,8 +434,12 @@ template <class Data> bool Kist<Data>::AreDataUnique(){
 /**
  * \brief Set the in_image variable in every member of kist to value.
  *
- * Does not return current to previous value.
+ * Does not return current to previous value.  Data type must have a
+ * "in_image" attribute.
  */
+/*template <class Data> void Kist<Data>::SetInImage(Boo value){
+	return;
+}*/
 template <class Data> void Kist<Data>::SetInImage(Boo value){
 
 	if(Nunits() == 0) return;
