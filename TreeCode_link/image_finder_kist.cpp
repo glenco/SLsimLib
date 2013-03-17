@@ -8,6 +8,7 @@ static const int NpointsRequired = 100;  // number of points required to be with
 //static const float mumin = 0.1;
 static const float mumin = 0.3;
 
+
 static const float FracResTarget = 4.0e-4;
 //static const float FracResTarget = 1.0e-4;
 static const float telescope_high = 1.0e-3;
@@ -453,6 +454,8 @@ void find_images_microlens(
 	static int oldNimages=0;
 	static unsigned long Npoints_old = 0;
 
+	bool time_on = true;
+
 	double **xstars = lens->stars_xp;
 	int Ngrid_block = grid->getNgrid_block();
 
@@ -621,14 +624,14 @@ void find_images_microlens(
   		//for(int k=0; k < *Nimages; ++k) imageinfo[k].ShouldNotRefine = false;
 
     	time(&t1);
-    	if(verbose)	printf("      time in refine grid %f sec\n",difftime(t1,t2));
+    	if(time_on)	printf("      time in refine grid %f sec\n",difftime(t1,t2));
 
     	time(&now);
-    	if(verbose) printf("    time for one source size %f sec\n",difftime(now,t3));
+    	if(time_on) printf("    time for one source size %f sec\n",difftime(now,t3));
     }
 
 	time(&now);
-	if(verbose) printf(" time for source size reduction %f sec\n",difftime(now,to));
+	if(time_on) printf(" time for source size reduction %f sec\n",difftime(now,to));
 	time(&to);
 
    	// **** Refine grid around each star so that no images are missed
@@ -642,7 +645,7 @@ void find_images_microlens(
 		if(verbose) std::cout << "  out of zoom" << std::endl;
 	}
 	time(&now);
-	if(verbose) printf(" time for zooming on stars %f sec\n",difftime(now,to));
+	if(time_on) printf(" time for zooming on stars %f sec\n",difftime(now,to));
 	time(&to);
 
 	////////////////////////////////////////////////////////////////////////////////*/
@@ -710,9 +713,13 @@ void find_images_microlens(
 			return ;
 		}
 		++i;
-	}while( refine_grid_kist(lens,grid,imageinfo,*Nimages,1.0/NpointsRequired,3,kappa_off,NULL)
+	}while( refine_grid_kist(lens,grid,imageinfo,*Nimages,0.1,3,kappa_off,NULL)
 			|| moved );
     for(int k=0;k<*Nimages;++k) imageinfo[k].ShouldNotRefine = false;
+
+	time(&now);
+	if(time_on) printf(" time for uniform refinement %f sec\n",difftime(now,to));
+	time(&to);
 
 	assert(*Nimages > 0);
 
@@ -797,7 +804,7 @@ void find_images_microlens(
 	assert(*Nimages > 0);
 
 	time(&t3);
-	if(verbose) printf("     time in image refinement %f min\n",difftime(t3,now)/60.);
+	if(time_on) printf("     time in edge refinement %f sec\n",difftime(t3,now));
 
 	// if point source take only closest image point
 	if(r_source <= 0){
@@ -806,7 +813,7 @@ void find_images_microlens(
 	}
 
 	time(&now);
-	if(verbose) printf("time in find_images %f min\n",difftime(now,to)/60.);
+	if(time_on) printf("time in find_images %f min\n",difftime(now,to)/60.);
 
 	oldy[0]=y_source[0];
 	oldy[1]=y_source[1];
