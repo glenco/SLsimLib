@@ -10,36 +10,6 @@
 
 #include "Tree.h"
 
-class Observation
-{
-public:
-	Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron);
-	Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, float seeing);
-	Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, std::string psf_file);
-	Observation(float diameter, float transmission);
-	Observation(float zeropoint);
-	float getExpTime(){return exp_time;}
-	int getExpNum(){return exp_num;}
-	float getBackMag(){return back_mag;}
-	float getDiameter(){return diameter;}
-	float getTransmission(){return transmission;}
-	float getRon(){return ron;}
-	float getSeeing(){return seeing;}
-	float getZeropoint(){return mag_zeropoint;}
-	std::valarray<float> getPSF(){return map_psf;}
-
-private:
-	float diameter;  // diameter of telescope (in cm)
-	float transmission;  // total transmission of the instrument
-	float mag_zeropoint;  // magnitude of a source that produces one count/sec in the image
-	float exp_time;  // total exposure time (in sec)
-	int exp_num;  // number of exposures
-	float back_mag;  // sky (or background) magnitude
-	float ron;  // read-out-noise
-	float seeing;  // width of the gaussian smoothing
-	std::valarray<float> map_psf;  // array of the point spread function
-};
-
 
 
 /** \ingroup Image
@@ -70,16 +40,16 @@ public:
 	inline double getResolution() const { return resolution; }
 	
 	void Clean();
+	void Renormalize(double factor);
+	void AddValue(std::size_t i, double value);
+	void AssignValue(std::size_t i, double value);
 	void AddImages(ImageInfo *imageinfo,int Nimages,bool constant_sb);
 	void AddImages(ImageInfo *imageinfo,int Nimages,double sigma);
 	void printASCII();
 	void printASCIItoFile(std::string filename);
 	void printFITS(std::string filename);
-	void smooth(double sigma);
 
-	void ApplyPSF(std::valarray<float> map_psf, double oversample_n = 1);
-	void AddNoise(Observation obs);
-	void PhotonToCounts(Observation obs);
+	void smooth(double sigma);
 
 	inline double getValue(std::size_t i) const { return map[i]; }
 	inline double operator[](std::size_t i) const { return map[i]; };
@@ -99,6 +69,42 @@ private:
 	void PointsWithinLeaf(Branch * branch1, std::list <unsigned long> &neighborlist);
 	bool inMapBox(Branch * branch1);
 };
+
+class Observation
+{
+public:
+	Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron);
+	Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, float seeing);
+	Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, std::string psf_file, float oversample);
+	Observation(float diameter, float transmission);
+	Observation(float zeropoint);
+	float getExpTime(){return exp_time;}
+	int getExpNum(){return exp_num;}
+	float getBackMag(){return back_mag;}
+	float getDiameter(){return diameter;}
+	float getTransmission(){return transmission;}
+	float getRon(){return ron;}
+	float getSeeing(){return seeing;}
+	float getZeropoint(){return mag_zeropoint;}
+	std::valarray<float> getPSF(){return map_psf;}
+	PixelMap AddNoise(PixelMap pmap);
+	PixelMap PhotonToCounts(PixelMap pmap);
+	PixelMap ApplyPSF(PixelMap pmap);
+	PixelMap Smooth(PixelMap pmap);
+
+private:
+	float diameter;  // diameter of telescope (in cm)
+	float transmission;  // total transmission of the instrument
+	float mag_zeropoint;  // magnitude of a source that produces one count/sec in the image
+	float exp_time;  // total exposure time (in sec)
+	int exp_num;  // number of exposures
+	float back_mag;  // sky (or background) magnitude
+	float ron;  // read-out-noise
+	float seeing;  // width of the gaussian smoothing
+	std::valarray<float> map_psf;  // array of the point spread function
+	float oversample; // psf oversampling factor
+};
+
 
 /**
  * \ingroup Image

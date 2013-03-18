@@ -201,6 +201,24 @@ void PixelMap::Clean()
 	std::fill(map, map + map_size, 0);
 }
 
+/// Multiplies the whole map by a scalar factor
+void PixelMap::Renormalize(double factor)
+{
+	for(std::size_t i=0;i < map_size; ++i) map[i] *= factor;
+}
+
+/// Adds a value to the i-th pixel
+void PixelMap::AddValue(std::size_t i, double value)
+{
+	map[i] += value;
+}
+
+/// Assigns a value to the i-th pixel
+void PixelMap::AssignValue(std::size_t i, double value)
+{
+	map[i] = value;
+}
+
 /// Add an image to the map
 void PixelMap::AddImages(
 		ImageInfo *imageinfo   /// An array of ImageInfo-s.  There is no reason to separate images for this routine
@@ -505,29 +523,39 @@ void PixelMap::smooth(double sigma){
 
 }
 
+PixelMap Observation::Smooth(PixelMap pmap)
+{
+	PixelMap outmap(pmap);
+	outmap.smooth(seeing);
+	return outmap;
+}
+
+
 // Smooths the image with a PSF map.
 // oversample_n allows for an oversampled psf image.
 // (In principle, this should be readable directly from the fits header.)
-void PixelMap::ApplyPSF(std::valarray<float> map_psf, double oversample_n)
+PixelMap Observation::ApplyPSF(PixelMap pmap)
 {
 #ifdef ENABLE_FITS
 #ifdef ENABLE_FFTW
 
+	PixelMap outmap(pmap);
 	// creates plane for fft of map, sets properly input and output data, then performs fft
 	fftw_plan p;
-	double* in = new double[map_size];
-	std::complex<double>* out=new std::complex<double> [Npixels*(Npixels/2+1)];
-	for (unsigned long i = 0; i < map_size; i++)
+	long Npix = outmap.getNpixels();
+	double* in = new double[Npix*Npix];
+	std::complex<double>* out=new std::complex<double> [Npix*(Npix/2+1)];
+	for (unsigned long i = 0; i < Npix*Npix; i++)
 	{
-		in[i] = map[i];
+		in[i] = outmap[i];
 	}
-	p = fftw_plan_dft_r2c_2d(Npixels,Npixels,in, reinterpret_cast<fftw_complex*>(out), FFTW_ESTIMATE);
+	p = fftw_plan_dft_r2c_2d(Npix,Npix,in, reinterpret_cast<fftw_complex*>(out), FFTW_ESTIMATE);
 	fftw_execute(p);
 
 	// creates plane for perform backward fft after convolution, sets output data
 	fftw_plan p2;
-	double* out2 = new double[map_size];
-	p2 = fftw_plan_dft_c2r_2d(Npixels,Npixels,reinterpret_cast<fftw_complex*>(out), out2, FFTW_ESTIMATE);
+	double* out2 = new double[Npix*Npix];
+	p2 = fftw_plan_dft_c2r_2d(Npix,Npix,reinterpret_cast<fftw_complex*>(out), out2, FFTW_ESTIMATE);
 
 	// calculates normalisation of psf
 	int N_psf = map_psf.size();
@@ -540,7 +568,7 @@ void PixelMap::ApplyPSF(std::valarray<float> map_psf, double oversample_n)
 	fftw_plan p_psf;
 
 	// arrange psf data for fft, creates plane, then performs fft
-	int psf_big_Npixels = static_cast<int>(Npixels*oversample_n);
+	int psf_big_Npixels = static_cast<int>(Npix*oversample);
 	double* psf_big = new double[psf_big_Npixels*psf_big_Npixels];
 	std::complex<double>* out_psf=new std::complex<double> [psf_big_Npixels*(psf_big_Npixels/2+1)];
 	p_psf = fftw_plan_dft_r2c_2d(psf_big_Npixels,psf_big_Npixels,psf_big, reinterpret_cast<fftw_complex*>(out_psf), FFTW_ESTIMATE);
@@ -563,24 +591,25 @@ void PixelMap::ApplyPSF(std::valarray<float> map_psf, double oversample_n)
 	fftw_execute(p_psf);
 
 	// performs convolution in Fourier space, and transforms back to real space
-	for (unsigned long i = 0; i < Npixels*(Npixels/2+1); i++)
+	for (unsigned long i = 0; i < Npix*(Npix/2+1); i++)
 	{
-		ix = i/(Npixels/2+1);
-		iy = i%(Npixels/2+1);
-		if (ix>Npixels/2)
-			out[i] *= out_psf[(psf_big_Npixels-(Npixels-ix))*(psf_big_Npixels/2+1)+iy];
+		ix = i/(Npix/2+1);
+		iy = i%(Npix/2+1);
+		if (ix>Npix/2)
+			out[i] *= out_psf[(psf_big_Npixels-(Npix-ix))*(psf_big_Npixels/2+1)+iy];
 		else
 			out[i] *= out_psf[ix*(psf_big_Npixels/2+1)+iy];
 	}
 	fftw_execute(p2);
 
 	// translates array of data in (normalised) counts map
-	for (unsigned long i = 0; i < map_size; i++)
+	for (unsigned long i = 0; i < Npix*Npix; i++)
 	{
-		ix = i/Npixels;
-		iy = i%Npixels;
-		map[i] = out2[i]/double(map_size);
+		ix = i/Npix;
+		iy = i%Npix;
+		outmap.AssignValue(i,out2[i]/double(Npix*Npix));
 	}
+	return outmap;
 #else
 		std::cout << "Please enable the preprocessor flag ENABLE_FFTW !" << std::endl;
 		exit(1);
@@ -593,37 +622,31 @@ void PixelMap::ApplyPSF(std::valarray<float> map_psf, double oversample_n)
 
 }
 
-void PixelMap::AddNoise(Observation obs)
+PixelMap Observation::AddNoise(PixelMap pmap)
 {
-	float exp_time = obs.getExpTime();
-	int exp_num = obs.getExpNum();
-	float back_mag = obs.getBackMag();
-	float ron = obs.getRon();
-	float mag_zeropoint = obs.getZeropoint();
+	PixelMap outmap(pmap);
 	double Q = pow(10,0.4*(mag_zeropoint+48.6));
-	double res_in_arcsec = resolution*180.*60.*60/pi;
+	double res_in_arcsec = outmap.getResolution()*180.*60.*60/pi;
 	double back_mean = pow(10,-0.4*(48.6+back_mag))*res_in_arcsec*res_in_arcsec*Q*exp_time;
 	double rms, noise;
 	long seed = 24;
 	double norm_map, noised_map;
-	for (unsigned long i = 0; i < map_size; i++)
+	for (unsigned long i = 0; i < outmap.getNpixels()*outmap.getNpixels(); i++)
 	{
-		map[i]*= exp_time;
-		rms = sqrt(pow(exp_num*ron,2)+map[i]+back_mean);
+		norm_map = outmap[i]*exp_time;
+		rms = sqrt(pow(exp_num*ron,2)+norm_map+back_mean);
 		noise = gasdev(&seed)*rms;
-		map[i] += noise;
-		map[i] /= exp_time;
+		outmap.AddValue(i,noise/exp_time);
 		}
+	return outmap;
 	}
 
-void PixelMap::PhotonToCounts(Observation obs)
+PixelMap Observation::PhotonToCounts(PixelMap pmap)
 {
-	float mag_zeropoint = obs.getZeropoint();
+	PixelMap outmap(pmap);
 	double Q = pow(10,0.4*(mag_zeropoint+48.6));
-	for (unsigned long i = 0; i < map_size; i++)
-	{
-		map[i]=map[i]*Q;
-	}
+	outmap.Renormalize(Q);
+	return outmap;
 }
 
 Observation::Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron):
@@ -638,8 +661,8 @@ Observation::Observation(float diameter, float transmission, float exp_time, int
 			mag_zeropoint = 2.5*log10(diameter*diameter*transmission*pi/4./hplanck) - 48.6;
 		}
 
-Observation::Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, std::string psf_file):
-		exp_time(exp_time), exp_num(exp_num), back_mag(back_mag), diameter(diameter), transmission(transmission), ron(ron)
+Observation::Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, std::string psf_file, float oversample):
+		exp_time(exp_time), exp_num(exp_num), back_mag(back_mag), diameter(diameter), transmission(transmission), ron(ron), oversample(oversample)
 		{
 	mag_zeropoint = 2.5*log10(diameter*diameter*transmission*pi/4./hplanck) - 48.6;
 
