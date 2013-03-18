@@ -16,6 +16,8 @@ public:
 	Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron);
 	Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, float seeing);
 	Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, std::string psf_file);
+	Observation(float diameter, float transmission);
+	Observation(float zeropoint);
 	float getExpTime(){return exp_time;}
 	int getExpNum(){return exp_num;}
 	float getBackMag(){return back_mag;}
@@ -25,19 +27,17 @@ public:
 	float getSeeing(){return seeing;}
 	float getZeropoint(){return mag_zeropoint;}
 	std::valarray<float> getPSF(){return map_psf;}
-	int getPSF_size(){return psf_size;}
 
 private:
-	float exp_time;
-	int exp_num;
-	float ron;
-	float back_mag;
-	float diameter;
-	float transmission;
-	float seeing;
-	float mag_zeropoint;
-	std::valarray<float> map_psf;
-	int psf_size;
+	float diameter;  // diameter of telescope (in cm)
+	float transmission;  // total transmission of the instrument
+	float mag_zeropoint;  // magnitude of a source that produces one count/sec in the image
+	float exp_time;  // total exposure time (in sec)
+	int exp_num;  // number of exposures
+	float back_mag;  // sky (or background) magnitude
+	float ron;  // read-out-noise
+	float seeing;  // width of the gaussian smoothing
+	std::valarray<float> map_psf;  // array of the point spread function
 };
 
 

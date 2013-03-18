@@ -641,7 +641,7 @@ Observation::Observation(float diameter, float transmission, float exp_time, int
 Observation::Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, std::string psf_file):
 		exp_time(exp_time), exp_num(exp_num), back_mag(back_mag), diameter(diameter), transmission(transmission), ron(ron)
 		{
-	mag_zeropoint = 2.5*log10(diameter*diameter*exp_time*transmission*pi/4./hplanck) - 48.6;
+	mag_zeropoint = 2.5*log10(diameter*diameter*transmission*pi/4./hplanck) - 48.6;
 
 	std::auto_ptr<CCfits::FITS> fp (new CCfits::FITS (psf_file.c_str(), CCfits::Read));
 	CCfits::PHDU *h0=&fp->pHDU();
@@ -650,6 +650,17 @@ Observation::Observation(float diameter, float transmission, float exp_time, int
 	map_psf.resize(N_psf);
 	h0->read(map_psf);
 		}
+
+Observation::Observation(float diameter, float transmission):
+		diameter(diameter), transmission(transmission)
+		{
+	mag_zeropoint = 2.5*log10(diameter*diameter*transmission*pi/4./hplanck) - 48.6;
+		}
+
+Observation::Observation(float zeropoint):
+		mag_zeropoint(zeropoint)
+{
+}
 
 void swap(PixelMask& x, PixelMask& y)
 	{
