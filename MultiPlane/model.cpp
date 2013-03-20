@@ -14,6 +14,7 @@ using namespace std;
  * The Type of the lens is determined by multi_lens, the type of the source is read in from the parameter file
  * and the the cosmology is the standard one
  */
+/*
 Model::Model(LensHndl mylens  /// lens
 		,SourceHndl mysource /// source
 		,CosmoHndl mycosmo	/// cosmology
@@ -38,3 +39,4 @@ void Model::setInternal(){
 	lens->setInternalParams(cosmo,source);
 	source->setDlDs(cosmo->angDist(0,lens->getZlens()) / cosmo->angDist(0,source->getZ()));
 }
+*/
