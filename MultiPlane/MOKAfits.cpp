@@ -9,8 +9,8 @@
 #include <fstream>
 
 #ifdef ENABLE_FITS
-//#include <CCfits/CCfits>
-#include <CCfits>
+#include <CCfits/CCfits>
+//#include <CCfits>
 
 using namespace CCfits;
 

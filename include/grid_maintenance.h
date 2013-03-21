@@ -77,7 +77,7 @@ void find_images_kist(LensHndl lens,double *y_source,double r_source,GridHndl gr
 
 void find_images_microlens(BaseAnaLens *lens,double *y_source,double r_source,GridHndl grid
 		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
-		,double initial_size,bool splitimages,short edge_refinement
+		,double initial_size,double mu_min,bool splitimages,short edge_refinement
 		,bool verbose,bool kappa_off);
 
 short image_finder_kist(LensHndl lens, double *y_source,double r_source,GridHndl grid
@@ -85,10 +85,11 @@ short image_finder_kist(LensHndl lens, double *y_source,double r_source,GridHndl
 		,short splitparities,short true_images);
 
 int refine_grid_kist(LensHndl lens,GridHndl grid,ImageInfo *imageinfo
-		,unsigned long Nimages,double res_target,short criterion,bool kappa_off,Kist<Point> * newpointkist = NULL,bool batch=true);
+		,unsigned long Nimages,double res_target,short criterion,bool kappa_off
+		,Kist<Point> * newpointkist = NULL,bool batch=true);
 
-ImageInfo *find_crit(LensHndl lens,GridHndl grid,int *Ncrits,double resolution,bool *orderingsuccess
-		,bool ordercurve,bool verbose);
+//ImageInfo *find_crit(LensHndl lens,GridHndl grid,int *Ncrits,double resolution,bool *orderingsuccess
+//		,bool ordercurve,bool verbose);
 
 void find_crit_kist(LensHndl lens,GridHndl grid,ImageInfo *critcurve,int maxNcrits,int *Ncrits
 		,double resolution,bool *orderingsuccess,bool ordercurve,bool verbose);
@@ -96,7 +97,8 @@ void find_crit_kist(LensHndl lens,GridHndl grid,ImageInfo *critcurve,int maxNcri
 int refine_grid(LensHndl lens,GridHndl grid,OldImageInfo *imageinfo
 		,unsigned long Nimages,double res_target,short criterion,bool kappa_off,bool batch=true);
 long refine_edges(LensHndl lens,GridHndl grid,ImageInfo *imageinfo
-		,unsigned long Nimages,double res_target,short criterion,bool kappa_off,bool batch=true);
+		,unsigned long Nimages,double res_target,short criterion,bool kappa_off
+		,Kist<Point> * newpointkist = NULL,bool batch=true);
 long refine_edges2(LensHndl lens,double *y_source,double r_source,GridHndl grid
 		,ImageInfo *imageinfo,bool *image_overlap,unsigned long Nimages,double res_target
 		,short criterion,bool kappa_off,bool batch=true);

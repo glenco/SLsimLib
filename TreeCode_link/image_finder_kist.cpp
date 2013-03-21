@@ -423,6 +423,7 @@ void find_images_microlens(
 		,const int NimageMax    /// maximum number of images allowed
 		,unsigned long *Nimagepoints  /// number of points in final images
 		,double initial_size    /// Initial size of source for telescoping, 0 to start from the initial grid size.
+        ,double mu_min
 		,bool splitimages       /// TRUE each image is refined to target accuracy, otherwise all images are treated as one
 		,short edge_refinement  /// see comment
 		,bool verbose           /// verbose
@@ -443,7 +444,7 @@ void find_images_microlens(
 	}
 
 	int Nsizes;
-	double rtemp,tmp,maxgridsize;
+	double rtemp,tmp;
 	static double oldy[2],oldr=0;
 	short moved,flag;
 	int i,j,k;
@@ -454,7 +455,7 @@ void find_images_microlens(
 	static int oldNimages=0;
 	static unsigned long Npoints_old = 0;
 
-	bool time_on = true;
+	bool time_on = false;
 
 	double **xstars = lens->stars_xp;
 	int Ngrid_block = grid->getNgrid_block();
@@ -485,11 +486,11 @@ void find_images_microlens(
 	if(verbose) printf("entering find_image\n");
 	time(&to);
 
-    //**** TODO test line **********************/
-	bool map_on = false;
+    /**** TODO test line **********************
+	bool map_on = true;
     PixelMap map(2000,(grid->i_tree->top->boundary_p2[0]-grid->i_tree->top->boundary_p1[0])/2,grid->i_tree->top->center);
     char chrstr[100];
-    std::string output = "image_hr_ultraslowscope";
+    std::string output = "image_proportional";
     int Nmaps=0;
     // ************************************/
 
@@ -502,10 +503,12 @@ void find_images_microlens(
     //////////////////////////////////////////
 	//if(!( (oldy[0]==y_source[0])*(oldy[1]==y_source[1])*(oldr < r_source) )){
 
-    unsigned long minN = 0;
+    //unsigned long minN = 0;
     //float telescope_factor = 1.0/Ngrid_block;
     //float telescope_factor = 0.5;
     float telescope_factor = 0.66;
+    double time_in_refine = 0,time_in_find = 0;
+
 
     for(i=0
 				//for(rtemp = fabs(r_source/mumin)*pow(Ngrid_block,Nsizes),Nold=0
@@ -561,18 +564,25 @@ void find_images_microlens(
     	time(&t2);
     	if(verbose)
 				printf("\n   new source size = %e    Nimages = %i  telescoping rsource = %e\n",rtemp,*Nimages,r_source);
-
-   		/*for(int k=0; k < *Nimages; ++k){
+/*
+   		for(int k=0; k < *Nimages; ++k){
             if( 5.0e-3 > imageinfo[k].area/pi/r_source/r_source ) imageinfo[k].ShouldNotRefine = true;
             else imageinfo[k].ShouldNotRefine = false;
-        }*/
+        }
+*/
+ 		moved = image_finder_kist(lens,y_source,rtemp,grid
+    				,Nimages,imageinfo,NimageMax,Nimagepoints,-1,0);
 
     	j=0;
+        time_in_refine = time_in_find = 0;
+        time(&now);
     	//while(refine_grid_kist(lens,grid,imageinfo,*Nimages,telescope_res,3,kappa_off,NULL)){
-    	//while(refine_grid_kist(lens,grid,imageinfo,*Nimages,0.3/Ngrid_block/Ngrid_block,1,kappa_off,NULL)){
-    	//while( refine_grid_kist(lens,grid,imageinfo,*Nimages,0.1*telescope_factor*telescope_factor,3,kappa_off,NULL) ){
-    	do{
+    	while(refine_grid_kist(lens,grid,imageinfo,*Nimages,mu_min,0,kappa_off,NULL)){
+    	//while( refine_grid_kist(lens,grid,imageinfo,*Nimages,mu_min*telescope_factor*telescope_factor,3,kappa_off,NULL) ){
+    	//do{
     		time(&t1);
+            time_in_refine += difftime(t1, now);
+
     		if(verbose) std::cout << "    refined images" << std::endl;
 
             /*for(int i=0;i<lens->stars_N;++i){
@@ -588,16 +598,19 @@ void find_images_microlens(
 
        		/************* method that separates images ****************
       		for(int k=0; k < *Nimages; ++k) imageinfo[k].ShouldNotRefine = false;
-   		// mark image points in tree
-    		grid->s_tree->PointsWithinKist(y_source,rtemp,subkist,1);
+      		// mark image points in tree
+    		//grid->s_tree->PointsWithinKist(y_source,rtemp,subkist,1);
     		moved = image_finder_kist(lens,y_source,rtemp,grid
-    				,Nimages,imageinfo,NimageMax,Nimagepoints,0,0);
+    				,Nimages,imageinfo,NimageMax,Nimagepoints,-1,0);
+            divide_images_kist(grid->i_tree,imageinfo,Nimages,NimageMax);
+            for(int k=0; k < *Nimages; ++k) imageinfo[k].outerborder->Empty();
     		// unmark image points in tree
     		grid->s_tree->PointsWithinKist(y_source,rtemp,subkist,-1);
 
     		for(int k=0; k < *Nimages; ++k) if( 1.0e-2 > imageinfo[k].area/pi/r_source/r_source ) imageinfo[k].ShouldNotRefine = true;
-    		// ***********************************************************/
-            //**** TODO test line **********************/
+
+    		/***********************************************************/
+            /**** TODO test line **********************
     		if(map_on){
     			map.AddImages(imageinfo, *Nimages, true);
     			snprintf(chrstr,100,"%i",Nmaps++);
@@ -606,7 +619,11 @@ void find_images_microlens(
     		}
             // ************************************/
 
-    		assert(*Nimages > 0);
+            time(&now);
+            time_in_find += difftime(now , t1);
+
+            if(time_on) printf("    time in finding images %f sec\n",difftime(now,t1));
+            assert(*Nimages > 0);
 
     		if(verbose){
     			printf("      refound images after refinement\n        Nimagepoints=%li  Nimages = %i\n"
@@ -618,16 +635,14 @@ void find_images_microlens(
     		}
 
     		++j;
-    	}while(refine_grid_kist(lens,grid,imageinfo,*Nimages,rtemp*mumin/Ngrid_block,2,kappa_off,NULL));
-    	//}
+    	//}while(refine_grid_kist(lens,grid,imageinfo,*Nimages,rtemp*mumin/Ngrid_block,2,kappa_off,NULL));
+    	}
 
   		//for(int k=0; k < *Nimages; ++k) imageinfo[k].ShouldNotRefine = false;
-
-    	time(&t1);
-    	if(time_on)	printf("      time in refine grid %f sec\n",difftime(t1,t2));
-
+        
     	time(&now);
     	if(time_on) printf("    time for one source size %f sec\n",difftime(now,t3));
+    	if(time_on) printf("        time for refinement %f sec and image finding %f sec\n",time_in_refine,time_in_find);
     }
 
 	time(&now);
@@ -1049,6 +1064,7 @@ short image_finder_kist(LensHndl lens, double *y_source,double r_source,GridHndl
 
 	  assert(imageinfo[i].area >= 0.0);
 	  if(Nsource_points < NpointsRequired || moved) imageinfo[i].area_error=1.0;
+	  else imageinfo[i].area_error = pow(imageinfo[i].gridrange[1],2)/imageinfo[i].area;
  }
 
   // Empty the border lists of old images to save mem

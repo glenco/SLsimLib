@@ -8,8 +8,8 @@
 #include "slsimlib.h"
 
 #ifdef ENABLE_FITS
-//#include <CCfits/CCfits>
-#include <CCfits>
+#include <CCfits/CCfits>
+//#include <CCfits>
 #endif
 
 #if __cplusplus < 201103L

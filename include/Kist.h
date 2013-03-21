@@ -82,6 +82,7 @@ public:
 	void Fill(Data * data,unsigned long N);
 	void SwapCurrentWithBottom();
 	void MoveCurrentToBottom();
+	void copy(Kist<Data> *kist);
 
 	// movement
 	bool JumpDown(int jump);
@@ -450,6 +451,19 @@ template <class Data> void Kist<Data>::SetInImage(Boo value){
 		getCurrent()->image->in_image = value;
 	}while(Down());
 }
+/**
+ * \brief copy contains of kist into this kist.  Destroys former content and leaves current of kist in
+ * new place.
+ */
+template <class Data> void Kist<Data>::copy(Kist<Data> *kist){
+	Empty();
+	kist->MoveToTop();
+	do{
+		InsertAfterCurrent(kist->getCurrent());
+		Down();
+	}while(kist->Down());
+}
+
 
 /*
  * These functions are provided for backwards compatibility, but the kist member methods

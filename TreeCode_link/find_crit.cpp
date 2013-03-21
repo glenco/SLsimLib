@@ -26,7 +26,7 @@ using namespace std;
   * If there are no regions of negative magnification in the original grid the grid is refined
   * around the point of highest kappa.  If there are other points of high kappa that are not of
   * interest one should be careful that the region of interest is not missed.
-  */
+  *
 ImageInfo *find_crit(
 	    LensHndl lens
 		,GridHndl grid             /// The grid.  It must be initialized.
@@ -48,7 +48,7 @@ ImageInfo *find_crit(
 
 
   minpoint->invmag=1.0e99;
-  /*point=NmewPoint(x,0);*/
+  //point=NmewPoint(x,0);
 
   OldImageInfo *critcurve = new OldImageInfo[NMAXCRITS];
 
@@ -84,7 +84,7 @@ ImageInfo *find_crit(
 			  return critexport;
 		  }
 
-		  /* if there is no negative magnification points use maximum mag point */
+		  // if there is no negative magnification points use maximum mag point 
 		  ++Npoints;
 		  critcurve->points=NewPointArray(1,false);
 		  critcurve->points->in_image = FALSE;
@@ -108,7 +108,7 @@ ImageInfo *find_crit(
 	  if(verbose) std::printf("find_crit, came out of findborders 1\n");
 
 
-	  /* make inner border the image */
+	  // make inner border the image 
 	  MoveToTopKist(critcurve->innerborder);
 	  for(i=0,maxgridsize=0.0,mingridsize=1.0e99;i<critcurve->innerborder->Nunits();++i){
 		  PointCopyData(&(critcurve->points[i]),getCurrentKist(critcurve->innerborder));
@@ -160,7 +160,7 @@ ImageInfo *find_crit(
 	                    ,critcurve[j].points[i].image->x[1]);
   }
   exit(0);
-	*/
+	*
 
   if(*Ncrits==0 && critcurve->Npoints > 0 ){
 	  *Ncrits=1;
@@ -170,7 +170,7 @@ ImageInfo *find_crit(
   if(*Ncrits > NMAXCRITS){ERROR_MESSAGE(); std::printf("ERROR: in find_crit, too many critical curves Ncrits=%i > NMAXCRITS gridsize=%e\n"
 			       ,*Ncrits,critcurve->points[0].gridsize); exit(1);}
 
-  /* find area of critical curves */
+  // find area of critical curves
   x[0]=x[1]=0.0;
   for(i=0;i<*Ncrits;++i){
 	  if(critcurve[i].Npoints > 5){
@@ -199,7 +199,7 @@ ImageInfo *find_crit(
   delete[] critcurve;
   return critexport;
 }
-
+*/
 /** \ingroup ImageFinding
   *
   * \brief Finds critical curves and caustics.
@@ -236,6 +236,10 @@ void find_crit_kist(
   //Point *minpoint = NewPoint(x,0);
   Kist<Point> newpoint_kist;
 
+  ImageInfo *pseudocurve = new ImageInfo[maxNcrits];
+  bool pseuodcaustic = false;
+  double pseudolimit = -0.01;
+
   /*point=NmewPoint(x,0);*/
 
   // find list of points with negative magnification
@@ -244,11 +248,6 @@ void find_crit_kist(
   Point *minpoint = grid->i_tree->pointlist->current;
   for(i=0;i<grid->i_tree->pointlist->Npoints;++i){
 	  if(grid->i_tree->pointlist->current->invmag < 0){
-
-		  //InsertAfterCurrent(negpointlist,grid->i_tree->pointlist->current->x,grid->i_tree->pointlist->current->id
-		  //		  ,grid->i_tree->pointlist->current->image);
-		  //MoveDownList(negpointlist);
-		  //PointCopyData(negpointlist->current,grid->i_tree->pointlist->current);
 		  negimage.imagekist->InsertAfterCurrent(grid->i_tree->pointlist->current);
 		  negimage.imagekist->Down();
 	  }
@@ -290,9 +289,6 @@ void find_crit_kist(
 	  critcurve->imagekist->Empty();
 	  MoveToTopKist(negimage.innerborder);
 	  for(i=0,maxgridsize=0.0,mingridsize=1.0e99;i<negimage.innerborder->Nunits();++i){
-		  //PointCopyData(&(critcurve->points[i]),getCurrentKist(negpoints.innerborder));
-		  //if(critcurve->points[i].gridsize > maxgridsize) maxgridsize=critcurve->points[i].gridsize;
-		  //if(critcurve->points[i].gridsize < mingridsize) mingridsize=critcurve->points[i].gridsize;
 
 		  if(getCurrentKist(negimage.innerborder)->gridsize > maxgridsize) maxgridsize = getCurrentKist(negimage.innerborder)->gridsize;
 		  if(getCurrentKist(negimage.innerborder)->gridsize < mingridsize) mingridsize = getCurrentKist(negimage.innerborder)->gridsize;
@@ -342,6 +338,89 @@ void find_crit_kist(
 
   if(*Ncrits > maxNcrits){ERROR_MESSAGE(); std::printf("ERROR: in find_crit, too many critical curves Ncrits=%i > maxNcrits gridsize=%e\n"
 			       ,*Ncrits,critcurve->imagekist->getCurrent()->gridsize); exit(1);}
+
+
+  if(pseuodcaustic){
+  	  // Find points within each critical curve that have invmag < pseudolimit
+  	  // If there are none use the minimum invmag value point.
+  	  Point *minmupoint;
+  	  double mumin = 0.0;
+  	  Kist<Point> *newpoints = new Kist<Point>;
+
+  	  pseudocurve->imagekist->copy(negimage.imagekist);
+  	  divide_images_kist(grid->i_tree,pseudocurve,Ncrits,maxNcrits);
+
+  	  for(int i;i<*Ncrits;++i){
+  		  mumin = 0.0;
+  		  pseudocurve[i].imagekist->MoveToBottom();
+  		  do{
+  			  if(pseudocurve[i].imagekist->getCurrent()->invmag < mumin){
+  				  minmupoint = pseudocurve[i].imagekist->getCurrent();
+  				  mumin = pseudocurve[i].imagekist->getCurrent()->invmag;
+  			  }
+  			  if(pseudocurve[i].imagekist->getCurrent()->invmag > pseudolimit){
+  				  pseudocurve[i].imagekist->getCurrent()->in_image = FALSE;
+  				  pseudocurve[i].imagekist->TakeOutCurrent();
+  			  }
+  		  }while(pseudocurve[i].imagekist->Up());
+
+  		  // in case one before top was taken out
+  		  if(pseudocurve[i].imagekist->getCurrent()->invmag > pseudolimit){
+  			  pseudocurve[i].imagekist->getCurrent()->in_image = FALSE;
+  			  pseudocurve[i].imagekist->TakeOutCurrent();
+  		  }
+
+  		  if(pseudocurve[i].imagekist->Nunits() == 0){
+  			  pseudocurve[i].imagekist->InsertAfterCurrent(minmupoint);
+  			  pseudocurve[i].ShouldNotRefine = 0;  // marks that region has not been found
+  		  }else{
+  			  pseudocurve[i].ShouldNotRefine = 1;
+  		  }
+
+
+  		  while( pseudocurve[i].imagekist->Nunits() < 100 &&
+  				  refine_edges(lens,grid,&pseudocurve[i],1,0.01*resolution/sqrt(fabs(pseudolimit)),1,false,newpoints)
+  				  ){
+  			  // update region
+  			  if(pseudocurve[i].ShouldNotRefine == 0){
+  				  mumin = pseudocurve[i].imagekist->getCurrent()->invmag;
+  				  minmupoint = pseudocurve[i].imagekist->getCurrent();
+  				  pseudocurve[i].imagekist->getCurrent()->in_image = FALSE;
+  				  pseudocurve[i].imagekist->TakeOutCurrent();
+  			  }
+
+  			  newpoints->MoveToTop();
+  			  do{
+  				  if(newpoints->getCurrent()->invmag < mumin){
+  					  mumin = newpoints->getCurrent()->invmag;
+  					  minmupoint = newpoints->getCurrent();
+  				  }
+  				  if(newpoints->getCurrent()->invmag < 0.0)
+  					  negimage.imagekist->InsertAfterCurrent(newpoints->getCurrent());
+  				  if(newpoints->getCurrent()->invmag < pseudolimit){
+  					  newpoints->getCurrent()->in_image = TRUE;
+  					  pseudocurve[i].imagekist->InsertAfterCurrent(newpoints->getCurrent());
+  				  }
+  			  }while(newpoints->Down());
+
+  			  if(pseudocurve[i].ShouldNotRefine == 0){
+
+  				  if(pseudocurve[i].imagekist->Nunits() == 0){
+  					  minmupoint->in_image = TRUE;
+  					  pseudocurve[i].imagekist->InsertAfterCurrent(minmupoint);
+  				  }else{
+  					  pseudocurve[i].ShouldNotRefine = 1;
+  				  }
+  			  }
+  			  findborders4(grid->i_tree,&pseudocurve[i]);
+  		  }
+
+  		  pseudocurve[i].imagekist->MoveToTop();
+  		  do{
+  			pseudocurve[i].imagekist->getCurrent()->in_image = FALSE;
+  		  }while(pseudocurve[i].imagekist->Down());
+  	  }
+  }
 
   // TODO make sure divid_images_kist above can be outside ordercurve
   *orderingsuccess = true;

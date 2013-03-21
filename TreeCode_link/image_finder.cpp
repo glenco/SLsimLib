@@ -148,9 +148,19 @@ int refine_grid(LensHndl lens,GridHndl grid,OldImageInfo *imageinfo
  *
  * </pr>
  */
-long refine_edges(LensHndl lens,GridHndl grid,ImageInfo *imageinfo
-		,unsigned long Nimages,double res_target,short criterion,bool kappa_off,bool batch){
+long refine_edges(
+		LensHndl lens
+		,GridHndl grid
+		,ImageInfo *imageinfo
+		,unsigned long Nimages
+		,double res_target
+		,short criterion
+		,bool kappa_off
+		,Kist<Point> * newpointskist  /// returns a Kist of the points that were added to the grid on this pass, if == NULL will not be added
+		,bool batch){
 	 //printf("entering refine_edges\n");
+
+	if(newpointskist) newpointskist->Empty();
 
 	if(Nimages < 1) return 0;
 
@@ -206,7 +216,12 @@ long refine_edges(LensHndl lens,GridHndl grid,ImageInfo *imageinfo
 					++count;
 
 					if(batch) points_to_refine.push_back(point);
-					else grid->RefineLeaf(lens,point,kappa_off);
+					else{
+						Point *i_points = grid->RefineLeaf(lens,point,kappa_off);
+						if(newpointskist && i_points != NULL){
+							for(unsigned int k=0;k < i_points->head; ++k) newpointskist->InsertAfterCurrent(&i_points[k]);
+						}
+					}
 
 					point->in_image = FALSE;
 
@@ -230,7 +245,11 @@ long refine_edges(LensHndl lens,GridHndl grid,ImageInfo *imageinfo
     			++count;
 
     			if(batch) points_to_refine.push_back(getCurrentKist(imageinfo[i].innerborder));
-    			else grid->RefineLeaf(lens,getCurrentKist(imageinfo[i].innerborder),kappa_off);
+    			else{
+    				Point *i_points = grid->RefineLeaf(lens,getCurrentKist(imageinfo[i].innerborder),kappa_off);
+    				if(newpointskist && i_points != NULL)
+    					for(unsigned int k=0;k < i_points->head; ++k) newpointskist->InsertAfterCurrent(&i_points[k]);
+    			}
        			++Ncells;
 			}
 			MoveDownKist(imageinfo[i].innerborder);
@@ -239,7 +258,10 @@ long refine_edges(LensHndl lens,GridHndl grid,ImageInfo *imageinfo
 	}
 
 	if(batch){
-		grid->RefineLeaves(lens,points_to_refine,kappa_off);
+		Point *i_points = grid->RefineLeaves(lens,points_to_refine,kappa_off);
+		if(newpointskist && i_points != NULL){
+			for(unsigned int k=0;k < i_points->head; ++k) newpointskist->InsertAfterCurrent(&i_points[k]);
+		}
 	  	points_to_refine.clear();
 	}
 
@@ -441,7 +463,7 @@ long refine_edges2(LensHndl lens,double *y_source,double r_source,GridHndl grid
 
 			if(batch){
 				i_points = grid->RefineLeaves(lens,points_to_refine,kappa_off);
-				sort_out_points(i_points,&imageinfo[i],r_source,y_source);
+				if(i_points) sort_out_points(i_points,&imageinfo[i],r_source,y_source);
 				points_to_refine.clear();
 			}
 
