@@ -19,7 +19,7 @@ public:
 	  virtual ~Source();
 
 	  /// names of clump and sb models
-	  typedef enum {Uniform,Gaussian,BLR_Disk,BLR_Sph1,BLR_Sph2,MultiAnaSource,Pixelled} SBModel;
+	  typedef enum {Uniform,Gaussian,BLR_Disk,BLR_Sph1,BLR_Sph2,MultiAnaSource,Pixelled,Sersic} SBModel;
 
 	  // in lens.cpp
 	  /// Surface brightness of source in grid coordinates not source centered coordinates.
@@ -62,6 +62,36 @@ protected:
 
 typedef Source *SourceHndl;
 
+class SersicSource: public Source{
+public:
+	SersicSource();
+	SersicSource(double mag,double Reff,double PA,double my_index,double my_q,double my_z=0,const double *theta=0);
+	~SersicSource();
+
+	void setInternals(double mag,double Reff,double PA,double my_index,double my_q,double my_z=0,const double *theta=0);
+
+	inline double getMag() { return mag; }
+	/// bulge half light radius
+	inline double getRadius() { return Reff*5.; }
+	inline double getPA() { return PA; }
+
+	double SurfaceBrightness(double *x);
+	inline double getTotalFlux() {return flux;}
+	void printSource();
+
+private:
+	void assignParams(InputParams& params);
+	double Reff;
+	double mag;
+	double PA;
+	double index;
+	double bn;
+	double q;
+	double Ieff;
+	double flux;
+};
+
+
 class PixelledSource: public Source{
 public:
 	PixelledSource(double my_z, int Npixels, double range, double* center, double* arr_val);
@@ -69,13 +99,13 @@ public:
 	~PixelledSource();
 	double SurfaceBrightness(double *y);
 	void printSource();
-	double getTotalFlux(){return flux;}
+	inline double getTotalFlux(){return flux;}
 	inline double getRadius(){return source_r;}
-	double* getEll(){return ell;};
-	double getQuad(int i, int j){return quad[i][j];};
-	double getSize(){return size;};
-	double* getCentroid(){return centroid;};
-	double getMag(){return -2.5*log10(flux)-48.6;};
+	inline double* getEll(){return ell;};
+	inline double getQuad(int i, int j){return quad[i][j];};
+	inline double getSize(){return size;};
+	inline double* getCentroid(){return centroid;};
+	inline double getMag(){return -2.5*log10(flux)-48.6;};
 private:
 	void assignParams(InputParams& params);
 	void calcEll();

@@ -73,8 +73,7 @@ private:
 class Observation
 {
 public:
-	Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron);
-	Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, float seeing);
+	Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, float seeing = 0.);
 	Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, std::string psf_file, float oversample);
 	Observation(float diameter, float transmission);
 	Observation(float zeropoint);
@@ -90,7 +89,6 @@ public:
 	PixelMap AddNoise(PixelMap pmap);
 	PixelMap PhotonToCounts(PixelMap pmap);
 	PixelMap ApplyPSF(PixelMap pmap);
-	PixelMap Smooth(PixelMap pmap);
 
 private:
 	float diameter;  // diameter of telescope (in cm)

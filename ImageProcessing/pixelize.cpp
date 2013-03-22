@@ -523,19 +523,26 @@ void PixelMap::smooth(double sigma){
 
 }
 
-PixelMap Observation::Smooth(PixelMap pmap)
-{
-	PixelMap outmap(pmap);
-	outmap.smooth(seeing);
-	return outmap;
-}
-
-
 // Smooths the image with a PSF map.
 // oversample_n allows for an oversampled psf image.
 // (In principle, this should be readable directly from the fits header.)
 PixelMap Observation::ApplyPSF(PixelMap pmap)
 {
+	if (map_psf.size() == 0)
+	{
+		if (seeing > 0.)
+		{
+			PixelMap outmap(pmap);
+			outmap.smooth(seeing);
+			return outmap;
+		}
+		else
+		{
+			return pmap;
+		}
+	}
+	else
+	{
 #ifdef ENABLE_FITS
 #ifdef ENABLE_FFTW
 
@@ -619,7 +626,7 @@ PixelMap Observation::ApplyPSF(PixelMap pmap)
 		std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
 		exit(1);
 #endif
-
+	}
 }
 
 PixelMap Observation::AddNoise(PixelMap pmap)
@@ -648,12 +655,6 @@ PixelMap Observation::PhotonToCounts(PixelMap pmap)
 	outmap.Renormalize(Q);
 	return outmap;
 }
-
-Observation::Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron):
-		exp_time(exp_time), exp_num(exp_num), back_mag(back_mag), diameter(diameter), transmission(transmission), ron(ron)
-		{
-			mag_zeropoint = 2.5*log10(diameter*diameter*transmission*pi/4./hplanck) - 48.6;
-		}
 
 Observation::Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, float seeing):
 		exp_time(exp_time), exp_num(exp_num), back_mag(back_mag), diameter(diameter), transmission(transmission), ron(ron), seeing(seeing)

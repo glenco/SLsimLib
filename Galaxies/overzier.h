@@ -7,6 +7,7 @@
 #ifndef GALAXIES_OVERZIER_H_
 #define GALAXIES_OVERZIER_H_
 
+
 /**
  *\brief Structure for holding parameters for one or more galaxy images according to
  * the Overzier model.
