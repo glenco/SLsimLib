@@ -198,7 +198,7 @@ void *compute_rays_parallel_nfw(void *_p){
     				&(p->i_points[i].kappa),p->i_points[i].gamma);
 
     		// do stars with tree code
-    		lens->star_tree->force2D_recur(p->i_points[i].x,alpha,&kappa,gamma,true);
+    		lens->star_tree->force2D_recur(p->i_points[i].x,alpha,&kappa,gamma,kappa_off);
 
     		p->i_points[i].image->x[0] -= convert_factor*alpha[0];
     		p->i_points[i].image->x[1] -= convert_factor*alpha[1];
@@ -309,7 +309,7 @@ void BaseAnaLens::rayshooterInternal(double *ray, double *alpha, KappaType *gamm
     	 substract_stars_disks(ray,alpha,kappa,gamma);
 
     	 // do stars with tree code
-    	 star_tree->force2D_recur(ray,alpha_tmp,&tmp,gamma_tmp,true);
+    	 star_tree->force2D_recur(ray,alpha_tmp,&tmp,gamma_tmp,kappa_off);
 
     	 alpha[0] -= convert_factor*alpha_tmp[0];
     	 alpha[1] -= convert_factor*alpha_tmp[1];

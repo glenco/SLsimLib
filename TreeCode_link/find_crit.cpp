@@ -327,8 +327,10 @@ void find_crit_kist(
 	  }while(newpoint_kist.Down());
   }
   newpoint_kist.Empty();
-  critcurve->imagekist->MoveToTop();
-  do{critcurve->imagekist->getCurrent()->in_image = FALSE;}while(critcurve->imagekist->Down());
+  if(critcurve->imagekist->Nunits()){
+	  critcurve->imagekist->MoveToTop();
+	  do{critcurve->imagekist->getCurrent()->in_image = FALSE;}while(critcurve->imagekist->Down());
+  }
 
   if(verbose) std::printf("find_crit, number of caustic points: %li\n",critcurve->imagekist->Nunits());
 

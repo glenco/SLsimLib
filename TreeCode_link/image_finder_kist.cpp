@@ -508,7 +508,9 @@ void find_images_microlens(
     //float telescope_factor = 0.5;
     float telescope_factor = 0.66;
     double time_in_refine = 0,time_in_find = 0;
-
+    ImageInfo *critcurve = new ImageInfo[NimageMax];
+    int Ncrits;
+    bool dummybool;
 
     for(i=0
 				//for(rtemp = fabs(r_source/mumin)*pow(Ngrid_block,Nsizes),Nold=0
@@ -570,16 +572,19 @@ void find_images_microlens(
             else imageinfo[k].ShouldNotRefine = false;
         }
 */
+
  		moved = image_finder_kist(lens,y_source,rtemp,grid
     				,Nimages,imageinfo,NimageMax,Nimagepoints,-1,0);
 
     	j=0;
         time_in_refine = time_in_find = 0;
         time(&now);
-    	//while(refine_grid_kist(lens,grid,imageinfo,*Nimages,telescope_res,3,kappa_off,NULL)){
-    	while(refine_grid_kist(lens,grid,imageinfo,*Nimages,mu_min,0,kappa_off,NULL)){
-    	//while( refine_grid_kist(lens,grid,imageinfo,*Nimages,mu_min*telescope_factor*telescope_factor,3,kappa_off,NULL) ){
+    	//while(refine_grid_kist(lens,grid,imageinfo,*Nimages,telescope_res,3,kappa_off)){
+       	//while(refine_grid_kist(lens,grid,imageinfo,*Nimages,mu_min,0,kappa_off)){
+       	 while(refine_grid_kist(lens,grid,imageinfo,*Nimages,mu_min,0,false)){
+       	    	//while( refine_grid_kist(lens,grid,imageinfo,*Nimages,mu_min*telescope_factor*telescope_factor,3,kappa_off) ){
     	//do{
+
     		time(&t1);
             time_in_refine += difftime(t1, now);
 
@@ -588,6 +593,10 @@ void find_images_microlens(
             /*for(int i=0;i<lens->stars_N;++i){
                  grid->zoom(lens,xstars[i],rtemp*0.1/Ngrid_block,kappa_off);//,tmp);
             }*/
+
+    		// refine critical curves
+    		find_crit_kist(lens,grid,critcurve,NimageMax,&Ncrits,rtemp*0.01,&dummybool,false,verbose);
+    		std::cout << "    Ncrits = " << Ncrits << " with " << critcurve->imagekist->Nunits() << " points." << std::endl;
 
     		//************* method that does not separate images ****************
     		moved = image_finder_kist(lens,y_source,rtemp,grid
@@ -649,7 +658,14 @@ void find_images_microlens(
 	if(time_on) printf(" time for source size reduction %f sec\n",difftime(now,to));
 	time(&to);
 
-   	// **** Refine grid around each star so that no images are missed
+	// refine critical curves
+	find_crit_kist(lens,grid,critcurve,NimageMax,&Ncrits,r_source*0.01,&dummybool,false,verbose);
+
+	time(&now);
+	if(time_on) printf(" time for refine critical curves %f sec\n",difftime(now,to));
+	time(&to);
+
+	/**** Refine grid around each star so that no images are missed
 	if(lens->AreStarsImaplated()){
 		if(verbose) std::cout << "  zooming in around " << lens->stars_N << " stars" << std::endl;
 		//Branch *tmp = grid->i_tree->current;
@@ -662,6 +678,7 @@ void find_images_microlens(
 	time(&now);
 	if(time_on) printf(" time for zooming on stars %f sec\n",difftime(now,to));
 	time(&to);
+	//**********************************************************************/
 
 	////////////////////////////////////////////////////////////////////////////////*/
 	//////////////////////////////////////////////////////////////////////////////////

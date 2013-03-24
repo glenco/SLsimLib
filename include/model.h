@@ -36,24 +36,29 @@ public:
 	L* lens;
 	S* source;
 	CosmoHndl cosmo;
+	InputParams* params;
 
 	///For the MultiPlane one
 	Model(std::string paramfile,long* seed){
-		InputParams params = InputParams(paramfile);
+		InputParams pa = InputParams(paramfile);
 
 		cosmo = new COSMOLOGY();
-		lens = new L(params,seed);
-		source = new S(params);
+		lens = new L(pa,seed);
+		source = new S(pa);
+
+		params = &pa;
 
 		setInternal();
 	};
 	/// For the AnaLens one
 	Model(std::string paramfile){
-		InputParams params = InputParams(paramfile);
+		InputParams pa = InputParams(paramfile);
 
 		cosmo = new COSMOLOGY();
-		lens = new L(params);
-		source = new S(params);
+		lens = new L(pa);
+		source = new S(pa);
+
+		params = &pa;
 
 		setInternal();
 	};
