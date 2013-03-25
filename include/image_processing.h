@@ -226,20 +226,18 @@ public:
 	/**
 	 * \brief Construct PixelData from image and sigma map.
 	 * 
-	 * Construct a new PixelData object given an image PixelMap and a sigma
-	 * PixelMap specifying the standard deviation for each pixel.
+	 * Construct a new PixelData object given an image PixelMap and a noise
+	 * PixelMap.
 	 * 
-	 * Any normalization and offset values of the data can be specified with
-	 * the optional arguments to the constructor. The normalization factor is
-	 * multiplied to pixel values in simulated images when comparing them with
-	 * the data. The offset is substracted for each data pixel.
+	 * It is assumed that the value in each pixel of the data image is given as
+	 * the observed value minus the mean value of the noise in this pixel, and
+	 * that this mean noise is provided in the second image.
 	 * 
 	 * \param image The data image.
-	 * \param sigma A PixelMap containing the value of sigma for each pixel.
-	 * \param normalization The normalization factor.
+	 * \param noise The noise image.
 	 * 
 	 */
-	PixelData(PixelMap image, PixelMap sigma, double normalization = 1, double offset = 0);
+	PixelData(PixelMap image, PixelMap noise);
 	
 	/**
 	 * Copy constructor.
@@ -267,10 +265,11 @@ public:
 	double getResolution() const;
 	
 	/**
-	 * \brief Calculate the chi^2 value of a PixelMap.
+	 * \brief Calculate the chi^2 value of a model PixelMap.
 	 * 
 	 * Given a model PixelMap, this method calculates the chi^2 value with
-	 * respect to the image and sigma maps for the data.
+	 * respect to the image and noise maps for the data. The model PixelMap
+	 * has to be converted to the same units as the data.
 	 */
 	double chi_square(const PixelMap& model) const;
 	
@@ -284,9 +283,7 @@ public:
 	
 private:
 	PixelMap img;
-	PixelMap sgm;
-	double norm;
-	double offs;
+	PixelMap noi;
 };
 
 inline PixelMap PixelData::image() const { return img; }
