@@ -595,8 +595,10 @@ void find_images_microlens(
             }*/
 
     		// refine critical curves
-    		find_crit_kist(lens,grid,critcurve,NimageMax,&Ncrits,rtemp*0.01,&dummybool,false,verbose);
-    		std::cout << "    Ncrits = " << Ncrits << " with " << critcurve->imagekist->Nunits() << " points." << std::endl;
+    		//find_crit(lens,grid,critcurve,NimageMax,&Ncrits,rtemp*0.01,&dummybool,false,false,verbose);
+            refine_crit_in_image(lens,grid,r_source,y_source,rtemp*0.01);
+
+//    		std::cout << "    Ncrits = " << Ncrits << " with " << critcurve->imagekist->Nunits() << " points." << std::endl;
 
     		//************* method that does not separate images ****************
     		moved = image_finder_kist(lens,y_source,rtemp,grid
@@ -659,7 +661,8 @@ void find_images_microlens(
 	time(&to);
 
 	// refine critical curves
-	find_crit_kist(lens,grid,critcurve,NimageMax,&Ncrits,r_source*0.01,&dummybool,false,verbose);
+	//find_crit(lens,grid,critcurve,NimageMax,&Ncrits,r_source*0.01,&dummybool,false,false,verbose);
+    refine_crit_in_image(lens,grid,r_source,y_source,r_source*0.01);
 
 	time(&now);
 	if(time_on) printf(" time for refine critical curves %f sec\n",difftime(now,to));
@@ -918,7 +921,7 @@ void find_images_microlens(
  *	                 , also does not find borders or change in_image markers
  * true_images = 1 gives just the points that are in the image
  *             = 0 if there are not enough points in images this will include close points to be refined
-* side-effects :  Will make in_image = true for all image points
+ * side-effects :  Will make in_image = true for all image points if splitparities == 0
  */
 short image_finder_kist(LensHndl lens, double *y_source,double r_source,GridHndl grid
 		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
@@ -1017,7 +1020,7 @@ short image_finder_kist(LensHndl lens, double *y_source,double r_source,GridHndl
   }
 
   // mark all image points
-  if(imageinfo->imagekist->Nunits() > 0){
+  if(imageinfo->imagekist->Nunits() > 0 && splitparities == 0){
 	  MoveToTopKist(imageinfo->imagekist);
 	  do{
 		  getCurrentKist(imageinfo->imagekist)->in_image = TRUE;
@@ -1315,9 +1318,9 @@ void findborders4(TreeHndl i_tree,ImageInfo *imageinfo){
 	EmptyKist(imageinfo->innerborder);
 	EmptyKist(imageinfo->outerborder);
 
-	imageinfo->gridrange[2] = 1.0e99; /* minimum grid size in image */
-	imageinfo->gridrange[0] = 0.0; /* maximum grid size in outerborder */
-	imageinfo->gridrange[1] = 0.0;      /* maximum grid size in image */
+	imageinfo->gridrange[2] = 1.0e99; // minimum grid size in image
+	imageinfo->gridrange[0] = 0.0;   // maximum grid size in outerborder
+	imageinfo->gridrange[1] = 0.0;   // maximum grid size in image
 
 	if(imageinfo->imagekist->Nunits() < 1) return;
 

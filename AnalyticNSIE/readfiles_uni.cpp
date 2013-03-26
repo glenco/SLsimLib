@@ -22,7 +22,7 @@ UniLens::UniLens(InputParams& params) : BaseAnaLens(params){
   assignParams(params);
 
   perturb_Nmodes=3;
-  perturb_modes = new double[2];
+  perturb_modes = new double[3];
 
   perturb_modes[0]=kappa_uniform;
   perturb_modes[1]=gamma_uniform[0];

@@ -45,7 +45,8 @@ double lens_expand(double beta,double *mod,int Nmodes,double *x,double *alpha,Ka
   cosx=x[0]/r;
   sinx=x[1]/r;
 
-  F=0.5*mod[3];
+  if(Nmodes > 3) F=0.5*mod[3];
+  else F = 0;
   F1=0;
   F2=0;
   for(i=4;i<Nmodes;i+=2){
