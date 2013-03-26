@@ -40,30 +40,28 @@ public:
 
 	///For the MultiPlane one
 	Model(std::string paramfile,long* seed){
-		InputParams pa = InputParams(paramfile);
+		params = new InputParams(paramfile);
 
 		cosmo = new COSMOLOGY();
-		lens = new L(pa,seed);
-		source = new S(pa);
-
-		params = &pa;
+		lens = new L(*params,seed);
+		source = new S(*params);
 
 		setInternal();
 	};
 	/// For the AnaLens one
 	Model(std::string paramfile){
-		InputParams pa = InputParams(paramfile);
+		params = new InputParams(paramfile);
 
 		cosmo = new COSMOLOGY();
-		lens = new L(pa);
-		source = new S(pa);
-
-		params = &pa;
+		lens = new L(*params);
+		source = new S(*params);
 
 		setInternal();
 	};
 	///Others
 	Model(long* seed){
+		params = NULL;
+
 		cosmo = new COSMOLOGY();
 		lens = new L();
 		source = new S();
@@ -71,6 +69,7 @@ public:
 		setInternal();
 		};
 	Model(){
+		params = NULL;
 		cosmo = new COSMOLOGY();
 		lens = new L();
 		source = new S();
@@ -78,6 +77,8 @@ public:
 		setInternal();
 	};
 	~Model(){
+		if(params)
+			delete params;
 		delete lens;
 		delete source;
 		delete cosmo;
