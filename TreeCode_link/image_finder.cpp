@@ -239,7 +239,7 @@ long refine_edges(
 					|| (criterion==2 && pow(getCurrentKist(imageinfo[i].innerborder)->gridsize,2)/area_total > res_target) ){
 
 				//point = getCurrentKist(imageinfo[i].innerborder);
-    			assert(point->gridsize > 0);
+    			//assert(point->gridsize > 0);
 
 				//if( getCurrentKist(imageinfo[i].innerborderkist)->gridsize == point->gridsize){ /* point has not been refined yet */
     			++count;

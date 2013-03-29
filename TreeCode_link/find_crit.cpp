@@ -576,8 +576,7 @@ void find_crit2(
 
   		  findborders4(grid->i_tree,&pseudocurve[i]);
 
-  		  while( pseudocurve[i].imagekist->Nunits() < 100 &&
-  				  refine_edges(lens,grid,&pseudocurve[i],1,0.01*resolution/sqrt(fabs(pseudolimit)),1,false,newpoints)
+  		  while(  refine_edges(lens,grid,&pseudocurve[i],1,1.0e-3,0,false,newpoints)
   				  ){
   			  // update region
   			  if(pseudocurve[i].ShouldNotRefine == 0){
@@ -616,6 +615,7 @@ void find_crit2(
   		  pseudocurve[i].imagekist->SetInImage(FALSE);
   		  pseudocurve[i].imagekist->Empty();
   		  pseudocurve[i].imagekist->copy(pseudocurve[i].innerborder);
+  		  //**** TODO uncomment this line
   		  //pseudocurve[i].imagekist->TranformPlanes();
 
   		  // find location of pseudo caustic
@@ -628,7 +628,9 @@ void find_crit2(
   		  pseudocurve[i].centroid[0] /= pseudocurve[i].imagekist->Nunits();
   		  pseudocurve[i].centroid[1] /= pseudocurve[i].imagekist->Nunits();
 
+
   		//******** test lines **********************
+  		  if( i > 10){
   		double tmp_range = 0,dr;
   		pseudocurve[i].imagekist->MoveToTop();
   		do{
@@ -641,11 +643,15 @@ void find_crit2(
   		map.AddImages(&pseudocurve[i],1,true);
   		snprintf(chrstr,100,"%i",i);
   		map.printFITS(output + chrstr + ".fits");
+  		  }
   		//******************************************/
 
   	  }
 
   }
+
+  for(i=0;i<*Ncrits;++i) critcurve[i].imagekist->SetInImage(FALSE);
+
 
   *orderingsuccess = true;
   if(ordercurve){
@@ -658,9 +664,6 @@ void find_crit2(
 	  Point *tmp_points = NewPointArray(Npoints,false);
 	  unsigned long ii;
 	  for(i=0;i<*Ncrits;++i){
-		  // return in_image value to false
-		  critcurve[i].imagekist->MoveToTop();
-		  do{critcurve[i].imagekist->getCurrent()->in_image = FALSE;}while(critcurve[i].imagekist->Down());
 
 		  critcurve[i].imagekist->MoveToTop();
 		  //copy points into a point array for compatibility with curve ordering routines
