@@ -304,21 +304,21 @@ void find_crit2(
 		){
 
   unsigned long i=0;
-  short refinements;
+  long refinements;
   //short spur,closed;
   double maxgridsize,mingridsize,x[2];
   Kist<Point> newpoint_kist,neighborkist;
+
+  //*******************************************************************
+  ImageInfo *pseudocurve = new ImageInfo[maxNcrits];
+  bool pseuodcaustic = true;
+  double pseudolimit = -10.0;
+  //**************************************************************
 
   // find kist of points with negative magnification
   critcurve->imagekist->Empty();
   MoveToTopList(grid->i_tree->pointlist);
   Point *minpoint = grid->i_tree->pointlist->current;
-
-  //*******************************************************************
-  ImageInfo *pseudocurve = new ImageInfo[maxNcrits];
-  bool pseuodcaustic = false;
-  double pseudolimit = -0.01;
-  //**************************************************************
 
   for(i=0;i<grid->i_tree->pointlist->Npoints;++i){
 	  if(grid->i_tree->pointlist->current->invmag < 0){
@@ -348,11 +348,14 @@ void find_crit2(
 
   findborders4(grid->i_tree,critcurve);
 
-  for(;;){
+  for(int k=0;;++k){
 
-	  refinements=refine_grid_kist(lens,grid,critcurve,1,resolution,2,false,&newpoint_kist);
+	  refinements=refine_edges(lens,grid,critcurve,1,resolution,1,false,&newpoint_kist);
+	  //refinements=refine_grid_kist(lens,grid,critcurve,1,resolution,2,false,&newpoint_kist);
+	  if(!refinements) break;
+	  critcurve->outerborder->SetInImage(MAYBE);
 
-	  // add new points to negimage
+	  // add new points to negative region
 	  newpoint_kist.MoveToTop();
 	  critcurve->imagekist->MoveToBottom();
 	  do{
@@ -367,6 +370,8 @@ void find_crit2(
 			  if(critcurve->gridrange[2] > newpoint_kist.getCurrent()->gridsize)
 				  critcurve->gridrange[2] = newpoint_kist.getCurrent()->gridsize;
 
+		  }else{
+			  newpoint_kist.getCurrent()->invmag = FALSE;
 		  }
 	  }while(newpoint_kist.Down());
 
@@ -397,32 +402,31 @@ void find_crit2(
 		  }
 	  }
 
-	  critcurve->outerborder->SetInImage(MAYBE);
-
-	  // check which points in inner border are still in border
+	  // check which points in inner border are still in the border
 	  bool ininner;
 	  unsigned long Ntmp = critcurve->innerborder->Nunits();
 	  critcurve->innerborder->MoveToTop();
-	  for(unsigned long j=0;j<Ntmp;++j){
+	  for(unsigned long j=0;j < Ntmp;++j){
 
 		  ininner=false;
 
 		  grid->i_tree->FindAllBoxNeighborsKist(critcurve->innerborder->getCurrent(),&neighborkist);
 
 		  neighborkist.MoveToTop();
-		  for(i=0;i < neighborkist.Nunits();++i){
+		  do{
 
 			  if( neighborkist.getCurrent()->in_image != TRUE){  // point is a neighbor
 				  ininner=true;
 
 				  if(neighborkist.getCurrent()->in_image == FALSE){  // if point is not yet in outerborder
 					  // add point to outerborder
-					  InsertAfterCurrentKist(critcurve->outerborder,neighborkist.getCurrent());
+					  neighborkist.getCurrent()->in_image = MAYBE;
+					  critcurve->outerborder->InsertAfterCurrent(neighborkist.getCurrent());
 					  MoveDownKist(critcurve->outerborder);
 				  }
 			  }
-			  neighborkist.Down();
-		  }
+
+		  }while(neighborkist.Down());
 
 		  if(!ininner){
 			  bool tmp = critcurve->innerborder->AtTop();
@@ -433,32 +437,72 @@ void find_crit2(
 		  }
 	  }
 
+	  // Take out outer border points that are no longer in outer border
 	  critcurve->gridrange[0] = 0.0;
 	  Ntmp = critcurve->outerborder->Nunits();
 	  critcurve->outerborder->MoveToTop();
+	  bool tmpbool;
 	  for(unsigned long j=0;j<Ntmp;++j){
-		  if(critcurve->outerborder->getCurrent()->in_image == MAYBE){
-			  grid->i_tree->FindAllBoxNeighborsKist(critcurve->outerborder->getCurrent(),&neighborkist);
-			  neighborkist.MoveToTop();
-			  do{
-				  if(neighborkist.getCurrent()->in_image == TRUE){
-					  critcurve->outerborder->getCurrent()->in_image = TRUE;
-					  if(critcurve->outerborder->getCurrent()->gridsize
-							  > critcurve->gridrange[0]) critcurve->gridrange[0]
-							                = critcurve->outerborder->getCurrent()->gridsize;
-					  break;
-				  }
-			  }while(neighborkist.Down());
 
-			  if(critcurve->outerborder->getCurrent()->in_image == MAYBE){
-				  bool tmp = critcurve->outerborder->AtTop();
-				  critcurve->outerborder->TakeOutCurrent();
-				  if(!tmp) critcurve->outerborder->Down();
-			  }else{
-				  critcurve->outerborder->Down();
+		  tmpbool = true;
+		  assert(critcurve->outerborder->getCurrent()->in_image == MAYBE);
+		  grid->i_tree->FindAllBoxNeighborsKist(critcurve->outerborder->getCurrent(),&neighborkist);
+		  neighborkist.MoveToTop();
+		  do{
+			  if(neighborkist.getCurrent()->in_image == TRUE){
+				  //critcurve->outerborder->getCurrent()->in_image = FALSE;
+				  if(critcurve->outerborder->getCurrent()->gridsize
+						  > critcurve->gridrange[0]) critcurve->gridrange[0]
+						           = critcurve->outerborder->getCurrent()->gridsize;
+				  tmpbool = false;
+				  break;
 			  }
+		  }while(neighborkist.Down());
+
+		  if(tmpbool){  // no neighbor in image was found
+			  bool tmp = critcurve->outerborder->AtTop();
+			  critcurve->outerborder->getCurrent()->in_image = FALSE;
+			  critcurve->outerborder->TakeOutCurrent();
+			  if(!tmp) critcurve->outerborder->Down();
+		  }else{
+			  critcurve->outerborder->Down();
 		  }
 	  }
+
+	  //critcurve->outerborder->SetInImage(MAYBE);
+	  // sort new points into inner and outer borders
+	  newpoint_kist.MoveToTop();
+	  do{
+
+		  if(newpoint_kist.getCurrent()->in_image != MAYBE){
+			  grid->i_tree->FindAllBoxNeighborsKist(newpoint_kist.getCurrent(),&neighborkist);
+
+			  tmpbool = true;
+			  neighborkist.MoveToTop();
+			  do{
+				  if( newpoint_kist.getCurrent()->in_image == TRUE){
+					  if(neighborkist.getCurrent()->in_image != TRUE){
+						  if(tmpbool){
+							  critcurve->innerborder->InsertAfterCurrent(newpoint_kist.getCurrent());
+							  tmpbool = false;
+						  }
+						  if(neighborkist.getCurrent()->in_image == FALSE){
+							  neighborkist.getCurrent()->in_image = MAYBE;
+							  critcurve->outerborder->InsertAfterCurrent(neighborkist.getCurrent());
+						  }
+					  }
+				  }else{
+					  if(neighborkist.getCurrent()->in_image == TRUE){
+						  newpoint_kist.getCurrent()->in_image = MAYBE;
+						  critcurve->outerborder->InsertAfterCurrent(newpoint_kist.getCurrent());
+						  break;
+					  }
+				  }
+			  }while(neighborkist.Down());
+		  }
+	  }while(newpoint_kist.Down());
+
+	  critcurve->outerborder->SetInImage(FALSE);
   }
 
   if(maxpoint){
@@ -486,6 +530,13 @@ void find_crit2(
 				       ,*Ncrits,critcurve->imagekist->getCurrent()->gridsize); exit(1);}
 
   if(pseuodcaustic){
+
+	  //******* test line *****************
+	  char chrstr[100];
+	  std::string output = "pseudocaustic";
+	  std::cout << " finding pseudo-caustics" << std::endl;
+	  //************************************/
+
   	  // Find points within each critical curve that have invmag < pseudolimit
   	  // If there are none use the minimum invmag value point.
 	  Point *minmupoint;
@@ -495,10 +546,11 @@ void find_crit2(
 
   	  divide_images_kist(grid->i_tree,pseudocurve,Ncrits,maxNcrits);
 
-  	  for(int i;i<*Ncrits;++i){
+  	  for(int i=0;i<*Ncrits;++i){
 
-  		  mumin = 0.0;
-  		  pseudocurve[i].imagekist->MoveToBottom();
+  		  mumin = pseudocurve[i].imagekist->getCurrent()->invmag;
+		  minmupoint = pseudocurve[i].imagekist->getCurrent();
+		  pseudocurve[i].imagekist->MoveToBottom();
   		  do{
   			  if(pseudocurve[i].imagekist->getCurrent()->invmag < mumin){
   				  minmupoint = pseudocurve[i].imagekist->getCurrent();
@@ -511,18 +563,18 @@ void find_crit2(
   		  }while(pseudocurve[i].imagekist->Up());
 
   		  // in case one before top was taken out
-  		  if(pseudocurve[i].imagekist->getCurrent()->invmag > pseudolimit){
-  			  pseudocurve[i].imagekist->getCurrent()->in_image = FALSE;
-  			  pseudocurve[i].imagekist->TakeOutCurrent();
-  		  }
-
-  		  if(pseudocurve[i].imagekist->Nunits() == 0){
+  		  if(pseudocurve[i].imagekist->Nunits() > 0){
+  			  if(pseudocurve[i].imagekist->getCurrent()->invmag > pseudolimit){
+  				  pseudocurve[i].imagekist->getCurrent()->in_image = FALSE;
+  				  pseudocurve[i].imagekist->TakeOutCurrent();
+  			  }
+ 			  pseudocurve[i].ShouldNotRefine = 1;
+  		  }else{
   			  pseudocurve[i].imagekist->InsertAfterCurrent(minmupoint);
   			  pseudocurve[i].ShouldNotRefine = 0;  // marks that region has not been found
-  		  }else{
-  			  pseudocurve[i].ShouldNotRefine = 1;
   		  }
 
+  		  findborders4(grid->i_tree,&pseudocurve[i]);
 
   		  while( pseudocurve[i].imagekist->Nunits() < 100 &&
   				  refine_edges(lens,grid,&pseudocurve[i],1,0.01*resolution/sqrt(fabs(pseudolimit)),1,false,newpoints)
@@ -551,6 +603,7 @@ void find_crit2(
   			  if(pseudocurve[i].ShouldNotRefine == 0){
 
   				  if(pseudocurve[i].imagekist->Nunits() == 0){
+  					  assert(minmupoint);
   					  minmupoint->in_image = TRUE;
   					  pseudocurve[i].imagekist->InsertAfterCurrent(minmupoint);
   				  }else{
@@ -560,14 +613,38 @@ void find_crit2(
   			  findborders4(grid->i_tree,&pseudocurve[i]);
   		  }
 
-  		  pseudocurve[i].imagekist->MoveToTop();
-  		  do{
-  			pseudocurve[i].imagekist->getCurrent()->in_image = FALSE;
-  		  }while(pseudocurve[i].imagekist->Down());
+  		  pseudocurve[i].imagekist->SetInImage(FALSE);
+  		  pseudocurve[i].imagekist->Empty();
+  		  pseudocurve[i].imagekist->copy(pseudocurve[i].innerborder);
+  		  //pseudocurve[i].imagekist->TranformPlanes();
 
-  		pseudocurve[i].imagekist->Empty();
-  		pseudocurve[i].imagekist->copy(pseudocurve[i].innerborder);
+  		  // find location of pseudo caustic
+  		  pseudocurve[i].imagekist->MoveToTop();
+  		  pseudocurve[i].centroid[0] = pseudocurve[i].centroid[1] = 0.0;
+  		  do{
+  			pseudocurve[i].centroid[0] += pseudocurve[i].imagekist->getCurrent()->x[0];
+  			pseudocurve[i].centroid[1] += pseudocurve[i].imagekist->getCurrent()->x[1];
+  		  }while(pseudocurve[i].imagekist->Down());
+  		  pseudocurve[i].centroid[0] /= pseudocurve[i].imagekist->Nunits();
+  		  pseudocurve[i].centroid[1] /= pseudocurve[i].imagekist->Nunits();
+
+  		//******** test lines **********************
+  		double tmp_range = 0,dr;
+  		pseudocurve[i].imagekist->MoveToTop();
+  		do{
+  			dr = pow(pseudocurve[i].centroid[0]-pseudocurve[i].imagekist->getCurrent()->x[0],2)
+  					+ pow(pseudocurve[i].centroid[1]-pseudocurve[i].imagekist->getCurrent()->x[1],2);
+  			if(dr > tmp_range) tmp_range = dr;
+   		}while(pseudocurve[i].imagekist->Down());
+
+  		PixelMap map(1000,2*sqrt(tmp_range),pseudocurve[i].centroid);
+  		map.AddImages(&pseudocurve[i],1,true);
+  		snprintf(chrstr,100,"%i",i);
+  		map.printFITS(output + chrstr + ".fits");
+  		//******************************************/
+
   	  }
+
   }
 
   *orderingsuccess = true;
