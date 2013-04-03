@@ -1387,7 +1387,7 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 			}
 
 			// initialize unused variables to harmless values in PowerLaw case
-			if(internal_profile == PowerLaw) halo_vec[j].rscale = 0.0;
+			if(internal_profile == PowerLaw) halo_vec[j].rscale = 1.0;
 
 			if(halo_vec[j].Rmax > R_max) R_max = halo_vec[j].Rmax;
 			if(vdisp > V_max) V_max = vdisp;
