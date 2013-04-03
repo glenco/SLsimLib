@@ -531,7 +531,7 @@ void find_crit2(
 
   if(pseuodcaustic){
 
-	  //******* test line *****************
+	  /******* test line *****************
 	  char chrstr[100];
 	  std::string output = "pseudocaustic";
 	  std::cout << " finding pseudo-caustics" << std::endl;
@@ -546,11 +546,14 @@ void find_crit2(
 
   	  divide_images_kist(grid->i_tree,pseudocurve,Ncrits,maxNcrits);
 
+
   	  for(int i=0;i<*Ncrits;++i){
+
 
   		  mumin = pseudocurve[i].imagekist->getCurrent()->invmag;
 		  minmupoint = pseudocurve[i].imagekist->getCurrent();
-		  pseudocurve[i].imagekist->MoveToBottom();
+		  pseudocurve[i].area = 0;
+		  pseudocurve[i].imagekist->MoveToTop();
   		  do{
   			  if(pseudocurve[i].imagekist->getCurrent()->invmag < mumin){
   				  minmupoint = pseudocurve[i].imagekist->getCurrent();
@@ -559,27 +562,41 @@ void find_crit2(
   			  if(pseudocurve[i].imagekist->getCurrent()->invmag > pseudolimit){
   				  pseudocurve[i].imagekist->getCurrent()->in_image = FALSE;
   				  pseudocurve[i].imagekist->TakeOutCurrent();
+  			  }else{
+  				pseudocurve[i].area += pow(pseudocurve[i].imagekist->getCurrent()->gridsize,2);
+  				pseudocurve[i].imagekist->getCurrent()->in_image = TRUE;
   			  }
-  		  }while(pseudocurve[i].imagekist->Up());
+  		  }while(pseudocurve[i].imagekist->Down());
 
   		  // in case one before top was taken out
+
   		  if(pseudocurve[i].imagekist->Nunits() > 0){
+  			  pseudocurve[i].imagekist->MoveToTop();
   			  if(pseudocurve[i].imagekist->getCurrent()->invmag > pseudolimit){
   				  pseudocurve[i].imagekist->getCurrent()->in_image = FALSE;
   				  pseudocurve[i].imagekist->TakeOutCurrent();
+  			  }else{
+  				  pseudocurve[i].imagekist->getCurrent()->in_image = TRUE;
   			  }
- 			  pseudocurve[i].ShouldNotRefine = 1;
+  		  }
+
+  		  if(pseudocurve[i].imagekist->Nunits() > 0){
+  			  pseudocurve[i].ShouldNotRefine = 1;
   		  }else{
   			  pseudocurve[i].imagekist->InsertAfterCurrent(minmupoint);
+  			  minmupoint->in_image = TRUE;
   			  pseudocurve[i].ShouldNotRefine = 0;  // marks that region has not been found
   		  }
 
   		  findborders4(grid->i_tree,&pseudocurve[i]);
 
-  		  while(  refine_edges(lens,grid,&pseudocurve[i],1,1.0e-3,0,false,newpoints)
+  		  int count=0;
+  		  while(  refine_edges(lens,grid,&pseudocurve[i],1,1.0e-3,0,false,newpoints) && count < 100
   				  ){
+  			  ++count;
   			  // update region
   			  if(pseudocurve[i].ShouldNotRefine == 0){
+  				  assert(pseudocurve[i].imagekist->Nunits() == 1);
   				  mumin = pseudocurve[i].imagekist->getCurrent()->invmag;
   				  minmupoint = pseudocurve[i].imagekist->getCurrent();
   				  pseudocurve[i].imagekist->getCurrent()->in_image = FALSE;
@@ -596,7 +613,10 @@ void find_crit2(
   				  if(newpoints->getCurrent()->invmag < pseudolimit){
   					  newpoints->getCurrent()->in_image = TRUE;
   					  pseudocurve[i].imagekist->InsertAfterCurrent(newpoints->getCurrent());
+  				  }else{
+  					newpoints->getCurrent()->in_image = FALSE;
   				  }
+
   			  }while(newpoints->Down());
 
   			  if(pseudocurve[i].ShouldNotRefine == 0){
@@ -610,13 +630,20 @@ void find_crit2(
   				  }
   			  }
   			  findborders4(grid->i_tree,&pseudocurve[i]);
+
+  			  // update image area to area of inner border
+  			  pseudocurve[i].area = 0.0;
+  			  pseudocurve[i].innerborder->MoveToTop();
+  			  do{
+  				  pseudocurve[i].area += pow(pseudocurve[i].innerborder->getCurrent()->gridsize,2);
+  			  }while(pseudocurve[i].innerborder->Down());
   		  }
 
   		  pseudocurve[i].imagekist->SetInImage(FALSE);
+  		  //**** TODO uncomment this lines
   		  pseudocurve[i].imagekist->Empty();
   		  pseudocurve[i].imagekist->copy(pseudocurve[i].innerborder);
-  		  //**** TODO uncomment this line
-  		  //pseudocurve[i].imagekist->TranformPlanes();
+  		  pseudocurve[i].imagekist->TranformPlanes();
 
   		  // find location of pseudo caustic
   		  pseudocurve[i].imagekist->MoveToTop();
@@ -629,20 +656,25 @@ void find_crit2(
   		  pseudocurve[i].centroid[1] /= pseudocurve[i].imagekist->Nunits();
 
 
-  		//******** test lines **********************
-  		  if( i > 10){
+  		/******** test lines **********************
+  		  if( i > 0){
   		double tmp_range = 0,dr;
   		pseudocurve[i].imagekist->MoveToTop();
   		do{
   			dr = pow(pseudocurve[i].centroid[0]-pseudocurve[i].imagekist->getCurrent()->x[0],2)
   					+ pow(pseudocurve[i].centroid[1]-pseudocurve[i].imagekist->getCurrent()->x[1],2);
+  			//pseudocurve[i].imagekist->getCurrent()->surface_brightness = pseudocurve[i].imagekist->getCurrent()->invmag;
   			if(dr > tmp_range) tmp_range = dr;
+  			if(pseudocurve[i].imagekist->getCurrent()->invmag > pseudolimit)
+  				std::cout << "  number of points = " << pseudocurve[i].imagekist->Nunits();
+  			assert(pseudocurve[i].imagekist->getCurrent()->invmag < pseudolimit);
    		}while(pseudocurve[i].imagekist->Down());
 
   		PixelMap map(1000,2*sqrt(tmp_range),pseudocurve[i].centroid);
   		map.AddImages(&pseudocurve[i],1,true);
+  		map.AddImages(&pseudocurve[i],1,true);
   		snprintf(chrstr,100,"%i",i);
-  		map.printFITS(output + chrstr + ".fits");
+  		//map.printFITS(output + chrstr + ".fits");
   		  }
   		//******************************************/
 
