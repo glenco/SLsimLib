@@ -32,7 +32,7 @@ void MultiLens::make_table(CosmoHndl cosmo){
 
 	coorDist_table = new double[NTABLE];
 	redshift_table = new double[NTABLE];
-	
+
 #ifdef _OPENMP
 #pragma omp parallel for default(shared) private(i,x)
 #endif
@@ -64,20 +64,20 @@ void MultiLens::resetNplanes(CosmoHndl cosmo, int Np){
 
   delete[] halo_tree;
   delete[] halo_data;
-  
+
   delete[] Dl;
   delete[] plane_redshifts;
   delete[] dDl;
-  
+
   Nplanes = Np;
 
   plane_redshifts = new double[Nplanes];
   Dl = new double[Nplanes];
   dDl = new double[Nplanes];
-  
+
   halo_tree = new auto_ptr<QuadTree>[Nplanes-1];
   halo_data = new auto_ptr<HaloData>[Nplanes-1];
-   
+
   setCoorDist(cosmo);
   buildHaloTrees(cosmo);
 }
@@ -176,7 +176,7 @@ MultiLens::~MultiLens(){
 	free_PosTypeMatrix(halo_pos,Nhalos,3);
 	if(flag_run_multip_test)
 		free_PosTypeMatrix(halo_pos_Mpc,Nhalos,3);
-	
+
 	if(flag_input_lens)
 		delete input_lens;
 
@@ -191,7 +191,7 @@ void MultiLens::assignParams(InputParams& params){
 		  ERROR_MESSAGE();
 		  cout << "parameter outputfile needs to be set in the parameter file " << params.filename() << endl;
 		  exit(0);
-	}	
+	}
 	if(!params.get("Nplanes",Nplanes)){
 		  ERROR_MESSAGE();
 		  cout << "parameter Nplanes needs to be set in the parameter file " << params.filename() << endl;
@@ -388,7 +388,7 @@ void MultiLens::createHaloData(
 		exit(1);
 	}
   HALO *halo_calc = new HALO(cosmo,min_mass*mass_scale,0.0);
-  
+
   std::vector<double> Logm,Nhalosbin;
   std::vector<HaloStructure> halo_vec;
   std::vector<double> halo_zs_vec;
@@ -399,16 +399,16 @@ void MultiLens::createHaloData(
   const int Nmassbin=32;
   const double MaxLogm=17.;
 
-  
+
   Logm.resize(Nmassbin);
   Nhalosbin.resize(Nmassbin);
-  
+
   /* fill the log(mass) vector */
-  
+
   fill_linear(Logm,Nmassbin,log10(min_mass*mass_scale),MaxLogm);
 
   int Nsample = 50;
-  
+
   double tmp_dDl, Dl1, Dl2, z1, z2, mass_max,mass_tot;
   tmp_dDl = cosmo->coorDist(0,zsource)/(Nsample);
   int np;
@@ -428,13 +428,13 @@ void MultiLens::createHaloData(
     }
 
     Dl2 = Dl1+tmp_dDl;
-    
+
     locateD(coorDist_table-1,NTABLE,Dl2,&k);
     z2 = redshift_table[k];
 
     double tailarea = cosmo->haloNumberDensityOnSky(pow(10,MaxLogm),z1,z2,mass_func_type,pw_alpha)*fieldofview;
     Nhalosbin[0] = cosmo->haloNumberDensityOnSky(pow(10,Logm[0]),z1,z2,mass_func_type,pw_alpha)*fieldofview;
-    
+
     /*
     std::cout << "tail = " << tailarea << "  " << tailarea/Nhalosbin[0] << " % "<< std::endl;
     std::cout << "number tail above 1.0e16 = " << 100*cosmo->haloNumberDensityOnSky(1.0e16,z1,z2,mass_func_type,pw_alpha)*fieldofview/Nhalosbin[0]
@@ -458,26 +458,26 @@ void MultiLens::createHaloData(
       Nhalosbin[k] = (Nhalosbin[k]-tailarea)/Nhaloestot;
     }
     Nhalosbin[Nmassbin-1] = 0;
-    
+
     long Nh = (long)(poidev(float(Nhaloestot), seed) + 0.5);
-    
+
     double rr,theta,maxr,zi;
     unsigned long i;
     for(i = 0,mass_max=0; i < Nh; i++){
       HaloStructure halo;
-      
-      zi = z1+(z2-z1)*ran2 (seed); 
+
+      zi = z1+(z2-z1)*ran2 (seed);
        /// positions need to be in radians initially
       maxr = pi*sqrt(fieldofview/pi)/180.; // fov is a circle
       rr = maxr*sqrt(ran2(seed));
-      
+
       theta = 2*pi*ran2(seed);
-      
+
       pos = new double[3];
       pos[0] = rr*cos(theta);
       pos[1] = rr*sin(theta);
       pos[2] = 0.0;
-      
+
       // TODO Ben - this will never work for NSIE or NFW+NSIE models fix it
      halo.mass = pow(10,InterpolateYvec(Nhalosbin,Logm,ran2 (seed)));
       halo_calc->reset(halo.mass,zi);
@@ -492,16 +492,16 @@ void MultiLens::createHaloData(
     	  pos_max[1] = pos[1];
     	  z_max = zi;
       }
-      
+
       halo_vec.push_back(halo);
       halo_zs_vec.push_back(zi);
       halo_pos_vec.push_back(pos);
       halo_id_vec.push_back(h_index);
       h_index++;
-      
+
       mass_tot += halo.mass;
     }
-    
+
     Nhalosbin.empty();
 
 
@@ -520,22 +520,22 @@ void MultiLens::createHaloData(
 		<< " Msun  number of halo = " << Nh << std::endl;
      */
   }
-  
+
   delete halo_calc;
-  
+
   Nhalos = halo_vec.size();
-  
+
   std::cout << Nhalos << " halos created."<< std::endl
 	    << "Max input mass = " << mass_max*mass_scale << "  R max = " << halo_vec[j_max].Rmax
 	    << " at z = " << z_max << std::endl;
-  
+
   halos = new HaloStructure[Nhalos];
   halo_zs = new double[Nhalos];
   halo_id = new unsigned long[Nhalos];
   halo_pos = PosTypeMatrix(Nhalos,3);
   if(flag_run_multip_test)
 	  halo_pos_Mpc = PosTypeMatrix(Nhalos,3);
-  
+
   for(int i=0;i<Nhalos;++i){
     halo_id[i] = halo_id_vec[i];
     halo_zs[i] = halo_zs_vec[i];
@@ -546,7 +546,7 @@ void MultiLens::createHaloData(
   std::cout << "sorting in MultiLens::createHaloData()" << std::endl;
   // sort the halos by readshift
   MultiLens::quicksort(halos,halo_pos,halo_zs,halo_id,Nhalos);
-  
+
   if(flag_run_multip_test){
 	  for(int i=0;i<Nhalos;++i){
 		  double Dh = cosmo->angDist(0.0,halo_zs[i]);
@@ -1320,7 +1320,7 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 		if(np > 0.0 && vdisp > 0.0 && z <= zsource){
 
 			halo_pos_vec.push_back(theta);
-			
+
 			halo_vec.push_back(halo);
 
 			halo_vec[j].mass = np*8.6e8/cosmo->gethubble();
@@ -1343,7 +1343,7 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 				halo_vec[j].rscale = halo_vec[j].Rmax/halo_vec[j].rscale; // Was the concentration
 				//std::cout << "z: " << z << " vmax:" << vmax << " Rmax: " << halo_vec[j].Rmax << " rscale: " << halo_vec[j].rscale << std::endl;
 			}
-			
+
 			if(internal_profile == NSIE || internal_profile == NFW_NSIE){
 				NFW_Utility nfw_util;
 
@@ -1406,7 +1406,7 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 
 			if(rmax < (rtmp = theta[0]*theta[0]+theta[1]*theta[1])) rmax = rtmp;
 			++j;
-		
+
 		}
 	}
 	file_in.close();
@@ -1463,10 +1463,10 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 
 	/// makes the oordinate distance table for the calculation of the redshifts of the different planes
 	if(table_set == false) {std::cout << "making tables" << std::endl; make_table(cosmo);}
-	
+
 	if(flag_input_lens)
 	  input_lens->setInternalParams(cosmo,source);
-	
+
 	setCoorDist(cosmo);
 
 	if(sim_input_flag){
@@ -1600,12 +1600,12 @@ void MultiLens::unusedHalos(){
     cout << "unable to create file " << endl;
     exit(1);
   }
-  
+
   for(int l=0; l < Nplanes-1; l++){
     for(int i=0; i<halo_data[l]->Nhalos; i++){
       if(halo_data[l]->haloID[i] == 0){
 	halo_data[l]->haloID[i] = 0;
-	file_area << halo_data[l]->halos[i].mass << " " << halo_data[l]->z[i] 
+	file_area << halo_data[l]->halos[i].mass << " " << halo_data[l]->z[i]
 		  << " " << halo_data[l]->pos[i][0] << " " << halo_data[l]->pos[i][1] << endl;
       }
     }

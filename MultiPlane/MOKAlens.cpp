@@ -70,11 +70,10 @@ MOKALens::MOKALens(InputParams& params) : Lens(){
 #endif
 
 	map = new MOKAmap;
-	LH = new LensHalo;
 
 	assignParams(params);
 
-	getDims(MOKA_input_file,&(map->nx),&(map->ny));
+	getDims();
 
 	map->convergence.resize(map->nx*map->ny);
 	map->alpha1.resize(map->nx*map->ny);
@@ -83,14 +82,7 @@ MOKALens::MOKALens(InputParams& params) : Lens(){
 	map->gamma2.resize(map->nx*map->ny); 
 	map->gamma3.resize(map->nx*map->ny);
 
-	readImage(MOKA_input_file
-			,&map->convergence
-			,&map->alpha1
-			,&map->alpha2
-			,&map->gamma1
-			,&map->gamma2
-			,LH);
-
+	readImage();
 
 	int i,j;
 	if(flag_background_field==1){
@@ -105,56 +97,18 @@ MOKALens::MOKALens(InputParams& params) : Lens(){
 	initMap();
 }
 
-/**
- * \ingroup Constructor
- * \brief allocates and reads the MOKA map in
- */
-//MOKALens::MOKALens(std::string paramfile,LensHalo *halo) : Lens(){
-MOKALens::MOKALens(InputParams& params,LensHalo *halo) : Lens(){
-	map = new MOKAmap;
-	LH = halo;
-
-	assignParams(params);
-
-	map->nx = map->ny = LH->npix;
-
-	map->convergence.resize(map->nx*map->ny);
-	map->alpha1.resize(map->nx*map->ny);
-	map->alpha2.resize(map->nx*map->ny);
-	map->gamma1.resize(map->nx*map->ny);
-	map->gamma2.resize(map->nx*map->ny);
-	map->gamma3.resize(map->nx*map->ny);
-
-	initMap();
-}
-
 MOKALens::~MOKALens(){
-	map->convergence.resize(0);
-	map->alpha1.resize(0);
-	map->alpha2.resize(0);
-	map->gamma1.resize(0);
-	map->gamma2.resize(0);
-	map->gamma3.resize(0);
 	delete map;
-	delete LH;
 }
 
 void MOKALens::initMap(){
-	map->boxlarcsec = LH->boxlarcsec;
-	map->zlens = LH->zl;
-	map->zsource = LH->zs;
-	map->omegam = LH->omegam;
-	map->omegal = LH->omegal;
-	map->DL =LH->DL;
 	map->center[0] = map->center[1] = 0.0;
-	map->boxlMpc = LH->boxlMpc;
-	map->h = LH->h;
 	map->boxlrad = map->boxlarcsec*pi/180/3600.;
 
 	double xmin = -map->boxlMpc*0.5;
 	double xmax =  map->boxlMpc*0.5;
 	fill_linear (map->x,map->nx,xmin,xmax); // physical Mpc/h
-	map->inarcsec  = 10800./M_PI/LH->DL*60.; // Mpc/h to arcsec
+	map->inarcsec  = 10800./M_PI/map->DL*60.; // Mpc/h to arcsec
 }
 
 /** \brief sets the cosmology and the lens and the source according to the MOKA map parameters
@@ -165,7 +119,7 @@ void MOKALens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 	setZlens(cosmo,map->zlens,source->getZ());
 	source->setZ(map->zsource);
 
-	double fac = LH->DS/LH->DLS/LH->DL*LH->h;
+	double fac = map->DS/map->DLS/map->DL*map->h;
 
 	/// converts to the code units
 	if(flag_MOKA_analyze == 0 || flag_MOKA_analyze == 2){
@@ -220,7 +174,7 @@ void MOKALens::setZlens(CosmoHndl cosmo,double z,double dummy){
 }
 
 /**
- * saves the image, by reading off the calues from the image tree
+ * saves the image, by reading off the values from the image tree
  * and then saving to a fits file and computing the radial profile
  * of the convergence
  */
@@ -247,14 +201,7 @@ void MOKALens::saveImage(GridHndl grid,bool saveprofiles){
 		}
 	}while(MoveDownList(grid->i_tree->pointlist)==true);
 
-	writeImage(filename
-			,map->convergence
-			,map->gamma1
-			,map->gamma2
-			,map->gamma3
-			,map->nx
-			,map->ny
-		    ,LH);
+	writeImage(filename);
 
 	if(saveprofiles == true){
 
@@ -652,14 +599,7 @@ void MOKALens::saveImage(bool saveprofiles){
 	}
 	filename = f.str();
 
-	writeImage(filename
-		   ,map->convergence
-		   ,map->gamma1
-		   ,map->gamma2
-		   ,map->gamma3
-		   ,map->nx
-		   ,map->ny
-		   ,LH);
+	writeImage(filename);
 	
 	if(saveprofiles == true){
 	  std:: cout << " saving profile " << std:: endl;
@@ -680,8 +620,6 @@ void MOKALens::saveImage(bool saveprofiles){
 		    filoutEinr << "# effective        median      from_profles" << std:: endl;
 		    filoutEinr << RE1 << "   " << RE2 << "    " << RE3 << std:: endl;
 		    filoutEinr.close();
-		    // saveKappaProfile();
-		    // saveGammaProfile();
 	}
 }
 

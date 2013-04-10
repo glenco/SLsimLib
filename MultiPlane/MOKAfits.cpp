@@ -5,31 +5,28 @@
  *      Author: mpetkova
  */
 
-#include <MOKAfits.h>
+#include "MOKAlens.h"
 #include <fstream>
 
 #ifdef ENABLE_FITS
 #include <CCfits/CCfits>
-//#include <CCfits>
 
 using namespace CCfits;
 
 #endif
 
-void getDims(std::string fn
-	     ,int *nx
-	     ,int *ny){
+void MOKALens::getDims(){
 #ifdef ENABLE_FITS
 	try{
-		std::auto_ptr<FITS> ff(new FITS (fn, Read));
+		std::auto_ptr<FITS> ff(new FITS (MOKA_input_file, Read));
 
 		PHDU *h0=&ff->pHDU();
 
-		*nx=h0->axis(0);
-		*ny=h0->axis(1);
+		map->nx=h0->axis(0);
+		map->ny=h0->axis(1);
 	}
 	catch(FITS::CantOpen){
-		std::cout << "can not open " << fn << std::endl;
+		std::cout << "can not open " << MOKA_input_file << std::endl;
 		exit(1);
 	}
 #else
@@ -41,49 +38,39 @@ void getDims(std::string fn
 /**
  * \brief reads in the fits file for the MOKA map and saves it in the structure map
  */
-void readImage(std::string fn
-		,std::valarray<float> *convergence
-		,std::valarray<float> *alpha1
-		,std::valarray<float> *alpha2
-		,std::valarray<float> *gamma1
-		,std::valarray<float> *gamma2
-	    ,LensHalo *LH){
+void MOKALens::readImage(){
 #ifdef ENABLE_FITS
-	int nx,ny;
 
-	std:: cout << " reading MOKA file: " << fn << std:: endl;
-	std::auto_ptr<FITS> ff(new FITS (fn, Read));
+	std:: cout << " reading MOKA file: " << MOKA_input_file << std:: endl;
+	std::auto_ptr<FITS> ff(new FITS (MOKA_input_file, Read));
 
 	PHDU *h0=&ff->pHDU();
 
-	nx=h0->axis(0);
-	ny=h0->axis(1);
+	h0->read(map->convergence);
 
-	h0->read(*convergence);
-
-	h0->readKey ("SIDEL",LH->boxlarcsec);
-	h0->readKey ("SIDEL2",LH->boxlMpc);
-	h0->readKey ("ZLENS",LH->zl);
-	h0->readKey ("ZSOURCE",LH->zs);
-	h0->readKey ("OMEGA",LH->omegam);
-	h0->readKey ("LAMBDA",LH->omegal);
-	h0->readKey ("H",LH->h);
-	h0->readKey ("W",LH->wq);
-	h0->readKey ("MSTAR",LH->mstar);  
-	h0->readKey ("MVIR",LH->m);  
-	h0->readKey ("CONCENTRATION",LH->c);
-	h0->readKey ("DL",LH->DL);
-	h0->readKey ("DLS",LH->DLS);
-	h0->readKey ("DS",LH->DS);
+	h0->readKey ("SIDEL",map->boxlarcsec);
+	h0->readKey ("SIDEL2",map->boxlMpc);
+	h0->readKey ("ZLENS",map->zlens);
+	h0->readKey ("ZSOURCE",map->zsource);
+	h0->readKey ("OMEGA",map->omegam);
+	h0->readKey ("LAMBDA",map->omegal);
+	h0->readKey ("H",map->h);
+	h0->readKey ("W",map->wq);
+	h0->readKey ("MSTAR",map->mstar);
+	h0->readKey ("MVIR",map->m);
+	h0->readKey ("CONCENTRATION",map->c);
+	h0->readKey ("DL",map->DL);
+	h0->readKey ("DLS",map->DLS);
+	h0->readKey ("DS",map->DS);
 
 	ExtHDU &h1=ff->extension(1);
-	h1.read(*alpha1);
+	h1.read(map->alpha1);
 	ExtHDU &h2=ff->extension(2);
-	h2.read(*alpha2);
+	h2.read(map->alpha2);
 	ExtHDU &h3=ff->extension(3);
-	h3.read(*gamma1);
+	h3.read(map->gamma1);
 	ExtHDU &h4=ff->extension(4);
-	h4.read(*gamma2);
+	h4.read(map->gamma2);
 
 	std::cout << *h0 << h1 << h2 << h3  << h4 << std::endl;
 #else
@@ -96,17 +83,10 @@ void readImage(std::string fn
 /**
  * \brief write the fits file of the new MOKA map from the structure map
  */
-void writeImage(std::string filename
-		,std::valarray<float> convergence
-		,std::valarray<float> gamma1
-		,std::valarray<float> gamma2
-		,std::valarray<float> gamma3
-		,int nx
-		,int ny
-		,LensHalo *LH){
+void MOKALens::writeImage(std::string filename){
 #ifdef ENABLE_FITS
 	long naxis=2;
-	long naxes[2]={nx,ny};
+	long naxes[2]={map->nx,map->ny};
 
 	std::auto_ptr<FITS> fout(0);
 
@@ -120,35 +100,35 @@ void writeImage(std::string filename
 	}
 
 	std::vector<long> naxex(2);
-	naxex[0]=nx;
-	naxex[1]=ny;
+	naxex[0]=map->nx;
+	naxex[1]=map->ny;
 
 	PHDU *phout=&fout->pHDU();
 
-	phout->write( 1,nx*ny,convergence );
+	phout->write( 1,map->nx*map->ny,map->convergence );
 
-	phout->addKey ("SIDEL",LH->boxlarcsec,"arcsec");
-	phout->addKey ("SIDEL2",LH->boxlMpc,"Mpc/h");
-	phout->addKey ("ZLENS",LH->zl,"lens redshift");
-	phout->addKey ("ZSOURCE",LH->zs, "source redshift");
-	phout->addKey ("OMEGA",LH->omegam,"omega matter");
-	phout->addKey ("LAMBDA",LH->omegal,"omega lamda");
-	phout->addKey ("H",LH->h,"hubble/100");
-	phout->addKey ("W",LH->wq,"dark energy equation of state parameter");
-	phout->addKey ("MSTAR",LH->mstar,"stellar mass of the BCG in Msun/h");
-	phout->addKey ("MVIR",LH->m,"virial mass of the halo in Msun/h");
-	phout->addKey ("CONCENTRATION",LH->c,"NFW concentration");
-	phout->addKey ("DL",LH->DL,"Mpc/h");
-	phout->addKey ("DLS",LH->DLS,"Mpc/h");
-	phout->addKey ("DS",LH->DS,"Mpc/h");
+	phout->addKey ("SIDEL",map->boxlarcsec,"arcsec");
+	phout->addKey ("SIDEL2",map->boxlMpc,"Mpc/h");
+	phout->addKey ("ZLENS",map->zlens,"lens redshift");
+	phout->addKey ("ZSOURCE",map->zsource, "source redshift");
+	phout->addKey ("OMEGA",map->omegam,"omega matter");
+	phout->addKey ("LAMBDA",map->omegal,"omega lamda");
+	phout->addKey ("H",map->h,"hubble/100");
+	phout->addKey ("W",map->wq,"dark energy equation of state parameter");
+	phout->addKey ("MSTAR",map->mstar,"stellar mass of the BCG in Msun/h");
+	phout->addKey ("MVIR",map->m,"virial mass of the halo in Msun/h");
+	phout->addKey ("CONCENTRATION",map->c,"NFW concentration");
+	phout->addKey ("DL",map->DL,"Mpc/h");
+	phout->addKey ("DLS",map->DLS,"Mpc/h");
+	phout->addKey ("DS",map->DS,"Mpc/h");
 
 
 	ExtHDU *eh1=fout->addImage("gamma1", FLOAT_IMG, naxex);
-	eh1->write(1,nx*ny,gamma1);
+	eh1->write(1,map->nx*map->ny,map->gamma1);
 	ExtHDU *eh2=fout->addImage("gamma2", FLOAT_IMG, naxex);
-	eh2->write(1,nx*ny,gamma2);
+	eh2->write(1,map->nx*map->ny,map->gamma2);
 	ExtHDU *eh3=fout->addImage("gamma3", FLOAT_IMG, naxex);
-	eh3->write(1,nx*ny,gamma3);
+	eh3->write(1,map->nx*map->ny,map->gamma3);
 
 	std::cout << *phout << std::endl;
 #else
@@ -156,53 +136,6 @@ void writeImage(std::string filename
 	exit(1);
 #endif
 }
-
-void writeImage(std::string filename
-		,std::valarray<float> convergence
-		,std::valarray<float> gamma1
-		,std::valarray<float> gamma2
-		,std::valarray<float> gamma3
-		,int nx
-		,int ny){
-#ifdef ENABLE_FITS
-	long naxis=2;
-	long naxes[2]={nx,ny};
-
-	std::auto_ptr<FITS> fout(0);
-
-	try{
-		fout.reset(new FITS(filename,FLOAT_IMG,naxis,naxes));
-	}
-	catch(FITS::CantCreate){
-		std::cout << "Unable to open fits file " << filename << std::endl;
-		ERROR_MESSAGE();
-		exit(1);
-	}
-
-	std::vector<long> naxex(2);
-	naxex[0]=nx;
-	naxex[1]=ny;
-
-	PHDU *phout=&fout->pHDU();
-
-	phout->write( 1,nx*ny,convergence );
-
-	phout->addKey ("NX",nx,"pixel");
-
-	ExtHDU *eh1=fout->addImage("gamma1", FLOAT_IMG, naxex);
-	eh1->write(1,nx*ny,gamma1);
-	ExtHDU *eh2=fout->addImage("gamma2", FLOAT_IMG, naxex);
-	eh2->write(1,nx*ny,gamma2);
-	ExtHDU *eh3=fout->addImage("gamma3", FLOAT_IMG, naxex);
-	eh3->write(1,nx*ny,gamma3);
-
-	std::cout << *phout << std::endl;
-#else
-	std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
-	exit(1);
-#endif
-}
-
 
 /**
  * routine used by fof to link nearby grid cell points
