@@ -41,7 +41,7 @@ void swap(PixelMap& x, PixelMap& y)
 
 bool agree(const PixelMap& a, const PixelMap& b)
 {
-	return (a.Npixels == b.Npixels) && (a.range == b.range) &&
+	return (a.Npixels == b.Npixels) && (a.resolution == b.resolution) &&
 		(a.center[0] == b.center[0] && a.center[1] == b.center[1]);
 }
 
@@ -800,29 +800,24 @@ void swap(PixelData& a, PixelData& b)
 	using std::swap;
 	
 	swap(a.img, b.img);
-	swap(a.sgm, b.sgm);
-	swap(a.norm, b.norm);
-	swap(a.offs, b.offs);
+	swap(a.noi, b.noi);
 }
 
-PixelData::PixelData(PixelMap image, PixelMap sigma, double normalization, double offset)
-: img(image), sgm(sigma), norm(normalization), offs(offset)
+PixelData::PixelData(PixelMap image, PixelMap noise)
+: img(image), noi(noise)
 {
 	// must be a valid image
 	assert(img.valid());
 	
 	// must be a valid sigma map
-	assert(sgm.valid());
+	assert(noi.valid());
 	
 	// image and sigma need to agree
-	assert(agree(img, sgm));
-	
-	// make sure normalization is not faulty
-	assert(norm != 0);
+	assert(agree(img, noi));
 }
 
 PixelData::PixelData(const PixelData& other)
-: img(other.img), sgm(other.sgm), norm(other.norm), offs(other.offs)
+: img(other.img), noi(other.noi)
 {
 }
 
@@ -839,7 +834,7 @@ double PixelData::chi_square(const PixelMap &model) const
 	
 	double chi2 = 0;
 	for(std::size_t i = 0, n = model.size(); i < n; ++i)
-		chi2 += std::pow(((norm * model[i]) - (img[i] - offs))/(sgm[i]), 2);
+		chi2 += std::pow(img[i] - model[i], 2)/(model[i] + noi[i]);
 	return chi2;
 }
 
