@@ -86,9 +86,9 @@ public:
 	float getSeeing(){return seeing;}
 	float getZeropoint(){return mag_zeropoint;}
 	std::valarray<float> getPSF(){return map_psf;}
-	PixelMap AddNoise(PixelMap pmap);
-	PixelMap PhotonToCounts(PixelMap pmap);
-	PixelMap ApplyPSF(PixelMap pmap);
+	PixelMap AddNoise(PixelMap &pmap);
+	PixelMap PhotonToCounts(PixelMap &pmap);
+	PixelMap ApplyPSF(PixelMap &pmap);
 
 private:
 	float diameter;  // diameter of telescope (in cm)

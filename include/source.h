@@ -26,6 +26,8 @@ public:
 	  virtual double SurfaceBrightness(double *y) = 0;
 	  virtual double getTotalFlux() = 0;
 	  virtual void printSource() = 0;
+	  double getSBlimit(){return sb_limit;}
+
 
 	  // accessor functions that will sometimes be over ridden in class derivatives
 	  /// Redshift of source
@@ -42,6 +44,7 @@ public:
 	  virtual inline double getDlDs(){return DlDs;}
 	  //TODO BEN I think this need only be in the BLR source models
 	  virtual void setDlDs(double my_DlDs){DlDs = my_DlDs;}
+	  void setSBlimit(float limit) {sb_limit = limit;}
 
 protected:
 	  SBModel source_sb_type;
@@ -58,6 +61,7 @@ protected:
 	  /// Dl / Ds -- needed for the blr source models
 	  //TODO Could this be moved into the BLR classes because they are the only ones that use it.
 	  double DlDs;
+	  double sb_limit;
 };
 
 typedef Source *SourceHndl;

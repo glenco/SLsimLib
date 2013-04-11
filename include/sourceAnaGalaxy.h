@@ -81,6 +81,7 @@ public:
 
 	unsigned long getID(){return galaxies[index].haloID;}
 
+
 	/// Return angular position of current source.
 	double *getX(){return galaxies[index].theta;}
 	/// Set angular position of current source.
@@ -90,13 +91,11 @@ public:
 
 	void multiplier(double z,double mag_cut,int Multiplicity,long *seed);
 
-	void setSBlimit(float limit) {sb_limit = limit;}
 
 private:
 	Band band;
 	float mag_limit;
 	std::size_t index;
-	float sb_limit;
 
 	std::vector<OverGalaxy> galaxies;
 	std::string input_gal_file;
