@@ -1,109 +1,62 @@
 #ifndef MCMC_H_
 #define MCMC_H_
 
-#include "parameters.h"
-#include "image_likelihood.h"
+#define MCMC_SOURCE(s) typedef s source_type
+#define MCMC_LENS(l) typedef l lens_type
 
-#include <monaco/markov.hpp>
-#include <monaco/metropolis.hpp>
+#define MCMC_SOURCE_PARAMETERS(sp) typedef sp source_parameters
+#define MCMC_LENS_PARAMETERS(lp) typedef lp lens_parameters
 
-#include <list>
-#include <iterator>
+#define MCMC_SOURCE_GENERATOR(sg) typedef sg source_generator
+#define MCMC_LENS_GENERATOR(lg) typedef lg lens_generator
 
-template<
-	typename Generator,
-	typename Likelihood = ImageLikelihood<typename Generator::source_type, typename Generator::lens_type>
->
+#define MCMC_LIKELIHOOD(l) typedef l likelihood
+
+template<typename Spec>
 class MCMC
 {
 public:
-	typedef typename Generator::source_type source_type;
-	typedef typename Generator::lens_type lens_type;
+	typedef typename Spec::source_type source_type;
+	typedef typename Spec::lens_type lens_type;
 	
-	typedef SourceLensParameters<source_type, lens_type> parameter_type;
+	typedef typename Spec::source_parameters source_parameters;
+	typedef typename Spec::lens_parameters lens_parameters;
 	
-	typedef std::list<parameter_type> container_type;
+	typedef typename Spec::source_generator source_generator;
+	typedef typename Spec::lens_generator lens_generator;
 	
-	typedef typename container_type::iterator iterator;
-	
-	MCMC(Generator& generator, Likelihood& likelihood)
-	: metrop(generator, likelihood)
+	class generator
 	{
-	}
+	public:
+		generator(source_generator& s, lens_generator& l)
+		: sgen(s), lgen(l)
+		{
+		}
+		
+		template<typename Parameters>
+		inline Parameters operator()(Parameters p)
+		{
+			p.source = sgen(p.source);
+			p.lens = lgen(p.lens);
+			return p;
+		}
+		
+	private:
+		source_generator& sgen;
+		lens_generator& lgen;
+	};
 	
-	void add(const source_type& source, const lens_type& lens)
+	class parameters
 	{
-		SourceLensParameters<source_type, lens_type> p;
-		p.source << source;
-		p.lens << lens;
-		chain.push_back(p);
-	}
-	
-	void add(const Parameters<source_type>& source, const Parameters<lens_type>& lens)
-	{
-		SourceLensParameters<source_type, lens_type> p;
-		p.source = source;
-		p.lens = lens;
-		chain.push_back(p);
-	}
-	
-	void add(const parameter_type& p)
-	{
-		chain.push_back(p);
-	}
-	
-	void step()
-	{
-		chain.push_back(metrop(chain.back()));
-	}
-	
-	template<typename Size>
-	void step(Size n)
-	{
-		monaco::markov_chain(chain, n, metrop);
-	}
-	
-	iterator begin()
-	{
-		return chain.begin();
-	}
-	
-	iterator end()
-	{
-		return chain.end();
-	}
-	
-	parameter_type front() const
-	{
-		return chain.front();
-	}
-	
-	parameter_type back() const
-	{
-		return chain.back();
-	}
-	
-	std::size_t size() const
-	{
-		return chain.size();
-	}
-	
-	void clear()
-	{
-		chain.clear();
-	}
-	
-	void clear(std::ptrdiff_t count)
-	{
-		iterator end = (count > 0) ? chain.begin() : chain.end();
-		std::advance(end, count);
-		chain.erase(chain.begin(), end);
-	}
-	
-private:
-	container_type chain;
-	
-	monaco::metropolis<Generator, Likelihood> metrop;
+	public:
+		source_parameters source;
+		lens_parameters lens;
+		
+		parameters(source_parameters& s, lens_parameters& l)
+		: source(s), lens(l)
+		{
+		}
+	};
 };
 
 #endif
