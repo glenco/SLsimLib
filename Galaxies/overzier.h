@@ -7,6 +7,10 @@
 #ifndef GALAXIES_OVERZIER_H_
 #define GALAXIES_OVERZIER_H_
 
+// define pi here if not done via include
+#ifndef pi
+#define pi 3.141592653589793238462643383279502884
+#endif
 
 /**
  *\brief Structure for holding parameters for one or more galaxy images according to
