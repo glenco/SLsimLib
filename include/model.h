@@ -67,7 +67,23 @@ public:
 		source = new S();
 
 		setInternal();
-		};
+	};
+	Model(const L& l, const S& s){
+		params = NULL;
+		cosmo = new COSMOLOGY();
+		lens = new L(l);
+		source = new S(s);
+		
+		setInternal();
+	};
+	Model(L* l, S* s){
+		params = NULL;
+		cosmo = new COSMOLOGY();
+		lens = l;
+		source = s;
+		
+		setInternal();
+	};
 	Model(){
 		params = NULL;
 		cosmo = new COSMOLOGY();
