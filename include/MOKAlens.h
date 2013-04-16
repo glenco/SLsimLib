@@ -10,19 +10,20 @@
 #define MOKALENS_H_
 
 #include "standard.h"
-#include "MOKAfits.h"
 #include "profile.h"
 #include "InputParams.h"
+#include "lens.h"
+#include "grid_maintenance.h"
 
-//TODO Improve this comment with more complete description of what a MOKAmap is used for.
 /**
- * \brief the MOKA map structure, containing all quantities that define it
+ * \brief The MOKA map structure, containing all quantities that define it
+ *
+ * The MOKA map, that is read in from the fits file. Its components include the
+ * lensing properties, as well as the cosmology, the size of the field of view,
+ * the redshifts of the lens and source, the properties of the cluster, etc.
  *
  * Note: To use this class requires setting the ENABLE_FITS compiler flag and linking
  * the cfits library.
-
-#include <MOKAfits.h>
-
  */
 struct MOKAmap{
 	/// values for the map
@@ -37,26 +38,31 @@ struct MOKAmap{
 	std:: vector<double> x;	 
     int nx,ny;
     // boxlMpc is Mpc/h for MOKA
-    double boxlarcsec,boxlMpc,boxlrad,zlens,zsource,omegam,omegal,h,DL;
+	/// lens and source properties
+    double zlens,m,zsource,DL,DLS,DS,c,cS,fsub,mstar,minsubmass;
+    double boxlarcsec,boxlMpc,boxlrad;
+    /// cosmology
+    double omegam,omegal,h,wq;
 	double inarcsec;
 	double center[2];
 };
-//TODO Improve this comment.
+
 /**
- *  \brief A class to represents the MOKA lens map
+ *  \brief A class that includes the MOKA lens map
+ *
+ * A class, where the lens is represented by a MOKA cluster in the form of a
+ * MOKAmap object (see the description of MOKAmap). It can either be used with the
+ * MultiLens model or by itself.
  *
  * Note: To use this class requires setting the ENABLE_FITS compiler flag and linking
  * the cfits library.
  */
 
-//TODO Change to physical length units !!!!
+
 class MOKALens : public Lens{
 public:
 
-	//MOKALens(std::string);
-	//MOKALens(std::string paramfile,LensHalo *LH);
 	MOKALens(InputParams& params);
-	MOKALens(InputParams& params,LensHalo *LH);
 
 	~MOKALens();
 
@@ -80,12 +86,19 @@ public:
 	void initMap();
 
 	MOKAmap *map;
-	LensHalo *LH;
 
 	void estSignLambdas();
 	void EinsteinRadii(double &RE1, double &RE2, double &xxc, double &yyc);
 
+private:
+	void getDims();
+	void readImage();
+	void writeImage(std::string fn);
+
 };
 
+void make_friendship(int ii,int ji,int np,std:: vector<int> &friends, std:: vector<double> &pointdist);
+
+int fof(double l,std:: vector<double> xci, std:: vector<double> yci, std:: vector<int> &groupid);
 #endif /* MOKALENS_H_ */
 

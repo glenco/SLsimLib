@@ -61,7 +61,7 @@
 }*/
 
 /// print out all member data for testing purposes
-void Point::print(){
+void Point::Print(){
 	 std::cout << "Point Data : " << std::endl;
 	 std::cout << "  next " << next << std::endl;
 	 std::cout << "  prev " << prev << std::endl;
@@ -78,6 +78,11 @@ void Point::print(){
 	 std::cout << "  surface_brightness " << surface_brightness << std::endl;
 	 std::cout << "  leaf " << leaf << std::endl;
 }
+/// print just position and gridsize
+void Point::print(){
+	std::cout << x[0] <<  "  " << x[1] << "  " << gridsize << std::endl;
+}
+
 
 
 unsigned long Branch::countID = 0;
@@ -757,9 +762,9 @@ void PrintPoint(Point *point){
  */
 ImageInfo::ImageInfo(){
 
-  imagekist = new Kist;
-  innerborder = new Kist;
-  outerborder = new Kist;
+  imagekist = new Kist<Point>;
+  innerborder = new Kist<Point>;
+  outerborder = new Kist<Point>;
   
   ShouldNotRefine = 0;
   uniform_mag = unchecked;
@@ -778,10 +783,10 @@ ImageInfo::ImageInfo(){
 
   for(i = 0;i < Nimages; i++)
   {
-	imageinfo[i].imagekist = new Kist;
+	imageinfo[i].imagekist = new Kist<Point>;
 	imageinfo[i].Npoints=0;
-    imageinfo[i].innerborder = new Kist;
-    imageinfo[i].outerborder = new Kist;
+    imageinfo[i].innerborder = new Kist<Point>;
+    imageinfo[i].outerborder = new Kist<Point>;
   }
 
   return imageinfo;
@@ -811,8 +816,8 @@ void freeImageInfo(ImageInfo *imageinfo,int Nimages){
 
 OldImageInfo::OldImageInfo(){
 
-  innerborder = new Kist;
-  outerborder = new Kist;
+  innerborder = new Kist<Point>;
+  outerborder = new Kist<Point>;
 }
 OldImageInfo::~OldImageInfo(){
     delete innerborder;

@@ -44,11 +44,11 @@ public:
 	short freeTree(TreeHndl tree);*/
 
   void FindAllBoxNeighbors(Point *point,ListHndl neighbors);
-  void FindAllBoxNeighborsKist(Point *point,KistHndl neighbors);
-  void PointsWithinEllipKist(double *ray,float rmax,float rmin,float posangle,KistHndl neighborkist);
-  double PointsWithinKist(double *ray,float rmax,KistHndl neighborkist,short markpoints);
-  void PointsWithinKist_iter(double *ray,float rmin,float rmax,KistHndl neighborkist);
-  Point *NearestNeighborKist(double *ray,int Nneighbors,KistHndl neighborkist);
+  void FindAllBoxNeighborsKist(Point *point,Kist<Point> * neighbors);
+  void PointsWithinEllipKist(double *ray,float rmax,float rmin,float posangle,Kist<Point> * neighborkist);
+  double PointsWithinKist(double *ray,float rmax,Kist<Point> * neighborkist,short markpoints);
+  void PointsWithinKist_iter(double *ray,float rmin,float rmax,Kist<Point> * neighborkist);
+  Point *NearestNeighborKist(double *ray,int Nneighbors,Kist<Point> * neighborkist);
 
   void PointsInCurrent(unsigned long *ids,double **x);
 
@@ -87,7 +87,7 @@ public:
 
   void FindBoxPoint(double *ray,Point *point);
 
-  void _FindLeaf(double *ray,unsigned long Nadd);
+  void _FindLeaf(double *ray,unsigned long Nadd = 0);
 
 private:
 
@@ -103,9 +103,9 @@ private:
 
 
   void _FindAllBoxNeighbors(Branch *leaf,ListHndl neighbors);
-  void _FindAllBoxNeighborsKist(Branch *leaf,KistHndl neighbors);
-  void _FindAllBoxNeighborsKist_iter(Branch *leaf,KistHndl neighbors);
-  void _PointsWithinKist(double *ray,float *rmax,KistHndl neighborkist
+  void _FindAllBoxNeighborsKist(Branch *leaf,Kist<Point> * neighbors);
+  void _FindAllBoxNeighborsKist_iter(Branch *leaf,Kist<Point> * neighbors);
+  void _PointsWithinKist(double *ray,float *rmax,Kist<Point> * neighborkist
   		,short markpoints,double *maxgridsize);
 
   void _freeBranches(short child);
@@ -269,7 +269,7 @@ void split_order_curve2(OldImageInfo *curves,int Maxcurves,int *Ncurves);
 void split_order_curve3(OldImageInfo *curves,int Maxcurves,int *Ncurves);
 void split_order_curve4(OldImageInfo *curves,int Maxcurves,int *Ncurves);
 unsigned long order_curve4(Point *curve,long Npoints);
-bool order_curve4(KistHndl curve);
+bool order_curve4(Kist<Point> * curve);
 bool order_ExteriorBoundary(Point *curve,long Npoints,long *NewNpoints,double *area);
 double findAreaOfCurve(TreeHndl tree,ImageInfo *curve,int NimageMax);
 void walkcurve(Point *points,long Npoints,long *j,long *end);
@@ -281,7 +281,7 @@ void split_images3(TreeHndl i_tree,ImageInfo *images,int Maximages,int *Nimages,
 void splitter(OldImageInfo *images,int Maximages,int *Nimages);
 void splitlist(ListHndl imagelist,OldImageInfo *images,int *Nimages,int Maximages);
 int windings(double *x,Point *points,unsigned long Npoints,double *area,short image);
-int windings(double *x,KistHndl kist,double *area,short image);
+int windings(double *x,Kist<Point> * kist,double *area,short image);
 
 /* externally provided functions */
 /*********************************/

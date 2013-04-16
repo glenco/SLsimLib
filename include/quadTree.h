@@ -243,15 +243,15 @@ protected:
 
 	// Override internal structure of halos
 	inline double alpha_h(double x,double xmax){
-	  if(x==0) x=1e-5;
+	  if(x==0) x=1e-6*xmax;
 		return -1.0*pow(x/xmax,beta+2);
 	}
 	inline double kappa_h(double x,double xmax){
-	  if(x==0) x=1e-5;
+	  if(x==0) x=1e-6*xmax;
 		return 0.5*(beta+2)*pow(x/xmax,beta)*x*x/(xmax*xmax);
 	}
 	inline double gamma_h(double x,double xmax){
-	  if(x==0) x=1e-5;
+	  if(x==0) x=1e-6*xmax;
 		return 0.5*beta*pow(x/xmax,beta+2);
 	}
 	inline double phi_h(double x,double xmax){

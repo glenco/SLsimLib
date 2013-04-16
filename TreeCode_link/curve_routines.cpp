@@ -210,7 +210,7 @@ unsigned long order_curve4(Point *curve,long Npoints){
 	return end+1;
 }
 /// Overloads and is dependent on version that takes a point array
-bool order_curve4(KistHndl curve){
+bool order_curve4(Kist<Point> * curve){
 	Point *tmpcurve = NewPointArray(curve->Nunits(),false);
 	unsigned long i=0,Npoints = curve->Nunits();
 	bool bo;
@@ -1506,7 +1506,7 @@ int windings(
 }
 int windings(
 		double *x              /// Point for which the winding number is calculated
-		,KistHndl kist         /// Kist of points on the border.  These must be ordered.
+		,Kist<Point> * kist         /// Kist of points on the border.  These must be ordered.
 		,double *area          /// returns absolute the area within the curve with oriented border
 		,short image           /// if == 1 the image of the curve is uses as the curve
 		){

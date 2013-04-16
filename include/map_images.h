@@ -21,9 +21,9 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
 void check_sb_add(Source *source,ImageInfo *imageinfo,Point *i_points,unsigned long &Nold,int &number_of_refined);
 
 bool RefinePoint(Point *point,TreeHndl i_tree,double image_area,double total_area,ExitCriterion criterion
-		,double res_target,KistHndl nearest);
+		,double res_target,Kist<Point> * nearest);
 bool RefinePoint2(Point *point,TreeHndl i_tree,double image_area,double total_area,ExitCriterion criterion
-		,double res_target,KistHndl nearest);
+		,double res_target,Kist<Point> * nearest);
 void UniformMagCheck(ImageInfo *imageinfo);
 
 #endif

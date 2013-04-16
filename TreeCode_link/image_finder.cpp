@@ -148,9 +148,19 @@ int refine_grid(LensHndl lens,GridHndl grid,OldImageInfo *imageinfo
  *
  * </pr>
  */
-long refine_edges(LensHndl lens,GridHndl grid,ImageInfo *imageinfo
-		,unsigned long Nimages,double res_target,short criterion,bool kappa_off,bool batch){
+long refine_edges(
+		LensHndl lens
+		,GridHndl grid
+		,ImageInfo *imageinfo
+		,unsigned long Nimages
+		,double res_target
+		,short criterion
+		,bool kappa_off
+		,Kist<Point> * newpointskist  /// returns a Kist of the points that were added to the grid on this pass, if == NULL will not be added
+		,bool batch){
 	 //printf("entering refine_edges\n");
+
+	if(newpointskist) newpointskist->Empty();
 
 	if(Nimages < 1) return 0;
 
@@ -206,7 +216,12 @@ long refine_edges(LensHndl lens,GridHndl grid,ImageInfo *imageinfo
 					++count;
 
 					if(batch) points_to_refine.push_back(point);
-					else grid->RefineLeaf(lens,point,kappa_off);
+					else{
+						Point *i_points = grid->RefineLeaf(lens,point,kappa_off);
+						if(newpointskist && i_points != NULL){
+							for(unsigned int k=0;k < i_points->head; ++k) newpointskist->InsertAfterCurrent(&i_points[k]);
+						}
+					}
 
 					point->in_image = FALSE;
 
@@ -224,13 +239,17 @@ long refine_edges(LensHndl lens,GridHndl grid,ImageInfo *imageinfo
 					|| (criterion==2 && pow(getCurrentKist(imageinfo[i].innerborder)->gridsize,2)/area_total > res_target) ){
 
 				//point = getCurrentKist(imageinfo[i].innerborder);
-    			assert(point->gridsize > 0);
+    			//assert(point->gridsize > 0);
 
 				//if( getCurrentKist(imageinfo[i].innerborderkist)->gridsize == point->gridsize){ /* point has not been refined yet */
     			++count;
 
     			if(batch) points_to_refine.push_back(getCurrentKist(imageinfo[i].innerborder));
-    			else grid->RefineLeaf(lens,getCurrentKist(imageinfo[i].innerborder),kappa_off);
+    			else{
+    				Point *i_points = grid->RefineLeaf(lens,getCurrentKist(imageinfo[i].innerborder),kappa_off);
+    				if(newpointskist && i_points != NULL)
+    					for(unsigned int k=0;k < i_points->head; ++k) newpointskist->InsertAfterCurrent(&i_points[k]);
+    			}
        			++Ncells;
 			}
 			MoveDownKist(imageinfo[i].innerborder);
@@ -239,7 +258,10 @@ long refine_edges(LensHndl lens,GridHndl grid,ImageInfo *imageinfo
 	}
 
 	if(batch){
-		grid->RefineLeaves(lens,points_to_refine,kappa_off);
+		Point *i_points = grid->RefineLeaves(lens,points_to_refine,kappa_off);
+		if(newpointskist && i_points != NULL){
+			for(unsigned int k=0;k < i_points->head; ++k) newpointskist->InsertAfterCurrent(&i_points[k]);
+		}
 	  	points_to_refine.clear();
 	}
 
@@ -278,7 +300,7 @@ long refine_edges2(LensHndl lens,double *y_source,double r_source,GridHndl grid
 
 	long i,j,k,n,Ncells=0,Ncells_o=0,count=0,Npoints=0;
 	Point *i_points,*point;
-	KistHndl neighborkist = new Kist;
+	Kist<Point> * neighborkist = new Kist<Point>;
 	double tmp_area=0,area_total=0;
 	bool addinner;
 	std::vector<Point *> points_to_refine;
@@ -292,6 +314,7 @@ long refine_edges2(LensHndl lens,double *y_source,double r_source,GridHndl grid
 
 	for(i=0;i<Nimages;++i){
 
+        if(!(imageinfo[i].ShouldNotRefine)){
 		// count border points that needs to be refined
 		MoveToTopKist(imageinfo[i].outerborder);
 		for(j=0,Ncells=0;j<imageinfo[i].outerborder->Nunits();++j){
@@ -440,7 +463,7 @@ long refine_edges2(LensHndl lens,double *y_source,double r_source,GridHndl grid
 
 			if(batch){
 				i_points = grid->RefineLeaves(lens,points_to_refine,kappa_off);
-				sort_out_points(i_points,&imageinfo[i],r_source,y_source);
+				if(i_points) sort_out_points(i_points,&imageinfo[i],r_source,y_source);
 				points_to_refine.clear();
 			}
 
@@ -494,6 +517,7 @@ long refine_edges2(LensHndl lens,double *y_source,double r_source,GridHndl grid
 				}
 			}
 		}
+        }
 	}  // end loop through images
 
 	delete neighborkist;
@@ -549,7 +573,7 @@ void findborders2(TreeHndl i_tree,OldImageInfo *imageinfo){
 
 	if(imageinfo->Npoints < 1) return;
 
-	KistHndl neighborkist = new Kist;
+	Kist<Point> * neighborkist = new Kist<Point>;
 
 	for(j=0;j<imageinfo->Npoints;++j){
 
@@ -716,7 +740,7 @@ void findborders3(TreeHndl i_tree,OldImageInfo *imageinfo){
 
 	if(imageinfo->Npoints < 1) return;
 
-	KistHndl neighborkist = new Kist;
+	Kist<Point> * neighborkist = new Kist<Point>;
 
 	for(j=0;j<imageinfo->Npoints;++j){
 
@@ -853,7 +877,7 @@ void SwapImages(OldImageInfo *image1,OldImageInfo *image2){
 	Point *point;
 	unsigned long Npoints,i;
 	double tmp;
-	KistHndl list;
+	Kist<Point> * list;
 
 	point = image1->points;
 	image1->points = image2->points;

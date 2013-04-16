@@ -38,7 +38,7 @@ short find_peaks(
 	long Nnewpoints = 0,Ntemp;
 	unsigned long i;
 	//ImageInfo *imageinfo = new ImageInfo;
-	KistHndl newpointskist = new Kist;
+	Kist<Point> * newpointskist = new Kist<Point>;
 
 	if(grid->getInitRange() != grid->getNumberOfPoints() ) grid->ReInitializeGrid(lens);
 
@@ -163,7 +163,7 @@ short refine_on_implanted_source(
 		,double threshold      /// the surface brightness threshold above which the grid is refined, default is 0
 		){
 
-	KistHndl newpointskist = new Kist;
+	Kist<Point> * newpointskist = new Kist<Point>;
 	bool foundimage;
 	double tmp;
 

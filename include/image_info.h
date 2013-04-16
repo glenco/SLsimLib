@@ -26,7 +26,7 @@ typedef struct ImageInfo{
   /// Number of points in image, SHOULD NOT BE USED IN FAVOR OF imagekist->Nunits().  Still used by caustic finding routines.
   //unsigned long Npoints;
   /// later addition, holds all points in image, will replace points eventually
-  KistHndl imagekist;
+  Kist<Point> * imagekist;
   /// gridrange[2] minimum grid size in image, gridrange[0] maximum grid size in outerborder, gridrange[1] maximum grid size in image
   double gridrange[3];
   /// Centroid of image
@@ -36,9 +36,9 @@ typedef struct ImageInfo{
   /// error on the estimate of area
   double area_error;
   /// the points on the inner border of the image
-  KistHndl innerborder;
+  Kist<Point> * innerborder;
   /// the points on the outer border of the image, i.e. not in the image
-  KistHndl outerborder;
+  Kist<Point> * outerborder;
   //short Nencircled;
 
   /// Flag for stopping refinement but also used for other temporary purposes.
@@ -67,7 +67,7 @@ typedef struct OldImageInfo{
   /// Number of points in image, SHOULD NOT BE USED IN FAVOR OF imagekist->Nunits().  Still used by caustic finding routines.
   unsigned long Npoints;
   /// later addition, holds all points in image, will replace points eventually
-  //KistHndl imagekist;
+  //Kist<Point> * imagekist;
   /// gridrange[2] minimum grid size in image, gridrange[0] maximum grid size in outerborder, gridrange[1] maximum grid size in image
   double gridrange[3];
   /// Centroid of image
@@ -77,9 +77,9 @@ typedef struct OldImageInfo{
   /// error on the estimate of area
   double area_error;
   /// the points on the inner border of the image
-  KistHndl innerborder;
+  Kist<Point> * innerborder;
   /// the points on the outer border of the image, i.e. not in the image
-  KistHndl outerborder;
+  Kist<Point> * outerborder;
   short ShouldNotRefine;
 
 } OldImageInfo;
