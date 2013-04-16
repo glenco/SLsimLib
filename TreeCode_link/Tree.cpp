@@ -800,6 +800,27 @@ ImageInfo::~ImageInfo(){
     delete innerborder;
     delete outerborder;
 }
+/**
+ * \brief Copy all information about the image including making copies of the imagekist,
+ * innerborder and outerborder.  Previous information in the image will be
+ */
+void ImageInfo::copy(ImageInfo &image){
+	imagekist->copy(image.imagekist);
+	innerborder->copy(image.innerborder);
+	outerborder->copy(image.outerborder);
+
+	gridrange[0] = image.gridrange[0];
+	gridrange[1] = image.gridrange[1];
+	gridrange[2] = image.gridrange[2];
+
+	centroid[0] = image.centroid[0];
+	centroid[1] = image.centroid[1];
+
+	area = image.area;
+	area_error = image.area_error;
+	ShouldNotRefine = image.ShouldNotRefine;
+	uniform_mag = image.uniform_mag;
+}
 /*
 void freeImageInfo(ImageInfo *imageinfo,int Nimages){
 	int i;

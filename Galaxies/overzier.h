@@ -34,6 +34,20 @@ struct OverGalaxy{
 	double theta[2];
 	/// returns the maximum radius of the source galaxy TODO This needs to be done better.
 	double getRadius(){return 6*(Reff > Rh ? Reff : Rh);}
+
+
+	// colors
+	double mag_u;
+	double mag_g;
+	double mag_r;
+	double mag_i;
+	double mag_z;
+	double mag_J;
+	double mag_H;
+	double mag_Ks;
+	double mag_i1;
+	double mag_i2;
+
 private:
 	/// bulge half light radius
 	double Reff;

@@ -65,6 +65,10 @@ public:
 		return galaxies[index];
 	}
 
+	OverGalaxy& CurrentGalaxy(){
+		return galaxies[index];
+	}
+
 	/// Return redshift of current source.
 	double getZ(){return galaxies[index].z;}
 	//double getRadius(){return max(galaxies[index]->Reff,galaxies[index]->Rh);}

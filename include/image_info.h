@@ -49,6 +49,7 @@ typedef struct ImageInfo{
   /// returns number of points currently in the image
   unsigned long getNimagePoints(){return imagekist->Nunits();}
   void PrintImageInfo();
+  void copy(ImageInfo &image);
 
 } ImageInfo;
 

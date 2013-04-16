@@ -312,7 +312,7 @@ void find_crit2(
   //*******************************************************************
   ImageInfo *pseudocurve = new ImageInfo[maxNcrits];
   bool pseuodcaustic = true;
-  double pseudolimit = -10.0;
+  double pseudolimit = -100.0;
   //**************************************************************
 
   // find kist of points with negative magnification
@@ -350,8 +350,10 @@ void find_crit2(
 
   for(int k=0;;++k){
 
-	  refinements=refine_edges(lens,grid,critcurve,1,resolution,1,false,&newpoint_kist);
+	  refinements=refine_edges(lens,grid,critcurve,1,resolution/2,1,false,&newpoint_kist);
+	  //refinements=refine_edges(lens,grid,critcurve,1,1.0e-3,0,false,&newpoint_kist);
 	  //refinements=refine_grid_kist(lens,grid,critcurve,1,resolution,2,false,&newpoint_kist);
+
 	  if(!refinements) break;
 	  critcurve->outerborder->SetInImage(MAYBE);
 
@@ -531,7 +533,7 @@ void find_crit2(
 
   if(pseuodcaustic){
 
-	  /******* test line *****************
+	  //******* TODO test line *****************
 	  char chrstr[100];
 	  std::string output = "pseudocaustic";
 	  std::cout << " finding pseudo-caustics" << std::endl;
@@ -543,64 +545,67 @@ void find_crit2(
   	  double mumin = 0.0;
   	  Kist<Point> *newpoints = new Kist<Point>;
   	  assert(pseudocurve);
+  	  int Nmaxsubcautic =100,Nsubcurves;
+  	  ImageInfo *tmp_pseudo = new ImageInfo[Nmaxsubcautic];
 
   	  divide_images_kist(grid->i_tree,pseudocurve,Ncrits,maxNcrits);
 
-
   	  for(int i=0;i<*Ncrits;++i){
 
+  		  tmp_pseudo->copy(pseudocurve[i]);
 
-  		  mumin = pseudocurve[i].imagekist->getCurrent()->invmag;
-		  minmupoint = pseudocurve[i].imagekist->getCurrent();
-		  pseudocurve[i].area = 0;
-		  pseudocurve[i].imagekist->MoveToTop();
+  		  mumin = tmp_pseudo->imagekist->getCurrent()->invmag;
+		  minmupoint = tmp_pseudo->imagekist->getCurrent();
+		  tmp_pseudo->area = 0;
+		  tmp_pseudo->imagekist->MoveToTop();
   		  do{
-  			  if(pseudocurve[i].imagekist->getCurrent()->invmag < mumin){
-  				  minmupoint = pseudocurve[i].imagekist->getCurrent();
-  				  mumin = pseudocurve[i].imagekist->getCurrent()->invmag;
+  			  if(tmp_pseudo->imagekist->getCurrent()->invmag < mumin){
+  				  minmupoint = tmp_pseudo->imagekist->getCurrent();
+  				  mumin = tmp_pseudo->imagekist->getCurrent()->invmag;
   			  }
-  			  if(pseudocurve[i].imagekist->getCurrent()->invmag > pseudolimit){
-  				  pseudocurve[i].imagekist->getCurrent()->in_image = FALSE;
-  				  pseudocurve[i].imagekist->TakeOutCurrent();
+  			  if(tmp_pseudo->imagekist->getCurrent()->invmag > pseudolimit){
+  				  tmp_pseudo->imagekist->getCurrent()->in_image = FALSE;
+  				  tmp_pseudo->imagekist->TakeOutCurrent();
   			  }else{
-  				pseudocurve[i].area += pow(pseudocurve[i].imagekist->getCurrent()->gridsize,2);
-  				pseudocurve[i].imagekist->getCurrent()->in_image = TRUE;
+  				tmp_pseudo->area += pow(tmp_pseudo->imagekist->getCurrent()->gridsize,2);
+  				tmp_pseudo->imagekist->getCurrent()->in_image = TRUE;
   			  }
-  		  }while(pseudocurve[i].imagekist->Down());
+  		  }while(tmp_pseudo->imagekist->Down());
 
   		  // in case one before top was taken out
 
-  		  if(pseudocurve[i].imagekist->Nunits() > 0){
-  			  pseudocurve[i].imagekist->MoveToTop();
-  			  if(pseudocurve[i].imagekist->getCurrent()->invmag > pseudolimit){
-  				  pseudocurve[i].imagekist->getCurrent()->in_image = FALSE;
-  				  pseudocurve[i].imagekist->TakeOutCurrent();
+  		  if(tmp_pseudo->imagekist->Nunits() > 0){
+  			  tmp_pseudo->imagekist->MoveToTop();
+  			  if(tmp_pseudo->imagekist->getCurrent()->invmag > pseudolimit){
+  				  tmp_pseudo->imagekist->getCurrent()->in_image = FALSE;
+  				  tmp_pseudo->imagekist->TakeOutCurrent();
   			  }else{
-  				  pseudocurve[i].imagekist->getCurrent()->in_image = TRUE;
+  				  tmp_pseudo->imagekist->getCurrent()->in_image = TRUE;
   			  }
   		  }
 
-  		  if(pseudocurve[i].imagekist->Nunits() > 0){
-  			  pseudocurve[i].ShouldNotRefine = 1;
+  		  if(tmp_pseudo->imagekist->Nunits() > 0){
+  			  tmp_pseudo->ShouldNotRefine = 1;
   		  }else{
-  			  pseudocurve[i].imagekist->InsertAfterCurrent(minmupoint);
+  			  tmp_pseudo->imagekist->InsertAfterCurrent(minmupoint);
   			  minmupoint->in_image = TRUE;
-  			  pseudocurve[i].ShouldNotRefine = 0;  // marks that region has not been found
+  			  tmp_pseudo->ShouldNotRefine = 0;  // marks that region has not been found
+  			  tmp_pseudo->area = pow(minmupoint->gridsize,2);
   		  }
 
-  		  findborders4(grid->i_tree,&pseudocurve[i]);
+  		  findborders4(grid->i_tree,tmp_pseudo);
 
   		  int count=0;
-  		  while(  refine_edges(lens,grid,&pseudocurve[i],1,1.0e-3,0,false,newpoints) && count < 100
+  		  while(  refine_edges(lens,grid,tmp_pseudo,1,1.0e-3,0,false,newpoints) && count < 10
   				  ){
   			  ++count;
   			  // update region
-  			  if(pseudocurve[i].ShouldNotRefine == 0){
-  				  assert(pseudocurve[i].imagekist->Nunits() == 1);
-  				  mumin = pseudocurve[i].imagekist->getCurrent()->invmag;
-  				  minmupoint = pseudocurve[i].imagekist->getCurrent();
-  				  pseudocurve[i].imagekist->getCurrent()->in_image = FALSE;
-  				  pseudocurve[i].imagekist->TakeOutCurrent();
+  			  if(tmp_pseudo->ShouldNotRefine == 0){
+  				  assert(tmp_pseudo->imagekist->Nunits() == 1);
+  				  mumin = tmp_pseudo->imagekist->getCurrent()->invmag;
+  				  minmupoint = tmp_pseudo->imagekist->getCurrent();
+  				  tmp_pseudo->imagekist->getCurrent()->in_image = FALSE;
+  				  tmp_pseudo->imagekist->TakeOutCurrent();
   			  }
 
   			  newpoints->MoveToTop();
@@ -612,75 +617,103 @@ void find_crit2(
 
   				  if(newpoints->getCurrent()->invmag < pseudolimit){
   					  newpoints->getCurrent()->in_image = TRUE;
-  					  pseudocurve[i].imagekist->InsertAfterCurrent(newpoints->getCurrent());
+  					  tmp_pseudo->imagekist->InsertAfterCurrent(newpoints->getCurrent());
   				  }else{
   					newpoints->getCurrent()->in_image = FALSE;
   				  }
 
   			  }while(newpoints->Down());
 
-  			  if(pseudocurve[i].ShouldNotRefine == 0){
+  			  if(tmp_pseudo->ShouldNotRefine == 0){
 
-  				  if(pseudocurve[i].imagekist->Nunits() == 0){
+  				  if(tmp_pseudo->imagekist->Nunits() == 0){
   					  assert(minmupoint);
   					  minmupoint->in_image = TRUE;
-  					  pseudocurve[i].imagekist->InsertAfterCurrent(minmupoint);
+  					  tmp_pseudo->imagekist->InsertAfterCurrent(minmupoint);
   				  }else{
-  					  pseudocurve[i].ShouldNotRefine = 1;
+  					  tmp_pseudo->ShouldNotRefine = 1;
   				  }
   			  }
-  			  findborders4(grid->i_tree,&pseudocurve[i]);
+  			  findborders4(grid->i_tree,tmp_pseudo);
 
   			  // update image area to area of inner border
-  			  pseudocurve[i].area = 0.0;
-  			  pseudocurve[i].innerborder->MoveToTop();
+  			  tmp_pseudo->area = 0.0;
+  			  tmp_pseudo->innerborder->MoveToTop();
   			  do{
-  				  pseudocurve[i].area += pow(pseudocurve[i].innerborder->getCurrent()->gridsize,2);
-  			  }while(pseudocurve[i].innerborder->Down());
+  				  tmp_pseudo->area += pow(tmp_pseudo->innerborder->getCurrent()->gridsize,2);
+  			  }while(tmp_pseudo->innerborder->Down());
   		  }
 
-  		  pseudocurve[i].imagekist->SetInImage(FALSE);
-  		  //**** TODO uncomment this lines
-  		  pseudocurve[i].imagekist->Empty();
-  		  pseudocurve[i].imagekist->copy(pseudocurve[i].innerborder);
-  		  pseudocurve[i].imagekist->TranformPlanes();
+  		  tmp_pseudo->imagekist->SetInImage(FALSE);
+  		  if(tmp_pseudo->imagekist->Nunits() == 1){
+  			tmp_pseudo->imagekist->Empty();
+  			pseudocurve[i].imagekist->Empty();
+  		  }else{
+  			  tmp_pseudo->imagekist->copy(tmp_pseudo->innerborder);
 
-  		  // find location of pseudo caustic
-  		  pseudocurve[i].imagekist->MoveToTop();
-  		  pseudocurve[i].centroid[0] = pseudocurve[i].centroid[1] = 0.0;
-  		  do{
-  			pseudocurve[i].centroid[0] += pseudocurve[i].imagekist->getCurrent()->x[0];
-  			pseudocurve[i].centroid[1] += pseudocurve[i].imagekist->getCurrent()->x[1];
-  		  }while(pseudocurve[i].imagekist->Down());
-  		  pseudocurve[i].centroid[0] /= pseudocurve[i].imagekist->Nunits();
-  		  pseudocurve[i].centroid[1] /= pseudocurve[i].imagekist->Nunits();
+  		 	  divide_images_kist(grid->i_tree,tmp_pseudo,&Nsubcurves,Nmaxsubcautic);
+  		 	  double area_max = tmp_pseudo[0].area;
+  		 	  int imax = 0;
+  		 	  for(int j=1;j<Nsubcurves;++j){
+  		 		  if(tmp_pseudo[j].area > area_max){
+  		 			  area_max = tmp_pseudo[j].area;
+  		 			  imax = j;
+  		 		  }
+  		 	  }
 
+  		 	  //tmp_pseudo[imax].imagekist->TranformPlanes();
 
-  		/******** test lines **********************
-  		  if( i > 0){
-  		double tmp_range = 0,dr;
-  		pseudocurve[i].imagekist->MoveToTop();
-  		do{
-  			dr = pow(pseudocurve[i].centroid[0]-pseudocurve[i].imagekist->getCurrent()->x[0],2)
+  			  // find location of pseudo caustic
+  			  tmp_pseudo[imax].imagekist->MoveToTop();
+  			  tmp_pseudo[imax].centroid[0] = tmp_pseudo[imax].centroid[1] = 0.0;
+  			  do{
+  				  tmp_pseudo[imax].centroid[0] += tmp_pseudo[imax].imagekist->getCurrent()->x[0];
+  				  tmp_pseudo[imax].centroid[1] += tmp_pseudo[imax].imagekist->getCurrent()->x[1];
+  			  }while(tmp_pseudo[imax].imagekist->Down());
+  			  tmp_pseudo[imax].centroid[0] /= tmp_pseudo[imax].imagekist->Nunits();
+  			  tmp_pseudo[imax].centroid[1] /= tmp_pseudo[imax].imagekist->Nunits();
+
+  			  pseudocurve[i].copy(tmp_pseudo[imax]);
+
+  			  //******** TODO test lines **********************
+  			  if( i > 0){
+  				  double tmp_range = 0,dr;
+
+ 				  pseudocurve[i].imagekist->MoveToTop();
+  				  do{
+  					  dr = pow(pseudocurve[i].centroid[0]-pseudocurve[i].imagekist->getCurrent()->x[0],2)
   					+ pow(pseudocurve[i].centroid[1]-pseudocurve[i].imagekist->getCurrent()->x[1],2);
-  			//pseudocurve[i].imagekist->getCurrent()->surface_brightness = pseudocurve[i].imagekist->getCurrent()->invmag;
-  			if(dr > tmp_range) tmp_range = dr;
-  			if(pseudocurve[i].imagekist->getCurrent()->invmag > pseudolimit)
-  				std::cout << "  number of points = " << pseudocurve[i].imagekist->Nunits();
-  			assert(pseudocurve[i].imagekist->getCurrent()->invmag < pseudolimit);
-   		}while(pseudocurve[i].imagekist->Down());
+  					  //pseudocurve[i].imagekist->getCurrent()->surface_brightness = pseudocurve[i].imagekist->getCurrent()->invmag;
+  					  if(dr > tmp_range) tmp_range = dr;
+  					  if(pseudocurve[i].imagekist->getCurrent()->invmag > pseudolimit)
+  						  std::cout << "  number of points = " << pseudocurve[i].imagekist->Nunits();
+  					  assert(pseudocurve[i].imagekist->getCurrent()->invmag < pseudolimit);
+  				  }while(pseudocurve[i].imagekist->Down());
 
-  		PixelMap map(1000,2*sqrt(tmp_range),pseudocurve[i].centroid);
-  		map.AddImages(&pseudocurve[i],1,true);
-  		map.AddImages(&pseudocurve[i],1,true);
-  		snprintf(chrstr,100,"%i",i);
-  		//map.printFITS(output + chrstr + ".fits");
+ 			  	  //critcurve[i].imagekist->TranformPlanes();
+				  critcurve[i].imagekist->MoveToTop();
+  				  do{
+  					  dr = pow(pseudocurve[i].centroid[0]-critcurve[i].imagekist->getCurrent()->x[0],2)
+  					+ pow(pseudocurve[i].centroid[1]-critcurve[i].imagekist->getCurrent()->x[1],2);
+  					  //pseudocurve[i].imagekist->getCurrent()->surface_brightness = pseudocurve[i].imagekist->getCurrent()->invmag;
+  					  if(dr > tmp_range) tmp_range = dr;
+   				  }while(critcurve[i].imagekist->Down());
+
+  				  PixelMap map(4000,2*sqrt(tmp_range),pseudocurve[i].centroid);
+  				  map.AddImages(&pseudocurve[i],1,0.0);
+
+   				  map.AddImages(&critcurve[i],1,0.0);
+  			  	  //critcurve[i].imagekist->TranformPlanes();
+
+  				  snprintf(chrstr,100,"%i",i);
+  				  map.printFITS(output + chrstr + ".fits");
+  			  }
+  			  //******************************************/
   		  }
-  		//******************************************/
-
   	  }
 
-  }
+  	  delete[] tmp_pseudo;
+   }
 
   for(i=0;i<*Ncrits;++i) critcurve[i].imagekist->SetInImage(FALSE);
 

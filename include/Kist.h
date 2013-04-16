@@ -457,6 +457,7 @@ template <class Data> void Kist<Data>::SetInImage(Boo value){
  */
 template <class Data> void Kist<Data>::copy(Kist<Data> *kist){
 	Empty();
+	if(kist->Nunits() == 0) return;
 	kist->MoveToTop();
 	do{
 		InsertAfterCurrent(kist->getCurrent());

@@ -37,8 +37,8 @@ public:
 	inline double getResolution() const { return resolution; }
 	
 	void Clean();
-	void AddImages(ImageInfo *imageinfo,int Nimages,bool constant_sb);
-	void AddImages(ImageInfo *imageinfo,int Nimages,double sigma);
+	void AddImages(ImageInfo *imageinfo,int Nimages,float rescale);
+	//void AddImages(ImageInfo *imageinfo,int Nimages,double sigma);
 	void printASCII();
 	void printASCIItoFile(std::string filename);
 	void printFITS(std::string filename);

@@ -1223,7 +1223,13 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 
 	if(internal_profile == PseudoNFW){
 		ERROR_MESSAGE();
-		std::cout << "Input to MultiLens is not yet enabled for PseudoNFW profiles"
+		std::cout << "Input to MultiLens from a simulation is not yet enabled for PseudoNFW profiles"
+				<< std::endl << "Change this is parameter file" << std::endl;
+		exit(1);
+	}
+	if(internal_profile == PowerLaw){
+		ERROR_MESSAGE();
+		std::cout << "Input to MultiLens from a simulation is not yet enabled for PowerLaw profiles"
 				<< std::endl << "Change this is parameter file" << std::endl;
 		exit(1);
 	}
@@ -1347,17 +1353,18 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 			if(internal_profile == NSIE || internal_profile == NFW_NSIE){
 				NFW_Utility nfw_util;
 
+				// Stellar mass fraction in from Moster et al. 2010
+				galaxy_mass_fraction = 2*mo*pow(halo_vec[j].mass/M1,gam1)
+				  /pow(1+pow(halo_vec[j].mass/M1,beta),(gam1-gam2)/beta)/halo_vec[j].mass;
+				if(galaxy_mass_fraction > 1.0) galaxy_mass_fraction = 1;
+
 				if(internal_profile == NFW_NSIE){
-					// Stellar mass fraction in from Moster et al. 2010
-					galaxy_mass_fraction = 2*mo*pow(halo_vec[j].mass/M1,gam1)
-					  /pow(1+pow(halo_vec[j].mass/M1,beta),(gam1-gam2)/beta)/halo_vec[j].mass;
-					if(galaxy_mass_fraction > 1.0) galaxy_mass_fraction = 1;
 
 					halo_vec[j].mass_nsie = halo_vec[j].mass*galaxy_mass_fraction;   //TODO This is a kluge. A mass dependent ratio would be better
 					halo_vec[j].mass *= (1-galaxy_mass_fraction);
 					halo_vec[j].rcore_nsie = 0.0;
 				}else{
-					halo_vec[j].mass_nsie = halo_vec[j].mass;
+					halo_vec[j].mass_nsie = halo_vec[j].mass*galaxy_mass_fraction;
 					halo_vec[j].rscale = 0.0;
 					halo_vec[j].mass = 0.0;
 					halo_vec[j].rcore_nsie = 0.0;

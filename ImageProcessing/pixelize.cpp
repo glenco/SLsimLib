@@ -156,8 +156,8 @@ void PixelMap::Clean()
 void PixelMap::AddImages(
 		ImageInfo *imageinfo   /// An array of ImageInfo-s.  There is no reason to separate images for this routine
 		,int Nimages           /// Number of images on input.
-		,bool constant_sb      /// true - all images will have surface brightness = 1,
-		                       /// false - surface brightness is taken from surface_brighness in  the image points
+		,float rescale         /// rescales the surface brightness while leaving the image unchanged
+			                   /// , rescale==0 gives constant surface brightness
 		){
 
 	if(Nimages <= 0) return;
@@ -171,7 +171,7 @@ void PixelMap::AddImages(
 		if(imageinfo->imagekist->Nunits() > 0){
 			MoveToTopKist(imageinfo[ii].imagekist);
 			do{
-				if(!constant_sb) sb = getCurrentKist(imageinfo[ii].imagekist)->surface_brightness;
+				if(rescale != 0.0) sb = rescale*getCurrentKist(imageinfo[ii].imagekist)->surface_brightness;
 
 				assert(getCurrentKist(imageinfo[ii].imagekist)->leaf);
 
@@ -238,7 +238,7 @@ double PixelMap::LeafPixelArea(IndexType i,Branch * branch1){
 
 }
 
-/// Add an image to the map with Gaussian smoothing
+/*// Add an image to the map with Gaussian smoothing
 void PixelMap::AddImages(
 		ImageInfo *imageinfo   /// An array of ImageInfo-s.  There is no reason to separate images for this routine
 		,int Nimages           /// Number of images on input.
@@ -294,7 +294,7 @@ void PixelMap::AddImages(
 	delete kist;
 	return;
 }
-
+*/
 /// Print an ASCII table of all the pixel values.
 void PixelMap::printASCII(){
 

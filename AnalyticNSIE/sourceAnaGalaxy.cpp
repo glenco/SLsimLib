@@ -187,6 +187,18 @@ void MultiSourceAnaGalaxy::readDataFile(std::string input_gal_file){
 		>> c >> SDSS_i_Bulge >> c >> SDSS_z_Bulge >> c >> J_band_Bulge >> c >> H_band_Bulge >> c >> Ks_band_Bulge >> c >> i1_Bulge
 		>> c >> i2_Bulge >> c;
 */
+
+		addr[11] = &SDSS_u;
+		addr[12] = &SDSS_g;
+		addr[13] = &SDSS_r;
+		addr[14] = &SDSS_i;
+		addr[15] = &SDSS_z;
+		addr[16] = &J_band;
+		addr[17] = &H_band;
+		addr[18] = &Ks_band;
+		addr[19] = &i1;
+		addr[20] = &i2;
+
 		switch (band){
 		case SDSS_U:
 			mag = SDSS_u;
@@ -252,6 +264,17 @@ void MultiSourceAnaGalaxy::readDataFile(std::string input_gal_file){
 					OverGalaxy(mag,pow(10,-(mag_bulge-mag)/2.5),Ref,Rh
 							,pa,inclination,HaloID,z_cosm,theta)
 			);
+
+			galaxies.back().mag_u = SDSS_u;
+			galaxies.back().mag_g = SDSS_g;
+			galaxies.back().mag_r = SDSS_r;
+			galaxies.back().mag_i = SDSS_i;
+			galaxies.back().mag_z = SDSS_z;
+			galaxies.back().mag_u = SDSS_u;
+			galaxies.back().mag_J = J_band;
+			galaxies.back().mag_H = H_band;
+			galaxies.back().mag_Ks = Ks_band;
+
 			//std::cout << "z:" << z_cosm << " mag " << SDSS_u << " Bulge to total " << pow(10,-(SDSS_u_Bulge-SDSS_u)/2.5)
 			//		<< " bulge size arcsec " << Ref  << " disk size arcsec " << pa << " position angle " << pa << " inclination " << inclination
 			//		<< " theta = " << theta[0] << " " << theta[1] << std::endl;
