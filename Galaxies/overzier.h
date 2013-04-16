@@ -39,7 +39,6 @@ struct OverGalaxy{
 	double z;
 	/// position on the sky
 	double theta[2];
-	/// returns the maximum radius of the source galaxy TODO This needs to be done better.
 	double getRadius(){return /*6*(Reff > Rh ? Reff : Rh)*/
 		// weighted mean between the radii that enclose 99% of the flux
 		// in the pure De Vacouleur/exponential disk case
