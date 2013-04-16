@@ -526,7 +526,7 @@ void PixelMap::smooth(double sigma){
 // Smooths the image with a PSF map.
 // oversample_n allows for an oversampled psf image.
 // (In principle, this should be readable directly from the fits header.)
-PixelMap Observation::ApplyPSF(PixelMap pmap)
+PixelMap Observation::ApplyPSF(PixelMap &pmap)
 {
 	if (map_psf.size() == 0)
 	{
@@ -629,7 +629,7 @@ PixelMap Observation::ApplyPSF(PixelMap pmap)
 	}
 }
 
-PixelMap Observation::AddNoise(PixelMap pmap)
+PixelMap Observation::AddNoise(PixelMap &pmap)
 {
 	PixelMap outmap(pmap);
 	double Q = pow(10,0.4*(mag_zeropoint+48.6));
@@ -648,7 +648,7 @@ PixelMap Observation::AddNoise(PixelMap pmap)
 	return outmap;
 	}
 
-PixelMap Observation::PhotonToCounts(PixelMap pmap)
+PixelMap Observation::PhotonToCounts(PixelMap &pmap)
 {
 	PixelMap outmap(pmap);
 	double Q = pow(10,0.4*(mag_zeropoint+48.6));
