@@ -699,7 +699,8 @@ void find_crit2(
   					  if(dr > tmp_range) tmp_range = dr;
    				  }while(critcurve[i].imagekist->Down());
 
-  				  PixelMap map(4000,2*sqrt(tmp_range),pseudocurve[i].centroid);
+  				  PixelMap map(pseudocurve[i].centroid,4000,2*sqrt(tmp_range)/4000);
+
   				  map.AddImages(&pseudocurve[i],1,0.0);
 
    				  map.AddImages(&critcurve[i],1,0.0);

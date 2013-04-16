@@ -12,11 +12,13 @@
 //#include <CCfits>
 #endif
 
-#if __cplusplus < 201103L
-#include <algorithm>
-#else
-#include <utility>
+#ifdef ENABLE_FFTW
+#include "fftw3.h"
 #endif
+
+#include <fstream>
+#include <algorithm>
+#include <utility>
 
 void swap(PixelMap& x, PixelMap& y)
 {
@@ -36,6 +38,12 @@ void swap(PixelMap& x, PixelMap& y)
 	swap(x.map_boundary_p1[1], y.map_boundary_p1[1]);
 	swap(x.map_boundary_p2[0], y.map_boundary_p2[0]);
 	swap(x.map_boundary_p2[1], y.map_boundary_p2[1]);
+}
+
+bool agree(const PixelMap& a, const PixelMap& b)
+{
+	return (a.Npixels == b.Npixels) && (a.resolution == b.resolution) &&
+		(a.center[0] == b.center[0] && a.center[1] == b.center[1]);
 }
 
 PixelMap::PixelMap()
@@ -67,22 +75,20 @@ PixelMap::PixelMap(const PixelMap& other)
 }
 
 PixelMap::PixelMap(
+		const double* center,  /// The location of the center of the map
 		std::size_t Npixels,  /// Number of pixels in one dimension of map.
-		double range,         /// One dimensional range of map in whatever units the point positions are in
-		const double* center  /// The location of the center of the map
-		): Npixels(Npixels), resolution(range/Npixels), range(range)
+		double resolution        /// One dimensional range of map in whatever units the point positions are in
+		): Npixels(Npixels), resolution(resolution)
 		{
 
 	std::copy(center, center + 2, this->center);
+	range = resolution*(Npixels-1);
 	
-	map_boundary_p1[0] = center[0]-range/2.;
-	map_boundary_p1[1] = center[1]-range/2.;
-	map_boundary_p2[0] = center[0]+range/2.;
-	map_boundary_p2[1] = center[1]+range/2.;
-	
-	// is this good?
-	this->range = range - resolution;
-	
+	map_boundary_p1[0] = center[0]-(Npixels*resolution)/2.;
+	map_boundary_p1[1] = center[1]-(Npixels*resolution)/2.;
+	map_boundary_p2[0] = center[0]+(Npixels*resolution)/2.;
+	map_boundary_p2[1] = center[1]+(Npixels*resolution)/2.;
+
 	map_size = Npixels*Npixels;
 	map = new float[map_size];
 	std::fill(map, map + map_size, 0);
@@ -112,12 +118,11 @@ PixelMap::PixelMap(std::string filename)
 		std::cout << "Resolution is " << resolution << std::endl;
 		resolution = fabs(resolution)*pi/180.;
 		std::cout << "Resolution is " << resolution << std::endl;
-		range = resolution*Npixels;
-		map_boundary_p1[0] = center[0] - range/2.;
-		map_boundary_p1[1] = center[1] - range/2.;
-		map_boundary_p2[0] = center[0] + range/2.;
-		map_boundary_p2[1] = center[1] + range/2.;
-		range = range - resolution;
+		range = resolution*(Npixels-1);
+		map_boundary_p1[0] = center[0] - (Npixels*resolution)/2.;
+		map_boundary_p1[1] = center[1] - (Npixels*resolution)/2.;
+		map_boundary_p2[0] = center[0] + (Npixels*resolution)/2.;
+		map_boundary_p2[1] = center[1] + (Npixels*resolution)/2.;
 		
 		std::valarray<float> image;
 		h0->read(image);
@@ -135,9 +140,54 @@ PixelMap::PixelMap(std::string filename)
 
 }
 
+// Copy constructor. If degrading_factor > 1., it creates a PixelMap with a lower resolution.
+PixelMap::PixelMap(const PixelMap& pmap, double degrading_factor)
+	{
+
+	resolution = degrading_factor*pmap.resolution;
+	Npixels = pmap.Npixels/degrading_factor + 1;
+	range = resolution*(Npixels-1);
+	center[0] = pmap.center[0];
+	center[1] = pmap.center[1];
+	map_boundary_p1[0] = center[0] - (Npixels*resolution)/2.;
+	map_boundary_p1[1] = center[1] - (Npixels*resolution)/2.;
+	map_boundary_p2[0] = center[0] + (Npixels*resolution)/2.;
+	map_boundary_p2[1] = center[1] + (Npixels*resolution)/2.;
+	
+	map_size = Npixels*Npixels;
+	map = new float[map_size];
+	
+	int old_Npixels = pmap.Npixels;
+	int ix, iy;
+	double area;
+	double* old_p1 = new double[2];
+	double* old_p2 = new double[2];
+
+	for(unsigned long i=0;i < map_size; ++i)
+	{
+		ix = i%Npixels;
+		iy = i/Npixels;
+		map[ix+Npixels*iy] = 0.;
+		old_p1[0] = std::max(0,int(ix*degrading_factor));
+		old_p1[1] = std::max(0,int(iy*degrading_factor));
+		old_p2[0] = std::min(old_Npixels-1,int((ix+1.)*degrading_factor));
+		old_p2[1] = std::min(old_Npixels-1,int((iy+1.)*degrading_factor));
+		for (int old_iy = old_p1[1]; old_iy<= old_p2[1]; ++old_iy)
+		{
+			for (int old_ix = old_p1[0]; old_ix<= old_p2[0]; ++old_ix)
+				{
+					area = MIN(old_ix+0.5,(ix+1.)*degrading_factor-0.5) - MAX(old_ix-0.5,ix*degrading_factor-0.5);
+					area *= MIN(old_iy+0.5,(iy+1.)*degrading_factor-0.5) - MAX(old_iy-0.5,iy*degrading_factor-0.5);
+					map[ix+Npixels*iy] += area*pmap.map[old_ix+old_Npixels*old_iy];
+				}
+			}
+		}
+}
+
 PixelMap::~PixelMap()
 {
 	delete[] map;
+
 }
 
 PixelMap& PixelMap::operator=(PixelMap other)
@@ -150,6 +200,24 @@ PixelMap& PixelMap::operator=(PixelMap other)
 void PixelMap::Clean()
 {
 	std::fill(map, map + map_size, 0);
+}
+
+/// Multiplies the whole map by a scalar factor
+void PixelMap::Renormalize(double factor)
+{
+	for(std::size_t i=0;i < map_size; ++i) map[i] *= factor;
+}
+
+/// Adds a value to the i-th pixel
+void PixelMap::AddValue(std::size_t i, double value)
+{
+	map[i] += value;
+}
+
+/// Assigns a value to the i-th pixel
+void PixelMap::AssignValue(std::size_t i, double value)
+{
+	map[i] = value;
 }
 
 /// Add an image to the map
@@ -365,18 +433,18 @@ std::cout<< range << "  " << resolution << "  " << Npixels << std::endl;
 		phout->addKey ("CRPIX2",naxex[1]/2,"");
 		phout->addKey ("CRVAL1",0.0,"");
 		phout->addKey ("CRVAL2",0.0,"");
-		phout->addKey ("CDELT1",-180*range/(Npixels-1)/pi,"degrees");
-		phout->addKey ("CDELT2", 180*range/(Npixels-1)/pi,"degrees");
+		phout->addKey ("CDELT1",-180*resolution/pi,"degrees");
+		phout->addKey ("CDELT2", 180*resolution/pi,"degrees");
 		phout->addKey ("CTYPE1","RA--TAN","");
 		phout->addKey ("CTYPE2","RA-TAN","");
 		phout->addKey ("CROTA2",0.0,"");
-		phout->addKey ("CD1_1",-180*range/(Npixels-1)/pi,"degrees");
+		phout->addKey ("CD1_1",-180*resolution/pi,"degrees");
 		phout->addKey ("CD1_2",0.0,"");
 		phout->addKey ("CD2_1",0.0,"");
-		phout->addKey ("CD2_2", 180*range/(Npixels-1)/pi,"degrees");
+		phout->addKey ("CD2_2", 180*resolution/pi,"degrees");
 
 		phout->addKey ("Npixels", Npixels,"");
-		phout->addKey ("range ", range," radians");
+		phout->addKey ("range ", map_boundary_p2[0]-map_boundary_p1[0]," radians");
 
 		std::cout << *phout << std::endl;
 
@@ -390,47 +458,385 @@ std::cout<< range << "  " << resolution << "  " << Npixels << std::endl;
 
 /** \ingroup Image
  *
- * \brief Smoothes a map with a Gaussian kernel. Needs to be tested.
- *  This smoothes onto a map of the same resolution
+ * \brief Smoothes a map with a Gaussian kernel of width sigma (in arcseconds)
  */
-void PixelMap::smooth(double *map_out,double sigma){
+void PixelMap::smooth(double sigma){
 	double sum=0,**mask;
-	std::size_t i=0;
-	long j,k,ix,iy;
-	std::size_t Nmask;
+	int ix,iy;
+	int Nmask,Nmask_half;
+	double *map_out;
+	int j_cen, k_cen;
 
-	Nmask=2*(int)(3*sigma*Npixels/range + 1);
+	sigma /= 3600.*180/pi;
+	map_out = new double[map_size];
+	Nmask=2*(int)(3*sigma/resolution + 1);
+	std::cout << Nmask << std::endl;
 	if(Nmask < 4 ) std::cout << "WARNING: pixels are large compare to psf Nmask=" << Nmask << std::endl;
 
-	// set up mask
-	Matrix(mask,Nmask,Nmask);
-	for(j=-Nmask/2,sum=0;j<=Nmask/2;++j){
-		for(k=-Nmask/2;k<=Nmask/2;++k){
-			mask[j+Nmask/2][k+Nmask/2]= exp(-(pow(j*range/(Npixels-1),2)
-					                        + pow(k*range/(Npixels-1),2))/2/pow(sigma,2) );
-			sum+=mask[j+Nmask/2][k+Nmask/2];
+	Nmask_half = int(Nmask/2);
+	mask = new double*[Nmask];
+	for (int j = 0; j <Nmask; j++)
+		mask[j] = new double[Nmask];
+
+	for(int j=0;j<Nmask;j++)
+	{
+		for(int k=0;k<Nmask;k++)
+		{
+			j_cen = j - Nmask_half;
+			k_cen = k - Nmask_half;
+			mask[j][k]= exp(-(pow(j_cen*resolution,2) + pow(k_cen*resolution,2))/2/pow(sigma,2) );
+			sum+=mask[j][k];
 		}
 	}
-	for(j=-Nmask/2;j<=Nmask/2;++j) for(k=-Nmask/2;k<=Nmask/2;++k) mask[j+Nmask/2][k+Nmask/2]/=sum;
+	for(int j=0;j<Nmask;j++)
+	{
+		for(int k=0;k<Nmask;k++)
+		{
+			mask[j][k]/=sum;
+			std::cout << mask[j][k] << std::endl;
+		}
+	}
+	for(long i=0;i<map_size;i++){
+		map_out[i] = 0.;
+	}
 
-	for(i=0;i<map_size;++i){
-		for(j=0;j<=Nmask;++j){
-			ix=i%Npixels + j-Nmask/2;
-			if( (ix>-1)*(ix<Npixels) ){
-				for(k=0;k<=Nmask;++k){
-					iy=i/Npixels + k-Nmask/2;
-					if( (iy>-1)*(iy<Npixels) ){
-
-						map_out[ix+Npixels*iy] += mask[ix][iy]*map[i];
+	for(long i=0;i<map_size;i++){
+		for(int j=0;j<Nmask;j++){
+			ix=i%Npixels + j-Nmask_half;
+			if( (ix>-1) && (ix<Npixels) ){
+				for(int k=0;k<Nmask;k++){
+					iy=i/Npixels + k-Nmask_half;
+					if( (iy>-1) && (iy<Npixels) ){
+						map_out[ix+Npixels*iy] += mask[j][k]*map[i];
 					}
 				}
 			}
 		}
 	}
+	for(long i=0;i<map_size;i++){
+		map[i] = map_out[i];
+	}
 
-	free_Matrix(mask,Nmask,Nmask);
+	for (int j = 0; j <Nmask; j++)
+		delete mask[j];
+	delete [] mask;
+	delete [] map_out;
 
-	return ;
+}
+
+// Smooths the image with a PSF map.
+// oversample_n allows for an oversampled psf image.
+// (In principle, this should be readable directly from the fits header.)
+PixelMap Observation::ApplyPSF(PixelMap &pmap)
+{
+	if (map_psf.size() == 0)
+	{
+		if (seeing > 0.)
+		{
+			PixelMap outmap(pmap);
+			outmap.smooth(seeing);
+			return outmap;
+		}
+		else
+		{
+			return pmap;
+		}
+	}
+	else
+	{
+#ifdef ENABLE_FITS
+#ifdef ENABLE_FFTW
+
+	PixelMap outmap(pmap);
+	// creates plane for fft of map, sets properly input and output data, then performs fft
+	fftw_plan p;
+	long Npix = outmap.getNpixels();
+	double* in = new double[Npix*Npix];
+	std::complex<double>* out=new std::complex<double> [Npix*(Npix/2+1)];
+	for (unsigned long i = 0; i < Npix*Npix; i++)
+	{
+		in[i] = outmap[i];
+	}
+	p = fftw_plan_dft_r2c_2d(Npix,Npix,in, reinterpret_cast<fftw_complex*>(out), FFTW_ESTIMATE);
+	fftw_execute(p);
+
+	// creates plane for perform backward fft after convolution, sets output data
+	fftw_plan p2;
+	double* out2 = new double[Npix*Npix];
+	p2 = fftw_plan_dft_c2r_2d(Npix,Npix,reinterpret_cast<fftw_complex*>(out), out2, FFTW_ESTIMATE);
+
+	// calculates normalisation of psf
+	int N_psf = map_psf.size();
+	int side_psf = sqrt(N_psf);
+	double map_norm = 0.;
+	for (int i = 0; i < N_psf; i++)
+	{
+		map_norm += map_psf[i];
+	}
+	fftw_plan p_psf;
+
+	// arrange psf data for fft, creates plane, then performs fft
+	int psf_big_Npixels = static_cast<int>(Npix*oversample);
+	double* psf_big = new double[psf_big_Npixels*psf_big_Npixels];
+	std::complex<double>* out_psf=new std::complex<double> [psf_big_Npixels*(psf_big_Npixels/2+1)];
+	p_psf = fftw_plan_dft_r2c_2d(psf_big_Npixels,psf_big_Npixels,psf_big, reinterpret_cast<fftw_complex*>(out_psf), FFTW_ESTIMATE);
+	long ix, iy;
+	for (int i = 0; i < psf_big_Npixels*psf_big_Npixels; i++)
+	{
+		ix = i/psf_big_Npixels;
+		iy = i%psf_big_Npixels;
+		if(ix<side_psf/2 && iy<side_psf/2)
+			psf_big[i] = map_psf[(ix+side_psf/2)*side_psf+(iy+side_psf/2)]/map_norm;
+		else if(ix<side_psf/2 && iy>=psf_big_Npixels-side_psf/2)
+			psf_big[i] = map_psf[(ix+side_psf/2)*side_psf+(iy-(psf_big_Npixels-side_psf/2))]/map_norm;
+		else if(ix>=psf_big_Npixels-side_psf/2 && iy<side_psf/2)
+			psf_big[i] = map_psf[(ix-(psf_big_Npixels-side_psf/2))*side_psf+(iy+side_psf/2)]/map_norm;
+		else if(ix>=psf_big_Npixels-side_psf/2 && iy>=psf_big_Npixels-side_psf/2)
+			psf_big[i] = map_psf[(ix-(psf_big_Npixels-side_psf/2))*side_psf+(iy-(psf_big_Npixels-side_psf/2))]/map_norm;
+		else
+			psf_big[i] = 0.;
+	}
+	fftw_execute(p_psf);
+
+	// performs convolution in Fourier space, and transforms back to real space
+	for (unsigned long i = 0; i < Npix*(Npix/2+1); i++)
+	{
+		ix = i/(Npix/2+1);
+		iy = i%(Npix/2+1);
+		if (ix>Npix/2)
+			out[i] *= out_psf[(psf_big_Npixels-(Npix-ix))*(psf_big_Npixels/2+1)+iy];
+		else
+			out[i] *= out_psf[ix*(psf_big_Npixels/2+1)+iy];
+	}
+	fftw_execute(p2);
+
+	// translates array of data in (normalised) counts map
+	for (unsigned long i = 0; i < Npix*Npix; i++)
+	{
+		ix = i/Npix;
+		iy = i%Npix;
+		outmap.AssignValue(i,out2[i]/double(Npix*Npix));
+	}
+	return outmap;
+#else
+		std::cout << "Please enable the preprocessor flag ENABLE_FFTW !" << std::endl;
+		exit(1);
+#endif
+
+#else
+		std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
+		exit(1);
+#endif
+	}
+}
+
+PixelMap Observation::AddNoise(PixelMap &pmap)
+{
+	PixelMap outmap(pmap);
+	double Q = pow(10,0.4*(mag_zeropoint+48.6));
+	double res_in_arcsec = outmap.getResolution()*180.*60.*60/pi;
+	double back_mean = pow(10,-0.4*(48.6+back_mag))*res_in_arcsec*res_in_arcsec*Q*exp_time;
+	double rms, noise;
+	long seed = 24;
+	double norm_map, noised_map;
+	for (unsigned long i = 0; i < outmap.getNpixels()*outmap.getNpixels(); i++)
+	{
+		norm_map = outmap[i]*exp_time;
+		rms = sqrt(pow(exp_num*ron,2)+norm_map+back_mean);
+		noise = gasdev(&seed)*rms;
+		outmap.AddValue(i,noise/exp_time);
+		}
+	return outmap;
+	}
+
+PixelMap Observation::PhotonToCounts(PixelMap &pmap)
+{
+	PixelMap outmap(pmap);
+	double Q = pow(10,0.4*(mag_zeropoint+48.6));
+	outmap.Renormalize(Q);
+	return outmap;
+}
+
+Observation::Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, float seeing):
+		exp_time(exp_time), exp_num(exp_num), back_mag(back_mag), diameter(diameter), transmission(transmission), ron(ron), seeing(seeing)
+		{
+			mag_zeropoint = 2.5*log10(diameter*diameter*transmission*pi/4./hplanck) - 48.6;
+		}
+
+Observation::Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, std::string psf_file, float oversample):
+		exp_time(exp_time), exp_num(exp_num), back_mag(back_mag), diameter(diameter), transmission(transmission), ron(ron), oversample(oversample)
+		{
+	mag_zeropoint = 2.5*log10(diameter*diameter*transmission*pi/4./hplanck) - 48.6;
+
+	std::auto_ptr<CCfits::FITS> fp (new CCfits::FITS (psf_file.c_str(), CCfits::Read));
+	CCfits::PHDU *h0=&fp->pHDU();
+	int side_psf = h0->axis(0);
+	int N_psf = side_psf*side_psf;
+	map_psf.resize(N_psf);
+	h0->read(map_psf);
+		}
+
+Observation::Observation(float diameter, float transmission):
+		diameter(diameter), transmission(transmission)
+		{
+	mag_zeropoint = 2.5*log10(diameter*diameter*transmission*pi/4./hplanck) - 48.6;
+		}
+
+Observation::Observation(float zeropoint):
+		mag_zeropoint(zeropoint)
+{
+}
+
+void swap(PixelMask& x, PixelMask& y)
+	{
+
+	using std::swap;
+	
+	swap(x.map_size, y.map_size);
+	swap(x.mask_size, y.mask_size);
+	swap(x.pixels, y.pixels);
+}
+
+PixelMask::PixelMask()
+: map_size(0), mask_size(0)
+{
+}
+
+PixelMask::PixelMask(std::size_t map_size)
+: map_size(map_size), mask_size(map_size)
+{
+	pixels.resize(map_size);
+	for(std::size_t i = 0; i < map_size; ++i)
+		pixels[i] = true;
+}
+
+PixelMask::PixelMask(const PixelMap& base, double threshold, ThresholdType type)
+: map_size(base.size())
+{
+	pixels.reserve(map_size);
+	
+	switch(type)
+	{
+	case Greater:
+		for(std::size_t i = 0; i < map_size; ++i)
+			if(base[i] > threshold)
+				pixels.push_back(i);
+		break;
+	case GreaterOrEqual:
+		for(std::size_t i = 0; i < map_size; ++i)
+			if(base[i] >= threshold)
+				pixels.push_back(i);
+		break;
+	case Less:
+		for(std::size_t i = 0; i < map_size; ++i)
+			if(base[i] < threshold)
+				pixels.push_back(i);
+		break;
+	case LessOrEqual:
+		for(std::size_t i = 0; i < map_size; ++i)
+			if(base[i] <= threshold)
+				pixels.push_back(i);
+		break;
+	}
+	
+	mask_size = pixels.size();
+	pixels.resize(mask_size);
+}
+
+PixelMask::PixelMask(std::string file, double threshold, ThresholdType type)
+{
+#ifdef ENABLE_FITS
+	// get PixelMap for file
+	PixelMap map(file);
+	
+	// create PixelMask for map
+	PixelMask mask(map);
+	
+	// swap contents of mask into this
+	swap(*this, mask);
+#else
+	// warn about ENABLE_FITS
+	SLSIMLIB_DEBUG("FITS support disabled, use ENABLE_FITS flag");
+	
+	// default mask
+	PixelMask mask;
+	
+	// swap defaults into this
+	swap(*this, mask);
+#endif
+}
+
+PixelMask& PixelMask::operator=(PixelMask other)
+{
+	swap(*this, other);
+	return *this;
+}
+std::size_t PixelMask::operator[](std::size_t i) const
+{
+	return pixels[i];
+}
+
+bool PixelMask::valid() const
+{
+	return map_size;
+}
+
+bool PixelMask::empty() const
+{
+	return !mask_size;
+}
+
+std::size_t PixelMask::size() const
+{
+	return mask_size;
+}
+
+std::size_t PixelMask::base_size() const
+{
+	return map_size;
+}
+
+void swap(PixelData& a, PixelData& b)
+{
+	using std::swap;
+	
+	swap(a.img, b.img);
+	swap(a.noi, b.noi);
+}
+
+PixelData::PixelData(PixelMap image, PixelMap noise)
+: img(image), noi(noise)
+{
+	// must be a valid image
+	assert(img.valid());
+	
+	// must be a valid sigma map
+	assert(noi.valid());
+	
+	// image and sigma need to agree
+	assert(agree(img, noi));
+}
+
+PixelData::PixelData(const PixelData& other)
+: img(other.img), noi(other.noi)
+{
+}
+
+PixelData& PixelData::operator=(PixelData rhs)
+{
+	swap(rhs, *this);
+	return *this;
+}
+
+double PixelData::chi_square(const PixelMap &model) const
+{
+	assert(model.valid());
+	assert(agree(model, img));
+	
+	double chi2 = 0;
+	for(std::size_t i = 0, n = model.size(); i < n; ++i)
+		chi2 += std::pow(img[i] - model[i], 2)/(model[i] + noi[i]);
+	return chi2;
 }
 
 /*

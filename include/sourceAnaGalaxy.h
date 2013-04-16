@@ -37,12 +37,12 @@ public:
 	double SurfaceBrightness(double *y){
 		double x[2] = {y[0]-galaxies[index].theta[0] , y[1]-galaxies[index].theta[1]};
 		double s = galaxies[index].SurfaceBrightness(x);
-		if (s < pow(10,-0.4*(48.6+sb_limit))/hplanck*pow(180*60*60/pi,2)) return 0.;
+		if (s < pow(10,-0.4*(48.6+sb_limit))*pow(180*60*60/pi,2)) return 0.;
 		return s;
 
 	}
-	/// Total flux coming from the current galaxy in arbitrary units
-	double getTotalFlux(){return pow(10,-(48.6+galaxies[index].getMag())/2.5)/hplanck;}
+	/// Total flux coming from the current galaxy in erg/sec/Hz/cm^2
+	double getTotalFlux(){return pow(10,-(48.6+galaxies[index].getMag())/2.5);}
 
 	void printSource();
 	// Add a pre-constructed galaxy to the source collection
@@ -64,6 +64,12 @@ public:
 			return galaxies[i];
 		return galaxies[index];
 	}
+	
+	const OverGalaxy& operator[] (std::size_t i) const {
+		if(i < galaxies.size())
+			return galaxies[i];
+		return galaxies[index];
+	}
 
 	OverGalaxy& CurrentGalaxy(){
 		return galaxies[index];
@@ -78,22 +84,21 @@ public:
 
 	unsigned long getID(){return galaxies[index].haloID;}
 
+
 	/// Return angular position of current source.
 	double *getX(){return galaxies[index].theta;}
 	/// Set angular position of current source.
 	void setX(double my_theta[2]){galaxies[index].theta[0] = my_theta[0]; galaxies[index].theta[1] = my_theta[1];}
 	void setX(double my_x,double my_y){galaxies[index].theta[0] = my_x; galaxies[index].theta[1] = my_y;}
-	std::size_t getNumberOfGalaxies(){return galaxies.size();}
+	std::size_t getNumberOfGalaxies() const {return galaxies.size();}
 
 	void multiplier(double z,double mag_cut,int Multiplicity,long *seed);
 
-	void setSBlimit(float limit) {sb_limit = limit;}
 
 private:
 	Band band;
 	float mag_limit;
 	std::size_t index;
-	float sb_limit;
 
 	std::vector<OverGalaxy> galaxies;
 	std::string input_gal_file;

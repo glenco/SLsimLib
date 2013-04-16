@@ -7,24 +7,31 @@
 #ifndef GALAXIES_OVERZIER_H_
 #define GALAXIES_OVERZIER_H_
 
+// define pi here if not done via include
+#ifndef pi
+#define pi 3.141592653589793238462643383279502884
+#endif
+
 /**
  *\brief Structure for holding parameters for one or more galaxy images according to
  * the Overzier model.
  */
 struct OverGalaxy{
 	OverGalaxy();
-	OverGalaxy(double mag,double BtoT,double Reff,double Rh,double PA,double inclination,unsigned long my_id,double my_z=0,double *theta=0);
+	OverGalaxy(double mag,double BtoT,double Reff,double Rh,double PA,double inclination,unsigned long my_id,double my_z=0,const double *theta=0);
 	~OverGalaxy();
 
-	void setInternals(double mag,double BtoT,double Reff,double Rh,double PA,double inclination,unsigned long my_id,double my_z=0,double *my_theta=0);
+	void setInternals(double mag,double BtoT,double Reff,double Rh,double PA,double inclination,unsigned long my_id,double my_z=0,const double *my_theta=0);
 	double SurfaceBrightness(double *x);
 	void print();
-	double getMag(){return mag;}
+	double getMag() const { return mag; }
 	/// bulge half light radius
-	double getReff(){return Reff;}
+	double getReff() const { return Reff/(pi/180/60/60); }
 	/// disk scale height
-	double getRh(){return Rh;}
-	double getBtoT(){return  Reff*Reff*sbSo*pow(10,mag/2.5)/94.484376;}
+	double getRh() const { return Rh/(pi/180/60/60); }
+	double getBtoT() const { return BtoT; }
+	double getPA() const { return PA; }
+	double getInclination() const { return inclination; }
 
 	/// haloID
 	unsigned long haloID;
@@ -33,8 +40,6 @@ struct OverGalaxy{
 	/// position on the sky
 	double theta[2];
 	/// returns the maximum radius of the source galaxy TODO This needs to be done better.
-	double getRadius(){return 6*(Reff > Rh ? Reff : Rh);}
-
 
 	// colors
 	double mag_u;
@@ -48,11 +53,22 @@ struct OverGalaxy{
 	double mag_i1;
 	double mag_i2;
 
+	/*6*(Reff > Rh ? Reff : Rh)*/
+			// weighted mean between the radii that enclose 99% of the flux
+			// in the pure De Vacouleur/exponential disk case
+			// 6.670 = 3.975*Re = 3.975*1.678*Rh
+	double getRadius(){return
+		6.670*Rh*(1-BtoT)+18.936*Reff*BtoT;}
+
 private:
 	/// bulge half light radius
 	double Reff;
 	/// disk scale height
 	double Rh;
+
+	double BtoT;
+	double PA;
+	double inclination;
 
 	double cxx,cyy,cxy;
 	double sbDo;
