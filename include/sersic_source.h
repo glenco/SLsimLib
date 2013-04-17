@@ -1,0 +1,42 @@
+/*
+ * sersic_source.h
+ *
+ *  Created on: Mar 6, 2010
+ *      Author: R.B. Metcalf
+ */
+#ifndef SERSIC_SOURCE_H_
+#define SERSIC_SOURCE_H_
+
+#include "source.h"
+
+class SersicSource : public Source
+{
+public:
+	SersicSource();
+	SersicSource(double mag,double Reff,double PA,double my_index,double my_q,double my_z=0,const double *theta=0);
+	~SersicSource();
+	
+	void setInternals(double mag,double Reff,double PA,double my_index,double my_q,double my_z=0,const double *theta=0);
+	
+	inline double getMag() { return mag; }
+	// approximation of the radius that encloses 99% of the flux
+	inline double getRadius() { return (3.73 - 0.926*index + 1.164*index*index)*Reff; }
+	inline double getPA() { return PA; }
+	
+	double SurfaceBrightness(double *x);
+	inline double getTotalFlux() {return flux;}
+	void printSource();
+	
+private:
+	void assignParams(InputParams& params);
+	double Reff;
+	double mag;
+	double PA;
+	double index;
+	double bn;
+	double q;
+	double Ieff;
+	double flux;
+};
+
+#endif /* GALAXIES_SERSIC_H_ */

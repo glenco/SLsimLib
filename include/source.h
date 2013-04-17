@@ -9,23 +9,22 @@
 #define SOURCE_H_
 
 #include "standard.h"
-#include "galaxies.h"
 #include "InputParams.h"
 
-class Source{
+class Source
+{
 public:
 
 	  Source();
 	  virtual ~Source();
-
+	  
 	  // in lens.cpp
 	  /// Surface brightness of source in grid coordinates not source centered coordinates.
 	  virtual double SurfaceBrightness(double *y) = 0;
 	  virtual double getTotalFlux() = 0;
 	  virtual void printSource() = 0;
 	  double getSBlimit(){return sb_limit;}
-
-
+	  
 	  // accessor functions that will sometimes be over ridden in class derivatives
 	  /// Redshift of source
 	  virtual inline double getZ(){return zsource;}
@@ -61,36 +60,6 @@ protected:
 };
 
 typedef Source *SourceHndl;
-
-class SersicSource: public Source{
-public:
-	SersicSource();
-	SersicSource(double mag,double Reff,double PA,double my_index,double my_q,double my_z=0,const double *theta=0);
-	~SersicSource();
-
-	void setInternals(double mag,double Reff,double PA,double my_index,double my_q,double my_z=0,const double *theta=0);
-
-	inline double getMag() { return mag; }
-	// approximation of the radius that encloses 99% of the flux
-	inline double getRadius() { return (3.73 - 0.926*index + 1.164*index*index)*Reff; }
-	inline double getPA() { return PA; }
-
-	double SurfaceBrightness(double *x);
-	inline double getTotalFlux() {return flux;}
-	void printSource();
-
-private:
-	void assignParams(InputParams& params);
-	double Reff;
-	double mag;
-	double PA;
-	double index;
-	double bn;
-	double q;
-	double Ieff;
-	double flux;
-};
-
 
 class PixelledSource: public Source{
 public:

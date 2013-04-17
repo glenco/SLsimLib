@@ -21,13 +21,13 @@ MultiSourceAnaGalaxy::MultiSourceAnaGalaxy(
 		): Source(),index(0){
 
 	sb_limit = 30.;
-	galaxies.push_back(OverGalaxy(mag,BtoT,Reff,Rh,PA,inclination,0,my_z,my_theta));
+	galaxies.push_back(OverzierSource(mag,BtoT,Reff,Rh,PA,inclination,0,my_z,my_theta));
 }
 /** Constructor for passing in a pointer to the galaxy model or a list of galaxies instead of constructing it internally.
 *   Useful when there is a list of pre-allocated sources.  The redshifts and sky positions need to be set separately.
 */
 MultiSourceAnaGalaxy::MultiSourceAnaGalaxy(
-		OverGalaxy *my_galaxy
+		OverzierSource *my_galaxy
 		): Source(),index(0){
 
 	sb_limit = 30.;
@@ -47,7 +47,7 @@ MultiSourceAnaGalaxy::MultiSourceAnaGalaxy(
 
 	std::cout << "Constructing SourceAnaGalaxy" << std::endl;
 
-	readDataFile(input_gal_file);
+	readDataFile();
 	index = 0;
 }
 
@@ -56,7 +56,7 @@ MultiSourceAnaGalaxy::~MultiSourceAnaGalaxy()
 }
 
 /// read in galaxies from a Millennium simulation file
-void MultiSourceAnaGalaxy::readDataFile(std::string input_gal_file){
+void MultiSourceAnaGalaxy::readDataFile(){
 
 	char c='0';
 	//int type;
@@ -82,7 +82,7 @@ void MultiSourceAnaGalaxy::readDataFile(std::string input_gal_file){
 	//file_in >> Ngalaxies;
 	//std::cout << "Number of source galaxies: " << Ngalaxies << std::endl;
 
-	//TODO Using a vector of pointer to OverGalaxy is inefficient for mem.  check that a default copy would work for adding galaxies
+	//TODO Using a vector of pointer to OverzierSource is inefficient for mem.  check that a default copy would work for adding galaxies
 	i=0;
 	while(file_in.peek() == '#'){
 		file_in.ignore(10000,'\n');
@@ -92,7 +92,7 @@ void MultiSourceAnaGalaxy::readDataFile(std::string input_gal_file){
 
 	double theta[2] = {0.0,0.0};
 
-	int ncolumns = 31;
+	const int ncolumns = 31;
 
 	void *addr[ncolumns];
 	addr[0] = &GalID;
@@ -258,7 +258,7 @@ void MultiSourceAnaGalaxy::readDataFile(std::string input_gal_file){
 
 			/***************************/
 			galaxies.push_back(
-					OverGalaxy(mag,pow(10,-(mag_bulge-mag)/2.5),Ref,Rh
+					OverzierSource(mag,pow(10,-(mag_bulge-mag)/2.5),Ref,Rh
 							,pa,inclination,HaloID,z_cosm,theta)
 			);
 
@@ -327,25 +327,25 @@ void MultiSourceAnaGalaxy::multiplier(
 	double x1[2],x2[2],theta[2];
 
 	for(unsigned long i=0;i<Nold;++i){
-		if(galaxies[i].theta[0] < x1[0]) x1[0] = galaxies[i].theta[0];
-		if(galaxies[i].theta[0] > x2[0]) x2[0] = galaxies[i].theta[0];
-		if(galaxies[i].theta[1] < x1[1]) x1[1] = galaxies[i].theta[1];
-		if(galaxies[i].theta[1] > x2[1]) x2[1] = galaxies[i].theta[1];
+		if(galaxies[i].getX()[0] < x1[0]) x1[0] = galaxies[i].getX()[0];
+		if(galaxies[i].getX()[0] > x2[0]) x2[0] = galaxies[i].getX()[0];
+		if(galaxies[i].getX()[1] < x1[1]) x1[1] = galaxies[i].getX()[1];
+		if(galaxies[i].getX()[1] > x2[1]) x2[1] = galaxies[i].getX()[1];
 
-		if(galaxies[i].z > z && galaxies[i].getMag() < mag_cut) ++NtoAdd;
+		if(galaxies[i].getZ() > z && galaxies[i].getMag() < mag_cut) ++NtoAdd;
 	}
 
 	NtoAdd = 0;
 	for(unsigned long i=0;i<Nold;++i){
-		if(galaxies[i].z > z && galaxies[i].getMag() < mag_cut){
+		if(galaxies[i].getZ() > z && galaxies[i].getMag() < mag_cut){
 
 			for(int j=0;j<multiplicity;++j){
 				theta[0] = x1[0] + (x2[0] - x1[0])*ran2(seed);
 				theta[1] = x1[1] + (x2[1] - x1[1])*ran2(seed);
 
-				galaxies.push_back(OverGalaxy(galaxies[i].getMag(),galaxies[i].getBtoT(),galaxies[i].getReff()
+				galaxies.push_back(OverzierSource(galaxies[i].getMag(),galaxies[i].getBtoT(),galaxies[i].getReff()
 					,galaxies[i].getRh(),ran2(seed)*pi,ran2(seed)*2*pi
-					,Nold+NtoAdd,galaxies[i].z,theta));
+					,Nold+NtoAdd,galaxies[i].getZ(),theta));
 
 				++NtoAdd;
 			}
@@ -357,5 +357,5 @@ void MultiSourceAnaGalaxy::multiplier(
 /// Print info on current source parameters
 void MultiSourceAnaGalaxy::printSource(){
 	std::cout << "Overzier Galaxy Model" << std::endl;
-	galaxies[index].print();
+	galaxies[index].printSource();
 }
