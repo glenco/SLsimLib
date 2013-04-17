@@ -71,6 +71,13 @@ private:
 	bool inMapBox(Branch * branch1);
 };
 
+/** \ingroup Image
+ * \brief It creates a realistic image from the output of a ray-tracing simulation.
+ * It translates pixel values in observed units (counts/sec), applies PSF and noise.
+ * Input must be in photons/(cm^2*Hz)
+ *
+ */
+
 class Observation
 {
 public:
