@@ -13,6 +13,30 @@ MultiSource::MultiSource(InputParams& params)
 	// check if there is a sb_limit set
 	if(!params.get("source_sb_limit", sb_limit))
 		sb_limit = 30.;
+	
+	// check if there is a Millenium data file
+	std::string input_galaxy_file;
+	if(params.get("input_galaxy_file", input_galaxy_file))
+	{
+		Band band;
+		double mag_limit;
+		
+		if(!params.get("source_band", band))
+		{
+			std::cerr << "ERROR: Must assign source_band in parameter file " << params.filename() << std::endl;
+			std::cerr << "Could be that specified band is not available " << std::endl;
+			exit(1);
+		}
+		
+		if(!params.get("source_mag_limit", mag_limit))
+		{
+			std::cerr << "ERROR: Must assign source_mag_limit in parameter file " << params.filename() << std::endl;
+			exit(1);
+		}
+		
+		// load galaxies from input file
+		readGalaxyFile(input_galaxy_file, band, mag_limit);
+	}
 }
 
 MultiSource::MultiSource(const MultiSource& other)

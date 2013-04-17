@@ -156,6 +156,9 @@ private:
 	/// add a source to the internal list
 	void addInternal(Source* source, const std::type_info& type, bool owned);
 	
+	/// read a Millenium galaxy data file
+	void readGalaxyFile(std::string filename, Band band, double mag_limit);
+	
 	/// the current source index
 	std::size_t index;
 	
