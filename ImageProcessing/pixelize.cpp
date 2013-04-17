@@ -260,7 +260,7 @@ void PixelMap::AddImages(
 		ImageInfo *imageinfo   /// An array of ImageInfo-s.  There is no reason to separate images for this routine
 		,int Nimages           /// Number of images on input.
 		,float rescale         /// rescales the surface brightness while leaving the image unchanged
-			                   /// , rescale==0 gives constant surface brightness
+			                   /// , rescale==0 gives constant surface brightness (default: 1)
 		){
 
 	if(Nimages <= 0) return;
@@ -725,7 +725,7 @@ Observation::Observation(float zeropoint):
 		mag_zeropoint(zeropoint)
 {
 }
-// TODO comment
+
 void swap(PixelMask& x, PixelMask& y)
 	{
 
@@ -735,12 +735,12 @@ void swap(PixelMask& x, PixelMask& y)
 	swap(x.mask_size, y.mask_size);
 	swap(x.pixels, y.pixels);
 }
-// TODO comment
+
 PixelMask::PixelMask()
 : map_size(0), mask_size(0)
 {
 }
-// TODO comment
+
 PixelMask::PixelMask(std::size_t map_size)
 : map_size(map_size), mask_size(map_size)
 {
@@ -748,7 +748,7 @@ PixelMask::PixelMask(std::size_t map_size)
 	for(std::size_t i = 0; i < map_size; ++i)
 		pixels[i] = true;
 }
-// TODO comment
+
 PixelMask::PixelMask(const PixelMap& base, double threshold, ThresholdType type)
 : map_size(base.size())
 {
@@ -781,7 +781,7 @@ PixelMask::PixelMask(const PixelMap& base, double threshold, ThresholdType type)
 	mask_size = pixels.size();
 	pixels.resize(mask_size);
 }
-// TODO comment
+
 PixelMask::PixelMask(std::string file, double threshold, ThresholdType type)
 {
 #ifdef ENABLE_FITS
@@ -804,38 +804,38 @@ PixelMask::PixelMask(std::string file, double threshold, ThresholdType type)
 	swap(*this, mask);
 #endif
 }
-// TODO Again, this is really a swap, not a copy
+
 PixelMask& PixelMask::operator=(PixelMask other)
 {
 	swap(*this, other);
 	return *this;
 }
-// TODO comment
+
 std::size_t PixelMask::operator[](std::size_t i) const
 {
 	return pixels[i];
 }
-// TODO comment
+
 bool PixelMask::valid() const
 {
 	return map_size;
 }
-// TODO comment
+
 bool PixelMask::empty() const
 {
 	return !mask_size;
 }
-// TODO comment
+
 std::size_t PixelMask::size() const
 {
 	return mask_size;
 }
-// TODO comment
+
 std::size_t PixelMask::base_size() const
 {
 	return map_size;
 }
-// TODO comment
+
 void swap(PixelData& a, PixelData& b)
 {
 	using std::swap;
@@ -843,8 +843,8 @@ void swap(PixelData& a, PixelData& b)
 	swap(a.img, b.img);
 	swap(a.noi, b.noi);
 }
-// TODO comment
-PixelData::PixelData(PixelMap image, PixelMap noise)
+
+PixelData::PixelData(const PixelMap& image, const PixelMap& noise)
 : img(image), noi(noise)
 {
 	// must be a valid image
@@ -861,13 +861,13 @@ PixelData::PixelData(const PixelData& other)
 : img(other.img), noi(other.noi)
 {
 }
-// TODO swap, not copy
+
 PixelData& PixelData::operator=(PixelData rhs)
 {
 	swap(rhs, *this);
 	return *this;
 }
-// TODO comment
+
 double PixelData::chi_square(const PixelMap &model) const
 {
 	assert(model.valid());

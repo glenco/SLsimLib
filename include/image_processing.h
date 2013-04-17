@@ -41,7 +41,7 @@ public:
 	
 	void Clean();
 
-	void AddImages(ImageInfo *imageinfo,int Nimages,float rescale);
+	void AddImages(ImageInfo *imageinfo,int Nimages,float rescale = 1.);
 	//void AddImages(ImageInfo *imageinfo,int Nimages,double sigma);
 	void Renormalize(double factor);
 	void AddValue(std::size_t i, double value);
@@ -236,9 +236,8 @@ public:
 	 * 
 	 * \param image The data image.
 	 * \param noise The noise image.
-	 * 
 	 */
-	PixelData(PixelMap image, PixelMap noise);
+	PixelData(const PixelMap& image, const PixelMap& noise);
 	
 	/**
 	 * Copy constructor.
