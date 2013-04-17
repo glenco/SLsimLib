@@ -13,10 +13,9 @@
 
 
 /** \ingroup Image
- * \brief Takes images and pixelizes the flux into regular pixel grid.
+ * \brief Takes image structure and pixelizes the flux into regular pixel grid which then
+ * can be exported as a fits file, smoothed, etc. like an image.
  *
- * The routine constructs an internal tree structure of the pixel points for fast calculation of location
- * of each point in the images.
  */
 
 class PixelMap

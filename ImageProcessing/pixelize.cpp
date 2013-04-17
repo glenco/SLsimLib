@@ -39,7 +39,7 @@ void swap(PixelMap& x, PixelMap& y)
 	swap(x.map_boundary_p2[0], y.map_boundary_p2[0]);
 	swap(x.map_boundary_p2[1], y.map_boundary_p2[1]);
 }
-
+// TODO comment
 bool agree(const PixelMap& a, const PixelMap& b)
 {
 	return (a.Npixels == b.Npixels) && (a.resolution == b.resolution) &&
@@ -93,7 +93,7 @@ PixelMap::PixelMap(
 	map = new float[map_size];
 	std::fill(map, map + map_size, 0);
 }
-
+// TODO comment, what is filename?
 PixelMap::PixelMap(std::string filename)
 {
 #ifdef ENABLE_FITS
@@ -140,7 +140,7 @@ PixelMap::PixelMap(std::string filename)
 
 }
 
-// Copy constructor. If degrading_factor > 1., it creates a PixelMap with a lower resolution.
+/// TODO (What happens when degrading_factor < 1???) Copy constructor. If degrading_factor > 1., it creates a PixelMap with a lower resolution.
 PixelMap::PixelMap(const PixelMap& pmap, double degrading_factor)
 	{
 
@@ -189,7 +189,9 @@ PixelMap::~PixelMap()
 	delete[] map;
 
 }
-
+/* TODO I don't like this because it is not what you would expect the "=" operator to do.
+ * This is a swap and not a copy.
+*/
 PixelMap& PixelMap::operator=(PixelMap other)
 {
 	swap(*this, other);
@@ -257,6 +259,7 @@ void PixelMap::AddImages(
 	return;
 }
 
+/// returns the grid points within the branch
 void PixelMap::PointsWithinLeaf(Branch * branch1, std::list <unsigned long> &neighborlist){
 
 	neighborlist.clear();
@@ -278,13 +281,14 @@ void PixelMap::PointsWithinLeaf(Branch * branch1, std::list <unsigned long> &nei
 			}
 		}
 }
-
+/// checks if the branch is within map boundaries
 bool PixelMap::inMapBox(Branch * branch1){
 	if (branch1->boundary_p1[0] > map_boundary_p2[0] || branch1->boundary_p2[0] < map_boundary_p1[0]) return false;
 	if (branch1->boundary_p1[1] > map_boundary_p2[1] || branch1->boundary_p2[1] < map_boundary_p1[1]) return false;
 	return true;
 }
 
+//// Finds the area of the intersection between pixel i and branch1
 double PixelMap::LeafPixelArea(IndexType i,Branch * branch1){
 	double area=0;
 	PosType p[2],p1[2],p2[2];
@@ -392,7 +396,7 @@ void PixelMap::printASCIItoFile(std::string filename){
 
 	return;
 }
-// Output the pixel map as a fits file.
+/// Output the pixel map as a fits file.
 void PixelMap::printFITS(std::string filename){
 
 #ifdef ENABLE_FITS
@@ -524,9 +528,10 @@ void PixelMap::smooth(double sigma){
 
 }
 
-// Smooths the image with a PSF map.
-// oversample_n allows for an oversampled psf image.
-// (In principle, this should be readable directly from the fits header.)
+/** \brief Smooths the image with a PSF map.
+* oversample_n allows for an oversampled psf image.
+* (In principle, this should be readable directly from the fits header.)
+*/
 PixelMap Observation::ApplyPSF(PixelMap &pmap)
 {
 	if (map_psf.size() == 0)
@@ -630,6 +635,7 @@ PixelMap Observation::ApplyPSF(PixelMap &pmap)
 	}
 }
 
+// TODO comment
 PixelMap Observation::AddNoise(PixelMap &pmap)
 {
 	PixelMap outmap(pmap);
@@ -648,7 +654,7 @@ PixelMap Observation::AddNoise(PixelMap &pmap)
 		}
 	return outmap;
 	}
-
+// TODO comment
 PixelMap Observation::PhotonToCounts(PixelMap &pmap)
 {
 	PixelMap outmap(pmap);
@@ -656,13 +662,13 @@ PixelMap Observation::PhotonToCounts(PixelMap &pmap)
 	outmap.Renormalize(Q);
 	return outmap;
 }
-
+// TODO comment
 Observation::Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, float seeing):
 		exp_time(exp_time), exp_num(exp_num), back_mag(back_mag), diameter(diameter), transmission(transmission), ron(ron), seeing(seeing)
 		{
 			mag_zeropoint = 2.5*log10(diameter*diameter*transmission*pi/4./hplanck) - 48.6;
 		}
-
+// TODO comment
 Observation::Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, std::string psf_file, float oversample):
 		exp_time(exp_time), exp_num(exp_num), back_mag(back_mag), diameter(diameter), transmission(transmission), ron(ron), oversample(oversample)
 		{
@@ -675,18 +681,18 @@ Observation::Observation(float diameter, float transmission, float exp_time, int
 	map_psf.resize(N_psf);
 	h0->read(map_psf);
 		}
-
+// TODO comment
 Observation::Observation(float diameter, float transmission):
 		diameter(diameter), transmission(transmission)
 		{
 	mag_zeropoint = 2.5*log10(diameter*diameter*transmission*pi/4./hplanck) - 48.6;
 		}
-
+// TODO comment
 Observation::Observation(float zeropoint):
 		mag_zeropoint(zeropoint)
 {
 }
-
+// TODO comment
 void swap(PixelMask& x, PixelMask& y)
 	{
 
@@ -696,12 +702,12 @@ void swap(PixelMask& x, PixelMask& y)
 	swap(x.mask_size, y.mask_size);
 	swap(x.pixels, y.pixels);
 }
-
+// TODO comment
 PixelMask::PixelMask()
 : map_size(0), mask_size(0)
 {
 }
-
+// TODO comment
 PixelMask::PixelMask(std::size_t map_size)
 : map_size(map_size), mask_size(map_size)
 {
@@ -709,7 +715,7 @@ PixelMask::PixelMask(std::size_t map_size)
 	for(std::size_t i = 0; i < map_size; ++i)
 		pixels[i] = true;
 }
-
+// TODO comment
 PixelMask::PixelMask(const PixelMap& base, double threshold, ThresholdType type)
 : map_size(base.size())
 {
@@ -742,7 +748,7 @@ PixelMask::PixelMask(const PixelMap& base, double threshold, ThresholdType type)
 	mask_size = pixels.size();
 	pixels.resize(mask_size);
 }
-
+// TODO comment
 PixelMask::PixelMask(std::string file, double threshold, ThresholdType type)
 {
 #ifdef ENABLE_FITS
@@ -765,37 +771,38 @@ PixelMask::PixelMask(std::string file, double threshold, ThresholdType type)
 	swap(*this, mask);
 #endif
 }
-
+// TODO Again, this is really a swap, not a copy
 PixelMask& PixelMask::operator=(PixelMask other)
 {
 	swap(*this, other);
 	return *this;
 }
+// TODO comment
 std::size_t PixelMask::operator[](std::size_t i) const
 {
 	return pixels[i];
 }
-
+// TODO comment
 bool PixelMask::valid() const
 {
 	return map_size;
 }
-
+// TODO comment
 bool PixelMask::empty() const
 {
 	return !mask_size;
 }
-
+// TODO comment
 std::size_t PixelMask::size() const
 {
 	return mask_size;
 }
-
+// TODO comment
 std::size_t PixelMask::base_size() const
 {
 	return map_size;
 }
-
+// TODO comment
 void swap(PixelData& a, PixelData& b)
 {
 	using std::swap;
@@ -803,7 +810,7 @@ void swap(PixelData& a, PixelData& b)
 	swap(a.img, b.img);
 	swap(a.noi, b.noi);
 }
-
+// TODO comment
 PixelData::PixelData(PixelMap image, PixelMap noise)
 : img(image), noi(noise)
 {
@@ -821,13 +828,13 @@ PixelData::PixelData(const PixelData& other)
 : img(other.img), noi(other.noi)
 {
 }
-
+// TODO swap, not copy
 PixelData& PixelData::operator=(PixelData rhs)
 {
 	swap(rhs, *this);
 	return *this;
 }
-
+// TODO comment
 double PixelData::chi_square(const PixelMap &model) const
 {
 	assert(model.valid());

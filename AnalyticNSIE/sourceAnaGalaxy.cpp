@@ -265,15 +265,14 @@ void MultiSourceAnaGalaxy::readDataFile(std::string input_gal_file){
 							,pa,inclination,HaloID,z_cosm,theta)
 			);
 
-			galaxies.back().mag_u = SDSS_u;
-			galaxies.back().mag_g = SDSS_g;
-			galaxies.back().mag_r = SDSS_r;
-			galaxies.back().mag_i = SDSS_i;
-			galaxies.back().mag_z = SDSS_z;
-			galaxies.back().mag_u = SDSS_u;
-			galaxies.back().mag_J = J_band;
-			galaxies.back().mag_H = H_band;
-			galaxies.back().mag_Ks = Ks_band;
+			galaxies.back().setUMag(SDSS_u);
+			galaxies.back().setGMag(SDSS_g);
+			galaxies.back().setRMag(SDSS_r);
+			galaxies.back().setIMag(SDSS_i);
+			galaxies.back().setZMag(SDSS_z);
+			galaxies.back().setJMag(J_band);
+			galaxies.back().setHMag(H_band);
+			galaxies.back().setKMag(Ks_band);
 
 			//std::cout << "z:" << z_cosm << " mag " << SDSS_u << " Bulge to total " << pow(10,-(SDSS_u_Bulge-SDSS_u)/2.5)
 			//		<< " bulge size arcsec " << Ref  << " disk size arcsec " << pa << " position angle " << pa << " inclination " << inclination
