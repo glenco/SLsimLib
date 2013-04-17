@@ -26,6 +26,7 @@ public:
 	  virtual double SurfaceBrightness(double *y) = 0;
 	  virtual double getTotalFlux() = 0;
 	  virtual void printSource() = 0;
+	  // TODO Fabio: What are the units?
 	  double getSBlimit(){return sb_limit;}
 
 

@@ -75,9 +75,9 @@ PixelMap::PixelMap(const PixelMap& other)
 }
 
 PixelMap::PixelMap(
-		const double* center,  /// The location of the center of the map
-		std::size_t Npixels,  /// Number of pixels in one dimension of map.
-		double resolution        /// One dimensional range of map in whatever units the point positions are in
+		const double* center  /// The location of the center of the map
+		,std::size_t Npixels  /// Number of pixels in one dimension of map.
+		,double resolution    /// Resolution of the map - distance from pixel center to pixel center in units of center
 		): Npixels(Npixels), resolution(resolution)
 		{
 

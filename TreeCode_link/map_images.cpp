@@ -67,7 +67,6 @@ void map_images(
 	double center[2],y[2],sb,xx[2],source_flux = 0;
 	int Nsources;
 
-
 	assert(xmin > 0);
 	assert(xmax > 0);
 
@@ -638,8 +637,13 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
 		  MoveToTopKist(imageinfo[i].imagekist);
 		  for(j = 0 ; j < imageinfo[i].imagekist->Nunits() ; ++j,MoveDownKist(imageinfo[i].imagekist) ){
 
-			  if(RefinePoint2(getCurrentKist(imageinfo[i].imagekist),grid->i_tree
-						,imageinfo[i].area,total_area,criterion,res_target,nearest)){
+			  if(
+					  RefinePoint2(getCurrentKist(imageinfo[i].imagekist),grid->i_tree
+					  	,imageinfo[i].area,total_area,criterion,res_target,nearest)
+					  //RefinePoint_sb(getCurrentKist(imageinfo[i].imagekist),grid->i_tree
+					//		,imageinfo[i].area,total_area,source->getSBlimit(),nearest)
+
+			  ){
 
 				  ++Ncells;
 
@@ -744,8 +748,12 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
 			  // TODO This was taken out and i'm not sure if it was needed.
 			  //assert(getCurrentKist(imageinfo[i].outerborder)->surface_brightness == 0);
 
-			  if(RefinePoint2(getCurrentKist(imageinfo[i].outerborder),grid->i_tree
-					  ,imageinfo[i].area,total_area,criterion,res_target,nearest)){
+			  if(
+					  RefinePoint2(getCurrentKist(imageinfo[i].outerborder),grid->i_tree
+					  ,imageinfo[i].area,total_area,criterion,res_target,nearest)
+					  //RefinePoint_sb(getCurrentKist(imageinfo[i].outerborder),grid->i_tree
+					  //    ,imageinfo[i].area,total_area,source->getSBlimit(),nearest)
+			  ){
 
 				  if(getCurrentKist(imageinfo[i].outerborder)->in_image != MAYBE){
 					  getCurrentKist(imageinfo[i].outerborder)->in_image = MAYBE;
@@ -966,6 +974,27 @@ bool RefinePoint2(Point *point,TreeHndl i_tree,double image_area,double total_ar
 
 	if( ( criterion == EachImage || criterion == FillHoles ) && error > res_target*image_area ) return true;
 	if( criterion == TotalArea && error > res_target*total_area ) return true;
+
+	return false;
+}
+// refinement criterion based on difference in surface brightness
+bool RefinePoint_sb(Point *point,TreeHndl i_tree,double image_area,double total_area
+		,double sb_limit,Kist<Point> * nearest){
+
+	nearest->Empty();
+	// Prevent cell from getting so small that precision error prevents everything from working
+	if(point->gridsize <= pow(10.,1 - DBL_DIG)) return false;  // this shouldn't be necessary every time
+
+	if( image_area < 1.0e-3*total_area ) return false;
+	if(pow(point->gridsize,2)*(point->surface_brightness/maxflux) > 1.0e-4*image_area)
+		return false;;
+
+	i_tree->FindAllBoxNeighborsKist(point,nearest);
+	MoveToTopKist(nearest);
+	do{
+		if(sb_limit < fabs(getCurrentKist(nearest)->surface_brightness - point->surface_brightness) )
+			return true;
+	}while(MoveDownKist(nearest));
 
 	return false;
 }
