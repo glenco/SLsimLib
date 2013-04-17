@@ -18,9 +18,6 @@ public:
 	  Source();
 	  virtual ~Source();
 
-	  /// names of clump and sb models
-	  typedef enum {Uniform,Gaussian,BLR_Disk,BLR_Sph1,BLR_Sph2,MultiAnaSource,Pixelled,Sersic} SBModel;
-
 	  // in lens.cpp
 	  /// Surface brightness of source in grid coordinates not source centered coordinates.
 	  virtual double SurfaceBrightness(double *y) = 0;
@@ -47,7 +44,6 @@ public:
 	  void setSBlimit(float limit) {sb_limit = limit;}
 
 protected:
-	  SBModel source_sb_type;
 	  virtual void assignParams(InputParams& params) = 0;
 
 	  // source parameters

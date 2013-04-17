@@ -20,7 +20,6 @@ MultiSourceAnaGalaxy::MultiSourceAnaGalaxy(
 		,double *my_theta          /// position on the sky
 		): Source(),index(0){
 
-	source_sb_type = MultiAnaSource;
 	sb_limit = 30.;
 	galaxies.push_back(OverGalaxy(mag,BtoT,Reff,Rh,PA,inclination,0,my_z,my_theta));
 }
@@ -31,7 +30,6 @@ MultiSourceAnaGalaxy::MultiSourceAnaGalaxy(
 		OverGalaxy *my_galaxy
 		): Source(),index(0){
 
-	source_sb_type = MultiAnaSource;
 	sb_limit = 30.;
 	galaxies.push_back(*my_galaxy);
 }
@@ -40,7 +38,6 @@ MultiSourceAnaGalaxy::MultiSourceAnaGalaxy(
 		InputParams& params   /// Input data file for galaxies
 		): Source(),index(0){
 
-	source_sb_type = MultiAnaSource;
 	if(!params.get("input_galaxy_file",input_gal_file)){
 		std::cout << "ERROR: input_galaxy_file not found in parameter file " << params.filename() << std::endl;
 		exit(1);
