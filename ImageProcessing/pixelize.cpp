@@ -75,7 +75,7 @@ PixelMap::PixelMap(const PixelMap& other)
 }
 
 PixelMap::PixelMap(
-		double* center,  /// The location of the center of the map
+		const double* center,  /// The location of the center of the map
 		std::size_t Npixels,  /// Number of pixels in one dimension of map.
 		double resolution        /// One dimensional range of map in whatever units the point positions are in
 		): Npixels(Npixels), resolution(resolution)
@@ -143,7 +143,7 @@ PixelMap::PixelMap(std::string filename)
 
 /// Creates a new PixelMap from a region of a PixelMap.
 PixelMap::PixelMap(const PixelMap& pmap,  /// Input PixelMap (from which the stamp is taken)
-		double* center, /// center of the region to be duplicated (in rads)
+		const double* center, /// center of the region to be duplicated (in rads)
 		std::size_t Npixels /// size of the region to be duplicated (in pixels)
 		): resolution(pmap.resolution), Npixels(Npixels)
 	{
