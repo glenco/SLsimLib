@@ -75,8 +75,8 @@ public:
 	void setInternals(double mag,double Reff,double PA,double my_index,double my_q,double my_z=0,const double *theta=0);
 
 	inline double getMag() { return mag; }
-	/// bulge half light radius
-	inline double getRadius() { return Reff*5.; }
+	// approximation of the radius that encloses 99% of the flux
+	inline double getRadius() { return (3.73 - 0.926*index + 1.164*index*index)*Reff; }
 	inline double getPA() { return PA; }
 
 	double SurfaceBrightness(double *x);
