@@ -75,9 +75,9 @@ PixelMap::PixelMap(const PixelMap& other)
 }
 
 PixelMap::PixelMap(
-		const double* center  /// The location of the center of the map
-		,std::size_t Npixels  /// Number of pixels in one dimension of map.
-		,double resolution    /// Resolution of the map - distance from pixel center to pixel center in units of center
+		double* center,  /// The location of the center of the map
+		std::size_t Npixels,  /// Number of pixels in one dimension of map.
+		double resolution        /// One dimensional range of map in whatever units the point positions are in
 		): Npixels(Npixels), resolution(resolution)
 		{
 
@@ -140,6 +140,39 @@ PixelMap::PixelMap(std::string filename)
 
 }
 
+/// Creates a new PixelMap from a region of a PixelMap.
+PixelMap::PixelMap(const PixelMap& pmap,  /// Input PixelMap (from which the stamp is taken)
+		double* center, /// center of the region to be duplicated (in rads)
+		std::size_t Npixels /// size of the region to be duplicated (in pixels)
+		): resolution(pmap.resolution), Npixels(Npixels)
+	{
+		std::copy(center, center + 2, this->center);
+		range = resolution*(Npixels-1);
+
+		map_boundary_p1[0] = center[0]-(Npixels*resolution)/2.;
+		map_boundary_p1[1] = center[1]-(Npixels*resolution)/2.;
+		map_boundary_p2[0] = center[0]+(Npixels*resolution)/2.;
+		map_boundary_p2[1] = center[1]+(Npixels*resolution)/2.;
+
+		map_size = Npixels*Npixels;
+		map = new float[map_size];
+
+		int * edge = new int[2];
+		edge[0] = (center[0]-pmap.map_boundary_p1[0])/resolution - Npixels/2;
+		edge[1] = (center[1]-pmap.map_boundary_p1[1])/resolution - Npixels/2;
+		if (edge[0] < 0 || edge[1] < 0 || edge[0]+Npixels > pmap.Npixels || edge[1]+Npixels > pmap.Npixels)
+		{
+			std::cout << "The region you selected is not fully contained in the PixelMap!" << std::endl;
+			exit(1);
+		}
+		for (unsigned long i=0; i < map_size; ++i)
+		{
+			int ix = i%Npixels;
+			int iy = i/Npixels;
+			map[i] = pmap.map[ix+edge[0]+(iy+edge[1])*pmap.Npixels];
+		}
+	}
+
 /// TODO (What happens when degrading_factor < 1???) Copy constructor. If degrading_factor > 1., it creates a PixelMap with a lower resolution.
 PixelMap::PixelMap(const PixelMap& pmap, double degrading_factor)
 	{
@@ -189,9 +222,7 @@ PixelMap::~PixelMap()
 	delete[] map;
 
 }
-/* TODO I don't like this because it is not what you would expect the "=" operator to do.
- * This is a swap and not a copy.
-*/
+
 PixelMap& PixelMap::operator=(PixelMap other)
 {
 	swap(*this, other);
@@ -227,7 +258,7 @@ void PixelMap::AddImages(
 		ImageInfo *imageinfo   /// An array of ImageInfo-s.  There is no reason to separate images for this routine
 		,int Nimages           /// Number of images on input.
 		,float rescale         /// rescales the surface brightness while leaving the image unchanged
-			                   /// , rescale==0 gives constant surface brightness
+			                   /// , rescale==0 gives constant surface brightness (default: 1)
 		){
 
 	if(Nimages <= 0) return;
@@ -692,7 +723,7 @@ Observation::Observation(float zeropoint):
 		mag_zeropoint(zeropoint)
 {
 }
-// TODO comment
+
 void swap(PixelMask& x, PixelMask& y)
 	{
 
@@ -702,12 +733,12 @@ void swap(PixelMask& x, PixelMask& y)
 	swap(x.mask_size, y.mask_size);
 	swap(x.pixels, y.pixels);
 }
-// TODO comment
+
 PixelMask::PixelMask()
 : map_size(0), mask_size(0)
 {
 }
-// TODO comment
+
 PixelMask::PixelMask(std::size_t map_size)
 : map_size(map_size), mask_size(map_size)
 {
@@ -715,7 +746,7 @@ PixelMask::PixelMask(std::size_t map_size)
 	for(std::size_t i = 0; i < map_size; ++i)
 		pixels[i] = true;
 }
-// TODO comment
+
 PixelMask::PixelMask(const PixelMap& base, double threshold, ThresholdType type)
 : map_size(base.size())
 {
@@ -748,7 +779,7 @@ PixelMask::PixelMask(const PixelMap& base, double threshold, ThresholdType type)
 	mask_size = pixels.size();
 	pixels.resize(mask_size);
 }
-// TODO comment
+
 PixelMask::PixelMask(std::string file, double threshold, ThresholdType type)
 {
 #ifdef ENABLE_FITS
@@ -771,38 +802,38 @@ PixelMask::PixelMask(std::string file, double threshold, ThresholdType type)
 	swap(*this, mask);
 #endif
 }
-// TODO Again, this is really a swap, not a copy
+
 PixelMask& PixelMask::operator=(PixelMask other)
 {
 	swap(*this, other);
 	return *this;
 }
-// TODO comment
+
 std::size_t PixelMask::operator[](std::size_t i) const
 {
 	return pixels[i];
 }
-// TODO comment
+
 bool PixelMask::valid() const
 {
 	return map_size;
 }
-// TODO comment
+
 bool PixelMask::empty() const
 {
 	return !mask_size;
 }
-// TODO comment
+
 std::size_t PixelMask::size() const
 {
 	return mask_size;
 }
-// TODO comment
+
 std::size_t PixelMask::base_size() const
 {
 	return map_size;
 }
-// TODO comment
+
 void swap(PixelData& a, PixelData& b)
 {
 	using std::swap;
@@ -810,8 +841,8 @@ void swap(PixelData& a, PixelData& b)
 	swap(a.img, b.img);
 	swap(a.noi, b.noi);
 }
-// TODO comment
-PixelData::PixelData(PixelMap image, PixelMap noise)
+
+PixelData::PixelData(const PixelMap& image, const PixelMap& noise)
 : img(image), noi(noise)
 {
 	// must be a valid image
@@ -828,13 +859,13 @@ PixelData::PixelData(const PixelData& other)
 : img(other.img), noi(other.noi)
 {
 }
-// TODO swap, not copy
+
 PixelData& PixelData::operator=(PixelData rhs)
 {
 	swap(rhs, *this);
 	return *this;
 }
-// TODO comment
+
 double PixelData::chi_square(const PixelMap &model) const
 {
 	assert(model.valid());
