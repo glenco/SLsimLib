@@ -24,7 +24,8 @@ public:
 	PixelMap(const PixelMap& pmap, double degrading_factor);
 	PixelMap();
 	PixelMap(const PixelMap& other);
-	PixelMap(const double* center, std::size_t Npixels, double resolution);
+	PixelMap(const PixelMap& pmap, double* center, std::size_t Npixels);
+	PixelMap(double* center, std::size_t Npixels, double resolution);
 	PixelMap(std::string filename);
 	~PixelMap();
 	
