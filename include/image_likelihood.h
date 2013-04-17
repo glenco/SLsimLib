@@ -66,8 +66,8 @@ public:
 	/**
 	 * Calculate the likelihood for the provided model.
 	 */
-	template<typename Source, typename Lens>
-	double operator()(Model<Source, Lens>& model)
+	template<typename Lens, typename Source>
+	double operator()(Model<Lens, Source>& model)
 	{
 		// create a grid for the model
 		Grid grid(model.lens, (int)grid_points, grid_center, grid_range);
@@ -77,25 +77,25 @@ public:
 		
 		// do the mapping
 		map_images(
-				   model.lens, // Lens* lens
-				   model.source, // Source* source
-				   &grid, // Grid* grid
-				   &image_count, // int* Nimages
-				   images, // ImageInfo* imageinfo
-				   (int)images_size, // int Nimagesmax
-				   model.source->getRadius(), // double xmax
-				   0.1*model.source->getRadius(), // double xmin
-				   0, // double initial_size
-				   EachImage, // ExitCriterion criterion
-				   true, // bool kappa_off
-				   false, // bool FindCenter
-				   true // bool divide_images
-				   );
+			model.lens, // Lens* lens
+			model.source, // Source* source
+			&grid, // Grid* grid
+			&image_count, // int* Nimages
+			images, // ImageInfo* imageinfo
+			(int)images_size, // int Nimagesmax
+			model.source->getRadius(), // double xmax
+			0.1*model.source->getRadius(), // double xmin
+			0, // double initial_size
+			EachImage, // ExitCriterion criterion
+			true, // bool kappa_off
+			false, // bool FindCenter
+			true // bool divide_images
+		);
 		
 		// build the fit image
 		// TODO: loop for multi source
 		PixelMap image(dta.getCenter(), dta.getNpixels(), dta.getResolution());
-		image.AddImages(images, image_count, false);
+		image.AddImages(images, image_count);
 		
 		// return multinormal log-likelihood
 		return -0.5*dta.chi_square(image);
