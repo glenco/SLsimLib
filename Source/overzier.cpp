@@ -1,5 +1,5 @@
 /*
- * Galaxies/overzier.cpp
+ * Source/overzier.cpp
  *
  *  Created on: Apr 12, 2012
  *      Author: bmetcalf
@@ -9,7 +9,7 @@
  */
 #include "slsimlib.h"
 
-OverGalaxy::OverGalaxy()
+OverzierSource::OverzierSource()
 : haloID(0), z(0), Reff(0), Rh(0), BtoT(0), PA(0), inclination(0),
   cxx(0), cyy(0), cxy(0), sbDo(0), sbSo(0), mag(0)
 {
@@ -17,7 +17,7 @@ OverGalaxy::OverGalaxy()
 	theta[1] = 0;
 }
 
-OverGalaxy::OverGalaxy(
+OverzierSource::OverzierSource(
 		double my_mag              /// Total magnitude
 		,double my_BtoT            /// Bulge to total ratio
 		,double my_Reff         /// Bulge half light radius (arcs)
@@ -31,12 +31,12 @@ OverGalaxy::OverGalaxy(
 	setInternals(my_mag,my_BtoT,my_Reff,my_Rh,my_PA,my_inclination,my_id,my_z,my_theta);
 }
 
-OverGalaxy::~OverGalaxy()
+OverzierSource::~OverzierSource()
 {
 }
 
 /// Sets internal variables.  If default constructor is used this must be called before the surface brightness function.
-void OverGalaxy::setInternals(double my_mag,double my_BtoT,double my_Reff,double my_Rh,double my_PA,double incl,unsigned long my_id,double my_z,const double *my_theta){
+void OverzierSource::setInternals(double my_mag,double my_BtoT,double my_Reff,double my_Rh,double my_PA,double incl,unsigned long my_id,double my_z,const double *my_theta){
 
 	haloID = my_id;
 
@@ -73,7 +73,7 @@ void OverGalaxy::setInternals(double my_mag,double my_BtoT,double my_Reff,double
 	}
 }
 /// Surface brightness in erg/cm^2/sec/rad^2/Hz
-double OverGalaxy::SurfaceBrightness(
+double OverzierSource::SurfaceBrightness(
 		double *x  /// position in radians relative to center of source
 		){
 
@@ -88,6 +88,14 @@ double OverGalaxy::SurfaceBrightness(
 	return sb;
 }
 
-void OverGalaxy::print(){
+double OverzierSource::getTotalFlux(){
+	return pow(10,-(48.6+mag)/2.5);
+}
+
+void OverzierSource::printSource(){
 	std::cout << "bulge half light radius: " << Reff << " arcs   disk scale hight: " << Rh << " arcs" << std::endl;
+}
+
+void OverzierSource::assignParams(InputParams& /* params */)
+{
 }
