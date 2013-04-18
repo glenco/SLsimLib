@@ -100,7 +100,7 @@ public:
 		std::map<SourceType, std::vector<Source*> >::const_iterator pos = type_map.find(source_type_of<SourceT>());
 		
 		// check if found
-		if(pos == type_map.cend())
+		if(pos == type_map.end())
 			return std::vector<SourceT*>();
 		
 		// add sources to list of results

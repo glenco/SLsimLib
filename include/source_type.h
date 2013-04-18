@@ -28,13 +28,6 @@ public:
 		SourceBLRSph2
 	};
 	
-	/// Get type of a source class.
-	template<typename SourceT>
-	static SourceType typeof()
-	{
-		return SourceT::source_type();
-	}
-	
 	SourceType(const SourceType&);
 	SourceType(SourceType::Type);
 	SourceType(::Source*);
@@ -56,9 +49,11 @@ SourceType source_type_of()
 	return SourceT::source_type();
 }
 
+namespace std
+{
 /// Comparator specialization for SourceType.
 template<>
-class std::less<SourceType>
+class less<SourceType>
 {
 public:
 	bool operator()(const SourceType& lhs, const SourceType& rhs) const
@@ -66,5 +61,6 @@ public:
 		return lhs.t < rhs.t;
 	}
 };
+}
 
 #endif

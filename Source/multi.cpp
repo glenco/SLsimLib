@@ -121,7 +121,7 @@ std::vector<Source*> MultiSource::getAll(SourceType type) const
 	std::map<SourceType, std::vector<Source*> >::const_iterator pos = type_map.find(type);
 	
 	// check if found
-	if(pos == type_map.cend())
+	if(pos == type_map.end())
 		return std::vector<Source*>();
 	
 	// return sources found
