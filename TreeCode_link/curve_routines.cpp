@@ -98,7 +98,7 @@ void split_order_curve4(OldImageInfo *curves,int Maxcurves,int *Ncurves){
 				theta[m]=atan2(curves[i].points[m].x[1]-center[1]
 			              ,curves[i].points[m].x[0]-center[0]);
 			}
-			quicksortPoints(curves[i].points,theta,curves[i].Npoints);
+			Utilities::quicksortPoints(curves[i].points,theta,curves[i].Npoints);
 
 			// check to make sure the center is inside the curves
 			//assert(abs(windings(center,curves[i].points,curves[i].Npoints,&tmp1,0)));
@@ -137,6 +137,7 @@ void split_order_curve4(OldImageInfo *curves,int Maxcurves,int *Ncurves){
 
 	return ;
 }
+namespace Utilities{
 /** \ingroup Utill
  *
  * \brief Orders points on a closed curve.
@@ -182,7 +183,7 @@ unsigned long order_curve4(Point *curve,long Npoints){
 		theta[m]=atan2(curve[m].x[1]-center[1]
 		              ,curve[m].x[0]-center[0]);
 	}
-	quicksortPoints(curve,theta,Npoints);
+	Utilities::quicksortPoints(curve,theta,Npoints);
 
 	// check to make sure the center is inside the curves
 
@@ -234,6 +235,7 @@ bool order_curve4(Kist<Point> * curve){
 	FreePointArray(tmpcurve,false);
 
 	return bo;
+}
 }
 /**
  *
@@ -329,7 +331,7 @@ bool order_curve4(Kist<Point> * curve){
 
 	return true;
 }*/
-/**\ingroup Utill
+/* \ingroup Utill
  *
  * \brief Finds area within a curve by summing every cell.
  *
@@ -595,7 +597,7 @@ exit(0);
 	return ;
 }/*
 
-/**  orders points in a curve, separates disconnected curves
+/*  orders points in a curve, separates disconnected curves
  *   curves[0...Maxcurves] must be allocated before
  *
  *   does not attempt to remove spurs
@@ -819,7 +821,7 @@ exit(0);
 
 }*/
 
-/*
+/**
  * orders curve by finding closest point ahead in list
  *   tries x/y jump before diagonal jump
  *   exits when it cannot find a cell neighbor ahead in array
@@ -1386,7 +1388,7 @@ void splitter(OldImageInfo *images,int Maximages,int *Nimages){
 	return ;
 }
 
-/* reorders imagelist into separate images using reliable
+/** reorders imagelist into separate images using reliable
  *      neighbor-of-neighbor method
  *
  * in images the number of points in each image is updated
@@ -1444,7 +1446,10 @@ void splitlist(ListHndl imagelist,OldImageInfo *images,int *Nimages,int Maximage
 	//std::printf("imagelist = %il\n",imagelist->Npoints);
 	return;
 }
-
+/** \brief The Utilities namespace contains functions for wide use in many classes that
+ *  perform generic tasks.
+ */
+namespace Utilities{
 /** \ingroup Utill
  * \brief windings(): winding number test for a point in a polygon
  * Returns: Number of times a curves winds around the point x.
@@ -1698,4 +1703,5 @@ void writeCurves(int m			/// part of te filename, could be the number/index of t
 
 		  file_crit.close();
 
+}
 }

@@ -154,7 +154,7 @@ void TreeStruct::_NearestNeighbor(double *ray,int Nneighbors,Point **neighborpoi
     		}
 
     		if(current->npoints > 0){
-    			double_sort(current->npoints,rneighbors-1,index-1);
+    			Utilities::double_sort(current->npoints,rneighbors-1,index-1);
     			for(i=0;i<current->npoints;++i) neighborpoints[i] = temp_points[index[i]];
     		}
 
@@ -189,7 +189,7 @@ void TreeStruct::_NearestNeighbor(double *ray,int Nneighbors,Point **neighborpoi
   }else{  /* already found cell */
 
 	  // does radius cut into the box
-	  if( cutbox(ray,current->boundary_p1,current->boundary_p2,rneighbors[Nneighbors-1]) ){
+	  if( Utilities::cutbox(ray,current->boundary_p1,current->boundary_p2,rneighbors[Nneighbors-1]) ){
 
 		  if( atLeaf() ){  /* leaf case */
 
@@ -235,7 +235,7 @@ void TreeStruct::_NearestNeighbor(double *ray,int Nneighbors,Point **neighborpoi
 
 			  // sort the points found so far
 			  if(current->npoints > 0){
-				  double_sort(current->npoints+Nneighbors,rneighbors-1,index-1);
+				  Utilities::double_sort(current->npoints+Nneighbors,rneighbors-1,index-1);
 				  for(i=0;i<(current->npoints+Nneighbors);++i) neighborpoints[i] = temp_points[index[i]];
 			  }
 

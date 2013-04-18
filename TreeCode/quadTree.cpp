@@ -186,13 +186,13 @@ void QuadTree::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
 
 		// sort particles in size
 		//quicksort(particles,x,cbranch->nparticles);
-		quickPartition(maxsize,&cut,particles,x,cbranch->nparticles);
+		Utilities::quickPartition(maxsize,&cut,particles,x,cbranch->nparticles);
 
 		if(cut < cbranch->nparticles){
 			if(tree->atTop()){
 				cbranch->Nbig_particles = cut2 = cbranch->nparticles-cut;
 			}else{
-				quickPartition(2*maxsize,&cut2,&particles[cut],&x[cut],cbranch->nparticles-cut);
+				Utilities::quickPartition(2*maxsize,&cut2,&particles[cut],&x[cut],cbranch->nparticles-cut);
 				cbranch->Nbig_particles = cut2;
 			}
 
@@ -263,12 +263,12 @@ void QuadTree::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
 
 	// divide along y direction
 	for(i=0;i<NpInChildren;++i) x[i] = tree->xp[particles[i]][1];
-	quickPartition(ycut,&cuty,particles,x,NpInChildren);
+	Utilities::quickPartition(ycut,&cuty,particles,x,NpInChildren);
 
 	if(cuty > 0){
 	  // divide first group in the x direction
       for(i=0;i<cuty;++i) x[i] = tree->xp[particles[i]][0];
-      quickPartition(xcut,&cutx,particles,x,cuty);
+      Utilities::quickPartition(xcut,&cutx,particles,x,cuty);
 
       child3->nparticles=cutx;
       assert(child3->nparticles >= 0);
@@ -293,7 +293,7 @@ void QuadTree::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
 	if(cuty < NpInChildren){
 	  // divide second group in the x direction
 	  for(i=cuty;i<NpInChildren;++i) x[i-cuty] = tree->xp[particles[i]][0];
-	  quickPartition(xcut,&cutx,&particles[cuty],x,NpInChildren-cuty);
+	  Utilities::quickPartition(xcut,&cutx,&particles[cuty],x,NpInChildren-cuty);
 
 	  child1->nparticles=cutx;
 	  assert(child1->nparticles >= 0);

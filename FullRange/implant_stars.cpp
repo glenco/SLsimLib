@@ -26,14 +26,14 @@ void BaseAnaLens::implant_stars(Point *centers,unsigned long Nregions,long *seed
 
 		star_masses = new float[stars_N];
 		stars = new unsigned long[stars_N];
-		stars_xp = PosTypeMatrix(stars_N,3);
+		stars_xp = Utilities::PosTypeMatrix(stars_N,3);
 		star_theta_force = 1.0e-1;
 
 		assert(Nregions > 0);
 		star_Nregions = Nregions;
 		star_region = new double[Nregions];
 		star_kappa = new double[Nregions];
-		star_xdisk = PosTypeMatrix(Nregions,2);
+		star_xdisk = Utilities::PosTypeMatrix(Nregions,2);
 
 	}else{
 		// free star_tree

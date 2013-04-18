@@ -205,7 +205,12 @@ protected:
 
 };
 
-double RandomFromTable(double *table,unsigned long Ntable,long *seed);
+namespace Utilities{
+	double RandomFromTable(double *table,unsigned long Ntable,long *seed);
+	void rotation(float *xout,float *xin,double theta);
+	void rotation(double *xout,double *xin,double theta);
+}
+
 void alphaNSIE(double *alpha,double *xt,double f,double bc,double theta);
 KappaType kappaNSIE(double *xt,double f,double bc,double theta);
 void gammaNSIE(KappaType *gam,double *xt,double f,double bc,double theta);
@@ -215,8 +220,6 @@ double rmaxNSIE(double sigma,double mass,double f,double rc );
 double ellipticRadiusNSIE(double *x,double f,double pa);
 void quadMomNSIE(float mass,float Rmax,float f,float rc,float theta,double *quad);
 
-void rotation(float *xout,float *xin,double theta);
-void rotation(double *xout,double *xin,double theta);
 
 //  in powerlow.c
 

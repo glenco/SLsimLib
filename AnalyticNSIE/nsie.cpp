@@ -39,7 +39,7 @@ void alphaNSIE(
 
   double x[2],angle[2],fp,b2,RCphase,SCphase;
 
-  rotation(x,xt,theta);
+  Utilities::rotation(x,xt,theta);
 
   fp=sqrt(1-f*f);
   b2=x[0]*x[0]+f*f*x[1]*x[1];
@@ -66,7 +66,7 @@ void alphaNSIE(
 
   angle[1]= -0.5*sqrt(f)*(RCphase-SCphase)/fp;
 
-  rotation(alpha,angle,-theta);
+  Utilities::rotation(alpha,angle,-theta);
 
   if(alpha[0] != alpha[0] || alpha[1] != alpha[1] ){
 	  printf("alpha is %e %e in nsie.c \n fp=%e b2=%e r=%e bc=%e f=%e theta=%e\n x = %e %e xt= %e %e\n"
@@ -92,7 +92,7 @@ KappaType kappaNSIE(
 		){
   double x[2],b2;
 
-  rotation(x,xt,theta);
+  Utilities::rotation(x,xt,theta);
 
   b2=x[0]*x[0]+f*f*x[1]*x[1];
   if( (b2 < 1.0e-20)*(bc < 1.0e-20)){
@@ -122,7 +122,7 @@ void gammaNSIE(
 
   double x[2],fp,P,b2;
 
-  rotation(x,xt,theta);
+  Utilities::rotation(x,xt,theta);
 
   fp=sqrt(1-f*f);
 
@@ -136,7 +136,7 @@ void gammaNSIE(
   gam[0]=(f*f*(x[0]*x[0]-x[1]*x[1])-fp*fp*bc*bc)*P;
   gam[1]=2*f*f*x[0]*x[1]*P;
 
-  rotation(gam,gam,-2*theta);
+  Utilities::rotation(gam,gam,-2*theta);
   return;
 }
 /** \ingroup function
@@ -161,7 +161,7 @@ double ellipticRadiusNSIE(
 		){
 	double y[2];
 
-	rotation(y,x,pa);
+	Utilities::rotation(y,x,pa);
 
 	return sqrt(y[0]*y[0] + f*f*y[1]*y[1]);
 }
@@ -180,17 +180,19 @@ KappaType invmagNSIE(
   return pow(1-kap,2) - gam[0]*gam[0] - gam[1]*gam[1];
 }
 
-/// \ingroup function
-void rotation(float *xout,float *xin,double theta){
+namespace Utilities{
+	/// Rotates 2 dimensional point without changing input point
+	void rotation(float *xout,float *xin,double theta){
 
-  xout[0]=xin[0]*cos(theta)-xin[1]*sin(theta);
-  xout[1]=xin[1]*cos(theta)+xin[0]*sin(theta);
-}
-/// \ingroup function
-void rotation(double *xout,double *xin,double theta){
+		xout[0]=xin[0]*cos(theta)-xin[1]*sin(theta);
+		xout[1]=xin[1]*cos(theta)+xin[0]*sin(theta);
+	}
+	/// Rotates 2 dimensional point without changing input point
+	void rotation(double *xout,double *xin,double theta){
 
-  xout[0]=xin[0]*cos(theta)-xin[1]*sin(theta);
-  xout[1]=xin[1]*cos(theta)+xin[0]*sin(theta);
+		xout[0]=xin[0]*cos(theta)-xin[1]*sin(theta);
+		xout[1]=xin[1]*cos(theta)+xin[0]*sin(theta);
+	}
 }
 /* potential in Mpc^2 */
 KappaType phiNSIE(double *xt,double f,double bc,double theta){

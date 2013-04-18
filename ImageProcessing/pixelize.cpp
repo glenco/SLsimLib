@@ -298,10 +298,10 @@ void PixelMap::PointsWithinLeaf(Branch * branch1, std::list <unsigned long> &nei
 
 	int line_s,line_e,col_s,col_e;
 
-	line_s = std::max(0,IndexFromPosition(branch1->boundary_p1[0],Npixels,range,center[0]));
-	col_s = std::max(0,IndexFromPosition(branch1->boundary_p1[1],Npixels,range,center[1]));
-	line_e = IndexFromPosition(branch1->boundary_p2[0],Npixels,range,center[0]);
-	col_e = IndexFromPosition(branch1->boundary_p2[1],Npixels,range,center[1]);
+	line_s = std::max(0,Utilities::IndexFromPosition(branch1->boundary_p1[0],Npixels,range,center[0]));
+	col_s = std::max(0,Utilities::IndexFromPosition(branch1->boundary_p1[1],Npixels,range,center[1]));
+	line_e = Utilities::IndexFromPosition(branch1->boundary_p2[0],Npixels,range,center[0]);
+	col_e = Utilities::IndexFromPosition(branch1->boundary_p2[1],Npixels,range,center[1]);
 	if (line_e < 0) line_e = Npixels-1;
 	if (col_e < 0) col_e = Npixels-1;
 
@@ -325,7 +325,7 @@ double PixelMap::LeafPixelArea(IndexType i,Branch * branch1){
 	double area=0;
 	PosType p[2],p1[2],p2[2];
 
-	PositionFromIndex(i,p,Npixels,range,center);
+	Utilities::PositionFromIndex(i,p,Npixels,range,center);
 	p1[0] = p[0] - .5*resolution;
 	p1[1] = p[1] - .5*resolution;
 	p2[0] = p[0] + .5*resolution;

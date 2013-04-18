@@ -86,7 +86,7 @@ void map_images(
 		Ntmp = 80*(unsigned long)(xmax/xmin + 1);
 		xx[0] = xx[1] = 0.0;
 		for(i=0;i<Ntmp*Ntmp;++i){
-			PositionFromIndex(i,y,Ntmp,2*xmax,xx);
+			Utilities::PositionFromIndex(i,y,Ntmp,2*xmax,xx);
 			sb = source->SurfaceBrightness(y);
 			//printf(" sb = %e  y = %e %e\n",sb,y[0],y[1]);
 			if(sb > 0.0){

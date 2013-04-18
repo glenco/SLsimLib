@@ -192,7 +192,7 @@ void MOKALens::saveImage(GridHndl grid,bool saveprofiles){
 	MoveToTopList(grid->i_tree->pointlist);
 
 	do{
-		long index = IndexFromPosition(grid->i_tree->pointlist->current->x,map->nx,map->boxlrad,map->center);
+		long index = Utilities::IndexFromPosition(grid->i_tree->pointlist->current->x,map->nx,map->boxlrad,map->center);
 		if(index > -1){
 			map->convergence[index] = grid->i_tree->pointlist->current->kappa;
 			map->gamma1[index] = grid->i_tree->pointlist->current->gamma[0];
@@ -390,7 +390,7 @@ void MOKALens::saveProfiles(double &RE3,double &xxc,double &yyc){
 */
 void MOKALens::rayshooterInternal(double *xx, double *alpha, KappaType *gamma, KappaType *kappa, bool kappa_off){
     
-  long index = IndexFromPosition(xx,map->nx,map->boxlMpc/map->h,map->center);
+  long index = Utilities::IndexFromPosition(xx,map->nx,map->boxlMpc/map->h,map->center);
 
 	if(index > -1){
 		alpha[0] = map->alpha1[index];

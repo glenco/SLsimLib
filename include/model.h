@@ -160,8 +160,8 @@ template<class L,class S> void Model<L,S>::RandomizeModel(
 		// choose random set of redshifts
 		double zlens, zsource;
 		do{
-			zlens = RandomFromTable(zlTable,NzTable,seed);
-			zsource = RandomFromTable(zsTable,NzTable,seed);
+			zlens = Utilities::RandomFromTable(zlTable,NzTable,seed);
+			zsource = Utilities::RandomFromTable(zsTable,NzTable,seed);
 		}while(zsource < zlens);
 
 		delete[] zsTable;

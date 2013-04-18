@@ -246,12 +246,12 @@ void find_crit(
 			  PointCopyData(&tmp_points[ii],getCurrentKist(critcurve[i].imagekist));
 
 		  // order the curve
-		  NewNumber = order_curve4(tmp_points,critcurve[i].imagekist->Nunits());
+		  NewNumber = Utilities::order_curve4(tmp_points,critcurve[i].imagekist->Nunits());
 		  if(NewNumber != critcurve[i].imagekist->Nunits() ) *orderingsuccess = false;
 
 		  // find area of critical curves
 		  if(critcurve[i].imagekist->Nunits() > 5){
-				   windings(x,tmp_points,critcurve[i].imagekist->Nunits(),&(critcurve[i].area),0);
+				   Utilities::windings(x,tmp_points,critcurve[i].imagekist->Nunits(),&(critcurve[i].area),0);
 		  }else critcurve[i].area=0;
 
 		  // re-sort points in imagekist
@@ -737,12 +737,12 @@ void find_crit2(
 			  PointCopyData(&tmp_points[ii],getCurrentKist(critcurve[i].imagekist));
 
 		  // order the curve
-		  NewNumber = order_curve4(tmp_points,critcurve[i].imagekist->Nunits());
+		  NewNumber = Utilities::order_curve4(tmp_points,critcurve[i].imagekist->Nunits());
 		  if(NewNumber != critcurve[i].imagekist->Nunits() ) *orderingsuccess = false;
 
 		  // find area of critical curves
 		  if(critcurve[i].imagekist->Nunits() > 5){
-				   windings(x,tmp_points,critcurve[i].imagekist->Nunits(),&(critcurve[i].area),0);
+				   Utilities::windings(x,tmp_points,critcurve[i].imagekist->Nunits(),&(critcurve[i].area),0);
 		  }else critcurve[i].area=0;
 
 		  // resort points in imagekist

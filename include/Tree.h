@@ -149,12 +149,6 @@ inline double MAX(double x,double y){
 	return (x > y) ? x : y;
 };
 
-/** \ingroup Utill
- * \brief Separation squared between two positions in 2 dimensions.
- */
-inline double sepSQR(double *xx,double *yy){
-	return pow(xx[0]-yy[0],2) + pow(xx[1]-yy[1],2);
-}
 
 /*  returns the distance from ray[] to the furthest point on the
  *    border of the box,
@@ -226,50 +220,59 @@ void findborders4(TreeHndl i_tree,ImageInfo *imageinfo);
 // in find_crit.c
 void findborders(TreeHndl i_tree,ImageInfo *imageinfo);
 
-/* in double_sort.c */
-void double_sort(unsigned long n, double *arr, unsigned long *brr);
-void double_sort_points(unsigned long n, double *arr, Point *brr);
-void quicksortPoints(Point *pointarray,double *arr,unsigned long N);
-void quicksort(unsigned long *particles,double *arr,unsigned long N);
-void quickPartition(double pivotvalue,unsigned long *pivotindex,unsigned long *particles
-		,double *arr,unsigned long N);
-void quickPartitionPoints(double pivotvalue,unsigned long *pivotindex
-		,Point *pointsarray,double *arr,unsigned long N);
-int cutbox(PosType *ray,PosType *p1,PosType *p2,float rmax);
-
-/* in utilities.c */
-
 Point *LinkToSourcePoints(Point *i_points,unsigned long Npoints);
-void log_polar_grid(Point *i_points,double rmax,double rmin,double *center,long Ngrid);
-void findarea(ImageInfo *imageinfo);
-int windings2(double *x,Point *points,unsigned long Npoints,double *area,short image);
-void writeCurves(int m, ImageInfo *critical, int Ncrit, int index);
 
-long IndexFromPosition(double *x,long Npixels,double range,double *center);
-void PositionFromIndex(unsigned long i,double *x,long Npixels,double range,double *center);
-int IndexFromPosition(double x,long Npixels,double range,double center);
-//inline float isLeft( Point *p0, Point *p1, double *x );
+/// \ingroup Util
+namespace Utilities{
+    ///Separation squared between two positions in 2 dimensions.
+	inline double sepSQR(double *xx,double *yy){
+		return pow(xx[0]-yy[0],2) + pow(xx[1]-yy[1],2);
+	}
+	void double_sort(unsigned long n, double *arr, unsigned long *brr);
+	void double_sort_points(unsigned long n, double *arr, Point *brr);
 
-// isLeft(): tests if a point is Left|On|Right of an infinite line.
-// Input:three points P0, P1, and x
-// Return: >0 for x left of the line through P0 and P1
+	void quicksortPoints(Point *pointarray,double *arr,unsigned long N);
+	void quicksort(unsigned long *particles,double *arr,unsigned long N);
+	void quickPartition(double pivotvalue,unsigned long *pivotindex,unsigned long *particles
+		,double *arr,unsigned long N);
+	void quickPartitionPoints(double pivotvalue,unsigned long *pivotindex
+		,Point *pointsarray,double *arr,unsigned long N);
+	int cutbox(PosType *ray,PosType *p1,PosType *p2,float rmax);
+	void log_polar_grid(Point *i_points,double rmax,double rmin,double *center,long Ngrid);
+	void findarea(ImageInfo *imageinfo);
+	int windings2(double *x,Point *points,unsigned long Npoints,double *area,short image);
+	void writeCurves(int m, ImageInfo *critical, int Ncrit, int index);
+
+	long IndexFromPosition(double *x,long Npixels,double range,double *center);
+	void PositionFromIndex(unsigned long i,double *x,long Npixels,double range,double *center);
+	int IndexFromPosition(double x,long Npixels,double range,double center);
+	//inline float isLeft( Point *p0, Point *p1, double *x );
+
+	// isLeft(): tests if a point is Left|On|Right of an infinite line.
+	// Input:three points P0, P1, and x
+	// Return: >0 for x left of the line through P0 and P1
 //         =0 for x on the line
 //         <0 for x right of the line
-inline float isLeft( Point *p0, Point *p1, double *x ){
+	inline float isLeft( Point *p0, Point *p1, double *x ){
 
-	return (p1->x[0] - p0->x[0])*(x[1] - p0->x[1])
+		return (p1->x[0] - p0->x[0])*(x[1] - p0->x[1])
 			- (x[0] - p0->x[0])*(p1->x[1] - p0->x[1]);
-};
-unsigned long prevpower(unsigned long k);
+	};
+	unsigned long prevpower(unsigned long k);
 
+	int windings(double *x,Point *points,unsigned long Npoints,double *area,short image);
+	int windings(double *x,Kist<Point> * kist,double *area,short image);
+}
 // in curve_routines.c
 void nesting_curve(OldImageInfo *curves,int Ncurves);
 void split_order_curve(OldImageInfo *curves,int Maxcurves,int *Ncurves);
 void split_order_curve2(OldImageInfo *curves,int Maxcurves,int *Ncurves);
 void split_order_curve3(OldImageInfo *curves,int Maxcurves,int *Ncurves);
 void split_order_curve4(OldImageInfo *curves,int Maxcurves,int *Ncurves);
-unsigned long order_curve4(Point *curve,long Npoints);
-bool order_curve4(Kist<Point> * curve);
+namespace Utilities{
+	unsigned long order_curve4(Point *curve,long Npoints);
+	bool order_curve4(Kist<Point> * curve);
+}
 bool order_ExteriorBoundary(Point *curve,long Npoints,long *NewNpoints,double *area);
 double findAreaOfCurve(TreeHndl tree,ImageInfo *curve,int NimageMax);
 void walkcurve(Point *points,long Npoints,long *j,long *end);
@@ -280,8 +283,7 @@ void split_images2(TreeHndl i_tree,ImageInfo *images,int Maximages,int *Nimages)
 void split_images3(TreeHndl i_tree,ImageInfo *images,int Maximages,int *Nimages,bool sortallpoints);
 void splitter(OldImageInfo *images,int Maximages,int *Nimages);
 void splitlist(ListHndl imagelist,OldImageInfo *images,int *Nimages,int Maximages);
-int windings(double *x,Point *points,unsigned long Npoints,double *area,short image);
-int windings(double *x,Kist<Point> * kist,double *area,short image);
+
 
 /* externally provided functions */
 /*********************************/

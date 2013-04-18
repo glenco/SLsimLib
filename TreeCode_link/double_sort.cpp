@@ -1,3 +1,4 @@
+
 /* double_sort is adapted from NR sort2 to take an unsigned long */
 /* second array brr */
 /* note #undef's at end of file */
@@ -6,7 +7,7 @@
 #define NRANSI
 #define M 7
 #define NSTACK 50
-
+namespace Utilities{
 void double_sort(unsigned long n, double *arr, unsigned long *brr)
 {
   unsigned long i,ir=n,j,k,l=1,*istack,b;
@@ -321,4 +322,5 @@ int cutbox(PosType *ray,PosType *p1,PosType *p2,float rmax){
   if(rtmp<rmax*rmax) return 1;  // box is all inside circle
 
   return 3;  // box intersects circle
+}
 }

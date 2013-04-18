@@ -179,7 +179,7 @@ void QuadTreeNSIE::force_halo(
 			alpha_out[0] = prefac*xcm[0]/r;
 			alpha_out[1] = prefac*xcm[1]/r;
 
-			rotation(x_in,xcm,halo_params.pa_nsie);
+			Utilities::rotation(x_in,xcm,halo_params.pa_nsie);
 			rin = r*halo_params.Rsize_nsie
 					  /sqrt( x_in[0]*x_in[0] + pow(halo_params.fratio_nsie*x_in[1],2) );
 			//rin = halo_params.Rsize_nsie;

@@ -89,7 +89,7 @@ void log_polar_grid(Point *i_points,double rmax,double rmin,double *center,long 
  *   Npixels in the number of point is 1 dimension
  *   index is between 0 and Npixels*Npixels-1
  */
-
+namespace Utilities{
 long IndexFromPosition(double *x,long Npixels,double range,double *center){
 	long ix,iy;
 
@@ -151,4 +151,5 @@ PosType **PosTypeMatrix(long rows, long cols)
 void free_PosTypeMatrix(PosType **matrix, long rows, long cols){
   if(rows) delete[] matrix[0];
   delete[] matrix;
+}
 }

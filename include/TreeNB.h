@@ -31,7 +31,8 @@ typedef double PosType;
 typedef unsigned long IndexType;
 #endif
 
-PosType **PosTypeMatrix(long nrl, long nrh, long ncl, long nch);
-void free_PosTypeMatrix(PosType **m, long nrl, long nrh, long ncl, long nch);
-
+namespace Utilities{
+	PosType **PosTypeMatrix(long nrl, long nrh, long ncl, long nch);
+	void free_PosTypeMatrix(PosType **m, long nrl, long nrh, long ncl, long nch);
+}
 #endif

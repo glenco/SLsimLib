@@ -402,7 +402,7 @@ void TreeStruct::_BuildTree(){
 
   if(median_cut){
     //double_sort_points(cbranch->npoints,x-1,current->points);
-	  quicksortPoints(current->points,x,cbranch->npoints);
+	  Utilities::quicksortPoints(current->points,x,cbranch->npoints);
 
 	  cut=cbranch->npoints/2;
       branch1->boundary_p2[dimension]=(x[cut]+x[cut-1])/2;
@@ -414,7 +414,7 @@ void TreeStruct::_BuildTree(){
       branch1->boundary_p2[dimension]=xcut;
       branch2->boundary_p1[dimension]=xcut;
 
-	  quickPartitionPoints(xcut,&cut,current->points,x,cbranch->npoints);
+	  Utilities::quickPartitionPoints(xcut,&cut,current->points,x,cbranch->npoints);
 
       //locateD(x-1,cbranch->npoints,xcut,&cut);
   }
@@ -1072,7 +1072,7 @@ unsigned long Grid::PrunePointsOutside(
 			if(point->gridsize*Ngrid_block > resolution){
 				if(AtTopKist(subkist)) go = false;
 				TakeOutCurrentKist(subkist);
-			}else if( cutbox(y,point->leaf->boundary_p1,point->leaf->boundary_p2,r_in) ){
+			}else if( Utilities::cutbox(y,point->leaf->boundary_p1,point->leaf->boundary_p2,r_in) ){
 				if(AtTopKist(subkist)) go = false;
 				TakeOutCurrentKist(subkist);
 			}

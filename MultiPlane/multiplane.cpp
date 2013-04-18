@@ -89,9 +89,9 @@ void MultiLens::resetHalos(CosmoHndl cosmo){
 
   delete[] halo_zs;
   delete[] halo_id;
-  free_PosTypeMatrix(halo_pos,Nhalos,3);
+  Utilities::free_PosTypeMatrix(halo_pos,Nhalos,3);
   if(flag_run_multip_test)
-	  free_PosTypeMatrix(halo_pos_Mpc,Nhalos,3);
+	  Utilities::free_PosTypeMatrix(halo_pos_Mpc,Nhalos,3);
 
   halo_tree = new auto_ptr<QuadTree>[Nplanes-1];
   halo_data = new auto_ptr<HaloData>[Nplanes-1];
@@ -173,9 +173,9 @@ MultiLens::~MultiLens(){
 	delete[] halos;
 	delete[] halo_zs;
 	delete[] halo_id;
-	free_PosTypeMatrix(halo_pos,Nhalos,3);
+	Utilities::free_PosTypeMatrix(halo_pos,Nhalos,3);
 	if(flag_run_multip_test)
-		free_PosTypeMatrix(halo_pos_Mpc,Nhalos,3);
+		Utilities::free_PosTypeMatrix(halo_pos_Mpc,Nhalos,3);
 
 	if(flag_input_lens)
 		delete input_lens;
@@ -532,9 +532,9 @@ void MultiLens::createHaloData(
   halos = new HaloStructure[Nhalos];
   halo_zs = new double[Nhalos];
   halo_id = new unsigned long[Nhalos];
-  halo_pos = PosTypeMatrix(Nhalos,3);
+  halo_pos = Utilities::PosTypeMatrix(Nhalos,3);
   if(flag_run_multip_test)
-	  halo_pos_Mpc = PosTypeMatrix(Nhalos,3);
+	  halo_pos_Mpc = Utilities::PosTypeMatrix(Nhalos,3);
 
   for(int i=0;i<Nhalos;++i){
     halo_id[i] = halo_id_vec[i];
@@ -604,7 +604,7 @@ void MultiLens::createHaloData_buffered(
 	halo_zs = new double[Nhalos];
 	halos = new HaloStructure[Nhalos];
 	halo_id = new unsigned long[Nhalos];
-	halo_pos = PosTypeMatrix(Nhalos,3);
+	halo_pos = Utilities::PosTypeMatrix(Nhalos,3);
 
 	// assign redsshifts to halos and sort them
 
@@ -729,7 +729,7 @@ void MultiLens::createHaloData_test(
 	halo_zs = new double[Nhalos];
 	halos = new HaloStructure[Nhalos];
 	halo_id = new unsigned long[Nhalos];
-	halo_pos = PosTypeMatrix(Nhalos,3);
+	halo_pos = Utilities::PosTypeMatrix(Nhalos,3);
 
 	for(int i=0;i<Nhalos;i++){
 		double maxr = pi*sqrt(fieldofview/pi)/180.; // fov is a circle
@@ -1435,7 +1435,7 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 	halos = new HaloStructure[Nhalos];
 	halo_zs = new double[Nhalos];
 	halo_id = new unsigned long[Nhalos];
-	halo_pos = PosTypeMatrix(Nhalos,3);
+	halo_pos = Utilities::PosTypeMatrix(Nhalos,3);
 
 	for(i=0;i<Nhalos;++i){
 		halo_id[i] = halo_id_vec[i];

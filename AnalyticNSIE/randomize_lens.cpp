@@ -38,7 +38,7 @@ void AnaLens::RandomizeSigma(long *seed,bool tables){
 
 	file.close();
 
-	host_sigma = RandomFromTable(sigmaTable,NsigmaTable,seed);
+	host_sigma = Utilities::RandomFromTable(sigmaTable,NsigmaTable,seed);
 
 	delete[] sigmaTable;
 }
@@ -74,7 +74,7 @@ void AnaLens::RandomizeHost(long *seed,bool tables){
 
 	// random host ellipticity
 	do{
-		if(tables) host_axis_ratio = RandomFromTable(axisTable,NaxisTable,seed);
+		if(tables) host_axis_ratio = Utilities::RandomFromTable(axisTable,NaxisTable,seed);
 		else host_axis_ratio = fo + 0.1*gasdev(seed);
 		//std::cout << "f=%e\n",axis_ratio);
 	}while(host_axis_ratio < 0.0 || host_axis_ratio > 1.0);
@@ -209,7 +209,7 @@ void AnaLens::RandomizeSubstructure2(double rangeInRei,long *seed){
 	if(!(substruct_implanted) && ndensity > 0){
 		NsubMax=(unsigned long)(ndensity*pi*Rmax*Rmax + 5*sqrt(ndensity*pi*Rmax*Rmax) );
 		if(NsubMax > 0){
-			sub_x=PosTypeMatrix(NsubMax,2);
+			sub_x=Utilities::PosTypeMatrix(NsubMax,2);
 			sub_Rcut=new float[NsubMax];
 			sub_mass=new float[NsubMax];
 			sub_substructures = new IndexType[NsubMax];
@@ -325,7 +325,7 @@ void AnaLens::RandomizeSubstructure3(double rangeInRei,long *seed){
 
 	if(!substruct_implanted){
 		NsubMax=(unsigned long)(sub_Ndensity*pi*Rmax*Rmax*(1+5/sqrt(sub_Ndensity*pi*Rmax*Rmax)) );
-		sub_x=PosTypeMatrix(NsubMax,2);
+		sub_x=Utilities::PosTypeMatrix(NsubMax,2);
 		sub_Rcut=new float[NsubMax];
 		sub_mass=new float[NsubMax];
 		substruct_implanted=true;
@@ -413,18 +413,19 @@ void AnaLens::RandomizeSubstructure3(double rangeInRei,long *seed){
 	return;
 }
 
-
+namespace Utilities{
 /** \ingroup Utill
  * \brief Generates a random deviates drawn from approximately the same as the values of table
  *
  */
-double RandomFromTable(double *table,unsigned long Ntable,long *seed){
-	double y;
-	unsigned long j;
+	double RandomFromTable(double *table,unsigned long Ntable,long *seed){
+		double y;
+		unsigned long j;
 
-	y=ran2(seed)*(Ntable-1);
-	j=(int)(y);
-	return (table[j+1]-table[j])*(y-j) + table[j];
+		y=ran2(seed)*(Ntable-1);
+		j=(int)(y);
+		return (table[j+1]-table[j])*(y-j) + table[j];
+	}
 }
 
 double AnaLens::FractionWithinRe(double rangeInRei){

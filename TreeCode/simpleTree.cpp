@@ -123,7 +123,7 @@ void SimpleTree::_PointsWithin(PosType *ray,float *rmax,std::list <unsigned long
     	//cout << "   In box" << endl;
 
       // found the box small enough
-    	if( cutbox(ray,tree->current->boundary_p1,tree->current->boundary_p2,*rmax)==1
+    	if( Utilities::cutbox(ray,tree->current->boundary_p1,tree->current->boundary_p2,*rmax)==1
     			|| atLeaf() ){
     		//cout << "   Found cell" << endl;
 
@@ -182,7 +182,7 @@ void SimpleTree::_PointsWithin(PosType *ray,float *rmax,std::list <unsigned long
 
   }else{    // found cell
 
-	  pass=cutbox(ray,tree->current->boundary_p1,tree->current->boundary_p2,*rmax);
+	  pass=Utilities::cutbox(ray,tree->current->boundary_p1,tree->current->boundary_p2,*rmax);
 	  // does radius cut into the box
 	  if( pass ){
 		  //cout << "   Cell found searching other cells" << endl;
@@ -300,7 +300,7 @@ void SimpleTree::_NearestNeighbors(double *ray,int Nneighbors,unsigned long *nei
     			neighbors[i]=tree->current->particles[i];
     		}
 
-    		quicksort(neighbors,rneighbors,tree->current->nparticles);
+    		Utilities::quicksort(neighbors,rneighbors,tree->current->nparticles);
 
     	}else{ /* keep going down the tree */
 
@@ -333,7 +333,7 @@ void SimpleTree::_NearestNeighbors(double *ray,int Nneighbors,unsigned long *nei
 	}
   }else{ // found cell
 		/* does radius cut into the box */
-    if( cutbox(ray,tree->current->boundary_p1,tree->current->boundary_p2,rneighbors[Nneighbors-1]) ){
+    if( Utilities::cutbox(ray,tree->current->boundary_p1,tree->current->boundary_p2,rneighbors[Nneighbors-1]) ){
 
     	if( (tree->current->child1 == NULL)*(tree->current->child2 == NULL)){  /* leaf case */
 
@@ -347,7 +347,7 @@ void SimpleTree::_NearestNeighbors(double *ray,int Nneighbors,unsigned long *nei
     			neighbors[i]=tree->current->particles[i-Nneighbors];
     		}
 
-       		quicksort(neighbors,rneighbors,Nneighbors+Nbucket);
+    		Utilities::quicksort(neighbors,rneighbors,Nneighbors+Nbucket);
 
     	}else{
 
@@ -446,7 +446,7 @@ void SimpleTree::_BuildTreeNB(TreeNBHndl tree,IndexType nparticles,IndexType *pa
   for(i=cbranch->big_particle;i<cbranch->nparticles;++i) x[i]=tree->xp[particles[i]][dimension];
 
   if(median_cut){
-	  quicksort(particles,x,cbranch->nparticles-cbranch->big_particle);
+	  Utilities::quicksort(particles,x,cbranch->nparticles-cbranch->big_particle);
 
 	  cut=(cbranch->nparticles-cbranch->big_particle)/2;
       branch1.boundary_p2[dimension]=x[cut];
@@ -456,7 +456,7 @@ void SimpleTree::_BuildTreeNB(TreeNBHndl tree,IndexType nparticles,IndexType *pa
       branch1.boundary_p2[dimension]=xcut;
       branch2.boundary_p1[dimension]=xcut;
 
-      quickPartition(xcut,&cut,particles
+      Utilities::quickPartition(xcut,&cut,particles
     		  ,x,cbranch->nparticles-cbranch->big_particle);
  }
 

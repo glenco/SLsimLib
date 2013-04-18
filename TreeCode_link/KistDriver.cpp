@@ -225,7 +225,7 @@ void TreeStruct::_PointsWithinKist(double *ray,float *rmax,Kist<Point> * neighbo
     if( inbox(ray,current->boundary_p1,current->boundary_p2) ){
 
       // found the box small enough
-    	if( cutbox(ray,current->boundary_p1,current->boundary_p2,*rmax)==1
+    	if( Utilities::cutbox(ray,current->boundary_p1,current->boundary_p2,*rmax)==1
     			|| atLeaf() ){
     		// whole box in circle or a leaf with ray in it
 
@@ -306,7 +306,7 @@ void TreeStruct::_PointsWithinKist(double *ray,float *rmax,Kist<Point> * neighbo
 
   }else{    // found cell
 
-	  pass=cutbox(ray,current->boundary_p1,current->boundary_p2,*rmax);
+	  pass=Utilities::cutbox(ray,current->boundary_p1,current->boundary_p2,*rmax);
 	  // does radius cut into the box
 	  if( pass ){
 
@@ -417,7 +417,7 @@ void TreeStruct::PointsWithinKist_iter(double *ray,float rmin,float rmax,Kist<Po
 					MoveDownList(pointlist);
 				}
 
-			}else if(cutbox(ray,current->boundary_p1,current->boundary_p2,rmax) == 0  // box is all outside outer circle
+			}else if(Utilities::cutbox(ray,current->boundary_p1,current->boundary_p2,rmax) == 0  // box is all outside outer circle
 			){
 
 				decend = false;
@@ -458,7 +458,7 @@ void TreeStruct::PointsWithinKist_iter(double *ray,float rmin,float rmax,Kist<Po
 				}
 
 			}else if(BoxInCircle(ray,rmax,current->boundary_p1,current->boundary_p2)  // box is all inside outer circle
-					&& cutbox(ray,current->boundary_p1,current->boundary_p2,rmin) == 0  // box is all outside inner circle
+					&& Utilities::cutbox(ray,current->boundary_p1,current->boundary_p2,rmin) == 0  // box is all outside inner circle
 			){
 
 				decend = false;
@@ -471,7 +471,7 @@ void TreeStruct::PointsWithinKist_iter(double *ray,float rmin,float rmax,Kist<Po
 					MoveDownList(pointlist);
 				}
 
-			}else if(cutbox(ray,current->boundary_p1,current->boundary_p2,rmax) == 0  // box is all outside outer circle
+			}else if(Utilities::cutbox(ray,current->boundary_p1,current->boundary_p2,rmax) == 0  // box is all outside outer circle
 					|| BoxInCircle(ray,rmin,current->boundary_p1,current->boundary_p2) // box is all inside inner circle
 			){
 

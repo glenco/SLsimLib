@@ -803,7 +803,7 @@ void xygridpoints(Point *i_points,double range,double *center,long Ngrid_1d,shor
       if( (2*(i/Ngrid_1d)/(Ngrid_1d-1) == 1) && (i%Ngrid_1d == Ngrid_1d/2+1) ) j=1;
       i_points[i-j].id=id;
       ++id;
-      PositionFromIndex(i,i_points[i-j].x,Ngrid_1d,range,center);
+      Utilities::PositionFromIndex(i,i_points[i-j].x,Ngrid_1d,range,center);
       //i_points[i-j].x[0] = center[0] + range*( 1.0*(i%Ngrid_1d)/(Ngrid_1d-1) - 0.5 );
       //i_points[i-j].x[1] = center[1] + range*( 1.0*(i/Ngrid_1d)/(Ngrid_1d-1) - 0.5 );
       i_points[i-j].gridsize=range/(Ngrid_1d-1);
@@ -814,7 +814,7 @@ void xygridpoints(Point *i_points,double range,double *center,long Ngrid_1d,shor
     for(i=0;i<Ngrid_1d*Ngrid_1d;++i){
       i_points[i].id=id;
       ++id;
-      PositionFromIndex(i,i_points[i].x,Ngrid_1d,range,center);
+      Utilities::PositionFromIndex(i,i_points[i].x,Ngrid_1d,range,center);
       //i_points[i].x[0] = center[0] + range*( 1.0*(i%Ngrid_1d)/(Ngrid_1d-1) - 0.5 );
       //i_points[i].x[1] = center[1] + range*( 1.0*(i/Ngrid_1d)/(Ngrid_1d-1) - 0.5 );
       i_points[i].gridsize=range/(Ngrid_1d-1);
