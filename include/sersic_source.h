@@ -12,6 +12,8 @@
 class SersicSource : public Source
 {
 public:
+	SOURCE_TYPE(SersicSource)
+	
 	SersicSource();
 	SersicSource(double mag,double Reff,double PA,double my_index,double my_q,double my_z=0,const double *theta=0);
 	~SersicSource();

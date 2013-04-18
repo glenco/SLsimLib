@@ -21,6 +21,8 @@
 class OverzierSource : public Source
 {
 public:
+	SOURCE_TYPE(OverzierSource)
+	
 	OverzierSource();
 	OverzierSource(double mag,double BtoT,double Reff,double Rh,double PA,double inclination,unsigned long my_id,double my_z=0,const double *theta=0);
 	~OverzierSource();
