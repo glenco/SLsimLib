@@ -1,6 +1,9 @@
 #include "../include/multi_source.h"
 #include "../include/InputParams.h"
 
+#include <algorithm>
+#include <iterator>
+
 MultiSource::MultiSource()
 : index(0)
 {
@@ -55,16 +58,14 @@ MultiSource::~MultiSource()
 bool MultiSource::setCurrent(Source* source)
 {
 	// find source in list
-	std::size_t i = 0, n = sources.size();
-	while(i < n && sources[i].source != source)
-		++i;
+	std::vector<Source*>::iterator pos = std::find(sources.begin(), sources.end(), source);
 	
 	// check if source was found
-	if(i == n)
+	if(pos == sources.end())
 		return false;
 	
 	// set index
-	index = i;
+	index = (std::size_t)std::distance(sources.begin(), pos);
 	
 	// all is well
 	return true;
@@ -83,17 +84,48 @@ bool MultiSource::setIndex(std::size_t i)
 	return true;
 }
 
+/// Add a source. Ownership is not transferred to the MultiSource. Return the source index.
+std::size_t MultiSource::add(Source* source)
+{
+	// get the last index
+	std::size_t i = sources.size();
+	
+	// add source to internal lists
+	addInternal(source, false);
+	
+	// return the added source
+	return i;
+}
+
+/// Add a source. Ownership is not transferred to the MultiSource. Return the source index.
+std::size_t MultiSource::add(Source& source)
+{
+	// get the last index
+	std::size_t i = sources.size();
+	
+	// add source to internal lists
+	addInternal(&source, false);
+	
+	// return the added source
+	return i;
+}
+
 std::vector<Source*> MultiSource::getAll() const
 {
-	// list of results
-	std::vector<Source*> matches;
+	return sources;
+}
+
+std::vector<Source*> MultiSource::getAll(SourceType type) const
+{
+	// try to find SourceType in map
+	std::map<SourceType, std::vector<Source*> >::const_iterator pos = type_map.find(type);
 	
-	// go through list
-	for(std::size_t i = 0, n = sources.size(); i < n; ++i)
-		matches.push_back(sources[i].source);
+	// check if found
+	if(pos == type_map.cend())
+		return std::vector<Source*>();
 	
-	// return sources
-	return matches;
+	// return sources found
+	return pos->second;
 }
 
 void MultiSource::printSource()
@@ -103,7 +135,7 @@ void MultiSource::printSource()
 	else
 	{
 		std::cout << "MultiSource\n-----------" << std::endl;
-		sources[index].source->printSource();
+		sources[index]->printSource();
 	}
 }
 
@@ -111,12 +143,15 @@ void MultiSource::assignParams(InputParams& /* params */)
 {
 }
 
-void MultiSource::addInternal(Source* source, const std::type_info& type, bool owned)
+void MultiSource::addInternal(Source* source, bool owned)
 {
 	// add source to list of created sources if owned by this MultiSource
 	if(owned)
 		created.push_back(source);
 	
-	// add source and type to list
-	sources.push_back(SourceTypePair(source, type));
+	// add source
+	sources.push_back(source);
+	
+	// add to type map
+	type_map[source->type()].push_back(source);
 }

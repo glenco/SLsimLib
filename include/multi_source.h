@@ -2,8 +2,7 @@
 #define MULTI_SOURCE_H_
 
 #include <vector>
-#include <utility>
-#include <typeinfo>
+#include <map>
 #include <cstddef>
 
 #include "source.h"
@@ -11,6 +10,8 @@
 class MultiSource : public Source
 {
 public:
+	SOURCE_TYPE(MultiSource)
+	
 	/// Construct an empty MultiSource
 	MultiSource();
 	
@@ -50,55 +51,11 @@ public:
 	/// Get number of sources.
 	std::size_t size() const;
 	
-	/// Add a source. Ownership is with the MultiSource.
-	template<typename SourceT>
-	SourceT* add()
-	{
-		// create the new source of the given type
-		SourceT* source = new SourceT();
-		
-		// add source to internal lists
-		addInternal(source, typeid(SourceT), true);
-		
-		// return the created source
-		return source;
-	}
+	/// Add a source. Ownership is not transferred to the MultiSource. Return the source index.
+	std::size_t add(Source* source);
 	
-	/// Add a source using input parameters. Ownership is with the MultiSource.
-	template<typename SourceT>
-	SourceT* add(InputParams& params)
-	{
-		// create the new source of the given type
-		SourceT* source = new SourceT(params);
-		
-		// add source to internal lists
-		addInternal(source, typeid(SourceT), true);
-		
-		// return the created source
-		return source;
-	}
-	
-	/// Add a source. Ownership is not transferred to the MultiSource.
-	template<typename SourceT>
-	SourceT* add(SourceT* source)
-	{
-		// add source to internal lists
-		addInternal(source, typeid(SourceT), false);
-		
-		// return the added source
-		return source;
-	}
-	
-	/// Add a source. Ownership is not transferred to the MultiSource.
-	template<typename SourceT>
-	SourceT* add(SourceT& source)
-	{
-		// add source to internal lists
-		addInternal(&source, typeid(SourceT), false);
-		
-		// return the added source
-		return &source;
-	}
+	/// Add a source. Ownership is not transferred to the MultiSource. Return the source index.
+	std::size_t add(Source& source);
 	
 	/// Get the current source
 	Source* getCurrent() const;
@@ -116,33 +73,39 @@ public:
 	template<typename SourceT>
 	SourceT* getCurrent() const
 	{
-		// use the RTTI to safely upcase Source* current
-		return dynamic_cast<SourceT*>(sources[index].source);
+		// use the SourceType to safely upcast the current Source*
+		return source_cast<SourceT>(sources[index]);
 	}
 	
 	/// Get the type of the current source.
-	const std::type_info& getCurrentType() const
+	const SourceType getCurrentType() const
 	{
-		return sources[index].type;
+		return sources[index]->type();
 	}
 	
 	/// Get all sources.
 	std::vector<Source*> getAll() const;
 	
 	/// Get all sources of a given type.
+	std::vector<Source*> getAll(SourceType type) const;
+	
+	/// Get all sources of a given type in that type.
 	template<typename SourceT>
 	std::vector<SourceT*> getAll() const
 	{
-		// list of results
+		// list of resulting sources
 		std::vector<SourceT*> matches;
 		
-		// go through list
-		for(std::size_t i = 0, n = sources.size(); i < n; ++i)
-		{
-			// check if type of source matches
-			if(sources[i].type == typeid(SourceT))
-				matches.push_back(dynamic_cast<SourceT*>(sources[i].source));
-		}
+		// try to find SourceType in map
+		std::map<SourceType, std::vector<Source*> >::const_iterator pos = type_map.find(source_type_of<SourceT>());
+		
+		// check if found
+		if(pos == type_map.cend())
+			return std::vector<SourceT*>();
+		
+		// add sources to list of results
+		for(std::vector<Source*>::const_iterator it = pos->second.begin(); it != pos->second.end(); ++it)
+			matches.push_back((SourceT*)(*it));
 		
 		// return sources of requested type
 		return matches;
@@ -154,7 +117,7 @@ private:
 	void assignParams(InputParams& params);
 	
 	/// add a source to the internal list
-	void addInternal(Source* source, const std::type_info& type, bool owned);
+	void addInternal(Source* source, bool owned);
 	
 	/// read a Millenium galaxy data file
 	void readGalaxyFile(std::string filename, Band band, double mag_limit);
@@ -162,17 +125,11 @@ private:
 	/// the current source index
 	std::size_t index;
 	
-	// TODO: make this a map of type_index when we move to C++11
-	struct SourceTypePair
-	{
-		Source* source;
-		const std::type_info& type;
-		
-		SourceTypePair(Source* s, const std::type_info& t) : source(s), type(t) {}
-	};
-	
 	/// list of sources and associated types
-	std::vector<SourceTypePair> sources;
+	std::vector<Source*> sources;
+	
+	/// map of sources and types
+	std::map<SourceType, std::vector<Source*> > type_map;
 	
 	// TODO: handle creation better
 	std::vector<Source*> created;
@@ -180,25 +137,25 @@ private:
 
 /**** inline functions ****/
 
-inline double MultiSource::SurfaceBrightness(double *y) { return sources[index].source->SurfaceBrightness(y); }
+inline double MultiSource::SurfaceBrightness(double *y) { return sources[index]->SurfaceBrightness(y); }
 
-inline double MultiSource::getTotalFlux() { return sources[index].source->getTotalFlux(); }
+inline double MultiSource::getTotalFlux() { return sources[index]->getTotalFlux(); }
 
-inline double MultiSource::getRadius() { return sources[index].source->getRadius(); }
+inline double MultiSource::getRadius() { return sources[index]->getRadius(); }
 
-inline double MultiSource::getZ(){ return sources[index].source->getZ(); }
+inline double MultiSource::getZ(){ return sources[index]->getZ(); }
 
-inline void MultiSource::setZ(double z){ sources[index].source->setZ(z); }
+inline void MultiSource::setZ(double z){ sources[index]->setZ(z); }
 
-inline double* MultiSource::getX(){return sources[index].source->getX(); }
+inline double* MultiSource::getX(){return sources[index]->getX(); }
 
-inline void MultiSource::setX(double x[2]){ sources[index].source->setX(x); }
+inline void MultiSource::setX(double x[2]){ sources[index]->setX(x); }
 
-inline void MultiSource::setX(double x1, double x2){ sources[index].source->setX(x1, x2); }
+inline void MultiSource::setX(double x1, double x2){ sources[index]->setX(x1, x2); }
 
 inline std::size_t MultiSource::size() const { return sources.size(); }
 
-inline Source* MultiSource::getCurrent() const { return sources[index].source; }
+inline Source* MultiSource::getCurrent() const { return sources[index]; }
 
 inline std::size_t MultiSource::getIndex() const { return index; }
 

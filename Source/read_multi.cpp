@@ -218,7 +218,7 @@ void MultiSource::readGalaxyFile(std::string filename, Band band, double mag_lim
 			over->setKMag(Ks_band);
 			
 			// add galaxy to list of sources
-			addInternal(over, typeid(OverzierSource), true);
+			addInternal(over, true);
 			
 			// increase counter
 			++count;
