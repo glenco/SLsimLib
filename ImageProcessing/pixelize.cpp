@@ -75,7 +75,7 @@ PixelMap::PixelMap(const PixelMap& other)
 }
 
 PixelMap::PixelMap(
-		double* center,  /// The location of the center of the map
+		const double* center,  /// The location of the center of the map
 		std::size_t Npixels,  /// Number of pixels in one dimension of map.
 		double resolution        /// One dimensional range of map in whatever units the point positions are in
 		): Npixels(Npixels), resolution(resolution)
@@ -93,7 +93,8 @@ PixelMap::PixelMap(
 	map = new float[map_size];
 	std::fill(map, map + map_size, 0);
 }
-// TODO comment, what is filename?
+
+/// Constructs a PixelMap reading in a fits file
 PixelMap::PixelMap(std::string filename)
 {
 #ifdef ENABLE_FITS
@@ -142,7 +143,7 @@ PixelMap::PixelMap(std::string filename)
 
 /// Creates a new PixelMap from a region of a PixelMap.
 PixelMap::PixelMap(const PixelMap& pmap,  /// Input PixelMap (from which the stamp is taken)
-		double* center, /// center of the region to be duplicated (in rads)
+		const double* center, /// center of the region to be duplicated (in rads)
 		std::size_t Npixels /// size of the region to be duplicated (in pixels)
 		): resolution(pmap.resolution), Npixels(Npixels)
 	{
@@ -666,7 +667,7 @@ PixelMap Observation::ApplyPSF(PixelMap &pmap)
 	}
 }
 
-// TODO comment
+/// Applies realistic noise (read-out + Poisson) on an image
 PixelMap Observation::AddNoise(PixelMap &pmap)
 {
 	PixelMap outmap(pmap);
@@ -685,15 +686,17 @@ PixelMap Observation::AddNoise(PixelMap &pmap)
 		}
 	return outmap;
 	}
-// TODO comment
+
+/// Translates photon flux (in photons/(cm^2*Hz)) into telescope pixel counts
 PixelMap Observation::PhotonToCounts(PixelMap &pmap)
 {
 	PixelMap outmap(pmap);
-	double Q = pow(10,0.4*(mag_zeropoint+48.6));
+	double Q = pow(10,0.4*(mag_zeropoint+48.6))*hplanck;
 	outmap.Renormalize(Q);
 	return outmap;
 }
-// TODO comment
+
+// TODO comment (First reorganize the constructors, probably we do not need so many of them)
 Observation::Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, float seeing):
 		exp_time(exp_time), exp_num(exp_num), back_mag(back_mag), diameter(diameter), transmission(transmission), ron(ron), seeing(seeing)
 		{

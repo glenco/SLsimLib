@@ -24,8 +24,8 @@ public:
 	PixelMap(const PixelMap& pmap, double degrading_factor);
 	PixelMap();
 	PixelMap(const PixelMap& other);
-	PixelMap(const PixelMap& pmap, double* center, std::size_t Npixels);
-	PixelMap(double* center, std::size_t Npixels, double resolution);
+	PixelMap(const PixelMap& pmap, const double* center, std::size_t Npixels);
+	PixelMap(const double* center, std::size_t Npixels, double resolution);
 	PixelMap(std::string filename);
 	~PixelMap();
 	
@@ -70,6 +70,13 @@ private:
 	void PointsWithinLeaf(Branch * branch1, std::list <unsigned long> &neighborlist);
 	bool inMapBox(Branch * branch1);
 };
+
+/** \ingroup Image
+ * \brief It creates a realistic image from the output of a ray-tracing simulation.
+ * It translates pixel values in observed units (counts/sec), applies PSF and noise.
+ * Input must be in photons/(cm^2*Hz)
+ *
+ */
 
 class Observation
 {

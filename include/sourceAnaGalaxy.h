@@ -22,7 +22,7 @@
  *	source_band             Band that these sources are to be observed in. Must be one of the following SDSS_U,SDSS_G,SDSS_R,SDSS_I,SDSS_Z,J,H,Ks,i1, or i2
  *	source_band
  *	source_mag_limit        magnitude limit
- *	source_sb_limit         Minimum surface brightness limit for truncating sources.  By default it is 30. // TODO Fabio: What units is this?
+ *	source_sb_limit         Minimum surface brightness limit for truncating sources.  By default it is 30. mag/sq. arcsec
  *
  *</pre>
  */
@@ -37,7 +37,7 @@ public:
 	double SurfaceBrightness(double *y){
 		double x[2] = {y[0]-galaxies[index].theta[0] , y[1]-galaxies[index].theta[1]};
 		double s = galaxies[index].SurfaceBrightness(x);
-		if (s < pow(10,-0.4*(48.6+sb_limit))*pow(180*60*60/pi,2)) return 0.;
+		if (s*hplanck < pow(10,-0.4*(48.6+sb_limit))*pow(180*60*60/pi,2)) return 0.;
 		return s;
 
 	}
