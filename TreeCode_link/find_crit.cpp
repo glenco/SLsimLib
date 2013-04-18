@@ -229,12 +229,12 @@ void find_crit(
   if(ordercurve){
 
 	  unsigned long NewNumber;
+	  unsigned long ii;
 
 	  // order points in curve
 
 	  x[0]=x[1]=0.0;
 	  Point *tmp_points = NewPointArray(Npoints,false);
-	  unsigned long ii;
 	  for(i=0;i<*Ncrits;++i){
 		  // return in_image value to false
 		  critcurve[i].imagekist->MoveToTop();
@@ -279,13 +279,20 @@ void find_crit(
   for(i=0;i<*Ncrits;++i){
 	  critcurve[i].centroid[0] = 0;
 	  critcurve[i].centroid[1] = 0;
-	  critcurve[i].imagekist->MoveToTop();
-	  do{
-		  critcurve[i].centroid[0] += critcurve[i].imagekist->getCurrent()->x[0];
-		  critcurve[i].centroid[1] += critcurve[i].imagekist->getCurrent()->x[1];
-	  }while(critcurve[i].imagekist->Down());
-	  critcurve[i].centroid[0] /= critcurve[i].imagekist->Nunits();
-	  critcurve[i].centroid[1] /= critcurve[i].imagekist->Nunits();
+	  if(critcurve[i].imagekist->Nunits() >0){
+		  critcurve[i].imagekist->MoveToTop();
+		  do{
+			  critcurve[i].centroid[0] += critcurve[i].imagekist->getCurrent()->x[0];
+			  critcurve[i].centroid[1] += critcurve[i].imagekist->getCurrent()->x[1];
+		  }while(critcurve[i].imagekist->Down());
+		  critcurve[i].centroid[0] /= critcurve[i].imagekist->Nunits();
+		  critcurve[i].centroid[1] /= critcurve[i].imagekist->Nunits();
+	  }else{
+		  // take out curves with no points
+		  critcurve[i].copy(critcurve[*Ncrits-1]);
+		  *Ncrits -= 1;
+		  --i;
+	  }
   }
 
   return ;
