@@ -21,7 +21,7 @@
 class PixelMap
 {
 public:
-	PixelMap(const PixelMap& pmap, double degrading_factor);
+	PixelMap(const PixelMap& pmap, double res_ratio);
 	PixelMap();
 	PixelMap(const PixelMap& other);
 	PixelMap(const PixelMap& pmap, const double* center, std::size_t Npixels);
