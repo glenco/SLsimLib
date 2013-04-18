@@ -15,6 +15,8 @@ OverzierSource::OverzierSource()
 {
 	theta[0] = 0;
 	theta[1] = 0;
+	
+	sb_limit = 30.;
 }
 
 OverzierSource::OverzierSource(
@@ -29,6 +31,8 @@ OverzierSource::OverzierSource(
 		,const double *my_theta          /// optional angular position on the sky
 		){
 	setInternals(my_mag,my_BtoT,my_Reff,my_Rh,my_PA,my_inclination,my_id,my_z,my_theta);
+	
+	sb_limit = 30.;
 }
 
 OverzierSource::~OverzierSource()
@@ -74,9 +78,13 @@ void OverzierSource::setInternals(double my_mag,double my_BtoT,double my_Reff,do
 }
 /// Surface brightness in erg/cm^2/sec/rad^2/Hz
 double OverzierSource::SurfaceBrightness(
-		double *x  /// position in radians relative to center of source
+		double *y  /// position in radians
 		){
-
+	// position relative to center
+	double x[2];
+	x[0] = y[0]-theta[0];
+	x[1] = y[1]-theta[1];
+	
 	double R = cxx*x[0]*x[0] + cyy*x[1]*x[1] + cxy*x[0]*x[1],sb;
 	R = sqrt(R);
 
@@ -84,7 +92,11 @@ double OverzierSource::SurfaceBrightness(
 	sb = sbDo*exp(-R);
 	if(Reff > 0.0) sb += sbSo*exp(-7.6693*pow((x[0]*x[0] + x[1]*x[1])/Reff/Reff,0.125));
 //	if(sb < 1.0e-4*(sbDo + sbSo) ) return 0.0;
-	sb *= pow(10,-0.4*48.6)/hplanck;
+	sb *= pow(10,-0.4*48.6)*inv_hplanck;
+	
+	if(sb*hplanck < pow(10,-0.4*(48.6+sb_limit))*pow(180*60*60/pi,2))
+		return 0.;
+	
 	return sb;
 }
 

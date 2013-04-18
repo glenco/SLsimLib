@@ -35,15 +35,10 @@ public:
 	MultiSourceAnaGalaxy(OverzierSource *my_galaxy);
 	MultiSourceAnaGalaxy(InputParams& params);
 	~MultiSourceAnaGalaxy();
-
-	/// Surface brightness of current galaxy in coordinates not centered on current galaxy.
-	double SurfaceBrightness(double *y){
-		double x[2] = {y[0]-galaxies[index].getX()[0] , y[1]-galaxies[index].getX()[1]};
-		double s = galaxies[index].SurfaceBrightness(x);
-		if (s*hplanck < pow(10,-0.4*(48.6+sb_limit))*pow(180*60*60/pi,2)) return 0.;
-		return s;
-
-	}
+	
+	/// Surface brightness of current galaxy.
+	double SurfaceBrightness(double* x) { return galaxies[index].SurfaceBrightness(x); }
+	
 	/// Total flux coming from the current galaxy in erg/sec/Hz/cm^2
 	double getTotalFlux(){return pow(10,-(48.6+galaxies[index].getMag())/2.5);}
 
