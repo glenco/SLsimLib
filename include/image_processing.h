@@ -238,13 +238,14 @@ public:
 	 * PixelMap.
 	 * 
 	 * It is assumed that the value in each pixel of the data image is given as
-	 * the observed value minus the mean value of the noise in this pixel, and
-	 * that this mean noise is provided in the second image.
+	 * the observed counts per second minus the mean value of the noise in this
+	 * pixel, and that this mean noise is provided in the second image.
 	 * 
 	 * \param image The data image.
 	 * \param noise The noise image.
+	 * \param zp_mag The zero-point magnitude of the observation.
 	 */
-	PixelData(const PixelMap& image, const PixelMap& noise);
+	PixelData(const PixelMap& image, const PixelMap& noise, double zp_mag);
 	
 	/**
 	 * Copy constructor.
@@ -271,6 +272,9 @@ public:
 	/** Get resolution of data. */
 	double getResolution() const;
 	
+	/** Get zero-point magnitude. */
+	double getZeroPoint() const;
+	
 	/**
 	 * \brief Calculate the chi^2 value of a model PixelMap.
 	 * 
@@ -291,6 +295,7 @@ public:
 private:
 	PixelMap img;
 	PixelMap noi;
+	double zp;
 };
 
 inline PixelMap PixelData::image() const { return img; }
@@ -298,6 +303,7 @@ inline std::size_t PixelData::getNpixels() const { return img.getNpixels(); }
 inline double PixelData::getRange() const { return img.getRange(); }
 inline const double* PixelData::getCenter() const { return img.getCenter(); }
 inline double PixelData::getResolution() const { return img.getResolution(); }
+inline double PixelData::getZeroPoint() const { return zp; }
 
 void pixelize(double *map,long Npixels,double range,double *center
 		,ImageInfo *imageinfo,int Nimages,bool constant_sb,bool cleanmap

@@ -847,8 +847,8 @@ void swap(PixelData& a, PixelData& b)
 	swap(a.noi, b.noi);
 }
 
-PixelData::PixelData(const PixelMap& image, const PixelMap& noise)
-: img(image), noi(noise)
+PixelData::PixelData(const PixelMap& image, const PixelMap& noise, double zp_mag)
+: img(image), noi(noise), zp(zp_mag)
 {
 	// must be a valid image
 	assert(img.valid());
@@ -858,10 +858,15 @@ PixelData::PixelData(const PixelMap& image, const PixelMap& noise)
 	
 	// image and sigma need to agree
 	assert(agree(img, noi));
+	
+	// renormalize pixmaps by amount given from zero-point magnitude.
+	double norm = std::pow(10., -0.4*(zp_mag+48.6))*inv_hplanck;
+	img.Renormalize(norm);
+	noi.Renormalize(norm);
 }
 
 PixelData::PixelData(const PixelData& other)
-: img(other.img), noi(other.noi)
+: img(other.img), noi(other.noi), zp(other.zp)
 {
 }
 
