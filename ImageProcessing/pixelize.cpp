@@ -95,6 +95,7 @@ PixelMap::PixelMap(
 }
 
 /// Constructs a PixelMap reading in a fits file
+/// Infos about resolution, Npixels and center are read from the header.
 PixelMap::PixelMap(std::string filename)
 {
 #ifdef ENABLE_FITS
@@ -174,12 +175,13 @@ PixelMap::PixelMap(const PixelMap& pmap,  /// Input PixelMap (from which the sta
 		}
 	}
 
-/// TODO (What happens when degrading_factor < 1???) Copy constructor. If degrading_factor > 1., it creates a PixelMap with a lower resolution.
-PixelMap::PixelMap(const PixelMap& pmap, double degrading_factor)
+/// Creates a PixelMap at a different resolution.
+/// The new counts are calculated integrating over the input pixels.
+/// No interpolation or smoothing is performed.
+PixelMap::PixelMap(const PixelMap& pmap, double res_ratio)
 	{
-
-	resolution = degrading_factor*pmap.resolution;
-	Npixels = pmap.Npixels/degrading_factor + 1;
+	resolution = res_ratio*pmap.resolution;
+	Npixels = pmap.Npixels/res_ratio + .5;
 	range = resolution*(Npixels-1);
 	center[0] = pmap.center[0];
 	center[1] = pmap.center[1];
@@ -202,16 +204,16 @@ PixelMap::PixelMap(const PixelMap& pmap, double degrading_factor)
 		ix = i%Npixels;
 		iy = i/Npixels;
 		map[ix+Npixels*iy] = 0.;
-		old_p1[0] = std::max(0,int(ix*degrading_factor));
-		old_p1[1] = std::max(0,int(iy*degrading_factor));
-		old_p2[0] = std::min(old_Npixels-1,int((ix+1.)*degrading_factor));
-		old_p2[1] = std::min(old_Npixels-1,int((iy+1.)*degrading_factor));
+		old_p1[0] = std::max(0,int(ix*res_ratio));
+		old_p1[1] = std::max(0,int(iy*res_ratio));
+		old_p2[0] = std::min(old_Npixels-1,int((ix+1.)*res_ratio));
+		old_p2[1] = std::min(old_Npixels-1,int((iy+1.)*res_ratio));
 		for (int old_iy = old_p1[1]; old_iy<= old_p2[1]; ++old_iy)
 		{
 			for (int old_ix = old_p1[0]; old_ix<= old_p2[0]; ++old_ix)
 				{
-					area = MIN(old_ix+0.5,(ix+1.)*degrading_factor-0.5) - MAX(old_ix-0.5,ix*degrading_factor-0.5);
-					area *= MIN(old_iy+0.5,(iy+1.)*degrading_factor-0.5) - MAX(old_iy-0.5,iy*degrading_factor-0.5);
+					area = MIN(old_ix+0.5,(ix+1.)*res_ratio-0.5) - MAX(old_ix-0.5,ix*res_ratio-0.5);
+					area *= MIN(old_iy+0.5,(iy+1.)*res_ratio-0.5) - MAX(old_iy-0.5,iy*res_ratio-0.5);
 					map[ix+Npixels*iy] += area*pmap.map[old_ix+old_Npixels*old_iy];
 				}
 			}
@@ -563,8 +565,7 @@ void PixelMap::smooth(double sigma){
 }
 
 /** \brief Smooths the image with a PSF map.
-* oversample_n allows for an oversampled psf image.
-* (In principle, this should be readable directly from the fits header.)
+*
 */
 PixelMap Observation::ApplyPSF(PixelMap &pmap)
 {
