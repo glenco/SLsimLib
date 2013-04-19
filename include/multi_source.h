@@ -24,14 +24,14 @@ public:
 	/// Destroy the MultiSource and free created sources.
 	~MultiSource();
 	
-	/// Surface brightness of current source
+	/// Surface brightness of current source. The limits of both the MultiSource and the current source apply.
 	double SurfaceBrightness(double* y);
 	
-	/// Total flux coming from the current source
+	/// Total flux coming from the current source.
 	double getTotalFlux();
 	
-	/// Get radius of current source.
-	double getRadius();
+	/// Output source information.
+	void printSource();
 	
 	/// Return redshift of current source.
 	double getZ();
@@ -39,11 +39,17 @@ public:
 	/// Set redshift of current source. Only changes the redshift while leaving position fixed.
 	void setZ(double z);
 	
+	/// Get radius of current source.
+	double getRadius();
+	
+	/// Set radius of current source.
+	void setRadius(double r);
+	
 	/// Return angular position of current source.
 	double* getX();
 	
 	/// Set angular position of current source.
-	void setX(double theta[2]);
+	void setX(double x[2]);
 	
 	/// Set angular position of current source.
 	void setX(double x1, double x2);
@@ -111,8 +117,6 @@ public:
 		return matches;
 	}
 	
-	void printSource();
-	
 private:
 	void assignParams(InputParams& params);
 	
@@ -137,11 +141,21 @@ private:
 
 /**** inline functions ****/
 
-inline double MultiSource::SurfaceBrightness(double *y) { return sources[index]->SurfaceBrightness(y); }
+inline double MultiSource::SurfaceBrightness(double *y)
+{
+	double sb = sources[index]->SurfaceBrightness(y);
+	
+	if(sb*hplanck < std::pow(10., -0.4*(48.6+getSBlimit())) * (180*60*60/pi)*(180*60*60/pi))
+		return 0.;
+	
+	return sb;
+}
 
 inline double MultiSource::getTotalFlux() { return sources[index]->getTotalFlux(); }
 
 inline double MultiSource::getRadius() { return sources[index]->getRadius(); }
+
+inline void MultiSource::setRadius(double r) { sources[index]->setRadius(r); }
 
 inline double MultiSource::getZ(){ return sources[index]->getZ(); }
 
