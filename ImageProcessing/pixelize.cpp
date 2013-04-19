@@ -714,12 +714,21 @@ Observation::Observation(float diameter, float transmission, float exp_time, int
 		{
 	mag_zeropoint = 2.5*log10(diameter*diameter*transmission*pi/4./hplanck) - 48.6;
 
+#ifdef ENABLE_FITS
+
 	std::auto_ptr<CCfits::FITS> fp (new CCfits::FITS (psf_file.c_str(), CCfits::Read));
 	CCfits::PHDU *h0=&fp->pHDU();
 	int side_psf = h0->axis(0);
 	int N_psf = side_psf*side_psf;
 	map_psf.resize(N_psf);
 	h0->read(map_psf);
+
+#else
+		std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
+		exit(1);
+#endif
+
+
 		}
 // TODO comment
 Observation::Observation(float diameter, float transmission):
