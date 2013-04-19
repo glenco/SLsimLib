@@ -163,7 +163,7 @@ PixelMap::PixelMap(const PixelMap& pmap,  /// Input PixelMap (from which the sta
 		int * edge = new int[2];
 		edge[0] = (center[0]-pmap.map_boundary_p1[0])/resolution - Npixels/2;
 		edge[1] = (center[1]-pmap.map_boundary_p1[1])/resolution - Npixels/2;
-		if (edge[0] > pmap.Npixels || edge[1] > pmap.Npixels || edge[0]+Npixels < 0 || edge[1]+Npixels < 0)
+		if (edge[0] > int(pmap.Npixels) || edge[1] > int(pmap.Npixels) || edge[0]+int(Npixels) < 0 || edge[1]+int(Npixels) < 0)
 		{
 			std::cout << "The region you selected is completely outside PixelMap!" << std::endl;
 			exit(1);
