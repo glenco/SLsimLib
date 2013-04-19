@@ -590,6 +590,13 @@ void find_crit2(
   				  tmp_pseudo->imagekist->getCurrent()->in_image = TRUE;
   			  }
   		  }
+  		  if(pseudocurve[i].imagekist->Nunits() > 0){
+  			  pseudocurve[i].ShouldNotRefine = 1;
+  		  }else{
+  			  minmupoint->in_image = TRUE;
+  			  pseudocurve[i].imagekist->InsertAfterCurrent(minmupoint);
+  			  pseudocurve[i].ShouldNotRefine = 0;  // marks that region has not been found
+  		  }
 
   		  if(tmp_pseudo->imagekist->Nunits() > 0){
   			  tmp_pseudo->ShouldNotRefine = 1;
@@ -607,6 +614,7 @@ void find_crit2(
   				  ){
   			  ++count;
   			  // update region
+
   			  if(tmp_pseudo->ShouldNotRefine == 0){
   				  assert(tmp_pseudo->imagekist->Nunits() == 1);
   				  mumin = tmp_pseudo->imagekist->getCurrent()->invmag;
@@ -690,12 +698,10 @@ void find_crit2(
   				  do{
   					  dr = pow(pseudocurve[i].centroid[0]-pseudocurve[i].imagekist->getCurrent()->x[0],2)
   					+ pow(pseudocurve[i].centroid[1]-pseudocurve[i].imagekist->getCurrent()->x[1],2);
-  					  //pseudocurve[i].imagekist->getCurrent()->surface_brightness = pseudocurve[i].imagekist->getCurrent()->invmag;
-  					  if(dr > tmp_range) tmp_range = dr;
-  					  if(pseudocurve[i].imagekist->getCurrent()->invmag > pseudolimit)
-  						  std::cout << "  number of points = " << pseudocurve[i].imagekist->Nunits();
-  					  assert(pseudocurve[i].imagekist->getCurrent()->invmag < pseudolimit);
-  				  }while(pseudocurve[i].imagekist->Down());
+  			if(dr > tmp_range) tmp_range = dr;
+  			assert(pseudocurve[i].imagekist->getCurrent()->invmag < pseudolimit);
+   		}while(pseudocurve[i].imagekist->Down());
+
 
  			  	  //critcurve[i].imagekist->TranformPlanes();
 				  critcurve[i].imagekist->MoveToTop();
