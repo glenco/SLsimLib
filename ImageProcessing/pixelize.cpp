@@ -143,6 +143,7 @@ PixelMap::PixelMap(std::string filename)
 }
 
 /// Creates a new PixelMap from a region of a PixelMap.
+/// If the region exceeds the boundaries of the original map, the new map is completed with zeros.
 PixelMap::PixelMap(const PixelMap& pmap,  /// Input PixelMap (from which the stamp is taken)
 		const double* center, /// center of the region to be duplicated (in rads)
 		std::size_t Npixels /// size of the region to be duplicated (in pixels)
@@ -162,16 +163,18 @@ PixelMap::PixelMap(const PixelMap& pmap,  /// Input PixelMap (from which the sta
 		int * edge = new int[2];
 		edge[0] = (center[0]-pmap.map_boundary_p1[0])/resolution - Npixels/2;
 		edge[1] = (center[1]-pmap.map_boundary_p1[1])/resolution - Npixels/2;
-		if (edge[0] < 0 || edge[1] < 0 || edge[0]+Npixels > pmap.Npixels || edge[1]+Npixels > pmap.Npixels)
+		if (edge[0] > pmap.Npixels || edge[1] > pmap.Npixels || edge[0]+Npixels < 0 || edge[1]+Npixels < 0)
 		{
-			std::cout << "The region you selected is not fully contained in the PixelMap!" << std::endl;
+			std::cout << "The region you selected is completely outside PixelMap!" << std::endl;
 			exit(1);
 		}
 		for (unsigned long i=0; i < map_size; ++i)
 		{
 			int ix = i%Npixels;
 			int iy = i/Npixels;
-			map[i] = pmap.map[ix+edge[0]+(iy+edge[1])*pmap.Npixels];
+			map[i] = 0;
+			if (ix+edge[0] > 0 && ix+edge[0] < pmap.Npixels && iy+edge[1] > 0 && iy+edge[1] < pmap.Npixels)
+				map[i] = pmap.map[ix+edge[0]+(iy+edge[1])*pmap.Npixels];
 		}
 	}
 
