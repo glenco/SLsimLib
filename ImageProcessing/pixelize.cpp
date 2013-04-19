@@ -860,8 +860,8 @@ void swap(PixelData& a, PixelData& b)
 	swap(a.noi, b.noi);
 }
 
-PixelData::PixelData(const PixelMap& image, const PixelMap& noise, double zp_mag)
-: img(image), noi(noise), zp(zp_mag)
+PixelData::PixelData(const PixelMap& image, const PixelMap& noise, double zp_mag, double time)
+: img(image), noi(noise)
 {
 	// must be a valid image
 	assert(img.valid());
@@ -872,14 +872,19 @@ PixelData::PixelData(const PixelMap& image, const PixelMap& noise, double zp_mag
 	// image and sigma need to agree
 	assert(agree(img, noi));
 	
-	// renormalize pixmaps by amount given from zero-point magnitude.
-	double norm = std::pow(10., -0.4*(zp_mag+48.6))*inv_hplanck;
-	img.Renormalize(norm);
-	noi.Renormalize(norm);
+	// normalization factor from zero-point magnitude and observation time
+	norm = std::pow(10., 0.4*(zp_mag+48.6))*hplanck;
+	
+	// convert to simulation units
+	img.Renormalize(1./norm);
+	noi.Renormalize(1./norm);
+	
+	// convert from counts/sec to counts
+	norm *= time;
 }
 
 PixelData::PixelData(const PixelData& other)
-: img(other.img), noi(other.noi), zp(other.zp)
+: img(other.img), noi(other.noi), norm(other.norm)
 {
 }
 
@@ -894,10 +899,21 @@ double PixelData::chi_square(const PixelMap &model) const
 	assert(model.valid());
 	assert(agree(model, img));
 	
+	// we need the sum of chi^2 and log(sigma^2)
 	double chi2 = 0;
+	double log_sigma2 = 0;
+	
+	// go through pixels
 	for(std::size_t i = 0, n = model.size(); i < n; ++i)
-		chi2 += std::pow(img[i] - model[i], 2)/(model[i] + noi[i]);
-	return chi2;
+	{
+		double delta = img[i] - norm*model[i];
+		double sigma2 = norm*model[i] + noi[i];
+		chi2 += (delta*delta)/sigma2;
+		log_sigma2 += std::log(sigma2);
+	}
+	
+	// return with normalization, taking care of the log
+	return norm*chi2 + model.size()*std::log(norm) + log_sigma2;
 }
 
 /*

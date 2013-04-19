@@ -78,5 +78,5 @@ void ImageLikelihood::gridPoints(std::size_t n)
 
 void ImageLikelihood::redof()
 {
-	dof = std::pow((float)(dta.getNpixels()), 2) - dim;
+	dof = dta.getNpixels()*dta.getNpixels() - dim;
 }

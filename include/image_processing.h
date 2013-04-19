@@ -244,8 +244,9 @@ public:
 	 * \param image The data image.
 	 * \param noise The noise image.
 	 * \param zp_mag The zero-point magnitude of the observation.
+	 * \param time The observation time.
 	 */
-	PixelData(const PixelMap& image, const PixelMap& noise, double zp_mag);
+	PixelData(const PixelMap& image, const PixelMap& noise, double zp_mag, double time);
 	
 	/**
 	 * Copy constructor.
@@ -272,15 +273,11 @@ public:
 	/** Get resolution of data. */
 	double getResolution() const;
 	
-	/** Get zero-point magnitude. */
-	double getZeroPoint() const;
-	
 	/**
 	 * \brief Calculate the chi^2 value of a model PixelMap.
 	 * 
 	 * Given a model PixelMap, this method calculates the chi^2 value with
-	 * respect to the image and noise maps for the data. The model PixelMap
-	 * has to be converted to the same units as the data.
+	 * respect to the image and noise maps for the data.
 	 */
 	double chi_square(const PixelMap& model) const;
 	
@@ -295,7 +292,7 @@ public:
 private:
 	PixelMap img;
 	PixelMap noi;
-	double zp;
+	double norm;
 };
 
 inline PixelMap PixelData::image() const { return img; }
@@ -303,7 +300,6 @@ inline std::size_t PixelData::getNpixels() const { return img.getNpixels(); }
 inline double PixelData::getRange() const { return img.getRange(); }
 inline const double* PixelData::getCenter() const { return img.getCenter(); }
 inline double PixelData::getResolution() const { return img.getResolution(); }
-inline double PixelData::getZeroPoint() const { return zp; }
 
 void pixelize(double *map,long Npixels,double range,double *center
 		,ImageInfo *imageinfo,int Nimages,bool constant_sb,bool cleanmap
