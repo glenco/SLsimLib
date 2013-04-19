@@ -811,7 +811,7 @@ PixelMask::PixelMask(std::string file, double threshold, ThresholdType type)
 	swap(*this, mask);
 #else
 	// warn about ENABLE_FITS
-	SLSIMLIB_DEBUG("FITS support disabled, use ENABLE_FITS flag");
+	std::cerr << "FITS support disabled, use ENABLE_FITS flag" << std::endl;
 	
 	// default mask
 	PixelMask mask;
