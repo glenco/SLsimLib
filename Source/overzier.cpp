@@ -10,13 +10,14 @@
 #include "slsimlib.h"
 
 OverzierSource::OverzierSource()
-: haloID(0), z(0), Reff(0), Rh(0), BtoT(0), PA(0), inclination(0),
+: haloID(0), Reff(0), Rh(0), BtoT(0), PA(0), inclination(0),
   cxx(0), cyy(0), cxy(0), sbDo(0), sbSo(0), mag(0)
 {
-	theta[0] = 0;
-	theta[1] = 0;
+	setZ(0);
+	setRadius(0);
+	setX(0, 0);
 	
-	sb_limit = 30.;
+	setSBlimit(30.);
 }
 
 OverzierSource::OverzierSource(
@@ -32,7 +33,7 @@ OverzierSource::OverzierSource(
 		){
 	setInternals(my_mag,my_BtoT,my_Reff,my_Rh,my_PA,my_inclination,my_id,my_z,my_theta);
 	
-	sb_limit = 30.;
+	setSBlimit(30.);
 }
 
 OverzierSource::~OverzierSource()
@@ -66,24 +67,28 @@ void OverzierSource::setInternals(double my_mag,double my_BtoT,double my_Reff,do
 	else sbDo = 0.0;
 	if(Reff > 0.0) sbSo = pow(10,-my_mag/2.5)*94.484376*BtoT/pow(Reff,2);
 	else sbSo = 0.0;
-
-	z = my_z;
-	if(my_theta != NULL){
-		theta[0] = my_theta[0];
-		theta[1] = my_theta[1];
-	}else{
-		theta[0] = 0;
-		theta[1] = 0;
-	}
+	
+	// redshift
+	setZ(my_z);
+	
+	// radius
+	setRadius(6.670*Rh*(1-BtoT)+18.936*Reff*BtoT);
+	
+	// position
+	if(my_theta != NULL)
+		setX(my_theta[0], my_theta[1]);
+	else
+		setX(0, 0);
 }
+
 /// Surface brightness in erg/cm^2/sec/rad^2/Hz
 double OverzierSource::SurfaceBrightness(
 		double *y  /// position in radians
 		){
 	// position relative to center
 	double x[2];
-	x[0] = y[0]-theta[0];
-	x[1] = y[1]-theta[1];
+	x[0] = y[0]-getX()[0];
+	x[1] = y[1]-getX()[1];
 	
 	double R = cxx*x[0]*x[0] + cyy*x[1]*x[1] + cxy*x[0]*x[1],sb;
 	R = sqrt(R);
@@ -94,7 +99,7 @@ double OverzierSource::SurfaceBrightness(
 //	if(sb < 1.0e-4*(sbDo + sbSo) ) return 0.0;
 	sb *= pow(10,-0.4*48.6)*inv_hplanck;
 	
-	if(sb*hplanck < pow(10,-0.4*(48.6+sb_limit))*pow(180*60*60/pi,2))
+	if(sb*hplanck < pow(10,-0.4*(48.6+getSBlimit()))*pow(180*60*60/pi,2))
 		return 0.;
 	
 	return sb;

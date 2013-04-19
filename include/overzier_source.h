@@ -32,22 +32,8 @@ public:
 	double getTotalFlux();
 	void printSource();
 	
-	/// Return redshift.
-	double getZ() { return z; }
-	
-	/// Set redshift. Only changes the redshift while leaving position fixed.
-	void setZ(double my_z) { z = my_z; }
-	
+	/// Halo ID.
 	unsigned long getID() { return haloID; }
-	
-	/// Return angular position.
-	double* getX() { return theta; }
-	
-	/// Set angular position.
-	void setX(double my_theta[2]) { theta[0] = my_theta[0]; theta[1] = my_theta[1]; }
-	
-	/// Set angular position.
-	void setX(double my_x,double my_y) { theta[0] = my_x; theta[1] = my_y; }
 	
 	/// get magnitude of whole galaxy.  Which band this is in depends on which was passed in the constructor
 	double getMag() const { return mag; }
@@ -86,19 +72,11 @@ public:
 	double getPA() const { return PA; }
 	double getInclination() const { return inclination; }
 	
-	double getRadius(){return 6.670*Rh*(1-BtoT)+18.936*Reff*BtoT;}
-	
 private:
 	void assignParams(InputParams& params);
 	
 	/// haloID
 	unsigned long haloID;
-	
-	/// redshift
-	double z;
-	
-	/// position on the sky
-	double theta[2];
 	
 	/// weighted mean between the radii that enclose 99% of the flux
 	/// in the pure De Vacouleur/exponential disk case
