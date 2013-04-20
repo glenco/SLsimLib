@@ -80,6 +80,9 @@ public:
 	/// Get the type of the source.
 	virtual SourceType type() const = 0;
 	
+	/// Get the name of the source.
+	virtual const char* name() const = 0;
+	
 	/// Create a copy of the source from the abstract base class. Needs to be deleted.
 	virtual Source* clone() const = 0;
 	
@@ -101,15 +104,6 @@ protected:
 };
 
 typedef Source *SourceHndl;
-
-/// Cast a source into a given type.
-template<typename SourceT>
-SourceT* source_cast(Source* s)
-{
-	if(s->type() == source_type_of<SourceT>())
-		return (SourceT*)s;
-	return 0;
-}
 
 class PixelledSource: public Source{
 public:
@@ -237,6 +231,9 @@ public:
 	SourceBLRSph2(InputParams&);
 	~SourceBLRSph2();
 };
+
+// include casting definitions
+#include "source_cast.h"
 
 /// pointer to surface brightness function
 //double (Source::*SurfaceBrightness)(double *y);

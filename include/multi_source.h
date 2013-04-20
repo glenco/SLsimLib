@@ -80,7 +80,7 @@ public:
 	SourceT* getCurrent() const
 	{
 		// use the SourceType to safely upcast the current Source*
-		return source_cast<SourceT>(sources[index]);
+		return source_cast<SourceT*>(sources[index]);
 	}
 	
 	/// Get the type of the current source.
