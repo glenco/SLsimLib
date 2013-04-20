@@ -80,6 +80,9 @@ public:
 	/// Get the type of the source.
 	virtual SourceType type() const = 0;
 	
+	/// Create a copy of the source from the abstract base class. Needs to be deleted.
+	virtual Source* clone() const = 0;
+	
 protected:
 	virtual void assignParams(InputParams& params) = 0;
 	

@@ -7,8 +7,9 @@ class Source;
 
 /// Macro for easy source type definition.
 #define SOURCE_TYPE(T_) \
+	static SourceType source_type() { return SourceType(SourceType::T_); } \
 	SourceType type() const { return SourceType(SourceType::T_); } \
-	static SourceType source_type() { return SourceType(SourceType::T_); }
+	T_* clone() const { return new T_(*this); }
 
 /// Class registry for sources of complete type.
 class SourceType
