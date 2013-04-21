@@ -76,6 +76,26 @@ MultiSource& MultiSource::operator=(MultiSource rhs)
 	return *this;
 }
 
+void MultiSource::setParameters(Parameters& p)
+{
+	Source::setParameters(p);
+	for(std::size_t i = 0, n = sources.size(); i < n; ++i)
+		sources[i]->setParameters(p);
+}
+
+void MultiSource::getParameters(Parameters& p)
+{
+	Source::getParameters(p);
+	for(std::size_t i = 0, n = sources.size(); i < n; ++i)
+		sources[i]->getParameters(p);
+}
+
+void MultiSource::randomize(double step, long* seed)
+{
+	for(std::size_t i = 0, n = sources.size(); i < n; ++i)
+		sources[i]->randomize(step, seed);
+}
+
 bool MultiSource::setCurrent(Source* source)
 {
 	// find source in list

@@ -27,6 +27,12 @@ public:
 	/// Copy contents of another MultiSource into this. Replaces all sources, invalidates all pointers.
 	MultiSource& operator=(MultiSource rhs);
 	
+	/// Set parameters into all sources.
+	void setParameters(Parameters& p);
+	
+	/// Get parameters for all sources.
+	void getParameters(Parameters& p);
+	
 	/// Surface brightness of current source. The limits of both the MultiSource and the current source apply.
 	double SurfaceBrightness(double* y);
 	
@@ -56,6 +62,9 @@ public:
 	
 	/// Set angular position of current source.
 	void setX(double x1, double x2);
+	
+	/// Randomize all sources.
+	void randomize(double step, long* seed);
 	
 	/// Get number of sources.
 	std::size_t size() const;

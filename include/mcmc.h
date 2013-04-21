@@ -1,124 +1,104 @@
 #ifndef MCMC_H_
 #define MCMC_H_
 
-#include <monaco/likelihood.hpp>
-#include <monaco/metropolis.hpp>
+#include "source.h"
+#include "lens.h"
+#include "model.h"
+#include "parameters.h"
+
+#include <vector>
+#include <stdexcept>
 #include <cstddef>
+#include <cmath>
+#include <ctime>
 
-// macros to define the spec struct
+// TODO: put into C++ code
+#ifndef MCMC_MAX_ITER
+#define MCMC_MAX_ITER 1000
+#endif
 
-#define MCMC_SOURCE(s) typedef s source_type
-#define MCMC_LENS(l) typedef l lens_type
-
-#define MCMC_SOURCE_PARAMETERS(sp) typedef sp source_parameters
-#define MCMC_LENS_PARAMETERS(lp) typedef lp lens_parameters
-
-#define MCMC_SOURCE_GENERATOR(sg) typedef sg source_generator
-#define MCMC_LENS_GENERATOR(lg) typedef lg lens_generator
-
-#define MCMC_LIKELIHOOD(l) typedef l likelihood
-
-template<typename Spec>
 class MCMC
 {
 public:
-	typedef typename Spec::lens_type lens_type;
-	typedef typename Spec::source_type source_type;
-	
-	typedef typename Spec::lens_parameters lens_parameters;
-	typedef typename Spec::source_parameters source_parameters;
-	
-	typedef typename Spec::lens_generator lens_generator;
-	typedef typename Spec::source_generator source_generator;
-	
-	typedef typename Spec::likelihood likelihood;
-	
-	class parameters
+	MCMC(double step, long seed = 0)
+	: step(step), seed(seed)
 	{
-	public:
-		lens_parameters lens;
-		source_parameters source;
-		
-		parameters()
-		{
-		}
-		
-		parameters(const lens_type& l, const source_type& s)
-		{
-			lens.from_lens(l);
-			source.from_source(s);
-		}
-		
-		parameters(const lens_parameters& l, const source_parameters& s)
-		: lens(l), source(s)
-		{
-		}
-	};
-	
-public:
-	MCMC(Model<lens_type, source_type>& model, lens_generator& lens_gen, source_generator& source_gen, likelihood& lh)
-	: model(model), gen(lens_gen, source_gen), lh(model, lh)
-	{
+		if(!this->seed)
+			this->seed = time(0);
 	}
 	
-	template<typename Iterator>
-	void run(Iterator outp, const std::size_t n)
+	template<typename Model, typename Likelihood>
+	std::vector<Parameters> run(Model& model, Likelihood& L, const std::size_t n)
 	{
-		// load current parameters into chain
-		*outp = parameters(*model.lens, *model.source);
+		// the Markov chain
+		std::vector<Parameters> chain;
 		
-		// run metropolis algorithm
-		monaco::metropolis(gen, lh, outp, n);
-	}
-	
-private: /* classes */
-	class mcmc_generator
-	{
-	public:
-		mcmc_generator(lens_generator& l, source_generator& s)
-		: lgen(l), sgen(s)
+		// the number of steps in the chain
+		chain.reserve(n+1);
+		
+		// initial parameters
+		chain.push_back(Parameters());
+		
+		// load parameters from model
+		model.getParameters(chain.back());
+		
+		// current likelihood
+		double Lx = L(model);
+		
+		// candidate likelihood
+		double Ly;
+		
+		// run
+		for(std::size_t i = 0; i < n; ++i)
 		{
-		}
-		
-		inline parameters operator()(parameters p)
-		{
-			p.lens = lgen(p.lens);
-			p.source = sgen(p.source);
-			return p;
-		}
-		
-	private:
-		lens_generator& lgen;
-		source_generator& sgen;
-	};
-	
-	class mcmc_likelihood
-	{
-	public:
-		static const bool logarithmic = monaco::likelihood_traits<likelihood>::logarithmic;
-		
-		mcmc_likelihood(Model<lens_type, source_type>& model, likelihood& lh)
-		: model(model), lh(lh)
-		{
-		}
-		
-		inline double operator()(const parameters& p)
-		{
-			p.lens.to_lens(*model.lens);
-			p.source.to_source(*model.source);
+			// generate points until one is accepted
+			for(std::size_t j = 0; true; ++j)
+			{
+				// maximum number of iterations
+				if(j == MCMC_MAX_ITER)
+					throw std::runtime_error("MCMC: maximum iterations reached.");
+				
+				// load parameters into model
+				model.setParameters(chain.back());
+				
+				// reset consumed parameters
+				chain.back().reset();
+				
+				// randomize model
+				model.randomize(step, &seed);
+				
+				// calculate candidate likelihood
+				Ly = L(model);
+				
+				// acceptance
+				double a = Ly - Lx;
+				
+				// check if density increased
+				if(a > 0)
+					break;
+				
+				// step with probability a
+				if(std::exp(a) > ran2(&seed))
+					break;
+			}
 			
-			return lh(model);
+			// add parameters to chain
+			chain.push_back(Parameters());
+			
+			// get candidate parameters into chain
+			model.setParameters(chain.back());
+			
+			// keep likelihood
+			Lx = Ly;
 		}
 		
-	private:
-		Model<lens_type, source_type>& model;
-		likelihood& lh;
-	};
+		// chain is complete
+		return chain;
+	}
 	
-private: /* members */
-	Model<lens_type, source_type> model;
-	mcmc_generator gen;
-	mcmc_likelihood lh;
+private:
+	double step;
+	long seed;
 };
 
 #endif

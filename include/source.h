@@ -11,6 +11,7 @@
 #include "standard.h"
 #include "InputParams.h"
 #include "source_type.h"
+#include "parameters.h"
 
 class Source
 {
@@ -85,6 +86,15 @@ public:
 	
 	/// Create a copy of the source from the abstract base class. Needs to be deleted.
 	virtual Source* clone() const = 0;
+	
+	/// Get parameters from source.
+	virtual void getParameters(Parameters& p);
+	
+	/// Set parameters in source.
+	virtual void setParameters(Parameters& p);
+	
+	/// Randomize source by a given amount.
+	virtual void randomize(double step, long* seed);
 	
 protected:
 	virtual void assignParams(InputParams& params) = 0;
