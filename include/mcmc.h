@@ -86,7 +86,7 @@ public:
 			chain.push_back(Parameters());
 			
 			// get candidate parameters into chain
-			model.setParameters(chain.back());
+			model.getParameters(chain.back());
 			
 			// keep likelihood
 			Lx = Ly;

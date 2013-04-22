@@ -12,7 +12,7 @@ using namespace std;
 Source::Source(){
 }
 
-void Source::setParameters(Parameters& p)
+void Source::getParameters(Parameters& p)
 {
 	p << source_r;
 	p << source_x[0] << source_x[1];
@@ -22,7 +22,7 @@ void Source::setParameters(Parameters& p)
 	p << sb_limit;
 }
 
-void Source::getParameters(Parameters& p)
+void Source::setParameters(Parameters& p)
 {
 	p >> source_r;
 	p >> source_x[0] >> source_x[1];
