@@ -16,41 +16,6 @@
 class Source
 {
 public:
-/*
-
-	  Source();
-	  virtual ~Source();
-
-	  /// names of clump and sb models
-	  typedef enum {Uniform,Gaussian,BLR_Disk,BLR_Sph1,BLR_Sph2,MultiAnaSource,Pixelled,Sersic} SBModel;
-
-	  // in lens.cpp
-	  /// Surface brightness of source in grid coordinates not source centered coordinates.
-	  virtual double SurfaceBrightness(double *y) = 0;
-	  virtual double getTotalFlux() = 0;
-	  virtual void printSource() = 0;
-	  // TODO Fabio: What are the units?
-	  double getSBlimit(){return sb_limit;}
-
-
-	  // accessor functions that will sometimes be over ridden in class derivatives
-	  /// Redshift of source
-	  virtual inline double getZ(){return zsource;}
-	  virtual void setZ(double my_z){zsource = my_z;}
-	  /// Radius of source TODO units?
-	  virtual inline double getRadius(){return source_r;}
-	  virtual void setRadius(double my_radius){source_r = my_radius;}
-	  /// position of source TODO units?
-	  virtual inline double* getX(){return source_x;}
-	  virtual inline void setX(double *xx){source_x[0] = xx[0]; source_x[1] = xx[1];}
-	  void setX(double my_x,double my_y){source_x[0] = my_x; source_x[1] = my_y;}
-	  /// In the case of a single plane lens, the ratio of angular size distances
-	  virtual inline double getDlDs(){return DlDs;}
-	  //TODO BEN I think this need only be in the BLR source models
-	  virtual void setDlDs(double my_DlDs){DlDs = my_DlDs;}
-	  void setSBlimit(float limit) {sb_limit = limit;}
-
-*/
 	Source();
 	virtual ~Source();
 	
