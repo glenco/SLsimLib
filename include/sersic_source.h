@@ -18,8 +18,8 @@ public:
 	SersicSource(double mag,double Reff,double PA,double my_index,double my_q,double my_z=0,const double *theta=0);
 	~SersicSource();
 	
+	void getParameters(Parameters& p) const;
 	void setParameters(Parameters& p);
-	void getParameters(Parameters& p);
 	
 	void randomize(double step, long* seed);
 	

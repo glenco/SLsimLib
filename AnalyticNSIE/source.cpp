@@ -12,24 +12,14 @@ using namespace std;
 Source::Source(){
 }
 
-void Source::getParameters(Parameters& p)
+void Source::getParameters(Parameters& p) const
 {
-	p << source_r;
-	p << source_x[0] << source_x[1];
-	
-	p << zsource;
-	p << DlDs;
-	p << sb_limit;
+	p << source_r << source_x[0] << source_x[1] << zsource << DlDs << sb_limit;
 }
 
 void Source::setParameters(Parameters& p)
 {
-	p >> source_r;
-	p >> source_x[0] >> source_x[1];
-	
-	p >> zsource;
-	p >> DlDs;
-	p >> sb_limit;
+	p >> source_r >> source_x[0] >> source_x[1] >> zsource >> DlDs >> sb_limit;
 }
 
 void Source::randomize(double, long*)

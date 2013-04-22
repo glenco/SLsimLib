@@ -88,7 +88,7 @@ public:
 	virtual Source* clone() const = 0;
 	
 	/// Get parameters from source.
-	virtual void getParameters(Parameters& p);
+	virtual void getParameters(Parameters& p) const;
 	
 	/// Set parameters in source.
 	virtual void setParameters(Parameters& p);

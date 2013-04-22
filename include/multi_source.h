@@ -27,11 +27,11 @@ public:
 	/// Copy contents of another MultiSource into this. Replaces all sources, invalidates all pointers.
 	MultiSource& operator=(MultiSource rhs);
 	
+	/// Get parameters for all sources.
+	void getParameters(Parameters& p) const;
+	
 	/// Set parameters into all sources.
 	void setParameters(Parameters& p);
-	
-	/// Get parameters for all sources.
-	void getParameters(Parameters& p);
 	
 	/// Surface brightness of current source. The limits of both the MultiSource and the current source apply.
 	double SurfaceBrightness(double* y);
