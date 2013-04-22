@@ -95,7 +95,7 @@ private: /* classes */
 	class mcmc_likelihood
 	{
 	public:
-		static const bool is_logarithmic = monaco::likelihood_traits<likelihood>::logarithmic;
+		static const bool logarithmic = monaco::likelihood_traits<likelihood>::logarithmic;
 		
 		mcmc_likelihood(Model<lens_type, source_type>& model, likelihood& lh)
 		: model(model), lh(lh)

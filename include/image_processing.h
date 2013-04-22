@@ -21,7 +21,7 @@
 class PixelMap
 {
 public:
-	PixelMap(const PixelMap& pmap, double degrading_factor);
+	PixelMap(const PixelMap& pmap, double res_ratio);
 	PixelMap();
 	PixelMap(const PixelMap& other);
 	PixelMap(const PixelMap& pmap, const double* center, std::size_t Npixels);
@@ -238,13 +238,15 @@ public:
 	 * PixelMap.
 	 * 
 	 * It is assumed that the value in each pixel of the data image is given as
-	 * the observed value minus the mean value of the noise in this pixel, and
-	 * that this mean noise is provided in the second image.
+	 * the observed counts per second minus the mean value of the noise in this
+	 * pixel, and that this mean noise is provided in the second image.
 	 * 
 	 * \param image The data image.
 	 * \param noise The noise image.
+	 * \param zp_mag The zero-point magnitude of the observation.
+	 * \param time The observation time.
 	 */
-	PixelData(const PixelMap& image, const PixelMap& noise);
+	PixelData(const PixelMap& image, const PixelMap& noise, double zp_mag, double time);
 	
 	/**
 	 * Copy constructor.
@@ -275,8 +277,7 @@ public:
 	 * \brief Calculate the chi^2 value of a model PixelMap.
 	 * 
 	 * Given a model PixelMap, this method calculates the chi^2 value with
-	 * respect to the image and noise maps for the data. The model PixelMap
-	 * has to be converted to the same units as the data.
+	 * respect to the image and noise maps for the data.
 	 */
 	double chi_square(const PixelMap& model) const;
 	
@@ -291,6 +292,7 @@ public:
 private:
 	PixelMap img;
 	PixelMap noi;
+	double norm;
 };
 
 inline PixelMap PixelData::image() const { return img; }

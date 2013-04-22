@@ -95,6 +95,7 @@ PixelMap::PixelMap(
 }
 
 /// Constructs a PixelMap reading in a fits file
+/// Infos about resolution, Npixels and center are read from the header.
 PixelMap::PixelMap(std::string filename)
 {
 #ifdef ENABLE_FITS
@@ -142,6 +143,7 @@ PixelMap::PixelMap(std::string filename)
 }
 
 /// Creates a new PixelMap from a region of a PixelMap.
+/// If the region exceeds the boundaries of the original map, the new map is completed with zeros.
 PixelMap::PixelMap(const PixelMap& pmap,  /// Input PixelMap (from which the stamp is taken)
 		const double* center, /// center of the region to be duplicated (in rads)
 		std::size_t Npixels /// size of the region to be duplicated (in pixels)
@@ -161,25 +163,28 @@ PixelMap::PixelMap(const PixelMap& pmap,  /// Input PixelMap (from which the sta
 		int * edge = new int[2];
 		edge[0] = (center[0]-pmap.map_boundary_p1[0])/resolution - Npixels/2;
 		edge[1] = (center[1]-pmap.map_boundary_p1[1])/resolution - Npixels/2;
-		if (edge[0] < 0 || edge[1] < 0 || edge[0]+Npixels > pmap.Npixels || edge[1]+Npixels > pmap.Npixels)
+		if (edge[0] > int(pmap.Npixels) || edge[1] > int(pmap.Npixels) || edge[0]+int(Npixels) < 0 || edge[1]+int(Npixels) < 0)
 		{
-			std::cout << "The region you selected is not fully contained in the PixelMap!" << std::endl;
+			std::cout << "The region you selected is completely outside PixelMap!" << std::endl;
 			exit(1);
 		}
 		for (unsigned long i=0; i < map_size; ++i)
 		{
 			int ix = i%Npixels;
 			int iy = i/Npixels;
-			map[i] = pmap.map[ix+edge[0]+(iy+edge[1])*pmap.Npixels];
+			map[i] = 0;
+			if (ix+edge[0] > 0 && ix+edge[0] < pmap.Npixels && iy+edge[1] > 0 && iy+edge[1] < pmap.Npixels)
+				map[i] = pmap.map[ix+edge[0]+(iy+edge[1])*pmap.Npixels];
 		}
 	}
 
-/// TODO (What happens when degrading_factor < 1???) Copy constructor. If degrading_factor > 1., it creates a PixelMap with a lower resolution.
-PixelMap::PixelMap(const PixelMap& pmap, double degrading_factor)
+/// Creates a PixelMap at a different resolution.
+/// The new counts are calculated integrating over the input pixels.
+/// No interpolation or smoothing is performed.
+PixelMap::PixelMap(const PixelMap& pmap, double res_ratio)
 	{
-
-	resolution = degrading_factor*pmap.resolution;
-	Npixels = pmap.Npixels/degrading_factor + 1;
+	resolution = res_ratio*pmap.resolution;
+	Npixels = pmap.Npixels/res_ratio + .5;
 	range = resolution*(Npixels-1);
 	center[0] = pmap.center[0];
 	center[1] = pmap.center[1];
@@ -202,16 +207,16 @@ PixelMap::PixelMap(const PixelMap& pmap, double degrading_factor)
 		ix = i%Npixels;
 		iy = i/Npixels;
 		map[ix+Npixels*iy] = 0.;
-		old_p1[0] = std::max(0,int(ix*degrading_factor));
-		old_p1[1] = std::max(0,int(iy*degrading_factor));
-		old_p2[0] = std::min(old_Npixels-1,int((ix+1.)*degrading_factor));
-		old_p2[1] = std::min(old_Npixels-1,int((iy+1.)*degrading_factor));
+		old_p1[0] = std::max(0,int(ix*res_ratio));
+		old_p1[1] = std::max(0,int(iy*res_ratio));
+		old_p2[0] = std::min(old_Npixels-1,int((ix+1.)*res_ratio));
+		old_p2[1] = std::min(old_Npixels-1,int((iy+1.)*res_ratio));
 		for (int old_iy = old_p1[1]; old_iy<= old_p2[1]; ++old_iy)
 		{
 			for (int old_ix = old_p1[0]; old_ix<= old_p2[0]; ++old_ix)
 				{
-					area = MIN(old_ix+0.5,(ix+1.)*degrading_factor-0.5) - MAX(old_ix-0.5,ix*degrading_factor-0.5);
-					area *= MIN(old_iy+0.5,(iy+1.)*degrading_factor-0.5) - MAX(old_iy-0.5,iy*degrading_factor-0.5);
+					area = MIN(old_ix+0.5,(ix+1.)*res_ratio-0.5) - MAX(old_ix-0.5,ix*res_ratio-0.5);
+					area *= MIN(old_iy+0.5,(iy+1.)*res_ratio-0.5) - MAX(old_iy-0.5,iy*res_ratio-0.5);
 					map[ix+Npixels*iy] += area*pmap.map[old_ix+old_Npixels*old_iy];
 				}
 			}
@@ -561,8 +566,7 @@ void PixelMap::smooth(double sigma){
 }
 
 /** \brief Smooths the image with a PSF map.
-* oversample_n allows for an oversampled psf image.
-* (In principle, this should be readable directly from the fits header.)
+*
 */
 PixelMap Observation::ApplyPSF(PixelMap &pmap)
 {
@@ -708,12 +712,21 @@ Observation::Observation(float diameter, float transmission, float exp_time, int
 		{
 	mag_zeropoint = 2.5*log10(diameter*diameter*transmission*pi/4./hplanck) - 48.6;
 
+#ifdef ENABLE_FITS
+
 	std::auto_ptr<CCfits::FITS> fp (new CCfits::FITS (psf_file.c_str(), CCfits::Read));
 	CCfits::PHDU *h0=&fp->pHDU();
 	int side_psf = h0->axis(0);
 	int N_psf = side_psf*side_psf;
 	map_psf.resize(N_psf);
 	h0->read(map_psf);
+
+#else
+		std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
+		exit(1);
+#endif
+
+
 		}
 // TODO comment
 Observation::Observation(float diameter, float transmission):
@@ -796,7 +809,7 @@ PixelMask::PixelMask(std::string file, double threshold, ThresholdType type)
 	swap(*this, mask);
 #else
 	// warn about ENABLE_FITS
-	SLSIMLIB_DEBUG("FITS support disabled, use ENABLE_FITS flag");
+	std::cerr << "FITS support disabled, use ENABLE_FITS flag" << std::endl;
 	
 	// default mask
 	PixelMask mask;
@@ -845,7 +858,7 @@ void swap(PixelData& a, PixelData& b)
 	swap(a.noi, b.noi);
 }
 
-PixelData::PixelData(const PixelMap& image, const PixelMap& noise)
+PixelData::PixelData(const PixelMap& image, const PixelMap& noise, double zp_mag, double time)
 : img(image), noi(noise)
 {
 	// must be a valid image
@@ -856,10 +869,20 @@ PixelData::PixelData(const PixelMap& image, const PixelMap& noise)
 	
 	// image and sigma need to agree
 	assert(agree(img, noi));
+	
+	// normalization factor from zero-point magnitude and observation time
+	norm = std::pow(10., 0.4*(zp_mag+48.6))*hplanck;
+	
+	// convert to simulation units
+	img.Renormalize(1./norm);
+	noi.Renormalize(1./norm);
+	
+	// convert from counts/sec to counts
+	norm *= time;
 }
 
 PixelData::PixelData(const PixelData& other)
-: img(other.img), noi(other.noi)
+: img(other.img), noi(other.noi), norm(other.norm)
 {
 }
 
@@ -874,10 +897,21 @@ double PixelData::chi_square(const PixelMap &model) const
 	assert(model.valid());
 	assert(agree(model, img));
 	
+	// we need the sum of chi^2 and log(sigma^2)
 	double chi2 = 0;
+	double log_sigma2 = 0;
+	
+	// go through pixels
 	for(std::size_t i = 0, n = model.size(); i < n; ++i)
-		chi2 += std::pow(img[i] - model[i], 2)/(model[i] + noi[i]);
-	return chi2;
+	{
+		double delta = img[i] - norm*model[i];
+		double sigma2 = norm*model[i] + noi[i];
+		chi2 += (delta*delta)/sigma2;
+		log_sigma2 += std::log(sigma2);
+	}
+	
+	// return with normalization, taking care of the log
+	return norm*chi2 + model.size()*std::log(norm) + log_sigma2;
 }
 
 /*

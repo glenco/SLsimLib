@@ -45,6 +45,10 @@
 #define hplanck  6.626068e-27  // in erg*sec
 #endif
 
+#ifndef inv_hplanck
+#define inv_hplanck 1.50919e26 // in 1/(erg*sec)
+#endif
+
 #ifndef error_message
 #define error_message
 #define ERROR_MESSAGE() std::cout << "ERROR: file: " << __FILE__ << " line: " << __LINE__ << std::endl;

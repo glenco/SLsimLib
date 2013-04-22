@@ -1,5 +1,5 @@
 /*
- * Galaxies/overzier.cpp
+ * Source/overzier.cpp
  *
  *  Created on: Apr 12, 2012
  *      Author: bmetcalf
@@ -9,15 +9,18 @@
  */
 #include "slsimlib.h"
 
-OverGalaxy::OverGalaxy()
-: haloID(0), z(0), Reff(0), Rh(0), BtoT(0), PA(0), inclination(0),
+OverzierSource::OverzierSource()
+: haloID(0), Reff(0), Rh(0), BtoT(0), PA(0), inclination(0),
   cxx(0), cyy(0), cxy(0), sbDo(0), sbSo(0), mag(0)
 {
-	theta[0] = 0;
-	theta[1] = 0;
+	setZ(0);
+	setRadius(0);
+	setX(0, 0);
+	
+	setSBlimit(30.);
 }
 
-OverGalaxy::OverGalaxy(
+OverzierSource::OverzierSource(
 		double my_mag              /// Total magnitude
 		,double my_BtoT            /// Bulge to total ratio
 		,double my_Reff         /// Bulge half light radius (arcs)
@@ -29,14 +32,16 @@ OverGalaxy::OverGalaxy(
 		,const double *my_theta          /// optional angular position on the sky
 		){
 	setInternals(my_mag,my_BtoT,my_Reff,my_Rh,my_PA,my_inclination,my_id,my_z,my_theta);
+	
+	setSBlimit(30.);
 }
 
-OverGalaxy::~OverGalaxy()
+OverzierSource::~OverzierSource()
 {
 }
 
 /// Sets internal variables.  If default constructor is used this must be called before the surface brightness function.
-void OverGalaxy::setInternals(double my_mag,double my_BtoT,double my_Reff,double my_Rh,double my_PA,double incl,unsigned long my_id,double my_z,const double *my_theta){
+void OverzierSource::setInternals(double my_mag,double my_BtoT,double my_Reff,double my_Rh,double my_PA,double incl,unsigned long my_id,double my_z,const double *my_theta){
 
 	haloID = my_id;
 
@@ -62,21 +67,29 @@ void OverGalaxy::setInternals(double my_mag,double my_BtoT,double my_Reff,double
 	else sbDo = 0.0;
 	if(Reff > 0.0) sbSo = pow(10,-my_mag/2.5)*94.484376*BtoT/pow(Reff,2);
 	else sbSo = 0.0;
-
-	z = my_z;
-	if(my_theta != NULL){
-		theta[0] = my_theta[0];
-		theta[1] = my_theta[1];
-	}else{
-		theta[0] = 0;
-		theta[1] = 0;
-	}
+	
+	// redshift
+	setZ(my_z);
+	
+	// radius
+	setRadius(6.670*Rh*(1-BtoT)+18.936*Reff*BtoT);
+	
+	// position
+	if(my_theta != NULL)
+		setX(my_theta[0], my_theta[1]);
+	else
+		setX(0, 0);
 }
-/// Surface brightness in erg/cm^2/sec/rad^2/Hz
-double OverGalaxy::SurfaceBrightness(
-		double *x  /// position in radians relative to center of source
-		){
 
+/// Surface brightness in erg/cm^2/sec/rad^2/Hz
+double OverzierSource::SurfaceBrightness(
+		double *y  /// position in radians
+		){
+	// position relative to center
+	double x[2];
+	x[0] = y[0]-getX()[0];
+	x[1] = y[1]-getX()[1];
+	
 	double R = cxx*x[0]*x[0] + cyy*x[1]*x[1] + cxy*x[0]*x[1],sb;
 	R = sqrt(R);
 
@@ -84,10 +97,22 @@ double OverGalaxy::SurfaceBrightness(
 	sb = sbDo*exp(-R);
 	if(Reff > 0.0) sb += sbSo*exp(-7.6693*pow((x[0]*x[0] + x[1]*x[1])/Reff/Reff,0.125));
 //	if(sb < 1.0e-4*(sbDo + sbSo) ) return 0.0;
-	sb *= pow(10,-0.4*48.6)/hplanck;
+	sb *= pow(10,-0.4*48.6)*inv_hplanck;
+	
+	if(sb*hplanck < pow(10,-0.4*(48.6+getSBlimit()))*pow(180*60*60/pi,2))
+		return 0.;
+	
 	return sb;
 }
 
-void OverGalaxy::print(){
+double OverzierSource::getTotalFlux(){
+	return pow(10,-(48.6+mag)/2.5);
+}
+
+void OverzierSource::printSource(){
 	std::cout << "bulge half light radius: " << Reff << " arcs   disk scale hight: " << Rh << " arcs" << std::endl;
+}
+
+void OverzierSource::assignParams(InputParams& /* params */)
+{
 }
