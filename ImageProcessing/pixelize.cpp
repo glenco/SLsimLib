@@ -897,21 +897,16 @@ double PixelData::chi_square(const PixelMap &model) const
 	assert(model.valid());
 	assert(agree(model, img));
 	
-	// we need the sum of chi^2 and log(sigma^2)
 	double chi2 = 0;
-	double log_sigma2 = 0;
 	
-	// go through pixels
 	for(std::size_t i = 0, n = model.size(); i < n; ++i)
 	{
-		double delta = img[i] - norm*model[i];
-		double sigma2 = norm*model[i] + noi[i];
-		chi2 += (delta*delta)/sigma2;
-		log_sigma2 += std::log(sigma2);
+		double delta = img[i] - model[i];
+		double sigma2 = model[i] + noi[i];
+		chi2 += delta*delta/sigma2;
 	}
 	
-	// return with normalization, taking care of the log
-	return norm*chi2 + model.size()*std::log(norm) + log_sigma2;
+	return norm*chi2;
 }
 
 /*

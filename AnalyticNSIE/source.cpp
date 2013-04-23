@@ -12,6 +12,22 @@ using namespace std;
 Source::Source(){
 }
 
+void Source::getParameters(Parameters& p) const
+{
+	p << source_r << source_x[0] << source_x[1] << zsource << DlDs << sb_limit;
+}
+
+void Source::setParameters(Parameters& p)
+{
+	p >> source_r >> source_x[0] >> source_x[1] >> zsource >> DlDs >> sb_limit;
+}
+
+void Source::randomize(double, long*)
+{
+	std::cerr << "Error: " << this->name() << "::randomize() not implemented!" << std::endl;
+	exit(1);
+}
+
 SourceUniform::SourceUniform(InputParams& params) : Source(){
 	assignParams(params);
 }

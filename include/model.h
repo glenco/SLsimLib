@@ -12,6 +12,8 @@
 #include <uniform_lens.h>
 #include <multiplane.h>
 #include <source.h>
+#include "parameters.h"
+
 /**
  * \brief A class that allocates the lens, the source, and the cosmological models.
  * There are several constructors, which allow for different types of initializations.
@@ -68,22 +70,6 @@ public:
 
 		setInternal();
 	};
-	Model(const L& l, const S& s){
-		params = NULL;
-		cosmo = new COSMOLOGY();
-		lens = new L(l);
-		source = new S(s);
-		
-		setInternal();
-	};
-	Model(L* l, S* s){
-		params = NULL;
-		cosmo = new COSMOLOGY();
-		lens = l;
-		source = s;
-		
-		setInternal();
-	};
 	Model(){
 		params = NULL;
 		cosmo = new COSMOLOGY();
@@ -105,7 +91,27 @@ public:
 
     void RandomizeModel(double r_source_physical,long *seed
     		,bool tables,bool randomize_host_z=true,bool randomize_source_z=true,bool in_radians=false);
-
+	
+	inline void randomize(double step, long* seed)
+	{
+		//lens->randomize(step, seed);
+		source->randomize(step, seed);
+	}
+	
+	// write parameters
+	void setParameters(Parameters& p)
+	{
+		//lens->setParameters(p);
+		source->setParameters(p);
+	}
+	
+	// read parameters
+	void getParameters(Parameters& p)
+	{
+		//lens->getParameters(p);
+		source->getParameters(p);
+	}
+	
 private:
 
     void setInternal(){
