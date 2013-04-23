@@ -27,6 +27,16 @@ void TreeStruct::FindAllBoxNeighborsKist(Point *point,Kist<Point> * neighbors){
 	++count;
 	EmptyKist(neighbors);
 
+	//Kist<Point>* testkist = new Kist<Point>;
+
+	for(std::list<Branch *>::iterator it = point->leaf->neighbors.begin();
+			it != point->leaf->neighbors.end() ; ++it){
+		assert((*it)->npoints <= 1);
+		//std::cout << point->leaf->neighbors.size() << std::endl;
+		if((*it)->npoints == 1) neighbors->InsertAfterCurrent((*it)->points);
+	}
+
+/*
 	// point is outside of initial region
 	if(!inbox(point->x,top->boundary_p1,top->boundary_p2)) return;
 
@@ -47,7 +57,24 @@ void TreeStruct::FindAllBoxNeighborsKist(Point *point,Kist<Point> * neighbors){
 
 	assert(inbox(point->x,current->boundary_p1,current->boundary_p2));
 	_FindAllBoxNeighborsKist_iter(point->leaf,neighbors);
+*/
+/* TODO Test lines
+	bool found;
+	neighbors->MoveToTop();
+	do{
+		found = false;
+		testkist->MoveToTop();
+		do{
+			if(testkist->getCurrent() == neighbors->getCurrent()){
+				found=true;
+				break;
+			}
+		}while(testkist->Down());
+		assert(found);
+	}while(neighbors->Down());
+	delete testkist;
 
+//*************************************************/
 	return;
 }
 /**  \ingroup LowLevel

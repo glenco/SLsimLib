@@ -50,8 +50,6 @@ typedef struct Point{
   double gridsize;   // the size of the most refined grid the point is in
   float surface_brightness;  // the surface brightness at this points
 
-//  struct branchstruct *leaf;
-
   Branch *leaf;
 
   void print();
@@ -81,6 +79,8 @@ struct Branch{
   bool refined;
 
   void print();
+
+  std::list<Branch *> neighbors;
 private:
   static unsigned long countID;
 } ;

@@ -515,6 +515,32 @@ void TreeStruct::attachChildrenToCurrent(Branch* child1,Branch* child2){
 
 	current->child1->brother = current->child2;
 	current->child2->brother = current->brother;
+
+	// update lists of branch neighbors
+	Branch *neighbor;
+	current->child1->neighbors.push_back(current->child2);
+	current->child2->neighbors.push_back(current->child1);
+	std::list<Branch *>::iterator jt,it;
+	for( it=current->neighbors.begin() ; it != current->neighbors.end() ; ++it){
+		neighbor = *it;//current->neighbors[i];
+		for(jt=neighbor->neighbors.begin();jt != neighbor->neighbors.end();++jt){
+			if(*jt == current){
+				if(AreBoxNeighbors(neighbor,current->child1)){
+					current->child1->neighbors.push_back(neighbor);
+					neighbor->neighbors.insert(jt,current->child1);
+				}
+				if(AreBoxNeighbors(neighbor,current->child2)){
+					current->child2->neighbors.push_back(neighbor);
+					neighbor->neighbors.insert(jt,current->child2);
+				}
+				assert(*jt == current);
+				jt = neighbor->neighbors.erase(jt);
+				--jt;
+			}
+		}
+	}
+
+	current->neighbors.clear();
 	return;
 }
 

@@ -61,7 +61,7 @@ public:
  *   Input Parameters:
  *
  *	Nplanes                     Number of lens planes
- *	flag_input_lens             1 through
+ *	flag_input_lens             Implanted lens - 0: no lens, 1: AnaLens, 2: MOKALens, The redshifts and internal parameters are the same as for constructing these lenses separately, see classes for each type of lens
  *	fov                         Field of view for the simulation region (not nessisarily the grided region)
  *	internal_profile            The internal profile type for the halos, 0 or PowerLaw,1 or NFW,2 or PseudoNFW, 3 or NSIE, 4 or NFW_NSIE .
  *  halo_to_galaxy_ratio        If NFW_NSIE is chosen this must be set to the ratio of the mass put in each component.

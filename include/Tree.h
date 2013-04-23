@@ -43,7 +43,7 @@ public:
 			 ,double center[2],int Nbucket);
 	short freeTree(TreeHndl tree);*/
 
-  void FindAllBoxNeighbors(Point *point,ListHndl neighbors);
+  //void FindAllBoxNeighbors(Point *point,ListHndl neighbors);
   void FindAllBoxNeighborsKist(Point *point,Kist<Point> * neighbors);
   void PointsWithinEllipKist(double *ray,float rmax,float rmin,float posangle,Kist<Point> * neighborkist);
   double PointsWithinKist(double *ray,float rmax,Kist<Point> * neighborkist,short markpoints);
@@ -102,7 +102,7 @@ private:
 			 ,double center[2],int Nbucket);
 
 
-  void _FindAllBoxNeighbors(Branch *leaf,ListHndl neighbors);
+  //void _FindAllBoxNeighbors(Branch *leaf,ListHndl neighbors);
   void _FindAllBoxNeighborsKist(Branch *leaf,Kist<Point> * neighbors);
   void _FindAllBoxNeighborsKist_iter(Branch *leaf,Kist<Point> * neighbors);
   void _PointsWithinKist(double *ray,float *rmax,Kist<Point> * neighborkist
@@ -123,16 +123,16 @@ private:
 
 
   // Are obsolete
- void PointsWithin(double *ray,float rmax,ListHndl neighborlist,short markpoints);
-  void PointsWithin_iter(double *ray,float rmax,ListHndl neighborlist,short markpoints);
-  void FriendsOfFriends(double *starting_point,float rlink
-  		      ,ListHndl neighborlist,Point *filter
-  		      ,unsigned long Nfilter,unsigned long *filter_place);
-  void _PointsWithin2(double *ray,float *rmax,ListHndl neighborlist
-  		   ,Point *filter,unsigned long Nfilter
-  		   ,unsigned long *filter_place,short compliment);
-  void _PointsWithin(double *ray,float *rmax,ListHndl neighborlist
-  		,short markpoints);
+  //void PointsWithin(double *ray,float rmax,ListHndl neighborlist,short markpoints);
+  //void PointsWithin_iter(double *ray,float rmax,ListHndl neighborlist,short markpoints);
+  //void FriendsOfFriends(double *starting_point,float rlink
+  //		      ,ListHndl neighborlist,Point *filter
+  //		      ,unsigned long Nfilter,unsigned long *filter_place);
+  //void _PointsWithin2(double *ray,float *rmax,ListHndl neighborlist
+  //		   ,Point *filter,unsigned long Nfilter
+  //		   ,unsigned long *filter_place,short compliment);
+  //void _PointsWithin(double *ray,float *rmax,ListHndl neighborlist
+  //		,short markpoints);
 
 };
 
@@ -173,6 +173,7 @@ inline int inbox(double *ray,double *p1,double *p2){
 bool boxinbox(Branch *branch1,Branch *branch2);
 double BoxIntersection(Branch *branch1,Branch *branch2);
 bool AreBoxNeighbors(Point *point1,Point *point2);
+bool AreBoxNeighbors(Branch *branch1,Branch *branch2);
 bool CircleInBox(double *ray,double radius,double *p1,double *p2);
 bool BoxInCircle(double *ray,double radius,double *p1,double *p2);
 

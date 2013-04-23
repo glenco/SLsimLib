@@ -106,7 +106,7 @@ void MultiLens::resetHalos(CosmoHndl cosmo){
   else buildHaloTrees(cosmo);
 }
 
-/*
+/**
  * \ingroup Constructor
  * allocates space for the halo trees and the inout lens, if there is any
  */

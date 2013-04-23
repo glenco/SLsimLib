@@ -394,6 +394,15 @@ bool AreBoxNeighbors(Point *point1,Point *point2){
 	return false;
 }
 
+bool AreBoxNeighbors(Branch *branch1,Branch *branch2){
+
+	if(    branch1->boundary_p1[0] <= branch2->boundary_p2[0]
+	    && branch1->boundary_p2[0] >= branch2->boundary_p1[0]
+	    && branch1->boundary_p1[1] <= branch2->boundary_p2[1]
+	    && branch1->boundary_p2[1] >= branch2->boundary_p1[1] ) return true;
+	return false;
+}
+
 /** return the point that is in the same box as ray[2]
  * if Nbuck > 1 the head of the point array is returned
  */
@@ -487,14 +496,13 @@ Point *sortList(long n, double *arr,ListHndl list,Point *firstpointin){
   return firstpoint;
 }
 
-
-void TreeStruct::PointsWithin(double *ray,float rmax,ListHndl neighborlist,short markpoints){
-/*
+/**
  *  finds all points in tree that lie within rmax of the point ray[]
  *   markpoints = 0  does not change in_image variable in any point, gives a list of neighbors
  *              = 1  makes in_image=true for all points in image, gives no list of neighbors
  *              = -1 makes in_image=false for all points in image to reset, gives no list of neighbors
- */
+ *
+void TreeStruct::PointsWithin(double *ray,float rmax,ListHndl neighborlist,short markpoints){
 
   if(markpoints==0) EmptyList(neighborlist);
   
@@ -591,7 +599,7 @@ void TreeStruct::PointsWithin_iter(double *ray,float rmax,ListHndl neighborlist,
 		}
 	}while(TreeWalkStep(descend));
 }
-
+*/
 double ClosestBorder(double *ray,double *p1,double *p2){
 	/*  returns the distance from ray[] to the closest
 	 *    border of the box,
@@ -605,7 +613,7 @@ double ClosestBorder(double *ray,double *p1,double *p2){
 
 	return MIN(p2[1]-ray[1],length);
 }
-
+/*
 void TreeStruct::_PointsWithin(double *ray,float *rmax,ListHndl neighborlist,short markpoints){
 
   int i,j,incell2=1;
@@ -724,7 +732,7 @@ void TreeStruct::_PointsWithin(double *ray,float *rmax,ListHndl neighborlist,sho
 
 		  if(current->points != NULL) pointlist->current = current->points;
 
-		  if( atLeaf() ){  /* leaf case */
+		  if( atLeaf() ){  // leaf case
 
 			  for(i=0;i<current->npoints;++i){
 
@@ -792,10 +800,10 @@ void TreeStruct::_PointsWithin(double *ray,float *rmax,ListHndl neighborlist,sho
   }
 
 	  //  std::printf("end of _PointsWithin incell=%i level=%i p1= %e %e %e\n",incell,current->level
-	//	,current->boundary_p1[0],current->boundary_p1[1],current->boundary_p1[2]);/**/
+	//	,current->boundary_p1[0],current->boundary_p1[1],current->boundary_p1[2]);
   return;
 }
-
+*/
 void NeighborsOfNeighbors(ListHndl neighbors,ListHndl wholelist){
 	/* finds all the neighbors of neighbors of the
 	 * point neighbors->current that are part in the list wholelist
@@ -823,28 +831,28 @@ void NeighborsOfNeighbors(ListHndl neighbors,ListHndl wholelist){
 
 	return ;
 }
-
+/*
 void TreeStruct::FriendsOfFriends(double *start_point,float linkinglength,ListHndl neighborlist
 		      ,Point *filter,unsigned long Nfilter,unsigned long *filter_place){
   unsigned long Nlocal_filter,i;
   Point *placemark,*local_filter;
   short malloced=0;
 
-/*   std::printf("entering FOF\n"); */
+//   std::printf("entering FOF\n");
 
   if(filter == NULL){ std::printf("FriendsOfFriends cannot handle no unfiltered points\n"); return;}
 
   EmptyList(neighborlist);
 
-/*   if(filter != NULL){   */
-/*     std::printf("filter first id %i\n   x start = %e %e\n",filter[*filter_place].id,start_point[0],start_point[1]); */
-/*     MoveToTopList(pointlist); */
-/*     for(i=0;i<pointlist->Npoints;++i){ */
-/*       if(filter[*filter_place].id == pointlist->current->id) std::printf("x in tree %e %e\n" */
-/* 					 ,pointlist->current->x[0],pointlist->current->x[1]); */
-/*       MoveDownList(pointlist); */
-/*     } */
-/*   } */
+//   if(filter != NULL){
+//     std::printf("filter first id %i\n   x start = %e %e\n",filter[*filter_place].id,start_point[0],start_point[1]);
+//     MoveToTopList(pointlist);
+//     for(i=0;i<pointlist->Npoints;++i){
+//       if(filter[*filter_place].id == pointlist->current->id) std::printf("x in tree %e %e\n"
+// 					 ,pointlist->current->x[0],pointlist->current->x[1]);
+//       MoveDownList(pointlist);
+//     }
+//   }
 
   incell=1;
   realray[0]=start_point[0];
@@ -871,14 +879,14 @@ void TreeStruct::FriendsOfFriends(double *start_point,float linkinglength,ListHn
     for(;;){
 
       if(filter==NULL){
-	/* find points that are not in filter */
+	// find points that are not in filter
 	realray[0]=neighborlist->current->x[0];
 	realray[1]=neighborlist->current->x[1];
 
 	_PointsWithin2(neighborlist->current->x,&linkinglength,neighborlist
 		      ,local_filter,Nlocal_filter,filter_place,0);
 
-	/* add found points to filter */
+	// add found points to filter
 	if(Nlocal_filter < neighborlist->Npoints){
 	  local_filter=(Point *) realloc(local_filter,neighborlist->Npoints*sizeof(Point));
 	  local_filter->head = neighborlist->Npoints;
@@ -910,18 +918,19 @@ void TreeStruct::FriendsOfFriends(double *start_point,float linkinglength,ListHn
 
   if(malloced) free(local_filter);
 
-/*   std::printf("returning from FOF\n"); */
+//   std::printf("returning from FOF\n");
   return;
 }
-
+*/
+/*
 void TreeStruct::_PointsWithin2(double *ray,float *rmax,ListHndl neighborlist
 		   ,Point *filter,unsigned long Nfilter,unsigned long *filter_place,short compliment){
 
-/*   id numbers in filter[*filterplace ... Nfilter-1] */
-/*   reorders filter[] and moves filterplace as points are found */
-/*   if filter=NULL no filter is used */
-/*   compliment = 0 search only points not in the filter */
-/*              = 1 search only points in filter after filter_place */
+//   id numbers in filter[*filterplace ... Nfilter-1]
+//   reorders filter[] and moves filterplace as points are found
+//   if filter=NULL no filter is used
+//   compliment = 0 search only points not in the filter
+//              = 1 search only points in filter after filter_place
 
   int i,j,incell2=1;
   double radius;
@@ -1040,7 +1049,7 @@ void TreeStruct::_PointsWithin2(double *ray,float *rmax,ListHndl neighborlist
 	  // does radius cut into the box
 	  if( cutbox(ray,current->boundary_p1,current->boundary_p2,*rmax) ){
 
-		  if( (current->child1 == NULL)*(current->child2 == NULL)){  /* leaf case */
+		  if( (current->child1 == NULL)*(current->child2 == NULL)){  // leaf case
 
 			  pointlist->current=current->points;
 			  for(i=0;i<current->npoints;++i){
@@ -1114,14 +1123,16 @@ void TreeStruct::_PointsWithin2(double *ray,float *rmax,ListHndl neighborlist
   }
 
 	  //  std::printf("end of _PointsWithin incell=%i level=%i p1= %e %e %e\n",incell,current->level
-	//	,current->boundary_p1[0],current->boundary_p1[1],current->boundary_p1[2]);/**/
+	//	,current->boundary_p1[0],current->boundary_p1[1],current->boundary_p1[2]);
   return;
 }
+*/
 
+/** tranforms between image and source planes
+* the image pointers in listin must be set properly
+* the image pointers of listout will be set to listin members - it would be better to fix this
+*/
 void TransformPoints(ListHndl listout,ListHndl listin){
-  /* tranforms between image and source planes */
-  /* the image pointers in listin must be set properly */
-  /* the image pointers of listout will be set to listin members - it would be better to fix this */
 
   unsigned long i;
   Point *placemarker;
@@ -1199,7 +1210,7 @@ void UnionList(ListHndl list1,ListHndl list2){
 	return ;
 }
 
-
+/*
 void TreeStruct::FindAllBoxNeighbors(Point *point,ListHndl neighbors){
 	// finds all the leaves that are neighboring branch
 	// points outside of grid have no box neighbors
@@ -1265,6 +1276,7 @@ void TreeStruct::_FindAllBoxNeighbors(Branch *leaf,ListHndl neighbors){
 
 	return;
 }
+*/
 /// Print positions and gridsizes of all points in all the images to stdout
 void PrintImages(ImageInfo *images,long Nimages){
 	unsigned long i;
