@@ -111,6 +111,9 @@ Branch::Branch(Point *my_points,unsigned long my_npoints
     prev = NULL;
     refined = false;
 }
+Branch::~Branch(){
+	neighbors.clear();
+}
 /// print out all member data for testing purposes
 void Branch::print(){
 	 std::cout << "Branch Data : " << std::endl;
