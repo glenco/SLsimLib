@@ -18,7 +18,7 @@ SersicSource::SersicSource(
 :Source()
 {
 	setInternals(my_mag,my_Reff,my_PA,my_index,my_q,my_z,my_theta);
-	sb_limit = 30.;
+	sb_limit = pow(10,-0.4*(48.6+30.))*pow(180*60*60/pi,2)/hplanck;
 }
 
 SersicSource::~SersicSource()
@@ -59,7 +59,7 @@ double SersicSource::SurfaceBrightness(
 	double r = sqrt(x_new[0]*x_new[0]+x_new[1]*x_new[1]/q/q);
 
 	double sb = Ieff * exp(-bn*(pow(r/Reff,1./index)-1.))*inv_hplanck;
-	if (sb*hplanck < pow(10,-0.4*(48.6+sb_limit))*pow(180*60*60/pi,2)) return 0.;
+	if (sb < sb_limit) return 0.;
 	return sb;
 }
 

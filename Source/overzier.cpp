@@ -17,7 +17,7 @@ OverzierSource::OverzierSource()
 	setRadius(0);
 	setX(0, 0);
 	
-	setSBlimit(30.);
+	setSBlimit(pow(10,-0.4*(48.6+30.))*pow(180*60*60/pi,2)/hplanck);
 }
 
 OverzierSource::OverzierSource(
@@ -33,7 +33,7 @@ OverzierSource::OverzierSource(
 		){
 	setInternals(my_mag,my_BtoT,my_Reff,my_Rh,my_PA,my_inclination,my_id,my_z,my_theta);
 	
-	setSBlimit(30.);
+	setSBlimit(pow(10,-0.4*(48.6+30.))*pow(180*60*60/pi,2)/hplanck);
 }
 
 OverzierSource::~OverzierSource()
@@ -99,7 +99,7 @@ double OverzierSource::SurfaceBrightness(
 //	if(sb < 1.0e-4*(sbDo + sbSo) ) return 0.0;
 	sb *= pow(10,-0.4*48.6)*inv_hplanck;
 	
-	if(sb*hplanck < pow(10,-0.4*(48.6+getSBlimit()))*pow(180*60*60/pi,2))
+	if(sb< sb_limit)
 		return 0.;
 	
 	return sb;

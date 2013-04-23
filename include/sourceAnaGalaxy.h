@@ -39,7 +39,7 @@ public:
 	/// Surface brightness of current galaxy.
 	double SurfaceBrightness(double* x) {
 		double sb = galaxies[index].SurfaceBrightness(x);
-		if (sb*hplanck< pow(10,-0.4*(48.6+sb_limit))*pow(180*60*60/pi,2)) return 0.;
+		if (sb < sb_limit) return 0.;
 		return sb;}
 	
 	/// Total flux coming from the current galaxy in erg/sec/Hz/cm^2

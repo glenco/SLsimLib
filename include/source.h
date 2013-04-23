@@ -59,6 +59,7 @@ public:
 	virtual double getTotalFlux() = 0;
 	virtual void printSource() = 0;
 	double getSBlimit(){return sb_limit;}
+	double getSBlimit_magarcsec(){return -2.5*log10(sb_limit*hplanck/pow((180*60*60/pi),2))-48.6;}
 	
 	// accessor functions that will sometimes be over ridden in class derivatives
 	/// Redshift of source
@@ -76,6 +77,7 @@ public:
 	//TODO BEN I think this need only be in the BLR source models
 	virtual void setDlDs(double my_DlDs){DlDs = my_DlDs;}
 	void setSBlimit(float limit) {sb_limit = limit;}
+	void setSBlimit_magarcsec(float limit) {sb_limit = pow(10,-0.4*(48.6+limit))*pow(180*60*60/pi,2)/hplanck;}
 	
 	/// Get the type of the source.
 	virtual SourceType type() const = 0;

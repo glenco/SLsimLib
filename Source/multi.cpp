@@ -7,7 +7,7 @@
 MultiSource::MultiSource()
 : index(0)
 {
-	sb_limit = 30.;
+	sb_limit = pow(10,-0.4*(48.6+30.))*pow(180*60*60/pi,2)/hplanck;
 }
 
 MultiSource::MultiSource(InputParams& params)
@@ -15,7 +15,7 @@ MultiSource::MultiSource(InputParams& params)
 {
 	// check if there is a sb_limit set
 	if(!params.get("source_sb_limit", sb_limit))
-		sb_limit = 30.;
+		sb_limit = pow(10,-0.4*(48.6+30.))*pow(180*60*60/pi,2)/hplanck;
 	
 	// check if there is a Millenium data file
 	std::string input_galaxy_file;
