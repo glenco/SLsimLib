@@ -12,6 +12,13 @@ void swap(MultiSource& a, MultiSource& b)
 	swap(a.sources, b.sources);
 	swap(a.type_map, b.type_map);
 	swap(a.index, b.index);
+	
+	// Source stuff
+	swap(a.source_r, b.source_r);
+	swap(a.source_x, b.source_x);
+	swap(a.zsource, b.zsource);
+	swap(a.DlDs, b.DlDs);
+	swap(a.sb_limit, b.sb_limit);
 }
 
 MultiSource::MultiSource()

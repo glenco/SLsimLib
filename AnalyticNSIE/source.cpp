@@ -9,7 +9,13 @@
 
 using namespace std;
 
-Source::Source(){
+Source::Source()
+{
+	source_r = 0;
+	source_x[0] = 0;
+	source_x[1] = 0;
+	zsource = 0;
+	setSBlimit_magarcsec(30.);
 }
 
 void Source::getParameters(Parameters& p) const

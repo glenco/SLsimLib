@@ -22,10 +22,6 @@ SersicSource::SersicSource(
 	
 	if(my_theta)
 		setX(my_theta[0], my_theta[1]);
-	else
-		setX(0, 0);
-	
-	setSBlimit_magarcsec(30.);
 	
 	setInternals();
 }

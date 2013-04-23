@@ -157,7 +157,7 @@ inline double MultiSource::SurfaceBrightness(double *y)
 {
 	double sb = sources[index]->SurfaceBrightness(y);
 	
-	if(sb*hplanck < std::pow(10., -0.4*(48.6+getSBlimit())) * (180*60*60/pi)*(180*60*60/pi))
+	if(sb < sb_limit)
 		return 0.;
 	
 	return sb;

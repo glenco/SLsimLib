@@ -13,11 +13,6 @@ OverzierSource::OverzierSource()
 : haloID(0), Reff(0), Rh(0), BtoT(0), PA(0), inclination(0),
   cxx(0), cyy(0), cxy(0), sbDo(0), sbSo(0), mag(0)
 {
-	setZ(0);
-	setRadius(0);
-	setX(0, 0);
-	
-	setSBlimit_magarcsec(30.);
 }
 
 OverzierSource::OverzierSource(
@@ -32,8 +27,6 @@ OverzierSource::OverzierSource(
 		,const double *my_theta          /// optional angular position on the sky
 		){
 	setInternals(my_mag,my_BtoT,my_Reff,my_Rh,my_PA,my_inclination,my_id,my_z,my_theta);
-	
-	setSBlimit_magarcsec(30.);
 }
 
 OverzierSource::~OverzierSource()
