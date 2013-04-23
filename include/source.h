@@ -58,7 +58,10 @@ public:
 	virtual double SurfaceBrightness(double *y) = 0;
 	virtual double getTotalFlux() = 0;
 	virtual void printSource() = 0;
+
+	/// Gets sb_limit in erg/cm^2/sec/rad^2/Hz
 	double getSBlimit(){return sb_limit;}
+	/// Gets sb_limit in mag/arcsec^2
 	double getSBlimit_magarcsec(){return -2.5*log10(sb_limit*hplanck/pow((180*60*60/pi),2))-48.6;}
 	
 	// accessor functions that will sometimes be over ridden in class derivatives
@@ -76,7 +79,10 @@ public:
 	virtual inline double getDlDs(){return DlDs;}
 	//TODO BEN I think this need only be in the BLR source models
 	virtual void setDlDs(double my_DlDs){DlDs = my_DlDs;}
+
+	/// Sets sb_limit in erg/cm^2/sec/rad^2/Hz
 	void setSBlimit(float limit) {sb_limit = limit;}
+	/// Sets sb_limit in mag/arcsec^2
 	void setSBlimit_magarcsec(float limit) {sb_limit = pow(10,-0.4*(48.6+limit))*pow(180*60*60/pi,2)/hplanck;}
 	
 	/// Get the type of the source.

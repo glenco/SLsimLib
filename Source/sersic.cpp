@@ -18,7 +18,7 @@ SersicSource::SersicSource(
 :Source()
 {
 	setInternals(my_mag,my_Reff,my_PA,my_index,my_q,my_z,my_theta);
-	sb_limit = pow(10,-0.4*(48.6+30.))*pow(180*60*60/pi,2)/hplanck;
+	setSBlimit_magarcsec(30.);
 }
 
 SersicSource::~SersicSource()

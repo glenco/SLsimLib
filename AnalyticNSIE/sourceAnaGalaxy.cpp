@@ -20,7 +20,7 @@ MultiSourceAnaGalaxy::MultiSourceAnaGalaxy(
 		,double *my_theta          /// position on the sky
 		): Source(),index(0){
 
-	sb_limit = pow(10,-0.4*(48.6+30.))*pow(180*60*60/pi,2)/hplanck;
+	setSBlimit_magarcsec(30.);
 	galaxies.push_back(OverzierSource(mag,BtoT,Reff,Rh,PA,inclination,0,my_z,my_theta));
 }
 /** Constructor for passing in a pointer to the galaxy model or a list of galaxies instead of constructing it internally.
@@ -30,7 +30,7 @@ MultiSourceAnaGalaxy::MultiSourceAnaGalaxy(
 		OverzierSource *my_galaxy
 		): Source(),index(0){
 
-	sb_limit = pow(10,-0.4*(48.6+30.))*pow(180*60*60/pi,2)/hplanck;
+	setSBlimit_magarcsec(30.);
 	galaxies.push_back(*my_galaxy);
 }
 /// Constructor for importing from data file.
@@ -303,7 +303,7 @@ void MultiSourceAnaGalaxy::assignParams(InputParams& params){
 		exit(1);
 	}
 	if(!params.get("source_sb_limit",sb_limit)){
-		sb_limit = pow(10,-0.4*(48.6+30.))*pow(180*60*60/pi,2)/hplanck;
+		setSBlimit_magarcsec(30.);
 		params.put("source_sb_limit",sb_limit,"# surface brightness limit for galaxy sources");
 		/*{
 		std::cout << "ERROR: Must assign source_sb_limit in parameter file " << params.filename() << std::endl;
