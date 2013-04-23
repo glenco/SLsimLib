@@ -15,7 +15,8 @@ void swap(MultiSource& a, MultiSource& b)
 	
 	// Source stuff
 	swap(a.source_r, b.source_r);
-	swap(a.source_x, b.source_x);
+	swap(a.source_x[0], b.source_x[0]);
+	swap(a.source_x[1], b.source_x[1]);
 	swap(a.zsource, b.zsource);
 	swap(a.DlDs, b.DlDs);
 	swap(a.sb_limit, b.sb_limit);
