@@ -7,7 +7,7 @@
 MultiSource::MultiSource()
 : index(0)
 {
-	sb_limit = 30.;
+	setSBlimit_magarcsec(30.);
 }
 
 MultiSource::MultiSource(InputParams& params)
@@ -15,7 +15,7 @@ MultiSource::MultiSource(InputParams& params)
 {
 	// check if there is a sb_limit set
 	if(!params.get("source_sb_limit", sb_limit))
-		sb_limit = 30.;
+		setSBlimit_magarcsec(30.);
 	
 	// check if there is a Millenium data file
 	std::string input_galaxy_file;
