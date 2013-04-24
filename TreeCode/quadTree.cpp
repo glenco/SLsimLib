@@ -483,9 +483,9 @@ void QuadTree::force2D(double *ray,double *alpha,KappaType *kappa,KappaType *gam
 
 		  rcm2cell = xcm[0]*xcm[0] + xcm[1]*xcm[1];
 
-		  boxsize2 = pow(tree->current->boundary_p2[0]-tree->current->boundary_p1[0],2);
+		  boxsize2 = (tree->current->boundary_p2[0]-tree->current->boundary_p1[0])*(tree->current->boundary_p2[0]-tree->current->boundary_p1[0]);
 
-		  if( rcm2cell < pow(tree->current->rcrit_angle,2) || rcm2cell < 5.83*boxsize2){
+		  if( rcm2cell < (tree->current->rcrit_angle)*(tree->current->rcrit_angle) || rcm2cell < 5.83*boxsize2){
 
 			  // includes rcrit_particle constraint
 			  allowDescent=true;
@@ -590,12 +590,12 @@ void QuadTree::force2D(double *ray,double *alpha,KappaType *kappa,KappaType *gam
 			  // quadrapole contribution
 			  //   the kappa and gamma are not calculated to this order
 			  alpha[0] -= (tree->current->quad[0]*xcm[0] + tree->current->quad[2]*xcm[1])
-    				  /pow(rcm2cell,2)/pi;
+    				  /(rcm2cell*rcm2cell)/pi;
 			  alpha[1] -= (tree->current->quad[1]*xcm[1] + tree->current->quad[2]*xcm[0])
-    				  /pow(rcm2cell,2)/pi;
+    				  /(rcm2cell*rcm2cell)/pi;
 
 			  tmp = 4*(tree->current->quad[0]*xcm[0]*xcm[0] + tree->current->quad[1]*xcm[1]*xcm[1]
-				  + 2*tree->current->quad[2]*xcm[0]*xcm[1])/pow(rcm2cell,3)/pi;
+				  + 2*tree->current->quad[2]*xcm[0]*xcm[1])/(rcm2cell*rcm2cell*rcm2cell)/pi;
 
 			  alpha[0] += tmp*xcm[0];
 			  alpha[1] += tmp*xcm[1];
@@ -665,9 +665,9 @@ void QuadTree::walkTree_recur(QBranchNB *branch,double *ray,double *alpha,KappaT
 
 		rcm2cell = xcm[0]*xcm[0] + xcm[1]*xcm[1];
 
-		boxsize2 = pow(branch->boundary_p2[0]-branch->boundary_p1[0],2);
+		boxsize2 = (branch->boundary_p2[0]-branch->boundary_p1[0])*(branch->boundary_p2[0]-branch->boundary_p1[0]);
 
-		if( rcm2cell < pow(branch->rcrit_angle,2) || rcm2cell < 5.83*boxsize2){
+		if( rcm2cell < (branch->rcrit_angle)*(branch->rcrit_angle) || rcm2cell < 5.83*boxsize2){
 
 			// Treat all particles in a leaf as a point particle
 			if(tree->atLeaf(branch)){
@@ -775,12 +775,12 @@ void QuadTree::walkTree_recur(QBranchNB *branch,double *ray,double *alpha,KappaT
 			// quadrapole contribution
 			//   the kappa and gamma are not calculated to this order
 			alpha[0] -= (branch->quad[0]*xcm[0] + branch->quad[2]*xcm[1])
-	    								  /pow(rcm2cell,2)/pi;
+	    								  /(rcm2cell*rcm2cell)/pi;
 			alpha[1] -= (branch->quad[1]*xcm[1] + branch->quad[2]*xcm[0])
-	    								  /pow(rcm2cell,2)/pi;
+	    								  /(rcm2cell*rcm2cell)/pi;
 
 			tmp = 4*(branch->quad[0]*xcm[0]*xcm[0] + branch->quad[1]*xcm[1]*xcm[1]
-					+ 2*branch->quad[2]*xcm[0]*xcm[1])/pow(rcm2cell,3)/pi;
+					+ 2*branch->quad[2]*xcm[0]*xcm[1])/(rcm2cell*rcm2cell*rcm2cell)/pi;
 
 			alpha[0] += tmp*xcm[0];
 			alpha[1] += tmp*xcm[1];
