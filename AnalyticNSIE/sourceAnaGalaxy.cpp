@@ -302,14 +302,13 @@ void MultiSourceAnaGalaxy::assignParams(InputParams& params){
 		std::cout << "ERROR: Must assign source_mag_limit in parameter file " << params.filename() << std::endl;
 		exit(1);
 	}
-	if(!params.get("source_sb_limit",sb_limit)){
+	if(!params.get("source_sb_limit",sb_limit))
 		setSBlimit_magarcsec(30.);
-		params.put("source_sb_limit",sb_limit,"# surface brightness limit for galaxy sources");
+	else
+		sb_limit = pow(10,-0.4*(48.6+sb_limit))*pow(180*60*60/pi,2)/hplanck;
 		/*{
 		std::cout << "ERROR: Must assign source_sb_limit in parameter file " << params.filename() << std::endl;
 		exit(1);*/
-	}
-
 }
 /** \brief Artificially increase the number of sources to increase the incidence of strong lenses.
  *
