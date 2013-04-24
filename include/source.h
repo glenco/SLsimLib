@@ -11,45 +11,11 @@
 #include "standard.h"
 #include "InputParams.h"
 #include "source_type.h"
+#include "parameters.h"
 
 class Source
 {
 public:
-/*
-
-	  Source();
-	  virtual ~Source();
-
-	  /// names of clump and sb models
-	  typedef enum {Uniform,Gaussian,BLR_Disk,BLR_Sph1,BLR_Sph2,MultiAnaSource,Pixelled,Sersic} SBModel;
-
-	  // in lens.cpp
-	  /// Surface brightness of source in grid coordinates not source centered coordinates.
-	  virtual double SurfaceBrightness(double *y) = 0;
-	  virtual double getTotalFlux() = 0;
-	  virtual void printSource() = 0;
-	  // TODO Fabio: What are the units?
-	  double getSBlimit(){return sb_limit;}
-
-
-	  // accessor functions that will sometimes be over ridden in class derivatives
-	  /// Redshift of source
-	  virtual inline double getZ(){return zsource;}
-	  virtual void setZ(double my_z){zsource = my_z;}
-	  /// Radius of source TODO units?
-	  virtual inline double getRadius(){return source_r;}
-	  virtual void setRadius(double my_radius){source_r = my_radius;}
-	  /// position of source TODO units?
-	  virtual inline double* getX(){return source_x;}
-	  virtual inline void setX(double *xx){source_x[0] = xx[0]; source_x[1] = xx[1];}
-	  void setX(double my_x,double my_y){source_x[0] = my_x; source_x[1] = my_y;}
-	  /// In the case of a single plane lens, the ratio of angular size distances
-	  virtual inline double getDlDs(){return DlDs;}
-	  //TODO BEN I think this need only be in the BLR source models
-	  virtual void setDlDs(double my_DlDs){DlDs = my_DlDs;}
-	  void setSBlimit(float limit) {sb_limit = limit;}
-
-*/
 	Source();
 	virtual ~Source();
 	
@@ -88,6 +54,21 @@ public:
 	/// Get the type of the source.
 	virtual SourceType type() const = 0;
 	
+	/// Get the name of the source.
+	virtual const char* name() const = 0;
+	
+	/// Create a copy of the source from the abstract base class. Needs to be deleted.
+	virtual Source* clone() const = 0;
+	
+	/// Get parameters from source.
+	virtual void getParameters(Parameters& p) const;
+	
+	/// Set parameters in source.
+	virtual void setParameters(Parameters& p);
+	
+	/// Randomize source by a given amount.
+	virtual void randomize(double step, long* seed);
+	
 protected:
 	virtual void assignParams(InputParams& params) = 0;
 	
@@ -106,15 +87,6 @@ protected:
 };
 
 typedef Source *SourceHndl;
-
-/// Cast a source into a given type.
-template<typename SourceT>
-SourceT* source_cast(Source* s)
-{
-	if(s->type() == source_type_of<SourceT>())
-		return (SourceT*)s;
-	return 0;
-}
 
 class PixelledSource: public Source{
 public:
@@ -242,6 +214,9 @@ public:
 	SourceBLRSph2(InputParams&);
 	~SourceBLRSph2();
 };
+
+// include casting definitions
+#include "source_cast.h"
 
 /// pointer to surface brightness function
 //double (Source::*SurfaceBrightness)(double *y);

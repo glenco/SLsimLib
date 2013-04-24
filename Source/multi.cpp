@@ -2,7 +2,25 @@
 #include "../include/InputParams.h"
 
 #include <algorithm>
+#include <utility>
 #include <iterator>
+
+void swap(MultiSource& a, MultiSource& b)
+{
+	using std::swap;
+	
+	swap(a.sources, b.sources);
+	swap(a.type_map, b.type_map);
+	swap(a.index, b.index);
+	
+	// Source stuff
+	swap(a.source_r, b.source_r);
+	swap(a.source_x[0], b.source_x[0]);
+	swap(a.source_x[1], b.source_x[1]);
+	swap(a.zsource, b.zsource);
+	swap(a.DlDs, b.DlDs);
+	swap(a.sb_limit, b.sb_limit);
+}
 
 MultiSource::MultiSource()
 : index(0)
@@ -46,16 +64,47 @@ MultiSource::MultiSource(InputParams& params)
 }
 
 MultiSource::MultiSource(const MultiSource& other)
-: Source(other), // base copy constructor
-  index(other.index), sources(other.sources), created()
+: Source(other)
 {
+	// copy all contained sources
+	for(std::size_t i = 0, n = other.sources.size(); i < n; ++i)
+		addInternal(other.sources[i]->clone());
+	
+	// set index
+	index = other.index;
 }
 
 MultiSource::~MultiSource()
 {
-	// delete created sources
-	for(std::size_t i = 0, n = created.size(); i < n; ++i)
-		delete created[i];
+	// delete sources
+	for(std::size_t i = 0, n = sources.size(); i < n; ++i)
+		delete sources[i];
+}
+
+MultiSource& MultiSource::operator=(MultiSource rhs)
+{
+	swap(*this, rhs);
+	return *this;
+}
+
+void MultiSource::getParameters(Parameters& p) const
+{
+	Source::getParameters(p);
+	for(std::size_t i = 0, n = sources.size(); i < n; ++i)
+		sources[i]->getParameters(p);
+}
+
+void MultiSource::setParameters(Parameters& p)
+{
+	Source::setParameters(p);
+	for(std::size_t i = 0, n = sources.size(); i < n; ++i)
+		sources[i]->setParameters(p);
+}
+
+void MultiSource::randomize(double step, long* seed)
+{
+	for(std::size_t i = 0, n = sources.size(); i < n; ++i)
+		sources[i]->randomize(step, seed);
 }
 
 bool MultiSource::setCurrent(Source* source)
@@ -87,27 +136,25 @@ bool MultiSource::setIndex(std::size_t i)
 	return true;
 }
 
-/// Add a source. Ownership is not transferred to the MultiSource. Return the source index.
-std::size_t MultiSource::add(Source* source)
+std::size_t MultiSource::add(const Source& source)
 {
 	// get the last index
 	std::size_t i = sources.size();
 	
 	// add source to internal lists
-	addInternal(source, false);
+	addInternal(source.clone());
 	
 	// return the added source
 	return i;
 }
 
-/// Add a source. Ownership is not transferred to the MultiSource. Return the source index.
-std::size_t MultiSource::add(Source& source)
+std::size_t MultiSource::add(const Source* source)
 {
 	// get the last index
 	std::size_t i = sources.size();
 	
 	// add source to internal lists
-	addInternal(&source, false);
+	addInternal(source->clone());
 	
 	// return the added source
 	return i;
@@ -146,12 +193,8 @@ void MultiSource::assignParams(InputParams& /* params */)
 {
 }
 
-void MultiSource::addInternal(Source* source, bool owned)
+void MultiSource::addInternal(Source* source)
 {
-	// add source to list of created sources if owned by this MultiSource
-	if(owned)
-		created.push_back(source);
-	
 	// add source
 	sources.push_back(source);
 	

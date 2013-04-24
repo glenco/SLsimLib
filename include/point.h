@@ -62,7 +62,7 @@ struct Branch{
 	Branch(Point *my_points,unsigned long my_npoints
 			  ,double my_boundary_p1[2],double my_boundary_p2[2]
 			  ,double my_center[2],int my_level);
-	~Branch(){};
+	~Branch();
 
   struct Point *points;        // pointer to first points in Branch
   unsigned long npoints;

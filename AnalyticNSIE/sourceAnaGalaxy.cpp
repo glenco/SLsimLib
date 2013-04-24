@@ -19,8 +19,7 @@ MultiSourceAnaGalaxy::MultiSourceAnaGalaxy(
 		,double my_z               /// redshift of source
 		,double *my_theta          /// position on the sky
 		): Source(),index(0){
-
-	setSBlimit_magarcsec(30.);
+	
 	galaxies.push_back(OverzierSource(mag,BtoT,Reff,Rh,PA,inclination,0,my_z,my_theta));
 }
 /** Constructor for passing in a pointer to the galaxy model or a list of galaxies instead of constructing it internally.
@@ -29,8 +28,7 @@ MultiSourceAnaGalaxy::MultiSourceAnaGalaxy(
 MultiSourceAnaGalaxy::MultiSourceAnaGalaxy(
 		OverzierSource *my_galaxy
 		): Source(),index(0){
-
-	setSBlimit_magarcsec(30.);
+	
 	galaxies.push_back(*my_galaxy);
 }
 /// Constructor for importing from data file.
@@ -302,6 +300,7 @@ void MultiSourceAnaGalaxy::assignParams(InputParams& params){
 		std::cout << "ERROR: Must assign source_mag_limit in parameter file " << params.filename() << std::endl;
 		exit(1);
 	}
+
 	if(!params.get("source_sb_limit",sb_limit))
 		setSBlimit_magarcsec(30.);
 	else

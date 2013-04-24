@@ -9,7 +9,29 @@
 
 using namespace std;
 
-Source::Source(){
+Source::Source()
+{
+	source_r = 0;
+	source_x[0] = 0;
+	source_x[1] = 0;
+	zsource = 0;
+	setSBlimit_magarcsec(30.);
+}
+
+void Source::getParameters(Parameters& p) const
+{
+	p << source_r << source_x[0] << source_x[1] << zsource << DlDs << sb_limit;
+}
+
+void Source::setParameters(Parameters& p)
+{
+	p >> source_r >> source_x[0] >> source_x[1] >> zsource >> DlDs >> sb_limit;
+}
+
+void Source::randomize(double, long*)
+{
+	std::cerr << "Error: " << this->name() << "::randomize() not implemented!" << std::endl;
+	exit(1);
 }
 
 SourceUniform::SourceUniform(InputParams& params) : Source(){

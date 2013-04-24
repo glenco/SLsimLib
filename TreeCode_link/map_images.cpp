@@ -638,10 +638,10 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
 		  for(j = 0 ; j < imageinfo[i].imagekist->Nunits() ; ++j,MoveDownKist(imageinfo[i].imagekist) ){
 
 			  if(
-					  RefinePoint2(getCurrentKist(imageinfo[i].imagekist),grid->i_tree
-					  	,imageinfo[i].area,total_area,criterion,res_target,nearest)
-					  //RefinePoint_sb(getCurrentKist(imageinfo[i].imagekist),grid->i_tree
-					  //		,imageinfo[i].area,total_area,source->getSBlimit(),nearest)
+					  //RefinePoint2(getCurrentKist(imageinfo[i].imagekist),grid->i_tree
+					  //	,imageinfo[i].area,total_area,criterion,res_target,nearest)
+					  RefinePoint_sb(getCurrentKist(imageinfo[i].imagekist),grid->i_tree
+					  		,imageinfo[i].area,total_area,source->getSBlimit(),nearest)
 
 			  ){
 
@@ -749,10 +749,10 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
 			  //assert(getCurrentKist(imageinfo[i].outerborder)->surface_brightness == 0);
 
 			  if(
-					  RefinePoint2(getCurrentKist(imageinfo[i].outerborder),grid->i_tree
-					  ,imageinfo[i].area,total_area,criterion,res_target,nearest)
-					  //RefinePoint_sb(getCurrentKist(imageinfo[i].outerborder),grid->i_tree
-					  //    ,imageinfo[i].area,total_area,source->getSBlimit(),nearest)
+					  //RefinePoint2(getCurrentKist(imageinfo[i].outerborder),grid->i_tree
+					  //,imageinfo[i].area,total_area,criterion,res_target,nearest)
+					  RefinePoint_sb(getCurrentKist(imageinfo[i].outerborder),grid->i_tree
+					      ,imageinfo[i].area,total_area,source->getSBlimit(),nearest)
 			  ){
 
 				  if(getCurrentKist(imageinfo[i].outerborder)->in_image != MAYBE){

@@ -15,37 +15,73 @@ SersicSource::SersicSource(
 		,double my_z            /// optional redshift
 		,const double *my_theta          /// optional angular position on the sky
 		)
-:Source()
+: Source(),
+  mag(my_mag), Reff(my_Reff*pi/180/60/60), PA(my_PA), index(my_index), q(my_q)
 {
-	setInternals(my_mag,my_Reff,my_PA,my_index,my_q,my_z,my_theta);
-	setSBlimit_magarcsec(30.);
+	setZ(my_z);
+	
+	if(my_theta)
+		setX(my_theta[0], my_theta[1]);
+	
+	setInternals();
 }
 
 SersicSource::~SersicSource()
 {
 }
 
-void SersicSource::setInternals(double my_mag,double my_Reff,double my_PA,double my_index,double my_q,double my_z,const double *my_theta){
+void SersicSource::getParameters(Parameters& p) const
+{
+	// base class serialization
+	Source::getParameters(p);
+	
+	p << Reff << mag << PA << index << bn << q << Ieff << flux;
+}
 
-	Reff = my_Reff*pi/180/60/60;
-	mag = my_mag;
-	PA = my_PA;
-	index = my_index;
-	q = my_q;
+void SersicSource::setParameters(Parameters& p)
+{
+	// base class deserialization
+	Source::setParameters(p);
+	
+	p >> Reff >> mag >> PA >> index >> bn >> q >> Ieff >> flux;
+}
 
-	zsource = my_z;
-	if(my_theta != NULL){
-		source_x[0] = my_theta[0];
-		source_x[1] = my_theta[1];
-	}else{
-		source_x[0] = 0;
-		source_x[1] = 0;
-	}
+void SersicSource::randomize(double step, long* seed)
+{
+	// half light radius
+	Reff += step*pi/180/60/60*gasdev(seed);
+	
+	// magnitude
+	mag += step*gasdev(seed);
+	
+	// position angle
+	//PA += step*pi*gasdev(seed);
+	
+	// Sersic index
+	index += step*gasdev(seed);
+	
+	// axes ratio
+	//q += step*gasdev(seed);
+	
+	// redshift?
+	
+	// position
+	source_x[0] += step*pi/180/60/60*gasdev(seed);
+	source_x[1] += step*pi/180/60/60*gasdev(seed);
+	
+	// update
+	setInternals();
+}
 
+void SersicSource::setInternals()
+{
 	// approximation valid for 0.5 < n < 8
 	bn = 1.9992*index - 0.3271;
 	flux = pow(10,-0.4*(mag+48.6));
 	Ieff = flux/2./pi/Reff/Reff/exp(bn)/index*pow(bn,2*index)/tgamma(2*index)/q;
+	
+	// radius in Source
+	setRadius((3.73 - 0.926*index + 1.164*index*index)*Reff);
 }
 
 double SersicSource::SurfaceBrightness(

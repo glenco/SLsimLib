@@ -325,8 +325,7 @@ void TreeStruct::_freeBranches_iter(){
 				current = current->brother;
 				current->prev->child1 = NULL;
 			}
-
-			free(branch);
+			delete branch;
 			--Nbranches;
 		}
 	}
@@ -1584,7 +1583,7 @@ Point * TreeStruct::RemoveLeafFromTree(unsigned long *Npoints){
 		point = branch->points;
 	}
 	*Npoints = branch->npoints;
-	free(branch);
+	delete branch;
 	--Nbranches;
 
 	return point;

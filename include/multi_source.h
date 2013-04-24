@@ -18,11 +18,20 @@ public:
 	/// Create a MultiSource from input parameters.
 	MultiSource(InputParams& params);
 	
-	/// Copy a MultiSource. The new MultiSource does not own any sources.
+	/// Copy a MultiSource and its contained sources.
 	MultiSource(const MultiSource& other);
 	
-	/// Destroy the MultiSource and free created sources.
+	/// Destroy the MultiSource.
 	~MultiSource();
+	
+	/// Copy contents of another MultiSource into this. Replaces all sources, invalidates all pointers.
+	MultiSource& operator=(MultiSource rhs);
+	
+	/// Get parameters for all sources.
+	void getParameters(Parameters& p) const;
+	
+	/// Set parameters into all sources.
+	void setParameters(Parameters& p);
 	
 	/// Surface brightness of current source. The limits of both the MultiSource and the current source apply.
 	double SurfaceBrightness(double* y);
@@ -54,14 +63,17 @@ public:
 	/// Set angular position of current source.
 	void setX(double x1, double x2);
 	
+	/// Randomize all sources.
+	void randomize(double step, long* seed);
+	
 	/// Get number of sources.
 	std::size_t size() const;
 	
-	/// Add a source. Ownership is not transferred to the MultiSource. Return the source index.
-	std::size_t add(Source* source);
+	/// Add a source. A copy is created and stored in the MultiSource.
+	std::size_t add(const Source& source);
 	
-	/// Add a source. Ownership is not transferred to the MultiSource. Return the source index.
-	std::size_t add(Source& source);
+	/// Add a source. A copy is created and stored in the MultiSource.
+	std::size_t add(const Source* source);
 	
 	/// Get the current source
 	Source* getCurrent() const;
@@ -80,7 +92,7 @@ public:
 	SourceT* getCurrent() const
 	{
 		// use the SourceType to safely upcast the current Source*
-		return source_cast<SourceT>(sources[index]);
+		return source_cast<SourceT*>(sources[index]);
 	}
 	
 	/// Get the type of the current source.
@@ -117,11 +129,14 @@ public:
 		return matches;
 	}
 	
+	/// Swap contents of MultiSource with another
+	friend void swap(MultiSource& a, MultiSource& b);
+	
 private:
 	void assignParams(InputParams& params);
 	
 	/// add a source to the internal list
-	void addInternal(Source* source, bool owned);
+	void addInternal(Source* source);
 	
 	/// read a Millenium galaxy data file
 	void readGalaxyFile(std::string filename, Band band, double mag_limit);
@@ -129,14 +144,11 @@ private:
 	/// the current source index
 	std::size_t index;
 	
-	/// list of sources and associated types
+	/// list of sources
 	std::vector<Source*> sources;
 	
 	/// map of sources and types
 	std::map<SourceType, std::vector<Source*> > type_map;
-	
-	// TODO: handle creation better
-	std::vector<Source*> created;
 };
 
 /**** inline functions ****/
@@ -145,7 +157,7 @@ inline double MultiSource::SurfaceBrightness(double *y)
 {
 	double sb = sources[index]->SurfaceBrightness(y);
 	
-	if(sb*hplanck < std::pow(10., -0.4*(48.6+getSBlimit())) * (180*60*60/pi)*(180*60*60/pi))
+	if(sb < sb_limit)
 		return 0.;
 	
 	return sb;
