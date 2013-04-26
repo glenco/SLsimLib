@@ -116,7 +116,7 @@ private:
 
     void setInternal(){
     	lens->setInternalParams(cosmo,source);
-    	source->setDlDs(cosmo->angDist(0,lens->getZlens()) / cosmo->angDist(0,source->getZ()));
+    	//source->setDlDs(cosmo->angDist(0,lens->getZlens()) / cosmo->angDist(0,source->getZ()));
     };
 
     //void change_redshifts(TreeHndl i_tree,TreeHndl s_tree,double z_source,double z_lens);
