@@ -8,31 +8,11 @@
 #include "image_processing.h"
 
 #include <vector>
-#include <stdexcept>
-#include <string>
-#include <sstream>
 #include <cstddef>
 #include <cmath>
 #include <ctime>
 
-// TODO: put into C++ code
-#ifndef MCMC_MAX_ITER
-#define MCMC_MAX_ITER 1000
-#endif
-
-class IterationError : public std::runtime_error
-{
-public:
-	IterationError(std::size_t max_iter) : val(max_iter), std::runtime_error("Maximum number of " + itos(max_iter) + " iterations exceeded.") {}
-	
-	std::size_t value() const { return val; }
-	
-private:
-	static std::string itos(std::size_t i) { std::stringstream sstr; sstr << i; return sstr.str(); }
-	std::size_t val;
-};
-
-/// Blocked Gibbs sampling MCMC algorithm.
+/// Blocked Metropolis MCMC algorithm.
 class MCMC
 {
 public:
@@ -98,15 +78,9 @@ public:
 			Lx[s] = -0.5*data.chi_square(pixmap);
 		}
 		
-		// keep track of iterations per step
-		std::size_t iter;
-		
 		// run n complete cycles through all sources
 		for(std::size_t i = 0; i < n; ++i)
 		{
-			// reset iterations
-			iter = 0;
-			
 			// randomize each source in turn
 			for(std::size_t s = 0; s < num_sources; ++s)
 			{
@@ -120,49 +94,35 @@ public:
 				Parameters p;
 				source->getParameters(p);
 				
-				// candidate likelihood
-				double Ly;
-				
 				// TODO: treat overlap of sources
 				
-				// generate points until one is accepted
-				while(++iter)
-				{
-					// maximum number of iterations
-					if(iter == MCMC_MAX_ITER)
-						throw IterationError(MCMC_MAX_ITER);
-					
-					// randomize source
-					source->randomize(step, &seed);
-					
-					// update grid
-					grid.RefreshSurfaceBrightnesses(source);
-					
-					// render model
-					map_images(model.lens, source, &grid, &image_count, images, MAX_N_IMAGES, source->getRadius(), 0.1*source->getRadius(), 0, EachImage, true, false, true);
-					
-					// create pixmap from images
-					pixmap.Clean();
-					pixmap.AddImages(images, image_count);
-					
-					// calculate candidate chi^2
-					Ly = -0.5*data.chi_square(pixmap);
-					
-					// check if density increased
-					if(Ly > Lx[s])
-						break;
-					
-					// step with probability a
-					if(std::exp(Ly - Lx[s]) > ran2(&seed))
-						break;
-					
-					// restore parameters
-					source->setParameters(p);
-					p.reset();
-				}
+				// randomize source
+				source->randomize(step, &seed);
 				
-				// candidate likelihood becomes current
-				Lx[s] = Ly;
+				// update grid
+				grid.RefreshSurfaceBrightnesses(source);
+				
+				// render model
+				map_images(model.lens, source, &grid, &image_count, images, MAX_N_IMAGES, source->getRadius(), 0.1*source->getRadius(), 0, EachImage, true, false, true);
+				
+				// create pixmap from images
+				pixmap.Clean();
+				pixmap.AddImages(images, image_count);
+				
+				// calculate candidate chi^2
+				double Ly = -0.5*data.chi_square(pixmap);
+				
+				// probability of accepting a candidate point
+				if(Ly < Lx[s] && std::exp(Ly - Lx[s]) < ran2(&seed))
+				{
+					// not accepted, restore parameters
+					source->setParameters(p);
+				}
+				else
+				{
+					// accepted, candidate likelihood becomes current
+					Lx[s] = Ly;
+				}
 			}
 			
 			// TODO: randomize lens
