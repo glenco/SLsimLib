@@ -42,7 +42,6 @@ public:
 	void Clean();
 
 	void AddImages(ImageInfo *imageinfo,int Nimages,float rescale = 1.);
-	//void AddImages(ImageInfo *imageinfo,int Nimages,double sigma);
 	void Renormalize(double factor);
 	void AddValue(std::size_t i, double value);
 	void AssignValue(std::size_t i, double value);
@@ -73,18 +72,19 @@ private:
 
 /** \ingroup Image
  * \brief It creates a realistic image from the output of a ray-tracing simulation.
- * It translates pixel values in observed units (counts/sec), applies PSF and noise.
- * Input must be in photons/(cm^2*Hz)
  *
+ * It translates pixel values in observed units (counts/sec), applies PSF and noise.
+ * Input must be in photons/(cm^2*Hz).
  */
+
+typedef enum {Euclid_VIS} Telescope;
 
 class Observation
 {
 public:
+	Observation(Telescope tel_name);
 	Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, float seeing = 0.);
 	Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, std::string psf_file, float oversample);
-	Observation(float diameter, float transmission);
-	Observation(float zeropoint);
 	float getExpTime(){return exp_time;}
 	int getExpNum(){return exp_num;}
 	float getBackMag(){return back_mag;}
@@ -94,9 +94,8 @@ public:
 	float getSeeing(){return seeing;}
 	float getZeropoint(){return mag_zeropoint;}
 	std::valarray<float> getPSF(){return map_psf;}
-	PixelMap AddNoise(PixelMap &pmap);
-	PixelMap PhotonToCounts(PixelMap &pmap);
-	PixelMap ApplyPSF(PixelMap &pmap);
+	PixelMap Convert (PixelMap &map, bool psf, bool noise);
+	PixelMap Convert_back (PixelMap &map);
 
 private:
 	float diameter;  // diameter of telescope (in cm)
@@ -104,11 +103,16 @@ private:
 	float mag_zeropoint;  // magnitude of a source that produces one count/sec in the image
 	float exp_time;  // total exposure time (in sec)
 	int exp_num;  // number of exposures
-	float back_mag;  // sky (or background) magnitude
-	float ron;  // read-out-noise
-	float seeing;  // width of the gaussian smoothing
+	float back_mag;  // sky (or background) magnitude in mag/arcsec^2
+	float ron;  // read-out noise in electrons/pixel
+	float seeing;  // full-width at half maximum of the gaussian smoothing
 	std::valarray<float> map_psf;  // array of the point spread function
 	float oversample; // psf oversampling factor
+
+	PixelMap AddNoise(PixelMap &pmap);
+	PixelMap PhotonToCounts(PixelMap &pmap);
+	PixelMap ApplyPSF(PixelMap &pmap);
+
 };
 
 
