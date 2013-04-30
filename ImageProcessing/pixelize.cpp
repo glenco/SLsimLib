@@ -678,6 +678,7 @@ void swap(PixelData& a, PixelData& b)
 	
 	swap(a.img, b.img);
 	swap(a.noi, b.noi);
+	swap(a.norm, b.norm);
 }
 
 PixelData::PixelData(const PixelMap& image, const PixelMap& noise, double zp_mag, double time)
