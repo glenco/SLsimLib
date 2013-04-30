@@ -72,11 +72,9 @@ public:
 	double getPA() const { return PA; }
 	double getInclination() const { return inclination; }
 	
-	// weighted mean between the radii that enclose 99% of the flux
-	// in the pure De Vacouleur/exponential disk case
-	// 6.670 = 3.975*Re = 3.975*1.678*Rh
-	double getRadius(){return
-		6.670*Rh*(1-BtoT)+18.936*Reff*BtoT;}
+	// Returns minimum of the radii at which disk and bulge have a surf. brightness equal to a fraction f of the central one
+	//TODO Fabio: Needs to be tested and improved (Bulge is so steep in the center that output values are very small)
+	inline double getMinSize(double f) {return std::min(1.678*Reff*fabs(cos(inclination))*pow(-log (f)/7.67,4),Rh*(-log (f)/1.67));}
 
 
 private:

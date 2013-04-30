@@ -65,6 +65,9 @@ void OverzierSource::setInternals(double my_mag,double my_BtoT,double my_Reff,do
 	setZ(my_z);
 	
 	// radius
+	// weighted mean between the radii that enclose 99% of the flux
+	// in the pure De Vacouleur/exponential disk case
+	// 6.670 = 3.975*Re = 3.975*1.678*Rh
 	setRadius(6.670*Rh*(1-BtoT)+18.936*Reff*BtoT);
 	
 	// position
