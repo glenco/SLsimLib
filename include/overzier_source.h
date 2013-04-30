@@ -72,6 +72,13 @@ public:
 	double getPA() const { return PA; }
 	double getInclination() const { return inclination; }
 	
+	// weighted mean between the radii that enclose 99% of the flux
+	// in the pure De Vacouleur/exponential disk case
+	// 6.670 = 3.975*Re = 3.975*1.678*Rh
+	double getRadius(){return
+		6.670*Rh*(1-BtoT)+18.936*Reff*BtoT;}
+
+
 private:
 	void assignParams(InputParams& params);
 	

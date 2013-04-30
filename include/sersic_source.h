@@ -27,6 +27,8 @@ public:
 	
 	inline double getMag() { return mag; }
 	// approximation of the radius that encloses 99% of the flux
+	inline double getRadius() { return (3.73 - 0.926*index + 1.164*index*index)*Reff; }
+
 	inline double getPA() { return PA; }
 	
 	inline double getReff() const { return Reff*180*60*60/pi; }

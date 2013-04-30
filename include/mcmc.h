@@ -63,16 +63,23 @@ public:
 		{
 			// make source current
 			model.source->setIndex(s);
-			
-			// update grid
-			grid.RefreshSurfaceBrightnesses(model.source);
-			
-			// render model
-			map_images(model.lens, model.source, &grid, &image_count, images, MAX_N_IMAGES, model.source->getRadius(), 0.1*model.source->getRadius(), 0, EachImage, true, false, true);
-			
+
 			// create pixmap from images
 			pixmap.Clean();
-			pixmap.AddImages(images, image_count);
+			for(std::size_t t = 0; t < num_sources; ++t)
+			{
+				model.source->setIndex(t);
+				Source* source = model.source->getCurrent();
+
+				// update grid
+				grid.RefreshSurfaceBrightnesses(model.source);
+
+				// render model
+				map_images(model.lens, source, &grid, &image_count, images, MAX_N_IMAGES, source->getRadius(), 0.1*source->getRadius(), 0, EachImage, true, false, true);
+
+				// create pixmap from images
+				pixmap.AddImages(images, image_count);
+			}
 			
 			// calculate chi^2 from data
 			Lx[s] = -0.5*data.chi_square(pixmap);
@@ -99,16 +106,22 @@ public:
 				// randomize source
 				source->randomize(step, &seed);
 				
-				// update grid
-				grid.RefreshSurfaceBrightnesses(source);
-				
-				// render model
-				map_images(model.lens, source, &grid, &image_count, images, MAX_N_IMAGES, source->getRadius(), 0.1*source->getRadius(), 0, EachImage, true, false, true);
-				
-				// create pixmap from images
 				pixmap.Clean();
-				pixmap.AddImages(images, image_count);
+
+				for(std::size_t t = 0; t < num_sources; ++t)
+				{
+					model.source->setIndex(t);
+					Source* source = model.source->getCurrent();
+
+					// update grid
+					grid.RefreshSurfaceBrightnesses(source);
+
+					// render model
+					map_images(model.lens, source, &grid, &image_count, images, MAX_N_IMAGES, source->getRadius(), 0.1*source->getRadius(), 0, EachImage, true, false, true);
 				
+					// create pixmap from images
+					pixmap.AddImages(images, image_count);
+				}
 				// calculate candidate chi^2
 				double Ly = -0.5*data.chi_square(pixmap);
 				
