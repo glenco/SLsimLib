@@ -352,6 +352,14 @@ void MultiSourceAnaGalaxy::multiplier(
 
 }
 
+/// Sort the sources by redshift in assending order
+void MultiSourceAnaGalaxy::sortInRedshift(){
+    std::sort(galaxies.begin(),galaxies.end(),redshiftcompare);
+}
+// used in MultiSourceAnaGalaxy::sortInRedshift()
+bool redshiftcompare(OverzierSource s1,OverzierSource s2){
+    return (s1.getZ() < s2.getZ());
+}
 /// Print info on current source parameters
 void MultiSourceAnaGalaxy::printSource(){
 	std::cout << "Overzier Galaxy Model" << std::endl;

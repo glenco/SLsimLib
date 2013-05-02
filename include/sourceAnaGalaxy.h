@@ -94,6 +94,7 @@ public:
 	std::size_t getNumberOfGalaxies() const {return galaxies.size();}
 
 	void multiplier(double z,double mag_cut,int Multiplicity,long *seed);
+    void sortInRedshift();
 
 
 private:
@@ -108,5 +109,7 @@ private:
 	void assignParams(InputParams& params);
 
 };
+
+bool redshiftcompare(OverzierSource s1,OverzierSource s2);
 
 #endif /* SOURCE_H_ */

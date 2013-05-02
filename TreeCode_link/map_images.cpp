@@ -638,10 +638,10 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
 		  for(j = 0 ; j < imageinfo[i].imagekist->Nunits() ; ++j,MoveDownKist(imageinfo[i].imagekist) ){
 
 			  if(
-					  RefinePoint2(getCurrentKist(imageinfo[i].imagekist),grid->i_tree
-					  	,imageinfo[i].area,total_area,criterion,res_target,nearest)
-					  //RefinePoint_sb(getCurrentKist(imageinfo[i].imagekist),grid->i_tree
-					  //		,imageinfo[i].area,total_area,source->getSBlimit(),nearest)
+					  //RefinePoint2(getCurrentKist(imageinfo[i].imagekist),grid->i_tree
+					  //	,imageinfo[i].area,total_area,criterion,res_target,nearest)
+					  RefinePoint_sb(getCurrentKist(imageinfo[i].imagekist),grid->i_tree
+					  		,imageinfo[i].area,total_area,2*source->getSBlimit(),nearest)
 
 			  ){
 
@@ -749,10 +749,10 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
 			  //assert(getCurrentKist(imageinfo[i].outerborder)->surface_brightness == 0);
 
 			  if(
-					  RefinePoint2(getCurrentKist(imageinfo[i].outerborder),grid->i_tree
-					  ,imageinfo[i].area,total_area,criterion,res_target,nearest)
-					  //RefinePoint_sb(getCurrentKist(imageinfo[i].outerborder),grid->i_tree
-					  //    ,imageinfo[i].area,total_area,source->getSBlimit(),nearest)
+					  //RefinePoint2(getCurrentKist(imageinfo[i].outerborder),grid->i_tree
+					  //    ,imageinfo[i].area,total_area,criterion,res_target,nearest)
+					  RefinePoint_sb(getCurrentKist(imageinfo[i].outerborder),grid->i_tree
+					      ,imageinfo[i].area,total_area,2*source->getSBlimit(),nearest)
 			  ){
 
 				  if(getCurrentKist(imageinfo[i].outerborder)->in_image != MAYBE){
@@ -981,14 +981,20 @@ bool RefinePoint2(Point *point,TreeHndl i_tree,double image_area,double total_ar
 bool RefinePoint_sb(Point *point,TreeHndl i_tree,double image_area,double total_area
 		,double sb_limit,Kist<Point> * nearest){
 
-	nearest->Empty();
+    double smallsize = 1.0e-7;
 	// Prevent cell from getting so small that precision error prevents everything from working
 	if(point->gridsize <= pow(10.,1 - DBL_DIG)) return false;  // this shouldn't be necessary every time
 
 	if( image_area < 1.0e-3*total_area ) return false;
-	if(pow(point->gridsize,2)*(point->surface_brightness/maxflux) > 1.0e-4*image_area)
-		return false;;
+	if( point->gridsize*point->gridsize*point->surface_brightness/maxflux > 1.0e-4*image_area)
+		return false;
 
+    if(point->gridsize*point->gridsize*point->invmag > smallsize*smallsize) return true;
+    else return false;
+
+    //*****************************************************************
+	nearest->Empty();
+    
 	i_tree->FindAllBoxNeighborsKist(point,nearest);
 	MoveToTopKist(nearest);
 	do{
