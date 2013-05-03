@@ -15,6 +15,7 @@
 #include <fstream>
 #include <algorithm>
 #include <utility>
+#include <stdexcept>
 
 void swap(PixelMap& x, PixelMap& y)
 {
@@ -95,47 +96,40 @@ PixelMap::PixelMap(
 PixelMap::PixelMap(std::string filename)
 {
 #ifdef ENABLE_FITS
-
-		if(filename == ""){
-			std::cout << "Please enter a valid filename for the FITS file input" << std::endl;
-			exit(1);
-		}
-
-		std::auto_ptr<CCfits::FITS> fp (new CCfits::FITS (filename, CCfits::Read));
-		CCfits::PHDU *h0=&fp->pHDU();
-		//const CCfits::ExtMap *h1=&fp->extension();
-		Npixels = h0->axis(0);
-		if(Npixels != (std::size_t)h0->axis(1))
-		{
-			std::cout << "Only squared maps are allowed!" << std::endl;
-			exit(1);
-		}
-		h0->readKey("CRVAL1",center[0]);
-		h0->readKey("CRVAL2",center[1]);
-		h0->readKey("CDELT1",resolution);
-		std::cout << "Resolution is " << resolution << std::endl;
-		resolution = fabs(resolution)*pi/180.;
-		std::cout << "Resolution is " << resolution << std::endl;
-		range = resolution*(Npixels-1);
-		map_boundary_p1[0] = center[0] - (Npixels*resolution)/2.;
-		map_boundary_p1[1] = center[1] - (Npixels*resolution)/2.;
-		map_boundary_p2[0] = center[0] + (Npixels*resolution)/2.;
-		map_boundary_p2[1] = center[1] + (Npixels*resolution)/2.;
-		
-		std::valarray<float> image;
-		h0->read(image);
-		
-		map_size = Npixels*Npixels;
-		map = new float[map_size];
-		std::copy(&image[0], &image[0] + map_size, map);
-		
-		std::cout << "Resolution is " << resolution << std::endl;
-		
+	if(filename.empty())
+		throw std::invalid_argument("Please enter a valid filename for the FITS file input");
+	
+	std::auto_ptr<CCfits::FITS> fp(new CCfits::FITS(filename, CCfits::Read));
+	
+	CCfits::PHDU& h0 = fp->pHDU();
+	
+	//const CCfits::ExtMap *h1=&fp->extension();
+	
+	Npixels = h0.axis(0);
+	if(Npixels != (std::size_t)h0.axis(1))
+		throw std::runtime_error("Only square maps are allowed!");
+	
+	h0.readKey("CRVAL1", center[0]);
+	h0.readKey("CRVAL2", center[1]);
+	h0.readKey("CDELT1", resolution);
+	
+	resolution = fabs(resolution)*pi/180.;
+	range = resolution*(Npixels-1);
+	map_boundary_p1[0] = center[0] - (Npixels*resolution)/2.;
+	map_boundary_p1[1] = center[1] - (Npixels*resolution)/2.;
+	map_boundary_p2[0] = center[0] + (Npixels*resolution)/2.;
+	map_boundary_p2[1] = center[1] + (Npixels*resolution)/2.;
+	
+	std::valarray<float> image;
+	h0.read(image);
+	
+	map_size = Npixels*Npixels;
+	map = new float[map_size];
+	std::copy(&image[0], &image[0] + map_size, map);
 #else
-		std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
-		exit(1);
+	std::cerr << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
+	exit(1);
 #endif
-
 }
 
 /// Creates a new PixelMap from a region of a PixelMap.
@@ -431,68 +425,50 @@ void PixelMap::printASCIItoFile(std::string filename) const
 	return;
 }
 /// Output the pixel map as a fits file.
-void PixelMap::printFITS(std::string filename) const
+void PixelMap::printFITS(std::string filename, bool verbose) const
 {
 #ifdef ENABLE_FITS
-		if(filename == ""){
-			std::cout << "Please enter a valid filename for the FITS file output" << std::endl;
-			exit(1);
-		}
-
-		//int Np = (int)Npixels;
-		//writeImage(filename,map,Np,Np);
-
-		long naxis=2;
-		long naxes[2] = {(long)Npixels,(long)Npixels};
-
-		std::auto_ptr<CCfits::FITS> fout(0);
-
-		try{
-			fout.reset(new CCfits::FITS(filename,FLOAT_IMG,naxis,naxes));
-		}
-		catch(CCfits::FITS::CantCreate&){
-			std::cout << "Unable to open fits file " << filename << std::endl;
-			ERROR_MESSAGE();
-			exit(1);
-		}
-
-		//long seed;
-
-		//ran2(&seed)*1000;
-
-		std::vector<long> naxex(2);
-		naxex[0]=Npixels;
-		naxex[1]=Npixels;
-
-		CCfits::PHDU *phout = &fout->pHDU();
-		phout->write(1, map_size, std::valarray<float>(map, map_size));
-std::cout<< range << "  " << resolution << "  " << Npixels << std::endl;		
-		phout->addKey ("CRPIX1",naxex[0]/2,"");
-		phout->addKey ("CRPIX2",naxex[1]/2,"");
-		phout->addKey ("CRVAL1",0.0,"");
-		phout->addKey ("CRVAL2",0.0,"");
-		phout->addKey ("CDELT1",-180*resolution/pi,"degrees");
-		phout->addKey ("CDELT2", 180*resolution/pi,"degrees");
-		phout->addKey ("CTYPE1","RA--TAN","");
-		phout->addKey ("CTYPE2","RA-TAN","");
-		phout->addKey ("CROTA2",0.0,"");
-		phout->addKey ("CD1_1",-180*resolution/pi,"degrees");
-		phout->addKey ("CD1_2",0.0,"");
-		phout->addKey ("CD2_1",0.0,"");
-		phout->addKey ("CD2_2", 180*resolution/pi,"degrees");
-
-		phout->addKey ("Npixels", Npixels,"");
-		phout->addKey ("range ", map_boundary_p2[0]-map_boundary_p1[0]," radians");
-
-		std::cout << *phout << std::endl;
-
-		//map.resize(0);
+	if(filename.empty())
+		throw std::invalid_argument("Please enter a valid filename for the FITS file output");
+	
+	long naxis = 2;
+	long naxes[2] = {(long)Npixels, (long)Npixels};
+	
+	// might throw CCfits::FITS::CantCreate
+	std::auto_ptr<CCfits::FITS> fout(new CCfits::FITS(filename, FLOAT_IMG, naxis, naxes));
+	
+	std::vector<long> naxex(2);
+	naxex[0] = Npixels;
+	naxex[1] = Npixels;
+	
+	CCfits::PHDU& phout = fout->pHDU();
+	
+	phout.write(1, map_size, std::valarray<float>(map, map_size));
+	
+	phout.addKey("CRPIX1", naxex[0]/2, "");
+	phout.addKey("CRPIX2", naxex[1]/2, "");
+	phout.addKey("CRVAL1", 0.0, "");
+	phout.addKey("CRVAL2", 0.0, "");
+	phout.addKey("CDELT1", -180*resolution/pi, "degrees");
+	phout.addKey("CDELT2", 180*resolution/pi, "degrees");
+	phout.addKey("CTYPE1", "RA--TAN", ""); // TODO: why is this different?
+	phout.addKey("CTYPE2", "RA-TAN", "");
+	phout.addKey("CROTA2", 0.0, "");
+	phout.addKey("CD1_1", -180*resolution/pi, "degrees");
+	phout.addKey("CD1_2", 0.0, "");
+	phout.addKey("CD2_1", 0.0, "");
+	phout.addKey("CD2_2", 180*resolution/pi, "degrees");
+	
+	phout.addKey("Npixels", Npixels, "");
+	phout.addKey("range", map_boundary_p2[0]-map_boundary_p1[0], "radians");
+	
+	if(verbose)
+		std::cout << phout << std::endl;
 #else
-		std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
-		exit(1);
+	std::cerr << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
+	exit(1);
 #endif
 }
-
 
 /** \ingroup Image
  *

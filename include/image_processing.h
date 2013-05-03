@@ -47,7 +47,7 @@ public:
 	void AssignValue(std::size_t i, double value);
 	void printASCII() const;
 	void printASCIItoFile(std::string filename) const;
-	void printFITS(std::string filename) const;
+	void printFITS(std::string filename, bool verbose = false) const;
 
 	void smooth(double sigma);
 
