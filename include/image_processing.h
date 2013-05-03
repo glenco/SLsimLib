@@ -45,9 +45,9 @@ public:
 	void Renormalize(double factor);
 	void AddValue(std::size_t i, double value);
 	void AssignValue(std::size_t i, double value);
-	void printASCII();
-	void printASCIItoFile(std::string filename);
-	void printFITS(std::string filename);
+	void printASCII() const;
+	void printASCIItoFile(std::string filename) const;
+	void printFITS(std::string filename) const;
 
 	void smooth(double sigma);
 
@@ -263,7 +263,10 @@ public:
 	PixelData& operator=(PixelData rhs);
 	
 	/** Get the data image. */
-	PixelMap image() const;
+	const PixelMap& image() const;
+	
+	/** Get the noise image. */
+	const PixelMap& noise() const;
 	
 	/** Get range of data. */
 	std::size_t getNpixels() const;
@@ -276,6 +279,9 @@ public:
 	
 	/** Get resolution of data. */
 	double getResolution() const;
+	
+	/** Get normalization of data. */
+	double getNormalization() const;
 	
 	/**
 	 * \brief Calculate the chi^2 value of a model PixelMap.
@@ -299,11 +305,13 @@ private:
 	double norm;
 };
 
-inline PixelMap PixelData::image() const { return img; }
+inline const PixelMap& PixelData::image() const { return img; }
+inline const PixelMap& PixelData::noise() const { return noi; }
 inline std::size_t PixelData::getNpixels() const { return img.getNpixels(); }
 inline double PixelData::getRange() const { return img.getRange(); }
 inline const double* PixelData::getCenter() const { return img.getCenter(); }
 inline double PixelData::getResolution() const { return img.getResolution(); }
+inline double PixelData::getNormalization() const { return norm; }
 
 void pixelize(double *map,long Npixels,double range,double *center
 		,ImageInfo *imageinfo,int Nimages,bool constant_sb,bool cleanmap

@@ -401,8 +401,8 @@ void PixelMap::AddImages(
 }
 */
 /// Print an ASCII table of all the pixel values.
-void PixelMap::printASCII(){
-
+void PixelMap::printASCII() const
+{
 	std::cout << Npixels << "  " << range << std::endl;
 	for(std::size_t i=0;i < map_size; ++i) std::cout << map[i] << std::endl;
 	std::cout << Npixels << "  " << range << std::endl;
@@ -411,7 +411,8 @@ void PixelMap::printASCII(){
 	return;
 }
 /// Print an ASCII table of all the pixel values.
-void PixelMap::printASCIItoFile(std::string filename){
+void PixelMap::printASCIItoFile(std::string filename) const
+{
 	std::ofstream file_map(filename.c_str());
 
 	if(!file_map){
@@ -430,8 +431,8 @@ void PixelMap::printASCIItoFile(std::string filename){
 	return;
 }
 /// Output the pixel map as a fits file.
-void PixelMap::printFITS(std::string filename){
-
+void PixelMap::printFITS(std::string filename) const
+{
 #ifdef ENABLE_FITS
 		if(filename == ""){
 			std::cout << "Please enter a valid filename for the FITS file output" << std::endl;
