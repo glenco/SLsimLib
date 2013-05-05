@@ -26,7 +26,10 @@ public:
 	void setInternals();
 	
 	inline double getMag() { return mag; }
-	// approximation of the radius that encloses 99% of the flux
+
+	// calculates radius where the surface brightness drops by a factor f with respect to the central peak
+	inline double FractionRadius (double f) {return Reff*pow(-log (f)/bn,index);}
+
 	inline double getPA() { return PA; }
 	
 	inline double getReff() const { return Reff*180*60*60/pi; }

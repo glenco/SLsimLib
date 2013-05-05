@@ -81,6 +81,7 @@ void SersicSource::setInternals()
 	Ieff = flux/2./pi/Reff/Reff/exp(bn)/index*pow(bn,2*index)/tgamma(2*index)/q;
 	
 	// radius in Source
+	// approximation of the radius that encloses 99% of the flux
 	setRadius((3.73 - 0.926*index + 1.164*index*index)*Reff);
 }
 
