@@ -43,47 +43,43 @@ public:
 		chain.push_back(Parameters());
 		model.getParameters(chain.back());
 		
-		// create a grid
+		// the image properties
 		double center[2];
 		center[0] = data.getCenter()[0];
 		center[1] = data.getCenter()[1];
 		double range = data.getRange();
+		double resolution = data.getResolution();
+		std::size_t npixels = data.getNpixels();
+		
+		// create a grid
 		Grid grid(model.lens, GRID_POINTS, center, range);
 		
 		// buffer for images
 		ImageInfo images[MAX_N_IMAGES];
 		int image_count;
 		
-		// create a pixmap for the results
-		PixelMap pixmap(data.getCenter(), data.getNpixels(), data.getResolution());
+		// create pixmaps for the individual sources
+		std::vector<PixelMap> pixmaps(num_sources);
 		
 		// the likelihood for each source
-		std::vector<double> Lx(num_sources);
 		for(std::size_t s = 0; s < num_sources; ++s)
 		{
 			// make source current
 			model.source->setIndex(s);
-
-			// create pixmap from images
-			pixmap.Clean();
-			for(std::size_t t = 0; t < num_sources; ++t)
-			{
-				model.source->setIndex(t);
-				Source* source = model.source->getCurrent();
-
-				// update grid
-				grid.RefreshSurfaceBrightnesses(model.source);
-
-				// render model
-				map_images(model.lens, source, &grid, &image_count, images, MAX_N_IMAGES, source->getRadius(), 0.1*source->getRadius(), 0, EachImage, true, false, true);
-
-				// create pixmap from images
-				pixmap.AddImages(images, image_count);
-			}
 			
-			// calculate chi^2 from data
-			Lx[s] = -0.5*data.chi_square(pixmap);
+			// update grid
+			grid.RefreshSurfaceBrightnesses(model.source);
+			
+			// render model
+			map_images(model.lens, model.source, &grid, &image_count, images, MAX_N_IMAGES, model.source->getRadius(), 0.1*model.source->getRadius(), 0, EachImage, true, false, true);
+			
+			// create pixmap for images
+			pixmaps[s] = PixelMap(center, npixels, resolution);
+			pixmaps[s].AddImages(images, image_count);
 		}
+		
+		// calculate current likelihood
+		double Lx = likelihood(pixmaps.begin(), pixmaps.end(), data);
 		
 		// run n complete cycles through all sources
 		for(std::size_t i = 0; i < n; ++i)
@@ -101,40 +97,38 @@ public:
 				Parameters p;
 				source->getParameters(p);
 				
-				// TODO: treat overlap of sources
-				
 				// randomize source
 				source->randomize(step, &seed);
 				
-				pixmap.Clean();
-
-				for(std::size_t t = 0; t < num_sources; ++t)
-				{
-					model.source->setIndex(t);
-					Source* source = model.source->getCurrent();
-
-					// update grid
-					grid.RefreshSurfaceBrightnesses(source);
-
-					// render model
-					map_images(model.lens, source, &grid, &image_count, images, MAX_N_IMAGES, source->getRadius(), 0.1*source->getRadius(), 0, EachImage, true, false, true);
+				// update grid
+				grid.RefreshSurfaceBrightnesses(source);
 				
-					// create pixmap from images
-					pixmap.AddImages(images, image_count);
-				}
-				// calculate candidate chi^2
-				double Ly = -0.5*data.chi_square(pixmap);
+				// render model
+				map_images(model.lens, source, &grid, &image_count, images, MAX_N_IMAGES, source->getRadius(), 0.1*source->getRadius(), 0, EachImage, true, false, true);
+				
+				// create pixmap for images
+				PixelMap pixmap(center, npixels, resolution);
+				pixmap.AddImages(images, image_count);
+				
+				// swap pixmap into array to calculate likelihood
+				swap(pixmaps[s], pixmap);
+				
+				// calculate candidate likelihood
+				double Ly = likelihood(pixmaps.begin(), pixmaps.end(), data);
 				
 				// probability of accepting a candidate point
-				if(Ly < Lx[s] && std::exp(Ly - Lx[s]) < ran2(&seed))
+				if(Ly < Lx && std::exp(Ly - Lx) < ran2(&seed))
 				{
 					// not accepted, restore parameters
 					source->setParameters(p);
+					
+					// restore pixmap
+					swap(pixmaps[s], pixmap);
 				}
 				else
 				{
 					// accepted, candidate likelihood becomes current
-					Lx[s] = Ly;
+					Lx = Ly;
 				}
 			}
 			
@@ -150,6 +144,30 @@ public:
 	}
 	
 private:
+	template<typename It>
+	static double likelihood(It first, It last, const PixelData& data)
+	{
+		const PixelMap& image = data.image();
+		const PixelMap& noise = data.noise();
+		double norm = data.getNormalization();
+		
+		double chi2 = 0;
+		
+		for(std::size_t i = 0, n = image.size(); i < n; ++i)
+		{
+			double model = 0;
+			for(It j = first; j != last; ++j)
+				model += (*j)[i];
+			
+			double diff = model - image[i];
+			double sigma2 = model + noise[i];
+			
+			chi2 += diff*diff/sigma2;
+		}
+		
+		return -0.5*norm*chi2;
+	}
+	
 	double step;
 	long seed;
 };
