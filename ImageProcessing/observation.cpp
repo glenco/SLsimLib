@@ -222,11 +222,11 @@ PixelMap Observation::AddNoise(PixelMap &pmap)
 	double back_mean = pow(10,-0.4*(48.6+back_mag))*res_in_arcsec*res_in_arcsec*Q*exp_time;
 	double rms, noise;
 	long seed = 24;
-	double norm_map, noised_map;
+	double norm_map;
 	for (unsigned long i = 0; i < outmap.getNpixels()*outmap.getNpixels(); i++)
 	{
 		norm_map = outmap[i]*exp_time;
-		if (norm_map+back_mean > 1000.)
+		if (norm_map+back_mean > 500.)
 		{
 			rms = sqrt(pow(exp_num*ron,2)+norm_map+back_mean);
 			noise = gasdev(&seed)*rms;
