@@ -159,13 +159,13 @@ private:
 			for(It j = first; j != last; ++j)
 				model += (*j)[i];
 			
-			double diff = model - image[i];
-			double sigma2 = model + noise[i];
+			double diff = norm*(model - image[i]);
+			double sigma2 = norm*model + (norm*noise[i])*(norm*noise[i]);
 			
-			chi2 += diff*diff/sigma2;
+			chi2 += (diff*diff)/sigma2 + std::log(sigma2);
 		}
 		
-		return -0.5*norm*chi2;
+		return -0.5*chi2;
 	}
 	
 	double step;
