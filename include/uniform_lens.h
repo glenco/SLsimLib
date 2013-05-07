@@ -10,7 +10,6 @@
 
 #include <lens.h>
 #include <Tree.h>
-#include <forceTree.h>
 #include <quadTree.h>
 #include <source.h>
 #include <base_analens.h>
