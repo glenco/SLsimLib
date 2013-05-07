@@ -185,7 +185,7 @@ void NSIELensHalo::force_halo(
 			alpha_out[0] = prefac*xcm[0]/r;
 			alpha_out[1] = prefac*xcm[1]/r;
 
-			rotation(x_in,xcm,pa);
+			Utilities::rotation(x_in,xcm,pa);
 			rin = r*Rsize
 					/sqrt( x_in[0]*x_in[0] + pow(fratio*x_in[1],2) );
 			//rin = Rsize;
