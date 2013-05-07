@@ -37,5 +37,6 @@
 #include "multi_source.h"
 #include "overzier_source.h"
 #include "sersic_source.h"
+#include "causticdata.h"
 
 #endif

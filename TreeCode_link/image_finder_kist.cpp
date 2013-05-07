@@ -662,7 +662,7 @@ void find_images_microlens(
 
 	// refine critical curves
 	//find_crit(lens,grid,critcurve,NimageMax,&Ncrits,r_source*0.01,&dummybool,false,false,verbose);
-    refine_crit_in_image(lens,grid,r_source,y_source,r_source*0.01);
+  refine_crit_in_image(lens,grid,r_source,y_source,r_source*0.01);
 
 	time(&now);
 	if(time_on) printf(" time for refine critical curves %f sec\n",difftime(now,to));

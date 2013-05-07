@@ -45,6 +45,7 @@ public:
 class DummyLens: public Lens{
 public:
 	DummyLens(): Lens(){};
+    DummyLens(InputParams& params,long *my_seed): Lens(){};
 	~DummyLens(){};
 
 	virtual void setInternalParams(CosmoHndl,SourceHndl){}

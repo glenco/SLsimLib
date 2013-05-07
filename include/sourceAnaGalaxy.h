@@ -94,9 +94,11 @@ public:
 	std::size_t getNumberOfGalaxies() const {return galaxies.size();}
 
 	void multiplier(double z,double mag_cut,int Multiplicity,long *seed);
-    void sortInRedshift();
-
-
+  void sortInRedshift();
+  void sortInMag();
+  /// returns field-of-view in deg^2 assuming region is square
+  double getFOV(){return (rangex[1]-rangex[0])*(rangey[1]-rangey[0])*180*180/pi/pi;}
+  
 private:
 	Band band;
 	float mag_limit;
@@ -108,8 +110,10 @@ private:
 	void readDataFile();
 	void assignParams(InputParams& params);
 
+  double rangex[2],rangey[2];
 };
 
 bool redshiftcompare(OverzierSource s1,OverzierSource s2);
+bool magcompare(OverzierSource s1,OverzierSource s2);
 
 #endif /* SOURCE_H_ */
