@@ -26,6 +26,8 @@ bool RefinePoint2(Point *point,TreeHndl i_tree,double image_area,double total_ar
 		,double res_target,Kist<Point> * nearest);
 bool RefinePoint_sb(Point *point,TreeHndl i_tree,double image_area,double total_area
 		,double sb_limit,Kist<Point> * nearest);
+bool RefinePoint_smallsize(Point *point,TreeHndl i_tree,double image_area,double total_area
+                           ,double smallsize,Kist<Point> * nearest);
 void UniformMagCheck(ImageInfo *imageinfo);
 
 #endif
