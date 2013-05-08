@@ -32,7 +32,7 @@ public:
 	/// ids
 	unsigned long *haloID;
 
-	HaloData(HaloStructure *halostrucs,double sb,double **positions,double *z, unsigned long *haloID,unsigned long Nhaloss,double Dl);
+	HaloData(Lenas *halostrucs,double sb,double **positions,double *z, unsigned long *haloID,unsigned long Nhaloss,double Dl);
 	~HaloData();
 };
 
