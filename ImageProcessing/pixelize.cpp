@@ -510,7 +510,6 @@ void PixelMap::smooth(double sigma){
 		for(int k=0;k<Nmask;k++)
 		{
 			mask[j][k]/=sum;
-			std::cout << mask[j][k] << std::endl;
 		}
 	}
 	for(long i=0;i<map_size;i++){
