@@ -191,7 +191,7 @@ void BaseAnaLens::substract_stars_disks(double *ray,double *alpha
 float* BaseAnaLens::stellar_mass_function(int mftype, unsigned long Nstars, long *seed, double minmass, double maxmass, double bendmass, double powerlo, double powerhi){
 	//if(!(stars_implanted)) return;
 	unsigned long i;
-	double powerp1,n0,n1;
+	double powerp1,powerlp1,shiftmax,shiftmin,n0,n1,n2,rndnr;
 	float *star_masses = new float[Nstars];
 
 	if(mftype==0){
@@ -212,25 +212,24 @@ float* BaseAnaLens::stellar_mass_function(int mftype, unsigned long Nstars, long
     	}
 	}
 
-    /*
-
-    bendmass=1.
-    powerl=0.
-    powerlp1=powerl+1.
-    dummax=maxmass/bendmass
-    dummin=minmass/bendmass
-
-    N1=(1./powerlp1)-(dummin**(powerlp1))/(powerlp1)
-    N2=(dummax**powerp1)/powerp1-(1./powerp1)
-    N=N1+N2
-
-    if(dum1.lt.(N1/N))then
-      RM=((N*dum1)*(powerlp1)+dummin**powerlp1)**(1./powerlp1)
-    else
-      RM=((N*dum1-N1)*powerp1+1.)**(1./powerp1)
-    endif
-    massf = RM*bendmass
-    */
+    if(mftype==2){
+    	powerlp1=powerlo+1.0;
+    	powerp1 = powerhi+1.0;
+    	shiftmax=maxmass/bendmass;
+    	shiftmin=minmass/bendmass;
+    	n1=(1./powerlp1)-(pow(shiftmin, powerlp1))/powerlp1;
+    	n2=( pow(shiftmax,powerp1) )/powerp1-(1./powerp1);
+    	n0=n1+n2;
+    	for(i = 0; i < Nstars; i++){
+    		rndnr=ran2(seed);
+    		if(rndnr<(n1/n0)){
+    			star_masses[i]=(pow( ((n0*rndnr)*(powerlp1)+ pow(shiftmin,powerlp1)),(1.0/powerlp1)))*bendmass;
+    		}
+    		else{
+    			star_masses[i]=(pow( ((n0*rndnr-n1)*powerp1+1.0),(1.0/powerp1)))*bendmass;
+    		}
+    	}
+    }
 
     return star_masses;
 }

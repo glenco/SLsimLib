@@ -139,7 +139,7 @@ public:
                   ,KappaType *kappa,KappaType *gamma);
   void implant_stars(Point *centers,unsigned long Nregions,long *seed,int mftype=0);
   float* stellar_mass_function(int mftype, unsigned long Nstars, long *seed, double minmass=0.1, double maxmass=100
-  		,double bendmass=0, double powerlo=0, double powerhi=-2.35);
+  		,double bendmass=1.0, double powerlo=-0.3, double powerhi=-2.35);
 
   //void toggleStars(bool implanted);
 
