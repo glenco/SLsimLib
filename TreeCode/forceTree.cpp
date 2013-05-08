@@ -23,21 +23,33 @@ ForceTree::ForceTree(
 	SimpleTree(xp,Npoints,bucket,dimension,median)
 	, MultiMass(Multimass), MultiRadius(Multisize), masses(Masses), rsph(Rsphs), force_theta(theta), kappa_background(my_kappa_background)
 {
-/*	tree->MultiMass = Multimass;
-	tree->MultiRadius = Multisize;
-	tree->masses = masses;
-	tree->rsph= rsph;
-	force_theta = theta;*/
 
 	haloON = false; // don't use internal halo parameters
-	halo_params = NULL;
+	halos = NULL;
 	init = false;
 
+	CalcMoments();
+}
 
-	// This should be changed so other particle profiles can be used.
-	//alpha_particle = alpha_o;
-	//kappa_particle = kappa_o;
-	//gamma_particle = gamma_o;
+ForceTree::ForceTree(
+		PosType **xp              /// positions of the halos xp[0..Npoints-1][0..1 or 2]
+		,IndexType Npoints         /// number of halos
+		,LensHalo *my_halos   /// array with internal properties of halos
+		,bool Multisize            /// flag false if only one halo size and structure should be used, default is true
+		,double my_kappa_bk        /// Background convergence to be subtracted
+		,int bucket                /// maximum number of halos in a leaf of the tree
+		,int dimension             /// 2 or 3, dimension of tree, default 2
+		,bool median               /// If true will divide branches at the median position of the particles, if false an equal area cut is used, default false
+		,PosType theta             /// Opening angle used in tree force calculation
+		) :
+		SimpleTree(xp,Npoints,bucket,dimension,median)
+, MultiMass(true), MultiRadius(true), masses(NULL), rsph(NULL), force_theta(theta), kappa_background(my_kappa_bk)
+{
+
+	haloON = true;
+	halos = my_halos;
+
+	CalcMoments();
 }
 
 ForceTree::~ForceTree(){
@@ -62,12 +74,12 @@ void ForceTree::CalcMoments(){
 
 		// calculate mass
 		for(i=0,cbranch->mass=0;i<cbranch->nparticles;++i)
-			cbranch->mass +=  haloON ? halo_params[cbranch->particles[i]*MultiRadius].mass : masses[cbranch->particles[i]*MultiMass];
+			cbranch->mass +=  haloON ? halos[cbranch->particles[i]*MultiRadius].get_mass() : masses[cbranch->particles[i]*MultiMass];
 
 		// calculate center of mass
 		cbranch->center[0]=cbranch->center[1]=0;
 		for(i=0;i<cbranch->nparticles;++i){
-			tmp = haloON ? halo_params[cbranch->particles[i]*MultiRadius].mass : masses[cbranch->particles[i]*MultiMass];
+			tmp = haloON ? halos[cbranch->particles[i]*MultiRadius].get_mass() : masses[cbranch->particles[i]*MultiMass];
 			cbranch->center[0] += tmp*tree->xp[cbranch->particles[i]][0]/cbranch->mass;
 			cbranch->center[1] += tmp*tree->xp[cbranch->particles[i]][1]/cbranch->mass;
 		}
@@ -79,7 +91,7 @@ void ForceTree::CalcMoments(){
 			xcm[0]=tree->xp[cbranch->particles[i]][0]-cbranch->center[0];
 			xcm[1]=tree->xp[cbranch->particles[i]][1]-cbranch->center[1];
 			xcut=pow(xcm[0],2) + pow(xcm[1],2);
-			tmp = haloON ? halo_params[cbranch->particles[i]*MultiRadius].mass : masses[cbranch->particles[i]*MultiMass];
+			tmp = haloON ? halos[cbranch->particles[i]*MultiRadius].get_mass() : masses[cbranch->particles[i]*MultiMass];
 
 			cbranch->quad[0] += (xcut-2*xcm[0]*xcm[0])*tmp;
 			cbranch->quad[1] += (xcut-2*xcm[1]*xcm[1])*tmp;
@@ -99,7 +111,7 @@ void ForceTree::CalcMoments(){
 		if(MultiRadius){
 
 			for(i=0,cbranch->maxrsph=0.0;i<cbranch->nparticles;++i){
-				tmp = haloON ? halo_params[cbranch->particles[i]*MultiRadius].Rmax : rsph[cbranch->particles[i]*MultiRadius];
+				tmp = haloON ? halos[cbranch->particles[i]*MultiRadius].get_Rmax() : rsph[cbranch->particles[i]*MultiRadius];
 				if(cbranch->maxrsph <= tmp ){
 					cbranch->maxrsph = tmp;
 				}
@@ -148,7 +160,7 @@ void ForceTree::CalcMoments(){
 
 		}else{
 			// single size case
-			cbranch->maxrsph = haloON ? halo_params[0].Rmax : rsph[0];
+			cbranch->maxrsph = haloON ? halos[0].get_Rmax() : rsph[0];
 			cbranch->rcrit_part = rcom + 2*cbranch->maxrsph;
 			cbranch->big_particle = cbranch->particles[0];
 		}
@@ -208,7 +220,7 @@ float * ForceTree::CalculateSPHsmoothing(int N){
 
 void ForceTree::force2D(double *ray,double *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa){
 
-  PosType xcm,ycm,rcm2,tmp;
+  PosType xcm[2],rcm2,tmp;
   int OpenBox(TreeNBHndl tree,PosType r);
   IndexType i;
   bool allowDescent=true;
@@ -227,10 +239,10 @@ void ForceTree::force2D(double *ray,double *alpha,KappaType *kappa,KappaType *ga
   do{
 
 	  ++count;
-	  xcm=tree->current->center[0]-ray[0];
-	  ycm=tree->current->center[1]-ray[1];
+	  xcm[0]=tree->current->center[0]-ray[0];
+	  xcm[1]=tree->current->center[1]-ray[1];
 
-	  rcm2 = xcm*xcm + ycm*ycm;
+	  rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
 
 	  /* if the box is close enough that the smoothing scale could be important
 	   * add those particles individually and subtract their point particle contribution
@@ -248,40 +260,40 @@ void ForceTree::force2D(double *ray,double *alpha,KappaType *kappa,KappaType *ga
 
 			  for(i=0;i<tree->current->nparticles;++i){
 
-				  xcm = tree->xp[tree->current->particles[i]][0] - ray[0];
-				  ycm = tree->xp[tree->current->particles[i]][1] - ray[1];
-
-				  rcm2 = xcm*xcm + ycm*ycm;
-				  if(rcm2 < 1e-20) rcm2 = 1e-20;
+				  xcm[0] = tree->xp[tree->current->particles[i]][0] - ray[0];
+				  xcm[1] = tree->xp[tree->current->particles[i]][1] - ray[1];
 
 				  index = MultiRadius*tree->current->particles[i];
 
-				  rcm = sqrt(rcm2);
-
 				  if(haloON){
-					  prefac = halo_params[index].mass/rcm2/pi;
-					  arg1 = rcm/halo_params[index].rscale;
-					  arg2 = halo_params[index].Rmax/halo_params[index].rscale;
-				  }
-				  else{
-					  prefac = masses[MultiMass*tree->current->particles[i]]/rcm2/pi;
-					  arg1 = rcm2/(rsph[index]*rsph[index]);
-					  arg2 = rsph[index];
-				  }
+					  halos[index].force_halo(alpha,kappa,gamma,xcm,no_kappa);
+				  }else{  // case of no halos just particles and no class derived from QuadTree
 
-				  prefacg = prefac/rcm2;
+					  rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
+					  if(rcm2 < 1e-20) rcm2 = 1e-20;
+					  rcm = sqrt(rcm2);
 
-				  tmp = alpha_h(arg1,arg2)*prefac;
-				  alpha[0] += tmp*xcm;
-				  alpha[1] += tmp*ycm;
+					  prefac = masses[MultiMass*index]/rcm2/pi;
+					  arg1 = rcm2/(rsph[index*MultiRadius]*rsph[index*MultiRadius]);
+					  arg2 = rsph[index*MultiRadius];
+					  tmp = rsph[index*MultiRadius];
 
-				  // can turn off kappa and gamma calculations to save times
-				  if(!no_kappa){
-					  *kappa += kappa_h(arg1,arg2)*prefac;
+					  /// intersecting, subtract the point particle
+					  if(rcm2 < tmp*tmp){
+						  tmp = alpha_h(arg1,arg2)*prefac;
+						  alpha[0] += tmp*xcm[0];
+						  alpha[1] += tmp*xcm[1];
 
-					  tmp = gamma_h(arg1,arg2)*prefacg;
-					  gamma[0] += 0.5*(xcm*xcm-ycm*ycm)*tmp;
-					  gamma[1] += xcm*ycm*tmp;
+						  // can turn off kappa and gamma calculations to save times
+						  if(!no_kappa){
+							  *kappa += kappa_h(arg1,arg2)*prefac;
+
+							  tmp = gamma_h(arg1,arg2)*prefac/rcm2;
+
+							  gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+							  gamma[1] += xcm[0]*xcm[1]*tmp;
+						  }
+					  }
 				  }
 			  }
 		  }
@@ -290,27 +302,27 @@ void ForceTree::force2D(double *ray,double *alpha,KappaType *kappa,KappaType *ga
 
 		  tmp = -1.0*tree->current->mass/rcm2/pi;
 
-		  alpha[0] += tmp*xcm;
-		  alpha[1] += tmp*ycm;
+		  alpha[0] += tmp*xcm[0];
+		  alpha[1] += tmp*xcm[1];
 
 		  if(!no_kappa){      //  taken out to speed up
 			  tmp=-2.0*tree->current->mass/pi/rcm2/rcm2;
-			  gamma[0] += 0.5*(xcm*xcm-ycm*ycm)*tmp;
-			  gamma[1] += xcm*ycm*tmp;
+			  gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+			  gamma[1] += xcm[0]*xcm[1]*tmp;
 		  }
 
 		  // quadrapole contribution
 		  //   the kappa and gamma are not calculated to this order
-		  alpha[0] -= (tree->current->quad[0]*xcm + tree->current->quad[2]*ycm)
+		  alpha[0] -= (tree->current->quad[0]*xcm[0] + tree->current->quad[2]*xcm[1])
     				  /pow(rcm2,2)/pi;
-		  alpha[1] -= (tree->current->quad[1]*ycm + tree->current->quad[2]*xcm)
+		  alpha[1] -= (tree->current->quad[1]*xcm[1] + tree->current->quad[2]*xcm[0])
     				  /pow(rcm2,2)/pi;
 
-		  tmp = 4*(tree->current->quad[0]*xcm*xcm + tree->current->quad[1]*ycm*ycm
-				  + 2*tree->current->quad[2]*xcm*ycm)/pow(rcm2,3)/pi;
+		  tmp = 4*(tree->current->quad[0]*xcm[0]*xcm[0] + tree->current->quad[1]*xcm[1]*xcm[1]
+				  + 2*tree->current->quad[2]*xcm[0]*xcm[1])/pow(rcm2,3)/pi;
 
-		  alpha[0] += tmp*xcm;
-		  alpha[1] += tmp*ycm;
+		  alpha[0] += tmp*xcm[0];
+		  alpha[1] += tmp*xcm[1];
 	  }
 
   }while(TreeNBWalkStep(tree,allowDescent));
@@ -324,138 +336,5 @@ void ForceTree::force2D(double *ray,double *alpha,KappaType *kappa,KappaType *ga
   }
 
   return;
-}
-/*
-void ForceTree::ChangeParticleProfile(PartProf partprof){
-	switch(partprof){
-	case gaussian:
-		alpha_particle = alpha_o;
-		kappa_particle = kappa_o;
-		gamma_particle = gamma_o;
-		break;
-	default:
-		alpha_particle = alpha_o;
-		kappa_particle = kappa_o;
-		gamma_particle = gamma_o;
-		break;
-	}
-}
-*/
-
-ForceTreePowerLaw::ForceTreePowerLaw(
-		float beta                 /// slop of mass profile \f$ \Sigma \propto r^\beta \f$
-		,PosType **xp              /// positions of the halos xp[0..Npoints-1][0..1 or 2]
-		,IndexType Npoints         /// number of halos
-		,HaloStructure *h_params   /// array with internal properties of halos
-		,bool Multisize            /// flag false if only one halo size and structure should be used, default is true
-		,double my_kappa_bk        /// Background convergence to be subtracted
-		,int bucket                /// maximum number of halos in a leaf of the tree
-		,int dimension             /// 2 or 3, dimension of tree, default 2
-		,bool median               /// If true will divide branches at the median position of the particles, if false an equal area cut is used, default false
-		,PosType theta             /// Opening angle used in tree force calculation
-		) :
-		ForceTree(xp,Npoints,NULL,NULL,false,Multisize,my_kappa_bk,bucket,dimension,median,theta), beta(beta)
-{
-
-	haloON = true;
-	halo_params = h_params;
-
-	CalcMoments();
-}
-
-ForceTreePowerLaw::~ForceTreePowerLaw(){
-}
-
-long ForceTreeNFW::ob_count = 0;
-double *ForceTreeNFW::ftable = NULL,*ForceTreeNFW::gtable = NULL,*ForceTreeNFW::g2table = NULL,*ForceTreeNFW::xtable = NULL;
-
-ForceTreeNFW::ForceTreeNFW(
-		PosType **xp               /// positions of the halos xp[0..Npoints-1][0..1 or 2]
-		,IndexType Npoints         /// number of halos
-		,HaloStructure *h_params   /// array with internal properties of halos
-		,bool Multisize            /// flag false if only one halo size and structure should be used, default is true
-		,double my_kappa_bk        /// Background convergence to be subtracted
-		,int bucket                /// maximum number of halos in a leaf of the tree
-		,int dimension             /// 2 or 3, dimension of tree, default 2
-		,bool median               /// If true will divide branches at the median position of the particles, if false an equal area cut is used, default false
-		,PosType theta             /// Opening angle used in tree force calculation
-		) :
-		ForceTree(xp,Npoints,NULL,NULL,false,Multisize,my_kappa_bk,bucket,dimension,median,theta)
-{
-	for(unsigned long i=0;i<Npoints;++i){
-		if(h_params[i].Rmax <= 0.0 || h_params[i].rscale <= 0.0){
-			ERROR_MESSAGE();
-			std::cout << "Illegal values for halo internal valuables." << std::endl;
-			exit(1);
-		}
-	}
-
-	haloON = true;
-	halo_params = h_params;
-
-	if(ob_count == 0) make_tables();
-
-	CalcMoments();
-	++ob_count;
-}
-
-ForceTreeNFW::~ForceTreeNFW(){
-	--ob_count;
-	if(ob_count == 0){
-		// remove tables made in make_tables()
-	  delete[] xtable;
-		delete[] gtable;
-		delete[] ftable;
-		delete[] g2table;
-	}
-}
-
-long ForceTreePseudoNFW::ob_count = 0;
-double * ForceTreePseudoNFW::mhattable = NULL,*ForceTreePseudoNFW::xtable = NULL;
-
-ForceTreePseudoNFW::ForceTreePseudoNFW(
-		double my_beta                 /// outer slope of profile is \f$ \Sigma \propto r^{-\beta} \f$
-		,PosType **xp              /// positions of the halos xp[0..Npoints-1][0..1 or 2]
-		,IndexType Npoints         /// number of halos
-		,HaloStructure *h_params   /// array with internal properties of halos
-		,bool Multisize            /// flag false if only one halo size and structure should be used, default is true
-		,double my_kappa_bk       /// Background convergence to be subtracted
-		,int bucket                /// maximum number of halos in a leaf of the tree
-		,int dimension             /// 2 or 3, dimension of tree, default 2
-		,bool median               /// If true will divide branches at the median position of the particles, if false an equal area cut is used, default false
-		,PosType theta             /// Opening angle used in tree force calculation
-		) :
-		ForceTree(xp,Npoints,NULL,NULL,false,Multisize,my_kappa_bk,bucket,dimension,median,theta), beta(my_beta)
-{
-
-	if(beta <= 0){
-		std::cout << "The slope can not be less or equal to zero!" << std::endl;
-		exit(1);
-	}
-
-	// Check for values that would make the rayshooter return nan.
-	for(unsigned long i=0;i<Npoints;++i){
-		if(h_params[i].Rmax <= 0.0 || h_params[i].rscale <= 0.0){
-			ERROR_MESSAGE();
-			std::cout << "Illegal values for halo internal valuables." << std::endl;
-			exit(1);
-		}
-	}
-	haloON = true;
-	halo_params = h_params;
-
-	if(ob_count == 0) make_tables();
-
-	CalcMoments();
-	++ob_count;
-}
-
-ForceTreePseudoNFW::~ForceTreePseudoNFW(){
-	--ob_count;
-	// remove tables made in make_tables()
-	if(ob_count == 0) {
-	  delete[] xtable;
-	  delete[] mhattable;
-	}
 }
 

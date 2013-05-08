@@ -23,7 +23,7 @@ struct TmpParamsHalos{
   double *dDl_halos;
   double **halo_pos_Mpc;
   double *halo_zs;
-  HaloStructure *halos;
+  LensHalo *halos;
   IndexType Nhalos;
   bool kappa_off;
   int tid;
@@ -145,14 +145,11 @@ void *compute_rays_parallel_halos(void *_p){
 	      xcm[0] = p->halo_pos_Mpc[j][0] - xx[0];
 	      xcm[1] = p->halo_pos_Mpc[j][1] - xx[1];
 
-	      lens->halo_tree[0]->force_halo_external(
+	      p->halos[j].force_halo(
 	    			alpha
 	    			,&kappa
 	    			,gamma
 	    			,xcm
-	    			,p->halos[j].mass
-	    			,p->halos[j].Rmax
-	    			,p->halos[j].rscale
 	    			,kappa_off);
 
 	      assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);

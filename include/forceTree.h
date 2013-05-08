@@ -39,7 +39,12 @@ public:
 			,double my_kappa_background = 0,int bucket = 5,int dimensions = 2,bool median = false,PosType theta = 0.1
 			);
 
-	virtual ~ForceTree();
+	ForceTree(PosType **xp,IndexType Npoints,LensHalo *my_halos
+			,bool Multisize = true,double my_kappa_bk=0.0,int bucket = 5,int dimensions = 2
+			,bool median = false,PosType theta = 0.1
+			);
+
+	~ForceTree();
 
 	/// calculated sph smoothing and store them in the tree, also provide pointer to them
 	float * CalculateSPHsmoothing(int N);
@@ -96,160 +101,9 @@ protected:
 	}
 
 	bool haloON;
-	HaloStructure *halo_params;
+	LensHalo *halos;
 };
 
 typedef ForceTree *ForceTreeHndl;
-
-/** \ingroup DeflectionL2
- *
- * \brief A class for calculating the deflection, kappa and gamma caused by a collection of halos
- * with truncated power-law mass profiles.
- *
- * Derived from the ForceTree class.  The "particles" are replaced with spherical halos.
- *The truncation is in 2d not 3d. \f$ \Sigma \propto r^\beta \f$ so beta would usually be negative.
- *
- * The default value of theta = 0.1 generally gives better than 1% accuracy on alpha, but
- * only ~ 20% accuracy on gamma.  For high accuracy gamma use theta <~ 0.01
- */
-class ForceTreePowerLaw : public ForceTree{
-
-public:
-	ForceTreePowerLaw(float beta,PosType **xp,IndexType Npoints,HaloStructure *par_internals
-			,bool Multisize = true,double my_kappa_bk=0.0,int bucket = 5,int dimensions = 2
-			,bool median = false,PosType theta = 0.1
-			);
-	~ForceTreePowerLaw();
-
-private:
-	double beta; // logorithmic slop of 2d mass profile
-
-	// Override internal structure of halos
-	inline double alpha_h(double x,double xmax){
-	  if(x==0) x=1e-6*xmax;
-		return (x < xmax) ? -1.0*pow(x/xmax,beta+2) : -1.0;
-	}
-	inline double kappa_h(double x,double xmax){
-	  if(x==0) x=1e-6*xmax;
-		return (x < xmax) ? 0.5*(beta+2)*pow(x/xmax,beta)*x*x/(xmax*xmax) : 0.0;
-	}
-	inline double gamma_h(double x,double xmax){
-	  if(x==0) x=1e-6*xmax;
-		return (x < xmax) ? 0.5*beta*pow(x/xmax,beta+2) : -2.0;
-	}
-	inline double phi_h(double x,double xmax){
-		ERROR_MESSAGE();
-		std::cout << "time delay has not been fixed for PowerLaw profile yet." << std::endl;
-		exit(1);
-		return 0.0;
-	}
-};
-
-/** \ingroup DeflectionL2
- *
- * \brief A class for calculating the deflection, kappa and gamma caused by a collection of NFW
- * halos.
- *
- * Derived from the ForceTree class.  The "particles" are replaced with spherical NFW halos.
- *
- * This class uses the true expressions for the NFW profile.  This is
- * time consuming and not usually necessary. See ForceTreePseudoNFW for a faster alternative.
- *
- * The default value of theta = 0.1 generally gives better than 1% accuracy on alpha, but
- * only ~ 20% accuracy on gamma.  For high accuracy gamma use theta <~ 0.01
- */
-class ForceTreeNFW : public ForceTree{
-
-public:
-	ForceTreeNFW(PosType **xp,IndexType Npoints,HaloStructure *par_internals
-			,bool Multisize = true,double my_kappa_bk = 0.0
-			,int bucket = 5,int dimensions = 2,bool median = false,PosType theta = 0.1
-			);
-	~ForceTreeNFW();
-
-private:
-
-	//double *ft, *gt, *g2t;
-	static double *ftable,*gtable,*g2table,*xtable;
-	static long ob_count;
-
-
-	// Override internal structure of halos
-	inline double alpha_h(double x,double xmax){
-	  return (x < xmax) ? -1.0*InterpolateFromTable(gtable,xtable,x)/InterpolateFromTable(gtable,xtable,xmax) : -1.0;
-	}
-	inline double kappa_h(double x,double xmax){
-	  return (x < xmax) ? 0.5*x*x*InterpolateFromTable(ftable,xtable,x)/InterpolateFromTable(gtable,xtable,xmax) : 0.0;
-	}
-	inline double gamma_h(double x,double xmax){
-	  return (x < xmax) ? -0.25*x*x*InterpolateFromTable(g2table,xtable,x)/InterpolateFromTable(gtable,xtable,xmax) : -2.0;
-	}
-	inline double phi_h(double x,double xmax){
-		ERROR_MESSAGE();
-		std::cout << "time delay has not been fixed for NFW profile yet." << std::endl;
-		exit(1);
-		return 0.0;
-	}
-
-	void make_tables();
-};
-
-double gfunction(double x);
-double ffunction(double x);
-double g2function(double x);
-double rhos(double x);
-
-/** \ingroup DeflectionL2
- *
- * \brief A class for calculating the deflection, kappa and gamma caused by a collection of
- * halos with a double power-law mass profile.
- *
- * Derived from the ForceTree class.  The "particles" are replaced with spherical halos
- * with \f$ \Sigma \propto 1/(1 + r/r_s )^\beta \f$ so beta would usually be positive.
- *
- * An NFW profile is approximated beta = 2 .
- *
- * The default value of theta = 0.1 generally gives better than 1% accuracy on alpha, but
- * only ~ 20% accuracy on gamma.  For high accuracy gamma use theta <~ 0.01
- */
-class ForceTreePseudoNFW : public ForceTree{
-
-public:
-	ForceTreePseudoNFW(double beta,PosType **xp,IndexType Npoints,HaloStructure *par_internals
-			,bool Multisize = true,double my_kappa_bk = 0.0,int bucket = 5,int dimensions = 2
-			,bool median = false,PosType theta = 0.1
-			);
-	~ForceTreePseudoNFW();
-
-private:
-
-	double beta;
-	static double *mhattable,*xtable;
-	static long ob_count;
-
-
-	// Override internal structure of halos
-	inline double alpha_h(double x,double xmax){
-		return (x < xmax) ? -1.0*InterpolateFromTable(mhattable,xtable,x)/InterpolateFromTable(mhattable,xtable,xmax) : -1.0;
-	}
-	inline double kappa_h(double x,double xmax){
-		return (x < xmax) ? 0.5*x*x/InterpolateFromTable(mhattable,xtable,xmax)/pow(1+x,beta) : 0.0;
-	}
-	inline double gamma_h(double x,double xmax){
-		return (x < xmax) ? (0.5*x*x/pow(1+x,beta) - InterpolateFromTable(mhattable,xtable,x))/InterpolateFromTable(mhattable,xtable,xmax) : -2.0;
-	}
-	inline double phi_h(double r,double xmax){
-		ERROR_MESSAGE();
-		std::cout << "time delay has not been fixed for PseudoNFW profile yet." << std::endl;
-		exit(1);
-		return 0.0;
-	}
-
-	void make_tables();
-
-};
-
-double mhat(double y, double beta);
-
 
 #endif /* FORCE_TREE_H_ */

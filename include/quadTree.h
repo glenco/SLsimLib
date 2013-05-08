@@ -184,8 +184,6 @@ protected:
 	void CalcMoments();
 	void rotate_coordinates(double **coord);
 
-	virtual void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,HaloStructure& halo_params,bool no_kappa);
-
 	// Internal profiles for a Gaussian particle
 	virtual inline double alpha_h(double r2s2,double sigma){
 	  return (sigma > 0.0 ) ? ( exp(-0.5*r2s2) - 1.0 ) : -1.0;

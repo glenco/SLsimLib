@@ -89,9 +89,9 @@ void MultiLens::resetHalos(CosmoHndl cosmo){
 
   delete[] halo_zs;
   delete[] halo_id;
-  free_PosTypeMatrix(halo_pos,Nhalos,3);
+  Utilities::free_PosTypeMatrix(halo_pos,Nhalos,3);
   if(flag_run_multip_test)
-	  free_PosTypeMatrix(halo_pos_Mpc,Nhalos,3);
+	  Utilities::free_PosTypeMatrix(halo_pos_Mpc,Nhalos,3);
 
   halo_tree = new auto_ptr<QuadTree>[Nplanes-1];
   halo_data = new auto_ptr<HaloData>[Nplanes-1];
@@ -190,9 +190,9 @@ MultiLens::~MultiLens(){
 	delete[] halos;
 	delete[] halo_zs;
 	delete[] halo_id;
-	free_PosTypeMatrix(halo_pos,Nhalos,3);
+	Utilities::free_PosTypeMatrix(halo_pos,Nhalos,3);
 	if(flag_run_multip_test)
-		free_PosTypeMatrix(halo_pos_Mpc,Nhalos,3);
+		Utilities::free_PosTypeMatrix(halo_pos_Mpc,Nhalos,3);
 
 	if(flag_input_lens)
 		delete input_lens;

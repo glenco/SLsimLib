@@ -11,6 +11,12 @@
 #include "standard.h"
 #include "simpleTree.h"
 
+double ffunction(double x);
+double gfunction(double x);
+double g2function(double x);
+double mhat(double y, double beta);
+double InterpolateFromTable(double *table, double *xtable, double y);
+
 class LensHalo{
 public:
 	LensHalo();
