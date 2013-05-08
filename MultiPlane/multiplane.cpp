@@ -102,10 +102,18 @@ void MultiLens::resetHalos(CosmoHndl cosmo){
   		else createHaloData<PowerLawLensHalo>(cosmo,seed);
   		break;
   	case NFW:
+  		if(nfw_table_set == false){
+  			make_nfw_tables();
+  			nfw_table_set = true;
+  		}
   		if(flag_run_twop_test) createHaloData_test<NFWLensHalo>(cosmo,seed);
   		else createHaloData<NFWLensHalo>(cosmo,seed);
   		break;
   	case PseudoNFW:
+  		if(nfw_table_set == false){
+  			make_pnfw_tables(beta);
+  			pnfw_table_set = true;
+  		}
   		if(flag_run_twop_test) createHaloData_test<PseudoNFWLensHalo>(cosmo,seed);
   		else createHaloData<PseudoNFWLensHalo>(cosmo,seed);
   		break;
@@ -114,6 +122,10 @@ void MultiLens::resetHalos(CosmoHndl cosmo){
   		else createHaloData<NSIELensHalo>(cosmo,seed);
   		break;
   	case NFW_NSIE:
+  		if(nfw_table_set == false){
+  			make_nfw_tables();
+  			nfw_table_set = true;
+  		}
   		if(flag_run_twop_test) createHaloData_test<NFW_NSIELensHalo>(cosmo,seed);
   		else createHaloData<NFW_NSIELensHalo>(cosmo,seed);
   		break;
@@ -176,6 +188,9 @@ MultiLens::MultiLens(InputParams& params,long *my_seed) : Lens(){
 	index_of_new_sourceplane = -1;
 	toggle_source_plane = false;
 
+	nfw_table_set = false;
+	pnfw_table_set = false;
+
 	seed = my_seed;
 }
 
@@ -199,6 +214,18 @@ MultiLens::~MultiLens(){
 
 	delete[] coorDist_table;
 	delete[] redshift_table;
+
+	if(nfw_table_set){
+		delete[] xtable;
+		delete[] gtable;
+		delete[] ftable;
+		delete[] g2table;
+	}
+
+	if(pnfw_table_set){
+		delete[] xtable;
+		delete[] mhattable;
+	}
 }
 
 /// Retrieve input parameters for construction
@@ -272,8 +299,8 @@ void MultiLens::assignParams(InputParams& params){
 	}
 	// parameters with default values
 	if(!params.get("alpha",pw_alpha))                pw_alpha = 1./6.;
-	if(!params.get("internal_slope_pw",pw_beta))     pw_beta = -1.0;
-	if(!params.get("internal_slope_pnfw",pnfw_beta)) pnfw_beta = 2.0;
+	if(!params.get("internal_slope",beta) && internal_profile == PowerLaw)     beta = -1.0;
+	if(!params.get("internal_slope",beta) && internal_profile == PseudoNFW) beta = 2.0;
 	if(!params.get("deflection_off",flag_switch_deflection_off)) flag_switch_deflection_off = false;
 	if(!params.get("background_off",flag_switch_background_off)) flag_switch_background_off = false;
 	if(!params.get("twop_test",flag_run_twop_test)) flag_run_twop_test = false;
@@ -281,21 +308,21 @@ void MultiLens::assignParams(InputParams& params){
 	if(!params.get("print_halos",r_print_halos)) r_print_halos = 0.0;
 
 	// Some checks for valid parameters
-	  if(pw_beta >= 0){
+	  if(internal_profile == PowerLaw && beta >= 0){
 		  ERROR_MESSAGE();
-		  cout << "Internal slope >=0 not possible." << endl;
+		  cout << "Power Law internal slope >=0 not possible." << endl;
 		  exit(1);
 	  }
 
-	  if(pnfw_beta <= 0){
+	  if(internal_profile == PseudoNFW && beta <= 0){
 		  ERROR_MESSAGE();
-		  cout << "Internal slope <=0 not possible." << endl;
+		  cout << "Pseudo NFW internal slope <=0 not possible." << endl;
 		  exit(1);
 	  }
 
-	  if(pnfw_beta / floor(pnfw_beta) > 1.0){
+	  if(internal_profile == PseudoNFW && (beta / floor(beta) > 1.0)){
 		  ERROR_MESSAGE();
-		  cout << "Internal slope needs to be a whole number." << endl;
+		  cout << "Pseudo NFW internal slope needs to be a whole number." << endl;
 		  exit(1);
 	  }
 
@@ -354,14 +381,14 @@ void MultiLens::printMultiLens(){
 	switch(internal_profile){
 	case PowerLaw:
 		cout << "  Power law internal profile " << endl;
-		cout << "  slope: " << pw_beta << endl;
+		cout << "  slope: " << beta << endl;
 		break;
 	case NFW:
 		cout << "  NFW internal profile " << endl;
 		break;
 	case PseudoNFW:
 		cout << "  Pseudo NFW internal profile " << endl;
-		cout << "  slope: " << pnfw_beta << endl;
+		cout << "  slope: " << beta << endl;
 		break;
 	case NSIE:
 		cout << "  NonSingular Isothermal Ellipsoid internal profile " << endl;
@@ -804,6 +831,10 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 		}
 		break;
 	case NFW:
+  		if(nfw_table_set == false){
+  			make_nfw_tables();
+  			nfw_table_set = true;
+  		}
 		if(sim_input_flag){
 			if(read_sim_file == false) readInputSimFile<NFWLensHalo>(cosmo);
 		}
@@ -813,6 +844,10 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 		}
 		break;
 	case PseudoNFW:
+  		if(nfw_table_set == false){
+  			make_pnfw_tables(beta);
+  			pnfw_table_set = true;
+  		}
 		if(sim_input_flag){
 			if(read_sim_file == false) readInputSimFile<PseudoNFWLensHalo>(cosmo);
 		}
@@ -831,6 +866,10 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 		}
 		break;
 	case NFW_NSIE:
+  		if(nfw_table_set == false){
+  			make_nfw_tables();
+  			nfw_table_set = true;
+  		}
 		if(sim_input_flag){
 			if(read_sim_file == false) readInputSimFile<NFW_NSIELensHalo>(cosmo);
 		}

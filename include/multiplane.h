@@ -12,6 +12,7 @@
 #include <MOKAlens.h>
 #include <quadTree.h>
 #include <sourceAnaGalaxy.h>
+#include "tables.h"
 
 
 /** \brief Class that holds all the information about the halos' positions and their internal parameters on one plane.
@@ -177,10 +178,8 @@ private:
 	double min_mass;
 	/// internal profile type, 0=powerlaw,1=nfw,2=pseudoNfw, 3=NSIE
 	IntProfType internal_profile;
-	/// power law internal profile slope, need to be <= 0
-	double pw_beta;
-	/// pseudo NFW internal profile slope, needs to be a whole number and > 0
-	double pnfw_beta;
+	/// power law or pseudo NFW internal profile slope
+	double beta;
 	double galaxy_mass_fraction;
 
 
@@ -221,9 +220,10 @@ private:
 	/// This is the source redshift that is read in from the parameter file and becomes the maximum redshift
 	double zsource;
 
-	/// nfw tables
-	//bool tables_set;
 	double field_buffer;
+
+	bool nfw_table_set;
+	bool pnfw_table_set;
 
 	void quicksort(LensHalo *halos,double **brr,double *arr,unsigned long *id,unsigned long N);
 };
@@ -336,7 +336,10 @@ template <class LH> void MultiLens::createHaloData(
 			halo_pos[i][1] = rr*sin(theta);
 			halo_pos[i][2] = 0;
 
+			halos[i].set_slope(beta);
+
 			float mass = pow(10,InterpolateYvec(Nhalosbin,Logm,ran2 (seed)));
+
 			halos[i].set_mass(mass/mass_scale);
 
 			halo_calc->reset(mass,halo_zs[i]);
@@ -404,6 +407,7 @@ template <class LH> void MultiLens::createHaloData_test(
 		halo_pos[i][2] = 0;
 
 		halo_zs[i] = plane_redshifts[i]+0.1;
+		halos[i].set_slope(beta);
 		halos[i].set_mass(ran2(seed)*1e12/mass_scale);
 		halo_calc->reset(halos[i].get_mass()*mass_scale,halo_zs[i]);
 
@@ -556,6 +560,8 @@ template <class LH> void MultiLens::readInputSimFile(CosmoHndl cosmo){
 			/*
 			 * set the other properties of the LensHalo, such as rscale or the NSIE properties
 			 */
+
+			halo_vec[j].set_slope(beta);
 			halo_vec[j].set_internal(seed,vmax,r_halfmass*cosmo->gethubble());
 
 			if(halo_vec[j].get_Rmax() > R_max) R_max = halo_vec[j].get_Rmax();

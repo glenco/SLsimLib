@@ -4,14 +4,11 @@
  *  Created on: Mar 6, 2012
  *      Author: bmetcalf
  */
-#include "slsimlib.h"
+#include "tables.h"
 
 /// tables for the g,f,and g2 NFW functions
-//double *ftable, *gtable, *g2table, *mhattable;
-const long NTABLE = 1000;
-const double maxrm = 100.0;
 
-void NFWLensHalo::make_tables(){
+void make_nfw_tables(){
 	int i;
 	double x, dx = maxrm/(double)NTABLE;
 
@@ -21,7 +18,7 @@ void NFWLensHalo::make_tables(){
 	g2table = new double[NTABLE];
 
 	for(i = 0 ; i< NTABLE; i++){
-	        x = i*dx;
+		x = i*dx;
 		xtable[i] = x;
 		ftable[i] = ffunction(x);
 		gtable[i] = gfunction(x);
@@ -30,7 +27,7 @@ void NFWLensHalo::make_tables(){
 }
 
 
-void PseudoNFWLensHalo::make_tables(){
+void make_pnfw_tables(double beta){
 	int i;
 	double x, dx = maxrm/(double)NTABLE;
 

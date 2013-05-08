@@ -10,12 +10,7 @@
 
 #include "standard.h"
 #include "simpleTree.h"
-
-double ffunction(double x);
-double gfunction(double x);
-double g2function(double x);
-double mhat(double y, double beta);
-double InterpolateFromTable(double *table, double *xtable, double y);
+#include "tables.h"
 
 class LensHalo{
 public:
@@ -31,6 +26,8 @@ public:
 	void set_Rmax(float my_Rmax){Rmax=my_Rmax;};
 	void set_mass(float my_mass){mass=my_mass;};
 	void set_rscale(float my_rscale){rscale=my_rscale;};
+
+	virtual void set_slope(double my_slope){};
 
 	virtual void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa);
 
@@ -71,9 +68,6 @@ public:
 	void set_internal(long*,float,float);
 
 protected:
-	static double *ftable,*gtable,*g2table,*xtable;
-	static long ob_count;
-	void make_tables();
 
 	// Override internal structure of halos
 	inline double alpha_h(double x,double xmax){
@@ -111,11 +105,10 @@ public:
 	PseudoNFWLensHalo();
 	~PseudoNFWLensHalo();
 
+	void set_slope(double my_slope){beta=my_slope;};
+
 private:
-	static double *mhattable,*xtable;
-	static long ob_count;
 	double beta;
-	void make_tables();
 
 	// Override internal structure of halos
 	inline double alpha_h(double x,double xmax){
@@ -151,6 +144,8 @@ class PowerLawLensHalo: public LensHalo{
 public:
 	PowerLawLensHalo();
 	~PowerLawLensHalo();
+
+	void set_slope(double my_slope){beta=my_slope;};
 
 private:
 

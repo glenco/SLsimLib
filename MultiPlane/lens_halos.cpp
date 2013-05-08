@@ -15,24 +15,11 @@ LensHalo::~LensHalo(){
 
 }
 
-
-long NFWLensHalo::ob_count = 0;
-double *NFWLensHalo::ftable = NULL,*NFWLensHalo::gtable = NULL,*NFWLensHalo::g2table = NULL,*NFWLensHalo::xtable = NULL;
-
 NFWLensHalo::NFWLensHalo() : LensHalo(){
-	// make halo profile lookup tables if this is the first instance of a NFWLensHalo
-	if(ob_count == 0) make_tables();
-	++ob_count;
 }
 
 NFWLensHalo::~NFWLensHalo(){
-	--ob_count;
-	if(ob_count == 0){
-		delete[] xtable;
-		delete[] gtable;
-		delete[] ftable;
-		delete[] g2table;
-	}
+
 }
 
 void NFWLensHalo::set_internal(long *seed, float vmax, float r_halfmass){
@@ -45,21 +32,12 @@ void NFWLensHalo::set_internal(long *seed, float vmax, float r_halfmass){
 	rscale = Rmax/rscale; // Was the concentration
 }
 
-long PseudoNFWLensHalo::ob_count = 0;
-double * PseudoNFWLensHalo::mhattable = NULL,*PseudoNFWLensHalo::xtable = NULL;
-
 PseudoNFWLensHalo::PseudoNFWLensHalo() : NFWLensHalo(){
-	// make halo profile lookup tables if this is the first instance of a QuadTreePseudoNFW
-	if(ob_count == 0) make_tables();
-	++ob_count;
+
 }
 
 PseudoNFWLensHalo::~PseudoNFWLensHalo(){
-	--ob_count;
-	if(ob_count == 0){
-		delete[] xtable;
-		delete[] mhattable;
-	}
+
 }
 
 
