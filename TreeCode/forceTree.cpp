@@ -119,45 +119,6 @@ void ForceTree::CalcMoments(){
 
 			cbranch->rcrit_part = rcom + 2*cbranch->maxrsph;
 
-			//////////////////////////////////////////////
-			/* find the biggest particle that is not the
-			 * biggest particle of any of its parents
-			 *
-			 * This was to implement the big particle subtraction scheme that
-			 * has been semi-abandoned.
-			///////////////////////////////////////////////
-
-			if(atTopNB(tree) || cbranch->prev->rcrit_part==0.0){
-				prev_big = -1;
-				prev_size = 1.0e100;
-			}else{
-				prev_big = cbranch->prev->big_particle;
-				prev_size = cbranch->prev->maxrsph;
-			}
-
-			// find largest rsph smoothing in cell  that is not the largest in a previous cell
-			cbranch->big_particle = cbranch->particles[0];
-			for(i=0,maxrsph=0.0,cbranch->big_particle=0;i<cbranch->nparticles;++i){
-
-				assert(i < tree->top->nparticles);
-
-				if(maxrsph <= rsph[MultiRadius*cbranch->particles[i]] ){
-					maxrsph = rsph[MultiRadius*cbranch->particles[i]];
-					cbranch->big_particle = cbranch->particles[i];
-				}
-			}
-			// if it is possible for the largest particle size to be big enough
-			//    cause the opening of a box then tag it
-			cbranch->maxrsph = maxrsph;
-
-			if(maxrsph > cbranch->rcrit_angle/2){
-				rsph[MultiRadius*cbranch->big_particle] = 0.0; // zero out so it wont show up in leaf
-				cbranch->rcrit_part = rcom + 2*maxrsph;
-			}else{
-				cbranch->rcrit_part = 0;
-			}
-			 */
-
 		}else{
 			// single size case
 			cbranch->maxrsph = haloON ? halos[0].get_Rmax() : rsph[0];
@@ -265,22 +226,36 @@ void ForceTree::force2D(double *ray,double *alpha,KappaType *kappa,KappaType *ga
 
 				  index = MultiRadius*tree->current->particles[i];
 
+				  rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
+				  if(rcm2 < 1e-20) rcm2 = 1e-20;
+				  rcm = sqrt(rcm2);
+
+				  prefac = haloON ? halos[index].get_mass()/rcm2/pi : masses[MultiMass*index]/rcm2/pi;
+
+				  tmp = -1.0*prefac;
+
+				  alpha[0] += tmp*xcm[0];
+				  alpha[1] += tmp*xcm[1];
+
+				  // can turn off kappa and gamma calculations to save times
+				  if(!no_kappa){
+					  tmp = -2.0*prefac/rcm2;
+
+					  gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+					  gamma[1] += xcm[0]*xcm[1]*tmp;
+				  }
+
 				  if(haloON){
 					  halos[index].force_halo(alpha,kappa,gamma,xcm,no_kappa);
 				  }else{  // case of no halos just particles and no class derived from QuadTree
 
-					  rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
-					  if(rcm2 < 1e-20) rcm2 = 1e-20;
-					  rcm = sqrt(rcm2);
-
-					  prefac = masses[MultiMass*index]/rcm2/pi;
 					  arg1 = rcm2/(rsph[index*MultiRadius]*rsph[index*MultiRadius]);
 					  arg2 = rsph[index*MultiRadius];
 					  tmp = rsph[index*MultiRadius];
 
 					  /// intersecting, subtract the point particle
 					  if(rcm2 < tmp*tmp){
-						  tmp = alpha_h(arg1,arg2)*prefac;
+						  tmp = (alpha_h(arg1,arg2)+1.0)*prefac;
 						  alpha[0] += tmp*xcm[0];
 						  alpha[1] += tmp*xcm[1];
 
@@ -288,7 +263,7 @@ void ForceTree::force2D(double *ray,double *alpha,KappaType *kappa,KappaType *ga
 						  if(!no_kappa){
 							  *kappa += kappa_h(arg1,arg2)*prefac;
 
-							  tmp = gamma_h(arg1,arg2)*prefac/rcm2;
+							  tmp = (gamma_h(arg1,arg2)+2.0)*prefac/rcm2;
 
 							  gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 							  gamma[1] += xcm[0]*xcm[1]*tmp;
