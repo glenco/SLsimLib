@@ -137,7 +137,10 @@ public:
   void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off);
   void substract_stars_disks(PosType *ray,PosType *alpha
                   ,KappaType *kappa,KappaType *gamma);
-  void implant_stars(Point *centers,unsigned long Nregions,long *seed);
+  void implant_stars(Point *centers,unsigned long Nregions,long *seed,int mftype=0);
+  float* stellar_mass_function(int mftype, unsigned long Nstars, long *seed, double minmass=0.1, double maxmass=100
+  		,double bendmass=0, double powerlo=0, double powerhi=-2.35);
+
   //void toggleStars(bool implanted);
 
   double getHost_Dl(){return Dl;}
