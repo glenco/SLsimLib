@@ -253,7 +253,17 @@ void MultiSourceAnaGalaxy::readDataFile(){
 
 			theta[0] = ra*pi/180;
 			theta[1] = dec*pi/180;
-
+      
+      if(j == 0){
+        rangex[0] = rangex[1] = theta[0];
+        rangey[0] = rangey[1] = theta[1];
+      }else{
+        if(theta[0] < rangex[0]) rangex[0] = theta[0];
+        if(theta[0] > rangex[1]) rangex[1] = theta[0];
+        if(theta[1] < rangey[0]) rangey[0] = theta[1];
+        if(theta[1] > rangey[1]) rangey[1] = theta[1];
+      }
+      
 			/***************************/
 			galaxies.push_back(
 					OverzierSource(mag,pow(10,-(mag_bulge-mag)/2.5),Ref,Rh
@@ -280,6 +290,8 @@ void MultiSourceAnaGalaxy::readDataFile(){
 	file_in.close();
 
 	std::cout << galaxies.size() << " galaxies read in."<< std::endl;
+	std::cout << "angular range x = " << rangex[0] << " to " << rangex[1] << "   y = " << rangey[0] << " to " << rangey[1]
+  << std::endl;
 
 	return;
 }
@@ -352,6 +364,22 @@ void MultiSourceAnaGalaxy::multiplier(
 
 }
 
+/// Sort the sources by redshift in assending order
+void MultiSourceAnaGalaxy::sortInRedshift(){
+    std::sort(galaxies.begin(),galaxies.end(),redshiftcompare);
+}
+// used in MultiSourceAnaGalaxy::sortInRedshift()
+bool redshiftcompare(OverzierSource s1,OverzierSource s2){
+    return (s1.getZ() < s2.getZ());
+}
+/// Sort the sources by magnitude in assending order
+void MultiSourceAnaGalaxy::sortInMag(){
+    std::sort(galaxies.begin(),galaxies.end(),magcompare);
+}
+// used in MultiSourceAnaGalaxy::sortInRedshift()
+bool magcompare(OverzierSource s1,OverzierSource s2){
+    return (s1.getMag() < s2.getMag());
+}
 /// Print info on current source parameters
 void MultiSourceAnaGalaxy::printSource(){
 	std::cout << "Overzier Galaxy Model" << std::endl;

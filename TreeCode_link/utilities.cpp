@@ -148,8 +148,10 @@ PosType **PosTypeMatrix(long rows, long cols)
 }
 
 
-void free_PosTypeMatrix(PosType **matrix, long rows, long cols){
-  if(rows) delete[] matrix[0];
-  delete[] matrix;
-}
+  void free_PosTypeMatrix(PosType **matrix, long rows, long cols){
+    if(rows) delete[] matrix[0];
+    delete[] matrix;
+  }
+  
+
 }

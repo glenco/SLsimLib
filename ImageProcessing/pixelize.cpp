@@ -91,8 +91,9 @@ PixelMap::PixelMap(
 	std::fill(map, map + map_size, 0);
 }
 
-/// Constructs a PixelMap reading in a fits file
-/// Infos about resolution, Npixels and center are read from the header.
+/** \brief Constructs a PixelMap reading in a fits file
+* Infos about resolution, Npixels and center are read from the header.
+ */
 PixelMap::PixelMap(std::string filename)
 {
 #ifdef ENABLE_FITS
@@ -132,8 +133,9 @@ PixelMap::PixelMap(std::string filename)
 #endif
 }
 
-/// Creates a new PixelMap from a region of a PixelMap.
-/// If the region exceeds the boundaries of the original map, the new map is completed with zeros.
+/** \brief Creates a new PixelMap from a region of a PixelMap.
+ * If the region exceeds the boundaries of the original map, the new map is completed with zeros.
+ */
 PixelMap::PixelMap(const PixelMap& pmap,  /// Input PixelMap (from which the stamp is taken)
 		const double* center, /// center of the region to be duplicated (in rads)
 		std::size_t Npixels /// size of the region to be duplicated (in pixels)
@@ -168,9 +170,10 @@ PixelMap::PixelMap(const PixelMap& pmap,  /// Input PixelMap (from which the sta
 		}
 	}
 
-/// Creates a PixelMap at a different resolution.
-/// The new counts are calculated integrating over the input pixels.
-/// No interpolation or smoothing is performed.
+/** \brief Creates a PixelMap at a different resolution.
+* The new counts are calculated integrating over the input pixels.
+* No interpolation or smoothing is performed.
+ */
 PixelMap::PixelMap(const PixelMap& pmap, double res_ratio)
 	{
 	resolution = res_ratio*pmap.resolution;
@@ -507,7 +510,6 @@ void PixelMap::smooth(double sigma){
 		for(int k=0;k<Nmask;k++)
 		{
 			mask[j][k]/=sum;
-			std::cout << mask[j][k] << std::endl;
 		}
 	}
 	for(long i=0;i<map_size;i++){
@@ -708,111 +710,3 @@ double PixelData::chi_square(const PixelMap &model) const
 	
 	return norm*chi2;
 }
-
-/*
-void pixelize(
-		double *map    /// Output map in one dimensional array. It is always square. map[0...Npixels*Npixels-1]
-		,long Npixels   /// Number of pixels in one dimension of map.
-		,double range   /// One dimensional range of map in whatever units the point positions are in (generally Mpc on the lens plane.)
-		,double *center /// The location of the center of the map
-		,ImageInfo *imageinfo  /// An array of ImageInfo-s.  There is no reason to separate images for this routine
-		,int Nimages           /// Number of images on input.
-		,bool constant_sb  /// true - all images will have surface brightness = 1,
-		                      /// false - surface brightness is taken from surface_brighness in  the image points
-		,bool cleanmap     ///  true - erases previous pixel map, false - adds new flux to map
-		,bool write_for_skymaker /// true -- produces a fits map in the proper Skymaker format
-		,std::string filename /// the filename for the FITS file
-		){
-
-	if(imageinfo->imagekist->Nunits() == 0) return;
-
-	long ix;
-	double sb,resolution=0;
-	unsigned long i,ii;
-	Point *points;
-	TreeHndl ptree;
-
-	//printf("%d %g %g %g\n", Npixels, range, center[0], center[1]);
-
-	if( (Npixels & (Npixels-1)) != 0){
-		ERROR_MESSAGE();
-		std::printf("ERROR: pixelsize, Npixels is not a power of 2\n");
-		exit(1);
-	}
-
-	resolution=range/(Npixels-1);
-
-	// initialize pixel tree
-	points=NewPointArray(Npixels*Npixels,true);
-	xygridpoints(points,range,center,Npixels,false);
-	ptree=BuildTree(points,Npixels*Npixels);
-
-	MoveToTopList(ptree->pointlist);
-	for(i=0 ; i < ptree->pointlist->Npoints ; ++i){
-		ptree->pointlist->current->surface_brightness = 0.0;
-		MoveDownList(ptree->pointlist);
-	}
-
-	if(cleanmap)
-		for(i=0 ; i < Npixels*Npixels ; ++i) map[i]=0.0;
-
-	sb = 1;
-	for(ii=0;ii<Nimages;++ii){
-		MoveToTopKist(imageinfo[ii].imagekist);
-		do{
-
-			if(!constant_sb) sb = getCurrentKist(imageinfo[ii].imagekist)->surface_brightness;
-
-			assert(getCurrentKist(imageinfo[ii].imagekist)->leaf);
-			moveTop(ptree);
-			//_SplitFluxIntoPixels(ptree,getCurrentKist(imageinfo[ii].imagekist)->leaf,&sb);
-
-		}while(MoveDownKist(imageinfo[ii].imagekist));
-	}
-
-	int mycount;
-	MoveToTopList(ptree->pointlist);
-	for(i=0,mycount=0;i<ptree->pointlist->Npoints;++i){
-		if(ptree->pointlist->current->surface_brightness > 0.0){
-			ix = IndexFromPosition(ptree->pointlist->current->x,Npixels,range,center);
-			if(ix > -1){
-				mycount++;
-				map[ix] =  ptree->pointlist->current->surface_brightness/resolution/resolution;
-			}
-		}
-		MoveDownList(ptree->pointlist);
-	}
-
-	FreePointArray(points);
-
-	std::cout << "Found " << mycount << " pixels!" << std::endl;
-
-	if(write_for_skymaker == true){
-#ifdef ENABLE_FITS
-		if(filename == ""){
-			std::cout << "Please enter a valid filename for the FITS file output" << std::endl;
-			exit(1);
-		}
-
-		std::valarray<float> quantity;
-		quantity.resize(Npixels*Npixels, 0);
-
-		int j;
-		for(i=0; i<Npixels; i++)
-			for(j=0; j<Npixels; j++)
-				quantity[j+i*Npixels] = map[j+i*Npixels];
-
-		int Np = (int)Npixels;
-
-		writeImage(filename,quantity,Np,Np);
-
-		quantity.resize(0);
-#else
-		std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
-		exit(1);
-#endif
-	}
-
-	return;
-}
-*/
