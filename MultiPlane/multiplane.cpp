@@ -755,7 +755,6 @@ void MultiLens::setZlens(CosmoHndl cosmo,double z,double zsource){
 }
 
 
-
 /**
  * Sets the internal parameters of the multiple lens model
  * first the redshifts of the planes are calculated

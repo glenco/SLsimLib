@@ -16,9 +16,10 @@ using namespace std;
  * allocates all memory for stars
  */
 
-void BaseAnaLens::implant_stars(Point *centers,unsigned long Nregions,long *seed){
+void BaseAnaLens::implant_stars(Point *centers,unsigned long Nregions,long *seed, int mftype){
 	PosType r,theta,NstarsPerImage;
 	unsigned long i,j,m,k;
+	//float maxr;
 
 	if(stars_N < 1.0  || star_fstars <= 0) return;
 	if(star_fstars > 1.0){ std::printf("fstars > 1.0\n"); exit(0); }
@@ -65,7 +66,8 @@ void BaseAnaLens::implant_stars(Point *centers,unsigned long Nregions,long *seed
 		star_region[j] = 1.0/sqrt(pi*star_fstars*centers[j].kappa*Sigma_crit
 				/star_massscale/(float)NstarsPerImage);
 
-		//cout << star_region[j] << " " << star_fstars <<  " " << centers[j].kappa << " " << Sigma_crit << " " << star_massscale << " " << NstarsPerImage << endl;
+
+		cout << star_region[j] << " " << star_fstars <<  " " << centers[j].kappa << " " << Sigma_crit << " " << star_massscale << " " << NstarsPerImage << endl;
 		//cout << "Sigma_star= " << (float)NstarsPerImage*star_massscale/(pi*pow(star_region[j],2)) << endl;
 		// cutoff based on comparison of star deflection to smooth component
 		//rcut = 4*sqrt(star_massscale/pi/Sigma_crit
@@ -83,6 +85,9 @@ void BaseAnaLens::implant_stars(Point *centers,unsigned long Nregions,long *seed
 		if(j==2){fname = "stars2.dat";}
 		if(j==3){fname = "stars3.dat";}
 		ofstream fstars(fname);
+		ofstream mstars("masses.dat");
+
+		star_masses=stellar_mass_function(mftype, NstarsPerImage, seed);
 
 		for(i=0;i<NstarsPerImage;++i,++m){
 			//m=j*NstarsPerImage+i;
@@ -91,8 +96,11 @@ void BaseAnaLens::implant_stars(Point *centers,unsigned long Nregions,long *seed
 			stars_xp[m][0] = centers[j].x[0] + r*cos(theta);
 			stars_xp[m][1] = centers[j].x[1] + r*sin(theta);
 			stars_xp[m][2] = 0.0;
-			star_masses[m] = 1.0;
+			cout << m << " " << star_masses[m] << endl;
 
+			//if(maxr<r){
+			//	maxr=r;
+			//}
 			// check to make see if star is in another centers region
 			//   and remove it
 			for(k=0;k<j;++k){
@@ -105,11 +113,14 @@ void BaseAnaLens::implant_stars(Point *centers,unsigned long Nregions,long *seed
 				}
 			}
 			fstars << scientific << stars_xp[m][0] << " " << stars_xp[m][1] << endl;
+			mstars << scientific << star_masses[m] << endl;
+
+			//cout << "max r" << maxr << " " << star_region[j] << endl;
 			//printf("%e %e\n",stars_xp[m][0],stars_xp[m][1]);
 		}
 		fstars.close();
+		mstars.close();
 	}
-
 
 	assert(m <= stars_N);
 	stars_N = m;
@@ -133,6 +144,7 @@ void BaseAnaLens::implant_stars(Point *centers,unsigned long Nregions,long *seed
 	stars_implanted = implanted;
 }
 */
+
 /// subtracts the mass in stars from the smooth model to compensate
 /// for the mass of the stars the lensing quantities are all updated not replaced
 void BaseAnaLens::substract_stars_disks(double *ray,double *alpha
@@ -167,4 +179,57 @@ void BaseAnaLens::substract_stars_disks(double *ray,double *alpha
 	}
 
 	return;
+}
+
+// random stellar masses according to IMF of choice
+/* mtype defines the stellar mass function
+ * 0 - always the same stellar mass (e.g. 1Msol)
+ * 1 - salpeter imf, i.e. slope = -2.35
+ * 2 - broken power law, requires lower mass end slope (powerlo), high mass slope (powerhi), bending point (bendmass)
+ * 3 - further IMF models may follow
+ */
+float* BaseAnaLens::stellar_mass_function(int mftype, unsigned long Nstars, long *seed, double minmass, double maxmass, double bendmass, double powerlo, double powerhi){
+	//if(!(stars_implanted)) return;
+	unsigned long i;
+	double powerp1,powerlp1,shiftmax,shiftmin,n0,n1,n2,rndnr;
+	float *star_masses = new float[Nstars];
+
+	if(mftype==0){
+		for(i = 0; i < Nstars; i++){
+			star_masses[i]=1.0;
+		}
+		//std::fill_n(star_masses, Nstars, 1.0);
+
+	}
+
+    if(mftype==1){
+    	powerp1 = powerhi+1.0;
+    	n0 = (pow(maxmass,powerp1)) /powerp1;
+    	n1 =  n0 - (pow(minmass,powerp1)) / powerp1;
+    	for(i = 0; i < Nstars; i++){
+    		star_masses[i] = pow( (-powerp1*(n1*ran2(seed)-n0)),(1.0/powerp1) );
+    	//cout << powerp1 << " " << n0 << " " << n1 << endl;
+    	}
+	}
+
+    if(mftype==2){
+    	powerlp1=powerlo+1.0;
+    	powerp1 = powerhi+1.0;
+    	shiftmax=maxmass/bendmass;
+    	shiftmin=minmass/bendmass;
+    	n1=(1./powerlp1)-(pow(shiftmin, powerlp1))/powerlp1;
+    	n2=( pow(shiftmax,powerp1) )/powerp1-(1./powerp1);
+    	n0=n1+n2;
+    	for(i = 0; i < Nstars; i++){
+    		rndnr=ran2(seed);
+    		if(rndnr<(n1/n0)){
+    			star_masses[i]=(pow( ((n0*rndnr)*(powerlp1)+ pow(shiftmin,powerlp1)),(1.0/powerlp1)))*bendmass;
+    		}
+    		else{
+    			star_masses[i]=(pow( ((n0*rndnr-n1)*powerp1+1.0),(1.0/powerp1)))*bendmass;
+    		}
+    	}
+    }
+
+    return star_masses;
 }

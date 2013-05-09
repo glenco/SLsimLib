@@ -166,6 +166,7 @@ private:
 	//std::string input_gal_file;
 	//bool gal_input_flag;
 	bool read_sim_file;
+    // TODO Margarita:  This parameter is undocumented!!!
 	bool partial_cone;
 
 	/// enables to two plane test

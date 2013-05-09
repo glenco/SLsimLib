@@ -72,8 +72,9 @@ public:
 	double getPA() const { return PA; }
 	double getInclination() const { return inclination; }
 	
-	// Returns minimum of the radii at which disk and bulge have a surf. brightness equal to a fraction f of the central one
-	//TODO Fabio: Needs to be tested and improved (Bulge is so steep in the center that output values are very small)
+	/** Returns minimum of the radii at which disk and bulge have a surf. brightness equal to a fraction f of the central one
+	* TODO Fabio: Needs to be tested and improved (Bulge is so steep in the center that output values are very small)
+  */
 	inline double getMinSize(double f) {return std::min(1.678*Reff*fabs(cos(inclination))*pow(-log (f)/7.67,4),Rh*(-log (f)/1.67));}
 
 
