@@ -33,11 +33,11 @@ void find_crit(
 		,double resolution        /// The target resolution that the critical curve is mapped on the image plane.
 		,bool *orderingsuccess    /// true if ordering was successful.
 		,bool ordercurve          /// Order the curve so that it can be drawn or used to find the winding number.
-        ,bool dividecurves        /// Divide the critical curves into seporate curves by whether they are attached  
+    ,bool dividecurves        /// Divide the critical curves into seporate curves by whether they are attached  
 		,bool verbose
 		){
 
-  unsigned long i=0;
+  long i=0;
   short refinements;
   //short spur,closed;
   double maxgridsize,mingridsize,x[2];
@@ -310,7 +310,7 @@ void find_crit2(
 		,bool verbose
 		){
 
-  unsigned long i=0;
+  long i=0;
   long refinements;
   //short spur,closed;
   double maxgridsize,mingridsize,x[2];
@@ -318,7 +318,7 @@ void find_crit2(
 
   //*******************************************************************
   ImageInfo *pseudocurve = new ImageInfo[maxNcrits];
-  bool pseuodcaustic = true;
+  bool pseuodcaustic = false;
   double pseudolimit = -100.0;
   //**************************************************************
 
@@ -782,7 +782,7 @@ void find_crit2(
   if(critcurve->imagekist->Nunits() == 0) *Ncrits=0;
 
   for(i=0;i<*Ncrits;++i){
-	  critcurve[i].centroid[0] = 0;
+	  /*critcurve[i].centroid[0] = 0;
 	  critcurve[i].centroid[1] = 0;
 	  critcurve[i].imagekist->MoveToTop();
 	  do{
@@ -791,8 +791,25 @@ void find_crit2(
 	  }while(critcurve[i].imagekist->Down());
 	  critcurve[i].centroid[0] /= critcurve[i].imagekist->Nunits();
 	  critcurve[i].centroid[1] /= critcurve[i].imagekist->Nunits();
+  */
+    critcurve[i].centroid[0] = 0;
+    critcurve[i].centroid[1] = 0;
+    
+    if(critcurve[i].imagekist->Nunits() >0){
+      critcurve[i].imagekist->MoveToTop();
+      do{
+        critcurve[i].centroid[0] += critcurve[i].imagekist->getCurrent()->x[0];
+        critcurve[i].centroid[1] += critcurve[i].imagekist->getCurrent()->x[1];
+      }while(critcurve[i].imagekist->Down());
+      critcurve[i].centroid[0] /= critcurve[i].imagekist->Nunits();
+      critcurve[i].centroid[1] /= critcurve[i].imagekist->Nunits();
+    }else{
+      // take out curves with no points
+      critcurve[i].copy(critcurve[*Ncrits-1]);
+      *Ncrits -= 1;
+      --i;
+    }
   }
-
   return ;
 }
 /**
