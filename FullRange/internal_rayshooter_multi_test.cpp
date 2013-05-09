@@ -23,7 +23,7 @@ struct TmpParamsHalos{
   double *dDl_halos;
   double **halo_pos_Mpc;
   double *halo_zs;
-  LensHalo *halos;
+  std::vector<LensHalo *> halos;
   IndexType Nhalos;
   bool kappa_off;
   int tid;
@@ -145,7 +145,7 @@ void *compute_rays_parallel_halos(void *_p){
 	      xcm[0] = p->halo_pos_Mpc[j][0] - xx[0];
 	      xcm[1] = p->halo_pos_Mpc[j][1] - xx[1];
 
-	      p->halos[j].force_halo(
+	      p->halos[j]->force_halo(
 	    			alpha
 	    			,&kappa
 	    			,gamma

@@ -14,29 +14,6 @@
 #include <sourceAnaGalaxy.h>
 #include "tables.h"
 
-
-/** \brief Class that holds all the information about the halos' positions and their internal parameters on one plane.
- *
- */
- class HaloData{
-public:
-	/// number of halos in the halo model on the plane
-	IndexType Nhalos;
-	/// halo positions
-	PosType **pos;
-	/// halo structure with internal halo parameters such as mass, size, etc.
-	LensHalo *halos;
-	/// mean mass density
-	double sigma_background;
-	/// redshifts
-	double *z;
-	/// ids
-	unsigned long *haloID;
-
-	HaloData(LensHalo *halostrucs,double sb,double **positions,double *z, unsigned long *haloID,unsigned long Nhaloss,double Dl);
-	~HaloData();
-};
-
 /**
  * \brief A class to represents a lens with multiple planes.
  *
@@ -161,8 +138,6 @@ private:
 	long *seed;
 
 	void assignParams(InputParams& params);
-	/// an array of smart pointers to the halo models on each plane
-	std::auto_ptr<HaloData> *halo_data;
 
 	double r_print_halos;
 
@@ -184,7 +159,7 @@ private:
 
 
 	/// read particle/halo data in from a file
-	template <class LH> void readInputSimFile(CosmoHndl cosmo);
+	template <class DM_halo, class galaxy_halo> void readInputSimFile(CosmoHndl cosmo);
 
 	std::string input_sim_file;
 	bool sim_input_flag;
@@ -199,7 +174,7 @@ private:
 	bool flag_run_multip_test;
 
 	/// pointer to first of all the halo internal structures
-	LensHalo *halos;
+	std::vector<LensHalo *> halos;
 	/// number of halos on all the planes
 	IndexType Nhalos;
 	double *halo_zs;
@@ -225,7 +200,9 @@ private:
 	bool nfw_table_set;
 	bool pnfw_table_set;
 
-	void quicksort(LensHalo *halos,double **brr,double *arr,unsigned long *id,unsigned long N);
+	bool second_halo;
+
+	void quicksort(std::vector<LensHalo *> *halos,double **brr,double *arr,unsigned long *id,unsigned long N);
 };
 
 typedef  MultiLens* MultiLensHndl;
@@ -275,7 +252,6 @@ template <class LH> void MultiLens::createHaloData(
 
 	// allocate memory for halos
 	halo_zs = new double[Nhalos];
-	halos = new LH[Nhalos];
 	halo_id = new unsigned long[Nhalos];
 	halo_pos = Utilities::PosTypeMatrix(Nhalos,3);
 
@@ -325,30 +301,36 @@ template <class LH> void MultiLens::createHaloData(
 		for(i = k1; i < k2; i++){
 // TODO Ben - this will never work for NSIE or NFW+NSIE models fix it
 			/// positions need to be in radians initially
-			maxr = pi*sqrt(fieldofview/pi)/180. + field_buffer/cosmo->angDist(0,halo_zs[i]); // fov is a circle
+
+			double Ds = cosmo->angDist(0,halo_zs[i]);
+
+			maxr = pi*sqrt(fieldofview/pi)/180. + field_buffer/Ds; // fov is a circle
 			rr = maxr*sqrt(ran2(seed));
 
 			assert(rr == rr);
 
 			theta = 2*pi*ran2(seed);
 
-			halo_pos[i][0] = rr*cos(theta);
-			halo_pos[i][1] = rr*sin(theta);
+
+			halo_pos[i][0] = rr*cos(theta)*Ds;
+			halo_pos[i][1] = rr*sin(theta)*Ds;
 			halo_pos[i][2] = 0;
 
-			halos[i].set_slope(beta);
+			halos.push_back(new LH);
+
+			halos[i]->set_slope(beta);
 
 			float mass = pow(10,InterpolateYvec(Nhalosbin,Logm,ran2 (seed)));
 
-			halos[i].set_mass(mass/mass_scale);
+			halos[i]->set_mass(mass/mass_scale);
 
 			halo_calc->reset(mass,halo_zs[i]);
 
-			halos[i].set_Rmax(halo_calc->getRvir());
-			halos[i].set_rscale(halos[i].get_Rmax()/halo_calc->getConcentration(0));
+			halos[i]->set_Rmax(halo_calc->getRvir());
+			halos[i]->set_rscale(halos[i]->get_Rmax()/halo_calc->getConcentration(0));
 
-			if(halos[i].get_mass() > mass_max) {
-				mass_max = halos[i].get_mass();
+			if(halos[i]->get_mass() > mass_max) {
+				mass_max = halos[i]->get_mass();
 				j_max = i;
 				pos_max[0] = halo_pos[i][0];
 				pos_max[1] = halo_pos[i][1];
@@ -357,7 +339,7 @@ template <class LH> void MultiLens::createHaloData(
 
 			halo_id[i] = i;
 
-			mass_tot += halos[i].get_mass();
+			mass_tot += halos[i]->get_mass();
 		}
 
 		Nhalosbin.empty();
@@ -367,7 +349,7 @@ template <class LH> void MultiLens::createHaloData(
 	delete halo_calc;
 
 	std::cout << Nhalos << " halos created." << std::endl
-	    << "Max input mass = " << mass_max << "  R max = " << halos[j_max].get_Rmax()
+	    << "Max input mass = " << mass_max << "  R max = " << halos[j_max]->get_Rmax()
 	    << " at z = " << z_max << std::endl;
 
 	std::cout << "leaving MultiLens::createHaloData_buffered()" << std::endl;
@@ -390,7 +372,6 @@ template <class LH> void MultiLens::createHaloData_test(
 
 	// allocate memory for halos
 	halo_zs = new double[Nhalos];
-	halos = new LH[Nhalos];
 	halo_id = new unsigned long[Nhalos];
 	halo_pos = Utilities::PosTypeMatrix(Nhalos,3);
 
@@ -407,17 +388,20 @@ template <class LH> void MultiLens::createHaloData_test(
 		halo_pos[i][2] = 0;
 
 		halo_zs[i] = plane_redshifts[i]+0.1;
-		halos[i].set_slope(beta);
-		halos[i].set_mass(ran2(seed)*1e12/mass_scale);
-		halo_calc->reset(halos[i].get_mass()*mass_scale,halo_zs[i]);
 
-		halos[i].set_Rmax(halo_calc->getRvir());
-		halos[i].set_rscale(halos[i].get_Rmax()/halo_calc->getConcentration(0));
+		halos.push_back(new LH);
+
+		halos[i]->set_slope(beta);
+		halos[i]->set_mass(ran2(seed)*1e12/mass_scale);
+		halo_calc->reset(halos[i]->get_mass()*mass_scale,halo_zs[i]);
+
+		halos[i]->set_Rmax(halo_calc->getRvir());
+		halos[i]->set_rscale(halos[i]->get_Rmax()/halo_calc->getConcentration(0));
 
 		std::cout<< "halo z " << halo_zs[i] << std::endl;
 		std::cout<< "halo pos " << halo_pos[i][0] << " " << halo_pos[i][1] << std::endl;
-		std::cout<< "halo mass " << halos[i].get_mass()*mass_scale << std::endl;
-		std::cout<< "halo Rmax and rscale " << halos[i].get_Rmax() << " " << halos[i].get_rscale() << std::endl;
+		std::cout<< "halo mass " << halos[i]->get_mass()*mass_scale << std::endl;
+		std::cout<< "halo Rmax and rscale " << halos[i]->get_Rmax() << " " << halos[i]->get_rscale() << std::endl;
 	}
 
 	delete halo_calc;
@@ -434,7 +418,7 @@ template <class LH> void MultiLens::createHaloData_test(
  * The comments must be removed from the beginning of the data file and the total number of halos must be added
  * as the first line.
  */
-template <class LH> void MultiLens::readInputSimFile(CosmoHndl cosmo){
+template <class DM_halo, class galaxy_halo> void MultiLens::readInputSimFile(CosmoHndl cosmo){
 
 	double ra,dec,z,vmax,vdisp,r_halfmass;
 	unsigned long i,j;
@@ -471,7 +455,6 @@ template <class LH> void MultiLens::readInputSimFile(CosmoHndl cosmo){
 	}
 	std::cout << "skipped "<< i << " comment lines in file " << input_sim_file << std::endl;
 
-	std::vector<LH> halo_vec;
 	std::vector<double> halo_zs_vec;
 	std::vector<double *> halo_pos_vec;
 	std::vector<unsigned long> halo_id_vec;
@@ -480,7 +463,6 @@ template <class LH> void MultiLens::readInputSimFile(CosmoHndl cosmo){
 	int j_max;
 	double mass_max=0,R_max=0,V_max=0,minmass=1e30;
 	double *theta;
-	LH halo;
 	int ncolumns = 9;
 
 	void *addr[ncolumns];
@@ -529,14 +511,15 @@ template <class LH> void MultiLens::readInputSimFile(CosmoHndl cosmo){
 		/// pos in radians
 		theta = new double[2];
 		/// pos in physical radians
-		theta[0] = ra*pi/180.;
-		theta[1] = dec*pi/180.;
+		double Ds = cosmo->angDist(0,z);
+		theta[0] = ra*pi/180.*Ds;
+		theta[1] = dec*pi/180.*Ds;
 
         if(rmax < (rtmp = theta[0]*theta[0]+theta[1]*theta[1])) rmax = rtmp;
 
 		if(partial_cone){
 			double r = sqrt(theta[0]*theta[0]+theta[1]*theta[1]);
-			if(r > 1.5*mokalens->map->boxlrad)
+			if(r > 1.5*mokalens->map->boxlMpc)
 				continue;
 		}
 
@@ -544,44 +527,79 @@ template <class LH> void MultiLens::readInputSimFile(CosmoHndl cosmo){
 
 			halo_pos_vec.push_back(theta);
 
-			halo_vec.push_back(halo);
+			halos.push_back(new DM_halo);
 
-			halo_vec[j].set_mass(np*8.6e8/cosmo->gethubble());
-			halo_vec[j].set_Rmax(halo_vec[j].get_mass()*Grav/2/pow(vmax/lightspeed,2));  // SIS value
+			halos[j]->set_mass(np*8.6e8/cosmo->gethubble());
+			halos[j]->set_Rmax(halos[j]->get_mass()*Grav/2/pow(vmax/lightspeed,2));  // SIS value
 
-			if(halo_vec[j].get_mass() > mass_max) {
-				mass_max = halo_vec[j].get_mass();
+			if(halos[j]->get_mass() > mass_max) {
+				mass_max = halos[j]->get_mass();
 				j_max = j;
 			}
-			if(halo_vec[j].get_mass() < minmass) {
-				minmass = halo_vec[j].get_mass();
+			if(halos[j]->get_mass() < minmass) {
+				minmass = halos[j]->get_mass();
 			}
 
 			/*
 			 * set the other properties of the LensHalo, such as rscale or the NSIE properties
 			 */
 
-			halo_vec[j].set_slope(beta);
-			halo_vec[j].set_internal(seed,vmax,r_halfmass*cosmo->gethubble());
+			halos[j]->set_slope(beta);
+			halos[j]->set_internal(seed,vmax,r_halfmass*cosmo->gethubble());
 
-			if(halo_vec[j].get_Rmax() > R_max) R_max = halo_vec[j].get_Rmax();
+			if(halos[j]->get_Rmax() > R_max) R_max = halos[j]->get_Rmax();
 			if(vdisp > V_max) V_max = vdisp;
 
 
 			halo_zs_vec.push_back(z);
 			halo_id_vec.push_back(haloid);
 
-			halo_vec[j].set_mass(halo_vec[j].get_mass()/mass_scale);
+			halos[j]->set_mass(halos[j]->get_mass()/mass_scale);
 
 			++j;
+
+			if(second_halo){
+				halo_pos_vec.push_back(theta);
+
+				halos.push_back(new galaxy_halo);
+
+				halos[j]->set_mass(np*8.6e8/cosmo->gethubble());
+				halos[j]->set_Rmax(halos[j]->get_mass()*Grav/2/pow(vmax/lightspeed,2));  // SIS value
+
+				if(halos[j]->get_mass() > mass_max) {
+					mass_max = halos[j]->get_mass();
+					j_max = j;
+				}
+				if(halos[j]->get_mass() < minmass) {
+					minmass = halos[j]->get_mass();
+				}
+
+				/*
+				 * set the other properties of the LensHalo, such as rscale or the NSIE properties
+				 */
+
+				halos[j]->set_slope(beta);
+				halos[j]->set_internal(seed,vmax,r_halfmass*cosmo->gethubble());
+
+				if(halos[j]->get_Rmax() > R_max) R_max = halos[j]->get_Rmax();
+				if(vdisp > V_max) V_max = vdisp;
+
+
+				halo_zs_vec.push_back(z);
+				halo_id_vec.push_back(haloid);
+
+				halos[j]->set_mass(halos[j]->get_mass()/mass_scale);
+
+				++j;
+			}
 
 		}
 	}
 	file_in.close();
-	std::cout << halo_vec.size() << " halos read in."<< std::endl
+	std::cout << halos.size() << " halos read in."<< std::endl
 			<< "Max input mass = " << mass_max << "  R max = " << R_max << "  V max = " << V_max << std::endl;
 
-	Nhalos = halo_vec.size();
+	Nhalos = halos.size();
 
 	/// setting the minimum halo mass in the simulation
 	min_mass = minmass;
@@ -593,7 +611,6 @@ template <class LH> void MultiLens::readInputSimFile(CosmoHndl cosmo){
 	if(partial_cone == false)
 		fieldofview = pi*rmax*pow(180/pi,2);  // Resets field of view to estimate of inputed one
 
-	halos = new LH[Nhalos];
 	halo_zs = new double[Nhalos];
 	halo_id = new unsigned long[Nhalos];
 	halo_pos = Utilities::PosTypeMatrix(Nhalos,3);
@@ -602,12 +619,11 @@ template <class LH> void MultiLens::readInputSimFile(CosmoHndl cosmo){
 		halo_id[i] = halo_id_vec[i];
 		halo_zs[i] = halo_zs_vec[i];
 		halo_pos[i] = halo_pos_vec[i];
-		halos[i] = halo_vec[i];
 	}
 
 	std::cout << "sorting in MultiLens::readInputSimFile()" << std::endl;
 	// sort the halos by readshift
-	MultiLens::quicksort(halos,halo_pos,halo_zs,halo_id,Nhalos);
+	MultiLens::quicksort(&halos,halo_pos,halo_zs,halo_id,Nhalos);
 
 	std::cout << "leaving MultiLens::readInputSimFile()" << std::endl;
 

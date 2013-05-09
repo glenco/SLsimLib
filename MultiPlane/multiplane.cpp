@@ -9,22 +9,6 @@
 
 using namespace std;
 
-HaloData::HaloData(LensHalo *my_halos,double sigma_back,PosType **positions, double *zz, unsigned long *id,unsigned long Nhaloss,double Dl):
-	pos(positions), halos(my_halos), Nhalos(Nhaloss),z(zz),haloID(id),sigma_background(sigma_back)
-{
-	//convert to physical Mpc on the plane
-	int i;
-#ifdef _OPENMP
-#pragma omp parallel for default(shared) private(i)
-#endif
-	for(i=0; i<Nhalos; i++){
-		pos[i][0]*=Dl;
-		pos[i][1]*=Dl;
-	}
-}
-
-HaloData::~HaloData(){
-}
 
 void MultiLens::make_table(CosmoHndl cosmo){
 	int i;
@@ -45,25 +29,7 @@ void MultiLens::make_table(CosmoHndl cosmo){
 }
 
 void MultiLens::resetNplanes(CosmoHndl cosmo, int Np){
-	int i,j;
-	///revert back to radians
-	for(j=0; j<Nplanes-1; j++){
-		if(flag_input_lens && j == (flag_input_lens % Nplanes))
-			continue;
-#ifdef _OPENMP
-#pragma omp parallel for default(shared) private(i)
-#endif
-		for(i=0; i<halo_data[j]->Nhalos; i++){
-			halo_data[j]->pos[i][0]/=Dl[j]/(1+plane_redshifts[j]);
-			halo_data[j]->pos[i][1]/=Dl[j]/(1+plane_redshifts[j]);
-		}
-#ifdef _OPENMP
-#pragma omp barrier
-#endif
-	}
-
   delete[] halo_tree;
-  delete[] halo_data;
 
   delete[] Dl;
   delete[] plane_redshifts;
@@ -76,7 +42,6 @@ void MultiLens::resetNplanes(CosmoHndl cosmo, int Np){
   dDl = new double[Nplanes];
 
   halo_tree = new auto_ptr<QuadTree>[Nplanes-1];
-  halo_data = new auto_ptr<HaloData>[Nplanes-1];
 
   setCoorDist(cosmo);
   buildHaloTrees(cosmo);
@@ -84,8 +49,7 @@ void MultiLens::resetNplanes(CosmoHndl cosmo, int Np){
 
 void MultiLens::resetHalos(CosmoHndl cosmo){
   delete[] halo_tree;
-  delete[] halo_data;
-  delete[] halos;
+  halos.resize(0);
 
   delete[] halo_zs;
   delete[] halo_id;
@@ -94,7 +58,6 @@ void MultiLens::resetHalos(CosmoHndl cosmo){
 	  Utilities::free_PosTypeMatrix(halo_pos_Mpc,Nhalos,3);
 
   halo_tree = new auto_ptr<QuadTree>[Nplanes-1];
-  halo_data = new auto_ptr<HaloData>[Nplanes-1];
 
   switch(internal_profile){
   	case PowerLaw:
@@ -161,7 +124,6 @@ MultiLens::MultiLens(InputParams& params,long *my_seed) : Lens(){
 	std::cout << "charge: " << charge << std::endl;
 
 	halo_tree = new auto_ptr<QuadTree>[Nplanes-1];
-	halo_data = new auto_ptr<HaloData>[Nplanes-1];
 
 	switch(flag_input_lens){
 	case null:
@@ -191,18 +153,19 @@ MultiLens::MultiLens(InputParams& params,long *my_seed) : Lens(){
 	nfw_table_set = false;
 	pnfw_table_set = false;
 
+	second_halo == false;
+
 	seed = my_seed;
 }
 
 MultiLens::~MultiLens(){
 	delete[] halo_tree;
-	delete[] halo_data;
 
 	delete[] Dl;
 	delete[] plane_redshifts;
 	delete[] dDl;
 
-	delete[] halos;
+	halos.resize(0);
 	delete[] halo_zs;
 	delete[] halo_id;
 	Utilities::free_PosTypeMatrix(halo_pos,Nhalos,3);
@@ -252,9 +215,10 @@ void MultiLens::assignParams(InputParams& params){
 		  exit(0);
 	}
 	if(internal_profile == NFW_NSIE){
+		second_halo = true;
 		if(!params.get("galaxy_mass_fraction",galaxy_mass_fraction)){
 			  ERROR_MESSAGE();
-			  cout << "to construct a NFW + NSIE model the parameter halo_to_galaxy_ratio needs to be set in the parameter file " << params.filename() << endl;
+			  cout << "to construct a NFW + NSIE model the parameter galaxy_mass_fraction needs to be set in the parameter file " << params.filename() << endl;
 			  exit(0);
 		}
 	}
@@ -492,12 +456,12 @@ void MultiLens::buildHaloTrees(
 
 		double sb=0.0;
 		for(int m=0;m<j2-j1;m++){
-		  sb+=halos[j1+m].get_mass();
+		  sb+=halos[j1+m]->get_mass();
 		  if(r_print_halos){
 			  // halo_pos is still in radians
 			  double r=sqrt(halo_pos[j1+m][0]*halo_pos[j1+m][0]+halo_pos[j1+m][1]*halo_pos[j1+m][1]);
 			  if(r < r_print_halos)
-				  file_area << halo_zs[j1+m] << " " << halos[j1+m].get_mass() << " " << halo_pos[j1+m][0] << " " << halo_pos[j1+m][0] <<endl;
+				  file_area << halo_zs[j1+m] << " " << halos[j1+m]->get_mass() << " " << halo_pos[j1+m][0] << " " << halo_pos[j1+m][0] <<endl;
 		  }
 		}
 		sb /= (pi*pow(sqrt(fieldofview/pi)*pi*Dl[j]/180/(1+plane_redshifts[j]) + field_buffer,2));
@@ -506,13 +470,10 @@ void MultiLens::buildHaloTrees(
 		if(sim_input_flag) sigma_back = sb;
 		if(flag_run_multip_test) sigma_back = 0.0;
 
-		halo_data[j].reset(new HaloData(&halos[j1],sigma_back,&halo_pos[j1],&halo_zs[j1],&halo_id[j1],j2-j1,Dl[j]/(1+plane_redshifts[j])));
-
 		/// Use other constructor to create halo data
-		std::cout << "  Building tree on plane " << j << " number of halos: " << halo_data[j]->Nhalos << std::endl;
+		std::cout << "  Building tree on plane " << j << " number of halos: " << j2-j1 << std::endl;
 
-		halo_tree[j].reset(new QuadTree(&halo_data[j]->pos[0],halo_data[j]->halos
-				,halo_data[j]->Nhalos,halo_data[j]->sigma_background));
+		halo_tree[j].reset(new QuadTree(&halo_pos[j1],halos[j1],j2-j1,sigma_back));
 	}
 
 	if(r_print_halos){
@@ -563,13 +524,10 @@ void MultiLens::buildHaloTrees_test(
 
 		double sigma_back = 0.0;
 
-		halo_data[j].reset(new HaloData(&halos[j1],sigma_back,&halo_pos[j1],&halo_zs[j1],&halo_id[j1],j2-j1,Dl[j]/(1+plane_redshifts[j])));
-
 		/// Use other constructor to create halo data
-		std::cout << "  Building tree on plane " << j << " number of halos: " << halo_data[j]->Nhalos << std::endl;
+		std::cout << "  Building tree on plane " << j << " number of halos: " << j2-j1 << std::endl;
 
-		halo_tree[j].reset(new QuadTree(&halo_data[j]->pos[0],halo_data[j]->halos
-							,halo_data[j]->Nhalos,halo_data[j]->sigma_background));
+		halo_tree[j].reset(new QuadTree(&halo_pos[j1],halos[j1],j2-j1,sigma_back));
 	}
 
 	cout << "constructed " << Nhalos << " halos" << endl;
@@ -823,7 +781,7 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 	switch(internal_profile){
 	case PowerLaw:
 		if(sim_input_flag){
-			if(read_sim_file == false) readInputSimFile<PowerLawLensHalo>(cosmo);
+			if(read_sim_file == false) readInputSimFile<PowerLawLensHalo,NSIELensHalo>(cosmo);
 		}
 		else{
 			if(flag_run_twop_test) createHaloData_test<PowerLawLensHalo>(cosmo,seed);
@@ -836,7 +794,7 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
   			nfw_table_set = true;
   		}
 		if(sim_input_flag){
-			if(read_sim_file == false) readInputSimFile<NFWLensHalo>(cosmo);
+			if(read_sim_file == false) readInputSimFile<NFWLensHalo,NSIELensHalo>(cosmo);
 		}
 		else{
 			if(flag_run_twop_test) createHaloData_test<NFWLensHalo>(cosmo,seed);
@@ -849,7 +807,7 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
   			pnfw_table_set = true;
   		}
 		if(sim_input_flag){
-			if(read_sim_file == false) readInputSimFile<PseudoNFWLensHalo>(cosmo);
+			if(read_sim_file == false) readInputSimFile<PseudoNFWLensHalo,NSIELensHalo>(cosmo);
 		}
 		else{
 			if(flag_run_twop_test) createHaloData_test<PseudoNFWLensHalo>(cosmo,seed);
@@ -858,7 +816,7 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 		break;
 	case NSIE:
 		if(sim_input_flag){
-			if(read_sim_file == false) readInputSimFile<NSIELensHalo>(cosmo);
+			if(read_sim_file == false) readInputSimFile<NSIELensHalo,NSIELensHalo>(cosmo);
 		}
 		else{
 			if(flag_run_twop_test) createHaloData_test<NSIELensHalo>(cosmo,seed);
@@ -871,7 +829,7 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
   			nfw_table_set = true;
   		}
 		if(sim_input_flag){
-			if(read_sim_file == false) readInputSimFile<NFW_NSIELensHalo>(cosmo);
+			if(read_sim_file == false) readInputSimFile<NFWLensHalo,NSIELensHalo>(cosmo);
 		}
 		else{
 			if(flag_run_twop_test) createHaloData_test<NFW_NSIELensHalo>(cosmo,seed);
@@ -887,7 +845,7 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 }
 
 /// Sort halos[], brr[][], and id[] by content off arr[]
-void MultiLens::quicksort(LensHalo *halos,double **brr,double *arr,unsigned long  *id,unsigned long N){
+void MultiLens::quicksort(std::vector<LensHalo *> *halos,double **brr,double *arr,unsigned long  *id,unsigned long N){
 	double pivotvalue;
 	unsigned long pivotindex,newpivotindex,i;
 
@@ -994,25 +952,5 @@ short MultiLens::ResetSourcePlane(
 	return out;
 }
 
-void MultiLens::unusedHalos(){
-  ofstream file_area("halos_with.data.txt");
-  if(!file_area){
-    cout << "unable to create file " << endl;
-    exit(1);
-  }
-
-  for(int l=0; l < Nplanes-1; l++){
-    for(int i=0; i<halo_data[l]->Nhalos; i++){
-      if(halo_data[l]->haloID[i] == 0){
-	halo_data[l]->haloID[i] = 0;
-	file_area << halo_data[l]->halos[i].get_mass() << " " << halo_data[l]->z[i]
-		  << " " << halo_data[l]->pos[i][0] << " " << halo_data[l]->pos[i][1] << endl;
-      }
-    }
-  }
-
-  file_area.close();
-
-}
 
 
