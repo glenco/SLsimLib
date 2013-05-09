@@ -65,7 +65,7 @@ public:
 
 	virtual void assignParams(InputParams& params);
 	void PrintLens(bool show_substruct,bool show_stars);
-	void implant_stars(double x,double y,unsigned long Nregions,long *seed);
+	void implant_stars(double x,double y,unsigned long Nregions,long *seed,int mftype=0);
 	void rayshooterInternal(unsigned long Npoints, bool kappa_off);
 	float getKappa_uniform(){return kappa_uniform;}
 	float* getGamma_uniform(){return gamma_uniform;}
