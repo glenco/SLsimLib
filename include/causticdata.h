@@ -11,6 +11,42 @@
 
 #include <iostream>
 #include "standard.h"
+/// A class used within CausticData class to store information on a caustic and critical curve pair
+struct CausticStructure{
+  CausticStructure(){}
+  CausticStructure(const CausticStructure &tmp){
+    redshift = tmp.redshift;
+    crit_center[0] = tmp.crit_center[0];
+    crit_center[1] = tmp.crit_center[1];
+    crit_radius[0] = tmp.crit_radius[0];
+    crit_radius[1] = tmp.crit_radius[1];
+    crit_radius[2] = tmp.crit_radius[2];
+    crit_area = tmp.crit_area;
+    
+    caustic_center[0] = tmp.caustic_center[0];
+    caustic_center[1] = tmp.caustic_center[1];
+    caustic_radius[0] = tmp.caustic_radius[0];
+    caustic_radius[1] = tmp.caustic_radius[1];
+    caustic_radius[2] = tmp.caustic_radius[2];
+    caustic_area = tmp.caustic_area;
+    
+  };
+  /// redshift of source plane
+  double redshift;
+  /// center of critical line in radians
+  double crit_center[2];
+  /// average radius, smallest radius and largest radius of critical curve
+  double crit_radius[3];
+  /// area of critical curve in radian^2
+  double crit_area;
+  
+  /// center of caustic curve in radians
+  double caustic_center[2];
+  /// average radius, smallest radius and largest radius of caustic curve
+  double caustic_radius[3];
+  /// area of caustic curve in radian^2
+  double caustic_area;
+};
 /** \brief A class for holding, printing and reading the information about the caustics and critical curves in an image.
  */
 class CausticData{
@@ -29,42 +65,16 @@ public:
 
   size_t numberOfCaustics(){return data.size();}
   
-  /// A class used within CausticData class to store information on a caustic and critical curve pair
-  struct CausticStructure{
-    CausticStructure(){}
-    CausticStructure(const CausticStructure &tmp){
-      redshift = tmp.redshift;
-      crit_center[0] = tmp.crit_center[0];
-      crit_center[1] = tmp.crit_center[1];
-      crit_radius[0] = tmp.crit_radius[0];
-      crit_radius[1] = tmp.crit_radius[1];
-      crit_radius[2] = tmp.crit_radius[2];
-      crit_area = tmp.crit_area;
- 
-      caustic_center[0] = tmp.caustic_center[0];
-      caustic_center[1] = tmp.caustic_center[1];
-      caustic_radius[0] = tmp.caustic_radius[0];
-      caustic_radius[1] = tmp.caustic_radius[1];
-      caustic_radius[2] = tmp.caustic_radius[2];
-      caustic_area = tmp.caustic_area;
-      
-    };
-    double redshift;        /// redshift of source plane
-    double crit_center[2];  /// center of critical line in radians
-    double crit_radius[3];  /// average radius, smallest radius and largest radius of critical curve
-    double crit_area;       /// area of critical curve in radian^2
-    
-    double caustic_center[2];
-    double caustic_radius[3];
-    double caustic_area;
-  };
 
   CausticStructure & operator[](size_t index){return data[index];}
+  void readfile(std::string filename);
+  void SortByCritSize();
 private:
   
   int ncolumns;
-  void readfile(std::string filename);
   std::vector<CausticStructure> data;
 };
+
+bool comparcritsize(CausticStructure &caust1,CausticStructure &caust2);
 
 #endif /* defined(__SLsimLib__causticdata__) */

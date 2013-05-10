@@ -70,15 +70,15 @@ private:
 	bool inMapBox(Branch * branch1);
 };
 
+
+typedef enum {Euclid_VIS} Telescope;
+
 /** \ingroup Image
  * \brief It creates a realistic image from the output of a ray-tracing simulation.
  *
  * It translates pixel values in observed units (counts/sec), applies PSF and noise.
  * Input must be in photons/(cm^2*Hz).
  */
-
-typedef enum {Euclid_VIS} Telescope;
-
 class Observation
 {
 public:
