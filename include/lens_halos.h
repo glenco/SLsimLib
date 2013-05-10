@@ -209,6 +209,8 @@ protected:
 
 };
 
+typedef LensHalo* LensHaloHndl;
+
 class NFW_NSIELensHalo : public NFWLensHalo{
 public:
 	NFW_NSIELensHalo();

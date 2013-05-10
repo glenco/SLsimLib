@@ -838,18 +838,13 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 		break;
 	}
 
-
-
-	std::cout << zsource << std::endl;
-	exit(1);
-
 	if(flag_run_twop_test) buildHaloTrees_test(cosmo);
 	else buildHaloTrees(cosmo);
 	std:: cout << " done " << std:: endl;
 }
 
 /// Sort halos[], brr[][], and id[] by content off arr[]
-void MultiLens::quicksort(std::vector<LensHalo *> *halos,double **brr,double *arr,unsigned long  *id,unsigned long N){
+void MultiLens::quicksort(LensHaloHndl *halos,double **brr,double *arr,unsigned long  *id,unsigned long N){
 	double pivotvalue;
 	unsigned long pivotindex,newpivotindex,i;
 
@@ -882,7 +877,7 @@ void MultiLens::quicksort(std::vector<LensHalo *> *halos,double **brr,double *ar
 	}
 	--newpivotindex;
 
-	quicksort(halos,brr,arr,id,newpivotindex);
+	quicksort(&halos[0],brr,arr,id,newpivotindex);
 	quicksort(&halos[newpivotindex+1],&brr[newpivotindex+1],&arr[newpivotindex+1],&id[newpivotindex+1],N-newpivotindex-1);
 
 	return ;

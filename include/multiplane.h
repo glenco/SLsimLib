@@ -203,7 +203,7 @@ private:
 
 	bool second_halo;
 
-	void quicksort(std::vector<LensHalo *> *halos,double **brr,double *arr,unsigned long *id,unsigned long N);
+	void quicksort(LensHaloHndl *halo,double **brr,double *arr,unsigned long *id,unsigned long N);
 };
 
 typedef  MultiLens* MultiLensHndl;
@@ -634,7 +634,7 @@ template <class DM_halo, class galaxy_halo> void MultiLens::readInputSimFile(Cos
 
 	std::cout << "sorting in MultiLens::readInputSimFile()" << std::endl;
 	// sort the halos by readshift
-	MultiLens::quicksort(&halos,halo_pos,halo_zs,halo_id,Nhalos);
+	MultiLens::quicksort(halos.data(),halo_pos,halo_zs,halo_id,Nhalos);
 
 	std::cout << "leaving MultiLens::readInputSimFile()" << std::endl;
 
