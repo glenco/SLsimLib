@@ -100,7 +100,7 @@ protected:
  * The default value of theta = 0.1 generally gives better than 1% accuracy on alpha.
  * The shear and kappa is always more accurate than the deflection.
  */
-class PseudoNFWLensHalo: public NFWLensHalo{
+class PseudoNFWLensHalo: public LensHalo{
 public:
 	PseudoNFWLensHalo();
 	~PseudoNFWLensHalo();
@@ -191,7 +191,7 @@ public:
 	void set_pa(float my_pa){pa=my_pa;};
 	void set_rcore(float my_rcore){rcore=my_rcore;};
 
-	//float get_Rmax(){return Rmax*MAX(1.0,1.0/fratio);};
+	float get_Rmax(){return Rmax*MAX(1.0,1.0/fratio);};
 
 	void set_internal(long*,float,float);
 
@@ -211,22 +211,5 @@ protected:
 
 typedef LensHalo* LensHaloHndl;
 
-class NFW_NSIELensHalo : public NFWLensHalo{
-public:
-	NFW_NSIELensHalo();
-	~NFW_NSIELensHalo();
-
-	NSIELensHalo *nsie_halo;
-
-	void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa);
-
-	void set_internal(long*,float,float);
-
-	float get_mass(){return (mass+nsie_halo->get_mass());};
-	float get_Rmax(){return nsie_halo->get_Rmax();};
-
-private:
-
-};
 
 #endif /* LENS_HALOS_H_ */

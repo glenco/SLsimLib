@@ -60,38 +60,63 @@ void MultiLens::resetHalos(CosmoHndl cosmo){
   halo_tree = new auto_ptr<QuadTree>[Nplanes-1];
 
   switch(internal_profile){
-  	case PowerLaw:
-  		if(flag_run_twop_test) createHaloData_test<PowerLawLensHalo>(cosmo,seed);
-  		else createHaloData<PowerLawLensHalo>(cosmo,seed);
-  		break;
-  	case NFW:
-  		if(nfw_table_set == false){
-  			make_nfw_tables();
-  			nfw_table_set = true;
-  		}
-  		if(flag_run_twop_test) createHaloData_test<NFWLensHalo>(cosmo,seed);
-  		else createHaloData<NFWLensHalo>(cosmo,seed);
-  		break;
-  	case PseudoNFW:
-  		if(nfw_table_set == false){
-  			make_pnfw_tables(beta);
-  			pnfw_table_set = true;
-  		}
-  		if(flag_run_twop_test) createHaloData_test<PseudoNFWLensHalo>(cosmo,seed);
-  		else createHaloData<PseudoNFWLensHalo>(cosmo,seed);
-  		break;
-  	case NSIE:
-  		if(flag_run_twop_test) createHaloData_test<NSIELensHalo>(cosmo,seed);
-  		else createHaloData<NSIELensHalo>(cosmo,seed);
-  		break;
-  	case NFW_NSIE:
-  		if(nfw_table_set == false){
-  			make_nfw_tables();
-  			nfw_table_set = true;
-  		}
-  		if(flag_run_twop_test) createHaloData_test<NFW_NSIELensHalo>(cosmo,seed);
-  		else createHaloData<NFW_NSIELensHalo>(cosmo,seed);
-  		break;
+  case PowerLaw:
+	  if(sim_input_flag){
+		  if(read_sim_file == false) readInputSimFile<PowerLawLensHalo,PowerLawLensHalo>(cosmo);
+	  }
+	  else{
+		  if(flag_run_twop_test) createHaloData_test<PowerLawLensHalo,PowerLawLensHalo>(cosmo,seed);
+		  else createHaloData<PowerLawLensHalo,PowerLawLensHalo>(cosmo,seed);
+	  }
+	  break;
+  case NFW:
+	  if(nfw_table_set == false){
+		  make_nfw_tables();
+		  nfw_table_set = true;
+	  }
+	  if(sim_input_flag){
+		  if(read_sim_file == false) readInputSimFile<NFWLensHalo,NFWLensHalo>(cosmo);
+	  }
+	  else{
+		  if(flag_run_twop_test) createHaloData_test<NFWLensHalo,NFWLensHalo>(cosmo,seed);
+		  else createHaloData<NFWLensHalo,NFWLensHalo>(cosmo,seed);
+	  }
+	  break;
+  case PseudoNFW:
+	  if(nfw_table_set == false){
+		  make_pnfw_tables(beta);
+		  pnfw_table_set = true;
+	  }
+	  if(sim_input_flag){
+		  if(read_sim_file == false) readInputSimFile<PseudoNFWLensHalo,PseudoNFWLensHalo>(cosmo);
+	  }
+	  else{
+		  if(flag_run_twop_test) createHaloData_test<PseudoNFWLensHalo,PseudoNFWLensHalo>(cosmo,seed);
+		  else createHaloData<PseudoNFWLensHalo,PseudoNFWLensHalo>(cosmo,seed);
+	  }
+	  break;
+  case NSIE:
+	  if(sim_input_flag){
+		  if(read_sim_file == false) readInputSimFile<NSIELensHalo,NSIELensHalo>(cosmo);
+	  }
+	  else{
+		  if(flag_run_twop_test) createHaloData_test<NSIELensHalo,NSIELensHalo>(cosmo,seed);
+		  else createHaloData<NSIELensHalo,NSIELensHalo>(cosmo,seed);
+	  }
+	  break;
+  case NFW_NSIE:
+	  if(nfw_table_set == false){
+		  make_nfw_tables();
+		  nfw_table_set = true;
+	  }
+	  if(sim_input_flag){
+		  if(read_sim_file == false) readInputSimFile<NFWLensHalo,NSIELensHalo>(cosmo);
+	  }
+	  else{
+		  if(flag_run_twop_test) createHaloData_test<NFWLensHalo,NSIELensHalo>(cosmo,seed);
+		  else createHaloData<NFWLensHalo,NSIELensHalo>(cosmo,seed);
+	  }
+	  break;
   }
 
   if(flag_run_twop_test) buildHaloTrees_test(cosmo);
@@ -781,11 +806,11 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 	switch(internal_profile){
 	case PowerLaw:
 		if(sim_input_flag){
-			if(read_sim_file == false) readInputSimFile<PowerLawLensHalo,NSIELensHalo>(cosmo);
+			if(read_sim_file == false) readInputSimFile<PowerLawLensHalo,PowerLawLensHalo>(cosmo);
 		}
 		else{
-			if(flag_run_twop_test) createHaloData_test<PowerLawLensHalo>(cosmo,seed);
-			else createHaloData<PowerLawLensHalo>(cosmo,seed);
+			if(flag_run_twop_test) createHaloData_test<PowerLawLensHalo,PowerLawLensHalo>(cosmo,seed);
+			else createHaloData<PowerLawLensHalo,PowerLawLensHalo>(cosmo,seed);
 		}
 		break;
 	case NFW:
@@ -794,11 +819,11 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
   			nfw_table_set = true;
   		}
 		if(sim_input_flag){
-			if(read_sim_file == false) readInputSimFile<NFWLensHalo,NSIELensHalo>(cosmo);
+			if(read_sim_file == false) readInputSimFile<NFWLensHalo,NFWLensHalo>(cosmo);
 		}
 		else{
-			if(flag_run_twop_test) createHaloData_test<NFWLensHalo>(cosmo,seed);
-			else createHaloData<NFWLensHalo>(cosmo,seed);
+			if(flag_run_twop_test) createHaloData_test<NFWLensHalo,NFWLensHalo>(cosmo,seed);
+			else createHaloData<NFWLensHalo,NFWLensHalo>(cosmo,seed);
 		}
 		break;
 	case PseudoNFW:
@@ -807,11 +832,11 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
   			pnfw_table_set = true;
   		}
 		if(sim_input_flag){
-			if(read_sim_file == false) readInputSimFile<PseudoNFWLensHalo,NSIELensHalo>(cosmo);
+			if(read_sim_file == false) readInputSimFile<PseudoNFWLensHalo,PseudoNFWLensHalo>(cosmo);
 		}
 		else{
-			if(flag_run_twop_test) createHaloData_test<PseudoNFWLensHalo>(cosmo,seed);
-			else createHaloData<PseudoNFWLensHalo>(cosmo,seed);
+			if(flag_run_twop_test) createHaloData_test<PseudoNFWLensHalo,PseudoNFWLensHalo>(cosmo,seed);
+			else createHaloData<PseudoNFWLensHalo,PseudoNFWLensHalo>(cosmo,seed);
 		}
 		break;
 	case NSIE:
@@ -819,8 +844,8 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 			if(read_sim_file == false) readInputSimFile<NSIELensHalo,NSIELensHalo>(cosmo);
 		}
 		else{
-			if(flag_run_twop_test) createHaloData_test<NSIELensHalo>(cosmo,seed);
-			else createHaloData<NSIELensHalo>(cosmo,seed);
+			if(flag_run_twop_test) createHaloData_test<NSIELensHalo,NSIELensHalo>(cosmo,seed);
+			else createHaloData<NSIELensHalo,NSIELensHalo>(cosmo,seed);
 		}
 		break;
 	case NFW_NSIE:
@@ -832,8 +857,8 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 			if(read_sim_file == false) readInputSimFile<NFWLensHalo,NSIELensHalo>(cosmo);
 		}
 		else{
-			if(flag_run_twop_test) createHaloData_test<NFW_NSIELensHalo>(cosmo,seed);
-			else createHaloData<NFW_NSIELensHalo>(cosmo,seed);
+			if(flag_run_twop_test) createHaloData_test<NFWLensHalo,NSIELensHalo>(cosmo,seed);
+			else createHaloData<NFWLensHalo,NSIELensHalo>(cosmo,seed);
 		}
 		break;
 	}

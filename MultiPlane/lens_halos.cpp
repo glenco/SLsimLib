@@ -32,7 +32,7 @@ void NFWLensHalo::set_internal(long *seed, float vmax, float r_halfmass){
 	rscale = Rmax/rscale; // Was the concentration
 }
 
-PseudoNFWLensHalo::PseudoNFWLensHalo() : NFWLensHalo(){
+PseudoNFWLensHalo::PseudoNFWLensHalo() : LensHalo(){
 
 }
 
@@ -52,7 +52,8 @@ PowerLawLensHalo::~PowerLawLensHalo(){
 
 
 NSIELensHalo::NSIELensHalo() : LensHalo(){
-
+	rscale = 1.0;
+	rcore = 0.0;
 }
 
 
@@ -61,9 +62,6 @@ NSIELensHalo::~NSIELensHalo(){
 }
 
 void NSIELensHalo::set_internal(long *seed, float vmax, float r_halfmass){
-	rscale = 1.0;
-	rcore = 0.0;
-
 	sigma = 126*pow(mass/1.0e10,0.25); // From Tully-Fisher and Bell & de Jong 2001
 	fratio = (ran2(seed)+1)*0.5;  //TODO This is a kluge.
 	pa = 2*pi*ran2(seed);  //TODO This is a kluge.
@@ -71,32 +69,6 @@ void NSIELensHalo::set_internal(long *seed, float vmax, float r_halfmass){
 	Rmax = MAX(1.0,1.0/fratio)*Rsize;  // redefine
 
 	assert(Rmax >= Rsize);
-}
-
-
-NFW_NSIELensHalo::NFW_NSIELensHalo() : NFWLensHalo(){
-	nsie_halo = new NSIELensHalo;
-}
-
-
-NFW_NSIELensHalo::~NFW_NSIELensHalo(){
-	delete nsie_halo;
-}
-
-void NFW_NSIELensHalo::set_internal(long *seed, float vmax, float r_halfmass){
-	double mo=7.3113e10,M1=2.8575e10,gam1=7.17,gam2=0.201,beta=0.557;
-
-	NFWLensHalo::set_internal(seed,vmax,r_halfmass);
-
-	double gmf = 2*mo*pow(mass/M1,gam1)
-	  /pow(1+pow(mass/M1,beta),(gam1-gam2)/beta)/mass;
-	if(gmf > 1.0) gmf = 1;
-
-	nsie_halo->set_mass(mass*gmf);   //TODO This is a kluge. A mass dependent ratio would be better
-
-	mass *= (1-gmf);
-
-	nsie_halo->set_internal(seed,vmax,r_halfmass);
 }
 
 void LensHalo::force_halo(
@@ -206,28 +178,4 @@ void NSIELensHalo::force_halo(
 		}
 	}
 	return;
-}
-
-void NFW_NSIELensHalo::force_halo(
-		double *alpha
-		,KappaType *kappa
-		,KappaType *gamma
-		,double *xcm
-		,bool no_kappa
-){
-	double alpha_tmp[2];
-	KappaType kappa_tmp;
-	KappaType gamma_tmp[3];
-
-	LensHalo::force_halo(alpha,kappa,gamma,xcm,no_kappa);
-	nsie_halo->force_halo(&alpha_tmp[0],&kappa_tmp,&gamma_tmp[0],xcm,no_kappa);
-
-	alpha[0]+=alpha_tmp[0];
-	alpha[1]+=alpha_tmp[1];
-	if(!no_kappa){
-		*kappa+=kappa_tmp;
-		gamma[0]+=gamma_tmp[0];
-		gamma[1]+=gamma_tmp[1];
-		gamma[2]+=gamma_tmp[2];
-	}
 }

@@ -73,8 +73,8 @@ public:
 
 	void buildHaloTrees(CosmoHndl cosmo);
 	void buildHaloTrees_test(CosmoHndl cosmo);
-	template <class LH> void createHaloData(CosmoHndl cosmo,long *seed);
-	template <class LH> void createHaloData_test(CosmoHndl cosmo,long *seed);
+	template <class DM_halo, class galaxy_halo> void createHaloData(CosmoHndl cosmo,long *seed);
+	template <class DM_halo, class galaxy_halo>  void createHaloData_test(CosmoHndl cosmo,long *seed);
 	void RandomizeHost(long *seed,bool tables);
 	void RandomizeSigma(long *seed,bool tables);
 	double getZlens();
@@ -209,7 +209,7 @@ private:
 typedef  MultiLens* MultiLensHndl;
 
 
-template <class LH> void MultiLens::createHaloData(
+template <class DM_halo, class galaxy_halo> void MultiLens::createHaloData(
 		CosmoHndl cosmo     /// cosmology
 		,long *seed
 	){
@@ -317,7 +317,7 @@ template <class LH> void MultiLens::createHaloData(
 			halo_pos[i][1] = rr*sin(theta)*Ds;
 			halo_pos[i][2] = 0;
 
-			halos.push_back(new LH);
+			halos.push_back(new DM_halo);
 
 			halos[i]->set_slope(beta);
 
@@ -362,7 +362,7 @@ template <class LH> void MultiLens::createHaloData(
  * This is used to test the convergence of the ray shooter.
  *
  */
-template <class LH> void MultiLens::createHaloData_test(
+template <class DM_halo, class galaxy_halo>  void MultiLens::createHaloData_test(
 		CosmoHndl cosmo     /// cosmology
 		,long *seed
 	){
@@ -390,7 +390,7 @@ template <class LH> void MultiLens::createHaloData_test(
 
 		halo_zs[i] = plane_redshifts[i]+0.1;
 
-		halos.push_back(new LH);
+		halos.push_back(new DM_halo);
 
 		halos[i]->set_slope(beta);
 		halos[i]->set_mass(ran2(seed)*1e12/mass_scale);
