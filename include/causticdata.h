@@ -22,14 +22,14 @@ struct CausticStructure{
     crit_radius[1] = tmp.crit_radius[1];
     crit_radius[2] = tmp.crit_radius[2];
     crit_area = tmp.crit_area;
-    
+
     caustic_center[0] = tmp.caustic_center[0];
     caustic_center[1] = tmp.caustic_center[1];
     caustic_radius[0] = tmp.caustic_radius[0];
     caustic_radius[1] = tmp.caustic_radius[1];
     caustic_radius[2] = tmp.caustic_radius[2];
     caustic_area = tmp.caustic_area;
-    
+
   };
   /// redshift of source plane
   double redshift;
@@ -75,6 +75,6 @@ private:
   std::vector<CausticStructure> data;
 };
 
-bool comparcritsize(CausticStructure &caust1,CausticStructure &caust2);
+bool comparcritsize(const CausticStructure &caust1,const CausticStructure &caust2);
 
 #endif /* defined(__SLsimLib__causticdata__) */

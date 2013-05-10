@@ -191,13 +191,11 @@ public:
 	void set_pa(float my_pa){pa=my_pa;};
 	void set_rcore(float my_rcore){rcore=my_rcore;};
 
-	float get_Rmax(){return Rmax*MAX(1.0,1.0/fratio);};
+	//float get_Rmax(){return Rmax*MAX(1.0,1.0/fratio);};
 
 	void set_internal(long*,float,float);
 
 protected:
-    /// Mass of the NSIE
-    float mass;
 	/// velocity dispersion of NSIE
 	float sigma;
 	/// Actual edge of mass distribution in elliptical radius, Rmax is the range beyond which the halo is a point mass

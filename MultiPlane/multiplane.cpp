@@ -103,6 +103,9 @@ void MultiLens::resetHalos(CosmoHndl cosmo){
  * allocates space for the halo trees and the inout lens, if there is any
  */
 MultiLens::MultiLens(InputParams& params,long *my_seed) : Lens(){
+
+	second_halo = false;
+
 	assignParams(params);
 
 	NTABLE=1000;
@@ -152,8 +155,6 @@ MultiLens::MultiLens(InputParams& params,long *my_seed) : Lens(){
 
 	nfw_table_set = false;
 	pnfw_table_set = false;
-
-	second_halo == false;
 
 	seed = my_seed;
 }
@@ -837,6 +838,10 @@ void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 		break;
 	}
 
+
+
+	std::cout << zsource << std::endl;
+	exit(1);
 
 	if(flag_run_twop_test) buildHaloTrees_test(cosmo);
 	else buildHaloTrees(cosmo);

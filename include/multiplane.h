@@ -424,6 +424,7 @@ template <class DM_halo, class galaxy_halo> void MultiLens::readInputSimFile(Cos
 	double ra,dec,z,vmax,vdisp,r_halfmass;
 	unsigned long i,j;
 	unsigned long haloid,idd,np;
+	double mo=7.3113e10,M1=2.8575e10,gam1=7.17,gam2=0.201,be=0.557;
 
 	double rmax=0,rtmp=0;
 
@@ -530,8 +531,10 @@ template <class DM_halo, class galaxy_halo> void MultiLens::readInputSimFile(Cos
 
 			halos.push_back(new DM_halo);
 
-			halos[j]->set_mass(np*8.6e8/cosmo->gethubble());
-			halos[j]->set_Rmax(halos[j]->get_mass()*Grav/2/pow(vmax/lightspeed,2));  // SIS value
+			float mass = np*8.6e8/cosmo->gethubble();
+
+			halos[j]->set_mass(mass);
+			halos[j]->set_Rmax(mass*Grav/2/pow(vmax/lightspeed,2));  // SIS value
 
 			if(halos[j]->get_mass() > mass_max) {
 				mass_max = halos[j]->get_mass();
@@ -560,12 +563,19 @@ template <class DM_halo, class galaxy_halo> void MultiLens::readInputSimFile(Cos
 			++j;
 
 			if(second_halo){
+				galaxy_mass_fraction = 2*mo*pow(mass/M1,gam1)
+				  /pow(1+pow(mass/M1,be),(gam1-gam2)/be)/mass;
+				if(galaxy_mass_fraction > 1.0) galaxy_mass_fraction = 1;
+
 				halo_pos_vec.push_back(theta);
 
 				halos.push_back(new galaxy_halo);
 
-				halos[j]->set_mass(np*8.6e8/cosmo->gethubble());
-				halos[j]->set_Rmax(halos[j]->get_mass()*Grav/2/pow(vmax/lightspeed,2));  // SIS value
+				halos[j]->set_mass(mass*galaxy_mass_fraction);
+				halos[j-1]->set_mass(mass*(1-galaxy_mass_fraction)/mass_scale);
+
+				halos[j]->set_Rmax(mass*galaxy_mass_fraction*Grav/2/pow(vmax/lightspeed,2));  // SIS value
+
 
 				if(halos[j]->get_mass() > mass_max) {
 					mass_max = halos[j]->get_mass();
