@@ -14,6 +14,7 @@
 #include <forceTree.h>
 #include <quadTree.h>
 #include <source.h>
+#include <InputParams.h>
 
 /**
  * \brief An "analytic" model to represent a lens on a single plane.
@@ -53,8 +54,11 @@
  *
  * TODO BEN finish this documentation.
  */
+
+
 class BaseAnaLens : public Lens{
 public:
+
 	//BaseAnaLens(std::string);
 	BaseAnaLens(InputParams& params);
 	virtual ~BaseAnaLens();
@@ -137,9 +141,9 @@ public:
   void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off);
   void substract_stars_disks(PosType *ray,PosType *alpha
                   ,KappaType *kappa,KappaType *gamma);
-  void implant_stars(Point *centers,unsigned long Nregions,long *seed,int mftype=0);
-  float* stellar_mass_function(int mftype, unsigned long Nstars, long *seed, double minmass=0.1, double maxmass=100
-  		,double bendmass=1.0, double powerlo=-0.3, double powerhi=-2.35);
+  void implant_stars(Point *centers,unsigned long Nregions,long *seed, IMFtype type=One);
+  float* stellar_mass_function(IMFtype type, unsigned long Nstars, long *seed, double minmass=0.0, double maxmass=0.0
+  		,double bendmass=0.0, double powerlo=0.0, double powerhi=0.0);
 
   //void toggleStars(bool implanted);
 
@@ -153,7 +157,7 @@ public:
   double getHost_axis_ratio(){return host_axis_ratio;}
   double getHost_position_angle(){return host_pos_angle;}    /// position angle
   double getPerturb_beta(){return perturb_beta;}
-
+  IMFtype getIMF_type(){return imf_type;}
   int getPerturb_Nmodes(){return perturb_Nmodes;}    /// this includes two for external shear
   double *perturb_modes;  ///first two are shear
 
@@ -184,7 +188,13 @@ protected:
 
   bool stars_implanted;
   /// Number of regions to be subtracted to compensate for the mass in stars
-
+  IMFtype imf_type;
+  double min_mstar;
+  double max_mstar;
+  double bend_mstar;
+  double lo_mass_slope;
+  double hi_mass_slope;
+  /// parameters for stellar mass function: minimal and maximal stellar mass, bending point for a broken power law IMF
   double *star_kappa;
   double **star_xdisk;
 

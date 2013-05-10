@@ -311,6 +311,57 @@ bool InputParams::get(std::string label,ClumpInternal& value){
 	std::cout << label << " in parameter file " << paramfile_name << " needs to be 0, 1 or 2 or nfw, powerlaw, or pointmass!"<< std::endl;
 	return false;
 }
+
+/** \brief Assigns to "value" the value of the parameter called "label".
+ * If this parameter label does not appear in the parameter file false
+ * is returned.  If the parameter in the file does not "match" the type
+ * of value false will also be returned and a warning printed to stdout.
+ *
+ * InputLens entries in the parameter file must be Mono,BrokenPowerLaw,Salpeter,IMFPowerLaw,Kroupa or Chabrier
+ */
+
+bool InputParams::get(std::string label,IMFtype& value){
+	unsigned int i;
+	for(i=0;i<labels.size();++i)
+		if(labels[i] == label) break;
+	if(i==labels.size()) return false;
+
+	if(!char_values[i].compare("Mono")){
+		value = Mono;
+		use_number[i]++;
+		return true;
+	}
+	if(!char_values[i].compare("BrokenPowerLaw")){
+		value = BrokenPowerLaw;
+		use_number[i]++;
+		return true;
+	}
+	if(!char_values[i].compare("Salpeter")){
+		value = Salpeter;
+		use_number[i]++;
+		return true;
+	}
+	if(!char_values[i].compare("IMFPowerLaw")){
+		value = IMFPowerLaw;
+		use_number[i]++;
+		return true;
+	}
+	if(!char_values[i].compare("Kroupa")){
+		value = Kroupa;
+		use_number[i]++;
+		return true;
+	}
+	if(!char_values[i].compare("Chabrier")){
+		value = Chabrier;
+		use_number[i]++;
+		return true;
+	}
+
+	std::cout << label << " in parameter file " << paramfile_name << " needs to be Mono,BrokenPowerLaw,Salpeter,IMFPowerLaw,Kroupa or Chabrier!"<< std::endl;
+	return false;
+}
+
+
 /** \brief Assigns to "value" the value of the parameter called "label".
  * If this parameter label does not appear in the parameter file false
  * is returned.  If the parameter in the file does not "match" the type

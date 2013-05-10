@@ -28,6 +28,7 @@ typedef enum {PS, ST, PL} MassFuncType;
 typedef enum {null, ana_lens, moka_lens} InputLens;
 /// names of clump and sb models
 typedef enum {nfw,powerlaw,pointmass} ClumpInternal;
+enum IMFtype {One,Mono,BrokenPowerLaw,Salpeter,IMFPowerLaw,Kroupa,Chabrier};
 enum Band {SDSS_U,SDSS_G,SDSS_R,SDSS_I,SDSS_Z,J,H,Ks,i1,i2};
 
 
@@ -46,6 +47,7 @@ public:
 	bool get(std::string label,InputLens& value);
 	bool get(std::string label,ClumpInternal& value);
 	bool get(std::string label,Band& value);
+	bool get(std::string label,IMFtype& value);
 
 	bool exist(std::string label);
 	void print();

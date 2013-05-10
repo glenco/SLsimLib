@@ -16,7 +16,7 @@ using namespace std;
  * allocates all memory for stars
  */
 
-void BaseAnaLens::implant_stars(Point *centers,unsigned long Nregions,long *seed, int mftype){
+void BaseAnaLens::implant_stars(Point *centers,unsigned long Nregions,long *seed, IMFtype type){
 	PosType r,theta,NstarsPerImage;
 	unsigned long i,j,m,k;
 	//float maxr;
@@ -56,6 +56,9 @@ void BaseAnaLens::implant_stars(Point *centers,unsigned long Nregions,long *seed
 		return;
 	}
 
+	//params.get("mass_max",sub_Mmax)
+	star_masses=stellar_mass_function(type, stars_N, seed, min_mstar, max_mstar, bend_mstar,lo_mass_slope,hi_mass_slope);
+
 	for(j=0,m=0;j<Nregions;++j){
 
 		assert( centers[j].kappa > 0.0);
@@ -85,9 +88,11 @@ void BaseAnaLens::implant_stars(Point *centers,unsigned long Nregions,long *seed
 		if(j==2){fname = "stars2.dat";}
 		if(j==3){fname = "stars3.dat";}
 		ofstream fstars(fname);
-		ofstream mstars("masses.dat");
-
-		star_masses=stellar_mass_function(mftype, NstarsPerImage, seed);
+		if(j==0){fname = "masses0.dat";}
+		if(j==1){fname = "masses1.dat";}
+		if(j==2){fname = "masses2.dat";}
+		if(j==3){fname = "masses3.dat";}
+		ofstream mstars(fname);
 
 		for(i=0;i<NstarsPerImage;++i,++m){
 			//m=j*NstarsPerImage+i;
@@ -96,13 +101,14 @@ void BaseAnaLens::implant_stars(Point *centers,unsigned long Nregions,long *seed
 			stars_xp[m][0] = centers[j].x[0] + r*cos(theta);
 			stars_xp[m][1] = centers[j].x[1] + r*sin(theta);
 			stars_xp[m][2] = 0.0;
-			cout << m << " " << star_masses[m] << endl;
+			//cout << m << " " << star_masses[m] << endl;
 
 			//if(maxr<r){
 			//	maxr=r;
 			//}
 			// check to make see if star is in another centers region
 			//   and remove it
+			//cout << "bla: " << j << " " <<  m << " " << i << endl;
 			for(k=0;k<j;++k){
 				if(  star_region[k] > sqrt(pow(centers[k].x[0]-stars_xp[m][0],2)
 						+ pow(centers[k].x[1]-stars_xp[m][1],2)) ){
@@ -120,6 +126,7 @@ void BaseAnaLens::implant_stars(Point *centers,unsigned long Nregions,long *seed
 		}
 		fstars.close();
 		mstars.close();
+
 	}
 
 	assert(m <= stars_N);
@@ -188,48 +195,69 @@ void BaseAnaLens::substract_stars_disks(double *ray,double *alpha
  * 2 - broken power law, requires lower mass end slope (powerlo), high mass slope (powerhi), bending point (bendmass)
  * 3 - further IMF models may follow
  */
-float* BaseAnaLens::stellar_mass_function(int mftype, unsigned long Nstars, long *seed, double minmass, double maxmass, double bendmass, double powerlo, double powerhi){
+float* BaseAnaLens::stellar_mass_function(IMFtype type, unsigned long Nstars, long *seed
+		,double minmass, double maxmass, double bendmass, double powerlo, double powerhi){
 	//if(!(stars_implanted)) return;
 	unsigned long i;
 	double powerp1,powerlp1,shiftmax,shiftmin,n0,n1,n2,rndnr;
 	float *star_masses = new float[Nstars];
 
-	if(mftype==0){
+	if(type==One){
 		for(i = 0; i < Nstars; i++){
-			star_masses[i]=1.0;
+				star_masses[i]=1.0;
 		}
-		//std::fill_n(star_masses, Nstars, 1.0);
-
 	}
 
-    if(mftype==1){
-    	powerp1 = powerhi+1.0;
+
+	if(type==Mono){
+		if((minmass!=maxmass)){
+		    cout << "For IMF type Mono min_mstar and max_mstar must be defined in parameter file and they must be equal" << endl;
+		    exit(1);
+		}
+		for(i = 0; i < Nstars; i++){
+			star_masses[i]=minmass;
+		}
+	}
+
+    if(type==Salpeter){
+    	if((minmass==maxmass)){
+    			    cout << "For IMF type Salpeter min_mstar and max_mstar must be defined in parameter file" << endl;
+    			    exit(1);
+    	}
+    	powerp1 = -1.35;
     	n0 = (pow(maxmass,powerp1)) /powerp1;
     	n1 =  n0 - (pow(minmass,powerp1)) / powerp1;
     	for(i = 0; i < Nstars; i++){
     		star_masses[i] = pow( (-powerp1*(n1*ran2(seed)-n0)),(1.0/powerp1) );
-    	//cout << powerp1 << " " << n0 << " " << n1 << endl;
     	}
 	}
 
-    if(mftype==2){
-    	powerlp1=powerlo+1.0;
-    	powerp1 = powerhi+1.0;
-    	shiftmax=maxmass/bendmass;
-    	shiftmin=minmass/bendmass;
-    	n1=(1./powerlp1)-(pow(shiftmin, powerlp1))/powerlp1;
-    	n2=( pow(shiftmax,powerp1) )/powerp1-(1./powerp1);
-    	n0=n1+n2;
-    	for(i = 0; i < Nstars; i++){
-    		rndnr=ran2(seed);
-    		if(rndnr<(n1/n0)){
-    			star_masses[i]=(pow( ((n0*rndnr)*(powerlp1)+ pow(shiftmin,powerlp1)),(1.0/powerlp1)))*bendmass;
-    		}
-    		else{
-    			star_masses[i]=(pow( ((n0*rndnr-n1)*powerp1+1.0),(1.0/powerp1)))*bendmass;
+    if(type==BrokenPowerLaw){
+    	if((powerlo==powerhi)){
+    		cout << "For IMF type BrokenPowerLaw inner slope (slope_1) and outer slope (slope_2) must be defined in parameter file" << endl;
+    		exit(1);
+    	}
+    	else{
+    		powerlp1=powerlo+1.0;
+    		powerp1 = powerhi+1.0;
+    		shiftmax=maxmass/bendmass;
+    		shiftmin=minmass/bendmass;
+    		n1=(1./powerlp1)-(pow(shiftmin, powerlp1))/powerlp1;
+    		n2=( pow(shiftmax,powerp1) )/powerp1-(1./powerp1);
+    		n0=n1+n2;
+    		for(i = 0; i < Nstars; i++){
+    			rndnr=ran2(seed);
+    			if(rndnr<(n1/n0)){
+    				star_masses[i]=(pow( ((n0*rndnr)*(powerlp1)+ pow(shiftmin,powerlp1)),(1.0/powerlp1)))*bendmass;
+    			}
+    			else{
+    				star_masses[i]=(pow( ((n0*rndnr-n1)*powerp1+1.0),(1.0/powerp1)))*bendmass;
+    			}
     		}
     	}
     }
 
+
+    cout << " " << type << " " << maxmass << " " << minmass << " " << bendmass << " " << powerlo << " " << powerhi << " " << endl;
     return star_masses;
 }

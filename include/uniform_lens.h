@@ -58,20 +58,23 @@
  *
  */
 
+
 class UniLens: public BaseAnaLens{
 public:
 	UniLens(InputParams& params);
 	~UniLens();
 
+
 	virtual void assignParams(InputParams& params);
 	void PrintLens(bool show_substruct,bool show_stars);
-	void implant_stars(double x,double y,unsigned long Nregions,long *seed,int mftype=0);
+	void implant_stars(double x,double y,unsigned long Nregions,long *seed,IMFtype type=One);
 	void rayshooterInternal(unsigned long Npoints, bool kappa_off);
 	float getKappa_uniform(){return kappa_uniform;}
 	float* getGamma_uniform(){return gamma_uniform;}
 	double getAveMag(){ return 1.0/( pow(1-kappa_uniform,2) - gamma_uniform[0]*gamma_uniform[0] - gamma_uniform[1]*gamma_uniform[1]);}
 
 protected:
+
    float kappa_uniform;
    float gamma_uniform[3];
 
