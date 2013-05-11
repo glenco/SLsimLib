@@ -208,7 +208,6 @@ float* BaseAnaLens::stellar_mass_function(IMFtype type, unsigned long Nstars, lo
 		}
 	}
 
-
 	if(type==Mono){
 		if((minmass!=maxmass)){
 		    cout << "For IMF type Mono min_mstar and max_mstar must be defined in parameter file and they must be equal" << endl;
@@ -258,6 +257,8 @@ float* BaseAnaLens::stellar_mass_function(IMFtype type, unsigned long Nstars, lo
     }
 
 
-    cout << " " << type << " " << maxmass << " " << minmass << " " << bendmass << " " << powerlo << " " << powerhi << " " << endl;
+    //cout << " " << type << " " << maxmass << " " << minmass << " " << bendmass << " " << powerlo << " " << powerhi << " " << endl;
+
     return star_masses;
 }
+

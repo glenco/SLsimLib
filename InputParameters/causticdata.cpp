@@ -27,7 +27,7 @@ CausticData::CausticData(size_t size){
   caustic_area.resize(size);
   
   for(size_t i = 0; i < size ; ++i){
-    causticdata[i].crit_centers = new double[2];
+    crit_centers[i] = new double[2];
     crit_radius[i] = new double[3];
     caustic_centers[i] = new double[2];
     caustic_radius[i] = new double[3];
@@ -54,13 +54,35 @@ CausticData::~CausticData(){
 void CausticData::resize(size_t size){
   
   data.resize(size);
+  /*size_t oldsize = redshifts.size();
+  
+  for(size_t i = oldsize - 1; i > size-1  ; --i){
+    delete[] crit_centers[i];
+    delete[] crit_radius[i];
+    delete[] caustic_centers[i];
+    delete[] crit_radius[i];
+  }
+
+  redshifts.resize(size);
+  crit_centers.reserve(size);
+  caustic_centers.resize(size);
+  
+  crit_radius.resize(size);
+  caustic_radius.resize(size);
+  
+  crit_area.resize(size);
+  caustic_area.resize(size);
+  
+  for(size_t i = oldsize; i < size ; ++i){
+    crit_centers[i] = new double[2];
+    crit_radius[i] = new double[3];
+    caustic_centers[i] = new double[2];
+    caustic_radius[i] = new double[3];
+  }
+   */
 }
 
-/// Read in data from a caustic catalog file
 void CausticData::readfile(std::string filename){
-  
-  data.clear();
-  
   std::ifstream file_in(filename.c_str());
   std::string myline;
   std::string space = " ";
@@ -96,19 +118,6 @@ void CausticData::readfile(std::string filename){
       std::cout << "skipped line " << i << std::endl;
 			continue;
     }
-    /*
-     if(causticdata[i].crit_radius[0] > 0 ){
-     //*** need to calculate area and max min sizes
-     catalog_caustic << z_sources
-     << " " << causticdata[i].crit_center[0] << " " << causticdata[i].crit_center[1]
-     << " " << causticdata[i].crit_radius[0] << " " << causticdata[i].crit_radius[2]
-     << " "<< causticdata[i].crit_radius[1]  << " " << imageinfo[i].area
-     << " " << causticdata[i].caustic_center[0] << " " << causticdata[i].caustic_center[1]
-     << " " << causticdata[i].caustic_radius[0] << " " << causticdata[i].caustic_radius[2]   << " "
-     << causticdata[i].caustic_radius[1]
-     << " " << causticdata[i].caustic_area
-     << std::endl;
-     }*/
     
 		for(int l=0;l<ncolumns; l++){
 			pos = myline.find(space);
@@ -133,11 +142,11 @@ void CausticData::readfile(std::string filename){
           break;
         case 4:
           buffer >> mydouble;
-          tmp_data.crit_radius[2] = mydouble;
+          tmp_data.crit_radius[1] = mydouble;
           break;
         case 5:
           buffer >> mydouble;
-          tmp_data.crit_radius[1] = mydouble;
+          tmp_data.crit_radius[2] = mydouble;
           break;
         case 6:
           buffer >> mydouble;
@@ -158,11 +167,11 @@ void CausticData::readfile(std::string filename){
           break;
         case 10:
           buffer >> mydouble;
-          tmp_data.caustic_radius[2] = mydouble;
+          tmp_data.caustic_radius[1] = mydouble;
           break;
         case 11:
           buffer >> mydouble;
-          tmp_data.caustic_radius[1] = mydouble;
+          tmp_data.caustic_radius[2] = mydouble;
           break;
         case 12:
           buffer >> mydouble;
@@ -210,23 +219,14 @@ void CausticData::printfile(std::string filename,std::string paramfile,double fi
   
   catalog_caustic << "# " << " all critical lines above a scale of " << 180*60*60*minscale/pi << " arcsec,  field of view: " << fieldofview << " square degrees" << std::endl;
 
-  
   for(size_t i = 0; i < data.size(); ++i){
     catalog_caustic << data[i].redshift
     << " " << data[i].crit_center[0] << " " << data[i].crit_center[1]
-    << " " << data[i].crit_radius[0] << " " << data[i].crit_radius[2] << " " << data[i].crit_radius[1]
+    << " " << data[i].crit_radius[0] << " " << data[i].crit_radius[1] << " " << data[i].crit_radius[2]
     << " " << data[i].crit_area
     << " " << data[i].caustic_center[0] << " " << data[i].caustic_center[1]
-    << " " << data[i].caustic_radius[0] << " " << data[i].caustic_radius[2] << " " << data[i].caustic_radius[1]
+    << " " << data[i].caustic_radius[0] << " " << data[i].caustic_radius[1] << " " << data[i].caustic_radius[2]
     << " " << data[i].caustic_area
     << std::endl;
   }
-}
-
-void CausticData::SortByCritSize(){
-  std::sort(data.begin(),data.end(),comparcritsize);
-}
-
-bool comparcritsize(CausticStructure &caust1,CausticStructure &caust2){
-  return (caust1.crit_radius[0] > caust2.crit_radius[0]);
 }

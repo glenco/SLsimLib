@@ -75,6 +75,6 @@ private:
   std::vector<CausticStructure> data;
 };
 
-bool comparcritsize(CausticStructure &caust1,CausticStructure &caust2);
+bool comparcritsize(const CausticStructure &caust1,const CausticStructure &caust2);
 
 #endif /* defined(__SLsimLib__causticdata__) */
