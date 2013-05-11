@@ -317,7 +317,7 @@ bool InputParams::get(std::string label,ClumpInternal& value){
  * is returned.  If the parameter in the file does not "match" the type
  * of value false will also be returned and a warning printed to stdout.
  *
- * InputLens entries in the parameter file must be One,Mono,BrokenPowerLaw,Salpeter,IMFPowerLaw,Kroupa or Chabrier
+ * InputLens entries in the parameter file must be One,Mono,BrokenPowerLaw,Salpeter,SinglePowerLaw,Kroupa or Chabrier
  */
 
 bool InputParams::get(std::string label,IMFtype& value){
@@ -346,8 +346,8 @@ bool InputParams::get(std::string label,IMFtype& value){
 		use_number[i]++;
 		return true;
 	}
-	if(!char_values[i].compare("IMFPowerLaw")){
-		value = IMFPowerLaw;
+	if(!char_values[i].compare("SinglePowerLaw")){
+		value = SinglePowerLaw;
 		use_number[i]++;
 		return true;
 	}
@@ -362,7 +362,7 @@ bool InputParams::get(std::string label,IMFtype& value){
 		return true;
 	}
 
-	std::cout << label << " in parameter file " << paramfile_name << " needs to be Mono,BrokenPowerLaw,Salpeter,IMFPowerLaw,Kroupa or Chabrier!"<< std::endl;
+	std::cout << label << " in parameter file " << paramfile_name << " needs to be One, Mono, BrokenPowerLaw, Salpeter, SinglePowerLaw, Kroupa or Chabrier!"<< std::endl;
 	return false;
 }
 

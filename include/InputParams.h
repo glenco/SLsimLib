@@ -28,7 +28,7 @@ typedef enum {PS, ST, PL} MassFuncType;
 typedef enum {null, ana_lens, moka_lens} InputLens;
 /// names of clump and sb models
 typedef enum {nfw,powerlaw,pointmass} ClumpInternal;
-enum IMFtype {One,Mono,BrokenPowerLaw,Salpeter,IMFPowerLaw,Kroupa,Chabrier};
+enum IMFtype {One,Mono,BrokenPowerLaw,Salpeter,SinglePowerLaw,Kroupa,Chabrier};
 enum Band {SDSS_U,SDSS_G,SDSS_R,SDSS_I,SDSS_Z,J,H,Ks,i1,i2};
 
 

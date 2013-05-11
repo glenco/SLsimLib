@@ -261,6 +261,21 @@ float* BaseAnaLens::stellar_mass_function(IMFtype type, unsigned long Nstars, lo
     	}
 	}
 
+    if(type==SinglePowerLaw){
+       	if((minmass==maxmass) || (powerlo!=powerhi) || ((powerlo==0)&(powerhi==0))){
+       			    cout << "For IMF type SinglePowerLaw min_mstar, max_mstar and slope_1 must be defined in parameter file. Slope_1 must be equal to slope_2, min_mstar must be different from max_mstar!" << endl;
+       			    exit(1);
+       	}
+
+       	powerp1 = powerlo+1.0;
+       	n0 = (pow(maxmass,powerp1)) /powerp1;
+       	n1 =  n0 - (pow(minmass,powerp1)) / powerp1;
+       	for(i = 0; i < Nstars; i++){
+       		star_masses[i] = pow( (-powerp1*(n1*ran2(seed)-n0)),(1.0/powerp1) );
+       	}
+   	}
+
+
     if(type==BrokenPowerLaw){
     	if((powerlo==powerhi)){
     		cout << "For IMF type BrokenPowerLaw inner slope (slope_1) and outer slope (slope_2) must be defined in parameter file" << endl;
