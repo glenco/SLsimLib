@@ -18,8 +18,8 @@ using namespace std;
 
 void BaseAnaLens::implant_stars(Point *centers,unsigned long Nregions,long *seed, IMFtype type){
 	PosType r,theta,NstarsPerImage;
+	double *mean_mstar;
 	unsigned long i,j,m,k;
-	//float maxr;
 
 	if(stars_N < 1.0  || star_fstars <= 0) return;
 	if(star_fstars > 1.0){ std::printf("fstars > 1.0\n"); exit(0); }
@@ -29,10 +29,10 @@ void BaseAnaLens::implant_stars(Point *centers,unsigned long Nregions,long *seed
 		stars = new unsigned long[stars_N];
 		stars_xp = Utilities::PosTypeMatrix(stars_N,3);
 		star_theta_force = 1.0e-1;
-
 		assert(Nregions > 0);
 		star_Nregions = Nregions;
 		star_region = new double[Nregions];
+		mean_mstar = new double[Nregions];
 		star_kappa = new double[Nregions];
 		star_xdisk = Utilities::PosTypeMatrix(Nregions,2);
 
@@ -49,6 +49,7 @@ void BaseAnaLens::implant_stars(Point *centers,unsigned long Nregions,long *seed
 		for(j=0,m=0;j<Nregions;++j){
 			star_region[j] = 0.0;
 			star_kappa[j] = 0.0;
+			mean_mstar[j] = 0.0;
 			star_xdisk[j][0] = centers[j].x[0];
 			star_xdisk[j][1] = centers[j].x[1];
 
@@ -57,26 +58,55 @@ void BaseAnaLens::implant_stars(Point *centers,unsigned long Nregions,long *seed
 	}
 
 	//params.get("mass_max",sub_Mmax)
+	NstarsPerImage = stars_N/star_Nregions;
 	star_masses=stellar_mass_function(type, stars_N, seed, min_mstar, max_mstar, bend_mstar,lo_mass_slope,hi_mass_slope);
+	if (type==One){
+		for(j=0;j<Nregions;++j){
+			mean_mstar[j]=1.0;
+		}
+	}
+	else if(type==Mono){
+		for(j=0;j<Nregions;++j){
+			mean_mstar[j]=min_mstar;
+		}
+	}
+	else{
+		for(j=0,m=0;j<Nregions;++j){
+			mean_mstar[j] = 0.0;
+			for(i=0;i<NstarsPerImage;++i,++m){
+				mean_mstar[j]+=star_masses[m];
+			}
+			mean_mstar[j]/=NstarsPerImage;
+			//cout << "mean_mstar: " << j << " " << mean_mstar[j] << endl;
+		}
+	}
 
 	for(j=0,m=0;j<Nregions;++j){
 
 		assert( centers[j].kappa > 0.0);
 
-		NstarsPerImage = stars_N/star_Nregions;
-		//cout << "NstarsPerImage: " << NstarsPerImage << endl; // remove
+		star_kappa[j] = star_fstars*centers[j].kappa;
+		star_region[j] = 1.0/sqrt(pi*star_kappa[j]*Sigma_crit/(mean_mstar[j]*(float)NstarsPerImage));
 
-		star_region[j] = 1.0/sqrt(pi*star_fstars*centers[j].kappa*Sigma_crit
+		//cout << "kappastar: " << star_kappa[j] << endl;
+		//cout << "fstar: " << star_kappa[j]/centers[j].kappa << endl;
+		//cout << "rstar: " << star_region[j] << endl;
+
+		/* star_region[j] = 1.0/sqrt(pi*star_fstars*centers[j].kappa*Sigma_crit
 				/star_massscale/(float)NstarsPerImage);
+			cout << "PREVIOUS rstar: " << star_region[j] << endl;
+		    cout << star_region[j] << " " << star_fstars <<  " " << centers[j].kappa << " " << Sigma_crit << " " << star_massscale << " " << NstarsPerImage << endl;
+		 */
 
-
-		cout << star_region[j] << " " << star_fstars <<  " " << centers[j].kappa << " " << Sigma_crit << " " << star_massscale << " " << NstarsPerImage << endl;
-		//cout << "Sigma_star= " << (float)NstarsPerImage*star_massscale/(pi*pow(star_region[j],2)) << endl;
 		// cutoff based on comparison of star deflection to smooth component
 		//rcut = 4*sqrt(star_massscale/pi/Sigma_crit
 		//		/( centers[j].kappa+sqrt(pow(centers[j].gamma[0],2)+pow(centers[j].gamma[1],2)) ) );
 
-		star_kappa[j] = star_fstars*centers[j].kappa;
+		//if( (type!=One) && (type!=Mono)) {
+
+		//}else{
+
+		//}
 
 		star_xdisk[j][0] = centers[j].x[0];
 		star_xdisk[j][1] = centers[j].x[1];
