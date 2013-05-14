@@ -199,6 +199,6 @@ void CausticData::SortByCritSize(){
   std::sort(data.begin(),data.end(),comparcritsize);
 }
 
-bool comparcritsize(CausticStructure &caust1,CausticStructure &caust2){
+bool comparcritsize(const CausticStructure &caust1,const CausticStructure &caust2){
   return (caust1.crit_radius[0] > caust2.crit_radius[0]);
 }
