@@ -202,8 +202,18 @@ bool InputParams::get(std::string label,IntProfType& value){
 		use_number[i]++;
 		return true;
 	}
-	if(!char_values[i].compare("4") || !char_values[i].compare("NFW_NSIE")){
-		value = NFW_NSIE;
+	if(!char_values[i].compare("4") || !char_values[i].compare("AnaNSIE")){
+		value = AnaNSIE;
+		use_number[i]++;
+		return true;
+	}
+	if(!char_values[i].compare("5") || !char_values[i].compare("UniNSIE")){
+		value = UniNSIE;
+		use_number[i]++;
+		return true;
+	}
+	if(!char_values[i].compare("4") || !char_values[i].compare("PointMass")){
+		value = PointMass;
 		use_number[i]++;
 		return true;
 	}

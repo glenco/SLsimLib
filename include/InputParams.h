@@ -23,7 +23,7 @@
 
 #include "standard.h"
 
-typedef enum {PowerLaw, NFW, PseudoNFW, NSIE, NFW_NSIE} IntProfType;
+typedef enum {PowerLaw, NFW, PseudoNFW, NSIE, AnaNSIE, UniNSIE, PointMass} IntProfType;
 typedef enum {PS, ST, PL} MassFuncType;
 typedef enum {null, ana_lens, moka_lens} InputLens;
 /// names of clump and sb models

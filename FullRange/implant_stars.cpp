@@ -6,8 +6,7 @@
  */
 
 #include "slsimlib.h"
-#include <iostream> // remove
-#include <sstream> // remove
+
 using namespace std;
 /** \ingroup ChangeLens
  * \brief  Implants stars into the lens around the images.
@@ -16,7 +15,7 @@ using namespace std;
  * allocates all memory for stars
  */
 
-void BaseAnaLens::implant_stars(Point *centers,unsigned long Nregions,long *seed, int mftype){
+void NSIELensHalo::implant_stars(Point *centers,unsigned long Nregions,long *seed, int mftype){
 	PosType r,theta,NstarsPerImage;
 	unsigned long i,j,m,k;
 	//float maxr;
@@ -147,7 +146,7 @@ void BaseAnaLens::implant_stars(Point *centers,unsigned long Nregions,long *seed
 
 /// subtracts the mass in stars from the smooth model to compensate
 /// for the mass of the stars the lensing quantities are all updated not replaced
-void BaseAnaLens::substract_stars_disks(double *ray,double *alpha
+void NSIELensHalo::substract_stars_disks(double *ray,double *alpha
 		,KappaType *kappa,KappaType *gamma){
 
 	if(!(stars_implanted)) return;
@@ -188,7 +187,7 @@ void BaseAnaLens::substract_stars_disks(double *ray,double *alpha
  * 2 - broken power law, requires lower mass end slope (powerlo), high mass slope (powerhi), bending point (bendmass)
  * 3 - further IMF models may follow
  */
-float* BaseAnaLens::stellar_mass_function(int mftype, unsigned long Nstars, long *seed, double minmass, double maxmass, double bendmass, double powerlo, double powerhi){
+float* NSIELensHalo::stellar_mass_function(int mftype, unsigned long Nstars, long *seed, double minmass, double maxmass, double bendmass, double powerlo, double powerhi){
 	//if(!(stars_implanted)) return;
 	unsigned long i;
 	double powerp1,powerlp1,shiftmax,shiftmin,n0,n1,n2,rndnr;

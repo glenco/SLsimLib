@@ -17,7 +17,7 @@ static double oldsm;//,tang[2],length,yot[2],radsourceT;
  *
  */
 
-void AnaLens::FindLensSimple(
+void AnaNSIELensHalo::FindLensSimple(
 		int Nimages               /// Number of images to be fit
 		,Point *image_positions   /// Array of points with point[i].x set to the image positions
 		,double *y                /// output source position
@@ -43,7 +43,7 @@ void AnaLens::FindLensSimple(
  *
  */
 
-void AnaLens::FindLensSimple(
+void AnaNSIELensHalo::FindLensSimple(
 		ImageInfo *imageinfo    /// Positions of images relative to center of lens.  Only imageinfo[].centoid[] is used.
 		,int Nimages             /// input number of images
 		,double *y               /// output source position
@@ -124,8 +124,8 @@ void AnaLens::FindLensSimple(
 	x_center[0] *= scale;
 	x_center[1] *= scale;
 
-	host_ro = 0.0; // the monople is now included in the modes
-	host_sigma = 0.0;
+	Einstein_ro = 0.0; // the monople is now included in the modes
+	sigma = 0.0;
 
 	free_dmatrix(xob,0,Nimages-1,0,1);
 	free_dmatrix(xg,0,1,0,1);
@@ -153,7 +153,7 @@ void AnaLens::FindLensSimple(
 *
 *************************************
 **************************************/
-double AnaLens::ElliptisizeLens(
+double AnaNSIELensHalo::ElliptisizeLens(
 		int Nimages   /// number of images
 		,int Nsources /// number of sources
 		,int Nlenses  /// number of lens centers
@@ -516,7 +516,7 @@ void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *x_cent
 *        - x2 - position of second lens relative to center of lens
 ***************************************************************/
 
-double AnaLens::deflect_translated(double beta,double *mod,double *x,double *y,double *mag,int Nmodes
+double AnaNSIELensHalo::deflect_translated(double beta,double *mod,double *x,double *y,double *mag,int Nmodes
 		  ,int Nlenses,double Re2,double *x2){
 	KappaType kappa,gamma[2],dt;
 
@@ -782,7 +782,7 @@ double minaxis(double thetaX){
 }
 
 
-int AnaLens::check_model(int Nimages,int Nsources,int Nlenses,int *pairing,double **xob,double *x_center
+int AnaNSIELensHalo::check_model(int Nimages,int Nsources,int Nlenses,int *pairing,double **xob,double *x_center
 		,int Nmod,double *mod,double **xg,double Re2,double **dx_sub,double **Amag,double ytol){
   int i;
   double dy,dymax,tmp[2],kappa,mag[3],x2[2],par;

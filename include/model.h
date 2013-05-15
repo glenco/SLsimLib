@@ -8,8 +8,7 @@
 #ifndef MODEL_H_
 #define MODEL_H_
 
-#include <analytic_lens.h>
-#include <uniform_lens.h>
+#include <singlelens.h>
 #include <multiplane.h>
 #include <source.h>
 #include "parameters.h"
@@ -32,7 +31,7 @@
  * etc.
  *
  */
-template <class L=AnaLens, class S=SourceUniform> class Model{
+template <class L=SingleLens, class S=SourceUniform> class Model{
 public:
 
 	L* lens;

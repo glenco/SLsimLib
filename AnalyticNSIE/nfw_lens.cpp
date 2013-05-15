@@ -3,7 +3,7 @@
  *      Author: R.B. Metcalf
  */
 
-#include "analytic_lens.h"
+#include "lens_halos.h"
 
 /// deflection caused by NFW halo
 void alphaNFW(double *alpha,double *x,double Rtrunc,double mass,double r_scale
