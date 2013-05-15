@@ -229,7 +229,7 @@ float* BaseAnaLens::stellar_mass_function(IMFtype type, unsigned long Nstars, lo
 		,double minmass, double maxmass, double bendmass, double powerlo, double powerhi){
 	//if(!(stars_implanted)) return;
 	unsigned long i;
-	double powerp1,powerlp1,shiftmax,shiftmin,n0,n1,n2,rndnr;
+	double powerp1,powerlp1,shiftmax,shiftmin,n0,n1,n2,rndnr,tmp0,tmp1,tmp2;
 	float *star_masses = new float[Nstars];
 
 	if(type==One){
@@ -275,6 +275,30 @@ float* BaseAnaLens::stellar_mass_function(IMFtype type, unsigned long Nstars, lo
        	}
    	}
 
+
+    if(type==Chabrier){
+		if(minmass==maxmass){
+			cout << "For IMF type Chabrier min_mstar and max_mstar must be defined in parameter file!" << endl;
+			exit(1);
+		}
+		double chab_param[]={0.086,0.22,0.57};
+		powerp1=-1.3;
+		tmp0=2.0*chab_param[2]*chab_param[2];
+		tmp1=chab_param[0]/(log(10.0)*log(10.0))*exp((-(log10(chab_param[1]))*(log10(chab_param[1])))/tmp0);
+		tmp2=-0.5*chab_param[0]/log(10)*sqrt(pi)*sqrt(tmp0);
+		n1=tmp2*(erff(log10(chab_param[1])/sqrt(tmp0))-erff((log10(chab_param[1])-log10(minmass))/sqrt(tmp0)));
+		n2=tmp1/powerp1*(pow(maxmass,powerp1)-1.0);
+		n0=n1+n2;
+		for(i = 0; i < Nstars; i++){
+			rndnr=ran2(seed);
+			if(rndnr<(n1/n0)){
+				star_masses[i]=pow(10.0,(log10(chab_param[1])-sqrt(2.*chab_param[2]*chab_param[2])*erfinv((n0*rndnr)/tmp2+erff((log10(chab_param[1])-log10(minmass))/(sqrt(2.*chab_param[2]*chab_param[2])) ) )));
+			}
+			else{
+				star_masses[i]=pow( ((n0*rndnr-n1)*powerp1/tmp1 +1.0),(1./powerp1) );
+			}
+		}
+	}
 
     if(type==BrokenPowerLaw){
     	if((powerlo==powerhi)){
