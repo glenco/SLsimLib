@@ -56,7 +56,7 @@ namespace Utilities{
 	 *		<< "  " << mvector.index<SourceGaussian>(1).source_gauss_r2
 	 *		<< endl;
 	 *
-	 *<\pre>
+	 *</pre>
 	 */
 	template <class BaseClass,class DClass1,class DClass2>
 	class MixedVector{
