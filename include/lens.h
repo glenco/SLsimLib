@@ -10,11 +10,12 @@
 #include <point.h>
 #include <source.h>
 
+
+
 /// An abstract base class to represent a gravitational lens.
 class Lens {
 public:
 	int Nplanes;
-
 	double zlens;
 	/// output file, not always used.
 	//std::string outputfile;

@@ -42,6 +42,14 @@ void UniNSIELensHalo::assignParams(InputParams& params){
 	if(!params.get("kappa_uniform",kappa_uniform)) error_message1("kappa_uniform",params.filename());
 	if(!params.get("gamma_uniform_1",gamma_uniform[0])) error_message1("gamma_uniform_1",params.filename());
 	if(!params.get("gamma_uniform_2",gamma_uniform[1])) error_message1("gamma_uniform_2",params.filename());
+
+	if(!params.get("stellar_mass_function",imf_type)) error_message1("stellar_mass_function",params.filename());
+	if(!params.get("min_mstar",min_mstar)) error_message1("min_mstar",params.filename());
+	if(!params.get("max_mstar",max_mstar)) error_message1("max_mstar",params.filename());
+	if(!params.get("bending_point",bend_mstar)) error_message1("bending_point",params.filename());
+	if(!params.get("slope_1",lo_mass_slope)) error_message1("slope_1",params.filename());
+	if(!params.get("slope_2",hi_mass_slope)) error_message1("slope_2",params.filename());
+
 	return;
 }
 
@@ -63,7 +71,9 @@ void UniNSIELensHalo::PrintLens(bool show_substruct,bool show_stars){
 
 }
 
-void UniNSIELensHalo::implant_stars(double x, double y, unsigned long Nregions,long *seed, int mftype){
+
+void UniNSIELensHalo::implant_stars(double x, double y, unsigned long Nregions,long *seed, IMFtype type){
+
 	if(Nregions <= 0) return;
 	Point *centers;
 	gamma_uniform[2]=0.0; // TODO gamma_uniform[2] determines rotation for multiplane lens, how shall it be implemented here?
@@ -74,7 +84,8 @@ void UniNSIELensHalo::implant_stars(double x, double y, unsigned long Nregions,l
 	centers[0].gamma[0]=gamma_uniform[0];
 	centers[0].gamma[1]=gamma_uniform[1];
 	centers[0].gamma[2]=gamma_uniform[2];
-	BaseNSIELensHalo::implant_stars(centers,Nregions,seed,mftype);
+
+	BaseNSIELensHalo::implant_stars(centers,Nregions,seed,type);
 }
 
 

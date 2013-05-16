@@ -58,9 +58,9 @@ void CausticData::resize(size_t size){
 
 /// Read in data from a caustic catalog file
 void CausticData::readfile(std::string filename){
-  
+
   data.clear();
-  
+
   std::ifstream file_in(filename.c_str());
   std::string myline;
   std::string space = " ";
@@ -96,20 +96,20 @@ void CausticData::readfile(std::string filename){
       std::cout << "skipped line " << i << std::endl;
 			continue;
     }
-    /*
-     if(causticdata[i].crit_radius[0] > 0 ){
-     //*** need to calculate area and max min sizes
-     catalog_caustic << z_sources
-     << " " << causticdata[i].crit_center[0] << " " << causticdata[i].crit_center[1]
-     << " " << causticdata[i].crit_radius[0] << " " << causticdata[i].crit_radius[2]
-     << " "<< causticdata[i].crit_radius[1]  << " " << imageinfo[i].area
-     << " " << causticdata[i].caustic_center[0] << " " << causticdata[i].caustic_center[1]
-     << " " << causticdata[i].caustic_radius[0] << " " << causticdata[i].caustic_radius[2]   << " "
-     << causticdata[i].caustic_radius[1]
-     << " " << causticdata[i].caustic_area
-     << std::endl;
-     }*/
-    
+	/*
+	 if(causticdata[i].crit_radius[0] > 0 ){
+	 //*** need to calculate area and max min sizes
+	 catalog_caustic << z_sources
+	 << " " << causticdata[i].crit_center[0] << " " << causticdata[i].crit_center[1]
+	 << " " << causticdata[i].crit_radius[0] << " " << causticdata[i].crit_radius[2]
+	 << " "<< causticdata[i].crit_radius[1]  << " " << imageinfo[i].area
+	 << " " << causticdata[i].caustic_center[0] << " " << causticdata[i].caustic_center[1]
+	 << " " << causticdata[i].caustic_radius[0] << " " << causticdata[i].caustic_radius[2]   << " "
+	 << causticdata[i].caustic_radius[1]
+	 << " " << causticdata[i].caustic_area
+	 << std::endl;
+	 }*/
+
 		for(int l=0;l<ncolumns; l++){
 			pos = myline.find(space);
 			strg.assign(myline,0,pos);
@@ -210,7 +210,7 @@ void CausticData::printfile(std::string filename,std::string paramfile,double fi
   
   catalog_caustic << "# " << " all critical lines above a scale of " << 180*60*60*minscale/pi << " arcsec,  field of view: " << fieldofview << " square degrees" << std::endl;
 
-  
+
   for(size_t i = 0; i < data.size(); ++i){
     catalog_caustic << data[i].redshift
     << " " << data[i].crit_center[0] << " " << data[i].crit_center[1]
