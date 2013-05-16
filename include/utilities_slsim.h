@@ -87,6 +87,13 @@ namespace Utilities{
 			v_class2.clear();
 		}
 
+		/// clear all elements of a given type
+		template <typename T>
+		void clear(){
+			if(typeid(T) == typeid(DClass1)) v_class1.clear();
+			if(typeid(T) == typeid(DClass2)) v_class2.clear();
+		}
+
 		/// erase the last element of a specific type
 		template <typename T>
 		void pop(){
@@ -95,14 +102,13 @@ namespace Utilities{
 		}
 
 
+		/// Checks if derived type is one of the allowed types (returns true) for this object
 		template <typename T>
-		T & operator[](size_t in){
-			if(typeid(T) == typeid(DClass1)) return dynamic_cast<T &> (v_class1[in]);
-			if(typeid(T) == typeid(DClass2)) return dynamic_cast<T &> (v_class2[in]);
+		bool CheckType(){
+			if(typeid(T) == typeid(DClass1)) return true;
+			if(typeid(T) == typeid(DClass2)) return true;
 
-			ERROR_MESSAGE();
-			std::cout << "MixedVector::[] accessed with invalid type." << std::endl;
-			exit(1);
+			return false;
 		}
 
 
