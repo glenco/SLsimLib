@@ -28,7 +28,7 @@ namespace Utilities{
 	 * a base class and retains the ability to access derived class functions/members.
 	 *
 	 * The indexing operator is overridden to return a reference to the base class and
-	 * a templated dereferencing operator provides a reference to elements with derived class
+	 * a templated index<>() function provides a reference to elements with derived class
 	 * type information.
 	 *
 	 *
@@ -92,9 +92,6 @@ namespace Utilities{
 		void pop(){
 			if(typeid(T) == typeid(DClass1)) v_class1.pop_back();
 			if(typeid(T) == typeid(DClass2)) v_class2.pop_back();
-
-			ERROR_MESSAGE();
-			std::cout << "MixedVector::pop() accessed with invalid type." << std::endl;
 		}
 
 
