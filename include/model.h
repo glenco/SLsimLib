@@ -20,14 +20,14 @@
  * The template class will then be created from the main() function as:
  * e.g. Model<MultiLens,SourceUniform>* model = new Model<MultiLens,SourceUniform>(paramfile,&seed);
  *
- * The default values of the Model template are AnaLens and SourceUnifrom, which can de allocated as
+ * The default values of the Model template are AnaNSIELensHalo and SourceUnifrom, which can de allocated as
  * Model<>* model = new Model<>(paramfile);
  * equivalent to
- * Model<AnaLens,SourceUniform>* model = new Model<AnaLens,SourceUniform>(paramfile);
+ * Model<AnaNSIELensHalo,SourceUniform>* model = new Model<AnaNSIELensHalo,SourceUniform>(paramfile);
  *
  * the parameters correspond to the ones that the lens need. For example
  * MultiPlane == paramfile + seed
- * AnaLens == paramfile
+ * AnaNSIELensHalo == paramfile
  * etc.
  *
  */
@@ -49,7 +49,7 @@ public:
 
 		setInternal();
 	};
-	/// For the AnaLens one
+	/// For the AnaNSIELensHalo one
 	Model(std::string paramfile){
 		params = new InputParams(paramfile);
 

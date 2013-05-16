@@ -10,7 +10,7 @@
 /** \ingroup DeflectionL2
  *
  * \brief Routine for calculating the deflection and other lensing quantities for
- * a analytic one plane lens (AnaLens).
+ * a analytic one plane lens (AnaNSIELensHalo).
  *
  * Can be switched with rayshooterNB() to change
  * to particle lens model.  This transition needs to be made more automatic and
@@ -32,10 +32,10 @@ struct TmpParams{
 	int tid;
 	int start;
 	int size;
-	BaseAnaLens *lens;
+	SingleLens *lens;
 };
 
-void BaseAnaLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off){
+void SingleLens::rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off){
 
     if(this == NULL || !set){
     	ERROR_MESSAGE();
@@ -80,7 +80,7 @@ void BaseAnaLens::rayshooterInternal(unsigned long Npoints, Point *i_points, boo
 void *compute_rays_parallel_nfw(void *_p){
 	TmpParams *p = (TmpParams *) _p;
 	bool kappa_off = p->kappa_off;
-	BaseAnaLens *lens = p->lens;
+	SingleLens *lens = p->lens;
 	int tid        = p->tid;
 	int chunk_size = p->size;
 	int start      = p->start;
@@ -232,10 +232,10 @@ void *compute_rays_parallel_nfw(void *_p){
 /** \ingroup DeflectionL2
    *
    * \brief Routine for calculating the deflection and other lensing quantities for
-   * a analytic one plane lens (AnaLens), for just one ray!!
+   * a analytic one plane lens (AnaNSIELensHalo), for just one ray!!
    *
 */
-void BaseAnaLens::rayshooterInternal(double *ray, double *alpha, KappaType *gamma, KappaType *kappa, bool kappa_off){
+void SingleLens::rayshooterInternal(double *ray, double *alpha, KappaType *gamma, KappaType *kappa, bool kappa_off){
      double x_rescale[2];
      long j;
      double alpha_tmp[2];

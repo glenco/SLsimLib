@@ -192,11 +192,11 @@ private:
 	}
 };
 
-class BaseNSIELensHalo : public LensHalo{
+class SimpleNSIELensHalo : public LensHalo{
 public:
-	BaseNSIELensHalo();
-	BaseNSIELensHalo(InputParams& params);
-	virtual ~BaseNSIELensHalo();
+	SimpleNSIELensHalo();
+	SimpleNSIELensHalo(InputParams& params);
+	virtual ~SimpleNSIELensHalo();
 
 	void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa);
 
@@ -232,183 +232,8 @@ protected:
 
 };
 
-class QuadTree;
-
-class NSIELensHalo : public BaseNSIELensHalo{
-public:
-	NSIELensHalo(InputParams& params);
-	virtual ~NSIELensHalo();
-
-	bool AreSubStructImaplated(){return substruct_implanted;};
-	bool AreStarsImaplated(){return stars_implanted;};
-
-	void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa);
-
-	void setInternalParams(CosmoHndl cosmo, double zsource);
-
-	// These need to be in the base class because they are used in the rayshooter function which because of parrelleization is not a member function
-	double getEinstein_ro(){return Einstein_ro;}
-
-	double getPerturb_beta(){return perturb_beta;}
-
-	int getPerturb_Nmodes(){return perturb_Nmodes;}    /// this includes two for external shear
-
-	double averageSubMass();
-	void reNormSubstructure(double kappa_sub);
-	void substract_stars_disks(PosType *ray,PosType *alpha
-			,KappaType *kappa,KappaType *gamma);
-	void implant_stars(Point *centers,unsigned long Nregions,long *seed,int mftype=0);
-	float* stellar_mass_function(int mftype, unsigned long Nstars, long *seed, double minmass=0.1, double maxmass=100
-			,double bendmass=1.0, double powerlo=-0.3, double powerhi=-2.35);
-
-protected:
-	/// substructures
-	double sub_sigmaScale;
-	double sub_Ndensity;
-	/// actual number of substructures
-	int sub_N;
-	double **sub_x;
-	LensHalo *subs;
-	/// slope of mass profile
-	double sub_beta;
-	/// slope of mass function
-	double sub_alpha;
-	/// radius of largest mass substructures
-	double sub_Rmax;
-	double sub_Mmax;
-	double sub_Mmin;
-	double sub_theta_force;
-	QuadTree *sub_tree;
-	IndexType *sub_substructures;
-	ClumpInternal sub_type;
-
-	/// stars
-	int stars_N;
-	IndexType *stars;
-	PosType **stars_xp;
-	//ForceTree *star_tree;
-	QuadTree *star_tree;
-	double star_massscale;
-	/// star masses relative to star_massscles
-	float *star_masses;
-	double star_fstars;
-	double star_theta_force;
-	int star_Nregions;
-	double *star_region;
-
-	void assignParams(InputParams& params);
-
-	void error_message1(std::string name,std::string filename);
-
-	// in readlens_ana.c
-
-	double *perturb_modes;  ///first two are shear
-
-	// perturbations to host.  These are protected so that in some derived classes they can or cann't be changed.
-	int perturb_Nmodes;    /// this includes two for external shear
-	double perturb_beta;
-	double *perturb_rms;
-
-	bool substruct_implanted;
-
-	bool stars_implanted;
-	/// Number of regions to be subtracted to compensate for the mass in stars
-
-	double *star_kappa;
-	double **star_xdisk;
-
-	// private derived quantities
-	double Sigma_crit;
-	double Einstein_ro;
-	/// private: conversion factor between Mpc on the lens plane and arcseconds
-	double MpcToAsec;
-	double to;
-};
-
-class AnaNSIELensHalo : public NSIELensHalo{
-public:
-	AnaNSIELensHalo(InputParams& params);
-	~AnaNSIELensHalo();
-
-	double FractionWithinRe(double rangeInRei);
-
-	// in randoimize_lens.c
-	void RandomizeHost(long *seed,bool tables);
-	void RandomizeSigma(long *seed,bool tables);
-	void RandomlyDistortLens(long *seed,int Nmodes);
-	void AlignedRandomlyDistortLens(long *seed,double theta,int n);
-	void RandomizeSubstructure(double rangeInRei,long *seed);
-	void RandomizeSubstructure2(double rangeInRei,long *seed);
-	void RandomizeSubstructure3(double rangeInRei,long *seed);
-
-	void FindLensSimple(int Nimages,Point *image_positions,double *y,double **dx_sub);
-	void FindLensSimple(ImageInfo *imageinfo ,int Nimages ,double *y,double **dx_sub);
-
-protected:
-
-	void assignParams(InputParams& params);
-
-	// Things added to manipulate and fit lenses.
-	int check_model(int Nimages,int Nsources,int Nlenses,int *pairing,double **xob,double *x_center
-			,int Nmod,double *mod,double **xg,double Re2,double **dx_sub,double **Amag,double ytol);
-	double find_axis(double *mod,int Nmod);
-	double deflect_translated(double beta,double *mod,double *x,double *y,double *mag,int N
-			,int Nlenses,double Re2,double *x2);
-	double ElliptisizeLens(int Nimages,int Nsources,int Nlenses,int *pairing,double **xob
-			,double *xc,double **xg,double sigG,double beta,int Nmod
-			,double *mod,double **dx,double *re2,double *q);
-};
-
-class UniNSIELensHalo : public NSIELensHalo{
-public:
-	UniNSIELensHalo(InputParams& params);
-	~UniNSIELensHalo();
-
-	void implant_stars(double x,double y,unsigned long Nregions,long *seed,int mftype=0);
-	float getKappa_uniform(){return kappa_uniform;}
-	float* getGamma_uniform(){return gamma_uniform;}
-	double getAveMag(){ return 1.0/( pow(1-kappa_uniform,2) - gamma_uniform[0]*gamma_uniform[0] - gamma_uniform[1]*gamma_uniform[1]);}
-
-protected:
-	void assignParams(InputParams& params);
-
-	float kappa_uniform;
-	float gamma_uniform[3];
-};
 
 typedef LensHalo* LensHaloHndl;
 
 
-namespace Utilities{
-	double RandomFromTable(double *table,unsigned long Ntable,long *seed);
-	void rotation(float *xout,float *xin,double theta);
-	void rotation(double *xout,double *xin,double theta);
-}
-
-
-double lens_expand(double beta,double *mod,int Nmodes,double *x,double *alpha,KappaType *gamma,KappaType *phi);
-
-void alphaNSIE(double *alpha,double *xt,double f,double bc,double theta);
-KappaType kappaNSIE(double *xt,double f,double bc,double theta);
-void gammaNSIE(KappaType *gam,double *xt,double f,double bc,double theta);
-KappaType invmagNSIE(double *x,double f,double bc,double theta
-                     ,float *gam,float kap);
-double rmaxNSIE(double sigma,double mass,double f,double rc );
-double ellipticRadiusNSIE(double *x,double f,double pa);
-void quadMomNSIE(float mass,float Rmax,float f,float rc,float theta,double *quad);
-
-//  in powerlow.c
-
-void alphaPowLaw(double *alpha,double *x,double R,double mass,double beta,double *center,double Sigma_crit);
-KappaType kappaPowLaw(double *x,double R,double mass,double beta,double *center,double Sigma_crit);
-void gammaPowLaw(KappaType *gamma,double *x,double R,double mass,double beta,double *center,double Sigma_crit);
-KappaType phiPowLaw(double *x,double R,double mass,double beta,double *center,double Sigma_crit);
-
-// in nfw_lens.c
-void alphaNFW(double *alpha,double *x,double Rtrunc,double mass,double r_scale
-                ,double *center,double Sigma_crit);
-KappaType kappaNFW(double *x,double Rtrunc,double mass,double r_scale
-                ,double *center,double Sigma_crit);
-void gammaNFW(KappaType *gamma,double *x,double Rtrunc,double mass,double r_scale
-                ,double *center,double Sigma_crit);
 #endif /* LENS_HALOS_H_ */

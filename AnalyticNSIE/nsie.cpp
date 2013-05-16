@@ -5,7 +5,7 @@
 *  convention here is gamma_1 = -(Axx-Ayy)/2 and gamma_2= -Axy
 */
 
-#include "lens_halos.h"
+#include "base_analens.h"
 
 /** \ingroup DeflectionL2 \ingroup function
  * \brief Deflection angle for non-singular isothermal ellipsoid in units of Einstein radii

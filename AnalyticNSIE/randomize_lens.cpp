@@ -471,7 +471,7 @@ double AnaNSIELensHalo::FractionWithinRe(double rangeInRei){
 				);
 }
 
-double NSIELensHalo::averageSubMass(){
+double BaseNSIELensHalo::averageSubMass(){
 	// average mass of substructures
 	return sub_Mmax*(sub_alpha+1)
 				  /(sub_alpha+2)*(1-pow(sub_Mmin/sub_Mmax,sub_alpha+2))/

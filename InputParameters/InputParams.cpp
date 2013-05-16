@@ -260,7 +260,7 @@ bool InputParams::get(std::string label,MassFuncType& value){
  * is returned.  If the parameter in the file does not "match" the type
  * of value false will also be returned and a warning printed to stdout.
  *
- * InputLens entries in the parameter file must be 0 through 2 or nolens, AnaLens (analytic lens) or MOKALens (MOKA Lens).
+ * InputLens entries in the parameter file must be 0 through 2 or nolens, AnaNSIELensHalo (analytic lens) or MOKALens (MOKA Lens).
  */
 
 bool InputParams::get(std::string label,InputLens& value){

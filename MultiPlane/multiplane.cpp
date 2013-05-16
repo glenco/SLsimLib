@@ -459,7 +459,7 @@ void MultiLens::buildHaloTrees(
 }
 
 /*
- * Builds the halo trees for a test without an AnaLens and
+ * Builds the halo trees for a test without an AnaNSIELensHalo and
  * with just two lensing planes, used to test the convergence
  * of the ray-shooter.
  */
@@ -1040,7 +1040,7 @@ void MultiLens::createHaloData(
 
 				switch(internal_profile_galaxy){
 				case NSIE:
-					halos.push_back(new BaseNSIELensHalo);
+					halos.push_back(new SimpleNSIELensHalo);
 					break;
 				default:
 					ERROR_MESSAGE();
@@ -1291,7 +1291,7 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 				halos.push_back(new NFWLensHalo);
 				break;
 			case NSIE:
-				halos.push_back(new BaseNSIELensHalo);
+				halos.push_back(new SimpleNSIELensHalo);
 				break;
 			case PointMass:
 				halos.push_back(new LensHalo);
@@ -1344,7 +1344,7 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 
 				switch(internal_profile_galaxy){
 				case NSIE:
-					halos.push_back(new BaseNSIELensHalo);
+					halos.push_back(new SimpleNSIELensHalo);
 					break;
 				default:
 					ERROR_MESSAGE();

@@ -21,7 +21,7 @@ SingleLens::SingleLens(InputParams& params) : Lens(){
 		halo.push_back(new PseudoNFWLensHalo(params));
 		break;
 	case NSIE:
-		halo.push_back(new BaseNSIELensHalo(params));
+		halo.push_back(new SimpleNSIELensHalo(params));
 		break;
 	case AnaNSIE:
 		halo.push_back(new AnaNSIELensHalo(params));
@@ -52,7 +52,7 @@ SingleLens::SingleLens(InputParams& params) : Lens(){
 			halo.push_back(new PseudoNFWLensHalo(params));
 			break;
 		case NSIE:
-			halo.push_back(new BaseNSIELensHalo(params));
+			halo.push_back(new SimpleNSIELensHalo(params));
 			break;
 		case AnaNSIE:
 			halo.push_back(new AnaNSIELensHalo(params));
@@ -80,7 +80,7 @@ SingleLens::~SingleLens(){
 
 void SingleLens::assignParams(InputParams& params){
 	if(!params.get("DM_halo_type",DM_halo_type)) error_message1("DM_halo_type",params.filename());
-	if(!params.get("DM_halo_type",galaxy_halo_type)){
+	if(!params.get("galaxy_halo_type",galaxy_halo_type)){
 		Nprof = 1;
 	}
 	else{
@@ -101,8 +101,11 @@ double SingleLens::getZlens(){
 
 /// resets Zl, Dl, Sigma_crit, MpcToAsec
 void SingleLens::setZlens(CosmoHndl cosmo,double zl,double zsource){
-	halo->set_zlens(zl);
-	halo->setInternalParams(cosmo,zsource);
+	long j;
+	for(j=0;j<Nprof;j++){
+		halo[j]->set_zlens(zl);
+		halo[j]->setInternalParams(cosmo,zsource);
+	}
 }
 
 /// Sets parameters within BaseLens that depend on the source redshift - Dl,Sigma_crit,etc.
@@ -111,5 +114,8 @@ void SingleLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 }
 
 void SingleLens::setInternalParams(CosmoHndl cosmo, double zsource){
-	halo->setInternalParams(cosmo,zsource);
+	long j;
+	for(j=0;j<Nprof;j++){
+		halo[j]->setInternalParams(cosmo,zsource);
+	}
 }

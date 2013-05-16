@@ -11,7 +11,8 @@
 #include "standard.h"
 #include "InputParams.h"
 #include "lens.h"
-#include "lens_halos.h"
+#include "analytic_lens.h"
+#include "uniform_lens.h"
 
 
 class SingleLens : public Lens{

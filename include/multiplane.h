@@ -19,7 +19,7 @@
  *
  *<pre>
  *	The rays are traced through multiple deflections.  On each plane there is a deflection
- *	solver.  An AnaLens or MOKALens can be put on one of the planes.  The other planes can be
+ *	solver.  An AnaNSIELensHalo or MOKALens can be put on one of the planes.  The other planes can be
  *	populated with random halos drawn from a mass function or they can be retrieved from an
  *	external catalog.
  *
@@ -39,7 +39,7 @@
  *   Input Parameters:
  *
  *	Nplanes                     Number of lens planes
- *	flag_input_lens             Implanted lens - 0: no lens, 1: AnaLens, 2: MOKALens, The redshifts and internal parameters are the same as for constructing these lenses separately, see classes for each type of lens
+ *	flag_input_lens             Implanted lens - 0: no lens, 1: AnaNSIELensHalo, 2: MOKALens, The redshifts and internal parameters are the same as for constructing these lenses separately, see classes for each type of lens
  *	fov                         Field of view for the simulation region (not nessisarily the grided region)
  *	internal_profile            The internal profile type for the halos, 0 or PowerLaw,1 or NFW,2 or PseudoNFW, 3 or NSIE, 4 or NFW_NSIE .
  *  halo_to_galaxy_ratio        If NFW_NSIE is chosen this must be set to the ratio of the mass put in each component.

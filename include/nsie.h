@@ -7,7 +7,7 @@
 #ifndef simple_analens_declare
 #define simple_analens_declare
 
-/** \brief A simplified version of AnaLens */
+/** \brief A simplified version of AnaNSIELensHalo */
 typedef struct simple_analytic_lens{
   char outputfile[40];
   double zlens;

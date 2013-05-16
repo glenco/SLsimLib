@@ -15,7 +15,7 @@ using namespace std;
  * allocates all memory for stars
  */
 
-void NSIELensHalo::implant_stars(Point *centers,unsigned long Nregions,long *seed, int mftype){
+void BaseNSIELensHalo::implant_stars(Point *centers,unsigned long Nregions,long *seed, int mftype){
 	PosType r,theta,NstarsPerImage;
 	unsigned long i,j,m,k;
 	//float maxr;
@@ -139,14 +139,14 @@ void NSIELensHalo::implant_stars(Point *centers,unsigned long Nregions,long *see
 }
 
 // This allows the stars to be turned off after they have been implanted.
-/*void AnaLens::toggleStars(bool implanted){
+/*void AnaNSIELensHalo::toggleStars(bool implanted){
 	stars_implanted = implanted;
 }
 */
 
 /// subtracts the mass in stars from the smooth model to compensate
 /// for the mass of the stars the lensing quantities are all updated not replaced
-void NSIELensHalo::substract_stars_disks(double *ray,double *alpha
+void BaseNSIELensHalo::substract_stars_disks(double *ray,double *alpha
 		,KappaType *kappa,KappaType *gamma){
 
 	if(!(stars_implanted)) return;
@@ -187,7 +187,7 @@ void NSIELensHalo::substract_stars_disks(double *ray,double *alpha
  * 2 - broken power law, requires lower mass end slope (powerlo), high mass slope (powerhi), bending point (bendmass)
  * 3 - further IMF models may follow
  */
-float* NSIELensHalo::stellar_mass_function(int mftype, unsigned long Nstars, long *seed, double minmass, double maxmass, double bendmass, double powerlo, double powerhi){
+float* BaseNSIELensHalo::stellar_mass_function(int mftype, unsigned long Nstars, long *seed, double minmass, double maxmass, double bendmass, double powerlo, double powerhi){
 	//if(!(stars_implanted)) return;
 	unsigned long i;
 	double powerp1,powerlp1,shiftmax,shiftmin,n0,n1,n2,rndnr;

@@ -394,7 +394,7 @@ double minEllip(double *par){
 * - [2]=gamma2
 * - [3]=ao
 *******************************************************/
-//void AnaLens::find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *x_center,double beta
+//void AnaNSIELensHalo::find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *x_center,double beta
 void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *x_center,double beta
 	       ,int Nmodes,int *degen,double *mod,double **v,double **dx_sub){
 
@@ -745,7 +745,7 @@ void RotateModel(double thetaX,double *mod,int N,int Nsources){
 }
 
 
-double AnaLens::find_axis(double *mod,int Nmod){
+double AnaNSIELensHalo::find_axis(double *mod,int Nmod){
 	/********************************************
 	************* find rotation axis ***********
 	********************************************/
