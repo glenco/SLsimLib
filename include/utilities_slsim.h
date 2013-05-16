@@ -110,6 +110,19 @@ namespace Utilities{
 
 			return false;
 		}
+		/// Checks if element i is of the derived type T
+		template <typename T>
+		bool CheckType(size_t i){
+			if(i < v_class1.size()){
+				if(typeid(T) == typeid(DClass1)) return true;
+				return false;
+			}else if(i < v_class1.size() + v_class2.size()){
+				if(typeid(T) == typeid(DClass2)) return true;
+				return false;
+			}
+
+			return false;
+		}
 
 
 		/** \brief Templated indexing operator for elements of a specific derived class.
