@@ -103,6 +103,11 @@ public:
 	void SetInImage(Boo value);
 
 
+  bool OffBottom(){
+    return (current == &offbot);
+  }
+
+  
 	/// Returns a pointer to the current data.  Same as getCurrent.
 	Data *operator*(){return getCurrent();}
 	/// Same as Up()
@@ -130,6 +135,8 @@ private:
 	KistUnit<Data> *top;
 	KistUnit<Data> *bottom;
 	KistUnit<Data> *current;
+  
+  KistUnit<Data> offbot;
 
 };// Kist;
 
@@ -331,7 +338,10 @@ template <class Data> bool Kist<Data>::JumpDown(int jump){
 template <class Data> bool Kist<Data>::Down(){
 
 	if(Number == 0) return false;
-	if(current==bottom) return false;
+	if(current==bottom || current == &offbot){
+    current = &offbot;
+    return false;
+  }
 	current=current->next;
 
 	return true;

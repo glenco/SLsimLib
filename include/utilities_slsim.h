@@ -29,11 +29,14 @@ namespace Utilities{
 	 *
 	 * The indexing operator is overridden to return a reference to the base class and
 	 * a templated index<>() function provides a reference to elements with derived class
-	 * type information.
+	 * type information.  The order of the elements is not the same as the order in which 
+   * they were put in - DClass1 elements are listed first.  (This could be changed in the 
+   * future if need be.)
 	 *
 	 *
 	 *<pre>
 	 * example:
+   *
 	 * InputParams params(paramfile);
      * params.put("gauss_r2",1,"non");
  	 * SourceGaussian source1(params);
@@ -56,7 +59,7 @@ namespace Utilities{
 	 *		<< "  " << mvector.index<SourceGaussian>(1).source_gauss_r2
 	 *		<< endl;
 	 *
-	 *</pre>
+	 * </pre>
 	 */
 	template <class BaseClass,class DClass1,class DClass2>
 	class MixedVector{
@@ -125,7 +128,7 @@ namespace Utilities{
 		}
 
 
-		/** \brief Templated indexing operator for elements of a specific derived class.
+		/** \brief Templated indexing function for elements of a specific derived class.
 		 * The index runs 0 ... size<T>() - 1
 		 */
 		template <typename T>
@@ -148,7 +151,7 @@ namespace Utilities{
 			obj = &(v_class2[index]);
 		}
 
-		/// number of elements of a specific type
+		/// number of elements of a specific type T
 		template <typename T>
 		size_t size(){
 			if(typeid(T) == typeid(DClass1)) return v_class1.size();
@@ -156,7 +159,7 @@ namespace Utilities{
 			return 0;
 		}
 
-		/// number of all elements
+		/// Total number of all elements
 		size_t size(){
 			return v_class1.size() + v_class2.size();
 		}
