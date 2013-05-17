@@ -229,7 +229,7 @@ float* BaseAnaLens::stellar_mass_function(IMFtype type, unsigned long Nstars, lo
 		,double minmass, double maxmass, double bendmass, double powerlo, double powerhi){
 	//if(!(stars_implanted)) return;
 	unsigned long i;
-	double powerp1,powerlp1,shiftmax,shiftmin,n0,n1,n2,rndnr,tmp0,tmp1,tmp2;
+	double powerp1,powerp2,powerp3,powerlp1,bendmass1,bendmass2,shiftmax,shiftmin,n0,n1,n2,n3,rndnr,tmp0,tmp1,tmp2;
 	float *stellar_masses = new float[Nstars];
 
 	if(type==One){
@@ -325,9 +325,42 @@ float* BaseAnaLens::stellar_mass_function(IMFtype type, unsigned long Nstars, lo
     	}
     }
 
+    if(type==Kroupa){
+    	bendmass1=0.08;
+    	bendmass2=0.5;
+		if((minmass>bendmass1)||(maxmass<bendmass2)){
+			cout << "For IMF type Kroupa min_mstar<0.08 and max_mstar>0.5 must be defined in parameter file!" << endl;
+			exit(1);
+		}
+		else{
+			double kroupa_param[]={-0.3,-1.3,-2.3};
+			powerp1=kroupa_param[0]+1.0;
+			powerp2=kroupa_param[1]+1.0;
+			powerp3=kroupa_param[2]+1.0;
+			tmp1=pow(bendmass1,(kroupa_param[0]-kroupa_param[1]));
+			tmp2=tmp1*pow(bendmass2,(kroupa_param[1]-kroupa_param[2]));
+			n1=(pow(bendmass1,powerp1)-pow(minmass, powerp1))/powerp1;
+			n2=tmp1*((pow(bendmass2,powerp2)-pow(bendmass1, powerp2))/powerp2);
+			n3=tmp2*((pow(maxmass,powerp3)-pow(bendmass2, powerp3))/powerp3);
+			n0=n1+n2+n3;
 
-    //cout << " " << type << " " << maxmass << " " << minmass << " " << bendmass << " " << powerlo << " " << powerhi << " " << endl;
+			for(i = 0; i < Nstars; i++){
+				rndnr=ran2(seed);
+				if(rndnr<(n1/n0)){
+					stellar_masses[i]=(pow( ((n0*rndnr)*(powerp1)+ pow(minmass,powerp1)),(1.0/powerp1)));
 
+				}
+				else if(rndnr<((n1+n2)/n0)) {
+					stellar_masses[i]=(pow( ((n0*rndnr-n1)*(powerp2/tmp1)+pow(bendmass1,powerp2)),(1.0/powerp2)));
+
+				}
+				else{
+					tmp0= ((n0*rndnr-n1-n2)*(powerp3/tmp2)+pow(bendmass2,powerp3));
+					stellar_masses[i]=(pow(tmp0,(1.0/powerp3)));
+				}
+			}
+		}
+    }
     return stellar_masses;
 }
 
