@@ -90,8 +90,8 @@ double SersicSource::SurfaceBrightness(
 		){
 
 	double x_new[2];
-	x_new[0] = (x[0]-source_x[0])*cos(PA)-(x[1]-source_x[1])*sin(PA);
-	x_new[1] = (x[0]-source_x[0])*sin(PA)+(x[1]-source_x[1])*cos(PA);
+	x_new[0] = (x[0]-source_x[0])*cos(PA)+(x[1]-source_x[1])*sin(PA);
+	x_new[1] = (x[0]-source_x[0])*sin(PA)-(x[1]-source_x[1])*cos(PA);
 
 	double r = sqrt(x_new[0]*x_new[0]+x_new[1]*x_new[1]/q/q);
 
