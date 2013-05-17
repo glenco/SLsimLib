@@ -23,9 +23,9 @@
 
 #include "standard.h"
 
-typedef enum {PowerLaw, NFW, PseudoNFW, NSIE, AnaNSIE, UniNSIE, PointMass} IntProfType;
+typedef enum {PowerLaw, NFW, PseudoNFW, NSIE, PointMass} IntProfType;
 typedef enum {PS, ST, PL} MassFuncType;
-typedef enum {null, ana_lens, moka_lens} InputLens;
+typedef enum {null, nfw_lens, pnfw_lens, pl_lens, nsie_lens, ana_lens, uni_lens, moka_lens} InputLensType;
 /// names of clump and sb models
 typedef enum {nfw,powerlaw,pointmass} ClumpInternal;
 enum IMFtype {One,Mono,BrokenPowerLaw,Salpeter,SinglePowerLaw,Kroupa,Chabrier};
@@ -44,7 +44,7 @@ public:
 	bool get(std::string label,float& value);
 	bool get(std::string label,IntProfType& value);
 	bool get(std::string label,MassFuncType& value);
-	bool get(std::string label,InputLens& value);
+	bool get(std::string label,InputLensType& value);
 	bool get(std::string label,ClumpInternal& value);
 	bool get(std::string label,Band& value);
 	bool get(std::string label,IMFtype& value);

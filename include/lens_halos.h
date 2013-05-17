@@ -12,36 +12,38 @@
 #include "simpleTree.h"
 #include "tables.h"
 #include "InputParams.h"
+#include "source.h"
 
 class LensHalo{
 public:
 	LensHalo();
 	LensHalo(InputParams& params);
-	virtual ~LensHalo();
+	~LensHalo();
 
 	virtual float get_Rmax(){return Rmax;};
 	virtual float get_mass(){return mass;};
 	virtual float get_rscale(){return rscale;};
-
-	double get_zlens(){return zlens;};
 
 	virtual void set_internal(long*,float,float){};
 
 	void set_Rmax(float my_Rmax){Rmax=my_Rmax;};
 	void set_mass(float my_mass){mass=my_mass;};
 	void set_rscale(float my_rscale){rscale=my_rscale;};
-	void set_zlens(float my_zlens){zlens=my_zlens;};
 
 	virtual void set_slope(double my_slope){};
 
-	virtual void setInternalParams(CosmoHndl cosmo, double zsource){};
+	virtual void setInternalParams(CosmoHndl cosmo, SourceHndl source){};
 
 	virtual void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa);
 
-protected:
+	double getZlens(){return zlens;};
+	void setZlens(double my_zlens){zlens=my_zlens;};
+	virtual void setZlens(CosmoHndl cosmo,double z,double dummy){zlens=z;};
 
-	virtual void error_message1(std::string name,std::string filename);
-	virtual void assignParams(InputParams& params);
+protected:
+	void assignParams(InputParams& params);
+
+	void error_message1(std::string name,std::string filename);
 
     float mass;
     /// Radius of halo and NSIE if it exists,  This is the radius used in the tree force solver
@@ -49,7 +51,7 @@ protected:
     float Rmax;
     /// scale length or core size.  Different meaning in different cases.  Not used in NSIE case.
     float rscale;
-    /// redhsift
+    /// redshift
     double zlens;
 
     /// point mass case

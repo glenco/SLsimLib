@@ -54,8 +54,6 @@ void MultiLens::resetHalos(CosmoHndl cosmo){
   delete[] halo_zs;
   delete[] halo_id;
   Utilities::free_PosTypeMatrix(halo_pos,Nhalos,3);
-  if(flag_run_multip_test)
-	  Utilities::free_PosTypeMatrix(halo_pos_Mpc,Nhalos,3);
 
   halo_tree = new auto_ptr<QuadTree>[Nplanes-1];
 
@@ -84,6 +82,9 @@ MultiLens::MultiLens(InputParams& params,long *my_seed) : Lens(){
 	NTABLE=1000;
 	table_set = false;
 
+	nfw_table_set = false;
+	pnfw_table_set = false;
+
 	// flag to determine if halos are created randomly or read in from a external simulation.
 	if(input_sim_file.size() < 1) sim_input_flag = false;
 	else sim_input_flag = true;
@@ -105,13 +106,34 @@ MultiLens::MultiLens(InputParams& params,long *my_seed) : Lens(){
 	case null:
 		input_lens = NULL;
 		break;
+	case nfw_lens:
+		input_lens = new NFWLensHalo(params);
+		make_nfw_tables();
+		nfw_table_set = true;
+		break;
+	case pnfw_lens:
+		input_lens = new PseudoNFWLensHalo(params);
+		double b;
+		params.get("slope_pnfw",b);
+		make_pnfw_tables(b);
+		pnfw_table_set = true;
+		break;
+	case pl_lens:
+		input_lens = new PowerLawLensHalo(params);
+		break;
+	case nsie_lens:
+		input_lens = new SimpleNSIELensHalo(params);
+		break;
 	case ana_lens:
-		input_lens = new SingleLens(params);
-		analens = static_cast<SingleLens*>(input_lens);
+		input_lens = new AnaNSIELensHalo(params);
+		analens = static_cast<AnaNSIELensHalo*>(input_lens);
+		break;
+	case uni_lens:
+		input_lens = new UniNSIELensHalo(params);
 		break;
 	case moka_lens:
-		input_lens = new MOKALens(params);
-		mokalens = static_cast<MOKALens*>(input_lens);
+		input_lens = new MOKALensHalo(params);
+		mokalens = static_cast<MOKALensHalo*>(input_lens);
 		fieldofview = pow(1.5*mokalens->map->boxlrad*180/pi,2.0);
 		break;
 	default:
@@ -125,9 +147,6 @@ MultiLens::MultiLens(InputParams& params,long *my_seed) : Lens(){
 	// initially let source be the one inputed from parameter file
 	index_of_new_sourceplane = -1;
 	toggle_source_plane = false;
-
-	nfw_table_set = false;
-	pnfw_table_set = false;
 
 	seed = my_seed;
 }
@@ -143,8 +162,6 @@ MultiLens::~MultiLens(){
 	delete[] halo_zs;
 	delete[] halo_id;
 	Utilities::free_PosTypeMatrix(halo_pos,Nhalos,3);
-	if(flag_run_multip_test)
-		Utilities::free_PosTypeMatrix(halo_pos_Mpc,Nhalos,3);
 
 	if(flag_input_lens)
 		delete input_lens;
@@ -183,12 +200,12 @@ void MultiLens::assignParams(InputParams& params){
 		  cout << "parameter flag_input_lens needs to be set in the parameter file " << params.filename() << endl;
 		  exit(0);
 	}
-	if(!params.get("internal_profile",internal_profile)){
+	if(!params.get("internal_profile",int_prof_type)){
 		  ERROR_MESSAGE();
 		  cout << "parameter internal_profile needs to be set in the parameter file " << params.filename() << endl;
 		  exit(0);
 	}
-	if(!params.get("internal_profile_galaxy",internal_profile_galaxy)){
+	if(!params.get("internal_profile_galaxy",int_prof_gal_type)){
 		second_halo = false;
 	}
 	else{
@@ -240,9 +257,9 @@ void MultiLens::assignParams(InputParams& params){
 		  exit(0);
 	}
 	// parameters with default values
-	if(!params.get("alpha",pw_alpha))                pw_alpha = 1./6.;
-	if(!params.get("internal_slope",beta) && internal_profile == PowerLaw)     beta = -1.0;
-	if(!params.get("internal_slope",beta) && internal_profile == PseudoNFW) beta = 2.0;
+	if(!params.get("alpha",mass_func_PL_slope))                mass_func_PL_slope = 1./6.;
+	if(!params.get("internal_slope_pl",halo_slope) && int_prof_type == PowerLaw)     halo_slope = -1.0;
+	if(!params.get("internal_slope_pnfw",halo_slope) && int_prof_type == PseudoNFW) halo_slope = 2.0;
 	if(!params.get("deflection_off",flag_switch_deflection_off)) flag_switch_deflection_off = false;
 	if(!params.get("background_off",flag_switch_background_off)) flag_switch_background_off = false;
 	if(!params.get("twop_test",flag_run_twop_test)) flag_run_twop_test = false;
@@ -250,25 +267,25 @@ void MultiLens::assignParams(InputParams& params){
 	if(!params.get("print_halos",r_print_halos)) r_print_halos = 0.0;
 
 	// Some checks for valid parameters
-	  if(internal_profile == PowerLaw && beta >= 0){
+	  if(int_prof_type == PowerLaw && halo_slope >= 0){
 		  ERROR_MESSAGE();
 		  cout << "Power Law internal slope >=0 not possible." << endl;
 		  exit(1);
 	  }
 
-	  if(internal_profile == PseudoNFW && beta <= 0){
+	  if(int_prof_type == PseudoNFW && halo_slope <= 0){
 		  ERROR_MESSAGE();
 		  cout << "Pseudo NFW internal slope <=0 not possible." << endl;
 		  exit(1);
 	  }
 
-	  if(internal_profile == PseudoNFW && (beta / floor(beta) > 1.0)){
+	  if(int_prof_type == PseudoNFW && (halo_slope / floor(halo_slope) > 1.0)){
 		  ERROR_MESSAGE();
 		  cout << "Pseudo NFW internal slope needs to be a whole number." << endl;
 		  exit(1);
 	  }
 
-	  if(input_sim_file.size() < 1 && internal_profile == NSIE){
+	  if(input_sim_file.size() < 1 && int_prof_type == NSIE){
 		  ERROR_MESSAGE();
 		  cout << "The NSIE internal profile works only for Millenium DM simulations for now." << endl;
 		  cout << "Set input_simulation_file in sample_paramfile." << endl;
@@ -319,18 +336,18 @@ void MultiLens::printMultiLens(){
 
 	cout << "field of view " << fieldofview << endl;
 
-	cout << "internal profile type " << internal_profile << endl;
-	switch(internal_profile){
+	cout << "internal profile type " << int_prof_type << endl;
+	switch(int_prof_type){
 	case PowerLaw:
 		cout << "  Power law internal profile " << endl;
-		cout << "  slope: " << beta << endl;
+		cout << "  slope: " << halo_slope << endl;
 		break;
 	case NFW:
 		cout << "  NFW internal profile " << endl;
 		break;
 	case PseudoNFW:
 		cout << "  Pseudo NFW internal profile " << endl;
-		cout << "  slope: " << beta << endl;
+		cout << "  slope: " << halo_slope << endl;
 		break;
 	case NSIE:
 		cout << "  NonSingular Isothermal Ellipsoid internal profile " << endl;
@@ -347,7 +364,7 @@ void MultiLens::printMultiLens(){
 			break;
 		case PL:
 			cout << "  Power law mass function " << endl;
-			cout << "  slope: " << pw_alpha << endl;
+			cout << "  slope: " << mass_func_PL_slope << endl;
 			break;
 		}
 
@@ -426,7 +443,7 @@ void MultiLens::buildHaloTrees(
 		 */
 
 		// TODO Ben: test this
-		double sigma_back = cosmo->haloMassInBufferedCone(min_mass*mass_scale,z1,z2,fieldofview*pow(pi/180,2),field_buffer,mass_func_type,pw_alpha)
+		double sigma_back = cosmo->haloMassInBufferedCone(min_mass*mass_scale,z1,z2,fieldofview*pow(pi/180,2),field_buffer,mass_func_type,mass_func_PL_slope)
 			             /(pi*pow(sqrt(fieldofview/pi)*pi*Dl[j]/180/(1+plane_redshifts[j]) + field_buffer,2))/mass_scale;
 
 		double sb=0.0;
@@ -661,7 +678,7 @@ void MultiLens::setCoorDist(CosmoHndl cosmo){
 	int j=0, flag=0;
 	if(flag_input_lens && Dlens < lD[1]){
 		Dl[j] = Dlens;
-		flag_input_lens = (InputLens)Nplanes;
+		flag_input_lens = (InputLensType)Nplanes;
 		flag = 1;
 		j++;
 	}
@@ -674,7 +691,7 @@ void MultiLens::setCoorDist(CosmoHndl cosmo){
 			if(Dlens > lD[i] && Dlens <= lD[i+1]){
 				Dl[j] = lD[i];
 				Dl[++j] = Dlens;
-				flag_input_lens = (InputLens)j;
+				flag_input_lens = (InputLensType)j;
 				flag = 1;
 			}
 		j++;
@@ -879,12 +896,7 @@ void MultiLens::createHaloData(
 		,long *seed
 	){
 
-	if(internal_profile == NSIE || internal_profile == AnaNSIE || internal_profile == UniNSIE){
-		std::cout << "ERROR: MultiLens can't make NSIE type halos without an input file yet." << std::endl;
-		ERROR_MESSAGE();
-		exit(1);
-	}
-	if(second_halo == true && internal_profile_galaxy != NSIE){
+	if(second_halo == true && int_prof_gal_type != NSIE){
 		std::cout << "ERROR: MultiLens can only make NSIE galaxy halos." << std::endl;
 		ERROR_MESSAGE();
 		exit(1);
@@ -904,7 +916,7 @@ void MultiLens::createHaloData(
 	float dummy;
 	HALO *halo_calc = new HALO(cosmo,min_mass*mass_scale,0.0);
 
-	double aveNhalos = cosmo->haloNumberInBufferedCone(min_mass*mass_scale,0,zsource,fieldofview*pow(pi/180,2),field_buffer,mass_func_type,pw_alpha);
+	double aveNhalos = cosmo->haloNumberInBufferedCone(min_mass*mass_scale,0,zsource,fieldofview*pow(pi/180,2),field_buffer,mass_func_type,mass_func_PL_slope);
 
 	fill_linear(zbins,Nzbins,0.0,zsource);
 	// construct redshift distribution table
@@ -915,7 +927,7 @@ void MultiLens::createHaloData(
 #pragma omp parallel for default(shared) private(k)
 #endif
 	for(k=1;k<Nzbins-1;++k){
-		Nhalosbin[k] = cosmo->haloNumberInBufferedCone(min_mass*mass_scale,zbins[k],zsource,fieldofview*pow(pi/180,2),field_buffer,mass_func_type,pw_alpha)/aveNhalos;
+		Nhalosbin[k] = cosmo->haloNumberInBufferedCone(min_mass*mass_scale,zbins[k],zsource,fieldofview*pow(pi/180,2),field_buffer,mass_func_type,mass_func_PL_slope)/aveNhalos;
 	}
 	zbins[Nzbins-1] = zsource;
 	Nhalosbin[Nzbins-1] = 0.0;
@@ -960,7 +972,7 @@ void MultiLens::createHaloData(
 		locateD(halo_zs-1,Nhalos,z2,&k2);
 		if(k2 > Nhalos) k2 = Nhalos;
 
-		Nhaloestot = cosmo->haloNumberInBufferedCone(pow(10,Logm[0]),z1,z2,fieldofview*pow(pi/180,2),field_buffer,mass_func_type,pw_alpha);
+		Nhaloestot = cosmo->haloNumberInBufferedCone(pow(10,Logm[0]),z1,z2,fieldofview*pow(pi/180,2),field_buffer,mass_func_type,mass_func_PL_slope);
 
 		Nhalosbin[0] = 1;
 
@@ -969,7 +981,7 @@ void MultiLens::createHaloData(
 #endif
 		for(k=1;k<Nmassbin-1;k++){
 			// cumulative number density in one square degree
-			Nhalosbin[k] = cosmo->haloNumberInBufferedCone(pow(10,Logm[k]),z1,z2,fieldofview*pow(pi/180,2),field_buffer,mass_func_type,pw_alpha)
+			Nhalosbin[k] = cosmo->haloNumberInBufferedCone(pow(10,Logm[k]),z1,z2,fieldofview*pow(pi/180,2),field_buffer,mass_func_type,mass_func_PL_slope)
 					/Nhaloestot;
 		}
 		Nhalosbin[Nmassbin-1] = 0;
@@ -989,7 +1001,7 @@ void MultiLens::createHaloData(
 			pos[0] = rr*cos(theta)*Ds;
 			pos[1] = rr*sin(theta)*Ds;
 
-			switch(internal_profile){
+			switch(int_prof_type){
 			case PowerLaw:
 				halos.push_back(new PowerLawLensHalo);
 				break;
@@ -998,6 +1010,9 @@ void MultiLens::createHaloData(
 				break;
 			case PseudoNFW:
 				halos.push_back(new PseudoNFWLensHalo);
+				break;
+			case NSIE:
+				halos.push_back(new SimpleNSIELensHalo);
 				break;
 			case PointMass:
 				halos.push_back(new LensHalo);
@@ -1013,12 +1028,17 @@ void MultiLens::createHaloData(
 
 			float mass = pow(10,InterpolateYvec(Nhalosbin,Logm,ran2 (seed)));
 
-			halos[j]->set_mass(mass/mass_scale);
+			halos[j]->set_mass(mass);
 
 			halo_calc->reset(mass,halo_zs[i]);
 
 			halos[j]->set_Rmax(halo_calc->getRvir());
 			halos[j]->set_rscale(halos[j]->get_Rmax()/halo_calc->getConcentration(0));
+
+
+			halos[j]->set_internal(seed,dummy,dummy);
+
+			halos[j]->set_mass(mass/mass_scale);
 
 			if(halos[j]->get_mass() > mass_max) {
 				mass_max = halos[j]->get_mass();
@@ -1038,7 +1058,7 @@ void MultiLens::createHaloData(
 				if(galaxy_mass_fraction > 1.0) galaxy_mass_fraction = 1;
 
 
-				switch(internal_profile_galaxy){
+				switch(int_prof_gal_type){
 				case NSIE:
 					halos.push_back(new SimpleNSIELensHalo);
 					break;
@@ -1052,7 +1072,7 @@ void MultiLens::createHaloData(
 
 				halos[j]->set_mass(mass*galaxy_mass_fraction);
 				halos[j-1]->set_mass(mass*(1-galaxy_mass_fraction)/mass_scale);
-				halos[j]->set_slope(beta);
+				halos[j]->set_slope(halo_slope);
 				halos[j]->set_internal(seed,dummy,dummy);
 
 				halo_pos_vec.push_back(pos);
@@ -1100,7 +1120,7 @@ void MultiLens::createHaloData_test(
 		,long *seed
 	){
 
-	if(internal_profile == NSIE || internal_profile == AnaNSIE || internal_profile == UniNSIE){
+	if(int_prof_type == NSIE){
 		std::cout << "ERROR: MultiLens can't make NSIE type halos without an input file yet." << std::endl;
 		ERROR_MESSAGE();
 		exit(1);
@@ -1129,7 +1149,7 @@ void MultiLens::createHaloData_test(
 
 		halo_zs[i] = plane_redshifts[i]+0.1;
 
-		switch(internal_profile){
+		switch(int_prof_type){
 		case PowerLaw:
 			halos.push_back(new PowerLawLensHalo);
 			break;
@@ -1150,7 +1170,7 @@ void MultiLens::createHaloData_test(
 			break;
 		}
 
-		halos[i]->set_slope(beta);
+		halos[i]->set_slope(halo_slope);
 		halos[i]->set_mass(ran2(seed)*1e12/mass_scale);
 		halo_calc->reset(halos[i]->get_mass()*mass_scale,halo_zs[i]);
 
@@ -1188,13 +1208,13 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 
 	//int index;
 
-	if(internal_profile == PseudoNFW || internal_profile == PowerLaw || internal_profile == AnaNSIE || internal_profile == UniNSIE){
+	if(int_prof_type == PseudoNFW || int_prof_type == PowerLaw){
 		ERROR_MESSAGE();
 		std::cout << "Input to MultiLens from a simulation is not yet enabled for PseudoNFW, PowerLaw, AnaNSIE, and UniNSIE profiles"
 				<< std::endl << "Change this is parameter file" << std::endl;
 		exit(1);
 	}
-	if(second_halo == true && internal_profile_galaxy != NSIE){
+	if(second_halo == true && int_prof_gal_type != NSIE){
 		std::cout << "ERROR: MultiLens can only make NSIE galaxy halos." << std::endl;
 		ERROR_MESSAGE();
 		exit(1);
@@ -1286,7 +1306,7 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 
 			halo_pos_vec.push_back(theta);
 
-			switch(internal_profile){
+			switch(int_prof_type){
 			case NFW:
 				halos.push_back(new NFWLensHalo);
 				break;
@@ -1321,7 +1341,7 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 			 * set the other properties of the LensHalo, such as rscale or the NSIE properties
 			 */
 
-			halos[j]->set_slope(beta);
+			halos[j]->set_slope(halo_slope);
 			halos[j]->set_internal(seed,vmax,r_halfmass*cosmo->gethubble());
 
 			if(halos[j]->get_Rmax() > R_max) R_max = halos[j]->get_Rmax();
@@ -1342,7 +1362,7 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 
 				halo_pos_vec.push_back(theta);
 
-				switch(internal_profile_galaxy){
+				switch(int_prof_gal_type){
 				case NSIE:
 					halos.push_back(new SimpleNSIELensHalo);
 					break;
@@ -1372,7 +1392,7 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 				 * set the other properties of the LensHalo, such as rscale or the NSIE properties
 				 */
 
-				halos[j]->set_slope(beta);
+				halos[j]->set_slope(halo_slope);
 				halos[j]->set_internal(seed,vmax,r_halfmass*cosmo->gethubble());
 
 				if(halos[j]->get_Rmax() > R_max) R_max = halos[j]->get_Rmax();

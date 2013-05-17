@@ -21,7 +21,7 @@ struct TmpParamsHalos{
   Point *i_points;
   double *Dl_halos;
   double *dDl_halos;
-  double **halo_pos_Mpc;
+  double **halo_pos;
   double *halo_zs;
   std::vector<LensHalo *> halos;
   IndexType Nhalos;
@@ -68,7 +68,7 @@ void MultiLens::rayshooterInternal_halos(
     thread_params[i].i_points = i_points;
     thread_params[i].Dl_halos = Dl_halos;
     thread_params[i].dDl_halos = dDl_halos;
-    thread_params[i].halo_pos_Mpc = halo_pos_Mpc;
+    thread_params[i].halo_pos = halo_pos;
     thread_params[i].halo_zs = halo_zs;
     thread_params[i].halos = halos;
     thread_params[i].Nhalos = Nhalos;
@@ -142,8 +142,8 @@ void *compute_rays_parallel_halos(void *_p){
 
 	      assert(xx[0] == xx[0] && xx[1] == xx[1]);
 
-	      xcm[0] = p->halo_pos_Mpc[j][0] - xx[0];
-	      xcm[1] = p->halo_pos_Mpc[j][1] - xx[1];
+	      xcm[0] = p->halo_pos[j][0] - xx[0];
+	      xcm[1] = p->halo_pos[j][1] - xx[1];
 
 	      p->halos[j]->force_halo(
 	    			alpha

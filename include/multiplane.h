@@ -19,7 +19,7 @@
  *
  *<pre>
  *	The rays are traced through multiple deflections.  On each plane there is a deflection
- *	solver.  An AnaNSIELensHalo or MOKALens can be put on one of the planes.  The other planes can be
+ *	solver.  An AnaNSIELensHalo or MOKALensHalo can be put on one of the planes.  The other planes can be
  *	populated with random halos drawn from a mass function or they can be retrieved from an
  *	external catalog.
  *
@@ -39,9 +39,9 @@
  *   Input Parameters:
  *
  *	Nplanes                     Number of lens planes
- *	flag_input_lens             Implanted lens - 0: no lens, 1: AnaNSIELensHalo, 2: MOKALens, The redshifts and internal parameters are the same as for constructing these lenses separately, see classes for each type of lens
+ *	flag_input_lens             Implanted lens - 0: no lens, 1: AnaNSIELensHalo, 2: MOKALensHalo, The redshifts and internal parameters are the same as for constructing these lenses separately, see classes for each type of lens
  *	fov                         Field of view for the simulation region (not nessisarily the grided region)
- *	internal_profile            The internal profile type for the halos, 0 or PowerLaw,1 or NFW,2 or PseudoNFW, 3 or NSIE, 4 or NFW_NSIE .
+ *	int_prof_type            The internal profile type for the halos, 0 or PowerLaw,1 or NFW,2 or PseudoNFW, 3 or NSIE, 4 or NFW_NSIE .
  *  halo_to_galaxy_ratio        If NFW_NSIE is chosen this must be set to the ratio of the mass put in each component.
  *	z_source                    The "source" redshift, but actually the redshift of the last plane in the simulation.  The source can be at higher or lower redshift (see ResetSourcePlane)
  *	input_simulation_file       File that contains the input catalog of halos.  If it is missing a random set of halos will be generated.
@@ -85,10 +85,16 @@ public:
 	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off);
 	void rayshooterInternal(double *ray, double *alpha, KappaType *gamma, KappaType *kappa, bool kappa_off);
 	void rayshooterInternal_halos(unsigned long Npoints, Point *i_points, bool kappa_off, double *Dl_halos, double *dDl_halos);
-	
-	LensHndl input_lens;
-	SingleLens *analens;
-	MOKALens *mokalens;
+
+	/// needs to be 0 or nolens, 1 or NFW, 2 or PseudoNFW, 3 or PowerLaw, 4 or NSIE, 5 or AnaLens, 6 or UniLens, 7 or MOKALens
+	InputLensType flag_input_lens;
+	/// main lesning halo in the simulation
+	LensHalo *input_lens;
+	/// pointer to an ana lens type, if parameter access is needed elsewhere
+	AnaNSIELensHalo *analens;
+	/// pointer to a moka lens type, if parameter access is needed elsewhere
+	MOKALensHalo *mokalens;
+
 	/// field of view in square degrees
 	double fieldofview;
 
@@ -108,27 +114,28 @@ public:
 	}
 	double getZmax(){return plane_redshifts[Nplanes-1];}
 
-	/// if = 0 there is no input lens, if = 1 there is an analytic lens, if = 2 there is a MOKA lens
-	InputLens flag_input_lens;
-	/// Dl[j = 0...]angular diameter distances
+	/// Dl[j = 0...] angular diameter distances, comoving
 	double *Dl;
+	/// dDl[j] is the distance between plane j-1 and j plane, comoving
+	double *dDl;
 	/// Redshifts of lens planes, 0...Nplanes.  Last one is the source redshift.
 	double *plane_redshifts;
-	/// dDl[j] is the distance between plane j-1 and j plane
-	double *dDl;
 	/// charge for the tree force solver (4*pi*G*mass_scale)
 	double charge;
+
 	/// an array of smart pointers to halo trees on each plane, uses the haloModel in the construction
 	std::auto_ptr<QuadTree> *halo_tree;
-	/// if >= 1, deflection in the rayshooting is switched if
+
+	/// if >= 1, deflection in the rayshooting is switched off
 	bool flag_switch_deflection_off;
-	/// if >= 1, the background is switched of and only the main lens is present
+	/// if >= 1, the background is switched off and only the main lens is present
 	bool flag_switch_background_off;
 
 private:
 
 	void setCoorDist(CosmoHndl cosmo);
 	
+	/// tables with angular distances (comoving) and corresponding redshifts
 	double *coorDist_table;
 	double *redshift_table;
 	unsigned long NTABLE;
@@ -146,17 +153,18 @@ private:
 	/// type of mass function PS (0), ST (1), and power law (2) default is ST
 	MassFuncType mass_func_type;
 	/// slope of the mass function is mass_func_type == 2
-	double pw_alpha;
+	double mass_func_PL_slope;
 	/// mass scale
 	double mass_scale;
 	/// min mass for the halo model
 	double min_mass;
-	/// internal profile type, 0=powerlaw,1=nfw,2=pseudoNfw,3=NSIE,4=anaNSIE,5=UniNSIE,6=PointMass
-	IntProfType internal_profile;
-	/// internal galaxy profile type, 0=powerlaw,1=nfw,2=pseudoNfw,3=NSIE,4=anaNSIE,5=UniNSIE,6=PointMass
-	IntProfType internal_profile_galaxy;
+	/// internal halo profile type; needs to be 0 or PowerLaw, 1 or NFW, 2 or PseudoNFW, 3 or NSIE, 4 or PointMass
+	IntProfType int_prof_type;
+	/// internal galaxy profile type; needs to be 0 or PowerLaw, 1 or NFW, 2 or PseudoNFW, 3 or NSIE, 4 or PointMass
+	IntProfType int_prof_gal_type;
 	/// power law or pseudo NFW internal profile slope
-	double beta;
+	double halo_slope;
+	/// mass fraction in the host galaxy
 	double galaxy_mass_fraction;
 
 
@@ -176,12 +184,11 @@ private:
 	/// enables the multi planes halos test
 	bool flag_run_multip_test;
 
-	/// pointer to first of all the halo internal structures
+	/// vector of all lens halos in the light cone
 	std::vector<LensHalo *> halos;
 	/// number of halos on all the planes
 	IndexType Nhalos;
 	double *halo_zs;
-	double **halo_pos_Mpc;
 	double **halo_pos;
 	unsigned long *halo_id;
 

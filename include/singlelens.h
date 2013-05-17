@@ -13,6 +13,7 @@
 #include "lens.h"
 #include "analytic_lens.h"
 #include "uniform_lens.h"
+#include "MOKAlens.h"
 
 
 class SingleLens : public Lens{
@@ -23,13 +24,12 @@ public:
 	double getZlens();
 	void setZlens(CosmoHndl cosmo,double zlens,double zsource = 1000);
 	void setInternalParams(CosmoHndl,SourceHndl);
-	void setInternalParams(CosmoHndl,double);
 	void error_message1(std::string name,std::string filename);
 	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off);
 	void rayshooterInternal(double *ray, double *alpha, KappaType *gamma, KappaType *kappa, bool kappa_off);
 
-	IntProfType DM_halo_type;
-	IntProfType galaxy_halo_type;
+	InputLensType DM_halo_type;
+	InputLensType galaxy_halo_type;
 	int Nprof;
 	std::vector<LensHalo *> halo;
 

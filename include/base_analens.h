@@ -120,7 +120,6 @@ public:
 
   // in readlens_ana.c
   void reNormSubstructure(double kappa_sub);
-  void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off);
   void substract_stars_disks(PosType *ray,PosType *alpha
                   ,KappaType *kappa,KappaType *gamma);
   void implant_stars(Point *centers,unsigned long Nregions,long *seed, IMFtype type=One);

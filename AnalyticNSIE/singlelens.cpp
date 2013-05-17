@@ -11,26 +11,32 @@ SingleLens::SingleLens(InputParams& params) : Lens(){
 	assignParams(params);
 
 	switch(DM_halo_type){
-	case PowerLaw:
+	case null:
+		ERROR_MESSAGE();
+		std::cout << "Incorrect halo_type selected! Please choose from:" << std::endl;
+		std::cout << "0: null, 1: NFW, 2: PseudoNFW, 3: NSIE, 4: AnaNSIE, 5: UniNSIE, 6: PointMass" << std::endl;
+		exit(1);
+		break;
+	case pl_lens:
 		halo.push_back(new PowerLawLensHalo(params));
 		break;
-	case NFW:
+	case nfw_lens:
 		halo.push_back(new NFWLensHalo(params));
 		break;
-	case PseudoNFW:
+	case pnfw_lens:
 		halo.push_back(new PseudoNFWLensHalo(params));
 		break;
-	case NSIE:
+	case nsie_lens:
 		halo.push_back(new SimpleNSIELensHalo(params));
 		break;
-	case AnaNSIE:
+	case ana_lens:
 		halo.push_back(new AnaNSIELensHalo(params));
 		break;
-	case UniNSIE:
+	case uni_lens:
 		halo.push_back(new UniNSIELensHalo(params));
 		break;
-	case PointMass:
-		halo.push_back(new LensHalo(params));
+	case moka_lens:
+		halo.push_back(new MOKALensHalo(params));
 		break;
 	default:
 		ERROR_MESSAGE();
@@ -53,12 +59,6 @@ SingleLens::SingleLens(InputParams& params) : Lens(){
 			break;
 		case NSIE:
 			halo.push_back(new SimpleNSIELensHalo(params));
-			break;
-		case AnaNSIE:
-			halo.push_back(new AnaNSIELensHalo(params));
-			break;
-		case UniNSIE:
-			halo.push_back(new UniNSIELensHalo(params));
 			break;
 		case PointMass:
 			halo.push_back(new LensHalo(params));
@@ -96,26 +96,21 @@ void SingleLens::error_message1(std::string parameter,std::string file){
 }
 
 double SingleLens::getZlens(){
-	return halo[0]->get_zlens();
+	return halo[0]->getZlens();
 }
 
 /// resets Zl, Dl, Sigma_crit, MpcToAsec
 void SingleLens::setZlens(CosmoHndl cosmo,double zl,double zsource){
 	long j;
 	for(j=0;j<Nprof;j++){
-		halo[j]->set_zlens(zl);
-		halo[j]->setInternalParams(cosmo,zsource);
+		halo[j]->setZlens(cosmo,zl,zsource);
 	}
 }
 
 /// Sets parameters within BaseLens that depend on the source redshift - Dl,Sigma_crit,etc.
 void SingleLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
-	setInternalParams(cosmo,source->getZ());
-}
-
-void SingleLens::setInternalParams(CosmoHndl cosmo, double zsource){
 	long j;
 	for(j=0;j<Nprof;j++){
-		halo[j]->setInternalParams(cosmo,zsource);
+		halo[j]->setInternalParams(cosmo,source);
 	}
 }

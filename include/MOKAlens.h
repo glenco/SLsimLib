@@ -59,12 +59,12 @@ struct MOKAmap{
  */
 
 
-class MOKALens : public Lens{
+class MOKALensHalo : public LensHalo{
 public:
 
-	MOKALens(InputParams& params);
+	MOKALensHalo(InputParams& params);
 
-	~MOKALens();
+	~MOKALensHalo();
 
 	bool set;	/// the name of the MOKA input file
 	std::string MOKA_input_file;
@@ -73,10 +73,6 @@ public:
 	int flag_background_field;
 
 	void assignParams(InputParams& params);
-	void rayshooterInternal(double *ray, double *alpha, KappaType *gamma, KappaType *kappa, bool kappa_off);
-	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off){ERROR_MESSAGE(); exit(1);};
-	void setZlens(CosmoHndl cosmo,double zlens,double zsource = 1000);
-	double getZlens();
 	void setInternalParams(CosmoHndl,SourceHndl);
 	void saveImage(GridHndl grid, bool saveprofile=true);
 	void saveImage(bool saveprofile=true);
@@ -84,6 +80,7 @@ public:
 	void saveGammaProfile();
 	void saveProfiles(double &RE3, double &xxc, double &yyc);
 	void initMap();
+	void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa);
 
 	MOKAmap *map;
 

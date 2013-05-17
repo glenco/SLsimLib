@@ -8,7 +8,8 @@
 #include "slsimlib.h"
 
 LensHalo::LensHalo(){
-
+	rscale = 1.0;
+	mass = Rmax = 0.0;
 }
 
 LensHalo::LensHalo(InputParams& params){
@@ -16,9 +17,9 @@ LensHalo::LensHalo(InputParams& params){
 }
 
 void LensHalo::error_message1(std::string parameter,std::string file){
-		  ERROR_MESSAGE();
-		  std::cout << "Parameter " << parameter << " is needed to construct a LensHalo.  It needs to be set in parameter file " << file << "!" << std::endl;
-		  exit(0);
+	ERROR_MESSAGE();
+	std::cout << "Parameter " << parameter << " is needed to construct a LensHalo.  It needs to be set in parameter file " << file << "!" << std::endl;
+	exit(0);
 }
 
 void LensHalo::assignParams(InputParams& params){

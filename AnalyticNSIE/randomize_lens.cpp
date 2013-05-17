@@ -45,7 +45,7 @@ void AnaNSIELensHalo::RandomizeSigma(long *seed,bool tables){
 
 void MultiLens::RandomizeSigma(long *seed,bool tables){
 	if(flag_input_lens)
-		input_lens->RandomizeSigma(seed,tables);
+		analens->RandomizeSigma(seed,tables);
 }
 
 void AnaNSIELensHalo::RandomizeHost(long *seed,bool tables){
@@ -94,7 +94,7 @@ void AnaNSIELensHalo::RandomizeHost(long *seed,bool tables){
 
 void MultiLens::RandomizeHost(long *seed,bool tables){
 	if(flag_input_lens)
-		input_lens->RandomizeHost(seed,tables);
+		analens->RandomizeHost(seed,tables);
 }
 
 /** \ingEinstein_roup ChangeLens

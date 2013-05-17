@@ -65,7 +65,7 @@ public:
 	AnaNSIELensHalo(InputParams& params);
 	~AnaNSIELensHalo();
 
-  virtual void assignParams(InputParams& params);
+  void assignParams(InputParams& params);
   double FractionWithinRe(double rangeInRei);
   void PrintLens(bool show_substruct,bool show_stars);
 
