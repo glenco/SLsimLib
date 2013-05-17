@@ -57,6 +57,12 @@ protected:
 	virtual KappaType inline kappa_h(double x, double xmax){return 0;};
 	virtual KappaType inline gamma_h(double x, double xmax){return -2;};
 	virtual KappaType inline phi_h(double x, double xmax){return 0;};
+  
+  // Functions for calculating axial dependence
+  void setModesToEllip(double q,double theta);
+  void faxial(double theta,double f[]);
+  const int Nmod = 18;
+  double mod[18];
 };
 
 /** \ingroup DeflectionL2
