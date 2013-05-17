@@ -230,11 +230,11 @@ float* BaseAnaLens::stellar_mass_function(IMFtype type, unsigned long Nstars, lo
 	//if(!(stars_implanted)) return;
 	unsigned long i;
 	double powerp1,powerlp1,shiftmax,shiftmin,n0,n1,n2,rndnr,tmp0,tmp1,tmp2;
-	float *star_masses = new float[Nstars];
+	float *stellar_masses = new float[Nstars];
 
 	if(type==One){
 		for(i = 0; i < Nstars; i++){
-				star_masses[i]=1.0;
+				stellar_masses[i]=1.0;
 		}
 	}
 
@@ -244,7 +244,7 @@ float* BaseAnaLens::stellar_mass_function(IMFtype type, unsigned long Nstars, lo
 		    exit(1);
 		}
 		for(i = 0; i < Nstars; i++){
-			star_masses[i]=minmass;
+			stellar_masses[i]=minmass;
 		}
 	}
 
@@ -257,7 +257,7 @@ float* BaseAnaLens::stellar_mass_function(IMFtype type, unsigned long Nstars, lo
     	n0 = (pow(maxmass,powerp1)) /powerp1;
     	n1 =  n0 - (pow(minmass,powerp1)) / powerp1;
     	for(i = 0; i < Nstars; i++){
-    		star_masses[i] = pow( (-powerp1*(n1*ran2(seed)-n0)),(1.0/powerp1) );
+    		stellar_masses[i] = pow( (-powerp1*(n1*ran2(seed)-n0)),(1.0/powerp1) );
     	}
 	}
 
@@ -271,7 +271,7 @@ float* BaseAnaLens::stellar_mass_function(IMFtype type, unsigned long Nstars, lo
        	n0 = (pow(maxmass,powerp1)) /powerp1;
        	n1 =  n0 - (pow(minmass,powerp1)) / powerp1;
        	for(i = 0; i < Nstars; i++){
-       		star_masses[i] = pow( (-powerp1*(n1*ran2(seed)-n0)),(1.0/powerp1) );
+       		stellar_masses[i] = pow( (-powerp1*(n1*ran2(seed)-n0)),(1.0/powerp1) );
        	}
    	}
 
@@ -292,10 +292,10 @@ float* BaseAnaLens::stellar_mass_function(IMFtype type, unsigned long Nstars, lo
 		for(i = 0; i < Nstars; i++){
 			rndnr=ran2(seed);
 			if(rndnr<(n1/n0)){
-				star_masses[i]=pow(10.0,(log10(chab_param[1])-sqrt(2.*chab_param[2]*chab_param[2])*erfinv((n0*rndnr)/tmp2+erff((log10(chab_param[1])-log10(minmass))/(sqrt(2.*chab_param[2]*chab_param[2])) ) )));
+				stellar_masses[i]=pow(10.0,(log10(chab_param[1])-sqrt(2.*chab_param[2]*chab_param[2])*erfinv((n0*rndnr)/tmp2+erff((log10(chab_param[1])-log10(minmass))/(sqrt(2.*chab_param[2]*chab_param[2])) ) )));
 			}
 			else{
-				star_masses[i]=pow( ((n0*rndnr-n1)*powerp1/tmp1 +1.0),(1./powerp1) );
+				stellar_masses[i]=pow( ((n0*rndnr-n1)*powerp1/tmp1 +1.0),(1./powerp1) );
 			}
 		}
 	}
@@ -316,10 +316,10 @@ float* BaseAnaLens::stellar_mass_function(IMFtype type, unsigned long Nstars, lo
     		for(i = 0; i < Nstars; i++){
     			rndnr=ran2(seed);
     			if(rndnr<(n1/n0)){
-    				star_masses[i]=(pow( ((n0*rndnr)*(powerlp1)+ pow(shiftmin,powerlp1)),(1.0/powerlp1)))*bendmass;
+    				stellar_masses[i]=(pow( ((n0*rndnr)*(powerlp1)+ pow(shiftmin,powerlp1)),(1.0/powerlp1)))*bendmass;
     			}
     			else{
-    				star_masses[i]=(pow( ((n0*rndnr-n1)*powerp1+1.0),(1.0/powerp1)))*bendmass;
+    				stellar_masses[i]=(pow( ((n0*rndnr-n1)*powerp1+1.0),(1.0/powerp1)))*bendmass;
     			}
     		}
     	}
@@ -328,6 +328,6 @@ float* BaseAnaLens::stellar_mass_function(IMFtype type, unsigned long Nstars, lo
 
     //cout << " " << type << " " << maxmass << " " << minmass << " " << bendmass << " " << powerlo << " " << powerhi << " " << endl;
 
-    return star_masses;
+    return stellar_masses;
 }
 
