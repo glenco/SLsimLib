@@ -557,7 +557,6 @@ void map_images(
 
 		//printf("  %i  centroid = %e %e N = %li\n",i,imageinfo[i].centroid[0],imageinfo[i].centroid[1]
 		//                                    ,imageinfo[i].Npoints);
-		assert(AtBottomKist(imageinfo[i].imagekist));
 	}
 
 	delete[] sourceinfo;
