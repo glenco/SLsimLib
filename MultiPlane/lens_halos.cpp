@@ -16,6 +16,12 @@ LensHalo::LensHalo(InputParams& params){
 	assignParams(params);
 }
 
+void LensHalo::initFromMassFunc(float my_mass, double mass_scale, float my_Rmax, float my_rscale, double my_slope, long *seed){
+	mass = my_mass/mass_scale;
+	Rmax = my_Rmax;
+	rscale = my_rscale;
+}
+
 void LensHalo::error_message1(std::string parameter,std::string file){
 	ERROR_MESSAGE();
 	std::cout << "Parameter " << parameter << " is needed to construct a LensHalo.  It needs to be set in parameter file " << file << "!" << std::endl;
@@ -32,11 +38,45 @@ LensHalo::~LensHalo(){
 
 }
 
+int NFWLensHalo::count = 0;
+double *NFWLensHalo::xtable = NULL,*NFWLensHalo::ftable = NULL,*NFWLensHalo::gtable = NULL,*NFWLensHalo::g2table = NULL;
 NFWLensHalo::NFWLensHalo() : LensHalo(){
+	make_tables();
 }
 
 NFWLensHalo::NFWLensHalo(InputParams& params){
 	assignParams(params);
+	make_tables();
+}
+
+void NFWLensHalo::make_tables(){
+	if(count == 0){
+		int i;
+		double x, dx = maxrm/(double)NTABLE;
+
+		xtable = new double[NTABLE];
+		ftable = new double[NTABLE];
+		gtable = new double[NTABLE];
+		g2table = new double[NTABLE];
+
+		for(i = 0 ; i< NTABLE; i++){
+			x = i*dx;
+			xtable[i] = x;
+			ftable[i] = ffunction(x);
+			gtable[i] = gfunction(x);
+			g2table[i] = g2function(x);
+		}
+
+		count++;
+	}
+}
+
+double NFWLensHalo::InterpolateFromTable(double *table, double y){
+	int j;
+	j=(int)(y/maxrm*NTABLE);
+
+	assert(y>=xtable[j] && y<=xtable[j+1]);
+	return (table[j+1]-table[j])/(xtable[j+1]-xtable[j])*(y-xtable[j]) + table[j];
 }
 
 void NFWLensHalo::assignParams(InputParams& params){
@@ -48,10 +88,18 @@ void NFWLensHalo::assignParams(InputParams& params){
 }
 
 NFWLensHalo::~NFWLensHalo(){
-
+	--count;
+	if(count == 0){
+		delete[] xtable;
+		delete[] gtable;
+		delete[] ftable;
+		delete[] g2table;
+	}
 }
 
-void NFWLensHalo::set_internal(long *seed, float vmax, float r_halfmass){
+void NFWLensHalo::initFromFile(float my_mass, double mass_scale, long *seed, float vmax, float r_halfmass){
+
+	mass = my_mass;
 
 	NFW_Utility nfw_util;
 
@@ -59,14 +107,49 @@ void NFWLensHalo::set_internal(long *seed, float vmax, float r_halfmass){
 	nfw_util.match_nfw(vmax,r_halfmass,mass,&rscale,&Rmax);
 
 	rscale = Rmax/rscale; // Was the concentration
+	mass /= mass_scale;
 }
 
+int PseudoNFWLensHalo::count = 0;
+double *PseudoNFWLensHalo::xtable = NULL,*PseudoNFWLensHalo::mhattable = NULL;
 PseudoNFWLensHalo::PseudoNFWLensHalo() : LensHalo(){
-
 }
 
 PseudoNFWLensHalo::PseudoNFWLensHalo(InputParams& params){
 	assignParams(params);
+	make_tables();
+}
+
+void PseudoNFWLensHalo::make_tables(){
+	if(count == 0){
+		int i;
+		double x, dx = maxrm/(double)NTABLE;
+
+		xtable = new double[NTABLE];
+		mhattable = new double[NTABLE];
+
+		for(i = 0 ; i< NTABLE; i++){
+			x = i*dx;
+			xtable[i] = x;
+			mhattable[i] = mhat(x,beta);
+		}
+
+		count++;
+	}
+}
+
+double PseudoNFWLensHalo::InterpolateFromTable(double y){
+	int j;
+	j=(int)(y/maxrm*NTABLE);
+
+	assert(y>=xtable[j] && y<=xtable[j+1]);
+	return (mhattable[j+1]-mhattable[j])/(xtable[j+1]-xtable[j])*(y-xtable[j]) + mhattable[j];
+}
+
+void PseudoNFWLensHalo::initFromMassFunc(float my_mass, double mass_scale, float my_Rmax, float my_rscale, double my_slope, long *seed){
+	LensHalo::initFromMassFunc(my_mass,mass_scale,my_Rmax,my_rscale,my_slope,seed);
+	beta = my_slope;
+	make_tables();
 }
 
 void PseudoNFWLensHalo::assignParams(InputParams& params){
@@ -79,7 +162,11 @@ void PseudoNFWLensHalo::assignParams(InputParams& params){
 }
 
 PseudoNFWLensHalo::~PseudoNFWLensHalo(){
-
+    --count;
+    if(count == 0){
+    	delete[] xtable;
+    	delete[] mhattable;
+    }
 }
 
 
@@ -90,6 +177,11 @@ PowerLawLensHalo::PowerLawLensHalo() : LensHalo(){
 
 PowerLawLensHalo::PowerLawLensHalo(InputParams& params){
 	assignParams(params);
+}
+
+void PowerLawLensHalo::initFromMassFunc(float my_mass, double mass_scale, float my_Rmax, float my_rscale, double my_slope, long *seed){
+	LensHalo::initFromMassFunc(my_mass,mass_scale,my_Rmax,my_rscale,my_slope,seed);
+	beta = my_slope;
 }
 
 void PowerLawLensHalo::assignParams(InputParams& params){
@@ -131,7 +223,8 @@ void SimpleNSIELensHalo::assignParams(InputParams& params){
 SimpleNSIELensHalo::~SimpleNSIELensHalo(){
 
 }
-void SimpleNSIELensHalo::set_internal(long *seed, float vmax, float r_halfmass){
+void SimpleNSIELensHalo::initFromMass(float my_mass, double mass_scale, long *seed){
+	mass = my_mass;
 	rcore = 0.0;
 	sigma = 126*pow(mass/1.0e10,0.25); // From Tully-Fisher and Bell & de Jong 2001
 	fratio = (ran2(seed)+1)*0.5;  //TODO This is a kluge.
@@ -139,11 +232,17 @@ void SimpleNSIELensHalo::set_internal(long *seed, float vmax, float r_halfmass){
 	Rsize = rmaxNSIE(sigma,mass,fratio,rcore);
 	Rmax = MAX(1.0,1.0/fratio)*Rsize;  // redefine
 
+	mass /= mass_scale;
 	assert(Rmax >= Rsize);
 }
 
+void SimpleNSIELensHalo::initFromFile(float my_mass, double mass_scale, long *seed, float vmax, float r_halfmass){
+	initFromMass(my_mass,mass_scale,seed);
+}
 
-
+void SimpleNSIELensHalo::initFromMassFunc(float my_mass, double mass_scale, float my_Rmax, float my_rscale, double my_slope, long *seed){
+	initFromMass(my_mass,mass_scale,seed);
+}
 
 void LensHalo::force_halo(
 		double *alpha     /// mass/Mpc
@@ -159,18 +258,18 @@ void LensHalo::force_halo(
 	/// intersecting, subtract the point particle
 	if(rcm2 < Rmax*Rmax){
 		double prefac = mass/rcm2/pi;
-		double arg1 = sqrt(rcm2)/rscale;
-		double arg2 = Rmax/rscale;
+		double x = sqrt(rcm2)/rscale;
+		double xmax = Rmax/rscale;
 
-		double tmp = (alpha_h(arg1,arg2) + 1.0)*prefac;
+		double tmp = (alpha_h(x,xmax) + 1.0)*prefac;
 		alpha[0] += tmp*xcm[0];
 		alpha[1] += tmp*xcm[1];
 
 		// can turn off kappa and gamma calculations to save times
 		if(!no_kappa){
-			*kappa += kappa_h(arg1,arg2)*prefac;
+			*kappa += kappa_h(x,xmax)*prefac;
 
-			tmp = (gamma_h(arg1,arg2) + 2.0)*prefac/rcm2;
+			tmp = (gamma_h(x,xmax) + 2.0)*prefac/rcm2;
 
 			gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 			gamma[1] += xcm[0]*xcm[1]*tmp;

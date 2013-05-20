@@ -134,7 +134,7 @@ public:
 			);
 	QuadTree(
 			PosType **xpt
-			,LensHalo *my_halo_params
+			,LensHaloHndl *my_halos
 			,IndexType Npoints
 			,double my_sigma_background = 0
 			,int bucket = 5
@@ -165,7 +165,7 @@ protected:
 	IndexType *index;
 
 	bool haloON;
-	LensHalo *halos;
+	LensHaloHndl *halos;
 
 	PosType realray[2];
 	int incell,incell2;

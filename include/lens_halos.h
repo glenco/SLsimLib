@@ -24,7 +24,8 @@ public:
 	virtual float get_mass(){return mass;};
 	virtual float get_rscale(){return rscale;};
 
-	virtual void set_internal(long*,float,float){};
+	virtual void initFromFile(float,double,long*,float,float){};
+	virtual void initFromMassFunc(float my_mass, double mass_scale, float my_Rmax, float my_rscale, double my_slope, long *seed);
 
 	void set_Rmax(float my_Rmax){Rmax=my_Rmax;};
 	void set_mass(float my_mass){mass=my_mass;};
@@ -65,6 +66,7 @@ protected:
   void faxial(double theta,double f[]);
   const static int Nmod = 18;
   double mod[18];
+
 };
 
 /** \ingroup DeflectionL2
@@ -87,20 +89,28 @@ public:
 	NFWLensHalo(InputParams& params);
 	virtual ~NFWLensHalo();
 
-	void set_internal(long*,float,float);
+	void initFromFile(float,double,long*,float,float);
 
 protected:
+	const static long NTABLE = 1000;
+	const static double maxrm = 100.0;
+	static int count;
+
+	static double *ftable,*gtable,*g2table,*xtable;
+	void make_tables();
+	double InterpolateFromTable(double *table, double y);
+
 	void assignParams(InputParams& params);
 
 	// Override internal structure of halos
 	inline double alpha_h(double x,double xmax){
-		return -1.0*InterpolateFromTable(gtable,xtable,x)/InterpolateFromTable(gtable,xtable,xmax);
+		return -1.0*InterpolateFromTable(gtable,x)/InterpolateFromTable(gtable,xmax);
 	}
 	inline KappaType kappa_h(double x,double xmax){
-		return 0.5*x*x*InterpolateFromTable(ftable,xtable,x)/InterpolateFromTable(gtable,xtable,xmax);
+		return 0.5*x*x*InterpolateFromTable(ftable,x)/InterpolateFromTable(gtable,xmax);
 	}
 	inline KappaType gamma_h(double x,double xmax){
-		return -0.25*x*x*InterpolateFromTable(g2table,xtable,x)/InterpolateFromTable(gtable,xtable,xmax);
+		return -0.25*x*x*InterpolateFromTable(g2table,x)/InterpolateFromTable(gtable,xmax);
 	}
 	inline KappaType phi_h(double x,double xmax){
 		ERROR_MESSAGE();
@@ -129,22 +139,31 @@ public:
 	PseudoNFWLensHalo(InputParams& params);
 	~PseudoNFWLensHalo();
 
-	void set_slope(double my_slope){beta=my_slope;};
+	void set_slope(double my_slope){beta=my_slope; make_tables();};
+	void initFromMassFunc(float my_mass, double mass_scale, float my_Rmax, float my_rscale, double my_slope, long *seed);
 
 private:
+	const static long NTABLE = 1000;
+	const static double maxrm = 100.0;
+	static int count;
+
+	static double *mhattable,*xtable;
+	void make_tables();
+	double InterpolateFromTable(double y);
+
 	void assignParams(InputParams& params);
 
 	double beta;
 
 	// Override internal structure of halos
 	inline double alpha_h(double x,double xmax){
-		return -1.0*InterpolateFromTable(mhattable,xtable,x)/InterpolateFromTable(mhattable,xtable,xmax);
+		return -1.0*InterpolateFromTable(x)/InterpolateFromTable(xmax);
 	}
 	inline KappaType kappa_h(double x,double xmax){
-		return 0.5*x*x/InterpolateFromTable(mhattable,xtable,xmax)/pow(1+x,beta);
+		return 0.5*x*x/InterpolateFromTable(xmax)/pow(1+x,beta);
 	}
 	inline KappaType gamma_h(double x,double xmax){
-		return (0.5*x*x/pow(1+x,beta) - InterpolateFromTable(mhattable,xtable,x))/InterpolateFromTable(mhattable,xtable,xmax);
+		return (0.5*x*x/pow(1+x,beta) - InterpolateFromTable(x))/InterpolateFromTable(xmax);
 	}
 	inline KappaType phi_h(double x,double xmax){
 		ERROR_MESSAGE();
@@ -173,6 +192,7 @@ public:
 	~PowerLawLensHalo();
 
 	void set_slope(double my_slope){beta=my_slope;};
+	void initFromMassFunc(float my_mass, double mass_scale, float my_Rmax, float my_rscale, double my_slope, long *seed);
 
 private:
 	void assignParams(InputParams& params);
@@ -222,7 +242,9 @@ public:
 
 	float get_Rmax(){return Rmax*MAX(1.0,1.0/fratio);};
 
-	void set_internal(long*,float,float);
+	void initFromFile(float,double,long*,float,float);
+	void initFromMassFunc(float my_mass, double mass_scale, float my_Rmax, float my_rscale, double my_slope, long *seed);
+	void initFromMass(float my_mass, double mass_scale, long *seed);
 
 protected:
 	void assignParams(InputParams& params);

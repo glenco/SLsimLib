@@ -185,7 +185,7 @@ private:
 	bool flag_run_multip_test;
 
 	/// vector of all lens halos in the light cone
-	std::vector<LensHalo *> halos;
+	std::vector<LensHaloHndl> halos;
 	/// number of halos on all the planes
 	IndexType Nhalos;
 	double *halo_zs;
@@ -206,9 +206,6 @@ private:
 	double zsource;
 
 	double field_buffer;
-
-	bool nfw_table_set;
-	bool pnfw_table_set;
 
 	bool second_halo;
 

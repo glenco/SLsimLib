@@ -49,7 +49,7 @@ void MultiLens::resetNplanes(CosmoHndl cosmo, int Np){
 
 void MultiLens::resetHalos(CosmoHndl cosmo){
   delete[] halo_tree;
-  halos.resize(0);
+  halos.clear();
 
   delete[] halo_zs;
   delete[] halo_id;
@@ -82,9 +82,6 @@ MultiLens::MultiLens(InputParams& params,long *my_seed) : Lens(){
 	NTABLE=1000;
 	table_set = false;
 
-	nfw_table_set = false;
-	pnfw_table_set = false;
-
 	// flag to determine if halos are created randomly or read in from a external simulation.
 	if(input_sim_file.size() < 1) sim_input_flag = false;
 	else sim_input_flag = true;
@@ -102,21 +99,16 @@ MultiLens::MultiLens(InputParams& params,long *my_seed) : Lens(){
 
 	halo_tree = new auto_ptr<QuadTree>[Nplanes-1];
 
+
 	switch(flag_input_lens){
 	case null:
 		input_lens = NULL;
 		break;
 	case nfw_lens:
 		input_lens = new NFWLensHalo(params);
-		make_nfw_tables();
-		nfw_table_set = true;
 		break;
 	case pnfw_lens:
 		input_lens = new PseudoNFWLensHalo(params);
-		double b;
-		params.get("slope_pnfw",b);
-		make_pnfw_tables(b);
-		pnfw_table_set = true;
 		break;
 	case pl_lens:
 		input_lens = new PowerLawLensHalo(params);
@@ -158,7 +150,7 @@ MultiLens::~MultiLens(){
 	delete[] plane_redshifts;
 	delete[] dDl;
 
-	halos.resize(0);
+	halos.clear();
 	delete[] halo_zs;
 	delete[] halo_id;
 	Utilities::free_PosTypeMatrix(halo_pos,Nhalos,3);
@@ -168,18 +160,6 @@ MultiLens::~MultiLens(){
 
 	delete[] coorDist_table;
 	delete[] redshift_table;
-
-	if(nfw_table_set){
-		delete[] xtable;
-		delete[] gtable;
-		delete[] ftable;
-		delete[] g2table;
-	}
-
-	if(pnfw_table_set){
-		delete[] xtable;
-		delete[] mhattable;
-	}
 }
 
 /// Retrieve input parameters for construction
@@ -465,7 +445,7 @@ void MultiLens::buildHaloTrees(
 		/// Use other constructor to create halo data
 		std::cout << "  Building tree on plane " << j << " number of halos: " << j2-j1 << std::endl;
 
-		halo_tree[j].reset(new QuadTree(&halo_pos[j1],halos[j1],j2-j1,sigma_back));
+		halo_tree[j].reset(new QuadTree(&halo_pos[j1],&halos[j1],j2-j1,sigma_back));
 	}
 
 	if(r_print_halos){
@@ -519,7 +499,7 @@ void MultiLens::buildHaloTrees_test(
 		/// Use other constructor to create halo data
 		std::cout << "  Building tree on plane " << j << " number of halos: " << j2-j1 << std::endl;
 
-		halo_tree[j].reset(new QuadTree(&halo_pos[j1],halos[j1],j2-j1,sigma_back));
+		halo_tree[j].reset(new QuadTree(&halo_pos[j1],&halos[j1],j2-j1,sigma_back));
 	}
 
 	cout << "constructed " << Nhalos << " halos" << endl;
@@ -1028,20 +1008,21 @@ void MultiLens::createHaloData(
 
 			float mass = pow(10,InterpolateYvec(Nhalosbin,Logm,ran2 (seed)));
 
-			halos[j]->set_mass(mass);
-
 			halo_calc->reset(mass,halo_zs[i]);
 
-			halos[j]->set_Rmax(halo_calc->getRvir());
-			halos[j]->set_rscale(halos[j]->get_Rmax()/halo_calc->getConcentration(0));
+			float Rmax = halo_calc->getRvir();
+			float rscale = Rmax/halo_calc->getConcentration(0);
 
+			if(second_halo){
+				if(galaxy_mass_fraction > 1.0) galaxy_mass_fraction = 1;
+				halos[j]->initFromMassFunc(mass*(1-galaxy_mass_fraction),mass_scale,Rmax,rscale,halo_slope,seed);
+			}
+			else{
+				halos[j]->initFromMassFunc(mass,mass_scale,Rmax,rscale,halo_slope,seed);
+			}
 
-			halos[j]->set_internal(seed,dummy,dummy);
-
-			halos[j]->set_mass(mass/mass_scale);
-
-			if(halos[j]->get_mass() > mass_max) {
-				mass_max = halos[j]->get_mass();
+			if(mass > mass_max) {
+				mass_max = mass;
 				j_max = i;
 				pos_max[0] = pos[0];
 				pos_max[1] = pos[1];
@@ -1055,9 +1036,6 @@ void MultiLens::createHaloData(
 			++j;
 
 			if(second_halo){
-				if(galaxy_mass_fraction > 1.0) galaxy_mass_fraction = 1;
-
-
 				switch(int_prof_gal_type){
 				case NSIE:
 					halos.push_back(new SimpleNSIELensHalo);
@@ -1070,16 +1048,11 @@ void MultiLens::createHaloData(
 					break;
 				}
 
-				halos[j]->set_mass(mass*galaxy_mass_fraction);
-				halos[j-1]->set_mass(mass*(1-galaxy_mass_fraction)/mass_scale);
-				halos[j]->set_slope(halo_slope);
-				halos[j]->set_internal(seed,dummy,dummy);
+				halos[j]->initFromMassFunc(mass*galaxy_mass_fraction,mass_scale,Rmax,rscale,halo_slope,seed);
 
 				halo_pos_vec.push_back(pos);
 				halo_zs_vec.push_back(halo_zs[i]);
 				halo_id_vec.push_back(j);
-
-				halos[j]->set_mass(halos[j]->get_mass()/mass_scale);
 
 				++j;
 			}
@@ -1304,8 +1277,6 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 
 		if(np > 0.0 && vdisp > 0.0 && z <= zsource){
 
-			halo_pos_vec.push_back(theta);
-
 			switch(int_prof_type){
 			case NFW:
 				halos.push_back(new NFWLensHalo);
@@ -1326,42 +1297,36 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 
 			float mass = np*8.6e8/cosmo->gethubble();
 
-			halos[j]->set_mass(mass);
-			halos[j]->set_Rmax(mass*Grav/2/pow(vmax/lightspeed,2));  // SIS value
-
-			if(halos[j]->get_mass() > mass_max) {
-				mass_max = halos[j]->get_mass();
-				j_max = j;
-			}
-			if(halos[j]->get_mass() < minmass) {
-				minmass = halos[j]->get_mass();
-			}
-
-			/*
-			 * set the other properties of the LensHalo, such as rscale or the NSIE properties
-			 */
-
-			halos[j]->set_slope(halo_slope);
-			halos[j]->set_internal(seed,vmax,r_halfmass*cosmo->gethubble());
-
-			if(halos[j]->get_Rmax() > R_max) R_max = halos[j]->get_Rmax();
-			if(vdisp > V_max) V_max = vdisp;
-
-
-			halo_zs_vec.push_back(z);
-			halo_id_vec.push_back(haloid);
-
-			halos[j]->set_mass(halos[j]->get_mass()/mass_scale);
-
-			++j;
-
 			if(second_halo){
 				galaxy_mass_fraction = 2*mo*pow(mass/M1,gam1)
 				  /pow(1+pow(mass/M1,be),(gam1-gam2)/be)/mass;
 				if(galaxy_mass_fraction > 1.0) galaxy_mass_fraction = 1;
 
-				halo_pos_vec.push_back(theta);
+				halos[j]->initFromFile(mass*(1-galaxy_mass_fraction),mass_scale,seed,vmax,r_halfmass*cosmo->gethubble());
+			}
+			else{
+				halos[j]->initFromFile(mass,mass_scale,seed,vmax,r_halfmass*cosmo->gethubble());
+			}
 
+
+			if(halos[j]->get_Rmax() > R_max) R_max = halos[j]->get_Rmax();
+			if(vdisp > V_max) V_max = vdisp;
+
+			halo_zs_vec.push_back(z);
+			halo_id_vec.push_back(haloid);
+			halo_pos_vec.push_back(theta);
+
+			if(mass > mass_max) {
+				mass_max = mass;
+				j_max = j;
+			}
+			if(mass < minmass) {
+				minmass = mass;
+			}
+
+			++j;
+
+			if(second_halo){
 				switch(int_prof_gal_type){
 				case NSIE:
 					halos.push_back(new SimpleNSIELensHalo);
@@ -1374,35 +1339,11 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 					break;
 				}
 
-				halos[j]->set_mass(mass*galaxy_mass_fraction);
-				halos[j-1]->set_mass(mass*(1-galaxy_mass_fraction)/mass_scale);
-
-				halos[j]->set_Rmax(mass*galaxy_mass_fraction*Grav/2/pow(vmax/lightspeed,2));  // SIS value
-
-
-				if(halos[j]->get_mass() > mass_max) {
-					mass_max = halos[j]->get_mass();
-					j_max = j;
-				}
-				if(halos[j]->get_mass() < minmass) {
-					minmass = halos[j]->get_mass();
-				}
-
-				/*
-				 * set the other properties of the LensHalo, such as rscale or the NSIE properties
-				 */
-
-				halos[j]->set_slope(halo_slope);
-				halos[j]->set_internal(seed,vmax,r_halfmass*cosmo->gethubble());
-
-				if(halos[j]->get_Rmax() > R_max) R_max = halos[j]->get_Rmax();
-				if(vdisp > V_max) V_max = vdisp;
-
+				halos[j]->initFromFile(mass*galaxy_mass_fraction,mass_scale,seed,vmax,r_halfmass*cosmo->gethubble());
 
 				halo_zs_vec.push_back(z);
 				halo_id_vec.push_back(haloid);
-
-				halos[j]->set_mass(halos[j]->get_mass()/mass_scale);
+				halo_pos_vec.push_back(theta);
 
 				++j;
 			}

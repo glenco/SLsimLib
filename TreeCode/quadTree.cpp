@@ -46,7 +46,7 @@ QuadTree::QuadTree(
  */
 QuadTree::QuadTree(
 		PosType **xpt
-		,LensHalo *my_halos
+		,LensHaloHndl *my_halos
 		,IndexType Npoints
 		,double my_sigma_background /// background kappa that is subtracted
 		,int bucket
@@ -138,7 +138,7 @@ void QuadTree::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
 		for(i=0;i<cbranch->nparticles;++i){
 			jt = particles[i]*MultiRadius;
 			if(haloON){
-				r = halos[jt].get_Rmax();
+				r = halos[jt]->get_Rmax();
 			}else{
 				r = sizes[jt];
 			}
@@ -150,7 +150,7 @@ void QuadTree::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
 			for(i=0,j=0;i<cbranch->nparticles;++i){
 				jt = particles[i]*MultiRadius;
 				if(haloON){
-					r = halos[jt].get_Rmax();
+					r = halos[jt]->get_Rmax();
 				}else{
 					r = sizes[jt];
 				}
@@ -175,7 +175,7 @@ void QuadTree::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
 		// store the particles that are too large to be in a child at the end of the list of particles in cbranch
 		for(i=0;i<cbranch->nparticles;++i){
 			if(haloON){
-				x[i] = halos[i].get_Rmax();
+				x[i] = halos[i]->get_Rmax();
 			}else{
 				x[i] = sizes[particles[i]];
 			}
@@ -201,7 +201,7 @@ void QuadTree::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
 
 	}else{
 		if(haloON){
-			x[0] = halos[0].get_Rmax();
+			x[0] = halos[0]->get_Rmax();
 		}else{
 			x[0] = sizes[0];
 		}
@@ -354,7 +354,7 @@ void QuadTree::CalcMoments(){
 		// calculate mass
 		for(i=0,cbranch->mass=0;i<cbranch->nparticles;++i)
 			if(haloON ){
-				cbranch->mass +=  halos[i].get_mass();
+				cbranch->mass +=  halos[i]->get_mass();
 			}else{
 				cbranch->mass += masses[cbranch->particles[i]*MultiMass];
 			}
@@ -364,7 +364,7 @@ void QuadTree::CalcMoments(){
 		cbranch->center[0]=cbranch->center[1]=0;
 		for(i=0;i<cbranch->nparticles;++i){
 			if(haloON ){
-				tmp = halos[i].get_mass();
+				tmp = halos[i]->get_mass();
 			}else{
 				tmp = masses[cbranch->particles[i]*MultiMass];
 			}
@@ -381,7 +381,7 @@ void QuadTree::CalcMoments(){
 			xcm[1]=tree->xp[cbranch->particles[i]][1]-cbranch->center[1];
 			xcut = pow(xcm[0],2) + pow(xcm[1],2);
 			if(haloON ){
-				tmp = halos[i].get_mass();
+				tmp = halos[i]->get_mass();
 			}else{
 				tmp = masses[cbranch->particles[i]*MultiMass];
 			}
@@ -504,7 +504,7 @@ void QuadTree::force2D(double *ray,double *alpha,KappaType *kappa,KappaType *gam
 					  index = MultiMass*tree->current->particles[i];
 
 					  if(haloON ){
-						  prefac = halos[index].get_mass();
+						  prefac = halos[index]->get_mass();
 					  }else{
 						  prefac = masses[index];
 					  }
@@ -535,7 +535,7 @@ void QuadTree::force2D(double *ray,double *alpha,KappaType *kappa,KappaType *gam
 					  xcm[1] = tree->xp[index][1] - ray[1];
 
 					  if(haloON){
-						  halos[index].force_halo(alpha,kappa,gamma,xcm,no_kappa);
+						  halos[index]->force_halo(alpha,kappa,gamma,xcm,no_kappa);
 					  }else{  // case of no halos just particles and no class derived from QuadTree
 
 						  rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
@@ -678,7 +678,7 @@ void QuadTree::walkTree_recur(QBranchNB *branch,double *ray,double *alpha,KappaT
 
 
 					  if(haloON ){
-						  prefac = halos[index].get_mass();
+						  prefac = halos[index]->get_mass();
 					  }else{
 						  prefac = masses[index];
 					  }
@@ -708,7 +708,7 @@ void QuadTree::walkTree_recur(QBranchNB *branch,double *ray,double *alpha,KappaT
 
 					/////////////////////////////////////////
 					if(haloON){
-						halos[index].force_halo(alpha,kappa,gamma,xcm,no_kappa);
+						halos[index]->force_halo(alpha,kappa,gamma,xcm,no_kappa);
 					}else{  // case of no halos just particles and no class derived from QuadTree
 
 						rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
