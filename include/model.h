@@ -18,7 +18,7 @@
  * There are several constructors, which allow for different types of initializations.
  *
  * The template class will then be created from the main() function as:
- * e.g. Model<MultiLens,SourceUniform>* model = new Model<MultiLens,SourceUniform>(paramfile,&seed);
+ * e.g. Model<Lens,SourceUniform>* model = new Model<Lens,SourceUniform>(paramfile,&seed);
  *
  * The default values of the Model template are AnaNSIELensHalo and SourceUnifrom, which can de allocated as
  * Model<>* model = new Model<>(paramfile);
@@ -31,7 +31,7 @@
  * etc.
  *
  */
-template <class L=SingleLens, class S=SourceUniform> class Model{
+template <class L=Lens, class S=SourceUniform> class Model{
 public:
 
 	L* lens;

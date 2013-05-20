@@ -10,7 +10,7 @@
 using namespace std;
 
 
-void MultiLens::make_table(CosmoHndl cosmo){
+void Lens::make_table(CosmoHndl cosmo){
 	int i;
 	double x, dx = (zsource+1.0)/(double)NTABLE;
 
@@ -28,7 +28,7 @@ void MultiLens::make_table(CosmoHndl cosmo){
 	table_set=true;
 }
 
-void MultiLens::resetNplanes(CosmoHndl cosmo, int Np){
+void Lens::resetNplanes(CosmoHndl cosmo, int Np){
   delete[] halo_tree;
 
   delete[] Dl;
@@ -47,7 +47,7 @@ void MultiLens::resetNplanes(CosmoHndl cosmo, int Np){
   buildHaloTrees(cosmo);
 }
 
-void MultiLens::resetFieldHalos(CosmoHndl cosmo){
+void Lens::resetFieldHalos(CosmoHndl cosmo){
   delete[] halo_tree;
   field_halos.clear();
 
@@ -73,7 +73,7 @@ void MultiLens::resetFieldHalos(CosmoHndl cosmo){
  * \ingroup Constructor
  * allocates space for the halo trees and the inout lens, if there is any
  */
-MultiLens::MultiLens(InputParams& params, CosmoHndl cosmo, SourceHndl source, long *my_seed) : Lens() , seed(my_seed){
+Lens::Lens(InputParams& params, CosmoHndl cosmo, SourceHndl source, long *my_seed) : Lens() , seed(my_seed){
 
 	second_halo = false;
 
@@ -167,7 +167,7 @@ MultiLens::MultiLens(InputParams& params, CosmoHndl cosmo, SourceHndl source, lo
 	std:: cout << " done " << std:: endl;
 }
 
-MultiLens::~MultiLens(){
+Lens::~Lens(){
 	delete[] halo_tree;
 
 	delete[] Dl;
@@ -187,7 +187,7 @@ MultiLens::~MultiLens(){
 }
 
 /// Retrieve input parameters for construction
-void MultiLens::assignParams(InputParams& params){
+void Lens::assignParams(InputParams& params){
 
   if(!params.get("outputfile",outputfile)){
 		  ERROR_MESSAGE();
@@ -315,7 +315,7 @@ void MultiLens::assignParams(InputParams& params){
 	  printMultiLens();
 }
 
-void MultiLens::printMultiLens(){
+void Lens::printMultiLens(){
 
 	cout << endl << "**multi lens model**" << endl;
 
@@ -383,7 +383,7 @@ void MultiLens::printMultiLens(){
  * Then the halo trees are built, depending on the internal profile model that
  * has been chosen in the parameter file
  */
-void MultiLens::buildHaloTrees(
+void Lens::buildHaloTrees(
 		CosmoHndl cosmo /// the cosmology
 		){
 	int j, Ntot;
@@ -484,7 +484,7 @@ void MultiLens::buildHaloTrees(
  * with just two lensing planes, used to test the convergence
  * of the ray-shooter.
  */
-void MultiLens::buildHaloTrees_test(
+void Lens::buildHaloTrees_test(
 		CosmoHndl cosmo /// the cosmology
 		){
 	int j, Ntot;
@@ -534,7 +534,7 @@ void MultiLens::buildHaloTrees_test(
  * analytical solution for a system with two lensing planes.
  * The error values are saved instead of the real physical values.
  */
-void MultiLens::calc_error_test(
+void Lens::calc_error_test(
 		unsigned long Npoints
 		,Point *point
 		,bool kappa_off
@@ -617,7 +617,7 @@ void MultiLens::calc_error_test(
  * This way one can see the relative error between the plane approximation and the
  * "analytical" solution of the lens equation.
  */
-void MultiLens::calc_error_test_multi(
+void Lens::calc_error_test_multi(
 		unsigned long Npoints
 		,Point *i_points
 		,bool kappa_off
@@ -651,7 +651,7 @@ void MultiLens::calc_error_test_multi(
  * In case it is on the first plane, it will hold the index Nplanes, to make
  * sure that it is not zero (i.e. not set)
  */
-void MultiLens::setCoorDist(CosmoHndl cosmo){
+void Lens::setCoorDist(CosmoHndl cosmo){
 	std:: vector<double> lD;
 	int i, Np;
 
@@ -733,14 +733,14 @@ void MultiLens::setCoorDist(CosmoHndl cosmo){
 	cout << plane_redshifts[i] << " " << std::endl;
 }
 
-double MultiLens::getZlens(){
+double Lens::getZlens(){
 	if(flag_input_lens)
 		return main_halos->getZlens();
 	else
 		return plane_redshifts[0];
 }
 
-void MultiLens::setZlens(CosmoHndl cosmo,double z,double zsource){
+void Lens::setZlens(CosmoHndl cosmo,double z,double zsource){
 	if(flag_input_lens)
 		main_halos->setZlens(cosmo,z,zsource);
 	else{
@@ -752,7 +752,7 @@ void MultiLens::setZlens(CosmoHndl cosmo,double z,double zsource){
 
 
 /// Sort field_halos[], brr[][], and id[] by content off arr[]
-void MultiLens::quicksort(LensHaloHndl *halos,double **brr,double *arr,unsigned long  *id,unsigned long N){
+void Lens::quicksort(LensHaloHndl *halos,double **brr,double *arr,unsigned long  *id,unsigned long N){
 	double pivotvalue;
 	unsigned long pivotindex,newpivotindex,i;
 
@@ -798,10 +798,10 @@ void MultiLens::quicksort(LensHaloHndl *halos,double **brr,double *arr,unsigned 
  * than this redshift.  This is used to rayshoot to a source whose line of sight passes through the
  * simulation volume.  The source can be at higher redshift than the simulation volume.
  *
- * To revert the source redshift to its original value use MultiLens::RevertSourcePlane().
+ * To revert the source redshift to its original value use Lens::RevertSourcePlane().
  *
  */
-short MultiLens::ResetSourcePlane(
+short Lens::ResetSourcePlane(
 		CosmoHndl cosmo           /// cosmology
 		,double z                 /// redshift of implanted source
 		,bool nearest             /** If true, set the source plane to the nearest (in coordinate distance)
@@ -860,7 +860,7 @@ short MultiLens::ResetSourcePlane(
 }
 
 
-void MultiLens::createHaloData(
+void Lens::createHaloData(
 		CosmoHndl cosmo     /// cosmology
 		,long *seed
 	){
@@ -1077,7 +1077,7 @@ void MultiLens::createHaloData(
  * This is used to test the convergence of the ray shooter.
  *
  */
-void MultiLens::createHaloData_test(
+void Lens::createHaloData_test(
 		CosmoHndl cosmo     /// cosmology
 		,long *seed
 	){
@@ -1159,7 +1159,7 @@ void MultiLens::createHaloData_test(
  * The comments must be removed from the beginning of the data file and the total number of field_halos must be added
  * as the first line.
  */
-void MultiLens::readInputSimFile(CosmoHndl cosmo){
+void Lens::readInputSimFile(CosmoHndl cosmo){
 
 	double ra,dec,z,vmax,vdisp,r_halfmass;
 	unsigned long i,j;
@@ -1367,7 +1367,7 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 
 	std::cout << "sorting in MultiLens::readInputSimFile()" << std::endl;
 	// sort the field_halos by readshift
-	MultiLens::quicksort(field_halos.data(),halo_pos,halo_zs,halo_id,Nhalos);
+	Lens::quicksort(field_halos.data(),halo_pos,halo_zs,halo_id,Nhalos);
 
 	std::cout << "leaving MultiLens::readInputSimFile()" << std::endl;
 

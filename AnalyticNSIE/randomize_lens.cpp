@@ -43,7 +43,7 @@ void AnaNSIELensHalo::RandomizeSigma(long *seed,bool tables){
 	delete[] sigmaTable;
 }
 
-void MultiLens::RandomizeSigma(long *seed,bool tables){
+void Lens::RandomizeSigma(long *seed,bool tables){
 	if(flag_input_lens)
 		analens->RandomizeSigma(seed,tables);
 }
@@ -92,7 +92,7 @@ void AnaNSIELensHalo::RandomizeHost(long *seed,bool tables){
 	return ;
 }
 
-void MultiLens::RandomizeHost(long *seed,bool tables){
+void Lens::RandomizeHost(long *seed,bool tables){
 	if(flag_input_lens)
 		analens->RandomizeHost(seed,tables);
 }

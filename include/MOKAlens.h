@@ -52,7 +52,7 @@ struct MOKAmap{
  *
  * A class, where the lens is represented by a MOKA cluster in the form of a
  * MOKAmap object (see the description of MOKAmap). It can either be used with the
- * MultiLens model or by itself.
+ * Lens model or by itself.
  *
  * Note: To use this class requires setting the ENABLE_FITS compiler flag and linking
  * the cfits library.

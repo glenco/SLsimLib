@@ -145,13 +145,13 @@ short find_peaks(
  *
  *  \brief Refines the grid based on the flux from implanted sources.
  *
- *  If a source has been implanted into a MultiLens this routine will refine the
+ *  If a source has been implanted into a Lens this routine will refine the
  *  grid around that image until the grid anywhere on the image and on the border
  *  reaches the resolution target.  The images are stored in imageinfo[0,...,*Nimages-1]->imagekist.
  *  The image must be within radius of the point theta[2].
  */
 short refine_on_implanted_source(
-		MultiLensHndl lens        /// MultiLens model
+		MultiLensHndl lens        /// Lens model
 		,GridHndl grid         /// Grid to be refined.  It must be initialized.
 		,double *theta         /// position on the sky
 		,double radius         /// size of region to look for image

@@ -29,7 +29,7 @@ struct TmpParamsHalos{
   int tid;
   int start;
   int size;
-  MultiLens *lens;
+  Lens *lens;
 };
 
 /*
@@ -41,7 +41,7 @@ struct TmpParamsHalos{
  * dDl_halos[j = 0...Nhalos-1] - The angular size distance between the (j-1)th and jth field_halos
  *                      dDl_halos[0] = Dl_halos[0]
  */
-void MultiLens::rayshooterInternal_halos(
+void Lens::rayshooterInternal_halos(
 		unsigned long Npoints   /// number of points to be shot
 		,Point *i_points        /// point on the image plane
 		,bool kappa_off         /// turns calculation of convergence and shear off to save time.
@@ -95,7 +95,7 @@ void MultiLens::rayshooterInternal_halos(
 void *compute_rays_parallel_halos(void *_p){
 	  TmpParamsHalos *p = (TmpParamsHalos *) _p;
 	  bool kappa_off = p->kappa_off;
-	  MultiLens *lens = p->lens;
+	  Lens *lens = p->lens;
 	  int tid        = p->tid;
 	  int chunk_size = p->size;
 	  int start      = p->start;

@@ -55,11 +55,11 @@
  * </pre>
  */
 
-class MultiLens{
+class Lens{
 public:
-	//MultiLens(InputParams& params,long *seed);
+	//Lens(InputParams& params,long *seed);
 	MultiLens(InputParams& params, CosmoHndl cosmo, SourceHndl source, long *my_seed);
-	~MultiLens();
+	~Lens();
 
 	/// marks if the lens has been setup.
 	bool set;
@@ -101,7 +101,7 @@ public:
 
 	short ResetSourcePlane(CosmoHndl cosmo,double z,bool nearest, unsigned long GalID=0, double *xx=NULL);
 
-	/// Revert the source redshift to the value it was when the MultiLens was created.
+	/// Revert the source redshift to the value it was when the Lens was created.
 	void RevertSourcePlane(){ toggle_source_plane = false;}
 	//void ImplantSource(unsigned long index,CosmoHndl cosmo);
 	double getSourceZ(){
@@ -214,7 +214,7 @@ private:
 	void quicksort(LensHaloHndl *halo,double **brr,double *arr,unsigned long *id,unsigned long N);
 };
 
-typedef  MultiLens* MultiLensHndl;
+typedef  Lens* LensHndl;
 
 
 #endif /* MULTIPLANE_H_ */

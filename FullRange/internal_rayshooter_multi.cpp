@@ -45,10 +45,10 @@ struct TmpParams{
   int start;
   int size;
   int NPlanes;
-  MultiLens *lens;
+  Lens *lens;
 };
 
-void MultiLens::rayshooterInternal(
+void Lens::rayshooterInternal(
 		unsigned long Npoints   /// number of points to be shot
 		,Point *i_points        /// point on the image plane
 		,bool kappa_off         /// turns calculation of convergence and shear off to save time.
@@ -120,7 +120,7 @@ void MultiLens::rayshooterInternal(
 void *compute_rays_parallel(void *_p){
   TmpParams *p = (TmpParams *) _p;
   bool kappa_off = p->kappa_off;
-  MultiLens *lens = p->lens;
+  Lens *lens = p->lens;
   int tid        = p->tid;
   int chunk_size = p->size;
   int start      = p->start;
@@ -296,7 +296,7 @@ void *compute_rays_parallel(void *_p){
  * Calculates the source plane position x_source, gamma, and kappa for a single ray (in radians)
  *
  */
-void MultiLens::rayshooterInternal(
+void Lens::rayshooterInternal(
 		double *ray 	  /// position on the image plane in radians
 		,double *x_source /// position on the source plane in radians
 		,KappaType *gamma

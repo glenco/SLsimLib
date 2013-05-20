@@ -269,7 +269,7 @@ protected:
 class DummyLens: public LensHalo{
 public:
 	DummyLens(): LensHalo(){};
-    DummyLens(InputParams& params,long *my_seed): Lens(){};
+    DummyLens(InputParams& params): LensHalo(){};
 	~DummyLens(){};
 
 	void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa){
