@@ -73,7 +73,7 @@ void Lens::resetFieldHalos(CosmoHndl cosmo){
  * \ingroup Constructor
  * allocates space for the halo trees and the inout lens, if there is any
  */
-Lens::Lens(InputParams& params, CosmoHndl cosmo, SourceHndl source, long *my_seed) : Lens() , seed(my_seed){
+Lens::Lens(InputParams& params, CosmoHndl cosmo, SourceHndl source, long *my_seed) : seed(my_seed){
 
 	second_halo = false;
 

@@ -11,7 +11,6 @@
 #include "lens.h"
 #include "point.h"
 #include "Tree.h"
-#include "base_analens.h"
 
 /** \ingroup ImageFinding
  * \brief Structure to contain both source and image trees.
@@ -110,5 +109,7 @@ void sort_out_points(Point *i_points,ImageInfo *imageinfo,double r_source,double
 
 void xygridpoints(Point *points,double range,double *center,long Ngrid
 		,short remove_center);
+
+void saveImage(MOKALensHalo *mokahalo, GridHndl grid, bool saveprofile=true);
 
 #endif

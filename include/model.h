@@ -8,9 +8,8 @@
 #ifndef MODEL_H_
 #define MODEL_H_
 
-#include <singlelens.h>
-#include <multiplane.h>
-#include <source.h>
+#include "lens.h"
+#include "source.h"
 #include "parameters.h"
 
 /**

@@ -151,7 +151,7 @@ short find_peaks(
  *  The image must be within radius of the point theta[2].
  */
 short refine_on_implanted_source(
-		MultiLensHndl lens        /// Lens model
+		LensHndl lens        /// Lens model
 		,GridHndl grid         /// Grid to be refined.  It must be initialized.
 		,double *theta         /// position on the sky
 		,double radius         /// size of region to look for image

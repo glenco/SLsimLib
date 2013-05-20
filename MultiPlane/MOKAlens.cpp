@@ -170,44 +170,44 @@ void MOKALensHalo::assignParams(InputParams& params){
  * and then saving to a fits file and computing the radial profile
  * of the convergence
  */
-void MOKALensHalo::saveImage(GridHndl grid,bool saveprofiles){
+void saveImage(MOKALensHalo *halo, GridHndl grid,bool saveprofiles){
 	std::stringstream f;
 	std::string filename;
 
-	if(flag_background_field==1) f << MOKA_input_file << "_only_noise.fits";
+	if(halo->flag_background_field==1) f << halo->MOKA_input_file << "_only_noise.fits";
 	else{
-	  if(flag_MOKA_analyze == 0) f << MOKA_input_file << "_noisy.fits";
-	  else f << MOKA_input_file << "_no_noise.fits";
+	  if(halo->flag_MOKA_analyze == 0) f << halo->MOKA_input_file << "_noisy.fits";
+	  else f << halo->MOKA_input_file << "_no_noise.fits";
 	}
 	filename = f.str();
 
 	MoveToTopList(grid->i_tree->pointlist);
 
 	do{
-		long index = Utilities::IndexFromPosition(grid->i_tree->pointlist->current->x,map->nx,map->boxlrad,map->center);
+		long index = Utilities::IndexFromPosition(grid->i_tree->pointlist->current->x,halo->map->nx,halo->map->boxlrad,halo->map->center);
 		if(index > -1){
-			map->convergence[index] = grid->i_tree->pointlist->current->kappa;
-			map->gamma1[index] = grid->i_tree->pointlist->current->gamma[0];
-			map->gamma2[index] = grid->i_tree->pointlist->current->gamma[1];
-			map->gamma3[index] = grid->i_tree->pointlist->current->gamma[2];
+			halo->map->convergence[index] = grid->i_tree->pointlist->current->kappa;
+			halo->map->gamma1[index] = grid->i_tree->pointlist->current->gamma[0];
+			halo->map->gamma2[index] = grid->i_tree->pointlist->current->gamma[1];
+			halo->map->gamma3[index] = grid->i_tree->pointlist->current->gamma[2];
 		}
 	}while(MoveDownList(grid->i_tree->pointlist)==true);
 
-	writeImage(filename);
+	halo->writeImage(filename);
 
 	if(saveprofiles == true){
 
 	  std:: cout << " saving profile " << std:: endl;
 	  double RE3,xxc,yyc;
-          saveProfiles(RE3,xxc,yyc);
-	  estSignLambdas();
+	  halo->saveProfiles(RE3,xxc,yyc);
+	  halo->estSignLambdas();
 	  double RE1,RE2;
-	  EinsteinRadii(RE1,RE2,xxc,yyc);
+	  halo->EinsteinRadii(RE1,RE2,xxc,yyc);
 	  std::ostringstream fEinr;
-	  if(flag_background_field==1) fEinr << MOKA_input_file << "_only_noise_Einstein.radii.dat";
+	  if(halo->flag_background_field==1) fEinr << halo->MOKA_input_file << "_only_noise_Einstein.radii.dat";
 	  else{
-	    if(flag_MOKA_analyze == 0) fEinr << MOKA_input_file << "_noisy_Einstein.radii.dat";
-	    else fEinr << MOKA_input_file << "_no_noise_Einstein.radii.dat";
+	    if(halo->flag_MOKA_analyze == 0) fEinr << halo->MOKA_input_file << "_noisy_Einstein.radii.dat";
+	    else fEinr << halo->MOKA_input_file << "_no_noise_Einstein.radii.dat";
 	  }
 	  std:: ofstream filoutEinr;
 	  std:: string filenameEinr = fEinr.str();

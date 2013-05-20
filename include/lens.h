@@ -13,6 +13,7 @@
 #include <quadTree.h>
 #include <sourceAnaGalaxy.h>
 #include "tables.h"
+#include "utilities_slsim.h"
 
 /**
  * \brief A class to represents a lens with multiple planes.
@@ -58,7 +59,7 @@
 class Lens{
 public:
 	//Lens(InputParams& params,long *seed);
-	MultiLens(InputParams& params, CosmoHndl cosmo, SourceHndl source, long *my_seed);
+	Lens(InputParams& params, CosmoHndl cosmo, SourceHndl source, long *my_seed);
 	~Lens();
 
 	/// marks if the lens has been setup.
@@ -92,7 +93,7 @@ public:
 	InputLensType DM_halo_type;
 	InputLensType galaxy_halo_type;
 	/// main lensing halo in the simulation
-	Utilities::MixedVector<LensHaloHndl> main_halos;
+	Utilities::MixedVector<LensHalo> main_halos;
 
 	/// field of view in square degrees
 	double fieldofview;

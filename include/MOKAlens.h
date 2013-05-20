@@ -12,8 +12,7 @@
 #include "standard.h"
 #include "profile.h"
 #include "InputParams.h"
-#include "lens.h"
-#include "grid_maintenance.h"
+#include "lens_halos.h"
 
 /**
  * \brief The MOKA map structure, containing all quantities that define it
@@ -74,7 +73,6 @@ public:
 
 	void assignParams(InputParams& params);
 	void setInternalParams(CosmoHndl,SourceHndl);
-	void saveImage(GridHndl grid, bool saveprofile=true);
 	void saveImage(bool saveprofile=true);
 	void saveKappaProfile();
 	void saveGammaProfile();
@@ -87,7 +85,6 @@ public:
 	void estSignLambdas();
 	void EinsteinRadii(double &RE1, double &RE2, double &xxc, double &yyc);
 
-private:
 	void getDims();
 	void readImage();
 	void writeImage(std::string fn);

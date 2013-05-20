@@ -76,7 +76,7 @@ namespace Utilities{
 		
 		/// add an object of type SubclassT to the vector
 		template<typename SubclassT>
-		void push_back(const SubclassT& obj)
+		void push_back_ref(const SubclassT& obj)
 		{
 			// make sure this is a subclass of BaseT
 			check_type(obj);
@@ -91,6 +91,19 @@ namespace Utilities{
 			tmap[typeid(SubclassT)].push_back(copy);
 		}
 		
+		/// add an object of type SubclassT to the vector
+		template<typename SubclassT>
+		void push_back(SubclassT* obj)
+		{
+			// make sure this is a subclass of BaseT
+			//check_type(obj);
+
+			// add the copy of the object to the list of items
+			items.push_back(obj);
+
+			// add the copy to type map
+			tmap[typeid(SubclassT)].push_back(obj);
+		}
 		/// pop element from back of vector
 		void pop_back()
 		{
