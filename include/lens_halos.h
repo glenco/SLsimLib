@@ -63,7 +63,7 @@ protected:
   // Functions for calculating axial dependence
   void setModesToEllip(double q,double theta);
   void faxial(double theta,double f[]);
-  const int Nmod = 18;
+  const static int Nmod = 18;
   double mod[18];
 };
 
