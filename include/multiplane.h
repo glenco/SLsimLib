@@ -55,14 +55,28 @@
  * </pre>
  */
 
-class MultiLens : public Lens{
+class MultiLens{
 public:
-
-  void unusedHalos();
-
-	MultiLens(InputParams& params,long *seed);
+	//MultiLens(InputParams& params,long *seed);
+	MultiLens(InputParams& params, CosmoHndl cosmo, SourceHndl source, long *my_seed);
 	~MultiLens();
 
+	int Nplanes;
+
+	/// marks if the lens has been setup.
+	bool set;
+
+	int getNplanes(){return Nplanes;};
+
+	void resetNplanes(CosmoHndl cosmo, int Np){};
+
+	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off){};
+	void rayshooterInternal(double *ray, double *alpha, KappaType *gamma, KappaType *kappa, bool kappa_off){};
+
+	void RandomizeHost(long *seed,bool tables){};
+	void RandomizeSigma(long *seed,bool tables){};
+	double getZlens() = 0;
+	void setZlens(CosmoHndl cosmo,double zlens,double zsource = 1000) = 0;
 	std::string outputfile;
 
 	void resetNplanes(CosmoHndl cosmo, int Np);
@@ -81,14 +95,13 @@ public:
 	void setZlens(CosmoHndl cosmo,double zlens,double zsource);
 	void printMultiLens();
 
-	void setInternalParams(CosmoHndl,SourceHndl);
 	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off);
 	void rayshooterInternal(double *ray, double *alpha, KappaType *gamma, KappaType *kappa, bool kappa_off);
 	void rayshooterInternal_halos(unsigned long Npoints, Point *i_points, bool kappa_off, double *Dl_halos, double *dDl_halos);
 
 	/// needs to be 0 or nolens, 1 or NFW, 2 or PseudoNFW, 3 or PowerLaw, 4 or NSIE, 5 or AnaLens, 6 or UniLens, 7 or MOKALens
 	InputLensType flag_input_lens;
-	/// main lesning halo in the simulation
+	/// main lensing halo in the simulation
 	LensHalo *input_lens;
 	/// pointer to an ana lens type, if parameter access is needed elsewhere
 	AnaNSIELensHalo *analens;

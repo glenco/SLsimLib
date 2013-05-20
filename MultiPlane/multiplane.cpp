@@ -73,7 +73,7 @@ void MultiLens::resetHalos(CosmoHndl cosmo){
  * \ingroup Constructor
  * allocates space for the halo trees and the inout lens, if there is any
  */
-MultiLens::MultiLens(InputParams& params,long *my_seed) : Lens(){
+MultiLens::MultiLens(InputParams& params, CosmoHndl cosmo, SourceHndl source, long *my_seed) : Lens() , seed(my_seed){
 
 	second_halo = false;
 
@@ -141,6 +141,32 @@ MultiLens::MultiLens(InputParams& params,long *my_seed) : Lens(){
 	toggle_source_plane = false;
 
 	seed = my_seed;
+
+
+	if( (cosmo->getOmega_matter() + cosmo->getOmega_lambda()) != 1.0 ){
+		printf("ERROR: MultiLens can only handle flat universes at present.  Must change cosmology.\n");
+		exit(1);
+	}
+
+	/// makes the oordinate distance table for the calculation of the redshifts of the different planes
+	if(table_set == false) {std::cout << "making tables" << std::endl; make_table(cosmo);}
+
+	if(flag_input_lens)
+	  input_lens->setInternalParams(cosmo,source);
+
+	setCoorDist(cosmo);
+
+	if(sim_input_flag){
+		if(read_sim_file == false) readInputSimFile(cosmo);
+	}
+	else{
+		if(flag_run_twop_test) createHaloData_test(cosmo,seed);
+		else createHaloData(cosmo,seed);
+	}
+
+	if(flag_run_twop_test) buildHaloTrees_test(cosmo);
+	else buildHaloTrees(cosmo);
+	std:: cout << " done " << std:: endl;
 }
 
 MultiLens::~MultiLens(){

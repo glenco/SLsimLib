@@ -263,6 +263,29 @@ protected:
 };
 
 
+/**
+ * \brief This is a lens that does no lensing.  It is useful for testing and for running refinement code on sources.
+ */
+class DummyLens: public LensHalo{
+public:
+	DummyLens(): LensHalo(){};
+    DummyLens(InputParams& params,long *my_seed): Lens(){};
+	~DummyLens(){};
+
+	void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa){
+		alpha[0] = alpha[1] = 0.0;
+		*kappa = 0.0;
+		gamma[0] = gamma[1] = gamma[2] = 0.0;
+	}
+
+	void rayshooterInternal(double *ray, double *alpha, KappaType *gamma, KappaType *kappa, bool kappa_off){
+		alpha[0] = alpha[1] = 0.0;
+		gamma[0] = gamma[1] = gamma[2] = 0.0;
+		*kappa = 0.0;
+	}
+};
+
+
 typedef LensHalo* LensHaloHndl;
 
 
