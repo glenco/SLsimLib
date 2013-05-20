@@ -277,12 +277,6 @@ public:
 		*kappa = 0.0;
 		gamma[0] = gamma[1] = gamma[2] = 0.0;
 	}
-
-	void rayshooterInternal(double *ray, double *alpha, KappaType *gamma, KappaType *kappa, bool kappa_off){
-		alpha[0] = alpha[1] = 0.0;
-		gamma[0] = gamma[1] = gamma[2] = 0.0;
-		*kappa = 0.0;
-	}
 };
 
 

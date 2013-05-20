@@ -171,7 +171,7 @@ void *compute_rays_parallel(void *_p){
       assert(xx[0] == xx[0] && xx[1] == xx[1]);
       
       if(lens->flag_input_lens && j == (lens->flag_input_lens % lens->Nplanes)){
-    	  lens->input_lens->force_halo(alpha,&kappa,gamma,xx,kappa_off);
+    	  lens->main_halos->force_halo(alpha,&kappa,gamma,xx,kappa_off);
     	  cc = lens->dDl[j+1];
       }else{
     	  cc = lens->charge*lens->dDl[j+1];
@@ -344,7 +344,7 @@ void MultiLens::rayshooterInternal(
       assert(xx[0] == xx[0] && xx[1] == xx[1]);
 
       if(flag_input_lens && j == (flag_input_lens % Nplanes)){
-    	  input_lens->force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,xx,kappa_off);
+    	  main_halos->force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,xx,kappa_off);
     	  cc = dDl[j+1];
       }else{
     	  cc = charge*dDl[j+1];

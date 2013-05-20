@@ -33,12 +33,12 @@ struct TmpParamsHalos{
 };
 
 /*
- * A method that calculates the lensing properties by considering all lensing halos as single objects,
+ * A method that calculates the lensing properties by considering all lensing field_halos as single objects,
  * i.e. each halo is alone on a lensing plane.
  *
- * Dl_halos[j = 0...Nhalos-1] - The angular size distance between the observer and the jth halos.
+ * Dl_halos[j = 0...Nhalos-1] - The angular size distance between the observer and the jth field_halos.
  *
- * dDl_halos[j = 0...Nhalos-1] - The angular size distance between the (j-1)th and jth halos
+ * dDl_halos[j = 0...Nhalos-1] - The angular size distance between the (j-1)th and jth field_halos
  *                      dDl_halos[0] = Dl_halos[0]
  */
 void MultiLens::rayshooterInternal_halos(
@@ -70,7 +70,7 @@ void MultiLens::rayshooterInternal_halos(
     thread_params[i].dDl_halos = dDl_halos;
     thread_params[i].halo_pos = halo_pos;
     thread_params[i].halo_zs = halo_zs;
-    thread_params[i].halos = halos;
+    thread_params[i].halos = field_halos;
     thread_params[i].Nhalos = Nhalos;
     thread_params[i].kappa_off = kappa_off;
     thread_params[i].size = chunk_size;

@@ -47,9 +47,9 @@ void MultiLens::resetNplanes(CosmoHndl cosmo, int Np){
   buildHaloTrees(cosmo);
 }
 
-void MultiLens::resetHalos(CosmoHndl cosmo){
+void MultiLens::resetFieldHalos(CosmoHndl cosmo){
   delete[] halo_tree;
-  halos.clear();
+  field_halos.clear();
 
   delete[] halo_zs;
   delete[] halo_id;
@@ -82,7 +82,7 @@ MultiLens::MultiLens(InputParams& params, CosmoHndl cosmo, SourceHndl source, lo
 	NTABLE=1000;
 	table_set = false;
 
-	// flag to determine if halos are created randomly or read in from a external simulation.
+	// flag to determine if field_halos are created randomly or read in from a external simulation.
 	if(input_sim_file.size() < 1) sim_input_flag = false;
 	else sim_input_flag = true;
 
@@ -100,33 +100,31 @@ MultiLens::MultiLens(InputParams& params, CosmoHndl cosmo, SourceHndl source, lo
 	halo_tree = new auto_ptr<QuadTree>[Nplanes-1];
 
 
-	switch(flag_input_lens){
+	switch(DM_halo_type){
 	case null:
-		input_lens = NULL;
+		main_halos.push_back(new DummyLens(params));
 		break;
 	case nfw_lens:
-		input_lens = new NFWLensHalo(params);
+		main_halos.push_back(new NFWLensHalo(params));
 		break;
 	case pnfw_lens:
-		input_lens = new PseudoNFWLensHalo(params);
+		main_halos.push_back(new PseudoNFWLensHalo(params));
 		break;
 	case pl_lens:
-		input_lens = new PowerLawLensHalo(params);
+		main_halos.push_back(new PowerLawLensHalo(params));
 		break;
 	case nsie_lens:
-		input_lens = new SimpleNSIELensHalo(params);
+		main_halos.push_back(new SimpleNSIELensHalo(params));
 		break;
 	case ana_lens:
-		input_lens = new AnaNSIELensHalo(params);
-		analens = static_cast<AnaNSIELensHalo*>(input_lens);
+		main_halos.push_back(new AnaNSIELensHalo(params));
 		break;
 	case uni_lens:
-		input_lens = new UniNSIELensHalo(params);
+		main_halos.push_back(new UniNSIELensHalo(params));
 		break;
 	case moka_lens:
-		input_lens = new MOKALensHalo(params);
-		mokalens = static_cast<MOKALensHalo*>(input_lens);
-		fieldofview = pow(1.5*mokalens->map->boxlrad*180/pi,2.0);
+		main_halos.push_back(new MOKALensHalo(params));
+		//fieldofview = pow(1.5*mokalens->map->boxlrad*180/pi,2.0);
 		break;
 	default:
 		ERROR_MESSAGE();
@@ -152,7 +150,7 @@ MultiLens::MultiLens(InputParams& params, CosmoHndl cosmo, SourceHndl source, lo
 	if(table_set == false) {std::cout << "making tables" << std::endl; make_table(cosmo);}
 
 	if(flag_input_lens)
-	  input_lens->setInternalParams(cosmo,source);
+	  main_halos->setInternalParams(cosmo,source);
 
 	setCoorDist(cosmo);
 
@@ -176,13 +174,13 @@ MultiLens::~MultiLens(){
 	delete[] plane_redshifts;
 	delete[] dDl;
 
-	halos.clear();
+	field_halos.clear();
 	delete[] halo_zs;
 	delete[] halo_id;
 	Utilities::free_PosTypeMatrix(halo_pos,Nhalos,3);
 
 	if(flag_input_lens)
-		delete input_lens;
+		delete main_halos;
 
 	delete[] coorDist_table;
 	delete[] redshift_table;
@@ -201,7 +199,7 @@ void MultiLens::assignParams(InputParams& params){
 		  cout << "parameter Nplanes needs to be set in the parameter file " << params.filename() << endl;
 		  exit(0);
 	}
-	if(!params.get("flag_input_lens",flag_input_lens)){
+	if(!params.get("DM_halo_type",DM_halo_type)){
 		  ERROR_MESSAGE();
 		  cout << "parameter flag_input_lens needs to be set in the parameter file " << params.filename() << endl;
 		  exit(0);
@@ -378,9 +376,9 @@ void MultiLens::printMultiLens(){
 }
 
 /**
- * Populates the planes with halos by dividing the space around the planes into
+ * Populates the planes with field_halos by dividing the space around the planes into
  * equal redshift distances, where the plane with the input lens is excluded
- * since it will not contain any halos
+ * since it will not contain any field_halos
  *
  * Then the halo trees are built, depending on the internal profile model that
  * has been chosen in the parameter file
@@ -414,7 +412,7 @@ void MultiLens::buildHaloTrees(
 		/*
 		 * Setting the redshift range
 		 * If there is a plane with an input lens on it, it is skipped over
-		 * since it will not contain any halos
+		 * since it will not contain any field_halos
 		 */
 		if(j == 0) z1 = 0.0;
 		else{
@@ -438,14 +436,14 @@ void MultiLens::buildHaloTrees(
 			z2 = redshift_table[ind];
 		}
 
-		/// Find which halos are in redshift range
+		/// Find which field_halos are in redshift range
 		locateD(halo_zs-1,Nhalos,z1,&j1);
 		if(j1 == Nhalos) j1 = Nhalos-1;
 		locateD(halo_zs-1,Nhalos,z2,&j2);
 		if(j2 == Nhalos) j2 = Nhalos-1;
 
 		/*
-		 * finding the average mass surface density in halos
+		 * finding the average mass surface density in field_halos
 		 */
 
 		// TODO Ben: test this
@@ -454,12 +452,12 @@ void MultiLens::buildHaloTrees(
 
 		double sb=0.0;
 		for(int m=0;m<j2-j1;m++){
-		  sb+=halos[j1+m]->get_mass();
+		  sb+=field_halos[j1+m]->get_mass();
 		  if(r_print_halos){
 			  // halo_pos is still in radians
 			  double r=sqrt(halo_pos[j1+m][0]*halo_pos[j1+m][0]+halo_pos[j1+m][1]*halo_pos[j1+m][1]);
 			  if(r < r_print_halos)
-				  file_area << halo_zs[j1+m] << " " << halos[j1+m]->get_mass() << " " << halo_pos[j1+m][0] << " " << halo_pos[j1+m][0] <<endl;
+				  file_area << halo_zs[j1+m] << " " << field_halos[j1+m]->get_mass() << " " << halo_pos[j1+m][0] << " " << halo_pos[j1+m][0] <<endl;
 		  }
 		}
 		sb /= (pi*pow(sqrt(fieldofview/pi)*pi*Dl[j]/180/(1+plane_redshifts[j]) + field_buffer,2));
@@ -471,7 +469,7 @@ void MultiLens::buildHaloTrees(
 		/// Use other constructor to create halo data
 		std::cout << "  Building tree on plane " << j << " number of halos: " << j2-j1 << std::endl;
 
-		halo_tree[j].reset(new QuadTree(&halo_pos[j1],&halos[j1],j2-j1,sigma_back));
+		halo_tree[j].reset(new QuadTree(&halo_pos[j1],&field_halos[j1],j2-j1,sigma_back));
 	}
 
 	if(r_print_halos){
@@ -502,7 +500,7 @@ void MultiLens::buildHaloTrees_test(
 		/*
 		 * Setting the redshift range
 		 * If there is a plane with an input lens on it, it is skipped over
-		 * since it will not contain any halos
+		 * since it will not contain any field_halos
 		 */
 		if(j == 0) z1 = 0.0;
 		else{
@@ -516,7 +514,7 @@ void MultiLens::buildHaloTrees_test(
 			z2 = redshift_table[ind];
 		}
 
-		/// Find which halos are in redshift range
+		/// Find which field_halos are in redshift range
 		locateD(halo_zs-1,Nhalos,z1,&j1);
 		locateD(halo_zs-1,Nhalos,z2,&j2);
 
@@ -525,7 +523,7 @@ void MultiLens::buildHaloTrees_test(
 		/// Use other constructor to create halo data
 		std::cout << "  Building tree on plane " << j << " number of halos: " << j2-j1 << std::endl;
 
-		halo_tree[j].reset(new QuadTree(&halo_pos[j1],&halos[j1],j2-j1,sigma_back));
+		halo_tree[j].reset(new QuadTree(&halo_pos[j1],&field_halos[j1],j2-j1,sigma_back));
 	}
 
 	cout << "constructed " << Nhalos << " halos" << endl;
@@ -665,7 +663,7 @@ void MultiLens::setCoorDist(CosmoHndl cosmo){
 	double Ds = cosmo->coorDist(0,zsource);
 
 	double Dlens;
-	if(flag_input_lens) Dlens = cosmo->coorDist(0,input_lens->getZlens());
+	if(flag_input_lens) Dlens = cosmo->coorDist(0,main_halos->getZlens());
 	else Dlens = Ds;
 
 	/// spaces lD equally up to the source, including 0 and Ds
@@ -711,7 +709,7 @@ void MultiLens::setCoorDist(CosmoHndl cosmo){
 	}
 
 	if(flag_input_lens)
-		cout << "zlens " << input_lens->getZlens() << " on plane number " << (flag_input_lens % Nplanes) << endl;
+		cout << "zlens " << main_halos->getZlens() << " on plane number " << (flag_input_lens % Nplanes) << endl;
 
 	cout << "Dl: ";
 	for(j = 0; j < Nplanes; j++)
@@ -737,14 +735,14 @@ void MultiLens::setCoorDist(CosmoHndl cosmo){
 
 double MultiLens::getZlens(){
 	if(flag_input_lens)
-		return input_lens->getZlens();
+		return main_halos->getZlens();
 	else
 		return plane_redshifts[0];
 }
 
 void MultiLens::setZlens(CosmoHndl cosmo,double z,double zsource){
 	if(flag_input_lens)
-		input_lens->setZlens(cosmo,z,zsource);
+		main_halos->setZlens(cosmo,z,zsource);
 	else{
 		cout << "It is not possible to reset the redshift of the input AnaLens plane a MultiLens" << endl;
 		ERROR_MESSAGE();
@@ -753,42 +751,7 @@ void MultiLens::setZlens(CosmoHndl cosmo,double z,double zsource){
 }
 
 
-/**
- * Sets the internal parameters of the multiple lens model
- * first the redshifts of the planes are calculated
- * then the coordinate distances to the different planes
- * the planes are populated by halos and the halo trees are built
- * and finally the internal parameters of the input plane are set, in case there is one
- */
-void MultiLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
-
-	if( (cosmo->getOmega_matter() + cosmo->getOmega_lambda()) != 1.0 ){
-		printf("ERROR: MultiLens can only handle flat universes at present.  Must change cosmology.\n");
-		exit(1);
-	}
-
-	/// makes the oordinate distance table for the calculation of the redshifts of the different planes
-	if(table_set == false) {std::cout << "making tables" << std::endl; make_table(cosmo);}
-
-	if(flag_input_lens)
-	  input_lens->setInternalParams(cosmo,source);
-
-	setCoorDist(cosmo);
-
-	if(sim_input_flag){
-		if(read_sim_file == false) readInputSimFile(cosmo);
-	}
-	else{
-		if(flag_run_twop_test) createHaloData_test(cosmo,seed);
-		else createHaloData(cosmo,seed);
-	}
-
-	if(flag_run_twop_test) buildHaloTrees_test(cosmo);
-	else buildHaloTrees(cosmo);
-	std:: cout << " done " << std:: endl;
-}
-
-/// Sort halos[], brr[][], and id[] by content off arr[]
+/// Sort field_halos[], brr[][], and id[] by content off arr[]
 void MultiLens::quicksort(LensHaloHndl *halos,double **brr,double *arr,unsigned long  *id,unsigned long N){
 	double pivotvalue;
 	unsigned long pivotindex,newpivotindex,i;
@@ -940,14 +903,14 @@ void MultiLens::createHaloData(
 
 	Nhalos = (long)(poidev(float(aveNhalos), seed) );
 
-	// allocate memory for halos
+	// allocate memory for field_halos
 	halo_zs = new double[Nhalos];
 
 	std::vector<double> halo_zs_vec;
 	std::vector<double *> halo_pos_vec;
 	std::vector<unsigned long> halo_id_vec;
 
-	// assign redsshifts to halos and sort them
+	// assign redsshifts to field_halos and sort them
 
 	for(i=0;i < Nhalos;++i){
 		halo_zs[i] = InterpolateYvec(Nhalosbin,zbins,ran2(seed));
@@ -1009,19 +972,19 @@ void MultiLens::createHaloData(
 
 			switch(int_prof_type){
 			case PowerLaw:
-				halos.push_back(new PowerLawLensHalo);
+				field_halos.push_back(new PowerLawLensHalo);
 				break;
 			case NFW:
-				halos.push_back(new NFWLensHalo);
+				field_halos.push_back(new NFWLensHalo);
 				break;
 			case PseudoNFW:
-				halos.push_back(new PseudoNFWLensHalo);
+				field_halos.push_back(new PseudoNFWLensHalo);
 				break;
 			case NSIE:
-				halos.push_back(new SimpleNSIELensHalo);
+				field_halos.push_back(new SimpleNSIELensHalo);
 				break;
 			case PointMass:
-				halos.push_back(new LensHalo);
+				field_halos.push_back(new LensHalo);
 				break;
 			default:
 				ERROR_MESSAGE();
@@ -1041,10 +1004,10 @@ void MultiLens::createHaloData(
 
 			if(second_halo){
 				if(galaxy_mass_fraction > 1.0) galaxy_mass_fraction = 1;
-				halos[j]->initFromMassFunc(mass*(1-galaxy_mass_fraction),mass_scale,Rmax,rscale,halo_slope,seed);
+				field_halos[j]->initFromMassFunc(mass*(1-galaxy_mass_fraction),mass_scale,Rmax,rscale,halo_slope,seed);
 			}
 			else{
-				halos[j]->initFromMassFunc(mass,mass_scale,Rmax,rscale,halo_slope,seed);
+				field_halos[j]->initFromMassFunc(mass,mass_scale,Rmax,rscale,halo_slope,seed);
 			}
 
 			if(mass > mass_max) {
@@ -1064,7 +1027,7 @@ void MultiLens::createHaloData(
 			if(second_halo){
 				switch(int_prof_gal_type){
 				case NSIE:
-					halos.push_back(new SimpleNSIELensHalo);
+					field_halos.push_back(new SimpleNSIELensHalo);
 					break;
 				default:
 					ERROR_MESSAGE();
@@ -1074,7 +1037,7 @@ void MultiLens::createHaloData(
 					break;
 				}
 
-				halos[j]->initFromMassFunc(mass*galaxy_mass_fraction,mass_scale,Rmax,rscale,halo_slope,seed);
+				field_halos[j]->initFromMassFunc(mass*galaxy_mass_fraction,mass_scale,Rmax,rscale,halo_slope,seed);
 
 				halo_pos_vec.push_back(pos);
 				halo_zs_vec.push_back(halo_zs[i]);
@@ -1093,7 +1056,7 @@ void MultiLens::createHaloData(
 
 	std::cout << Nhalos << " halos created." << std::endl;
 
-	Nhalos = halos.size();
+	Nhalos = field_halos.size();
 	delete[] halo_zs;
 	halo_zs = new double[Nhalos];
 	halo_id = new unsigned long[Nhalos];
@@ -1109,7 +1072,7 @@ void MultiLens::createHaloData(
 }
 
 /*
- * A test function that creates two halos, at random positions on the sky, but in
+ * A test function that creates two field_halos, at random positions on the sky, but in
  * such a way that they will be onto two separate lensing planes.
  * This is used to test the convergence of the ray shooter.
  *
@@ -1129,7 +1092,7 @@ void MultiLens::createHaloData_test(
 
 	Nhalos = 2;
 
-	// allocate memory for halos
+	// allocate memory for field_halos
 	halo_zs = new double[Nhalos];
 	halo_id = new unsigned long[Nhalos];
 	halo_pos = Utilities::PosTypeMatrix(Nhalos,3);
@@ -1150,16 +1113,16 @@ void MultiLens::createHaloData_test(
 
 		switch(int_prof_type){
 		case PowerLaw:
-			halos.push_back(new PowerLawLensHalo);
+			field_halos.push_back(new PowerLawLensHalo);
 			break;
 		case NFW:
-			halos.push_back(new NFWLensHalo);
+			field_halos.push_back(new NFWLensHalo);
 			break;
 		case PseudoNFW:
-			halos.push_back(new PseudoNFWLensHalo);
+			field_halos.push_back(new PseudoNFWLensHalo);
 			break;
 		case PointMass:
-			halos.push_back(new LensHalo);
+			field_halos.push_back(new LensHalo);
 			break;
 		default:
 			ERROR_MESSAGE();
@@ -1169,17 +1132,17 @@ void MultiLens::createHaloData_test(
 			break;
 		}
 
-		halos[i]->set_slope(halo_slope);
-		halos[i]->set_mass(ran2(seed)*1e12/mass_scale);
-		halo_calc->reset(halos[i]->get_mass()*mass_scale,halo_zs[i]);
+		field_halos[i]->set_slope(halo_slope);
+		field_halos[i]->set_mass(ran2(seed)*1e12/mass_scale);
+		halo_calc->reset(field_halos[i]->get_mass()*mass_scale,halo_zs[i]);
 
-		halos[i]->set_Rmax(halo_calc->getRvir());
-		halos[i]->set_rscale(halos[i]->get_Rmax()/halo_calc->getConcentration(0));
+		field_halos[i]->set_Rmax(halo_calc->getRvir());
+		field_halos[i]->set_rscale(field_halos[i]->get_Rmax()/halo_calc->getConcentration(0));
 
 		std::cout<< "halo z " << halo_zs[i] << std::endl;
 		std::cout<< "halo pos " << halo_pos[i][0] << " " << halo_pos[i][1] << std::endl;
-		std::cout<< "halo mass " << halos[i]->get_mass()*mass_scale << std::endl;
-		std::cout<< "halo Rmax and rscale " << halos[i]->get_Rmax() << " " << halos[i]->get_rscale() << std::endl;
+		std::cout<< "halo mass " << field_halos[i]->get_mass()*mass_scale << std::endl;
+		std::cout<< "halo Rmax and rscale " << field_halos[i]->get_Rmax() << " " << field_halos[i]->get_rscale() << std::endl;
 	}
 
 	delete halo_calc;
@@ -1192,8 +1155,8 @@ void MultiLens::createHaloData_test(
  *
  * query select * from MockLensing.dbo.m21_20_39_021_bc03_Ben_halos
  *
- * This is information on the dark matter halos only.  There are 13 entries in each line separated by commas.
- * The comments must be removed from the beginning of the data file and the total number of halos must be added
+ * This is information on the dark matter field_halos only.  There are 13 entries in each line separated by commas.
+ * The comments must be removed from the beginning of the data file and the total number of field_halos must be added
  * as the first line.
  */
 void MultiLens::readInputSimFile(CosmoHndl cosmo){
@@ -1305,13 +1268,13 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 
 			switch(int_prof_type){
 			case NFW:
-				halos.push_back(new NFWLensHalo);
+				field_halos.push_back(new NFWLensHalo);
 				break;
 			case NSIE:
-				halos.push_back(new SimpleNSIELensHalo);
+				field_halos.push_back(new SimpleNSIELensHalo);
 				break;
 			case PointMass:
-				halos.push_back(new LensHalo);
+				field_halos.push_back(new LensHalo);
 				break;
 			default:
 				ERROR_MESSAGE();
@@ -1328,14 +1291,14 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 				  /pow(1+pow(mass/M1,be),(gam1-gam2)/be)/mass;
 				if(galaxy_mass_fraction > 1.0) galaxy_mass_fraction = 1;
 
-				halos[j]->initFromFile(mass*(1-galaxy_mass_fraction),mass_scale,seed,vmax,r_halfmass*cosmo->gethubble());
+				field_halos[j]->initFromFile(mass*(1-galaxy_mass_fraction),mass_scale,seed,vmax,r_halfmass*cosmo->gethubble());
 			}
 			else{
-				halos[j]->initFromFile(mass,mass_scale,seed,vmax,r_halfmass*cosmo->gethubble());
+				field_halos[j]->initFromFile(mass,mass_scale,seed,vmax,r_halfmass*cosmo->gethubble());
 			}
 
 
-			if(halos[j]->get_Rmax() > R_max) R_max = halos[j]->get_Rmax();
+			if(field_halos[j]->get_Rmax() > R_max) R_max = field_halos[j]->get_Rmax();
 			if(vdisp > V_max) V_max = vdisp;
 
 			halo_zs_vec.push_back(z);
@@ -1355,7 +1318,7 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 			if(second_halo){
 				switch(int_prof_gal_type){
 				case NSIE:
-					halos.push_back(new SimpleNSIELensHalo);
+					field_halos.push_back(new SimpleNSIELensHalo);
 					break;
 				default:
 					ERROR_MESSAGE();
@@ -1365,7 +1328,7 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 					break;
 				}
 
-				halos[j]->initFromFile(mass*galaxy_mass_fraction,mass_scale,seed,vmax,r_halfmass*cosmo->gethubble());
+				field_halos[j]->initFromFile(mass*galaxy_mass_fraction,mass_scale,seed,vmax,r_halfmass*cosmo->gethubble());
 
 				halo_zs_vec.push_back(z);
 				halo_id_vec.push_back(haloid);
@@ -1377,10 +1340,10 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 		}
 	}
 	file_in.close();
-	std::cout << halos.size() << " halos read in."<< std::endl
+	std::cout << field_halos.size() << " halos read in."<< std::endl
 			<< "Max input mass = " << mass_max << "  R max = " << R_max << "  V max = " << V_max << std::endl;
 
-	Nhalos = halos.size();
+	Nhalos = field_halos.size();
 
 	/// setting the minimum halo mass in the simulation
 	min_mass = minmass;
@@ -1403,8 +1366,8 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 	}
 
 	std::cout << "sorting in MultiLens::readInputSimFile()" << std::endl;
-	// sort the halos by readshift
-	MultiLens::quicksort(halos.data(),halo_pos,halo_zs,halo_id,Nhalos);
+	// sort the field_halos by readshift
+	MultiLens::quicksort(field_halos.data(),halo_pos,halo_zs,halo_id,Nhalos);
 
 	std::cout << "leaving MultiLens::readInputSimFile()" << std::endl;
 
