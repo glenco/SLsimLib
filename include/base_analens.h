@@ -130,6 +130,8 @@ public:
 
   double getHost_Dl(){return Dl;}
 
+  double getEinstein_ro(){return Einstein_ro;}
+
   double getPerturb_beta(){return perturb_beta;}
   IMFtype getIMF_type(){return imf_type;}
   int getPerturb_Nmodes(){return perturb_Nmodes;}    /// this includes two for external shear

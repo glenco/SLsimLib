@@ -444,7 +444,7 @@ namespace Utilities{
  * \brief Generates a random deviates drawn fEinstein_rom appEinstein_roximately the same as the values of table
  *
  */
-	double RandomFEinstein_romTable(double *table,unsigned long Ntable,long *seed){
+	double RandomFromTable(double *table,unsigned long Ntable,long *seed){
 		double y;
 		unsigned long j;
 
