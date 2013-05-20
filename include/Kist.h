@@ -28,6 +28,27 @@ struct KistUnit{
  * blocks and held in a reservoir to improve efficiency when adding and removing data.  This
  * makes it faster then the STL list when data is repeatedly being added and subtracted from the
  * list.
+ *
+ <pre>
+ example:
+ 
+ Kist<Point> kist;
+ Point *p_point = NewPointArray(100,true);
+ int i=0;
+ 
+ for(i = 0; i< 100; ++i){
+ p_point[i].x[0] = p_point[i].x[1] = ran2(&seed);
+ kist.InsertAfterCurrent(&p_point[i]);
+ --kist;
+ }
+ cout << "Number of points " << kist.Nunits() << endl;
+ 
+ for(i=0,kist.MoveToTop() ; !(kist.OffBottom()) ; --kist ){
+ cout << i << " x = " << (*kist)->x[0] << "  " << (*kist)->x[1] << endl;
+ ++i;
+ }
+ 
+<\pre>
  */
 template <class Data = Point>
 struct Kist{
@@ -102,7 +123,11 @@ public:
 	bool AreDataUnique();
 	void SetInImage(Boo value);
 
-
+  /// Test if Down() (or --) was last called from last element in list.  Used to stop a for loop. 
+  bool OffBottom(){
+    return (current == &offbot);
+  }
+  
 	/// Returns a pointer to the current data.  Same as getCurrent.
 	Data *operator*(){return getCurrent();}
 	/// Same as Up()
@@ -130,6 +155,8 @@ private:
 	KistUnit<Data> *top;
 	KistUnit<Data> *bottom;
 	KistUnit<Data> *current;
+  
+  KistUnit<Data> offbot;
 
 };// Kist;
 
@@ -188,13 +215,14 @@ template <class Data> bool Kist<Data>::AtBottom(){
 	else return false;
 }
 
-/// Insert data into kist.  Leaves current unchanged.
+/// Insert data into kist.  Leaves current unchanged. If off end it acts as if it where at the bottom.
 template <class Data> void Kist<Data>::InsertAfterCurrent(Data *data){
 
     assert(data);
     assert(data->x);
     assert(data->gridsize >= 0);
-
+    //assert(current != &offbot);
+  
     KistUnit<Data> *unit = pop_from_reserve();
 
     unit->data = data;
@@ -202,12 +230,14 @@ template <class Data> void Kist<Data>::InsertAfterCurrent(Data *data){
     if(Number > 0){
       assert(current);
 
+      if(current == &offbot) current = bottom;
       unit->prev = current;
       unit->next = current->next;
 
       if(current == bottom) bottom = unit;
-      else current->next->prev=unit;
-      current->next=unit;
+      else current->next->prev = unit;
+      current->next = unit;
+      
     }else{  // empty kist case
       current=unit;
       top=unit;
@@ -221,26 +251,29 @@ template <class Data> void Kist<Data>::InsertAfterCurrent(Data *data){
     return;
 }
 
-/// Insert data into kist.  Leaves current unchanged.
+/// Insert data into kist.  Leaves current unchanged. If offend acts as if it where at bottom.
 template <class Data> void Kist<Data>::InsertBeforeCurrent(Data *data){
 
 	assert(data);
-    assert(data->x);
-    assert(data->gridsize >= 0);
+  assert(data->x);
+  assert(data->gridsize >= 0);
 
-    //Unit *unit = (Unit *)malloc(sizeof(Unit));
-    KistUnit<Data> *unit = pop_from_reserve();
+  //Unit *unit = (Unit *)malloc(sizeof(Unit));
+  KistUnit<Data> *unit = pop_from_reserve();
 
 	unit->data=data;
 
     if(Number > 0){
       assert(current);
 
+      if(current == &offbot) current=bottom;
+      
       unit->prev=current->prev;
       unit->next=current;
       if(current == top) top=unit;
       else current->prev->next=unit;
       current->prev=unit;
+      
     }else{  /* empty kist case */
       current=unit;
       top=unit;
@@ -257,6 +290,7 @@ template <class Data> void Kist<Data>::InsertBeforeCurrent(Data *data){
 /// Swaps current data with bottom data leaving current one above former current.
 template <class Data> void Kist<Data>::SwapCurrentWithBottom(){
 
+  if(Number == 0 || current==&offbot) return;
 	Data *data;
 
 	data=current->data;
@@ -269,6 +303,7 @@ template <class Data> void Kist<Data>::SwapCurrentWithBottom(){
 /// Moves data at current location to the bottom of the kist.  Current is left at the bottom
 template <class Data> void Kist<Data>::MoveCurrentToBottom(){
 
+  if(Number == 0 || current==&offbot) return;
 	Data *data = TakeOutCurrent();
 	MoveToBottom();
 	InsertAfterCurrent(data);
@@ -278,14 +313,16 @@ template <class Data> void Kist<Data>::MoveCurrentToBottom(){
 /**
  * \brief Takes out current data and set current to data previous
 * except at top where current is set to new top.
-* Returns pointer to removed data.
+* Returns pointer to removed data.  If offend acts as if at bottom.
 */
 template <class Data> Data *Kist<Data>::TakeOutCurrent(){
 
     Data *data;
     KistUnit<Data> *unit;
 
-    if( Number <= 0) return NULL;
+    if( Number <= 0 ) return NULL;
+  
+    if( current == &offbot ) current = bottom;
 
     assert(current);
     assert(top);
@@ -295,7 +332,7 @@ template <class Data> Data *Kist<Data>::TakeOutCurrent(){
     unit = current;
 
     if(top == bottom){  /* last data */
-      current=NULL;
+      current=&offbot;
       top=NULL;
       bottom=NULL;
     }else if(current==top){
@@ -331,14 +368,18 @@ template <class Data> bool Kist<Data>::JumpDown(int jump){
 template <class Data> bool Kist<Data>::Down(){
 
 	if(Number == 0) return false;
-	if(current==bottom) return false;
+	if(current==bottom || current == &offbot){
+    current = &offbot;
+    return false;
+  }
 	current=current->next;
 
 	return true;
 }
-/// Move up the list. Returns false when at the top of the list.
+/// Move up the list. Returns false when at the top of the list. If offend act as if at bottom.
 template <class Data> bool Kist<Data>::Up(){
 
+  if(current == &offbot) current=bottom;
 	if(Number == 0) return false;
 	if(current==top) return false;
 	current=current->prev;
@@ -347,14 +388,14 @@ template <class Data> bool Kist<Data>::Up(){
 }
 /// Moves to the top.  Returns false if the kist is empty.
 template <class Data> bool Kist<Data>::MoveToTop(){
-	if(!Number)return false;
+	if(!Number){current=&offbot; return false;}
 	current=top;
 	return true;
 }
 
 /// Moves to the top.  Returns false if the kist is empty.
 template <class Data> bool Kist<Data>::MoveToBottom(){
-	if(!Number)return false;
+	if(!Number){current=&offbot; return false;}
 	current=bottom;
 	return true;
 }
@@ -371,9 +412,11 @@ template <class Data> void Kist<Data>::Fill(Data *data_array,unsigned long N){
 /*********************************/
 /*  data extraction routines */
 /*********************************/
-/// Return pointer to data in current element.
+/// Return pointer to data in current element.  If offend act as if it is at bottem.
 template <class Data> inline Data * Kist<Data>::getCurrent(){
-	return Number ? current->data : NULL;
+  if(Number == 0) return NULL;
+  if(current == &offbot) current = bottom;
+	return current->data;
 }
 /*********************************
  * specific to image points

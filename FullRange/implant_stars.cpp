@@ -229,12 +229,12 @@ float* BaseNSIELensHalo::stellar_mass_function(IMFtype type, unsigned long Nstar
 
 	//if(!(stars_implanted)) return;
 	unsigned long i;
-	double powerp1,powerlp1,shiftmax,shiftmin,n0,n1,n2,rndnr,tmp0,tmp1,tmp2;
-	float *star_masses = new float[Nstars];
+	double powerp1,powerp2,powerp3,powerlp1,bendmass1,bendmass2,shiftmax,shiftmin,n0,n1,n2,n3,rndnr,tmp0,tmp1,tmp2;
+	float *stellar_masses = new float[Nstars];
 
 	if(type==One){
 		for(i = 0; i < Nstars; i++){
-				star_masses[i]=1.0;
+				stellar_masses[i]=1.0;
 		}
 	}
 
@@ -244,7 +244,7 @@ float* BaseNSIELensHalo::stellar_mass_function(IMFtype type, unsigned long Nstar
 		    exit(1);
 		}
 		for(i = 0; i < Nstars; i++){
-			star_masses[i]=minmass;
+			stellar_masses[i]=minmass;
 		}
 	}
 
@@ -257,7 +257,7 @@ float* BaseNSIELensHalo::stellar_mass_function(IMFtype type, unsigned long Nstar
     	n0 = (pow(maxmass,powerp1)) /powerp1;
     	n1 =  n0 - (pow(minmass,powerp1)) / powerp1;
     	for(i = 0; i < Nstars; i++){
-    		star_masses[i] = pow( (-powerp1*(n1*ran2(seed)-n0)),(1.0/powerp1) );
+    		stellar_masses[i] = pow( (-powerp1*(n1*ran2(seed)-n0)),(1.0/powerp1) );
     	}
 	}
 
@@ -271,7 +271,7 @@ float* BaseNSIELensHalo::stellar_mass_function(IMFtype type, unsigned long Nstar
        	n0 = (pow(maxmass,powerp1)) /powerp1;
        	n1 =  n0 - (pow(minmass,powerp1)) / powerp1;
        	for(i = 0; i < Nstars; i++){
-       		star_masses[i] = pow( (-powerp1*(n1*ran2(seed)-n0)),(1.0/powerp1) );
+       		stellar_masses[i] = pow( (-powerp1*(n1*ran2(seed)-n0)),(1.0/powerp1) );
        	}
    	}
 
@@ -292,10 +292,10 @@ float* BaseNSIELensHalo::stellar_mass_function(IMFtype type, unsigned long Nstar
 		for(i = 0; i < Nstars; i++){
 			rndnr=ran2(seed);
 			if(rndnr<(n1/n0)){
-				star_masses[i]=pow(10.0,(log10(chab_param[1])-sqrt(2.*chab_param[2]*chab_param[2])*erfinv((n0*rndnr)/tmp2+erff((log10(chab_param[1])-log10(minmass))/(sqrt(2.*chab_param[2]*chab_param[2])) ) )));
+				stellar_masses[i]=pow(10.0,(log10(chab_param[1])-sqrt(2.*chab_param[2]*chab_param[2])*erfinv((n0*rndnr)/tmp2+erff((log10(chab_param[1])-log10(minmass))/(sqrt(2.*chab_param[2]*chab_param[2])) ) )));
 			}
 			else{
-				star_masses[i]=pow( ((n0*rndnr-n1)*powerp1/tmp1 +1.0),(1./powerp1) );
+				stellar_masses[i]=pow( ((n0*rndnr-n1)*powerp1/tmp1 +1.0),(1./powerp1) );
 			}
 		}
 	}
@@ -316,18 +316,51 @@ float* BaseNSIELensHalo::stellar_mass_function(IMFtype type, unsigned long Nstar
     		for(i = 0; i < Nstars; i++){
     			rndnr=ran2(seed);
     			if(rndnr<(n1/n0)){
-    				star_masses[i]=(pow( ((n0*rndnr)*(powerlp1)+ pow(shiftmin,powerlp1)),(1.0/powerlp1)))*bendmass;
+    				stellar_masses[i]=(pow( ((n0*rndnr)*(powerlp1)+ pow(shiftmin,powerlp1)),(1.0/powerlp1)))*bendmass;
     			}
     			else{
-    				star_masses[i]=(pow( ((n0*rndnr-n1)*powerp1+1.0),(1.0/powerp1)))*bendmass;
+    				stellar_masses[i]=(pow( ((n0*rndnr-n1)*powerp1+1.0),(1.0/powerp1)))*bendmass;
     			}
     		}
     	}
     }
 
+    if(type==Kroupa){
+    	bendmass1=0.08;
+    	bendmass2=0.5;
+		if((minmass>bendmass1)||(maxmass<bendmass2)){
+			cout << "For IMF type Kroupa min_mstar<0.08 and max_mstar>0.5 must be defined in parameter file!" << endl;
+			exit(1);
+		}
+		else{
+			double kroupa_param[]={-0.3,-1.3,-2.3};
+			powerp1=kroupa_param[0]+1.0;
+			powerp2=kroupa_param[1]+1.0;
+			powerp3=kroupa_param[2]+1.0;
+			tmp1=pow(bendmass1,(kroupa_param[0]-kroupa_param[1]));
+			tmp2=tmp1*pow(bendmass2,(kroupa_param[1]-kroupa_param[2]));
+			n1=(pow(bendmass1,powerp1)-pow(minmass, powerp1))/powerp1;
+			n2=tmp1*((pow(bendmass2,powerp2)-pow(bendmass1, powerp2))/powerp2);
+			n3=tmp2*((pow(maxmass,powerp3)-pow(bendmass2, powerp3))/powerp3);
+			n0=n1+n2+n3;
 
-    //cout << " " << type << " " << maxmass << " " << minmass << " " << bendmass << " " << powerlo << " " << powerhi << " " << endl;
+			for(i = 0; i < Nstars; i++){
+				rndnr=ran2(seed);
+				if(rndnr<(n1/n0)){
+					stellar_masses[i]=(pow( ((n0*rndnr)*(powerp1)+ pow(minmass,powerp1)),(1.0/powerp1)));
 
-    return star_masses;
+				}
+				else if(rndnr<((n1+n2)/n0)) {
+					stellar_masses[i]=(pow( ((n0*rndnr-n1)*(powerp2/tmp1)+pow(bendmass1,powerp2)),(1.0/powerp2)));
+
+				}
+				else{
+					tmp0= ((n0*rndnr-n1-n2)*(powerp3/tmp2)+pow(bendmass2,powerp3));
+					stellar_masses[i]=(pow(tmp0,(1.0/powerp3)));
+				}
+			}
+		}
+    }
+    return stellar_masses;
 }
 

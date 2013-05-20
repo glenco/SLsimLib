@@ -16,39 +16,12 @@ CausticData::CausticData(size_t size){
   ncolumns = 13;
   
   data.resize(size);
-/*  redshifts.resize(size);
-  crit_centers.reserve(size);
-  caustic_centers.resize(size);
-  
-  crit_radius.resize(size);
-  caustic_radius.resize(size);
-  
-  crit_area.resize(size);
-  caustic_area.resize(size);
-  
-  for(size_t i = 0; i < size ; ++i){
-    causticdata[i].crit_centers = new double[2];
-    crit_radius[i] = new double[3];
-    caustic_centers[i] = new double[2];
-    caustic_radius[i] = new double[3];
-  }
- */
+
 }
 CausticData::~CausticData(){
   
   data.clear();
-  /*
-  while(crit_centers.size() > 0){
-    delete[] crit_centers.back();
-    crit_centers.pop_back();
-    delete[] crit_radius.back();
-    crit_radius.pop_back();
-    delete[] caustic_centers.back();
-    caustic_centers.pop_back();
-    delete[] crit_radius.back();
-    caustic_radius.pop_back();
-  }
-   */
+
 }
 
 void CausticData::resize(size_t size){
@@ -89,7 +62,6 @@ void CausticData::readfile(std::string filename){
   double tmp[3];
   CausticStructure tmp_data;
   // read in data
-//	for(i=0; i < 20; ++i){
   while(getline(file_in,myline)){
     
 		if(myline[0] == '#'){
@@ -173,13 +145,13 @@ void CausticData::readfile(std::string filename){
           break;
       }
       
-			myline.erase(0,pos+1);
+      myline.erase(0,pos+1);
       pos= myline.find_first_not_of(space);
       myline.erase(0,pos);
       
-			strg.clear();
-			buffer.clear();
-			buffer.str(std::string());
+      strg.clear();
+      buffer.clear();
+      buffer.str(std::string());
     }
     myline.clear();
     data.push_back(tmp_data);

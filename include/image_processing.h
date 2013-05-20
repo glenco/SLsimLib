@@ -268,6 +268,9 @@ public:
 	/** Get the noise image. */
 	const PixelMap& noise() const;
 	
+	/** Get PixelMask for data. */
+	const PixelMask& mask() const;
+	
 	/** Get range of data. */
 	std::size_t getNpixels() const;
 	
@@ -282,6 +285,9 @@ public:
 	
 	/** Get normalization of data. */
 	double getNormalization() const;
+	
+	/** Add PixelMask for data. */
+	void setMask(PixelMask mask);
 	
 	/**
 	 * \brief Calculate the chi^2 value of a model PixelMap.
@@ -302,16 +308,19 @@ public:
 private:
 	PixelMap img;
 	PixelMap noi;
+	PixelMask msk;
 	double norm;
 };
 
 inline const PixelMap& PixelData::image() const { return img; }
 inline const PixelMap& PixelData::noise() const { return noi; }
+inline const PixelMask& PixelData::mask() const { return msk; }
 inline std::size_t PixelData::getNpixels() const { return img.getNpixels(); }
 inline double PixelData::getRange() const { return img.getRange(); }
 inline const double* PixelData::getCenter() const { return img.getCenter(); }
 inline double PixelData::getResolution() const { return img.getResolution(); }
 inline double PixelData::getNormalization() const { return norm; }
+inline void PixelData::setMask(PixelMask mask) { assert(mask.base_size() == img.size()); swap(msk, mask); }
 
 void pixelize(double *map,long Npixels,double range,double *center
 		,ImageInfo *imageinfo,int Nimages,bool constant_sb,bool cleanmap

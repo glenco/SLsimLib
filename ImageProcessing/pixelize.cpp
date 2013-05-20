@@ -657,6 +657,7 @@ void swap(PixelData& a, PixelData& b)
 	
 	swap(a.img, b.img);
 	swap(a.noi, b.noi);
+	swap(a.msk, b.msk);
 	swap(a.norm, b.norm);
 }
 
@@ -684,7 +685,7 @@ PixelData::PixelData(const PixelMap& image, const PixelMap& noise, double zp_mag
 }
 
 PixelData::PixelData(const PixelData& other)
-: img(other.img), noi(other.noi), norm(other.norm)
+: img(other.img), noi(other.noi), msk(other.msk), norm(other.norm)
 {
 }
 
@@ -701,12 +702,25 @@ double PixelData::chi_square(const PixelMap &model) const
 	
 	double chi2 = 0;
 	
-	for(std::size_t i = 0, n = model.size(); i < n; ++i)
+	if(msk.valid())
 	{
-		double delta = img[i] - model[i];
-		double sigma2 = model[i] + noi[i];
-		chi2 += delta*delta/sigma2;
+		for(std::size_t i = 0, n = msk.size(); i < n; ++i)
+		{
+			std::size_t j = msk[i];
+			double delta = norm*(img[j] - model[j]);
+			double sigma2 = norm*model[j] + (norm*noi[j])*(norm*noi[j]);
+			chi2 += delta*delta/sigma2;
+		}
+	}
+	else
+	{
+		for(std::size_t i = 0, n = model.size(); i < n; ++i)
+		{
+			double delta = norm*(img[i] - model[i]);
+			double sigma2 = norm*model[i] + (norm*noi[i])*(norm*noi[i]);
+			chi2 += delta*delta/sigma2;
+		}
 	}
 	
-	return norm*chi2;
+	return chi2;
 }

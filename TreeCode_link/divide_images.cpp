@@ -325,7 +325,7 @@ void divide_images_kist(
 		imageinfo[i].centroid[1] /= imageinfo[i].area;
 
 		assert((Ntemp - new_imagekist->Nunits() - imageinfo[i].imagekist->Nunits()) == 0);
-		assert(AtBottomKist(new_imagekist));
+		assert(new_imagekist->OffBottom());
 		++i;
 	}while(new_imagekist->Nunits() > 0 && i < Nimagesmax);
 
