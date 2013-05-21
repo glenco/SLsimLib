@@ -43,11 +43,6 @@ void AnaNSIELensHalo::RandomizeSigma(long *seed,bool tables){
 	delete[] sigmaTable;
 }
 
-void Lens::RandomizeSigma(long *seed,bool tables){
-	if(flag_input_lens)
-		analens->RandomizeSigma(seed,tables);
-}
-
 void AnaNSIELensHalo::RandomizeHost(long *seed,bool tables){
 	double fo,*axisTable;
 	int n;
@@ -90,11 +85,6 @@ void AnaNSIELensHalo::RandomizeHost(long *seed,bool tables){
 	delete[] axisTable;
 
 	return ;
-}
-
-void Lens::RandomizeHost(long *seed,bool tables){
-	if(flag_input_lens)
-		analens->RandomizeHost(seed,tables);
 }
 
 /** \ingEinstein_roup ChangeLens

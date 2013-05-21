@@ -8,11 +8,7 @@
 #ifndef UNIFORM_LENS_H_
 #define UNIFORM_LENS_H_
 
-#include <lens.h>
-#include <Tree.h>
-#include <quadTree.h>
-#include <source.h>
-#include <base_analens.h>
+#include "base_analens.h"
 
 /**
  * \brief An uniform model to represent a lens on a single plane.

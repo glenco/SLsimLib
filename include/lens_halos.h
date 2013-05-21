@@ -9,7 +9,6 @@
 #define LENS_HALOS_H_
 
 #include "standard.h"
-#include "simpleTree.h"
 #include "tables.h"
 #include "InputParams.h"
 #include "source.h"
@@ -37,9 +36,11 @@ public:
 
 	virtual void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa);
 
-	double getZlens(){return zlens;};
+	double getZlens() const {return zlens;};
 	void setZlens(double my_zlens){zlens=my_zlens;};
 	virtual void setZlens(CosmoHndl cosmo,double z,double dummy){zlens=z;};
+
+	bool compare(double z){return z > zlens;};
 
 protected:
 	void assignParams(InputParams& params);
@@ -224,7 +225,7 @@ class SimpleNSIELensHalo : public LensHalo{
 public:
 	SimpleNSIELensHalo();
 	SimpleNSIELensHalo(InputParams& params);
-	virtual ~SimpleNSIELensHalo();
+	~SimpleNSIELensHalo();
 
 	void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa);
 
@@ -240,7 +241,7 @@ public:
 	void set_pa(float my_pa){pa=my_pa;};
 	void set_rcore(float my_rcore){rcore=my_rcore;};
 
-	float get_Rmax(){return Rmax*MAX(1.0,1.0/fratio);};
+	float get_Rmax(){return Rmax*std::max(1.0,1.0/fratio);};
 
 	void initFromFile(float,double,long*,float,float);
 	void initFromMassFunc(float my_mass, double mass_scale, float my_Rmax, float my_rscale, double my_slope, long *seed);
@@ -266,11 +267,11 @@ protected:
 /**
  * \brief This is a lens that does no lensing.  It is useful for testing and for running refinement code on sources.
  */
-class DummyLens: public LensHalo{
+class DummyLensHalo: public LensHalo{
 public:
-	DummyLens(): LensHalo(){};
-    DummyLens(InputParams& params): LensHalo(){};
-	~DummyLens(){};
+	DummyLensHalo(): LensHalo(){};
+	DummyLensHalo(InputParams& params): LensHalo(){};
+	~DummyLensHalo(){};
 
 	void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa){
 		alpha[0] = alpha[1] = 0.0;

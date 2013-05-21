@@ -8,12 +8,16 @@
 #ifndef MULTIPLANE_H_
 #define MULTIPLANE_H_
 
-#include <analytic_lens.h>
-#include <MOKAlens.h>
-#include <quadTree.h>
-#include <sourceAnaGalaxy.h>
+#include "analytic_lens.h"
+#include "uniform_lens.h"
+#include "MOKAlens.h"
+#include "quadTree.h"
+#include "sourceAnaGalaxy.h"
 #include "tables.h"
 #include "utilities_slsim.h"
+#include "planes.h"
+
+#include <map>
 
 /**
  * \brief A class to represents a lens with multiple planes.
@@ -66,37 +70,33 @@ public:
 	bool set;
 
 	int getNplanes(){return Nplanes;};
+	double getfov(){return fieldofview;};
+	void setfov(double fov){fieldofview=fov;};
 
+	/// output filename, to be usually used in the executable
 	std::string outputfile;
 
+	/// reset te number of planes, but keep the field halos and main lens
 	void resetNplanes(CosmoHndl cosmo, int Np);
+	/// keep the main lens and the number of planes constant, but generate new field halos
 	void resetFieldHalos(CosmoHndl cosmo);
-	
-	void calc_error_test(unsigned long Npoints,Point *point,bool kappa_off);
-	void calc_error_test_multi(unsigned long Npoints,Point *i_points,bool kappa_off,CosmoHndl cosmo);
 
-	void buildHaloTrees(CosmoHndl cosmo);
-	void buildHaloTrees_test(CosmoHndl cosmo);
-	void createHaloData(CosmoHndl cosmo,long *seed);
-	void createHaloData_test(CosmoHndl cosmo,long *seed);
-	void RandomizeHost(long *seed,bool tables);
-	void RandomizeSigma(long *seed,bool tables);
-	double getZlens();
-	void setZlens(CosmoHndl cosmo,double zlens,double zsource);
+	/// build the lensing planes
+	void buildLensPlanes(CosmoHndl cosmo);
+	/// generate main halos from the parameter file
+	void createMainHalos(InputParams& params, CosmoHndl cosmo, SourceHndl source);
+	/// generate field halos from a mass function
+	void createFieldHalos(CosmoHndl cosmo,long *seed);
+	/// read field halo data in from a file
+	void readInputSimFile(CosmoHndl cosmo);
+
+	/// print the main parameters of the lens
 	void printMultiLens();
 
+	/// compute the dflection, convergence, and shear for each point on the grid
 	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off);
+	/// compute the dflection, convergence, and shear for a single ray
 	void rayshooterInternal(double *ray, double *alpha, KappaType *gamma, KappaType *kappa, bool kappa_off);
-	void rayshooterInternal_halos(unsigned long Npoints, Point *i_points, bool kappa_off, double *Dl_halos, double *dDl_halos);
-
-	/// needs to be 0 or nolens, 1 or NFW, 2 or PseudoNFW, 3 or PowerLaw, 4 or NSIE, 5 or AnaLens, 6 or UniLens, 7 or MOKALens
-	InputLensType DM_halo_type;
-	InputLensType galaxy_halo_type;
-	/// main lensing halo in the simulation
-	Utilities::MixedVector<LensHalo> main_halos;
-
-	/// field of view in square degrees
-	double fieldofview;
 
 	// methods used for use with implanted sources
 
@@ -115,41 +115,41 @@ public:
 
 	double getZmax(){return plane_redshifts[Nplanes-1];}
 
+	int flag_input_lens;
+	/// the lensing planes
+	std::vector<LensPlane *> lensing_planes;
 	/// Dl[j = 0...] angular diameter distances, comoving
-	double *Dl;
+	std::vector<double> Dl;
 	/// dDl[j] is the distance between plane j-1 and j plane, comoving
-	double *dDl;
+	std::vector<double> dDl;
 	/// Redshifts of lens planes, 0...Nplanes.  Last one is the source redshift.
-	double *plane_redshifts;
+	std::vector<double> plane_redshifts;
 	/// charge for the tree force solver (4*pi*G*mass_scale)
 	double charge;
-
-	/// an array of smart pointers to halo trees on each plane, uses the haloModel in the construction
-	std::auto_ptr<QuadTree> *halo_tree;
 
 	/// if >= 1, deflection in the rayshooting is switched off
 	bool flag_switch_deflection_off;
 	/// if >= 1, the background is switched off and only the main lens is present
-	bool flag_switch_background_off;
+	bool flag_switch_field_off;
 
 private:
-
+	/// number of lensing planes + 1 in the simulation, the last plant is the source plane
 	int Nplanes;
-
-	void setCoorDist(CosmoHndl cosmo);
+	/// field of view in square degrees
+	double fieldofview;
 	
 	/// tables with angular distances (comoving) and corresponding redshifts
-	double *coorDist_table;
-	double *redshift_table;
-	unsigned long NTABLE;
+	std::map<double,double> coorDist_table;
+	const static long NTABLE = 1000;
 	bool table_set;
 	void make_table(CosmoHndl cosmo);
+
+	/// sets the distances and redshifts of the lensing planes
+	void setCoorDist(CosmoHndl cosmo);
 
 	long *seed;
 
 	void assignParams(InputParams& params);
-
-	double r_print_halos;
 
 	/* the following parameters are read in from the parameter file */
 
@@ -162,38 +162,40 @@ private:
 	/// min mass for the halo model
 	double min_mass;
 	/// internal halo profile type; needs to be 0 or PowerLaw, 1 or NFW, 2 or PseudoNFW, 3 or NSIE, 4 or PointMass
-	IntProfType int_prof_type;
-	/// internal galaxy profile type; needs to be 0 or PowerLaw, 1 or NFW, 2 or PseudoNFW, 3 or NSIE, 4 or PointMass
-	IntProfType int_prof_gal_type;
+	LensHaloType int_prof_type;
 	/// power law or pseudo NFW internal profile slope
 	double halo_slope;
+
+	/// if true, each field halo contains an NSIE galaxy inside it
+	bool flag_galaxy_subhalo;
+	/// galaxy subhalo profile type; needs to be 0 or PowerLaw, 1 or NFW, 2 or PseudoNFW, 3 or NSIE, 4 or PointMass
+	GalaxyLensHaloType int_prof_gal_type;
 	/// mass fraction in the host galaxy
 	double galaxy_mass_fraction;
 
-
-	/// read particle/halo data in from a file
-	void readInputSimFile(CosmoHndl cosmo);
 
 	std::string input_sim_file;
 	bool sim_input_flag;
 	//std::string input_gal_file;
 	//bool gal_input_flag;
 	bool read_sim_file;
-    // TODO Margarita:  This parameter is undocumented!!!
-	bool partial_cone;
 
-	/// enables to two plane test
-	bool flag_run_twop_test;
-	/// enables the multi planes field_halos test
-	bool flag_run_multip_test;
+	/* MAIN HALOS */
+	/// main lens type: 0 or nolens, 1 or NFW, 2 or PseudoNFW, 3 or PowerLaw, 4 or NSIE, 5 or AnaLens, 6 or UniLens, 7 or MOKALens, 8 or DummyLens
+	LensHaloType main_halo_type;
+	/// galaxy lens type: 0 or none, 1 or NSIE
+	GalaxyLensHaloType galaxy_halo_type;
+	/// main lensing halo in the simulation
+	Utilities::MixedVector<LensHaloHndl> main_halos;
+	/// number of main halo profiles (or main halos)
+	IndexType NmainHalos;
 
+	/* FIELD HALOS */
 	/// vector of all lens field_halos in the light cone
 	std::vector<LensHaloHndl> field_halos;
 	/// number of field_halos on all the planes
 	IndexType Nhalos;
-	double *halo_zs;
 	double **halo_pos;
-	unsigned long *halo_id;
 
 	// Variables for implanted source
 	//std::auto_ptr<MultiSourceAnaGalaxy> anasource;
@@ -208,11 +210,10 @@ private:
 	/// This is the source redshift that is read in from the parameter file and becomes the maximum redshift
 	double zsource;
 
+	/// increases are for cosmological mean number density of halos calculation
 	double field_buffer;
 
-	bool second_halo;
-
-	void quicksort(LensHaloHndl *halo,double **brr,double *arr,unsigned long *id,unsigned long N);
+	void quicksort(LensHaloHndl *halo,double **pos,unsigned long N);
 };
 
 typedef  Lens* LensHndl;

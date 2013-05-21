@@ -80,10 +80,10 @@ double NFWLensHalo::InterpolateFromTable(double *table, double y){
 }
 
 void NFWLensHalo::assignParams(InputParams& params){
-	if(!params.get("mass",mass)) error_message1("mass",params.filename());
-	if(!params.get("Rmax",Rmax)) error_message1("Rmax",params.filename());
-	if(!params.get("z_lens",zlens)) error_message1("z_lens",params.filename());
-	if(!params.get("concentration",rscale)) error_message1("concentration",params.filename());
+	if(!params.get("mass_nfw",mass)) error_message1("mass_nfw",params.filename());
+	if(!params.get("Rmax_nfw",Rmax)) error_message1("Rmax_nfw",params.filename());
+	if(!params.get("zlens_nfw",zlens)) error_message1("lens_nfw",params.filename());
+	if(!params.get("concentration_nfw",rscale)) error_message1("concentration_nfw",params.filename());
 	rscale = rscale*Rmax; // was the concentration
 }
 
@@ -153,10 +153,10 @@ void PseudoNFWLensHalo::initFromMassFunc(float my_mass, double mass_scale, float
 }
 
 void PseudoNFWLensHalo::assignParams(InputParams& params){
-	if(!params.get("mass",mass)) error_message1("mass",params.filename());
-	if(!params.get("Rmax",Rmax)) error_message1("Rmax",params.filename());
-	if(!params.get("z_lens",zlens)) error_message1("z_lens",params.filename());
-	if(!params.get("concentration",rscale)) error_message1("concentration",params.filename());
+	if(!params.get("mass_pnfw",mass)) error_message1("mass_pnfw",params.filename());
+	if(!params.get("Rmax_pnfw",Rmax)) error_message1("Rmax_pnfw",params.filename());
+	if(!params.get("zlens_pnfw",zlens)) error_message1("zlens_pnfw",params.filename());
+	if(!params.get("concentration_pnfw",rscale)) error_message1("concentration_pnfw",params.filename());
 	if(!params.get("slope_pnfw",beta)) error_message1("slope_pnfw",params.filename());
 	rscale = rscale*Rmax; // was the concentration
 }
@@ -185,9 +185,9 @@ void PowerLawLensHalo::initFromMassFunc(float my_mass, double mass_scale, float 
 }
 
 void PowerLawLensHalo::assignParams(InputParams& params){
-	if(!params.get("mass",mass)) error_message1("mass",params.filename());
-	if(!params.get("Rmax",Rmax)) error_message1("Rmax",params.filename());
-	if(!params.get("z_lens",zlens)) error_message1("z_lens",params.filename());
+	if(!params.get("mass_pl",mass)) error_message1("mass_pl",params.filename());
+	if(!params.get("Rmax_pl",Rmax)) error_message1("Rmax_pl",params.filename());
+	if(!params.get("zlens_pl",zlens)) error_message1("zlens_pl",params.filename());
 	if(!params.get("slope_pl",beta)) error_message1("slope_pl",params.filename());
 }
 
@@ -205,9 +205,9 @@ SimpleNSIELensHalo::SimpleNSIELensHalo(InputParams& params){
 }
 
 void SimpleNSIELensHalo::assignParams(InputParams& params){
-	if(!params.get("mass",mass)) error_message1("mass",params.filename());
-	if(!params.get("Rmax",Rmax)) error_message1("Rmax",params.filename());
-	if(!params.get("z_lens",zlens)) error_message1("z_lens",params.filename());
+	if(!params.get("mass_nsie",mass)) error_message1("mass_nsie",params.filename());
+	if(!params.get("Rmax_nsie",Rmax)) error_message1("Rmax_nsie",params.filename());
+	if(!params.get("zlens_nsie",zlens)) error_message1("zlens_nsie",params.filename());
 
 	if(!params.get("sigma",sigma)) error_message1("sigma",params.filename());
 	if(!params.get("core",rcore)) error_message1("core",params.filename());

@@ -100,20 +100,16 @@ void BaseNSIELensHalo::force_halo(
     	 }
      }
 
-     // final operations on results
-     convert_factor = 4*pi*Grav*Sigma_crit;
+     // convert from physical distance on the lens plane to (1/physical_distance)
+	 alpha[0] *= Sigma_crit;
+	 alpha[1] *= Sigma_crit;
 
-     // convert from physical distance on the lens plane to an angle
-	 alpha[0] *= convert_factor;
-	 alpha[1] *= convert_factor;
-
-	 // in the multi-plane formalism G^i=partial deflection_angle^i / partial x^i
-	 // therefore the quantities need to be in units (1/physical_distance)
-	 // --> convert from unitless quantity to (1/physical_distance)
-	 *kappa *= convert_factor;
-	 gamma[0] *= convert_factor;
-	 gamma[1] *= convert_factor;
-	 gamma[2] *= convert_factor;
+	 // therefore the quantities need to be in units (1/physical_distance^2)
+	 // --> convert from unitless quantity to (1/physical_distance^2)
+	 *kappa *= Sigma_crit;
+	 gamma[0] *= Sigma_crit;
+	 gamma[1] *= Sigma_crit;
+	 gamma[2] *= Sigma_crit;
 
      return ;
 }
@@ -198,7 +194,7 @@ void BaseNSIELensHalo::setInternalParams(CosmoHndl cosmo, double zsource){
 
 	MpcToAsec = 60*60*180 / pi / Dl;
 		// in Mpc
-	Einstein_ro=4*pi*pow(sigma/2.99792e5,2)*Dl
+	Einstein_ro=4*pi*pow(sigma/lightspeed,2)*Dl
 		*Dls/Ds;
 	// find critical density
 	Sigma_crit=Ds/Dls/Dl/4/pi/Grav;

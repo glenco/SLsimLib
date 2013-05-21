@@ -170,21 +170,11 @@ void *compute_rays_parallel(void *_p){
       
       assert(xx[0] == xx[0] && xx[1] == xx[1]);
       
-      if(lens->flag_input_lens && j == (lens->flag_input_lens % lens->Nplanes)){
-    	  lens->main_halos->force_halo(alpha,&kappa,gamma,xx,kappa_off);
-    	  cc = lens->dDl[j+1];
-      }else{
-    	  cc = lens->charge*lens->dDl[j+1];
-	
-    	  if(lens->flag_switch_background_off){
-    		  kappa = alpha[0] = alpha[1] = gamma[0] = gamma[1] = gamma[2] = 0.0;
-    	  }else{
-    		  lens->halo_tree[j]->force2D_recur(xx,alpha,&kappa,gamma,kappa_off);
-    		  //halo_tree[j]->force2D(xx,alpha,&kappa,gamma,kappa_off);
-    		  assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
-    	  }
-      }
+      lens->lensing_planes[j]->force(alpha,&kappa,gamma,xx,kappa_off);
 
+      cc = lens->charge*lens->dDl[j+1];
+
+      assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
 
       if(!kappa_off){
     	  fac = 1/(1+lens->plane_redshifts[j]);
@@ -225,10 +215,8 @@ void *compute_rays_parallel(void *_p){
     	  else
     		  bb = 0;
 	
-    	  if(lens->flag_input_lens && j == (lens->flag_input_lens % lens->Nplanes))
-    		  cc = lens->dDl[j+1]*lens->Dl[j]/lens->Dl[j+1];
-    	  else
-    		  cc = lens->charge*lens->dDl[j+1]*lens->Dl[j]/lens->Dl[j+1];
+
+    	  cc = lens->charge*lens->dDl[j+1]*lens->Dl[j]/lens->Dl[j+1];
 	
     	  kappa_plus = aa*p->i_points[i].kappa - bb*kappa_minus
     			  - cc*(kappa*p->i_points[i].kappa + gamma[0]*p->i_points[i].gamma[0] + gamma[1]*p->i_points[i].gamma[1]);
@@ -343,20 +331,11 @@ void Lens::rayshooterInternal(
 
       assert(xx[0] == xx[0] && xx[1] == xx[1]);
 
-      if(flag_input_lens && j == (flag_input_lens % Nplanes)){
-    	  main_halos->force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,xx,kappa_off);
-    	  cc = dDl[j+1];
-      }else{
-    	  cc = charge*dDl[j+1];
+      lensing_planes[j]->force(alpha_tmp,&kappa_tmp,gamma_tmp,xx,kappa_off);
 
-    	  if(flag_switch_background_off){
-    		  kappa_tmp = alpha_tmp[0] = alpha_tmp[1] = gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
-    	  }else{
-    		  halo_tree[j]->force2D_recur(xx,alpha_tmp,&kappa_tmp,gamma_tmp,kappa_off);
-    		  assert(alpha_tmp[0] == alpha_tmp[0] && alpha_tmp[1] == alpha_tmp[1]);
-    	  }
-      }
+      assert(alpha_tmp[0] == alpha_tmp[0] && alpha_tmp[1] == alpha_tmp[1]);
 
+      cc = charge*dDl[j+1];
 
       if(!kappa_off){
     	  fac = 1/(1+plane_redshifts[j]);
@@ -397,10 +376,7 @@ void Lens::rayshooterInternal(
     	  else
     		  bb = 0;
 
-    	  if(flag_input_lens && j == (flag_input_lens % Nplanes))
-    		  cc = dDl[j+1]*Dl[j]/Dl[j+1];
-    	  else
-    		  cc = charge*dDl[j+1]*Dl[j]/Dl[j+1];
+    	  cc = charge*dDl[j+1]*Dl[j]/Dl[j+1];
 
     	  kappa_tmp_plus = aa*(*kappa) - bb*kappa_tmp_minus
     			  - cc*(kappa_tmp*(*kappa) + gamma_tmp[0]*gamma[0] + gamma_tmp[1]*gamma[1]);

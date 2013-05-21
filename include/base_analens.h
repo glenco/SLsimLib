@@ -8,13 +8,10 @@
 #ifndef BASE_ANALENS_H_
 #define BASE_ANALENS_H_
 
-
-#include <lens.h>
-#include <Tree.h>
-#include <forceTree.h>
-#include <quadTree.h>
-#include <source.h>
-#include <InputParams.h>
+#include "forceTree.h"
+#include "quadTree.h"
+#include "source.h"
+#include "InputParams.h"
 
 /**
  * \brief An "analytic" model to represent a lens on a single plane.
