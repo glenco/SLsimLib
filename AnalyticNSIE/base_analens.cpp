@@ -332,17 +332,18 @@ void LensHalo::setModesToEllip(double q,double theta){
 		mod[i]=0;
 	}
 	// fill in modes with their values for an elliptical lens
-	mod[3]=4*K/pi;
 	if(q != 1.0){
-		mod[4] = 4*( (1+q*q)*K-2*q*q*E )/(1-q*q)/pi/(1-4);
+    mod[3]=4*K/pi;
+		mod[4] = 4*( (1+q*q)*K-2*q*q*E )/(1-q*q)/pi/mod[3];
 		mod[8] = 4*( (3*q*q+1)*(q*q+3)*K-8*q*q*(1+q*q)*E )
-      /( 3*pi*pow(1-q*q,2) )/(1-16);
+      /( 3*pi*pow(1-q*q,2) )/mod[3];
 		mod[12] = 4*( (1+q*q)*(15+98*q*q+15*q*q*q*q)*K-2*q*q*(23+82*q*q+23*q*q*q*q)*E )
-      /( 15*pi*pow(1-q*q,3) )/(1-36);
+      /( 15*pi*pow(1-q*q,3) )/mod[3];
 		mod[16]= 4*( -32*q*q*(1+q*q)*(11+74*q*q+11*q*q*q*q)*E
                            +(105+1436*q*q+3062*q*q*q*q+1436*pow(q,6)+105*pow(q,8))*K )
-      /(105*pi*pow(1-q*q,4))/(1-64);
+      /(105*pi*pow(1-q*q,4))/mod[3];
 	}
+  mod[3]=1.0;
   
 	// rotate model
 	RotateModel(theta,mod,Nmod,0);
