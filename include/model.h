@@ -43,38 +43,30 @@ public:
 		params = new InputParams(paramfile);
 
 		cosmo = new COSMOLOGY();
-		lens = new L(*params,seed);
 		source = new S(*params);
-
-		setInternal();
+		lens = new L(*params,cosmo,source,seed);
 	};
 	/// For the AnaNSIELensHalo one
-	Model(std::string paramfile){
+	Model(std::string paramfile,long* seed){
 		params = new InputParams(paramfile);
 
 		cosmo = new COSMOLOGY();
-		lens = new L(*params);
 		source = new S(*params);
-
-		setInternal();
+		lens = new L(*params,cosmo,source,seed);
 	};
 	///Others
 	Model(long* seed){
 		params = NULL;
 
 		cosmo = new COSMOLOGY();
-		lens = new L();
 		source = new S();
-
-		setInternal();
+		lens = new L(*params,cosmo,source,seed);
 	};
-	Model(){
+	Model(long* seed){
 		params = NULL;
 		cosmo = new COSMOLOGY();
-		lens = new L();
 		source = new S();
-
-		setInternal();
+		lens = new L(*params,cosmo,source,seed);
 	};
 	~Model(){
 		if(params)
@@ -109,15 +101,7 @@ public:
 		//lens->getParameters(p);
 		source->getParameters(p);
 	}
-	
-private:
 
-    void setInternal(){
-    	lens->setInternalParams(cosmo,source);
-    	//source->setDlDs(cosmo->angDist(0,lens->getZlens()) / cosmo->angDist(0,source->getZ()));
-    };
-
-    //void change_redshifts(TreeHndl i_tree,TreeHndl s_tree,double z_source,double z_lens);
 };
 
 /** \ingroup ChangeLens
@@ -176,9 +160,6 @@ template<class L,class S> void Model<L,S>::RandomizeModel(
 
 		lens->RandomizeSigma(seed,tables);
 	}
-
-	// This randomizes the halos if they are not read from an external source
-	setInternal();
 
 	// This need to be done after source->DlDs has been set in setInternal()
 	if(in_radians)
