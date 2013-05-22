@@ -8,13 +8,10 @@
 #ifndef BASE_ANALENS_H_
 #define BASE_ANALENS_H_
 
-
-#include <lens.h>
-#include <Tree.h>
-#include <forceTree.h>
-#include <quadTree.h>
-#include <source.h>
-#include <InputParams.h>
+#include "forceTree.h"
+#include "quadTree.h"
+#include "source.h"
+#include "InputParams.h"
 
 /**
  * \brief An "analytic" model to represent a lens on a single plane.
@@ -54,14 +51,10 @@
  *
  * TODO BEN finish this documentation.
  */
-
-
-class BaseAnaLens : public Lens{
+class BaseNSIELensHalo : public SimpleNSIELensHalo{
 public:
-
-	//BaseAnaLens(std::string);
-	BaseAnaLens(InputParams& params);
-	virtual ~BaseAnaLens();
+	BaseNSIELensHalo(InputParams& params);
+	virtual ~BaseNSIELensHalo();
 
   /// critical surface density
   double getSigma_crit(){return Sigma_crit;}
@@ -81,8 +74,6 @@ public:
   /// actual number of substructures
   int sub_N;
   double **sub_x;
-  float *sub_Rcut;
-  float *sub_mass;
   /// slope of mass profile
   double sub_beta;
   /// slope of mass function
@@ -92,22 +83,10 @@ public:
   double sub_Mmax;
   double sub_Mmin;
   double sub_theta_force;
-  ForceTree *sub_tree;
+  LensHalo *subs;
+  QuadTree *sub_tree;
   IndexType *sub_substructures;
   ClumpInternal sub_type;
-
-  /// pointer to function for calculating the deflection caused by a subclump
-  void (*sub_alpha_func)(double *alpha,double *x,double Rtrunc,double mass,double r_scale
-			,double *center,double Sigma_crit);
-  /// pointer to function for calculating the convergence caused by a subclump
-  KappaType (*sub_kappa_func)(double *x,double Rtrunc,double mass,double r_scale
-  		,double *center,double Sigma_crit);
-  /// pointer to function for calculating the shear caused by a subclump
-  void (*sub_gamma_func)(KappaType *gamma,double *x,double Rtrunc,double mass,double r_scale
-    		,double *center,double Sigma_crit);
-  /// pointer to function for calculating the surface potential caused by a subclump
-  KappaType (*sub_phi_func)(double *x,double Rtrunc,double mass,double r_scale
-    		,double *center,double Sigma_crit);
 
   /// stars
   bool AreStarsImaplated(){return stars_implanted;}
@@ -124,21 +103,20 @@ public:
   int star_Nregions;
   double *star_region;
 
-  double getZlens();
   void setZlens(CosmoHndl cosmo,double zlens,double zsource = 1000);
   void setInternalParams(CosmoHndl,SourceHndl);
   void setInternalParams(CosmoHndl,double);
   void assignParams(InputParams& params);
   void PrintLens(bool show_substruct,bool show_stars);
   void error_message1(std::string name,std::string filename);
-  void rayshooterInternal(double *ray, double *alpha, KappaType *gamma, KappaType *kappa, bool kappa_off);
+
+  virtual void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa);
 
   // in randoimize_lens.c
   double averageSubMass();
 
   // in readlens_ana.c
   void reNormSubstructure(double kappa_sub);
-  void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off);
   void substract_stars_disks(PosType *ray,PosType *alpha
                   ,KappaType *kappa,KappaType *gamma);
   void implant_stars(Point *centers,unsigned long Nregions,long *seed, IMFtype type=One);
@@ -149,13 +127,8 @@ public:
 
   double getHost_Dl(){return Dl;}
 
-  // These need to be in the base class because they are used in the rayshooter function which because of parrelleization is not a member function
-  double getHost_ro(){return host_ro;}
-  double getHost_sigma(){return host_sigma;}
-  //double *host_x;    /// not used yet
-  double getHost_core(){return host_core;}
-  double getHost_axis_ratio(){return host_axis_ratio;}
-  double getHost_position_angle(){return host_pos_angle;}    /// position angle
+  double getEinstein_ro(){return Einstein_ro;}
+
   double getPerturb_beta(){return perturb_beta;}
   IMFtype getIMF_type(){return imf_type;}
   int getPerturb_Nmodes(){return perturb_Nmodes;}    /// this includes two for external shear
@@ -169,15 +142,8 @@ protected:
   double to;
    /// Angular size distance to lens plane
   double Dl;
-
-   // host elliptical
-    /// private: Einstein radius of host
-  double host_ro;
-  double host_sigma;
-    //double *host_x;    /// not used yet
-  double host_core;
-  double host_axis_ratio;
-  double host_pos_angle;    /// position angle
+  /// Einstein radius
+  double Einstein_ro;
 
     // perturbations to host.  These are protected so that in some derived classes they can or cann't be changed.
   int perturb_Nmodes;    /// this includes two for external shear
@@ -198,23 +164,10 @@ protected:
   double *star_kappa;
   double **star_xdisk;
 
-  /// redshift of lens
-   double zlens;
    // private derived quantities
    /// private: conversion factor between Mpc on the lens plane and arcseconds
    double MpcToAsec;
 
-   // Things added to manipulate and fit lenses.
-   //int check_model(int Nimages,int Nsources,int Nlenses,int *pairing,double **xob,double *x_center
-   //		,int Nmod,double *mod,double **xg,double Re2,double **dx_sub,double **Amag,double ytol);
-   //double find_axis(double *mod,int Nmod);
-   //double deflect_translated(double beta,double *mod,double *x,double *y,double *mag,int N
-   //   ,int Nlenses,double Re2,double *x2);
-   //void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *xg,double beta
-   //		 ,int N,int *degen,double *mod,double **v,double **dx);
-   //double ElliptisizeLens(int Nimages,int Nsources,int Nlenses,int *pairing,double **xob
-   //		       ,double *xc,double **xg,double sigG,double beta,int Nmod
-   //		       ,double *mod,double **dx,double *re2,double *q);
 
 };
 
@@ -256,7 +209,7 @@ double lens_expand(double beta,double *mod,int Nmodes,double *x,double *alpha,Ka
 // in FullRange/implant_stars.c
 
 //void implant_stars(Point *images,unsigned long Nimages,long *seed);
-//void substract_stars_disks(BaseAnaLens *lens,PosType *ray,PosType *alpha
+//void substract_stars_disks(BaseNSIELensHalo *lens,PosType *ray,PosType *alpha
  //               ,PosType *kappa,PosType *gamma);
 
 

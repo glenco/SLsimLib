@@ -8,10 +8,7 @@
 #ifndef analens_declare
 #define analens_declare
 
-#include <lens.h>
 #include <Tree.h>
-#include <forceTree.h>
-#include <quadTree.h>
 #include <source.h>
 #include <base_analens.h>
 
@@ -60,12 +57,12 @@
  *
  * TODO BEN finish this documentation for perturbation parameters.
  */
-class AnaLens : public BaseAnaLens{
+class AnaNSIELensHalo : public BaseNSIELensHalo{
 public:
-	AnaLens(InputParams& params);
-	~AnaLens();
+	AnaNSIELensHalo(InputParams& params);
+	~AnaNSIELensHalo();
 
-  virtual void assignParams(InputParams& params);
+  void assignParams(InputParams& params);
   double FractionWithinRe(double rangeInRei);
   void PrintLens(bool show_substruct,bool show_stars);
 
@@ -97,9 +94,9 @@ private:
 
 
 // in mark_points.c
-void MarkPoints(TreeHndl s_tree,AnaLens *lens,bool sb_cut,short invert);
-void _MarkPoints(TreeHndl s_tree,AnaLens *lens,bool *sbcut);
-bool InSource(double *ray,AnaLens *lens,bool surfacebright);
+void MarkPoints(TreeHndl s_tree,AnaNSIELensHalo *lens,bool sb_cut,short invert);
+void _MarkPoints(TreeHndl s_tree,AnaNSIELensHalo *lens,bool *sbcut);
+bool InSource(double *ray,AnaNSIELensHalo *lens,bool surfacebright);
 
 void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *xg,double beta
 		 ,int N,int *degen,double *mod,double **v,double **dx);

@@ -17,13 +17,13 @@ using namespace std;
  * Sets many parameters within the lens model, source model and
  * force calculation.
  */
-void AnaLens::assignParams(InputParams& params){
+void AnaNSIELensHalo::assignParams(InputParams& params){
 
 	// Host lens parameters
-	if(!params.get("sigma",host_sigma)) error_message1("sigma",params.filename());
-	if(!params.get("core",host_core)) error_message1("core",params.filename());
-	if(!params.get("axis_ratio",host_axis_ratio)) error_message1("axis_ratio",params.filename());
-	if(!params.get("pos_angle",host_pos_angle)) error_message1("pos_angle",params.filename());
+	if(!params.get("sigma",sigma)) error_message1("sigma",params.filename());
+	if(!params.get("core",rcore)) error_message1("core",params.filename());
+	if(!params.get("axis_ratio",fratio)) error_message1("axis_ratio",params.filename());
+	if(!params.get("pos_angle",pa)) error_message1("pos_angle",params.filename());
 
 
 	// Distortion of host lens parameters
@@ -60,18 +60,18 @@ cout << endl << "Nstars "<<stars_N << endl << endl;
 	}
 */
 
-void AnaLens::PrintLens(bool show_substruct,bool show_stars){
+void AnaNSIELensHalo::PrintLens(bool show_substruct,bool show_stars){
 	int i;
 
-	BaseAnaLens::PrintLens(show_substruct,show_stars);
+	BaseNSIELensHalo::PrintLens(show_substruct,show_stars);
 
 	// parameters of host elliptical
 	cout << endl << "**Host lens model**" << endl;
 	// redshifts
-	cout << "sigma " << host_sigma << "km/s" << endl;
-	cout << "core " << host_core << " Mpc" << endl;
-	cout << "axis_ratio " << host_axis_ratio << endl;
-	cout << "position angle " <<host_pos_angle << endl;
+	cout << "sigma " << sigma << "km/s" << endl;
+	cout << "core " << rcore << " Mpc" << endl;
+	cout << "axis_ratio " << fratio << endl;
+	cout << "position angle " <<pa << endl;
 
 			// parameters of distortion to host elliptical
 	cout << endl << "Nmodes " << perturb_Nmodes << endl;
@@ -87,24 +87,23 @@ void AnaLens::PrintLens(bool show_substruct,bool show_stars){
 }
 
 
-AnaLens::AnaLens(InputParams& params) : BaseAnaLens(params){
+AnaNSIELensHalo::AnaNSIELensHalo(InputParams& params) : BaseNSIELensHalo(params){
 
   assignParams(params);
 
   if(perturb_Nmodes){
   	perturb_modes = new double[perturb_Nmodes+1];
-  	// zero perturbation modes until use BaseAnaLens::RandomlyDistortLens()
+  	// zero perturbation modes until use BaseNSIELensHalo::RandomlyDistortLens()
   	for(int i=0;i< perturb_Nmodes+1 ;++i) perturb_modes[i] =  0;
   }
 
   // in degrees
-  host_pos_angle*=pi/180;
-  set = true;
+  pa*=pi/180;
 
   PrintLens(false,false);
 }
 
 
-AnaLens::~AnaLens(){
+AnaNSIELensHalo::~AnaNSIELensHalo(){
 
 }

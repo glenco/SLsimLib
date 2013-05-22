@@ -15,7 +15,7 @@ using namespace CCfits;
 
 #endif
 
-void MOKALens::getDims(){
+void MOKALensHalo::getDims(){
 #ifdef ENABLE_FITS
 	try{
 		std::auto_ptr<FITS> ff(new FITS (MOKA_input_file, Read));
@@ -38,7 +38,7 @@ void MOKALens::getDims(){
 /**
  * \brief reads in the fits file for the MOKA map and saves it in the structure map
  */
-void MOKALens::readImage(){
+void MOKALensHalo::readImage(){
 #ifdef ENABLE_FITS
 
 	std:: cout << " reading MOKA file: " << MOKA_input_file << std:: endl;
@@ -83,7 +83,7 @@ void MOKALens::readImage(){
 /**
  * \brief write the fits file of the new MOKA map from the structure map
  */
-void MOKALens::writeImage(std::string filename){
+void MOKALensHalo::writeImage(std::string filename){
 #ifdef ENABLE_FITS
 	long naxis=2;
 	long naxes[2]={map->nx,map->ny};

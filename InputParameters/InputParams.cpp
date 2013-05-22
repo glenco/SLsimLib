@@ -170,49 +170,6 @@ bool InputParams::get(std::string label,bool& value){
 	std::cout << label << " in parameter file " << paramfile_name << " needs to be 1 or 0 representing true or false!"<< std::endl;
 	return false;
 }
-/** \brief Assigns to "value" the value of the parameter called "label".
- * If this parameter label does not appear in the parameter file false
- * is returned.  If the parameter in the file does not "match" the type
- * of value false will also be returned and a warning printed to stdout.
- *
- * IntProfType entries in the parameter file must be 0 through 4 or PowerLaw, NFW, PseudoNFW, NSIE or NFW_NSIE.
- */
-bool InputParams::get(std::string label,IntProfType& value){
-	unsigned int i;
-	for(i=0;i<labels.size();++i)
-		if(labels[i] == label) break;
-	if(i==labels.size()) return false;
-
-	if(!char_values[i].compare("0") || !char_values[i].compare("PowerLaw")){
-		value = PowerLaw;
-		use_number[i]++;
-		return true;
-	}
-	if(!char_values[i].compare("1") || !char_values[i].compare("NFW")){
-		value = NFW;
-		use_number[i]++;
-		return true;
-	}
-	if(!char_values[i].compare("2") || !char_values[i].compare("PseudoNFW")){
-		value = PseudoNFW;
-		use_number[i]++;
-		return true;
-	}
-	if(!char_values[i].compare("3") || !char_values[i].compare("NSIE")){
-		value = NSIE;
-		use_number[i]++;
-		return true;
-	}
-	if(!char_values[i].compare("4") || !char_values[i].compare("NFW_NSIE")){
-		value = NFW_NSIE;
-		use_number[i]++;
-		return true;
-	}
-
-	std::cout << label << " in parameter file " << paramfile_name
-			<< " needs to be 0 or PowerLaw, 1 or NFW, 2 or PseudoNFW, 3 or NSIE, 4 or NFW_NSIE!"<< std::endl;
-	return false;
-}
 
 /** \brief Assigns to "value" the value of the parameter called "label".
  * If this parameter label does not appear in the parameter file false
@@ -237,13 +194,13 @@ bool InputParams::get(std::string label,MassFuncType& value){
 		use_number[i]++;
 		return true;
 	}
-	if(!char_values[i].compare("2") || !char_values[i].compare("PowLaw")){
+	if(!char_values[i].compare("2") || !char_values[i].compare("PowerLaw")){
 		value = PL;
 		use_number[i]++;
 		return true;
 	}
 
-	std::cout << label << " in parameter file " << paramfile_name << " needs to be 0, 1 or 2 or PS, ST or PowLaw!"<< std::endl;
+	std::cout << label << " in parameter file " << paramfile_name << " needs to be 0, 1 or 2 or PS, ST or PowerLaw!"<< std::endl;
 	return false;
 }
 /** \brief Assigns to "value" the value of the parameter called "label".
@@ -251,40 +208,102 @@ bool InputParams::get(std::string label,MassFuncType& value){
  * is returned.  If the parameter in the file does not "match" the type
  * of value false will also be returned and a warning printed to stdout.
  *
- * InputLens entries in the parameter file must be 0 through 2 or nolens, AnaLens (analytic lens) or MOKALens (MOKA Lens).
+ * MainLensType entries in the parameter file must needs to be 0 or nolens, 1 or NFW, 2 or PseudoNFW,
+ * 3 or PowerLaw, 4 or NSIE, 5 or AnaLens, 6 or UniLens, 7 or MOKALens, 8 or DummyLens
  */
 
-bool InputParams::get(std::string label,InputLens& value){
+bool InputParams::get(std::string label,LensHaloType& value){
 	unsigned int i;
 	for(i=0;i<labels.size();++i)
 		if(labels[i] == label) break;
 	if(i==labels.size()) return false;
 
 	if(!char_values[i].compare("0") || !char_values[i].compare("nolens")){
-		value = null;
+		value = null_lens;
 		use_number[i]++;
 		return true;
 	}
-	if(!char_values[i].compare("1") || !char_values[i].compare("AnaLens")){
+	if(!char_values[i].compare("1") || !char_values[i].compare("NFW")){
+		value = nfw_lens;
+		use_number[i]++;
+		return true;
+	}
+	if(!char_values[i].compare("2") || !char_values[i].compare("PseudoNFW")){
+		value = pnfw_lens;
+		use_number[i]++;
+		return true;
+	}
+	if(!char_values[i].compare("3") || !char_values[i].compare("PowerLaw")){
+		value = pl_lens;
+		use_number[i]++;
+		return true;
+	}
+	if(!char_values[i].compare("4") || !char_values[i].compare("NSIE")){
+		value = nsie_lens;
+		use_number[i]++;
+		return true;
+	}
+	if(!char_values[i].compare("5") || !char_values[i].compare("AnaLens")){
 		value = ana_lens;
 		use_number[i]++;
 		return true;
 	}
-	if(!char_values[i].compare("2") || !char_values[i].compare("MOKALens")){
+	if(!char_values[i].compare("6") || !char_values[i].compare("UniLens")){
+		value = uni_lens;
+		use_number[i]++;
+		return true;
+	}
+	if(!char_values[i].compare("7") || !char_values[i].compare("MOKALens")){
 		value = moka_lens;
 		use_number[i]++;
 		return true;
 	}
+	if(!char_values[i].compare("8") || !char_values[i].compare("DummyLens")){
+		value = dummy_lens;
+		use_number[i]++;
+		return true;
+	}
 
-	std::cout << label << " in parameter file " << paramfile_name << " needs to be 0, 1 or 2 or nolens, AnaLens or MOKALens!"<< std::endl;
+	std::cout << label << " in parameter file " << paramfile_name << " needs to be 0 or nolens, 1 or NFW, 2 or PseudoNFW, " << std::endl;
+	std::cout << "3 or PowerLaw, 4 or NSIE, 5 or AnaLens, 6 or UniLens, 7 or MOKALens, 8 or DummyLens"<< std::endl;
 	return false;
 }
+
 /** \brief Assigns to "value" the value of the parameter called "label".
  * If this parameter label does not appear in the parameter file false
  * is returned.  If the parameter in the file does not "match" the type
  * of value false will also be returned and a warning printed to stdout.
  *
- * InputLens entries in the parameter file must be 0 through 2 or nfw, powerlaw, or pointmass.
+ * GalaxyLensType entries in the parameter file must be 0 or none, 1 or NSIE
+ */
+
+bool InputParams::get(std::string label,GalaxyLensHaloType& value){
+	unsigned int i;
+	for(i=0;i<labels.size();++i)
+		if(labels[i] == label) break;
+	if(i==labels.size()) return false;
+
+	if(!char_values[i].compare("0") || !char_values[i].compare("none")){
+		value = null_gal;
+		use_number[i]++;
+		return true;
+	}
+	if(!char_values[i].compare("1") || !char_values[i].compare("NSIE")){
+		value = nsie_gal;
+		use_number[i]++;
+		return true;
+	}
+
+	std::cout << label << " in parameter file " << paramfile_name << " needs to be 0 or none, 1 or NSIE" << std::endl;
+	return false;
+}
+
+/** \brief Assigns to "value" the value of the parameter called "label".
+ * If this parameter label does not appear in the parameter file false
+ * is returned.  If the parameter in the file does not "match" the type
+ * of value false will also be returned and a warning printed to stdout.
+ *
+ * MainLensType entries in the parameter file must be 0 through 2 or NFW, PowerLaw, or PointMass.
  */
 
 bool InputParams::get(std::string label,ClumpInternal& value){
@@ -293,23 +312,23 @@ bool InputParams::get(std::string label,ClumpInternal& value){
 		if(labels[i] == label) break;
 	if(i==labels.size()) return false;
 
-	if(!char_values[i].compare("0") || !char_values[i].compare("nfw")){
+	if(!char_values[i].compare("0") || !char_values[i].compare("NFW")){
 		value = nfw;
 		use_number[i]++;
 		return true;
 	}
-	if(!char_values[i].compare("1") || !char_values[i].compare("powerlaw")){
+	if(!char_values[i].compare("1") || !char_values[i].compare("PowerLaw")){
 		value = powerlaw;
 		use_number[i]++;
 		return true;
 	}
-	if(!char_values[i].compare("2") || !char_values[i].compare("pointmass")){
+	if(!char_values[i].compare("2") || !char_values[i].compare("PointMass")){
 		value = pointmass;
 		use_number[i]++;
 		return true;
 	}
 
-	std::cout << label << " in parameter file " << paramfile_name << " needs to be 0, 1 or 2 or nfw, powerlaw, or pointmass!"<< std::endl;
+	std::cout << label << " in parameter file " << paramfile_name << " needs to be 0, 1 or 2 or NFW, PowerLaw, or PointMass!"<< std::endl;
 	return false;
 }
 
@@ -318,7 +337,7 @@ bool InputParams::get(std::string label,ClumpInternal& value){
  * is returned.  If the parameter in the file does not "match" the type
  * of value false will also be returned and a warning printed to stdout.
  *
- * InputLens entries in the parameter file must be One,Mono,BrokenPowerLaw,Salpeter,SinglePowerLaw,Kroupa or Chabrier
+ * MainLensType entries in the parameter file must be One,Mono,BrokenPowerLaw,Salpeter,SinglePowerLaw,Kroupa or Chabrier
  */
 
 bool InputParams::get(std::string label,IMFtype& value){
@@ -373,7 +392,7 @@ bool InputParams::get(std::string label,IMFtype& value){
  * is returned.  If the parameter in the file does not "match" the type
  * of value false will also be returned and a warning printed to stdout.
  *
- * InputLens entries in the parameter file must be SDSS_U,SDSS_G,SDSS_R,SDSS_I,SDSS_Z,J,H,Ks,i1, or i2
+ * MainLensType entries in the parameter file must be SDSS_U,SDSS_G,SDSS_R,SDSS_I,SDSS_Z,J,H,Ks,i1, or i2
  */
 
 bool InputParams::get(std::string label,Band& value){

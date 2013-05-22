@@ -131,7 +131,7 @@ namespace Utilities
 		
 		/// add an object of type SubclassT to the vector
 		template<typename SubclassT>
-		void push_back(const SubclassT& obj)
+		void push_back_ref(const SubclassT& obj)
 		{
 			// make sure this is a subclass of BaseT
 			check_subclass(obj);
@@ -456,8 +456,7 @@ namespace Utilities
 		/// clear all elements
 		void clear()
 		{
-			items.clear();
-			tmap.clear();
+			while(!empty()) pop_back();
 		}
 		
 		/// clear all elements of a given type
@@ -478,6 +477,18 @@ namespace Utilities
 			return is_type<SubclassT>(items[i]);
 		}
 		
+		/// pointer to first element of items
+		BaseT** data()
+		{
+			return items.data();
+		}
+
+		/// pointer to first element of items
+		BaseT** ptr(unsigned long j)
+		{
+			return &items[j];
+		}
+
 		/// indexed access with bounds checking
 		BaseT* at(std::size_t i)
 		{
@@ -552,6 +563,21 @@ namespace Utilities
 			return items;
 		}
 		
+		unsigned long lower_bound(double target){
+			unsigned long ju,jm,jl;
+
+			jl=0;
+			ju=items.size()-1;
+			while (ju-jl > 1) {
+				jm=(ju+jl) >> 1;
+				if(items[jm]->compare(target))
+					jl=jm;
+				else
+					ju=jm;
+			}
+			return jl;
+		}
+
 		/// get vector of all items of type SubclassT
 		template<typename SubclassT>
 		std::vector<SubclassT*> vector() const
@@ -581,7 +607,46 @@ namespace Utilities
 		std::map<detail::type_index, std::vector<BaseT*> > tmap;
 		
 		typedef typename std::map<detail::type_index, std::vector<BaseT*> >::const_iterator tmap_iterator;
+		typedef typename std::vector<BaseT*>::iterator item_iterator;
 	};
 	
+	void locate(double *xx, unsigned long n, double x, unsigned long *j)
+	{
+		unsigned long ju,jm,jl;
+		int ascnd;
+
+		jl=0;
+		ju=n+1;
+		ascnd=(xx[n] >= xx[1]);
+		while (ju-jl > 1) {
+			jm=(ju+jl) >> 1;
+			if (x >= xx[jm] == ascnd)
+				jl=jm;
+			else
+				ju=jm;
+		}
+		if (x == xx[1]) *j=1;
+		else if(x == xx[n]) *j=n-1;
+		else *j=jl;
+	}
+
+	template<class BaseT>
+	unsigned long lower_bound(std::vector<BaseT*>& items, double target){
+		unsigned long ju,jm,jl;
+
+		jl=0;
+		ju=items.size()-1;
+		while (ju-jl > 1) {
+			jm=(ju+jl) >> 1;
+			if(items[jm]->compare(target))
+				jl=jm;
+			else
+				ju=jm;
+		}
+		return jl;
+	}
+
+	template<typename Container>
+	void delete_container(Container& c) { while(!c.empty()) delete c.back(), c.pop_back(); }
 }
 #endif

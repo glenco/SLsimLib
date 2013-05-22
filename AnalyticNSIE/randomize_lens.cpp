@@ -12,12 +12,12 @@ const float sheartol = 1.0e-3;
 using namespace std;
 
 /*
- * routines for making random, close to elliptical
+ * Einstein_routines for making random, close to elliptical
  *     lenses
  */
 
 
-void AnaLens::RandomizeSigma(long *seed,bool tables){
+void AnaNSIELensHalo::RandomizeSigma(long *seed,bool tables){
 	double *sigmaTable;
 	int n,NsigmaTable;
 	ifstream file;
@@ -38,17 +38,12 @@ void AnaLens::RandomizeSigma(long *seed,bool tables){
 
 	file.close();
 
-	host_sigma = Utilities::RandomFromTable(sigmaTable,NsigmaTable,seed);
+	sigma = Utilities::RandomFromTable(sigmaTable,NsigmaTable,seed);
 
 	delete[] sigmaTable;
 }
 
-void MultiLens::RandomizeSigma(long *seed,bool tables){
-	if(flag_input_lens)
-		input_lens->RandomizeSigma(seed,tables);
-}
-
-void AnaLens::RandomizeHost(long *seed,bool tables){
+void AnaNSIELensHalo::RandomizeHost(long *seed,bool tables){
 	double fo,*axisTable;
 	int n;
 	int NaxisTable;
@@ -70,21 +65,21 @@ void AnaLens::RandomizeHost(long *seed,bool tables){
 	for(n=0;n<NaxisTable;++n) file >> axisTable[n];
 	file.close();
 
-	fo=host_axis_ratio;
+	fo=fratio;
 
 	// random host ellipticity
 	do{
-		if(tables) host_axis_ratio = Utilities::RandomFromTable(axisTable,NaxisTable,seed);
-		else host_axis_ratio = fo + 0.1*gasdev(seed);
+		if(tables) fratio = Utilities::RandomFromTable(axisTable,NaxisTable,seed);
+		else fratio = fo + 0.1*gasdev(seed);
 		//std::cout << "f=%e\n",axis_ratio);
-	}while(host_axis_ratio < 0.0 || host_axis_ratio > 1.0);
+	}while(fratio < 0.0 || fratio > 1.0);
 
 	// unaligned shear modes
 	if(perturb_Nmodes > 0) RandomlyDistortLens(seed,3);
 	// aligned hexopole and octopole
 	if(perturb_Nmodes > 0){
 		for(n=3;n<6;++n) AlignedRandomlyDistortLens(seed
-			,host_pos_angle+3*pi*gasdev(seed)/180,n);
+			,pa+3*pi*gasdev(seed)/180,n);
 	}
 
 	delete[] axisTable;
@@ -92,12 +87,7 @@ void AnaLens::RandomizeHost(long *seed,bool tables){
 	return ;
 }
 
-void MultiLens::RandomizeHost(long *seed,bool tables){
-	if(flag_input_lens)
-		input_lens->RandomizeHost(seed,tables);
-}
-
-/** \ingroup ChangeLens
+/** \ingEinstein_roup ChangeLens
  *
  *
  *	*  make a random realization of the perturbations to the lens
@@ -108,7 +98,7 @@ void MultiLens::RandomizeHost(long *seed,bool tables){
 	 *    each mode is randomly oriented
 	 */
 
-void AnaLens::RandomlyDistortLens(long *seed, int Nmodes){
+void AnaNSIELensHalo::RandomlyDistortLens(long *seed, int Nmodes){
 
 	int i,k;
 	double tmp,theta;
@@ -130,13 +120,13 @@ void AnaLens::RandomlyDistortLens(long *seed, int Nmodes){
 		modes[0]= sqrt(pow(modes[1],2) + pow(modes[2],2));
 		 */
 
-		if(Nmodes > 2) perturb_modes[3] = perturb_rms[2]*pow(host_ro,2-perturb_beta)
+		if(Nmodes > 2) perturb_modes[3] = perturb_rms[2]*pow(Einstein_ro,2-perturb_beta)
 					*gasdev(seed)/ perturb_beta/ perturb_beta;
 		for(i=4;i<((perturb_Nmodes < Nmodes) ? perturb_Nmodes : Nmodes) ;i+=2){
 			k=i/2;
-			perturb_modes[i] =   perturb_rms[k+1]*pow(host_ro,2- perturb_beta)
+			perturb_modes[i] =   perturb_rms[k+1]*pow(Einstein_ro,2- perturb_beta)
 				*gasdev(seed)/( perturb_beta* perturb_beta-k*k)/sqrt(2);
-			perturb_modes[i+1] = perturb_rms[k+1]*pow(host_ro,2- perturb_beta)
+			perturb_modes[i+1] = perturb_rms[k+1]*pow(Einstein_ro,2- perturb_beta)
 				*gasdev(seed)/( perturb_beta* perturb_beta-k*k)/sqrt(2);
 
 			//std::cout << "k=%i i=%i  modes = %e %e rms_purturb=%e\n",k,i,modes[i],modes[i+1],
@@ -147,7 +137,7 @@ void AnaLens::RandomlyDistortLens(long *seed, int Nmodes){
 
 	return ;
 }
-/** \ingroup ChangeLens
+/** \ingEinstein_roup ChangeLens
  *
  *  make a random realization of the perturbations to the lens
  *    the normalization is such that the rms maximum surface
@@ -157,7 +147,7 @@ void AnaLens::RandomlyDistortLens(long *seed, int Nmodes){
  *    This is for randomly distorting a mode but maintaining its alignment
  *    with the ellipticity for example.
  */
-void AnaLens::AlignedRandomlyDistortLens(long *seed,double theta,int Npole){
+void AnaNSIELensHalo::AlignedRandomlyDistortLens(long *seed,double theta,int Npole){
 
 	double tmp;
 	int i,k;
@@ -167,9 +157,9 @@ void AnaLens::AlignedRandomlyDistortLens(long *seed,double theta,int Npole){
 
 		if( k+1 == Npole){
 			tmp=gasdev(seed);
-			perturb_modes[i] =   perturb_rms[k+1]*pow(host_ro,2- perturb_beta)
+			perturb_modes[i] =   perturb_rms[k+1]*pow(Einstein_ro,2- perturb_beta)
 						*tmp*cos(theta)/( perturb_beta* perturb_beta-k*k);
-			perturb_modes[i+1] = perturb_rms[k+1]*pow(host_ro,2- perturb_beta)
+			perturb_modes[i+1] = perturb_rms[k+1]*pow(Einstein_ro,2- perturb_beta)
 						*tmp*sin(theta)/( perturb_beta* perturb_beta-k*k);
 		}
 		//std::cout << "k=%i i=%i  modes = %e %e rms_purturb=%e\n",k,i,modes[i],modes[i+1],
@@ -178,48 +168,60 @@ void AnaLens::AlignedRandomlyDistortLens(long *seed,double theta,int Npole){
 
 	return ;
 }
-/** \ingroup ChangeLens
+/** \ingEinstein_roup ChangeLens
  *
  */
-void AnaLens::RandomizeSubstructure2(double rangeInRei,long *seed){
+void AnaNSIELensHalo::RandomizeSubstructure2(double rangeInRei,long *seed){
 	long i,k;
 	double r,theta,rmax,rav[2],r2av=0,area_av=0;
 	static unsigned long NsubMax;
-	static double Rmax = 0.0,scale = 0.0,ndensity = 0.0,host_ro_save = 0.0;
+	static double Rm = 0.0,scale = 0.0,ndensity = 0.0,Einstein_ro_save = 0.0;
 
 	rav[0]=rav[1]=0.0;
 
 
 	// scaling of substructure masses with host sigma
-	//  exponent of 3 is for  M_host propto sigma^3 model
-	if(host_sigma > 0.0){
-		scale = pow(host_sigma/sub_sigmaScale,3);
+	//  exponent of 3 is for  M_host pEinstein_ropto sigma^3 model
+	if(sigma > 0.0){
+		scale = pow(sigma/sub_sigmaScale,3);
 
 		// keep fraction of surface density at r = f R(sigma) constant
-		//   R(sigma) propto sigma to make all hosts have the same average density
-		ndensity = sub_Ndensity*pow(host_sigma/sub_sigmaScale,1)/scale;
+		//   R(sigma) pEinstein_ropto sigma to make all hosts have the same average density
+		ndensity = sub_Ndensity*pow(sigma/sub_sigmaScale,1)/scale;
 	}
 
-	if(host_ro > 0.0){
-		Rmax = host_ro*rangeInRei + sub_Rmax*pow(scale,1./3.)
-	          + pow(2*sub_Mmax*scale*host_ro/pi/Sigma_crit/sheartol,1./3.);
-		host_ro_save = host_ro;
+	if(Einstein_ro > 0.0){
+		Rm = Einstein_ro*rangeInRei + sub_Rmax*pow(scale,1./3.)
+	          + pow(2*sub_Mmax*scale*Einstein_ro/pi/Sigma_crit/sheartol,1./3.);
+		Einstein_ro_save = Einstein_ro;
 	}
 
 	if(!(substruct_implanted) && ndensity > 0){
-		NsubMax=(unsigned long)(ndensity*pi*Rmax*Rmax + 5*sqrt(ndensity*pi*Rmax*Rmax) );
+		NsubMax=(unsigned long)(ndensity*pi*Rm*Rm + 5*sqrt(ndensity*pi*Rm*Rm) );
 		if(NsubMax > 0){
 			sub_x=Utilities::PosTypeMatrix(NsubMax,2);
-			sub_Rcut=new float[NsubMax];
-			sub_mass=new float[NsubMax];
+			switch(sub_type){
+			case pointmass:
+				subs=new LensHalo[NsubMax];
+				break;
+			case powerlaw:
+				subs=new PowerLawLensHalo[NsubMax];
+				break;
+			case nfw:
+				subs=new NFWLensHalo[NsubMax];
+				break;
+			default:
+				subs=new LensHalo[NsubMax];
+				break;
+			}
 			sub_substructures = new IndexType[NsubMax];
 		}
 		substruct_implanted=true;
 	}
-	//std::cout << "Rmax/re = %e\n",Rmax/ro);
-	//for(i=0;i<12;++i) std::cout << "%f %f\n",poidev(ndensity*pi*Rmax*Rmax,seed),ndensity*pi*Rmax*Rmax);
+	//std::cout << "Rm/re = %e\n",Rm/Einstein_ro);
+	//for(i=0;i<12;++i) std::cout << "%f %f\n",poidev(ndensity*pi*Rm*Rm,seed),ndensity*pi*Rm*Rm);
 
-	unsigned int Nsub=(int)(poidev(ndensity*pi*Rmax*Rmax,seed));
+	unsigned int Nsub=(int)(poidev(ndensity*pi*Rm*Rm,seed));
 	Nsub = (NsubMax > Nsub) ? Nsub : NsubMax ;
 
 	//std::cout << "scale = %e\n",scale);
@@ -227,30 +229,33 @@ void AnaLens::RandomizeSubstructure2(double rangeInRei,long *seed){
 	for(i=0,k=0; i < Nsub;++i){
 		//for(i=0;i<NSubstruct;++i){
 
-		r=Rmax*sqrt(ran2(seed));
+		r=Rm*sqrt(ran2(seed));
 
 		do{
 			if(sub_alpha == -1.0){
 				float ratio = sub_Mmax/sub_Mmin;
-				sub_mass[k] = sub_Mmin*scale
-						*pow(ratio,ran2(seed));
+				subs[k].set_mass(sub_Mmin*scale*pow(ratio,ran2(seed)));
 			}else{
-				sub_mass[k] = sub_Mmin*scale
+				subs[k].set_mass(sub_Mmin*scale
 						*pow(ran2(seed)*(pow(sub_Mmax/sub_Mmin,sub_alpha+1)-1)+1.0
-								,1.0/(sub_alpha+1));
+								,1.0/(sub_alpha+1)));
 			}
-		}while(sub_mass[k] < sub_Mmin);  // not sure why this is necessary
+		}while(subs[k].get_mass() < sub_Mmin);  // not sure why this is necessary
 
 		// average density of a substructure does not scale with host
-		if(sub_type != pointmass) sub_Rcut[k]=sub_Rmax*pow(scale,1./3.)
-				*pow(sub_mass[k]/sub_Mmax/scale,1/3.);
+		subs[k].set_Rmax(sub_Rmax*pow(scale,1./3.)
+				*pow(subs[k].get_mass()/sub_Mmax/scale,1/3.));
+
+		subs[k].set_slope(sub_beta);
+
+		subs[k].set_rscale(0.1*subs[k].get_Rmax());
 
 		// maximum radius for a substructure of this mass
-		rmax = (host_ro_save*rangeInRei + sub_Rcut[k]
-		     + pow(2*sub_mass[k]*host_ro_save/pi/Sigma_crit/sheartol,1./3.) );
+		rmax = (Einstein_ro_save*rangeInRei + subs[k].get_Rmax()
+		     + pow(2*subs[k].get_mass()*Einstein_ro_save/pi/Sigma_crit/sheartol,1./3.) );
 
 		//std::cout << "RcutSubstruct[%i] = %e\n",k,RcutSubstruct[k]);
-		//std::cout << "%e %e %e Rmax=%e\n",r/rmax,r,rmax,Rmax);
+		//std::cout << "%e %e %e Rm=%e\n",r/rmax,r,rmax,Rm);
 		if( r < rmax){
 			theta=2*pi*ran2(seed);
 			sub_x[k][0]=r*cos(theta);
@@ -260,7 +265,7 @@ void AnaLens::RandomizeSubstructure2(double rangeInRei,long *seed){
 			rav[0] += sub_x[k][0];
 			rav[1] += sub_x[k][1];
 			r2av += r*r;
-			area_av += pow(sub_Rcut[k],2);
+			area_av += pow(subs[k].get_Rmax(),2);
 			++k;
 		}
 	}
@@ -294,47 +299,59 @@ void AnaLens::RandomizeSubstructure2(double rangeInRei,long *seed){
 */
 	return;
 }
-/** \ingroup ChangeLens
+/** \ingEinstein_roup ChangeLens
 	 *
 	 *  get a random population of substructures
-	 *  This version does not scale to host_ro and
-	 *  host_sigma
+	 *  This version does not scale to Einstein_ro and
+	 *  sigma
 	 */
-void AnaLens::RandomizeSubstructure3(double rangeInRei,long *seed){
+void AnaNSIELensHalo::RandomizeSubstructure3(double rangeInRei,long *seed){
 	long i,k;
 	double r,theta,rmax,rav[2],r2av=0,area_av=0;
 	static unsigned long NsubMax;
-	static double Rmax = 0.0,host_ro_save = 0.0;
+	static double Rm = 0.0,Einstein_ro_save = 0.0;
 
 	rav[0]=rav[1]=0.0;
 
-	if(host_ro > 0.0){
-		host_ro_save = host_ro;
-		//std::cout << "host_ro = %e\n",host_ro);
+	if(Einstein_ro > 0.0){
+		Einstein_ro_save = Einstein_ro;
+		//std::cout << "Einstein_ro = %e\n",Einstein_ro);
 	}else if( perturb_Nmodes >= 4 && perturb_modes[3] > 0 ){  // this is in case the the host has already been fit to image positions
-		host_ro_save = perturb_modes[3]/2;
+		Einstein_ro_save = perturb_modes[3]/2;
 	}
 
-	assert(host_ro_save > 0.0);
+	assert(Einstein_ro_save > 0.0);
 
-	Rmax = host_ro_save*rangeInRei;
-	Rmax +=  sub_Rmax
-          + pow(2*sub_Mmax*host_ro_save/pi/Sigma_crit/sheartol,1./3.);
+	Rm = Einstein_ro_save*rangeInRei;
+	Rm +=  sub_Rmax
+          + pow(2*sub_Mmax*Einstein_ro_save/pi/Sigma_crit/sheartol,1./3.);
 
-	assert(Rmax > 0.0);
+	assert(Rm > 0.0);
 
 	if(!substruct_implanted){
-		NsubMax=(unsigned long)(sub_Ndensity*pi*Rmax*Rmax*(1+5/sqrt(sub_Ndensity*pi*Rmax*Rmax)) );
+		NsubMax=(unsigned long)(sub_Ndensity*pi*Rm*Rm*(1+5/sqrt(sub_Ndensity*pi*Rm*Rm)) );
 		sub_x=Utilities::PosTypeMatrix(NsubMax,2);
-		sub_Rcut=new float[NsubMax];
-		sub_mass=new float[NsubMax];
+		switch(sub_type){
+		case pointmass:
+			subs=new LensHalo[NsubMax];
+			break;
+		case powerlaw:
+			subs=new PowerLawLensHalo[NsubMax];
+			break;
+		case nfw:
+			subs=new NFWLensHalo[NsubMax];
+			break;
+		default:
+			subs=new LensHalo[NsubMax];
+			break;
+		}
 		substruct_implanted=true;
 		sub_substructures = new IndexType[NsubMax];
 	}
-	//std::cout << "Rmax/re = %e\n",Rmax/ro);
-	//for(i=0;i<12;++i) std::cout << "%f %f\n",poidev(ndensity*pi*Rmax*Rmax,seed),ndensity*pi*Rmax*Rmax);
+	//std::cout << "Rm/re = %e\n",Rm/Einstein_ro);
+	//for(i=0;i<12;++i) std::cout << "%f %f\n",poidev(ndensity*pi*Rm*Rm,seed),ndensity*pi*Rm*Rm);
 
-	unsigned int Nsub=(int)(poidev(sub_Ndensity*pi*Rmax*Rmax,seed));
+	unsigned int Nsub=(int)(poidev(sub_Ndensity*pi*Rm*Rm,seed));
 
 	assert(Nsub < NsubMax);
 
@@ -344,30 +361,29 @@ void AnaLens::RandomizeSubstructure3(double rangeInRei,long *seed){
 	for(i=0,k=0; i < Nsub;++i){
 		//for(i=0;i<NSubstruct;++i){
 
-		r=Rmax*sqrt(ran2(seed));
+		r=Rm*sqrt(ran2(seed));
 
 		do{
 			if(sub_alpha == -1.0){
 				float ratio = sub_Mmax/sub_Mmin;
-				sub_mass[k] = sub_Mmin
-						*pow(ratio,ran2(seed));
+				subs[k].set_mass(sub_Mmin*pow(ratio,ran2(seed)));
 			}else{
-				sub_mass[k] = sub_Mmin
+				subs[k].set_mass(sub_Mmin
 						*pow(ran2(seed)*(pow(sub_Mmax/sub_Mmin,sub_alpha+1)-1)+1.0
-								,1.0/(sub_alpha+1));
+								,1.0/(sub_alpha+1)));
 			}
-		}while(sub_mass[k] < sub_Mmin);  // not sure why this is necessary
+		}while(subs[k].get_mass() < sub_Mmin);  // not sure why this is necessary
 
 		// average density of a substructure does not scale with host
-		if(sub_type != pointmass) sub_Rcut[k] = sub_Rmax
-				*pow(sub_mass[k]/sub_Mmax,1/3.);
+		subs[k].set_Rmax(sub_Rmax
+				*pow(subs[k].get_mass()/sub_Mmax,1/3.));
 
 		// maximum radius for a substructure of this mass
-		rmax = (host_ro_save*rangeInRei + sub_Rcut[k]
-		     + pow(2*sub_mass[k]*host_ro_save/pi/Sigma_crit/sheartol,1./3.) );
+		rmax = (Einstein_ro_save*rangeInRei + subs[k].get_Rmax()
+		     + pow(2*subs[k].get_mass()*Einstein_ro_save/pi/Sigma_crit/sheartol,1./3.) );
 
 		//std::cout << "RcutSubstruct[%i] = %e\n",k,RcutSubstruct[k]);
-		//std::cout << "%e %e %e Rmax=%e\n",r/rmax,r,rmax,Rmax);
+		//std::cout << "%e %e %e Rm=%e\n",r/rmax,r,rmax,Rm);
 		if( r < rmax){
 			theta=2*pi*ran2(seed);
 			sub_x[k][0]=r*cos(theta);
@@ -377,7 +393,7 @@ void AnaLens::RandomizeSubstructure3(double rangeInRei,long *seed){
 			rav[0] += sub_x[k][0];
 			rav[1] += sub_x[k][1];
 			r2av += r*r;
-			area_av += pow(sub_Rcut[k],2);
+			area_av += pow(subs[k].get_Rmax(),2);
 			++k;
 		}
 	}
@@ -414,8 +430,8 @@ void AnaLens::RandomizeSubstructure3(double rangeInRei,long *seed){
 }
 
 namespace Utilities{
-/** \ingroup Utill
- * \brief Generates a random deviates drawn from approximately the same as the values of table
+/** \ingEinstein_roup Utill
+ * \brief Generates a random deviates drawn fEinstein_rom appEinstein_roximately the same as the values of table
  *
  */
 	double RandomFromTable(double *table,unsigned long Ntable,long *seed){
@@ -428,24 +444,24 @@ namespace Utilities{
 	}
 }
 
-double AnaLens::FractionWithinRe(double rangeInRei){
+double AnaNSIELensHalo::FractionWithinRe(double rangeInRei){
 	double B;
 
 	B = (sub_Rmax/pow(sub_Mmax,1./3.)
-			+ pow(2*host_ro/pi/Sigma_crit/1.e-3,1./3.) );
+			+ pow(2*Einstein_ro/pi/Sigma_crit/1.e-3,1./3.) );
 
 	return 1+(1+sub_alpha)*(
-		2*rangeInRei*host_ro*B*(
+		2*rangeInRei*Einstein_ro*B*(
 				pow(sub_Mmax,sub_alpha+4./3.)-pow(sub_Mmin,sub_alpha+4./3.)
 				)/(sub_alpha+4./3.)
 		+ B*B*(
 				pow(sub_Mmax,sub_alpha+5./3.)-pow(sub_Mmin,sub_alpha+5./3.)
 				)/(sub_alpha+5./3.)
-		)/(pow(rangeInRei*host_ro,2)*(pow(sub_Mmax,sub_alpha+1.0)-pow(sub_Mmin,sub_alpha+1.0))
+		)/(pow(rangeInRei*Einstein_ro,2)*(pow(sub_Mmax,sub_alpha+1.0)-pow(sub_Mmin,sub_alpha+1.0))
 				);
 }
 
-double BaseAnaLens::averageSubMass(){
+double BaseNSIELensHalo::averageSubMass(){
 	// average mass of substructures
 	return sub_Mmax*(sub_alpha+1)
 				  /(sub_alpha+2)*(1-pow(sub_Mmin/sub_Mmax,sub_alpha+2))/

@@ -132,26 +132,22 @@ public:
 			,int bucket = 5
 			,double theta_force = 0.1
 			);
-	virtual ~QuadTree();
+	QuadTree(
+			PosType **xpt
+			,LensHaloHndl *my_halos
+			,IndexType Npoints
+			,double my_sigma_background = 0
+			,int bucket = 5
+			,double theta_force = 0.1
+			);
+	~QuadTree();
 
 	virtual void force2D(double *ray,double *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa);
 	virtual void force2D_recur(double *ray,double *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa);
 	virtual void printParticlesInBranch(unsigned long number);
 	virtual void printBranchs(int level = -1);
 
-	virtual void force_halo_external(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,double mass, double Rmax,double rscale,bool no_kappa);
-
 protected:
-
-	QuadTree(
-			PosType **xpt
-			,HaloStructure *my_halo_params
-			,IndexType Npoints
-			,double my_sigma_background = 0
-			,int bucket = 5
-			,double theta_force = 0.1
-			,bool NSIE_ON = false
-			);
 
 	PosType **xp;
 	bool MultiMass;
@@ -169,8 +165,7 @@ protected:
 	IndexType *index;
 
 	bool haloON;
-	bool NSIE_ON;
-	HaloStructure *halo_params;
+	LensHaloHndl *halos;
 
 	PosType realray[2];
 	int incell,incell2;
@@ -188,8 +183,6 @@ protected:
 	
 	void CalcMoments();
 	void rotate_coordinates(double **coord);
-
-	virtual void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,HaloStructure& halo_params,bool no_kappa);
 
 	// Internal profiles for a Gaussian particle
 	virtual inline double alpha_h(double r2s2,double sigma){
@@ -216,194 +209,6 @@ protected:
 	 void cuttoffscale(QTreeNBHndl tree,double *theta);
 
 	 void walkTree_recur(QBranchNB *branch,double *ray,double *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa);
-};
-
-/** \ingroup DeflectionL2
- *
- * \brief A class for calculating the deflection, kappa and gamma caused by a collection of halos
- * with truncated power-law mass profiles.
- *
- * Derived from the QuadTree class.  The "particles" are replaced with spherical halos.
- *The truncation is in 2d not 3d. \f$ \Sigma \propto r^\beta \f$ so beta would usually be negative.
- *
- *
- * The default value of theta = 0.1 generally gives better than 1% accuracy on alpha.
- * The shear and kappa is always more accurate than the deflection.
- */
-class QuadTreePowerLaw : public QuadTree{
-
-public:
-	QuadTreePowerLaw(float beta,PosType **xp,IndexType Npoints,HaloStructure *par_internals
-			,double my_sigma_bk=0.0,int bucket = 5,PosType theta = 0.1);
-
-	~QuadTreePowerLaw();
-
-protected:
-	double beta; // logorithmic slop of 2d mass profile
-
-	// Override internal structure of halos
-	inline double alpha_h(double x,double xmax){
-	  if(x==0) x=1e-6*xmax;
-		return -1.0*pow(x/xmax,beta+2);
-	}
-	inline double kappa_h(double x,double xmax){
-	  if(x==0) x=1e-6*xmax;
-		return 0.5*(beta+2)*pow(x/xmax,beta)*x*x/(xmax*xmax);
-	}
-	inline double gamma_h(double x,double xmax){
-	  if(x==0) x=1e-6*xmax;
-		return 0.5*beta*pow(x/xmax,beta+2);
-	}
-	inline double phi_h(double x,double xmax){
-		ERROR_MESSAGE();
-		std::cout << "time delay has not been fixed for PowerLaw profile yet." << std::endl;
-		exit(1);
-		return 0.0;
-	}
-};
-
-/** \ingroup DeflectionL2
- *
- * \brief A class for calculating the deflection, kappa and gamma caused by a collection of NFW
- * halos.
- *
- * Derived from the QuadTree class.  The "particles" are replaced with spherical NFW halos.
- *
- * This class uses the true expressions for the NFW profile.  This is
- * time consuming and not usually necessary. See QuadTreePseudoNFW for a faster alternative.
- *
-* The default value of theta = 0.1 generally gives better than 1% accuracy on alpha.
- * The shear and kappa is always more accurate than the deflection.
- *
- */
-class QuadTreeNFW : public QuadTree{
-
-public:
-	QuadTreeNFW(PosType **xp,IndexType Npoints,HaloStructure *par_internals
-			,double my_sigma_bk = 0.0,int bucket = 5,PosType theta = 0.1);
-	~QuadTreeNFW();
-
-protected:
-
-	//static double *ft, *gt, *g2t;
-	static double *ftable,*gtable,*g2table,*xtable;
-	static long ob_count;
-
-
-	// Override internal structure of halos
-	inline double alpha_h(double x,double xmax){
-		return -1.0*InterpolateFromTable(gtable,xtable,x)/InterpolateFromTable(gtable,xtable,xmax);
-	}
-	inline double kappa_h(double x,double xmax){
-		return 0.5*x*x*InterpolateFromTable(ftable,xtable,x)/InterpolateFromTable(gtable,xtable,xmax);
-	}
-	inline double gamma_h(double x,double xmax){
-		return -0.25*x*x*InterpolateFromTable(g2table,xtable,x)/InterpolateFromTable(gtable,xtable,xmax);
-	}
-	inline double phi_h(double x,double xmax){
-		ERROR_MESSAGE();
-		std::cout << "time delay has not been fixed for NFW profile yet." << std::endl;
-		exit(1);
-		return 0.0;
-	}
-	void make_tables();
-
-	double gfunctionRmax(double rm,double x);
-	double ffunctionRmax(double rm,double x);
-	double g2functionRmax(double rm,double x);
-};
-
-/** \ingroup DeflectionL2
- *
- * \brief A class for calculating the deflection, kappa and gamma caused by a collection of
- * halos with a double power-law mass profile.
- *
- * Derived from the QuadTree class.  The "particles" are replaced with spherical halos
- * with \f$ \Sigma \propto 1/(1 + r/r_s )^\beta \f$ so beta would usually be positive.
- *
- * An NFW profile is approximated beta = 2 .
- *
- * The default value of theta = 0.1 generally gives better than 1% accuracy on alpha.
- * The shear and kappa is always more accurate than the deflection.
- */
-class QuadTreePseudoNFW : public QuadTree{
-
-public:
-	QuadTreePseudoNFW(double beta,PosType **xp,IndexType Npoints,HaloStructure *par_internals
-			,double my_sigma_bk = 0.0,int bucket = 5,PosType theta = 0.1);
-	~QuadTreePseudoNFW();
-
-protected:
-
-	double beta;
-	static double *mhattable,*xtable;
-	static long ob_count;
-
-
-	// Override internal structure of halos
-	inline double alpha_h(double x,double xmax){
-		return -1.0*InterpolateFromTable(mhattable,xtable,x)/InterpolateFromTable(mhattable,xtable,xmax);
-	}
-	inline double kappa_h(double x,double xmax){
-		return 0.5*x*x/InterpolateFromTable(mhattable,xtable,xmax)/pow(1+x,beta);
-	}
-	inline double gamma_h(double x,double xmax){
-		return (0.5*x*x/pow(1+x,beta) - InterpolateFromTable(mhattable,xtable,x))/InterpolateFromTable(mhattable,xtable,xmax);
-	}
-	inline double phi_h(double x,double xmax){
-		ERROR_MESSAGE();
-		std::cout << "time delay has not been fixed for PseudoNFW profile yet." << std::endl;
-		exit(1);
-		return 0.0;
-	}
-	void make_tables();
-};
-/** \ingroup DeflectionL2
- *
- * \brief A class for calculating the deflection, kappa and gamma caused by a collection of
- * halos that are each non-singular isothermal ellipsoids.
- *
- */
-class QuadTreeNSIE : public QuadTree{
-public:
-	  QuadTreeNSIE(PosType **xp,IndexType Npoints,HaloStructure *par_internals
-				,double my_sigma_bk = 0.0,int bucket = 5,PosType theta = 0.1);
-	  ~QuadTreeNSIE();
-
-	  void test_force_halo(HaloStructure &halo_params);
-protected:
-
-	  virtual void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm
-	  		,HaloStructure& halo_params,bool no_kappa);
-private:
-	  /// not used
-	  inline double alpha_h(double x,double xmax){assert(0); return 0.0;}
-	  /// not used
-	  inline double kappa_h(double x,double xmax){assert(0); return 0.0;}
-	  /// not used
-	  inline double gamma_h(double x,double xmax){assert(0); return 0.0;}
-	  /// not used
-	  inline double phi_h(double x,double){assert(0); return 0.0;}
-};
-
-/** \ingroup DeflectionL2
- *
- * \brief A class for calculating the deflection, kappa and gamma caused by a collection of
- * halos that are each non-singular isothermal ellipsoids.
- *
- */
-class QuadTreeNFW_NSIE : public QuadTreeNFW{
-public:
-	  QuadTreeNFW_NSIE(PosType **xp,IndexType Npoints,HaloStructure *par_internals
-				,double my_sigma_bk = 0.0,int bucket = 5,PosType theta = 0.1);
-	  ~QuadTreeNFW_NSIE();
-
-	  virtual void force2D(double *ray,double *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa);
-	  virtual void force2D_recur(double *ray,double *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa);
-
-protected:
-
-	  QuadTreeNSIE* qtreensie;
 };
 
 #endif /* QUAD_TREE_H_ */

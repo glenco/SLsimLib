@@ -9,13 +9,117 @@
 
 using namespace std;
 
+void BaseNSIELensHalo::force_halo(
+		double *alpha     /// mass/Mpc
+		,KappaType *kappa
+		,KappaType *gamma
+		,double *xcm
+		,bool no_kappa
+		){
+     double x_rescale[2];
+     long j;
+     double alpha_tmp[2];
+     KappaType kappa_tmp = 0.0, gamma_tmp[3], dt = 0,tmp = 0;
+
+     gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
+     alpha_tmp[0] = alpha_tmp[1] = 0.0;
+
+     alpha[0] = alpha[1] = 0.0;
+     gamma[0] = gamma[1] = gamma[2] = 0.0;
+     *kappa = 0.0;
+
+     double convert_factor = star_massscale/Sigma_crit;
+
+     if(Einstein_ro > 0){
+    	 x_rescale[0] = xcm[0]/Einstein_ro;
+    	 x_rescale[1] = xcm[1]/Einstein_ro;
+
+    	 alphaNSIE(alpha,x_rescale,fratio,rcore/Einstein_ro,pa);
+
+    	 if(!no_kappa){
+    		 gammaNSIE(gamma,x_rescale,fratio,rcore/Einstein_ro,pa);
+    		 *kappa=kappaNSIE(x_rescale,fratio,rcore/Einstein_ro,pa);
+    	 }
+
+    	 alpha[0] *= Einstein_ro;
+    	 alpha[1] *= Einstein_ro;
+     }
+
+  // perturbations of host lens
+     if(perturb_Nmodes > 0){
+    	 *kappa += lens_expand(perturb_beta,perturb_modes
+    			 ,perturb_Nmodes,xcm,alpha_tmp,gamma_tmp,&dt);
+
+    	 alpha[0] += alpha_tmp[0];
+    	 alpha[1] += alpha_tmp[1];
+
+   	      if(!no_kappa){
+   	    	  gamma[0] += gamma_tmp[0];
+   	    	  gamma[1] += gamma_tmp[1];
+   	      }
+
+   	     gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
+   	     alpha_tmp[0] = alpha_tmp[1] = 0.0;
+     }
+
+     // add substructure
+     if(substruct_implanted){
+    	 for(j=0;j<sub_N;++j){
+
+    		 subs[j].force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,xcm,no_kappa);
+
+    		 alpha[0] += alpha_tmp[0];
+    		 alpha[1] += alpha_tmp[1];
+
+    		 if(!no_kappa){
+    			 *kappa += kappa_tmp;
+    			 gamma[0] += gamma_tmp[0];
+    			 gamma[1] += gamma_tmp[1];
+    		 }
+    	 }
+
+         gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
+         alpha_tmp[0] = alpha_tmp[1] = 0.0;
+     }
+
+     // add stars for microlensing
+     if(stars_N > 0 && stars_implanted){
+
+    	 substract_stars_disks(xcm,alpha,kappa,gamma);
+
+    	 // do stars with tree code
+    	 star_tree->force2D_recur(xcm,alpha_tmp,&tmp,gamma_tmp,no_kappa);
+
+    	 alpha[0] -= convert_factor*alpha_tmp[0];
+    	 alpha[1] -= convert_factor*alpha_tmp[1];
+
+    	 if(!no_kappa){
+    		 *kappa += convert_factor*tmp;
+    		 gamma[0] += convert_factor*gamma_tmp[0];
+    		 gamma[1] += convert_factor*gamma_tmp[1];
+    	 }
+     }
+
+     // convert from physical distance on the lens plane to (1/physical_distance)
+	 alpha[0] *= Sigma_crit;
+	 alpha[1] *= Sigma_crit;
+
+	 // therefore the quantities need to be in units (1/physical_distance^2)
+	 // --> convert from unitless quantity to (1/physical_distance^2)
+	 *kappa *= Sigma_crit;
+	 gamma[0] *= Sigma_crit;
+	 gamma[1] *= Sigma_crit;
+	 gamma[2] *= Sigma_crit;
+
+     return ;
+}
 /**
  * \brief Reads in a parameter file and sets up an analytic lens.
  *
  * Sets many parameters within the lens model, source model and
  * force calculation.
  */
-void BaseAnaLens::assignParams(InputParams& params){
+void BaseNSIELensHalo::assignParams(InputParams& params){
 
 	// Host lens parameters
 	if(!params.get("z_lens",zlens)) error_message1("z_lens",params.filename());
@@ -49,23 +153,19 @@ void BaseAnaLens::assignParams(InputParams& params){
 
 }
 
-void BaseAnaLens::error_message1(std::string parameter,std::string file){
+void BaseNSIELensHalo::error_message1(std::string parameter,std::string file){
 		  ERROR_MESSAGE();
 		  std::cout << "Parameter " << parameter << " is needed to construct a BaseAnaLens.  It needs to be set in parameter file " << file << "!" << endl;
 		  exit(0);
 }
 
-
-double BaseAnaLens::getZlens(){
-	return zlens;
-}
 /// resets Zl, Dl, Sigma_crit, MpcToAsec
-void BaseAnaLens::setZlens(CosmoHndl cosmo,double zl,double zsource){
+void BaseNSIELensHalo::setZlens(CosmoHndl cosmo,double zl,double zsource){
 	zlens = zl;
 	setInternalParams(cosmo, zsource);
 }
 
-void BaseAnaLens::reNormSubstructure(double kappa_sub){
+void BaseNSIELensHalo::reNormSubstructure(double kappa_sub){
 	/* renomalizes substructure so that
 	 * the average surface density it kappa_sub
 	 */
@@ -80,10 +180,11 @@ void BaseAnaLens::reNormSubstructure(double kappa_sub){
 }
 
 /// Sets parameters within BaseLens that depend on the source redshift - Dl,Sigma_crit,etc.
-void BaseAnaLens::setInternalParams(CosmoHndl cosmo, SourceHndl source){
+void BaseNSIELensHalo::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 	setInternalParams(cosmo,source->getZ());
 }
-void BaseAnaLens::setInternalParams(CosmoHndl cosmo, double zsource){
+
+void BaseNSIELensHalo::setInternalParams(CosmoHndl cosmo, double zsource){
 	double Ds, Dls;
 
 	if(zsource < zlens) zsource = 1000;
@@ -93,47 +194,18 @@ void BaseAnaLens::setInternalParams(CosmoHndl cosmo, double zsource){
 
 	MpcToAsec = 60*60*180 / pi / Dl;
 		// in Mpc
-	host_ro=4*pi*pow(host_sigma/2.99792e5,2)*Dl
+	Einstein_ro=4*pi*pow(sigma/lightspeed,2)*Dl
 		*Dls/Ds;
 	// find critical density
 	Sigma_crit=Ds/Dls/Dl/4/pi/Grav;
 	to = (1+zlens)*Ds/Dls/Dl/8.39428142e-10;
 }
 
-BaseAnaLens::BaseAnaLens(InputParams& params) : Lens(){
+BaseNSIELensHalo::BaseNSIELensHalo(InputParams& params) : SimpleNSIELensHalo(){
 
   perturb_rms = new double[6];
 
   assignParams(params);
-
-  if(sub_Ndensity > 0){
-  	switch(sub_type){
-  	case nfw:
-		  sub_alpha_func = alphaNFW;
-		  sub_kappa_func = kappaNFW;
-		  sub_gamma_func = gammaNFW;
-		  sub_phi_func = 0;
-		  ERROR_MESSAGE();
-		  break;
-  	case powerlaw:
-		  sub_alpha_func = alphaPowLaw;
-		  sub_kappa_func = kappaPowLaw;
-		  sub_gamma_func = gammaPowLaw;
-		  sub_phi_func = phiPowLaw;
-		  break;
-  	case pointmass:
-		  sub_alpha_func = NULL;
-		  sub_kappa_func = NULL;
-		  sub_gamma_func = NULL;
-		  sub_phi_func = NULL;
-		  break;
-  	default:
-		  ERROR_MESSAGE();
-		  cout << "ERROR: no submass internal profile chosen" << endl;
-		  exit(1);
-		  break;
-  	}
-  }
 
   // parameters for stars
   stars_implanted = false; // stars are implanted later
@@ -141,7 +213,7 @@ BaseAnaLens::BaseAnaLens(InputParams& params) : Lens(){
   sub_theta_force = 0.1;
 
   perturb_Nmodes = 0;
-  sub_sigmaScale = host_sigma = host_pos_angle = host_ro = host_axis_ratio = host_core = 0.0;
+  sub_sigmaScale = sigma = pa = Einstein_ro = fratio = rcore = 0.0;
 
   if(sub_Ndensity == 0)
 	  sub_N = 0;
@@ -149,11 +221,10 @@ BaseAnaLens::BaseAnaLens(InputParams& params) : Lens(){
   Sigma_crit = 0;
 
   stars_implanted = false;
-  set = true;
 }
 
 
-void BaseAnaLens::PrintLens(bool show_substruct,bool show_stars){
+void BaseNSIELensHalo::PrintLens(bool show_substruct,bool show_stars){
 	int i;
 	cout << "zlens " << zlens << endl;
 
@@ -172,8 +243,8 @@ void BaseAnaLens::PrintLens(bool show_substruct,bool show_stars){
 		if(show_substruct){
 			if(substruct_implanted || sub_N > 0){
 				for(i=0;i<sub_N;++i){
-				  cout << "RcutSubstruct "<<i << " " <<sub_Rcut[i] << " Mpc" << endl;
-				  cout << "massSubstruct "<<i<<" "<<sub_mass[i] << " Msun" << endl;
+				  cout << "RcutSubstruct "<<i << " " <<subs[i].get_Rmax() << " Mpc" << endl;
+				  cout << "massSubstruct "<<i<<" "<<subs[i].get_mass() << " Msun" << endl;
 				  cout << "xSubstruct "<<i<<" "<<sub_x[i][0]<<" "<<sub_x[i][1] << " Mpc" << endl;
 					switch(sub_type){
 					case nfw:
@@ -216,7 +287,7 @@ void BaseAnaLens::PrintLens(bool show_substruct,bool show_stars){
 }
 
 
-BaseAnaLens::~BaseAnaLens(){
+BaseNSIELensHalo::~BaseNSIELensHalo(){
 	cout << "deleting lens" << endl;
 
 	delete[] perturb_rms;
@@ -228,8 +299,7 @@ BaseAnaLens::~BaseAnaLens(){
 	if(sub_N > 0 && substruct_implanted){
 		cout << "deleting subs" << endl;
 		Utilities::free_PosTypeMatrix(sub_x,sub_N,2);
-		delete[] sub_Rcut;
-		delete[] sub_mass;
+		delete[] subs;
 		delete[] sub_substructures;
 	}
 	if(stars_N > 0 && stars_implanted){
@@ -244,4 +314,56 @@ BaseAnaLens::~BaseAnaLens(){
 	}
 }
 
+/******************************************************
+ Below are routines for calculating the deflection etc. 
+ for asymetric halos
+ ******************************************************/
+
+
+/// TODO This needs to be thought about more. sets axial modes to reproduce a near elliptically shaped surface density
+void LensHalo::setModesToEllip(double q,double theta){
+  // elliptical integrals
+	double K = rfD(0,1./q/q,1);
+	double E = K - (1-1./q/q)*rdD(0,1./q/q,1)/3;
+  assert(Nmod == 18);
+  
+  // set modo to elliptical model
+	for(int i=1;i<=Nmod;++i){
+		mod[i]=0;
+	}
+	// fill in modes with their values for an elliptical lens
+	if(q != 1.0){
+    mod[3]=4*K/pi;
+		mod[4] = 4*( (1+q*q)*K-2*q*q*E )/(1-q*q)/pi/mod[3];
+		mod[8] = 4*( (3*q*q+1)*(q*q+3)*K-8*q*q*(1+q*q)*E )
+      /( 3*pi*pow(1-q*q,2) )/mod[3];
+		mod[12] = 4*( (1+q*q)*(15+98*q*q+15*q*q*q*q)*K-2*q*q*(23+82*q*q+23*q*q*q*q)*E )
+      /( 15*pi*pow(1-q*q,3) )/mod[3];
+		mod[16]= 4*( -32*q*q*(1+q*q)*(11+74*q*q+11*q*q*q*q)*E
+                           +(105+1436*q*q+3062*q*q*q*q+1436*pow(q,6)+105*pow(q,8))*K )
+      /(105*pi*pow(1-q*q,4))/mod[3];
+	}
+  mod[3]=1.0;
+  
+	// rotate model
+	RotateModel(theta,mod,Nmod,0);
+  
+  return;
+}
+
+/// Derivatives of the axial potential factor with respect to theta
+void LensHalo::faxial(double theta,double f[]){
+  int i,k;
+  
+  //f[0] = 0.5*mod[3];
+  f[0] = 1;
+  f[1] = f[2] = 0;
+  for(i=4;i<Nmod;i+=2){
+    k=i/2;
+    f[0] +=  mod[i]*cos(k*theta)     + mod[i+1]*sin(k*theta);
+    f[1] += -mod[i]*k*sin(k*theta)   + mod[i+1]*k*cos(k*theta);
+    f[2] += -mod[i]*k*k*cos(k*theta) - mod[i+1]*k*k*sin(k*theta);
+  }
+
+}
 

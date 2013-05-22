@@ -16,6 +16,8 @@
 
 #include "utilities_slsim.h"
 
+#include "lens_halos.h"
+
 #include <KistDriver.h>
 
 #include <divide_images.h>

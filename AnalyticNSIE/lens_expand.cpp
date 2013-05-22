@@ -26,7 +26,7 @@
         came from previous program lensexpand1.1.c
 ***************************************************************/
 
-#include "analytic_lens.h"
+#include "lens_halos.h"
 
 /// removed declaration of Grav -- caused compiler problems and was not needed
 

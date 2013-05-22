@@ -12,8 +12,7 @@
 #include "standard.h"
 #include "profile.h"
 #include "InputParams.h"
-#include "lens.h"
-#include "grid_maintenance.h"
+#include "lens_halos.h"
 
 /**
  * \brief The MOKA map structure, containing all quantities that define it
@@ -52,19 +51,19 @@ struct MOKAmap{
  *
  * A class, where the lens is represented by a MOKA cluster in the form of a
  * MOKAmap object (see the description of MOKAmap). It can either be used with the
- * MultiLens model or by itself.
+ * Lens model or by itself.
  *
  * Note: To use this class requires setting the ENABLE_FITS compiler flag and linking
  * the cfits library.
  */
 
 
-class MOKALens : public Lens{
+class MOKALensHalo : public LensHalo{
 public:
 
-	MOKALens(InputParams& params);
+	MOKALensHalo(InputParams& params);
 
-	~MOKALens();
+	~MOKALensHalo();
 
 	bool set;	/// the name of the MOKA input file
 	std::string MOKA_input_file;
@@ -73,24 +72,19 @@ public:
 	int flag_background_field;
 
 	void assignParams(InputParams& params);
-	void rayshooterInternal(double *ray, double *alpha, KappaType *gamma, KappaType *kappa, bool kappa_off);
-	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off){ERROR_MESSAGE(); exit(1);};
-	void setZlens(CosmoHndl cosmo,double zlens,double zsource = 1000);
-	double getZlens();
 	void setInternalParams(CosmoHndl,SourceHndl);
-	void saveImage(GridHndl grid, bool saveprofile=true);
 	void saveImage(bool saveprofile=true);
 	void saveKappaProfile();
 	void saveGammaProfile();
 	void saveProfiles(double &RE3, double &xxc, double &yyc);
 	void initMap();
+	void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa);
 
 	MOKAmap *map;
 
 	void estSignLambdas();
 	void EinsteinRadii(double &RE1, double &RE2, double &xxc, double &yyc);
 
-private:
 	void getDims();
 	void readImage();
 	void writeImage(std::string fn);

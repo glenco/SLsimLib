@@ -414,7 +414,8 @@ void find_images_kist(
  */
 
 void find_images_microlens(
-		BaseAnaLens *lens,          /// contains the lens/es and source/sources
+		LensHndl lens,          /// contains the lens/es and source/sources
+		BaseNSIELensHalo *halo,          /// contains the lens/es and source/sources
 		double *y_source        /// position of source center
 		,double r_source        /// radius of source
 		,GridHndl grid          /// grid provided to routine
@@ -457,7 +458,7 @@ void find_images_microlens(
 
 	bool time_on = false;
 
-	double **xstars = lens->stars_xp;
+	double **xstars = halo->stars_xp;
 	int Ngrid_block = grid->getNgrid_block();
 
 	if(r_source==0.0){ERROR_MESSAGE(); printf("ERROR: find_images, point source must have a resolution target\n"); exit(1);}

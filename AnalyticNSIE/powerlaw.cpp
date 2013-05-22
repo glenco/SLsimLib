@@ -10,7 +10,7 @@
  *
  */
 
-#include "analytic_lens.h"
+#include "lens_halos.h"
 
 ///
 void alphaPowLaw(double *alpha,double *x,double R,double mass,double beta,double *center,double Sigma_crit){

@@ -6,7 +6,7 @@
  */
 
 
-#include "slsimlib.h"
+#include "uniform_lens.h"
 
 using namespace std;
 
@@ -17,7 +17,7 @@ using namespace std;
  * force calculation.
  */
 
-UniLens::UniLens(InputParams& params) : BaseAnaLens(params){
+UniNSIELensHalo::UniNSIELensHalo(InputParams& params) : BaseNSIELensHalo(params){
 
   assignParams(params);
 
@@ -28,17 +28,15 @@ UniLens::UniLens(InputParams& params) : BaseAnaLens(params){
   perturb_modes[1]=gamma_uniform[0];
   perturb_modes[2]=gamma_uniform[1];
 
-  set = true;
-
   PrintLens(false,false);
 }
 
-UniLens::~UniLens(){
+UniNSIELensHalo::~UniNSIELensHalo(){
 
 }
 
 
-void UniLens::assignParams(InputParams& params){
+void UniNSIELensHalo::assignParams(InputParams& params){
 
 	//if(perturb_Nmodes > 0){
 	if(!params.get("kappa_uniform",kappa_uniform)) error_message1("kappa_uniform",params.filename());
@@ -58,10 +56,10 @@ void UniLens::assignParams(InputParams& params){
 /** \ingroup ImageFinding
  * \brief Prints the parameters of the analytic lens to stdout
  */
-void UniLens::PrintLens(bool show_substruct,bool show_stars){
+void UniNSIELensHalo::PrintLens(bool show_substruct,bool show_stars){
 	int i;
 
-	BaseAnaLens::PrintLens(show_substruct,show_stars);
+	BaseNSIELensHalo::PrintLens(show_substruct,show_stars);
 
 	// uni lens parameters only
 	cout << endl << "**Host lens model**" << endl;
@@ -73,7 +71,9 @@ void UniLens::PrintLens(bool show_substruct,bool show_stars){
 
 }
 
-void UniLens::implant_stars(double x, double y, unsigned long Nregions,long *seed, IMFtype type){
+
+void UniNSIELensHalo::implant_stars(double x, double y, unsigned long Nregions,long *seed, IMFtype type){
+
 	if(Nregions <= 0) return;
 	Point *centers;
 	gamma_uniform[2]=0.0; // TODO gamma_uniform[2] determines rotation for multiplane lens, how shall it be implemented here?
@@ -84,7 +84,8 @@ void UniLens::implant_stars(double x, double y, unsigned long Nregions,long *see
 	centers[0].gamma[0]=gamma_uniform[0];
 	centers[0].gamma[1]=gamma_uniform[1];
 	centers[0].gamma[2]=gamma_uniform[2];
-	BaseAnaLens::implant_stars(centers,Nregions,seed,type);
+
+	BaseNSIELensHalo::implant_stars(centers,Nregions,seed,type);
 }
 
 

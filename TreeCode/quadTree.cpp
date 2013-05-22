@@ -33,7 +33,7 @@ QuadTree::QuadTree(
 	for(ii=0;ii<Npoints;++ii) index[ii] = ii;
 
 	haloON = false; // don't use internal halo parameters
-	halo_params = NULL;
+	halos = NULL;
 
 	tree = BuildQTreeNB(xp,Npoints,index);
 
@@ -46,15 +46,14 @@ QuadTree::QuadTree(
  */
 QuadTree::QuadTree(
 		PosType **xpt
-		,HaloStructure *my_halo_params
+		,LensHaloHndl *my_halos
 		,IndexType Npoints
 		,double my_sigma_background /// background kappa that is subtracted
 		,int bucket
 		,double theta_force
-		,bool myNSIE_ON               /// This flag causes the tree build to use Rnsie in the my_halo_params instead of Rmax as the halo's maximum size
 		):
 	xp(xpt),MultiMass(true),MultiRadius(true),masses(NULL),sizes(NULL),Nparticles(Npoints),
-	sigma_background(my_sigma_background),Nbucket(bucket),force_theta(theta_force),halo_params(my_halo_params),NSIE_ON(myNSIE_ON)
+	sigma_background(my_sigma_background),Nbucket(bucket),force_theta(theta_force),halos(my_halos)
 {
 	index = new IndexType[Npoints];
 	IndexType ii;
@@ -139,11 +138,11 @@ void QuadTree::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
 		for(i=0;i<cbranch->nparticles;++i){
 			jt = particles[i]*MultiRadius;
 			if(haloON){
-				r = NSIE_ON ? halo_params[jt].Rsize_nsie*MAX(1.0,1.0/halo_params[jt].fratio_nsie) : halo_params[jt].Rmax;
+				r = halos[jt]->get_Rmax();
 			}else{
 				r = sizes[jt];
 			}
-			//r = haloON ? halo_params[particles[i]*MultiRadius].Rmax	: sizes[particles[i]*MultiRadius];
+			//r = haloON ? halos[particles[i]*MultiRadius].Rmax	: sizes[particles[i]*MultiRadius];
 			if(r < (cbranch->boundary_p2[0]-cbranch->boundary_p1[0])) ++cbranch->Nbig_particles;
 		}
 		if(cbranch->Nbig_particles){
@@ -151,11 +150,11 @@ void QuadTree::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
 			for(i=0,j=0;i<cbranch->nparticles;++i){
 				jt = particles[i]*MultiRadius;
 				if(haloON){
-					r = NSIE_ON ? halo_params[jt].Rsize_nsie*MAX(1.0,1.0/halo_params[jt].fratio_nsie) : halo_params[jt].Rmax;
+					r = halos[jt]->get_Rmax();
 				}else{
 					r = sizes[jt];
 				}
-				//r = haloON ? halo_params[particles[i]*MultiRadius].Rmax	: sizes[particles[i]*MultiRadius];
+				//r = haloON ? halos[particles[i]*MultiRadius].Rmax	: sizes[particles[i]*MultiRadius];
 				if(r < (cbranch->boundary_p2[0]-cbranch->boundary_p1[0])) cbranch->big_particles[j++] = particles[i];
 			}
 		}
@@ -176,11 +175,11 @@ void QuadTree::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
 		// store the particles that are too large to be in a child at the end of the list of particles in cbranch
 		for(i=0;i<cbranch->nparticles;++i){
 			if(haloON){
-				x[i] = NSIE_ON ? halo_params[particles[i]].Rsize_nsie*MAX(1.0,1.0/halo_params[particles[i]].fratio_nsie) : halo_params[particles[i]].Rmax;
+				x[i] = halos[i]->get_Rmax();
 			}else{
 				x[i] = sizes[particles[i]];
 			}
-			//x[i] =  haloON ? halo_params[particles[i]].Rmax : sizes[particles[i]];
+			//x[i] =  haloON ? halos[particles[i]].Rmax : sizes[particles[i]];
 		}
 		double maxsize = (cbranch->boundary_p2[0]-cbranch->boundary_p1[0])/2;
 
@@ -202,11 +201,11 @@ void QuadTree::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
 
 	}else{
 		if(haloON){
-			x[0] = NSIE_ON ? halo_params[0].Rsize_nsie*MAX(1.0,1.0/halo_params[0].fratio_nsie) : halo_params[0].Rmax;
+			x[0] = halos[0]->get_Rmax();
 		}else{
 			x[0] = sizes[0];
 		}
-		//x[0] =  haloON ? halo_params[0].Rmax : sizes[0];
+		//x[0] =  haloON ? halos[0].Rmax : sizes[0];
 		if(x[0] > (cbranch->boundary_p2[0]-cbranch->boundary_p1[0])/2
 				&& x[0] < (cbranch->boundary_p2[0]-cbranch->boundary_p1[0])){
 			cbranch->Nbig_particles = cbranch->nparticles;
@@ -355,21 +354,21 @@ void QuadTree::CalcMoments(){
 		// calculate mass
 		for(i=0,cbranch->mass=0;i<cbranch->nparticles;++i)
 			if(haloON ){
-				cbranch->mass +=  NSIE_ON ? halo_params[cbranch->particles[i]*MultiMass].mass_nsie : halo_params[cbranch->particles[i]*MultiMass].mass;
+				cbranch->mass +=  halos[i]->get_mass();
 			}else{
 				cbranch->mass += masses[cbranch->particles[i]*MultiMass];
 			}
-			//cbranch->mass +=  haloON ? halo_params[cbranch->particles[i]*MultiMass].mass : masses[cbranch->particles[i]*MultiMass];
+			//cbranch->mass +=  haloON ? halos[cbranch->particles[i]*MultiMass].mass : masses[cbranch->particles[i]*MultiMass];
 
 		// calculate center of mass
 		cbranch->center[0]=cbranch->center[1]=0;
 		for(i=0;i<cbranch->nparticles;++i){
 			if(haloON ){
-				tmp = NSIE_ON ? halo_params[cbranch->particles[i]*MultiMass].mass_nsie : halo_params[cbranch->particles[i]*MultiMass].mass;
+				tmp = halos[i]->get_mass();
 			}else{
 				tmp = masses[cbranch->particles[i]*MultiMass];
 			}
-			//tmp = haloON ? halo_params[cbranch->particles[i]*MultiMass].mass : masses[cbranch->particles[i]*MultiMass];
+			//tmp = haloON ? halos[cbranch->particles[i]*MultiMass].mass : masses[cbranch->particles[i]*MultiMass];
 			cbranch->center[0] += tmp*tree->xp[cbranch->particles[i]][0]/cbranch->mass;
 			cbranch->center[1] += tmp*tree->xp[cbranch->particles[i]][1]/cbranch->mass;
 		}
@@ -382,11 +381,11 @@ void QuadTree::CalcMoments(){
 			xcm[1]=tree->xp[cbranch->particles[i]][1]-cbranch->center[1];
 			xcut = pow(xcm[0],2) + pow(xcm[1],2);
 			if(haloON ){
-				tmp = NSIE_ON ? halo_params[cbranch->particles[i]*MultiMass].mass_nsie : halo_params[cbranch->particles[i]*MultiMass].mass;
+				tmp = halos[i]->get_mass();
 			}else{
 				tmp = masses[cbranch->particles[i]*MultiMass];
 			}
-			//tmp = haloON ? halo_params[cbranch->particles[i]*MultiMass].mass : masses[cbranch->particles[i]*MultiMass];
+			//tmp = haloON ? halos[cbranch->particles[i]*MultiMass].mass : masses[cbranch->particles[i]*MultiMass];
 
 			cbranch->quad[0] += (xcut-2*xcm[0]*xcm[0])*tmp;
 			cbranch->quad[1] += (xcut-2*xcm[1]*xcm[1])*tmp;
@@ -405,7 +404,7 @@ void QuadTree::CalcMoments(){
 		/*if(MultiRadius){
 
 			for(i=0,cbranch->maxrsph=0.0;i<cbranch->nparticles;++i){
-				tmp = haloON ? halo_params[cbranch->particles[i]].Rmax : sizes[cbranch->particles[i]];
+				tmp = haloON ? halos[cbranch->particles[i]].Rmax : sizes[cbranch->particles[i]];
 				if(cbranch->maxrsph <= tmp ){
 					cbranch->maxrsph = tmp;
 				}
@@ -415,7 +414,7 @@ void QuadTree::CalcMoments(){
 
 		}else{
 			// single size case
-			cbranch->maxrsph = haloON ? halo_params[0].Rmax : sizes[0];
+			cbranch->maxrsph = haloON ? halos[0].Rmax : sizes[0];
 			cbranch->rcrit_part = rcom + 2*cbranch->maxrsph;
 		}*/
 		//cbranch->rcrit_angle += cbranch->rcrit_part;
@@ -505,16 +504,11 @@ void QuadTree::force2D(double *ray,double *alpha,KappaType *kappa,KappaType *gam
 					  index = MultiMass*tree->current->particles[i];
 
 					  if(haloON ){
-						  prefac = NSIE_ON ? halo_params[index].mass_nsie : halo_params[index].mass;
+						  prefac = halos[index]->get_mass();
 					  }else{
 						  prefac = masses[index];
 					  }
 					  prefac /= rcm2*pi;
-
-					  //if(haloON) prefac = halo_params[index].mass/rcm2/pi;
-					  //else prefac = masses[index]/rcm2/pi;
-
-					  //prefacg = prefac/rcm2;
 
 					  tmp = -1.0*prefac;
 
@@ -541,7 +535,7 @@ void QuadTree::force2D(double *ray,double *alpha,KappaType *kappa,KappaType *gam
 					  xcm[1] = tree->xp[index][1] - ray[1];
 
 					  if(haloON){
-						  force_halo(alpha,kappa,gamma,xcm,halo_params[index],no_kappa);
+						  halos[index]->force_halo(alpha,kappa,gamma,xcm,no_kappa);
 					  }else{  // case of no halos just particles and no class derived from QuadTree
 
 						  rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
@@ -684,17 +678,11 @@ void QuadTree::walkTree_recur(QBranchNB *branch,double *ray,double *alpha,KappaT
 
 
 					  if(haloON ){
-						  prefac = NSIE_ON ? halo_params[index].mass_nsie : halo_params[index].mass;
+						  prefac = halos[index]->get_mass();
 					  }else{
 						  prefac = masses[index];
 					  }
 					  prefac /= rcm2*pi;
-
-					  //if(haloON) prefac = halo_params[index].mass/rcm2/pi;
-					//else prefac = masses[index]/rcm2/pi;
-
-					//prefacg = prefac/rcm2;
-					//tmp = -1.0*prefac;
 
 					alpha[0] += -1.0*prefac*xcm[0];
 					alpha[1] += -1.0*prefac*xcm[1];
@@ -720,7 +708,7 @@ void QuadTree::walkTree_recur(QBranchNB *branch,double *ray,double *alpha,KappaT
 
 					/////////////////////////////////////////
 					if(haloON){
-						force_halo(alpha,kappa,gamma,xcm,halo_params[index],no_kappa);
+						halos[index]->force_halo(alpha,kappa,gamma,xcm,no_kappa);
 					}else{  // case of no halos just particles and no class derived from QuadTree
 
 						rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
@@ -791,99 +779,6 @@ void QuadTree::walkTree_recur(QBranchNB *branch,double *ray,double *alpha,KappaT
 	return;
 }
 
-/** This method does the single halo calculation force calculation.
- * It is to be overridden by any derived class with asymetric halos.
- */
-void QuadTree::force_halo(
-		double *alpha     /// mass/Mpc
-		,KappaType *kappa
-		,KappaType *gamma
-		,double *xcm
-		,HaloStructure & halo_params
-		,bool no_kappa
-		){
-
-	double rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
-	if(rcm2 < 1e-20) rcm2 = 1e-20;
-
-	//Rmax = NSIE_ON ?  halo_params.Rsize_nsie*MAX(1.0,1.0/halo_params.fratio_nsie) : halo_params.Rmax;
-	/// intersecting, subtract the point particle
-	if(rcm2 < halo_params.Rmax*halo_params.Rmax){
-		double prefac = halo_params.mass/rcm2/pi;
-		double arg1 = sqrt(rcm2)/halo_params.rscale;
-		double arg2 = halo_params.Rmax/halo_params.rscale;
-
-		double tmp = (alpha_h(arg1,arg2) + 1.0)*prefac;
-		alpha[0] += tmp*xcm[0];
-		alpha[1] += tmp*xcm[1];
-
-		// can turn off kappa and gamma calculations to save times
-		if(!no_kappa){
-			*kappa += kappa_h(arg1,arg2)*prefac;
-
-			tmp = (gamma_h(arg1,arg2) + 2.0)*prefac/rcm2;
-
-			gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
-			gamma[1] += xcm[0]*xcm[1]*tmp;
-		}
-	}
-
-	return;
-}
-
-/*
- * External method (i.e. public to the class) that does a single halo calculation force calculation.
- * For the moment it only works for the !!!non NSIE!!! halo profiles
- */
-void QuadTree::force_halo_external(
-		double *alpha
-		,KappaType *kappa
-		,KappaType *gamma
-		,double *xcm
-		,double mass
-		,double Rmax
-		,double rscale
-		,bool no_kappa
-		){
-
-	double tmp, rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
-	if(rcm2 < 1e-20) rcm2 = 1e-20;
-	double prefac = mass/rcm2/pi;
-
-	if(rcm2 > Rmax*Rmax){
-		tmp = -1.0*prefac;
-		alpha[0] = tmp*xcm[0];
-		alpha[1] = tmp*xcm[1];
-
-		// can turn off kappa and gamma calculations to save times
-		if(!no_kappa){
-			*kappa = 0.0;
-
-			tmp = -2.0*prefac/rcm2;
-
-			gamma[0] = 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
-			gamma[1] = xcm[0]*xcm[1]*tmp;
-		}
-	}else{
-		double arg1 = sqrt(rcm2)/rscale;
-		double arg2 = Rmax/rscale;
-
-		tmp = alpha_h(arg1,arg2)*prefac;
-		alpha[0] = tmp*xcm[0];
-		alpha[1] = tmp*xcm[1];
-
-		// can turn off kappa and gamma calculations to save times
-		if(!no_kappa){
-			*kappa = kappa_h(arg1,arg2)*prefac;
-
-			tmp = gamma_h(arg1,arg2)*prefac/rcm2;
-
-			gamma[0] = 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
-			gamma[1] = xcm[0]*xcm[1]*tmp;
-		}
-	}
-	return;
-}
 /** This is a diagnostic routine that prints the position of every point in a
  * given branch of the tree.
  */

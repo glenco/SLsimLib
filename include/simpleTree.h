@@ -10,69 +10,7 @@
 
 #include "standard.h"
 #include "Tree.h"
-
-/// for the PseudoNFW and NFW tables
-//void make_tables_nfw();
-void delete_tables_nfw();
-//void make_tables_pseudonfw(double beta);
-void delete_tables_pseudonfw();
-double InterpolateFromTable(double *table, double *xtable, double y);
-
-/// structure to hold information about the halos' internal parameters
-struct HaloStructure{
-
-	// assignment operator
-	/*HaloStructure & operator= (const HaloStructure &halosource){
-		if(this == &halosource) return *this;
-
-		mass = halosource.mass;
-		Rmax = halosource.Rmax;
-		rscale = halosource.rscale;
-		sigma = halosource.sigma;
-		Rsize = halosource.Rsize;
-		fratio = halosource.fratio;
-		pa = halosource.pa;
-
-		return *this;
-	}*/
-
-	/// Mass in solar masses of the part of the object that is not an NSIE
-    float mass;
-    /// Radius of halo and NSIE if it exists,  This is the radius used in the tree force solver
-    /// to determine when a ray intersects an object.
-    float Rmax;
-    /// scale length or core size.  Different meaning in different cases.  Not used in NSIE case.
-    float rscale;
-
-// the below are not used except for NSIE.  These parameters are not used if there is no NSIE.
-    /// Mass of the NSIE
-    float mass_nsie;
-	/// velocity dispersion of NSIE
-	float sigma_nsie;
-	/// Actual edge of mass distribution in elliptical radius, Rmax is the range beyond which the halo is a point mass
-	float Rsize_nsie;
-	/// axis ratio of surface mass distribution
-	float fratio_nsie;
-	/// position angle on sky, radians
-	float pa_nsie;
-	/// core size of NSIE
-	float rcore_nsie;
-
-};
-typedef struct HaloStructure * HaloStructHndl;
-
-/// internal structure for a Non-Singular Isothermal Ellipsoid
-/*struct NSIEstructure: public HaloStructure{
-	/// velocity dispersion
-	double sigma;
-	/// Actual edge of mass distribution in elliptical radius, Rmax is the range beyond which the halo is a point mass
-	double Rsize;
-	/// axis ratio of surface mass distribution
-	double fratio;
-	/// position angle on sky, radians
-	double pa;
-};
-typedef struct NSIEstructure * NIEStructHndl;*/
+#include "lens_halos.h"
 
 struct BranchNB{
   BranchNB(int Ndim);
