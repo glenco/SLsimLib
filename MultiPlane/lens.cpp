@@ -1031,7 +1031,7 @@ short Lens::ResetSourcePlane(
 	// j is the index of the next plane at higher redshift, This plane will be temporarily replaced and used as a source plane
 
 	double Ds = cosmo->coorDist(0,z);
-	Utilities::locate(Dl.data(),Nplanes,Ds,&j);
+	locateD(Dl.data(),Nplanes,Ds,&j);
 	assert(j <= Nplanes && j >=0);
 
 	if(j >= Nplanes-1){

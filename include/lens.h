@@ -92,6 +92,15 @@ public:
 
 	/// print the main parameters of the lens
 	void printMultiLens();
+	double getZlens(){
+		if(flag_input_lens)
+			return main_halos[0]->getZlens();
+		else{
+			ERROR_MESSAGE();
+			std::cout << "error, no main lens present" << std::endl;
+			exit(1);
+		}
+	}
 
 	/// compute the dflection, convergence, and shear for each point on the grid
 	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off);
@@ -131,6 +140,16 @@ public:
 	bool flag_switch_deflection_off;
 	/// if >= 1, the background is switched off and only the main lens is present
 	bool flag_switch_field_off;
+
+	/* MAIN HALOS */
+	/// main lens type: 0 or nolens, 1 or NFW, 2 or PseudoNFW, 3 or PowerLaw, 4 or NSIE, 5 or AnaLens, 6 or UniLens, 7 or MOKALens, 8 or DummyLens
+	LensHaloType main_halo_type;
+	/// galaxy lens type: 0 or none, 1 or NSIE
+	GalaxyLensHaloType galaxy_halo_type;
+	/// main lensing halo in the simulation
+	Utilities::MixedVector<LensHaloHndl> main_halos;
+	/// number of main halo profiles (or main halos)
+	IndexType NmainHalos;
 
 private:
 	/// number of lensing planes + 1 in the simulation, the last plant is the source plane
@@ -180,15 +199,7 @@ private:
 	//bool gal_input_flag;
 	bool read_sim_file;
 
-	/* MAIN HALOS */
-	/// main lens type: 0 or nolens, 1 or NFW, 2 or PseudoNFW, 3 or PowerLaw, 4 or NSIE, 5 or AnaLens, 6 or UniLens, 7 or MOKALens, 8 or DummyLens
-	LensHaloType main_halo_type;
-	/// galaxy lens type: 0 or none, 1 or NSIE
-	GalaxyLensHaloType galaxy_halo_type;
-	/// main lensing halo in the simulation
-	Utilities::MixedVector<LensHaloHndl> main_halos;
-	/// number of main halo profiles (or main halos)
-	IndexType NmainHalos;
+
 
 	/* FIELD HALOS */
 	/// vector of all lens field_halos in the light cone

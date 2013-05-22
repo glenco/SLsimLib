@@ -30,43 +30,20 @@
  * etc.
  *
  */
-template <class L=Lens, class S=SourceUniform> class Model{
+template <class S=SourceUniform> class Model{
 public:
 
-	L* lens;
+	Lens* lens;
 	S* source;
 	CosmoHndl cosmo;
 	InputParams* params;
 
-	///For the MultiPlane one
 	Model(std::string paramfile,long* seed){
 		params = new InputParams(paramfile);
 
 		cosmo = new COSMOLOGY();
 		source = new S(*params);
-		lens = new L(*params,cosmo,source,seed);
-	};
-	/// For the AnaNSIELensHalo one
-	Model(std::string paramfile,long* seed){
-		params = new InputParams(paramfile);
-
-		cosmo = new COSMOLOGY();
-		source = new S(*params);
-		lens = new L(*params,cosmo,source,seed);
-	};
-	///Others
-	Model(long* seed){
-		params = NULL;
-
-		cosmo = new COSMOLOGY();
-		source = new S();
-		lens = new L(*params,cosmo,source,seed);
-	};
-	Model(long* seed){
-		params = NULL;
-		cosmo = new COSMOLOGY();
-		source = new S();
-		lens = new L(*params,cosmo,source,seed);
+		lens = new Lens(*params,cosmo,source,seed);
 	};
 	~Model(){
 		if(params)
@@ -109,7 +86,7 @@ public:
 * derived lens class that was used to construct the model.
  *
  */
-template<class L,class S> void Model<L,S>::RandomizeModel(
+template<class S> void Model<S>::RandomizeModel(
 		double r_source_phys
 		,long *seed
 		,bool tables
@@ -156,9 +133,9 @@ template<class L,class S> void Model<L,S>::RandomizeModel(
 		delete[] zlTable;
 
 		if(randomize_source_z) source->setZ(zsource);
-		if(randomize_host_z) lens->setZlens(cosmo,zlens,zsource);
+		if(randomize_host_z) lens->main_halos.at<AnaNSIELensHalo>(0)->setZlens(cosmo,zlens,zsource);
 
-		lens->RandomizeSigma(seed,tables);
+		lens->main_halos.at<AnaNSIELensHalo>(0)->RandomizeSigma(seed,tables);
 	}
 
 	// This need to be done after source->DlDs has been set in setInternal()
@@ -167,7 +144,7 @@ template<class L,class S> void Model<L,S>::RandomizeModel(
 	else
 		source->setRadius(r_source_phys*source->getDlDs());
 
-	lens->RandomizeHost(seed,tables);
+	lens->main_halos.at<AnaNSIELensHalo>(0)->RandomizeHost(seed,tables);
 
 	return ;
 }
