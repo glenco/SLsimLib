@@ -60,6 +60,35 @@ Lens::Lens(InputParams& params, CosmoHndl cosmo, SourceHndl source, long *my_see
 
 	std:: cout << " done " << std:: endl;
 }
+/*
+ * Creates an empty lens. Main halos and field halos need to be inserted by hand from the user.
+ */
+Lens::Lens(InputParams& params, CosmoHndl cosmo, long *my_seed) : seed(my_seed){
+
+	if( (cosmo->getOmega_matter() + cosmo->getOmega_lambda()) != 1.0 ){
+		printf("ERROR: MultiLens can only handle flat universes at present.  Must change cosmology.\n");
+		exit(1);
+	}
+
+	assignParams(params);
+
+	/// makes the oordinate distance table for the calculation of the redshifts of the different planes
+	table_set = false;
+	make_table(cosmo);
+
+	read_sim_file = false;
+
+	charge = 4*pi*Grav*mass_scale;
+	std::cout << "charge: " << charge << std::endl;
+
+	// initially let source be the one inputed from parameter file
+	index_of_new_sourceplane = -1;
+	toggle_source_plane = false;
+
+	seed = my_seed;
+
+	std:: cout << " done " << std:: endl;
+}
 
 Lens::~Lens(){
 	Utilities::delete_container(lensing_planes);
@@ -112,7 +141,7 @@ void Lens::assignParams(InputParams& params){
 	if(flag_input_lens){
 		if(!params.get("DM_halo_type",main_halo_type)){
 			ERROR_MESSAGE();
-			cout << "parameter flag_input_lens needs to be set in the parameter file " << params.filename() << endl;
+			cout << "parameter DM_halo_type needs to be set in the parameter file " << params.filename() << endl;
 			exit(0);
 		}
 		if(!params.get("galaxy_halo_type",galaxy_halo_type)){
@@ -123,6 +152,11 @@ void Lens::assignParams(InputParams& params){
 	if(!params.get("field_off",flag_switch_field_off)) flag_switch_field_off = false;
 
 	if(!flag_switch_field_off){
+		if(!params.get("fov",fieldofview)){
+			  ERROR_MESSAGE();
+			  cout << "parameter fov needs to be set in the parameter file " << params.filename() << endl;
+			  exit(0);
+		}
 		if(!params.get("internal_profile",int_prof_type)){
 			ERROR_MESSAGE();
 			cout << "parameter internal_profile needs to be set in the parameter file " << params.filename() << endl;
@@ -158,11 +192,6 @@ void Lens::assignParams(InputParams& params){
 			if(!params.get("min_mass",min_mass)){
 				  ERROR_MESSAGE();
 				  cout << "parameter min_mass needs to be set in the parameter file " << params.filename() << endl;
-				  exit(0);
-			}
-			if(!params.get("fov",fieldofview)){
-				  ERROR_MESSAGE();
-				  cout << "parameter fov needs to be set in the parameter file " << params.filename() << endl;
 				  exit(0);
 			}
 			if(!params.get("field_buffer",field_buffer)){
@@ -418,13 +447,9 @@ void Lens::buildLensPlanes(
 
 	for(j=0,Ntot=0;j<Nplanes-1;j++){
 		if(flag_input_lens && j == (flag_input_lens % Nplanes)){
-			std::cout << "  Building lensing plane " << j << " number of halos: " << main_halos.size() << std::endl;
-
 			lensing_planes.push_back(new SingularLensPlane(main_halos.data(),main_halos.size()));
 		}
 		else if(flag_switch_field_off == false){
-
-
 			/*
 			 * Setting the redshift range
 			 * If there is a plane with an input lens on it, it is skipped over
@@ -523,8 +548,6 @@ void Lens::setCoorDist(CosmoHndl cosmo){
 			Np = Nplanes;
 		if(flag_input_lens && flag_switch_field_off == false)
 			Np = Nplanes-1;
-
-		cout << flag_input_lens << " " << flag_switch_field_off << " " << Np << " " << Dlens << " " << Ds << endl;
 
 		/// spaces lD equally up to the source, including 0 and Ds
 		/// therefore we need Nplanes+1 values
@@ -932,16 +955,16 @@ void Lens::createFieldHalos(
 				std::cout << "int_prof_type is null!!!!" << std::endl;
 				break;
 			case nfw_lens:
-				main_halos.push_back(new NFWLensHalo);
+				field_halos.push_back(new NFWLensHalo);
 				break;
 			case pnfw_lens:
-				main_halos.push_back(new PseudoNFWLensHalo);
+				field_halos.push_back(new PseudoNFWLensHalo);
 				break;
 			case pl_lens:
-				main_halos.push_back(new PowerLawLensHalo);
+				field_halos.push_back(new PowerLawLensHalo);
 				break;
 			case nsie_lens:
-				main_halos.push_back(new SimpleNSIELensHalo);
+				field_halos.push_back(new SimpleNSIELensHalo);
 				break;
 			case ana_lens:
 				ERROR_MESSAGE();
@@ -1128,10 +1151,10 @@ void Lens::readInputSimFile(CosmoHndl cosmo){
 				std::cout << "int_prof_type is null!!!!" << std::endl;
 				break;
 			case nfw_lens:
-				main_halos.push_back(new NFWLensHalo);
+				field_halos.push_back(new NFWLensHalo);
 				break;
 			case pnfw_lens:
-				main_halos.push_back(new PseudoNFWLensHalo);
+				field_halos.push_back(new PseudoNFWLensHalo);
 				break;
 				ERROR_MESSAGE();
 				std::cout << "PseudoNFW not supported." << std::endl;
@@ -1141,7 +1164,7 @@ void Lens::readInputSimFile(CosmoHndl cosmo){
 				std::cout << "PowerLaw not supported." << std::endl;
 				break;
 			case nsie_lens:
-				main_halos.push_back(new SimpleNSIELensHalo);
+				field_halos.push_back(new SimpleNSIELensHalo);
 				break;
 			case ana_lens:
 				ERROR_MESSAGE();
@@ -1156,7 +1179,7 @@ void Lens::readInputSimFile(CosmoHndl cosmo){
 				std::cout << "MOKA not supported." << std::endl;
 				break;
 			case dummy_lens:
-				main_halos.push_back(new DummyLensHalo);
+				field_halos.push_back(new DummyLensHalo);
 				ERROR_MESSAGE();
 				std::cout << "Why would you wand dummy file halos???" << std::endl;
 				break;

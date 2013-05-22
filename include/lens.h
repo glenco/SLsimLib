@@ -62,7 +62,7 @@
 
 class Lens{
 public:
-	//Lens(InputParams& params,long *seed);
+	Lens(InputParams& params,CosmoHndl cosmo, long *seed);
 	Lens(InputParams& params, CosmoHndl cosmo, SourceHndl source, long *my_seed);
 	~Lens();
 

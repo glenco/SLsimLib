@@ -511,7 +511,7 @@ namespace Utilities
 			tmap_iterator found = tmap.find(typeid(SubclassT));
 			if(found == tmap.end())
 				throw std::out_of_range(std::string() + "type " + typeid(SubclassT).name() + " not in vector");
-			return found->second.at(i);
+			return (SubclassT*)found->second.at(i);
 		}
 		
 		/// Templated indexing operator for elements of a specific derived class (const).
@@ -521,7 +521,7 @@ namespace Utilities
 			tmap_iterator found = tmap.find(typeid(SubclassT));
 			if(found == tmap.end())
 				throw std::out_of_range(std::string() + "type " + typeid(SubclassT).name() + " not in vector");
-			return found->second.at(i);
+			return (SubclassT*)found->second.at(i);
 		}
 		
 		/// number of all elements
