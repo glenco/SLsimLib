@@ -4,41 +4,37 @@
 #		outputfile is common to all lens models
 #		so are zlens and zsource at the moment
 
+####### General ##########
+outputfile         output    # will contain the image magnifications
 
-outputfile         output      # will contain the image magnifications
-
-####### SingleLens model ##########
-# 0: PowerLaw, 1: NFW, 2: PseudoNFW, 3: NSIE, 4: AnaNSIE, 5: UniNSIE, 6: PointMass
-DM_halo_type		0       # type of the DM profile in the case of the analytic lens
-galaxy_halo_type    0       # if set, a second profile for a galaxy is used
-
-##################################
-####### MultiLens model ##########
-##################################
 Nplanes	   	   10 		    # number of lens planes
-flag_input_lens	   1        # 0: no lens, 1: analytic (single lens) lens, 2: MOKA lens
 mass_scale	   1.0e10		# mass scale of the simulation in solar masses
 
 deflection_off		0		# switches deflection off, default is 0
-background_off		0		# no los halos, default is 0
+field_off		0			# run without field halos, default is 0
 
-###### Internal mass profiles of LOS halos ##########
-# 0: PowerLaw, 1: NFW, 2: PseudoNFW, 3: NSIE, 4: AnaNSIE, 5: UniNSIE, 6: PointMass
-internal_profile       2    # DM internal profile type
-internal_profile_galaxy 3	# if set, a galaxy profile and a second halo type is chose
+####### Main halos type ##########
+flag_input_lens	   1    # 0: no main halo, 1 or else - a main halo
+DM_halo_type       1    # DM internal profile type: 0 or nolens, 1 or NFW, 2 or PseudoNFW, 3 or PowerLaw, 4 or NSIE, 5 or AnaLens, 6 or UniLens, 7 or MOKALens, 8 or DummyLens
+galaxy_halo_type 1	# if set, a galaxy profile is chosen: 0 or none, 1 or NSIE
+
+
+###### Field halos type ##########
+###### Halos from a mass function #######
+mass_func_type	   1		# mass function type, 0: Press-Schechter, 1: Sheth-Tormen, 2: PowerLaw
+fov		   1.0e4	        # field of view in square arcseconds
+field_buffer	   1.0		# in physical Mpc
+min_mass	   0.1			# min mass of the halos in the light cone in mass scale units		
+
+internal_profile       1    # DM internal profile type: 0 or nolens, 1 or NFW, 2 or PseudoNFW, 3 or PowerLaw, 4 or NSIE, 5 or AnaLens, 6 or UniLens, 7 or MOKALens, 8 or DummyLens
+internal_profile_galaxy 1	# if set, a galaxy profile is chosen: 0 or none, 1 or NSIE
 galaxy_mass_fraction    0.1	# must be set if internal_profile_galaxy is set, mass fraction of the galaxy 
+
 internal_slope_pnfw		2 	# slope of the PseudoNFW profile, default is 2
 internal_slope_pl		-1  # slope of the PowerLaw profile, default is -1
 
 ####### Halos from an input file ##############
 #input_simulation_file ../MillenniumData/DMhalos.txt  # if set, the light cone is read from an input file 
-
-###### Halos from a mass function #######
-mass_func_type	   1		# mass function type, 0: Press-Schechter, 1: Sheth-Tormen, 2: PowerLaw
-alpha			0.1667		# slope of the PL mass function profile, default is 1./6.
-fov		   1.0e4	        # field of view in square arcseconds
-field_buffer	   1.0		# in physical Mpc
-min_mass	   0.1			# min mass of the halos in the light cone in mass scale units
 
 ####### AnaNSIE lens halo model ############
 sigma              250       # velocity dispersion in km/s

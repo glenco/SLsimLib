@@ -490,56 +490,62 @@ void Lens::buildLensPlanes(
  * sure that it is not zero (i.e. not set)
  */
 void Lens::setCoorDist(CosmoHndl cosmo){
-	std:: vector<double> lD;
-	int i, Np;
-
-	if(flag_input_lens)
-		Np = Nplanes;
-	else
-		Np = Nplanes+1;
-
-	double Ds = cosmo->coorDist(0,zsource);
+	int i;
 
 	double Dlens;
+	double Ds = cosmo->coorDist(0,zsource);
 	if(flag_input_lens) Dlens = cosmo->coorDist(0,main_halos[0]->getZlens());
 	else Dlens = Ds;
 
-	/// spaces lD equally up to the source, including 0 and Ds
-	/// therefore we need Nplanes+1 values
-	/// however, if there is an input plane, we will need Nplanes values, since the input plane will take up a value itself
-	fill_linear(lD,Np,0.,Ds);
-
-	/// ensures that the first plane and the last before the source plane have the same volume
-	/// as all ther planes
-	double dlD = lD[1]-lD[0];
-	for(i=0; i<Np; i++){
-	  lD[i] -= 0.5*dlD;
-	}
-
-	/// puts the input plane first if the case
-	int flag=0;
-	if(flag_input_lens && Dlens < lD[1]){
+	if(flag_input_lens && Nplanes == 2){
 		Dl.push_back(Dlens);
-		flag_input_lens = Nplanes;
-		flag = 1;
+		Dl.push_back(Ds);
+	}else{
+
+		std:: vector<double> lD;
+		int Np;
+
+		if(flag_input_lens == 0 && flag_switch_field_off == false)
+			Np = Nplanes;
+		if(flag_input_lens && flag_switch_field_off == false)
+			Np = Nplanes-1;
+
+		cout << flag_input_lens << " " << flag_switch_field_off << " " << Np << " " << Dlens << " " << Ds << endl;
+
+		/// spaces lD equally up to the source, including 0 and Ds
+		/// therefore we need Nplanes+1 values
+		/// however, if there is an input plane, we will need Nplanes values, since the input plane will take up a value itself
+		fill_linear(lD,Np,0.0,Ds);
+
+		/// ensures that the first plane and the last before the source plane have the same volume
+		/// as all ther planes
+		double dlD = lD[1]-lD[0];
+		for(i=0; i<Np; i++){
+			lD[i] -= 0.5*dlD;
+		}
+
+		/// puts the input plane first if the case
+		int flag=0;
+		if(flag_input_lens && Dlens < lD[1]){
+			Dl.push_back(Dlens);
+			flag_input_lens = Nplanes;
+			flag = 1;
+		}
+
+		/// assigns the redshifts and plugs in the input plane
+		for(i=1; i<Np; i++){
+			Dl.push_back(lD[i]);
+
+			if(flag_input_lens && flag == 0)
+				if(Dlens > lD[i] && Dlens <= lD[i+1]){
+					Dl.push_back(Dlens);
+					flag_input_lens = Dl.size()-1;
+					flag = 1;
+				}
+		}
+
+		Dl.push_back(Ds);
 	}
-
-	/// assigns the redshifts and plugs in the input plane
-	for(i=1; i<Np; i++){
-		Dl.push_back(lD[i]);
-
-		if(flag_input_lens && flag == 0)
-			if(Dlens > lD[i] && Dlens <= lD[i+1]){
-				Dl.push_back(lD[i]);
-				Dl.push_back(Dlens);
-				flag_input_lens = Dl.size()-1;
-				flag = 1;
-			}
-	}
-
-	assert(Dl.size() == Nplanes);
-
-	Dl.back() = Ds;
 
 	int j;
 	dDl.push_back(Dl[0]);  // distance between jth plane and the previous plane
@@ -560,6 +566,7 @@ void Lens::setCoorDist(CosmoHndl cosmo){
 		cout << dDl[j] << " ";
 	cout << endl;
 
+
 	std::map<double,double>::iterator ind;
 	// assigns the redshifts and plugs in the input plane
 	cout << "z: ";
@@ -570,6 +577,8 @@ void Lens::setCoorDist(CosmoHndl cosmo){
 	}
 	plane_redshifts[Nplanes-1] = zsource;
 	cout << plane_redshifts[i] << " " << std::endl;
+
+	assert(Dl.size() == Nplanes);
 }
 
 void Lens::createMainHalos(
