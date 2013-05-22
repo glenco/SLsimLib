@@ -37,7 +37,8 @@ Lens::Lens(InputParams& params, CosmoHndl cosmo, SourceHndl source, long *my_see
 	charge = 4*pi*Grav*mass_scale;
 	std::cout << "charge: " << charge << std::endl;
 
-	createMainHalos(params,cosmo,source);
+	if(flag_input_lens)
+		createMainHalos(params,cosmo,source);
 
 	// initially let source be the one inputed from parameter file
 	index_of_new_sourceplane = -1;
@@ -46,15 +47,17 @@ Lens::Lens(InputParams& params, CosmoHndl cosmo, SourceHndl source, long *my_see
 	seed = my_seed;
 
 	/// makes the oordinate distance table for the calculation of the redshifts of the different planes
-	if(table_set == false) {std::cout << "making tables" << std::endl; make_table(cosmo);}
+	if(table_set == false) {std::cout << "making tables" << std::endl; make_table(cosmo);std::cout << "done tables" << std::endl; }
 
 	setCoorDist(cosmo);
 
-	if(sim_input_flag){
-		if(read_sim_file == false) readInputSimFile(cosmo);
-	}
-	else{
-		createFieldHalos(cosmo,seed);
+	if(flag_switch_field_off == false){
+		if(sim_input_flag){
+			if(read_sim_file == false) readInputSimFile(cosmo);
+		}
+		else{
+			createFieldHalos(cosmo,seed);
+		}
 	}
 
 	buildLensPlanes(cosmo);
@@ -79,15 +82,16 @@ Lens::~Lens(){
 
 void Lens::make_table(CosmoHndl cosmo){
 	int i;
-	double x, dx = (zsource+1.0)/(double)NTABLE;
+	double x, dx = (zsource+1.0)/(double)NTABLE, Dl;
 
-#ifdef _OPENMP
-#pragma omp parallel for default(shared) private(i,x)
-#endif
 	for(i = 0 ; i< NTABLE; i++){
 		x = i*dx;
-		coorDist_table[cosmo->coorDist(0,x)]=x;
+		Dl = cosmo->coorDist(0,x);
+		coorDist_table.insert ( std::pair<double,double>(Dl,x));
 	}
+	//std::map<double,double>::iterator it;
+	//for (it=coorDist_table.begin(); it!=coorDist_table.end(); ++it)
+	//   std::cout << it->first << " => " << it->second << '\n';
 	table_set=true;
 }
 
@@ -104,25 +108,69 @@ void Lens::assignParams(InputParams& params){
 		  cout << "parameter Nplanes needs to be set in the parameter file " << params.filename() << endl;
 		  exit(0);
 	}
-	if(!params.get("DM_halo_type",main_halo_type)){
+	if(!params.get("flag_input_lens",flag_input_lens)){
 		  ERROR_MESSAGE();
 		  cout << "parameter flag_input_lens needs to be set in the parameter file " << params.filename() << endl;
 		  exit(0);
 	}
-	if(!params.get("internal_profile",int_prof_type)){
-		  ERROR_MESSAGE();
-		  cout << "parameter internal_profile needs to be set in the parameter file " << params.filename() << endl;
-		  exit(0);
-	}
-	if(!params.get("internal_profile_galaxy",int_prof_gal_type)){
-		flag_galaxy_subhalo = false;
-	}
-	else{
-		flag_galaxy_subhalo = true;
-		if(!params.get("galaxy_mass_fraction",galaxy_mass_fraction)){
+	if(flag_input_lens){
+		if(!params.get("DM_halo_type",main_halo_type)){
 			ERROR_MESSAGE();
-			cout << "to construct a DM + galaxy model the parameter galaxy_mass_fraction needs to be set in the parameter file " << params.filename() << endl;
+			cout << "parameter flag_input_lens needs to be set in the parameter file " << params.filename() << endl;
 			exit(0);
+		}
+		if(!params.get("galaxy_halo_type",galaxy_halo_type)){
+			galaxy_halo_type = null_gal;
+		}
+	}
+
+	if(!params.get("field_off",flag_switch_field_off)) flag_switch_field_off = false;
+
+	if(!flag_switch_field_off){
+		if(!params.get("internal_profile",int_prof_type)){
+			ERROR_MESSAGE();
+			cout << "parameter internal_profile needs to be set in the parameter file " << params.filename() << endl;
+			exit(0);
+		}
+		if(!params.get("internal_profile_galaxy",int_prof_gal_type)){
+			int_prof_gal_type = null_gal;
+			flag_galaxy_subhalo = false;
+		}
+		else{
+			flag_galaxy_subhalo = true;
+			if(!params.get("galaxy_mass_fraction",galaxy_mass_fraction)){
+				ERROR_MESSAGE();
+				cout << "to construct a DM + galaxy model the parameter galaxy_mass_fraction needs to be set in the parameter file " << params.filename() << endl;
+				exit(0);
+			}
+		}
+		if(!params.get("alpha",mass_func_PL_slope))                mass_func_PL_slope = 1./6.;
+		if(!params.get("internal_slope_pl",halo_slope) && int_prof_type == pl_lens)     halo_slope = -1.0;
+		if(!params.get("internal_slope_pnfw",halo_slope) && int_prof_type == pnfw_lens) halo_slope = 2.0;
+		if(!params.get("input_simulation_file",input_sim_file)){
+
+			// No simulation input file provided
+			if(!params.get("mass_func_type",mass_func_type)){
+				  ERROR_MESSAGE();
+				  cout << "parameter mass_func_type needs to be set in the parameter file " << params.filename() << endl;
+				  exit(0);
+			}
+			if(!params.get("min_mass",min_mass)){
+				  ERROR_MESSAGE();
+				  cout << "parameter min_mass needs to be set in the parameter file " << params.filename() << endl;
+				  exit(0);
+			}
+			if(!params.get("fov",fieldofview)){
+				  ERROR_MESSAGE();
+				  cout << "parameter fov needs to be set in the parameter file " << params.filename() << endl;
+				  exit(0);
+			}
+			if(!params.get("field_buffer",field_buffer)){
+				field_buffer = 0.0;
+				cout << "default field buffer of 0 Mpc is being used." << endl;
+			}
+		}else{
+			min_mass = 0.0;
 		}
 	}
 
@@ -132,69 +180,62 @@ void Lens::assignParams(InputParams& params){
 		  exit(0);
 	}
 
-	if(!params.get("input_simulation_file",input_sim_file)){
-
-		// No simulation input file provided
-		if(!params.get("mass_func_type",mass_func_type)){
-			  ERROR_MESSAGE();
-			  cout << "parameter mass_func_type needs to be set in the parameter file " << params.filename() << endl;
-			  exit(0);
-		}
-		if(!params.get("min_mass",min_mass)){
-			  ERROR_MESSAGE();
-			  cout << "parameter min_mass needs to be set in the parameter file " << params.filename() << endl;
-			  exit(0);
-		}
-		if(!params.get("fov",fieldofview)){
-			  ERROR_MESSAGE();
-			  cout << "parameter fov needs to be set in the parameter file " << params.filename() << endl;
-			  exit(0);
-		}
-		if(!params.get("field_buffer",field_buffer)){
-			field_buffer = 0.0;
-			cout << "default field buffer of 0 Mpc is being used." << endl;
-		}
-	}else{
-		min_mass = 0.0;
-	}
-
 	if(!params.get("mass_scale",mass_scale)){
 		  ERROR_MESSAGE();
 		  cout << "parameter mass_scale needs to be set in the parameter file " << params.filename() << endl;
 		  exit(0);
 	}
-	// parameters with default values
-	if(!params.get("alpha",mass_func_PL_slope))                mass_func_PL_slope = 1./6.;
-	if(!params.get("internal_slope_pl",halo_slope) && int_prof_type == pl_lens)     halo_slope = -1.0;
-	if(!params.get("internal_slope_pnfw",halo_slope) && int_prof_type == pnfw_lens) halo_slope = 2.0;
+
 	if(!params.get("deflection_off",flag_switch_deflection_off)) flag_switch_deflection_off = false;
-	if(!params.get("background_off",flag_switch_field_off)) flag_switch_field_off = false;
 
 	// Some checks for valid parameters
-	  if(int_prof_type == pl_lens && halo_slope >= 0){
-		  ERROR_MESSAGE();
-		  cout << "Power Law internal slope >=0 not possible." << endl;
-		  exit(1);
-	  }
+	if(flag_switch_field_off == true && Nplanes != 1){
+		ERROR_MESSAGE();
+		cout << "Do you want to run _without_ field halos, but with more than one lens planes? Change Nplanes to 1!" << endl;
+		exit(1);
+	}
 
-	  if(int_prof_type == pnfw_lens && halo_slope <= 0){
-		  ERROR_MESSAGE();
-		  cout << "Pseudo NFW internal slope <=0 not possible." << endl;
-		  exit(1);
-	  }
+	if(flag_switch_field_off == false && Nplanes == 1){
+		ERROR_MESSAGE();
+		cout << "Do you want to run _with_ field halos, but with _only_ one lens planes? Change Nplanes to a bigger number!" << endl;
+		exit(1);
+	}
 
-	  if(int_prof_type == pnfw_lens && (halo_slope / floor(halo_slope) > 1.0)){
-		  ERROR_MESSAGE();
-		  cout << "Pseudo NFW internal slope needs to be a whole number." << endl;
-		  exit(1);
-	  }
+	if(flag_input_lens == 0 && Nplanes == 1){
+		ERROR_MESSAGE();
+		cout << "Do you want an empty simulation? Set flag_input_lens to > 0 for a main lens." << endl;
+		exit(1);
+	}
 
-	  if(input_sim_file.size() < 1 && int_prof_type == nsie_lens){
-		  ERROR_MESSAGE();
-		  cout << "The NSIE internal profile works only for Millenium DM simulations for now." << endl;
-		  cout << "Set input_simulation_file in sample_paramfile." << endl;
-		  exit(1);
-	  }
+	if(flag_input_lens > 0){
+		flag_input_lens = 1;
+	}
+	if(!flag_switch_field_off){
+		if(int_prof_type == pl_lens && halo_slope >= 0){
+			ERROR_MESSAGE();
+			cout << "Power Law internal slope >=0 not possible." << endl;
+			exit(1);
+		}
+
+		if(int_prof_type == pnfw_lens && halo_slope <= 0){
+			ERROR_MESSAGE();
+			cout << "Pseudo NFW internal slope <=0 not possible." << endl;
+			exit(1);
+		}
+
+		if(int_prof_type == pnfw_lens && (halo_slope / floor(halo_slope) > 1.0)){
+			ERROR_MESSAGE();
+			cout << "Pseudo NFW internal slope needs to be a whole number." << endl;
+			exit(1);
+		}
+
+		if(input_sim_file.size() < 1 && int_prof_type == nsie_lens){
+			ERROR_MESSAGE();
+			cout << "The NSIE internal profile works only for Millenium DM simulations for now." << endl;
+			cout << "Set input_simulation_file in sample_paramfile." << endl;
+			exit(1);
+		}
+	}
 
 	  // to compensate for the last plane, which is the source plane
 	  Nplanes++;
@@ -241,8 +282,6 @@ void Lens::printMultiLens(){
 
 	cout << "mass scale " << mass_scale << endl;
 
-	cout << "min mass " << min_mass << endl;
-
 	cout << endl << "MAIN HALOS" << endl;
 	cout << "Main lens profile type:" << endl;
 	switch(main_halo_type){
@@ -287,65 +326,70 @@ void Lens::printMultiLens(){
 		break;
 	}
 
-	cout << "field of view " << fieldofview << endl;
+	if(flag_switch_field_off == false){
 
-	cout << endl << "FIELD HALOS" << endl;
-	cout << "Mass function type: "<< endl;
+		cout << "field of view " << fieldofview << endl;
 
-	switch(mass_func_type){
-	case PS:
-		cout << "  Press-Schechter mass function " << endl;
-		break;
-	case ST:
-		cout << "  Sheth-Tormen mass function " << endl;
-		break;
-	case PL:
-		cout << "  Power law mass function " << endl;
-		cout << "  slope: " << mass_func_PL_slope << endl;
-		break;
-	}
+		cout << endl << "FIELD HALOS" << endl;
 
-	cout << endl << "Field halos profile type:" << endl;
-	switch(int_prof_type){
-	case null_lens:
-		cout << "no field type" << endl;
-		break;
-	case nfw_lens:
-		cout << "NFW field type" << endl;
-		break;
-	case pnfw_lens:
-		cout << "PseudoNFW field type" << endl;
-		cout << "slope: " << halo_slope << endl;
-		break;
-	case pl_lens:
-		cout << "PowerLaw field type" << endl;
-		cout << "slope: " << halo_slope << endl;
-		break;
-	case nsie_lens:
-		cout << "NSIE field type" << endl;
-		break;
-	case ana_lens:
-		cout << "AnaNSIE field type" << endl;
-		break;
-	case uni_lens:
-		cout << "UniNSIE field type" << endl;
-		break;
-	case moka_lens:
-		cout << "MOKA field type" << endl;
-		break;
-	case dummy_lens:
-		cout << "Dummy field type" << endl;
-		break;
-	}
+		cout << "min mass " << min_mass << endl;
+		cout << "Mass function type: "<< endl;
 
-	cout << endl << "Field galaxies profile type:" << endl;
-	switch(int_prof_gal_type){
-	case null_gal:
-		cout << "no field galaxy type" << endl;
-		break;
-	case nsie_gal:
-		cout << "NSIE field galaxy type" << endl;
-		break;
+		switch(mass_func_type){
+		case PS:
+			cout << "  Press-Schechter mass function " << endl;
+			break;
+		case ST:
+			cout << "  Sheth-Tormen mass function " << endl;
+			break;
+		case PL:
+			cout << "  Power law mass function " << endl;
+			cout << "  slope: " << mass_func_PL_slope << endl;
+			break;
+		}
+
+		cout << endl << "Field halos profile type:" << endl;
+		switch(int_prof_type){
+		case null_lens:
+			cout << "no field type" << endl;
+			break;
+		case nfw_lens:
+			cout << "NFW field type" << endl;
+			break;
+		case pnfw_lens:
+			cout << "PseudoNFW field type" << endl;
+			cout << "slope: " << halo_slope << endl;
+			break;
+		case pl_lens:
+			cout << "PowerLaw field type" << endl;
+			cout << "slope: " << halo_slope << endl;
+			break;
+		case nsie_lens:
+			cout << "NSIE field type" << endl;
+			break;
+		case ana_lens:
+			cout << "AnaNSIE field type" << endl;
+			break;
+		case uni_lens:
+			cout << "UniNSIE field type" << endl;
+			break;
+		case moka_lens:
+			cout << "MOKA field type" << endl;
+			break;
+		case dummy_lens:
+			cout << "Dummy field type" << endl;
+			break;
+		}
+
+		cout << endl << "Field galaxies profile type:" << endl;
+		switch(int_prof_gal_type){
+		case null_gal:
+			cout << "no field galaxy type" << endl;
+			break;
+		case nsie_gal:
+			cout << "NSIE field galaxy type" << endl;
+			break;
+		}
 	}
 
 	cout << endl;
@@ -367,7 +411,7 @@ void Lens::buildLensPlanes(
 	unsigned long j1,j2;
 	std::map<double,double>::iterator ind;
 
-	std::cout << "MultiLens::buildHaloTrees zsource = " << zsource << std::endl;
+	std::cout << "Lens::buildLensPlanes zsource = " << zsource << std::endl;
 
 	assert(plane_redshifts[Nplanes-1] == zsource);
 
@@ -377,7 +421,7 @@ void Lens::buildLensPlanes(
 
 			lensing_planes.push_back(new SingularLensPlane(main_halos.data(),main_halos.size()));
 		}
-		else{
+		else if(flag_switch_field_off == false){
 
 
 			/*
@@ -435,9 +479,6 @@ void Lens::buildLensPlanes(
 			lensing_planes.push_back(new TreeLensPlane(&halo_pos[j1],field_halos.data(),j2-j1,sigma_back));
 		}
 	}
-
-
-	cout << "constructed " << Nhalos << " halos" << endl;
 }
 
 /**
@@ -453,9 +494,9 @@ void Lens::setCoorDist(CosmoHndl cosmo){
 	int i, Np;
 
 	if(flag_input_lens)
-		Np = Nplanes-1;
-	else
 		Np = Nplanes;
+	else
+		Np = Nplanes+1;
 
 	double Ds = cosmo->coorDist(0,zsource);
 
@@ -496,7 +537,9 @@ void Lens::setCoorDist(CosmoHndl cosmo){
 			}
 	}
 
-	Dl[Nplanes-1] = Ds;
+	assert(Dl.size() == Nplanes);
+
+	Dl.back() = Ds;
 
 	int j;
 	dDl.push_back(Dl[0]);  // distance between jth plane and the previous plane
