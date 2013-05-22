@@ -40,12 +40,8 @@ Lens::Lens(InputParams& params, CosmoHndl cosmo, SourceHndl source, long *my_see
 	toggle_source_plane = false;
 
 	seed = my_seed;
-cout << read_redshift_planes << endl;
-	if(read_redshift_planes){
-		setCoorDistFromFile(cosmo);
-	}else{
-		setCoorDist(cosmo);
-	}
+
+	setCoorDist(cosmo);
 
 	if(flag_switch_field_off == false){
 		if(sim_input_flag){
@@ -178,13 +174,8 @@ void Lens::assignParams(InputParams& params){
 		if(!params.get("internal_slope_pl",halo_slope) && int_prof_type == pl_lens)     halo_slope = -1.0;
 		if(!params.get("internal_slope_pnfw",halo_slope) && int_prof_type == pnfw_lens) halo_slope = 2.0;
 
-		if(params.get("read_redshift_planes",read_redshift_planes)) {
-			if(!params.get("redshift_planes_file",redshift_planes_file)){
-				  ERROR_MESSAGE();
-				  cout << "parameter redshift_planes_file needs to be set in the parameter file " << params.filename() << endl;
-				  exit(0);
-			}
-		}
+		if(!params.get("redshift_planes_file",redshift_planes_file)) read_redshift_planes = false;
+		else read_redshift_planes = true;
 
 		if(!params.get("input_simulation_file",input_sim_file)){
 			sim_input_flag = false;
