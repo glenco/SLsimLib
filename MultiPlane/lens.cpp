@@ -469,12 +469,12 @@ void Lens::buildLensPlanes(
 			if(j == Nplanes-2) z2 = zsource;
 			else{
 				ind = coorDist_table.lower_bound(Dl[j] + 0.5*dDl[j+1]);
-				z1 = ind->second;
+				z2 = ind->second;
 			}
 
 			if(flag_input_lens && j+1 == (flag_input_lens % Nplanes)){
 				ind = coorDist_table.lower_bound(Dl[j] + 0.5*(Dl[j+2] - Dl[j]));
-				z1 = ind->second;
+				z2 = ind->second;
 			}
 
 			/// Find which field_halos are in redshift range
@@ -502,7 +502,7 @@ void Lens::buildLensPlanes(
 			/// Use other constructor to create halo data
 			std::cout << "  Building lensing plane " << j << " number of halos: " << j2-j1 << std::endl;
 
-			lensing_planes.push_back(new TreeLensPlane(&halo_pos[j1],field_halos.data(),j2-j1,sigma_back));
+			lensing_planes.push_back(new TreeLensPlane(&halo_pos[j1],&field_halos[j1],j2-j1,sigma_back));
 		}
 	}
 }
