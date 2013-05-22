@@ -13,6 +13,9 @@ mass_scale	   1.0e10		# mass scale of the simulation in solar masses
 deflection_off		0		# switches deflection off, default is 0
 field_off		0			# run without field halos, default is 0
 
+read_redshift_planes   0 		# 0 - no, 1 - yes , reads in the redshifts of the lensing planes from a file
+redshift_planes_file    Z.txt   # an asci file with redshifts of the planes, excluding the source redshift
+
 ####### Main halos type ##########
 flag_input_lens	   1    # 0: no main halo, 1 or else - a main halo
 DM_halo_type       1    # DM internal profile type: 0 or nolens, 1 or NFW, 2 or PseudoNFW, 3 or PowerLaw, 4 or NSIE, 5 or AnaLens, 6 or UniLens, 7 or MOKALens, 8 or DummyLens
@@ -20,11 +23,6 @@ galaxy_halo_type   1	# if set, a galaxy profile is chosen: 0 or none, 1 or NSIE
 
 
 ###### Field halos type ##########
-###### Halos from a mass function #######
-mass_func_type	   1		# mass function type, 0: Press-Schechter, 1: Sheth-Tormen, 2: PowerLaw
-fov		   1.0e4	        # field of view in square arcseconds
-field_buffer	   1.0		# in physical Mpc
-min_mass	   0.1			# min mass of the halos in the light cone in mass scale units		
 
 internal_profile         1    # DM internal profile type: 0 or nolens, 1 or NFW, 2 or PseudoNFW, 3 or PowerLaw, 4 or NSIE, 5 or AnaLens, 6 or UniLens, 7 or MOKALens, 8 or DummyLens
 internal_profile_galaxy  1	# if set, a galaxy profile is chosen: 0 or none, 1 or NSIE
@@ -33,7 +31,15 @@ galaxy_mass_fraction    0.1	# must be set if internal_profile_galaxy is set, mas
 internal_slope_pnfw		2 	# slope of the PseudoNFW profile, default is 2
 internal_slope_pl		-1  # slope of the PowerLaw profile, default is -1
 
-####### Halos from an input file ##############
+
+###### Field halos from a mass function #######
+mass_func_type	   1		# mass function type, 0: Press-Schechter, 1: Sheth-Tormen, 2: PowerLaw
+fov		   1.0e4	        # field of view in square arcseconds
+field_buffer	   1.0		# in physical Mpc
+min_mass	   0.1			# min mass of the halos in the light cone in mass scale units		
+
+
+####### Field halos from an input file ##############
 #input_simulation_file ../MillenniumData/DMhalos.txt  # if set, the light cone is read from an input file 
 
 ####### AnaNSIE lens halo model ############

@@ -83,6 +83,8 @@ public:
 
 	/// build the lensing planes
 	void buildLensPlanes(CosmoHndl cosmo);
+	/// updates the lensing plane for the main halos
+	void updateMainHaloLensPlane();
 	/// generate main halos from the parameter file
 	void createMainHalos(InputParams& params, CosmoHndl cosmo, SourceHndl source);
 	/// generate field halos from a mass function
@@ -101,6 +103,15 @@ public:
 			exit(1);
 		}
 	}
+
+	/// inserts a single main lens halo and adds it to the existing ones
+	void insertSingleMainHalo(CosmoHndl cosmo, SourceHndl source,LensHalo *halo);
+	/// inserts a single main lens halo and deletes all previously existing ones
+	void insertNewSingleMainHalo(CosmoHndl cosmo, SourceHndl source,LensHalo *halo);
+	/// inserts a sequence of main lens halos and adds them to the existing ones
+	void insertMainHalos(CosmoHndl cosmo, SourceHndl source,LensHaloHndl *halo, IndexType nhalos);
+	/// inserts a sequence of main lens halos and erases all previously existing ones
+	void insertNewMainHalos(CosmoHndl cosmo, SourceHndl source,LensHaloHndl *halo, IndexType nhalos);
 
 	/// compute the dflection, convergence, and shear for each point on the grid
 	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off);
@@ -136,6 +147,9 @@ public:
 	/// charge for the tree force solver (4*pi*G*mass_scale)
 	double charge;
 
+	std::string redshift_planes_file;
+	bool read_redshift_planes;
+
 	/// if >= 1, deflection in the rayshooting is switched off
 	bool flag_switch_deflection_off;
 	/// if >= 1, the background is switched off and only the main lens is present
@@ -165,6 +179,7 @@ private:
 
 	/// sets the distances and redshifts of the lensing planes
 	void setCoorDist(CosmoHndl cosmo);
+	void setCoorDistFromFile(CosmoHndl cosmo);
 
 	long *seed;
 
