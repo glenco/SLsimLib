@@ -408,7 +408,7 @@ void Lens::buildLensPlanes(
 		){
 	int j, Ntot;
 	double z1, z2;
-	unsigned long j1,j2;
+	int j1,j2;
 	std::map<double,double>::iterator ind;
 
 	std::cout << "Lens::buildLensPlanes zsource = " << zsource << std::endl;
@@ -443,12 +443,12 @@ void Lens::buildLensPlanes(
 			if(j == Nplanes-2) z2 = zsource;
 			else{
 				ind = coorDist_table.lower_bound(Dl[j] + 0.5*dDl[j+1]);
-				z1 = ind->second;
+				z2 = ind->second;
 			}
 
 			if(flag_input_lens && j+1 == (flag_input_lens % Nplanes)){
 				ind = coorDist_table.lower_bound(Dl[j] + 0.5*(Dl[j+2] - Dl[j]));
-				z1 = ind->second;
+				z2 = ind->second;
 			}
 
 			/// Find which field_halos are in redshift range
@@ -934,10 +934,10 @@ void Lens::readInputSimFile(CosmoHndl cosmo){
 				std::cout << "int_prof_type is null!!!!" << std::endl;
 				break;
 			case nfw_lens:
-				main_halos.push_back(new NFWLensHalo);
+				field_halos.push_back(new NFWLensHalo);
 				break;
 			case pnfw_lens:
-				main_halos.push_back(new PseudoNFWLensHalo);
+				field_halos.push_back(new PseudoNFWLensHalo);
 				break;
 				ERROR_MESSAGE();
 				std::cout << "PseudoNFW not supported." << std::endl;
@@ -947,7 +947,7 @@ void Lens::readInputSimFile(CosmoHndl cosmo){
 				std::cout << "PowerLaw not supported." << std::endl;
 				break;
 			case nsie_lens:
-				main_halos.push_back(new SimpleNSIELensHalo);
+				field_halos.push_back(new SimpleNSIELensHalo);
 				break;
 			case ana_lens:
 				ERROR_MESSAGE();

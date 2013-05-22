@@ -16,7 +16,7 @@ field_off		0			# run without field halos, default is 0
 ####### Main halos type ##########
 flag_input_lens	   1    # 0: no main halo, 1 or else - a main halo
 DM_halo_type       1    # DM internal profile type: 0 or nolens, 1 or NFW, 2 or PseudoNFW, 3 or PowerLaw, 4 or NSIE, 5 or AnaLens, 6 or UniLens, 7 or MOKALens, 8 or DummyLens
-galaxy_halo_type 1	# if set, a galaxy profile is chosen: 0 or none, 1 or NSIE
+galaxy_halo_type   1	# if set, a galaxy profile is chosen: 0 or none, 1 or NSIE
 
 
 ###### Field halos type ##########
@@ -26,8 +26,8 @@ fov		   1.0e4	        # field of view in square arcseconds
 field_buffer	   1.0		# in physical Mpc
 min_mass	   0.1			# min mass of the halos in the light cone in mass scale units		
 
-internal_profile       1    # DM internal profile type: 0 or nolens, 1 or NFW, 2 or PseudoNFW, 3 or PowerLaw, 4 or NSIE, 5 or AnaLens, 6 or UniLens, 7 or MOKALens, 8 or DummyLens
-internal_profile_galaxy 1	# if set, a galaxy profile is chosen: 0 or none, 1 or NSIE
+internal_profile         1    # DM internal profile type: 0 or nolens, 1 or NFW, 2 or PseudoNFW, 3 or PowerLaw, 4 or NSIE, 5 or AnaLens, 6 or UniLens, 7 or MOKALens, 8 or DummyLens
+internal_profile_galaxy  1	# if set, a galaxy profile is chosen: 0 or none, 1 or NSIE
 galaxy_mass_fraction    0.1	# must be set if internal_profile_galaxy is set, mass fraction of the galaxy 
 
 internal_slope_pnfw		2 	# slope of the PseudoNFW profile, default is 2
