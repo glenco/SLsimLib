@@ -482,6 +482,19 @@ void Lens::buildLensPlanes(
 	}
 }
 
+/*
+ * Updates the lensing plane where the main lens halos are and keeps everything else the same
+ */
+void Lens::updateMainHaloLensPlane(){
+	int j;
+	for(j=0;j<Nplanes-1;j++){
+		if(flag_input_lens && j == (flag_input_lens % Nplanes)){
+			delete lensing_planes[j];
+			lensing_planes[j] = new SingularLensPlane(main_halos.data(),main_halos.size());
+		}
+	}
+}
+
 /**
  * Set the coordinate distances of the planes by dividing the coordinate distance space into equal intervals
  * and then plugging the analytic input plane in between.
@@ -633,6 +646,10 @@ void Lens::setCoorDistFromFile(CosmoHndl cosmo){
 	assert(plane_redshifts.size() == Nplanes);
 }
 
+/*
+ * Creates main lens halo as set up in the parmeter file.
+ *
+ */
 void Lens::createMainHalos(
 		InputParams& params
 		,CosmoHndl cosmo     /// cosmology
@@ -682,6 +699,131 @@ void Lens::createMainHalos(
 
 	for(int i=0; i< NmainHalos; i++)
 		main_halos[i]->setInternalParams(cosmo,source);
+}
+
+/*
+ * Inserts a sequense of main lens halos and ads them to the existing ones.
+ * Then all lensing planes are updated accordingly.
+ */
+void Lens::insertMainHalos(
+		CosmoHndl cosmo     /// cosmology
+		,SourceHndl source
+		,LensHaloHndl *halo
+		,IndexType nhalos
+		){
+
+	if(main_halos.size() &&	main_halos[0]->getZlens() != halo[0]->getZlens()){
+		ERROR_MESSAGE();
+		cout << "Cannot insert a main halo that differs in redshift from the already existing main halos." << endl;
+		cout << "Old z = " << main_halos[0]->getZlens()<< " and new z = " << halo[0]->getZlens() << endl;
+		cout << "Please use the function insertNewMainHalo, which will delete previously existing main lenses" << endl;
+	}
+
+	int i;
+	for(i=0; i<nhalos; i++){
+		main_halos.push_back(halo[i]);
+	}
+
+	NmainHalos = main_halos.size();
+
+	for(int i=0; i< NmainHalos; i++)
+		main_halos[i]->setInternalParams(cosmo,source);
+
+	updateMainHaloLensPlane();
+}
+
+/*
+ * Inserts a sequense of main lens halos and deletes all previous ones.
+ * Then all lensing planes are updated accordingly.
+ */
+void Lens::insertNewMainHalos(
+		CosmoHndl cosmo     /// cosmology
+		,SourceHndl source
+		,LensHaloHndl *halo
+		,IndexType nhalos
+		){
+
+	main_halos.clear();
+
+	int i;
+	for(i=0; i<nhalos; i++){
+		main_halos.push_back(halo[i]);
+	}
+
+	NmainHalos = main_halos.size();
+
+	for(int i=0; i< NmainHalos; i++)
+		main_halos[i]->setInternalParams(cosmo,source);
+
+	flag_input_lens = 1;
+
+	setCoorDist(cosmo);
+
+	Utilities::delete_container(lensing_planes);
+
+	Dl.clear();
+	plane_redshifts.clear();
+	dDl.clear();
+
+	buildLensPlanes(cosmo);
+}
+
+/*
+ * Inserts a single main lens halo.
+ * Then all lensing planes are updated accordingly.
+ */
+void Lens::insertSingleMainHalo(
+		CosmoHndl cosmo     /// cosmology
+		,SourceHndl source
+		,LensHalo *halo
+		){
+
+	if(main_halos.size() &&	main_halos[0]->getZlens() != halo->getZlens()){
+		ERROR_MESSAGE();
+		cout << "Cannot insert a main halo that differs in redshift from the already existing main halos." << endl;
+		cout << "Old z = " << main_halos[0]->getZlens()<< " and new z = " << halo->getZlens() << endl;
+		cout << "Please use the function insertNewMainHalo, which will delete previously existing main lenses" << endl;
+	}
+
+	main_halos.push_back(halo);
+
+	NmainHalos = main_halos.size();
+
+	for(int i=0; i< NmainHalos; i++)
+		main_halos[i]->setInternalParams(cosmo,source);
+
+	updateMainHaloLensPlane();
+}
+/*
+ * Inserts a single main lens halo and deletes all previous ones.
+ * Then all lensing planes are updated accordingly.
+ */
+void Lens::insertNewSingleMainHalo(
+		CosmoHndl cosmo     /// cosmology
+		,SourceHndl source
+		,LensHalo *halo
+		){
+
+	main_halos.clear();
+
+	main_halos.push_back(halo);
+
+	NmainHalos = main_halos.size();
+
+	for(int i=0; i< NmainHalos; i++)
+		main_halos[i]->setInternalParams(cosmo,source);
+
+	flag_input_lens = 1;
+
+	setCoorDist(cosmo);
+
+	Utilities::delete_container(lensing_planes);
+
+	Dl.clear();
+	plane_redshifts.clear();
+	dDl.clear();
+
+	buildLensPlanes(cosmo);
 }
 
 void Lens::createFieldHalos(

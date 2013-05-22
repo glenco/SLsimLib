@@ -83,6 +83,8 @@ public:
 
 	/// build the lensing planes
 	void buildLensPlanes(CosmoHndl cosmo);
+	/// updates the lensing plane for the main halos
+	void updateMainHaloLensPlane();
 	/// generate main halos from the parameter file
 	void createMainHalos(InputParams& params, CosmoHndl cosmo, SourceHndl source);
 	/// generate field halos from a mass function
@@ -101,6 +103,15 @@ public:
 			exit(1);
 		}
 	}
+
+	/// inserts a single main lens halo and adds it to the existing ones
+	void insertSingleMainHalo(CosmoHndl cosmo, SourceHndl source,LensHalo *halo);
+	/// inserts a single main lens halo and deletes all previously existing ones
+	void insertNewSingleMainHalo(CosmoHndl cosmo, SourceHndl source,LensHalo *halo);
+	/// inserts a sequence of main lens halos and adds them to the existing ones
+	void insertMainHalos(CosmoHndl cosmo, SourceHndl source,LensHaloHndl *halo, IndexType nhalos);
+	/// inserts a sequence of main lens halos and erases all previously existing ones
+	void insertNewMainHalos(CosmoHndl cosmo, SourceHndl source,LensHaloHndl *halo, IndexType nhalos);
 
 	/// compute the dflection, convergence, and shear for each point on the grid
 	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off);
