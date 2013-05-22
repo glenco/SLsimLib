@@ -1306,7 +1306,7 @@ void MultiLens::readInputSimFile(CosmoHndl cosmo){
 		/// pos in radians
 		theta = new double[2];
 		/// pos in physical radians
-		theta[0] = ra*pi/180.;
+		theta[0] = -ra*pi/180.;
 		theta[1] = dec*pi/180.;
         
         if(rmax < (rtmp = theta[0]*theta[0]+theta[1]*theta[1])) rmax = rtmp;
