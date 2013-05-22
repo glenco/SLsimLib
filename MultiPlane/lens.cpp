@@ -15,22 +15,17 @@ using namespace std;
  * allocates space for the halo trees and the inout lens, if there is any
  */
 Lens::Lens(InputParams& params, CosmoHndl cosmo, SourceHndl source, long *my_seed) : seed(my_seed){
+
 	if( (cosmo->getOmega_matter() + cosmo->getOmega_lambda()) != 1.0 ){
 		printf("ERROR: MultiLens can only handle flat universes at present.  Must change cosmology.\n");
 		exit(1);
 	}
 
-	flag_galaxy_subhalo = false;
-
 	assignParams(params);
 
+	/// makes the oordinate distance table for the calculation of the redshifts of the different planes
 	table_set = false;
-
-	// flag to determine if field_halos are created randomly or read in from a external simulation.
-	if(input_sim_file.size() < 1) sim_input_flag = false;
-	else sim_input_flag = true;
-
-	std::cout << input_sim_file.c_str() << std::endl;
+	make_table(cosmo);
 
 	read_sim_file = false;
 
@@ -46,10 +41,11 @@ Lens::Lens(InputParams& params, CosmoHndl cosmo, SourceHndl source, long *my_see
 
 	seed = my_seed;
 
-	/// makes the oordinate distance table for the calculation of the redshifts of the different planes
-	if(table_set == false) {std::cout << "making tables" << std::endl; make_table(cosmo);std::cout << "done tables" << std::endl; }
-
-	setCoorDist(cosmo);
+	if(read_redshift_planes){
+		setCoorDistFromFile(cosmo);
+	}else{
+		setCoorDist(cosmo);
+	}
 
 	if(flag_switch_field_off == false){
 		if(sim_input_flag){
@@ -147,8 +143,12 @@ void Lens::assignParams(InputParams& params){
 		if(!params.get("alpha",mass_func_PL_slope))                mass_func_PL_slope = 1./6.;
 		if(!params.get("internal_slope_pl",halo_slope) && int_prof_type == pl_lens)     halo_slope = -1.0;
 		if(!params.get("internal_slope_pnfw",halo_slope) && int_prof_type == pnfw_lens) halo_slope = 2.0;
-		if(!params.get("input_simulation_file",input_sim_file)){
 
+		if(!params.get("redshift_planes_file",redshift_planes_file)) read_redshift_planes = false;
+		else read_redshift_planes = true;
+
+		if(!params.get("input_simulation_file",input_sim_file)){
+			sim_input_flag = false;
 			// No simulation input file provided
 			if(!params.get("mass_func_type",mass_func_type)){
 				  ERROR_MESSAGE();
@@ -171,6 +171,7 @@ void Lens::assignParams(InputParams& params){
 			}
 		}else{
 			min_mass = 0.0;
+			sim_input_flag = true;
 		}
 	}
 
@@ -579,6 +580,57 @@ void Lens::setCoorDist(CosmoHndl cosmo){
 	cout << plane_redshifts[i] << " " << std::endl;
 
 	assert(Dl.size() == Nplanes);
+}
+
+
+void Lens::setCoorDistFromFile(CosmoHndl cosmo){
+
+	double value;
+
+	std::ifstream file_in(redshift_planes_file.c_str());
+	if(!file_in){
+		std::cout << "Can't open file " << redshift_planes_file << std::endl;
+		exit(1);
+	}
+
+	while(file_in >> value){
+		if(!value){
+			ERROR_MESSAGE();
+			cout << "can't read double from " << redshift_planes_file << endl;
+			exit(1);
+		}else{
+			plane_redshifts.push_back(value);
+		}
+	}
+
+	file_in.close();
+
+	plane_redshifts.push_back(zsource);
+
+	cout << "Dl: ";
+	int j;
+	for(j = 0; j < Nplanes; j++){
+		Dl.push_back(cosmo->coorDist(0,plane_redshifts[j]));
+		cout << Dl[j] << " ";
+	}
+	cout << endl;
+
+	cout << "dDl: ";
+	dDl.push_back(Dl[0]);  // distance between jth plane and the previous plane
+	cout << dDl[0] << " ";
+	for(j = 1; j < Nplanes; j++){
+		dDl.push_back(Dl[j] - Dl[j-1]); // distance between jth plane and the previous plane
+		cout << dDl[j] << " ";
+	}
+	cout << endl;
+
+	cout << "z: ";
+	for(j=0; j<Nplanes; j++){
+		cout << plane_redshifts[j] << " ";
+	}
+	cout << endl;
+
+	assert(plane_redshifts.size() == Nplanes);
 }
 
 void Lens::createMainHalos(

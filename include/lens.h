@@ -136,6 +136,9 @@ public:
 	/// charge for the tree force solver (4*pi*G*mass_scale)
 	double charge;
 
+	std::string redshift_planes_file;
+	bool read_redshift_planes;
+
 	/// if >= 1, deflection in the rayshooting is switched off
 	bool flag_switch_deflection_off;
 	/// if >= 1, the background is switched off and only the main lens is present
@@ -165,6 +168,7 @@ private:
 
 	/// sets the distances and redshifts of the lensing planes
 	void setCoorDist(CosmoHndl cosmo);
+	void setCoorDistFromFile(CosmoHndl cosmo);
 
 	long *seed;
 
