@@ -73,6 +73,8 @@ void MultiSourceAnaGalaxy::readDataFile(){
 	std::ifstream file_in(input_gal_file.c_str());
 	if(!file_in){
 		std::cout << "Can't open file " << input_gal_file << std::endl;
+    ERROR_MESSAGE();
+    throw std::runtime_error(" Cannot open file.");
 		exit(1);
 	}
 
