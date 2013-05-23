@@ -137,7 +137,7 @@ void *compute_rays_parallel(void *_p){
   
   assert(p->NPlanes > 0);
   // If a lower redshift source is being used
-    
+
   for(i = start; i< end; i++){
     
 	  if(p->i_points[i].in_image == MAYBE)
@@ -169,7 +169,7 @@ void *compute_rays_parallel(void *_p){
       xx[1] = p->i_points[i].image->x[1]/(1+lens->plane_redshifts[j]);
       
       assert(xx[0] == xx[0] && xx[1] == xx[1]);
-      
+
       lens->lensing_planes[j]->force(alpha,&kappa,gamma,xx,kappa_off);
 
       cc = lens->charge*lens->dDl[j+1];
