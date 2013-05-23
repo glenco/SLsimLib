@@ -22,7 +22,6 @@ Lens::Lens(InputParams& params, CosmoHndl cosmo, SourceHndl source, long *my_see
 	}
 
 	assignParams(params);
-
 	/// makes the oordinate distance table for the calculation of the redshifts of the different planes
 	table_set = false;
 	make_table(cosmo);
@@ -41,7 +40,11 @@ Lens::Lens(InputParams& params, CosmoHndl cosmo, SourceHndl source, long *my_see
 
 	seed = my_seed;
 
-	setCoorDist(cosmo);
+	if(read_redshift_planes){
+		setCoorDistFromFile(cosmo);
+	}else{
+		setCoorDist(cosmo);
+	}
 
 	if(flag_switch_field_off == false){
 		if(sim_input_flag){
@@ -145,6 +148,9 @@ void Lens::assignParams(InputParams& params){
 		}
 	}
 
+	if(!params.get("redshift_planes_file",redshift_planes_file)) read_redshift_planes = false;
+	else read_redshift_planes = true;
+
 	if(!params.get("field_off",flag_switch_field_off)) flag_switch_field_off = false;
 
 	if(!flag_switch_field_off){
@@ -173,9 +179,6 @@ void Lens::assignParams(InputParams& params){
 		if(!params.get("alpha",mass_func_PL_slope))                mass_func_PL_slope = 1./6.;
 		if(!params.get("internal_slope_pl",halo_slope) && int_prof_type == pl_lens)     halo_slope = -1.0;
 		if(!params.get("internal_slope_pnfw",halo_slope) && int_prof_type == pnfw_lens) halo_slope = 2.0;
-
-		if(!params.get("redshift_planes_file",redshift_planes_file)) read_redshift_planes = false;
-		else read_redshift_planes = true;
 
 		if(!params.get("input_simulation_file",input_sim_file)){
 			sim_input_flag = false;
