@@ -269,8 +269,6 @@ void Lens::assignParams(InputParams& params){
 	  // to compensate for the last plane, which is the source plane
 	  Nplanes++;
 
-	  // to compensate for additional lens planes
-
 	  // convert to square degrees
 	  fieldofview /= 3600. * 3600.;
 
@@ -705,7 +703,7 @@ void Lens::createMainHalos(
 		break;
 	case moka_lens:
 		main_halos.push_back(new MOKALensHalo(params));
-		//fieldofview = pow(1.5*mokalens->map->boxlrad*180/pi,2.0);
+		fieldofview = pow(1.5*main_halos.at<MOKALensHalo>(0)->map->boxlrad*180/pi,2.0);
 		break;
 	case dummy_lens:
 		main_halos.push_back(new DummyLensHalo(params));
