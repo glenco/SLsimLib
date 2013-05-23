@@ -15,6 +15,7 @@ void BaseNSIELensHalo::force_halo(
 		,KappaType *gamma
 		,double *xcm
 		,bool no_kappa
+		,bool subtract_point /// if true contribution from a point mass is subtracted
 		){
      double x_rescale[2];
      long j;

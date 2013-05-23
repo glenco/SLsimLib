@@ -19,9 +19,9 @@ public:
 	LensHalo(InputParams& params);
 	~LensHalo();
 
-	virtual float get_Rmax(){return Rmax;};
-	virtual float get_mass(){return mass;};
-	virtual float get_rscale(){return rscale;};
+	float get_Rmax(){return Rmax;};
+	float get_mass(){return mass;};
+	float get_rscale(){return rscale;};
 
 	virtual void initFromFile(float,double,long*,float,float){};
 	virtual void initFromMassFunc(float my_mass, double mass_scale, float my_Rmax, float my_rscale, double my_slope, long *seed);
@@ -34,7 +34,7 @@ public:
 
 	virtual void setInternalParams(CosmoHndl cosmo, SourceHndl source){};
 
-	virtual void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa);
+	virtual void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa,bool subtract_point=false);
 
 	double getZlens() const {return zlens;};
 	void setZlens(double my_zlens){zlens=my_zlens;};
@@ -227,7 +227,7 @@ public:
 	SimpleNSIELensHalo(InputParams& params);
 	~SimpleNSIELensHalo();
 
-	void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa);
+	void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa,bool subtract_point=false);
 
 	float get_sigma(){return sigma;};
 	float get_Rsize(){return Rsize;};
@@ -240,8 +240,6 @@ public:
 	void set_fratio(float my_fratio){fratio=my_fratio;};
 	void set_pa(float my_pa){pa=my_pa;};
 	void set_rcore(float my_rcore){rcore=my_rcore;};
-
-	float get_Rmax(){return Rmax*std::max(1.0,1.0/fratio);};
 
 	void initFromFile(float,double,long*,float,float);
 	void initFromMassFunc(float my_mass, double mass_scale, float my_Rmax, float my_rscale, double my_slope, long *seed);
@@ -273,7 +271,7 @@ public:
 	DummyLensHalo(InputParams& params): LensHalo(){};
 	~DummyLensHalo(){};
 
-	void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa){
+	void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa,bool subtract_point=false){
 		alpha[0] = alpha[1] = 0.0;
 		*kappa = 0.0;
 		gamma[0] = gamma[1] = gamma[2] = 0.0;

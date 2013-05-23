@@ -206,7 +206,6 @@ SimpleNSIELensHalo::SimpleNSIELensHalo(InputParams& params){
 
 void SimpleNSIELensHalo::assignParams(InputParams& params){
 	if(!params.get("mass_nsie",mass)) error_message1("mass_nsie",params.filename());
-	if(!params.get("Rmax_nsie",Rmax)) error_message1("Rmax_nsie",params.filename());
 	if(!params.get("zlens_nsie",zlens)) error_message1("zlens_nsie",params.filename());
 
 	if(!params.get("sigma",sigma)) error_message1("sigma",params.filename());
@@ -250,6 +249,7 @@ void LensHalo::force_halo(
 		,KappaType *gamma
 		,double *xcm
 		,bool no_kappa
+		,bool subtract_point /// if true contribution from a point mass is subtracted
 		){
 
 	double rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
@@ -261,7 +261,7 @@ void LensHalo::force_halo(
 		double x = sqrt(rcm2)/rscale;
 		double xmax = Rmax/rscale;
 
-		double tmp = (alpha_h(x,xmax) + 1.0)*prefac;
+		double tmp = (alpha_h(x,xmax) + 1.0*subtract_point)*prefac;
 		alpha[0] += tmp*xcm[0];
 		alpha[1] += tmp*xcm[1];
 
@@ -269,7 +269,7 @@ void LensHalo::force_halo(
 		if(!no_kappa){
 			*kappa += kappa_h(x,xmax)*prefac;
 
-			tmp = (gamma_h(x,xmax) + 2.0)*prefac/rcm2;
+			tmp = (gamma_h(x,xmax) + 2.0*subtract_point)*prefac/rcm2;
 
 			gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 			gamma[1] += xcm[0]*xcm[1]*tmp;
@@ -285,33 +285,25 @@ void SimpleNSIELensHalo::force_halo(
 		,KappaType *gamma
 		,double *xcm
 		,bool no_kappa
+		,bool subtract_point /// if true contribution from a point mass is subtracted
 ){
 
 	double rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
 	if(rcm2 < 1e-20) rcm2 = 1e-20;
 
-	double ellipR = ellipticRadiusNSIE(xcm,fratio,pa);
-	if(ellipR > Rsize){
-		double rout = Rsize*MAX(1.0,1.0/fratio);
-		// This is the case when the ray is within the NSIE's circular region of influence but outside its elliptical truncation
-		// if the ray misses the halo treat it as a point mass
-		double prefac = -1.0*mass/rcm2/pi;
+	if(rcm2 < Rmax*Rmax){
+		double ellipR = ellipticRadiusNSIE(xcm,fratio,pa);
+		if(ellipR > Rsize){
+			// This is the case when the ray is within the NSIE's circular region of influence but outside its elliptical truncation
 
-		if(rcm2 > rout*rout){
-			alpha[0] += prefac*xcm[0];
-			alpha[1] += prefac*xcm[1];
-		}else{
 			double alpha_out[2],alpha_in[2],rin,x_in[2];
-			double prefac = -1.0*mass/rout/pi;
+			double prefac = -1.0*mass/Rmax/pi;
 			double r = sqrt(rcm2);
 
 			alpha_out[0] = prefac*xcm[0]/r;
 			alpha_out[1] = prefac*xcm[1]/r;
 
-			Utilities::rotation(x_in,xcm,pa);
-			rin = r*Rsize
-					/sqrt( x_in[0]*x_in[0] + pow(fratio*x_in[1],2) );
-			//rin = Rsize;
+			rin = r*Rsize/ellipR;
 
 			x_in[0] = rin*xcm[0]/r;
 			x_in[1] = rin*xcm[1]/r;
@@ -322,33 +314,41 @@ void SimpleNSIELensHalo::force_halo(
 			alpha_in[0] *= -units;
 			alpha_in[1] *= -units;
 
-			alpha[0] += (r - rin)*(alpha_out[0] - alpha_in[0])/(rout - rin) + alpha_in[0];
-			alpha[1] += (r - rin)*(alpha_out[1] - alpha_in[1])/(rout - rin) + alpha_in[1];
+			alpha[0] += (r - rin)*(alpha_out[0] - alpha_in[0])/(Rmax - rin) + alpha_in[0];
+			alpha[1] += (r - rin)*(alpha_out[1] - alpha_in[1])/(Rmax - rin) + alpha_in[1];
+
+
+
+		}else{
+			double xt[2]={0,0},tmp[2]={0,0};
+			float units = pow(sigma/lightspeed,2)/Grav/sqrt(fratio); // mass/distance(physical)
+			xt[0]=xcm[0];
+			xt[1]=xcm[1];
+			alphaNSIE(tmp,xt,fratio,rcore,pa);
+			alpha[0] -= units*tmp[0];
+			alpha[1] -= units*tmp[1];
+			if(!no_kappa){
+				KappaType tmp[2]={0,0};
+				*kappa += units*kappaNSIE(xt,fratio,rcore,pa);
+				gammaNSIE(tmp,xt,fratio,rcore,pa);
+				gamma[0] += units*tmp[0];
+				gamma[1] += units*tmp[1];
+			}
 		}
+
+		double pref = mass/rcm2/pi;
+		double fac = (1.0*subtract_point)*pref;
+		alpha[0] += fac*xcm[0];
+		alpha[1] += fac*xcm[1];
 
 		// can turn off kappa and gamma calculations to save times
 		if(!no_kappa){
-			prefac *= 2.0/rcm2;
+			fac = (2.0*subtract_point)*pref/rcm2;
 
-			gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*prefac;
-			gamma[1] += xcm[0]*xcm[1]*prefac;
+			gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*fac;
+			gamma[1] += xcm[0]*xcm[1]*fac;
 		}
 
-	}else{
-		double xt[2]={0,0},tmp[2]={0,0};
-		float units = pow(sigma/lightspeed,2)/Grav/sqrt(fratio); // mass/distance(physical)
-		xt[0]=xcm[0];
-		xt[1]=xcm[1];
-		alphaNSIE(tmp,xt,fratio,rcore,pa);
-		alpha[0] -= units*tmp[0];
-		alpha[1] -= units*tmp[1];
-		if(!no_kappa){
-			KappaType tmp[2]={0,0};
-			*kappa += units*kappaNSIE(xt,fratio,rcore,pa);
-			gammaNSIE(tmp,xt,fratio,rcore,pa);
-			gamma[0] += units*tmp[0];
-			gamma[1] += units*tmp[1];
-		}
 	}
 	return;
 }

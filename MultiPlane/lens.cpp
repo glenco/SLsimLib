@@ -1087,7 +1087,6 @@ void Lens::readInputSimFile(CosmoHndl cosmo){
 	}
 	std::cout << "skipped "<< i << " comment lines in file " << input_sim_file << std::endl;
 
-	std::vector<double> halo_zs_vec;
 	std::vector<double *> halo_pos_vec;
 
 	// read in data
@@ -1143,10 +1142,9 @@ void Lens::readInputSimFile(CosmoHndl cosmo){
 		theta = new double[2];
 		/// pos in physical radians
 		double Ds = cosmo->angDist(0,z);
-		theta[0] = ra*pi/180.*Ds;
+		theta[0] = -ra*pi/180.*Ds;
 		theta[1] = dec*pi/180.*Ds;
 
-        if(rmax < (rtmp = theta[0]*theta[0]+theta[1]*theta[1])) rmax = rtmp;
 
 		if(np > 0.0 && vdisp > 0.0 && z <= zsource){
 
@@ -1208,7 +1206,6 @@ void Lens::readInputSimFile(CosmoHndl cosmo){
 			if(field_halos[j]->get_Rmax() > R_max) R_max = field_halos[j]->get_Rmax();
 			if(vdisp > V_max) V_max = vdisp;
 
-			halo_zs_vec.push_back(z);
 			halo_pos_vec.push_back(theta);
 
 			if(mass > mass_max) {
@@ -1261,11 +1258,11 @@ void Lens::readInputSimFile(CosmoHndl cosmo){
 		halo_pos[i] = halo_pos_vec[i];
 	}
 
-	std::cout << "sorting in MultiLens::readInputSimFile()" << std::endl;
+	std::cout << "sorting in Lens::readInputSimFile()" << std::endl;
 	// sort the field_halos by readshift
 	Lens::quicksort(field_halos.data(),halo_pos,field_halos.size());
 
-	std::cout << "leaving MultiLens::readInputSimFile()" << std::endl;
+	std::cout << "leaving Lens::readInputSimFile()" << std::endl;
 
 	read_sim_file = true;
 }

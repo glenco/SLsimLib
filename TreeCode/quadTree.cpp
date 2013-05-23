@@ -535,7 +535,7 @@ void QuadTree::force2D(double *ray,double *alpha,KappaType *kappa,KappaType *gam
 					  xcm[1] = tree->xp[index][1] - ray[1];
 
 					  if(haloON){
-						  halos[index]->force_halo(alpha,kappa,gamma,xcm,no_kappa);
+						  halos[index]->force_halo(alpha,kappa,gamma,xcm,no_kappa,true);
 					  }else{  // case of no halos just particles and no class derived from QuadTree
 
 						  rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
@@ -708,7 +708,7 @@ void QuadTree::walkTree_recur(QBranchNB *branch,double *ray,double *alpha,KappaT
 
 					/////////////////////////////////////////
 					if(haloON){
-						halos[index]->force_halo(alpha,kappa,gamma,xcm,no_kappa);
+						halos[index]->force_halo(alpha,kappa,gamma,xcm,no_kappa,true);
 					}else{  // case of no halos just particles and no class derived from QuadTree
 
 						rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
