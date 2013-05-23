@@ -175,7 +175,7 @@ void QuadTree::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
 		// store the particles that are too large to be in a child at the end of the list of particles in cbranch
 		for(i=0;i<cbranch->nparticles;++i){
 			if(haloON){
-				x[i] = halos[i]->get_Rmax();
+				x[i] = halos[particles[i]]->get_Rmax();
 			}else{
 				x[i] = sizes[particles[i]];
 			}
@@ -354,7 +354,7 @@ void QuadTree::CalcMoments(){
 		// calculate mass
 		for(i=0,cbranch->mass=0;i<cbranch->nparticles;++i)
 			if(haloON ){
-				cbranch->mass +=  halos[i]->get_mass();
+				cbranch->mass +=  halos[cbranch->particles[i]]->get_mass();
 			}else{
 				cbranch->mass += masses[cbranch->particles[i]*MultiMass];
 			}
@@ -364,7 +364,7 @@ void QuadTree::CalcMoments(){
 		cbranch->center[0]=cbranch->center[1]=0;
 		for(i=0;i<cbranch->nparticles;++i){
 			if(haloON ){
-				tmp = halos[i]->get_mass();
+				tmp = halos[cbranch->particles[i]]->get_mass();
 			}else{
 				tmp = masses[cbranch->particles[i]*MultiMass];
 			}
@@ -381,7 +381,7 @@ void QuadTree::CalcMoments(){
 			xcm[1]=tree->xp[cbranch->particles[i]][1]-cbranch->center[1];
 			xcut = pow(xcm[0],2) + pow(xcm[1],2);
 			if(haloON ){
-				tmp = halos[i]->get_mass();
+				tmp = halos[cbranch->particles[i]]->get_mass();
 			}else{
 				tmp = masses[cbranch->particles[i]*MultiMass];
 			}

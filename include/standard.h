@@ -9,6 +9,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <cfloat>
+#include <stdexcept>
 #ifdef _OPENMP
 #include <omp.h>
 #endif

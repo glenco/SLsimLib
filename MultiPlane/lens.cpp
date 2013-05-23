@@ -149,9 +149,9 @@ void Lens::assignParams(InputParams& params){
 
 	if(!flag_switch_field_off){
 		if(!params.get("fov",fieldofview)){
-			  ERROR_MESSAGE();
-			  cout << "parameter fov needs to be set in the parameter file " << params.filename() << endl;
-			  exit(0);
+		  ERROR_MESSAGE();
+		  cout << "parameter fov needs to be set in the parameter file " << params.filename() << endl;
+		  exit(0);
 		}
 		if(!params.get("internal_profile",int_prof_type)){
 			ERROR_MESSAGE();
@@ -443,6 +443,7 @@ void Lens::buildLensPlanes(
 
 	for(j=0,Ntot=0;j<Nplanes-1;j++){
 		if(flag_input_lens && j == (flag_input_lens % Nplanes)){
+			std::cout << "Building main halos lensing plane" << std::endl;
 			lensing_planes.push_back(new SingularLensPlane(main_halos.data(),main_halos.size()));
 		}
 		else if(flag_switch_field_off == false){
@@ -536,6 +537,7 @@ void Lens::setCoorDist(CosmoHndl cosmo){
 	if(flag_input_lens && Nplanes == 2){
 		Dl.push_back(Dlens);
 		Dl.push_back(Ds);
+		flag_input_lens = Nplanes;
 	}else{
 
 		std:: vector<double> lD;
@@ -941,12 +943,13 @@ void Lens::createFieldHalos(
 
 			assert(rr == rr);
 
-			pos = new double[2];
+			pos = new double[3];
 
 			theta = 2*pi*ran2(seed);
 
 			pos[0] = rr*cos(theta)*Ds;
 			pos[1] = rr*sin(theta)*Ds;
+			pos[2] = 0.0;
 
 			switch(int_prof_type){
 			case null_lens:
@@ -1046,7 +1049,7 @@ void Lens::createFieldHalos(
 		halo_pos[i] = halo_pos_vec[i];
 	}
 
-	std::cout << "leaving MultiLens::createHaloData_buffered()" << std::endl;
+	std::cout << "leaving Lens::createFieldHalos()" << std::endl;
 }
 
 /**
