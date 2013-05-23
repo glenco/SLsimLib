@@ -7,6 +7,42 @@
  *      Author: bmetcalf
  */
 
+/** \mainpage
+   <pre>
+ GLAMER is a very flexible computer code for doing simulations of gravitational lensing 
+ and modeling of gravitational lenses.
+ 
+ This page describes  the steps to doing a simple simulation and where in the
+ documentation to find further information.
+ 
+   <em> GETTING STARTED: </em>
+ 
+ GLAMER is in the form of a C++ library that can be linked into your code.  
+ For instructions on installing and linking the library see 
+ http://metcalf1.bo.astro.it/wiki/projects/glamer/GLAMER.html
+ 
+   <em> READ IN PARAMETERS: </em>
+ 
+ Within your main code the first thing to do is to read in the input parameter file.
+ Your parameter file should contains all the parameters required to run the simulation.
+ A sample parameter file is provided in the repository.   A particular simulation will
+ not require all the parameters to be specified.  The parameter file should be read by 
+ constructing an InputParams object.  See the ImputParams class for options.  If a parameter 
+ is required, but not present in the parameter file the program should throw an exception 
+ and notify you of which parameter needs to be included.
+ 
+ The list of currently used input parameters are:
+ 
+   <em> CONSTRUCT MODEL: </em>
+ 
+   <em> CONSTRUCT GRID: </em>
+ 
+   <em> SHOOT RAYS: </em>
+ 
+   <em> OUTPUT: </em>
+ 
+   </pre>
+ */
 
 /** \defgroup HighLevel High Level Routines
  *

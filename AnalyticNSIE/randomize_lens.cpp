@@ -28,6 +28,8 @@ void AnaNSIELensHalo::RandomizeSigma(long *seed,bool tables){
 
 	if(!file){
 		std::cout << "Can't open file " << filename << std::endl;
+    ERROR_MESSAGE();
+    throw std::runtime_error(" Cannot open file.");
 		exit(1);
 	}
 
@@ -55,6 +57,8 @@ void AnaNSIELensHalo::RandomizeHost(long *seed,bool tables){
 
 	if(!file){
 		std::cout << "Can't open file " << filename << std::endl;
+    ERROR_MESSAGE();
+    throw std::runtime_error(" Cannot open file.");
 		exit(1);
 	}
 

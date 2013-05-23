@@ -62,7 +62,7 @@
 
 class Lens{
 public:
-	//Lens(InputParams& params,long *seed);
+	Lens(InputParams& params,CosmoHndl cosmo, long *seed);
 	Lens(InputParams& params, CosmoHndl cosmo, SourceHndl source, long *my_seed);
 	~Lens();
 
@@ -83,6 +83,8 @@ public:
 
 	/// build the lensing planes
 	void buildLensPlanes(CosmoHndl cosmo);
+	/// updates the lensing plane for the main halos
+	void updateMainHaloLensPlane();
 	/// generate main halos from the parameter file
 	void createMainHalos(InputParams& params, CosmoHndl cosmo, SourceHndl source);
 	/// generate field halos from a mass function
@@ -92,6 +94,24 @@ public:
 
 	/// print the main parameters of the lens
 	void printMultiLens();
+	double getZlens(){
+		if(flag_input_lens)
+			return main_halos[0]->getZlens();
+		else{
+			ERROR_MESSAGE();
+			std::cout << "error, no main lens present" << std::endl;
+			exit(1);
+		}
+	}
+
+	/// inserts a single main lens halo and adds it to the existing ones
+	void insertSingleMainHalo(CosmoHndl cosmo, SourceHndl source,LensHalo *halo);
+	/// inserts a single main lens halo and deletes all previously existing ones
+	void insertNewSingleMainHalo(CosmoHndl cosmo, SourceHndl source,LensHalo *halo);
+	/// inserts a sequence of main lens halos and adds them to the existing ones
+	void insertMainHalos(CosmoHndl cosmo, SourceHndl source,LensHaloHndl *halo, IndexType nhalos);
+	/// inserts a sequence of main lens halos and erases all previously existing ones
+	void insertNewMainHalos(CosmoHndl cosmo, SourceHndl source,LensHaloHndl *halo, IndexType nhalos);
 
 	/// compute the dflection, convergence, and shear for each point on the grid
 	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off);
@@ -127,10 +147,23 @@ public:
 	/// charge for the tree force solver (4*pi*G*mass_scale)
 	double charge;
 
+	std::string redshift_planes_file;
+	bool read_redshift_planes;
+
 	/// if >= 1, deflection in the rayshooting is switched off
 	bool flag_switch_deflection_off;
 	/// if >= 1, the background is switched off and only the main lens is present
 	bool flag_switch_field_off;
+
+	/* MAIN HALOS */
+	/// main lens type: 0 or nolens, 1 or NFW, 2 or PseudoNFW, 3 or PowerLaw, 4 or NSIE, 5 or AnaLens, 6 or UniLens, 7 or MOKALens, 8 or DummyLens
+	LensHaloType main_halo_type;
+	/// galaxy lens type: 0 or none, 1 or NSIE
+	GalaxyLensHaloType galaxy_halo_type;
+	/// main lensing halo in the simulation
+	Utilities::MixedVector<LensHaloHndl> main_halos;
+	/// number of main halo profiles (or main halos)
+	IndexType NmainHalos;
 
 private:
 	/// number of lensing planes + 1 in the simulation, the last plant is the source plane
@@ -146,6 +179,7 @@ private:
 
 	/// sets the distances and redshifts of the lensing planes
 	void setCoorDist(CosmoHndl cosmo);
+	void setCoorDistFromFile(CosmoHndl cosmo);
 
 	long *seed;
 
@@ -180,15 +214,7 @@ private:
 	//bool gal_input_flag;
 	bool read_sim_file;
 
-	/* MAIN HALOS */
-	/// main lens type: 0 or nolens, 1 or NFW, 2 or PseudoNFW, 3 or PowerLaw, 4 or NSIE, 5 or AnaLens, 6 or UniLens, 7 or MOKALens, 8 or DummyLens
-	LensHaloType main_halo_type;
-	/// galaxy lens type: 0 or none, 1 or NSIE
-	GalaxyLensHaloType galaxy_halo_type;
-	/// main lensing halo in the simulation
-	Utilities::MixedVector<LensHaloHndl> main_halos;
-	/// number of main halo profiles (or main halos)
-	IndexType NmainHalos;
+
 
 	/* FIELD HALOS */
 	/// vector of all lens field_halos in the light cone

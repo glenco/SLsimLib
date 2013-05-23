@@ -126,8 +126,9 @@ void InputParams::PrintToFile(std::string filename){
 	}
 }
 
-/// Print all parameters to a file in the format needed for an input parameter file.
-/// Only the parameters that were accessed at least once are printed.
+/** \brief Print used parameters to a file in the format needed for an input parameter file.
+* Only the parameters that were accessed at least once are printed.
+ */
 void InputParams::PrintUsedToFile(std::string filename){
 
 	paramfile_name = filename;

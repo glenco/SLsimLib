@@ -71,7 +71,7 @@ private:
 };
 
 
-typedef enum {Euclid_VIS} Telescope;
+typedef enum {Euclid_VIS,Euclid_Y,Euclid_J,Euclid_H} Telescope;
 
 /** \ingroup Image
  * \brief It creates a realistic image from the output of a ray-tracing simulation.
@@ -108,6 +108,8 @@ private:
 	float seeing;  // full-width at half maximum of the gaussian smoothing
 	std::valarray<float> map_psf;  // array of the point spread function
 	float oversample; // psf oversampling factor
+	double pix_size; // pixel size (in rad)
+	bool telescope; // was the observation created from a default telescope?
 
 	PixelMap AddNoise(PixelMap &pmap);
 	PixelMap PhotonToCounts(PixelMap &pmap);

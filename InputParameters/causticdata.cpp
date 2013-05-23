@@ -47,7 +47,8 @@ void CausticData::readfile(std::string filename){
   
   if(!file_in){
     std::cout << "Can't open file " << filename << std::endl;
-    exit(1);
+    ERROR_MESSAGE();
+    throw std::runtime_error(" Cannot open file.");
   }
   
   std::cout << "Reading caustic information from " << filename << std::endl;

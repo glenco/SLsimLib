@@ -27,6 +27,8 @@ void MultiSource::readGalaxyFile(std::string filename, Band band, double mag_lim
 	std::ifstream file_in(filename.c_str());
 	if(!file_in){
 		std::cerr << "Can't open file " << filename << std::endl;
+    ERROR_MESSAGE();
+    throw std::runtime_error(" Cannot open file.");
 		exit(1);
 	}
 	

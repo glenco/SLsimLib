@@ -17,6 +17,8 @@
 #endif
 
 #include <fstream>
+#include <limits>
+
 
 /*\brief Creates an observation setup that mimics a known instrument
  *
@@ -32,8 +34,43 @@ Observation::Observation(Telescope tel_name)
 		back_mag = 22.8;
 		ron = 5.;
 		seeing = 0.18;
+		pix_size = .1/60./60./180.*pi;
+	}
+	if (tel_name == Euclid_Y)
+	{
+		diameter = 119.;
+		transmission = 0.0961;
+		exp_time = 264.;
+		exp_num = 3;
+		back_mag = 22.57;
+		ron = 5.;
+		seeing = 0.3;
+		pix_size = .3/60./60./180.*pi;
+	}
+	if (tel_name == Euclid_J)
+	{
+		diameter = 119.;
+		transmission = 0.0814;
+		exp_time = 270.;
+		exp_num = 3;
+		back_mag = 22.53;
+		ron = 5.;
+		seeing = 0.3;
+		pix_size = .3/60./60./180.*pi;
+	}
+	if (tel_name == Euclid_H)
+	{
+		diameter = 119.;
+		transmission = 0.1692;
+		exp_time = 162.;
+		exp_num = 3;
+		back_mag = 22.59;
+		ron = 5.;
+		seeing = 0.3;
+		pix_size = .3/60./60./180.*pi;
 	}
 	mag_zeropoint = 2.5*log10(diameter*diameter*transmission*pi/4./hplanck) - 48.6;
+	telescope = true;
 }
 
 /* Creates a custom observation setup with parameters decided by the user.
@@ -50,6 +87,7 @@ Observation::Observation(float diameter, float transmission, float exp_time, int
 		exp_time(exp_time), exp_num(exp_num), back_mag(back_mag), diameter(diameter), transmission(transmission), ron(ron), seeing(seeing)
 		{
 			mag_zeropoint = 2.5*log10(diameter*diameter*transmission*pi/4./hplanck) - 48.6;
+			telescope = false;
 		}
 
 /* Creates a custom observation setup with parameters decided by the user. Allows for the use of a psf fits image.
@@ -81,6 +119,7 @@ Observation::Observation(float diameter, float transmission, float exp_time, int
 		std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
 		exit(1);
 #endif
+		telescope = false;
 		}
 
 /* \brief Converts the input map to a realistic image
@@ -91,6 +130,11 @@ Observation::Observation(float diameter, float transmission, float exp_time, int
  */
 PixelMap Observation::Convert (PixelMap &map, bool psf, bool noise)
 {
+	if (telescope == true && fabs(map.getResolution()-pix_size) > std::numeric_limits<double>::epsilon())
+	{
+		std::cout << "The resolution of the input map is different from the one of the simulated instrument!" << std::endl;
+		exit(1);
+	}
 	PixelMap outmap = PhotonToCounts(map);
 	if (psf == true)  outmap = ApplyPSF(outmap);
 	if (noise == true) outmap = AddNoise(outmap);
