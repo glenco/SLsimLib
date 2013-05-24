@@ -35,7 +35,7 @@ internal_slope_pl		-1  # slope of the PowerLaw profile, default is -1
 mass_func_type	   1		# mass function type, 0: Press-Schechter, 1: Sheth-Tormen, 2: PowerLaw
 fov		   1.0e4	        # field of view in square arcseconds
 field_buffer	   1.0		# in physical Mpc
-min_mass	   0.1			# min mass of the halos in the light cone in mass scale units		
+min_mass	   1.0e9			# min mass of the halos in the light cone in solar masses
 
 
 ####### Field halos from an input file ##############
