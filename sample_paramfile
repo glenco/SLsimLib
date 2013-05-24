@@ -8,7 +8,6 @@
 outputfile         output    # will contain the image magnifications
 
 Nplanes	   	   10 		    # number of lens planes
-mass_scale	   1.0e10		# mass scale of the simulation in solar masses
 
 deflection_off		0		# switches deflection off, default is 0
 field_off		0			# run without field halos, default is 0
