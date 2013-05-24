@@ -28,7 +28,7 @@ Lens::Lens(InputParams& params, CosmoHndl cosmo, SourceHndl source, long *my_see
 
 	read_sim_file = false;
 
-	charge = 4*pi*Grav*mass_scale;
+	charge = 4*pi*Grav;
 	std::cout << "charge: " << charge << std::endl;
 
 	if(flag_input_lens)
@@ -77,7 +77,7 @@ Lens::Lens(InputParams& params, CosmoHndl cosmo, long *my_seed) : seed(my_seed){
 
 	read_sim_file = false;
 
-	charge = 4*pi*Grav*mass_scale;
+	charge = 4*pi*Grav;
 	std::cout << "charge: " << charge << std::endl;
 
 	// initially let source be the one inputed from parameter file
@@ -208,13 +208,6 @@ void Lens::assignParams(InputParams& params){
 		  cout << "parameter z_source needs to be set in the parameter file " << params.filename() << endl;
 		  exit(0);
 	}
-
-	if(!params.get("mass_scale",mass_scale)){
-		  ERROR_MESSAGE();
-		  cout << "parameter mass_scale needs to be set in the parameter file " << params.filename() << endl;
-		  exit(0);
-	}
-
 	if(!params.get("deflection_off",flag_switch_deflection_off)) flag_switch_deflection_off = false;
 
 	// Some checks for valid parameters
@@ -306,8 +299,6 @@ void Lens::resetFieldHalos(CosmoHndl cosmo){
 
 void Lens::printMultiLens(){
 	cout << "Nplanes " << Nplanes << endl;
-
-	cout << "mass scale " << mass_scale << endl;
 
 	cout << endl << "MAIN HALOS" << endl;
 	cout << "Main lens profile type:" << endl;
@@ -484,8 +475,8 @@ void Lens::buildLensPlanes(
 			 */
 
 			// TODO Ben: test this
-			double sigma_back = cosmo->haloMassInBufferedCone(min_mass*mass_scale,z1,z2,fieldofview*pow(pi/180,2),field_buffer,mass_func_type,mass_func_PL_slope)
-			            		 /(pi*pow(sqrt(fieldofview/pi)*pi*Dl[j]/180/(1+plane_redshifts[j]) + field_buffer,2))/mass_scale;
+			double sigma_back = cosmo->haloMassInBufferedCone(min_mass,z1,z2,fieldofview*pow(pi/180,2),field_buffer,mass_func_type,mass_func_PL_slope)
+			            		 /(pi*pow(sqrt(fieldofview/pi)*pi*Dl[j]/180/(1+plane_redshifts[j]) + field_buffer,2));
 
 			double sb=0.0;
 			for(int m=0;m<j2-j1;m++){
@@ -868,9 +859,9 @@ void Lens::createFieldHalos(
 	int np;
 	double rr,theta,maxr;
 	float dummy;
-	HALO *halo_calc = new HALO(cosmo,min_mass*mass_scale,0.0);
+	HALO *halo_calc = new HALO(cosmo,min_mass,0.0);
 
-	double aveNhalos = cosmo->haloNumberInBufferedCone(min_mass*mass_scale,0,zsource,fieldofview*pow(pi/180,2),field_buffer,mass_func_type,mass_func_PL_slope);
+	double aveNhalos = cosmo->haloNumberInBufferedCone(min_mass,0,zsource,fieldofview*pow(pi/180,2),field_buffer,mass_func_type,mass_func_PL_slope);
 
 	fill_linear(zbins,Nzbins,0.0,zsource);
 	// construct redshift distribution table
@@ -881,7 +872,7 @@ void Lens::createFieldHalos(
 #pragma omp parallel for default(shared) private(k)
 #endif
 	for(k=1;k<Nzbins-1;++k){
-		Nhalosbin[k] = cosmo->haloNumberInBufferedCone(min_mass*mass_scale,zbins[k],zsource,fieldofview*pow(pi/180,2),field_buffer,mass_func_type,mass_func_PL_slope)/aveNhalos;
+		Nhalosbin[k] = cosmo->haloNumberInBufferedCone(min_mass,zbins[k],zsource,fieldofview*pow(pi/180,2),field_buffer,mass_func_type,mass_func_PL_slope)/aveNhalos;
 	}
 	zbins[Nzbins-1] = zsource;
 	Nhalosbin[Nzbins-1] = 0.0;
@@ -905,7 +896,7 @@ void Lens::createFieldHalos(
 	// fill the log(mass) vector
 	Logm.resize(Nmassbin);
 	Nhalosbin.resize(Nmassbin);
-	fill_linear(Logm,Nmassbin,log10(min_mass*mass_scale),MaxLogm);
+	fill_linear(Logm,Nmassbin,log10(min_mass),MaxLogm);
 
 	double *pos;
 	int j = 0;
@@ -996,10 +987,10 @@ void Lens::createFieldHalos(
 			field_halos[j]->setZlens(halo_zs_vec[i]);
 			if(flag_galaxy_subhalo){
 				if(galaxy_mass_fraction > 1.0) galaxy_mass_fraction = 1;
-				field_halos[j]->initFromMassFunc(mass*(1-galaxy_mass_fraction),mass_scale,Rmax,rscale,halo_slope,seed);
+				field_halos[j]->initFromMassFunc(mass*(1-galaxy_mass_fraction),Rmax,rscale,halo_slope,seed);
 			}
 			else{
-				field_halos[j]->initFromMassFunc(mass,mass_scale,Rmax,rscale,halo_slope,seed);
+				field_halos[j]->initFromMassFunc(mass,Rmax,rscale,halo_slope,seed);
 			}
 
 			if(mass > mass_max) {
@@ -1026,7 +1017,7 @@ void Lens::createFieldHalos(
 				}
 
 				field_halos[j]->setZlens(halo_zs_vec[i]);
-				field_halos[j]->initFromMassFunc(mass*galaxy_mass_fraction,mass_scale,Rmax,rscale,halo_slope,seed);
+				field_halos[j]->initFromMassFunc(mass*galaxy_mass_fraction,Rmax,rscale,halo_slope,seed);
 
 				halo_pos_vec.push_back(pos);
 
@@ -1196,10 +1187,10 @@ void Lens::readInputSimFile(CosmoHndl cosmo){
 				  /pow(1+pow(mass/M1,be),(gam1-gam2)/be)/mass;
 				if(galaxy_mass_fraction > 1.0) galaxy_mass_fraction = 1;
 
-				field_halos[j]->initFromFile(mass*(1-galaxy_mass_fraction),mass_scale,seed,vmax,r_halfmass*cosmo->gethubble());
+				field_halos[j]->initFromFile(mass*(1-galaxy_mass_fraction),seed,vmax,r_halfmass*cosmo->gethubble());
 			}
 			else{
-				field_halos[j]->initFromFile(mass,mass_scale,seed,vmax,r_halfmass*cosmo->gethubble());
+				field_halos[j]->initFromFile(mass,seed,vmax,r_halfmass*cosmo->gethubble());
 			}
 
 
@@ -1230,7 +1221,7 @@ void Lens::readInputSimFile(CosmoHndl cosmo){
 				}
 
 				field_halos[j]->setZlens(z);
-				field_halos[j]->initFromFile(mass*galaxy_mass_fraction,mass_scale,seed,vmax,r_halfmass*cosmo->gethubble());
+				field_halos[j]->initFromFile(mass*galaxy_mass_fraction,seed,vmax,r_halfmass*cosmo->gethubble());
 
 				halo_pos_vec.push_back(theta);
 

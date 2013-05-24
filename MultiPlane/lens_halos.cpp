@@ -16,8 +16,8 @@ LensHalo::LensHalo(InputParams& params){
 	assignParams(params);
 }
 
-void LensHalo::initFromMassFunc(float my_mass, double mass_scale, float my_Rmax, float my_rscale, double my_slope, long *seed){
-	mass = my_mass/mass_scale;
+void LensHalo::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, double my_slope, long *seed){
+	mass = my_mass;
 	Rmax = my_Rmax;
 	rscale = my_rscale;
 }
@@ -97,7 +97,7 @@ NFWLensHalo::~NFWLensHalo(){
 	}
 }
 
-void NFWLensHalo::initFromFile(float my_mass, double mass_scale, long *seed, float vmax, float r_halfmass){
+void NFWLensHalo::initFromFile(float my_mass, long *seed, float vmax, float r_halfmass){
 
 	mass = my_mass;
 
@@ -107,7 +107,6 @@ void NFWLensHalo::initFromFile(float my_mass, double mass_scale, long *seed, flo
 	nfw_util.match_nfw(vmax,r_halfmass,mass,&rscale,&Rmax);
 
 	rscale = Rmax/rscale; // Was the concentration
-	mass /= mass_scale;
 }
 
 int PseudoNFWLensHalo::count = 0;
@@ -146,8 +145,8 @@ double PseudoNFWLensHalo::InterpolateFromTable(double y){
 	return (mhattable[j+1]-mhattable[j])/(xtable[j+1]-xtable[j])*(y-xtable[j]) + mhattable[j];
 }
 
-void PseudoNFWLensHalo::initFromMassFunc(float my_mass, double mass_scale, float my_Rmax, float my_rscale, double my_slope, long *seed){
-	LensHalo::initFromMassFunc(my_mass,mass_scale,my_Rmax,my_rscale,my_slope,seed);
+void PseudoNFWLensHalo::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, double my_slope, long *seed){
+	LensHalo::initFromMassFunc(my_mass,my_Rmax,my_rscale,my_slope,seed);
 	beta = my_slope;
 	make_tables();
 }
@@ -179,8 +178,8 @@ PowerLawLensHalo::PowerLawLensHalo(InputParams& params){
 	assignParams(params);
 }
 
-void PowerLawLensHalo::initFromMassFunc(float my_mass, double mass_scale, float my_Rmax, float my_rscale, double my_slope, long *seed){
-	LensHalo::initFromMassFunc(my_mass,mass_scale,my_Rmax,my_rscale,my_slope,seed);
+void PowerLawLensHalo::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, double my_slope, long *seed){
+	LensHalo::initFromMassFunc(my_mass,my_Rmax,my_rscale,my_slope,seed);
 	beta = my_slope;
 }
 
@@ -222,7 +221,7 @@ void SimpleNSIELensHalo::assignParams(InputParams& params){
 SimpleNSIELensHalo::~SimpleNSIELensHalo(){
 
 }
-void SimpleNSIELensHalo::initFromMass(float my_mass, double mass_scale, long *seed){
+void SimpleNSIELensHalo::initFromMass(float my_mass, long *seed){
 	mass = my_mass;
 	rcore = 0.0;
 	sigma = 126*pow(mass/1.0e10,0.25); // From Tully-Fisher and Bell & de Jong 2001
@@ -231,16 +230,15 @@ void SimpleNSIELensHalo::initFromMass(float my_mass, double mass_scale, long *se
 	Rsize = rmaxNSIE(sigma,mass,fratio,rcore);
 	Rmax = MAX(1.0,1.0/fratio)*Rsize;  // redefine
 
-	mass /= mass_scale;
 	assert(Rmax >= Rsize);
 }
 
-void SimpleNSIELensHalo::initFromFile(float my_mass, double mass_scale, long *seed, float vmax, float r_halfmass){
-	initFromMass(my_mass,mass_scale,seed);
+void SimpleNSIELensHalo::initFromFile(float my_mass, long *seed, float vmax, float r_halfmass){
+	initFromMass(my_mass,seed);
 }
 
-void SimpleNSIELensHalo::initFromMassFunc(float my_mass, double mass_scale, float my_Rmax, float my_rscale, double my_slope, long *seed){
-	initFromMass(my_mass,mass_scale,seed);
+void SimpleNSIELensHalo::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, double my_slope, long *seed){
+	initFromMass(my_mass,seed);
 }
 
 void LensHalo::force_halo(
@@ -317,8 +315,6 @@ void SimpleNSIELensHalo::force_halo(
 			alpha[0] += (r - rin)*(alpha_out[0] - alpha_in[0])/(Rmax - rin) + alpha_in[0];
 			alpha[1] += (r - rin)*(alpha_out[1] - alpha_in[1])/(Rmax - rin) + alpha_in[1];
 
-
-
 		}else{
 			double xt[2]={0,0},tmp[2]={0,0};
 			float units = pow(sigma/lightspeed,2)/Grav/sqrt(fratio); // mass/distance(physical)
@@ -336,17 +332,20 @@ void SimpleNSIELensHalo::force_halo(
 			}
 		}
 
-		double pref = mass/rcm2/pi;
-		double fac = (1.0*subtract_point)*pref;
-		alpha[0] += fac*xcm[0];
-		alpha[1] += fac*xcm[1];
+		if(subtract_point){
+			double pref = mass/rcm2/pi;
+			double fac = 1.0*pref;
+			alpha[0] += fac*xcm[0];
+			alpha[1] += fac*xcm[1];
 
-		// can turn off kappa and gamma calculations to save times
-		if(!no_kappa){
-			fac = (2.0*subtract_point)*pref/rcm2;
+			// can turn off kappa and gamma calculations to save times
+			if(!no_kappa){
+				fac = 2.0*pref/rcm2;
 
-			gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*fac;
-			gamma[1] += xcm[0]*xcm[1]*fac;
+				gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*fac;
+				gamma[1] += xcm[0]*xcm[1]*fac;
+			}
+
 		}
 
 	}

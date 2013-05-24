@@ -23,8 +23,8 @@ public:
 	float get_mass(){return mass;};
 	float get_rscale(){return rscale;};
 
-	virtual void initFromFile(float,double,long*,float,float){};
-	virtual void initFromMassFunc(float my_mass, double mass_scale, float my_Rmax, float my_rscale, double my_slope, long *seed);
+	virtual void initFromFile(float,long*,float,float){};
+	virtual void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, double my_slope, long *seed);
 
 	void set_Rmax(float my_Rmax){Rmax=my_Rmax;};
 	void set_mass(float my_mass){mass=my_mass;};
@@ -90,7 +90,7 @@ public:
 	NFWLensHalo(InputParams& params);
 	virtual ~NFWLensHalo();
 
-	void initFromFile(float,double,long*,float,float);
+	void initFromFile(float,long*,float,float);
 
 protected:
 	const static long NTABLE = 1000;
@@ -141,7 +141,7 @@ public:
 	~PseudoNFWLensHalo();
 
 	void set_slope(double my_slope){beta=my_slope; make_tables();};
-	void initFromMassFunc(float my_mass, double mass_scale, float my_Rmax, float my_rscale, double my_slope, long *seed);
+	void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, double my_slope, long *seed);
 
 private:
 	const static long NTABLE = 1000;
@@ -193,7 +193,7 @@ public:
 	~PowerLawLensHalo();
 
 	void set_slope(double my_slope){beta=my_slope;};
-	void initFromMassFunc(float my_mass, double mass_scale, float my_Rmax, float my_rscale, double my_slope, long *seed);
+	void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, double my_slope, long *seed);
 
 private:
 	void assignParams(InputParams& params);
@@ -241,9 +241,9 @@ public:
 	void set_pa(float my_pa){pa=my_pa;};
 	void set_rcore(float my_rcore){rcore=my_rcore;};
 
-	void initFromFile(float,double,long*,float,float);
-	void initFromMassFunc(float my_mass, double mass_scale, float my_Rmax, float my_rscale, double my_slope, long *seed);
-	void initFromMass(float my_mass, double mass_scale, long *seed);
+	void initFromFile(float,long*,float,float);
+	void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, double my_slope, long *seed);
+	void initFromMass(float my_mass, long *seed);
 
 protected:
 	void assignParams(InputParams& params);

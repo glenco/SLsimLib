@@ -144,7 +144,7 @@ public:
 	std::vector<double> dDl;
 	/// Redshifts of lens planes, 0...Nplanes.  Last one is the source redshift.
 	std::vector<double> plane_redshifts;
-	/// charge for the tree force solver (4*pi*G*mass_scale)
+	/// charge for the tree force solver (4*pi*G)
 	double charge;
 
 	std::string redshift_planes_file;
@@ -191,8 +191,6 @@ private:
 	MassFuncType mass_func_type;
 	/// slope of the mass function is mass_func_type == 2
 	double mass_func_PL_slope;
-	/// mass scale
-	double mass_scale;
 	/// min mass for the halo model
 	double min_mass;
 	/// internal halo profile type; needs to be 0 or PowerLaw, 1 or NFW, 2 or PseudoNFW, 3 or NSIE, 4 or PointMass
