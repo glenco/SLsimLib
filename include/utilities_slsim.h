@@ -131,7 +131,7 @@ namespace Utilities
 		
 		/// add an object of type SubclassT to the vector
 		template<typename SubclassT>
-		void push_back_ref(const SubclassT& obj)
+		void push_back(const SubclassT& obj)
 		{
 			// make sure this is a subclass of BaseT
 			check_subclass(obj);
@@ -242,7 +242,7 @@ namespace Utilities
 			tmap_iterator found = tmap.find(typeid(SubclassT));
 			if(found == tmap.end())
 				throw std::out_of_range(std::string() + "type " + typeid(SubclassT).name() + " not in vector");
-			return *found->second.at(i);
+			return (SubclassT&)(*found->second.at(i));
 		}
 		
 		/// Templated indexing operator for elements of a specific derived class (const).
@@ -252,7 +252,7 @@ namespace Utilities
 			tmap_iterator found = tmap.find(typeid(SubclassT));
 			if(found == tmap.end())
 				throw std::out_of_range(std::string() + "type " + typeid(SubclassT).name() + " not in vector");
-			return *found->second.at(i);
+			return (const SubclassT&)(*found->second.at(i));
 		}
 		
 		/// number of all elements
@@ -482,13 +482,13 @@ namespace Utilities
 		{
 			return items.data();
 		}
-
+		
 		/// pointer to first element of items
-		BaseT** ptr(unsigned long j)
+		BaseT** ptr(std::size_t j)
 		{
 			return &items[j];
 		}
-
+		
 		/// indexed access with bounds checking
 		BaseT* at(std::size_t i)
 		{
@@ -521,7 +521,7 @@ namespace Utilities
 			tmap_iterator found = tmap.find(typeid(SubclassT));
 			if(found == tmap.end())
 				throw std::out_of_range(std::string() + "type " + typeid(SubclassT).name() + " not in vector");
-			return (SubclassT*)found->second.at(i);
+			return (const SubclassT*)found->second.at(i);
 		}
 		
 		/// number of all elements
@@ -563,9 +563,9 @@ namespace Utilities
 			return items;
 		}
 		
-		unsigned long lower_bound(double target){
-			unsigned long ju,jm,jl;
-
+		std::size_t lower_bound(double target){
+			std::size_t ju,jm,jl;
+			
 			jl=0;
 			ju=items.size()-1;
 			while (ju-jl > 1) {
@@ -577,7 +577,7 @@ namespace Utilities
 			}
 			return jl;
 		}
-
+		
 		/// get vector of all items of type SubclassT
 		template<typename SubclassT>
 		std::vector<SubclassT*> vector() const
@@ -609,12 +609,12 @@ namespace Utilities
 		typedef typename std::map<detail::type_index, std::vector<BaseT*> >::const_iterator tmap_iterator;
 		typedef typename std::vector<BaseT*>::iterator item_iterator;
 	};
-
-
+	
+	
 	template<class BaseT>
-	unsigned long lower_bound(std::vector<BaseT*>& items, double target){
-		unsigned long ju,jm,jl;
-
+	std::size_t lower_bound(std::vector<BaseT*>& items, double target){
+		std::size_t ju,jm,jl;
+		
 		jl=0;
 		ju=items.size()-1;
 		while (ju-jl > 1) {
@@ -626,7 +626,7 @@ namespace Utilities
 		}
 		return jl;
 	}
-
+	
 	template<typename Container>
 	void delete_container(Container& c) { while(!c.empty()) delete c.back(), c.pop_back(); }
 }
