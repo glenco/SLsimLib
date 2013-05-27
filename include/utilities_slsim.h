@@ -25,6 +25,63 @@ namespace Utilities
 		private:
 			const std::type_info& t;
 		};
+		
+		template<typename BaseT>
+		class cloner
+		{
+		public:
+			cloner() {}
+			
+			cloner(const cloner& other)
+			{
+				for(typename std::map<type_index, base_item*>::const_iterator it = other.items.begin(); it != other.items.end(); ++it)
+					items[it->first] = it->second->copy();
+			}
+			
+			~cloner()
+			{
+				for(typename std::map<type_index, base_item*>::iterator it = items.begin(); it != items.end(); ++it)
+					delete it->second;
+			}
+			
+			template<typename SubT>
+			void know()
+			{
+				base_item*& i = items[typeid(SubT)];
+				if(i == 0)
+					i = new item<SubT>();
+			}
+			
+			template<typename T>
+			T* operator()(const T* ptr) const
+			{
+				typename std::map<type_index, base_item*>::const_iterator found = items.find(typeid(*ptr));
+				if(found == items.end())
+					return 0;
+				return found->second->clone(ptr);
+			}
+			
+		private:
+			class base_item
+			{
+			public:
+				virtual ~base_item() {}
+				virtual base_item* copy() const = 0;
+				
+				virtual BaseT* clone(const BaseT*) const = 0;
+			};
+			
+			template<typename SubT>
+			class item : public base_item
+			{
+			public:
+				item<SubT>* copy() const { return new item<SubT>(); }
+				
+				BaseT* clone(const BaseT* ptr) const { return new SubT((const SubT&)*ptr); }
+			};
+			
+			std::map<type_index, base_item*> items;
+		};
 	}
 	
 	//typedef double PosType;
@@ -83,15 +140,12 @@ namespace Utilities
 	template<typename BaseT>
 	class MixedVector
 	{
-	private: /* forward declarations */
-		class base_holder;
-		
 	public: /* iterators */
 		template<typename ValueT = BaseT> // TODO: needs to check subclass type
 		class iterator
 		{
 		private:
-			typedef typename std::vector<base_holder*>::iterator base_iterator;
+			typedef typename std::vector<BaseT*>::iterator base_iterator;
 			base_iterator it;
 			
 		public:
@@ -107,8 +161,8 @@ namespace Utilities
 			
 			iterator& operator=(const iterator& rhs) { it = rhs.it; return *this; }
 			
-			reference operator*() { return (reference)(*it)->ref(); }
-			const reference operator*() const { return (const reference)(*it)->ref(); }
+			reference operator*() { return (reference)(**it); }
+			const reference operator*() const { return (const reference)(**it); }
 			
 			iterator& operator++() { ++it; return *this; }
 			iterator operator++(int) { iterator tmp(*this); ++it; return tmp; }
@@ -121,8 +175,8 @@ namespace Utilities
 			iterator& operator+=(difference_type n) { it += n; return *this; }
 			iterator& operator-=(difference_type n) { it -= n; return *this; }
 			
-			reference operator[](difference_type n) { return (ValueT&)it[n]->ref(); }
-			const reference operator[](difference_type n) const { return (const ValueT&)it[n]->ref(); }
+			reference operator[](difference_type n) { return (reference)*it[n]; }
+			const reference operator[](difference_type n) const { return (const reference)*it[n]; }
 			
 			friend iterator operator+(const iterator& i, difference_type n) { return iterator(i.it + n); }
 			friend iterator operator+(difference_type n, const iterator& i) { return iterator(i.it + n); }
@@ -145,18 +199,22 @@ namespace Utilities
 		
 		/// copy the vector and all contained elements
 		MixedVector(const MixedVector<BaseT>& other)
+		: cloner(other.cloner)
 		{
 			// needs to clone all the contained base_holder items
-			for(typename std::vector<base_holder*>::const_iterator it = other.items.begin(); it != other.items.end(); ++it)
+			for(typename base_container::const_iterator it = other.items.begin(); it != other.items.end(); ++it)
 			{
+				// get object type
+				const std::type_info& type = typeid(**it);
+				
 				// clone the object
-				base_holder* hold = (*it)->clone();
+				BaseT* obj = cloner(*it);
 				
 				// add to own items
-				items.push_back(hold);
+				items.push_back(obj);
 				
 				// add to own typemap
-				tmap[hold->type()].push_back(hold);
+				tmap[type].push_back(obj);
 			}
 		}
 		
@@ -191,20 +249,23 @@ namespace Utilities
 			check_subclass(obj);
 			
 			// copy the object
-			base_holder* hold = new holder<SubclassT>(obj);
+			SubclassT* copy = new SubclassT(obj);
 			
 			// add the copy of the object to the list of items
-			items.push_back(hold);
+			items.push_back(copy);
 			
 			// add the copy to type map
-			tmap[typeid(SubclassT)].push_back(hold);
+			tmap[typeid(SubclassT)].push_back(copy);
+			
+			// let cloner know about type
+			cloner.template know<SubclassT>();
 		}
 		
 		/// pop element from back of vector
 		void pop_back()
 		{
 			// get very last element
-			base_holder* back = items.back();
+			BaseT* back = items.back();
 			
 			// remove from the vector in the type map
 			tmap[back->type()].pop_back();
@@ -229,7 +290,7 @@ namespace Utilities
 			found->second.pop_back();
 			
 			// go through list of all items from back, until item of correct type is found
-			for(typename std::vector<base_holder*>::reverse_iterator it = items.rbegin(); it != items.rend(); ++it)
+			for(typename base_container::reverse_iterator it = items.rbegin(); it != items.rend(); ++it)
 			{
 				if((*it)->type() == typeid(SubclassT))
 				{
@@ -254,16 +315,39 @@ namespace Utilities
 		template<typename SubclassT>
 		void clear()
 		{
-			// remove vector for subclass
-			tmap.erase(typeid(SubclassT));
+			// search for vector belonging to SubclassT
+			typename tmap_t::iterator found = tmap.find(typeid(SubclassT));
+			if(found == tmap.end())
+				return;
+			
+			base_container& titems = found.second;
+						
+			// delete items from vector for subclass
+			for(std::size_t i = 0, n = titems.size(); i < n; ++i)
+				delete titems[i];
+			
+			// remove items for subclass
+			tmap.erase(found);
 			
 			// erase items matching type
 			items.erase(std::remove_if(items.begin(), items.end(), is_type<SubclassT>), items.end());
 		}
 		
+		/// direct access to underlying array
+		BaseT* data()
+		{
+			return items.data();
+		}
+		
+		/// direct access to underlying array (const)
+		const BaseT* data() const
+		{
+			return items.data();
+		}
+		
 		/// Checks if element i is of the derived type SubclassT
 		template<typename SubclassT>
-		bool CheckType(std::size_t i)
+		bool type(std::size_t i)
 		{
 			return is_type<SubclassT>(items[i]);
 		}
@@ -271,25 +355,25 @@ namespace Utilities
 		/// Indexing operator for all elements.
 		BaseT& operator[](std::size_t i)
 		{
-			return items[i]->ref();
+			return *items[i];
 		}
 		
 		/// Indexing operator for all elements (const).
 		const BaseT& operator[](std::size_t i) const
 		{
-			return items[i]->ref();
+			return *items[i];
 		}
 		
 		/// indexed access
 		BaseT& get(std::size_t i)
 		{
-			return items[i]->ref();
+			return *items[i];
 		}
 		
 		/// indexed access (const)
 		const BaseT& get(std::size_t i) const
 		{
-			return items[i]->ref();
+			return *items[i];
 		}
 		
 		/// indexed access for type SubclassT
@@ -299,7 +383,7 @@ namespace Utilities
 			typename tmap_t::iterator found = tmap.find(typeid(SubclassT));
 			if(found == tmap.end())
 				throw std::out_of_range(std::string() + "type " + typeid(SubclassT).name() + " not in vector");
-			return (SubclassT&)found->second[i]->ref();
+			return (SubclassT&)*found->second[i];
 		}
 		
 		/// indexed access for type SubclassT (const)
@@ -309,19 +393,19 @@ namespace Utilities
 			typename tmap_t::const_iterator found = tmap.find(typeid(SubclassT));
 			if(found == tmap.end())
 				throw std::out_of_range(std::string() + "type " + typeid(SubclassT).name() + " not in vector");
-			return (const SubclassT&)found->second[i]->ref();
+			return (const SubclassT&)*found->second[i];
 		}
 		
 		/// indexed access with bounds checking
 		BaseT& at(std::size_t i)
 		{
-			return items.at(i)->ref();
+			return *items.at(i);
 		}
 		
 		/// indexed access with bounds checking (const)
 		const BaseT& at(std::size_t i) const
 		{
-			return items.at(i)->ref();
+			return *items.at(i);
 		}
 		
 		/** \brief Templated indexing operator for elements of a specific derived class.
@@ -334,7 +418,7 @@ namespace Utilities
 			typename tmap_t::iterator found = tmap.find(typeid(SubclassT));
 			if(found == tmap.end())
 				throw std::out_of_range(std::string() + "type " + typeid(SubclassT).name() + " not in vector");
-			return (SubclassT&)found->second.at(i)->ref();
+			return (SubclassT&)*found->second.at(i);
 		}
 		
 		/// Templated indexing operator for elements of a specific derived class (const).
@@ -344,7 +428,7 @@ namespace Utilities
 			typename tmap_t::const_iterator found = tmap.find(typeid(SubclassT));
 			if(found == tmap.end())
 				throw std::out_of_range(std::string() + "type " + typeid(SubclassT).name() + " not in vector");
-			return (const SubclassT&)found->second.at(i)->ref();
+			return (const SubclassT&)*found->second.at(i);
 		}
 		
 		/// number of all elements
@@ -413,44 +497,19 @@ namespace Utilities
 		}
 		
 	private:
-		class base_holder
-		{
-		public:
-			virtual ~base_holder() {}
-			
-			virtual base_holder* clone() const = 0;
-			virtual const std::type_info& type() const = 0;
-			virtual BaseT& ref() = 0;
-			virtual const BaseT& ref() const = 0;
-		};
-		
-		template<typename T>
-		class holder : public base_holder
-		{
-		public:
-			holder(const T& held) { ptr = new T(held); }
-			~holder() { delete ptr; }
-			
-			holder* clone() const { return new holder<T>(*ptr); }
-			const std::type_info& type() const { return typeid(T); }
-			T& ref() { return *ptr; }
-			const T& ref() const { return *ptr; }
-			
-		private:
-			T* ptr;
-		};
-		
-		typedef std::vector<base_holder*> base_container;
+		typedef std::vector<BaseT*> base_container;
 		
 		inline static void check_subclass(const BaseT&) {}
 		
 		template<typename SubclassT>
-		inline static bool is_type(const base_holder* obj) { return (obj->type() == typeid(SubclassT)); }
+		inline static bool is_type(const BaseT* obj) { return (typeid(*obj) == typeid(SubclassT)); }
 		
 		base_container items;
 		
 		typedef std::map<detail::type_index, base_container> tmap_t;
 		tmap_t tmap;
+		
+		detail::cloner<BaseT> cloner;
 	};
 	
 	/// A MixedVector for pointers.
@@ -628,7 +687,7 @@ namespace Utilities
 		
 		/// Checks if element i is of the derived type SubclassT
 		template<typename SubclassT>
-		bool CheckType(std::size_t i)
+		bool type(std::size_t i)
 		{
 			return is_type<SubclassT>(items[i]);
 		}
