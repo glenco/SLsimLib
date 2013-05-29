@@ -1,0 +1,13 @@
+add_sources(
+	base_analens.cpp
+	expanded_powerlaw.cpp
+	lens_expand.cpp
+	nfw_lens.cpp
+	nsie.cpp
+	powerlaw.cpp
+	randomize_lens.cpp
+	readfiles_ana.cpp
+	readfiles_uni.cpp
+	source.cpp
+	sourceAnaGalaxy.cpp
+)

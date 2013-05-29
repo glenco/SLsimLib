@@ -1,0 +1,10 @@
+add_sources(
+	MOKAfits.cpp
+	MOKAlens.cpp
+	lens.cpp
+	lens_halos.cpp
+	model.cpp
+	planes.cpp
+	profile.cpp
+	tables.cpp
+)

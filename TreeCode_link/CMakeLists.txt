@@ -1,0 +1,20 @@
+add_sources(
+	KistDriver.cpp
+	Tree.cpp
+	TreeDriver.cpp
+	change_redshifts.cpp
+	change_redshits.cpp
+	curve_routines.cpp
+	dirtycode.cpp
+	divide_images.cpp
+	double_sort.cpp
+	find_crit.cpp
+	grid_maintenance.cpp
+	image_finder.cpp
+	image_finder_kist.cpp
+	map_images.cpp
+	peak_refinement.cpp
+	tree_maintenance.cpp
+	utilities.cpp
+	List/list.cpp
+)
