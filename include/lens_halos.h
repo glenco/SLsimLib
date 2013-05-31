@@ -13,38 +13,77 @@
 #include "InputParams.h"
 #include "source.h"
 
+/*
+ * A base class for all types of lensing halos.
+ * It contains the mass, maximum radius (Rmax), and scale radius (rscale) of the halo,
+ * as well as the redshift (zlens).
+ *
+ * It has get and set functions for the members as well as virtual functions like:
+ * force_halo
+ * that compute the lensing properties -- deflection, convergence, and shear.
+ *
+ * Along with the simple set function, there are two general initialization functions,
+ * that calculate the rest of the properties based on some input lens halo parameter
+ * (e.g. mass).
+ *
+ * initFromFile
+ * is intended to be used when the halo data is read in from a simulation
+ * file. In this case the general halo is assumed to be an NFW halo and therefore the
+ * maximum velocity and the half-mass radius need to be set. This function is overridden
+ * in derived classes and in cases where it is not applicable only the mass is taken
+ * into initializing the lensing halo.
+ *
+ * initFromMassFunc
+ * is intended for the cases where the simulation is populated by lensing halos from
+ * a mass function. Then one needs all parameters of the halo -- mass, Rmax, and rscale.
+ */
+
 class LensHalo{
 public:
 	LensHalo();
 	LensHalo(InputParams& params);
 	~LensHalo();
 
+	/// get the Rmax
 	float get_Rmax(){return Rmax;};
+	/// get the mass
 	float get_mass(){return mass;};
+	/// get the scale radius
 	float get_rscale(){return rscale;};
+	/// get the redshift
+	double getZlens() const {return zlens;};
 
-	virtual void initFromFile(float,long*,float,float){};
+	/// initialize from a simulation file
+	virtual void initFromFile(float my_mass, long *seed, float vmax, float r_halfmass){};
+	/// initialize from a mass function
 	virtual void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, double my_slope, long *seed);
 
+	/// set Rmax
 	void set_Rmax(float my_Rmax){Rmax=my_Rmax;};
+	/// set mass
 	void set_mass(float my_mass){mass=my_mass;};
+	/// set scale radius
 	void set_rscale(float my_rscale){rscale=my_rscale;};
-
+	/// set redshift
+	void setZlens(double my_zlens){zlens=my_zlens;};
+	/// set redshift, where the cosmology and the source redshift are needed (BaseNSIELensHalo)
+	virtual void setZlens(CosmoHndl cosmo,double z,double dummy){zlens=z;};
+	/// set slope
 	virtual void set_slope(double my_slope){};
 
+	/// set internal params that need either the cosmology or the source
 	virtual void setInternalParams(CosmoHndl cosmo, SourceHndl source){};
 
+	/// calculate the lensing properties -- deflection, convergence, and shear
 	virtual void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa,bool subtract_point=false);
 
-	double getZlens() const {return zlens;};
-	void setZlens(double my_zlens){zlens=my_zlens;};
-	virtual void setZlens(CosmoHndl cosmo,double z,double dummy){zlens=z;};
-
+	/// internal compare redshift function
 	bool compare(double z){return z > zlens;};
 
 protected:
+	/// read in parameters from a parameterfile in InputParams params
 	void assignParams(InputParams& params);
-
+	/// error message printout
 	void error_message1(std::string name,std::string filename);
 
     float mass;
@@ -90,17 +129,24 @@ public:
 	NFWLensHalo(InputParams& params);
 	virtual ~NFWLensHalo();
 
-	void initFromFile(float,long*,float,float);
+	void initFromFile(float my_mass, long *seed, float vmax, float r_halfmass);
 
 protected:
+	/// table size
 	const static long NTABLE = 1000;
+	/// maximum Rmax/rscale
 	const static double maxrm = 100.0;
+	/// keeps track of how many time the tables are created, default is just once
 	static int count;
 
+	/// tables for lensing properties specific functions
 	static double *ftable,*gtable,*g2table,*xtable;
+	/// make the specific tables
 	void make_tables();
+	/// interpolates from the specific tables
 	double InterpolateFromTable(double *table, double y);
 
+	/// read in parameters from a parameterfile in InputParams params
 	void assignParams(InputParams& params);
 
 	// Override internal structure of halos
@@ -140,20 +186,30 @@ public:
 	PseudoNFWLensHalo(InputParams& params);
 	~PseudoNFWLensHalo();
 
+	/// set the slope of the surface density profile
 	void set_slope(double my_slope){beta=my_slope; make_tables();};
+	/// initialize from a mass function
 	void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, double my_slope, long *seed);
 
 private:
+	/// table size
 	const static long NTABLE = 1000;
+	/// maximum Rmax/rscale
 	const static double maxrm = 100.0;
+	/// keeps track of how many time the tables are created, default is just once
 	static int count;
 
+	/// tables for lensing properties specific functions
 	static double *mhattable,*xtable;
+	/// make the specific tables
 	void make_tables();
+	/// interpolates from the specific tables
 	double InterpolateFromTable(double y);
 
+	/// read in parameters from a parameterfile in InputParams params
 	void assignParams(InputParams& params);
 
+	/// slope of the surface density profile
 	double beta;
 
 	// Override internal structure of halos
@@ -192,13 +248,17 @@ public:
 	PowerLawLensHalo(InputParams& params);
 	~PowerLawLensHalo();
 
+	/// set the slope of the surface density profile
 	void set_slope(double my_slope){beta=my_slope;};
+	/// initialize from a mass function
 	void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, double my_slope, long *seed);
 
 private:
+	/// read-in parameters from the parameter file
 	void assignParams(InputParams& params);
 
-	double beta; // logarithmic slope of 2d mass profile
+	///	read in parameters from a parameterfile in InputParams params
+	double beta;
 
 	// Override internal structure of halos
 	inline double alpha_h(double x,double xmax){
@@ -227,25 +287,41 @@ public:
 	SimpleNSIELensHalo(InputParams& params);
 	~SimpleNSIELensHalo();
 
+	/// overridden function to calculate the lensing properties
 	void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa,bool subtract_point=false);
 
+	/// get the velocity dispersion
 	float get_sigma(){return sigma;};
+	/// get the NSIE radius
 	float get_Rsize(){return Rsize;};
+	/// get the axis ratio
 	float get_fratio(){return fratio;};
+	/// get the position angle
 	float get_pa(){return pa;};
+	/// get the core radius
 	float get_rcore(){return rcore;};
 
+	/// set the velocity dispersion
 	void set_sigma(float my_sigma){sigma=my_sigma;};
+	/// set the NSIE radius
 	void set_Rsize(float my_Rsize){Rsize=my_Rsize;};
+	///set the axis ratio
 	void set_fratio(float my_fratio){fratio=my_fratio;};
+	/// set the position angle
 	void set_pa(float my_pa){pa=my_pa;};
+	/// set the core radius
 	void set_rcore(float my_rcore){rcore=my_rcore;};
 
-	void initFromFile(float,long*,float,float);
+
+	/// initialize from a simulation file
+	void initFromFile(float my_mass, long *seed, float vmax, float r_halfmass);
+	/// initialize from a mass function
 	void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, double my_slope, long *seed);
+	/// simple initialize from mass
 	void initFromMass(float my_mass, long *seed);
 
 protected:
+	/// read-in parameters from a parameter file
 	void assignParams(InputParams& params);
 
 	/// velocity dispersion of NSIE

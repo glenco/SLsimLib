@@ -41,21 +41,39 @@
  *
  *              --------------------------------  i = 0 first plane with mass on it at finite distance from observer
  *
- *   Input Parameters:
+ *   Input Parameters (variable names):
  *
- *	Nplanes                     Number of lens planes
- *	flag_input_lens             Implanted lens - 0: no lens, 1: AnaNSIELensHalo, 2: MOKALensHalo, The redshifts and internal parameters are the same as for constructing these lenses separately, see classes for each type of lens
- *	fov                         Field of view for the simulation region (not nessisarily the grided region)
- *	int_prof_type            The internal profile type for the field_halos, 0 or PowerLaw,1 or NFW,2 or PseudoNFW, 3 or NSIE, 4 or NFW_NSIE .
- *  halo_to_galaxy_ratio        If NFW_NSIE is chosen this must be set to the ratio of the mass put in each component.
- *	z_source                    The "source" redshift, but actually the redshift of the last plane in the simulation.  The source can be at higher or lower redshift (see ResetSourcePlane)
- *	input_simulation_file       File that contains the input catalog of field_halos.  If it is missing a random set of field_halos will be generated.
- *	mass_func_type              The mass function used to generate random field_halos 0 through 2 or PS (Press & Schechter), ST (Sheth & Torman) or PowLaw (Power-law).  Not needed if input_simulation_file is provided.
- *	min_mass                    Minimum mass of halo when mass function is used (solar masses).  Not used when catalog is used.
- *	mass_scale                  The conversion between the mass units used and solar masses.  Usually 1.
- *	field_buffer                Field of view buffer in physical, rest frame Mpc.  Default is 0. Set to provide a buffer to the field of view so that field_halos that are centered outside the conical field of view but overlap it will be included.
- *	deflection_off              If true turns deflection off for testing purposes, default if false.
- *  background_off              If true turns deflection caused by background surface density off for testing purposes, default if false
+ *   outputfile -- filename for simulation output, usually in the main()
+ *   Nplanes -- number of lensing planes
+ *   flag_input_lens -- 0: no major lens present; 1: there is a major lens present
+ *   main_halo_type -- profile type for the main DM lens halo
+ *   	0 or nolens, 1 or NFW, 2 or PseudoNFW, 3 or PowerLaw, 4 or NSIE, 5 or AnaLens, 6 or UniLens, 7 or MOKALens, 8 or DummyLens
+ *   galaxy_halo_type -- profile typ for the main galaxy lens halo
+ *   	0 or none, 1 or NSIE
+ *   redshift_planes_file -- asci file with the redshifts of the lensing planes, if not set then created internaly
+ *   flag_switch_field_off -- false: field halos are created, true: no field halos are created; default is false
+ *
+ *   if flag_switch_field_off == false, i.e. there are field halos then also the following are used:
+ *   fieldofview -- field of view of the light cone, filled with field halos
+ *   int_prof_type -- profile type of the DM field lens halos
+ *   	0 or nolens, 1 or NFW, 2 or PseudoNFW, 3 or PowerLaw, 4 or NSIE, 5 or AnaLens, 6 or UniLens, 7 or MOKALens, 8 or DummyLens
+ *   halo_slope -- slope of the surface density for power law or pseudo nfw profiles
+ *   int_prof_gal_type -- profile type of the galaxy field halos; if not set, no galaxies are used
+ *   	0 or none, 1 or NSIE
+ *   galaxy_mass_fraction -- if int_prof_gal_type is set, then this is the galaxy mass fraction
+ *
+ *   input_sim_file -- filename of the Millenium simulation data to be read in and used to populate the light cone with field halos
+ *
+ *   if input_sim_file is  _not_ set, then the field halos are generated from a mass function and the following are used:
+ *   mass_func_type -- type of the halo mass function
+ *   	PS (0), ST (1), and power law (2)
+ *   mass_func_PL_slope -- slope of the mass function in the power law case; default is -1/6
+ *   min_mass -- minimum mass for the generated field halos
+ *   field_buffer -- a constant physical size buffer, padding every lens plane to increase its surface
+ *
+ *   zsource -- source redshift
+ *   flag_switch_deflection_off -- false: deflection is on, true: deflection is off; default is false
+ *
  *
  * </pre>
  */
