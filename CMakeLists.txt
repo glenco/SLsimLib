@@ -11,32 +11,6 @@ set(SLsimLib_VERSION_MINOR 1)
 
 
 ####
-# options
-####
-
-option(ENABLE_FITS "Enable FITS support." OFF)
-
-if(ENABLE_FITS)
-	find_package(CCfits REQUIRED)
-	add_definitions(-DENABLE_FITS=1)
-	message(STATUS "FITS support: enabled")
-else()
-	message(STATUS "FITS support: disabled")
-endif()
-
-
-option(ENABLE_FFTW "Enable functions that require FFTW." OFF)
-
-if(ENABLE_FFTW)
-	find_package(FFTW3 REQUIRED)
-	add_definitions(-DENABLE_FFTW=1)
-	message(STATUS "FFTW support: enabled")
-else()
-	message(STATUS "FFTW support: disabled")
-endif()
-
-
-####
 # macro for easy subdirectory adding
 ####
 
