@@ -124,17 +124,24 @@ namespace Utilities
 	 * mvector.push_back(source1);
 	 * mvector.push_back(source2);
 	 * mvector.push_back(source2);
-	 * cout << "Number of Uniform Sources " << mvector.size<SourceUniform>() << "   Number of Gausssian Sources "
-	 *		<< mvector.size<SourceGaussian>() << endl;
+	 * std::cout << "Number of Uniform Sources " << mvector.size<SourceUniform>() << "   Number of Gausssian Sources "
+	 *           << mvector.size<SourceGaussian>() << std::endl;
      *
      * // change derived class attribute
-	 * mvector.at<SourceGaussian>(0).source_gauss_r2 = 0.5;
-	 * cout << "A base class attribute " << mvector[2].getTotalFlux()
-	 *		<< " A derived class attribute  "
-	 *		<< mvector.at<SourceGaussian>(0).source_gauss_r2
-	 *		<< "  " << mvector.at<SourceGaussian>(1).source_gauss_r2
-	 *		<< endl;
-	 *
+	 * mvector.get<SourceGaussian>(0).source_gauss_r2 = 0.5;
+	 * std::cout << "A base class attribute " << mvector[2].getTotalFlux()
+	 *           << " A derived class attribute  "
+	 *           << mvector.get<SourceGaussian>(0).source_gauss_r2
+	 *           << "  " << mvector.get<SourceGaussian>(1).source_gauss_r2
+	 *           << std::endl;
+	 * 
+	 * // iterate all sources
+	 * for(Utilities::MixedVector<Source>::iterator<> it = mvector.begin(); it != mvector.end(); ++it)
+	 *   std::cout << "A base class attribute " << it->getTotalFlux() << std::endl;
+	 * 
+	 * // iterate SersicSources
+	 * for(Utilities::MixedVector<Source>::iterator<SersicSource> it = mvector.begin<SersicSource>(); it != mvector.end<SersicSource>(); ++it)
+	 *   std::cout << "A derived class attribute " << it->getSersicIndex() << std::endl;
 	 *</pre>
 	 */
 	template<typename BaseT>
