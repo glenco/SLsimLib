@@ -343,15 +343,16 @@ protected:
  */
 class DummyLensHalo: public LensHalo{
 public:
-	DummyLensHalo(): LensHalo(){};
-	DummyLensHalo(InputParams& params): LensHalo(){};
+	DummyLensHalo();
+	DummyLensHalo(InputParams& params);
 	~DummyLensHalo(){};
-
-	void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa,bool subtract_point=false){
-		alpha[0] = alpha[1] = 0.0;
-		*kappa = 0.0;
-		gamma[0] = gamma[1] = gamma[2] = 0.0;
-	}
+	
+	/// overridden function to calculate the lensing properties
+	void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa,bool subtract_point=false);
+	
+private:
+	/// read-in parameters from a parameter file
+	void assignParams(InputParams& params);
 };
 
 

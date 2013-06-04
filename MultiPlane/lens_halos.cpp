@@ -351,3 +351,26 @@ void SimpleNSIELensHalo::force_halo(
 	}
 	return;
 }
+
+DummyLensHalo::DummyLensHalo()
+: LensHalo()
+{
+}
+
+DummyLensHalo::DummyLensHalo(InputParams& params)
+: LensHalo()
+{
+	assignParams(params);
+}
+
+void DummyLensHalo::force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa,bool subtract_point)
+{
+	alpha[0] = alpha[1] = 0.0;
+	*kappa = 0.0;
+	gamma[0] = gamma[1] = gamma[2] = 0.0;
+}
+
+void DummyLensHalo::assignParams(InputParams& params)
+{
+	if(!params.get("z_lens",zlens)) error_message1("z_lens",params.filename());
+}
