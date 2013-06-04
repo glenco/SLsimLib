@@ -1296,7 +1296,7 @@ short Lens::ResetSourcePlane(
 	// j is the index of the next plane at higher redshift, This plane will be temporarily replaced and used as a source plane
 
 	double Ds = cosmo->coorDist(0,z);
-	locateD(Dl.data(),Nplanes,Ds,&j);
+	locateD(Dl.data()-1,Nplanes,Ds,&j);
 	assert(j <= Nplanes && j >=0);
 
 	if(j >= Nplanes-1){
@@ -1330,7 +1330,6 @@ short Lens::ResetSourcePlane(
 	out = j;
 	return out;
 }
-
 
 /// Sort field_halos[], brr[][], and id[] by content off arr[]
 void Lens::quicksort(LensHaloHndl *halos,double **pos,unsigned long N){
