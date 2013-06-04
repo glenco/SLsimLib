@@ -171,6 +171,9 @@ namespace Utilities
 			reference operator*() { return (reference)(**it); }
 			const reference operator*() const { return (const reference)(**it); }
 			
+			pointer operator->() { return (pointer)(*it); }
+			const pointer operator->() const { return (const pointer)(*it); }
+			
 			iterator& operator++() { ++it; return *this; }
 			iterator operator++(int) { iterator tmp(*this); ++it; return tmp; }
 			iterator& operator--() { --it; return *this; }
