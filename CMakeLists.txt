@@ -129,6 +129,8 @@ include_directories(
 
 add_library(SLsimLib ${HEADERS} ${SOURCES})
 
+add_dependencies(SLsimLib CosmoLib NR)
+
 
 ####
 # group sources
@@ -139,3 +141,4 @@ source_group("include" FILES ${HEADERS})
 foreach(_grp ${GROUPS})
 	source_group(${_grp} FILES ${GROUP_${_grp}})
 endforeach()
+
