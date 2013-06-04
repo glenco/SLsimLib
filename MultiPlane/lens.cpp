@@ -7,6 +7,8 @@
 
 #include "slsimlib.h"
 
+#include <algorithm>
+
 using namespace std;
 
 
@@ -603,10 +605,11 @@ void Lens::setCoorDist(CosmoHndl cosmo){
 		plane_redshifts.push_back(ind->second);
 		cout << plane_redshifts[i] << " ";
 	}
-	plane_redshifts[Nplanes-1] = zsource;
-	cout << plane_redshifts[i] << " " << std::endl;
+	plane_redshifts.push_back(zsource);
+	cout << plane_redshifts[Nplanes-1] << " " << std::endl;
 
 	assert(Dl.size() == Nplanes);
+	assert(plane_redshifts.size() == Nplanes);
 }
 
 
@@ -1292,11 +1295,15 @@ short Lens::ResetSourcePlane(
 
 	// j is the index of the next plane at higher redshift, This plane will be temporarily replaced and used as a source plane
 
+	// distance to new source plane
 	double Ds = cosmo->coorDist(0,z);
-	locateD(Dl.data(),Nplanes,Ds,&j);
+
+	// find bounding index
+	locateD(Dl.data()-1,Nplanes,Ds,&j);
 	assert(j <= Nplanes && j >=0);
 
-	if(j >= Nplanes-1){
+	// if z is past the last plane, use the last plane
+	if(j >= Nplanes){
 	  j--;
 	}
 	else if(j > 0){
@@ -1322,6 +1329,7 @@ short Lens::ResetSourcePlane(
 	}
 
 	std::cout << "Source on plane " << j << " zs " << zs_implant << " Ds " << Ds << " dDs " << dDs_implant << std::endl;
+
 	index_of_new_sourceplane = j;
 
 	out = j;
