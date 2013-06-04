@@ -12,7 +12,9 @@
 #include "InputParams.h"
 #include "source_type.h"
 #include "parameters.h"
-
+/** \brief Base class for all sources.
+ *
+ */
 class Source
 {
 public:
@@ -121,6 +123,7 @@ private:
 	std::valarray<float> values;
 };
 
+/// A uniform surface brightness circular source.
 class SourceUniform : public Source{
 public:
 	SOURCE_TYPE(SourceUniform)

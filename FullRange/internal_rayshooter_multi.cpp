@@ -36,7 +36,7 @@
 void *compute_rays_parallel(void *_p);
 
 /**
- * A data structure for temporarily distribute the data amongst threads.
+ * \brief A data structure for temporarily distribute the data amongst threads.
  */
 struct TmpParams{
   Point *i_points;
@@ -235,7 +235,7 @@ void *compute_rays_parallel(void *_p){
     	  gamma_minus[1] = p->i_points[i].gamma[1];
     	  gamma_minus[2] = p->i_points[i].gamma[2];
 	
-    	  assert(kappa_plus==kappa_plus && gamma_minus[0]==gamma_minus[0] &&gamma_minus[1]==gamma_minus[1] && gamma_minus[2]==gamma_minus[2]);
+    	  assert(kappa_plus==kappa_plus && gamma_minus[0]==gamma_minus[0] && gamma_minus[1]==gamma_minus[1] && gamma_minus[2]==gamma_minus[2]);
 	
     	  p->i_points[i].kappa = kappa_plus;
     	  p->i_points[i].gamma[0] = gamma_plus[0];

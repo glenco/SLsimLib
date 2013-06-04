@@ -414,7 +414,7 @@ void Lens::printMultiLens(){
 }
 
 /**
- * Populates the planes with field_halos by dividing the space around the planes into
+ * \brief Populates the planes with field_halos by dividing the space around the planes into
  * equal redshift distances, where the plane with the input lens is excluded
  * since it will not contain any field_halos
  *
@@ -431,6 +431,7 @@ void Lens::buildLensPlanes(
 
 	std::cout << "Lens::buildLensPlanes zsource = " << zsource << std::endl;
 
+  assert(plane_redshifts.size() == Nplanes);
 	assert(plane_redshifts[Nplanes-1] == zsource);
 
 	for(j=0,Ntot=0;j<Nplanes-1;j++){
@@ -511,7 +512,7 @@ void Lens::updateMainHaloLensPlane(){
 }
 
 /**
- * Set the coordinate distances of the planes by dividing the coordinate distance space into equal intervals
+ * /brief Set the coordinate distances of the planes by dividing the coordinate distance space into equal intervals
  * and then plugging the analytic input plane in between.
  *
  * After this flag_input_lens will hold the index of the plane it is on
@@ -603,8 +604,10 @@ void Lens::setCoorDist(CosmoHndl cosmo){
 		plane_redshifts.push_back(ind->second);
 		cout << plane_redshifts[i] << " ";
 	}
-	plane_redshifts[Nplanes-1] = zsource;
+  
+	plane_redshifts.push_back(zsource);
 	cout << plane_redshifts[i] << " " << std::endl;
+  assert(plane_redshifts.size() == Nplanes);
 
 	assert(Dl.size() == Nplanes);
 }

@@ -134,7 +134,9 @@ namespace Utilities
 	 *		<< mvector.at<SourceGaussian>(0).source_gauss_r2
 	 *		<< "  " << mvector.at<SourceGaussian>(1).source_gauss_r2
 	 *		<< endl;
-	 *
+	 *  
+   *  Using the iterator - 
+   *
 	 *</pre>
 	 */
 	template<typename BaseT>
@@ -175,6 +177,7 @@ namespace Utilities
 			iterator& operator+=(difference_type n) { it += n; return *this; }
 			iterator& operator-=(difference_type n) { it -= n; return *this; }
 			
+      /// return member n elements further along than current
 			reference operator[](difference_type n) { return (reference)*it[n]; }
 			const reference operator[](difference_type n) const { return (const reference)*it[n]; }
 			
@@ -540,8 +543,10 @@ namespace Utilities
 			pointer operator*() { return (pointer)*it; }
 			const pointer operator*() const { return (const pointer)*it; }
 			
+      /// advance iterator one element
 			iterator& operator++() { ++it; return *this; }
 			iterator operator++(int) { iterator tmp(*this); ++it; return tmp; }
+      /// retreat iterator one element
 			iterator& operator--() { --it; return *this; }
 			iterator operator--(int) { iterator tmp(*this); --it; return tmp; }
 			

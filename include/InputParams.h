@@ -33,7 +33,13 @@ typedef enum {nfw,powerlaw,pointmass} ClumpInternal;
 enum IMFtype {One,Mono,BrokenPowerLaw,Salpeter,SinglePowerLaw,Kroupa,Chabrier};
 enum Band {SDSS_U,SDSS_G,SDSS_R,SDSS_I,SDSS_Z,J,H,Ks,i1,i2};
 
-
+/** \brief Structure for reading and writing parameters to and from a parameter file as well as a container 
+ * for passing the parameters to other classes and functions.
+ *
+ *  The constructor reads in all parameters in the parameter file.  They can then be accessed with the 
+ *  get functions.  There should be no interaction with the parameter file except through the InputParams 
+ *  structure.
+ */
 class InputParams {
 public:
 	InputParams(std::string paramfile);
