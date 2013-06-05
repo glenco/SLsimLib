@@ -13,8 +13,9 @@
 #include "InputParams.h"
 #include "source.h"
 
-/*
- * A base class for all types of lensing halos.
+/**
+ * \brief A base class for all types of lensing halos.
+ *
  * It contains the mass, maximum radius (Rmax), and scale radius (rscale) of the halo,
  * as well as the redshift (zlens).
  *
@@ -149,15 +150,16 @@ protected:
 	/// read in parameters from a parameterfile in InputParams params
 	void assignParams(InputParams& params);
 
-	// Override internal structure of halos
+	/// Override internal structure of halos
 	inline double alpha_h(double x,double xmax){
-		return -1.0*InterpolateFromTable(gtable,x)/InterpolateFromTable(gtable,xmax);
+		//return -1.0*InterpolateFromTable(gtable,x)/InterpolateFromTable(gtable,xmax);
+		return -1.0*InterpolateFromTable(gtable,x)/gmax;
 	}
 	inline KappaType kappa_h(double x,double xmax){
-		return 0.5*x*x*InterpolateFromTable(ftable,x)/InterpolateFromTable(gtable,xmax);
+		return 0.5*x*x*InterpolateFromTable(ftable,x)/gmax;
 	}
 	inline KappaType gamma_h(double x,double xmax){
-		return -0.25*x*x*InterpolateFromTable(g2table,x)/InterpolateFromTable(gtable,xmax);
+		return -0.25*x*x*InterpolateFromTable(g2table,x)/gmax;
 	}
 	inline KappaType phi_h(double x,double xmax){
 		ERROR_MESSAGE();
@@ -165,6 +167,9 @@ protected:
 		exit(1);
 		return 0.0;
 	}
+  
+private:
+  double gmax;
 };
 
 /** \ingroup DeflectionL2

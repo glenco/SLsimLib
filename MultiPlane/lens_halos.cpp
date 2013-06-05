@@ -40,7 +40,9 @@ LensHalo::~LensHalo(){
 
 int NFWLensHalo::count = 0;
 double *NFWLensHalo::xtable = NULL,*NFWLensHalo::ftable = NULL,*NFWLensHalo::gtable = NULL,*NFWLensHalo::g2table = NULL;
+
 NFWLensHalo::NFWLensHalo() : LensHalo(){
+  gmax=0;
 	make_tables();
 }
 
@@ -66,9 +68,8 @@ void NFWLensHalo::make_tables(){
 			gtable[i] = gfunction(x);
 			g2table[i] = g2function(x);
 		}
-
-		count++;
-	}
+  }
+  count++;
 }
 
 double NFWLensHalo::InterpolateFromTable(double *table, double y){
@@ -85,6 +86,8 @@ void NFWLensHalo::assignParams(InputParams& params){
 	if(!params.get("zlens_nfw",zlens)) error_message1("lens_nfw",params.filename());
 	if(!params.get("concentration_nfw",rscale)) error_message1("concentration_nfw",params.filename());
 	rscale = rscale*Rmax; // was the concentration
+  gmax = InterpolateFromTable(gtable,Rmax/rscale);
+
 }
 
 NFWLensHalo::~NFWLensHalo(){
@@ -97,6 +100,7 @@ NFWLensHalo::~NFWLensHalo(){
 	}
 }
 
+/// Sets the profile to match the mass, Vmax and R_halfmass
 void NFWLensHalo::initFromFile(float my_mass, long *seed, float vmax, float r_halfmass){
 
 	mass = my_mass;
@@ -105,8 +109,9 @@ void NFWLensHalo::initFromFile(float my_mass, long *seed, float vmax, float r_ha
 
 	// Find the NFW profile with the same mass, Vmax and R_halfmass
 	nfw_util.match_nfw(vmax,r_halfmass,mass,&rscale,&Rmax);
-
 	rscale = Rmax/rscale; // Was the concentration
+  
+  gmax = InterpolateFromTable(gtable,Rmax/rscale);
 }
 
 int PseudoNFWLensHalo::count = 0;

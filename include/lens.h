@@ -216,7 +216,7 @@ private:
 	double field_prof_internal_slope;
 
 	/// if true, each field halo contains an NSIE galaxy inside it
-	bool flag_galaxy_subhalo;
+	bool flag_field_gal_on;
 	/// galaxy subhalo profile type; needs to be 0 or PowerLaw, 1 or NFW, 2 or PseudoNFW, 3 or NSIE, 4 or PointMass
 	GalaxyLensHaloType field_int_prof_gal_type;
 	/// mass fraction in the host galaxy

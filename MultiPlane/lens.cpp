@@ -168,10 +168,10 @@ void Lens::assignParams(InputParams& params){
 		}
 		if(!params.get("field_internal_profile_galaxy",field_int_prof_gal_type)){
 			field_int_prof_gal_type = null_gal;
-			flag_galaxy_subhalo = false;
+			flag_field_gal_on = false;
 		}
 		else{
-			flag_galaxy_subhalo = true;
+			flag_field_gal_on = true;
 			if(!params.get("field_galaxy_mass_fraction",field_galaxy_mass_fraction)){
 				ERROR_MESSAGE();
 				cout << "to construct a DM + galaxy model the parameter field_galaxy_mass_fraction needs to be set in the parameter file " << params.filename() << endl;
@@ -867,6 +867,10 @@ void Lens::createFieldHalos(
 	float dummy;
 	HALO *halo_calc = new HALO(cosmo,field_min_mass,0.0);
 
+  if (field_min_mass < 1.0e5) {
+    std::cout << "Are you sure you want the minimum field halo mass to be " << field_min_mass << " Msun?" << std::endl;
+    throw;
+   }
 	double aveNhalos = cosmo->haloNumberInBufferedCone(field_min_mass,0,zsource,fieldofview*pow(pi/180,2),field_buffer,field_mass_func_type,mass_func_PL_slope);
 
 	fill_linear(zbins,Nzbins,0.0,zsource);
@@ -991,7 +995,7 @@ void Lens::createFieldHalos(
 			float rscale = Rmax/halo_calc->getConcentration(0);
 
 			field_halos[j]->setZlens(halo_zs_vec[i]);
-			if(flag_galaxy_subhalo){
+			if(flag_field_gal_on){
 				if(field_galaxy_mass_fraction > 1.0) field_galaxy_mass_fraction = 1;
 				field_halos[j]->initFromMassFunc(mass*(1-field_galaxy_mass_fraction),Rmax,rscale,field_prof_internal_slope,seed);
 			}
@@ -1012,11 +1016,11 @@ void Lens::createFieldHalos(
       //Should we incriment j twice ??
 			++j;
 
-			if(flag_galaxy_subhalo){
+			if(flag_field_gal_on){
 				switch(field_int_prof_gal_type){
 				case null_gal:
 					ERROR_MESSAGE();
-					std::cout << "flag_galaxy_subhalo is true, but field_int_prof_gal_type is null!!!!" << std::endl;
+					std::cout << "flag_field_gal_on is true, but field_int_prof_gal_type is null!!!!" << std::endl;
 					break;
 				case nsie_gal:
 					field_halos.push_back(new SimpleNSIELensHalo);
@@ -1143,7 +1147,8 @@ void Lens::readInputSimFile(CosmoHndl cosmo){
 		theta[0] = -ra*pi/180.*Ds;
 		theta[1] = dec*pi/180.*Ds;
 
-
+    if(rmax < (rtmp = (theta[0]*theta[0]+theta[1]*theta[1])/Ds/Ds)) rmax = rtmp;
+    
 		if(np > 0.0 && vdisp > 0.0 && z <= zsource){
 
 			switch(field_int_prof_type){
@@ -1189,7 +1194,7 @@ void Lens::readInputSimFile(CosmoHndl cosmo){
 			float mass = np*8.6e8/cosmo->gethubble();
 
 			field_halos[j]->setZlens(z);
-			if(flag_galaxy_subhalo){
+			if(flag_field_gal_on){
 				field_galaxy_mass_fraction = 2*mo*pow(mass/M1,gam1)
 				  /pow(1+pow(mass/M1,be),(gam1-gam2)/be)/mass;
 				if(field_galaxy_mass_fraction > 1.0) field_galaxy_mass_fraction = 1;
@@ -1216,11 +1221,11 @@ void Lens::readInputSimFile(CosmoHndl cosmo){
 
 			++j;
 
-			if(flag_galaxy_subhalo){
+			if(flag_field_gal_on){
 				switch(field_int_prof_gal_type){
 				case null_gal:
 					ERROR_MESSAGE();
-					std::cout << "flag_galaxy_subhalo is true, but field_int_prof_gal_type is null!!!!" << std::endl;
+					std::cout << "flag_field_gal_on is true, but field_int_prof_gal_type is null!!!!" << std::endl;
 					break;
 				case nsie_gal:
 					field_halos.push_back(new SimpleNSIELensHalo);
@@ -1239,7 +1244,8 @@ void Lens::readInputSimFile(CosmoHndl cosmo){
 	}
 	file_in.close();
 	std::cout << field_halos.size() << " halos read in."<< std::endl
-			<< "Max input mass = " << mass_max << "  R max = " << R_max << "  V max = " << V_max << std::endl;
+			<< "Max input mass = " << mass_max << "  R max = " << R_max << "  V max = " << V_max
+      << "Min imput mass = " << minmass << std::endl;
 
 	Nhalos = field_halos.size();
 
@@ -1255,6 +1261,8 @@ void Lens::readInputSimFile(CosmoHndl cosmo){
 	for(i=0;i<Nhalos;++i){
 		halo_pos[i] = halo_pos_vec[i];
 	}
+  
+  fieldofview = pi*rmax*pow(180/pi,2);  // Resets field of view to estimate of inputed one
 
 	std::cout << "sorting in Lens::readInputSimFile()" << std::endl;
 	// sort the field_halos by readshift
