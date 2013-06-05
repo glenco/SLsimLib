@@ -36,7 +36,7 @@
  *              --------------------------------  i = Nplanes-2 last plane with mass on it
  *
  *
- *              --------------------------------  i = j == (flag_input_lens % Nplanes)
+ *              --------------------------------  i = j == (main_halo_on % Nplanes)
  *
  *
  *              --------------------------------  i = 0 first plane with mass on it at finite distance from observer
@@ -45,30 +45,29 @@
  *
  *   outputfile -- filename for simulation output, usually in the main()
  *   Nplanes -- number of lensing planes
- *   flag_input_lens -- 0: no major lens present; 1: there is a major lens present
+ *   main_halo_on -- 0: no major lens present; 1: there is a major lens present
  *   main_halo_type -- profile type for the main DM lens halo
  *   	0 or nolens, 1 or NFW, 2 or PseudoNFW, 3 or PowerLaw, 4 or NSIE, 5 or AnaLens, 6 or UniLens, 7 or MOKALens, 8 or DummyLens
- *   galaxy_halo_type -- profile typ for the main galaxy lens halo
- *   	0 or none, 1 or NSIE
+ *   main_galaxy_halo_type -- profile typ for the main galaxy lens halo 0 or none, 1 or NSIE
  *   redshift_planes_file -- asci file with the redshifts of the lensing planes, if not set then created internaly
  *   flag_switch_field_off -- false: field halos are created, true: no field halos are created; default is false
  *
  *   if flag_switch_field_off == false, i.e. there are field halos then also the following are used:
  *   fieldofview -- field of view of the light cone, filled with field halos
- *   int_prof_type -- profile type of the DM field lens halos
+ *   field_internal_profile -- profile type of the DM field lens halos
  *   	0 or nolens, 1 or NFW, 2 or PseudoNFW, 3 or PowerLaw, 4 or NSIE, 5 or AnaLens, 6 or UniLens, 7 or MOKALens, 8 or DummyLens
- *   halo_slope -- slope of the surface density for power law or pseudo nfw profiles
- *   int_prof_gal_type -- profile type of the galaxy field halos; if not set, no galaxies are used
+ *   field_prof_internal_slope -- slope of the surface density for power law or pseudo nfw profiles
+ *   field_internal_profile_galaxy -- profile type of the galaxy field halos; if not set, no galaxies are used
  *   	0 or none, 1 or NSIE
- *   galaxy_mass_fraction -- if int_prof_gal_type is set, then this is the galaxy mass fraction
+ *   field_galaxy_mass_fraction -- if int_prof_gal_type is set, then this is the galaxy mass fraction
  *
- *   input_sim_file -- filename of the Millenium simulation data to be read in and used to populate the light cone with field halos
+ *   field_input_sim_file -- filename of the Millenium simulation data to be read in and used to populate the light cone with field halos
  *
- *   if input_sim_file is  _not_ set, then the field halos are generated from a mass function and the following are used:
- *   mass_func_type -- type of the halo mass function
+ *   if field_input_sim_file is  _not_ set, then the field halos are generated from a mass function and the following are used:
+ *   field_mass_func_type -- type of the halo mass function
  *   	PS (0), ST (1), and power law (2)
  *   mass_func_PL_slope -- slope of the mass function in the power law case; default is -1/6
- *   min_mass -- minimum mass for the generated field halos
+ *   field_min_mass -- minimum mass for the generated field halos
  *   field_buffer -- a constant physical size buffer, padding every lens plane to increase its surface
  *
  *   zsource -- source redshift
@@ -113,7 +112,7 @@ public:
 	/// print the main parameters of the lens
 	void printMultiLens();
 	double getZlens(){
-		if(flag_input_lens)
+		if(main_halo_on)
 			return main_halos[0]->getZlens();
 		else{
 			ERROR_MESSAGE();
@@ -153,7 +152,7 @@ public:
 
 	double getZmax(){return plane_redshifts[Nplanes-1];}
 
-	int flag_input_lens;
+	int main_halo_on;
 	/// the lensing planes
 	std::vector<LensPlane *> lensing_planes;
 	/// Dl[j = 0...] angular diameter distances, comoving
@@ -177,7 +176,7 @@ public:
 	/// main lens type: 0 or nolens, 1 or NFW, 2 or PseudoNFW, 3 or PowerLaw, 4 or NSIE, 5 or AnaLens, 6 or UniLens, 7 or MOKALens, 8 or DummyLens
 	LensHaloType main_halo_type;
 	/// galaxy lens type: 0 or none, 1 or NSIE
-	GalaxyLensHaloType galaxy_halo_type;
+	GalaxyLensHaloType main_galaxy_halo_type;
 	/// main lensing halo in the simulation
 	Utilities::MixedVector<LensHaloHndl> main_halos;
 	/// number of main halo profiles (or main halos)
@@ -206,25 +205,25 @@ private:
 	/* the following parameters are read in from the parameter file */
 
 	/// type of mass function PS (0), ST (1), and power law (2) default is ST
-	MassFuncType mass_func_type;
-	/// slope of the mass function is mass_func_type == 2
+	MassFuncType field_mass_func_type;
+	/// slope of the mass function is field_mass_func_type == 2
 	double mass_func_PL_slope;
 	/// min mass for the halo model
-	double min_mass;
+	double field_min_mass;
 	/// internal halo profile type; needs to be 0 or PowerLaw, 1 or NFW, 2 or PseudoNFW, 3 or NSIE, 4 or PointMass
-	LensHaloType int_prof_type;
+	LensHaloType field_int_prof_type;
 	/// power law or pseudo NFW internal profile slope
-	double halo_slope;
+	double field_prof_internal_slope;
 
 	/// if true, each field halo contains an NSIE galaxy inside it
 	bool flag_galaxy_subhalo;
 	/// galaxy subhalo profile type; needs to be 0 or PowerLaw, 1 or NFW, 2 or PseudoNFW, 3 or NSIE, 4 or PointMass
-	GalaxyLensHaloType int_prof_gal_type;
+	GalaxyLensHaloType field_int_prof_gal_type;
 	/// mass fraction in the host galaxy
-	double galaxy_mass_fraction;
+	double field_galaxy_mass_fraction;
 
 
-	std::string input_sim_file;
+	std::string field_input_sim_file;
 	bool sim_input_flag;
 	//std::string input_gal_file;
 	//bool gal_input_flag;

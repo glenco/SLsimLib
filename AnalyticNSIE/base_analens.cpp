@@ -131,8 +131,8 @@ void BaseNSIELensHalo::assignParams(InputParams& params){
     	if(!params.get("beta_sub",sub_beta)) error_message1("beta_sub",params.filename());
     	if(!params.get("alpha_sub",sub_alpha)) error_message1("alpha_sub",params.filename());
     	if(!params.get("R_submax",sub_Rmax)) error_message1("R_submax",params.filename());
-    	if(!params.get("mass_max",sub_Mmax)) error_message1("mass_max",params.filename());
-    	if(!params.get("mass_min",sub_Mmin)) error_message1("mass_min",params.filename());
+    	if(!params.get("sub_mass_max",sub_Mmax)) error_message1("sub_mass_max",params.filename());
+    	if(!params.get("sub_mass_min",sub_Mmin)) error_message1("sub_mass_min",params.filename());
     	if(sub_Mmin < 1.0e3){
     		ERROR_MESSAGE();
     		std::cout << "Are you sure the minimum halo mass should be " << sub_Mmin << " Msun?" << std::endl;

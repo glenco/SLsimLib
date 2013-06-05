@@ -43,8 +43,8 @@
  *	beta_sub               Logarithmic slope of the internal clump profile.  Used if sub_type == powerlaw
  *	alpha_sub              Logarithmic slope of the mass function.
  *	R_submax               Maximum radius of most massive substructure (see Metcalf & Amara 2012)
- *	mass_max               Maximum mass
- *	mass_min               Minimum mass
+ *	sub_mass_max               Maximum mass
+ *	sub_mass_min               Minimum mass
  *	sub_type               Mass profile of clumps - 0 or nfw,1 or powerlaw, 2 or pointmass
  *
  *  **** Stars parameters

@@ -92,7 +92,7 @@ double OverzierSource::SurfaceBrightness(
 	//sb = sbDo*exp(-(R)) + sbSo*exp(-7.6693*pow(R/Reff,0.25));
 	sb = sbDo*exp(-R);
 	if(Reff > 0.0) sb += sbSo*exp(-7.6693*pow((x[0]*x[0] + x[1]*x[1])/Reff/Reff,0.125));
-//	if(sb < 1.0e-4*(sbDo + sbSo) ) return 0.0;
+  //	if(sb < 1.0e-4*(sbDo + sbSo) ) return 0.0;
 	sb *= pow(10,-0.4*48.6)*inv_hplanck;
 	
 	if(sb< sb_limit)
