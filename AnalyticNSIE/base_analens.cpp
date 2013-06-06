@@ -376,17 +376,39 @@ void LensHalo::gradial(double r,double g[]){
   g[2] = -3.0*g[1]/x/r_eps;
 }
 
-void LensHalo::desymmeterize(double r,double theta,double *alpha){
+/** \brief This function returns the lensing quantities for an asymmetric version of the symmetric baseclass halo.
+ *  
+ *  This function should only be used by the second generation of classes derived from LensHalo.
+ *
+ *  The math needs to be double checked and the sign convention checked.  
+ *  The method used to make the lenses asymmetric is laid out in http://metcalf1.bo.astro.it/~bmetcalf/ExtraNotes/notes_elliptical.pdf
+ */
+void LensHalo::desymmeterize(double r,double theta,double *alpha,double *kappa,double *gamma){
   double f[3],g[3];
   
   double alpha_iso = alpha_h(r/rscale),phi_iso = phi_h(r/rscale)
   ,kappa_iso = kappa_h(r/rscale),gamma_iso = gamma_h(r/rscale);
-  double alpha_r,alpha_theta;
+  
+  double alpha_r,alpha_theta,F;
 
-  alpha_r = (1+g[0]*f[0] + g[1]*f[0])*alpha_iso;
+  faxial(theta,f);
+  gradial(r,g);
+  
+  F = (1+g[0]*f[0]);
+  
+  alpha_r = (F + g[1]*f[0])*alpha_iso;
   alpha_theta = g[0]*f[1]*phi_iso/r;
   
   alpha[0] = alpha_r*cos(theta) - alpha_theta*sin(theta);
   alpha[1] = alpha_r*sin(theta) + alpha_theta*cos(theta);
+  
+  *kappa = F*kappa_iso + ( (g[2] + g[1]/r)*f[0] + g[0]*f[2]/r/r )*phi_iso;
+  
+  double gt = F*gamma_iso + g[1]*f[0]*alpha_iso + 0.5*( g[2]*f[0] - g[0]*f[2]/r/r)*phi_iso;
+  double g45 = f[1]*(alpha_iso*g[0]/r + (g[1]-g[0]/r/r)*phi_iso);
+  
+  gamma[0] = cos(2*theta)*gt + sin(2*theta)*g45;
+  gamma[1] = -sin(2*theta)*gt + cos(2*theta)*g45;
+  
 }
 

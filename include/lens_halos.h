@@ -107,7 +107,7 @@ protected:
   void setModesToEllip(double q,double theta);
   void faxial(double theta,double f[]);
   void gradial(double r,double g[]);
-  void desymmeterize(double r,double theta,double *alpha);
+  void desymmeterize(double r,double theta,double *alpha,double *kappa,double *gamma);
   const static int Nmod = 18;
   double mod[18];
   double r_eps;
