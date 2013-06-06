@@ -60,11 +60,11 @@ public:
 	virtual void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, double my_slope, long *seed);
 
 	/// set Rmax
-	void set_Rmax(float my_Rmax){Rmax=my_Rmax;};
+	void set_Rmax(float my_Rmax){Rmax=my_Rmax; xmax = Rmax/rscale; };
 	/// set mass
 	void set_mass(float my_mass){mass=my_mass;};
 	/// set scale radius
-	void set_rscale(float my_rscale){rscale=my_rscale;};
+	void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rmax/rscale;};
 	/// set redshift
 	void setZlens(double my_zlens){zlens=my_zlens;};
 	/// set redshift, where the cosmology and the source redshift are needed (BaseNSIELensHalo)
@@ -97,17 +97,20 @@ protected:
     double zlens;
 
     /// point mass case
-	virtual double inline alpha_h(double x, double xmax){return -1;};
-	virtual KappaType inline kappa_h(double x, double xmax){return 0;};
-	virtual KappaType inline gamma_h(double x, double xmax){return -2;};
-	virtual KappaType inline phi_h(double x, double xmax){return 0;};
+	virtual double inline alpha_h(double x){return -1;};
+	virtual KappaType inline kappa_h(double x){return 0;};
+	virtual KappaType inline gamma_h(double x){return -2;};
+	virtual KappaType inline phi_h(double x){return 0;};
+  double xmax;
   
   // Functions for calculating axial dependence
   void setModesToEllip(double q,double theta);
   void faxial(double theta,double f[]);
+  void gradial(double r,double g[]);
+  void desymmeterize(double r,double theta,double *alpha);
   const static int Nmod = 18;
   double mod[18];
-
+  double r_eps;
 };
 
 /** \ingroup DeflectionL2
@@ -151,17 +154,17 @@ protected:
 	void assignParams(InputParams& params);
 
 	/// Override internal structure of halos
-	inline double alpha_h(double x,double xmax){
+	inline double alpha_h(double x){
 		//return -1.0*InterpolateFromTable(gtable,x)/InterpolateFromTable(gtable,xmax);
 		return -1.0*InterpolateFromTable(gtable,x)/gmax;
 	}
-	inline KappaType kappa_h(double x,double xmax){
+	inline KappaType kappa_h(double x){
 		return 0.5*x*x*InterpolateFromTable(ftable,x)/gmax;
 	}
-	inline KappaType gamma_h(double x,double xmax){
+	inline KappaType gamma_h(double x){
 		return -0.25*x*x*InterpolateFromTable(g2table,x)/gmax;
 	}
-	inline KappaType phi_h(double x,double xmax){
+	inline KappaType phi_h(double x){
 		ERROR_MESSAGE();
 		std::cout << "time delay has not been fixed for NFW profile yet." << std::endl;
 		exit(1);
@@ -218,16 +221,16 @@ private:
 	double beta;
 
 	// Override internal structure of halos
-	inline double alpha_h(double x,double xmax){
+	inline double alpha_h(double x){
 		return -1.0*InterpolateFromTable(x)/InterpolateFromTable(xmax);
 	}
-	inline KappaType kappa_h(double x,double xmax){
+	inline KappaType kappa_h(double x){
 		return 0.5*x*x/InterpolateFromTable(xmax)/pow(1+x,beta);
 	}
-	inline KappaType gamma_h(double x,double xmax){
+	inline KappaType gamma_h(double x){
 		return (0.5*x*x/pow(1+x,beta) - InterpolateFromTable(x))/InterpolateFromTable(xmax);
 	}
-	inline KappaType phi_h(double x,double xmax){
+	inline KappaType phi_h(double x){
 		ERROR_MESSAGE();
 		std::cout << "time delay has not been fixed for PseudoNFW profile yet." << std::endl;
 		exit(1);
@@ -266,19 +269,19 @@ private:
 	double beta;
 
 	// Override internal structure of halos
-	inline double alpha_h(double x,double xmax){
+	inline double alpha_h(double x){
 		if(x==0) x=1e-6*xmax;
 		return -1.0*pow(x/xmax,beta+2);
 	}
-	inline KappaType kappa_h(double x,double xmax){
+	inline KappaType kappa_h(double x){
 		if(x==0) x=1e-6*xmax;
 		return 0.5*(beta+2)*pow(x/xmax,beta)*x*x/(xmax*xmax);
 	}
-	inline KappaType gamma_h(double x,double xmax){
+	inline KappaType gamma_h(double x){
 		if(x==0) x=1e-6*xmax;
 		return 0.5*beta*pow(x/xmax,beta+2);
 	}
-	inline KappaType phi_h(double x,double xmax){
+	inline KappaType phi_h(double x){
 		ERROR_MESSAGE();
 		std::cout << "time delay has not been fixed for PowerLaw profile yet." << std::endl;
 		exit(1);

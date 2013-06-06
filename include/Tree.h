@@ -272,7 +272,7 @@ void split_order_curve3(OldImageInfo *curves,int Maxcurves,int *Ncurves);
 void split_order_curve4(OldImageInfo *curves,int Maxcurves,int *Ncurves);
 namespace Utilities{
 	unsigned long order_curve4(Point *curve,long Npoints);
-	bool order_curve4(Kist<Point> * curve);
+	unsigned long order_curve4(Kist<Point> * curve);
 }
 bool order_ExteriorBoundary(Point *curve,long Npoints,long *NewNpoints,double *area);
 double findAreaOfCurve(TreeHndl tree,ImageInfo *curve,int NimageMax);

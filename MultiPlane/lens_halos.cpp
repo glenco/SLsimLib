@@ -9,7 +9,7 @@
 
 LensHalo::LensHalo(){
 	rscale = 1.0;
-	mass = Rmax = 0.0;
+	mass = Rmax = xmax = 0.0;
 }
 
 LensHalo::LensHalo(InputParams& params){
@@ -20,6 +20,7 @@ void LensHalo::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, d
 	mass = my_mass;
 	Rmax = my_Rmax;
 	rscale = my_rscale;
+  xmax = Rmax/rscale;
 }
 
 void LensHalo::error_message1(std::string parameter,std::string file){
@@ -86,7 +87,8 @@ void NFWLensHalo::assignParams(InputParams& params){
 	if(!params.get("zlens_nfw",zlens)) error_message1("lens_nfw",params.filename());
 	if(!params.get("concentration_nfw",rscale)) error_message1("concentration_nfw",params.filename());
 	rscale = rscale*Rmax; // was the concentration
-  gmax = InterpolateFromTable(gtable,Rmax/rscale);
+  xmax = Rmax/rscale;
+  gmax = InterpolateFromTable(gtable,xmax);
 
 }
 
@@ -110,8 +112,8 @@ void NFWLensHalo::initFromFile(float my_mass, long *seed, float vmax, float r_ha
 	// Find the NFW profile with the same mass, Vmax and R_halfmass
 	nfw_util.match_nfw(vmax,r_halfmass,mass,&rscale,&Rmax);
 	rscale = Rmax/rscale; // Was the concentration
-  
-  gmax = InterpolateFromTable(gtable,Rmax/rscale);
+  xmax = Rmax/rscale;
+  gmax = InterpolateFromTable(gtable,xmax);
 }
 
 int PseudoNFWLensHalo::count = 0;
@@ -153,6 +155,7 @@ double PseudoNFWLensHalo::InterpolateFromTable(double y){
 void PseudoNFWLensHalo::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, double my_slope, long *seed){
 	LensHalo::initFromMassFunc(my_mass,my_Rmax,my_rscale,my_slope,seed);
 	beta = my_slope;
+  xmax = my_Rmax/my_rscale;
 	make_tables();
 }
 
@@ -163,6 +166,7 @@ void PseudoNFWLensHalo::assignParams(InputParams& params){
 	if(!params.get("concentration_pnfw",rscale)) error_message1("concentration_pnfw",params.filename());
 	if(!params.get("slope_pnfw",beta)) error_message1("slope_pnfw",params.filename());
 	rscale = rscale*Rmax; // was the concentration
+  xmax = Rmax/rscale;
 }
 
 PseudoNFWLensHalo::~PseudoNFWLensHalo(){
@@ -186,6 +190,7 @@ PowerLawLensHalo::PowerLawLensHalo(InputParams& params){
 void PowerLawLensHalo::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, double my_slope, long *seed){
 	LensHalo::initFromMassFunc(my_mass,my_Rmax,my_rscale,my_slope,seed);
 	beta = my_slope;
+  xmax = my_Rmax/my_rscale;
 }
 
 void PowerLawLensHalo::assignParams(InputParams& params){
@@ -262,17 +267,18 @@ void LensHalo::force_halo(
 	if(rcm2 < Rmax*Rmax){
 		double prefac = mass/rcm2/pi;
 		double x = sqrt(rcm2)/rscale;
-		double xmax = Rmax/rscale;
+		//double xmax = Rmax/rscale;
 
-		double tmp = (alpha_h(x,xmax) + 1.0*subtract_point)*prefac;
+    //double tmp = (alpha_h(x,xmax) + 1.0*subtract_point)*prefac;
+		double tmp = (alpha_h(x) + 1.0*subtract_point)*prefac;
 		alpha[0] += tmp*xcm[0];
 		alpha[1] += tmp*xcm[1];
 
 		// can turn off kappa and gamma calculations to save times
 		if(!no_kappa){
-			*kappa += kappa_h(x,xmax)*prefac;
+			*kappa += kappa_h(x)*prefac;
 
-			tmp = (gamma_h(x,xmax) + 2.0*subtract_point)*prefac/rcm2;
+			tmp = (gamma_h(x) + 2.0*subtract_point)*prefac/rcm2;
 
 			gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 			gamma[1] += xcm[0]*xcm[1]*tmp;
@@ -293,6 +299,8 @@ void SimpleNSIELensHalo::force_halo(
 
 	double rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
 	if(rcm2 < 1e-20) rcm2 = 1e-20;
+
+  //**** test line
 
 	if(rcm2 < Rmax*Rmax){
 		double ellipR = ellipticRadiusNSIE(xcm,fratio,pa);
@@ -316,9 +324,11 @@ void SimpleNSIELensHalo::force_halo(
 			alphaNSIE(alpha_in,x_in,fratio,rcore,pa);
 			alpha_in[0] *= -units;
 			alpha_in[1] *= -units;
-
+      
 			alpha[0] += (r - rin)*(alpha_out[0] - alpha_in[0])/(Rmax - rin) + alpha_in[0];
 			alpha[1] += (r - rin)*(alpha_out[1] - alpha_in[1])/(Rmax - rin) + alpha_in[1];
+			//alpha[0] -= (r - rin)*(alpha_out[0] - alpha_in[0])/(Rmax - rin) + alpha_in[0];
+			//alpha[1] -= (r - rin)*(alpha_out[1] - alpha_in[1])/(Rmax - rin) + alpha_in[1];
 
 		}else{
 			double xt[2]={0,0},tmp[2]={0,0};
@@ -326,8 +336,11 @@ void SimpleNSIELensHalo::force_halo(
 			xt[0]=xcm[0];
 			xt[1]=xcm[1];
 			alphaNSIE(tmp,xt,fratio,rcore,pa);
+           
 			alpha[0] -= units*tmp[0];
 			alpha[1] -= units*tmp[1];
+			//alpha[0] += units*tmp[0];
+			//alpha[1] += units*tmp[1];
 			if(!no_kappa){
 				KappaType tmp[2]={0,0};
 				*kappa += units*kappaNSIE(xt,fratio,rcore,pa);
@@ -336,16 +349,15 @@ void SimpleNSIELensHalo::force_halo(
 				gamma[1] += units*tmp[1];
 			}
 		}
-
+    
 		if(subtract_point){
-			double pref = mass/rcm2/pi;
-			double fac = 1.0*pref;
+			double fac = mass/rcm2/pi;
 			alpha[0] += fac*xcm[0];
 			alpha[1] += fac*xcm[1];
 
 			// can turn off kappa and gamma calculations to save times
 			if(!no_kappa){
-				fac = 2.0*pref/rcm2;
+				fac = 2.0*fac/rcm2;
 
 				gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*fac;
 				gamma[1] += xcm[0]*xcm[1]*fac;

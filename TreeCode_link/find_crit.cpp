@@ -740,32 +740,34 @@ void find_crit2(
 	  // order points in curve
 
 	  x[0]=x[1]=0.0;
-	  Point *tmp_points = NewPointArray(Npoints,false);
+	  //Point *tmp_points = NewPointArray(Npoints,false);
 	  unsigned long ii;
 	  for(i=0;i<*Ncrits;++i){
 
-		  critcurve[i].imagekist->MoveToTop();
+		  //critcurve[i].imagekist->MoveToTop();
 		  //copy points into a point array for compatibility with curve ordering routines
-		  for(ii=0; ii < critcurve[i].imagekist->Nunits() ; ++ii, critcurve[i].imagekist->Down())
-			  PointCopyData(&tmp_points[ii],getCurrentKist(critcurve[i].imagekist));
+		  //for(ii=0; ii < critcurve[i].imagekist->Nunits() ; ++ii, critcurve[i].imagekist->Down())
+			//  PointCopyData(&tmp_points[ii],getCurrentKist(critcurve[i].imagekist));
 
 		  // order the curve
-		  NewNumber = Utilities::order_curve4(tmp_points,critcurve[i].imagekist->Nunits());
+//		  NewNumber = Utilities::order_curve4(tmp_points,critcurve[i].imagekist->Nunits());
+		  NewNumber = Utilities::order_curve4(critcurve[i].imagekist);
 		  if(NewNumber != critcurve[i].imagekist->Nunits() ) *orderingsuccess = false;
 
 		  // find area of critical curves
 		  if(critcurve[i].imagekist->Nunits() > 5){
-				   Utilities::windings(x,tmp_points,critcurve[i].imagekist->Nunits(),&(critcurve[i].area),0);
+        //Utilities::windings(x,tmp_points,critcurve[i].imagekist->Nunits(),&(critcurve[i].area),0);
+        Utilities::windings(critcurve[i].centroid,critcurve[i].imagekist,&(critcurve[i].area),0);
 		  }else critcurve[i].area=0;
 
 		  // resort points in imagekist
-		  for(ii=0;ii<NewNumber;++ii){
+		  /*for(ii=0;ii<NewNumber;++ii){
 			  critcurve[i].imagekist->MoveToTop();
 			  do{
 				  if(tmp_points[ii].id == critcurve[i].imagekist->getCurrent()->id)
 					  critcurve[i].imagekist->MoveCurrentToBottom();
 			  }while(critcurve[i].imagekist->Down());
-		  }
+		  }*/
 		  // remove points that were not linked up into a closed curve
 		  critcurve[i].imagekist->MoveToTop();
 		  critcurve[i].imagekist->JumpDown(NewNumber);
@@ -775,7 +777,7 @@ void find_crit2(
 		  }
 
 	  }
-	  FreePointArray(tmp_points,false);
+	  //FreePointArray(tmp_points,false);
 	  //split_order_curve4(critcurve,maxNcrits,Ncrits);
   }//else if(critcurve->imagekist->Nunits() > 0) *Ncrits=1;
 

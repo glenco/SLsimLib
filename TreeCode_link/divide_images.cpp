@@ -91,7 +91,7 @@ int ImageGenus(TreeHndl i_tree,ImageInfo *imageinfo){
 			}
 		}
 
-		assert(AtBottomKist(new_kist));
+		assert(AtBottomKist(new_kist) || new_kist->OffBottom());
 		++number;
 	}while(new_kist->Nunits() > 0 && number < Nimagesmax);
 	if(number == Nimagesmax)

@@ -162,7 +162,7 @@ unsigned long order_curve4(Point *curve,long Npoints){
 	double center[2],*theta;
 
 	//std::printf("entering split_order_curve\n");
-	if(Npoints < 3) return false;
+	if(Npoints < 3) return Npoints;
 
 
 	// order curve points
@@ -213,10 +213,13 @@ unsigned long order_curve4(Point *curve,long Npoints){
 	return end+1;
 }
 /// Overloads and is dependent on version that takes a point array
-bool order_curve4(Kist<Point> * curve){
-	Point *tmpcurve = NewPointArray(curve->Nunits(),false);
+unsigned long order_curve4(Kist<Point> * curve){
 	unsigned long i=0,Npoints = curve->Nunits();
 	bool bo;
+
+  if(Npoints < 3) return Npoints;
+
+  Point *tmpcurve = NewPointArray(curve->Nunits(),false);
 
 	curve->MoveToTop();
 	do{

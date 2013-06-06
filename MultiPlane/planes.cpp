@@ -42,8 +42,8 @@ void SingularLensPlane::force(double *alpha,KappaType *kappa,KappaType *gamma,do
 
 		halos[i]->force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,xx,kappa_off,false);
 
-		alpha[0] += alpha_tmp[0];
-		alpha[1] += alpha_tmp[1];
+		alpha[0] -= alpha_tmp[0];
+		alpha[1] -= alpha_tmp[1];
 		*kappa += kappa_tmp;
 		gamma[0] += gamma_tmp[0];
 		gamma[1] += gamma_tmp[1];

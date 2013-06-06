@@ -357,8 +357,7 @@ void LensHalo::faxial(double theta,double f[]){
   int i,k;
   
   //f[0] = 0.5*mod[3];
-  f[0] = 1;
-  f[1] = f[2] = 0;
+  f[0] = f[1] = f[2] = 0;
   for(i=4;i<Nmod;i+=2){
     k=i/2;
     f[0] +=  mod[i]*cos(k*theta)     + mod[i+1]*sin(k*theta);
@@ -366,5 +365,28 @@ void LensHalo::faxial(double theta,double f[]){
     f[2] += -mod[i]*k*k*cos(k*theta) - mod[i+1]*k*k*sin(k*theta);
   }
 
+}
+
+/// Derivatives of the axial potential factor with respect to theta
+void LensHalo::gradial(double r,double g[]){
+  double x = (1+r/r_eps);
+  
+  g[0] = 1.0/x/x;
+  g[1] = -2.0*g[0]/x/r_eps;
+  g[2] = -3.0*g[1]/x/r_eps;
+}
+
+void LensHalo::desymmeterize(double r,double theta,double *alpha){
+  double f[3],g[3];
+  
+  double alpha_iso = alpha_h(r/rscale),phi_iso = phi_h(r/rscale)
+  ,kappa_iso = kappa_h(r/rscale),gamma_iso = gamma_h(r/rscale);
+  double alpha_r,alpha_theta;
+
+  alpha_r = (1+g[0]*f[0] + g[1]*f[0])*alpha_iso;
+  alpha_theta = g[0]*f[1]*phi_iso/r;
+  
+  alpha[0] = alpha_r*cos(theta) - alpha_theta*sin(theta);
+  alpha[1] = alpha_r*sin(theta) + alpha_theta*cos(theta);
 }
 
