@@ -28,7 +28,7 @@ public:
 	}
 	
 	template<typename Lens>
-	std::vector<Parameters> run(Model<Lens, MultiSource>& model, const PixelData& data, const std::size_t n)
+	std::vector<Parameters> run(Model<Lens, SourceMulti>& model, const PixelData& data, const std::size_t n)
 	{
 		// number of sources
 		std::size_t num_sources = model.source->size();

@@ -39,20 +39,20 @@ LensHalo::~LensHalo(){
 
 }
 
-int NFWLensHalo::count = 0;
-double *NFWLensHalo::xtable = NULL,*NFWLensHalo::ftable = NULL,*NFWLensHalo::gtable = NULL,*NFWLensHalo::g2table = NULL;
+int LensHaloNFW::count = 0;
+double *LensHaloNFW::xtable = NULL,*LensHaloNFW::ftable = NULL,*LensHaloNFW::gtable = NULL,*LensHaloNFW::g2table = NULL;
 
-NFWLensHalo::NFWLensHalo() : LensHalo(){
+LensHaloNFW::LensHaloNFW() : LensHalo(){
   gmax=0;
 	make_tables();
 }
 
-NFWLensHalo::NFWLensHalo(InputParams& params){
+LensHaloNFW::LensHaloNFW(InputParams& params){
 	assignParams(params);
 	make_tables();
 }
 
-void NFWLensHalo::make_tables(){
+void LensHaloNFW::make_tables(){
 	if(count == 0){
 		int i;
 		double x, dx = maxrm/(double)NTABLE;
@@ -73,7 +73,7 @@ void NFWLensHalo::make_tables(){
   count++;
 }
 
-double NFWLensHalo::InterpolateFromTable(double *table, double y){
+double LensHaloNFW::InterpolateFromTable(double *table, double y){
 	int j;
 	j=(int)(y/maxrm*NTABLE);
 
@@ -81,7 +81,7 @@ double NFWLensHalo::InterpolateFromTable(double *table, double y){
 	return (table[j+1]-table[j])/(xtable[j+1]-xtable[j])*(y-xtable[j]) + table[j];
 }
 
-void NFWLensHalo::assignParams(InputParams& params){
+void LensHaloNFW::assignParams(InputParams& params){
 	if(!params.get("mass_nfw",mass)) error_message1("mass_nfw",params.filename());
 	if(!params.get("Rmax_nfw",Rmax)) error_message1("Rmax_nfw",params.filename());
 	if(!params.get("zlens_nfw",zlens)) error_message1("lens_nfw",params.filename());
@@ -92,7 +92,7 @@ void NFWLensHalo::assignParams(InputParams& params){
 
 }
 
-NFWLensHalo::~NFWLensHalo(){
+LensHaloNFW::~LensHaloNFW(){
 	--count;
 	if(count == 0){
 		delete[] xtable;
@@ -103,7 +103,7 @@ NFWLensHalo::~NFWLensHalo(){
 }
 
 /// Sets the profile to match the mass, Vmax and R_halfmass
-void NFWLensHalo::initFromFile(float my_mass, long *seed, float vmax, float r_halfmass){
+void LensHaloNFW::initFromFile(float my_mass, long *seed, float vmax, float r_halfmass){
 
 	mass = my_mass;
 
@@ -116,17 +116,17 @@ void NFWLensHalo::initFromFile(float my_mass, long *seed, float vmax, float r_ha
   gmax = InterpolateFromTable(gtable,xmax);
 }
 
-int PseudoNFWLensHalo::count = 0;
-double *PseudoNFWLensHalo::xtable = NULL,*PseudoNFWLensHalo::mhattable = NULL;
-PseudoNFWLensHalo::PseudoNFWLensHalo() : LensHalo(){
+int LensHaloPseudoNFW::count = 0;
+double *LensHaloPseudoNFW::xtable = NULL,*LensHaloPseudoNFW::mhattable = NULL;
+LensHaloPseudoNFW::LensHaloPseudoNFW() : LensHalo(){
 }
 
-PseudoNFWLensHalo::PseudoNFWLensHalo(InputParams& params){
+LensHaloPseudoNFW::LensHaloPseudoNFW(InputParams& params){
 	assignParams(params);
 	make_tables();
 }
 
-void PseudoNFWLensHalo::make_tables(){
+void LensHaloPseudoNFW::make_tables(){
 	if(count == 0){
 		int i;
 		double x, dx = maxrm/(double)NTABLE;
@@ -144,7 +144,7 @@ void PseudoNFWLensHalo::make_tables(){
 	}
 }
 
-double PseudoNFWLensHalo::InterpolateFromTable(double y){
+double LensHaloPseudoNFW::InterpolateFromTable(double y){
 	int j;
 	j=(int)(y/maxrm*NTABLE);
 
@@ -152,14 +152,14 @@ double PseudoNFWLensHalo::InterpolateFromTable(double y){
 	return (mhattable[j+1]-mhattable[j])/(xtable[j+1]-xtable[j])*(y-xtable[j]) + mhattable[j];
 }
 
-void PseudoNFWLensHalo::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, double my_slope, long *seed){
+void LensHaloPseudoNFW::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, double my_slope, long *seed){
 	LensHalo::initFromMassFunc(my_mass,my_Rmax,my_rscale,my_slope,seed);
 	beta = my_slope;
   xmax = my_Rmax/my_rscale;
 	make_tables();
 }
 
-void PseudoNFWLensHalo::assignParams(InputParams& params){
+void LensHaloPseudoNFW::assignParams(InputParams& params){
 	if(!params.get("mass_pnfw",mass)) error_message1("mass_pnfw",params.filename());
 	if(!params.get("Rmax_pnfw",Rmax)) error_message1("Rmax_pnfw",params.filename());
 	if(!params.get("zlens_pnfw",zlens)) error_message1("zlens_pnfw",params.filename());
@@ -169,7 +169,7 @@ void PseudoNFWLensHalo::assignParams(InputParams& params){
   xmax = Rmax/rscale;
 }
 
-PseudoNFWLensHalo::~PseudoNFWLensHalo(){
+LensHaloPseudoNFW::~LensHaloPseudoNFW(){
     --count;
     if(count == 0){
     	delete[] xtable;
@@ -179,41 +179,41 @@ PseudoNFWLensHalo::~PseudoNFWLensHalo(){
 
 
 
-PowerLawLensHalo::PowerLawLensHalo() : LensHalo(){
+LensHaloPowerLaw::LensHaloPowerLaw() : LensHalo(){
 	rscale = 1.0;
 }
 
-PowerLawLensHalo::PowerLawLensHalo(InputParams& params){
+LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
 	assignParams(params);
 }
 
-void PowerLawLensHalo::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, double my_slope, long *seed){
+void LensHaloPowerLaw::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, double my_slope, long *seed){
 	LensHalo::initFromMassFunc(my_mass,my_Rmax,my_rscale,my_slope,seed);
 	beta = my_slope;
   xmax = my_Rmax/my_rscale;
 }
 
-void PowerLawLensHalo::assignParams(InputParams& params){
+void LensHaloPowerLaw::assignParams(InputParams& params){
 	if(!params.get("mass_pl",mass)) error_message1("mass_pl",params.filename());
 	if(!params.get("Rmax_pl",Rmax)) error_message1("Rmax_pl",params.filename());
 	if(!params.get("zlens_pl",zlens)) error_message1("zlens_pl",params.filename());
 	if(!params.get("slope_pl",beta)) error_message1("slope_pl",params.filename());
 }
 
-PowerLawLensHalo::~PowerLawLensHalo(){
+LensHaloPowerLaw::~LensHaloPowerLaw(){
 
 }
 
 
-SimpleNSIELensHalo::SimpleNSIELensHalo() : LensHalo(){
+LensHaloSimpleNSIE::LensHaloSimpleNSIE() : LensHalo(){
 	rscale = 1.0;
 }
 
-SimpleNSIELensHalo::SimpleNSIELensHalo(InputParams& params){
+LensHaloSimpleNSIE::LensHaloSimpleNSIE(InputParams& params){
 	assignParams(params);
 }
 
-void SimpleNSIELensHalo::assignParams(InputParams& params){
+void LensHaloSimpleNSIE::assignParams(InputParams& params){
 	if(!params.get("mass_nsie",mass)) error_message1("mass_nsie",params.filename());
 	if(!params.get("zlens_nsie",zlens)) error_message1("zlens_nsie",params.filename());
 
@@ -228,10 +228,10 @@ void SimpleNSIELensHalo::assignParams(InputParams& params){
 	assert(Rmax >= Rsize);
 }
 
-SimpleNSIELensHalo::~SimpleNSIELensHalo(){
+LensHaloSimpleNSIE::~LensHaloSimpleNSIE(){
 
 }
-void SimpleNSIELensHalo::initFromMass(float my_mass, long *seed){
+void LensHaloSimpleNSIE::initFromMass(float my_mass, long *seed){
 	mass = my_mass;
 	rcore = 0.0;
 	sigma = 126*pow(mass/1.0e10,0.25); // From Tully-Fisher and Bell & de Jong 2001
@@ -243,11 +243,11 @@ void SimpleNSIELensHalo::initFromMass(float my_mass, long *seed){
 	assert(Rmax >= Rsize);
 }
 
-void SimpleNSIELensHalo::initFromFile(float my_mass, long *seed, float vmax, float r_halfmass){
+void LensHaloSimpleNSIE::initFromFile(float my_mass, long *seed, float vmax, float r_halfmass){
 	initFromMass(my_mass,seed);
 }
 
-void SimpleNSIELensHalo::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, double my_slope, long *seed){
+void LensHaloSimpleNSIE::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, double my_slope, long *seed){
 	initFromMass(my_mass,seed);
 }
 
@@ -288,7 +288,7 @@ void LensHalo::force_halo(
 	return;
 }
 
-void SimpleNSIELensHalo::force_halo(
+void LensHaloSimpleNSIE::force_halo(
 		double *alpha
 		,KappaType *kappa
 		,KappaType *gamma
@@ -369,25 +369,25 @@ void SimpleNSIELensHalo::force_halo(
 	return;
 }
 
-DummyLensHalo::DummyLensHalo()
+LensHaloDummy::LensHaloDummy()
 : LensHalo()
 {
 }
 
-DummyLensHalo::DummyLensHalo(InputParams& params)
+LensHaloDummy::LensHaloDummy(InputParams& params)
 : LensHalo()
 {
 	assignParams(params);
 }
 
-void DummyLensHalo::force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa,bool subtract_point)
+void LensHaloDummy::force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa,bool subtract_point)
 {
 	alpha[0] = alpha[1] = 0.0;
 	*kappa = 0.0;
 	gamma[0] = gamma[1] = gamma[2] = 0.0;
 }
 
-void DummyLensHalo::assignParams(InputParams& params)
+void LensHaloDummy::assignParams(InputParams& params)
 {
 	if(!params.get("z_lens",zlens)) error_message1("z_lens",params.filename());
 }

@@ -15,7 +15,7 @@ using namespace std;
  * allocates all memory for stars
  */
 
-void BaseNSIELensHalo::implant_stars(Point *centers,unsigned long Nregions,long *seed, IMFtype type){
+void LensHaloBaseNSIE::implant_stars(Point *centers,unsigned long Nregions,long *seed, IMFtype type){
 	PosType r,theta,NstarsPerImage;
 	double *mean_mstar;
 	unsigned long i,j,m,k;
@@ -183,7 +183,7 @@ void BaseNSIELensHalo::implant_stars(Point *centers,unsigned long Nregions,long 
 
 /// subtracts the mass in stars from the smooth model to compensate
 /// for the mass of the stars the lensing quantities are all updated not replaced
-void BaseNSIELensHalo::substract_stars_disks(double *ray,double *alpha
+void LensHaloBaseNSIE::substract_stars_disks(double *ray,double *alpha
 		,KappaType *kappa,KappaType *gamma){
 
 	if(!(stars_implanted)) return;
@@ -224,7 +224,7 @@ void BaseNSIELensHalo::substract_stars_disks(double *ray,double *alpha
  * 2 - broken power law, requires lower mass end slope (powerlo), high mass slope (powerhi), bending point (bendmass)
  * 3 - further IMF models may follow
  */
-float* BaseNSIELensHalo::stellar_mass_function(IMFtype type, unsigned long Nstars, long *seed
+float* LensHaloBaseNSIE::stellar_mass_function(IMFtype type, unsigned long Nstars, long *seed
 		,double minmass, double maxmass, double bendmass, double powerlo, double powerhi){
 
 	//if(!(stars_implanted)) return;

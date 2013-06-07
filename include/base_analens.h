@@ -51,10 +51,10 @@
  *
  * TODO BEN finish this documentation.
  */
-class BaseNSIELensHalo : public SimpleNSIELensHalo{
+class LensHaloBaseNSIE : public LensHaloSimpleNSIE{
 public:
-	BaseNSIELensHalo(InputParams& params);
-	virtual ~BaseNSIELensHalo();
+	LensHaloBaseNSIE(InputParams& params);
+	virtual ~LensHaloBaseNSIE();
 
   /// critical surface density
   double getSigma_crit(){return Sigma_crit;}
@@ -209,7 +209,7 @@ double lens_expand(double beta,double *mod,int Nmodes,double *x,double *alpha,Ka
 // in FullRange/implant_stars.c
 
 //void implant_stars(Point *images,unsigned long Nimages,long *seed);
-//void substract_stars_disks(BaseNSIELensHalo *lens,PosType *ray,PosType *alpha
+//void substract_stars_disks(LensHaloBaseNSIE *lens,PosType *ray,PosType *alpha
  //               ,PosType *kappa,PosType *gamma);
 
 

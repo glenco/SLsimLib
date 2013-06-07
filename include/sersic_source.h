@@ -9,14 +9,14 @@
 
 #include "source.h"
 
-class SersicSource : public Source
+class SourceSersic : public Source
 {
 public:
-	SOURCE_TYPE(SersicSource)
+	SOURCE_TYPE(SourceSersic)
 	
-	SersicSource();
-	SersicSource(double mag,double Reff,double PA,double my_index,double my_q,double my_z=0,const double *theta=0);
-	~SersicSource();
+	SourceSersic();
+	SourceSersic(double mag,double Reff,double PA,double my_index,double my_q,double my_z=0,const double *theta=0);
+	~SourceSersic();
 	
 	void getParameters(Parameters& p) const;
 	void setParameters(Parameters& p);

@@ -7,25 +7,25 @@
 
 #include "source.h"
 
-class MultiSource : public Source
+class SourceMulti : public Source
 {
 public:
-	SOURCE_TYPE(MultiSource)
+	SOURCE_TYPE(SourceMulti)
 	
 	/// Construct an empty MultiSource
-	MultiSource();
+	SourceMulti();
 	
 	/// Create a MultiSource from input parameters.
-	MultiSource(InputParams& params);
+	SourceMulti(InputParams& params);
 	
 	/// Copy a MultiSource and its contained sources.
-	MultiSource(const MultiSource& other);
+	SourceMulti(const SourceMulti& other);
 	
 	/// Destroy the MultiSource.
-	~MultiSource();
+	~SourceMulti();
 	
 	/// Copy contents of another MultiSource into this. Replaces all sources, invalidates all pointers.
-	MultiSource& operator=(MultiSource rhs);
+	SourceMulti& operator=(SourceMulti rhs);
 	
 	/// Get parameters for all sources.
 	void getParameters(Parameters& p) const;
@@ -130,7 +130,7 @@ public:
 	}
 	
 	/// Swap contents of MultiSource with another
-	friend void swap(MultiSource& a, MultiSource& b);
+	friend void swap(SourceMulti& a, SourceMulti& b);
 	
 private:
 	void assignParams(InputParams& params);
@@ -153,7 +153,7 @@ private:
 
 /**** inline functions ****/
 
-inline double MultiSource::SurfaceBrightness(double *y)
+inline double SourceMulti::SurfaceBrightness(double *y)
 {
 	double sb = sources[index]->SurfaceBrightness(y);
 	
@@ -163,26 +163,26 @@ inline double MultiSource::SurfaceBrightness(double *y)
 	return sb;
 }
 
-inline double MultiSource::getTotalFlux() { return sources[index]->getTotalFlux(); }
+inline double SourceMulti::getTotalFlux() { return sources[index]->getTotalFlux(); }
 
-inline double MultiSource::getRadius() { return sources[index]->getRadius(); }
+inline double SourceMulti::getRadius() { return sources[index]->getRadius(); }
 
-inline void MultiSource::setRadius(double r) { sources[index]->setRadius(r); }
+inline void SourceMulti::setRadius(double r) { sources[index]->setRadius(r); }
 
-inline double MultiSource::getZ(){ return sources[index]->getZ(); }
+inline double SourceMulti::getZ(){ return sources[index]->getZ(); }
 
-inline void MultiSource::setZ(double z){ sources[index]->setZ(z); }
+inline void SourceMulti::setZ(double z){ sources[index]->setZ(z); }
 
-inline double* MultiSource::getX(){return sources[index]->getX(); }
+inline double* SourceMulti::getX(){return sources[index]->getX(); }
 
-inline void MultiSource::setX(double x[2]){ sources[index]->setX(x); }
+inline void SourceMulti::setX(double x[2]){ sources[index]->setX(x); }
 
-inline void MultiSource::setX(double x1, double x2){ sources[index]->setX(x1, x2); }
+inline void SourceMulti::setX(double x1, double x2){ sources[index]->setX(x1, x2); }
 
-inline std::size_t MultiSource::size() const { return sources.size(); }
+inline std::size_t SourceMulti::size() const { return sources.size(); }
 
-inline Source* MultiSource::getCurrent() const { return sources[index]; }
+inline Source* SourceMulti::getCurrent() const { return sources[index]; }
 
-inline std::size_t MultiSource::getIndex() const { return index; }
+inline std::size_t SourceMulti::getIndex() const { return index; }
 
 #endif

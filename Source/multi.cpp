@@ -5,7 +5,7 @@
 #include <utility>
 #include <iterator>
 
-void swap(MultiSource& a, MultiSource& b)
+void swap(SourceMulti& a, SourceMulti& b)
 {
 	using std::swap;
 	
@@ -22,13 +22,13 @@ void swap(MultiSource& a, MultiSource& b)
 	swap(a.sb_limit, b.sb_limit);
 }
 
-MultiSource::MultiSource()
+SourceMulti::SourceMulti()
 : index(0)
 {
 	setSBlimit_magarcsec(30.);
 }
 
-MultiSource::MultiSource(InputParams& params)
+SourceMulti::SourceMulti(InputParams& params)
 : index(0)
 {
 	// check if there is a sb_limit set
@@ -63,7 +63,7 @@ MultiSource::MultiSource(InputParams& params)
 	}
 }
 
-MultiSource::MultiSource(const MultiSource& other)
+SourceMulti::SourceMulti(const SourceMulti& other)
 : Source(other)
 {
 	// copy all contained sources
@@ -74,40 +74,40 @@ MultiSource::MultiSource(const MultiSource& other)
 	index = other.index;
 }
 
-MultiSource::~MultiSource()
+SourceMulti::~SourceMulti()
 {
 	// delete sources
 	for(std::size_t i = 0, n = sources.size(); i < n; ++i)
 		delete sources[i];
 }
 
-MultiSource& MultiSource::operator=(MultiSource rhs)
+SourceMulti& SourceMulti::operator=(SourceMulti rhs)
 {
 	swap(*this, rhs);
 	return *this;
 }
 
-void MultiSource::getParameters(Parameters& p) const
+void SourceMulti::getParameters(Parameters& p) const
 {
 	Source::getParameters(p);
 	for(std::size_t i = 0, n = sources.size(); i < n; ++i)
 		sources[i]->getParameters(p);
 }
 
-void MultiSource::setParameters(Parameters& p)
+void SourceMulti::setParameters(Parameters& p)
 {
 	Source::setParameters(p);
 	for(std::size_t i = 0, n = sources.size(); i < n; ++i)
 		sources[i]->setParameters(p);
 }
 
-void MultiSource::randomize(double step, long* seed)
+void SourceMulti::randomize(double step, long* seed)
 {
 	for(std::size_t i = 0, n = sources.size(); i < n; ++i)
 		sources[i]->randomize(step, seed);
 }
 
-bool MultiSource::setCurrent(Source* source)
+bool SourceMulti::setCurrent(Source* source)
 {
 	// find source in list
 	std::vector<Source*>::iterator pos = std::find(sources.begin(), sources.end(), source);
@@ -123,7 +123,7 @@ bool MultiSource::setCurrent(Source* source)
 	return true;
 }
 
-bool MultiSource::setIndex(std::size_t i)
+bool SourceMulti::setIndex(std::size_t i)
 {
 	// make sure index is in range
 	if(i >= sources.size())
@@ -136,7 +136,7 @@ bool MultiSource::setIndex(std::size_t i)
 	return true;
 }
 
-std::size_t MultiSource::add(const Source& source)
+std::size_t SourceMulti::add(const Source& source)
 {
 	// get the last index
 	std::size_t i = sources.size();
@@ -148,7 +148,7 @@ std::size_t MultiSource::add(const Source& source)
 	return i;
 }
 
-std::size_t MultiSource::add(const Source* source)
+std::size_t SourceMulti::add(const Source* source)
 {
 	// get the last index
 	std::size_t i = sources.size();
@@ -160,12 +160,12 @@ std::size_t MultiSource::add(const Source* source)
 	return i;
 }
 
-std::vector<Source*> MultiSource::getAll() const
+std::vector<Source*> SourceMulti::getAll() const
 {
 	return sources;
 }
 
-std::vector<Source*> MultiSource::getAll(SourceType type) const
+std::vector<Source*> SourceMulti::getAll(SourceType type) const
 {
 	// try to find SourceType in map
 	std::map<SourceType, std::vector<Source*> >::const_iterator pos = type_map.find(type);
@@ -178,7 +178,7 @@ std::vector<Source*> MultiSource::getAll(SourceType type) const
 	return pos->second;
 }
 
-void MultiSource::printSource()
+void SourceMulti::printSource()
 {
 	if(sources.empty())
 		std::cout << "Empty MultiSource" << std::endl;
@@ -189,11 +189,11 @@ void MultiSource::printSource()
 	}
 }
 
-void MultiSource::assignParams(InputParams& /* params */)
+void SourceMulti::assignParams(InputParams& /* params */)
 {
 }
 
-void MultiSource::addInternal(Source* source)
+void SourceMulti::addInternal(Source* source)
 {
 	// add source
 	sources.push_back(source);

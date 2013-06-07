@@ -57,10 +57,10 @@
  *
  * TODO BEN finish this documentation for perturbation parameters.
  */
-class AnaNSIELensHalo : public BaseNSIELensHalo{
+class LensHaloAnaNSIE : public LensHaloBaseNSIE{
 public:
-	AnaNSIELensHalo(InputParams& params);
-	~AnaNSIELensHalo();
+	LensHaloAnaNSIE(InputParams& params);
+	~LensHaloAnaNSIE();
 
   void assignParams(InputParams& params);
   double FractionWithinRe(double rangeInRei);
@@ -94,9 +94,9 @@ private:
 
 
 // in mark_points.c
-void MarkPoints(TreeHndl s_tree,AnaNSIELensHalo *lens,bool sb_cut,short invert);
-void _MarkPoints(TreeHndl s_tree,AnaNSIELensHalo *lens,bool *sbcut);
-bool InSource(double *ray,AnaNSIELensHalo *lens,bool surfacebright);
+void MarkPoints(TreeHndl s_tree,LensHaloAnaNSIE *lens,bool sb_cut,short invert);
+void _MarkPoints(TreeHndl s_tree,LensHaloAnaNSIE *lens,bool *sbcut);
+bool InSource(double *ray,LensHaloAnaNSIE *lens,bool surfacebright);
 
 void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *xg,double beta
 		 ,int N,int *degen,double *mod,double **v,double **dx);

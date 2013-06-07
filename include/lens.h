@@ -24,7 +24,7 @@
  *
  *<pre>
  *	The rays are traced through multiple deflections.  On each plane there is a deflection
- *	solver.  An AnaNSIELensHalo or MOKALensHalo can be put on one of the planes.  The other planes can be
+ *	solver.  An LensHaloAnaNSIE or LensHaloMOKA can be put on one of the planes.  The other planes can be
  *	populated with random field_halos drawn from a mass function or they can be retrieved from an
  *	external catalog.
  *

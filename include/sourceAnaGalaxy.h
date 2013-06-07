@@ -27,14 +27,14 @@
  *
  *</pre>
  */
-class MultiSourceAnaGalaxy: public Source{
+class SourceMultiAnaGalaxy: public Source{
 public:
 	SOURCE_TYPE(MultiSourceAnaGalaxy)
 	
-	MultiSourceAnaGalaxy(double mag, double BtoT, double Reff, double Rh, double PA, double inclination,double my_z,double *my_theta);
-	MultiSourceAnaGalaxy(OverzierSource *my_galaxy);
-	MultiSourceAnaGalaxy(InputParams& params);
-	~MultiSourceAnaGalaxy();
+	SourceMultiAnaGalaxy(double mag, double BtoT, double Reff, double Rh, double PA, double inclination,double my_z,double *my_theta);
+	SourceMultiAnaGalaxy(SourceOverzier *my_galaxy);
+	SourceMultiAnaGalaxy(InputParams& params);
+	~SourceMultiAnaGalaxy();
 	
 	/// Surface brightness of current galaxy.
 	double SurfaceBrightness(double* x) {
@@ -47,12 +47,12 @@ public:
 
 	void printSource();
 	// Add a pre-constructed galaxy to the source collection
-	void AddAGalaxy(OverzierSource *my_galaxy){galaxies.push_back(*my_galaxy);}
+	void AddAGalaxy(SourceOverzier *my_galaxy){galaxies.push_back(*my_galaxy);}
 
 	/** Used to change the "current" source that is returned when the surface brightness is subsequently
 	 * called.  It also returns a reference to the particular OverzierSource source model.
 	 */
-	OverzierSource& setIndex (std::size_t i){
+	SourceOverzier& setIndex (std::size_t i){
 		if(i < galaxies.size())
 			index = i;
 		return galaxies[index];
@@ -60,19 +60,19 @@ public:
 	/** The indexing operator can be used to change the "current" source that is returned when the surface brightness is subsequently
 	 * called.  It also returns a reference to the particular OverzierSource source model.
 	 */
-	OverzierSource& operator[] (std::size_t i){
+	SourceOverzier& operator[] (std::size_t i){
 		if(i < galaxies.size())
 			return galaxies[i];
 		return galaxies[index];
 	}
 	
-	const OverzierSource& operator[] (std::size_t i) const {
+	const SourceOverzier& operator[] (std::size_t i) const {
 		if(i < galaxies.size())
 			return galaxies[i];
 		return galaxies[index];
 	}
 
-	OverzierSource& CurrentGalaxy(){
+	SourceOverzier& CurrentGalaxy(){
 		return galaxies[index];
 	}
 
@@ -104,7 +104,7 @@ private:
 	float mag_limit;
 	std::size_t index;
 
-	std::vector<OverzierSource> galaxies;
+	std::vector<SourceOverzier> galaxies;
 	std::string input_gal_file;
 
 	void readDataFile();
@@ -113,7 +113,7 @@ private:
   double rangex[2],rangey[2];
 };
 
-bool redshiftcompare(OverzierSource s1,OverzierSource s2);
-bool magcompare(OverzierSource s1,OverzierSource s2);
+bool redshiftcompare(SourceOverzier s1,SourceOverzier s2);
+bool magcompare(SourceOverzier s1,SourceOverzier s2);
 
 #endif /* SOURCE_H_ */

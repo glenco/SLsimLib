@@ -17,7 +17,7 @@ using namespace std;
  */
 
 
-void AnaNSIELensHalo::RandomizeSigma(long *seed,bool tables){
+void LensHaloAnaNSIE::RandomizeSigma(long *seed,bool tables){
 	double *sigmaTable;
 	int n,NsigmaTable;
 	ifstream file;
@@ -45,7 +45,7 @@ void AnaNSIELensHalo::RandomizeSigma(long *seed,bool tables){
 	delete[] sigmaTable;
 }
 
-void AnaNSIELensHalo::RandomizeHost(long *seed,bool tables){
+void LensHaloAnaNSIE::RandomizeHost(long *seed,bool tables){
 	double fo,*axisTable;
 	int n;
 	int NaxisTable;
@@ -102,7 +102,7 @@ void AnaNSIELensHalo::RandomizeHost(long *seed,bool tables){
 	 *    each mode is randomly oriented
 	 */
 
-void AnaNSIELensHalo::RandomlyDistortLens(long *seed, int Nmodes){
+void LensHaloAnaNSIE::RandomlyDistortLens(long *seed, int Nmodes){
 
 	int i,k;
 	double tmp,theta;
@@ -151,7 +151,7 @@ void AnaNSIELensHalo::RandomlyDistortLens(long *seed, int Nmodes){
  *    This is for randomly distorting a mode but maintaining its alignment
  *    with the ellipticity for example.
  */
-void AnaNSIELensHalo::AlignedRandomlyDistortLens(long *seed,double theta,int Npole){
+void LensHaloAnaNSIE::AlignedRandomlyDistortLens(long *seed,double theta,int Npole){
 
 	double tmp;
 	int i,k;
@@ -175,7 +175,7 @@ void AnaNSIELensHalo::AlignedRandomlyDistortLens(long *seed,double theta,int Npo
 /** \ingEinstein_roup ChangeLens
  *
  */
-void AnaNSIELensHalo::RandomizeSubstructure2(double rangeInRei,long *seed){
+void LensHaloAnaNSIE::RandomizeSubstructure2(double rangeInRei,long *seed){
 	long i,k;
 	double r,theta,rmax,rav[2],r2av=0,area_av=0;
 	static unsigned long NsubMax;
@@ -209,10 +209,10 @@ void AnaNSIELensHalo::RandomizeSubstructure2(double rangeInRei,long *seed){
 				subs=new LensHalo[NsubMax];
 				break;
 			case powerlaw:
-				subs=new PowerLawLensHalo[NsubMax];
+				subs=new LensHaloPowerLaw[NsubMax];
 				break;
 			case nfw:
-				subs=new NFWLensHalo[NsubMax];
+				subs=new LensHaloNFW[NsubMax];
 				break;
 			default:
 				subs=new LensHalo[NsubMax];
@@ -309,7 +309,7 @@ void AnaNSIELensHalo::RandomizeSubstructure2(double rangeInRei,long *seed){
 	 *  This version does not scale to Einstein_ro and
 	 *  sigma
 	 */
-void AnaNSIELensHalo::RandomizeSubstructure3(double rangeInRei,long *seed){
+void LensHaloAnaNSIE::RandomizeSubstructure3(double rangeInRei,long *seed){
 	long i,k;
 	double r,theta,rmax,rav[2],r2av=0,area_av=0;
 	static unsigned long NsubMax;
@@ -340,10 +340,10 @@ void AnaNSIELensHalo::RandomizeSubstructure3(double rangeInRei,long *seed){
 			subs=new LensHalo[NsubMax];
 			break;
 		case powerlaw:
-			subs=new PowerLawLensHalo[NsubMax];
+			subs=new LensHaloPowerLaw[NsubMax];
 			break;
 		case nfw:
-			subs=new NFWLensHalo[NsubMax];
+			subs=new LensHaloNFW[NsubMax];
 			break;
 		default:
 			subs=new LensHalo[NsubMax];
@@ -448,7 +448,7 @@ namespace Utilities{
 	}
 }
 
-double AnaNSIELensHalo::FractionWithinRe(double rangeInRei){
+double LensHaloAnaNSIE::FractionWithinRe(double rangeInRei){
 	double B;
 
 	B = (sub_Rmax/pow(sub_Mmax,1./3.)
@@ -465,7 +465,7 @@ double AnaNSIELensHalo::FractionWithinRe(double rangeInRei){
 				);
 }
 
-double BaseNSIELensHalo::averageSubMass(){
+double LensHaloBaseNSIE::averageSubMass(){
 	// average mass of substructures
 	return sub_Mmax*(sub_alpha+1)
 				  /(sub_alpha+2)*(1-pow(sub_Mmin/sub_Mmax,sub_alpha+2))/

@@ -74,7 +74,7 @@ void find_images_kist(LensHndl lens,double *y_source,double r_source,GridHndl gr
 		,double initial_size,bool splitimages,short edge_refinement
 		,bool verbose,bool kappa_off);
 
-void find_images_microlens(LensHndl lens, BaseNSIELensHalo *halo,double *y_source,double r_source,GridHndl grid
+void find_images_microlens(LensHndl lens, LensHaloBaseNSIE *halo,double *y_source,double r_source,GridHndl grid
 		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
 		,double initial_size,double mu_min,bool splitimages,short edge_refinement
 		,bool verbose,bool kappa_off);
@@ -110,6 +110,6 @@ void sort_out_points(Point *i_points,ImageInfo *imageinfo,double r_source,double
 void xygridpoints(Point *points,double range,double *center,long Ngrid
 		,short remove_center);
 
-void saveImage(MOKALensHalo *mokahalo, GridHndl grid, bool saveprofile=true);
+void saveImage(LensHaloMOKA *mokahalo, GridHndl grid, bool saveprofile=true);
 
 #endif
