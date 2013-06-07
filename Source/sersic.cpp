@@ -27,12 +27,15 @@ SourceSersic::SourceSersic(
 }
 
 SourceSersic::SourceSersic(InputParams& params)
+: Source()
 {
 }
 
 SourceSersic::~SourceSersic()
 {
 }
+
+
 
 void SourceSersic::getParameters(Parameters& p) const
 {

@@ -14,6 +14,7 @@ class SourceSersic : public Source
 public:
 	SOURCE_TYPE(SourceSersic)
 	
+
 	SourceSersic();
 	SourceSersic(double mag,double Reff,double PA,double my_index,double my_q,double my_z=0,const double *theta=0);
 	SourceSersic(InputParams& params);
@@ -37,6 +38,13 @@ public:
 	inline double getAxesRatio() const { return q; }
 	inline double getSersicIndex() const { return index; }
 	
+	inline void setSersicIndex(double x) {index = x;}
+	inline void setAxesRatio(double x) {q = x;}
+	inline void setReff(double x) {Reff = x;}
+	inline void setMag(double x) {mag= x;}
+	inline void setPA(double x) {PA= x;}
+
+
 	double SurfaceBrightness(double *x);
 	inline double getTotalFlux() {return flux;}
 	void printSource();
