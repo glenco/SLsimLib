@@ -9,7 +9,7 @@
 // TODO: set `mag_limit` and `band` to default values in all constructors
 
 /// Source model for a single analytic galaxy model.
-MultiSourceAnaGalaxy::MultiSourceAnaGalaxy(
+SourceMultiAnaGalaxy::SourceMultiAnaGalaxy(
 		double mag              /// Total magnitude
 		,double BtoT            /// Bulge to total ratio
 		,double Reff            /// Bulge half light radius (arcs)
@@ -20,19 +20,19 @@ MultiSourceAnaGalaxy::MultiSourceAnaGalaxy(
 		,double *my_theta          /// position on the sky
 		): Source(),index(0){
 	
-	galaxies.push_back(OverzierSource(mag,BtoT,Reff,Rh,PA,inclination,0,my_z,my_theta));
+	galaxies.push_back(SourceOverzier(mag,BtoT,Reff,Rh,PA,inclination,0,my_z,my_theta));
 }
 /** Constructor for passing in a pointer to the galaxy model or a list of galaxies instead of constructing it internally.
 *   Useful when there is a list of pre-allocated sources.  The redshifts and sky positions need to be set separately.
 */
-MultiSourceAnaGalaxy::MultiSourceAnaGalaxy(
-		OverzierSource *my_galaxy
+SourceMultiAnaGalaxy::SourceMultiAnaGalaxy(
+		SourceOverzier *my_galaxy
 		): Source(),index(0){
 	
 	galaxies.push_back(*my_galaxy);
 }
 /// Constructor for importing from data file.
-MultiSourceAnaGalaxy::MultiSourceAnaGalaxy(
+SourceMultiAnaGalaxy::SourceMultiAnaGalaxy(
 		InputParams& params   /// Input data file for galaxies
 		): Source(),index(0){
 
@@ -49,12 +49,12 @@ MultiSourceAnaGalaxy::MultiSourceAnaGalaxy(
 	index = 0;
 }
 
-MultiSourceAnaGalaxy::~MultiSourceAnaGalaxy()
+SourceMultiAnaGalaxy::~SourceMultiAnaGalaxy()
 {
 }
 
 /// read in galaxies from a Millennium simulation file
-void MultiSourceAnaGalaxy::readDataFile(){
+void SourceMultiAnaGalaxy::readDataFile(){
 
 	char c='0';
 	//int type;
@@ -268,7 +268,7 @@ void MultiSourceAnaGalaxy::readDataFile(){
       
 			/***************************/
 			galaxies.push_back(
-					OverzierSource(mag,pow(10,-(mag_bulge-mag)/2.5),Ref,Rh
+					SourceOverzier(mag,pow(10,-(mag_bulge-mag)/2.5),Ref,Rh
 							,pa,inclination,HaloID,z_cosm,theta)
 			);
 
@@ -298,7 +298,7 @@ void MultiSourceAnaGalaxy::readDataFile(){
 	return;
 }
 
-void MultiSourceAnaGalaxy::assignParams(InputParams& params){
+void SourceMultiAnaGalaxy::assignParams(InputParams& params){
 	if(!params.get("input_galaxy_file",input_gal_file)){
 		  ERROR_MESSAGE();
 		  std::cout << "parameter input_galaxy_file needs to be set in the parameter file "
@@ -329,7 +329,7 @@ void MultiSourceAnaGalaxy::assignParams(InputParams& params){
  * position angles, inclinations and positions within the field of view.  The field of view is determined
  * directly from the range of already existing source positions.  The field is assumed to be rectangular.
  */
-void MultiSourceAnaGalaxy::multiplier(
+void SourceMultiAnaGalaxy::multiplier(
 		double z                /// limiting redshift, only sources above this redshift are copied
 		,double mag_cut         /// limiting magnitude, only sources with magnitudes below this limit will be copied
 		,int multiplicity       /// the number of times each of these sources should be multiplied
@@ -355,7 +355,7 @@ void MultiSourceAnaGalaxy::multiplier(
 				theta[0] = x1[0] + (x2[0] - x1[0])*ran2(seed);
 				theta[1] = x1[1] + (x2[1] - x1[1])*ran2(seed);
 
-				galaxies.push_back(OverzierSource(galaxies[i].getMag(),galaxies[i].getBtoT(),galaxies[i].getReff()
+				galaxies.push_back(SourceOverzier(galaxies[i].getMag(),galaxies[i].getBtoT(),galaxies[i].getReff()
 					,galaxies[i].getRh(),ran2(seed)*pi,ran2(seed)*2*pi
 					,Nold+NtoAdd,galaxies[i].getZ(),theta));
 
@@ -367,23 +367,23 @@ void MultiSourceAnaGalaxy::multiplier(
 }
 
 /// Sort the sources by redshift in assending order
-void MultiSourceAnaGalaxy::sortInRedshift(){
+void SourceMultiAnaGalaxy::sortInRedshift(){
     std::sort(galaxies.begin(),galaxies.end(),redshiftcompare);
 }
 // used in MultiSourceAnaGalaxy::sortInRedshift()
-bool redshiftcompare(OverzierSource s1,OverzierSource s2){
+bool redshiftcompare(SourceOverzier s1,SourceOverzier s2){
     return (s1.getZ() < s2.getZ());
 }
 /// Sort the sources by magnitude in assending order
-void MultiSourceAnaGalaxy::sortInMag(){
+void SourceMultiAnaGalaxy::sortInMag(){
     std::sort(galaxies.begin(),galaxies.end(),magcompare);
 }
 // used in MultiSourceAnaGalaxy::sortInRedshift()
-bool magcompare(OverzierSource s1,OverzierSource s2){
+bool magcompare(SourceOverzier s1,SourceOverzier s2){
     return (s1.getMag() < s2.getMag());
 }
 /// Print info on current source parameters
-void MultiSourceAnaGalaxy::printSource(){
+void SourceMultiAnaGalaxy::printSource(){
 	std::cout << "Overzier Galaxy Model" << std::endl;
 	galaxies[index].printSource();
 }

@@ -18,20 +18,20 @@ public:
 	virtual void force(double *alpha,KappaType *kappa,KappaType *gamma,double *xx,bool kappa_off) = 0;
 };
 
-class TreeLensPlane : public LensPlane{
+class LensPlaneTree : public LensPlane{
 public:
-	TreeLensPlane(PosType **xpt,LensHaloHndl *my_halos,IndexType Nhalos,double my_sigma_background);
-	~TreeLensPlane();
+	LensPlaneTree(PosType **xpt,LensHaloHndl *my_halos,IndexType Nhalos,double my_sigma_background);
+	~LensPlaneTree();
 
 	void force(double *alpha,KappaType *kappa,KappaType *gamma,double *xx,bool kappa_off);
 protected:
-	QuadTree *halo_tree;
+	TreeQuad *halo_tree;
 };
 
-class SingularLensPlane : public LensPlane{
+class LensPlaneSingular : public LensPlane{
 public:
-	SingularLensPlane(LensHaloHndl *my_halos, IndexType Nhalos);
-	~SingularLensPlane();
+	LensPlaneSingular(LensHaloHndl *my_halos, IndexType Nhalos);
+	~LensPlaneSingular();
 
 	void force(double *alpha,KappaType *kappa,KappaType *gamma,double *xx,bool kappa_off);
 protected:

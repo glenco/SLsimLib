@@ -63,7 +63,7 @@ void cmass(int n, std::valarray<float> map, std:: vector<double> x, double &xcm,
  * \brief allocates and reads the MOKA map in
  */
 //MOKALensHalo::MOKALensHalo(std::string paramfile) : Lens(){
-MOKALensHalo::MOKALensHalo(InputParams& params) : LensHalo(){
+LensHaloMOKA::LensHaloMOKA(InputParams& params) : LensHalo(){
 #ifndef ENABLE_FITS
 	std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
 	exit(1);
@@ -97,11 +97,11 @@ MOKALensHalo::MOKALensHalo(InputParams& params) : LensHalo(){
 	initMap();
 }
 
-MOKALensHalo::~MOKALensHalo(){
+LensHaloMOKA::~LensHaloMOKA(){
 	delete map;
 }
 
-void MOKALensHalo::initMap(){
+void LensHaloMOKA::initMap(){
 	map->center[0] = map->center[1] = 0.0;
 	map->boxlrad = map->boxlarcsec*pi/180/3600.;
 
@@ -113,7 +113,7 @@ void MOKALensHalo::initMap(){
 
 /** \brief sets the cosmology and the lens and the source according to the MOKA map parameters
  */
-void MOKALensHalo::setInternalParams(CosmoHndl cosmo, SourceHndl source){
+void LensHaloMOKA::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 	cosmo->setOmega_matter(map->omegam,true);
 	cosmo->sethubble(map->h);
 	setZlens(cosmo,map->zlens,source->getZ());
@@ -139,7 +139,7 @@ void MOKALensHalo::setInternalParams(CosmoHndl cosmo, SourceHndl source){
  * Sets many parameters within the MOKA lens model
  */
 
-void MOKALensHalo::assignParams(InputParams& params){
+void LensHaloMOKA::assignParams(InputParams& params){
 
 
   if(!params.get("z_lens",zlens)){
@@ -170,7 +170,7 @@ void MOKALensHalo::assignParams(InputParams& params){
  * and then saving to a fits file and computing the radial profile
  * of the convergence
  */
-void saveImage(MOKALensHalo *halo, GridHndl grid,bool saveprofiles){
+void saveImage(LensHaloMOKA *halo, GridHndl grid,bool saveprofiles){
 	std::stringstream f;
 	std::string filename;
 
@@ -222,7 +222,7 @@ void saveImage(MOKALensHalo *halo, GridHndl grid,bool saveprofiles){
 /**
  * computing and saving the radial profile of the convergence, reduced tangential and parallel shear and of the shear
  *  */
-void MOKALensHalo::saveProfiles(double &RE3,double &xxc,double &yyc){
+void LensHaloMOKA::saveProfiles(double &RE3,double &xxc,double &yyc){
 	/* measuring the differential and cumulative profile*/
 	double xmin = -map->boxlMpc*0.5;
 	double xmax =  map->boxlMpc*0.5;
@@ -380,7 +380,7 @@ void MOKALensHalo::saveProfiles(double &RE3,double &xxc,double &yyc){
    * a MOKA map (MOKALensHalo), for just one ray!!
    *
 */
-void MOKALensHalo::force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xx,bool kappa_off){
+void LensHaloMOKA::force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xx,bool kappa_off){
     
   long index = Utilities::IndexFromPosition(xx,map->nx,map->boxlMpc/map->h,map->center);
 
@@ -405,7 +405,7 @@ void MOKALensHalo::force_halo(double *alpha,KappaType *kappa,KappaType *gamma,do
 /**
  * compute the signal of \lambda_r and \lambda_t
  */
-void MOKALensHalo::estSignLambdas(){
+void LensHaloMOKA::estSignLambdas(){
   map->Signlambdar.resize(map->nx*map->ny);
   map->Signlambdat.resize(map->nx*map->ny);
   double gamma,lambdar,lambdat;
@@ -429,7 +429,7 @@ void MOKALensHalo::estSignLambdas(){
  * measure the effective and the median Einstein radii of the connected critical 
  * points present at the halo center
  */
-void MOKALensHalo::EinsteinRadii(double &RE1, double &RE2, double &xxc, double &yyc){
+void LensHaloMOKA::EinsteinRadii(double &RE1, double &RE2, double &xxc, double &yyc){
   double signV;
   //  std:: vector<double> xci1,yci1;
   std:: vector<double> xci2,yci2;
@@ -581,7 +581,7 @@ void MOKALensHalo::EinsteinRadii(double &RE1, double &RE2, double &xxc, double &
  * saves MAP properties, computing the radial profile
  * of the convergence and shear
  */
-void MOKALensHalo::saveImage(bool saveprofiles){
+void LensHaloMOKA::saveImage(bool saveprofiles){
         std::stringstream f;
         std::string filename;  
 	if(flag_background_field==1) f << MOKA_input_file << "_only_noise.fits";

@@ -26,7 +26,7 @@ QBranchNB::~QBranchNB(){};
 
 /************************************************************************
  * This constructor just creates a root branch.  To construct a full tree
- * an external function must be used.  For example, QuadTree uses QTreeNB
+ * an external function must be used.  For example, TreeQuad uses QTreeNB
  ************************************************************************/
 QTreeNB::QTreeNB(PosType **xp,IndexType *particles,IndexType nparticles
 		 ,PosType boundary_p1[],PosType boundary_p2[]): xp(xp) {
@@ -50,7 +50,7 @@ QTreeNB::QTreeNB(PosType **xp,IndexType *particles,IndexType nparticles
 }
 
 QTreeNB::~QTreeNB(){
-//	void QuadTree::freeQTreeNB(QTreeNBHndl tree){
+//	void TreeQuad::freeQTreeNB(QTreeNBHndl tree){
 	/* free treeNB
 	 *  does not free the particle positions, masses or sizes
 	 */

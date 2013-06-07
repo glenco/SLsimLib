@@ -58,12 +58,12 @@ struct MOKAmap{
  */
 
 
-class MOKALensHalo : public LensHalo{
+class LensHaloMOKA : public LensHalo{
 public:
 
-	MOKALensHalo(InputParams& params);
+	LensHaloMOKA(InputParams& params);
 
-	~MOKALensHalo();
+	~LensHaloMOKA();
 
 	bool set;	/// the name of the MOKA input file
 	std::string MOKA_input_file;

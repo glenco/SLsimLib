@@ -6,7 +6,7 @@
  */
 #include "slsimlib.h"
 
-SersicSource::SersicSource(
+SourceSersic::SourceSersic(
 		double my_mag              /// Total magnitude
 		,double my_Reff         /// Bulge half light radius (arcs)
 		,double my_PA           /// Position angle (radians)
@@ -26,11 +26,11 @@ SersicSource::SersicSource(
 	setInternals();
 }
 
-SersicSource::~SersicSource()
+SourceSersic::~SourceSersic()
 {
 }
 
-void SersicSource::getParameters(Parameters& p) const
+void SourceSersic::getParameters(Parameters& p) const
 {
 	// base class serialization
 	Source::getParameters(p);
@@ -38,7 +38,7 @@ void SersicSource::getParameters(Parameters& p) const
 	p << Reff << mag << PA << index << bn << q << Ieff << flux;
 }
 
-void SersicSource::setParameters(Parameters& p)
+void SourceSersic::setParameters(Parameters& p)
 {
 	// base class deserialization
 	Source::setParameters(p);
@@ -46,7 +46,7 @@ void SersicSource::setParameters(Parameters& p)
 	p >> Reff >> mag >> PA >> index >> bn >> q >> Ieff >> flux;
 }
 
-void SersicSource::randomize(double step, long* seed)
+void SourceSersic::randomize(double step, long* seed)
 {
 	// half light radius
 	Reff += step*pi/180/60/60*gasdev(seed);
@@ -73,7 +73,7 @@ void SersicSource::randomize(double step, long* seed)
 	setInternals();
 }
 
-void SersicSource::setInternals()
+void SourceSersic::setInternals()
 {
 	// approximation valid for 0.5 < n < 8
 	bn = 1.9992*index - 0.3271;
@@ -85,7 +85,7 @@ void SersicSource::setInternals()
 	setRadius((3.73 - 0.926*index + 1.164*index*index)*Reff);
 }
 
-double SersicSource::SurfaceBrightness(
+double SourceSersic::SurfaceBrightness(
 		double *x  /// position in radians relative to center of source
 		){
 
@@ -100,5 +100,5 @@ double SersicSource::SurfaceBrightness(
 	return sb;
 }
 
-void SersicSource::printSource(){}
-void SersicSource::assignParams(InputParams& /* params */){}
+void SourceSersic::printSource(){}
+void SourceSersic::assignParams(InputParams& /* params */){}

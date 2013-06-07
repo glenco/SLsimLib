@@ -439,7 +439,7 @@ void Lens::buildLensPlanes(
 	for(j=0,Ntot=0;j<Nplanes-1;j++){
 		if(main_halo_on && j == (main_halo_on % Nplanes)){
 			std::cout << "Building main halos lensing plane" << std::endl;
-			lensing_planes.push_back(new SingularLensPlane(main_halos.data(),main_halos.size()));
+			lensing_planes.push_back(new LensPlaneSingular(main_halos.data(),main_halos.size()));
 		}
 		else if(flag_switch_field_off == false){
 			/*
@@ -494,7 +494,7 @@ void Lens::buildLensPlanes(
 			/// Use other constructor to create halo data
 			std::cout << "  Building lensing plane " << j << " number of halos: " << j2-j1 << std::endl;
 
-			lensing_planes.push_back(new TreeLensPlane(&halo_pos[j1],&field_halos[j1],j2-j1,sigma_back));
+			lensing_planes.push_back(new LensPlaneTree(&halo_pos[j1],&field_halos[j1],j2-j1,sigma_back));
 
 		}
 	}
@@ -508,7 +508,7 @@ void Lens::updateMainHaloLensPlane(){
 	for(j=0;j<Nplanes-1;j++){
 		if(main_halo_on && j == (main_halo_on % Nplanes)){
 			delete lensing_planes[j];
-			lensing_planes[j] = new SingularLensPlane(main_halos.data(),main_halos.size());
+			lensing_planes[j] = new LensPlaneSingular(main_halos.data(),main_halos.size());
 		}
 	}
 }
@@ -681,29 +681,29 @@ void Lens::createMainHalos(
 	case null_lens:
 		break;
 	case nfw_lens:
-		main_halos.push_back(new NFWLensHalo(params));
+		main_halos.push_back(new LensHaloNFW(params));
 		break;
 	case pnfw_lens:
-		main_halos.push_back(new PseudoNFWLensHalo(params));
+		main_halos.push_back(new LensHaloPseudoNFW(params));
 		break;
 	case pl_lens:
-		main_halos.push_back(new PowerLawLensHalo(params));
+		main_halos.push_back(new LensHaloPowerLaw(params));
 		break;
 	case nsie_lens:
-		main_halos.push_back(new SimpleNSIELensHalo(params));
+		main_halos.push_back(new LensHaloSimpleNSIE(params));
 		break;
 	case ana_lens:
-		main_halos.push_back(new AnaNSIELensHalo(params));
+		main_halos.push_back(new LensHaloAnaNSIE(params));
 		break;
 	case uni_lens:
-		main_halos.push_back(new UniNSIELensHalo(params));
+		main_halos.push_back(new LensHaloUniNSIE(params));
 		break;
 	case moka_lens:
-		main_halos.push_back(new MOKALensHalo(params));
-		fieldofview = pow(1.5*main_halos.at<MOKALensHalo>(0)->map->boxlrad*180/pi,2.0);
+		main_halos.push_back(new LensHaloMOKA(params));
+		fieldofview = pow(1.5*main_halos.at<LensHaloMOKA>(0)->map->boxlrad*180/pi,2.0);
 		break;
 	case dummy_lens:
-		main_halos.push_back(new DummyLensHalo(params));
+		main_halos.push_back(new LensHaloDummy(params));
 		break;
 	}
 
@@ -712,7 +712,7 @@ void Lens::createMainHalos(
 		case null_gal:
 			break;
 		case nsie_gal:
-			main_halos.push_back(new SimpleNSIELensHalo(params));
+			main_halos.push_back(new LensHaloSimpleNSIE(params));
 			break;
 		}
 	}
@@ -959,16 +959,16 @@ void Lens::createFieldHalos(
 				std::cout << "field_int_prof_type is null!!!!" << std::endl;
 				break;
 			case nfw_lens:
-				field_halos.push_back(new NFWLensHalo);
+				field_halos.push_back(new LensHaloNFW);
 				break;
 			case pnfw_lens:
-				field_halos.push_back(new PseudoNFWLensHalo);
+				field_halos.push_back(new LensHaloPseudoNFW);
 				break;
 			case pl_lens:
-				field_halos.push_back(new PowerLawLensHalo);
+				field_halos.push_back(new LensHaloPowerLaw);
 				break;
 			case nsie_lens:
-				field_halos.push_back(new SimpleNSIELensHalo);
+				field_halos.push_back(new LensHaloSimpleNSIE);
 				break;
 			case ana_lens:
 				ERROR_MESSAGE();
@@ -983,7 +983,7 @@ void Lens::createFieldHalos(
 				std::cout << "MOKA not supported." << std::endl;
 				break;
 			case dummy_lens:
-				field_halos.push_back(new DummyLensHalo);
+				field_halos.push_back(new LensHaloDummy);
 				break;
 			}
 
@@ -1023,7 +1023,7 @@ void Lens::createFieldHalos(
 					std::cout << "flag_field_gal_on is true, but field_int_prof_gal_type is null!!!!" << std::endl;
 					break;
 				case nsie_gal:
-					field_halos.push_back(new SimpleNSIELensHalo);
+					field_halos.push_back(new LensHaloSimpleNSIE);
 					break;
 				}
 
@@ -1157,10 +1157,10 @@ void Lens::readInputSimFile(CosmoHndl cosmo){
 				std::cout << "field_int_prof_type is null!!!!" << std::endl;
 				break;
 			case nfw_lens:
-				field_halos.push_back(new NFWLensHalo);
+				field_halos.push_back(new LensHaloNFW);
 				break;
 			case pnfw_lens:
-				field_halos.push_back(new PseudoNFWLensHalo);
+				field_halos.push_back(new LensHaloPseudoNFW);
 				break;
 				ERROR_MESSAGE();
 				std::cout << "PseudoNFW not supported." << std::endl;
@@ -1170,7 +1170,7 @@ void Lens::readInputSimFile(CosmoHndl cosmo){
 				std::cout << "PowerLaw not supported." << std::endl;
 				break;
 			case nsie_lens:
-				field_halos.push_back(new SimpleNSIELensHalo);
+				field_halos.push_back(new LensHaloSimpleNSIE);
 				break;
 			case ana_lens:
 				ERROR_MESSAGE();
@@ -1185,7 +1185,7 @@ void Lens::readInputSimFile(CosmoHndl cosmo){
 				std::cout << "MOKA not supported." << std::endl;
 				break;
 			case dummy_lens:
-				field_halos.push_back(new DummyLensHalo);
+				field_halos.push_back(new LensHaloDummy);
 				ERROR_MESSAGE();
 				std::cout << "Why would you wand dummy file halos???" << std::endl;
 				break;
@@ -1228,7 +1228,7 @@ void Lens::readInputSimFile(CosmoHndl cosmo){
 					std::cout << "flag_field_gal_on is true, but field_int_prof_gal_type is null!!!!" << std::endl;
 					break;
 				case nsie_gal:
-					field_halos.push_back(new SimpleNSIELensHalo);
+					field_halos.push_back(new LensHaloSimpleNSIE);
 					break;
 				}
 

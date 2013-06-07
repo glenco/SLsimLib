@@ -7,27 +7,27 @@
 
 #include "planes.h"
 
-TreeLensPlane::TreeLensPlane(PosType **xpt,LensHaloHndl *my_halos,IndexType Nhalos,double my_sigma_background) : LensPlane(){
-	halo_tree = new QuadTree(xpt,my_halos,Nhalos,my_sigma_background);
+LensPlaneTree::LensPlaneTree(PosType **xpt,LensHaloHndl *my_halos,IndexType Nhalos,double my_sigma_background) : LensPlane(){
+	halo_tree = new TreeQuad(xpt,my_halos,Nhalos,my_sigma_background);
 }
 
-TreeLensPlane::~TreeLensPlane(){
+LensPlaneTree::~LensPlaneTree(){
 	delete halo_tree;
 }
 
-void TreeLensPlane::force(double *alpha,KappaType *kappa,KappaType *gamma,double *xx,bool kappa_off){
+void LensPlaneTree::force(double *alpha,KappaType *kappa,KappaType *gamma,double *xx,bool kappa_off){
 	halo_tree->force2D_recur(xx,alpha,kappa,gamma,kappa_off);
 }
 
-SingularLensPlane::SingularLensPlane(LensHaloHndl *my_halos, IndexType my_Nhalos) : LensPlane(), halos(my_halos), Nhalos(my_Nhalos){
+LensPlaneSingular::LensPlaneSingular(LensHaloHndl *my_halos, IndexType my_Nhalos) : LensPlane(), halos(my_halos), Nhalos(my_Nhalos){
 
 }
 
-SingularLensPlane::~SingularLensPlane(){
+LensPlaneSingular::~LensPlaneSingular(){
 
 }
 
-void SingularLensPlane::force(double *alpha,KappaType *kappa,KappaType *gamma,double *xx,bool kappa_off){
+void LensPlaneSingular::force(double *alpha,KappaType *kappa,KappaType *gamma,double *xx,bool kappa_off){
 	double alpha_tmp[2];
 	KappaType kappa_tmp, gamma_tmp[3];
 

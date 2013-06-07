@@ -6,7 +6,7 @@
 #include <iostream>
 #include <sstream>
 
-void MultiSource::readGalaxyFile(std::string filename, Band band, double mag_limit)
+void SourceMulti::readGalaxyFile(std::string filename, Band band, double mag_limit)
 {
 	std::size_t count = 0;
 	
@@ -208,7 +208,7 @@ void MultiSource::readGalaxyFile(std::string filename, Band band, double mag_lim
 			theta[1] = dec*pi/180;
 			
 			/***************************/
-			OverzierSource* over = new OverzierSource(mag, pow(10, -(mag_bulge-mag)/2.5), Ref, Rh, pa*pi/180., inclination*pi/180., HaloID, z_cosm, theta);
+			SourceOverzier* over = new SourceOverzier(mag, pow(10, -(mag_bulge-mag)/2.5), Ref, Rh, pa*pi/180., inclination*pi/180., HaloID, z_cosm, theta);
 			
 			over->setUMag(SDSS_u);
 			over->setGMag(SDSS_g);

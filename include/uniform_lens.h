@@ -66,10 +66,10 @@
  *
  */
 
-class UniNSIELensHalo: public BaseNSIELensHalo{
+class LensHaloUniNSIE: public LensHaloBaseNSIE{
 public:
-	UniNSIELensHalo(InputParams& params);
-	~UniNSIELensHalo();
+	LensHaloUniNSIE(InputParams& params);
+	~LensHaloUniNSIE();
 
 	void assignParams(InputParams& params);
 	void PrintLens(bool show_substruct,bool show_stars);

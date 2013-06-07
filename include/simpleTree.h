@@ -82,10 +82,10 @@ typedef int TreeNBElement;
  * Most of the code in TreeNB.c and TreeDriverNB.c is duplicated here as private methods and
  * a few public ones.
  */
-class SimpleTree {
+class TreeSimple {
 public:
-	SimpleTree(PosType **xp,IndexType Npoints,int bucket = 5,int dimensions = 2,bool median = true);
-	virtual ~SimpleTree();
+	TreeSimple(PosType **xp,IndexType Npoints,int bucket = 5,int dimensions = 2,bool median = true);
+	virtual ~TreeSimple();
 
 	/// \brief Finds the points within a circle around center and puts their index numbers in a list
 	void PointsWithinCircle(PosType center[2],float radius,std::list<unsigned long> &neighborkist);

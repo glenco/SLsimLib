@@ -9,13 +9,13 @@
  */
 #include "slsimlib.h"
 
-OverzierSource::OverzierSource()
+SourceOverzier::SourceOverzier()
 : haloID(0), Reff(0), Rh(0), BtoT(0), PA(0), inclination(0),
   cxx(0), cyy(0), cxy(0), sbDo(0), sbSo(0), mag(0)
 {
 }
 
-OverzierSource::OverzierSource(
+SourceOverzier::SourceOverzier(
 		double my_mag              /// Total magnitude
 		,double my_BtoT            /// Bulge to total ratio
 		,double my_Reff         /// Bulge half light radius (arcs)
@@ -29,12 +29,12 @@ OverzierSource::OverzierSource(
 	setInternals(my_mag,my_BtoT,my_Reff,my_Rh,my_PA,my_inclination,my_id,my_z,my_theta);
 }
 
-OverzierSource::~OverzierSource()
+SourceOverzier::~SourceOverzier()
 {
 }
 
 /// Sets internal variables.  If default constructor is used this must be called before the surface brightness function.
-void OverzierSource::setInternals(double my_mag,double my_BtoT,double my_Reff,double my_Rh,double my_PA,double incl,unsigned long my_id,double my_z,const double *my_theta){
+void SourceOverzier::setInternals(double my_mag,double my_BtoT,double my_Reff,double my_Rh,double my_PA,double incl,unsigned long my_id,double my_z,const double *my_theta){
 
 	haloID = my_id;
 
@@ -78,7 +78,7 @@ void OverzierSource::setInternals(double my_mag,double my_BtoT,double my_Reff,do
 }
 
 /// Surface brightness in erg/cm^2/sec/rad^2/Hz
-double OverzierSource::SurfaceBrightness(
+double SourceOverzier::SurfaceBrightness(
 		double *y  /// position in radians
 		){
 	// position relative to center
@@ -101,14 +101,14 @@ double OverzierSource::SurfaceBrightness(
 	return sb;
 }
 
-double OverzierSource::getTotalFlux(){
+double SourceOverzier::getTotalFlux(){
 	return pow(10,-(48.6+mag)/2.5);
 }
 
-void OverzierSource::printSource(){
+void SourceOverzier::printSource(){
 	std::cout << "bulge half light radius: " << Reff << " arcs   disk scale hight: " << Rh << " arcs" << std::endl;
 }
 
-void OverzierSource::assignParams(InputParams& /* params */)
+void SourceOverzier::assignParams(InputParams& /* params */)
 {
 }

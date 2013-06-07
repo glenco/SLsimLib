@@ -21,7 +21,7 @@ BranchNB::~BranchNB(){
 	delete center;
 }
 
-SimpleTree::SimpleTree(PosType **xpt,IndexType Npoints,int bucket,int Ndimensions,bool median){
+TreeSimple::TreeSimple(PosType **xpt,IndexType Npoints,int bucket,int Ndimensions,bool median){
 	index = new IndexType[Npoints];
 	IndexType ii;
 
@@ -34,19 +34,19 @@ SimpleTree::SimpleTree(PosType **xpt,IndexType Npoints,int bucket,int Ndimension
 
 	for(ii=0;ii<Npoints;++ii) index[ii] = ii;
 
-	tree = SimpleTree::BuildTreeNB(xp,Npoints,index,Ndimensions,0);
+	tree = TreeSimple::BuildTreeNB(xp,Npoints,index,Ndimensions,0);
 
 	return;
 }
 
-SimpleTree::~SimpleTree()
+TreeSimple::~TreeSimple()
 {
 	freeTreeNB(tree);
 	delete[] index;
 	return;
 }
 
-void SimpleTree::PointsWithinEllipse(
+void TreeSimple::PointsWithinEllipse(
 	PosType *ray     /// center of ellipse
 	,float rmax      /// major axis
 	,float rmin     /// minor axis
@@ -74,7 +74,7 @@ void SimpleTree::PointsWithinEllipse(
 	}
 	return;
 }
-void SimpleTree::PointsWithinCircle(
+void TreeSimple::PointsWithinCircle(
 		PosType *ray     /// center of circle
 		,float rmax      /// radius of circle
 		,std::list <unsigned long> &neighborlist  /// output neighbor list, will be emptied if it contains anything on entry
@@ -110,7 +110,7 @@ void SimpleTree::PointsWithinCircle(
 }
 /**
  * Used in PointsWithinKist() to walk tree.*/
-void SimpleTree::_PointsWithin(PosType *ray,float *rmax,std::list <unsigned long> &neighborlist){
+void TreeSimple::_PointsWithin(PosType *ray,float *rmax,std::list <unsigned long> &neighborlist){
 
   int j,incell2=1;
   unsigned long i;
@@ -228,7 +228,7 @@ void SimpleTree::_PointsWithin(PosType *ray,float *rmax,std::list <unsigned long
 /**
  *  finds the nearest neighbors in whatever dimensions tree is defined in
  *  */
-void SimpleTree::NearestNeighbors(PosType *ray,int Nneighbors,float *rsph,IndexType *neighborsout){
+void TreeSimple::NearestNeighbors(PosType *ray,int Nneighbors,float *rsph,IndexType *neighborsout){
   IndexType i;
   //static int count=0,oldNneighbors=-1;
    short j;
@@ -240,7 +240,7 @@ void SimpleTree::NearestNeighbors(PosType *ray,int Nneighbors,float *rsph,IndexT
 
   if(tree->top->nparticles <= Nneighbors){
 	ERROR_MESSAGE();
-    printf("ERROR: in SimpleTree::NearestNeighbors, number of neighbors > total number of particles\n");
+    printf("ERROR: in TreeSimple::NearestNeighbors, number of neighbors > total number of particles\n");
     exit(1);
   }
 
@@ -275,7 +275,7 @@ void SimpleTree::NearestNeighbors(PosType *ray,int Nneighbors,float *rsph,IndexT
 }
 
 
-void SimpleTree::_NearestNeighbors(double *ray,int Nneighbors,unsigned long *neighbors,PosType *rneighbors){
+void TreeSimple::_NearestNeighbors(double *ray,int Nneighbors,unsigned long *neighbors,PosType *rneighbors){
 
   int incellNB2=1;
   IndexType i;
@@ -369,7 +369,7 @@ void SimpleTree::_NearestNeighbors(double *ray,int Nneighbors,unsigned long *nei
 }
 
 
-TreeNBHndl SimpleTree::BuildTreeNB(PosType **xp,IndexType Nparticles,IndexType *particles,int Ndims
+TreeNBHndl TreeSimple::BuildTreeNB(PosType **xp,IndexType Nparticles,IndexType *particles,int Ndims
 	   ,double theta){
   TreeNBHndl tree;
   IndexType i;
@@ -408,7 +408,7 @@ TreeNBHndl SimpleTree::BuildTreeNB(PosType **xp,IndexType Nparticles,IndexType *
 
 
 // tree must be created and first branch must be set before start
-void SimpleTree::_BuildTreeNB(TreeNBHndl tree,IndexType nparticles,IndexType *particles){
+void TreeSimple::_BuildTreeNB(TreeNBHndl tree,IndexType nparticles,IndexType *particles){
   IndexType i,cut,dimension;
   short j;
   BranchNB *cbranch,branch1(Ndim),branch2(Ndim);
@@ -518,7 +518,7 @@ void SimpleTree::_BuildTreeNB(TreeNBHndl tree,IndexType nparticles,IndexType *pa
  * Returns pointer to new BranchNB struct.  Initializes children pointers to NULL,
  * and sets data field to input.  Private.
  ************************************************************************/
-BranchNB *SimpleTree::NewBranchNB(IndexType *particles,IndexType nparticles
+BranchNB *TreeSimple::NewBranchNB(IndexType *particles,IndexType nparticles
 		  ,PosType boundary_p1[],PosType boundary_p2[]
 		  ,PosType center[],int level,unsigned long branchNBnumber){
 
@@ -554,7 +554,7 @@ BranchNB *SimpleTree::NewBranchNB(IndexType *particles,IndexType nparticles
  * FreeBranchNB
  * Frees memory pointed to by branchNB.  Private.
  ************************************************************************/
-void SimpleTree::FreeBranchNB(BranchNB *branchNB){
+void TreeSimple::FreeBranchNB(BranchNB *branchNB){
 
     assert( branchNB != NULL);
     delete branchNB;
@@ -567,7 +567,7 @@ void SimpleTree::FreeBranchNB(BranchNB *branchNB){
  * Returns pointer to new TreeNB struct.  Initializes top, last, and
  * current pointers to NULL.  Sets NbranchNBes field to 0.  Exported.
  ************************************************************************/
-TreeNBHndl SimpleTree::NewTreeNB(IndexType *particles,IndexType nparticles
+TreeNBHndl TreeSimple::NewTreeNB(IndexType *particles,IndexType nparticles
 		 ,PosType boundary_p1[],PosType boundary_p2[],
 		     PosType center[],short Ndimensions){
 
@@ -592,7 +592,7 @@ TreeNBHndl SimpleTree::NewTreeNB(IndexType *particles,IndexType nparticles
     return(tree);
 }
 
-void SimpleTree::freeTreeNB(TreeNBHndl tree){
+void TreeSimple::freeTreeNB(TreeNBHndl tree){
 	/* free treeNB
 	 *  does not free the particle positions, masses or rsph
 	 */
@@ -606,7 +606,7 @@ void SimpleTree::freeTreeNB(TreeNBHndl tree){
 	return;
 }
 
-short SimpleTree::emptyTreeNB(TreeNBHndl tree){
+short TreeSimple::emptyTreeNB(TreeNBHndl tree){
 
 	moveTopNB(tree);
 	_freeTreeNB(tree,0);
@@ -616,7 +616,7 @@ short SimpleTree::emptyTreeNB(TreeNBHndl tree){
 	return 1;
 }
 
-void SimpleTree::_freeTreeNB(TreeNBHndl tree,short child){
+void TreeSimple::_freeTreeNB(TreeNBHndl tree,short child){
 	BranchNB *branch;
 
 	assert( tree );
@@ -658,7 +658,7 @@ void SimpleTree::_freeTreeNB(TreeNBHndl tree,short child){
  * isEmptyNB
  * Returns "true" if the TreeNB is empty and "false" otherwise.  Exported.
  ************************************************************************/
-bool SimpleTree::isEmptyNB(TreeNBHndl tree){
+bool TreeSimple::isEmptyNB(TreeNBHndl tree){
 
     assert(tree != NULL);
     return(tree->Nbranches == 0);
@@ -670,7 +670,7 @@ bool SimpleTree::isEmptyNB(TreeNBHndl tree){
  * Exported.
  * Pre: !isEmptyNB(tree)
  ************************************************************************/
-bool SimpleTree::atTopNB(TreeNBHndl tree){
+bool TreeSimple::atTopNB(TreeNBHndl tree){
 
     assert(tree != NULL);
     if( isEmptyNB(tree) ){
@@ -687,7 +687,7 @@ bool SimpleTree::atTopNB(TreeNBHndl tree){
  * Exported.
  * Pre: !isEmptyNB(tree)
  ************************************************************************/
-bool SimpleTree::noChildNB(TreeNBHndl tree){
+bool TreeSimple::noChildNB(TreeNBHndl tree){
 
     assert(tree != NULL);
     if( isEmptyNB(tree) ){
@@ -704,7 +704,7 @@ bool SimpleTree::noChildNB(TreeNBHndl tree){
  * offEndNB
  * Returns "true" if current is off end and "false" otherwise.  Exported.
  ************************************************************************/
-bool SimpleTree::offEndNB(TreeNBHndl tree){
+bool TreeSimple::offEndNB(TreeNBHndl tree){
 
     assert(tree != NULL);
     return(tree->current == NULL);
@@ -715,7 +715,7 @@ bool SimpleTree::offEndNB(TreeNBHndl tree){
  * Returns the particuls of current.  Exported.
  * Pre: !offEndNB(tree)
  ************************************************************************/
-void SimpleTree::getCurrentNB(TreeNBHndl tree,IndexType *particles,IndexType *nparticles){
+void TreeSimple::getCurrentNB(TreeNBHndl tree,IndexType *particles,IndexType *nparticles){
 
     assert(tree != NULL);
     if( offEndNB(tree) ){
@@ -734,7 +734,7 @@ void SimpleTree::getCurrentNB(TreeNBHndl tree,IndexType *particles,IndexType *np
  * getNbranchesNB
  * Returns the NbranchNBes of tree.  Exported.
  ************************************************************************/
-unsigned long SimpleTree::getNbranchesNB(TreeNBHndl tree){
+unsigned long TreeSimple::getNbranchesNB(TreeNBHndl tree){
 
     assert(tree != NULL);
     return(tree->Nbranches);
@@ -747,7 +747,7 @@ unsigned long SimpleTree::getNbranchesNB(TreeNBHndl tree){
  * Moves current to the front of tree.  Exported.
  * Pre: !isEmptyNB(tree)
  ************************************************************************/
-void SimpleTree::moveTopNB(TreeNBHndl tree){
+void TreeSimple::moveTopNB(TreeNBHndl tree){
 	//std::cout << tree << std::endl;
 	//std::cout << tree->current << std::endl;
 	//std::cout << tree->top << std::endl;
@@ -771,7 +771,7 @@ void SimpleTree::moveTopNB(TreeNBHndl tree){
  * off end.  Exported.
  * Pre: !offEndNB(tree)
  ************************************************************************/
-void SimpleTree::moveUpNB(TreeNBHndl tree){
+void TreeSimple::moveUpNB(TreeNBHndl tree){
     
     assert(tree != NULL);
     if( offEndNB(tree) ){
@@ -793,7 +793,7 @@ void SimpleTree::moveUpNB(TreeNBHndl tree){
  * end.  Exported.
  * Pre: !offEndNB(tree)
  ************************************************************************/
-void SimpleTree::moveToChildNB(TreeNBHndl tree,int child){
+void TreeSimple::moveToChildNB(TreeNBHndl tree,int child){
 
     assert(tree != NULL);
     if( offEndNB(tree) ){
@@ -824,7 +824,7 @@ void SimpleTree::moveToChildNB(TreeNBHndl tree,int child){
  * data field of the new BranchNB to input.  Exported.
  * Pre: !offEndNB(tree)
  ************************************************************************/
-void SimpleTree::insertChildToCurrentNB(TreeNBHndl tree, IndexType *particles,IndexType nparticles
+void TreeSimple::insertChildToCurrentNB(TreeNBHndl tree, IndexType *particles,IndexType nparticles
 			  ,PosType boundary_p1[],PosType boundary_p2[]
 			  ,PosType center[],int child){
     
@@ -869,7 +869,7 @@ void SimpleTree::insertChildToCurrentNB(TreeNBHndl tree, IndexType *particles,In
 
   /* same as above but takes a branchNB structure */
 
-void SimpleTree::attachChildToCurrentNB(TreeNBHndl tree,BranchNB &data,int child){
+void TreeSimple::attachChildToCurrentNB(TreeNBHndl tree,BranchNB &data,int child){
 
   insertChildToCurrentNB(tree,data.particles,data.nparticles
 		  ,data.boundary_p1,data.boundary_p2,data.center,child);
@@ -877,7 +877,7 @@ void SimpleTree::attachChildToCurrentNB(TreeNBHndl tree,BranchNB &data,int child
 }
 
 // step for walking tree by iteration instead of recursion
-bool SimpleTree::TreeNBWalkStep(TreeNBHndl tree,bool allowDescent){
+bool TreeSimple::TreeNBWalkStep(TreeNBHndl tree,bool allowDescent){
 	if(allowDescent && tree->current->child1 != NULL){
 		moveToChildNB(tree,1);
 		return true;

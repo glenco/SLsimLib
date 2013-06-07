@@ -17,7 +17,7 @@ using namespace std;
  * force calculation.
  */
 
-UniNSIELensHalo::UniNSIELensHalo(InputParams& params) : BaseNSIELensHalo(params){
+LensHaloUniNSIE::LensHaloUniNSIE(InputParams& params) : LensHaloBaseNSIE(params){
 
   assignParams(params);
 
@@ -31,12 +31,12 @@ UniNSIELensHalo::UniNSIELensHalo(InputParams& params) : BaseNSIELensHalo(params)
   PrintLens(false,false);
 }
 
-UniNSIELensHalo::~UniNSIELensHalo(){
+LensHaloUniNSIE::~LensHaloUniNSIE(){
 
 }
 
 
-void UniNSIELensHalo::assignParams(InputParams& params){
+void LensHaloUniNSIE::assignParams(InputParams& params){
 
 	//if(perturb_Nmodes > 0){
 	if(!params.get("kappa_uniform",kappa_uniform)) error_message1("kappa_uniform",params.filename());
@@ -56,10 +56,10 @@ void UniNSIELensHalo::assignParams(InputParams& params){
 /** \ingroup ImageFinding
  * \brief Prints the parameters of the analytic lens to stdout
  */
-void UniNSIELensHalo::PrintLens(bool show_substruct,bool show_stars){
+void LensHaloUniNSIE::PrintLens(bool show_substruct,bool show_stars){
 	int i;
 
-	BaseNSIELensHalo::PrintLens(show_substruct,show_stars);
+	LensHaloBaseNSIE::PrintLens(show_substruct,show_stars);
 
 	// uni lens parameters only
 	cout << endl << "**Host lens model**" << endl;
@@ -72,7 +72,7 @@ void UniNSIELensHalo::PrintLens(bool show_substruct,bool show_stars){
 }
 
 
-void UniNSIELensHalo::implant_stars(double x, double y, unsigned long Nregions,long *seed, IMFtype type){
+void LensHaloUniNSIE::implant_stars(double x, double y, unsigned long Nregions,long *seed, IMFtype type){
 
 	if(Nregions <= 0) return;
 	Point *centers;
@@ -85,7 +85,7 @@ void UniNSIELensHalo::implant_stars(double x, double y, unsigned long Nregions,l
 	centers[0].gamma[1]=gamma_uniform[1];
 	centers[0].gamma[2]=gamma_uniform[2];
 
-	BaseNSIELensHalo::implant_stars(centers,Nregions,seed,type);
+	LensHaloBaseNSIE::implant_stars(centers,Nregions,seed,type);
 }
 
 

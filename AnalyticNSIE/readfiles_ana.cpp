@@ -17,7 +17,7 @@ using namespace std;
  * Sets many parameters within the lens model, source model and
  * force calculation.
  */
-void AnaNSIELensHalo::assignParams(InputParams& params){
+void LensHaloAnaNSIE::assignParams(InputParams& params){
 
 	// Host lens parameters
 	if(!params.get("sigma",sigma)) error_message1("sigma",params.filename());
@@ -60,10 +60,10 @@ cout << endl << "Nstars "<<stars_N << endl << endl;
 	}
 */
 
-void AnaNSIELensHalo::PrintLens(bool show_substruct,bool show_stars){
+void LensHaloAnaNSIE::PrintLens(bool show_substruct,bool show_stars){
 	int i;
 
-	BaseNSIELensHalo::PrintLens(show_substruct,show_stars);
+	LensHaloBaseNSIE::PrintLens(show_substruct,show_stars);
 
 	// parameters of host elliptical
 	cout << endl << "**Host lens model**" << endl;
@@ -87,7 +87,7 @@ void AnaNSIELensHalo::PrintLens(bool show_substruct,bool show_stars){
 }
 
 
-AnaNSIELensHalo::AnaNSIELensHalo(InputParams& params) : BaseNSIELensHalo(params){
+LensHaloAnaNSIE::LensHaloAnaNSIE(InputParams& params) : LensHaloBaseNSIE(params){
 
   assignParams(params);
 
@@ -104,6 +104,6 @@ AnaNSIELensHalo::AnaNSIELensHalo(InputParams& params) : BaseNSIELensHalo(params)
 }
 
 
-AnaNSIELensHalo::~AnaNSIELensHalo(){
+LensHaloAnaNSIE::~LensHaloAnaNSIE(){
 
 }

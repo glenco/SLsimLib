@@ -217,10 +217,10 @@ double SourceBLRSph2::SurfaceBrightness(double *y){
 //void in_source(double *y_source,ListHndl sourcelist){
 //  return;
 //}
-PixelledSource::PixelledSource(InputParams& params)
+SourcePixelled::SourcePixelled(InputParams& params)
 {}
 
-PixelledSource::PixelledSource(double my_z, int my_Npixels, double my_range, double* my_center, double* arr_val)
+SourcePixelled::SourcePixelled(double my_z, int my_Npixels, double my_range, double* my_center, double* arr_val)
 	:Source(), range(my_range), Npixels (my_Npixels){
 	zsource = my_z;
 	resolution = range/Npixels;
@@ -236,10 +236,10 @@ PixelledSource::PixelledSource(double my_z, int my_Npixels, double my_range, dou
 	calcSize();
 }
 
-PixelledSource::~PixelledSource(){
+SourcePixelled::~SourcePixelled(){
 }
 
-void PixelledSource::calcCentroid(){
+void SourcePixelled::calcCentroid(){
 	double x_sum = 0;
 	double y_sum = 0;
 	double sum = 0;
@@ -255,7 +255,7 @@ void PixelledSource::calcCentroid(){
 	centroid[1] = y_sum/sum;
 }
 
-void PixelledSource::calcEll(){
+void SourcePixelled::calcEll(){
 	double sum = 0;
 	for (int j = 0; j < 2; j++)
 	{
@@ -282,7 +282,7 @@ void PixelledSource::calcEll(){
 	ell[1] = 2*quad[0][1]/(quad[0][0] + quad[1][1]);
 }
 
-void PixelledSource::calcSize(){
+void SourcePixelled::calcSize(){
 	double r_sum = 0.;
 	double sum = 0.;
 	double rad;
@@ -298,7 +298,7 @@ void PixelledSource::calcSize(){
 	size = r_sum/sum;
 }
 
-double PixelledSource::SurfaceBrightness(double *y){
+double SourcePixelled::SurfaceBrightness(double *y){
 	int ix = Utilities::IndexFromPosition(y[0],Npixels,range,source_x[0]);
 	int iy = Utilities::IndexFromPosition(y[1],Npixels,range,source_x[1]);
 	if (ix>-1 && iy>-1)
@@ -309,13 +309,13 @@ double PixelledSource::SurfaceBrightness(double *y){
 		return 0.;
 }
 
-void PixelledSource::calcTotalFlux(){
+void SourcePixelled::calcTotalFlux(){
 	double val_tot = 0.;
 	for (int i = 0; i < Npixels*Npixels; i++)
 		val_tot += values[i];
 	flux = val_tot*resolution*resolution;
 }
 
-void PixelledSource::printSource(){}
-void PixelledSource::assignParams(InputParams& params){}
+void SourcePixelled::printSource(){}
+void SourcePixelled::assignParams(InputParams& params){}
 

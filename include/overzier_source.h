@@ -18,14 +18,14 @@
  *\brief Structure for holding parameters for one or more galaxy images according to
  * the Overzier model.
  */
-class OverzierSource : public Source
+class SourceOverzier : public Source
 {
 public:
-	SOURCE_TYPE(OverzierSource)
+	SOURCE_TYPE(SourceOverzier)
 	
-	OverzierSource();
-	OverzierSource(double mag,double BtoT,double Reff,double Rh,double PA,double inclination,unsigned long my_id,double my_z=0,const double *theta=0);
-	~OverzierSource();
+	SourceOverzier();
+	SourceOverzier(double mag,double BtoT,double Reff,double Rh,double PA,double inclination,unsigned long my_id,double my_z=0,const double *theta=0);
+	~SourceOverzier();
 	
 	void setInternals(double mag,double BtoT,double Reff,double Rh,double PA,double inclination,unsigned long my_id,double my_z=0,const double *my_theta=0);
 	double SurfaceBrightness(double *x);

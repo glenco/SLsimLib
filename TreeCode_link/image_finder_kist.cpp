@@ -415,7 +415,7 @@ void find_images_kist(
 
 void find_images_microlens(
 		LensHndl lens,          /// contains the lens/es and source/sources
-		BaseNSIELensHalo *halo,          /// contains the lens/es and source/sources
+		LensHaloBaseNSIE *halo,          /// contains the lens/es and source/sources
 		double *y_source        /// position of source center
 		,double r_source        /// radius of source
 		,GridHndl grid          /// grid provided to routine

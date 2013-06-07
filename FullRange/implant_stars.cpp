@@ -15,7 +15,7 @@ using namespace std;
  * allocates all memory for stars
  */
 
-void BaseNSIELensHalo::implant_stars(Point *centers,unsigned long Nregions,long *seed, IMFtype type){
+void LensHaloBaseNSIE::implant_stars(Point *centers,unsigned long Nregions,long *seed, IMFtype type){
 	PosType r,theta,NstarsPerImage;
 	double *mean_mstar;
 	unsigned long i,j,m,k;
@@ -163,10 +163,10 @@ void BaseNSIELensHalo::implant_stars(Point *centers,unsigned long Nregions,long 
 	//std::printf("last star x = %e %e\n",stars_xp[stars_N-1][0],stars_xp[stars_N-1][1]);
 
 	float dummy=0;
-	//star_tree = new ForceTree(stars_xp,stars_N,star_masses,&dummy
+	//star_tree = new TreeForce(stars_xp,stars_N,star_masses,&dummy
 	//		,false,false,5,2,false,star_theta_force);
 
-	star_tree = new QuadTree(stars_xp,star_masses,&dummy,stars_N
+	star_tree = new TreeQuad(stars_xp,star_masses,&dummy,stars_N
 			,false,false,0,4,star_theta_force);
 
 	// visit every branch to find center of mass and cutoff scale */
@@ -183,7 +183,7 @@ void BaseNSIELensHalo::implant_stars(Point *centers,unsigned long Nregions,long 
 
 /// subtracts the mass in stars from the smooth model to compensate
 /// for the mass of the stars the lensing quantities are all updated not replaced
-void BaseNSIELensHalo::substract_stars_disks(double *ray,double *alpha
+void LensHaloBaseNSIE::substract_stars_disks(double *ray,double *alpha
 		,KappaType *kappa,KappaType *gamma){
 
 	if(!(stars_implanted)) return;
@@ -224,7 +224,7 @@ void BaseNSIELensHalo::substract_stars_disks(double *ray,double *alpha
  * 2 - broken power law, requires lower mass end slope (powerlo), high mass slope (powerhi), bending point (bendmass)
  * 3 - further IMF models may follow
  */
-float* BaseNSIELensHalo::stellar_mass_function(IMFtype type, unsigned long Nstars, long *seed
+float* LensHaloBaseNSIE::stellar_mass_function(IMFtype type, unsigned long Nstars, long *seed
 		,double minmass, double maxmass, double bendmass, double powerlo, double powerhi){
 
 	//if(!(stars_implanted)) return;

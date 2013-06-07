@@ -19,14 +19,14 @@
  * The template class will then be created from the main() function as:
  * e.g. Model<SourceUniform>* model = new Model<SourceUniform>(paramfile,&seed);
  *
- * The default values of the Model template are AnaNSIELensHalo and SourceUnifrom, which can de allocated as
+ * The default values of the Model template are LensHaloAnaNSIE and SourceUnifrom, which can de allocated as
  * Model<>* model = new Model<>(paramfile);
  * equivalent to
- * Model<AnaNSIELensHalo,SourceUniform>* model = new Model<AnaNSIELensHalo,SourceUniform>(paramfile);
+ * Model<SourceUniform>* model = new Model<SourceUniform>(paramfile);
  *
  * the parameters correspond to the ones that the lens need. For example
  * MultiPlane == paramfile + seed
- * AnaNSIELensHalo == paramfile
+ * LensHaloAnaNSIE == paramfile
  * etc.
  *
  */
@@ -135,9 +135,9 @@ template<class S> void Model<S>::RandomizeModel(
 		delete[] zlTable;
 
 		if(randomize_source_z) source->setZ(zsource);
-		if(randomize_host_z) lens->main_halos.at<AnaNSIELensHalo>(0)->setZlens(cosmo,zlens,zsource);
+		if(randomize_host_z) lens->main_halos.at<LensHaloAnaNSIE>(0)->setZlens(cosmo,zlens,zsource);
 
-		lens->main_halos.at<AnaNSIELensHalo>(0)->RandomizeSigma(seed,tables);
+		lens->main_halos.at<LensHaloAnaNSIE>(0)->RandomizeSigma(seed,tables);
 	}
 
 	// This need to be done after source->DlDs has been set in setInternal()
@@ -146,7 +146,7 @@ template<class S> void Model<S>::RandomizeModel(
 	else
 		source->setRadius(r_source_phys*source->getDlDs());
 
-	lens->main_halos.at<AnaNSIELensHalo>(0)->RandomizeHost(seed,tables);
+	lens->main_halos.at<LensHaloAnaNSIE>(0)->RandomizeHost(seed,tables);
 
 	return ;
 }

@@ -9,7 +9,7 @@
 
 using namespace std;
 
-void BaseNSIELensHalo::force_halo(
+void LensHaloBaseNSIE::force_halo(
 		double *alpha     /// mass/Mpc
 		,KappaType *kappa
 		,KappaType *gamma
@@ -120,7 +120,7 @@ void BaseNSIELensHalo::force_halo(
  * Sets many parameters within the lens model, source model and
  * force calculation.
  */
-void BaseNSIELensHalo::assignParams(InputParams& params){
+void LensHaloBaseNSIE::assignParams(InputParams& params){
 
 	// Host lens parameters
 	if(!params.get("z_lens",zlens)) error_message1("z_lens",params.filename());
@@ -154,19 +154,19 @@ void BaseNSIELensHalo::assignParams(InputParams& params){
 
 }
 
-void BaseNSIELensHalo::error_message1(std::string parameter,std::string file){
+void LensHaloBaseNSIE::error_message1(std::string parameter,std::string file){
 		  ERROR_MESSAGE();
 		  std::cout << "Parameter " << parameter << " is needed to construct a BaseAnaLens.  It needs to be set in parameter file " << file << "!" << endl;
 		  exit(0);
 }
 
 /// resets Zl, Dl, Sigma_crit, MpcToAsec
-void BaseNSIELensHalo::setZlens(CosmoHndl cosmo,double zl,double zsource){
+void LensHaloBaseNSIE::setZlens(CosmoHndl cosmo,double zl,double zsource){
 	zlens = zl;
 	setInternalParams(cosmo, zsource);
 }
 
-void BaseNSIELensHalo::reNormSubstructure(double kappa_sub){
+void LensHaloBaseNSIE::reNormSubstructure(double kappa_sub){
 	/* renomalizes substructure so that
 	 * the average surface density it kappa_sub
 	 */
@@ -181,11 +181,11 @@ void BaseNSIELensHalo::reNormSubstructure(double kappa_sub){
 }
 
 /// Sets parameters within BaseLens that depend on the source redshift - Dl,Sigma_crit,etc.
-void BaseNSIELensHalo::setInternalParams(CosmoHndl cosmo, SourceHndl source){
+void LensHaloBaseNSIE::setInternalParams(CosmoHndl cosmo, SourceHndl source){
 	setInternalParams(cosmo,source->getZ());
 }
 
-void BaseNSIELensHalo::setInternalParams(CosmoHndl cosmo, double zsource){
+void LensHaloBaseNSIE::setInternalParams(CosmoHndl cosmo, double zsource){
 	double Ds, Dls;
 
 	if(zsource < zlens) zsource = 1000;
@@ -202,7 +202,7 @@ void BaseNSIELensHalo::setInternalParams(CosmoHndl cosmo, double zsource){
 	to = (1+zlens)*Ds/Dls/Dl/8.39428142e-10;
 }
 
-BaseNSIELensHalo::BaseNSIELensHalo(InputParams& params) : SimpleNSIELensHalo(){
+LensHaloBaseNSIE::LensHaloBaseNSIE(InputParams& params) : LensHaloSimpleNSIE(){
 
   perturb_rms = new double[6];
 
@@ -225,7 +225,7 @@ BaseNSIELensHalo::BaseNSIELensHalo(InputParams& params) : SimpleNSIELensHalo(){
 }
 
 
-void BaseNSIELensHalo::PrintLens(bool show_substruct,bool show_stars){
+void LensHaloBaseNSIE::PrintLens(bool show_substruct,bool show_stars){
 	int i;
 	cout << "zlens " << zlens << endl;
 
@@ -288,7 +288,7 @@ void BaseNSIELensHalo::PrintLens(bool show_substruct,bool show_stars){
 }
 
 
-BaseNSIELensHalo::~BaseNSIELensHalo(){
+LensHaloBaseNSIE::~LensHaloBaseNSIE(){
 	cout << "deleting lens" << endl;
 
 	delete[] perturb_rms;
