@@ -50,6 +50,8 @@ LensHaloNFW::LensHaloNFW() : LensHalo(){
 LensHaloNFW::LensHaloNFW(InputParams& params){
 	assignParams(params);
 	make_tables();
+	  gmax = InterpolateFromTable(gtable,xmax);
+
 }
 
 void LensHaloNFW::make_tables(){
@@ -88,7 +90,6 @@ void LensHaloNFW::assignParams(InputParams& params){
 	if(!params.get("concentration_nfw",rscale)) error_message1("concentration_nfw",params.filename());
 	rscale = rscale*Rmax; // was the concentration
   xmax = Rmax/rscale;
-  gmax = InterpolateFromTable(gtable,xmax);
 
 }
 

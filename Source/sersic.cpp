@@ -26,6 +26,10 @@ SourceSersic::SourceSersic(
 	setInternals();
 }
 
+SourceSersic::SourceSersic(InputParams& params)
+{
+}
+
 SourceSersic::~SourceSersic()
 {
 }

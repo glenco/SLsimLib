@@ -16,6 +16,7 @@ public:
 	
 	SourceSersic();
 	SourceSersic(double mag,double Reff,double PA,double my_index,double my_q,double my_z=0,const double *theta=0);
+	SourceSersic(InputParams& params);
 	~SourceSersic();
 	
 	void getParameters(Parameters& p) const;
