@@ -7,7 +7,7 @@
 
 #include "slsimlib.h"
 
-ForceTree::ForceTree(
+TreeForce::TreeForce(
 		PosType **xp
 		,IndexType Npoints
 		,float *Masses
@@ -20,7 +20,7 @@ ForceTree::ForceTree(
 		,bool median
 		,double theta
 		) :
-	SimpleTree(xp,Npoints,bucket,dimension,median)
+	TreeSimple(xp,Npoints,bucket,dimension,median)
 	, MultiMass(Multimass), MultiRadius(Multisize), masses(Masses), rsph(Rsphs), force_theta(theta), kappa_background(my_kappa_background)
 {
 
@@ -31,7 +31,7 @@ ForceTree::ForceTree(
 	CalcMoments();
 }
 
-ForceTree::ForceTree(
+TreeForce::TreeForce(
 		PosType **xp              /// positions of the halos xp[0..Npoints-1][0..1 or 2]
 		,IndexType Npoints         /// number of halos
 		,LensHalo *my_halos   /// array with internal properties of halos
@@ -42,7 +42,7 @@ ForceTree::ForceTree(
 		,bool median               /// If true will divide branches at the median position of the particles, if false an equal area cut is used, default false
 		,PosType theta             /// Opening angle used in tree force calculation
 		) :
-		SimpleTree(xp,Npoints,bucket,dimension,median)
+		TreeSimple(xp,Npoints,bucket,dimension,median)
 , MultiMass(true), MultiRadius(true), masses(NULL), rsph(NULL), force_theta(theta), kappa_background(my_kappa_bk)
 {
 
@@ -52,12 +52,12 @@ ForceTree::ForceTree(
 	CalcMoments();
 }
 
-ForceTree::~ForceTree(){
+TreeForce::~TreeForce(){
 }
 
 
 // calculates moments of the mass and the cutoff scale for each box
-void ForceTree::CalcMoments(){
+void TreeForce::CalcMoments(){
 
 	//*** make compatable
 	IndexType i;
@@ -134,7 +134,7 @@ void ForceTree::CalcMoments(){
 }
 
 /// simple rotates the coordinates in the xp array
-void ForceTree::rotate_coordinates(double **coord){
+void TreeForce::rotate_coordinates(double **coord){
 	IndexType i;
 	short j;
 	PosType tmp[3];
@@ -153,7 +153,7 @@ void ForceTree::rotate_coordinates(double **coord){
   return;
 }
 
-float * ForceTree::CalculateSPHsmoothing(int N){
+float * TreeForce::CalculateSPHsmoothing(int N){
 	IndexType i;//,neighbors[N];
 	IndexType *neighbors = new IndexType[N];
 
@@ -179,7 +179,7 @@ float * ForceTree::CalculateSPHsmoothing(int N){
  *       4*pi*G*mass_scale to get the deflection angle caused by the plane lens.
  * */
 
-void ForceTree::force2D(double *ray,double *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa){
+void TreeForce::force2D(double *ray,double *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa){
 
   PosType xcm[2],rcm2,tmp;
   int OpenBox(TreeNBHndl tree,PosType r);
@@ -247,7 +247,7 @@ void ForceTree::force2D(double *ray,double *alpha,KappaType *kappa,KappaType *ga
 
 				  if(haloON){
 					  halos[index].force_halo(alpha,kappa,gamma,xcm,no_kappa,true);
-				  }else{  // case of no halos just particles and no class derived from QuadTree
+				  }else{  // case of no halos just particles and no class derived from TreeQuad
 
 					  arg1 = rcm2/(rsph[index*MultiRadius]*rsph[index*MultiRadius]);
 					  arg2 = rsph[index*MultiRadius];

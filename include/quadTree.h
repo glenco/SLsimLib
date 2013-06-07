@@ -106,10 +106,10 @@ typedef struct QTreeNB * QTreeNBHndl;
 typedef int QTreeNBElement;
 
 /**
- * \brief QuadTree is a class for calculating the deflection, kappa and gamma by tree method.
+ * \brief TreeQuad is a class for calculating the deflection, kappa and gamma by tree method.
  *
- * QuadTree is evolved from SimpleTree and ForceTree.  It splits each cell into four equal area
- * subcells instead of being a binary tree like SimpleTree.  When the "particles" are given sizes
+ * TreeQuad is evolved from TreeSimple and TreeForce.  It splits each cell into four equal area
+ * subcells instead of being a binary tree like TreeSimple.  When the "particles" are given sizes
  * the tree is built in such a way the large particles are stored in branches that are no smaller
  * than their size.  In this way particles are stored on all levels of the tree and not just in the
  * leaves.  This improves efficiency when particles of a wide range of sizes overlap in 2D.
@@ -119,9 +119,9 @@ typedef int QTreeNBElement;
  *
  */
 
-class QuadTree {
+class TreeQuad {
 public:
-	QuadTree(
+	TreeQuad(
 			PosType **xpt
 			,float *my_masses
 			,float *my_sizes
@@ -132,7 +132,7 @@ public:
 			,int bucket = 5
 			,double theta_force = 0.1
 			);
-	QuadTree(
+	TreeQuad(
 			PosType **xpt
 			,LensHaloHndl *my_halos
 			,IndexType Npoints
@@ -140,7 +140,7 @@ public:
 			,int bucket = 5
 			,double theta_force = 0.1
 			);
-	~QuadTree();
+	~TreeQuad();
 
 	virtual void force2D(double *ray,double *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa);
 	virtual void force2D_recur(double *ray,double *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa);

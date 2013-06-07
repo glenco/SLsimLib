@@ -20,11 +20,11 @@
  * The particles can be point masses or have multiple sizes in which case they have a Gaussian profile.
  * They can also have the same mass or multiple masses.
  *
- * xp[][], masses[] and rsph[] need to be allocated before constructing a ForceTree is
+ * xp[][], masses[] and rsph[] need to be allocated before constructing a TreeForce is
  * constructed and de-allocated after it is destruction.  If the boolian flags are set to
- * false these arrays need only be one element long.  Multiple ForceTrees can be
+ * false these arrays need only be one element long.  Multiple TreeForces can be
  * made from the same particles.  Do not rotate the particles without reconstructing
- * a ForceTree.
+ * a TreeForce.
  *
  * Most of the code in the earlier TreeNBForce.c is duplicated here as private methods and
  * a few public ones.
@@ -33,18 +33,18 @@
  * The shear and kappa is always more accurate than the deflection.
  *
  */
-class ForceTree : public SimpleTree {
+class TreeForce : public TreeSimple {
 public:
-	ForceTree(PosType **xp,IndexType Npoints,float *masses,float *rsph,bool Multimass,bool Multisize
+	TreeForce(PosType **xp,IndexType Npoints,float *masses,float *rsph,bool Multimass,bool Multisize
 			,double my_kappa_background = 0,int bucket = 5,int dimensions = 2,bool median = false,PosType theta = 0.1
 			);
 
-	ForceTree(PosType **xp,IndexType Npoints,LensHalo *my_halos
+	TreeForce(PosType **xp,IndexType Npoints,LensHalo *my_halos
 			,bool Multisize = true,double my_kappa_bk=0.0,int bucket = 5,int dimensions = 2
 			,bool median = false,PosType theta = 0.1
 			);
 
-	~ForceTree();
+	~TreeForce();
 
 	/// calculated sph smoothing and store them in the tree, also provide pointer to them
 	float * CalculateSPHsmoothing(int N);
@@ -104,6 +104,6 @@ protected:
 	LensHalo *halos;
 };
 
-typedef ForceTree *ForceTreeHndl;
+typedef TreeForce *TreeForceHndl;
 
 #endif /* FORCE_TREE_H_ */

@@ -19,11 +19,11 @@ class SourceType
 public:
 	enum Type
 	{
-		MultiSource,
-		MultiSourceAnaGalaxy,
-		SersicSource,
-		OverzierSource,
-		PixelledSource,
+		SourceMulti,
+		SourceMultiAnaGalaxy,
+		SourceSersic,
+		SourceOverzier,
+		SourcePixelled,
 		SourceGaussian,
 		SourceUniform,
 		SourceBLRDisk,

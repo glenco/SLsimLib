@@ -90,13 +90,13 @@ protected:
 
 typedef Source *SourceHndl;
 
-class PixelledSource: public Source{
+class SourcePixelled: public Source{
 public:
-	SOURCE_TYPE(PixelledSource)
+	SOURCE_TYPE(SourcePixelled)
 	
-	PixelledSource(double my_z, int Npixels, double range, double* center, double* arr_val);
-	PixelledSource(InputParams& params);
-	~PixelledSource();
+	SourcePixelled(double my_z, int Npixels, double range, double* center, double* arr_val);
+	SourcePixelled(InputParams& params);
+	~SourcePixelled();
 	double SurfaceBrightness(double *y);
 	void printSource();
 	inline double getTotalFlux(){return flux;}

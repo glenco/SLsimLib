@@ -163,10 +163,10 @@ void LensHaloBaseNSIE::implant_stars(Point *centers,unsigned long Nregions,long 
 	//std::printf("last star x = %e %e\n",stars_xp[stars_N-1][0],stars_xp[stars_N-1][1]);
 
 	float dummy=0;
-	//star_tree = new ForceTree(stars_xp,stars_N,star_masses,&dummy
+	//star_tree = new TreeForce(stars_xp,stars_N,star_masses,&dummy
 	//		,false,false,5,2,false,star_theta_force);
 
-	star_tree = new QuadTree(stars_xp,star_masses,&dummy,stars_N
+	star_tree = new TreeQuad(stars_xp,star_masses,&dummy,stars_N
 			,false,false,0,4,star_theta_force);
 
 	// visit every branch to find center of mass and cutoff scale */

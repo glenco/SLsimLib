@@ -25,7 +25,7 @@ public:
 
 	void force(double *alpha,KappaType *kappa,KappaType *gamma,double *xx,bool kappa_off);
 protected:
-	QuadTree *halo_tree;
+	TreeQuad *halo_tree;
 };
 
 class LensPlaneSingular : public LensPlane{

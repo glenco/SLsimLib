@@ -13,7 +13,7 @@
 
 /** \brief Constructor meant for point particles, simulation particles
  */
-QuadTree::QuadTree(
+TreeQuad::TreeQuad(
 		PosType **xpt
 		,float *my_masses
 		,float *my_sizes
@@ -44,7 +44,7 @@ QuadTree::QuadTree(
 /** \brief Constructor meant for halos with internal structure parameters.  This is a protected constructor because
  * it should only be invoked from the derived classes that have specific defined halo models.
  */
-QuadTree::QuadTree(
+TreeQuad::TreeQuad(
 		PosType **xpt
 		,LensHaloHndl *my_halos
 		,IndexType Npoints
@@ -70,14 +70,14 @@ QuadTree::QuadTree(
 }
 
 
-QuadTree::~QuadTree()
+TreeQuad::~TreeQuad()
 {
 	delete tree;
 	delete[] index;
 	return;
 }
 
-QTreeNBHndl QuadTree::BuildQTreeNB(PosType **xp,IndexType Nparticles,IndexType *particles){
+QTreeNBHndl TreeQuad::BuildQTreeNB(PosType **xp,IndexType Nparticles,IndexType *particles){
   IndexType i;
   short j;
   PosType p1[2],p2[2];
@@ -115,12 +115,12 @@ QTreeNBHndl QuadTree::BuildQTreeNB(PosType **xp,IndexType Nparticles,IndexType *
 }
 
 /// returns an index for which of the four quadrangles of the branch the point x[] is in
-inline short QuadTree::WhichQuad(double *x,QBranchNB &branch){
+inline short TreeQuad::WhichQuad(double *x,QBranchNB &branch){
 	return (x[0] < branch.center[0]) + 2*(x[1] < branch.center[1]);
 }
 
 /// tree must be created and first branch must be set before start
-void QuadTree::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
+void TreeQuad::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
 
 	QBranchNB *cbranch = tree->current; /* pointer to current branch */
 	IndexType i,j,cut,cut2,jt;
@@ -336,7 +336,7 @@ void QuadTree::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
 }
 
 // calculates moments of the mass and the cutoff scale for each box
-void QuadTree::CalcMoments(){
+void TreeQuad::CalcMoments(){
 
 	//*** make compatable
 	IndexType i;
@@ -425,7 +425,7 @@ void QuadTree::CalcMoments(){
 }
 
 /// simple rotates the coordinates in the xp array
-void QuadTree::rotate_coordinates(double **coord){
+void TreeQuad::rotate_coordinates(double **coord){
 	IndexType i;
 	short j;
 	PosType tmp[3];
@@ -457,7 +457,7 @@ void QuadTree::rotate_coordinates(double **coord){
  *       NB : the units of sigma_backgound need to be mass/units(ray)^2
  * */
 
-void QuadTree::force2D(double *ray,double *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa){
+void TreeQuad::force2D(double *ray,double *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa){
 
   PosType xcm[2],rcm2cell,rcm2,tmp,boxsize2;
   IndexType i;
@@ -536,7 +536,7 @@ void QuadTree::force2D(double *ray,double *alpha,KappaType *kappa,KappaType *gam
 
 					  if(haloON){
 						  halos[index]->force_halo(alpha,kappa,gamma,xcm,no_kappa,true);
-					  }else{  // case of no halos just particles and no class derived from QuadTree
+					  }else{  // case of no halos just particles and no class derived from TreeQuad
 
 						  rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
 						  if(rcm2 < 1e-20) rcm2 = 1e-20;
@@ -612,7 +612,7 @@ void QuadTree::force2D(double *ray,double *alpha,KappaType *kappa,KappaType *gam
 /** \brief Force2D_recur calculates the defection, convergence and shear using
  *   the plane-lens approximation.
  *
- *  This function should do the same work as QuadTree::force2D() accept it is
+ *  This function should do the same work as TreeQuad::force2D() accept it is
  *  done recursively instead of iteratively.  This is done to enable multi-threading
  *  of the force calculation.
  *
@@ -626,7 +626,7 @@ void QuadTree::force2D(double *ray,double *alpha,KappaType *kappa,KappaType *gam
  *       NB : the units of sigma_backgound need to be mass/units(ray)^2
  * */
 
-void QuadTree::force2D_recur(double *ray,double *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa){
+void TreeQuad::force2D_recur(double *ray,double *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa){
 
   assert(tree);
 
@@ -646,7 +646,7 @@ void QuadTree::force2D_recur(double *ray,double *alpha,KappaType *kappa,KappaTyp
   return;
 }
 
-void QuadTree::walkTree_recur(QBranchNB *branch,double *ray,double *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa){
+void TreeQuad::walkTree_recur(QBranchNB *branch,double *ray,double *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa){
 
 	PosType xcm[2],rcm2cell,rcm2,tmp,boxsize2;
 	IndexType i;
@@ -709,7 +709,7 @@ void QuadTree::walkTree_recur(QBranchNB *branch,double *ray,double *alpha,KappaT
 					/////////////////////////////////////////
 					if(haloON){
 						halos[index]->force_halo(alpha,kappa,gamma,xcm,no_kappa,true);
-					}else{  // case of no halos just particles and no class derived from QuadTree
+					}else{  // case of no halos just particles and no class derived from TreeQuad
 
 						rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
 						if(rcm2 < 1e-20) rcm2 = 1e-20;
@@ -782,7 +782,7 @@ void QuadTree::walkTree_recur(QBranchNB *branch,double *ray,double *alpha,KappaT
 /** This is a diagnostic routine that prints the position of every point in a
  * given branch of the tree.
  */
-void QuadTree::printParticlesInBranch(unsigned long number){
+void TreeQuad::printParticlesInBranch(unsigned long number){
 	unsigned long i;
 
 	tree->moveTop();
@@ -802,7 +802,7 @@ void QuadTree::printParticlesInBranch(unsigned long number){
  * Prints to stdout the borders of each branch in the tree below level.
  * If level < 0 or not specified the whole tree will be printed.
  */
-void QuadTree::printBranchs(int level){
+void TreeQuad::printBranchs(int level){
 
 	bool decend = true;
 	tree->moveTop();

@@ -8,7 +8,7 @@
 #include "planes.h"
 
 LensPlaneTree::LensPlaneTree(PosType **xpt,LensHaloHndl *my_halos,IndexType Nhalos,double my_sigma_background) : LensPlane(){
-	halo_tree = new QuadTree(xpt,my_halos,Nhalos,my_sigma_background);
+	halo_tree = new TreeQuad(xpt,my_halos,Nhalos,my_sigma_background);
 }
 
 LensPlaneTree::~LensPlaneTree(){

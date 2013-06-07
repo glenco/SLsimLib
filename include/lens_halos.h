@@ -118,10 +118,10 @@ protected:
  * \brief A class for calculating the deflection, kappa and gamma caused by a collection of NFW
  * halos.
  *
- * Derived from the QuadTree class.  The "particles" are replaced with spherical NFW halos.
+ * Derived from the TreeQuad class.  The "particles" are replaced with spherical NFW halos.
  *
  * This class uses the true expressions for the NFW profile.  This is
- * time consuming and not usually necessary. See QuadTreePseudoNFW for a faster alternative.
+ * time consuming and not usually necessary. See TreeQuadPseudoNFW for a faster alternative.
  *
 * The default value of theta = 0.1 generally gives better than 1% accuracy on alpha.
  * The shear and kappa is always more accurate than the deflection.
@@ -180,7 +180,7 @@ private:
  * \brief A class for calculating the deflection, kappa and gamma caused by a collection of
  * halos with a double power-law mass profile.
  *
- * Derived from the QuadTree class.  The "particles" are replaced with spherical halos
+ * Derived from the TreeQuad class.  The "particles" are replaced with spherical halos
  * with \f$ \Sigma \propto 1/(1 + r/r_s )^\beta \f$ so beta would usually be positive.
  *
  * An NFW profile is approximated beta = 2 .
@@ -243,7 +243,7 @@ private:
  * \brief A class for calculating the deflection, kappa and gamma caused by a collection of halos
  * with truncated power-law mass profiles.
  *
- * Derived from the QuadTree class.  The "particles" are replaced with spherical halos.
+ * Derived from the TreeQuad class.  The "particles" are replaced with spherical halos.
  *The truncation is in 2d not 3d. \f$ \Sigma \propto r^\beta \f$ so beta would usually be negative.
  *
  *

@@ -84,7 +84,7 @@ public:
   double sub_Mmin;
   double sub_theta_force;
   LensHalo *subs;
-  QuadTree *sub_tree;
+  TreeQuad *sub_tree;
   IndexType *sub_substructures;
   ClumpInternal sub_type;
 
@@ -93,8 +93,8 @@ public:
   int stars_N;
   IndexType *stars;
   PosType **stars_xp;
-  //ForceTree *star_tree;
-  QuadTree *star_tree;
+  //TreeForce *star_tree;
+  TreeQuad *star_tree;
   double star_massscale;
   /// star masses relative to star_massscles
   float *star_masses;
