@@ -30,7 +30,13 @@ SourceSersic::~SourceSersic()
 {
 }
 
-void SourceSersic::getParameters(Parameters& p) const
+
+SersicSource::SersicSource(InputParams& params)
+: Source()
+{
+}
+
+void SersicSource::getParameters(Parameters& p) const
 {
 	// base class serialization
 	Source::getParameters(p);
