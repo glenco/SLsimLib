@@ -88,7 +88,7 @@ void LensHaloNFW::assignParams(InputParams& params){
 	if(!params.get("Rmax_nfw",Rmax)) error_message1("Rmax_nfw",params.filename());
 	if(!params.get("zlens_nfw",zlens)) error_message1("lens_nfw",params.filename());
 	if(!params.get("concentration_nfw",rscale)) error_message1("concentration_nfw",params.filename());
-	rscale = rscale*Rmax; // was the concentration
+	rscale = Rmax/rscale; // was the concentration
   xmax = Rmax/rscale;
 
 }
@@ -166,7 +166,7 @@ void LensHaloPseudoNFW::assignParams(InputParams& params){
 	if(!params.get("zlens_pnfw",zlens)) error_message1("zlens_pnfw",params.filename());
 	if(!params.get("concentration_pnfw",rscale)) error_message1("concentration_pnfw",params.filename());
 	if(!params.get("slope_pnfw",beta)) error_message1("slope_pnfw",params.filename());
-	rscale = rscale*Rmax; // was the concentration
+	rscale = Rmax/rscale; // was the concentration
   xmax = Rmax/rscale;
 }
 
@@ -283,6 +283,23 @@ void LensHalo::force_halo(
 
 			gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 			gamma[1] += xcm[0]*xcm[1]*tmp;
+		}
+	}
+	else
+	{
+		if (subtract_point == false)
+		{
+			double prefac = mass/rcm2/pi;
+			alpha[0] += -1.0*prefac*xcm[0];
+			alpha[1] += -1.0*prefac*xcm[1];
+
+			// can turn off kappa and gamma calculations to save times
+			if(!no_kappa){
+				double tmp = -2.0*prefac/rcm2;
+
+				gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+				gamma[1] += xcm[0]*xcm[1]*tmp;
+			}
 		}
 	}
 
