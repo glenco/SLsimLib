@@ -16,8 +16,9 @@ using namespace std;
  * \ingroup Constructor
  * \brief allocates space for the halo trees and the inout lens, if there is any
  */
-Lens::Lens(InputParams& params, CosmoHndl cosmo, SourceHndl source, long *my_seed) : seed(my_seed){
-
+Lens::Lens(InputParams& params, CosmoHndl cosmo, SourceHndl source, long *my_seed)
+: seed(my_seed), Nhalos(0), halo_pos(0)
+{
 	if( (cosmo->getOmega_matter() + cosmo->getOmega_lambda()) != 1.0 ){
 		printf("ERROR: MultiLens can only handle flat universes at present.  Must change cosmology.\n");
 		exit(1);
@@ -64,8 +65,9 @@ Lens::Lens(InputParams& params, CosmoHndl cosmo, SourceHndl source, long *my_see
 /**
  * \brief Creates an empty lens. Main halos and field halos need to be inserted by hand from the user.
  */
-Lens::Lens(InputParams& params, CosmoHndl cosmo, long *my_seed) : seed(my_seed){
-
+Lens::Lens(InputParams& params, CosmoHndl cosmo, long *my_seed)
+: seed(my_seed), Nhalos(0), halo_pos(0)
+{
 	if( (cosmo->getOmega_matter() + cosmo->getOmega_lambda()) != 1.0 ){
 		printf("ERROR: MultiLens can only handle flat universes at present.  Must change cosmology.\n");
 		exit(1);
