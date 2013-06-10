@@ -11,6 +11,27 @@
 
 using namespace std;
 
+namespace
+{
+	double redshift_from_dist_table(std::map<double,double>& coorDist_table, double Dl)
+	{
+		// lookup redshift/distance interval from table
+		std::map<double,double>::iterator ind = coorDist_table.lower_bound(Dl);
+		if(ind == coorDist_table.end())
+			--ind;
+		double Dl1 = 0, z1 = 0;
+		double Dl2 = ind->first, z2 = ind->second;
+		if(ind != coorDist_table.begin())
+		{
+			--ind;
+			Dl1 = ind->first;
+			z1 = ind->second;
+		}
+
+		// interpolate redshift
+		return z1 + (Dl-Dl1)/(Dl2-Dl1)*(z2-z1);
+	}
+}
 
 /**
  * \ingroup Constructor
@@ -451,24 +472,20 @@ void Lens::buildLensPlanes(
 			 */
 			if(j == 0) z1 = 0.0;
 			else{
-				ind = coorDist_table.lower_bound((Dl[j]-0.5*dDl[j]));
-				z1 = ind->second;
+				z1 = redshift_from_dist_table(coorDist_table, Dl[j]-0.5*dDl[j]);
 			}
 
 			if(main_halo_on && j-1 == (main_halo_on % Nplanes)){
-				ind = coorDist_table.lower_bound(Dl[j] - 0.5*(Dl[j] - Dl[j-2]));
-				z1 = ind->second;
+				z1 = redshift_from_dist_table(coorDist_table, Dl[j] - 0.5*(Dl[j] - Dl[j-2]));
 			}
 
 			if(j == Nplanes-2) z2 = zsource;
 			else{
-				ind = coorDist_table.lower_bound(Dl[j] + 0.5*dDl[j+1]);
-				z2 = ind->second;
+				z2 = redshift_from_dist_table(coorDist_table, Dl[j] + 0.5*dDl[j+1]);
 			}
 
 			if(main_halo_on && j+1 == (main_halo_on % Nplanes)){
-				ind = coorDist_table.lower_bound(Dl[j] + 0.5*(Dl[j+2] - Dl[j]));
-				z2 = ind->second;
+				z2 = redshift_from_dist_table(coorDist_table, Dl[j] + 0.5*(Dl[j+2] - Dl[j]));
 			}
 
 			/// Find which field_halos are in redshift range
@@ -594,25 +611,12 @@ void Lens::setCoorDist(CosmoHndl cosmo)
 		}
 		else
 		{
-			// lookup redshift/distance interval from table
-			std::map<double,double>::iterator ind = coorDist_table.lower_bound(Dl[i]);
-			if(ind == coorDist_table.end())
-				--ind;
-			double Dl1 = 0, z1 = 0;
-			double Dl2 = ind->first, z2 = ind->second;
-			if(ind != coorDist_table.begin())
-			{
-				--ind;
-				Dl1 = ind->first;
-				z1 = ind->second;
-			}
-
-			// interpolate redshift
-			double z_interp = z1 + (Dl[i]-Dl1)/(Dl2-Dl1)*(z2-z1);
-			plane_redshifts.push_back(z_interp);
+			// get redshift for calculated distance
+			double zz = redshift_from_dist_table(coorDist_table, Dl[i]);
+			plane_redshifts.push_back(zz);
 
 			// set distance so that it agrees with redshift
-			Dl[i] = cosmo->coorDist(0, z_interp);
+			Dl[i] = cosmo->coorDist(0, zz);
 		}
 		cout << plane_redshifts[i] << " ";
 	}
@@ -1341,9 +1345,15 @@ short Lens::ResetSourcePlane(
 	if(j > 0)
 	{
 		// check if source plane coincides with previous lens plane
-		// or check if previous plane is nearer when asked to
-		if(Dl[j-1] == Ds || (nearest && Dl[j]-Ds > Ds-Dl[j-1]))
+		if(Dl[j-1] == Ds)
 			--j;
+		// or check if previous plane is nearer when asked to
+		else if(nearest)
+		{
+			double z1 = redshift_from_dist_table(coorDist_table, Dl[j]-0.5*dDl[j]);
+			if(z < z1) 
+				--j;
+		}
 	}
 
 	if(nearest && (j < Nplanes-1) ){
