@@ -83,11 +83,7 @@ private:
 	
 	/// haloID
 	unsigned long haloID;
-	
-	/// weighted mean between the radii that enclose 99% of the flux
-	/// in the pure De Vacouleur/exponential disk case
-	/// 6.670 = 3.975*Re = 3.975*1.678*Rh
-	
+
 	/// bulge half light radius
 	double Reff;
 	/// disk scale height
