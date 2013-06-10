@@ -1330,12 +1330,12 @@ short Lens::ResetSourcePlane(
 		return out;
 	}
 
-	// j is the index of the next plane at higher redshift, This plane will be temporarily replaced and used as a source plane
 
 	// distance to new source plane
 	double Ds = cosmo->coorDist(0,z);
 	// find bounding index
 	locateD(Dl.data()-1,Nplanes-1,Ds,&j);
+	// j is the index of the next plane at higher redshift, This plane will be temporarily replaced and used as a source plane
 	assert(j <= Nplanes && j >=0);
 
 	if(j > 0)

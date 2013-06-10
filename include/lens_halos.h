@@ -134,22 +134,11 @@ public:
 	virtual ~LensHaloNFW();
 
 	void initFromFile(float my_mass, long *seed, float vmax, float r_halfmass);
-<<<<<<< local
   
   /// set Rmax
   void set_Rmax(float my_Rmax){Rmax=my_Rmax; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
   /// set scale radius
-=======
-	/// set Rmax
-	void set_Rmax(float my_Rmax){Rmax=my_Rmax; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
-	/// set scale radius
->>>>>>> other
 	void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
-<<<<<<< local
-=======
-
-
->>>>>>> other
 
 protected:
 	/// table size
