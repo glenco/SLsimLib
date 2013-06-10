@@ -236,6 +236,7 @@ private:
 	std::vector<LensHaloHndl> field_halos;
 	/// number of field_halos on all the planes
 	IndexType Nhalos;
+  /// Perpendicular position of halo TODO (In proper distance?)
 	double **halo_pos;
 
 	// Variables for implanted source

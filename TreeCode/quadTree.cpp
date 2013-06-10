@@ -45,7 +45,7 @@ TreeQuad::TreeQuad(
  * it should only be invoked from the derived classes that have specific defined halo models.
  */
 TreeQuad::TreeQuad(
-		PosType **xpt
+		PosType **xpt               /// Perpendicular postion of halo (TODO In proper distance?)
 		,LensHaloHndl *my_halos
 		,IndexType Npoints
 		,double my_sigma_background /// background kappa that is subtracted

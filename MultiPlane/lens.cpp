@@ -1100,7 +1100,7 @@ void Lens::readInputSimFile(CosmoHndl cosmo){
 	// read in data
 	int j_max;
 	double mass_max=0,R_max=0,V_max=0,minmass=1e30;
-	double *theta;
+	double *position;
 	int ncolumns = 9;
 
 	void *addr[ncolumns];
@@ -1146,14 +1146,13 @@ void Lens::readInputSimFile(CosmoHndl cosmo){
 			buffer.str(std::string());
 		}
 
-		/// pos in radians
-		theta = new double[2];
-		/// pos in physical radians
+		// position on lens plane
+		position = new double[2];
 		double Ds = cosmo->angDist(0,z);
-		theta[0] = -ra*pi/180.*Ds;
-		theta[1] = dec*pi/180.*Ds;
+		position[0] = -ra*pi/180.*Ds;
+		position[1] = dec*pi/180.*Ds;
 
-    if(rmax < (rtmp = (theta[0]*theta[0]+theta[1]*theta[1])/Ds/Ds)) rmax = rtmp;
+    if(rmax < (rtmp = (position[0]*position[0]+position[1]*position[1])/Ds/Ds)) rmax = rtmp;
     
 		if(np > 0.0 && vdisp > 0.0 && z <= zsource){
 
@@ -1215,7 +1214,7 @@ void Lens::readInputSimFile(CosmoHndl cosmo){
 			if(field_halos[j]->get_Rmax() > R_max) R_max = field_halos[j]->get_Rmax();
 			if(vdisp > V_max) V_max = vdisp;
 
-			halo_pos_vec.push_back(theta);
+			halo_pos_vec.push_back(position);
 
 			if(mass > mass_max) {
 				mass_max = mass;
@@ -1241,7 +1240,7 @@ void Lens::readInputSimFile(CosmoHndl cosmo){
 				field_halos[j]->setZlens(z);
 				field_halos[j]->initFromFile(mass*field_galaxy_mass_fraction,seed,vmax,r_halfmass*cosmo->gethubble());
 
-				halo_pos_vec.push_back(theta);
+				halo_pos_vec.push_back(position);
 
 				++j;
 			}
