@@ -6,6 +6,7 @@
 #include <iostream>
 #include <sstream>
 
+/// read in galaxies from a Millennium simulation file
 void SourceMulti::readGalaxyFile(std::string filename, Band band, double mag_limit)
 {
 	std::size_t count = 0;
@@ -204,8 +205,13 @@ void SourceMulti::readGalaxyFile(std::string filename, Band band, double mag_lim
 			 << c << inclination << c << pa << c << angdist << c << diskradius_arcsec << c << bulgesize_arcsec << std::endl;
 			 */
 			
-			theta[0] = ra*pi/180;
+      // Millennium conventions
+      theta[0] = -ra*pi/180;
 			theta[1] = dec*pi/180;
+      pa = (90 - pa)*pi/180;
+      inclination *= pi/180;
+      if(cos(inclination)< 0.1) inclination = acos(0.1);
+      
 			
 			/***************************/
 			SourceOverzier* over = new SourceOverzier(mag, pow(10, -(mag_bulge-mag)/2.5), Ref, Rh, pa*pi/180., inclination*pi/180., HaloID, z_cosm, theta);

@@ -1144,7 +1144,7 @@ void Lens::readInputSimFile(CosmoHndl cosmo){
 		theta = new double[2];
 		/// pos in physical radians
 		double Ds = cosmo->angDist(0,z);
-		theta[0] = ra*pi/180.*Ds;
+		theta[0] = -ra*pi/180.*Ds;
 		theta[1] = dec*pi/180.*Ds;
 
     if(rmax < (rtmp = (theta[0]*theta[0]+theta[1]*theta[1])/Ds/Ds)) rmax = rtmp;

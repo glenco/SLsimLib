@@ -253,8 +253,12 @@ void SourceMultiAnaGalaxy::readDataFile(){
 			<< c << inclination << c << pa << c << angdist << c << diskradius_arcsec << c << bulgesize_arcsec << std::endl;
 			 */
 
-			theta[0] = ra*pi/180;
+      // converting from Millennium conventions
+			theta[0] = -ra*pi/180;
 			theta[1] = dec*pi/180;
+      pa = (90 - pa)*pi/180;
+      inclination *= pi/180;
+      if(cos(inclination)< 0.1) inclination = acos(0.1);
       
       if(j == 0){
         rangex[0] = rangex[1] = theta[0];
