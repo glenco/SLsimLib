@@ -523,9 +523,8 @@ void Lens::updateMainHaloLensPlane(){
  * In case it is on the first plane, it will hold the index Nplanes, to make
  * sure that it is not zero (i.e. not set)
  */
-void Lens::setCoorDist(CosmoHndl cosmo){
-	int i;
-
+void Lens::setCoorDist(CosmoHndl cosmo)
+{
 	double Dlens;
 	double Ds = cosmo->coorDist(0,zsource);
 	if(main_halo_on) Dlens = cosmo->coorDist(0,main_halos[0]->getZlens());
@@ -553,7 +552,7 @@ void Lens::setCoorDist(CosmoHndl cosmo){
 		/// ensures that the first plane and the last before the source plane have the same volume
 		/// as all ther planes
 		double dlD = lD[1]-lD[0];
-		for(i=0; i<Np; i++){
+		for(std::size_t i=0; i<Np; i++){
 			lD[i] -= 0.5*dlD;
 		}
 
@@ -566,7 +565,7 @@ void Lens::setCoorDist(CosmoHndl cosmo){
 		}
 
 		/// assigns the redshifts and plugs in the input plane
-		for(i=1; i<Np; i++){
+		for(std::size_t i=1; i<Np; i++){
 			Dl.push_back(lD[i]);
 
 			if(main_halo_on && flag == 0)
@@ -580,47 +579,66 @@ void Lens::setCoorDist(CosmoHndl cosmo){
 		Dl.push_back(Ds);
 	}
 
-	int j;
-	dDl.push_back(Dl[0]);  // distance between jth plane and the previous plane
-	for(j = 1; j < Nplanes; j++){
-		dDl.push_back(Dl[j] - Dl[j-1]); // distance between jth plane and the previous plane
-	}
+	assert(Dl.size() == Nplanes);
 
 	if(main_halo_on)
 		cout << "zlens " << main_halos[0]->getZlens() << " on plane number " << (main_halo_on % Nplanes) << endl;
 
-	cout << "Dl: ";
-	for(j = 0; j < Nplanes; j++)
-		cout << Dl[j] << " ";
-	cout << endl;
-
-	cout << "dDl: ";
-	for(j = 0; j < Nplanes; j++)
-		cout << dDl[j] << " ";
-	cout << endl;
-
-
-	std::map<double,double>::iterator ind;
 	// assigns the redshifts and plugs in the input plane
 	cout << "z: ";
-	for(i=0; i<Nplanes-1; i++){
+	for(std::size_t i = 0; i < Nplanes-1; ++i)
+	{
 		if(main_halo_on && i == (main_halo_on % Nplanes))
 		{
 			plane_redshifts.push_back(main_halos[0]->getZlens());
 		}
 		else
 		{
-			ind = coorDist_table.lower_bound(Dl[i]);
-			plane_redshifts.push_back(ind->second);
+			// lookup redshift/distance interval from table
+			std::map<double,double>::iterator ind = coorDist_table.lower_bound(Dl[i]);
+			if(ind == coorDist_table.end())
+				--ind;
+			double Dl1 = 0, z1 = 0;
+			double Dl2 = ind->first, z2 = ind->second;
+			if(ind != coorDist_table.begin())
+			{
+				--ind;
+				Dl1 = ind->first;
+				z1 = ind->second;
+			}
+
+			// interpolate redshift
+			double z_interp = z1 + (Dl[i]-Dl1)/(Dl2-Dl1)*(z2-z1);
+			plane_redshifts.push_back(z_interp);
+
+			// set distance so that it agrees with redshift
+			Dl[i] = cosmo->coorDist(0, z_interp);
 		}
 		cout << plane_redshifts[i] << " ";
 	}
-  
-	plane_redshifts.push_back(zsource);
-	cout << plane_redshifts[Nplanes-1] << " " << std::endl;
 
-	assert(Dl.size() == Nplanes);
+	plane_redshifts.push_back(zsource);
+	cout << plane_redshifts.back() << " " << std::endl;
+
 	assert(plane_redshifts.size() == Nplanes);
+
+	cout << "Dl: ";
+	for(std::size_t i = 0; i < Nplanes; ++i)
+		cout << Dl[i] << " ";
+	cout << endl;
+
+	dDl.push_back(Dl[0]);  // distance between ith plane and the previous plane
+	for(std::size_t i = 1; i < Nplanes; ++i)
+	{
+		dDl.push_back(Dl[i] - Dl[i-1]); // distance between ith plane and the previous plane
+	}
+
+	assert(dDl.size() == Nplanes);
+
+	cout << "dDl: ";
+	for(std::size_t i = 0; i < Nplanes; ++i)
+		cout << dDl[i] << " ";
+	cout << endl;
 }
 
 
@@ -1337,7 +1355,7 @@ short Lens::ResetSourcePlane(
 		// if nearest==false or the source is at higher redshift than the last plane use the real redshift
 		Ds_implant = Ds;
 		zs_implant = z;
-		if(j > 0) dDs_implant = cosmo->coorDist(plane_redshifts[j-1],z);
+		if(j > 0) dDs_implant = Ds - Dl[j-1];
 		else  dDs_implant = Ds;
 	}
 
