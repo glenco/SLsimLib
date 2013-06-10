@@ -90,6 +90,11 @@ protected:
 
 typedef Source *SourceHndl;
 
+/** \brief Class for sources described by an array of pixels
+ *
+ *  The sources are created as a square array of pixels of dimension Npixels x Npixels and side equal to range.
+ *
+ */
 class SourcePixelled: public Source{
 public:
 	SOURCE_TYPE(SourcePixelled)
