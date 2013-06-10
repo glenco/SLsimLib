@@ -433,7 +433,7 @@ void Lens::buildLensPlanes(
 
 	std::cout << "Lens::buildLensPlanes zsource = " << zsource << std::endl;
 
-  assert(plane_redshifts.size() == Nplanes);
+	assert(plane_redshifts.size() == Nplanes);
 	assert(plane_redshifts[Nplanes-1] == zsource);
 
 	for(j=0,Ntot=0;j<Nplanes-1;j++){
@@ -602,14 +602,20 @@ void Lens::setCoorDist(CosmoHndl cosmo){
 	// assigns the redshifts and plugs in the input plane
 	cout << "z: ";
 	for(i=0; i<Nplanes-1; i++){
-		ind = coorDist_table.lower_bound(Dl[i]);
-		plane_redshifts.push_back(ind->second);
+		if(main_halo_on && i == (main_halo_on % Nplanes))
+		{
+			plane_redshifts.push_back(main_halos[0]->getZlens());
+		}
+		else
+		{
+			ind = coorDist_table.lower_bound(Dl[i]);
+			plane_redshifts.push_back(ind->second);
+		}
 		cout << plane_redshifts[i] << " ";
 	}
   
 	plane_redshifts.push_back(zsource);
-	cout << plane_redshifts[i] << " " << std::endl;
-  assert(plane_redshifts.size() == Nplanes);
+	cout << plane_redshifts[Nplanes-1] << " " << std::endl;
 
 	assert(Dl.size() == Nplanes);
 	assert(plane_redshifts.size() == Nplanes);
