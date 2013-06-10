@@ -45,6 +45,7 @@ double *LensHaloNFW::xtable = NULL,*LensHaloNFW::ftable = NULL,*LensHaloNFW::gta
 LensHaloNFW::LensHaloNFW() : LensHalo(){
   gmax=0;
 	make_tables();
+	  gmax = InterpolateFromTable(gtable,xmax);
 }
 
 LensHaloNFW::LensHaloNFW(InputParams& params){

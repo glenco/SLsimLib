@@ -9,6 +9,13 @@
 
 #include "source.h"
 
+/** \brief Class for sources described by a Sersic profile
+ *
+ * The sources are constructed from magnitude, effective radius Reff, Sersic index, axis ratio q and main axis orientation PA.
+ * For q = 1, the source is circular and the surface brightness profile is I(r) = Ieff * exp(-bn*((r/Reff)^(1/index)-1))
+ * The elliptical model is defined for axis ratio q < 1.
+ *
+ */
 class SourceSersic : public Source
 {
 public:
@@ -29,7 +36,7 @@ public:
 	
 	inline double getMag() { return mag; }
 
-	// calculates radius where the surface brightness drops by a factor f with respect to the central peak
+	/// calculates radius where the surface brightness drops by a factor f with respect to the central peak
 	inline double FractionRadius (double f) {return Reff*pow(-log (f)/bn,index);}
 
 	inline double getPA() { return PA; }

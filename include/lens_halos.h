@@ -60,11 +60,11 @@ public:
 	virtual void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, double my_slope, long *seed);
 
 	/// set Rmax
-	void set_Rmax(float my_Rmax){Rmax=my_Rmax; xmax = Rmax/rscale; };
+	virtual void set_Rmax(float my_Rmax){Rmax=my_Rmax; xmax = Rmax/rscale;};
 	/// set mass
 	void set_mass(float my_mass){mass=my_mass;};
 	/// set scale radius
-	void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rmax/rscale;};
+	virtual void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rmax/rscale;};
 	/// set redshift
 	void setZlens(double my_zlens){zlens=my_zlens;};
 	/// set redshift, where the cosmology and the source redshift are needed (BaseNSIELensHalo)
@@ -134,6 +134,12 @@ public:
 	virtual ~LensHaloNFW();
 
 	void initFromFile(float my_mass, long *seed, float vmax, float r_halfmass);
+	/// set Rmax
+	void set_Rmax(float my_Rmax){Rmax=my_Rmax; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
+	/// set scale radius
+	void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
+
+
 
 protected:
 	/// table size

@@ -23,6 +23,11 @@ SourceSersic::SourceSersic(
 	if(my_theta)
 		setX(my_theta[0], my_theta[1]);
 	
+	if ( q > 1)
+	{
+		std::cerr << "Error: q must be < 1!" << std::endl;
+		exit(1);
+	}
 	setInternals();
 }
 
