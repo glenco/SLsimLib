@@ -16,8 +16,9 @@ using namespace std;
  * \ingroup Constructor
  * \brief allocates space for the halo trees and the inout lens, if there is any
  */
-Lens::Lens(InputParams& params, CosmoHndl cosmo, SourceHndl source, long *my_seed) : seed(my_seed){
-
+Lens::Lens(InputParams& params, CosmoHndl cosmo, SourceHndl source, long *my_seed)
+: seed(my_seed), Nhalos(0), halo_pos(0)
+{
 	if( (cosmo->getOmega_matter() + cosmo->getOmega_lambda()) != 1.0 ){
 		printf("ERROR: MultiLens can only handle flat universes at present.  Must change cosmology.\n");
 		exit(1);
@@ -64,8 +65,9 @@ Lens::Lens(InputParams& params, CosmoHndl cosmo, SourceHndl source, long *my_see
 /**
  * \brief Creates an empty lens. Main halos and field halos need to be inserted by hand from the user.
  */
-Lens::Lens(InputParams& params, CosmoHndl cosmo, long *my_seed) : seed(my_seed){
-
+Lens::Lens(InputParams& params, CosmoHndl cosmo, long *my_seed)
+: seed(my_seed), Nhalos(0), halo_pos(0)
+{
 	if( (cosmo->getOmega_matter() + cosmo->getOmega_lambda()) != 1.0 ){
 		printf("ERROR: MultiLens can only handle flat universes at present.  Must change cosmology.\n");
 		exit(1);
@@ -1315,20 +1317,15 @@ short Lens::ResetSourcePlane(
 	// distance to new source plane
 	double Ds = cosmo->coorDist(0,z);
 	// find bounding index
-	locateD(Dl.data()-1,Nplanes,Ds,&j);
+	locateD(Dl.data()-1,Nplanes-1,Ds,&j);
 	assert(j <= Nplanes && j >=0);
 
-	// if z is past the last plane, use the last plane
-	if(j >= Nplanes){
-	  j--;
-	}
-	else if(j > 0){
-		std::map<double,double>::iterator ind;
-
-		ind = coorDist_table.lower_bound((Dl[j]-0.5*dDl[j]));
-		double z1 = ind->second;
-
-		if(nearest) j = (z>=z1) ? j : j-1;  // reset j to the nearest plane
+	if(j > 0)
+	{
+		// check if source plane coincides with previous lens plane
+		// or check if previous plane is nearer when asked to
+		if(Dl[j-1] == Ds || (nearest && Dl[j]-Ds > Ds-Dl[j-1]))
+			--j;
 	}
 
 	if(nearest && (j < Nplanes-1) ){
