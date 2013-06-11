@@ -380,7 +380,7 @@ void LensHaloMOKA::saveProfiles(double &RE3,double &xxc,double &yyc){
    * a MOKA map (MOKALensHalo), for just one ray!!
    *
 */
-void LensHaloMOKA::force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xx,bool kappa_off){
+void LensHaloMOKA::force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xx,bool kappa_off,bool subtract_point){
     
   long index = Utilities::IndexFromPosition(xx,map->nx,map->boxlMpc/map->h,map->center);
 

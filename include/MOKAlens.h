@@ -78,7 +78,7 @@ public:
 	void saveGammaProfile();
 	void saveProfiles(double &RE3, double &xxc, double &yyc);
 	void initMap();
-	void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa);
+	void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa,bool subtract_point=false);
 
 	MOKAmap *map;
 
