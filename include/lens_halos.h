@@ -362,10 +362,16 @@ public:
 	
 	/// overridden function to calculate the lensing properties
 	void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa,bool subtract_point=false);
+	/// initialize from a mass function
+	void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, double my_slope, long *seed);
+
 	
 private:
 	/// read-in parameters from a parameter file
 	void assignParams(InputParams& params);
+	inline double alpha_h(double x){return  0.;}
+	inline KappaType kappa_h(double x){return  0.;}
+	inline KappaType gamma_h(double x){return  0.;}
 };
 
 
