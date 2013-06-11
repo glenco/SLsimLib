@@ -1,12 +1,12 @@
 /** 
- *  Created on: Aug 26, 2010
- *      Author: R.B. Metcalf
+ *  Created on: June 5, 2013
+ *      Author: D. Leier
  */
 
 #include "lens_halos.h"
 
 /// deflection caused by NFW halo
-void alphaNFW(double *alpha,double *x,double Rtrunc,double mass,double r_scale
+void alphaHern(double *alpha,double *x,double Rtrunc,double mass,double r_scale
 		,double *center,double Sigma_crit){
 	double r,b=0;
 
@@ -19,7 +19,7 @@ void alphaNFW(double *alpha,double *x,double Rtrunc,double mass,double r_scale
 
 	if(r < Rtrunc){
 		double y;
-		double gfunction(double);
+		double gfunction(double), g2function(double);
 
 		y = Rtrunc/r_scale;
 		b/= gfunction(y);
@@ -33,7 +33,7 @@ void alphaNFW(double *alpha,double *x,double Rtrunc,double mass,double r_scale
 	return ;
 }
 /// Convergence for an NFW halo
-KappaType kappaNFW(double *x,double Rtrunc,double mass,double r_scale
+KappaType kappaHern(double *x,double Rtrunc,double mass,double r_scale
 		,double *center,double Sigma_crit){
 	double r;
 	double gfunction(double),ffunction(double);
@@ -50,11 +50,11 @@ KappaType kappaNFW(double *x,double Rtrunc,double mass,double r_scale
 	y = r/r_scale;
 	b*= ffunction(y);
 
-	return b*mass/(2*pi*pow(r_scale,2)*Sigma_crit);
+	return b*mass/(pi*pow(r_scale,2)*Sigma_crit);
 }
 
 /// Shear for and NFW halo. this might have a flaw in it
-void gammaNFW(KappaType *gamma,double *x,double Rtrunc,double mass,double r_scale
+void gammaHern(KappaType *gamma,double *x,double Rtrunc,double mass,double r_scale
 		,double *center,double Sigma_crit){
 	double r,gt=0;
 	double g2function(double x);
@@ -65,15 +65,15 @@ void gammaNFW(KappaType *gamma,double *x,double Rtrunc,double mass,double r_scal
 		return ;
 	}
 
-	gt=mass/pi/Sigma_crit/pow(r,2);
+	gt=mass/pi/Sigma_crit/pow(r_scale,2);
 	if(r<Rtrunc){
 		double y;
-		double gfunction(double),ffunction(double);
+		double gfunction(double);
 
 		y = Rtrunc/r_scale;
 		gt /= gfunction(y);
 		y = r/r_scale;
-		gt *= g2function(y)*pow(y,2);
+		gt *= g2function(y)/y-kappaHern(&y,Rtrunc,mass,r_scale,center,Sigma_crit);
 	}
 
 	gamma[0]=-gt*(pow(x[0]-center[0],2)-pow(x[1]-center[1],2))/r/r;
@@ -86,32 +86,29 @@ double gfunction(double x){
 	double ans;
 
 	if(x==0) x=1e-5;
-	ans=log(x/2);
-	if(x==1.0){ ans += 1.0; return ans;}
-	if(x>1.0){  ans +=  2*atan(sqrt((x-1)/(x+1)))/sqrt(x*x-1);; return ans;}
-	if(x<1.0){  ans += 2*atanh(sqrt((1-x)/(x+1)))/sqrt(1-x*x);; return ans;}
+	if(x<=1.0){ ans =  (x*x)*(((log((1.+sqrt(1.-x*x))/x))/sqrt(1.-x*x))-1.)/(1.-x*x) ;; return ans;}
+	if(x>1.0){  ans =  (x*x)*(((acos(1./x))/sqrt(x*x-1.))-1.)/(1.-x*x) ;; return ans;}
 	return 0.0;
 }
-
 double ffunction(double x){
 	double ans;
 
 	if(x==0) x=1e-5;
-	if(x==1.0){ return 1.0/3.0;}
-	if(x>1.0){  ans = (1-2*atan(sqrt((x-1)/(x+1)))/sqrt(x*x-1))/(x*x-1); return ans;}
-	if(x<1.0){  ans = (1-2*atanh(sqrt((1-x)/(x+1)))/sqrt(1-x*x))/(x*x-1); return ans;}
+	if(x==1.0){ return (0.6-(1./3.));}
+	if(x>1.0){  ans = ((2.+x*x)*(atan(sqrt(x*x-1.))/(sqrt(x*x-1.0)))-3.)/((x*x-1.)*(x*x-1.)); return ans;}
+	if(x<1.0){  ans = ((2.+x*x)*(0.5*(log(1+sqrt(1.0-x*x))-log(1-sqrt(1.0-x*x)))/sqrt(1.0-x*x))-3.)/((x*x-1.)*(x*x-1.)); return ans;}
 	return 0.0;
 }
 
 double g2function(double x){
-	double ans,y;
+	double ans,ax;
 
 	if(x==0) x=1e-5;
-	if(x==1) return 10/3. + 4*log(0.5);
-	y=x*x-1;
-	ans=4*log(x/2)/x/x -2/y;
-	if(x<1.0){ ans+= 4*(2/x/x+1/y)*atanh(sqrt((1-x)/(x+1)))/sqrt(-y); return ans;}
-	if(x>1.0){ ans+= 4*(2/x/x+1/y)*atan(sqrt((x-1)/(x+1)))/sqrt(y); return ans;}
+	if(x==1) return 2./3./x;
+	ax=sqrt((1.0-x)*(x+1.0));
+	if(x<1.0){ ans= 2*(1+1/(x*x-1)+ax*x*x*(0.5*(log(1+ax)-log(1-ax)))/((x*x-1)*(x*x-1)))/x; return ans;}
+	ax=sqrt((x-1.0)*(x+1.0));
+	if(x>1.0){ ans= 2*(1+1/(x*x-1)-x*x*atan(ax)/pow(x*x-1,3./2.))/x; return ans;}
 
 	return 0.0;
 }
