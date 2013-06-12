@@ -113,7 +113,7 @@ void LensHaloMOKA::initMap(){
 
 /** \brief sets the cosmology and the lens and the source according to the MOKA map parameters
  */
-void LensHaloMOKA::setInternalParams(CosmoHndl cosmo, SourceHndl source){
+void LensHaloMOKA::setup(CosmoHndl cosmo, SourceHndl source){
 	cosmo->setOmega_matter(map->omegam,true);
 	cosmo->sethubble(map->h);
 	setZlens(cosmo,map->zlens,source->getZ());
