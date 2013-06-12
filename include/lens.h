@@ -8,11 +8,7 @@
 #ifndef MULTIPLANE_H_
 #define MULTIPLANE_H_
 
-#include "analytic_lens.h"
-#include "uniform_lens.h"
-#include "MOKAlens.h"
 #include "quadTree.h"
-#include "sourceAnaGalaxy.h"
 #include "tables.h"
 #include "utilities_slsim.h"
 #include "planes.h"
