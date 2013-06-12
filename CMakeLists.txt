@@ -58,7 +58,6 @@ set(HEADERS
 	include/map_images.h
 	include/mcmc.h
 	include/model.h
-	include/multi_source.h
 	include/MOKAlens.h
 	include/nestedsampler.h
 	include/nsie.h
@@ -74,8 +73,6 @@ set(HEADERS
 	include/simpleTree.h
 	include/slsimlib.h
 	include/source.h
-	include/source_type.h
-	include/source_cast.h
 	include/source_models.h
 	include/sourceAnaGalaxy.h
 	include/standard.h
