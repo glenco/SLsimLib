@@ -6,7 +6,7 @@
 #include "lens_halos.h"
 
 /// deflection caused by NFW halo
-void alphaNFW(double *alpha,double *x,double Rtrunc,double mass,double r_scale
+void LensHaloNFW::alphaNFW(double *alpha,double *x,double Rtrunc,double mass,double r_scale
 		,double *center,double Sigma_crit){
 	double r,b=0;
 
@@ -19,7 +19,7 @@ void alphaNFW(double *alpha,double *x,double Rtrunc,double mass,double r_scale
 
 	if(r < Rtrunc){
 		double y;
-		double gfunction(double);
+		//double gfunction(double);
 
 		y = Rtrunc/r_scale;
 		b/= gfunction(y);
@@ -33,10 +33,10 @@ void alphaNFW(double *alpha,double *x,double Rtrunc,double mass,double r_scale
 	return ;
 }
 /// Convergence for an NFW halo
-KappaType kappaNFW(double *x,double Rtrunc,double mass,double r_scale
+KappaType LensHaloNFW::kappaNFW(double *x,double Rtrunc,double mass,double r_scale
 		,double *center,double Sigma_crit){
 	double r;
-	double gfunction(double),ffunction(double);
+	//double gfunction(double),ffunction(double);
 
 	r=sqrt(pow(x[0]-center[0],2) + pow(x[1]-center[1],2));
 	if(r>=Rtrunc) return 0.0;
@@ -54,10 +54,10 @@ KappaType kappaNFW(double *x,double Rtrunc,double mass,double r_scale
 }
 
 /// Shear for and NFW halo. this might have a flaw in it
-void gammaNFW(KappaType *gamma,double *x,double Rtrunc,double mass,double r_scale
+void LensHaloNFW::gammaNFW(KappaType *gamma,double *x,double Rtrunc,double mass,double r_scale
 		,double *center,double Sigma_crit){
 	double r,gt=0;
-	double g2function(double x);
+	//double g2function(double x);
 
 	r=sqrt(pow(x[0]-center[0],2) + pow(x[1]-center[1],2));
 	if(r==0.0){
@@ -68,7 +68,7 @@ void gammaNFW(KappaType *gamma,double *x,double Rtrunc,double mass,double r_scal
 	gt=mass/pi/Sigma_crit/pow(r,2);
 	if(r<Rtrunc){
 		double y;
-		double gfunction(double),ffunction(double);
+		//double gfunction(double),ffunction(double);
 
 		y = Rtrunc/r_scale;
 		gt /= gfunction(y);
@@ -82,7 +82,7 @@ void gammaNFW(KappaType *gamma,double *x,double Rtrunc,double mass,double r_scal
 	return ;
 }
 
-double gfunction(double x){
+double LensHaloNFW::gfunction(double x){
 	double ans;
 
 	if(x==0) x=1e-5;
@@ -93,7 +93,7 @@ double gfunction(double x){
 	return 0.0;
 }
 
-double ffunction(double x){
+double LensHaloNFW::ffunction(double x){
 	double ans;
 
 	if(x==0) x=1e-5;
@@ -103,7 +103,7 @@ double ffunction(double x){
 	return 0.0;
 }
 
-double g2function(double x){
+double LensHaloNFW::g2function(double x){
 	double ans,y;
 
 	if(x==0) x=1e-5;

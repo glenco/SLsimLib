@@ -10,14 +10,6 @@
 
 #include "standard.h"
 
-double ffunction(double x);
-double gfunction(double x);
-double g2function(double x);
 double mhat(double y, double beta);
-
-double fhernfunction(double x);
-double ghernfunction(double x);
-double g2hernfunction(double x);
-
 
 #endif /* TABLES_H_ */
