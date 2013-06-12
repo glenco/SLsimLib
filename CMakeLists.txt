@@ -58,7 +58,6 @@ set(HEADERS
 	include/map_images.h
 	include/mcmc.h
 	include/model.h
-	include/multi_source.h
 	include/MOKAlens.h
 	include/nestedsampler.h
 	include/nsie.h
@@ -72,10 +71,9 @@ set(HEADERS
 	include/quadTree.h
 	include/sersic_source.h
 	include/simpleTree.h
+	include/sky.h
 	include/slsimlib.h
 	include/source.h
-	include/source_type.h
-	include/source_cast.h
 	include/source_models.h
 	include/sourceAnaGalaxy.h
 	include/standard.h
@@ -98,6 +96,7 @@ add_subdirectory(Fitlens)
 add_subdirectory(FullRange)
 add_subdirectory(ImageProcessing)
 add_subdirectory(InputParameters)
+add_subdirectory(MCMC)
 add_subdirectory(MultiPlane)
 add_subdirectory(Source)
 add_subdirectory(TreeCode)

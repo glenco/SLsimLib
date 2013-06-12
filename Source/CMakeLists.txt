@@ -1,7 +1,7 @@
 add_sources(
-	multi.cpp
 	overzier.cpp
-	read_multi.cpp
+	read_galaxy_file.cpp
+	read_sersic_file.cpp
 	sersic.cpp
-	type.cpp
+	sky.cpp
 )

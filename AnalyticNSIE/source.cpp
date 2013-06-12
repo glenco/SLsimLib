@@ -6,6 +6,7 @@
  */
 
 #include "slsimlib.h"
+#include <typeinfo>
 
 using namespace std;
 
@@ -30,7 +31,8 @@ void Source::setParameters(Parameters& p)
 
 void Source::randomize(double, long*)
 {
-	std::cerr << "Error: " << this->name() << "::randomize() not implemented!" << std::endl;
+	const std::type_info& type = typeid(*this);
+	std::cerr << "Error: " << type.name() << "::randomize() not implemented!" << std::endl;
 	exit(1);
 }
 

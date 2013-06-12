@@ -42,7 +42,7 @@
 
 /**** sources ****/
 
-#include "multi_source.h"
+#include "sky.h"
 #include "sourceAnaGalaxy.h"
 #include "overzier_source.h"
 #include "sersic_source.h"

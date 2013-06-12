@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <utility>
 #include <vector>
+#include <string>
 #include <stdexcept>
 #include <cstddef>
 

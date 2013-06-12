@@ -87,7 +87,8 @@ double ghernfunction(double x){
 	double ans;
 
 	if(x==0) x=1e-5;
-	if(x<=1.0){ ans =  (x*x)*(((log((1.+sqrt(1.-x*x))/x))/sqrt(1.-x*x))-1.)/(1.-x*x) ;; return ans;}
+	if(x==1.0) return 1./3.;
+	if(x<1.0){ ans =  (x*x)*(((log((1.+sqrt(1.-x*x))/x))/sqrt(1.-x*x))-1.)/(1.-x*x) ;; return ans;}
 	if(x>1.0){  ans =  (x*x)*(((acos(1./x))/sqrt(x*x-1.))-1.)/(1.-x*x) ;; return ans;}
 	return 0.0;
 }
