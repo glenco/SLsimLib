@@ -38,7 +38,7 @@ SourceMulti::SourceMulti(InputParams& params)
 		sb_limit = pow(10,-0.4*(48.6+sb_limit))*pow(180*60*60/pi,2)/hplanck;
 
 	
-	// check if there is a Millenium data file
+	// check if there is a Millennium data file
 	std::string input_galaxy_file;
 	if(params.get("input_galaxy_file", input_galaxy_file))
 	{

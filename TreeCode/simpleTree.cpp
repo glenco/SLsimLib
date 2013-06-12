@@ -226,7 +226,7 @@ void TreeSimple::_PointsWithin(PosType *ray,float *rmax,std::list <unsigned long
 }
 
 /**
- *  finds the nearest neighbors in whatever dimensions tree is defined in
+ *  \brief finds the nearest neighbors in whatever dimensions tree is defined in
  *  */
 void TreeSimple::NearestNeighbors(PosType *ray,int Nneighbors,float *rsph,IndexType *neighborsout){
   IndexType i;

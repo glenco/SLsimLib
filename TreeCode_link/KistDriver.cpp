@@ -517,6 +517,9 @@ void TreeStruct::PointsWithinKist_iter(double *ray,float rmin,float rmax,Kist<Po
  *
  *    This is a kludge that relies on NearestNeighbor which uses a List and translates
  *    the list to a kist.  Could be rewritten.
+ * 
+ *    Warning: The number of neighbor points in neighborkist will be less than Nneighbors when
+ *             the number of points in the tree is less than Nneighbors
  */
 Point * TreeStruct::NearestNeighborKist(double *ray,int Nneighbors,Kist<Point> * neighborkist){
 	ListHndl neighborlist = NewList();
