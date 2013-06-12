@@ -11,6 +11,8 @@
 #include "lens.h"
 #include "source.h"
 #include "parameters.h"
+#include "base_analens.h"
+#include "analytic_lens.h"
 
 /**
  * \brief A class that allocates the lens, the source, and the cosmological models.
