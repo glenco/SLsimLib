@@ -478,42 +478,20 @@ void Lens::buildLensPlanes(
 			 */
 			if(jj == 0) z1 = 0.0;
 			else{
-<<<<<<< local
-				ind = coorDist_table.lower_bound((Dl[jj]-0.5*dDl[jj]));
-				z1 = ind->second;
-=======
-				z1 = redshift_from_dist_table(coorDist_table, Dl[j]-0.5*dDl[j]);
->>>>>>> other
+				z1 = redshift_from_dist_table(coorDist_table, Dl[jj]-0.5*dDl[jj]);
 			}
 
-<<<<<<< local
 			if(main_halo_on && jj-1 == (main_halo_on % Nplanes)){
-				ind = coorDist_table.lower_bound(Dl[jj] - 0.5*(Dl[jj] - Dl[jj-2]));
-				z1 = ind->second;
-=======
-			if(main_halo_on && j-1 == (main_halo_on % Nplanes)){
-				z1 = redshift_from_dist_table(coorDist_table, Dl[j] - 0.5*(Dl[j] - Dl[j-2]));
->>>>>>> other
+				z1 = redshift_from_dist_table(coorDist_table, Dl[jj] - 0.5*(Dl[jj] - Dl[jj-2]));
 			}
 
 			if(jj == Nplanes-2) z2 = zsource;
 			else{
-<<<<<<< local
-				ind = coorDist_table.lower_bound(Dl[jj] + 0.5*dDl[jj+1]);
-				z2 = ind->second;
-=======
-				z2 = redshift_from_dist_table(coorDist_table, Dl[j] + 0.5*dDl[j+1]);
->>>>>>> other
+				z2 = redshift_from_dist_table(coorDist_table, Dl[jj] + 0.5*dDl[jj+1]);
 			}
 
-<<<<<<< local
 			if(main_halo_on && jj+1 == (main_halo_on % Nplanes)){
-				ind = coorDist_table.lower_bound(Dl[jj] + 0.5*(Dl[jj+2] - Dl[jj]));
-				z2 = ind->second;
-=======
-			if(main_halo_on && j+1 == (main_halo_on % Nplanes)){
-				z2 = redshift_from_dist_table(coorDist_table, Dl[j] + 0.5*(Dl[j+2] - Dl[j]));
->>>>>>> other
+				z2 = redshift_from_dist_table(coorDist_table, Dl[jj] + 0.5*(Dl[jj+2] - Dl[jj]));
 			}
 
 			/// Find which field_halos are in redshift range
@@ -1423,17 +1401,12 @@ short Lens::ResetSourcePlane(
 		if(Dl[j-1] == Ds)
 			--j;
 		// or check if previous plane is nearer when asked to
-<<<<<<< local
-		//(Dl[j-1] == Ds || (nearest && Dl[j]-Ds > Ds-Dl[j-1]))
-		//	--j;
-=======
 		else if(nearest)
 		{
 			double z1 = redshift_from_dist_table(coorDist_table, Dl[j]-0.5*dDl[j]);
 			if(z < z1) 
 				--j;
 		}
->>>>>>> other
 	}
 
 	if(nearest && (j < Nplanes-1) ){
