@@ -71,6 +71,7 @@ set(HEADERS
 	include/quadTree.h
 	include/sersic_source.h
 	include/simpleTree.h
+	include/sky.h
 	include/slsimlib.h
 	include/source.h
 	include/source_models.h
