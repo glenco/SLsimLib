@@ -417,9 +417,9 @@ void LensHaloHernquist::make_tables(){
 		for(i = 0 ; i< NTABLE; i++){
 			x = i*dx;
 			xtable[i] = x;
-			ftable[i] = fhernfunction(x);
-			gtable[i] = ghernfunction(x);
-			g2table[i] = g2hernfunction(x);
+			ftable[i] = ffunction(x);
+			gtable[i] = gfunction(x);
+			g2table[i] = g2function(x);
 		}
   }
   count++;

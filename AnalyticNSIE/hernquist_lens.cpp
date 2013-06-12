@@ -6,7 +6,7 @@
 #include "lens_halos.h"
 
 /// deflection caused by NFW halo
-void alphaHern(double *alpha,double *x,double Rtrunc,double mass,double r_scale
+void LensHaloHernquist::alphaHern(double *alpha,double *x,double Rtrunc,double mass,double r_scale
 		,double *center,double Sigma_crit){
 	double r,b=0;
 
@@ -19,12 +19,12 @@ void alphaHern(double *alpha,double *x,double Rtrunc,double mass,double r_scale
 
 	if(r < Rtrunc){
 		double y;
-		double ghernfunction(double);
+		//double gfunction(double);
 
 		y = Rtrunc/r_scale;
-		b/= ghernfunction(y);
+		b/= gfunction(y);
 		y = r/r_scale;
-		b*= ghernfunction(y);
+		b*= gfunction(y);
 	}
 
 	alpha[0]=b*(x[0]-center[0]);
@@ -33,10 +33,10 @@ void alphaHern(double *alpha,double *x,double Rtrunc,double mass,double r_scale
 	return ;
 }
 /// Convergence for an NFW halo
-KappaType kappaHern(double *x,double Rtrunc,double mass,double r_scale
+KappaType LensHaloHernquist::kappaHern(double *x,double Rtrunc,double mass,double r_scale
 		,double *center,double Sigma_crit){
 	double r;
-	double ghernfunction(double),fhernfunction(double);
+	//double gfunction(double),ffunction(double);
 
 	r=sqrt(pow(x[0]-center[0],2) + pow(x[1]-center[1],2));
 	if(r>=Rtrunc) return 0.0;
@@ -46,18 +46,18 @@ KappaType kappaHern(double *x,double Rtrunc,double mass,double r_scale
 
 	b=1.0;
 	y = Rtrunc/r_scale;
-	b/= ghernfunction(y);
+	b/= gfunction(y);
 	y = r/r_scale;
-	b*= fhernfunction(y);
+	b*= ffunction(y);
 
 	return b*mass/(pi*pow(r_scale,2)*Sigma_crit);
 }
 
 /// Shear for and NFW halo. this might have a flaw in it
-void gammaHern(KappaType *gamma,double *x,double Rtrunc,double mass,double r_scale
+void LensHaloHernquist::gammaHern(KappaType *gamma,double *x,double Rtrunc,double mass,double r_scale
 		,double *center,double Sigma_crit){
 	double r,gt=0;
-	double g2hernfunction(double x);
+	//double g2function(double x);
 
 	r=sqrt(pow(x[0]-center[0],2) + pow(x[1]-center[1],2));
 	if(r==0.0){
@@ -68,12 +68,12 @@ void gammaHern(KappaType *gamma,double *x,double Rtrunc,double mass,double r_sca
 	gt=mass/pi/Sigma_crit/pow(r_scale,2);
 	if(r<Rtrunc){
 		double y;
-		double ghernfunction(double);
+		//double ghernfunction(double);
 
 		y = Rtrunc/r_scale;
-		gt /= ghernfunction(y);
+		gt /= gfunction(y);
 		y = r/r_scale;
-		gt *= g2hernfunction(y);
+		gt *= g2function(y);
 		//gt -=kappaHern(&y,Rtrunc,mass,r_scale,center,Sigma_crit);
 	}
 
@@ -83,7 +83,7 @@ void gammaHern(KappaType *gamma,double *x,double Rtrunc,double mass,double r_sca
 	return ;
 }
 
-double ghernfunction(double x){
+double LensHaloHernquist::gfunction(double x){
 	double ans;
 
 	if(x==0) x=1e-5;
@@ -92,7 +92,7 @@ double ghernfunction(double x){
 	if(x>1.0){  ans =  (x*x)*(((acos(1./x))/sqrt(x*x-1.))-1.)/(1.-x*x) ;; return ans;}
 	return 0.0;
 }
-double fhernfunction(double x){
+double LensHaloHernquist::ffunction(double x){
 	double ans;
 
 	if(x==0) x=1e-5;
@@ -102,15 +102,15 @@ double fhernfunction(double x){
 	return 0.0;
 }
 
-double g2hernfunction(double x){
+double LensHaloHernquist::g2function(double x){
 	double ans,ax;
 
 	if(x==0) x=1e-5;
-	if(x==1) return 2./3./(x*x) - fhernfunction(x);
+	if(x==1) return 2./3./(x*x) - ffunction(x);
 	ax=sqrt((1.0-x)*(x+1.0));
-	if(x<1.0){ ans= 2*(1+1/(x*x-1)+ax*x*x*(0.5*(log(1+ax)-log(1-ax)))/((x*x-1)*(x*x-1)))/(x*x) ; return ans-fhernfunction(x);}
+	if(x<1.0){ ans= 2*(1+1/(x*x-1)+ax*x*x*(0.5*(log(1+ax)-log(1-ax)))/((x*x-1)*(x*x-1)))/(x*x) ; return ans-ffunction(x);}
 	ax=sqrt((x-1.0)*(x+1.0));
-	if(x>1.0){ ans= 2*(1+1/(x*x-1)-x*x*atan(ax)/pow(x*x-1,3./2.))/(x*x); return ans-fhernfunction(x);}
+	if(x>1.0){ ans= 2*(1+1/(x*x-1)-x*x*atan(ax)/pow(x*x-1,3./2.))/(x*x); return ans-ffunction(x);}
 
 	return 0.0;
 }
