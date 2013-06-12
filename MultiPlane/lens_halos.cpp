@@ -387,6 +387,70 @@ void LensHaloSimpleNSIE::force_halo(
 	return;
 }
 
+
+int LensHaloHernquist::count = 0;
+double *LensHaloHernquist::xtable = NULL,*LensHaloHernquist::ftable = NULL,*LensHaloHernquist::gtable = NULL,*LensHaloHernquist::g2table = NULL;
+
+LensHaloHernquist::LensHaloHernquist() : LensHalo(){
+  gmax=0;
+	make_tables();
+  gmax = InterpolateFromTable(gtable,xmax);
+}
+
+LensHaloHernquist::LensHaloHernquist(InputParams& params){
+	assignParams(params);
+	make_tables();
+  gmax = InterpolateFromTable(gtable,xmax);
+}
+
+void LensHaloHernquist::make_tables(){
+	if(count == 0){
+		int i;
+		double x, dx = maxrm/(double)NTABLE;
+
+		xtable = new double[NTABLE];
+		ftable = new double[NTABLE];
+		gtable = new double[NTABLE];
+		g2table = new double[NTABLE];
+
+		for(i = 0 ; i< NTABLE; i++){
+			x = i*dx;
+			xtable[i] = x;
+			ftable[i] = fhernfunction(x);
+			gtable[i] = ghernfunction(x);
+			g2table[i] = g2hernfunction(x);
+		}
+  }
+  count++;
+}
+
+double LensHaloHernquist::InterpolateFromTable(double *table, double y){
+	int j;
+	j=(int)(y/maxrm*NTABLE);
+
+	assert(y>=xtable[j] && y<=xtable[j+1]);
+	return (table[j+1]-table[j])/(xtable[j+1]-xtable[j])*(y-xtable[j]) + table[j];
+}
+
+void LensHaloHernquist::assignParams(InputParams& params){
+	if(!params.get("mass_hernquist",mass)) error_message1("mass_hernquist",params.filename());
+	if(!params.get("Rmax_hernquist",Rmax)) error_message1("Rmax_hernquist",params.filename());
+	if(!params.get("zlens_hernquist",zlens)) error_message1("zlens_hernquist",params.filename());
+	if(!params.get("rscale_hernquist",rscale)) error_message1("rscale_hernquist",params.filename());
+  xmax = Rmax/rscale;
+}
+
+LensHaloHernquist::~LensHaloHernquist(){
+	--count;
+	if(count == 0){
+		delete[] xtable;
+		delete[] gtable;
+		delete[] ftable;
+		delete[] g2table;
+	}
+}
+
+
 LensHaloDummy::LensHaloDummy()
 : LensHalo()
 {

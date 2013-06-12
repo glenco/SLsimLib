@@ -357,6 +357,9 @@ void Lens::printMultiLens(){
 	case dummy_lens:
 		cout << "Dummy lens" << endl;
 		break;
+	case hern_lens:
+		cout << "Hernquist lens" << endl;
+		break;
 	}
 
 	cout << endl << "Main galaxies profile type:" << endl;
@@ -422,6 +425,9 @@ void Lens::printMultiLens(){
 		case dummy_lens:
 			cout << "Dummy field type" << endl;
 			break;
+		case hern_lens:
+			cout << "Hernquist field type" << endl;
+		break;
 		}
 
 		cout << endl << "Field galaxies profile type:" << endl;
@@ -735,6 +741,9 @@ void Lens::createMainHalos(
 	case dummy_lens:
 		main_halos.push_back(new LensHaloDummy(params));
 		break;
+	case hern_lens:
+		main_halos.push_back(new LensHaloHernquist(params));
+		break;
 	}
 
 	if(main_galaxy_halo_type!=0){
@@ -1015,6 +1024,9 @@ void Lens::createFieldHalos(
 			case dummy_lens:
 				field_halos.push_back(new LensHaloDummy);
 				break;
+			case hern_lens:
+				field_halos.push_back(new LensHaloHernquist);
+				break;
 			}
 
 			float mass = pow(10,InterpolateYvec(Nhalosbin,Logm,ran2 (seed)));
@@ -1217,6 +1229,10 @@ void Lens::readInputSimFile(CosmoHndl cosmo){
 				field_halos.push_back(new LensHaloDummy);
 				ERROR_MESSAGE();
 				std::cout << "Why would you wand dummy file halos???" << std::endl;
+				break;
+			case hern_lens:
+				ERROR_MESSAGE();
+				std::cout << "Hernquist not supported." << std::endl;
 				break;
 			}
 

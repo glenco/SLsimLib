@@ -25,7 +25,7 @@
 
 typedef enum {PS, ST, PL} MassFuncType;
 
-typedef enum {null_lens, nfw_lens, pnfw_lens, pl_lens, nsie_lens, ana_lens, uni_lens, moka_lens, dummy_lens} LensHaloType;
+typedef enum {null_lens, nfw_lens, pnfw_lens, pl_lens, nsie_lens, ana_lens, uni_lens, moka_lens, dummy_lens, hern_lens} LensHaloType;
 typedef enum {null_gal, nsie_gal} GalaxyLensHaloType;
 
 /// names of clump and sb models
