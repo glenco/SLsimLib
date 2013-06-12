@@ -10,7 +10,6 @@
 
 #include "standard.h"
 #include "InputParams.h"
-#include "source_type.h"
 #include "parameters.h"
 /** \brief Base class for all sources.
  *
@@ -53,15 +52,6 @@ public:
 	/// Sets sb_limit in mag/arcsec^2
 	void setSBlimit_magarcsec(float limit) {sb_limit = pow(10,-0.4*(48.6+limit))*pow(180*60*60/pi,2)/hplanck;}
 	
-	/// Get the type of the source.
-	virtual SourceType type() const = 0;
-	
-	/// Get the name of the source.
-	virtual const char* name() const = 0;
-	
-	/// Create a copy of the source from the abstract base class. Needs to be deleted.
-	virtual Source* clone() const = 0;
-	
 	/// Get parameters from source.
 	virtual void getParameters(Parameters& p) const;
 	
@@ -97,8 +87,6 @@ typedef Source *SourceHndl;
  */
 class SourcePixelled: public Source{
 public:
-	SOURCE_TYPE(SourcePixelled)
-	
 	SourcePixelled(double my_z, int Npixels, double range, double* center, double* arr_val);
 	SourcePixelled(InputParams& params);
 	~SourcePixelled();
@@ -131,8 +119,6 @@ private:
 /// A uniform surface brightness circular source.
 class SourceUniform : public Source{
 public:
-	SOURCE_TYPE(SourceUniform)
-	
 	SourceUniform(InputParams& params);
 	~SourceUniform();
 
@@ -144,8 +130,6 @@ public:
 
 class SourceGaussian : public Source{
 public:
-	SOURCE_TYPE(SourceGaussian)
-	
 	SourceGaussian(InputParams& params);
 	~SourceGaussian();
 	
@@ -192,8 +176,6 @@ private:
 
 class SourceBLRDisk : public SourceBLR{
 public:
-	SOURCE_TYPE(SourceBLRDisk)
-	
 	double SurfaceBrightness(double *y);
 	double getTotalFlux(){std::cout << "No total flux in SourceBLRDisk yet" << std::endl; exit(1);}
 	
@@ -203,8 +185,6 @@ public:
 
 class SourceBLRSph1 : public SourceBLR{
 public:
-	SOURCE_TYPE(SourceBLRSph1)
-	
 	double SurfaceBrightness(double *y);
 	double getTotalFlux(){std::cout << "No total flux in SourceBLRSph1 yet" << std::endl; exit(1);}
 	
@@ -214,17 +194,12 @@ public:
 
 class SourceBLRSph2 : public SourceBLR{
 public:
-	SOURCE_TYPE(SourceBLRSph2)
-	
 	double SurfaceBrightness(double *y);
 	double getTotalFlux(){std::cout << "No total flux in SourceBLRSph2 yet" << std::endl; exit(1);}
 
 	SourceBLRSph2(InputParams&);
 	~SourceBLRSph2();
 };
-
-// include casting definitions
-#include "source_cast.h"
 
 /// pointer to surface brightness function
 //double (Source::*SurfaceBrightness)(double *y);

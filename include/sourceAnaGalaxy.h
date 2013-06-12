@@ -29,8 +29,6 @@
  */
 class SourceMultiAnaGalaxy: public Source{
 public:
-	SOURCE_TYPE(SourceMultiAnaGalaxy)
-	
 	SourceMultiAnaGalaxy(double mag, double BtoT, double Reff, double Rh, double PA, double inclination,double my_z,double *my_theta);
 	SourceMultiAnaGalaxy(SourceOverzier *my_galaxy);
 	SourceMultiAnaGalaxy(InputParams& params);

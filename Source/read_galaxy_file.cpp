@@ -1,4 +1,4 @@
-#include "../include/multi_source.h"
+#include "../include/sky.h"
 #include "../include/overzier_source.h"
 
 #include <string>
@@ -7,7 +7,7 @@
 #include <sstream>
 
 /// read in galaxies from a Millennium simulation file
-void SourceMulti::readGalaxyFile(std::string filename, Band band, double mag_limit)
+void Sky::readGalaxyFile(std::string filename, Band band, double mag_limit)
 {
 	std::size_t count = 0;
 	
@@ -26,12 +26,8 @@ void SourceMulti::readGalaxyFile(std::string filename, Band band, double mag_lim
 	,J_band_Bulge,H_band_Bulge,Ks_band_Bulge,i1_Bulge,i2_Bulge;
 	
 	std::ifstream file_in(filename.c_str());
-	if(!file_in){
-		std::cerr << "Can't open file " << filename << std::endl;
-    ERROR_MESSAGE();
-    throw std::runtime_error(" Cannot open file.");
-		exit(1);
-	}
+	if(!file_in)
+		throw std::runtime_error("Cannot open file " + filename + ".");
 	
 	std::cout << "Reading from galaxy data file " << filename.c_str() << std::endl;
 	//file_in >> Ngalaxies;
@@ -191,8 +187,7 @@ void SourceMulti::readGalaxyFile(std::string filename, Band band, double mag_lim
 				 mag_bulge = i2_Bulge;
 				 break;*/
 			default:
-				std::cerr << "Requested band is not an available option." << std::endl;
-				exit(1);
+				throw std::runtime_error("Requested band is not an available option.");
 		}
 		if(mag < mag_limit){
 			/*
@@ -205,28 +200,27 @@ void SourceMulti::readGalaxyFile(std::string filename, Band band, double mag_lim
 			 << c << inclination << c << pa << c << angdist << c << diskradius_arcsec << c << bulgesize_arcsec << std::endl;
 			 */
 			
-      // Millennium conventions
-      theta[0] = -ra*pi/180;
+			// converting from Millennium conventions
+			theta[0] = -ra*pi/180;
 			theta[1] = dec*pi/180;
-      pa = (90 - pa)*pi/180;
-      inclination *= pi/180;
-      if(cos(inclination)< 0.1) inclination = acos(0.1);
-      
+			pa = (90 - pa)*pi/180;
+			inclination *= pi/180;
+			if(cos(inclination)< 0.1) inclination = acos(0.1);
 			
 			/***************************/
-			SourceOverzier* over = new SourceOverzier(mag, pow(10, -(mag_bulge-mag)/2.5), Ref, Rh, pa*pi/180., inclination*pi/180., HaloID, z_cosm, theta);
+			SourceOverzier over(mag, pow(10, -(mag_bulge-mag)/2.5), Ref, Rh, pa, inclination, HaloID, z_cosm, theta);
 			
-			over->setUMag(SDSS_u);
-			over->setGMag(SDSS_g);
-			over->setRMag(SDSS_r);
-			over->setIMag(SDSS_i);
-			over->setZMag(SDSS_z);
-			over->setJMag(J_band);
-			over->setHMag(H_band);
-			over->setKMag(Ks_band);
+			over.setUMag(SDSS_u);
+			over.setGMag(SDSS_g);
+			over.setRMag(SDSS_r);
+			over.setIMag(SDSS_i);
+			over.setZMag(SDSS_z);
+			over.setJMag(J_band);
+			over.setHMag(H_band);
+			over.setKMag(Ks_band);
 			
 			// add galaxy to list of sources
-			addInternal(over);
+			addSource(over);
 			
 			// increase counter
 			++count;
