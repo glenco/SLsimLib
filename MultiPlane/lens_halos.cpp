@@ -284,6 +284,7 @@ void LensHalo::force_halo(
 			gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 			gamma[1] += xcm[0]*xcm[1]*tmp;
 		}
+
 	}
 	else
 	{
@@ -340,8 +341,8 @@ void LensHaloSimpleNSIE::force_halo(
 			alpha_in[0] = alpha_in[1] = 0;
 			float units = pow(sigma/lightspeed,2)/Grav/sqrt(fratio); // mass/distance(physical)
 			alphaNSIE(alpha_in,x_in,fratio,rcore,pa);
-			alpha_in[0] *= -units;
-			alpha_in[1] *= -units;
+			alpha_in[0] *= units;  // minus sign removed because already included in alphaNSIE
+			alpha_in[1] *= units;
       
 			alpha[0] += (r - rin)*(alpha_out[0] - alpha_in[0])/(Rmax - rin) + alpha_in[0];
 			alpha[1] += (r - rin)*(alpha_out[1] - alpha_in[1])/(Rmax - rin) + alpha_in[1];
@@ -355,8 +356,8 @@ void LensHaloSimpleNSIE::force_halo(
 			xt[1]=xcm[1];
 			alphaNSIE(tmp,xt,fratio,rcore,pa);
            
-			alpha[0] -= units*tmp[0];
-			alpha[1] -= units*tmp[1];
+			alpha[0] = units*tmp[0];  // minus sign removed because already included in alphaNSIE
+			alpha[1] = units*tmp[1];
 			//alpha[0] += units*tmp[0];
 			//alpha[1] += units*tmp[1];
 			if(!no_kappa){
@@ -387,22 +388,111 @@ void LensHaloSimpleNSIE::force_halo(
 	return;
 }
 
+
+int LensHaloHernquist::count = 0;
+double *LensHaloHernquist::xtable = NULL,*LensHaloHernquist::ftable = NULL,*LensHaloHernquist::gtable = NULL,*LensHaloHernquist::g2table = NULL;
+
+LensHaloHernquist::LensHaloHernquist() : LensHalo(){
+  gmax=0;
+	make_tables();
+  gmax = InterpolateFromTable(gtable,xmax);
+}
+
+LensHaloHernquist::LensHaloHernquist(InputParams& params){
+	assignParams(params);
+	make_tables();
+  gmax = InterpolateFromTable(gtable,xmax);
+}
+
+void LensHaloHernquist::make_tables(){
+	if(count == 0){
+		int i;
+		double x, dx = maxrm/(double)NTABLE;
+
+		xtable = new double[NTABLE];
+		ftable = new double[NTABLE];
+		gtable = new double[NTABLE];
+		g2table = new double[NTABLE];
+
+		for(i = 0 ; i< NTABLE; i++){
+			x = i*dx;
+			xtable[i] = x;
+			ftable[i] = fhernfunction(x);
+			gtable[i] = ghernfunction(x);
+			g2table[i] = g2hernfunction(x);
+		}
+  }
+  count++;
+}
+
+double LensHaloHernquist::InterpolateFromTable(double *table, double y){
+	int j;
+	j=(int)(y/maxrm*NTABLE);
+
+	assert(y>=xtable[j] && y<=xtable[j+1]);
+	return (table[j+1]-table[j])/(xtable[j+1]-xtable[j])*(y-xtable[j]) + table[j];
+}
+
+void LensHaloHernquist::assignParams(InputParams& params){
+	if(!params.get("mass_hernquist",mass)) error_message1("mass_hernquist",params.filename());
+	if(!params.get("Rmax_hernquist",Rmax)) error_message1("Rmax_hernquist",params.filename());
+	if(!params.get("zlens_hernquist",zlens)) error_message1("zlens_hernquist",params.filename());
+	if(!params.get("rscale_hernquist",rscale)) error_message1("rscale_hernquist",params.filename());
+  xmax = Rmax/rscale;
+}
+
+LensHaloHernquist::~LensHaloHernquist(){
+	--count;
+	if(count == 0){
+		delete[] xtable;
+		delete[] gtable;
+		delete[] ftable;
+		delete[] g2table;
+	}
+}
+
+
 LensHaloDummy::LensHaloDummy()
 : LensHalo()
 {
+//	mass = 0.;
 }
 
 LensHaloDummy::LensHaloDummy(InputParams& params)
 : LensHalo()
 {
 	assignParams(params);
+//	mass = 0.;
 }
+
+void LensHaloDummy::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, double my_slope, long *seed){
+	mass = 1.e-10;
+	Rmax = my_Rmax;
+	rscale = my_rscale;
+  xmax = Rmax/rscale;
+}
+
 
 void LensHaloDummy::force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa,bool subtract_point)
 {
-	alpha[0] = alpha[1] = 0.0;
-	*kappa = 0.0;
-	gamma[0] = gamma[1] = gamma[2] = 0.0;
+	double rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
+	double prefac = mass/rcm2/pi;
+	double tmp = subtract_point*prefac;
+	alpha[0] += tmp*xcm[0];
+	alpha[1] += tmp*xcm[1];
+  if(subtract_point){
+    double x = sqrt(rcm2)/rscale;
+
+    // can turn off kappa and gamma calculations to save times
+    if(!no_kappa){
+      *kappa += kappa_h(x)*prefac;
+
+      tmp = (gamma_h(x) + 2.0*subtract_point)*prefac/rcm2;
+
+      gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+      gamma[1] += xcm[0]*xcm[1]*tmp;
+    }
+  }
 }
 
 void LensHaloDummy::assignParams(InputParams& params)

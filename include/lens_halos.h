@@ -350,6 +350,73 @@ protected:
 
 };
 
+/** \ingroup DeflectionL2
+ *
+ * \brief A class for calculating the deflection, kappa and gamma caused by a collection of halos
+ * with truncated Hernquist mass profiles.
+ *
+ * Derived from the TreeQuad class.  The "particles" are replaced with spherical halos.
+ *The truncation is in 2d not 3d. \f$ \Sigma \propto r^\beta \f$ so beta would usually be negative.
+ *
+ *
+ * The default value of theta = 0.1 generally gives better than 1% accuracy on alpha.
+ * The shear and kappa is always more accurate than the deflection.
+ */
+
+class LensHaloHernquist: public LensHalo{
+public:
+	LensHaloHernquist();
+	LensHaloHernquist(InputParams& params);
+	virtual ~LensHaloHernquist();
+
+	//void initFromFile(float my_mass, long *seed, float vmax, float r_halfmass);
+
+  /// set Rmax
+  void set_Rmax(float my_Rmax){Rmax=my_Rmax; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
+  /// set scale radius
+	void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
+
+protected:
+	/// table size
+	const static long NTABLE = 1000;
+	/// maximum Rmax/rscale
+	const static double maxrm = 100.0;
+	/// keeps track of how many time the tables are created, default is just once
+	static int count;
+
+	/// tables for lensing properties specific functions
+	static double *ftable,*gtable,*g2table,*xtable;
+	/// make the specific tables
+	void make_tables();
+	/// interpolates from the specific tables
+	double InterpolateFromTable(double *table, double y);
+
+	/// read in parameters from a parameterfile in InputParams params
+	void assignParams(InputParams& params);
+
+	/// Override internal structure of halos
+	inline double alpha_h(double x){
+		//return -1.0*InterpolateFromTable(gtable,x)/InterpolateFromTable(gtable,xmax);
+		return -1.0*InterpolateFromTable(gtable,x)/gmax;
+	}
+	inline KappaType kappa_h(double x){
+		return 0.5*x*x*InterpolateFromTable(ftable,x)/gmax;
+	}
+	inline KappaType gamma_h(double x){
+		return -0.25*x*x*InterpolateFromTable(g2table,x)/gmax;
+	}
+	inline KappaType phi_h(double x){
+		ERROR_MESSAGE();
+		std::cout << "time delay has not been fixed for NFW profile yet." << std::endl;
+		exit(1);
+		return 0.0;
+	}
+
+private:
+  double gmax;
+};
+
+
 
 /**
  * \brief This is a lens that does no lensing.  It is useful for testing and for running refinement code on sources.
@@ -362,10 +429,16 @@ public:
 	
 	/// overridden function to calculate the lensing properties
 	void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa,bool subtract_point=false);
+	/// initialize from a mass function
+	void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, double my_slope, long *seed);
+
 	
 private:
 	/// read-in parameters from a parameter file
 	void assignParams(InputParams& params);
+	inline double alpha_h(double x){return  0.;}
+	inline KappaType kappa_h(double x){return  0.;}
+	inline KappaType gamma_h(double x){return  0.;}
 };
 
 

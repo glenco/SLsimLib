@@ -40,7 +40,7 @@ KappaType kappaNFW(double *x,double Rtrunc,double mass,double r_scale
 
 	r=sqrt(pow(x[0]-center[0],2) + pow(x[1]-center[1],2));
 	if(r>=Rtrunc) return 0.0;
-	if(r < 1.0-20) r=1.0e-20;
+	if(r < 1.0e-20) r=1.0e-20;
 
 	double y,b;
 
@@ -92,6 +92,7 @@ double gfunction(double x){
 	if(x<1.0){  ans += 2*atanh(sqrt((1-x)/(x+1)))/sqrt(1-x*x);; return ans;}
 	return 0.0;
 }
+
 double ffunction(double x){
 	double ans;
 

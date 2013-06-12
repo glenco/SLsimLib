@@ -13,6 +13,7 @@
 #include "profile.h"
 #include "InputParams.h"
 #include "lens_halos.h"
+#include "model.h"
 
 /**
  * \brief The MOKA map structure, containing all quantities that define it
@@ -72,13 +73,13 @@ public:
 	int flag_background_field;
 
 	void assignParams(InputParams& params);
-	void setInternalParams(CosmoHndl,SourceHndl);
+	void setup(CosmoHndl,SourceHndl);
 	void saveImage(bool saveprofile=true);
 	void saveKappaProfile();
 	void saveGammaProfile();
 	void saveProfiles(double &RE3, double &xxc, double &yyc);
 	void initMap();
-	void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa);
+	void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa,bool subtract_point=false);
 
 	MOKAmap *map;
 
@@ -89,6 +90,30 @@ public:
 	void readImage();
 	void writeImage(std::string fn);
 
+};
+
+/**
+ * \brief The MOKA model that contains the lens, source and cosmology.
+ * 
+ * This is a Model subclass which reads in a MOKA file and updates the
+ * cosmology and lens according to the values read from the FITS file.
+ */
+template<typename SourceT = SourceUniform>
+class ModelMOKA : public Model<SourceT>
+{
+public:
+	ModelMOKA(std::string paramfile, long* seed) : Model<SourceT>(paramfile, seed)
+	{
+		// make sure the lens contains a LensHaloMOKA
+		if(this->lens->main_halos.template size<LensHaloMOKA>() != 1)
+			throw std::runtime_error("ModelMOKA needs to contain exactly one main halo of type LensHaloMOKA!");
+		
+		// update cosmology and source from halo
+		this->lens->main_halos.template get<LensHaloMOKA>(0)->setup(this->cosmo, this->source);
+	}
+	
+private:
+	LensHaloMOKA* halo;
 };
 
 void make_friendship(int ii,int ji,int np,std:: vector<int> &friends, std:: vector<double> &pointdist);

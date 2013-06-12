@@ -17,7 +17,7 @@ redshift_planes_file    Z.txt   # an asci file with redshifts of the planes, exc
 
 ####### Main halos type ##########
 flag_input_lens	   1    # 0: no main halo, 1 or else - a main halo
-DM_halo_type       1    # DM internal profile type: 0 or nolens, 1 or NFW, 2 or PseudoNFW, 3 or PowerLaw, 4 or NSIE, 5 or AnaLens, 6 or UniLens, 7 or MOKALens, 8 or DummyLens
+DM_halo_type       6    # DM internal profile type: 0 or nolens, 1 or NFW, 2 or PseudoNFW, 3 or PowerLaw, 4 or NSIE, 5 or AnaLens, 6 or UniLens, 7 or MOKALens, 8 or DummyLens
 galaxy_halo_type   1	# if set, a galaxy profile is chosen: 0 or none, 1 or NSIE
 
 

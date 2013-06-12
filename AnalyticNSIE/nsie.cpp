@@ -26,13 +26,14 @@ void alphaNSIE(
 	  return;
   }
 
+  // deflection angle alpha has opposite sign with respect to ray position xt
   if( f==1.0 ){
     if(bc == 0.0){
-      alpha[0]=xt[0]/r;
-      alpha[1]=xt[1]/r;
+      alpha[0]=-xt[0]/r;
+      alpha[1]=-xt[1]/r;
     }else{
-      alpha[0]=(sqrt(r*r+bc*bc) - bc)*xt[0]/r/r;
-      alpha[1]=(sqrt(r*r+bc*bc) - bc)*xt[1]/r/r;
+      alpha[0]=-(sqrt(r*r+bc*bc) - bc)*xt[0]/r/r;
+      alpha[1]=-(sqrt(r*r+bc*bc) - bc)*xt[1]/r/r;
     }
     return;
   }

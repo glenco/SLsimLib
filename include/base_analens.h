@@ -202,6 +202,15 @@ KappaType kappaNFW(double *x,double Rtrunc,double mass,double r_scale
 void gammaNFW(KappaType *gamma,double *x,double Rtrunc,double mass,double r_scale
                 ,double *center,double Sigma_crit);
 
+// in hernquist_lens.cpp
+void alphaHern(double *alpha,double *x,double Rtrunc,double mass,double r_scale
+                ,double *center,double Sigma_crit);
+KappaType kappaHern(double *x,double Rtrunc,double mass,double r_scale
+                ,double *center,double Sigma_crit);
+void gammaHern(KappaType *gamma,double *x,double Rtrunc,double mass,double r_scale
+                ,double *center,double Sigma_crit);
+
+
 // in lens_expand.c
 
 double lens_expand(double beta,double *mod,int Nmodes,double *x,double *alpha,KappaType *gamma,KappaType *phi);

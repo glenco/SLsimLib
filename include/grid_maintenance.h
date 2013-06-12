@@ -12,11 +12,14 @@
 #include "point.h"
 #include "Tree.h"
 
+class LensHaloBaseNSIE;
+class LensHaloMOKA;
+
 /** \ingroup ImageFinding
  * \brief Structure to contain both source and image trees.
  * It is not yet used, but may be useful.
  */
-typedef struct Grid{
+struct Grid{
 
 	Grid(LensHndl lens,unsigned long N1d,double center[2],double range);
 	~Grid();

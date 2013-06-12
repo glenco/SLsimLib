@@ -34,9 +34,16 @@
 #include <image_processing.h>
 #include <nsie.h>
 
+/**** halos ****/
+
+#include "analytic_lens.h"
+#include "uniform_lens.h"
+#include "MOKAlens.h"
+
 /**** sources ****/
 
 #include "multi_source.h"
+#include "sourceAnaGalaxy.h"
 #include "overzier_source.h"
 #include "sersic_source.h"
 #include "causticdata.h"

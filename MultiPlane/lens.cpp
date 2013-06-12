@@ -11,6 +11,27 @@
 
 using namespace std;
 
+namespace
+{
+	double redshift_from_dist_table(std::map<double,double>& coorDist_table, double Dl)
+	{
+		// lookup redshift/distance interval from table
+		std::map<double,double>::iterator ind = coorDist_table.lower_bound(Dl);
+		if(ind == coorDist_table.end())
+			--ind;
+		double Dl1 = 0, z1 = 0;
+		double Dl2 = ind->first, z2 = ind->second;
+		if(ind != coorDist_table.begin())
+		{
+			--ind;
+			Dl1 = ind->first;
+			z1 = ind->second;
+		}
+
+		// interpolate redshift
+		return z1 + (Dl-Dl1)/(Dl2-Dl1)*(z2-z1);
+	}
+}
 
 /**
  * \ingroup Constructor
@@ -336,6 +357,9 @@ void Lens::printMultiLens(){
 	case dummy_lens:
 		cout << "Dummy lens" << endl;
 		break;
+	case hern_lens:
+		cout << "Hernquist lens" << endl;
+		break;
 	}
 
 	cout << endl << "Main galaxies profile type:" << endl;
@@ -401,6 +425,9 @@ void Lens::printMultiLens(){
 		case dummy_lens:
 			cout << "Dummy field type" << endl;
 			break;
+		case hern_lens:
+			cout << "Hernquist field type" << endl;
+		break;
 		}
 
 		cout << endl << "Field galaxies profile type:" << endl;
@@ -451,24 +478,42 @@ void Lens::buildLensPlanes(
 			 */
 			if(jj == 0) z1 = 0.0;
 			else{
+<<<<<<< local
 				ind = coorDist_table.lower_bound((Dl[jj]-0.5*dDl[jj]));
 				z1 = ind->second;
+=======
+				z1 = redshift_from_dist_table(coorDist_table, Dl[j]-0.5*dDl[j]);
+>>>>>>> other
 			}
 
+<<<<<<< local
 			if(main_halo_on && jj-1 == (main_halo_on % Nplanes)){
 				ind = coorDist_table.lower_bound(Dl[jj] - 0.5*(Dl[jj] - Dl[jj-2]));
 				z1 = ind->second;
+=======
+			if(main_halo_on && j-1 == (main_halo_on % Nplanes)){
+				z1 = redshift_from_dist_table(coorDist_table, Dl[j] - 0.5*(Dl[j] - Dl[j-2]));
+>>>>>>> other
 			}
 
 			if(jj == Nplanes-2) z2 = zsource;
 			else{
+<<<<<<< local
 				ind = coorDist_table.lower_bound(Dl[jj] + 0.5*dDl[jj+1]);
 				z2 = ind->second;
+=======
+				z2 = redshift_from_dist_table(coorDist_table, Dl[j] + 0.5*dDl[j+1]);
+>>>>>>> other
 			}
 
+<<<<<<< local
 			if(main_halo_on && jj+1 == (main_halo_on % Nplanes)){
 				ind = coorDist_table.lower_bound(Dl[jj] + 0.5*(Dl[jj+2] - Dl[jj]));
 				z2 = ind->second;
+=======
+			if(main_halo_on && j+1 == (main_halo_on % Nplanes)){
+				z2 = redshift_from_dist_table(coorDist_table, Dl[j] + 0.5*(Dl[j+2] - Dl[j]));
+>>>>>>> other
 			}
 
 			/// Find which field_halos are in redshift range
@@ -607,25 +652,12 @@ void Lens::setCoorDist(CosmoHndl cosmo)
 		}
 		else
 		{
-			// lookup redshift/distance interval from table
-			std::map<double,double>::iterator ind = coorDist_table.lower_bound(Dl[i]);
-			if(ind == coorDist_table.end())
-				--ind;
-			double Dl1 = 0, z1 = 0;
-			double Dl2 = ind->first, z2 = ind->second;
-			if(ind != coorDist_table.begin())
-			{
-				--ind;
-				Dl1 = ind->first;
-				z1 = ind->second;
-			}
-
-			// interpolate redshift
-			double z_interp = z1 + (Dl[i]-Dl1)/(Dl2-Dl1)*(z2-z1);
-			plane_redshifts.push_back(z_interp);
+			// get redshift for calculated distance
+			double zz = redshift_from_dist_table(coorDist_table, Dl[i]);
+			plane_redshifts.push_back(zz);
 
 			// set distance so that it agrees with redshift
-			Dl[i] = cosmo->coorDist(0, z_interp);
+			Dl[i] = cosmo->coorDist(0, zz);
 		}
 		cout << plane_redshifts[i] << " ";
 	}
@@ -743,6 +775,9 @@ void Lens::createMainHalos(
 		break;
 	case dummy_lens:
 		main_halos.push_back(new LensHaloDummy(params));
+		break;
+	case hern_lens:
+		main_halos.push_back(new LensHaloHernquist(params));
 		break;
 	}
 
@@ -1025,6 +1060,9 @@ void Lens::createFieldHalos(
 			case dummy_lens:
 				field_halos.push_back(new LensHaloDummy);
 				break;
+			case hern_lens:
+				field_halos.push_back(new LensHaloHernquist);
+				break;
 			}
 
 			float mass = pow(10,InterpolateYvec(Nhalosbin,Logm,ran2 (seed)));
@@ -1233,6 +1271,10 @@ void Lens::readInputSimFile(CosmoHndl cosmo){
 				ERROR_MESSAGE();
 				std::cout << "Why would you wand dummy file halos???" << std::endl;
 				break;
+			case hern_lens:
+				ERROR_MESSAGE();
+				std::cout << "Hernquist not supported." << std::endl;
+				break;
 			}
 
 			float mass = np*8.6e8/cosmo->gethubble();
@@ -1378,9 +1420,20 @@ short Lens::ResetSourcePlane(
 		if(nearest) j = (z>=z1) ? j : j-1;  // reset j to the nearest plane
 
 		// check if source plane coincides with previous lens plane
+		if(Dl[j-1] == Ds)
+			--j;
 		// or check if previous plane is nearer when asked to
+<<<<<<< local
 		//(Dl[j-1] == Ds || (nearest && Dl[j]-Ds > Ds-Dl[j-1]))
 		//	--j;
+=======
+		else if(nearest)
+		{
+			double z1 = redshift_from_dist_table(coorDist_table, Dl[j]-0.5*dDl[j]);
+			if(z < z1) 
+				--j;
+		}
+>>>>>>> other
 	}
 
 	if(nearest && (j < Nplanes-1) ){
