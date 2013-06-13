@@ -57,7 +57,6 @@ set(HEADERS
 	include/List_old.h
 	include/map_images.h
 	include/mcmc.h
-	include/model.h
 	include/MOKAlens.h
 	include/nestedsampler.h
 	include/nsie.h
