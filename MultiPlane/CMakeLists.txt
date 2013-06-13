@@ -6,5 +6,4 @@ add_sources(
 	model.cpp
 	planes.cpp
 	profile.cpp
-	tables.cpp
 )
