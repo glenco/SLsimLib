@@ -77,7 +77,6 @@ set(HEADERS
 	include/source_models.h
 	include/sourceAnaGalaxy.h
 	include/standard.h
-	include/tables.h
 	include/Tree.h
 	include/tree_maintenance.h
 	include/TreeNB.h

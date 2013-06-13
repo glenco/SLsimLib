@@ -90,4 +90,11 @@ typedef double KappaType;
 typedef float KappaType;
 #endif
 
+// unit test definitions
+// GlamerTest overrides these as necessary
+#ifndef GLAMER_TEST
+#define GLAMER_TEST_USES(t)
+#define GLAMER_TEST_FRIEND(t)
+#endif
+
 #endif
