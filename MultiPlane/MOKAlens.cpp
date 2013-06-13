@@ -70,7 +70,11 @@ LensHaloMOKA::LensHaloMOKA(InputParams& params) : LensHalo(){
 #endif
 
 	map = new MOKAmap;
-
+  if(std::numeric_limits<float>::has_infinity){
+    Rmax = std::numeric_limits<float>::infinity();
+  }else{
+    Rmax = std::numeric_limits<float>::max();
+  }
 	assignParams(params);
 
 	getDims();

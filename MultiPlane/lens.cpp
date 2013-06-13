@@ -37,9 +37,12 @@ namespace
  * \ingroup Constructor
  * \brief allocates space for the halo trees and the inout lens, if there is any
  */
-Lens::Lens(InputParams& params, CosmoHndl cosmo, SourceHndl source, long *my_seed)
+Lens::Lens(InputParams& params,SourceHndl source, long *my_seed)
 : seed(my_seed), Nhalos(0), halo_pos(0)
 {
+  
+  cosmo = new COSMOLOGY();
+  
 	if( (cosmo->getOmega_matter() + cosmo->getOmega_lambda()) != 1.0 ){
 		printf("ERROR: MultiLens can only handle flat universes at present.  Must change cosmology.\n");
 		exit(1);
@@ -86,9 +89,12 @@ Lens::Lens(InputParams& params, CosmoHndl cosmo, SourceHndl source, long *my_see
 /**
  * \brief Creates an empty lens. Main halos and field halos need to be inserted by hand from the user.
  */
-Lens::Lens(InputParams& params, CosmoHndl cosmo, long *my_seed)
+Lens::Lens(InputParams& params, long *my_seed)
 : seed(my_seed), Nhalos(0), halo_pos(0)
 {
+  
+  cosmo = new COSMOLOGY();
+  
 	if( (cosmo->getOmega_matter() + cosmo->getOmega_lambda()) != 1.0 ){
 		printf("ERROR: MultiLens can only handle flat universes at present.  Must change cosmology.\n");
 		exit(1);
@@ -745,7 +751,7 @@ void Lens::createMainHalos(
 		main_halos.push_back(new LensHaloAnaNSIE(params));
 		break;
 	case uni_lens:
-		main_halos.push_back(new LensHaloUniNSIE(params));
+		main_halos.push_back(new LensHaloUniform(params));
 		break;
 	case moka_lens:
 		main_halos.push_back(new LensHaloMOKA(params));
@@ -1354,9 +1360,8 @@ void Lens::readInputSimFile(CosmoHndl cosmo){
  *
  */
 short Lens::ResetSourcePlane(
-		CosmoHndl cosmo           /// cosmology
-		,double z                 /// redshift of implanted source
-		,bool nearest             /** If true, set the source plane to the nearest (in coordinate distance)
+		double z                 /// redshift of implanted source
+		,bool nearest           /** If true, set the source plane to the nearest (in coordinate distance)
 			                      * lensing plane that was created already.  This can be used to avoid self-lensing
 			                      * by the halo of the source.  If the source is at higher redshift than the simulation
 			                      * volume the source will be at its real redshift.
