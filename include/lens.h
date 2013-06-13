@@ -9,7 +9,6 @@
 #define MULTIPLANE_H_
 
 #include "quadTree.h"
-#include "tables.h"
 #include "utilities_slsim.h"
 #include "planes.h"
 

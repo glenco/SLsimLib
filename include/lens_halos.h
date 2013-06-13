@@ -9,7 +9,6 @@
 #define LENS_HALOS_H_
 
 #include "standard.h"
-#include "tables.h"
 #include "InputParams.h"
 #include "source.h"
 
@@ -209,6 +208,8 @@ public:
 	LensHaloPseudoNFW();
 	LensHaloPseudoNFW(InputParams& params);
 	~LensHaloPseudoNFW();
+
+	double mhat(double y, double beta);
 
 	/// set the slope of the surface density profile
 	void set_slope(double my_slope){beta=my_slope; make_tables();};
