@@ -178,17 +178,16 @@ public:
 	Utilities::MixedVector<LensHaloHndl> main_halos;
 	/// number of main halo profiles (or main halos)
 	IndexType NmainHalos;
+  
+  /// print the cosmological parameters
+  void PrintCosmology(){cosmo->PrintCosmology();}
 
 private:
-<<<<<<< local
-  
   
   COSMOLOGY *cosmo;
   
-=======
 	GLAMER_TEST_FRIEND(LensTest)
 
->>>>>>> other
 	/// number of lensing planes + 1 in the simulation, the last plant is the source plane
 	int Nplanes;
 	/// field of view in square degrees
