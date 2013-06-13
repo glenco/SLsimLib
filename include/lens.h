@@ -14,6 +14,8 @@
 
 #include <map>
 
+GLAMER_TEST_USES(LensTest)
+
 /**
  * \brief A class to represents a lens with multiple planes.
  *
@@ -178,6 +180,8 @@ public:
 	IndexType NmainHalos;
 
 private:
+	GLAMER_TEST_FRIEND(LensTest)
+
 	/// number of lensing planes + 1 in the simulation, the last plant is the source plane
 	int Nplanes;
 	/// field of view in square degrees
