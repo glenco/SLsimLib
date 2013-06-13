@@ -75,8 +75,8 @@
 
 class Lens{
 public:
-	Lens(InputParams& params,CosmoHndl cosmo, long *seed);
-	Lens(InputParams& params, CosmoHndl cosmo, SourceHndl source, long *my_seed);
+	Lens(InputParams& params, long *seed);
+	Lens(InputParams& params, SourceHndl source, long *my_seed);
 	~Lens();
 
 	/// marks if the lens has been setup.
@@ -133,7 +133,7 @@ public:
 
 	// methods used for use with implanted sources
 
-	short ResetSourcePlane(CosmoHndl cosmo,double z,bool nearest, unsigned long GalID=0, double *xx=NULL);
+	short ResetSourcePlane(double z,bool nearest, unsigned long GalID=0, double *xx=NULL);
 
 	/// Revert the source redshift to the value it was when the Lens was created.
 	void RevertSourcePlane(){ toggle_source_plane = false;}
@@ -179,6 +179,10 @@ public:
 	IndexType NmainHalos;
 
 private:
+  
+  
+  COSMOLOGY *cosmo;
+  
 	/// number of lensing planes + 1 in the simulation, the last plant is the source plane
 	int Nplanes;
 	/// field of view in square degrees

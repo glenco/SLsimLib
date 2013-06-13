@@ -69,7 +69,7 @@ TreeQuad::TreeQuad(
 	return;
 }
 
-
+/// Particle positions and other data are not destroyed.
 TreeQuad::~TreeQuad()
 {
 	delete tree;

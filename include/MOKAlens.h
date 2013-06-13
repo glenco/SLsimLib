@@ -97,7 +97,7 @@ public:
  * 
  * This is a Model subclass which reads in a MOKA file and updates the
  * cosmology and lens according to the values read from the FITS file.
- */
+ *
 template<typename SourceT = SourceUniform>
 class ModelMOKA : public Model<SourceT>
 {
@@ -115,6 +115,7 @@ public:
 private:
 	LensHaloMOKA* halo;
 };
+*/
 
 void make_friendship(int ii,int ji,int np,std:: vector<int> &friends, std:: vector<double> &pointdist);
 

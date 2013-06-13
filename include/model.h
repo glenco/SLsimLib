@@ -3,7 +3,7 @@
  *
  *  Created on: Jan 23, 2012
  *      Author: mpetkova
- */
+ *
 
 #ifndef MODEL_H_
 #define MODEL_H_
@@ -14,7 +14,7 @@
 #include "base_analens.h"
 #include "analytic_lens.h"
 
-/**
+/*
  * \brief A class that allocates the lens, the source, and the cosmological models.
  * There are several constructors, which allow for different types of initializations.
  *
@@ -31,7 +31,7 @@
  * LensHaloAnaNSIE == paramfile
  * etc.
  *
- */
+ *
 template <class S=SourceUniform> class Model{
 public:
 
@@ -83,11 +83,11 @@ public:
 
 };
 
-/** \ingroup ChangeLens
+/* \ingroup ChangeLens
 * \brief routines for randomizing the lens.  How the lens is randomized is specified in the specific
 * derived lens class that was used to construct the model.
  *
- */
+ *
 template<class S> void Model<S>::RandomizeModel(
 		double r_source_phys
 		,long *seed
