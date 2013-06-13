@@ -59,7 +59,7 @@ Lens::Lens(InputParams& params,SourceHndl source, long *my_seed)
 	charge = 4*pi*Grav;
 	std::cout << "charge: " << charge << std::endl;
 
-	if(main_halo_on)
+	if(flag_switch_main_halo_on)
 		createMainHalos(params,cosmo,source);
 
 	// initially let source be the one inputed from parameter file
@@ -175,12 +175,12 @@ void Lens::assignParams(InputParams& params){
 		  cout << "parameter Nplanes needs to be set in the parameter file " << params.filename() << endl;
 		  exit(0);
 	}
-	if(!params.get("main_halo_on",main_halo_on)){
+	if(!params.get("main_halo_on",flag_switch_main_halo_on)){
 		  ERROR_MESSAGE();
 		  cout << "parameter main_halo_on needs to be set in the parameter file " << params.filename() << endl;
 		  exit(0);
 	}
-	if(main_halo_on){
+	if(flag_switch_main_halo_on){
 		if(!params.get("main_DM_halo_type",main_halo_type)){
 			ERROR_MESSAGE();
 			cout << "parameter main_DM_halo_type needs to be set in the parameter file " << params.filename() << endl;
@@ -266,15 +266,12 @@ void Lens::assignParams(InputParams& params){
 		exit(1);
 	}
 
-	if(main_halo_on == 0 && Nplanes == 1){
+	if(flag_switch_main_halo_on == false && Nplanes == 1){
 		ERROR_MESSAGE();
-		cout << "Do you want an empty simulation? Set main_halo_on to > 0 for a main lens." << endl;
+		cout << "Do you want an empty simulation? Set main_halo_on to true for a main lens." << endl;
 		exit(1);
 	}
 
-	if(main_halo_on > 0){
-		main_halo_on = 1;
-	}
 	if(!flag_switch_field_off){
 		if(field_int_prof_type == pl_lens && field_prof_internal_slope >= 0){
 			ERROR_MESSAGE();
@@ -481,10 +478,10 @@ void Lens::buildLensPlanes(
 	std::cout << "Lens::buildLensPlanes zsource = " << zsource << std::endl;
 
 	assert(plane_redshifts.size() == Nplanes);
-	assert(plane_redshifts[Nplanes-1] == zsource);
+	assert(plane_redshifts.back() == zsource);
 
 	for(jj=0,Ntot=0;jj<Nplanes-1;jj++){
-		if(main_halo_on && jj == (main_halo_on % Nplanes)){
+		if(flag_switch_main_halo_on && jj == main_halo_plane){
 			std::cout << "Building main halos lensing plane" << std::endl;
 			lensing_planes.push_back(new LensPlaneSingular(main_halos.data(),main_halos.size()));
 		}
@@ -499,7 +496,7 @@ void Lens::buildLensPlanes(
 				z1 = redshift_from_dist_table(coorDist_table, Dl[jj]-0.5*dDl[jj]);
 			}
 
-			if(main_halo_on && jj-1 == (main_halo_on % Nplanes)){
+			if(flag_switch_main_halo_on && jj-1 == main_halo_plane){
 				z1 = redshift_from_dist_table(coorDist_table, Dl[jj] - 0.5*(Dl[jj] - Dl[jj-2]));
 			}
 
@@ -508,7 +505,7 @@ void Lens::buildLensPlanes(
 				z2 = redshift_from_dist_table(coorDist_table, Dl[jj] + 0.5*dDl[jj+1]);
 			}
 
-			if(main_halo_on && jj+1 == (main_halo_on % Nplanes)){
+			if(flag_switch_main_halo_on && jj+1 == main_halo_plane){
 				z2 = redshift_from_dist_table(coorDist_table, Dl[jj] + 0.5*(Dl[jj+2] - Dl[jj]));
 			}
 
@@ -560,12 +557,9 @@ void Lens::buildLensPlanes(
  * Updates the lensing plane where the main lens halos are and keeps everything else the same
  */
 void Lens::updateMainHaloLensPlane(){
-	int j;
-	for(j=0;j<Nplanes-1;j++){
-		if(main_halo_on && j == (main_halo_on % Nplanes)){
-			delete lensing_planes[j];
-			lensing_planes[j] = new LensPlaneSingular(main_halos.data(),main_halos.size());
-		}
+	if(flag_switch_main_halo_on){
+		delete lensing_planes[main_halo_plane];
+		lensing_planes[main_halo_plane] = new LensPlaneSingular(main_halos.data(),main_halos.size());
 	}
 }
 
@@ -573,29 +567,27 @@ void Lens::updateMainHaloLensPlane(){
  * /brief Set the coordinate distances of the planes by dividing the coordinate distance space into equal intervals
  * and then plugging the analytic input plane in between.
  *
- * After this main_halo_on will hold the index of the plane it is on
- * In case it is on the first plane, it will hold the index Nplanes, to make
- * sure that it is not zero (i.e. not set)
+ * After this main_halo_plane will hold the index of the plane the main halo is on
  */
 void Lens::setCoorDist(CosmoHndl cosmo)
 {
 	double Dlens;
 	double Ds = cosmo->coorDist(0,zsource);
-	if(main_halo_on) Dlens = cosmo->coorDist(0,main_halos[0]->getZlens());
+	if(flag_switch_main_halo_on) Dlens = cosmo->coorDist(0,main_halos[0]->getZlens());
 	else Dlens = Ds;
 
-	if(main_halo_on && Nplanes == 2){
+	if(flag_switch_main_halo_on && Nplanes == 2){
 		Dl.push_back(Dlens);
 		Dl.push_back(Ds);
-		main_halo_on = Nplanes;
+		main_halo_plane = 0;
 	}else{
 
 		std:: vector<double> lD;
 		int Np;
 
-		if(main_halo_on == 0 && flag_switch_field_off == false)
+		if(!flag_switch_main_halo_on && !flag_switch_field_off)
 			Np = Nplanes;
-		if(main_halo_on && flag_switch_field_off == false)
+		if(flag_switch_main_halo_on && !flag_switch_field_off)
 			Np = Nplanes-1;
 
 		/// spaces lD equally up to the source, including 0 and Ds
@@ -612,9 +604,9 @@ void Lens::setCoorDist(CosmoHndl cosmo)
 
 		/// puts the input plane first if the case
 		int flag=0;
-		if(main_halo_on && Dlens < lD[1]){
+		if(flag_switch_main_halo_on && Dlens < lD[1]){
 			Dl.push_back(Dlens);
-			main_halo_on = Nplanes;
+			main_halo_plane = 0;
 			flag = 1;
 		}
 
@@ -622,10 +614,10 @@ void Lens::setCoorDist(CosmoHndl cosmo)
 		for(std::size_t i=1; i<Np; i++){
 			Dl.push_back(lD[i]);
 
-			if(main_halo_on && flag == 0)
+			if(flag_switch_main_halo_on && flag == 0)
 				if(Dlens > lD[i] && Dlens <= lD[i+1]){
 					Dl.push_back(Dlens);
-					main_halo_on = Dl.size()-1;
+					main_halo_plane = Dl.size()-1;
 					flag = 1;
 				}
 		}
@@ -635,14 +627,14 @@ void Lens::setCoorDist(CosmoHndl cosmo)
 
 	assert(Dl.size() == Nplanes);
 
-	if(main_halo_on)
-		cout << "zlens " << main_halos[0]->getZlens() << " on plane number " << (main_halo_on % Nplanes) << endl;
+	if(flag_switch_main_halo_on)
+		cout << "zlens " << main_halos[0]->getZlens() << " on plane number " << main_halo_plane << endl;
 
 	// assigns the redshifts and plugs in the input plane
 	cout << "z: ";
 	for(std::size_t i = 0; i < Nplanes-1; ++i)
 	{
-		if(main_halo_on && i == (main_halo_on % Nplanes))
+		if(flag_switch_main_halo_on && i == main_halo_plane)
 		{
 			plane_redshifts.push_back(main_halos[0]->getZlens());
 		}
@@ -847,7 +839,7 @@ void Lens::insertNewMainHalos(
 	for(int i=0; i< NmainHalos; i++)
 		main_halos[i]->setInternalParams(cosmo,source);
 
-	main_halo_on = 1;
+	flag_switch_main_halo_on = true;
 
 	setCoorDist(cosmo);
 
@@ -905,7 +897,7 @@ void Lens::insertNewSingleMainHalo(
 	for(int i=0; i< NmainHalos; i++)
 		main_halos[i]->setInternalParams(cosmo,source);
 
-	main_halo_on = 1;
+	flag_switch_main_halo_on = true;
 
 	setCoorDist(cosmo);
 

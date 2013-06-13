@@ -60,9 +60,9 @@ void Lens::rayshooterInternal(
 
 // If a lower redshift source is being used
   if(toggle_source_plane){
-    NLastPlane = index_of_new_sourceplane + 1;
+    NLastPlane = index_of_new_sourceplane;
 
-    assert(NLastPlane <= Nplanes);
+    assert(NLastPlane <= lensing_planes.size());
     tmpDs = Dl[index_of_new_sourceplane];
     tmpdDs = dDl[index_of_new_sourceplane];
     tmpZs = plane_redshifts[index_of_new_sourceplane];
@@ -71,7 +71,7 @@ void Lens::rayshooterInternal(
     dDl[index_of_new_sourceplane] = dDs_implant;
     plane_redshifts[index_of_new_sourceplane] = zs_implant;
   }else{
-    NLastPlane = Nplanes;
+    NLastPlane = lensing_planes.size();
   }
 
   int nthreads, rc;
@@ -161,7 +161,7 @@ void *compute_rays_parallel(void *_p){
     p->i_points[i].gamma[1] = 0;
     p->i_points[i].gamma[2] = 0;
     
-    for(j = 0; j < p->NPlanes-1 ; j++){  // each iteration leaves i_point[i].image on plane (j+1)
+    for(j = 0; j < p->NPlanes ; ++j){  // each iteration leaves i_point[i].image on plane (j+1)
       
       // convert to physical coordinates on the plane j
       
@@ -246,8 +246,8 @@ void *compute_rays_parallel(void *_p){
     }
     
     // Convert units back to angles.
-    p->i_points[i].image->x[0] /= lens->Dl[p->NPlanes-1];
-    p->i_points[i].image->x[1] /= lens->Dl[p->NPlanes-1];
+    p->i_points[i].image->x[0] /= lens->Dl[p->NPlanes];
+    p->i_points[i].image->x[1] /= lens->Dl[p->NPlanes];
     
     p->i_points[i].kappa = 1 - p->i_points[i].kappa;
 
@@ -292,7 +292,8 @@ void Lens::rayshooterInternal(
 		,bool kappa_off		/// if true -- no kappa and gamma values are calculated
 		){
 
-  int j;
+  std::size_t j;
+  std::size_t NPlanes = lensing_planes.size();
 
   double xx[2],fac;
   double aa,bb,cc;
@@ -301,7 +302,7 @@ void Lens::rayshooterInternal(
   double xminus[2],xplus[2];
   double kappa_tmp_minus,gamma_tmp_minus[3],kappa_tmp_plus,gamma_tmp_plus[3];
 
-  assert(Nplanes > 0);
+  assert(NPlanes > 0);
   // If a lower redshift source is being used
 
     // find position on first lens plane in comoving units
@@ -322,7 +323,7 @@ void Lens::rayshooterInternal(
     gamma[1] = 0;
     gamma[2] = 0;
 
-    for(j = 0; j < Nplanes-1 ; j++){  // each iteration leaves i_point[i].image on plane (j+1)
+    for(j = 0; j < NPlanes; ++j){  // each iteration leaves i_point[i].image on plane (j+1)
 
       // convert to physical coordinates on the plane j
 
@@ -406,8 +407,8 @@ void Lens::rayshooterInternal(
     }
 
     // Convert units back to angles.
-    x_source[0] /= Dl[Nplanes-1];
-    x_source[1] /= Dl[Nplanes-1];
+    x_source[0] /= Dl[NPlanes];
+    x_source[1] /= Dl[NPlanes];
 
     *kappa = 1 - *kappa;
 

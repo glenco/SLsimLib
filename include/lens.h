@@ -91,7 +91,7 @@ public:
 	/// marks if the lens has been setup.
 	bool set;
 
-	int getNplanes(){return Nplanes;};
+	int getNplanes(){return lensing_planes.size();}
 	double getfov(){return fieldofview;};
 	void setfov(double fov){fieldofview=fov;};
 
@@ -117,7 +117,7 @@ public:
 	/// print the main parameters of the lens
 	void printMultiLens();
 	double getZlens(){
-		if(main_halo_on)
+		if(flag_switch_main_halo_on)
 			return main_halos[0]->getZlens();
 		else{
 			ERROR_MESSAGE();
@@ -151,13 +151,16 @@ public:
 		if(toggle_source_plane){
 			return zs_implant;
 		}else{
-			return plane_redshifts[Nplanes-1];
+			return plane_redshifts.back();
 		}
 	}
 
-	double getZmax(){return plane_redshifts[Nplanes-1];}
+	double getZmax(){return plane_redshifts.back();}
 
-	int main_halo_on;
+	/// having a main halo in the paramfile
+	bool flag_switch_main_halo_on;
+	/// the index the main halo is on
+	std::size_t main_halo_plane;
 	/// the lensing planes
 	std::vector<LensPlane *> lensing_planes;
 	/// Dl[j = 0...] angular diameter distances, comoving
