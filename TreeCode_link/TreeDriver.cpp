@@ -9,6 +9,7 @@ static Point **temp_points,tmp;
 static double realray[2];
 //Point *point_global;
 
+/// Warning: Not garenteed to return Nneighbors if there are less points on the grid
 Point *TreeStruct::NearestNeighbor(double *ray,int Nneighbors,ListHndl neighborlist,short direction){
   /* nearest neighbor points in a given direction, direction != 0 should not */
   /*    be used except on a grid */
@@ -25,9 +26,10 @@ Point *TreeStruct::NearestNeighbor(double *ray,int Nneighbors,ListHndl neighborl
   /*std::printf("entering NN\n");*/
 
   if(top->npoints <= Nneighbors){
-	  ERROR_MESSAGE();
-	  std::printf("ERROR: in NearestNeighbor, number of neighbors > total number of points\n");
-	  exit(1);
+	  //ERROR_MESSAGE();
+	  //std::printf("ERROR: in NearestNeighbor, number of neighbors > total number of points\n");
+	  //throw std::out_of_range(std::string() + "ERROR: in NearestNeighbor, number of neighbors > total number of points");
+    Nneighbors = top->npoints-1;
   }
   EmptyList(neighborlist);
   if(Nneighbors <= 0) return NULL;

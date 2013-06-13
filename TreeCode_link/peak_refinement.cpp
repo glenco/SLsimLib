@@ -4,7 +4,7 @@
  *  Created on: Apr 8, 2011
  *      Author: bmetcalf
  *
- *      Written for project with S.Hilbert for adaptive ray tracing through the Millenium II simulation.
+ *      Written for project with S.Hilbert for adaptive ray tracing through the Millennium II simulation.
  *
  *      Uses a defection solver provided by the user.  Adaptively finds regions with high kappa and refines
  *      them to higher resolution

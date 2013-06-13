@@ -495,18 +495,19 @@ void LensHaloDummy::force_halo(double *alpha,KappaType *kappa,KappaType *gamma,d
 	double tmp = subtract_point*prefac;
 	alpha[0] += tmp*xcm[0];
 	alpha[1] += tmp*xcm[1];
-	double x = sqrt(rcm2)/rscale;
+  if(subtract_point){
+    double x = sqrt(rcm2)/rscale;
 
-	// can turn off kappa and gamma calculations to save times
-	if(!no_kappa){
-		*kappa += kappa_h(x)*prefac;
+    // can turn off kappa and gamma calculations to save times
+    if(!no_kappa){
+      *kappa += kappa_h(x)*prefac;
 
-		tmp = (gamma_h(x) + 2.0*subtract_point)*prefac/rcm2;
+      tmp = (gamma_h(x) + 2.0*subtract_point)*prefac/rcm2;
 
-		gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
-		gamma[1] += xcm[0]*xcm[1]*tmp;
-	}
-
+      gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+      gamma[1] += xcm[0]*xcm[1]*tmp;
+    }
+  }
 }
 
 void LensHaloDummy::assignParams(InputParams& params)

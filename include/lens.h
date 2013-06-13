@@ -56,7 +56,7 @@
  *   	0 or none, 1 or NSIE
  *   field_galaxy_mass_fraction -- if int_prof_gal_type is set, then this is the galaxy mass fraction
  *
- *   field_input_sim_file -- filename of the Millenium simulation data to be read in and used to populate the light cone with field halos
+ *   field_input_sim_file -- filename of the Millennium simulation data to be read in and used to populate the light cone with field halos
  *
  *   if field_input_sim_file is  _not_ set, then the field halos are generated from a mass function and the following are used:
  *   field_mass_func_type -- type of the halo mass function
