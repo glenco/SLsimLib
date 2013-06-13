@@ -478,81 +478,6 @@ bool InputParams::get(std::string label,std::string& value){
 	use_number[i]++;
 	return true;
 }
-/** \brief Assigns to "value" the value of the parameter called "label".
- * If this parameter label does not appear in the parameter file false
- * is returned.  If the parameter in the file does not "match" the type
- * of value false will also be returned and a warning printed to stdout.
- *
- * The entry in the parameter file must have a numerical value.  If it
- * does not, an exception message is printed and false is returned.
- */
-bool InputParams::get(std::string label,double& value){
-	unsigned int i;
-	bool numeric;
-
-	for(i=0;i<labels.size();++i)
-		if(labels[i] == label) break;
-	if(i==labels.size()) return false;
-
-	value = string_to_double(char_values[i],numeric);
-	if(!numeric){
-		std::cout << "Expected a numerical value for " << labels[i] << " in parameter file " << paramfile_name << std::endl;
-		return false;
-	}
-	use_number[i]++;
-	return true;
-}
-/** \brief Assigns to "value" the value of the parameter called "label".
- * If this parameter label does not appear in the parameter file false
- * is returned.  If the parameter in the file does not "match" the type
- * of value false will also be returned and a warning printed to stdout.
- *
- * The entry in the parameter file must have a numerical value.  If it
- * does not, an exception message is printed and false is returned.
- */
-bool InputParams::get(std::string label,float& value){
-	unsigned int i;
-	bool numeric;
-
-	for(i=0;i<labels.size();++i)
-		if(labels[i] == label) break;
-	if(i==labels.size()) return false;
-
-	value = string_to_double(char_values[i],numeric);
-	if(!numeric){
-		std::cout << "Expected a numerical value for " << labels[i] << " in parameter file " << paramfile_name << std::endl;
-		return false;
-	}
-	use_number[i]++;
-	return true;
-}
-/** \brief Assigns to "value" the value of the parameter called "label".
- * If this parameter label does not appear in the parameter file false
- * is returned.  If the parameter in the file does not "match" the type
- * of value false will also be returned and a warning printed to stdout.
- *
- ** The entry in the parameter file must have a numerical value.  If it
- * doesn't an exception message is printed and false is returned.  If
- * the entry is a decimal number it is truncated to an integer and true
- * is returned.  This is a possible source of error if the wrong type is
- * used.
- */
-bool InputParams::get(std::string label,int& value){
-	unsigned int i;
-	bool numeric;
-
-	for(i=0;i<labels.size();++i)
-		if(labels[i] == label) break;
-	if(i==labels.size()) return false;
-
-	value = string_to_int(char_values[i],numeric);
-	if(!numeric){
-		std::cout << "Expected a numerical value for " << labels[i] << " in parameter file " << paramfile_name << std::endl;
-		return false;
-	}
-	use_number[i]++;
-	return true;
-}
 /**
  * Add a new parameter to the parameter list.
  */
@@ -561,57 +486,6 @@ void InputParams::put(std::string label,std::string value,std::string comment){
 	labels.push_back(label);
 	use_number.push_back(0);
 	char_values.push_back(value);
-	if(comment == "") comments.push_back("");
-	else comments.push_back("#" + comment);
-
-	return;
-}
-/**
- * Add a new parameter to the parameter list.
- */
-void InputParams::put(std::string label,int value,std::string comment){
-
-	labels.push_back(label);
-	use_number.push_back(0);
-
-	// convert to string
-	std::ostringstream strs;
-	strs << value;
-	char_values.push_back(strs.str());
-	if(comment == "") comments.push_back("");
-	else comments.push_back("#" + comment);
-
-	return;
-}
-/**
- * Add a new parameter to the parameter list.
- */
-void InputParams::put(std::string label,float value,std::string comment){
-
-	labels.push_back(label);
-	use_number.push_back(0);
-
-	// convert to string
-	std::ostringstream strs;
-	strs << value;
-	char_values.push_back(strs.str());
-	if(comment == "") comments.push_back("");
-	else comments.push_back("#" + comment);
-
-	return;
-}
-/**
- * Add a new parameter to the parameter list.
- */
-void InputParams::put(std::string label,double value,std::string comment){
-
-	labels.push_back(label);
-	use_number.push_back(0);
-
-	// convert to string
-	std::ostringstream strs;
-	strs << value;
-	char_values.push_back(strs.str());
 	if(comment == "") comments.push_back("");
 	else comments.push_back("#" + comment);
 
@@ -626,27 +500,4 @@ bool InputParams::exist(std::string label){
 	if(i==labels.size()) return false;
 
 	return true;
-}
-
-double InputParams::string_to_double( const std::string& s,bool& numeric ){
-	std::istringstream i(s);
-
-	double x;
-	if (!(i >> x)){
-		numeric = false;
-		return 0;
-	}
-	numeric = true;
-	return x;
-}
-int InputParams::string_to_int( const std::string& s,bool& numeric  ){
-	std::istringstream i(s);
-
-	int x;
-	if (!(i >> x)){
-		numeric = false;
-		return 0;
-	}
-	numeric = true;
-	return x;
 }
