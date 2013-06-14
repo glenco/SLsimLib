@@ -10,12 +10,16 @@
 #include <algorithm>
 #include <utility>
 #include <iterator>
+#if __cplusplus >= 201103L
+#include <typeindex>
+#endif
 
 namespace Utilities
 {
 	// this is not for the user
 	namespace detail
 	{
+#if __cplusplus < 201103L
 		class type_index
 		{
 		public:
@@ -25,66 +29,10 @@ namespace Utilities
 		private:
 			const std::type_info& t;
 		};
-		
-		template<typename BaseT>
-		class cloner
-		{
-		public:
-			cloner() {}
-			
-			cloner(const cloner& other)
-			{
-				for(typename std::map<type_index, base_item*>::const_iterator it = other.items.begin(); it != other.items.end(); ++it)
-					items[it->first] = it->second->copy();
-			}
-			
-			~cloner()
-			{
-				for(typename std::map<type_index, base_item*>::iterator it = items.begin(); it != items.end(); ++it)
-					delete it->second;
-			}
-			
-			template<typename SubT>
-			void know()
-			{
-				base_item*& i = items[typeid(SubT)];
-				if(i == 0)
-					i = new item<SubT>();
-			}
-			
-			template<typename T>
-			T* operator()(const T* ptr) const
-			{
-				typename std::map<type_index, base_item*>::const_iterator found = items.find(typeid(*ptr));
-				if(found == items.end())
-					return 0;
-				return found->second->clone(ptr);
-			}
-			
-		private:
-			class base_item
-			{
-			public:
-				virtual ~base_item() {}
-				virtual base_item* copy() const = 0;
-				
-				virtual BaseT* clone(const BaseT*) const = 0;
-			};
-			
-			template<typename SubT>
-			class item : public base_item
-			{
-			public:
-				item<SubT>* copy() const { return new item<SubT>(); }
-				
-				BaseT* clone(const BaseT* ptr) const { return new SubT((const SubT&)*ptr); }
-			};
-			
-			std::map<type_index, base_item*> items;
-		};
+#else
+		using std::type_index;
 	}
-	
-	//typedef double PosType;
+#endif
 	
 	template <class T>
 	void Matrix(T **matrix, long rows, long cols){
@@ -207,27 +155,6 @@ namespace Utilities
 		{
 		}
 		
-		/// copy the vector and all contained elements
-		MixedVector(const MixedVector<BaseT>& other)
-		: cloner(other.cloner)
-		{
-			// needs to clone all the contained base_holder items
-			for(typename base_container::const_iterator it = other.items.begin(); it != other.items.end(); ++it)
-			{
-				// get object type
-				const std::type_info& type = typeid(**it);
-				
-				// clone the object
-				BaseT* obj = cloner(*it);
-				
-				// add to own items
-				items.push_back(obj);
-				
-				// add to own typemap
-				tmap[type].push_back(obj);
-			}
-		}
-		
 		/// destroy the vector and all contained items
 		~MixedVector()
 		{
@@ -266,9 +193,6 @@ namespace Utilities
 			
 			// add the copy to type map
 			tmap[typeid(SubclassT)].push_back(copy);
-			
-			// let cloner know about type
-			cloner.template know<SubclassT>();
 		}
 		
 		/// pop element from back of vector
@@ -507,6 +431,9 @@ namespace Utilities
 		}
 		
 	private:
+		/// cannot copy MixedVector
+		MixedVector(const MixedVector<BaseT>& other);
+		
 		typedef std::vector<BaseT*> base_container;
 		
 		inline static void check_subclass(const BaseT&) {}
@@ -518,8 +445,6 @@ namespace Utilities
 		
 		typedef std::map<detail::type_index, base_container> tmap_t;
 		tmap_t tmap;
-		
-		detail::cloner<BaseT> cloner;
 	};
 	
 	/// A MixedVector for pointers.
