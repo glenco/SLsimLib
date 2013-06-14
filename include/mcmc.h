@@ -17,14 +17,13 @@ public:
 	static const int MAX_N_IMAGES = 100;
 	static const int GRID_POINTS = 64;
 	
-	MCMC(Lens& lens, Sky& sky, COSMOLOGY& cosmo, const PixelData& data);
+	MCMC(Lens& lens, Sky& sky, const PixelData& data);
 	
 	std::vector<Parameters> run(std::size_t n, double step, long* seed);
 	
 private:
 	Lens& lens;
 	Sky& sky;
-	COSMOLOGY& cosmo;
 	PixelData data;
 };
 
