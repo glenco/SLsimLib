@@ -207,10 +207,21 @@ LensHaloPowerLaw::~LensHaloPowerLaw(){
 
 
 LensHaloSimpleNSIE::LensHaloSimpleNSIE() : LensHalo(){
-	rscale = 1.0;
+	sigma = 0.;
+	zlens = 0.;
+	fratio = 0.;
+	pa = 0.;
+	rcore = 0.;
+
 }
 
 LensHaloSimpleNSIE::LensHaloSimpleNSIE(InputParams& params){
+	sigma = 0.;
+	zlens = 0.;
+	fratio = 0.;
+	pa = 0.;
+	rcore = 0.;
+
 	assignParams(params);
 }
 

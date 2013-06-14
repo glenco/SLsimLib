@@ -28,12 +28,13 @@ void alphaNSIE(
 
   // deflection angle alpha has opposite sign with respect to ray position xt
   if( f==1.0 ){
+	 std::cout << "This is simple: circular simmetry" << std::endl;
     if(bc == 0.0){
-      alpha[0]=-xt[0]/r;
-      alpha[1]=-xt[1]/r;
+      alpha[0]=-1.0*xt[0]/r;
+      alpha[1]=-1.0*xt[1]/r;
     }else{
-      alpha[0]=-(sqrt(r*r+bc*bc) - bc)*xt[0]/r/r;
-      alpha[1]=-(sqrt(r*r+bc*bc) - bc)*xt[1]/r/r;
+      alpha[0]=-1.0*(sqrt(r*r+bc*bc) - bc)*xt[0]/r/r;
+      alpha[1]=-1.0*(sqrt(r*r+bc*bc) - bc)*xt[1]/r/r;
     }
     return;
   }
@@ -68,6 +69,8 @@ void alphaNSIE(
   angle[1]= -0.5*sqrt(f)*(RCphase-SCphase)/fp;
 
   Utilities::rotation(alpha,angle,-theta);
+  alpha[0] = -alpha[0];
+  alpha[1] = -alpha[1];
 
   if(alpha[0] != alpha[0] || alpha[1] != alpha[1] ){
 	  printf("alpha is %e %e in nsie.c \n fp=%e b2=%e r=%e bc=%e f=%e theta=%e\n x = %e %e xt= %e %e\n"
