@@ -42,7 +42,7 @@ class LensHalo{
 public:
 	LensHalo();
 	LensHalo(InputParams& params);
-	~LensHalo();
+	virtual ~LensHalo();
 
 	/// get the Rmax
 	float get_Rmax(){return Rmax;};
