@@ -70,6 +70,14 @@ GLAMER_TEST_USES(LensTest)
  *   zsource -- source redshift
  *   flag_switch_deflection_off -- false: deflection is on, true: deflection is off; default is false
  *
+ *   # Cosmology - Any cosmological parameters that are not set will have default values
+ *
+ *  Omega_matter -- Total mass (baryons + dark matter) in the units of the critical density, optional
+ *  Omega_lambda -- Density in a cosmological constant, if not set it will be = 1 - Omega_matter
+ *  Omega_baryon -- Density in baryons
+ *  Omega_neutrino -- Density in neutrinos
+ *  hubble -- Hubble parameter in units of 100 km/s/Mpc
+ *
  *
  * </pre>
  */
@@ -179,12 +187,12 @@ public:
 	/// number of main halo profiles (or main halos)
 	IndexType NmainHalos;
   
-  /// print the cosmological parameters
-  void PrintCosmology(){cosmo->PrintCosmology();}
+	/// print the cosmological parameters
+	void PrintCosmology(){cosmo->PrintCosmology();}
 
 private:
   
-  COSMOLOGY *cosmo;
+	COSMOLOGY *cosmo;
   
 	GLAMER_TEST_FRIEND(LensTest)
 
@@ -205,6 +213,7 @@ private:
 
 	long *seed;
 
+	void readCosmology(InputParams& params);
 	void assignParams(InputParams& params);
 
 	/* the following parameters are read in from the parameter file */

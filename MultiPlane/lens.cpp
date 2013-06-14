@@ -42,6 +42,7 @@ Lens::Lens(InputParams& params,SourceHndl source, long *my_seed)
 {
   
   cosmo = new COSMOLOGY();
+  readCosmology(params);
   
 	if( (cosmo->getOmega_matter() + cosmo->getOmega_lambda()) != 1.0 ){
 		printf("ERROR: MultiLens can only handle flat universes at present.  Must change cosmology.\n");
@@ -148,6 +149,17 @@ void Lens::make_table(CosmoHndl cosmo){
 	//for (it=coorDist_table.begin(); it!=coorDist_table.end(); ++it)
 	//   std::cout << it->first << " => " << it->second << '\n';
 	table_set=true;
+}
+
+/// read in Cosmological Parameters
+void Lens::readCosmology(InputParams& params){
+	double tmp;
+
+	if( params.get("Omega_matter",tmp) ) cosmo->setOmega_matter(tmp,true);
+	if( params.get("Omega_lambda",tmp) ) cosmo->setOmega_lambda(tmp);
+	if( params.get("Omega_baryon",tmp) ) cosmo->setOmega_baryon(tmp);
+	if( params.get("Omega_neutrino",tmp) ) cosmo->setOmega_neutrino(tmp);
+	if( params.get("hubble",tmp) ) cosmo->sethubble(tmp);
 }
 
 /// Retrieve input parameters for construction
