@@ -9,11 +9,12 @@
 #define MULTIPLANE_H_
 
 #include "quadTree.h"
-#include "tables.h"
 #include "utilities_slsim.h"
 #include "planes.h"
 
 #include <map>
+
+GLAMER_TEST_USES(LensTest)
 
 /**
  * \brief A class to represents a lens with multiple planes.
@@ -57,7 +58,7 @@
  *   	0 or none, 1 or NSIE
  *   field_galaxy_mass_fraction -- if int_prof_gal_type is set, then this is the galaxy mass fraction
  *
- *   field_input_sim_file -- filename of the Millenium simulation data to be read in and used to populate the light cone with field halos
+ *   field_input_sim_file -- filename of the Millennium simulation data to be read in and used to populate the light cone with field halos
  *
  *   if field_input_sim_file is  _not_ set, then the field halos are generated from a mass function and the following are used:
  *   field_mass_func_type -- type of the halo mass function
@@ -69,14 +70,22 @@
  *   zsource -- source redshift
  *   flag_switch_deflection_off -- false: deflection is on, true: deflection is off; default is false
  *
+ *   # Cosmology - Any cosmological parameters that are not set will have default values
+ *
+ *  Omega_matter -- Total mass (baryons + dark matter) in the units of the critical density, optional
+ *  Omega_lambda -- Density in a cosmological constant, if not set it will be = 1 - Omega_matter
+ *  Omega_baryon -- Density in baryons
+ *  Omega_neutrino -- Density in neutrinos
+ *  hubble -- Hubble parameter in units of 100 km/s/Mpc
+ *
  *
  * </pre>
  */
 
 class Lens{
 public:
-	Lens(InputParams& params,CosmoHndl cosmo, long *seed);
-	Lens(InputParams& params, CosmoHndl cosmo, SourceHndl source, long *my_seed);
+	Lens(InputParams& params, long *seed);
+	Lens(InputParams& params, SourceHndl source, long *my_seed);
 	~Lens();
 
 	/// marks if the lens has been setup.
@@ -133,7 +142,7 @@ public:
 
 	// methods used for use with implanted sources
 
-	short ResetSourcePlane(CosmoHndl cosmo,double z,bool nearest, unsigned long GalID=0, double *xx=NULL);
+	short ResetSourcePlane(double z,bool nearest, unsigned long GalID=0, double *xx=NULL);
 
 	/// Revert the source redshift to the value it was when the Lens was created.
 	void RevertSourcePlane(){ toggle_source_plane = false;}
@@ -177,8 +186,16 @@ public:
 	Utilities::MixedVector<LensHaloHndl> main_halos;
 	/// number of main halo profiles (or main halos)
 	IndexType NmainHalos;
+  
+	/// print the cosmological parameters
+	void PrintCosmology(){cosmo->PrintCosmology();}
 
 private:
+  
+	COSMOLOGY *cosmo;
+  
+	GLAMER_TEST_FRIEND(LensTest)
+
 	/// number of lensing planes + 1 in the simulation, the last plant is the source plane
 	int Nplanes;
 	/// field of view in square degrees
@@ -196,6 +213,7 @@ private:
 
 	long *seed;
 
+	void readCosmology(InputParams& params);
 	void assignParams(InputParams& params);
 
 	/* the following parameters are read in from the parameter file */

@@ -17,10 +17,15 @@ using namespace std;
  * force calculation.
  */
 
-LensHaloUniNSIE::LensHaloUniNSIE(InputParams& params) : LensHaloBaseNSIE(params){
+LensHaloUniform::LensHaloUniform(InputParams& params) : LensHaloBaseNSIE(params){
 
   assignParams(params);
-
+  if(std::numeric_limits<float>::has_infinity){
+    Rmax = std::numeric_limits<float>::infinity();
+  }else{
+    Rmax = std::numeric_limits<float>::max();
+  }
+  
   perturb_Nmodes=3;
   perturb_modes = new double[3];
 
@@ -31,12 +36,12 @@ LensHaloUniNSIE::LensHaloUniNSIE(InputParams& params) : LensHaloBaseNSIE(params)
   PrintLens(false,false);
 }
 
-LensHaloUniNSIE::~LensHaloUniNSIE(){
+LensHaloUniform::~LensHaloUniform(){
 
 }
 
 
-void LensHaloUniNSIE::assignParams(InputParams& params){
+void LensHaloUniform::assignParams(InputParams& params){
 
 	//if(perturb_Nmodes > 0){
 	if(!params.get("kappa_uniform",kappa_uniform)) error_message1("kappa_uniform",params.filename());
@@ -56,7 +61,7 @@ void LensHaloUniNSIE::assignParams(InputParams& params){
 /** \ingroup ImageFinding
  * \brief Prints the parameters of the analytic lens to stdout
  */
-void LensHaloUniNSIE::PrintLens(bool show_substruct,bool show_stars){
+void LensHaloUniform::PrintLens(bool show_substruct,bool show_stars){
 	int i;
 
 	LensHaloBaseNSIE::PrintLens(show_substruct,show_stars);
@@ -72,7 +77,7 @@ void LensHaloUniNSIE::PrintLens(bool show_substruct,bool show_stars){
 }
 
 
-void LensHaloUniNSIE::implant_stars(double x, double y, unsigned long Nregions,long *seed, IMFtype type){
+void LensHaloUniform::implant_stars(double x, double y, unsigned long Nregions,long *seed, IMFtype type){
 
 	if(Nregions <= 0) return;
 	Point *centers;

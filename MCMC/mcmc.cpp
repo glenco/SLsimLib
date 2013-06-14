@@ -56,8 +56,8 @@ namespace
 	}
 }
 
-MCMC::MCMC(Lens& l, Sky& s, COSMOLOGY& c, const PixelData& d)
-: lens(l), sky(s), cosmo(c), data(d)
+MCMC::MCMC(Lens& l, Sky& s, const PixelData& d)
+: lens(l), sky(s), data(d)
 {
 }
 
@@ -99,7 +99,7 @@ std::vector<Parameters> MCMC::run(std::size_t n, double step, long* seed)
 		
 		// check if source plane has changed
 		if(lens.getSourceZ() != source.getZ())
-			lens.ResetSourcePlane(&cosmo, source.getZ(), false);
+			lens.ResetSourcePlane(source.getZ(), false);
 		
 		// create a grid
 		Grid grid(&lens, GRID_POINTS, center, range);
@@ -126,7 +126,7 @@ std::vector<Parameters> MCMC::run(std::size_t n, double step, long* seed)
 			
 			// check if source plane has changed
 			if(lens.getSourceZ() != source.getZ())
-				lens.ResetSourcePlane(&cosmo, source.getZ(), false);
+				lens.ResetSourcePlane(source.getZ(), false);
 			
 			// get source parameters
 			Parameters p;

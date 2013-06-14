@@ -9,7 +9,6 @@
 #define LENS_HALOS_H_
 
 #include "standard.h"
-#include "tables.h"
 #include "InputParams.h"
 #include "source.h"
 
@@ -133,10 +132,21 @@ public:
 	LensHaloNFW(InputParams& params);
 	virtual ~LensHaloNFW();
 
+	double ffunction(double x);
+	double gfunction(double x);
+	double g2function(double x);
+	// TODO BEN: the below functions alphaNFW, kappaNFW and gammaNFW are obsolete and better to be deleted to avoid confusion
+	void alphaNFW(double *alpha,double *x,double Rtrunc,double mass,double r_scale
+			,double *center,double Sigma_crit);
+	KappaType kappaNFW(double *x,double Rtrunc,double mass,double r_scale
+			,double *center,double Sigma_crit);
+	void gammaNFW(KappaType *gamma,double *x,double Rtrunc,double mass,double r_scale
+			,double *center,double Sigma_crit);
+
 	void initFromFile(float my_mass, long *seed, float vmax, float r_halfmass);
   
   /// set Rmax
-  void set_Rmax(float my_Rmax){Rmax=my_Rmax; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
+    void set_Rmax(float my_Rmax){Rmax=my_Rmax; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
   /// set scale radius
 	void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
 
@@ -198,6 +208,8 @@ public:
 	LensHaloPseudoNFW();
 	LensHaloPseudoNFW(InputParams& params);
 	~LensHaloPseudoNFW();
+
+	double mhat(double y, double beta);
 
 	/// set the slope of the surface density profile
 	void set_slope(double my_slope){beta=my_slope; make_tables();};
@@ -369,11 +381,21 @@ public:
 	LensHaloHernquist(InputParams& params);
 	virtual ~LensHaloHernquist();
 
+	double ffunction(double x);
+	double gfunction(double x);
+	double g2function(double x);
+	// TODO BEN: the below functions alphaHern, kappaHern and gammaHern are obsolete and better to be deleted to avoid confusion
+	void alphaHern(double *alpha,double *x,double Rtrunc,double mass,double r_scale
+			,double *center,double Sigma_crit);
+	KappaType kappaHern(double *x,double Rtrunc,double mass,double r_scale
+			,double *center,double Sigma_crit);
+	void gammaHern(KappaType *gamma,double *x,double Rtrunc,double mass,double r_scale
+			,double *center,double Sigma_crit);
 	//void initFromFile(float my_mass, long *seed, float vmax, float r_halfmass);
 
-  /// set Rmax
-  void set_Rmax(float my_Rmax){Rmax=my_Rmax; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
-  /// set scale radius
+	/// set Rmax
+	void set_Rmax(float my_Rmax){Rmax=my_Rmax; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
+	/// set scale radius
 	void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
 
 protected:

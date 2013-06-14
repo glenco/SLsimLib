@@ -37,9 +37,13 @@ namespace
  * \ingroup Constructor
  * \brief allocates space for the halo trees and the inout lens, if there is any
  */
-Lens::Lens(InputParams& params, CosmoHndl cosmo, SourceHndl source, long *my_seed)
+Lens::Lens(InputParams& params,SourceHndl source, long *my_seed)
 : seed(my_seed), Nhalos(0), halo_pos(0)
 {
+  
+  cosmo = new COSMOLOGY();
+  readCosmology(params);
+  
 	if( (cosmo->getOmega_matter() + cosmo->getOmega_lambda()) != 1.0 ){
 		printf("ERROR: MultiLens can only handle flat universes at present.  Must change cosmology.\n");
 		exit(1);
@@ -86,9 +90,12 @@ Lens::Lens(InputParams& params, CosmoHndl cosmo, SourceHndl source, long *my_see
 /**
  * \brief Creates an empty lens. Main halos and field halos need to be inserted by hand from the user.
  */
-Lens::Lens(InputParams& params, CosmoHndl cosmo, long *my_seed)
+Lens::Lens(InputParams& params, long *my_seed)
 : seed(my_seed), Nhalos(0), halo_pos(0)
 {
+  
+  cosmo = new COSMOLOGY();
+  
 	if( (cosmo->getOmega_matter() + cosmo->getOmega_lambda()) != 1.0 ){
 		printf("ERROR: MultiLens can only handle flat universes at present.  Must change cosmology.\n");
 		exit(1);
@@ -142,6 +149,17 @@ void Lens::make_table(CosmoHndl cosmo){
 	//for (it=coorDist_table.begin(); it!=coorDist_table.end(); ++it)
 	//   std::cout << it->first << " => " << it->second << '\n';
 	table_set=true;
+}
+
+/// read in Cosmological Parameters
+void Lens::readCosmology(InputParams& params){
+	double tmp;
+
+	if( params.get("Omega_matter",tmp) ) cosmo->setOmega_matter(tmp,true);
+	if( params.get("Omega_lambda",tmp) ) cosmo->setOmega_lambda(tmp);
+	if( params.get("Omega_baryon",tmp) ) cosmo->setOmega_baryon(tmp);
+	if( params.get("Omega_neutrino",tmp) ) cosmo->setOmega_neutrino(tmp);
+	if( params.get("hubble",tmp) ) cosmo->sethubble(tmp);
 }
 
 /// Retrieve input parameters for construction
@@ -278,7 +296,7 @@ void Lens::assignParams(InputParams& params){
 
 		if(field_input_sim_file.size() < 1 && field_int_prof_type == nsie_lens){
 			ERROR_MESSAGE();
-			cout << "The NSIE internal profile works only for Millenium DM simulations for now." << endl;
+			cout << "The NSIE internal profile works only for Millennium DM simulations for now." << endl;
 			cout << "Set field_input_simulation_file in sample_paramfile." << endl;
 			exit(1);
 		}
@@ -455,7 +473,7 @@ void Lens::printMultiLens(){
 void Lens::buildLensPlanes(
 		CosmoHndl cosmo /// the cosmology
 		){
-	int j, Ntot;
+	int jj, Ntot;
 	double z1, z2;
 	int j1,j2;
 	std::map<double,double>::iterator ind;
@@ -465,8 +483,8 @@ void Lens::buildLensPlanes(
 	assert(plane_redshifts.size() == Nplanes);
 	assert(plane_redshifts[Nplanes-1] == zsource);
 
-	for(j=0,Ntot=0;j<Nplanes-1;j++){
-		if(main_halo_on && j == (main_halo_on % Nplanes)){
+	for(jj=0,Ntot=0;jj<Nplanes-1;jj++){
+		if(main_halo_on && jj == (main_halo_on % Nplanes)){
 			std::cout << "Building main halos lensing plane" << std::endl;
 			lensing_planes.push_back(new LensPlaneSingular(main_halos.data(),main_halos.size()));
 		}
@@ -476,22 +494,22 @@ void Lens::buildLensPlanes(
 			 * If there is a plane with an input lens on it, it is skipped over
 			 * since it will not contain any field_halos
 			 */
-			if(j == 0) z1 = 0.0;
+			if(jj == 0) z1 = 0.0;
 			else{
-				z1 = redshift_from_dist_table(coorDist_table, Dl[j]-0.5*dDl[j]);
+				z1 = redshift_from_dist_table(coorDist_table, Dl[jj]-0.5*dDl[jj]);
 			}
 
-			if(main_halo_on && j-1 == (main_halo_on % Nplanes)){
-				z1 = redshift_from_dist_table(coorDist_table, Dl[j] - 0.5*(Dl[j] - Dl[j-2]));
+			if(main_halo_on && jj-1 == (main_halo_on % Nplanes)){
+				z1 = redshift_from_dist_table(coorDist_table, Dl[jj] - 0.5*(Dl[jj] - Dl[jj-2]));
 			}
 
-			if(j == Nplanes-2) z2 = zsource;
+			if(jj == Nplanes-2) z2 = zsource;
 			else{
-				z2 = redshift_from_dist_table(coorDist_table, Dl[j] + 0.5*dDl[j+1]);
+				z2 = redshift_from_dist_table(coorDist_table, Dl[jj] + 0.5*dDl[jj+1]);
 			}
 
-			if(main_halo_on && j+1 == (main_halo_on % Nplanes)){
-				z2 = redshift_from_dist_table(coorDist_table, Dl[j] + 0.5*(Dl[j+2] - Dl[j]));
+			if(main_halo_on && jj+1 == (main_halo_on % Nplanes)){
+				z2 = redshift_from_dist_table(coorDist_table, Dl[jj] + 0.5*(Dl[jj+2] - Dl[jj]));
 			}
 
 			/// Find which field_halos are in redshift range
@@ -504,20 +522,33 @@ void Lens::buildLensPlanes(
 
 			// TODO Ben: test this
 			double sigma_back = cosmo->haloMassInBufferedCone(field_min_mass,z1,z2,fieldofview*pow(pi/180,2),field_buffer,field_mass_func_type,mass_func_PL_slope)
-			            		 /(pi*pow(sqrt(fieldofview/pi)*pi*Dl[j]/180/(1+plane_redshifts[j]) + field_buffer,2));
+			            		 /(pi*pow(sqrt(fieldofview/pi)*pi*Dl[jj]/180/(1+plane_redshifts[jj]) + field_buffer,2));
 
 			double sb=0.0;
+      //double max_r = 0,tmp;
 			for(int m=0;m<j2-j1;m++){
 				sb+=field_halos[j1+m]->get_mass();
-			}
+        assert(Dl[jj] > 0.0);
+        assert(plane_redshifts[jj] > 0.0);
+        //** test lines********
+        //if(max_r < (tmp = halo_pos[j1+m][0]*halo_pos[j1+m][0] + halo_pos[j1+m][1]*halo_pos[j1+m][1])) max_r = tmp;
 
-			sb /= (pi*pow(sqrt(fieldofview/pi)*pi*Dl[j]/180/(1+plane_redshifts[j]) + field_buffer,2));
+        // convert to proper distance on the lens plane
+        halo_pos[j1+m][0] *= Dl[jj]/(1+plane_redshifts[jj]);
+        halo_pos[j1+m][1] *= Dl[jj]/(1+plane_redshifts[jj]);
+        //std::cout << "j1+m = " << j1+m << std::endl;
+			}
+      
+      //max_r=sqrt(max_r);
+      
+
+			sb /= (pi*pow(sqrt(fieldofview/pi)*pi*Dl[jj]/180/(1+plane_redshifts[jj]) + field_buffer,2));
 
 			std::cout << sigma_back << " " << sb << " " << sb/sigma_back - 1 << std::endl;
 			if(sim_input_flag) sigma_back = sb;
 
 			/// Use other constructor to create halo data
-			std::cout << "  Building lensing plane " << j << " number of halos: " << j2-j1 << std::endl;
+			std::cout << "  Building lensing plane " << jj << " number of halos: " << j2-j1 << std::endl;
 
 			lensing_planes.push_back(new LensPlaneTree(&halo_pos[j1],&field_halos[j1],j2-j1,sigma_back));
 
@@ -704,8 +735,8 @@ void Lens::setCoorDistFromFile(CosmoHndl cosmo){
 	assert(plane_redshifts.size() == Nplanes);
 }
 
-/*
- * Creates main lens halo as set up in the parmeter file.
+/**
+ * \brief Creates main lens halo as set up in the parmeter file.
  *
  */
 void Lens::createMainHalos(
@@ -732,7 +763,7 @@ void Lens::createMainHalos(
 		main_halos.push_back(new LensHaloAnaNSIE(params));
 		break;
 	case uni_lens:
-		main_halos.push_back(new LensHaloUniNSIE(params));
+		main_halos.push_back(new LensHaloUniform(params));
 		break;
 	case moka_lens:
 		main_halos.push_back(new LensHaloMOKA(params));
@@ -762,8 +793,8 @@ void Lens::createMainHalos(
 		main_halos[i]->setInternalParams(cosmo,source);
 }
 
-/*
- * Inserts a sequense of main lens halos and ads them to the existing ones.
+/**
+ * \brief Inserts a sequense of main lens halos and ads them to the existing ones.
  * Then all lensing planes are updated accordingly.
  */
 void Lens::insertMainHalos(
@@ -793,8 +824,8 @@ void Lens::insertMainHalos(
 	updateMainHaloLensPlane();
 }
 
-/*
- * Inserts a sequense of main lens halos and deletes all previous ones.
+/**
+ * \brief Inserts a sequense of main lens halos and deletes all previous ones.
  * Then all lensing planes are updated accordingly.
  */
 void Lens::insertNewMainHalos(
@@ -829,8 +860,8 @@ void Lens::insertNewMainHalos(
 	buildLensPlanes(cosmo);
 }
 
-/*
- * Inserts a single main lens halo.
+/**
+ * \brief Inserts a single main lens halo.
  * Then all lensing planes are updated accordingly.
  */
 void Lens::insertSingleMainHalo(
@@ -855,8 +886,8 @@ void Lens::insertSingleMainHalo(
 
 	updateMainHaloLensPlane();
 }
-/*
- * Inserts a single main lens halo and deletes all previous ones.
+/**
+ * \brief Inserts a single main lens halo and deletes all previous ones.
  * Then all lensing planes are updated accordingly.
  */
 void Lens::insertNewSingleMainHalo(
@@ -898,7 +929,8 @@ void Lens::createFieldHalos(
 	std::vector<double> zbins,Nhalosbin(Nzbins);
 	unsigned long i,k,j_max,k1,k2;
 	std::vector<double> Logm;
-	double pos_max[2], z_max;
+	//double pos_max[2];
+  double z_max;
 	const double MaxLogm=16.;
 	double z1, z2, mass_max,mass_tot,Nhaloestot;
 	int np;
@@ -947,7 +979,7 @@ void Lens::createFieldHalos(
 	Nhalosbin.resize(Nmassbin);
 	fill_linear(Logm,Nmassbin,log10(field_min_mass),MaxLogm);
 
-	double *pos;
+	double *theta_pos,*theta2;
 	int j = 0;
 	k2 = 0;
 	std::vector<double>::iterator it1,it2;
@@ -984,13 +1016,13 @@ void Lens::createFieldHalos(
 
 			assert(rr == rr);
 
-			pos = new double[3];
+			theta_pos = new double[3];
 
 			theta = 2*pi*ran2(seed);
 
-			pos[0] = rr*cos(theta)*Ds;
-			pos[1] = rr*sin(theta)*Ds;
-			pos[2] = 0.0;
+			theta_pos[0] = rr*cos(theta);//*Ds;
+			theta_pos[1] = rr*sin(theta);//*Ds;
+			theta_pos[2] = 0.0;
 
 			switch(field_int_prof_type){
 			case null_lens:
@@ -1048,12 +1080,12 @@ void Lens::createFieldHalos(
 			if(mass > mass_max) {
 				mass_max = mass;
 				j_max = i;
-				pos_max[0] = pos[0];
-				pos_max[1] = pos[1];
+				//pos_max[0] = theta_pos[0];
+				//pos_max[1] = theta_pos[1];
 				z_max = halo_zs_vec[i];
 			}
 
-			halo_pos_vec.push_back(pos);
+			halo_pos_vec.push_back(theta_pos);
 
       //Should we incriment j twice ??
 			++j;
@@ -1072,7 +1104,12 @@ void Lens::createFieldHalos(
 				field_halos[j]->setZlens(halo_zs_vec[i]);
 				field_halos[j]->initFromMassFunc(mass*field_galaxy_mass_fraction,Rmax,rscale,field_prof_internal_slope,seed);
 
-				halo_pos_vec.push_back(pos);
+        // Another copy of this position must be made to avoid rescaling it twice when it is converted into
+        // distance on the lens plane in Lens::buildLensPlanes()
+        theta2 = new double[3];
+        theta2[0]=theta_pos[0]; theta2[1]=theta_pos[1]; theta2[3]=theta_pos[3];
+
+				halo_pos_vec.push_back(theta2);
 
 				++j;
 			}
@@ -1113,7 +1150,7 @@ void Lens::readInputSimFile(CosmoHndl cosmo){
 	unsigned long haloid,idd,np;
 	double mo=7.3113e10,M1=2.8575e10,gam1=7.17,gam2=0.201,be=0.557;
 
-	double rmax=0,rtmp=0;
+	double rmax2=0,rtmp=0;
 
 	std::ifstream file_in(field_input_sim_file.c_str());
 	if(!file_in){
@@ -1136,7 +1173,7 @@ void Lens::readInputSimFile(CosmoHndl cosmo){
 	// read in data
 	int j_max;
 	double mass_max=0,R_max=0,V_max=0,minmass=1e30;
-	double *position;
+	double *theta,*theta2;
 	int ncolumns = 9;
 
 	void *addr[ncolumns];
@@ -1183,12 +1220,12 @@ void Lens::readInputSimFile(CosmoHndl cosmo){
 		}
 
 		// position on lens plane
-		position = new double[2];
-		double Ds = cosmo->angDist(0,z);
-		position[0] = -ra*pi/180.*Ds;
-		position[1] = dec*pi/180.*Ds;
+		theta = new double[2];
+		//double Ds = cosmo->angDist(0,z);
+		theta[0] = -ra*pi/180.;
+		theta[1] = dec*pi/180.;
 
-    if(rmax < (rtmp = (position[0]*position[0]+position[1]*position[1])/Ds/Ds)) rmax = rtmp;
+    if(rmax2 < (rtmp = (theta[0]*theta[0]+theta[1]*theta[1]))) rmax2 = rtmp;
     
 		if(np > 0.0 && vdisp > 0.0 && z <= zsource){
 
@@ -1254,7 +1291,7 @@ void Lens::readInputSimFile(CosmoHndl cosmo){
 			if(field_halos[j]->get_Rmax() > R_max) R_max = field_halos[j]->get_Rmax();
 			if(vdisp > V_max) V_max = vdisp;
 
-			halo_pos_vec.push_back(position);
+			halo_pos_vec.push_back(theta);
 
 			if(mass > mass_max) {
 				mass_max = mass;
@@ -1280,7 +1317,11 @@ void Lens::readInputSimFile(CosmoHndl cosmo){
 				field_halos[j]->setZlens(z);
 				field_halos[j]->initFromFile(mass*field_galaxy_mass_fraction,seed,vmax,r_halfmass*cosmo->gethubble());
 
-				halo_pos_vec.push_back(position);
+        // Another copy of this position must be made to avoid rescaling it twice when it is converted into
+        // distance on the lens plane in Lens::buildLensPlanes()
+        theta2 = new double[2];
+        theta2[0]=theta[0]; theta2[1]=theta[1];
+				halo_pos_vec.push_back(theta2);
 
 				++j;
 			}
@@ -1307,7 +1348,8 @@ void Lens::readInputSimFile(CosmoHndl cosmo){
 		halo_pos[i] = halo_pos_vec[i];
 	}
   
-  fieldofview = pi*rmax*pow(180/pi,2);  // Resets field of view to estimate of inputed one
+  std::cout << "Overiding input file field of view to make it fit the simulation light cone." << std::endl;
+  fieldofview = pi*rmax2*pow(180/pi,2);  // Resets field of view to range of input galaxies
 
 	std::cout << "sorting in Lens::readInputSimFile()" << std::endl;
 	// sort the field_halos by readshift
@@ -1330,9 +1372,8 @@ void Lens::readInputSimFile(CosmoHndl cosmo){
  *
  */
 short Lens::ResetSourcePlane(
-		CosmoHndl cosmo           /// cosmology
-		,double z                 /// redshift of implanted source
-		,bool nearest             /** If true, set the source plane to the nearest (in coordinate distance)
+		double z                 /// redshift of implanted source
+		,bool nearest           /** If true, set the source plane to the nearest (in coordinate distance)
 			                      * lensing plane that was created already.  This can be used to avoid self-lensing
 			                      * by the halo of the source.  If the source is at higher redshift than the simulation
 			                      * volume the source will be at its real redshift.
@@ -1354,12 +1395,25 @@ short Lens::ResetSourcePlane(
 	// distance to new source plane
 	double Ds = cosmo->coorDist(0,z);
 	// find bounding index
-	locateD(Dl.data()-1,Nplanes-1,Ds,&j);
+	locateD(Dl.data()-1,Nplanes,Ds,&j);
 	// j is the index of the next plane at higher redshift, This plane will be temporarily replaced and used as a source plane
 	assert(j <= Nplanes && j >=0);
 
-	if(j > 0)
+  if(j >= Nplanes-1){
+	  j--;
+	}
+  else if(j > 0)
 	{
+    //unsigned long ind;
+    std::map<double,double>::iterator ind;
+    
+		//locateD(coorDist_table-1,NTABLE,(Dl[j]-0.5*dDl[j]),&ind);
+    ind = coorDist_table.upper_bound(Dl[j]-0.5*dDl[j]);
+		//double z1 = redshift_table[ind];
+    //ind = coorDist_table.lower_bound((Dl[j]-0.5*dDl[j]));
+    double z1 = ind->second;
+		if(nearest) j = (z>=z1) ? j : j-1;  // reset j to the nearest plane
+
 		// check if source plane coincides with previous lens plane
 		if(Dl[j-1] == Ds)
 			--j;
@@ -1381,7 +1435,7 @@ short Lens::ResetSourcePlane(
 		// if nearest==false or the source is at higher redshift than the last plane use the real redshift
 		Ds_implant = Ds;
 		zs_implant = z;
-		if(j > 0) dDs_implant = Ds - Dl[j-1];
+		if(j > 0) dDs_implant = cosmo->coorDist(plane_redshifts[j-1],z); //Ds - Dl[j-1];
 		else  dDs_implant = Ds;
 	}
 

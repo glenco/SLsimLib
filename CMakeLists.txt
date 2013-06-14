@@ -57,7 +57,6 @@ set(HEADERS
 	include/List_old.h
 	include/map_images.h
 	include/mcmc.h
-	include/model.h
 	include/MOKAlens.h
 	include/nestedsampler.h
 	include/nsie.h
@@ -77,7 +76,6 @@ set(HEADERS
 	include/source_models.h
 	include/sourceAnaGalaxy.h
 	include/standard.h
-	include/tables.h
 	include/Tree.h
 	include/tree_maintenance.h
 	include/TreeNB.h

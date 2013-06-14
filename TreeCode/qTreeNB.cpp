@@ -49,11 +49,9 @@ QTreeNB::QTreeNB(PosType **xp,IndexType *particles,IndexType nparticles
     current = top;
 }
 
+/// Free treeNB. Does not free the particle positions, masses or sizes
 QTreeNB::~QTreeNB(){
 //	void TreeQuad::freeQTreeNB(QTreeNBHndl tree){
-	/* free treeNB
-	 *  does not free the particle positions, masses or sizes
-	 */
 
 	empty();
   	delete top;
