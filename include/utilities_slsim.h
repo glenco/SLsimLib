@@ -31,8 +31,8 @@ namespace Utilities
 		};
 #else
 		using std::type_index;
-	}
 #endif
+	}
 	
 	template <class T>
 	void Matrix(T **matrix, long rows, long cols){
