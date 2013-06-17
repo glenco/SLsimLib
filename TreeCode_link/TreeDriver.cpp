@@ -1279,6 +1279,75 @@ void TreeStruct::_FindAllBoxNeighbors(Branch *leaf,ListHndl neighbors){
 	return;
 }
 */
+
+/// Treating the image as an arc, find its parameters
+void ImageInfo::ArcInfo(
+		double *area        /// area of image with surface brightness limit
+		,double *area_circ   /// 4 * area / circumference^2 of the image, a measure of thinness
+		,double theta        ///
+		){
+
+	throw std::runtime_error("ImageInfo::ArcInfo() is not finished yet.");
+
+	double tmp,dist1,dist2,circumference;
+	Point *center,*tmp_point,*farthest_p,*furthest_p2;
+	Kist<Point> image;
+//	ImageInfo tmp_image;
+
+
+
+	// find highest surface brightness point and the image above the surface brightness limit
+	for(tmp=0,imagekist->MoveToTop();!(imagekist->OffBottom());imagekist->Down()){
+		if(tmp < imagekist->getCurrent()->surface_brightness){
+			tmp = imagekist->getCurrent()->surface_brightness;
+			center = innerborder->getCurrent();
+		}
+		/*if(imagekist->getCurrent()->surface_brightness > sb_limit){
+			tmp_image.imagekist->InsertBeforeCurrent(imagekist->getCurrent());
+			tmp_image.area += (imagekist->getCurrent()->gridsize)*(imagekist->getCurrent()->gridsize);
+		}*/
+	}
+
+	//findborders4(grid->i_tree,&tmp_image);
+	unsigned long Nborder = Utilities::order_curve4(innerborder);
+	innerborder->MoveToBottom();
+	while(innerborder->Nunits() > Nborder) innerborder->TakeOutCurrent();
+
+
+	// find the farthest point from the center and calculate the circumference
+	double x[2],circumfrance = 0.0;
+	innerborder->MoveToTop();
+	x[0] = innerborder->getCurrent()->x[0];
+	x[1] = innerborder->getCurrent()->x[1];
+	for(tmp=0,dist1=0;!(innerborder->OffBottom());innerborder->Down()){
+		tmp_point = innerborder->getCurrent();
+		tmp = pow(tmp_point->x[0] - center->x[0],2) + pow(tmp_point->x[1] - center->x[1],2);
+		if(tmp < dist1){
+			dist1 = tmp;
+			farthest_p = tmp_point;
+		}
+		circumference += sqrt( pow(tmp_point->x[0] - x[0],2) + pow(tmp_point->x[1] - x[1],2) );
+		x[0] = tmp_point->x[0];
+		x[1] = tmp_point->x[1];
+	}
+
+	dist1 = sqrt(dist1);
+
+	Utilities::windings(center->x,innerborder,area);
+	*area_circ = *area*4/circumference/circumference;
+
+	for(tmp=0,dist2=0,innerborder->MoveToTop();!(innerborder->OffBottom());innerborder->Down()){
+		tmp_point = innerborder->getCurrent();
+		tmp = pow(tmp_point->x[0] - farthest_p->x[0],2) + pow(tmp_point->x[1] - farthest_p->x[1],2);
+		if(tmp < dist2){
+			dist2 = tmp;
+			furthest_p2 = tmp_point;
+		}
+	}
+	dist2 = sqrt(dist2);
+}
+
+
 /// Print positions and gridsizes of all points in all the images to stdout
 void PrintImages(ImageInfo *images,long Nimages){
 	unsigned long i;

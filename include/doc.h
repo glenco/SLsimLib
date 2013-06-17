@@ -37,11 +37,8 @@
 		####### General ##########
 		outputfile         output    # will contain the image magnifications
 
-		Nplanes	   	   10 		    # number of lens planes
-
 		deflection_off		0		# switches deflection off, default is 0
-		field_off		0			# run without field halos, default is 0
-
+		
 		read_redshift_planes   0 		# 0 - no, 1 - yes , reads in the redshifts of the lensing planes from a file
 		redshift_planes_file    Z.txt   # an asci file with redshifts of the planes, excluding the source redshift
 
@@ -49,7 +46,11 @@
 		main_halo_on	   1    # 0: no main halo, 1 or else - a main halo
 		main_DM_halo_type       1    # DM internal profile type: 0 or nolens, 1 or NFW, 2 or PseudoNFW, 3 or PowerLaw, 4 or NSIE, 5 or AnaLens, 6 or UniLens, 7 or MOKALens, 8 or DummyLens
 		main_galaxy_halo_type   1	# if set, a galaxy profile is chosen: 0 or none, 1 or NSIE
-
+		
+		###### Field halos ######
+		field_off           0   # run without field halos, default is 0
+		field_Nplanes       10  # number of field planes 
+		
 		###### Field halos type ##########
 
 		field_internal_profile         1    # DM internal profile type: 0 or nolens, 1 or NFW, 2 or PseudoNFW, 3 or PowerLaw, 4 or NSIE, 5 or AnaLens, 6 or UniLens, 7 or MOKALens, 8 or DummyLens

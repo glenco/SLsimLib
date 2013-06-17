@@ -10,6 +10,8 @@
 
 #include <Kist.h>
 #include <pointlist.h>
+#include <Tree.h>
+//#include <grid_maintenance.h>
 
 #ifndef gate_declare
 #define gate_declare
@@ -50,6 +52,8 @@ typedef struct ImageInfo{
   unsigned long getNimagePoints(){return imagekist->Nunits();}
   void PrintImageInfo();
   void copy(ImageInfo &image);
+
+  void ArcInfo(double *area,double *area_circ,double theta);
 
 } ImageInfo;
 

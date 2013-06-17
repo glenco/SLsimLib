@@ -45,7 +45,12 @@ struct TmpParams{
   int start;
   int size;
   int NPlanes;
-  Lens *lens;
+  bool flag_switch_deflection_off;
+  double charge;
+  LensPlane** lensing_planes;
+  double* plane_redshifts;
+  double* Dl;
+  double* dDl;
 };
 
 void Lens::rayshooterInternal(
@@ -60,9 +65,9 @@ void Lens::rayshooterInternal(
 
 // If a lower redshift source is being used
   if(toggle_source_plane){
-    NLastPlane = index_of_new_sourceplane + 1;
+    NLastPlane = index_of_new_sourceplane;
 
-    assert(NLastPlane <= Nplanes);
+    assert(NLastPlane <= lensing_planes.size());
     tmpDs = Dl[index_of_new_sourceplane];
     tmpdDs = dDl[index_of_new_sourceplane];
     tmpZs = plane_redshifts[index_of_new_sourceplane];
@@ -71,7 +76,7 @@ void Lens::rayshooterInternal(
     dDl[index_of_new_sourceplane] = dDs_implant;
     plane_redshifts[index_of_new_sourceplane] = zs_implant;
   }else{
-    NLastPlane = Nplanes;
+    NLastPlane = lensing_planes.size();
   }
 
   int nthreads, rc;
@@ -95,7 +100,12 @@ void Lens::rayshooterInternal(
       thread_params[i].size = (int)Npoints - (nthreads-1)*chunk_size;
     thread_params[i].start = i*chunk_size;
     thread_params[i].tid = i;
-    thread_params[i].lens = this;
+    thread_params[i].flag_switch_deflection_off = flag_switch_deflection_off;
+    thread_params[i].charge = charge;
+    thread_params[i].lensing_planes = &lensing_planes[0];
+    thread_params[i].plane_redshifts = &plane_redshifts[0];
+    thread_params[i].Dl = &Dl[0];
+    thread_params[i].dDl = &dDl[0];
     thread_params[i].NPlanes = NLastPlane;
     rc = pthread_create(&threads[i], NULL, compute_rays_parallel, (void*) &thread_params[i]);
     assert(rc==0);
@@ -117,15 +127,14 @@ void Lens::rayshooterInternal(
 
 }
 
-void *compute_rays_parallel(void *_p){
+void *compute_rays_parallel(void *_p)
+{
   TmpParams *p = (TmpParams *) _p;
   bool kappa_off = p->kappa_off;
-  Lens *lens = p->lens;
-  int tid        = p->tid;
   int chunk_size = p->size;
   int start      = p->start;
   int end        = start + chunk_size;
-  
+    
   int i, j;
   
   double xx[2],fac;
@@ -135,17 +144,14 @@ void *compute_rays_parallel(void *_p){
   double xminus[2],xplus[2];
   double kappa_minus,gamma_minus[3],kappa_plus,gamma_plus[3];
   
-  assert(p->NPlanes > 0);
-  // If a lower redshift source is being used
-
   for(i = start; i< end; i++){
     
 	  if(p->i_points[i].in_image == MAYBE)
 			 continue;
 
     // find position on first lens plane in comoving units
-    p->i_points[i].image->x[0] = p->i_points[i].x[0]*lens->Dl[0];
-    p->i_points[i].image->x[1] = p->i_points[i].x[1]*lens->Dl[0];
+    p->i_points[i].image->x[0] = p->i_points[i].x[0]*p->Dl[0];
+    p->i_points[i].image->x[1] = p->i_points[i].x[1]*p->Dl[0];
     
     xminus[0] = 0;
     xminus[1] = 0;
@@ -161,23 +167,23 @@ void *compute_rays_parallel(void *_p){
     p->i_points[i].gamma[1] = 0;
     p->i_points[i].gamma[2] = 0;
     
-    for(j = 0; j < p->NPlanes-1 ; j++){  // each iteration leaves i_point[i].image on plane (j+1)
+    for(j = 0; j < p->NPlanes ; ++j){  // each iteration leaves i_point[i].image on plane (j+1)
       
       // convert to physical coordinates on the plane j
       
-      xx[0] = p->i_points[i].image->x[0]/(1+lens->plane_redshifts[j]);
-      xx[1] = p->i_points[i].image->x[1]/(1+lens->plane_redshifts[j]);
+      xx[0] = p->i_points[i].image->x[0]/(1+p->plane_redshifts[j]);
+      xx[1] = p->i_points[i].image->x[1]/(1+p->plane_redshifts[j]);
       
       assert(xx[0] == xx[0] && xx[1] == xx[1]);
 
-      lens->lensing_planes[j]->force(alpha,&kappa,gamma,xx,kappa_off);
+      p->lensing_planes[j]->force(alpha,&kappa,gamma,xx,kappa_off);
 
-      cc = lens->charge*lens->dDl[j+1];
+      cc = p->charge*p->dDl[j+1];
 
       assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
 
       if(!kappa_off){
-    	  fac = 1/(1+lens->plane_redshifts[j]);
+    	  fac = 1/(1+p->plane_redshifts[j]);
     	  /* multiply by fac to obtain 1/comoving_distance/physical_distance
     	   * such that a multiplication with the charge (in units of physical distance)
     	   * will result in a 1/comoving_distance quantity */
@@ -190,11 +196,11 @@ void *compute_rays_parallel(void *_p){
     	  assert(kappa == kappa);
       }
       
-      if(lens->flag_switch_deflection_off)
+      if(p->flag_switch_deflection_off)
     	  alpha[0] = alpha[1] = 0.0;
             
-      aa = (lens->dDl[j+1]+lens->dDl[j])/lens->dDl[j];
-      bb = lens->dDl[j+1]/lens->dDl[j];
+      aa = (p->dDl[j+1]+p->dDl[j])/p->dDl[j];
+      bb = p->dDl[j+1]/p->dDl[j];
       
       xplus[0] = aa*p->i_points[i].image->x[0] - bb*xminus[0] - cc*alpha[0];
       xplus[1] = aa*p->i_points[i].image->x[1] - bb*xminus[1] - cc*alpha[1];
@@ -207,16 +213,16 @@ void *compute_rays_parallel(void *_p){
       
       if(!kappa_off){
 	
-    	  aa = (lens->dDl[j+1]+lens->dDl[j])*lens->Dl[j]/lens->dDl[j]/lens->Dl[j+1];
+    	  aa = (p->dDl[j+1]+p->dDl[j])*p->Dl[j]/p->dDl[j]/p->Dl[j+1];
 	
     	  if(j>0){
-    		  bb = lens->dDl[j+1]*lens->Dl[j-1]/lens->dDl[j]/lens->Dl[j+1];
+    		  bb = p->dDl[j+1]*p->Dl[j-1]/p->dDl[j]/p->Dl[j+1];
     	  }
     	  else
     		  bb = 0;
 	
 
-    	  cc = lens->charge*lens->dDl[j+1]*lens->Dl[j]/lens->Dl[j+1];
+    	  cc = p->charge*p->dDl[j+1]*p->Dl[j]/p->Dl[j+1];
 	
     	  kappa_plus = aa*p->i_points[i].kappa - bb*kappa_minus
     			  - cc*(kappa*p->i_points[i].kappa + gamma[0]*p->i_points[i].gamma[0] + gamma[1]*p->i_points[i].gamma[1]);
@@ -246,8 +252,8 @@ void *compute_rays_parallel(void *_p){
     }
     
     // Convert units back to angles.
-    p->i_points[i].image->x[0] /= lens->Dl[p->NPlanes-1];
-    p->i_points[i].image->x[1] /= lens->Dl[p->NPlanes-1];
+    p->i_points[i].image->x[0] /= p->Dl[p->NPlanes];
+    p->i_points[i].image->x[1] /= p->Dl[p->NPlanes];
     
     p->i_points[i].kappa = 1 - p->i_points[i].kappa;
 
@@ -292,7 +298,8 @@ void Lens::rayshooterInternal(
 		,bool kappa_off		/// if true -- no kappa and gamma values are calculated
 		){
 
-  int j;
+  std::size_t j;
+  std::size_t NPlanes = lensing_planes.size();
 
   double xx[2],fac;
   double aa,bb,cc;
@@ -301,7 +308,7 @@ void Lens::rayshooterInternal(
   double xminus[2],xplus[2];
   double kappa_tmp_minus,gamma_tmp_minus[3],kappa_tmp_plus,gamma_tmp_plus[3];
 
-  assert(Nplanes > 0);
+  assert(NPlanes > 0);
   // If a lower redshift source is being used
 
     // find position on first lens plane in comoving units
@@ -322,7 +329,7 @@ void Lens::rayshooterInternal(
     gamma[1] = 0;
     gamma[2] = 0;
 
-    for(j = 0; j < Nplanes-1 ; j++){  // each iteration leaves i_point[i].image on plane (j+1)
+    for(j = 0; j < NPlanes; ++j){  // each iteration leaves i_point[i].image on plane (j+1)
 
       // convert to physical coordinates on the plane j
 
@@ -406,8 +413,8 @@ void Lens::rayshooterInternal(
     }
 
     // Convert units back to angles.
-    x_source[0] /= Dl[Nplanes-1];
-    x_source[1] /= Dl[Nplanes-1];
+    x_source[0] /= Dl[NPlanes];
+    x_source[1] /= Dl[NPlanes];
 
     *kappa = 1 - *kappa;
 

@@ -212,7 +212,7 @@ unsigned long order_curve4(Point *curve,long Npoints){
 
 	return end+1;
 }
-/// Overloads and is dependent on version that takes a point array
+/// Overloads and is dependent on version that takes a point array.  Returns number of points that have been ordered.
 unsigned long order_curve4(Kist<Point> * curve){
 	unsigned long i=0,Npoints = curve->Nunits();
 	bool bo;
@@ -1559,7 +1559,6 @@ int windings(
  *  \brief determines the whether a point is inside a curve, that has been stretched 1.2 times
  *  returns the area of the stretched curve
  */
-
 int windings2(
 		double *x              /// Point for which the winding number is calculated
 		,Point *points_original         /// The points on the border.  These must be ordered.
@@ -1617,7 +1616,7 @@ int windings2(
 	return wn;
 }
 
-/*
+/**
  * writes in four files the critical curves and the caustics for all the curves found and also for a
  * specified one (ind_causic)
  */
