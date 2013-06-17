@@ -69,8 +69,9 @@ void alphaNSIE(
   angle[1]= -0.5*sqrt(f)*(RCphase-SCphase)/fp;
 
   Utilities::rotation(alpha,angle,-theta);
-  alpha[0] = -alpha[0];
-  alpha[1] = -alpha[1];
+
+  alpha[0] = -1.0*alpha[0];
+  alpha[1] = -1.0*alpha[1];
 
   if(alpha[0] != alpha[0] || alpha[1] != alpha[1] ){
 	  printf("alpha is %e %e in nsie.c \n fp=%e b2=%e r=%e bc=%e f=%e theta=%e\n x = %e %e xt= %e %e\n"
