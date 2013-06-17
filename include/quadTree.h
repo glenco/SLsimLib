@@ -140,7 +140,7 @@ public:
 			,int bucket = 5
 			,double theta_force = 0.1
 			);
-	~TreeQuad();
+	virtual ~TreeQuad();
 
 	virtual void force2D(double *ray,double *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa);
 	virtual void force2D_recur(double *ray,double *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa);
