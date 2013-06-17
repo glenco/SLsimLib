@@ -12,10 +12,13 @@
 
 class LensPlane{
 public:
-	LensPlane(){};
-	~LensPlane(){};
-
+	LensPlane() {}
+	virtual ~LensPlane() {} 
+	
 	virtual void force(double *alpha,KappaType *kappa,KappaType *gamma,double *xx,bool kappa_off) = 0;
+	
+	virtual void add(LensHalo* halo) = 0;
+	virtual void remove(LensHalo* halo) = 0;
 };
 
 class LensPlaneTree : public LensPlane{
@@ -24,8 +27,12 @@ public:
 	~LensPlaneTree();
 
 	void force(double *alpha,KappaType *kappa,KappaType *gamma,double *xx,bool kappa_off);
-protected:
-	TreeQuad *halo_tree;
+	
+	void add(LensHalo* halo);
+	void remove(LensHalo* halo);
+	
+private:
+	TreeQuad* halo_tree;
 };
 
 class LensPlaneSingular : public LensPlane{
@@ -34,9 +41,12 @@ public:
 	~LensPlaneSingular();
 
 	void force(double *alpha,KappaType *kappa,KappaType *gamma,double *xx,bool kappa_off);
-protected:
-	LensHaloHndl *halos;
-	IndexType Nhalos;
+	
+	void add(LensHalo* halo);
+	void remove(LensHalo* halo);
+	
+private:
+	std::vector<LensHalo*> halos;
 };
 
 #endif /* PLANES_H_ */

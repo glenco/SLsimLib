@@ -36,6 +36,10 @@ SourceSersic::SourceSersic(InputParams& params)
 {
 }
 
+SourceSersic::SourceSersic(): Source()
+{
+}
+
 SourceSersic::~SourceSersic()
 {
 }

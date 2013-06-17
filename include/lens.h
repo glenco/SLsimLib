@@ -64,7 +64,7 @@ GLAMER_TEST_USES(LensTest)
  *  Omega_baryon -- Density in baryons
  *  Omega_neutrino -- Density in neutrinos
  *  hubble -- Hubble parameter in units of 100 km/s/Mpc
- *
+ *  sigm_8 -- normalization of power spectrum
  *
  * </pre>
  */

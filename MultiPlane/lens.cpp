@@ -107,6 +107,7 @@ void Lens::readCosmology(InputParams& params){
 	if( params.get("Omega_baryon",tmp) ) cosmo->setOmega_baryon(tmp);
 	if( params.get("Omega_neutrino",tmp) ) cosmo->setOmega_neutrino(tmp);
 	if( params.get("hubble",tmp) ) cosmo->sethubble(tmp);
+	if( params.get("sigma_8",tmp) ) cosmo->power_normalize(tmp);
 }
 
 /// Retrieve input parameters for construction
@@ -493,13 +494,47 @@ void Lens::createFieldPlanes()
 
 void Lens::addMainHaloToPlane(LensHalo* halo)
 {
-	// TODO: don't destroy planes but add to existing
-	Utilities::delete_container(main_planes);
-	createMainPlanes();
+	// the redshift and distance of the halo
+	double halo_z = halo->getZlens();
+	double halo_Dl = cosmo->coorDist(0, halo_z);
+	
+	// find the position of the new lens plane
+	std::size_t i = std::distance(main_Dl.begin(), std::upper_bound(main_Dl.begin(), main_Dl.end(), halo_Dl));
+	
+	// go though all options for adding
+	if(i > 0 && (halo_Dl - main_Dl[i-1]) < MIN_PLANE_DIST)
+	{
+		// add to plane at (i-1)
+		main_planes[i-1]->add(halo);
+	}
+	else if(i == main_Dl.size())
+	{
+		// add new plane at the end
+		main_planes.push_back(new LensPlaneSingular(&halo, 1));
+		main_plane_redshifts.push_back(halo_z);
+		main_Dl.push_back(halo_Dl);
+	}
+	else if((main_Dl[i] - halo_Dl) < MIN_PLANE_DIST)
+	{
+		// add to existing plane at position i
+		main_planes[i]->add(halo);
+	}
+	else
+	{
+		// create new plane at position i
+		main_planes.insert(main_planes.begin() + i, new LensPlaneSingular(&halo, 1));
+		main_plane_redshifts.insert(main_plane_redshifts.begin() + i, halo_z);
+		main_Dl.insert(main_Dl.begin() + i, halo_Dl);
+	}
 }
 
 void Lens::createMainPlanes()
 {
+	// clear arrays
+	main_planes.clear();
+	main_plane_redshifts.clear();
+	main_Dl.clear();
+	
 	// sort halos by redshift
 	std::sort(main_halos.begin(), main_halos.end(), lens_halo_less(cosmo));
 	
@@ -935,7 +970,7 @@ void Lens::createFieldHalos()
 		halo_pos[i] = halo_pos_vec[i];
 	}
 
-	std::cout << "leaving Lens::generateFieldHalos()" << std::endl;
+	std::cout << "leaving Lens::createFieldHalos()" << std::endl;
 }
 
 /**
