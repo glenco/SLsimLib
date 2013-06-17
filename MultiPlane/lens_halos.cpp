@@ -40,7 +40,7 @@ LensHalo::~LensHalo(){
 }
 
 int LensHaloNFW::count = 0;
-double *LensHaloNFW::xtable = NULL,*LensHaloNFW::ftable = NULL,*LensHaloNFW::gtable = NULL,*LensHaloNFW::g2table = NULL;
+double *LensHaloNFW::xtable = NULL,*LensHaloNFW::ftable = NULL,*LensHaloNFW::gtable = NULL,*LensHaloNFW::g2table = NULL,*LensHaloNFW::htable = NULL;
 
 LensHaloNFW::LensHaloNFW() : LensHalo(){
   gmax=0;
@@ -63,6 +63,7 @@ void LensHaloNFW::make_tables(){
 		ftable = new double[NTABLE];
 		gtable = new double[NTABLE];
 		g2table = new double[NTABLE];
+		htable = new double[NTABLE];
 
 		for(i = 0 ; i< NTABLE; i++){
 			x = i*dx;
@@ -70,6 +71,7 @@ void LensHaloNFW::make_tables(){
 			ftable[i] = ffunction(x);
 			gtable[i] = gfunction(x);
 			g2table[i] = g2function(x);
+			htable[i] = hfunction(x);
 		}
   }
   count++;
@@ -100,6 +102,7 @@ LensHaloNFW::~LensHaloNFW(){
 		delete[] gtable;
 		delete[] ftable;
 		delete[] g2table;
+		delete[] htable;
 	}
 }
 
