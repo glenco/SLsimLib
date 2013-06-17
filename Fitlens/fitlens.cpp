@@ -23,6 +23,7 @@ void LensHaloAnaNSIE::FindLensSimple(
 		,double *y                /// output source position
 		,double **dx_sub          /// dx_sub[Nimages][2] pre-calculated deflections caused by substructures or external masses at each image
 		){
+
 	ImageInfo* imageinfo = new ImageInfo[Nimages];
 
 	for(int i=0;i<Nimages;++i){

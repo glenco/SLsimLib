@@ -107,6 +107,7 @@ void Lens::readCosmology(InputParams& params){
 	if( params.get("Omega_baryon",tmp) ) cosmo->setOmega_baryon(tmp);
 	if( params.get("Omega_neutrino",tmp) ) cosmo->setOmega_neutrino(tmp);
 	if( params.get("hubble",tmp) ) cosmo->sethubble(tmp);
+	if( params.get("sigma_8",tmp) ) cosmo->power_normalize(tmp);
 }
 
 /// Retrieve input parameters for construction

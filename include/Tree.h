@@ -261,8 +261,8 @@ namespace Utilities{
 	};
 	unsigned long prevpower(unsigned long k);
 
-	int windings(double *x,Point *points,unsigned long Npoints,double *area,short image);
-	int windings(double *x,Kist<Point> * kist,double *area,short image);
+	int windings(double *x,Point *points,unsigned long Npoints,double *area,short image = 0 );
+	int windings(double *x,Kist<Point> * kist,double *area,short image = 0);
 }
 // in curve_routines.c
 void nesting_curve(OldImageInfo *curves,int Ncurves);
