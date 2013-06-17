@@ -7,6 +7,8 @@
 
 #include "planes.h"
 
+#include <iterator>
+
 LensPlaneTree::LensPlaneTree(PosType **xpt,LensHaloHndl *my_halos,IndexType Nhalos,double my_sigma_background) : LensPlane(){
 	halo_tree = new TreeQuad(xpt,my_halos,Nhalos,my_sigma_background);
 }
@@ -19,12 +21,25 @@ void LensPlaneTree::force(double *alpha,KappaType *kappa,KappaType *gamma,double
 	halo_tree->force2D_recur(xx,alpha,kappa,gamma,kappa_off);
 }
 
-LensPlaneSingular::LensPlaneSingular(LensHaloHndl *my_halos, IndexType my_Nhalos) : LensPlane(), halos(my_halos), Nhalos(my_Nhalos){
-
+void LensPlaneTree::add(LensHalo* halo)
+{
+	bool not_yet_implemented = false;
+	assert(not_yet_implemented);
 }
 
-LensPlaneSingular::~LensPlaneSingular(){
+void LensPlaneTree::remove(LensHalo* halo)
+{
+	bool not_yet_implemented = false;
+	assert(not_yet_implemented);
+}
 
+LensPlaneSingular::LensPlaneSingular(LensHalo** my_halos, std::size_t my_Nhalos)
+: LensPlane(), halos(my_halos, my_halos + my_Nhalos)
+{
+}
+
+LensPlaneSingular::~LensPlaneSingular()
+{
 }
 
 void LensPlaneSingular::force(double *alpha,KappaType *kappa,KappaType *gamma,double *xx,bool kappa_off){
@@ -35,7 +50,8 @@ void LensPlaneSingular::force(double *alpha,KappaType *kappa,KappaType *gamma,do
 	*kappa = 0.0;
 	gamma[0] = gamma[1] = gamma[2] = 0.0;
 
-	for(int i=0; i<Nhalos; i++){
+	for(std::size_t i = 0, n = halos.size(); i < n; ++i)
+	{
 		alpha_tmp[0] = alpha_tmp[1] = 0.0;
 		kappa_tmp = 0.0;
 		gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
@@ -49,6 +65,16 @@ void LensPlaneSingular::force(double *alpha,KappaType *kappa,KappaType *gamma,do
 		gamma[1] += gamma_tmp[1];
 		gamma[2] += gamma_tmp[2];
 	}
+}
 
+void LensPlaneSingular::add(LensHalo* halo)
+{
+	halos.push_back(halo);
+}
 
+void LensPlaneSingular::remove(LensHalo* halo)
+{
+	std::vector<LensHalo*>::iterator it = std::find(halos.begin(), halos.end(), halo);
+	if(it != halos.end())
+		halos.erase(it);
 }
