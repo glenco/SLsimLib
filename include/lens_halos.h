@@ -135,6 +135,8 @@ public:
 	double ffunction(double x);
 	double gfunction(double x);
 	double g2function(double x);
+	double hfunction(double x);
+
 	// TODO BEN: the below functions alphaNFW, kappaNFW and gammaNFW are obsolete and better to be deleted to avoid confusion
 	void alphaNFW(double *alpha,double *x,double Rtrunc,double mass,double r_scale
 			,double *center,double Sigma_crit);
@@ -159,7 +161,7 @@ protected:
 	static int count;
 
 	/// tables for lensing properties specific functions
-	static double *ftable,*gtable,*g2table,*xtable;
+	static double *ftable,*gtable,*g2table,*htable,*xtable;
 	/// make the specific tables
 	void make_tables();
 	/// interpolates from the specific tables
@@ -180,10 +182,10 @@ protected:
 		return -0.25*x*x*InterpolateFromTable(g2table,x)/gmax;
 	}
 	inline KappaType phi_h(double x){
-		ERROR_MESSAGE();
-		std::cout << "time delay has not been fixed for NFW profile yet." << std::endl;
-		exit(1);
-		return 0.0;
+		//ERROR_MESSAGE();
+		//std::cout << "time delay has not been fixed for NFW profile yet." << std::endl;
+		//exit(1);
+		return -1.0*InterpolateFromTable(htable,x)/gmax;
 	}
   
 private:
