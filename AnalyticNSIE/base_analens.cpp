@@ -29,21 +29,24 @@ void LensHaloBaseNSIE::force_halo(
      gamma[0] = gamma[1] = gamma[2] = 0.0;
      *kappa = 0.0;
 
-     double convert_factor = star_massscale/Sigma_crit;
+     if (Einstein_ro > 0)
+     {
+	 double xt[2]={0,0};
+	 float units = pow(sigma/lightspeed,2)/Grav/sqrt(fratio); // mass/distance(physical)
+	 xt[0]=xcm[0];
+	 xt[1]=xcm[1];
+     alphaNSIE(alpha,xt,fratio,rcore,pa);
+	 alpha[0] *= units;
+	 alpha[1] *= units;
 
-     if(Einstein_ro > 0){
-    	 x_rescale[0] = xcm[0]/Einstein_ro;
-    	 x_rescale[1] = xcm[1]/Einstein_ro;
-
-    	 alphaNSIE(alpha,x_rescale,fratio,rcore/Einstein_ro,pa);
-
-    	 if(!no_kappa){
-    		 gammaNSIE(gamma,x_rescale,fratio,rcore/Einstein_ro,pa);
-    		 *kappa=kappaNSIE(x_rescale,fratio,rcore/Einstein_ro,pa);
-    	 }
-
-    	 alpha[0] *= Einstein_ro;
-    	 alpha[1] *= Einstein_ro;
+	 if(!no_kappa){
+    	gammaNSIE(gamma,xcm,fratio,rcore,pa);
+    	*kappa=kappaNSIE(xcm,fratio,rcore,pa);
+    	*kappa *= units;
+    	gamma[0] *= units;
+    	gamma[1] *= units;
+		gamma[2] *= units;
+	 }
      }
 
   // perturbations of host lens
@@ -83,6 +86,7 @@ void LensHaloBaseNSIE::force_halo(
          alpha_tmp[0] = alpha_tmp[1] = 0.0;
      }
 
+     std::cout << stars_N << "  " << stars_implanted << std::endl;
      // add stars for microlensing
      if(stars_N > 0 && stars_implanted){
 
@@ -91,27 +95,16 @@ void LensHaloBaseNSIE::force_halo(
     	 // do stars with tree code
     	 star_tree->force2D_recur(xcm,alpha_tmp,&tmp,gamma_tmp,no_kappa);
 
-    	 alpha[0] -= convert_factor*alpha_tmp[0];
-    	 alpha[1] -= convert_factor*alpha_tmp[1];
+    	 alpha[0] -= star_massscale*alpha_tmp[0];
+    	 alpha[1] -= star_massscale*alpha_tmp[1];
 
     	 if(!no_kappa){
-    		 *kappa += convert_factor*tmp;
-    		 gamma[0] += convert_factor*gamma_tmp[0];
-    		 gamma[1] += convert_factor*gamma_tmp[1];
+    		 *kappa += star_massscale*tmp;
+    		 gamma[0] += star_massscale*gamma_tmp[0];
+    		 gamma[1] += star_massscale*gamma_tmp[1];
     	 }
      }
-
-     // convert from physical distance on the lens plane to (1/physical_distance)
-	 alpha[0] *= Sigma_crit;
-	 alpha[1] *= Sigma_crit;
-
-	 // therefore the quantities need to be in units (1/physical_distance^2)
-	 // --> convert from unitless quantity to (1/physical_distance^2)
-	 *kappa *= Sigma_crit;
-	 gamma[0] *= Sigma_crit;
-	 gamma[1] *= Sigma_crit;
-	 gamma[2] *= Sigma_crit;
-
+std::cout << xcm[0] << "  " << xcm[1] << "  " << alpha[0] << "  " << alpha[1] << std::endl;
      return ;
 }
 /**
@@ -202,7 +195,7 @@ void LensHaloBaseNSIE::setInternalParams(CosmoHndl cosmo, double zsource){
 	to = (1+zlens)*Ds/Dls/Dl/8.39428142e-10;
 }
 
-LensHaloBaseNSIE::LensHaloBaseNSIE(InputParams& params) : LensHaloSimpleNSIE(){
+LensHaloBaseNSIE::LensHaloBaseNSIE(InputParams& params) : LensHalo(){
 
   perturb_rms = new double[6];
 

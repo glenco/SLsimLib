@@ -51,7 +51,7 @@
  *
  * TODO BEN finish this documentation.
  */
-class LensHaloBaseNSIE : public LensHaloSimpleNSIE{
+class LensHaloBaseNSIE : public LensHalo{
 public:
 	LensHaloBaseNSIE(InputParams& params);
 	virtual ~LensHaloBaseNSIE();
