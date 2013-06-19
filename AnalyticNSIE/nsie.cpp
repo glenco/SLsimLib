@@ -28,7 +28,6 @@ void alphaNSIE(
 
   // deflection angle alpha has opposite sign with respect to ray position xt
   if( f==1.0 ){
-	 std::cout << "This is simple: circular simmetry" << std::endl;
     if(bc == 0.0){
       alpha[0]=-1.0*xt[0]/r;
       alpha[1]=-1.0*xt[1]/r;
