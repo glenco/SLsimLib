@@ -382,8 +382,8 @@ void LensHaloSimpleNSIE::force_halo(
 			xt[1]=xcm[1];
 			alphaNSIE(tmp,xt,fratio,rcore,pa);
            
-			alpha[0] = units*tmp[0];  // minus sign removed because already included in alphaNSIE
-			alpha[1] = units*tmp[1];  // Why was the "+=" removed?
+			alpha[0] += units*tmp[0];  // minus sign removed because already included in alphaNSIE
+			alpha[1] += units*tmp[1];  // Why was the "+=" removed?
 			//alpha[0] += units*tmp[0];
 			//alpha[1] += units*tmp[1];
 			if(!no_kappa){
