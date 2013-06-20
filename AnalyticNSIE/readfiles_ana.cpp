@@ -68,7 +68,7 @@ void LensHaloAnaNSIE::PrintLens(bool show_substruct,bool show_stars){
 	// parameters of host elliptical
 	cout << endl << "**Host lens model**" << endl;
 	// redshifts
-	cout << "sigma " << main_sigma << "km/s" << endl;
+	cout << "sigma " << sigma << "km/s" << endl;
 	cout << "core " << rcore << " Mpc" << endl;
 	cout << "axis_ratio " << fratio << endl;
 	cout << "position angle " <<pa << endl;
