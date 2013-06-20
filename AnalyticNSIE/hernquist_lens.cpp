@@ -5,7 +5,7 @@
 
 #include "lens_halos.h"
 
-/// deflection caused by NFW halo
+/*// deflection caused by NFW halo
 void LensHaloHernquist::alphaHern(double *alpha,double *x,double Rtrunc,double mass,double r_scale
 		,double *center,double Sigma_crit){
 	double r,b=0;
@@ -53,7 +53,7 @@ KappaType LensHaloHernquist::kappaHern(double *x,double Rtrunc,double mass,doubl
 	return b*mass/(pi*pow(r_scale,2)*Sigma_crit);
 }
 
-/// Shear for and NFW halo. this might have a flaw in it
+// Shear for and NFW halo. this might have a flaw in it
 void LensHaloHernquist::gammaHern(KappaType *gamma,double *x,double Rtrunc,double mass,double r_scale
 		,double *center,double Sigma_crit){
 	double r,gt=0;
@@ -82,7 +82,7 @@ void LensHaloHernquist::gammaHern(KappaType *gamma,double *x,double Rtrunc,doubl
 
 	return ;
 }
-
+*/
 double LensHaloHernquist::gfunction(double x){
 	double ans;
 

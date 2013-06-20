@@ -33,7 +33,8 @@ void find_crit(
 		,double resolution        /// The target resolution that the critical curve is mapped on the image plane.
 		,bool *orderingsuccess    /// true if ordering was successful.
 		,bool ordercurve          /// Order the curve so that it can be drawn or used to find the winding number.
-    ,bool dividecurves        /// Divide the critical curves into seporate curves by whether they are attached  
+    ,bool dividecurves        /// Divide the critical curves into seporate curves by whether they are attached
+    ,double invmag_min        /// finds regions with 1/magnification < invmag_min, set to zero for caustics               
 		,bool verbose
 		){
 
@@ -54,7 +55,7 @@ void find_crit(
   Point *minpoint = grid->i_tree->pointlist->current;
     
   for(i=0;i<grid->i_tree->pointlist->Npoints;++i){
-	  if(grid->i_tree->pointlist->current->invmag < 0){
+	  if(grid->i_tree->pointlist->current->invmag < invmag_min){
 		  negimage.imagekist->InsertAfterCurrent(grid->i_tree->pointlist->current);
 		  negimage.imagekist->Down();
 	  }
@@ -121,7 +122,7 @@ void find_crit(
 	  newpoint_kist.MoveToTop();
 	  negimage.imagekist->MoveToBottom();
 	  do{
-		  if(newpoint_kist.getCurrent()->invmag < 0)
+		  if(newpoint_kist.getCurrent()->invmag < invmag_min)
 			  negimage.imagekist->InsertAfterCurrent(newpoint_kist.getCurrent());
 	  }while(newpoint_kist.Down());
   }
@@ -279,7 +280,7 @@ void find_crit(
   for(i=0;i<*Ncrits;++i){
 	  critcurve[i].centroid[0] = 0;
 	  critcurve[i].centroid[1] = 0;
-	  if(critcurve[i].imagekist->Nunits() >0){
+	  if(critcurve[i].imagekist->Nunits() > 1){
 		  critcurve[i].imagekist->MoveToTop();
 		  do{
 			  critcurve[i].centroid[0] += critcurve[i].imagekist->getCurrent()->x[0];
@@ -295,6 +296,53 @@ void find_crit(
 	  }
   }
 
+  /******* TODO: test line *****************
+  char chrstr[100];
+  std::string output = "test_crit";
+  double tmp_range=0,tmp,xx[2];
+  for(i=0; i< MIN(*Ncrits,50) ; ++i){
+    
+    if(critcurve[i].getNimagePoints() > 10){
+      tmp_range=0;
+      for(critcurve[i].imagekist->MoveToTop();!(critcurve[i].imagekist->OffBottom()); critcurve[i].imagekist->Down()){
+        tmp = pow(critcurve[i].centroid[0] - critcurve[i].imagekist->getCurrent()->x[0],2)
+            + pow(critcurve[i].centroid[1] - critcurve[i].imagekist->getCurrent()->x[1],2);
+        if(tmp > tmp_range) tmp_range = tmp;
+      }
+    
+      tmp_range = sqrt(tmp_range)*2;
+    
+      snprintf(chrstr,100,"%i",i);
+      PixelMap map(critcurve[i].centroid,4000,tmp_range/4000);
+    
+      map.AddImages(&critcurve[i],1,0);
+     
+      map.printFITS(output + chrstr + ".0.fits");
+      
+      critcurve[i].imagekist->TranformPlanes();
+
+      tmp_range=0;
+      xx[0] = critcurve[i].imagekist->getCurrent()->x[0];
+      xx[1] = critcurve[i].imagekist->getCurrent()->x[1];
+      for(critcurve[i].imagekist->MoveToTop();!(critcurve[i].imagekist->OffBottom()); critcurve[i].imagekist->Down()){
+        tmp = pow(xx[0] - critcurve[i].imagekist->getCurrent()->x[0],2)
+        + pow(xx[1] - critcurve[i].imagekist->getCurrent()->x[1],2);
+        if(tmp > tmp_range) tmp_range = tmp;
+      }
+      
+      tmp_range = sqrt(tmp_range)*2;
+
+      PixelMap map2(xx,4000,tmp_range/4000);
+     
+      map2.AddImages(&critcurve[i],1,0);
+    
+      map2.printFITS(output + chrstr + ".1.fits");
+      critcurve[i].imagekist->TranformPlanes();
+
+    }
+  }
+  //************************************/
+
   return ;
 }
 void find_crit2(
@@ -306,7 +354,8 @@ void find_crit2(
 		,double resolution        /// The target resolution that the critical curve is mapped on the image plane.
 		,bool *orderingsuccess    /// true if ordering was successful.
 		,bool ordercurve          /// Order the curve so that it can be drawn or used to find the winding number.
-        ,bool dividecurves        /// Divide the critical curves into seporate curves by whether they are attached
+    ,bool dividecurves        /// Divide the critical curves into seporate curves by whether they are attached
+    ,double invmag_min        /// finds regions with 1/magnification < invmag_min
 		,bool verbose
 		){
 
@@ -328,7 +377,7 @@ void find_crit2(
   Point *minpoint = grid->i_tree->pointlist->current;
 
   for(i=0;i<grid->i_tree->pointlist->Npoints;++i){
-	  if(grid->i_tree->pointlist->current->invmag < 0){
+	  if(grid->i_tree->pointlist->current->invmag < invmag_min){
 		  critcurve->imagekist->InsertAfterCurrent(grid->i_tree->pointlist->current);
 		  critcurve->imagekist->Down();
 	  }
@@ -368,7 +417,7 @@ void find_crit2(
 	  newpoint_kist.MoveToTop();
 	  critcurve->imagekist->MoveToBottom();
 	  do{
-		  if(newpoint_kist.getCurrent()->invmag < 0){
+		  if(newpoint_kist.getCurrent()->invmag < invmag_min){
 			  newpoint_kist.getCurrent()->in_image = TRUE;
 			  critcurve->imagekist->InsertAfterCurrent(newpoint_kist.getCurrent());
 
@@ -540,7 +589,7 @@ void find_crit2(
 
   if(pseuodcaustic){
 
-	  //******* TODO test line *****************
+	  //******* TODO: test line *****************
 	  char chrstr[100];
 	  std::string output = "pseudocaustic";
 	  std::cout << " finding pseudo-caustics" << std::endl;
@@ -690,7 +739,7 @@ void find_crit2(
 
   			  pseudocurve[i].copy(tmp_pseudo[imax]);
 
-  			  //******** TODO test lines **********************
+  			  //******** TODO: test lines **********************
   			  if( i > 0){
   				  double tmp_range = 0,dr;
 
@@ -812,8 +861,37 @@ void find_crit2(
       --i;
     }
   }
+  
+
+  //******* TODO: test line *****************
+  char chrstr[100];
+  std::string output = "test_crit";
+  double tmp_range=0,tmp;
+  for(i=0; i<100; ++i){
+
+    tmp_range=0;
+    for(critcurve[i].imagekist->MoveToTop();!(critcurve[i].imagekist->OffBottom()); critcurve[i].imagekist->Down()){
+      tmp = pow(critcurve[i].centroid[0] - critcurve[i].imagekist->getCurrent()->x[0],2)
+      + pow(critcurve[i].centroid[1] - critcurve[i].imagekist->getCurrent()->x[1],2);
+      if(tmp > tmp_range) tmp_range = tmp;
+    }
+    tmp_range = sqrt(tmp_range)*2;
+    
+    PixelMap map(critcurve[i].centroid,4000,tmp_range/4000);
+  
+    map.AddImages(&critcurve[i],1,0);
+    critcurve[i].imagekist->TranformPlanes();
+    map.AddImages(&critcurve[i],1,0);
+    critcurve[i].imagekist->TranformPlanes();
+  
+    snprintf(chrstr,100,"%i",i);
+    map.printFITS(output + chrstr + ".fits");
+  }
+  //************************************/
+  
   return ;
 }
+
 /**
  *  This is a stripped down version of find_crit() for use in find_image_microlens() that
  *  refines the critical lines that are within the image.

@@ -203,7 +203,7 @@ unsigned long order_curve4(Point *curve,long Npoints){
 		if(j < Npoints-1)
 			backtrack(curve,Npoints,&j,-1,&end);
 		++m;
-        // TODO This is a kluge.  There should be a better exit stratagy.
+        // TODO: This is a kluge.  There should be a better exit stratagy.
         if(m >= Npoints) return false;
 		assert(m < Npoints);
 	}

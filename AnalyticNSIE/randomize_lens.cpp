@@ -204,7 +204,7 @@ void LensHaloAnaNSIE::RandomizeSubstructure2(double rangeInRei,long *seed){
 		NsubMax=(unsigned long)(ndensity*pi*Rm*Rm + 5*sqrt(ndensity*pi*Rm*Rm) );
 		if(NsubMax > 0){
 			sub_x=Utilities::PosTypeMatrix(NsubMax,2);
-			switch(sub_type){
+			switch(main_sub_type){
 			case pointmass:
 				subs=new LensHalo[NsubMax];
 				break;
@@ -289,7 +289,7 @@ void LensHaloAnaNSIE::RandomizeSubstructure2(double rangeInRei,long *seed){
 		assert(r2av > 0);
 		assert(area_av >= 0.0);
 
-		if(sub_type == pointmass){  // always use tree for point mass substructures
+		if(main_sub_type == pointmass){  // always use tree for point mass substructures
 			sub_theta_force=1.0e-1;
 			sub_tree=BuildTreeNB(sub_x,sub_Rcut,sub_mass,
 				false,true,sub_N,sub_substructures,2,sub_theta_force);
@@ -335,7 +335,7 @@ void LensHaloAnaNSIE::RandomizeSubstructure3(double rangeInRei,long *seed){
 	if(!substruct_implanted){
 		NsubMax=(unsigned long)(sub_Ndensity*pi*Rm*Rm*(1+5/sqrt(sub_Ndensity*pi*Rm*Rm)) );
 		sub_x=Utilities::PosTypeMatrix(NsubMax,2);
-		switch(sub_type){
+		switch(main_sub_type){
 		case pointmass:
 			subs=new LensHalo[NsubMax];
 			break;
@@ -418,7 +418,7 @@ void LensHaloAnaNSIE::RandomizeSubstructure3(double rangeInRei,long *seed){
 		assert(r2av > 0);
 		assert(area_av >= 0.0);
 
-		if(sub_type == pointmass){  // always use tree for point mass substructures
+		if(main_sub_type == pointmass){  // always use tree for point mass substructures
 			sub_theta_force=1.0e-1;
 			sub_tree=BuildTreeNB(sub_x,sub_Rcut,sub_mass,
 				false,true,sub_N,sub_substructures,2,sub_theta_force);

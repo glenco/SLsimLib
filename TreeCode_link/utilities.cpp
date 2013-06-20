@@ -153,5 +153,67 @@ PosType **PosTypeMatrix(long rows, long cols)
     delete[] matrix;
   }
   
-
+  
+  /// convert (x,y) to d
+  long HilbertCurve::xy2d (long x, long y) {
+    long rx, ry, s, d=0;
+    for (s=n/2; s>0; s/=2) {
+      rx = (x & s) > 0;
+      ry = (y & s) > 0;
+      d += s * s * ((3 * rx) ^ ry);
+      rot(s, &x, &y, rx, ry);
+    }
+    return d;
+  }
+  
+  ///convert d to (x,y)
+  void HilbertCurve::d2xy(long d, long *x, long *y) {
+    long rx, ry, s, t=d;
+    *x = *y = 0;
+    for (s=1; s<n; s*=2) {
+      rx = 1 & (t/2);
+      ry = 1 & (t ^ rx);
+      rot(s, x, y, rx, ry);
+      *x += s * rx;
+      *y += s * ry;
+      t /= 4;
+    }
+  }
+  /// convert (x,y) to d
+  long HilbertCurve::xy2d (double x, double y) {
+    long rx, ry;
+    
+    rx = (long)((x-xo[0])/n + 0.5);
+    ry = (long)((y-xo[1])/n + 0.5);
+    
+    if(rx > n || ry > n) throw std::runtime_error("Point out of bounds.");
+    return xy2d(rx,ry);
+  }
+  
+  ///convert d to (x,y)
+  void HilbertCurve::d2xy(long d, double *x, double *y) {
+    long rx, ry;
+    
+    if(d > n*n) throw std::runtime_error("Point out of bounds.");
+      
+    d2xy(d,&rx,&ry);
+    
+    *x = xo[0] + range*rx;
+    *y = xo[1] + range*ry;
+  }
+  
+  //rotate/flip a quadrant appropriately
+  void HilbertCurve::rot(long s,long *x, long *y, long rx, long ry) {
+    if (ry == 0) {
+      if (rx == 1) {
+        *x = s-1 - *x;
+        *y = s-1 - *y;
+      }
+      
+      //Swap x and y
+      int t  = *x;
+      *x = *y;
+      *y = t;
+    }
+  }
 }

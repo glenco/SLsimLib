@@ -11,7 +11,7 @@
 //#include "pointlist.h"
 #include "point.h"
 
-// Used as internal container in Kist
+/// Internal container used in Kist container class
 template <class T>
 struct KistUnit{
 	T * data;

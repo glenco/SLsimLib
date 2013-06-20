@@ -57,7 +57,7 @@ typedef struct Point{
 
 } Point;
 
-//struct branchstruct{
+/// The box representing a branch of a binary tree structure.  Used specifically in TreeStruct for organizing points in the grid.
 struct Branch{
 	Branch(Point *my_points,unsigned long my_npoints
 			  ,double my_boundary_p1[2],double my_boundary_p2[2]

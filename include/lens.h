@@ -81,6 +81,7 @@ public:
 	/// the total number of lens planes
 	int getNplanes(){return lensing_planes.size();}
 	
+  /// field of view in square degrees
 	double getfov(){return fieldofview;};
 	void setfov(double fov){fieldofview=fov;};
 
@@ -221,7 +222,7 @@ private: /* field */
 	/// vector of field plane distances
 	std::vector<double> field_Dl;
 	
-	/// Perpendicular position of halo TODO (In proper distance?)
+	/// Perpendicular position of halo TODO: (In proper distance?)
 	double **halo_pos;
 	
 	/// type of mass function PS (0), ST (1), and power law (2) default is ST

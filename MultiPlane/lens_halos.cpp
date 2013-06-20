@@ -244,13 +244,13 @@ LensHaloSimpleNSIE::LensHaloSimpleNSIE(InputParams& params){
 }
 
 void LensHaloSimpleNSIE::assignParams(InputParams& params){
-	if(!params.get("mass_nsie",mass)) error_message1("mass_nsie",params.filename());
-	if(!params.get("zlens_nsie",zlens)) error_message1("zlens_nsie",params.filename());
+	if(!params.get("main_mass_nsie",mass)) error_message1("main_mass_nsie",params.filename());
+	if(!params.get("main_zlens",zlens)) error_message1("main_zlens",params.filename());
 
-	if(!params.get("sigma",sigma)) error_message1("sigma",params.filename());
-	if(!params.get("core",rcore)) error_message1("core",params.filename());
-	if(!params.get("axis_ratio",fratio)) error_message1("axis_ratio",params.filename());
-	if(!params.get("pos_angle",pa)) error_message1("pos_angle",params.filename());
+	if(!params.get("main_sigma",sigma)) error_message1("main_sigma",params.filename());
+	if(!params.get("main_core",rcore)) error_message1("main_core",params.filename());
+	if(!params.get("main_axis_ratio",fratio)) error_message1("main_axis_ratio",params.filename());
+	if(!params.get("main_pos_angle",pa)) error_message1("main_pos_angle",params.filename());
 
 	Rsize = rmaxNSIE(sigma,mass,fratio,rcore);
 	Rmax = MAX(1.0,1.0/fratio)*Rsize;  // redefine
@@ -265,8 +265,9 @@ void LensHaloSimpleNSIE::initFromMass(float my_mass, long *seed){
 	mass = my_mass;
 	rcore = 0.0;
 	sigma = 126*pow(mass/1.0e10,0.25); // From Tully-Fisher and Bell & de Jong 2001
-	fratio = (ran2(seed)+1)*0.5;  //TODO This is a kluge.
-	pa = 2*pi*ran2(seed);  //TODO This is a kluge.
+  //std::cout << "Warning: All galaxies are spherical" << std::endl;
+	fratio = (ran2(seed)+1)*0.5;  //TODO: Ben change this!  This is a kluge.
+	pa = 2*pi*ran2(seed);  //TODO: This is a kluge.
 	Rsize = rmaxNSIE(sigma,mass,fratio,rcore);
 	Rmax = MAX(1.0,1.0/fratio)*Rsize;  // redefine
 
@@ -377,6 +378,19 @@ void LensHaloSimpleNSIE::force_halo(
 			alpha[1] += (r - rin)*(alpha_out[1] - alpha_in[1])/(Rmax - rin) + alpha_in[1];
 			//alpha[0] -= (r - rin)*(alpha_out[0] - alpha_in[0])/(Rmax - rin) + alpha_in[0];
 			//alpha[1] -= (r - rin)*(alpha_out[1] - alpha_in[1])/(Rmax - rin) + alpha_in[1];
+			if(!no_kappa){
+        // TODO: this makes the kappa and gamma disagree with the alpha as calculated above
+				KappaType tmp[2]={0,0};
+        double xt[2]={0,0};
+        float units = pow(sigma/lightspeed,2)/Grav/sqrt(fratio); // mass/distance(physical)
+        xt[0]=xcm[0];
+        xt[1]=xcm[1];
+        
+				*kappa += units*kappaNSIE(xt,fratio,rcore,pa);
+				gammaNSIE(tmp,xt,fratio,rcore,pa);
+				gamma[0] += units*tmp[0];
+				gamma[1] += units*tmp[1];
+			}
 
 		}else{
 			double xt[2]={0,0},tmp[2]={0,0};
@@ -385,10 +399,10 @@ void LensHaloSimpleNSIE::force_halo(
 			xt[1]=xcm[1];
 			alphaNSIE(tmp,xt,fratio,rcore,pa);
            
-			alpha[0] = units*tmp[0];  // minus sign removed because already included in alphaNSIE
-			alpha[1] = units*tmp[1];  // Why was the "+=" removed?
-			//alpha[0] += units*tmp[0];
-			//alpha[1] += units*tmp[1];
+			//alpha[0] = units*tmp[0];  // minus sign removed because already included in alphaNSIE
+			//alpha[1] = units*tmp[1];  // Why was the "+=" removed?
+			alpha[0] += units*tmp[0];
+			alpha[1] += units*tmp[1];
 			if(!no_kappa){
 				KappaType tmp[2]={0,0};
 				*kappa += units*kappaNSIE(xt,fratio,rcore,pa);

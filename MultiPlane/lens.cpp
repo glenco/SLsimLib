@@ -137,63 +137,68 @@ void Lens::assignParams(InputParams& params){
 	if(!params.get("redshift_planes_file",redshift_planes_file)) read_redshift_planes = false;
 	else read_redshift_planes = true;
 
-	if(!params.get("field_off",flag_switch_field_off)) flag_switch_field_off = false;
+	if(!params.get("field_off",flag_switch_field_off)){
+    flag_switch_field_off = false;
+    std::cout << "parameter field_off needs to be set in the parameter file " << params.filename() << std::endl;
+    throw runtime_error("need input parameter");
+  }else{
 
-	if(!flag_switch_field_off){
-		if(!params.get("field_Nplanes",field_Nplanes)){
-			ERROR_MESSAGE();
-			cout << "parameter field_Nplanes needs to be set in the parameter file " << params.filename() << endl;
-			exit(0);
-		}
-		if(!params.get("field_fov",fieldofview)){
-		  ERROR_MESSAGE();
-		  cout << "parameter field_fov needs to be set in the parameter file " << params.filename() << endl;
-		  exit(0);
-		}
-		if(!params.get("field_internal_profile",field_int_prof_type)){
-			ERROR_MESSAGE();
-			cout << "parameter field_internal_profile needs to be set in the parameter file " << params.filename() << endl;
-			exit(0);
-		}
-		if(!params.get("field_internal_profile_galaxy",field_int_prof_gal_type)){
-			field_int_prof_gal_type = null_gal;
-			flag_field_gal_on = false;
-		}
-		else{
-			flag_field_gal_on = true;
-			if(!params.get("field_galaxy_mass_fraction",field_galaxy_mass_fraction)){
-				ERROR_MESSAGE();
-				cout << "to construct a DM + galaxy model the parameter field_galaxy_mass_fraction needs to be set in the parameter file " << params.filename() << endl;
-				exit(0);
-			}
-		}
-		if(!params.get("alpha",mass_func_PL_slope))                mass_func_PL_slope = 1./6.;
-		if(!params.get("field_prof_internal_slope_pl",field_prof_internal_slope) && field_int_prof_type == pl_lens)     field_prof_internal_slope = -1.0;
-		if(!params.get("field_prof_internal_slope_pnfw",field_prof_internal_slope) && field_int_prof_type == pnfw_lens) field_prof_internal_slope = 2.0;
+    if(!flag_switch_field_off){
+      if(!params.get("field_Nplanes",field_Nplanes)){
+        ERROR_MESSAGE();
+        cout << "parameter field_Nplanes needs to be set in the parameter file " << params.filename() << endl;
+        exit(0);
+      }
+      if(!params.get("field_fov",fieldofview)){
+        ERROR_MESSAGE();
+        cout << "parameter field_fov needs to be set in the parameter file " << params.filename() << endl;
+        exit(0);
+      }
+      if(!params.get("field_internal_profile",field_int_prof_type)){
+        ERROR_MESSAGE();
+        cout << "parameter field_internal_profile needs to be set in the parameter file " << params.filename() << endl;
+        exit(0);
+      }
+      if(!params.get("field_internal_profile_galaxy",field_int_prof_gal_type)){
+        field_int_prof_gal_type = null_gal;
+        flag_field_gal_on = false;
+      }
+      else{
+        flag_field_gal_on = true;
+        field_galaxy_mass_fraction = 0;
+      }
+      if(!params.get("field_mass_func_alpha",mass_func_PL_slope)) mass_func_PL_slope = 1./6.;
+      if(!params.get("field_prof_internal_slope_pl",field_prof_internal_slope) && field_int_prof_type == pl_lens) field_prof_internal_slope = -1.0;
+      if(!params.get("field_prof_internal_slope_pnfw",field_prof_internal_slope) && field_int_prof_type == pnfw_lens) field_prof_internal_slope = 2.0;
 
-		if(!params.get("field_input_simulation_file",field_input_sim_file)){
-			sim_input_flag = false;
+      if(!params.get("field_input_simulation_file",field_input_sim_file)){
+        sim_input_flag = false;
+        if(!params.get("field_galaxy_mass_fraction",field_galaxy_mass_fraction)){
+            ERROR_MESSAGE();
+            cout << "to construct a DM + galaxy model the parameter field_galaxy_mass_fraction needs to be set in the parameter file " << params.filename() << endl;
+            exit(0);
+        }
 			// No simulation input file provided
-			if(!params.get("field_mass_func_type",field_mass_func_type)){
+        if(!params.get("field_mass_func_type",field_mass_func_type)){
 				  ERROR_MESSAGE();
 				  cout << "parameter field_mass_func_type needs to be set in the parameter file " << params.filename() << endl;
 				  exit(0);
-			}
-			if(!params.get("field_min_mass",field_min_mass)){
+        }
+        if(!params.get("field_min_mass",field_min_mass)){
 				  ERROR_MESSAGE();
 				  cout << "parameter field_min_mass needs to be set in the parameter file " << params.filename() << endl;
 				  exit(0);
-			}
-			if(!params.get("field_buffer",field_buffer)){
-				field_buffer = 0.0;
-				cout << "default field buffer of 0 Mpc is being used." << endl;
-			}
-		}else{
-			field_min_mass = 0.0;
-			sim_input_flag = true;
-		}
-	}
-
+        }
+        if(!params.get("field_buffer",field_buffer)){
+          field_buffer = 0.0;
+          cout << "default field buffer of 0 Mpc is being used." << endl;
+        }
+      }else{
+        field_min_mass = 0.0;
+        sim_input_flag = true;
+      }
+    }
+  }
 	if(!params.get("z_source",zsource)){
 		  ERROR_MESSAGE();
 		  cout << "parameter z_source needs to be set in the parameter file " << params.filename() << endl;
@@ -455,7 +460,7 @@ void Lens::createFieldPlanes()
 		 * finding the average mass surface density in field_halos
 		 */
 		
-		// TODO Ben: test this
+		// TODO: Ben: test this
 		double sigma_back = cosmo->haloMassInBufferedCone(field_min_mass,z1,z2,fieldofview*pow(pi/180,2),field_buffer,field_mass_func_type,mass_func_PL_slope)
 		/(pi*pow(sqrt(fieldofview/pi)*pi*field_Dl[i]/180/(1+field_plane_redshifts[i]) + field_buffer,2));
 		
@@ -1123,6 +1128,10 @@ void Lens::readInputSimFile()
 				field_halos[j]->initFromFile(mass*(1-field_galaxy_mass_fraction),seed,vmax,r_halfmass*cosmo->gethubble());
 			}
 			else{
+        // TODO: test line ****
+        //std::cout << "Warning:  This needs to be changed" << std::endl;
+        //mass /= 10;
+        /***********************/
 				field_halos[j]->initFromFile(mass,seed,vmax,r_halfmass*cosmo->gethubble());
 			}
 

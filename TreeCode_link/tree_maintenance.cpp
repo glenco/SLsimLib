@@ -865,7 +865,7 @@ void TreeStruct::_AddPoint(){
 	    assert(atLeaf());
 		attachChildrenToCurrent(branch1,branch2);
 
-		// TODO take these out when problem is fixed
+		// TODO: take these out when problem is fixed
 		assert(current->child1->child1 == NULL);
 		assert(current->child1->child2 == NULL);
 		assert(current->child2->child1 == NULL);

@@ -137,7 +137,7 @@ public:
 	double g2function(double x);
 	double hfunction(double x);
 
-	// TODO BEN: the below functions alphaNFW, kappaNFW and gammaNFW are obsolete and better to be deleted to avoid confusion
+	// TODO: BEN: the below functions alphaNFW, kappaNFW and gammaNFW are obsolete and better to be deleted to avoid confusion
 	void alphaNFW(double *alpha,double *x,double Rtrunc,double mass,double r_scale
 			,double *center,double Sigma_crit);
 	KappaType kappaNFW(double *x,double Rtrunc,double mass,double r_scale
@@ -383,16 +383,14 @@ public:
 	LensHaloHernquist(InputParams& params);
 	virtual ~LensHaloHernquist();
 
-	double ffunction(double x);
-	double gfunction(double x);
-	double g2function(double x);
-	// TODO BEN: the below functions alphaHern, kappaHern and gammaHern are obsolete and better to be deleted to avoid confusion
+	/* the below functions alphaHern, kappaHern and gammaHern are obsolete and better to be deleted to avoid confusion
 	void alphaHern(double *alpha,double *x,double Rtrunc,double mass,double r_scale
 			,double *center,double Sigma_crit);
 	KappaType kappaHern(double *x,double Rtrunc,double mass,double r_scale
 			,double *center,double Sigma_crit);
 	void gammaHern(KappaType *gamma,double *x,double Rtrunc,double mass,double r_scale
 			,double *center,double Sigma_crit);
+  */
 	//void initFromFile(float my_mass, long *seed, float vmax, float r_halfmass);
 
 	/// set Rmax
@@ -435,6 +433,10 @@ protected:
 		exit(1);
 		return 0.0;
 	}
+
+  double ffunction(double x);
+	double gfunction(double x);
+	double g2function(double x);
 
 private:
   double gmax;

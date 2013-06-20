@@ -23,15 +23,15 @@
  * Input Parameters:
  *
  *  **** NSIE parameters
- * 	sigma                  Velocity dispersion of host NSIE.
- *	core                   Core size
- *	axis_ratio             Axis ratio of mass
- *	pos_angle              Position angle
- *	z_lens                 Redshift of lens
+ * 	main_sigma                  Velocity dispersion of host NSIE.
+ *	main_core                   Core size
+ *	main_axis_ratio             Axis ratio of mass
+ *	main_pos_angle              Position angle
+ *	main_z_lens                 Redshift of lens
  *
  *  **** Distortion parameters
- *	NDistortionModes       Number of distortion modes to be used.  If zero the other distortion parameters are not needed.
- *	beta_perturb
+ *	main_NDistortionModes       Number of distortion modes to be used.  If zero the other distortion parameters are not needed.
+ *	main_perturb_beta
  *	kappa_peturb
  *	gamma_peturb
  *	monopole_peturb
@@ -40,24 +40,24 @@
  *	octopole_peturb
  *
  *  **** Substructure parameters
- *	NdensitySubstruct      Number density of substructures.  They are distributed uniformly.  If zero the other substructure parameters are not needed.
- *	beta_sub               Logarithmic slope of the internal clump profile.  Used if sub_type == powerlaw
- *	alpha_sub              Logarithmic slope of the mass function.
- *	R_submax               Maximum radius of most massive substructure (see Metcalf & Amara 2012)
- *	sub_mass_max               Maximum mass
- *	sub_mass_min               Minimum mass
- *	sub_type               Mass profile of clumps - 0 or nfw,1 or powerlaw, 2 or pointmass
+ *	main_sub_Ndensity      Number density of substructures.  They are distributed uniformly.  If zero the other substructure parameters are not needed.
+ *	main_sub_beta               Logarithmic slope of the internal clump profile.  Used if main_sub_type == powerlaw
+ *	main_sub_alpha              Logarithmic slope of the mass function.
+ *	main_sub_Rmax               Maximum radius of most massive substructure (see Metcalf & Amara 2012)
+ *	main_sub_mass_max               Maximum mass
+ *	main_sub_mass_min               Minimum mass
+ *	main_sub_type               Mass profile of clumps - 0 or nfw,1 or powerlaw, 2 or pointmass
  *
  *  **** Stars parameters
- *	Nstars                 Total number of stars that will be used in the simulation.  If zero the other star parameters are not needed.
- *	fstars                 Fraction of surface density in stars.
- *	stars_mass             Mass of stars.
+ *	main_stars_N                 Total number of stars that will be used in the simulation.  If zero the other star parameters are not needed.
+ *	main_stars_fraction                 Fraction of surface density in stars.
+ *	main_stars_mass             Mass of stars.
  *
  * The stars are not initially present.  They must be implanted later.
  *</pre>
  *
- * TODO BEN finish this documentation for perturbation parameters.
  */
+// TODO: BEN finish this documentation for perturbation parameters.
 class LensHaloAnaNSIE : public LensHaloBaseNSIE{
 public:
 	LensHaloAnaNSIE(InputParams& params);

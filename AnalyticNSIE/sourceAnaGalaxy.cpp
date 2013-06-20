@@ -36,8 +36,8 @@ SourceMultiAnaGalaxy::SourceMultiAnaGalaxy(
 		InputParams& params   /// Input data file for galaxies
 		): Source(),index(0){
 
-	if(!params.get("input_galaxy_file",input_gal_file)){
-		std::cout << "ERROR: input_galaxy_file not found in parameter file " << params.filename() << std::endl;
+	if(!params.get("source_input_galaxy_file",input_gal_file)){
+		std::cout << "ERROR: source_input_galaxy_file not found in parameter file " << params.filename() << std::endl;
 		exit(1);
 	}
 
@@ -82,7 +82,7 @@ void SourceMultiAnaGalaxy::readDataFile(){
 	//file_in >> Ngalaxies;
 	//std::cout << "Number of source galaxies: " << Ngalaxies << std::endl;
 
-	//TODO Using a vector of pointer to OverzierSource is inefficient for mem.  check that a default copy would work for adding galaxies
+	//TODO: Using a vector of pointer to OverzierSource is inefficient for mem.  check that a default copy would work for adding galaxies
 	i=0;
 	while(file_in.peek() == '#'){
 		file_in.ignore(10000,'\n');
@@ -303,9 +303,9 @@ void SourceMultiAnaGalaxy::readDataFile(){
 }
 
 void SourceMultiAnaGalaxy::assignParams(InputParams& params){
-	if(!params.get("input_galaxy_file",input_gal_file)){
+	if(!params.get("source_input_galaxy_file",input_gal_file)){
 		  ERROR_MESSAGE();
-		  std::cout << "parameter input_galaxy_file needs to be set in the parameter file "
+		  std::cout << "parameter source_input_galaxy_file needs to be set in the parameter file "
 				  << params.filename() << std::endl;
 		  exit(0);
 	  }

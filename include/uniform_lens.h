@@ -24,9 +24,9 @@
  *
  *
  *  **** Stars parameters
- *	Nstars                 Total number of stars that will be used in the simulation.  If zero the other star parameters are not needed.
- *	fstars                 Fraction of surface denity in stars.
- *	stars_mass             Mass of stars.
+ *	main_stars_N                 Total number of stars that will be used in the simulation.  If zero the other star parameters are not needed.
+ *	main_stars_fraction                 Fraction of surface denity in stars.
+ *	main_stars_mass             Mass of stars.
  *
  *	stellar_mass_function  Choose between: One, Mono, Salpeter, BrokenPowerLaw, SinglePowerLaw, Chabrier.
  *						   One - all stellar masses set to 1 Msol - default value in case one does not give the IMFtype option in function implant_stars()

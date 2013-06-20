@@ -7,7 +7,7 @@
 
 #include "profile.h"
 
-//TODO CARLO Could this be made methods of a class?
+//TODO: CARLO Could this be made methods of a class?
 /// create profile of the maps for each lensing component - spherical simmetry is assumed
 // create profile of the maps for each lensing component - spherical simmetry is assumed          
 double * estprof(std:: valarray<float> q,int nx,int ny, std:: valarray<float> r, 

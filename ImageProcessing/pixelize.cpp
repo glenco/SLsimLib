@@ -36,7 +36,7 @@ void swap(PixelMap& x, PixelMap& y)
 	swap(x.map_boundary_p2[0], y.map_boundary_p2[0]);
 	swap(x.map_boundary_p2[1], y.map_boundary_p2[1]);
 }
-// TODO comment
+// TODO: comment
 bool agree(const PixelMap& a, const PixelMap& b)
 {
 	return (a.Npixels == b.Npixels) && (a.resolution == b.resolution) &&

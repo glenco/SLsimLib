@@ -745,7 +745,7 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
 		  imageinfo[i].outerborder->MoveToTop();
 		  for(j = 0 ; j < imageinfo[i].outerborder->Nunits() ; ++j,MoveDownKist(imageinfo[i].outerborder) ){
 
-			  // TODO This was taken out and i'm not sure if it was needed.
+			  // TODO: This was taken out and i'm not sure if it was needed.
 			  //assert(getCurrentKist(imageinfo[i].outerborder)->surface_brightness == 0);
 
 			  if(
