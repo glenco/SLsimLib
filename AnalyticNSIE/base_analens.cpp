@@ -29,8 +29,6 @@ void LensHaloBaseNSIE::force_halo(
      gamma[0] = gamma[1] = gamma[2] = 0.0;
      *kappa = 0.0;
 
-     if (Einstein_ro > 0)
-     {
 	 double xt[2]={0,0};
 	 float units = pow(sigma/lightspeed,2)/Grav/sqrt(fratio); // mass/distance(physical)
 	 xt[0]=xcm[0];
@@ -47,7 +45,6 @@ void LensHaloBaseNSIE::force_halo(
     	gamma[1] *= units;
 		gamma[2] *= units;
 	 }
-     }
 
   // perturbations of host lens
      if(perturb_Nmodes > 0){
@@ -95,6 +92,9 @@ void LensHaloBaseNSIE::force_halo(
     	 // do stars with tree code
     	 star_tree->force2D_recur(xcm,alpha_tmp,&tmp,gamma_tmp,no_kappa);
 
+    	 // it was
+     	 // double convert_factor = star_massscale/Sigma_crit;
+     	 // alpha[0] -= convert_factor*alpha_tmp[0];
     	 alpha[0] -= star_massscale*alpha_tmp[0];
     	 alpha[1] -= star_massscale*alpha_tmp[1];
 
@@ -104,7 +104,6 @@ void LensHaloBaseNSIE::force_halo(
     		 gamma[1] += star_massscale*gamma_tmp[1];
     	 }
      }
-std::cout << xcm[0] << "  " << xcm[1] << "  " << alpha[0] << "  " << alpha[1] << std::endl;
      return ;
 }
 /**
@@ -113,6 +112,7 @@ std::cout << xcm[0] << "  " << xcm[1] << "  " << alpha[0] << "  " << alpha[1] <<
  * Sets many parameters within the lens model, source model and
  * force calculation.
  */
+// TODO Fabio: Now it needs to assign also SimpleNSIE-like parameters
 void LensHaloBaseNSIE::assignParams(InputParams& params){
 
 	// Host lens parameters
@@ -154,9 +154,9 @@ void LensHaloBaseNSIE::error_message1(std::string parameter,std::string file){
 }
 
 /// resets Zl, Dl, Sigma_crit, MpcToAsec
-void LensHaloBaseNSIE::setZlens(CosmoHndl cosmo,double zl,double zsource){
+void LensHaloBaseNSIE::setZlens(double zl){
 	zlens = zl;
-	setInternalParams(cosmo, zsource);
+//	setInternalParams(cosmo, zsource);
 }
 
 void LensHaloBaseNSIE::reNormSubstructure(double kappa_sub){
@@ -174,17 +174,10 @@ void LensHaloBaseNSIE::reNormSubstructure(double kappa_sub){
 }
 
 /// Sets parameters within BaseLens that depend on the source redshift - Dl,Sigma_crit,etc.
-void LensHaloBaseNSIE::setInternalParams(CosmoHndl cosmo, SourceHndl source){
-	setInternalParams(cosmo,source->getZ());
-}
-
-void LensHaloBaseNSIE::setInternalParams(CosmoHndl cosmo, double zsource){
+/*void LensHaloBaseNSIE::setInternalParams(CosmoHndl cosmo){
 	double Ds, Dls;
 
 	if(zsource < zlens) zsource = 1000;
-	Dl = cosmo->angDist(0,zlens);
-	Ds = cosmo->angDist(0,zsource);
-	Dls = cosmo->angDist(zlens,zsource);
 
 	MpcToAsec = 60*60*180 / pi / Dl;
 		// in Mpc
@@ -193,7 +186,8 @@ void LensHaloBaseNSIE::setInternalParams(CosmoHndl cosmo, double zsource){
 	// find critical density
 	Sigma_crit=Ds/Dls/Dl/4/pi/Grav;
 	to = (1+zlens)*Ds/Dls/Dl/8.39428142e-10;
-}
+
+}*/
 
 LensHaloBaseNSIE::LensHaloBaseNSIE(InputParams& params) : LensHalo(){
 
@@ -261,25 +255,30 @@ void LensHaloBaseNSIE::PrintLens(bool show_substruct,bool show_stars){
 		}
 	}
 
-	cout << endl << "Nstars "<<stars_N << endl << endl;
-	if(stars_N>0){
-		if(star_Nregions > 0)
-			cout << "stars_Nregions "<<star_Nregions << endl;
-		cout << "stars_massscale "<<star_massscale << endl;
-		cout << "stars_fstars "<<star_fstars << endl;
-		cout << "stars_theta_force "<<star_theta_force << endl;
-		if(show_stars){
-			if(stars_implanted){
-			  for(i=0 ; i < stars_N ; ++i) cout << "    x["<<i<<"]="
-							    << stars_xp[i][0] << " " << stars_xp[i][1] << endl;
-			}else cout << "stars are not implanted yet" << endl;
-		}
-	}
-
 	if(Sigma_crit)
 		cout << "critical density is " << Sigma_crit << " Msun/Mpc^2" << endl << endl;
+
+	if (stars_implanted) PrintStars(show_stars);
 }
 
+// TODO Fabio: move this to a better place and insert it in all halos::PrintLens()
+void LensHalo::PrintStars(bool show_stars)
+{
+cout << endl << "Nstars "<<stars_N << endl << endl;
+if(stars_N>0){
+	if(star_Nregions > 0)
+		cout << "stars_Nregions "<<star_Nregions << endl;
+	cout << "stars_massscale "<<star_massscale << endl;
+	cout << "stars_fstars "<<star_fstars << endl;
+	cout << "stars_theta_force "<<star_theta_force << endl;
+	if(show_stars){
+		if(stars_implanted){
+		  for(int i=0 ; i < stars_N ; ++i) cout << "    x["<<i<<"]="
+						    << stars_xp[i][0] << " " << stars_xp[i][1] << endl;
+		}else cout << "stars are not implanted yet" << endl;
+	}
+}
+}
 
 LensHaloBaseNSIE::~LensHaloBaseNSIE(){
 	cout << "deleting lens" << endl;

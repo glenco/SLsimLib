@@ -46,7 +46,7 @@
  *
  */
 
-class LensHaloUniform: public LensHaloBaseNSIE{
+class LensHaloUniform: public LensHalo{
 public:
 	LensHaloUniform(InputParams& params);
 	~LensHaloUniform();
@@ -58,10 +58,25 @@ public:
 	float* getGamma_uniform(){return gamma_uniform;}
 	double getAveMag(){ return 1.0/( pow(1-kappa_uniform,2) - gamma_uniform[0]*gamma_uniform[0] - gamma_uniform[1]*gamma_uniform[1]);}
 
+	  double getPerturb_beta(){return perturb_beta;}
+	  int getPerturb_Nmodes(){return perturb_Nmodes;}    /// this includes two for external shear
+	  double *perturb_modes;  ///first two are shear
+
+		/// overridden function to calculate the lensing properties
+		void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa,bool subtract_point=false);
+		void setInternalParams(CosmoHndl);
+
 protected:
 
    float kappa_uniform;
    float gamma_uniform[3];
+   // perturbations to host.  These are protected so that in some derived classes they can or cann't be changed.
+ int perturb_Nmodes;    /// this includes two for external shear
+ double perturb_beta;
+ double *perturb_rms;
+ float reference_z;
+ double Dl, Ds, Dls;
+
 
 };
 

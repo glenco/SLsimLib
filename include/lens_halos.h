@@ -11,6 +11,9 @@
 #include "standard.h"
 #include "InputParams.h"
 #include "source.h"
+#include "point.h"
+//#include "quadTree.h"
+
 
 /**
  * \brief A base class for all types of lensing halos.
@@ -37,6 +40,8 @@
  * is intended for the cases where the simulation is populated by lensing halos from
  * a mass function. Then one needs all parameters of the halo -- mass, Rmax, and rscale.
  */
+
+class TreeQuad; // forward declaration TODO Fabio: can you do something prettier?
 
 class LensHalo{
 public:
@@ -72,13 +77,39 @@ public:
 	virtual void set_slope(double my_slope){};
 
 	/// set internal params that need either the cosmology or the source
-	virtual void setInternalParams(CosmoHndl cosmo, SourceHndl source){};
+	virtual void setInternalParams(CosmoHndl cosmo){};
 
 	/// calculate the lensing properties -- deflection, convergence, and shear
 	virtual void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa,bool subtract_point=false);
 
 	/// internal compare redshift function
 	bool compare(double z){return z > zlens;};
+
+	  /// stars
+	  bool AreStarsImaplated(){return stars_implanted;}
+	  int stars_N;
+	  IndexType *stars;
+	  PosType **stars_xp;
+	  //TreeForce *star_tree;
+	  TreeQuad *star_tree;
+	  double star_massscale;
+	  /// star masses relative to star_massscles
+	  float *star_masses;
+	  double star_fstars;
+	  double star_theta_force;
+	  int star_Nregions;
+	  double *star_region;
+
+	  void substract_stars_disks(PosType *ray,PosType *alpha
+	                  ,KappaType *kappa,KappaType *gamma);
+	  void implant_stars(PosType **centers,unsigned long Nregions,long *seed, IMFtype type=One);
+	  float* stellar_mass_function(IMFtype type, unsigned long Nstars, long *seed, double minmass=0.0, double maxmass=0.0
+	  		,double bendmass=0.0, double powerlo=0.0, double powerhi=0.0);
+	  IMFtype getIMF_type(){return imf_type;}
+
+	  void PrintStars(bool show_stars);
+
+
 
 protected:
 	/// read in parameters from a parameterfile in InputParams params
@@ -94,6 +125,18 @@ protected:
     float rscale;
     /// redshift
     double zlens;
+
+    bool stars_implanted;
+    /// Number of regions to be subtracted to compensate for the mass in stars
+    IMFtype imf_type;
+    double min_mstar;
+    double max_mstar;
+    double bend_mstar;
+    double lo_mass_slope;
+    double hi_mass_slope;
+    /// parameters for stellar mass function: minimal and maximal stellar mass, bending point for a broken power law IMF
+    double *star_kappa;
+    double **star_xdisk;
 
     /// point mass case
 	virtual double inline alpha_h(double x){return -1;};
