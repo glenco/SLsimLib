@@ -290,13 +290,13 @@ LensHaloSimpleNSIE::LensHaloSimpleNSIE(InputParams& params){
 }
 
 void LensHaloSimpleNSIE::assignParams(InputParams& params){
-	if(!params.get("main_mass_nsie",mass)) error_message1("mass_nsie",params.filename());
-	if(!params.get("main_zlens_nsie",zlens)) error_message1("zlens_nsie",params.filename());
+	if(!params.get("main_mass_nsie",mass)) error_message1("main_mass_nsie",params.filename());
+	if(!params.get("main_zlens_nsie",zlens)) error_message1("main_zlens_nsie",params.filename());
 
-	if(!params.get("main_sigma",sigma)) error_message1("sigma",params.filename());
-	if(!params.get("main_core",rcore)) error_message1("core",params.filename());
-	if(!params.get("main_axis_ratio",fratio)) error_message1("axis_ratio",params.filename());
-	if(!params.get("main_pos_angle",pa)) error_message1("pos_angle",params.filename());
+	if(!params.get("main_sigma",sigma)) error_message1("main_sigma",params.filename());
+	if(!params.get("main_core",rcore)) error_message1("main_core",params.filename());
+	if(!params.get("main_axis_ratio",fratio)) error_message1("main_axis_ratio",params.filename());
+	if(!params.get("main_pos_angle",pa)) error_message1("main_pos_angle",params.filename());
 
 	Rsize = rmaxNSIE(sigma,mass,fratio,rcore);
 	Rmax = MAX(1.0,1.0/fratio)*Rsize;  // redefine
