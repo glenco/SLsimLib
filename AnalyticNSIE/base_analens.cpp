@@ -30,7 +30,7 @@ void LensHaloBaseNSIE::force_halo(
      *kappa = 0.0;
 
 	 double xt[2]={0,0};
-	 float units = pow(sigma/lightspeed,2)/Grav/sqrt(fratio); // mass/distance(physical)
+	 float units = pow(sigma/lightspeed,2)/Grav;///sqrt(fratio); // mass/distance(physical)
 	 xt[0]=xcm[0];
 	 xt[1]=xcm[1];
      alphaNSIE(alpha,xt,fratio,rcore,pa);
@@ -97,7 +97,7 @@ void LensHaloBaseNSIE::force_halo(
  */
 void LensHaloBaseNSIE::assignParams(InputParams& params){
 	if(!params.get("main_mass_nsie",mass)) error_message1("main_mass_nsie",params.filename());
-	if(!params.get("main_zlens",zlens)) error_message1("main_zlens",params.filename());
+	if(!params.get("z_lens",zlens)) error_message1("main_zlens",params.filename());
 
 	if(!params.get("main_sigma",sigma)) error_message1("main_sigma",params.filename());
 	if(!params.get("main_core",rcore)) error_message1("main_core",params.filename());
