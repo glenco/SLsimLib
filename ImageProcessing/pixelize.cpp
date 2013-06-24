@@ -317,6 +317,12 @@ bool PixelMap::inMapBox(Branch * branch1){
 	if (branch1->boundary_p1[1] > map_boundary_p2[1] || branch1->boundary_p2[1] < map_boundary_p1[1]) return false;
 	return true;
 }
+/// checks if point is within map boundaries
+bool PixelMap::inMapBox(double * x){
+	if (x[0] > map_boundary_p2[0] || x[0] < map_boundary_p1[0]) return false;
+	if (x[1] > map_boundary_p2[1] || x[1] < map_boundary_p1[1]) return false;
+	return true;
+}
 
 //// Finds the area of the intersection between pixel i and branch1
 double PixelMap::LeafPixelArea(IndexType i,Branch * branch1){
@@ -723,4 +729,70 @@ double PixelData::chi_square(const PixelMap &model) const
 	}
 	
 	return chi2;
+}
+/**
+ * \brief Draws a line between two points on the image by setting
+ * the pixels equal to value.
+ *
+ * TODO: Could be improved by detecting if the line passes through the map
+ * at all before starting.  Could also be improved by making the line fatter
+ * by including neighbor points.
+ */
+void PixelMap::drawline(double x1[],double x2[],double value){
+
+	double x[2],s1,s2,r;
+	size_t index;
+	double d = 0;
+
+	r = sqrt( (x2[0] - x1[0])*(x2[0] - x1[0]) + (x2[1] - x1[1])*(x2[1] - x1[1]) );
+
+	if(r==0.0){
+		if(inMapBox(x1)){
+			index = Utilities::IndexFromPosition(x1,Npixels,range,center);
+			map[index] = value;
+		}
+		return;
+	}
+
+	s1 = (x2[0] - x1[0])/r;
+	s2 = (x2[1] - x1[1])/r;
+
+	x[0] = x1[0];
+	x[1] = x1[1];
+	while(d <= r){
+		if(inMapBox(x)){
+			index = Utilities::IndexFromPosition(x,Npixels,range,center);
+			map[index] = value;
+		}
+		x[0] += s1*resolution;
+		x[1] += s2*resolution;
+		d += resolution;
+	}
+
+	return;
+}
+/**
+ * \brief Draws a closed curve through the points in curve->imagekist
+ *
+ * This differs form PixelMap::AddImage() in that it draws lines between the points
+ * and takes no account of the cells that the points are in or the surface brightness.
+ * The points must be ordered already.  Particularly useful for drawing the caustics
+ * that may have irregular cell sizes.  The last point will be connected to the first point.
+ */
+void PixelMap::AddCurve(ImageInfo *curve,double value){
+	PosType x[2];
+
+	curve->imagekist->MoveToTop();
+	x[0] = curve->imagekist->getCurrent()->x[0];
+	x[1] = curve->imagekist->getCurrent()->x[1];
+	curve->imagekist->Down();
+	for(;!(curve->imagekist->OffBottom());curve->imagekist->Down()){
+		drawline(x,curve->imagekist->getCurrent()->x,value);
+		x[0] = curve->imagekist->getCurrent()->x[0];
+		x[1] = curve->imagekist->getCurrent()->x[1];
+	}
+	curve->imagekist->MoveToTop();
+	drawline(x,curve->imagekist->getCurrent()->x,value);
+
+	return;
 }
