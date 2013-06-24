@@ -35,6 +35,55 @@ void LensHalo::assignParams(InputParams& params){
 	if(!params.get("z_lens",zlens)) error_message1("z_lens",params.filename());
 }
 
+// TODO Fabio: insert it in all halos::PrintLens()
+void LensHalo::PrintStars(bool show_stars)
+{
+std::cout << std::endl << "Nstars "<<stars_N << std::endl << std::endl;
+if(stars_N>0){
+	if(star_Nregions > 0)
+		std::cout << "stars_Nregions "<<star_Nregions << std::endl;
+	std::cout << "stars_massscale "<<star_massscale << std::endl;
+	std::cout << "stars_fstars "<<star_fstars << std::endl;
+	std::cout << "stars_theta_force "<<star_theta_force << std::endl;
+	if(show_stars){
+		if(stars_implanted){
+		  for(int i=0 ; i < stars_N ; ++i) std::cout << "    x["<<i<<"]="
+						    << stars_xp[i][0] << " " << stars_xp[i][1] << std::endl;
+		}else std::cout << "stars are not implanted yet" << std::endl;
+	}
+}
+}
+
+void LensHalo::force_stars(
+		double *alpha     /// mass/Mpc
+		,KappaType *kappa
+		,KappaType *gamma
+		,double *xcm
+		,bool no_kappa
+		)
+{
+    double alpha_tmp[2];
+    KappaType kappa_tmp = 0.0, gamma_tmp[3], tmp = 0;
+
+    gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
+    alpha_tmp[0] = alpha_tmp[1] = 0.0;
+
+	 substract_stars_disks(xcm,alpha,kappa,gamma);
+
+	 // do stars with tree code
+	 star_tree->force2D_recur(xcm,alpha_tmp,&tmp,gamma_tmp,no_kappa);
+
+	 alpha[0] -= star_massscale*alpha_tmp[0];
+	 alpha[1] -= star_massscale*alpha_tmp[1];
+
+	 if(!no_kappa){
+		 *kappa += star_massscale*tmp;
+		 gamma[0] += star_massscale*gamma_tmp[0];
+		 gamma[1] += star_massscale*gamma_tmp[1];
+	 }
+
+}
+
 LensHalo::~LensHalo(){
 
 }
@@ -241,13 +290,13 @@ LensHaloSimpleNSIE::LensHaloSimpleNSIE(InputParams& params){
 }
 
 void LensHaloSimpleNSIE::assignParams(InputParams& params){
-	if(!params.get("mass_nsie",mass)) error_message1("mass_nsie",params.filename());
-	if(!params.get("zlens_nsie",zlens)) error_message1("zlens_nsie",params.filename());
+	if(!params.get("main_mass_nsie",mass)) error_message1("mass_nsie",params.filename());
+	if(!params.get("main_zlens_nsie",zlens)) error_message1("zlens_nsie",params.filename());
 
-	if(!params.get("sigma",sigma)) error_message1("sigma",params.filename());
-	if(!params.get("core",rcore)) error_message1("core",params.filename());
-	if(!params.get("axis_ratio",fratio)) error_message1("axis_ratio",params.filename());
-	if(!params.get("pos_angle",pa)) error_message1("pos_angle",params.filename());
+	if(!params.get("main_sigma",sigma)) error_message1("sigma",params.filename());
+	if(!params.get("main_core",rcore)) error_message1("core",params.filename());
+	if(!params.get("main_axis_ratio",fratio)) error_message1("axis_ratio",params.filename());
+	if(!params.get("main_pos_angle",pa)) error_message1("pos_angle",params.filename());
 
 	Rsize = rmaxNSIE(sigma,mass,fratio,rcore);
 	Rmax = MAX(1.0,1.0/fratio)*Rsize;  // redefine

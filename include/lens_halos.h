@@ -82,6 +82,9 @@ public:
 	/// calculate the lensing properties -- deflection, convergence, and shear
 	virtual void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa,bool subtract_point=false);
 
+	/// force tree calculation for stars
+	void force_stars(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa);
+
 	/// internal compare redshift function
 	bool compare(double z){return z > zlens;};
 

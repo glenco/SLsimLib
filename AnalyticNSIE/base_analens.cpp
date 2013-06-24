@@ -86,23 +86,7 @@ void LensHaloBaseNSIE::force_halo(
      // add stars for microlensing
      // TODO Fabio: in the end there will be a LensHalo::force_stars with this piece of code
      if(stars_N > 0 && stars_implanted){
-
-    	 substract_stars_disks(xcm,alpha,kappa,gamma);
-
-    	 // do stars with tree code
-    	 star_tree->force2D_recur(xcm,alpha_tmp,&tmp,gamma_tmp,no_kappa);
-
-    	 // it was
-     	 // double convert_factor = star_massscale/Sigma_crit;
-     	 // alpha[0] -= convert_factor*alpha_tmp[0];
-    	 alpha[0] -= star_massscale*alpha_tmp[0];
-    	 alpha[1] -= star_massscale*alpha_tmp[1];
-
-    	 if(!no_kappa){
-    		 *kappa += star_massscale*tmp;
-    		 gamma[0] += star_massscale*gamma_tmp[0];
-    		 gamma[1] += star_massscale*gamma_tmp[1];
-    	 }
+    	 force_stars(alpha,kappa,gamma,xcm,no_kappa);
      }
      return ;
 }
@@ -112,15 +96,14 @@ void LensHaloBaseNSIE::force_halo(
  * Sets many parameters within the lens model, source model and
  * force calculation.
  */
-// TODO Fabio: Now it needs to assign also SimpleNSIE-like parameters
 void LensHaloBaseNSIE::assignParams(InputParams& params){
-	if(!params.get("mass_nsie",mass)) error_message1("mass_nsie",params.filename());
-	if(!params.get("zlens_nsie",zlens)) error_message1("zlens_nsie",params.filename());
+	if(!params.get("main_mass_nsie",mass)) error_message1("mass_nsie",params.filename());
+	if(!params.get("main_zlens_nsie",zlens)) error_message1("zlens_nsie",params.filename());
 
-	if(!params.get("sigma",sigma)) error_message1("sigma",params.filename());
-	if(!params.get("core",rcore)) error_message1("core",params.filename());
-	if(!params.get("axis_ratio",fratio)) error_message1("axis_ratio",params.filename());
-	if(!params.get("pos_angle",pa)) error_message1("pos_angle",params.filename());
+	if(!params.get("main_sigma",sigma)) error_message1("sigma",params.filename());
+	if(!params.get("main_core",rcore)) error_message1("core",params.filename());
+	if(!params.get("main_axis_ratio",fratio)) error_message1("axis_ratio",params.filename());
+	if(!params.get("main_pos_angle",pa)) error_message1("pos_angle",params.filename());
 
 	Rsize = rmaxNSIE(sigma,mass,fratio,rcore);
 	Rmax = MAX(1.0,1.0/fratio)*Rsize;  // redefine
@@ -130,30 +113,30 @@ void LensHaloBaseNSIE::assignParams(InputParams& params){
 	if(!params.get("z_lens",zlens)) error_message1("z_lens",params.filename());
 
     // Substructure parameters
-    if(!params.get("NdensitySubstruct",sub_Ndensity)) error_message1("NdensitySubstruct",params.filename());
+    if(!params.get("main_NdensitySubstruct",sub_Ndensity)) error_message1("NdensitySubstruct",params.filename());
     else if(sub_Ndensity > 0){
-    	if(!params.get("beta_sub",sub_beta)) error_message1("beta_sub",params.filename());
-    	if(!params.get("alpha_sub",sub_alpha)) error_message1("alpha_sub",params.filename());
-    	if(!params.get("R_submax",sub_Rmax)) error_message1("R_submax",params.filename());
-    	if(!params.get("sub_mass_max",sub_Mmax)) error_message1("sub_mass_max",params.filename());
-    	if(!params.get("sub_mass_min",sub_Mmin)) error_message1("sub_mass_min",params.filename());
+    	if(!params.get("main_sub_beta",sub_beta)) error_message1("beta_sub",params.filename());
+    	if(!params.get("main_sub_alpha",sub_alpha)) error_message1("alpha_sub",params.filename());
+    	if(!params.get("main_sub_Rmax",sub_Rmax)) error_message1("R_submax",params.filename());
+    	if(!params.get("main_sub_mass_max",sub_Mmax)) error_message1("sub_mass_max",params.filename());
+    	if(!params.get("main_sub_mass_min",sub_Mmin)) error_message1("sub_mass_min",params.filename());
     	if(sub_Mmin < 1.0e3){
     		ERROR_MESSAGE();
     		std::cout << "Are you sure the minimum halo mass should be " << sub_Mmin << " Msun?" << std::endl;
     		exit(1);
     	}
-    	if(!params.get("sub_type",sub_type)) error_message1("sub_type",params.filename());
+    	if(!params.get("main_sub_type",sub_type)) error_message1("sub_type",params.filename());
     }
 	  // Stars parameters
-    if(!params.get("Nstars",stars_N)) error_message1("Nstars",params.filename());
+    if(!params.get("main_Nstars",stars_N)) error_message1("Nstars",params.filename());
     else if(stars_N){
-    	if(!params.get("fstars",star_fstars)) error_message1("fstars",params.filename());
+    	if(!params.get("main_stars_fraction",star_fstars)) error_message1("fstars",params.filename());
     	if(star_fstars < 0 || star_fstars > 1){
     		ERROR_MESSAGE();
     		cout << "fstars cannot be less than 0 or larger than 1 in file " << params.filename() <<endl;
     		exit(0);
     	}
-    	if(!params.get("stars_mass",star_massscale)) error_message1("stars_mass",params.filename());
+    	if(!params.get("main_stars_mass",star_massscale)) error_message1("stars_mass",params.filename());
     }
 
 }
@@ -272,24 +255,6 @@ void LensHaloBaseNSIE::PrintLens(bool show_substruct,bool show_stars){
 	if (stars_implanted) PrintStars(show_stars);
 }
 
-// TODO Fabio: move this to a better place and insert it in all halos::PrintLens()
-void LensHalo::PrintStars(bool show_stars)
-{
-cout << endl << "Nstars "<<stars_N << endl << endl;
-if(stars_N>0){
-	if(star_Nregions > 0)
-		cout << "stars_Nregions "<<star_Nregions << endl;
-	cout << "stars_massscale "<<star_massscale << endl;
-	cout << "stars_fstars "<<star_fstars << endl;
-	cout << "stars_theta_force "<<star_theta_force << endl;
-	if(show_stars){
-		if(stars_implanted){
-		  for(int i=0 ; i < stars_N ; ++i) cout << "    x["<<i<<"]="
-						    << stars_xp[i][0] << " " << stars_xp[i][1] << endl;
-		}else cout << "stars are not implanted yet" << endl;
-	}
-}
-}
 
 LensHaloBaseNSIE::~LensHaloBaseNSIE(){
 	cout << "deleting lens" << endl;
