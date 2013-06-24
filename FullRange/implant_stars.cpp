@@ -56,7 +56,7 @@ void LensHalo::implant_stars(PosType **centers,unsigned long Nregions,long *seed
 		return;
 	}
 
-	//params.get("sub_mass_max",sub_Mmax)
+	//params.get("main_sub_mass_max",sub_Mmax)
 	NstarsPerImage = stars_N/star_Nregions;
 	star_masses=stellar_mass_function(type, stars_N, seed, min_mstar, max_mstar, bend_mstar,lo_mass_slope,hi_mass_slope);
 	if (type==One){

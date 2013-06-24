@@ -291,7 +291,7 @@ LensHaloSimpleNSIE::LensHaloSimpleNSIE(InputParams& params){
 
 void LensHaloSimpleNSIE::assignParams(InputParams& params){
 	if(!params.get("main_mass_nsie",mass)) error_message1("main_mass_nsie",params.filename());
-	if(!params.get("main_zlens_nsie",zlens)) error_message1("main_zlens_nsie",params.filename());
+	if(!params.get("main_zlens",zlens)) error_message1("main_zlens",params.filename());
 
 	if(!params.get("main_sigma",sigma)) error_message1("main_sigma",params.filename());
 	if(!params.get("main_core",rcore)) error_message1("main_core",params.filename());

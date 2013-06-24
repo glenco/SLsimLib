@@ -83,24 +83,9 @@ void LensHaloUniform::force_halo(
 
 	      // add stars for microlensing
 	      if(stars_N > 0 && stars_implanted){
-
-	     	 substract_stars_disks(xcm,alpha,kappa,gamma);
-
-	     	 // do stars with tree code
-	     	 star_tree->force2D_recur(xcm,alpha_tmp,&tmp,gamma_tmp,no_kappa);
-
-	     	 // it was
-	     	 // double convert_factor = star_massscale/Sigma_crit;
-	     	 // alpha[0] -= convert_factor*alpha_tmp[0];
-	     	 alpha[0] -= star_massscale*alpha_tmp[0];
-	     	 alpha[1] -= star_massscale*alpha_tmp[1];
-
-	     	 if(!no_kappa){
-	     		 *kappa += star_massscale*tmp;
-	     		 gamma[0] += star_massscale*gamma_tmp[0];
-	     		 gamma[1] += star_massscale*gamma_tmp[1];
-	     	 }
+	     	 force_stars(alpha,kappa,gamma,xcm,no_kappa);
 	      }
+
 
 }
 

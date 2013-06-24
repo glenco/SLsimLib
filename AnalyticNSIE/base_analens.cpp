@@ -84,7 +84,6 @@ void LensHaloBaseNSIE::force_halo(
      }
 
      // add stars for microlensing
-     // TODO Fabio: in the end there will be a LensHalo::force_stars with this piece of code
      if(stars_N > 0 && stars_implanted){
     	 force_stars(alpha,kappa,gamma,xcm,no_kappa);
      }
@@ -98,7 +97,7 @@ void LensHaloBaseNSIE::force_halo(
  */
 void LensHaloBaseNSIE::assignParams(InputParams& params){
 	if(!params.get("main_mass_nsie",mass)) error_message1("main_mass_nsie",params.filename());
-	if(!params.get("main_zlens_nsie",zlens)) error_message1("main_zlens_nsie",params.filename());
+	if(!params.get("main_zlens",zlens)) error_message1("main_zlens",params.filename());
 
 	if(!params.get("main_sigma",sigma)) error_message1("main_sigma",params.filename());
 	if(!params.get("main_core",rcore)) error_message1("main_core",params.filename());
@@ -109,11 +108,9 @@ void LensHaloBaseNSIE::assignParams(InputParams& params){
 	Rmax = MAX(1.0,1.0/fratio)*Rsize;  // redefine
 
 	assert(Rmax >= Rsize);
-	// Host lens parameters
-	if(!params.get("z_lens",zlens)) error_message1("z_lens",params.filename());
 
     // Substructure parameters
-    if(!params.get("main_NdensitySubstruct",sub_Ndensity)) error_message1("main_NdensitySubstruct",params.filename());
+	if(!params.get("main_sub_Ndensity",sub_Ndensity)) error_message1("main_sub_Ndensity",params.filename());
     else if(sub_Ndensity > 0){
     	if(!params.get("main_sub_beta",sub_beta)) error_message1("main_sub_beta",params.filename());
     	if(!params.get("main_sub_alpha",sub_alpha)) error_message1("main_sub_alpha",params.filename());
@@ -128,12 +125,12 @@ void LensHaloBaseNSIE::assignParams(InputParams& params){
     	if(!params.get("main_sub_type",sub_type)) error_message1("main_sub_type",params.filename());
     }
 	  // Stars parameters
-    if(!params.get("main_Nstars",stars_N)) error_message1("main_Nstars",params.filename());
+	if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
     else if(stars_N){
     	if(!params.get("main_stars_fraction",star_fstars)) error_message1("main_stars_fraction",params.filename());
     	if(star_fstars < 0 || star_fstars > 1){
     		ERROR_MESSAGE();
-    		cout << "fstars cannot be less than 0 or larger than 1 in file " << params.filename() <<endl;
+    		cout << "main_stars_fraction cannot be less than 0 or larger than 1 in file " << params.filename() <<endl;
     		exit(0);
     	}
     	if(!params.get("main_stars_mass",star_massscale)) error_message1("main_stars_mass",params.filename());

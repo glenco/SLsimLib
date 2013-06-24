@@ -29,8 +29,8 @@ void LensHaloAnaNSIE::assignParams(InputParams& params){
 	// Distortion of host lens parameters
 	if(!params.get("main_NDistortionModes",perturb_Nmodes)) error_message1("main_NDistortionModes",params.filename());
 	else if(perturb_Nmodes > 0){
-		if(!params.get("main_beta_perturb",perturb_beta)) error_message1("main_beta_perturb",params.filename());
-		else if(perturb_beta <= 0.0) {ERROR_MESSAGE(); cout << "main_beta_perturb can't be <= 0.0 in file " << params.filename(); }
+		if(!params.get("main_perturb_beta",perturb_beta)) error_message1("main_perturb_beta",params.filename());
+		else if(perturb_beta <= 0.0) {ERROR_MESSAGE(); cout << "perturb_beta can't be <= 0.0 in file " << params.filename(); }
 		if(!params.get("main_perturb_kappa",perturb_rms[0])) error_message1("main_perturb_kappa",params.filename());
 		if(!params.get("main_perturb_gamma",perturb_rms[1])) error_message1("main_perturb_gamma",params.filename());
 		if(!params.get("main_perturb_monopole",perturb_rms[2])) error_message1("main_perturb_monopole",params.filename());
