@@ -26,15 +26,6 @@ LensHaloUniform::LensHaloUniform(InputParams& params) : LensHalo(params){
   }else{
     Rmax = std::numeric_limits<float>::max();
   }
-/*	double Dl = cosmo->angDist(0,reference_z);
-	double Ds = cosmo->angDist(0,zlens);
-	double Dls = cosmo->angDist(zlens,reference_z);
-*/	double norm_factor = 8*pi*Grav*Dls*Dl/Ds;
-	kappa_uniform /= norm_factor;
-	gamma_uniform[0] /= norm_factor;
-	gamma_uniform[1] /= norm_factor;
-
-  
   perturb_Nmodes=3;
   perturb_modes = new double[3];
 
@@ -50,9 +41,13 @@ LensHaloUniform::~LensHaloUniform(){
 }
 
 void LensHaloUniform::setInternalParams(CosmoHndl cosmo){
-		double Dl = cosmo->angDist(0,reference_z);
-		double Ds = cosmo->angDist(0,zlens);
-		double Dls = cosmo->angDist(zlens,reference_z);
+		Dl = cosmo->angDist(0,reference_z);
+		Ds = cosmo->angDist(0,zlens);
+		Dls = cosmo->angDist(zlens,reference_z);
+		double norm_factor = 8*pi*Grav*Dls*Dl/Ds;
+		kappa_uniform /= norm_factor;
+		gamma_uniform[0] /= norm_factor;
+		gamma_uniform[1] /= norm_factor;
 }
 
 void LensHaloUniform::force_halo(
@@ -121,24 +116,21 @@ void LensHaloUniform::PrintLens(bool show_substruct,bool show_stars){
 	cout << "kappa " << kappa_uniform << endl;
 	cout << "gamma " << gamma_uniform[0] << " " << gamma_uniform[1] << endl;
 
+	if (stars_implanted) PrintStars(show_stars);
 
 }
 
 
-/*void LensHaloUniform::implant_stars(double x, double y, unsigned long Nregions,long *seed, IMFtype type){
+void LensHalo::implant_stars(double x, double y, unsigned long Nregions,long *seed, IMFtype type){
 
 	if(Nregions <= 0) return;
-	Point *centers;
-	gamma_uniform[2]=0.0; // TODO gamma_uniform[2] determines rotation for multiplane lens, how shall it be implemented here?
-	centers = New=PointArray(Nregions,true);
-	centers[0].x[0]=x;
-	centers[0].x[1]=y;
-	centers[0].kappa=kappa_uniform;
-	centers[0].gamma[0]=gamma_uniform[0];
-	centers[0].gamma[1]=gamma_uniform[1];
-	centers[0].gamma[2]=gamma_uniform[2];
 
-	LensHaloBaseNSIE::implant_stars(centers,Nregions,seed,type);
+	double ** centers = new double*[Nregions];
+	for (int i = 0; i < Nregions; ++i)
+		centers[i] = new double[2];
+	centers[0][0] = x;
+	centers[0][1] = y;
+	implant_stars(centers,Nregions,seed,type);
 }
-*/
+
 

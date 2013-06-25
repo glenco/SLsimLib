@@ -35,7 +35,6 @@ void LensHalo::assignParams(InputParams& params){
 	if(!params.get("z_lens",zlens)) error_message1("z_lens",params.filename());
 }
 
-// TODO Fabio: insert it in all halos::PrintLens()
 void LensHalo::PrintStars(bool show_stars)
 {
 std::cout << std::endl << "Nstars "<<stars_N << std::endl << std::endl;
@@ -378,6 +377,10 @@ void LensHalo::force_halo(
 			}
 		}
 	}
+    // add stars for microlensing
+    if(stars_N > 0 && stars_implanted){
+   	 force_stars(alpha,kappa,gamma,xcm,no_kappa);
+    }
 
 	return;
 }
@@ -460,6 +463,11 @@ void LensHaloSimpleNSIE::force_halo(
 		}
 
 	}
+    // add stars for microlensing
+    if(stars_N > 0 && stars_implanted){
+   	 force_stars(alpha,kappa,gamma,xcm,no_kappa);
+    }
+
 	return;
 }
 
@@ -568,6 +576,11 @@ void LensHaloDummy::force_halo(double *alpha,KappaType *kappa,KappaType *gamma,d
       gamma[1] += xcm[0]*xcm[1]*tmp;
     }
   }
+  // add stars for microlensing
+  if(stars_N > 0 && stars_implanted){
+ 	 force_stars(alpha,kappa,gamma,xcm,no_kappa);
+  }
+
 }
 
 void LensHaloDummy::assignParams(InputParams& params)

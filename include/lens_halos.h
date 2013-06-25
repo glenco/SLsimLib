@@ -106,6 +106,9 @@ public:
 	  void substract_stars_disks(PosType *ray,PosType *alpha
 	                  ,KappaType *kappa,KappaType *gamma);
 	  void implant_stars(PosType **centers,unsigned long Nregions,long *seed, IMFtype type=One);
+	  // creates a single star halo in pos (x,y)
+   	void implant_stars(double x,double y,unsigned long Nregions,long *seed,IMFtype type=One);
+
 	  float* stellar_mass_function(IMFtype type, unsigned long Nstars, long *seed, double minmass=0.0, double maxmass=0.0
 	  		,double bendmass=0.0, double powerlo=0.0, double powerhi=0.0);
 	  IMFtype getIMF_type(){return imf_type;}

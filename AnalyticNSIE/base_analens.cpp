@@ -125,6 +125,7 @@ void LensHaloBaseNSIE::assignParams(InputParams& params){
     	if(!params.get("main_sub_type",sub_type)) error_message1("main_sub_type",params.filename());
     }
 	  // Stars parameters
+	// TODO Fabio I should include this in every reasonable halo
 	if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
     else if(stars_N){
     	if(!params.get("main_stars_fraction",star_fstars)) error_message1("main_stars_fraction",params.filename());
