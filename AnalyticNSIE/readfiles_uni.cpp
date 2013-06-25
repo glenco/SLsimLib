@@ -29,9 +29,6 @@ LensHaloUniform::LensHaloUniform(InputParams& params) : LensHalo(params){
   perturb_Nmodes=3;
   perturb_modes = new double[3];
 
-  perturb_modes[0]=kappa_uniform;
-  perturb_modes[1]=gamma_uniform[0];
-  perturb_modes[2]=gamma_uniform[1];
 
   PrintLens(false,false);
 }
@@ -41,13 +38,17 @@ LensHaloUniform::~LensHaloUniform(){
 }
 
 void LensHaloUniform::setInternalParams(CosmoHndl cosmo){
-		Dl = cosmo->angDist(0,reference_z);
-		Ds = cosmo->angDist(0,zlens);
+		Dl = cosmo->angDist(0,zlens);
+		Ds = cosmo->angDist(0,reference_z);
 		Dls = cosmo->angDist(zlens,reference_z);
-		double norm_factor = 8*pi*Grav*Dls*Dl/Ds;
+		double norm_factor = 4*pi*Grav*Dls*Dl/Ds;
 		kappa_uniform /= norm_factor;
 		gamma_uniform[0] /= norm_factor;
 		gamma_uniform[1] /= norm_factor;
+    	  perturb_modes[0]=kappa_uniform;
+		  perturb_modes[1]=gamma_uniform[0];
+		  perturb_modes[2]=gamma_uniform[1];
+
 }
 
 void LensHaloUniform::force_halo(
@@ -81,7 +82,6 @@ void LensHaloUniform::force_halo(
 	     	 force_stars(alpha,kappa,gamma,xcm,no_kappa);
 	      }
 
-
 }
 
 
@@ -98,6 +98,8 @@ void LensHaloUniform::assignParams(InputParams& params){
 	if(!params.get("bending_point",bend_mstar)) error_message1("bending_point",params.filename());
 	if(!params.get("slope_1",lo_mass_slope)) error_message1("slope_1",params.filename());
 	if(!params.get("slope_2",hi_mass_slope)) error_message1("slope_2",params.filename());
+
+	if(!params.get("reference_z",reference_z)) error_message1("reference_z",params.filename());
 
 	return;
 }
