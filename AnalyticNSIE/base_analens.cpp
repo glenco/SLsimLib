@@ -128,13 +128,7 @@ void LensHaloBaseNSIE::assignParams(InputParams& params){
 	// TODO Fabio I should include this in every reasonable halo
 	if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
     else if(stars_N){
-    	if(!params.get("main_stars_fraction",star_fstars)) error_message1("main_stars_fraction",params.filename());
-    	if(star_fstars < 0 || star_fstars > 1){
-    		ERROR_MESSAGE();
-    		cout << "main_stars_fraction cannot be less than 0 or larger than 1 in file " << params.filename() <<endl;
-    		exit(0);
-    	}
-    	if(!params.get("main_stars_mass",star_massscale)) error_message1("main_stars_mass",params.filename());
+    	assignParams_stars(params);
     }
 
 }

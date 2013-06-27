@@ -113,8 +113,8 @@ void LensHalo::implant_stars(PosType **centers,unsigned long Nregions,long *seed
 			//m=j*NstarsPerImage+i;
 			r = star_region[j]*sqrt(ran2(seed));
 			theta=2*pi*ran2(seed);
-			stars_xp[m][0] = centers[j][0] + r*cos(theta);
-			stars_xp[m][1] = centers[j][1] + r*sin(theta);
+			stars_xp[m][0] = star_xdisk[j][0] + r*cos(theta);
+			stars_xp[m][1] = star_xdisk[j][1] + r*sin(theta);
 			stars_xp[m][2] = 0.0;
 			//cout << m << " " << star_masses[m] << endl;
 
@@ -146,6 +146,7 @@ void LensHalo::implant_stars(PosType **centers,unsigned long Nregions,long *seed
 
 	assert(m <= stars_N);
 	stars_N = m;
+
 	//std::printf("last star x = %e %e\n",stars_xp[stars_N-1][0],stars_xp[stars_N-1][1]);
 
 	float dummy=0;

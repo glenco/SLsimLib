@@ -115,6 +115,8 @@ public:
 
 	  void PrintStars(bool show_stars);
 
+	  void assignParams_stars(InputParams& params);
+
 
 
 protected:

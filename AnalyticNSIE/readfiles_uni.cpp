@@ -81,16 +81,19 @@ void LensHaloUniform::force_halo(
 	      if(stars_N > 0 && stars_implanted){
 	     	 force_stars(alpha,kappa,gamma,xcm,no_kappa);
 	      }
+//		 	 std::cout << xcm[0] << "  " << xcm[1] << "  " << alpha_tmp[0] << "  " << alpha_tmp[1] << "  " << alpha[0] << "  " << alpha[1] << std::endl;
 
 }
 
+void LensHalo::assignParams_stars(InputParams& params){
 
-void LensHaloUniform::assignParams(InputParams& params){
-
-	//if(perturb_Nmodes > 0){
-	if(!params.get("kappa_uniform",kappa_uniform)) error_message1("kappa_uniform",params.filename());
-	if(!params.get("gamma_uniform_1",gamma_uniform[0])) error_message1("gamma_uniform_1",params.filename());
-	if(!params.get("gamma_uniform_2",gamma_uniform[1])) error_message1("gamma_uniform_2",params.filename());
+   	if(!params.get("main_stars_fraction",star_fstars)) error_message1("main_stars_fraction",params.filename());
+   	if(star_fstars < 0 || star_fstars > 1){
+   		ERROR_MESSAGE();
+    	cout << "main_stars_fraction cannot be less than 0 or larger than 1 in file " << params.filename() <<endl;
+    	exit(0);
+   	}
+   	if(!params.get("main_stars_mass",star_massscale)) error_message1("main_stars_mass",params.filename());
 
 	if(!params.get("stellar_mass_function",imf_type)) error_message1("stellar_mass_function",params.filename());
 	if(!params.get("min_mstar",min_mstar)) error_message1("min_mstar",params.filename());
@@ -99,7 +102,20 @@ void LensHaloUniform::assignParams(InputParams& params){
 	if(!params.get("slope_1",lo_mass_slope)) error_message1("slope_1",params.filename());
 	if(!params.get("slope_2",hi_mass_slope)) error_message1("slope_2",params.filename());
 
+	return;
+}
+
+void LensHaloUniform::assignParams(InputParams& params){
+
+	//if(perturb_Nmodes > 0){
+	if(!params.get("kappa_uniform",kappa_uniform)) error_message1("kappa_uniform",params.filename());
+	if(!params.get("gamma_uniform_1",gamma_uniform[0])) error_message1("gamma_uniform_1",params.filename());
+	if(!params.get("gamma_uniform_2",gamma_uniform[1])) error_message1("gamma_uniform_2",params.filename());
 	if(!params.get("reference_z",reference_z)) error_message1("reference_z",params.filename());
+	if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
+    else if(stars_N){
+    	assignParams_stars(params);
+    }
 
 	return;
 }
