@@ -92,7 +92,7 @@ bool testLeafs(TreeHndl tree){
  * \brief Build a complete tree from a list of points.
  */
 //TreeHndl BuildTree(Point *xp,unsigned long Npoints,short my_median_cut){
-TreeStruct::TreeStruct(Point *xp,unsigned long Npoints,short my_median_cut){
+TreeStruct::TreeStruct(Point *xp,unsigned long Npoints,short my_median_cut,double buffer){
   //TreeHndl tree;
   unsigned long i;
   double p1[2],p2[2],center[2];
@@ -120,6 +120,11 @@ TreeStruct::TreeStruct(Point *xp,unsigned long Npoints,short my_median_cut){
 
   center[0]=(p1[0]+p2[0])/2;
   center[1]=(p1[1]+p2[1])/2;
+  
+  p1[0] -= buffer;
+  p1[1] -= buffer;
+  p2[0] += buffer;
+  p2[1] += buffer;
 
   /* Initialize tree root */
   //tree=NewTree(xp,Npoints,p1,p2,center,Nbucket);

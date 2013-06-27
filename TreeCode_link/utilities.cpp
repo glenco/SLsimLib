@@ -108,9 +108,14 @@ long IndexFromPosition(double *x,long Npixels,double range,double *center){
  *
  */
 void PositionFromIndex(unsigned long i,double *x,long Npixels,double range,double *center){
-    x[0] = center[0] + range*( 1.0*(i%Npixels)/(Npixels-1) - 0.5 );
-    x[1] = center[1] + range*( 1.0*(i/Npixels)/(Npixels-1) - 0.5 );
+  if(Npixels == 1){
+    x[0] = center[0];
+    x[1] = center[1];
     return;
+  }
+  x[0] = center[0] + range*( 1.0*(i%Npixels)/(Npixels-1) - 0.5 );
+  x[1] = center[1] + range*( 1.0*(i/Npixels)/(Npixels-1) - 0.5 );
+  return;
 }
 
 // 1d version

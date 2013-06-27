@@ -36,9 +36,10 @@ Grid::Grid(
 	xygridpoints(i_points,range,center,Ngrid_init,0);
 	s_points=LinkToSourcePoints(i_points,Ngrid_init*Ngrid_init);
 	lens->rayshooterInternal(Ngrid_init*Ngrid_init,i_points,false);
+  
 	// Build trees
 	i_tree = new TreeStruct(i_points,Ngrid_init*Ngrid_init);
-	s_tree = new TreeStruct(s_points,Ngrid_init*Ngrid_init);  // make tree on source plane a area splitting tree
+	s_tree = new TreeStruct(s_points,Ngrid_init*Ngrid_init,1,range);  // make tree on source plane with a buffer
 
 	trashkist = new Kist<Point>;
 	neighbors = new Kist<Point>;
