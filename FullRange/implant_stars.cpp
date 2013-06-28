@@ -181,8 +181,8 @@ void LensHalo::substract_stars_disks(double *ray,double *alpha
 	int i;
 
 	for(i=0;i<star_Nregions;++i){
-		xcm = star_xdisk[i][0] - ray[0];
-		ycm = star_xdisk[i][1] - ray[1];
+		xcm = ray[0] - star_xdisk[i][0];
+		ycm = ray[1] - star_xdisk[i][1];
 		r=sqrt(xcm*xcm + ycm*ycm);
 
 		if(r < star_region[i]){

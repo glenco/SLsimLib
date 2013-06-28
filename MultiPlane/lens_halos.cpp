@@ -10,10 +10,12 @@
 LensHalo::LensHalo(){
 	rscale = 1.0;
 	mass = Rmax = xmax = 0.0;
+	stars_implanted = false;
 }
 
 LensHalo::LensHalo(InputParams& params){
 	assignParams(params);
+	stars_implanted = false;
 }
 
 void LensHalo::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, double my_slope, long *seed){
@@ -77,8 +79,8 @@ void LensHalo::force_stars(
 
 	 if(!no_kappa){
 		 *kappa += star_massscale*tmp;
-		 gamma[0] += star_massscale*gamma_tmp[0];
-		 gamma[1] += star_massscale*gamma_tmp[1];
+		 gamma[0] -= star_massscale*gamma_tmp[0];
+		 gamma[1] -= star_massscale*gamma_tmp[1];
 	 }
 
 }
