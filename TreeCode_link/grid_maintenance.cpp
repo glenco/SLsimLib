@@ -842,7 +842,7 @@ void Grid::writeFits(
   }
 
   map.Clean();
-  map.AddImages(&tmp_image,1);
+  map.AddImages(&tmp_image,1,-1);
   map.printFITS(filename + tag);
 
   for(tmp_image.imagekist->MoveToTop(),i=0;i<tmp_sb_vec.size();++i,tmp_image.imagekist->Down())

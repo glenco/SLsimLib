@@ -252,18 +252,24 @@ void PixelMap::AssignValue(std::size_t i, double value)
 	map[i] = value;
 }
 
-/// Add an image to the map
+/** \brief Add an image to the map
+ *
+ *  If rescale==0 gives constant surface brightness, if < 0
+ *  the surface brightness is not scales by the pixel area for get the flux (default: 1).
+ *  Negative values are good for mapping some quantity independant of the pixel size
+ */
 void PixelMap::AddImages(
 		ImageInfo *imageinfo   /// An array of ImageInfo-s.  There is no reason to separate images for this routine
 		,int Nimages           /// Number of images on input.
-		,float rescale         /// rescales the surface brightness while leaving the image unchanged
-			                   /// , rescale==0 gives constant surface brightness (default: 1)
+		,float rescale         /// rescales the surface brightness while leaving the image unchanged,
+                               ///  see full notes
 		){
 
 	if(Nimages <= 0) return;
 	if(imageinfo->imagekist->Nunits() == 0) return;
 
 	double sb = 1;
+    float area = 1;
 	std::list <unsigned long> neighborlist;
 	std::list<unsigned long>::iterator it;
 	for(long ii=0;ii<Nimages;++ii){
@@ -271,15 +277,15 @@ void PixelMap::AddImages(
 		if(imageinfo->imagekist->Nunits() > 0){
 			MoveToTopKist(imageinfo[ii].imagekist);
 			do{
-				if(rescale != 0.0) sb = rescale*getCurrentKist(imageinfo[ii].imagekist)->surface_brightness;
+				if(rescale != 0.0) sb = abs(rescale)*getCurrentKist(imageinfo[ii].imagekist)->surface_brightness;
 
 				assert(getCurrentKist(imageinfo[ii].imagekist)->leaf);
 
 				if ((inMapBox(getCurrentKist(imageinfo[ii].imagekist)->leaf)) == true){
 					PointsWithinLeaf(getCurrentKist(imageinfo[ii].imagekist)->leaf,neighborlist);
 					for(it = neighborlist.begin();it != neighborlist.end();it++){
-						float area = LeafPixelArea(*it,getCurrentKist(imageinfo[ii].imagekist)->leaf);
-						map[*it] += sb*area;
+						if(rescale >=0 ) area = LeafPixelArea(*it,getCurrentKist(imageinfo[ii].imagekist)->leaf);
+                        map[*it] += sb*area;
 					}
 				}
 			}while(MoveDownKist(imageinfo[ii].imagekist));

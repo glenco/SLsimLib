@@ -5,13 +5,13 @@
  *      Author: cgiocoli
  */
 
-#include "profile.h"
+#include "../include/profile.h"
 
 //TODO: CARLO Could this be made methods of a class?
 /// create profile of the maps for each lensing component - spherical simmetry is assumed
 // create profile of the maps for each lensing component - spherical simmetry is assumed          
 double * estprof(std:: valarray<float> q,int nx,int ny, std:: valarray<float> r, 
-		 double dr0, double xmax, std:: vector<int> &vi, std:: vector<int> &vj, int ngal){     
+		 double dr0, double xmax, std:: vector<int> &vi, std:: vector<int> &vj, int ngal){
   int nbin = int(xmax/dr0); 
   std:: cout << " nbins (in estprof) = " << nbin << std:: endl;                                    
   double *kr = new double[nbin];                                                                   
