@@ -284,13 +284,17 @@ void PixelMap::AddImages(
 				if ((inMapBox(getCurrentKist(imageinfo[ii].imagekist)->leaf)) == true){
 					PointsWithinLeaf(getCurrentKist(imageinfo[ii].imagekist)->leaf,neighborlist);
 					for(it = neighborlist.begin();it != neighborlist.end();it++){
-						if(rescale >=0 ) area = LeafPixelArea(*it,getCurrentKist(imageinfo[ii].imagekist)->leaf);
+						area = LeafPixelArea(*it,getCurrentKist(imageinfo[ii].imagekist)->leaf);
                         map[*it] += sb*area;
 					}
 				}
 			}while(MoveDownKist(imageinfo[ii].imagekist));
 		}
 	}
+    
+    if(rescale < 0){
+        for(size_t i=0; i< Npixels*Npixels ;++i) map[i] /= resolution*resolution;
+    }
 
 	return;
 }
