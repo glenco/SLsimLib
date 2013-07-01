@@ -428,7 +428,7 @@ void find_crit2(
 				  critcurve->gridrange[2] = newpoint_kist.getCurrent()->gridsize;
 
 		  }else{
-			  newpoint_kist.getCurrent()->invmag = FALSE;
+			  newpoint_kist.getCurrent()->in_image = FALSE;
 		  }
 	  }while(newpoint_kist.Down());
 

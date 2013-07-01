@@ -264,7 +264,7 @@ void *compute_rays_parallel(void *_p)
 		     - p->i_points[i].gamma[0]*p->i_points[i].gamma[0]
 		     - p->i_points[i].gamma[1]*p->i_points[i].gamma[1]
 		     + p->i_points[i].gamma[2]*p->i_points[i].gamma[2];
-    else p->i_points[i].invmag = 0.0;
+    else p->i_points[i].invmag = 1.0;
 
     p->i_points[i].image->invmag=p->i_points[i].invmag;
     p->i_points[i].image->kappa=p->i_points[i].kappa;
