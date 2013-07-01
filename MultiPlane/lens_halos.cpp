@@ -287,7 +287,7 @@ void LensHalo::force_halo(
 		,KappaType *kappa
 		,KappaType *gamma
 		,double *xcm
-		,bool no_kappa
+		,bool kappa_off
 		,bool subtract_point /// if true contribution from a point mass is subtracted
 		){
 
@@ -306,7 +306,7 @@ void LensHalo::force_halo(
 		alpha[1] += tmp*xcm[1];
 
 		// can turn off kappa and gamma calculations to save times
-		if(!no_kappa){
+		if(!kappa_off){
 			*kappa += kappa_h(x)*prefac;
 
 			tmp = (gamma_h(x) + 2.0*subtract_point)*prefac/rcm2;
@@ -325,7 +325,7 @@ void LensHalo::force_halo(
 			alpha[1] += -1.0*prefac*xcm[1];
 
 			// can turn off kappa and gamma calculations to save times
-			if(!no_kappa){
+			if(!kappa_off){
 				double tmp = -2.0*prefac/rcm2;
 
 				gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;

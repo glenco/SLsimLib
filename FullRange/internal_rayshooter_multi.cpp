@@ -58,6 +58,9 @@ void Lens::rayshooterInternal(
 		,Point *i_points        /// point on the image plane
 		,bool kappa_off         /// turns calculation of convergence and shear off to save time.
 		){
+    
+    kappa_off =false;
+    
   int NLastPlane;
   double tmpDs,tmpdDs,tmpZs;
 
@@ -298,6 +301,8 @@ void Lens::rayshooterInternal(
 		,bool kappa_off		/// if true -- no kappa and gamma values are calculated
 		){
 
+    kappa_off = false;
+    
   std::size_t j;
   std::size_t NPlanes = lensing_planes.size();
 
