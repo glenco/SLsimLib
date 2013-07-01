@@ -32,6 +32,31 @@ namespace
 }
 
 /**
+ * \brief Creates an empty lens. Main halos and field halos need to be inserted by hand from the user.
+ */
+Lens::Lens(long *my_seed)
+: seed(my_seed), halo_pos(0)
+{
+	cosmo = new COSMOLOGY();
+	
+	if( (cosmo->getOmega_matter() + cosmo->getOmega_lambda()) != 1.0 ){
+		printf("ERROR: MultiLens can only handle flat universes at present.  Must change cosmology.\n");
+		exit(1);
+	}
+	
+	read_sim_file = false;
+	
+	charge = 4*pi*Grav;
+	std::cout << "charge: " << charge << std::endl;
+	
+	// initially let source be the one inputed from parameter file
+	index_of_new_sourceplane = -1;
+	toggle_source_plane = false;
+	
+	std:: cout << " done " << std:: endl;
+}
+
+/**
  * \ingroup Constructor
  * \brief allocates space for the halo trees and the inout lens, if there is any
  */
@@ -62,34 +87,9 @@ Lens::Lens(InputParams& params, Source* source, long* my_seed)
 
 	std:: cout << " done " << std:: endl;
 }
-/**
- * \brief Creates an empty lens. Main halos and field halos need to be inserted by hand from the user.
- */
-Lens::Lens(InputParams& params, long *my_seed)
-: seed(my_seed), halo_pos(0)
+
+Lens::~Lens()
 {
-	cosmo = new COSMOLOGY();
-
-	if( (cosmo->getOmega_matter() + cosmo->getOmega_lambda()) != 1.0 ){
-		printf("ERROR: MultiLens can only handle flat universes at present.  Must change cosmology.\n");
-		exit(1);
-	}
-
-	assignParams(params);
-
-	read_sim_file = false;
-
-	charge = 4*pi*Grav;
-	std::cout << "charge: " << charge << std::endl;
-
-	// initially let source be the one inputed from parameter file
-	index_of_new_sourceplane = -1;
-	toggle_source_plane = false;
-
-	std:: cout << " done " << std:: endl;
-}
-
-Lens::~Lens(){
 	Utilities::delete_container(lensing_planes);
 
 	Utilities::free_PosTypeMatrix(halo_pos, field_halos.size(), 3);
@@ -111,144 +111,182 @@ void Lens::readCosmology(InputParams& params){
 }
 
 /// Retrieve input parameters for construction
-void Lens::assignParams(InputParams& params){
-
-  if(!params.get("outputfile",outputfile)){
-		  ERROR_MESSAGE();
-		  cout << "parameter outputfile needs to be set in the parameter file " << params.filename() << endl;
-		  exit(0);
+void Lens::assignParams(InputParams& params)
+{
+	if(!params.get("main_halo_on",flag_switch_main_halo_on))
+	{
+		ERROR_MESSAGE();
+		cout << "parameter main_halo_on needs to be set in the parameter file " << params.filename() << endl;
+		exit(0);
 	}
-	if(!params.get("main_halo_on",flag_switch_main_halo_on)){
-		  ERROR_MESSAGE();
-		  cout << "parameter main_halo_on needs to be set in the parameter file " << params.filename() << endl;
-		  exit(0);
-	}
-	if(flag_switch_main_halo_on){
-		if(!params.get("main_DM_halo_type",main_halo_type)){
+	
+	if(flag_switch_main_halo_on)
+	{
+		if(!params.get("main_DM_halo_type",main_halo_type))
+		{
 			ERROR_MESSAGE();
 			cout << "parameter main_DM_halo_type needs to be set in the parameter file " << params.filename() << endl;
 			exit(0);
 		}
-		if(!params.get("main_galaxy_halo_type",main_galaxy_halo_type)){
+		if(!params.get("main_galaxy_halo_type",main_galaxy_halo_type))
+		{
 			main_galaxy_halo_type = null_gal;
 		}
 	}
-
-	if(!params.get("redshift_planes_file",redshift_planes_file)) read_redshift_planes = false;
-	else read_redshift_planes = true;
-
-	if(!params.get("field_off",flag_switch_field_off)){
-    flag_switch_field_off = false;
-    std::cout << "parameter field_off needs to be set in the parameter file " << params.filename() << std::endl;
-    throw runtime_error("need input parameter");
-  }else{
-
-    if(!flag_switch_field_off){
-      if(!params.get("field_Nplanes",field_Nplanes)){
-        ERROR_MESSAGE();
-        cout << "parameter field_Nplanes needs to be set in the parameter file " << params.filename() << endl;
-        exit(0);
-      }
-      if(!params.get("field_fov",fieldofview)){
-        ERROR_MESSAGE();
-        cout << "parameter field_fov needs to be set in the parameter file " << params.filename() << endl;
-        exit(0);
-      }
-      if(!params.get("field_internal_profile",field_int_prof_type)){
-        ERROR_MESSAGE();
-        cout << "parameter field_internal_profile needs to be set in the parameter file " << params.filename() << endl;
-        exit(0);
-      }
-      if(!params.get("field_internal_profile_galaxy",field_int_prof_gal_type)){
-        field_int_prof_gal_type = null_gal;
-        flag_field_gal_on = false;
-      }
-      else{
-        flag_field_gal_on = true;
-        field_galaxy_mass_fraction = 0;
-      }
-      if(!params.get("field_mass_func_alpha",mass_func_PL_slope)) mass_func_PL_slope = 1./6.;
-      if(!params.get("field_prof_internal_slope_pl",field_prof_internal_slope) && field_int_prof_type == pl_lens) field_prof_internal_slope = -1.0;
-      if(!params.get("field_prof_internal_slope_pnfw",field_prof_internal_slope) && field_int_prof_type == pnfw_lens) field_prof_internal_slope = 2.0;
-
-      if(!params.get("field_input_simulation_file",field_input_sim_file)){
-        sim_input_flag = false;
-        if(!params.get("field_galaxy_mass_fraction",field_galaxy_mass_fraction)){
-            ERROR_MESSAGE();
-            cout << "to construct a DM + galaxy model the parameter field_galaxy_mass_fraction needs to be set in the parameter file " << params.filename() << endl;
-            exit(0);
-        }
-			// No simulation input file provided
-        if(!params.get("field_mass_func_type",field_mass_func_type)){
-				  ERROR_MESSAGE();
-				  cout << "parameter field_mass_func_type needs to be set in the parameter file " << params.filename() << endl;
-				  exit(0);
-        }
-        if(!params.get("field_min_mass",field_min_mass)){
-				  ERROR_MESSAGE();
-				  cout << "parameter field_min_mass needs to be set in the parameter file " << params.filename() << endl;
-				  exit(0);
-        }
-        if(!params.get("field_buffer",field_buffer)){
-          field_buffer = 0.0;
-          cout << "default field buffer of 0 Mpc is being used." << endl;
-        }
-      }else{
-        field_min_mass = 0.0;
-        sim_input_flag = true;
-      }
-    }
-  }
-	if(!params.get("z_source",zsource)){
-		  ERROR_MESSAGE();
-		  cout << "parameter z_source needs to be set in the parameter file " << params.filename() << endl;
-		  exit(0);
+	
+	if(!params.get("redshift_planes_file",redshift_planes_file))
+		read_redshift_planes = false;
+	else
+		read_redshift_planes = true;
+	
+	if(!params.get("field_off",flag_switch_field_off))
+	{
+		flag_switch_field_off = false;
+		std::cout << "parameter field_off needs to be set in the parameter file " << params.filename() << std::endl;
+		throw runtime_error("need input parameter");
 	}
-	if(!params.get("deflection_off",flag_switch_deflection_off)) flag_switch_deflection_off = false;
-
+	else
+	{
+		if(!flag_switch_field_off)
+		{
+			if(!params.get("field_Nplanes",field_Nplanes))
+			{
+				ERROR_MESSAGE();
+				cout << "parameter field_Nplanes needs to be set in the parameter file " << params.filename() << endl;
+				exit(0);
+			}
+			
+			if(!params.get("field_fov",fieldofview))
+			{
+				ERROR_MESSAGE();
+				cout << "parameter field_fov needs to be set in the parameter file " << params.filename() << endl;
+				exit(0);
+			}
+			
+			if(!params.get("field_internal_profile",field_int_prof_type))
+			{
+				ERROR_MESSAGE();
+				cout << "parameter field_internal_profile needs to be set in the parameter file " << params.filename() << endl;
+				exit(0);
+			}
+			
+			if(!params.get("field_internal_profile_galaxy",field_int_prof_gal_type))
+			{
+				flag_field_gal_on = false;
+				field_int_prof_gal_type = null_gal;
+			}
+			else
+			{
+				flag_field_gal_on = true;
+				
+				if(!params.get("field_galaxy_mass_fraction",field_galaxy_mass_fraction))
+				{
+					ERROR_MESSAGE();
+					cout << "to construct a DM + galaxy model the parameter field_galaxy_mass_fraction needs to be set in the parameter file " << params.filename() << endl;
+					exit(0);
+				}
+			}
+			
+			if(!params.get("field_mass_func_alpha",mass_func_PL_slope))
+				mass_func_PL_slope = 1./6.;
+			if(!params.get("field_prof_internal_slope_pl",field_prof_internal_slope) && field_int_prof_type == pl_lens)
+				field_prof_internal_slope = -1.0;
+			if(!params.get("field_prof_internal_slope_pnfw",field_prof_internal_slope) && field_int_prof_type == pnfw_lens)
+				field_prof_internal_slope = 2.0;
+			
+			if(!params.get("field_input_simulation_file",field_input_sim_file))
+			{
+				// No simulation input file provided
+				sim_input_flag = false;
+				
+				if(!params.get("field_mass_func_type",field_mass_func_type))
+				{
+					ERROR_MESSAGE();
+					cout << "parameter field_mass_func_type needs to be set in the parameter file " << params.filename() << endl;
+					exit(0);
+				}
+				
+				if(!params.get("field_min_mass",field_min_mass))
+				{
+					ERROR_MESSAGE();
+					cout << "parameter field_min_mass needs to be set in the parameter file " << params.filename() << endl;
+					exit(0);
+				}
+				
+				if(!params.get("field_buffer",field_buffer))
+				{
+					field_buffer = 0.0;
+					cout << "default field buffer of 0 Mpc is being used." << endl;
+				}
+			}
+			else
+			{
+				field_min_mass = 0.0;
+				sim_input_flag = true;
+			}
+		}
+	}
+	
+	if(!params.get("z_source",zsource))
+	{
+		ERROR_MESSAGE();
+		cout << "parameter z_source needs to be set in the parameter file " << params.filename() << endl;
+		exit(0);
+	}
+	
+	if(!params.get("deflection_off",flag_switch_deflection_off))
+		flag_switch_deflection_off = false;
+	
 	// Some checks for valid parameters
-	if(flag_switch_field_off == false && field_Nplanes == 0){
+	if(flag_switch_field_off == false && field_Nplanes == 0)
+	{
 		ERROR_MESSAGE();
 		cout << "Do you want to run _with_ field halos, but with _without_ field planes? Change field_Nplanes to a bigger number!" << endl;
 		exit(1);
 	}
-
-	if(flag_switch_main_halo_on == false && flag_switch_field_off == true){
+	
+	if(flag_switch_main_halo_on == false && flag_switch_field_off == true)
+	{
 		ERROR_MESSAGE();
 		cout << "Do you want an empty simulation? Set main_halo_on to true for a main lens, or field_off to false for field lenses." << endl;
 		exit(1);
 	}
-
-	if(!flag_switch_field_off){
-		if(field_int_prof_type == pl_lens && field_prof_internal_slope >= 0){
+	
+	if(!flag_switch_field_off)
+	{
+		if(field_int_prof_type == pl_lens && field_prof_internal_slope >= 0)
+		{
 			ERROR_MESSAGE();
 			cout << "Power Law internal slope >=0 not possible." << endl;
 			exit(1);
 		}
-
-		if(field_int_prof_type == pnfw_lens && field_prof_internal_slope <= 0){
+		
+		if(field_int_prof_type == pnfw_lens && field_prof_internal_slope <= 0)
+		{
 			ERROR_MESSAGE();
 			cout << "Pseudo NFW internal slope <=0 not possible." << endl;
 			exit(1);
 		}
-
-		if(field_int_prof_type == pnfw_lens && (field_prof_internal_slope / floor(field_prof_internal_slope) > 1.0)){
+		
+		if(field_int_prof_type == pnfw_lens && (field_prof_internal_slope / floor(field_prof_internal_slope) > 1.0))
+		{
 			ERROR_MESSAGE();
 			cout << "Pseudo NFW internal slope needs to be a whole number." << endl;
 			exit(1);
 		}
-
-		if(field_input_sim_file.size() < 1 && field_int_prof_type == nsie_lens){
+		
+		if(field_input_sim_file.size() < 1 && field_int_prof_type == nsie_lens)
+		{
 			ERROR_MESSAGE();
 			cout << "The NSIE internal profile works only for Millennium DM simulations for now." << endl;
 			cout << "Set field_input_simulation_file in sample_paramfile." << endl;
 			exit(1);
 		}
 	}
-
+	
 	// convert to square degrees
 	fieldofview /= 3600. * 3600.;
-
+	
 	printMultiLens();
 }
 
@@ -691,43 +729,17 @@ void Lens::createMainHalos(InputParams& params, Source* source)
 		main_halos[i]->setInternalParams(cosmo, source);
 }
 
-/**
- * \brief Inserts a sequense of main lens halos and ads them to the existing ones.
- * Then all lensing planes are updated accordingly.
- */
-void Lens::insertMainHalos(Source* source, LensHalo** halos, std::size_t Nhalos)
-{
-	for(std::size_t i = 0; i < Nhalos; ++i)
-	{
-		halos[i]->setInternalParams(cosmo,source);
-		main_halos.push_back(halos[i]);
-		addMainHaloToPlane(halos[i]);
-	}
-	
-	flag_switch_main_halo_on = true;
-	
-	combinePlanes();
-}
-
-/**
- * \brief Inserts a sequense of main lens halos and deletes all previous ones.
- * Then all lensing planes are updated accordingly.
- */
-void Lens::insertNewMainHalos(Source* source, LensHalo** halos, std::size_t Nhalos)
+void Lens::clearMainHalos()
 {
 	Utilities::delete_container(main_halos_created);
 	main_halos.clear();
 	
-	for(std::size_t i = 0; i < Nhalos; ++i)
-	{
-		halos[i]->setInternalParams(cosmo,source);
-		main_halos.push_back(halos[i]);
-	}
-	
-	flag_switch_main_halo_on = true;
+	flag_switch_main_halo_on = false;
 	
 	Utilities::delete_container(main_planes);
-	createMainPlanes();
+	main_plane_redshifts.clear();
+	main_Dl.clear();
+	
 	combinePlanes();
 }
 
@@ -748,16 +760,56 @@ void Lens::insertMainHalo(Source* source, LensHalo* halo)
 }
 
 /**
+ * \brief Inserts a sequense of main lens halos and ads them to the existing ones.
+ * Then all lensing planes are updated accordingly.
+ */
+void Lens::insertMainHalos(Source* source, LensHalo** halos, std::size_t Nhalos)
+{
+	for(std::size_t i = 0; i < Nhalos; ++i)
+	{
+		halos[i]->setInternalParams(cosmo,source);
+		main_halos.push_back(halos[i]);
+		addMainHaloToPlane(halos[i]);
+	}
+	
+	flag_switch_main_halo_on = true;
+	
+	combinePlanes();
+}
+
+/**
  * \brief Inserts a single main lens halo and deletes all previous ones.
  * Then all lensing planes are updated accordingly.
  */
-void Lens::insertNewMainHalo(Source* source, LensHalo* halo)
+void Lens::replaceMainHalos(Source* source, LensHalo* halo)
 {
 	Utilities::delete_container(main_halos_created);
 	main_halos.clear();
 	
 	halo->setInternalParams(cosmo, source);
 	main_halos.push_back(halo);
+	
+	flag_switch_main_halo_on = true;
+	
+	Utilities::delete_container(main_planes);
+	createMainPlanes();
+	combinePlanes();
+}
+
+/**
+ * \brief Inserts a sequense of main lens halos and deletes all previous ones.
+ * Then all lensing planes are updated accordingly.
+ */
+void Lens::replaceMainHalos(Source* source, LensHalo** halos, std::size_t Nhalos)
+{
+	Utilities::delete_container(main_halos_created);
+	main_halos.clear();
+	
+	for(std::size_t i = 0; i < Nhalos; ++i)
+	{
+		halos[i]->setInternalParams(cosmo,source);
+		main_halos.push_back(halos[i]);
+	}
 	
 	flag_switch_main_halo_on = true;
 	
