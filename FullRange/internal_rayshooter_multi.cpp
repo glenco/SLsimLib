@@ -130,7 +130,6 @@ void Lens::rayshooterInternal(
 void *compute_rays_parallel(void *_p)
 {
   TmpParams *p = (TmpParams *) _p;
-  bool kappa_off = p->kappa_off;
   int chunk_size = p->size;
   int start      = p->start;
   int end        = start + chunk_size;
@@ -176,26 +175,25 @@ void *compute_rays_parallel(void *_p)
       
       assert(xx[0] == xx[0] && xx[1] == xx[1]);
 
-      p->lensing_planes[j]->force(alpha,&kappa,gamma,xx,kappa_off);
+        p->lensing_planes[j]->force(alpha,&kappa,gamma,xx,true);
+//        p->lensing_planes[j]->force(alpha,&kappa,gamma,xx,kappa_off);
 
       cc = p->charge*p->dDl[j+1];
 
       assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
 
-      if(!kappa_off){
-    	  fac = 1/(1+p->plane_redshifts[j]);
+      fac = 1/(1+p->plane_redshifts[j]);
     	  /* multiply by fac to obtain 1/comoving_distance/physical_distance
     	   * such that a multiplication with the charge (in units of physical distance)
     	   * will result in a 1/comoving_distance quantity */
-    	  kappa*=fac;
-    	  gamma[0]*=fac;
-    	  gamma[1]*=fac;
-    	  gamma[2]*=fac;
+      kappa*=fac;
+      gamma[0]*=fac;
+      gamma[1]*=fac;
+      gamma[2]*=fac;
 	
-    	  assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
-    	  assert(kappa == kappa);
-      }
-      
+      assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
+      assert(kappa == kappa);
+        
       if(p->flag_switch_deflection_off)
     	  alpha[0] = alpha[1] = 0.0;
             
@@ -211,7 +209,7 @@ void *compute_rays_parallel(void *_p)
       p->i_points[i].image->x[0] = xplus[0];
       p->i_points[i].image->x[1] = xplus[1];
       
-      if(!kappa_off){
+      //if(!kappa_off){
 	
     	  aa = (p->dDl[j+1]+p->dDl[j])*p->Dl[j]/p->dDl[j]/p->Dl[j+1];
 	
@@ -247,8 +245,7 @@ void *compute_rays_parallel(void *_p)
     	  p->i_points[i].gamma[0] = gamma_plus[0];
     	  p->i_points[i].gamma[1] = gamma_plus[1];
     	  p->i_points[i].gamma[2] = gamma_plus[2];
-	
-      }
+    //}
     }
     
     // Convert units back to angles.
@@ -257,12 +254,11 @@ void *compute_rays_parallel(void *_p)
     
     p->i_points[i].kappa = 1 - p->i_points[i].kappa;
 
-    if(!kappa_off) p->i_points[i].invmag = (1-p->i_points[i].kappa)*(1-p->i_points[i].kappa)
+    p->i_points[i].invmag = (1-p->i_points[i].kappa)*(1-p->i_points[i].kappa)
 		     - p->i_points[i].gamma[0]*p->i_points[i].gamma[0]
 		     - p->i_points[i].gamma[1]*p->i_points[i].gamma[1]
 		     + p->i_points[i].gamma[2]*p->i_points[i].gamma[2];
-    else p->i_points[i].invmag = 0.0;
-
+    
     p->i_points[i].image->invmag=p->i_points[i].invmag;
     p->i_points[i].image->kappa=p->i_points[i].kappa;
     p->i_points[i].image->gamma[0]=p->i_points[i].gamma[0];
@@ -275,7 +271,7 @@ void *compute_rays_parallel(void *_p)
       ERROR_MESSAGE();
       std::cout << p->i_points[i].image->x[0] << "  " << p->i_points[i].image->x[1] << "  " << p->i_points[i].invmag << std::endl;
       std::cout << p->i_points[i].gamma[0] << "  " << p->i_points[i].gamma[1] << "  " << p->i_points[i].gamma[2] << "  " <<
-    		  p->i_points[i].kappa << "  "  << kappa_off << std::endl;
+    		  p->i_points[i].kappa << "  " << std::endl;
       //	assert(0);
       exit(1);
     }
@@ -338,13 +334,14 @@ void Lens::rayshooterInternal(
 
       assert(xx[0] == xx[0] && xx[1] == xx[1]);
 
-      lensing_planes[j]->force(alpha_tmp,&kappa_tmp,gamma_tmp,xx,kappa_off);
+       // lensing_planes[j]->force(alpha_tmp,&kappa_tmp,gamma_tmp,xx,kappa_off);
+      lensing_planes[j]->force(alpha_tmp,&kappa_tmp,gamma_tmp,xx,true);
 
       assert(alpha_tmp[0] == alpha_tmp[0] && alpha_tmp[1] == alpha_tmp[1]);
 
       cc = charge*dDl[j+1];
 
-      if(!kappa_off){
+      //if(!kappa_off){
     	  fac = 1/(1+plane_redshifts[j]);
     	  /* multiply by fac to obtain 1/comoving_distance/physical_distance
     	   * such that a multiplication with the charge (in units of physical distance)
@@ -356,7 +353,7 @@ void Lens::rayshooterInternal(
 
     	  assert(gamma_tmp[0] == gamma_tmp[0] && gamma_tmp[1] == gamma_tmp[1]);
     	  assert(kappa_tmp == kappa_tmp);
-      }
+      //}
 
       if(flag_switch_deflection_off)
     	  alpha_tmp[0] = alpha_tmp[1] = 0.0;
@@ -373,7 +370,7 @@ void Lens::rayshooterInternal(
       x_source[0] = xplus[0];
       x_source[1] = xplus[1];
 
-      if(!kappa_off){
+      //if(!kappa_off){
 
     	  aa = (dDl[j+1]+dDl[j])*Dl[j]/dDl[j]/Dl[j+1];
 
@@ -409,7 +406,7 @@ void Lens::rayshooterInternal(
     	  gamma[1] = gamma_tmp_plus[1];
     	  gamma[2] = gamma_tmp_plus[2];
 
-      }
+      //}
     }
 
     // Convert units back to angles.
