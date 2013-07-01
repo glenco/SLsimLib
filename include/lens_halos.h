@@ -80,6 +80,15 @@ public:
 	/// internal compare redshift function
 	bool compare(double z){return z > zlens;};
 
+	/// read raw data
+	virtual void serialize(RawData& d) const;
+
+	/// write raw data
+	virtual void unserialize(RawData& d);
+
+	/// randomize halo by a given amound
+	virtual void randomize(double step, long* seed);
+
 protected:
 	/// read in parameters from a parameterfile in InputParams params
 	void assignParams(InputParams& params);

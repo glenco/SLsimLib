@@ -543,3 +543,30 @@ void LensHaloDummy::assignParams(InputParams& params)
 {
 	if(!params.get("z_lens",zlens)) error_message1("z_lens",params.filename());
 }
+
+void LensHalo::serialize(RawData& d) const
+{
+	d << mass << Rmax << rscale << zlens << xmax;
+	
+	for(std::size_t i = 0; i < Nmod; ++i)
+		d << mod[i];
+	
+	d << r_eps;
+}
+
+void LensHalo::unserialize(RawData& d)
+{
+	d >> mass >> Rmax >> rscale >> zlens >> xmax;
+	
+	for(std::size_t i = 0; i < Nmod; ++i)
+		d >> mod[i];
+	
+	d >> r_eps;
+}
+
+void LensHalo::randomize(double step, long* seed)
+{
+	const std::type_info& type = typeid(*this);
+	std::cerr << "Error: " << type.name() << "::randomize() not implemented!" << std::endl;
+	exit(1);
+}
