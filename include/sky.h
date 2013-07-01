@@ -113,6 +113,9 @@ public:
 		return srcs.size<SourceT>();
 	}
 	
+	/// returns field-of-view in deg^2 assuming region is square
+	double getFov(); // TODO: make const once Source is sorted out
+	
 	/// Read data from all sources.
 	void serialize(RawData& d) const;
 	

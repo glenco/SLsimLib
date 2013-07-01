@@ -54,6 +54,38 @@ Sky::~Sky()
 {
 }
 
+double Sky::getFov()
+{
+	if(srcs.empty())
+		return 0;
+	
+	double rangex[2];
+	double rangey[2];
+	
+	const double* x = srcs[0].getX();
+	rangex[0] = x[0];
+	rangex[1] = x[0];
+	rangey[0] = x[1];
+	rangey[1] = x[1];
+	
+	for(std::size_t i = 1, n = srcs.size(); i < n; ++i)
+	{
+		x = srcs[i].getX();
+		
+		if(x[0] < rangex[0])
+			rangex[0] = x[0];
+		else if(x[0] > rangex[1])
+			rangex[1] = x[0];
+		
+		if(x[1] < rangey[0])
+			rangey[0] = x[1];
+		else if(x[1] > rangey[1])
+			rangey[1] = x[1];
+	}
+	
+	return (rangex[1]-rangex[0])*(rangey[1]-rangey[0])*180*180/pi/pi;
+}
+
 void Sky::serialize(RawData& d) const
 {
 	for(std::size_t i = 0, n = srcs.size(); i < n; ++i)
