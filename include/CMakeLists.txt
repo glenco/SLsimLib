@@ -22,13 +22,13 @@ add_sources(
 	nestedsampler.h
 	nsie.h
 	overzier_source.h
-	parameters.h
 	peak_refinement.h
 	planes.h
 	point.h
 	pointlist.h
 	profile.h
 	quadTree.h
+	raw_data.h
 	sersic_source.h
 	simpleTree.h
 	sky.h

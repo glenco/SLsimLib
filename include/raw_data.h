@@ -1,5 +1,5 @@
-#ifndef PARAMETERS_H_
-#define PARAMETERS_H_
+#ifndef RAW_DATA_H_
+#define RAW_DATA_H_
 
 #include <algorithm>
 #include <utility>
@@ -8,22 +8,22 @@
 #include <stdexcept>
 #include <cstddef>
 
-class BadParameters : public std::runtime_error
+class RawDataError : public std::runtime_error
 {
 public:
-	BadParameters(const std::string& what) : std::runtime_error("Parameters error: " + what) {}
+	RawDataError(const std::string& what) : std::runtime_error("RawData error: " + what) {}
 };
 
-/// A fifo buffer for arbitrary parameter data.
-class Parameters
+/// A fifo buffer for arbitrary raw data.
+class RawData
 {
 public:
-	Parameters()
+	RawData()
 	: cur(0)
 	{
 	}
 	
-	Parameters(const Parameters& other)
+	RawData(const RawData& other)
 	{
 		values.reserve(other.values.size());
 		// clone all contained values
@@ -32,12 +32,12 @@ public:
 		cur = other.cur;
 	}
 	
-	~Parameters()
+	~RawData()
 	{
 		this->clear();
 	}
 	
-	Parameters& operator=(Parameters rhs)
+	RawData& operator=(RawData rhs)
 	{
 		swap(*this, rhs);
 		return *this;
@@ -66,7 +66,7 @@ public:
 	
 	/// Input
 	template<typename T>
-	friend Parameters& operator<<(Parameters& p, const T& x)
+	friend RawData& operator<<(RawData& p, const T& x)
 	{
 		p.values.push_back(new value<T>(x));
 		return p;
@@ -74,22 +74,22 @@ public:
 	
 	/// Output
 	template<typename T>
-	friend Parameters& operator>>(Parameters& p, T& x)
+	friend RawData& operator>>(RawData& p, T& x)
 	{
 		if(p.cur == p.values.size())
-			throw BadParameters("Reading from past the end.");
+			throw RawDataError("Reading from past the end.");
 		
 		value<T>* v = dynamic_cast<value<T>*>(p.values[p.cur++]);
 		
 		if(v == 0)
-			throw BadParameters("Could not cast parameters to requested type.");
+			throw RawDataError("Could not cast data to requested type.");
 		
 		x = *v;
 		
 		return p;
 	}
 	
-	friend void swap(Parameters& a, Parameters& b)
+	friend void swap(RawData& a, RawData& b)
 	{
 		using std::swap;
 		swap(a.cur, b.cur);

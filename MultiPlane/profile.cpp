@@ -5,7 +5,7 @@
  *      Author: cgiocoli
  */
 
-#include "profile.h"
+#include "../include/profile.h"
 
 //TODO: CARLO Could this be made methods of a class?
 /// create profile of the maps for each lensing component - spherical simmetry is assumed

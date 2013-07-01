@@ -1,6 +1,4 @@
 #include "../include/sky.h"
-#include "../include/InputParams.h"
-#include "../include/parameters.h"
 
 #include <iterator>
 #include <ctime>
@@ -56,18 +54,16 @@ Sky::~Sky()
 {
 }
 
-void Sky::setParameters(Parameters& p)
+void Sky::serialize(RawData& d) const
 {
-	//lns->setParameters(p);
 	for(std::size_t i = 0, n = srcs.size(); i < n; ++i)
-		srcs[i].setParameters(p);
+		srcs[i].serialize(d);
 }
 
-void Sky::getParameters(Parameters& p)
+void Sky::unserialize(RawData& d)
 {
-	//lns->getParameters(p);
 	for(std::size_t i = 0, n = srcs.size(); i < n; ++i)
-		srcs[i].getParameters(p);
+		srcs[i].unserialize(d);
 }
 
 void Sky::randomize(double step, long* seed)

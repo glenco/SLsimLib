@@ -3,12 +3,11 @@
 
 #include "source.h"
 #include "utilities_slsim.h"
+#include "InputParams.h"
+#include "raw_data.h"
 
 #include <vector>
 #include <cstddef>
-
-class InputParams;
-class Parameters;
 
 /**
  * \brief Container for all sources that make up one sky.
@@ -114,11 +113,11 @@ public:
 		return srcs.size<SourceT>();
 	}
 	
-	/// Set parameters for all sources.
-	void setParameters(Parameters& p);
+	/// Read data from all sources.
+	void serialize(RawData& d) const;
 	
-	/// Get parameters from all sources.
-	void getParameters(Parameters& p);
+	/// Write data to all sources.
+	void unserialize(RawData& d);
 	
 	/// Randomize all sources and lenses.
 	void randomize(double step, long* seed);
