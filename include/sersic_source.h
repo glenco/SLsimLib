@@ -24,8 +24,8 @@ public:
 	SourceSersic(InputParams& params);
 	~SourceSersic();
 	
-	void getParameters(Parameters& p) const;
-	void setParameters(Parameters& p);
+	void serialize(RawData& d) const;
+	void unserialize(RawData& d);
 	
 	void randomize(double step, long* seed);
 	

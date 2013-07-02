@@ -10,7 +10,8 @@
 
 #include "standard.h"
 #include "InputParams.h"
-#include "parameters.h"
+#include "raw_data.h"
+
 /** \brief Base class for all sources.
  *
  */
@@ -52,11 +53,11 @@ public:
 	/// Sets sb_limit in mag/arcsec^2
 	void setSBlimit_magarcsec(float limit) {sb_limit = pow(10,-0.4*(48.6+limit))*pow(180*60*60/pi,2)/hplanck;}
 	
-	/// Get parameters from source.
-	virtual void getParameters(Parameters& p) const;
+	/// Read raw data from source.
+	virtual void serialize(RawData& d) const;
 	
-	/// Set parameters in source.
-	virtual void setParameters(Parameters& p);
+	/// Write raw data to source.
+	virtual void unserialize(RawData& d);
 	
 	/// Randomize source by a given amount.
 	virtual void randomize(double step, long* seed);
