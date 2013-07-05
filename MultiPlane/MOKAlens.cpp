@@ -335,7 +335,7 @@ void LensHaloMOKA::saveProfiles(double &RE3,double &xxc,double &yyc){
 	std:: cout << " computing profiles assuming spherical symmetry";                                
 	// - - - - - - - - - - - - - - - - -
 
-	// TODO Carlo:  These are all memory leaks!  They are never deleted!
+	// TODO: Carlo:  These are all memory leaks!  They are never deleted!
 	double *kprofr = estprof(map->convergence,map->nx,map->ny,pxdist,dr0,xmax,runi,runj,ntbggal);                                          
 	double *sigmakprof = estsigmaprof(map->convergence,map->nx,map->ny,pxdist,dr0,xmax,runi,runj,ntbggal,kprofr);                          
 	double *ckprofr = estcprof(map->convergence,map->nx,map->ny,pxdist,dr0,xmax,runi,runj,ntbggal);                                          

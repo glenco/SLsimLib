@@ -150,9 +150,9 @@ namespace Utilities{
  * this to the end of the ordered list and continuous to walk.  This algorithm works well at finding a closed loop.  It
  * can cut off points from the curve that are either in loops or if four cells intersect and are all on the curve as
  * can happen when there is a lot of structure in the curve that is not resolved at the gridsize used.  The points that are
- * cut of are at the end of the array in no guaranteed order.
+ * cut off are at the end of the array in no guaranteed order.
  *
- * Returns true if a closed loop is found which incorporates all of the points.
+ * Returns the number of point that have been ordered - total number minus the cuttout points.
  *
  * This algorithm could be improve by inserting the remaining points, if any, into the existing curve and recursively calling itself.
  */
@@ -203,7 +203,7 @@ unsigned long order_curve4(Point *curve,long Npoints){
 		if(j < Npoints-1)
 			backtrack(curve,Npoints,&j,-1,&end);
 		++m;
-        // TODO This is a kluge.  There should be a better exit stratagy.
+        // TODO: This is a kluge.  There should be a better exit stratagy.
         if(m >= Npoints) return false;
 		assert(m < Npoints);
 	}
@@ -212,36 +212,137 @@ unsigned long order_curve4(Point *curve,long Npoints){
 
 	return end+1;
 }
-/// Overloads and is dependent on version that takes a point array.  Returns number of points that have been ordered.
-unsigned long order_curve4(Kist<Point> * curve){
-	unsigned long i=0,Npoints = curve->Nunits();
-	bool bo;
+/** \brief Overloads and is dependent on version that takes a point array.  Returns number of points that have been ordered.  
+ * Remaining, unordered points are left at the end of the kist.
+ */
+  unsigned long order_curve4(Kist<Point> * curve){
+    unsigned long i=0,Npoints = curve->Nunits(),newnumber;
 
-  if(Npoints < 3) return Npoints;
+    if(Npoints < 3) return Npoints;
 
-  Point *tmpcurve = NewPointArray(curve->Nunits(),false);
+    Point *tmpcurve = NewPointArray(curve->Nunits(),false);
 
-	curve->MoveToTop();
-	do{
-		PointCopyData(&tmpcurve[i++],curve->getCurrent());
-	}while(curve->Down());
+    curve->MoveToTop();
+    do{
+      PointCopyData(&tmpcurve[i++],curve->getCurrent());
+    }while(curve->Down());
 
-	bo = order_curve4(tmpcurve,curve->Nunits());
+    newnumber = order_curve4(tmpcurve,curve->Nunits());
 
-	// resort points in imagekist
-	for(i=0;i<Npoints;++i){
-		curve->MoveToTop();
-		do{
-			if(tmpcurve[i].id == curve->getCurrent()->id)
-				  curve->MoveCurrentToBottom();
-		}while(curve->Down());
-	}
+    // resort points in imagekist to match tmpcurve
+    for(i=0;i<Npoints;++i){
+      curve->JumpDown(i);
+      do{
+        if(tmpcurve[Npoints-1-i].id == curve->getCurrent()->id){
+				  curve->MoveCurrentToTop();
+          break;
+        }
+      }while(curve->Down());
+    }
 
-	FreePointArray(tmpcurve,false);
+    FreePointArray(tmpcurve,false);
 
-	return bo;
+    return newnumber;
+  }
+
+/**
+ *  \brief For odering the curve by the convex hull meathod.  Warning: Does not work very well.
+ * 
+ *   The convex hull is found for the points in the kist.  Then each additional point
+ *   is inserted into the curve where it will increase the length of the curve the least.
+ *   This method leaves loops where they shouldn't be and probably doesn't handle self-intersections
+ *   well.
+ */
+  unsigned long order_curve5(Kist<Point> * curve){
+    std::vector<Point *> copy;
+    for(curve->MoveToTop();!(curve->OffBottom());curve->Down()){
+      copy.push_back(curve->getCurrent());
+    }
+  
+    std::vector<Point *> hull = Utilities::convex_hull(copy);
+    std::vector<Point *>::iterator hit,it_min;
+    
+    double ro,d1,d2,rmin,sq2=0.99999*sqrt(2.);
+    size_t i;
+    bool tag;
+    while(hull.size() < copy.size()){
+      for(std::vector<Point *>::iterator cit = copy.begin() ; cit != copy.end() ; ++cit){
+        tag = true;
+        rmin = std::numeric_limits<double>::max();
+      
+        for(hit = hull.begin(),i=0 ; i < hull.size()-1 ; ++hit,++i){
+        
+          if(*cit == hull[i] || *cit == hull[i+1]){
+            tag = false;
+            break;
+          }
+        
+        
+          d1 = sqrt( ((*cit)->x[0] - hull[i]->x[0])*((*cit)->x[0] - hull[i]->x[0])
+                  + ((*cit)->x[1] - hull[i]->x[1])*((*cit)->x[1] - hull[i]->x[1]) );
+        
+          d2 = sqrt( (hull[i+1]->x[0] - (*cit)->x[0])*(hull[i+1]->x[0] - (*cit)->x[0])
+                  + (hull[i+1]->x[1] - (*cit)->x[1])*(hull[i+1]->x[1] - (*cit)->x[1]) );
+ 
+          if(d1 > ((*cit)->gridsize + hull[i]->gridsize)/sq2 && d2 > ((*cit)->gridsize + hull[i+1]->gridsize)/sq2){
+            tag = false;
+            break;
+          }
+
+          ro = sqrt( (hull[i+1]->x[0] - hull[i]->x[0])*(hull[i+1]->x[0] - hull[i]->x[0])
+                    + (hull[i+1]->x[1] - hull[i]->x[1])*(hull[i+1]->x[1] - hull[i]->x[1]) );
+
+          if(rmin > (d1 + d2 - ro)){
+              rmin = (d1 + d2 - ro);
+              it_min = hit;
+          }
+        }
+      
+        if(tag){
+        
+          d1 = sqrt( ((*cit)->x[0] - hull[i]->x[0])*((*cit)->x[0] - hull[i]->x[0])
+                  + ((*cit)->x[1] - hull[i]->x[1])*((*cit)->x[1] - hull[i]->x[1]) );
+          d2 = sqrt( (hull[0]->x[0] - (*cit)->x[0])*(hull[0]->x[0] - (*cit)->x[0])
+                  + (hull[0]->x[1] - (*cit)->x[1])*(hull[0]->x[1] - (*cit)->x[1]) );
+      
+          if(d1 > ((*cit)->gridsize + hull[i]->gridsize)/sq2 && d2 > ((*cit)->gridsize + hull[0]->gridsize)/sq2){
+            tag = false;
+            break;
+          }
+        
+          ro = sqrt( (hull[0]->x[0] - hull[i]->x[0])*(hull[0]->x[0] - hull[i]->x[0])
+                  + (hull[0]->x[1] - hull[i]->x[1])*(hull[0]->x[1] - hull[i]->x[1]) );
+
+          if(rmin > (d1 + d2 - ro)){
+            rmin = (d1 + d2 - ro);
+            it_min = hit;
+          }
+      
+          hull.insert((it_min+1),*cit);
+        }
+      }
+    }
+    assert(hull.size() == copy.size());
+    
+    curve->copy(hull);
+
+    return hull.size();
+  }
+
+/// Replaces curve->imagekist with its convex hull.  The number of points will change.
+  void ordered_convexhull(Kist<Point> * curve){
+    std::vector<Point *> copy;
+    for(curve->MoveToTop();!(curve->OffBottom());curve->Down()){
+      copy.push_back(curve->getCurrent());
+    }
+  
+    std::vector<Point *> hull = Utilities::convex_hull(copy);
+    curve->copy(hull);
+  
+    return;
+  }
 }
-}
+
 /**
  *
  *
@@ -1708,4 +1809,66 @@ void writeCurves(int m			/// part of te filename, could be the number/index of t
 		  file_crit.close();
 
 }
+  
+  // 2D cross product of OA and OB vectors, i.e. z-component of their 3D cross product.
+  // Returns a positive value, if OAB makes a counter-clockwise turn,
+  // negative for clockwise turn, and zero if the points are collinear.
+  double cross(const Point *O, const Point *A, const Point *B)
+  {
+    return (A->x[0] - O->x[0]) * (B->x[1] - O->x[1]) - (A->x[1] - O->x[1]) * (B->x[0] - O->x[0]);
+  }
+  
+  bool xorder(Point *p1,Point *p2){
+    return p1->x[0] < p2->x[0];
+  }
+  /// Returns a vector of points on the convex hull in counter-clockwise order.
+  std::vector<Point *> convex_hull(std::vector<Point *> P)
+  {
+    
+    if(P.size() <= 3){
+      std::vector<Point *> H = P;
+      P.resize(0);
+      return H;
+    }
+    
+    size_t n = P.size();
+    size_t k = 0;
+    long j = 0;
+    std::vector<Point *> H(2*n);//,anti_H(2*n);
+    
+    // Sort points lexicographically
+    std::sort(P.begin(), P.end(), xorder);
+    
+    // Build lower hull
+    for (size_t i = 0; i < n; i++) {
+      while (k >= 2 && cross(H[k-2], H[k-1], P[i]) <= 0){
+        //anti_H[j++] = H[k-1];
+        k--;
+      }
+      H[k++] = P[i];
+    }
+    
+    // Build upper hull
+    for (long i = n-2, t = k+1; i >= 0; i--) {
+      while (k >= t && cross(H[k-2], H[k-1], P[i]) <= 0){
+        //anti_H[j++] = H[k-1];
+        k--;
+      }
+      H[k++] = P[i];
+    }
+    
+    
+    H.resize(k);
+    H.pop_back();
+    //anti_H.resize(j);
+    
+    //assert(H.size() + anti_H.size() == P.size());
+    //P = anti_H;
+    
+    return H;
+  }
+
+
 }
+
+

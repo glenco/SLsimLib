@@ -10,7 +10,8 @@
 
 #include "standard.h"
 #include "InputParams.h"
-#include "parameters.h"
+#include "raw_data.h"
+
 /** \brief Base class for all sources.
  *
  */
@@ -35,7 +36,7 @@ public:
 	/// Redshift of source
 	virtual inline double getZ(){return zsource;}
 	virtual void setZ(double my_z){zsource = my_z;}
-	/// Radius of source TODO units?
+	/// Radius of source TODO: units?
 	virtual inline double getRadius(){return source_r;}
 	virtual void setRadius(double my_radius){source_r = my_radius;}
 	/// position of source in radians
@@ -44,7 +45,7 @@ public:
 	void setX(double my_x,double my_y){source_x[0] = my_x; source_x[1] = my_y;}
 	/// In the case of a single plane lens, the ratio of angular size distances
 	virtual inline double getDlDs(){return DlDs;}
-	//TODO BEN I think this need only be in the BLR source models
+	//TODO: BEN I think this need only be in the BLR source models
 	virtual void setDlDs(double my_DlDs){DlDs = my_DlDs;}
 
 	/// Sets sb_limit in erg/cm^2/sec/rad^2/Hz
@@ -52,11 +53,11 @@ public:
 	/// Sets sb_limit in mag/arcsec^2
 	void setSBlimit_magarcsec(float limit) {sb_limit = pow(10,-0.4*(48.6+limit))*pow(180*60*60/pi,2)/hplanck;}
 	
-	/// Get parameters from source.
-	virtual void getParameters(Parameters& p) const;
+	/// Read raw data from source.
+	virtual void serialize(RawData& d) const;
 	
-	/// Set parameters in source.
-	virtual void setParameters(Parameters& p);
+	/// Write raw data to source.
+	virtual void unserialize(RawData& d);
 	
 	/// Randomize source by a given amount.
 	virtual void randomize(double step, long* seed);
@@ -73,7 +74,7 @@ protected:
 	/// redshift of source
 	double zsource;
 	/// Dl / Ds -- needed for the blr source models
-	//TODO Could this be moved into the BLR classes because they are the only ones that use it.
+	//TODO: Could this be moved into the BLR classes because they are the only ones that use it.
 	double DlDs;
 	double sb_limit;
 };
@@ -128,6 +129,7 @@ public:
 	double getTotalFlux(){return pi*source_r*source_r;}
 };
 
+/// A source with a Gaussian surface brightness profile
 class SourceGaussian : public Source{
 public:
 	SourceGaussian(InputParams& params);
@@ -142,6 +144,7 @@ public:
 	double getTotalFlux(){std::cout << "No total flux in SourceGaussian yet" << std::endl; exit(1);}
 };
 
+/// Base class for all sources representing the Broad Line Region (BLR) of a AGN/QSO
 class SourceBLR : public Source{
 public:
 	SourceBLR(InputParams& params);
@@ -174,6 +177,7 @@ private:
 	void assignParams(InputParams& params);
 };
 
+/// A source representing a BLR with a Keplarian disk
 class SourceBLRDisk : public SourceBLR{
 public:
 	double SurfaceBrightness(double *y);
@@ -183,6 +187,7 @@ public:
 	~SourceBLRDisk();
 };
 
+/// A source representing a BLR with a spherical symmetry and circular orbits
 class SourceBLRSph1 : public SourceBLR{
 public:
 	double SurfaceBrightness(double *y);
@@ -192,6 +197,7 @@ public:
 	~SourceBLRSph1();
 };
 
+/// A source representing a BLR with a spherical symmetry and random velocity dispersion
 class SourceBLRSph2 : public SourceBLR{
 public:
 	double SurfaceBrightness(double *y);

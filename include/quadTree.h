@@ -12,6 +12,8 @@
 
 //short const treeNBdim = 2;
 
+/** \brief Box representing a branch in a tree.  It has four children.  Used in QTreeNB which is used in TreeQuad.
+ */
 struct QBranchNB{
   QBranchNB();
   ~QBranchNB();

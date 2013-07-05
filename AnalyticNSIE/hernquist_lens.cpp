@@ -5,7 +5,6 @@
 
 #include "lens_halos.h"
 
-
 double LensHaloHernquist::gfunction(double x){
 	double ans;
 	if(x==0) x=1e-5;

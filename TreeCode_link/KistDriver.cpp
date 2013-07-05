@@ -526,7 +526,7 @@ Point * TreeStruct::NearestNeighborKist(double *ray,int Nneighbors,Kist<Point> *
 	Point *point = 0;
 	unsigned long i;
 
-	//TODO BEN Make this better!  NearestNeighbor() should be replaced.
+	//TODO: BEN Make this better!  NearestNeighbor() should be replaced.
 	point = NearestNeighbor(ray,Nneighbors,neighborlist,0);
 
 	// convert from point array to exported point kist

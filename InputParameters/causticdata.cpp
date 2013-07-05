@@ -24,11 +24,6 @@ CausticData::~CausticData(){
 
 }
 
-void CausticData::resize(size_t size){
-  
-  data.resize(size);
-}
-
 /// Read in data from a caustic catalog file
 void CausticData::readfile(std::string filename){
 

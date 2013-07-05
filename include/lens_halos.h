@@ -80,6 +80,15 @@ public:
 	/// internal compare redshift function
 	bool compare(double z){return z > zlens;};
 
+	/// read raw data
+	virtual void serialize(RawData& d) const;
+
+	/// write raw data
+	virtual void unserialize(RawData& d);
+
+	/// randomize halo by a given amound
+	virtual void randomize(double step, long* seed);
+
 protected:
 	/// read in parameters from a parameterfile in InputParams params
 	void assignParams(InputParams& params);
@@ -137,7 +146,7 @@ public:
 	double g2function(double x);
 	double hfunction(double x);
 
-	// TODO BEN: the below functions alphaNFW, kappaNFW and gammaNFW are obsolete and better to be deleted to avoid confusion
+	// TODO: BEN: the below functions alphaNFW, kappaNFW and gammaNFW are obsolete and better to be deleted to avoid confusion
 	void alphaNFW(double *alpha,double *x,double Rtrunc,double mass,double r_scale
 			,double *center,double Sigma_crit);
 	KappaType kappaNFW(double *x,double Rtrunc,double mass,double r_scale
@@ -385,18 +394,14 @@ public:
 	LensHaloHernquist(InputParams& params);
 	virtual ~LensHaloHernquist();
 
-	double ffunction(double x);
-	double gfunction(double x);
-	double hfunction(double x);
-	double g2function(double x);
-
-	// TODO BEN: the below functions alphaHern, kappaHern and gammaHern are obsolete and better to be deleted to avoid confusion
+	/* the below functions alphaHern, kappaHern and gammaHern are obsolete and better to be deleted to avoid confusion
 	void alphaHern(double *alpha,double *x,double Rtrunc,double mass,double r_scale
 			,double *center,double Sigma_crit);
 	KappaType kappaHern(double *x,double Rtrunc,double mass,double r_scale
 			,double *center,double Sigma_crit);
 	void gammaHern(KappaType *gamma,double *x,double Rtrunc,double mass,double r_scale
 			,double *center,double Sigma_crit);
+  */
 	//void initFromFile(float my_mass, long *seed, float vmax, float r_halfmass);
 
 	/// set Rmax
@@ -439,6 +444,11 @@ protected:
 		//exit(1);
 		return -1.0*InterpolateFromTable(htable,x)/gmax;
 	}
+
+    double ffunction(double x);
+	double gfunction(double x);
+	double hfunction(double x);
+	double g2function(double x);
 
 private:
   double gmax;

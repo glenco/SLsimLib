@@ -54,10 +54,19 @@ typedef struct Point{
 
   void print();
   void Print();
+  
+  /// cross product of points 2d positions
+  double cross(Point &p){
+    return x[0]*p.x[1] - x[1]*p.x[0];
+  }
+  /// dot product of points in 2d
+  double dot(Point &p){
+    return x[0]*p.x[0] + x[1]*p.x[1];
+  }
 
 } Point;
 
-//struct branchstruct{
+/// The box representing a branch of a binary tree structure.  Used specifically in TreeStruct for organizing points in the grid.
 struct Branch{
 	Branch(Point *my_points,unsigned long my_npoints
 			  ,double my_boundary_p1[2],double my_boundary_p2[2]

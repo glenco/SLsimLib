@@ -61,20 +61,20 @@ MCMC::MCMC(Lens& l, Sky& s, const PixelData& d)
 {
 }
 
-std::vector<Parameters> MCMC::run(std::size_t n, double step, long* seed)
+std::vector<RawData> MCMC::run(std::size_t n, double step, long* seed)
 {
 	std::size_t num_sources = sky.getNsources();
 	
 	// the Markov chain
-	std::vector<Parameters> chain;
+	std::vector<RawData> chain;
 	
 	// the number of steps in the chain
 	chain.reserve(n+1);
 	
 	// put initial parameters in chain
-	chain.push_back(Parameters());
-	//lens.getParameters(chain.back());
-	sky.getParameters(chain.back());
+	chain.push_back(RawData());
+	//lens.serialize(chain.back());
+	sky.serialize(chain.back());
 	
 	// the image properties
 	double center[2];
@@ -129,8 +129,8 @@ std::vector<Parameters> MCMC::run(std::size_t n, double step, long* seed)
 				lens.ResetSourcePlane(source.getZ(), false);
 			
 			// get source parameters
-			Parameters p;
-			source.getParameters(p);
+			RawData d;
+			source.serialize(d);
 			
 			// randomize source
 			source.randomize(step, seed);
@@ -155,7 +155,7 @@ std::vector<Parameters> MCMC::run(std::size_t n, double step, long* seed)
 			if(Ly < Lx && std::exp(Ly - Lx) < ran2(seed))
 			{
 				// not accepted, restore parameters
-				source.setParameters(p);
+				source.unserialize(d);
 				
 				// restore pixmap
 				swap(pixmaps[s], pixmap);
@@ -170,9 +170,9 @@ std::vector<Parameters> MCMC::run(std::size_t n, double step, long* seed)
 		// TODO: randomize lens
 		
 		// add parameters to chain after complete cycle
-		chain.push_back(Parameters());
-		//lens.getParameters(chain.back());
-		sky.getParameters(chain.back());
+		chain.push_back(RawData());
+		//lens.serialize(chain.back());
+		sky.serialize(chain.back());
 	}
 	
 	// chain is complete

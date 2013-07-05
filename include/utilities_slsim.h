@@ -797,6 +797,41 @@ namespace Utilities
 	
 	template<typename Container>
 	void delete_container(Container& c) { while(!c.empty()) delete c.back(), c.pop_back(); }
+  
+  /** \brief Class for calculating the Hilbert curve distance in two dimensions
+   *
+   *  The Hilbert Curve maps two dimensional positions on a grid into distance in one dimension.
+   *  The distance d is generally close for points that are near eachother.  This allows one to
+   *  uniquely order points in a two dimensional space.  It is useful for matching objects quickly
+   *  if they are sorted by thier Hilbert distance.
+   *
+   */
+  class HilbertCurve{
+  public:
+    HilbertCurve(
+                 double x_min       /// x coordinate of lower left corner
+                 ,double y_min      /// y coordinate of lower left corner
+                 ,double my_range   /// range in which points will be distributed
+                 ,double smallsize  /// smallest distance of separation that must give unique Hilbert distances
+                 ):
+    range(my_range)
+    {
+      xo[0] = x_min;
+      xo[1] = y_min;
+      n = (long)(range/smallsize+1);
+    }
+    
+    long xy2d (long x, long y);
+    long xy2d (double x, double y);
+    void d2xy(long d, long *x, long *y);
+    void d2xy(long d, double *x, double *y);
+    
+  private:
+    long n;
+    double xo[2],range;
+    void rot(long s,long *x, long *y, long rx, long ry);
+  };
+
 }
 
 #endif

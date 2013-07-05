@@ -81,7 +81,7 @@ void LensHaloUniform::implant_stars(double x, double y, unsigned long Nregions,l
 
 	if(Nregions <= 0) return;
 	Point *centers;
-	gamma_uniform[2]=0.0; // TODO gamma_uniform[2] determines rotation for multiplane lens, how shall it be implemented here?
+	gamma_uniform[2]=0.0; // TODO: gamma_uniform[2] determines rotation for multiplane lens, how shall it be implemented here?
 	centers = NewPointArray(Nregions,true);
 	centers[0].x[0]=x;
 	centers[0].x[1]=y;

@@ -24,7 +24,7 @@ typedef enum{TotalArea,EachImage,Resolution,FillHoles} ExitCriterion;
 /** \brief Tree: Exported struct */
 struct TreeStruct{
 public:
-	TreeStruct(Point *xp,unsigned long Npoints,short my_median_cut = 1);
+	TreeStruct(Point *xp,unsigned long Npoints,short my_median_cut = 1,double buffer = 0.0);
 	TreeStruct(Point *xp,unsigned long npoints
 			 ,double boundary_p1[2],double boundary_p2[2]
 			 ,double center[2],int Nbucket);
@@ -243,6 +243,10 @@ namespace Utilities{
 	void findarea(ImageInfo *imageinfo);
 	int windings2(double *x,Point *points,unsigned long Npoints,double *area,short image);
 	void writeCurves(int m, ImageInfo *critical, int Ncrit, int index);
+  double cross(const Point *O, const Point *A, const Point *B);
+  bool xorder(Point *p1,Point *p2);
+  std::vector<Point *> convex_hull(std::vector<Point *> P);
+
 
 	long IndexFromPosition(double *x,long Npixels,double range,double *center);
 	void PositionFromIndex(unsigned long i,double *x,long Npixels,double range,double *center);
@@ -273,6 +277,8 @@ void split_order_curve4(OldImageInfo *curves,int Maxcurves,int *Ncurves);
 namespace Utilities{
 	unsigned long order_curve4(Point *curve,long Npoints);
 	unsigned long order_curve4(Kist<Point> * curve);
+  unsigned long order_curve5(Kist<Point> * curve);
+  void ordered_convexhull(Kist<Point> * curve);
 }
 bool order_ExteriorBoundary(Point *curve,long Npoints,long *NewNpoints,double *area);
 double findAreaOfCurve(TreeHndl tree,ImageInfo *curve,int NimageMax);

@@ -19,14 +19,14 @@ Source::Source()
 	setSBlimit_magarcsec(30.);
 }
 
-void Source::getParameters(Parameters& p) const
+void Source::serialize(RawData& d) const
 {
-	p << source_r << source_x[0] << source_x[1] << zsource << DlDs << sb_limit;
+	d << source_r << source_x[0] << source_x[1] << zsource << DlDs << sb_limit;
 }
 
-void Source::setParameters(Parameters& p)
+void Source::unserialize(RawData& d)
 {
-	p >> source_r >> source_x[0] >> source_x[1] >> zsource >> DlDs >> sb_limit;
+	d >> source_r >> source_x[0] >> source_x[1] >> zsource >> DlDs >> sb_limit;
 }
 
 void Source::randomize(double, long*)

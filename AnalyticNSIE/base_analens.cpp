@@ -126,30 +126,30 @@ void LensHaloBaseNSIE::assignParams(InputParams& params){
 	if(!params.get("z_lens",zlens)) error_message1("z_lens",params.filename());
 
     // Substructure parameters
-    if(!params.get("NdensitySubstruct",sub_Ndensity)) error_message1("NdensitySubstruct",params.filename());
+    if(!params.get("main_sub_Ndensity",sub_Ndensity)) error_message1("main_sub_Ndensity",params.filename());
     else if(sub_Ndensity > 0){
-    	if(!params.get("beta_sub",sub_beta)) error_message1("beta_sub",params.filename());
-    	if(!params.get("alpha_sub",sub_alpha)) error_message1("alpha_sub",params.filename());
-    	if(!params.get("R_submax",sub_Rmax)) error_message1("R_submax",params.filename());
-    	if(!params.get("sub_mass_max",sub_Mmax)) error_message1("sub_mass_max",params.filename());
-    	if(!params.get("sub_mass_min",sub_Mmin)) error_message1("sub_mass_min",params.filename());
+    	if(!params.get("main_sub_beta",sub_beta)) error_message1("main_sub_beta",params.filename());
+    	if(!params.get("main_sub_alpha",sub_alpha)) error_message1("main_sub_alpha",params.filename());
+    	if(!params.get("main_sub_Rmax",sub_Rmax)) error_message1("main_sub_Rmax",params.filename());
+    	if(!params.get("main_sub_mass_max",sub_Mmax)) error_message1("main_sub_mass_max",params.filename());
+    	if(!params.get("main_sub_mass_min",sub_Mmin)) error_message1("main_sub_mass_min",params.filename());
     	if(sub_Mmin < 1.0e3){
     		ERROR_MESSAGE();
     		std::cout << "Are you sure the minimum halo mass should be " << sub_Mmin << " Msun?" << std::endl;
     		exit(1);
     	}
-    	if(!params.get("sub_type",sub_type)) error_message1("sub_type",params.filename());
+    	if(!params.get("main_sub_type",main_sub_type)) error_message1("main_sub_type",params.filename());
     }
 	  // Stars parameters
-    if(!params.get("Nstars",stars_N)) error_message1("Nstars",params.filename());
+    if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
     else if(stars_N){
-    	if(!params.get("fstars",star_fstars)) error_message1("fstars",params.filename());
+    	if(!params.get("main_stars_fraction",star_fstars)) error_message1("main_stars_fraction",params.filename());
     	if(star_fstars < 0 || star_fstars > 1){
     		ERROR_MESSAGE();
-    		cout << "fstars cannot be less than 0 or larger than 1 in file " << params.filename() <<endl;
+    		cout << "main_stars_fraction cannot be less than 0 or larger than 1 in file " << params.filename() <<endl;
     		exit(0);
     	}
-    	if(!params.get("stars_mass",star_massscale)) error_message1("stars_mass",params.filename());
+    	if(!params.get("main_stars_mass",star_massscale)) error_message1("main_stars_mass",params.filename());
     }
 
 }
@@ -230,7 +230,7 @@ void LensHaloBaseNSIE::PrintLens(bool show_substruct,bool show_stars){
 	cout << "zlens " << zlens << endl;
 
 	 // parameters of substructures
-	cout << endl << "NdensitySubstruct "<< sub_Ndensity << endl;
+	cout << endl << "main_sub_Ndensity "<< sub_Ndensity << endl;
 	if(sub_Ndensity > 0){
 		cout << "betaSubstruct "<<sub_beta << endl;
 		cout << "alphaSubstruct "<<sub_alpha << endl;
@@ -247,7 +247,7 @@ void LensHaloBaseNSIE::PrintLens(bool show_substruct,bool show_stars){
 				  cout << "RcutSubstruct "<<i << " " <<subs[i].get_Rmax() << " Mpc" << endl;
 				  cout << "massSubstruct "<<i<<" "<<subs[i].get_mass() << " Msun" << endl;
 				  cout << "xSubstruct "<<i<<" "<<sub_x[i][0]<<" "<<sub_x[i][1] << " Mpc" << endl;
-					switch(sub_type){
+					switch(main_sub_type){
 					case nfw:
 						cout << "  NFW clumps" << endl;
 						break;
@@ -268,7 +268,7 @@ void LensHaloBaseNSIE::PrintLens(bool show_substruct,bool show_stars){
 		}
 	}
 
-	cout << endl << "Nstars "<<stars_N << endl << endl;
+	cout << endl << "main_stars_N "<<stars_N << endl << endl;
 	if(stars_N>0){
 		if(star_Nregions > 0)
 			cout << "stars_Nregions "<<star_Nregions << endl;
@@ -321,7 +321,7 @@ LensHaloBaseNSIE::~LensHaloBaseNSIE(){
  ******************************************************/
 
 
-/// TODO This needs to be thought about more. sets axial modes to reproduce a near elliptically shaped surface density
+/// TODO: This needs to be thought about more. sets axial modes to reproduce a near elliptically shaped surface density
 void LensHalo::setModesToEllip(double q,double theta){
   // elliptical integrals
 	double K = rfD(0,1./q/q,1);

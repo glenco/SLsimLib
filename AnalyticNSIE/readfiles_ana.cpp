@@ -20,23 +20,23 @@ using namespace std;
 void LensHaloAnaNSIE::assignParams(InputParams& params){
 
 	// Host lens parameters
-	if(!params.get("sigma",sigma)) error_message1("sigma",params.filename());
-	if(!params.get("core",rcore)) error_message1("core",params.filename());
-	if(!params.get("axis_ratio",fratio)) error_message1("axis_ratio",params.filename());
-	if(!params.get("pos_angle",pa)) error_message1("pos_angle",params.filename());
+	if(!params.get("main_sigma",sigma)) error_message1("main_sigma",params.filename());
+	if(!params.get("main_core",rcore)) error_message1("main_core",params.filename());
+	if(!params.get("main_axis_ratio",fratio)) error_message1("main_axis_ratio",params.filename());
+	if(!params.get("main_pos_angle",pa)) error_message1("main_pos_angle",params.filename());
 
 
 	// Distortion of host lens parameters
-	if(!params.get("NDistortionModes",perturb_Nmodes)) error_message1("NDistortionModes",params.filename());
+	if(!params.get("main_NDistortionModes",perturb_Nmodes)) error_message1("main_NDistortionModes",params.filename());
 	else if(perturb_Nmodes > 0){
-		if(!params.get("beta_perturb",perturb_beta)) error_message1("beta_perturb",params.filename());
+		if(!params.get("main_perturb_beta",perturb_beta)) error_message1("main_perturb_beta",params.filename());
 		else if(perturb_beta <= 0.0) {ERROR_MESSAGE(); cout << "perturb_beta can't be <= 0.0 in file " << params.filename(); }
-		if(!params.get("kappa_perturb",perturb_rms[0])) error_message1("kappa_perturb",params.filename());
-		if(!params.get("gamma_perturb",perturb_rms[1])) error_message1("gamma_perturb",params.filename());
-		if(!params.get("monopole_perturb",perturb_rms[2])) error_message1("monopole_perturb",params.filename());
-		if(!params.get("quadrapole_perturb",perturb_rms[3])) error_message1("quadrapole_perturb",params.filename());
-		if(!params.get("hexopole_perturb",perturb_rms[4])) error_message1("hexopole_perturb",params.filename());
-		if(!params.get("octopole_perturb",perturb_rms[5])) error_message1("octopole_perturb",params.filename());
+		if(!params.get("main_perturb_kappa",perturb_rms[0])) error_message1("main_perturb_kappa",params.filename());
+		if(!params.get("main_perturb_gamma",perturb_rms[1])) error_message1("main_perturb_gamma",params.filename());
+		if(!params.get("main_perturb_monopole",perturb_rms[2])) error_message1("main_perturb_monopole",params.filename());
+		if(!params.get("main_perturb_quadrapole",perturb_rms[3])) error_message1("main_perturb_quadrapole",params.filename());
+		if(!params.get("main_perturb_hexopole",perturb_rms[4])) error_message1("main_perturb_hexopole",params.filename());
+		if(!params.get("main_perturb_octopole",perturb_rms[5])) error_message1("main_perturb_octopole",params.filename());
 	}
 
 }
@@ -44,7 +44,7 @@ void LensHaloAnaNSIE::assignParams(InputParams& params){
 /** \ingroup ImageFinding
  * \brief Prints the parameters of the analytic lens to stdout
 
-cout << endl << "Nstars "<<stars_N << endl << endl;
+cout << endl << "main_stars_N "<<stars_N << endl << endl;
 	if(stars_N>0){
 		if(star_Nregions > 0)
 			cout << "stars_Nregions "<< star_Nregions << endl;

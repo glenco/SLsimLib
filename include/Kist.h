@@ -11,7 +11,7 @@
 //#include "pointlist.h"
 #include "point.h"
 
-// Used as internal container in Kist
+/// Internal container used in Kist container class
 template <class T>
 struct KistUnit{
 	T * data;
@@ -103,7 +103,9 @@ public:
 	void Fill(Data * data,unsigned long N);
 	void SwapCurrentWithBottom();
 	void MoveCurrentToBottom();
+	void MoveCurrentToTop();
 	void copy(Kist<Data> *kist);
+	void copy(std::vector<Data *> &vector);
 
 	// movement
 	bool JumpDown(int jump);
@@ -302,12 +304,21 @@ template <class Data> void Kist<Data>::SwapCurrentWithBottom(){
 
 /// Moves data at current location to the bottom of the kist.  Current is left at the bottom
 template <class Data> void Kist<Data>::MoveCurrentToBottom(){
-
+  
   if(Number == 0 || current==&offbot) return;
 	Data *data = TakeOutCurrent();
 	MoveToBottom();
 	InsertAfterCurrent(data);
 	Down();
+}
+/// Moves data at current location to the top of the kist.  Current is left at the top
+template <class Data> void Kist<Data>::MoveCurrentToTop(){
+  
+  if(Number == 0 || current==&offbot) return;
+	Data *data = TakeOutCurrent();
+	MoveToTop();
+	InsertBeforeCurrent(data);
+	Up();
 }
 
 /**
@@ -506,6 +517,14 @@ template <class Data> void Kist<Data>::copy(Kist<Data> *kist){
 		InsertAfterCurrent(kist->getCurrent());
 		Down();
 	}while(kist->Down());
+}
+template <class Data> void Kist<Data>::copy(std::vector<Data *> &vector){
+	Empty();
+	if(vector.size() == 0) return;
+	for(size_t i=0;i<vector.size();++i){
+		InsertAfterCurrent(vector[i]);
+		Down();
+	}
 }
 
 

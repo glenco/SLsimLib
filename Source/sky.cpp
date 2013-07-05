@@ -1,6 +1,4 @@
 #include "../include/sky.h"
-#include "../include/InputParams.h"
-#include "../include/parameters.h"
 
 #include <iterator>
 #include <ctime>
@@ -56,18 +54,48 @@ Sky::~Sky()
 {
 }
 
-void Sky::setParameters(Parameters& p)
+double Sky::getFov()
 {
-	//lns->setParameters(p);
-	for(std::size_t i = 0, n = srcs.size(); i < n; ++i)
-		srcs[i].setParameters(p);
+	if(srcs.empty())
+		return 0;
+	
+	double rangex[2];
+	double rangey[2];
+	
+	const double* x = srcs[0].getX();
+	rangex[0] = x[0];
+	rangex[1] = x[0];
+	rangey[0] = x[1];
+	rangey[1] = x[1];
+	
+	for(std::size_t i = 1, n = srcs.size(); i < n; ++i)
+	{
+		x = srcs[i].getX();
+		
+		if(x[0] < rangex[0])
+			rangex[0] = x[0];
+		else if(x[0] > rangex[1])
+			rangex[1] = x[0];
+		
+		if(x[1] < rangey[0])
+			rangey[0] = x[1];
+		else if(x[1] > rangey[1])
+			rangey[1] = x[1];
+	}
+	
+	return (rangex[1]-rangex[0])*(rangey[1]-rangey[0])*180*180/pi/pi;
 }
 
-void Sky::getParameters(Parameters& p)
+void Sky::serialize(RawData& d) const
 {
-	//lns->getParameters(p);
 	for(std::size_t i = 0, n = srcs.size(); i < n; ++i)
-		srcs[i].getParameters(p);
+		srcs[i].serialize(d);
+}
+
+void Sky::unserialize(RawData& d)
+{
+	for(std::size_t i = 0, n = srcs.size(); i < n; ++i)
+		srcs[i].unserialize(d);
 }
 
 void Sky::randomize(double step, long* seed)

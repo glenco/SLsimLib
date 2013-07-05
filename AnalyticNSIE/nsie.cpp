@@ -28,7 +28,6 @@ void alphaNSIE(
 
   // deflection angle alpha has opposite sign with respect to ray position xt
   if( f==1.0 ){
-	 std::cout << "This is simple: circular simmetry" << std::endl;
     if(bc == 0.0){
       alpha[0]=-1.0*xt[0]/r;
       alpha[1]=-1.0*xt[1]/r;
@@ -142,12 +141,13 @@ void gammaNSIE(
   gam[1]=2*f*f*x[0]*x[1]*P;
 
   Utilities::rotation(gam,gam,-2*theta);
+
   return;
 }
 /** \ingroup function
  *  \brief Elliptical radius \f$ R^2 = x^2 + f^2 y^2 \f$ of a NonSingular Isothermal Ellipsoid
  */
-// TODO BEN Check pi factor against notes.
+// TODO: BEN Check pi factor against notes.
 double rmaxNSIE(
 		double sigma    /// velocity dispersion in km/s
 		,double mass    /// mass in Msun
@@ -188,15 +188,17 @@ KappaType invmagNSIE(
 namespace Utilities{
 	/// Rotates 2 dimensional point without changing input point
 	void rotation(float *xout,float *xin,double theta){
-
-		xout[0]=xin[0]*cos(theta)-xin[1]*sin(theta);
-		xout[1]=xin[1]*cos(theta)+xin[0]*sin(theta);
+    
+    float tmp = xin[0];  // to make it work if xout == xin
+		xout[0]=tmp*cos(theta)-xin[1]*sin(theta);
+		xout[1]=xin[1]*cos(theta)+tmp*sin(theta);
 	}
 	/// Rotates 2 dimensional point without changing input point
 	void rotation(double *xout,double *xin,double theta){
-
-		xout[0]=xin[0]*cos(theta)-xin[1]*sin(theta);
-		xout[1]=xin[1]*cos(theta)+xin[0]*sin(theta);
+    
+    double tmp = xin[0];  // to make it work if xout == xin
+		xout[0]=tmp*cos(theta)-xin[1]*sin(theta);
+		xout[1]=xin[1]*cos(theta)+tmp*sin(theta);
 	}
 }
 /* potential in Mpc^2 */

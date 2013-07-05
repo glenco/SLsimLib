@@ -46,20 +46,20 @@ SourceSersic::~SourceSersic()
 
 
 
-void SourceSersic::getParameters(Parameters& p) const
+void SourceSersic::serialize(RawData& d) const
 {
 	// base class serialization
-	Source::getParameters(p);
+	Source::serialize(d);
 	
-	p << Reff << mag << PA << index << bn << q << Ieff << flux;
+	d << Reff << mag << PA << index << bn << q << Ieff << flux;
 }
 
-void SourceSersic::setParameters(Parameters& p)
+void SourceSersic::unserialize(RawData& d)
 {
 	// base class deserialization
-	Source::setParameters(p);
+	Source::unserialize(d);
 	
-	p >> Reff >> mag >> PA >> index >> bn >> q >> Ieff >> flux;
+	d >> Reff >> mag >> PA >> index >> bn >> q >> Ieff >> flux;
 }
 
 void SourceSersic::randomize(double step, long* seed)
