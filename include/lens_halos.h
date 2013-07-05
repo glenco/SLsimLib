@@ -174,9 +174,11 @@ protected:
 	inline double alpha_h(double x){
 		//return -1.0*InterpolateFromTable(gtable,x)/InterpolateFromTable(gtable,xmax);
 		return -1.0*InterpolateFromTable(gtable,x)/gmax;
+	// return 4./x*InterpolateFromTable(gtable,x)/gmax;
 	}
 	inline KappaType kappa_h(double x){
 		return 0.5*x*x*InterpolateFromTable(ftable,x)/gmax;
+	// return 2.*InterpolateFromTable(ftable,x)/gmax;
 	}
 	inline KappaType gamma_h(double x){
 		return -0.25*x*x*InterpolateFromTable(g2table,x)/gmax;
@@ -185,7 +187,7 @@ protected:
 		//ERROR_MESSAGE();
 		//std::cout << "time delay has not been fixed for NFW profile yet." << std::endl;
 		//exit(1);
-		return -1.0*InterpolateFromTable(htable,x)/gmax;
+		return InterpolateFromTable(htable,x)/gmax; // -0.5*x*
 	}
   
 private:
@@ -385,7 +387,9 @@ public:
 
 	double ffunction(double x);
 	double gfunction(double x);
+	double hfunction(double x);
 	double g2function(double x);
+
 	// TODO BEN: the below functions alphaHern, kappaHern and gammaHern are obsolete and better to be deleted to avoid confusion
 	void alphaHern(double *alpha,double *x,double Rtrunc,double mass,double r_scale
 			,double *center,double Sigma_crit);
@@ -409,7 +413,7 @@ protected:
 	static int count;
 
 	/// tables for lensing properties specific functions
-	static double *ftable,*gtable,*g2table,*xtable;
+	static double *ftable,*gtable,*g2table,*htable,*xtable;
 	/// make the specific tables
 	void make_tables();
 	/// interpolates from the specific tables
@@ -424,16 +428,16 @@ protected:
 		return -1.0*InterpolateFromTable(gtable,x)/gmax;
 	}
 	inline KappaType kappa_h(double x){
-		return 0.5*x*x*InterpolateFromTable(ftable,x)/gmax;
+		return 2.0*InterpolateFromTable(ftable,x)/gmax;
 	}
 	inline KappaType gamma_h(double x){
 		return -0.25*x*x*InterpolateFromTable(g2table,x)/gmax;
 	}
 	inline KappaType phi_h(double x){
-		ERROR_MESSAGE();
-		std::cout << "time delay has not been fixed for NFW profile yet." << std::endl;
-		exit(1);
-		return 0.0;
+		//ERROR_MESSAGE();
+		//std::cout << "time delay has not been fixed for NFW profile yet." << std::endl;
+		//exit(1);
+		return -1.0*InterpolateFromTable(htable,x)/gmax;
 	}
 
 private:

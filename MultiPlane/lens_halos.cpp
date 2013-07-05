@@ -419,7 +419,7 @@ void LensHaloSimpleNSIE::force_halo(
 
 
 int LensHaloHernquist::count = 0;
-double *LensHaloHernquist::xtable = NULL,*LensHaloHernquist::ftable = NULL,*LensHaloHernquist::gtable = NULL,*LensHaloHernquist::g2table = NULL;
+double *LensHaloHernquist::xtable = NULL,*LensHaloHernquist::ftable = NULL,*LensHaloHernquist::gtable = NULL,*LensHaloHernquist::g2table = NULL,*LensHaloHernquist::htable = NULL;
 
 LensHaloHernquist::LensHaloHernquist() : LensHalo(){
   gmax=0;
@@ -441,6 +441,7 @@ void LensHaloHernquist::make_tables(){
 		xtable = new double[NTABLE];
 		ftable = new double[NTABLE];
 		gtable = new double[NTABLE];
+		htable = new double[NTABLE];
 		g2table = new double[NTABLE];
 
 		for(i = 0 ; i< NTABLE; i++){
@@ -448,7 +449,9 @@ void LensHaloHernquist::make_tables(){
 			xtable[i] = x;
 			ftable[i] = ffunction(x);
 			gtable[i] = gfunction(x);
+			htable[i] = hfunction(x);
 			g2table[i] = g2function(x);
+
 		}
   }
   count++;
@@ -476,6 +479,7 @@ LensHaloHernquist::~LensHaloHernquist(){
 		delete[] xtable;
 		delete[] gtable;
 		delete[] ftable;
+		delete[] htable;
 		delete[] g2table;
 	}
 }
