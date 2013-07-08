@@ -827,12 +827,14 @@ void Lens::createFieldHalos()
 	unsigned long i,k,j_max,k1,k2;
 	std::vector<double> Logm;
 	//double pos_max[2];
-  double z_max;
+    double z_max;
 	const double MaxLogm=16.;
 	double z1, z2, mass_max,Nhaloestot;
 	int np;
 	double rr,theta,maxr;
 	HALO *halo_calc = new HALO(cosmo,field_min_mass,0.0);
+    double mo=7.3113e10,M1=2.8575e10,gam1=7.17,gam2=0.201,be=0.557;
+
 
   if (field_min_mass < 1.0e5) {
     std::cout << "Are you sure you want the minimum field halo mass to be " << field_min_mass << " Msun?" << std::endl;
@@ -964,9 +966,13 @@ void Lens::createFieldHalos()
 			float Rmax = halo_calc->getRvir();
 			float rscale = Rmax/halo_calc->getConcentration(0);
       
+
 			field_halos[j]->setZlens(halo_zs_vec[i]);
 			if(flag_field_gal_on){
-				if(field_galaxy_mass_fraction > 1.0) field_galaxy_mass_fraction = 1;
+                field_galaxy_mass_fraction = 2*mo*pow(mass/M1,gam1)
+                /pow(1+pow(mass/M1,be),(gam1-gam2)/be)/mass;
+                if(field_galaxy_mass_fraction > 1.0) field_galaxy_mass_fraction = 1;
+				
 				field_halos[j]->initFromMassFunc(mass*(1-field_galaxy_mass_fraction),Rmax,rscale,field_prof_internal_slope,seed);
 			}
 			else{
