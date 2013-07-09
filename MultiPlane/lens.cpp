@@ -181,9 +181,10 @@ void Lens::assignParams(InputParams& params)
 				
 				if(!params.get("field_galaxy_mass_fraction",field_galaxy_mass_fraction))
 				{
-					ERROR_MESSAGE();
+                    field_galaxy_mass_fraction = 0;
+					/*ERROR_MESSAGE();
 					cout << "to construct a DM + galaxy model the parameter field_galaxy_mass_fraction needs to be set in the parameter file " << params.filename() << endl;
-					exit(0);
+					exit(0);*/
 				}
 			}
 			
@@ -1006,10 +1007,10 @@ void Lens::createFieldHalos()
 				field_halos[j]->setZlens(halo_zs_vec[i]);
 				field_halos[j]->initFromMassFunc(mass*field_galaxy_mass_fraction,Rmax,rscale,field_prof_internal_slope,seed);
 
-        // Another copy of this position must be made to avoid rescaling it twice when it is converted into
-        // distance on the lens plane in Lens::buildLensPlanes()
-        theta2 = new double[3];
-        theta2[0]=theta_pos[0]; theta2[1]=theta_pos[1]; theta2[3]=theta_pos[3];
+                // Another copy of this position must be made to avoid rescaling it twice when it is converted into
+                // distance on the lens plane in Lens::buildLensPlanes()
+                theta2 = new double[3];
+                theta2[0]=theta_pos[0]; theta2[1]=theta_pos[1]; theta2[3]=theta_pos[3];
 
 				halo_pos_vec.push_back(theta2);
 
