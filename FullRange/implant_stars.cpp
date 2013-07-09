@@ -90,7 +90,7 @@ void LensHalo::implant_stars(PosType **centers,unsigned long Nregions,long *seed
 		xcm[1] = centers[j][1];
 
 		force_halo(alpha,&kappa,gamma,xcm,false,false);
-		star_kappa[j] = kappa;
+		star_kappa[j] = star_fstars*kappa;
 		star_region[j] = 1.0/sqrt(pi*star_kappa[j]/(mean_mstar[j]*(float)NstarsPerImage));
 
 		star_xdisk[j][0] = centers[j][0];
