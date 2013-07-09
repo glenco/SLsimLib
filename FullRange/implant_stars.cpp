@@ -259,7 +259,6 @@ float* LensHalo::stellar_mass_function(IMFtype type, unsigned long Nstars, long 
        	n1 =  n0 - (pow(minmass,powerp1)) / powerp1;
        	for(i = 0; i < Nstars; i++){
        		stellar_masses[i] = pow( (-powerp1*(n1*ran2(seed)-n0)),(1.0/powerp1) );
-       		cout << stellar_masses[i] << endl;
        	}
    	}
 
@@ -306,7 +305,6 @@ float* LensHalo::stellar_mass_function(IMFtype type, unsigned long Nstars, long 
     		n1=(1./powerlp1)-(pow(shiftmin, powerlp1))/powerlp1;
     		n2=( pow(shiftmax,powerp1) )/powerp1-(1./powerp1);
     		n0=n1+n2;
-    		cout << n1 <<" "<< n2 << " " << rndnr << " "<< powerlp1<< " " << shiftmax<< " " << bendmass<< " " << endl;
     		for(i = 0; i < Nstars; i++){
     			rndnr=ran2(seed);
     			if(rndnr<(n1/n0)){
