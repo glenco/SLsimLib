@@ -308,6 +308,12 @@ void LensHaloSimpleNSIE::assignParams(InputParams& params){
 	Rmax = MAX(1.0,1.0/fratio)*Rsize;  // redefine
 
 	assert(Rmax >= Rsize);
+
+	if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
+    else if(stars_N){
+    	assignParams_stars(params);
+    }
+
 }
 
 LensHaloSimpleNSIE::~LensHaloSimpleNSIE(){
