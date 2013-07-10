@@ -183,11 +183,10 @@ protected:
 	inline double alpha_h(double x){
 		//return -1.0*InterpolateFromTable(gtable,x)/InterpolateFromTable(gtable,xmax);
 		return -1.0*InterpolateFromTable(gtable,x)/gmax;
-	// return 4./x*InterpolateFromTable(gtable,x)/gmax;
+	// return -0.5/x*InterpolateFromTable(gtable,x)/gmax;
 	}
 	inline KappaType kappa_h(double x){
 		return 0.5*x*x*InterpolateFromTable(ftable,x)/gmax;
-	// return 2.*InterpolateFromTable(ftable,x)/gmax;
 	}
 	inline KappaType gamma_h(double x){
 		return -0.25*x*x*InterpolateFromTable(g2table,x)/gmax;
@@ -430,10 +429,10 @@ protected:
 	/// Override internal structure of halos
 	inline double alpha_h(double x){
 		//return -1.0*InterpolateFromTable(gtable,x)/InterpolateFromTable(gtable,xmax);
-		return -1.0*InterpolateFromTable(gtable,x)/gmax;
+		return -0.25*x*InterpolateFromTable(gtable,x)/gmax;
 	}
 	inline KappaType kappa_h(double x){
-		return 2.0*InterpolateFromTable(ftable,x)/gmax;
+		return 0.5*x*x*InterpolateFromTable(ftable,x)/gmax;
 	}
 	inline KappaType gamma_h(double x){
 		return -0.25*x*x*InterpolateFromTable(g2table,x)/gmax;
