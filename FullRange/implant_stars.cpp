@@ -90,7 +90,7 @@ void LensHalo::implant_stars(PosType **centers,unsigned long Nregions,long *seed
 		xcm[1] = centers[j][1];
 
 		force_halo(alpha,&kappa,gamma,xcm,false,false);
-		star_kappa[j] = kappa;
+		star_kappa[j] = star_fstars*kappa;
 		star_region[j] = 1.0/sqrt(pi*star_kappa[j]/(mean_mstar[j]*(float)NstarsPerImage));
 
 		star_xdisk[j][0] = centers[j][0];
@@ -292,6 +292,11 @@ float* LensHalo::stellar_mass_function(IMFtype type, unsigned long Nstars, long 
     		cout << "For IMF type BrokenPowerLaw inner slope (slope_1) and outer slope (slope_2) must be defined in parameter file" << endl;
     		exit(1);
     	}
+    	if((powerlo==-1) || (powerhi==-1) ){
+    	    cout << "For IMF type BrokenPowerLaw no slope of -1 is allowed." << endl;
+    	    exit(1);
+    	}
+
     	else{
     		powerlp1=powerlo+1.0;
     		powerp1 = powerhi+1.0;
@@ -304,9 +309,11 @@ float* LensHalo::stellar_mass_function(IMFtype type, unsigned long Nstars, long 
     			rndnr=ran2(seed);
     			if(rndnr<(n1/n0)){
     				stellar_masses[i]=(pow( ((n0*rndnr)*(powerlp1)+ pow(shiftmin,powerlp1)),(1.0/powerlp1)))*bendmass;
+    				//cout << stellar_masses[i] << endl;
     			}
     			else{
     				stellar_masses[i]=(pow( ((n0*rndnr-n1)*powerp1+1.0),(1.0/powerp1)))*bendmass;
+    				//cout << stellar_masses[i] << endl;
     			}
     		}
     	}
