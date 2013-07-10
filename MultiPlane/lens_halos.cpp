@@ -264,6 +264,11 @@ void LensHaloPowerLaw::assignParams(InputParams& params){
 	if(!params.get("Rmax_pl",Rmax)) error_message1("Rmax_pl",params.filename());
 	if(!params.get("zlens_pl",zlens)) error_message1("zlens_pl",params.filename());
 	if(!params.get("slope_pl",beta)) error_message1("slope_pl",params.filename());
+
+	if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
+    else if(stars_N){
+    	assignParams_stars(params);
+    }
 }
 
 LensHaloPowerLaw::~LensHaloPowerLaw(){
@@ -524,6 +529,12 @@ void LensHaloHernquist::assignParams(InputParams& params){
 	if(!params.get("zlens_hernquist",zlens)) error_message1("zlens_hernquist",params.filename());
 	if(!params.get("rscale_hernquist",rscale)) error_message1("rscale_hernquist",params.filename());
   xmax = Rmax/rscale;
+
+	if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
+  else if(stars_N){
+  	assignParams_stars(params);
+  }
+
 }
 
 LensHaloHernquist::~LensHaloHernquist(){

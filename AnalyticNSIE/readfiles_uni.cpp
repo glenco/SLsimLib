@@ -17,7 +17,7 @@ using namespace std;
  * force calculation.
  */
 
-LensHaloUniform::LensHaloUniform(InputParams& params) : LensHalo(params){
+LensHaloUniform::LensHaloUniform(InputParams& params): LensHalo(){
 
   assignParams(params);
 
