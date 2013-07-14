@@ -55,8 +55,7 @@
 
 		field_internal_profile         1    # DM internal profile type: 0 or nolens, 1 or NFW, 2 or PseudoNFW, 3 or PowerLaw, 4 or NSIE, 5 or AnaLens, 6 or UniLens, 7 or MOKALens, 8 or DummyLens
 		field_internal_profile_galaxy  1	# if set, a galaxy profile is chosen: 0 or none, 1 or NSIE
-		field_galaxy_mass_fraction    0.1	# must be set if field_internal_profile_galaxy is set, mass fraction of the galaxy
-
+ 
 		field_prof_internal_slope_pnfw		2 	# slope of the PseudoNFW profile, default is 2
 		field_prof_internal_slope_pl		-1  # slope of the PowerLaw profile, default is -1
 

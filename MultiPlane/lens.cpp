@@ -179,13 +179,6 @@ void Lens::assignParams(InputParams& params)
 			{
 				flag_field_gal_on = true;
 				
-				if(!params.get("field_galaxy_mass_fraction",field_galaxy_mass_fraction))
-				{
-                    field_galaxy_mass_fraction = 0;
-					/*ERROR_MESSAGE();
-					cout << "to construct a DM + galaxy model the parameter field_galaxy_mass_fraction needs to be set in the parameter file " << params.filename() << endl;
-					exit(0);*/
-				}
 			}
 			
 			if(!params.get("field_mass_func_alpha",mass_func_PL_slope))
@@ -835,12 +828,14 @@ void Lens::createFieldHalos()
 	double rr,theta,maxr;
 	HALO *halo_calc = new HALO(cosmo,field_min_mass,0.0);
     double mo=7.3113e10,M1=2.8575e10,gam1=7.17,gam2=0.201,be=0.557;
+    double field_galaxy_mass_fraction = 0;
 
 
-  if (field_min_mass < 1.0e5) {
-    std::cout << "Are you sure you want the minimum field halo mass to be " << field_min_mass << " Msun?" << std::endl;
-    throw;
-   }
+    if (field_min_mass < 1.0e5) {
+       std::cout << "Are you sure you want the minimum field halo mass to be " << field_min_mass << " Msun?" << std::endl;
+       throw;
+    }
+    
 	double aveNhalos = cosmo->haloNumberInBufferedCone(field_min_mass,0,zsource,fieldofview*pow(pi/180,2),field_buffer,field_mass_func_type,mass_func_PL_slope);
 
 	fill_linear(zbins,Nzbins,0.0,zsource);
@@ -848,9 +843,6 @@ void Lens::createFieldHalos()
 	Nhalosbin[0] = 1;
 	zbins[0] = 0;
 
-#ifdef _OPENMP
-#pragma omp parallel for default(shared) private(k)
-#endif
 	for(k=1;k<Nzbins-1;++k){
 		Nhalosbin[k] = cosmo->haloNumberInBufferedCone(field_min_mass,zbins[k],zsource,fieldofview*pow(pi/180,2),field_buffer,field_mass_func_type,mass_func_PL_slope)/aveNhalos;
 	}
@@ -862,12 +854,13 @@ void Lens::createFieldHalos()
 	std::vector<double> halo_zs_vec;
 	std::vector<double *> halo_pos_vec;
 
-	// assign redsshifts to field_halos and sort them
+	// assign redsshifts to field_halos according to the redshift distribution
 
 	for(i=0;i < Nhalos;++i){
 		halo_zs_vec.push_back(InterpolateYvec(Nhalosbin,zbins,ran2(seed)));
 	}
 
+    // sort redshifts
 	std::sort(halo_zs_vec.begin(),halo_zs_vec.end());
 
 	assert(halo_zs_vec[0] < halo_zs_vec[1]);
@@ -966,6 +959,7 @@ void Lens::createFieldHalos()
 
 			float Rmax = halo_calc->getRvir();
 			float rscale = Rmax/halo_calc->getConcentration(0);
+            assert(rscale < Rmax);
       
 
 			field_halos[j]->setZlens(halo_zs_vec[i]);
@@ -973,7 +967,7 @@ void Lens::createFieldHalos()
                 field_galaxy_mass_fraction = 2*mo*pow(mass/M1,gam1)
                 /pow(1+pow(mass/M1,be),(gam1-gam2)/be)/mass;
                 if(field_galaxy_mass_fraction > 1.0) field_galaxy_mass_fraction = 1;
-				
+
 				field_halos[j]->initFromMassFunc(mass*(1-field_galaxy_mass_fraction),Rmax,rscale,field_prof_internal_slope,seed);
 			}
 			else{
@@ -990,7 +984,6 @@ void Lens::createFieldHalos()
 
 			halo_pos_vec.push_back(theta_pos);
 
-      //Should we incriment j twice ??
 			++j;
 
 			if(flag_field_gal_on){
@@ -1052,6 +1045,7 @@ void Lens::readInputSimFile()
 	unsigned long i,j;
 	unsigned long haloid,idd,np;
 	double mo=7.3113e10,M1=2.8575e10,gam1=7.17,gam2=0.201,be=0.557;
+    double field_galaxy_mass_fraction = 0;
 
 	double rmax2=0,rtmp=0;
 
