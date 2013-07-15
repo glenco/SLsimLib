@@ -167,6 +167,12 @@ void LensHaloNFW::initFromFile(float my_mass, long *seed, float vmax, float r_ha
   gmax = InterpolateFromTable(gtable,xmax);
 }
 
+void LensHaloNFW::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, double my_slope, long* seed)
+{
+	LensHalo::initFromMassFunc(my_mass, my_Rmax, my_rscale, my_slope, seed);
+    gmax = InterpolateFromTable(gtable,xmax);
+}
+
 int LensHaloPseudoNFW::count = 0;
 double *LensHaloPseudoNFW::xtable = NULL,*LensHaloPseudoNFW::mhattable = NULL;
 LensHaloPseudoNFW::LensHaloPseudoNFW() : LensHalo(){

@@ -195,6 +195,7 @@ public:
 			,double *center,double Sigma_crit);
 
 	void initFromFile(float my_mass, long *seed, float vmax, float r_halfmass);
+	void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, double my_slope, long *seed);
   
   /// set Rmax
     void set_Rmax(float my_Rmax){Rmax=my_Rmax; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
