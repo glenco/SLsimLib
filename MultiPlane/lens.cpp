@@ -1004,7 +1004,7 @@ void Lens::createFieldHalos()
                 // Another copy of this position must be made to avoid rescaling it twice when it is converted into
                 // distance on the lens plane in Lens::buildLensPlanes()
                 theta2 = new double[3];
-                theta2[0]=theta_pos[0]; theta2[1]=theta_pos[1]; theta2[3]=theta_pos[3];
+                theta2[0]=theta_pos[0]; theta2[1]=theta_pos[1]; theta2[2]=theta_pos[2];
 
 				halo_pos_vec.push_back(theta2);
 
