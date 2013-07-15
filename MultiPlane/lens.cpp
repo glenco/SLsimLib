@@ -474,6 +474,7 @@ void Lens::createFieldPlanes()
 		assert(field_Dl[i] > 0);
 		
 		// previous upper bound is now lower bound
+		z1 = z2;
 		k1 = k2;
 		
 		// find upper bound
