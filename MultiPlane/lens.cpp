@@ -765,7 +765,7 @@ void Lens::insertMainHalos(Source* source, LensHalo** halos, std::size_t Nhalos)
 {
 	for(std::size_t i = 0; i < Nhalos; ++i)
 	{
-		halos[i]->setInternalParams(cosmo,source);
+		halos[i]->setInternalParams(cosmo);
 		main_halos.push_back(halos[i]);
 		addMainHaloToPlane(halos[i]);
 	}
@@ -805,7 +805,7 @@ void Lens::replaceMainHalos(Source* source, LensHalo** halos, std::size_t Nhalos
 	
 	for(std::size_t i = 0; i < Nhalos; ++i)
 	{
-		halos[i]->setInternalParams(cosmo,source);
+		halos[i]->setInternalParams(cosmo);
 		main_halos.push_back(halos[i]);
 	}
 	

@@ -411,6 +411,12 @@ void LensHalo::force_halo(
    	 force_stars(alpha,kappa,gamma,xcm,no_kappa);
     }
 
+    // add stars for microlensing
+    if(stars_N > 0 && stars_implanted){
+   	 force_stars(alpha,kappa,gamma,xcm,kappa_off);
+    }
+
+
 	return;
 }
 
