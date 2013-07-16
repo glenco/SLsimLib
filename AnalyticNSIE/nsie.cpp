@@ -138,8 +138,8 @@ void gammaNSIE(
               - 0.5*(1+f*f)*sqrt(b2+bc*bc)+f*bc ) 
     /( pow(f*r,4) - 2*f*f*fp*fp*bc*bc*(x[0]*x[0]-x[1]*x[1]) + pow(fp*bc,4) );
 
-  gam_tmp[0]=(f*f*(x[0]*x[0]-x[1]*x[1])-fp*fp*bc*bc)*P;
-  gam_tmp[1]=2*f*f*x[0]*x[1]*P;
+  gam[0]=(f*f*(x[0]*x[0]-x[1]*x[1])-fp*fp*bc*bc)*P;
+  gam[1]=2*f*f*x[0]*x[1]*P;
 
   Utilities::rotation(gam,gam,-2*theta);
 
