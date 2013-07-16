@@ -50,12 +50,8 @@ struct Grid{
 	void ClearAllMarks();
 
 	void test_mag_matrix();
-<<<<<<< local
-	void writeFits(double center[],size_t Npixels,double resolution,LensingVariable lensvar,std::string filename);
-=======
   void writeFits(double center[],size_t Npixels,double resolution,LensingVariable lensvar,std::string filename);
 
->>>>>>> other
 
 private:
 	/// one dimensional size of initial grid

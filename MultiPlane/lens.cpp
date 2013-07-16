@@ -724,48 +724,15 @@ void Lens::createMainHalos(InputParams& params, Source* source)
 		main_halos[i]->setInternalParams(cosmo);
 }
 
-<<<<<<< local
-/**
- * \brief Inserts a sequense of main lens halos and ads them to the existing ones.
- * Then all lensing planes are updated accordingly.
- */
-void Lens::insertMainHalos(Source* source, LensHalo** halos, std::size_t Nhalos)
-{
-	for(std::size_t i = 0; i < Nhalos; ++i)
-	{
-		halos[i]->setInternalParams(cosmo);
-		main_halos.push_back(halos[i]);
-		addMainHaloToPlane(halos[i]);
-	}
-	
-	flag_switch_main_halo_on = true;
-	
-	combinePlanes();
-}
 
-/**
- * \brief Inserts a sequense of main lens halos and deletes all previous ones.
- * Then all lensing planes are updated accordingly.
- */
-void Lens::insertNewMainHalos(Source* source, LensHalo** halos, std::size_t Nhalos)
-=======
 void Lens::clearMainHalos()
->>>>>>> other
+
 {
 	Utilities::delete_container(main_halos_created);
 	main_halos.clear();
 	
-<<<<<<< local
-	for(std::size_t i = 0; i < Nhalos; ++i)
-	{
-		halos[i]->setInternalParams(cosmo);
-		main_halos.push_back(halos[i]);
-	}
-	
-	flag_switch_main_halo_on = true;
-=======
 	flag_switch_main_halo_on = false;
->>>>>>> other
+
 	
 	Utilities::delete_container(main_planes);
 	main_plane_redshifts.clear();

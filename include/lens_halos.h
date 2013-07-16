@@ -88,7 +88,6 @@ public:
 	/// internal compare redshift function
 	bool compare(double z){return z > zlens;};
 
-<<<<<<< local
 	  /// stars
 	  bool AreStarsImaplated(){return stars_implanted;}
 	  int stars_N;
@@ -103,40 +102,26 @@ public:
 	  double star_theta_force;
 	  int star_Nregions;
 	  double *star_region;
-=======
 	/// read raw data
 	virtual void serialize(RawData& d) const;
->>>>>>> other
-
-<<<<<<< local
 	  void substract_stars_disks(PosType *ray,PosType *alpha
 	                  ,KappaType *kappa,KappaType *gamma);
 	  void implant_stars(PosType **centers,unsigned long Nregions,long *seed, IMFtype type=One);
 	  // creates a single star halo in pos (x,y)
    	void implant_stars(double x,double y,unsigned long Nregions,long *seed,IMFtype type=One);
-=======
 	/// write raw data
 	virtual void unserialize(RawData& d);
->>>>>>> other
-
-<<<<<<< local
 	  float* stellar_mass_function(IMFtype type, unsigned long Nstars, long *seed, double minmass=0.0, double maxmass=0.0
 	  		,double bendmass=0.0, double powerlo=0.0, double powerhi=0.0);
 	  IMFtype getIMF_type(){return imf_type;}
-=======
 	/// randomize halo by a given amound
 	virtual void randomize(double step, long* seed);
->>>>>>> other
-
-<<<<<<< local
 	  void PrintStars(bool show_stars);
 
 	  void assignParams_stars(InputParams& params);
 
 
 
-=======
->>>>>>> other
 protected:
 	/// read in parameters from a parameterfile in InputParams params
 	void assignParams(InputParams& params);
@@ -216,11 +201,6 @@ public:
 
 	void initFromFile(float my_mass, long *seed, float vmax, float r_halfmass);
 	void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, double my_slope, long *seed);
-<<<<<<< local
-  
-=======
-
->>>>>>> other
   /// set Rmax
     void set_Rmax(float my_Rmax){Rmax=my_Rmax; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
   /// set scale radius

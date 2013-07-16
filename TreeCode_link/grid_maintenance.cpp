@@ -784,43 +784,18 @@ void Grid::writeFits(
       ,LensingVariable lensvar  /// which quantity is to be displayed
       ,std::string filename     /// file name for image -- .kappa.fits, .gamma1.fits, etc will be appended
       ){
-<<<<<<< local
-
-=======
-  
->>>>>>> other
   PixelMap map(center, Npixels, resolution);
 
   double range = Npixels*resolution;
   ImageInfo tmp_image;
   long i;
   std::string tag;
-<<<<<<< local
-
-=======
-  
->>>>>>> other
   i_tree->PointsWithinKist(center,range/sqrt(2.),tmp_image.imagekist,0);
-<<<<<<< local
-
-=======
-  
->>>>>>> other
   std::vector<double> tmp_sb_vec(tmp_image.imagekist->Nunits());
 
   Point point;
-<<<<<<< local
-
-=======
-  
->>>>>>> other
   for(tmp_image.imagekist->MoveToTop(),i=0;i<tmp_sb_vec.size();++i,tmp_image.imagekist->Down()){
     tmp_sb_vec[i] = tmp_image.imagekist->getCurrent()->surface_brightness;
-<<<<<<< local
-
-=======
-    
->>>>>>> other
     switch (lensvar) {
       case dt:
         tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->dt;
@@ -867,17 +842,4 @@ void Grid::writeFits(
 
   for(tmp_image.imagekist->MoveToTop(),i=0;i<tmp_sb_vec.size();++i,tmp_image.imagekist->Down())
     tmp_image.imagekist->getCurrent()->surface_brightness = tmp_sb_vec[i];
-<<<<<<< local
-
-=======
-  
->>>>>>> other
 }
-<<<<<<< local
-
-=======
-  
-  
-  
-  
-  >>>>>>> other

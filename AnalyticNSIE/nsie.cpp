@@ -141,14 +141,9 @@ void gammaNSIE(
   gam_tmp[0]=(f*f*(x[0]*x[0]-x[1]*x[1])-fp*fp*bc*bc)*P;
   gam_tmp[1]=2*f*f*x[0]*x[1]*P;
 
-<<<<<<< local
-  Utilities::rotation(gam_out,gam_tmp,-2*theta);
-  gam[0] = gam_out[0];
-  gam[1] = gam_out[1];
-=======
   Utilities::rotation(gam,gam,-2*theta);
 
->>>>>>> other
+
   return;
 }
 /** \ingroup function
