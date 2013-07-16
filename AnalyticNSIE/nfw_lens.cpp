@@ -115,3 +115,10 @@ double LensHaloNFW::g2function(double x){
 
 	return 0.0;
 }
+
+double LensHaloNFW::hfunction(double x){
+	if(x==0) x=1e-5;
+	if(x<=1.0) return 2.*((log(x/2.)*log(x/2.))-atanh(sqrt(1.-x*x))*atanh(sqrt(1.-x*x)));
+	if(x>1.0) return 2.* ((log(x/2.)*log(x/2.))+ atan(sqrt(x*x-1.))*atan(sqrt(x*x-1.)));
+	return 0.0;
+}

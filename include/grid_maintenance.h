@@ -50,7 +50,12 @@ struct Grid{
 	void ClearAllMarks();
 
 	void test_mag_matrix();
+<<<<<<< local
 	void writeFits(double center[],size_t Npixels,double resolution,LensingVariable lensvar,std::string filename);
+=======
+  void writeFits(double center[],size_t Npixels,double resolution,LensingVariable lensvar,std::string filename);
+
+>>>>>>> other
 
 private:
 	/// one dimensional size of initial grid
@@ -92,9 +97,9 @@ int refine_grid_kist(LensHndl lens,GridHndl grid,ImageInfo *imageinfo
 		,Kist<Point> * newpointkist = NULL,bool batch=true);
 
 void find_crit(LensHndl lens,GridHndl grid,ImageInfo *critcurve,int maxNcrits,int *Ncrits
-		,double resolution,bool *orderingsuccess,bool ordercurve,bool dividecurves,bool verbose = false);
+		,double resolution,bool *orderingsuccess,bool ordercurve,bool dividecurves,double invmag_min = 0.0,bool verbose = false);
 void find_crit2(LensHndl lens,GridHndl grid,ImageInfo *critcurve,int maxNcrits,int *Ncrits
-		,double resolution,bool *orderingsuccess,bool ordercurve,bool dividecurves,bool verbose = false);
+		,double resolution,bool *orderingsuccess,bool ordercurve,bool dividecurves,double invmag_min = 0.0,bool verbose = false);
 
 void refine_crit_in_image(LensHndl lens,GridHndl grid,double r_source,double x_source[],double resolution);
 

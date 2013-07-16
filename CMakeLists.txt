@@ -34,60 +34,10 @@ endmacro()
 
 
 ####
-# headers
-####
-
-set(HEADERS
-	include/analytic_lens.h
-	include/base_analens.h
-	include/causticdata.h
-	include/divide_images.h
-	include/doc.h
-	include/fitlens.h
-	include/forceTree.h
-	include/grid_maintenance.h
-	include/image_info.h
-	include/image_processing.h
-	include/InputParams.h
-	include/Kist.h
-	include/KistDriver.h
-	include/lens.h
-	include/lens_halos.h
-	include/List1.h
-	include/List_old.h
-	include/map_images.h
-	include/mcmc.h
-	include/MOKAlens.h
-	include/nestedsampler.h
-	include/nsie.h
-	include/overzier_source.h
-	include/parameters.h
-	include/peak_refinement.h
-	include/planes.h
-	include/point.h
-	include/pointlist.h
-	include/profile.h
-	include/quadTree.h
-	include/sersic_source.h
-	include/simpleTree.h
-	include/sky.h
-	include/slsimlib.h
-	include/source.h
-	include/source_models.h
-	include/sourceAnaGalaxy.h
-	include/standard.h
-	include/Tree.h
-	include/tree_maintenance.h
-	include/TreeNB.h
-	include/uniform_lens.h
-	include/utilities_slsim.h
-)
-
-
-####
 # sources
 ####
 
+add_subdirectory(include)
 add_subdirectory(AnalyticNSIE)
 add_subdirectory(BLR)
 add_subdirectory(Fitlens)
@@ -132,8 +82,6 @@ add_dependencies(SLsimLib CosmoLib NR)
 ####
 # group sources
 ####
-
-source_group("include" FILES ${HEADERS})
 
 foreach(_grp ${GROUPS})
 	source_group(${_grp} FILES ${GROUP_${_grp}})

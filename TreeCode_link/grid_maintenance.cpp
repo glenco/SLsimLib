@@ -36,9 +36,10 @@ Grid::Grid(
 	xygridpoints(i_points,range,center,Ngrid_init,0);
 	s_points=LinkToSourcePoints(i_points,Ngrid_init*Ngrid_init);
 	lens->rayshooterInternal(Ngrid_init*Ngrid_init,i_points,false);
+  
 	// Build trees
 	i_tree = new TreeStruct(i_points,Ngrid_init*Ngrid_init);
-	s_tree = new TreeStruct(s_points,Ngrid_init*Ngrid_init);  // make tree on source plane a area splitting tree
+	s_tree = new TreeStruct(s_points,Ngrid_init*Ngrid_init,1,range);  // make tree on source plane with a buffer
 
 	trashkist = new Kist<Point>;
 	neighbors = new Kist<Point>;
@@ -324,10 +325,10 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa
 
 	if(points.size() == 0) return NULL;
 
-	long Nleaves = points.size();
+	size_t Nleaves = points.size();
 	Point *i_points = NewPointArray((Ngrid_block*Ngrid_block-1)*Nleaves,true);
 	Point *s_points;
-	int Nout,kk,ii,addedtocell[Nleaves];
+	size_t Nout,kk,ii,addedtocell[Nleaves];
 	long Nadded,Nout_tot;
 
 	Nout_tot=0;
@@ -783,23 +784,43 @@ void Grid::writeFits(
       ,LensingVariable lensvar  /// which quantity is to be displayed
       ,std::string filename     /// file name for image -- .kappa.fits, .gamma1.fits, etc will be appended
       ){
+<<<<<<< local
 
+=======
+  
+>>>>>>> other
   PixelMap map(center, Npixels, resolution);
 
   double range = Npixels*resolution;
   ImageInfo tmp_image;
   long i;
   std::string tag;
+<<<<<<< local
 
+=======
+  
+>>>>>>> other
   i_tree->PointsWithinKist(center,range/sqrt(2.),tmp_image.imagekist,0);
+<<<<<<< local
 
+=======
+  
+>>>>>>> other
   std::vector<double> tmp_sb_vec(tmp_image.imagekist->Nunits());
 
   Point point;
+<<<<<<< local
 
+=======
+  
+>>>>>>> other
   for(tmp_image.imagekist->MoveToTop(),i=0;i<tmp_sb_vec.size();++i,tmp_image.imagekist->Down()){
     tmp_sb_vec[i] = tmp_image.imagekist->getCurrent()->surface_brightness;
+<<<<<<< local
 
+=======
+    
+>>>>>>> other
     switch (lensvar) {
       case dt:
         tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->dt;
@@ -846,6 +867,17 @@ void Grid::writeFits(
 
   for(tmp_image.imagekist->MoveToTop(),i=0;i<tmp_sb_vec.size();++i,tmp_image.imagekist->Down())
     tmp_image.imagekist->getCurrent()->surface_brightness = tmp_sb_vec[i];
+<<<<<<< local
 
+=======
+  
+>>>>>>> other
 }
+<<<<<<< local
 
+=======
+  
+  
+  
+  
+  >>>>>>> other

@@ -42,6 +42,9 @@ public:
 	void Clean();
 
 	void AddImages(ImageInfo *imageinfo,int Nimages,float rescale = 1.);
+	void AddCurve(ImageInfo *curve,double value);
+	void drawline(double x1[],double x2[],double value);
+
 	void Renormalize(double factor);
 	void AddValue(std::size_t i, double value);
 	void AssignValue(std::size_t i, double value);
@@ -68,6 +71,7 @@ private:
 	double LeafPixelArea(IndexType i,Branch * branch1);
 	void PointsWithinLeaf(Branch * branch1, std::list <unsigned long> &neighborlist);
 	bool inMapBox(Branch * branch1);
+	bool inMapBox(double * branch1);
 };
 
 

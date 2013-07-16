@@ -55,8 +55,7 @@
 
 		field_internal_profile         1    # DM internal profile type: 0 or nolens, 1 or NFW, 2 or PseudoNFW, 3 or PowerLaw, 4 or NSIE, 5 or AnaLens, 6 or UniLens, 7 or MOKALens, 8 or DummyLens
 		field_internal_profile_galaxy  1	# if set, a galaxy profile is chosen: 0 or none, 1 or NSIE
-		field_galaxy_mass_fraction    0.1	# must be set if field_internal_profile_galaxy is set, mass fraction of the galaxy
-
+ 
 		field_prof_internal_slope_pnfw		2 	# slope of the PseudoNFW profile, default is 2
 		field_prof_internal_slope_pl		-1  # slope of the PowerLaw profile, default is -1
 
@@ -70,31 +69,31 @@
 		#field_input_simulation_file ../MillenniumData/DMhalos.txt  # if set, the light cone is read from an input file
 
 		####### AnaNSIE lens halo model ############
-		sigma              250       # velocity dispersion in km/s
-		core               0.0e-5    # core radius in Mpc
-		axis_ratio         0.8       # axis ration
-		pos_angle          0	     # inclination angle in degrees
+		main_sigma              250       # velocity dispersion in km/s
+		main_core               0.0e-5    # core radius in Mpc
+		main_axis_ratio         0.8       # axis ration
+		main_pos_angle          0	     # inclination angle in degrees
 
-		NDistortionModes   0	     # number of ellipsoid distortion modes
-		beta_perturb       1.0
-		kappa_peturb       0.03
-		gamma_perturb      0.03
-		monopole_perturb   0.0
-		quadrapole_perturb 0.005
-		hexopole_perturb   0.005
-		octopole_perturb   0.01
+		main_NDistortionModes   0	     # number of ellipsoid distortion modes
+		main_perturb_beta       1.0
+		main_perturb_kappa       0.03
+		main_perturb_gamma      0.03
+		main_perturb_monopole   0.0
+		main_perturb_quadrapole 0.005
+		main_perturb_hexopole   0.005
+		main_perturb_octopole   0.01
 
-		NdensitySubstruct   0.0e6    # number density of substructure
-		beta_sub           -1.0
-		alpha_sub          -1.9
-		R_submax           0.5e-3
-		sub_mass_max           1.0e9
-		sub_mass_min           1.0e6
-		sub_type           1
+		main_sub_Ndensity   0.0e6    # number density of substructure
+		main_sub_beta           -1.0
+		main_sub_alpha          -1.9
+		main_sub_Rmax           0.5e-3
+		main_sub_mass_max           1.0e9
+		main_sub_mass_min           1.0e6
+		main_sub_type           1
 
-		Nstars             0	    # number of stars to be implanted
-		fstars             0.50	    # stellar mass fraction
-		stars_mass         0.5	    # star mass in solar masses
+		main_stars_N             0	    # number of stars to be implanted
+		main_stars_fraction      0.50	    # stellar mass fraction
+		main_stars_mass         0.5	    # star mass in solar masses
 
 		######## Type of source SB model
 		SourceSBType	   0	 # 0: Uniform, 1: Gaussian, 2: BLR_Disk, 3: BLR_Sph1, 4: BLR_Sph2
@@ -113,11 +112,21 @@
 		source_sigma       0
 
 		####### General #############
-		z_lens             0.42		# lens redshift
+		main_zlens             0.42		# lens redshift
 		z_source           3.62		# source redshift
  
 
-   <em> CONSTRUCT MODEL: </em>
+ <em> Read in Parameter file: </em>
+ 
+ In main() one needs to first read in the parameter file.
+ This is done by constructing a InputParams object.
+ 
+ InputParams params(paramfile);
+ 
+ Where "paramfile" is a string containing the path and file name of your parameter file.
+ 
+ <em> CONSTRUCT A Source: </em>
+ <em> CONSTRUCT A Lens: </em>
  
    <em> CONSTRUCT GRID: </em>
  

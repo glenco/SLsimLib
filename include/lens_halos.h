@@ -88,6 +88,7 @@ public:
 	/// internal compare redshift function
 	bool compare(double z){return z > zlens;};
 
+<<<<<<< local
 	  /// stars
 	  bool AreStarsImaplated(){return stars_implanted;}
 	  int stars_N;
@@ -102,23 +103,40 @@ public:
 	  double star_theta_force;
 	  int star_Nregions;
 	  double *star_region;
+=======
+	/// read raw data
+	virtual void serialize(RawData& d) const;
+>>>>>>> other
 
+<<<<<<< local
 	  void substract_stars_disks(PosType *ray,PosType *alpha
 	                  ,KappaType *kappa,KappaType *gamma);
 	  void implant_stars(PosType **centers,unsigned long Nregions,long *seed, IMFtype type=One);
 	  // creates a single star halo in pos (x,y)
    	void implant_stars(double x,double y,unsigned long Nregions,long *seed,IMFtype type=One);
+=======
+	/// write raw data
+	virtual void unserialize(RawData& d);
+>>>>>>> other
 
+<<<<<<< local
 	  float* stellar_mass_function(IMFtype type, unsigned long Nstars, long *seed, double minmass=0.0, double maxmass=0.0
 	  		,double bendmass=0.0, double powerlo=0.0, double powerhi=0.0);
 	  IMFtype getIMF_type(){return imf_type;}
+=======
+	/// randomize halo by a given amound
+	virtual void randomize(double step, long* seed);
+>>>>>>> other
 
+<<<<<<< local
 	  void PrintStars(bool show_stars);
 
 	  void assignParams_stars(InputParams& params);
 
 
 
+=======
+>>>>>>> other
 protected:
 	/// read in parameters from a parameterfile in InputParams params
 	void assignParams(InputParams& params);
@@ -186,7 +204,9 @@ public:
 	double ffunction(double x);
 	double gfunction(double x);
 	double g2function(double x);
-	// TODO BEN: the below functions alphaNFW, kappaNFW and gammaNFW are obsolete and better to be deleted to avoid confusion
+	double hfunction(double x);
+
+	// TODO: BEN: the below functions alphaNFW, kappaNFW and gammaNFW are obsolete and better to be deleted to avoid confusion
 	void alphaNFW(double *alpha,double *x,double Rtrunc,double mass,double r_scale
 			,double *center,double Sigma_crit);
 	KappaType kappaNFW(double *x,double Rtrunc,double mass,double r_scale
@@ -196,7 +216,11 @@ public:
 
 	void initFromFile(float my_mass, long *seed, float vmax, float r_halfmass);
 	void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, double my_slope, long *seed);
+<<<<<<< local
   
+=======
+
+>>>>>>> other
   /// set Rmax
     void set_Rmax(float my_Rmax){Rmax=my_Rmax; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
   /// set scale radius
@@ -211,7 +235,7 @@ protected:
 	static int count;
 
 	/// tables for lensing properties specific functions
-	static double *ftable,*gtable,*g2table,*xtable;
+	static double *ftable,*gtable,*g2table,*htable,*xtable;
 	/// make the specific tables
 	void make_tables();
 	/// interpolates from the specific tables
@@ -224,18 +248,20 @@ protected:
 	inline double alpha_h(double x){
 		//return -1.0*InterpolateFromTable(gtable,x)/InterpolateFromTable(gtable,xmax);
 		return -1.0*InterpolateFromTable(gtable,x)/gmax;
+	// return 4./x*InterpolateFromTable(gtable,x)/gmax;
 	}
 	inline KappaType kappa_h(double x){
 		return 0.5*x*x*InterpolateFromTable(ftable,x)/gmax;
+	// return 2.*InterpolateFromTable(ftable,x)/gmax;
 	}
 	inline KappaType gamma_h(double x){
 		return -0.25*x*x*InterpolateFromTable(g2table,x)/gmax;
 	}
 	inline KappaType phi_h(double x){
-		ERROR_MESSAGE();
-		std::cout << "time delay has not been fixed for NFW profile yet." << std::endl;
-		exit(1);
-		return 0.0;
+		//ERROR_MESSAGE();
+		//std::cout << "time delay has not been fixed for NFW profile yet." << std::endl;
+		//exit(1);
+		return InterpolateFromTable(htable,x)/gmax; // -0.5*x*
 	}
   
 private:
@@ -433,16 +459,14 @@ public:
 	LensHaloHernquist(InputParams& params);
 	virtual ~LensHaloHernquist();
 
-	double ffunction(double x);
-	double gfunction(double x);
-	double g2function(double x);
-	// TODO BEN: the below functions alphaHern, kappaHern and gammaHern are obsolete and better to be deleted to avoid confusion
+	/* the below functions alphaHern, kappaHern and gammaHern are obsolete and better to be deleted to avoid confusion
 	void alphaHern(double *alpha,double *x,double Rtrunc,double mass,double r_scale
 			,double *center,double Sigma_crit);
 	KappaType kappaHern(double *x,double Rtrunc,double mass,double r_scale
 			,double *center,double Sigma_crit);
 	void gammaHern(KappaType *gamma,double *x,double Rtrunc,double mass,double r_scale
 			,double *center,double Sigma_crit);
+  */
 	//void initFromFile(float my_mass, long *seed, float vmax, float r_halfmass);
 
 	/// set Rmax
@@ -459,7 +483,7 @@ protected:
 	static int count;
 
 	/// tables for lensing properties specific functions
-	static double *ftable,*gtable,*g2table,*xtable;
+	static double *ftable,*gtable,*g2table,*htable,*xtable;
 	/// make the specific tables
 	void make_tables();
 	/// interpolates from the specific tables
@@ -474,17 +498,22 @@ protected:
 		return -1.0*InterpolateFromTable(gtable,x)/gmax;
 	}
 	inline KappaType kappa_h(double x){
-		return 0.5*x*x*InterpolateFromTable(ftable,x)/gmax;
+		return 2.0*InterpolateFromTable(ftable,x)/gmax;
 	}
 	inline KappaType gamma_h(double x){
 		return -0.25*x*x*InterpolateFromTable(g2table,x)/gmax;
 	}
 	inline KappaType phi_h(double x){
-		ERROR_MESSAGE();
-		std::cout << "time delay has not been fixed for NFW profile yet." << std::endl;
-		exit(1);
-		return 0.0;
+		//ERROR_MESSAGE();
+		//std::cout << "time delay has not been fixed for NFW profile yet." << std::endl;
+		//exit(1);
+		return -1.0*InterpolateFromTable(htable,x)/gmax;
 	}
+
+    double ffunction(double x);
+	double gfunction(double x);
+	double hfunction(double x);
+	double g2function(double x);
 
 private:
   double gmax;

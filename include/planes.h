@@ -10,6 +10,7 @@
 
 #include "quadTree.h"
 
+/// Base class representing a plane in redshift onto which lenses are placed.
 class LensPlane{
 public:
 	LensPlane() {}
@@ -21,6 +22,7 @@ public:
 	virtual void remove(LensHalo* halo) = 0;
 };
 
+/// A LensPlane with a TreeQuad on it to calculate the deflection caused by field lenses
 class LensPlaneTree : public LensPlane{
 public:
 	LensPlaneTree(PosType **xpt,LensHaloHndl *my_halos,IndexType Nhalos,double my_sigma_background);
@@ -35,6 +37,11 @@ private:
 	TreeQuad* halo_tree;
 };
 
+/** \brief A LensPlane with a list of LensHalo's in it.  
+ *
+ * The deflection is calculated by direct summation which can be slow for large numbers of LensHalo's.  
+ * Main lenses are put onto these planes when they are added to the Lens.
+*/
 class LensPlaneSingular : public LensPlane{
 public:
 	LensPlaneSingular(LensHaloHndl *my_halos, IndexType Nhalos);

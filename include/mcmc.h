@@ -3,7 +3,7 @@
 
 #include "lens.h"
 #include "sky.h"
-#include "parameters.h"
+#include "raw_data.h"
 #include "image_processing.h"
 
 #include <vector>
@@ -19,7 +19,7 @@ public:
 	
 	MCMC(Lens& lens, Sky& sky, const PixelData& data);
 	
-	std::vector<Parameters> run(std::size_t n, double step, long* seed);
+	std::vector<RawData> run(std::size_t n, double step, long* seed);
 	
 private:
 	Lens& lens;

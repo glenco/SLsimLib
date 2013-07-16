@@ -385,7 +385,7 @@ void partition_images(Point *point,unsigned long *N_in_image,TreeHndl i_tree){
 	assert(i_tree);
 
 	Kist<Point> * neighbors = new Kist<Point>;
-	  /**************** TODO test line ******************
+	  /**************** TODO: test line ******************
 	  ERROR_MESSAGE();
 	  // ****************  ******************/
 

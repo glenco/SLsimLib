@@ -61,7 +61,7 @@ public:
   void printfile(std::string filename,std::string paramfile,double fieldofview,double minscale);
 
   /// change the number of cautics in the object.
-  void resize(size_t size);
+  void resize(size_t size){ data.resize(size);}
 
   size_t numberOfCaustics(){return data.size();}
   

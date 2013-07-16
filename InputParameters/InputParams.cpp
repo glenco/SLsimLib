@@ -71,6 +71,8 @@ InputParams::InputParams(std::string paramfile) {
 }
 
 InputParams::~InputParams() {
+  print_unused();
+  print_used();
 	labels.clear();
 	char_values.clear();
 	comments.clear();

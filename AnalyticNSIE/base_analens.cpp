@@ -110,7 +110,11 @@ void LensHaloBaseNSIE::assignParams(InputParams& params){
 	assert(Rmax >= Rsize);
 
     // Substructure parameters
+<<<<<<< local
 	if(!params.get("main_sub_Ndensity",sub_Ndensity)) error_message1("main_sub_Ndensity",params.filename());
+=======
+    if(!params.get("main_sub_Ndensity",sub_Ndensity)) error_message1("main_sub_Ndensity",params.filename());
+>>>>>>> other
     else if(sub_Ndensity > 0){
     	if(!params.get("main_sub_beta",sub_beta)) error_message1("main_sub_beta",params.filename());
     	if(!params.get("main_sub_alpha",sub_alpha)) error_message1("main_sub_alpha",params.filename());
@@ -122,12 +126,31 @@ void LensHaloBaseNSIE::assignParams(InputParams& params){
     		std::cout << "Are you sure the minimum halo mass should be " << sub_Mmin << " Msun?" << std::endl;
     		exit(1);
     	}
+<<<<<<< local
     	if(!params.get("main_sub_type",sub_type)) error_message1("main_sub_type",params.filename());
+=======
+    	if(!params.get("main_sub_type",main_sub_type)) error_message1("main_sub_type",params.filename());
+>>>>>>> other
     }
+<<<<<<< local
 
 	if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
+=======
+	  // Stars parameters
+    if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
+>>>>>>> other
     else if(stars_N){
+<<<<<<< local
     	assignParams_stars(params);
+=======
+    	if(!params.get("main_stars_fraction",star_fstars)) error_message1("main_stars_fraction",params.filename());
+    	if(star_fstars < 0 || star_fstars > 1){
+    		ERROR_MESSAGE();
+    		cout << "main_stars_fraction cannot be less than 0 or larger than 1 in file " << params.filename() <<endl;
+    		exit(0);
+    	}
+    	if(!params.get("main_stars_mass",star_massscale)) error_message1("main_stars_mass",params.filename());
+>>>>>>> other
     }
 
 }
@@ -202,7 +225,7 @@ void LensHaloBaseNSIE::PrintLens(bool show_substruct,bool show_stars){
 	cout << "zlens " << zlens << endl;
 
 	 // parameters of substructures
-	cout << endl << "NdensitySubstruct "<< sub_Ndensity << endl;
+	cout << endl << "main_sub_Ndensity "<< sub_Ndensity << endl;
 	if(sub_Ndensity > 0){
 		cout << "betaSubstruct "<<sub_beta << endl;
 		cout << "alphaSubstruct "<<sub_alpha << endl;
@@ -219,7 +242,7 @@ void LensHaloBaseNSIE::PrintLens(bool show_substruct,bool show_stars){
 				  cout << "RcutSubstruct "<<i << " " <<subs[i].get_Rmax() << " Mpc" << endl;
 				  cout << "massSubstruct "<<i<<" "<<subs[i].get_mass() << " Msun" << endl;
 				  cout << "xSubstruct "<<i<<" "<<sub_x[i][0]<<" "<<sub_x[i][1] << " Mpc" << endl;
-					switch(sub_type){
+					switch(main_sub_type){
 					case nfw:
 						cout << "  NFW clumps" << endl;
 						break;
@@ -240,6 +263,24 @@ void LensHaloBaseNSIE::PrintLens(bool show_substruct,bool show_stars){
 		}
 	}
 
+<<<<<<< local
+=======
+	cout << endl << "main_stars_N "<<stars_N << endl << endl;
+	if(stars_N>0){
+		if(star_Nregions > 0)
+			cout << "stars_Nregions "<<star_Nregions << endl;
+		cout << "stars_massscale "<<star_massscale << endl;
+		cout << "stars_fstars "<<star_fstars << endl;
+		cout << "stars_theta_force "<<star_theta_force << endl;
+		if(show_stars){
+			if(stars_implanted){
+			  for(i=0 ; i < stars_N ; ++i) cout << "    x["<<i<<"]="
+							    << stars_xp[i][0] << " " << stars_xp[i][1] << endl;
+			}else cout << "stars are not implanted yet" << endl;
+		}
+	}
+
+>>>>>>> other
 	if(Sigma_crit)
 		cout << "critical density is " << Sigma_crit << " Msun/Mpc^2" << endl << endl;
 
@@ -280,7 +321,7 @@ LensHaloBaseNSIE::~LensHaloBaseNSIE(){
  ******************************************************/
 
 
-/// TODO This needs to be thought about more. sets axial modes to reproduce a near elliptically shaped surface density
+/// TODO: This needs to be thought about more. sets axial modes to reproduce a near elliptically shaped surface density
 void LensHalo::setModesToEllip(double q,double theta){
   // elliptical integrals
 	double K = rfD(0,1./q/q,1);

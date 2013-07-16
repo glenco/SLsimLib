@@ -90,7 +90,7 @@ LensHalo::~LensHalo(){
 }
 
 int LensHaloNFW::count = 0;
-double *LensHaloNFW::xtable = NULL,*LensHaloNFW::ftable = NULL,*LensHaloNFW::gtable = NULL,*LensHaloNFW::g2table = NULL;
+double *LensHaloNFW::xtable = NULL,*LensHaloNFW::ftable = NULL,*LensHaloNFW::gtable = NULL,*LensHaloNFW::g2table = NULL,*LensHaloNFW::htable = NULL;
 
 LensHaloNFW::LensHaloNFW() : LensHalo(){
   gmax=0;
@@ -113,6 +113,7 @@ void LensHaloNFW::make_tables(){
 		ftable = new double[NTABLE];
 		gtable = new double[NTABLE];
 		g2table = new double[NTABLE];
+		htable = new double[NTABLE];
 
 		for(i = 0 ; i< NTABLE; i++){
 			x = i*dx;
@@ -120,6 +121,7 @@ void LensHaloNFW::make_tables(){
 			ftable[i] = ffunction(x);
 			gtable[i] = gfunction(x);
 			g2table[i] = g2function(x);
+			htable[i] = hfunction(x);
 		}
   }
   count++;
@@ -150,6 +152,7 @@ LensHaloNFW::~LensHaloNFW(){
 		delete[] gtable;
 		delete[] ftable;
 		delete[] g2table;
+		delete[] htable;
 	}
 }
 
@@ -163,8 +166,14 @@ void LensHaloNFW::initFromFile(float my_mass, long *seed, float vmax, float r_ha
 	// Find the NFW profile with the same mass, Vmax and R_halfmass
 	nfw_util.match_nfw(vmax,r_halfmass,mass,&rscale,&Rmax);
 	rscale = Rmax/rscale; // Was the concentration
-  xmax = Rmax/rscale;
-  gmax = InterpolateFromTable(gtable,xmax);
+    xmax = Rmax/rscale;
+    gmax = InterpolateFromTable(gtable,xmax);
+}
+
+void LensHaloNFW::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, double my_slope, long* seed)
+{
+	LensHalo::initFromMassFunc(my_mass, my_Rmax, my_rscale, my_slope, seed);
+    gmax = InterpolateFromTable(gtable,xmax);
 }
 
 void LensHaloNFW::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, double my_slope, long* seed)
@@ -329,8 +338,9 @@ void LensHaloSimpleNSIE::initFromMass(float my_mass, long *seed){
 	mass = my_mass;
 	rcore = 0.0;
 	sigma = 126*pow(mass/1.0e10,0.25); // From Tully-Fisher and Bell & de Jong 2001
-	fratio = (ran2(seed)+1)*0.5;  //TODO This is a kluge.
-	pa = 2*pi*ran2(seed);  //TODO This is a kluge.
+  //std::cout << "Warning: All galaxies are spherical" << std::endl;
+	fratio = (ran2(seed)+1)*0.5;  //TODO: Ben change this!  This is a kluge.
+	pa = 2*pi*ran2(seed);  //TODO: This is a kluge.
 	Rsize = rmaxNSIE(sigma,mass,fratio,rcore);
 	Rmax = MAX(1.0,1.0/fratio)*Rsize;  // redefine
 
@@ -350,7 +360,7 @@ void LensHalo::force_halo(
 		,KappaType *kappa
 		,KappaType *gamma
 		,double *xcm
-		,bool no_kappa
+		,bool kappa_off
 		,bool subtract_point /// if true contribution from a point mass is subtracted
 		){
 
@@ -369,7 +379,7 @@ void LensHalo::force_halo(
 		alpha[1] += tmp*xcm[1];
 
 		// can turn off kappa and gamma calculations to save times
-		if(!no_kappa){
+		if(!kappa_off){
 			*kappa += kappa_h(x)*prefac;
 
 			tmp = (gamma_h(x) + 2.0*subtract_point)*prefac/rcm2;
@@ -388,7 +398,7 @@ void LensHalo::force_halo(
 			alpha[1] += -1.0*prefac*xcm[1];
 
 			// can turn off kappa and gamma calculations to save times
-			if(!no_kappa){
+			if(!kappa_off){
 				double tmp = -2.0*prefac/rcm2;
 
 				gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
@@ -445,6 +455,19 @@ void LensHaloSimpleNSIE::force_halo(
 			alpha[1] += (r - rin)*(alpha_out[1] - alpha_in[1])/(Rmax - rin) + alpha_in[1];
 			//alpha[0] -= (r - rin)*(alpha_out[0] - alpha_in[0])/(Rmax - rin) + alpha_in[0];
 			//alpha[1] -= (r - rin)*(alpha_out[1] - alpha_in[1])/(Rmax - rin) + alpha_in[1];
+			if(!no_kappa){
+        // TODO: this makes the kappa and gamma disagree with the alpha as calculated above
+				KappaType tmp[2]={0,0};
+        double xt[2]={0,0};
+        float units = pow(sigma/lightspeed,2)/Grav/sqrt(fratio); // mass/distance(physical)
+        xt[0]=xcm[0];
+        xt[1]=xcm[1];
+        
+				*kappa += units*kappaNSIE(xt,fratio,rcore,pa);
+				gammaNSIE(tmp,xt,fratio,rcore,pa);
+				gamma[0] += units*tmp[0];
+				gamma[1] += units*tmp[1];
+			}
 
 		}else{
 			double xt[2]={0,0},tmp[2]={0,0};
@@ -452,11 +475,12 @@ void LensHaloSimpleNSIE::force_halo(
 			xt[0]=xcm[0];
 			xt[1]=xcm[1];
 			alphaNSIE(tmp,xt,fratio,rcore,pa);
-           
-			alpha[0] += units*tmp[0];  // minus sign removed because already included in alphaNSIE
-			alpha[1] += units*tmp[1];  // Why was the "+=" removed?
-			//alpha[0] += units*tmp[0];
-			//alpha[1] += units*tmp[1];
+      
+			//alpha[0] = units*tmp[0];  // minus sign removed because already included in alphaNSIE
+			//alpha[1] = units*tmp[1];  // Why was the "+=" removed?
+			alpha[0] += units*tmp[0];
+			alpha[1] += units*tmp[1];
+
 			if(!no_kappa){
 				KappaType tmp[2]={0,0};
 				*kappa += units*kappaNSIE(xt,fratio,rcore,pa);
@@ -492,7 +516,7 @@ void LensHaloSimpleNSIE::force_halo(
 
 
 int LensHaloHernquist::count = 0;
-double *LensHaloHernquist::xtable = NULL,*LensHaloHernquist::ftable = NULL,*LensHaloHernquist::gtable = NULL,*LensHaloHernquist::g2table = NULL;
+double *LensHaloHernquist::xtable = NULL,*LensHaloHernquist::ftable = NULL,*LensHaloHernquist::gtable = NULL,*LensHaloHernquist::g2table = NULL,*LensHaloHernquist::htable = NULL;
 
 LensHaloHernquist::LensHaloHernquist() : LensHalo(){
   gmax=0;
@@ -514,6 +538,7 @@ void LensHaloHernquist::make_tables(){
 		xtable = new double[NTABLE];
 		ftable = new double[NTABLE];
 		gtable = new double[NTABLE];
+		htable = new double[NTABLE];
 		g2table = new double[NTABLE];
 
 		for(i = 0 ; i< NTABLE; i++){
@@ -521,7 +546,9 @@ void LensHaloHernquist::make_tables(){
 			xtable[i] = x;
 			ftable[i] = ffunction(x);
 			gtable[i] = gfunction(x);
+			htable[i] = hfunction(x);
 			g2table[i] = g2function(x);
+
 		}
   }
   count++;
@@ -555,6 +582,7 @@ LensHaloHernquist::~LensHaloHernquist(){
 		delete[] xtable;
 		delete[] gtable;
 		delete[] ftable;
+		delete[] htable;
 		delete[] g2table;
 	}
 }
@@ -611,4 +639,31 @@ void LensHaloDummy::force_halo(double *alpha,KappaType *kappa,KappaType *gamma,d
 void LensHaloDummy::assignParams(InputParams& params)
 {
 	if(!params.get("z_lens",zlens)) error_message1("z_lens",params.filename());
+}
+
+void LensHalo::serialize(RawData& d) const
+{
+	d << mass << Rmax << rscale << zlens << xmax;
+	
+	for(std::size_t i = 0; i < Nmod; ++i)
+		d << mod[i];
+	
+	d << r_eps;
+}
+
+void LensHalo::unserialize(RawData& d)
+{
+	d >> mass >> Rmax >> rscale >> zlens >> xmax;
+	
+	for(std::size_t i = 0; i < Nmod; ++i)
+		d >> mod[i];
+	
+	d >> r_eps;
+}
+
+void LensHalo::randomize(double step, long* seed)
+{
+	const std::type_info& type = typeid(*this);
+	std::cerr << "Error: " << type.name() << "::randomize() not implemented!" << std::endl;
+	exit(1);
 }

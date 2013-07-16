@@ -36,7 +36,7 @@ void swap(PixelMap& x, PixelMap& y)
 	swap(x.map_boundary_p2[0], y.map_boundary_p2[0]);
 	swap(x.map_boundary_p2[1], y.map_boundary_p2[1]);
 }
-// TODO comment
+// TODO: comment
 bool agree(const PixelMap& a, const PixelMap& b)
 {
 	return (a.Npixels == b.Npixels) && (a.resolution == b.resolution) &&
@@ -252,18 +252,24 @@ void PixelMap::AssignValue(std::size_t i, double value)
 	map[i] = value;
 }
 
-/// Add an image to the map
+/** \brief Add an image to the map
+ *
+ *  If rescale==0 gives constant surface brightness, if < 0
+ *  the surface brightness is not scales by the pixel area for get the flux (default: 1).
+ *  Negative values are good for mapping some quantity independant of the pixel size
+ */
 void PixelMap::AddImages(
 		ImageInfo *imageinfo   /// An array of ImageInfo-s.  There is no reason to separate images for this routine
 		,int Nimages           /// Number of images on input.
-		,float rescale         /// rescales the surface brightness while leaving the image unchanged
-			                   /// , rescale==0 gives constant surface brightness (default: 1)
+		,float rescale         /// rescales the surface brightness while leaving the image unchanged,
+                               ///  see full notes
 		){
 
 	if(Nimages <= 0) return;
 	if(imageinfo->imagekist->Nunits() == 0) return;
 
 	double sb = 1;
+    float area = 1;
 	std::list <unsigned long> neighborlist;
 	std::list<unsigned long>::iterator it;
 	for(long ii=0;ii<Nimages;++ii){
@@ -271,20 +277,24 @@ void PixelMap::AddImages(
 		if(imageinfo->imagekist->Nunits() > 0){
 			MoveToTopKist(imageinfo[ii].imagekist);
 			do{
-				if(rescale != 0.0) sb = rescale*getCurrentKist(imageinfo[ii].imagekist)->surface_brightness;
+				if(rescale != 0.0) sb = abs(rescale)*getCurrentKist(imageinfo[ii].imagekist)->surface_brightness;
 
 				assert(getCurrentKist(imageinfo[ii].imagekist)->leaf);
 
 				if ((inMapBox(getCurrentKist(imageinfo[ii].imagekist)->leaf)) == true){
 					PointsWithinLeaf(getCurrentKist(imageinfo[ii].imagekist)->leaf,neighborlist);
 					for(it = neighborlist.begin();it != neighborlist.end();it++){
-						float area = LeafPixelArea(*it,getCurrentKist(imageinfo[ii].imagekist)->leaf);
-						map[*it] += sb*area;
+						area = LeafPixelArea(*it,getCurrentKist(imageinfo[ii].imagekist)->leaf);
+                        map[*it] += sb*area;
 					}
 				}
 			}while(MoveDownKist(imageinfo[ii].imagekist));
 		}
 	}
+    
+    if(rescale < 0){
+        for(size_t i=0; i< Npixels*Npixels ;++i) map[i] /= resolution*resolution;
+    }
 
 	return;
 }
@@ -315,6 +325,12 @@ void PixelMap::PointsWithinLeaf(Branch * branch1, std::list <unsigned long> &nei
 bool PixelMap::inMapBox(Branch * branch1){
 	if (branch1->boundary_p1[0] > map_boundary_p2[0] || branch1->boundary_p2[0] < map_boundary_p1[0]) return false;
 	if (branch1->boundary_p1[1] > map_boundary_p2[1] || branch1->boundary_p2[1] < map_boundary_p1[1]) return false;
+	return true;
+}
+/// checks if point is within map boundaries
+bool PixelMap::inMapBox(double * x){
+	if (x[0] > map_boundary_p2[0] || x[0] < map_boundary_p1[0]) return false;
+	if (x[1] > map_boundary_p2[1] || x[1] < map_boundary_p1[1]) return false;
 	return true;
 }
 
@@ -723,4 +739,70 @@ double PixelData::chi_square(const PixelMap &model) const
 	}
 	
 	return chi2;
+}
+/**
+ * \brief Draws a line between two points on the image by setting
+ * the pixels equal to value.
+ *
+ * TODO: Could be improved by detecting if the line passes through the map
+ * at all before starting.  Could also be improved by making the line fatter
+ * by including neighbor points.
+ */
+void PixelMap::drawline(double x1[],double x2[],double value){
+
+	double x[2],s1,s2,r;
+	size_t index;
+	double d = 0;
+
+	r = sqrt( (x2[0] - x1[0])*(x2[0] - x1[0]) + (x2[1] - x1[1])*(x2[1] - x1[1]) );
+
+	if(r==0.0){
+		if(inMapBox(x1)){
+			index = Utilities::IndexFromPosition(x1,Npixels,range,center);
+			map[index] = value;
+		}
+		return;
+	}
+
+	s1 = (x2[0] - x1[0])/r;
+	s2 = (x2[1] - x1[1])/r;
+
+	x[0] = x1[0];
+	x[1] = x1[1];
+	while(d <= r){
+		if(inMapBox(x)){
+			index = Utilities::IndexFromPosition(x,Npixels,range,center);
+			map[index] = value;
+		}
+		x[0] += s1*resolution;
+		x[1] += s2*resolution;
+		d += resolution;
+	}
+
+	return;
+}
+/**
+ * \brief Draws a closed curve through the points in curve->imagekist
+ *
+ * This differs form PixelMap::AddImage() in that it draws lines between the points
+ * and takes no account of the cells that the points are in or the surface brightness.
+ * The points must be ordered already.  Particularly useful for drawing the caustics
+ * that may have irregular cell sizes.  The last point will be connected to the first point.
+ */
+void PixelMap::AddCurve(ImageInfo *curve,double value){
+	PosType x[2];
+
+	curve->imagekist->MoveToTop();
+	x[0] = curve->imagekist->getCurrent()->x[0];
+	x[1] = curve->imagekist->getCurrent()->x[1];
+	curve->imagekist->Down();
+	for(;!(curve->imagekist->OffBottom());curve->imagekist->Down()){
+		drawline(x,curve->imagekist->getCurrent()->x,value);
+		x[0] = curve->imagekist->getCurrent()->x[0];
+		x[1] = curve->imagekist->getCurrent()->x[1];
+	}
+	curve->imagekist->MoveToTop();
+	drawline(x,curve->imagekist->getCurrent()->x,value);
+
+	return;
 }

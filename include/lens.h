@@ -27,7 +27,6 @@ GLAMER_TEST_USES(LensTest)
  *
  *   Input Parameters (variable names):
  *
- *   outputfile -- filename for simulation output, usually in the main()
  *   main_halo_on -- 0: no major lens present; 1: there is a major lens present
  *   main_halo_type -- profile type for the main DM lens halo
  *   	0 or nolens, 1 or NFW, 2 or PseudoNFW, 3 or PowerLaw, 4 or NSIE, 5 or AnaLens, 6 or UniLens, 7 or MOKALens, 8 or DummyLens
@@ -43,7 +42,6 @@ GLAMER_TEST_USES(LensTest)
  *   field_prof_internal_slope -- slope of the surface density for power law or pseudo nfw profiles
  *   field_internal_profile_galaxy -- profile type of the galaxy field halos; if not set, no galaxies are used
  *   	0 or none, 1 or NSIE
- *   field_galaxy_mass_fraction -- if int_prof_gal_type is set, then this is the galaxy mass fraction
  *
  *   field_input_sim_file -- filename of the Millennium simulation data to be read in and used to populate the light cone with field halos
  *
@@ -69,9 +67,10 @@ GLAMER_TEST_USES(LensTest)
  * </pre>
  */
 
-class Lens{
+class Lens
+{
 public:
-	Lens(InputParams& params, long *seed);
+	Lens(long *seed);
 	Lens(InputParams& params, Source* source, long *my_seed);
 	~Lens();
 
@@ -80,12 +79,10 @@ public:
 
 	/// the total number of lens planes
 	int getNplanes(){return lensing_planes.size();}
-	
+
+	/// field of view in square degrees
 	double getfov(){return fieldofview;};
 	void setfov(double fov){fieldofview=fov;};
-
-	/// output filename, to be usually used in the executable
-	std::string outputfile;
 
 	/// reset te number of planes, but keep the field halos and main lens
 	void resetFieldNplanes(std::size_t field_Nplanes);
@@ -104,14 +101,18 @@ public:
 		}
 	}
 
+	/// remove all main halos
+	void clearMainHalos();
+
 	/// inserts a single main lens halo and adds it to the existing ones
 	void insertMainHalo(Source* source, LensHalo* halo);
-	/// inserts a single main lens halo and deletes all previously existing ones
-	void insertNewMainHalo(Source* source, LensHalo* halo);
 	/// inserts a sequence of main lens halos and adds them to the existing ones
 	void insertMainHalos(Source* source, LensHalo** halos, std::size_t Nhalos);
-	/// inserts a sequence of main lens halos and erases all previously existing ones
-	void insertNewMainHalos(Source* source, LensHalo** halos, std::size_t Nhalos);
+
+	/// replaces existing main halos with a single main halo
+	void replaceMainHalos(Source* source, LensHalo* halo);
+	/// replaces existing main halos with a sequence of main halos
+	void replaceMainHalos(Source* source, LensHalo** halos, std::size_t Nhalos);
 
 	/// compute the dflection, convergence, and shear for each point on the grid
 	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off);
@@ -223,7 +224,7 @@ private: /* field */
 	/// vector of field plane distances
 	std::vector<double> field_Dl;
 	
-	/// Perpendicular position of halo TODO (In proper distance?)
+	/// Perpendicular position of halo TODO: (In proper distance?)
 	double **halo_pos;
 	
 	/// type of mass function PS (0), ST (1), and power law (2) default is ST
@@ -241,8 +242,8 @@ private: /* field */
 	bool flag_field_gal_on;
 	/// galaxy subhalo profile type; needs to be 0 or PowerLaw, 1 or NFW, 2 or PseudoNFW, 3 or NSIE, 4 or PointMass
 	GalaxyLensHaloType field_int_prof_gal_type;
-	/// mass fraction in the host galaxy
-	double field_galaxy_mass_fraction;
+	// mass fraction in the host galaxy
+	//double field_galaxy_mass_fraction;
 	
 	std::string redshift_planes_file;
 	bool read_redshift_planes;

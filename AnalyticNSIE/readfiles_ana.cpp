@@ -44,7 +44,7 @@ void LensHaloAnaNSIE::assignParams(InputParams& params){
 /** \ingroup ImageFinding
  * \brief Prints the parameters of the analytic lens to stdout
 
-cout << endl << "Nstars "<<stars_N << endl << endl;
+cout << endl << "main_stars_N "<<stars_N << endl << endl;
 	if(stars_N>0){
 		if(star_Nregions > 0)
 			cout << "stars_Nregions "<< star_Nregions << endl;

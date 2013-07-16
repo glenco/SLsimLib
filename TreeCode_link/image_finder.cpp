@@ -89,7 +89,7 @@ int refine_grid(LensHndl lens,GridHndl grid,OldImageInfo *imageinfo
     				points_to_refine.push_back(point);
     			}else{
     				grid->RefineLeaf(lens,point,kappa_off);
-        			// TODO This seems like it shouldn't have been there. imageinfo[i].points[j].gridsize /= Ngrid_block;
+        			// TODO: This seems like it shouldn't have been there. imageinfo[i].points[j].gridsize /= Ngrid_block;
     			}
     			++count;
 

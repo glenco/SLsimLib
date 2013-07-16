@@ -12,6 +12,8 @@
 #include "Tree.h"
 #include "lens_halos.h"
 
+/** \brief Box representing a branch in a tree.  It has four children.  Used in TreeNBStruct which is used in TreeForce.
+ */
 struct BranchNB{
   BranchNB(int Ndim);
   ~BranchNB();

@@ -142,6 +142,18 @@ void LensHaloUniform::PrintLens(bool show_substruct,bool show_stars){
 void LensHalo::implant_stars(double x, double y, unsigned long Nregions,long *seed, IMFtype type){
 
 	if(Nregions <= 0) return;
+<<<<<<< local
+=======
+	Point *centers;
+	gamma_uniform[2]=0.0; // TODO: gamma_uniform[2] determines rotation for multiplane lens, how shall it be implemented here?
+	centers = NewPointArray(Nregions,true);
+	centers[0].x[0]=x;
+	centers[0].x[1]=y;
+	centers[0].kappa=kappa_uniform;
+	centers[0].gamma[0]=gamma_uniform[0];
+	centers[0].gamma[1]=gamma_uniform[1];
+	centers[0].gamma[2]=gamma_uniform[2];
+>>>>>>> other
 
 	double ** centers = new double*[Nregions];
 	for (int i = 0; i < Nregions; ++i)

@@ -19,7 +19,7 @@
  * Input parameters are only needed if the third constructor is used so that an input catalog is read
  * Input Parameters:
  *
- *	input_galaxy_file       file with catalog of galaxies
+ *	source_input_galaxy_file       file with catalog of galaxies
  *	source_band             Band that these sources are to be observed in. Must be one of the following SDSS_U,SDSS_G,SDSS_R,SDSS_I,SDSS_Z,J,H,Ks,i1, or i2
  *	source_band
  *	source_mag_limit        magnitude limit
