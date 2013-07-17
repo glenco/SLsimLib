@@ -60,10 +60,10 @@ Lens::Lens(long *my_seed)
  * \ingroup Constructor
  * \brief allocates space for the halo trees and the inout lens, if there is any
  */
-Lens::Lens(InputParams& params, Source* source, long* my_seed)
+Lens::Lens(InputParams& params, Source* source, long* my_seed,CosmoParamSet cosmoset)
 : seed(my_seed), halo_pos(0)
 {
-	cosmo = new COSMOLOGY();
+	cosmo = new COSMOLOGY(cosmoset);
 	readCosmology(params);
 
 	if( (cosmo->getOmega_matter() + cosmo->getOmega_lambda()) != 1.0 ){
@@ -515,7 +515,7 @@ void Lens::createFieldPlanes()
 		
 		sb /= (pi*pow(sqrt(fieldofview/pi)*pi*field_Dl[i]/180/(1+field_plane_redshifts[i]) + field_buffer,2));
 		
-		std::cout << sigma_back << " " << sb << " " << sb/sigma_back - 1 << std::endl;
+		std::cout << "sigma_back from mass function " << sigma_back << " from sum of halos " << sb << " " << sb/sigma_back - 1 << std::endl;
 		if(sim_input_flag) sigma_back = sb;
 		
 		/*
@@ -1258,6 +1258,7 @@ void Lens::readInputSimFile()
 
 	std::cout << "leaving Lens::readInputSimFile()" << std::endl;
 
+  field_buffer = 0.0;
 	read_sim_file = true;
 }
 

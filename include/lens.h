@@ -71,7 +71,7 @@ class Lens
 {
 public:
 	Lens(long *seed);
-	Lens(InputParams& params, Source* source, long *my_seed);
+	Lens(InputParams& params, Source* source, long *my_seed,CosmoParamSet cosmoset = Planck1yr);
 	~Lens();
 
 	/// marks if the lens has been setup.
