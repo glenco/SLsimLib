@@ -80,7 +80,6 @@ void alphaNSIE(
 	  exit(0);
 	  alpha[0]=alpha[1]=0;
   }
-//std::cout << xt[0] << "  " << xt[1] << "  " << alpha[0] << "  " << alpha[1] << std::endl;
   return;
 }
 

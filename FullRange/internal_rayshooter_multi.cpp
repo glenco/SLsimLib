@@ -282,7 +282,6 @@ void *compute_rays_parallel(void *_p)
       //	assert(0);
       exit(1);
     }
-//    std::cout << p->i_points[i].image->x[0] << "  " << p->i_points[i].image->x[1] << "  " << p->i_points[i].gamma[0] << "  " << p->i_points[i].gamma[1] << std::endl;
 
     
   }

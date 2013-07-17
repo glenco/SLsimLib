@@ -81,7 +81,6 @@ void LensHaloUniform::force_halo(
 	      if(stars_N > 0 && stars_implanted){
 	     	 force_stars(alpha,kappa,gamma,xcm,no_kappa);
 	      }
-//		 	 std::cout << xcm[0] << "  " << xcm[1] << "  " << alpha_tmp[0] << "  " << alpha_tmp[1] << "  " << alpha[0] << "  " << alpha[1] << std::endl;
 
 }
 
