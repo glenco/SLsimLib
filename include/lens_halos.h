@@ -102,29 +102,36 @@ public:
 	  double star_theta_force;
 	  int star_Nregions;
 	  double *star_region;
-	/// read raw data
-	virtual void serialize(RawData& d) const;
 	  void substract_stars_disks(PosType *ray,PosType *alpha
 	                  ,KappaType *kappa,KappaType *gamma);
-	  void implant_stars(PosType **centers,unsigned long Nregions,long *seed, IMFtype type=One);
-	  // creates a single star halo in pos (x,y)
+
+	void implant_stars(PosType **centers,unsigned long Nregions,long *seed, IMFtype type=One);
+	  /// creates a single star halo in pos (x,y)
    	void implant_stars(double x,double y,unsigned long Nregions,long *seed,IMFtype type=One);
-	/// write raw data
-	virtual void unserialize(RawData& d);
+
 	  float* stellar_mass_function(IMFtype type, unsigned long Nstars, long *seed, double minmass=0.0, double maxmass=0.0
 	  		,double bendmass=0.0, double powerlo=0.0, double powerhi=0.0);
 	  IMFtype getIMF_type(){return imf_type;}
+
+	  /// read raw data
+		virtual void serialize(RawData& d) const;
+		/// write raw data
+		virtual void unserialize(RawData& d);
 	/// randomize halo by a given amound
 	virtual void randomize(double step, long* seed);
-	  void PrintStars(bool show_stars);
 
-	  void assignParams_stars(InputParams& params);
+	/// Prints star parameters; if show_stars is true, prints data for single stars
+	void PrintStars(bool show_stars);
+
 
 
 
 protected:
 	/// read in parameters from a parameterfile in InputParams params
 	void assignParams(InputParams& params);
+	  /// read in star parameters. This is valid for all halos and not overloaded.
+	  void assignParams_stars(InputParams& params);
+
 	/// error message printout
 	void error_message1(std::string name,std::string filename);
 
