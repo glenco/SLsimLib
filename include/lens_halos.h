@@ -45,13 +45,13 @@ public:
 	virtual ~LensHalo();
 
 	/// get the Rmax
-	float get_Rmax(){return Rmax;};
+	float get_Rmax() const { return Rmax; }
 	/// get the mass
-	float get_mass(){return mass;};
+	float get_mass() const { return mass; }
 	/// get the scale radius
-	float get_rscale(){return rscale;};
+	float get_rscale() const { return rscale; }
 	/// get the redshift
-	double getZlens() const {return zlens;};
+	double getZlens() const { return zlens; }
 
 	/// initialize from a simulation file
 	virtual void initFromFile(float my_mass, long *seed, float vmax, float r_halfmass){};
