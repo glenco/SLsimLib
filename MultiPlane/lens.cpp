@@ -543,7 +543,7 @@ void Lens::addMainHaloToPlane(LensHalo* halo)
 	if(i > 0 && (halo_Dl - main_Dl[i-1]) < MIN_PLANE_DIST)
 	{
 		// add to plane at (i-1)
-		main_planes[i-1]->add(halo);
+		main_planes[i-1]->addHalo(halo);
 	}
 	else if(i == main_Dl.size())
 	{
@@ -555,7 +555,7 @@ void Lens::addMainHaloToPlane(LensHalo* halo)
 	else if((main_Dl[i] - halo_Dl) < MIN_PLANE_DIST)
 	{
 		// add to existing plane at position i
-		main_planes[i]->add(halo);
+		main_planes[i]->addHalo(halo);
 	}
 	else
 	{

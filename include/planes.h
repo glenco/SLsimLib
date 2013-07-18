@@ -18,8 +18,11 @@ public:
 	
 	virtual void force(double *alpha,KappaType *kappa,KappaType *gamma,double *xx,bool kappa_off) = 0;
 	
-	virtual void add(LensHalo* halo) = 0;
-	virtual void remove(LensHalo* halo) = 0;
+	virtual void addHalo(LensHalo* halo) = 0;
+	virtual void removeHalo(LensHalo* halo) = 0;
+	
+	virtual std::vector<LensHalo*> getHalos() = 0;
+	virtual std::vector<const LensHalo*> getHalos() const = 0;
 };
 
 /// A LensPlane with a TreeQuad on it to calculate the deflection caused by field lenses
@@ -30,10 +33,15 @@ public:
 
 	void force(double *alpha,KappaType *kappa,KappaType *gamma,double *xx,bool kappa_off);
 	
-	void add(LensHalo* halo);
-	void remove(LensHalo* halo);
+	void addHalo(LensHalo* halo);
+	void removeHalo(LensHalo* halo);
+	
+	std::vector<LensHalo*> getHalos();
+	std::vector<const LensHalo*> getHalos() const;
 	
 private:
+	std::vector<LensHalo*> halos;
+	
 	TreeQuad* halo_tree;
 };
 
@@ -49,8 +57,11 @@ public:
 
 	void force(double *alpha,KappaType *kappa,KappaType *gamma,double *xx,bool kappa_off);
 	
-	void add(LensHalo* halo);
-	void remove(LensHalo* halo);
+	void addHalo(LensHalo* halo);
+	void removeHalo(LensHalo* halo);
+	
+	std::vector<LensHalo*> getHalos();
+	std::vector<const LensHalo*> getHalos() const;
 	
 private:
 	std::vector<LensHalo*> halos;
