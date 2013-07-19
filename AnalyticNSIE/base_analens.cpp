@@ -58,7 +58,6 @@ void LensHaloBaseNSIE::force_halo(
    	    	  gamma[0] += gamma_tmp[0];
    	    	  gamma[1] += gamma_tmp[1];
    	      }
-
    	     gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
    	     alpha_tmp[0] = alpha_tmp[1] = 0.0;
      }
@@ -108,6 +107,8 @@ void LensHaloBaseNSIE::assignParams(InputParams& params){
 	Rmax = MAX(1.0,1.0/fratio)*Rsize;  // redefine
 
 	assert(Rmax >= Rsize);
+
+	if(!params.get("reference_z",reference_z)) error_message1("reference_z",params.filename());
 
     // Substructure parameters
     if(!params.get("main_sub_Ndensity",sub_Ndensity)) error_message1("main_sub_Ndensity",params.filename());
@@ -162,11 +163,16 @@ void LensHaloBaseNSIE::reNormSubstructure(double kappa_sub){
 }
 
 /// Sets parameters within BaseLens that depend on the source redshift - Dl,Sigma_crit,etc.
-/*void LensHaloBaseNSIE::setInternalParams(CosmoHndl cosmo){
-	double Ds, Dls;
+void LensHaloAnaNSIE::setInternalParams(CosmoHndl cosmo){
 
-	if(zsource < zlens) zsource = 1000;
+//	if(zsource < zlens) zsource = 1000;
 
+	Dl = cosmo->angDist(0,zlens);
+	Ds = cosmo->angDist(0,reference_z);
+	Dls = cosmo->angDist(zlens,reference_z);
+	norm_factor = 4*pi*Grav*Dls*Dl/Ds;
+	std::cout << zlens << "  " << reference_z << std::endl;
+std::cout << Dl << "  " << Ds << "  " << Dls << std::endl;
 	MpcToAsec = 60*60*180 / pi / Dl;
 		// in Mpc
 	Einstein_ro=4*pi*pow(sigma/lightspeed,2)*Dl
@@ -175,7 +181,17 @@ void LensHaloBaseNSIE::reNormSubstructure(double kappa_sub){
 	Sigma_crit=Ds/Dls/Dl/4/pi/Grav;
 	to = (1+zlens)*Ds/Dls/Dl/8.39428142e-10;
 
-}*/
+	std::cout << "Einstein radius = " << Einstein_ro << std::endl;
+
+/*    // This shouldn't be here. There should be a way to access the LensHalo from the driver program and call one of the randomizing functions.
+	// The normalisation can be done there.
+    long seed = -12212;
+//    RandomlyDistortLens(&seed,perturb_Nmodes);
+    RandomizeSubstructure3(0.5,&seed);
+*/
+
+}
+
 
 LensHaloBaseNSIE::LensHaloBaseNSIE(InputParams& params) : LensHalo(){
 
@@ -196,7 +212,8 @@ LensHaloBaseNSIE::LensHaloBaseNSIE(InputParams& params) : LensHalo(){
 
   Sigma_crit = 0;
 
-  stars_implanted = false;
+  substruct_implanted = false;
+
 }
 
 

@@ -90,7 +90,7 @@ public:
 
   void setZlens(double zlens);
 //  void setInternalParams(CosmoHndl,SourceHndl);
-//  void setInternalParams(CosmoHndl,double);
+//  void setInternalParams(CosmoHndl cosmo);
   void assignParams(InputParams& params);
   void PrintLens(bool show_substruct,bool show_stars);
   void error_message1(std::string name,std::string filename);
@@ -146,6 +146,10 @@ protected:
    // private derived quantities
    /// private: conversion factor between Mpc on the lens plane and arcseconds
    double MpcToAsec;
+
+   float reference_z;
+   double Ds, Dls;
+   double norm_factor;
 
 
 };
