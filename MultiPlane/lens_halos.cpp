@@ -435,6 +435,24 @@ void LensHaloSimpleNSIE::force_halo(
 		}
 
 	}
+	else
+	{
+		if (subtract_point == false)
+		{
+			double prefac = mass/rcm2/pi;
+			alpha[0] += -1.0*prefac*xcm[0];
+			alpha[1] += -1.0*prefac*xcm[1];
+
+			// can turn off kappa and gamma calculations to save times
+			if(!no_kappa){
+				double tmp = -2.0*prefac/rcm2;
+
+				gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+				gamma[1] += xcm[0]*xcm[1]*tmp;
+			}
+		}
+	}
+
 	return;
 }
 

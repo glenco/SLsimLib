@@ -814,7 +814,7 @@ void Grid::writeFits(
       case alpha2:
         tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->x[1]
         - tmp_image.imagekist->getCurrent()->image->x[1];
-        tag = ".alpha1.fits";
+        tag = ".alpha2.fits";
         break;
       case kappa:
         tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->kappa;
