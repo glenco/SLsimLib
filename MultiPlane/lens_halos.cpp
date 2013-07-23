@@ -419,21 +419,6 @@ void LensHaloSimpleNSIE::force_halo(
 			}
 		}
     
-		if(subtract_point){
-			double fac = mass/rcm2/pi;
-			alpha[0] += fac*xcm[0];
-			alpha[1] += fac*xcm[1];
-
-			// can turn off kappa and gamma calculations to save times
-			if(!no_kappa){
-				fac = 2.0*fac/rcm2;
-
-				gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*fac;
-				gamma[1] += xcm[0]*xcm[1]*fac;
-			}
-
-		}
-
 	}
 	else
 	{
@@ -452,6 +437,23 @@ void LensHaloSimpleNSIE::force_halo(
 			}
 		}
 	}
+
+	if(subtract_point){
+		double fac = mass/rcm2/pi;
+		alpha[0] += fac*xcm[0];
+		alpha[1] += fac*xcm[1];
+
+		// can turn off kappa and gamma calculations to save times
+		if(!no_kappa){
+			fac = 2.0*fac/rcm2;
+
+			gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*fac;
+			gamma[1] += xcm[0]*xcm[1]*fac;
+		}
+
+	}
+
+
 
 	return;
 }
