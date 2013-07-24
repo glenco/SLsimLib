@@ -1252,6 +1252,9 @@ void Lens::readInputSimFile()
 	std::cout << "Overiding input file field of view to make it fit the simulation light cone." << std::endl;
 	fieldofview = pi*rmax2*pow(180/pi,2);  // Resets field of view to range of input galaxies
 
+	std::cout << "Setting mass function to Sheth-Tormen." << std::endl;
+	field_mass_func_type = ST; // set mass function
+
 	std::cout << "sorting in Lens::readInputSimFile()" << std::endl;
 	// sort the field_halos by readshift
 	Lens::quicksort(field_halos.data(),halo_pos,field_halos.size());
