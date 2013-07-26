@@ -428,8 +428,8 @@ protected:
 
 	/// Override internal structure of halos
 	inline double alpha_h(double x){
-		//return -1.0*InterpolateFromTable(gtable,x)/InterpolateFromTable(gtable,xmax);
-		return -0.25*x*InterpolateFromTable(gtable,x)/gmax;
+		return -1.0*InterpolateFromTable(gtable,x)/gmax;
+		//return -0.25*x*InterpolateFromTable(gtable,x)/gmax;
 	}
 	inline KappaType kappa_h(double x){
 		return 0.5*x*x*InterpolateFromTable(ftable,x)/gmax;
