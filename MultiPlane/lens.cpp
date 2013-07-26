@@ -60,10 +60,10 @@ Lens::Lens(long *my_seed)
  * \ingroup Constructor
  * \brief allocates space for the halo trees and the inout lens, if there is any
  */
-Lens::Lens(InputParams& params, Source* source, long* my_seed)
+Lens::Lens(InputParams& params, Source* source, long* my_seed,CosmoParamSet cosmoset)
 : seed(my_seed), halo_pos(0)
 {
-	cosmo = new COSMOLOGY();
+	cosmo = new COSMOLOGY(cosmoset);
 	readCosmology(params);
 
 	if( (cosmo->getOmega_matter() + cosmo->getOmega_lambda()) != 1.0 ){
@@ -179,12 +179,6 @@ void Lens::assignParams(InputParams& params)
 			{
 				flag_field_gal_on = true;
 				
-				if(!params.get("field_galaxy_mass_fraction",field_galaxy_mass_fraction))
-				{
-					ERROR_MESSAGE();
-					cout << "to construct a DM + galaxy model the parameter field_galaxy_mass_fraction needs to be set in the parameter file " << params.filename() << endl;
-					exit(0);
-				}
 			}
 			
 			if(!params.get("field_mass_func_alpha",mass_func_PL_slope))
@@ -480,6 +474,7 @@ void Lens::createFieldPlanes()
 		assert(field_Dl[i] > 0);
 		
 		// previous upper bound is now lower bound
+		z1 = z2;
 		k1 = k2;
 		
 		// find upper bound
@@ -520,7 +515,7 @@ void Lens::createFieldPlanes()
 		
 		sb /= (pi*pow(sqrt(fieldofview/pi)*pi*field_Dl[i]/180/(1+field_plane_redshifts[i]) + field_buffer,2));
 		
-		std::cout << sigma_back << " " << sb << " " << sb/sigma_back - 1 << std::endl;
+		std::cout << "sigma_back from mass function " << sigma_back << " from sum of halos " << sb << " " << sb/sigma_back - 1 << std::endl;
 		if(sim_input_flag) sigma_back = sb;
 		
 		/*
@@ -548,7 +543,7 @@ void Lens::addMainHaloToPlane(LensHalo* halo)
 	if(i > 0 && (halo_Dl - main_Dl[i-1]) < MIN_PLANE_DIST)
 	{
 		// add to plane at (i-1)
-		main_planes[i-1]->add(halo);
+		main_planes[i-1]->addHalo(halo);
 	}
 	else if(i == main_Dl.size())
 	{
@@ -560,7 +555,7 @@ void Lens::addMainHaloToPlane(LensHalo* halo)
 	else if((main_Dl[i] - halo_Dl) < MIN_PLANE_DIST)
 	{
 		// add to existing plane at position i
-		main_planes[i]->add(halo);
+		main_planes[i]->addHalo(halo);
 	}
 	else
 	{
@@ -827,17 +822,21 @@ void Lens::createFieldHalos()
 	unsigned long i,k,j_max,k1,k2;
 	std::vector<double> Logm;
 	//double pos_max[2];
-  double z_max;
+    double z_max;
 	const double MaxLogm=16.;
 	double z1, z2, mass_max,Nhaloestot;
 	int np;
 	double rr,theta,maxr;
 	HALO *halo_calc = new HALO(cosmo,field_min_mass,0.0);
+    double mo=7.3113e10,M1=2.8575e10,gam1=7.17,gam2=0.201,be=0.557;
+    double field_galaxy_mass_fraction = 0;
 
-  if (field_min_mass < 1.0e5) {
-    std::cout << "Are you sure you want the minimum field halo mass to be " << field_min_mass << " Msun?" << std::endl;
-    throw;
-   }
+
+    if (field_min_mass < 1.0e5) {
+       std::cout << "Are you sure you want the minimum field halo mass to be " << field_min_mass << " Msun?" << std::endl;
+       throw;
+    }
+    
 	double aveNhalos = cosmo->haloNumberInBufferedCone(field_min_mass,0,zsource,fieldofview*pow(pi/180,2),field_buffer,field_mass_func_type,mass_func_PL_slope);
 
 	fill_linear(zbins,Nzbins,0.0,zsource);
@@ -845,9 +844,6 @@ void Lens::createFieldHalos()
 	Nhalosbin[0] = 1;
 	zbins[0] = 0;
 
-#ifdef _OPENMP
-#pragma omp parallel for default(shared) private(k)
-#endif
 	for(k=1;k<Nzbins-1;++k){
 		Nhalosbin[k] = cosmo->haloNumberInBufferedCone(field_min_mass,zbins[k],zsource,fieldofview*pow(pi/180,2),field_buffer,field_mass_func_type,mass_func_PL_slope)/aveNhalos;
 	}
@@ -859,12 +855,13 @@ void Lens::createFieldHalos()
 	std::vector<double> halo_zs_vec;
 	std::vector<double *> halo_pos_vec;
 
-	// assign redsshifts to field_halos and sort them
+	// assign redsshifts to field_halos according to the redshift distribution
 
 	for(i=0;i < Nhalos;++i){
 		halo_zs_vec.push_back(InterpolateYvec(Nhalosbin,zbins,ran2(seed)));
 	}
 
+    // sort redshifts
 	std::sort(halo_zs_vec.begin(),halo_zs_vec.end());
 
 	assert(halo_zs_vec[0] < halo_zs_vec[1]);
@@ -963,10 +960,15 @@ void Lens::createFieldHalos()
 
 			float Rmax = halo_calc->getRvir();
 			float rscale = Rmax/halo_calc->getConcentration(0);
+            assert(rscale < Rmax);
       
+
 			field_halos[j]->setZlens(halo_zs_vec[i]);
 			if(flag_field_gal_on){
-				if(field_galaxy_mass_fraction > 1.0) field_galaxy_mass_fraction = 1;
+                field_galaxy_mass_fraction = 2*mo*pow(mass/M1,gam1)
+                /pow(1+pow(mass/M1,be),(gam1-gam2)/be)/mass;
+                if(field_galaxy_mass_fraction > 1.0) field_galaxy_mass_fraction = 1;
+
 				field_halos[j]->initFromMassFunc(mass*(1-field_galaxy_mass_fraction),Rmax,rscale,field_prof_internal_slope,seed);
 			}
 			else{
@@ -983,7 +985,6 @@ void Lens::createFieldHalos()
 
 			halo_pos_vec.push_back(theta_pos);
 
-      //Should we incriment j twice ??
 			++j;
 
 			if(flag_field_gal_on){
@@ -1000,10 +1001,10 @@ void Lens::createFieldHalos()
 				field_halos[j]->setZlens(halo_zs_vec[i]);
 				field_halos[j]->initFromMassFunc(mass*field_galaxy_mass_fraction,Rmax,rscale,field_prof_internal_slope,seed);
 
-        // Another copy of this position must be made to avoid rescaling it twice when it is converted into
-        // distance on the lens plane in Lens::buildLensPlanes()
-        theta2 = new double[3];
-        theta2[0]=theta_pos[0]; theta2[1]=theta_pos[1]; theta2[3]=theta_pos[3];
+                // Another copy of this position must be made to avoid rescaling it twice when it is converted into
+                // distance on the lens plane in Lens::buildLensPlanes()
+                theta2 = new double[3];
+                theta2[0]=theta_pos[0]; theta2[1]=theta_pos[1]; theta2[2]=theta_pos[2];
 
 				halo_pos_vec.push_back(theta2);
 
@@ -1045,6 +1046,7 @@ void Lens::readInputSimFile()
 	unsigned long i,j;
 	unsigned long haloid,idd,np;
 	double mo=7.3113e10,M1=2.8575e10,gam1=7.17,gam2=0.201,be=0.557;
+    double field_galaxy_mass_fraction = 0;
 
 	double rmax2=0,rtmp=0;
 
@@ -1250,12 +1252,16 @@ void Lens::readInputSimFile()
 	std::cout << "Overiding input file field of view to make it fit the simulation light cone." << std::endl;
 	fieldofview = pi*rmax2*pow(180/pi,2);  // Resets field of view to range of input galaxies
 
+	std::cout << "Setting mass function to Sheth-Tormen." << std::endl;
+	field_mass_func_type = ST; // set mass function
+
 	std::cout << "sorting in Lens::readInputSimFile()" << std::endl;
 	// sort the field_halos by readshift
 	Lens::quicksort(field_halos.data(),halo_pos,field_halos.size());
 
 	std::cout << "leaving Lens::readInputSimFile()" << std::endl;
 
+  field_buffer = 0.0;
 	read_sim_file = true;
 }
 

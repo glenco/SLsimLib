@@ -9,7 +9,9 @@
 
 #include <iterator>
 
-LensPlaneTree::LensPlaneTree(PosType **xpt,LensHaloHndl *my_halos,IndexType Nhalos,double my_sigma_background) : LensPlane(){
+LensPlaneTree::LensPlaneTree(PosType **xpt,LensHaloHndl *my_halos,IndexType Nhalos,double my_sigma_background)
+: LensPlane(), halos(my_halos, my_halos + Nhalos)
+{
 	halo_tree = new TreeQuad(xpt,my_halos,Nhalos,my_sigma_background);
 }
 
@@ -21,16 +23,26 @@ void LensPlaneTree::force(double *alpha,KappaType *kappa,KappaType *gamma,double
 	halo_tree->force2D_recur(xx,alpha,kappa,gamma,kappa_off);
 }
 
-void LensPlaneTree::add(LensHalo* halo)
+void LensPlaneTree::addHalo(LensHalo* halo)
 {
 	bool not_yet_implemented = false;
 	assert(not_yet_implemented);
 }
 
-void LensPlaneTree::remove(LensHalo* halo)
+void LensPlaneTree::removeHalo(LensHalo* halo)
 {
 	bool not_yet_implemented = false;
 	assert(not_yet_implemented);
+}
+
+std::vector<LensHalo*> LensPlaneTree::getHalos()
+{
+	return halos;
+}
+
+std::vector<const LensHalo*> LensPlaneTree::getHalos() const
+{
+	return std::vector<const LensHalo*>(halos.begin(), halos.end());
 }
 
 LensPlaneSingular::LensPlaneSingular(LensHalo** my_halos, std::size_t my_Nhalos)
@@ -67,14 +79,24 @@ void LensPlaneSingular::force(double *alpha,KappaType *kappa,KappaType *gamma,do
 	}
 }
 
-void LensPlaneSingular::add(LensHalo* halo)
+void LensPlaneSingular::addHalo(LensHalo* halo)
 {
 	halos.push_back(halo);
 }
 
-void LensPlaneSingular::remove(LensHalo* halo)
+void LensPlaneSingular::removeHalo(LensHalo* halo)
 {
 	std::vector<LensHalo*>::iterator it = std::find(halos.begin(), halos.end(), halo);
 	if(it != halos.end())
 		halos.erase(it);
+}
+
+std::vector<LensHalo*> LensPlaneSingular::getHalos()
+{
+	return halos;
+}
+
+std::vector<const LensHalo*> LensPlaneSingular::getHalos() const
+{
+	return std::vector<const LensHalo*>(halos.begin(), halos.end());
 }

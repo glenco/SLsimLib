@@ -42,7 +42,6 @@ GLAMER_TEST_USES(LensTest)
  *   field_prof_internal_slope -- slope of the surface density for power law or pseudo nfw profiles
  *   field_internal_profile_galaxy -- profile type of the galaxy field halos; if not set, no galaxies are used
  *   	0 or none, 1 or NSIE
- *   field_galaxy_mass_fraction -- if int_prof_gal_type is set, then this is the galaxy mass fraction
  *
  *   field_input_sim_file -- filename of the Millennium simulation data to be read in and used to populate the light cone with field halos
  *
@@ -72,7 +71,7 @@ class Lens
 {
 public:
 	Lens(long *seed);
-	Lens(InputParams& params, Source* source, long *my_seed);
+	Lens(InputParams& params, Source* source, long *my_seed,CosmoParamSet cosmoset = Planck1yr);
 	~Lens();
 
 	/// marks if the lens has been setup.
@@ -243,8 +242,8 @@ private: /* field */
 	bool flag_field_gal_on;
 	/// galaxy subhalo profile type; needs to be 0 or PowerLaw, 1 or NFW, 2 or PseudoNFW, 3 or NSIE, 4 or PointMass
 	GalaxyLensHaloType field_int_prof_gal_type;
-	/// mass fraction in the host galaxy
-	double field_galaxy_mass_fraction;
+	// mass fraction in the host galaxy
+	//double field_galaxy_mass_fraction;
 	
 	std::string redshift_planes_file;
 	bool read_redshift_planes;

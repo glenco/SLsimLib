@@ -285,7 +285,7 @@ void PixelMap::AddImages(
 					PointsWithinLeaf(getCurrentKist(imageinfo[ii].imagekist)->leaf,neighborlist);
 					for(it = neighborlist.begin();it != neighborlist.end();it++){
 						area = LeafPixelArea(*it,getCurrentKist(imageinfo[ii].imagekist)->leaf);
-                        map[*it] += sb*area;
+            map[*it] += sb*area;
 					}
 				}
 			}while(MoveDownKist(imageinfo[ii].imagekist));
