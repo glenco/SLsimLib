@@ -48,7 +48,6 @@ void LensHaloUniform::setInternalParams(CosmoHndl cosmo){
     	  perturb_modes[0]=kappa_uniform;
 		  perturb_modes[1]=gamma_uniform[0];
 		  perturb_modes[2]=gamma_uniform[1];
-
 }
 
 void LensHaloUniform::force_halo(
@@ -107,6 +106,7 @@ void LensHalo::assignParams_stars(InputParams& params){
 void LensHaloUniform::assignParams(InputParams& params){
 
 	//if(perturb_Nmodes > 0){
+	if(!params.get("z_lens",zlens)) error_message1("z_lens",params.filename());
 	if(!params.get("kappa_uniform",kappa_uniform)) error_message1("kappa_uniform",params.filename());
 	if(!params.get("gamma_uniform_1",gamma_uniform[0])) error_message1("gamma_uniform_1",params.filename());
 	if(!params.get("gamma_uniform_2",gamma_uniform[1])) error_message1("gamma_uniform_2",params.filename());
