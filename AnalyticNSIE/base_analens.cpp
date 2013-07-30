@@ -29,22 +29,22 @@ void LensHaloBaseNSIE::force_halo(
      gamma[0] = gamma[1] = gamma[2] = 0.0;
      *kappa = 0.0;
 
-     double convert_factor = star_massscale/Sigma_crit;
+	 double xt[2]={0,0};
+	 float units = pow(sigma/lightspeed,2)/Grav;///sqrt(fratio); // mass/distance(physical)
+	 xt[0]=xcm[0];
+	 xt[1]=xcm[1];
+     alphaNSIE(alpha,xt,fratio,rcore,pa);
+	 alpha[0] *= units;
+	 alpha[1] *= units;
 
-     if(Einstein_ro > 0){
-    	 x_rescale[0] = xcm[0]/Einstein_ro;
-    	 x_rescale[1] = xcm[1]/Einstein_ro;
-
-    	 alphaNSIE(alpha,x_rescale,fratio,rcore/Einstein_ro,pa);
-
-    	 if(!no_kappa){
-    		 gammaNSIE(gamma,x_rescale,fratio,rcore/Einstein_ro,pa);
-    		 *kappa=kappaNSIE(x_rescale,fratio,rcore/Einstein_ro,pa);
-    	 }
-
-    	 alpha[0] *= Einstein_ro;
-    	 alpha[1] *= Einstein_ro;
-     }
+	 if(!no_kappa){
+    	gammaNSIE(gamma,xcm,fratio,rcore,pa);
+    	*kappa=kappaNSIE(xcm,fratio,rcore,pa);
+    	*kappa *= units;
+    	gamma[0] *= units;
+    	gamma[1] *= units;
+		gamma[2] *= units;
+	 }
 
   // perturbations of host lens
      if(perturb_Nmodes > 0){
@@ -58,7 +58,6 @@ void LensHaloBaseNSIE::force_halo(
    	    	  gamma[0] += gamma_tmp[0];
    	    	  gamma[1] += gamma_tmp[1];
    	      }
-
    	     gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
    	     alpha_tmp[0] = alpha_tmp[1] = 0.0;
      }
@@ -85,33 +84,8 @@ void LensHaloBaseNSIE::force_halo(
 
      // add stars for microlensing
      if(stars_N > 0 && stars_implanted){
-
-    	 substract_stars_disks(xcm,alpha,kappa,gamma);
-
-    	 // do stars with tree code
-    	 star_tree->force2D_recur(xcm,alpha_tmp,&tmp,gamma_tmp,no_kappa);
-
-    	 alpha[0] -= convert_factor*alpha_tmp[0];
-    	 alpha[1] -= convert_factor*alpha_tmp[1];
-
-    	 if(!no_kappa){
-    		 *kappa += convert_factor*tmp;
-    		 gamma[0] += convert_factor*gamma_tmp[0];
-    		 gamma[1] += convert_factor*gamma_tmp[1];
-    	 }
+    	 force_stars(alpha,kappa,gamma,xcm,no_kappa);
      }
-
-     // convert from physical distance on the lens plane to (1/physical_distance)
-	 alpha[0] *= Sigma_crit;
-	 alpha[1] *= Sigma_crit;
-
-	 // therefore the quantities need to be in units (1/physical_distance^2)
-	 // --> convert from unitless quantity to (1/physical_distance^2)
-	 *kappa *= Sigma_crit;
-	 gamma[0] *= Sigma_crit;
-	 gamma[1] *= Sigma_crit;
-	 gamma[2] *= Sigma_crit;
-
      return ;
 }
 /**
@@ -121,12 +95,24 @@ void LensHaloBaseNSIE::force_halo(
  * force calculation.
  */
 void LensHaloBaseNSIE::assignParams(InputParams& params){
+	if(!params.get("main_mass_nsie",mass)) error_message1("main_mass_nsie",params.filename());
+	if(!params.get("zlens_basensie",zlens)) error_message1("zlens_basensie",params.filename());
 
-	// Host lens parameters
-	if(!params.get("z_lens",zlens)) error_message1("z_lens",params.filename());
+	if(!params.get("main_sigma",sigma)) error_message1("main_sigma",params.filename());
+	if(!params.get("main_core",rcore)) error_message1("main_core",params.filename());
+	if(!params.get("main_axis_ratio",fratio)) error_message1("main_axis_ratio",params.filename());
+	if(!params.get("main_pos_angle",pa)) error_message1("main_pos_angle",params.filename());
+
+	Rsize = rmaxNSIE(sigma,mass,fratio,rcore);
+	Rmax = MAX(1.0,1.0/fratio)*Rsize;  // redefine
+
+	assert(Rmax >= Rsize);
+
+	if(!params.get("reference_z",reference_z)) error_message1("reference_z",params.filename());
 
     // Substructure parameters
     if(!params.get("main_sub_Ndensity",sub_Ndensity)) error_message1("main_sub_Ndensity",params.filename());
+
     else if(sub_Ndensity > 0){
     	if(!params.get("main_sub_beta",sub_beta)) error_message1("main_sub_beta",params.filename());
     	if(!params.get("main_sub_alpha",sub_alpha)) error_message1("main_sub_alpha",params.filename());
@@ -139,17 +125,13 @@ void LensHaloBaseNSIE::assignParams(InputParams& params){
     		exit(1);
     	}
     	if(!params.get("main_sub_type",main_sub_type)) error_message1("main_sub_type",params.filename());
+
     }
 	  // Stars parameters
     if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
+
     else if(stars_N){
-    	if(!params.get("main_stars_fraction",star_fstars)) error_message1("main_stars_fraction",params.filename());
-    	if(star_fstars < 0 || star_fstars > 1){
-    		ERROR_MESSAGE();
-    		cout << "main_stars_fraction cannot be less than 0 or larger than 1 in file " << params.filename() <<endl;
-    		exit(0);
-    	}
-    	if(!params.get("main_stars_mass",star_massscale)) error_message1("main_stars_mass",params.filename());
+    	assignParams_stars(params);
     }
 
 }
@@ -161,9 +143,9 @@ void LensHaloBaseNSIE::error_message1(std::string parameter,std::string file){
 }
 
 /// resets Zl, Dl, Sigma_crit, MpcToAsec
-void LensHaloBaseNSIE::setZlens(CosmoHndl cosmo,double zl,double zsource){
+void LensHaloBaseNSIE::setZlens(double zl){
 	zlens = zl;
-	setInternalParams(cosmo, zsource);
+//	setInternalParams(cosmo, zsource);
 }
 
 void LensHaloBaseNSIE::reNormSubstructure(double kappa_sub){
@@ -181,18 +163,13 @@ void LensHaloBaseNSIE::reNormSubstructure(double kappa_sub){
 }
 
 /// Sets parameters within BaseLens that depend on the source redshift - Dl,Sigma_crit,etc.
-void LensHaloBaseNSIE::setInternalParams(CosmoHndl cosmo, SourceHndl source){
-	setInternalParams(cosmo,source->getZ());
-}
+void LensHaloAnaNSIE::setInternalParams(CosmoHndl cosmo){
 
-void LensHaloBaseNSIE::setInternalParams(CosmoHndl cosmo, double zsource){
-	double Ds, Dls;
+//	if(zsource < zlens) zsource = 1000;
 
-	if(zsource < zlens) zsource = 1000;
 	Dl = cosmo->angDist(0,zlens);
-	Ds = cosmo->angDist(0,zsource);
-	Dls = cosmo->angDist(zlens,zsource);
-
+	Ds = cosmo->angDist(0,reference_z);
+	Dls = cosmo->angDist(zlens,reference_z);
 	MpcToAsec = 60*60*180 / pi / Dl;
 		// in Mpc
 	Einstein_ro=4*pi*pow(sigma/lightspeed,2)*Dl
@@ -202,7 +179,8 @@ void LensHaloBaseNSIE::setInternalParams(CosmoHndl cosmo, double zsource){
 	to = (1+zlens)*Ds/Dls/Dl/8.39428142e-10;
 }
 
-LensHaloBaseNSIE::LensHaloBaseNSIE(InputParams& params) : LensHaloSimpleNSIE(){
+
+LensHaloBaseNSIE::LensHaloBaseNSIE(InputParams& params) : LensHalo(){
 
   perturb_rms = new double[6];
 
@@ -221,7 +199,8 @@ LensHaloBaseNSIE::LensHaloBaseNSIE(InputParams& params) : LensHaloSimpleNSIE(){
 
   Sigma_crit = 0;
 
-  stars_implanted = false;
+  substruct_implanted = false;
+
 }
 
 
@@ -268,23 +247,10 @@ void LensHaloBaseNSIE::PrintLens(bool show_substruct,bool show_stars){
 		}
 	}
 
-	cout << endl << "main_stars_N "<<stars_N << endl << endl;
-	if(stars_N>0){
-		if(star_Nregions > 0)
-			cout << "stars_Nregions "<<star_Nregions << endl;
-		cout << "stars_massscale "<<star_massscale << endl;
-		cout << "stars_fstars "<<star_fstars << endl;
-		cout << "stars_theta_force "<<star_theta_force << endl;
-		if(show_stars){
-			if(stars_implanted){
-			  for(i=0 ; i < stars_N ; ++i) cout << "    x["<<i<<"]="
-							    << stars_xp[i][0] << " " << stars_xp[i][1] << endl;
-			}else cout << "stars are not implanted yet" << endl;
-		}
-	}
-
 	if(Sigma_crit)
 		cout << "critical density is " << Sigma_crit << " Msun/Mpc^2" << endl << endl;
+
+	if (stars_implanted) PrintStars(show_stars);
 }
 
 

@@ -37,28 +37,11 @@ void LensHaloAnaNSIE::assignParams(InputParams& params){
 		if(!params.get("main_perturb_quadrapole",perturb_rms[3])) error_message1("main_perturb_quadrapole",params.filename());
 		if(!params.get("main_perturb_hexopole",perturb_rms[4])) error_message1("main_perturb_hexopole",params.filename());
 		if(!params.get("main_perturb_octopole",perturb_rms[5])) error_message1("main_perturb_octopole",params.filename());
+
 	}
 
 }
 
-/** \ingroup ImageFinding
- * \brief Prints the parameters of the analytic lens to stdout
-
-cout << endl << "main_stars_N "<<stars_N << endl << endl;
-	if(stars_N>0){
-		if(star_Nregions > 0)
-			cout << "stars_Nregions "<< star_Nregions << endl;
-		cout << "stars_massscale "<<star_massscale << endl;
-		cout << "stars_fstars "<<star_fstars << endl;
-		cout << "stars_theta_force "<<star_theta_force << endl;
-		if(show_stars){
-			if(stars_implanted){
-			  for(i=0 ; i < stars_N ; ++i) cout << "    x["<<i<<"]="
-							    << stars_xp[i][0] << " " << stars_xp[i][1] << endl;
-			}else cout << "stars are not implanted yet" << endl;
-		}
-	}
-*/
 
 void LensHaloAnaNSIE::PrintLens(bool show_substruct,bool show_stars){
 	int i;
@@ -102,6 +85,7 @@ LensHaloAnaNSIE::LensHaloAnaNSIE(InputParams& params) : LensHaloBaseNSIE(params)
 
   PrintLens(false,false);
 }
+
 
 
 LensHaloAnaNSIE::~LensHaloAnaNSIE(){

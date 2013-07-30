@@ -64,8 +64,8 @@ double lens_expand(double beta,double *mod,int Nmodes,double *x,double *alpha,Ka
   alpha[1] += -x[1]*mod[1] + x[0]*mod[2];
 
   // add flat kappa
-  alpha[0] += x[0]*mod[0];
-  alpha[1] += x[1]*mod[0];
+  alpha[0] += -1.0*x[0]*mod[0];
+  alpha[1] += -1.0*x[1]*mod[0];
 
   gt=-0.5*pow(r,beta-2)*(beta*(beta-2)*F-F2);
   gx=pow(r,beta-2)*(beta-1)*F1;

@@ -784,23 +784,18 @@ void Grid::writeFits(
       ,LensingVariable lensvar  /// which quantity is to be displayed
       ,std::string filename     /// file name for image -- .kappa.fits, .gamma1.fits, etc will be appended
       ){
-  
   PixelMap map(center, Npixels, resolution);
 
   double range = Npixels*resolution;
   ImageInfo tmp_image;
   long i;
   std::string tag;
-  
   i_tree->PointsWithinKist(center,range/sqrt(2.),tmp_image.imagekist,0);
-  
   std::vector<double> tmp_sb_vec(tmp_image.imagekist->Nunits());
 
   Point point;
-  
   for(tmp_image.imagekist->MoveToTop(),i=0;i<tmp_sb_vec.size();++i,tmp_image.imagekist->Down()){
     tmp_sb_vec[i] = tmp_image.imagekist->getCurrent()->surface_brightness;
-    
     switch (lensvar) {
       case dt:
         tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->dt;
@@ -814,7 +809,7 @@ void Grid::writeFits(
       case alpha2:
         tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->x[1]
         - tmp_image.imagekist->getCurrent()->image->x[1];
-        tag = ".alpha1.fits";
+        tag = ".alpha2.fits";
         break;
       case kappa:
         tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->kappa;
@@ -847,10 +842,4 @@ void Grid::writeFits(
 
   for(tmp_image.imagekist->MoveToTop(),i=0;i<tmp_sb_vec.size();++i,tmp_image.imagekist->Down())
     tmp_image.imagekist->getCurrent()->surface_brightness = tmp_sb_vec[i];
-  
 }
-  
-  
-  
-  
-  

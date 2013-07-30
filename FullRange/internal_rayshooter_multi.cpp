@@ -282,6 +282,7 @@ void *compute_rays_parallel(void *_p)
       //	assert(0);
       exit(1);
     }
+
     
   }
   
