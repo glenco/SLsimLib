@@ -138,7 +138,7 @@ double LensHaloNFW::InterpolateFromTable(double *table, double y){
 void LensHaloNFW::assignParams(InputParams& params){
 	if(!params.get("mass_nfw",mass)) error_message1("mass_nfw",params.filename());
 	if(!params.get("Rmax_nfw",Rmax)) error_message1("Rmax_nfw",params.filename());
-	if(!params.get("zlens_nfw",zlens)) error_message1("lens_nfw",params.filename());
+	if(!params.get("zlens_nfw",zlens)) error_message1("zlens_nfw",params.filename());
 	if(!params.get("concentration_nfw",rscale)) error_message1("concentration_nfw",params.filename());
 	rscale = Rmax/rscale; // was the concentration
   xmax = Rmax/rscale;
