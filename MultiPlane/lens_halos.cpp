@@ -525,7 +525,7 @@ void LensHaloSimpleNSIE::force_halo(
    	 force_stars(alpha,kappa,gamma,xcm,no_kappa);
     }
 
-	return;
+       return;
 }
 
 
