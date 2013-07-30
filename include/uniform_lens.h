@@ -73,6 +73,8 @@ protected:
  int perturb_Nmodes;    /// this includes two for external shear
  double perturb_beta;
  double *perturb_rms;
+
+ /// redshift for which uniform kappa and gamma are valid
  float reference_z;
  double Dl, Ds, Dls;
 

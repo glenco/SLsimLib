@@ -147,10 +147,9 @@ protected:
    /// private: conversion factor between Mpc on the lens plane and arcseconds
    double MpcToAsec;
 
+   /// redshift for which the perturbation modes are normalised
    float reference_z;
    double Ds, Dls;
-   double norm_factor;
-
 
 };
 

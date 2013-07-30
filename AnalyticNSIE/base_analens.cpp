@@ -170,7 +170,6 @@ void LensHaloAnaNSIE::setInternalParams(CosmoHndl cosmo){
 	Dl = cosmo->angDist(0,zlens);
 	Ds = cosmo->angDist(0,reference_z);
 	Dls = cosmo->angDist(zlens,reference_z);
-	norm_factor = 4*pi*Grav*Dls*Dl/Ds;
 	MpcToAsec = 60*60*180 / pi / Dl;
 		// in Mpc
 	Einstein_ro=4*pi*pow(sigma/lightspeed,2)*Dl

@@ -140,7 +140,7 @@ void LensHaloAnaNSIE::RandomlyDistortLens(long *seed, int Nmodes){
 
     for (int i = 0; i < Nmodes; i++)
     {
-    	perturb_modes[i] /= norm_factor;
+    	perturb_modes[i] *= Sigma_crit;
     }
 	//PrintLens(false,false);
 
@@ -170,8 +170,8 @@ void LensHaloAnaNSIE::AlignedRandomlyDistortLens(long *seed,double theta,int Npo
 						*tmp*cos(theta)/( perturb_beta* perturb_beta-k*k);
 			perturb_modes[i+1] = perturb_rms[k+1]*pow(Einstein_ro,2- perturb_beta)
 						*tmp*sin(theta)/( perturb_beta* perturb_beta-k*k);
-	    	perturb_modes[i] /= norm_factor;
-	    	perturb_modes[i+1] /= norm_factor;
+	    	perturb_modes[i] *= Sigma_crit;
+	    	perturb_modes[i+1] *= Sigma_crit;
 		}
 		//std::cout << "k=%i i=%i  modes = %e %e rms_purturb=%e\n",k,i,modes[i],modes[i+1],
 		//		rms_perturb[k+1]);
