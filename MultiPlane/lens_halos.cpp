@@ -10,10 +10,12 @@
 LensHalo::LensHalo(){
 	rscale = 1.0;
 	mass = Rmax = xmax = 0.0;
+	stars_implanted = false;
 }
 
 LensHalo::LensHalo(InputParams& params){
 	assignParams(params);
+	stars_implanted = false;
 }
 
 void LensHalo::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, double my_slope, long *seed){
@@ -33,6 +35,54 @@ void LensHalo::assignParams(InputParams& params){
 	if(!params.get("mass",mass)) error_message1("mass",params.filename());
 	if(!params.get("Rmax",Rmax)) error_message1("Rmax",params.filename());
 	if(!params.get("z_lens",zlens)) error_message1("z_lens",params.filename());
+}
+
+void LensHalo::PrintStars(bool show_stars)
+{
+std::cout << std::endl << "Nstars "<<stars_N << std::endl << std::endl;
+if(stars_N>0){
+	if(star_Nregions > 0)
+		std::cout << "stars_Nregions "<<star_Nregions << std::endl;
+	std::cout << "stars_massscale "<<star_massscale << std::endl;
+	std::cout << "stars_fstars "<<star_fstars << std::endl;
+	std::cout << "stars_theta_force "<<star_theta_force << std::endl;
+	if(show_stars){
+		if(stars_implanted){
+		  for(int i=0 ; i < stars_N ; ++i) std::cout << "    x["<<i<<"]="
+						    << stars_xp[i][0] << " " << stars_xp[i][1] << std::endl;
+		}else std::cout << "stars are not implanted yet" << std::endl;
+	}
+}
+}
+
+void LensHalo::force_stars(
+		double *alpha     /// mass/Mpc
+		,KappaType *kappa
+		,KappaType *gamma
+		,double *xcm
+		,bool no_kappa
+		)
+{
+    double alpha_tmp[2];
+    KappaType kappa_tmp = 0.0, gamma_tmp[3], tmp = 0;
+
+    gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
+    alpha_tmp[0] = alpha_tmp[1] = 0.0;
+
+	 substract_stars_disks(xcm,alpha,kappa,gamma);
+
+	 // do stars with tree code
+	 star_tree->force2D_recur(xcm,alpha_tmp,&tmp,gamma_tmp,no_kappa);
+
+	 alpha[0] -= star_massscale*alpha_tmp[0];
+	 alpha[1] -= star_massscale*alpha_tmp[1];
+
+	 if(!no_kappa){
+		 *kappa += star_massscale*tmp;
+		 gamma[0] -= star_massscale*gamma_tmp[0];
+		 gamma[1] -= star_massscale*gamma_tmp[1];
+	 }
+
 }
 
 LensHalo::~LensHalo(){
@@ -223,6 +273,11 @@ void LensHaloPowerLaw::assignParams(InputParams& params){
 	if(!params.get("Rmax_pl",Rmax)) error_message1("Rmax_pl",params.filename());
 	if(!params.get("zlens_pl",zlens)) error_message1("zlens_pl",params.filename());
 	if(!params.get("slope_pl",beta)) error_message1("slope_pl",params.filename());
+
+	if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
+    else if(stars_N){
+    	assignParams_stars(params);
+    }
 }
 
 LensHaloPowerLaw::~LensHaloPowerLaw(){
@@ -262,6 +317,12 @@ void LensHaloSimpleNSIE::assignParams(InputParams& params){
 	Rmax = MAX(1.0,1.0/fratio)*Rsize;  // redefine
 
 	assert(Rmax >= Rsize);
+
+	if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
+    else if(stars_N){
+    	assignParams_stars(params);
+    }
+
 }
 
 LensHaloSimpleNSIE::~LensHaloSimpleNSIE(){
@@ -339,6 +400,12 @@ void LensHalo::force_halo(
 			}
 		}
 	}
+
+    // add stars for microlensing
+    if(stars_N > 0 && stars_implanted){
+   	 force_stars(alpha,kappa,gamma,xcm,kappa_off);
+    }
+
 
 	return;
 }
@@ -418,23 +485,46 @@ void LensHaloSimpleNSIE::force_halo(
 				gamma[1] += units*tmp[1];
 			}
 		}
-    
-		if(subtract_point){
-			double fac = mass/rcm2/pi;
-			alpha[0] += fac*xcm[0];
-			alpha[1] += fac*xcm[1];
+	}
+	else
+	{
+		if (subtract_point == false)
+		{
+			double prefac = mass/rcm2/pi;
+			alpha[0] += -1.0*prefac*xcm[0];
+			alpha[1] += -1.0*prefac*xcm[1];
 
 			// can turn off kappa and gamma calculations to save times
 			if(!no_kappa){
-				fac = 2.0*fac/rcm2;
+				double tmp = -2.0*prefac/rcm2;
 
-				gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*fac;
-				gamma[1] += xcm[0]*xcm[1]*fac;
+				gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+				gamma[1] += xcm[0]*xcm[1]*tmp;
 			}
+		}
+	}
 
+
+	if(subtract_point){
+		double fac = mass/rcm2/pi;
+		alpha[0] += fac*xcm[0];
+		alpha[1] += fac*xcm[1];
+
+		// can turn off kappa and gamma calculations to save times
+		if(!no_kappa){
+			fac = 2.0*fac/rcm2;
+
+			gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*fac;
+			gamma[1] += xcm[0]*xcm[1]*fac;
 		}
 
 	}
+
+    // add stars for microlensing
+    if(stars_N > 0 && stars_implanted){
+   	 force_stars(alpha,kappa,gamma,xcm,no_kappa);
+    }
+
 	return;
 }
 
@@ -492,6 +582,12 @@ void LensHaloHernquist::assignParams(InputParams& params){
 	if(!params.get("zlens_hernquist",zlens)) error_message1("zlens_hernquist",params.filename());
 	if(!params.get("rscale_hernquist",rscale)) error_message1("rscale_hernquist",params.filename());
   xmax = Rmax/rscale;
+
+	if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
+  else if(stars_N){
+  	assignParams_stars(params);
+  }
+
 }
 
 LensHaloHernquist::~LensHaloHernquist(){
@@ -547,6 +643,11 @@ void LensHaloDummy::force_halo(double *alpha,KappaType *kappa,KappaType *gamma,d
       gamma[1] += xcm[0]*xcm[1]*tmp;
     }
   }
+  // add stars for microlensing
+  if(stars_N > 0 && stars_implanted){
+ 	 force_stars(alpha,kappa,gamma,xcm,no_kappa);
+  }
+
 }
 
 void LensHaloDummy::assignParams(InputParams& params)

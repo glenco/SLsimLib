@@ -139,6 +139,8 @@ public:
 	/// print the cosmological parameters
 	void PrintCosmology(){cosmo->PrintCosmology();}
 
+	LensHaloHndl GetMainHalo(int i){return main_halos[i];}
+
 private:
 	GLAMER_TEST_FRIEND(LensTest)
 	

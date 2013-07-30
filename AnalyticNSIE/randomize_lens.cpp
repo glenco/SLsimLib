@@ -137,7 +137,12 @@ void LensHaloAnaNSIE::RandomlyDistortLens(long *seed, int Nmodes){
 			//		rms_perturb[k+1]);
 		}
 	}
-	//PrintAnaLens(lens,false,false);
+
+    for (int i = 0; i < Nmodes; i++)
+    {
+    	perturb_modes[i] *= Sigma_crit;
+    }
+	//PrintLens(false,false);
 
 	return ;
 }
@@ -165,6 +170,8 @@ void LensHaloAnaNSIE::AlignedRandomlyDistortLens(long *seed,double theta,int Npo
 						*tmp*cos(theta)/( perturb_beta* perturb_beta-k*k);
 			perturb_modes[i+1] = perturb_rms[k+1]*pow(Einstein_ro,2- perturb_beta)
 						*tmp*sin(theta)/( perturb_beta* perturb_beta-k*k);
+	    	perturb_modes[i] *= Sigma_crit;
+	    	perturb_modes[i+1] *= Sigma_crit;
 		}
 		//std::cout << "k=%i i=%i  modes = %e %e rms_purturb=%e\n",k,i,modes[i],modes[i+1],
 		//		rms_perturb[k+1]);
@@ -360,7 +367,6 @@ void LensHaloAnaNSIE::RandomizeSubstructure3(double rangeInRei,long *seed){
 	assert(Nsub < NsubMax);
 
 	Nsub = (NsubMax > Nsub) ? Nsub : NsubMax ;
-
 	//std::cout << "scale = %e\n",scale);
 	for(i=0,k=0; i < Nsub;++i){
 		//for(i=0;i<NSubstruct;++i){
@@ -379,8 +385,7 @@ void LensHaloAnaNSIE::RandomizeSubstructure3(double rangeInRei,long *seed){
 		}while(subs[k].get_mass() < sub_Mmin);  // not sure why this is necessary
 
 		// average density of a substructure does not scale with host
-		subs[k].set_Rmax(sub_Rmax
-				*pow(subs[k].get_mass()/sub_Mmax,1/3.));
+		subs[k].set_Rmax(sub_Rmax*pow(subs[k].get_mass()/sub_Mmax,1/3.));
 
 		// maximum radius for a substructure of this mass
 		rmax = (Einstein_ro_save*rangeInRei + subs[k].get_Rmax()

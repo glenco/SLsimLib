@@ -721,15 +721,18 @@ void Lens::createMainHalos(InputParams& params, Source* source)
 	}
 
 	for(std::size_t i = 0; i < main_halos.size(); ++i)
-		main_halos[i]->setInternalParams(cosmo, source);
+		main_halos[i]->setInternalParams(cosmo);
 }
 
+
 void Lens::clearMainHalos()
+
 {
 	Utilities::delete_container(main_halos_created);
 	main_halos.clear();
 	
 	flag_switch_main_halo_on = false;
+
 	
 	Utilities::delete_container(main_planes);
 	main_plane_redshifts.clear();
@@ -744,7 +747,7 @@ void Lens::clearMainHalos()
  */
 void Lens::insertMainHalo(Source* source, LensHalo* halo)
 {
-	halo->setInternalParams(cosmo, source);
+	halo->setInternalParams(cosmo);
 	main_halos.push_back(halo);
 	
 	flag_switch_main_halo_on = true;
@@ -762,7 +765,7 @@ void Lens::insertMainHalos(Source* source, LensHalo** halos, std::size_t Nhalos)
 {
 	for(std::size_t i = 0; i < Nhalos; ++i)
 	{
-		halos[i]->setInternalParams(cosmo,source);
+		halos[i]->setInternalParams(cosmo);
 		main_halos.push_back(halos[i]);
 		addMainHaloToPlane(halos[i]);
 	}
@@ -781,7 +784,7 @@ void Lens::replaceMainHalos(Source* source, LensHalo* halo)
 	Utilities::delete_container(main_halos_created);
 	main_halos.clear();
 	
-	halo->setInternalParams(cosmo, source);
+	halo->setInternalParams(cosmo);
 	main_halos.push_back(halo);
 	
 	flag_switch_main_halo_on = true;
@@ -802,7 +805,7 @@ void Lens::replaceMainHalos(Source* source, LensHalo** halos, std::size_t Nhalos
 	
 	for(std::size_t i = 0; i < Nhalos; ++i)
 	{
-		halos[i]->setInternalParams(cosmo,source);
+		halos[i]->setInternalParams(cosmo);
 		main_halos.push_back(halos[i]);
 	}
 	

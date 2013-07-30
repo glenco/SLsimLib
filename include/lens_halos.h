@@ -11,6 +11,9 @@
 #include "standard.h"
 #include "InputParams.h"
 #include "source.h"
+#include "point.h"
+//#include "quadTree.h"
+
 
 /**
  * \brief A base class for all types of lensing halos.
@@ -37,6 +40,8 @@
  * is intended for the cases where the simulation is populated by lensing halos from
  * a mass function. Then one needs all parameters of the halo -- mass, Rmax, and rscale.
  */
+
+class TreeQuad; // forward declaration TODO Fabio: can you do something prettier?
 
 class LensHalo{
 public:
@@ -72,26 +77,61 @@ public:
 	virtual void set_slope(double my_slope){};
 
 	/// set internal params that need either the cosmology or the source
-	virtual void setInternalParams(CosmoHndl cosmo, SourceHndl source){};
+	virtual void setInternalParams(CosmoHndl cosmo){};
 
 	/// calculate the lensing properties -- deflection, convergence, and shear
 	virtual void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa,bool subtract_point=false);
 
+	/// force tree calculation for stars
+	void force_stars(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa);
+
 	/// internal compare redshift function
 	bool compare(double z){return z > zlens;};
 
-	/// read raw data
-	virtual void serialize(RawData& d) const;
+	  /// stars
+	  bool AreStarsImaplated(){return stars_implanted;}
+	  int stars_N;
+	  IndexType *stars;
+	  PosType **stars_xp;
+	  //TreeForce *star_tree;
+	  TreeQuad *star_tree;
+	  double star_massscale;
+	  /// star masses relative to star_massscles
+	  float *star_masses;
+	  double star_fstars;
+	  double star_theta_force;
+	  int star_Nregions;
+	  double *star_region;
+	  void substract_stars_disks(PosType *ray,PosType *alpha
+	                  ,KappaType *kappa,KappaType *gamma);
 
-	/// write raw data
-	virtual void unserialize(RawData& d);
+	void implant_stars(PosType **centers,unsigned long Nregions,long *seed, IMFtype type=One);
+	  /// creates a single star halo in pos (x,y)
+   	void implant_stars(double x,double y,unsigned long Nregions,long *seed,IMFtype type=One);
 
+	  float* stellar_mass_function(IMFtype type, unsigned long Nstars, long *seed, double minmass=0.0, double maxmass=0.0
+	  		,double bendmass=0.0, double powerlo=0.0, double powerhi=0.0);
+	  IMFtype getIMF_type(){return imf_type;}
+
+	  /// read raw data
+		virtual void serialize(RawData& d) const;
+		/// write raw data
+		virtual void unserialize(RawData& d);
 	/// randomize halo by a given amound
 	virtual void randomize(double step, long* seed);
+
+	/// Prints star parameters; if show_stars is true, prints data for single stars
+	void PrintStars(bool show_stars);
+
+
+
 
 protected:
 	/// read in parameters from a parameterfile in InputParams params
 	void assignParams(InputParams& params);
+	  /// read in star parameters. This is valid for all halos and not overloaded.
+	  void assignParams_stars(InputParams& params);
+
 	/// error message printout
 	void error_message1(std::string name,std::string filename);
 
@@ -103,6 +143,18 @@ protected:
     float rscale;
     /// redshift
     double zlens;
+
+    bool stars_implanted;
+    /// Number of regions to be subtracted to compensate for the mass in stars
+    IMFtype imf_type;
+    double min_mstar;
+    double max_mstar;
+    double bend_mstar;
+    double lo_mass_slope;
+    double hi_mass_slope;
+    /// parameters for stellar mass function: minimal and maximal stellar mass, bending point for a broken power law IMF
+    double *star_kappa;
+    double **star_xdisk;
 
     /// point mass case
 	virtual double inline alpha_h(double x){return -1;};
@@ -156,7 +208,6 @@ public:
 
 	void initFromFile(float my_mass, long *seed, float vmax, float r_halfmass);
 	void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, double my_slope, long *seed);
-
   /// set Rmax
     void set_Rmax(float my_Rmax){Rmax=my_Rmax; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
   /// set scale radius

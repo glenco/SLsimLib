@@ -15,7 +15,7 @@ using namespace std;
  * allocates all memory for stars
  */
 
-void LensHaloBaseNSIE::implant_stars(Point *centers,unsigned long Nregions,long *seed, IMFtype type){
+void LensHalo::implant_stars(PosType **centers,unsigned long Nregions,long *seed, IMFtype type){
 	PosType r,theta,NstarsPerImage;
 	double *mean_mstar;
 	unsigned long i,j,m,k;
@@ -49,8 +49,8 @@ void LensHaloBaseNSIE::implant_stars(Point *centers,unsigned long Nregions,long 
 			star_region[j] = 0.0;
 			star_kappa[j] = 0.0;
 			mean_mstar[j] = 0.0;
-			star_xdisk[j][0] = centers[j].x[0];
-			star_xdisk[j][1] = centers[j].x[1];
+			star_xdisk[j][0] = centers[j][0];
+			star_xdisk[j][1] = centers[j][1];
 
 		}
 		return;
@@ -81,34 +81,20 @@ void LensHaloBaseNSIE::implant_stars(Point *centers,unsigned long Nregions,long 
 	}
 
 	for(j=0,m=0;j<Nregions;++j){
+		double alpha[2];
+		KappaType kappa, gamma[3];
+		alpha[0]=alpha[1]=gamma[0]=gamma[1]=gamma[2]=0.;
+		kappa=0.;
+		double xcm[2];
+		xcm[0] = centers[j][0];
+		xcm[1] = centers[j][1];
 
-		assert( centers[j].kappa > 0.0);
+		force_halo(alpha,&kappa,gamma,xcm,false,false);
+		star_kappa[j] = star_fstars*kappa;
+		star_region[j] = 1.0/sqrt(pi*star_kappa[j]/(mean_mstar[j]*(float)NstarsPerImage));
 
-		star_kappa[j] = star_fstars*centers[j].kappa;
-		star_region[j] = 1.0/sqrt(pi*star_kappa[j]*Sigma_crit/(mean_mstar[j]*(float)NstarsPerImage));
-
-		//cout << "kappastar: " << star_kappa[j] << endl;
-		//cout << "fstar: " << star_kappa[j]/centers[j].kappa << endl;
-		//cout << "rstar: " << star_region[j] << endl;
-
-		/* star_region[j] = 1.0/sqrt(pi*star_fstars*centers[j].kappa*Sigma_crit
-				/star_massscale/(float)NstarsPerImage);
-			cout << "PREVIOUS rstar: " << star_region[j] << endl;
-		    cout << star_region[j] << " " << star_fstars <<  " " << centers[j].kappa << " " << Sigma_crit << " " << star_massscale << " " << NstarsPerImage << endl;
-		 */
-
-		// cutoff based on comparison of star deflection to smooth component
-		//rcut = 4*sqrt(star_massscale/pi/Sigma_crit
-		//		/( centers[j].kappa+sqrt(pow(centers[j].gamma[0],2)+pow(centers[j].gamma[1],2)) ) );
-
-		//if( (type!=One) && (type!=Mono)) {
-
-		//}else{
-
-		//}
-
-		star_xdisk[j][0] = centers[j].x[0];
-		star_xdisk[j][1] = centers[j].x[1];
+		star_xdisk[j][0] = centers[j][0];
+		star_xdisk[j][1] = centers[j][1];
 
 		//printf("kappa = %e  star_region = %e\n",star_kappa[j],star_region[j]);
 		char *fname = "stars0.dat";
@@ -127,8 +113,8 @@ void LensHaloBaseNSIE::implant_stars(Point *centers,unsigned long Nregions,long 
 			//m=j*NstarsPerImage+i;
 			r = star_region[j]*sqrt(ran2(seed));
 			theta=2*pi*ran2(seed);
-			stars_xp[m][0] = centers[j].x[0] + r*cos(theta);
-			stars_xp[m][1] = centers[j].x[1] + r*sin(theta);
+			stars_xp[m][0] = star_xdisk[j][0] + r*cos(theta);
+			stars_xp[m][1] = star_xdisk[j][1] + r*sin(theta);
 			stars_xp[m][2] = 0.0;
 			//cout << m << " " << star_masses[m] << endl;
 
@@ -139,8 +125,8 @@ void LensHaloBaseNSIE::implant_stars(Point *centers,unsigned long Nregions,long 
 			//   and remove it
 			//cout << "bla: " << j << " " <<  m << " " << i << endl;
 			for(k=0;k<j;++k){
-				if(  star_region[k] > sqrt(pow(centers[k].x[0]-stars_xp[m][0],2)
-						+ pow(centers[k].x[1]-stars_xp[m][1],2)) ){
+				if(  star_region[k] > sqrt(pow(centers[k][0]-stars_xp[m][0],2)
+						+ pow(centers[k][1]-stars_xp[m][1],2)) ){
 					//--NstarsPerImage;
 					//--i;
 					--m;
@@ -160,6 +146,7 @@ void LensHaloBaseNSIE::implant_stars(Point *centers,unsigned long Nregions,long 
 
 	assert(m <= stars_N);
 	stars_N = m;
+
 	//std::printf("last star x = %e %e\n",stars_xp[stars_N-1][0],stars_xp[stars_N-1][1]);
 
 	float dummy=0;
@@ -183,7 +170,7 @@ void LensHaloBaseNSIE::implant_stars(Point *centers,unsigned long Nregions,long 
 
 /// subtracts the mass in stars from the smooth model to compensate
 /// for the mass of the stars the lensing quantities are all updated not replaced
-void LensHaloBaseNSIE::substract_stars_disks(double *ray,double *alpha
+void LensHalo::substract_stars_disks(double *ray,double *alpha
 		,KappaType *kappa,KappaType *gamma){
 
 	if(!(stars_implanted)) return;
@@ -194,8 +181,8 @@ void LensHaloBaseNSIE::substract_stars_disks(double *ray,double *alpha
 	int i;
 
 	for(i=0;i<star_Nregions;++i){
-		xcm = star_xdisk[i][0] - ray[0];
-		ycm = star_xdisk[i][1] - ray[1];
+		xcm = ray[0] - star_xdisk[i][0];
+		ycm = ray[1] - star_xdisk[i][1];
 		r=sqrt(xcm*xcm + ycm*ycm);
 
 		if(r < star_region[i]){
@@ -224,7 +211,7 @@ void LensHaloBaseNSIE::substract_stars_disks(double *ray,double *alpha
  * 2 - broken power law, requires lower mass end slope (powerlo), high mass slope (powerhi), bending point (bendmass)
  * 3 - further IMF models may follow
  */
-float* LensHaloBaseNSIE::stellar_mass_function(IMFtype type, unsigned long Nstars, long *seed
+float* LensHalo::stellar_mass_function(IMFtype type, unsigned long Nstars, long *seed
 		,double minmass, double maxmass, double bendmass, double powerlo, double powerhi){
 
 	//if(!(stars_implanted)) return;
@@ -305,6 +292,11 @@ float* LensHaloBaseNSIE::stellar_mass_function(IMFtype type, unsigned long Nstar
     		cout << "For IMF type BrokenPowerLaw inner slope (slope_1) and outer slope (slope_2) must be defined in parameter file" << endl;
     		exit(1);
     	}
+    	if((powerlo==-1) || (powerhi==-1) ){
+    	    cout << "For IMF type BrokenPowerLaw no slope of -1 is allowed." << endl;
+    	    exit(1);
+    	}
+
     	else{
     		powerlp1=powerlo+1.0;
     		powerp1 = powerhi+1.0;
@@ -317,9 +309,11 @@ float* LensHaloBaseNSIE::stellar_mass_function(IMFtype type, unsigned long Nstar
     			rndnr=ran2(seed);
     			if(rndnr<(n1/n0)){
     				stellar_masses[i]=(pow( ((n0*rndnr)*(powerlp1)+ pow(shiftmin,powerlp1)),(1.0/powerlp1)))*bendmass;
+    				//cout << stellar_masses[i] << endl;
     			}
     			else{
     				stellar_masses[i]=(pow( ((n0*rndnr-n1)*powerp1+1.0),(1.0/powerp1)))*bendmass;
+    				//cout << stellar_masses[i] << endl;
     			}
     		}
     	}

@@ -51,7 +51,7 @@
  *
  * TODO: BEN finish this documentation.
  */
-class LensHaloBaseNSIE : public LensHaloSimpleNSIE{
+class LensHaloBaseNSIE : public LensHalo{
 public:
 	LensHaloBaseNSIE(InputParams& params);
 	virtual ~LensHaloBaseNSIE();
@@ -88,24 +88,9 @@ public:
   IndexType *sub_substructures;
   ClumpInternal main_sub_type;
 
-  /// stars
-  bool AreStarsImaplated(){return stars_implanted;}
-  int stars_N;
-  IndexType *stars;
-  PosType **stars_xp;
-  //TreeForce *star_tree;
-  TreeQuad *star_tree;
-  double star_massscale;
-  /// star masses relative to star_massscles
-  float *star_masses;
-  double star_fstars;
-  double star_theta_force;
-  int star_Nregions;
-  double *star_region;
-
-  void setZlens(CosmoHndl cosmo,double zlens,double zsource = 1000);
-  void setInternalParams(CosmoHndl,SourceHndl);
-  void setInternalParams(CosmoHndl,double);
+  void setZlens(double zlens);
+//  void setInternalParams(CosmoHndl,SourceHndl);
+//  void setInternalParams(CosmoHndl cosmo);
   void assignParams(InputParams& params);
   void PrintLens(bool show_substruct,bool show_stars);
   void error_message1(std::string name,std::string filename);
@@ -117,12 +102,6 @@ public:
 
   // in readlens_ana.c
   void reNormSubstructure(double kappa_sub);
-  void substract_stars_disks(PosType *ray,PosType *alpha
-                  ,KappaType *kappa,KappaType *gamma);
-  void implant_stars(Point *centers,unsigned long Nregions,long *seed, IMFtype type=One);
-  float* stellar_mass_function(IMFtype type, unsigned long Nstars, long *seed, double minmass=0.0, double maxmass=0.0
-  		,double bendmass=0.0, double powerlo=0.0, double powerhi=0.0);
-
   //void toggleStars(bool implanted);
 
   double getHost_Dl(){return Dl;}
@@ -145,6 +124,18 @@ protected:
   /// Einstein radius
   double Einstein_ro;
 
+	/// velocity dispersion of NSIE
+	float sigma;
+	/// Actual edge of mass distribution in elliptical radius, Rmax is the range beyond which the halo is a point mass
+	float Rsize;
+	/// axis ratio of surface mass distribution
+	float fratio;
+	/// position angle on sky, radians
+	float pa;
+	/// core size of NSIE
+	float rcore;
+
+
     // perturbations to host.  These are protected so that in some derived classes they can or cann't be changed.
   int perturb_Nmodes;    /// this includes two for external shear
   double perturb_beta;
@@ -152,22 +143,13 @@ protected:
 
   bool substruct_implanted;
 
-  bool stars_implanted;
-  /// Number of regions to be subtracted to compensate for the mass in stars
-  IMFtype imf_type;
-  double min_mstar;
-  double max_mstar;
-  double bend_mstar;
-  double lo_mass_slope;
-  double hi_mass_slope;
-  /// parameters for stellar mass function: minimal and maximal stellar mass, bending point for a broken power law IMF
-  double *star_kappa;
-  double **star_xdisk;
-
    // private derived quantities
    /// private: conversion factor between Mpc on the lens plane and arcseconds
    double MpcToAsec;
 
+   /// redshift for which the perturbation modes are normalised
+   float reference_z;
+   double Ds, Dls;
 
 };
 
