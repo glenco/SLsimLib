@@ -394,6 +394,11 @@ public:
 	LensHaloHernquist(InputParams& params);
 	virtual ~LensHaloHernquist();
 
+    double ffunction(double x);
+	double gfunction(double x);
+	double hfunction(double x);
+	double g2function(double x);
+
 	/* the below functions alphaHern, kappaHern and gammaHern are obsolete and better to be deleted to avoid confusion
 	void alphaHern(double *alpha,double *x,double Rtrunc,double mass,double r_scale
 			,double *center,double Sigma_crit);
@@ -429,8 +434,7 @@ protected:
 
 	/// Override internal structure of halos
 	inline double alpha_h(double x){
-		return -1.0*InterpolateFromTable(gtable,x)/gmax;
-		//return -0.25*x*InterpolateFromTable(gtable,x)/gmax;
+		return -0.25*InterpolateFromTable(gtable,x)/gmax;
 	}
 	inline KappaType kappa_h(double x){
 		return 0.5*x*x*InterpolateFromTable(ftable,x)/gmax;
@@ -445,10 +449,7 @@ protected:
 		return -1.0*InterpolateFromTable(htable,x)/gmax;
 	}
 
-    double ffunction(double x);
-	double gfunction(double x);
-	double hfunction(double x);
-	double g2function(double x);
+
 
 private:
   double gmax;

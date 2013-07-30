@@ -2,6 +2,7 @@ add_sources(
 	base_analens.cpp
 	expanded_powerlaw.cpp
 	hernquist_lens.cpp
+	jaffe_lens.cpp
 	lens_expand.cpp
 	nfw_lens.cpp
 	nsie.cpp
