@@ -171,8 +171,6 @@ void LensHaloAnaNSIE::setInternalParams(CosmoHndl cosmo){
 	Ds = cosmo->angDist(0,reference_z);
 	Dls = cosmo->angDist(zlens,reference_z);
 	norm_factor = 4*pi*Grav*Dls*Dl/Ds;
-	std::cout << zlens << "  " << reference_z << std::endl;
-std::cout << Dl << "  " << Ds << "  " << Dls << std::endl;
 	MpcToAsec = 60*60*180 / pi / Dl;
 		// in Mpc
 	Einstein_ro=4*pi*pow(sigma/lightspeed,2)*Dl
@@ -180,16 +178,6 @@ std::cout << Dl << "  " << Ds << "  " << Dls << std::endl;
 	// find critical density
 	Sigma_crit=Ds/Dls/Dl/4/pi/Grav;
 	to = (1+zlens)*Ds/Dls/Dl/8.39428142e-10;
-
-	std::cout << "Einstein radius = " << Einstein_ro << std::endl;
-
-/*    // This shouldn't be here. There should be a way to access the LensHalo from the driver program and call one of the randomizing functions.
-	// The normalisation can be done there.
-    long seed = -12212;
-//    RandomlyDistortLens(&seed,perturb_Nmodes);
-    RandomizeSubstructure3(0.5,&seed);
-*/
-
 }
 
 
