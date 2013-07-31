@@ -494,17 +494,82 @@ protected:
 		return -0.25*x*x*InterpolateFromTable(g2table,x)/gmax;
 	}
 	inline KappaType phi_h(double x){
-		//ERROR_MESSAGE();
-		//std::cout << "time delay has not been fixed for NFW profile yet." << std::endl;
-		//exit(1);
 		return -1.0*InterpolateFromTable(htable,x)/gmax;
 	}
-
-
 
 private:
   double gmax;
 };
+
+/** \ingroup DeflectionL2
+ *
+ * \brief A class for calculating the deflection, kappa and gamma caused by a collection of halos
+ * with truncated Jaffe mass profiles.
+ *
+ * Derived from the TreeQuad class.  The "particles" are replaced with spherical halos.
+ *The truncation is in 2d not 3d. \f$ \Sigma \propto r^\beta \f$ so beta would usually be negative.
+ *
+ *
+ * The default value of theta = 0.1 generally gives better than 1% accuracy on alpha.
+ * The shear and kappa is always more accurate than the deflection.
+ */
+
+
+class LensHaloJaffe: public LensHalo{
+public:
+	LensHaloJaffe();
+	LensHaloJaffe(InputParams& params);
+	virtual ~LensHaloJaffe();
+
+    double ffunction(double x);
+	double gfunction(double x);
+	double hfunction(double x);
+	double g2function(double x);
+
+	/// set Rmax
+	void set_Rmax(float my_Rmax){Rmax=my_Rmax; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
+	/// set scale radius
+	void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
+
+protected:
+	/// table size
+	const static long NTABLE = 1000;
+	/// maximum Rmax/rscale
+	const static double maxrm = 100.0;
+	/// keeps track of how many time the tables are created, default is just once
+	static int count;
+
+	/// tables for lensing properties specific functions
+	static double *ftable,*gtable,*g2table,*htable,*xtable;
+	/// make the specific tables
+	void make_tables();
+	/// interpolates from the specific tables
+	double InterpolateFromTable(double *table, double y);
+
+	/// read in parameters from a parameterfile in InputParams params
+	void assignParams(InputParams& params);
+
+	/// Override internal structure of halos
+	inline double alpha_h(double x){
+		return -1.0*InterpolateFromTable(gtable,x)/gmax;
+	}
+	inline KappaType kappa_h(double x){
+		return 0.5*x*x*InterpolateFromTable(ftable,x)/gmax;
+	}
+	inline KappaType gamma_h(double x){
+		return -0.25*x*x*InterpolateFromTable(g2table,x)/gmax;
+	}
+	inline KappaType phi_h(double x){
+		ERROR_MESSAGE();
+		std::cout << "not yet defined" << std::endl;
+		exit(1);
+		//return -1.0*InterpolateFromTable(htable,x)/gmax;
+	}
+
+private:
+  double gmax;
+};
+
 
 
 

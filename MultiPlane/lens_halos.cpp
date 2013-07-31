@@ -602,6 +602,82 @@ LensHaloHernquist::~LensHaloHernquist(){
 }
 
 
+
+int LensHaloJaffe::count = 0;
+double *LensHaloJaffe::xtable = NULL,*LensHaloJaffe::ftable = NULL,*LensHaloJaffe::gtable = NULL,*LensHaloJaffe::g2table = NULL; //,*LensHaloJaffe::htable = NULL;
+
+LensHaloJaffe::LensHaloJaffe() : LensHalo(){
+  gmax=0;
+	make_tables();
+  gmax = InterpolateFromTable(gtable,xmax);
+}
+
+LensHaloJaffe::LensHaloJaffe(InputParams& params){
+	assignParams(params);
+	make_tables();
+  gmax = InterpolateFromTable(gtable,xmax);
+}
+
+void LensHaloJaffe::make_tables(){
+	if(count == 0){
+		int i;
+		double x, dx = maxrm/(double)NTABLE;
+
+		xtable = new double[NTABLE];
+		ftable = new double[NTABLE];
+		gtable = new double[NTABLE];
+		g2table = new double[NTABLE];
+		//htable = new double[NTABLE];
+
+		for(i = 0 ; i< NTABLE; i++){
+			x = i*dx;
+			xtable[i] = x;
+			ftable[i] = ffunction(x);
+			gtable[i] = gfunction(x);
+			g2table[i] = g2function(x);
+			//htable[i] = hfunction(x);
+		}
+  }
+  count++;
+}
+
+double LensHaloJaffe::InterpolateFromTable(double *table, double y){
+	int j;
+	j=(int)(y/maxrm*NTABLE);
+
+	assert(y>=xtable[j] && y<=xtable[j+1]);
+	return (table[j+1]-table[j])/(xtable[j+1]-xtable[j])*(y-xtable[j]) + table[j];
+}
+
+void LensHaloJaffe::assignParams(InputParams& params){
+	if(!params.get("mass_jaffe",mass)) error_message1("mass_jaffe",params.filename());
+	if(!params.get("Rmax_jaffe",Rmax)) error_message1("Rmax_jaffe",params.filename());
+	if(!params.get("zlens_jaffe",zlens)) error_message1("zlens_jaffe",params.filename());
+	if(!params.get("rscale_jaffe",rscale)) error_message1("rscale_jaffe",params.filename());
+  xmax = Rmax/rscale;
+
+	if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
+  else if(stars_N){
+  	assignParams_stars(params);
+  }
+
+}
+
+LensHaloJaffe::~LensHaloJaffe(){
+	--count;
+	if(count == 0){
+		delete[] xtable;
+		delete[] gtable;
+		delete[] ftable;
+		delete[] g2table;
+		//delete[] htable;
+	}
+}
+
+
+
+
+
 LensHaloDummy::LensHaloDummy()
 : LensHalo()
 {

@@ -354,6 +354,9 @@ void Lens::printMultiLens(){
 	case hern_lens:
 		cout << "Hernquist lens" << endl;
 		break;
+	case jaffe_lens:
+		cout << "Jaffe lens" << endl;
+		break;
 	}
 
 	cout << endl << "Main galaxies profile type:" << endl;
@@ -423,6 +426,9 @@ void Lens::printMultiLens(){
 			break;
 		case hern_lens:
 			cout << "Hernquist field type" << endl;
+		break;
+		case jaffe_lens:
+			cout << "Jaffe field type" << endl;
 		break;
 		}
 
@@ -708,6 +714,9 @@ void Lens::createMainHalos(InputParams& params, Source* source)
 	case hern_lens:
 		main_halos.push_back(new LensHaloHernquist(params));
 		break;
+	case jaffe_lens:
+		main_halos.push_back(new LensHaloJaffe(params));
+		break;
 	}
 
 	if(main_galaxy_halo_type!=0){
@@ -955,6 +964,9 @@ void Lens::createFieldHalos()
 			case hern_lens:
 				field_halos.push_back(new LensHaloHernquist);
 				break;
+			case jaffe_lens:
+				field_halos.push_back(new LensHaloJaffe);
+				break;
 			}
 
 			float mass = pow(10,InterpolateYvec(Nhalosbin,Logm,ran2 (seed)));
@@ -1166,11 +1178,15 @@ void Lens::readInputSimFile()
 			case dummy_lens:
 				field_halos.push_back(new LensHaloDummy);
 				ERROR_MESSAGE();
-				std::cout << "Why would you wand dummy file halos???" << std::endl;
+				std::cout << "Why would you want dummy file halos???" << std::endl;
 				break;
 			case hern_lens:
 				ERROR_MESSAGE();
 				std::cout << "Hernquist not supported." << std::endl;
+				break;
+			case jaffe_lens:
+				ERROR_MESSAGE();
+				std::cout << "Jaffe not supported." << std::endl;
 				break;
 			}
 

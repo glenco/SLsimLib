@@ -270,9 +270,14 @@ bool InputParams::get(std::string label,LensHaloType& value){
 			use_number[i]++;
 			return true;
 	}
+	if(!char_values[i].compare("10") || !char_values[i].compare("Jaffe")){
+			value = jaffe_lens;
+			use_number[i]++;
+			return true;
+	}
 
 	std::cout << label << " in parameter file " << paramfile_name << " needs to be 0 or nolens, 1 or NFW, 2 or PseudoNFW, " << std::endl;
-	std::cout << "3 or PowerLaw, 4 or NSIE, 5 or AnaLens, 6 or UniLens, 7 or MOKALens, 8 or DummyLens"<< std::endl;
+	std::cout << "3 or PowerLaw, 4 or NSIE, 5 or AnaLens, 6 or UniLens, 7 or MOKALens, 8 or DummyLens, 9 or Hernquist, 10 or Jaffe"<< std::endl;
 	return false;
 }
 
