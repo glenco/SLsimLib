@@ -5,8 +5,8 @@ static const int NpointsRequired = 100;  // number of points required to be with
 //static const int Ngrid_block = 3;       // each cell is divided into Ngrid_block^2 subcells
 //static const float mumin = 0.5;  // actually the sqrt of the minimum magnification
 //static const float mumin = 0.45;  // actually the sqrt of the minimum magnification
-static const float mumin = 0.1;
-//static const float mumin = 0.3;
+//static const float mumin = 0.1;
+static const float mumin = 0.3;
 
 
 static const float FracResTarget = 4.0e-4;
