@@ -44,6 +44,7 @@ Grid::Grid(
 	trashkist = new Kist<Point>;
 	neighbors = new Kist<Point>;
 	maglimit = 1.0e-4;
+  
 }
 
 /*
@@ -161,20 +162,36 @@ void Grid::ReInitializeGrid(LensHndl lens){
  */
 double Grid::RefreshSurfaceBrightnesses(SourceHndl source){
 	double y[2],total=0,tmp;
-
+  
 	MoveToTopList(s_tree->pointlist);
 	for(unsigned long i=0;i<s_tree->pointlist->Npoints;++i,MoveDownList(s_tree->pointlist)){
 		//y[0] = s_tree->pointlist->current->x[0]; - source->getX()[0];
 		//y[1] = s_tree->pointlist->current->x[1]; - source->getX()[1];
 		tmp = source->SurfaceBrightness(s_tree->pointlist->current->x);
 		s_tree->pointlist->current->surface_brightness = s_tree->pointlist->current->image->surface_brightness
-				= tmp;
+    = tmp;
 		total += tmp;//*pow( s_tree->pointlist->current->gridsize,2);
 		assert(s_tree->pointlist->current->surface_brightness >= 0.0);
 		s_tree->pointlist->current->in_image = s_tree->pointlist->current->image->in_image
-				= FALSE;
+    = FALSE;
 	}
-
+  
+	return total;
+}
+/**
+ *  \brief Reset the surface brightness and in_image flag in every point on image and source planes to zero (false)
+ */
+double Grid::ClearSurfaceBrightnesses(){
+	double y[2],total=0,tmp;
+  
+	MoveToTopList(s_tree->pointlist);
+	for(unsigned long i=0;i<s_tree->pointlist->Npoints;++i,MoveDownList(s_tree->pointlist)){
+		s_tree->pointlist->current->surface_brightness = s_tree->pointlist->current->image->surface_brightness
+    = 0.0;
+		s_tree->pointlist->current->in_image = s_tree->pointlist->current->image->in_image
+    = FALSE;
+	}
+  
 	return total;
 }
 
@@ -381,14 +398,14 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa
 
 	s_points = LinkToSourcePoints(i_points,Nadded);
 
-	// Here the points that are in uniform magnification regions are calculated by interpolation and marked with in_image = MAYBE
+  // This interpolation does not work for some reason and needs to be fixed some time.
+	/*/ Here the points that are in uniform magnification regions are calculated by interpolation and marked with in_image = MAYBE
 	{
 		double aa[4],dx[2];
-		/*double a1[4],ss;
-		bool tmp;
-		Point *i_point = NewPointArray(1,true);
-		Point *s_point = LinkToSourcePoints(i_point,1);
-		 */
+		//double a1[4],ss;
+		//bool tmp;
+		//Point *i_point = NewPointArray(1,true);
+		//Point *s_point = LinkToSourcePoints(i_point,1);
 
 		for(ii=0,kk=0;ii<Nleaves;++ii){
 
@@ -441,7 +458,7 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa
 		//FreePointArray(i_point);
 		//FreePointArray(s_point);
 
-	}
+	}*/
 
 	lens->rayshooterInternal(Nadded,i_points,kappa_off);
 

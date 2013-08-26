@@ -31,6 +31,7 @@ struct Grid{
 	unsigned long PrunePointsOutside(double resolution,double *y,double r_in ,double r_out);
 
 	double RefreshSurfaceBrightnesses(SourceHndl source);
+  double ClearSurfaceBrightnesses();
 	unsigned long getNumberOfPoints();
 
 

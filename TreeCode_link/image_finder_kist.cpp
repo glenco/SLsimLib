@@ -479,8 +479,7 @@ void find_images_microlens(
 	}
 
 	Npoints_old = grid->i_tree->pointlist->Npoints;
-
-
+  
 	// starting with a larger source size make sure all the grid sizes are small enough to find it
 	Kist<Point> * subkist = new Kist<Point>;//,pointkist = NewKist();
 
@@ -488,7 +487,7 @@ void find_images_microlens(
 	time(&to);
 
     /**** TODO test line **********************
-	bool map_on = true;
+	  bool map_on = true;
     PixelMap map(2000,(grid->i_tree->top->boundary_p2[0]-grid->i_tree->top->boundary_p1[0])/2,grid->i_tree->top->center);
     char chrstr[100];
     std::string output = "image_proportional";
@@ -498,11 +497,12 @@ void find_images_microlens(
     if(verbose) printf("Ntemp=%li\n",Nsizes);
 
     grid->ClearAllMarks();
+    imageinfo->imagekist->Empty();
 
     //////////////////////////////////////////
     // telescope source size down to target
     //////////////////////////////////////////
-	//if(!( (oldy[0]==y_source[0])*(oldy[1]==y_source[1])*(oldr < r_source) )){
+  	//if(!( (oldy[0]==y_source[0])*(oldy[1]==y_source[1])*(oldr < r_source) )){
 
     //unsigned long minN = 0;
     //float telescope_factor = 1.0/Ngrid_block;
@@ -517,7 +517,8 @@ void find_images_microlens(
 				//for(rtemp = fabs(r_source/mumin)*pow(Ngrid_block,Nsizes),Nold=0
 		//		;rtemp >= 0.99*Ngrid_block*fabs(r_source)
     		;rtemp >= r_source
-       		;rtemp *= telescope_factor,++i ){
+       		;rtemp *= telescope_factor,++i )
+    {
 
     	time(&t3);
 
@@ -574,20 +575,20 @@ void find_images_microlens(
         }
 */
 
- 		moved = image_finder_kist(lens,y_source,rtemp,grid
+ 		  moved = image_finder_kist(lens,y_source,rtemp,grid
     				,Nimages,imageinfo,NimageMax,Nimagepoints,-1,0);
 
     	j=0;
-        time_in_refine = time_in_find = 0;
-        time(&now);
+      time_in_refine = time_in_find = 0;
+      time(&now);
     	//while(refine_grid_kist(lens,grid,imageinfo,*Nimages,telescope_res,3,kappa_off)){
        	//while(refine_grid_kist(lens,grid,imageinfo,*Nimages,mu_min,0,kappa_off)){
-       	 while(refine_grid_kist(lens,grid,imageinfo,*Nimages,mu_min,3,false)){
+      while(refine_grid_kist(lens,grid,imageinfo,*Nimages,mu_min,3,false)){
        	    	//while( refine_grid_kist(lens,grid,imageinfo,*Nimages,mu_min*telescope_factor*telescope_factor,3,kappa_off) ){
     	//do{
 
     		time(&t1);
-            time_in_refine += difftime(t1, now);
+        time_in_refine += difftime(t1, now);
 
     		if(verbose) std::cout << "    refined images" << std::endl;
 
@@ -597,7 +598,7 @@ void find_images_microlens(
 
     		// refine critical curves
     		//find_crit(lens,grid,critcurve,NimageMax,&Ncrits,rtemp*0.01,&dummybool,false,false,verbose);
-            refine_crit_in_image(lens,grid,r_source,y_source,rtemp*0.01);
+        refine_crit_in_image(lens,grid,r_source,y_source,rtemp*0.01);
 
 //    		std::cout << "    Ncrits = " << Ncrits << " with " << critcurve->imagekist->Nunits() << " points." << std::endl;
 
@@ -655,7 +656,9 @@ void find_images_microlens(
     	time(&now);
     	if(time_on) printf("    time for one source size %f sec\n",difftime(now,t3));
     	if(time_on) printf("        time for refinement %f sec and image finding %f sec\n",time_in_refine,time_in_find);
-    }
+      imageinfo->imagekist->Empty();
+      
+  } // end of telescoping
 
 	time(&now);
 	if(time_on) printf(" time for source size reduction %f sec\n",difftime(now,to));
@@ -689,7 +692,8 @@ void find_images_microlens(
 	// target source size has been reached, do full image decomposition and refinement
 	/////////////////////////////////////////////////////////////////////////////////
 
-    grid->ClearAllMarks();
+  grid->ClearAllMarks();
+  imageinfo->imagekist->Empty();
 
 	i=0;
 
@@ -713,26 +717,26 @@ void find_images_microlens(
 		// mark image points in tree
 		grid->s_tree->PointsWithinKist(y_source,r_source,subkist,1);
 
-        for(int k=0;k<*Nimages;++k) imageinfo[k].ShouldNotRefine = false;
+    for(int k=0;k<*Nimages;++k) imageinfo[k].ShouldNotRefine = false;
 		//moved=image_finder_kist(lens,y_source,fabs(r_source),grid
 		//		,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
-		moved=image_finder_kist(lens,y_source,fabs(r_source),grid
+		moved = image_finder_kist(lens,y_source,r_source,grid
 				,Nimages,imageinfo,NimageMax,Nimagepoints,0,0);
 
-        area_tot = 0;
-        count = 0;
-        for(int k=0;k < *Nimages;++k){
+    area_tot = 0;
+    count = 0;
+    for(int k=0;k < *Nimages;++k){
             //std::cout << "area_tot = " << area_tot << "  area " << imageinfo[k].area << std::endl;
-            area_tot += imageinfo[k].area;
+        area_tot += imageinfo[k].area;
+    }
+    for(int k=0;k < *Nimages;++k){
+        if(imageinfo[k].area < area_tot*1.0e-3){
+            ++count;
+            imageinfo[k].ShouldNotRefine = true;
+        }else{
+            imageinfo[k].ShouldNotRefine = false;
         }
-        for(int k=0;k < *Nimages;++k){
-            if(imageinfo[k].area < area_tot*1.0e-3){
-                ++count;
-                imageinfo[k].ShouldNotRefine = true;
-            }else{
-                imageinfo[k].ShouldNotRefine = false;
-            }
-        }
+    }
 		//if(*Nimages < 1) printf("  Nimages=%i i=%i\n",*Nimages,i);
 
 		time(&now);
@@ -751,7 +755,7 @@ void find_images_microlens(
 		++i;
 	}while( refine_grid_kist(lens,grid,imageinfo,*Nimages,0.1,3,kappa_off,NULL)
 			|| moved );
-    for(int k=0;k<*Nimages;++k) imageinfo[k].ShouldNotRefine = false;
+  for(int k=0;k<*Nimages;++k) imageinfo[k].ShouldNotRefine = false;
 
 	time(&now);
 	if(time_on) printf(" time for uniform refinement %f sec\n",difftime(now,to));
@@ -900,10 +904,9 @@ void find_images_microlens(
 		if(imageinfo[i].outerborder->Nunits() > 0 ) imageinfo[i].area_error = imageinfo[i].gridrange[2]/imageinfo[i].area;
 	}
 
-    grid->ClearAllMarks();
+  grid->ClearAllMarks();
 
 	//freeKist(pointkist);
-
 
 	return;
 }
@@ -934,10 +937,11 @@ short image_finder_kist(LensHndl lens, double *y_source,double r_source,GridHndl
   short moved;
   double r;
 
+  
   //if(count==0) oldy[0]=oldy[1]=0;
   TreeHndl i_tree = grid->i_tree,s_tree = grid->s_tree;
 
-  if(splitparities==1){ ERROR_MESSAGE(); printf("ERROR: image_finger, option splitparaties==1 is obsolete\n"); exit(1); }
+  if(splitparities==1){ ERROR_MESSAGE(); printf("ERROR: image_finger, option splitparaties==1 is obsolete\n"); throw std::runtime_error("splitparaties==1"); }
   if(r_source <= 0.0){
 	  ERROR_MESSAGE();
 	  printf("ERROR: cannot do point source right now \n");
