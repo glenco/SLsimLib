@@ -170,6 +170,11 @@ void *compute_rays_parallel(void *_p)
     p->i_points[i].gamma[1] = 0;
     p->i_points[i].gamma[2] = 0;
     
+
+    // time delay at first plane     //TODO: check
+    p->i_points[i].dt = 0.5*( p->i_points[i].image->x[0]*p->i_points[i].image->x[0]
+                            +  p->i_points[i].image->x[1]*p->i_points[i].image->x[1] )/p->dDl[0];
+
     for(j = 0; j < p->NPlanes ; ++j){  // each iteration leaves i_point[i].image on plane (j+1)
       
       // convert to physical coordinates on the plane j
@@ -250,6 +255,10 @@ void *compute_rays_parallel(void *_p)
     	  p->i_points[i].gamma[0] = gamma_plus[0];
     	  p->i_points[i].gamma[1] = gamma_plus[1];
     	  p->i_points[i].gamma[2] = gamma_plus[2];
+        
+        //TODO: Geometric time delay, potential needs to be added and and this needs to be checked 
+        p->i_points[i].dt += 0.5*( (xplus[0] - xminus[0])*(xplus[0] - xminus[0])
+                                 + (xplus[1] - xminus[1])*(xplus[1] - xminus[1]) )/p->dDl[j+1]; // + phi;
 	
       }
     }
@@ -271,6 +280,10 @@ void *compute_rays_parallel(void *_p)
     p->i_points[i].image->gamma[0]=p->i_points[i].gamma[0];
     p->i_points[i].image->gamma[1]=p->i_points[i].gamma[1];
     p->i_points[i].image->gamma[2]=p->i_points[i].gamma[2];
+    
+    //TODO: check
+    p->i_points[i].dt -=  0.5*p->Dl[p->NPlanes]*( p->i_points[i].image->x[0]*p->i_points[i].image->x[0]
+                            + p->i_points[i].image->x[1]*p->i_points[i].image->x[1] );
 
     if(p->i_points[i].image->x[0] != p->i_points[i].image->x[0] ||
        p->i_points[i].image->x[1] != p->i_points[i].image->x[1] ||

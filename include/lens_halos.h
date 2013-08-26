@@ -88,49 +88,52 @@ public:
 	/// internal compare redshift function
 	bool compare(double z){return z > zlens;};
 
-	  /// stars
-	  bool AreStarsImaplated(){return stars_implanted;}
-	  int stars_N;
-	  IndexType *stars;
-	  PosType **stars_xp;
-	  //TreeForce *star_tree;
-	  TreeQuad *star_tree;
-	  double star_massscale;
-	  /// star masses relative to star_massscles
-	  float *star_masses;
-	  double star_fstars;
-	  double star_theta_force;
-	  int star_Nregions;
-	  double *star_region;
-	  void substract_stars_disks(PosType *ray,PosType *alpha
-	                  ,KappaType *kappa,KappaType *gamma);
+  /// stars
+  bool AreStarsImaplated() const {return stars_implanted;}
+  void implant_stars(PosType **centers,unsigned long Nregions,long *seed, IMFtype type=One);
+  /// creates a single star halo in pos (x,y)
+  void implant_stars(double x,double y,unsigned long Nregions,long *seed,IMFtype type=One);
+  void remove_stars();
+  IMFtype getStarIMF_type() const {return main_stars_imf_type;}
+  /// Fraction of surface density in stars
+  double getFstars() const {return star_fstars;}
+  /// The mass of the stars if they are all the same mass
+  double getStarMass() const {if(stars_implanted)return star_masses[0]; else return 0.0;}
 
-	void implant_stars(PosType **centers,unsigned long Nregions,long *seed, IMFtype type=One);
-	  /// creates a single star halo in pos (x,y)
-   	void implant_stars(double x,double y,unsigned long Nregions,long *seed,IMFtype type=One);
-
-	  float* stellar_mass_function(IMFtype type, unsigned long Nstars, long *seed, double minmass=0.0, double maxmass=0.0
-	  		,double bendmass=0.0, double powerlo=0.0, double powerhi=0.0);
-	  IMFtype getIMF_type(){return imf_type;}
-
-	  /// read raw data
-		virtual void serialize(RawData& d) const;
-		/// write raw data
-		virtual void unserialize(RawData& d);
+  /// read raw data
+  virtual void serialize(RawData& d) const;
+  /// write raw data
+  virtual void unserialize(RawData& d);
 	/// randomize halo by a given amound
 	virtual void randomize(double step, long* seed);
 
 	/// Prints star parameters; if show_stars is true, prints data for single stars
-	void PrintStars(bool show_stars);
-
-
-
+	void PrintStars(bool show_stars) const;
 
 protected:
+  
+  IndexType *stars;
+  PosType **stars_xp;
+  //TreeForce *star_tree;
+  TreeQuad *star_tree;
+  int stars_N;
+  double star_massscale;
+  /// star masses relative to star_massscles
+  float *star_masses;
+  double star_fstars;
+  double star_theta_force;
+  int star_Nregions;
+  double *star_region;
+  void substract_stars_disks(PosType *ray,PosType *alpha
+                             ,KappaType *kappa,KappaType *gamma);
+  float* stellar_mass_function(IMFtype type, unsigned long Nstars, long *seed, double minmass=0.0, double maxmass=0.0
+                               ,double bendmass=0.0, double powerlo=0.0, double powerhi=0.0);
+
+  
 	/// read in parameters from a parameterfile in InputParams params
 	void assignParams(InputParams& params);
-	  /// read in star parameters. This is valid for all halos and not overloaded.
-	  void assignParams_stars(InputParams& params);
+  /// read in star parameters. This is valid for all halos and not overloaded.
+  void assignParams_stars(InputParams& params);
 
 	/// error message printout
 	void error_message1(std::string name,std::string filename);
@@ -146,9 +149,9 @@ protected:
 
     bool stars_implanted;
     /// Number of regions to be subtracted to compensate for the mass in stars
-    IMFtype imf_type;
-    double min_mstar;
-    double max_mstar;
+    IMFtype main_stars_imf_type;
+    double main_stars_min_mass;
+    double main_stars_max_mass;
     double bend_mstar;
     double lo_mass_slope;
     double hi_mass_slope;
@@ -156,7 +159,7 @@ protected:
     double *star_kappa;
     double **star_xdisk;
 
-    /// point mass case
+  /// point mass case
 	virtual double inline alpha_h(double x){return -1;};
 	virtual KappaType inline kappa_h(double x){return 0;};
 	virtual KappaType inline gamma_h(double x){return -2;};
@@ -521,11 +524,6 @@ public:
 	LensHaloJaffe(InputParams& params);
 	virtual ~LensHaloJaffe();
 
-    double ffunction(double x);
-	double gfunction(double x);
-	double hfunction(double x);
-	double g2function(double x);
-
 	/// set Rmax
 	void set_Rmax(float my_Rmax){Rmax=my_Rmax; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
 	/// set scale radius
@@ -568,6 +566,12 @@ protected:
 
 private:
   double gmax;
+  
+  // I have temporarily set these functions to 0 to make the code compile, Ben
+  double ffunction(double x){throw std::runtime_error("Set to temporary invalid value"); return 0;}
+	double gfunction(double x){throw std::runtime_error("Set to temporary invalid value"); return 0;}
+	double hfunction(double x){throw std::runtime_error("Set to temporary invalid value"); return 0;}
+	double g2function(double x){throw std::runtime_error("Set to temporary invalid value"); return 0;}
 };
 
 

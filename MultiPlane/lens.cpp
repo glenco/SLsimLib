@@ -583,11 +583,14 @@ void Lens::createMainPlanes()
 	std::sort(main_halos.begin(), main_halos.end(), lens_halo_less(cosmo));
 	
 	// put everything with same redshift (within epsilon) onto a plane
-	std::vector<LensHalo*>::iterator it = main_halos.begin();
+
+	std::vector<LensHalo*>::iterator it = main_halos.begin(); 
+  //Utilities::MixedVector<LensHalo*>::iterator<> it = main_halos.begin(); temp_tag
 	while(it != main_halos.end())
 	{
 		// find halos with higher redshift
 		std::vector<LensHalo*>::iterator jt = std::upper_bound(it, main_halos.end(), *it, lens_halo_less(cosmo));
+		//Utilities::MixedVector<LensHalo*>::iterator<> jt = std::upper_bound(it, main_halos.end(), *it, lens_halo_less(cosmo)); temp_tag
 		
 		// add halos until higher redshift to plane
 		main_planes.push_back(new LensPlaneSingular(&(*it), std::distance(it, jt)));
@@ -1088,8 +1091,10 @@ void Lens::readInputSimFile()
 	double mass_max=0,R_max=0,V_max=0,minmass=1e30;
 	double *theta,*theta2;
 	int ncolumns = 9;
+	//int ncolumns = 13;
 
 	void *addr[ncolumns];
+  
 	addr[0] = &haloid;
 	addr[1] = &idd;
 	addr[2] = &ra;
@@ -1099,7 +1104,25 @@ void Lens::readInputSimFile()
 	addr[6] = &vdisp;
 	addr[7] = &vmax;
 	addr[8] = &r_halfmass;
-
+/*
+  double z_app,m_crit200,m_mean200;
+  unsigned long galid;
+  
+  addr[0] = &galid;
+  addr[1] = &haloid;
+	addr[2] = &idd;
+	addr[3] = &ra;
+	addr[4] = &dec;
+	addr[5] = &z;
+  addr[6] = &z_app;
+	addr[7] = &np;
+  addr[8] = &m_crit200;
+  addr[9] = &m_mean200;
+	addr[10] = &vmax;
+  addr[11] = &vdisp;
+	addr[12] = &r_halfmass;
+  */
+  
 	unsigned long myint;
 	double mydouble;
 	std::string myline;
@@ -1118,7 +1141,8 @@ void Lens::readInputSimFile()
 			int pos = myline.find(f);
 			strg.assign(myline,0,pos);
 			buffer << strg;
-			if(l == 0 || l == 1 || l == 5){
+			if(l <= 1 || l == 5){
+      //  if(l <= 2 || l == 7){
 				buffer >> myint;
 				*((unsigned long *)addr[l]) = myint;
 			}

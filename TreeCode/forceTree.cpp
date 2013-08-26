@@ -293,7 +293,7 @@ void TreeForce::force2D(double *ray,double *alpha,KappaType *kappa,KappaType *ga
 		  alpha[1] -= (tree->current->quad[1]*xcm[1] + tree->current->quad[2]*xcm[0])
     				  /pow(rcm2,2)/pi;
 
-		  tmp = 4*(tree->current->quad[0]*xcm[0]*xcm[0] + tree->current->quad[1]*xcm[1]*xcm[1]
+		  tmp = 2*(tree->current->quad[0]*xcm[0]*xcm[0] + tree->current->quad[1]*xcm[1]*xcm[1]
 				  + 2*tree->current->quad[2]*xcm[0]*xcm[1])/pow(rcm2,3)/pi;
 
 		  alpha[0] += tmp*xcm[0];

@@ -9,21 +9,27 @@
 
 using namespace std;
 /** \ingroup ChangeLens
- * \brief  Implants stars into the lens around the images.
+ * \brief  Implant or randomize stars into the lens around the images.
+ *
+ * The first time this is called the memory for the stars is allocated.
+ * On subsequent calls the star positions and masses are randomized within thier 
+ * regions, but thier number and average density in stars and total
+ * is not changed.  This can become out of sync with the host if its 
+ * parameters are changed.
  *
  * lens->Nstars and lens->stars_fstars must be set before calling
  * allocates all memory for stars
+ *
+ * 
  */
-
 void LensHalo::implant_stars(PosType **centers,unsigned long Nregions,long *seed, IMFtype type){
 	PosType r,theta,NstarsPerImage;
-	double *mean_mstar;
 	unsigned long i,j,m,k;
-
+  
 	if(stars_N < 1.0  || star_fstars <= 0) return;
 	if(star_fstars > 1.0){ std::printf("fstars > 1.0\n"); exit(0); }
 	if(!(stars_implanted) ){
-
+    
 		star_masses = new float[stars_N];
 		stars = new unsigned long[stars_N];
 		stars_xp = Utilities::PosTypeMatrix(stars_N,3);
@@ -31,34 +37,31 @@ void LensHalo::implant_stars(PosType **centers,unsigned long Nregions,long *seed
 		assert(Nregions > 0);
 		star_Nregions = Nregions;
 		star_region = new double[Nregions];
-		mean_mstar = new double[Nregions];
 		star_kappa = new double[Nregions];
 		star_xdisk = Utilities::PosTypeMatrix(Nregions,2);
-
-	}else{
-		// free star_tree
-		delete star_tree;
+    
 	}
-
+  
+  double mean_mstar[Nregions];
 	if(stars_N < 1  || star_fstars <= 0){
 		stars_implanted = true;
 		stars_N = 0;
 		star_fstars = 0.0;
-
+    
 		for(j=0,m=0;j<Nregions;++j){
 			star_region[j] = 0.0;
 			star_kappa[j] = 0.0;
 			mean_mstar[j] = 0.0;
 			star_xdisk[j][0] = centers[j][0];
 			star_xdisk[j][1] = centers[j][1];
-
+      
 		}
 		return;
 	}
-
+  
 	//params.get("main_sub_mass_max",sub_Mmax)
 	NstarsPerImage = stars_N/star_Nregions;
-	star_masses=stellar_mass_function(type, stars_N, seed, min_mstar, max_mstar, bend_mstar,lo_mass_slope,hi_mass_slope);
+	star_masses=stellar_mass_function(type, stars_N, seed, main_stars_min_mass, main_stars_max_mass, bend_mstar,lo_mass_slope,hi_mass_slope);
 	if (type==One){
 		for(j=0;j<Nregions;++j){
 			mean_mstar[j]=1.0;
@@ -66,7 +69,7 @@ void LensHalo::implant_stars(PosType **centers,unsigned long Nregions,long *seed
 	}
 	else if(type==Mono){
 		for(j=0;j<Nregions;++j){
-			mean_mstar[j]=min_mstar;
+			mean_mstar[j]=main_stars_min_mass;
 		}
 	}
 	else{
@@ -79,25 +82,26 @@ void LensHalo::implant_stars(PosType **centers,unsigned long Nregions,long *seed
 			//cout << "mean_mstar: " << j << " " << mean_mstar[j] << endl;
 		}
 	}
-
+  
 	for(j=0,m=0;j<Nregions;++j){
 		double alpha[2];
-		KappaType kappa, gamma[3];
+		KappaType kappa = 0, gamma[3];
 		alpha[0]=alpha[1]=gamma[0]=gamma[1]=gamma[2]=0.;
-		kappa=0.;
 		double xcm[2];
 		xcm[0] = centers[j][0];
 		xcm[1] = centers[j][1];
-
-		force_halo(alpha,&kappa,gamma,xcm,false,false);
-		star_kappa[j] = star_fstars*kappa;
-		star_region[j] = 1.0/sqrt(pi*star_kappa[j]/(mean_mstar[j]*(float)NstarsPerImage));
-
-		star_xdisk[j][0] = centers[j][0];
-		star_xdisk[j][1] = centers[j][1];
-
+    
+    if(!stars_implanted){
+      force_halo(alpha,&kappa,gamma,xcm,false,false);
+      star_kappa[j] = star_fstars*kappa;
+      star_region[j] = 1.0/sqrt(pi*star_kappa[j]/(mean_mstar[j]*(float)NstarsPerImage));
+      
+      star_xdisk[j][0] = centers[j][0];
+      star_xdisk[j][1] = centers[j][1];
+    }
+    
 		//printf("kappa = %e  star_region = %e\n",star_kappa[j],star_region[j]);
-		char *fname = "stars0.dat";
+		/*char *fname = "stars0.dat";
 		if(j==0){fname = "stars0.dat";}
 		if(j==1){fname = "stars1.dat";}
 		if(j==2){fname = "stars2.dat";}
@@ -107,8 +111,8 @@ void LensHalo::implant_stars(PosType **centers,unsigned long Nregions,long *seed
 		if(j==1){fname = "masses1.dat";}
 		if(j==2){fname = "masses2.dat";}
 		if(j==3){fname = "masses3.dat";}
-		ofstream mstars(fname);
-
+		ofstream mstars(fname);*/
+    
 		for(i=0;i<NstarsPerImage;++i,++m){
 			//m=j*NstarsPerImage+i;
 			r = star_region[j]*sqrt(ran2(seed));
@@ -117,7 +121,7 @@ void LensHalo::implant_stars(PosType **centers,unsigned long Nregions,long *seed
 			stars_xp[m][1] = star_xdisk[j][1] + r*sin(theta);
 			stars_xp[m][2] = 0.0;
 			//cout << m << " " << star_masses[m] << endl;
-
+      
 			//if(maxr<r){
 			//	maxr=r;
 			//}
@@ -126,39 +130,61 @@ void LensHalo::implant_stars(PosType **centers,unsigned long Nregions,long *seed
 			//cout << "bla: " << j << " " <<  m << " " << i << endl;
 			for(k=0;k<j;++k){
 				if(  star_region[k] > sqrt(pow(centers[k][0]-stars_xp[m][0],2)
-						+ pow(centers[k][1]-stars_xp[m][1],2)) ){
+                                   + pow(centers[k][1]-stars_xp[m][1],2)) ){
 					//--NstarsPerImage;
 					//--i;
 					--m;
 					break;
 				}
 			}
-			fstars << scientific << stars_xp[m][0] << " " << stars_xp[m][1] << endl;
-			mstars << scientific << star_masses[m] << endl;
-
+			//fstars << scientific << stars_xp[m][0] << " " << stars_xp[m][1] << endl;
+      //std::cout << stars_xp[m][0] << " " << stars_xp[m][1] << endl;
+			//mstars << scientific << star_masses[m] << endl;
+      
 			//cout << "max r" << maxr << " " << star_region[j] << endl;
 			//printf("%e %e\n",stars_xp[m][0],stars_xp[m][1]);
 		}
-		fstars.close();
-		mstars.close();
-
+		//fstars.close();
+		//mstars.close();
+    
 	}
-
+  
 	assert(m <= stars_N);
 	stars_N = m;
-
+  
 	//std::printf("last star x = %e %e\n",stars_xp[stars_N-1][0],stars_xp[stars_N-1][1]);
-
+  
 	float dummy=0;
 	//star_tree = new TreeForce(stars_xp,stars_N,star_masses,&dummy
 	//		,false,false,5,2,false,star_theta_force);
-
+  
+  if(stars_implanted) delete star_tree;
 	star_tree = new TreeQuad(stars_xp,star_masses,&dummy,stars_N
-			,false,false,0,4,star_theta_force);
-
+                           ,false,false,0,4,star_theta_force);
+  
 	// visit every branch to find center of mass and cutoff scale */
 	stars_implanted = true;
+  
+	return ;
+}
 
+/// Un-implant stars.  Remove stars an any information about the number and size of star regions.
+void LensHalo::remove_stars(){  
+  
+	if(stars_implanted){
+    
+    delete star_tree;
+		delete star_masses;
+		delete stars;
+		delete stars_xp;
+		delete star_region;
+		delete star_kappa;
+    Utilities::free_PosTypeMatrix(star_xdisk,star_Nregions,2);
+    star_Nregions = 0;
+    
+    stars_implanted = false;
+	}
+  
 	return ;
 }
 
@@ -227,7 +253,7 @@ float* LensHalo::stellar_mass_function(IMFtype type, unsigned long Nstars, long 
 
 	if(type==Mono){
 		if((minmass!=maxmass)){
-		    cout << "For IMF type Mono min_mstar and max_mstar must be defined in parameter file and they must be equal" << endl;
+		    cout << "For IMF type Mono main_stars_min_mass and main_stars_max_mass must be defined in parameter file and they must be equal" << endl;
 		    exit(1);
 		}
 		for(i = 0; i < Nstars; i++){
@@ -237,7 +263,7 @@ float* LensHalo::stellar_mass_function(IMFtype type, unsigned long Nstars, long 
 
     if(type==Salpeter){
     	if((minmass==maxmass)){
-    			    cout << "For IMF type Salpeter min_mstar and max_mstar must be defined in parameter file" << endl;
+    			    cout << "For IMF type Salpeter main_stars_min_mass and main_stars_max_mass must be defined in parameter file" << endl;
     			    exit(1);
     	}
     	powerp1 = -1.35;
@@ -250,7 +276,7 @@ float* LensHalo::stellar_mass_function(IMFtype type, unsigned long Nstars, long 
 
     if(type==SinglePowerLaw){
        	if((minmass==maxmass) || (powerlo!=powerhi) || ((powerlo==0)&(powerhi==0))){
-       			    cout << "For IMF type SinglePowerLaw min_mstar, max_mstar and slope_1 must be defined in parameter file. Slope_1 must be equal to slope_2, min_mstar must be different from max_mstar!" << endl;
+       			    cout << "For IMF type SinglePowerLaw main_stars_min_mass, main_stars_max_mass and main_stars_lo_mass_slope must be defined in parameter file. main_stars_lo_mass_slope must be equal to main_stars_hi_mass_slope, main_stars_min_mass must be different from main_stars_max_mass!" << endl;
        			    exit(1);
        	}
 
@@ -265,7 +291,7 @@ float* LensHalo::stellar_mass_function(IMFtype type, unsigned long Nstars, long 
 
     if(type==Chabrier){
 		if(minmass==maxmass){
-			cout << "For IMF type Chabrier min_mstar and max_mstar must be defined in parameter file!" << endl;
+			cout << "For IMF type Chabrier main_stars_min_mass and main_stars_max_mass must be defined in parameter file!" << endl;
 			exit(1);
 		}
 		double chab_param[]={0.086,0.22,0.57};
@@ -289,7 +315,7 @@ float* LensHalo::stellar_mass_function(IMFtype type, unsigned long Nstars, long 
 
     if(type==BrokenPowerLaw){
     	if((powerlo==powerhi)){
-    		cout << "For IMF type BrokenPowerLaw inner slope (slope_1) and outer slope (slope_2) must be defined in parameter file" << endl;
+    		cout << "For IMF type BrokenPowerLaw inner slope (main_stars_lo_mass_slope) and outer slope (main_stars_hi_mass_slope) must be defined in parameter file" << endl;
     		exit(1);
     	}
     	if((powerlo==-1) || (powerhi==-1) ){
@@ -323,7 +349,7 @@ float* LensHalo::stellar_mass_function(IMFtype type, unsigned long Nstars, long 
     	bendmass1=0.08;
     	bendmass2=0.5;
 		if((minmass>bendmass1)||(maxmass<bendmass2)){
-			cout << "For IMF type Kroupa min_mstar<0.08 and max_mstar>0.5 must be defined in parameter file!" << endl;
+			cout << "For IMF type Kroupa main_stars_min_mass<0.08 and main_stars_max_mass>0.5 must be defined in parameter file!" << endl;
 			exit(1);
 		}
 		else{

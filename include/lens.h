@@ -141,10 +141,13 @@ public:
 
 	LensHaloHndl GetMainHalo(int i){return main_halos[i];}
 
+  /// returns the critical density at the main lens in Msun/ Mpc^2 for a source at zsource
+  double getSigmaCrit(double zsource){ return cosmo->SigmaCrit(getZlens(),zsource); }
+
+  COSMOLOGY *cosmo;
+
 private:
 	GLAMER_TEST_FRIEND(LensTest)
-	
-	COSMOLOGY *cosmo;
 	
 	long *seed;
 	
@@ -262,7 +265,8 @@ private: /* main */
 	bool flag_switch_main_halo_on;
 	
 	/// vector of all main halos
-	std::vector<LensHalo*> main_halos;
+	std::vector<LensHalo*> main_halos; 
+  //Utilities::MixedVector<LensHalo*> main_halos; temp_tag
 	/// vector of own main halos that will be deleted
 	std::vector<LensHalo*> main_halos_created;
 	/// vector of all main planes

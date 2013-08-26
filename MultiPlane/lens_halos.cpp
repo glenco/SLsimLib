@@ -37,7 +37,7 @@ void LensHalo::assignParams(InputParams& params){
 	if(!params.get("z_lens",zlens)) error_message1("z_lens",params.filename());
 }
 
-void LensHalo::PrintStars(bool show_stars)
+void LensHalo::PrintStars(bool show_stars) const
 {
 std::cout << std::endl << "Nstars "<<stars_N << std::endl << std::endl;
 if(stars_N>0){
@@ -69,20 +69,20 @@ void LensHalo::force_stars(
     gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
     alpha_tmp[0] = alpha_tmp[1] = 0.0;
 
-	 substract_stars_disks(xcm,alpha,kappa,gamma);
+ 	 substract_stars_disks(xcm,alpha,kappa,gamma);
 
 	 // do stars with tree code
-	 star_tree->force2D_recur(xcm,alpha_tmp,&tmp,gamma_tmp,no_kappa);
+    star_tree->force2D_recur(xcm,alpha_tmp,&tmp,gamma_tmp,no_kappa);
 
-	 alpha[0] -= star_massscale*alpha_tmp[0];
-	 alpha[1] -= star_massscale*alpha_tmp[1];
+    alpha[0] -= star_massscale*alpha_tmp[0];
+    alpha[1] -= star_massscale*alpha_tmp[1];
 
-	 if(!no_kappa){
-		 *kappa += star_massscale*tmp;
-		 gamma[0] -= star_massscale*gamma_tmp[0];
-		 gamma[1] -= star_massscale*gamma_tmp[1];
-	 }
-
+    if(!no_kappa){
+      *kappa += star_massscale*tmp;
+      gamma[0] -= star_massscale*gamma_tmp[0];
+      gamma[1] -= star_massscale*gamma_tmp[1];
+    }
+  
 }
 
 LensHalo::~LensHalo(){

@@ -36,11 +36,13 @@ public:
 	/// Redshift of source
 	virtual inline double getZ(){return zsource;}
 	virtual void setZ(double my_z){zsource = my_z;}
-	/// Radius of source TODO: units?
+	/// Radius of source in radians
 	virtual inline double getRadius(){return source_r;}
+  /// Reset the radius of the source in radians
 	virtual void setRadius(double my_radius){source_r = my_radius;}
 	/// position of source in radians
 	virtual inline double* getX(){return source_x;}
+  /// Reset the position of the source in radians
 	virtual inline void setX(double *xx){source_x[0] = xx[0]; source_x[1] = xx[1];}
 	void setX(double my_x,double my_y){source_x[0] = my_x; source_x[1] = my_y;}
 	/// In the case of a single plane lens, the ratio of angular size distances

@@ -5,8 +5,8 @@ static const int NpointsRequired = 100;  // number of points required to be with
 //static const int Ngrid_block = 3;       // each cell is divided into Ngrid_block^2 subcells
 //static const float mumin = 0.5;  // actually the sqrt of the minimum magnification
 //static const float mumin = 0.45;  // actually the sqrt of the minimum magnification
-//static const float mumin = 0.1;
-static const float mumin = 0.3;
+static const float mumin = 0.1;
+//static const float mumin = 0.3;
 
 
 static const float FracResTarget = 4.0e-4;
@@ -415,7 +415,7 @@ void find_images_kist(
 
 void find_images_microlens(
 		LensHndl lens,          /// contains the lens/es and source/sources
-		LensHaloBaseNSIE *halo,          /// contains the lens/es and source/sources
+		LensHalo *halo,          /// contains the lens/es and source/sources
 		double *y_source        /// position of source center
 		,double r_source        /// radius of source
 		,GridHndl grid          /// grid provided to routine
@@ -424,7 +424,7 @@ void find_images_microlens(
 		,const int NimageMax    /// maximum number of images allowed
 		,unsigned long *Nimagepoints  /// number of points in final images
 		,double initial_size    /// Initial size of source for telescoping, 0 to start from the initial grid size.
-        ,double mu_min
+    ,double mu_min
 		,bool splitimages       /// TRUE each image is refined to target accuracy, otherwise all images are treated as one
 		,short edge_refinement  /// see comment
 		,bool verbose           /// verbose
@@ -458,7 +458,7 @@ void find_images_microlens(
 
 	bool time_on = false;
 
-	double **xstars = halo->stars_xp;
+	//double **xstars = halo->stars_xp;
 	int Ngrid_block = grid->getNgrid_block();
 
 	if(r_source==0.0){ERROR_MESSAGE(); printf("ERROR: find_images, point source must have a resolution target\n"); exit(1);}
@@ -509,9 +509,9 @@ void find_images_microlens(
     //float telescope_factor = 0.5;
     float telescope_factor = 0.66;
     double time_in_refine = 0,time_in_find = 0;
-    ImageInfo *critcurve = new ImageInfo[NimageMax];
-    int Ncrits;
-    bool dummybool;
+    //ImageInfo *critcurve = new ImageInfo[NimageMax];
+    //int Ncrits;
+    //bool dummybool;
 
     for(i=0
 				//for(rtemp = fabs(r_source/mumin)*pow(Ngrid_block,Nsizes),Nold=0
@@ -582,7 +582,7 @@ void find_images_microlens(
         time(&now);
     	//while(refine_grid_kist(lens,grid,imageinfo,*Nimages,telescope_res,3,kappa_off)){
        	//while(refine_grid_kist(lens,grid,imageinfo,*Nimages,mu_min,0,kappa_off)){
-       	 while(refine_grid_kist(lens,grid,imageinfo,*Nimages,mu_min,0,false)){
+       	 while(refine_grid_kist(lens,grid,imageinfo,*Nimages,mu_min,3,false)){
        	    	//while( refine_grid_kist(lens,grid,imageinfo,*Nimages,mu_min*telescope_factor*telescope_factor,3,kappa_off) ){
     	//do{
 
@@ -618,8 +618,8 @@ void find_images_microlens(
             for(int k=0; k < *Nimages; ++k) imageinfo[k].outerborder->Empty();
     		// unmark image points in tree
     		grid->s_tree->PointsWithinKist(y_source,rtemp,subkist,-1);
-
-    		for(int k=0; k < *Nimages; ++k) if( 1.0e-2 > imageinfo[k].area/pi/r_source/r_source ) imageinfo[k].ShouldNotRefine = true;
+*/
+    		for(int k=0; k < *Nimages; ++k) if( 1.0e-3 > imageinfo[k].area/pi/r_source/r_source ) imageinfo[k].ShouldNotRefine = true;
 
     		/***********************************************************/
             /**** TODO test line **********************
@@ -650,7 +650,7 @@ void find_images_microlens(
     	//}while(refine_grid_kist(lens,grid,imageinfo,*Nimages,rtemp*mumin/Ngrid_block,2,kappa_off,NULL));
     	}
 
-  		//for(int k=0; k < *Nimages; ++k) imageinfo[k].ShouldNotRefine = false;
+  		for(int k=0; k < *Nimages; ++k) imageinfo[k].ShouldNotRefine = false;
         
     	time(&now);
     	if(time_on) printf("    time for one source size %f sec\n",difftime(now,t3));

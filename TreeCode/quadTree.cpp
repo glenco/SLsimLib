@@ -471,7 +471,11 @@ void TreeQuad::force2D(double *ray,double *alpha,KappaType *kappa,KappaType *gam
   alpha[0]=alpha[1]=gamma[0]=gamma[1]=gamma[2]=0.0;
 
   *kappa=0.0;
-
+  
+  //TODO: Need to implement phi and test
+  //float *phi = new float;
+  //*phi = 0.0;
+  
   do{
 	  ++count;
 	  allowDescent=false;
@@ -521,11 +525,12 @@ void TreeQuad::force2D(double *ray,double *alpha,KappaType *kappa,KappaType *gam
 
 						  gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 						  gamma[1] += xcm[0]*xcm[1]*tmp;
+              //*phi = prefac*rcm2*0.5*log(rcm2);
 					  }
 				  }
 			  }
 
-			  // Fined the particles that are intersect with ray and add them individually.
+			  // Find the particles that are intersect with ray and add them individually.
 			  if(rcm2cell < 5.83*boxsize2){
 				  for(i = 0 ; i < tree->current->Nbig_particles ; ++i){
 
@@ -561,6 +566,9 @@ void TreeQuad::force2D(double *ray,double *alpha,KappaType *kappa,KappaType *gam
 
 								  gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 								  gamma[1] += xcm[0]*xcm[1]*tmp;
+                  
+                  // TODO: makes sure the normalization of phi_h agrees with this 
+                  //*phi = (phi_h(arg1,arg2) + 0.5*log(rcm2))*prefac*rcm2;
 							  }
 						  }
 					  }
@@ -579,6 +587,10 @@ void TreeQuad::force2D(double *ray,double *alpha,KappaType *kappa,KappaType *gam
 				  tmp=-2.0*tree->current->mass/pi/rcm2cell/rcm2cell;
 				  gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 				  gamma[1] += xcm[0]*xcm[1]*tmp;
+          
+          //*phi += 0.5*tree->current->mass*log( rcm2cell )/pi;
+          //*phi -= 0.5*( tree->current->quad[0]*xcm[0]*xcm[0] + tree->current->quad[1]*xcm[1]*xcm[1]
+          //              + 2*tree->current->quad[2]*xcm[0]*xcm[1] )/(pi*rcm2cell*rcm2cell);
 			  }
 
 			  // quadrapole contribution
@@ -588,7 +600,7 @@ void TreeQuad::force2D(double *ray,double *alpha,KappaType *kappa,KappaType *gam
 			  alpha[1] -= (tree->current->quad[1]*xcm[1] + tree->current->quad[2]*xcm[0])
     				  /(rcm2cell*rcm2cell)/pi;
 
-			  tmp = 4*(tree->current->quad[0]*xcm[0]*xcm[0] + tree->current->quad[1]*xcm[1]*xcm[1]
+			  tmp = 2*(tree->current->quad[0]*xcm[0]*xcm[0] + tree->current->quad[1]*xcm[1]*xcm[1]
 				  + 2*tree->current->quad[2]*xcm[0]*xcm[1])/(rcm2cell*rcm2cell*rcm2cell)/pi;
 
 			  alpha[0] += tmp*xcm[0];

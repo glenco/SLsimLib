@@ -68,7 +68,7 @@ void SourceMultiAnaGalaxy::readDataFile(){
 	unsigned long GalID,HaloID;
 	double ra,dec,z_cosm,z_app,Dlum,inclination,pa,Rh,Ref,SDSS_u,SDSS_g,SDSS_r,SDSS_i,SDSS_z
 	,J_band,H_band,Ks_band,i1,i2,SDSS_u_Bulge,SDSS_g_Bulge,SDSS_r_Bulge,SDSS_i_Bulge,SDSS_z_Bulge
-	,J_band_Bulge,H_band_Bulge,Ks_band_Bulge,i1_Bulge,i2_Bulge;
+	,J_band_Bulge,H_band_Bulge,Ks_band_Bulge,i1_Bulge,i2_Bulge,cx,cy,cz;
 
 	std::ifstream file_in(input_gal_file.c_str());
 	if(!file_in){
@@ -126,6 +126,7 @@ void SourceMultiAnaGalaxy::readDataFile(){
 	addr[28] = &Ks_band_Bulge;
 	addr[29] = &i1_Bulge;
 	addr[30] = &i2_Bulge;
+
 
 	unsigned long myint;
 	double mydouble;

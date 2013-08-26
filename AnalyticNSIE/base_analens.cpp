@@ -108,7 +108,7 @@ void LensHaloBaseNSIE::assignParams(InputParams& params){
 
 	assert(Rmax >= Rsize);
 
-	if(!params.get("reference_z",reference_z)) error_message1("reference_z",params.filename());
+	if(!params.get("zsource_reference",zsource_reference)) error_message1("zsource_reference",params.filename());
 
     // Substructure parameters
     if(!params.get("main_sub_Ndensity",sub_Ndensity)) error_message1("main_sub_Ndensity",params.filename());
@@ -168,8 +168,8 @@ void LensHaloAnaNSIE::setInternalParams(CosmoHndl cosmo){
 //	if(zsource < zlens) zsource = 1000;
 
 	Dl = cosmo->angDist(0,zlens);
-	Ds = cosmo->angDist(0,reference_z);
-	Dls = cosmo->angDist(zlens,reference_z);
+	Ds = cosmo->angDist(0,zsource_reference);
+	Dls = cosmo->angDist(zlens,zsource_reference);
 	MpcToAsec = 60*60*180 / pi / Dl;
 		// in Mpc
 	Einstein_ro=4*pi*pow(sigma/lightspeed,2)*Dl

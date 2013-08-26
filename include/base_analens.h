@@ -109,7 +109,7 @@ public:
   double getEinstein_ro(){return Einstein_ro;}
 
   double getPerturb_beta(){return perturb_beta;}
-  IMFtype getIMF_type(){return imf_type;}
+  IMFtype getIMF_type(){return main_stars_imf_type;}
   int getPerturb_Nmodes(){return perturb_Nmodes;}    /// this includes two for external shear
   double *perturb_modes;  ///first two are shear
 
@@ -148,7 +148,7 @@ protected:
    double MpcToAsec;
 
    /// redshift for which the perturbation modes are normalised
-   float reference_z;
+   float zsource_reference;
    double Ds, Dls;
 
 };
