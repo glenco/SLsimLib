@@ -84,6 +84,8 @@ protected:
   float Sigma_uniform;
   /// gamma*Sigma_crit
   float gammaCrit_uniform[3];
+  /// input values for kappa and gamma
+  float kappa_uniform, gamma_uniform[3];
    // perturbations to host.  These are protected so that in some derived classes they can or cann't be changed.
   int perturb_Nmodes;    /// this includes two for external shear
   double perturb_beta;

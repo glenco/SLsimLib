@@ -53,15 +53,15 @@ LensHaloUniform::~LensHaloUniform(){
 }
 
 void LensHaloUniform::setInternalParams(CosmoHndl cosmo){
-		Dl = cosmo->angDist(0,zlens);
-		Ds = cosmo->angDist(0,zsource_reference);
-		Dls = cosmo->angDist(zlens,zsource_reference);
+	Dl = cosmo->angDist(0,zlens);
+	Ds = cosmo->angDist(0,zsource_reference);
+	Dls = cosmo->angDist(zlens,zsource_reference);
     SigmaCrit = Ds/Dl/Dls/(4*pi*Grav);
   
   // TODO: Why is this done?  These are nolonger kappa and gamma!
-    Sigma_uniform *= SigmaCrit;
-		gammaCrit_uniform[0] *= SigmaCrit;
-		gammaCrit_uniform[1] *= SigmaCrit;
+    Sigma_uniform = kappa_uniform*SigmaCrit;
+	gammaCrit_uniform[0] = gamma_uniform[0]*SigmaCrit;
+	gammaCrit_uniform[1] = gamma_uniform[1]*SigmaCrit;
   
     perturb_modes[0] = Sigma_uniform;
     perturb_modes[1] = gammaCrit_uniform[0];
@@ -158,9 +158,9 @@ void LensHaloUniform::assignParams(InputParams& params){
 
 	//if(perturb_Nmodes > 0){
 	if(!params.get("zlens_uniform",zlens)) error_message1("zlens_uniform",params.filename());
-	if(!params.get("kappa_uniform",Sigma_uniform)) error_message1("kappa_uniform",params.filename());
-	if(!params.get("gamma_uniform_1",gammaCrit_uniform[0])) error_message1("gamma_uniform_1",params.filename());
-	if(!params.get("gamma_uniform_2",gammaCrit_uniform[1])) error_message1("gamma_uniform_2",params.filename());
+	if(!params.get("kappa_uniform",kappa_uniform)) error_message1("kappa_uniform",params.filename());
+	if(!params.get("gamma_uniform_1",gamma_uniform[0])) error_message1("gamma_uniform_1",params.filename());
+	if(!params.get("gamma_uniform_2",gamma_uniform[1])) error_message1("gamma_uniform_2",params.filename());
 	if(!params.get("zsource_reference",zsource_reference)) error_message1("zsource_reference",params.filename());
 	if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
     else if(stars_N){
