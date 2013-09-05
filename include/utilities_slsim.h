@@ -452,7 +452,7 @@ namespace Utilities
 	class MixedVector<BaseT*>
 	{
 	public: /* iterators */
-		template<typename ValueT = BaseT> // TODO: needs to check subclass type
+		template<typename ValueT = BaseT*> // TODO: needs to check subclass pointer type
 		class iterator
 		{
 		private:
@@ -460,9 +460,9 @@ namespace Utilities
 			base_iterator it;
 			
 		public:
-			typedef ValueT value_type;
-			typedef ValueT* pointer;
-			typedef ValueT& reference;
+			typedef typename std::vector<ValueT>::iterator::value_type value_type;
+			typedef typename std::vector<ValueT>::iterator::pointer pointer;
+			typedef typename std::vector<ValueT>::iterator::reference reference;
 			typedef typename base_iterator::difference_type difference_type;
 			typedef typename base_iterator::iterator_category iterator_category;
 			
@@ -472,8 +472,8 @@ namespace Utilities
 			
 			iterator& operator=(const iterator& rhs) { it = rhs.it; return *this; }
 			
-			pointer operator*() { return (pointer)*it; }
-			const pointer operator*() const { return (const pointer)*it; }
+			reference operator*() { return (reference)*it; }
+			const reference operator*() const { return (const reference)*it; }
 			
 			iterator& operator++() { ++it; return *this; }
 			iterator operator++(int) { iterator tmp(*this); ++it; return tmp; }
