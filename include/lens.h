@@ -114,6 +114,12 @@ public:
 	/// replaces existing main halos with a sequence of main halos
 	void replaceMainHalos(Source* source, LensHalo** halos, std::size_t Nhalos);
 
+	/// get single main halo
+	LensHalo* getMainHalo(std::size_t i);
+	/// get single main halo of given type
+	template<typename HaloType>
+	HaloType* getMainHalo(std::size_t i);
+	
 	/// compute the dflection, convergence, and shear for each point on the grid
 	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off);
 	/// compute the dflection, convergence, and shear for a single ray
@@ -138,8 +144,6 @@ public:
 
 	/// print the cosmological parameters
 	void PrintCosmology(){cosmo->PrintCosmology();}
-
-	LensHaloHndl GetMainHalo(int i){return main_halos[i];}
 
   /// returns the critical density at the main lens in Msun/ Mpc^2 for a source at zsource
   double getSigmaCrit(double zsource){ return cosmo->SigmaCrit(getZlens(),zsource); }
@@ -265,8 +269,7 @@ private: /* main */
 	bool flag_switch_main_halo_on;
 	
 	/// vector of all main halos
-	std::vector<LensHalo*> main_halos; 
-  //Utilities::MixedVector<LensHalo*> main_halos; temp_tag
+	Utilities::MixedVector<LensHalo*> main_halos;
 	/// vector of own main halos that will be deleted
 	std::vector<LensHalo*> main_halos_created;
 	/// vector of all main planes
@@ -281,6 +284,17 @@ private: /* main */
 	/// galaxy lens type: 0 or none, 1 or NSIE
 	GalaxyLensHaloType main_galaxy_halo_type;
 };
+
+inline LensHalo* Lens::getMainHalo(std::size_t i)
+{
+	return main_halos.at(i);
+}
+
+template<typename HaloType>
+inline HaloType* Lens::getMainHalo(std::size_t i)
+{
+	return main_halos.at<HaloType>(i);
+}
 
 typedef Lens* LensHndl;
 

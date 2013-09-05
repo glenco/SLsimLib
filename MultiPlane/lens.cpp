@@ -584,13 +584,11 @@ void Lens::createMainPlanes()
 	
 	// put everything with same redshift (within epsilon) onto a plane
 
-	std::vector<LensHalo*>::iterator it = main_halos.begin(); 
-  //Utilities::MixedVector<LensHalo*>::iterator<> it = main_halos.begin(); temp_tag
+	Utilities::MixedVector<LensHalo*>::iterator<> it = main_halos.begin(); 
 	while(it != main_halos.end())
 	{
 		// find halos with higher redshift
-		std::vector<LensHalo*>::iterator jt = std::upper_bound(it, main_halos.end(), *it, lens_halo_less(cosmo));
-		//Utilities::MixedVector<LensHalo*>::iterator<> jt = std::upper_bound(it, main_halos.end(), *it, lens_halo_less(cosmo)); temp_tag
+		Utilities::MixedVector<LensHalo*>::iterator<> jt = std::upper_bound(it, main_halos.end(), *it, lens_halo_less(cosmo));
 		
 		// add halos until higher redshift to plane
 		main_planes.push_back(new LensPlaneSingular(&(*it), std::distance(it, jt)));
