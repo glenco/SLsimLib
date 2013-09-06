@@ -76,8 +76,8 @@ public:
 	/// set slope
 	virtual void set_slope(double my_slope){};
 
-	/// set internal params that need either the cosmology or the source
-	virtual void setInternalParams(CosmoHndl cosmo){};
+	/// set cosmology for halo
+	virtual void setCosmology(COSMOLOGY* cosmo){}
 
 	/// calculate the lensing properties -- deflection, convergence, and shear
 	virtual void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa,bool subtract_point=false);

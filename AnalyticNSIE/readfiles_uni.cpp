@@ -29,7 +29,7 @@ LensHaloUniform::LensHaloUniform(InputParams& params,CosmoHndl cosmo): LensHalo(
   perturb_Nmodes=3;
   perturb_modes = new double[3];
   
-  setInternalParams(cosmo);
+  setCosmology(cosmo);
   PrintLens(false,false);
 }
 
@@ -52,7 +52,8 @@ LensHaloUniform::~LensHaloUniform(){
 
 }
 
-void LensHaloUniform::setInternalParams(CosmoHndl cosmo){
+void LensHaloUniform::setCosmology(COSMOLOGY* cosmo)
+{
 	Dl = cosmo->angDist(0,zlens);
 	Ds = cosmo->angDist(0,zsource_reference);
 	Dls = cosmo->angDist(zlens,zsource_reference);

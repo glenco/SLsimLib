@@ -73,7 +73,7 @@ public:
 	int flag_background_field;
 
 	void assignParams(InputParams& params);
-	void setup(CosmoHndl,SourceHndl);
+	void setCosmology(COSMOLOGY* cosmo);
 	void saveImage(bool saveprofile=true);
 	void saveKappaProfile();
 	void saveGammaProfile();
@@ -91,31 +91,6 @@ public:
 	void writeImage(std::string fn);
 
 };
-
-/**
- * \brief The MOKA model that contains the lens, source and cosmology.
- * 
- * This is a Model subclass which reads in a MOKA file and updates the
- * cosmology and lens according to the values read from the FITS file.
- *
-template<typename SourceT = SourceUniform>
-class ModelMOKA : public Model<SourceT>
-{
-public:
-	ModelMOKA(std::string paramfile, long* seed) : Model<SourceT>(paramfile, seed)
-	{
-		// make sure the lens contains a LensHaloMOKA
-		if(this->lens->main_halos.template size<LensHaloMOKA>() != 1)
-			throw std::runtime_error("ModelMOKA needs to contain exactly one main halo of type LensHaloMOKA!");
-		
-		// update cosmology and source from halo
-		this->lens->main_halos.template get<LensHaloMOKA>(0)->setup(this->cosmo, this->source);
-	}
-	
-private:
-	LensHaloMOKA* halo;
-};
-*/
 
 void make_friendship(int ii,int ji,int np,std:: vector<int> &friends, std:: vector<double> &pointdist);
 

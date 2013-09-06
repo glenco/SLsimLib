@@ -219,6 +219,12 @@ void Lens::assignParams(InputParams& params)
 				sim_input_flag = true;
 			}
 		}
+		else
+		{
+			// no field
+			field_Nplanes = 0;
+			fieldofview = 0;
+		}
 	}
 	
 	if(!params.get("z_source",zsource))
@@ -703,11 +709,7 @@ void Lens::createMainHalos(InputParams& params, Source* source)
 		main_halos.push_back(new LensHaloUniform(params));
 		break;
 	case moka_lens:
-		{
-			LensHaloMOKA* moka = new LensHaloMOKA(params);
-			fieldofview = pow(1.5*moka->map->boxlrad*180/pi,2.0);
-			main_halos.push_back(moka);
-		}
+		main_halos.push_back(new LensHaloMOKA(params));
 		break;
 	case dummy_lens:
 		main_halos.push_back(new LensHaloDummy(params));
@@ -731,7 +733,7 @@ void Lens::createMainHalos(InputParams& params, Source* source)
 	}
 
 	for(std::size_t i = 0; i < main_halos.size(); ++i)
-		main_halos[i]->setInternalParams(cosmo);
+		main_halos[i]->setCosmology(cosmo);
 }
 
 
@@ -757,7 +759,7 @@ void Lens::clearMainHalos()
  */
 void Lens::insertMainHalo(Source* source, LensHalo* halo)
 {
-	halo->setInternalParams(cosmo);
+	halo->setCosmology(cosmo);
 	main_halos.push_back(halo);
 	
 	flag_switch_main_halo_on = true;
@@ -775,7 +777,7 @@ void Lens::insertMainHalos(Source* source, LensHalo** halos, std::size_t Nhalos)
 {
 	for(std::size_t i = 0; i < Nhalos; ++i)
 	{
-		halos[i]->setInternalParams(cosmo);
+		halos[i]->setCosmology(cosmo);
 		main_halos.push_back(halos[i]);
 		addMainHaloToPlane(halos[i]);
 	}
@@ -794,7 +796,7 @@ void Lens::replaceMainHalos(Source* source, LensHalo* halo)
 	Utilities::delete_container(main_halos_created);
 	main_halos.clear();
 	
-	halo->setInternalParams(cosmo);
+	halo->setCosmology(cosmo);
 	main_halos.push_back(halo);
 	
 	flag_switch_main_halo_on = true;
@@ -815,7 +817,7 @@ void Lens::replaceMainHalos(Source* source, LensHalo** halos, std::size_t Nhalos
 	
 	for(std::size_t i = 0; i < Nhalos; ++i)
 	{
-		halos[i]->setInternalParams(cosmo);
+		halos[i]->setCosmology(cosmo);
 		main_halos.push_back(halos[i]);
 	}
 	

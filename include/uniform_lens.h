@@ -72,7 +72,7 @@ public:
 
 		/// overridden function to calculate the lensing properties
   void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa,bool subtract_point=false);
-  void setInternalParams(CosmoHndl);
+  void setCosmology(COSMOLOGY* cosmo);
 
 protected:
 

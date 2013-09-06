@@ -88,16 +88,15 @@ LensHaloMOKA::LensHaloMOKA(InputParams& params) : LensHalo(){
 
 	readImage();
 
-	int i,j;
-	if(flag_background_field==1){
-	  for(i=0;i<map->nx;i++) for(j=0;j<map->ny;j++){
-	      map->convergence[i+map->nx*j] = 0;
-	      map->alpha1[i+map->nx*j] = 0;
-	      map->alpha2[i+map->nx*j] = 0;
-	      map->gamma1[i+map->nx*j] = 0;
-	      map->gamma2[i+map->nx*j] = 0;
-	    }
+	if(flag_background_field == 1)
+	{
+		map->convergence = 0;
+		map->alpha1 = 0;
+		map->alpha2 = 0;
+		map->gamma1 = 0;
+		map->gamma2 = 0;
 	}
+	
 	initMap();
 }
 
@@ -105,7 +104,8 @@ LensHaloMOKA::~LensHaloMOKA(){
 	delete map;
 }
 
-void LensHaloMOKA::initMap(){
+void LensHaloMOKA::initMap()
+{
 	map->center[0] = map->center[1] = 0.0;
 	map->boxlrad = map->boxlarcsec*pi/180/3600.;
 
@@ -113,30 +113,27 @@ void LensHaloMOKA::initMap(){
 	double xmax =  map->boxlMpc*0.5;
 	fill_linear (map->x,map->nx,xmin,xmax); // physical Mpc/h
 	map->inarcsec  = 10800./M_PI/map->DL*60.; // Mpc/h to arcsec
-}
-
-/** \brief sets the cosmology and the lens and the source according to the MOKA map parameters
- */
-void LensHaloMOKA::setup(CosmoHndl cosmo, SourceHndl source){
-	cosmo->setOmega_matter(map->omegam,true);
-	cosmo->sethubble(map->h);
-	setZlens(cosmo,map->zlens,source->getZ());
-	source->setZ(map->zsource);
 
 	double fac = map->DS/map->DLS/map->DL*map->h;
-
+	
 	/// converts to the code units
-	if(flag_MOKA_analyze == 0 || flag_MOKA_analyze == 2){
-	  int i, j;
-	  std::cout << "converting the units of the MOKA map" << std::endl;
-	  for(i=0;i<map->nx;i++)
-	    for(j=0;j<map->ny;j++){
-	      int index = i*map->ny+j;
-	      map->convergence[index] *= fac;
-	      map->gamma1[index] *= fac;
-	      map->gamma2[index] *= fac;
-	    }
+	if(flag_MOKA_analyze == 0 || flag_MOKA_analyze == 2)
+	{
+		std::cout << "converting the units of the MOKA map" << std::endl;
+
+		map->convergence *= fac;
+		map->gamma1 *= fac;
+		map->gamma2 *= fac;
 	}
+}
+
+/** \brief checks the cosmology against the MOKA map parameters
+ */
+void LensHaloMOKA::setCosmology(COSMOLOGY* cosmo)
+{
+	assert(cosmo->getOmega_matter() == map->omegam);
+	assert(cosmo->getOmega_lambda() == map->omegal);
+	assert(cosmo->gethubble() == map->h);
 }
 
 /**
