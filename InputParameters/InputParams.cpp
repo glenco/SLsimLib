@@ -6,143 +6,235 @@
  */
 #include "slsimlib.h"
 
-/// The constructor reads in all the lines from the parameter file and stores the labels and values of each parameter.
-InputParams::InputParams(std::string paramfile) {
+#ifdef ENABLE_FITS
+#include <CCfits/CCfits>
+#endif
 
+namespace
+{
+	template<typename T>
+	std::string to_str(const T& v)
+	{
+		std::stringstream sstr;
+		sstr << v;
+		return sstr.str();
+	}
+}
+
+/// The constructor reads in all the lines from the parameter file and stores the labels and values of each parameter.
+InputParams::InputParams(std::string paramfile)
+{
 	std::cout << "Reading parameters from file: " << paramfile << std::endl;
 	std::ifstream file_in(paramfile.c_str());
-	if(!file_in){
+	if(!file_in)
+	{
 		std::cout << "Can't open parameter file " << paramfile << std::endl;
 		exit(1);
 	}
 
 	paramfile_name = paramfile;
 
-	std::string myline,comment;
-	int np,i=0;
-
-	while(!file_in.eof()){
-
-		getline(file_in,myline);
+	while(!file_in.eof())
+	{
+		std::string myline;
+		getline(file_in, myline);
 		std::cout << myline << std::endl;
 
 		// remove all tabs from the string
-		np = myline.find('\t');
-		while(np >= 0){
-			myline.replace(np,1," ");
+		std::size_t np = myline.find('\t');
+		while(np != std::string::npos)
+		{
+			myline.replace(np, 1, " ");
 			np = myline.find('\t');
 		}
 
 		// strip of comments
 		np = myline.find_first_of('#');
-		if(np == std::string::npos) np = myline.size(); // Case where no comment is found
-		if(np > 0){
-			comment = myline.substr(np);
-			myline = myline.substr(0,np);  // strip out comments
+		if(np == std::string::npos)
+			np = myline.size(); // Case where no comment is found
+		if(np > 0)
+		{
+			std::string comment = myline.substr(np);
+			myline = myline.substr(0, np);  // strip out comments
 
-			//pars line
+			// parse line
 			np = myline.find_first_of(' ');
-			if(np > 0){
-				labels.push_back(myline.substr(0,np));
-				comments.push_back(comment);
-
+			if(np > 0)
+			{
+				std::string label = myline.substr(0, np);
+				
 				myline = myline.substr(np);  // should now just have the value plus white space
 				np = myline.find_first_not_of(' ');
-				if(np > 0) myline = myline.substr(np);  // strip off spaces after value if they exist
+				if(np > 0)
+					myline = myline.substr(np);  // strip off spaces after value if they exist
 				np = myline.find_first_of(' ');
 				myline = myline.substr(0,np);
-				if(myline.size() <= 0){
-					std::cout << "ERRROR: Paramters " << labels[i] << " does not have a valid value in parameter file " << paramfile_name << std::endl;
+				if(myline.size() <= 0)
+				{
+					std::cout << "ERRROR: Paramters " << label << " does not have a valid value in parameter file " << paramfile_name << std::endl;
 					exit(1);
 				}
 
-				char_values.push_back(myline);
-				//std::cout << labels[i] << "     " << char_values[i] << std::endl;
-				++i;
+				params.insert(std::make_pair(label, myline));
+				if(!comment.empty())
+					comments.insert(std::make_pair(label, comment));
 			}
 		}
 
 		myline.clear();
 	}
 
-	use_number.resize(labels.size(),0);
-	std::cout << "number of lines read: " << labels.size() << std::endl;
+	std::cout << "number of lines read: " << params.size() << std::endl;
 	//print();
+	
+	// check if MOKA parameters should be read
+	bool read_moka = false;
+	if(get("MOKA_input_params", read_moka) && read_moka)
+		readMOKA();
 }
 
-InputParams::~InputParams() {
-  print_unused();
-  print_used();
-	labels.clear();
-	char_values.clear();
-	comments.clear();
+InputParams::~InputParams()
+{
+	print_unused();
+	print_used();
 }
 
 /// Print all parameters and values to stdout.
-void InputParams::print(){
-	std::cout << "number of lines read: " << labels.size() << std::endl;
-	for(int i=0;i<labels.size();++i){
-		std::cout << labels[i] << "     " << char_values[i] << "    " << comments[i] << std::endl;
-	}
+void InputParams::print()
+{
+	std::cout << "number of lines read: " << params.size() << std::endl;
+	for(iterator it = params.begin(); it != params.end(); ++it)
+		std::cout << it->first << "\t\t" << it->second << "\t" << comments[it->first] << std::endl;
 }
 
 /// Print parameters and values that have been accessed within the code to stdout.
-void InputParams::print_used(){
+void InputParams::print_used()
+{
 	std::cout << "###### Used Parameters #######" << std::endl;
-	std::cout << "number of lines read: " << labels.size() << std::endl;
-	int n=0;
-	for(int i=0;i<labels.size();++i){
-		if(use_number[i] > 0){
-			std::cout << labels[i] << "     " << char_values[i] << "    " << comments[i] << std::endl;
+	std::size_t n = 0;
+	for(iterator it = params.begin(); it != params.end(); ++it)
+	{
+		if(use_number[it->first] > 0)
+		{
+			std::cout << it->first << "\t\t" << it->second << "\t" << comments[it->first] << std::endl;
 			++n;
 		}
 	}
-	std::cout << std::endl << n << " Parameters where used out of a total of " << labels.size() << " paramaters read from the parameter file. " << std::endl;
+	std::cout << std::endl << n << " parameters where USED out of a total of " << params.size() << " paramaters read from the parameter file." << std::endl;
 }
 
 /// Print parameters and values that where read in but not accessed within the code to stdout.
-void InputParams::print_unused(){
+void InputParams::print_unused()
+{
 	std::cout << "###### Unused Parameters #######" << std::endl;
-	int n=0;
-	for(int i=0;i<labels.size();++i){
-		if(use_number[i] == 0){
-			std::cout << labels[i] << "     " << char_values[i] << "    " << comments[i] << std::endl;
+	std::cout << "number of lines read: " << params.size() << std::endl;
+	std::size_t n = 0;
+	for(iterator it = params.begin(); it != params.end(); ++it)
+	{
+		if(use_number[it->first] == 0)
+		{
+			std::cout << it->first << "\t\t" << it->second << "\t" << comments[it->first] << std::endl;
 			++n;
 		}
 	}
-	std::cout << std::endl << n << " Parameters where UNUSED out of a total of " << labels.size() << " paramaters read from the parameter file. " << std::endl;
+	std::cout << std::endl << n << " parameters where UNUSED out of a total of " << params.size() << " paramaters read from the parameter file." << std::endl;
 }
 
-/// Print all parameters to a file in the format needed for an input parameter file
-void InputParams::PrintToFile(std::string filename){
-
+/// Print all parameters to a file in the format needed for an input parameter file. Unused parameters can be stripped with the optional second argument.
+void InputParams::PrintToFile(std::string filename, bool strip_unused)
+{
 	paramfile_name = filename;
 	std::ofstream file_out(paramfile_name.c_str());
 
 	std::cout << "Creating parameter file: " << paramfile_name;
 	file_out << "# This parameter file was created by GLAMER."<< std::endl;
 	file_out << "# It can be used as an input parameter file."<< std::endl;
-	file_out << "# number of parameters: " << labels.size() << std::endl << std::endl;
-	for(int i=0;i<labels.size();++i){
-		file_out << labels[i] << "               " << char_values[i] << "         " << comments[i] << std::endl;
+	file_out << "# number of parameters: " << params.size() << std::endl << std::endl;
+	
+	for(iterator it = params.begin(); it != params.end(); ++it)
+	{
+		if(strip_unused && use_number[it->first] == 0)
+			continue;
+		
+		iterator comment = comments.find(it->first);
+		if(comment == comments.end())
+		   file_out << it->first << "\t\t" << it->second << std::endl;
+		else
+			file_out << it->first << "\t\t" << it->second << "\t" << comment->second << std::endl;
 	}
 }
 
-/** \brief Print used parameters to a file in the format needed for an input parameter file.
-* Only the parameters that were accessed at least once are printed.
+/** \brief Read input parameters from a MOKA FITS header.
+ * This function reads the FITS file given by the MOKA_input_file parameter and
+ * uses the values found in its header to set various input parameters such as
+ * z_lens, z_source, Omega_matter, ...
+ *
+ * This method needs ENABLE_FITS to be defined.
  */
-void InputParams::PrintUsedToFile(std::string filename){
-
-	paramfile_name = filename;
-	std::ofstream file_out(paramfile_name.c_str());
-
-	std::cout << "Creating parameter file: " << paramfile_name;
-	file_out << "# This parameter file was created by GLAMER."<< std::endl;
-	file_out << "# It can be used as an input parameter file."<< std::endl;
-	file_out << "# number of parameters: " << labels.size() << std::endl << std::endl;
-	for(int i=0;i<labels.size();++i){
-		if(use_number[i] > 0) file_out << labels[i] << "               " << char_values[i] << "         " << comments[i] << std::endl;
+void InputParams::readMOKA()
+{
+#ifdef ENABLE_FITS
+	std::cout << "Reading MOKA FITS parameters...\n" << std::endl;
+	
+	std::string MOKA_input_file;
+	if(!get("MOKA_input_file", MOKA_input_file))
+		throw new std::runtime_error("Parameter MOKA_input_file must be set for MOKA_input_params to work!");
+	
+	try
+	{
+		std::auto_ptr<CCfits::FITS> ff(new CCfits::FITS(MOKA_input_file, CCfits::Read));
+		
+		CCfits::PHDU* h0 = &ff->pHDU();
+		
+		double sidel; // box side length in arc seconds
+		double zlens; // redshift of lens
+		double zsource; // redshift of source
+		double omega_m; // omega matter
+		double omega_l; // omega_lambda
+		double hubble; // hubble constant H/100
+		
+		h0->readKey("SIDEL", sidel);
+		h0->readKey("ZLENS", zlens);
+		h0->readKey("ZSOURCE", zsource);
+		h0->readKey("OMEGA", omega_m);
+		h0->readKey("LAMBDA", omega_l);
+		h0->readKey("H", hubble);
+		
+		double fov = 1.4142*1.4142*sidel*sidel;
+		
+		params["field_fov"] = to_str(fov);
+		comments["field_fov"] = "# [MOKA]";
+		std::cout << std::left << std::setw(24) << "field_fov" << std::setw(12) << fov << "# [MOKA]" << std::endl;
+		
+		params["z_lens"] = to_str(zlens);
+		comments["z_lens"] = "# [MOKA]";
+		std::cout << std::left << std::setw(24) << "z_lens" << std::setw(12) << zlens << "# [MOKA]" << std::endl;
+		
+		params["z_source"] = to_str(zsource);
+		comments["z_source"] = "# [MOKA]";
+		std::cout << std::left << std::setw(24) << "z_source" << std::setw(12) << zsource << "# [MOKA]" << std::endl;
+		
+		params["Omega_matter"] = to_str(omega_m);
+		comments["Omega_matter"] = "# [MOKA]";
+		std::cout << std::left << std::setw(24) << "Omega_matter" << std::setw(12) << omega_m << "# [MOKA]" << std::endl;
+		
+		params["Omega_lambda"] = to_str(omega_l);
+		comments["Omega_lambda"] = "# [MOKA]";
+		std::cout << std::left << std::setw(24) << "Omega_lambda" << std::setw(12) << omega_l << "# [MOKA]" << std::endl;
+		
+		params["hubble"] = to_str(hubble);
+		comments["hubble"] = "# [MOKA]";
+		std::cout << std::left << std::setw(24) << "hubble" << std::setw(12) << hubble << "# [MOKA]" << std::endl;
 	}
+	catch(CCfits::FITS::CantOpen)
+	{
+		std::cout << "can not open " << MOKA_input_file << std::endl;
+		exit(1);
+	}
+#else
+	std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
+	exit(1);
+#endif
 }
 
 /** \brief Assigns to "value" the value of the parameter called "label".
@@ -152,24 +244,27 @@ void InputParams::PrintUsedToFile(std::string filename){
  *
  * bool entries in the parameter file must be 0,1,true or false.
  */
-bool InputParams::get(std::string label,bool& value){
-	unsigned int i;
-	for(i=0;i<labels.size();++i)
-		if(labels[i] == label) break;
-	if(i==labels.size()) return false;
-
-	if(!char_values[i].compare("0") || !char_values[i].compare("false")){
+bool InputParams::get(std::string label, bool& value)
+{
+	iterator it = params.find(label);
+	if(it == params.end())
+		return false;
+	
+	if(!it->second.compare("0") || !it->second.compare("false"))
+	{
 		value = false;
-		use_number[i]++;
+		++use_number[it->first];
 		return true;
 	}
-	if(!char_values[i].compare("1") || !char_values[i].compare("true")){
+	
+	if(!it->second.compare("1") || !it->second.compare("true"))
+	{
 		value = true;
-		use_number[i]++;
+		++use_number[it->first];
 		return true;
 	}
 
-	std::cout << label << " in parameter file " << paramfile_name << " needs to be 1 or 0 representing true or false!"<< std::endl;
+	std::cout << label << " in parameter file " << paramfile_name << " needs to be 1 or 0 representing true or false!" << std::endl;
 	return false;
 }
 
@@ -178,31 +273,34 @@ bool InputParams::get(std::string label,bool& value){
  * is returned.  If the parameter in the file does not "match" the type
  * of value false will also be returned and a warning printed to stdout.
  *
- * MassFuncType entries in the parameter file must be 0 through 2 or PS (Press & Schechter), ST (Sheth & Torman) or PowLaw (Power-law).
+ * MassFuncType entries in the parameter file must be 0 through 2 or PS (Press & Schechter), ST (Sheth & Torman) or PowerLaw (Power-law).
  */
-bool InputParams::get(std::string label,MassFuncType& value){
-	unsigned int i;
-	for(i=0;i<labels.size();++i)
-		if(labels[i] == label) break;
-	if(i==labels.size()) return false;
+bool InputParams::get(std::string label, MassFuncType& value)
+{
+	iterator it = params.find(label);
+	if(it == params.end())
+		return false;
 
-	if(!char_values[i].compare("0") || !char_values[i].compare("PS")){
+	if(!it->second.compare("0") || !it->second.compare("PS"))
+	{
 		value = PS;
-		use_number[i]++;
+		++use_number[it->first];
 		return true;
 	}
-	if(!char_values[i].compare("1") || !char_values[i].compare("ST")){
+	if(!it->second.compare("1") || !it->second.compare("ST"))
+	{
 		value = ST;
-		use_number[i]++;
+		++use_number[it->first];
 		return true;
 	}
-	if(!char_values[i].compare("2") || !char_values[i].compare("PowerLaw")){
+	if(!it->second.compare("2") || !it->second.compare("PowerLaw"))
+	{
 		value = PL;
-		use_number[i]++;
+		++use_number[it->first];
 		return true;
 	}
 
-	std::cout << label << " in parameter file " << paramfile_name << " needs to be 0, 1 or 2 or PS, ST or PowerLaw!"<< std::endl;
+	std::cout << label << " in parameter file " << paramfile_name << " needs to be 0, 1 or 2 or PS, ST or PowerLaw!" << std::endl;
 	return false;
 }
 /** \brief Assigns to "value" the value of the parameter called "label".
@@ -214,70 +312,81 @@ bool InputParams::get(std::string label,MassFuncType& value){
  * 3 or PowerLaw, 4 or NSIE, 5 or AnaLens, 6 or UniLens, 7 or MOKALens, 8 or DummyLens
  */
 
-bool InputParams::get(std::string label,LensHaloType& value){
-	unsigned int i;
-	for(i=0;i<labels.size();++i)
-		if(labels[i] == label) break;
-	if(i==labels.size()) return false;
-
-	if(!char_values[i].compare("0") || !char_values[i].compare("nolens")){
+bool InputParams::get(std::string label, LensHaloType& value)
+{
+	iterator it = params.find(label);
+	if(it == params.end())
+		return false;
+	
+	if(!it->second.compare("0") || !it->second.compare("nolens"))
+	{
 		value = null_lens;
-		use_number[i]++;
+		++use_number[it->first];
 		return true;
 	}
-	if(!char_values[i].compare("1") || !char_values[i].compare("NFW")){
+	if(!it->second.compare("1") || !it->second.compare("NFW"))
+	{
 		value = nfw_lens;
-		use_number[i]++;
+		++use_number[it->first];
 		return true;
 	}
-	if(!char_values[i].compare("2") || !char_values[i].compare("PseudoNFW")){
+	if(!it->second.compare("2") || !it->second.compare("PseudoNFW"))
+	{
 		value = pnfw_lens;
-		use_number[i]++;
+		++use_number[it->first];
 		return true;
 	}
-	if(!char_values[i].compare("3") || !char_values[i].compare("PowerLaw")){
+	if(!it->second.compare("3") || !it->second.compare("PowerLaw"))
+	{
 		value = pl_lens;
-		use_number[i]++;
+		++use_number[it->first];
 		return true;
 	}
-	if(!char_values[i].compare("4") || !char_values[i].compare("NSIE")){
+	if(!it->second.compare("4") || !it->second.compare("NSIE"))
+	{
 		value = nsie_lens;
-		use_number[i]++;
+		++use_number[it->first];
 		return true;
 	}
-	if(!char_values[i].compare("5") || !char_values[i].compare("AnaLens")){
+	if(!it->second.compare("5") || !it->second.compare("AnaLens"))
+	{
 		value = ana_lens;
-		use_number[i]++;
+		++use_number[it->first];
 		return true;
 	}
-	if(!char_values[i].compare("6") || !char_values[i].compare("UniLens")){
+	if(!it->second.compare("6") || !it->second.compare("UniLens")){
+		
 		value = uni_lens;
-		use_number[i]++;
+		++use_number[it->first];
 		return true;
 	}
-	if(!char_values[i].compare("7") || !char_values[i].compare("MOKALens")){
+	if(!it->second.compare("7") || !it->second.compare("MOKALens"))
+	{
 		value = moka_lens;
-		use_number[i]++;
+		++use_number[it->first];
 		return true;
 	}
-	if(!char_values[i].compare("8") || !char_values[i].compare("DummyLens")){
+	if(!it->second.compare("8") || !it->second.compare("DummyLens"))
+	{
 		value = dummy_lens;
-		use_number[i]++;
+		++use_number[it->first];
 		return true;
 	}
-	if(!char_values[i].compare("9") || !char_values[i].compare("Hernquist")){
-			value = hern_lens;
-			use_number[i]++;
-			return true;
+	if(!it->second.compare("9") || !it->second.compare("Hernquist"))
+	{
+		value = hern_lens;
+		++use_number[it->first];
+		return true;
 	}
-	if(!char_values[i].compare("10") || !char_values[i].compare("Jaffe")){
-			value = jaffe_lens;
-			use_number[i]++;
-			return true;
+	if(!it->second.compare("10") || !it->second.compare("Jaffe"))
+	{
+		value = jaffe_lens;
+		++use_number[it->first];
+		return true;
 	}
 
-	std::cout << label << " in parameter file " << paramfile_name << " needs to be 0 or nolens, 1 or NFW, 2 or PseudoNFW, " << std::endl;
-	std::cout << "3 or PowerLaw, 4 or NSIE, 5 or AnaLens, 6 or UniLens, 7 or MOKALens, 8 or DummyLens, 9 or Hernquist, 10 or Jaffe"<< std::endl;
+	std::cout << label << " in parameter file " << paramfile_name << " needs to be 0 or nolens, 1 or NFW, 2 or PseudoNFW,"
+		"3 or PowerLaw, 4 or NSIE, 5 or AnaLens, 6 or UniLens, 7 or MOKALens, 8 or DummyLens, 9 or Hernquist, 10 or Jaffe" << std::endl;
 	return false;
 }
 
@@ -289,20 +398,22 @@ bool InputParams::get(std::string label,LensHaloType& value){
  * GalaxyLensType entries in the parameter file must be 0 or none, 1 or NSIE
  */
 
-bool InputParams::get(std::string label,GalaxyLensHaloType& value){
-	unsigned int i;
-	for(i=0;i<labels.size();++i)
-		if(labels[i] == label) break;
-	if(i==labels.size()) return false;
-
-	if(!char_values[i].compare("0") || !char_values[i].compare("none")){
+bool InputParams::get(std::string label, GalaxyLensHaloType& value)
+{
+	iterator it = params.find(label);
+	if(it == params.end())
+		return false;
+	
+	if(!it->second.compare("0") || !it->second.compare("none"))
+	{
 		value = null_gal;
-		use_number[i]++;
+		++use_number[it->first];
 		return true;
 	}
-	if(!char_values[i].compare("1") || !char_values[i].compare("NSIE")){
+	if(!it->second.compare("1") || !it->second.compare("NSIE"))
+	{
 		value = nsie_gal;
-		use_number[i]++;
+		++use_number[it->first];
 		return true;
 	}
 
@@ -318,29 +429,32 @@ bool InputParams::get(std::string label,GalaxyLensHaloType& value){
  * MainLensType entries in the parameter file must be 0 through 2 or NFW, PowerLaw, or PointMass.
  */
 
-bool InputParams::get(std::string label,ClumpInternal& value){
-	unsigned int i;
-	for(i=0;i<labels.size();++i)
-		if(labels[i] == label) break;
-	if(i==labels.size()) return false;
+bool InputParams::get(std::string label, ClumpInternal& value)
+{
+	iterator it = params.find(label);
+	if(it == params.end())
+		return false;
 
-	if(!char_values[i].compare("0") || !char_values[i].compare("NFW")){
+	if(!it->second.compare("0") || !it->second.compare("NFW"))
+	{
 		value = nfw;
-		use_number[i]++;
+		++use_number[it->first];
 		return true;
 	}
-	if(!char_values[i].compare("1") || !char_values[i].compare("PowerLaw")){
+	if(!it->second.compare("1") || !it->second.compare("PowerLaw"))
+	{
 		value = powerlaw;
-		use_number[i]++;
+		++use_number[it->first];
 		return true;
 	}
-	if(!char_values[i].compare("2") || !char_values[i].compare("PointMass")){
+	if(!it->second.compare("2") || !it->second.compare("PointMass"))
+	{
 		value = pointmass;
-		use_number[i]++;
+		++use_number[it->first];
 		return true;
 	}
 
-	std::cout << label << " in parameter file " << paramfile_name << " needs to be 0, 1 or 2 or NFW, PowerLaw, or PointMass!"<< std::endl;
+	std::cout << label << " in parameter file " << paramfile_name << " needs to be 0, 1 or 2 or NFW, PowerLaw, or PointMass!" << std::endl;
 	return false;
 }
 
@@ -352,49 +466,56 @@ bool InputParams::get(std::string label,ClumpInternal& value){
  * MainLensType entries in the parameter file must be One,Mono,BrokenPowerLaw,Salpeter,SinglePowerLaw,Kroupa or Chabrier
  */
 
-bool InputParams::get(std::string label,IMFtype& value){
-	unsigned int i;
-	for(i=0;i<labels.size();++i)
-		if(labels[i] == label) break;
-	if(i==labels.size()) return false;
-
-	if(!char_values[i].compare("One")){
-			value = One;
-			use_number[i]++;
-			return true;
+bool InputParams::get(std::string label, IMFtype& value)
+{
+	iterator it = params.find(label);
+	if(it == params.end())
+		return false;
+	
+	if(!it->second.compare("One"))
+	{
+		value = One;
+		++use_number[it->first];
+		return true;
 	}
-	if(!char_values[i].compare("Mono")){
+	if(!it->second.compare("Mono"))
+	{
 		value = Mono;
-		use_number[i]++;
+		++use_number[it->first];
 		return true;
 	}
-	if(!char_values[i].compare("BrokenPowerLaw")){
+	if(!it->second.compare("BrokenPowerLaw"))
+	{
 		value = BrokenPowerLaw;
-		use_number[i]++;
+		++use_number[it->first];
 		return true;
 	}
-	if(!char_values[i].compare("Salpeter")){
+	if(!it->second.compare("Salpeter"))
+	{
 		value = Salpeter;
-		use_number[i]++;
+		++use_number[it->first];
 		return true;
 	}
-	if(!char_values[i].compare("SinglePowerLaw")){
+	if(!it->second.compare("SinglePowerLaw"))
+	{
 		value = SinglePowerLaw;
-		use_number[i]++;
+		++use_number[it->first];
 		return true;
 	}
-	if(!char_values[i].compare("Kroupa")){
+	if(!it->second.compare("Kroupa"))
+	{
 		value = Kroupa;
-		use_number[i]++;
+		++use_number[it->first];
 		return true;
 	}
-	if(!char_values[i].compare("Chabrier")){
+	if(!it->second.compare("Chabrier"))
+	{
 		value = Chabrier;
-		use_number[i]++;
+		++use_number[it->first];
 		return true;
 	}
 
-	std::cout << label << " in parameter file " << paramfile_name << " needs to be One, Mono, BrokenPowerLaw, Salpeter, SinglePowerLaw, Kroupa or Chabrier!"<< std::endl;
+	std::cout << label << " in parameter file " << paramfile_name << " needs to be One, Mono, BrokenPowerLaw, Salpeter, SinglePowerLaw, Kroupa or Chabrier!" << std::endl;
 	return false;
 }
 
@@ -407,64 +528,74 @@ bool InputParams::get(std::string label,IMFtype& value){
  * MainLensType entries in the parameter file must be SDSS_U,SDSS_G,SDSS_R,SDSS_I,SDSS_Z,J,H,Ks,i1, or i2
  */
 
-bool InputParams::get(std::string label,Band& value){
-	unsigned int i;
-	for(i=0;i<labels.size();++i)
-		if(labels[i] == label) break;
-	if(i==labels.size()) return false;
-
-	if(!char_values[i].compare("SDSS_U")){
+bool InputParams::get(std::string label, Band& value)
+{
+	iterator it = params.find(label);
+	if(it == params.end())
+		return false;
+	
+	if(!it->second.compare("SDSS_U"))
+	{
 		value = SDSS_U;
-		use_number[i]++;
+		++use_number[it->first];
 		return true;
 	}
-	if(!char_values[i].compare("SDSS_G")){
+	if(!it->second.compare("SDSS_G"))
+	{
 		value = SDSS_G;
-		use_number[i]++;
+		++use_number[it->first];
 		return true;
 	}
-	if(!char_values[i].compare("SDSS_R")){
+	if(!it->second.compare("SDSS_R"))
+	{
 		value = SDSS_R;
-		use_number[i]++;
+		++use_number[it->first];
 		return true;
 	}
-	if(!char_values[i].compare("SDSS_I")){
+	if(!it->second.compare("SDSS_I"))
+	{
 		value = SDSS_I;
-		use_number[i]++;
+		++use_number[it->first];
 		return true;
 	}
-	if(!char_values[i].compare("SDSS_Z")){
+	if(!it->second.compare("SDSS_Z"))
+	{
 		value = SDSS_Z;
-		use_number[i]++;
+		++use_number[it->first];
 		return true;
 	}
-	if(!char_values[i].compare("J")){
+	if(!it->second.compare("J"))
+	{
 		value = J;
-		use_number[i]++;
+		++use_number[it->first];
 		return true;
 	}
-	if(!char_values[i].compare("H")){
+	if(!it->second.compare("H"))
+	{
 		value = H;
-		use_number[i]++;
+		++use_number[it->first];
 		return true;
 	}
-	if(!char_values[i].compare("Ks")){
+	if(!it->second.compare("Ks"))
+	{
 		value = Ks;
-		use_number[i]++;
+		++use_number[it->first];
 		return true;
 	}
-	if(!char_values[i].compare("i1")){
+	if(!it->second.compare("i1"))
+	{
 		value = i1;
-		use_number[i]++;
+		++use_number[it->first];
 		return true;
 	}
-	if(!char_values[i].compare("i2")){
+	if(!it->second.compare("i2"))
+	{
 		value = i2;
-		use_number[i]++;
+		++use_number[it->first];
 		return true;
 	}
 
-	std::cout << label << " in parameter file " << paramfile_name << " needs to be SDSS_U,SDSS_G,SDSS_R,SDSS_I,SDSS_Z,J,H,Ks,i1, or i2!"<< std::endl;
+	std::cout << label << " in parameter file " << paramfile_name << " needs to be SDSS_U,SDSS_G,SDSS_R,SDSS_I,SDSS_Z,J,H,Ks,i1, or i2!" << std::endl;
 	return false;
 }
 
@@ -475,36 +606,39 @@ bool InputParams::get(std::string label,Band& value){
  * If there is an entry in the parameter file this function will always
  * return it in string format - no type checking.
  */
-bool InputParams::get(std::string label,std::string& value){
-	unsigned int i;
-	for(i=0;i<labels.size();++i)
-		if(labels[i] == label) break;
-	if(i==labels.size()) return false;
-
-	value = char_values[i];
-	use_number[i]++;
+bool InputParams::get(std::string label,std::string& value)
+{
+	iterator it = params.find(label);
+	if(it == params.end())
+		return false;
+	
+	value = it->second;
+	++use_number[it->first];
+	
 	return true;
 }
+
 /**
  * Add a new parameter to the parameter list.
  */
-void InputParams::put(std::string label,std::string value,std::string comment){
-
-	labels.push_back(label);
-	use_number.push_back(0);
-	char_values.push_back(value);
-	if(comment == "") comments.push_back("");
-	else comments.push_back("#" + comment);
+void InputParams::put(std::string label, std::string value, std::string comment)
+{
+	params[label] = value;
+	
+	if(comment.empty())
+		comments.erase(label);
+	else
+		comments[label] = "# " + comment;
 
 	return;
 }
 
 // Check to see if parameter exists.
-bool InputParams::exist(std::string label){
-	unsigned int i;
-	for(i=0;i<labels.size();++i)
-		if(labels[i] == label) break;
-	if(i==labels.size()) return false;
-
+bool InputParams::exist(std::string label)
+{
+	iterator it = params.find(label);
+	if(it == params.end())
+		return false;
+	
 	return true;
 }

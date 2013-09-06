@@ -94,7 +94,13 @@
 		main_stars_N             0	    # number of stars to be implanted
 		main_stars_fraction      0.50	    # stellar mass fraction
 		main_stars_mass         0.5	    # star mass in solar masses
-
+		 
+		####### MOKA lens halo model ############
+		MOKA_input_file         moka.fits    # MOKA FITS file
+        MOKA_input_params       1            # read parameters from MOKA FITS header
+		MOKA_analyze            0
+		background_field        0
+		
 		######## Type of source SB model
 		SourceSBType	   0	 # 0: Uniform, 1: Gaussian, 2: BLR_Disk, 3: BLR_Sph1, 4: BLR_Sph2
 

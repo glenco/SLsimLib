@@ -22,6 +22,7 @@
  */
 
 #include "standard.h"
+#include <map>
 
 typedef enum {PS, ST, PL} MassFuncType;
 
@@ -40,7 +41,8 @@ enum Band {SDSS_U,SDSS_G,SDSS_R,SDSS_I,SDSS_Z,J,H,Ks,i1,i2};
  *  get functions.  There should be no interaction with the parameter file except through the InputParams 
  *  structure.
  */
-class InputParams {
+class InputParams
+{
 public:
 	InputParams(std::string paramfile);
 	~InputParams();
@@ -63,25 +65,29 @@ public:
 	void print_used();
 	void print_unused();
 	/// Returns total number of parameters.
-	unsigned int Nparams(){return labels.size();}
-	void PrintToFile(std::string filename);
-	void PrintUsedToFile(std::string filename);
+	std::size_t Nparams() { return params.size(); }
+	void PrintToFile(std::string filename, bool strip_unused = false);
 	/// Return name of the parameter file.
 	std::string filename(){return paramfile_name;}
 
-	void put(std::string label,std::string value,std::string comment = "");
+	void put(std::string label,std::string value,std::string comment = std::string());
 	
 	template<typename Number>
-	void put(std::string label,Number value,std::string comment = "");
+	void put(std::string label,Number value,std::string comment = std::string());
+	
+	// read parameters from a MOKA FITS header
+	void readMOKA();
 
 private:
+	typedef std::map<std::string, std::string>::iterator iterator;
+	
 	std::string paramfile_name;
 
-	std::vector<std::string> labels;
-	std::vector<std::string> char_values;
-	std::vector<std::string> comments;
+	std::map<std::string, std::string> params;
+	std::map<std::string, std::string> comments;
+	
 	// The number of times a parameter was retrieved by get
-	std::vector<int> use_number;
+	std::map<std::string, std::size_t> use_number;
 };
 
 /** \brief Assigns to "value" the value of the parameter called "label".
@@ -94,23 +100,24 @@ private:
 template<typename Number>
 bool InputParams::get(std::string label, Number& value)
 {
-	std::size_t i = std::distance(labels.begin(), std::find(labels.begin(), labels.end(), label));
-	if(i == labels.size())
+	iterator it = params.find(label);
+	
+	if(it == params.end())
 	{
 		value = Number();
 		return false;
 	}
 	
-	std::istringstream sstr(char_values[i]);
+	std::istringstream sstr(it->second);
 	
 	sstr >> value;
 	if(sstr.fail())
 	{
-		std::cout << "Expected a numerical value for " << labels[i] << " in parameter file " << paramfile_name << std::endl;
+		std::cout << "Expected a numerical value for " << it->first << " in parameter file " << paramfile_name << std::endl;
 		return false;
 	}
 	
-	use_number[i]++;
+	++use_number[it->first];
 	
 	return true;
 }
@@ -121,15 +128,15 @@ bool InputParams::get(std::string label, Number& value)
 template<typename Number>
 void InputParams::put(std::string label, Number value, std::string comment)
 {
-	labels.push_back(label);
-	use_number.push_back(0);
-	
 	// convert to string
-	std::ostringstream strs;
-	strs << value;
-	char_values.push_back(strs.str());
-	if(comment == "") comments.push_back("");
-	else comments.push_back("#" + comment);
+	std::ostringstream sstr;
+	sstr << value;
+	params.insert(std::make_pair(label, sstr.str()));
+	
+	if(comment.empty())
+		comments.erase(label);
+	else
+		comments.insert(std::make_pair(label, comment));
 }
 
 #endif /* INPUTPARAMS_H_ */
