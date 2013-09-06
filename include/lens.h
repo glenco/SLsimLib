@@ -71,7 +71,7 @@ class Lens
 {
 public:
 	Lens(long *seed);
-	Lens(InputParams& params, Source* source, long *my_seed,CosmoParamSet cosmoset = WMAP5yr);
+	Lens(InputParams& params, long *my_seed, CosmoParamSet cosmoset = WMAP5yr);
 	~Lens();
 
 	/// marks if the lens has been setup.
@@ -105,14 +105,14 @@ public:
 	void clearMainHalos();
 
 	/// inserts a single main lens halo and adds it to the existing ones
-	void insertMainHalo(Source* source, LensHalo* halo);
+	void insertMainHalo(LensHalo* halo);
 	/// inserts a sequence of main lens halos and adds them to the existing ones
-	void insertMainHalos(Source* source, LensHalo** halos, std::size_t Nhalos);
+	void insertMainHalos(LensHalo** halos, std::size_t Nhalos);
 
 	/// replaces existing main halos with a single main halo
-	void replaceMainHalos(Source* source, LensHalo* halo);
+	void replaceMainHalos(LensHalo* halo);
 	/// replaces existing main halos with a sequence of main halos
-	void replaceMainHalos(Source* source, LensHalo** halos, std::size_t Nhalos);
+	void replaceMainHalos(LensHalo** halos, std::size_t Nhalos);
 
 	/// get single main halo
 	LensHalo* getMainHalo(std::size_t i);
@@ -176,7 +176,7 @@ private:
 	
 private: /* generation */
 	/// create the lens planes
-	void buildPlanes(InputParams& params, Source* source);
+	void buildPlanes(InputParams& params);
 	
 	/// sets the distances and redshifts of the field planes equidistant
 	void setFieldDist();
@@ -192,7 +192,7 @@ private: /* generation */
 	void createFieldPlanes();
 	
 	/// generate main halo from the parameter file
-	void createMainHalos(InputParams& params, Source* source);
+	void createMainHalos(InputParams& params);
 	/// generate main halo from the parameter file
 	void createMainPlanes();
 	/// add a main halo to an existing plane, or create a new plane

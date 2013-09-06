@@ -60,14 +60,14 @@ Lens::Lens(long *my_seed)
  * \ingroup Constructor
  * \brief allocates space for the halo trees and the inout lens, if there is any
  */
-Lens::Lens(InputParams& params, Source* source, long* my_seed,CosmoParamSet cosmoset)
+Lens::Lens(InputParams& params, long* my_seed, CosmoParamSet cosmoset)
 : seed(my_seed), halo_pos(0)
 {
 	cosmo = new COSMOLOGY(cosmoset);
 	readCosmology(params);
 
 	if( (cosmo->getOmega_matter() + cosmo->getOmega_lambda()) != 1.0 ){
-		printf("ERROR: MultiLens can only handle flat universes at present.  Must change cosmology.\n");
+		printf("ERROR: Lens can only handle flat universes at present.  Must change cosmology.\n");
 		exit(1);
 	}
 
@@ -83,9 +83,7 @@ Lens::Lens(InputParams& params, Source* source, long* my_seed,CosmoParamSet cosm
 	toggle_source_plane = false;
 
 	// set up the lens contents
-	buildPlanes(params, source);
-
-	std:: cout << " done " << std:: endl;
+	buildPlanes(params);
 }
 
 Lens::~Lens()
@@ -684,7 +682,7 @@ void Lens::setFieldDistFromFile()
  * \brief Creates main lens halo as set up in the parmeter file.
  *
  */
-void Lens::createMainHalos(InputParams& params, Source* source)
+void Lens::createMainHalos(InputParams& params)
 {
 	switch(main_halo_type)
 	{
@@ -722,8 +720,10 @@ void Lens::createMainHalos(InputParams& params, Source* source)
 		break;
 	}
 
-	if(main_galaxy_halo_type!=0){
-		switch(main_galaxy_halo_type){
+	if(main_galaxy_halo_type != 0)
+	{
+		switch(main_galaxy_halo_type)
+		{
 		case null_gal:
 			break;
 		case nsie_gal:
@@ -738,7 +738,6 @@ void Lens::createMainHalos(InputParams& params, Source* source)
 
 
 void Lens::clearMainHalos()
-
 {
 	Utilities::delete_container(main_halos_created);
 	main_halos.clear();
@@ -757,7 +756,7 @@ void Lens::clearMainHalos()
  * \brief Inserts a single main lens halo.
  * Then all lensing planes are updated accordingly.
  */
-void Lens::insertMainHalo(Source* source, LensHalo* halo)
+void Lens::insertMainHalo(LensHalo* halo)
 {
 	halo->setCosmology(cosmo);
 	main_halos.push_back(halo);
@@ -773,7 +772,7 @@ void Lens::insertMainHalo(Source* source, LensHalo* halo)
  * \brief Inserts a sequense of main lens halos and ads them to the existing ones.
  * Then all lensing planes are updated accordingly.
  */
-void Lens::insertMainHalos(Source* source, LensHalo** halos, std::size_t Nhalos)
+void Lens::insertMainHalos(LensHalo** halos, std::size_t Nhalos)
 {
 	for(std::size_t i = 0; i < Nhalos; ++i)
 	{
@@ -791,7 +790,7 @@ void Lens::insertMainHalos(Source* source, LensHalo** halos, std::size_t Nhalos)
  * \brief Inserts a single main lens halo and deletes all previous ones.
  * Then all lensing planes are updated accordingly.
  */
-void Lens::replaceMainHalos(Source* source, LensHalo* halo)
+void Lens::replaceMainHalos(LensHalo* halo)
 {
 	Utilities::delete_container(main_halos_created);
 	main_halos.clear();
@@ -810,7 +809,7 @@ void Lens::replaceMainHalos(Source* source, LensHalo* halo)
  * \brief Inserts a sequense of main lens halos and deletes all previous ones.
  * Then all lensing planes are updated accordingly.
  */
-void Lens::replaceMainHalos(Source* source, LensHalo** halos, std::size_t Nhalos)
+void Lens::replaceMainHalos(LensHalo** halos, std::size_t Nhalos)
 {
 	Utilities::delete_container(main_halos_created);
 	main_halos.clear();
@@ -1397,7 +1396,7 @@ void Lens::combinePlanes()
 	std::cout << "\n" << std::endl;
 }
 
-void Lens::buildPlanes(InputParams& params, Source* source)
+void Lens::buildPlanes(InputParams& params)
 {
 	// build field
 	if(!flag_switch_field_off)
@@ -1419,7 +1418,7 @@ void Lens::buildPlanes(InputParams& params, Source* source)
 	if(flag_switch_main_halo_on)
 	{
 		// create the main halos
-		createMainHalos(params, source);
+		createMainHalos(params);
 		
 		// create the main planes for the halos
 		createMainPlanes();
