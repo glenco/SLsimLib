@@ -114,16 +114,21 @@ void LensHaloMOKA::initMap()
 	fill_linear (map->x,map->nx,xmin,xmax); // physical Mpc/h
 	map->inarcsec  = 10800./M_PI/map->DL*60.; // Mpc/h to arcsec
 
-	double fac = map->DS/map->DLS/map->DL*map->h;
-	
 	/// converts to the code units
 	if(flag_MOKA_analyze == 0 || flag_MOKA_analyze == 2)
 	{
 		std::cout << "converting the units of the MOKA map" << std::endl;
 
+		double fac = map->DS/map->DLS/map->DL*map->h/(4*pi*Grav);
+		
 		map->convergence *= fac;
 		map->gamma1 *= fac;
 		map->gamma2 *= fac;
+		
+		fac = 1/(4*pi*Grav);
+		
+		map->alpha1 *= fac;
+		map->alpha2 *= fac;
 	}
 }
 
