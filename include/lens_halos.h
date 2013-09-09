@@ -524,6 +524,11 @@ public:
 	LensHaloJaffe(InputParams& params);
 	virtual ~LensHaloJaffe();
 
+    double ffunction(double x);
+	double gfunction(double x);
+	double hfunction(double x);
+	double g2function(double x);
+
 	/// set Rmax
 	void set_Rmax(float my_Rmax){Rmax=my_Rmax; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
 	/// set scale radius
@@ -568,10 +573,10 @@ private:
   double gmax;
   
   // I have temporarily set these functions to 0 to make the code compile, Ben
-  double ffunction(double x){throw std::runtime_error("Set to temporary invalid value"); return 0;}
-	double gfunction(double x){throw std::runtime_error("Set to temporary invalid value"); return 0;}
-	double hfunction(double x){throw std::runtime_error("Set to temporary invalid value"); return 0;}
-	double g2function(double x){throw std::runtime_error("Set to temporary invalid value"); return 0;}
+//  double ffunction(double x){throw std::runtime_error("Set to temporary invalid value"); return 0;}
+//	double gfunction(double x){throw std::runtime_error("Set to temporary invalid value"); return 0;}
+//	double hfunction(double x){throw std::runtime_error("Set to temporary invalid value"); return 0;}
+//	double g2function(double x){throw std::runtime_error("Set to temporary invalid value"); return 0;}
 };
 
 
