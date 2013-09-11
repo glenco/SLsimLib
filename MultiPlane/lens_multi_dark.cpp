@@ -10,11 +10,11 @@ namespace
 	const char* char_whitespace = " \t";
 }
 
-void Lens::readMultiDark(const std::string& listfile)
+void Lens::readMultiDark()
 {
-	std::ifstream list(listfile.c_str());
+	std::ifstream list(main_input_file.c_str());
 	if(!list.good())
-		throw new std::runtime_error("Could not open MultiDark list file" + listfile + "!");
+		throw new std::runtime_error("Could not open MultiDark list file" + main_input_file + "!");
 	
 	std::cout << "MultiDark files:" << std::endl;
 	

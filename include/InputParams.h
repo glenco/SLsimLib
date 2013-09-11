@@ -24,10 +24,34 @@
 #include "standard.h"
 #include <map>
 
-typedef enum {PS, ST, PL} MassFuncType;
+enum MassFuncType
+{
+	PS,
+	ST,
+	PL
+};
 
-typedef enum {null_lens, nfw_lens, pnfw_lens, pl_lens, nsie_lens, ana_lens, uni_lens, moka_lens, dummy_lens, hern_lens, jaffe_lens} LensHaloType;
-typedef enum {null_gal, nsie_gal} GalaxyLensHaloType;
+enum LensHaloType
+{
+	null_lens,
+	nfw_lens,
+	pnfw_lens,
+	pl_lens,
+	nsie_lens,
+	ana_lens,
+	uni_lens,
+	moka_lens,
+	dummy_lens,
+	hern_lens,
+	jaffe_lens,
+	multi_dark_lens
+};
+
+enum GalaxyLensHaloType
+{
+	null_gal,
+	nsie_gal
+};
 
 /// names of clump and sb models
 typedef enum {nfw,powerlaw,pointmass} ClumpInternal;

@@ -230,20 +230,15 @@ void Lens::assignParams(InputParams& params)
 		}
 	}
 	
-	// try if MultiDark parameters are set
-	if(params.exist("MultiDark_input_file"))
+	// read MultiDark parameters if necessary
+	if(main_halo_type == multi_dark_lens)
 	{
-		std::string MultiDark_input_file;
-		if(!params.get("MultiDark_input_file", MultiDark_input_file))
+		if(!params.get("MultiDark_input_file", main_input_file))
 		{
 			ERROR_MESSAGE();
 			cout << "parameter MultiDark_input_file needs to be set in the parameter file " << params.filename() << endl;
 			exit(1);
 		}
-		
-		readMultiDark(MultiDark_input_file);
-		
-		flag_switch_main_halo_on = true;
 	}
 	
 	if(!params.get("z_source",zsource))
@@ -381,6 +376,9 @@ void Lens::printMultiLens(){
 		break;
 	case jaffe_lens:
 		cout << "Jaffe lens" << endl;
+		break;
+	case multi_dark_lens:
+		cout << "MultiDark lens" << endl;
 		break;
 	}
 
@@ -738,6 +736,9 @@ void Lens::createMainHalos(InputParams& params)
 		break;
 	case jaffe_lens:
 		main_halos.push_back(new LensHaloJaffe(params));
+		break;
+	case multi_dark_lens:
+		readMultiDark();
 		break;
 	}
 

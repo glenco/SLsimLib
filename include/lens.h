@@ -289,8 +289,11 @@ private: /* main */
 	GalaxyLensHaloType main_galaxy_halo_type;
 	
 private: /* input */
-	/// read main halos from a MultiDark simulation
-	void readMultiDark(const std::string& listfile);
+	/// file for multiple main halo input
+	std::string main_input_file;
+	
+ 	/// read main halos from a MultiDark simulation
+	void readMultiDark();
 };
 
 inline std::size_t Lens::getNMainHalos() const
