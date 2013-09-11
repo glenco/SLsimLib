@@ -128,8 +128,6 @@ public:
 	
 	/// compute the dflection, convergence, and shear for each point on the grid
 	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off);
-	/// compute the dflection, convergence, and shear for a single ray
-	void rayshooterInternal(double *ray, double *alpha, KappaType *gamma, KappaType *kappa, bool kappa_off);
 
 	// methods used for use with implanted sources
 
