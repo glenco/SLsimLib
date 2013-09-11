@@ -3,6 +3,7 @@ add_sources(
 	MOKAlens.cpp
 	lens.cpp
 	lens_halos.cpp
+	lens_multi_dark.cpp
 	planes.cpp
 	profile.cpp
 )

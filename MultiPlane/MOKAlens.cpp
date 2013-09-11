@@ -60,34 +60,63 @@ void cmass(int n, std::valarray<float> map, std:: vector<double> x, double &xcm,
 }
 
 /**
+ * \brief loads a MOKA map from a given filename
+ */
+LensHaloMOKA::LensHaloMOKA(const std::string& filename)
+: LensHalo(),
+  MOKA_input_file(filename), flag_MOKA_analyze(0), flag_background_field(0)
+{
+	initMap();
+	
+	// set redshift to value from map
+	setZlens(map->zlens);
+}
+
+/**
  * \brief allocates and reads the MOKA map in
  */
-//MOKALensHalo::MOKALensHalo(std::string paramfile) : Lens(){
-LensHaloMOKA::LensHaloMOKA(InputParams& params) : LensHalo(){
+LensHaloMOKA::LensHaloMOKA(InputParams& params)
+: LensHalo()
+{
+	// read in parameters
+	assignParams(params);
+	
+	// initialize MOKA map
+	initMap();
+}
+
+LensHaloMOKA::~LensHaloMOKA()
+{
+	delete map;
+}
+
+void LensHaloMOKA::initMap()
+{
 #ifndef ENABLE_FITS
 	std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
 	exit(1);
 #endif
 
-	map = new MOKAmap;
-  if(std::numeric_limits<float>::has_infinity){
-    Rmax = std::numeric_limits<float>::infinity();
-  }else{
-    Rmax = std::numeric_limits<float>::max();
-  }
-	assignParams(params);
-
+	map = new MOKAmap();
+	
+	if(std::numeric_limits<float>::has_infinity)
+		Rmax = std::numeric_limits<float>::infinity();
+	else
+		Rmax = std::numeric_limits<float>::max();
+	
 	getDims();
-
-	map->convergence.resize(map->nx*map->ny);
-	map->alpha1.resize(map->nx*map->ny);
-	map->alpha2.resize(map->nx*map->ny);
-	map->gamma1.resize(map->nx*map->ny);
-	map->gamma2.resize(map->nx*map->ny); 
-	map->gamma3.resize(map->nx*map->ny);
-
+	
+	std::size_t size = map->nx*map->ny;
+	
+	map->convergence.resize(size);
+	map->alpha1.resize(size);
+	map->alpha2.resize(size);
+	map->gamma1.resize(size);
+	map->gamma2.resize(size); 
+	map->gamma3.resize(size);
+	
 	readImage();
-
+	
 	if(flag_background_field == 1)
 	{
 		map->convergence = 0;
@@ -96,22 +125,11 @@ LensHaloMOKA::LensHaloMOKA(InputParams& params) : LensHalo(){
 		map->gamma1 = 0;
 		map->gamma2 = 0;
 	}
-	
-	initMap();
-}
 
-LensHaloMOKA::~LensHaloMOKA(){
-	delete map;
-}
-
-void LensHaloMOKA::initMap()
-{
 	map->center[0] = map->center[1] = 0.0;
 	map->boxlrad = map->boxlarcsec*pi/180/3600.;
 
-	double xmin = -map->boxlMpc*0.5;
-	double xmax =  map->boxlMpc*0.5;
-	fill_linear (map->x,map->nx,xmin,xmax); // physical Mpc/h
+	fill_linear(map->x, map->nx, -0.5*map->boxlMpc, 0.5*map->boxlMpc); // physical Mpc/h
 	map->inarcsec  = 10800./M_PI/map->DL*60.; // Mpc/h to arcsec
 
 	/// converts to the code units
@@ -167,8 +185,6 @@ void LensHaloMOKA::assignParams(InputParams& params){
   }
 
   if(!params.get("MOKA_analyze",flag_MOKA_analyze)) flag_MOKA_analyze = 0;
-
-  set = true;
 }
 
 /**

@@ -57,16 +57,14 @@ struct MOKAmap{
  * Note: To use this class requires setting the ENABLE_FITS compiler flag and linking
  * the cfits library.
  */
-
-
-class LensHaloMOKA : public LensHalo{
+class LensHaloMOKA : public LensHalo
+{
 public:
-
+	LensHaloMOKA(const std::string& filename);
 	LensHaloMOKA(InputParams& params);
 
 	~LensHaloMOKA();
 
-	bool set;	/// the name of the MOKA input file
 	std::string MOKA_input_file;
 	/// if >=1 (true), do analyzis only; if = 0 (false) change units to internal GLAMER units and prepare for ray-shooting
 	int flag_MOKA_analyze;
@@ -78,10 +76,9 @@ public:
 	void saveKappaProfile();
 	void saveGammaProfile();
 	void saveProfiles(double &RE3, double &xxc, double &yyc);
-	void initMap();
 	void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa,bool subtract_point=false);
 
-	MOKAmap *map;
+	MOKAmap* map;
 
 	void estSignLambdas();
 	void EinsteinRadii(double &RE1, double &RE2, double &xxc, double &yyc);
@@ -89,7 +86,9 @@ public:
 	void getDims();
 	void readImage();
 	void writeImage(std::string fn);
-
+	
+private:
+	void initMap();
 };
 
 void make_friendship(int ii,int ji,int np,std:: vector<int> &friends, std:: vector<double> &pointdist);

@@ -131,6 +131,11 @@ void Lens::assignParams(InputParams& params)
 			main_galaxy_halo_type = null_gal;
 		}
 	}
+	else
+	{
+		main_halo_type = null_lens;
+		main_galaxy_halo_type = null_gal;
+	}
 	
 	if(!params.get("redshift_planes_file",redshift_planes_file))
 		read_redshift_planes = false;
@@ -223,6 +228,22 @@ void Lens::assignParams(InputParams& params)
 			field_Nplanes = 0;
 			fieldofview = 0;
 		}
+	}
+	
+	// try if MultiDark parameters are set
+	if(params.exist("MultiDark_input_file"))
+	{
+		std::string MultiDark_input_file;
+		if(!params.get("MultiDark_input_file", MultiDark_input_file))
+		{
+			ERROR_MESSAGE();
+			cout << "parameter MultiDark_input_file needs to be set in the parameter file " << params.filename() << endl;
+			exit(1);
+		}
+		
+		readMultiDark(MultiDark_input_file);
+		
+		flag_switch_main_halo_on = true;
 	}
 	
 	if(!params.get("z_source",zsource))
