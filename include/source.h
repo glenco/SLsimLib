@@ -90,7 +90,7 @@ typedef Source *SourceHndl;
  */
 class SourcePixelled: public Source{
 public:
-	SourcePixelled(double my_z, int Npixels, double range, double* center, double* arr_val);
+	SourcePixelled(double my_z, double* center, int Npixels, double resolution, double* arr_val);
 	SourcePixelled(InputParams& params);
 	~SourcePixelled();
 	double SurfaceBrightness(double *y);

@@ -222,10 +222,12 @@ double SourceBLRSph2::SurfaceBrightness(double *y){
 SourcePixelled::SourcePixelled(InputParams& params)
 {}
 
-SourcePixelled::SourcePixelled(double my_z, int my_Npixels, double my_range, double* my_center, double* arr_val)
-	:Source(), range(my_range), Npixels (my_Npixels){
+SourcePixelled::SourcePixelled(double my_z, double* my_center, int my_Npixels, double my_resolution, double* arr_val)
+	:Source(), resolution(my_resolution), Npixels (my_Npixels){
 	zsource = my_z;
-	resolution = range/Npixels;
+
+	range = resolution*(Npixels-1);
+
 	values.resize(Npixels*Npixels);
 	for (int i = 0; i < Npixels*Npixels; i++)
 			values[i] = arr_val[i];
@@ -301,8 +303,8 @@ void SourcePixelled::calcSize(){
 }
 
 double SourcePixelled::SurfaceBrightness(double *y){
-	int ix = Utilities::IndexFromPosition(y[0],Npixels,range,source_x[0]);
-	int iy = Utilities::IndexFromPosition(y[1],Npixels,range,source_x[1]);
+	long ix = Utilities::IndexFromPosition(y[0],Npixels,range,source_x[0]);
+	long iy = Utilities::IndexFromPosition(y[1],Npixels,range,source_x[1]);
 	if (ix>-1 && iy>-1)
 	{
 		return values[iy*Npixels+ix];

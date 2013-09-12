@@ -92,14 +92,20 @@ void log_polar_grid(Point *i_points,double rmax,double rmin,double *center,long 
 namespace Utilities{
 long IndexFromPosition(double *x,long Npixels,double range,double *center){
 	long ix,iy;
+	double fx, fy;
 
-	  ix=(long)( ((x[0] - center[0])/range + 0.5)*(Npixels-1)+0.5);
-	  iy=(long)( ((x[1] - center[1])/range + 0.5)*(Npixels-1)+0.5);
+	  fx = ((x[0] - center[0])/range + 0.5)*(Npixels-1)+0.5;
+	  fy = ((x[1] - center[1])/range + 0.5)*(Npixels-1)+0.5;
 
 /*	  std::printf("point %e %e  map %e %e\n",x[0],x[1]
       ,(ix*1.0/(Npixels-1.) - 0.5)*range + center[0]
       ,(iy*1.0/(Npixels-1.) - 0.5)*range + center[1]);
 */
+	  if (fx < 0.) ix = -1;
+	  else ix = (long)(fx);
+
+	  if (fy < 0.) iy = -1;
+	  else iy = (long)(fy);
 
 	  if( (ix>-1)*(ix<Npixels) && (iy>-1)*(iy<Npixels) ) return ix+Npixels*iy;
 	  return -1;
@@ -119,10 +125,13 @@ void PositionFromIndex(unsigned long i,double *x,long Npixels,double range,doubl
 }
 
 // 1d version
-int IndexFromPosition(double x,long Npixels,double range,double center){
-	int ix;
+long IndexFromPosition(double x,long Npixels,double range,double center){
+	double fx;
+	long ix;
 
-	  ix=(int)( ((x - center)/range + 0.5)*(Npixels-1)+0.5);
+	  fx = ((x - center)/range + 0.5)*(Npixels-1)+0.5;
+	  if (fx < 0.) ix = -1;
+	  else ix = (long)(fx);
 
 	  if( (ix>-1)*(ix<Npixels)) return ix;
 	  return -1;
