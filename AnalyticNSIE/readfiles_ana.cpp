@@ -80,9 +80,6 @@ LensHaloAnaNSIE::LensHaloAnaNSIE(InputParams& params) : LensHaloBaseNSIE(params)
   	for(int i=0;i< perturb_Nmodes+1 ;++i) perturb_modes[i] =  0;
   }
 
-  // in degrees
-  pa*=pi/180;
-
   PrintLens(false,false);
 }
 

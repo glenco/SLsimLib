@@ -26,7 +26,7 @@
  * 	main_sigma                  Velocity dispersion of host NSIE.
  *	main_core                   Core size
  *	main_axis_ratio             Axis ratio of mass
- *	main_pos_angle              Position angle
+ *	main_pos_angle              Position angle in radiants
  *	main_z_lens                 Redshift of lens
  *
  *  **** Distortion parameters
