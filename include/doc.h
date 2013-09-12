@@ -44,7 +44,7 @@
 
 		####### Main halos type ##########
 		main_halo_on	   1    # 0: no main halo, 1 or else - a main halo
-		main_DM_halo_type       1    # DM internal profile type: 0 or nolens, 1 or NFW, 2 or PseudoNFW, 3 or PowerLaw, 4 or NSIE, 5 or AnaLens, 6 or UniLens, 7 or MOKALens, 8 or DummyLens
+		main_DM_halo_type       1    # DM internal profile type: 0 or nolens, 1 or NFW, 2 or PseudoNFW, 3 or PowerLaw, 4 or NSIE, 5 or AnaLens, 6 or UniLens, 7 or MOKALens, 8 or DummyLens, 9 or Hernquist, 10 or Jaffe, 11 or MultiDark
 		main_galaxy_halo_type   1	# if set, a galaxy profile is chosen: 0 or none, 1 or NSIE
 		
 		###### Field halos ######

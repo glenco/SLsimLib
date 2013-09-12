@@ -131,6 +131,11 @@ void Lens::assignParams(InputParams& params)
 			main_galaxy_halo_type = null_gal;
 		}
 	}
+	else
+	{
+		main_halo_type = null_lens;
+		main_galaxy_halo_type = null_gal;
+	}
 	
 	if(!params.get("redshift_planes_file",redshift_planes_file))
 		read_redshift_planes = false;
@@ -222,6 +227,17 @@ void Lens::assignParams(InputParams& params)
 			// no field
 			field_Nplanes = 0;
 			fieldofview = 0;
+		}
+	}
+	
+	// read MultiDark parameters if necessary
+	if(main_halo_type == multi_dark_lens)
+	{
+		if(!params.get("MultiDark_input_file", main_input_file))
+		{
+			ERROR_MESSAGE();
+			cout << "parameter MultiDark_input_file needs to be set in the parameter file " << params.filename() << endl;
+			exit(1);
 		}
 	}
 	
@@ -360,6 +376,9 @@ void Lens::printMultiLens(){
 		break;
 	case jaffe_lens:
 		cout << "Jaffe lens" << endl;
+		break;
+	case multi_dark_lens:
+		cout << "MultiDark lens" << endl;
 		break;
 	}
 
@@ -717,6 +736,9 @@ void Lens::createMainHalos(InputParams& params)
 		break;
 	case jaffe_lens:
 		main_halos.push_back(new LensHaloJaffe(params));
+		break;
+	case multi_dark_lens:
+		readMultiDark();
 		break;
 	}
 

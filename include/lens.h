@@ -114,6 +114,12 @@ public:
 	/// replaces existing main halos with a sequence of main halos
 	void replaceMainHalos(LensHalo** halos, std::size_t Nhalos);
 
+	/// get number of main halos
+	std::size_t getNMainHalos() const;
+	/// get number of main halos of given type
+	template<typename HaloType>
+	std::size_t getNMainHalos() const;
+	
 	/// get single main halo
 	LensHalo* getMainHalo(std::size_t i);
 	/// get single main halo of given type
@@ -122,8 +128,6 @@ public:
 	
 	/// compute the dflection, convergence, and shear for each point on the grid
 	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off);
-	/// compute the dflection, convergence, and shear for a single ray
-	void rayshooterInternal(double *ray, double *alpha, KappaType *gamma, KappaType *kappa, bool kappa_off);
 
 	// methods used for use with implanted sources
 
@@ -145,10 +149,10 @@ public:
 	/// print the cosmological parameters
 	void PrintCosmology(){cosmo->PrintCosmology();}
 
-  /// returns the critical density at the main lens in Msun/ Mpc^2 for a source at zsource
-  double getSigmaCrit(double zsource){ return cosmo->SigmaCrit(getZlens(),zsource); }
+	/// returns the critical density at the main lens in Msun/ Mpc^2 for a source at zsource
+	double getSigmaCrit(double zsource){ return cosmo->SigmaCrit(getZlens(),zsource); }
 
-  COSMOLOGY *cosmo;
+	COSMOLOGY *cosmo;
 
 private:
 	GLAMER_TEST_FRIEND(LensTest)
@@ -279,11 +283,29 @@ private: /* main */
 	/// vector of main plane distances
 	std::vector<double> main_Dl;
 	
-	/// main lens type: 0 or nolens, 1 or NFW, 2 or PseudoNFW, 3 or PowerLaw, 4 or NSIE, 5 or AnaLens, 6 or UniLens, 7 or MOKALens, 8 or DummyLens, 9 or Hernquist, 10 or Jaffe
+	/// main lens type
 	LensHaloType main_halo_type;
-	/// galaxy lens type: 0 or none, 1 or NSIE
+	/// galaxy lens type
 	GalaxyLensHaloType main_galaxy_halo_type;
+	
+private: /* input */
+	/// file for multiple main halo input
+	std::string main_input_file;
+	
+ 	/// read main halos from a MultiDark simulation
+	void readMultiDark();
 };
+
+inline std::size_t Lens::getNMainHalos() const
+{
+	return main_halos.size();
+}
+
+template<typename HaloType>
+inline std::size_t Lens::getNMainHalos() const
+{
+	return main_halos.size<HaloType>();
+}
 
 inline LensHalo* Lens::getMainHalo(std::size_t i)
 {
