@@ -23,6 +23,7 @@
 
 #include "standard.h"
 #include <map>
+#include <set>
 
 enum MassFuncType
 {
@@ -103,6 +104,8 @@ public:
 	void readMOKA();
 
 private:
+	static const std::set<std::string> known_labels;
+	
 	typedef std::map<std::string, std::string>::iterator iterator;
 	
 	std::string paramfile_name;

@@ -63,6 +63,10 @@ InputParams::InputParams(std::string paramfile)
 			{
 				std::string label = myline.substr(0, np);
 				
+				// check if label is known
+				if(known_labels.find(label) == known_labels.end())
+					std::cerr << "WARNING: unknown parameter " << label << " in file " << paramfile << "!" << std::endl;
+				
 				myline = myline.substr(np);  // should now just have the value plus white space
 				np = myline.find_first_not_of(' ');
 				if(np > 0)
