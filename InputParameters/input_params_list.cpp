@@ -23,7 +23,7 @@ namespace {
 		"main_halo_on",
 		"main_DM_halo_type",
 		"main_galaxy_halo_type",
-		
+
 		// Field halos
 		"field_off",
 		"field_Nplanes",
@@ -72,7 +72,41 @@ namespace {
 		"MOKA_input_params",
 		"MOKA_analyze",
 		"background_field",
+
+		// NFW lens halo model
+		"mass_nfw"
+		"Rmax_nfw"
+		"zlens_nfw"
+		"concentration_nfw"
+
+		// Pseudo NFW lens halo model
+		"mass_pnfw"
+		"Rmax_pnfw"
+		"zlens_pnfw"
+		"concentration_pnfw"
+		"slope_pnfw"
+
+		// Power law lens halo model
+		"mass_pl"
+		"Rmax_pl"
+		"zlens_pl"
+		"slope_pl"
+
+		// Simple NSIE lens halo model
+		"mass_nsie"
+
+		// Hernquist lens halo model
+		"mass_hernquist"
+		"Rmax_hernquist"
+		"zlens_hernquist"
+		"rscale_hernquist"
 		
+		// Jaffe lens halo model
+		"mass_jaffe"
+		"Rmax_jaffe"
+		"zlens_jaffe"
+		"rscale_jaffe"
+
 		// MultiDark lenses
 		"MultiDark_input_file",
 		
