@@ -63,9 +63,6 @@ namespace {
 		"main_sub_mass_max",
 		"main_sub_mass_min",
 		"main_sub_type",
-		"main_stars_N",
-		"main_stars_fraction",
-		"main_stars_mass",
 		
 		// MOKA lens halo model
 		"MOKA_input_file",
@@ -74,38 +71,56 @@ namespace {
 		"background_field",
 
 		// NFW lens halo model
-		"mass_nfw"
-		"Rmax_nfw"
-		"zlens_nfw"
-		"concentration_nfw"
+		"mass_nfw",
+		"Rmax_nfw",
+		"zlens_nfw",
+		"concentration_nfw",
 
 		// Pseudo NFW lens halo model
-		"mass_pnfw"
-		"Rmax_pnfw"
-		"zlens_pnfw"
-		"concentration_pnfw"
-		"slope_pnfw"
+		"mass_pnfw",
+		"Rmax_pnfw",
+		"zlens_pnfw",
+		"concentration_pnfw",
+		"slope_pnfw",
 
 		// Power law lens halo model
-		"mass_pl"
-		"Rmax_pl"
-		"zlens_pl"
-		"slope_pl"
+		"mass_pl",
+		"Rmax_pl",
+		"zlens_pl",
+		"slope_pl",
 
 		// Simple NSIE lens halo model
-		"mass_nsie"
+		"mass_nsie",
 
 		// Hernquist lens halo model
-		"mass_hernquist"
-		"Rmax_hernquist"
-		"zlens_hernquist"
-		"rscale_hernquist"
+		"mass_hernquist",
+		"Rmax_hernquist",
+		"zlens_hernquist",
+		"rscale_hernquist",
 		
 		// Jaffe lens halo model
-		"mass_jaffe"
-		"Rmax_jaffe"
-		"zlens_jaffe"
-		"rscale_jaffe"
+		"mass_jaffe",
+		"Rmax_jaffe",
+		"zlens_jaffe",
+		"rscale_jaffe",
+
+		// Uniform lens halo model
+		"zlens_uniform",
+		"kappa_uniform",
+		"gamma_uniform_1",
+		"gamma_uniform_2",
+		"zsource_reference",
+
+		// Stars
+		"main_stars_N",
+		"main_stars_fraction",
+		"main_stars_mass",
+		"main_stars_mass_function",
+		"main_stars_min_mass",
+		"main_stars_max_mass",
+		"main_stars_bending_point",
+		"main_stars_lo_mass_slope",
+		"main_stars_hi_mass_slope",
 
 		// MultiDark lenses
 		"MultiDark_input_file",
