@@ -25,17 +25,21 @@ void Lens::readMultiDark()
 		if(line.empty())
 			continue;
 		
-		std::ifstream::pos_type begin, end, comment;
+		std::string::size_type comment = line.find_first_of(char_comment);
 		
-		comment = line.find_first_of(char_comment);
-		begin = line.find_first_not_of(char_whitespace);
-		end = line.find_last_not_of(char_whitespace, comment - (std::ifstream::pos_type)1);
+		if(comment == 0)
+			continue;
+		if(comment != std::string::npos)
+			line = line.substr(0, comment - 1);
+		
+		std::string::size_type begin = line.find_first_not_of(char_whitespace);
+		std::string::size_type end = line.find_last_not_of(char_whitespace);
 		
 		// skip empty filenames
-		if(begin >= end)
+		if(end <= begin)
 			continue;
 		
-		std::string mokafile = line.substr(begin, 1 + end - begin);
+		std::string mokafile = line.substr(begin, end - begin + 1);
 		
 		std::cout << "- " << mokafile << std::endl;
 		
