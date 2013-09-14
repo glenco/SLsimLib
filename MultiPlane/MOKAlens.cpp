@@ -83,6 +83,10 @@ LensHaloMOKA::LensHaloMOKA(InputParams& params)
 	
 	// initialize MOKA map
 	initMap();
+	
+	// set redshift if necessary
+	if(zlens == -1)
+		setZlens(map->zlens);
 }
 
 LensHaloMOKA::~LensHaloMOKA()
@@ -154,37 +158,35 @@ void LensHaloMOKA::initMap()
  */
 void LensHaloMOKA::setCosmology(COSMOLOGY* cosmo)
 {
-	assert(cosmo->getOmega_matter() == map->omegam);
-	assert(cosmo->getOmega_lambda() == map->omegal);
-	assert(cosmo->gethubble() == map->h);
+	if(cosmo->getOmega_matter() == map->omegam)
+		std::cerr << "LensHaloMOKA: Omega_matter " << cosmo->getOmega_matter() << " (cosmology) != " << map->omegam << " (MOKA)" << std::endl;
+	if(cosmo->getOmega_lambda() == map->omegal)
+		std::cerr << "LensHaloMOKA: Omega_lambda " << cosmo->getOmega_lambda() << " (cosmology) != " << map->omegal << " (MOKA)" << std::endl;
+	if(cosmo->gethubble() == map->h)
+		std::cerr << "LensHaloMOKA: hubble " << cosmo->gethubble() << " (cosmology) != " << map->h << " (MOKA)" << std::endl;
 }
 
 /**
  * Sets many parameters within the MOKA lens model
  */
 
-void LensHaloMOKA::assignParams(InputParams& params){
-
-
-  if(!params.get("z_lens",zlens)){
-	  ERROR_MESSAGE();
-	  std::cout << "parameter z_lens needs to be set in parameter file " << params.filename() << std::endl;
-	  exit(0);
-  }
-
-  if(!params.get("MOKA_input_file",MOKA_input_file)){
-	  ERROR_MESSAGE();
-	  std::cout << "parameter MOKA_input_file needs to be set in parameter file " << params.filename() << std::endl;
-	  exit(0);
-  }
-
-  if(!params.get("background_field",flag_background_field)){
-	  ERROR_MESSAGE();
-	  std::cout << "parameter background_field needs to be set in parameter file " << params.filename() << std::endl;
-	  exit(0);
-  }
-
-  if(!params.get("MOKA_analyze",flag_MOKA_analyze)) flag_MOKA_analyze = 0;
+void LensHaloMOKA::assignParams(InputParams& params)
+{
+	if(!params.get("z_lens", zlens))
+		zlens = -1; // set to -1 so that it will be set to the MOKA map value
+	
+	if(!params.get("MOKA_input_file", MOKA_input_file))
+	{
+		ERROR_MESSAGE();
+		std::cout << "parameter MOKA_input_file needs to be set in parameter file " << params.filename() << std::endl;
+		exit(0);
+	}
+	
+	if(!params.get("MOKA_background_field", flag_background_field))
+		flag_background_field = 0;
+	
+	if(!params.get("MOKA_analyze",flag_MOKA_analyze))
+		flag_MOKA_analyze = 0;
 }
 
 /**

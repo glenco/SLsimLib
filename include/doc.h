@@ -97,9 +97,9 @@
 		 
 		####### MOKA lens halo model ############
 		MOKA_input_file         moka.fits    # MOKA FITS file
-        MOKA_input_params       1            # read parameters from MOKA FITS header
+		MOKA_input_params       1            # read parameters from MOKA FITS header
 		MOKA_analyze            0
-		background_field        0
+		MOKA_background_field   0
 		
 		######## Type of source SB model
 		SourceSBType	   0	 # 0: Uniform, 1: Gaussian, 2: BLR_Disk, 3: BLR_Sph1, 4: BLR_Sph2

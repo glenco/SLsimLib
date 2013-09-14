@@ -68,7 +68,7 @@ namespace {
 		"MOKA_input_file",
 		"MOKA_input_params",
 		"MOKA_analyze",
-		"background_field",
+		"MOKA_background_field",
 
 		// NFW lens halo model
 		"mass_nfw",
