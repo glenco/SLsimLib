@@ -63,6 +63,9 @@ void LensHaloMOKA::readImage(){
 	h0->readKey ("DLS",map->DLS);
 	h0->readKey ("DS",map->DS);
 
+
+	std:: cout << map->boxlMpc << "  " << map->boxlarcsec << std:: endl;
+
 	ExtHDU &h1=ff->extension(1);
 	h1.read(map->alpha1);
 	ExtHDU &h2=ff->extension(2);
