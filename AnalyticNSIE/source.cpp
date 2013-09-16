@@ -240,6 +240,26 @@ SourcePixelled::SourcePixelled(double my_z, double* my_center, int my_Npixels, d
 	calcSize();
 }
 
+SourcePixelled::SourcePixelled(const PixelMap& gal_map, double my_z, double factor)
+	:Source(){
+
+	zsource = my_z;
+	resolution = gal_map.getResolution();
+	Npixels = gal_map.getNpixels();
+	range = resolution*(Npixels-1);
+	source_x[0] = gal_map.getCenter()[0];
+	source_x[1] = gal_map.getCenter()[1];
+	source_r =  range/sqrt(2.);
+	values.resize(Npixels*Npixels);
+	for (int i = 0; i < Npixels*Npixels; i++)
+			values[i] = gal_map[i]/resolution/resolution*factor;
+
+	calcTotalFlux();
+	calcCentroid();
+	calcEll();
+	calcSize();
+}
+
 SourcePixelled::~SourcePixelled(){
 }
 
