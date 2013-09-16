@@ -222,7 +222,13 @@ double SourceBLRSph2::SurfaceBrightness(double *y){
 SourcePixelled::SourcePixelled(InputParams& params)
 {}
 
-SourcePixelled::SourcePixelled(double my_z, double* my_center, int my_Npixels, double my_resolution, double* arr_val)
+SourcePixelled::SourcePixelled(
+		double my_z            /// redshift of the source
+		, double* my_center  /// center (in rad)
+		, int my_Npixels           /// number of pixels per side
+		, double my_resolution  /// resolution (in rad)
+		, double* arr_val          /// array of pixel values (must be of size = Npixels*Npixels)
+		)
 	:Source(), resolution(my_resolution), Npixels (my_Npixels){
 	zsource = my_z;
 
@@ -240,7 +246,16 @@ SourcePixelled::SourcePixelled(double my_z, double* my_center, int my_Npixels, d
 	calcSize();
 }
 
-SourcePixelled::SourcePixelled(const PixelMap& gal_map, double my_z, double factor)
+/** \brief Creates a SourcePixelled from a PixelMap image.
+ *  The idea is to use stamps of observed galaxies as input sources for simuations.
+ *  Surface brightness of the source is conserved, taking into account the input pixel size.
+ *  Factor allows for rescaling of the flux, in case one wants to simulate a different observation.
+ */
+SourcePixelled::SourcePixelled(
+		const PixelMap& gal_map  /// Input image and information
+		, double my_z                 /// redshift of the source
+		, double factor                /// optional rescaling factor for the flux
+		)
 	:Source(){
 
 	zsource = my_z;
