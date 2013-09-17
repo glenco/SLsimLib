@@ -113,7 +113,7 @@ void SourceGaussian::assignParams(InputParams& params){
 void SourceBLR::assignParams(InputParams& params){
 
 	bool fail = false;
-	if(!params.get("source_z_source",zsource)){
+	if(!params.get("source_z",zsource)){
 		  ERROR_MESSAGE();
 		  cout << "parameter source_z_source needs to be set in parameter file " << params.filename() << endl;
 		  fail = true;

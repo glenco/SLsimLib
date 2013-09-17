@@ -728,7 +728,7 @@ void LensHaloDummy::force_halo(double *alpha,KappaType *kappa,KappaType *gamma,d
 
 void LensHaloDummy::assignParams(InputParams& params)
 {
-	if(!params.get("z_lens",zlens)) error_message1("z_lens",params.filename());
+	if(!params.get("main_zlens",zlens)) error_message1("main_zlens",params.filename());
 }
 
 void LensHalo::serialize(RawData& d) const
