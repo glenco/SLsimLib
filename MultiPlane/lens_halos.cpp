@@ -136,10 +136,10 @@ double LensHaloNFW::InterpolateFromTable(double *table, double y){
 }
 
 void LensHaloNFW::assignParams(InputParams& params){
-	if(!params.get("mass_nfw",mass)) error_message1("mass_nfw",params.filename());
-	if(!params.get("Rmax_nfw",Rmax)) error_message1("Rmax_nfw",params.filename());
-	if(!params.get("zlens_nfw",zlens)) error_message1("zlens_nfw",params.filename());
-	if(!params.get("concentration_nfw",rscale)) error_message1("concentration_nfw",params.filename());
+	if(!params.get("main_mass",mass)) error_message1("main_mass",params.filename());
+	if(!params.get("main_Rmax",Rmax)) error_message1("main_Rmax",params.filename());
+	if(!params.get("main_zlens",zlens)) error_message1("main_zlens",params.filename());
+	if(!params.get("main_concentration",rscale)) error_message1("main_concentration",params.filename());
 	rscale = Rmax/rscale; // was the concentration
   xmax = Rmax/rscale;
 
@@ -235,11 +235,11 @@ void LensHaloPseudoNFW::initFromMassFunc(float my_mass, float my_Rmax, float my_
 }
 
 void LensHaloPseudoNFW::assignParams(InputParams& params){
-	if(!params.get("mass_pnfw",mass)) error_message1("mass_pnfw",params.filename());
-	if(!params.get("Rmax_pnfw",Rmax)) error_message1("Rmax_pnfw",params.filename());
-	if(!params.get("zlens_pnfw",zlens)) error_message1("zlens_pnfw",params.filename());
-	if(!params.get("concentration_pnfw",rscale)) error_message1("concentration_pnfw",params.filename());
-	if(!params.get("slope_pnfw",beta)) error_message1("slope_pnfw",params.filename());
+	if(!params.get("main_mass",mass)) error_message1("main_mass",params.filename());
+	if(!params.get("main_Rmax",Rmax)) error_message1("main_Rmax",params.filename());
+	if(!params.get("main_zlens",zlens)) error_message1("main_zlens",params.filename());
+	if(!params.get("main_concentration",rscale)) error_message1("main_concentration",params.filename());
+	if(!params.get("main_slope",beta)) error_message1("main_slope",params.filename());
 	rscale = Rmax/rscale; // was the concentration
   xmax = Rmax/rscale;
 }
@@ -269,10 +269,10 @@ void LensHaloPowerLaw::initFromMassFunc(float my_mass, float my_Rmax, float my_r
 }
 
 void LensHaloPowerLaw::assignParams(InputParams& params){
-	if(!params.get("mass_pl",mass)) error_message1("mass_pl",params.filename());
-	if(!params.get("Rmax_pl",Rmax)) error_message1("Rmax_pl",params.filename());
-	if(!params.get("zlens_pl",zlens)) error_message1("zlens_pl",params.filename());
-	if(!params.get("slope_pl",beta)) error_message1("slope_pl",params.filename());
+	if(!params.get("main_mass",mass)) error_message1("main_mass",params.filename());
+	if(!params.get("main_Rmax",Rmax)) error_message1("main_Rmax",params.filename());
+	if(!params.get("main_zlens",zlens)) error_message1("main_zlens",params.filename());
+	if(!params.get("main_slope",beta)) error_message1("main_slope",params.filename());
 
 	if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
     else if(stars_N){
@@ -305,7 +305,7 @@ LensHaloSimpleNSIE::LensHaloSimpleNSIE(InputParams& params){
 }
 
 void LensHaloSimpleNSIE::assignParams(InputParams& params){
-	if(!params.get("mass_nsie",mass)) error_message1("mass_nsie",params.filename());
+	if(!params.get("main_mass",mass)) error_message1("main_mass",params.filename());
 	if(!params.get("main_zlens",zlens)) error_message1("main_zlens",params.filename());
 
 	if(!params.get("main_sigma",sigma)) error_message1("main_sigma",params.filename());
@@ -577,10 +577,10 @@ double LensHaloHernquist::InterpolateFromTable(double *table, double y){
 }
 
 void LensHaloHernquist::assignParams(InputParams& params){
-	if(!params.get("mass_hernquist",mass)) error_message1("mass_hernquist",params.filename());
-	if(!params.get("Rmax_hernquist",Rmax)) error_message1("Rmax_hernquist",params.filename());
-	if(!params.get("zlens_hernquist",zlens)) error_message1("zlens_hernquist",params.filename());
-	if(!params.get("rscale_hernquist",rscale)) error_message1("rscale_hernquist",params.filename());
+	if(!params.get("main_mass",mass)) error_message1("main_mass",params.filename());
+	if(!params.get("main_Rmax",Rmax)) error_message1("main_Rmax",params.filename());
+	if(!params.get("main_zlens",zlens)) error_message1("main_zlens",params.filename());
+	if(!params.get("main_rscale",rscale)) error_message1("main_rscale",params.filename());
   xmax = Rmax/rscale;
 
 	if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
@@ -650,10 +650,10 @@ double LensHaloJaffe::InterpolateFromTable(double *table, double y){
 }
 
 void LensHaloJaffe::assignParams(InputParams& params){
-	if(!params.get("mass_jaffe",mass)) error_message1("mass_jaffe",params.filename());
-	if(!params.get("Rmax_jaffe",Rmax)) error_message1("Rmax_jaffe",params.filename());
-	if(!params.get("zlens_jaffe",zlens)) error_message1("zlens_jaffe",params.filename());
-	if(!params.get("rscale_jaffe",rscale)) error_message1("rscale_jaffe",params.filename());
+	if(!params.get("main_mass",mass)) error_message1("main_mass",params.filename());
+	if(!params.get("main_Rmax",Rmax)) error_message1("main_Rmax",params.filename());
+	if(!params.get("main_zlens",zlens)) error_message1("main_zlens",params.filename());
+	if(!params.get("main_rscale",rscale)) error_message1("main_rscale",params.filename());
   xmax = Rmax/rscale;
 
 	if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
