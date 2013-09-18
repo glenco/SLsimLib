@@ -65,19 +65,27 @@ void SourceSersic::unserialize(RawData& d)
 void SourceSersic::randomize(double step, long* seed)
 {
 	// half light radius
-	Reff += step*pi/180/60/60*gasdev(seed);
+	double new_R = Reff + step*pi/180/60/60*gasdev(seed);
+	Reff = std::max(1.e-10,new_R);
 	
 	// magnitude
 	mag += step*gasdev(seed);
 	
 	// position angle
-	//PA += step*pi*gasdev(seed);
+	double new_PA = PA + step*pi*gasdev(seed);
+	if (new_PA > pi/2.)
+		PA = new_PA - pi;
+	else if (new_PA < -pi/2.)
+		PA = new_PA + pi;
+	else
+		PA = new_PA;
 	
 	// Sersic index
 	index += step*gasdev(seed);
 	
 	// axes ratio
-	//q += step*gasdev(seed);
+	double new_q = q + step*gasdev(seed);
+	q = std::min(1.,std::max(1.e-05,new_q));
 	
 	// redshift?
 	

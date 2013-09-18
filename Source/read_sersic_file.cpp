@@ -64,7 +64,7 @@ void Sky::readSersicFile(std::string filename, double z)
 		
 		Reff *= 3600;
 		
-		theta *= PI/180.;
+		theta *= -PI/180.;
 		
 		n *= 0.90; // TODO: don't cheat
 		
