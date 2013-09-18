@@ -113,7 +113,7 @@ void SourceGaussian::assignParams(InputParams& params){
 void SourceBLR::assignParams(InputParams& params){
 
 	bool fail = false;
-	if(!params.get("source_z_source",zsource)){
+	if(!params.get("source_z",zsource)){
 		  ERROR_MESSAGE();
 		  cout << "parameter source_z_source needs to be set in parameter file " << params.filename() << endl;
 		  fail = true;
@@ -222,7 +222,13 @@ double SourceBLRSph2::SurfaceBrightness(double *y){
 SourcePixelled::SourcePixelled(InputParams& params)
 {}
 
-SourcePixelled::SourcePixelled(double my_z, double* my_center, int my_Npixels, double my_resolution, double* arr_val)
+SourcePixelled::SourcePixelled(
+		double my_z            /// redshift of the source
+		, double* my_center  /// center (in rad)
+		, int my_Npixels           /// number of pixels per side
+		, double my_resolution  /// resolution (in rad)
+		, double* arr_val          /// array of pixel values (must be of size = Npixels*Npixels)
+		)
 	:Source(), resolution(my_resolution), Npixels (my_Npixels){
 	zsource = my_z;
 
@@ -234,6 +240,35 @@ SourcePixelled::SourcePixelled(double my_z, double* my_center, int my_Npixels, d
 	source_r =  range/sqrt(2.);
 	source_x[0] = my_center[0];
 	source_x[1] = my_center[1];
+	calcTotalFlux();
+	calcCentroid();
+	calcEll();
+	calcSize();
+}
+
+/** \brief Creates a SourcePixelled from a PixelMap image.
+ *  The idea is to use stamps of observed galaxies as input sources for simuations.
+ *  Surface brightness of the source is conserved, taking into account the input pixel size.
+ *  Factor allows for rescaling of the flux, in case one wants to simulate a different observation.
+ */
+SourcePixelled::SourcePixelled(
+		const PixelMap& gal_map  /// Input image and information
+		, double my_z                 /// redshift of the source
+		, double factor                /// optional rescaling factor for the flux
+		)
+	:Source(){
+
+	zsource = my_z;
+	resolution = gal_map.getResolution();
+	Npixels = gal_map.getNpixels();
+	range = resolution*(Npixels-1);
+	source_x[0] = gal_map.getCenter()[0];
+	source_x[1] = gal_map.getCenter()[1];
+	source_r =  range/sqrt(2.);
+	values.resize(Npixels*Npixels);
+	for (int i = 0; i < Npixels*Npixels; i++)
+			values[i] = gal_map[i]/resolution/resolution*factor;
+
 	calcTotalFlux();
 	calcCentroid();
 	calcEll();
