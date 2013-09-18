@@ -21,6 +21,8 @@ Point *LinkToSourcePoints(Point *i_points,unsigned long Npoints){
       // link images and source points
     i_points[i].image=&s_points[i];
     s_points[i].image=&i_points[i];
+    
+    s_points[i].gridsize = i_points[i].gridsize;
   }
 
   return s_points;
@@ -148,7 +150,14 @@ long IndexFromPosition(double x,long Npixels,double range,double center){
    *  After it is used once, later calls can use TwoDInterpolator(double *map) for the same point 
    *  in the same coordinate system to save time in calculating the idndexes.
    */
-  double TwoDInterpolator(double *x,int Npixels,double range,double *center,double *map,bool init){
+  double TwoDInterpolator(
+                          double *x
+                          ,int Npixels
+                          ,double range
+                          ,double *center
+                          ,double *map
+                          ,bool init
+                          ){
     static double fx, fy;
     static unsigned long index;
     static bool initialized = false;

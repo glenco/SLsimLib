@@ -53,7 +53,8 @@ GLAMER_TEST_USES(LensTest)
  *   field_buffer -- a constant physical size buffer, padding every lens plane to increase its surface
  *
  *   zsource -- source redshift
- *   flag_switch_deflection_off -- false: deflection is on, true: deflection is off; default is false
+ *   flag_switch_deflection_off -- false: deflection is on, but kappa and gamma may be calculated, true: deflection is off; default is false
+ *   flag_switch_lensing_off -- false: lensing is on, true: lensing is off (no alpha, kappa or gamma); default is false
  *
  *   # Cosmology - Any cosmological parameters that are not set will have default values
  *
@@ -91,9 +92,21 @@ public:
 
 	/// print the main parameters of the lens
 	void printMultiLens();
+  
+  /// Redshift of first main lens plane
 	double getZlens(){
 		if(flag_switch_main_halo_on)
 			return main_halos[0]->getZlens();
+		else{
+			ERROR_MESSAGE();
+			std::cout << "error, no main lens present" << std::endl;
+			exit(1);
+		}
+	}
+  /// Angular size distance (Mpc) to first main lens plane
+	double getAngDistLens(){
+		if(flag_switch_main_halo_on)
+			return cosmo->angDist( main_halos[0]->getZlens() );
 		else{
 			ERROR_MESSAGE();
 			std::cout << "error, no main lens present" << std::endl;
@@ -208,6 +221,7 @@ private: /* generation */
 private: /* force calculation */
 	/// if >= 1, deflection in the rayshooting is switched off
 	bool flag_switch_deflection_off;
+	bool flag_switch_lensing_off;
 	
 	/// the lensing planes
 	std::vector<LensPlane *> lensing_planes;

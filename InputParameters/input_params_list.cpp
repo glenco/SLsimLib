@@ -6,6 +6,7 @@ namespace {
 		// General
 		"outputfile",
 		"deflection_off",
+    "lensing_off",
 		"read_redshift_planes",
 		"redshift_planes_file",
 		"z_lens",

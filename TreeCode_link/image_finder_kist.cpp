@@ -237,7 +237,7 @@ void find_images_kist(
 			printf("     image   # of points    error in area\n");
 			for(j=0;j<*Nimages;++j) printf("       %i        %li         %e\n",j,imageinfo[j].imagekist->Nunits(),imageinfo[j].area_error);
 		}
-		if(i > 20 && *Nimagepoints == 100){
+		if(i > 9 && *Nimagepoints == 100){
 			// case where no image is found at any size
 			*Nimages = 0;
 			*Nimagepoints = 0;
@@ -1236,6 +1236,7 @@ int refine_grid_kist(
 				  //assert(getCurrentKist(imageinfo[i].imagekist)->image->leaf->child2 == NULL);
 
 				  if(batch){
+            assert(imageinfo[i].imagekist->getCurrent()->gridsize > 1.0e-16);
 					  points_to_refine.push_back(getCurrentKist(imageinfo[i].imagekist));
 				  }else{
 					  i_points = grid->RefineLeaf(lens,getCurrentKist(imageinfo[i].imagekist),kappa_off);
@@ -1267,6 +1268,7 @@ int refine_grid_kist(
 					  assert(point->image->leaf->child2 == NULL);
 
 					  if(batch){
+              assert(imageinfo[i].imagekist->getCurrent()->gridsize > 1.0e-16);
 						  points_to_refine.push_back(point);
 					  }else{
 						  i_points = grid->RefineLeaf(lens,point,kappa_off);

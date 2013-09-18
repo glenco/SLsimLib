@@ -266,7 +266,12 @@ namespace Utilities{
   template <typename T>
   class Interpolator{
   public:
-    Interpolator(double *x,int Npixels,double my_range,double *my_center):
+    Interpolator(
+                 double *x          /// position of point
+                 ,int Npixels       /// Number of pixels in one dimension
+                 ,double my_range   /// Range of map in same units as x[]
+                 ,double *my_center /// Center of map in same units as x[]
+                 ):
     N(Npixels),range(my_range),map_p(NULL)
     {
       center[0] = my_center[0];
@@ -279,7 +284,12 @@ namespace Utilities{
      The resulting object can then be used with the () operator as a function.
      Warning: Be sure to distroy the object before distroying map.
      */
-    Interpolator(int Npixels,double my_range,double *my_center,const T *map):
+    Interpolator(
+                 int Npixels          /// Number of pixels in one dimension
+                 ,double my_range     /// Range of map in same units as x[]
+                 ,double *my_center   /// Center of map in same units as x[]
+                 ,const T *map        /// One dimensional array of fundamental type
+                 ):
     N(Npixels),range(my_range),map_p(map)
     {
       center[0] = my_center[0];
@@ -291,13 +301,18 @@ namespace Utilities{
      Does interpolation of map at point that object was constructed with or last called with.
      Can use and map type that has a [] operator that returns a double.
      */
-    double interpolate(T& map){
+    double interpolate(
+                       T& map    /// map that supports the [] operator 
+                       ){
       if(index == -1) return 0;
       return (1-fx)*(1-fy)*map[index] + fx*(1-fy)*map[index+N] + fx*fy*map[index+1+N]
           + (1-fx)*fy*map[index+1];
     };
     /// reinitializes to a new position
-    double interpolate(double *x,T& map){
+    double interpolate(
+                       double *x   /// position of point
+                       ,T& map     /// map that supports the [] operator
+                       ){
       initparams(x);
       return interpolate(map);
     }

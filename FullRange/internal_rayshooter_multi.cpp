@@ -46,6 +46,7 @@ struct TmpParams{
   int size;
   int NPlanes;
   bool flag_switch_deflection_off;
+  bool flag_switch_lensing_off;
   double charge;
   LensPlane** lensing_planes;
   double* plane_redshifts;
@@ -104,6 +105,7 @@ void Lens::rayshooterInternal(
     thread_params[i].start = i*chunk_size;
     thread_params[i].tid = i;
     thread_params[i].flag_switch_deflection_off = flag_switch_deflection_off;
+    thread_params[i].flag_switch_lensing_off = flag_switch_lensing_off;
     thread_params[i].charge = charge;
     thread_params[i].lensing_planes = &lensing_planes[0];
     thread_params[i].plane_redshifts = &plane_redshifts[0];
@@ -171,7 +173,7 @@ void *compute_rays_parallel(void *_p)
     p->i_points[i].gamma[2] = 0;
     
     //*
-    if(p->flag_switch_deflection_off){
+    if(p->flag_switch_lensing_off){
       p->i_points[i].image->x[0] /= p->Dl[0];
       p->i_points[i].image->x[1] /= p->Dl[0];
       p->i_points[i].invmag = 1.0;
@@ -216,7 +218,6 @@ void *compute_rays_parallel(void *_p)
       
       if(p->flag_switch_deflection_off){
         alpha[0] = alpha[1] = 0.0;
-        kappa = gamma[0] = gamma[1] = gamma[2] = 0.0;
       }
       
       aa = (p->dDl[j+1]+p->dDl[j])/p->dDl[j];
