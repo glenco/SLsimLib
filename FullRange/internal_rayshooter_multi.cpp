@@ -170,7 +170,17 @@ void *compute_rays_parallel(void *_p)
     p->i_points[i].gamma[1] = 0;
     p->i_points[i].gamma[2] = 0;
     
-
+    //*
+    if(p->flag_switch_deflection_off){
+      p->i_points[i].image->x[0] /= p->Dl[0];
+      p->i_points[i].image->x[1] /= p->Dl[0];
+      p->i_points[i].invmag = 1.0;
+      p->i_points[i].dt = 0.0;
+      
+      continue;
+    }
+     /**/
+    
     // time delay at first plane     //TODO: check
     p->i_points[i].dt = 0.5*( p->i_points[i].image->x[0]*p->i_points[i].image->x[0]
                             +  p->i_points[i].image->x[1]*p->i_points[i].image->x[1] )/p->dDl[0];
@@ -204,9 +214,11 @@ void *compute_rays_parallel(void *_p)
     	  assert(kappa == kappa);
       }
       
-      if(p->flag_switch_deflection_off)
-    	  alpha[0] = alpha[1] = 0.0;
-            
+      if(p->flag_switch_deflection_off){
+        alpha[0] = alpha[1] = 0.0;
+        kappa = gamma[0] = gamma[1] = gamma[2] = 0.0;
+      }
+      
       aa = (p->dDl[j+1]+p->dDl[j])/p->dDl[j];
       bb = p->dDl[j+1]/p->dDl[j];
       
@@ -221,42 +233,41 @@ void *compute_rays_parallel(void *_p)
       
       if(!kappa_off){
 	
-    	  aa = (p->dDl[j+1]+p->dDl[j])*p->Dl[j]/p->dDl[j]/p->Dl[j+1];
+        aa = (p->dDl[j+1]+p->dDl[j])*p->Dl[j]/p->dDl[j]/p->Dl[j+1];
 	
-    	  if(j>0){
-    		  bb = p->dDl[j+1]*p->Dl[j-1]/p->dDl[j]/p->Dl[j+1];
-    	  }
-    	  else
-    		  bb = 0;
+        if(j>0){
+          bb = p->dDl[j+1]*p->Dl[j-1]/p->dDl[j]/p->Dl[j+1];
+        }
+        else
+          bb = 0;
 	
-
-    	  cc = p->charge*p->dDl[j+1]*p->Dl[j]/p->Dl[j+1];
+        cc = p->charge*p->dDl[j+1]*p->Dl[j]/p->Dl[j+1];
 	
-    	  kappa_plus = aa*p->i_points[i].kappa - bb*kappa_minus
+        kappa_plus = aa*p->i_points[i].kappa - bb*kappa_minus
     			  - cc*(kappa*p->i_points[i].kappa + gamma[0]*p->i_points[i].gamma[0] + gamma[1]*p->i_points[i].gamma[1]);
 	
-    	  gamma_plus[0] = aa*p->i_points[i].gamma[0] - bb*gamma_minus[0]
+        gamma_plus[0] = aa*p->i_points[i].gamma[0] - bb*gamma_minus[0]
     	          - cc*(gamma[0]*p->i_points[i].kappa + kappa*p->i_points[i].gamma[0] - gamma[1]*p->i_points[i].gamma[2]);
 	
-    	  gamma_plus[1] = aa*p->i_points[i].gamma[1] - bb*gamma_minus[1]
+        gamma_plus[1] = aa*p->i_points[i].gamma[1] - bb*gamma_minus[1]
     	          - cc*(gamma[1]*p->i_points[i].kappa + kappa*p->i_points[i].gamma[1] + gamma[0]*p->i_points[i].gamma[2]);
 	
-    	  gamma_plus[2] = aa*p->i_points[i].gamma[2] - bb*gamma_minus[2]
+        gamma_plus[2] = aa*p->i_points[i].gamma[2] - bb*gamma_minus[2]
     	          - cc*(kappa*p->i_points[i].gamma[2] - gamma[1]*p->i_points[i].gamma[0] + gamma[0]*p->i_points[i].gamma[1]);
 	
-    	  kappa_minus = p->i_points[i].kappa;
-    	  gamma_minus[0] = p->i_points[i].gamma[0];
-    	  gamma_minus[1] = p->i_points[i].gamma[1];
-    	  gamma_minus[2] = p->i_points[i].gamma[2];
+        kappa_minus = p->i_points[i].kappa;
+        gamma_minus[0] = p->i_points[i].gamma[0];
+        gamma_minus[1] = p->i_points[i].gamma[1];
+        gamma_minus[2] = p->i_points[i].gamma[2];
 	
-    	  assert(kappa_plus==kappa_plus && gamma_minus[0]==gamma_minus[0] && gamma_minus[1]==gamma_minus[1] && gamma_minus[2]==gamma_minus[2]);
+        assert(kappa_plus==kappa_plus && gamma_minus[0]==gamma_minus[0] && gamma_minus[1]==gamma_minus[1] && gamma_minus[2]==gamma_minus[2]);
 	
-    	  p->i_points[i].kappa = kappa_plus;
-    	  p->i_points[i].gamma[0] = gamma_plus[0];
-    	  p->i_points[i].gamma[1] = gamma_plus[1];
-    	  p->i_points[i].gamma[2] = gamma_plus[2];
+        p->i_points[i].kappa = kappa_plus;
+        p->i_points[i].gamma[0] = gamma_plus[0];
+        p->i_points[i].gamma[1] = gamma_plus[1];
+        p->i_points[i].gamma[2] = gamma_plus[2];
         
-        //TODO: Geometric time delay, potential needs to be added and and this needs to be checked 
+          //TODO: Geometric time delay, potential needs to be added and and this needs to be checked 
         p->i_points[i].dt += 0.5*( (xplus[0] - xminus[0])*(xplus[0] - xminus[0])
                                  + (xplus[1] - xminus[1])*(xplus[1] - xminus[1]) )/p->dDl[j+1]; // + phi;
 	
