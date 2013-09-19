@@ -56,7 +56,6 @@ SourceMultiAnaGalaxy::~SourceMultiAnaGalaxy()
 /// read in galaxies from a Millennium simulation file
 void SourceMultiAnaGalaxy::readDataFile(){
 
-	char c='0';
 	//int type;
 	//long galid,haloid;
 	/*double cx,cy,cz,ra,dec,z_geo ,z_app ,dlum ,vlos ,incl
@@ -68,7 +67,7 @@ void SourceMultiAnaGalaxy::readDataFile(){
 	unsigned long GalID,HaloID;
 	double ra,dec,z_cosm,z_app,Dlum,inclination,pa,Rh,Ref,SDSS_u,SDSS_g,SDSS_r,SDSS_i,SDSS_z
 	,J_band,H_band,Ks_band,i1,i2,SDSS_u_Bulge,SDSS_g_Bulge,SDSS_r_Bulge,SDSS_i_Bulge,SDSS_z_Bulge
-	,J_band_Bulge,H_band_Bulge,Ks_band_Bulge,i1_Bulge,i2_Bulge,cx,cy,cz;
+	,J_band_Bulge,H_band_Bulge,Ks_band_Bulge,i1_Bulge,i2_Bulge;
 
 	std::ifstream file_in(input_gal_file.c_str());
 	if(!file_in){
@@ -134,7 +133,6 @@ void SourceMultiAnaGalaxy::readDataFile(){
 	std::string strg;
 	std::string f=",";
 	std::stringstream buffer;
-	size_t length;
 
 	double mag,mag_bulge;
 

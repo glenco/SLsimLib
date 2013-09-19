@@ -26,7 +26,6 @@
 #include <vector>
 #include <valarray>
 
-#include <nrutil.h>
 #include <nr.h>
 #include <nrD.h>
 #include <utilities.h>

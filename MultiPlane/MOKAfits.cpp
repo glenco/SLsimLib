@@ -246,11 +246,10 @@ int fof(double l,std:: vector<double> xci, std:: vector<double> yci, std:: vecto
   std::vector< int > histogram(np,0);
   std::vector< int >::iterator it = groupid.begin();
   while(it != groupid.end()) histogram[*it++]++;
-  /* Print out the frequencies of the values in v */
-  // std::copy(histogram.begin(),histogram.end(),std::ostream_iterator< int >(std::cout, " "));
-  // std::cout << std::endl;
-  /* Find the mode */
-  /*
+  // Print out the frequencies of the values in v
+  std::copy(histogram.begin(),histogram.end(),std::ostream_iterator< int >(std::cout, " "));
+  std::cout << std::endl;
+  // Find the mode
   int mode = std::max_element(histogram.begin(),histogram.end()) - histogram.begin();
   return mode;
   */

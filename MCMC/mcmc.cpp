@@ -2,7 +2,6 @@
 
 #include "../include/source.h"
 #include "../include/lens.h"
-#include "../include/model.h"
 #include "../include/image_processing.h"
 #include "../include/grid_maintenance.h"
 #include "../include/map_images.h"

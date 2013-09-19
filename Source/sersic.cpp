@@ -16,7 +16,7 @@ SourceSersic::SourceSersic(
 		,const double *my_theta          /// optional angular position on the sky
 		)
 : Source(),
-  mag(my_mag), Reff(my_Reff*pi/180/60/60), PA(my_PA), index(my_index), q(my_q)
+  Reff(my_Reff*pi/180/60/60), mag(my_mag), PA(my_PA), index(my_index), q(my_q)
 {
 	setZ(my_z);
 	

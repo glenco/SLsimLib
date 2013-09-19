@@ -1,11 +1,13 @@
 
 #include "slsimlib.h"
 
+#include <nrutil.h>
+
 /* median_cut determines how the cells are subdivided */
 /*    if ==0  equal volume cuts, Warning this option causes an error*/
 /*    if ==1  median point cuts */
 static int incell;
-static Point **temp_points,tmp;
+static Point **temp_points;
 static double realray[2];
 //Point *point_global;
 
@@ -333,9 +335,6 @@ int cutbox(double *ray,double *p1,double *p2,double rmax){
 bool CircleInBox(double *ray,double radius,double *p1,double *p2){
 
 	if(!inbox(ray,p1,p2)) return false;
-
-	double close[2];
-	int i;
 
 	if((ray[0] + radius) > p2[0] ) return false;
 	if((ray[0] - radius) < p1[0] ) return false;
@@ -1315,7 +1314,7 @@ void ImageInfo::ArcInfo(
 
 
 	// find the farthest point from the center and calculate the circumference
-	double x[2],circumfrance = 0.0;
+	double x[2];
 	innerborder->MoveToTop();
 	x[0] = innerborder->getCurrent()->x[0];
 	x[1] = innerborder->getCurrent()->x[1];

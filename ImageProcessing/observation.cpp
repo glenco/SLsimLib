@@ -84,7 +84,7 @@ Observation::Observation(Telescope tel_name)
  * \param seeing FWHM in arcsecs of the image
  */
 Observation::Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, float seeing):
-		exp_time(exp_time), exp_num(exp_num), back_mag(back_mag), diameter(diameter), transmission(transmission), ron(ron), seeing(seeing)
+		diameter(diameter), transmission(transmission), exp_time(exp_time), exp_num(exp_num), back_mag(back_mag), ron(ron), seeing(seeing)
 		{
 			mag_zeropoint = 2.5*log10(diameter*diameter*transmission*pi/4./hplanck) - 48.6;
 			telescope = false;
@@ -102,7 +102,7 @@ Observation::Observation(float diameter, float transmission, float exp_time, int
  * \param oversample Oversampling rate of the PSF image
  */
 Observation::Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, std::string psf_file, float oversample):
-		exp_time(exp_time), exp_num(exp_num), back_mag(back_mag), diameter(diameter), transmission(transmission), ron(ron), oversample(oversample)
+		diameter(diameter), transmission(transmission), exp_time(exp_time), exp_num(exp_num), back_mag(back_mag), ron(ron), oversample(oversample)
 		{
 	mag_zeropoint = 2.5*log10(diameter*diameter*transmission*pi/4./hplanck) - 48.6;
 

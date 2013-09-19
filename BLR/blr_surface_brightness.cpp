@@ -66,7 +66,6 @@ double blr_surface_brightness_disk_old(double x[],SourceBLR *source){
 	//static const float MSUN = 1.989e33 ; // Solar mass
 
 	static float DlDs;  //
-	static double oldzlens=0,oldzsource=0;
 	double R,r,zz,rho,tau;
 	double zz_prime,xx_prime,yy_prime;
 	double sig_nu;

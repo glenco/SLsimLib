@@ -266,7 +266,12 @@ namespace Utilities{
   template <typename T>
   class Interpolator{
   public:
-    Interpolator(double *x,int Npixels,double my_range,double *my_center):
+    Interpolator(
+                 double *x          /// position of point
+                 ,int Npixels       /// Number of pixels in one dimension
+                 ,double my_range   /// Range of map in same units as x[]
+                 ,double *my_center /// Center of map in same units as x[]
+                 ):
     N(Npixels),range(my_range),map_p(NULL)
     {
       center[0] = my_center[0];
@@ -279,7 +284,12 @@ namespace Utilities{
      The resulting object can then be used with the () operator as a function.
      Warning: Be sure to distroy the object before distroying map.
      */
-    Interpolator(int Npixels,double my_range,double *my_center,const T *map):
+    Interpolator(
+                 int Npixels          /// Number of pixels in one dimension
+                 ,double my_range     /// Range of map in same units as x[]
+                 ,double *my_center   /// Center of map in same units as x[]
+                 ,const T *map        /// One dimensional array of fundamental type
+                 ):
     N(Npixels),range(my_range),map_p(map)
     {
       center[0] = my_center[0];
@@ -291,13 +301,26 @@ namespace Utilities{
      Does interpolation of map at point that object was constructed with or last called with.
      Can use and map type that has a [] operator that returns a double.
      */
-    double interpolate(T& map){
+    double interpolate(
+                       T& map    /// map that supports the [] operator 
+                       ){
+      if(map.size() != N*N){
+        ERROR_MESSAGE();
+        std::cout << "ERROR: Interpolator:interpolator(double *,T&)" << std::endl;
+      }
       if(index == -1) return 0;
-      return (1-fx)*(1-fy)*map[index] + fx*(1-fy)*map[index+N] + fx*fy*map[index+1+N]
-          + (1-fx)*fy*map[index+1];
+      return (1.-fx)*(1.-fy)*map[index] + fx*(1.-fy)*map[index+1] + fx*fy*map[index+1+N]
+          + (1.-fx)*fy*map[index+N];
     };
     /// reinitializes to a new position
-    double interpolate(double *x,T& map){
+    double interpolate(
+                       double *x   /// position of point
+                       ,T& map     /// map that supports the [] operator
+                       ){
+      if(map.size() != N*N){
+        ERROR_MESSAGE();
+        std::cout << "ERROR: Interpolator:interpolator(double *,T&)" << std::endl;
+      }
       initparams(x);
       return interpolate(map);
     }
@@ -312,19 +335,44 @@ namespace Utilities{
         return 0.0;
       }
       initparams(x);
-      return (1-fx)*(1-fy)*map_p[index] + fx*(1-fy)*map_p[index+N] + fx*fy*map_p[index+1+N]
-      + (1-fx)*fy*map_p[index+1];
+      return (1-fx)*(1-fy)*map_p[index] + fx*(1-fy)*map_p[index+1] + fx*fy*map_p[index+1+N]
+      + (1-fx)*fy*map_p[index+N];
+    }
+        
+    void test(void){
+      std::valarray<float> map;
+      double tmp,x[2];
+          
+      map.resize(N*N);
+      
+      for(int i=0;i<N;++i){
+        tmp = cos( 6.*i*2.*pi/(N-1) );
+        for(int j=0;j<N;++j){
+            map[i+N*j] = tmp;
+        }
+      }
+
+      x[1] = 0*range/2.;
+      for(int i=0;i<N;++i){
+        x[0] = x[1] = center[0] + range*( 1.0*(i)/(N-1) - 0.5 ) + 0.5*range/(N-1);
+        std::cout << i << "  " << map[i+N*i] << " " << interpolate(x,map) << std::endl;
+      }
     }
 
   private:
     double range,center[2];
     const T *map_p;
-    
+    double fx, fy;
+    long index;
+    int N;
+
     void initparams(double *x){
       long ix,iy;
+      // position in pixel coordinates
       fx = ((x[0] - center[0])/range + 0.5)*(N-1);
       fy = ((x[1] - center[1])/range + 0.5)*(N-1);
-      
+      //std::cout << "(  " << fx << " " << fy << "   ";
+     
       if (fx < 0. || fx > N-1){index = -1; return;}
       else ix = (unsigned long)(fx);
       if(ix == N-1) ix = N-2;
@@ -334,17 +382,30 @@ namespace Utilities{
       if(iy == N-1) iy = N-2;
       
       index = ix + N*iy;
+      //std::cout << "  " << ix << " " << iy << " " << index << "   ";
       
       /** bilinear interpolation */
       fx = center[0] + range*( 1.0*(ix)/(N-1) - 0.5 );
       fy = center[1] + range*( 1.0*(iy)/(N-1) - 0.5 );
-      fx=(x[0] - fx)*(N-1);
-      fy=(x[1] - fy)*(N-1);
+      fx=(x[0] - fx)*(N-1)/range;
+      fy=(x[1] - fy)*(N-1)/range;
+      //std::cout  << fx << " " << fy << "   )";
+     
+      /*
+      //printf("%i %i\n",i,j);
+      if(j > nx-1 || i > ny-1) return 0.0;
+      if(j==0 || i==0 ) return 0.0;
+      
+      // bilinear interpolation 
+      t=(x-xtab[j])/(xtab[j+1]-xtab[j]);
+      u=(y-ytab[i])/(ytab[i+1]-ytab[i]);
+      
+      return (1-t)*(1-u)*tab[i][j] + t*(1-u)*tab[i][j+1] + t*u*tab[i+1][j+1]
+      + (1-t)*u*tab[i+1][j];
+      */
     }
-    double fx, fy;
-    long index;
-    int N;
-  };
+        
+   };
 
 	//inline float isLeft( Point *p0, Point *p1, double *x );
 

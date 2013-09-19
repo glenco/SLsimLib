@@ -21,7 +21,7 @@ TreeForce::TreeForce(
 		,double theta
 		) :
 	TreeSimple(xp,Npoints,bucket,dimension,median)
-	, MultiMass(Multimass), MultiRadius(Multisize), masses(Masses), rsph(Rsphs), force_theta(theta), kappa_background(my_kappa_background)
+	, MultiMass(Multimass), MultiRadius(Multisize), masses(Masses), rsph(Rsphs), kappa_background(my_kappa_background), force_theta(theta)
 {
 
 	haloON = false; // don't use internal halo parameters
@@ -43,7 +43,7 @@ TreeForce::TreeForce(
 		,PosType theta             /// Opening angle used in tree force calculation
 		) :
 		TreeSimple(xp,Npoints,bucket,dimension,median)
-, MultiMass(true), MultiRadius(true), masses(NULL), rsph(NULL), force_theta(theta), kappa_background(my_kappa_bk)
+, MultiMass(true), MultiRadius(true), masses(NULL), rsph(NULL), kappa_background(my_kappa_bk), force_theta(theta)
 {
 
 	haloON = true;
@@ -186,7 +186,7 @@ void TreeForce::force2D(double *ray,double *alpha,KappaType *kappa,KappaType *ga
   IndexType i;
   bool allowDescent=true;
   unsigned long count=0,index;
-  double rcm, arg1, arg2, prefac, prefacg;
+  double rcm, arg1, arg2, prefac;
 
   assert(tree);
   moveTopNB(tree);

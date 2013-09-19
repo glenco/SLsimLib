@@ -37,8 +37,9 @@
 		####### General ##########
 		outputfile         output    # will contain the image magnifications
 
-		deflection_off		0		# switches deflection off, default is 0
-		
+    deflection_off		0		# switches deflection off (but not kappa and gamma, ie  Born approximation), default is 0
+    lensing_off		0		# switches all lensing off, default is 0
+	
 		read_redshift_planes   0 		# 0 - no, 1 - yes , reads in the redshifts of the lensing planes from a file
 		redshift_planes_file    Z.txt   # an asci file with redshifts of the planes, excluding the source redshift
 

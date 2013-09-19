@@ -662,7 +662,7 @@ void TreeQuad::walkTree_recur(QBranchNB *branch,double *ray,double *alpha,KappaT
 
 	PosType xcm[2],rcm2cell,rcm2,tmp,boxsize2;
 	IndexType i;
-	unsigned long count=0,index;
+	std::size_t index;
 	double rcm, arg1, arg2, prefac;
 
 	if(branch->nparticles > 0){

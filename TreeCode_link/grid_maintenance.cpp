@@ -161,7 +161,7 @@ void Grid::ReInitializeGrid(LensHndl lens){
  * returns the sum of the surface brightnesses
  */
 double Grid::RefreshSurfaceBrightnesses(SourceHndl source){
-	double y[2],total=0,tmp;
+	double total=0,tmp;
   
 	MoveToTopList(s_tree->pointlist);
 	for(unsigned long i=0;i<s_tree->pointlist->Npoints;++i,MoveDownList(s_tree->pointlist)){
@@ -182,7 +182,7 @@ double Grid::RefreshSurfaceBrightnesses(SourceHndl source){
  *  \brief Reset the surface brightness and in_image flag in every point on image and source planes to zero (false)
  */
 double Grid::ClearSurfaceBrightnesses(){
-	double y[2],total=0,tmp;
+	double total=0;
   
 	MoveToTopList(s_tree->pointlist);
 	for(unsigned long i=0;i<s_tree->pointlist->Npoints;++i,MoveDownList(s_tree->pointlist)){
@@ -235,7 +235,7 @@ Point * Grid::RefineLeaf(LensHndl lens,Point *point,bool kappa_off){
 	if(!testLeafs(i_tree)){ERROR_MESSAGE(); std::cout << "point id "<< point->id; exit(1);}
 	  ERROR_MESSAGE();
 	if(!testLeafs(s_tree)){ERROR_MESSAGE(); std::cout << "point id "<< point->image->id; exit(1);}
-	//*****************************************************************************/
+	/ *****************************************************************************/
 
 	assert(point->leaf->child1 == NULL && point->leaf->child2 == NULL);
 	assert(point->image->leaf->child1 == NULL && point->image->leaf->child2 == NULL);
@@ -481,7 +481,7 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa
 		assert(i_points[ii].image->image == &i_points[ii]);
 		assert(s_points[ii].image->image == &s_points[ii]);
 	}
-	//******************************************************/
+	/ ******************************************************/
 	// remove the points that are outside initial source grid
 	int j,Noutcell;
 	for(ii=0,kk=0,Nout=0;ii<Nleaves;++ii){
@@ -845,7 +845,6 @@ void Grid::writeFits(
   i_tree->PointsWithinKist(center,range/sqrt(2.),tmp_image.imagekist,0);
   std::vector<double> tmp_sb_vec(tmp_image.imagekist->Nunits());
 
-  Point point;
   for(tmp_image.imagekist->MoveToTop(),i=0;i<tmp_sb_vec.size();++i,tmp_image.imagekist->Down()){
     tmp_sb_vec[i] = tmp_image.imagekist->getCurrent()->surface_brightness;
     switch (lensvar) {
@@ -876,7 +875,7 @@ void Grid::writeFits(
         tag = ".gamma2.fits";
         break;
       case gamma3:
-        tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->gamma[3];
+        tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->gamma[2];
         tag = ".gamma3.fits";
         break;
       case invmag:
@@ -887,11 +886,68 @@ void Grid::writeFits(
         break;
     }
   }
-
+  
   map.Clean();
   map.AddImages(&tmp_image,1,-1);
   map.printFITS(filename + tag);
+  
+  for(tmp_image.imagekist->MoveToTop(),i=0;i<tmp_sb_vec.size();++i,tmp_image.imagekist->Down())
+    tmp_image.imagekist->getCurrent()->surface_brightness = tmp_sb_vec[i];
+}
 
+/// Outputs a fits file for making plots of vector fields
+void Grid::writeFitsVector(
+                     double center[]           /// center of image
+                     ,size_t Npixels           /// number of pixels in image in on dimension
+                     ,double resolution        /// resolution of image in radians
+                     ,LensingVariable lensvar  /// which quantity is to be displayed
+                     ,std::string filename     /// file name for image -- .kappa.fits, .gamma1.fits, etc will be appended
+                     ){
+  throw std::runtime_error("Not done yet.");
+  PixelMap map(center, Npixels, resolution);
+  
+  double range = Npixels*resolution,tmp_x[2];
+  ImageInfo tmp_image,tmp_image_theta;
+  size_t i;
+  std::string tag;
+  
+  i_tree->PointsWithinKist(center,range/sqrt(2.),tmp_image.imagekist,0);
+  i_tree->PointsWithinKist(center,range/sqrt(2.),tmp_image_theta.imagekist,0);
+  
+  std::vector<double> tmp_sb_vec(tmp_image.imagekist->Nunits());
+  
+  for(tmp_image.imagekist->MoveToTop(),i=0;i<tmp_sb_vec.size();++i,tmp_image.imagekist->Down()){
+    tmp_sb_vec[i] = tmp_image.imagekist->getCurrent()->surface_brightness;
+    switch (lensvar) {
+      case alpha1:
+        tmp_x[0] = tmp_image.imagekist->getCurrent()->x[0]
+        - tmp_image.imagekist->getCurrent()->image->x[0];
+
+        tmp_x[1] = tmp_image.imagekist->getCurrent()->x[1]
+        - tmp_image.imagekist->getCurrent()->image->x[1];
+      
+        tmp_image.imagekist->getCurrent()->surface_brightness = sqrt( tmp_x[0]*tmp_x[0] + tmp_x[1]*tmp_x[1]);
+        tag = ".alphaV.fits";
+        break;
+      case gamma1:
+        
+        tmp_x[0] = tmp_image.imagekist->getCurrent()->gamma[0];
+        tmp_x[1] = tmp_image.imagekist->getCurrent()->gamma[1];
+
+        tmp_image.imagekist->getCurrent()->surface_brightness = sqrt( tmp_x[0]*tmp_x[0] + tmp_x[1]*tmp_x[1]);
+        tag = ".gammaV.fits";
+        break;
+      default:
+        std::cout << "Grid::writeFitsVector() does not support the LensVariable you are using." << std::endl;
+        return;
+    }
+  }
+  
+  
+  map.Clean();
+  map.AddImages(&tmp_image,1,-1);
+  map.printFITS(filename + tag);
+  
   for(tmp_image.imagekist->MoveToTop(),i=0;i<tmp_sb_vec.size();++i,tmp_image.imagekist->Down())
     tmp_image.imagekist->getCurrent()->surface_brightness = tmp_sb_vec[i];
 }

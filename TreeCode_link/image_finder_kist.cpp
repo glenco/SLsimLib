@@ -6,8 +6,8 @@ static const int NpointsRequired = 100;  // number of points required to be with
 //static const float mumin = 0.5;  // actually the sqrt of the minimum magnification
 //static const float mumin = 0.45;  // actually the sqrt of the minimum magnification
 //static const float mumin = 0.1;
-//static const float mumin = 0.3;
 static const float mumin = 0.3;
+//static const float mumin = 0.3;
 
 
 static const float FracResTarget = 4.0e-4;
@@ -72,7 +72,7 @@ void find_images_kist(
 	}
 
 	int Nsizes;
-	double rtemp,tmp,maxgridsize;
+	double rtemp,tmp;
 	static double oldy[2],oldr=0;
 	short moved,flag;
 	int i,j,k;
@@ -116,7 +116,7 @@ void find_images_kist(
 	time(&to);
 
 
-    if(verbose) printf("Ntemp=%li\n",Nsizes);
+    if(verbose) printf("Ntemp=%i\n",Nsizes);
 
     grid->ClearAllMarks();
 
@@ -124,7 +124,6 @@ void find_images_kist(
     // telescope source size down to target
     //////////////////////////////////////////
 
-    int Nimages_old = 1;
     for(i=0
 				//for(rtemp = fabs(r_source/mumin)*pow(Ngrid_block,Nsizes),Nold=0
 		//		;rtemp >= 0.99*Ngrid_block*fabs(r_source)
@@ -140,7 +139,7 @@ void find_images_kist(
 				  ,Nimages,imageinfo,NimageMax,Nimagepoints,0,0);
 			// unmark image points in tree
 			PointsWithinKist(grid->s_tree,y_source,rtemp,subkist,-1);
-			//***********************************************************/
+			/ ***********************************************************/
 
 
 			time(&t1);
@@ -168,7 +167,7 @@ void find_images_kist(
 						,Nimages,imageinfo,NimageMax,Nimagepoints,0,0);
 				// unmark image points in tree
 				PointsWithinKist(grid->s_tree,y_source,rtemp,subkist,-1);
-				//***********************************************************/
+				/ ***********************************************************/
 
 				assert(*Nimages > 0);
 
@@ -237,7 +236,7 @@ void find_images_kist(
 			printf("     image   # of points    error in area\n");
 			for(j=0;j<*Nimages;++j) printf("       %i        %li         %e\n",j,imageinfo[j].imagekist->Nunits(),imageinfo[j].area_error);
 		}
-		if(i > 20 && *Nimagepoints == 100){
+		if(i > 9 && *Nimagepoints == 100){
 			// case where no image is found at any size
 			*Nimages = 0;
 			*Nimagepoints = 0;
@@ -495,7 +494,7 @@ void find_images_microlens(
     int Nmaps=0;
     // ************************************/
 
-    if(verbose) printf("Ntemp=%li\n",Nsizes);
+    if(verbose) printf("Ntemp=%i\n",Nsizes);
 
     grid->ClearAllMarks();
     imageinfo->imagekist->Empty();
@@ -621,7 +620,7 @@ void find_images_microlens(
     		// unmark image points in tree
     		grid->s_tree->PointsWithinKist(y_source,rtemp,subkist,-1);
 */
-    		for(int k=0; k < *Nimages; ++k) if( 1.0e-3 > imageinfo[k].area/pi/r_source/r_source ) imageinfo[k].ShouldNotRefine = true;
+    		for(int k=0; k < *Nimages; ++k) if( 5.0e-4 > imageinfo[k].area/pi/r_source/r_source ) imageinfo[k].ShouldNotRefine = true;
 
     		/***********************************************************/
             /**** TODO test line **********************
@@ -686,7 +685,7 @@ void find_images_microlens(
 	time(&now);
 	if(time_on) printf(" time for zooming on stars %f sec\n",difftime(now,to));
 	time(&to);
-	//**********************************************************************/
+	/ **********************************************************************/
 
 	////////////////////////////////////////////////////////////////////////////////*/
 	//////////////////////////////////////////////////////////////////////////////////
@@ -1152,7 +1151,6 @@ int refine_grid_kist(
 
   if(Nimages < 1) return 0;
 
-  TreeHndl i_tree = grid->i_tree,s_tree = grid->s_tree;
   int Ngrid_block = grid->getNgrid_block();
 
   int i,j,k,number_of_refined,count;
@@ -1236,6 +1234,7 @@ int refine_grid_kist(
 				  //assert(getCurrentKist(imageinfo[i].imagekist)->image->leaf->child2 == NULL);
 
 				  if(batch){
+            assert(imageinfo[i].imagekist->getCurrent()->gridsize > 1.0e-16);
 					  points_to_refine.push_back(getCurrentKist(imageinfo[i].imagekist));
 				  }else{
 					  i_points = grid->RefineLeaf(lens,getCurrentKist(imageinfo[i].imagekist),kappa_off);
@@ -1267,6 +1266,7 @@ int refine_grid_kist(
 					  assert(point->image->leaf->child2 == NULL);
 
 					  if(batch){
+              assert(imageinfo[i].imagekist->getCurrent()->gridsize > 1.0e-16);
 						  points_to_refine.push_back(point);
 					  }else{
 						  i_points = grid->RefineLeaf(lens,point,kappa_off);
@@ -1315,7 +1315,7 @@ int refine_grid_kist(
  */
 void findborders4(TreeHndl i_tree,ImageInfo *imageinfo){
 	int i;
-	unsigned long m,j;
+	unsigned long j;
 	bool addinner;
 	bool allin = false;
 

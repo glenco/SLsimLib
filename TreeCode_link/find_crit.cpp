@@ -154,7 +154,7 @@ void find_crit(
   	  pseudocurve->imagekist->copy(negimage.imagekist);
   	  divide_images_kist(grid->i_tree,pseudocurve,Ncrits,maxNcrits);
 
-  	  for(int i;i<*Ncrits;++i){
+  	  for(int i =1;i<*Ncrits;++i){
   		  mumin = 0.0;
   		  pseudocurve[i].imagekist->MoveToBottom();
   		  do{
