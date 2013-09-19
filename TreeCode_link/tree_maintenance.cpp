@@ -1548,7 +1548,7 @@ unsigned long FreeBranchesBelow(TreeHndl i_tree,TreeHndl s_tree,Kist<Point> * tr
 Point * TreeStruct::RemoveLeafFromTree(unsigned long *Npoints){
 
 	Branch *branch;
-	Point *point;
+	Point *point = NULL;
 	unsigned long i;
 
 	if(atTop() || !(atLeaf()) ) return NULL;
