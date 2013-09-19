@@ -1,6 +1,8 @@
 
 #include "slsimlib.h"
 
+#include <nrutil.h>
+
 using namespace std;
 
 static double betaT,*modT,**xobT,**dx_subT,sigGT,*modTT,*modoT,**vT,x_centerT[2],**xgT,**dx_subTt;

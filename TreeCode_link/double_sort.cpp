@@ -4,6 +4,8 @@
 /* note #undef's at end of file */
 #include "slsimlib.h"
 
+#include <nrutil.h>
+
 #define NRANSI
 #define M 7
 #define NSTACK 50
