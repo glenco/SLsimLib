@@ -64,7 +64,7 @@ void LensHalo::force_stars(
 		)
 {
     double alpha_tmp[2];
-    KappaType kappa_tmp = 0.0, gamma_tmp[3], tmp = 0;
+    KappaType gamma_tmp[3], tmp = 0;
 
     gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
     alpha_tmp[0] = alpha_tmp[1] = 0.0;
@@ -85,23 +85,32 @@ void LensHalo::force_stars(
   
 }
 
-LensHalo::~LensHalo(){
-
+LensHalo::~LensHalo()
+{
 }
 
+const long LensHaloNFW::NTABLE = 1000;
+const double LensHaloNFW::maxrm = 100.0;
 int LensHaloNFW::count = 0;
-double *LensHaloNFW::xtable = NULL,*LensHaloNFW::ftable = NULL,*LensHaloNFW::gtable = NULL,*LensHaloNFW::g2table = NULL,*LensHaloNFW::htable = NULL;
 
-LensHaloNFW::LensHaloNFW() : LensHalo(){
-  gmax=0;
+double* LensHaloNFW::xtable = NULL;
+double* LensHaloNFW::ftable = NULL;
+double* LensHaloNFW::gtable = NULL;
+double* LensHaloNFW::g2table = NULL;
+double* LensHaloNFW::htable = NULL;
+
+LensHaloNFW::LensHaloNFW()
+: LensHalo(), gmax(0)
+{
 	make_tables();
-  gmax = InterpolateFromTable(gtable,xmax);
+	gmax = InterpolateFromTable(gtable, xmax);
 }
 
-LensHaloNFW::LensHaloNFW(InputParams& params){
+LensHaloNFW::LensHaloNFW(InputParams& params)
+{
 	assignParams(params);
 	make_tables();
-  gmax = InterpolateFromTable(gtable,xmax);
+	gmax = InterpolateFromTable(gtable, xmax);
 }
 
 void LensHaloNFW::make_tables(){
@@ -176,12 +185,20 @@ void LensHaloNFW::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale
     gmax = InterpolateFromTable(gtable,xmax);
 }
 
+const long LensHaloPseudoNFW::NTABLE = 1000;
+const double LensHaloPseudoNFW::maxrm = 100.0;
 int LensHaloPseudoNFW::count = 0;
-double *LensHaloPseudoNFW::xtable = NULL,*LensHaloPseudoNFW::mhattable = NULL;
-LensHaloPseudoNFW::LensHaloPseudoNFW() : LensHalo(){
+
+double* LensHaloPseudoNFW::xtable = NULL;
+double* LensHaloPseudoNFW::mhattable = NULL;
+
+LensHaloPseudoNFW::LensHaloPseudoNFW()
+: LensHalo()
+{
 }
 
-LensHaloPseudoNFW::LensHaloPseudoNFW(InputParams& params){
+LensHaloPseudoNFW::LensHaloPseudoNFW(InputParams& params)
+{
 	assignParams(params);
 	make_tables();
 }
@@ -528,20 +545,28 @@ void LensHaloSimpleNSIE::force_halo(
        return;
 }
 
-
+const long LensHaloHernquist::NTABLE = 1000;
+const double LensHaloHernquist::maxrm = 100.0;
 int LensHaloHernquist::count = 0;
-double *LensHaloHernquist::xtable = NULL,*LensHaloHernquist::ftable = NULL,*LensHaloHernquist::gtable = NULL,*LensHaloHernquist::g2table = NULL,*LensHaloHernquist::htable = NULL;
 
-LensHaloHernquist::LensHaloHernquist() : LensHalo(){
-  gmax=0;
+double* LensHaloHernquist::xtable = NULL;
+double* LensHaloHernquist::ftable = NULL;
+double* LensHaloHernquist::gtable = NULL;
+double* LensHaloHernquist::g2table = NULL;
+double* LensHaloHernquist::htable = NULL;
+
+LensHaloHernquist::LensHaloHernquist()
+: LensHalo(), gmax(0)
+{
 	make_tables();
-  gmax = InterpolateFromTable(gtable,xmax);
+	gmax = InterpolateFromTable(gtable,xmax);
 }
 
-LensHaloHernquist::LensHaloHernquist(InputParams& params){
+LensHaloHernquist::LensHaloHernquist(InputParams& params)
+{
 	assignParams(params);
 	make_tables();
-  gmax = InterpolateFromTable(gtable,xmax);
+	gmax = InterpolateFromTable(gtable,xmax);
 }
 
 void LensHaloHernquist::make_tables(){
@@ -601,21 +626,28 @@ LensHaloHernquist::~LensHaloHernquist(){
 	}
 }
 
-
-
+const long LensHaloJaffe::NTABLE = 1000;
+const double LensHaloJaffe::maxrm = 100.0;
 int LensHaloJaffe::count = 0;
-double *LensHaloJaffe::xtable = NULL,*LensHaloJaffe::ftable = NULL,*LensHaloJaffe::gtable = NULL,*LensHaloJaffe::g2table = NULL; //,*LensHaloJaffe::htable = NULL;
 
-LensHaloJaffe::LensHaloJaffe() : LensHalo(){
-  gmax=0;
+double* LensHaloJaffe::xtable = NULL;
+double* LensHaloJaffe::ftable = NULL;
+double* LensHaloJaffe::gtable = NULL;
+double* LensHaloJaffe::g2table = NULL;
+//double* LensHaloJaffe::htable = NULL;
+
+LensHaloJaffe::LensHaloJaffe()
+: LensHalo(), gmax(0)
+{
 	make_tables();
-  gmax = InterpolateFromTable(gtable,xmax);
+	gmax = InterpolateFromTable(gtable,xmax);
 }
 
-LensHaloJaffe::LensHaloJaffe(InputParams& params){
+LensHaloJaffe::LensHaloJaffe(InputParams& params)
+{
 	assignParams(params);
 	make_tables();
-  gmax = InterpolateFromTable(gtable,xmax);
+	gmax = InterpolateFromTable(gtable,xmax);
 }
 
 void LensHaloJaffe::make_tables(){

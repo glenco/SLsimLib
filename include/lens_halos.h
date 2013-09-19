@@ -218,9 +218,9 @@ public:
 
 protected:
 	/// table size
-	const static long NTABLE = 1000;
+	static const long NTABLE;
 	/// maximum Rmax/rscale
-	const static double maxrm = 100.0;
+	static const double maxrm;
 	/// keeps track of how many time the tables are created, default is just once
 	static int count;
 
@@ -285,9 +285,9 @@ public:
 
 private:
 	/// table size
-	const static long NTABLE = 1000;
+	static const long NTABLE;
 	/// maximum Rmax/rscale
-	const static double maxrm = 100.0;
+	static const double maxrm;
 	/// keeps track of how many time the tables are created, default is just once
 	static int count;
 
@@ -470,9 +470,9 @@ public:
 
 protected:
 	/// table size
-	const static long NTABLE = 1000;
+	static const long NTABLE;
 	/// maximum Rmax/rscale
-	const static double maxrm = 100.0;
+	static const double maxrm;
 	/// keeps track of how many time the tables are created, default is just once
 	static int count;
 
@@ -536,9 +536,9 @@ public:
 
 protected:
 	/// table size
-	const static long NTABLE = 1000;
+	static const long NTABLE;
 	/// maximum Rmax/rscale
-	const static double maxrm = 100.0;
+	static const double maxrm;
 	/// keeps track of how many time the tables are created, default is just once
 	static int count;
 
