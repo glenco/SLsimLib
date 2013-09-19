@@ -840,7 +840,7 @@ void Grid::writeFits(
         tag = ".gamma2.fits";
         break;
       case gamma3:
-        tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->gamma[3];
+        tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->gamma[2];
         tag = ".gamma3.fits";
         break;
       case invmag:
