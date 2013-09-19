@@ -161,7 +161,7 @@ void Grid::ReInitializeGrid(LensHndl lens){
  * returns the sum of the surface brightnesses
  */
 double Grid::RefreshSurfaceBrightnesses(SourceHndl source){
-	double y[2],total=0,tmp;
+	double total=0,tmp;
   
 	MoveToTopList(s_tree->pointlist);
 	for(unsigned long i=0;i<s_tree->pointlist->Npoints;++i,MoveDownList(s_tree->pointlist)){
@@ -182,7 +182,7 @@ double Grid::RefreshSurfaceBrightnesses(SourceHndl source){
  *  \brief Reset the surface brightness and in_image flag in every point on image and source planes to zero (false)
  */
 double Grid::ClearSurfaceBrightnesses(){
-	double y[2],total=0,tmp;
+	double total=0;
   
 	MoveToTopList(s_tree->pointlist);
 	for(unsigned long i=0;i<s_tree->pointlist->Npoints;++i,MoveDownList(s_tree->pointlist)){
@@ -235,7 +235,7 @@ Point * Grid::RefineLeaf(LensHndl lens,Point *point,bool kappa_off){
 	if(!testLeafs(i_tree)){ERROR_MESSAGE(); std::cout << "point id "<< point->id; exit(1);}
 	  ERROR_MESSAGE();
 	if(!testLeafs(s_tree)){ERROR_MESSAGE(); std::cout << "point id "<< point->image->id; exit(1);}
-	//*****************************************************************************/
+	/ *****************************************************************************/
 
 	assert(point->leaf->child1 == NULL && point->leaf->child2 == NULL);
 	assert(point->image->leaf->child1 == NULL && point->image->leaf->child2 == NULL);
@@ -467,7 +467,7 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa
 		assert(i_points[ii].image->image == &i_points[ii]);
 		assert(s_points[ii].image->image == &s_points[ii]);
 	}
-	//******************************************************/
+	/ ******************************************************/
 	// remove the points that are outside initial source grid
 	int j,Noutcell;
 	for(ii=0,kk=0,Nout=0;ii<Nleaves;++ii){
@@ -810,7 +810,6 @@ void Grid::writeFits(
   i_tree->PointsWithinKist(center,range/sqrt(2.),tmp_image.imagekist,0);
   std::vector<double> tmp_sb_vec(tmp_image.imagekist->Nunits());
 
-  Point point;
   for(tmp_image.imagekist->MoveToTop(),i=0;i<tmp_sb_vec.size();++i,tmp_image.imagekist->Down()){
     tmp_sb_vec[i] = tmp_image.imagekist->getCurrent()->surface_brightness;
     switch (lensvar) {

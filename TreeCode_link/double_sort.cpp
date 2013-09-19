@@ -12,7 +12,7 @@ void double_sort(unsigned long n, double *arr, unsigned long *brr)
 {
   unsigned long i,ir=n,j,k,l=1,*istack,b;
   int jstack=0;
-  double a,temp;
+  double a;
   
   istack=lvector(1,NSTACK);
   for (;;) {
@@ -93,7 +93,7 @@ void double_sort(unsigned long n, double *arr, unsigned long *brr)
 void double_sort_points(unsigned long n, double *arr, Point *brr){
   unsigned long i,ir=n,j,k,l=1,*istack;
   long jstack=0;
-  double a,temp;
+  double a;
   Point b;
 
   istack=lvector(1,NSTACK);

@@ -260,7 +260,6 @@ void SourcePixelled::calcCentroid(){
 }
 
 void SourcePixelled::calcEll(){
-	double sum = 0;
 	for (int j = 0; j < 2; j++)
 	{
 		for (int k = 0; k < 2; k++)

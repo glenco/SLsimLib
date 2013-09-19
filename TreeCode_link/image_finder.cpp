@@ -34,7 +34,7 @@ int refine_grid(LensHndl lens,GridHndl grid,OldImageInfo *imageinfo
 
   int i,j,number_of_refined,count; /* Ngrid_block must be odd */
   double rmax,total_area;
-  Point *s_points,*point;
+  Point* point;
   short pass=0;
   long Ncells,Ncells_o;
   std::vector<Point*> points_to_refine;

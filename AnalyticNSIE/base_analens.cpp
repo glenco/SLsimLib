@@ -17,10 +17,9 @@ void LensHaloBaseNSIE::force_halo(
 		,bool no_kappa
 		,bool subtract_point /// if true contribution from a point mass is subtracted
 		){
-     double x_rescale[2];
      long j;
      double alpha_tmp[2];
-     KappaType kappa_tmp = 0.0, gamma_tmp[3], dt = 0,tmp = 0;
+     KappaType kappa_tmp = 0.0, gamma_tmp[3], dt = 0;
 
      gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
      alpha_tmp[0] = alpha_tmp[1] = 0.0;

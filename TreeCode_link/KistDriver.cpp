@@ -74,7 +74,7 @@ void TreeStruct::FindAllBoxNeighborsKist(Point *point,Kist<Point> * neighbors){
 	}while(neighbors->Down());
 	delete testkist;
 
-//*************************************************/
+// *************************************************/
 	return;
 }
 /**  \ingroup LowLevel
@@ -426,7 +426,6 @@ void TreeStruct::PointsWithinKist_iter(double *ray,float rmin,float rmax,Kist<Po
 	}
 
 	Branch *top = current;
-	Branch *branch;
 
 	if(rmin <= 0.0){
 

@@ -55,7 +55,7 @@ void LensHaloAnaNSIE::FindLensSimple(
 
 	if(perturb_Nmodes <= 0 || Nimages <= 0){
 		ERROR_MESSAGE();
-		std::printf("must set perturb_Nmodes lens->perturb_Nmodes = %li Nimages = %i \n"
+		std::printf("must set perturb_Nmodes lens->perturb_Nmodes = %i Nimages = %i \n"
 				,perturb_Nmodes,Nimages);
 		exit(1);
 	}

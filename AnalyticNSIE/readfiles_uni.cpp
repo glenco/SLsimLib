@@ -79,7 +79,7 @@ void LensHaloUniform::force_halo(
 		)
 {
     double alpha_tmp[2];
-     KappaType kappa_tmp = 0.0, gamma_tmp[3], dt = 0,tmp = 0;
+     KappaType gamma_tmp[3], dt = 0;
 
      gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
      alpha_tmp[0] = alpha_tmp[1] = 0.0;
@@ -95,8 +95,6 @@ void LensHaloUniform::force_halo(
 
 double LensHaloUniform::lens_expand(double *mod,double *x,double *alpha,KappaType *gamma,KappaType *phi){
   double theta,r,cosx,sinx,cos2theta,sin2theta;
-  int i;
-  
 
    // add shear
   alpha[0] +=  x[0]*mod[1] + x[1]*mod[2];
@@ -174,10 +172,8 @@ void LensHaloUniform::assignParams(InputParams& params){
 /** \ingroup ImageFinding
  * \brief Prints the parameters of the analytic lens to stdout
  */
-void LensHaloUniform::PrintLens(bool show_substruct,bool show_stars) const{
-	int i;
-
-
+void LensHaloUniform::PrintLens(bool show_substruct,bool show_stars) const
+{
 	// uni lens parameters only
 	cout << endl << "**Host lens model**" << endl;
 	// redshifts
@@ -186,7 +182,6 @@ void LensHaloUniform::PrintLens(bool show_substruct,bool show_stars) const{
 	cout << "gamma " << gammaCrit_uniform[0]/SigmaCrit << " " << gammaCrit_uniform[1]/SigmaCrit << endl;
 
 	if (stars_implanted) PrintStars(show_stars);
-
 }
 
 
