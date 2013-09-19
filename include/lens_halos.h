@@ -71,8 +71,6 @@ public:
 	virtual void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rmax/rscale;};
 	/// set redshift
 	void setZlens(double my_zlens){zlens=my_zlens;};
-	/// set redshift, where the cosmology and the source redshift are needed (BaseNSIELensHalo)
-	virtual void setZlens(CosmoHndl cosmo,double z,double dummy){zlens=z;};
 	/// set slope
 	virtual void set_slope(double my_slope){};
 
