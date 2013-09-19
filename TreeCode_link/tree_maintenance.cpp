@@ -11,6 +11,8 @@
 /* median_cut determines how the cells are subdivided */
 /*    if ==0  equal volume cuts, Warning this option causes an error*/
 /*    if ==1  median point cuts */
+#include <iostream>     // std::cout, std::fixed
+#include <iomanip>      // std::setprecision
 
 #include "slsimlib.h"
 /************************** test routine *****************************/
@@ -755,6 +757,17 @@ void TreeStruct::_AddPoint(){
 					x[1] = x[0];
 					x[0] = tmp;
 				}
+        if(x[0] == x[1]){
+          pointlist->current = current->points;
+          for(i=0;i<current->npoints;i++){
+            std::cout << std::scientific << std::setprecision(15) << pointlist->current->x[0] << "  " << pointlist->current->x[1] << " " << pointlist->current->id << "      "
+                      << pointlist->current->image->x[0] << "  " << pointlist->current->image->x[1] << " " << pointlist->current->image->id << std::endl;
+            std::cout << "invmag " << pointlist->current->invmag << " gridsize " << pointlist->current->gridsize << std::endl;
+            MoveDownList(pointlist);
+          }
+          std::cout << std::setprecision(15) << "top bounderies  " << top->boundary_p1[0] << " " << top->boundary_p1[1] << "      " << top->boundary_p2[0] << " " << top->boundary_p2[1] << std::endl;
+          throw std::runtime_error("Points in grid are the same");
+        }
 			}else{
 				ERROR_MESSAGE();
 				std::cout << "This is prone to errors and this should never happen!" << std::endl;

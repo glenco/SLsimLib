@@ -353,7 +353,7 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa
 		assert(points[ii]->leaf->child1 == NULL && points[ii]->leaf->child2 == NULL);
 		assert(points[ii]->image->leaf->child1 == NULL && points[ii]->image->leaf->child2 == NULL);
 
-		assert(points[ii]->gridsize > pow(10.,-DBL_DIG) ); // If cells are too small they will cause problems.
+		assert(points[ii]->gridsize > pow(10.,-DBL_DIG)*MAX(abs(points[ii]->x[0]),abs(points[ii]->x[1])) ); // If cells are too small they will cause problems.
 
 		points[ii]->leaf->refined = true;
 		xygridpoints(&i_points[Nadded],points[ii]->gridsize*(Ngrid_block-1)/Ngrid_block
@@ -361,18 +361,21 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa
 		points[ii]->gridsize /= Ngrid_block;
 		points[ii]->image->gridsize /= Ngrid_block;
 
+    assert(points[ii]->gridsize > 0.0);
+    
 		// take out points that are outside of original grid
 		Nout = 0;
-		if( (points[ii]->x[0] == i_tree->top->boundary_p1[0]) || (points[ii]->x[0] == i_tree->top->boundary_p2[0])
-			|| (points[ii]->x[1] == i_tree->top->boundary_p1[1]) || (points[ii]->x[1] == i_tree->top->boundary_p2[1]) ){
-
+		//if( (points[ii]->x[0] <= i_tree->top->boundary_p1[0]) || (points[ii]->x[0] >= i_tree->top->boundary_p2[0])
+		//	|| (points[ii]->x[1] <= i_tree->top->boundary_p1[1]) || (points[ii]->x[1] >= i_tree->top->boundary_p2[1]) ){
+      
 			// remove the points that are outside initial image grid
 			for(kk=0,Nout=0;kk < (Ngrid_block*Ngrid_block-1);++kk){
+        assert(i_points[Nadded + kk - Nout].gridsize > 0.0);
 				if( !inbox(i_points[Nadded + kk - Nout].x,i_tree->top->boundary_p1,i_tree->top->boundary_p2) ){
 					//SwapPointsInArray(&i_points[Nadded + kk - Nout],&i_points[(Ngrid_block*Ngrid_block-1)*Nleaves - 1 - Nout]);
-
+        
 					// This maintains the ordering in parent cells, but is rather inefficient
-					for(unsigned long nn=Nadded + kk - Nout
+					for(unsigned long nn = Nadded + kk - Nout
 							; nn < (Ngrid_block*Ngrid_block-1)*Nleaves - 1 - Nout - Nout_tot ; ++nn){
 						assert(nn+1 < i_points[0].head);
 						SwapPointsInArray(&i_points[nn],&i_points[nn + 1]);
@@ -381,16 +384,27 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa
 					//std::cout << "Nout_tot = " << Nout_tot << std::endl;
 				}
 			}
-			assert(Nout > 0);
-		}
+			//assert(Nout > 0);
+		//}
 
 		Nout_tot += Nout;
 		Nadded += Ngrid_block*Ngrid_block-1 - Nout;
 		addedtocell[ii] = Ngrid_block*Ngrid_block-1 - Nout;
+    
+    if(addedtocell[ii] == 0){
+      points[ii]->leaf->refined = false;
+      points[ii]->gridsize *= Ngrid_block;
+      points[ii]->image->gridsize *= Ngrid_block;
+    }
 		//if(Nout > 0) i_points = AddPointToArray(i_points,Ngrid_block*Ngrid_block-1-Nout,Ngrid_block*Ngrid_block-1);
-	}
+	} 
 
 	assert(Nadded == (Ngrid_block*Ngrid_block-1)*Nleaves-Nout_tot);
+  //***** TODO: test line
+  //for(long jj=0;jj<Nadded;++jj){ assert(inbox(i_points[jj].x,i_tree->top->boundary_p1,i_tree->top->boundary_p2));}
+  //for(long jj=0;jj<Nadded;++jj){ assert(i_points[jj].gridsize > 0 );}
+  //**************************/
+  
 	if(Nadded == 0){
 		FreePointArray(i_points,true);
 		return NULL;
@@ -471,12 +485,14 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa
 	// remove the points that are outside initial source grid
 	int j,Noutcell;
 	for(ii=0,kk=0,Nout=0;ii<Nleaves;++ii){
+    if(addedtocell[ii] == 0) continue;
 		for(j = 0,Noutcell=0; j < addedtocell[ii]; ++j){
 			if( !inbox(s_points[kk - Nout].x,s_tree->top->boundary_p1,s_tree->top->boundary_p2) ){
 				//SwapPointsInArray(&i_points[kk - Nout],&i_points[Nadded - 1 - Nout]);
 				//SwapPointsInArray(&s_points[kk - Nout],&s_points[Nadded - 1 - Nout]);
 				for(long nn = kk - Nout; nn < Nadded - 1 - Nout;++nn){
 					assert(nn+1 < s_points[0].head);
+					assert(nn+1 < i_points[0].head);
 					SwapPointsInArray(&i_points[nn],&i_points[nn+1]);
 					SwapPointsInArray(&s_points[nn],&s_points[nn+1]);
 				}
@@ -520,41 +536,60 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa
 		s_points = AddPointToArray(s_points,Nadded,s_points->head);
 	}
 	assert(i_points->head == s_points->head);
+  assert(i_points->head == Nadded);
+  //***** TODO: test line
+  //for(long jj=0;jj<Nadded;++jj){ assert(inbox(i_points[jj].x,i_tree->top->boundary_p1,i_tree->top->boundary_p2));}
+  //for(long jj=0;jj<Nadded;++jj){ assert(i_points[jj].gridsize > 0 );}
+  //**************************/
 
-	//*****************************************************************************/
-	//*** these could be mode more efficient by starting at the current in tree
-	i_tree->AddPointsToTree(i_points,i_points->head);
-	s_tree->AddPointsToTree(s_points,s_points->head);
+  
+    //*****************************************************************************/
+    //*** these could be mode more efficient by starting at the current in tree
+    i_tree->AddPointsToTree(i_points,i_points->head);
+    s_tree->AddPointsToTree(s_points,s_points->head);
 
-	assert(s_points->head > 0);
+    assert(s_points->head > 0);
 
-	//********* This repairs the leaf pointer which for some reason does not point to a leaf for s_points on some occasions ***********
-	for(ii=0;ii < s_points->head;++ii){
+    //********* This repairs the leaf pointer which for some reason does not point to a leaf for s_points on some occasions ***********
+    for(ii=0;ii < s_points->head;++ii){
 
-		if(i_points[ii].leaf->child1 != NULL || i_points[ii].leaf->child2 != NULL){
-			//std::cout << ii << std::endl;
-			//i_points[ii].print();
-			//i_points[ii].leaf->print();
-			i_tree->current = i_points[ii].leaf;
-			i_tree->_FindLeaf(i_points[ii].x,0);
-			assert(i_tree->current->npoints == 1);
-			i_points[ii].leaf = i_tree->current;
-			assert(i_points[ii].prev != NULL || i_points[ii].next != NULL || s_points->head == 1);
-			assert(i_points[ii].image->prev != NULL || i_points[ii].image->next != NULL || s_points->head == 1);
-		}
+      if(i_points[ii].leaf->child1 != NULL || i_points[ii].leaf->child2 != NULL){
+        //std::cout << ii << std::endl;
+        //i_points[ii].print();
+        //i_points[ii].leaf->print();
+        i_tree->current = i_points[ii].leaf;
+        i_tree->_FindLeaf(i_points[ii].x,0);
+        assert(i_tree->current->npoints == 1);
+        i_points[ii].leaf = i_tree->current;
+        assert(i_points[ii].prev != NULL || i_points[ii].next != NULL || s_points->head == 1);
+        assert(i_points[ii].image->prev != NULL || i_points[ii].image->next != NULL || s_points->head == 1);
+      }
 
-		if(s_points[ii].leaf->child1 != NULL || s_points[ii].leaf->child2 != NULL){
-			//std::cout << ii << std::endl;
-			//s_points[ii].print();
-			//s_points[ii].leaf->print();
-			s_tree->current = s_points[ii].leaf;
-			s_tree->_FindLeaf(s_points[ii].x,0);
-			assert(s_tree->current->npoints == 1);
-			s_points[ii].leaf = s_tree->current;
-			assert(s_points[ii].prev != NULL || s_points[ii].next != NULL || s_points->head == 1);
-			assert(s_points[ii].image->prev != NULL || s_points[ii].image->next != NULL || s_points->head == 1);
-		}
-	}
+      if(s_points[ii].leaf->child1 != NULL || s_points[ii].leaf->child2 != NULL){
+        //std::cout << ii << std::endl;
+        //s_points[ii].print();
+        //s_points[ii].leaf->print();
+        s_tree->current = s_points[ii].leaf;
+        s_tree->_FindLeaf(s_points[ii].x,0);
+        assert(s_tree->current->npoints == 1);
+        s_points[ii].leaf = s_tree->current;
+        assert(s_points[ii].prev != NULL || s_points[ii].next != NULL || s_points->head == 1);
+        assert(s_points[ii].image->prev != NULL || s_points[ii].image->next != NULL || s_points->head == 1);
+      }
+    }
+  
+  for(ii=0;ii<Nleaves;++ii){
+		assert(points[ii]->leaf->child1 == NULL && points[ii]->leaf->child2 == NULL);
+		if(points[ii]->image->leaf->child1 != NULL || points[ii]->image->leaf->child2 != NULL){
+      s_tree->current = points[ii]->image->leaf;
+      s_tree->moveTop();
+      //assert(inbox(points[ii]->x,s_tree->top->boundary_p1,s_tree->top->boundary_p2));
+      assert(inbox(points[ii]->x,s_tree->current->boundary_p1,s_tree->current->boundary_p2));
+      s_tree->_FindLeaf(points[ii]->x,0);
+      assert(s_tree->current->npoints == 1);
+      points[ii]->image->leaf = s_tree->current;
+    }
+  }
 	//*********************************************************************
 
 	// This loop should not be necessary!! It is repairing the leaf that has been assigned incorrectly somewhere

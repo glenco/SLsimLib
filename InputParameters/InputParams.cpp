@@ -21,7 +21,9 @@ namespace
 	}
 }
 
-/// The constructor reads in all the lines from the parameter file and stores the labels and values of each parameter.
+/** \brief The constructor reads in all the lines from the parameter file and stores the labels and values of each parameter.
+*  If a parameter is provided that should not exist an error message is printed
+ */
 InputParams::InputParams(std::string paramfile)
 {
 	std::cout << "Reading parameters from file: " << paramfile << std::endl;
@@ -75,7 +77,7 @@ InputParams::InputParams(std::string paramfile)
 				myline = myline.substr(0,np);
 				if(myline.size() <= 0)
 				{
-					std::cout << "ERRROR: Paramters " << label << " does not have a valid value in parameter file " << paramfile_name << std::endl;
+					std::cout << "ERROR: Paramters " << label << " does not have a valid value in parameter file " << paramfile_name << std::endl;
 					exit(1);
 				}
 

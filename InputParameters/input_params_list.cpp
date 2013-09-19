@@ -6,8 +6,9 @@ namespace {
 		// General
 		"outputfile",
 		"deflection_off",
+    "lensing_off",
 		"read_redshift_planes",
-		"redshift_planes_fil",
+		"redshift_planes_file",
 		"z_lens",
 		"z_source",
 		
@@ -17,7 +18,7 @@ namespace {
 		"Omega_baryon",
 		"Omega_neutrino",
 		"hubble",
-		"sigm_8",
+		"sigma_8",
 
 		// Main halos type
 		"main_halo_on",
@@ -36,6 +37,7 @@ namespace {
 
 		// Field halos from a mass function
 		"field_mass_func_type",
+		"field_mass_func_alpha",
 		"field_fov",
 		"field_buffer",
 		"field_min_mass",
@@ -43,11 +45,19 @@ namespace {
 		// Field halos from an input file
 		"field_input_simulation_file",
 		
-		// AnaNSIE lens halo model
+		// Main halos
+		"main_mass",
+		"main_zlens",
+		"main_Rmax",
+		"main_concentration",
+		"main_slope",
 		"main_sigma",
 		"main_core",
 		"main_axis_ratio",
 		"main_pos_angle",
+		"main_rscale",
+
+		// AnaNSIE perturbations
 		"main_NDistortionModes",
 		"main_perturb_beta",
 		"main_perturb_kappa",
@@ -56,6 +66,8 @@ namespace {
 		"main_perturb_quadrapole",
 		"main_perturb_hexopole",
 		"main_perturb_octopole",
+
+		// AnaNSIE substructures
 		"main_sub_Ndensity",
 		"main_sub_beta",
 		"main_sub_alpha",
@@ -64,53 +76,6 @@ namespace {
 		"main_sub_mass_min",
 		"main_sub_type",
 		
-		// MOKA lens halo model
-		"MOKA_input_file",
-		"MOKA_input_params",
-		"MOKA_analyze",
-		"MOKA_background_field",
-
-		// NFW lens halo model
-		"mass_nfw",
-		"Rmax_nfw",
-		"zlens_nfw",
-		"concentration_nfw",
-
-		// Pseudo NFW lens halo model
-		"mass_pnfw",
-		"Rmax_pnfw",
-		"zlens_pnfw",
-		"concentration_pnfw",
-		"slope_pnfw",
-
-		// Power law lens halo model
-		"mass_pl",
-		"Rmax_pl",
-		"zlens_pl",
-		"slope_pl",
-
-		// Simple NSIE lens halo model
-		"mass_nsie",
-
-		// Hernquist lens halo model
-		"mass_hernquist",
-		"Rmax_hernquist",
-		"zlens_hernquist",
-		"rscale_hernquist",
-		
-		// Jaffe lens halo model
-		"mass_jaffe",
-		"Rmax_jaffe",
-		"zlens_jaffe",
-		"rscale_jaffe",
-
-		// Uniform lens halo model
-		"zlens_uniform",
-		"kappa_uniform",
-		"gamma_uniform_1",
-		"gamma_uniform_2",
-		"zsource_reference",
-
 		// Stars
 		"main_stars_N",
 		"main_stars_fraction",
@@ -122,6 +87,20 @@ namespace {
 		"main_stars_lo_mass_slope",
 		"main_stars_hi_mass_slope",
 
+		// MOKA lens halo model
+		"MOKA_input_file",
+		"MOKA_input_params",
+		"MOKA_analyze",
+		"MOKA_background_field",
+
+		// Uniform lens halo model
+		"kappa_uniform",
+		"gamma_uniform_1",
+		"gamma_uniform_2",
+
+		// Reference redshift for halo quantities that depend on source z
+		"zsource_reference",
+
 		// MultiDark lenses
 		"MultiDark_input_file",
 		
@@ -132,14 +111,21 @@ namespace {
 		"gauss_r2",
 		
 		// BLR source model
-		"BHmass",
-		"gamma",
-		"inclin",
-		"opening_ang",
-		"r_in",
-		"r_out",
-		"nuo",
-		"source_sigma"
+		"source_BHmass",
+		"source_gamma",
+		"source_inclin",
+		"source_opening_ang",
+		"source_r_in",
+		"source_r_out",
+		"source_nuo",
+		"souce_fK",
+
+		// SourceMultiAnaGalaxy & Sky
+		"source_input_galaxy_file",
+		"source_band",
+		"source_mag_limit",
+		"source_sb_limit",
+		"input_sersic_file"
 	};
 }
 

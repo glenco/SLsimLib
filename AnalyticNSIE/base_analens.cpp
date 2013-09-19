@@ -94,8 +94,8 @@ void LensHaloBaseNSIE::force_halo(
  * force calculation.
  */
 void LensHaloBaseNSIE::assignParams(InputParams& params){
-	if(!params.get("main_mass_nsie",mass)) error_message1("main_mass_nsie",params.filename());
-	if(!params.get("zlens_basensie",zlens)) error_message1("zlens_basensie",params.filename());
+	if(!params.get("main_mass",mass)) error_message1("main_mass",params.filename());
+	if(!params.get("main_zlens",zlens)) error_message1("main_zlens",params.filename());
 
 	if(!params.get("main_sigma",sigma)) error_message1("main_sigma",params.filename());
 	if(!params.get("main_core",rcore)) error_message1("main_core",params.filename());

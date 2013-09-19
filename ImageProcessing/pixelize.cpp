@@ -158,7 +158,7 @@ PixelMap::PixelMap(const PixelMap& pmap,  /// Input PixelMap (from which the sta
 		if (edge[0] > int(pmap.Npixels) || edge[1] > int(pmap.Npixels) || edge[0]+int(Npixels) < 0 || edge[1]+int(Npixels) < 0)
 		{
 			std::cout << "The region you selected is completely outside PixelMap!" << std::endl;
-			exit(1);
+			throw std::runtime_error("Attempting to make Sub-PixelMap outside of parent PixelMap!");
 		}
 		for (unsigned long i=0; i < map_size; ++i)
 		{

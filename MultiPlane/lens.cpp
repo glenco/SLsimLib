@@ -250,7 +250,10 @@ void Lens::assignParams(InputParams& params)
 	
 	if(!params.get("deflection_off",flag_switch_deflection_off))
 		flag_switch_deflection_off = false;
-	
+
+  if(!params.get("lensing_off",flag_switch_lensing_off))
+		flag_switch_lensing_off = false;
+
 	// Some checks for valid parameters
 	if(flag_switch_field_off == false && field_Nplanes == 0)
 	{

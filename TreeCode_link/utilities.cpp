@@ -21,6 +21,8 @@ Point *LinkToSourcePoints(Point *i_points,unsigned long Npoints){
       // link images and source points
     i_points[i].image=&s_points[i];
     s_points[i].image=&i_points[i];
+    
+    s_points[i].gridsize = i_points[i].gridsize;
   }
 
   return s_points;
@@ -88,6 +90,8 @@ void log_polar_grid(Point *i_points,double rmax,double rmin,double *center,long 
  *   between a 1d array index and a square grid of positions
  *   Npixels in the number of point is 1 dimension
  *   index is between 0 and Npixels*Npixels-1
+ *   If x is outside of the region -1 is returned.
+ *
  */
 namespace Utilities{
 long IndexFromPosition(double *x,long Npixels,double range,double *center){
@@ -110,6 +114,7 @@ long IndexFromPosition(double *x,long Npixels,double range,double *center){
 	  if( (ix>-1)*(ix<Npixels) && (iy>-1)*(iy<Npixels) ) return ix+Npixels*iy;
 	  return -1;
 }
+  
 /** \ingroup Utill
  *
  */
@@ -136,6 +141,65 @@ long IndexFromPosition(double x,long Npixels,double range,double center){
 	  if( (ix>-1)*(ix<Npixels)) return ix;
 	  return -1;
 }
+
+  /** \ingroup Utill
+   * \brief bilinear interpolation from a map.
+   *
+   *  Out of bounds points return 0.  map is a i dimensional array representing a 2 dimensional map.
+   *  Don't use init.
+   *  After it is used once, later calls can use TwoDInterpolator(double *map) for the same point 
+   *  in the same coordinate system to save time in calculating the idndexes.
+   */
+  double TwoDInterpolator(
+                          double *x
+                          ,int Npixels
+                          ,double range
+                          ,double *center
+                          ,double *map
+                          ,bool init
+                          ){
+    static double fx, fy;
+    static unsigned long index;
+    static bool initialized = false;
+    
+    if(init){
+      unsigned long ix,iy;
+      fx = ((x[0] - center[0])/range + 0.5)*(Npixels-1);
+      fy = ((x[1] - center[1])/range + 0.5)*(Npixels-1);
+    
+      if (fx < 0. || fx > Npixels-1) return 0.0;
+      else ix = (unsigned long)(fx);
+      if(ix == Npixels-1) ix = Npixels-2;
+    
+      if (fy < 0. || fx > Npixels-1) return 0.0;
+      else iy = (unsigned long)(fy);
+      if(iy == Npixels-1) iy = Npixels-2;
+    
+      index = ix + Npixels*iy;
+      
+      /** bilinear interpolation */
+      fx = center[0] + range*( 1.0*(ix)/(Npixels-1) - 0.5 );
+      fy = center[1] + range*( 1.0*(iy)/(Npixels-1) - 0.5 );
+      fx=(x[0] - fx)*(Npixels-1);
+      fy=(x[1] - fy)*(Npixels-1);
+
+      initialized = true;
+    }
+    
+    if(!initialized){
+      ERROR_MESSAGE();
+      std::cout << " TwoDInterpolator() needs to be initialized. " << std::endl;
+      throw std::runtime_error("Not initialized");
+    }
+    
+    return (1-fx)*(1-fy)*map[index] + fx*(1-fy)*map[index+Npixels] + fx*fy*map[index+1+Npixels]
+           + (1-fx)*fy*map[index+1];
+  }
+  double TwoDInterpolator(double *map){
+    double *dummy = NULL;
+    return TwoDInterpolator(dummy,0,0,dummy,map,false);
+  }
+
 
 /** \ingroup Utill
  * This function finds the largest power of 2 that is < k
