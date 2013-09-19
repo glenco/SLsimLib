@@ -304,6 +304,10 @@ namespace Utilities{
     double interpolate(
                        T& map    /// map that supports the [] operator 
                        ){
+      if(map.size() != N*N){
+        ERROR_MESSAGE();
+        std::cout << "ERROR: Interpolator:interpolator(double *,T&)" << std::endl;
+      }
       if(index == -1) return 0;
       return (1.-fx)*(1.-fy)*map[index] + fx*(1.-fy)*map[index+1] + fx*fy*map[index+1+N]
           + (1.-fx)*fy*map[index+N];
