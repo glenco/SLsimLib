@@ -6,6 +6,7 @@ static const int NpointsRequired = 100;  // number of points required to be with
 //static const float mumin = 0.5;  // actually the sqrt of the minimum magnification
 //static const float mumin = 0.45;  // actually the sqrt of the minimum magnification
 //static const float mumin = 0.1;
+//static const float mumin = 0.3;
 static const float mumin = 0.3;
 
 
@@ -818,23 +819,28 @@ void find_images_microlens(
 
 	}else if(edge_refinement==2){  // edge refinement with no image finding at each step
 		++i;
-        area_tot = 0;
-        count=0;
-        for(int k=0;k<*Nimages;++k) area_tot += imageinfo[k].area;
-        for(int k=0;k<*Nimages;++k){            
-            if(imageinfo[k].area < area_tot*1.0e-3){++count; imageinfo[k].ShouldNotRefine = true;}
-            else imageinfo[k].ShouldNotRefine = false;
-        }
+    area_tot = 0;
+    count=0;
+    for(int kk=0;kk<*Nimages;++kk) area_tot += imageinfo[kk].area;
+    for(int kk=0;kk<*Nimages;++kk){
+        if(imageinfo[kk].area < area_tot*1.0e-3){++count; imageinfo[kk].ShouldNotRefine = true;}
+        else imageinfo[kk].ShouldNotRefine = false;
+    }
 		while(refine_edges2(lens,y_source,r_source,grid
 				,imageinfo,&image_overlap,*Nimages,FracResTarget,flag,kappa_off)){
-			// if an overlap is detected find the images again
+      // if an overlap is detected find the images again
 
-			if(image_overlap) moved=image_finder_kist(lens,y_source,fabs(r_source),grid
-					,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
+      if(image_overlap){
+        moved=image_finder_kist(lens,y_source,fabs(r_source),grid
+					  ,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
+        for(int kk=0;kk<*Nimages;++kk){
+          if(imageinfo[kk].area < area_tot*1.0e-3){++count; imageinfo[kk].ShouldNotRefine = true;}
+          else imageinfo[kk].ShouldNotRefine = false;
+        }
+      }
 			++i;
 		}
-        for(int k=0;k<*Nimages;++k) imageinfo[k].ShouldNotRefine = false;
-
+    for(int kk=0;kk<*Nimages;++kk) imageinfo[kk].ShouldNotRefine = false;
 	}
 	// unmark image points so new source can be used
 	grid->s_tree->PointsWithinKist(y_source,r_source,subkist,-1);

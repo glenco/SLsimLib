@@ -405,7 +405,7 @@ void LensHaloMOKA::saveProfiles(double &RE3,double &xxc,double &yyc){
    *
 */
 void LensHaloMOKA::force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xx,bool kappa_off,bool subtract_point){
-    
+  
   long index = Utilities::IndexFromPosition(xx,map->nx,map->boxlMpc/map->h,map->center);
 
 	if(index > -1){
@@ -421,8 +421,17 @@ void LensHaloMOKA::force_halo(double *alpha,KappaType *kappa,KappaType *gamma,do
 		gamma[0] = gamma[1] = gamma[2] = 0.0;
 		*kappa = 0.0;
 	}
-
-
+  
+  // interpolate from the maps
+	/*
+	  Utilities::Interpolator<valarray<float> > interp(xx,map->nx,map->boxlMpc/map->h,map->center);
+  alpha[0] = interp.interpolate(map->alpha1);
+  alpha[1] = interp.interpolate(map->alpha2);
+  gamma[0] = interp.interpolate(map->gamma1);
+  gamma[1] = interp.interpolate(map->gamma2);
+  gamma[2] = 0.0;
+  *kappa = interp.interpolate(map->convergence);
+  */
 	return;
 }
 
