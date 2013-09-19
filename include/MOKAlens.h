@@ -13,7 +13,6 @@
 #include "profile.h"
 #include "InputParams.h"
 #include "lens_halos.h"
-#include "model.h"
 
 /**
  * \brief The MOKA map structure, containing all quantities that define it

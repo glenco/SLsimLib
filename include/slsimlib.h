@@ -25,8 +25,6 @@
 #include <grid_maintenance.h>
 #include <source_models.h>
 
-#include <model.h>
-
 #include <peak_refinement.h>
 #include <map_images.h>
 

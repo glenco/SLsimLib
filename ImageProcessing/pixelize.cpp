@@ -139,7 +139,7 @@ PixelMap::PixelMap(std::string filename)
 PixelMap::PixelMap(const PixelMap& pmap,  /// Input PixelMap (from which the stamp is taken)
 		const double* center, /// center of the region to be duplicated (in rads)
 		std::size_t Npixels /// size of the region to be duplicated (in pixels)
-		): resolution(pmap.resolution), Npixels(Npixels)
+		): Npixels(Npixels), resolution(pmap.resolution)
 	{
 		std::copy(center, center + 2, this->center);
 		range = resolution*(Npixels-1);
