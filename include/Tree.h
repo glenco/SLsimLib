@@ -313,6 +313,10 @@ namespace Utilities{
                        double *x   /// position of point
                        ,T& map     /// map that supports the [] operator
                        ){
+      if(map.size() != N*N){
+        ERROR_MESSAGE();
+        std::cout << "ERROR: Interpolator:interpolator(double *,T&)" << std::endl;
+      }
       initparams(x);
       return interpolate(map);
     }
@@ -332,7 +336,7 @@ namespace Utilities{
     }
         
     void test(void){
-      std::valarray<double> map;
+      std::valarray<float> map;
       double tmp,x[2];
           
       map.resize(N*N);
@@ -346,7 +350,7 @@ namespace Utilities{
 
       x[1] = 0*range/2.;
       for(int i=0;i<N;++i){
-        x[0] = x[1] = center[0] + range*( 1.0*(i)/(N-1) - 0.5 ) + 0.01*range/(N-1);
+        x[0] = x[1] = center[0] + range*( 1.0*(i)/(N-1) - 0.5 ) + 0.5*range/(N-1);
         std::cout << i << "  " << map[i+N*i] << " " << interpolate(x,map) << std::endl;
       }
     }

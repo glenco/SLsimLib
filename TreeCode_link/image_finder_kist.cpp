@@ -6,8 +6,8 @@ static const int NpointsRequired = 100;  // number of points required to be with
 //static const float mumin = 0.5;  // actually the sqrt of the minimum magnification
 //static const float mumin = 0.45;  // actually the sqrt of the minimum magnification
 //static const float mumin = 0.1;
-//static const float mumin = 0.3;
 static const float mumin = 0.3;
+//static const float mumin = 0.3;
 
 
 static const float FracResTarget = 4.0e-4;
@@ -621,7 +621,7 @@ void find_images_microlens(
     		// unmark image points in tree
     		grid->s_tree->PointsWithinKist(y_source,rtemp,subkist,-1);
 */
-    		for(int k=0; k < *Nimages; ++k) if( 1.0e-3 > imageinfo[k].area/pi/r_source/r_source ) imageinfo[k].ShouldNotRefine = true;
+    		for(int k=0; k < *Nimages; ++k) if( 5.0e-4 > imageinfo[k].area/pi/r_source/r_source ) imageinfo[k].ShouldNotRefine = true;
 
     		/***********************************************************/
             /**** TODO test line **********************
