@@ -903,7 +903,7 @@ void Grid::writeFitsVector(
                      ,LensingVariable lensvar  /// which quantity is to be displayed
                      ,std::string filename     /// file name for image -- .kappa.fits, .gamma1.fits, etc will be appended
                      ){
-  throw std::runtime_error("Not done yet.");
+  throw std::runtime_error("Not done yet!");
   PixelMap map(center, Npixels, resolution);
   
   double range = Npixels*resolution,tmp_x[2];

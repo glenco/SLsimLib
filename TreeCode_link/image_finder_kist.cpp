@@ -5,8 +5,7 @@ static const int NpointsRequired = 100;  // number of points required to be with
 //static const int Ngrid_block = 3;       // each cell is divided into Ngrid_block^2 subcells
 //static const float mumin = 0.5;  // actually the sqrt of the minimum magnification
 //static const float mumin = 0.45;  // actually the sqrt of the minimum magnification
-//static const float mumin = 0.1;
-static const float mumin = 0.3;
+static const float mumin = 0.1;
 //static const float mumin = 0.3;
 
 
@@ -1234,7 +1233,6 @@ int refine_grid_kist(
 				  //assert(getCurrentKist(imageinfo[i].imagekist)->image->leaf->child2 == NULL);
 
 				  if(batch){
-            assert(imageinfo[i].imagekist->getCurrent()->gridsize > 1.0e-16);
 					  points_to_refine.push_back(getCurrentKist(imageinfo[i].imagekist));
 				  }else{
 					  i_points = grid->RefineLeaf(lens,getCurrentKist(imageinfo[i].imagekist),kappa_off);
@@ -1266,8 +1264,7 @@ int refine_grid_kist(
 					  assert(point->image->leaf->child2 == NULL);
 
 					  if(batch){
-              assert(imageinfo[i].imagekist->getCurrent()->gridsize > 1.0e-16);
-						  points_to_refine.push_back(point);
+ 						  points_to_refine.push_back(point);
 					  }else{
 						  i_points = grid->RefineLeaf(lens,point,kappa_off);
 						  if(newpointskist && i_points != NULL){
