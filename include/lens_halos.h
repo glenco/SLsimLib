@@ -71,8 +71,6 @@ public:
 	virtual void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rmax/rscale;};
 	/// set redshift
 	void setZlens(double my_zlens){zlens=my_zlens;};
-	/// set redshift, where the cosmology and the source redshift are needed (BaseNSIELensHalo)
-	virtual void setZlens(CosmoHndl cosmo,double z,double dummy){zlens=z;};
 	/// set slope
 	virtual void set_slope(double my_slope){};
 
@@ -218,9 +216,9 @@ public:
 
 protected:
 	/// table size
-	const static long NTABLE = 1000;
+	static const long NTABLE;
 	/// maximum Rmax/rscale
-	const static double maxrm = 100.0;
+	static const double maxrm;
 	/// keeps track of how many time the tables are created, default is just once
 	static int count;
 
@@ -285,9 +283,9 @@ public:
 
 private:
 	/// table size
-	const static long NTABLE = 1000;
+	static const long NTABLE;
 	/// maximum Rmax/rscale
-	const static double maxrm = 100.0;
+	static const double maxrm;
 	/// keeps track of how many time the tables are created, default is just once
 	static int count;
 
@@ -470,9 +468,9 @@ public:
 
 protected:
 	/// table size
-	const static long NTABLE = 1000;
+	static const long NTABLE;
 	/// maximum Rmax/rscale
-	const static double maxrm = 100.0;
+	static const double maxrm;
 	/// keeps track of how many time the tables are created, default is just once
 	static int count;
 
@@ -536,9 +534,9 @@ public:
 
 protected:
 	/// table size
-	const static long NTABLE = 1000;
+	static const long NTABLE;
 	/// maximum Rmax/rscale
-	const static double maxrm = 100.0;
+	static const double maxrm;
 	/// keeps track of how many time the tables are created, default is just once
 	static int count;
 

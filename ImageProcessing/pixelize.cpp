@@ -139,7 +139,7 @@ PixelMap::PixelMap(std::string filename)
 PixelMap::PixelMap(const PixelMap& pmap,  /// Input PixelMap (from which the stamp is taken)
 		const double* center, /// center of the region to be duplicated (in rads)
 		std::size_t Npixels /// size of the region to be duplicated (in pixels)
-		): resolution(pmap.resolution), Npixels(Npixels)
+		): Npixels(Npixels), resolution(pmap.resolution)
 	{
 		std::copy(center, center + 2, this->center);
 		range = resolution*(Npixels-1);
@@ -158,7 +158,7 @@ PixelMap::PixelMap(const PixelMap& pmap,  /// Input PixelMap (from which the sta
 		if (edge[0] > int(pmap.Npixels) || edge[1] > int(pmap.Npixels) || edge[0]+int(Npixels) < 0 || edge[1]+int(Npixels) < 0)
 		{
 			std::cout << "The region you selected is completely outside PixelMap!" << std::endl;
-			exit(1);
+			throw std::runtime_error("Attempting to make Sub-PixelMap outside of parent PixelMap!");
 		}
 		for (unsigned long i=0; i < map_size; ++i)
 		{
@@ -174,8 +174,10 @@ PixelMap::PixelMap(const PixelMap& pmap,  /// Input PixelMap (from which the sta
 * The new counts are calculated integrating over the input pixels.
 * No interpolation or smoothing is performed.
  */
-PixelMap::PixelMap(const PixelMap& pmap, double res_ratio)
-	{
+PixelMap::PixelMap(
+                   const PixelMap& pmap
+                   , double res_ratio     /// resolution of map is res_ratio times the resolution of the input map
+                   ){
 	resolution = res_ratio*pmap.resolution;
 	Npixels = pmap.Npixels/res_ratio + .5;
 	range = resolution*(Npixels-1);
@@ -255,7 +257,7 @@ void PixelMap::AssignValue(std::size_t i, double value)
 /** \brief Add an image to the map
  *
  *  If rescale==0 gives constant surface brightness, if < 0
- *  the surface brightness is not scales by the pixel area for get the flux (default: 1).
+ *  the surface brightness is not scales by the pixel area as for the flux (default: 1).
  *  Negative values are good for mapping some quantity independant of the pixel size
  */
 void PixelMap::AddImages(

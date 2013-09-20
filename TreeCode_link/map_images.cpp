@@ -405,7 +405,7 @@ void map_images(
 	}
 	divide_images_kist(grid->s_tree,imageinfo,Nimages,NimageMax);
 	printf("number of sources %i\n",*Nimages);
-	/*******************************************************/
+	/ *******************************************************/
 
 	//PointsWithinKist(grid->s_tree,source->getX(),source->source_r_out,imageinfo->imagekist,0);
 	grid->s_tree->PointsWithinKist_iter(source->getX(),0,source->getRadius(),imageinfo->imagekist);
@@ -505,7 +505,7 @@ void map_images(
 	2) uniform_mag get reset after process
 	3) magnification is calculated properly.  Will need flux from source.  Careful of the normalization!
 	4) What if there are more than one sources?
-
+	***/
 	/********************************************************
 	 ******* refine images based on flux in each pixel ******
 	 *******************************************************/
@@ -586,7 +586,7 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
   if((*Nimages) < 1) return 0;
 
   int k,number_of_refined; /* Ngrid_block must be odd */
-  double total_area,y[2],r,rmin;
+  double total_area,r,rmin;
   Point *i_points;
   unsigned long Ncells,Nold,j,i;
   bool reborder=false,redivide=false;
@@ -597,7 +597,6 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
 
   Point *point;
   Kist<Point> * nearest=new Kist<Point>;
-  int Ngrid_block = grid->getNgrid_block();
   std::vector<Point *> points_to_refine;
 
   if(verbose) printf(" entering refine_on_image(), number of points %li\n",grid->getNumberOfPoints());
@@ -624,7 +623,7 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
 			  assert(sourceinfo[k].area > 0);
 			  assert(fabs(getCurrentKist(imageinfo[i].imagekist)->invmag) > 0.0);
 			  imageinfo[i].area = sourceinfo[k].area/fabs(getCurrentKist(imageinfo[i].imagekist)->invmag)/maxflux;
-			  if(verbose) printf("magnification is uniform for image %i\n",i);
+			  if(verbose) printf("magnification is uniform for image %lu\n",i);
 		  }
 	  }
 

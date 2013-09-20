@@ -1,6 +1,8 @@
 
 #include "slsimlib.h"
 
+#include <nrutil.h>
+
 using namespace std;
 
 static double betaT,*modT,**xobT,**dx_subT,sigGT,*modTT,*modoT,**vT,x_centerT[2],**xgT,**dx_subTt;
@@ -55,7 +57,7 @@ void LensHaloAnaNSIE::FindLensSimple(
 
 	if(perturb_Nmodes <= 0 || Nimages <= 0){
 		ERROR_MESSAGE();
-		std::printf("must set perturb_Nmodes lens->perturb_Nmodes = %li Nimages = %i \n"
+		std::printf("must set perturb_Nmodes lens->perturb_Nmodes = %i Nimages = %i \n"
 				,perturb_Nmodes,Nimages);
 		exit(1);
 	}

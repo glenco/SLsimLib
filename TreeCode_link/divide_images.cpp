@@ -55,8 +55,6 @@ int ImageGenus(TreeHndl i_tree,ImageInfo *imageinfo){
 		return 0;
 	}
 
-	GridHndl grid;
-
 	// mark points in tree as in image and transfer points to temporary temporary new_imagekist
 
 	kist->MoveToTop();

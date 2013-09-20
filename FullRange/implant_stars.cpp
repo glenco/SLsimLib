@@ -262,7 +262,7 @@ float* LensHalo::stellar_mass_function(IMFtype type, unsigned long Nstars, long 
 	}
 
     if(type==Salpeter){
-    	if((minmass==maxmass)){
+    	if(minmass==maxmass){
     			    cout << "For IMF type Salpeter main_stars_min_mass and main_stars_max_mass must be defined in parameter file" << endl;
     			    exit(1);
     	}
@@ -314,7 +314,7 @@ float* LensHalo::stellar_mass_function(IMFtype type, unsigned long Nstars, long 
 	}
 
     if(type==BrokenPowerLaw){
-    	if((powerlo==powerhi)){
+    	if(powerlo==powerhi){
     		cout << "For IMF type BrokenPowerLaw inner slope (main_stars_lo_mass_slope) and outer slope (main_stars_hi_mass_slope) must be defined in parameter file" << endl;
     		exit(1);
     	}

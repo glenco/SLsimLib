@@ -11,12 +11,12 @@
 /* median_cut determines how the cells are subdivided */
 /*    if ==0  equal volume cuts, Warning this option causes an error*/
 /*    if ==1  median point cuts */
+#include <iostream>     // std::cout, std::fixed
+#include <iomanip>      // std::setprecision
 
 #include "slsimlib.h"
 /************************** test routine *****************************/
 bool tree_count_test(TreeHndl tree){
-	int i,nbranches=0;
-	Branch *branch = tree->current;
 	/*static int init=0;
 	static double p1[2],p2[2];
 
@@ -460,7 +460,7 @@ void TreeStruct::_BuildTree(){
 	  branch2->center[0]+=pointlist->current->x[0]/branch2->npoints;
 	  branch2->center[1]+=pointlist->current->x[1]/branch2->npoints;
 	  MoveDownList(pointlist);
-  }/**/
+  }*/
 
   attachChildrenToCurrent(branch1,branch2);
 
@@ -636,7 +636,7 @@ void TreeStruct::_AddPoint(){
 					,pointlist->current->leaf->boundary_p2));
 			MoveDownList(pointlist);
 		}
-		//****************************************/
+		/ ****************************************/
 		return;
 	}
 
@@ -757,6 +757,17 @@ void TreeStruct::_AddPoint(){
 					x[1] = x[0];
 					x[0] = tmp;
 				}
+        if(x[0] == x[1]){
+          pointlist->current = current->points;
+          for(i=0;i<current->npoints;i++){
+            std::cout << std::scientific << std::setprecision(15) << pointlist->current->x[0] << "  " << pointlist->current->x[1] << " " << pointlist->current->id << "      "
+                      << pointlist->current->image->x[0] << "  " << pointlist->current->image->x[1] << " " << pointlist->current->image->id << std::endl;
+            std::cout << "invmag " << pointlist->current->invmag << " gridsize " << pointlist->current->gridsize << std::endl;
+            MoveDownList(pointlist);
+          }
+          std::cout << std::setprecision(15) << "top bounderies  " << top->boundary_p1[0] << " " << top->boundary_p1[1] << "      " << top->boundary_p2[0] << " " << top->boundary_p2[1] << std::endl;
+          throw std::runtime_error("Points in grid are the same");
+        }
 			}else{
 				ERROR_MESSAGE();
 				std::cout << "This is prone to errors and this should never happen!" << std::endl;
@@ -847,7 +858,7 @@ void TreeStruct::_AddPoint(){
 			ERROR_MESSAGE();
 			exit(0);
 		}
-		/////////////////////////////////////////////////////
+		////////////////////////////////////////////////////*/
 		/* centers of mass *
 
 	for(i=0;i<2;++i) branch1->center[i]=0;
@@ -887,7 +898,7 @@ void TreeStruct::_AddPoint(){
 			assert(pointlist->current->leaf == current->child1 || pointlist->current->leaf == current->child2);
 			MoveDownList(pointlist);
 		}
-		/*******************************************/
+		/ *******************************************/
 
 
 		// If needed, change the particle pointer in all parent cells
@@ -1026,12 +1037,10 @@ unsigned long Grid::PrunePointsOutside(
 	if(r_out <= 0.0) return 0.0;
 
 	double res,dr2;
-	TreeHndl i_tree = i_tree,s_tree = s_tree;
-	int Ngrid_block = getNgrid_block();
 
-	long i,count = 0,j;
+	long i,count = 0;
 	Point *point;
-	Branch *branch,*branch2;
+	Branch *branch;
 	Kist<Point> * subkist = new Kist<Point>;
 	bool go = true;
 	unsigned long Ntmp;
@@ -1064,7 +1073,7 @@ unsigned long Grid::PrunePointsOutside(
 		++i;
 	}while(MoveDownKist(subkist));
 	}
-	/*****************************************/
+	/ *****************************************/
 
 	if(r_in > 0){
 		// take out points that are within inner circle
@@ -1106,7 +1115,7 @@ unsigned long Grid::PrunePointsOutside(
 		subkist->current=unit;
 
 	}while(MoveDownKist(subkist));
-	/*****************************************/
+	/ *****************************************/
 
 	// Take out all points that are not at the center of their parent refined cell
 	MoveToTopKist(subkist);
@@ -1190,7 +1199,7 @@ unsigned long Grid::PrunePointsOutside(
 
 	}while(MoveDownKist(subkist));
 
-	/******************************/
+	/ ******************************/
 
 	assert(AtBottomKist(subkist));
 
@@ -1210,7 +1219,7 @@ unsigned long Grid::PrunePointsOutside(
 			assert( !inbox(getCurrentKist(subkist)->x,i_tree->current->boundary_p1,i_tree->current->boundary_p2) );
 		}
 		subkist->current = unit;
-		//*******************************************/
+		/ *******************************************/
 
 		// make sure that none of the child points are outside the annulus
 		i_tree->pointlist->current = i_tree->current->points;
@@ -1251,7 +1260,7 @@ unsigned long Grid::PrunePointsOutside(
 				subkist->current = unit;
 
 			}
-			/*******************************************/
+			/ *******************************************/
 
 			count += FreeBranchesBelow(i_tree,s_tree,trashkist);
 
@@ -1282,7 +1291,7 @@ unsigned long Grid::PrunePointsOutside(
 				subkist->current = unit;
 
 			}
-			/*******************************************/
+			/ *******************************************/
 
 			assert(i_tree->current->npoints == 1);
 			assert( fabs( 1 - (i_tree->current->boundary_p2[0] - i_tree->current->boundary_p1[0])/i_tree->current->points->gridsize) < 1.0e-4 );
@@ -1366,7 +1375,7 @@ unsigned long FreeBranchesBelow(TreeHndl i_tree,TreeHndl s_tree,Kist<Point> * tr
 
 	Branch *branch,*headbranch;
 	Point *point;
-	unsigned long Ntmp,NtoRemove,i,count = 0,count2 = 0,count1,j;
+	unsigned long Ntmp,NtoRemove,i,count = 0,count2 = 0,count1;
 	double center[2];
 
 	//_freeBranches_iter(s_tree);  // s_tree will no longer be valid on exit.  This is to make sure it isn't used later without a rebuild.
@@ -1552,7 +1561,7 @@ unsigned long FreeBranchesBelow(TreeHndl i_tree,TreeHndl s_tree,Kist<Point> * tr
 Point * TreeStruct::RemoveLeafFromTree(unsigned long *Npoints){
 
 	Branch *branch;
-	Point *point;
+	Point *point = NULL;
 	unsigned long i;
 
 	if(atTop() || !(atLeaf()) ) return NULL;

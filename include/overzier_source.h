@@ -61,9 +61,9 @@ public:
 	/// set k band magnitude
 	void setKMag(double m) { mag_Ks = m; }
 	
-	/// bulge half light radius
+	/// bulge half light radius in radians
 	double getReff() const { return Reff/(pi/180/60/60); }
-	/// disk scale height
+	/// disk scale height in radians
 	double getRh() const { return Rh/(pi/180/60/60); }
 	
 	double getBtoT() const { return BtoT; }

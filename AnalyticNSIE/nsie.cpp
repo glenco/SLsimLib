@@ -124,8 +124,7 @@ void gammaNSIE(
   }
 
   double x[2],fp,P,b2;
-  double gam_tmp[2], gam_out[2];
-
+  
   Utilities::rotation(x,xt,theta);
 
   fp=sqrt(1-f*f);
