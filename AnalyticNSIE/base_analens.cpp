@@ -250,6 +250,29 @@ void LensHaloBaseNSIE::PrintLens(bool show_substruct,bool show_stars){
 	if (stars_implanted) PrintStars(show_stars);
 }
 
+void LensHaloBaseNSIE::randomize(double step, long* seed)
+{
+	sigma += step*sigma*gasdev(seed);
+
+	fratio += step*gasdev(seed);
+
+	pa += step*pi*gasdev(seed);
+
+}
+
+void LensHaloBaseNSIE::serialize(RawData& d) const
+{
+	d << sigma << fratio << pa << rcore;
+}
+
+
+void LensHaloBaseNSIE::unserialize(RawData& d)
+{
+	d >> sigma >> fratio >> pa >> rcore;
+}
+
+
+
 
 LensHaloBaseNSIE::~LensHaloBaseNSIE(){
 	cout << "deleting lens" << endl;
