@@ -9,6 +9,7 @@ static const float mumin = 0.1;
 //static const float mumin = 0.3;
 
 
+
 static const float FracResTarget = 4.0e-4;
 //static const float FracResTarget = 1.0e-4;
 static const float telescope_high = 1.0e-3;
@@ -1233,7 +1234,7 @@ int refine_grid_kist(
 				  //assert(getCurrentKist(imageinfo[i].imagekist)->image->leaf->child2 == NULL);
 
 				  if(batch){
-					  points_to_refine.push_back(getCurrentKist(imageinfo[i].imagekist));
+ 					  points_to_refine.push_back(getCurrentKist(imageinfo[i].imagekist));
 				  }else{
 					  i_points = grid->RefineLeaf(lens,getCurrentKist(imageinfo[i].imagekist),kappa_off);
 					  if(newpointskist && i_points != NULL){
@@ -1264,7 +1265,7 @@ int refine_grid_kist(
 					  assert(point->image->leaf->child2 == NULL);
 
 					  if(batch){
- 						  points_to_refine.push_back(point);
+						  points_to_refine.push_back(point);
 					  }else{
 						  i_points = grid->RefineLeaf(lens,point,kappa_off);
 						  if(newpointskist && i_points != NULL){
