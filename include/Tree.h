@@ -309,6 +309,7 @@ namespace Utilities{
         std::cout << "ERROR: Interpolator:interpolator(double *,T&)" << std::endl;
       }
       if(index == -1) return 0;
+      
       return (1.-fx)*(1.-fy)*map[index] + fx*(1.-fy)*map[index+1] + fx*fy*map[index+1+N]
           + (1.-fx)*fy*map[index+N];
     };
@@ -377,11 +378,12 @@ namespace Utilities{
       else ix = (unsigned long)(fx);
       if(ix == N-1) ix = N-2;
       
-      if (fy < 0. || fx > N-1){index = -1; return;}
+      if (fy < 0. || fy > N-1){index = -1; return;}
       else iy = (unsigned long)(fy);
       if(iy == N-1) iy = N-2;
       
       index = ix + N*iy;
+
       //std::cout << "  " << ix << " " << iy << " " << index << "   ";
       
       /** bilinear interpolation */

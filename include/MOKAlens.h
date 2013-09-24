@@ -38,7 +38,7 @@ struct MOKAmap{
     int nx,ny;
     // boxlMpc is Mpc/h for MOKA
 	/// lens and source properties
-    double zlens,m,zsource,DL,DLS,DS,c,cS,fsub,mstar,minsubmass;
+    double zlens,m,zsource,Dlens,DLS,DS,c,cS,fsub,mstar,minsubmass;
     double boxlarcsec,boxlMpc,boxlrad;
     /// cosmology
     double omegam,omegal,h,wq;

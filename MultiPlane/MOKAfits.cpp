@@ -59,7 +59,7 @@ void LensHaloMOKA::readImage(){
 	h0->readKey ("MSTAR",map->mstar);
 	h0->readKey ("MVIR",map->m);
 	h0->readKey ("CONCENTRATION",map->c);
-	h0->readKey ("DL",map->DL);
+	h0->readKey ("DL",map->Dlens);
 	h0->readKey ("DLS",map->DLS);
 	h0->readKey ("DS",map->DS);
 
@@ -72,6 +72,9 @@ void LensHaloMOKA::readImage(){
 	ExtHDU &h4=ff->extension(4);
 	h4.read(map->gamma2);
 
+  for(size_t i=0;i<map->convergence.size();++i){
+    assert(map->convergence[i] == map->convergence[i]);
+  }
 	std::cout << *h0 << h1 << h2 << h3  << h4 << std::endl;
 #else
 	std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
@@ -118,7 +121,7 @@ void LensHaloMOKA::writeImage(std::string filename){
 	phout->addKey ("MSTAR",map->mstar,"stellar mass of the BCG in Msun/h");
 	phout->addKey ("MVIR",map->m,"virial mass of the halo in Msun/h");
 	phout->addKey ("CONCENTRATION",map->c,"NFW concentration");
-	phout->addKey ("DL",map->DL,"Mpc/h");
+	phout->addKey ("DL",map->Dlens,"Mpc/h");
 	phout->addKey ("DLS",map->DLS,"Mpc/h");
 	phout->addKey ("DS",map->DS,"Mpc/h");
 

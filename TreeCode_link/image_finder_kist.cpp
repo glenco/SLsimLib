@@ -766,8 +766,11 @@ void find_images_microlens(
 	// find points that are truly in the image and not just neighbors
 	moved=image_finder_kist(lens,y_source,fabs(r_source),grid
 			,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
-	assert(*Nimages > 0);
-
+  
+	if(*Nimages == 0){
+    *Nimagepoints = 0;
+    return ;
+  }
 
 	// remove images with no points in them
 	for(j=0;j<*Nimages;++j){

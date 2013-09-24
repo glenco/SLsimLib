@@ -69,7 +69,7 @@ void LensPlaneSingular::force(double *alpha,KappaType *kappa,KappaType *gamma,do
 		gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
 
 		halos[i]->force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,xx,kappa_off,false);
-
+    
 		alpha[0] -= alpha_tmp[0];
 		alpha[1] -= alpha_tmp[1];
 		*kappa += kappa_tmp;
