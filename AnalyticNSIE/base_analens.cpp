@@ -295,7 +295,7 @@ LensHaloBaseNSIE::~LensHaloBaseNSIE(){
 		delete[] stars;
 		Utilities::free_PosTypeMatrix(stars_xp,stars_N,3);
 		delete[] star_region;
-		delete[] star_kappa;
+		delete[] star_Sigma;
 		Utilities::free_PosTypeMatrix(star_xdisk,star_Nregions,2);
 		delete star_tree;
 	}

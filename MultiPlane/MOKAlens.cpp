@@ -70,6 +70,11 @@ LensHaloMOKA::LensHaloMOKA(const std::string& filename)
 	
 	// set redshift to value from map
 	setZlens(map->zlens);
+  
+  range_phy = map->boxlMpc/(1+map->zlens);
+  center[0] = map->center[0]/(1+map->zlens);
+  center[1] = map->center[1]/(1+map->zlens);
+  zlens = map->zlens;
 }
 
 /**
@@ -87,6 +92,11 @@ LensHaloMOKA::LensHaloMOKA(InputParams& params)
 	// set redshift if necessary
 	if(zlens == -1)
 		setZlens(map->zlens);
+  
+  range_phy = map->boxlMpc/(1+map->zlens);
+  center[0] = map->center[0]/map->h/(1+map->zlens);
+  center[1] = map->center[1]/map->h/(1+map->zlens);
+  zlens = map->zlens;
 }
 
 LensHaloMOKA::~LensHaloMOKA()
@@ -194,44 +204,44 @@ void LensHaloMOKA::assignParams(InputParams& params)
  * and then saving to a fits file and computing the radial profile
  * of the convergence
  */
-void saveImage(LensHaloMOKA *halo, GridHndl grid,bool saveprofiles){
+void LensHaloMOKA::saveImage(GridHndl grid,bool saveprofiles){
 	std::stringstream f;
 	std::string filename;
 
-	if(halo->flag_background_field==1) f << halo->MOKA_input_file << "_only_noise.fits";
+	if(flag_background_field==1) f << MOKA_input_file << "_only_noise.fits";
 	else{
-	  if(halo->flag_MOKA_analyze == 0) f << halo->MOKA_input_file << "_noisy.fits";
-	  else f << halo->MOKA_input_file << "_no_noise.fits";
+	  if(flag_MOKA_analyze == 0) f << MOKA_input_file << "_noisy.fits";
+	  else f << MOKA_input_file << "_no_noise.fits";
 	}
 	filename = f.str();
 
 	MoveToTopList(grid->i_tree->pointlist);
 
 	do{
-		long index = Utilities::IndexFromPosition(grid->i_tree->pointlist->current->x,halo->map->nx,halo->map->boxlrad,halo->map->center);
+		long index = Utilities::IndexFromPosition(grid->i_tree->pointlist->current->x,map->nx,map->boxlrad,map->center);
 		if(index > -1){
-			halo->map->convergence[index] = grid->i_tree->pointlist->current->kappa;
-			halo->map->gamma1[index] = grid->i_tree->pointlist->current->gamma[0];
-			halo->map->gamma2[index] = grid->i_tree->pointlist->current->gamma[1];
-			halo->map->gamma3[index] = grid->i_tree->pointlist->current->gamma[2];
+			map->convergence[index] = grid->i_tree->pointlist->current->kappa;
+			map->gamma1[index] = grid->i_tree->pointlist->current->gamma[0];
+			map->gamma2[index] = grid->i_tree->pointlist->current->gamma[1];
+			map->gamma3[index] = grid->i_tree->pointlist->current->gamma[2];
 		}
 	}while(MoveDownList(grid->i_tree->pointlist)==true);
 
-	halo->writeImage(filename);
+	writeImage(filename);
 
 	if(saveprofiles == true){
 
 	  std:: cout << " saving profile " << std:: endl;
 	  double RE3,xxc,yyc;
-	  halo->saveProfiles(RE3,xxc,yyc);
-	  halo->estSignLambdas();
+	  saveProfiles(RE3,xxc,yyc);
+	  estSignLambdas();
 	  double RE1,RE2;
-	  halo->EinsteinRadii(RE1,RE2,xxc,yyc);
+	  EinsteinRadii(RE1,RE2,xxc,yyc);
 	  std::ostringstream fEinr;
-	  if(halo->flag_background_field==1) fEinr << halo->MOKA_input_file << "_only_noise_Einstein.radii.dat";
+	  if(flag_background_field==1) fEinr << MOKA_input_file << "_only_noise_Einstein.radii.dat";
 	  else{
-	    if(halo->flag_MOKA_analyze == 0) fEinr << halo->MOKA_input_file << "_noisy_Einstein.radii.dat";
-	    else fEinr << halo->MOKA_input_file << "_no_noise_Einstein.radii.dat";
+	    if(flag_MOKA_analyze == 0) fEinr << MOKA_input_file << "_noisy_Einstein.radii.dat";
+	    else fEinr << MOKA_input_file << "_no_noise_Einstein.radii.dat";
 	  }
 	  std:: ofstream filoutEinr;
 	  std:: string filenameEinr = fEinr.str();
@@ -425,7 +435,7 @@ void LensHaloMOKA::force_halo(double *alpha,KappaType *kappa,KappaType *gamma,do
    */
   
   // interpolate from the maps
-  Utilities::Interpolator<valarray<float>> interp(xx,map->nx,map->boxlMpc/map->h,map->center);
+  Utilities::Interpolator<valarray<float>> interp(xx,map->nx,range_phy,center);
   alpha[0] = interp.interpolate(map->alpha1);
   alpha[1] = interp.interpolate(map->alpha2);
   gamma[0] = interp.interpolate(map->gamma1);
@@ -433,7 +443,6 @@ void LensHaloMOKA::force_halo(double *alpha,KappaType *kappa,KappaType *gamma,do
   gamma[2] = 0.0;
   *kappa = interp.interpolate(map->convergence);
 
-  assert(*kappa == *kappa);
 	return;
 }
 

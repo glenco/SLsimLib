@@ -278,7 +278,7 @@ namespace Utilities{
       center[1] = my_center[1];
       initparams(x);
     };
-    
+        
     /**
      This constructor takes the map as a pointer to an array of values and stores it.
      The resulting object can then be used with the () operator as a function.

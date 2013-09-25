@@ -88,9 +88,9 @@ public:
 
   /// stars
   bool AreStarsImaplated() const {return stars_implanted;}
-  void implant_stars(PosType **centers,unsigned long Nregions,long *seed, IMFtype type=One);
+  void implant_stars(PosType **centers,int Nregions,long *seed, IMFtype type=One);
   /// creates a single star halo in pos (x,y)
-  void implant_stars(double x,double y,unsigned long Nregions,long *seed,IMFtype type=One);
+  void implant_stars(double x,double y,int Nregions,long *seed,IMFtype type=One);
   void remove_stars();
   IMFtype getStarIMF_type() const {return main_stars_imf_type;}
   /// Fraction of surface density in stars
@@ -154,7 +154,7 @@ protected:
     double lo_mass_slope;
     double hi_mass_slope;
     /// parameters for stellar mass function: minimal and maximal stellar mass, bending point for a broken power law IMF
-    double *star_kappa;
+    double *star_Sigma;
     double **star_xdisk;
 
   /// point mass case

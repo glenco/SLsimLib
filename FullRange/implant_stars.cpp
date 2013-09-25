@@ -22,10 +22,11 @@ using namespace std;
  *
  * 
  */
-void LensHalo::implant_stars(PosType **centers,unsigned long Nregions,long *seed, IMFtype type){
+void LensHalo::implant_stars(PosType **centers,int Nregions,long *seed, IMFtype type){
 	PosType r,theta,NstarsPerImage;
 	unsigned long i,j,m,k;
   
+  std::cout << stars_N << std::endl;
 	if(stars_N < 1.0  || star_fstars <= 0) return;
 	if(star_fstars > 1.0){ std::printf("fstars > 1.0\n"); exit(0); }
 	if(!(stars_implanted) ){
@@ -37,7 +38,7 @@ void LensHalo::implant_stars(PosType **centers,unsigned long Nregions,long *seed
 		assert(Nregions > 0);
 		star_Nregions = Nregions;
 		star_region = new double[Nregions];
-		star_kappa = new double[Nregions];
+		star_Sigma = new double[Nregions];
 		star_xdisk = Utilities::PosTypeMatrix(Nregions,2);
     
 	}
@@ -50,7 +51,7 @@ void LensHalo::implant_stars(PosType **centers,unsigned long Nregions,long *seed
     
 		for(j=0,m=0;j<Nregions;++j){
 			star_region[j] = 0.0;
-			star_kappa[j] = 0.0;
+			star_Sigma[j] = 0.0;
 			mean_mstar[j] = 0.0;
 			star_xdisk[j][0] = centers[j][0];
 			star_xdisk[j][1] = centers[j][1];
@@ -85,22 +86,22 @@ void LensHalo::implant_stars(PosType **centers,unsigned long Nregions,long *seed
   
 	for(j=0,m=0;j<Nregions;++j){
 		double alpha[2];
-		KappaType kappa = 0, gamma[3];
+		KappaType Sigma = 0, gamma[3];
 		alpha[0]=alpha[1]=gamma[0]=gamma[1]=gamma[2]=0.;
 		double xcm[2];
 		xcm[0] = centers[j][0];
 		xcm[1] = centers[j][1];
     
     if(!stars_implanted){
-      force_halo(alpha,&kappa,gamma,xcm,false,false);
-      star_kappa[j] = star_fstars*kappa;
-      star_region[j] = 1.0/sqrt(pi*star_kappa[j]/(mean_mstar[j]*(float)NstarsPerImage));
+      force_halo(alpha,&Sigma,gamma,xcm,false,false);
+      star_Sigma[j] = star_fstars*Sigma;
+      star_region[j] = 1.0/sqrt(pi*star_Sigma[j]/(mean_mstar[j]*(float)NstarsPerImage));
       
       star_xdisk[j][0] = centers[j][0];
       star_xdisk[j][1] = centers[j][1];
     }
     
-		//printf("kappa = %e  star_region = %e\n",star_kappa[j],star_region[j]);
+		//printf("kappa = %e  star_region = %e\n",star_Sigma[j],star_region[j]);
 		/*char *fname = "stars0.dat";
 		if(j==0){fname = "stars0.dat";}
 		if(j==1){fname = "stars1.dat";}
@@ -178,7 +179,7 @@ void LensHalo::remove_stars(){
 		delete stars;
 		delete stars_xp;
 		delete star_region;
-		delete star_kappa;
+		delete star_Sigma;
     Utilities::free_PosTypeMatrix(star_xdisk,star_Nregions,2);
     star_Nregions = 0;
     
@@ -212,12 +213,12 @@ void LensHalo::substract_stars_disks(double *ray,double *alpha
 		r=sqrt(xcm*xcm + ycm*ycm);
 
 		if(r < star_region[i]){
-			alpha[0] += star_kappa[i]*xcm;
-			alpha[1] += star_kappa[i]*ycm;
-			*kappa -= star_kappa[i];
+			alpha[0] += star_Sigma[i]*xcm;
+			alpha[1] += star_Sigma[i]*ycm;
+			*kappa -= star_Sigma[i];
 		}else{
 
-			mass = star_kappa[i]*pow(star_region[i],2)/r/r;
+			mass = star_Sigma[i]*pow(star_region[i],2)/r/r;
 			alpha[0] += mass*xcm;
 			alpha[1] += mass*ycm;
 
