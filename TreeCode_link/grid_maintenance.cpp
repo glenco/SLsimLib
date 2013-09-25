@@ -83,6 +83,70 @@ Grid::~Grid(){
 }
 
 /** \ingroup ImageFinding
+ *  \brief Reinitializes the grid so that it is back to the original coarse grid, but if
+ *  the lens has changed the source positions will be updated.
+ */
+void Grid::ReInitializeGrid(LensHndl lens){
+  
+	Point *i_points,*s_points;
+	double range,center[2];
+	unsigned long i;
+  
+	range = i_tree->top->boundary_p2[0] - i_tree->top->boundary_p1[0];
+	center[0] = (i_tree->top->boundary_p2[0] + i_tree->top->boundary_p1[0])/2;
+	center[1] = (i_tree->top->boundary_p2[1] + i_tree->top->boundary_p1[1])/2;
+  
+	//////////////////////////////
+  // redo grid with stars in it
+  // free old tree to speed up image finding
+  
+	i_tree->emptyTree();
+	s_tree->emptyTree();
+  
+  
+	// build new initial grid
+	i_points = NewPointArray(Ngrid_init*Ngrid_init,true);
+	xygridpoints(i_points,range,center,Ngrid_init,0);
+	s_points=LinkToSourcePoints(i_points,Ngrid_init*Ngrid_init);
+	lens->rayshooterInternal(Ngrid_init*Ngrid_init,i_points,false);
+  
+	// need to resize root of source tree.  It can change in size
+	s_tree->top->boundary_p1[0]=s_points[0].x[0]; s_tree->top->boundary_p1[1]=s_points[0].x[1];
+	s_tree->top->boundary_p2[0]=s_points[0].x[0]; s_tree->top->boundary_p2[1]=s_points[0].x[1];
+  
+	for(i=0;i<Ngrid_init*Ngrid_init;++i){
+    
+    /* find X boundary */
+		if(s_points[i].x[0] < s_tree->top->boundary_p1[0] ) s_tree->top->boundary_p1[0]=s_points[i].x[0];
+    if(s_points[i].x[0] > s_tree->top->boundary_p2[0] ) s_tree->top->boundary_p2[0]=s_points[i].x[0];
+    
+    /* find Y boundary */
+    if(s_points[i].x[1] < s_tree->top->boundary_p1[1] ) s_tree->top->boundary_p1[1]=s_points[i].x[1];
+    if(s_points[i].x[1] > s_tree->top->boundary_p2[1] ) s_tree->top->boundary_p2[1]=s_points[i].x[1];
+  }
+  
+  // a little extra room for future points
+  s_tree->top->boundary_p1[0] -=  range/Ngrid_init;
+  s_tree->top->boundary_p1[1] -=  range/Ngrid_init;
+  s_tree->top->boundary_p2[0] +=  range/Ngrid_init;
+  s_tree->top->boundary_p2[1] +=  range/Ngrid_init;
+  
+  s_tree->top->center[0] = (s_tree->top->boundary_p1[0]+s_tree->top->boundary_p2[0])/2;
+  s_tree->top->center[1] = (s_tree->top->boundary_p1[1]+s_tree->top->boundary_p2[1])/2;
+  
+	// fill trees
+	i_tree->FillTree(i_points,Ngrid_init*Ngrid_init);
+	s_tree->FillTree(s_points,Ngrid_init*Ngrid_init);
+  
+	/*for(i=0;i<Ngrid_init*Ngrid_init;++i){
+   assert(i_points[i].leaf->child1 == NULL && i_points[i].leaf->child2 == NULL);
+   assert(s_points[i].leaf->child1 == NULL && s_points[i].leaf->child2 == NULL);
+   }*/
+	return;
+}
+
+
+/** \ingroup ImageFinding
  *  \brief Reshoot the rays with the same image postions.
  *
  *  The source positions and source tree are updated to the current lens model.
