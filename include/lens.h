@@ -91,6 +91,7 @@ public:
 
 	/// print the main parameters of the lens
 	void printMultiLens();
+
 	double getZlens(){
 		if(flag_switch_main_halo_on)
 			return main_halos[0]->getZlens();

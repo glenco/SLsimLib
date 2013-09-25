@@ -81,6 +81,9 @@ public:
 
 	/// calculate the lensing properties -- deflection, convergence, and shear
 	virtual void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa,bool subtract_point=false);
+	void force_halo_sym(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa,bool subtract_point=false);
+	void force_halo_asym(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa,bool subtract_point=false);
+
 
 	/// force tree calculation for stars
 	void force_stars(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa);
@@ -93,6 +96,7 @@ public:
   void implant_stars(PosType **centers,unsigned long Nregions,long *seed, IMFtype type=One);
   /// creates a single star halo in pos (x,y)
   void implant_stars(double x,double y,unsigned long Nregions,long *seed,IMFtype type=One);
+  double * getStarRegion() {return star_region;}
   void remove_stars();
   IMFtype getStarIMF_type() const {return main_stars_imf_type;}
   /// Fraction of surface density in stars
@@ -171,6 +175,13 @@ protected:
   void faxial(double theta,double f[]);
   void gradial(double r,double g[]);
   void desymmeterize(double r,double theta,double *alpha,double *kappa,double *gamma);
+
+  void setEllipModes(double q,double theta);
+  void fangular(double theta,double f[]);
+  virtual double gamma_asym(double x,double theta);
+  virtual double kappa_asym(double x,double theta);
+  virtual double alpha_asym(double x,double theta);
+
   const static int Nmod = 18;
   double mod[18];
   double r_eps;
@@ -497,7 +508,7 @@ protected:
 		return -0.25*x*x*InterpolateFromTable(g2table,x)/gmax;
 	}
 	inline KappaType phi_h(double x){
-		return -1.0*InterpolateFromTable(htable,x)/gmax;
+		return -0.25*InterpolateFromTable(htable,x)/gmax/pi;
 	}
 
 private:

@@ -7,6 +7,8 @@
 
 #include "slsimlib.h"
 
+using namespace std;
+
 LensHalo::LensHalo(){
 	rscale = 1.0;
 	mass = Rmax = xmax = 0.0;
@@ -351,6 +353,26 @@ void LensHaloSimpleNSIE::initFromMassFunc(float my_mass, float my_Rmax, float my
 
 void LensHalo::force_halo(
 		double *alpha     /// mass/Mpc
+				,KappaType *kappa
+				,KappaType *gamma
+				,double *xcm
+				,bool kappa_off
+				,bool subtract_point /// if true contribution from a point mass is subtracted
+				){
+	double theta=30., q = 0.5, f[3]; // TODO read theta and q from param file!!!
+
+	if (q==1){
+		force_halo_sym(alpha,kappa,gamma,xcm,kappa_off,subtract_point);
+	}
+	else{
+		setEllipModes(q,theta);
+		force_halo_asym(alpha,kappa,gamma,xcm,kappa_off,subtract_point);
+	}
+}
+
+
+void LensHalo::force_halo_sym(
+		double *alpha     /// mass/Mpc
 		,KappaType *kappa
 		,KappaType *gamma
 		,double *xcm
@@ -409,6 +431,77 @@ void LensHalo::force_halo(
 
 	return;
 }
+
+void LensHalo::force_halo_asym(
+		double *alpha     /// mass/Mpc
+		,KappaType *kappa
+		,KappaType *gamma
+		,double *xcm
+		,bool kappa_off
+		,bool subtract_point /// if true contribution from a point mass is subtracted
+		){
+
+	double theta=30.;
+	//double f[3], g[3];
+	//setEllipModes(q,theta);
+	//fangular(theta,f);
+
+	double rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
+	if(rcm2 < 1e-20) rcm2 = 1e-20;
+
+	/// intersecting, subtract the point particle
+	if(rcm2 < Rmax*Rmax){
+		double prefac = mass/rcm2/pi;
+		double x = sqrt(rcm2)/rscale;
+		//gradial(x,g);
+		//double xmax = Rmax/rscale;
+
+    //double tmp = (alpha_h(x,xmax) + 1.0*subtract_point)*prefac;
+		double tmp = (alpha_asym(x,theta) + 1.0*subtract_point)*prefac;
+		alpha[0] += tmp*xcm[0];
+		alpha[1] += tmp*xcm[1];
+
+//*alpha=alpha_asym(x, 30.);
+
+		// can turn off kappa and gamma calculations to save times
+		if(!kappa_off){
+			*kappa += kappa_asym(x,theta)*prefac;
+
+			tmp = (gamma_asym(x,theta) + 2.0*subtract_point)*prefac/rcm2;
+
+			gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+			gamma[1] += xcm[0]*xcm[1]*tmp;
+		}
+
+	}
+	else
+	{
+		if (subtract_point == false)
+		{
+			double prefac = mass/rcm2/pi;
+			alpha[0] += -1.0*prefac*xcm[0];
+			alpha[1] += -1.0*prefac*xcm[1];
+
+			// can turn off kappa and gamma calculations to save times
+			if(!kappa_off){
+				double tmp = -2.0*prefac/rcm2;
+
+				gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+				gamma[1] += xcm[0]*xcm[1]*tmp;
+			}
+		}
+	}
+
+    // add stars for microlensing
+    if(stars_N > 0 && stars_implanted){
+   	 force_stars(alpha,kappa,gamma,xcm,kappa_off);
+    }
+
+
+	return;
+}
+
+
 
 void LensHaloSimpleNSIE::force_halo(
 		double *alpha
