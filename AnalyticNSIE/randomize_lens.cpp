@@ -21,9 +21,8 @@ void LensHaloAnaNSIE::RandomizeSigma(long *seed,bool tables){
 	double *sigmaTable;
 	int n,NsigmaTable;
 	ifstream file;
-	char *filename;
-
-	filename = "GalaxyData/slacs_sigma.dat";
+	
+	const char* filename = "GalaxyData/slacs_sigma.dat";
 	file.open(filename);
 
 	if(!file){

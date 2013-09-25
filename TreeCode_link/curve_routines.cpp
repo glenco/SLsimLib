@@ -487,7 +487,7 @@ exit(0);
 
 	return area;
 }
-	/*******
+	/ *******
 	// find "center" of curve
 	xcm[0]=xcm[1]=0.0;
 	curve->MoveToTop();
@@ -701,7 +701,7 @@ exit(0);
 	free(lists[Maxcurves]);
 	free(point);
 	return ;
-}/*
+}*/
 
 /*  orders points in a curve, separates disconnected curves
  *   curves[0...Maxcurves] must be allocated before
@@ -1833,7 +1833,6 @@ void writeCurves(int m			/// part of te filename, could be the number/index of t
     
     size_t n = P.size();
     size_t k = 0;
-    long j = 0;
     std::vector<Point *> H(2*n);//,anti_H(2*n);
     
     // Sort points lexicographically

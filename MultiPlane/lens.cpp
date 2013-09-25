@@ -23,7 +23,7 @@ namespace
 		bool operator()(const LensHalo* a, const LensHalo* b)
 		{
 			// compare sizes and check that b is not in eps around a
-			return (a->getZlens() < b->getZlens()) && std::abs(cosmo->coorDist(a->getZlens(), b->getZlens())) > MIN_PLANE_DIST;
+			return (a->getZlens() < b->getZlens()) && fabs(cosmo->coorDist(a->getZlens(), b->getZlens())) > MIN_PLANE_DIST;
 		}
 		
 	private:
@@ -250,7 +250,10 @@ void Lens::assignParams(InputParams& params)
 	
 	if(!params.get("deflection_off",flag_switch_deflection_off))
 		flag_switch_deflection_off = false;
-	
+
+  if(!params.get("lensing_off",flag_switch_lensing_off))
+		flag_switch_lensing_off = false;
+
 	// Some checks for valid parameters
 	if(flag_switch_field_off == false && field_Nplanes == 0)
 	{
@@ -417,42 +420,46 @@ void Lens::printMultiLens(){
 		}
 
 		cout << endl << "Field halos profile type:" << endl;
-		switch(field_int_prof_type){
-		case null_lens:
-			cout << "no field type" << endl;
-			break;
-		case nfw_lens:
-			cout << "NFW field type" << endl;
-			break;
-		case pnfw_lens:
-			cout << "PseudoNFW field type" << endl;
-			cout << "slope: " << field_prof_internal_slope << endl;
-			break;
-		case pl_lens:
-			cout << "PowerLaw field type" << endl;
-			cout << "slope: " << field_prof_internal_slope << endl;
-			break;
-		case nsie_lens:
-			cout << "NSIE field type" << endl;
-			break;
-		case ana_lens:
-			cout << "AnaNSIE field type" << endl;
-			break;
-		case uni_lens:
-			cout << "UniNSIE field type" << endl;
-			break;
-		case moka_lens:
-			cout << "MOKA field type" << endl;
-			break;
-		case dummy_lens:
-			cout << "Dummy field type" << endl;
-			break;
-		case hern_lens:
-			cout << "Hernquist field type" << endl;
-		break;
-		case jaffe_lens:
-			cout << "Jaffe field type" << endl;
-		break;
+		switch(field_int_prof_type)
+		{
+			case null_lens:
+				cout << "no field type" << endl;
+				break;
+			case nfw_lens:
+				cout << "NFW field type" << endl;
+				break;
+			case pnfw_lens:
+				cout << "PseudoNFW field type" << endl;
+				cout << "slope: " << field_prof_internal_slope << endl;
+				break;
+			case pl_lens:
+				cout << "PowerLaw field type" << endl;
+				cout << "slope: " << field_prof_internal_slope << endl;
+				break;
+			case nsie_lens:
+				cout << "NSIE field type" << endl;
+				break;
+			case ana_lens:
+				cout << "AnaNSIE field type" << endl;
+				break;
+			case uni_lens:
+				cout << "UniNSIE field type" << endl;
+				break;
+			case moka_lens:
+				cout << "MOKA field type" << endl;
+				break;
+			case dummy_lens:
+				cout << "Dummy field type" << endl;
+				break;
+			case hern_lens:
+				cout << "Hernquist field type" << endl;
+				break;
+			case jaffe_lens:
+				cout << "Jaffe field type" << endl;
+				break;
+			case multi_dark_lens:
+				cout << "MultiDark field type" << endl;
+				break;
 		}
 
 		cout << endl << "Field galaxies profile type:" << endl;
@@ -953,44 +960,49 @@ void Lens::createFieldHalos()
 			theta_pos[1] = rr*sin(theta);//*Ds;
 			theta_pos[2] = 0.0;
 
-			switch(field_int_prof_type){
-			case null_lens:
-				ERROR_MESSAGE();
-				std::cout << "field_int_prof_type is null!!!!" << std::endl;
-				break;
-			case nfw_lens:
-				field_halos.push_back(new LensHaloNFW);
-				break;
-			case pnfw_lens:
-				field_halos.push_back(new LensHaloPseudoNFW);
-				break;
-			case pl_lens:
-				field_halos.push_back(new LensHaloPowerLaw);
-				break;
-			case nsie_lens:
-				field_halos.push_back(new LensHaloSimpleNSIE);
-				break;
-			case ana_lens:
-				ERROR_MESSAGE();
-				std::cout << "AnaNSIE not supported." << std::endl;
-				break;
-			case uni_lens:
-				ERROR_MESSAGE();
-				std::cout << "UniNSIE not supported." << std::endl;
-				break;
-			case moka_lens:
-				ERROR_MESSAGE();
-				std::cout << "MOKA not supported." << std::endl;
-				break;
-			case dummy_lens:
-				field_halos.push_back(new LensHaloDummy);
-				break;
-			case hern_lens:
-				field_halos.push_back(new LensHaloHernquist);
-				break;
-			case jaffe_lens:
-				field_halos.push_back(new LensHaloJaffe);
-				break;
+			switch(field_int_prof_type)
+			{
+				case null_lens:
+					ERROR_MESSAGE();
+					std::cout << "field_int_prof_type is null!!!!" << std::endl;
+					break;
+				case nfw_lens:
+					field_halos.push_back(new LensHaloNFW);
+					break;
+				case pnfw_lens:
+					field_halos.push_back(new LensHaloPseudoNFW);
+					break;
+				case pl_lens:
+					field_halos.push_back(new LensHaloPowerLaw);
+					break;
+				case nsie_lens:
+					field_halos.push_back(new LensHaloSimpleNSIE);
+					break;
+				case ana_lens:
+					ERROR_MESSAGE();
+					std::cout << "AnaNSIE not supported." << std::endl;
+					break;
+				case uni_lens:
+					ERROR_MESSAGE();
+					std::cout << "UniNSIE not supported." << std::endl;
+					break;
+				case moka_lens:
+					ERROR_MESSAGE();
+					std::cout << "MOKA not supported." << std::endl;
+					break;
+				case dummy_lens:
+					field_halos.push_back(new LensHaloDummy);
+					break;
+				case hern_lens:
+					field_halos.push_back(new LensHaloHernquist);
+					break;
+				case jaffe_lens:
+					field_halos.push_back(new LensHaloJaffe);
+					break;
+				case multi_dark_lens:
+					ERROR_MESSAGE();
+					std::cout << "MultiDark not supported." << std::endl;
+					break;
 			}
 
 			float mass = pow(10,InterpolateYvec(Nhalosbin,Logm,ran2 (seed)));
@@ -1187,52 +1199,57 @@ void Lens::readInputSimFile()
     
 		if(np > 0.0 && vdisp > 0.0 && z <= zsource){
 
-			switch(field_int_prof_type){
-			case null_lens:
-				ERROR_MESSAGE();
-				std::cout << "field_int_prof_type is null!!!!" << std::endl;
-				break;
-			case nfw_lens:
-				field_halos.push_back(new LensHaloNFW);
-				break;
-			case pnfw_lens:
-				field_halos.push_back(new LensHaloPseudoNFW);
-				break;
-				ERROR_MESSAGE();
-				std::cout << "PseudoNFW not supported." << std::endl;
-				break;
-			case pl_lens:
-				ERROR_MESSAGE();
-				std::cout << "PowerLaw not supported." << std::endl;
-				break;
-			case nsie_lens:
-				field_halos.push_back(new LensHaloSimpleNSIE);
-				break;
-			case ana_lens:
-				ERROR_MESSAGE();
-				std::cout << "AnaNSIE not supported." << std::endl;
-				break;
-			case uni_lens:
-				ERROR_MESSAGE();
-				std::cout << "UniNSIE not supported." << std::endl;
-				break;
-			case moka_lens:
-				ERROR_MESSAGE();
-				std::cout << "MOKA not supported." << std::endl;
-				break;
-			case dummy_lens:
-				field_halos.push_back(new LensHaloDummy);
-				ERROR_MESSAGE();
-				std::cout << "Why would you want dummy file halos???" << std::endl;
-				break;
-			case hern_lens:
-				ERROR_MESSAGE();
-				std::cout << "Hernquist not supported." << std::endl;
-				break;
-			case jaffe_lens:
-				ERROR_MESSAGE();
-				std::cout << "Jaffe not supported." << std::endl;
-				break;
+			switch(field_int_prof_type)
+			{
+				case null_lens:
+					ERROR_MESSAGE();
+					std::cout << "field_int_prof_type is null!!!!" << std::endl;
+					break;
+				case nfw_lens:
+					field_halos.push_back(new LensHaloNFW);
+					break;
+				case pnfw_lens:
+					field_halos.push_back(new LensHaloPseudoNFW);
+					break;
+					ERROR_MESSAGE();
+					std::cout << "PseudoNFW not supported." << std::endl;
+					break;
+				case pl_lens:
+					ERROR_MESSAGE();
+					std::cout << "PowerLaw not supported." << std::endl;
+					break;
+				case nsie_lens:
+					field_halos.push_back(new LensHaloSimpleNSIE);
+					break;
+				case ana_lens:
+					ERROR_MESSAGE();
+					std::cout << "AnaNSIE not supported." << std::endl;
+					break;
+				case uni_lens:
+					ERROR_MESSAGE();
+					std::cout << "UniNSIE not supported." << std::endl;
+					break;
+				case moka_lens:
+					ERROR_MESSAGE();
+					std::cout << "MOKA not supported." << std::endl;
+					break;
+				case dummy_lens:
+					field_halos.push_back(new LensHaloDummy);
+					ERROR_MESSAGE();
+					std::cout << "Why would you want dummy file halos???" << std::endl;
+					break;
+				case hern_lens:
+					ERROR_MESSAGE();
+					std::cout << "Hernquist not supported." << std::endl;
+					break;
+				case jaffe_lens:
+					ERROR_MESSAGE();
+					std::cout << "Jaffe not supported." << std::endl;
+					break;
+				case multi_dark_lens:
+					ERROR_MESSAGE();
+					std::cout << "MultiDark not supported." << std::endl;
+					break;
 			}
 
 			float mass = np*8.6e8/cosmo->gethubble();
@@ -1362,7 +1379,7 @@ void Lens::combinePlanes()
 			Dl.push_back(field_Dl[i_field]);
 			
 			// check if planes are too close together
-			if(std::abs(field_Dl[i_field] - main_Dl[i_main]) < MIN_PLANE_DIST)
+			if(fabs(field_Dl[i_field] - main_Dl[i_main]) < MIN_PLANE_DIST)
 			{
 				// move back the inserted field plane
 				Dl.back() = main_Dl[i_main] + MIN_PLANE_DIST;

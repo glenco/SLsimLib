@@ -11,6 +11,7 @@
 #include "standard.h"
 #include "InputParams.h"
 #include "raw_data.h"
+#include "image_processing.h"
 
 /** \brief Base class for all sources.
  *
@@ -85,12 +86,13 @@ typedef Source *SourceHndl;
 
 /** \brief Class for sources described by an array of pixels
  *
- *  The sources are created as a square array of pixels of dimension Npixels x Npixels and side equal to range.
+ *  The sources are created as a square array of pixels of dimension Npixels x Npixels and pixel size equal to resolution.
  *
  */
 class SourcePixelled: public Source{
 public:
 	SourcePixelled(double my_z, double* center, int Npixels, double resolution, double* arr_val);
+	SourcePixelled(const PixelMap& gal_map, double z, double factor = 1.);
 	SourcePixelled(InputParams& params);
 	~SourcePixelled();
 	double SurfaceBrightness(double *y);

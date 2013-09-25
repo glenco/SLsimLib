@@ -17,10 +17,9 @@ void LensHaloBaseNSIE::force_halo(
 		,bool no_kappa
 		,bool subtract_point /// if true contribution from a point mass is subtracted
 		){
-     double x_rescale[2];
      long j;
      double alpha_tmp[2];
-     KappaType kappa_tmp = 0.0, gamma_tmp[3], dt = 0,tmp = 0;
+     KappaType kappa_tmp = 0.0, gamma_tmp[3], dt = 0;
 
      gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
      alpha_tmp[0] = alpha_tmp[1] = 0.0;
@@ -95,8 +94,8 @@ void LensHaloBaseNSIE::force_halo(
  * force calculation.
  */
 void LensHaloBaseNSIE::assignParams(InputParams& params){
-	if(!params.get("main_mass_nsie",mass)) error_message1("main_mass_nsie",params.filename());
-	if(!params.get("zlens_basensie",zlens)) error_message1("zlens_basensie",params.filename());
+	if(!params.get("main_mass",mass)) error_message1("main_mass",params.filename());
+	if(!params.get("main_zlens",zlens)) error_message1("main_zlens",params.filename());
 
 	if(!params.get("main_sigma",sigma)) error_message1("main_sigma",params.filename());
 	if(!params.get("main_core",rcore)) error_message1("main_core",params.filename());
@@ -250,6 +249,29 @@ void LensHaloBaseNSIE::PrintLens(bool show_substruct,bool show_stars){
 
 	if (stars_implanted) PrintStars(show_stars);
 }
+
+void LensHaloBaseNSIE::randomize(double step, long* seed)
+{
+	sigma += step*sigma*gasdev(seed);
+
+	fratio += step*gasdev(seed);
+
+	pa += step*pi*gasdev(seed);
+
+}
+
+void LensHaloBaseNSIE::serialize(RawData& d) const
+{
+	d << sigma << fratio << pa << rcore;
+}
+
+
+void LensHaloBaseNSIE::unserialize(RawData& d)
+{
+	d >> sigma >> fratio >> pa >> rcore;
+}
+
+
 
 
 LensHaloBaseNSIE::~LensHaloBaseNSIE(){

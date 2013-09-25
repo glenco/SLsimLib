@@ -134,14 +134,14 @@ void LensHaloMOKA::initMap()
 	map->boxlrad = map->boxlarcsec*pi/180/3600.;
 
 	fill_linear(map->x, map->nx, -0.5*map->boxlMpc, 0.5*map->boxlMpc); // physical Mpc/h
-	map->inarcsec  = 10800./M_PI/map->DL*60.; // Mpc/h to arcsec
+	map->inarcsec  = 10800./M_PI/map->Dlens*60.; // Mpc/h to arcsec
 
 	/// converts to the code units
 	if(flag_MOKA_analyze == 0 || flag_MOKA_analyze == 2)
 	{
 		std::cout << "converting the units of the MOKA map" << std::endl;
 
-		double fac = map->DS/map->DLS/map->DL*map->h/(4*pi*Grav);
+		double fac = map->DS/map->DLS/map->Dlens*map->h/(4*pi*Grav);
 		
 		map->convergence *= fac;
 		map->gamma1 *= fac;
@@ -405,7 +405,8 @@ void LensHaloMOKA::saveProfiles(double &RE3,double &xxc,double &yyc){
    *
 */
 void LensHaloMOKA::force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xx,bool kappa_off,bool subtract_point){
-    
+  
+  /*
   long index = Utilities::IndexFromPosition(xx,map->nx,map->boxlMpc/map->h,map->center);
 
 	if(index > -1){
@@ -421,8 +422,18 @@ void LensHaloMOKA::force_halo(double *alpha,KappaType *kappa,KappaType *gamma,do
 		gamma[0] = gamma[1] = gamma[2] = 0.0;
 		*kappa = 0.0;
 	}
+   */
+  
+  // interpolate from the maps
+  Utilities::Interpolator<valarray<float>> interp(xx,map->nx,map->boxlMpc/map->h,map->center);
+  alpha[0] = interp.interpolate(map->alpha1);
+  alpha[1] = interp.interpolate(map->alpha2);
+  gamma[0] = interp.interpolate(map->gamma1);
+  gamma[1] = interp.interpolate(map->gamma2);
+  gamma[2] = 0.0;
+  *kappa = interp.interpolate(map->convergence);
 
-
+  assert(*kappa == *kappa);
 	return;
 }
 

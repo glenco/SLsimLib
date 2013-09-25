@@ -32,13 +32,11 @@ void CausticData::readfile(std::string filename){
   std::ifstream file_in(filename.c_str());
   std::string myline;
   std::string space = " ";
-  unsigned long myint;
 	double mydouble;
 
 	std::string strg;
 	std::string f=",";
 	std::stringstream buffer;
-	size_t length;
   
   if(!file_in){
     std::cout << "Can't open file " << filename << std::endl;
@@ -55,7 +53,6 @@ void CausticData::readfile(std::string filename){
   std::cout << "skipped "<< i << " comment lines in " << filename << std::endl;
   
   size_t pos;
-  double tmp[3];
   CausticStructure tmp_data;
   // read in data
   while(getline(file_in,myline)){
@@ -66,7 +63,7 @@ void CausticData::readfile(std::string filename){
     }
 	/*
 	 if(causticdata[i].crit_radius[0] > 0 ){
-	 //*** need to calculate area and max min sizes
+	 // *** need to calculate area and max min sizes
 	 catalog_caustic << z_sources
 	 << " " << causticdata[i].crit_center[0] << " " << causticdata[i].crit_center[1]
 	 << " " << causticdata[i].crit_radius[0] << " " << causticdata[i].crit_radius[2]

@@ -13,7 +13,6 @@
 #include "profile.h"
 #include "InputParams.h"
 #include "lens_halos.h"
-#include "model.h"
 
 /**
  * \brief The MOKA map structure, containing all quantities that define it
@@ -35,11 +34,11 @@ struct MOKAmap{
 	std::valarray<float> gamma3;
 	std::valarray<float> Signlambdar;
 	std::valarray<float> Signlambdat;
-	std:: vector<double> x;	 
+	std:: vector<double> x;
     int nx,ny;
     // boxlMpc is Mpc/h for MOKA
 	/// lens and source properties
-    double zlens,m,zsource,DL,DLS,DS,c,cS,fsub,mstar,minsubmass;
+    double zlens,m,zsource,Dlens,DLS,DS,c,cS,fsub,mstar,minsubmass;
     double boxlarcsec,boxlMpc,boxlrad;
     /// cosmology
     double omegam,omegal,h,wq;

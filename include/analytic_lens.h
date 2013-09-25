@@ -80,6 +80,7 @@ public:
   void FindLensSimple(int Nimages,Point *image_positions,double *y,double **dx_sub);
   void FindLensSimple(ImageInfo *imageinfo ,int Nimages ,double *y,double **dx_sub);
 
+
 private:
 
    // Things added to manipulate and fit lenses.
