@@ -353,7 +353,8 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa
 		assert(points[ii]->leaf->child1 == NULL && points[ii]->leaf->child2 == NULL);
 		assert(points[ii]->image->leaf->child1 == NULL && points[ii]->image->leaf->child2 == NULL);
 
-		assert(points[ii]->gridsize > pow(10.,-DBL_DIG)*MAX(abs(points[ii]->x[0]),abs(points[ii]->x[1])) ); // If cells are too small they will cause problems.
+		assert(points[ii]->gridsize > pow(10.,-DBL_DIG)*MAX(fabs(points[ii]->x[0]),fabs(points[ii]->x[1])) ); // If cells are too small they will cause
+    //assert(points[ii]->gridsize > 1.0e-10*MAX(fabs(points[ii]->x[0]),fabs(points[ii]->x[1])) ); // If cells are too small they will cause problems.
 
 		points[ii]->leaf->refined = true;
 		xygridpoints(&i_points[Nadded],points[ii]->gridsize*(Ngrid_block-1)/Ngrid_block
@@ -368,24 +369,23 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa
 		//if( (points[ii]->x[0] <= i_tree->top->boundary_p1[0]) || (points[ii]->x[0] >= i_tree->top->boundary_p2[0])
 		//	|| (points[ii]->x[1] <= i_tree->top->boundary_p1[1]) || (points[ii]->x[1] >= i_tree->top->boundary_p2[1]) ){
       
-			// remove the points that are outside initial image grid
-			for(kk=0,Nout=0;kk < (Ngrid_block*Ngrid_block-1);++kk){
-        assert(i_points[Nadded + kk - Nout].gridsize > 0.0);
-				if( !inbox(i_points[Nadded + kk - Nout].x,i_tree->top->boundary_p1,i_tree->top->boundary_p2) ){
-					//SwapPointsInArray(&i_points[Nadded + kk - Nout],&i_points[(Ngrid_block*Ngrid_block-1)*Nleaves - 1 - Nout]);
+    Point *point;
+    // remove the points that are outside initial image grid
+    for(kk=0,Nout=0;kk < (Ngrid_block*Ngrid_block-1);++kk){
+      point = &i_points[Nadded + kk - Nout];
+      if( !inbox(point->x,i_tree->top->boundary_p1,i_tree->top->boundary_p2)
+           || point->gridsize < 1.0e-10*MAX(fabs(point->x[0]),fabs(point->x[1])) ){
         
 					// This maintains the ordering in parent cells, but is rather inefficient
-					for(unsigned long nn = Nadded + kk - Nout
+        for(unsigned long nn = Nadded + kk - Nout
 							; nn < (Ngrid_block*Ngrid_block-1)*Nleaves - 1 - Nout - Nout_tot ; ++nn){
-						assert(nn+1 < i_points[0].head);
-						SwapPointsInArray(&i_points[nn],&i_points[nn + 1]);
-					}
-					++Nout;
+          assert(nn+1 < i_points[0].head);
+          SwapPointsInArray(&i_points[nn],&i_points[nn + 1]);
+        }
+        ++Nout;
 					//std::cout << "Nout_tot = " << Nout_tot << std::endl;
-				}
-			}
-			//assert(Nout > 0);
-		//}
+      }
+    }
 
 		Nout_tot += Nout;
 		Nadded += Ngrid_block*Ngrid_block-1 - Nout;
@@ -903,7 +903,7 @@ void Grid::writeFitsVector(
                      ,LensingVariable lensvar  /// which quantity is to be displayed
                      ,std::string filename     /// file name for image -- .kappa.fits, .gamma1.fits, etc will be appended
                      ){
-  throw std::runtime_error("Not done yet.");
+  throw std::runtime_error("Not done yet!");
   PixelMap map(center, Npixels, resolution);
   
   double range = Npixels*resolution,tmp_x[2];

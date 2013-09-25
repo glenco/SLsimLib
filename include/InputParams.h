@@ -23,7 +23,6 @@
 
 #include "standard.h"
 #include <map>
-#include <set>
 
 enum MassFuncType
 {
@@ -69,6 +68,7 @@ enum Band {SDSS_U,SDSS_G,SDSS_R,SDSS_I,SDSS_Z,J,H,Ks,i1,i2};
 class InputParams
 {
 public:
+	InputParams();
 	InputParams(std::string paramfile);
 	~InputParams();
 
@@ -102,11 +102,14 @@ public:
 	
 	// read parameters from a MOKA FITS header
 	void readMOKA();
+	
+	/** return sample input parameters */
+	static InputParams sample();
 
 private:
-	static const std::set<std::string> known_labels;
-	
 	typedef std::map<std::string, std::string>::iterator iterator;
+	
+	static bool check_label(const std::string& name);
 	
 	std::string paramfile_name;
 

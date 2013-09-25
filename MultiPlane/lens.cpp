@@ -23,7 +23,7 @@ namespace
 		bool operator()(const LensHalo* a, const LensHalo* b)
 		{
 			// compare sizes and check that b is not in eps around a
-			return (a->getZlens() < b->getZlens()) && std::abs(cosmo->coorDist(a->getZlens(), b->getZlens())) > MIN_PLANE_DIST;
+			return (a->getZlens() < b->getZlens()) && fabs(cosmo->coorDist(a->getZlens(), b->getZlens())) > MIN_PLANE_DIST;
 		}
 		
 	private:
@@ -1379,7 +1379,7 @@ void Lens::combinePlanes()
 			Dl.push_back(field_Dl[i_field]);
 			
 			// check if planes are too close together
-			if(std::abs(field_Dl[i_field] - main_Dl[i_main]) < MIN_PLANE_DIST)
+			if(fabs(field_Dl[i_field] - main_Dl[i_main]) < MIN_PLANE_DIST)
 			{
 				// move back the inserted field plane
 				Dl.back() = main_Dl[i_main] + MIN_PLANE_DIST;

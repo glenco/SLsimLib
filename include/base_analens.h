@@ -67,6 +67,17 @@ public:
 
   // private derived quantities
 
+	/// get the velocity dispersion
+	double get_sigma(){return sigma;};
+	/// get the NSIE radius
+	double get_Rsize(){return Rsize;};
+	/// get the axis ratio
+	double get_fratio(){return fratio;};
+	/// get the position angle
+	double get_pa(){return pa;};
+	/// get the core radius
+	double get_rcore(){return rcore;};
+
   /// substructures
   bool AreSubStructImaplated(){return substruct_implanted;}
   double sub_sigmaScale;
@@ -112,6 +123,12 @@ public:
   IMFtype getIMF_type(){return main_stars_imf_type;}
   int getPerturb_Nmodes(){return perturb_Nmodes;}    /// this includes two for external shear
   double *perturb_modes;  ///first two are shear
+
+  void randomize(double step, long* seed);
+
+  void serialize(RawData& d) const;
+  void unserialize(RawData& d);
+
 
 protected:
 

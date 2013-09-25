@@ -279,7 +279,7 @@ void PixelMap::AddImages(
 		if(imageinfo->imagekist->Nunits() > 0){
 			MoveToTopKist(imageinfo[ii].imagekist);
 			do{
-				if(rescale != 0.0) sb = abs(rescale)*getCurrentKist(imageinfo[ii].imagekist)->surface_brightness;
+				if(rescale != 0.0) sb = fabs(rescale)*getCurrentKist(imageinfo[ii].imagekist)->surface_brightness;
 
 				assert(getCurrentKist(imageinfo[ii].imagekist)->leaf);
 

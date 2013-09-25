@@ -72,7 +72,8 @@ std::vector<RawData> MCMC::run(std::size_t n, double step, long* seed)
 	
 	// put initial parameters in chain
 	chain.push_back(RawData());
-	//lens.serialize(chain.back());
+	LensHalo* halo = lens.getMainHalo(0);
+	halo->serialize(chain.back());
 	sky.serialize(chain.back());
 	
 	// the image properties
@@ -139,7 +140,7 @@ std::vector<RawData> MCMC::run(std::size_t n, double step, long* seed)
 			
 			// render model
 			map_images(&lens, &source, &grid, &image_count, images, MAX_N_IMAGES, source.getRadius(), 0.1*source.getRadius(), 0, EachImage, true, false, true);
-			
+
 			// create pixmap for images
 			PixelMap pixmap(center, npixels, resolution);
 			pixmap.AddImages(images, image_count);
@@ -165,12 +166,60 @@ std::vector<RawData> MCMC::run(std::size_t n, double step, long* seed)
 				Lx = Ly;
 			}
 		}
-		
-		// TODO: randomize lens
-		
+
+		// get halo parameters
+		RawData d;
+		halo->serialize(d);
+
+		// randomize halo
+		halo->randomize(step, seed);
+
+		// create new pixmaps for the individual sources
+		std::vector<PixelMap> pixmaps_new(num_sources);
+
+		for(std::size_t s = 0; s < num_sources; ++s)
+		{
+			// get current source
+			Source& source = sky.getSource(s);
+
+			// check if source plane has changed
+			if(lens.getSourceZ() != source.getZ())
+				lens.ResetSourcePlane(source.getZ(), false);
+
+			// create a grid
+			Grid grid(&lens, GRID_POINTS, center, range);
+
+			// render model
+			map_images(&lens, &source, &grid, &image_count, images, MAX_N_IMAGES, source.getRadius(), 0.1*source.getRadius(), 0, EachImage, true, false, true);
+
+			// create pixmap for images
+			pixmaps_new[s] = PixelMap(center, npixels, resolution);
+			pixmaps_new[s].AddImages(images, image_count);
+		}
+
+		// calculate candidate likelihood
+		double Ly = likelihood(pixmaps_new.begin(), pixmaps_new.end(), data);
+
+		// probability of accepting a candidate point
+		if(Ly < Lx && std::exp(Ly - Lx) < ran2(seed))
+		{
+			// not accepted, restore parameters
+			halo->unserialize(d);
+		}
+		else
+		{
+			// accepted, candidate likelihood becomes current
+			Lx = Ly;
+			for(std::size_t s = 0; s < num_sources; ++s)
+			{
+				pixmaps[s] = pixmaps_new[s];
+			}
+		}
+
+
 		// add parameters to chain after complete cycle
 		chain.push_back(RawData());
-		//lens.serialize(chain.back());
+		halo->serialize(chain.back());
 		sky.serialize(chain.back());
 	}
 	

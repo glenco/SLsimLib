@@ -5,9 +5,9 @@ static const int NpointsRequired = 100;  // number of points required to be with
 //static const int Ngrid_block = 3;       // each cell is divided into Ngrid_block^2 subcells
 //static const float mumin = 0.5;  // actually the sqrt of the minimum magnification
 //static const float mumin = 0.45;  // actually the sqrt of the minimum magnification
-//static const float mumin = 0.1;
-static const float mumin = 0.3;
+static const float mumin = 0.1;
 //static const float mumin = 0.3;
+
 
 
 static const float FracResTarget = 4.0e-4;
@@ -766,8 +766,11 @@ void find_images_microlens(
 	// find points that are truly in the image and not just neighbors
 	moved=image_finder_kist(lens,y_source,fabs(r_source),grid
 			,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
-	assert(*Nimages > 0);
-
+  
+	if(*Nimages == 0){
+    *Nimagepoints = 0;
+    return ;
+  }
 
 	// remove images with no points in them
 	for(j=0;j<*Nimages;++j){
@@ -1234,8 +1237,7 @@ int refine_grid_kist(
 				  //assert(getCurrentKist(imageinfo[i].imagekist)->image->leaf->child2 == NULL);
 
 				  if(batch){
-            assert(imageinfo[i].imagekist->getCurrent()->gridsize > 1.0e-16);
-					  points_to_refine.push_back(getCurrentKist(imageinfo[i].imagekist));
+ 					  points_to_refine.push_back(getCurrentKist(imageinfo[i].imagekist));
 				  }else{
 					  i_points = grid->RefineLeaf(lens,getCurrentKist(imageinfo[i].imagekist),kappa_off);
 					  if(newpointskist && i_points != NULL){
@@ -1266,7 +1268,6 @@ int refine_grid_kist(
 					  assert(point->image->leaf->child2 == NULL);
 
 					  if(batch){
-              assert(imageinfo[i].imagekist->getCurrent()->gridsize > 1.0e-16);
 						  points_to_refine.push_back(point);
 					  }else{
 						  i_points = grid->RefineLeaf(lens,point,kappa_off);
