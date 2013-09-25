@@ -19,10 +19,28 @@ namespace
 		sstr << v;
 		return sstr.str();
 	}
+	
+	template<typename Stream, typename ValueType>
+	void printrow(Stream& str, const std::string& label, const ValueType& value, const std::string& comment = std::string())
+	{
+		if(comment.empty())
+			str << std::left << std::setw(23) << label << " " << value << std::endl;
+		else
+			str << std::left << std::setw(23) << label << " " << std::setw(11) << value << " # " << comment << std::endl;
+	}
 }
 
-/** \brief The constructor reads in all the lines from the parameter file and stores the labels and values of each parameter.
-*  If a parameter is provided that should not exist an error message is printed
+/**
+ * \brief The constructor creates an empty map of input params.
+ */
+InputParams::InputParams()
+{
+}
+
+/**
+ * \brief The constructor reads in all the lines from the parameter file and stores the labels and values of each parameter.
+ * 
+ * If a parameter is provided that should not exist an error message is printed
  */
 InputParams::InputParams(std::string paramfile)
 {
@@ -40,7 +58,6 @@ InputParams::InputParams(std::string paramfile)
 	{
 		std::string myline;
 		getline(file_in, myline);
-		std::cout << myline << std::endl;
 
 		// remove all tabs from the string
 		std::size_t np = myline.find('\t');
@@ -66,7 +83,7 @@ InputParams::InputParams(std::string paramfile)
 				std::string label = myline.substr(0, np);
 				
 				// check if label is known
-				if(known_labels.find(label) == known_labels.end())
+				if(!check_label(label))
 					std::cerr << "WARNING: unknown parameter " << label << " in file " << paramfile << "!" << std::endl;
 				
 				myline = myline.substr(np);  // should now just have the value plus white space
@@ -110,7 +127,7 @@ void InputParams::print()
 {
 	std::cout << "number of lines read: " << params.size() << std::endl;
 	for(iterator it = params.begin(); it != params.end(); ++it)
-		std::cout << it->first << "\t\t" << it->second << "\t" << comments[it->first] << std::endl;
+		printrow(std::cout, it->first, it->second, comments[it->first]);
 }
 
 /// Print parameters and values that have been accessed within the code to stdout.
@@ -122,7 +139,7 @@ void InputParams::print_used()
 	{
 		if(use_number[it->first] > 0)
 		{
-			std::cout << it->first << "\t\t" << it->second << "\t" << comments[it->first] << std::endl;
+			printrow(std::cout, it->first, it->second, comments[it->first]);
 			++n;
 		}
 	}
@@ -139,7 +156,7 @@ void InputParams::print_unused()
 	{
 		if(use_number[it->first] == 0)
 		{
-			std::cout << it->first << "\t\t" << it->second << "\t" << comments[it->first] << std::endl;
+			printrow(std::cout, it->first, it->second, comments[it->first]);
 			++n;
 		}
 	}
@@ -164,9 +181,9 @@ void InputParams::PrintToFile(std::string filename, bool strip_unused)
 		
 		iterator comment = comments.find(it->first);
 		if(comment == comments.end())
-		   file_out << it->first << "\t\t" << it->second << std::endl;
+			printrow(file_out, it->first, it->second);
 		else
-			file_out << it->first << "\t\t" << it->second << "\t" << comment->second << std::endl;
+			printrow(file_out, it->first, it->second, comment->second);
 	}
 }
 
