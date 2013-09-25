@@ -425,7 +425,7 @@ void LensHaloMOKA::force_halo(double *alpha,KappaType *kappa,KappaType *gamma,do
    */
   
   // interpolate from the maps
-  Utilities::Interpolator<valarray<float>> interp(xx,map->nx,map->boxlMpc/map->h,map->center);
+  Utilities::Interpolator<valarray<float> > interp(xx,map->nx,map->boxlMpc/map->h,map->center);
   alpha[0] = interp.interpolate(map->alpha1);
   alpha[1] = interp.interpolate(map->alpha2);
   gamma[0] = interp.interpolate(map->gamma1);
