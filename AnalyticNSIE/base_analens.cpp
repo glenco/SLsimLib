@@ -10,8 +10,8 @@
 using namespace std;
 
 void LensHaloBaseNSIE::force_halo(
-		double *alpha     /// mass/Mpc
-		,KappaType *kappa
+		double *alpha       /// mass/Mpc
+		,KappaType *kappa   /// surface mass density
 		,KappaType *gamma
 		,double *xcm
 		,bool no_kappa
