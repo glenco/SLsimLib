@@ -14,6 +14,7 @@
 #include "point.h"
 //#include "quadTree.h"
 
+class TreeQuad;
 
 /**
  * \brief A base class for all types of lensing halos.
@@ -40,8 +41,6 @@
  * is intended for the cases where the simulation is populated by lensing halos from
  * a mass function. Then one needs all parameters of the halo -- mass, Rmax, and rscale.
  */
-
-class TreeQuad; // forward declaration TODO Fabio: can you do something prettier?
 
 class LensHalo{
 public:

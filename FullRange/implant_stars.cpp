@@ -189,14 +189,9 @@ void LensHalo::remove_stars(){
 	return ;
 }
 
-// This allows the stars to be turned off after they have been implanted.
-/*void AnaNSIELensHalo::toggleStars(bool implanted){
-	stars_implanted = implanted;
-}
-*/
-
-/// subtracts the mass in stars from the smooth model to compensate
-/// for the mass of the stars the lensing quantities are all updated not replaced
+/** subtracts the mass in stars from the smooth model to compensate
+* for the mass of the stars the lensing quantities are all updated not replaced
+ */
 void LensHalo::substract_stars_disks(double *ray,double *alpha
 		,KappaType *kappa,KappaType *gamma){
 
@@ -231,8 +226,9 @@ void LensHalo::substract_stars_disks(double *ray,double *alpha
 	return;
 }
 
-// random stellar masses according to IMF of choice
-/* mtype defines the stellar mass function
+/** \brief random stellar masses according to IMF of choice
+ *
+ * mtype defines the stellar mass function
  * 0 - always the same stellar mass (e.g. 1Msol)
  * 1 - salpeter imf, i.e. slope = -2.35
  * 2 - broken power law, requires lower mass end slope (powerlo), high mass slope (powerhi), bending point (bendmass)
