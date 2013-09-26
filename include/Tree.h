@@ -249,7 +249,7 @@ namespace Utilities{
 
 
 	long IndexFromPosition(double *x,long Npixels,double range,double *center);
-	void PositionFromIndex(unsigned long i,double *x,long Npixels,double range,double *center);
+	void PositionFromIndex(unsigned long i,double *x,long Npixels,double range,const double *center);
 	long IndexFromPosition(double x,long Npixels,double range,double center);
   double TwoDInterpolator(double *x,int Npixels,double range,double *center,double *map,bool init=true);
   double TwoDInterpolator(double *map);

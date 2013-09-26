@@ -16,7 +16,7 @@ Point *pointofinterest = NULL;
 Grid::Grid(
 		LensHndl lens      /// lens model for initializing grid
 		,unsigned long N1d           /// Initial number of grid points in each dimension.
-		,double center[2]  /// Center of grid.
+		,const double center[2]  /// Center of grid.
 		,double range      /// Full width of grid in whatever units will be used.
 		 ){
 
