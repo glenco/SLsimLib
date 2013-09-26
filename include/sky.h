@@ -122,7 +122,7 @@ public:
 	/// Write data to all sources.
 	void unserialize(RawData& d);
 	
-	/// Randomize all sources and lenses.
+	/// Randomize all sources.
 	void randomize(double step, long* seed);
 	
 private:

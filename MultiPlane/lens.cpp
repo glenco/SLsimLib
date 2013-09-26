@@ -1575,3 +1575,22 @@ void Lens::quicksort(LensHaloHndl *halos,double **pos,unsigned long N){
 
 	return ;
 }
+
+void Lens::serialize(RawData& d) const
+{
+	for(std::size_t i = 0, n = main_halos.size(); i < n; ++i)
+		main_halos[i]->serialize(d);
+}
+
+void Lens::unserialize(RawData& d)
+{
+	for(std::size_t i = 0, n = main_halos.size(); i < n; ++i)
+		main_halos[i]->unserialize(d);
+}
+
+void Lens::randomize(double step, long* seed)
+{
+	//lns->randomize(step, seed);
+	for(std::size_t i = 0, n = main_halos.size(); i < n; ++i)
+		main_halos[i]->randomize(step, seed);
+}

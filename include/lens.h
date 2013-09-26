@@ -166,6 +166,15 @@ public:
 	double getSigmaCrit(double zsource){ return cosmo->SigmaCrit(getZlens(),zsource); }
 
 	COSMOLOGY *cosmo;
+	
+	/// Read data from all main halos.
+	void serialize(RawData& d) const;
+	
+	/// Write data to all main halos.
+	void unserialize(RawData& d);
+	
+	/// Randomize all main halos.
+	void randomize(double step, long* seed);
 
 private:
 	GLAMER_TEST_FRIEND(LensTest)
