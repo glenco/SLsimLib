@@ -25,6 +25,7 @@ struct Grid{
 	~Grid();
 
 	void ReInitializeGrid(LensHndl lens);
+  void ReShoot(LensHndl lens);
 	void zoom(LensHndl lens,double *center,double scale,bool kappa_off,Branch *top = NULL);
 
 	unsigned long PruneTrees(double resolution,bool useSB,double fluxlimit);

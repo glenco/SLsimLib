@@ -14,6 +14,8 @@
 void map_images(LensHndl lens,Source *source,GridHndl grid,int *Nimages,ImageInfo *imageinfo
 		,int Nimagesmax,double xmax,double xmin,double initial_size
 		,ExitCriterion criterion,bool kappa_off,bool FindCenter,bool divide_images);
+void map_images_fixedgrid(Source *source,GridHndl grid ,int *Nimages ,ImageInfo *imageinfo
+                          ,int NimageMax ,double xmax ,bool divide_images,bool find_borders);
 
 int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imageinfo,int *Nimages
 		,ImageInfo *sourceinfo,int Nsources,int NimageMax,const double res_target,ExitCriterion criterion

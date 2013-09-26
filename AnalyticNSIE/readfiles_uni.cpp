@@ -185,16 +185,19 @@ void LensHaloUniform::PrintLens(bool show_substruct,bool show_stars) const
 }
 
 
-void LensHalo::implant_stars(double x, double y, unsigned long Nregions,long *seed, IMFtype type){
+void LensHalo::implant_stars(double x, double y, int Nregions,long *seed, IMFtype type){
 
 	if(Nregions <= 0) return;
 
 	double ** centers = new double*[Nregions];
-	for (int i = 0; i < Nregions; ++i)
-		centers[i] = new double[2];
-	centers[0][0] = x;
-	centers[0][1] = y;
+	for (int i = 0; i < Nregions; ++i) centers[i] = new double[2];
+  
+  centers[0][0] = x;
+  centers[0][1] = y;
 	implant_stars(centers,Nregions,seed,type);
+  
+  for (int i = 0; i < Nregions; ++i) delete[] centers[i];
+  delete[] centers;
 }
 
 
