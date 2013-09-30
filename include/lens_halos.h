@@ -83,6 +83,8 @@ public:
 	void force_halo_asym(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa,bool subtract_point=false);
 
 
+	double checkkappa(double x, double theta, double ang);
+
 	/// force tree calculation for stars
 	void force_stars(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa);
 
@@ -174,11 +176,11 @@ protected:
   void gradial(double r,double g[]);
   void desymmeterize(double r,double theta,double *alpha,double *kappa,double *gamma);
 
-  void setEllipModes(double q,double theta);
-  void fangular(double theta,double f[]);
-  virtual double gamma_asym(double x,double theta);
-  virtual double kappa_asym(double x,double theta);
-  virtual double alpha_asym(double x,double theta);
+	virtual double gamma_asym(double x,double theta);
+	virtual double kappa_asym(double x,double theta);
+	virtual double alpha_asym(double x,double theta);
+    void setEllipModes(double q,double theta);
+    void fangular(double theta,double f[]);
 
   const static int Nmod = 18;
   double mod[18];
@@ -259,7 +261,7 @@ protected:
 		//ERROR_MESSAGE();
 		//std::cout << "time delay has not been fixed for NFW profile yet." << std::endl;
 		//exit(1);
-		return InterpolateFromTable(htable,x)/gmax; // -0.5*x*
+		return -0.25*InterpolateFromTable(htable,x)/gmax/pi; // -0.5*x*
 	}
   
 private:

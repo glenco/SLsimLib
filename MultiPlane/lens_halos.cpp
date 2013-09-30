@@ -376,13 +376,16 @@ void LensHalo::force_halo(
 				,bool kappa_off
 				,bool subtract_point /// if true contribution from a point mass is subtracted
 				){
-	double theta=30., q = 0.5, f[3]; // TODO read theta and q from param file!!!
+	double theta=30., q = 1.0, f[3]; // TODO read theta and q from param file!!!
 
 	if (q==1){
 		force_halo_sym(alpha,kappa,gamma,xcm,kappa_off,subtract_point);
 	}
 	else{
+		//setModesToEllip(q,theta);
+		//faxial(theta,f);
 		setEllipModes(q,theta);
+		fangular(theta,f);
 		force_halo_asym(alpha,kappa,gamma,xcm,kappa_off,subtract_point);
 	}
 }
@@ -414,6 +417,7 @@ void LensHalo::force_halo_sym(
 		// can turn off kappa and gamma calculations to save times
 		if(!kappa_off){
 			*kappa += kappa_h(x)*prefac;
+			cout << x << endl;
 
 			tmp = (gamma_h(x) + 2.0*subtract_point)*prefac/rcm2;
 
