@@ -13,6 +13,7 @@
 #include "profile.h"
 #include "InputParams.h"
 #include "lens_halos.h"
+#include "grid_maintenance.h"
 
 /**
  * \brief The MOKA map structure, containing all quantities that define it
@@ -76,18 +77,25 @@ public:
 	void saveGammaProfile();
 	void saveProfiles(double &RE3, double &xxc, double &yyc);
 	void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa,bool subtract_point=false);
-
-	MOKAmap* map;
-
+  void saveImage(GridHndl grid,bool saveprofiles);
+  
 	void estSignLambdas();
 	void EinsteinRadii(double &RE1, double &RE2, double &xxc, double &yyc);
 
 	void getDims();
 	void readImage();
 	void writeImage(std::string fn);
+  /// return center in physical Mpc
+  double *getCenter(){return center;}
+  /// return range of input map in physical Mpc
+  double getRange(){return range_phy;}
+  /// return number of pixels on a side in original map
+  size_t getN(){return map->nx;}
 	
 private:
 	void initMap();
+  double range_phy,center[2];  /// range of map in physical Mpc
+  MOKAmap* map;
 };
 
 void make_friendship(int ii,int ji,int np,std:: vector<int> &friends, std:: vector<double> &pointdist);
