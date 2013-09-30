@@ -60,7 +60,7 @@ struct MOKAmap{
 class LensHaloMOKA : public LensHalo
 {
 public:
-	LensHaloMOKA(const std::string& filename);
+	LensHaloMOKA(const std::string& filename,LensHaloType maptype);
 	LensHaloMOKA(InputParams& params);
 
 	~LensHaloMOKA();
@@ -93,6 +93,7 @@ public:
   size_t getN(){return map->nx;}
 	
 private:
+  LensHaloType maptype;
 	void initMap();
   double range_phy,center[2];  /// range of map in physical Mpc
   MOKAmap* map;

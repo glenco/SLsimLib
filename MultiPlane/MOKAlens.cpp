@@ -62,40 +62,58 @@ void cmass(int n, std::valarray<float> map, std:: vector<double> x, double &xcm,
 /**
  * \brief loads a MOKA map from a given filename
  */
-LensHaloMOKA::LensHaloMOKA(const std::string& filename)
+LensHaloMOKA::LensHaloMOKA(const std::string& filename,LensHaloType my_maptype)
 : LensHalo(),
-  MOKA_input_file(filename), flag_MOKA_analyze(0), flag_background_field(0)
+  MOKA_input_file(filename), flag_MOKA_analyze(0), flag_background_field(0), maptype(my_maptype)
 {
 	initMap();
+  assert(maptype == multi_dark_lens || maptype == moka_lens);
 	
 	// set redshift to value from map
 	setZlens(map->zlens);
   
-  range_phy = map->boxlMpc/(1+map->zlens);
-  center[0] = map->center[0]/(1+map->zlens);
-  center[1] = map->center[1]/(1+map->zlens);
+  range_phy = map->boxlMpc;
+  center[0] = map->center[0];
+  center[1] = map->center[1];
+  
+  if(maptype == multi_dark_lens){
+    range_phy /= (1+map->zlens);
+    center[0] /= (1+map->zlens);
+    center[1] /= (1+map->zlens);
+  }
+
   zlens = map->zlens;
 }
 
 /**
  * \brief allocates and reads the MOKA map in
+ *
+ *  In the future this could be used to read in individual MultiDark or other types of maps if the type were specified in the paramfile.
  */
 LensHaloMOKA::LensHaloMOKA(InputParams& params)
-: LensHalo()
+: LensHalo(), maptype(moka_lens)
 {
 	// read in parameters
 	assignParams(params);
 	
 	// initialize MOKA map
 	initMap();
-	
+  assert(maptype == multi_dark_lens || maptype == moka_lens);
+
 	// set redshift if necessary
 	if(zlens == -1)
 		setZlens(map->zlens);
   
-  range_phy = map->boxlMpc/(1+map->zlens);
-  center[0] = map->center[0]/map->h/(1+map->zlens);
-  center[1] = map->center[1]/map->h/(1+map->zlens);
+  range_phy = map->boxlMpc;
+  center[0] = map->center[0];
+  center[1] = map->center[1];
+  
+  if(maptype == multi_dark_lens){
+    range_phy /= (1+map->zlens);
+    center[0] /= (1+map->zlens);
+    center[1] /= (1+map->zlens);
+  }
+
   zlens = map->zlens;
 }
 
@@ -197,6 +215,8 @@ void LensHaloMOKA::assignParams(InputParams& params)
 	
 	if(!params.get("MOKA_analyze",flag_MOKA_analyze))
 		flag_MOKA_analyze = 0;
+  
+  maptype = moka_lens;
 }
 
 /**

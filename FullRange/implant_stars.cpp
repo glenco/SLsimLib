@@ -26,7 +26,6 @@ void LensHalo::implant_stars(PosType **centers,int Nregions,long *seed, IMFtype 
 	PosType r,theta,NstarsPerImage;
 	unsigned long i,j,m,k;
   
-  std::cout << stars_N << std::endl;
 	if(stars_N < 1.0  || star_fstars <= 0) return;
 	if(star_fstars > 1.0){ std::printf("fstars > 1.0\n"); exit(0); }
 	if(!(stars_implanted) ){
