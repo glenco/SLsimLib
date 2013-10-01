@@ -71,7 +71,7 @@ public:
 	int flag_background_field;
 
 	void assignParams(InputParams& params);
-	void setCosmology(COSMOLOGY* cosmo);
+	void setCosmology(const COSMOLOGY& cosmo);
 	void saveImage(bool saveprofile=true);
 	void saveKappaProfile();
 	void saveGammaProfile();

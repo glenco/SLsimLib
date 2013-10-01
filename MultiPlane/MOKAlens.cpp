@@ -191,14 +191,14 @@ void LensHaloMOKA::convertmap(MOKAmap *map,LensHaloType maptype){
 
 /** \brief checks the cosmology against the MOKA map parameters
  */
-void LensHaloMOKA::setCosmology(COSMOLOGY* cosmo)
+void LensHaloMOKA::setCosmology(const COSMOLOGY& cosmo)
 {
-	if(cosmo->getOmega_matter() == map->omegam)
-		std::cerr << "LensHaloMOKA: Omega_matter " << cosmo->getOmega_matter() << " (cosmology) != " << map->omegam << " (MOKA)" << std::endl;
-	if(cosmo->getOmega_lambda() == map->omegal)
-		std::cerr << "LensHaloMOKA: Omega_lambda " << cosmo->getOmega_lambda() << " (cosmology) != " << map->omegal << " (MOKA)" << std::endl;
-	if(cosmo->gethubble() == map->h)
-		std::cerr << "LensHaloMOKA: hubble " << cosmo->gethubble() << " (cosmology) != " << map->h << " (MOKA)" << std::endl;
+	if(cosmo.getOmega_matter() == map->omegam)
+		std::cerr << "LensHaloMOKA: Omega_matter " << cosmo.getOmega_matter() << " (cosmology) != " << map->omegam << " (MOKA)" << std::endl;
+	if(cosmo.getOmega_lambda() == map->omegal)
+		std::cerr << "LensHaloMOKA: Omega_lambda " << cosmo.getOmega_lambda() << " (cosmology) != " << map->omegal << " (MOKA)" << std::endl;
+	if(cosmo.gethubble() == map->h)
+		std::cerr << "LensHaloMOKA: hubble " << cosmo.gethubble() << " (cosmology) != " << map->h << " (MOKA)" << std::endl;
 }
 
 /**

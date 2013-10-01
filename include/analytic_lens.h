@@ -66,7 +66,7 @@ public:
   void assignParams(InputParams& params);
   double FractionWithinRe(double rangeInRei);
   void PrintLens(bool show_substruct,bool show_stars);
-  void setCosmology(COSMOLOGY* cosmo);
+  void setCosmology(const COSMOLOGY& cosmo);
 
   // in randoimize_lens.c
   void RandomizeHost(long *seed,bool tables);
