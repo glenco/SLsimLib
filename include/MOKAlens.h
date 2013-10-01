@@ -95,6 +95,7 @@ public:
 private:
   LensHaloType maptype;
 	void initMap();
+  void convertmap(MOKAmap *map,LensHaloType maptype);
   double range_phy,center[2];  /// range of map in physical Mpc
   MOKAmap* map;
 };

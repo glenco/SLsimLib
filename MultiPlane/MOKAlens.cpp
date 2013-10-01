@@ -67,8 +67,7 @@ LensHaloMOKA::LensHaloMOKA(const std::string& filename,LensHaloType my_maptype)
   MOKA_input_file(filename), flag_MOKA_analyze(0), flag_background_field(0), maptype(my_maptype)
 {
 	initMap();
-  assert(maptype == multi_dark_lens || maptype == moka_lens);
-	
+ 	
 	// set redshift to value from map
 	setZlens(map->zlens);
   
@@ -76,12 +75,6 @@ LensHaloMOKA::LensHaloMOKA(const std::string& filename,LensHaloType my_maptype)
   center[0] = map->center[0];
   center[1] = map->center[1];
   
-  if(maptype == multi_dark_lens){
-    range_phy /= (1+map->zlens);
-    center[0] /= (1+map->zlens);
-    center[1] /= (1+map->zlens);
-  }
-
   zlens = map->zlens;
 }
 
@@ -108,12 +101,6 @@ LensHaloMOKA::LensHaloMOKA(InputParams& params)
   center[0] = map->center[0];
   center[1] = map->center[1];
   
-  if(maptype == multi_dark_lens){
-    range_phy /= (1+map->zlens);
-    center[0] /= (1+map->zlens);
-    center[1] /= (1+map->zlens);
-  }
-
   zlens = map->zlens;
 }
 
@@ -124,6 +111,12 @@ LensHaloMOKA::~LensHaloMOKA()
 
 void LensHaloMOKA::initMap()
 {
+  
+  if(!(maptype == multi_dark_lens || maptype == moka_lens)){
+    ERROR_MESSAGE();
+    throw runtime_error("Does not recognize input lens map type");
+  }
+
 #ifndef ENABLE_FITS
 	std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
 	exit(1);
@@ -164,22 +157,36 @@ void LensHaloMOKA::initMap()
 	fill_linear(map->x, map->nx, -0.5*map->boxlMpc, 0.5*map->boxlMpc); // physical Mpc/h
 	map->inarcsec  = 10800./M_PI/map->Dlens*60.; // Mpc/h to arcsec
 
-	/// converts to the code units
-	if(flag_MOKA_analyze == 0 || flag_MOKA_analyze == 2)
-	{
-		std::cout << "converting the units of the MOKA map" << std::endl;
+  if(maptype == moka_lens){
+    /// converts to the code units
+     std::cout << "converting the units of the MOKA map" << std::endl;
 
-		double fac = map->DS/map->DLS/map->Dlens*map->h/(4*pi*Grav);
+      double fac = map->DS/map->DLS/map->Dlens*map->h/(4*pi*Grav);
 		
-		map->convergence *= fac;
-		map->gamma1 *= fac;
-		map->gamma2 *= fac;
+      map->convergence *= fac;
+      map->gamma1 *= fac;
+      map->gamma2 *= fac;
 		
-		fac = 1/(4*pi*Grav);
+      fac = 1/(4*pi*Grav);
 		
-		map->alpha1 *= fac;
-		map->alpha2 *= fac;
-	}
+      map->alpha1 *= fac;
+      map->alpha2 *= fac;
+  }else{
+    convertmap(map,maptype);
+  }
+}
+
+void LensHaloMOKA::convertmap(MOKAmap *map,LensHaloType maptype){
+  assert(maptype == multi_dark_lens);
+
+  // TODO: convert units
+  throw std::runtime_error("needs to be finished");
+
+  // Convertion for a Multidark simulation file
+  map->boxlMpc /= (1+map->zlens);
+  map->center[0] /= (1+map->zlens);
+  map->center[1] /= (1+map->zlens);
+  
 }
 
 /** \brief checks the cosmology against the MOKA map parameters
