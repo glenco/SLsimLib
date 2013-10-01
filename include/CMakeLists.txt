@@ -17,7 +17,6 @@ add_sources(
 	List1.h
 	List_old.h
 	map_images.h
-	mcmc.h
 	MOKAlens.h
 	nestedsampler.h
 	nsie.h

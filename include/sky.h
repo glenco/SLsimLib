@@ -132,7 +132,6 @@ private:
 	
 private: /* input methods */
 	void readGalaxyFile(std::string filename, Band band, double mag_limit);
-	void readSersicFile(std::string filename, double z);
 };
 
 #endif
