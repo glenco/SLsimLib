@@ -126,11 +126,11 @@ void LensHaloMOKA::readImage(){
         for(int i=0;i<npixels;i++) for(int j=0;j<npixels;j++){
             map->convergence[i+npixels*j] = mapbut[i+map->nx*j]*pixelunit;
         }
+        throw std::runtime_error("needs to be finished");
         // kappa is not divided by the critical surface density
         // they don't need to be preprocessed by fact
         // create alpha and gamma arrays by FFT
-        //PreProcessMap(map->convergence,map->alpha1,map->alpha2,map->gamma1,map->gamma2);
-        throw std::runtime_error("needs to be finished");
+        PreProcessFFTWMap();
 	}
     
 	std:: cout << map->boxlMpc << "  " << map->boxlarcsec << std:: endl;
@@ -319,21 +319,8 @@ int fof(double l,std:: vector<double> xci, std:: vector<double> yci, std:: vecto
 /**
  * \brief pre-process sourface mass density map computing deflection angles and shear in FFT
  */
-//void PreProcessMap(&map->convergence,&map->alpha1,&map->alpha2,&map->gamma1,&map->gamma2){
-//    // force them to be squared for now!
-//    int n = ny; // for the ray-tracing it need to be a power of two!
-//    std::valarray<float> kappa(n*n);
-//    int k=0;
-//    double kmean=0; // subtract from each plane the average density
-//    for(int i=0;i<n;i++) for(int j=0;j<n;j++){
-//        kappa[i+n*j] = map[i+nx*j];
-//        kmean+=kappa[i+n*j];
-//	}
-//    kmean=kmean/n/n;
-//    for(int i=0;i<n;i++) for(int j=0;j<n;j++){
-//        kappa[i+n*j]-=kmean;
-//	}
-//    ny = n;
-//    nx = ny;
-//}
+
+void PreProcessFFTWMap(){
+    
+}
 

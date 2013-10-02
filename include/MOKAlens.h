@@ -101,6 +101,7 @@ private:
   double range_phy,center[2];  /// range of map in physical Mpc
   MOKAmap* map;
   const COSMOLOGY *cosmo;
+    void PreProcessFFTWMap();
 };
 
 void make_friendship(int ii,int ji,int np,std:: vector<int> &friends, std:: vector<double> &pointdist);
