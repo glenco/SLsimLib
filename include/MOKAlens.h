@@ -60,7 +60,7 @@ struct MOKAmap{
 class LensHaloMOKA : public LensHalo
 {
 public:
-	LensHaloMOKA(const std::string& filename,LensHaloType maptype);
+	LensHaloMOKA(const std::string& filename,LensHaloType maptype,const COSMOLOGY *lenscosmo);
 	LensHaloMOKA(InputParams& params);
 
 	~LensHaloMOKA();
@@ -72,6 +72,7 @@ public:
 
 	void assignParams(InputParams& params);
 	void setCosmology(COSMOLOGY* cosmo);
+  void checkCosmology();
 	void saveImage(bool saveprofile=true);
 	void saveKappaProfile();
 	void saveGammaProfile();
@@ -98,6 +99,7 @@ private:
   void convertmap(MOKAmap *map,LensHaloType maptype);
   double range_phy,center[2];  /// range of map in physical Mpc
   MOKAmap* map;
+  const COSMOLOGY *cosmo;
 };
 
 void make_friendship(int ii,int ji,int np,std:: vector<int> &friends, std:: vector<double> &pointdist);

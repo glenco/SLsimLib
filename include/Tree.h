@@ -276,9 +276,32 @@ namespace Utilities{
     {
       center[0] = my_center[0];
       center[1] = my_center[1];
+      Ny = N;
+      range_y = range;
+
       initparams(x);
     };
-        
+
+    /**
+     *  Constructor for case when region is a rectangle and not a square.
+     *  Array must be indexed i = ix + iy * Nx 
+     */
+    Interpolator(
+                 double *x          /// position of point
+                 ,int my_Nx       /// Number of pixels in x dimension
+                 ,double my_range_x   /// Range of map in x in same units as x[]
+                 ,int my_Ny       /// Number of pixels in y dimension
+                 ,double my_range_y   /// Range of map in y in same units as x[]
+                 ,double *my_center /// Center of map in same units as x[]
+                 ):
+    N(my_Nx),range(my_range_x),map_p(NULL),Ny(my_Ny),range_y(my_range_y)
+    {
+      center[0] = my_center[0];
+      center[1] = my_center[1];
+      
+      initparams(x);
+    };
+
     /**
      This constructor takes the map as a pointer to an array of values and stores it.
      The resulting object can then be used with the () operator as a function.
@@ -294,8 +317,9 @@ namespace Utilities{
     {
       center[0] = my_center[0];
       center[1] = my_center[1];
+      Ny = N;
+      range_y = range;
     };
-    
     
     /** 
      Does interpolation of map at point that object was constructed with or last called with.
@@ -304,7 +328,7 @@ namespace Utilities{
     double interpolate(
                        T& map    /// map that supports the [] operator 
                        ){
-      if(map.size() != N*N){
+      if(map.size() != N*Ny){
         ERROR_MESSAGE();
         std::cout << "ERROR: Interpolator:interpolator(double *,T&)" << std::endl;
       }
@@ -318,7 +342,7 @@ namespace Utilities{
                        double *x   /// position of point
                        ,T& map     /// map that supports the [] operator
                        ){
-      if(map.size() != N*N){
+      if(map.size() != N*Ny){
         ERROR_MESSAGE();
         std::cout << "ERROR: Interpolator:interpolator(double *,T&)" << std::endl;
       }
@@ -361,26 +385,26 @@ namespace Utilities{
     }
 
   private:
-    double range,center[2];
+    double range,range_y,center[2];
     const T *map_p;
     double fx, fy;
     long index;
-    int N;
+    int N,Ny;
 
     void initparams(double *x){
       long ix,iy;
       // position in pixel coordinates
       fx = ((x[0] - center[0])/range + 0.5)*(N-1);
-      fy = ((x[1] - center[1])/range + 0.5)*(N-1);
+      fy = ((x[1] - center[1])/range_y + 0.5)*(Ny-1);
       //std::cout << "(  " << fx << " " << fy << "   ";
      
       if (fx < 0. || fx > N-1){index = -1; return;}
       else ix = (unsigned long)(fx);
       if(ix == N-1) ix = N-2;
       
-      if (fy < 0. || fy > N-1){index = -1; return;}
+      if (fy < 0. || fy > Ny-1){index = -1; return;}
       else iy = (unsigned long)(fy);
-      if(iy == N-1) iy = N-2;
+      if(iy == Ny-1) iy = Ny-2;
       
       index = ix + N*iy;
 
@@ -388,9 +412,9 @@ namespace Utilities{
       
       /** bilinear interpolation */
       fx = center[0] + range*( 1.0*(ix)/(N-1) - 0.5 );
-      fy = center[1] + range*( 1.0*(iy)/(N-1) - 0.5 );
+      fy = center[1] + range_y*( 1.0*(iy)/(Ny-1) - 0.5 );
       fx=(x[0] - fx)*(N-1)/range;
-      fy=(x[1] - fy)*(N-1)/range;
+      fy=(x[1] - fy)*(Ny-1)/range_y;
       //std::cout  << fx << " " << fy << "   )";
      
       /*
