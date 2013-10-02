@@ -126,8 +126,7 @@ namespace {
 		{"source_input_galaxy_file", "sources.txt", "Millennium sources input file"},
 		{"source_band", "", ""},
 		{"source_mag_limit", "30", "minimum magnitude for sources"},
-		{"source_sb_limit", "0", "minimum surface brightness for sources"},
-		{"input_sersic_file", "sersic.txt", "SExtractor catalog for Sersic sources"}
+		{"source_sb_limit", "0", "minimum surface brightness for sources"}
 	};
 	
 	// return a list of all labels from the parameter list

@@ -33,21 +33,6 @@ Sky::Sky(InputParams& params)
 		// load galaxies from input file
 		readGalaxyFile(filename, band, mag_limit);
 	}
-	
-	// check if there is a Sersic catalog file
-	if(params.get("input_sersic_file", filename))
-	{
-		// source redshift
-		double z_source;
-		if(!params.get("z_source", z_source))
-		{
-			std::cerr << "ERROR: Must assign z_source in parameter file " << params.filename() << std::endl;
-			exit(1);
-		}
-		
-		// load Sersic sources from file
-		readSersicFile(filename, z_source);
-	}
 }
 
 Sky::~Sky()

@@ -118,7 +118,7 @@ long IndexFromPosition(double *x,long Npixels,double range,double *center){
 /** \ingroup Utill
  *
  */
-void PositionFromIndex(unsigned long i,double *x,long Npixels,double range,double *center){
+void PositionFromIndex(unsigned long i,double *x,long Npixels,double range,const double *center){
   if(Npixels == 1){
     x[0] = center[0];
     x[1] = center[1];

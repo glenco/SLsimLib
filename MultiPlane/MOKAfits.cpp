@@ -63,22 +63,26 @@ void LensHaloMOKA::readImage(){
 	h0->readKey ("DLS",map->DLS);
 	h0->readKey ("DS",map->DS);
 
-
 	std:: cout << map->boxlMpc << "  " << map->boxlarcsec << std:: endl;
-
-	ExtHDU &h1=ff->extension(1);
-	h1.read(map->alpha1);
-	ExtHDU &h2=ff->extension(2);
-	h2.read(map->alpha2);
-	ExtHDU &h3=ff->extension(3);
-	h3.read(map->gamma1);
-	ExtHDU &h4=ff->extension(4);
-	h4.read(map->gamma2);
-
-  for(size_t i=0;i<map->convergence.size();++i){
-    assert(map->convergence[i] == map->convergence[i]);
-  }
-	std::cout << *h0 << h1 << h2 << h3  << h4 << std::endl;
+	
+	if(h0->axis(2) > 1 ){
+	  ExtHDU &h1=ff->extension(1);
+	  h1.read(map->alpha1);
+	  ExtHDU &h2=ff->extension(2);
+	  h2.read(map->alpha2);
+	  ExtHDU &h3=ff->extension(3);
+	  h3.read(map->gamma1);
+	  ExtHDU &h4=ff->extension(4);
+	  h4.read(map->gamma2);
+	  std::cout << *h0 << h1 << h2 << h3  << h4 << std::endl;
+	}else{
+	  // creat alpha and gamma arrays by FFT
+	  throw std::runtime_error("needs to be finished");
+	}
+	
+	for(size_t i=0;i<map->convergence.size();++i){
+	  assert(map->convergence[i] == map->convergence[i]);
+	}
 #else
 	std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
 	exit(1);

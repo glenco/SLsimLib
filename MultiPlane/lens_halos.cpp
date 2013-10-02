@@ -89,7 +89,7 @@ LensHalo::~LensHalo()
 {
 }
 
-const long LensHaloNFW::NTABLE = 1000;
+const long LensHaloNFW::NTABLE = 10000;
 const double LensHaloNFW::maxrm = 100.0;
 int LensHaloNFW::count = 0;
 
@@ -141,6 +141,13 @@ double LensHaloNFW::InterpolateFromTable(double *table, double y){
 	j=(int)(y/maxrm*NTABLE);
 
 	assert(y>=xtable[j] && y<=xtable[j+1]);
+	if (j==0)
+		{
+		if (table==ftable) return ffunction(y);
+		if (table==gtable) return gfunction(y);
+		if (table==g2table) return g2function(y);
+		if (table==htable) return hfunction(y);
+		}
 	return (table[j+1]-table[j])/(xtable[j+1]-xtable[j])*(y-xtable[j]) + table[j];
 }
 
@@ -185,7 +192,7 @@ void LensHaloNFW::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale
     gmax = InterpolateFromTable(gtable,xmax);
 }
 
-const long LensHaloPseudoNFW::NTABLE = 1000;
+const long LensHaloPseudoNFW::NTABLE = 10000;
 const double LensHaloPseudoNFW::maxrm = 100.0;
 int LensHaloPseudoNFW::count = 0;
 
@@ -241,6 +248,7 @@ double LensHaloPseudoNFW::InterpolateFromTable(double y){
 	j=(int)(y/maxrm*NTABLE);
 
 	assert(y>=xtable[j] && y<=xtable[j+1]);
+	if (j==0) return mhat(y,beta);
 	return (mhattable[j+1]-mhattable[j])/(xtable[j+1]-xtable[j])*(y-xtable[j]) + mhattable[j];
 }
 
@@ -545,7 +553,7 @@ void LensHaloSimpleNSIE::force_halo(
        return;
 }
 
-const long LensHaloHernquist::NTABLE = 1000;
+const long LensHaloHernquist::NTABLE = 10000;
 const double LensHaloHernquist::maxrm = 100.0;
 int LensHaloHernquist::count = 0;
 
@@ -598,6 +606,13 @@ double LensHaloHernquist::InterpolateFromTable(double *table, double y){
 	j=(int)(y/maxrm*NTABLE);
 
 	assert(y>=xtable[j] && y<=xtable[j+1]);
+	if (j==0)
+		{
+		if (table==ftable) return ffunction(y);
+		if (table==gtable) return gfunction(y);
+		if (table==g2table) return g2function(y);
+		if (table==htable) return hfunction(y);
+		}
 	return (table[j+1]-table[j])/(xtable[j+1]-xtable[j])*(y-xtable[j]) + table[j];
 }
 
@@ -611,6 +626,8 @@ void LensHaloHernquist::assignParams(InputParams& params){
 	if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
   else if(stars_N){
   	assignParams_stars(params);
+
+  	std::cout << "Rmax " << Rmax <<std::endl;
   }
 
 }
@@ -626,7 +643,7 @@ LensHaloHernquist::~LensHaloHernquist(){
 	}
 }
 
-const long LensHaloJaffe::NTABLE = 1000;
+const long LensHaloJaffe::NTABLE = 10000;
 const double LensHaloJaffe::maxrm = 100.0;
 int LensHaloJaffe::count = 0;
 
@@ -678,6 +695,13 @@ double LensHaloJaffe::InterpolateFromTable(double *table, double y){
 	j=(int)(y/maxrm*NTABLE);
 
 	assert(y>=xtable[j] && y<=xtable[j+1]);
+	if (j==0)
+		{
+		if (table==ftable) return ffunction(y);
+		if (table==gtable) return gfunction(y);
+		if (table==g2table) return g2function(y);
+//		if (table==htable) return hfunction(y);
+		}
 	return (table[j+1]-table[j])/(xtable[j+1]-xtable[j])*(y-xtable[j]) + table[j];
 }
 

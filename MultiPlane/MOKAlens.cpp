@@ -62,31 +62,46 @@ void cmass(int n, std::valarray<float> map, std:: vector<double> x, double &xcm,
 /**
  * \brief loads a MOKA map from a given filename
  */
-LensHaloMOKA::LensHaloMOKA(const std::string& filename)
+LensHaloMOKA::LensHaloMOKA(const std::string& filename,LensHaloType my_maptype)
 : LensHalo(),
-  MOKA_input_file(filename), flag_MOKA_analyze(0), flag_background_field(0)
+  MOKA_input_file(filename), flag_MOKA_analyze(0), flag_background_field(0), maptype(my_maptype)
 {
 	initMap();
-	
+ 	
 	// set redshift to value from map
 	setZlens(map->zlens);
+  
+  range_phy = map->boxlMpc;
+  center[0] = map->center[0];
+  center[1] = map->center[1];
+  
+  zlens = map->zlens;
 }
 
 /**
  * \brief allocates and reads the MOKA map in
+ *
+ *  In the future this could be used to read in individual MultiDark or other types of maps if the type were specified in the paramfile.
  */
 LensHaloMOKA::LensHaloMOKA(InputParams& params)
-: LensHalo()
+: LensHalo(), maptype(moka_lens)
 {
 	// read in parameters
 	assignParams(params);
 	
 	// initialize MOKA map
 	initMap();
-	
+  assert(maptype == multi_dark_lens || maptype == moka_lens);
+
 	// set redshift if necessary
 	if(zlens == -1)
 		setZlens(map->zlens);
+  
+  range_phy = map->boxlMpc;
+  center[0] = map->center[0];
+  center[1] = map->center[1];
+  
+  zlens = map->zlens;
 }
 
 LensHaloMOKA::~LensHaloMOKA()
@@ -96,6 +111,12 @@ LensHaloMOKA::~LensHaloMOKA()
 
 void LensHaloMOKA::initMap()
 {
+  
+  if(!(maptype == multi_dark_lens || maptype == moka_lens)){
+    ERROR_MESSAGE();
+    throw runtime_error("Does not recognize input lens map type");
+  }
+
 #ifndef ENABLE_FITS
 	std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
 	exit(1);
@@ -136,34 +157,48 @@ void LensHaloMOKA::initMap()
 	fill_linear(map->x, map->nx, -0.5*map->boxlMpc, 0.5*map->boxlMpc); // physical Mpc/h
 	map->inarcsec  = 10800./M_PI/map->Dlens*60.; // Mpc/h to arcsec
 
-	/// converts to the code units
-	if(flag_MOKA_analyze == 0 || flag_MOKA_analyze == 2)
-	{
-		std::cout << "converting the units of the MOKA map" << std::endl;
+  if(maptype == moka_lens){
+    /// converts to the code units
+     std::cout << "converting the units of the MOKA map" << std::endl;
 
-		double fac = map->DS/map->DLS/map->Dlens*map->h/(4*pi*Grav);
+      double fac = map->DS/map->DLS/map->Dlens*map->h/(4*pi*Grav);
 		
-		map->convergence *= fac;
-		map->gamma1 *= fac;
-		map->gamma2 *= fac;
+      map->convergence *= fac;
+      map->gamma1 *= fac;
+      map->gamma2 *= fac;
 		
-		fac = 1/(4*pi*Grav);
+      fac = 1/(4*pi*Grav);
 		
-		map->alpha1 *= fac;
-		map->alpha2 *= fac;
-	}
+      map->alpha1 *= fac;
+      map->alpha2 *= fac;
+  }else{
+    convertmap(map,maptype);
+  }
+}
+
+void LensHaloMOKA::convertmap(MOKAmap *map,LensHaloType maptype){
+  assert(maptype == multi_dark_lens);
+
+  // TODO: convert units
+  throw std::runtime_error("needs to be finished");
+
+  // Convertion for a Multidark simulation file
+  map->boxlMpc /= (1+map->zlens);
+  map->center[0] /= (1+map->zlens);
+  map->center[1] /= (1+map->zlens);
+  
 }
 
 /** \brief checks the cosmology against the MOKA map parameters
  */
-void LensHaloMOKA::setCosmology(COSMOLOGY* cosmo)
+void LensHaloMOKA::setCosmology(const COSMOLOGY& cosmo)
 {
-	if(cosmo->getOmega_matter() == map->omegam)
-		std::cerr << "LensHaloMOKA: Omega_matter " << cosmo->getOmega_matter() << " (cosmology) != " << map->omegam << " (MOKA)" << std::endl;
-	if(cosmo->getOmega_lambda() == map->omegal)
-		std::cerr << "LensHaloMOKA: Omega_lambda " << cosmo->getOmega_lambda() << " (cosmology) != " << map->omegal << " (MOKA)" << std::endl;
-	if(cosmo->gethubble() == map->h)
-		std::cerr << "LensHaloMOKA: hubble " << cosmo->gethubble() << " (cosmology) != " << map->h << " (MOKA)" << std::endl;
+	if(cosmo.getOmega_matter() == map->omegam)
+		std::cerr << "LensHaloMOKA: Omega_matter " << cosmo.getOmega_matter() << " (cosmology) != " << map->omegam << " (MOKA)" << std::endl;
+	if(cosmo.getOmega_lambda() == map->omegal)
+		std::cerr << "LensHaloMOKA: Omega_lambda " << cosmo.getOmega_lambda() << " (cosmology) != " << map->omegal << " (MOKA)" << std::endl;
+	if(cosmo.gethubble() == map->h)
+		std::cerr << "LensHaloMOKA: hubble " << cosmo.gethubble() << " (cosmology) != " << map->h << " (MOKA)" << std::endl;
 }
 
 /**
@@ -187,6 +222,8 @@ void LensHaloMOKA::assignParams(InputParams& params)
 	
 	if(!params.get("MOKA_analyze",flag_MOKA_analyze))
 		flag_MOKA_analyze = 0;
+  
+  maptype = moka_lens;
 }
 
 /**
@@ -194,44 +231,44 @@ void LensHaloMOKA::assignParams(InputParams& params)
  * and then saving to a fits file and computing the radial profile
  * of the convergence
  */
-void saveImage(LensHaloMOKA *halo, GridHndl grid,bool saveprofiles){
+void LensHaloMOKA::saveImage(GridHndl grid,bool saveprofiles){
 	std::stringstream f;
 	std::string filename;
 
-	if(halo->flag_background_field==1) f << halo->MOKA_input_file << "_only_noise.fits";
+	if(flag_background_field==1) f << MOKA_input_file << "_only_noise.fits";
 	else{
-	  if(halo->flag_MOKA_analyze == 0) f << halo->MOKA_input_file << "_noisy.fits";
-	  else f << halo->MOKA_input_file << "_no_noise.fits";
+	  if(flag_MOKA_analyze == 0) f << MOKA_input_file << "_noisy.fits";
+	  else f << MOKA_input_file << "_no_noise.fits";
 	}
 	filename = f.str();
 
 	MoveToTopList(grid->i_tree->pointlist);
 
 	do{
-		long index = Utilities::IndexFromPosition(grid->i_tree->pointlist->current->x,halo->map->nx,halo->map->boxlrad,halo->map->center);
+		long index = Utilities::IndexFromPosition(grid->i_tree->pointlist->current->x,map->nx,map->boxlrad,map->center);
 		if(index > -1){
-			halo->map->convergence[index] = grid->i_tree->pointlist->current->kappa;
-			halo->map->gamma1[index] = grid->i_tree->pointlist->current->gamma[0];
-			halo->map->gamma2[index] = grid->i_tree->pointlist->current->gamma[1];
-			halo->map->gamma3[index] = grid->i_tree->pointlist->current->gamma[2];
+			map->convergence[index] = grid->i_tree->pointlist->current->kappa;
+			map->gamma1[index] = grid->i_tree->pointlist->current->gamma[0];
+			map->gamma2[index] = grid->i_tree->pointlist->current->gamma[1];
+			map->gamma3[index] = grid->i_tree->pointlist->current->gamma[2];
 		}
 	}while(MoveDownList(grid->i_tree->pointlist)==true);
 
-	halo->writeImage(filename);
+	writeImage(filename);
 
 	if(saveprofiles == true){
 
 	  std:: cout << " saving profile " << std:: endl;
 	  double RE3,xxc,yyc;
-	  halo->saveProfiles(RE3,xxc,yyc);
-	  halo->estSignLambdas();
+	  saveProfiles(RE3,xxc,yyc);
+	  estSignLambdas();
 	  double RE1,RE2;
-	  halo->EinsteinRadii(RE1,RE2,xxc,yyc);
+	  EinsteinRadii(RE1,RE2,xxc,yyc);
 	  std::ostringstream fEinr;
-	  if(halo->flag_background_field==1) fEinr << halo->MOKA_input_file << "_only_noise_Einstein.radii.dat";
+	  if(flag_background_field==1) fEinr << MOKA_input_file << "_only_noise_Einstein.radii.dat";
 	  else{
-	    if(halo->flag_MOKA_analyze == 0) fEinr << halo->MOKA_input_file << "_noisy_Einstein.radii.dat";
-	    else fEinr << halo->MOKA_input_file << "_no_noise_Einstein.radii.dat";
+	    if(flag_MOKA_analyze == 0) fEinr << MOKA_input_file << "_noisy_Einstein.radii.dat";
+	    else fEinr << MOKA_input_file << "_no_noise_Einstein.radii.dat";
 	  }
 	  std:: ofstream filoutEinr;
 	  std:: string filenameEinr = fEinr.str();
@@ -425,7 +462,10 @@ void LensHaloMOKA::force_halo(double *alpha,KappaType *kappa,KappaType *gamma,do
    */
   
   // interpolate from the maps
-  Utilities::Interpolator<valarray<float> > interp(xx,map->nx,map->boxlMpc/map->h,map->center);
+  //<<<<<<< local
+  // Utilities::Interpolator<valarray<float> > interp(xx,map->nx,map->boxlMpc/map->h,map->center);
+  Utilities::Interpolator<valarray<float> > interp(xx,map->nx,range_phy,center);
+
   alpha[0] = interp.interpolate(map->alpha1);
   alpha[1] = interp.interpolate(map->alpha2);
   gamma[0] = interp.interpolate(map->gamma1);
@@ -433,7 +473,6 @@ void LensHaloMOKA::force_halo(double *alpha,KappaType *kappa,KappaType *gamma,do
   gamma[2] = 0.0;
   *kappa = interp.interpolate(map->convergence);
 
-  assert(*kappa == *kappa);
 	return;
 }
 

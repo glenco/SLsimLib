@@ -563,6 +563,124 @@ void map_images(
 	return ;
 }
 
+/** \brief Find the images without any additional grid refinement or ray shooting.
+ *
+ *   The images and surface brighnesses are found.  This will be much faster than map_images(), 
+ *   but will miss images that are not resolved on the current grid.
+ *   
+ *   The surface brightnesses on all of the grid are refreshed.
+ *   The images centroids and gridranges are maintained.
+ **/
+
+void map_images_fixedgrid(
+                Source *source
+                ,GridHndl grid          /// Tree of grid points
+                ,int *Nimages           /// number of images found
+                ,ImageInfo *imageinfo   /// information on each image
+                ,int NimageMax          /// Size of imageinfo array on entry.  This could increase if more images are found
+                ,double xmax            /// Maximum size of source on image plane.  The entire source must be within this distance from
+                                        ///  source->getX()[].  Decreasing it will make the code run faster.  Making xmax much bigger than
+                                        /// the grid boundaries will check all points for surface brightness.
+                ,bool divide_images     /// if true will divide images.
+                ,bool find_borders      /// if true will find the inner and outer borders of each image
+  ){
+  
+	assert(grid->s_tree);
+	assert(grid->i_tree);
+	assert(imageinfo->imagekist);
+  
+  imageinfo->area = 0.0;
+  imageinfo->area_error = 0.0;
+
+  imageinfo->innerborder->Empty();
+  imageinfo->outerborder->Empty();
+  
+  grid->RefreshSurfaceBrightnesses(source);
+
+  double x[2];
+  
+  grid->s_tree->PointsWithinKist(source->getX(), xmax, imageinfo->imagekist, 0);
+  
+  // Assign surface brightnesses and remove points from image without flux
+  for(imageinfo->imagekist->MoveToTop();!(imageinfo->imagekist->OffBottom());){
+    
+    x[0] = imageinfo->imagekist->getCurrent()->x[0] - source->getX()[0];
+    x[1] = imageinfo->imagekist->getCurrent()->x[1] - source->getX()[1];
+    
+    imageinfo->imagekist->getCurrent()->surface_brightness =
+    imageinfo->imagekist->getCurrent()->image->surface_brightness = source->SurfaceBrightness( x );
+    
+    imageinfo->area += imageinfo->imagekist->getCurrent()->surface_brightness;
+    
+    if(imageinfo->imagekist->getCurrent()->surface_brightness == 0.0){
+      imageinfo->imagekist->getCurrent()->in_image = FALSE;  // re-set marks
+			imageinfo->imagekist->getCurrent()->image->in_image = FALSE;  // re-set marks
+      imageinfo->imagekist->TakeOutCurrent();
+      if(!(imageinfo->imagekist->AtTop())) imageinfo->imagekist->Down();
+    }else{
+      imageinfo->imagekist->getCurrent()->in_image = TRUE;  // re-set marks
+			imageinfo->imagekist->getCurrent()->image->in_image = TRUE;  // re-set marks
+      imageinfo->imagekist->Down();
+    }
+    
+  }
+  
+  if(imageinfo->imagekist->Nunits() == 0){
+    *Nimages = 0;
+    return;
+  }
+  
+  *Nimages = 1;
+  imageinfo->imagekist->TranformPlanes();
+  
+  int i;
+
+  // divide up images
+  if(divide_images) divide_images_kist(grid->i_tree,imageinfo,Nimages,NimageMax);
+ 
+  // calculate grid range for images
+  for(i=0;i<*Nimages;++i){
+    
+    imageinfo[i].gridrange[0] = imageinfo->gridrange[1] = 0.0;
+    imageinfo[i].gridrange[2] = 1.0e99; // minimum grid size in image
+    
+    for(imageinfo[i].imagekist->MoveToTop();!(imageinfo[i].imagekist->OffBottom());imageinfo[i].imagekist->Down()){
+      if(imageinfo[i].imagekist->getCurrent()->gridsize < imageinfo[i].gridrange[2])
+        imageinfo[i].gridrange[2] = imageinfo[i].imagekist->getCurrent()->gridsize;
+      if(imageinfo[i].imagekist->getCurrent()->gridsize > imageinfo[i].gridrange[0])
+        imageinfo[i].gridrange[0] = imageinfo[i].imagekist->getCurrent()->gridsize;
+    }
+  }
+
+  if(find_borders){
+    for(i=0;i<*Nimages;++i) findborders4(grid->i_tree,&(imageinfo[i]));
+  }
+
+  // find image centroids
+  for(i=0;i<*Nimages;++i){
+		MoveToTopKist(imageinfo[i].imagekist);
+		imageinfo[i].centroid[0] = 0.0;
+		imageinfo[i].centroid[1] = 0.0;
+    imageinfo[i].area = 0.0;
+		for(long j = 0 ; j < imageinfo[i].imagekist->Nunits() ; ++j,MoveDownKist(imageinfo[i].imagekist) ){
+			imageinfo[i].area += pow(getCurrentKist(imageinfo[i].imagekist)->gridsize,2)*getCurrentKist(imageinfo[i].imagekist)->surface_brightness;
+			imageinfo[i].centroid[0] += getCurrentKist(imageinfo[i].imagekist)->x[0]*pow(getCurrentKist(imageinfo[i].imagekist)->gridsize,2)
+      *getCurrentKist(imageinfo[i].imagekist)->surface_brightness;
+			imageinfo[i].centroid[1] += getCurrentKist(imageinfo[i].imagekist)->x[1]*pow(getCurrentKist(imageinfo[i].imagekist)->gridsize,2)
+      *getCurrentKist(imageinfo[i].imagekist)->surface_brightness;
+      
+			getCurrentKist(imageinfo[i].imagekist)->in_image = FALSE;  // re-set marks
+			getCurrentKist(imageinfo[i].imagekist)->image->in_image = FALSE;  // re-set marks
+		}
+		if(imageinfo[i].getNimagePoints() > 0 ){
+			imageinfo[i].centroid[0] /= imageinfo[i].area;
+			imageinfo[i].centroid[1] /= imageinfo[i].area;
+		}
+	}
+  
+	return ;
+}
+
 /**
  * \brief refines grid according to criterion based on flux in each grid cell
  *

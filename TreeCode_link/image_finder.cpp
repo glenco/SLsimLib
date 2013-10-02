@@ -787,7 +787,7 @@ void findborders3(TreeHndl i_tree,OldImageInfo *imageinfo){
 	return;
 }
 
-void xygridpoints(Point *i_points,double range,double *center,long Ngrid_1d,short remove_center){
+void xygridpoints(Point *i_points,double range,const double *center,long Ngrid_1d,short remove_center){
   /* make a new rectolinear grid of points on the image plane **/
   /* and link them to points on the source plane **/
   /* remove_center = 0 include center point of grid */

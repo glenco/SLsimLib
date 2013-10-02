@@ -21,10 +21,11 @@ class LensHaloMOKA;
  */
 struct Grid{
 
-	Grid(LensHndl lens,unsigned long N1d,double center[2],double range);
+	Grid(LensHndl lens,unsigned long N1d,const double center[2],double range);
 	~Grid();
 
 	void ReInitializeGrid(LensHndl lens);
+  void ReShoot(LensHndl lens);
 	void zoom(LensHndl lens,double *center,double scale,bool kappa_off,Branch *top = NULL);
 
 	unsigned long PruneTrees(double resolution,bool useSB,double fluxlimit);
@@ -114,7 +115,7 @@ long refine_edges2(LensHndl lens,double *y_source,double r_source,GridHndl grid
 
 void sort_out_points(Point *i_points,ImageInfo *imageinfo,double r_source,double y_source[]);
 
-void xygridpoints(Point *points,double range,double *center,long Ngrid
+void xygridpoints(Point *points,double range,const double *center,long Ngrid
 		,short remove_center);
 
 void saveImage(LensHaloMOKA *mokahalo, GridHndl grid, bool saveprofile=true);

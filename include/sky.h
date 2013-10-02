@@ -122,7 +122,7 @@ public:
 	/// Write data to all sources.
 	void unserialize(RawData& d);
 	
-	/// Randomize all sources and lenses.
+	/// Randomize all sources.
 	void randomize(double step, long* seed);
 	
 private:
@@ -132,7 +132,6 @@ private:
 	
 private: /* input methods */
 	void readGalaxyFile(std::string filename, Band band, double mag_limit);
-	void readSersicFile(std::string filename, double z);
 };
 
 #endif
