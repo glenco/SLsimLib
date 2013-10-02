@@ -60,7 +60,7 @@ void LensHaloMOKA::readImage(){
         std::cout << *h0 << h1 << h2 << h3  << h4 << std::endl;
 
         h0->readKey ("SIDEL",map->boxlarcsec);
-        h0->readKey ("SIDEL2",map->boxlMpc);
+        h0->readKey ("SIDEL2",map->boxlMpc);  // recall you that MOKA Mpc/h
         h0->readKey ("ZLENS",map->zlens);
         h0->readKey ("ZSOURCE",map->zsource);
         h0->readKey ("OMEGA",map->omegam);
@@ -75,45 +75,28 @@ void LensHaloMOKA::readImage(){
         h0->readKey ("DS",map->DS);
 	
     }else{
-        int nx=h0->axis(0);
-        int ny=h0->axis(1);
-        int nhdu=h0->axis(2);
-        // std:: cout << " number of ExtHDU:  " << nhdu << std:: endl;
-        // std:: cout << nx << "  " << ny << std:: endl;
-        // square the map with respect to the smalles length
-        npixels = nx;
-        if(ny<nx) npixels = ny;
-        std:: valarray<float> mapbut(nx*ny);
-        for(int i=0;i<nx;i++) for(j=0;j<ny;j++){
-            mapbut[i+nx*j] = map->convergence[i+nx*j];
+        int npixels = map->nx;
+        if(map->ny<map->nx) npixels = map->ny;
+        std:: valarray<float> mapbut(map->nx*map->ny);
+        for(int i=0;i<map->nx;i++) for(int j=0;j<map->ny;j++){
+            mapbut[i+map->nx*j] = map->convergence[i+map->nx*j];
         }
         map->convergence.resize(npixels*npixels);
         
         // FITS file must contain the following keywords:
         /*
-         ZLENS or REDSHIFT                                 double
-         PIXELUNIT (to convert them in kappa before
-         rescale with Sigma_crit                double
-         UNIT thas must be COMOVING or PHYSICAL            string
-         OMEGAM                                            double
-         OMEGAL                                            double
-         OMEGAB                                            double
-         HUBBLE (in unit of 100 km/sec/Mpc)                double
-         W      (dark energy parameter equation of state)  double
+            ZLENS or REDSHIFT                                 double
+            PHYSICALSIZE                                      double
          */
-        
-        double zlmap,pixelunit;
-        std:: string unitcase;
-        double omegamatter, omegalambda, omegabaryons, hubblepar, wde;
         
         h0->readAllKeys();
         
         try {
-            h0->readKey("ZLENS",zlmap);
+            h0->readKey("ZLENS",map->zlens);
         }
         catch(CCfits::HDU::NoSuchKeyword) {
             try {
-                h0->readKey("REDSHIFT",zlmap);
+                h0->readKey("REDSHIFT",map->zlens);
             }
             catch(CCfits::HDU::NoSuchKeyword){
                 std::cout << "unable to read map zlmap" << std::endl;
@@ -122,76 +105,32 @@ void LensHaloMOKA::readImage(){
             }
         }
         
+        double pixLMpc,pixelunit;
         try {
-            h0->readKey("PIXELUNIT",pixelunit);
+            h0->readKey("PHYSICALSIZE",map->boxlMpc);
+            // assumed to be square, what if it is not square?
+            pixLMpc = map->boxlMpc/npixels;
         }
         catch(CCfits::HDU::NoSuchKeyword) {
             std::cout << "unable to read map pixelunit" << std::endl;
-            std::cout << "I will STOP here!!!" << std::endl;
-            exit(1);
+            std::cout << "assuming is the MultiDark file" << std::endl;
+            map->boxlarcsec = 4*60.*60.;    // the square is 4x4
+            map->Dlens = cosmo->angDist(0.,map->zlens);
+            double inarcsec  = 180./M_PI/map->Dlens*60.*60.;
+            pixLMpc = 60./inarcsec;  //
+            map->boxlMpc = pixLMpc*npixels;
+            pixelunit = 1.e+10/pixLMpc/pixLMpc/cosmo->gethubble();
         }
-        
-        try {
-            h0->readKey("UNIT",unitcase);
+
+        // made square // need to be
+        for(int i=0;i<npixels;i++) for(int j=0;j<npixels;j++){
+            map->convergence[i+npixels*j] = mapbut[i+map->nx*j]*pixelunit;
         }
-        catch(CCfits::HDU::NoSuchKeyword) {
-            std::cout << "unable to read map unitcase" << std::endl;
-            std::cout << "I will STOP here!!!" << std::endl;
-            exit(1);
-        }
-        
-        try {
-            h0->readKey("OMEGAM",omegamatter);
-        }
-        catch(CCfits::HDU::NoSuchKeyword) {
-            std::cout << "unable to read map omegamatter" << std::endl;
-            std::cout << "I will STOP here!!!" << std::endl;
-            exit(1);
-        }
-        
-        try {
-            h0->readKey("OMEGAL",omegalambda);
-        }
-        catch(CCfits::HDU::NoSuchKeyword) {
-            std::cout << "unable to read map omegalambda" << std::endl;
-            std::cout << "I will STOP here!!!" << std::endl;
-            exit(1);
-        }
-        
-        try {
-            h0->readKey("OMEGAB",omegabaryons);
-        }
-        catch(CCfits::HDU::NoSuchKeyword) {
-            std::cout << "unable to read map omegabaryons" << std::endl;
-            std::cout << "I will STOP here!!!" << std::endl;
-            exit(1);
-        }
-        
-        try {
-            h0->readKey("HUBBLE",hubblepar);
-        }
-        catch(CCfits::HDU::NoSuchKeyword) {
-            std::cout << "unable to read map hubblepar" << std::endl;
-            std::cout << "I will STOP here!!!" << std::endl;
-            exit(1);
-        }
-        
-        try {
-            h0->readKey("W",wde);
-        }
-        catch(CCfits::HDU::NoSuchKeyword) {
-            std::cout << "unable to read map wde" << std::endl;
-            std::cout << "I will STOP here!!!" << std::endl;
-            exit(1);
-        }
-        
-        // made square // need to be 
-        for(int i=0;i<npixels;i++) for(j=0;j<npixels;j++){
-            map->convergence[i+npixels*j] = mapbut[i+nx*j]/pixelunit;
-        }
+        // kappa is not divided by the critical surface density
+        // they don't need to be preprocessed by fact
         // create alpha and gamma arrays by FFT
-        PreProcessMap(map->convergence,map->alpha1,map->alpha2,map->gamma1,map->gamma2);
-        // throw std::runtime_error("needs to be finished");
+        //PreProcessMap(map->convergence,map->alpha1,map->alpha2,map->gamma1,map->gamma2);
+        throw std::runtime_error("needs to be finished");
 	}
     
 	std:: cout << map->boxlMpc << "  " << map->boxlarcsec << std:: endl;
@@ -380,146 +319,21 @@ int fof(double l,std:: vector<double> xci, std:: vector<double> yci, std:: vecto
 /**
  * \brief pre-process sourface mass density map computing deflection angles and shear in FFT
  */
-void PreProcessMap(&map->convergence,&map->alpha1,&map->alpha2,&map->gamma1,&map->gamma2){
-    // force them to be squared for now!
-    int n = ny; // for the ray-tracing it need to be a power of two!
-    std::valarray<float> kappa(n*n);
-    int k=0;
-    double kmean=0; // subtract from each plane the average density
-    for(int i=0;i<n;i++) for(int j=0;j<n;j++){
-        kappa[i+n*j] = map[i+nx*j];
-        kmean+=kappa[i+n*j];
-	}
-    kmean=kmean/n/n;
-    for(int i=0;i<n;i++) for(int j=0;j<n;j++){
-        kappa[i+n*j]-=kmean;
-	}
-    ny = n;
-    nx = ny;
-
-}
-
-
-void readFitsSingleHDU(std::string fn,
-                       int &npixels,
-                       std:: valarray<float> &map
-                       ){
-    std:: valarray<float> mapbut;
-    std::auto_ptr<FITS> ff(new FITS (fn, Read));
-    PHDU *h0=&ff->pHDU();
-    // pixel sizes of the map: it can be rectangular
-    // it is reduced to a square later
-    int nx=h0->axis(0);
-    int ny=h0->axis(1);
-    int nhdu=h0->axis(2);
-    std:: valarray<float> mapbut;
-    // std:: cout << " number of ExtHDU:  " << nhdu << std:: endl;
-    // std:: cout << nx << "  " << ny << std:: endl;
-    // square the map with respect to the smalles length
-    npixels = nx;
-    if(ny<nx) npixels = ny;
-    map.resize(npixels*npixels);
-    // FITS file must contain the following keywords:
-    /*
-     ZLENS or REDSHIFT                                 double
-     PIXELUNIT (to convert them in kappa before 
-                rescale with Sigma_crit                double
-     UNIT thas must be COMOVING or PHYSICAL            string
-     OMEGAM                                            double
-     OMEGAL                                            double
-     OMEGAB                                            double
-     HUBBLE (in unit of 100 km/sec/Mpc)                double
-     W      (dark energy parameter equation of state)  double
-     */
-
-    double zlmap,pixelunit;
-    std:: string unitcase;
-    double omegamatter, omegalambda, omegabaryons, hubblepar, wde;
-
-    h0->readAllKeys();
-
-    try {
-        h0->readKey("ZLENS",zlmap);
-    }
-    catch(CCfits::HDU::NoSuchKeyword) {
-        try {
-            h0->readKey("REDSHIFT",zlmap);
-        }
-        catch(CCfits::HDU::NoSuchKeyword){
-            std::cout << "unable to read map zlmap" << std::endl;
-            std::cout << "I will STOP here!!!" << std::endl;
-            exit(1);
-        }
-    }
-
-    try {
-        h0->readKey("PIXELUNIT",pixelunit);
-    }
-    catch(CCfits::HDU::NoSuchKeyword) {
-        std::cout << "unable to read map pixelunit" << std::endl;
-        std::cout << "I will STOP here!!!" << std::endl;
-        exit(1);
-    }
-
-    try {
-        h0->readKey("UNIT",unitcase);
-    }
-    catch(CCfits::HDU::NoSuchKeyword) {
-        std::cout << "unable to read map unitcase" << std::endl;
-        std::cout << "I will STOP here!!!" << std::endl;
-        exit(1);
-    }
-
-    try {
-        h0->readKey("OMEGAM",omegamatter);
-    }
-    catch(CCfits::HDU::NoSuchKeyword) {
-        std::cout << "unable to read map omegamatter" << std::endl;
-        std::cout << "I will STOP here!!!" << std::endl;
-        exit(1);
-    }
-
-    try {
-        h0->readKey("OMEGAL",omegalambda);
-    }
-    catch(CCfits::HDU::NoSuchKeyword) {
-        std::cout << "unable to read map omegalambda" << std::endl;
-        std::cout << "I will STOP here!!!" << std::endl;
-        exit(1);
-    }
-
-    try {
-        h0->readKey("OMEGAB",omegabaryons);
-    }
-    catch(CCfits::HDU::NoSuchKeyword) {
-        std::cout << "unable to read map omegabaryons" << std::endl;
-        std::cout << "I will STOP here!!!" << std::endl;
-        exit(1);
-    }
-
-    try {
-        h0->readKey("HUBBLE",hubblepar);
-    }
-    catch(CCfits::HDU::NoSuchKeyword) {
-        std::cout << "unable to read map hubblepar" << std::endl;
-        std::cout << "I will STOP here!!!" << std::endl;
-        exit(1);
-    }
-
-    try {
-        h0->readKey("W",wde);
-    }
-    catch(CCfits::HDU::NoSuchKeyword) {
-        std::cout << "unable to read map wde" << std::endl;
-        std::cout << "I will STOP here!!!" << std::endl;
-        exit(1);
-    }
-    // readmap even if it is rectangular
-    h0->read(mapbut);
-    // now make it square
-    for(int i=0;i<npixels;i++) for(int j=0;j<npixels;j++){
-        map[i+npixels*j] = mapbut[i+nx*j];
-	}
-}
-
+//void PreProcessMap(&map->convergence,&map->alpha1,&map->alpha2,&map->gamma1,&map->gamma2){
+//    // force them to be squared for now!
+//    int n = ny; // for the ray-tracing it need to be a power of two!
+//    std::valarray<float> kappa(n*n);
+//    int k=0;
+//    double kmean=0; // subtract from each plane the average density
+//    for(int i=0;i<n;i++) for(int j=0;j<n;j++){
+//        kappa[i+n*j] = map[i+nx*j];
+//        kmean+=kappa[i+n*j];
+//	}
+//    kmean=kmean/n/n;
+//    for(int i=0;i<n;i++) for(int j=0;j<n;j++){
+//        kappa[i+n*j]-=kmean;
+//	}
+//    ny = n;
+//    nx = ny;
+//}
 

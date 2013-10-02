@@ -5,10 +5,8 @@ static const int NpointsRequired = 100;  // number of points required to be with
 //static const int Ngrid_block = 3;       // each cell is divided into Ngrid_block^2 subcells
 //static const float mumin = 0.5;  // actually the sqrt of the minimum magnification
 //static const float mumin = 0.45;  // actually the sqrt of the minimum magnification
-static const float mumin = 0.1;
-//static const float mumin = 0.3;
-
-
+//static const float mumin = 0.1;
+static const float mumin = 0.3;
 
 static const float FracResTarget = 4.0e-4;
 //static const float FracResTarget = 1.0e-4;
@@ -431,6 +429,7 @@ void find_images_microlens(
 		,bool kappa_off         /// turns off calculation of surface density, shear, magnification and time delay
 		){
 
+  const float mumin_local = 0.1;
 
 	if(  grid->s_tree->top->boundary_p1[0] > (y_source[0] + r_source)
 	  || grid->s_tree->top->boundary_p2[0] < (y_source[0] - r_source)
@@ -471,10 +470,10 @@ void find_images_microlens(
 			(oldy[0]==y_source[0])*(oldy[1]==y_source[1])* // and source not moved
 			(oldr > r_source)  // and source size has gotten smaller
 	){
-		Nsizes=(int)( log(oldr/r_source/mumin)/log(Ngrid_block) ); // round up
+		Nsizes=(int)( log(oldr/r_source/mumin_local)/log(Ngrid_block) ); // round up
 	    rtemp = r_source*pow(1.0*Ngrid_block,Nsizes);
 	}else{
-		Nsizes=(int)(log(initial_size/fabs(r_source*mumin))/log(Ngrid_block) ) + 1 ; // round up
+		Nsizes=(int)(log(initial_size/fabs(r_source*mumin_local))/log(Ngrid_block) ) + 1 ; // round up
 	    rtemp = r_source*pow(1.0*Ngrid_block,Nsizes);
 	}
 
@@ -514,7 +513,7 @@ void find_images_microlens(
     //bool dummybool;
 
     for(i=0
-				//for(rtemp = fabs(r_source/mumin)*pow(Ngrid_block,Nsizes),Nold=0
+				//for(rtemp = fabs(r_source/mumin_local)*pow(Ngrid_block,Nsizes),Nold=0
 		//		;rtemp >= 0.99*Ngrid_block*fabs(r_source)
     		;rtemp >= r_source
        		;rtemp *= telescope_factor,++i )
@@ -648,7 +647,7 @@ void find_images_microlens(
     		}
 
     		++j;
-    	//}while(refine_grid_kist(lens,grid,imageinfo,*Nimages,rtemp*mumin/Ngrid_block,2,kappa_off,NULL));
+    	//}while(refine_grid_kist(lens,grid,imageinfo,*Nimages,rtemp*mumin_local/Ngrid_block,2,kappa_off,NULL));
     	}
 
   		for(int k=0; k < *Nimages; ++k) imageinfo[k].ShouldNotRefine = false;

@@ -57,8 +57,9 @@ public:
 	inline double getValue(std::size_t i) const { return map[i]; }
 	inline double operator[](std::size_t i) const { return map[i]; };
 	
+	bool agrees(const PixelMap& other) const;
+	
 	friend void swap(PixelMap&, PixelMap&);
-	friend bool agree(const PixelMap& a, const PixelMap& b);
 	
 private:
 	std::size_t map_size;

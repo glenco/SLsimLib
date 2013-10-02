@@ -760,8 +760,9 @@ void Lens::createMainHalos(InputParams& params)
 		}
 	}
 
-	for(std::size_t i = 0; i < main_halos.size(); ++i)
+	for(std::size_t i = 0; i < main_halos.size(); ++i){
 		main_halos[i]->setCosmology(cosmo);
+  }
 }
 
 void Lens::clearMainHalos()

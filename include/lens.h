@@ -174,15 +174,18 @@ public:
 	/// Randomize all main halos.
 	void randomize(double step, long* seed);
 
+  /// returns a const reference to the cosmology so that constant function can be used, but the cosmological parameters cannot be changed.
+  const COSMOLOGY & getCosmo(){return cosmo;}
+
 private:
 	GLAMER_TEST_FRIEND(LensTest)
 	
 	// seed for random field generation
 	long *seed;
 	
-	// the cosmology
+  // the cosmology
 	COSMOLOGY cosmo;
-	
+
 	/// field of view in square degrees
 	double fieldofview;
 	
