@@ -206,7 +206,8 @@ void LensHaloMOKA::convertmap(MOKAmap *map,LensHaloType maptype){
 
 /** \brief checks the cosmology against the MOKA map parameters
  */
-void LensHaloMOKA::setCosmology(COSMOLOGY* lens_cosmo)
+
+void LensHaloMOKA::setCosmology(const COSMOLOGY* lens_cosmo)
 {
   cosmo = lens_cosmo;
 }
@@ -220,7 +221,6 @@ void LensHaloMOKA::checkCosmology(){
 	if(cosmo->gethubble() == map->h)
 		std::cerr << "LensHaloMOKA: hubble " << cosmo->gethubble() << " (cosmology) != " << map->h << " (MOKA)" << std::endl;
 }
-
 /**
  * Sets many parameters within the MOKA lens model
  */

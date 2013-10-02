@@ -74,8 +74,8 @@ public:
 	virtual void set_slope(double my_slope){};
 
 	/// set cosmology for halo
-	virtual void setCosmology(COSMOLOGY* cosmo){}
-
+	virtual void setCosmology(const COSMOLOGY& cosmo) {}
+	
 	/// calculate the lensing properties -- deflection, convergence, and shear
 	virtual void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa,bool subtract_point=false);
 

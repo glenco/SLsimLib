@@ -576,12 +576,12 @@ void map_images(
 void map_images_fixedgrid(
                 Source *source
                 ,GridHndl grid          /// Tree of grid points
-                ,double xmax            /// Maximum size of source on image plane.  The entire source must be within this distance from
-                                        ///  source->getX()[].  Decreasing it will make the code run faster.  Making xmax much bigger than
-                                        /// the grid boundaries will check all points for surface brightness.
                 ,int *Nimages           /// number of images found
                 ,ImageInfo *imageinfo   /// information on each image
                 ,int NimageMax          /// Size of imageinfo array on entry.  This could increase if more images are found
+                ,double xmax            /// Maximum size of source on image plane.  The entire source must be within this distance from
+                                        ///  source->getX()[].  Decreasing it will make the code run faster.  Making xmax much bigger than
+                                        /// the grid boundaries will check all points for surface brightness.
                 ,bool divide_images     /// if true will divide images.
                 ,bool find_borders      /// if true will find the inner and outer borders of each image
   ){

@@ -162,11 +162,11 @@ void LensHaloBaseNSIE::reNormSubstructure(double kappa_sub){
 }
 
 /// Sets parameters within BaseLens that depend on the source redshift - Dl,Sigma_crit,etc.
-void LensHaloAnaNSIE::setCosmology(COSMOLOGY* cosmo)
+void LensHaloAnaNSIE::setCosmology(const COSMOLOGY& cosmo)
 {
-	Dl = cosmo->angDist(0,zlens);
-	Ds = cosmo->angDist(0,zsource_reference);
-	Dls = cosmo->angDist(zlens,zsource_reference);
+	Dl = cosmo.angDist(0,zlens);
+	Ds = cosmo.angDist(0,zsource_reference);
+	Dls = cosmo.angDist(zlens,zsource_reference);
 	MpcToAsec = 60*60*180 / pi / Dl;
 		// in Mpc
 	Einstein_ro=4*pi*pow(sigma/lightspeed,2)*Dl

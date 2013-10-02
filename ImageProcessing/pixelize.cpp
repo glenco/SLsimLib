@@ -36,12 +36,6 @@ void swap(PixelMap& x, PixelMap& y)
 	swap(x.map_boundary_p2[0], y.map_boundary_p2[0]);
 	swap(x.map_boundary_p2[1], y.map_boundary_p2[1]);
 }
-// TODO: comment
-bool agree(const PixelMap& a, const PixelMap& b)
-{
-	return (a.Npixels == b.Npixels) && (a.resolution == b.resolution) &&
-		(a.center[0] == b.center[0] && a.center[1] == b.center[1]);
-}
 
 PixelMap::PixelMap()
 : map_size(0), map(0), Npixels(0), resolution(0), range(0)
@@ -252,6 +246,16 @@ void PixelMap::AddValue(std::size_t i, double value)
 void PixelMap::AssignValue(std::size_t i, double value)
 {
 	map[i] = value;
+}
+
+/// Check whether two PixelMaps agree in their physical dimensions.
+bool PixelMap::agrees(const PixelMap& other) const
+{
+	return
+		(Npixels == other.Npixels) &&
+		(resolution == other.resolution) &&
+		(center[0] == other.center[0]) &&
+		(center[1] == other.center[1]);
 }
 
 /** \brief Add an image to the map
@@ -558,190 +562,6 @@ void PixelMap::smooth(double sigma){
 
 }
 
-
-void swap(PixelMask& x, PixelMask& y)
-	{
-
-	using std::swap;
-	
-	swap(x.map_size, y.map_size);
-	swap(x.mask_size, y.mask_size);
-	swap(x.pixels, y.pixels);
-}
-
-PixelMask::PixelMask()
-: map_size(0), mask_size(0)
-{
-}
-
-PixelMask::PixelMask(std::size_t map_size)
-: map_size(map_size), mask_size(map_size)
-{
-	pixels.resize(map_size);
-	for(std::size_t i = 0; i < map_size; ++i)
-		pixels[i] = true;
-}
-
-PixelMask::PixelMask(const PixelMap& base, double threshold, ThresholdType type)
-: map_size(base.size())
-{
-	pixels.reserve(map_size);
-	
-	switch(type)
-	{
-	case Greater:
-		for(std::size_t i = 0; i < map_size; ++i)
-			if(base[i] > threshold)
-				pixels.push_back(i);
-		break;
-	case GreaterOrEqual:
-		for(std::size_t i = 0; i < map_size; ++i)
-			if(base[i] >= threshold)
-				pixels.push_back(i);
-		break;
-	case Less:
-		for(std::size_t i = 0; i < map_size; ++i)
-			if(base[i] < threshold)
-				pixels.push_back(i);
-		break;
-	case LessOrEqual:
-		for(std::size_t i = 0; i < map_size; ++i)
-			if(base[i] <= threshold)
-				pixels.push_back(i);
-		break;
-	}
-	
-	mask_size = pixels.size();
-	pixels.resize(mask_size);
-}
-
-PixelMask::PixelMask(std::string file, double threshold, ThresholdType type)
-{
-#ifdef ENABLE_FITS
-	// get PixelMap for file
-	PixelMap map(file);
-	
-	// create PixelMask for map
-	PixelMask mask(map);
-	
-	// swap contents of mask into this
-	swap(*this, mask);
-#else
-	// warn about ENABLE_FITS
-	std::cerr << "FITS support disabled, use ENABLE_FITS flag" << std::endl;
-	
-	// default mask
-	PixelMask mask;
-	
-	// swap defaults into this
-	swap(*this, mask);
-#endif
-}
-
-PixelMask& PixelMask::operator=(PixelMask other)
-{
-	swap(*this, other);
-	return *this;
-}
-
-std::size_t PixelMask::operator[](std::size_t i) const
-{
-	return pixels[i];
-}
-
-bool PixelMask::valid() const
-{
-	return map_size;
-}
-
-bool PixelMask::empty() const
-{
-	return !mask_size;
-}
-
-std::size_t PixelMask::size() const
-{
-	return mask_size;
-}
-
-std::size_t PixelMask::base_size() const
-{
-	return map_size;
-}
-
-void swap(PixelData& a, PixelData& b)
-{
-	using std::swap;
-	
-	swap(a.img, b.img);
-	swap(a.noi, b.noi);
-	swap(a.msk, b.msk);
-	swap(a.norm, b.norm);
-}
-
-PixelData::PixelData(const PixelMap& image, const PixelMap& noise, double zp_mag, double time)
-: img(image), noi(noise)
-{
-	// must be a valid image
-	assert(img.valid());
-	
-	// must be a valid sigma map
-	assert(noi.valid());
-	
-	// image and sigma need to agree
-	assert(agree(img, noi));
-	
-	// normalization factor from zero-point magnitude and observation time
-	norm = std::pow(10., 0.4*(zp_mag+48.6))*hplanck;
-	
-	// convert to simulation units
-	img.Renormalize(1./norm);
-	noi.Renormalize(1./norm);
-	
-	// convert from counts/sec to counts
-	norm *= time;
-}
-
-PixelData::PixelData(const PixelData& other)
-: img(other.img), noi(other.noi), msk(other.msk), norm(other.norm)
-{
-}
-
-PixelData& PixelData::operator=(PixelData rhs)
-{
-	swap(rhs, *this);
-	return *this;
-}
-
-double PixelData::chi_square(const PixelMap &model) const
-{
-	assert(model.valid());
-	assert(agree(model, img));
-	
-	double chi2 = 0;
-	
-	if(msk.valid())
-	{
-		for(std::size_t i = 0, n = msk.size(); i < n; ++i)
-		{
-			std::size_t j = msk[i];
-			double delta = norm*(img[j] - model[j]);
-			double sigma2 = norm*model[j] + (norm*noi[j])*(norm*noi[j]);
-			chi2 += delta*delta/sigma2;
-		}
-	}
-	else
-	{
-		for(std::size_t i = 0, n = model.size(); i < n; ++i)
-		{
-			double delta = norm*(img[i] - model[i]);
-			double sigma2 = norm*model[i] + (norm*noi[i])*(norm*noi[i]);
-			chi2 += delta*delta/sigma2;
-		}
-	}
-	
-	return chi2;
-}
 /**
  * \brief Draws a line between two points on the image by setting
  * the pixels equal to value.
