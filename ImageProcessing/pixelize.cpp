@@ -36,12 +36,6 @@ void swap(PixelMap& x, PixelMap& y)
 	swap(x.map_boundary_p2[0], y.map_boundary_p2[0]);
 	swap(x.map_boundary_p2[1], y.map_boundary_p2[1]);
 }
-// TODO: comment
-bool agree(const PixelMap& a, const PixelMap& b)
-{
-	return (a.Npixels == b.Npixels) && (a.resolution == b.resolution) &&
-		(a.center[0] == b.center[0] && a.center[1] == b.center[1]);
-}
 
 PixelMap::PixelMap()
 : map_size(0), map(0), Npixels(0), resolution(0), range(0)
@@ -252,6 +246,16 @@ void PixelMap::AddValue(std::size_t i, double value)
 void PixelMap::AssignValue(std::size_t i, double value)
 {
 	map[i] = value;
+}
+
+/// Check whether two PixelMaps agree in their physical dimensions.
+bool PixelMap::agrees(const PixelMap& other) const
+{
+	return
+		(Npixels == other.Npixels) &&
+		(resolution == other.resolution) &&
+		(center[0] == other.center[0]) &&
+		(center[1] == other.center[1]);
 }
 
 /** \brief Add an image to the map
