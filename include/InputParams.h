@@ -72,28 +72,34 @@ public:
 	InputParams(std::string paramfile);
 	~InputParams();
 
-	bool get(std::string label,bool& value);
-	bool get(std::string label,std::string& value);
-	bool get(std::string label,MassFuncType& value);
-	bool get(std::string label,LensHaloType& value);
-	bool get(std::string label,GalaxyLensHaloType& value);
-	bool get(std::string label,ClumpInternal& value);
-	bool get(std::string label,Band& value);
-	bool get(std::string label,IMFtype& value);
-
+	bool get(std::string label,bool& value) const;
+	bool get(std::string label,std::string& value) const;
+	bool get(std::string label,MassFuncType& value) const;
+	bool get(std::string label,LensHaloType& value) const;
+	bool get(std::string label,GalaxyLensHaloType& value) const;
+	bool get(std::string label,ClumpInternal& value) const;
+	bool get(std::string label,Band& value) const;
+	bool get(std::string label,IMFtype& value) const;
+	
 	// get numbers
 	template<typename Number>
-	bool get(std::string label, Number& value);
-
-	bool exist(std::string label);
-	void print();
-	void print_used();
-	void print_unused();
+	bool get(std::string label, Number& value) const;
+	
+	template<typename T>
+	T get(std::string label) const;
+	
+	template<typename T>
+	T require(std::string label) const;
+	
+	bool exist(std::string label) const;
+	void print() const;
+	void print_used() const;
+	void print_unused() const;
 	/// Returns total number of parameters.
-	std::size_t Nparams() { return params.size(); }
-	void PrintToFile(std::string filename, bool strip_unused = false);
+	std::size_t Nparams() const { return params.size(); }
+	void PrintToFile(std::string filename, bool strip_unused = false) const;
 	/// Return name of the parameter file.
-	std::string filename(){return paramfile_name;}
+	std::string filename() const{return paramfile_name;}
 
 	void put(std::string label,std::string value,std::string comment = std::string());
 	
@@ -106,18 +112,22 @@ public:
 	/** return sample input parameters */
 	static InputParams sample();
 
+	/** add a new parameter with default value and comment */
+	static void add(std::string label, std::string value = std::string(), std::string comment = std::string());
+	
 private:
 	typedef std::map<std::string, std::string>::iterator iterator;
+	typedef std::map<std::string, std::string>::const_iterator const_iterator;
 	
-	static bool check_label(const std::string& name);
+	static bool is_known(const std::string& name);
 	
 	std::string paramfile_name;
-
+	
 	std::map<std::string, std::string> params;
 	std::map<std::string, std::string> comments;
 	
 	// The number of times a parameter was retrieved by get
-	std::map<std::string, std::size_t> use_number;
+	mutable std::map<std::string, std::size_t> use_number;
 };
 
 /** \brief Assigns to "value" the value of the parameter called "label".
@@ -128,9 +138,9 @@ private:
  * does not, an exception message is printed and false is returned.
  */
 template<typename Number>
-bool InputParams::get(std::string label, Number& value)
+bool InputParams::get(std::string label, Number& value) const
 {
-	iterator it = params.find(label);
+	const_iterator it = params.find(label);
 	
 	if(it == params.end())
 	{
@@ -167,6 +177,30 @@ void InputParams::put(std::string label, Number value, std::string comment)
 		comments.erase(label);
 	else
 		comments.insert(std::make_pair(label, comment));
+}
+
+/**
+ * Return a parameter value.
+ */
+template<typename T>
+T InputParams::get(std::string label) const
+{
+	T value;
+	get(label, value);
+	return value;
+}
+
+/**
+ * Return a parameter value or throw an error.
+ */
+template<typename T>
+T InputParams::require(std::string label) const
+{
+	// TODO: add getting of default value
+	T value;
+	if(!get(label, value))
+		throw std::runtime_error("Parameter " + label + " is required in " + paramfile_name);
+	return value;
 }
 
 #endif /* INPUTPARAMS_H_ */
