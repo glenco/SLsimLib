@@ -95,12 +95,12 @@ public:
   size_t getN(){return map->nx;}
 	
 private:
-  LensHaloType maptype;
+    LensHaloType maptype;
 	void initMap();
-  void convertmap(MOKAmap *map,LensHaloType maptype);
-  double range_phy,center[2];  /// range of map in physical Mpc
-  MOKAmap* map;
-  const COSMOLOGY *cosmo;
+    void convertmap(MOKAmap *map,LensHaloType maptype);
+    double range_phy,center[2];  /// range of map in physical Mpc
+    MOKAmap* map;
+    const COSMOLOGY *cosmo;
     void PreProcessFFTWMap();
 };
 

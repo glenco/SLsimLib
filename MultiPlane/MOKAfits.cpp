@@ -10,9 +10,12 @@
 
 #ifdef ENABLE_FITS
 #include <CCfits/CCfits>
-
 using namespace CCfits;
 
+#endif
+
+#ifdef ENABLE_FFTW
+#include "fftw3.h"
 #endif
 
 void LensHaloMOKA::getDims(){
@@ -126,11 +129,16 @@ void LensHaloMOKA::readImage(){
         for(int i=0;i<npixels;i++) for(int j=0;j<npixels;j++){
             map->convergence[i+npixels*j] = mapbut[i+map->nx*j]*pixelunit;
         }
-        throw std::runtime_error("needs to be finished");
         // kappa is not divided by the critical surface density
         // they don't need to be preprocessed by fact
         // create alpha and gamma arrays by FFT
+        map->nx = map->ny = npixels;
+        #ifdef ENABLE_FFTW
         PreProcessFFTWMap();
+        #else
+        std::cout << "Please enable the preprocessor flag ENABLE_FFTW !" << std::endl;
+        exit(1);
+        #endif
 	}
     
 	std:: cout << map->boxlMpc << "  " << map->boxlarcsec << std:: endl;
@@ -320,7 +328,158 @@ int fof(double l,std:: vector<double> xci, std:: vector<double> yci, std:: vecto
  * \brief pre-process sourface mass density map computing deflection angles and shear in FFT
  */
 
-void PreProcessFFTWMap(){
+void LensHaloMOKA::PreProcessFFTWMap(){
+    #ifdef ENABLE_FFTW
+    // initialize the quantities and does the zeropadding
+    int zerosize = 4;      // zero padding region
+    int npix_filter = 0;   // filter the map if you want on a given number of pixels
+
+    int npixels = map->nx;
+    double boxl = map->boxlMpc;
     
+    // size of the new map
+    int Nnpixels = int(zerosize*npixels);
+    double Nboxl = boxl*zerosize;
+    
+    // filter the map in the fourier space to avoid spikes if you want
+    double sigmag = 0;
+    if(npix_filter>0) sigmag = (2.*M_PI/boxl)*npixels/npix_filter;
+    
+    std:: valarray<float> Nmap( Nnpixels*Nnpixels );
+        
+    // assume locate in a squared map and build up the new map with the zero padding region
+    for( int i=0; i<Nnpixels; i++ ) for( int j=0; j<Nnpixels; j++ ){
+            Nmap[i+Nnpixels*j]=0;
+            if(i>=int(Nnpixels/2-npixels/2) && i<int(Nnpixels/2+npixels/2) &&
+               j>=int(Nnpixels/2-npixels/2) && j<int(Nnpixels/2+npixels/2)){
+                int ii = i-int(Nnpixels/2-npixels/2);
+                int jj = j-int(Nnpixels/2-npixels/2);
+                
+                if(ii>=npixels || jj>=npixels){
+                    std::cout << " 1 error mapping " << ii << "  " << jj << std::endl; 
+                    exit(1); 
+                } 
+                if(ii<0 || jj<0){ 
+                    std::cout << " 2 error mapping " << ii << "  " << jj << std::endl; 
+                    exit(1); 
+                } 
+                Nmap[i+Nnpixels*j]=map->convergence[ii+npixels*jj];
+            }
+        }
+
+    double *dNmap=new double[Nnpixels*Nnpixels];
+    double *input=new double[Nnpixels*Nnpixels];
+    fftw_complex *fNmap=new fftw_complex[Nnpixels*(Nnpixels/2+1)];
+    fftw_complex *output=new fftw_complex[Nnpixels*(Nnpixels/2+1)];
+    for(int k=0;k<Nnpixels*Nnpixels;k++) dNmap[k] = double(Nmap[k]);
+    fftw_plan p;
+    p=fftw_plan_dft_r2c_2d(Nnpixels,Nnpixels,input,output,FFTW_ESTIMATE);
+    for (int i=0; i<Nnpixels*Nnpixels; i++) input[i] = dNmap[i];
+    fftw_execute( p );
+    for(int i=0; i<Nnpixels*(Nnpixels/2+1);i++){
+        fNmap[i][0] = output[i][0];
+        fNmap[i][1] = output[i][1];
+    }
+    delete[] input;
+    delete[] output;
+    delete[] dNmap;
+
+    // fourier space
+    fftw_complex *fphi   = new fftw_complex[Nnpixels*(Nnpixels/2+1)];
+    fftw_complex *falpha1= new fftw_complex[Nnpixels*(Nnpixels/2+1)];
+    fftw_complex *falpha2= new fftw_complex[Nnpixels*(Nnpixels/2+1)];
+    fftw_complex *fgamma1= new fftw_complex[Nnpixels*(Nnpixels/2+1)];
+    fftw_complex *fgamma2= new fftw_complex[Nnpixels*(Nnpixels/2+1)];
+    
+    // build modes for each pixel in the fourier space
+    for( int i=0; i<Nnpixels; i++ ){
+        // kx = i if i<n/2 else i-n
+        double kx=(i<Nnpixels/2)?double(i):double(i-Nnpixels);
+        kx=kx*2.*M_PI/Nboxl;
+        for( int j=0; j<Nnpixels/2+1; j++ ){
+            double ky=double(j);
+            ky=ky*2.*M_PI/Nboxl;
+            // rescale respect to the box size
+            double k2 = (kx*kx + ky*ky);
+            // smooth if you want
+            if(npix_filter>0){
+                fNmap[j+(Nnpixels/2+1)*i][0] = fNmap[j+(Nnpixels/2+1)*i][0]*exp(-k2/sigmag/sigmag/2.);
+                fNmap[j+(Nnpixels/2+1)*i][1] = fNmap[j+(Nnpixels/2+1)*i][1]*exp(-k2/sigmag/sigmag/2.);
+            }
+            // fphi
+            fphi[j+(Nnpixels/2+1)*i][0]= -2.*fNmap[j+(Nnpixels/2+1)*i][0]/k2;
+            fphi[j+(Nnpixels/2+1)*i][1]= -2.*fNmap[j+(Nnpixels/2+1)*i][1]/k2;
+            // null for k2 = 0 no divergence
+            if(k2 == 0){
+                fphi[j+(Nnpixels/2+1)*i][0] = 0.;
+                fphi[j+(Nnpixels/2+1)*i][1] = 0.;
+            }
+            // gamma
+            fgamma1[j+(Nnpixels/2+1)*i][0] = 0.5*(kx*kx-ky*ky)*fphi[j+(Nnpixels/2+1)*i][0];
+            fgamma1[j+(Nnpixels/2+1)*i][1] = 0.5*(kx*kx-ky*ky)*fphi[j+(Nnpixels/2+1)*i][1];
+            fgamma2[j+(Nnpixels/2+1)*i][0] = kx*ky*fphi[j+(Nnpixels/2+1)*i][0];
+            fgamma2[j+(Nnpixels/2+1)*i][1] = kx*ky*fphi[j+(Nnpixels/2+1)*i][1];
+            // alpha - original
+            falpha1[j+(Nnpixels/2+1)*i][0] = -kx*fphi[j+(Nnpixels/2+1)*i][1];
+            falpha1[j+(Nnpixels/2+1)*i][1] =  kx*fphi[j+(Nnpixels/2+1)*i][0];
+            falpha2[j+(Nnpixels/2+1)*i][0] = -ky*fphi[j+(Nnpixels/2+1)*i][1];
+            falpha2[j+(Nnpixels/2+1)*i][1] =  ky*fphi[j+(Nnpixels/2+1)*i][0];
+        } 
+    }
+    
+    fftw_destroy_plan(p);  
+    delete[] fNmap;
+    
+    double *phi    = new double[Nnpixels*Nnpixels];
+    double *alpha1 = new double[Nnpixels*Nnpixels];
+    double *alpha2 = new double[Nnpixels*Nnpixels];
+    double *gamma1 = new double[Nnpixels*Nnpixels];
+    double *gamma2 = new double[Nnpixels*Nnpixels];
+
+    fftw_plan pp;
+    pp=fftw_plan_dft_c2r_2d(Nnpixels,Nnpixels,fphi,phi,FFTW_ESTIMATE);
+    fftw_execute( pp );
+    fftw_destroy_plan(pp);
+
+    pp=fftw_plan_dft_c2r_2d(Nnpixels,Nnpixels,falpha1,alpha1,FFTW_ESTIMATE);
+    fftw_execute( pp );
+    fftw_destroy_plan(pp);
+
+    pp=fftw_plan_dft_c2r_2d(Nnpixels,Nnpixels,falpha2,alpha2,FFTW_ESTIMATE);
+    fftw_execute( pp );
+    fftw_destroy_plan(pp);
+
+    pp=fftw_plan_dft_c2r_2d(Nnpixels,Nnpixels,fgamma1,gamma1,FFTW_ESTIMATE);
+    fftw_execute( pp );
+    fftw_destroy_plan(pp);
+
+    pp=fftw_plan_dft_c2r_2d(Nnpixels,Nnpixels,fgamma2,gamma2,FFTW_ESTIMATE);
+    fftw_execute( pp );
+    fftw_destroy_plan(pp);
+
+    for( int i=Nnpixels/2-npixels/2; i<Nnpixels/2+npixels/2; i++ )
+            for( int j=Nnpixels/2-npixels/2; j<Nnpixels/2+npixels/2; j++ ){
+                int ii = i-int(Nnpixels/2-npixels/2);
+                int jj = j-int(Nnpixels/2-npixels/2);
+        
+                map->gamma1[ii+Nnpixels*jj] = float( gamma1[i+Nnpixels*j]/Nnpixels/Nnpixels);
+                map->gamma2[ii+Nnpixels*jj] = float(-gamma2[i+Nnpixels*j]/Nnpixels/Nnpixels);
+        
+                map->alpha1[ii+Nnpixels*jj] = float(alpha1[i+Nnpixels*j]/Nnpixels/Nnpixels);
+                map->alpha2[ii+Nnpixels*jj] = float(alpha2[i+Nnpixels*j]/Nnpixels/Nnpixels);
+        }
+    
+    delete[] fphi;
+    delete[] falpha1;
+    delete[] falpha2;
+    delete[] fgamma1;
+    delete[] fgamma2;
+    delete[] phi;
+    delete[] alpha1;
+    delete[] alpha2;
+    delete[] gamma1;
+    delete[] gamma2;
+    #endif
 }
+
 
