@@ -91,7 +91,7 @@ LensHalo::~LensHalo()
 {
 }
 
-const long LensHaloNFW::NTABLE = 1000;
+const long LensHaloNFW::NTABLE = 10000;
 const double LensHaloNFW::maxrm = 100.0;
 int LensHaloNFW::count = 0;
 
@@ -143,8 +143,16 @@ double LensHaloNFW::InterpolateFromTable(double *table, double y){
 	j=(int)(y/maxrm*NTABLE);
 
 	assert(y>=xtable[j] && y<=xtable[j+1]);
+	if (j==0)
+		{
+		if (table==ftable) return ffunction(y);
+		if (table==gtable) return gfunction(y);
+		if (table==g2table) return g2function(y);
+		if (table==htable) return hfunction(y);
+		}
 	return (table[j+1]-table[j])/(xtable[j+1]-xtable[j])*(y-xtable[j]) + table[j];
 }
+
 
 void LensHaloNFW::assignParams(InputParams& params){
 	if(!params.get("main_mass",mass)) error_message1("main_mass",params.filename());
@@ -187,7 +195,7 @@ void LensHaloNFW::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale
     gmax = InterpolateFromTable(gtable,xmax);
 }
 
-const long LensHaloPseudoNFW::NTABLE = 1000;
+const long LensHaloPseudoNFW::NTABLE = 10000;
 const double LensHaloPseudoNFW::maxrm = 100.0;
 int LensHaloPseudoNFW::count = 0;
 
@@ -243,6 +251,7 @@ double LensHaloPseudoNFW::InterpolateFromTable(double y){
 	j=(int)(y/maxrm*NTABLE);
 
 	assert(y>=xtable[j] && y<=xtable[j+1]);
+	if (j==0) return mhat(y,beta);
 	return (mhattable[j+1]-mhattable[j])/(xtable[j+1]-xtable[j])*(y-xtable[j]) + mhattable[j];
 }
 
@@ -376,7 +385,7 @@ void LensHalo::force_halo(
 				,bool kappa_off
 				,bool subtract_point /// if true contribution from a point mass is subtracted
 				){
-	double theta=30., q = 1.0, f[3]; // TODO read theta and q from param file!!!
+	double q = 0.999; // TODO read theta and q from param file!!!
 
 	if (q==1){
 		force_halo_sym(alpha,kappa,gamma,xcm,kappa_off,subtract_point);
@@ -384,8 +393,8 @@ void LensHalo::force_halo(
 	else{
 		//setModesToEllip(q,theta);
 		//faxial(theta,f);
-		setEllipModes(q,theta);
-		fangular(theta,f);
+		//setEllipModes(q,theta);
+		//fangular(theta,f);
 		force_halo_asym(alpha,kappa,gamma,xcm,kappa_off,subtract_point);
 	}
 }
@@ -417,7 +426,7 @@ void LensHalo::force_halo_sym(
 		// can turn off kappa and gamma calculations to save times
 		if(!kappa_off){
 			*kappa += kappa_h(x)*prefac;
-			cout << x << endl;
+			//cout << x << endl;
 
 			tmp = (gamma_h(x) + 2.0*subtract_point)*prefac/rcm2;
 
@@ -462,11 +471,6 @@ void LensHalo::force_halo_asym(
 		,bool subtract_point /// if true contribution from a point mass is subtracted
 		){
 
-	double theta=30.;
-	//double f[3], g[3];
-	//setEllipModes(q,theta);
-	//fangular(theta,f);
-
 	double rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
 	if(rcm2 < 1e-20) rcm2 = 1e-20;
 
@@ -474,15 +478,13 @@ void LensHalo::force_halo_asym(
 	if(rcm2 < Rmax*Rmax){
 		double prefac = mass/rcm2/pi;
 		double x = sqrt(rcm2)/rscale;
-		//gradial(x,g);
-		//double xmax = Rmax/rscale;
+		double theta=atan(xcm[1]/xcm[0]);
 
-    //double tmp = (alpha_h(x,xmax) + 1.0*subtract_point)*prefac;
+		//double xmax = Rmax/rscale;
+		//double tmp = (alpha_h(x,xmax) + 1.0*subtract_point)*prefac;
 		double tmp = (alpha_asym(x,theta) + 1.0*subtract_point)*prefac;
 		alpha[0] += tmp*xcm[0];
 		alpha[1] += tmp*xcm[1];
-
-//*alpha=alpha_asym(x, 30.);
 
 		// can turn off kappa and gamma calculations to save times
 		if(!kappa_off){
@@ -642,7 +644,7 @@ void LensHaloSimpleNSIE::force_halo(
        return;
 }
 
-const long LensHaloHernquist::NTABLE = 1000;
+const long LensHaloHernquist::NTABLE = 10000;
 const double LensHaloHernquist::maxrm = 100.0;
 int LensHaloHernquist::count = 0;
 
@@ -695,6 +697,13 @@ double LensHaloHernquist::InterpolateFromTable(double *table, double y){
 	j=(int)(y/maxrm*NTABLE);
 
 	assert(y>=xtable[j] && y<=xtable[j+1]);
+	if (j==0)
+		{
+		if (table==ftable) return ffunction(y);
+		if (table==gtable) return gfunction(y);
+		if (table==g2table) return g2function(y);
+		if (table==htable) return hfunction(y);
+		}
 	return (table[j+1]-table[j])/(xtable[j+1]-xtable[j])*(y-xtable[j]) + table[j];
 }
 
@@ -708,6 +717,8 @@ void LensHaloHernquist::assignParams(InputParams& params){
 	if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
   else if(stars_N){
   	assignParams_stars(params);
+
+  	std::cout << "Rmax " << Rmax <<std::endl;
   }
 
 }
@@ -723,7 +734,7 @@ LensHaloHernquist::~LensHaloHernquist(){
 	}
 }
 
-const long LensHaloJaffe::NTABLE = 1000;
+const long LensHaloJaffe::NTABLE = 10000;
 const double LensHaloJaffe::maxrm = 100.0;
 int LensHaloJaffe::count = 0;
 
@@ -775,6 +786,13 @@ double LensHaloJaffe::InterpolateFromTable(double *table, double y){
 	j=(int)(y/maxrm*NTABLE);
 
 	assert(y>=xtable[j] && y<=xtable[j+1]);
+	if (j==0)
+		{
+		if (table==ftable) return ffunction(y);
+		if (table==gtable) return gfunction(y);
+		if (table==g2table) return g2function(y);
+//		if (table==htable) return hfunction(y);
+		}
 	return (table[j+1]-table[j])/(xtable[j+1]-xtable[j])*(y-xtable[j]) + table[j];
 }
 

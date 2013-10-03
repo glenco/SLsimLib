@@ -177,12 +177,14 @@ protected:
   void faxial(double theta,double f[]);
   void gradial(double r,double g[]);
   void desymmeterize(double r,double theta,double *alpha,double *kappa,double *gamma);
+  void felliptical(double q, double theta, double f[]);
 
 	virtual double gamma_asym(double x,double theta);
 	virtual double kappa_asym(double x,double theta);
 	virtual double alpha_asym(double x,double theta);
     void setEllipModes(double q,double theta);
     void fangular(double theta,double f[]);
+
 
   const static int Nmod = 18;
   double mod[18];
@@ -379,10 +381,11 @@ private:
 		return 0.5*beta*pow(x/xmax,beta+2);
 	}
 	inline KappaType phi_h(double x){
-		ERROR_MESSAGE();
-		std::cout << "time delay has not been fixed for PowerLaw profile yet." << std::endl;
-		exit(1);
-		return 0.0;
+		//ERROR_MESSAGE();
+		//std::cout << "time delay has not been fixed for PowerLaw profile yet." << std::endl;
+		if(x==0) x=1e-6*xmax;
+		//exit(1);
+		return -1.0*pow(x/xmax,beta+3)/(beta+3);
 	}
 };
 
