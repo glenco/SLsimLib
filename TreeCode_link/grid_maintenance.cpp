@@ -975,7 +975,6 @@ void Grid::writeFitsVector(
                      ,std::string filename     /// file name for image -- .kappa.fits, .gamma1.fits, etc will be appended
                      ){
   throw std::runtime_error("Not done yet!");
-  PixelMap map(center, Npixels, resolution);
   
   double range = Npixels*resolution,tmp_x[2];
   ImageInfo tmp_image,tmp_image_theta;
@@ -992,12 +991,14 @@ void Grid::writeFitsVector(
     switch (lensvar) {
       case alpha1:
         tmp_x[0] = tmp_image.imagekist->getCurrent()->x[0]
-        - tmp_image.imagekist->getCurrent()->image->x[0];
+            - tmp_image.imagekist->getCurrent()->image->x[0];
 
         tmp_x[1] = tmp_image.imagekist->getCurrent()->x[1]
-        - tmp_image.imagekist->getCurrent()->image->x[1];
+            - tmp_image.imagekist->getCurrent()->image->x[1];
       
         tmp_image.imagekist->getCurrent()->surface_brightness = sqrt( tmp_x[0]*tmp_x[0] + tmp_x[1]*tmp_x[1]);
+        tmp_image_theta.imagekist->getCurrent()->surface_brightness = atan2(tmp_x[1],tmp_x[0]);
+            
         tag = ".alphaV.fits";
         break;
       case gamma1:
@@ -1006,6 +1007,8 @@ void Grid::writeFitsVector(
         tmp_x[1] = tmp_image.imagekist->getCurrent()->gamma[1];
 
         tmp_image.imagekist->getCurrent()->surface_brightness = sqrt( tmp_x[0]*tmp_x[0] + tmp_x[1]*tmp_x[1]);
+        tmp_image_theta.imagekist->getCurrent()->surface_brightness = atan2(tmp_x[1],tmp_x[0])/2;
+            
         tag = ".gammaV.fits";
         break;
       default:
@@ -1014,10 +1017,17 @@ void Grid::writeFitsVector(
     }
   }
   
+  PixelMap map_m(center, Npixels, resolution),map_t(center,Npixels,resolution);
   
-  map.Clean();
-  map.AddImages(&tmp_image,1,-1);
-  map.printFITS(filename + tag);
+  map_m.Clean();
+  map_m.AddImages(&tmp_image,1,-1);
+  map_m = PixelMap(map_m,4);
+  map_m = PixelMap(map_m,1/4.);
+    
+  map_t.Clean();
+  map_t.AddImages(&tmp_image_theta,1,-1);
+
+  map_m.printFITS(filename + tag);
   
   for(tmp_image.imagekist->MoveToTop(),i=0;i<tmp_sb_vec.size();++i,tmp_image.imagekist->Down())
     tmp_image.imagekist->getCurrent()->surface_brightness = tmp_sb_vec[i];

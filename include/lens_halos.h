@@ -514,17 +514,11 @@ private:
  * The shear and kappa is always more accurate than the deflection.
  */
 
-
 class LensHaloJaffe: public LensHalo{
 public:
 	LensHaloJaffe();
 	LensHaloJaffe(InputParams& params);
 	virtual ~LensHaloJaffe();
-
-    double ffunction(double x);
-	double gfunction(double x);
-	double hfunction(double x);
-	double g2function(double x);
 
 	/// set Rmax
 	void set_Rmax(float my_Rmax){Rmax=my_Rmax; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
@@ -532,6 +526,12 @@ public:
 	void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
 
 protected:
+    
+    double ffunction(double x);
+	double gfunction(double x);
+	double hfunction(double x);
+	double g2function(double x);
+
 	/// table size
 	static const long NTABLE;
 	/// maximum Rmax/rscale

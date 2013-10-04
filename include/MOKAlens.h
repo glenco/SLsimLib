@@ -60,7 +60,7 @@ struct MOKAmap{
 class LensHaloMOKA : public LensHalo
 {
 public:
-	LensHaloMOKA(const std::string& filename,LensHaloType maptype,const COSMOLOGY *lenscosmo);
+	LensHaloMOKA(const std::string& filename,LensHaloType maptype,const COSMOLOGY &lenscosmo);
 	LensHaloMOKA(InputParams& params);
 
 	~LensHaloMOKA();
@@ -71,8 +71,8 @@ public:
 	int flag_background_field;
 
 	void assignParams(InputParams& params);
-  void checkCosmology();
-	void setCosmology(const COSMOLOGY* cosmo);
+    void checkCosmology();
+	void setCosmology(const COSMOLOGY& cosmo);
 
 	void saveImage(bool saveprofile=true);
 	void saveKappaProfile();
