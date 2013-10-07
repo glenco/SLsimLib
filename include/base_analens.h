@@ -127,6 +127,8 @@ public:
 	std::size_t Nrandomize() const;
 	Utilities::Any randomize(std::size_t i, double step, long* seed);
 	void unrandomize(std::size_t i, const Utilities::Any& old);
+	
+	void printCSV(std::ostream& out, bool header = false) const;
 
 protected:
 

@@ -74,7 +74,11 @@ Utilities::Any SourceSersic::randomize(std::size_t i, double step, long* seed)
 			case 2:
 				// position angle
 				old = PA;
-				PA = std::fmod(PA + step*pi*gasdev(seed), pi) - pi/2;
+				PA += step*pi*gasdev(seed);
+				while(PA > pi/2)
+					PA -= pi;
+				while(PA < -pi/2)
+					PA += pi;
 				break;
 			case 3:
 				// Sersic index
@@ -134,6 +138,34 @@ void SourceSersic::unrandomize(std::size_t i, const Utilities::Any& old)
 	
 	// update
 	setInternals();
+}
+
+void SourceSersic::printCSV(std::ostream& out, bool header) const
+{
+	if(header)
+	{
+		out
+		<< "mag" << ","
+		<< "Reff" << ","
+		<< "PA" << ","
+		<< "n" << ","
+		<< "q" << ","
+		<< "z" << ","
+		<< "x[0]" << ","
+		<< "x[1]" << std::endl;
+	}
+	else
+	{
+		out
+		<< mag << ","
+		<< Reff << ","
+		<< PA << ","
+		<< index << ","
+		<< q << ","
+		<< zsource << ","
+		<< source_x[0] << ","
+		<< source_x[1] << std::endl;
+	}
 }
 
 void SourceSersic::setInternals()

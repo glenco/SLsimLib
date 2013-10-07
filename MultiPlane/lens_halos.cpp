@@ -814,3 +814,9 @@ void LensHalo::unrandomize(std::size_t i, const Utilities::Any&)
 	}
 }
 
+void LensHalo::printCSV(std::ostream&, bool header) const
+{
+	const std::type_info& type = typeid(*this);
+	std::cerr << "LensHalo subclass " << type.name() << " does not implement printCSV()" << std::endl;
+	std::exit(1);
+}

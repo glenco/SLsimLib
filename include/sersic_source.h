@@ -47,10 +47,11 @@ public:
 	inline void setMag(double x) {mag= x;}
 	inline void setPA(double x) {PA= x;}
 
-
 	double SurfaceBrightness(double *x);
 	inline double getTotalFlux() {return flux;}
 	void printSource();
+	
+	void printCSV(std::ostream& out, bool header = false) const;
 	
 private:
 	void assignParams(InputParams& params);

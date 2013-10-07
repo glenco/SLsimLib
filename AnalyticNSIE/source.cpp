@@ -60,6 +60,13 @@ void Source::unrandomize(std::size_t i, const Utilities::Any& old)
 	}
 }
 
+void Source::printCSV(std::ostream&, bool header) const
+{
+	const std::type_info& type = typeid(*this);
+	std::cerr << "Source subclass " << type.name() << " does not implement printCSV()" << std::endl;
+	std::exit(1);
+}
+
 SourceUniform::SourceUniform(InputParams& params) : Source(){
 	assignParams(params);
 }

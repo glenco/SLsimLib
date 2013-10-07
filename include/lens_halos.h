@@ -85,17 +85,17 @@ public:
 	/// internal compare redshift function
 	bool compare(double z){return z > zlens;};
 
-  /// stars
-  bool AreStarsImaplated() const {return stars_implanted;}
-  void implant_stars(PosType **centers,int Nregions,long *seed, IMFtype type=One);
-  /// creates a single star halo in pos (x,y)
-  void implant_stars(double x,double y,int Nregions,long *seed,IMFtype type=One);
-  void remove_stars();
-  IMFtype getStarIMF_type() const {return main_stars_imf_type;}
-  /// Fraction of surface density in stars
-  double getFstars() const {return star_fstars;}
-  /// The mass of the stars if they are all the same mass
-  double getStarMass() const {if(stars_implanted)return star_masses[0]; else return 0.0;}
+	/// stars
+	bool AreStarsImaplated() const {return stars_implanted;}
+	void implant_stars(PosType **centers,int Nregions,long *seed, IMFtype type=One);
+	/// creates a single star halo in pos (x,y)
+	void implant_stars(double x,double y,int Nregions,long *seed,IMFtype type=One);
+	void remove_stars();
+	IMFtype getStarIMF_type() const {return main_stars_imf_type;}
+	/// Fraction of surface density in stars
+	double getFstars() const {return star_fstars;}
+	/// The mass of the stars if they are all the same mass
+	double getStarMass() const {if(stars_implanted)return star_masses[0]; else return 0.0;}
 
 	/// get number of randomizable parameters
 	virtual std::size_t Nrandomize() const;
@@ -103,7 +103,10 @@ public:
 	virtual Utilities::Any randomize(std::size_t i, double step, long* seed);
 	/// restore previously randomized value
 	virtual void unrandomize(std::size_t i, const Utilities::Any& old);
-
+	
+	/// Print the halo properties in CSV format.
+	virtual void printCSV(std::ostream&, bool header = false) const;
+	
 	/// Prints star parameters; if show_stars is true, prints data for single stars
 	void PrintStars(bool show_stars) const;
 

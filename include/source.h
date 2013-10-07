@@ -63,6 +63,9 @@ public:
 	/// Restore a previous value to a parameter.
 	virtual void unrandomize(std::size_t i, const Utilities::Any& old);
 	
+	/// Print the source properties in CSV format.
+	virtual void printCSV(std::ostream&, bool header = false) const;
+	
 protected:
 	virtual void assignParams(InputParams& params) = 0;
 	

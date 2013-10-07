@@ -312,6 +312,24 @@ void LensHaloBaseNSIE::unrandomize(std::size_t i, const Utilities::Any& old)
 	}
 }
 
+void LensHaloBaseNSIE::printCSV(std::ostream& out, bool header) const
+{
+	if(header)
+	{
+		out
+		<< "sigma" << ","
+		<< "fratio" << ","
+		<< "PA" << std::endl;
+	}
+	else
+	{
+		out
+		<< sigma << ","
+		<< fratio << ","
+		<< pa << std::endl;
+	}
+}
+
 LensHaloBaseNSIE::~LensHaloBaseNSIE(){
 	cout << "deleting lens" << endl;
 
