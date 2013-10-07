@@ -21,7 +21,7 @@ Source::Source()
 
 std::size_t Source::Nrandomize() const
 {
-	return 1;
+	return 2;
 }
 
 Utilities::Any Source::randomize(std::size_t i, double step, long* seed)
@@ -31,9 +31,13 @@ Utilities::Any Source::randomize(std::size_t i, double step, long* seed)
 	switch(i)
 	{
 		case 0:
-			// source position
-			old = std::make_pair(source_x[0], source_x[1]);
+			// source x position
+			old = source_x[0];
 			source_x[0] += step*pi/180/60/60*gasdev(seed);
+			break;
+		case 1:
+			// source y position
+			old = source_x[1];
 			source_x[1] += step*pi/180/60/60*gasdev(seed);
 			break;
 		default:
@@ -45,15 +49,15 @@ Utilities::Any Source::randomize(std::size_t i, double step, long* seed)
 
 void Source::unrandomize(std::size_t i, const Utilities::Any& old)
 {
-	std::pair<double, double> pos;
-	
 	switch(i)
 	{
 		case 0:
-			// source position
-			pos = Utilities::AnyCast<std::pair<double, double> >(old);
-			source_x[0] = pos.first;
-			source_x[1] = pos.second;
+			// source x position
+			source_x[0] = Utilities::AnyCast<double>(old);
+			break;
+		case 1:
+			// source y position
+			source_x[1] = Utilities::AnyCast<double>(old);
 			break;
 		default:
 			throw std::invalid_argument("bad parameter index for unrandomize()");

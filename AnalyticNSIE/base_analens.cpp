@@ -298,13 +298,13 @@ void LensHaloBaseNSIE::unrandomize(std::size_t i, const Utilities::Any& old)
 		switch(i - LensHalo::Nrandomize())
 		{
 			case 0:
-				sigma = Utilities::AnyCast<double>(old);
+				sigma = Utilities::AnyCast<float>(old);
 				break;
 			case 1:
-				fratio = Utilities::AnyCast<double>(old);
+				fratio = Utilities::AnyCast<float>(old);
 				break;
 			case 2:
-				pa = Utilities::AnyCast<double>(old);
+				pa = Utilities::AnyCast<float>(old);
 				break;
 			default:
 				throw std::invalid_argument("bad parameter index for unrandomize()");
