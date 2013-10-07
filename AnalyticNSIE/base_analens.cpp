@@ -269,15 +269,15 @@ Utilities::Any LensHaloBaseNSIE::randomize(std::size_t i, double step, long* see
 		{
 			case 0:
 				old = sigma;
-				sigma += step*sigma*gasdev(seed);
+				sigma = std::exp(std::log(sigma) + step*gasdev(seed));
 				break;
 			case 1:
 				old = fratio;
-				fratio += step*gasdev(seed);
+				fratio = std::max(1.0e-6, std::min(1., fratio + step*gasdev(seed)));
 				break;
 			case 2:
 				old = pa;
-				pa += step*pi*gasdev(seed);
+				pa = std::fmod(pa + pi/2 + step*pi*gasdev(seed), pi) - pi/2;
 				break;
 			default:
 				throw std::invalid_argument("bad parameter index for randomize()");
