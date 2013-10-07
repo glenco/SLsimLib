@@ -60,39 +60,39 @@ struct MOKAmap{
 class LensHaloMOKA : public LensHalo
 {
 public:
-	LensHaloMOKA(const std::string& filename,LensHaloType maptype,const COSMOLOGY *lenscosmo);
-	LensHaloMOKA(InputParams& params);
-
+	LensHaloMOKA(const std::string& filename, LensHaloType maptype, const COSMOLOGY& lenscosmo);
+	LensHaloMOKA(InputParams& params, const COSMOLOGY& lenscosmo);
+	
 	~LensHaloMOKA();
-
+	
 	std::string MOKA_input_file;
 	/// if >=1 (true), do analyzis only; if = 0 (false) change units to internal GLAMER units and prepare for ray-shooting
 	int flag_MOKA_analyze;
 	int flag_background_field;
-
+	
 	void assignParams(InputParams& params);
-  void checkCosmology();
-	void setCosmology(const COSMOLOGY* cosmo);
-
+	void checkCosmology();
+	
 	void saveImage(bool saveprofile=true);
 	void saveKappaProfile();
 	void saveGammaProfile();
 	void saveProfiles(double &RE3, double &xxc, double &yyc);
 	void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa,bool subtract_point=false);
-  void saveImage(GridHndl grid,bool saveprofiles);
-  
+	void saveImage(GridHndl grid,bool saveprofiles);
+	
 	void estSignLambdas();
 	void EinsteinRadii(double &RE1, double &RE2, double &xxc, double &yyc);
-
+	
 	void getDims();
 	void readImage();
 	void writeImage(std::string fn);
-  /// return center in physical Mpc
-  double *getCenter(){return center;}
-  /// return range of input map in physical Mpc
-  double getRange(){return range_phy;}
-  /// return number of pixels on a side in original map
-  size_t getN(){return map->nx;}
+	
+	/// return center in physical Mpc
+	const double* getCenter() const { return center; }
+	/// return range of input map in physical Mpc
+	double getRange() const { return range_phy; }
+	/// return number of pixels on a side in original map
+	size_t getN() const { return map->nx; }
 	
 private:
     LensHaloType maptype;
@@ -100,7 +100,7 @@ private:
     void convertmap(MOKAmap *map,LensHaloType maptype);
     double range_phy,center[2];  /// range of map in physical Mpc
     MOKAmap* map;
-    const COSMOLOGY *cosmo;
+    const COSMOLOGY& cosmo;
     void PreProcessFFTWMap();
 };
 

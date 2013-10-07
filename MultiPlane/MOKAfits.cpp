@@ -118,11 +118,11 @@ void LensHaloMOKA::readImage(){
             std::cout << "unable to read map pixelunit" << std::endl;
             std::cout << "assuming is the MultiDark file" << std::endl;
             map->boxlarcsec = 4*60.*60.;    // the square is 4x4
-            map->Dlens = cosmo->angDist(0.,map->zlens);
+            map->Dlens = cosmo.angDist(0.,map->zlens);
             double inarcsec  = 180./M_PI/map->Dlens*60.*60.;
             pixLMpc = 60./inarcsec;  //
             map->boxlMpc = pixLMpc*npixels;
-            pixelunit = 1.e+10/pixLMpc/pixLMpc/cosmo->gethubble();
+            pixelunit = 1.e+10/pixLMpc/pixLMpc/cosmo.gethubble();
         }
 
         // made square // need to be

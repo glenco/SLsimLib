@@ -62,21 +62,21 @@ void cmass(int n, std::valarray<float> map, std:: vector<double> x, double &xcm,
 /**
  * \brief loads a MOKA map from a given filename
  */
-LensHaloMOKA::LensHaloMOKA(const std::string& filename,LensHaloType my_maptype,const COSMOLOGY *lenscosmo)
+LensHaloMOKA::LensHaloMOKA(const std::string& filename, LensHaloType my_maptype, const COSMOLOGY& lenscosmo)
 : LensHalo(),
-  MOKA_input_file(filename), flag_MOKA_analyze(0), flag_background_field(0), maptype(my_maptype)
+  MOKA_input_file(filename), flag_MOKA_analyze(0), flag_background_field(0),
+  maptype(my_maptype), cosmo(lenscosmo)
 {
-  cosmo = lenscosmo;
 	initMap();
  	
 	// set redshift to value from map
 	setZlens(map->zlens);
-  
-  range_phy = map->boxlMpc;
-  center[0] = map->center[0];
-  center[1] = map->center[1];
-  
-  zlens = map->zlens;
+	
+	range_phy = map->boxlMpc;
+	center[0] = map->center[0];
+	center[1] = map->center[1];
+	
+	zlens = map->zlens;
 }
 
 /**
@@ -84,25 +84,25 @@ LensHaloMOKA::LensHaloMOKA(const std::string& filename,LensHaloType my_maptype,c
  *
  *  In the future this could be used to read in individual MultiDark or other types of maps if the type were specified in the paramfile.
  */
-LensHaloMOKA::LensHaloMOKA(InputParams& params)
-: LensHalo(), maptype(moka_lens)
+LensHaloMOKA::LensHaloMOKA(InputParams& params, const COSMOLOGY& lenscosmo)
+: LensHalo(), maptype(moka_lens), cosmo(lenscosmo)
 {
 	// read in parameters
 	assignParams(params);
 	
 	// initialize MOKA map
 	initMap();
-  assert(maptype == multi_dark_lens || maptype == moka_lens);
-
+	assert(maptype == multi_dark_lens || maptype == moka_lens);
+	
 	// set redshift if necessary
 	if(zlens == -1)
 		setZlens(map->zlens);
-  
-  range_phy = map->boxlMpc;
-  center[0] = map->center[0];
-  center[1] = map->center[1];
-  
-  zlens = map->zlens;
+	
+	range_phy = map->boxlMpc;
+	center[0] = map->center[0];
+	center[1] = map->center[1];
+	
+	zlens = map->zlens;
 }
 
 LensHaloMOKA::~LensHaloMOKA()
@@ -204,23 +204,17 @@ void LensHaloMOKA::convertmap(MOKAmap *map,LensHaloType maptype){
   
 }
 
-/** \brief checks the cosmology against the MOKA map parameters
- */
-
-void LensHaloMOKA::setCosmology(const COSMOLOGY* lens_cosmo)
-{
-  cosmo = lens_cosmo;
-}
-
 /// checks that cosmology in the header of the input fits map is the same as the one set
-void LensHaloMOKA::checkCosmology(){
-  if(cosmo->getOmega_matter() == map->omegam)
-		std::cerr << "LensHaloMOKA: Omega_matter " << cosmo->getOmega_matter() << " (cosmology) != " << map->omegam << " (MOKA)" << std::endl;
-	if(cosmo->getOmega_lambda() == map->omegal)
-		std::cerr << "LensHaloMOKA: Omega_lambda " << cosmo->getOmega_lambda() << " (cosmology) != " << map->omegal << " (MOKA)" << std::endl;
-	if(cosmo->gethubble() == map->h)
-		std::cerr << "LensHaloMOKA: hubble " << cosmo->gethubble() << " (cosmology) != " << map->h << " (MOKA)" << std::endl;
+void LensHaloMOKA::checkCosmology()
+{
+	if(cosmo.getOmega_matter() == map->omegam)
+		std::cerr << "LensHaloMOKA: Omega_matter " << cosmo.getOmega_matter() << " (cosmology) != " << map->omegam << " (MOKA)" << std::endl;
+	if(cosmo.getOmega_lambda() == map->omegal)
+		std::cerr << "LensHaloMOKA: Omega_lambda " << cosmo.getOmega_lambda() << " (cosmology) != " << map->omegal << " (MOKA)" << std::endl;
+	if(cosmo.gethubble() == map->h)
+		std::cerr << "LensHaloMOKA: hubble " << cosmo.gethubble() << " (cosmology) != " << map->h << " (MOKA)" << std::endl;
 }
+
 /**
  * Sets many parameters within the MOKA lens model
  */
