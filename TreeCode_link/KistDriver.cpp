@@ -162,10 +162,10 @@ void TreeStruct::_FindAllBoxNeighborsKist_iter(Branch *leaf,Kist<Point> * neighb
  * The
  */
 void TreeStruct::PointsWithinEllipKist(
-	double *ray     /// center of ellipse
-	,float rmax      /// major axis
-	,float rmin     /// minor axis
-	,float posangle  /// position angle of major axis, smallest angle between the x-axis and the long axis
+	const double* center         /// center of ellipse
+	,float rmax                  /// major axis
+	,float rmin                  /// minor axis
+	,float posangle              /// position angle of major axis, smallest angle between the x-axis and the long axis
 	,Kist<Point> * neighborkist  /// output neighbor kist, will be emptied if it contains anything on entry
 	){
 	unsigned long i,Ntmp;
@@ -176,7 +176,7 @@ void TreeStruct::PointsWithinEllipKist(
 	if(rmax <=0.0 || rmin <= 0.0) return;
 
 	// find point within a circle circumscribes the ellipse
-	PointsWithinKist(ray,rmax,neighborkist,false);
+	PointsWithinKist(center,rmax,neighborkist,false);
 
 	cs = cos(posangle);
 	sn = sin(posangle);
@@ -201,16 +201,20 @@ void TreeStruct::PointsWithinEllipKist(
  *   image point to get the largest gridsize on the image plane.
  */
 double TreeStruct::PointsWithinKist(
-		double *ray     /// center of circle
-		,float rmax      /// radius of circle
+		const double* center         /// center of circle
+		,float rmax                  /// radius of circle
 		,Kist<Point> * neighborkist  /// output neighbor kist, will be emptied if it contains anything on entry
-		,short markpoints       /// see comment
-		){
+		,short markpoints            /// see comment
+		)
+{
 
 	double maxgridsize;
 
-	if(markpoints==0) EmptyKist(neighborkist);
+	if(markpoints==0)
+		EmptyKist(neighborkist);
 
+	double ray[2] = { center[0], center[1] };
+	
 	realray[0]=ray[0];
 	realray[1]=ray[1];
 
@@ -408,7 +412,7 @@ void TreeStruct::_PointsWithinKist(double *ray,float *rmax,Kist<Point> * neighbo
  *
  */
 
-void TreeStruct::PointsWithinKist_iter(double *ray,float rmin,float rmax,Kist<Point> * neighborkist){
+void TreeStruct::PointsWithinKist_iter(const double* center,float rmin,float rmax,Kist<Point> * neighborkist){
 	bool decend;
 	unsigned long i;
 	moveTop();
@@ -419,10 +423,10 @@ void TreeStruct::PointsWithinKist_iter(double *ray,float rmin,float rmax,Kist<Po
 	assert(rmax >= rmin);
 	if(rmax <= rmin) return;
 
-	if( CircleInBox(ray,rmax,top->boundary_p1,top->boundary_p2) ){
-		_FindLeaf(ray,0);
+	if( CircleInBox(center,rmax,top->boundary_p1,top->boundary_p2) ){
+		_FindLeaf(center,0);
 		// Move up the tree till the whole circle is inside the box
-		while(!CircleInBox(ray,rmax,current->boundary_p1,current->boundary_p2) && moveUp());
+		while(!CircleInBox(center,rmax,current->boundary_p1,current->boundary_p2) && moveUp());
 	}
 
 	Branch *top = current;
@@ -433,7 +437,7 @@ void TreeStruct::PointsWithinKist_iter(double *ray,float rmin,float rmax,Kist<Po
 
 			decend = true;
 
-			if(BoxInCircle(ray,rmax,current->boundary_p1,current->boundary_p2)  // box is all inside outer circle
+			if(BoxInCircle(center,rmax,current->boundary_p1,current->boundary_p2)  // box is all inside outer circle
 			){
 
 				decend = false;
@@ -443,7 +447,7 @@ void TreeStruct::PointsWithinKist_iter(double *ray,float rmin,float rmax,Kist<Po
 					MoveDownList(pointlist);
 				}
 
-			}else if(Utilities::cutbox(ray,current->boundary_p1,current->boundary_p2,rmax) == 0  // box is all outside outer circle
+			}else if(Utilities::cutbox(center,current->boundary_p1,current->boundary_p2,rmax) == 0  // box is all outside outer circle
 			){
 
 				decend = false;
@@ -452,7 +456,7 @@ void TreeStruct::PointsWithinKist_iter(double *ray,float rmin,float rmax,Kist<Po
 
 				if(current->points != NULL) pointlist->current = current->points;
 				for(i=0;i<current->npoints;++i){
-					if(rmax*rmax >= pow(pointlist->current->x[0] - ray[0],2) + pow(pointlist->current->x[1] - ray[1],2) )
+					if(rmax*rmax >= pow(pointlist->current->x[0] - center[0],2) + pow(pointlist->current->x[1] - center[1],2) )
 						InsertAfterCurrentKist(neighborkist,pointlist->current);
 					MoveDownList(pointlist);
 				}
@@ -476,15 +480,15 @@ void TreeStruct::PointsWithinKist_iter(double *ray,float rmin,float rmax,Kist<Po
 
 				for(i=0;i<current->npoints;++i){
 
-					r2 = pow(pointlist->current->x[0] - ray[0],2) + pow(pointlist->current->x[1] - ray[1],2);
+					r2 = pow(pointlist->current->x[0] - center[0],2) + pow(pointlist->current->x[1] - center[1],2);
 					if(rmax*rmax >= r2 && rmin*rmin <= r2){
 						InsertAfterCurrentKist(neighborkist,pointlist->current);
 					}
 					MoveDownList(pointlist);
 				}
 
-			}else if(BoxInCircle(ray,rmax,current->boundary_p1,current->boundary_p2)  // box is all inside outer circle
-					&& Utilities::cutbox(ray,current->boundary_p1,current->boundary_p2,rmin) == 0  // box is all outside inner circle
+			}else if(BoxInCircle(center,rmax,current->boundary_p1,current->boundary_p2)  // box is all inside outer circle
+					&& Utilities::cutbox(center,current->boundary_p1,current->boundary_p2,rmin) == 0  // box is all outside inner circle
 			){
 
 				decend = false;
@@ -497,8 +501,8 @@ void TreeStruct::PointsWithinKist_iter(double *ray,float rmin,float rmax,Kist<Po
 					MoveDownList(pointlist);
 				}
 
-			}else if(Utilities::cutbox(ray,current->boundary_p1,current->boundary_p2,rmax) == 0  // box is all outside outer circle
-					|| BoxInCircle(ray,rmin,current->boundary_p1,current->boundary_p2) // box is all inside inner circle
+			}else if(Utilities::cutbox(center,current->boundary_p1,current->boundary_p2,rmax) == 0  // box is all outside outer circle
+					|| BoxInCircle(center,rmin,current->boundary_p1,current->boundary_p2) // box is all inside inner circle
 			){
 
 				decend = false;
@@ -520,13 +524,13 @@ void TreeStruct::PointsWithinKist_iter(double *ray,float rmin,float rmax,Kist<Po
  *    Warning: The number of neighbor points in neighborkist will be less than Nneighbors when
  *             the number of points in the tree is less than Nneighbors
  */
-Point * TreeStruct::NearestNeighborKist(double *ray,int Nneighbors,Kist<Point> * neighborkist){
+Point * TreeStruct::NearestNeighborKist(const double* center,int Nneighbors,Kist<Point> * neighborkist){
 	ListHndl neighborlist = NewList();
 	Point *point = 0;
 	unsigned long i;
 
 	//TODO: BEN Make this better!  NearestNeighbor() should be replaced.
-	point = NearestNeighbor(ray,Nneighbors,neighborlist,0);
+	point = NearestNeighbor(center,Nneighbors,neighborlist,0);
 
 	// convert from point array to exported point kist
 	EmptyKist(neighborkist);

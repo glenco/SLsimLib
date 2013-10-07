@@ -12,7 +12,7 @@ static double realray[2];
 //Point *point_global;
 
 /// Warning: Not garenteed to return Nneighbors if there are less points on the grid
-Point *TreeStruct::NearestNeighbor(double *ray,int Nneighbors,ListHndl neighborlist,short direction){
+Point *TreeStruct::NearestNeighbor(const double* center,int Nneighbors,ListHndl neighborlist,short direction){
   /* nearest neighbor points in a given direction, direction != 0 should not */
   /*    be used except on a grid */
   /* direction = 0 distance */
@@ -68,6 +68,8 @@ Point *TreeStruct::NearestNeighbor(double *ray,int Nneighbors,ListHndl neighborl
   //   std::printf("p1= [%f,%f]\n", current->boundary_p1[0],current->boundary_p1[1]);
   //   std::printf("p2= [%f,%f]\n", current->boundary_p2[0],current->boundary_p2[1]);
 
+  double ray[2] = { center[0], center[1] };
+	
   realray[0]=ray[0];
   realray[1]=ray[1];
 
@@ -98,7 +100,7 @@ Point *TreeStruct::NearestNeighbor(double *ray,int Nneighbors,ListHndl neighborl
   return neighborpoints[0];
 }
 
-void TreeStruct::_NearestNeighbor(double *ray,int Nneighbors,Point **neighborpoints,double *rneighbors,short *direction){
+void TreeStruct::_NearestNeighbor(double* ray,int Nneighbors,Point **neighborpoints,double *rneighbors,short *direction){
 
   int i,incell2=1;
   unsigned long index[Nneighbors+Nbucket];
@@ -332,26 +334,26 @@ int cutbox(double *ray,double *p1,double *p2,double rmax){
  * returns true.
  *
  */
-bool CircleInBox(double *ray,double radius,double *p1,double *p2){
+bool CircleInBox(const double* center,double radius,double *p1,double *p2){
 
-	if(!inbox(ray,p1,p2)) return false;
+	if(!inbox(center,p1,p2)) return false;
 
-	if((ray[0] + radius) > p2[0] ) return false;
-	if((ray[0] - radius) < p1[0] ) return false;
-	if((ray[1] + radius) > p2[1] ) return false;
-	if((ray[1] - radius) < p1[1] ) return false;
+	if((center[0] + radius) > p2[0] ) return false;
+	if((center[0] - radius) < p1[0] ) return false;
+	if((center[1] + radius) > p2[1] ) return false;
+	if((center[1] - radius) < p1[1] ) return false;
 
 	return true;
 }
 
-bool BoxInCircle(double *ray,double radius,double *p1,double *p2){
+bool BoxInCircle(const double* center,double radius,double *p1,double *p2){
 
 	double rad2 = radius*radius;
 
-	if((pow(p1[0] - ray[0],2) + pow(p1[1] - ray[1],2)) > rad2) return false;
-	if((pow(p2[0] - ray[0],2) + pow(p2[1] - ray[1],2)) > rad2) return false;
-	if((pow(p1[0] - ray[0],2) + pow(p2[1] - ray[1],2)) > rad2) return false;
-	if((pow(p2[0] - ray[0],2) + pow(p1[1] - ray[1],2)) > rad2) return false;
+	if((pow(p1[0] - center[0],2) + pow(p1[1] - center[1],2)) > rad2) return false;
+	if((pow(p2[0] - center[0],2) + pow(p2[1] - center[1],2)) > rad2) return false;
+	if((pow(p1[0] - center[0],2) + pow(p2[1] - center[1],2)) > rad2) return false;
+	if((pow(p2[0] - center[0],2) + pow(p1[1] - center[1],2)) > rad2) return false;
 
 	return true;
 }
@@ -360,7 +362,7 @@ bool BoxInCircle(double *ray,double radius,double *p1,double *p2){
  *   Finds the leaf the ray is in and adds Nadd to all of is parent leaves
 */
 
-void TreeStruct::_FindLeaf(double *ray,unsigned long Nadd){
+void TreeStruct::_FindLeaf(const double* ray,unsigned long Nadd){
 
 	bool contin;
 
@@ -407,7 +409,7 @@ bool AreBoxNeighbors(Branch *branch1,Branch *branch2){
 /** return the point that is in the same box as ray[2]
  * if Nbuck > 1 the head of the point array is returned
  */
-void TreeStruct::FindBoxPoint(double *ray,Point *point){
+void TreeStruct::FindBoxPoint(const double* ray,Point *point){
 	Branch *branch;
 
 	branch=current;
@@ -439,7 +441,7 @@ void TreeStruct::FindBoxPoint(double *ray,Point *point){
 	//return point;
 }
 
-void TreeStruct::_FindBox(double *ray){
+void TreeStruct::_FindBox(const double* ray){
 	bool contin;
 
 	// replaced recursion with iteration

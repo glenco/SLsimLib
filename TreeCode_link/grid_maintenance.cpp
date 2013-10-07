@@ -155,7 +155,7 @@ void Grid::ReInitializeGrid(LensHndl lens){
  */
 void Grid::ReShoot(LensHndl lens){
   
-	Point *i_points,*s_point;
+	Point *i_points;
 	double range,center[2];
 	unsigned long i;
   
@@ -901,7 +901,7 @@ void Grid::zoom(
 
 /// Outputs a fits image of a lensing variable of choice
 void Grid::writeFits(
-      double center[]           /// center of image
+      const double center[]     /// center of image
       ,size_t Npixels           /// number of pixels in image in on dimension
       ,double resolution        /// resolution of image in radians
       ,LensingVariable lensvar  /// which quantity is to be displayed
@@ -968,7 +968,7 @@ void Grid::writeFits(
 
 /// Outputs a fits file for making plots of vector fields
 void Grid::writeFitsVector(
-                     double center[]           /// center of image
+                     const double center[]     /// center of image
                      ,size_t Npixels           /// number of pixels in image in on dimension
                      ,double resolution        /// resolution of image in radians
                      ,LensingVariable lensvar  /// which quantity is to be displayed
