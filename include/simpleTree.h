@@ -142,8 +142,8 @@ protected:
 	inline bool atLeaf(){
 		return (tree->current->child1 == NULL)*(tree->current->child2 == NULL);
 	}
-	inline bool inbox(PosType *ray,PosType *p1,PosType *p2){
-	  return (ray[0]>=p1[0])*(ray[0]<=p2[0])*(ray[1]>=p1[1])*(ray[1]<=p2[1]);
+	inline bool inbox(const PosType* center,PosType *p1,PosType *p2){
+	  return (center[0]>=p1[0])*(center[0]<=p2[0])*(center[1]>=p1[1])*(center[1]<=p2[1]);
 	}
 	
 	/*TreeNBHndl rotate_simulation(PosType **xp,IndexType Nparticles,IndexType *particles
