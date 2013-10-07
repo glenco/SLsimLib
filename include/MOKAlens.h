@@ -88,9 +88,11 @@ public:
 	void writeImage(std::string fn);
 	
 	/// return center in physical Mpc
-	const double* getCenter() const { return center; }
+	const double* getCenter() const { return map->center; }
+	/// return range of input map in rad
+	double getRangeRad() const { return map->boxlrad; }
 	/// return range of input map in physical Mpc
-	double getRange() const { return range_phy; }
+	double getRangeMpc() const { return map->boxlMpc; }
 	/// return number of pixels on a side in original map
 	size_t getN() const { return map->nx; }
 	
@@ -98,7 +100,6 @@ private:
     LensHaloType maptype;
 	void initMap();
     void convertmap(MOKAmap *map,LensHaloType maptype);
-    double range_phy,center[2];  /// range of map in physical Mpc
     MOKAmap* map;
     const COSMOLOGY& cosmo;
     void PreProcessFFTWMap();

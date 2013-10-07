@@ -71,12 +71,6 @@ LensHaloMOKA::LensHaloMOKA(const std::string& filename, LensHaloType my_maptype,
  	
 	// set redshift to value from map
 	setZlens(map->zlens);
-	
-	range_phy = map->boxlMpc;
-	center[0] = map->center[0];
-	center[1] = map->center[1];
-	
-	zlens = map->zlens;
 }
 
 /**
@@ -97,12 +91,6 @@ LensHaloMOKA::LensHaloMOKA(InputParams& params, const COSMOLOGY& lenscosmo)
 	// set redshift if necessary
 	if(zlens == -1)
 		setZlens(map->zlens);
-	
-	range_phy = map->boxlMpc;
-	center[0] = map->center[0];
-	center[1] = map->center[1];
-	
-	zlens = map->zlens;
 }
 
 LensHaloMOKA::~LensHaloMOKA()
@@ -478,7 +466,7 @@ void LensHaloMOKA::force_halo(double *alpha,KappaType *kappa,KappaType *gamma,do
   // interpolate from the maps
   //<<<<<<< local
   // Utilities::Interpolator<valarray<float> > interp(xx,map->nx,map->boxlMpc/map->h,map->center);
-  Utilities::Interpolator<valarray<float> > interp(xx,map->nx,range_phy,center);
+  Utilities::Interpolator<valarray<float> > interp(xx,map->nx,map->boxlMpc,map->center);
 
   alpha[0] = interp.interpolate(map->alpha1);
   alpha[1] = interp.interpolate(map->alpha2);
