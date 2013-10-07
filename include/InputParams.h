@@ -24,6 +24,10 @@
 #include "standard.h"
 #include <map>
 
+#if __cplusplus >= 201103L
+#include <mutex>
+#endif
+
 enum MassFuncType
 {
 	PS,
@@ -116,6 +120,26 @@ public:
 	static void add(std::string label, std::string value = std::string(), std::string comment = std::string());
 	
 private:
+	// thread-safe counter
+	class counter
+	{
+	public:
+		counter();
+		counter(const counter& other);
+		
+		void use(const std::string& label);
+		bool is_used(const std::string& label) const;
+		
+		friend void swap(counter&, counter&);
+		
+	private:
+		std::map<std::string, std::size_t> c;
+		
+#if __cplusplus >= 201103L
+		mutable std::mutex mutex;
+#endif
+	};
+	
 	typedef std::map<std::string, std::string>::iterator iterator;
 	typedef std::map<std::string, std::string>::const_iterator const_iterator;
 	
@@ -127,7 +151,7 @@ private:
 	std::map<std::string, std::string> comments;
 	
 	// The number of times a parameter was retrieved by get
-	mutable std::map<std::string, std::size_t> use_number;
+	mutable counter use_counter;
 };
 
 /** \brief Assigns to "value" the value of the parameter called "label".
@@ -157,7 +181,7 @@ bool InputParams::get(std::string label, Number& value) const
 		return false;
 	}
 	
-	++use_number[it->first];
+	use_counter.use(it->first);
 	
 	return true;
 }

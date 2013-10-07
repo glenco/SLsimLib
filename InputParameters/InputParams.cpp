@@ -33,6 +33,32 @@ namespace
 	}
 }
 
+InputParams::counter::counter()
+{
+}
+
+InputParams::counter::counter(const InputParams::counter& other)
+: c(other.c)
+{
+}
+
+void InputParams::counter::use(const std::string& label)
+{
+#if __cplusplus >= 201103L
+	std::lock_guard<std::mutex> hold(mutex);
+#endif
+	
+	++c[label];
+}
+
+bool InputParams::counter::is_used(const std::string& label) const
+{
+	std::map<std::string, std::size_t>::const_iterator it = c.find(label);
+	if(it == c.end())
+		return false;
+	return (it->second > 0);
+}
+
 /**
  * \brief The constructor creates an empty map of input params.
  */
@@ -146,7 +172,7 @@ void InputParams::print_used() const
 	std::size_t n = 0;
 	for(const_iterator it = params.begin(); it != params.end(); ++it)
 	{
-		if(use_number[it->first] > 0)
+		if(use_counter.is_used(it->first))
 		{
 			const_iterator comment = comments.find(it->first);
 			if(comment != comments.end())
@@ -167,7 +193,7 @@ void InputParams::print_unused() const
 	std::size_t n = 0;
 	for(const_iterator it = params.begin(); it != params.end(); ++it)
 	{
-		if(use_number[it->first] == 0)
+		if(!use_counter.is_used(it->first))
 		{
 			const_iterator comment = comments.find(it->first);
 			if(comment != comments.end())
@@ -192,7 +218,7 @@ void InputParams::PrintToFile(std::string filename, bool strip_unused) const
 	
 	for(const_iterator it = params.begin(); it != params.end(); ++it)
 	{
-		if(strip_unused && use_number[it->first] == 0)
+		if(strip_unused && !use_counter.is_used(it->first))
 			continue;
 		
 		const_iterator comment = comments.find(it->first);
@@ -289,17 +315,17 @@ bool InputParams::get(std::string label, bool& value) const
 	if(it == params.end())
 		return false;
 	
+	use_counter.use(it->first);
+	
 	if(!it->second.compare("0") || !it->second.compare("false"))
 	{
 		value = false;
-		++use_number[it->first];
 		return true;
 	}
 	
 	if(!it->second.compare("1") || !it->second.compare("true"))
 	{
 		value = true;
-		++use_number[it->first];
 		return true;
 	}
 
@@ -320,22 +346,21 @@ bool InputParams::get(std::string label, MassFuncType& value) const
 	if(it == params.end())
 		return false;
 
+	use_counter.use(it->first);
+	
 	if(!it->second.compare("0") || !it->second.compare("PS"))
 	{
 		value = PS;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("1") || !it->second.compare("ST"))
 	{
 		value = ST;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("2") || !it->second.compare("PowerLaw"))
 	{
 		value = PL;
-		++use_number[it->first];
 		return true;
 	}
 
@@ -357,76 +382,66 @@ bool InputParams::get(std::string label, LensHaloType& value) const
 	if(it == params.end())
 		return false;
 	
+	use_counter.use(it->first);
+	
 	if(!it->second.compare("0") || !it->second.compare("nolens"))
 	{
 		value = null_lens;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("1") || !it->second.compare("NFW"))
 	{
 		value = nfw_lens;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("2") || !it->second.compare("PseudoNFW"))
 	{
 		value = pnfw_lens;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("3") || !it->second.compare("PowerLaw"))
 	{
 		value = pl_lens;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("4") || !it->second.compare("NSIE"))
 	{
 		value = nsie_lens;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("5") || !it->second.compare("AnaLens"))
 	{
 		value = ana_lens;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("6") || !it->second.compare("UniLens")){
 		
 		value = uni_lens;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("7") || !it->second.compare("MOKALens"))
 	{
 		value = moka_lens;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("8") || !it->second.compare("DummyLens"))
 	{
 		value = dummy_lens;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("9") || !it->second.compare("Hernquist"))
 	{
 		value = hern_lens;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("10") || !it->second.compare("Jaffe"))
 	{
 		value = jaffe_lens;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("11") || !it->second.compare("MultiDark"))
 	{
 		value = multi_dark_lens;
-		++use_number[it->first];
 		return true;
 	}
 
@@ -449,16 +464,16 @@ bool InputParams::get(std::string label, GalaxyLensHaloType& value) const
 	if(it == params.end())
 		return false;
 	
+	use_counter.use(it->first);
+	
 	if(!it->second.compare("0") || !it->second.compare("none"))
 	{
 		value = null_gal;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("1") || !it->second.compare("NSIE"))
 	{
 		value = nsie_gal;
-		++use_number[it->first];
 		return true;
 	}
 
@@ -480,22 +495,21 @@ bool InputParams::get(std::string label, ClumpInternal& value) const
 	if(it == params.end())
 		return false;
 
+	use_counter.use(it->first);
+	
 	if(!it->second.compare("0") || !it->second.compare("NFW"))
 	{
 		value = nfw;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("1") || !it->second.compare("PowerLaw"))
 	{
 		value = powerlaw;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("2") || !it->second.compare("PointMass"))
 	{
 		value = pointmass;
-		++use_number[it->first];
 		return true;
 	}
 
@@ -517,46 +531,41 @@ bool InputParams::get(std::string label, IMFtype& value) const
 	if(it == params.end())
 		return false;
 	
+	use_counter.use(it->first);
+	
 	if(!it->second.compare("One"))
 	{
 		value = One;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("Mono"))
 	{
 		value = Mono;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("BrokenPowerLaw"))
 	{
 		value = BrokenPowerLaw;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("Salpeter"))
 	{
 		value = Salpeter;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("SinglePowerLaw"))
 	{
 		value = SinglePowerLaw;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("Kroupa"))
 	{
 		value = Kroupa;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("Chabrier"))
 	{
 		value = Chabrier;
-		++use_number[it->first];
 		return true;
 	}
 
@@ -579,64 +588,56 @@ bool InputParams::get(std::string label, Band& value) const
 	if(it == params.end())
 		return false;
 	
+	use_counter.use(it->first);
+	
 	if(!it->second.compare("SDSS_U"))
 	{
 		value = SDSS_U;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("SDSS_G"))
 	{
 		value = SDSS_G;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("SDSS_R"))
 	{
 		value = SDSS_R;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("SDSS_I"))
 	{
 		value = SDSS_I;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("SDSS_Z"))
 	{
 		value = SDSS_Z;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("J"))
 	{
 		value = J;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("H"))
 	{
 		value = H;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("Ks"))
 	{
 		value = Ks;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("i1"))
 	{
 		value = i1;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("i2"))
 	{
 		value = i2;
-		++use_number[it->first];
 		return true;
 	}
 
@@ -657,8 +658,9 @@ bool InputParams::get(std::string label,std::string& value) const
 	if(it == params.end())
 		return false;
 	
+	use_counter.use(it->first);
+	
 	value = it->second;
-	++use_number[it->first];
 	
 	return true;
 }
