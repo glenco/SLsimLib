@@ -124,11 +124,9 @@ public:
   int getPerturb_Nmodes(){return perturb_Nmodes;}    /// this includes two for external shear
   double *perturb_modes;  ///first two are shear
 
-  void randomize(double step, long* seed);
-
-  void serialize(RawData& d) const;
-  void unserialize(RawData& d);
-
+	std::size_t Nrandomize() const;
+	Utilities::Any randomize(std::size_t i, double step, long* seed);
+	void unrandomize(std::size_t i, const Utilities::Any& old);
 
 protected:
 

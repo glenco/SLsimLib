@@ -97,12 +97,12 @@ public:
   /// The mass of the stars if they are all the same mass
   double getStarMass() const {if(stars_implanted)return star_masses[0]; else return 0.0;}
 
-  /// read raw data
-  virtual void serialize(RawData& d) const;
-  /// write raw data
-  virtual void unserialize(RawData& d);
-	/// randomize halo by a given amound
-	virtual void randomize(double step, long* seed);
+	/// get number of randomizable parameters
+	virtual std::size_t Nrandomize() const;
+	/// randomize specific halo parameter by a given amound and return old value
+	virtual Utilities::Any randomize(std::size_t i, double step, long* seed);
+	/// restore previously randomized value
+	virtual void unrandomize(std::size_t i, const Utilities::Any& old);
 
 	/// Prints star parameters; if show_stars is true, prints data for single stars
 	void PrintStars(bool show_stars) const;

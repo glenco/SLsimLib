@@ -24,10 +24,9 @@ public:
 	SourceSersic(InputParams& params);
 	~SourceSersic();
 	
-	void serialize(RawData& d) const;
-	void unserialize(RawData& d);
-	
-	void randomize(double step, long* seed);
+	std::size_t Nrandomize() const;
+	Utilities::Any randomize(std::size_t i, double step, long* seed);
+	void unrandomize(std::size_t i, const Utilities::Any& old);
 	
 	void setInternals();
 	

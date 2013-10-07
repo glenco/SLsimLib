@@ -250,29 +250,67 @@ void LensHaloBaseNSIE::PrintLens(bool show_substruct,bool show_stars){
 	if (stars_implanted) PrintStars(show_stars);
 }
 
-void LensHaloBaseNSIE::randomize(double step, long* seed)
+std::size_t LensHaloBaseNSIE::Nrandomize() const
 {
-	sigma += step*sigma*gasdev(seed);
-
-	fratio += step*gasdev(seed);
-
-	pa += step*pi*gasdev(seed);
-
+	return LensHalo::Nrandomize() + 3;
 }
 
-void LensHaloBaseNSIE::serialize(RawData& d) const
+Utilities::Any LensHaloBaseNSIE::randomize(std::size_t i, double step, long* seed)
 {
-	d << sigma << fratio << pa << rcore;
+	Utilities::Any old;
+	
+	if(i < LensHalo::Nrandomize())
+	{
+		old = LensHalo::randomize(i, step, seed);
+	}
+	else
+	{
+		switch(i - LensHalo::Nrandomize())
+		{
+			case 0:
+				old = sigma;
+				sigma += step*sigma*gasdev(seed);
+				break;
+			case 1:
+				old = fratio;
+				fratio += step*gasdev(seed);
+				break;
+			case 2:
+				old = pa;
+				pa += step*pi*gasdev(seed);
+				break;
+			default:
+				throw std::invalid_argument("bad parameter index for randomize()");
+		}
+	}
+	
+	return old;
 }
 
-
-void LensHaloBaseNSIE::unserialize(RawData& d)
+void LensHaloBaseNSIE::unrandomize(std::size_t i, const Utilities::Any& old)
 {
-	d >> sigma >> fratio >> pa >> rcore;
+	if(i < LensHalo::Nrandomize())
+	{
+		LensHalo::unrandomize(i, old);
+	}
+	else
+	{
+		switch(i - LensHalo::Nrandomize())
+		{
+			case 0:
+				sigma = Utilities::AnyCast<double>(old);
+				break;
+			case 1:
+				fratio = Utilities::AnyCast<double>(old);
+				break;
+			case 2:
+				pa = Utilities::AnyCast<double>(old);
+				break;
+			default:
+				throw std::invalid_argument("bad parameter index for unrandomize()");
+		}
+	}
 }
-
-
-
 
 LensHaloBaseNSIE::~LensHaloBaseNSIE(){
 	cout << "deleting lens" << endl;

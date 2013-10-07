@@ -19,21 +19,45 @@ Source::Source()
 	setSBlimit_magarcsec(30.);
 }
 
-void Source::serialize(RawData& d) const
+std::size_t Source::Nrandomize() const
 {
-	d << source_r << source_x[0] << source_x[1] << zsource << DlDs << sb_limit;
+	return 1;
 }
 
-void Source::unserialize(RawData& d)
+Utilities::Any Source::randomize(std::size_t i, double step, long* seed)
 {
-	d >> source_r >> source_x[0] >> source_x[1] >> zsource >> DlDs >> sb_limit;
+	Utilities::Any old;
+	
+	switch(i)
+	{
+		case 0:
+			// source position
+			old = std::make_pair(source_x[0], source_x[1]);
+			source_x[0] += step*pi/180/60/60*gasdev(seed);
+			source_x[1] += step*pi/180/60/60*gasdev(seed);
+			break;
+		default:
+			throw std::invalid_argument("bad parameter index for randomize()");
+	}
+	
+	return old;
 }
 
-void Source::randomize(double, long*)
+void Source::unrandomize(std::size_t i, const Utilities::Any& old)
 {
-	const std::type_info& type = typeid(*this);
-	std::cerr << "Error: " << type.name() << "::randomize() not implemented!" << std::endl;
-	exit(1);
+	std::pair<double, double> pos;
+	
+	switch(i)
+	{
+		case 0:
+			// source position
+			pos = Utilities::AnyCast<std::pair<double, double> >(old);
+			source_x[0] = pos.first;
+			source_x[1] = pos.second;
+			break;
+		default:
+			throw std::invalid_argument("bad parameter index for unrandomize()");
+	}
 }
 
 SourceUniform::SourceUniform(InputParams& params) : Source(){

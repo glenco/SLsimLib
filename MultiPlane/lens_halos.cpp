@@ -787,29 +787,30 @@ void LensHaloDummy::assignParams(InputParams& params)
 	if(!params.get("main_zlens",zlens)) error_message1("main_zlens",params.filename());
 }
 
-void LensHalo::serialize(RawData& d) const
+std::size_t LensHalo::Nrandomize() const
 {
-	d << mass << Rmax << rscale << zlens << xmax;
-	
-	for(std::size_t i = 0; i < Nmod; ++i)
-		d << mod[i];
-	
-	d << r_eps;
+	return 0;
 }
 
-void LensHalo::unserialize(RawData& d)
+Utilities::Any LensHalo::randomize(std::size_t i, double, long*)
 {
-	d >> mass >> Rmax >> rscale >> zlens >> xmax;
+	Utilities::Any old;
 	
-	for(std::size_t i = 0; i < Nmod; ++i)
-		d >> mod[i];
+	switch(i)
+	{
+		default:
+			throw std::invalid_argument("bad parameter index for randomize()");
+	}
 	
-	d >> r_eps;
+	return old;
 }
 
-void LensHalo::randomize(double step, long* seed)
+void LensHalo::unrandomize(std::size_t i, const Utilities::Any&)
 {
-	const std::type_info& type = typeid(*this);
-	std::cerr << "Error: " << type.name() << "::randomize() not implemented!" << std::endl;
-	exit(1);
+	switch(i)
+	{
+		default:
+			throw std::invalid_argument("bad parameter index for randomize()");
+	}
 }
+

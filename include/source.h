@@ -10,8 +10,8 @@
 
 #include "standard.h"
 #include "InputParams.h"
-#include "raw_data.h"
 #include "image_processing.h"
+#include "utilities_slsim.h"
 
 /** \brief Base class for all sources.
  *
@@ -56,14 +56,12 @@ public:
 	/// Sets sb_limit in mag/arcsec^2
 	void setSBlimit_magarcsec(float limit) {sb_limit = pow(10,-0.4*(48.6+limit))*pow(180*60*60/pi,2)/hplanck;}
 	
-	/// Read raw data from source.
-	virtual void serialize(RawData& d) const;
-	
-	/// Write raw data to source.
-	virtual void unserialize(RawData& d);
-	
-	/// Randomize source by a given amount.
-	virtual void randomize(double step, long* seed);
+	/// Number of randomizable parameters.
+	virtual std::size_t Nrandomize() const;
+	/// Randomize given source parameter by a given amount and return old value.
+	virtual Utilities::Any randomize(std::size_t i, double step, long* seed);
+	/// Restore a previous value to a parameter.
+	virtual void unrandomize(std::size_t i, const Utilities::Any& old);
 	
 protected:
 	virtual void assignParams(InputParams& params) = 0;

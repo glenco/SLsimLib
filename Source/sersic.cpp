@@ -44,54 +44,93 @@ SourceSersic::~SourceSersic()
 {
 }
 
-
-
-void SourceSersic::serialize(RawData& d) const
+std::size_t SourceSersic::Nrandomize() const
 {
-	// base class serialization
-	Source::serialize(d);
-	
-	d << Reff << mag << PA << index << bn << q << Ieff << flux;
+	return Source::Nrandomize() + 5;
 }
 
-void SourceSersic::unserialize(RawData& d)
+Utilities::Any SourceSersic::randomize(std::size_t i, double step, long* seed)
 {
-	// base class deserialization
-	Source::unserialize(d);
+	Utilities::Any old;
 	
-	d >> Reff >> mag >> PA >> index >> bn >> q >> Ieff >> flux;
-}
-
-void SourceSersic::randomize(double step, long* seed)
-{
-	// half light radius
-	double new_R = Reff + step*pi/180/60/60*gasdev(seed);
-	Reff = std::max(1.e-10,new_R);
-	
-	// magnitude
-	mag += step*gasdev(seed);
-	
-	// position angle
-	double new_PA = PA + step*pi*gasdev(seed);
-	if (new_PA > pi/2.)
-		PA = new_PA - pi;
-	else if (new_PA < -pi/2.)
-		PA = new_PA + pi;
+	if(i < Source::Nrandomize())
+	{
+		old = Source::randomize(i, step, seed);
+	}
 	else
-		PA = new_PA;
+	{
+		switch(i - Source::Nrandomize())
+		{
+			case 0:
+				// half light radius
+				old = Reff;
+				Reff = std::max(1.e-10, Reff + step*pi/180/60/60*gasdev(seed));
+				break;
+			case 1:
+				// magnitude
+				old = mag;
+				mag += step*gasdev(seed);
+				break;
+			case 2:
+				// position angle
+				old = PA;
+				PA = std::fmod(PA + step*pi*gasdev(seed), pi) - pi/2;
+				break;
+			case 3:
+				// Sersic index
+				old = index;
+				index += step*gasdev(seed);
+				break;
+			case 4:
+				// axes ratio
+				old = q;
+				q = std::min(1., std::max(1.e-05, q + step*gasdev(seed)));
+				break;
+			default:
+				throw std::invalid_argument("bad parameter index for randomize()");
+		}
+	}
 	
-	// Sersic index
-	index += step*gasdev(seed);
+	// update
+	setInternals();
 	
-	// axes ratio
-	double new_q = q + step*gasdev(seed);
-	q = std::min(1.,std::max(1.e-05,new_q));
-	
-	// redshift?
-	
-	// position
-	source_x[0] += step*pi/180/60/60*gasdev(seed);
-	source_x[1] += step*pi/180/60/60*gasdev(seed);
+	return old;
+}
+
+void SourceSersic::unrandomize(std::size_t i, const Utilities::Any& old)
+{
+	if(i < Source::Nrandomize())
+	{
+		Source::unrandomize(i, old);
+	}
+	else
+	{
+		switch(i - Source::Nrandomize())
+		{
+			case 0:
+				// half light radius
+				Reff = Utilities::AnyCast<double>(old);
+				break;
+			case 1:
+				// magnitude
+				mag = Utilities::AnyCast<double>(old);
+				break;
+			case 2:
+				// position angle
+				PA = Utilities::AnyCast<double>(old);
+				break;
+			case 3:
+				// Sersic index
+				index = Utilities::AnyCast<double>(old);
+				break;
+			case 4:
+				// axes ratio
+				q = Utilities::AnyCast<double>(old);
+				break;
+			default:
+				throw std::invalid_argument("bad parameter index for randomize()");
+		}
+	}
 	
 	// update
 	setInternals();
