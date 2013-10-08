@@ -74,11 +74,7 @@ Utilities::Any SourceSersic::randomize(std::size_t i, double step, long* seed)
 			case 2:
 				// position angle
 				old = PA;
-				PA += step*pi*gasdev(seed);
-				while(PA > pi/2)
-					PA -= pi;
-				while(PA < -pi/2)
-					PA += pi;
+				PA = std::fmod(PA + pi/2 + step*pi*gasdev(seed), pi) - pi/2;
 				break;
 			case 3:
 				// Sersic index
@@ -88,7 +84,14 @@ Utilities::Any SourceSersic::randomize(std::size_t i, double step, long* seed)
 			case 4:
 				// axes ratio
 				old = q;
-				q = std::min(1., std::max(1.e-05, q + step*gasdev(seed)));
+				q = std::max(1.e-05, q + step*gasdev(seed));
+				
+				// invert ellipsis if bigger than one
+				if(q > 1.)
+				{
+					q = 1/q;
+					PA = std::fmod(PA + pi, pi) - pi/2;
+				}
 				break;
 			default:
 				throw std::invalid_argument("bad parameter index for randomize()");

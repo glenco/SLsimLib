@@ -273,7 +273,14 @@ Utilities::Any LensHaloBaseNSIE::randomize(std::size_t i, double step, long* see
 				break;
 			case 1:
 				old = fratio;
-				fratio = std::max(1.0e-6, std::min(1., fratio + step*gasdev(seed)));
+				fratio = std::max(1.e-05, fratio + step*gasdev(seed));
+				
+				// invert ellipsis if bigger than one
+				if(fratio > 1.)
+				{
+					fratio = 1/fratio;
+					pa = std::fmod(pa + pi, pi) - pi/2;
+				}
 				break;
 			case 2:
 				old = pa;
