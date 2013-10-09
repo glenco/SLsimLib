@@ -269,7 +269,7 @@ Utilities::Any LensHaloBaseNSIE::randomize(std::size_t i, double step, long* see
 		{
 			case 0:
 				old = sigma;
-				sigma = std::exp(std::log(sigma) + step*gasdev(seed));
+				sigma = std::max(1., sigma + step*1000*gasdev(seed));
 				break;
 			case 1:
 				old = fratio;
