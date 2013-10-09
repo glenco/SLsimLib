@@ -17,6 +17,20 @@
 #include <utility>
 #include <stdexcept>
 
+#if __cplusplus < 201103L
+template<typename T>
+void swap(std::valarray<T>& x, std::valarray<T>& y)
+{
+	std::valarray<T> z(x);
+	
+	x.resize(y.size());
+	x = y;
+	
+	y.resize(z.size());
+	y = z;
+}
+#endif
+
 void swap(PixelMap& x, PixelMap& y)
 {
 	using std::swap;
@@ -547,7 +561,8 @@ void PixelMap::smooth(double sigma){
 		}
 	}
 	
-	std::swap(map, map_out);
+	using std::swap;
+	swap(map, map_out);
 
 	for (int j = 0; j <Nmask; j++)
 		delete[] mask[j];
