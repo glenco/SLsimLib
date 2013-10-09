@@ -44,47 +44,69 @@ SourceSersic::~SourceSersic()
 {
 }
 
-std::size_t SourceSersic::Nrandomize() const
+std::size_t SourceSersic::Nparams() const
 {
-	return Source::Nrandomize() + 5;
+	return Source::Nparams() + 5;
 }
 
-Utilities::Any SourceSersic::randomize(std::size_t i, double step, long* seed)
+double SourceSersic::getParam(std::size_t p) const
 {
-	Utilities::Any old;
+	if(p < Source::Nparams())
+		return Source::getParam(p);
 	
-	if(i < Source::Nrandomize())
+	switch(p - Source::Nparams())
 	{
-		old = Source::randomize(i, step, seed);
+		case 0:
+			// half light radius
+			return Reff;
+		case 1:
+			// magnitude
+			return mag;
+		case 2:
+			// position angle
+			return PA;
+		case 3:
+			// Sersic index
+			return index;
+		case 4:
+			// axes ratio
+			return q;
+		default:
+			throw std::invalid_argument("bad parameter index for randomize()");
+	}
+}
+
+double SourceSersic::setParam(std::size_t p, double val)
+{
+	double ret;
+	
+	if(p < Source::Nparams())
+	{
+		ret = Source::setParam(p, val);
 	}
 	else
 	{
-		switch(i - Source::Nrandomize())
+		switch(p - Source::Nparams())
 		{
 			case 0:
 				// half light radius
-				old = Reff;
-				Reff = std::max(1.e-10, Reff + step*pi/180/60/60*gasdev(seed));
+				ret = (Reff = val);
 				break;
 			case 1:
 				// magnitude
-				old = mag;
-				mag += step*gasdev(seed);
+				ret = (mag = val);
 				break;
 			case 2:
 				// position angle
-				old = PA;
-				PA = std::fmod(PA + pi/2 + step*pi*gasdev(seed), pi) - pi/2;
+				ret = (PA = val);
 				break;
 			case 3:
 				// Sersic index
-				old = index;
-				index += step*gasdev(seed);
+				ret = (index = val);
 				break;
 			case 4:
 				// axes ratio
-				old = q;
-				q = std::max(1.e-05, q + step*gasdev(seed));
+				q = val;
 				
 				// invert ellipsis if bigger than one
 				if(q > 1.)
@@ -92,6 +114,8 @@ Utilities::Any SourceSersic::randomize(std::size_t i, double step, long* seed)
 					q = 1/q;
 					PA = std::fmod(PA + pi, pi) - pi/2;
 				}
+				
+				ret = q;
 				break;
 			default:
 				throw std::invalid_argument("bad parameter index for randomize()");
@@ -101,38 +125,49 @@ Utilities::Any SourceSersic::randomize(std::size_t i, double step, long* seed)
 	// update
 	setInternals();
 	
-	return old;
+	return ret;
 }
 
-void SourceSersic::unrandomize(std::size_t i, const Utilities::Any& old)
+double SourceSersic::tweakParam(std::size_t p, double eps)
 {
-	if(i < Source::Nrandomize())
+	double ret;
+	
+	if(p < Source::Nparams())
 	{
-		Source::unrandomize(i, old);
+		ret = Source::tweakParam(p, eps);
 	}
 	else
 	{
-		switch(i - Source::Nrandomize())
+		switch(p - Source::Nparams())
 		{
 			case 0:
 				// half light radius
-				Reff = Utilities::AnyCast<double>(old);
+				ret = (Reff = std::max(1.e-10, Reff + eps*pi/180/60/60));
 				break;
 			case 1:
 				// magnitude
-				mag = Utilities::AnyCast<double>(old);
+				ret = (mag += eps*10);
 				break;
 			case 2:
 				// position angle
-				PA = Utilities::AnyCast<double>(old);
+				ret = (PA = std::fmod(PA + pi/2 + eps*pi, pi) - pi/2);
 				break;
 			case 3:
 				// Sersic index
-				index = Utilities::AnyCast<double>(old);
+				ret = (index += eps);
 				break;
 			case 4:
 				// axes ratio
-				q = Utilities::AnyCast<double>(old);
+				q = std::max(1.e-05, q + eps);
+				
+				// invert ellipsis if bigger than one
+				if(q > 1.)
+				{
+					q = 1/q;
+					PA = std::fmod(PA + pi, pi) - pi/2;
+				}
+				
+				ret = q;
 				break;
 			default:
 				throw std::invalid_argument("bad parameter index for randomize()");
@@ -141,6 +176,8 @@ void SourceSersic::unrandomize(std::size_t i, const Utilities::Any& old)
 	
 	// update
 	setInternals();
+	
+	return ret;
 }
 
 void SourceSersic::printCSV(std::ostream& out, bool header) const

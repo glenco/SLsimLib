@@ -250,72 +250,71 @@ void LensHaloBaseNSIE::PrintLens(bool show_substruct,bool show_stars){
 	if (stars_implanted) PrintStars(show_stars);
 }
 
-std::size_t LensHaloBaseNSIE::Nrandomize() const
+std::size_t LensHaloBaseNSIE::Nparams() const
 {
-	return LensHalo::Nrandomize() + 3;
+	return LensHalo::Nparams() + 3;
 }
 
-Utilities::Any LensHaloBaseNSIE::randomize(std::size_t i, double step, long* seed)
+double LensHaloBaseNSIE::getParam(std::size_t p) const
 {
-	Utilities::Any old;
+	if(p < LensHalo::Nparams())
+		return LensHalo::getParam(p);
 	
-	if(i < LensHalo::Nrandomize())
+	switch(p - LensHalo::Nparams())
 	{
-		old = LensHalo::randomize(i, step, seed);
+		case 0:
+			return sigma;
+		case 1:
+			return fratio;
+		case 2:
+			return pa;
+		default:
+			throw std::invalid_argument("bad parameter index for getParam()");
 	}
-	else
-	{
-		switch(i - LensHalo::Nrandomize())
-		{
-			case 0:
-				old = sigma;
-				sigma = std::max(1., sigma + step*1000*gasdev(seed));
-				break;
-			case 1:
-				old = fratio;
-				fratio = std::max(1.e-05, fratio + step*gasdev(seed));
-				
-				// invert ellipsis if bigger than one
-				if(fratio > 1.)
-				{
-					fratio = 1/fratio;
-					pa = std::fmod(pa + pi, pi) - pi/2;
-				}
-				break;
-			case 2:
-				old = pa;
-				pa = std::fmod(pa + pi/2 + step*pi*gasdev(seed), pi) - pi/2;
-				break;
-			default:
-				throw std::invalid_argument("bad parameter index for randomize()");
-		}
-	}
-	
-	return old;
 }
 
-void LensHaloBaseNSIE::unrandomize(std::size_t i, const Utilities::Any& old)
+double LensHaloBaseNSIE::setParam(std::size_t p, double val)
 {
-	if(i < LensHalo::Nrandomize())
+	if(p < LensHalo::Nparams())
+		return LensHalo::setParam(p, val);
+	
+	switch(p - LensHalo::Nparams())
 	{
-		LensHalo::unrandomize(i, old);
+		case 0:
+			return (sigma = val);
+		case 1:
+			return (fratio = val);
+		case 2:
+			return (pa = val);
+		default:
+			throw std::invalid_argument("bad parameter index for setParam()");
 	}
-	else
+}
+
+double LensHaloBaseNSIE::tweakParam(std::size_t p, double eps)
+{
+	if(p < LensHalo::Nparams())
+		return LensHalo::tweakParam(p, eps);
+	
+	switch(p - LensHalo::Nparams())
 	{
-		switch(i - LensHalo::Nrandomize())
-		{
-			case 0:
-				sigma = Utilities::AnyCast<float>(old);
-				break;
-			case 1:
-				fratio = Utilities::AnyCast<float>(old);
-				break;
-			case 2:
-				pa = Utilities::AnyCast<float>(old);
-				break;
-			default:
-				throw std::invalid_argument("bad parameter index for unrandomize()");
-		}
+		case 0:
+			return (sigma = std::max(1., sigma + eps*1000));
+		case 1:
+			fratio = std::max(1.e-05, fratio + eps);
+			
+			// invert ellipsis if bigger than one
+			if(fratio > 1.)
+			{
+				fratio = 1/fratio;
+				pa = std::fmod(pa + pi, pi) - pi/2;
+			}
+			
+			return fratio;
+		case 2:
+			return (pa = std::fmod(pa + pi/2 + eps*pi, pi) - pi/2);
+		default:
+			throw std::invalid_argument("bad parameter index for tweakParam()");
 	}
 }
 

@@ -24,10 +24,6 @@ public:
 	SourceSersic(InputParams& params);
 	~SourceSersic();
 	
-	std::size_t Nrandomize() const;
-	Utilities::Any randomize(std::size_t i, double step, long* seed);
-	void unrandomize(std::size_t i, const Utilities::Any& old);
-	
 	void setInternals();
 	
 	inline double getMag() { return mag; }
@@ -50,6 +46,11 @@ public:
 	double SurfaceBrightness(double *x);
 	inline double getTotalFlux() {return flux;}
 	void printSource();
+	
+	std::size_t Nparams() const;
+	double getParam(std::size_t p) const;
+	double setParam(std::size_t p, double value);
+	double tweakParam(std::size_t p, double eps);
 	
 	void printCSV(std::ostream& out, bool header = false) const;
 	

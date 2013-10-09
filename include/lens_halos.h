@@ -96,15 +96,17 @@ public:
 	double getFstars() const {return star_fstars;}
 	/// The mass of the stars if they are all the same mass
 	double getStarMass() const {if(stars_implanted)return star_masses[0]; else return 0.0;}
-
-	/// get number of randomizable parameters
-	virtual std::size_t Nrandomize() const;
-	/// randomize specific halo parameter by a given amound and return old value
-	virtual Utilities::Any randomize(std::size_t i, double step, long* seed);
-	/// restore previously randomized value
-	virtual void unrandomize(std::size_t i, const Utilities::Any& old);
 	
-	/// Print the halo properties in CSV format.
+	/// get the number of halo parameters
+	virtual std::size_t Nparams() const;
+	/// get the value of a halo parameter by index
+	virtual double getParam(std::size_t p) const;
+	/// set the value of a halo parameter by index
+	virtual double setParam(std::size_t p, double value);
+	/// modify the value of a halo parameter by a given amount
+	virtual double tweakParam(std::size_t p, double eps);
+	
+	/// print the halo parameters in CSV format
 	virtual void printCSV(std::ostream&, bool header = false) const;
 	
 	/// Prints star parameters; if show_stars is true, prints data for single stars

@@ -787,30 +787,35 @@ void LensHaloDummy::assignParams(InputParams& params)
 	if(!params.get("main_zlens",zlens)) error_message1("main_zlens",params.filename());
 }
 
-std::size_t LensHalo::Nrandomize() const
+std::size_t LensHalo::Nparams() const
 {
 	return 0;
 }
 
-Utilities::Any LensHalo::randomize(std::size_t i, double, long*)
+double LensHalo::getParam(std::size_t p) const
 {
-	Utilities::Any old;
-	
-	switch(i)
+	switch(p)
 	{
 		default:
-			throw std::invalid_argument("bad parameter index for randomize()");
+			throw std::invalid_argument("bad parameter index for getParam()");
 	}
-	
-	return old;
 }
 
-void LensHalo::unrandomize(std::size_t i, const Utilities::Any&)
+double LensHalo::setParam(std::size_t p, double val)
 {
-	switch(i)
+	switch(p)
 	{
 		default:
-			throw std::invalid_argument("bad parameter index for randomize()");
+			throw std::invalid_argument("bad parameter index for setParam()");
+	}
+}
+
+double LensHalo::tweakParam(std::size_t p, double eps)
+{
+	switch(p)
+	{
+		default:
+			throw std::invalid_argument("bad parameter index for tweak()");
 	}
 }
 

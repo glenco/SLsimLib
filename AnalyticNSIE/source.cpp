@@ -19,48 +19,53 @@ Source::Source()
 	setSBlimit_magarcsec(30.);
 }
 
-std::size_t Source::Nrandomize() const
+std::size_t Source::Nparams() const
 {
 	return 2;
 }
 
-Utilities::Any Source::randomize(std::size_t i, double step, long* seed)
+double Source::getParam(std::size_t p) const
 {
-	Utilities::Any old;
-	
-	switch(i)
+	switch(p)
 	{
 		case 0:
 			// source x position
-			old = source_x[0];
-			source_x[0] += step*pi/180/60/60*gasdev(seed);
-			break;
+			return source_x[0];
 		case 1:
 			// source y position
-			old = source_x[1];
-			source_x[1] += step*pi/180/60/60*gasdev(seed);
-			break;
+			return source_x[1];
 		default:
-			throw std::invalid_argument("bad parameter index for randomize()");
+			throw std::invalid_argument("bad parameter index for getParam()");
 	}
-	
-	return old;
 }
 
-void Source::unrandomize(std::size_t i, const Utilities::Any& old)
+double Source::setParam(std::size_t p, double val)
 {
-	switch(i)
+	switch(p)
 	{
 		case 0:
 			// source x position
-			source_x[0] = Utilities::AnyCast<double>(old);
-			break;
+			return (source_x[0] = val);
 		case 1:
 			// source y position
-			source_x[1] = Utilities::AnyCast<double>(old);
-			break;
+			return (source_x[1] = val);
 		default:
-			throw std::invalid_argument("bad parameter index for unrandomize()");
+			throw std::invalid_argument("bad parameter index for setParam()");
+	}
+}
+
+double Source::tweakParam(std::size_t p, double eps)
+{
+	switch(p)
+	{
+		case 0:
+			// source x position
+			return (source_x[0] += eps*pi/180/60/60);
+		case 1:
+			// source y position
+			return (source_x[1] += eps*pi/180/60/60);
+		default:
+			throw std::invalid_argument("bad parameter index for tweakParam()");
 	}
 }
 

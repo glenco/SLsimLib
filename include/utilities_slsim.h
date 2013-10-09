@@ -51,66 +51,6 @@ namespace Utilities
 	PosType **PosTypeMatrix(long rows, long cols);
 	void free_PosTypeMatrix(PosType **matrix, long rows, long cols);
 	
-	/// Exception for a bad cast of any
-	class BadAnyCast : public std::runtime_error
-	{
-	public:
-		BadAnyCast(const std::string& what) : std::runtime_error("BadAnyCast: " + what) {}
-	};
-	
-	/// A container for arbitrary data.
-	class Any
-	{
-	public:
-		Any() : value(0) {}
-		Any(const Any& other) : value(other.value ? other.value->clone() : 0) {}
-		template<typename T> Any(const T& x) : value(new derived<T>(x)) {}
-		~Any() { delete value; }
-		
-		Any& operator=(Any rhs) { swap(*this, rhs); return *this; }
-		template<typename T> Any& operator=(const T& rhs) { *this = Any(rhs); return *this; }
-		
-		const std::type_info& type() const { return value ? value->type() : typeid(void); }
-		
-		friend void swap(Any& a, Any& b) { std::swap(a.value, b.value); }
-		
-		template<typename value_type> friend value_type AnyCast(const Any& x);
-		
-	private:
-		class base
-		{
-		public:
-			virtual ~base() {}
-			virtual base* clone() const = 0;
-			virtual const std::type_info& type() const = 0;
-		};
-		
-		template<typename value_type>
-		class derived : public base
-		{
-		public:
-			derived(const value_type& x) : content(x) {}
-			virtual ~derived() {}
-			virtual base* clone() const { return new derived(content); }
-			virtual const std::type_info& type() const { return typeid(value_type); }
-			operator const value_type&() const { return content; }
-		private:
-			const value_type content;
-		};
-		
-		base* value;
-	};
-	
-	/// Cast operator for Any.
-	template<typename value_type>
-	value_type AnyCast(const Any& x)
-	{
-		const Any::derived<value_type>* value = dynamic_cast<Any::derived<value_type>*>(x.value);
-		if(!value)
-			throw BadAnyCast("could not cast Any to requested type");
-		return *value;
-	}
-	
 	/** \brief A container that can hold mixed objects all derived from
 	 * a base class and retains the ability to access derived class functions/members.
 	 *
