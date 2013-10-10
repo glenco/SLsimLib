@@ -787,29 +787,41 @@ void LensHaloDummy::assignParams(InputParams& params)
 	if(!params.get("main_zlens",zlens)) error_message1("main_zlens",params.filename());
 }
 
-void LensHalo::serialize(RawData& d) const
+std::size_t LensHalo::Nparams() const
 {
-	d << mass << Rmax << rscale << zlens << xmax;
-	
-	for(std::size_t i = 0; i < Nmod; ++i)
-		d << mod[i];
-	
-	d << r_eps;
+	return 0;
 }
 
-void LensHalo::unserialize(RawData& d)
+double LensHalo::getParam(std::size_t p) const
 {
-	d >> mass >> Rmax >> rscale >> zlens >> xmax;
-	
-	for(std::size_t i = 0; i < Nmod; ++i)
-		d >> mod[i];
-	
-	d >> r_eps;
+	switch(p)
+	{
+		default:
+			throw std::invalid_argument("bad parameter index for getParam()");
+	}
 }
 
-void LensHalo::randomize(double step, long* seed)
+double LensHalo::setParam(std::size_t p, double val)
+{
+	switch(p)
+	{
+		default:
+			throw std::invalid_argument("bad parameter index for setParam()");
+	}
+}
+
+double LensHalo::tweakParam(std::size_t p, double eps)
+{
+	switch(p)
+	{
+		default:
+			throw std::invalid_argument("bad parameter index for tweak()");
+	}
+}
+
+void LensHalo::printCSV(std::ostream&, bool header) const
 {
 	const std::type_info& type = typeid(*this);
-	std::cerr << "Error: " << type.name() << "::randomize() not implemented!" << std::endl;
-	exit(1);
+	std::cerr << "LensHalo subclass " << type.name() << " does not implement printCSV()" << std::endl;
+	std::exit(1);
 }

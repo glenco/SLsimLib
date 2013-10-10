@@ -123,12 +123,13 @@ public:
   IMFtype getIMF_type(){return main_stars_imf_type;}
   int getPerturb_Nmodes(){return perturb_Nmodes;}    /// this includes two for external shear
   double *perturb_modes;  ///first two are shear
-
-  void randomize(double step, long* seed);
-
-  void serialize(RawData& d) const;
-  void unserialize(RawData& d);
-
+	
+	std::size_t Nparams() const;
+	double getParam(std::size_t p) const;
+	double setParam(std::size_t p, double value);
+	double tweakParam(std::size_t p, double eps);
+	
+	void printCSV(std::ostream& out, bool header = false) const;
 
 protected:
 
