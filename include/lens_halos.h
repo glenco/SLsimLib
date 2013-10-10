@@ -598,6 +598,8 @@ public:
 	/// initialize from a mass function
 	void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, double my_slope, long *seed);
 
+	void randomize(double step, long* seed){};
+
 	
 private:
 	/// read-in parameters from a parameter file
