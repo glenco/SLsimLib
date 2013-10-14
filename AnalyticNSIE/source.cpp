@@ -60,10 +60,10 @@ double Source::tweakParam(std::size_t p, double eps)
 	{
 		case 0:
 			// source x position
-			return (source_x[0] += eps*pi/180/60/60);
+			return (source_x[0] += eps*pi/180/60);
 		case 1:
 			// source y position
-			return (source_x[1] += eps*pi/180/60/60);
+			return (source_x[1] += eps*pi/180/60);
 		default:
 			throw std::invalid_argument("bad parameter index for tweakParam()");
 	}
