@@ -78,6 +78,8 @@ double SourceSersic::getParam(std::size_t p) const
 
 double SourceSersic::setParam(std::size_t p, double val)
 {
+	using Utilities::between;
+	
 	double ret;
 	
 	if(p < Source::Nparams())
@@ -90,32 +92,23 @@ double SourceSersic::setParam(std::size_t p, double val)
 		{
 			case 0:
 				// half light radius
-				ret = (Reff = val);
+				ret = (Reff = between(val, 1e-10, std::numeric_limits<double>::max()));
 				break;
 			case 1:
 				// magnitude
-				ret = (mag = val);
+				ret = (mag = between(val, 1e-10, 40.));
 				break;
 			case 2:
 				// position angle
-				ret = (PA = val);
+				ret = (PA = between(val, -pi/2, pi/2));
 				break;
 			case 3:
 				// Sersic index
-				ret = (index = val);
+				ret = (index = between(val, 0.5, 8.0));
 				break;
 			case 4:
 				// axes ratio
-				q = val;
-				
-				// invert ellipsis if bigger than one
-				if(q > 1.)
-				{
-					q = 1/q;
-					PA = std::fmod(PA + pi, pi) - pi/2;
-				}
-				
-				ret = q;
+				ret = (q = between(val, 1e-10, 1.));
 				break;
 			default:
 				throw std::invalid_argument("bad parameter index for randomize()");
@@ -130,6 +123,8 @@ double SourceSersic::setParam(std::size_t p, double val)
 
 double SourceSersic::tweakParam(std::size_t p, double eps)
 {
+	using Utilities::between;
+	
 	double ret;
 	
 	if(p < Source::Nparams())
@@ -142,32 +137,23 @@ double SourceSersic::tweakParam(std::size_t p, double eps)
 		{
 			case 0:
 				// half light radius
-				ret = (Reff = std::max(1.e-10, Reff + eps*pi/180/60/60));
+				ret = (Reff = between(Reff + eps*pi/180/60/60, 1e-10, std::numeric_limits<double>::max()));
 				break;
 			case 1:
 				// magnitude
-				ret = (mag += eps*10);
+				ret = (mag = between(mag + eps*10, 1e-10, 40.));
 				break;
 			case 2:
 				// position angle
-				ret = (PA = std::fmod(PA + pi/2 + eps*pi, pi) - pi/2);
+				ret = (PA = between(PA + eps*pi, -pi/2, pi/2));
 				break;
 			case 3:
 				// Sersic index
-				ret = (index += eps);
+				ret = (index = between(index + eps, 0.5, 8.0));
 				break;
 			case 4:
 				// axes ratio
-				q = std::max(1.e-05, q + eps);
-				
-				// invert ellipsis if bigger than one
-				if(q > 1.)
-				{
-					q = 1/q;
-					PA = std::fmod(PA + pi, pi) - pi/2;
-				}
-				
-				ret = q;
+				ret = (q = between(q + eps, 1e-10, 1.));
 				break;
 			default:
 				throw std::invalid_argument("bad parameter index for randomize()");

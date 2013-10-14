@@ -275,17 +275,19 @@ double LensHaloBaseNSIE::getParam(std::size_t p) const
 
 double LensHaloBaseNSIE::setParam(std::size_t p, double val)
 {
+	using Utilities::between;
+	
 	if(p < LensHalo::Nparams())
 		return LensHalo::setParam(p, val);
 	
 	switch(p - LensHalo::Nparams())
 	{
 		case 0:
-			return (sigma = val);
+			return (sigma = between(val, 1e-10, 10000.));
 		case 1:
-			return (fratio = val);
+			return (fratio = between(val, 1e-10, 1.));
 		case 2:
-			return (pa = val);
+			return (pa = between(val, -pi/2, pi/2));
 		default:
 			throw std::invalid_argument("bad parameter index for setParam()");
 	}
@@ -293,26 +295,19 @@ double LensHaloBaseNSIE::setParam(std::size_t p, double val)
 
 double LensHaloBaseNSIE::tweakParam(std::size_t p, double eps)
 {
+	using Utilities::between;
+	
 	if(p < LensHalo::Nparams())
 		return LensHalo::tweakParam(p, eps);
 	
 	switch(p - LensHalo::Nparams())
 	{
 		case 0:
-			return (sigma = std::max(1., sigma + eps*1000));
+			return (sigma = between(sigma + eps*1000, 1e-10, 10000.));
 		case 1:
-			fratio = std::max(1.e-05, fratio + eps);
-			
-			// invert ellipsis if bigger than one
-			if(fratio > 1.)
-			{
-				fratio = 1/fratio;
-				pa = std::fmod(pa + pi, pi) - pi/2;
-			}
-			
-			return fratio;
+			return (fratio = between(fratio + eps, 1e-10, 1.));
 		case 2:
-			return (pa = std::fmod(pa + pi/2 + eps*pi, pi) - pi/2);
+			return (pa = between(pa + eps*pi, -pi/2, pi/2));
 		default:
 			throw std::invalid_argument("bad parameter index for tweakParam()");
 	}
