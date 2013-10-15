@@ -71,6 +71,7 @@ public:
 	int flag_background_field;
 	
 	void assignParams(InputParams& params);
+
 	void checkCosmology();
 	
 	void saveImage(bool saveprofile=true);

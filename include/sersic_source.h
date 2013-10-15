@@ -24,11 +24,6 @@ public:
 	SourceSersic(InputParams& params);
 	~SourceSersic();
 	
-	void serialize(RawData& d) const;
-	void unserialize(RawData& d);
-	
-	void randomize(double step, long* seed);
-	
 	void setInternals();
 	
 	inline double getMag() { return mag; }
@@ -48,10 +43,16 @@ public:
 	inline void setMag(double x) {mag= x;}
 	inline void setPA(double x) {PA= x;}
 
-
 	double SurfaceBrightness(double *x);
 	inline double getTotalFlux() {return flux;}
 	void printSource();
+	
+	std::size_t Nparams() const;
+	double getParam(std::size_t p) const;
+	double setParam(std::size_t p, double value);
+	double tweakParam(std::size_t p, double eps);
+	
+	void printCSV(std::ostream& out, bool header = false) const;
 	
 private:
 	void assignParams(InputParams& params);

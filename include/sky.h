@@ -4,7 +4,6 @@
 #include "source.h"
 #include "utilities_slsim.h"
 #include "InputParams.h"
-#include "raw_data.h"
 
 #include <vector>
 #include <cstddef>
@@ -115,15 +114,6 @@ public:
 	
 	/// returns field-of-view in deg^2 assuming region is square
 	double getFov(); // TODO: make const once Source is sorted out
-	
-	/// Read data from all sources.
-	void serialize(RawData& d) const;
-	
-	/// Write data to all sources.
-	void unserialize(RawData& d);
-	
-	/// Randomize all sources.
-	void randomize(double step, long* seed);
 	
 private:
 	Utilities::MixedVector<Source> srcs;

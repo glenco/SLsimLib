@@ -44,6 +44,7 @@ void Lens::readMultiDark()
 		std::cout << "- " << mokafile << std::endl;
 		
 		// create the MOKA halo
-		main_halos.push_back(new LensHaloMOKA(mokafile, multi_dark_lens, cosmo));
+        
+		main_halos.push_back(new LensHaloMOKA(mokafile,multi_dark_lens,cosmo));
 	}
 }

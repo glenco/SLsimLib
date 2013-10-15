@@ -31,8 +31,8 @@ public:
 	
 	PixelMap& operator=(PixelMap other);
 	
-	inline bool valid() const { return map_size; };
-	inline std::size_t size() const { return map_size; };
+	inline bool valid() const { return map.size(); };
+	inline std::size_t size() const { return map.size(); };
 	
 	inline std::size_t getNpixels() const { return Npixels; }
 	inline double getRange() const { return range; }
@@ -57,13 +57,17 @@ public:
 	inline double getValue(std::size_t i) const { return map[i]; }
 	inline double operator[](std::size_t i) const { return map[i]; };
 	
+	PixelMap& operator+=(const PixelMap& rhs);
+	friend PixelMap operator+(const PixelMap&, const PixelMap&);
+	
+	const std::valarray<float>& data() const { return map; }
+	
 	bool agrees(const PixelMap& other) const;
 	
 	friend void swap(PixelMap&, PixelMap&);
 	
 private:
-	std::size_t map_size;
-	float* map;
+	std::valarray<float> map;
 
 	std::size_t Npixels;
 	double resolution,range,center[2];

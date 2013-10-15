@@ -97,12 +97,17 @@ public:
   /// The mass of the stars if they are all the same mass
   double getStarMass() const {if(stars_implanted)return star_masses[0]; else return 0.0;}
 
-  /// read raw data
-  virtual void serialize(RawData& d) const;
-  /// write raw data
-  virtual void unserialize(RawData& d);
-	/// randomize halo by a given amound
-	virtual void randomize(double step, long* seed);
+	/// get the number of halo parameters
+	virtual std::size_t Nparams() const;
+	/// get the value of a halo parameter by index
+	virtual double getParam(std::size_t p) const;
+	/// set the value of a halo parameter by index
+	virtual double setParam(std::size_t p, double value);
+	/// modify the value of a halo parameter by a given amount
+	virtual double tweakParam(std::size_t p, double eps);
+	
+	/// print the halo parameters in CSV format
+	virtual void printCSV(std::ostream&, bool header = false) const;
 
 	/// Prints star parameters; if show_stars is true, prints data for single stars
 	void PrintStars(bool show_stars) const;
@@ -514,17 +519,11 @@ private:
  * The shear and kappa is always more accurate than the deflection.
  */
 
-
 class LensHaloJaffe: public LensHalo{
 public:
 	LensHaloJaffe();
 	LensHaloJaffe(InputParams& params);
 	virtual ~LensHaloJaffe();
-
-    double ffunction(double x);
-	double gfunction(double x);
-	double hfunction(double x);
-	double g2function(double x);
 
 	/// set Rmax
 	void set_Rmax(float my_Rmax){Rmax=my_Rmax; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
@@ -532,6 +531,12 @@ public:
 	void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
 
 protected:
+    
+    double ffunction(double x);
+	double gfunction(double x);
+	double hfunction(double x);
+	double g2function(double x);
+
 	/// table size
 	static const long NTABLE;
 	/// maximum Rmax/rscale

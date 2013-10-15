@@ -70,22 +70,3 @@ double Sky::getFov()
 	
 	return (rangex[1]-rangex[0])*(rangey[1]-rangey[0])*180*180/pi/pi;
 }
-
-void Sky::serialize(RawData& d) const
-{
-	for(std::size_t i = 0, n = srcs.size(); i < n; ++i)
-		srcs[i].serialize(d);
-}
-
-void Sky::unserialize(RawData& d)
-{
-	for(std::size_t i = 0, n = srcs.size(); i < n; ++i)
-		srcs[i].unserialize(d);
-}
-
-void Sky::randomize(double step, long* seed)
-{
-	//lns->randomize(step, seed);
-	for(std::size_t i = 0, n = srcs.size(); i < n; ++i)
-		srcs[i].randomize(step, seed);
-}
