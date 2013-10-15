@@ -62,6 +62,7 @@ void cmass(int n, std::valarray<float> map, std:: vector<double> x, double &xcm,
 /**
  * \brief loads a MOKA map from a given filename
  */
+
 LensHaloMOKA::LensHaloMOKA(const std::string& filename, LensHaloType my_maptype, const COSMOLOGY& lenscosmo)
 : LensHalo(),
   MOKA_input_file(filename), flag_MOKA_analyze(0), flag_background_field(0),
@@ -192,6 +193,8 @@ void LensHaloMOKA::convertmap(MOKAmap *map,LensHaloType maptype){
   
 }
 
+/** \brief checks the cosmology against the MOKA map parameters
+ */
 /// checks that cosmology in the header of the input fits map is the same as the one set
 void LensHaloMOKA::checkCosmology()
 {

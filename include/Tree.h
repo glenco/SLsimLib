@@ -272,12 +272,10 @@ namespace Utilities{
                  ,double my_range   /// Range of map in same units as x[]
                  ,double *my_center /// Center of map in same units as x[]
                  ):
-    N(Npixels),range(my_range),map_p(NULL)
+    N(Npixels),range(my_range),map_p(NULL),Ny(Npixels),range_y(my_range)
     {
       center[0] = my_center[0];
       center[1] = my_center[1];
-      Ny = N;
-      range_y = range;
 
       initparams(x);
     };
@@ -313,24 +311,22 @@ namespace Utilities{
                  ,double *my_center   /// Center of map in same units as x[]
                  ,const T *map        /// One dimensional array of fundamental type
                  ):
-    N(Npixels),range(my_range),map_p(map)
+    N(Npixels),range(my_range),map_p(map),Ny(Npixels),range_y(my_range)
     {
       center[0] = my_center[0];
       center[1] = my_center[1];
-      Ny = N;
-      range_y = range;
     };
     
     /** 
      Does interpolation of map at point that object was constructed with or last called with.
-     Can use and map type that has a [] operator that returns a double.
+     Can use any map type that has a [] operator that returns a double.
      */
     double interpolate(
                        T& map    /// map that supports the [] operator 
                        ){
       if(map.size() != N*Ny){
         ERROR_MESSAGE();
-        std::cout << "ERROR: Interpolator:interpolator(double *,T&)" << std::endl;
+        std::cout << "ERROR: Interpolator:interpolator(T&), wrong size map" << std::endl;
       }
       if(index == -1) return 0;
       
@@ -344,7 +340,7 @@ namespace Utilities{
                        ){
       if(map.size() != N*Ny){
         ERROR_MESSAGE();
-        std::cout << "ERROR: Interpolator:interpolator(double *,T&)" << std::endl;
+        std::cout << "ERROR: Interpolator:interpolator(double *,T&), wrong size map" << std::endl;
       }
       initparams(x);
       return interpolate(map);
