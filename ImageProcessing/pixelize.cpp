@@ -486,7 +486,9 @@ void PixelMap::printFITS(std::string filename, bool verbose) const
 	
 	phout.addKey("Npixels", Npixels, "");
 	phout.addKey("range", map_boundary_p2[0]-map_boundary_p1[0], "radians");
-	
+	phout.addKey("RA", center[0], "radians");
+	phout.addKey("DEC", center[1], "radians");
+    
 	if(verbose)
 		std::cout << phout << std::endl;
 #else
@@ -494,6 +496,15 @@ void PixelMap::printFITS(std::string filename, bool verbose) const
 	exit(1);
 #endif
 }
+
+/// Exports the pixel values into a valarray
+void PixelMap::values(std::valarray<float> &array) const{
+    array.resize(Npixels*Npixels);
+    for(size_t i=0;i<Npixels*Npixels;++i){
+        array[i] = map[i];
+    }
+}
+
 
 /** \ingroup Image
  *

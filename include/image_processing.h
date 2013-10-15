@@ -51,6 +51,8 @@ public:
 	void printASCII() const;
 	void printASCIItoFile(std::string filename) const;
 	void printFITS(std::string filename, bool verbose = false) const;
+    
+    void values(std::valarray<float> &array) const;
 
 	void smooth(double sigma);
 
