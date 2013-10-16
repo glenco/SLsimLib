@@ -155,11 +155,7 @@ void Grid::ReInitializeGrid(LensHndl lens){
  */
 void Grid::ReShoot(LensHndl lens){
   
-<<<<<<< local
 	Point *i_points,*s_points;
-=======
-	Point *i_points;
->>>>>>> other
 	double range,center[2];
 	unsigned long i;
   

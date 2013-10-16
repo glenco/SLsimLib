@@ -112,13 +112,8 @@ private:
   void _BuildTree();
 
   void _checkTree(unsigned long *count);
-<<<<<<< local
-  void _FindBox(double *ray);
   void _freeBranches_iter();
-
-=======
   void _FindBox(const double* ray);
->>>>>>> other
 
   // Should be obsolete
   Point *NearestNeighbor(const double* center,int Nneighbors,ListHndl neighborlist
