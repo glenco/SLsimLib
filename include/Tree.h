@@ -69,7 +69,6 @@ public:
   int AddPointsToTree(Point *xpoint,unsigned long Nadd);
 
   short emptyTree();
-  short freeTree();
   void RebuildTreeFromList();
 
   /***** State of tree functions *****/
@@ -109,12 +108,13 @@ private:
   		,short markpoints,double *maxgridsize);
 
   void _freeBranches(short child);
-  void _freeBranches_iter();
   void _AddPoint();
   void _BuildTree();
 
   void _checkTree(unsigned long *count);
   void _FindBox(double *ray);
+  void _freeBranches_iter();
+
 
   // Should be obsolete
   Point *NearestNeighbor(double *ray,int Nneighbors,ListHndl neighborlist
