@@ -732,7 +732,7 @@ void Lens::createMainHalos(InputParams& params)
 		main_halos.push_back(new LensHaloUniform(params));
 		break;
 	case moka_lens:
-		main_halos.push_back(new LensHaloMOKA(params));
+		main_halos.push_back(new LensHaloMOKA(params, cosmo));
 		break;
 	case dummy_lens:
 		main_halos.push_back(new LensHaloDummy(params));
@@ -1573,23 +1573,4 @@ void Lens::quicksort(LensHaloHndl *halos,double **pos,unsigned long N){
 	quicksort(&halos[newpivotindex+1],&pos[newpivotindex+1],N-newpivotindex-1);
 
 	return ;
-}
-
-void Lens::serialize(RawData& d) const
-{
-	for(std::size_t i = 0, n = main_halos.size(); i < n; ++i)
-		main_halos[i]->serialize(d);
-}
-
-void Lens::unserialize(RawData& d)
-{
-	for(std::size_t i = 0, n = main_halos.size(); i < n; ++i)
-		main_halos[i]->unserialize(d);
-}
-
-void Lens::randomize(double step, long* seed)
-{
-	//lns->randomize(step, seed);
-	for(std::size_t i = 0, n = main_halos.size(); i < n; ++i)
-		main_halos[i]->randomize(step, seed);
 }

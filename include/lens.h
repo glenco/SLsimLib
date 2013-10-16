@@ -165,14 +165,6 @@ public:
 	/// returns the critical density at the main lens in Msun/ Mpc^2 for a source at zsource
 	double getSigmaCrit(double zsource) { return cosmo.SigmaCrit(getZlens(), zsource); }
 	
-	/// Read data from all main halos.
-	void serialize(RawData& d) const;
-	
-	/// Write data to all main halos.
-	void unserialize(RawData& d);
-	
-	/// Randomize all main halos.
-	void randomize(double step, long* seed);
 
   /// returns a const reference to the cosmology so that constant functions can be used, but the cosmological parameters cannot be changed.
   const COSMOLOGY & getCosmo(){return cosmo;}

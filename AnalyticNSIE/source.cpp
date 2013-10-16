@@ -19,21 +19,61 @@ Source::Source()
 	setSBlimit_magarcsec(30.);
 }
 
-void Source::serialize(RawData& d) const
+std::size_t Source::Nparams() const
 {
-	d << source_r << source_x[0] << source_x[1] << zsource << DlDs << sb_limit;
+	return 2;
 }
 
-void Source::unserialize(RawData& d)
+double Source::getParam(std::size_t p) const
 {
-	d >> source_r >> source_x[0] >> source_x[1] >> zsource >> DlDs >> sb_limit;
+	switch(p)
+	{
+		case 0:
+			// source x position
+			return source_x[0];
+		case 1:
+			// source y position
+			return source_x[1];
+		default:
+			throw std::invalid_argument("bad parameter index for getParam()");
+	}
 }
 
-void Source::randomize(double, long*)
+double Source::setParam(std::size_t p, double val)
+{
+	switch(p)
+	{
+		case 0:
+			// source x position
+			return (source_x[0] = val);
+		case 1:
+			// source y position
+			return (source_x[1] = val);
+		default:
+			throw std::invalid_argument("bad parameter index for setParam()");
+	}
+}
+
+double Source::tweakParam(std::size_t p, double eps)
+{
+	switch(p)
+	{
+		case 0:
+			// source x position
+			return (source_x[0] += eps*pi/180/60/60);
+		case 1:
+			// source y position
+			return (source_x[1] += eps*pi/180/60/60);
+		default:
+			throw std::invalid_argument("bad parameter index for tweakParam()");
+	}
+}
+
+void Source::printCSV(std::ostream&, bool header) const
 {
 	const std::type_info& type = typeid(*this);
-	std::cerr << "Error: " << type.name() << "::randomize() not implemented!" << std::endl;
-	exit(1);
+	std::cerr << "Source subclass " << type.name() << " does not implement printCSV()" << std::endl;
+	std::exit(1);
 }
 
 SourceUniform::SourceUniform(InputParams& params) : Source(){

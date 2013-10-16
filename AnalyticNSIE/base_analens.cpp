@@ -250,29 +250,86 @@ void LensHaloBaseNSIE::PrintLens(bool show_substruct,bool show_stars){
 	if (stars_implanted) PrintStars(show_stars);
 }
 
-void LensHaloBaseNSIE::randomize(double step, long* seed)
+std::size_t LensHaloBaseNSIE::Nparams() const
 {
-	sigma += step*sigma*gasdev(seed);
-
-	fratio += step*gasdev(seed);
-
-	pa += step*pi*gasdev(seed);
-
+	return LensHalo::Nparams() + 3;
 }
 
-void LensHaloBaseNSIE::serialize(RawData& d) const
+double LensHaloBaseNSIE::getParam(std::size_t p) const
 {
-	d << sigma << fratio << pa << rcore;
+	if(p < LensHalo::Nparams())
+		return LensHalo::getParam(p);
+	
+	switch(p - LensHalo::Nparams())
+	{
+		case 0:
+			return sigma;
+		case 1:
+			return fratio;
+		case 2:
+			return pa;
+		default:
+			throw std::invalid_argument("bad parameter index for getParam()");
+	}
 }
 
-
-void LensHaloBaseNSIE::unserialize(RawData& d)
+double LensHaloBaseNSIE::setParam(std::size_t p, double val)
 {
-	d >> sigma >> fratio >> pa >> rcore;
+	using Utilities::between;
+	
+	if(p < LensHalo::Nparams())
+		return LensHalo::setParam(p, val);
+	
+	switch(p - LensHalo::Nparams())
+	{
+		case 0:
+			return (sigma = between(val, 1e-10, 10000.));
+		case 1:
+			return (fratio = between(val, 1e-10, 1.));
+		case 2:
+			return (pa = between(val, -pi/2, pi/2));
+		default:
+			throw std::invalid_argument("bad parameter index for setParam()");
+	}
 }
 
+double LensHaloBaseNSIE::tweakParam(std::size_t p, double eps)
+{
+	using Utilities::between;
+	
+	if(p < LensHalo::Nparams())
+		return LensHalo::tweakParam(p, eps);
+	
+	switch(p - LensHalo::Nparams())
+	{
+		case 0:
+			return (sigma = between(sigma + eps*1000, 1e-10, 10000.));
+		case 1:
+			return (fratio = between(fratio + eps, 1e-10, 1.));
+		case 2:
+			return (pa = between(pa + eps*pi, -pi/2, pi/2));
+		default:
+			throw std::invalid_argument("bad parameter index for tweakParam()");
+	}
+}
 
-
+void LensHaloBaseNSIE::printCSV(std::ostream& out, bool header) const
+{
+	if(header)
+	{
+		out
+		<< "sigma" << ","
+		<< "fratio" << ","
+		<< "PA" << std::endl;
+	}
+	else
+	{
+		out
+		<< sigma << ","
+		<< fratio << ","
+		<< pa << std::endl;
+	}
+}
 
 LensHaloBaseNSIE::~LensHaloBaseNSIE(){
 	cout << "deleting lens" << endl;

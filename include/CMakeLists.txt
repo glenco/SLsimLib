@@ -27,7 +27,6 @@ add_sources(
 	pointlist.h
 	profile.h
 	quadTree.h
-	raw_data.h
 	sersic_source.h
 	simpleTree.h
 	sky.h

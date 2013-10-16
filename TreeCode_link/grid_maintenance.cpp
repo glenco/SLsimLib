@@ -155,7 +155,11 @@ void Grid::ReInitializeGrid(LensHndl lens){
  */
 void Grid::ReShoot(LensHndl lens){
   
+<<<<<<< local
 	Point *i_points,*s_points;
+=======
+	Point *i_points;
+>>>>>>> other
 	double range,center[2];
 	unsigned long i;
   
@@ -873,7 +877,7 @@ void Grid::zoom(
 
 /// Outputs a fits image of a lensing variable of choice
 void Grid::writeFits(
-      double center[]           /// center of image
+      const double center[]     /// center of image
       ,size_t Npixels           /// number of pixels in image in on dimension
       ,double resolution        /// resolution of image in radians
       ,LensingVariable lensvar  /// which quantity is to be displayed
@@ -938,9 +942,77 @@ void Grid::writeFits(
     tmp_image.imagekist->getCurrent()->surface_brightness = tmp_sb_vec[i];
 }
 
+/// Outputs a PixelMap of the lensing quantities of a fixed grid
+PixelMap Grid::writePixelMap(
+                     const double center[]     /// center of image
+                     ,size_t Npixels           /// number of pixels in image in on dimension
+                     ,double resolution        /// resolution of image in radians
+                     ,LensingVariable lensvar  /// which quantity is to be displayed
+                     ){
+    PixelMap map(center, Npixels, resolution);
+    
+    double range = Npixels*resolution;
+    ImageInfo tmp_image;
+    long i;
+    std::string tag;
+    i_tree->PointsWithinKist(center,range/sqrt(2.),tmp_image.imagekist,0);
+    std::vector<double> tmp_sb_vec(tmp_image.imagekist->Nunits());
+    
+    for(tmp_image.imagekist->MoveToTop(),i=0;i<tmp_sb_vec.size();++i,tmp_image.imagekist->Down()){
+        tmp_sb_vec[i] = tmp_image.imagekist->getCurrent()->surface_brightness;
+        switch (lensvar) {
+            case dt:
+                tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->dt;
+                tag = ".dt.fits";
+                break;
+            case alpha1:
+                tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->x[0]
+                - tmp_image.imagekist->getCurrent()->image->x[0];
+                tag = ".alpha1.fits";
+                break;
+            case alpha2:
+                tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->x[1]
+                - tmp_image.imagekist->getCurrent()->image->x[1];
+                tag = ".alpha2.fits";
+                break;
+            case kappa:
+                tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->kappa;
+                tag = ".kappa.fits";
+                break;
+            case gamma1:
+                tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->gamma[0];
+                tag = ".gamma1.fits";
+                break;
+            case gamma2:
+                tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->gamma[1];
+                tag = ".gamma2.fits";
+                break;
+            case gamma3:
+                tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->gamma[2];
+                tag = ".gamma3.fits";
+                break;
+            case invmag:
+                tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->invmag;
+                tag = ".invmag.fits";
+                break;
+            default:
+                break;
+        }
+    }
+    
+    map.Clean();
+    map.AddImages(&tmp_image,1,-1);
+    
+    for(tmp_image.imagekist->MoveToTop(),i=0;i<tmp_sb_vec.size();++i,tmp_image.imagekist->Down())
+        tmp_image.imagekist->getCurrent()->surface_brightness = tmp_sb_vec[i];
+    
+    return map;
+}
+
+
 /// Outputs a fits file for making plots of vector fields
 void Grid::writeFitsVector(
-                     double center[]           /// center of image
+                     const double center[]     /// center of image
                      ,size_t Npixels           /// number of pixels in image in on dimension
                      ,double resolution        /// resolution of image in radians
                      ,LensingVariable lensvar  /// which quantity is to be displayed

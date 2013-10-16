@@ -832,6 +832,12 @@ namespace Utilities
     void rot(long s,long *x, long *y, long rx, long ry);
   };
 
+	template<typename T>
+	T between(const T& x, const T& l, const T& u)
+	{
+		return std::max(l, std::min(u, x));
+	}
+	
 }
 
 #endif

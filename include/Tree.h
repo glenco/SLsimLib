@@ -45,10 +45,10 @@ public:
 
   //void FindAllBoxNeighbors(Point *point,ListHndl neighbors);
   void FindAllBoxNeighborsKist(Point *point,Kist<Point> * neighbors);
-  void PointsWithinEllipKist(double *ray,float rmax,float rmin,float posangle,Kist<Point> * neighborkist);
-  double PointsWithinKist(double *ray,float rmax,Kist<Point> * neighborkist,short markpoints);
-  void PointsWithinKist_iter(double *ray,float rmin,float rmax,Kist<Point> * neighborkist);
-  Point *NearestNeighborKist(double *ray,int Nneighbors,Kist<Point> * neighborkist);
+  void PointsWithinEllipKist(const double* center,float rmax,float rmin,float posangle,Kist<Point> * neighborkist);
+  double PointsWithinKist(const double* center,float rmax,Kist<Point> * neighborkist,short markpoints);
+  void PointsWithinKist_iter(const double* center,float rmin,float rmax,Kist<Point> * neighborkist);
+  Point *NearestNeighborKist(const double* center,int Nneighbors,Kist<Point> * neighborkist);
 
   void PointsInCurrent(unsigned long *ids,double **x);
 
@@ -84,9 +84,9 @@ public:
   void printTree();
   void checkTree();
 
-  void FindBoxPoint(double *ray,Point *point);
+  void FindBoxPoint(const double* ray,Point *point);
 
-  void _FindLeaf(double *ray,unsigned long Nadd = 0);
+  void _FindLeaf(const double* ray,unsigned long Nadd = 0);
 
 private:
 
@@ -112,14 +112,18 @@ private:
   void _BuildTree();
 
   void _checkTree(unsigned long *count);
+<<<<<<< local
   void _FindBox(double *ray);
   void _freeBranches_iter();
 
+=======
+  void _FindBox(const double* ray);
+>>>>>>> other
 
   // Should be obsolete
-  Point *NearestNeighbor(double *ray,int Nneighbors,ListHndl neighborlist
+  Point *NearestNeighbor(const double* center,int Nneighbors,ListHndl neighborlist
   		,short direction);
-  void _NearestNeighbor(double *ray,int Nneighbors,Point **neighborpoints,double *rneighbors,short *direction);
+  void _NearestNeighbor(double* ray,int Nneighbors,Point **neighborpoints,double *rneighbors,short *direction);
 
 
   // Are obsolete
@@ -153,8 +157,8 @@ inline double MAX(double x,double y){
 /*  returns the distance from ray[] to the furthest point on the
  *    border of the box,
  */
-inline double FurthestBorder(double *ray,double *p1,double *p2){
-  return sqrt( pow(MAX(ray[0]-p1[0],p2[0]-ray[0]),2) + pow(MAX(ray[1]-p1[1],p2[1]-ray[1]),2) );
+inline double FurthestBorder(const double* center,double *p1,double *p2){
+  return sqrt( pow(MAX(center[0]-p1[0],p2[0]-center[0]),2) + pow(MAX(center[1]-p1[1],p2[1]-center[1]),2) );
 };
 
 /***** Other operations *****/
@@ -167,15 +171,15 @@ TreeHndl readTree(char *filename);
 
 //inline int inbox(double ray[2],double *p1,double *p2);
 /* return 1 (0) if ray is (not) in the cube */
-inline int inbox(double *ray,double *p1,double *p2){
-  return (ray[0]>=p1[0])*(ray[0]<=p2[0])*(ray[1]>=p1[1])*(ray[1]<=p2[1]);
+inline int inbox(const double* center,double *p1,double *p2){
+  return (center[0]>=p1[0])*(center[0]<=p2[0])*(center[1]>=p1[1])*(center[1]<=p2[1]);
 };
 bool boxinbox(Branch *branch1,Branch *branch2);
 double BoxIntersection(Branch *branch1,Branch *branch2);
 bool AreBoxNeighbors(Point *point1,Point *point2);
 bool AreBoxNeighbors(Branch *branch1,Branch *branch2);
-bool CircleInBox(double *ray,double radius,double *p1,double *p2);
-bool BoxInCircle(double *ray,double radius,double *p1,double *p2);
+bool CircleInBox(const double* center,double radius,double *p1,double *p2);
+bool BoxInCircle(const double* center,double radius,double *p1,double *p2);
 
 // Point arrays
 
@@ -238,7 +242,7 @@ namespace Utilities{
 		,double *arr,unsigned long N);
 	void quickPartitionPoints(double pivotvalue,unsigned long *pivotindex
 		,Point *pointsarray,double *arr,unsigned long N);
-	int cutbox(PosType *ray,PosType *p1,PosType *p2,float rmax);
+	int cutbox(const PosType* center,PosType *p1,PosType *p2,float rmax);
 	void log_polar_grid(Point *i_points,double rmax,double rmin,double *center,long Ngrid);
 	void findarea(ImageInfo *imageinfo);
 	int windings2(double *x,Point *points,unsigned long Npoints,double *area,short image);
@@ -272,12 +276,10 @@ namespace Utilities{
                  ,double my_range   /// Range of map in same units as x[]
                  ,double *my_center /// Center of map in same units as x[]
                  ):
-    N(Npixels),range(my_range),map_p(NULL)
+    N(Npixels),range(my_range),map_p(NULL),Ny(Npixels),range_y(my_range)
     {
       center[0] = my_center[0];
       center[1] = my_center[1];
-      Ny = N;
-      range_y = range;
 
       initparams(x);
     };
@@ -313,24 +315,22 @@ namespace Utilities{
                  ,double *my_center   /// Center of map in same units as x[]
                  ,const T *map        /// One dimensional array of fundamental type
                  ):
-    N(Npixels),range(my_range),map_p(map)
+    N(Npixels),range(my_range),map_p(map),Ny(Npixels),range_y(my_range)
     {
       center[0] = my_center[0];
       center[1] = my_center[1];
-      Ny = N;
-      range_y = range;
     };
     
     /** 
      Does interpolation of map at point that object was constructed with or last called with.
-     Can use and map type that has a [] operator that returns a double.
+     Can use any map type that has a [] operator that returns a double.
      */
     double interpolate(
                        T& map    /// map that supports the [] operator 
                        ){
       if(map.size() != N*Ny){
         ERROR_MESSAGE();
-        std::cout << "ERROR: Interpolator:interpolator(double *,T&)" << std::endl;
+        std::cout << "ERROR: Interpolator:interpolator(T&), wrong size map" << std::endl;
       }
       if(index == -1) return 0;
       
@@ -344,7 +344,7 @@ namespace Utilities{
                        ){
       if(map.size() != N*Ny){
         ERROR_MESSAGE();
-        std::cout << "ERROR: Interpolator:interpolator(double *,T&)" << std::endl;
+        std::cout << "ERROR: Interpolator:interpolator(double *,T&), wrong size map" << std::endl;
       }
       initparams(x);
       return interpolate(map);

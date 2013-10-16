@@ -21,13 +21,42 @@ namespace
 	}
 	
 	template<typename Stream, typename ValueType>
-	void printrow(Stream& str, const std::string& label, const ValueType& value, const std::string& comment = std::string())
+	void printrow(Stream& str, const std::string& label, const ValueType& value)
 	{
-		if(comment.empty())
-			str << std::left << std::setw(23) << label << " " << value << std::endl;
-		else
-			str << std::left << std::setw(23) << label << " " << std::setw(11) << value << " # " << comment << std::endl;
+		str << std::left << std::setw(23) << label << " " << value << std::endl;
 	}
+	
+	template<typename Stream, typename ValueType>
+	void printrow(Stream& str, const std::string& label, const ValueType& value, const std::string& comment)
+	{
+		str << std::left << std::setw(23) << label << " " << std::setw(11) << value << " # " << comment << std::endl;
+	}
+}
+
+InputParams::counter::counter()
+{
+}
+
+InputParams::counter::counter(const InputParams::counter& other)
+: c(other.c)
+{
+}
+
+void InputParams::counter::use(const std::string& label)
+{
+#if __cplusplus >= 201103L
+	std::lock_guard<std::mutex> hold(mutex);
+#endif
+	
+	++c[label];
+}
+
+bool InputParams::counter::is_used(const std::string& label) const
+{
+	std::map<std::string, std::size_t>::const_iterator it = c.find(label);
+	if(it == c.end())
+		return false;
+	return (it->second > 0);
 }
 
 /**
@@ -83,7 +112,7 @@ InputParams::InputParams(std::string paramfile)
 				std::string label = myline.substr(0, np);
 				
 				// check if label is known
-				if(!check_label(label))
+				if(!is_known(label))
 					std::cerr << "WARNING: unknown parameter " << label << " in file " << paramfile << "!" << std::endl;
 				
 				myline = myline.substr(np);  // should now just have the value plus white space
@@ -123,23 +152,33 @@ InputParams::~InputParams()
 }
 
 /// Print all parameters and values to stdout.
-void InputParams::print()
+void InputParams::print() const
 {
 	std::cout << "number of lines read: " << params.size() << std::endl;
-	for(iterator it = params.begin(); it != params.end(); ++it)
-		printrow(std::cout, it->first, it->second, comments[it->first]);
+	for(const_iterator it = params.begin(); it != params.end(); ++it)
+	{
+		const_iterator comment = comments.find(it->first);
+		if(comment != comments.end())
+			printrow(std::cout, it->first, it->second, comment->second);
+		else
+		   printrow(std::cout, it->first, it->second);
+	}
 }
 
 /// Print parameters and values that have been accessed within the code to stdout.
-void InputParams::print_used()
+void InputParams::print_used() const
 {
 	std::cout << "###### Used Parameters #######" << std::endl;
 	std::size_t n = 0;
-	for(iterator it = params.begin(); it != params.end(); ++it)
+	for(const_iterator it = params.begin(); it != params.end(); ++it)
 	{
-		if(use_number[it->first] > 0)
+		if(use_counter.is_used(it->first))
 		{
-			printrow(std::cout, it->first, it->second, comments[it->first]);
+			const_iterator comment = comments.find(it->first);
+			if(comment != comments.end())
+				printrow(std::cout, it->first, it->second, comment->second);
+			else
+				printrow(std::cout, it->first, it->second);
 			++n;
 		}
 	}
@@ -147,16 +186,20 @@ void InputParams::print_used()
 }
 
 /// Print parameters and values that where read in but not accessed within the code to stdout.
-void InputParams::print_unused()
+void InputParams::print_unused() const
 {
 	std::cout << "###### Unused Parameters #######" << std::endl;
 	std::cout << "number of lines read: " << params.size() << std::endl;
 	std::size_t n = 0;
-	for(iterator it = params.begin(); it != params.end(); ++it)
+	for(const_iterator it = params.begin(); it != params.end(); ++it)
 	{
-		if(use_number[it->first] == 0)
+		if(!use_counter.is_used(it->first))
 		{
-			printrow(std::cout, it->first, it->second, comments[it->first]);
+			const_iterator comment = comments.find(it->first);
+			if(comment != comments.end())
+				printrow(std::cout, it->first, it->second, comment->second);
+			else
+				printrow(std::cout, it->first, it->second);
 			++n;
 		}
 	}
@@ -164,26 +207,25 @@ void InputParams::print_unused()
 }
 
 /// Print all parameters to a file in the format needed for an input parameter file. Unused parameters can be stripped with the optional second argument.
-void InputParams::PrintToFile(std::string filename, bool strip_unused)
+void InputParams::PrintToFile(std::string filename, bool strip_unused) const
 {
-	paramfile_name = filename;
-	std::ofstream file_out(paramfile_name.c_str());
+	std::ofstream file_out(filename.c_str());
 
-	std::cout << "Creating parameter file: " << paramfile_name;
+	std::cout << "Creating parameter file: " << filename;
 	file_out << "# This parameter file was created by GLAMER."<< std::endl;
 	file_out << "# It can be used as an input parameter file."<< std::endl;
 	file_out << "# number of parameters: " << params.size() << std::endl << std::endl;
 	
-	for(iterator it = params.begin(); it != params.end(); ++it)
+	for(const_iterator it = params.begin(); it != params.end(); ++it)
 	{
-		if(strip_unused && use_number[it->first] == 0)
+		if(strip_unused && !use_counter.is_used(it->first))
 			continue;
 		
-		iterator comment = comments.find(it->first);
-		if(comment == comments.end())
-			printrow(file_out, it->first, it->second);
+		const_iterator comment = comments.find(it->first);
+		if(comment != comments.end())
+			printrow(std::cout, it->first, it->second, comment->second);
 		else
-			printrow(file_out, it->first, it->second, comment->second);
+			printrow(std::cout, it->first, it->second);
 	}
 }
 
@@ -267,23 +309,23 @@ void InputParams::readMOKA()
  *
  * bool entries in the parameter file must be 0,1,true or false.
  */
-bool InputParams::get(std::string label, bool& value)
+bool InputParams::get(std::string label, bool& value) const
 {
-	iterator it = params.find(label);
+	const_iterator it = params.find(label);
 	if(it == params.end())
 		return false;
+	
+	use_counter.use(it->first);
 	
 	if(!it->second.compare("0") || !it->second.compare("false"))
 	{
 		value = false;
-		++use_number[it->first];
 		return true;
 	}
 	
 	if(!it->second.compare("1") || !it->second.compare("true"))
 	{
 		value = true;
-		++use_number[it->first];
 		return true;
 	}
 
@@ -298,28 +340,27 @@ bool InputParams::get(std::string label, bool& value)
  *
  * MassFuncType entries in the parameter file must be 0 through 2 or PS (Press & Schechter), ST (Sheth & Torman) or PowerLaw (Power-law).
  */
-bool InputParams::get(std::string label, MassFuncType& value)
+bool InputParams::get(std::string label, MassFuncType& value) const
 {
-	iterator it = params.find(label);
+	const_iterator it = params.find(label);
 	if(it == params.end())
 		return false;
 
+	use_counter.use(it->first);
+	
 	if(!it->second.compare("0") || !it->second.compare("PS"))
 	{
 		value = PS;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("1") || !it->second.compare("ST"))
 	{
 		value = ST;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("2") || !it->second.compare("PowerLaw"))
 	{
 		value = PL;
-		++use_number[it->first];
 		return true;
 	}
 
@@ -335,82 +376,72 @@ bool InputParams::get(std::string label, MassFuncType& value)
  * 3 or PowerLaw, 4 or NSIE, 5 or AnaLens, 6 or UniLens, 7 or MOKALens, 8 or DummyLens
  */
 
-bool InputParams::get(std::string label, LensHaloType& value)
+bool InputParams::get(std::string label, LensHaloType& value) const
 {
-	iterator it = params.find(label);
+	const_iterator it = params.find(label);
 	if(it == params.end())
 		return false;
+	
+	use_counter.use(it->first);
 	
 	if(!it->second.compare("0") || !it->second.compare("nolens"))
 	{
 		value = null_lens;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("1") || !it->second.compare("NFW"))
 	{
 		value = nfw_lens;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("2") || !it->second.compare("PseudoNFW"))
 	{
 		value = pnfw_lens;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("3") || !it->second.compare("PowerLaw"))
 	{
 		value = pl_lens;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("4") || !it->second.compare("NSIE"))
 	{
 		value = nsie_lens;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("5") || !it->second.compare("AnaLens"))
 	{
 		value = ana_lens;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("6") || !it->second.compare("UniLens")){
 		
 		value = uni_lens;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("7") || !it->second.compare("MOKALens"))
 	{
 		value = moka_lens;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("8") || !it->second.compare("DummyLens"))
 	{
 		value = dummy_lens;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("9") || !it->second.compare("Hernquist"))
 	{
 		value = hern_lens;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("10") || !it->second.compare("Jaffe"))
 	{
 		value = jaffe_lens;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("11") || !it->second.compare("MultiDark"))
 	{
 		value = multi_dark_lens;
-		++use_number[it->first];
 		return true;
 	}
 
@@ -427,22 +458,22 @@ bool InputParams::get(std::string label, LensHaloType& value)
  * GalaxyLensType entries in the parameter file must be 0 or none, 1 or NSIE
  */
 
-bool InputParams::get(std::string label, GalaxyLensHaloType& value)
+bool InputParams::get(std::string label, GalaxyLensHaloType& value) const
 {
-	iterator it = params.find(label);
+	const_iterator it = params.find(label);
 	if(it == params.end())
 		return false;
+	
+	use_counter.use(it->first);
 	
 	if(!it->second.compare("0") || !it->second.compare("none"))
 	{
 		value = null_gal;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("1") || !it->second.compare("NSIE"))
 	{
 		value = nsie_gal;
-		++use_number[it->first];
 		return true;
 	}
 
@@ -458,28 +489,27 @@ bool InputParams::get(std::string label, GalaxyLensHaloType& value)
  * MainLensType entries in the parameter file must be 0 through 2 or NFW, PowerLaw, or PointMass.
  */
 
-bool InputParams::get(std::string label, ClumpInternal& value)
+bool InputParams::get(std::string label, ClumpInternal& value) const
 {
-	iterator it = params.find(label);
+	const_iterator it = params.find(label);
 	if(it == params.end())
 		return false;
 
+	use_counter.use(it->first);
+	
 	if(!it->second.compare("0") || !it->second.compare("NFW"))
 	{
 		value = nfw;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("1") || !it->second.compare("PowerLaw"))
 	{
 		value = powerlaw;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("2") || !it->second.compare("PointMass"))
 	{
 		value = pointmass;
-		++use_number[it->first];
 		return true;
 	}
 
@@ -495,52 +525,47 @@ bool InputParams::get(std::string label, ClumpInternal& value)
  * MainLensType entries in the parameter file must be One,Mono,BrokenPowerLaw,Salpeter,SinglePowerLaw,Kroupa or Chabrier
  */
 
-bool InputParams::get(std::string label, IMFtype& value)
+bool InputParams::get(std::string label, IMFtype& value) const
 {
-	iterator it = params.find(label);
+	const_iterator it = params.find(label);
 	if(it == params.end())
 		return false;
+	
+	use_counter.use(it->first);
 	
 	if(!it->second.compare("One"))
 	{
 		value = One;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("Mono"))
 	{
 		value = Mono;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("BrokenPowerLaw"))
 	{
 		value = BrokenPowerLaw;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("Salpeter"))
 	{
 		value = Salpeter;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("SinglePowerLaw"))
 	{
 		value = SinglePowerLaw;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("Kroupa"))
 	{
 		value = Kroupa;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("Chabrier"))
 	{
 		value = Chabrier;
-		++use_number[it->first];
 		return true;
 	}
 
@@ -557,70 +582,62 @@ bool InputParams::get(std::string label, IMFtype& value)
  * MainLensType entries in the parameter file must be SDSS_U,SDSS_G,SDSS_R,SDSS_I,SDSS_Z,J,H,Ks,i1, or i2
  */
 
-bool InputParams::get(std::string label, Band& value)
+bool InputParams::get(std::string label, Band& value) const
 {
-	iterator it = params.find(label);
+	const_iterator it = params.find(label);
 	if(it == params.end())
 		return false;
+	
+	use_counter.use(it->first);
 	
 	if(!it->second.compare("SDSS_U"))
 	{
 		value = SDSS_U;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("SDSS_G"))
 	{
 		value = SDSS_G;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("SDSS_R"))
 	{
 		value = SDSS_R;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("SDSS_I"))
 	{
 		value = SDSS_I;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("SDSS_Z"))
 	{
 		value = SDSS_Z;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("J"))
 	{
 		value = J;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("H"))
 	{
 		value = H;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("Ks"))
 	{
 		value = Ks;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("i1"))
 	{
 		value = i1;
-		++use_number[it->first];
 		return true;
 	}
 	if(!it->second.compare("i2"))
 	{
 		value = i2;
-		++use_number[it->first];
 		return true;
 	}
 
@@ -635,14 +652,15 @@ bool InputParams::get(std::string label, Band& value)
  * If there is an entry in the parameter file this function will always
  * return it in string format - no type checking.
  */
-bool InputParams::get(std::string label,std::string& value)
+bool InputParams::get(std::string label,std::string& value) const
 {
-	iterator it = params.find(label);
+	const_iterator it = params.find(label);
 	if(it == params.end())
 		return false;
 	
+	use_counter.use(it->first);
+	
 	value = it->second;
-	++use_number[it->first];
 	
 	return true;
 }
@@ -663,9 +681,9 @@ void InputParams::put(std::string label, std::string value, std::string comment)
 }
 
 // Check to see if parameter exists.
-bool InputParams::exist(std::string label)
+bool InputParams::exist(std::string label) const
 {
-	iterator it = params.find(label);
+	const_iterator it = params.find(label);
 	if(it == params.end())
 		return false;
 	
