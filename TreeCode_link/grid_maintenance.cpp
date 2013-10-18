@@ -155,7 +155,7 @@ void Grid::ReInitializeGrid(LensHndl lens){
  */
 void Grid::ReShoot(LensHndl lens){
   
-	Point *i_points;
+	Point *i_points,*s_points;
 	double range,center[2];
 	unsigned long i;
   
@@ -163,63 +163,35 @@ void Grid::ReShoot(LensHndl lens){
 	center[0] = (i_tree->top->boundary_p2[0] + i_tree->top->boundary_p1[0])/2;
 	center[1] = (i_tree->top->boundary_p2[1] + i_tree->top->boundary_p1[1])/2;
   
-	//////////////////////////////
-  // redo grid with stars in it
-  // free old tree to speed up image finding
-  
-	s_tree->emptyTree();
+  // clear source tree
+  delete s_tree;
+  s_points = NewPointArray(i_tree->pointlist->Npoints,true);
   
 	// build new initial grid
   MoveToTopList(i_tree->pointlist);
-  for(i=0;i<i_tree->pointlist->Npoints;++i){
+  size_t k;
+  for(i=0,k=0;i<i_tree->pointlist->Npoints;++i){
     i_points = i_tree->pointlist->current;
-    if(i_points->head > 0) lens->rayshooterInternal(i_points->head,i_points,false);
+    if(i_points->head > 0){
+      
+      // link source and image points
+      for(size_t j=0;j<i_points->head;++j,++k){
+        i_points[j].image = &s_points[k];
+        s_points[k].image = &i_points[j];
+        s_points[k].id = i_points[j].id;
+        s_points[k].gridsize = i_points[j].gridsize;
+      };
+      // reshoot the rays
+      lens->rayshooterInternal(i_points->head,i_points,false);
+    }
+    
     MoveDownList(i_tree->pointlist);
   }
   
-	// need to resize root of source tree.  It can change in size
-  
-  MoveToTopList(s_tree->pointlist);
-  Point *s_points = s_tree->pointlist->current;
-	s_tree->top->boundary_p1[0]=s_points[0].x[0]; s_tree->top->boundary_p1[1]=s_points[0].x[1];
-	s_tree->top->boundary_p2[0]=s_points[0].x[0]; s_tree->top->boundary_p2[1]=s_points[0].x[1];
-  
-	for(i=0;i<s_tree->pointlist->Npoints;++i){
-    s_points = s_tree->pointlist->current;
-    /* find X boundary */
-		if(s_points[i].x[0] < s_tree->top->boundary_p1[0] ) s_tree->top->boundary_p1[0]=s_points[i].x[0];
-    if(s_points[i].x[0] > s_tree->top->boundary_p2[0] ) s_tree->top->boundary_p2[0]=s_points[i].x[0];
-    
-    /* find Y boundary */
-    if(s_points[i].x[1] < s_tree->top->boundary_p1[1] ) s_tree->top->boundary_p1[1]=s_points[i].x[1];
-    if(s_points[i].x[1] > s_tree->top->boundary_p2[1] ) s_tree->top->boundary_p2[1]=s_points[i].x[1];
-    MoveDownList(s_tree->pointlist);
-  }
-  
-  // a little extra room for future points
-  s_tree->top->boundary_p1[0] -=  range/Ngrid_init;
-  s_tree->top->boundary_p1[1] -=  range/Ngrid_init;
-  s_tree->top->boundary_p2[0] +=  range/Ngrid_init;
-  s_tree->top->boundary_p2[1] +=  range/Ngrid_init;
-  
-  s_tree->top->center[0] = (s_tree->top->boundary_p1[0]+s_tree->top->boundary_p2[0])/2;
-  s_tree->top->center[1] = (s_tree->top->boundary_p1[1]+s_tree->top->boundary_p2[1])/2;
-  
-	// fill trees
-  MoveToTopList(s_tree->pointlist);
-  for(i=0;i<s_tree->pointlist->Npoints;++i){
-    s_points = s_tree->pointlist->current;
-    if(s_points->head > 0) s_tree->AddPointsToTree(s_points,s_points->head);
-    MoveDownList(s_tree->pointlist);
-  }
-  
+  s_tree = new TreeStruct(s_points,s_points->head,1,(i_tree->top->boundary_p2[0] - i_tree->top->boundary_p1[0])/10 );
 	return;
 }
 
-/** \ingroup ImageFinding
- *
- * \brief DOES NOT WORK YET !!!!
- */
 
 /** \ingroup ImageFinding
  * \brief Recalculate surface brightness at every point without changing the positions of the grid or any lens properties.

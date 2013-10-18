@@ -281,6 +281,7 @@ LensHaloPseudoNFW::~LensHaloPseudoNFW(){
 
 LensHaloPowerLaw::LensHaloPowerLaw() : LensHalo(){
 	rscale = 1.0;
+  beta = -2;
 }
 
 LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){

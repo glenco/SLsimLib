@@ -166,7 +166,7 @@ public:
 	double getSigmaCrit(double zsource) { return cosmo.SigmaCrit(getZlens(), zsource); }
 	
 
-  /// returns a const reference to the cosmology so that constant function can be used, but the cosmological parameters cannot be changed.
+  /// returns a const reference to the cosmology so that constant functions can be used, but the cosmological parameters cannot be changed.
   const COSMOLOGY & getCosmo(){return cosmo;}
 
 private:
