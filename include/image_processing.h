@@ -103,7 +103,7 @@ public:
 	float getSeeing(){return seeing;}
 	float getZeropoint(){return mag_zeropoint;}
 	std::valarray<float> getPSF(){return map_psf;}
-	PixelMap Convert (PixelMap &map, bool psf, bool noise);
+	PixelMap Convert (PixelMap &map, bool psf, bool noise,long *seed);
 	PixelMap Convert_back (PixelMap &map);
 
 private:
@@ -120,7 +120,7 @@ private:
 	double pix_size; // pixel size (in rad)
 	bool telescope; // was the observation created from a default telescope?
 
-	PixelMap AddNoise(PixelMap &pmap);
+	PixelMap AddNoise(PixelMap &pmap,long *seed);
 	PixelMap PhotonToCounts(PixelMap &pmap);
 	PixelMap ApplyPSF(PixelMap &pmap);
 

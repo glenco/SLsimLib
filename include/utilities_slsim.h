@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <utility>
 #include <iterator>
+#include <cstdlib>
 #if __cplusplus >= 201103L
 #include <typeindex>
 #endif
@@ -838,6 +839,7 @@ namespace Utilities
 		return std::max(l, std::min(u, x));
 	}
 	
-}
+    /// generates a random number between 0 and 1, must be seeded with srand()
+    double randomDouble(void);}
 
 #endif

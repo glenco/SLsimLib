@@ -7,6 +7,7 @@
 
 
 #include "slsimlib.h"
+#include "utilities_slsim.h"
 
 Point *LinkToSourcePoints(Point *i_points,unsigned long Npoints){
   Point *s_points;
@@ -293,5 +294,9 @@ PosType **PosTypeMatrix(long rows, long cols)
       *x = *y;
       *y = t;
     }
+  }
+    
+  double randomDouble(void){
+        return (double)(std::rand())/(double)(RAND_MAX);
   }
 }
