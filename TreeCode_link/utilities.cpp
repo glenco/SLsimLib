@@ -297,7 +297,7 @@ PosType **PosTypeMatrix(long rows, long cols)
   }
   
   RandomNumbers::RandomNumbers(long seed){
-    if(seed < 0) seed *= -1;
+    if(seed > 0) seed *= -1;
     idum = seed;
     
     long k,j;
