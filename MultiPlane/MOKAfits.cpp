@@ -21,16 +21,18 @@ using namespace CCfits;
 void LensHaloMOKA::getDims(){
 #ifdef ENABLE_FITS
 	try{
-		std::auto_ptr<FITS> ff(new FITS (MOKA_input_file, Read));
-
-		PHDU *h0=&ff->pHDU();
-
-		map->nx=h0->axis(0);
-		map->ny=h0->axis(1);
+	  std::auto_ptr<FITS> ff(new FITS (MOKA_input_file, Read));
+	  
+	  PHDU *h0=&ff->pHDU();
+	  
+	  map->nx=h0->axis(0);
+	  map->ny=h0->axis(1);
+	  std:: cout << "nx           ny " << std:: endl;
+	  std:: cout << map->nx << "   " << map->ny << std:: endl;
 	}
 	catch(FITS::CantOpen){
-		std::cout << "can not open " << MOKA_input_file << std::endl;
-		exit(1);
+	  std::cout << "can not open " << MOKA_input_file << std::endl;
+	  exit(1);
 	}
 #else
 	std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
@@ -43,106 +45,151 @@ void LensHaloMOKA::getDims(){
  */
 void LensHaloMOKA::readImage(){
 #ifdef ENABLE_FITS
-
 	std:: cout << " reading MOKA file: " << MOKA_input_file << std:: endl;
 	std::auto_ptr<FITS> ff(new FITS (MOKA_input_file, Read));
 
 	PHDU *h0=&ff->pHDU();
-    // principal HDU is read
-	h0->read(map->convergence);
 
-	if(h0->axis(2) > 1 ){
-        ExtHDU &h1=ff->extension(1);
-        h1.read(map->alpha1);
-        ExtHDU &h2=ff->extension(2);
-        h2.read(map->alpha2);
-        ExtHDU &h3=ff->extension(3);
-        h3.read(map->gamma1);
-        ExtHDU &h4=ff->extension(4);
-        h4.read(map->gamma2);
-        std::cout << *h0 << h1 << h2 << h3  << h4 << std::endl;
-
-        h0->readKey ("SIDEL",map->boxlarcsec);
-        h0->readKey ("SIDEL2",map->boxlMpc);  // recall you that MOKA Mpc/h
-        h0->readKey ("ZLENS",map->zlens);
-        h0->readKey ("ZSOURCE",map->zsource);
-        h0->readKey ("OMEGA",map->omegam);
-        h0->readKey ("LAMBDA",map->omegal);
-        h0->readKey ("H",map->h);
-        h0->readKey ("W",map->wq);
-        h0->readKey ("MSTAR",map->mstar);
-        h0->readKey ("MVIR",map->m);
-        h0->readKey ("CONCENTRATION",map->c);
-        h0->readKey ("DL",map->Dlens);
-        h0->readKey ("DLS",map->DLS);
-        h0->readKey ("DS",map->DS);
-	
-    }else{
-        int npixels = map->nx;
-        if(map->ny<map->nx) npixels = map->ny;
-        std:: valarray<float> mapbut(map->nx*map->ny);
-        for(int i=0;i<map->nx;i++) for(int j=0;j<map->ny;j++){
-            mapbut[i+map->nx*j] = map->convergence[i+map->nx*j];
+        h0->readAllKeys();
+ 
+	// try to read MVIR, if it exists is a MOKA map
+	bool moka;
+        try {
+	  h0->readKey ("MVIR",map->m);
+	  moka=true;
         }
-        map->convergence.resize(npixels*npixels);
-        
-        // FITS file must contain the following keywords:
-        /*
+        catch(CCfits::HDU::NoSuchKeyword) {
+	  moka=false;
+        }
+	
+	// principal HDU is read
+	h0->read(map->convergence);
+	
+	if(moka){
+	  // check if they exist if not it has to compute them
+	  int nhdu = h0->axis(2);
+	  
+	  if(nhdu==1){
+	    std:: cout << "  preProcessing Map MOKA fits file has only KAPPA map" << std:: endl;
+	    PreProcessFFTWMap();
+	  }
+	  else{
+	    ExtHDU &h1=ff->extension(1);
+	    h1.read(map->alpha1);
+	    ExtHDU &h2=ff->extension(2);
+	    h2.read(map->alpha2);
+	    ExtHDU &h3=ff->extension(3);
+	    h3.read(map->gamma1);
+	    ExtHDU &h4=ff->extension(4);
+	    h4.read(map->gamma2);
+	    std::cout << *h0 << h1 << h2 << h3  << h4 << std::endl;
+	  }
+	  /* these are always present in each fits file created by MOKA */
+	  h0->readKey ("SIDEL",map->boxlarcsec);
+	  h0->readKey ("SIDEL2",map->boxlMpc);  // recall you that MOKA Mpc/h
+	  h0->readKey ("ZLENS",map->zlens);
+	  h0->readKey ("ZSOURCE",map->zsource);
+	  h0->readKey ("OMEGA",map->omegam);
+	  h0->readKey ("LAMBDA",map->omegal);
+	  h0->readKey ("H",map->h);
+	  h0->readKey ("W",map->wq);
+	  h0->readKey ("MSTAR",map->mstar);
+	  // h0->readKey ("MVIR",map->m);
+	  h0->readKey ("CONCENTRATION",map->c);
+	  h0->readKey ("DL",map->Dlens);
+	  h0->readKey ("DLS",map->DLS);
+	  h0->readKey ("DS",map->DS);
+	  
+	}else{
+	  int npixels = map->nx;
+	  if(map->ny<map->nx) npixels = map->ny;
+	  std:: valarray<float> mapbut(map->nx*map->ny);
+	  for(int i=0;i<map->nx;i++) for(int j=0;j<map->ny;j++){
+	      mapbut[i+map->nx*j] = map->convergence[i+map->nx*j];
+	    }
+	  map->convergence.resize(npixels*npixels);
+	  
+	  // FITS file must contain the following keywords:
+	  /*
             ZLENS or REDSHIFT                                 double
             PHYSICALSIZE                                      double
-         */
-        
-        h0->readAllKeys();
-        
-        try {
+	  */
+	  
+	  try {
             h0->readKey("ZLENS",map->zlens);
-        }
-        catch(CCfits::HDU::NoSuchKeyword) {
+	  }
+	  catch(CCfits::HDU::NoSuchKeyword) {
             try {
-                h0->readKey("REDSHIFT",map->zlens);
+	      h0->readKey("REDSHIFT",map->zlens);
             }
             catch(CCfits::HDU::NoSuchKeyword){
-                std::cout << "unable to read map zlmap" << std::endl;
-                std::cout << "I will STOP here!!!" << std::endl;
-                exit(1);
+	      std::cout << "unable to read map zlmap" << std::endl;
+	      std::cout << "I will STOP here!!!" << std::endl;
+	      exit(1);
             }
-        }
-        
-        double pixLMpc,pixelunit;
-        try {
-            h0->readKey("PHYSICALSIZE",map->boxlMpc);
-            // assumed to be square, what if it is not square?
-            pixLMpc = map->boxlMpc/npixels;
-        }
-        catch(CCfits::HDU::NoSuchKeyword) {
-            std::cout << "unable to read map pixelunit" << std::endl;
-            std::cout << "assuming is the MultiDark file" << std::endl;
-            map->boxlarcsec = 4*60.*60.;    // the square is 4x4
-            map->Dlens = cosmo.angDist(0.,map->zlens);
-            double inarcsec  = 180./M_PI/map->Dlens*60.*60.;
-            pixLMpc = 60./inarcsec;  //
+	  }
+	  map->Dlens = cosmo.angDist(0.,map->zlens);	  
+	  double inarcsec  = 180./M_PI/map->Dlens*60.*60.;
+	  double pixLMpc,pixelunit;
+	  try {
+	    // physical size in degrees
+            h0->readKey("PHYSICALSIZE",map->boxlarcsec);
+	    map->boxlarcsec*=60.*60;
+            pixLMpc = map->boxlarcsec/npixels/inarcsec;  
             map->boxlMpc = pixLMpc*npixels;
-            pixelunit = 1.e+10/pixLMpc/pixLMpc/cosmo.gethubble();
-        }
-
-        // made square // need to be
-        for(int i=0;i<npixels;i++) for(int j=0;j<npixels;j++){
-            map->convergence[i+npixels*j] = mapbut[i+map->nx*j]*pixelunit;
-        }
-        // kappa is not divided by the critical surface density
-        // they don't need to be preprocessed by fact
-        // create alpha and gamma arrays by FFT
-        map->nx = map->ny = npixels;
-        #ifdef ENABLE_FFTW
-        PreProcessFFTWMap();
-        #else
-        std::cout << "Please enable the preprocessor flag ENABLE_FFTW !" << std::endl;
-        exit(1);
-        #endif
+	    try {
+	      h0->readKey("PIXELUNIT",pixelunit);
+	      pixelunit/=pixLMpc/pixLMpc;	      
+	    }
+	    catch(CCfits::HDU::NoSuchKeyword) {
+	      std::cout << " unable to read map pixelunit" << std::endl;
+	      std::cout << " check this out in MOKAfits.cpp " << std::endl;
+	      std:: cout << " I will STOP here !!! " << std:: endl; 
+	      exit(1);
+	    }
+	  }
+	  catch(CCfits::HDU::NoSuchKeyword) {
+            std::cout << "unable to read map physical size and pixelunit" << std::endl;
+            std::cout << "assuming is the MultiDark file" << std::endl;
+	    
+            map->boxlarcsec = 4*60.*60.;    // the square is 4x4 by hand
+            pixLMpc = map->boxlarcsec/npixels/inarcsec;  
+            map->boxlMpc = pixLMpc*npixels;
+	    pixelunit = 1.e+10/cosmo.gethubble()/pixLMpc/pixLMpc; // by hand
+	  }
+	  
+	  double avkappa = 0;
+	  
+	  // made square // need to be
+	  for(int i=0;i<npixels;i++) for(int j=0;j<npixels;j++){
+	      map->convergence[i+npixels*j] = mapbut[i+map->nx*j]*pixelunit;
+	      avkappa += map->convergence[i+npixels*j];
+	    }
+	  avkappa /= (npixels*npixels);
+	  
+	  //std:: cout << "  <<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>> " << std:: endl;
+	  //std:: cout << "     average kappa = " << avkappa << std:: endl;
+	  //std:: cout << "  <<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>> " << std:: endl;
+	  for(int i=0;i<npixels;i++) for(int j=0;j<npixels;j++){
+	      map->convergence[i+npixels*j] = (map->convergence[i+npixels*j] - avkappa); 
+	    }
+	  
+	  // kappa is not divided by the critical surface density
+	  // they don't need to be preprocessed by fact
+	  // create alpha and gamma arrays by FFT
+	  map->nx = map->ny = npixels;
+#ifdef ENABLE_FFTW
+	  std:: cout << "  preProcessing Map " << std:: endl;
+	  PreProcessFFTWMap();
+	  
+#else
+	  std::cout << "Please enable the preprocessor flag ENABLE_FFTW !" << std::endl;
+	  exit(1);
+#endif
 	}
-    
+	
 	std:: cout << map->boxlMpc << "  " << map->boxlarcsec << std:: endl;
-		
+	
 	for(size_t i=0;i<map->convergence.size();++i){
 	  assert(map->convergence[i] == map->convergence[i]);
 	}
@@ -365,8 +412,8 @@ void LensHaloMOKA::PreProcessFFTWMap(){
                 } 
                 Nmap[i+Nnpixels*j]=map->convergence[ii+npixels*jj];
             }
-        }
-
+      }
+    
     double *dNmap=new double[Nnpixels*Nnpixels];
     double *input=new double[Nnpixels*Nnpixels];
     fftw_complex *fNmap=new fftw_complex[Nnpixels*(Nnpixels/2+1)];
@@ -385,6 +432,7 @@ void LensHaloMOKA::PreProcessFFTWMap(){
     delete[] dNmap;
 
     // fourier space
+    // std:: cout << " allocating fourier space maps " << std:: endl;
     fftw_complex *fphi   = new fftw_complex[Nnpixels*(Nnpixels/2+1)];
     fftw_complex *falpha1= new fftw_complex[Nnpixels*(Nnpixels/2+1)];
     fftw_complex *falpha2= new fftw_complex[Nnpixels*(Nnpixels/2+1)];
@@ -419,7 +467,7 @@ void LensHaloMOKA::PreProcessFFTWMap(){
             fgamma1[j+(Nnpixels/2+1)*i][1] = 0.5*(kx*kx-ky*ky)*fphi[j+(Nnpixels/2+1)*i][1];
             fgamma2[j+(Nnpixels/2+1)*i][0] = kx*ky*fphi[j+(Nnpixels/2+1)*i][0];
             fgamma2[j+(Nnpixels/2+1)*i][1] = kx*ky*fphi[j+(Nnpixels/2+1)*i][1];
-            // alpha - original
+            // alpha
             falpha1[j+(Nnpixels/2+1)*i][0] = -kx*fphi[j+(Nnpixels/2+1)*i][1];
             falpha1[j+(Nnpixels/2+1)*i][1] =  kx*fphi[j+(Nnpixels/2+1)*i][0];
             falpha2[j+(Nnpixels/2+1)*i][0] = -ky*fphi[j+(Nnpixels/2+1)*i][1];
@@ -457,17 +505,24 @@ void LensHaloMOKA::PreProcessFFTWMap(){
     fftw_execute( pp );
     fftw_destroy_plan(pp);
 
+    // std:: cout << " remapping the map in the original size " << std:: endl;
+
+    map->gamma1.resize(npixels*npixels);
+    map->gamma2.resize(npixels*npixels);
+    map->alpha1.resize(npixels*npixels);
+    map->alpha2.resize(npixels*npixels);
+
     for( int i=Nnpixels/2-npixels/2; i<Nnpixels/2+npixels/2; i++ )
             for( int j=Nnpixels/2-npixels/2; j<Nnpixels/2+npixels/2; j++ ){
                 int ii = i-int(Nnpixels/2-npixels/2);
                 int jj = j-int(Nnpixels/2-npixels/2);
         
-                map->gamma1[ii+Nnpixels*jj] = float( gamma1[i+Nnpixels*j]/Nnpixels/Nnpixels);
-                map->gamma2[ii+Nnpixels*jj] = float(-gamma2[i+Nnpixels*j]/Nnpixels/Nnpixels);
+                map->gamma1[ii+npixels*jj] = float( gamma1[i+Nnpixels*j]/Nnpixels/Nnpixels);
+                map->gamma2[ii+npixels*jj] = float(-gamma2[i+Nnpixels*j]/Nnpixels/Nnpixels);
         
-                map->alpha1[ii+Nnpixels*jj] = float(alpha1[i+Nnpixels*j]/Nnpixels/Nnpixels);
-                map->alpha2[ii+Nnpixels*jj] = float(alpha2[i+Nnpixels*j]/Nnpixels/Nnpixels);
-        }
+                map->alpha1[ii+npixels*jj] = float(alpha1[i+Nnpixels*j]/Nnpixels/Nnpixels);
+                map->alpha2[ii+npixels*jj] = float(alpha2[i+Nnpixels*j]/Nnpixels/Nnpixels);
+	    }
     
     delete[] fphi;
     delete[] falpha1;

@@ -98,12 +98,12 @@ public:
 	size_t getN() const { return map->nx; }
 	
 private:
-    LensHaloType maptype;
+	LensHaloType maptype;
 	void initMap();
-    void convertmap(MOKAmap *map,LensHaloType maptype);
-    MOKAmap* map;
-    const COSMOLOGY& cosmo;
-    void PreProcessFFTWMap();
+	void convertmap(MOKAmap *map,LensHaloType maptype);
+	MOKAmap* map;
+	const COSMOLOGY& cosmo;
+	void PreProcessFFTWMap();
 };
 
 void make_friendship(int ii,int ji,int np,std:: vector<int> &friends, std:: vector<double> &pointdist);
