@@ -296,7 +296,16 @@ PosType **PosTypeMatrix(long rows, long cols)
     }
   }
   
-  RandomNumbers::RandomNumbers(long seed){
+  RandomNumbers::RandomNumbers(long seed):
+     IM1(2147483399),IM2(2147483399),IA1(40014),IA2(40692),IQ1(53668),
+     IQ2(52774),IR1(12211),IR2(3791),EPS(1.2e-7),idum2(123456789),iy(0)
+  {
+    
+    AM = (1.0/IM1);
+    //IMM1 = (IM1-1);
+    NDIV = (1+(IM1-1)/32);
+    RNMX = (1.0-EPS);
+    
     if(seed > 0) seed *= -1;
     idum = seed;
     

@@ -850,22 +850,22 @@ namespace Utilities
     long idum;
     double ran2(void);
     
-    int IM1 = 2147483563;
-    int IM2 = 2147483399;
-    double AM = (1.0/IM1);
+    int IM1;
+    int IM2;
+    double AM;
     //int IMM1 = (IM1-1);
-    int IA1 = 40014;
-    int IA2 = 40692;
-    int IQ1 = 53668;
-    int IQ2 = 52774;
-    int IR1 = 12211;
-    int IR2 = 3791;
-    int NDIV = (1+(IM1-1)/32);
-    double EPS = 1.2e-7;
-    double RNMX = (1.0-EPS);
+    int IA1;
+    int IA2;
+    int IQ1;
+    int IQ2;
+    int IR1;
+    int IR2;
+    int NDIV;
+    double EPS;
+    double RNMX;
 
-    long idum2=123456789;
-    long iy=0;
+    long idum2;
+    long iy;
     long iv[32];
 
   };
