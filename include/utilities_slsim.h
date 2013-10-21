@@ -839,7 +839,37 @@ namespace Utilities
 		return std::max(l, std::min(u, x));
 	}
 	
-    /// generates a random number between 0 and 1, must be seeded with srand()
-    double randomDouble(void);}
+  /// This is a class for generating random numbers. It simplifies and fool proofs initialization and allows for multiple independent series of numbers.
+  class RandomNumbers{
+  public:
+    
+    RandomNumbers(long seed);
+    
+    double operator()(void);
+  private:
+    long idum;
+    double ran2(void);
+    
+    int IM1 = 2147483563;
+    int IM2 = 2147483399;
+    double AM = (1.0/IM1);
+    //int IMM1 = (IM1-1);
+    int IA1 = 40014;
+    int IA2 = 40692;
+    int IQ1 = 53668;
+    int IQ2 = 52774;
+    int IR1 = 12211;
+    int IR2 = 3791;
+    int NDIV = (1+(IM1-1)/32);
+    double EPS = 1.2e-7;
+    double RNMX = (1.0-EPS);
+
+    long idum2=123456789;
+    long iy=0;
+    long iv[32];
+
+  };
+
+}
 
 #endif

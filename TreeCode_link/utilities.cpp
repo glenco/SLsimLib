@@ -295,8 +295,48 @@ PosType **PosTypeMatrix(long rows, long cols)
       *y = t;
     }
   }
+  
+  RandomNumbers::RandomNumbers(long seed){
+    if(seed < 0) seed *= -1;
+    idum = seed;
     
-  double randomDouble(void){
-        return (double)(std::rand())/(double)(RAND_MAX);
+    long k,j;
+    
+    if (-(idum) < 1) idum=1;
+    else idum = -(idum);
+    idum2=(idum);
+    for (j=32+7;j>=0;j--) {
+      k=(idum)/IQ1;
+      idum=IA1*(idum-k*IQ1)-k*IR1;
+      if (idum < 0) idum += IM1;
+      if (j < 32) iv[j] = idum;
+    }
+    iy=iv[0];
+    
   }
+  
+  /// return a uniform random number between 0 and 1
+  double RandomNumbers::operator()(void){
+    return ran2();
+  }
+  
+  double RandomNumbers::ran2(void){
+    long j;
+    long k;
+    double temp;
+    
+    k=(idum)/IQ1;
+    idum=IA1*(idum-k*IQ1)-k*IR1;
+    if (idum < 0) idum += IM1;
+    k=idum2/IQ2;
+    idum2=IA2*(idum2-k*IQ2)-k*IR2;
+    if (idum2 < 0) idum2 += IM2;
+    j=iy/NDIV;
+    iy=iv[j]-idum2;
+    iv[j] = idum;
+    if (iy < 1) iy += IM1-1;
+    if ((temp=AM*iy) > RNMX) return RNMX;
+    else return temp;
+  }
+  
 }
