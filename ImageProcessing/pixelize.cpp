@@ -35,7 +35,12 @@ void swap(PixelMap& x, PixelMap& y)
 {
 	using std::swap;
 	
-	swap(x.map, y.map);
+	int square_size = y.Npixels*y.Npixels;
+	x.map.resize(square_size);
+	std::valarray<float> temp(square_size);
+	temp = y.map;
+	y.map = x.map;
+	x.map = temp;
 	
 	swap(x.Npixels, y.Npixels);
 	swap(x.resolution, y.resolution);
