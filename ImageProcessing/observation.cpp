@@ -69,6 +69,51 @@ Observation::Observation(Telescope tel_name)
 		seeing = 0.3;
 		pix_size = .3/60./60./180.*pi;
 	}
+	if (tel_name == KiDS_u)
+	{
+		diameter = 265.;
+		transmission = 0.032;
+		exp_time = 1000.;
+		exp_num = 5;
+		back_mag = 22.93;
+		ron = 5.;
+		seeing = 1.0;
+		pix_size = .21/60./60./180.*pi;
+	}
+	if (tel_name == KiDS_g)
+	{
+		diameter = 265.;
+		transmission = 0.1220;
+		exp_time = 900.;
+		exp_num = 5;
+		back_mag = 22.29;
+		ron = 5.;
+		seeing = 0.8;
+		pix_size = .21/60./60./180.*pi;
+	}
+	if (tel_name == KiDS_r)
+	{
+		diameter = 265.;
+		transmission = 0.089;
+		exp_time = 1800.;
+		exp_num = 5;
+		back_mag = 21.40;
+		ron = 5.;
+		seeing = 0.7;
+		pix_size = .21/60./60./180.*pi;
+	}
+	if (tel_name == KiDS_i)
+	{
+		diameter = 265.;
+		transmission = 0.062;
+		exp_time = 1200.;
+		exp_num = 5;
+		back_mag = 20.64;
+		ron = 5.;
+		seeing = 1.1;
+		pix_size = .21/60./60./180.*pi;
+	}
+
 	mag_zeropoint = 2.5*log10(diameter*diameter*transmission*pi/4./hplanck) - 48.6;
 	telescope = true;
 }
