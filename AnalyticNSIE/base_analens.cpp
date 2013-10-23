@@ -263,11 +263,11 @@ double LensHaloBaseNSIE::getParam(std::size_t p) const
 	switch(p - LensHalo::Nparams())
 	{
 		case 0:
-			return sigma;
+			return std::log10(sigma);
 		case 1:
 			return fratio;
 		case 2:
-			return pa;
+			return pa/pi;
 		default:
 			throw std::invalid_argument("bad parameter index for getParam()");
 	}
@@ -283,33 +283,13 @@ double LensHaloBaseNSIE::setParam(std::size_t p, double val)
 	switch(p - LensHalo::Nparams())
 	{
 		case 0:
-			return (sigma = between(val, 1e-10, 10000.));
+			return (sigma = std::pow(10., val));
 		case 1:
 			return (fratio = between(val, 1e-10, 1.));
 		case 2:
-			return (pa = between(val, -pi/2, pi/2));
+			return (pa = between(pi*val, -pi/2, pi/2));
 		default:
 			throw std::invalid_argument("bad parameter index for setParam()");
-	}
-}
-
-double LensHaloBaseNSIE::tweakParam(std::size_t p, double eps)
-{
-	using Utilities::between;
-	
-	if(p < LensHalo::Nparams())
-		return LensHalo::tweakParam(p, eps);
-	
-	switch(p - LensHalo::Nparams())
-	{
-		case 0:
-			return (sigma = between(sigma + eps*1000, 1e-10, 10000.));
-		case 1:
-			return (fratio = between(fratio + eps, 1e-10, 1.));
-		case 2:
-			return (pa = between(pa + eps*pi, -pi/2, pi/2));
-		default:
-			throw std::invalid_argument("bad parameter index for tweakParam()");
 	}
 }
 

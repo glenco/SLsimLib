@@ -58,13 +58,13 @@ double SourceSersic::getParam(std::size_t p) const
 	{
 		case 0:
 			// half light radius
-			return Reff;
+			return Reff/pi*180*60*60;
 		case 1:
 			// magnitude
-			return mag;
+			return mag/10;
 		case 2:
 			// position angle
-			return PA;
+			return PA/pi;
 		case 3:
 			// Sersic index
 			return index;
@@ -72,7 +72,7 @@ double SourceSersic::getParam(std::size_t p) const
 			// axes ratio
 			return q;
 		default:
-			throw std::invalid_argument("bad parameter index for randomize()");
+			throw std::invalid_argument("bad parameter index for getParam()");
 	}
 }
 
@@ -92,15 +92,15 @@ double SourceSersic::setParam(std::size_t p, double val)
 		{
 			case 0:
 				// half light radius
-				ret = (Reff = between(val, 1e-10, std::numeric_limits<double>::max()));
+				ret = (Reff = std::max(1e-10, val*pi/180/60/60));
 				break;
 			case 1:
 				// magnitude
-				ret = (mag = between(val, 1e-10, 40.));
+				ret = (mag = between(val*10, 1., 100.));
 				break;
 			case 2:
 				// position angle
-				ret = (PA = between(val, -pi/2, pi/2));
+				ret = (PA = between(val*pi, -pi/2, pi/2));
 				break;
 			case 3:
 				// Sersic index
@@ -111,52 +111,7 @@ double SourceSersic::setParam(std::size_t p, double val)
 				ret = (q = between(val, 1e-10, 1.));
 				break;
 			default:
-				throw std::invalid_argument("bad parameter index for randomize()");
-		}
-	}
-	
-	// update
-	setInternals();
-	
-	return ret;
-}
-
-double SourceSersic::tweakParam(std::size_t p, double eps)
-{
-	using Utilities::between;
-	
-	double ret;
-	
-	if(p < Source::Nparams())
-	{
-		ret = Source::tweakParam(p, eps);
-	}
-	else
-	{
-		switch(p - Source::Nparams())
-		{
-			case 0:
-				// half light radius
-				ret = (Reff = between(Reff + eps*pi/180/60/60, 1e-10, std::numeric_limits<double>::max()));
-				break;
-			case 1:
-				// magnitude
-				ret = (mag = between(mag + eps*10, 1e-10, 40.));
-				break;
-			case 2:
-				// position angle
-				ret = (PA = between(PA + eps*pi, -pi/2, pi/2));
-				break;
-			case 3:
-				// Sersic index
-				ret = (index = between(index + eps, 0.5, 8.0));
-				break;
-			case 4:
-				// axes ratio
-				ret = (q = between(q + eps, 1e-10, 1.));
-				break;
-			default:
-				throw std::invalid_argument("bad parameter index for randomize()");
+				throw std::invalid_argument("bad parameter index for setParam()");
 		}
 	}
 	
