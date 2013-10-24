@@ -855,6 +855,44 @@ namespace Utilities
     std::normal_distribution<> norm_dist;
     std::mt19937 rand_gen;
   };
+  
+  /**
+   * \brief This is a class for generating random numbers. It simplifies and fool proofs initialization and allows for multiple
+   *  independent series of numbers.
+   *
+   * This version is based on NR ran2() and is provided only for backwards reproducibility.  Use RandomNumbers class when possible.
+   */
+  class RandomNumbers_NR{
+  public:
+    
+    RandomNumbers_NR(long seed);
+    
+    double operator()(void);
+  private:
+    long idum;
+    double ran2(void);
+    
+    int IM1;
+    int IM2;
+    double AM;
+    //int IMM1 = (IM1-1);
+    int IA1;
+    int IA2;
+    int IQ1;
+    int IQ2;
+    int IR1;
+    int IR2;
+    int NDIV;
+    double EPS;
+    double RNMX;
+    
+    long idum2;
+    long iy;
+    long iv[32];
+    
+  };
+  
+  
 
 }
 
