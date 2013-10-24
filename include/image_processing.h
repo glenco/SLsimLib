@@ -7,7 +7,7 @@
 
 #ifndef IMAGE_PROCESSING_H_
 #define IMAGE_PROCESSING_H_
-
+ 
 #include "Tree.h"
 
 
@@ -80,7 +80,7 @@ private:
 };
 
 
-typedef enum {Euclid_VIS,Euclid_Y,Euclid_J,Euclid_H} Telescope;
+typedef enum {Euclid_VIS,Euclid_Y,Euclid_J,Euclid_H,KiDS_u,KiDS_g,KiDS_r,KiDS_i} Telescope;
 
 /** \ingroup Image
  * \brief It creates a realistic image from the output of a ray-tracing simulation.

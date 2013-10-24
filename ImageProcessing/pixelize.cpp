@@ -35,7 +35,7 @@ void swap(PixelMap& x, PixelMap& y)
 {
 	using std::swap;
 	
-	swap(x.map, y.map);
+	swap(x.map,y.map);
 	
 	swap(x.Npixels, y.Npixels);
 	swap(x.resolution, y.resolution);
