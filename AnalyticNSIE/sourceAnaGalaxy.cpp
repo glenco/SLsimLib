@@ -272,7 +272,7 @@ void SourceMultiAnaGalaxy::readDataFile(){
 			/***************************/
 			galaxies.push_back(
 					SourceOverzier(mag,pow(10,-(mag_bulge-mag)/2.5),Ref,Rh
-							,pa,inclination,HaloID,z_cosm,theta)
+							,pa,inclination,GalID,z_cosm,theta)
 			);
 
 			galaxies.back().setUMag(SDSS_u);

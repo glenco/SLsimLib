@@ -8,6 +8,7 @@
 
 #include "slsimlib.h"
 #include "utilities_slsim.h"
+#include <random>
 
 Point *LinkToSourcePoints(Point *i_points,unsigned long Npoints){
   Point *s_points;
@@ -296,56 +297,17 @@ PosType **PosTypeMatrix(long rows, long cols)
     }
   }
   
-  RandomNumbers::RandomNumbers(long seed):
-     IM1(2147483399),IM2(2147483399),IA1(40014),IA2(40692),IQ1(53668),
-     IQ2(52774),IR1(12211),IR2(3791),EPS(1.2e-7),idum2(123456789),iy(0)
-  {
-    
-    AM = (1.0/IM1);
-    //IMM1 = (IM1-1);
-    NDIV = (1+(IM1-1)/32);
-    RNMX = (1.0-EPS);
-    
-    if(seed > 0) seed *= -1;
-    idum = seed;
-    
-    long k,j;
-    
-    if (-(idum) < 1) idum=1;
-    else idum = -(idum);
-    idum2=(idum);
-    for (j=32+7;j>=0;j--) {
-      k=(idum)/IQ1;
-      idum=IA1*(idum-k*IQ1)-k*IR1;
-      if (idum < 0) idum += IM1;
-      if (j < 32) iv[j] = idum;
-    }
-    iy=iv[0];
-    
+  RandomNumbers::RandomNumbers(unsigned int seed)
+  {        
+    rand_gen = std::mt19937(seed);
+  }
+  
+  RandomNumbers::~RandomNumbers(void){
+    //delete rand_gen;
   }
   
   /// return a uniform random number between 0 and 1
   double RandomNumbers::operator()(void){
-    return ran2();
+    return std::generate_canonical<double, 10>(rand_gen);
   }
-  
-  double RandomNumbers::ran2(void){
-    long j;
-    long k;
-    double temp;
-    
-    k=(idum)/IQ1;
-    idum=IA1*(idum-k*IQ1)-k*IR1;
-    if (idum < 0) idum += IM1;
-    k=idum2/IQ2;
-    idum2=IA2*(idum2-k*IQ2)-k*IR2;
-    if (idum2 < 0) idum2 += IM2;
-    j=iy/NDIV;
-    iy=iv[j]-idum2;
-    iv[j] = idum;
-    if (iy < 1) iy += IM1-1;
-    if ((temp=AM*iy) > RNMX) return RNMX;
-    else return temp;
-  }
-  
 }

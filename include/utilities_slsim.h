@@ -11,6 +11,7 @@
 #include <utility>
 #include <iterator>
 #include <cstdlib>
+#include <random>
 #if __cplusplus >= 201103L
 #include <typeindex>
 #endif
@@ -839,35 +840,20 @@ namespace Utilities
 		return std::max(l, std::min(u, x));
 	}
 	
-  /// This is a class for generating random numbers. It simplifies and fool proofs initialization and allows for multiple independent series of numbers.
+  /// This is a class for generating random numbers. It is actually just a rapper for some std random classes.
   class RandomNumbers{
   public:
     
-    RandomNumbers(long seed);
+    RandomNumbers(unsigned int seed);
+    ~RandomNumbers(void);
     
     double operator()(void);
+    /// Normally (Gaussian) distributed random numbers with mean 0 and standard deviation 1
+    double gauss(){return norm_dist(rand_gen);}
   private:
-    long idum;
-    double ran2(void);
-    
-    int IM1;
-    int IM2;
-    double AM;
-    //int IMM1 = (IM1-1);
-    int IA1;
-    int IA2;
-    int IQ1;
-    int IQ2;
-    int IR1;
-    int IR2;
-    int NDIV;
-    double EPS;
-    double RNMX;
-
-    long idum2;
-    long iy;
-    long iv[32];
-
+     
+    std::normal_distribution<> norm_dist;
+    std::mt19937 rand_gen;
   };
 
 }
