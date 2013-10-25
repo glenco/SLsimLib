@@ -547,7 +547,7 @@ void PixelMap::smooth(double sigma){
 		}
 	}
 
-	std::valarray<float> map_out(0.0, map.size());
+	std::valarray<double> map_out(0.0, map.size());
 	
 	for(long i=0;i<map.size();i++){
 		for(int j=0;j<Nmask;j++){

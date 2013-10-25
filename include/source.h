@@ -118,7 +118,7 @@ private:
 	double ell[2];
 	double size;
 	double centroid[2];
-	std::valarray<float> values;
+	std::valarray<double> values;
 };
 
 /// A uniform surface brightness circular source.

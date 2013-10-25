@@ -103,7 +103,7 @@ void LensHaloMOKA::readImage(){
 	}else{
 	  int npixels = map->nx;
 	  if(map->ny<map->nx) npixels = map->ny;
-	  std:: valarray<float> mapbut(map->nx*map->ny);
+	  std:: valarray<double> mapbut(map->nx*map->ny);
 	  for(int i=0;i<map->nx;i++) for(int j=0;j<map->ny;j++){
 	      mapbut[i+map->nx*j] = map->convergence[i+map->nx*j];
 	    }
@@ -392,7 +392,7 @@ void LensHaloMOKA::PreProcessFFTWMap(){
     double sigmag = 0;
     if(npix_filter>0) sigmag = (2.*M_PI/boxl)*npixels/npix_filter;
     
-    std:: valarray<float> Nmap( Nnpixels*Nnpixels );
+    std:: valarray<double> Nmap( Nnpixels*Nnpixels );
         
     // assume locate in a squared map and build up the new map with the zero padding region
     for( int i=0; i<Nnpixels; i++ ) for( int j=0; j<Nnpixels; j++ ){

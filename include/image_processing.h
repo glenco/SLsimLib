@@ -60,14 +60,14 @@ public:
 	PixelMap& operator+=(const PixelMap& rhs);
 	friend PixelMap operator+(const PixelMap&, const PixelMap&);
 	
-	const std::valarray<float>& data() const { return map; }
+	const std::valarray<double>& data() const { return map; }
 	
 	bool agrees(const PixelMap& other) const;
 	
 	friend void swap(PixelMap&, PixelMap&);
 	
 private:
-	std::valarray<float> map;
+	std::valarray<double> map;
 
 	std::size_t Npixels;
 	double resolution,range,center[2];
@@ -102,7 +102,7 @@ public:
 	float getRon(){return ron;}
 	float getSeeing(){return seeing;}
 	float getZeropoint(){return mag_zeropoint;}
-	std::valarray<float> getPSF(){return map_psf;}
+	std::valarray<double> getPSF(){return map_psf;}
 	PixelMap Convert (PixelMap &map, bool psf, bool noise,long *seed);
 	PixelMap Convert_back (PixelMap &map);
 
@@ -115,7 +115,7 @@ private:
 	float back_mag;  // sky (or background) magnitude in mag/arcsec^2
 	float ron;  // read-out noise in electrons/pixel
 	float seeing;  // full-width at half maximum of the gaussian smoothing
-	std::valarray<float> map_psf;  // array of the point spread function
+	std::valarray<double> map_psf;  // array of the point spread function
 	float oversample; // psf oversampling factor
 	double pix_size; // pixel size (in rad)
 	bool telescope; // was the observation created from a default telescope?

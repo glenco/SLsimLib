@@ -360,7 +360,7 @@ namespace Utilities{
     }
         
     void test(void){
-      std::valarray<float> map;
+      std::valarray<double> map;
       double tmp,x[2];
           
       map.resize(N*N);

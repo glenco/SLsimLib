@@ -10,7 +10,7 @@
 //TODO: CARLO Could this be made methods of a class?
 /// create profile of the maps for each lensing component - spherical simmetry is assumed
 // create profile of the maps for each lensing component - spherical simmetry is assumed          
-double * estprof(std:: valarray<float> q,int nx,int ny, std:: valarray<float> r, 
+double * estprof(std:: valarray<double> q,int nx,int ny, std:: valarray<double> r, 
 		 double dr0, double xmax, std:: vector<int> &vi, std:: vector<int> &vj, int ngal){
   int nbin = int(xmax/dr0); 
   std:: cout << " nbins (in estprof) = " << nbin << std:: endl;                                    
@@ -46,7 +46,7 @@ double * estprof(std:: valarray<float> q,int nx,int ny, std:: valarray<float> r,
 }
 
 // variance of the profile                                                                         
-double * estsigmaprof(std:: valarray<float> q,int nx,int ny, std:: valarray<float> r, double dr0, 
+double * estsigmaprof(std:: valarray<double> q,int nx,int ny, std:: valarray<double> r, double dr0, 
 		      double xmax, std:: vector<int> &vi, std:: vector<int> &vj, int ngal, double* qm){                                                                                      
   int nbin = int(xmax/dr0);                                                                        
   double *kr = new double[nbin];                                                                   
@@ -89,7 +89,7 @@ double * estsigmaprof(std:: valarray<float> q,int nx,int ny, std:: valarray<floa
 }
 
 // create cumulative profile of the maps for each lensing component - spherical simmetry is assumed          
-double * estcprof(std:: valarray<float> q,int nx,int ny, std:: valarray<float> r, 
+double * estcprof(std:: valarray<double> q,int nx,int ny, std:: valarray<double> r, 
 		  double dr0, double xmax, std:: vector<int> &vi, std:: vector<int> &vj, int ngal){     
   int nbin = int(xmax/dr0);                                                                        
   std:: cout << " nbins (in estprof) = " << nbin << std:: endl;                                    
@@ -126,7 +126,7 @@ double * estcprof(std:: valarray<float> q,int nx,int ny, std:: valarray<float> r
 }
 
 // variance of the profile                                                                         
-double * estsigmacprof(std:: valarray<float> q,int nx,int ny, std:: valarray<float> r, 
+double * estsigmacprof(std:: valarray<double> q,int nx,int ny, std:: valarray<double> r, 
 		       double dr0, double xmax, std:: vector<int> &vi, std:: vector<int> &vj, int ngal, double* qm){
   int nbin = int(xmax/dr0);                                                                        
   double *kr = new double[nbin];                                                                   
