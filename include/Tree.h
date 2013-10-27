@@ -472,8 +472,7 @@ void splitlist(ListHndl imagelist,OldImageInfo *images,int *Nimages,int Maximage
 /* externally provided functions */
 /*********************************/
 
-/*  void rayshooterInternal(double *x,double *alpha,double *gamma,double *kappa,double *invmag);*/
-void rayshooterInternal(unsigned long Npoints,Point *i_points,bool kappa_off);
+//void rayshooterInternal(unsigned long Npoints,Point *i_points,bool kappa_off);
 void in_source(double *y_source,ListHndl sourcelist);
 bool tree_count_test(TreeHndl tree);
 bool testLeafs(TreeHndl tree);
