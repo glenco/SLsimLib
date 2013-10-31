@@ -811,15 +811,6 @@ double LensHalo::setParam(std::size_t p, double val)
 	}
 }
 
-double LensHalo::tweakParam(std::size_t p, double eps)
-{
-	switch(p)
-	{
-		default:
-			throw std::invalid_argument("bad parameter index for tweak()");
-	}
-}
-
 void LensHalo::printCSV(std::ostream&, bool header) const
 {
 	const std::type_info& type = typeid(*this);

@@ -13,7 +13,7 @@ using namespace std;
 /*
  * \brief center of mass of a map using the moving centre
  */
-void cmass(int n, std::valarray<float> map, std:: vector<double> x, double &xcm, double &ycm){ 
+void cmass(int n, std::valarray<double> map, std:: vector<double> x, double &xcm, double &ycm){ 
   double shrink = 1.02;
   // 0.05% of the total number of pixels
   int nstop = int(0.05*double(n)*double(n)/100.);
@@ -296,8 +296,8 @@ void LensHaloMOKA::saveProfiles(double &RE3,double &xxc,double &yyc){
 
 	int galaxiesPerBin = 64;
 
-	std::valarray<float> pxdist(map->nx*map->ny);
-	std::valarray<float> red_sgE(map->nx*map->ny),red_sgB(map->nx*map->ny),sgm(map->nx*map->ny); 
+	std::valarray<double> pxdist(map->nx*map->ny);
+	std::valarray<double> red_sgE(map->nx*map->ny),red_sgB(map->nx*map->ny),sgm(map->nx*map->ny); 
 	int i, j;
 	/*
 	  measure the center of mass
@@ -468,8 +468,8 @@ void LensHaloMOKA::force_halo(double *alpha,KappaType *kappa,KappaType *gamma,do
   
   // interpolate from the maps
   //<<<<<<< local
-  // Utilities::Interpolator<valarray<float> > interp(xx,map->nx,map->boxlMpc/map->h,map->center);
-  Utilities::Interpolator<valarray<float> > interp(xx,map->nx,map->boxlMpc,map->center);
+  // Utilities::Interpolator<valarray<double> > interp(xx,map->nx,map->boxlMpc/map->h,map->center);
+  Utilities::Interpolator<valarray<double> > interp(xx,map->nx,map->boxlMpc,map->center);
 
   alpha[0] = interp.interpolate(map->alpha1);
   alpha[1] = interp.interpolate(map->alpha2);

@@ -57,12 +57,10 @@ public:
 	
 	/// get the number of source parameters
 	virtual std::size_t Nparams() const;
-	/// get the value of a source parameter by index
+	/// get the value of a scaled source parameter by index
 	virtual double getParam(std::size_t p) const;
-	/// set the value of a source parameter by index
+	/// set the value of a scaled source parameter by index
 	virtual double setParam(std::size_t p, double value);
-	/// modify the value of a source parameter by a given amount
-	virtual double tweakParam(std::size_t p, double eps);
 	
 	/// print the source parameters in CSV format
 	virtual void printCSV(std::ostream&, bool header = false) const;
@@ -120,7 +118,7 @@ private:
 	double ell[2];
 	double size;
 	double centroid[2];
-	std::valarray<float> values;
+	std::valarray<double> values;
 };
 
 /// A uniform surface brightness circular source.

@@ -30,10 +30,10 @@ double Source::getParam(std::size_t p) const
 	{
 		case 0:
 			// source x position
-			return source_x[0];
+			return (source_x[0]/pi*180*60*60);
 		case 1:
 			// source y position
-			return source_x[1];
+			return (source_x[1]/pi*180*60*60);
 		default:
 			throw std::invalid_argument("bad parameter index for getParam()");
 	}
@@ -45,27 +45,12 @@ double Source::setParam(std::size_t p, double val)
 	{
 		case 0:
 			// source x position
-			return (source_x[0] = val);
+			return (source_x[0] = val*pi/180/60/60);
 		case 1:
 			// source y position
-			return (source_x[1] = val);
+			return (source_x[1] = val*pi/180/60/60);
 		default:
 			throw std::invalid_argument("bad parameter index for setParam()");
-	}
-}
-
-double Source::tweakParam(std::size_t p, double eps)
-{
-	switch(p)
-	{
-		case 0:
-			// source x position
-			return (source_x[0] += eps*pi/180/60);
-		case 1:
-			// source y position
-			return (source_x[1] += eps*pi/180/60);
-		default:
-			throw std::invalid_argument("bad parameter index for tweakParam()");
 	}
 }
 

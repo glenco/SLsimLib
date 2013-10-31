@@ -27,14 +27,14 @@
  */
 struct MOKAmap{
 	/// values for the map
-	std::valarray<float> convergence;
-	std::valarray<float> alpha1;
-	std::valarray<float> alpha2;
-	std::valarray<float> gamma1;
-	std::valarray<float> gamma2;
-	std::valarray<float> gamma3;
-	std::valarray<float> Signlambdar;
-	std::valarray<float> Signlambdat;
+	std::valarray<double> convergence;
+	std::valarray<double> alpha1;
+	std::valarray<double> alpha2;
+	std::valarray<double> gamma1;
+	std::valarray<double> gamma2;
+	std::valarray<double> gamma3;
+	std::valarray<double> Signlambdar;
+	std::valarray<double> Signlambdat;
 	std:: vector<double> x;
     int nx,ny;
     // boxlMpc is Mpc/h for MOKA
