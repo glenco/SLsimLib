@@ -637,3 +637,19 @@ void PixelMap::AddCurve(ImageInfo *curve,double value){
 
 	return;
 }
+
+/**
+ *  \brief Fills in pixels where the image plane points in the grid are located with the value given
+ */
+void PixelMap::AddGrid(Grid &grid,double value){
+  PointList* list = grid.i_tree->pointlist;
+  size_t index;
+
+  list->current = list->top;
+  do{
+    if(inMapBox(list->current->x)){
+      index = Utilities::IndexFromPosition(list->current->x,Npixels,range,center);
+      map[index] = value;
+    }
+  }while(MoveDownList(list));
+}

@@ -10,14 +10,14 @@
  
 #include "Tree.h"
 
-
+// forward declaration
+class Grid;
 
 /** \ingroup Image
  * \brief Takes image structure and pixelizes the flux into regular pixel grid which then
  * can be exported as a fits file, smoothed, etc. like an image.
  *
  */
-
 class PixelMap
 {
 public:
@@ -44,6 +44,7 @@ public:
 	void AddImages(ImageInfo *imageinfo,int Nimages,float rescale = 1.);
 	void AddCurve(ImageInfo *curve,double value);
 	void drawline(double x1[],double x2[],double value);
+	void AddGrid(Grid &grid,double value = 1.0);
 
 	void Renormalize(double factor);
 	void AddValue(std::size_t i, double value);
