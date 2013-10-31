@@ -382,3 +382,99 @@ void SourcePixelled::calcTotalFlux(){
 void SourcePixelled::printSource(){}
 void SourcePixelled::assignParams(InputParams& params){}
 
+double Source::changeFilter(std::string filter_in, std::string filter_out, std::string sed){
+
+	std::ifstream fin(filter_in.c_str());
+	std::vector<double> wavel_in, ampl_in;
+	fin.seekg(0,fin.beg);
+	double x,y;
+	for (int i = 0; ; i++)
+	{
+		if( fin.eof() ) break;
+		if (fin.peek() == '#')
+		{
+			fin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+			continue;
+		}
+		fin >> x;
+		wavel_in.push_back(x);
+		fin >> y;
+		ampl_in.push_back(y);
+	}
+
+	std::ifstream fout(filter_out.c_str());
+	std::vector<double> wavel_out, ampl_out;
+	fout.seekg(0,fout.beg);
+	for (int i = 0; ; i++)
+	{
+		if (fout.eof() ) break;
+		if (fout.peek() == '#')
+		{
+			fout.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+			continue;
+		}
+		fout >> x;
+		wavel_out.push_back(x);
+		fout >> y;
+		ampl_out.push_back(y);
+	}
+
+	std::ifstream sed_input(sed.c_str());
+	std::vector<double> wavel_sed, ampl_sed;
+	sed_input.seekg(0,sed_input.beg);
+	for (int i = 0; ; i++)
+	{
+		if(sed_input.eof() ) break;
+		if (sed_input.peek() == '#')
+		{
+			sed_input.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+			continue;
+		}
+		sed_input >> x;
+		wavel_sed.push_back(x);
+		sed_input >> y;
+		ampl_sed.push_back(y);
+		wavel_sed[i] *= 1+zsource;
+	}
+
+	double fin_int = integrateFilter(wavel_in,ampl_in);
+	double fout_int = integrateFilter(wavel_out,ampl_out);
+	double sed_in = integrateFilterSed(wavel_in, ampl_in, wavel_sed, ampl_sed);
+	double sed_out = integrateFilterSed(wavel_out, ampl_out, wavel_sed, ampl_sed);
+	double delta_mag = -2.5 * log10(sed_out/sed_in*fin_int/fout_int);
+	return delta_mag;
+}
+
+double Source::integrateFilter(std::vector<double> wavel_fil, std::vector<double> fil)
+{
+	double integr = 0.;
+	for (int i = 0; i < wavel_fil.size()-1; i++)
+		integr += (wavel_fil[i+1] - wavel_fil[i])*(fil[i+1]+fil[i]);
+	integr /= 2.;
+	return integr;
+}
+
+double Source::integrateFilterSed(std::vector<double> wavel_fil, std::vector<double> fil, std::vector<double> wavel_sed, std::vector<double> sed)
+{
+	int wavel_new_size = 10000;
+	vector<double> wavel_new(wavel_new_size), fil_val(wavel_new_size), sed_val(wavel_new_size);
+
+	double integr = 0.;
+	for (int i = 0; i < wavel_new_size; i++)
+	{
+		wavel_new[i] = max(wavel_fil[0],wavel_sed[0]) + double(i)/double(wavel_new_size-1)*(min(wavel_fil[wavel_fil.size()-1],wavel_sed[wavel_sed.size()-1])-max(wavel_fil[0],wavel_sed[0]) );
+		vector<double>::iterator it_f = lower_bound(wavel_fil.begin(), wavel_fil.end(), wavel_new[i]);
+		int p = it_f-wavel_fil.begin()-1;
+		fil_val[i] = fil[p] + (fil[p+1]-fil[p])*(wavel_new[i]-wavel_fil[p])/(wavel_fil[p+1]-wavel_fil[p]);
+		vector<double>::iterator it_s = lower_bound(wavel_sed.begin(), wavel_sed.end(), wavel_new[i]);
+		int q = it_s-wavel_sed.begin()-1;
+		sed_val[i] = sed[q] + (sed[q+1]-sed[q])*(wavel_new[i]-wavel_sed[q])/(wavel_sed[q+1]-wavel_sed[q]);
+	}
+	for (int i = 0; i < wavel_new_size-1; i++)
+	{
+		integr += (wavel_new[i+1] - wavel_new[i])*(fil_val[i+1]*sed_val[i+1]*wavel_new[i+1]*wavel_new[i+1]+fil_val[i]*sed_val[i]*wavel_new[i]*wavel_new[i]);
+	}
+	integr /= 2.;
+	return integr;
+}
+

@@ -65,6 +65,10 @@ public:
 	/// print the source parameters in CSV format
 	virtual void printCSV(std::ostream&, bool header = false) const;
 	
+	double changeFilter(std::string filter_in, std::string filter_out, std::string sed);
+	double integrateFilter(std::vector<double> wavel_fil, std::vector<double> fil);
+	double integrateFilterSed(std::vector<double> wavel_fil, std::vector<double> fil, std::vector<double> wavel_sed, std::vector<double> sed);
+
 protected:
 	virtual void assignParams(InputParams& params) = 0;
 	
