@@ -8,6 +8,11 @@
 #include "slsimlib.h"
 #include <typeinfo>
 
+#ifdef ENABLE_FITS
+#include <CCfits/CCfits>
+//#include <CCfits>
+#endif
+
 using namespace std;
 
 Source::Source()
@@ -382,7 +387,15 @@ void SourcePixelled::calcTotalFlux(){
 void SourcePixelled::printSource(){}
 void SourcePixelled::assignParams(InputParams& params){}
 
-double Source::changeFilter(std::string filter_in, std::string filter_out, std::string sed){
+/**  \brief Calculates the difference in magnitude when changing the observing filter
+ *
+ */
+double Source::changeFilter(
+		std::string filter_in  				/// file with the old observing filter
+		, std::string filter_out			/// file with the new observing filter
+		, std::string sed					/// file with the galaxy spectral energy distribution
+		)
+{
 
 	std::ifstream fin(filter_in.c_str());
 	std::vector<double> wavel_in, ampl_in;
@@ -445,6 +458,9 @@ double Source::changeFilter(std::string filter_in, std::string filter_out, std::
 	return delta_mag;
 }
 
+/**  \brief Calculates the integral of the filter curve given as an array of (x,y) values.
+ *
+ */
 double Source::integrateFilter(std::vector<double> wavel_fil, std::vector<double> fil)
 {
 	double integr = 0.;
@@ -454,6 +470,9 @@ double Source::integrateFilter(std::vector<double> wavel_fil, std::vector<double
 	return integr;
 }
 
+/**  \brief Calculates the integral of the sed mutliplied by the filter curve.
+ *
+ */
 double Source::integrateFilterSed(std::vector<double> wavel_fil, std::vector<double> fil, std::vector<double> wavel_sed, std::vector<double> sed)
 {
 	int wavel_new_size = 10000;
@@ -478,3 +497,151 @@ double Source::integrateFilterSed(std::vector<double> wavel_fil, std::vector<dou
 	return integr;
 }
 
+SourceShapelets::SourceShapelets(
+		double my_z                              /// redshift of the source
+		, double* my_center           			/// center (in rad)
+		, double my_mag							/// magnitude
+		, double my_scale						/// scale of the shapelets decomposition
+		, std::valarray<double> my_coeff  	/// coefficients of the shapelets decomposition
+		)
+		:Source()
+{
+	zsource = my_z;
+	mag = my_mag;
+	source_x[0] = my_center[0];
+	source_x[1] = my_center[1];
+	n1 = sqrt(my_coeff.size());
+	n2 = n1;
+	coeff = my_coeff;
+	source_r = my_scale;
+
+	NormalizeFlux();
+}
+
+SourceShapelets::SourceShapelets(
+		double my_z							/// redshift of the source
+		, double* my_center					/// center (in rad)
+		, double my_mag						/// magnitude
+		, std::string shap_file				/// fits file with coefficients in a square array
+		)
+		:Source()
+{
+	//TODO Fabio: add parameter for rotation
+
+	zsource = my_z;
+	mag = my_mag;
+	source_x[0] = my_center[0];
+	source_x[1] = my_center[1];
+
+#ifdef ENABLE_FITS
+	if(shap_file.empty())
+		throw std::invalid_argument("Please enter a valid filename for the FITS file input");
+
+	std::auto_ptr<CCfits::FITS> fp(new CCfits::FITS(shap_file.c_str(), CCfits::Read));
+
+	CCfits::PHDU& h0 = fp->pHDU();
+
+	h0.readKey("BETA", source_r);
+	source_r *= 0.03/180./60./60.*pi;
+	h0.readKey("DIM", n1);
+	n2 = n1;
+	h0.read(coeff);
+
+#else
+	std::cerr << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
+	exit(1);
+#endif
+
+	NormalizeFlux();
+}
+
+SourceShapelets::SourceShapelets(
+		double* my_center  					/// center (in rad)
+		, std::string shap_file				/// fits file with coefficients in a square array. Mag and redshift are read from the header.
+		)
+		:Source()
+{
+	//TODO Fabio: add parameter for rotation
+
+	source_x[0] = my_center[0];
+	source_x[1] = my_center[1];
+
+#ifdef ENABLE_FITS
+	if(shap_file.empty())
+		throw std::invalid_argument("Please enter a valid filename for the FITS file input");
+
+	std::auto_ptr<CCfits::FITS> fp(new CCfits::FITS(shap_file.c_str(), CCfits::Read));
+
+	CCfits::PHDU& h0 = fp->pHDU();
+
+	h0.readKey("BETA", source_r);
+	source_r *= 0.03/180./60./60.*pi;
+	h0.readKey("MAG", mag);
+	h0.readKey("REDSHIFT", zsource);
+	h0.readKey("DIM", n1);
+	n2 = n1;
+	h0.read(coeff);
+
+#else
+	std::cerr << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
+	exit(1);
+#endif
+
+	NormalizeFlux();
+}
+
+
+double SourceShapelets::SurfaceBrightness(double *y)
+{
+	double sb = 0.;
+	double y_norm[2];
+	y_norm[0] = (y[0]-source_x[0])/source_r;
+	y_norm[1] = (y[1]-source_x[1])/source_r;
+	double dist = sqrt(y_norm[0]*y_norm[0]+y_norm[1]*y_norm[1]);
+	for (int i = 0; i < n1; i++)
+	{
+		for (int j = 0; j < n2; j++)
+		{
+			double norm = pow(2,-(i+j)/2.)/sqrt(pi)*pow(factrl(i)*factrl(j),-0.5);
+			sb += norm*coeff[j*n1+i]*Hermite(i,y_norm[0])*Hermite(j,y_norm[1])*exp(-dist*dist/2.);
+		}
+	}
+	sb /= source_r;
+	return max(sb,std::numeric_limits<double>::epsilon());
+}
+
+/// Returns the value of the Hermite polynomial of degree n at position x
+double SourceShapelets::Hermite(int n, double x)
+{
+	double hg[n];
+	hg[0] = 1.;
+	for (int i = 1; i <= n; i++)
+	{
+		if (i==1)
+			hg[1] = 2.*x;
+		else
+			hg[i] = 2.*x*hg[i-1]-2.*(i-1)*hg[i-2];
+	}
+	return hg[n];
+}
+
+void SourceShapelets::printSource(){};
+void SourceShapelets::assignParams(InputParams& params){};
+
+/// Rescales the coefficients to make the source bright as we want.
+void SourceShapelets::NormalizeFlux()
+{
+	double shap_flux = 0.;
+	for (int i = 0; i < n1; i=i+2)
+	{
+		for (int j = 0; j < n2; j=j+2)
+		{
+			shap_flux += pow(2,0.5*(2-i-j))*sqrt(factrl(i))/factrl(i/2.)*sqrt(factrl(j))/factrl(j/2.)*coeff[j*n1+i];
+		}
+	}
+	shap_flux *= sqrt(pi)*source_r;
+
+	flux = pow(10,-0.4*(mag+48.6))*inv_hplanck;
+
+	coeff *= flux/shap_flux;
+}
