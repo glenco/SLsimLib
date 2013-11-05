@@ -404,7 +404,7 @@ void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *x_cent
 	double **c,*b,*w,r,theta,wmax,**a,*y,*temp,**x;
 	int i,k,j;
 
-	if(Nmodes+2*Nsources < 2*Nimages){ std::printf("ERROR: too few parameters in el\n"); exit(0);}
+	if(Nmodes+2*Nsources < 2*Nimages){ std::printf("ERROR: too few parameters in find_lens\n"); exit(0);}
 
 	y=dvector(0,1);
 	temp=dvector(0,1);

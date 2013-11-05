@@ -263,8 +263,8 @@ PosType **PosTypeMatrix(long rows, long cols)
   long HilbertCurve::xy2d (double x, double y) {
     long rx, ry;
     
-    rx = (long)((x-xo[0])/n + 0.5);
-    ry = (long)((y-xo[1])/n + 0.5);
+    rx = (long)((x-xo[0])*n/range + 0.5);
+    ry = (long)((y-xo[1])*n/range + 0.5);
     
     if(rx > n || ry > n) throw std::runtime_error("Point out of bounds.");
     return xy2d(rx,ry);

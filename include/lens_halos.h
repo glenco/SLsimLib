@@ -69,7 +69,9 @@ public:
 	/// set scale radius
 	virtual void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rmax/rscale;};
 	/// set redshift
-	void setZlens(double my_zlens){zlens=my_zlens;};
+	void setZlens(double my_zlens){
+    zlens=my_zlens;
+  };
 	/// set slope
 	virtual void set_slope(double my_slope){};
 
@@ -88,8 +90,7 @@ public:
   /// stars
   bool AreStarsImaplated() const {return stars_implanted;}
   void implant_stars(PosType **centers,int Nregions,long *seed, IMFtype type=One);
-  /// creates a single star halo in pos (x,y)
-  void implant_stars(double x,double y,int Nregions,long *seed,IMFtype type=One);
+  //void implant_stars(double *x,double *y,int Nregions,long *seed,IMFtype type=One);
   void remove_stars();
   IMFtype getStarIMF_type() const {return main_stars_imf_type;}
   /// Fraction of surface density in stars
@@ -145,7 +146,7 @@ protected:
     /// scale length or core size.  Different meaning in different cases.  Not used in NSIE case.
     float rscale;
     /// redshift
-    double zlens;
+    //double zlens;
 
     bool stars_implanted;
     /// Number of regions to be subtracted to compensate for the mass in stars
@@ -174,6 +175,8 @@ protected:
   const static int Nmod = 18;
   double mod[18];
   double r_eps;
+  
+  double zlens;
 };
 
 /** \ingroup DeflectionL2
