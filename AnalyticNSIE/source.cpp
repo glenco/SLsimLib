@@ -397,6 +397,7 @@ double Source::changeFilter(
 		)
 {
 
+	// reads in the input filter
 	std::ifstream fin(filter_in.c_str());
 	std::vector<double> wavel_in, ampl_in;
 	fin.seekg(0,fin.beg);
@@ -415,6 +416,7 @@ double Source::changeFilter(
 		ampl_in.push_back(y);
 	}
 
+	// reads in the output filter
 	std::ifstream fout(filter_out.c_str());
 	std::vector<double> wavel_out, ampl_out;
 	fout.seekg(0,fout.beg);
@@ -432,6 +434,7 @@ double Source::changeFilter(
 		ampl_out.push_back(y);
 	}
 
+	// reads in the source sed
 	std::ifstream sed_input(sed.c_str());
 	std::vector<double> wavel_sed, ampl_sed;
 	sed_input.seekg(0,sed_input.beg);
@@ -450,7 +453,8 @@ double Source::changeFilter(
 		wavel_sed[i] *= 1+zsource;
 	}
 
-	double fin_int = integrateFilter(wavel_in,ampl_in);
+	// Applies Delta m = int (sed*fout) / int (sed*fin) * int fin / int fout
+ 	double fin_int = integrateFilter(wavel_in,ampl_in);
 	double fout_int = integrateFilter(wavel_out,ampl_out);
 	double sed_in = integrateFilterSed(wavel_in, ampl_in, wavel_sed, ampl_sed);
 	double sed_out = integrateFilterSed(wavel_out, ampl_out, wavel_sed, ampl_sed);
@@ -503,6 +507,7 @@ SourceShapelets::SourceShapelets(
 		, double my_mag							/// magnitude
 		, double my_scale						/// scale of the shapelets decomposition
 		, std::valarray<double> my_coeff  	/// coefficients of the shapelets decomposition
+		, double my_ang					/// rotation angle (in rad)
 		)
 		:Source()
 {
@@ -510,6 +515,7 @@ SourceShapelets::SourceShapelets(
 	mag = my_mag;
 	source_x[0] = my_center[0];
 	source_x[1] = my_center[1];
+	ang = my_ang;
 	n1 = sqrt(my_coeff.size());
 	n2 = n1;
 	coeff = my_coeff;
@@ -523,6 +529,7 @@ SourceShapelets::SourceShapelets(
 		, double* my_center					/// center (in rad)
 		, double my_mag						/// magnitude
 		, std::string shap_file				/// fits file with coefficients in a square array
+		, double my_ang			/// rotation angle (in rad)
 		)
 		:Source()
 {
@@ -532,6 +539,7 @@ SourceShapelets::SourceShapelets(
 	mag = my_mag;
 	source_x[0] = my_center[0];
 	source_x[1] = my_center[1];
+	ang = my_ang;
 
 #ifdef ENABLE_FITS
 	if(shap_file.empty())
@@ -558,6 +566,7 @@ SourceShapelets::SourceShapelets(
 SourceShapelets::SourceShapelets(
 		double* my_center  					/// center (in rad)
 		, std::string shap_file				/// fits file with coefficients in a square array. Mag and redshift are read from the header.
+		, double my_ang				 /// rotation angle (in rad)
 		)
 		:Source()
 {
@@ -565,6 +574,7 @@ SourceShapelets::SourceShapelets(
 
 	source_x[0] = my_center[0];
 	source_x[1] = my_center[1];
+	ang = my_ang;
 
 #ifdef ENABLE_FITS
 	if(shap_file.empty())
@@ -595,18 +605,18 @@ double SourceShapelets::SurfaceBrightness(double *y)
 {
 	double sb = 0.;
 	double y_norm[2];
-	y_norm[0] = (y[0]-source_x[0])/source_r;
-	y_norm[1] = (y[1]-source_x[1])/source_r;
+	y_norm[0] = ((y[0]-source_x[0])*cos(ang)+(y[1]-source_x[1])*sin(ang))/source_r;
+	y_norm[1] = ((y[0]-source_x[0])*sin(ang)-(y[1]-source_x[1 ])*cos(ang))/source_r;
 	double dist = sqrt(y_norm[0]*y_norm[0]+y_norm[1]*y_norm[1]);
 	for (int i = 0; i < n1; i++)
 	{
 		for (int j = 0; j < n2; j++)
 		{
-			double norm = pow(2,-(i+j)/2.)/sqrt(pi)*pow(factrl(i)*factrl(j),-0.5);
-			sb += norm*coeff[j*n1+i]*Hermite(i,y_norm[0])*Hermite(j,y_norm[1])*exp(-dist*dist/2.);
+			double norm = 1./sqrt(pow(2,i+j)*pi*factrl(i)*factrl(j));
+			sb += norm*coeff[j*n1+i]*Hermite(i,y_norm[0])*Hermite(j,y_norm[1]);
 		}
 	}
-	sb /= source_r;
+	sb *= exp(-dist*dist/2.)/source_r;
 	return max(sb,std::numeric_limits<double>::epsilon());
 }
 

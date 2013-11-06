@@ -133,13 +133,13 @@ private:
  */
 class SourceShapelets: public Source{
 public:
-	SourceShapelets(double my_z, double* my_center, double my_mag, double my_scale, std::valarray<double> my_coeff);
-	SourceShapelets(double my_z, double* my_center, double my_mag, std::string shap_file);
-	SourceShapelets(double* my_center, std::string shap_file);
+	SourceShapelets(double my_z, double* my_center, double my_mag, double my_scale, std::valarray<double> my_coeff, double my_ang = 0.);
+	SourceShapelets(double my_z, double* my_center, double my_mag, std::string shap_file, double my_ang = 0.);
+	SourceShapelets(double* my_center, std::string shap_file, double my_ang = 0.);
 	double SurfaceBrightness(double *y);
 	void printSource();
 	inline double getTotalFlux(){return flux;}
-	inline double getRadius(){return source_r*5.;}
+	inline double getRadius(){return source_r*10.;}
 	inline double getMag(){return mag;}
 	inline void setMag(double my_mag){mag = my_mag; NormalizeFlux();}
 
@@ -150,6 +150,7 @@ private:
 	std::valarray<double> coeff;
 	int n1,n2;
 	double flux, mag;
+	double ang;
 };
 
 /// A uniform surface brightness circular source.
