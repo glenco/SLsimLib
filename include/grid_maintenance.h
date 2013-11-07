@@ -52,9 +52,9 @@ struct Grid{
 	void ClearAllMarks();
 
 	void test_mag_matrix();
-    void writeFits(const double center[],size_t Npixels,double resolution,LensingVariable lensvar,std::string filename);
-    void writeFitsVector(const double center[],size_t Npixels,double resolution,LensingVariable lensvar,std::string filename);
-    PixelMap writePixelMap(const double center[],size_t Npixels,double resolution
+  void writeFits(const double center[],size_t Npixels,double resolution,LensingVariable lensvar,std::string filename);
+  void writeFitsVector(const double center[],size_t Npixels,double resolution,LensingVariable lensvar,std::string filename);
+  PixelMap writePixelMap(const double center[],size_t Npixels,double resolution
                            ,LensingVariable lensvar);
 
 
