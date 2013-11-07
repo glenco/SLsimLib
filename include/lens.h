@@ -139,7 +139,6 @@ public:
 	template<typename HaloType>
 	HaloType* getMainHalo(std::size_t i);
 	
-	/// compute the dflection, convergence, and shear for each point on the grid
 	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off);
 
 	// methods used for use with implanted sources
