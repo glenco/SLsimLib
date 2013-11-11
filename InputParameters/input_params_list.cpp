@@ -167,7 +167,7 @@ namespace
 }
 
 /**
- * \brief Sample input parameters.
+ * \brief Lists all acceptable input parameters with description
  */
 InputParams InputParams::sample()
 {

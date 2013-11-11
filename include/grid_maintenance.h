@@ -52,9 +52,9 @@ struct Grid{
 	void ClearAllMarks();
 
 	void test_mag_matrix();
-    void writeFits(const double center[],size_t Npixels,double resolution,LensingVariable lensvar,std::string filename);
-    void writeFitsVector(const double center[],size_t Npixels,double resolution,LensingVariable lensvar,std::string filename);
-    PixelMap writePixelMap(const double center[],size_t Npixels,double resolution
+  void writeFits(const double center[],size_t Npixels,double resolution,LensingVariable lensvar,std::string filename);
+  void writeFitsVector(const double center[],size_t Npixels,double resolution,LensingVariable lensvar,std::string filename);
+  PixelMap writePixelMap(const double center[],size_t Npixels,double resolution
                            ,LensingVariable lensvar);
 
 
@@ -84,7 +84,7 @@ void find_images_kist(LensHndl lens,double *y_source,double r_source,GridHndl gr
 		,double initial_size,bool splitimages,short edge_refinement
 		,bool verbose,bool kappa_off);
 
-void find_images_microlens(LensHndl lens, LensHalo *halo,double *y_source,double r_source,GridHndl grid
+void find_images_microlens(LensHndl lens,double *y_source,double r_source,GridHndl grid
 		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
 		,double initial_size,double mu_min,bool splitimages,short edge_refinement
 		,bool verbose,bool kappa_off);

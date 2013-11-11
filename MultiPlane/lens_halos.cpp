@@ -59,7 +59,7 @@ void LensHalo::force_stars(
 		double *alpha     /// mass/Mpc
 		,KappaType *kappa
 		,KappaType *gamma
-		,double *xcm
+		,double *xcm     /// physical position on lens plane
 		,bool no_kappa
 		)
 {

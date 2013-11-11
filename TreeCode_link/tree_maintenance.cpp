@@ -214,6 +214,34 @@ void TreeStruct::RebuildTreeFromList(){
 	return;
 }
 
+/** \brief Spawn a subtree with current as its top
+ *
+ *  The new tree contains all of the tree below the current.
+ *  Warning:: Adding points to the new tree will not update the 
+ *  parent tree so it can become dangerously out of sync.
+ */
+TreeStruct * TreeStruct::spawn(){
+  throw std::runtime_error("This is untested and could cause significant problems");
+  
+  TreeStruct *newTree = new TreeStruct;
+
+  newTree->Nbucket = Nbucket;
+  newTree->top = current;
+  newTree->pointlist->top = current->points;
+  newTree->pointlist->Npoints = current->npoints;
+  pointlist->current = current->points;
+  for(size_t i=0 ; i < current->npoints-1 ; ++i) MoveDownList(pointlist);
+  newTree->pointlist->bottom = pointlist->current;
+  
+  // count the number of branches below
+  do{
+    newTree->Nbranches++;
+  }while(TreeWalkStep(true) && current != newTree->top->brother);
+  current = newTree->top;
+  
+  return newTree;
+}
+
 /** \ingroup  ImageFindingL2
 * \brief Empty tree of all point leaving a tree with an empty root.
 *
