@@ -39,19 +39,13 @@ public:
 	
 	inline void setSersicIndex(double x) {index = x;}
 	inline void setAxesRatio(double x) {q = x;}
-	inline void setReff(double x) {Reff = x;}
+	inline void setReff(double x) {Reff = x*pi/180/60/60;}
 	inline void setMag(double x) {mag= x;}
 	inline void setPA(double x) {PA= x;}
 
 	double SurfaceBrightness(double *x);
 	inline double getTotalFlux() {return flux;}
 	void printSource();
-	
-	std::size_t Nparams() const;
-	double getParam(std::size_t p) const;
-	double setParam(std::size_t p, double value);
-	
-	void printCSV(std::ostream& out, bool header = false) const;
 	
 private:
 	void assignParams(InputParams& params);
