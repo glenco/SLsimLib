@@ -432,7 +432,7 @@ double Source::integrateFilter(std::vector<double> wavel_fil, std::vector<double
 	return integr;
 }
 
-/**  \brief Calculates the integral of the sed mutliplied by the filter curve.
+/**  \brief Calculates the integral of the sed multiplied by the filter curve.
  *
  */
 double Source::integrateFilterSed(std::vector<double> wavel_fil, std::vector<double> fil, std::vector<double> wavel_sed, std::vector<double> sed)

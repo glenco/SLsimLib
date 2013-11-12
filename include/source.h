@@ -55,6 +55,10 @@ public:
 	/// Sets sb_limit in mag/arcsec^2
 	void setSBlimit_magarcsec(float limit) {sb_limit = pow(10,-0.4*(48.6+limit))*pow(180*60*60/pi,2)/hplanck;}
 
+	double changeFilter(std::string filter_in, std::string filter_out, std::string sed);
+	double integrateFilter(std::vector<double> wavel_fil, std::vector<double> fil);
+	double integrateFilterSed(std::vector<double> wavel_fil, std::vector<double> fil, std::vector<double> wavel_sed, std::vector<double> sed);
+
 protected:
 	virtual void assignParams(InputParams& params) = 0;
 	
