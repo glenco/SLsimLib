@@ -39,7 +39,7 @@ public:
 	
 	inline void setSersicIndex(double x) {index = x;}
 	inline void setAxesRatio(double x) {q = x;}
-	inline void setReff(double x) {Reff = x;}
+	inline void setReff(double x) {Reff = x*pi/180/60/60;}
 	inline void setMag(double x) {mag= x;}
 	inline void setPA(double x) {PA= x;}
 
