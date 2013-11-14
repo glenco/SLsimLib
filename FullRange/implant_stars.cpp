@@ -22,7 +22,12 @@ using namespace std;
  *
  * 
  */
-void LensHalo::implant_stars(PosType **centers,int Nregions,long *seed, IMFtype type){
+void LensHalo::implant_stars(
+      PosType **centers      /// Warning:: positions need to be in physical Mpc on the lens plane
+      ,int Nregions          /// number of regions where stars should be implanted
+      ,long *seed
+      ,IMFtype type
+                             ){
 	PosType r,theta,NstarsPerImage;
 	unsigned long i,j,m,k;
   
@@ -54,7 +59,7 @@ void LensHalo::implant_stars(PosType **centers,int Nregions,long *seed, IMFtype 
 			mean_mstar[j] = 0.0;
 			star_xdisk[j][0] = centers[j][0];
 			star_xdisk[j][1] = centers[j][1];
-      
+          
 		}
 		return;
 	}
@@ -98,6 +103,9 @@ void LensHalo::implant_stars(PosType **centers,int Nregions,long *seed, IMFtype 
       
       star_xdisk[j][0] = centers[j][0];
       star_xdisk[j][1] = centers[j][1];
+      
+      //std::cout << "star disk centers " << star_xdisk[j][0] << "  " << star_xdisk[j][1] << std::endl;
+
     }
     
 		//printf("kappa = %e  star_region = %e\n",star_Sigma[j],star_region[j]);
@@ -188,7 +196,7 @@ void LensHalo::remove_stars(){
 	return ;
 }
 
-/** subtracts the mass in stars from the smooth model to compensate
+/** \brief subtracts the mass in stars from the smooth model to compensate
 * for the mass of the stars the lensing quantities are all updated not replaced
  */
 void LensHalo::substract_stars_disks(double *ray,double *alpha
@@ -198,25 +206,29 @@ void LensHalo::substract_stars_disks(double *ray,double *alpha
 
 	double xcm,ycm,r;
 	float tmp;
-	double mass;
+	double tmp_mass;
 	int i;
 
-	for(i=0;i<star_Nregions;++i){
+  //std::cout <<  std::endl;
+  //std::cout << "ray = " << ray[0] << " " << ray[1] << std::endl;
+ 	for(i=0;i<star_Nregions;++i){
 		xcm = ray[0] - star_xdisk[i][0];
 		ycm = ray[1] - star_xdisk[i][1];
 		r=sqrt(xcm*xcm + ycm*ycm);
+
+    //std::cout << "r/star_region[" << i << "] = " << r/star_region[i] << std::endl;
 
 		if(r < star_region[i]){
 			alpha[0] += star_Sigma[i]*xcm;
 			alpha[1] += star_Sigma[i]*ycm;
 			*kappa -= star_Sigma[i];
 		}else{
+      
+			tmp_mass = star_Sigma[i]*pow(star_region[i],2)/r/r;
+			alpha[0] += tmp_mass*xcm;
+			alpha[1] += tmp_mass*ycm;
 
-			mass = star_Sigma[i]*pow(star_region[i],2)/r/r;
-			alpha[0] += mass*xcm;
-			alpha[1] += mass*ycm;
-
-			tmp = 2*mass/r/r;
+			tmp = 2*tmp_mass/r/r;
 			gamma[0] += 0.5*(xcm*xcm-ycm*ycm)*tmp;
 			gamma[1] += xcm*ycm*tmp;
 		}

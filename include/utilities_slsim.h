@@ -820,18 +820,18 @@ namespace Utilities
     {
       xo[0] = x_min;
       xo[1] = y_min;
-      n = (long)(range/smallsize+1);
+      n = (int)(range/smallsize+1);
     }
     
-    long xy2d (long x, long y);
-    long xy2d (double x, double y);
-    void d2xy(long d, long *x, long *y);
-    void d2xy(long d, double *x, double *y);
+    int xy2d (int x, int y);
+    int xy2d (double x, double y);
+    void d2xy(int d, int *x, int *y);
+    void d2xy(int d, double *x, double *y);
     
   private:
-    long n;
+    int n;
     double xo[2],range;
-    void rot(long s,long *x, long *y, long rx, long ry);
+    void rot(int s,int *x, int *y, int rx, int ry);
   };
 
 	template<typename T>

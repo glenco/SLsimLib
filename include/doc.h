@@ -29,101 +29,12 @@
  not require all the parameters to be specified.  The parameter file should be read by 
  constructing an InputParams object.  See the ImputParams class for options.  If a parameter 
  is required, but not present in the parameter file the program should throw an exception 
- and notify you of which parameter needs to be included.
+ and notify you of which parameter needs to be included.  If a parameters is in the parameters 
+ file that is not recognized a warning will be printed.
  
- The list of currently used input parameters is below.  They are also in the sample_paramfile
- that comes with the distribution.
-
-		####### General ##########
-		outputfile         output    # will contain the image magnifications
-
-    deflection_off		0		# switches deflection off (but not kappa and gamma, ie  Born approximation), default is 0
-    lensing_off		0		# switches all lensing off, default is 0
-	
-		read_redshift_planes   0 		# 0 - no, 1 - yes , reads in the redshifts of the lensing planes from a file
-		redshift_planes_file    Z.txt   # an asci file with redshifts of the planes, excluding the source redshift
-
-		####### Main halos type ##########
-		main_halo_on	   1    # 0: no main halo, 1 or else - a main halo
-		main_DM_halo_type       1    # DM internal profile type: 0 or nolens, 1 or NFW, 2 or PseudoNFW, 3 or PowerLaw, 4 or NSIE, 5 or AnaLens, 6 or UniLens, 7 or MOKALens, 8 or DummyLens, 9 or Hernquist, 10 or Jaffe, 11 or MultiDark
-		main_galaxy_halo_type   1	# if set, a galaxy profile is chosen: 0 or none, 1 or NSIE
-		
-		###### Field halos ######
-		field_off           0   # run without field halos, default is 0
-		field_Nplanes       10  # number of field planes 
-		
-		###### Field halos type ##########
-
-		field_internal_profile         1    # DM internal profile type: 0 or nolens, 1 or NFW, 2 or PseudoNFW, 3 or PowerLaw, 4 or NSIE, 5 or AnaLens, 6 or UniLens, 7 or MOKALens, 8 or DummyLens
-		field_internal_profile_galaxy  1	# if set, a galaxy profile is chosen: 0 or none, 1 or NSIE
+ For a list of currently acceptable parameters with very short descriptions use InputParams::sample();
  
-		field_prof_internal_slope_pnfw		2 	# slope of the PseudoNFW profile, default is 2
-		field_prof_internal_slope_pl		-1  # slope of the PowerLaw profile, default is -1
-
-		###### Field halos from a mass function #######
-		field_mass_func_type	   1		# mass function type, 0: Press-Schechter, 1: Sheth-Tormen, 2: PowerLaw
-		field_fov		   1.0e4	        # field of view in square arcseconds
-		field_buffer	   1.0		# in physical Mpc
-		field_min_mass	   1.0e9			# min mass of the halos in the light cone in solar masses
-
-		####### Field halos from an input file ##############
-		#field_input_simulation_file ../MillenniumData/DMhalos.txt  # if set, the light cone is read from an input file
-
-		####### AnaNSIE lens halo model ############
-		main_sigma              250       # velocity dispersion in km/s
-		main_core               0.0e-5    # core radius in Mpc
-		main_axis_ratio         0.8       # axis ration
-		main_pos_angle          0	     # inclination angle in degrees
-
-		main_NDistortionModes   0	     # number of ellipsoid distortion modes
-		main_perturb_beta       1.0
-		main_perturb_kappa       0.03
-		main_perturb_gamma      0.03
-		main_perturb_monopole   0.0
-		main_perturb_quadrapole 0.005
-		main_perturb_hexopole   0.005
-		main_perturb_octopole   0.01
-
-		main_sub_Ndensity   0.0e6    # number density of substructure
-		main_sub_beta           -1.0
-		main_sub_alpha          -1.9
-		main_sub_Rmax           0.5e-3
-		main_sub_mass_max           1.0e9
-		main_sub_mass_min           1.0e6
-		main_sub_type           1
-
-		main_stars_N             0	    # number of stars to be implanted
-		main_stars_fraction      0.50	    # stellar mass fraction
-		main_stars_mass         0.5	    # star mass in solar masses
-		 
-		####### MOKA lens halo model ############
-		MOKA_input_file         moka.fits    # MOKA FITS file
-		MOKA_input_params       1            # read parameters from MOKA FITS header
-		MOKA_analyze            0
-		MOKA_background_field   0
-		
-		######## Type of source SB model
-		SourceSBType	   0	 # 0: Uniform, 1: Gaussian, 2: BLR_Disk, 3: BLR_Sph1, 4: BLR_Sph2
-
-		###### Gaussian source model ###########
-		gauss_r2	   0.0
-
-		###### BLR source model ################
-		BHmass             1.0e9        # BH mass of the quasar
-		gamma              -0.5
-		inclin             35.0
-		opening_ang        10
-		r_in               5.0e-9
-		r_out              5.0e-6
-		nuo                6.17284e14
-		source_sigma       0
-
-		####### General #############
-		main_zlens             0.42		# lens redshift
-		z_source           3.62		# source redshift
- 
-
- <em> Read in Parameter file: </em>
+  <em> Read in Parameter file: </em>
  
  In main() one needs to first read in the parameter file.
  This is done by constructing a InputParams object.
@@ -133,11 +44,32 @@
  Where "paramfile" is a string containing the path and file name of your parameter file.
  
  <em> CONSTRUCT A Source: </em>
+ 
+ The source constructor takes the InputParams object and constructs one or many sources within 
+ a MixedVector member.  See the class Source and all
+ 
+ example: SourceUniform source(params);   Makes the source a uniform surface brightness circle
+ 
+ example: SourceMultiAnaGalaxy source(params);   Makes many individual sources.  Where they are read in is set in the parameter file.
+ 
  <em> CONSTRUCT A Lens: </em>
+ 
+ A lens is constructed
+ 
+ Lens lens(params,&seed);
+ 
+ Multiple components to the lens are stored within the lens.  See documentation for how to 
+ access them.  These can be read in from a file which are generally called "field" lenses.  The
+ "main" lens(es) can be set by parameters in the parameter file or added by hand within main().
+ 
  
    <em> CONSTRUCT GRID: </em>
  
-   <em> SHOOT RAYS: </em>
+ The Grid structure contains the image points and thier source points along with other 
+ information.  Without further grid refinement the Grid can be used to make a map of deflection, 
+ convergence, shear or time-delay.  Grid contains functions for outputing these.
+ 
+   <em> Image finding and Grid refinement: </em>
  
    <em> OUTPUT: </em>
  

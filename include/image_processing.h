@@ -11,7 +11,7 @@
 #include "Tree.h"
 
 // forward declaration
-class Grid;
+struct Grid;
 
 /** \ingroup Image
  * \brief Takes image structure and pixelizes the flux into regular pixel grid which then

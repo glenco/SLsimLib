@@ -47,12 +47,6 @@ public:
 	inline double getTotalFlux() {return flux;}
 	void printSource();
 	
-	std::size_t Nparams() const;
-	double getParam(std::size_t p) const;
-	double setParam(std::size_t p, double value);
-	
-	void printCSV(std::ostream& out, bool header = false) const;
-	
 private:
 	void assignParams(InputParams& params);
 	double Reff;

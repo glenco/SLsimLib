@@ -300,7 +300,7 @@ void find_crit(
 	  }
   }
 
-  //******* TODO: test line *****************
+  /*/******* TODO: test line *****************
   char chrstr[100];
   std::string output = "test_crit";
   double tmp_range=0,tmp,xx[2];

@@ -87,8 +87,12 @@ public:
   void FindBoxPoint(const double* ray,Point *point);
 
   void _FindLeaf(const double* ray,unsigned long Nadd = 0);
+  
+  TreeStruct * spawn();
 
 private:
+
+  TreeStruct(){};
 
   /// number of barnches in tree */
   unsigned long Nbranches;
