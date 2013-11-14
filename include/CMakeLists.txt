@@ -36,6 +36,7 @@ add_sources(
 	sourceAnaGalaxy.h
 	standard.h
 	Tree.h
+        TreeKist.h
 	tree_maintenance.h
 	TreeNB.h
 	uniform_lens.h

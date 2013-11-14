@@ -19,6 +19,59 @@ struct KistUnit{
 	struct KistUnit<T> *prev;
 };// Unit;
 
+/// Internal container used in Kist container class
+template <class T>
+class KistIt{
+private:
+    struct KistUnit<Point> *unit;
+    
+public:
+    /// Returns a pointer to the current data.  Same as getCurrent.
+	T *operator*(){return unit->data;}
+	bool operator++(){
+        if(unit == NULL){
+            return false;
+        }else{
+            unit = unit->next;
+            return true;
+        }
+    }
+	/// Same as Down()
+	bool operator--(){
+        if(unit == NULL){
+            return false;
+        }else{
+            unit = unit->prev;
+            return true;
+        }
+    }
+
+	/// Same as Up()
+	bool operator++(int x){
+        if(unit == NULL){
+            return false;
+        }else{
+            unit = unit->next;
+            return true;
+        }
+    }
+
+	/// Same as Down()
+	bool operator--(int x){
+        if(unit == NULL){
+            return false;
+        }else{
+            unit = unit->prev;
+            return true;
+        }
+    }
+    
+    void operator=(KistUnit<T> *my_unit){
+        unit = my_unit;
+    }
+	
+};
+
 //typedef struct Point Data;  // change this to make a kist of other objects
 
 /** \ingroup ImageFindingL2
@@ -113,6 +166,21 @@ public:
 	bool Up();
 	bool MoveToTop();
 	bool MoveToBottom();
+    
+    
+    void SetCurrentIt(KistIt<Data> it){current = it.unit;}
+    KistIt<Data> getCurrentIt(){
+        KistIt<Data> it = current;
+        return it;
+    }
+    KistIt<Data> getTopIt(){
+        KistIt<Data> it = top;
+        return it;
+    }
+    KistIt<Data> getBottomIt(){
+        KistIt<Data> it = bottom;
+        return it;
+    }
 
 	// status
 	/// Number of elements in list.
@@ -140,6 +208,7 @@ public:
 	bool operator++(int x){return Up();}
 	/// Same as Down()
 	bool operator--(int x){return Down();}
+    
 
 private:
 
