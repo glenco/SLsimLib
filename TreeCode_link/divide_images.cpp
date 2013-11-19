@@ -24,7 +24,7 @@ void find_divide_images(TreeHndl i_tree,TreeHndl s_tree
 	}
 
 	// move from source plane to image plane
-	TranformPlanesKist(imageinfo->imagekist);
+	imageinfo->imagekist->TranformPlanes();
 
 	if(imageinfo->imagekist->Nunits() == 1){
 		*Nimages = 1;
@@ -59,37 +59,37 @@ int ImageGenus(TreeHndl i_tree,ImageInfo *imageinfo){
 
 	kist->MoveToTop();
 	do{
-		getCurrentKist(kist)->in_image = TRUE;
-		getCurrentKist(kist)->image->in_image = TRUE;
-		InsertAfterCurrentKist(new_kist,kist->getCurrent());
-		MoveDownKist(new_kist);
+		kist->getCurrent()->in_image = TRUE;
+		kist->getCurrent()->image->in_image = TRUE;
+		new_kist->InsertAfterCurrent(kist->getCurrent());
+		new_kist->Down();
 	}while(kist->Down());
 
 	number=0;
 	do{
 
 		//printf("   new_imagekist %li\n",new_imagekist->Nunits());
-		partition_images_kist(getCurrentKist(new_kist),tmp_kist,i_tree);
+		partition_images_kist(new_kist->getCurrent(),tmp_kist,i_tree);
 
 		// take out points that got un-marked in partition_images
 
 		Ntemp = new_kist->Nunits();
 
-		for( j=0,MoveToTopKist(new_kist) ; j < Ntemp ; ++j){
-			if(getCurrentKist(new_kist)->in_image == FALSE){
+		for( j=0,new_kist->MoveToTop() ; j < Ntemp ; ++j){
+			if(new_kist->getCurrent()->in_image == FALSE){
 
-			    if(AtTopKist(new_kist)){
-			    	TakeOutCurrentKist(new_kist);
+			    if(new_kist->AtTop()){
+			    	new_kist->TakeOutCurrent();
 			    }else{
-			    	TakeOutCurrentKist(new_kist);
-			    	MoveDownKist(new_kist);
+			    	new_kist->TakeOutCurrent();
+			    	new_kist->Down();
 			    }
 			}else{
-				MoveDownKist(new_kist);
+				new_kist->Down();
 			}
 		}
 
-		assert(AtBottomKist(new_kist) || new_kist->OffBottom());
+		assert(new_kist->AtBottom() || new_kist->OffBottom());
 		++number;
 	}while(new_kist->Nunits() > 0 && number < Nimagesmax);
 	if(number == Nimagesmax)
@@ -260,20 +260,20 @@ void divide_images_kist(
 
 	  // mark points in tree as in image and transfer points to temporary temporary new_imagekist
 
-	MoveToTopKist(imageinfo->imagekist);
+	imageinfo->imagekist->MoveToTop();
 	Ntest = imageinfo->imagekist->Nunits();
 	while(imageinfo->imagekist->Nunits() > 0){
-		getCurrentKist(imageinfo->imagekist)->in_image = TRUE;
-		getCurrentKist(imageinfo->imagekist)->image->in_image = TRUE;
-		InsertAfterCurrentKist(new_imagekist,TakeOutCurrentKist(imageinfo->imagekist));
-		MoveDownKist(new_imagekist);
+		imageinfo->imagekist->getCurrent()->in_image = TRUE;
+		imageinfo->imagekist->getCurrent()->image->in_image = TRUE;
+		new_imagekist->InsertAfterCurrent(imageinfo->imagekist->TakeOutCurrent());
+		new_imagekist->Down();
 	}
 
 	i=0;
 	do{
 
 		//printf("   new_imagekist %li\n",new_imagekist->Nunits());
-		imageinfo[i].area = partition_images_kist(getCurrentKist(new_imagekist),imageinfo[i].imagekist,i_tree);
+		imageinfo[i].area = partition_images_kist(new_imagekist->getCurrent(),imageinfo[i].imagekist,i_tree);
 
 /*		if(imageinfo[i].imagekist->Nunits() > new_imagekist->Nunits()){
 			bool test1,test2;
@@ -288,22 +288,22 @@ void divide_images_kist(
 		Ntemp = new_imagekist->Nunits();
 		imageinfo[i].area = imageinfo[i].area_error = 0.0;
 
-		for( j=0,MoveToTopKist(new_imagekist) ; j < Ntemp ; ++j){
-			if(getCurrentKist(new_imagekist)->in_image == FALSE){
+		for( j=0,new_imagekist->MoveToTop() ; j < Ntemp ; ++j){
+			if(new_imagekist->getCurrent()->in_image == FALSE){
 
 				// calculates area of image
-				tmp = pow(getCurrentKist(new_imagekist)->gridsize,2 );
+				tmp = pow(new_imagekist->getCurrent()->gridsize,2 );
 				imageinfo[i].area += tmp;
 			    if(imageinfo[i].area_error < tmp) imageinfo[i].area_error = tmp;
 
-			    if(AtTopKist(new_imagekist)){
-			    	TakeOutCurrentKist(new_imagekist);
+			    if(new_imagekist->AtTop()){
+			    	new_imagekist->TakeOutCurrent();
 			    }else{
-			    	TakeOutCurrentKist(new_imagekist);
-			    	MoveDownKist(new_imagekist);
+			    	new_imagekist->TakeOutCurrent();
+			    	new_imagekist->Down();
 			    }
 			}else{
-				MoveDownKist(new_imagekist);
+				new_imagekist->Down();
 			}
 
 			//printf("%li %li\n",new_imagekist->Nunits(),imageinfo[i].imagekist->Nunits());
@@ -313,12 +313,12 @@ void divide_images_kist(
 		// calculate image centroid
 		imageinfo[i].centroid[0] = 0;
 		imageinfo[i].centroid[1] = 0;
-		MoveToTopKist(imageinfo[i].imagekist);
+		imageinfo[i].imagekist->MoveToTop();
 		do{
-			tmp = pow(getCurrentKist(imageinfo[i].imagekist)->gridsize,2 );
-			imageinfo[i].centroid[0] += tmp*getCurrentKist(imageinfo[i].imagekist)->x[0];
-			imageinfo[i].centroid[1] += tmp*getCurrentKist(imageinfo[i].imagekist)->x[1];
-		}while(MoveDownKist(imageinfo[i].imagekist));
+			tmp = pow(imageinfo[i].imagekist->getCurrent()->gridsize,2 );
+			imageinfo[i].centroid[0] += tmp*imageinfo[i].imagekist->getCurrent()->x[0];
+			imageinfo[i].centroid[1] += tmp*imageinfo[i].imagekist->getCurrent()->x[1];
+		}while(imageinfo[i].imagekist->Down());
 		imageinfo[i].centroid[0] /= imageinfo[i].area;
 		imageinfo[i].centroid[1] /= imageinfo[i].area;
 
@@ -336,20 +336,20 @@ void divide_images_kist(
 
 		while(new_imagekist->Nunits() > 0){
 			for(i=0,rmin=1.0e200,j=0;i<*Nimages;++i){
-				r2 = pow(getCurrentKist(new_imagekist)->x[0] - imageinfo[i].centroid[0],2)
-					+ pow(getCurrentKist(new_imagekist)->x[1] - imageinfo[i].centroid[1],2);
+				r2 = pow(new_imagekist->getCurrent()->x[0] - imageinfo[i].centroid[0],2)
+					+ pow(new_imagekist->getCurrent()->x[1] - imageinfo[i].centroid[1],2);
 				if(rmin > r2 ){
 					rmin = r2;
 					j = i;
 				}
 			}
-			tmp = pow(getCurrentKist(new_imagekist)->gridsize,2);
+			tmp = pow(new_imagekist->getCurrent()->gridsize,2);
 			imageinfo[j].centroid[0] = ( imageinfo[j].centroid[0]*imageinfo[j].area
-						+ tmp*getCurrentKist(new_imagekist)->x[0] )/(imageinfo[j].area + tmp);
+						+ tmp*new_imagekist->getCurrent()->x[0] )/(imageinfo[j].area + tmp);
 			imageinfo[j].centroid[1] = ( imageinfo[j].centroid[1]*imageinfo[j].area
-						+ tmp*getCurrentKist(new_imagekist)->x[1] )/(imageinfo[j].area + tmp);
+						+ tmp*new_imagekist->getCurrent()->x[1] )/(imageinfo[j].area + tmp);
 			imageinfo[j].area += tmp;
-			InsertAfterCurrentKist(imageinfo[j].imagekist,TakeOutCurrentKist(new_imagekist));
+			imageinfo[j].imagekist->InsertAfterCurrent(new_imagekist->TakeOutCurrent());
 		}
 	}
 
@@ -359,12 +359,12 @@ void divide_images_kist(
 	// mark all image points
 	for(i=0;i<*Nimages;++i){
 		imageinfo[i].ShouldNotRefine = 0;
-		MoveToTopKist(imageinfo[i].imagekist);
+		imageinfo[i].imagekist->MoveToTop();
 		do{
-			getCurrentKist(imageinfo[i].imagekist)->in_image = TRUE;
-			getCurrentKist(imageinfo[i].imagekist)->image->in_image = TRUE;
+			imageinfo[i].imagekist->getCurrent()->in_image = TRUE;
+			imageinfo[i].imagekist->getCurrent()->image->in_image = TRUE;
 			--Ntest;
-		}while(MoveDownKist(imageinfo[i].imagekist));
+		}while(imageinfo[i].imagekist->Down());
 	}
 
 	assert(Ntest == 0);
@@ -393,11 +393,11 @@ void partition_images(Point *point,unsigned long *N_in_image,TreeHndl i_tree){
 	// remove neighbors that are not marked as in image
 	//  It reduces the memory usage to do this before recursion
 
-	for(MoveToTopKist(neighbors) ; neighbors->Nunits() > 0 ;){
-		if(getCurrentKist(neighbors)->in_image == FALSE){
-			TakeOutCurrentKist(neighbors);
+	for(neighbors->MoveToTop() ; neighbors->Nunits() > 0 ;){
+		if(neighbors->getCurrent()->in_image == FALSE){
+			neighbors->TakeOutCurrent();
 		}else{
-			if(!MoveDownKist(neighbors)) break;
+			if(!(neighbors->Down())) break;
 		}
 	}
 	  /**************** TODO test line ******************
@@ -405,13 +405,13 @@ void partition_images(Point *point,unsigned long *N_in_image,TreeHndl i_tree){
 	  // ****************  ******************/
 
 	while(neighbors->Nunits() > 0){
-		if(getCurrentKist(neighbors)->in_image == TRUE){
-			getCurrentKist(neighbors)->in_image = FALSE;
-			getCurrentKist(neighbors)->image->in_image = FALSE;
+		if(neighbors->getCurrent()->in_image == TRUE){
+			neighbors->getCurrent()->in_image = FALSE;
+			neighbors->getCurrent()->image->in_image = FALSE;
 			++(*N_in_image);
-			partition_images(getCurrentKist(neighbors),N_in_image,i_tree);
+			partition_images(neighbors->getCurrent(),N_in_image,i_tree);
 		}
-		TakeOutCurrentKist(neighbors);
+		neighbors->TakeOutCurrent();
 	}
 
 	//printf("exiting partition_images\n");
@@ -440,32 +440,32 @@ double partition_images_kist(Point *point,Kist<Point> * imagekist,TreeHndl i_tre
 	double area = 0.0;
 	Kist<Point> * neighbors = new Kist<Point>;
 
-	EmptyKist(imagekist);
+	imagekist->Empty();
 
-	InsertAfterCurrentKist(imagekist,point);
+	imagekist->InsertAfterCurrent(point);
 	do{
 
-		if(getCurrentKist(imagekist)->in_image == TRUE){
-			getCurrentKist(imagekist)->in_image = FALSE;
+		if(imagekist->getCurrent()->in_image == TRUE){
+			imagekist->getCurrent()->in_image = FALSE;
 
-			area += pow(getCurrentKist(imagekist)->gridsize,2);
+			area += pow(imagekist->getCurrent()->gridsize,2);
 
 			// find all the neighbors of point
-			i_tree->FindAllBoxNeighborsKist(getCurrentKist(imagekist),neighbors);
+			i_tree->FindAllBoxNeighborsKist(imagekist->getCurrent(),neighbors);
 
 			// remove neighbors that are not marked as in image
-			for(MoveToTopKist(neighbors) ; neighbors->Nunits() > 0 ;){
-				if(getCurrentKist(neighbors)->in_image == FALSE){
-					TakeOutCurrentKist(neighbors);
+			for(neighbors->MoveToTop() ; neighbors->Nunits() > 0 ;){
+				if(neighbors->getCurrent()->in_image == FALSE){
+					neighbors->TakeOutCurrent();
 				}else{
-					InsertAfterCurrentKist(imagekist,TakeOutCurrentKist(neighbors));
+					imagekist->InsertAfterCurrent(neighbors->TakeOutCurrent());
 				}
 			}
 
 		}else{
-			TakeOutCurrentKist(imagekist);
+			imagekist->TakeOutCurrent();
 		}
-	}while(MoveDownKist(imagekist));
+	}while(imagekist->Down());
 
 	//assert(AreDataUniqueKist(imagekist));
 

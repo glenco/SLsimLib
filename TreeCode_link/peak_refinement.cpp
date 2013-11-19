@@ -102,7 +102,7 @@ short find_peaks(
 			while(newpointskist->Nunits() > 0){
 				if(newpointskist->getCurrent()->kappa > threshold){
 
-					InsertAfterCurrentKist(imageinfo->imagekist,newpointskist->TakeOutCurrent());
+					imageinfo->imagekist->InsertAfterCurrent(newpointskist->TakeOutCurrent());
 					imageinfo->imagekist->Down();
 					imageinfo->imagekist->getCurrent()->in_image = TRUE;
 

@@ -335,8 +335,9 @@ void find_images_kist(
 	delete subkist;
 
 	for(i=*Nimages;i<oldNimages;i++){  // save some space
-		EmptyKist(imageinfo[i].innerborder);
-		EmptyKist(imageinfo[i].outerborder);		EmptyKist(imageinfo[i].imagekist);
+		imageinfo[i].innerborder->Empty();
+		imageinfo[i].outerborder->Empty();
+    imageinfo[i].imagekist->Empty();
 	}
 	oldNimages=*Nimages;
 
@@ -359,15 +360,15 @@ void find_images_kist(
 		tmp=0.0;
 		imageinfo[i].centroid[0] = 0.0;
 		imageinfo[i].centroid[1] = 0.0;
-		MoveToTopKist(imageinfo[i].imagekist);
+		imageinfo[i].imagekist->MoveToTop();
 		do{
-			tmp += pow(getCurrentKist(imageinfo[i].imagekist)->gridsize,2);
-			imageinfo[i].centroid[0] += getCurrentKist(imageinfo[i].imagekist)->x[0]
-			                                         *pow(getCurrentKist(imageinfo[i].imagekist)->gridsize,2);
-			imageinfo[i].centroid[1] += getCurrentKist(imageinfo[i].imagekist)->x[1]
-			                                         *pow(getCurrentKist(imageinfo[i].imagekist)->gridsize,2);
+			tmp += pow(imageinfo[i].imagekist->getCurrent()->gridsize,2);
+			imageinfo[i].centroid[0] += imageinfo[i].imagekist->getCurrent()->x[0]
+			                                         *pow(imageinfo[i].imagekist->getCurrent()->gridsize,2);
+			imageinfo[i].centroid[1] += imageinfo[i].imagekist->getCurrent()->x[1]
+			                                         *pow(imageinfo[i].imagekist->getCurrent()->gridsize,2);
 
-		}while(MoveDownKist(imageinfo[i].imagekist));
+		}while(imageinfo[i].imagekist->Down());
 		if(imageinfo[i].imagekist->Nunits() > 0 ){
 			imageinfo[i].centroid[0] /= tmp;
 			imageinfo[i].centroid[1] /= tmp;
@@ -869,8 +870,9 @@ void find_images_microlens(
 	delete subkist;
 
 	for(i=*Nimages;i<oldNimages;i++){  // save some space
-		EmptyKist(imageinfo[i].innerborder);
-		EmptyKist(imageinfo[i].outerborder);		EmptyKist(imageinfo[i].imagekist);
+		imageinfo[i].innerborder->Empty();
+		imageinfo[i].outerborder->Empty();
+    imageinfo[i].imagekist->Empty();
 	}
 	oldNimages=*Nimages;
 
@@ -893,15 +895,15 @@ void find_images_microlens(
 		tmp=0.0;
 		imageinfo[i].centroid[0] = 0.0;
 		imageinfo[i].centroid[1] = 0.0;
-		MoveToTopKist(imageinfo[i].imagekist);
+		imageinfo[i].imagekist->MoveToTop();
 		do{
-			tmp += pow(getCurrentKist(imageinfo[i].imagekist)->gridsize,2);
-			imageinfo[i].centroid[0] += getCurrentKist(imageinfo[i].imagekist)->x[0]
-			                                         *pow(getCurrentKist(imageinfo[i].imagekist)->gridsize,2);
-			imageinfo[i].centroid[1] += getCurrentKist(imageinfo[i].imagekist)->x[1]
-			                                         *pow(getCurrentKist(imageinfo[i].imagekist)->gridsize,2);
+			tmp += pow(imageinfo[i].imagekist->getCurrent()->gridsize,2);
+			imageinfo[i].centroid[0] += imageinfo[i].imagekist->getCurrent()->x[0]
+			                                         *pow(imageinfo[i].imagekist->getCurrent()->gridsize,2);
+			imageinfo[i].centroid[1] += imageinfo[i].imagekist->getCurrent()->x[1]
+			                                         *pow(imageinfo[i].imagekist->getCurrent()->gridsize,2);
 
-		}while(MoveDownKist(imageinfo[i].imagekist));
+		}while(imageinfo[i].imagekist->Down());
 		if(imageinfo[i].imagekist->Nunits() > 0 ){
 			imageinfo[i].centroid[0] /= tmp;
 			imageinfo[i].centroid[1] /= tmp;
@@ -971,15 +973,15 @@ short image_finder_kist(LensHndl lens, double *y_source,double r_source,GridHndl
 	  // if new source position use larger image to make sure new images are found on the coarser grid
 	  s_tree->PointsWithinKist(y_source,initialgridsize/mumin,imageinfo->imagekist,0);
 
-	  MoveToTopKist(imageinfo->imagekist);
+	  imageinfo->imagekist->MoveToTop();
 	  for(i=0;i<imageinfo->imagekist->Nunits();++i){
-		  r=sqrt( pow(getCurrentKist(imageinfo->imagekist)->x[0]-y_source[0],2)
-				  + pow(getCurrentKist(imageinfo->imagekist)->x[1]-y_source[1],2) );
-		  if(r > r_source && getCurrentKist(imageinfo->imagekist)->image->gridsize < r_source*mumin){
-			  TakeOutCurrentKist(imageinfo->imagekist);
+		  r=sqrt( pow(imageinfo->imagekist->getCurrent()->x[0]-y_source[0],2)
+				  + pow(imageinfo->imagekist->getCurrent()->x[1]-y_source[1],2) );
+		  if(r > r_source && imageinfo->imagekist->getCurrent()->image->gridsize < r_source*mumin){
+			  imageinfo->imagekist->TakeOutCurrent();
 			  --i;
 		  }else{
-			  MoveDownKist(imageinfo->imagekist);
+			  imageinfo->imagekist->Down();
 		  }
 	  }
   }else{
@@ -1033,18 +1035,18 @@ short image_finder_kist(LensHndl lens, double *y_source,double r_source,GridHndl
 
   // mark all image points
   if(imageinfo->imagekist->Nunits() > 0 && splitparities == 0){
-	  MoveToTopKist(imageinfo->imagekist);
+	  imageinfo->imagekist->MoveToTop();
 	  do{
-		  getCurrentKist(imageinfo->imagekist)->in_image = TRUE;
-		  getCurrentKist(imageinfo->imagekist)->image->in_image = TRUE;
+		  imageinfo->imagekist->getCurrent()->in_image = TRUE;
+		  imageinfo->imagekist->getCurrent()->image->in_image = TRUE;
 
-	  }while(MoveDownKist(imageinfo->imagekist));
+	  }while(imageinfo->imagekist->Down());
   }
 
   *Nimagepoints = imageinfo->imagekist->Nunits();
 
   // transform from source plane to image points
-  TranformPlanesKist(imageinfo->imagekist);
+  imageinfo->imagekist->TranformPlanes();
 
   // At this point all the image points are in imageinfo->imagekist and not divided up into separate images
 
@@ -1055,10 +1057,10 @@ short image_finder_kist(LensHndl lens, double *y_source,double r_source,GridHndl
 	  *Nimages = 1;
 
 	  imageinfo->area = 0.0;
-	  MoveToTopKist(imageinfo->imagekist);
+	  imageinfo->imagekist->MoveToTop();
 	  do{
-		  imageinfo->area += pow(getCurrentKist(imageinfo->imagekist)->gridsize,2);
-	  }while(MoveDownKist(imageinfo->imagekist));
+		  imageinfo->area += pow(imageinfo->imagekist->getCurrent()->gridsize,2);
+	  }while(imageinfo->imagekist->Down());
   }
 
   // don't copy information into array
@@ -1071,8 +1073,8 @@ short image_finder_kist(LensHndl lens, double *y_source,double r_source,GridHndl
 
 	  if(splitparities == -1){
 		  // avoid finding image borders, but need to set grid range for each image
-		  EmptyKist(imageinfo[i].innerborder);
-		  EmptyKist(imageinfo[i].outerborder);
+		  imageinfo[i].innerborder->Empty();
+		  imageinfo[i].outerborder->Empty();
 
 		  imageinfo[i].gridrange[2] = 1.0e99; // minimum grid size in image
 		  imageinfo[i].gridrange[0] = 0.0;    // maximum grid size in outerborder
@@ -1080,13 +1082,13 @@ short image_finder_kist(LensHndl lens, double *y_source,double r_source,GridHndl
 
 		  //for(j=0;j<imageinfo[i].imagekist->Nunits();++j){
 
-		  MoveToTopKist(imageinfo[i].imagekist);
+		  imageinfo[i].imagekist->MoveToTop();
 		  do{
-		    if(imageinfo[i].gridrange[1] < getCurrentKist(imageinfo[i].imagekist)->gridsize)
-		      imageinfo[i].gridrange[1] = getCurrentKist(imageinfo[i].imagekist)->gridsize;
-		    if(imageinfo[i].gridrange[2] > getCurrentKist(imageinfo[i].imagekist)->gridsize)
-		      imageinfo[i].gridrange[2] = getCurrentKist(imageinfo[i].imagekist)->gridsize;
-		  }while(MoveDownKist(imageinfo[i].imagekist));
+		    if(imageinfo[i].gridrange[1] < imageinfo[i].imagekist->getCurrent()->gridsize)
+		      imageinfo[i].gridrange[1] = imageinfo[i].imagekist->getCurrent()->gridsize;
+		    if(imageinfo[i].gridrange[2] > imageinfo[i].imagekist->getCurrent()->gridsize)
+		      imageinfo[i].gridrange[2] = imageinfo[i].imagekist->getCurrent()->gridsize;
+		  }while(imageinfo[i].imagekist->Down());
 
 		  imageinfo[i].gridrange[0] = imageinfo[i].gridrange[1];
 	  }
@@ -1101,8 +1103,8 @@ short image_finder_kist(LensHndl lens, double *y_source,double r_source,GridHndl
 
   // Empty the border lists of old images to save mem
   for(i=*Nimages;i<Nold_images;++i){
-	  EmptyKist(imageinfo[i].innerborder);
-	  EmptyKist(imageinfo[i].outerborder);
+	  imageinfo[i].innerborder->Empty();
+	  imageinfo[i].outerborder->Empty();
   }
 
 	//for(i=0;i<*Nimages;++i) printf("  image %i  Npoints = %li Ninner = %li Noutter = %li  area = %e\n",i
@@ -1185,23 +1187,23 @@ int refine_grid_kist(
 
       // count number of grid cells to be refined
       // cells in image
-    	MoveToTopKist(imageinfo[i].imagekist);
+    	imageinfo[i].imagekist->MoveToTop();
     	do{
-    		if( getCurrentKist(imageinfo[i].imagekist)->gridsize > 1.01*rmax/Ngrid_block) ++Ncells;
-    	}while( MoveDownKist(imageinfo[i].imagekist) );
+    		if( imageinfo[i].imagekist->getCurrent()->gridsize > 1.01*rmax/Ngrid_block) ++Ncells;
+    	}while( imageinfo[i].imagekist->Down() );
 
     	//printf("   initial image point refinements count = %li\n",Ncells);
        	// cells on border
     	if(imageinfo[i].outerborder->Nunits() > 0){
-    		MoveToTopKist(imageinfo[i].outerborder);
+    		imageinfo[i].outerborder->MoveToTop();
     		do{
-    			if( getCurrentKist(imageinfo[i].outerborder)->gridsize > 1.01*rmax/Ngrid_block){
+    			if( imageinfo[i].outerborder->getCurrent()->gridsize > 1.01*rmax/Ngrid_block){
     				// border point is marked to prevent refining more than once
     				//   it will be unmarked by the end of refine grid
-    				getCurrentKist(imageinfo[i].outerborder)->in_image = TRUE;
+    				imageinfo[i].outerborder->getCurrent()->in_image = TRUE;
     				++Ncells;
     			}
-    		}while( MoveDownKist(imageinfo[i].outerborder) );
+    		}while( imageinfo[i].outerborder->Down() );
     		//printf("   initial outer border refinements count = %li\n",Ncells);
     	}
     }
@@ -1225,10 +1227,10 @@ int refine_grid_kist(
 		  rmax=MAX(imageinfo[i].gridrange[1],imageinfo[i].gridrange[0]);
 
 		  // loop through points in ith image
-		  MoveToTopKist(imageinfo[i].imagekist);
-		  for(j=0 ; j<imageinfo[i].imagekist->Nunits() ; ++j,MoveDownKist(imageinfo[i].imagekist) ){
+		  imageinfo[i].imagekist->MoveToTop();
+		  for(j=0 ; j<imageinfo[i].imagekist->Nunits() ; ++j,imageinfo[i].imagekist->Down() ){
 
-			  if( getCurrentKist(imageinfo[i].imagekist)->gridsize > 1.01*rmax/Ngrid_block){  /* only refine largest grid size in image*/
+			  if( imageinfo[i].imagekist->getCurrent()->gridsize > 1.01*rmax/Ngrid_block){  /* only refine largest grid size in image*/
 
 				  //assert(getCurrentKist(imageinfo[i].imagekist)->leaf->child1 == NULL);
 				  //assert(getCurrentKist(imageinfo[i].imagekist)->leaf->child2 == NULL);
@@ -1236,9 +1238,9 @@ int refine_grid_kist(
 				  //assert(getCurrentKist(imageinfo[i].imagekist)->image->leaf->child2 == NULL);
 
 				  if(batch){
- 					  points_to_refine.push_back(getCurrentKist(imageinfo[i].imagekist));
+ 					  points_to_refine.push_back(imageinfo[i].imagekist->getCurrent());
 				  }else{
-					  i_points = grid->RefineLeaf(lens,getCurrentKist(imageinfo[i].imagekist),kappa_off);
+					  i_points = grid->RefineLeaf(lens,imageinfo[i].imagekist->getCurrent(),kappa_off);
 					  if(newpointskist && i_points != NULL){
 						  for(k=0; k < i_points->head ; ++k) newpointskist->InsertAfterCurrent(&i_points[k]);
 						  ++count;
@@ -1252,11 +1254,11 @@ int refine_grid_kist(
 		  //printf("   actual image point refinements count = %li\n",Ncells);
 		  // * loop through outer border of ith image *
 
-		  MoveToTopKist(imageinfo[i].outerborder);
-		  for(j=0;j<imageinfo[i].outerborder->Nunits();++j,MoveDownKist(imageinfo[i].outerborder)){
-			  if( getCurrentKist(imageinfo[i].outerborder)->gridsize > 1.01*rmax/Ngrid_block){ // only refine largest grid size in image
+		  imageinfo[i].outerborder->MoveToTop();
+		  for(j=0;j<imageinfo[i].outerborder->Nunits();++j,imageinfo[i].outerborder->Down()){
+			  if( imageinfo[i].outerborder->getCurrent()->gridsize > 1.01*rmax/Ngrid_block){ // only refine largest grid size in image
 
-				  point = getCurrentKist(imageinfo[i].outerborder);
+				  point = imageinfo[i].outerborder->getCurrent();
 				  //assert(point->gridsize > 0);
 
 				  if(point->in_image){ // point has not been refined yet as border of another image
@@ -1326,8 +1328,8 @@ void findborders4(TreeHndl i_tree,ImageInfo *imageinfo){
 	//checkTree(i_tree);
 
 	//point=(Point *)malloc(sizeof(Point));
-	EmptyKist(imageinfo->innerborder);
-	EmptyKist(imageinfo->outerborder);
+	imageinfo->innerborder->Empty();
+	imageinfo->outerborder->Empty();
 
 	imageinfo->gridrange[2] = 1.0e99; // minimum grid size in image
 	imageinfo->gridrange[0] = 0.0;   // maximum grid size in outerborder
@@ -1339,26 +1341,26 @@ void findborders4(TreeHndl i_tree,ImageInfo *imageinfo){
 
 	Kist<Point> * imagekist = imageinfo->imagekist; assert(imageinfo->imagekist);
 
-	MoveToTopKist(imagekist);
-	for(j=0;j<imagekist->Nunits();++j,MoveDownKist(imagekist)){
+	imagekist->MoveToTop();
+	for(j=0;j<imagekist->Nunits();++j,imagekist->Down()){
 
-		if(imageinfo->gridrange[1] < getCurrentKist(imagekist)->gridsize)
-			imageinfo->gridrange[1] = getCurrentKist(imagekist)->gridsize;
-		if(imageinfo->gridrange[2] > getCurrentKist(imagekist)->gridsize)
-			imageinfo->gridrange[2] = getCurrentKist(imagekist)->gridsize;
+		if(imageinfo->gridrange[1] < imagekist->getCurrent()->gridsize)
+			imageinfo->gridrange[1] = imagekist->getCurrent()->gridsize;
+		if(imageinfo->gridrange[2] > imagekist->getCurrent()->gridsize)
+			imageinfo->gridrange[2] = imagekist->getCurrent()->gridsize;
 
 		addinner=false;
 
-		i_tree->FindAllBoxNeighborsKist(getCurrentKist(imagekist),neighborkist);
+		i_tree->FindAllBoxNeighborsKist(imagekist->getCurrent(),neighborkist);
 
 		if( allin && neighborkist->Nunits() < 4){
-			InsertAfterCurrentKist(imageinfo->innerborder,getCurrentKist(imagekist));
+			imageinfo->innerborder->InsertAfterCurrent(imagekist->getCurrent());
 		}else{
 
-			MoveToTopKist(neighborkist);
+			neighborkist->MoveToTop();
 			for(i=0;i<neighborkist->Nunits();++i){
 
-				if( getCurrentKist(neighborkist)->in_image != TRUE){  // point is a neighbor
+				if( neighborkist->getCurrent()->in_image != TRUE){  // point is a neighbor
 					addinner=true;
 					/*
 					// check if point is already in list
@@ -1375,20 +1377,20 @@ void findborders4(TreeHndl i_tree,ImageInfo *imageinfo){
 					}
 					*/
 					
-					if(getCurrentKist(neighborkist)->in_image == FALSE){  // if point is not yet in outerborder
+					if(neighborkist->getCurrent()->in_image == FALSE){  // if point is not yet in outerborder
 						// add point to outerborder
-						getCurrentKist(neighborkist)->in_image = MAYBE;
-						InsertAfterCurrentKist(imageinfo->outerborder,getCurrentKist(neighborkist));
-						MoveDownKist(imageinfo->outerborder);
+						neighborkist->getCurrent()->in_image = MAYBE;
+						imageinfo->outerborder->InsertAfterCurrent(neighborkist->getCurrent());
+						imageinfo->outerborder->Down();
 					}
 				}
-				MoveDownKist(neighborkist);
+				neighborkist->Down();
 			}
 
 			if(addinner){
 				// add point to innerborderkist
-				InsertAfterCurrentKist(imageinfo->innerborder,getCurrentKist(imagekist));
-				MoveDownKist(imageinfo->innerborder);
+				imageinfo->innerborder->InsertAfterCurrent(imagekist->getCurrent());
+				imageinfo->innerborder->Down();
 			}
 		}
 
@@ -1397,13 +1399,13 @@ void findborders4(TreeHndl i_tree,ImageInfo *imageinfo){
 		// mark outer borders back to in_image=FALSE
 		
 	if(!allin  && imageinfo->outerborder->Nunits() > 0){
-		MoveToTopKist(imageinfo->outerborder);
+		imageinfo->outerborder->MoveToTop();
 		do{
-			getCurrentKist(imageinfo->outerborder)->in_image = FALSE;
+			imageinfo->outerborder->getCurrent()->in_image = FALSE;
 
-			if(imageinfo->gridrange[0] < getCurrentKist(imageinfo->outerborder)->gridsize)
-				imageinfo->gridrange[0] = getCurrentKist(imageinfo->outerborder)->gridsize;
-		}while(MoveDownKist(imageinfo->outerborder));
+			if(imageinfo->gridrange[0] < imageinfo->outerborder->getCurrent()->gridsize)
+				imageinfo->gridrange[0] = imageinfo->outerborder->getCurrent()->gridsize;
+		}while(imageinfo->outerborder->Down());
 	}
 
 	delete neighborkist;

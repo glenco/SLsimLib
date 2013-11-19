@@ -73,7 +73,7 @@ public:
     bool CurrentIsSquareBranch();
     bool noChild();
 
-    void getCurrent(Point *points,unsigned long *npoints);
+    KistIt<Point> getCurrent(unsigned long *npoints);
     unsigned long getNbranches();
     void printTree();
     void checkTree();

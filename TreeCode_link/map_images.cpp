@@ -98,7 +98,7 @@ void map_images(
 				newpoint->surface_brightness = sb;
 				newpoint->gridsize = 2*xmax/(Ntmp-1);
 
-				InsertAfterCurrentKist(sourceinfo->imagekist,newpoint);
+				sourceinfo->imagekist->InsertAfterCurrent(newpoint);
 
 				++tmp_count;
 				source_flux += sb*pow(newpoint->gridsize,2);
@@ -128,25 +128,25 @@ void map_images(
 		double *rs = new double[Nsources+1];
 		for(i=0;i<Nsources; ++i){
 			sourceinfo[i].centroid[0] = sourceinfo[i].centroid[1] = 0;
-			MoveToTopKist(sourceinfo[i].imagekist);
+			sourceinfo[i].imagekist->MoveToTop();
 			do{
-				sourceinfo[i].centroid[0] += getCurrentKist(sourceinfo[i].imagekist)->x[0];
-				sourceinfo[i].centroid[1] += getCurrentKist(sourceinfo[i].imagekist)->x[1];
-			}while(MoveDownKist(sourceinfo[i].imagekist));
+				sourceinfo[i].centroid[0] += sourceinfo[i].imagekist->getCurrent()->x[0];
+				sourceinfo[i].centroid[1] += sourceinfo[i].imagekist->getCurrent()->x[1];
+			}while(sourceinfo[i].imagekist->Down());
 			sourceinfo[i].centroid[0] /= sourceinfo[i].imagekist->Nunits();
 			sourceinfo[i].centroid[1] /= sourceinfo[i].imagekist->Nunits();
 
 			rs[i] = 0;
 			sourceinfo[i].area = 0;  // actually the source flux
-			MoveToTopKist(sourceinfo[i].imagekist);
+			sourceinfo[i].imagekist->MoveToTop();
 			do{
-				rs[i] = MAX(rs[i],pow(getCurrentKist(sourceinfo[i].imagekist)->x[0] - sourceinfo[i].centroid[0],2)
-						+ pow(getCurrentKist(sourceinfo[i].imagekist)->x[1] - sourceinfo[i].centroid[1],2) );
+				rs[i] = MAX(rs[i],pow(sourceinfo[i].imagekist->getCurrent()->x[0] - sourceinfo[i].centroid[0],2)
+						+ pow(sourceinfo[i].imagekist->getCurrent()->x[1] - sourceinfo[i].centroid[1],2) );
 				//xx[0] = getCurrentKist(sourceinfo[i].imagekist)->x[0] - source->getX()[0];
 				//xx[1] = getCurrentKist(sourceinfo[i].imagekist)->x[1] - source->getX()[1];
-				sourceinfo[i].area += source->SurfaceBrightness(getCurrentKist(sourceinfo[i].imagekist)->x)*pow(2*xmax/(Ntmp-1),2);
+				sourceinfo[i].area += source->SurfaceBrightness(sourceinfo[i].imagekist->getCurrent()->x)*pow(2*xmax/(Ntmp-1),2);
 
-			}while(MoveDownKist(sourceinfo[i].imagekist));
+			}while(sourceinfo[i].imagekist->Down());
 
 			rs[i] = (rs[i] == 0) ? xmin : sqrt(rs[i]);
 
@@ -412,28 +412,28 @@ void map_images(
 
 
 	// move from source plane to image plane
-	TranformPlanesKist(imageinfo->imagekist);
+	imageinfo->imagekist->TranformPlanes();
 
 	// take out points with no flux
 	if(verbose) printf("before taking out zero surface brightness points: %li\n",imageinfo->imagekist->Nunits());
 	Ntmp = imageinfo->imagekist->Nunits();
-	for(i=0,MoveToTopKist(imageinfo->imagekist),area_tot=0,maxflux=0.0; i < Ntmp ; ++i ){
+	for(i=0,imageinfo->imagekist->MoveToTop(),area_tot=0,maxflux=0.0; i < Ntmp ; ++i ){
 
-		flux = getCurrentKist(imageinfo->imagekist)->surface_brightness * pow(getCurrentKist(imageinfo->imagekist)->gridsize,2);
+		flux = imageinfo->imagekist->getCurrent()->surface_brightness * pow(imageinfo->imagekist->getCurrent()->gridsize,2);
 		maxflux = MAX(flux,maxflux);
 		area_tot += flux;
 
-		if(getCurrentKist(imageinfo->imagekist)->surface_brightness > 0){
+		if(imageinfo->imagekist->getCurrent()->surface_brightness > 0){
 
-			getCurrentKist(imageinfo->imagekist)->in_image = TRUE;
-			getCurrentKist(imageinfo->imagekist)->image->in_image = TRUE;
-			MoveDownKist(imageinfo->imagekist);
+			imageinfo->imagekist->getCurrent()->in_image = TRUE;
+			imageinfo->imagekist->getCurrent()->image->in_image = TRUE;
+			imageinfo->imagekist->Down();
 		}else{
-			getCurrentKist(imageinfo->imagekist)->in_image = FALSE;
-			getCurrentKist(imageinfo->imagekist)->image->in_image = FALSE;
-			if(AtTopKist(imageinfo->imagekist)) go = false; else go = true;
-			TakeOutCurrentKist(imageinfo->imagekist);
-			if(go) MoveDownKist(imageinfo->imagekist);
+			imageinfo->imagekist->getCurrent()->in_image = FALSE;
+			imageinfo->imagekist->getCurrent()->image->in_image = FALSE;
+			if(imageinfo->imagekist->AtTop()) go = false; else go = true;
+			imageinfo->imagekist->TakeOutCurrent();
+			if(go) imageinfo->imagekist->Down();
 		}
 
 	}
@@ -487,13 +487,13 @@ void map_images(
 			}
 		}*/
 
-		MoveToTopKist(imageinfo[i].imagekist);
+		imageinfo[i].imagekist->MoveToTop();
 		imageinfo[i].area = 0.0;
 		do{
-			imageinfo[i].area += pow(getCurrentKist(imageinfo[i].imagekist)->gridsize,2)
-			                    		*(getCurrentKist(imageinfo[i].imagekist)->surface_brightness/maxflux);
+			imageinfo[i].area += pow(imageinfo[i].imagekist->getCurrent()->gridsize,2)
+                             *(imageinfo[i].imagekist->getCurrent()->surface_brightness/maxflux);
 
-		}while(MoveDownKist(imageinfo[i].imagekist));
+		}while(imageinfo[i].imagekist->Down());
 
 		area_tot += imageinfo[i].area;
 		//printf("   %i area = %e\n",i,imageinfo[i].area);
@@ -535,20 +535,23 @@ void map_images(
 		}
 		findborders4(grid->i_tree,&(imageinfo[i]));
 */
-		MoveToTopKist(imageinfo[i].imagekist);
+		imageinfo[i].imagekist->MoveToTop();
 		tmp=0.0;
 		imageinfo[i].centroid[0] = 0.0;
 		imageinfo[i].centroid[1] = 0.0;
     imageinfo[i].area = 0.0;
-		for(j = 0 ; j < imageinfo[i].imagekist->Nunits() ; ++j,MoveDownKist(imageinfo[i].imagekist) ){
-			imageinfo[i].area += pow(getCurrentKist(imageinfo[i].imagekist)->gridsize,2)*getCurrentKist(imageinfo[i].imagekist)->surface_brightness;
-			imageinfo[i].centroid[0] += getCurrentKist(imageinfo[i].imagekist)->x[0]*pow(getCurrentKist(imageinfo[i].imagekist)->gridsize,2)
-					*getCurrentKist(imageinfo[i].imagekist)->surface_brightness;
-			imageinfo[i].centroid[1] += getCurrentKist(imageinfo[i].imagekist)->x[1]*pow(getCurrentKist(imageinfo[i].imagekist)->gridsize,2)
-					*getCurrentKist(imageinfo[i].imagekist)->surface_brightness;
+		for(j = 0 ; j < imageinfo[i].imagekist->Nunits() ; ++j,imageinfo[i].imagekist->Down() ){
+			imageinfo[i].area += pow(imageinfo[i].imagekist->getCurrent()->gridsize,2)
+               *imageinfo[i].imagekist->getCurrent()->surface_brightness;
+			imageinfo[i].centroid[0] += imageinfo[i].imagekist->getCurrent()->x[0]
+          *pow(imageinfo[i].imagekist->getCurrent()->gridsize,2)
+					*imageinfo[i].imagekist->getCurrent()->surface_brightness;
+			imageinfo[i].centroid[1] += imageinfo[i].imagekist->getCurrent()->x[1]
+          *pow(imageinfo[i].imagekist->getCurrent()->gridsize,2)
+					*imageinfo[i].imagekist->getCurrent()->surface_brightness;
 
-			getCurrentKist(imageinfo[i].imagekist)->in_image = FALSE;  // re-set marks
-			getCurrentKist(imageinfo[i].imagekist)->image->in_image = FALSE;  // re-set marks
+			imageinfo[i].imagekist->getCurrent()->in_image = FALSE;  // re-set marks
+			imageinfo[i].imagekist->getCurrent()->image->in_image = FALSE;  // re-set marks
 		}
 		if(imageinfo[i].getNimagePoints() > 0 ){
 			imageinfo[i].centroid[0] /= imageinfo[i].area;
@@ -664,19 +667,22 @@ void map_images_fixedgrid(
 
   // find image centroids
   for(i=0;i<*Nimages;++i){
-		MoveToTopKist(imageinfo[i].imagekist);
+		imageinfo[i].imagekist->MoveToTop();
 		imageinfo[i].centroid[0] = 0.0;
 		imageinfo[i].centroid[1] = 0.0;
     imageinfo[i].area = 0.0;
-		for(long j = 0 ; j < imageinfo[i].imagekist->Nunits() ; ++j,MoveDownKist(imageinfo[i].imagekist) ){
-			imageinfo[i].area += pow(getCurrentKist(imageinfo[i].imagekist)->gridsize,2)*getCurrentKist(imageinfo[i].imagekist)->surface_brightness;
-			imageinfo[i].centroid[0] += getCurrentKist(imageinfo[i].imagekist)->x[0]*pow(getCurrentKist(imageinfo[i].imagekist)->gridsize,2)
-        *getCurrentKist(imageinfo[i].imagekist)->surface_brightness;
-			imageinfo[i].centroid[1] += getCurrentKist(imageinfo[i].imagekist)->x[1]*pow(getCurrentKist(imageinfo[i].imagekist)->gridsize,2)
-        *getCurrentKist(imageinfo[i].imagekist)->surface_brightness;
+		for(long j = 0 ; j < imageinfo[i].imagekist->Nunits() ; ++j,imageinfo[i].imagekist->Down() ){
+			imageinfo[i].area += pow(imageinfo[i].imagekist->getCurrent()->gridsize,2)
+                   *imageinfo[i].imagekist->getCurrent()->surface_brightness;
+			imageinfo[i].centroid[0] += imageinfo[i].imagekist->getCurrent()->x[0]
+                       *pow(imageinfo[i].imagekist->getCurrent()->gridsize,2)
+                       *imageinfo[i].imagekist->getCurrent()->surface_brightness;
+			imageinfo[i].centroid[1] += imageinfo[i].imagekist->getCurrent()->x[1]
+                       *pow(imageinfo[i].imagekist->getCurrent()->gridsize,2)
+                       *imageinfo[i].imagekist->getCurrent()->surface_brightness;
       
-			getCurrentKist(imageinfo[i].imagekist)->in_image = FALSE;  // re-set marks
-			getCurrentKist(imageinfo[i].imagekist)->image->in_image = FALSE;  // re-set marks
+			imageinfo[i].imagekist->getCurrent()->in_image = FALSE;  // re-set marks
+			imageinfo[i].imagekist->getCurrent()->image->in_image = FALSE;  // re-set marks
 		}
 		if(imageinfo[i].getNimagePoints() > 0 ){
 			imageinfo[i].centroid[0] /= imageinfo[i].area;
@@ -735,8 +741,8 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
 			  if(Nsources > 1){
 				  // Find the closest source
 				  for(j=0,rmin = 1.0e100;j<Nsources;++j){
-					  r = pow(sourceinfo[j].centroid[0] - getCurrentKist(imageinfo[i].imagekist)->image->x[0],2)
-						  + pow(sourceinfo[j].centroid[1] - getCurrentKist(imageinfo[i].imagekist)->image->x[1],2);
+					  r = pow(sourceinfo[j].centroid[0] - imageinfo[i].imagekist->getCurrent()->image->x[0],2)
+						  + pow(sourceinfo[j].centroid[1] - imageinfo[i].imagekist->getCurrent()->image->x[1],2);
 					  if(rmin > r){
 						  rmin = r;
 						  k = j;
@@ -745,8 +751,8 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
 			  }else{ k = 0; }
 
 			  assert(sourceinfo[k].area > 0);
-			  assert(fabs(getCurrentKist(imageinfo[i].imagekist)->invmag) > 0.0);
-			  imageinfo[i].area = sourceinfo[k].area/fabs(getCurrentKist(imageinfo[i].imagekist)->invmag)/maxflux;
+			  assert(fabs(imageinfo[i].imagekist->getCurrent()->invmag) > 0.0);
+			  imageinfo[i].area = sourceinfo[k].area/fabs(imageinfo[i].imagekist->getCurrent()->invmag)/maxflux;
 			  if(verbose) printf("magnification is uniform for image %lu\n",i);
 		  }
 	  }
@@ -755,11 +761,11 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
 	  if(imageinfo[i].ShouldNotRefine == 0 && imageinfo[i].uniform_mag == no){  // If image was not refined on the last round do not revisit unless the images are re-divided.
 		  imageinfo[i].ShouldNotRefine = 1;
 
-		  MoveToTopKist(imageinfo[i].imagekist);
-		  for(j = 0 ; j < imageinfo[i].imagekist->Nunits() ; ++j,MoveDownKist(imageinfo[i].imagekist) ){
+		  imageinfo[i].imagekist->MoveToTop();
+		  for(j = 0 ; j < imageinfo[i].imagekist->Nunits() ; ++j,imageinfo[i].imagekist->Down() ){
 
 			  if(
-					  RefinePoint2(getCurrentKist(imageinfo[i].imagekist),grid->i_tree
+					  RefinePoint2(imageinfo[i].imagekist->getCurrent(),grid->i_tree
 					  	,imageinfo[i].area,total_area,criterion,res_target,nearest)
            //RefinePoint_sb(getCurrentKist(imageinfo[i].imagekist),grid->i_tree
            //		,imageinfo[i].area,total_area,2*source->getSBlimit(),nearest)
@@ -775,18 +781,18 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
 
 				  // Determine if image point to be refined is a inner border point
 				  if(reborder == false){
-					  if(nearest->Nunits() == 0 ) grid->i_tree->FindAllBoxNeighborsKist(getCurrentKist(imageinfo[i].imagekist),nearest);
-					  MoveToTopKist(nearest);
+					  if(nearest->Nunits() == 0 ) grid->i_tree->FindAllBoxNeighborsKist(imageinfo[i].imagekist->getCurrent(),nearest);
+					  nearest->MoveToTop();
 					  do{
-						  if(getCurrentKist(nearest)->in_image != TRUE){
+						  if(nearest->getCurrent()->in_image != TRUE){
 							  reborder = true;
 							  break;
 						  }
-					  }while(MoveDownKist(nearest));
+					  }while(nearest->Down());
 				  }
 
-				  imageinfo[i].area -=  pow(getCurrentKist(imageinfo[i].imagekist)->gridsize,2)
-						  *(getCurrentKist(imageinfo[i].imagekist)->surface_brightness/maxflux);
+				  imageinfo[i].area -=  pow(imageinfo[i].imagekist->getCurrent()->gridsize,2)
+						  *(imageinfo[i].imagekist->getCurrent()->surface_brightness/maxflux);
 
 				  assert(imageinfo[i].area >= 0);
 
@@ -794,12 +800,12 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
 				  assert(imageinfo[i].imagekist->getCurrent()->leaf->child2 == NULL);
 
 				  if(batch){
-					  points_to_refine.push_back(getCurrentKist(imageinfo[i].imagekist));
+					  points_to_refine.push_back(imageinfo[i].imagekist->getCurrent());
 
-					  imageinfo[i].area +=  pow(getCurrentKist(imageinfo[i].imagekist)->gridsize/grid->getNgrid_block(),2)
-							  *(getCurrentKist(imageinfo[i].imagekist)->surface_brightness/maxflux);
+					  imageinfo[i].area +=  pow(imageinfo[i].imagekist->getCurrent()->gridsize/grid->getNgrid_block(),2)
+							  *(imageinfo[i].imagekist->getCurrent()->surface_brightness/maxflux);
 				  }else{
-					  i_points = grid->RefineLeaf(lens,getCurrentKist(imageinfo[i].imagekist),kappa_off);
+					  i_points = grid->RefineLeaf(lens,imageinfo[i].imagekist->getCurrent(),kappa_off);
 					  check_sb_add(source,&imageinfo[i],i_points,Nold,number_of_refined);
 
 					  /*if(i_points != NULL){
@@ -832,8 +838,8 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
 						  Nold += i_points->head;
 					  }*/
 
-					  imageinfo[i].area +=  pow(getCurrentKist(imageinfo[i].imagekist)->gridsize,2)
-							  *(getCurrentKist(imageinfo[i].imagekist)->surface_brightness/maxflux);
+					  imageinfo[i].area +=  pow(imageinfo[i].imagekist->getCurrent()->gridsize,2)
+							  *(imageinfo[i].imagekist->getCurrent()->surface_brightness/maxflux);
 				  }
 
 				  imageinfo[i].ShouldNotRefine = 0;   // mark to continue refinement on next round
@@ -852,10 +858,10 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
 		  if(reborder){
 			  if(imageinfo[i].outerborder->MoveToTop()){
 				  do{
-					  getCurrentKist(imageinfo[i].outerborder)->in_image = FALSE;
-					  if(getCurrentKist(imageinfo[i].outerborder)->surface_brightness > 0)
-						  point = getCurrentKist(imageinfo[i].outerborder);
-				  }while(MoveDownKist(imageinfo[i].outerborder));
+					  imageinfo[i].outerborder->getCurrent()->in_image = FALSE;
+					  if(imageinfo[i].outerborder->getCurrent()->surface_brightness > 0)
+						  point = imageinfo[i].outerborder->getCurrent();
+				  }while(imageinfo[i].outerborder->Down());
 			  }
 			  findborders4(grid->i_tree,&(imageinfo[i]));
 
@@ -866,20 +872,20 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
 		  // Do the same for the outerborder.
 
 		  imageinfo[i].outerborder->MoveToTop();
-		  for(j = 0 ; j < imageinfo[i].outerborder->Nunits() ; ++j,MoveDownKist(imageinfo[i].outerborder) ){
+		  for(j = 0 ; j < imageinfo[i].outerborder->Nunits() ; ++j,imageinfo[i].outerborder->Down() ){
 
 			  // TODO: This was taken out and i'm not sure if it was needed.
 			  //assert(getCurrentKist(imageinfo[i].outerborder)->surface_brightness == 0);
 
 			  if(
-					  RefinePoint2(getCurrentKist(imageinfo[i].outerborder),grid->i_tree
+					  RefinePoint2(imageinfo[i].outerborder->getCurrent(),grid->i_tree
 					      ,imageinfo[i].area,total_area,criterion,res_target,nearest)
 					  //RefinePoint_sb(getCurrentKist(imageinfo[i].outerborder),grid->i_tree
 					  //    ,imageinfo[i].area,total_area,2*source->getSBlimit(),nearest)
 			  ){
 
-				  if(getCurrentKist(imageinfo[i].outerborder)->in_image != MAYBE){
-					  getCurrentKist(imageinfo[i].outerborder)->in_image = MAYBE;
+				  if(imageinfo[i].outerborder->getCurrent()->in_image != MAYBE){
+					  imageinfo[i].outerborder->getCurrent()->in_image = MAYBE;
 
 					  reborder = true;  // Since the border has been refined, re do the borders.
 					  ++Ncells;
@@ -887,9 +893,9 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
 					  assert(imageinfo[i].outerborder->getCurrent()->leaf->child1 == NULL);
 					  assert(imageinfo[i].outerborder->getCurrent()->leaf->child2 == NULL);
 					  if(batch){
-						  points_to_refine.push_back(getCurrentKist(imageinfo[i].outerborder));
+						  points_to_refine.push_back(imageinfo[i].outerborder->getCurrent());
 					  }else{
-						  i_points = grid->RefineLeaf(lens,getCurrentKist(imageinfo[i].outerborder),kappa_off);
+						  i_points = grid->RefineLeaf(lens,imageinfo[i].outerborder->getCurrent(),kappa_off);
 						  check_sb_add(source,&imageinfo[i],i_points,Nold,number_of_refined);
 					  }
 					  /*if(i_points != NULL){
@@ -942,20 +948,20 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
 		  //   recalculate the border
 		  if(reborder){
 
-			  if(MoveToTopKist(imageinfo[i].outerborder)){
+			  if(imageinfo[i].outerborder->MoveToTop()){
 				  do{
-					  getCurrentKist(imageinfo[i].outerborder)->in_image = FALSE;
-					  if(getCurrentKist(imageinfo[i].outerborder)->surface_brightness > 0) point = getCurrentKist(imageinfo[i].outerborder);
-				  }while(MoveDownKist(imageinfo[i].outerborder));
+					  imageinfo[i].outerborder->getCurrent()->in_image = FALSE;
+					  if(imageinfo[i].outerborder->getCurrent()->surface_brightness > 0) point = imageinfo[i].outerborder->getCurrent();
+				  }while(imageinfo[i].outerborder->Down());
 			  }
 			  findborders4(grid->i_tree,&(imageinfo[i]));
 			  assert(imageinfo[i].outerborder->Nunits() > 0);
 
 			  // re-set markers to MAYBE so overlaps can be detected
-			  if(MoveToTopKist(imageinfo[i].outerborder)){
+			  if(imageinfo[i].outerborder->MoveToTop()){
 				  do{
-					  getCurrentKist(imageinfo[i].outerborder)->in_image = MAYBE;
-				  }while(MoveDownKist(imageinfo[i].outerborder));
+					  imageinfo[i].outerborder->getCurrent()->in_image = MAYBE;
+				  }while(imageinfo[i].outerborder->Down());
 			  }
 
 			  reborder = false;
@@ -968,21 +974,21 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
   // reset the flag in outer borders
   for(i=0;i<(*Nimages);++i){
 
-	  if(MoveToTopKist(imageinfo[i].outerborder)){
+	  if(imageinfo[i].outerborder->MoveToTop()){
 		  do{
-			  getCurrentKist(imageinfo[i].outerborder)->in_image = FALSE;
-		  }while(MoveDownKist(imageinfo[i].outerborder));
+			  imageinfo[i].outerborder->getCurrent()->in_image = FALSE;
+		  }while(imageinfo[i].outerborder->Down());
 	  }
   }
 
   if( number_of_refined == 0 || (divide_images && redivide) ){
 		// Put all the images together.
-		MoveToBottomKist(imageinfo->imagekist);
+		imageinfo->imagekist->MoveToBottom();
 		for(i=1 ; i < *Nimages ; ++i){
-			MoveToTopKist(imageinfo[i].imagekist);
+			imageinfo[i].imagekist->MoveToTop();
 			while(imageinfo[i].imagekist->Nunits() > 0)
-					InsertAfterCurrentKist(imageinfo->imagekist,TakeOutCurrentKist(imageinfo[i].imagekist));
-			MoveDownKist(imageinfo->imagekist);
+					imageinfo->imagekist->InsertAfterCurrent(imageinfo[i].imagekist->TakeOutCurrent());
+          imageinfo->imagekist->Down();
 		}
 
 		// divide up images
@@ -1004,8 +1010,8 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
 				if(Nsources > 1){
 					// Find the closest source
 					for(j=0,rmin = 1.0e200;j<Nsources;++j){
-						r = pow(sourceinfo[j].centroid[0] - getCurrentKist(imageinfo[i].imagekist)->image->x[0],2)
-									  + pow(sourceinfo[j].centroid[1] - getCurrentKist(imageinfo[i].imagekist)->image->x[1],2);
+						r = pow(sourceinfo[j].centroid[0] - imageinfo[i].imagekist->getCurrent()->image->x[0],2)
+									  + pow(sourceinfo[j].centroid[1] - imageinfo[i].imagekist->getCurrent()->image->x[1],2);
 						if(rmin > r){
 							rmin = r;
 							k = j;
@@ -1014,16 +1020,16 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
 				}else{ k=0; }
 
 				assert(sourceinfo[k].area > 0);
-				assert(fabs(getCurrentKist(imageinfo[i].imagekist)->invmag) > 0);
-				imageinfo[i].area = sourceinfo[k].area/fabs(getCurrentKist(imageinfo[i].imagekist)->invmag)/maxflux;
+				assert(fabs(imageinfo[i].imagekist->getCurrent()->invmag) > 0);
+				imageinfo[i].area = sourceinfo[k].area/fabs(imageinfo[i].imagekist->getCurrent()->invmag)/maxflux;
 
 			}else{
 				imageinfo[i].area = 0.0;
-				MoveToTopKist(imageinfo[i].imagekist);
+				imageinfo[i].imagekist->MoveToTop();
 				do{
-					imageinfo[i].area += pow(getCurrentKist(imageinfo[i].imagekist)->gridsize,2)
-		    				 * (getCurrentKist(imageinfo[i].imagekist)->surface_brightness/maxflux);
-				}while(MoveDownKist(imageinfo[i].imagekist));
+					imageinfo[i].area += pow(imageinfo[i].imagekist->getCurrent()->gridsize,2)
+		    				 * (imageinfo[i].imagekist->getCurrent()->surface_brightness/maxflux);
+				}while(imageinfo[i].imagekist->Down());
 			}
 		}
   }
@@ -1045,8 +1051,8 @@ void check_sb_add(Source *source,ImageInfo *imageinfo,Point *i_points,unsigned l
 
 			// if new point has flux add to image
 			if(i_points[k].surface_brightness > 0.0){
-				InsertAfterCurrentKist(imageinfo->imagekist,&(i_points[k]));
-				MoveDownKist(imageinfo->imagekist);
+				imageinfo->imagekist->InsertAfterCurrent(&(i_points[k]));
+				imageinfo->imagekist->Down();
 
 				i_points[k].in_image = TRUE;
 				i_points[k].image->in_image = TRUE;
@@ -1068,7 +1074,7 @@ bool RefinePoint2(Point *point,TreeHndl i_tree,double image_area,double total_ar
 
 	double borderSB = 0,error = 0,maxdiff_sb,flux;
 
-	EmptyKist(nearest);
+	nearest->Empty();
 	// Prevent cell from getting so small that precision error prevents everything from working
 	if(point->gridsize <= pow(10.,1 - DBL_DIG)) return false;  // this shouldn't be necessary every time
 
@@ -1085,11 +1091,11 @@ bool RefinePoint2(Point *point,TreeHndl i_tree,double image_area,double total_ar
 
 	flux = point->surface_brightness*pow(point->gridsize,2);
 	maxdiff_sb = 0.0;
-	MoveToTopKist(nearest);
+	nearest->MoveToTop();
 	do{
-		borderSB += getCurrentKist(nearest)->surface_brightness;
-		maxdiff_sb = MAX(fabs(getCurrentKist(nearest)->surface_brightness - point->surface_brightness),maxdiff_sb);
-	}while(MoveDownKist(nearest));
+		borderSB += nearest->getCurrent()->surface_brightness;
+		maxdiff_sb = MAX(fabs(nearest->getCurrent()->surface_brightness - point->surface_brightness),maxdiff_sb);
+	}while(nearest->Down());
 	borderSB /= nearest->Nunits();
 
 	error = pow(point->gridsize,2)*(fabs(borderSB - point->surface_brightness)/6/maxflux);
@@ -1119,11 +1125,11 @@ bool RefinePoint_sb(Point *point,TreeHndl i_tree,double image_area,double total_
 	nearest->Empty();
   
 	i_tree->FindAllBoxNeighborsKist(point,nearest);
-	MoveToTopKist(nearest);
+	nearest->MoveToTop();
 	do{
-		if(sb_limit < fabs(getCurrentKist(nearest)->surface_brightness - point->surface_brightness) )
+		if(sb_limit < fabs(nearest->getCurrent()->surface_brightness - point->surface_brightness) )
 			return true;
-	}while(MoveDownKist(nearest));
+	}while(nearest->Down());
   
 	return false;
 }
@@ -1208,13 +1214,13 @@ void UniformMagCheck(ImageInfo *imageinfo){
 
 		double magmin,magmax;
 
-		MoveToBottomKist(imageinfo->imagekist);
-		magmin = magmax = 1.0/getCurrentKist(imageinfo->imagekist)->invmag;
-		MoveToTopKist(imageinfo->imagekist);
+		imageinfo->imagekist->MoveToBottom();
+		magmin = magmax = 1.0/imageinfo->imagekist->getCurrent()->invmag;
+		imageinfo->imagekist->MoveToTop();
 		do{
-			magmin = MIN(magmin,1.0/getCurrentKist(imageinfo->imagekist)->invmag);
-			magmax = MAX(magmax,1.0/getCurrentKist(imageinfo->imagekist)->invmag);
-		}while( MoveDownKist(imageinfo->imagekist) && (magmax-magmin) < tol_UniformMag*fabs(magmax) );
+			magmin = MIN(magmin,1.0/imageinfo->imagekist->getCurrent()->invmag);
+			magmax = MAX(magmax,1.0/imageinfo->imagekist->getCurrent()->invmag);
+		}while( imageinfo->imagekist->Down() && (magmax-magmin) < tol_UniformMag*fabs(magmax) );
 
 		if((magmax-magmin) < tol_UniformMag*fabs(magmax)){
 			imageinfo->uniform_mag = yes;

@@ -19,13 +19,16 @@ struct KistUnit{
 	struct KistUnit<T> *prev;
 };// Unit;
 
-/// Internal container used in Kist container class
+/// Custom itorator class for Kist container
 template <class T>
 class KistIt{
 private:
-    struct KistUnit<Point> *unit;
+    struct KistUnit<T> *unit;
     
 public:
+  //friend struct Kist;
+  struct KistUnit<T>  * getUnit(){return unit;}
+  
     /// Returns a pointer to the current data.  Same as getCurrent.
 	T *operator*(){return unit->data;}
 	bool operator++(){
@@ -47,7 +50,7 @@ public:
     }
 
 	/// Same as Up()
-	bool operator++(int x){
+	bool operator++(int){
         if(unit == NULL){
             return false;
         }else{
@@ -57,7 +60,7 @@ public:
     }
 
 	/// Same as Down()
-	bool operator--(int x){
+	bool operator--(int){
         if(unit == NULL){
             return false;
         }else{
@@ -66,9 +69,13 @@ public:
         }
     }
     
-    void operator=(KistUnit<T> *my_unit){
-        unit = my_unit;
-    }
+  void operator=(KistUnit<T> *my_unit){
+    unit = my_unit;
+  }
+  
+  void operator=(KistIt<T> my_it){
+    unit = my_it.unit;
+  }
 	
 };
 
@@ -103,7 +110,7 @@ public:
  
 <\pre>
  */
-template <class Data = Point>
+template <class Data>
 struct Kist{
 public:
 
@@ -121,22 +128,23 @@ public:
 		  return;
 	};
 	Kist(Kist &a){
-		KistUnit<Data> *current;
+		KistUnit<Data> *tmp_current;
 
 		top=NULL;
 		Number=0;
 		bottom = top;
 		current = top;
 
-		current = a.current;
+		tmp_current = a.current;
 		a.MoveToTop();
 		do{
 			InsertAfterCurrent(a.getCurrent());
 			Down();
 		}while(a.Down());
 		assert(a.Nunits() == Nunits());
-		a.current = current;
+		a.current = tmp_current;
 	};
+  
 	~Kist(){
 		KistUnit<Data> *units;
 		while(heads.size() > 0){
@@ -152,6 +160,7 @@ public:
 	void InsertBeforeCurrent(Data * data);
 	Data *TakeOutCurrent();
 	void Empty();
+  void Clear();
 	//void FreeAll();
 	void Fill(Data * data,unsigned long N);
 	void SwapCurrentWithBottom();
@@ -166,21 +175,24 @@ public:
 	bool Up();
 	bool MoveToTop();
 	bool MoveToBottom();
-    
-    
-    void SetCurrentIt(KistIt<Data> it){current = it.unit;}
-    KistIt<Data> getCurrentIt(){
-        KistIt<Data> it = current;
-        return it;
-    }
-    KistIt<Data> getTopIt(){
-        KistIt<Data> it = top;
-        return it;
-    }
-    KistIt<Data> getBottomIt(){
-        KistIt<Data> it = bottom;
-        return it;
-    }
+  
+  void SetCurrentIt(KistIt<Data> it){current = it.getUnit();}
+  
+  KistIt<Data> getCurrentIt(){
+      KistIt<Data> it ;//= current;
+      it = current;
+      return it;
+  }
+  KistIt<Data> getTopIt(){
+      KistIt<Data> it ;//= top;
+      it = top;
+      return it;
+  }
+  KistIt<Data> getBottomIt(){
+      KistIt<Data> it;
+      it = bottom;
+      return it;
+  }
 
 	// status
 	/// Number of elements in list.
@@ -205,9 +217,9 @@ public:
 	/// Same as Down()
 	bool operator--(){return Down();}
 	/// Same as Up()
-	bool operator++(int x){return Up();}
+	bool operator++(int){return Up();}
 	/// Same as Down()
-	bool operator--(int x){return Down();}
+	bool operator--(int){return Down();}
     
 
 private:
@@ -241,6 +253,26 @@ template <class Data> void Kist<Data>::Empty(){
 	while(Number > 0) TakeOutCurrent();
 	//Number = 0;
 	//top = bottom = current = NULL;
+	return;
+}
+
+/**
+ * \brief Removes all elements from list and destroy the data.
+ */
+template <class Data> void Kist<Data>::Clear(){
+  std::list<Data *> list;
+  Data* point;
+  
+	while(Number > 0){
+    point = TakeOutCurrent();
+    if(point->head) list.push_back(point);
+  }
+  while(list.size() > 0){
+    point = list.back();
+    list.pop_back();
+    delete [] point;
+  }
+
 	return;
 }
 
@@ -468,15 +500,15 @@ template <class Data> bool Kist<Data>::Up(){
 }
 /// Moves to the top.  Returns false if the kist is empty.
 template <class Data> bool Kist<Data>::MoveToTop(){
-	if(!Number){current=&offbot; return false;}
-	current=top;
+	if(!Number){current = &offbot; return false;}
+	current = top;
 	return true;
 }
 
 /// Moves to the top.  Returns false if the kist is empty.
 template <class Data> bool Kist<Data>::MoveToBottom(){
 	if(!Number){current=&offbot; return false;}
-	current=bottom;
+	current = bottom;
 	return true;
 }
 
@@ -600,7 +632,7 @@ template <class Data> void Kist<Data>::copy(std::vector<Data *> &vector){
 /*
  * These functions are provided for backwards compatibility, but the kist member methods
  * should be used in the future.
- */
+ *
 inline void EmptyKist(Kist<Point> * kist){
 	kist->Empty();
 }
@@ -646,5 +678,5 @@ inline Point *getCurrentKist(Kist<Point> * kist){
 inline void TranformPlanesKist(Kist<Point> * kist){
 	kist->TranformPlanes();
 }
-
+*/
 #endif
