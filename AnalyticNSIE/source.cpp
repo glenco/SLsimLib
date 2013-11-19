@@ -19,48 +19,6 @@ Source::Source()
 	setSBlimit_magarcsec(30.);
 }
 
-std::size_t Source::Nparams() const
-{
-	return 2;
-}
-
-double Source::getParam(std::size_t p) const
-{
-	switch(p)
-	{
-		case 0:
-			// source x position
-			return (source_x[0]/pi*180*60*60);
-		case 1:
-			// source y position
-			return (source_x[1]/pi*180*60*60);
-		default:
-			throw std::invalid_argument("bad parameter index for getParam()");
-	}
-}
-
-double Source::setParam(std::size_t p, double val)
-{
-	switch(p)
-	{
-		case 0:
-			// source x position
-			return (source_x[0] = val*pi/180/60/60);
-		case 1:
-			// source y position
-			return (source_x[1] = val*pi/180/60/60);
-		default:
-			throw std::invalid_argument("bad parameter index for setParam()");
-	}
-}
-
-void Source::printCSV(std::ostream&, bool header) const
-{
-	const std::type_info& type = typeid(*this);
-	std::cerr << "Source subclass " << type.name() << " does not implement printCSV()" << std::endl;
-	std::exit(1);
-}
-
 SourceUniform::SourceUniform(InputParams& params) : Source(){
 	assignParams(params);
 }

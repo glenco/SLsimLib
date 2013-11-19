@@ -54,17 +54,7 @@ public:
 	void setSBlimit(float limit) {sb_limit = limit;}
 	/// Sets sb_limit in mag/arcsec^2
 	void setSBlimit_magarcsec(float limit) {sb_limit = pow(10,-0.4*(48.6+limit))*pow(180*60*60/pi,2)/hplanck;}
-	
-	/// get the number of source parameters
-	virtual std::size_t Nparams() const;
-	/// get the value of a scaled source parameter by index
-	virtual double getParam(std::size_t p) const;
-	/// set the value of a scaled source parameter by index
-	virtual double setParam(std::size_t p, double value);
-	
-	/// print the source parameters in CSV format
-	virtual void printCSV(std::ostream&, bool header = false) const;
-	
+
 protected:
 	virtual void assignParams(InputParams& params) = 0;
 	
