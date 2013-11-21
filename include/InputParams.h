@@ -127,6 +127,8 @@ private:
 		counter();
 		counter(const counter& other);
 		
+		counter& operator=(const counter& rhs);
+		
 		void use(const std::string& label);
 		bool is_used(const std::string& label) const;
 		
@@ -135,9 +137,7 @@ private:
 	private:
 		std::map<std::string, std::size_t> c;
 		
-#if __cplusplus >= 201103L
 		mutable std::mutex mutex;
-#endif
 	};
 	
 	typedef std::map<std::string, std::string>::iterator iterator;
