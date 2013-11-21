@@ -48,8 +48,8 @@
 
 class LensHaloUniform: public LensHalo{
 public:
-	LensHaloUniform(InputParams& params, const COSMOLOGY& cosmo);
-	LensHaloUniform(InputParams& params);
+	LensHaloUniform(InputParams& params, const COSMOLOGY& cosmo, bool verbose = false);
+	LensHaloUniform(InputParams& params,bool verbose =false);
 	~LensHaloUniform();
 
 	void assignParams(InputParams& params);

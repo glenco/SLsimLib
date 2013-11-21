@@ -147,8 +147,8 @@ InputParams::InputParams(std::string paramfile)
 
 InputParams::~InputParams()
 {
-	print_unused();
-	print_used();
+	//print_unused();
+	//print_used();
 }
 
 /// Print all parameters and values to stdout.

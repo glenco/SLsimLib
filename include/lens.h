@@ -71,8 +71,10 @@ GLAMER_TEST_USES(LensTest)
 class Lens
 {
 public:
-	Lens(long* seed, CosmoParamSet cosmoset = WMAP5yr);
-	Lens(InputParams& params, long* my_seed, CosmoParamSet cosmoset = WMAP5yr);
+	Lens(long* seed, CosmoParamSet cosmoset = WMAP5yr, bool verbose = false);
+	Lens(InputParams& params, long* my_seed, CosmoParamSet cosmoset = WMAP5yr, bool verbose = false);
+  Lens(Lens &lens);
+  
 	~Lens();
 
 	/// marks if the lens has been setup.
@@ -86,9 +88,9 @@ public:
 	void setfov(double fov){fieldofview=fov;};
 
 	/// reset te number of planes, but keep the field halos and main lens
-	void resetFieldNplanes(std::size_t field_Nplanes);
+	void resetFieldNplanes(std::size_t field_Nplanes, bool verbose = false);
 	/// keep the main lens and the number of planes constant, but generate new field halos
-	void resetFieldHalos();
+	void resetFieldHalos(bool verbose = false);
 
 	/// print the main parameters of the lens
 	void printMultiLens();
@@ -115,17 +117,17 @@ public:
 	}
 
 	/// remove all main halos
-	void clearMainHalos();
+	void clearMainHalos(bool verbose);
 
 	/// inserts a single main lens halo and adds it to the existing ones
-	void insertMainHalo(LensHalo* halo);
+	void insertMainHalo(LensHalo* halo,bool verbose = false);
 	/// inserts a sequence of main lens halos and adds them to the existing ones
-	void insertMainHalos(LensHalo** halos, std::size_t Nhalos);
+	void insertMainHalos(LensHalo** halos, std::size_t Nhalos,bool verbose = false);
 
 	/// replaces existing main halos with a single main halo
-	void replaceMainHalos(LensHalo* halo);
+	void replaceMainHalos(LensHalo* halo,bool verbose = false);
 	/// replaces existing main halos with a sequence of main halos
-	void replaceMainHalos(LensHalo** halos, std::size_t Nhalos);
+	void replaceMainHalos(LensHalo** halos, std::size_t Nhalos,bool verbose = false);
 
 	/// get number of main halos
 	std::size_t getNMainHalos() const;
@@ -143,7 +145,7 @@ public:
 
 	// methods used for use with implanted sources
 
-	short ResetSourcePlane(double z,bool nearest, unsigned long GalID=0, double *xx=NULL);
+	short ResetSourcePlane(double z,bool nearest, unsigned long GalID=0, double *xx=NULL,bool verbose = false);
 
 	/// Revert the source redshift to the value it was when the Lens was created.
 	void RevertSourcePlane(){ toggle_source_plane = false;}
@@ -173,7 +175,10 @@ private:
 	
 	// seed for random field generation
 	long *seed;
-	
+  
+  long init_seed;
+  InputParams init_params;
+  
   // the cosmology
 	COSMOLOGY cosmo;
 
@@ -181,7 +186,7 @@ private:
 	double fieldofview;
 	
 	void readCosmology(InputParams& params);
-	void assignParams(InputParams& params);
+	void assignParams(InputParams& params,bool verbose = false);
 	
 	/// turns source plane on and off
 	bool toggle_source_plane;
@@ -198,7 +203,7 @@ private:
 	
 private: /* generation */
 	/// create the lens planes
-	void buildPlanes(InputParams& params);
+	void buildPlanes(InputParams& params,bool verbose);
 	
 	/// sets the distances and redshifts of the field planes equidistant
 	void setFieldDist();
@@ -207,11 +212,11 @@ private: /* generation */
 	/// setup the field plane distances
 	void setupFieldPlanes();
 	/// create field halos as specified in the parameter file
-	void createFieldHalos();
+	void createFieldHalos(bool verbose);
 	/// read field halo data in from a file
-	void readInputSimFile();
+	void readInputSimFile(bool verbose);
 	/// build the field planes and sort halos onto them
-	void createFieldPlanes();
+	void createFieldPlanes(bool verbose);
 	
 	/// generate main halo from the parameter file
 	void createMainHalos(InputParams& params);
@@ -221,7 +226,7 @@ private: /* generation */
 	void addMainHaloToPlane(LensHalo* halo);
 	
 	/// combine field and main planes
-	void combinePlanes();
+	void combinePlanes(bool verbose);
 	
 private: /* force calculation */
 	/// if >= 1, deflection in the rayshooting is switched off

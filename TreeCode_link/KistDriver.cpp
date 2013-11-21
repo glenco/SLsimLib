@@ -10,8 +10,8 @@
 #include "slsimlib.h"
 
 //static int Nbucket = 1;   // must be =1 if each leaf is to coincide with each cell
-static int incell;
-static double realray[2];
+//static int incell;
+//static double realray[2];
 
 /** \ingroup ImageFundingL2
  *
@@ -185,7 +185,7 @@ void TreeStruct::PointsWithinEllipKist(
 		xtmp = neighborkist->getCurrent()->x;
 		x = xtmp[0]*cs - xtmp[1]*sn;
 		y = xtmp[0]*sn + xtmp[1]*cs;
-		if( pow(x/rmax,2) + pow(y/rmin,2) > 1) neighborkist->getCurrent();
+		if( (x*x/rmax/rmax) + (y*y/rmin/rmin) > 1) neighborkist->TakeOutCurrent();
 	}
 	return;
 }
@@ -212,27 +212,27 @@ double TreeStruct::PointsWithinKist(
 
 	if(markpoints==0) neighborkist->Empty();
 
-	double ray[2] = { center[0], center[1] };
+	double tmp_ray[2] = { center[0], center[1] };
 	
-	realray[0]=ray[0];
-	realray[1]=ray[1];
+	realray[0]=tmp_ray[0];
+	realray[1]=tmp_ray[1];
 
 	moveTop();
-	if( inbox(ray,current->boundary_p1,current->boundary_p2) == 0 ){
-		std::printf("Warning: in PointsWithinKist, ray is not inside the simulation box\n    should work in any case\n      ray= %e %e\n     boundary p1 = %e %e p2 = %e %e\n",ray[0],ray[1]
+	if( inbox(tmp_ray,current->boundary_p1,current->boundary_p2) == 0 ){
+		std::printf("Warning: in PointsWithinKist, ray is not inside the simulation box\n    should work in any case\n      ray= %e %e\n     boundary p1 = %e %e p2 = %e %e\n",tmp_ray[0],tmp_ray[1]
 	   ,current->boundary_p1[0],current->boundary_p1[1]
 	   ,current->boundary_p2[0],current->boundary_p2[1]);
 
-		ray[0]=MAX(ray[0],current->boundary_p1[0]);
-		ray[0]=MIN(ray[0],current->boundary_p2[0]);
+		tmp_ray[0]=MAX(tmp_ray[0],current->boundary_p1[0]);
+		tmp_ray[0]=MIN(tmp_ray[0],current->boundary_p2[0]);
 
-		ray[1]=MAX(ray[1],current->boundary_p1[1]);
-		ray[1]=MIN(ray[1],current->boundary_p2[1]);
+		tmp_ray[1]=MAX(tmp_ray[1],current->boundary_p1[1]);
+		tmp_ray[1]=MIN(tmp_ray[1],current->boundary_p2[1]);
 	}
 	incell=1;
 
 	maxgridsize = 0;
-    _PointsWithinKist(ray,&rmax,neighborkist,markpoints,&maxgridsize);
+    _PointsWithinKist(tmp_ray,&rmax,neighborkist,markpoints,&maxgridsize);
 
 	return maxgridsize;
 }

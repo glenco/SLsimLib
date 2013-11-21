@@ -373,8 +373,9 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa
 	for(ii=0,Nadded=0;ii<Nleaves;++ii){
 		assert(points[ii]->leaf->child1 == NULL && points[ii]->leaf->child2 == NULL);
 		assert(points[ii]->image->leaf->child1 == NULL && points[ii]->image->leaf->child2 == NULL);
-
-		assert(points[ii]->gridsize > pow(10.,-DBL_DIG)*MAX(fabs(points[ii]->x[0]),fabs(points[ii]->x[1])) ); // If cells are too small they will cause
+    
+    // If cells are too small they will cause problems
+		assert(points[ii]->gridsize > pow(10.,-DBL_DIG)*MAX(fabs(points[ii]->x[0]),fabs(points[ii]->x[1])) );
     //assert(points[ii]->gridsize > 1.0e-10*MAX(fabs(points[ii]->x[0]),fabs(points[ii]->x[1])) ); // If cells are too small they will cause problems.
 
 		points[ii]->leaf->refined = true;

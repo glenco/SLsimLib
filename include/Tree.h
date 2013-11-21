@@ -94,11 +94,16 @@ private:
 
   TreeStruct(){};
 
+  Point **temp_points;
+  
   /// number of barnches in tree */
   unsigned long Nbranches;
    /// number of points allowed in leaves of tree
   int Nbucket;
   short median_cut;
+  int incell;
+  double realray[2];
+
 
   void construct_root(Point *xp,unsigned long npoints
 			 ,double boundary_p1[2],double boundary_p2[2]

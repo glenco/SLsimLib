@@ -34,9 +34,11 @@ namespace
 /**
  * \brief Creates an empty lens. Main halos and field halos need to be inserted by hand from the user.
  */
-Lens::Lens(long* my_seed, CosmoParamSet cosmoset)
+Lens::Lens(long* my_seed, CosmoParamSet cosmoset,bool verbose)
 : seed(my_seed), cosmo(cosmoset), halo_pos(0)
 {
+  init_seed = 0;
+  
 	if((cosmo.getOmega_matter() + cosmo.getOmega_lambda()) != 1.0)
 	{
 		printf("ERROR: Lens can only handle flat universes at present. Must change cosmology.\n");
@@ -46,7 +48,7 @@ Lens::Lens(long* my_seed, CosmoParamSet cosmoset)
 	read_sim_file = false;
 	
 	charge = 4*pi*Grav;
-	std::cout << "charge: " << charge << std::endl;
+	if(verbose) std::cout << "charge: " << charge << std::endl;
 	
 	// initially let source be the one inputed from parameter file
 	index_of_new_sourceplane = -1;
@@ -59,9 +61,13 @@ Lens::Lens(long* my_seed, CosmoParamSet cosmoset)
  * \ingroup Constructor
  * \brief allocates space for the halo trees and the inout lens, if there is any
  */
-Lens::Lens(InputParams& params, long* my_seed, CosmoParamSet cosmoset)
+Lens::Lens(InputParams& params, long* my_seed, CosmoParamSet cosmoset, bool verbose)
 : seed(my_seed), cosmo(cosmoset), halo_pos(0)
 {
+  
+  //init_params = params;
+  init_seed = *my_seed;
+  
 	readCosmology(params);
 	
 	if((cosmo.getOmega_matter() + cosmo.getOmega_lambda()) != 1.0)
@@ -75,16 +81,53 @@ Lens::Lens(InputParams& params, long* my_seed, CosmoParamSet cosmoset)
 	read_sim_file = false;
 	
 	charge = 4*pi*Grav;
-	std::cout << "charge: " << charge << std::endl;
+	if(verbose) std::cout << "charge: " << charge << std::endl;
 	
 	// initially let source be the one inputed from parameter file
 	index_of_new_sourceplane = -1;
 	toggle_source_plane = false;
 	
 	// set up the lens contents
-	buildPlanes(params);
+	buildPlanes(params,verbose);
 }
 
+/* * Copy constructor.  This recreates the original lens before any new additions might have been added.
+Lens::Lens(Lens &lens)
+: cosmo(lens.cosmo), halo_pos(0)
+{
+  if(init_seed == 0){
+    std::cout << "Cann't use copy constructor on Lens that was not created from a parameter file!" << std::endl;
+    throw std::runtime_error("cannot use copy constructor");
+  }
+  
+  init_params = lens.init_params;
+  init_seed = lens.init_seed;
+  seed = new long;
+  *seed = lens.init_seed;
+  
+	readCosmology(lens.init_params);
+  
+	if((cosmo.getOmega_matter() + cosmo.getOmega_lambda()) != 1.0)
+	{
+		printf("ERROR: Lens can only handle flat universes at present. Must change cosmology.\n");
+		exit(1);
+	}
+	
+	assignParams(lens.init_params);
+	
+	read_sim_file = false;
+	
+	charge = 4*pi*Grav;
+	if(verbose) std::cout << "charge: " << charge << std::endl;
+	
+	// initially let source be the one inputed from parameter file
+	index_of_new_sourceplane = -1;
+	toggle_source_plane = false;
+	
+	// set up the lens contents
+	buildPlanes(lens.init_params);
+}
+// */
 Lens::~Lens()
 {
 	Utilities::delete_container(lensing_planes);
@@ -107,13 +150,13 @@ void Lens::readCosmology(InputParams& params)
 	if(params.get("sigma_8", tmp)) cosmo.power_normalize(tmp);
 }
 
-/// Retrieve input parameters for construction
-void Lens::assignParams(InputParams& params)
+/// Retrieve input parameters for construction. 
+void Lens::assignParams(InputParams& params,bool verbose)
 {
 	if(!params.get("main_halo_on",flag_switch_main_halo_on))
 	{
 		ERROR_MESSAGE();
-		cout << "parameter main_halo_on needs to be set in the parameter file " << params.filename() << endl;
+		std::cout << "parameter main_halo_on needs to be set in the parameter file " << params.filename() << endl;
 		exit(0);
 	}
 	
@@ -122,7 +165,7 @@ void Lens::assignParams(InputParams& params)
 		if(!params.get("main_DM_halo_type",main_halo_type))
 		{
 			ERROR_MESSAGE();
-			cout << "parameter main_DM_halo_type needs to be set in the parameter file " << params.filename() << endl;
+			std::cout << "parameter main_DM_halo_type needs to be set in the parameter file " << params.filename() << endl;
 			exit(0);
 		}
 		if(!params.get("main_galaxy_halo_type",main_galaxy_halo_type))
@@ -154,21 +197,21 @@ void Lens::assignParams(InputParams& params)
 			if(!params.get("field_Nplanes",field_Nplanes))
 			{
 				ERROR_MESSAGE();
-				cout << "parameter field_Nplanes needs to be set in the parameter file " << params.filename() << endl;
+				std::cout << "parameter field_Nplanes needs to be set in the parameter file " << params.filename() << endl;
 				exit(0);
 			}
 			
 			if(!params.get("field_fov",fieldofview))
 			{
 				ERROR_MESSAGE();
-				cout << "parameter field_fov needs to be set in the parameter file " << params.filename() << endl;
+				std::cout << "parameter field_fov needs to be set in the parameter file " << params.filename() << endl;
 				exit(0);
 			}
 			
 			if(!params.get("field_internal_profile",field_int_prof_type))
 			{
 				ERROR_MESSAGE();
-				cout << "parameter field_internal_profile needs to be set in the parameter file " << params.filename() << endl;
+				std::cout << "parameter field_internal_profile needs to be set in the parameter file " << params.filename() << endl;
 				exit(0);
 			}
 			
@@ -198,21 +241,21 @@ void Lens::assignParams(InputParams& params)
 				if(!params.get("field_mass_func_type",field_mass_func_type))
 				{
 					ERROR_MESSAGE();
-					cout << "parameter field_mass_func_type needs to be set in the parameter file " << params.filename() << endl;
+					std::cout << "parameter field_mass_func_type needs to be set in the parameter file " << params.filename() << endl;
 					exit(0);
 				}
 				
 				if(!params.get("field_min_mass",field_min_mass))
 				{
 					ERROR_MESSAGE();
-					cout << "parameter field_min_mass needs to be set in the parameter file " << params.filename() << endl;
+					std::cout << "parameter field_min_mass needs to be set in the parameter file " << params.filename() << endl;
 					exit(0);
 				}
 				
 				if(!params.get("field_buffer",field_buffer))
 				{
 					field_buffer = 0.0;
-					cout << "default field buffer of 0 Mpc is being used." << endl;
+					std::cout << "default field buffer of 0 Mpc is being used." << endl;
 				}
 			}
 			else
@@ -235,7 +278,7 @@ void Lens::assignParams(InputParams& params)
 		if(!params.get("MultiDark_input_file", main_input_file))
 		{
 			ERROR_MESSAGE();
-			cout << "parameter MultiDark_input_file needs to be set in the parameter file " << params.filename() << endl;
+			std::cout << "parameter MultiDark_input_file needs to be set in the parameter file " << params.filename() << endl;
 			exit(1);
 		}
 	}
@@ -243,28 +286,28 @@ void Lens::assignParams(InputParams& params)
 	if(!params.get("z_source",zsource))
 	{
 		ERROR_MESSAGE();
-		cout << "parameter z_source needs to be set in the parameter file " << params.filename() << endl;
+		std::cout << "parameter z_source needs to be set in the parameter file " << params.filename() << endl;
 		exit(0);
 	}
 	
 	if(!params.get("deflection_off",flag_switch_deflection_off))
 		flag_switch_deflection_off = false;
-
+  
   if(!params.get("lensing_off",flag_switch_lensing_off))
 		flag_switch_lensing_off = false;
-
+  
 	// Some checks for valid parameters
 	if(flag_switch_field_off == false && field_Nplanes == 0)
 	{
 		ERROR_MESSAGE();
-		cout << "Do you want to run _with_ field halos, but with _without_ field planes? Change field_Nplanes to a bigger number!" << endl;
+		std::cout << "Do you want to run _with_ field halos, but with _without_ field planes? Change field_Nplanes to a bigger number!" << endl;
 		exit(1);
 	}
 	
 	if(flag_switch_main_halo_on == false && flag_switch_field_off == true)
 	{
 		ERROR_MESSAGE();
-		cout << "Do you want an empty simulation? Set main_halo_on to true for a main lens, or field_off to false for field lenses." << endl;
+		std::cout << "Do you want an empty simulation? Set main_halo_on to true for a main lens, or field_off to false for field lenses." << endl;
 		exit(1);
 	}
 	
@@ -273,29 +316,29 @@ void Lens::assignParams(InputParams& params)
 		if(field_int_prof_type == pl_lens && field_prof_internal_slope >= 0)
 		{
 			ERROR_MESSAGE();
-			cout << "Power Law internal slope >=0 not possible." << endl;
+			std::cout << "Power Law internal slope >=0 not possible." << endl;
 			exit(1);
 		}
 		
 		if(field_int_prof_type == pnfw_lens && field_prof_internal_slope <= 0)
 		{
 			ERROR_MESSAGE();
-			cout << "Pseudo NFW internal slope <=0 not possible." << endl;
+			std::cout << "Pseudo NFW internal slope <=0 not possible." << endl;
 			exit(1);
 		}
 		
 		if(field_int_prof_type == pnfw_lens && (field_prof_internal_slope / floor(field_prof_internal_slope) > 1.0))
 		{
 			ERROR_MESSAGE();
-			cout << "Pseudo NFW internal slope needs to be a whole number." << endl;
+			std::cout << "Pseudo NFW internal slope needs to be a whole number." << endl;
 			exit(1);
 		}
 		
 		if(field_input_sim_file.size() < 1 && field_int_prof_type == nsie_lens)
 		{
 			ERROR_MESSAGE();
-			cout << "The NSIE internal profile works only for Millennium DM simulations for now." << endl;
-			cout << "Set field_input_simulation_file in sample_paramfile." << endl;
+			std::cout << "The NSIE internal profile works only for Millennium DM simulations for now." << endl;
+			std::cout << "Set field_input_simulation_file in sample_paramfile." << endl;
 			exit(1);
 		}
 	}
@@ -303,10 +346,10 @@ void Lens::assignParams(InputParams& params)
 	// convert to square degrees
 	fieldofview /= 3600. * 3600.;
 	
-	printMultiLens();
+	if(verbose) printMultiLens();
 }
 
-void Lens::resetFieldNplanes(std::size_t Np)
+void Lens::resetFieldNplanes(std::size_t Np, bool verbose)
 {
 	Utilities::delete_container(field_planes);
 	
@@ -316,12 +359,12 @@ void Lens::resetFieldNplanes(std::size_t Np)
 	field_Dl.clear();
 	
 	setupFieldPlanes();
-	createFieldPlanes();
+	createFieldPlanes(verbose);
 	
-	combinePlanes();
+	combinePlanes(verbose);
 }
 
-void Lens::resetFieldHalos()
+void Lens::resetFieldHalos(bool verbose)
 {
 	Utilities::delete_container(field_halos);
 	Utilities::delete_container(field_planes);
@@ -329,150 +372,150 @@ void Lens::resetFieldHalos()
 	Utilities::free_PosTypeMatrix(halo_pos, field_halos.size(), 3);
 	
 	if(sim_input_flag){
-		if(read_sim_file == false) readInputSimFile();
+		if(read_sim_file == false) readInputSimFile(verbose);
 	}
 	else{
-		createFieldHalos();
+		createFieldHalos(verbose);
 	}
 	
-	createFieldPlanes();
+	createFieldPlanes(verbose);
 	
-	combinePlanes();
+	combinePlanes(verbose);
 }
 
 void Lens::printMultiLens(){
-	cout << endl << "MAIN HALOS" << endl;
-	cout << "Main lens profile type:" << endl;
+	std::cout << endl << "MAIN HALOS" << endl;
+	std::cout << "Main lens profile type:" << endl;
 	switch(main_halo_type){
 	case null_lens:
-		cout << "no lens" << endl;
+		std::cout << "no lens" << endl;
 		break;
 	case nfw_lens:
-		cout << "NFW lens" << endl;
+		std::cout << "NFW lens" << endl;
 		break;
 	case pnfw_lens:
-		cout << "PseudoNFW lens" << endl;
-		cout << "slope: " << field_prof_internal_slope << endl;
+		std::cout << "PseudoNFW lens" << endl;
+		std::cout << "slope: " << field_prof_internal_slope << endl;
 		break;
 	case pl_lens:
-		cout << "PowerLaw lens" << endl;
-		cout << "slope: " << field_prof_internal_slope << endl;
+		std::cout << "PowerLaw lens" << endl;
+		std::cout << "slope: " << field_prof_internal_slope << endl;
 		break;
 	case nsie_lens:
-		cout << "NSIE lens" << endl;
+		std::cout << "NSIE lens" << endl;
 		break;
 	case ana_lens:
-		cout << "AnaNSIE lens" << endl;
+		std::cout << "AnaNSIE lens" << endl;
 		break;
 	case uni_lens:
-		cout << "UniNSIE lens" << endl;
+		std::cout << "UniNSIE lens" << endl;
 		break;
 	case moka_lens:
-		cout << "MOKA lens" << endl;
+		std::cout << "MOKA lens" << endl;
 		break;
 	case dummy_lens:
-		cout << "Dummy lens" << endl;
+		std::cout << "Dummy lens" << endl;
 		break;
 	case hern_lens:
-		cout << "Hernquist lens" << endl;
+		std::cout << "Hernquist lens" << endl;
 		break;
 	case jaffe_lens:
-		cout << "Jaffe lens" << endl;
+		std::cout << "Jaffe lens" << endl;
 		break;
 	case multi_dark_lens:
-		cout << "MultiDark lens" << endl;
+		std::cout << "MultiDark lens" << endl;
 		break;
 	}
 
-	cout << endl << "Main galaxies profile type:" << endl;
+	std::cout << endl << "Main galaxies profile type:" << endl;
 	switch(main_galaxy_halo_type){
 	case null_gal:
-		cout << "no galaxy" << endl;
+		std::cout << "no galaxy" << endl;
 		break;
 	case nsie_gal:
-		cout << "NSIE galaxy" << endl;
+		std::cout << "NSIE galaxy" << endl;
 		break;
 	}
 
 	if(flag_switch_field_off == false){
 
-		cout << "field of view " << fieldofview << endl;
+		std::cout << "field of view " << fieldofview << endl;
 
-		cout << endl << "FIELD HALOS" << endl;
+		std::cout << endl << "FIELD HALOS" << endl;
 
-		cout << "field Nplanes " << field_Nplanes << endl;
+		std::cout << "field Nplanes " << field_Nplanes << endl;
 
-		cout << "min mass " << field_min_mass << endl;
-		cout << "Mass function type: "<< endl;
+		std::cout << "min mass " << field_min_mass << endl;
+		std::cout << "Mass function type: "<< endl;
 
 		switch(field_mass_func_type){
 		case PS:
-			cout << "  Press-Schechter mass function " << endl;
+			std::cout << "  Press-Schechter mass function " << endl;
 			break;
 		case ST:
-			cout << "  Sheth-Tormen mass function " << endl;
+			std::cout << "  Sheth-Tormen mass function " << endl;
 			break;
 		case PL:
-			cout << "  Power law mass function " << endl;
-			cout << "  slope: " << mass_func_PL_slope << endl;
+			std::cout << "  Power law mass function " << endl;
+			std::cout << "  slope: " << mass_func_PL_slope << endl;
 			break;
 		}
 
-		cout << endl << "Field halos profile type:" << endl;
+		std::cout << endl << "Field halos profile type:" << endl;
 		switch(field_int_prof_type)
 		{
 			case null_lens:
-				cout << "no field type" << endl;
+				std::cout << "no field type" << endl;
 				break;
 			case nfw_lens:
-				cout << "NFW field type" << endl;
+				std::cout << "NFW field type" << endl;
 				break;
 			case pnfw_lens:
-				cout << "PseudoNFW field type" << endl;
-				cout << "slope: " << field_prof_internal_slope << endl;
+				std::cout << "PseudoNFW field type" << endl;
+				std::cout << "slope: " << field_prof_internal_slope << endl;
 				break;
 			case pl_lens:
-				cout << "PowerLaw field type" << endl;
-				cout << "slope: " << field_prof_internal_slope << endl;
+				std::cout << "PowerLaw field type" << endl;
+				std::cout << "slope: " << field_prof_internal_slope << endl;
 				break;
 			case nsie_lens:
-				cout << "NSIE field type" << endl;
+				std::cout << "NSIE field type" << endl;
 				break;
 			case ana_lens:
-				cout << "AnaNSIE field type" << endl;
+				std::cout << "AnaNSIE field type" << endl;
 				break;
 			case uni_lens:
-				cout << "UniNSIE field type" << endl;
+				std::cout << "UniNSIE field type" << endl;
 				break;
 			case moka_lens:
-				cout << "MOKA field type" << endl;
+				std::cout << "MOKA field type" << endl;
 				break;
 			case dummy_lens:
-				cout << "Dummy field type" << endl;
+				std::cout << "Dummy field type" << endl;
 				break;
 			case hern_lens:
-				cout << "Hernquist field type" << endl;
+				std::cout << "Hernquist field type" << endl;
 				break;
 			case jaffe_lens:
-				cout << "Jaffe field type" << endl;
+				std::cout << "Jaffe field type" << endl;
 				break;
 			case multi_dark_lens:
-				cout << "MultiDark field type" << endl;
+				std::cout << "MultiDark field type" << endl;
 				break;
 		}
 
-		cout << endl << "Field galaxies profile type:" << endl;
+		std::cout << endl << "Field galaxies profile type:" << endl;
 		switch(field_int_prof_gal_type){
 		case null_gal:
-			cout << "no field galaxy type" << endl;
+			std::cout << "no field galaxy type" << endl;
 			break;
 		case nsie_gal:
-			cout << "NSIE field galaxy type" << endl;
+			std::cout << "NSIE field galaxy type" << endl;
 			break;
 		}
 	}
 
-	cout << endl;
+	std::cout << endl;
 }
 
 void Lens::setupFieldPlanes()
@@ -492,9 +535,9 @@ void Lens::setupFieldPlanes()
  * Then the halo trees are built, depending on the internal profile model that
  * has been chosen in the parameter file
  */
-void Lens::createFieldPlanes()
+void Lens::createFieldPlanes(bool verbose)
 {
-	std::cout << "Lens::createFieldPlanes zsource = " << zsource << std::endl;
+	if(verbose) std::cout << "Lens::createFieldPlanes zsource = " << zsource << std::endl;
 	
 	assert(field_plane_redshifts.size() == field_Nplanes);
 	
@@ -550,14 +593,14 @@ void Lens::createFieldPlanes()
 		
 		sb /= (pi*pow(sqrt(fieldofview/pi)*pi*field_Dl[i]/180/(1+field_plane_redshifts[i]) + field_buffer,2));
 		
-		std::cout << "sigma_back from mass function " << sigma_back << " from sum of halos " << sb << " " << sb/sigma_back - 1 << std::endl;
+		if(verbose) std::cout << "sigma_back from mass function " << sigma_back << " from sum of halos " << sb << " " << sb/sigma_back - 1 << std::endl;
 		if(sim_input_flag) sigma_back = sb;
 		
 		/*
 		 * create the lensing plane
 		 */
 		
-		std::cout << "  Building lensing plane " << i << " number of halos: " << k2-k1 << std::endl;
+		if(verbose) std::cout << "  Building lensing plane " << i << " number of halos: " << k2-k1 << std::endl;
 		
 		field_planes.push_back(new LensPlaneTree(&halo_pos[k1], &field_halos[k1], k2-k1, sigma_back));
 	}
@@ -765,7 +808,7 @@ void Lens::createMainHalos(InputParams& params)
   }
 }
 
-void Lens::clearMainHalos()
+void Lens::clearMainHalos(bool verbose)
 {
 	Utilities::delete_container(main_halos_created);
 	main_halos.clear();
@@ -777,14 +820,14 @@ void Lens::clearMainHalos()
 	main_plane_redshifts.clear();
 	main_Dl.clear();
 	
-	combinePlanes();
+	combinePlanes(verbose);
 }
 
 /**
  * \brief Inserts a single main lens halo.
  * Then all lensing planes are updated accordingly.
  */
-void Lens::insertMainHalo(LensHalo* halo)
+void Lens::insertMainHalo(LensHalo* halo,bool verbose)
 {
 	halo->setCosmology(cosmo);
 	main_halos.push_back(halo);
@@ -793,14 +836,14 @@ void Lens::insertMainHalo(LensHalo* halo)
 	
 	addMainHaloToPlane(halo);
 	
-	combinePlanes();
+	combinePlanes(verbose);
 }
 
 /**
  * \brief Inserts a sequense of main lens halos and ads them to the existing ones.
  * Then all lensing planes are updated accordingly.
  */
-void Lens::insertMainHalos(LensHalo** halos, std::size_t Nhalos)
+void Lens::insertMainHalos(LensHalo** halos, std::size_t Nhalos, bool verbose)
 {
 	for(std::size_t i = 0; i < Nhalos; ++i)
 	{
@@ -811,14 +854,14 @@ void Lens::insertMainHalos(LensHalo** halos, std::size_t Nhalos)
 	
 	flag_switch_main_halo_on = true;
 	
-	combinePlanes();
+	combinePlanes(verbose);
 }
 
 /**
  * \brief Inserts a single main lens halo and deletes all previous ones.
  * Then all lensing planes are updated accordingly.
  */
-void Lens::replaceMainHalos(LensHalo* halo)
+void Lens::replaceMainHalos(LensHalo* halo,bool verbose)
 {
 	Utilities::delete_container(main_halos_created);
 	main_halos.clear();
@@ -830,14 +873,14 @@ void Lens::replaceMainHalos(LensHalo* halo)
 	
 	Utilities::delete_container(main_planes);
 	createMainPlanes();
-	combinePlanes();
+	combinePlanes(verbose);
 }
 
 /**
  * \brief Inserts a sequense of main lens halos and deletes all previous ones.
  * Then all lensing planes are updated accordingly.
  */
-void Lens::replaceMainHalos(LensHalo** halos, std::size_t Nhalos)
+void Lens::replaceMainHalos(LensHalo** halos, std::size_t Nhalos,bool verbose)
 {
 	Utilities::delete_container(main_halos_created);
 	main_halos.clear();
@@ -852,10 +895,10 @@ void Lens::replaceMainHalos(LensHalo** halos, std::size_t Nhalos)
 	
 	Utilities::delete_container(main_planes);
 	createMainPlanes();
-	combinePlanes();
+	combinePlanes(verbose);
 }
 
-void Lens::createFieldHalos()
+void Lens::createFieldHalos(bool verbose)
 {
 	const int Nzbins=64;
 	const int Nmassbin=64;
@@ -1069,7 +1112,7 @@ void Lens::createFieldHalos()
 	assert(k2 == Nhalos);
 	delete halo_calc;
 
-	std::cout << Nhalos << " halos created." << std::endl;
+	if(verbose) std::cout << Nhalos << " halos created." << std::endl;
 
 	Nhalos = field_halos.size();
 	halo_pos = Utilities::PosTypeMatrix(Nhalos,3);
@@ -1078,7 +1121,7 @@ void Lens::createFieldHalos()
 		halo_pos[i] = halo_pos_vec[i];
 	}
 
-	std::cout << "leaving Lens::createFieldHalos()" << std::endl;
+	if(verbose) std::cout << "leaving Lens::createFieldHalos()" << std::endl;
 }
 
 /**
@@ -1090,7 +1133,7 @@ void Lens::createFieldHalos()
  * The comments must be removed from the beginning of the data file and the total number of field_halos must be added
  * as the first line.
  */
-void Lens::readInputSimFile()
+void Lens::readInputSimFile(bool verbose)
 {
 	double ra,dec,z,vmax,vdisp,r_halfmass;
 	unsigned long i,j;
@@ -1114,7 +1157,7 @@ void Lens::readInputSimFile()
 		file_in.ignore(10000,'\n');
 		++i;
 	}
-	std::cout << "skipped "<< i << " comment lines in file " << field_input_sim_file << std::endl;
+	if(verbose) std::cout << "skipped "<< i << " comment lines in file " << field_input_sim_file << std::endl;
 
 	std::vector<double *> halo_pos_vec;
 
@@ -1311,14 +1354,14 @@ void Lens::readInputSimFile()
 		}
 	}
 	file_in.close();
-	std::cout << field_halos.size() << " halos read in."<< std::endl
+	if(verbose) std::cout << field_halos.size() << " halos read in."<< std::endl
 			<< "Max input mass = " << mass_max << "  R max = " << R_max << "  V max = " << V_max
       << "Min imput mass = " << minmass << std::endl;
 
 	/// setting the minimum halo mass in the simulation
 	field_min_mass = minmass;
 	if(field_buffer > 0.0){
-		std::cout << "Overiding field_buffer to make it 0 because halos are read in." << std::endl;
+		if(verbose) std::cout << "Overiding field_buffer to make it 0 because halos are read in." << std::endl;
 		field_buffer = 0.0;
 	}
 
@@ -1332,20 +1375,20 @@ void Lens::readInputSimFile()
 	std::cout << "Overiding input file field of view to make it fit the simulation light cone." << std::endl;
 	fieldofview = pi*rmax2*pow(180/pi,2);  // Resets field of view to range of input galaxies
 
-	std::cout << "Setting mass function to Sheth-Tormen." << std::endl;
+	if(verbose) std::cout << "Setting mass function to Sheth-Tormen." << std::endl;
 	field_mass_func_type = ST; // set mass function
 
-	std::cout << "sorting in Lens::readInputSimFile()" << std::endl;
+	if(verbose) std::cout << "sorting in Lens::readInputSimFile()" << std::endl;
 	// sort the field_halos by readshift
 	Lens::quicksort(field_halos.data(),halo_pos,field_halos.size());
 
-	std::cout << "leaving Lens::readInputSimFile()" << std::endl;
+	if(verbose) std::cout << "leaving Lens::readInputSimFile()" << std::endl;
 
   field_buffer = 0.0;
 	read_sim_file = true;
 }
 
-void Lens::combinePlanes()
+void Lens::combinePlanes(bool verbose)
 {
 	// clear old plane configuration
 	lensing_planes.clear();
@@ -1418,23 +1461,23 @@ void Lens::combinePlanes()
 		dDl.push_back(Dl[i] - Dl[i-1]); // distance from plane i-1 to plane i
 	
 	// output resulting setup
-	std::cout
+	if(verbose) std::cout
 	<< "\ncombinePlanes()"
 	<< "\n---------------"
 	<< std::endl;
-	std::cout << "\nz:";
+	if(verbose) std::cout << "\nz:";
 	for(std::size_t i = 0, n = plane_redshifts.size(); i < n; ++i)
-		std::cout << " " << plane_redshifts[i];
-	std::cout << "\nDl:";
+		if(verbose) std::cout << " " << plane_redshifts[i];
+	if(verbose) std::cout << "\nDl:";
 	for(std::size_t i = 0, n = Dl.size(); i < n; ++i)
-		std::cout << " " << Dl[i];
-	std::cout << "\ndDl:";
+		if(verbose) std::cout << " " << Dl[i];
+	if(verbose) std::cout << "\ndDl:";
 	for(std::size_t i = 0, n = dDl.size(); i < n; ++i)
-		std::cout << " " << dDl[i];
-	std::cout << "\n" << std::endl;
+		if(verbose) std::cout << " " << dDl[i];
+	if(verbose) std::cout << "\n" << std::endl;
 }
 
-void Lens::buildPlanes(InputParams& params)
+void Lens::buildPlanes(InputParams& params,bool verbose)
 {
 	// build field
 	if(!flag_switch_field_off)
@@ -1444,12 +1487,12 @@ void Lens::buildPlanes(InputParams& params)
 		
 		// create or read the field halos
 		if(sim_input_flag)
-			readInputSimFile();
+			readInputSimFile(verbose);
 		else
-			createFieldHalos();
+			createFieldHalos(verbose);
 		
 		// create field planes and sort halos onto them
-		createFieldPlanes();
+		createFieldPlanes(verbose);
 	}
 	
 	// build main
@@ -1463,7 +1506,7 @@ void Lens::buildPlanes(InputParams& params)
 	}
 	
 	// combine the different planes
-	combinePlanes();
+	combinePlanes(verbose);
 }
 
 /**
@@ -1485,6 +1528,7 @@ short Lens::ResetSourcePlane(
 			                      */
 		,unsigned long GalID
 		,double *xx
+    ,bool verbose
 		){
 	unsigned long j;
 	short out=0;
@@ -1492,7 +1536,7 @@ short Lens::ResetSourcePlane(
 	toggle_source_plane = true;
 
 	if(z<=0.0){
-		cout << "Warning: Source redshift can't be set to " << z << " in MultiLens::ResetSourcePlane." << endl;
+		std::cout << "Warning: Source redshift can't be set to " << z << " in MultiLens::ResetSourcePlane." << endl;
 		return out;
 	}
 
@@ -1531,7 +1575,7 @@ short Lens::ResetSourcePlane(
 		else  dDs_implant = Ds;
 	}
 
-	std::cout << "Source on plane " << j << " zs " << zs_implant << " Ds " << Ds << " dDs " << dDs_implant << std::endl;
+	if(verbose) std::cout << "Source on plane " << j << " zs " << zs_implant << " Ds " << Ds << " dDs " << dDs_implant << std::endl;
 
 	index_of_new_sourceplane = j;
 

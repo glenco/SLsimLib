@@ -6,9 +6,9 @@
 /* median_cut determines how the cells are subdivided */
 /*    if ==0  equal volume cuts, Warning this option causes an error*/
 /*    if ==1  median point cuts */
-static int incell;
-static Point **temp_points;
-static double realray[2];
+//static int incell;
+
+//static double realray[2];
 //Point *point_global;
 
 /// Warning: Not garenteed to return Nneighbors if there are less points on the grid
@@ -38,20 +38,22 @@ Point *TreeStruct::NearestNeighbor(const double* center,int Nneighbors,ListHndl 
 
   if(count==0){
     /*std::printf("allocating memory\n");*/
-    rneighbors=(double *)malloc((Nneighbors+Nbucket)*sizeof(double));
+    rneighbors= (double *)malloc((Nneighbors+Nbucket)*sizeof(double));
     assert(rneighbors);
     neighborpoints=(Point **)malloc((Nneighbors+Nbucket)*sizeof(Point *));
     assert(neighborpoints);
-    temp_points=(Point **)malloc((Nneighbors+Nbucket)*sizeof(Point *));
+    temp_points = (Point **)malloc((Nneighbors+Nbucket)*sizeof(Point *));
     assert(temp_points);
+    
     ++count;
     oldNneighbors=Nneighbors;
 
-  }else if(oldNneighbors < Nneighbors){ /* if the number of nearest neighbors goes up get more mem */
+  }else if(oldNneighbors < Nneighbors){ // if the number of nearest neighbors goes up get more mem
+    // TODO: This is a memory leak when the TreeStruct is exited
     /*std::printf("re-allocating memory\n");*/
-    rneighbors=(double *)realloc(rneighbors,(Nneighbors+Nbucket)*sizeof(double));
+    rneighbors = (double *)realloc(rneighbors,(Nneighbors+Nbucket)*sizeof(double));
     neighborpoints=(Point **)realloc(neighborpoints,(Nneighbors+Nbucket)*sizeof(Point *));
-    temp_points=(Point **)realloc(temp_points,(Nneighbors+Nbucket)*sizeof(Point *));
+    temp_points = (Point **)realloc(temp_points,(Nneighbors+Nbucket)*sizeof(Point *));
     oldNneighbors=Nneighbors;
   }
 

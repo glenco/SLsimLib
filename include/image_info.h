@@ -51,7 +51,7 @@ typedef struct ImageInfo{
   /// returns number of points currently in the image
   unsigned long getNimagePoints(){return imagekist->Nunits();}
   void PrintImageInfo();
-  void copy(ImageInfo &image);
+  void copy(ImageInfo &image,bool copykists = true);
 
   void ArcInfo(double *area,double *area_circ,double theta);
 

@@ -69,12 +69,15 @@ public:
         }
     }
     
-  void operator=(KistUnit<T> *my_unit){
+  KistIt& operator=(KistUnit<T> *my_unit){
     unit = my_unit;
+    return *this;
   }
   
-  void operator=(KistIt<T> my_it){
+  KistIt& operator=(const KistIt<T> my_it){
+    if(this == &my_it) return *this;
     unit = my_it.unit;
+    return *this;
   }
 	
 };
@@ -107,6 +110,17 @@ public:
  cout << i << " x = " << (*kist)->x[0] << "  " << (*kist)->x[1] << endl;
  ++i;
  }
+ 
+ There is also an iterator KistIt<> which works like this:
+ 
+ Kist<Point> kist;
+ 
+ ....
+ 
+ for(KistIt<Point> it = kist.getTopIt(); it != kist.getOffBottomIt() ;--it){
+   cout << i << " x = " << (*it)->x[0] << "  " << (*it)->x[1] << endl;
+ }
+ 
  
 <\pre>
  */
@@ -189,9 +203,14 @@ public:
       return it;
   }
   KistIt<Data> getBottomIt(){
-      KistIt<Data> it;
-      it = bottom;
-      return it;
+    KistIt<Data> it;
+    it = bottom;
+    return it;
+  }
+  KistIt<Data> getOffBottomIt(){
+    KistIt<Data> it;
+    it = &offbot;
+    return it;
   }
 
 	// status
