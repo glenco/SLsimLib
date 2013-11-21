@@ -65,7 +65,7 @@ Lens::Lens(InputParams& params, long* my_seed, CosmoParamSet cosmoset, bool verb
 : seed(my_seed), cosmo(cosmoset), halo_pos(0)
 {
   
-  //init_params = params;
+  init_params = params;
   init_seed = *my_seed;
   
 	readCosmology(params);
@@ -91,7 +91,8 @@ Lens::Lens(InputParams& params, long* my_seed, CosmoParamSet cosmoset, bool verb
 	buildPlanes(params,verbose);
 }
 
-/* * Copy constructor.  This recreates the original lens before any new additions might have been added.
+/** Recontructor constructor.  This recreates the original lens before any new additions might have been added or changes to the InputParam object.
+ */
 Lens::Lens(Lens &lens)
 : cosmo(lens.cosmo), halo_pos(0)
 {
@@ -118,16 +119,15 @@ Lens::Lens(Lens &lens)
 	read_sim_file = false;
 	
 	charge = 4*pi*Grav;
-	if(verbose) std::cout << "charge: " << charge << std::endl;
 	
 	// initially let source be the one inputed from parameter file
 	index_of_new_sourceplane = -1;
 	toggle_source_plane = false;
 	
 	// set up the lens contents
-	buildPlanes(lens.init_params);
+	buildPlanes(init_params,false);
 }
-// */
+
 Lens::~Lens()
 {
 	Utilities::delete_container(lensing_planes);

@@ -13,7 +13,7 @@ static const float mumin = 0.3;  // actually the sqrt of the minimum magnificati
 //static const float FracResTarget = 4.0e-4;
 static const float FracResTarget = 1.0e-4;
 
-double initialgridsize=0;
+//double initialgridsize=0;
 
 
 /**
@@ -795,8 +795,6 @@ void xygridpoints(Point *i_points,double range,const double *center,long Ngrid_1
   /* warning: memory for i_points must be allocated before entering */
   long i,j;
   static long id=0;
-
-  if(id==0) initialgridsize=range/(Ngrid_1d-1);
 
   if(remove_center && (Ngrid_1d%2 == 1)){
     /*i_points=NewPointArray(Ngrid_1d*Ngrid_1d-1);*/

@@ -12,7 +12,7 @@ static const float FracResTarget = 4.0e-4;
 //static const float FracResTarget = 1.0e-4;
 static const float telescope_high = 1.0e-3;
 static const float telescope_low = 0.01;
-extern const double initialgridsize;
+//extern const double initialgridsize;
 
 /** \ingroup ImageFinding
  *
@@ -89,8 +89,7 @@ void find_images_kist(
 
 	if(r_source==0.0){ERROR_MESSAGE(); printf("ERROR: find_images, point source must have a resolution target\n"); exit(1);}
 
-	if(verbose) printf("initialgridsize=%e\n",initialgridsize);
-	if(initial_size==0) initial_size=initialgridsize;
+	if(initial_size==0) initial_size=grid->getInitRange()/grid->getInitNgrid();
 
 	if(oldr==0){ oldr=r_source; Npoints_old = grid->i_tree->pointlist->Npoints;}
 	if((Npoints_old <= grid->i_tree->pointlist->Npoints )* // if grid has not been refreshed
@@ -463,8 +462,7 @@ void find_images_microlens(
 
 	if(r_source==0.0){ERROR_MESSAGE(); printf("ERROR: find_images, point source must have a resolution target\n"); exit(1);}
 
-	if(verbose) printf("initialgridsize=%e\n",initialgridsize);
-	if(initial_size==0) initial_size=initialgridsize;
+	if(initial_size==0) initial_size = grid->getInitRange()/grid->getInitNgrid();
 
 	if(oldr==0){ oldr=r_source; Npoints_old = grid->i_tree->pointlist->Npoints;}
 	if((Npoints_old <= grid->i_tree->pointlist->Npoints )* // if grid has not been refreshed
@@ -517,7 +515,7 @@ void find_images_microlens(
 				//for(rtemp = fabs(r_source/mumin_local)*pow(Ngrid_block,Nsizes),Nold=0
 		//		;rtemp >= 0.99*Ngrid_block*fabs(r_source)
     		;rtemp >= r_source
-       		;rtemp *= telescope_factor,++i )
+        ;rtemp *= telescope_factor,++i )
     {
 
     	time(&t3);
@@ -967,7 +965,8 @@ short image_finder_kist(LensHndl lens, double *y_source,double r_source,GridHndl
 
   grid->ClearAllMarks();
   assert(imageinfo->imagekist);
-
+  double initialgridsize = grid->getInitRange()/grid->getInitNgrid();
+  
   // if source has moved make sure low res grids are included in first source list
   if( moved && (initialgridsize > mumin*r_source) && !true_images){
 	  // if new source position use larger image to make sure new images are found on the coarser grid
