@@ -1632,4 +1632,77 @@ Point * TreeStruct::RemoveLeafFromTree(unsigned long *Npoints){
 	return point;
 }
 
+/// Move up to the parent of current branch if current in not the root. Otherwise returns false.
+bool TreeIt::up(){
+  if(current == NULL || current == top){
+    return false;
+  }else{
+    current = current->prev;
+    return true;
+  }
+}
+
+/// Move to brother if it exists
+bool TreeIt::brother(){
+  if(current->brother == NULL){
+    return false;
+  }else{
+    current = current->brother;
+    return true;
+  }
+}
+
+/// Move to child
+bool TreeIt::down(short child){
+  if(child == 1){
+    if(current->child1 == NULL){
+      return false;
+    }else{
+      current = current->child1;
+      return true;
+    }
+  }
+  if(child == 2){
+    if(current->child2 == NULL){
+      return false;
+    }else{
+      current = current->child2;
+      return true;
+    }
+  }
+  
+  throw std::runtime_error("There are only two children!");
+}
+
+/**
+ *  \brief step for walking tree by iteration instead of recursion.
+ *
+ *  This walk will not exit the tree defined by the descendants of
+ *  the root that is set in the constructor of TreeIt.  If allowed 
+ *  to, it will return to the root and return false.  If used again 
+ *  after this it will repeat its walk.
+ */
+bool TreeIt::TreeWalkStep(bool allowDescent){
+  
+	if(allowDescent && current->child1 != NULL){
+		down(1);
+		return true;
+	}
+	if(allowDescent && current->child2 != NULL){
+		down(2);
+		return true;
+	}
+  
+  if(current->brother == top->brother){
+    current = top;
+    return false;
+  }
+     
+	if(current->brother != NULL){
+		current = current->brother;
+		return true;
+	}
+  
+	return false;
+}
 

@@ -29,7 +29,6 @@ add_sources(
 	quadTree.h
 	sersic_source.h
 	simpleTree.h
-	sky.h
 	slsimlib.h
 	source.h
 	source_models.h

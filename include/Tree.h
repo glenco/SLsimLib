@@ -95,6 +95,7 @@ private:
   TreeStruct(){};
 
   Point **temp_points;
+  std::vector<Point *> tmp_point;
   
   /// number of barnches in tree */
   unsigned long Nbranches;
@@ -125,8 +126,8 @@ private:
   void _FindBox(const double* ray);
 
   // Should be obsolete
-  Point *NearestNeighbor(const double* center,int Nneighbors,ListHndl neighborlist
-  		,short direction);
+  //Point *NearestNeighbor(const double* center,int Nneighbors,ListHndl neighborlist
+  //		,short direction);
   void _NearestNeighbor(double* ray,int Nneighbors,Point **neighborpoints,double *rneighbors,short *direction);
 
 
@@ -146,6 +147,43 @@ private:
 
 typedef struct TreeStruct *TreeHndl;
 typedef int TreeElement;
+/**
+ *  \brief A iterator class fore TreeStruct that allows for movement through the tree without changing 
+ *      anything in the tree itself.
+ *
+ *   This class should be able to preform all of the constant movements within the tree without causing 
+ *   any change to the tree.
+ */
+class TreeIt{
+  
+private:
+  Branch *current;
+  Branch *top;
+
+public:
+  /// Sets the top or root to the top of "tree".
+  TreeIt(TreeHndl tree){current = top = tree->top;}
+  /// Sets the root to the input branch so that this will be a subtree in branch is not the real root.
+  TreeIt(Branch *branch){current = top = branch;}
+  
+  /// Returns a pointer to the current Branch.
+	Branch *operator*(){return current;}
+
+  void movetop(){current = top;}
+  
+  /// Same as up()
+	bool operator++(){ return up();}
+  
+	/// Same as up()
+	bool operator++(int){ return up();}
+
+	bool up();
+  /// Move to brother if it exists
+	bool brother();
+  /// Move to child
+	bool down(short child);
+  bool TreeWalkStep(bool allowDescent);
+};
 
 bool BoxInCircle(double *ray,double radius,double *p1,double *p2);
 double ClosestBorder(double *ray,double *p1,double *p2);

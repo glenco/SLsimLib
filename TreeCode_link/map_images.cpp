@@ -12,7 +12,6 @@ const double FracResTarget = 3.0e-5;
 const double target_all = 1.0e-3;
 //const int MinPoints = 100;  // Minimum number of points per image
 const float tol_UniformMag = 1.0e-3;
-double maxflux;
 const bool verbose = false;
 
 /** \ingroup ImageFinding
@@ -66,6 +65,7 @@ void map_images(
 	bool go;
 	double center[2],y[2],sb,xx[2],source_flux = 0;
 	int Nsources;
+  double maxflux;
 
 	assert(xmin > 0);
 	assert(xmax > 0);
@@ -384,7 +384,7 @@ void map_images(
 
 	//freeKist(subkist);
 
-	tmp = grid->RefreshSurfaceBrightnesses(source);
+	//tmp = grid->RefreshSurfaceBrightnesses(source);
 //	assert(tmp > 0.0 || imageinfo->imagekist->Nunits() == 0);
 
 	/*/********** test lines **********************
@@ -510,7 +510,7 @@ void map_images(
 	 ******* refine images based on flux in each pixel ******
 	 *******************************************************/
 	i=0;
-	while( refine_grid_on_image(lens,source,grid,imageinfo,Nimages,sourceinfo,Nsources,NimageMax
+	while( refine_grid_on_image(lens,source,grid,maxflux,imageinfo,Nimages,sourceinfo,Nsources,NimageMax
 			,FracResTarget,criterion,kappa_off,divide_images) > 0 ) ++i;
 
 	//printf("i=%i Nold=%li\n",i,Nold);
@@ -536,7 +536,6 @@ void map_images(
 		findborders4(grid->i_tree,&(imageinfo[i]));
 */
 		imageinfo[i].imagekist->MoveToTop();
-		tmp=0.0;
 		imageinfo[i].centroid[0] = 0.0;
 		imageinfo[i].centroid[1] = 0.0;
     imageinfo[i].area = 0.0;
@@ -707,7 +706,7 @@ void map_images_fixedgrid(
  *     Warning:     set imageinfo[i].ShouldNotRefine = 0 and imageinfo[i].uniform_mag = unchecked;
  *
  */
-int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imageinfo,int *Nimages
+int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,double maxflux,ImageInfo *imageinfo,int *Nimages
 		,ImageInfo *sourceinfo,int Nsources,int NimageMax,const double res_target,ExitCriterion criterion
 		,bool kappa_off,bool divide_images,bool batch){
 
@@ -766,7 +765,7 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
 
 			  if(
 					  RefinePoint2(imageinfo[i].imagekist->getCurrent(),grid->i_tree
-					  	,imageinfo[i].area,total_area,criterion,res_target,nearest)
+					  	,imageinfo[i].area,total_area,maxflux,criterion,res_target,nearest)
            //RefinePoint_sb(getCurrentKist(imageinfo[i].imagekist),grid->i_tree
            //		,imageinfo[i].area,total_area,2*source->getSBlimit(),nearest)
            //RefinePoint_smallsize(getCurrentKist(imageinfo[i].imagekist),grid->i_tree
@@ -806,7 +805,7 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
 							  *(imageinfo[i].imagekist->getCurrent()->surface_brightness/maxflux);
 				  }else{
 					  i_points = grid->RefineLeaf(lens,imageinfo[i].imagekist->getCurrent(),kappa_off);
-					  check_sb_add(source,&imageinfo[i],i_points,Nold,number_of_refined);
+					  check_sb_add(source,&imageinfo[i],i_points,maxflux,Nold,number_of_refined);
 
 					  /*if(i_points != NULL){
 						  // link new points into image kist and calculate surface brightnesses
@@ -850,7 +849,7 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
 
 		  if(batch){
 			  i_points = grid->RefineLeaves(lens,points_to_refine,kappa_off);
-			  check_sb_add(source,&imageinfo[i],i_points,Nold,number_of_refined);
+			  check_sb_add(source,&imageinfo[i],i_points,maxflux,Nold,number_of_refined);
 			  points_to_refine.clear();
 		  }
 
@@ -859,8 +858,8 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
 			  if(imageinfo[i].outerborder->MoveToTop()){
 				  do{
 					  imageinfo[i].outerborder->getCurrent()->in_image = FALSE;
-					  if(imageinfo[i].outerborder->getCurrent()->surface_brightness > 0)
-						  point = imageinfo[i].outerborder->getCurrent();
+					  //if(imageinfo[i].outerborder->getCurrent()->surface_brightness > 0)
+						//  point = imageinfo[i].outerborder->getCurrent();
 				  }while(imageinfo[i].outerborder->Down());
 			  }
 			  findborders4(grid->i_tree,&(imageinfo[i]));
@@ -879,7 +878,7 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
 
 			  if(
 					  RefinePoint2(imageinfo[i].outerborder->getCurrent(),grid->i_tree
-					      ,imageinfo[i].area,total_area,criterion,res_target,nearest)
+					      ,imageinfo[i].area,total_area,maxflux,criterion,res_target,nearest)
 					  //RefinePoint_sb(getCurrentKist(imageinfo[i].outerborder),grid->i_tree
 					  //    ,imageinfo[i].area,total_area,2*source->getSBlimit(),nearest)
 			  ){
@@ -896,7 +895,7 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
 						  points_to_refine.push_back(imageinfo[i].outerborder->getCurrent());
 					  }else{
 						  i_points = grid->RefineLeaf(lens,imageinfo[i].outerborder->getCurrent(),kappa_off);
-						  check_sb_add(source,&imageinfo[i],i_points,Nold,number_of_refined);
+						  check_sb_add(source,&imageinfo[i],i_points,maxflux,Nold,number_of_refined);
 					  }
 					  /*if(i_points != NULL){
 						  // link new points into image kist and calculate surface brightnesses
@@ -940,7 +939,7 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
 
 		  if(batch){
 			  i_points = grid->RefineLeaves(lens,points_to_refine,kappa_off);
-			  check_sb_add(source,&imageinfo[i],i_points,Nold,number_of_refined);
+			  check_sb_add(source,&imageinfo[i],i_points,maxflux,Nold,number_of_refined);
 			  points_to_refine.clear();
 		  }
 
@@ -951,7 +950,7 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
 			  if(imageinfo[i].outerborder->MoveToTop()){
 				  do{
 					  imageinfo[i].outerborder->getCurrent()->in_image = FALSE;
-					  if(imageinfo[i].outerborder->getCurrent()->surface_brightness > 0) point = imageinfo[i].outerborder->getCurrent();
+					  //if(imageinfo[i].outerborder->getCurrent()->surface_brightness > 0) point = imageinfo[i].outerborder->getCurrent();
 				  }while(imageinfo[i].outerborder->Down());
 			  }
 			  findborders4(grid->i_tree,&(imageinfo[i]));
@@ -1037,7 +1036,7 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,ImageInfo *imag
   return number_of_refined;
 }
 // Assign surface brightness of new points and add the ones that are nonzero to the image
-void check_sb_add(Source *source,ImageInfo *imageinfo,Point *i_points,unsigned long &Nold,int &number_of_refined){
+void check_sb_add(Source *source,ImageInfo *imageinfo,Point *i_points,double maxflux,unsigned long &Nold,int &number_of_refined){
 	if(i_points != NULL){
 		// link new points into image kist and calculate surface brightnesses
 		for(unsigned long k=0;k < i_points->head;++k){
@@ -1069,10 +1068,10 @@ void check_sb_add(Source *source,ImageInfo *imageinfo,Point *i_points,unsigned l
 	}
 }
 
-bool RefinePoint2(Point *point,TreeHndl i_tree,double image_area,double total_area
+bool RefinePoint2(Point *point,TreeHndl i_tree,double image_area,double total_area,double maxflux
 		,ExitCriterion criterion,double res_target,Kist<Point> * nearest){
 
-	double borderSB = 0,error = 0,maxdiff_sb,flux;
+	double borderSB = 0,error = 0,maxdiff_sb;
 
 	nearest->Empty();
 	// Prevent cell from getting so small that precision error prevents everything from working
@@ -1089,7 +1088,6 @@ bool RefinePoint2(Point *point,TreeHndl i_tree,double image_area,double total_ar
 	i_tree->FindAllBoxNeighborsKist(point,nearest);
 	//assert(nearest->Nunits() < 300);
 
-	flux = point->surface_brightness*pow(point->gridsize,2);
 	maxdiff_sb = 0.0;
 	nearest->MoveToTop();
 	do{
@@ -1108,7 +1106,7 @@ bool RefinePoint2(Point *point,TreeHndl i_tree,double image_area,double total_ar
 }
 // refinement criterion based on difference in surface brightness
 bool RefinePoint_sb(Point *point,TreeHndl i_tree,double image_area,double total_area
-                    ,double sb_limit,Kist<Point> * nearest){
+                    ,double sb_limit,double maxflux,Kist<Point> * nearest){
   
   double smallsize = 1.0e-7;
 	// Prevent cell from getting so small that precision error prevents everything from working
@@ -1135,7 +1133,7 @@ bool RefinePoint_sb(Point *point,TreeHndl i_tree,double image_area,double total_
 }
 // refinement criterion based on difference in surface brightness
 bool RefinePoint_smallsize(Point *point,TreeHndl i_tree,double image_area,double total_area
-                    ,double smallsize,Kist<Point> * nearest){
+                    ,double smallsize,double maxflux,Kist<Point> * nearest){
   
 	// Prevent cell from getting so small that precision error prevents everything from working
 	if(point->gridsize <= pow(10.,1 - DBL_DIG)) return false;  // this shouldn't be necessary every time

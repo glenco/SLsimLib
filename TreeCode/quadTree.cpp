@@ -462,8 +462,8 @@ void TreeQuad::force2D(double *ray,double *alpha,KappaType *kappa,KappaType *gam
   PosType xcm[2],rcm2cell,rcm2,tmp,boxsize2;
   IndexType i;
   bool allowDescent=true;
-  unsigned long count=0,index;
-  double rcm, arg1, arg2, prefac;
+  unsigned long count=0,tmp_index;
+  double arg1, arg2, prefac;
 
   assert(tree);
   tree->moveTop();
@@ -505,12 +505,12 @@ void TreeQuad::force2D(double *ray,double *alpha,KappaType *kappa,KappaType *gam
 					  rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
 					  if(rcm2 < 1e-20) rcm2 = 1e-20;
 
-					  index = MultiMass*tree->current->particles[i];
+					  tmp_index = MultiMass*tree->current->particles[i];
 
 					  if(haloON ){
-						  prefac = halos[index]->get_mass();
+						  prefac = halos[tmp_index]->get_mass();
 					  }else{
-						  prefac = masses[index];
+						  prefac = masses[tmp_index];
 					  }
 					  prefac /= rcm2*pi;
 
@@ -534,23 +534,23 @@ void TreeQuad::force2D(double *ray,double *alpha,KappaType *kappa,KappaType *gam
 			  if(rcm2cell < 5.83*boxsize2){
 				  for(i = 0 ; i < tree->current->Nbig_particles ; ++i){
 
-					  index = tree->current->big_particles[i];
+					  tmp_index = tree->current->big_particles[i];
 
-					  xcm[0] = tree->xp[index][0] - ray[0];
-					  xcm[1] = tree->xp[index][1] - ray[1];
+					  xcm[0] = tree->xp[tmp_index][0] - ray[0];
+					  xcm[1] = tree->xp[tmp_index][1] - ray[1];
 
 					  if(haloON){
-						  halos[index]->force_halo(alpha,kappa,gamma,xcm,no_kappa,true);
+						  halos[tmp_index]->force_halo(alpha,kappa,gamma,xcm,no_kappa,true);
 					  }else{  // case of no halos just particles and no class derived from TreeQuad
 
 						  rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
 						  if(rcm2 < 1e-20) rcm2 = 1e-20;
-						  rcm = sqrt(rcm2);
+						  //rcm = sqrt(rcm2);
 
-						  prefac = masses[MultiMass*index]/rcm2/pi;
-						  arg1 = rcm2/(sizes[index*MultiRadius]*sizes[index*MultiRadius]);
-						  arg2 = sizes[index*MultiRadius];
-						  tmp = sizes[index*MultiRadius];
+						  prefac = masses[MultiMass*tmp_index]/rcm2/pi;
+						  arg1 = rcm2/(sizes[tmp_index*MultiRadius]*sizes[tmp_index*MultiRadius]);
+						  arg2 = sizes[tmp_index*MultiRadius];
+						  tmp = sizes[tmp_index*MultiRadius];
 
 						  /// intersecting, subtract the point particle
 						  if(rcm2 < tmp*tmp){
@@ -662,8 +662,8 @@ void TreeQuad::walkTree_recur(QBranchNB *branch,double *ray,double *alpha,KappaT
 
 	PosType xcm[2],rcm2cell,rcm2,tmp,boxsize2;
 	IndexType i;
-	std::size_t index;
-	double rcm, arg1, arg2, prefac;
+	std::size_t tmp_index;
+	double arg1, arg2, prefac;
 
 	if(branch->nparticles > 0){
 		xcm[0]=branch->center[0]-ray[0];
@@ -686,13 +686,13 @@ void TreeQuad::walkTree_recur(QBranchNB *branch,double *ray,double *alpha,KappaT
 					rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
 					if(rcm2 < 1e-20) rcm2 = 1e-20;
 
-					index = MultiMass*branch->particles[i];
+					tmp_index = MultiMass*branch->particles[i];
 
 
 					  if(haloON ){
-						  prefac = halos[index]->get_mass();
+						  prefac = halos[tmp_index]->get_mass();
 					  }else{
-						  prefac = masses[index];
+						  prefac = masses[tmp_index];
 					  }
 					  prefac /= rcm2*pi;
 
@@ -713,24 +713,24 @@ void TreeQuad::walkTree_recur(QBranchNB *branch,double *ray,double *alpha,KappaT
 			if(rcm2cell < 5.83*boxsize2){
 				for(i = 0 ; i < branch->Nbig_particles ; ++i){
 
-					index = branch->big_particles[i];
+					tmp_index = branch->big_particles[i];
 
-					xcm[0] = tree->xp[index][0] - ray[0];
-					xcm[1] = tree->xp[index][1] - ray[1];
+					xcm[0] = tree->xp[tmp_index][0] - ray[0];
+					xcm[1] = tree->xp[tmp_index][1] - ray[1];
 
 					/////////////////////////////////////////
 					if(haloON){
-						halos[index]->force_halo(alpha,kappa,gamma,xcm,no_kappa,true);
+						halos[tmp_index]->force_halo(alpha,kappa,gamma,xcm,no_kappa,true);
 					}else{  // case of no halos just particles and no class derived from TreeQuad
 
 						rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
 						if(rcm2 < 1e-20) rcm2 = 1e-20;
-						rcm = sqrt(rcm2);
+						//rcm = sqrt(rcm2);
 
 						prefac = masses[MultiMass*branch->particles[i]]/rcm2/pi;
-						arg1 = rcm2/(sizes[index*MultiRadius]*sizes[index*MultiRadius]);
-						arg2 = sizes[index*MultiRadius];
-						tmp = sizes[index*MultiRadius];
+						arg1 = rcm2/(sizes[tmp_index*MultiRadius]*sizes[tmp_index*MultiRadius]);
+						arg2 = sizes[tmp_index*MultiRadius];
+						tmp = sizes[tmp_index*MultiRadius];
 
 						/// intersecting, subtract the point particle
 						if(rcm2 < tmp*tmp){

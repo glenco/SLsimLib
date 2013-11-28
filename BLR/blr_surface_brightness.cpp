@@ -57,20 +57,19 @@ double blr_surface_brightness_disk_old(double x[],SourceBLR *source){
 	//static const float r_in = 8.8439753e+15; // cm
 	//static const float r_out = 4.0e18 ; // cm
 	//static const float gam = 0.0;
-	static float sigma_0 = 2.0e-3; // in units of c
+	float sigma_0 = 2.0e-3; // in units of c
 	//static const float inc=30. * 3.14159/180 ; // in radians
 	//static const float opening_angle = 5. * 3.14159/180 ; //in radians
-	//static float MBH = 1.0e9 ; // black hole mass, in Msun
+	//float MBH = 1.0e9 ; // black hole mass, in Msun
 	//static const float CLIGHT = 3.0e10 ; // speed of light in cm/s
 	//static const float GNEWTON = 6.67259e-8 ; // grav. constant
 	//static const float MSUN = 1.989e33 ; // Solar mass
 
-	static float DlDs;  //
 	double R,r,zz,rho,tau;
 	double zz_prime,xx_prime,yy_prime;
 	double sig_nu;
 
-	DlDs = source->getDlDs();
+	float DlDs = source->getDlDs();
 
 	//printf("hi from BLR disk\n");
 

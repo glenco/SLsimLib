@@ -787,22 +787,21 @@ void findborders3(TreeHndl i_tree,OldImageInfo *imageinfo){
 	return;
 }
 
-void xygridpoints(Point *i_points,double range,const double *center,long Ngrid_1d,short remove_center){
+void Grid::xygridpoints(Point *i_points,double range,const double *center,long Ngrid_1d,short remove_center){
   /* make a new rectolinear grid of points on the image plane **/
   /* and link them to points on the source plane **/
   /* remove_center = 0 include center point of grid */
   /*              != 1 leave out center point of grid if Ngrid_1d is odd, Ngrid_1d*Ngrid_1d-1 points outputted */
   /* warning: memory for i_points must be allocated before entering */
   long i,j;
-  static long id=0;
 
   if(remove_center && (Ngrid_1d%2 == 1)){
     /*i_points=NewPointArray(Ngrid_1d*Ngrid_1d-1);*/
     for(i=0,j=0;i<Ngrid_1d*Ngrid_1d;++i){
 
       if( (2*(i/Ngrid_1d)/(Ngrid_1d-1) == 1) && (i%Ngrid_1d == Ngrid_1d/2+1) ) j=1;
-      i_points[i-j].id=id;
-      ++id;
+      i_points[i-j].id=pointID;
+      ++pointID;
       Utilities::PositionFromIndex(i,i_points[i-j].x,Ngrid_1d,range,center);
       //i_points[i-j].x[0] = center[0] + range*( 1.0*(i%Ngrid_1d)/(Ngrid_1d-1) - 0.5 );
       //i_points[i-j].x[1] = center[1] + range*( 1.0*(i/Ngrid_1d)/(Ngrid_1d-1) - 0.5 );
@@ -812,8 +811,8 @@ void xygridpoints(Point *i_points,double range,const double *center,long Ngrid_1
   }else{
     /*i_points=NewPointArray(Ngrid_1d*Ngrid_1d);*/
     for(i=0;i<Ngrid_1d*Ngrid_1d;++i){
-      i_points[i].id=id;
-      ++id;
+      i_points[i].id=pointID;
+      ++pointID;
       Utilities::PositionFromIndex(i,i_points[i].x,Ngrid_1d,range,center);
       //i_points[i].x[0] = center[0] + range*( 1.0*(i%Ngrid_1d)/(Ngrid_1d-1) - 0.5 );
       //i_points[i].x[1] = center[1] + range*( 1.0*(i/Ngrid_1d)/(Ngrid_1d-1) - 0.5 );

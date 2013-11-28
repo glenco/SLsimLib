@@ -533,7 +533,7 @@ public:
 
 protected:
     
-    double ffunction(double x);
+  double ffunction(double x);
 	double gfunction(double x);
 	double hfunction(double x);
 	double g2function(double x);

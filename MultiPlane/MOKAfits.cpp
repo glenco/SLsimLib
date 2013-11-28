@@ -512,7 +512,7 @@ void LensHaloMOKA::PreProcessFFTWMap(){
     map->alpha1.resize(npixels*npixels);
     map->alpha2.resize(npixels*npixels);
 
-    for( int i=Nnpixels/2-npixels/2; i<Nnpixels/2+npixels/2; i++ )
+    for( int i=Nnpixels/2-npixels/2; i<Nnpixels/2+npixels/2; i++ ){
             for( int j=Nnpixels/2-npixels/2; j<Nnpixels/2+npixels/2; j++ ){
                 int ii = i-int(Nnpixels/2-npixels/2);
                 int jj = j-int(Nnpixels/2-npixels/2);
@@ -523,7 +523,7 @@ void LensHaloMOKA::PreProcessFFTWMap(){
                 map->alpha1[ii+npixels*jj] = float(alpha1[i+Nnpixels*j]/Nnpixels/Nnpixels);
                 map->alpha2[ii+npixels*jj] = float(alpha2[i+Nnpixels*j]/Nnpixels/Nnpixels);
 	    }
-    
+    }
     delete[] fphi;
     delete[] falpha1;
     delete[] falpha2;

@@ -22,9 +22,6 @@
 */
 
 void TreeStruct::FindAllBoxNeighborsKist(Point *point,Kist<Point> * neighbors){
-	static int count=0;
-
-	++count;
 	neighbors->Empty();
 
 	//Kist<Point>* testkist = new Kist<Point>;
@@ -522,7 +519,7 @@ void TreeStruct::PointsWithinKist_iter(const double* center,float rmin,float rma
  * 
  *    Warning: The number of neighbor points in neighborkist will be less than Nneighbors when
  *             the number of points in the tree is less than Nneighbors
- */
+ *
 Point * TreeStruct::NearestNeighborKist(const double* center,int Nneighbors,Kist<Point> * neighborkist){
 	ListHndl neighborlist = NewList();
 	Point *point = 0;
@@ -547,3 +544,4 @@ Point * TreeStruct::NearestNeighborKist(const double* center,int Nneighbors,Kist
 
 	return point;
 }
+*/

@@ -31,6 +31,7 @@ public:
   
     /// Returns a pointer to the current data.  Same as getCurrent.
 	T *operator*(){return unit->data;}
+  
 	bool operator++(){
         if(unit == NULL){
             return false;
@@ -489,7 +490,7 @@ template <class Data> Data *Kist<Data>::TakeOutCurrent(){
 /// Move down the list jump units from current position
 template <class Data> bool Kist<Data>::JumpDown(int jump){
 	int i;
-	bool ans;
+	bool ans = true;
 
 	if(jump > 0) for(i=0;i<jump;++i) ans=Down();
 	if(jump < 0) for(i=0;i<abs(jump);++i) ans=Up();
@@ -545,7 +546,7 @@ template <class Data> void Kist<Data>::Fill(Data *data_array,unsigned long N){
 /*********************************/
 /// Return pointer to data in current element.  If offend act as if it is at bottem.
 template <class Data> inline Data * Kist<Data>::getCurrent(){
-  if(Number == 0) return NULL;
+  if(Number == 0 || current == NULL) return NULL;
   if(current == &offbot) current = bottom;
 	return current->data;
 }

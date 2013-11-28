@@ -24,8 +24,7 @@ double blr_surface_brightness_spherical_random_motions(double x,SourceBLR *sourc
 
 	float r,tau, sigma2, eta;
 	
-	static float DlDs;  //
-	DlDs = source->getDlDs();
+	float DlDs = source->getDlDs();
 
 	x /= DlDs;
 
@@ -58,8 +57,7 @@ double blr_surface_brightness_spherical_circular_motions(double x,SourceBLR *sou
 
 	float r,tau, eta, sin_theta, nu_m;
 
-	static float DlDs;  //
-	DlDs=source->getDlDs();
+	float DlDs = source->getDlDs();
 
 	x /= DlDs;
 
@@ -106,8 +104,7 @@ double blr_surface_brightness_disk(double x[],SourceBLR *source){
 	double zz_prime,xx_prime;//,yy_prime;
 	double sigma2,eta;
 
-	static float DlDs;  //
-	DlDs = source->getDlDs();
+	float DlDs = source->getDlDs();
 
 	//printf("hi from BLR disk\n");
 

@@ -124,7 +124,7 @@ void QTreeNB::_freeQTree(short child){
  * isEmpty
  * Returns "true" if the QTreeNB is empty and "false" otherwise.  Exported.
  ************************************************************************/
-bool QTreeNB::isEmpty(){
+const bool QTreeNB::isEmpty(){
 
     return(Nbranches == 0);
 }
@@ -135,7 +135,7 @@ bool QTreeNB::isEmpty(){
  * Exported.
  * Pre: !isEmptyNB(tree)
  ************************************************************************/
-bool QTreeNB::atTop(){
+const bool QTreeNB::atTop(){
 
     if( isEmpty() ){
     	ERROR_MESSAGE();
@@ -149,7 +149,7 @@ bool QTreeNB::atTop(){
  * offEndNB
  * Returns "true" if current is off end and "false" otherwise.  Exported.
  ************************************************************************/
-bool QTreeNB::offEnd(){
+const bool QTreeNB::offEnd(){
 
     return(current == NULL);
 }
@@ -177,7 +177,7 @@ void QTreeNB::getCurrent(IndexType *particles,IndexType *nparticles){
  * getNbranches
  * Returns the NbranchNBes of tree.  Exported.
  ************************************************************************/
-unsigned long QTreeNB::getNbranches(){
+const unsigned long QTreeNB::getNbranches(){
 
     return(Nbranches);
 }

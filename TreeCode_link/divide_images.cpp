@@ -68,7 +68,7 @@ int ImageGenus(TreeHndl i_tree,ImageInfo *imageinfo){
 	number=0;
 	do{
 
-		//printf("   new_imagekist %li\n",new_imagekist->Nunits());
+		//printf("   new_imagekist %li\n",new_imagekist.Nunits());
 		partition_images_kist(new_kist->getCurrent(),tmp_kist,i_tree);
 
 		// take out points that got un-marked in partition_images
@@ -197,13 +197,11 @@ void divide_images(TreeHndl i_tree,ImageInfo *imageinfo
 
 	assert(imageinfo->imagekist->Nunits() == 0);
 
-	new_imagekist->MoveToTop();
-	while(new_imagekist->Nunits() > 0){
+	new_imagekist.MoveToTop();
+	while(new_imagekist.Nunits() > 0){
 		imageinfo->imagekist->InsertAfterCurrent(new_imagekist->TakeOutCurrent());
 		imageinfo->imagekist->Down();
 	}
-
-	delete new_imagekist;
 
 	MoveToTopKist(imageinfo->imagekist);
 	do{
@@ -250,7 +248,7 @@ void divide_images_kist(
 	    ,int Nimagesmax
 	    ){
 	unsigned long i,j,Ntemp,Ntest;
-	Kist<Point> * new_imagekist = new Kist<Point>;
+	Kist<Point> new_imagekist;
 	double tmp = 0;
 
 	if(imageinfo->imagekist->Nunits() < 2){
@@ -265,48 +263,48 @@ void divide_images_kist(
 	while(imageinfo->imagekist->Nunits() > 0){
 		imageinfo->imagekist->getCurrent()->in_image = TRUE;
 		imageinfo->imagekist->getCurrent()->image->in_image = TRUE;
-		new_imagekist->InsertAfterCurrent(imageinfo->imagekist->TakeOutCurrent());
-		new_imagekist->Down();
+		new_imagekist.InsertAfterCurrent(imageinfo->imagekist->TakeOutCurrent());
+		new_imagekist.Down();
 	}
 
 	i=0;
 	do{
 
-		//printf("   new_imagekist %li\n",new_imagekist->Nunits());
-		imageinfo[i].area = partition_images_kist(new_imagekist->getCurrent(),imageinfo[i].imagekist,i_tree);
+		//printf("   new_imagekist %li\n",new_imagekist.Nunits());
+		imageinfo[i].area = partition_images_kist(new_imagekist.getCurrent(),imageinfo[i].imagekist,i_tree);
 
-/*		if(imageinfo[i].imagekist->Nunits() > new_imagekist->Nunits()){
+/*		if(imageinfo[i].imagekist->Nunits() > new_imagekist.Nunits()){
 			bool test1,test2;
-			test1 = new_imagekist->AreDataUnique();
+			test1 = new_imagekist.AreDataUnique();
 			test2 = imageinfo[i].imagekist->AreDataUnique();
-			assert(imageinfo[i].imagekist->Nunits() <= new_imagekist->Nunits());  // check that no more than
+			assert(imageinfo[i].imagekist->Nunits() <= new_imagekist.Nunits());  // check that no more than
 		}
 */
 
 		// take out points that got un-marked in partition_images
 
-		Ntemp = new_imagekist->Nunits();
+		Ntemp = new_imagekist.Nunits();
 		imageinfo[i].area = imageinfo[i].area_error = 0.0;
 
-		for( j=0,new_imagekist->MoveToTop() ; j < Ntemp ; ++j){
-			if(new_imagekist->getCurrent()->in_image == FALSE){
+		for( j=0,new_imagekist.MoveToTop() ; j < Ntemp ; ++j){
+			if(new_imagekist.getCurrent()->in_image == FALSE){
 
 				// calculates area of image
-				tmp = pow(new_imagekist->getCurrent()->gridsize,2 );
+				tmp = pow(new_imagekist.getCurrent()->gridsize,2 );
 				imageinfo[i].area += tmp;
 			    if(imageinfo[i].area_error < tmp) imageinfo[i].area_error = tmp;
 
-			    if(new_imagekist->AtTop()){
-			    	new_imagekist->TakeOutCurrent();
+			    if(new_imagekist.AtTop()){
+			    	new_imagekist.TakeOutCurrent();
 			    }else{
-			    	new_imagekist->TakeOutCurrent();
-			    	new_imagekist->Down();
+			    	new_imagekist.TakeOutCurrent();
+			    	new_imagekist.Down();
 			    }
 			}else{
-				new_imagekist->Down();
+				new_imagekist.Down();
 			}
 
-			//printf("%li %li\n",new_imagekist->Nunits(),imageinfo[i].imagekist->Nunits());
+			//printf("%li %li\n",new_imagekist.Nunits(),imageinfo[i].imagekist->Nunits());
 		}
 		imageinfo[i].area_error /= imageinfo[i].area;
 
@@ -322,10 +320,10 @@ void divide_images_kist(
 		imageinfo[i].centroid[0] /= imageinfo[i].area;
 		imageinfo[i].centroid[1] /= imageinfo[i].area;
 
-		assert((Ntemp - new_imagekist->Nunits() - imageinfo[i].imagekist->Nunits()) == 0);
-		assert(new_imagekist->OffBottom());
+		assert((Ntemp - new_imagekist.Nunits() - imageinfo[i].imagekist->Nunits()) == 0);
+		assert(new_imagekist.OffBottom());
 		++i;
-	}while(new_imagekist->Nunits() > 0 && i < Nimagesmax);
+	}while(new_imagekist.Nunits() > 0 && i < Nimagesmax);
 
 	*Nimages = i;
 
@@ -334,27 +332,26 @@ void divide_images_kist(
 	if(i == Nimagesmax){
 		double r2,rmin;
 
-		while(new_imagekist->Nunits() > 0){
+		while(new_imagekist.Nunits() > 0){
 			for(i=0,rmin=1.0e200,j=0;i<*Nimages;++i){
-				r2 = pow(new_imagekist->getCurrent()->x[0] - imageinfo[i].centroid[0],2)
-					+ pow(new_imagekist->getCurrent()->x[1] - imageinfo[i].centroid[1],2);
+				r2 = pow(new_imagekist.getCurrent()->x[0] - imageinfo[i].centroid[0],2)
+					+ pow(new_imagekist.getCurrent()->x[1] - imageinfo[i].centroid[1],2);
 				if(rmin > r2 ){
 					rmin = r2;
 					j = i;
 				}
 			}
-			tmp = pow(new_imagekist->getCurrent()->gridsize,2);
+			tmp = pow(new_imagekist.getCurrent()->gridsize,2);
 			imageinfo[j].centroid[0] = ( imageinfo[j].centroid[0]*imageinfo[j].area
-						+ tmp*new_imagekist->getCurrent()->x[0] )/(imageinfo[j].area + tmp);
+						+ tmp*new_imagekist.getCurrent()->x[0] )/(imageinfo[j].area + tmp);
 			imageinfo[j].centroid[1] = ( imageinfo[j].centroid[1]*imageinfo[j].area
-						+ tmp*new_imagekist->getCurrent()->x[1] )/(imageinfo[j].area + tmp);
+						+ tmp*new_imagekist.getCurrent()->x[1] )/(imageinfo[j].area + tmp);
 			imageinfo[j].area += tmp;
-			imageinfo[j].imagekist->InsertAfterCurrent(new_imagekist->TakeOutCurrent());
+			imageinfo[j].imagekist->InsertAfterCurrent(new_imagekist.TakeOutCurrent());
 		}
 	}
 
-	assert(new_imagekist->Nunits() == 0);
-	delete new_imagekist;
+	assert(new_imagekist.Nunits() == 0);
 
 	// mark all image points
 	for(i=0;i<*Nimages;++i){
