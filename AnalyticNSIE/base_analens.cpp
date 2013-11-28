@@ -349,6 +349,23 @@ void LensHalo::faxial(double theta,double f[]){
 
 }
 
+/// Derivatives of the axial potential factor with respect to theta
+void LensHalo::fangular(double theta,double f[]){
+  int i,k;
+
+  for(i=0;i<=Nmod/2;++i){
+	k=2*i;
+    f[0] +=  mod[k]*cos(i*theta)     + mod[k+1]*sin(i*theta);
+    f[1] += -mod[k]*i*sin(i*theta)   + mod[k+1]*i*cos(i*theta);
+    f[2] += -mod[k]*i*i*cos(i*theta) - mod[k+1]*i*i*sin(i*theta);
+    //std::cout << f[0] << " " << k << " " << mod[k] << " " << mod[k+1] << endl;
+  }
+	//cout << "fangular=" << "\n" << f[0] << "\n" << f[1] << "\n" << f[2] << "\n" << endl;
+
+//	cout << mod[0] << " " << mod[1] << " " << mod[2] << " " << mod[3] << " " << mod[4] << " " << mod[5] << " " << mod[6] << " " << mod[7] << " " << mod[8] << " " << mod[9] << endl;
+
+//	cout << mod[10] << " " << mod[11] << " " << mod[12] << " " << mod[13] << " " << mod[14] << " " << mod[15] << " " << mod[16] << " " << mod[17] << " " << mod[18] << endl;
+}
 
 
 
@@ -357,9 +374,9 @@ void LensHalo::gradial(double r,double g[]){
   double r_eps=Rmax; // TODO: r_eps = Rmax for now, but must be thought about later
   double x = (1+r/r_eps);
   
-  g[0] = 1.0; //1.0/x/x;
-  g[1] = 0.0; //-2.0*g[0]/x/r_eps;
-  g[2] = 0.0; //-3.0*g[1]/x/r_eps;
+  g[0] = 1.0/x/x;
+  g[1] = -2.0*g[0]/x/r_eps;
+  g[2] = -3.0*g[1]/x/r_eps;
   //cout << "ginside: rmax " << Rmax  << " "<< g[0] << " " << g[1] << " " << g[2] << endl;
 }
 
@@ -430,30 +447,23 @@ void LensHalo::setEllipModes(double q,double theta){
 
   return;
 }
-/// Derivatives of the axial potential factor with respect to theta
-void LensHalo::fangular(double theta,double f[]){
-  int i,k;
 
-  for(i=0;i<=Nmod/2;++i){
-	k=2*i;
-    f[0] +=  mod[k]*cos(i*theta)     + mod[k+1]*sin(i*theta);
-    f[1] += -mod[k]*i*sin(i*theta)   + mod[k+1]*i*cos(i*theta);
-    f[2] += -mod[k]*i*i*cos(i*theta) - mod[k+1]*i*i*sin(i*theta);
-    std::cout << f[0] << " " << k << " " << mod[k] << " " << mod[k+1] << endl;
-  }
-	//cout << "fangular=" << "\n" << f[0] << "\n" << f[1] << "\n" << f[2] << "\n" << endl;
 
-//	cout << mod[0] << " " << mod[1] << " " << mod[2] << " " << mod[3] << " " << mod[4] << " " << mod[5] << " " << mod[6] << " " << mod[7] << " " << mod[8] << " " << mod[9] << endl;
 
-//	cout << mod[10] << " " << mod[11] << " " << mod[12] << " " << mod[13] << " " << mod[14] << " " << mod[15] << " " << mod[16] << " " << mod[17] << " " << mod[18] << endl;
-}
-
-void LensHalo::felliptical(double q, double theta, double f[]){
-	double A=1/q/q;
+// for Ansatz I
+void LensHalo::felliptical(double x, double q, double theta, double f[], double g[]){ // q not a function of r
+	double A;
+	//reps=rmax
+	//q=r/reps+q0*(1-r/reps) // q=q0 for small radii, q=1 for large radii
+	A=1/q/q;
 	f[0]=pow((cos(theta)*cos(theta)+A*sin(theta)*sin(theta)),-0.5);
-	f[1]=(1-A)*(cos(theta)*sin(theta))/(pow(cos(theta)*cos(theta) + A*sin(theta)*sin(theta),1.5));
-	f[2]=( ( (1-A)*(4*(1+A)*cos(2*theta)+(A-1)*(-5+cos(4*theta))))/(sqrt(2)*pow(1+A-(A-1)*cos(2*theta),2.5)));
+	g[0]=1; //f[0]/x;
+	f[1]=-((A-1.)*cos(theta)*sin(theta))*pow(f[0],3);
+	f[2]=(A-1.)*(4*(A+1.)*cos(2.*theta)+(A-1)*(cos(4*theta)-5.))/(pow(2,0.5)*pow(1.+A-(A-1.)*cos(2*theta),2.5));
+	g[1]=0.; //f[0]/x;
+	g[2]=0.;
 }
+
 
 double LensHalo::alpha_asym(double x,double theta){
 	double f[3],g[3];
@@ -464,9 +474,8 @@ double LensHalo::alpha_asym(double x,double theta){
 	//setModesToEllip(0.999,theta);
 	//faxial(theta,f);
 	//fangular(theta,f);
-	felliptical(0.5,theta,f);
-	gradial(x,g);
-	F = f[0];
+	//felliptical(x,0.4,theta,f,g);
+	F = 1-f[0];
 	//F = g[0]*f[0];
 	//alpha_r=(F+g[1]*f[0])*alpha_iso;
 	alpha_r=(F*alpha_iso+g[1]*f[0]*phi_iso);
@@ -477,38 +486,65 @@ double LensHalo::alpha_asym(double x,double theta){
 }
 
 double LensHalo::kappa_asym(double x,double theta){
-	double f[3],g[3];
-	double F, kappa;
-	double kappa_iso = kappa_h(x);
-	double alpha_iso = alpha_h(x);
-	double phi_iso = phi_h(x);
-	felliptical(0.5,theta,f);
-	//setModesToEllip(0.999,theta);
+	double F, f[3],g[3], kappa;
+	//setModesToEllip(0.4,0.0);
 	//faxial(theta,f);
+
+	//setEllipModes(0.4,0.0);
 	//fangular(theta,f);
-	gradial(x,g);
-	F = f[0];
-	//F = 1+g[0]*f[0];
 
-	//kappa = F*kappa_iso + ( (g[2] + g[1]/x)*f[0] + g[0]*f[2]/x/x )*phi_iso;
+	felliptical(x,0.4,theta,f,g);
+	g[0]=1;
+	g[1]=g[2]=0;
 
-	//kappa=F*kappa_iso + ((F/x)+2.*g[1]*f[0])*alpha_iso/2.+(g[2]*f[0]+g[0]*f[2]/x/x)*phi_iso/2.;
-	kappa=F*kappa_iso + g[1]*f[0]*alpha_iso+(g[2]*f[0]+g[1]*f[0]/x+g[0]*f[2]/x/x)*phi_iso/2.;
-//	std::cout << "f: " << f[0] << " " << f[1] << " " << f[2] << "\n" << "g: " << g[0] << " " << g[1] << " " << g[2] << "\n" << "phi,kappa: " << phi_iso << " " << kappa_iso << "\n" << endl;
-/*
-	if(kappa<0.){
-		std:cout << x << endl;
-		std::cout << "iphi: " << phi_iso << endl;
-		std::cout << "old kappa: " << kappa_iso << endl;
-		std::cout << "ialpha: " << alpha_iso << endl;
-		std::cout << "F*kappa: " << F*kappa_iso << endl;
-		std::cout << "2nd term: " << g[1]*f[0]*alpha_iso << endl;
-		std::cout << "last term: " << (g[2]*f[0]+g[1]*f[0]/x+g[0]*f[2]/x/x)*phi_iso/2. << endl;
-		std::cout << "new kappa: " << kappa << endl;
+	//fangular(theta,f);
+	F=1+f[0];
+	//kappa=F*kappa_h(x)/x/x+g[1]*f[0]*alpha_h(x)/x+0.5*(g[2]*f[0]+g[1]*f[0]/x+g[0]*f[2]/x/x)*phi_h(x);
+	//kappa=F*kappa_h(x)/x/x-g[1]*f[0]*alpha_h(x)/x; //+0.5*(g[2]*f[0]+g[1]*f[0]/x+g[0]*f[2]/x/x)*phi_h(x);
+	kappa=F*kappa_h(x)-0.5*f[2]/x/x*phi_h(x);
+	if(x<1){
+		std::cout << F*kappa_h(x) << " " << 0.5*f[2]/x/x*phi_h(x) << std::endl;
 	}
-*/
+	kappa/=x*x; // for 2nd term
+
 	return kappa;
 }
+
+
+
+/* ANSATZ II
+ // eq 34
+ void LensHalo::felliptical(double x, double q, double theta, double f[], double g[]){
+	double A[3];
+	//reps=rmax
+	//q=r/reps+q0*(1-r/reps) // q=q0 for small radii, q=1 for large radii
+	A[0]=1/q/q;
+	A[1]=0.;
+	A[2]=0.;
+	f[0]=x*pow((cos(theta)*cos(theta)+A[0]*sin(theta)*sin(theta)),0.5);
+	g[0]=f[0]/x;
+	f[1]=x*(A[0]-1)*(cos(theta)*sin(theta))/(g[0]);
+	f[2]=(x*(A[0]-1)*(pow(cos(theta),4)-A[0]*pow(sin(theta),4)))/(g[0]*g[0]*g[0]);
+	g[1]=g[0]; // (g[0]*g[0]+0.5*x*A[1]*sin(theta)*sin(theta))/g[0];
+	g[2]=0; //sin(theta)*sin(theta)*(A[1]*(4*g[0]*g[0]-x*A[1]*sin(theta)*sin(theta))+2*f[0]*g[0]*A[2] )/(4*g[0]*g[0]*g[0]);
+	//g[3]=cos(theta)*sin(theta)*(2*(A[0]*A[0]-1-(A[0]-1)*(A[0]-1)*cos(2*theta))+x*A[1]*(3+cos(2*theta)+2*A[0]*sin(theta)*sin(theta)))/(4*g[0]*g[0]*g[0]);
+}
+
+double LensHalo::kappa_asym(double x,double theta){
+	double f[3],g[3];
+	double G,Gr,Grr, Gt,Gtt, kappa;
+	felliptical(x,0.4,theta,f,g);
+	G = f[0];
+	Gt = f[1];
+	Gtt= f[2];
+	Gr=g[1];
+	Grr=g[2];
+	double phitwo=(2*kappa_h(G)/G/G - alpha_h(G)/G/G);
+	kappa=-0.5*alpha_h(G)/G*(Gr/x+Grr+Gtt/x/x)+0.5*phitwo*(Gr*Gr+Gt*Gt/x/x);
+    kappa/=G*G;
+	return kappa;
+}
+*/
 
 double LensHalo::gamma_asym(double x,double theta){
 	double f[3],g[3];
@@ -516,11 +552,8 @@ double LensHalo::gamma_asym(double x,double theta){
 	double alpha_iso = alpha_h(x);
 	double phi_iso = phi_h(x);
 	double gamma_iso = gamma_h(x);
-	//setModesToEllip(0.999,theta);
-	//faxial(theta,f);
-	//fangular(theta,f);
-	felliptical(0.5,theta,f);
-	gradial(x,g);
+
+	//felliptical(x,0.2,theta,f,g);
 	F = f[0];
 	//double gt = F*gamma_iso + g[1]*f[0]*alpha_iso + 0.5*( g[2]*f[0] - g[0]*f[2]/x/x)*phi_iso;
 	double gt = F*gamma_iso + (g[1]*f[0]-F/x/2.)*alpha_iso + 0.5*( g[2]*f[0] - g[1]*f[0]/x - g[0]*f[2]/x/x)*phi_iso;
@@ -532,15 +565,3 @@ double LensHalo::gamma_asym(double x,double theta){
 }
 
 
-double LensHalo::checkkappa(double x, double theta, double ang){    // TODO can be removed after check
-	double q=0.999;
-	double f[3];
-	f[0]=f[1]=f[2]=0.0;
-	//setModesToEllip(q,theta);
-	//setEllipModes(q,theta);
-	//faxial(theta,f);
-	//fangular(theta,f);
-
-	return kappa_asym(x,ang);
-	//return kappa_h(x);
-}

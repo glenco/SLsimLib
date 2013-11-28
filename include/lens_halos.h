@@ -12,8 +12,8 @@
 #include "InputParams.h"
 #include "source.h"
 #include "point.h"
-//#include "quadTree.h"
 
+//#include "quadTree.h"
 
 /**
  * \brief A base class for all types of lensing halos.
@@ -83,7 +83,7 @@ public:
 	void force_halo_asym(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa,bool subtract_point=false);
 
 
-	double checkkappa(double x, double theta, double ang);
+	//double checkkappa(double x, double theta);
 
 	/// force tree calculation for stars
 	void force_stars(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa);
@@ -177,7 +177,7 @@ protected:
   void faxial(double theta,double f[]);
   void gradial(double r,double g[]);
   void desymmeterize(double r,double theta,double *alpha,double *kappa,double *gamma);
-  void felliptical(double q, double theta, double f[]);
+  void felliptical(double x, double q, double theta, double f[], double g[]);
 
 	virtual double gamma_asym(double x,double theta);
 	virtual double kappa_asym(double x,double theta);
@@ -357,6 +357,7 @@ public:
 
 	/// set the slope of the surface density profile
 	void set_slope(double my_slope){beta=my_slope;};
+
 	/// initialize from a mass function
 	void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, double my_slope, long *seed);
 
@@ -370,14 +371,19 @@ private:
 	// Override internal structure of halos
 	inline double alpha_h(double x){
 		if(x==0) x=1e-6*xmax;
+		assert(beta==2);
+		assert(-1.0*pow(x/xmax,beta+2) != 0.0);
+		//cout << x << "  " << -1.0*pow(x/xmax,beta+2) << endl;
 		return -1.0*pow(x/xmax,beta+2);
 	}
 	inline KappaType kappa_h(double x){
 		if(x==0) x=1e-6*xmax;
+		assert(0.5*(beta+2)*pow(x/xmax,beta)*x*x/(xmax*xmax) != 0);
 		return 0.5*(beta+2)*pow(x/xmax,beta)*x*x/(xmax*xmax);
 	}
 	inline KappaType gamma_h(double x){
 		if(x==0) x=1e-6*xmax;
+		assert(0.5*beta*pow(x/xmax,beta+2) != 0);
 		return 0.5*beta*pow(x/xmax,beta+2);
 	}
 	inline KappaType phi_h(double x){
@@ -385,6 +391,7 @@ private:
 		//std::cout << "time delay has not been fixed for PowerLaw profile yet." << std::endl;
 		if(x==0) x=1e-6*xmax;
 		//exit(1);
+		assert( -1.0*pow(x/xmax,beta+3)/(beta+3) !=0.0);
 		return -1.0*pow(x/xmax,beta+3)/(beta+3);
 	}
 };

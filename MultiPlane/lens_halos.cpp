@@ -281,9 +281,9 @@ LensHaloPseudoNFW::~LensHaloPseudoNFW(){
 }
 
 
-
 LensHaloPowerLaw::LensHaloPowerLaw() : LensHalo(){
 	rscale = 1.0;
+	//beta = 2.0; //TODO Check if beta is properly read in and set ...
 }
 
 LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
@@ -293,7 +293,7 @@ LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
 void LensHaloPowerLaw::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, double my_slope, long *seed){
 	LensHalo::initFromMassFunc(my_mass,my_Rmax,my_rscale,my_slope,seed);
 	beta = my_slope;
-  xmax = my_Rmax/my_rscale;
+    xmax = my_Rmax/my_rscale;
 }
 
 void LensHaloPowerLaw::assignParams(InputParams& params){
@@ -385,10 +385,11 @@ void LensHalo::force_halo(
 				,bool kappa_off
 				,bool subtract_point /// if true contribution from a point mass is subtracted
 				){
-	double q = 0.999; // TODO read theta and q from param file!!!
+	double q = 1.0; // TODO read theta and q from param file!!!
 
 	if (q==1){
 		force_halo_sym(alpha,kappa,gamma,xcm,kappa_off,subtract_point);
+		//std::cout << alpha[0] << std::endl;
 	}
 	else{
 		//setModesToEllip(q,theta);
@@ -470,15 +471,39 @@ void LensHalo::force_halo_asym(
 		,bool kappa_off
 		,bool subtract_point /// if true contribution from a point mass is subtracted
 		){
-
+	std::ofstream dfunc;
+	dfunc.open( "dfunc.dat", ios::out | ios::app );
 	double rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
+
 	if(rcm2 < 1e-20) rcm2 = 1e-20;
 
 	/// intersecting, subtract the point particle
 	if(rcm2 < Rmax*Rmax){
-		double prefac = mass/rcm2/pi;
 		double x = sqrt(rcm2)/rscale;
-		double theta=atan(xcm[1]/xcm[0]);
+		double theta;
+		if (xcm[0]==0 && xcm[1]==0){
+			xcm[0]=xcm[1]=7.0710678e-21;
+		}
+		if (xcm[0]>0){
+			theta=atan(xcm[1]/xcm[0]);
+		}
+		if (xcm[0]<0 && xcm[1]>=0){
+			theta=atan(xcm[1]/xcm[0])+pi;
+		}
+		if (xcm[0]<0 && xcm[1]<0){
+		   theta=atan(xcm[1]/xcm[0])-pi;
+		}
+		if (xcm[0]==0 && xcm[1]>0){
+			theta=pi/2;
+		}
+		if (xcm[0]==0 && xcm[1]>0){
+			theta=-1*pi/2;
+		}
+		//double prefac = mass/rcm2/pi;
+
+		//double ellr2=rcm2*0.5*(cos(theta)*cos(theta)+(1./0.5/0.5)*sin(theta)*sin(theta))*pi;
+		//double prefac = mass/ellr2;
+		double prefac = mass/rscale/rscale/pi;
 
 		//double xmax = Rmax/rscale;
 		//double tmp = (alpha_h(x,xmax) + 1.0*subtract_point)*prefac;
@@ -489,7 +514,9 @@ void LensHalo::force_halo_asym(
 		// can turn off kappa and gamma calculations to save times
 		if(!kappa_off){
 			*kappa += kappa_asym(x,theta)*prefac;
-
+			//if(kappa_asym(x,theta) < 0.01){
+			//	dfunc << x << " " << theta << " " << kappa_asym(x,theta) << " " << xcm[0] << " " << xcm[1] << std::endl;
+			//}
 			tmp = (gamma_asym(x,theta) + 2.0*subtract_point)*prefac/rcm2;
 
 			gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
