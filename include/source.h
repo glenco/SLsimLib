@@ -10,7 +10,6 @@
 
 #include "standard.h"
 #include "InputParams.h"
-#include "raw_data.h"
 #include "image_processing.h"
 
 /** \brief Base class for all sources.
@@ -55,16 +54,7 @@ public:
 	void setSBlimit(float limit) {sb_limit = limit;}
 	/// Sets sb_limit in mag/arcsec^2
 	void setSBlimit_magarcsec(float limit) {sb_limit = pow(10,-0.4*(48.6+limit))*pow(180*60*60/pi,2)/hplanck;}
-	
-	/// Read raw data from source.
-	virtual void serialize(RawData& d) const;
-	
-	/// Write raw data to source.
-	virtual void unserialize(RawData& d);
-	
-	/// Randomize source by a given amount.
-	virtual void randomize(double step, long* seed);
-	
+
 protected:
 	virtual void assignParams(InputParams& params) = 0;
 	
@@ -118,7 +108,7 @@ private:
 	double ell[2];
 	double size;
 	double centroid[2];
-	std::valarray<float> values;
+	std::valarray<double> values;
 };
 
 /// A uniform surface brightness circular source.

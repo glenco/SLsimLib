@@ -71,8 +71,8 @@ GLAMER_TEST_USES(LensTest)
 class Lens
 {
 public:
-	Lens(long *seed);
-	Lens(InputParams& params, long *my_seed, CosmoParamSet cosmoset = WMAP5yr);
+	Lens(long* seed, CosmoParamSet cosmoset = WMAP5yr);
+	Lens(InputParams& params, long* my_seed, CosmoParamSet cosmoset = WMAP5yr);
 	~Lens();
 
 	/// marks if the lens has been setup.
@@ -105,7 +105,7 @@ public:
   /// Angular size distance (Mpc) to first main lens plane
 	double getAngDistLens(){
 		if(flag_switch_main_halo_on)
-			return cosmo->angDist( main_halos[0]->getZlens() );
+			return cosmo.angDist( main_halos[0]->getZlens());
 		else{
 			ERROR_MESSAGE();
 			std::cout << "error, no main lens present" << std::endl;
@@ -138,7 +138,6 @@ public:
 	template<typename HaloType>
 	HaloType* getMainHalo(std::size_t i);
 	
-	/// compute the dflection, convergence, and shear for each point on the grid
 	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off);
 
 	// methods used for use with implanted sources
@@ -159,18 +158,24 @@ public:
 	double getZmax(){return plane_redshifts.back();}
 
 	/// print the cosmological parameters
-	void PrintCosmology(){cosmo->PrintCosmology();}
-
+	void PrintCosmology() { cosmo.PrintCosmology(); }
+	
 	/// returns the critical density at the main lens in Msun/ Mpc^2 for a source at zsource
-	double getSigmaCrit(double zsource){ return cosmo->SigmaCrit(getZlens(),zsource); }
+	double getSigmaCrit(double zsource) { return cosmo.SigmaCrit(getZlens(), zsource); }
+	
 
-	COSMOLOGY *cosmo;
+  /// returns a const reference to the cosmology so that constant functions can be used, but the cosmological parameters cannot be changed.
+  const COSMOLOGY & getCosmo(){return cosmo;}
 
 private:
 	GLAMER_TEST_FRIEND(LensTest)
 	
+	// seed for random field generation
 	long *seed;
 	
+  // the cosmology
+	COSMOLOGY cosmo;
+
 	/// field of view in square degrees
 	double fieldofview;
 	

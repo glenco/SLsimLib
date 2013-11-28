@@ -21,7 +21,7 @@ class LensHaloMOKA;
  */
 struct Grid{
 
-	Grid(LensHndl lens,unsigned long N1d,double center[2],double range);
+	Grid(LensHndl lens,unsigned long N1d,const double center[2],double range);
 	~Grid();
 
 	void ReInitializeGrid(LensHndl lens);
@@ -52,8 +52,10 @@ struct Grid{
 	void ClearAllMarks();
 
 	void test_mag_matrix();
-  void writeFits(double center[],size_t Npixels,double resolution,LensingVariable lensvar,std::string filename);
-  void writeFitsVector(double center[],size_t Npixels,double resolution,LensingVariable lensvar,std::string filename);
+  void writeFits(const double center[],size_t Npixels,double resolution,LensingVariable lensvar,std::string filename);
+  void writeFitsVector(const double center[],size_t Npixels,double resolution,LensingVariable lensvar,std::string filename);
+  PixelMap writePixelMap(const double center[],size_t Npixels,double resolution
+                           ,LensingVariable lensvar);
 
 
 private:
@@ -82,7 +84,7 @@ void find_images_kist(LensHndl lens,double *y_source,double r_source,GridHndl gr
 		,double initial_size,bool splitimages,short edge_refinement
 		,bool verbose,bool kappa_off);
 
-void find_images_microlens(LensHndl lens, LensHalo *halo,double *y_source,double r_source,GridHndl grid
+void find_images_microlens(LensHndl lens,double *y_source,double r_source,GridHndl grid
 		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
 		,double initial_size,double mu_min,bool splitimages,short edge_refinement
 		,bool verbose,bool kappa_off);
@@ -115,7 +117,7 @@ long refine_edges2(LensHndl lens,double *y_source,double r_source,GridHndl grid
 
 void sort_out_points(Point *i_points,ImageInfo *imageinfo,double r_source,double y_source[]);
 
-void xygridpoints(Point *points,double range,double *center,long Ngrid
+void xygridpoints(Point *points,double range,const double *center,long Ngrid
 		,short remove_center);
 
 void saveImage(LensHaloMOKA *mokahalo, GridHndl grid, bool saveprofile=true);

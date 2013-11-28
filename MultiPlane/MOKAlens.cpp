@@ -13,7 +13,7 @@ using namespace std;
 /*
  * \brief center of mass of a map using the moving centre
  */
-void cmass(int n, std::valarray<float> map, std:: vector<double> x, double &xcm, double &ycm){ 
+void cmass(int n, std::valarray<double> map, std:: vector<double> x, double &xcm, double &ycm){ 
   double shrink = 1.02;
   // 0.05% of the total number of pixels
   int nstop = int(0.05*double(n)*double(n)/100.);
@@ -62,41 +62,36 @@ void cmass(int n, std::valarray<float> map, std:: vector<double> x, double &xcm,
 /**
  * \brief loads a MOKA map from a given filename
  */
-LensHaloMOKA::LensHaloMOKA(const std::string& filename)
+
+LensHaloMOKA::LensHaloMOKA(const std::string& filename, LensHaloType my_maptype, const COSMOLOGY& lenscosmo)
 : LensHalo(),
-  MOKA_input_file(filename), flag_MOKA_analyze(0), flag_background_field(0)
+  MOKA_input_file(filename), flag_MOKA_analyze(0), flag_background_field(0),
+  maptype(my_maptype), cosmo(lenscosmo)
 {
 	initMap();
-	
+ 	
 	// set redshift to value from map
 	setZlens(map->zlens);
-  
-  range_phy = map->boxlMpc/(1+map->zlens);
-  center[0] = map->center[0]/(1+map->zlens);
-  center[1] = map->center[1]/(1+map->zlens);
-  zlens = map->zlens;
 }
 
 /**
  * \brief allocates and reads the MOKA map in
+ *
+ *  In the future this could be used to read in individual MultiDark or other types of maps if the type were specified in the paramfile.
  */
-LensHaloMOKA::LensHaloMOKA(InputParams& params)
-: LensHalo()
+LensHaloMOKA::LensHaloMOKA(InputParams& params, const COSMOLOGY& lenscosmo)
+: LensHalo(), maptype(moka_lens), cosmo(lenscosmo)
 {
 	// read in parameters
 	assignParams(params);
 	
 	// initialize MOKA map
 	initMap();
+	assert(maptype == multi_dark_lens || maptype == moka_lens);
 	
 	// set redshift if necessary
 	if(zlens == -1)
 		setZlens(map->zlens);
-  
-  range_phy = map->boxlMpc/(1+map->zlens);
-  center[0] = map->center[0]/map->h/(1+map->zlens);
-  center[1] = map->center[1]/map->h/(1+map->zlens);
-  zlens = map->zlens;
 }
 
 LensHaloMOKA::~LensHaloMOKA()
@@ -106,6 +101,12 @@ LensHaloMOKA::~LensHaloMOKA()
 
 void LensHaloMOKA::initMap()
 {
+  
+  if(!(maptype == multi_dark_lens || maptype == moka_lens)){
+    ERROR_MESSAGE();
+    throw runtime_error("Does not recognize input lens map type");
+  }
+
 #ifndef ENABLE_FITS
 	std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
 	exit(1);
@@ -140,40 +141,69 @@ void LensHaloMOKA::initMap()
 		map->gamma2 = 0;
 	}
 
-	map->center[0] = map->center[1] = 0.0;
-	map->boxlrad = map->boxlarcsec*pi/180/3600.;
+    map->center[0] = map->center[1] = 0.0;
+    map->boxlrad = map->boxlarcsec*pi/180/3600.;
+    map->inarcsec  = 10800./M_PI/map->Dlens*60.; // Mpc/h to arcsec for MOKA while Mpc to arcsec for MultiDark
 
-	fill_linear(map->x, map->nx, -0.5*map->boxlMpc, 0.5*map->boxlMpc); // physical Mpc/h
-	map->inarcsec  = 10800./M_PI/map->Dlens*60.; // Mpc/h to arcsec
+    if(maptype == moka_lens){
+      
+        fill_linear(map->x, map->nx, -0.5*map->boxlMpc, 0.5*map->boxlMpc); // physical Mpc/h
+      
+        /// converts to the code units
+        std::cout << "converting the units of the MOKA map" << std::endl;
 
-	/// converts to the code units
-	if(flag_MOKA_analyze == 0 || flag_MOKA_analyze == 2)
-	{
-		std::cout << "converting the units of the MOKA map" << std::endl;
+        double fac = map->DS/map->DLS/map->Dlens*map->h/(4*pi*Grav);
+		
+        map->convergence *= fac;
+        map->gamma1 *= fac;
+        map->gamma2 *= fac;
+		
+        fac = 1/(4*pi*Grav);
+		
+        map->alpha1 *= fac;
+        map->alpha2 *= fac;
 
-		double fac = map->DS/map->DLS/map->Dlens*map->h/(4*pi*Grav);
-		
-		map->convergence *= fac;
-		map->gamma1 *= fac;
-		map->gamma2 *= fac;
-		
-		fac = 1/(4*pi*Grav);
-		
-		map->alpha1 *= fac;
-		map->alpha2 *= fac;
-	}
+        checkCosmology();
+    }else{
+        // simulation case
+        // not needed for now does all in MOKAfits.cpp
+        // convertmap(map,maptype);
+  }
+}
+
+void LensHaloMOKA::convertmap(MOKAmap *map,LensHaloType maptype){
+  assert(maptype == multi_dark_lens);
+
+  // TODO: convert units
+  throw std::runtime_error("needs to be finished");
+
+  map->center[0] *= map->Dlens;//(1+map->zlens);
+  map->center[1] *= map->Dlens;//(1+map->zlens);
+  
+  //float pixLMpc = map->boxlMpc/map->nx;   // TODO: What if it isn't square?
+  //float fac = 1.e+10/pixLMpc/pixLMpc/cosmo->gethubble();
+  
+  //map->convergence *= fac;
+  //map->gamma1 *= fac;
+  //map->gamma2 *= fac;
+
+  // TODO: Need to check this
+  //map->alpha1 *= fac*pixLMpc;
+  //map->alpha2 *= fac*pixLMpc;
+  
 }
 
 /** \brief checks the cosmology against the MOKA map parameters
  */
-void LensHaloMOKA::setCosmology(COSMOLOGY* cosmo)
+/// checks that cosmology in the header of the input fits map is the same as the one set
+void LensHaloMOKA::checkCosmology()
 {
-	if(cosmo->getOmega_matter() == map->omegam)
-		std::cerr << "LensHaloMOKA: Omega_matter " << cosmo->getOmega_matter() << " (cosmology) != " << map->omegam << " (MOKA)" << std::endl;
-	if(cosmo->getOmega_lambda() == map->omegal)
-		std::cerr << "LensHaloMOKA: Omega_lambda " << cosmo->getOmega_lambda() << " (cosmology) != " << map->omegal << " (MOKA)" << std::endl;
-	if(cosmo->gethubble() == map->h)
-		std::cerr << "LensHaloMOKA: hubble " << cosmo->gethubble() << " (cosmology) != " << map->h << " (MOKA)" << std::endl;
+	if(cosmo.getOmega_matter() == map->omegam)
+		std::cerr << "LensHaloMOKA: Omega_matter " << cosmo.getOmega_matter() << " (cosmology) != " << map->omegam << " (MOKA)" << std::endl;
+	if(cosmo.getOmega_lambda() == map->omegal)
+		std::cerr << "LensHaloMOKA: Omega_lambda " << cosmo.getOmega_lambda() << " (cosmology) != " << map->omegal << " (MOKA)" << std::endl;
+	if(cosmo.gethubble() == map->h)
+		std::cerr << "LensHaloMOKA: hubble " << cosmo.gethubble() << " (cosmology) != " << map->h << " (MOKA)" << std::endl;
 }
 
 /**
@@ -197,6 +227,8 @@ void LensHaloMOKA::assignParams(InputParams& params)
 	
 	if(!params.get("MOKA_analyze",flag_MOKA_analyze))
 		flag_MOKA_analyze = 0;
+  
+  maptype = moka_lens;
 }
 
 /**
@@ -264,8 +296,8 @@ void LensHaloMOKA::saveProfiles(double &RE3,double &xxc,double &yyc){
 
 	int galaxiesPerBin = 64;
 
-	std::valarray<float> pxdist(map->nx*map->ny);
-	std::valarray<float> red_sgE(map->nx*map->ny),red_sgB(map->nx*map->ny),sgm(map->nx*map->ny); 
+	std::valarray<double> pxdist(map->nx*map->ny);
+	std::valarray<double> red_sgE(map->nx*map->ny),red_sgB(map->nx*map->ny),sgm(map->nx*map->ny); 
 	int i, j;
 	/*
 	  measure the center of mass
@@ -436,7 +468,8 @@ void LensHaloMOKA::force_halo(double *alpha,KappaType *kappa,KappaType *gamma,do
   
   // interpolate from the maps
 
-  Utilities::Interpolator<valarray<float> > interp(xx,map->nx,range_phy,center);
+  Utilities::Interpolator<valarray<double> > interp(xx,map->nx,map->boxlMpc,map->center);
+
   alpha[0] = interp.interpolate(map->alpha1);
   alpha[1] = interp.interpolate(map->alpha2);
   gamma[0] = interp.interpolate(map->gamma1);
@@ -493,18 +526,18 @@ void LensHaloMOKA::EinsteinRadii(double &RE1, double &RE2, double &xxc, double &
   for(i=1;i<map->nx-1;i++)
     for(j=1;j<map->ny-1;j++){
       signV=map->Signlambdar[i-1+map->ny*j]+map->Signlambdar[i+map->ny*(j-1)]+
-	map->Signlambdar[i+1+map->ny*j]+map->Signlambdar[i+map->ny*(j+1)];      
+      map->Signlambdar[i+1+map->ny*j]+map->Signlambdar[i+map->ny*(j+1)];
       if(fabs(signV)<4.){
-	// xci1.push_back(map->x[i]);
-	// yci1.push_back(map->x[j]);
-	filoutcrit << "circle(" << i << "," << j << ",0.5)" << std:: endl;
+        // xci1.push_back(map->x[i]);
+        // yci1.push_back(map->x[j]);
+        filoutcrit << "circle(" << i << "," << j << ",0.5)" << std:: endl;
       }
       signV=map->Signlambdat[i-1+map->ny*j]+map->Signlambdat[i+map->ny*(j-1)]+
-	map->Signlambdat[i+1+map->ny*j]+map->Signlambdat[i+map->ny*(j+1)];      
+      map->Signlambdat[i+1+map->ny*j]+map->Signlambdat[i+map->ny*(j+1)];
       if(fabs(signV)<4.){
-	xci2.push_back(map->x[i]);
-	yci2.push_back(map->x[j]);
-	filoutcrit << "circle(" << i << "," << j << ",0.5)" << std:: endl;
+        xci2.push_back(map->x[i]);
+        yci2.push_back(map->x[j]);
+        filoutcrit << "circle(" << i << "," << j << ",0.5)" << std:: endl;
       }
     }
   filoutcrit.close();

@@ -7,6 +7,8 @@
 
 
 #include "slsimlib.h"
+#include "utilities_slsim.h"
+#include <random>
 
 Point *LinkToSourcePoints(Point *i_points,unsigned long Npoints){
   Point *s_points;
@@ -118,7 +120,7 @@ long IndexFromPosition(double *x,long Npixels,double range,double *center){
 /** \ingroup Utill
  *
  */
-void PositionFromIndex(unsigned long i,double *x,long Npixels,double range,double *center){
+void PositionFromIndex(unsigned long i,double *x,long Npixels,double range,const double *center){
   if(Npixels == 1){
     x[0] = center[0];
     x[1] = center[1];
@@ -233,8 +235,8 @@ PosType **PosTypeMatrix(long rows, long cols)
   
   
   /// convert (x,y) to d
-  long HilbertCurve::xy2d (long x, long y) {
-    long rx, ry, s, d=0;
+  int HilbertCurve::xy2d (int x, int y) {
+    int rx, ry, s, d=0;
     for (s=n/2; s>0; s/=2) {
       rx = (x & s) > 0;
       ry = (y & s) > 0;
@@ -245,8 +247,8 @@ PosType **PosTypeMatrix(long rows, long cols)
   }
   
   ///convert d to (x,y)
-  void HilbertCurve::d2xy(long d, long *x, long *y) {
-    long rx, ry, s, t=d;
+  void HilbertCurve::d2xy(int d, int *x, int *y) {
+    int rx, ry, s, t=d;
     *x = *y = 0;
     for (s=1; s<n; s*=2) {
       rx = 1 & (t/2);
@@ -258,19 +260,19 @@ PosType **PosTypeMatrix(long rows, long cols)
     }
   }
   /// convert (x,y) to d
-  long HilbertCurve::xy2d (double x, double y) {
-    long rx, ry;
+  int HilbertCurve::xy2d (double x, double y) {
+    int rx, ry;
     
-    rx = (long)((x-xo[0])/n + 0.5);
-    ry = (long)((y-xo[1])/n + 0.5);
+    rx = (int)((x-xo[0])*n/range + 0.5);
+    ry = (int)((y-xo[1])*n/range + 0.5);
     
     if(rx > n || ry > n) throw std::runtime_error("Point out of bounds.");
     return xy2d(rx,ry);
   }
   
   ///convert d to (x,y)
-  void HilbertCurve::d2xy(long d, double *x, double *y) {
-    long rx, ry;
+  void HilbertCurve::d2xy(int d, double *x, double *y) {
+    int rx, ry;
     
     if(d > n*n) throw std::runtime_error("Point out of bounds.");
       
@@ -281,7 +283,7 @@ PosType **PosTypeMatrix(long rows, long cols)
   }
   
   //rotate/flip a quadrant appropriately
-  void HilbertCurve::rot(long s,long *x, long *y, long rx, long ry) {
+  void HilbertCurve::rot(int s,int *x, int *y, int rx, int ry) {
     if (ry == 0) {
       if (rx == 1) {
         *x = s-1 - *x;
@@ -294,4 +296,72 @@ PosType **PosTypeMatrix(long rows, long cols)
       *y = t;
     }
   }
+  
+  RandomNumbers::RandomNumbers(unsigned int seed)
+  {        
+    rand_gen = std::mt19937(seed);
+  }
+  
+  RandomNumbers::~RandomNumbers(void){
+    //delete rand_gen;
+  }
+  
+  /// return a uniform random number between 0 and 1
+  double RandomNumbers::operator()(void){
+    return std::generate_canonical<double, 10>(rand_gen);
+  }
+  
+  
+  RandomNumbers_NR::RandomNumbers_NR(long seed):
+  IM1(2147483399),IM2(2147483399),IA1(40014),IA2(40692),IQ1(53668),
+  IQ2(52774),IR1(12211),IR2(3791),EPS(1.2e-7),idum2(123456789),iy(0)
+  {
+    
+    AM = (1.0/IM1);
+    //IMM1 = (IM1-1);
+    NDIV = (1+(IM1-1)/32);
+    RNMX = (1.0-EPS);
+    
+    if(seed > 0) seed *= -1;
+    idum = seed;
+    
+    long k,j;
+    
+    if (-(idum) < 1) idum=1;
+    else idum = -(idum);
+    idum2 = idum;
+    for (j=32+7;j>=0;j--) {
+      k = idum/IQ1;
+      idum=IA1*(idum-k*IQ1)-k*IR1;
+      if (idum < 0) idum += IM1;
+      if (j < 32) iv[j] = idum;
+    }
+    iy=iv[0];
+    
+  }
+  
+  /// return a uniform random number between 0 and 1
+  double RandomNumbers_NR::operator()(void){
+    return ran2();
+  }
+  
+  double RandomNumbers_NR::ran2(void){
+    long j;
+    long k;
+    double temp;
+    
+    k=(idum)/IQ1;
+    idum=IA1*(idum-k*IQ1)-k*IR1;
+    if (idum < 0) idum += IM1;
+    k=idum2/IQ2;
+    idum2=IA2*(idum2-k*IQ2)-k*IR2;
+    if (idum2 < 0) idum2 += IM2;
+    j=iy/NDIV;
+    iy=iv[j]-idum2;
+    iv[j] = idum;
+    if (iy < 1) iy += IM1-1;
+    if ((temp=AM*iy) > RNMX) return RNMX;
+    else return temp;
+  }
+
 }

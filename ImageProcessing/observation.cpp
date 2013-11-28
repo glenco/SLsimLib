@@ -69,6 +69,51 @@ Observation::Observation(Telescope tel_name)
 		seeing = 0.3;
 		pix_size = .3/60./60./180.*pi;
 	}
+	if (tel_name == KiDS_u)
+	{
+		diameter = 265.;
+		transmission = 0.032;
+		exp_time = 1000.;
+		exp_num = 5;
+		back_mag = 22.93;
+		ron = 5.;
+		seeing = 1.0;
+		pix_size = .21/60./60./180.*pi;
+	}
+	if (tel_name == KiDS_g)
+	{
+		diameter = 265.;
+		transmission = 0.1220;
+		exp_time = 900.;
+		exp_num = 5;
+		back_mag = 22.29;
+		ron = 5.;
+		seeing = 0.8;
+		pix_size = .21/60./60./180.*pi;
+	}
+	if (tel_name == KiDS_r)
+	{
+		diameter = 265.;
+		transmission = 0.089;
+		exp_time = 1800.;
+		exp_num = 5;
+		back_mag = 21.40;
+		ron = 5.;
+		seeing = 0.7;
+		pix_size = .21/60./60./180.*pi;
+	}
+	if (tel_name == KiDS_i)
+	{
+		diameter = 265.;
+		transmission = 0.062;
+		exp_time = 1200.;
+		exp_num = 5;
+		back_mag = 20.64;
+		ron = 5.;
+		seeing = 1.1;
+		pix_size = .21/60./60./180.*pi;
+	}
+
 	mag_zeropoint = 2.5*log10(diameter*diameter*transmission*pi/4./hplanck) - 48.6;
 	telescope = true;
 }
@@ -128,7 +173,7 @@ Observation::Observation(float diameter, float transmission, float exp_time, int
  * \param psf Decides if the psf smoothing is applied
  * \param noise Decides if noise is added
  */
-PixelMap Observation::Convert (PixelMap &map, bool psf, bool noise)
+PixelMap Observation::Convert (PixelMap &map, bool psf, bool noise, long *seed)
 {
 	if (telescope == true && fabs(map.getResolution()-pix_size) > std::numeric_limits<double>::epsilon())
 	{
@@ -137,7 +182,7 @@ PixelMap Observation::Convert (PixelMap &map, bool psf, bool noise)
 	}
 	PixelMap outmap = PhotonToCounts(map);
 	if (psf == true)  outmap = ApplyPSF(outmap);
-	if (noise == true) outmap = AddNoise(outmap);
+	if (noise == true) outmap = AddNoise(outmap,seed);
 	return outmap;
 }
 
@@ -258,14 +303,13 @@ PixelMap Observation::ApplyPSF(PixelMap &pmap)
 }
 
 /// Applies realistic noise (read-out + Poisson) on an image
-PixelMap Observation::AddNoise(PixelMap &pmap)
+PixelMap Observation::AddNoise(PixelMap &pmap,long *seed)
 {
 	PixelMap outmap(pmap);
 	double Q = pow(10,0.4*(mag_zeropoint+48.6));
 	double res_in_arcsec = outmap.getResolution()*180.*60.*60/pi;
 	double back_mean = pow(10,-0.4*(48.6+back_mag))*res_in_arcsec*res_in_arcsec*Q*exp_time;
 	double rms, noise;
-	long seed = 24;
 	double norm_map;
 	for (unsigned long i = 0; i < outmap.getNpixels()*outmap.getNpixels(); i++)
 	{
@@ -273,7 +317,7 @@ PixelMap Observation::AddNoise(PixelMap &pmap)
 		if (norm_map+back_mean > 500.)
 		{
 			rms = sqrt(pow(exp_num*ron,2)+norm_map+back_mean);
-			noise = gasdev(&seed)*rms;
+			noise = gasdev(seed)*rms;
 			outmap.AssignValue(i,double(norm_map+noise)/exp_time);
 		}
 		else
@@ -284,7 +328,7 @@ PixelMap Observation::AddNoise(PixelMap &pmap)
 			while	(p > L)
 			{
 				k++;
-				p *= ran2(&seed);
+				p *= ran2(seed);
 			}
 			outmap.AssignValue(i,double(k-1-back_mean)/exp_time);
 		}

@@ -10,8 +10,8 @@
 using namespace std;
 
 void LensHaloBaseNSIE::force_halo(
-		double *alpha     /// mass/Mpc
-		,KappaType *kappa
+		double *alpha       /// mass/Mpc
+		,KappaType *kappa   /// surface mass density
 		,KappaType *gamma
 		,double *xcm
 		,bool no_kappa
@@ -32,7 +32,7 @@ void LensHaloBaseNSIE::force_halo(
 	 float units = pow(sigma/lightspeed,2)/Grav;///sqrt(fratio); // mass/distance(physical)
 	 xt[0]=xcm[0];
 	 xt[1]=xcm[1];
-     alphaNSIE(alpha,xt,fratio,rcore,pa);
+   alphaNSIE(alpha,xt,fratio,rcore,pa);
 	 alpha[0] *= units;
 	 alpha[1] *= units;
 
@@ -42,7 +42,7 @@ void LensHaloBaseNSIE::force_halo(
     	*kappa *= units;
     	gamma[0] *= units;
     	gamma[1] *= units;
-		gamma[2] *= units;
+		  gamma[2] *= units;
 	 }
 
   // perturbations of host lens
@@ -96,7 +96,6 @@ void LensHaloBaseNSIE::force_halo(
 void LensHaloBaseNSIE::assignParams(InputParams& params){
 	if(!params.get("main_mass",mass)) error_message1("main_mass",params.filename());
 	if(!params.get("main_zlens",zlens)) error_message1("main_zlens",params.filename());
-
 	if(!params.get("main_sigma",sigma)) error_message1("main_sigma",params.filename());
 	if(!params.get("main_core",rcore)) error_message1("main_core",params.filename());
 	if(!params.get("main_axis_ratio",fratio)) error_message1("main_axis_ratio",params.filename());
@@ -141,11 +140,10 @@ void LensHaloBaseNSIE::error_message1(std::string parameter,std::string file){
 		  exit(0);
 }
 
-/// resets Zl, Dl, Sigma_crit, MpcToAsec
+/*/ resets Zl, Dl, Sigma_crit, MpcToAsec
 void LensHaloBaseNSIE::setZlens(double zl){
-	zlens = zl;
-//	setInternalParams(cosmo, zsource);
-}
+  
+}*/
 
 void LensHaloBaseNSIE::reNormSubstructure(double kappa_sub){
 	/* renomalizes substructure so that
@@ -162,11 +160,12 @@ void LensHaloBaseNSIE::reNormSubstructure(double kappa_sub){
 }
 
 /// Sets parameters within BaseLens that depend on the source redshift - Dl,Sigma_crit,etc.
-void LensHaloAnaNSIE::setCosmology(COSMOLOGY* cosmo)
+void LensHaloAnaNSIE::setCosmology(const COSMOLOGY& cosmo)
 {
-	Dl = cosmo->angDist(0,zlens);
-	Ds = cosmo->angDist(0,zsource_reference);
-	Dls = cosmo->angDist(zlens,zsource_reference);
+  double zlens = getZlens();
+	Dl = cosmo.angDist(0,zlens);
+	Ds = cosmo.angDist(0,zsource_reference);
+	Dls = cosmo.angDist(zlens,zsource_reference);
 	MpcToAsec = 60*60*180 / pi / Dl;
 		// in Mpc
 	Einstein_ro=4*pi*pow(sigma/lightspeed,2)*Dl
@@ -203,7 +202,7 @@ LensHaloBaseNSIE::LensHaloBaseNSIE(InputParams& params) : LensHalo(){
 
 void LensHaloBaseNSIE::PrintLens(bool show_substruct,bool show_stars){
 	int i;
-	cout << "zlens " << zlens << endl;
+	cout << "zlens " << getZlens() << endl;
 
 	 // parameters of substructures
 	cout << endl << "main_sub_Ndensity "<< sub_Ndensity << endl;
@@ -250,29 +249,66 @@ void LensHaloBaseNSIE::PrintLens(bool show_substruct,bool show_stars){
 	if (stars_implanted) PrintStars(show_stars);
 }
 
-void LensHaloBaseNSIE::randomize(double step, long* seed)
+std::size_t LensHaloBaseNSIE::Nparams() const
 {
-	sigma += step*sigma*gasdev(seed);
-
-	fratio += step*gasdev(seed);
-
-	pa += step*pi*gasdev(seed);
-
+	return LensHalo::Nparams() + 3;
 }
 
-void LensHaloBaseNSIE::serialize(RawData& d) const
+double LensHaloBaseNSIE::getParam(std::size_t p) const
 {
-	d << sigma << fratio << pa << rcore;
+	if(p < LensHalo::Nparams())
+		return LensHalo::getParam(p);
+	
+	switch(p - LensHalo::Nparams())
+	{
+		case 0:
+			return std::log10(sigma);
+		case 1:
+			return fratio;
+		case 2:
+			return pa/pi;
+		default:
+			throw std::invalid_argument("bad parameter index for getParam()");
+	}
 }
 
-
-void LensHaloBaseNSIE::unserialize(RawData& d)
+double LensHaloBaseNSIE::setParam(std::size_t p, double val)
 {
-	d >> sigma >> fratio >> pa >> rcore;
+	using Utilities::between;
+	
+	if(p < LensHalo::Nparams())
+		return LensHalo::setParam(p, val);
+	
+	switch(p - LensHalo::Nparams())
+	{
+		case 0:
+			return (sigma = std::pow(10., val));
+		case 1:
+			return (fratio = between(val, 1e-10, 1.));
+		case 2:
+			return (pa = between(pi*val, -pi/2, pi/2));
+		default:
+			throw std::invalid_argument("bad parameter index for setParam()");
+	}
 }
 
-
-
+void LensHaloBaseNSIE::printCSV(std::ostream& out, bool header) const
+{
+	if(header)
+	{
+		out
+		<< "sigma" << ","
+		<< "fratio" << ","
+		<< "PA" << std::endl;
+	}
+	else
+	{
+		out
+		<< sigma << ","
+		<< fratio << ","
+		<< pa << std::endl;
+	}
+}
 
 LensHaloBaseNSIE::~LensHaloBaseNSIE(){
 	cout << "deleting lens" << endl;

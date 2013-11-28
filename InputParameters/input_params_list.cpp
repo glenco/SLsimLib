@@ -2,8 +2,12 @@
 
 #include <set>
 
-// array of all parameters
-namespace {
+typedef std::set<std::string> labels_t;
+typedef std::map<std::string, std::pair<std::string, std::string> > defaults_t;
+
+namespace
+{
+	// array of standard parameters
 	const char* parameter_list[][3] = {
 		// General
 		{"outputfile", "output", ""},
@@ -126,37 +130,77 @@ namespace {
 		{"source_input_galaxy_file", "sources.txt", "Millennium sources input file"},
 		{"source_band", "", ""},
 		{"source_mag_limit", "30", "minimum magnitude for sources"},
-		{"source_sb_limit", "0", "minimum surface brightness for sources"},
-		{"input_sersic_file", "sersic.txt", "SExtractor catalog for Sersic sources"}
+		{"source_sb_limit", "0", "minimum surface brightness for sources"}
 	};
 	
-	// return a list of all labels from the parameter list
-	std::set<std::string> get_labels()
+	// create a set of all labels from the parameter list
+	labels_t get_labels()
 	{
-		std::set<std::string> labels;
+		labels_t labels;
 		for(std::size_t i = 0; i < sizeof(parameter_list)/sizeof(const char*[3]); ++i)
 			labels.insert(parameter_list[i][0]);
 		return labels;
 	}
+	
+	// create a map of all default values and comments from the parameter list
+	defaults_t get_defaults()
+	{
+		defaults_t defaults;
+		for(std::size_t i = 0; i < sizeof(parameter_list)/sizeof(const char*[3]); ++i)
+			defaults.insert(std::make_pair(parameter_list[i][0], std::make_pair(parameter_list[i][1], parameter_list[i][2])));
+		return defaults;
+	}
+	
+	// get the list of currently known labels
+	labels_t& labels()
+	{
+		static labels_t labels = get_labels();
+		return labels;
+	}
+	
+	// get the list of currently known defaults
+	defaults_t& defaults()
+	{
+		static defaults_t defaults = get_defaults();
+		return defaults;
+	}
+}
+
+/**
+ * \brief Lists all acceptable input parameters with description
+ */
+InputParams InputParams::sample()
+{
+	// TODO: load only a given subset of all parameters as sample
+	
+	// load defaults for sample parameters
+	InputParams params;
+	for(defaults_t::iterator it = defaults().begin(); it != defaults().end(); ++it)
+		params.put(it->first, it->second.first, it->second.second);
+	return params;
+}
+
+/**
+ * Add a given parameter with default value and comment.
+ */
+void InputParams::add(std::string label, std::string value, std::string comment)
+{
+	// don't add empty parameters
+	if(label.empty())
+		return;
+	
+	// add the label to the set of known labels
+	labels().insert(label);
+	
+	// add the default values
+	if(!value.empty() || !comment.empty())
+		defaults().insert(std::make_pair(label, std::make_pair(value, comment)));
 }
 
 /**
  * Check if a parameter label exists.
  */
-bool InputParams::check_label(const std::string& name)
+bool InputParams::is_known(const std::string& name)
 {
-	static std::set<std::string> labels = get_labels();
-	return (labels.find(name) != labels.end());
-}
-
-/**
- * \brief Sample input parameters.
- */
-InputParams InputParams::sample()
-{
-	// load all entries from the parameter list
-	InputParams params;
-	for(std::size_t i = 0; i < sizeof(parameter_list)/sizeof(const char*[3]); ++i)
-		params.put(parameter_list[i][0], parameter_list[i][1], parameter_list[i][2]);
-	return params;
+	return (labels().find(name) != labels().end());
 }

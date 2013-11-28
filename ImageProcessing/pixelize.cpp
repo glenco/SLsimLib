@@ -17,12 +17,25 @@
 #include <utility>
 #include <stdexcept>
 
+#if __cplusplus < 201103L
+template<typename T>
+void swap(std::valarray<T>& x, std::valarray<T>& y)
+{
+	std::valarray<T> z(x);
+	
+	x.resize(y.size());
+	x = y;
+	
+	y.resize(z.size());
+	y = z;
+}
+#endif
+
 void swap(PixelMap& x, PixelMap& y)
 {
 	using std::swap;
 	
-	swap(x.map_size, y.map_size);
-	swap(x.map, y.map);
+	swap(x.map,y.map);
 	
 	swap(x.Npixels, y.Npixels);
 	swap(x.resolution, y.resolution);
@@ -36,15 +49,9 @@ void swap(PixelMap& x, PixelMap& y)
 	swap(x.map_boundary_p2[0], y.map_boundary_p2[0]);
 	swap(x.map_boundary_p2[1], y.map_boundary_p2[1]);
 }
-// TODO: comment
-bool agree(const PixelMap& a, const PixelMap& b)
-{
-	return (a.Npixels == b.Npixels) && (a.resolution == b.resolution) &&
-		(a.center[0] == b.center[0] && a.center[1] == b.center[1]);
-}
 
 PixelMap::PixelMap()
-: map_size(0), map(0), Npixels(0), resolution(0), range(0)
+: map(), Npixels(0), resolution(0), range(0)
 {
 	center[0] = 0;
 	center[1] = 0;
@@ -56,15 +63,9 @@ PixelMap::PixelMap()
 }
 
 PixelMap::PixelMap(const PixelMap& other)
-: map_size(other.map_size), map(0),
+: map(other.map),
   Npixels(other.Npixels), resolution(other.resolution), range(other.range)
 {
-	if(map_size)
-	{
-		map = new float[map_size];
-		std::copy(other.map, other.map + map_size, map);
-	}
-	
 	std::copy(other.center, other.center + 2, center);
 	
 	std::copy(other.map_boundary_p1, other.map_boundary_p1 + 2, map_boundary_p1);
@@ -75,9 +76,10 @@ PixelMap::PixelMap(
 		const double* center,  /// The location of the center of the map
 		std::size_t Npixels,  /// Number of pixels in one dimension of map.
 		double resolution        /// One dimensional range of map in whatever units the point positions are in
-		): Npixels(Npixels), resolution(resolution)
-		{
-
+		)
+: map(0.0, Npixels*Npixels),
+  Npixels(Npixels), resolution(resolution)
+{
 	std::copy(center, center + 2, this->center);
 	range = resolution*(Npixels-1);
 	
@@ -85,10 +87,6 @@ PixelMap::PixelMap(
 	map_boundary_p1[1] = center[1]-(Npixels*resolution)/2.;
 	map_boundary_p2[0] = center[0]+(Npixels*resolution)/2.;
 	map_boundary_p2[1] = center[1]+(Npixels*resolution)/2.;
-
-	map_size = Npixels*Npixels;
-	map = new float[map_size];
-	std::fill(map, map + map_size, 0);
 }
 
 /** \brief Constructs a PixelMap reading in a fits file
@@ -121,12 +119,7 @@ PixelMap::PixelMap(std::string filename)
 	map_boundary_p2[0] = center[0] + (Npixels*resolution)/2.;
 	map_boundary_p2[1] = center[1] + (Npixels*resolution)/2.;
 	
-	std::valarray<float> image;
-	h0.read(image);
-	
-	map_size = Npixels*Npixels;
-	map = new float[map_size];
-	std::copy(&image[0], &image[0] + map_size, map);
+	h0.read(map);
 #else
 	std::cerr << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
 	exit(1);
@@ -139,7 +132,9 @@ PixelMap::PixelMap(std::string filename)
 PixelMap::PixelMap(const PixelMap& pmap,  /// Input PixelMap (from which the stamp is taken)
 		const double* center, /// center of the region to be duplicated (in rads)
 		std::size_t Npixels /// size of the region to be duplicated (in pixels)
-		): Npixels(Npixels), resolution(pmap.resolution)
+		)
+: map(0.0, Npixels*Npixels),
+  Npixels(Npixels), resolution(pmap.resolution)
 	{
 		std::copy(center, center + 2, this->center);
 		range = resolution*(Npixels-1);
@@ -149,9 +144,6 @@ PixelMap::PixelMap(const PixelMap& pmap,  /// Input PixelMap (from which the sta
 		map_boundary_p2[0] = center[0]+(Npixels*resolution)/2.;
 		map_boundary_p2[1] = center[1]+(Npixels*resolution)/2.;
 
-		map_size = Npixels*Npixels;
-		map = new float[map_size];
-
 		int * edge = new int[2];
 		edge[0] = (center[0]-pmap.map_boundary_p1[0])/resolution - Npixels/2;
 		edge[1] = (center[1]-pmap.map_boundary_p1[1])/resolution - Npixels/2;
@@ -160,7 +152,7 @@ PixelMap::PixelMap(const PixelMap& pmap,  /// Input PixelMap (from which the sta
 			std::cout << "The region you selected is completely outside PixelMap!" << std::endl;
 			throw std::runtime_error("Attempting to make Sub-PixelMap outside of parent PixelMap!");
 		}
-		for (unsigned long i=0; i < map_size; ++i)
+		for (unsigned long i=0; i < map.size(); ++i)
 		{
 			int ix = i%Npixels;
 			int iy = i/Npixels;
@@ -177,7 +169,8 @@ PixelMap::PixelMap(const PixelMap& pmap,  /// Input PixelMap (from which the sta
 PixelMap::PixelMap(
                    const PixelMap& pmap
                    , double res_ratio     /// resolution of map is res_ratio times the resolution of the input map
-                   ){
+                   )
+{
 	resolution = res_ratio*pmap.resolution;
 	Npixels = pmap.Npixels/res_ratio + .5;
 	range = resolution*(Npixels-1);
@@ -188,8 +181,7 @@ PixelMap::PixelMap(
 	map_boundary_p2[0] = center[0] + (Npixels*resolution)/2.;
 	map_boundary_p2[1] = center[1] + (Npixels*resolution)/2.;
 	
-	map_size = Npixels*Npixels;
-	map = new float[map_size];
+	map.resize(Npixels*Npixels);
 	
 	int old_Npixels = pmap.Npixels;
 	int ix, iy;
@@ -197,7 +189,7 @@ PixelMap::PixelMap(
 	double* old_p1 = new double[2];
 	double* old_p2 = new double[2];
 
-	for(unsigned long i=0;i < map_size; ++i)
+	for(unsigned long i=0;i < map.size(); ++i)
 	{
 		ix = i%Npixels;
 		iy = i/Npixels;
@@ -220,8 +212,6 @@ PixelMap::PixelMap(
 
 PixelMap::~PixelMap()
 {
-	delete[] map;
-
 }
 
 PixelMap& PixelMap::operator=(PixelMap other)
@@ -233,13 +223,13 @@ PixelMap& PixelMap::operator=(PixelMap other)
 /// Zero the whole map
 void PixelMap::Clean()
 {
-	std::fill(map, map + map_size, 0);
+	map = 0;
 }
 
 /// Multiplies the whole map by a scalar factor
 void PixelMap::Renormalize(double factor)
 {
-	for(std::size_t i=0;i < map_size; ++i) map[i] *= factor;
+	map *= factor;
 }
 
 /// Adds a value to the i-th pixel
@@ -252,6 +242,32 @@ void PixelMap::AddValue(std::size_t i, double value)
 void PixelMap::AssignValue(std::size_t i, double value)
 {
 	map[i] = value;
+}
+
+/// Check whether two PixelMaps agree in their physical dimensions.
+bool PixelMap::agrees(const PixelMap& other) const
+{
+	return
+		(Npixels == other.Npixels) &&
+		(resolution == other.resolution) &&
+		(center[0] == other.center[0]) &&
+		(center[1] == other.center[1]);
+}
+
+/// Add the values of another PixelMap to this one.
+PixelMap& PixelMap::operator+=(const PixelMap& rhs)
+{
+	// TODO: maybe check if PixelMaps agree, but is slower
+	map += rhs.map;
+	return *this;
+}
+
+/// Add two PixelMaps.
+PixelMap operator+(const PixelMap& a, const PixelMap& b)
+{
+	PixelMap sum(a);
+	sum += b;
+	return sum;
 }
 
 /** \brief Add an image to the map
@@ -419,7 +435,7 @@ void PixelMap::AddImages(
 void PixelMap::printASCII() const
 {
 	std::cout << Npixels << "  " << range << std::endl;
-	for(std::size_t i=0;i < map_size; ++i) std::cout << map[i] << std::endl;
+	for(std::size_t i=0;i < map.size(); ++i) std::cout << map[i] << std::endl;
 	std::cout << Npixels << "  " << range << std::endl;
 
 	//map.resize(0);
@@ -436,7 +452,7 @@ void PixelMap::printASCIItoFile(std::string filename) const
 	}
 
 	file_map << Npixels << "  " << range << std::endl;
-	for(std::size_t i=0;i < map_size; ++i) file_map << std::scientific << map[i] << std::endl;
+	for(std::size_t i=0;i < map.size(); ++i) file_map << std::scientific << map[i] << std::endl;
 	file_map << Npixels << "  " << range << std::endl;
 
 	//map.resize(0);
@@ -464,7 +480,7 @@ void PixelMap::printFITS(std::string filename, bool verbose) const
 	
 	CCfits::PHDU& phout = fout->pHDU();
 	
-	phout.write(1, map_size, std::valarray<float>(map, map_size));
+	phout.write(1, map.size(), map);
 	
 	phout.addKey("CRPIX1", naxex[0]/2, "");
 	phout.addKey("CRPIX2", naxex[1]/2, "");
@@ -482,7 +498,9 @@ void PixelMap::printFITS(std::string filename, bool verbose) const
 	
 	phout.addKey("Npixels", Npixels, "");
 	phout.addKey("range", map_boundary_p2[0]-map_boundary_p1[0], "radians");
-	
+	phout.addKey("RA", center[0], "radians");
+	phout.addKey("DEC", center[1], "radians");
+    
 	if(verbose)
 		std::cout << phout << std::endl;
 #else
@@ -499,11 +517,9 @@ void PixelMap::smooth(double sigma){
 	double sum=0,**mask;
 	int ix,iy;
 	int Nmask,Nmask_half;
-	double *map_out;
 	int j_cen, k_cen;
 
 	sigma /= 3600.*180/pi;
-	map_out = new double[map_size];
 	Nmask=2*(int)(3*sigma/resolution + 1);
 	std::cout << Nmask << std::endl;
 	if(Nmask < 4 ) std::cout << "WARNING: pixels are large compare to psf Nmask=" << Nmask << std::endl;
@@ -530,11 +546,10 @@ void PixelMap::smooth(double sigma){
 			mask[j][k]/=sum;
 		}
 	}
-	for(long i=0;i<map_size;i++){
-		map_out[i] = 0.;
-	}
 
-	for(long i=0;i<map_size;i++){
+	std::valarray<double> map_out(0.0, map.size());
+	
+	for(long i=0;i<map.size();i++){
 		for(int j=0;j<Nmask;j++){
 			ix=i%Npixels + j-Nmask_half;
 			if( (ix>-1) && (ix<Npixels) ){
@@ -547,201 +562,15 @@ void PixelMap::smooth(double sigma){
 			}
 		}
 	}
-	for(long i=0;i<map_size;i++){
-		map[i] = map_out[i];
-	}
+	
+	using std::swap;
+	swap(map, map_out);
 
 	for (int j = 0; j <Nmask; j++)
-		delete mask[j];
-	delete [] mask;
-	delete [] map_out;
-
+		delete[] mask[j];
+	delete[] mask;
 }
 
-
-void swap(PixelMask& x, PixelMask& y)
-	{
-
-	using std::swap;
-	
-	swap(x.map_size, y.map_size);
-	swap(x.mask_size, y.mask_size);
-	swap(x.pixels, y.pixels);
-}
-
-PixelMask::PixelMask()
-: map_size(0), mask_size(0)
-{
-}
-
-PixelMask::PixelMask(std::size_t map_size)
-: map_size(map_size), mask_size(map_size)
-{
-	pixels.resize(map_size);
-	for(std::size_t i = 0; i < map_size; ++i)
-		pixels[i] = true;
-}
-
-PixelMask::PixelMask(const PixelMap& base, double threshold, ThresholdType type)
-: map_size(base.size())
-{
-	pixels.reserve(map_size);
-	
-	switch(type)
-	{
-	case Greater:
-		for(std::size_t i = 0; i < map_size; ++i)
-			if(base[i] > threshold)
-				pixels.push_back(i);
-		break;
-	case GreaterOrEqual:
-		for(std::size_t i = 0; i < map_size; ++i)
-			if(base[i] >= threshold)
-				pixels.push_back(i);
-		break;
-	case Less:
-		for(std::size_t i = 0; i < map_size; ++i)
-			if(base[i] < threshold)
-				pixels.push_back(i);
-		break;
-	case LessOrEqual:
-		for(std::size_t i = 0; i < map_size; ++i)
-			if(base[i] <= threshold)
-				pixels.push_back(i);
-		break;
-	}
-	
-	mask_size = pixels.size();
-	pixels.resize(mask_size);
-}
-
-PixelMask::PixelMask(std::string file, double threshold, ThresholdType type)
-{
-#ifdef ENABLE_FITS
-	// get PixelMap for file
-	PixelMap map(file);
-	
-	// create PixelMask for map
-	PixelMask mask(map);
-	
-	// swap contents of mask into this
-	swap(*this, mask);
-#else
-	// warn about ENABLE_FITS
-	std::cerr << "FITS support disabled, use ENABLE_FITS flag" << std::endl;
-	
-	// default mask
-	PixelMask mask;
-	
-	// swap defaults into this
-	swap(*this, mask);
-#endif
-}
-
-PixelMask& PixelMask::operator=(PixelMask other)
-{
-	swap(*this, other);
-	return *this;
-}
-
-std::size_t PixelMask::operator[](std::size_t i) const
-{
-	return pixels[i];
-}
-
-bool PixelMask::valid() const
-{
-	return map_size;
-}
-
-bool PixelMask::empty() const
-{
-	return !mask_size;
-}
-
-std::size_t PixelMask::size() const
-{
-	return mask_size;
-}
-
-std::size_t PixelMask::base_size() const
-{
-	return map_size;
-}
-
-void swap(PixelData& a, PixelData& b)
-{
-	using std::swap;
-	
-	swap(a.img, b.img);
-	swap(a.noi, b.noi);
-	swap(a.msk, b.msk);
-	swap(a.norm, b.norm);
-}
-
-PixelData::PixelData(const PixelMap& image, const PixelMap& noise, double zp_mag, double time)
-: img(image), noi(noise)
-{
-	// must be a valid image
-	assert(img.valid());
-	
-	// must be a valid sigma map
-	assert(noi.valid());
-	
-	// image and sigma need to agree
-	assert(agree(img, noi));
-	
-	// normalization factor from zero-point magnitude and observation time
-	norm = std::pow(10., 0.4*(zp_mag+48.6))*hplanck;
-	
-	// convert to simulation units
-	img.Renormalize(1./norm);
-	noi.Renormalize(1./norm);
-	
-	// convert from counts/sec to counts
-	norm *= time;
-}
-
-PixelData::PixelData(const PixelData& other)
-: img(other.img), noi(other.noi), msk(other.msk), norm(other.norm)
-{
-}
-
-PixelData& PixelData::operator=(PixelData rhs)
-{
-	swap(rhs, *this);
-	return *this;
-}
-
-double PixelData::chi_square(const PixelMap &model) const
-{
-	assert(model.valid());
-	assert(agree(model, img));
-	
-	double chi2 = 0;
-	
-	if(msk.valid())
-	{
-		for(std::size_t i = 0, n = msk.size(); i < n; ++i)
-		{
-			std::size_t j = msk[i];
-			double delta = norm*(img[j] - model[j]);
-			double sigma2 = norm*model[j] + (norm*noi[j])*(norm*noi[j]);
-			chi2 += delta*delta/sigma2;
-		}
-	}
-	else
-	{
-		for(std::size_t i = 0, n = model.size(); i < n; ++i)
-		{
-			double delta = norm*(img[i] - model[i]);
-			double sigma2 = norm*model[i] + (norm*noi[i])*(norm*noi[i]);
-			chi2 += delta*delta/sigma2;
-		}
-	}
-	
-	return chi2;
-}
 /**
  * \brief Draws a line between two points on the image by setting
  * the pixels equal to value.
@@ -807,4 +636,20 @@ void PixelMap::AddCurve(ImageInfo *curve,double value){
 	drawline(x,curve->imagekist->getCurrent()->x,value);
 
 	return;
+}
+
+/**
+ *  \brief Fills in pixels where the image plane points in the grid are located with the value given
+ */
+void PixelMap::AddGrid(Grid &grid,double value){
+  PointList* list = grid.i_tree->pointlist;
+  size_t index;
+
+  list->current = list->top;
+  do{
+    if(inMapBox(list->current->x)){
+      index = Utilities::IndexFromPosition(list->current->x,Npixels,range,center);
+      map[index] = value;
+    }
+  }while(MoveDownList(list));
 }

@@ -19,23 +19,6 @@ Source::Source()
 	setSBlimit_magarcsec(30.);
 }
 
-void Source::serialize(RawData& d) const
-{
-	d << source_r << source_x[0] << source_x[1] << zsource << DlDs << sb_limit;
-}
-
-void Source::unserialize(RawData& d)
-{
-	d >> source_r >> source_x[0] >> source_x[1] >> zsource >> DlDs >> sb_limit;
-}
-
-void Source::randomize(double, long*)
-{
-	const std::type_info& type = typeid(*this);
-	std::cerr << "Error: " << type.name() << "::randomize() not implemented!" << std::endl;
-	exit(1);
-}
-
 SourceUniform::SourceUniform(InputParams& params) : Source(){
 	assignParams(params);
 }

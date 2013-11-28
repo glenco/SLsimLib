@@ -45,10 +45,10 @@ public:
 
   //void FindAllBoxNeighbors(Point *point,ListHndl neighbors);
   void FindAllBoxNeighborsKist(Point *point,Kist<Point> * neighbors);
-  void PointsWithinEllipKist(double *ray,float rmax,float rmin,float posangle,Kist<Point> * neighborkist);
-  double PointsWithinKist(double *ray,float rmax,Kist<Point> * neighborkist,short markpoints);
-  void PointsWithinKist_iter(double *ray,float rmin,float rmax,Kist<Point> * neighborkist);
-  Point *NearestNeighborKist(double *ray,int Nneighbors,Kist<Point> * neighborkist);
+  void PointsWithinEllipKist(const double* center,float rmax,float rmin,float posangle,Kist<Point> * neighborkist);
+  double PointsWithinKist(const double* center,float rmax,Kist<Point> * neighborkist,short markpoints);
+  void PointsWithinKist_iter(const double* center,float rmin,float rmax,Kist<Point> * neighborkist);
+  Point *NearestNeighborKist(const double* center,int Nneighbors,Kist<Point> * neighborkist);
 
   void PointsInCurrent(unsigned long *ids,double **x);
 
@@ -69,7 +69,6 @@ public:
   int AddPointsToTree(Point *xpoint,unsigned long Nadd);
 
   short emptyTree();
-  short freeTree();
   void RebuildTreeFromList();
 
   /***** State of tree functions *****/
@@ -85,11 +84,15 @@ public:
   void printTree();
   void checkTree();
 
-  void FindBoxPoint(double *ray,Point *point);
+  void FindBoxPoint(const double* ray,Point *point);
 
-  void _FindLeaf(double *ray,unsigned long Nadd = 0);
+  void _FindLeaf(const double* ray,unsigned long Nadd = 0);
+  
+  TreeStruct * spawn();
 
 private:
+
+  TreeStruct(){};
 
   /// number of barnches in tree */
   unsigned long Nbranches;
@@ -109,17 +112,17 @@ private:
   		,short markpoints,double *maxgridsize);
 
   void _freeBranches(short child);
-  void _freeBranches_iter();
   void _AddPoint();
   void _BuildTree();
 
   void _checkTree(unsigned long *count);
-  void _FindBox(double *ray);
+  void _freeBranches_iter();
+  void _FindBox(const double* ray);
 
   // Should be obsolete
-  Point *NearestNeighbor(double *ray,int Nneighbors,ListHndl neighborlist
+  Point *NearestNeighbor(const double* center,int Nneighbors,ListHndl neighborlist
   		,short direction);
-  void _NearestNeighbor(double *ray,int Nneighbors,Point **neighborpoints,double *rneighbors,short *direction);
+  void _NearestNeighbor(double* ray,int Nneighbors,Point **neighborpoints,double *rneighbors,short *direction);
 
 
   // Are obsolete
@@ -153,8 +156,8 @@ inline double MAX(double x,double y){
 /*  returns the distance from ray[] to the furthest point on the
  *    border of the box,
  */
-inline double FurthestBorder(double *ray,double *p1,double *p2){
-  return sqrt( pow(MAX(ray[0]-p1[0],p2[0]-ray[0]),2) + pow(MAX(ray[1]-p1[1],p2[1]-ray[1]),2) );
+inline double FurthestBorder(const double* center,double *p1,double *p2){
+  return sqrt( pow(MAX(center[0]-p1[0],p2[0]-center[0]),2) + pow(MAX(center[1]-p1[1],p2[1]-center[1]),2) );
 };
 
 /***** Other operations *****/
@@ -167,15 +170,15 @@ TreeHndl readTree(char *filename);
 
 //inline int inbox(double ray[2],double *p1,double *p2);
 /* return 1 (0) if ray is (not) in the cube */
-inline int inbox(double *ray,double *p1,double *p2){
-  return (ray[0]>=p1[0])*(ray[0]<=p2[0])*(ray[1]>=p1[1])*(ray[1]<=p2[1]);
+inline int inbox(const double* center,double *p1,double *p2){
+  return (center[0]>=p1[0])*(center[0]<=p2[0])*(center[1]>=p1[1])*(center[1]<=p2[1]);
 };
 bool boxinbox(Branch *branch1,Branch *branch2);
 double BoxIntersection(Branch *branch1,Branch *branch2);
 bool AreBoxNeighbors(Point *point1,Point *point2);
 bool AreBoxNeighbors(Branch *branch1,Branch *branch2);
-bool CircleInBox(double *ray,double radius,double *p1,double *p2);
-bool BoxInCircle(double *ray,double radius,double *p1,double *p2);
+bool CircleInBox(const double* center,double radius,double *p1,double *p2);
+bool BoxInCircle(const double* center,double radius,double *p1,double *p2);
 
 // Point arrays
 
@@ -238,7 +241,7 @@ namespace Utilities{
 		,double *arr,unsigned long N);
 	void quickPartitionPoints(double pivotvalue,unsigned long *pivotindex
 		,Point *pointsarray,double *arr,unsigned long N);
-	int cutbox(PosType *ray,PosType *p1,PosType *p2,float rmax);
+	int cutbox(const PosType* center,PosType *p1,PosType *p2,float rmax);
 	void log_polar_grid(Point *i_points,double rmax,double rmin,double *center,long Ngrid);
 	void findarea(ImageInfo *imageinfo);
 	int windings2(double *x,Point *points,unsigned long Npoints,double *area,short image);
@@ -249,7 +252,7 @@ namespace Utilities{
 
 
 	long IndexFromPosition(double *x,long Npixels,double range,double *center);
-	void PositionFromIndex(unsigned long i,double *x,long Npixels,double range,double *center);
+	void PositionFromIndex(unsigned long i,double *x,long Npixels,double range,const double *center);
 	long IndexFromPosition(double x,long Npixels,double range,double center);
   double TwoDInterpolator(double *x,int Npixels,double range,double *center,double *map,bool init=true);
   double TwoDInterpolator(double *map);
@@ -272,13 +275,34 @@ namespace Utilities{
                  ,double my_range   /// Range of map in same units as x[]
                  ,double *my_center /// Center of map in same units as x[]
                  ):
-    N(Npixels),range(my_range),map_p(NULL)
+    N(Npixels),range(my_range),map_p(NULL),Ny(Npixels),range_y(my_range)
     {
       center[0] = my_center[0];
       center[1] = my_center[1];
+
       initparams(x);
     };
-        
+
+    /**
+     *  Constructor for case when region is a rectangle and not a square.
+     *  Array must be indexed i = ix + iy * Nx 
+     */
+    Interpolator(
+                 double *x          /// position of point
+                 ,int my_Nx       /// Number of pixels in x dimension
+                 ,double my_range_x   /// Range of map in x in same units as x[]
+                 ,int my_Ny       /// Number of pixels in y dimension
+                 ,double my_range_y   /// Range of map in y in same units as x[]
+                 ,double *my_center /// Center of map in same units as x[]
+                 ):
+    N(my_Nx),range(my_range_x),map_p(NULL),Ny(my_Ny),range_y(my_range_y)
+    {
+      center[0] = my_center[0];
+      center[1] = my_center[1];
+      
+      initparams(x);
+    };
+
     /**
      This constructor takes the map as a pointer to an array of values and stores it.
      The resulting object can then be used with the () operator as a function.
@@ -290,23 +314,22 @@ namespace Utilities{
                  ,double *my_center   /// Center of map in same units as x[]
                  ,const T *map        /// One dimensional array of fundamental type
                  ):
-    N(Npixels),range(my_range),map_p(map)
+    N(Npixels),range(my_range),map_p(map),Ny(Npixels),range_y(my_range)
     {
       center[0] = my_center[0];
       center[1] = my_center[1];
     };
     
-    
     /** 
      Does interpolation of map at point that object was constructed with or last called with.
-     Can use and map type that has a [] operator that returns a double.
+     Can use any map type that has a [] operator that returns a double.
      */
     double interpolate(
                        T& map    /// map that supports the [] operator 
                        ){
-      if(map.size() != N*N){
+      if(map.size() != N*Ny){
         ERROR_MESSAGE();
-        std::cout << "ERROR: Interpolator:interpolator(double *,T&)" << std::endl;
+        std::cout << "ERROR: Interpolator:interpolator(T&), wrong size map" << std::endl;
       }
       if(index == -1) return 0;
       
@@ -318,9 +341,9 @@ namespace Utilities{
                        double *x   /// position of point
                        ,T& map     /// map that supports the [] operator
                        ){
-      if(map.size() != N*N){
+      if(map.size() != N*Ny){
         ERROR_MESSAGE();
-        std::cout << "ERROR: Interpolator:interpolator(double *,T&)" << std::endl;
+        std::cout << "ERROR: Interpolator:interpolator(double *,T&), wrong size map" << std::endl;
       }
       initparams(x);
       return interpolate(map);
@@ -341,7 +364,7 @@ namespace Utilities{
     }
         
     void test(void){
-      std::valarray<float> map;
+      std::valarray<double> map;
       double tmp,x[2];
           
       map.resize(N*N);
@@ -361,26 +384,26 @@ namespace Utilities{
     }
 
   private:
-    double range,center[2];
+    double range,range_y,center[2];
     const T *map_p;
     double fx, fy;
     long index;
-    int N;
+    int N,Ny;
 
     void initparams(double *x){
       long ix,iy;
       // position in pixel coordinates
       fx = ((x[0] - center[0])/range + 0.5)*(N-1);
-      fy = ((x[1] - center[1])/range + 0.5)*(N-1);
+      fy = ((x[1] - center[1])/range_y + 0.5)*(Ny-1);
       //std::cout << "(  " << fx << " " << fy << "   ";
      
       if (fx < 0. || fx > N-1){index = -1; return;}
       else ix = (unsigned long)(fx);
       if(ix == N-1) ix = N-2;
       
-      if (fy < 0. || fy > N-1){index = -1; return;}
+      if (fy < 0. || fy > Ny-1){index = -1; return;}
       else iy = (unsigned long)(fy);
-      if(iy == N-1) iy = N-2;
+      if(iy == Ny-1) iy = Ny-2;
       
       index = ix + N*iy;
 
@@ -388,9 +411,9 @@ namespace Utilities{
       
       /** bilinear interpolation */
       fx = center[0] + range*( 1.0*(ix)/(N-1) - 0.5 );
-      fy = center[1] + range*( 1.0*(iy)/(N-1) - 0.5 );
+      fy = center[1] + range_y*( 1.0*(iy)/(Ny-1) - 0.5 );
       fx=(x[0] - fx)*(N-1)/range;
-      fy=(x[1] - fy)*(N-1)/range;
+      fy=(x[1] - fy)*(Ny-1)/range_y;
       //std::cout  << fx << " " << fy << "   )";
      
       /*
@@ -453,8 +476,7 @@ void splitlist(ListHndl imagelist,OldImageInfo *images,int *Nimages,int Maximage
 /* externally provided functions */
 /*********************************/
 
-/*  void rayshooterInternal(double *x,double *alpha,double *gamma,double *kappa,double *invmag);*/
-void rayshooterInternal(unsigned long Npoints,Point *i_points,bool kappa_off);
+//void rayshooterInternal(unsigned long Npoints,Point *i_points,bool kappa_off);
 void in_source(double *y_source,ListHndl sourcelist);
 bool tree_count_test(TreeHndl tree);
 bool testLeafs(TreeHndl tree);

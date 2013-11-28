@@ -25,6 +25,33 @@ void Sky::readGalaxyFile(std::string filename, Band band, double mag_limit)
 	,J_band,H_band,Ks_band,i1,i2,SDSS_u_Bulge,SDSS_g_Bulge,SDSS_r_Bulge,SDSS_i_Bulge,SDSS_z_Bulge
 	,J_band_Bulge,H_band_Bulge,Ks_band_Bulge,i1_Bulge,i2_Bulge;
 	
+    std::ofstream color_cat;
+    color_cat.open(filename + "color_catalog");
+    
+    color_cat << "# column 1 ID number" << std::endl;
+    color_cat << "# column 2 redshift" << std::endl;
+    color_cat << "# column 3 SDSS_u" << std::endl;
+    color_cat << "# column 4 SDSS_g" << std::endl;
+    color_cat << "# column 5 SDSS_r" << std::endl;
+    color_cat << "# column 6 SDSS_i" << std::endl;
+    color_cat << "# column 7 SDSS_z" << std::endl;
+    color_cat << "# column 8 J_band" << std::endl;
+    color_cat << "# column 9 H_band" << std::endl;
+    color_cat << "# column 10 Ks_band" << std::endl;
+    color_cat << "# column 11 i1" << std::endl;
+    color_cat << "# column 12 i2" << std::endl;
+    color_cat << "# column 13 SDSS_u_Bulge" << std::endl;
+    color_cat << "# column 14 SDSS_g_Bulge" << std::endl;
+    color_cat << "# column 15 SDSS_r_Bulge" << std::endl;
+    color_cat << "# column 16 SDSS_i_Bulge" << std::endl;
+    color_cat << "# column 17 SDSS_z_Bulge" << std::endl;
+    color_cat << "# column 18 J_band_Bulge" << std::endl;
+    color_cat << "# column 19 H_band_Bulge" << std::endl;
+    color_cat << "# column 20 Ks_band_Bulge" << std::endl;
+    color_cat << "# column 21 i1_Bulge" << std::endl;
+    color_cat << "# column 22 i2_Bulge" << std::endl;
+    
+
 	std::ifstream file_in(filename.c_str());
 	if(!file_in)
 		throw std::runtime_error("Cannot open file " + filename + ".");
@@ -189,6 +216,14 @@ void Sky::readGalaxyFile(std::string filename, Band band, double mag_limit)
 			default:
 				throw std::runtime_error("Requested band is not an available option.");
 		}
+        
+        color_cat << GalID << "  " << z_app << "  " << SDSS_u << "  " <<SDSS_g << "  " <<SDSS_r << "  " <<
+        SDSS_i << "  " << SDSS_z << "  " << J_band << "  " << H_band << "  " << Ks_band <<
+        "  " << i1 << "  " << i2 << "  " << SDSS_u_Bulge << "  " << SDSS_g_Bulge << "  " <<
+        SDSS_r_Bulge << "  " << SDSS_i_Bulge << "  " << SDSS_z_Bulge << "  " << J_band_Bulge
+        << "  " << H_band_Bulge << "  " << Ks_band_Bulge << "  " << i1_Bulge << "  " << i2_Bulge
+        << std::endl;
+               
 		if(mag < mag_limit){
 			/*
 			 std::cout << galid << c << haloid << c << cx << c << cy << c << cz << c << ra << c << dec << c << z_geo << c << z_app
@@ -233,7 +268,8 @@ void Sky::readGalaxyFile(std::string filename, Band band, double mag_limit)
 		}
 	}
 	
-	file_in.close();
+    color_cat.close();
+ 	file_in.close();
 	
 	std::cout << "Done reading " << count << " galaxies." << std::endl;
 	

@@ -214,6 +214,34 @@ void TreeStruct::RebuildTreeFromList(){
 	return;
 }
 
+/** \brief Spawn a subtree with current as its top
+ *
+ *  The new tree contains all of the tree below the current.
+ *  Warning:: Adding points to the new tree will not update the 
+ *  parent tree so it can become dangerously out of sync.
+ */
+TreeStruct * TreeStruct::spawn(){
+  throw std::runtime_error("This is untested and could cause significant problems");
+  
+  TreeStruct *newTree = new TreeStruct;
+
+  newTree->Nbucket = Nbucket;
+  newTree->top = current;
+  newTree->pointlist->top = current->points;
+  newTree->pointlist->Npoints = current->npoints;
+  pointlist->current = current->points;
+  for(size_t i=0 ; i < current->npoints-1 ; ++i) MoveDownList(pointlist);
+  newTree->pointlist->bottom = pointlist->current;
+  
+  // count the number of branches below
+  do{
+    newTree->Nbranches++;
+  }while(TreeWalkStep(true) && current != newTree->top->brother);
+  current = newTree->top;
+  
+  return newTree;
+}
+
 /** \ingroup  ImageFindingL2
 * \brief Empty tree of all point leaving a tree with an empty root.
 *
@@ -257,6 +285,7 @@ short TreeStruct::emptyTree(){
   free(heads);
   return 1;
 }
+
 /** \ingroup LowLevel
 * \brief Recursively free branches
 */
@@ -305,7 +334,7 @@ void TreeStruct::_freeBranches(short child){
 /** \ingroup LowLevel
 * \brief Iteratively free branches
 *
-* Frees all the barches of the tree so there is only the stump.
+* Frees all the branches of the tree so there is only the stump.
  */
 void TreeStruct::_freeBranches_iter(){
 	Branch *branch;
@@ -716,8 +745,8 @@ void TreeStruct::_AddPoint(){
 			}
 		}else{
 			ERROR_MESSAGE();
-			std::cout << "This is prone to errors and this should never happen!" << std::endl;
-			exit(1);
+			std::cout << "This is prone to errors and should never happen! npoints in this branch = " << current->npoints << std::endl;
+			throw std::runtime_error("Not the right number of points in a leaf");
 			current->points = sortList(current->npoints,x,pointlist,current->points);
 		}
 		newfirstpoint = current->points;

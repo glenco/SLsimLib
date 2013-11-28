@@ -17,7 +17,9 @@ using namespace std;
  * force calculation.
  */
 
-LensHaloUniform::LensHaloUniform(InputParams& params,CosmoHndl cosmo): LensHalo(){
+LensHaloUniform::LensHaloUniform(InputParams& params, const COSMOLOGY& cosmo)
+: LensHalo()
+{
   
   assignParams(params);
   
@@ -52,21 +54,21 @@ LensHaloUniform::~LensHaloUniform(){
 
 }
 
-void LensHaloUniform::setCosmology(COSMOLOGY* cosmo)
+void LensHaloUniform::setCosmology(const COSMOLOGY& cosmo)
 {
-	Dl = cosmo->angDist(0,zlens);
-	Ds = cosmo->angDist(0,zsource_reference);
-	Dls = cosmo->angDist(zlens,zsource_reference);
-    SigmaCrit = Ds/Dl/Dls/(4*pi*Grav);
-  
-  // TODO: Why is this done?  These are nolonger kappa and gamma!
-    Sigma_uniform = kappa_uniform*SigmaCrit;
-	gammaCrit_uniform[0] = gamma_uniform[0]*SigmaCrit;
-	gammaCrit_uniform[1] = gamma_uniform[1]*SigmaCrit;
-  
-    perturb_modes[0] = Sigma_uniform;
-    perturb_modes[1] = gammaCrit_uniform[0];
-    perturb_modes[2] = gammaCrit_uniform[1];
+  double zlens = LensHalo::getZlens();
+	Dl = cosmo.angDist(0,zlens);
+	Ds = cosmo.angDist(0,zsource_reference);
+	Dls = cosmo.angDist(zlens,zsource_reference);
+  SigmaCrit = Ds/Dl/Dls/(4*pi*Grav);
+	
+  Sigma_uniform = kappa_uniform*SigmaCrit;
+  gammaCrit_uniform[0] = gamma_uniform[0]*SigmaCrit;
+  gammaCrit_uniform[1] = gamma_uniform[1]*SigmaCrit;
+	
+  perturb_modes[0] = Sigma_uniform;
+  perturb_modes[1] = gammaCrit_uniform[0];
+  perturb_modes[2] = gammaCrit_uniform[1];
 }
 
 void LensHaloUniform::force_halo(
@@ -177,27 +179,30 @@ void LensHaloUniform::PrintLens(bool show_substruct,bool show_stars) const
 	// uni lens parameters only
 	cout << endl << "**Host lens model**" << endl;
 	// redshifts
-	cout << "zlens " << zlens << endl;
+	cout << "zlens " << getZlens() << endl;
 	cout << "kappa " << Sigma_uniform/SigmaCrit << endl;
 	cout << "gamma " << gammaCrit_uniform[0]/SigmaCrit << " " << gammaCrit_uniform[1]/SigmaCrit << endl;
 
 	if (stars_implanted) PrintStars(show_stars);
 }
 
-
-void LensHalo::implant_stars(double x, double y, int Nregions,long *seed, IMFtype type){
+/* creates a single star halo in pos (x,y)
+void LensHalo::implant_stars(
+      double x, double y,long *seed, IMFtype type){
 
 	if(Nregions <= 0) return;
 
 	double ** centers = new double*[Nregions];
-	for (int i = 0; i < Nregions; ++i) centers[i] = new double[2];
+	for (int i = 0; i < Nregions; ++i){
+    centers[i] = new double[2];
   
-  centers[0][0] = x;
-  centers[0][1] = y;
+    centers[i][0] = x[i];
+    centers[i][1] = y[i];
+  }
 	implant_stars(centers,Nregions,seed,type);
   
   for (int i = 0; i < Nregions; ++i) delete[] centers[i];
   delete[] centers;
-}
+}*/
 
 

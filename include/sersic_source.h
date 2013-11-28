@@ -19,41 +19,63 @@
 class SourceSersic : public Source
 {
 public:
-	SourceSersic();
 	SourceSersic(double mag,double Reff,double PA,double my_index,double my_q,double my_z=0,const double *theta=0);
-	SourceSersic(InputParams& params);
 	~SourceSersic();
 	
-	void serialize(RawData& d) const;
-	void unserialize(RawData& d);
-	
-	void randomize(double step, long* seed);
-	
-	void setInternals();
-	
-	inline double getMag() { return mag; }
-
 	/// calculates radius where the surface brightness drops by a factor f with respect to the central peak
 	inline double FractionRadius (double f) {return Reff*pow(-log (f)/bn,index);}
-
+	
+	inline double getSersicIndex() const { return index; }
+	inline double getAxesRatio() const { return q; }
+	inline double getReff() const { return Reff*180*60*60/pi; }
+	inline double getMag() { return mag; }
 	inline double getPA() { return PA; }
 	
-	inline double getReff() const { return Reff*180*60*60/pi; }
-	inline double getAxesRatio() const { return q; }
-	inline double getSersicIndex() const { return index; }
+	inline void setSersicIndex(double x)
+	{
+		index = x;
+		bn = 1.9992*index - 0.3271; // approximation valid for 0.5 < n < 8
+		I_n = 1./index*pow(bn,2*index)/tgamma(2*index);
+		updateRadius();
+	}
 	
-	inline void setSersicIndex(double x) {index = x;}
-	inline void setAxesRatio(double x) {q = x;}
-	inline void setReff(double x) {Reff = x;}
-	inline void setMag(double x) {mag= x;}
-	inline void setPA(double x) {PA= x;}
-
-
+	inline void setAxesRatio(double x)
+	{
+		q = x;
+		I_q = 1./q;
+	}
+	
+	inline void setReff(double x)
+	{
+		Reff = x*pi/180/60/60;
+		I_r = 1./2./pi/Reff/Reff;
+		updateRadius();
+	}
+	
+	inline void setMag(double x)
+	{
+		mag = x;
+		flux = pow(10, -0.4*(mag+48.6));
+	}
+	
+	inline void setPA(double x)
+	{
+		PA = x;
+	}
+	
+	inline double getTotalFlux() { return flux; }
+	
 	double SurfaceBrightness(double *x);
-	inline double getTotalFlux() {return flux;}
 	void printSource();
 	
 private:
+	inline void updateRadius()
+	{
+		// radius in Source
+		// approximation of the radius that encloses 99% of the flux
+		setRadius((3.73 - 0.926*index + 1.164*index*index)*Reff);
+	}
+	
 	void assignParams(InputParams& params);
 	double Reff;
 	double mag;
@@ -61,8 +83,8 @@ private:
 	double index;
 	double bn;
 	double q;
-	double Ieff;
 	double flux;
+	double I_r, I_n, I_q;
 };
 
 #endif /* GALAXIES_SERSIC_H_ */

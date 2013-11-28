@@ -10,6 +10,8 @@
 #include <algorithm>
 #include <utility>
 #include <iterator>
+#include <cstdlib>
+#include <random>
 #if __cplusplus >= 201103L
 #include <typeindex>
 #endif
@@ -818,19 +820,79 @@ namespace Utilities
     {
       xo[0] = x_min;
       xo[1] = y_min;
-      n = (long)(range/smallsize+1);
+      n = (int)(range/smallsize+1);
     }
     
-    long xy2d (long x, long y);
-    long xy2d (double x, double y);
-    void d2xy(long d, long *x, long *y);
-    void d2xy(long d, double *x, double *y);
+    int xy2d (int x, int y);
+    int xy2d (double x, double y);
+    void d2xy(int d, int *x, int *y);
+    void d2xy(int d, double *x, double *y);
     
   private:
-    long n;
+    int n;
     double xo[2],range;
-    void rot(long s,long *x, long *y, long rx, long ry);
+    void rot(int s,int *x, int *y, int rx, int ry);
   };
+
+	template<typename T>
+	T between(const T& x, const T& l, const T& u)
+	{
+		return std::max(l, std::min(u, x));
+	}
+	
+  /// This is a class for generating random numbers. It is actually just a rapper for some std random classes.
+  class RandomNumbers{
+  public:
+    
+    RandomNumbers(unsigned int seed);
+    ~RandomNumbers(void);
+    
+    double operator()(void);
+    /// Normally (Gaussian) distributed random numbers with mean 0 and standard deviation 1
+    double gauss(){return norm_dist(rand_gen);}
+  private:
+     
+    std::normal_distribution<> norm_dist;
+    std::mt19937 rand_gen;
+  };
+  
+  /**
+   * \brief This is a class for generating random numbers. It simplifies and fool proofs initialization and allows for multiple
+   *  independent series of numbers.
+   *
+   * This version is based on NR ran2() and is provided only for backwards reproducibility.  Use RandomNumbers class when possible.
+   */
+  class RandomNumbers_NR{
+  public:
+    
+    RandomNumbers_NR(long seed);
+    
+    double operator()(void);
+  private:
+    long idum;
+    double ran2(void);
+    
+    int IM1;
+    int IM2;
+    double AM;
+    //int IMM1 = (IM1-1);
+    int IA1;
+    int IA2;
+    int IQ1;
+    int IQ2;
+    int IR1;
+    int IR2;
+    int NDIV;
+    double EPS;
+    double RNMX;
+    
+    long idum2;
+    long iy;
+    long iv[32];
+    
+  };
+  
+  
 
 }
 

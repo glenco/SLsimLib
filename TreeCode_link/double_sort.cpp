@@ -289,7 +289,7 @@ void quickPartitionPoints(double pivotvalue,unsigned long *pivotindex
 }
 
 // return 1 (0) if box is (not) within rmax of ray
-int cutbox(PosType *ray,PosType *p1,PosType *p2,float rmax){
+int cutbox(const PosType* center,PosType *p1,PosType *p2,float rmax){
 	/*  returns:  0 if whole box is outside rmax from ray[]
 	 *            1 if whole box is inside circle but ray is not in the box
 	 *            2 if ray[] is inside box
@@ -301,24 +301,24 @@ int cutbox(PosType *ray,PosType *p1,PosType *p2,float rmax){
 
   // find closest point on box borders to ray[]
   for(i=0;i<2;++i){
-    if( ray[i] < p1[i] ){
+    if( center[i] < p1[i] ){
       close[i]=p1[i];
-    }else if(ray[i] > p2[i]){
+    }else if(center[i] > p2[i]){
       close[i]=p2[i];
     }else{
-      close[i]=ray[i];
+      close[i]=center[i];
       ++tick;
     }
   }
 
   if(tick==2) return 2;  // ray is inside box
 
-  for(i=0,rtmp=0;i<2;++i) rtmp += pow(ray[i] - close[i],2);
+  for(i=0,rtmp=0;i<2;++i) rtmp += pow(center[i] - close[i],2);
 
   if(rtmp>rmax*rmax) return 0;  // box is all outside circle
 
   // find farthest point on box border from ray[]
-  for(i=0,rtmp=0;i<2;++i) rtmp += ((tmp1 = pow(ray[i]-p1[i],2)) > (tmp2=pow(ray[i]-p2[i],2))) ? tmp1 : tmp2;
+  for(i=0,rtmp=0;i<2;++i) rtmp += ((tmp1 = pow(center[i]-p1[i],2)) > (tmp2=pow(center[i]-p2[i],2))) ? tmp1 : tmp2;
   //for(i=0,rtmp=0;i<2;++i) rtmp += DMAX(pow(ray[i]-p1[i],2),pow(ray[i]-p2[i],2));
 
   if(rtmp<rmax*rmax) return 1;  // box is all inside circle

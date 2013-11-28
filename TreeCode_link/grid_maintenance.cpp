@@ -16,7 +16,7 @@ Point *pointofinterest = NULL;
 Grid::Grid(
 		LensHndl lens      /// lens model for initializing grid
 		,unsigned long N1d           /// Initial number of grid points in each dimension.
-		,double center[2]  /// Center of grid.
+		,const double center[2]  /// Center of grid.
 		,double range      /// Full width of grid in whatever units will be used.
 		 ){
 
@@ -47,39 +47,17 @@ Grid::Grid(
   
 }
 
-/*
-GridHndl NewGrid(LensHndl lens, int Ngrid,double center[2],double range){
-	GridHndl grid = (Grid *)malloc(sizeof(Grid));
-	Point *i_points,*s_points;
-
-	grid->Ngrid = Ngrid;
-
-
-	i_points = NewPointArray(Ngrid*Ngrid,true);
-	xygridpoints(i_points,range,center,Ngrid,0);
-	s_points=LinkToSourcePoints(i_points,Ngrid*Ngrid);
-	lens->rayshooterInternal(Ngrid*Ngrid,i_points,false);
-	// Build trees
-	grid->i_tree = BuildTree(i_points,Ngrid*Ngrid);
-	grid->s_tree = BuildTree(s_points,Ngrid*Ngrid);
-
-	return grid;
-}
-*/
-
 /** \ingroup Constructor
  * \brief Destructor for a Grid.  Frees all memory.
  */
 Grid::~Grid(){
-	//freeTree(i_tree);
-	//freeTree(s_tree);
 	delete i_tree;
 	delete s_tree;
 	
 	delete trashkist;
 	delete neighbors;
-	
-	return;
+  
+  return;
 }
 
 /** \ingroup ImageFinding
@@ -155,7 +133,7 @@ void Grid::ReInitializeGrid(LensHndl lens){
  */
 void Grid::ReShoot(LensHndl lens){
   
-	Point *i_points,*s_point;
+	Point *i_points,*s_points;
 	double range,center[2];
 	unsigned long i;
   
@@ -163,63 +141,35 @@ void Grid::ReShoot(LensHndl lens){
 	center[0] = (i_tree->top->boundary_p2[0] + i_tree->top->boundary_p1[0])/2;
 	center[1] = (i_tree->top->boundary_p2[1] + i_tree->top->boundary_p1[1])/2;
   
-	//////////////////////////////
-  // redo grid with stars in it
-  // free old tree to speed up image finding
-  
-	s_tree->emptyTree();
+  // clear source tree
+  delete s_tree;
+  s_points = NewPointArray(i_tree->pointlist->Npoints,true);
   
 	// build new initial grid
   MoveToTopList(i_tree->pointlist);
-  for(i=0;i<i_tree->pointlist->Npoints;++i){
+  size_t k;
+  for(i=0,k=0;i<i_tree->pointlist->Npoints;++i){
     i_points = i_tree->pointlist->current;
-    if(i_points->head > 0) lens->rayshooterInternal(i_points->head,i_points,false);
+    if(i_points->head > 0){
+      
+      // link source and image points
+      for(size_t j=0;j<i_points->head;++j,++k){
+        i_points[j].image = &s_points[k];
+        s_points[k].image = &i_points[j];
+        s_points[k].id = i_points[j].id;
+        s_points[k].gridsize = i_points[j].gridsize;
+      };
+      // reshoot the rays
+      lens->rayshooterInternal(i_points->head,i_points,false);
+    }
+    
     MoveDownList(i_tree->pointlist);
   }
   
-	// need to resize root of source tree.  It can change in size
-  
-  MoveToTopList(s_tree->pointlist);
-  Point *s_points = s_tree->pointlist->current;
-	s_tree->top->boundary_p1[0]=s_points[0].x[0]; s_tree->top->boundary_p1[1]=s_points[0].x[1];
-	s_tree->top->boundary_p2[0]=s_points[0].x[0]; s_tree->top->boundary_p2[1]=s_points[0].x[1];
-  
-	for(i=0;i<s_tree->pointlist->Npoints;++i){
-    s_points = s_tree->pointlist->current;
-    /* find X boundary */
-		if(s_points[i].x[0] < s_tree->top->boundary_p1[0] ) s_tree->top->boundary_p1[0]=s_points[i].x[0];
-    if(s_points[i].x[0] > s_tree->top->boundary_p2[0] ) s_tree->top->boundary_p2[0]=s_points[i].x[0];
-    
-    /* find Y boundary */
-    if(s_points[i].x[1] < s_tree->top->boundary_p1[1] ) s_tree->top->boundary_p1[1]=s_points[i].x[1];
-    if(s_points[i].x[1] > s_tree->top->boundary_p2[1] ) s_tree->top->boundary_p2[1]=s_points[i].x[1];
-    MoveDownList(s_tree->pointlist);
-  }
-  
-  // a little extra room for future points
-  s_tree->top->boundary_p1[0] -=  range/Ngrid_init;
-  s_tree->top->boundary_p1[1] -=  range/Ngrid_init;
-  s_tree->top->boundary_p2[0] +=  range/Ngrid_init;
-  s_tree->top->boundary_p2[1] +=  range/Ngrid_init;
-  
-  s_tree->top->center[0] = (s_tree->top->boundary_p1[0]+s_tree->top->boundary_p2[0])/2;
-  s_tree->top->center[1] = (s_tree->top->boundary_p1[1]+s_tree->top->boundary_p2[1])/2;
-  
-	// fill trees
-  MoveToTopList(s_tree->pointlist);
-  for(i=0;i<s_tree->pointlist->Npoints;++i){
-    s_points = s_tree->pointlist->current;
-    if(s_points->head > 0) s_tree->AddPointsToTree(s_points,s_points->head);
-    MoveDownList(s_tree->pointlist);
-  }
-  
+  s_tree = new TreeStruct(s_points,s_points->head,1,(i_tree->top->boundary_p2[0] - i_tree->top->boundary_p1[0])/10 );
 	return;
 }
 
-/** \ingroup ImageFinding
- *
- * \brief DOES NOT WORK YET !!!!
- */
 
 /** \ingroup ImageFinding
  * \brief Recalculate surface brightness at every point without changing the positions of the grid or any lens properties.
@@ -471,10 +421,6 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa
 	} 
 
 	assert(Nadded == (Ngrid_block*Ngrid_block-1)*Nleaves-Nout_tot);
-  //***** TODO: test line
-  //for(long jj=0;jj<Nadded;++jj){ assert(inbox(i_points[jj].x,i_tree->top->boundary_p1,i_tree->top->boundary_p2));}
-  //for(long jj=0;jj<Nadded;++jj){ assert(i_points[jj].gridsize > 0 );}
-  //**************************/
   
 	if(Nadded == 0){
 		FreePointArray(i_points,true);
@@ -901,7 +847,7 @@ void Grid::zoom(
 
 /// Outputs a fits image of a lensing variable of choice
 void Grid::writeFits(
-      double center[]           /// center of image
+      const double center[]     /// center of image
       ,size_t Npixels           /// number of pixels in image in on dimension
       ,double resolution        /// resolution of image in radians
       ,LensingVariable lensvar  /// which quantity is to be displayed
@@ -966,16 +912,83 @@ void Grid::writeFits(
     tmp_image.imagekist->getCurrent()->surface_brightness = tmp_sb_vec[i];
 }
 
+/// Outputs a PixelMap of the lensing quantities of a fixed grid
+PixelMap Grid::writePixelMap(
+                     const double center[]     /// center of image
+                     ,size_t Npixels           /// number of pixels in image in on dimension
+                     ,double resolution        /// resolution of image in radians
+                     ,LensingVariable lensvar  /// which quantity is to be displayed
+                     ){
+    PixelMap map(center, Npixels, resolution);
+    
+    double range = Npixels*resolution;
+    ImageInfo tmp_image;
+    long i;
+    std::string tag;
+    i_tree->PointsWithinKist(center,range/sqrt(2.),tmp_image.imagekist,0);
+    std::vector<double> tmp_sb_vec(tmp_image.imagekist->Nunits());
+    
+    for(tmp_image.imagekist->MoveToTop(),i=0;i<tmp_sb_vec.size();++i,tmp_image.imagekist->Down()){
+        tmp_sb_vec[i] = tmp_image.imagekist->getCurrent()->surface_brightness;
+        switch (lensvar) {
+            case dt:
+                tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->dt;
+                tag = ".dt.fits";
+                break;
+            case alpha1:
+                tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->x[0]
+                - tmp_image.imagekist->getCurrent()->image->x[0];
+                tag = ".alpha1.fits";
+                break;
+            case alpha2:
+                tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->x[1]
+                - tmp_image.imagekist->getCurrent()->image->x[1];
+                tag = ".alpha2.fits";
+                break;
+            case kappa:
+                tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->kappa;
+                tag = ".kappa.fits";
+                break;
+            case gamma1:
+                tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->gamma[0];
+                tag = ".gamma1.fits";
+                break;
+            case gamma2:
+                tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->gamma[1];
+                tag = ".gamma2.fits";
+                break;
+            case gamma3:
+                tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->gamma[2];
+                tag = ".gamma3.fits";
+                break;
+            case invmag:
+                tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->invmag;
+                tag = ".invmag.fits";
+                break;
+            default:
+                break;
+        }
+    }
+    
+    map.Clean();
+    map.AddImages(&tmp_image,1,-1);
+    
+    for(tmp_image.imagekist->MoveToTop(),i=0;i<tmp_sb_vec.size();++i,tmp_image.imagekist->Down())
+        tmp_image.imagekist->getCurrent()->surface_brightness = tmp_sb_vec[i];
+    
+    return map;
+}
+
+
 /// Outputs a fits file for making plots of vector fields
 void Grid::writeFitsVector(
-                     double center[]           /// center of image
+                     const double center[]     /// center of image
                      ,size_t Npixels           /// number of pixels in image in on dimension
                      ,double resolution        /// resolution of image in radians
                      ,LensingVariable lensvar  /// which quantity is to be displayed
                      ,std::string filename     /// file name for image -- .kappa.fits, .gamma1.fits, etc will be appended
                      ){
   throw std::runtime_error("Not done yet!");
-  PixelMap map(center, Npixels, resolution);
   
   double range = Npixels*resolution,tmp_x[2];
   ImageInfo tmp_image,tmp_image_theta;
@@ -992,12 +1005,14 @@ void Grid::writeFitsVector(
     switch (lensvar) {
       case alpha1:
         tmp_x[0] = tmp_image.imagekist->getCurrent()->x[0]
-        - tmp_image.imagekist->getCurrent()->image->x[0];
+            - tmp_image.imagekist->getCurrent()->image->x[0];
 
         tmp_x[1] = tmp_image.imagekist->getCurrent()->x[1]
-        - tmp_image.imagekist->getCurrent()->image->x[1];
+            - tmp_image.imagekist->getCurrent()->image->x[1];
       
         tmp_image.imagekist->getCurrent()->surface_brightness = sqrt( tmp_x[0]*tmp_x[0] + tmp_x[1]*tmp_x[1]);
+        tmp_image_theta.imagekist->getCurrent()->surface_brightness = atan2(tmp_x[1],tmp_x[0]);
+            
         tag = ".alphaV.fits";
         break;
       case gamma1:
@@ -1006,6 +1021,8 @@ void Grid::writeFitsVector(
         tmp_x[1] = tmp_image.imagekist->getCurrent()->gamma[1];
 
         tmp_image.imagekist->getCurrent()->surface_brightness = sqrt( tmp_x[0]*tmp_x[0] + tmp_x[1]*tmp_x[1]);
+        tmp_image_theta.imagekist->getCurrent()->surface_brightness = atan2(tmp_x[1],tmp_x[0])/2;
+            
         tag = ".gammaV.fits";
         break;
       default:
@@ -1014,10 +1031,17 @@ void Grid::writeFitsVector(
     }
   }
   
+  PixelMap map_m(center, Npixels, resolution),map_t(center,Npixels,resolution);
   
-  map.Clean();
-  map.AddImages(&tmp_image,1,-1);
-  map.printFITS(filename + tag);
+  map_m.Clean();
+  map_m.AddImages(&tmp_image,1,-1);
+  map_m = PixelMap(map_m,4);
+  map_m = PixelMap(map_m,1/4.);
+    
+  map_t.Clean();
+  map_t.AddImages(&tmp_image_theta,1,-1);
+
+  map_m.printFITS(filename + tag);
   
   for(tmp_image.imagekist->MoveToTop(),i=0;i<tmp_sb_vec.size();++i,tmp_image.imagekist->Down())
     tmp_image.imagekist->getCurrent()->surface_brightness = tmp_sb_vec[i];

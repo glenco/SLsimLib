@@ -48,7 +48,7 @@
 
 class LensHaloUniform: public LensHalo{
 public:
-	LensHaloUniform(InputParams& params,CosmoHndl cosmo);
+	LensHaloUniform(InputParams& params, const COSMOLOGY& cosmo);
 	LensHaloUniform(InputParams& params);
 	~LensHaloUniform();
 
@@ -72,7 +72,7 @@ public:
 
 		/// overridden function to calculate the lensing properties
   void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa,bool subtract_point=false);
-  void setCosmology(COSMOLOGY* cosmo);
+  void setCosmology(const COSMOLOGY& cosmo);
 
 protected:
 

@@ -15,6 +15,8 @@
 
 //#include "quadTree.h"
 
+class TreeQuad;
+
 /**
  * \brief A base class for all types of lensing halos.
  *
@@ -40,8 +42,6 @@
  * is intended for the cases where the simulation is populated by lensing halos from
  * a mass function. Then one needs all parameters of the halo -- mass, Rmax, and rscale.
  */
-
-class TreeQuad; // forward declaration TODO Fabio: can you do something prettier?
 
 class LensHalo{
 public:
@@ -70,13 +70,15 @@ public:
 	/// set scale radius
 	virtual void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rmax/rscale;};
 	/// set redshift
-	void setZlens(double my_zlens){zlens=my_zlens;};
+	void setZlens(double my_zlens){
+    zlens=my_zlens;
+  };
 	/// set slope
 	virtual void set_slope(double my_slope){};
 
 	/// set cosmology for halo
-	virtual void setCosmology(COSMOLOGY* cosmo){}
-
+	virtual void setCosmology(const COSMOLOGY& cosmo) {}
+	
 	/// calculate the lensing properties -- deflection, convergence, and shear
 	virtual void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa,bool subtract_point=false);
 	void force_halo_sym(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa,bool subtract_point=false);
@@ -94,11 +96,15 @@ public:
   /// stars
   bool AreStarsImaplated() const {return stars_implanted;}
   void implant_stars(PosType **centers,int Nregions,long *seed, IMFtype type=One);
+<<<<<<< local
   /// creates a single star halo in pos (x,y)
 
   void implant_stars(double x,double y,int Nregions,long *seed,IMFtype type=One);
   double * getStarRegion() {return star_region;}
 
+=======
+  //void implant_stars(double *x,double *y,int Nregions,long *seed,IMFtype type=One);
+>>>>>>> other
   void remove_stars();
   IMFtype getStarIMF_type() const {return main_stars_imf_type;}
   /// Fraction of surface density in stars
@@ -106,12 +112,15 @@ public:
   /// The mass of the stars if they are all the same mass
   double getStarMass() const {if(stars_implanted)return star_masses[0]; else return 0.0;}
 
-  /// read raw data
-  virtual void serialize(RawData& d) const;
-  /// write raw data
-  virtual void unserialize(RawData& d);
-	/// randomize halo by a given amound
-	virtual void randomize(double step, long* seed);
+	/// get the number of halo parameters
+	virtual std::size_t Nparams() const;
+	/// get the value of a scaled halo parameter by index
+	virtual double getParam(std::size_t p) const;
+	/// set the value of a scaled halo parameter by index
+	virtual double setParam(std::size_t p, double value);
+	
+	/// print the halo parameters in CSV format
+	virtual void printCSV(std::ostream&, bool header = false) const;
 
 	/// Prints star parameters; if show_stars is true, prints data for single stars
 	void PrintStars(bool show_stars) const;
@@ -151,7 +160,7 @@ protected:
     /// scale length or core size.  Different meaning in different cases.  Not used in NSIE case.
     float rscale;
     /// redshift
-    double zlens;
+    //double zlens;
 
     bool stars_implanted;
     /// Number of regions to be subtracted to compensate for the mass in stars
@@ -189,6 +198,8 @@ protected:
   const static int Nmod = 18;
   double mod[18];
   double r_eps;
+  
+  double zlens;
 };
 
 /** \ingroup DeflectionL2
@@ -540,17 +551,11 @@ private:
  * The shear and kappa is always more accurate than the deflection.
  */
 
-
 class LensHaloJaffe: public LensHalo{
 public:
 	LensHaloJaffe();
 	LensHaloJaffe(InputParams& params);
 	virtual ~LensHaloJaffe();
-
-    double ffunction(double x);
-	double gfunction(double x);
-	double hfunction(double x);
-	double g2function(double x);
 
 	/// set Rmax
 	void set_Rmax(float my_Rmax){Rmax=my_Rmax; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
@@ -558,6 +563,12 @@ public:
 	void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
 
 protected:
+    
+    double ffunction(double x);
+	double gfunction(double x);
+	double hfunction(double x);
+	double g2function(double x);
+
 	/// table size
 	static const long NTABLE;
 	/// maximum Rmax/rscale

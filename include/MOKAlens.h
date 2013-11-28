@@ -27,14 +27,14 @@
  */
 struct MOKAmap{
 	/// values for the map
-	std::valarray<float> convergence;
-	std::valarray<float> alpha1;
-	std::valarray<float> alpha2;
-	std::valarray<float> gamma1;
-	std::valarray<float> gamma2;
-	std::valarray<float> gamma3;
-	std::valarray<float> Signlambdar;
-	std::valarray<float> Signlambdat;
+	std::valarray<double> convergence;
+	std::valarray<double> alpha1;
+	std::valarray<double> alpha2;
+	std::valarray<double> gamma1;
+	std::valarray<double> gamma2;
+	std::valarray<double> gamma3;
+	std::valarray<double> Signlambdar;
+	std::valarray<double> Signlambdat;
 	std:: vector<double> x;
     int nx,ny;
     // boxlMpc is Mpc/h for MOKA
@@ -60,42 +60,50 @@ struct MOKAmap{
 class LensHaloMOKA : public LensHalo
 {
 public:
-	LensHaloMOKA(const std::string& filename);
-	LensHaloMOKA(InputParams& params);
-
+	LensHaloMOKA(const std::string& filename, LensHaloType maptype, const COSMOLOGY& lenscosmo);
+	LensHaloMOKA(InputParams& params, const COSMOLOGY& lenscosmo);
+	
 	~LensHaloMOKA();
-
+	
 	std::string MOKA_input_file;
 	/// if >=1 (true), do analyzis only; if = 0 (false) change units to internal GLAMER units and prepare for ray-shooting
 	int flag_MOKA_analyze;
 	int flag_background_field;
-
+	
 	void assignParams(InputParams& params);
-	void setCosmology(COSMOLOGY* cosmo);
+
+	void checkCosmology();
+	
 	void saveImage(bool saveprofile=true);
 	void saveKappaProfile();
 	void saveGammaProfile();
 	void saveProfiles(double &RE3, double &xxc, double &yyc);
 	void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa,bool subtract_point=false);
-  void saveImage(GridHndl grid,bool saveprofiles);
-  
+	void saveImage(GridHndl grid,bool saveprofiles);
+	
 	void estSignLambdas();
 	void EinsteinRadii(double &RE1, double &RE2, double &xxc, double &yyc);
-
+	
 	void getDims();
 	void readImage();
 	void writeImage(std::string fn);
-  /// return center in physical Mpc
-  double *getCenter(){return center;}
-  /// return range of input map in physical Mpc
-  double getRange(){return range_phy;}
-  /// return number of pixels on a side in original map
-  size_t getN(){return map->nx;}
+	
+	/// return center in physical Mpc
+	const double* getCenter() const { return map->center; }
+	/// return range of input map in rad
+	double getRangeRad() const { return map->boxlrad; }
+	/// return range of input map in physical Mpc
+	double getRangeMpc() const { return map->boxlMpc; }
+	/// return number of pixels on a side in original map
+	size_t getN() const { return map->nx; }
 	
 private:
+	LensHaloType maptype;
 	void initMap();
-  double range_phy,center[2];  /// range of map in physical Mpc
-  MOKAmap* map;
+	void convertmap(MOKAmap *map,LensHaloType maptype);
+	MOKAmap* map;
+	const COSMOLOGY& cosmo;
+	void PreProcessFFTWMap();
 };
 
 void make_friendship(int ii,int ji,int np,std:: vector<int> &friends, std:: vector<double> &pointdist);

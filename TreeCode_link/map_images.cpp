@@ -563,7 +563,8 @@ void map_images(
 	return ;
 }
 
-/** \brief Find the images without any additional grid refinement or ray shooting.
+/** \ingroup ImageFinding
+ *  \brief Find the images without any additional grid refinement or ray shooting.
  *
  *   The images and surface brighnesses are found.  This will be much faster than map_images(), 
  *   but will miss images that are not resolved on the current grid.
@@ -575,12 +576,12 @@ void map_images(
 void map_images_fixedgrid(
                 Source *source
                 ,GridHndl grid          /// Tree of grid points
-                ,double xmax            /// Maximum size of source on image plane.  The entire source must be within this distance from
-                                        ///  source->getX()[].  Decreasing it will make the code run faster.  Making xmax much bigger than
-                                        /// the grid boundaries will check all points for surface brightness.
                 ,int *Nimages           /// number of images found
                 ,ImageInfo *imageinfo   /// information on each image
                 ,int NimageMax          /// Size of imageinfo array on entry.  This could increase if more images are found
+                ,double xmax            /// Maximum size of source on image plane.  The entire source must be within this distance from
+                                        ///  source->getX()[].  Decreasing it will make the code run faster.  Making xmax much bigger than
+                                        /// the grid boundaries will check all points for surface brightness.
                 ,bool divide_images     /// if true will divide images.
                 ,bool find_borders      /// if true will find the inner and outer borders of each image
   ){
@@ -596,27 +597,32 @@ void map_images_fixedgrid(
   imageinfo->outerborder->Empty();
   
   grid->RefreshSurfaceBrightnesses(source);
+  grid->ClearAllMarks();  // TODO: might be nice to elliminate the need for this
 
   double x[2];
   
   grid->s_tree->PointsWithinKist(source->getX(), xmax, imageinfo->imagekist, 0);
   
+  bool move;
   // Assign surface brightnesses and remove points from image without flux
   for(imageinfo->imagekist->MoveToTop();!(imageinfo->imagekist->OffBottom());){
     
     x[0] = imageinfo->imagekist->getCurrent()->x[0] - source->getX()[0];
     x[1] = imageinfo->imagekist->getCurrent()->x[1] - source->getX()[1];
     
-    imageinfo->imagekist->getCurrent()->surface_brightness =
-    imageinfo->imagekist->getCurrent()->image->surface_brightness = source->SurfaceBrightness( x );
+    imageinfo->imagekist->getCurrent()->surface_brightness
+    = imageinfo->imagekist->getCurrent()->image->surface_brightness
+      //= source->SurfaceBrightness( x );
+    = source->SurfaceBrightness(imageinfo->imagekist->getCurrent()->x);
     
     imageinfo->area += imageinfo->imagekist->getCurrent()->surface_brightness;
     
     if(imageinfo->imagekist->getCurrent()->surface_brightness == 0.0){
       imageinfo->imagekist->getCurrent()->in_image = FALSE;  // re-set marks
 			imageinfo->imagekist->getCurrent()->image->in_image = FALSE;  // re-set marks
+      move = imageinfo->imagekist->AtTop();
       imageinfo->imagekist->TakeOutCurrent();
-      if(!(imageinfo->imagekist->AtTop())) imageinfo->imagekist->Down();
+      if(!move) imageinfo->imagekist->Down();
     }else{
       imageinfo->imagekist->getCurrent()->in_image = TRUE;  // re-set marks
 			imageinfo->imagekist->getCurrent()->image->in_image = TRUE;  // re-set marks
@@ -665,9 +671,9 @@ void map_images_fixedgrid(
 		for(long j = 0 ; j < imageinfo[i].imagekist->Nunits() ; ++j,MoveDownKist(imageinfo[i].imagekist) ){
 			imageinfo[i].area += pow(getCurrentKist(imageinfo[i].imagekist)->gridsize,2)*getCurrentKist(imageinfo[i].imagekist)->surface_brightness;
 			imageinfo[i].centroid[0] += getCurrentKist(imageinfo[i].imagekist)->x[0]*pow(getCurrentKist(imageinfo[i].imagekist)->gridsize,2)
-      *getCurrentKist(imageinfo[i].imagekist)->surface_brightness;
+        *getCurrentKist(imageinfo[i].imagekist)->surface_brightness;
 			imageinfo[i].centroid[1] += getCurrentKist(imageinfo[i].imagekist)->x[1]*pow(getCurrentKist(imageinfo[i].imagekist)->gridsize,2)
-      *getCurrentKist(imageinfo[i].imagekist)->surface_brightness;
+        *getCurrentKist(imageinfo[i].imagekist)->surface_brightness;
       
 			getCurrentKist(imageinfo[i].imagekist)->in_image = FALSE;  // re-set marks
 			getCurrentKist(imageinfo[i].imagekist)->image->in_image = FALSE;  // re-set marks

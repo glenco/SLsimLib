@@ -99,9 +99,7 @@ public:
   IndexType *sub_substructures;
   ClumpInternal main_sub_type;
 
-  void setZlens(double zlens);
-//  void setInternalParams(CosmoHndl,SourceHndl);
-//  void setInternalParams(CosmoHndl cosmo);
+  //void setZlens(double zlens);
   void assignParams(InputParams& params);
   void PrintLens(bool show_substruct,bool show_stars);
   void error_message1(std::string name,std::string filename);
@@ -123,12 +121,12 @@ public:
   IMFtype getIMF_type(){return main_stars_imf_type;}
   int getPerturb_Nmodes(){return perturb_Nmodes;}    /// this includes two for external shear
   double *perturb_modes;  ///first two are shear
-
-  void randomize(double step, long* seed);
-
-  void serialize(RawData& d) const;
-  void unserialize(RawData& d);
-
+	
+	std::size_t Nparams() const;
+	double getParam(std::size_t p) const;
+	double setParam(std::size_t p, double value);
+	
+	void printCSV(std::ostream& out, bool header = false) const;
 
 protected:
 

@@ -54,6 +54,9 @@ struct TmpParams{
   double* dDl;
 };
 
+/** \brief This function calculates the deflection, shear, convergence, rotation
+ and time-delay of rays in parallel.
+*/
 void Lens::rayshooterInternal(
 		unsigned long Npoints   /// number of points to be shot
 		,Point *i_points        /// point on the image plane
@@ -154,6 +157,8 @@ void *compute_rays_parallel(void *_p)
 	  if(p->i_points[i].in_image == MAYBE)
 			 continue;
 
+    //std::cout << "p->i_points[i].x = " << p->i_points[i].x[0] << " " << p->i_points[i].x[1] << std::endl;
+    
     // find position on first lens plane in comoving units
     p->i_points[i].image->x[0] = p->i_points[i].x[0]*p->Dl[0];
     p->i_points[i].image->x[1] = p->i_points[i].x[1]*p->Dl[0];
@@ -176,6 +181,7 @@ void *compute_rays_parallel(void *_p)
     if(p->flag_switch_lensing_off){
       p->i_points[i].image->x[0] /= p->Dl[0];
       p->i_points[i].image->x[1] /= p->Dl[0];
+      p->i_points[i].kappa = p->i_points[i].image->kappa = 0.0;
       p->i_points[i].invmag = 1.0;
       p->i_points[i].dt = 0.0;
       
@@ -293,10 +299,10 @@ void *compute_rays_parallel(void *_p)
     p->i_points[i].image->gamma[1]=p->i_points[i].gamma[1];
     p->i_points[i].image->gamma[2]=p->i_points[i].gamma[2];
     
-    //TODO: check
     p->i_points[i].dt -=  0.5*p->Dl[p->NPlanes]*( p->i_points[i].image->x[0]*p->i_points[i].image->x[0]
                             + p->i_points[i].image->x[1]*p->i_points[i].image->x[1] );
 
+/*/TODO: check      
     if(p->i_points[i].image->x[0] != p->i_points[i].image->x[0] ||
        p->i_points[i].image->x[1] != p->i_points[i].image->x[1] ||
        p->i_points[i].invmag != p->i_points[i].invmag){
@@ -306,8 +312,7 @@ void *compute_rays_parallel(void *_p)
     		  p->i_points[i].kappa << "  "  << kappa_off << std::endl;
       //	assert(0);
       exit(1);
-    }
-
+    }*/
     
   }
   
