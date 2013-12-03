@@ -283,11 +283,14 @@ LensHaloPseudoNFW::~LensHaloPseudoNFW(){
 
 LensHaloPowerLaw::LensHaloPowerLaw() : LensHalo(){
 	rscale = 1.0;
-    beta = -2;
+  beta = -2;
+  xmax = 1.0;
 }
 
 LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
 	assignParams(params);
+  rscale = 1.0;
+  xmax = 1.0;
 }
 
 void LensHaloPowerLaw::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, double my_slope, long *seed){

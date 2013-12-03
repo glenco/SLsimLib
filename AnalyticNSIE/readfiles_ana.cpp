@@ -70,7 +70,7 @@ void LensHaloAnaNSIE::PrintLens(bool show_substruct,bool show_stars){
 }
 
 
-LensHaloAnaNSIE::LensHaloAnaNSIE(InputParams& params) : LensHaloBaseNSIE(params){
+LensHaloAnaNSIE::LensHaloAnaNSIE(InputParams& params, bool verbose) : LensHaloBaseNSIE(params){
 
   assignParams(params);
 
@@ -80,7 +80,7 @@ LensHaloAnaNSIE::LensHaloAnaNSIE(InputParams& params) : LensHaloBaseNSIE(params)
   	for(int i=0;i< perturb_Nmodes+1 ;++i) perturb_modes[i] =  0;
   }
 
-  PrintLens(false,false);
+  if(verbose) PrintLens(false,false);
 }
 
 

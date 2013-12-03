@@ -1106,20 +1106,20 @@ unsigned long Grid::PrunePointsOutside(
 
 	if(r_in > 0){
 		// take out points that are within inner circle
-		MoveToTopKist(subkist);
+		subkist->MoveToTop();
 		Ntmp = subkist->Nunits();
 		for(i=0;i<Ntmp;++i){
 			go = true;
-			point = getCurrentKist(subkist);
+			point = subkist->getCurrent();
 			if(point->gridsize*Ngrid_block > resolution){
-				if(AtTopKist(subkist)) go = false;
-				TakeOutCurrentKist(subkist);
+				if(subkist->AtTop()) go = false;
+				subkist->TakeOutCurrent();
 			}else if( Utilities::cutbox(y,point->leaf->boundary_p1,point->leaf->boundary_p2,r_in) ){
-				if(AtTopKist(subkist)) go = false;
-				TakeOutCurrentKist(subkist);
+				if(subkist->AtTop()) go = false;
+				subkist->TakeOutCurrent();
 			}
 
-			if(go) MoveDownKist(subkist);
+			if(go) subkist->Down();
 		}
 	}
 	std::printf("number of points after culling %li\n",subkist->Nunits());
@@ -1130,7 +1130,7 @@ unsigned long Grid::PrunePointsOutside(
 	}
 
 	// move from source plane to image plane
-	TranformPlanesKist(subkist);
+	subkist->TranformPlanes();
 
 	/*/*** test lines *******
 	MoveToTopKist(subkist);
@@ -1147,11 +1147,11 @@ unsigned long Grid::PrunePointsOutside(
 	/ *****************************************/
 
 	// Take out all points that are not at the center of their parent refined cell
-	MoveToTopKist(subkist);
+	subkist->MoveToTop();
 	Ntmp = subkist->Nunits();
 	for(i = 0; i < Ntmp ; ++i){
 		go = true;
-		point = getCurrentKist(subkist);
+		point = subkist->getCurrent();
 		i_tree->current = point->leaf;
 		// Move up to nearest ancestor that was refined.
 		while(!(i_tree->current->refined) && i_tree->moveUp() );
@@ -1160,8 +1160,8 @@ unsigned long Grid::PrunePointsOutside(
 
 		if(i_tree->current->npoints != Ngrid_block*Ngrid_block  || res > resolution){
 			// Take out the point if it is not in a parent block that has been refined than once or if the parent block is about the resolution limit
-			if(AtTopKist(subkist)) go = false;
-			TakeOutCurrentKist(subkist);
+			if(subkist->AtTop()) go = false;
+			subkist->TakeOutCurrent();
 		}else{
 			assert(inbox(point->x,i_tree->current->boundary_p1,i_tree->current->boundary_p2));
 
@@ -1173,12 +1173,12 @@ unsigned long Grid::PrunePointsOutside(
 			 if( (point->gridsize)/2 < fabs(point->x[0] - i_tree->current->center[0])
 					 || (point->gridsize)/2 < fabs(point->x[1] - i_tree->current->center[1])
 								){ // Take out point if it is not at the center of it's parent block
-				 if(AtTopKist(subkist)) go = false;
-				 TakeOutCurrentKist(subkist);
+				 if(subkist->AtTop()) go = false;
+				 subkist->TakeOutCurrent();
 			 }
 		}
 
-		if(go) MoveDownKist(subkist);
+		if(go) subkist->Down();
 	}
 
 	/*/ ******** Test *************
@@ -1230,11 +1230,11 @@ unsigned long Grid::PrunePointsOutside(
 
 	/ ******************************/
 
-	assert(AtBottomKist(subkist));
+	assert(subkist->AtBottom());
 
-	MoveToTopKist(subkist);
+	subkist->MoveToTop();
 	while(subkist->Nunits() > 0){
-		i_tree->current = getCurrentKist(subkist)->leaf;
+		i_tree->current = subkist->getCurrent()->leaf;
 		// Move up to nearest ancestor that was refined.
 		while(!(i_tree->current->refined) && i_tree->moveUp() );
 
@@ -1328,7 +1328,7 @@ unsigned long Grid::PrunePointsOutside(
 
 		}
 
-		TakeOutCurrentKist(subkist);
+		subkist->TakeOutCurrent();
 
 	}
 
@@ -1353,30 +1353,30 @@ void CollectTrash(Kist<Point> * trashkist,bool check){
 	if(trashkist->Nunits() == 0) return;
 
 	Ntmp = trashkist->Nunits();
-	for(j=0,MoveToTopKist(trashkist);j<Ntmp;++j){
+	for(j=0,trashkist->MoveToTop();j<Ntmp;++j){
 
-		 if(!(getCurrentKist(trashkist)->head)){  // point is not the head of an array
-			 if(AtTopKist(trashkist)) go = false; else go = true;
-			 TakeOutCurrentKist(trashkist);
+		 if(!(trashkist->getCurrent()->head)){  // point is not the head of an array
+			 if(trashkist->AtTop()) go = false; else go = true;
+			 trashkist->TakeOutCurrent();
 		 }else{
 
 			 // check to see if all points in the block have been removed from the trees
 			 if(check){
-				 for(i=0;i<getCurrentKist(trashkist)->head;++i) if(getCurrentKist(trashkist)[i].leaf != NULL) break;
+				 for(i=0;i<trashkist->getCurrent()->head;++i) if(trashkist->getCurrent()[i].leaf != NULL) break;
 			 }else{
-				 i = getCurrentKist(trashkist)->head;
+				 i = trashkist->getCurrent()->head;
 			 }
 
-			 if(i == getCurrentKist(trashkist)->head){
-				 if(AtTopKist(trashkist)) go = false; else go = true;
-				 points = TakeOutCurrentKist(trashkist);
+			 if(i == trashkist->getCurrent()->head){
+				 if(trashkist->AtTop()) go = false; else go = true;
+				 points = trashkist->TakeOutCurrent();
 				 FreePointArray(points);
 			 }else{
 				 go = true;
 			 }
 		 }
 
-		if(go) MoveDownKist(trashkist);
+		if(go) trashkist->Down();
 	 }
 
 	 return;
@@ -1510,7 +1510,7 @@ unsigned long FreeBranchesBelow(TreeHndl i_tree,TreeHndl s_tree,Kist<Point> * tr
 						s_tree->pointlist->current = point;
 						TakeOutCurrent(s_tree->pointlist);
 						point->leaf = NULL;  // set leaf to NULL to indicate that point is no longer in tree
-						if(point->head) InsertAfterCurrentKist(trashkist,point);  // collect heads for later trash collection
+						if(point->head) trashkist->InsertAfterCurrent(point);  // collect heads for later trash collection
 
 						assert(boxinbox(i_tree->current,headbranch));
 
@@ -1531,7 +1531,7 @@ unsigned long FreeBranchesBelow(TreeHndl i_tree,TreeHndl s_tree,Kist<Point> * tr
 						// If point is a head of a memory block add it to trashlist for eventual trash collection
 						if(point->head){
 							assert(point->head == 8);
-							InsertAfterCurrentKist(trashkist,point);
+							trashkist->InsertAfterCurrent(point);
 						}
 					}
 					assert(boxinbox(i_tree->current,headbranch));
@@ -1632,4 +1632,77 @@ Point * TreeStruct::RemoveLeafFromTree(unsigned long *Npoints){
 	return point;
 }
 
+/// Move up to the parent of current branch if current in not the root. Otherwise returns false.
+bool TreeIt::up(){
+  if(current == NULL || current == top){
+    return false;
+  }else{
+    current = current->prev;
+    return true;
+  }
+}
+
+/// Move to brother if it exists
+bool TreeIt::brother(){
+  if(current->brother == NULL){
+    return false;
+  }else{
+    current = current->brother;
+    return true;
+  }
+}
+
+/// Move to child
+bool TreeIt::down(short child){
+  if(child == 1){
+    if(current->child1 == NULL){
+      return false;
+    }else{
+      current = current->child1;
+      return true;
+    }
+  }
+  if(child == 2){
+    if(current->child2 == NULL){
+      return false;
+    }else{
+      current = current->child2;
+      return true;
+    }
+  }
+  
+  throw std::runtime_error("There are only two children!");
+}
+
+/**
+ *  \brief step for walking tree by iteration instead of recursion.
+ *
+ *  This walk will not exit the tree defined by the descendants of
+ *  the root that is set in the constructor of TreeIt.  If allowed 
+ *  to, it will return to the root and return false.  If used again 
+ *  after this it will repeat its walk.
+ */
+bool TreeIt::TreeWalkStep(bool allowDescent){
+  
+	if(allowDescent && current->child1 != NULL){
+		down(1);
+		return true;
+	}
+	if(allowDescent && current->child2 != NULL){
+		down(2);
+		return true;
+	}
+  
+  if(current->brother == top->brother){
+    current = top;
+    return false;
+  }
+     
+	if(current->brother != NULL){
+		current = current->brother;
+		return true;
+	}
+  
+	return false;
+}
 

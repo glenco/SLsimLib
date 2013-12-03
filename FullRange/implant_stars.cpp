@@ -176,6 +176,17 @@ void LensHalo::implant_stars(
 	return ;
 }
 
+/// For implanting one patch of stars. See other implant_stars.
+void LensHalo::implant_stars(
+                             PosType *center      /// Warning:: positions need to be in physical Mpc on the lens plane
+                             ,long *seed
+                             ,IMFtype type
+                             ){
+  double **tmp_p;
+  tmp_p[0] = center;
+  
+  implant_stars(tmp_p,1,seed,type);
+}
 /// Un-implant stars.  Remove stars an any information about the number and size of star regions.
 void LensHalo::remove_stars(){  
   

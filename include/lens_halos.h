@@ -96,7 +96,7 @@ public:
   /// stars
   bool AreStarsImaplated() const {return stars_implanted;}
   void implant_stars(PosType **centers,int Nregions,long *seed, IMFtype type=One);
-
+  void implant_stars(PosType *center,long *seed,IMFtype type = One);
   //void implant_stars(double *x,double *y,int Nregions,long *seed,IMFtype type=One);
   void remove_stars();
   IMFtype getStarIMF_type() const {return main_stars_imf_type;}
@@ -557,7 +557,7 @@ public:
 
 protected:
     
-    double ffunction(double x);
+  double ffunction(double x);
 	double gfunction(double x);
 	double hfunction(double x);
 	double g2function(double x);

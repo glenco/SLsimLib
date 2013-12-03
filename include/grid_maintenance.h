@@ -11,6 +11,7 @@
 #include "lens.h"
 #include "point.h"
 #include "Tree.h"
+#include <mutex>
 
 class LensHaloBaseNSIE;
 class LensHaloMOKA;
@@ -57,6 +58,8 @@ struct Grid{
   PixelMap writePixelMap(const double center[],size_t Npixels,double resolution
                            ,LensingVariable lensvar);
 
+  void xygridpoints(Point *points,double range,const double *center,long Ngrid
+                          ,short remove_center);
 
 private:
 	/// one dimensional size of initial grid
@@ -72,7 +75,10 @@ private:
 
 	bool uniform_mag_from_deflect(double *a,Point *point);
 	bool uniform_mag_from_shooter(double *a,Point *point);
-
+  
+  unsigned long pointID;
+  
+  static std::mutex grid_mutex;
 };
 
 typedef struct Grid* GridHndl;
@@ -89,7 +95,7 @@ void find_images_microlens(LensHndl lens,double *y_source,double r_source,GridHn
 		,double initial_size,double mu_min,bool splitimages,short edge_refinement
 		,bool verbose,bool kappa_off);
 
-short image_finder_kist(LensHndl lens, double *y_source,double r_source,GridHndl grid
+void image_finder_kist(LensHndl lens, double *y_source,double r_source,GridHndl grid
 		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
 		,short splitparities,short true_images);
 
@@ -117,8 +123,6 @@ long refine_edges2(LensHndl lens,double *y_source,double r_source,GridHndl grid
 
 void sort_out_points(Point *i_points,ImageInfo *imageinfo,double r_source,double y_source[]);
 
-void xygridpoints(Point *points,double range,const double *center,long Ngrid
-		,short remove_center);
 
 void saveImage(LensHaloMOKA *mokahalo, GridHndl grid, bool saveprofile=true);
 
