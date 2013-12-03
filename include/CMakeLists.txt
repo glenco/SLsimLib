@@ -29,13 +29,13 @@ add_sources(
 	quadTree.h
 	sersic_source.h
 	simpleTree.h
-	sky.h
 	slsimlib.h
 	source.h
 	source_models.h
 	sourceAnaGalaxy.h
 	standard.h
 	Tree.h
+        TreeKist.h
 	tree_maintenance.h
 	TreeNB.h
 	uniform_lens.h

@@ -42,11 +42,15 @@ InputParams::counter::counter(const InputParams::counter& other)
 {
 }
 
+InputParams::counter& InputParams::counter::operator=(const InputParams::counter& rhs)
+{
+	c = rhs.c;
+	return *this;
+}
+
 void InputParams::counter::use(const std::string& label)
 {
-#if __cplusplus >= 201103L
 	std::lock_guard<std::mutex> hold(mutex);
-#endif
 	
 	++c[label];
 }
@@ -147,8 +151,8 @@ InputParams::InputParams(std::string paramfile)
 
 InputParams::~InputParams()
 {
-	print_unused();
-	print_used();
+	//print_unused();
+	//print_used();
 }
 
 /// Print all parameters and values to stdout.

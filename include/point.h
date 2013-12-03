@@ -14,6 +14,7 @@
 #define pointtypes_declare
 
 #include <standard.h>
+#include "Kist.h"
 
 #ifndef pi
 #define pi  3.141593
@@ -73,7 +74,9 @@ struct Branch{
 			  ,double my_center[2],int my_level);
 	~Branch();
 
-  struct Point *points;        // pointer to first points in Branch
+  struct Point *points;        /// pointer to first points in Branch
+  KistIt<Point> pointit;       /// Kist iterator pointing to first point in branch
+  
   unsigned long npoints;
   double center[2];
   int level;

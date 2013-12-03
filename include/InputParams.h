@@ -59,7 +59,9 @@ enum GalaxyLensHaloType
 
 /// names of clump and sb models
 typedef enum {nfw,powerlaw,pointmass} ClumpInternal;
+/// Initial mass function type
 enum IMFtype {One,Mono,BrokenPowerLaw,Salpeter,SinglePowerLaw,Kroupa,Chabrier};
+/// Photometric bands
 enum Band {SDSS_U,SDSS_G,SDSS_R,SDSS_I,SDSS_Z,J,H,Ks,i1,i2};
 
 /** \brief Structure for reading and writing parameters to and from a parameter file as well as a container 
@@ -127,6 +129,8 @@ private:
 		counter();
 		counter(const counter& other);
 		
+		counter& operator=(const counter& rhs);
+		
 		void use(const std::string& label);
 		bool is_used(const std::string& label) const;
 		
@@ -135,9 +139,7 @@ private:
 	private:
 		std::map<std::string, std::size_t> c;
 		
-#if __cplusplus >= 201103L
 		mutable std::mutex mutex;
-#endif
 	};
 	
 	typedef std::map<std::string, std::string>::iterator iterator;

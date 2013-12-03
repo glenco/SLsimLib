@@ -74,6 +74,7 @@ protected:
 	//TODO: Could this be moved into the BLR classes because they are the only ones that use it.
 	double DlDs;
 	double sb_limit;
+  
 };
 
 typedef Source *SourceHndl;

@@ -60,7 +60,7 @@
 // TODO: BEN finish this documentation for perturbation parameters.
 class LensHaloAnaNSIE : public LensHaloBaseNSIE{
 public:
-	LensHaloAnaNSIE(InputParams& params);
+	LensHaloAnaNSIE(InputParams& params,bool verbose = false);
 	~LensHaloAnaNSIE();
 
   void assignParams(InputParams& params);

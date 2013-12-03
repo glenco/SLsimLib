@@ -293,20 +293,20 @@ void PixelMap::AddImages(
 	for(long ii=0;ii<Nimages;++ii){
 
 		if(imageinfo->imagekist->Nunits() > 0){
-			MoveToTopKist(imageinfo[ii].imagekist);
+			imageinfo[ii].imagekist->MoveToTop();
 			do{
-				if(rescale != 0.0) sb = fabs(rescale)*getCurrentKist(imageinfo[ii].imagekist)->surface_brightness;
+				if(rescale != 0.0) sb = fabs(rescale)*imageinfo[ii].imagekist->getCurrent()->surface_brightness;
 
-				assert(getCurrentKist(imageinfo[ii].imagekist)->leaf);
+				assert(imageinfo[ii].imagekist->getCurrent()->leaf);
 
-				if ((inMapBox(getCurrentKist(imageinfo[ii].imagekist)->leaf)) == true){
-					PointsWithinLeaf(getCurrentKist(imageinfo[ii].imagekist)->leaf,neighborlist);
+				if ((inMapBox(imageinfo[ii].imagekist->getCurrent()->leaf)) == true){
+					PointsWithinLeaf(imageinfo[ii].imagekist->getCurrent()->leaf,neighborlist);
 					for(it = neighborlist.begin();it != neighborlist.end();it++){
-						area = LeafPixelArea(*it,getCurrentKist(imageinfo[ii].imagekist)->leaf);
+						area = LeafPixelArea(*it,imageinfo[ii].imagekist->getCurrent()->leaf);
             map[*it] += sb*area;
 					}
 				}
-			}while(MoveDownKist(imageinfo[ii].imagekist));
+			}while(imageinfo[ii].imagekist->Down());
 		}
 	}
     

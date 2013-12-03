@@ -17,7 +17,7 @@ using namespace std;
  * force calculation.
  */
 
-LensHaloUniform::LensHaloUniform(InputParams& params, const COSMOLOGY& cosmo)
+LensHaloUniform::LensHaloUniform(InputParams& params, const COSMOLOGY& cosmo, bool verbose)
 : LensHalo()
 {
   
@@ -32,10 +32,10 @@ LensHaloUniform::LensHaloUniform(InputParams& params, const COSMOLOGY& cosmo)
   perturb_modes = new double[3];
   
   setCosmology(cosmo);
-  PrintLens(false,false);
+  if(verbose) PrintLens(false,false);
 }
 
-LensHaloUniform::LensHaloUniform(InputParams& params): LensHalo(){
+LensHaloUniform::LensHaloUniform(InputParams& params, bool verbose): LensHalo(){
   
   assignParams(params);
   
@@ -47,7 +47,7 @@ LensHaloUniform::LensHaloUniform(InputParams& params): LensHalo(){
   perturb_Nmodes=3;
   perturb_modes = new double[3];
   
-  PrintLens(false,false);
+  if(verbose) PrintLens(false,false);
 }
 
 LensHaloUniform::~LensHaloUniform(){

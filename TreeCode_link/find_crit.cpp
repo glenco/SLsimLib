@@ -92,17 +92,17 @@ void find_crit(
 
 	  // make inner border of the image
 	  critcurve->imagekist->Empty();
-	  MoveToTopKist(negimage.innerborder);
+	  negimage.innerborder->MoveToTop();
 	  for(i=0,maxgridsize=0.0,mingridsize=1.0e99;i<negimage.innerborder->Nunits();++i){
 
-		  if(getCurrentKist(negimage.innerborder)->gridsize > maxgridsize) maxgridsize = getCurrentKist(negimage.innerborder)->gridsize;
-		  if(getCurrentKist(negimage.innerborder)->gridsize < mingridsize) mingridsize = getCurrentKist(negimage.innerborder)->gridsize;
+		  if(negimage.innerborder->getCurrent()->gridsize > maxgridsize) maxgridsize = negimage.innerborder->getCurrent()->gridsize;
+		  if(negimage.innerborder->getCurrent()->gridsize < mingridsize) mingridsize = negimage.innerborder->getCurrent()->gridsize;
 
-		  critcurve->imagekist->InsertAfterCurrent(getCurrentKist(negimage.innerborder));
+		  critcurve->imagekist->InsertAfterCurrent(negimage.innerborder->getCurrent());
 		  critcurve->imagekist->Down();
 		  critcurve->imagekist->getCurrent()->in_image = TRUE;
 
-		  MoveDownKist(negimage.innerborder);
+		  negimage.innerborder->Down();
 	  }
 	  findborders4(grid->i_tree,critcurve);
 	  //std::printf("came out of findborders 2\n");
@@ -244,7 +244,7 @@ void find_crit(
 		  critcurve[i].imagekist->MoveToTop();
 		  //copy points into a point array for compatibility with curve ordering routines
 		  for(ii=0; ii < critcurve[i].imagekist->Nunits() ; ++ii, critcurve[i].imagekist->Down())
-			  PointCopyData(&tmp_points[ii],getCurrentKist(critcurve[i].imagekist));
+			  PointCopyData(&tmp_points[ii],critcurve[i].imagekist->getCurrent());
 
 		  // order the curve
 		  NewNumber = Utilities::order_curve4(tmp_points,critcurve[i].imagekist->Nunits());
@@ -479,7 +479,7 @@ void find_crit2(
 					  // add point to outerborder
 					  neighborkist.getCurrent()->in_image = MAYBE;
 					  critcurve->outerborder->InsertAfterCurrent(neighborkist.getCurrent());
-					  MoveDownKist(critcurve->outerborder);
+					  critcurve->outerborder->Down();
 				  }
 			  }
 
@@ -766,17 +766,19 @@ void refine_crit_in_image(
         
         // make inner border of the image
         critcurve.imagekist->Empty();
-        MoveToTopKist(negimage.innerborder);
+        negimage.innerborder->MoveToTop();
         for(i=0,maxgridsize=0.0,mingridsize=1.0e99;i<negimage.innerborder->Nunits();++i){
             
-            if(getCurrentKist(negimage.innerborder)->gridsize > maxgridsize) maxgridsize = getCurrentKist(negimage.innerborder)->gridsize;
-            if(getCurrentKist(negimage.innerborder)->gridsize < mingridsize) mingridsize = getCurrentKist(negimage.innerborder)->gridsize;
+            if(negimage.innerborder->getCurrent()->gridsize > maxgridsize) maxgridsize
+              = negimage.innerborder->getCurrent()->gridsize;
+            if(negimage.innerborder->getCurrent()->gridsize < mingridsize) mingridsize
+              = negimage.innerborder->getCurrent()->gridsize;
             
-            critcurve.imagekist->InsertAfterCurrent(getCurrentKist(negimage.innerborder));
+            critcurve.imagekist->InsertAfterCurrent(negimage.innerborder->getCurrent());
             critcurve.imagekist->Down();
             critcurve.imagekist->getCurrent()->in_image = TRUE;
             
-            MoveDownKist(negimage.innerborder);
+            negimage.innerborder->Down();
         }
         findborders4(grid->i_tree,&critcurve);
         

@@ -243,7 +243,6 @@ void TreeStruct::construct_root(
  * \brief Free tree and the linked list of points in it.
  */
 TreeStruct::~TreeStruct(){
-//short freeTree(TreeHndl tree){
 
 	emptyTree();
 	free(current);
@@ -833,11 +832,18 @@ ImageInfo::~ImageInfo(){
  * \brief Copy all information about the image including making copies of the imagekist,
  * innerborder and outerborder.  Previous information in the image will be
  */
-void ImageInfo::copy(ImageInfo &image){
-	imagekist->copy(image.imagekist);
-	innerborder->copy(image.innerborder);
-	outerborder->copy(image.outerborder);
+void ImageInfo::copy(
+                     ImageInfo &image   /// image to be copied
+                     ,bool copykists    /// Turn off copying imagekist, innerborder and outerborder.
+                                        /// This is useful when the grid has already been distroyed.
+                     ){
 
+  if(copykists){
+    imagekist->copy(image.imagekist);
+    innerborder->copy(image.innerborder);
+    outerborder->copy(image.outerborder);
+  }
+  
 	gridrange[0] = image.gridrange[0];
 	gridrange[1] = image.gridrange[1];
 	gridrange[2] = image.gridrange[2];

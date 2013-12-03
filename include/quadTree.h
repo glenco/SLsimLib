@@ -72,35 +72,38 @@ struct QTreeNB{
 			 ,PosType boundary_p1[],PosType boundary_p2[]);
 	~QTreeNB();
 
-	short empty();
-	bool isEmpty();
-	bool atTop();
-	bool noChild();
-	bool offEnd();
+	const bool isEmpty();
+	const bool atTop();
+	const bool noChild();
+	const bool offEnd();
+	const unsigned long getNbranches();
+	const bool atLeaf(){
+		return (current->child0 == NULL)*(current->child1 == NULL)
+    *(current->child2 == NULL)*(current->child3 == NULL);
+	}
+	const bool atLeaf(QBranchNB *branch){
+		return (branch->child0 == NULL)*(branch->child1 == NULL)
+    *(branch->child2 == NULL)*(branch->child3 == NULL);
+	}
+  
 	void getCurrent(IndexType *particles,IndexType *nparticles);
-	unsigned long getNbranches();
 	void moveTop();
 	void moveUp();
 	void moveToChild(int child);
+	bool WalkStep(bool allowDescent);  
+  
+  short empty();
 	void attachChildrenToCurrent(QBranchNB *branch0,QBranchNB *branch1
 			,QBranchNB *branch2,QBranchNB *branch3);
-	bool WalkStep(bool allowDescent);
-	inline bool atLeaf(){
-		return (current->child0 == NULL)*(current->child1 == NULL)
-				*(current->child2 == NULL)*(current->child3 == NULL);
-	}
-	inline bool atLeaf(QBranchNB *branch){
-		return (branch->child0 == NULL)*(branch->child1 == NULL)
-				*(branch->child2 == NULL)*(branch->child3 == NULL);
-	}
+
 	QBranchNB *top;
 	QBranchNB *current;
-	/// number of branches in tree
-	unsigned long Nbranches;
 	/// Array of particle positions
 	PosType **xp;
 
 private:
+  /// number of branches in tree
+	unsigned long Nbranches;
 	void _freeQTree(short child);
 };
 

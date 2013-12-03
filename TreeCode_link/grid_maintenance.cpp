@@ -7,7 +7,10 @@
 
 #include "slsimlib.h"
 #include "Tree.h"
-Point *pointofinterest = NULL;
+#include <mutex>
+
+std::mutex Grid::grid_mutex;
+
 /** \ingroup Constructor
  * \brief Constructor for initializing grid.
  *
@@ -21,6 +24,7 @@ Grid::Grid(
 		 ){
 
 	Point *i_points,*s_points;
+  pointID = 0;
 
 	assert(N1d > 0);
 	assert(range > 0);
@@ -35,7 +39,10 @@ Grid::Grid(
 	i_points = NewPointArray(Ngrid_init*Ngrid_init,true);
 	xygridpoints(i_points,range,center,Ngrid_init,0);
 	s_points=LinkToSourcePoints(i_points,Ngrid_init*Ngrid_init);
+
+  grid_mutex.lock();
 	lens->rayshooterInternal(Ngrid_init*Ngrid_init,i_points,false);
+  grid_mutex.unlock();
   
 	// Build trees
 	i_tree = new TreeStruct(i_points,Ngrid_init*Ngrid_init);
@@ -86,7 +93,10 @@ void Grid::ReInitializeGrid(LensHndl lens){
 	i_points = NewPointArray(Ngrid_init*Ngrid_init,true);
 	xygridpoints(i_points,range,center,Ngrid_init,0);
 	s_points=LinkToSourcePoints(i_points,Ngrid_init*Ngrid_init);
+  
+  grid_mutex.lock();
 	lens->rayshooterInternal(Ngrid_init*Ngrid_init,i_points,false);
+  grid_mutex.unlock();
   
 	// need to resize root of source tree.  It can change in size
 	s_tree->top->boundary_p1[0]=s_points[0].x[0]; s_tree->top->boundary_p1[1]=s_points[0].x[1];
@@ -160,7 +170,9 @@ void Grid::ReShoot(LensHndl lens){
         s_points[k].gridsize = i_points[j].gridsize;
       };
       // reshoot the rays
+      grid_mutex.lock();
       lens->rayshooterInternal(i_points->head,i_points,false);
+      grid_mutex.unlock();
     }
     
     MoveDownList(i_tree->pointlist);
@@ -289,8 +301,11 @@ Point * Grid::RefineLeaf(LensHndl lens,Point *point,bool kappa_off){
 	int  Ntemp = Ngrid_block*Ngrid_block-1-Nout;
 
 	s_points = LinkToSourcePoints(i_points,Ntemp);
+  
+  grid_mutex.lock();
 	lens->rayshooterInternal(Ntemp,i_points,kappa_off);
-
+  grid_mutex.unlock();
+  
 	// remove the points that are outside initial source grid
 	for(kk=0,Nout=0;kk < Ntemp;++kk){
 		assert(s_points[kk - Nout].x[0] == s_points[kk - Nout].x[0]);
@@ -356,11 +371,12 @@ Point * Grid::RefineLeaf(LensHndl lens,Point *point,bool kappa_off){
 	return i_points;
 }
 /**
- * Same as RefineLeaf() but multiple points can be passed.  The rays are shot all together so that more
+ * \brief Same as RefineLeaf() but multiple points can be passed.  The rays are shot all together so that more
  * parallelization can be achieved in the rayshooting.
  */
 Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa_off){
 
+  
 	if(points.size() == 0) return NULL;
 
 	size_t Nleaves = points.size();
@@ -373,8 +389,13 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa
 	for(ii=0,Nadded=0;ii<Nleaves;++ii){
 		assert(points[ii]->leaf->child1 == NULL && points[ii]->leaf->child2 == NULL);
 		assert(points[ii]->image->leaf->child1 == NULL && points[ii]->image->leaf->child2 == NULL);
-
-		assert(points[ii]->gridsize > pow(10.,-DBL_DIG)*MAX(fabs(points[ii]->x[0]),fabs(points[ii]->x[1])) ); // If cells are too small they will cause
+    
+    // If cells are too small they will cause problems
+		if(points[ii]->gridsize < pow(10.,-DBL_DIG)*MAX(fabs(points[ii]->x[0]),fabs(points[ii]->x[1])) ){
+      ERROR_MESSAGE();
+      std::cout << "Cell size is too small for double precision " << std::endl;
+      throw std::runtime_error("Cell size is too small for double precision");
+    };
     //assert(points[ii]->gridsize > 1.0e-10*MAX(fabs(points[ii]->x[0]),fabs(points[ii]->x[1])) ); // If cells are too small they will cause problems.
 
 		points[ii]->leaf->refined = true;
@@ -491,7 +512,9 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa
 
 	}*/
 
+  grid_mutex.lock();
 	lens->rayshooterInternal(Nadded,i_points,kappa_off);
+  grid_mutex.unlock();
 
 	/*********************** TODO test line *******************************
 	for(ii=0;ii<Nadded;++ii){

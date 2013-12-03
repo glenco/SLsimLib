@@ -6,13 +6,22 @@
 /* median_cut determines how the cells are subdivided */
 /*    if ==0  equal volume cuts, Warning this option causes an error*/
 /*    if ==1  median point cuts */
-static int incell;
-static Point **temp_points;
-static double realray[2];
+//static int incell;
+
+//static double realray[2];
 //Point *point_global;
 
-/// Warning: Not garenteed to return Nneighbors if there are less points on the grid
-Point *TreeStruct::NearestNeighbor(const double* center,int Nneighbors,ListHndl neighborlist,short direction){
+/** \ingroup ImageFundingL2
+ *
+ * \brief Finds nearest neighbor points to ray.
+ *
+ *    This is a kludge that relies on NearestNeighbor which uses a List and translates
+ *    the list to a kist.  Could be rewritten.
+ *
+ *    Warning: The number of neighbor points in neighborkist will be less than Nneighbors when
+ *             the number of points in the tree is less than Nneighbors
+ */
+Point *TreeStruct::NearestNeighborKist(const double* center,int Nneighbors,Kist<Point>* neighborkist){
   /* nearest neighbor points in a given direction, direction != 0 should not */
   /*    be used except on a grid */
   /* direction = 0 distance */
@@ -21,9 +30,10 @@ Point *TreeStruct::NearestNeighbor(const double* center,int Nneighbors,ListHndl 
   /*           = 3 to up */
   /*           = 4 to down */
   unsigned long i;
-  static int count=0,oldNneighbors=-1;
-  static double *rneighbors;
-  static Point **neighborpoints;
+  //static int oldNneighbors=-1;
+  //static double *rneighbors;
+  //static Point **neighborpoints;
+  short direction = 0;
 
   /*std::printf("entering NN\n");*/
 
@@ -33,28 +43,32 @@ Point *TreeStruct::NearestNeighbor(const double* center,int Nneighbors,ListHndl 
 	  //throw std::out_of_range(std::string() + "ERROR: in NearestNeighbor, number of neighbors > total number of points");
     Nneighbors = top->npoints-1;
   }
-  EmptyList(neighborlist);
+//  EmptyList(neighborlist);
+  neighborkist->Empty();
   if(Nneighbors <= 0) return NULL;
-
+/*
   if(count==0){
-    /*std::printf("allocating memory\n");*/
-    rneighbors=(double *)malloc((Nneighbors+Nbucket)*sizeof(double));
+    rneighbors= (double *)malloc((Nneighbors+Nbucket)*sizeof(double));
     assert(rneighbors);
     neighborpoints=(Point **)malloc((Nneighbors+Nbucket)*sizeof(Point *));
     assert(neighborpoints);
-    temp_points=(Point **)malloc((Nneighbors+Nbucket)*sizeof(Point *));
+    //temp_points = (Point **)malloc((Nneighbors+Nbucket)*sizeof(Point *));
     assert(temp_points);
+    
     ++count;
     oldNneighbors=Nneighbors;
 
-  }else if(oldNneighbors < Nneighbors){ /* if the number of nearest neighbors goes up get more mem */
-    /*std::printf("re-allocating memory\n");*/
-    rneighbors=(double *)realloc(rneighbors,(Nneighbors+Nbucket)*sizeof(double));
+  }else if(oldNneighbors < Nneighbors){ // if the number of nearest neighbors goes up get more mem
+    rneighbors = (double *)realloc(rneighbors,(Nneighbors+Nbucket)*sizeof(double));
     neighborpoints=(Point **)realloc(neighborpoints,(Nneighbors+Nbucket)*sizeof(Point *));
-    temp_points=(Point **)realloc(temp_points,(Nneighbors+Nbucket)*sizeof(Point *));
+    //temp_points = (Point **)realloc(temp_points,(Nneighbors+Nbucket)*sizeof(Point *));
     oldNneighbors=Nneighbors;
   }
-
+  */
+  
+  double rneighbors[Nneighbors+Nbucket];
+  Point *neighborpoints[Nneighbors+Nbucket];
+  tmp_point.resize(Nneighbors+Nbucket);
 
   /*   std::printf("Nneighbors=%i\n",Nneighbors); */
   /*   std::printf("array sizes=%i\n",Nneighbors+Nbucket); */
@@ -84,7 +98,7 @@ Point *TreeStruct::NearestNeighbor(const double* center,int Nneighbors,ListHndl 
   }
   incell=1;
 
-  if(direction==0) EmptyList(neighborlist);
+  //if(direction==0) EmptyList(neighborlist);
   if(direction==-1) direction=0;
 
   _NearestNeighbor(ray,Nneighbors,neighborpoints,rneighbors,&direction);
@@ -92,12 +106,19 @@ Point *TreeStruct::NearestNeighbor(const double* center,int Nneighbors,ListHndl 
   /* convert from point array to exported point list */
 
   for(i=0;i<Nneighbors;++i){
+    neighborkist->InsertAfterCurrent(neighborpoints[i]);
+    neighborkist->Down();
+  }
+/*
+  for(i=0;i<Nneighbors;++i){
     InsertAfterCurrent(neighborlist,neighborpoints[i]->x,neighborpoints[i]->id,neighborpoints[i]->image);
     MoveDownList(neighborlist);
-    PointCopyData(neighborlist->current,neighborpoints[i]);/**/
+    PointCopyData(neighborlist->current,neighborpoints[i]);
   }
-
-  return neighborpoints[0];
+*/
+    
+  neighborkist->MoveToTop();
+  return neighborkist->getCurrent();
 }
 
 void TreeStruct::_NearestNeighbor(double* ray,int Nneighbors,Point **neighborpoints,double *rneighbors,short *direction){
@@ -155,13 +176,15 @@ void TreeStruct::_NearestNeighbor(double* ray,int Nneighbors,Point **neighborpoi
     			}
 
      			index[i]=i;
-    			temp_points[i]=pointlist->current;
+    			//temp_points[i]=pointlist->current;
+          tmp_point[i] = pointlist->current;
     			MoveDownList(pointlist);
     		}
 
     		if(current->npoints > 0){
     			Utilities::double_sort(current->npoints,rneighbors-1,index-1);
-    			for(i=0;i<current->npoints;++i) neighborpoints[i] = temp_points[index[i]];
+    			//for(i=0;i<current->npoints;++i) neighborpoints[i] = temp_points[index[i]];
+    			for(i=0;i<current->npoints;++i) neighborpoints[i] = tmp_point[index[i]];
     		}
 
       }else{  // keep going down the tree
@@ -204,7 +227,8 @@ void TreeStruct::_NearestNeighbor(double* ray,int Nneighbors,Point **neighborpoi
 
 			  for(i=0;i<Nneighbors;++i){
 				  index[i]=i;
-				  temp_points[i]=neighborpoints[i];
+				  //temp_points[i]=neighborpoints[i];
+				  tmp_point[i]=neighborpoints[i];
 			  }
 
 			  for(i=Nneighbors;i<(current->npoints+Nneighbors);++i){
@@ -235,14 +259,16 @@ void TreeStruct::_NearestNeighbor(double* ray,int Nneighbors,Point **neighborpoi
 				  }
 
 				  index[i]=i;
-				  temp_points[i]=pointlist->current;
+				  //temp_points[i]=pointlist->current;
+				  tmp_point[i]=pointlist->current;
 				  MoveDownList(pointlist);
 			  }
 
 			  // sort the points found so far
 			  if(current->npoints > 0){
 				  Utilities::double_sort(current->npoints+Nneighbors,rneighbors-1,index-1);
-				  for(i=0;i<(current->npoints+Nneighbors);++i) neighborpoints[i] = temp_points[index[i]];
+				  //for(i=0;i<(current->npoints+Nneighbors);++i) neighborpoints[i] = temp_points[index[i]];
+				  for(i=0;i<(current->npoints+Nneighbors);++i) neighborpoints[i] = tmp_point[index[i]];
 			  }
 
 		  }else{

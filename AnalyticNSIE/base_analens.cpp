@@ -311,22 +311,22 @@ void LensHaloBaseNSIE::printCSV(std::ostream& out, bool header) const
 }
 
 LensHaloBaseNSIE::~LensHaloBaseNSIE(){
-	cout << "deleting lens" << endl;
+	// std::cout << "deleting lens" << endl;
 
 	delete[] perturb_rms;
 
 	if(perturb_Nmodes > 0){
-		cout << "deleting modes" << endl;
+		// std::cout << "deleting modes" << endl;
 		delete[] perturb_modes;
 	}
 	if(sub_N > 0 && substruct_implanted){
-		cout << "deleting subs" << endl;
+		// std::cout << "deleting subs" << endl;
 		Utilities::free_PosTypeMatrix(sub_x,sub_N,2);
 		delete[] subs;
 		delete[] sub_substructures;
 	}
 	if(stars_N > 0 && stars_implanted){
-		cout << "deleting stars" << endl;
+		// std::cout << "deleting stars" << endl;
 		delete[] star_masses;
 		delete[] stars;
 		Utilities::free_PosTypeMatrix(stars_xp,stars_N,3);
