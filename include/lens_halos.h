@@ -96,15 +96,8 @@ public:
   /// stars
   bool AreStarsImaplated() const {return stars_implanted;}
   void implant_stars(PosType **centers,int Nregions,long *seed, IMFtype type=One);
-<<<<<<< local
-  /// creates a single star halo in pos (x,y)
 
-  void implant_stars(double x,double y,int Nregions,long *seed,IMFtype type=One);
-  double * getStarRegion() {return star_region;}
-
-=======
   //void implant_stars(double *x,double *y,int Nregions,long *seed,IMFtype type=One);
->>>>>>> other
   void remove_stars();
   IMFtype getStarIMF_type() const {return main_stars_imf_type;}
   /// Fraction of surface density in stars
