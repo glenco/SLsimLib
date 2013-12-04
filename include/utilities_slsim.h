@@ -563,9 +563,6 @@ namespace Utilities
 			
 			// remove from items
 			items.pop_back();
-			
-			// delete from memory
-			delete back;
 		}
 		
 		/// erase the last element of a specific type
