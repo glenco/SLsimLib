@@ -237,4 +237,40 @@ public:
 /// pointer to surface brightness function
 //double (Source::*SurfaceBrightness)(double *y);
 
+
+/*
+ *    Class to handle redshift-dependent quasar luminosity functions.
+ *   At the moment, only i band is available
+ *   QLF from Ross et al. 2013
+ *   k-correction from Richards et al. 2006
+ */
+class QuasarLF{
+	public:
+		QuasarLF(double red, double mag_limit, std::string kcorr_file, long *seed);
+		// returns the integral of the luminosity function at redshift red
+		double getNorm() {return pow(10,log_phi)*norm;}; // in Mpc^(-3)
+		double get();
+
+	private:
+		double kcorr;
+		double red;
+		double mag_limit;
+		double mstar;
+		double log_phi;
+		double alpha;
+		double beta;
+		long *seed;
+		double norm;
+		double mag_max, mag_min;
+		int arr_nbin;
+		double* mag_arr;
+		double* lf_arr;
+		double dl;
+
+		typedef double (QuasarLF::*pt2MemFunc)(double) const;
+		double nintegrateQLF(pt2MemFunc func, double a,double b,double tols) const;
+		double trapzQLFlocal(pt2MemFunc func, double a, double b, int n, double *s2) const;
+		double lf_kernel (double mag) const;
+};
+
 #endif /* SOURCE_H_ */
