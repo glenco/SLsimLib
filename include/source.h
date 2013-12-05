@@ -55,6 +55,10 @@ public:
 	/// Sets sb_limit in mag/arcsec^2
 	void setSBlimit_magarcsec(float limit) {sb_limit = pow(10,-0.4*(48.6+limit))*pow(180*60*60/pi,2)/hplanck;}
 
+	double changeFilter(std::string filter_in, std::string filter_out, std::string sed);
+	double integrateFilter(std::vector<double> wavel_fil, std::vector<double> fil);
+	double integrateFilterSed(std::vector<double> wavel_fil, std::vector<double> fil, std::vector<double> wavel_sed, std::vector<double> sed);
+
 protected:
 	virtual void assignParams(InputParams& params) = 0;
 	
@@ -110,6 +114,34 @@ private:
 	double size;
 	double centroid[2];
 	std::valarray<double> values;
+};
+
+/** \brief Class for sources described by shapelets.
+ *
+ *  The sources are created from magnitude, scale radius, and the coefficients of their decomposition into the shapelets basis functions (Refregier et al., 2001).
+ *  The coefficients can be read from a fits square array.
+ *
+ */
+class SourceShapelets: public Source{
+public:
+	SourceShapelets(double my_z, double* my_center, double my_mag, double my_scale, std::valarray<double> my_coeff, double my_ang = 0.);
+	SourceShapelets(double my_z, double* my_center, double my_mag, std::string shap_file, double my_ang = 0.);
+	SourceShapelets(double* my_center, std::string shap_file, double my_ang = 0.);
+	double SurfaceBrightness(double *y);
+	void printSource();
+	inline double getTotalFlux(){return flux;}
+	inline double getRadius(){return source_r*10.;}
+	inline double getMag(){return mag;}
+	inline void setMag(double my_mag){mag = my_mag; NormalizeFlux();}
+
+private:
+	void assignParams(InputParams& params);
+	double Hermite(int n, double x);
+	void NormalizeFlux();
+	std::valarray<double> coeff;
+	int n1,n2;
+	double flux, mag;
+	double ang;
 };
 
 /// A uniform surface brightness circular source.
@@ -204,5 +236,41 @@ public:
 
 /// pointer to surface brightness function
 //double (Source::*SurfaceBrightness)(double *y);
+
+
+/*
+ *    Class to handle redshift-dependent quasar luminosity functions.
+ *   At the moment, only i band is available
+ *   QLF from Ross et al. 2013
+ *   k-correction from Richards et al. 2006
+ */
+class QuasarLF{
+	public:
+		QuasarLF(double red, double mag_limit, std::string kcorr_file, long *seed);
+		// returns the integral of the luminosity function at redshift red
+		double getNorm() {return pow(10,log_phi)*norm;}; // in Mpc^(-3)
+		double get();
+
+	private:
+		double kcorr;
+		double red;
+		double mag_limit;
+		double mstar;
+		double log_phi;
+		double alpha;
+		double beta;
+		long *seed;
+		double norm;
+		double mag_max, mag_min;
+		int arr_nbin;
+		double* mag_arr;
+		double* lf_arr;
+		double dl;
+
+		typedef double (QuasarLF::*pt2MemFunc)(double) const;
+		double nintegrateQLF(pt2MemFunc func, double a,double b,double tols) const;
+		double trapzQLFlocal(pt2MemFunc func, double a, double b, int n, double *s2) const;
+		double lf_kernel (double mag) const;
+};
 
 #endif /* SOURCE_H_ */
