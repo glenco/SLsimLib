@@ -162,4 +162,20 @@ void UnionList(ListHndl list1,ListHndl list2);
 bool ArePointsUniqueList(ListHndl list);
 bool IntersectionList(ListHndl list1,ListHndl list2,ListHndl intersection);
 
+/** \brief Transform all points in kist from image to source plane or vis versus.
+ * Data type must have a "image" attribute.
+ *
+void TranformPlanes(Kist<Point> &kist){
+  
+	if(kist.Nunits() == 0) return;
+	kist.MoveToTop();
+	do{
+		assert(kist.getCurrent());
+		assert(kist.getCurrent()->image);
+		kist.getCurrent() = kist.getCurrent()->image;
+	}while(kist.Down());
+  
+	return;
+}*/
+
 #endif

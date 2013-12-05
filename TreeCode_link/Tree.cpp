@@ -151,20 +151,25 @@ Point *NewPointArray(
   unsigned long i;
 
   if(N <= 0) return NULL;
-  points = (Point *) calloc(N, sizeof(Point));
-  if(NewXs) points[0].x = (double *) calloc(2,sizeof(double));
+  //points = (Point *) calloc(N, sizeof(Point));
+  points = new Point[N];
+  //if(NewXs) points[0].x = (double *) calloc(2,sizeof(double));
+  if(NewXs) points[0].x = new double[2];
   points[0].head = N;
   points[0].in_image = FALSE;
   points[0].surface_brightness = 0;
   points[0].leaf = NULL;
+  points[0].image = NULL;
 
   for(i = 1; i < N; i++)
   	  {
-	  	  if(NewXs) points[i].x = (double *) calloc(2,sizeof(double));
+	  	  //if(NewXs) points[i].x = (double *) calloc(2,sizeof(double));
+	  	  if(NewXs) points[i].x = new double[2];
 	  	  points[i].head = 0;
 	  	  points[i].in_image = FALSE;
 	  	  points[i].surface_brightness = 0;
 	  	  points[i].leaf = NULL;
+        points[i].image = NULL;
   	  }
 
   return points;
@@ -178,8 +183,10 @@ void FreePointArray(Point *array,bool NewXs){
   unsigned long i;
 
   if(array[0].head){
-	  if(NewXs) for(i=0;i<array[0].head;++i) free(array[i].x);
-	  free(array);
+	  //if(NewXs) for(i=0;i<array[0].head;++i) free(array[i].x);
+	  //free(array);
+	  if(NewXs) for(i=0;i<array[0].head;++i) delete[] array[i].x;
+	  delete[] array;
   }else{
 	  ERROR_MESSAGE();
 	  std::cout << "ERROR: FreePointArray, miss aligned attempt to free point array" << std::endl;
@@ -693,10 +700,10 @@ Point *NewPoint(double *x,unsigned long id){
   return(point);
 }
 
+/** SWAPS information in points without changing
+* pointers to prev and next
+* changes links of image points to follow */
 void SwapPointsInArray(Point *p1,Point *p2){
-  /* SWAPS information in points without changing */
-  /* pointers to prev and next */
-  /* changes links of image points to follow*/
   Point pt;
 
   if(p1==p2) return;
@@ -705,10 +712,10 @@ void SwapPointsInArray(Point *p1,Point *p2){
   PointCopy(p1,p2);
   PointCopy(p2,&pt);
 }
+/** SWAPS information in points without changing
+* pointers to prev and next
+* Does not change links of image points to follow */
 void SwapPointsInArrayData(Point *p1,Point *p2){
-  /* SWAPS information in points without changing */
-  /* pointers to prev and next */
-  /* Does not change links of image points to follow*/
   Point pt;
 
   if(p1==p2) return;
@@ -718,10 +725,10 @@ void SwapPointsInArrayData(Point *p1,Point *p2){
   PointCopyData(p2,&pt);
 }
 
+/** copies information in point without copying
+ * pointers to prev and next, but moving the link
+ * to the image point, does not touch head */
 void PointCopy(Point *pcopy,Point *pin){
-  /* copies information in point without copying
-  * pointers to prev and next, but moving the link
-  * to the image point, does not touch head */
   pcopy->id = pin->id;
   pcopy->image = pin->image;
   pcopy->invmag = pin->invmag;

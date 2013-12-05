@@ -695,8 +695,10 @@ inline void FillKist(Kist<Point> * kist,Point *data_array,unsigned long N){
 inline Point *getCurrentKist(Kist<Point> * kist){
 	return kist->getCurrent();
 }
+
 inline void TranformPlanesKist(Kist<Point> * kist){
 	kist->TranformPlanes();
 }
 */
+
 #endif
