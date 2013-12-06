@@ -23,7 +23,7 @@ QuasarLF::QuasarLF
 	for (int i = 0; i < 550; i++)
 	{
 		file_in >> red_arr[i] >> kcorr_arr[i];
-		if (fabs(red_arr[i]-red)<0.05) kcorr = kcorr_arr[i];
+		if (fabs(red_arr[i]-red)<=0.005) kcorr = kcorr_arr[i];
 	}
 
 	// QLF described as double power law
