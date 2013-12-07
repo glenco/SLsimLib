@@ -301,7 +301,7 @@ void LensHaloPowerLaw::assignParams(InputParams& params){
 	if(!params.get("main_mass",mass)) error_message1("main_mass",params.filename());
 	if(!params.get("main_Rmax",Rmax)) error_message1("main_Rmax",params.filename());
 	if(!params.get("main_zlens",zlens)) error_message1("main_zlens",params.filename());
-	if(!params.get("main_slope",beta)) error_message1("main_slope",params.filename());
+	if(!params.get("main_slope",beta)) error_message1("main_slope, example -1",params.filename());
 
 	if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
     else if(stars_N){

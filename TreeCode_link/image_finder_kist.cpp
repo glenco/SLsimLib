@@ -432,7 +432,7 @@ void find_images_microlens(
 		,bool kappa_off         /// turns off calculation of surface density, shear, magnification and time delay
 		){
 
-  const float mumin_local = 0.05;
+  const float mumin_local = 0.02;
 
 	if(  grid->s_tree->top->boundary_p1[0] > (y_source[0] + r_source)
 	  || grid->s_tree->top->boundary_p2[0] < (y_source[0] - r_source)
