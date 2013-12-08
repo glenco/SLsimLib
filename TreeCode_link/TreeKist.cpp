@@ -134,7 +134,7 @@ bool TreeKist::CurrentIsSquareBranch(){
  * Returns the first point in branch
  * Pre: !offEnd(tree)
  ************************************************************************/
-KistIt<Point> TreeKist::getCurrent(unsigned long *npoints){
+Kist<Point>::iterator TreeKist::getCurrent(unsigned long *npoints){
 
     if( offEnd() ){
     	ERROR_MESSAGE();
@@ -293,7 +293,8 @@ void TreeKist::insertChildToCurrent(Branch *branch,int child){
     		MoveDownList(pointlist);
     	}*/
 
-      KistIt<Point> it = branch->pointit;
+      //KistIt<Point> it = branch->pointit;
+        Kist<Point>::iterator it = branch->pointit;
     	for(unsigned long i=0;i<branch->npoints;++i,--it){
     		(*it)->leaf = branch;
     	}
@@ -379,7 +380,8 @@ void TreeKist::printTree(){
       MoveDownList(pointlist);
     }
 */
-  KistIt<Point> it = current->pointit;
+    //KistIt<Point> it = current->pointit;
+    Kist<Point>::iterator it = current->pointit;
   for(i=0;i<current->npoints;++i,--it){
     std::cout << (*it)->id << " " << (*it)->x[0] << " " << (*it)->x[1] << std::endl;
   }
@@ -449,7 +451,8 @@ void TreeKist::_checkTree(unsigned long *count){
 void TreeKist::PointsInCurrent(unsigned long *ids,double **x){
   unsigned long i;
 
-  KistIt<Point> it = current->pointit;
+  Kist<Point>::iterator it = current->pointit;
+
   
   for(i=0;i<current->npoints;--it){
     x[i]=(*it)->x;
@@ -571,7 +574,7 @@ void TreeKist::RebuildTreeFromList(){
 	Point *points = NewPointArray(Npoints,true);
   
 	pointkist.MoveToTop();
-  KistIt<Point> it = pointkist.getTopIt();
+    Kist<Point>::iterator it = pointkist.getTopIt();
 	for(i=0;i<Npoints;++i,--it){
 		tmp = points[i].x;
 		// PointCopy() copies the x pointer which is later freed in
@@ -617,7 +620,7 @@ TreeKist * TreeKist::spawn(){
   newTree->top = current;
   
   // !!!! TODO:need to cut out the point kist and without making a copy
-  KistIt<Point> it;
+  Kist<Point>::iterator it;
   size_t i;
   for(it = current->pointit,i=0;i<current->npoints;--it,++i){
       newTree->pointkist.InsertAfterCurrent(*it);
@@ -771,7 +774,7 @@ void TreeKist::_BuildTree(){
   
   /* reorder points */
   
-  KistIt<Point> it = current->pointit;
+  Kist<Point>::iterator it = current->pointit;
   for(i=0;i<cbranch->npoints;++i,--it){
     x[i]=(*it)->x[dimension];
     /*points[i]=pointlist->current->id;*/

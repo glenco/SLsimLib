@@ -73,7 +73,7 @@ public:
     bool CurrentIsSquareBranch();
     bool noChild();
 
-    KistIt<Point> getCurrent(unsigned long *npoints);
+    Kist<Point>::iterator getCurrent(unsigned long *npoints);
     unsigned long getNbranches();
     void printTree();
     void checkTree();

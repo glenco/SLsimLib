@@ -17,71 +17,8 @@ struct KistUnit{
 	T * data;
 	struct KistUnit<T> *next;
 	struct KistUnit<T> *prev;
-};// Unit;
-
-/// Custom itorator class for Kist container
-template <class T>
-class KistIt{
-private:
-    struct KistUnit<T> *unit;
-    
-public:
-  //friend struct Kist;
-  struct KistUnit<T>  * getUnit(){return unit;}
-  
-    /// Returns a pointer to the current data.  Same as getCurrent.
-	T *operator*(){return unit->data;}
-  
-	bool operator++(){
-        if(unit == NULL){
-            return false;
-        }else{
-            unit = unit->next;
-            return true;
-        }
-    }
-	/// Same as Down()
-	bool operator--(){
-        if(unit == NULL){
-            return false;
-        }else{
-            unit = unit->prev;
-            return true;
-        }
-    }
-
-	/// Same as Up()
-	bool operator++(int){
-        if(unit == NULL){
-            return false;
-        }else{
-            unit = unit->next;
-            return true;
-        }
-    }
-
-	/// Same as Down()
-	bool operator--(int){
-        if(unit == NULL){
-            return false;
-        }else{
-            unit = unit->prev;
-            return true;
-        }
-    }
-    
-  KistIt& operator=(KistUnit<T> *my_unit){
-    unit = my_unit;
-    return *this;
-  }
-  
-  KistIt& operator=(const KistIt<T> my_it){
-    if(this == &my_it) return *this;
-    unit = my_it.unit;
-    return *this;
-  }
-	
 };
+
 
 //typedef struct Point Data;  // change this to make a kist of other objects
 
@@ -175,7 +112,8 @@ public:
 	void InsertBeforeCurrent(Data * data);
 	Data *TakeOutCurrent();
 	void Empty();
-  void Clear();
+    void Clear();
+    
 	//void FreeAll();
 	void Fill(Data * data,unsigned long N);
 	void SwapCurrentWithBottom();
@@ -190,26 +128,91 @@ public:
 	bool Up();
 	bool MoveToTop();
 	bool MoveToBottom();
+    
+    /// Custom itorator class for Kist container
+    //template <class T>
+    class iterator{
+    private:
+        struct KistUnit<Data> *unit;
+        
+    public:
+        //friend struct Kist;
+        struct KistUnit<Data>  * getUnit(){return unit;}
+        
+        /// Returns a pointer to the current data.  Same as getCurrent.
+        Data *operator*(){return unit->data;}
+        
+        bool operator++(){
+            if(unit == NULL){
+                return false;
+            }else{
+                unit = unit->next;
+                return true;
+            }
+        }
+        /// Same as Down()
+        bool operator--(){
+            if(unit == NULL){
+                return false;
+            }else{
+                unit = unit->prev;
+                return true;
+            }
+        }
+        
+        /// Same as Up()
+        bool operator++(int){
+            if(unit == NULL){
+                return false;
+            }else{
+                unit = unit->next;
+                return true;
+            }
+        }
+        
+        /// Same as Down()
+        bool operator--(int){
+            if(unit == NULL){
+                return false;
+            }else{
+                unit = unit->prev;
+                return true;
+            }
+        }
+        
+        iterator& operator=(KistUnit<Data> *my_unit){
+            unit = my_unit;
+            return *this;
+        }
+        
+        iterator& operator=(const iterator my_it){
+            if(this == &my_it) return *this;
+            unit = my_it.unit;
+            return *this;
+        }
+        
+    };
+
   
-  void SetCurrentIt(KistIt<Data> it){current = it.getUnit();}
+  void SetCurrentIt(iterator it){current = it.getUnit();}
   
-  KistIt<Data> getCurrentIt(){
-      KistIt<Data> it ;//= current;
+  iterator getCurrentIt(){
+      iterator it ;//= current;
       it = current;
       return it;
   }
-  KistIt<Data> getTopIt(){
-      KistIt<Data> it ;//= top;
+  iterator getTopIt(){
+      iterator it ;//= top;
       it = top;
       return it;
   }
-  KistIt<Data> getBottomIt(){
-    KistIt<Data> it;
+  iterator getBottomIt(){
+    iterator it;
     it = bottom;
     return it;
   }
-  KistIt<Data> getOffBottomIt(){
-    KistIt<Data> it;
+  iterator getOffBottomIt(){
+    iterator it;
     it = &offbot;
     return it;
   }
