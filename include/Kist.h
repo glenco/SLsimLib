@@ -55,7 +55,7 @@ struct KistUnit{
  
  ....
  
- for(KistIt<Point> it = kist.getTopIt(); it != kist.getOffBottomIt() ;--it){
+ for(Kist<Point>::iterator it = kist.getTopIt(); it != kist.getOffBottomIt() ;--it){
    cout << i << " x = " << (*it)->x[0] << "  " << (*it)->x[1] << endl;
  }
  

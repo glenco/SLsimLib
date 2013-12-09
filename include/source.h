@@ -238,8 +238,9 @@ public:
 //double (Source::*SurfaceBrightness)(double *y);
 
 
-/*
- *    Class to handle redshift-dependent quasar luminosity functions.
+/**
+ *    \brief Class to handle redshift-dependent quasar luminosity functions.
+ *
  *   At the moment, only i band is available
  *   QLF from Ross et al. 2013
  *   k-correction from Richards et al. 2006
@@ -249,7 +250,7 @@ class QuasarLF{
 		QuasarLF(double red, double mag_limit, std::string kcorr_file, long *seed);
 		// returns the integral of the luminosity function at redshift red
 		double getNorm() {return pow(10,log_phi)*norm;}; // in Mpc^(-3)
-		double get();
+		double getRandomLum();
 
 	private:
 		double kcorr;

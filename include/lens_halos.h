@@ -370,6 +370,9 @@ private:
 		return 0.5*beta*pow(x/xmax,beta+2);
 	}
 	inline KappaType phi_h(double x){
+    
+    return pow(x/xmax,beta+2)/(beta+2);
+    
 		ERROR_MESSAGE();
 		std::cout << "time delay has not been fixed for PowerLaw profile yet." << std::endl;
 		exit(1);

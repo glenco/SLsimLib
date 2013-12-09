@@ -388,7 +388,7 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa
 	Point *i_points = NewPointArray((Ngrid_block*Ngrid_block-1)*Nleaves,true);
 	Point *s_points;
 	size_t Nout,kk,ii;
-	long Nadded,Nout_tot;
+	size_t Nadded,Nout_tot;
   std::vector<size_t> addedtocell(points.size());
 
 	Nout_tot=0;

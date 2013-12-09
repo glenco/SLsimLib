@@ -69,8 +69,8 @@ QuasarLF::QuasarLF
 
 }
 
-// returns random apparent magnitude according to the luminosity function
-double QuasarLF::get()
+/// returns random apparent magnitude according to the luminosity function
+double QuasarLF::getRandomLum()
 {
 	// extracts random number r between [0,1]
 	// m:P(m) = r is the desired random magnitude
