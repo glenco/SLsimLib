@@ -247,7 +247,7 @@ public:
  */
 class QuasarLF{
 	public:
-		QuasarLF(double red, double mag_limit, std::string kcorr_file, long *seed);
+		QuasarLF(double red, double mag_limit, long *seed);
 		// returns the integral of the luminosity function at redshift red
 		double getNorm() {return pow(10,log_phi)*norm;}; // in Mpc^(-3)
 		double getRandomLum();

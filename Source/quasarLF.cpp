@@ -9,7 +9,6 @@
 QuasarLF::QuasarLF
 	(double red                      // redshift
 	, double mag_limit				// magnitude limit
-	, std::string kcorr_file			// file that contains k-correction as a function of redshift
 	, long *seed):
 		red(red), mag_limit(mag_limit), seed(seed)
 {
@@ -18,13 +17,13 @@ QuasarLF::QuasarLF
 
 	// k-correction for i band and quasar SED in the redshift range [0,5.5]
 	// We should check that the input is in a desired range (see also fitting models for LF below)
-	std::ifstream file_in(kcorr_file.c_str());
+	std::ifstream file_in("kcorr_Richards06.txt");
 	double red_arr[550];
 	double kcorr_arr[550];
 	for (int i = 0; i < 550; i++)
 	{
 		file_in >> red_arr[i] >> kcorr_arr[i];
-		if (fabs(red_arr[i]-red)<0.05) kcorr = kcorr_arr[i];
+		if (fabs(red_arr[i]-red)<=0.005) kcorr = kcorr_arr[i];
 	}
 
 	// QLF described as double power law
@@ -53,7 +52,7 @@ QuasarLF::QuasarLF
 	mag_max = mag_limit - 5*log10(dl*1.e+05) - kcorr;
 	mag_min = 10 - 5*log10(dl*1.e+05) - kcorr;
 
-	arr_nbin = 100;
+	arr_nbin = 10000;
 	mag_arr = new double[arr_nbin];
 	lf_arr = new double[arr_nbin];
 
