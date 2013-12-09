@@ -395,8 +395,8 @@ private:
 		//std::cout << "time delay has not been fixed for PowerLaw profile yet." << std::endl;
 		if(x==0) x=1e-6*xmax;
 		//exit(1);
-		assert( -1.0*pow(x/xmax,beta+3)/(beta+3) !=0.0);
-		return -1.0*pow(x/xmax,beta+3)/(beta+3);
+		assert( -1.0*pow(x/xmax,beta+2)/(beta+2) !=0.0);
+		return -1.0*pow(x/xmax,beta+2)/(beta+2);
 	}
 };
 

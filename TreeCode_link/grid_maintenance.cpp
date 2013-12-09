@@ -8,6 +8,7 @@
 #include "slsimlib.h"
 #include "Tree.h"
 #include <mutex>
+#include <thread>
 
 std::mutex Grid::grid_mutex;
 
@@ -40,9 +41,10 @@ Grid::Grid(
 	xygridpoints(i_points,range,center,Ngrid_init,0);
 	s_points=LinkToSourcePoints(i_points,Ngrid_init*Ngrid_init);
 
-  grid_mutex.lock();
-	lens->rayshooterInternal(Ngrid_init*Ngrid_init,i_points,false);
-  grid_mutex.unlock();
+  {
+    std::lock_guard<std::mutex> hold(grid_mutex);
+  	lens->rayshooterInternal(Ngrid_init*Ngrid_init,i_points,false);
+  }
   
 	// Build trees
 	i_tree = new TreeStruct(i_points,Ngrid_init*Ngrid_init);
@@ -94,10 +96,10 @@ void Grid::ReInitializeGrid(LensHndl lens){
 	xygridpoints(i_points,range,center,Ngrid_init,0);
 	s_points=LinkToSourcePoints(i_points,Ngrid_init*Ngrid_init);
   
-  grid_mutex.lock();
-	lens->rayshooterInternal(Ngrid_init*Ngrid_init,i_points,false);
-  grid_mutex.unlock();
-  
+  {
+    std::lock_guard<std::mutex> hold(grid_mutex);
+	  lens->rayshooterInternal(Ngrid_init*Ngrid_init,i_points,false);
+  }
 	// need to resize root of source tree.  It can change in size
 	s_tree->top->boundary_p1[0]=s_points[0].x[0]; s_tree->top->boundary_p1[1]=s_points[0].x[1];
 	s_tree->top->boundary_p2[0]=s_points[0].x[0]; s_tree->top->boundary_p2[1]=s_points[0].x[1];
@@ -169,10 +171,12 @@ void Grid::ReShoot(LensHndl lens){
         s_points[k].id = i_points[j].id;
         s_points[k].gridsize = i_points[j].gridsize;
       };
+
+      {
       // reshoot the rays
-      grid_mutex.lock();
-      lens->rayshooterInternal(i_points->head,i_points,false);
-      grid_mutex.unlock();
+        std::lock_guard<std::mutex> hold(grid_mutex);
+         lens->rayshooterInternal(i_points->head,i_points,false);
+      }
     }
     
     MoveDownList(i_tree->pointlist);
@@ -302,9 +306,10 @@ Point * Grid::RefineLeaf(LensHndl lens,Point *point,bool kappa_off){
 
 	s_points = LinkToSourcePoints(i_points,Ntemp);
   
-  grid_mutex.lock();
-	lens->rayshooterInternal(Ntemp,i_points,kappa_off);
-  grid_mutex.unlock();
+  {
+    std::lock_guard<std::mutex> hold(grid_mutex);
+	  lens->rayshooterInternal(Ntemp,i_points,kappa_off);
+  }
   
 	// remove the points that are outside initial source grid
 	for(kk=0,Nout=0;kk < Ntemp;++kk){
@@ -382,8 +387,9 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa
 	size_t Nleaves = points.size();
 	Point *i_points = NewPointArray((Ngrid_block*Ngrid_block-1)*Nleaves,true);
 	Point *s_points;
-	size_t Nout,kk,ii,addedtocell[Nleaves];
+	size_t Nout,kk,ii;
 	long Nadded,Nout_tot;
+  std::vector<size_t> addedtocell(points.size());
 
 	Nout_tot=0;
 	for(ii=0,Nadded=0;ii<Nleaves;++ii){
@@ -512,9 +518,10 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa
 
 	}*/
 
-  grid_mutex.lock();
-	lens->rayshooterInternal(Nadded,i_points,kappa_off);
-  grid_mutex.unlock();
+  {
+    std::lock_guard<std::mutex> hold(grid_mutex);
+    lens->rayshooterInternal(Nadded,i_points,kappa_off);
+  }
 
 	/*********************** TODO test line *******************************
 	for(ii=0;ii<Nadded;++ii){

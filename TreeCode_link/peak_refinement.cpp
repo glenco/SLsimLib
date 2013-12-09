@@ -141,7 +141,7 @@ short find_peaks(
 	return 1;
 }
 
-/** \ingroup ImageFinding
+/* * \ingroup ImageFinding
  *
  *  \brief Refines the grid based on the flux from implanted sources.
  *
@@ -149,7 +149,7 @@ short find_peaks(
  *  grid around that image until the grid anywhere on the image and on the border
  *  reaches the resolution target.  The images are stored in imageinfo[0,...,*Nimages-1]->imagekist.
  *  The image must be within radius of the point theta[2].
- */
+ *
 short refine_on_implanted_source(
 		LensHndl lens        /// Lens model
 		,GridHndl grid         /// Grid to be refined.  It must be initialized.
@@ -276,3 +276,4 @@ short refine_on_implanted_source(
 
 	return 1;
 }
+*/
