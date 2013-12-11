@@ -7,10 +7,10 @@
 #include "source.h"
 
 QuasarLF::QuasarLF
-	(double red                      // redshift
-	, double mag_limit				// magnitude limit
-	, long *seed):
-		red(red), mag_limit(mag_limit), seed(seed)
+	(double my_red                      // redshift
+	, double my_mag_limit				// magnitude limit
+	, long *my_seed):
+		red(my_red), mag_limit(my_mag_limit), seed(my_seed)
 {
 	// the one used in the paper(s)
 	COSMOLOGY cosmo(0.3,0.7,0.7,-1.);
@@ -69,7 +69,7 @@ QuasarLF::QuasarLF
 }
 
 /// returns random apparent magnitude according to the luminosity function
-double QuasarLF::getRandomLum()
+double QuasarLF::getRandomMag()
 {
 	// extracts random number r between [0,1]
 	// m:P(m) = r is the desired random magnitude

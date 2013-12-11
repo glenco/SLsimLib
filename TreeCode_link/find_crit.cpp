@@ -30,24 +30,24 @@ void find_crit(
 		,ImageInfo *critcurve     /// Structure to hold critical curve.  Must be pre-allocated with maxNcrit elements. Stored in critcurve[i].imagekist.
 		,int maxNcrits            /// Maximum number of critical curves.
 		,int *Ncrits              /// The number of critical curves found.
-		,double resolution        /// The target resolution that the critical curve is mapped on the image plane.
+		,PosType resolution        /// The target resolution that the critical curve is mapped on the image plane.
 		,bool *orderingsuccess    /// true if ordering was successful.
 		,bool ordercurve          /// Order the curve so that it can be drawn or used to find the winding number.
     ,bool dividecurves        /// Divide the critical curves into seporate curves by whether they are attached
-    ,double invmag_min        /// finds regions with 1/magnification < invmag_min, set to zero for caustics               
+    ,PosType invmag_min        /// finds regions with 1/magnification < invmag_min, set to zero for caustics               
 		,bool verbose
 		){
 
   long i=0;
   short refinements;
   //short spur,closed;
-  double maxgridsize,mingridsize,x[2];
+  PosType maxgridsize,mingridsize,x[2];
   ImageInfo negimage;
   Kist<Point> newpoint_kist;
 
   ImageInfo *pseudocurve = new ImageInfo[maxNcrits];
   bool pseuodcaustic = false;
-  double pseudolimit = -0.01;
+  PosType pseudolimit = -0.01;
 
   // find kist of points with negative magnification
   negimage.imagekist->Empty();
@@ -148,7 +148,7 @@ void find_crit(
   	  // Find points within each critical curve that have invmag < pseudolimit
   	  // If there are none use the minimum invmag value point.
   	  Point *minmupoint;
-  	  double mumin = 0.0;
+  	  PosType mumin = 0.0;
   	  Kist<Point> *newpoints = new Kist<Point>;
 
   	  pseudocurve->imagekist->copy(negimage.imagekist);
@@ -303,7 +303,7 @@ void find_crit(
   /*/******* TODO: test line *****************
   char chrstr[100];
   std::string output = "test_crit";
-  double tmp_range=0,tmp,xx[2];
+  PosType tmp_range=0,tmp,xx[2];
   for(i=0; i< MIN(*Ncrits,50) ; ++i){
     
     if(critcurve[i].getNimagePoints() > 10){
@@ -356,18 +356,18 @@ void find_crit2(
 		,ImageInfo *critcurve     /// Structure to hold critical curve.  Must be pre-allocated with maxNcrit elements. Stored in critcurve[i].imagekist.
 		,int maxNcrits            /// Maximum number of critical curves.
 		,int *Ncrits              /// The number of critical curves found.
-		,double resolution        /// The target resolution that the critical curve is mapped on the image plane.
+		,PosType resolution        /// The target resolution that the critical curve is mapped on the image plane.
 		,bool *orderingsuccess    /// true if ordering was successful.
 		,bool ordercurve          /// Order the curve so that it can be drawn or used to find the winding number.
     ,bool dividecurves        /// Divide the critical curves into seporate curves by whether they are attached
-    ,double invmag_min        /// finds regions with 1/magnification < invmag_min
+    ,PosType invmag_min        /// finds regions with 1/magnification < invmag_min
 		,bool verbose
 		){
 
   long i=0;
   long refinements;
   //short spur,closed;
-  double maxgridsize,mingridsize,x[2];
+  PosType maxgridsize,mingridsize,x[2];
   Kist<Point> newpoint_kist,neighborkist;
 
   // find kist of points with negative magnification
@@ -667,7 +667,7 @@ void find_crit2(
   /******* TODO: test line *****************
   char chrstr[100];
   std::string output = "test_crit";
-  double tmp_range=0,tmp,xx[2];
+  PosType tmp_range=0,tmp,xx[2];
   for(i=0; i< MIN(*Ncrits,50) ; ++i){
     
     if(critcurve[i].getNimagePoints() > 10){
@@ -725,15 +725,15 @@ void find_crit2(
 void refine_crit_in_image(
                LensHndl lens             /// The lens model.
                ,GridHndl grid            /// The grid.  It must be initialized.
-               ,double r_source
-               ,double x_source[]
-               ,double resolution        /// The target resolution that the critical curve is mapped on the image plane.
+               ,PosType r_source
+               ,PosType x_source[]
+               ,PosType resolution        /// The target resolution that the critical curve is mapped on the image plane.
                ){
     
     unsigned long i=0;
     short refinements;
     //short spur,closed;
-    double maxgridsize,mingridsize,x[2];
+    PosType maxgridsize,mingridsize,x[2];
     ImageInfo negimage,critcurve;
     Kist<Point> newpoint_kist;
         

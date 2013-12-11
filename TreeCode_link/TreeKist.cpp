@@ -18,9 +18,9 @@
 TreeKist::TreeKist(
 		Point *xp   /// array of points to be added to the tree
 		,unsigned long npoints   /// number of points
-		,double boundary_p1[2]   /// bottom left hand corner of root
-		,double boundary_p2[2]   /// upper right hand corner of root
-		,double center[2]        /// center of root (this could be the center of mass)
+		,PosType boundary_p1[2]   /// bottom left hand corner of root
+		,PosType boundary_p2[2]   /// upper right hand corner of root
+		,PosType center[2]        /// center of root (this could be the center of mass)
 		,int my_Nbucket             /// maximum number of points allowed in a leaf
 		){
 	construct_root(xp,npoints,boundary_p1,boundary_p2,center,my_Nbucket);
@@ -29,9 +29,9 @@ TreeKist::TreeKist(
 void TreeKist::construct_root(
 		Point *xp   /// array of points to be added to the tree
 		,unsigned long npoints   /// number of points
-		,double boundary_p1[2]   /// bottom left hand corner of root
-		,double boundary_p2[2]   /// upper right hand corner of root
-		,double center[2]        /// center of root (this could be the center of mass)
+		,PosType boundary_p1[2]   /// bottom left hand corner of root
+		,PosType boundary_p2[2]   /// upper right hand corner of root
+		,PosType center[2]        /// center of root (this could be the center of mass)
 		,int my_Nbucket             /// maximum number of points allowed in a leaf
 		){
   unsigned long i;
@@ -209,8 +209,8 @@ bool TreeKist::moveUp(){
  * Pre: !offEnd(tree)
  ************************************************************************/
 /*void insertChildToCurrent(TreeHndl tree,Point *points,unsigned long npoints
-			  ,double boundary_p1[2],double boundary_p2[2]
-			  ,double center[2],int child){
+			  ,PosType boundary_p1[2],PosType boundary_p2[2]
+			  ,PosType center[2],int child){
     
     Branch *branch;
 
@@ -448,7 +448,7 @@ void TreeKist::_checkTree(unsigned long *count){
 /*********************************/
 /*  point extraction routines */
 /*********************************/
-void TreeKist::PointsInCurrent(unsigned long *ids,double **x){
+void TreeKist::PointsInCurrent(unsigned long *ids,PosType **x){
   unsigned long i;
 
   Kist<Point>::iterator it = current->pointit;
@@ -488,10 +488,10 @@ bool TreeKist::TreeWalkStep(bool allowDescent){
  * \brief Build a complete tree from a list of points.
  */
 
-TreeKist::TreeKist(Point *xp,unsigned long Npoints,short my_median_cut,double buffer){
+TreeKist::TreeKist(Point *xp,unsigned long Npoints,short my_median_cut,PosType buffer){
   //TreeHndl tree;
   unsigned long i;
-  double p1[2],p2[2],center[2];
+  PosType p1[2],p2[2],center[2];
   const int my_Nbucket = 1;   // must be =1 if each leaf is to coincide with each cell
   
   if( (Npoints & (Npoints-1)) != 0){
@@ -568,7 +568,7 @@ void TreeKist::RebuildTreeFromList(){
 	if(pointkist.Nunits() < 1) return;
   
 	unsigned long Npoints = pointkist.Nunits(),i;
-	double *tmp;
+	PosType *tmp;
   
 	// Make new array of points
 	Point *points = NewPointArray(Npoints,true);
@@ -739,7 +739,7 @@ void TreeKist::_BuildTree(){
   /* same order as the linked list */
   unsigned long i,cut,dimension;
   Branch *cbranch;//,branch1,branch2;
-  double xcut;
+  PosType xcut;
   
   cbranch=current; /* pointer to current branch */
   
@@ -769,7 +769,7 @@ void TreeKist::_BuildTree(){
   /* set dimension to cut box */
   dimension=(cbranch->level % 2);
   
-  double *x = new double[cbranch->npoints];
+  PosType *x = new PosType[cbranch->npoints];
   assert(x);
   
   /* reorder points */
@@ -1030,9 +1030,9 @@ void TreeKist::_AddPoint(){
 		//Branch branch1,branch2;
 		Branch *current_branch;
 		unsigned long dimension,cut;
-		double xcut;
+		PosType xcut;
 		Point *oldfirstpoint,*newfirstpoint;
-		double *x = new double[current->npoints];
+		PosType *x = new PosType[current->npoints];
     
 		Branch* branch1 = new Branch(NULL,0,current->boundary_p1,current->boundary_p2
                                  ,current->center,current->level+1);
@@ -1100,7 +1100,7 @@ void TreeKist::_AddPoint(){
 				if(!attop) pointkist.Down();
 				pointkist.InsertAfterCurrent(point);
 				current->points = point->prev;
-				double tmp = x[1];
+				PosType tmp = x[1];
 				x[1] = x[0];
 				x[0] = tmp;
 			}
@@ -1144,7 +1144,7 @@ void TreeKist::_AddPoint(){
 					if(!attop) pointkist.Down();
 					pointkist.InsertAfterCurrent(point);
 					current->points = point->prev;
-					double tmp = x[1];
+					PosType tmp = x[1];
 					x[1] = x[0];
 					x[0] = tmp;
 				}
@@ -1344,7 +1344,7 @@ unsigned long FreeBranchesBelow(TreeHndl i_tree,TreeHndl s_tree,Kist<Point> * tr
 	Branch *branch,*headbranch;
 	Point *point;
 	unsigned long Ntmp,NtoRemove,i,count = 0,count2 = 0,count1;
-	double center[2];
+	PosType center[2];
   
 	//_freeBranches_iter(s_tree);  // s_tree will no longer be valid on exit.  This is to make sure it isn't used later without a rebuild.
   

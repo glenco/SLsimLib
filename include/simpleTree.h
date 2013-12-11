@@ -108,11 +108,11 @@ protected:
 	PosType **xp;
 
 
-	TreeNBHndl BuildTreeNB(PosType **xp,IndexType Nparticles,IndexType *particles,int Ndimensions,double theta);
+	TreeNBHndl BuildTreeNB(PosType **xp,IndexType Nparticles,IndexType *particles,int Ndimensions,PosType theta);
 	void _BuildTreeNB(TreeNBHndl tree,IndexType nparticles,IndexType *particles);
 
 	void _PointsWithin(PosType *ray,float *rmax,std::list<unsigned long> &neighborkist);
-	void _NearestNeighbors(double *ray,int Nneighbors,unsigned long *neighbors,PosType *rneighbors);
+	void _NearestNeighbors(PosType *ray,int Nneighbors,unsigned long *neighbors,PosType *rneighbors);
 
 	BranchNB *NewBranchNB(IndexType *particles,IndexType nparticles
 			  ,PosType boundary_p1[],PosType boundary_p2[]
@@ -147,14 +147,14 @@ protected:
 	}
 	
 	/*TreeNBHndl rotate_simulation(PosType **xp,IndexType Nparticles,IndexType *particles
-			,double **coord,double theta,float *rsph,float *mass
+			,PosType **coord,PosType theta,float *rsph,float *mass
 			,bool MultiRadius,bool MultiMass);
 	TreeNBHndl rotate_project(PosType **xp,IndexType Nparticles,IndexType *particles
-			,double **coord,double theta,float *rsph,float *mass
+			,PosType **coord,PosType theta,float *rsph,float *mass
 			,bool MultiRadius,bool MultiMass);
 	TreeNBHndl spread_particles(PosType **xp,IndexType Nparticles,IndexType *particles
-			,double theta,float *rsph,float *mass,bool MultiRadius,bool MultiMass);
-	 void cuttoffscale(TreeNBHndl tree,double *theta);*/
+			,PosType theta,float *rsph,float *mass,bool MultiRadius,bool MultiMass);
+	 void cuttoffscale(TreeNBHndl tree,PosType *theta);*/
 };
 
 //PosType **PosTypeMatrix(long nrl, long nrh, long ncl, long nch);

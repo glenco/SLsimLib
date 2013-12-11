@@ -12,7 +12,7 @@
  *
  */
 void find_divide_images(TreeHndl i_tree,TreeHndl s_tree
-	,double *source_x,double source_r
+	,PosType *source_x,PosType source_r
 	,ImageInfo *imageinfo,int *Nimages,int Nimagesmax){
 
 	s_tree->PointsWithinKist(source_x,source_r,imageinfo->imagekist,0);
@@ -130,7 +130,7 @@ void divide_images(TreeHndl i_tree,ImageInfo *imageinfo
 		,int *Nimages,int Nimagesmax){
 	unsigned long i,j,Ntemp;
 	Kist<Point> * new_imagekist = new Kist<Point>;
-	double tmp = 0;
+	PosType tmp = 0;
 
 	if(imageinfo->imagekist->Nunits() < 2){
 		*Nimages = 1;
@@ -249,7 +249,7 @@ void divide_images_kist(
 	    ){
 	unsigned long i,j,Ntemp,Ntest;
 	Kist<Point> new_imagekist;
-	double tmp = 0;
+	PosType tmp = 0;
 
 	if(imageinfo->imagekist->Nunits() < 2){
 		*Nimages = 1;
@@ -330,7 +330,7 @@ void divide_images_kist(
 
 	// If there are more than NimageMax images, put the extra points into the closest image.
 	if(i == Nimagesmax){
-		double r2,rmin;
+		PosType r2,rmin;
 
 		while(new_imagekist.Nunits() > 0){
 			for(i=0,rmin=1.0e200,j=0;i<*Nimages;++i){
@@ -429,12 +429,12 @@ void partition_images(Point *point,unsigned long *N_in_image,TreeHndl i_tree){
  *    is left in imagekist.  The in_image marks are NOT returned to their original
  *    values.  The ones that are put into imagekist are changed to in_image = FALSE
  */
-double partition_images_kist(Point *point,Kist<Point> * imagekist,TreeHndl i_tree){
+PosType partition_images_kist(Point *point,Kist<Point> * imagekist,TreeHndl i_tree){
 	assert(point);
 	assert(i_tree);
 	assert(point->in_image == TRUE);
 
-	double area = 0.0;
+	PosType area = 0.0;
 	Kist<Point> * neighbors = new Kist<Point>;
 
 	imagekist->Empty();

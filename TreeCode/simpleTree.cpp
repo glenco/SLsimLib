@@ -10,7 +10,7 @@
 #include "slsimlib.h"
 
 
-//double dummy;
+//PosType dummy;
 
 BranchNB::BranchNB(int Ndim){
 	center = new PosType[Ndim*3];
@@ -53,7 +53,7 @@ void TreeSimple::PointsWithinEllipse(
 	,float posangle  /// position angle of major axis, smallest angle between the x-axis and the long axis
 	,std::list <unsigned long> &neighborlist  /// output neighbor list, will be emptied if it contains anything on entry
 	){
-	double x,y,cs,sn;
+	PosType x,y,cs,sn;
 
 
 	if(rmax < rmin){float tmp = rmax; rmax=rmin; rmin=tmp;}
@@ -114,7 +114,7 @@ void TreeSimple::_PointsWithin(PosType *ray,float *rmax,std::list <unsigned long
 
   int j,incell2=1;
   unsigned long i;
-  double radius;
+  PosType radius;
   short pass;
 
   if(incell){  // not found cell yet
@@ -275,7 +275,7 @@ void TreeSimple::NearestNeighbors(PosType *ray,int Nneighbors,float *rsph,IndexT
 }
 
 
-void TreeSimple::_NearestNeighbors(double *ray,int Nneighbors,unsigned long *neighbors,PosType *rneighbors){
+void TreeSimple::_NearestNeighbors(PosType *ray,int Nneighbors,unsigned long *neighbors,PosType *rneighbors){
 
   int incellNB2=1;
   IndexType i;
@@ -370,7 +370,7 @@ void TreeSimple::_NearestNeighbors(double *ray,int Nneighbors,unsigned long *nei
 
 
 TreeNBHndl TreeSimple::BuildTreeNB(PosType **xp,IndexType Nparticles,IndexType *particles,int Ndims
-	   ,double theta){
+	   ,PosType theta){
   TreeNBHndl tree;
   IndexType i;
   short j;
@@ -413,7 +413,7 @@ void TreeSimple::_BuildTreeNB(TreeNBHndl tree,IndexType nparticles,IndexType *pa
   short j;
   BranchNB *cbranch,branch1(Ndim),branch2(Ndim);
   PosType xcut;
-  double *x;
+  PosType *x;
 
   cbranch=tree->current; /* pointer to current branch */
 
@@ -442,7 +442,7 @@ void TreeSimple::_BuildTreeNB(TreeNBHndl tree,IndexType nparticles,IndexType *pa
   /* set dimension to cut box */
   dimension=(cbranch->level % Ndim);
 
-  x=(double *)malloc((cbranch->nparticles-cbranch->big_particle)*sizeof(double));
+  x=(PosType *)malloc((cbranch->nparticles-cbranch->big_particle)*sizeof(PosType));
   for(i=cbranch->big_particle;i<cbranch->nparticles;++i) x[i]=tree->xp[particles[i]][dimension];
 
   if(median_cut){

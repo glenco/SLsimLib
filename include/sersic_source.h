@@ -19,19 +19,19 @@
 class SourceSersic : public Source
 {
 public:
-	SourceSersic(double mag,double Reff,double PA,double my_index,double my_q,double my_z=0,const double *theta=0);
+	SourceSersic(PosType mag,PosType Reff,PosType PA,PosType my_index,PosType my_q,PosType my_z=0,const PosType *theta=0);
 	~SourceSersic();
 	
 	/// calculates radius where the surface brightness drops by a factor f with respect to the central peak
-	inline double FractionRadius (double f) {return Reff*pow(-log (f)/bn,index);}
+	inline PosType FractionRadius (PosType f) {return Reff*pow(-log (f)/bn,index);}
 	
-	inline double getSersicIndex() const { return index; }
-	inline double getAxesRatio() const { return q; }
-	inline double getReff() const { return Reff*180*60*60/pi; }
-	inline double getMag() { return mag; }
-	inline double getPA() { return PA; }
+	inline PosType getSersicIndex() const { return index; }
+	inline PosType getAxesRatio() const { return q; }
+	inline PosType getReff() const { return Reff*180*60*60/pi; }
+	inline PosType getMag() { return mag; }
+	inline PosType getPA() { return PA; }
 	
-	inline void setSersicIndex(double x)
+	inline void setSersicIndex(PosType x)
 	{
 		index = x;
 		bn = 1.9992*index - 0.3271; // approximation valid for 0.5 < n < 8
@@ -39,33 +39,33 @@ public:
 		updateRadius();
 	}
 	
-	inline void setAxesRatio(double x)
+	inline void setAxesRatio(PosType x)
 	{
 		q = x;
 		I_q = 1./q;
 	}
 	
-	inline void setReff(double x)
+	inline void setReff(PosType x)
 	{
 		Reff = x*pi/180/60/60;
 		I_r = 1./2./pi/Reff/Reff;
 		updateRadius();
 	}
 	
-	inline void setMag(double x)
+	inline void setMag(PosType x)
 	{
 		mag = x;
 		flux = pow(10, -0.4*(mag+48.6));
 	}
 	
-	inline void setPA(double x)
+	inline void setPA(PosType x)
 	{
 		PA = x;
 	}
 	
-	inline double getTotalFlux() { return flux; }
+	inline PosType getTotalFlux() { return flux; }
 	
-	double SurfaceBrightness(double *x);
+	PosType SurfaceBrightness(PosType *x);
 	void printSource();
 	
 private:
@@ -77,14 +77,14 @@ private:
 	}
 	
 	void assignParams(InputParams& params);
-	double Reff;
-	double mag;
-	double PA;
-	double index;
-	double bn;
-	double q;
-	double flux;
-	double I_r, I_n, I_q;
+	PosType Reff;
+	PosType mag;
+	PosType PA;
+	PosType index;
+	PosType bn;
+	PosType q;
+	PosType flux;
+	PosType I_r, I_n, I_q;
 };
 
 #endif /* GALAXIES_SERSIC_H_ */

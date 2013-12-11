@@ -17,8 +17,8 @@
 ***************************************************************/
 #include "fitlens.h"
 
-double deflection_model(double beta,double *mod,int Nmodes,double *x,double *y,double *mag){
-  double F,F1,F2,theta,r,cosx,sinx,dxdr,dxda,dydr,dyda;
+PosType deflection_model(PosType beta,PosType *mod,int Nmodes,PosType *x,PosType *y,PosType *mag){
+  PosType F,F1,F2,theta,r,cosx,sinx,dxdr,dxda,dydr,dyda;
   int i,k;
 
   theta=atan2(x[1],x[0]);

@@ -13,7 +13,7 @@ static const float mumin = 0.3;  // actually the sqrt of the minimum magnificati
 //static const float FracResTarget = 4.0e-4;
 static const float FracResTarget = 1.0e-4;
 
-//double initialgridsize=0;
+//PosType initialgridsize=0;
 
 
 /**
@@ -25,9 +25,9 @@ static const float FracResTarget = 1.0e-4;
  *           = 2 stops refining when grid resolution is smaller than res_target in all images
  */
 //int refine_grid(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,OldImageInfo *imageinfo
-//		,unsigned long Nimages,double res_target,short criterion,bool kappa_off){
+//		,unsigned long Nimages,PosType res_target,short criterion,bool kappa_off){
 int refine_grid(LensHndl lens,GridHndl grid,OldImageInfo *imageinfo
-			,unsigned long Nimages,double res_target,short criterion,bool kappa_off,bool batch){
+			,unsigned long Nimages,PosType res_target,short criterion,bool kappa_off,bool batch){
 
 
 	//printf("entering refine_grid\n");
@@ -35,7 +35,7 @@ int refine_grid(LensHndl lens,GridHndl grid,OldImageInfo *imageinfo
   if(Nimages < 1) return 0;
 
   int i,j,number_of_refined,count; /* Ngrid_block must be odd */
-  double rmax,total_area;
+  PosType rmax,total_area;
   Point* point;
   short pass=0;
   long Ncells,Ncells_o;
@@ -155,7 +155,7 @@ long refine_edges(
 		,GridHndl grid
 		,ImageInfo *imageinfo
 		,unsigned long Nimages
-		,double res_target
+		,PosType res_target
 		,short criterion
 		,bool kappa_off
 		,Kist<Point> * newpointskist  /// returns a Kist of the points that were added to the grid on this pass, if == NULL will not be added
@@ -168,7 +168,7 @@ long refine_edges(
 
 	long i,j,Ncells=0,Ncells_o=0,count=0;
 	Point *point;
-	double area_total=0;
+	PosType area_total=0;
 	std::vector<Point *> points_to_refine;
 
 	// count border points
@@ -292,8 +292,8 @@ long refine_edges(
  *
  * </pr>
  */
-long refine_edges2(LensHndl lens,double *y_source,double r_source,GridHndl grid
-		,ImageInfo *imageinfo,bool *image_overlap,unsigned long Nimages,double res_target
+long refine_edges2(LensHndl lens,PosType *y_source,PosType r_source,GridHndl grid
+		,ImageInfo *imageinfo,bool *image_overlap,unsigned long Nimages,PosType res_target
 		,short criterion,bool kappa_off,bool batch){
 
 	 //printf("entering refine_edges2\n");
@@ -303,7 +303,7 @@ long refine_edges2(LensHndl lens,double *y_source,double r_source,GridHndl grid
 	long i,j,k,n,Ncells=0,Ncells_o=0,count=0,Npoints=0;
 	Point *i_points,*point;
 	Kist<Point> * neighborkist = new Kist<Point>;
-	double tmp_area=0,area_total=0;
+	PosType tmp_area=0,area_total=0;
 	bool addinner;
 	std::vector<Point *> points_to_refine;
 
@@ -529,7 +529,7 @@ long refine_edges2(LensHndl lens,double *y_source,double r_source,GridHndl grid
 
 //  sort new points into in and out of image and add them to inner and outer borders
 // Also adds the area of new image points to the image area.
-void sort_out_points(Point *i_points,ImageInfo *imageinfo,double r_source,double y_source[]){
+void sort_out_points(Point *i_points,ImageInfo *imageinfo,PosType r_source,PosType y_source[]){
 	for(unsigned long j=0;j<i_points->head;++j){
 		if( sqrt(pow(i_points[j].image->x[0]-y_source[0],2)
 			+ pow(i_points[j].image->x[1]-y_source[1],2)) < r_source){
@@ -787,7 +787,7 @@ void findborders3(TreeHndl i_tree,OldImageInfo *imageinfo){
 	return;
 }
 
-void Grid::xygridpoints(Point *i_points,double range,const double *center,long Ngrid_1d,short remove_center){
+void Grid::xygridpoints(Point *i_points,PosType range,const PosType *center,long Ngrid_1d,short remove_center){
   /* make a new rectolinear grid of points on the image plane **/
   /* and link them to points on the source plane **/
   /* remove_center = 0 include center point of grid */
@@ -823,7 +823,7 @@ void Grid::xygridpoints(Point *i_points,double range,const double *center,long N
   return;
 }
 
-void combineCloseImages(double linkinglength,ImageInfo *imageinfo,int *Nimages
+void combineCloseImages(PosType linkinglength,ImageInfo *imageinfo,int *Nimages
 		,int *NewNimages,int NimagesMax){
 	unsigned long i,j,k;
 
@@ -875,7 +875,7 @@ void combineCloseImages(double linkinglength,ImageInfo *imageinfo,int *Nimages
 void SwapImages(OldImageInfo *image1,OldImageInfo *image2){
 	Point *point;
 	unsigned long Npoints,i;
-	double tmp;
+	PosType tmp;
 	Kist<Point> * list;
 
 	point = image1->points;

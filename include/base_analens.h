@@ -57,87 +57,87 @@ public:
 	virtual ~LensHaloBaseNSIE();
 
   /// critical surface density
-  double getSigma_crit(){return Sigma_crit;}
+  PosType getSigma_crit(){return Sigma_crit;}
   /// the time delay scale in days/Mpc^2
-  double get_to(){return to;}
+  PosType get_to(){return to;}
    /// Angular size distance to lens plane
-  double get_Dl(){return Dl;}
+  PosType get_Dl(){return Dl;}
   /// conversion factor from Mpc to Arcsec
-  double get_MpcToAsec(){return MpcToAsec;}
+  PosType get_MpcToAsec(){return MpcToAsec;}
 
   // private derived quantities
 
 	/// get the velocity dispersion
-	double get_sigma(){return sigma;};
+	PosType get_sigma(){return sigma;};
 	/// get the NSIE radius
-	double get_Rsize(){return Rsize;};
+	PosType get_Rsize(){return Rsize;};
 	/// get the axis ratio
-	double get_fratio(){return fratio;};
+	PosType get_fratio(){return fratio;};
 	/// get the position angle
-	double get_pa(){return pa;};
+	PosType get_pa(){return pa;};
 	/// get the core radius
-	double get_rcore(){return rcore;};
+	PosType get_rcore(){return rcore;};
 
   /// substructures
   bool AreSubStructImaplated(){return substruct_implanted;}
-  double sub_sigmaScale;
-  double sub_Ndensity;
+  PosType sub_sigmaScale;
+  PosType sub_Ndensity;
   /// actual number of substructures
   int sub_N;
-  double **sub_x;
+  PosType **sub_x;
   /// slope of mass profile
-  double sub_beta;
+  PosType sub_beta;
   /// slope of mass function
-  double sub_alpha;
+  PosType sub_alpha;
   /// radius of largest mass substructures
-  double sub_Rmax;
-  double sub_Mmax;
-  double sub_Mmin;
-  double sub_theta_force;
+  PosType sub_Rmax;
+  PosType sub_Mmax;
+  PosType sub_Mmin;
+  PosType sub_theta_force;
   LensHalo *subs;
   TreeQuad *sub_tree;
   IndexType *sub_substructures;
   ClumpInternal main_sub_type;
 
-  //void setZlens(double zlens);
+  //void setZlens(PosType zlens);
   void assignParams(InputParams& params);
   void PrintLens(bool show_substruct,bool show_stars);
   void error_message1(std::string name,std::string filename);
 
-  virtual void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa,bool subtract_point=false);
+  virtual void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xcm,bool no_kappa,bool subtract_point=false);
 
   // in randoimize_lens.c
-  double averageSubMass();
+  PosType averageSubMass();
 
   // in readlens_ana.c
-  void reNormSubstructure(double kappa_sub);
+  void reNormSubstructure(PosType kappa_sub);
   //void toggleStars(bool implanted);
 
-  double getHost_Dl(){return Dl;}
+  PosType getHost_Dl(){return Dl;}
 
-  double getEinstein_ro(){return Einstein_ro;}
+  PosType getEinstein_ro(){return Einstein_ro;}
 
-  double getPerturb_beta(){return perturb_beta;}
+  PosType getPerturb_beta(){return perturb_beta;}
   IMFtype getIMF_type(){return main_stars_imf_type;}
   int getPerturb_Nmodes(){return perturb_Nmodes;}    /// this includes two for external shear
-  double *perturb_modes;  ///first two are shear
+  PosType *perturb_modes;  ///first two are shear
 	
 	std::size_t Nparams() const;
-	double getParam(std::size_t p) const;
-	double setParam(std::size_t p, double value);
+	PosType getParam(std::size_t p) const;
+	PosType setParam(std::size_t p, PosType value);
 	
 	void printCSV(std::ostream& out, bool header = false) const;
 
 protected:
 
   /// critical surface density
-  double Sigma_crit;
+  PosType Sigma_crit;
    /// the time delay scale in days/Mpc^2
-  double to;
+  PosType to;
    /// Angular size distance to lens plane
-  double Dl;
+  PosType Dl;
   /// Einstein radius
-  double Einstein_ro;
+  PosType Einstein_ro;
 
 	/// velocity dispersion of NSIE
 	float sigma;
@@ -153,55 +153,55 @@ protected:
 
     // perturbations to host.  These are protected so that in some derived classes they can or cann't be changed.
   int perturb_Nmodes;    /// this includes two for external shear
-  double perturb_beta;
-  double *perturb_rms;
+  PosType perturb_beta;
+  PosType *perturb_rms;
 
   bool substruct_implanted;
 
    // private derived quantities
    /// private: conversion factor between Mpc on the lens plane and arcseconds
-   double MpcToAsec;
+   PosType MpcToAsec;
 
    /// redshift for which the perturbation modes are normalised
    float zsource_reference;
-   double Ds, Dls;
+   PosType Ds, Dls;
 
 };
 
 namespace Utilities{
-	double RandomFromTable(double *table,unsigned long Ntable,long *seed);
-	void rotation(float *xout,float *xin,double theta);
-	void rotation(double *xout,double *xin,double theta);
+	PosType RandomFromTable(PosType *table,unsigned long Ntable,long *seed);
+	void rotation(float *xout,float *xin,PosType theta);
+	void rotation(PosType *xout,PosType *xin,PosType theta);
 }
 
-void alphaNSIE(double *alpha,double *xt,double f,double bc,double theta);
-KappaType kappaNSIE(double *xt,double f,double bc,double theta);
-void gammaNSIE(KappaType *gam,double *xt,double f,double bc,double theta);
-KappaType invmagNSIE(double *x,double f,double bc,double theta
+void alphaNSIE(PosType *alpha,PosType *xt,PosType f,PosType bc,PosType theta);
+KappaType kappaNSIE(PosType *xt,PosType f,PosType bc,PosType theta);
+void gammaNSIE(KappaType *gam,PosType *xt,PosType f,PosType bc,PosType theta);
+KappaType invmagNSIE(PosType *x,PosType f,PosType bc,PosType theta
                      ,float *gam,float kap);
-double rmaxNSIE(double sigma,double mass,double f,double rc );
-double ellipticRadiusNSIE(double *x,double f,double pa);
-void quadMomNSIE(float mass,float Rmax,float f,float rc,float theta,double *quad);
+PosType rmaxNSIE(PosType sigma,PosType mass,PosType f,PosType rc );
+PosType ellipticRadiusNSIE(PosType *x,PosType f,PosType pa);
+void quadMomNSIE(float mass,float Rmax,float f,float rc,float theta,PosType *quad);
 
 
 //  in powerlow.c
 
-void alphaPowLaw(double *alpha,double *x,double R,double mass,double beta,double *center,double Sigma_crit);
-KappaType kappaPowLaw(double *x,double R,double mass,double beta,double *center,double Sigma_crit);
-void gammaPowLaw(KappaType *gamma,double *x,double R,double mass,double beta,double *center,double Sigma_crit);
-KappaType phiPowLaw(double *x,double R,double mass,double beta,double *center,double Sigma_crit);
+void alphaPowLaw(PosType *alpha,PosType *x,PosType R,PosType mass,PosType beta,PosType *center,PosType Sigma_crit);
+KappaType kappaPowLaw(PosType *x,PosType R,PosType mass,PosType beta,PosType *center,PosType Sigma_crit);
+void gammaPowLaw(KappaType *gamma,PosType *x,PosType R,PosType mass,PosType beta,PosType *center,PosType Sigma_crit);
+KappaType phiPowLaw(PosType *x,PosType R,PosType mass,PosType beta,PosType *center,PosType Sigma_crit);
 
 // in nfw_lens.c
-void alphaNFW(double *alpha,double *x,double Rtrunc,double mass,double r_scale
-                ,double *center,double Sigma_crit);
-KappaType kappaNFW(double *x,double Rtrunc,double mass,double r_scale
-                ,double *center,double Sigma_crit);
-void gammaNFW(KappaType *gamma,double *x,double Rtrunc,double mass,double r_scale
-                ,double *center,double Sigma_crit);
+void alphaNFW(PosType *alpha,PosType *x,PosType Rtrunc,PosType mass,PosType r_scale
+                ,PosType *center,PosType Sigma_crit);
+KappaType kappaNFW(PosType *x,PosType Rtrunc,PosType mass,PosType r_scale
+                ,PosType *center,PosType Sigma_crit);
+void gammaNFW(KappaType *gamma,PosType *x,PosType Rtrunc,PosType mass,PosType r_scale
+                ,PosType *center,PosType Sigma_crit);
 
 // in lens_expand.c
 
-double lens_expand(double beta,double *mod,int Nmodes,double *x,double *alpha,KappaType *gamma,KappaType *phi);
+double lens_expand(double beta,double *mod,int Nmodes,PosType *x,PosType *alpha,KappaType *gamma,KappaType *phi);
 
 // in FullRange/implant_stars.c
 

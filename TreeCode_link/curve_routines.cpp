@@ -23,7 +23,7 @@ void split_order_curve4(OldImageInfo *curves,int Maxcurves,int *Ncurves){
 	long i,m,j,end;
 	//short spur,closed,attach;
 	unsigned long NpointsTotal;
-	double center[2],*theta;
+	PosType center[2],*theta;
 	//bool delta,tmp,step;
 	//ListHndl reservoir,orderedlist;
 	//Point *newpointarray;
@@ -80,7 +80,7 @@ void split_order_curve4(OldImageInfo *curves,int Maxcurves,int *Ncurves){
 	assert(m == NpointsTotal);
 */
 	// order curve points
-	theta=(double *)malloc(NpointsTotal*sizeof(double));
+	theta=(PosType *)malloc(NpointsTotal*sizeof(PosType));
 	assert(theta);
 	for(i=0;i<*Ncurves;++i){
 
@@ -159,14 +159,14 @@ namespace Utilities{
 unsigned long order_curve4(Point *curve,long Npoints){
 
 	long m,j,end;
-	double center[2],*theta;
+	PosType center[2],*theta;
 
 	//std::printf("entering split_order_curve\n");
 	if(Npoints < 3) return Npoints;
 
 
 	// order curve points
-	theta=(double *)malloc(Npoints*sizeof(double));
+	theta=(PosType *)malloc(Npoints*sizeof(PosType));
 	assert(theta);
 
 
@@ -262,13 +262,13 @@ unsigned long order_curve4(Point *curve,long Npoints){
     std::vector<Point *> hull = Utilities::convex_hull(copy);
     std::vector<Point *>::iterator hit,it_min;
     
-    double ro,d1,d2,rmin,sq2=0.99999*sqrt(2.);
+    PosType ro,d1,d2,rmin,sq2=0.99999*sqrt(2.);
     size_t i;
     bool tag;
     while(hull.size() < copy.size()){
       for(std::vector<Point *>::iterator cit = copy.begin() ; cit != copy.end() ; ++cit){
         tag = true;
-        rmin = std::numeric_limits<double>::max();
+        rmin = std::numeric_limits<PosType>::max();
       
         for(hit = hull.begin(),i=0 ; i < hull.size()-1 ; ++hit,++i){
         
@@ -352,11 +352,11 @@ unsigned long order_curve4(Point *curve,long Npoints){
 		Point *curve           /// Array of points representing the curve
 		,long Npoints          /// Number of points in curve
 		,long *NewNpoints      /// Number of points in the exterior boundary, *NewNpoints <= Npoints
-		,double *area          /// Area within exterior boundary
+		,PosType *area          /// Area within exterior boundary
 		){
 
 	long m,j,end,k;
-	double center[2],*theta,tmp;
+	PosType center[2],*theta,tmp;
 
 	cout << AreBoxNeighbors(&(curve[0]),&(curve[Npoints-1])) << endl;
 
@@ -365,7 +365,7 @@ unsigned long order_curve4(Point *curve,long Npoints){
 
 
 	// order curve points
-	theta=(double *)malloc(Npoints*sizeof(double));
+	theta=(PosType *)malloc(Npoints*sizeof(PosType));
 	assert(theta);
 
 
@@ -391,7 +391,7 @@ unsigned long order_curve4(Point *curve,long Npoints){
 	cout << AreBoxNeighbors(&(curve[0]),&(curve[Npoints-1])) << endl;
 
 	// make bottom most point the first point
-	double ymin = curve[0].x[1];
+	PosType ymin = curve[0].x[1];
 	long imin = 0;
 	for(m=1;m<Npoints;++m){
 		if(ymin > curve[m].x[1]){
@@ -444,12 +444,12 @@ unsigned long order_curve4(Point *curve,long Npoints){
  * Should work every time provided the curve ordering is correct.
  * Testing if each cell is inside the curve can be slow.
  */
-/*double findAreaOfCurve(TreeHndl tree,ImageInfo *curve,int NimageMax){
+/*PosType findAreaOfCurve(TreeHndl tree,ImageInfo *curve,int NimageMax){
 
 	if(curve->imagekist->Nunits() < 3) return 0.0;
 
 	int Nimages,i,imax=0;
-	double xcm[2],area,tmp;
+	PosType xcm[2],area,tmp;
 	ImageInfo *borders = new ImageInfo[NimageMax];
 
 	// find borders of curve
@@ -992,7 +992,7 @@ void walkcurve(Point *points,long Npoints,long *j,long *end){
 /*void walkcurveRight(Point *points,long Npoints,long *j,long *end){
 
 	long i,k,i_next;
-	double mintheta,x,y,phi;
+	PosType mintheta,x,y,phi;
 
 	if(*j == 0) phi = pi/2;
 	else phi = atan2(points[*j].x[1] - points[*j-1].x[1] , points[*j].x[0] - points[*j-1].x[0]);
@@ -1097,7 +1097,7 @@ short backtrack(Point *points,long Npoints,long *j,long jold,long *end){
 	unsigned long Npoints,Npoints_tot,i,j,k,jold;
 	OldImageInfo *borders;
 	int TmpNimages=0,maxN,m;
-	double *image_number_array,tmp;
+	PosType *image_number_array,tmp;
 
 	Npoints_tot=images->Npoints;
 
@@ -1150,7 +1150,7 @@ short backtrack(Point *points,long Npoints,long *j,long jold,long *end){
 	// divide points into separate images
 	if(sortallpoints){
 		if(*Nimages > 1){
-			image_number_array=(double *)malloc(Npoints_tot*sizeof(double));
+			image_number_array=(PosType *)malloc(Npoints_tot*sizeof(PosType));
 			assert(image_number_array);
 			for(j=0,maxN=0;j<TmpNimages;++j) if(borders[j].ShouldNotRefine % 2 == 0 && borders[j].ShouldNotRefine > maxN) maxN=borders[j].ShouldNotRefine;
 			// sort points into images
@@ -1166,7 +1166,7 @@ short backtrack(Point *points,long Npoints,long *j,long jold,long *end){
 							// point is in j
 							if(image_number_array[k] == -1 ||
 									borders[(int)(image_number_array[k]+0.5)].ShouldNotRefine < borders[j].ShouldNotRefine){
-								image_number_array[k]=(double) j;
+								image_number_array[k]=(PosType) j;
 							// if point can't be in another move on to next image point
 								if(borders[j].ShouldNotRefine == maxN) j=TmpNimages;
 							}
@@ -1269,7 +1269,7 @@ short backtrack(Point *points,long Npoints,long *j,long jold,long *end){
 	unsigned long Npoints,Npoints_tot,i,j,k,jold;
 	OldImageInfo *borders;
 	int TmpNimages=0,maxN,m;
-	double *image_number_array,tmp,r,rmin;
+	PosType *image_number_array,tmp,r,rmin;
 
 	Npoints_tot=images->Npoints;
 
@@ -1317,7 +1317,7 @@ short backtrack(Point *points,long Npoints,long *j,long jold,long *end){
 	// divide points into separate images
 	if(sortallpoints){
 		if(*Nimages > 1){
-			image_number_array=(double *)malloc(Npoints_tot*sizeof(double));
+			image_number_array=(PosType *)malloc(Npoints_tot*sizeof(PosType));
 			assert(image_number_array);
 			// sort points into images
 
@@ -1567,10 +1567,10 @@ namespace Utilities{
  * infinity symbol has zero area.
  */
 int windings(
-		double *x              /// Point for which the winding number is calculated
+		PosType *x              /// Point for which the winding number is calculated
 		,Point *points         /// The points on the border.  These must be ordered.
 		,unsigned long Npoints /// number of points in curve
-		,double *area          /// returns absolute the area within the curve with oriented border
+		,PosType *area          /// returns absolute the area within the curve with oriented border
 		,short image           /// if == 1 the image of the curve is uses as the curve
 		){
 	int wn=0;
@@ -1616,9 +1616,9 @@ int windings(
 	return wn;
 }
 int windings(
-		double *x              /// Point for which the winding number is calculated
+		PosType *x              /// Point for which the winding number is calculated
 		,Kist<Point> * kist         /// Kist of points on the border.  These must be ordered.
-		,double *area          /// returns absolute the area within the curve with oriented border
+		,PosType *area          /// returns absolute the area within the curve with oriented border
 		,short image           /// if == 1 the image of the curve is uses as the curve
 		){
 	int wn=0;
@@ -1661,15 +1661,15 @@ int windings(
  *  returns the area of the stretched curve
  */
 int windings2(
-		double *x              /// Point for which the winding number is calculated
+		PosType *x              /// Point for which the winding number is calculated
 		,Point *points_original         /// The points on the border.  These must be ordered.
 		,unsigned long Npoints /// number of points in curve
-		,double *area          /// returns absolute the area within the curve with oriented border
+		,PosType *area          /// returns absolute the area within the curve with oriented border
 		,short image           /// if == 0 the image of the curve is uses as the curve
 		){
 	int wn=0;
 	unsigned long k,i;
-	double center[2];
+	PosType center[2];
 
 	center[0] = center[1] = 0.0;
 
@@ -1813,7 +1813,7 @@ void writeCurves(int m			/// part of te filename, could be the number/index of t
   // 2D cross product of OA and OB vectors, i.e. z-component of their 3D cross product.
   // Returns a positive value, if OAB makes a counter-clockwise turn,
   // negative for clockwise turn, and zero if the points are collinear.
-  double cross(const Point *O, const Point *A, const Point *B)
+  PosType cross(const Point *O, const Point *A, const Point *B)
   {
     return (A->x[0] - O->x[0]) * (B->x[1] - O->x[1]) - (A->x[1] - O->x[1]) * (B->x[0] - O->x[0]);
   }

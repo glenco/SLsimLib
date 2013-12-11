@@ -16,7 +16,7 @@ public:
 	LensPlane() {}
 	virtual ~LensPlane() {} 
 	
-	virtual void force(double *alpha,KappaType *kappa,KappaType *gamma,double *xx,bool kappa_off) = 0;
+	virtual void force(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xx,bool kappa_off) = 0;
 	
 	virtual void addHalo(LensHalo* halo) = 0;
 	virtual void removeHalo(LensHalo* halo) = 0;
@@ -28,10 +28,10 @@ public:
 /// A LensPlane with a TreeQuad on it to calculate the deflection caused by field lenses
 class LensPlaneTree : public LensPlane{
 public:
-	LensPlaneTree(PosType **xpt,LensHaloHndl *my_halos,IndexType Nhalos,double my_sigma_background);
+	LensPlaneTree(PosType **xpt,LensHaloHndl *my_halos,IndexType Nhalos,PosType my_sigma_background);
 	~LensPlaneTree();
 
-	void force(double *alpha,KappaType *kappa,KappaType *gamma,double *xx,bool kappa_off);
+	void force(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xx,bool kappa_off);
 	
 	void addHalo(LensHalo* halo);
 	void removeHalo(LensHalo* halo);
@@ -55,7 +55,7 @@ public:
 	LensPlaneSingular(LensHaloHndl *my_halos, IndexType Nhalos);
 	~LensPlaneSingular();
 
-	void force(double *alpha,KappaType *kappa,KappaType *gamma,double *xx,bool kappa_off);
+	void force(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xx,bool kappa_off);
 	
 	void addHalo(LensHalo* halo);
 	void removeHalo(LensHalo* halo);

@@ -22,7 +22,7 @@
 void DirtyFoF(
 		ImageInfo *imageinfo  /// Contains the kists of points in each image
 		,int *Nimages        /// Number of images
-		,double linkinglength /// linking length, If it is <= 0 the gridsize's for the points is used.
+		,PosType linkinglength /// linking length, If it is <= 0 the gridsize's for the points is used.
 		,int MaxNimages       /// Maximum size of imageinfo array
 		){
 
@@ -47,8 +47,8 @@ void DirtyFoF(
 	delete wholekist;
 	return;
 }
-void _DirtyFoF(Kist<Point> * neighbors,Kist<Point> * wholekist,double linkinglength){
-	double ll2 = linkinglength*linkinglength;
+void _DirtyFoF(Kist<Point> * neighbors,Kist<Point> * wholekist,PosType linkinglength){
+	PosType ll2 = linkinglength*linkinglength;
 	bool check = false;
 
 	assert(neighbors->Nunits() == 1);
@@ -99,7 +99,7 @@ void DirtyDivider(
 
 	Kist<Point> * wholekist = new Kist<Point>;
 	unsigned long i;
-	double xmin;
+	PosType xmin;
 
 	*Nimages = 0;
 
@@ -128,7 +128,7 @@ void DirtyDivider(
 }
 void _DirtyDivider(Kist<Point> * neighbors,Kist<Point> * wholekist,int Ngroup){
 	bool check = false;
-	double xinit[2],rr[Ngroup+1],ll;
+	PosType xinit[2],rr[Ngroup+1],ll;
 	long i,j;
 
 	if(wholekist->Nunits() <= Ngroup){

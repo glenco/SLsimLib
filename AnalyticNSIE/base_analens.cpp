@@ -10,15 +10,15 @@
 using namespace std;
 
 void LensHaloBaseNSIE::force_halo(
-		double *alpha       /// mass/Mpc
+		PosType *alpha       /// mass/Mpc
 		,KappaType *kappa   /// surface mass density
 		,KappaType *gamma
-		,double *xcm
+		,PosType *xcm
 		,bool no_kappa
 		,bool subtract_point /// if true contribution from a point mass is subtracted
 		){
      long j;
-     double alpha_tmp[2];
+     PosType alpha_tmp[2];
      KappaType kappa_tmp = 0.0, gamma_tmp[3], dt = 0;
 
      gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
@@ -28,7 +28,7 @@ void LensHaloBaseNSIE::force_halo(
      gamma[0] = gamma[1] = gamma[2] = 0.0;
      *kappa = 0.0;
 
-	 double xt[2]={0,0};
+	 PosType xt[2]={0,0};
 	 float units = pow(sigma/lightspeed,2)/Grav;///sqrt(fratio); // mass/distance(physical)
 	 xt[0]=xcm[0];
 	 xt[1]=xcm[1];
@@ -141,15 +141,15 @@ void LensHaloBaseNSIE::error_message1(std::string parameter,std::string file){
 }
 
 /*/ resets Zl, Dl, Sigma_crit, MpcToAsec
-void LensHaloBaseNSIE::setZlens(double zl){
+void LensHaloBaseNSIE::setZlens(PosType zl){
   
 }*/
 
-void LensHaloBaseNSIE::reNormSubstructure(double kappa_sub){
+void LensHaloBaseNSIE::reNormSubstructure(PosType kappa_sub){
 	/* renomalizes substructure so that
 	 * the average surface density it kappa_sub
 	 */
-	  double avem;
+	  PosType avem;
 	  avem=sub_Mmax*(sub_alpha+1)
 	    /(sub_alpha+2)*(1-pow(sub_Mmin/sub_Mmax,sub_alpha+2))/
 	    (1-pow(sub_Mmin/sub_Mmax,sub_alpha+1));
@@ -162,7 +162,7 @@ void LensHaloBaseNSIE::reNormSubstructure(double kappa_sub){
 /// Sets parameters within BaseLens that depend on the source redshift - Dl,Sigma_crit,etc.
 void LensHaloAnaNSIE::setCosmology(const COSMOLOGY& cosmo)
 {
-  double zlens = getZlens();
+  PosType zlens = getZlens();
 	Dl = cosmo.angDist(0,zlens);
 	Ds = cosmo.angDist(0,zsource_reference);
 	Dls = cosmo.angDist(zlens,zsource_reference);
@@ -178,7 +178,7 @@ void LensHaloAnaNSIE::setCosmology(const COSMOLOGY& cosmo)
 
 LensHaloBaseNSIE::LensHaloBaseNSIE(InputParams& params) : LensHalo(){
 
-  perturb_rms = new double[6];
+  perturb_rms = new PosType[6];
 
   assignParams(params);
 
@@ -254,7 +254,7 @@ std::size_t LensHaloBaseNSIE::Nparams() const
 	return LensHalo::Nparams() + 3;
 }
 
-double LensHaloBaseNSIE::getParam(std::size_t p) const
+PosType LensHaloBaseNSIE::getParam(std::size_t p) const
 {
 	if(p < LensHalo::Nparams())
 		return LensHalo::getParam(p);
@@ -272,7 +272,7 @@ double LensHaloBaseNSIE::getParam(std::size_t p) const
 	}
 }
 
-double LensHaloBaseNSIE::setParam(std::size_t p, double val)
+PosType LensHaloBaseNSIE::setParam(std::size_t p, PosType val)
 {
 	using Utilities::between;
 	
@@ -284,9 +284,9 @@ double LensHaloBaseNSIE::setParam(std::size_t p, double val)
 		case 0:
 			return (sigma = std::pow(10., val));
 		case 1:
-			return (fratio = between(val, 1e-10, 1.));
+			return (fratio = (float)between<PosType>(val, 1e-10, 1.));
 		case 2:
-			return (pa = between(pi*val, -pi/2, pi/2));
+			return (pa = (float)between<PosType>(pi*val, -pi/2, pi/2));
 		default:
 			throw std::invalid_argument("bad parameter index for setParam()");
 	}
@@ -344,10 +344,10 @@ LensHaloBaseNSIE::~LensHaloBaseNSIE(){
 
 
 /// TODO: This needs to be thought about more. sets axial modes to reproduce a near elliptically shaped surface density
-void LensHalo::setModesToEllip(double q,double theta){
+void LensHalo::setModesToEllip(PosType q,PosType theta){
   // elliptical integrals
-	double K = rfD(0,1./q/q,1);
-	double E = K - (1-1./q/q)*rdD(0,1./q/q,1)/3;
+	PosType K = rfD(0,1./q/q,1);
+	PosType E = K - (1-1./q/q)*rdD(0,1./q/q,1)/3;
   assert(Nmod == 18);
   
   // set modo to elliptical model
@@ -375,7 +375,7 @@ void LensHalo::setModesToEllip(double q,double theta){
 }
 
 /// Derivatives of the axial potential factor with respect to theta
-void LensHalo::faxial(double theta,double f[]){
+void LensHalo::faxial(PosType theta,PosType f[]){
   int i,k;
   
   //f[0] = 0.5*mod[3];
@@ -390,8 +390,8 @@ void LensHalo::faxial(double theta,double f[]){
 }
 
 /// Derivatives of the axial potential factor with respect to theta
-void LensHalo::gradial(double r,double g[]){
-  double x = (1+r/r_eps);
+void LensHalo::gradial(PosType r,PosType g[]){
+  PosType x = (1+r/r_eps);
   
   g[0] = 1.0/x/x;
   g[1] = -2.0*g[0]/x/r_eps;
@@ -402,16 +402,16 @@ void LensHalo::gradial(double r,double g[]){
  *  
  *  This function should only be used by the second generation of classes derived from LensHalo.
  *
- *  The math needs to be double checked and the sign convention checked.  
+ *  The math needs to be PosType checked and the sign convention checked.  
  *  The method used to make the lenses asymmetric is laid out in http://metcalf1.bo.astro.it/~bmetcalf/ExtraNotes/notes_elliptical.pdf
  */
-void LensHalo::desymmeterize(double r,double theta,double *alpha,double *kappa,double *gamma){
-  double f[3],g[3];
+void LensHalo::desymmeterize(PosType r,PosType theta,PosType *alpha,PosType *kappa,PosType *gamma){
+  PosType f[3],g[3];
   
-  double alpha_iso = alpha_h(r/rscale),phi_iso = phi_h(r/rscale)
+  PosType alpha_iso = alpha_h(r/rscale),phi_iso = phi_h(r/rscale)
   ,kappa_iso = kappa_h(r/rscale),gamma_iso = gamma_h(r/rscale);
   
-  double alpha_r,alpha_theta,F;
+  PosType alpha_r,alpha_theta,F;
 
   faxial(theta,f);
   gradial(r,g);
@@ -426,8 +426,8 @@ void LensHalo::desymmeterize(double r,double theta,double *alpha,double *kappa,d
   
   *kappa = F*kappa_iso + ( (g[2] + g[1]/r)*f[0] + g[0]*f[2]/r/r )*phi_iso;
   
-  double gt = F*gamma_iso + g[1]*f[0]*alpha_iso + 0.5*( g[2]*f[0] - g[0]*f[2]/r/r)*phi_iso;
-  double g45 = f[1]*(alpha_iso*g[0]/r + (g[1]-g[0]/r/r)*phi_iso);
+  PosType gt = F*gamma_iso + g[1]*f[0]*alpha_iso + 0.5*( g[2]*f[0] - g[0]*f[2]/r/r)*phi_iso;
+  PosType g45 = f[1]*(alpha_iso*g[0]/r + (g[1]-g[0]/r/r)*phi_iso);
   
   gamma[0] = cos(2*theta)*gt + sin(2*theta)*g45;
   gamma[1] = -sin(2*theta)*gt + cos(2*theta)*g45;

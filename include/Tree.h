@@ -24,10 +24,10 @@ typedef enum{TotalArea,EachImage,Resolution,FillHoles} ExitCriterion;
 /** \brief Tree: Exported struct */
 struct TreeStruct{
 public:
-	TreeStruct(Point *xp,unsigned long Npoints,short my_median_cut = 1,double buffer = 0.0);
+	TreeStruct(Point *xp,unsigned long Npoints,short my_median_cut = 1,PosType buffer = 0.0);
 	TreeStruct(Point *xp,unsigned long npoints
-			 ,double boundary_p1[2],double boundary_p2[2]
-			 ,double center[2],int Nbucket);
+			 ,PosType boundary_p1[2],PosType boundary_p2[2]
+			 ,PosType center[2],int Nbucket);
 
 	 ~TreeStruct();
 
@@ -39,18 +39,18 @@ public:
 
 	 /*  *** Constructor****
 	TreeHndl NewTree(Point *xp,unsigned long npoints
-			 ,double boundary_p1[2],double boundary_p2[2]
-			 ,double center[2],int Nbucket);
+			 ,PosType boundary_p1[2],PosType boundary_p2[2]
+			 ,PosType center[2],int Nbucket);
 	short freeTree(TreeHndl tree);*/
 
   //void FindAllBoxNeighbors(Point *point,ListHndl neighbors);
   void FindAllBoxNeighborsKist(Point *point,Kist<Point> * neighbors);
-  void PointsWithinEllipKist(const double* center,float rmax,float rmin,float posangle,Kist<Point> * neighborkist);
-  double PointsWithinKist(const double* center,float rmax,Kist<Point> * neighborkist,short markpoints);
-  void PointsWithinKist_iter(const double* center,float rmin,float rmax,Kist<Point> * neighborkist);
-  Point *NearestNeighborKist(const double* center,int Nneighbors,Kist<Point> * neighborkist);
+  void PointsWithinEllipKist(const PosType* center,float rmax,float rmin,float posangle,Kist<Point> * neighborkist);
+  PosType PointsWithinKist(const PosType* center,float rmax,Kist<Point> * neighborkist,short markpoints);
+  void PointsWithinKist_iter(const PosType* center,float rmin,float rmax,Kist<Point> * neighborkist);
+  Point *NearestNeighborKist(const PosType* center,int Nneighbors,Kist<Point> * neighborkist);
 
-  void PointsInCurrent(unsigned long *ids,double **x);
+  void PointsInCurrent(unsigned long *ids,PosType **x);
 
   /***** Movement on tree *****/
 
@@ -84,11 +84,49 @@ public:
   void printTree();
   void checkTree();
 
-  void FindBoxPoint(const double* ray,Point *point);
+  void FindBoxPoint(const PosType* ray,Point *point);
 
-  void _FindLeaf(const double* ray,unsigned long Nadd = 0);
+  void _FindLeaf(const PosType* ray,unsigned long Nadd = 0);
   
   TreeStruct * spawn();
+
+  /**
+   *  \brief A iterator class fore TreeStruct that allows for movement through the tree without changing
+   *      anything in the tree itself.
+   *
+   *   This class should be able to preform all of the constant movements within the tree without causing
+   *   any change to the tree.
+   */
+  class iterator{
+    
+  private:
+    Branch *current;
+    Branch *top;
+    
+  public:
+    /// Sets the top or root to the top of "tree".
+    iterator(TreeStruct * tree){current = top = tree->top;}
+    /// Sets the root to the input branch so that this will be a subtree in branch is not the real root.
+    iterator(Branch *branch){current = top = branch;}
+    
+    /// Returns a pointer to the current Branch.
+    Branch *operator*(){return current;}
+    
+    void movetop(){current = top;}
+    
+    /// Same as up()
+    bool operator++(){ return up();}
+    
+    /// Same as up()
+    bool operator++(int){ return up();}
+    
+    bool up();
+    /// Move to brother if it exists
+    bool brother();
+    /// Move to child
+    bool down(short child);
+    bool TreeWalkStep(bool allowDescent);
+  };
 
 private:
 
@@ -103,19 +141,19 @@ private:
   int Nbucket;
   short median_cut;
   int incell;
-  double realray[2];
+  PosType realray[2];
 
 
   void construct_root(Point *xp,unsigned long npoints
-			 ,double boundary_p1[2],double boundary_p2[2]
-			 ,double center[2],int Nbucket);
+			 ,PosType boundary_p1[2],PosType boundary_p2[2]
+			 ,PosType center[2],int Nbucket);
 
 
   //void _FindAllBoxNeighbors(Branch *leaf,ListHndl neighbors);
   void _FindAllBoxNeighborsKist(Branch *leaf,Kist<Point> * neighbors);
   void _FindAllBoxNeighborsKist_iter(Branch *leaf,Kist<Point> * neighbors);
-  void _PointsWithinKist(double *ray,float *rmax,Kist<Point> * neighborkist
-  		,short markpoints,double *maxgridsize);
+  void _PointsWithinKist(PosType *ray,float *rmax,Kist<Point> * neighborkist
+  		,short markpoints,PosType *maxgridsize);
 
   void _freeBranches(short child);
   void _AddPoint();
@@ -123,75 +161,38 @@ private:
 
   void _checkTree(unsigned long *count);
   void _freeBranches_iter();
-  void _FindBox(const double* ray);
+  void _FindBox(const PosType* ray);
 
   // Should be obsolete
-  //Point *NearestNeighbor(const double* center,int Nneighbors,ListHndl neighborlist
+  //Point *NearestNeighbor(const PosType* center,int Nneighbors,ListHndl neighborlist
   //		,short direction);
-  void _NearestNeighbor(double* ray,int Nneighbors,Point **neighborpoints,double *rneighbors,short *direction);
+  void _NearestNeighbor(PosType* ray,int Nneighbors,Point **neighborpoints,PosType *rneighbors,short *direction);
 
 
   // Are obsolete
-  //void PointsWithin(double *ray,float rmax,ListHndl neighborlist,short markpoints);
-  //void PointsWithin_iter(double *ray,float rmax,ListHndl neighborlist,short markpoints);
-  //void FriendsOfFriends(double *starting_point,float rlink
+  //void PointsWithin(PosType *ray,float rmax,ListHndl neighborlist,short markpoints);
+  //void PointsWithin_iter(PosType *ray,float rmax,ListHndl neighborlist,short markpoints);
+  //void FriendsOfFriends(PosType *starting_point,float rlink
   //		      ,ListHndl neighborlist,Point *filter
   //		      ,unsigned long Nfilter,unsigned long *filter_place);
-  //void _PointsWithin2(double *ray,float *rmax,ListHndl neighborlist
+  //void _PointsWithin2(PosType *ray,float *rmax,ListHndl neighborlist
   //		   ,Point *filter,unsigned long Nfilter
   //		   ,unsigned long *filter_place,short compliment);
-  //void _PointsWithin(double *ray,float *rmax,ListHndl neighborlist
+  //void _PointsWithin(PosType *ray,float *rmax,ListHndl neighborlist
   //		,short markpoints);
 
 };
 
 typedef struct TreeStruct *TreeHndl;
 typedef int TreeElement;
-/**
- *  \brief A iterator class fore TreeStruct that allows for movement through the tree without changing 
- *      anything in the tree itself.
- *
- *   This class should be able to preform all of the constant movements within the tree without causing 
- *   any change to the tree.
- */
-class TreeIt{
-  
-private:
-  Branch *current;
-  Branch *top;
 
-public:
-  /// Sets the top or root to the top of "tree".
-  TreeIt(TreeHndl tree){current = top = tree->top;}
-  /// Sets the root to the input branch so that this will be a subtree in branch is not the real root.
-  TreeIt(Branch *branch){current = top = branch;}
-  
-  /// Returns a pointer to the current Branch.
-	Branch *operator*(){return current;}
+bool BoxInCircle(PosType *ray,PosType radius,PosType *p1,PosType *p2);
+PosType ClosestBorder(PosType *ray,PosType *p1,PosType *p2);
 
-  void movetop(){current = top;}
-  
-  /// Same as up()
-	bool operator++(){ return up();}
-  
-	/// Same as up()
-	bool operator++(int){ return up();}
-
-	bool up();
-  /// Move to brother if it exists
-	bool brother();
-  /// Move to child
-	bool down(short child);
-  bool TreeWalkStep(bool allowDescent);
-};
-
-bool BoxInCircle(double *ray,double radius,double *p1,double *p2);
-double ClosestBorder(double *ray,double *p1,double *p2);
-
-inline double MIN(double x,double y){
+inline PosType MIN(PosType x,PosType y){
 	return (x < y) ? x : y;
 };
-inline double MAX(double x,double y){
+inline PosType MAX(PosType x,PosType y){
 	return (x > y) ? x : y;
 };
 
@@ -199,7 +200,7 @@ inline double MAX(double x,double y){
 /*  returns the distance from ray[] to the furthest point on the
  *    border of the box,
  */
-inline double FurthestBorder(const double* center,double *p1,double *p2){
+inline PosType FurthestBorder(const PosType* center,PosType *p1,PosType *p2){
   return sqrt( pow(MAX(center[0]-p1[0],p2[0]-center[0]),2) + pow(MAX(center[1]-p1[1],p2[1]-center[1]),2) );
 };
 
@@ -211,17 +212,17 @@ TreeHndl readTree(char *filename);
 
 /** routines in TreeDriver.c **/
 
-//inline int inbox(double ray[2],double *p1,double *p2);
+//inline int inbox(PosType ray[2],PosType *p1,PosType *p2);
 /* return 1 (0) if ray is (not) in the cube */
-inline int inbox(const double* center,double *p1,double *p2){
+inline int inbox(const PosType* center,PosType *p1,PosType *p2){
   return (center[0]>=p1[0])*(center[0]<=p2[0])*(center[1]>=p1[1])*(center[1]<=p2[1]);
 };
 bool boxinbox(Branch *branch1,Branch *branch2);
-double BoxIntersection(Branch *branch1,Branch *branch2);
+PosType BoxIntersection(Branch *branch1,Branch *branch2);
 bool AreBoxNeighbors(Point *point1,Point *point2);
 bool AreBoxNeighbors(Branch *branch1,Branch *branch2);
-bool CircleInBox(const double* center,double radius,double *p1,double *p2);
-bool BoxInCircle(const double* center,double radius,double *p1,double *p2);
+bool CircleInBox(const PosType* center,PosType radius,PosType *p1,PosType *p2);
+bool BoxInCircle(const PosType* center,PosType radius,PosType *p1,PosType *p2);
 
 // Point arrays
 
@@ -239,7 +240,7 @@ void PointCopyAll(Point *pcopy,Point *pins);
 
 //ImageInfo *NewImageInfo(int Nimages);
 //void freeImageInfo(ImageInfo *imageinfo,int Nimages);
-void combineCloseImages(double linkinglength,ImageInfo *imageinfo,int *Nimages
+void combineCloseImages(PosType linkinglength,ImageInfo *imageinfo,int *Nimages
 		,int *NewNimages,int NimageMax);
 void SwapImages(ImageInfo *image1,ImageInfo *image2);
 void SwapImages(OldImageInfo *image1,OldImageInfo *image2);
@@ -250,11 +251,11 @@ void PrintImageInfo(ImageInfo *image);
 
 // in image_finder.c
 
-/*void find_images(double *y_source,double r_source,GridHndl grid
+/*void find_images(PosType *y_source,PosType r_source,GridHndl grid
 		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
-		,double initial_size,bool splitimages,short edge_refinement
+		,PosType initial_size,bool splitimages,short edge_refinement
 		,bool verbose,bool kappa_off);
-short image_finder(double *y_source,double r_source,TreeHndl s_tree,TreeHndl i_tree
+short image_finder(PosType *y_source,PosType r_source,TreeHndl s_tree,TreeHndl i_tree
 		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
 		,short splitparities,short true_images);*/
 void findborders2(TreeHndl i_tree,OldImageInfo *imageinfo);
@@ -272,33 +273,33 @@ Point *LinkToSourcePoints(Point *i_points,unsigned long Npoints);
 /// \ingroup Util
 namespace Utilities{
     ///Separation squared between two positions in 2 dimensions.
-	inline double sepSQR(double *xx,double *yy){
+	inline PosType sepSQR(PosType *xx,PosType *yy){
 		return pow(xx[0]-yy[0],2) + pow(xx[1]-yy[1],2);
 	}
-	void double_sort(unsigned long n, double *arr, unsigned long *brr);
-	void double_sort_points(unsigned long n, double *arr, Point *brr);
+	void double_sort(unsigned long n, PosType *arr, unsigned long *brr);
+	void double_sort_points(unsigned long n, PosType *arr, Point *brr);
 
-	void quicksortPoints(Point *pointarray,double *arr,unsigned long N);
-	void quicksort(unsigned long *particles,double *arr,unsigned long N);
-	void quickPartition(double pivotvalue,unsigned long *pivotindex,unsigned long *particles
-		,double *arr,unsigned long N);
-	void quickPartitionPoints(double pivotvalue,unsigned long *pivotindex
-		,Point *pointsarray,double *arr,unsigned long N);
+	void quicksortPoints(Point *pointarray,PosType *arr,unsigned long N);
+	void quicksort(unsigned long *particles,PosType *arr,unsigned long N);
+	void quickPartition(PosType pivotvalue,unsigned long *pivotindex,unsigned long *particles
+		,PosType *arr,unsigned long N);
+	void quickPartitionPoints(PosType pivotvalue,unsigned long *pivotindex
+		,Point *pointsarray,PosType *arr,unsigned long N);
 	int cutbox(const PosType* center,PosType *p1,PosType *p2,float rmax);
-	void log_polar_grid(Point *i_points,double rmax,double rmin,double *center,long Ngrid);
+	void log_polar_grid(Point *i_points,PosType rmax,PosType rmin,PosType *center,long Ngrid);
 	void findarea(ImageInfo *imageinfo);
-	int windings2(double *x,Point *points,unsigned long Npoints,double *area,short image);
+	int windings2(PosType *x,Point *points,unsigned long Npoints,PosType *area,short image);
 	void writeCurves(int m, ImageInfo *critical, int Ncrit, int index);
-  double cross(const Point *O, const Point *A, const Point *B);
+  PosType cross(const Point *O, const Point *A, const Point *B);
   bool xorder(Point *p1,Point *p2);
   std::vector<Point *> convex_hull(std::vector<Point *> P);
 
 
-	long IndexFromPosition(double *x,long Npixels,double range,double *center);
-	void PositionFromIndex(unsigned long i,double *x,long Npixels,double range,const double *center);
-	long IndexFromPosition(double x,long Npixels,double range,double center);
-  double TwoDInterpolator(double *x,int Npixels,double range,double *center,double *map,bool init=true);
-  double TwoDInterpolator(double *map);
+	long IndexFromPosition(PosType *x,long Npixels,PosType range,PosType *center);
+	void PositionFromIndex(unsigned long i,PosType *x,long Npixels,PosType range,const PosType *center);
+	long IndexFromPosition(PosType x,long Npixels,PosType range,PosType center);
+  PosType TwoDInterpolator(PosType *x,int Npixels,PosType range,PosType *center,PosType *map,bool init=true);
+  PosType TwoDInterpolator(PosType *map);
 
   /** \ingroup Utill
    * \brief Bilinear interpolation class for interpolating from a 2D uniform grid.
@@ -313,10 +314,10 @@ namespace Utilities{
   class Interpolator{
   public:
     Interpolator(
-                 double *x          /// position of point
+                 PosType *x          /// position of point
                  ,int Npixels       /// Number of pixels in one dimension
-                 ,double my_range   /// Range of map in same units as x[]
-                 ,double *my_center /// Center of map in same units as x[]
+                 ,PosType my_range   /// Range of map in same units as x[]
+                 ,PosType *my_center /// Center of map in same units as x[]
                  ):
     N(Npixels),range(my_range),map_p(NULL),Ny(Npixels),range_y(my_range)
     {
@@ -331,12 +332,12 @@ namespace Utilities{
      *  Array must be indexed i = ix + iy * Nx 
      */
     Interpolator(
-                 double *x          /// position of point
+                 PosType *x          /// position of point
                  ,int my_Nx       /// Number of pixels in x dimension
-                 ,double my_range_x   /// Range of map in x in same units as x[]
+                 ,PosType my_range_x   /// Range of map in x in same units as x[]
                  ,int my_Ny       /// Number of pixels in y dimension
-                 ,double my_range_y   /// Range of map in y in same units as x[]
-                 ,double *my_center /// Center of map in same units as x[]
+                 ,PosType my_range_y   /// Range of map in y in same units as x[]
+                 ,PosType *my_center /// Center of map in same units as x[]
                  ):
     N(my_Nx),range(my_range_x),map_p(NULL),Ny(my_Ny),range_y(my_range_y)
     {
@@ -353,8 +354,8 @@ namespace Utilities{
      */
     Interpolator(
                  int Npixels          /// Number of pixels in one dimension
-                 ,double my_range     /// Range of map in same units as x[]
-                 ,double *my_center   /// Center of map in same units as x[]
+                 ,PosType my_range     /// Range of map in same units as x[]
+                 ,PosType *my_center   /// Center of map in same units as x[]
                  ,const T *map        /// One dimensional array of fundamental type
                  ):
     N(Npixels),range(my_range),map_p(map),Ny(Npixels),range_y(my_range)
@@ -365,9 +366,9 @@ namespace Utilities{
     
     /** 
      Does interpolation of map at point that object was constructed with or last called with.
-     Can use any map type that has a [] operator that returns a double.
+     Can use any map type that has a [] operator that returns a PosType.
      */
-    double interpolate(
+    PosType interpolate(
                        T& map    /// map that supports the [] operator 
                        ){
       if(map.size() != N*Ny){
@@ -380,13 +381,13 @@ namespace Utilities{
           + (1.-fx)*fy*map[index+N];
     };
     /// reinitializes to a new position
-    double interpolate(
-                       double *x   /// position of point
+    PosType interpolate(
+                       PosType *x   /// position of point
                        ,T& map     /// map that supports the [] operator
                        ){
       if(map.size() != N*Ny){
         ERROR_MESSAGE();
-        std::cout << "ERROR: Interpolator:interpolator(double *,T&), wrong size map" << std::endl;
+        std::cout << "ERROR: Interpolator:interpolator(PosType *,T&), wrong size map" << std::endl;
       }
       initparams(x);
       return interpolate(map);
@@ -395,7 +396,7 @@ namespace Utilities{
     /**
      Does interpolation of store map at point x. Only for use with the second constructor.
      */
-    double operator ()(double *x){
+    PosType operator ()(PosType *x){
       if(map_p == NULL){
         std::cout << "Didn't use the right constructor for Interpolator class" << std::endl;
         throw std::runtime_error("Did not use the right constructor.");
@@ -407,8 +408,8 @@ namespace Utilities{
     }
         
     void test(void){
-      std::valarray<double> map;
-      double tmp,x[2];
+      std::valarray<PosType> map;
+      PosType tmp,x[2];
           
       map.resize(N*N);
       
@@ -427,13 +428,13 @@ namespace Utilities{
     }
 
   private:
-    double range,range_y,center[2];
+    PosType range,range_y,center[2];
     const T *map_p;
-    double fx, fy;
+    PosType fx, fy;
     long index;
     int N,Ny;
 
-    void initparams(double *x){
+    void initparams(PosType *x){
       long ix,iy;
       // position in pixel coordinates
       fx = ((x[0] - center[0])/range + 0.5)*(N-1);
@@ -475,22 +476,22 @@ namespace Utilities{
         
    };
 
-	//inline float isLeft( Point *p0, Point *p1, double *x );
+	//inline float isLeft( Point *p0, Point *p1, PosType *x );
 
 	// isLeft(): tests if a point is Left|On|Right of an infinite line.
 	// Input:three points P0, P1, and x
 	// Return: >0 for x left of the line through P0 and P1
 //         =0 for x on the line
 //         <0 for x right of the line
-	inline float isLeft( Point *p0, Point *p1, double *x ){
+	inline float isLeft( Point *p0, Point *p1, PosType *x ){
 
 		return (p1->x[0] - p0->x[0])*(x[1] - p0->x[1])
 			- (x[0] - p0->x[0])*(p1->x[1] - p0->x[1]);
 	};
 	unsigned long prevpower(unsigned long k);
 
-	int windings(double *x,Point *points,unsigned long Npoints,double *area,short image = 0 );
-	int windings(double *x,Kist<Point> * kist,double *area,short image = 0);
+	int windings(PosType *x,Point *points,unsigned long Npoints,PosType *area,short image = 0 );
+	int windings(PosType *x,Kist<Point> * kist,PosType *area,short image = 0);
 }
 // in curve_routines.c
 void nesting_curve(OldImageInfo *curves,int Ncurves);
@@ -504,8 +505,8 @@ namespace Utilities{
   unsigned long order_curve5(Kist<Point> * curve);
   void ordered_convexhull(Kist<Point> * curve);
 }
-bool order_ExteriorBoundary(Point *curve,long Npoints,long *NewNpoints,double *area);
-double findAreaOfCurve(TreeHndl tree,ImageInfo *curve,int NimageMax);
+bool order_ExteriorBoundary(Point *curve,long Npoints,long *NewNpoints,PosType *area);
+PosType findAreaOfCurve(TreeHndl tree,ImageInfo *curve,int NimageMax);
 void walkcurve(Point *points,long Npoints,long *j,long *end);
 void walkcurveRight(Point *points,long Npoints,long *j,long *end);
 short backtrack(Point *points,long Npoints,long *j,long jold,long *end);
@@ -520,7 +521,7 @@ void splitlist(ListHndl imagelist,OldImageInfo *images,int *Nimages,int Maximage
 /*********************************/
 
 //void rayshooterInternal(unsigned long Npoints,Point *i_points,bool kappa_off);
-void in_source(double *y_source,ListHndl sourcelist);
+void in_source(PosType *y_source,ListHndl sourcelist);
 bool tree_count_test(TreeHndl tree);
 bool testLeafs(TreeHndl tree);
 

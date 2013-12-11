@@ -190,7 +190,15 @@ public:
             unit = my_it.unit;
             return *this;
         }
-        
+      
+      bool operator==(const iterator my_it){
+        return (this->unit == my_it.unit);
+       }
+      
+      bool operator!=(const iterator my_it){
+        return (this->unit != my_it.unit);
+      }
+
     };
 
   
