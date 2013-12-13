@@ -7,9 +7,9 @@
 #include "slsimlib.h"
 
 //const float mumin = 0.3;  // actually the sqrt of the minimum magnification
-const double FracResTarget = 3.0e-5;
+const PosType FracResTarget = 3.0e-5;
 //const float FracResTarget = 1.0e-4;
-const double target_all = 1.0e-3;
+const PosType target_all = 1.0e-3;
 //const int MinPoints = 100;  // Minimum number of points per image
 const float tol_UniformMag = 1.0e-3;
 const bool verbose = false;
@@ -31,11 +31,11 @@ void map_images(
 		,int *Nimages           /// number of images found
 		,ImageInfo *imageinfo   /// information on each image
 		,int NimageMax          /// Size of imageinfo array on entry.  This could increase if more images are found
-		,double xmax            /// Maximum size of source on image plane.  The entire source must be within this distance from
+		,PosType xmax            /// Maximum size of source on image plane.  The entire source must be within this distance from
 		                        ///  source->getX()[]
-		,double xmin            /// The smallest scale of the source measured on the lens plane.  The more accurate these
+		,PosType xmin            /// The smallest scale of the source measured on the lens plane.  The more accurate these
 			                    /// 2 parameters are the less likely it is that an image will be missed.
-		,double initial_size    /// Initial size of source for telescoping, 0 to start from the initial grid size.
+		,PosType initial_size    /// Initial size of source for telescoping, 0 to start from the initial grid size.
 		                        /// If < 0 no telescoping is used and only the already existing points are used to
 		                        /// to initiate the image finding.
 		,ExitCriterion criterion  /// see data type
@@ -53,8 +53,8 @@ void map_images(
 	assert(imageinfo->imagekist);
 
 	unsigned long Nimagepoints,Ntmp;
-	double tmp,area_tot,flux;
-	static double oldy[2],oldr=0;
+	PosType tmp,area_tot,flux;
+	static PosType oldy[2],oldr=0;
 	//short moved;
 	long i,j;
 	//Point *i_points,*s_points;
@@ -63,9 +63,9 @@ void map_images(
 	//ListHndl tmp_border_pointer;
 	static int oldNimages=0;
 	bool go;
-	double center[2],y[2],sb,xx[2],source_flux = 0;
+	PosType center[2],y[2],sb,xx[2],source_flux = 0;
 	int Nsources;
-  double maxflux;
+  PosType maxflux;
 
 	assert(xmin > 0);
 	assert(xmax > 0);
@@ -125,7 +125,7 @@ void map_images(
 		// split source into groups
 
 		// calculate centroids and sizes of sources
-		double *rs = new double[Nsources+1];
+		PosType *rs = new PosType[Nsources+1];
 		for(i=0;i<Nsources; ++i){
 			sourceinfo[i].centroid[0] = sourceinfo[i].centroid[1] = 0;
 			sourceinfo[i].imagekist->MoveToTop();
@@ -200,7 +200,7 @@ void map_images(
 	if(FindCenter){
 		Point *points;
 		TreeHndl tree;
-		double **centers,*rs;
+		PosType **centers,*rs;
 
 		//set up grid for scanning for source
 		Ntmp = 2*(unsigned long)(source->source_r_out/xmin + 1);
@@ -235,7 +235,7 @@ void map_images(
 
 		printf("Nsources = %i\n",Nsources);
 		centers = dmatrix(0,Nsources-1,0,1);
-		rs = (double *) malloc(Nsources*sizeof(double));
+		rs = (PosType *) malloc(Nsources*sizeof(PosType));
 
 		for(i=0;i<Nsources;++i){
 			centers[i][0] = centers[i][1] = 0.0;
@@ -302,7 +302,7 @@ void map_images(
 
 		printf("total number of points before telescope: %li\n",NumberOfPoints(grid));
 
-		double xsMax[2],xsMin[2],center[2],sbmax,ssize,r_source,rtemp,y[2];
+		PosType xsMax[2],xsMin[2],center[2],sbmax,ssize,r_source,rtemp,y[2];
 		bool detected = false;
 
 		xsMax[0] = xsMax[1] = -1.0e100;
@@ -581,7 +581,7 @@ void map_images_fixedgrid(
                 ,int *Nimages           /// number of images found
                 ,ImageInfo *imageinfo   /// information on each image
                 ,int NimageMax          /// Size of imageinfo array on entry.  This could increase if more images are found
-                ,double xmax            /// Maximum size of source on image plane.  The entire source must be within this distance from
+                ,PosType xmax            /// Maximum size of source on image plane.  The entire source must be within this distance from
                                         ///  source->getX()[].  Decreasing it will make the code run faster.  Making xmax much bigger than
                                         /// the grid boundaries will check all points for surface brightness.
                 ,bool divide_images     /// if true will divide images.
@@ -601,7 +601,7 @@ void map_images_fixedgrid(
   grid->RefreshSurfaceBrightnesses(source);
   grid->ClearAllMarks();  // TODO: might be nice to elliminate the need for this
 
-  double x[2];
+  PosType x[2];
   
   grid->s_tree->PointsWithinKist(source->getX(), xmax, imageinfo->imagekist, 0);
   
@@ -706,8 +706,8 @@ void map_images_fixedgrid(
  *     Warning:     set imageinfo[i].ShouldNotRefine = 0 and imageinfo[i].uniform_mag = unchecked;
  *
  */
-int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,double maxflux,ImageInfo *imageinfo,int *Nimages
-		,ImageInfo *sourceinfo,int Nsources,int NimageMax,const double res_target,ExitCriterion criterion
+int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,PosType maxflux,ImageInfo *imageinfo,int *Nimages
+		,ImageInfo *sourceinfo,int Nsources,int NimageMax,const PosType res_target,ExitCriterion criterion
 		,bool kappa_off,bool divide_images,bool batch){
 
 	//printf("entering refine_grid\n");
@@ -715,7 +715,7 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,double maxflux,
   if((*Nimages) < 1) return 0;
 
   int k,number_of_refined; /* Ngrid_block must be odd */
-  double total_area,r,rmin;
+  PosType total_area,r,rmin;
   Point *i_points;
   unsigned long Ncells,Nold,j,i;
   bool reborder=false,redivide=false;
@@ -1036,7 +1036,7 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,double maxflux,
   return number_of_refined;
 }
 // Assign surface brightness of new points and add the ones that are nonzero to the image
-void check_sb_add(Source *source,ImageInfo *imageinfo,Point *i_points,double maxflux,unsigned long &Nold,int &number_of_refined){
+void check_sb_add(Source *source,ImageInfo *imageinfo,Point *i_points,PosType maxflux,unsigned long &Nold,int &number_of_refined){
 	if(i_points != NULL){
 		// link new points into image kist and calculate surface brightnesses
 		for(unsigned long k=0;k < i_points->head;++k){
@@ -1068,10 +1068,10 @@ void check_sb_add(Source *source,ImageInfo *imageinfo,Point *i_points,double max
 	}
 }
 
-bool RefinePoint2(Point *point,TreeHndl i_tree,double image_area,double total_area,double maxflux
-		,ExitCriterion criterion,double res_target,Kist<Point> * nearest){
+bool RefinePoint2(Point *point,TreeHndl i_tree,PosType image_area,PosType total_area,PosType maxflux
+		,ExitCriterion criterion,PosType res_target,Kist<Point> * nearest){
 
-	double borderSB = 0,error = 0,maxdiff_sb;
+	PosType borderSB = 0,error = 0,maxdiff_sb;
 
 	nearest->Empty();
 	// Prevent cell from getting so small that precision error prevents everything from working
@@ -1105,10 +1105,10 @@ bool RefinePoint2(Point *point,TreeHndl i_tree,double image_area,double total_ar
 	return false;
 }
 // refinement criterion based on difference in surface brightness
-bool RefinePoint_sb(Point *point,TreeHndl i_tree,double image_area,double total_area
-                    ,double sb_limit,double maxflux,Kist<Point> * nearest){
+bool RefinePoint_sb(Point *point,TreeHndl i_tree,PosType image_area,PosType total_area
+                    ,PosType sb_limit,PosType maxflux,Kist<Point> * nearest){
   
-  double smallsize = 1.0e-7;
+  PosType smallsize = 1.0e-7;
 	// Prevent cell from getting so small that precision error prevents everything from working
 	if(point->gridsize <= pow(10.,1 - DBL_DIG)) return false;  // this shouldn't be necessary every time
   
@@ -1132,8 +1132,8 @@ bool RefinePoint_sb(Point *point,TreeHndl i_tree,double image_area,double total_
 	return false;
 }
 // refinement criterion based on difference in surface brightness
-bool RefinePoint_smallsize(Point *point,TreeHndl i_tree,double image_area,double total_area
-                    ,double smallsize,double maxflux,Kist<Point> * nearest){
+bool RefinePoint_smallsize(Point *point,TreeHndl i_tree,PosType image_area,PosType total_area
+                    ,PosType smallsize,PosType maxflux,Kist<Point> * nearest){
   
 	// Prevent cell from getting so small that precision error prevents everything from working
 	if(point->gridsize <= pow(10.,1 - DBL_DIG)) return false;  // this shouldn't be necessary every time
@@ -1150,10 +1150,10 @@ bool RefinePoint_smallsize(Point *point,TreeHndl i_tree,double image_area,double
 /*
  * Requires that all neighbors to point have a flux below a
  *
-bool RefinePoint(Point *point,TreeHndl i_tree,double image_area,double total_area
-		,ExitCriterion criterion,double res_target,Kist<Point> * nearest){
+bool RefinePoint(Point *point,TreeHndl i_tree,PosType image_area,PosType total_area
+		,ExitCriterion criterion,PosType res_target,Kist<Point> * nearest){
 
-	double flux,tmp;
+	PosType flux,tmp;
 
 	flux = pow(point->gridsize,2)*point->surface_brightness;
 
@@ -1210,7 +1210,7 @@ void UniformMagCheck(ImageInfo *imageinfo){
 	// find minimum and maximum magnification on border
 	if(imageinfo->imagekist->Nunits() > 10 && imageinfo->uniform_mag == unchecked){
 
-		double magmin,magmax;
+		PosType magmin,magmax;
 
 		imageinfo->imagekist->MoveToBottom();
 		magmin = magmax = 1.0/imageinfo->imagekist->getCurrent()->invmag;

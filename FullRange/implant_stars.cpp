@@ -41,13 +41,13 @@ void LensHalo::implant_stars(
 		star_theta_force = 1.0e-1;
 		assert(Nregions > 0);
 		star_Nregions = Nregions;
-		star_region = new double[Nregions];
-		star_Sigma = new double[Nregions];
+		star_region = new PosType[Nregions];
+		star_Sigma = new PosType[Nregions];
 		star_xdisk = Utilities::PosTypeMatrix(Nregions,2);
     
 	}
   
-  double mean_mstar[Nregions];
+  PosType mean_mstar[Nregions];
 	if(stars_N < 1  || star_fstars <= 0){
 		stars_implanted = true;
 		stars_N = 0;
@@ -89,10 +89,10 @@ void LensHalo::implant_stars(
 	}
   
 	for(j=0,m=0;j<Nregions;++j){
-		double alpha[2];
+		PosType alpha[2];
 		KappaType Sigma = 0, gamma[3];
 		alpha[0]=alpha[1]=gamma[0]=gamma[1]=gamma[2]=0.;
-		double xcm[2];
+		PosType xcm[2];
 		xcm[0] = centers[j][0];
 		xcm[1] = centers[j][1];
     
@@ -182,7 +182,7 @@ void LensHalo::implant_stars(
                              ,long *seed
                              ,IMFtype type
                              ){
-  double **tmp_p;
+  PosType **tmp_p;
   tmp_p[0] = center;
   
   implant_stars(tmp_p,1,seed,type);
@@ -210,14 +210,14 @@ void LensHalo::remove_stars(){
 /** \brief subtracts the mass in stars from the smooth model to compensate
 * for the mass of the stars the lensing quantities are all updated not replaced
  */
-void LensHalo::substract_stars_disks(double *ray,double *alpha
+void LensHalo::substract_stars_disks(PosType *ray,PosType *alpha
 		,KappaType *kappa,KappaType *gamma){
 
 	if(!(stars_implanted)) return;
 
-	double xcm,ycm,r;
+	PosType xcm,ycm,r;
 	float tmp;
-	double tmp_mass;
+	PosType tmp_mass;
 	int i;
 
   //std::cout <<  std::endl;
@@ -257,11 +257,11 @@ void LensHalo::substract_stars_disks(double *ray,double *alpha
  * 3 - further IMF models may follow
  */
 float* LensHalo::stellar_mass_function(IMFtype type, unsigned long Nstars, long *seed
-		,double minmass, double maxmass, double bendmass, double powerlo, double powerhi){
+		,PosType minmass, PosType maxmass, PosType bendmass, PosType powerlo, PosType powerhi){
 
 	//if(!(stars_implanted)) return;
 	unsigned long i;
-	double powerp1,powerp2,powerp3,powerlp1,bendmass1,bendmass2,shiftmax,shiftmin,n0,n1,n2,n3,rndnr,tmp0,tmp1,tmp2;
+	PosType powerp1,powerp2,powerp3,powerlp1,bendmass1,bendmass2,shiftmax,shiftmin,n0,n1,n2,n3,rndnr,tmp0,tmp1,tmp2;
 	float *stellar_masses = new float[Nstars];
 
 	if(type==One){
@@ -313,7 +313,7 @@ float* LensHalo::stellar_mass_function(IMFtype type, unsigned long Nstars, long 
 			cout << "For IMF type Chabrier main_stars_min_mass and main_stars_max_mass must be defined in parameter file!" << endl;
 			exit(1);
 		}
-		double chab_param[]={0.086,0.22,0.57};
+		PosType chab_param[]={0.086,0.22,0.57};
 		powerp1=-1.3;
 		tmp0=2.0*chab_param[2]*chab_param[2];
 		tmp1=chab_param[0]/(log(10.0)*log(10.0))*exp((-(log10(chab_param[1]))*(log10(chab_param[1])))/tmp0);
@@ -372,7 +372,7 @@ float* LensHalo::stellar_mass_function(IMFtype type, unsigned long Nstars, long 
 			exit(1);
 		}
 		else{
-			double kroupa_param[]={-0.3,-1.3,-2.3};
+			PosType kroupa_param[]={-0.3,-1.3,-2.3};
 			powerp1=kroupa_param[0]+1.0;
 			powerp2=kroupa_param[1]+1.0;
 			powerp3=kroupa_param[2]+1.0;

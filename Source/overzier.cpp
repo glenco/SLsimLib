@@ -16,7 +16,7 @@ SourceOverzier::SourceOverzier()
 }
 
 SourceOverzier::SourceOverzier(
-		double my_mag              /// Total magnitude
+		PosType my_mag              /// Total magnitude
 		,double my_BtoT            /// Bulge to total ratio
 		,double my_Reff         /// Bulge half light radius (arcs)
 		,double my_Rh           /// disk scale hight (arcs)
@@ -78,15 +78,15 @@ void SourceOverzier::setInternals(double my_mag,double my_BtoT,double my_Reff,do
 }
 
 /// Surface brightness in erg/cm^2/sec/rad^2/Hz
-double SourceOverzier::SurfaceBrightness(
-		double *y  /// position in radians
+PosType SourceOverzier::SurfaceBrightness(
+		PosType *y  /// position in radians
 		){
 	// position relative to center
-	double x[2];
+	PosType x[2];
 	x[0] = y[0]-getX()[0];
 	x[1] = y[1]-getX()[1];
 	
-	double R = cxx*x[0]*x[0] + cyy*x[1]*x[1] + cxy*x[0]*x[1],sb;
+	PosType R = cxx*x[0]*x[0] + cyy*x[1]*x[1] + cxy*x[0]*x[1],sb;
 	R = sqrt(R);
 
 	//sb = sbDo*exp(-(R)) + sbSo*exp(-7.6693*pow(R/Reff,0.25));
@@ -101,7 +101,7 @@ double SourceOverzier::SurfaceBrightness(
 	return sb;
 }
 
-double SourceOverzier::getTotalFlux(){
+PosType SourceOverzier::getTotalFlux(){
 	return pow(10,-(48.6+mag)/2.5);
 }
 

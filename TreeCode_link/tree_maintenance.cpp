@@ -18,7 +18,7 @@
 /************************** test routine *****************************/
 bool tree_count_test(TreeHndl tree){
 	/*static int init=0;
-	static double p1[2],p2[2];
+	static PosType p1[2],p2[2];
 
 	if(init==0){
 		p1[0] = tree->top->boundary_p1[0];
@@ -92,18 +92,18 @@ bool testLeafs(TreeHndl tree){
  * \brief Build a complete tree from a list of points.
  */
 //TreeHndl BuildTree(Point *xp,unsigned long Npoints,short my_median_cut){
-TreeStruct::TreeStruct(Point *xp,unsigned long Npoints,short my_median_cut,double buffer){
+TreeStruct::TreeStruct(Point *xp,unsigned long Npoints,short my_median_cut,PosType buffer){
   //TreeHndl tree;
   unsigned long i;
-  double p1[2],p2[2],center[2];
+  PosType p1[2],p2[2],center[2];
   const int my_Nbucket = 1;   // must be =1 if each leaf is to coincide with each cell
-
+/*
   if( (Npoints & (Npoints-1)) != 0){
 	  ERROR_MESSAGE();
 	  std::printf("ERROR: BuildTree, Npoints is not a power of 2\n");
 	  exit(1);
   }
-
+*/
   p1[0]=xp[0].x[0]; p1[1]=xp[0].x[1];
   p2[0]=xp[0].x[0]; p2[1]=xp[0].x[1];
 
@@ -157,7 +157,6 @@ void TreeStruct::FillTree(Point *xp,unsigned long Npoints){
 
   MoveToTopList(pointlist);
  /* build the tree */
-
   // make sure there are no branches in the tree
   _freeBranches_iter();
 
@@ -178,7 +177,7 @@ void TreeStruct::RebuildTreeFromList(){
 	if(pointlist->Npoints < 1) return;
 
 	unsigned long Npoints = pointlist->Npoints,i;
-	double *tmp;
+	PosType *tmp;
 
 	// Make new array of points
 	Point *points = NewPointArray(Npoints,true);
@@ -380,7 +379,7 @@ void TreeStruct::_BuildTree(){
   /* same order as the linked list */
   unsigned long i,cut,dimension;
   Branch *cbranch;//,branch1,branch2;
-  double xcut;
+  PosType xcut;
 
   cbranch=current; /* pointer to current branch */
 
@@ -409,7 +408,7 @@ void TreeStruct::_BuildTree(){
   /* set dimension to cut box */
   dimension=(cbranch->level % 2);
 
-  double *x = new double[cbranch->npoints];
+  PosType *x = new PosType[cbranch->npoints];
   assert(x);
 
    /* reorder points */
@@ -673,9 +672,9 @@ void TreeStruct::_AddPoint(){
 		//Branch branch1,branch2;
 		Branch *current_branch;
 		unsigned long dimension,cut;
-		double xcut;
+		PosType xcut;
 		Point *oldfirstpoint,*newfirstpoint;
-		double *x = new double[current->npoints];
+		PosType *x = new PosType[current->npoints];
 
 		Branch* branch1 = new Branch(NULL,0,current->boundary_p1,current->boundary_p2
 				,current->center,current->level+1);
@@ -739,7 +738,7 @@ void TreeStruct::_AddPoint(){
 				if(!attop) MoveDownList(pointlist);
 				InsertPointAfterCurrent(pointlist,point);
 				current->points = point->prev;
-				double tmp = x[1];
+				PosType tmp = x[1];
 				x[1] = x[0];
 				x[0] = tmp;
 			}
@@ -782,7 +781,7 @@ void TreeStruct::_AddPoint(){
 					if(!attop) MoveDownList(pointlist);
 					InsertPointAfterCurrent(pointlist,point);
 					current->points = point->prev;
-					double tmp = x[1];
+					PosType tmp = x[1];
 					x[1] = x[0];
 					x[0] = tmp;
 				}
@@ -962,13 +961,13 @@ void TreeStruct::_AddPoint(){
  *
 */
 unsigned long Grid::PruneTrees(
-		double resolution  /// Maximum size of a cell to be removed.
+		PosType resolution  /// Maximum size of a cell to be removed.
 		,bool useSB   /// If true it will not remove any point that has a flux above fluxlimit.
-		,double fluxlimit ///  flux limit threshold
+		,PosType fluxlimit ///  flux limit threshold
 		){
 		
 	long i,Ntmp,count = 0;
-	double res,initres;
+	PosType res,initres;
 	bool go;
 
 	assert(trashkist);
@@ -1054,10 +1053,10 @@ unsigned long Grid::PruneTrees(
 */
 
 unsigned long Grid::PrunePointsOutside(
-		double resolution  /// Maximum size of a cell to be removed.
-		,double *y   /// Center on source plane
-		,double r_in /// Inner radius of annulus on the source plane
-		,double r_out /// Outer radius of annulus on the source plane
+		PosType resolution  /// Maximum size of a cell to be removed.
+		,PosType *y   /// Center on source plane
+		,PosType r_in /// Inner radius of annulus on the source plane
+		,PosType r_out /// Outer radius of annulus on the source plane
 		){
 
 	if(i_tree == NULL) return 0;
@@ -1065,7 +1064,7 @@ unsigned long Grid::PrunePointsOutside(
 	if(r_in > r_out || resolution <= 0) return 0;
 	if(r_out <= 0.0) return 0.0;
 
-	double res,dr2;
+	PosType res,dr2;
 
 	long i,count = 0;
 	Point *point;
@@ -1405,7 +1404,7 @@ unsigned long FreeBranchesBelow(TreeHndl i_tree,TreeHndl s_tree,Kist<Point> * tr
 	Branch *branch,*headbranch;
 	Point *point;
 	unsigned long Ntmp,NtoRemove,i,count = 0,count2 = 0,count1;
-	double center[2];
+	PosType center[2];
 
 	//_freeBranches_iter(s_tree);  // s_tree will no longer be valid on exit.  This is to make sure it isn't used later without a rebuild.
 
@@ -1633,7 +1632,7 @@ Point * TreeStruct::RemoveLeafFromTree(unsigned long *Npoints){
 }
 
 /// Move up to the parent of current branch if current in not the root. Otherwise returns false.
-bool TreeIt::up(){
+bool TreeStruct::iterator::up(){
   if(current == NULL || current == top){
     return false;
   }else{
@@ -1643,7 +1642,7 @@ bool TreeIt::up(){
 }
 
 /// Move to brother if it exists
-bool TreeIt::brother(){
+bool TreeStruct::iterator::brother(){
   if(current->brother == NULL){
     return false;
   }else{
@@ -1653,7 +1652,7 @@ bool TreeIt::brother(){
 }
 
 /// Move to child
-bool TreeIt::down(short child){
+bool TreeStruct::iterator::down(short child){
   if(child == 1){
     if(current->child1 == NULL){
       return false;
@@ -1682,7 +1681,7 @@ bool TreeIt::down(short child){
  *  to, it will return to the root and return false.  If used again 
  *  after this it will repeat its walk.
  */
-bool TreeIt::TreeWalkStep(bool allowDescent){
+bool TreeStruct::iterator::TreeWalkStep(bool allowDescent){
   
 	if(allowDescent && current->child1 != NULL){
 		down(1);

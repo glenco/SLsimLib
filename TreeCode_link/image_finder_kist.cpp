@@ -12,7 +12,7 @@ static const float FracResTarget = 4.0e-4;
 //static const float FracResTarget = 1.0e-4;
 static const float telescope_high = 1.0e-3;
 static const float telescope_low = 0.01;
-//extern const double initialgridsize;
+//extern const PosType initialgridsize;
 
 /** \ingroup ImageFinding
  *
@@ -42,14 +42,14 @@ static const float telescope_low = 0.01;
 
 void find_images_kist(
 		LensHndl lens,          /// contains the lens/es and source/sources
-		double *y_source        /// position of source center
-		,double r_source        /// radius of source
+		PosType *y_source        /// position of source center
+		,PosType r_source        /// radius of source
 		,GridHndl grid          /// grid provided to routine
 		,int *Nimages           /// number of images found
 		,ImageInfo *imageinfo   /// information on each image
 		,const int NimageMax    /// maximum number of images allowed
 		,unsigned long *Nimagepoints  /// number of points in final images
-		,double initial_size    /// Initial size of source for telescoping, 0 to start from the initial grid size.
+		,PosType initial_size    /// Initial size of source for telescoping, 0 to start from the initial grid size.
 		,bool splitimages       /// TRUE each image is refined to target accuracy, otherwise all images are treated as one
 		,short edge_refinement  /// see comment
 		,bool verbose           /// verbose
@@ -70,8 +70,8 @@ void find_images_kist(
 	}
 
 	int Nsizes;
-	double rtemp,tmp;
-	//static double oldy[2],oldr=0;
+	PosType rtemp,tmp;
+	//static PosType oldy[2],oldr=0;
 	short flag;
 	int i,j,k;
 	//Point *i_points,*s_points,*point;
@@ -417,15 +417,15 @@ void find_images_kist(
 void find_images_microlens(
 		LensHndl lens,          /// contains the lens/es and source/sources
 		//LensHalo *halo,          // contains the lens/es and source/sources
-		double *y_source        /// position of source center
-		,double r_source        /// radius of source
+		PosType *y_source        /// position of source center
+		,PosType r_source        /// radius of source
 		,GridHndl grid          /// grid provided to routine
 		,int *Nimages           /// number of images found
 		,ImageInfo *imageinfo   /// information on each image
 		,const int NimageMax    /// maximum number of images allowed
 		,unsigned long *Nimagepoints  /// number of points in final images
-		,double initial_size    /// Initial size of source for telescoping, 0 to start from the initial grid size.
-    ,double mu_min
+		,PosType initial_size    /// Initial size of source for telescoping, 0 to start from the initial grid size.
+    ,PosType mu_min
 		,bool splitimages       /// TRUE each image is refined to target accuracy, otherwise all images are treated as one
 		,short edge_refinement  /// see comment
 		,bool verbose           /// verbose
@@ -446,9 +446,9 @@ void find_images_microlens(
 		return;
 	}
 
-	int Nsizes;
-	double rtemp,tmp;
-	//static double oldy[2],oldr=0;
+	int Nsizes,NuniformMags;
+	PosType rtemp,tmp;
+	//static PosType oldy[2],oldr=0;
 	short flag;
 	int i,j,k;
 	//Point *i_points,*s_points,*point;
@@ -460,7 +460,7 @@ void find_images_microlens(
 
 	bool time_on = false;
 
-	//double **xstars = halo->stars_xp;
+	//PosType **xstars = halo->stars_xp;
 	int Ngrid_block = grid->getNgrid_block();
 
 	if(r_source==0.0){ERROR_MESSAGE(); printf("ERROR: find_images, point source must have a resolution target\n"); exit(1);}
@@ -514,7 +514,7 @@ void find_images_microlens(
     //float telescope_factor = 1.0/Ngrid_block;
     //float telescope_factor = 0.5;
     float telescope_factor = 0.66;
-    double time_in_refine = 0,time_in_find = 0;
+    PosType time_in_refine = 0,time_in_find = 0;
     //ImageInfo *critcurve = new ImageInfo[NimageMax];
     //int Ncrits;
     //bool dummybool;
@@ -626,7 +626,15 @@ void find_images_microlens(
     		// unmark image points in tree
     		grid->s_tree->PointsWithinKist(y_source,rtemp,subkist,-1);
 */
-    		for(int k=0; k < *Nimages; ++k) if( 5.0e-4 > imageinfo[k].area/pi/r_source/r_source ) imageinfo[k].ShouldNotRefine = true;
+        NuniformMags = 0;
+    		for(int k=0; k < *Nimages; ++k){
+          if( 1.0e-4 > imageinfo[k].area/pi/r_source/r_source ) imageinfo[k].ShouldNotRefine = true;
+          if(*Nimages > 10 && imageinfo[k].imagekist->Nunits() > 10 && imageinfo[k].constant(invmag,1.0e-4)){
+            imageinfo[k].ShouldNotRefine = true;
+            ++NuniformMags;
+          }
+        }
+        
 
     		/***********************************************************/
             /**** TODO test line **********************
@@ -657,6 +665,7 @@ void find_images_microlens(
     	//}while(refine_grid_kist(lens,grid,imageinfo,*Nimages,rtemp*mumin_local/Ngrid_block,2,kappa_off,NULL));
     	}
 
+      if(NuniformMags == *Nimages) break;
   		for(int k=0; k < *Nimages; ++k) imageinfo[k].ShouldNotRefine = false;
         
     	time(&now);
@@ -672,11 +681,11 @@ void find_images_microlens(
 
 	// refine critical curves
 	//find_crit(lens,grid,critcurve,NimageMax,&Ncrits,r_source*0.01,&dummybool,false,false,verbose);
-  refine_crit_in_image(lens,grid,r_source,y_source,r_source*0.01);
+  //refine_crit_in_image(lens,grid,r_source,y_source,r_source*0.01);
 
-	time(&now);
-	if(time_on) printf(" time for refine critical curves %f sec\n",difftime(now,to));
-	time(&to);
+	//time(&now);
+	//if(time_on) printf(" time for refine critical curves %f sec\n",difftime(now,to));
+	//time(&to);
 
 	/**** Refine grid around each star so that no images are missed
 	if(lens->AreStarsImaplated()){
@@ -699,6 +708,39 @@ void find_images_microlens(
 	/////////////////////////////////////////////////////////////////////////////////
 
   grid->ClearAllMarks();
+  
+  if(NuniformMags == *Nimages){
+  
+    assert(*Nimages > 10);
+    
+    for(int i=0;i<*Nimages;++i){
+      imageinfo[i].area = fabs(pi*r_source*r_source/imageinfo[i].imagekist->getCurrent()->invmag);
+      imageinfo[i].imagekist->Empty();
+      imageinfo[i].ShouldNotRefine = false;
+  
+      //calculate centroid
+      tmp=0.0;
+      imageinfo[i].centroid[0] = 0.0;
+      imageinfo[i].centroid[1] = 0.0;
+      imageinfo[i].imagekist->MoveToTop();
+      do{
+        tmp += pow(imageinfo[i].imagekist->getCurrent()->gridsize,2);
+        imageinfo[i].centroid[0] += imageinfo[i].imagekist->getCurrent()->x[0]
+        *pow(imageinfo[i].imagekist->getCurrent()->gridsize,2);
+        imageinfo[i].centroid[1] += imageinfo[i].imagekist->getCurrent()->x[1]
+        *pow(imageinfo[i].imagekist->getCurrent()->gridsize,2);
+      }while(imageinfo[i].imagekist->Down());
+      if(imageinfo[i].imagekist->Nunits() > 0 ){
+        imageinfo[i].centroid[0] /= tmp;
+        imageinfo[i].centroid[1] /= tmp;
+      }
+    }
+    
+    grid->ClearAllMarks();
+    
+    return;
+  }
+  
   imageinfo->imagekist->Empty();
 
 	i=0;
@@ -712,7 +754,7 @@ void find_images_microlens(
 	// do an initial uniform refinement to make sure there are enough point in
 	//  the images
 	i=0;
-    double area_tot = 0;
+    PosType area_tot = 0;
     int count =0;
 	do{
 		time(&t3);
@@ -906,13 +948,16 @@ void find_images_microlens(
 			                                         *pow(imageinfo[i].imagekist->getCurrent()->gridsize,2);
 			imageinfo[i].centroid[1] += imageinfo[i].imagekist->getCurrent()->x[1]
 			                                         *pow(imageinfo[i].imagekist->getCurrent()->gridsize,2);
-
+      
 		}while(imageinfo[i].imagekist->Down());
 		if(imageinfo[i].imagekist->Nunits() > 0 ){
 			imageinfo[i].centroid[0] /= tmp;
 			imageinfo[i].centroid[1] /= tmp;
 		}
 
+    if(imageinfo[i].constant(invmag,1.0e-3))
+      imageinfo[i].area = fabs(pi*r_source*r_source/imageinfo[i].imagekist->getCurrent()->invmag);
+    
 		// redefine error so that it is based on the smallest grid cell on the border of the image
 		if(imageinfo[i].outerborder->Nunits() > 0 ) imageinfo[i].area_error = imageinfo[i].gridrange[2]/imageinfo[i].area;
 	}
@@ -940,15 +985,15 @@ void find_images_microlens(
  *             = 0 if there are not enough points in images this will include close points to be refined
  * side-effects :  Will make in_image = true for all image points if splitparities == 0
  */
-void image_finder_kist(LensHndl lens, double *y_source,double r_source,GridHndl grid
+void image_finder_kist(LensHndl lens, PosType *y_source,PosType r_source,GridHndl grid
 		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
 		,short splitparities,short true_images){
 
   unsigned long i,Nsource_points=0;
   //static long count=0,Nold_images;
-  //static double oldy[2];
+  //static PosType oldy[2];
   short moved;
-  double r;
+  PosType r;
 
   
   //if(count==0) oldy[0]=oldy[1]=0;
@@ -972,7 +1017,7 @@ void image_finder_kist(LensHndl lens, double *y_source,double r_source,GridHndl 
 
   grid->ClearAllMarks();
   assert(imageinfo->imagekist);
-  double initialgridsize = grid->getInitRange()/grid->getInitNgrid();
+  PosType initialgridsize = grid->getInitRange()/grid->getInitNgrid();
   
   // if source has moved make sure low res grids are included in first source list
   if( moved && (initialgridsize > mumin*r_source) && !true_images){
@@ -1148,7 +1193,7 @@ int refine_grid_kist(
 	,GridHndl grid           /// the grid
 	,ImageInfo *imageinfo    /// images
 	,unsigned long Nimages   /// Number of images to refine
-	,double res_target       /// meaning depends on criterion, see general notes
+	,PosType res_target       /// meaning depends on criterion, see general notes
 	,short criterion         /// see general notes
 	,bool kappa_off          /// true = no kappa, gamma and dt are calculated
 	,Kist<Point> * newpointskist  /// returns a Kist of the points that were added to the grid on this pass, if == NULL will not be added
@@ -1164,7 +1209,7 @@ int refine_grid_kist(
   int Ngrid_block = grid->getNgrid_block();
 
   int i,j,k,number_of_refined,count;
-  double rmax,total_area;
+  PosType rmax,total_area;
   Point *point;
   short pass=0;
   long Ncells=0,Ncells_o=0;
@@ -1421,7 +1466,7 @@ void findborders4(TreeHndl i_tree,ImageInfo *imageinfo){
 
 void SwapImages(ImageInfo *image1,ImageInfo *image2){
 	unsigned long Npoints,i;
-	double tmp;
+	PosType tmp;
 	Kist<Point> * list;
 
 	Npoints = image1->ShouldNotRefine;

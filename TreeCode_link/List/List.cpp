@@ -37,7 +37,7 @@ void freeList(ListHndl list){
 	free(list);
 }
 
-void InsertAfterCurrent(ListHndl list,double *x,unsigned long id,Point *image){
+void InsertAfterCurrent(ListHndl list,PosType *x,unsigned long id,Point *image){
 	assert(list);
 
 	Point *point;
@@ -66,7 +66,7 @@ void InsertAfterCurrent(ListHndl list,double *x,unsigned long id,Point *image){
     return;
 }
 
-void InsertBeforeCurrent(ListHndl list,double *x,unsigned long id,Point *image){
+void InsertBeforeCurrent(ListHndl list,PosType *x,unsigned long id,Point *image){
     Point *point;
   /* leaves current unchanged */
 
@@ -375,7 +375,7 @@ void ShiftList(ListHndl list){
 	list->top->prev=NULL;
 }
 
-void FillList(ListHndl list,double **x,unsigned long N
+void FillList(ListHndl list,PosType **x,unsigned long N
 	      ,unsigned long idmin){
   unsigned long i;
   /* add N points to to end of list */

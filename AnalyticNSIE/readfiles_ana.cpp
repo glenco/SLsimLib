@@ -75,7 +75,7 @@ LensHaloAnaNSIE::LensHaloAnaNSIE(InputParams& params, bool verbose) : LensHaloBa
   assignParams(params);
 
   if(perturb_Nmodes){
-  	perturb_modes = new double[perturb_Nmodes+1];
+  	perturb_modes = new PosType[perturb_Nmodes+1];
   	// zero perturbation modes until use BaseNSIELensHalo::RandomlyDistortLens()
   	for(int i=0;i< perturb_Nmodes+1 ;++i) perturb_modes[i] =  0;
   }

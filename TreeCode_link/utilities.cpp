@@ -67,9 +67,9 @@ void findarea(OldImageInfo *imageinfo){
  *           grid.  For testing the ray shooter only.
  */
 
-void log_polar_grid(Point *i_points,double rmax,double rmin,double *center,long Ngrid){
+void log_polar_grid(Point *i_points,PosType rmax,PosType rmin,PosType *center,long Ngrid){
   long i;
-  double r,theta;
+  PosType r,theta;
   static long id=0;
 
   for(i=0;i<Ngrid*Ngrid;++i){
@@ -96,9 +96,9 @@ void log_polar_grid(Point *i_points,double rmax,double rmin,double *center,long 
  *
  */
 namespace Utilities{
-long IndexFromPosition(double *x,long Npixels,double range,double *center){
+long IndexFromPosition(PosType *x,long Npixels,PosType range,PosType *center){
 	long ix,iy;
-	double fx, fy;
+	PosType fx, fy;
 
 	  fx = ((x[0] - center[0])/range + 0.5)*(Npixels-1)+0.5;
 	  fy = ((x[1] - center[1])/range + 0.5)*(Npixels-1)+0.5;
@@ -120,7 +120,7 @@ long IndexFromPosition(double *x,long Npixels,double range,double *center){
 /** \ingroup Utill
  *
  */
-void PositionFromIndex(unsigned long i,double *x,long Npixels,double range,const double *center){
+void PositionFromIndex(unsigned long i,PosType *x,long Npixels,PosType range,const PosType *center){
   if(Npixels == 1){
     x[0] = center[0];
     x[1] = center[1];
@@ -132,8 +132,8 @@ void PositionFromIndex(unsigned long i,double *x,long Npixels,double range,const
 }
 
 // 1d version
-long IndexFromPosition(double x,long Npixels,double range,double center){
-	double fx;
+long IndexFromPosition(PosType x,long Npixels,PosType range,PosType center){
+	PosType fx;
 	long ix;
 
 	  fx = ((x - center)/range + 0.5)*(Npixels-1)+0.5;
@@ -149,18 +149,18 @@ long IndexFromPosition(double x,long Npixels,double range,double center){
    *
    *  Out of bounds points return 0.  map is a i dimensional array representing a 2 dimensional map.
    *  Don't use init.
-   *  After it is used once, later calls can use TwoDInterpolator(double *map) for the same point 
+   *  After it is used once, later calls can use TwoDInterpolator(PosType *map) for the same point 
    *  in the same coordinate system to save time in calculating the idndexes.
    */
-  double TwoDInterpolator(
-                          double *x
+  PosType TwoDInterpolator(
+                          PosType *x
                           ,int Npixels
-                          ,double range
-                          ,double *center
-                          ,double *map
+                          ,PosType range
+                          ,PosType *center
+                          ,PosType *map
                           ,bool init
                           ){
-    static double fx, fy;
+    static PosType fx, fy;
     static unsigned long index;
     static bool initialized = false;
     
@@ -197,8 +197,8 @@ long IndexFromPosition(double x,long Npixels,double range,double center){
     return (1-fx)*(1-fy)*map[index] + fx*(1-fy)*map[index+Npixels] + fx*fy*map[index+1+Npixels]
            + (1-fx)*fy*map[index+1];
   }
-  double TwoDInterpolator(double *map){
-    double *dummy = NULL;
+  PosType TwoDInterpolator(PosType *map){
+    PosType *dummy = NULL;
     return TwoDInterpolator(dummy,0,0,dummy,map,false);
   }
 
@@ -260,7 +260,7 @@ PosType **PosTypeMatrix(long rows, long cols)
     }
   }
   /// convert (x,y) to d
-  int HilbertCurve::xy2d (double x, double y) {
+  int HilbertCurve::xy2d (PosType x, PosType y) {
     int rx, ry;
     
     rx = (int)((x-xo[0])*n/range + 0.5);
@@ -271,7 +271,7 @@ PosType **PosTypeMatrix(long rows, long cols)
   }
   
   ///convert d to (x,y)
-  void HilbertCurve::d2xy(int d, double *x, double *y) {
+  void HilbertCurve::d2xy(int d, PosType *x, PosType *y) {
     int rx, ry;
     
     if(d > n*n) throw std::runtime_error("Point out of bounds.");
@@ -307,8 +307,8 @@ PosType **PosTypeMatrix(long rows, long cols)
   }
   
   /// return a uniform random number between 0 and 1
-  double RandomNumbers::operator()(void){
-    return std::generate_canonical<double, 10>(rand_gen);
+  PosType RandomNumbers::operator()(void){
+    return std::generate_canonical<PosType, 10>(rand_gen);
   }
   
   
@@ -341,14 +341,14 @@ PosType **PosTypeMatrix(long rows, long cols)
   }
   
   /// return a uniform random number between 0 and 1
-  double RandomNumbers_NR::operator()(void){
+  PosType RandomNumbers_NR::operator()(void){
     return ran2();
   }
   
-  double RandomNumbers_NR::ran2(void){
+  PosType RandomNumbers_NR::ran2(void){
     long j;
     long k;
-    double temp;
+    PosType temp;
     
     k=(idum)/IQ1;
     idum=IA1*(idum-k*IQ1)-k*IR1;

@@ -55,7 +55,7 @@ struct KistUnit{
  
  ....
  
- for(KistIt<Point> it = kist.getTopIt(); it != kist.getOffBottomIt() ;--it){
+ for(Kist<Point>::iterator it = kist.getTopIt(); it != kist.getOffBottomIt() ;--it){
    cout << i << " x = " << (*it)->x[0] << "  " << (*it)->x[1] << endl;
  }
  
@@ -133,25 +133,28 @@ public:
     //template <class T>
     class iterator{
     private:
-        struct KistUnit<Data> *unit;
+      struct KistUnit<Data> *unit;
+      struct KistUnit<Data> *offbot;
         
     public:
+      /*
+      iterator(Kist<Data> &kist){
+        unit = kist.top;
+        offbot = &(kist.offbot);
+      }
+       */
+      
+      
         //friend struct Kist;
         struct KistUnit<Data>  * getUnit(){return unit;}
         
         /// Returns a pointer to the current data.  Same as getCurrent.
         Data *operator*(){return unit->data;}
-        
+      
+      
         bool operator++(){
-            if(unit == NULL){
-                return false;
-            }else{
-                unit = unit->next;
-                return true;
-            }
-        }
-        /// Same as Down()
-        bool operator--(){
+          throw std::runtime_error("Not ready yet!");
+          
             if(unit == NULL){
                 return false;
             }else{
@@ -159,23 +162,38 @@ public:
                 return true;
             }
         }
+        /// Same as Down()
+        bool operator--(){
+          throw std::runtime_error("Not ready yet!");
+          if(unit == NULL) return false;
+          if(unit->next == NULL || unit == offbot){
+            unit = offbot;
+            return false;
+          }
+          unit = unit->next;
+          
+          return true;
+        }
+        
         
         /// Same as Up()
         bool operator++(int){
+         throw std::runtime_error("Not ready yet!");
             if(unit == NULL){
                 return false;
             }else{
-                unit = unit->next;
+                unit = unit->prev;
                 return true;
             }
         }
         
         /// Same as Down()
         bool operator--(int){
+          throw std::runtime_error("Not ready yet!");
             if(unit == NULL){
                 return false;
             }else{
-                unit = unit->prev;
+                unit = unit->next;
                 return true;
             }
         }
@@ -190,10 +208,19 @@ public:
             unit = my_it.unit;
             return *this;
         }
-        
+      
+      bool operator==(const iterator my_it){
+        return (this->unit == my_it.unit);
+       }
+      
+      bool operator!=(const iterator my_it){
+        return (this->unit != my_it.unit);
+      }
+
     };
 
-  
+
+
   void SetCurrentIt(iterator it){current = it.getUnit();}
   
   iterator getCurrentIt(){

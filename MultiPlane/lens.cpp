@@ -141,7 +141,7 @@ Lens::~Lens()
 /// read in Cosmological Parameters
 void Lens::readCosmology(InputParams& params)
 {
-	double tmp;
+	PosType tmp;
 	if(params.get("Omega_matter", tmp)) cosmo.setOmega_matter(tmp, true);
 	if(params.get("Omega_lambda", tmp)) cosmo.setOmega_lambda(tmp);
 	if(params.get("Omega_baryon", tmp)) cosmo.setOmega_baryon(tmp);
@@ -542,7 +542,7 @@ void Lens::createFieldPlanes(bool verbose)
 	assert(field_plane_redshifts.size() == field_Nplanes);
 	
 	// the bounds for sorting field halos onto redshifts
-	double z1 = 0, z2 = 0;
+	PosType z1 = 0, z2 = 0;
 	std::size_t k1 = 0, k2 = 0;
 	
 	// go through planes
@@ -572,11 +572,11 @@ void Lens::createFieldPlanes(bool verbose)
 		 */
 		
 		// TODO: Ben: test this
-		double sigma_back = cosmo.haloMassInBufferedCone(field_min_mass,z1,z2,fieldofview*pow(pi/180,2),field_buffer,field_mass_func_type,mass_func_PL_slope)
+		PosType sigma_back = cosmo.haloMassInBufferedCone(field_min_mass,z1,z2,fieldofview*pow(pi/180,2),field_buffer,field_mass_func_type,mass_func_PL_slope)
 		/(pi*pow(sqrt(fieldofview/pi)*pi*field_Dl[i]/180/(1+field_plane_redshifts[i]) + field_buffer,2));
 		
-		double sb=0.0;
-		//double max_r = 0,tmp;
+		PosType sb=0.0;
+		//PosType max_r = 0,tmp;
 		for(std::size_t j = k1; j < k2; ++j)
 		{
 			sb += field_halos[j]->get_mass();
@@ -611,8 +611,8 @@ void Lens::createFieldPlanes(bool verbose)
 void Lens::addMainHaloToPlane(LensHalo* halo)
 {
 	// the redshift and distance of the halo
-	double halo_z = halo->getZlens();
-	double halo_Dl = cosmo.coorDist(0, halo_z);
+	PosType halo_z = halo->getZlens();
+	PosType halo_Dl = cosmo.coorDist(0, halo_z);
 	
 	// find the position of the new lens plane
 	std::size_t i = std::distance(main_Dl.begin(), std::upper_bound(main_Dl.begin(), main_Dl.end(), halo_Dl));
@@ -682,9 +682,9 @@ void Lens::createMainPlanes()
  */
 void Lens::setFieldDist()
 {
-	double Dmax = cosmo.coorDist(0, zsource);
+	PosType Dmax = cosmo.coorDist(0, zsource);
 	
-	std::vector<double> lD;
+	std::vector<PosType> lD;
 	std::size_t Np = field_Nplanes + 1;
 	
 	assert(Np > 1);
@@ -694,7 +694,7 @@ void Lens::setFieldDist()
 	fill_linear(lD, Np, 0.0, Dmax);
 	
 	// spacing of the distances
-	double dlD = lD[1]-lD[0];
+	PosType dlD = lD[1]-lD[0];
 	
 	// assigns the redshifts and plugs in the input plane
 	for(std::size_t i = 1; i < Np; ++i)
@@ -712,7 +712,7 @@ void Lens::setFieldDist()
 	for(std::size_t i = 0; i < field_Nplanes; ++i)
 	{
 		// get redshift for calculated distance
-		double z = cosmo.invCoorDist(field_Dl[i]);
+		PosType z = cosmo.invCoorDist(field_Dl[i]);
 		field_plane_redshifts.push_back(z);
 		
 		// refit the distances to match the redshift
@@ -724,7 +724,7 @@ void Lens::setFieldDist()
 
 void Lens::setFieldDistFromFile()
 {
-	double value;
+	PosType value;
 	
 	std::ifstream file_in(redshift_planes_file.c_str());
 	if(!file_in)
@@ -733,7 +733,7 @@ void Lens::setFieldDistFromFile()
 	while(file_in >> value)
 	{
 		if(!value)
-			throw std::runtime_error("can't read double from " + redshift_planes_file);
+			throw std::runtime_error("can't read PosType from " + redshift_planes_file);
 		else
 			field_plane_redshifts.push_back(value);
 	}
@@ -903,18 +903,18 @@ void Lens::createFieldHalos(bool verbose)
 	const int Nzbins=64;
 	const int Nmassbin=64;
 	int NZSamples = 50;
-	std::vector<double> zbins,Nhalosbin(Nzbins);
+	std::vector<PosType> zbins,Nhalosbin(Nzbins);
 	unsigned long i,k,j_max,k1,k2;
-	std::vector<double> Logm;
-	//double pos_max[2];
-    double z_max;
-	const double MaxLogm=16.;
-	double z1, z2, mass_max,Nhaloestot;
+	std::vector<PosType> Logm;
+	//PosType pos_max[2];
+    PosType z_max;
+	const PosType MaxLogm=16.;
+	PosType z1, z2, mass_max,Nhaloestot;
 	int np;
-	double rr,theta,maxr;
+	PosType rr,theta,maxr;
 	HALO *halo_calc = new HALO(&cosmo,field_min_mass,0.0);
-    double mo=7.3113e10,M1=2.8575e10,gam1=7.17,gam2=0.201,be=0.557;
-    double field_galaxy_mass_fraction = 0;
+    PosType mo=7.3113e10,M1=2.8575e10,gam1=7.17,gam2=0.201,be=0.557;
+    PosType field_galaxy_mass_fraction = 0;
 
 
     if (field_min_mass < 1.0e5) {
@@ -922,7 +922,7 @@ void Lens::createFieldHalos(bool verbose)
        throw;
     }
     
-	double aveNhalos = cosmo.haloNumberInBufferedCone(field_min_mass,0,zsource,fieldofview*pow(pi/180,2),field_buffer,field_mass_func_type,mass_func_PL_slope);
+	PosType aveNhalos = cosmo.haloNumberInBufferedCone(field_min_mass,0,zsource,fieldofview*pow(pi/180,2),field_buffer,field_mass_func_type,mass_func_PL_slope);
 
 	fill_linear(zbins,Nzbins,0.0,zsource);
 	// construct redshift distribution table
@@ -937,8 +937,8 @@ void Lens::createFieldHalos(bool verbose)
 
 	std::size_t Nhalos = static_cast<std::size_t>(poidev(float(aveNhalos), seed));
 
-	std::vector<double> halo_zs_vec;
-	std::vector<double *> halo_pos_vec;
+	std::vector<PosType> halo_zs_vec;
+	std::vector<PosType *> halo_pos_vec;
 
 	// assign redsshifts to field_halos according to the redshift distribution
 
@@ -957,10 +957,10 @@ void Lens::createFieldHalos(bool verbose)
 	Nhalosbin.resize(Nmassbin);
 	fill_linear(Logm,Nmassbin,log10(field_min_mass),MaxLogm);
 
-	double *theta_pos,*theta2;
+	PosType *theta_pos,*theta2;
 	int j = 0;
 	k2 = 0;
-	std::vector<double>::iterator it1,it2;
+	std::vector<PosType>::iterator it1,it2;
 	for(np=0,mass_max=0;np<NZSamples;np++){
 
 		z1 = np*zsource/(NZSamples);
@@ -987,14 +987,14 @@ void Lens::createFieldHalos(bool verbose)
 		Nhalosbin[Nmassbin-1] = 0;
 
 		for(i = k1; i < k2; i++){
-			double Ds = cosmo.angDist(0,halo_zs_vec[i]);
+			PosType Ds = cosmo.angDist(0,halo_zs_vec[i]);
 
 			maxr = pi*sqrt(fieldofview/pi)/180. + field_buffer/Ds; // fov is a circle
 			rr = maxr*sqrt(ran2(seed));
 
 			assert(rr == rr);
 
-			theta_pos = new double[3];
+			theta_pos = new PosType[3];
 
 			theta = 2*pi*ran2(seed);
 
@@ -1096,7 +1096,7 @@ void Lens::createFieldHalos(bool verbose)
 
                 // Another copy of this position must be made to avoid rescaling it twice when it is converted into
                 // distance on the lens plane in Lens::buildLensPlanes()
-                theta2 = new double[3];
+                theta2 = new PosType[3];
                 theta2[0]=theta_pos[0]; theta2[1]=theta_pos[1]; theta2[2]=theta_pos[2];
 
 				halo_pos_vec.push_back(theta2);
@@ -1135,13 +1135,13 @@ void Lens::createFieldHalos(bool verbose)
  */
 void Lens::readInputSimFile(bool verbose)
 {
-	double ra,dec,z,vmax,vdisp,r_halfmass;
+	PosType ra,dec,z,vmax,vdisp,r_halfmass;
 	unsigned long i,j;
 	unsigned long haloid,idd,np;
-	double mo=7.3113e10,M1=2.8575e10,gam1=7.17,gam2=0.201,be=0.557;
-    double field_galaxy_mass_fraction = 0;
+	PosType mo=7.3113e10,M1=2.8575e10,gam1=7.17,gam2=0.201,be=0.557;
+    PosType field_galaxy_mass_fraction = 0;
 
-	double rmax2=0,rtmp=0;
+	PosType rmax2=0,rtmp=0;
 
 	std::ifstream file_in(field_input_sim_file.c_str());
 	if(!file_in){
@@ -1159,12 +1159,12 @@ void Lens::readInputSimFile(bool verbose)
 	}
 	if(verbose) std::cout << "skipped "<< i << " comment lines in file " << field_input_sim_file << std::endl;
 
-	std::vector<double *> halo_pos_vec;
+	std::vector<PosType *> halo_pos_vec;
 
 	// read in data
 	int j_max;
-	double mass_max=0,R_max=0,V_max=0,minmass=1e30;
-	double *theta,*theta2;
+	PosType mass_max=0,R_max=0,V_max=0,minmass=1e30;
+	PosType *theta,*theta2;
 	int ncolumns = 9;
 	//int ncolumns = 13;
 
@@ -1180,7 +1180,7 @@ void Lens::readInputSimFile(bool verbose)
 	addr[7] = &vmax;
 	addr[8] = &r_halfmass;
 /*
-  double z_app,m_crit200,m_mean200;
+  PosType z_app,m_crit200,m_mean200;
   unsigned long galid;
   
   addr[0] = &galid;
@@ -1199,7 +1199,7 @@ void Lens::readInputSimFile(bool verbose)
   */
   
 	unsigned long myint;
-	double mydouble;
+	PosType myPosType;
 	std::string myline;
 	std::string strg;
 	std::string f=",";
@@ -1222,8 +1222,8 @@ void Lens::readInputSimFile(bool verbose)
 				*((unsigned long *)addr[l]) = myint;
 			}
 			else{
-				buffer >> mydouble;
-				*((double *)addr[l]) = mydouble;
+				buffer >> myPosType;
+				*((PosType *)addr[l]) = myPosType;
 			}
 			myline.erase(0,pos+1);
 			strg.clear();
@@ -1232,8 +1232,8 @@ void Lens::readInputSimFile(bool verbose)
 		}
 
 		// position on lens plane
-		theta = new double[2];
-		//double Ds = cosmo->angDist(0,z);
+		theta = new PosType[2];
+		//PosType Ds = cosmo->angDist(0,z);
 		theta[0] = -ra*pi/180.;
 		theta[1] = dec*pi/180.;
 
@@ -1345,7 +1345,7 @@ void Lens::readInputSimFile(bool verbose)
 
         // Another copy of this position must be made to avoid rescaling it twice when it is converted into
         // distance on the lens plane in Lens::buildLensPlanes()
-        theta2 = new double[2];
+        theta2 = new PosType[2];
         theta2[0]=theta[0]; theta2[1]=theta[1];
 				halo_pos_vec.push_back(theta2);
 
@@ -1521,14 +1521,14 @@ void Lens::buildPlanes(InputParams& params,bool verbose)
  *
  */
 short Lens::ResetSourcePlane(
-		double z                 /// redshift of implanted source
+		PosType z                 /// redshift of implanted source
 		,bool nearest           /** If true, set the source plane to the nearest (in coordinate distance)
 			                      * lensing plane that was created already.  This can be used to avoid self-lensing
 			                      * by the halo of the source.  If the source is at higher redshift than the simulation
 			                      * volume the source will be at its real redshift.
 			                      */
 		,unsigned long GalID
-		,double *xx
+		,PosType *xx
     ,bool verbose
 		){
 	unsigned long j;
@@ -1543,7 +1543,7 @@ short Lens::ResetSourcePlane(
 
 
 	// distance to new source plane
-	double Ds = cosmo.coorDist(0,z);
+	PosType Ds = cosmo.coorDist(0,z);
 	// find bounding index
 	locateD(Dl.data()-1,lensing_planes.size(),Ds,&j);
 	// j is the index of the next plane at higher redshift, This plane will be temporarily replaced and used as a source plane
@@ -1557,7 +1557,7 @@ short Lens::ResetSourcePlane(
 		// or check if previous plane is nearer when asked to
 		else if(nearest)
 		{
-			double z1 = cosmo.invCoorDist(Dl[j]-0.5*dDl[j]);
+			PosType z1 = cosmo.invCoorDist(Dl[j]-0.5*dDl[j]);
 			if(z < z1) 
 				--j;
 		}
@@ -1585,8 +1585,8 @@ short Lens::ResetSourcePlane(
 }
 
 /// Sort field_halos[], brr[][], and id[] by content off arr[]
-void Lens::quicksort(LensHaloHndl *halos,double **pos,unsigned long N){
-	double pivotvalue;
+void Lens::quicksort(LensHaloHndl *halos,PosType **pos,unsigned long N){
+	PosType pivotvalue;
 	unsigned long pivotindex,newpivotindex,i;
 
 	if(N <= 1) return ;

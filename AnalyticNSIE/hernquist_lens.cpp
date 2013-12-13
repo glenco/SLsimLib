@@ -5,8 +5,8 @@
 
 #include "lens_halos.h"
 
-double LensHaloHernquist::gfunction(double x){
-	double ans;
+PosType LensHaloHernquist::gfunction(PosType x){
+	PosType ans;
 	if(x==0) x=1e-5;
 	if(x==1.0) return 2.*x/3. ;//2./3.;
 	if(x<1.0){ ans =  2.*x*(1.-(atanh(sqrt(1.-x*x))/sqrt(1.-x*x)))/(x*x-1.) ;; return x*ans;} // ans
@@ -14,8 +14,8 @@ double LensHaloHernquist::gfunction(double x){
 	return 0.0;
 }
 
-double LensHaloHernquist::ffunction(double x){
-	double ans;
+PosType LensHaloHernquist::ffunction(PosType x){
+	PosType ans;
 
 	if(x==0) x=1e-5;
 	if(x==1.0){ return (0.6-(1./3.));}
@@ -24,8 +24,8 @@ double LensHaloHernquist::ffunction(double x){
 	return 0.0;
 }
 
-double LensHaloHernquist::g2function(double x){
-	double ans,ax;
+PosType LensHaloHernquist::g2function(PosType x){
+	PosType ans,ax;
 	if(x==0) x=1e-5;
 	if(x==1) return 2./3./(x*x) - ffunction(x);
 	ax=sqrt((1.0-x)*(x+1.0));
@@ -35,8 +35,8 @@ double LensHaloHernquist::g2function(double x){
 	return 0.0;
 }
 
-double LensHaloHernquist::hfunction(double x){
-	double ans,ax;
+PosType LensHaloHernquist::hfunction(PosType x){
+	PosType ans,ax;
 	if(x==0) x=1e-5;
 	ans=log(0.25*x*x);
 	ax=sqrt(x*x-1.);
