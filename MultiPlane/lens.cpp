@@ -1298,6 +1298,7 @@ void Lens::readInputSimFile(bool verbose)
 
 			field_halos[j]->setZlens(z);
 			if(flag_field_gal_on){
+                // from Moster et al. 2010ApJ...710..903M
 				field_galaxy_mass_fraction = 2*mo*pow(mass/M1,gam1)
 				  /pow(1+pow(mass/M1,be),(gam1-gam2)/be)/mass;
 				if(field_galaxy_mass_fraction > 1.0) field_galaxy_mass_fraction = 1;
