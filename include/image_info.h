@@ -54,6 +54,8 @@ typedef struct ImageInfo{
   void copy(ImageInfo &image,bool copykists = true);
 
   void ArcInfo(PosType *area,PosType *area_circ,PosType theta);
+  
+  bool constant(LensingVariable lenvar,PosType tol);
 
 } ImageInfo;
 

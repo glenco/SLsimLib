@@ -781,7 +781,7 @@ void TreeKist::_BuildTree(){
   }
   
   if(median_cut){
-    //double_sort_points(cbranch->npoints,x-1,current->points);
+    //PosType_sort_points(cbranch->npoints,x-1,current->points);
     
     // TODO: needs to be fixed *********************************************************
 	  Utilities::quicksortPoints(current->points,x,cbranch->npoints);

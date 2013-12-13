@@ -1391,3 +1391,37 @@ void ImageInfo::PrintImageInfo(){
 	std::printf("  gridrange = %e %e %e\n",gridrange[0],gridrange[1],gridrange[2]);
 	std::printf("  borders inner N = %li  outer N = %li\n",innerborder->Nunits(),outerborder->Nunits());
 }
+
+/// checks if all the points within the image have the same lensvar with the tolarence
+bool ImageInfo::constant(
+              LensingVariable lensvar  /// which variable is to be compared
+              ,PosType tol            /// to what tolarence it should be considered equal
+              ){
+  
+  PosType max,min,tmp;
+  
+  if(imagekist->Nunits() < 2) return false;
+  
+  switch(lensvar){
+		case kappa:
+			max = min = imagekist->getCurrent()->kappa;
+			break;
+		case invmag:
+			max = min = imagekist->getCurrent()->invmag;
+			break;
+		default:
+      throw std::runtime_error("ImageInfo::constant() only does kappa and invmag");
+			break;
+  }
+
+  imagekist->MoveToTop();
+  do{
+    if(lensvar == invmag) tmp = imagekist->getCurrent()->invmag;
+    if(lensvar == kappa) tmp = imagekist->getCurrent()->kappa;
+    
+    if(tmp > max ) max = tmp;
+    if(tmp < min ) min = tmp;
+  }while(imagekist->Down());
+  
+  return ( fabs(max-min) < tol );
+}

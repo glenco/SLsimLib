@@ -446,7 +446,7 @@ void find_images_microlens(
 		return;
 	}
 
-	int Nsizes;
+	int Nsizes,NuniformMags;
 	PosType rtemp,tmp;
 	//static PosType oldy[2],oldr=0;
 	short flag;
@@ -626,7 +626,15 @@ void find_images_microlens(
     		// unmark image points in tree
     		grid->s_tree->PointsWithinKist(y_source,rtemp,subkist,-1);
 */
-    		for(int k=0; k < *Nimages; ++k) if( 5.0e-4 > imageinfo[k].area/pi/r_source/r_source ) imageinfo[k].ShouldNotRefine = true;
+        NuniformMags = 0;
+    		for(int k=0; k < *Nimages; ++k){
+          if( 1.0e-4 > imageinfo[k].area/pi/r_source/r_source ) imageinfo[k].ShouldNotRefine = true;
+          if(*Nimages > 10 && imageinfo[k].imagekist->Nunits() > 10 && imageinfo[k].constant(invmag,1.0e-4)){
+            imageinfo[k].ShouldNotRefine = true;
+            ++NuniformMags;
+          }
+        }
+        
 
     		/***********************************************************/
             /**** TODO test line **********************
@@ -657,6 +665,7 @@ void find_images_microlens(
     	//}while(refine_grid_kist(lens,grid,imageinfo,*Nimages,rtemp*mumin_local/Ngrid_block,2,kappa_off,NULL));
     	}
 
+      if(NuniformMags == *Nimages) break;
   		for(int k=0; k < *Nimages; ++k) imageinfo[k].ShouldNotRefine = false;
         
     	time(&now);
@@ -672,11 +681,11 @@ void find_images_microlens(
 
 	// refine critical curves
 	//find_crit(lens,grid,critcurve,NimageMax,&Ncrits,r_source*0.01,&dummybool,false,false,verbose);
-  refine_crit_in_image(lens,grid,r_source,y_source,r_source*0.01);
+  //refine_crit_in_image(lens,grid,r_source,y_source,r_source*0.01);
 
-	time(&now);
-	if(time_on) printf(" time for refine critical curves %f sec\n",difftime(now,to));
-	time(&to);
+	//time(&now);
+	//if(time_on) printf(" time for refine critical curves %f sec\n",difftime(now,to));
+	//time(&to);
 
 	/**** Refine grid around each star so that no images are missed
 	if(lens->AreStarsImaplated()){
@@ -699,6 +708,39 @@ void find_images_microlens(
 	/////////////////////////////////////////////////////////////////////////////////
 
   grid->ClearAllMarks();
+  
+  if(NuniformMags == *Nimages){
+  
+    assert(*Nimages > 10);
+    
+    for(int i=0;i<*Nimages;++i){
+      imageinfo[i].area = fabs(pi*r_source*r_source/imageinfo[i].imagekist->getCurrent()->invmag);
+      imageinfo[i].imagekist->Empty();
+      imageinfo[i].ShouldNotRefine = false;
+  
+      //calculate centroid
+      tmp=0.0;
+      imageinfo[i].centroid[0] = 0.0;
+      imageinfo[i].centroid[1] = 0.0;
+      imageinfo[i].imagekist->MoveToTop();
+      do{
+        tmp += pow(imageinfo[i].imagekist->getCurrent()->gridsize,2);
+        imageinfo[i].centroid[0] += imageinfo[i].imagekist->getCurrent()->x[0]
+        *pow(imageinfo[i].imagekist->getCurrent()->gridsize,2);
+        imageinfo[i].centroid[1] += imageinfo[i].imagekist->getCurrent()->x[1]
+        *pow(imageinfo[i].imagekist->getCurrent()->gridsize,2);
+      }while(imageinfo[i].imagekist->Down());
+      if(imageinfo[i].imagekist->Nunits() > 0 ){
+        imageinfo[i].centroid[0] /= tmp;
+        imageinfo[i].centroid[1] /= tmp;
+      }
+    }
+    
+    grid->ClearAllMarks();
+    
+    return;
+  }
+  
   imageinfo->imagekist->Empty();
 
 	i=0;
@@ -894,14 +936,12 @@ void find_images_microlens(
 	}
 	assert(*Nimages > 0);
 
-  PosType tmp_mumax,tmp_mumin;
 	// calculate the centroid of the images assuming uniform surface brightness
 	for(i=0;i<*Nimages;++i){
 		tmp=0.0;
 		imageinfo[i].centroid[0] = 0.0;
 		imageinfo[i].centroid[1] = 0.0;
 		imageinfo[i].imagekist->MoveToTop();
-    tmp_mumax = tmp_mumin = imageinfo[i].imagekist->getCurrent()->invmag;
 		do{
 			tmp += pow(imageinfo[i].imagekist->getCurrent()->gridsize,2);
 			imageinfo[i].centroid[0] += imageinfo[i].imagekist->getCurrent()->x[0]
@@ -909,16 +949,14 @@ void find_images_microlens(
 			imageinfo[i].centroid[1] += imageinfo[i].imagekist->getCurrent()->x[1]
 			                                         *pow(imageinfo[i].imagekist->getCurrent()->gridsize,2);
       
-      if(tmp_mumax < imageinfo[i].imagekist->getCurrent()->invmag) tmp_mumax = imageinfo[i].imagekist->getCurrent()->invmag;
-      if(tmp_mumin > imageinfo[i].imagekist->getCurrent()->invmag) tmp_mumin = imageinfo[i].imagekist->getCurrent()->invmag;
-
 		}while(imageinfo[i].imagekist->Down());
 		if(imageinfo[i].imagekist->Nunits() > 0 ){
 			imageinfo[i].centroid[0] /= tmp;
 			imageinfo[i].centroid[1] /= tmp;
 		}
 
-    if(fabs((tmp_mumax - tmp_mumin)/tmp_mumin) < 1.0e-3) imageinfo[i].area = fabs(pi*r_source*r_source/tmp_mumin);
+    if(imageinfo[i].constant(invmag,1.0e-3))
+      imageinfo[i].area = fabs(pi*r_source*r_source/imageinfo[i].imagekist->getCurrent()->invmag);
     
 		// redefine error so that it is based on the smallest grid cell on the border of the image
 		if(imageinfo[i].outerborder->Nunits() > 0 ) imageinfo[i].area_error = imageinfo[i].gridrange[2]/imageinfo[i].area;
