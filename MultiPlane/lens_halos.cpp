@@ -367,7 +367,7 @@ void LensHaloSimpleNSIE::initFromMass(float my_mass, long *seed){
 }
 
 void LensHaloSimpleNSIE::initFromFile(float my_mass, long *seed, float vmax, float r_halfmass){
-	initFromMass(my_mass,seed);
+	initFromMass(my_mass,seed);
 }
 
 void LensHaloSimpleNSIE::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed){

@@ -121,6 +121,7 @@ public:
 	void MoveCurrentToTop();
 	void copy(Kist<Data> *kist);
 	void copy(std::vector<Data *> &vector);
+    void test_iterator();
 
 	// movement
 	bool JumpDown(int jump);
@@ -134,102 +135,116 @@ public:
     class iterator{
     private:
       struct KistUnit<Data> *unit;
-      struct KistUnit<Data> *offbot;
+      struct KistUnit<Data> offbot;
         
     public:
-      /*
-      iterator(Kist<Data> &kist){
-        unit = kist.top;
-        offbot = &(kist.offbot);
+      
+      iterator(){
+        unit = &offbot;
+        unit->data = NULL;
       }
-       */
-      
-      
-        //friend struct Kist;
-        struct KistUnit<Data>  * getUnit(){return unit;}
-        
+       
         /// Returns a pointer to the current data.  Same as getCurrent.
         Data *operator*(){return unit->data;}
-      
+        bool atend(){return (unit==&offbot);}
       
         bool operator++(){
-          throw std::runtime_error("Not ready yet!");
           
-            if(unit == NULL){
+            if(unit == NULL || unit == &offbot){
                 return false;
-            }else{
-                unit = unit->prev;
-                return true;
             }
+            
+            if(unit->prev == NULL){
+                unit = &offbot;
+                return false;
+            }
+            
+            unit = unit->prev;
+            return true;
         }
-        /// Same as Down()
-        bool operator--(){
-          throw std::runtime_error("Not ready yet!");
-          if(unit == NULL) return false;
-          if(unit->next == NULL || unit == offbot){
-            unit = offbot;
-            return false;
-          }
-          unit = unit->next;
-          
-          return true;
-        }
-        
-        
+
         /// Same as Up()
         bool operator++(int){
-         throw std::runtime_error("Not ready yet!");
-            if(unit == NULL){
+            
+            if(unit == NULL || unit == &offbot){
                 return false;
-            }else{
-                unit = unit->prev;
-                return true;
             }
+            
+            if(unit->prev == NULL){
+                unit = &offbot;
+                return false;
+            }
+            
+            unit = unit->prev;
+            return true;
+        }
+
+        
+        /// Same as Down()
+        bool operator--(){
+            
+            if(unit == NULL || unit == &offbot){
+                return false;
+            }
+            
+            if(unit->next == NULL){
+                unit = &offbot;
+                return false;
+            }
+            
+            unit = unit->next;
+            return true;
         }
         
         /// Same as Down()
         bool operator--(int){
-          throw std::runtime_error("Not ready yet!");
-            if(unit == NULL){
+            
+            if(unit == NULL || unit == &offbot){
                 return false;
-            }else{
-                unit = unit->next;
-                return true;
             }
+            
+            if(unit->next == NULL){
+                unit = &offbot;
+                return false;
+            }
+            
+            unit = unit->next;
+            return true;
         }
         
         iterator& operator=(KistUnit<Data> *my_unit){
-            unit = my_unit;
+            if(my_unit == NULL) unit = &offbot;
+            else unit = my_unit;
             return *this;
         }
         
         iterator& operator=(const iterator my_it){
             if(this == &my_it) return *this;
-            unit = my_it.unit;
+            if(my_it.unit == NULL) unit = &offbot;
+            else unit = my_it.unit;
             return *this;
         }
       
       bool operator==(const iterator my_it){
-        return (this->unit == my_it.unit);
+        return (unit == my_it.unit);
        }
       
       bool operator!=(const iterator my_it){
-        return (this->unit != my_it.unit);
+        return (unit != my_it.unit);
       }
 
     };
 
-
-
-  void SetCurrentIt(iterator it){current = it.getUnit();}
-  
+//  void SetCurrentIt(iterator it){current = it.getUnit();}
+//    void SetCurrentIt(iterator it){current = it.unit;}
+    
   iterator getCurrentIt(){
-      iterator it ;//= current;
+      iterator it ;
       it = current;
       return it;
   }
   iterator getTopIt(){
-      iterator it ;//= top;
+      iterator it ;
       it = top;
       return it;
   }
@@ -678,6 +693,18 @@ template <class Data> void Kist<Data>::copy(std::vector<Data *> &vector){
 	}
 }
 
+template <class Data> void Kist<Data>::test_iterator(){
+    
+    MoveToBottom();
+    int i;
+    Kist<Data>::iterator it = this->getBottomIt();
+    for(i=0;!(it.atend()) ;++it,++i){
+        assert(current->data == (*it));
+        std::cout << "i = " << i << std::endl;
+        Up();
+    }
+    assert(i == Nunits());
+}
 
 /*
  * These functions are provided for backwards compatibility, but the kist member methods
