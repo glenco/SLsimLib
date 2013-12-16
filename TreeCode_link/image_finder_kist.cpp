@@ -425,14 +425,14 @@ void find_images_microlens(
 		,const int NimageMax    /// maximum number of images allowed
 		,unsigned long *Nimagepoints  /// number of points in final images
 		,PosType initial_size    /// Initial size of source for telescoping, 0 to start from the initial grid size.
-    ,PosType mu_min
+        ,PosType mu_min
 		,bool splitimages       /// TRUE each image is refined to target accuracy, otherwise all images are treated as one
 		,short edge_refinement  /// see comment
 		,bool verbose           /// verbose
 		,bool kappa_off         /// turns off calculation of surface density, shear, magnification and time delay
 		){
 
-  const float mumin_local = 0.02;
+    const float mumin_local = 0.02;
 
 	if(  grid->s_tree->top->boundary_p1[0] > (y_source[0] + r_source)
 	  || grid->s_tree->top->boundary_p2[0] < (y_source[0] - r_source)
@@ -446,7 +446,7 @@ void find_images_microlens(
 		return;
 	}
 
-	int Nsizes,NuniformMags;
+	int Nsizes = 0,NuniformMags = 0;
 	PosType rtemp,tmp;
 	//static PosType oldy[2],oldr=0;
 	short flag;
@@ -483,8 +483,8 @@ void find_images_microlens(
 	Npoints_old = grid->i_tree->pointlist->Npoints;
   */
   
-  Nsizes=(int)(log(initial_size/fabs(r_source*mumin_local))/log(Ngrid_block) ) + 1 ; // round up
-  rtemp = r_source*pow(1.0*Ngrid_block,Nsizes);
+    Nsizes=(int)(log(initial_size/fabs(r_source*mumin_local))/log(Ngrid_block) ) + 1 ; // round up
+    rtemp = r_source*pow(1.0*Ngrid_block,Nsizes);
   
 	// starting with a larger source size make sure all the grid sizes are small enough to find it
 	Kist<Point> * subkist = new Kist<Point>;//,pointkist = NewKist();
@@ -581,22 +581,23 @@ void find_images_microlens(
         }
 */
 
- 		  image_finder_kist(lens,y_source,rtemp,grid
+        image_finder_kist(lens,y_source,rtemp,grid
     				,Nimages,imageinfo,NimageMax,Nimagepoints,-1,0);
 
     	j=0;
-      time_in_refine = time_in_find = 0;
-      time(&now);
+        NuniformMags = 0;
+        time_in_refine = time_in_find = 0;
+        time(&now);
     	//while(refine_grid_kist(lens,grid,imageinfo,*Nimages,telescope_res,3,kappa_off)){
        	//while(refine_grid_kist(lens,grid,imageinfo,*Nimages,mu_min,0,kappa_off)){
-      while(refine_grid_kist(lens,grid,imageinfo,*Nimages,mu_min,3,false)){
+        while(refine_grid_kist(lens,grid,imageinfo,*Nimages,mu_min,3,false)){
        	    	//while( refine_grid_kist(lens,grid,imageinfo,*Nimages,mu_min*telescope_factor*telescope_factor,3,kappa_off) ){
     	//do{
 
-    		time(&t1);
-        time_in_refine += difftime(t1, now);
+          time(&t1);
+          time_in_refine += difftime(t1, now);
 
-    		if(verbose) std::cout << "    refined images" << std::endl;
+          if(verbose) std::cout << "    refined images" << std::endl;
 
             /*for(int i=0;i<lens->stars_N;++i){
                  grid->zoom(lens,xstars[i],rtemp*0.1/Ngrid_block,kappa_off);//,tmp);
@@ -604,7 +605,7 @@ void find_images_microlens(
 
     		// refine critical curves
     		//find_crit(lens,grid,critcurve,NimageMax,&Ncrits,rtemp*0.01,&dummybool,false,false,verbose);
-        refine_crit_in_image(lens,grid,r_source,y_source,rtemp*0.01);
+            refine_crit_in_image(lens,grid,r_source,y_source,rtemp*0.01);
 
 //    		std::cout << "    Ncrits = " << Ncrits << " with " << critcurve->imagekist->Nunits() << " points." << std::endl;
 
@@ -626,14 +627,14 @@ void find_images_microlens(
     		// unmark image points in tree
     		grid->s_tree->PointsWithinKist(y_source,rtemp,subkist,-1);
 */
-        NuniformMags = 0;
-    		for(int k=0; k < *Nimages; ++k){
-          if( 1.0e-4 > imageinfo[k].area/pi/r_source/r_source ) imageinfo[k].ShouldNotRefine = true;
-          if(*Nimages > 10 && imageinfo[k].imagekist->Nunits() > 10 && imageinfo[k].constant(invmag,1.0e-4)){
-            imageinfo[k].ShouldNotRefine = true;
-            ++NuniformMags;
-          }
-        }
+            NuniformMags = 0;
+            for(int k=0; k < *Nimages; ++k){
+              if( 1.0e-4 > imageinfo[k].area/pi/r_source/r_source ) imageinfo[k].ShouldNotRefine = true;
+              if(*Nimages > 10 && (imageinfo[k].imagekist->Nunits() > 10 && imageinfo[k].constant(invmag,1.0e-4)) ){
+                  imageinfo[k].ShouldNotRefine = true;
+                  ++NuniformMags;
+              }
+            }
         
 
     		/***********************************************************/
@@ -665,7 +666,8 @@ void find_images_microlens(
     	//}while(refine_grid_kist(lens,grid,imageinfo,*Nimages,rtemp*mumin_local/Ngrid_block,2,kappa_off,NULL));
     	}
 
-      if(NuniformMags == *Nimages) break;
+        assert(NuniformMags <= *Nimages);
+        if(NuniformMags == *Nimages) break;
   		for(int k=0; k < *Nimages; ++k) imageinfo[k].ShouldNotRefine = false;
         
     	time(&now);

@@ -703,7 +703,7 @@ template <class Data> void Kist<Data>::test_iterator(){
         std::cout << "i = " << i << std::endl;
         Up();
     }
-    assert(i == Nunits());
+    assert(i == Nunits()); 
 }
 
 /*
