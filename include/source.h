@@ -238,8 +238,7 @@ public:
 //PosType (Source::*SurfaceBrightness)(PosType *y);
 
 
-/**
- *    \brief Class to handle redshift-dependent quasar luminosity functions.
+/**  \brief Class to handle redshift-dependent quasar luminosity functions.
  *
  *   At the moment, only i band is available
  *   QLF from Ross et al. 2013
@@ -251,6 +250,7 @@ class QuasarLF{
 		// returns the integral of the luminosity function at redshift red
 		PosType getNorm() {return pow(10,log_phi)*norm;}; // in Mpc^(-3)
 		PosType getRandomMag();
+		PosType getRandomFlux();
 
 	private:
 		PosType kcorr;

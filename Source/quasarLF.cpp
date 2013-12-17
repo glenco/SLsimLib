@@ -96,6 +96,14 @@ double QuasarLF::getRandomMag()
 	return mag_out;
 }
 
+/// returns random flux according to the luminosity function
+/// must be divided by an angular area in rad^2 to be a SurfaceBrightness for the ray-tracer
+double QuasarLF::getRandomFlux()
+{
+	double mag = getRandomMag();
+	return pow(10, -0.4*(mag+48.6))*inv_hplanck;
+}
+
 double QuasarLF::nintegrateQLF(pt2MemFunc func, double a,double b,double tols) const
 {
 	int jmax = 34;
