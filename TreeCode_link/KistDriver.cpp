@@ -199,7 +199,7 @@ void TreeStruct::PointsWithinEllipKist(
  */
 PosType TreeStruct::PointsWithinKist(
 		const PosType* center         /// center of circle
-		,float rmax                  /// radius of circle
+		,PosType rmax                  /// radius of circle
 		,Kist<Point> * neighborkist  /// output neighbor kist, will be emptied if it contains anything on entry
 		,short markpoints            /// see comment
 		)
@@ -235,7 +235,7 @@ PosType TreeStruct::PointsWithinKist(
 }
 /** \ingroup LowLevel
  * Used in PointsWithinKist() to walk tree.*/
-void TreeStruct::_PointsWithinKist(PosType *ray,float *rmax,Kist<Point> * neighborkist
+void TreeStruct::_PointsWithinKist(PosType *ray,PosType *rmax,Kist<Point> * neighborkist
 		,short markpoints,PosType *maxgridsize){
 
   int i,j,incell2=1;

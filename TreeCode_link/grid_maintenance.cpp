@@ -914,6 +914,14 @@ void Grid::writeFits(
         - tmp_image.imagekist->getCurrent()->image->x[1];
         tag = ".alpha2.fits";
         break;
+      case alpha:
+        tmp_image.imagekist->getCurrent()->surface_brightness = pow(tmp_image.imagekist->getCurrent()->x[0]- tmp_image.imagekist->getCurrent()->image->x[0],2);
+        tmp_image.imagekist->getCurrent()->surface_brightness += pow(tmp_image.imagekist->getCurrent()->x[1]- tmp_image.imagekist->getCurrent()->image->x[1],2);
+        
+        tmp_image.imagekist->getCurrent()->surface_brightness = sqrt(tmp_image.imagekist->getCurrent()->surface_brightness);
+        
+        tag = ".alpha.fits";
+        break;
       case kappa:
         tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->kappa;
         tag = ".kappa.fits";
@@ -979,6 +987,14 @@ PixelMap Grid::writePixelMap(
                 tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->x[1]
                 - tmp_image.imagekist->getCurrent()->image->x[1];
                 tag = ".alpha2.fits";
+                break;
+            case alpha:
+                tmp_image.imagekist->getCurrent()->surface_brightness = pow(tmp_image.imagekist->getCurrent()->x[0]- tmp_image.imagekist->getCurrent()->image->x[0],2);
+                tmp_image.imagekist->getCurrent()->surface_brightness += pow(tmp_image.imagekist->getCurrent()->x[1]- tmp_image.imagekist->getCurrent()->image->x[1],2);
+            
+                tmp_image.imagekist->getCurrent()->surface_brightness = sqrt(tmp_image.imagekist->getCurrent()->surface_brightness);
+        
+                tag = ".alpha.fits";
                 break;
             case kappa:
                 tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->kappa;
