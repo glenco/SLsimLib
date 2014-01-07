@@ -32,7 +32,7 @@ void LensHaloBaseNSIE::force_halo(
 	 float units = pow(sigma/lightspeed,2)/Grav;///sqrt(fratio); // mass/distance(physical)
 	 xt[0]=xcm[0];
 	 xt[1]=xcm[1];
-   alphaNSIE(alpha,xt,fratio,rcore,pa);
+     alphaNSIE(alpha,xt,fratio,rcore,pa);
 	 alpha[0] *= units;
 	 alpha[1] *= units;
 
