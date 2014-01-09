@@ -434,7 +434,7 @@ void LensHalo::force_halo(
 
 	return;
 }
-
+/*
 void LensHaloSimpleNSIE::force_halo(
 		PosType *alpha
 		,KappaType *kappa
@@ -457,17 +457,19 @@ void LensHaloSimpleNSIE::force_halo(
 			PosType alpha_out[2],alpha_in[2],rin,x_in[2];
 			PosType prefac = -1.0*mass/Rmax/pi;
 			PosType r = sqrt(rcm2);
+			float units = pow(sigma/lightspeed,2)/Grav/sqrt(fratio); // mass/distance(physical)
 
+ 			alpha_in[0] = alpha_in[1] = 0;
+     
+      rin = r*Rsize/ellipR;
+     
 			alpha_out[0] = prefac*xcm[0]/r;
 			alpha_out[1] = prefac*xcm[1]/r;
 
-			rin = r*Rsize/ellipR;
 
 			x_in[0] = rin*xcm[0]/r;
 			x_in[1] = rin*xcm[1]/r;
 
-			alpha_in[0] = alpha_in[1] = 0;
-			float units = pow(sigma/lightspeed,2)/Grav/sqrt(fratio); // mass/distance(physical)
 			alphaNSIE(alpha_in,x_in,fratio,rcore,pa);
 			alpha_in[0] *= units;  // minus sign removed because already included in alphaNSIE
 			alpha_in[1] *= units;
@@ -476,6 +478,7 @@ void LensHaloSimpleNSIE::force_halo(
 			alpha[1] += (r - rin)*(alpha_out[1] - alpha_in[1])/(Rmax - rin) + alpha_in[1];
 			//alpha[0] -= (r - rin)*(alpha_out[0] - alpha_in[0])/(Rmax - rin) + alpha_in[0];
 			//alpha[1] -= (r - rin)*(alpha_out[1] - alpha_in[1])/(Rmax - rin) + alpha_in[1];
+      
 			if(!no_kappa){
         // TODO: this makes the kappa and gamma disagree with the alpha as calculated above
 				KappaType tmp[2]={0,0};
@@ -551,6 +554,131 @@ void LensHaloSimpleNSIE::force_halo(
     }
 
        return;
+}
+*/
+void LensHaloSimpleNSIE::force_halo(
+                                    PosType *alpha
+                                    ,KappaType *kappa
+                                    ,KappaType *gamma
+                                    ,PosType *xcm
+                                    ,bool no_kappa
+                                    ,bool subtract_point /// if true contribution from a point mass is subtracted
+                                    ){
+  
+	PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
+	if(rcm2 < 1e-20) rcm2 = 1e-20;
+  
+  //**** test line
+  
+	if(rcm2 < Rmax*Rmax){
+		PosType ellipR = ellipticRadiusNSIE(xcm,fratio,pa);
+		if(rcm2 > Rsize*Rsize){
+			// This is the case when the ray is within the NSIE's circular region of influence but outside its elliptical truncation
+      
+			PosType alpha_iso[2],alpha_ellip[2];
+			PosType prefac = -1.0*mass/Rmax/pi;
+			PosType r = sqrt(rcm2);
+			float units = pow(sigma/lightspeed,2)/Grav/sqrt(fratio); // mass/distance(physical)
+      
+      double f1 = (Rmax - r)/(Rmax - Rsize),f2 = (r - Rsize)/(Rmax - Rsize);
+    
+      // SIE solution
+ 			alpha_ellip[0] = alpha_ellip[1] = 0;
+      alphaNSIE(alpha_ellip,xcm,fratio,rcore,pa);
+      alpha_ellip[0] *= units;
+      alpha_ellip[1] *= units;
+      
+      /*/ SIS solution
+      alpha_iso[0] = alpha_iso[1] = 0;
+      alphaNSIE(alpha_iso,xcm,1,rcore,pa);
+      alpha_iso[0] *= units;
+      alpha_iso[1] *= units;
+      //*/
+      
+      // point mass solution
+      //PosType tmp = mass/rcm2/pi;
+      PosType tmp = mass/Rmax/pi/r;
+			alpha_iso[0] = -1.0*tmp*xcm[0];
+			alpha_iso[1] = -1.0*tmp*xcm[1];
+
+			alpha[0] += alpha_iso[0]*f2 + alpha_ellip[0]*f1;
+			alpha[1] += alpha_iso[1]*f2 + alpha_ellip[1]*f1;
+      
+			// can turn off kappa and gamma calculations to save times
+			if(!no_kappa){
+				PosType tmp = -2.0*prefac/rcm2;
+        
+				gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp*f2;
+				gamma[1] += xcm[0]*xcm[1]*tmp*f2;
+
+        KappaType tmp_k[2]={0,0};
+				*kappa += units*kappaNSIE(xcm,fratio,rcore,pa)*f1;
+				gammaNSIE(tmp_k,xcm,fratio,rcore,pa);
+				gamma[0] += units*tmp_k[0]*f1;
+				gamma[1] += units*tmp_k[1]*f1;
+			}
+      
+		}else{
+			PosType xt[2]={0,0},tmp[2]={0,0};
+			float units = pow(sigma/lightspeed,2)/Grav/sqrt(fratio); // mass/distance(physical)
+			xt[0]=xcm[0];
+			xt[1]=xcm[1];
+			alphaNSIE(tmp,xt,fratio,rcore,pa);
+      
+			//alpha[0] = units*tmp[0];  // minus sign removed because already included in alphaNSIE
+			//alpha[1] = units*tmp[1];  // Why was the "+=" removed?
+			alpha[0] += units*tmp[0];
+			alpha[1] += units*tmp[1];
+      
+			if(!no_kappa){
+				KappaType tmp[2]={0,0};
+				*kappa += units*kappaNSIE(xt,fratio,rcore,pa);
+				gammaNSIE(tmp,xt,fratio,rcore,pa);
+				gamma[0] += units*tmp[0];
+				gamma[1] += units*tmp[1];
+			}
+		}
+
+    if(subtract_point){
+      PosType fac = mass/rcm2/pi;
+      alpha[0] += fac*xcm[0];
+      alpha[1] += fac*xcm[1];
+      
+      // can turn off kappa and gamma calculations to save times
+      if(!no_kappa){
+        fac = 2.0*fac/rcm2;
+        
+        gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*fac;
+        gamma[1] += xcm[0]*xcm[1]*fac;
+      }
+    }
+    
+	}
+	else
+	{  // outside of the halo
+		if (subtract_point == false)
+		{
+			PosType prefac = mass/rcm2/pi;
+			alpha[0] += -1.0*prefac*xcm[0];
+			alpha[1] += -1.0*prefac*xcm[1];
+      
+			// can turn off kappa and gamma calculations to save times
+			if(!no_kappa){
+				PosType tmp = -2.0*prefac/rcm2;
+        
+				gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+				gamma[1] += xcm[0]*xcm[1]*tmp;
+			}
+		}
+	}
+  
+  
+  // add stars for microlensing
+  if(stars_N > 0 && stars_implanted){
+    force_stars(alpha,kappa,gamma,xcm,no_kappa);
+  }
+  
+  return;
 }
 
 const long LensHaloHernquist::NTABLE = 10000;

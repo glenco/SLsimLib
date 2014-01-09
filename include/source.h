@@ -247,6 +247,7 @@ public:
 class QuasarLF{
 	public:
 		QuasarLF(PosType red, PosType mag_limit, long *seed);
+    ~QuasarLF();
 		// returns the integral of the luminosity function at redshift red
 		PosType getNorm() {return pow(10,log_phi)*norm;}; // in Mpc^(-3)
 		PosType getRandomMag();
