@@ -4,6 +4,7 @@ add_sources(
 	causticdata.h
 	divide_images.h
 	doc.h
+	delens.h
 	fitlens.h
 	forceTree.h
 	grid_maintenance.h
@@ -35,7 +36,7 @@ add_sources(
 	sourceAnaGalaxy.h
 	standard.h
 	Tree.h
-        TreeKist.h
+	TreeKist.h
 	tree_maintenance.h
 	TreeNB.h
 	uniform_lens.h

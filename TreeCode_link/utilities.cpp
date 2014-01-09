@@ -96,7 +96,7 @@ void log_polar_grid(Point *i_points,PosType rmax,PosType rmin,PosType *center,lo
  *
  */
 namespace Utilities{
-long IndexFromPosition(PosType *x,long Npixels,PosType range,PosType *center){
+long IndexFromPosition(PosType *x,long Npixels,PosType range,const PosType *center){
 	long ix,iy;
 	PosType fx, fy;
 

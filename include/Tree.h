@@ -295,7 +295,7 @@ namespace Utilities{
   std::vector<Point *> convex_hull(std::vector<Point *> P);
 
 
-	long IndexFromPosition(PosType *x,long Npixels,PosType range,PosType *center);
+	long IndexFromPosition(PosType *x,long Npixels,PosType range,const PosType *center);
 	void PositionFromIndex(unsigned long i,PosType *x,long Npixels,PosType range,const PosType *center);
 	long IndexFromPosition(PosType x,long Npixels,PosType range,PosType center);
   PosType TwoDInterpolator(PosType *x,int Npixels,PosType range,PosType *center,PosType *map,bool init=true);
