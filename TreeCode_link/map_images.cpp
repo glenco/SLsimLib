@@ -196,6 +196,7 @@ void map_images(
 		sourceinfo->area = source->getTotalFlux();
 	}
 
+  
 /*
 	if(FindCenter){
 		Point *points;
@@ -385,7 +386,9 @@ void map_images(
 	//freeKist(subkist);
 
 	tmp = grid->RefreshSurfaceBrightnesses(source);
-//	assert(tmp > 0.0 || imageinfo->imagekist->Nunits() == 0);
+
+  assert(tmp > 0.0 || imageinfo->imagekist->Nunits() == 0);
+
 
 	/*/********** test lines **********************
 	PointsWithinKist_iter(grid->s_tree,source->getX(),0,source->source_r_out,imageinfo->imagekist);

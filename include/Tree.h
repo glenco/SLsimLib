@@ -46,7 +46,7 @@ public:
   //void FindAllBoxNeighbors(Point *point,ListHndl neighbors);
   void FindAllBoxNeighborsKist(Point *point,Kist<Point> * neighbors);
   void PointsWithinEllipKist(const PosType* center,float rmax,float rmin,float posangle,Kist<Point> * neighborkist);
-  PosType PointsWithinKist(const PosType* center,float rmax,Kist<Point> * neighborkist,short markpoints);
+  PosType PointsWithinKist(const PosType* center,PosType rmax,Kist<Point> * neighborkist,short markpoints);
   void PointsWithinKist_iter(const PosType* center,float rmin,float rmax,Kist<Point> * neighborkist);
   Point *NearestNeighborKist(const PosType* center,int Nneighbors,Kist<Point> * neighborkist);
 
@@ -152,7 +152,7 @@ private:
   //void _FindAllBoxNeighbors(Branch *leaf,ListHndl neighbors);
   void _FindAllBoxNeighborsKist(Branch *leaf,Kist<Point> * neighbors);
   void _FindAllBoxNeighborsKist_iter(Branch *leaf,Kist<Point> * neighbors);
-  void _PointsWithinKist(PosType *ray,float *rmax,Kist<Point> * neighborkist
+  void _PointsWithinKist(PosType *ray,PosType *rmax,Kist<Point> * neighborkist
   		,short markpoints,PosType *maxgridsize);
 
   void _freeBranches(short child);
@@ -295,7 +295,7 @@ namespace Utilities{
   std::vector<Point *> convex_hull(std::vector<Point *> P);
 
 
-	long IndexFromPosition(PosType *x,long Npixels,PosType range,PosType *center);
+	long IndexFromPosition(PosType *x,long Npixels,PosType range,const PosType *center);
 	void PositionFromIndex(unsigned long i,PosType *x,long Npixels,PosType range,const PosType *center);
 	long IndexFromPosition(PosType x,long Npixels,PosType range,PosType center);
   PosType TwoDInterpolator(PosType *x,int Npixels,PosType range,PosType *center,PosType *map,bool init=true);

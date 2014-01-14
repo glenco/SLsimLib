@@ -154,7 +154,7 @@ long refine_edges(
 		LensHndl lens
 		,GridHndl grid
 		,ImageInfo *imageinfo
-		,unsigned long Nimages
+		,int Nimages
 		,PosType res_target
 		,short criterion
 		,bool kappa_off
@@ -293,7 +293,7 @@ long refine_edges(
  * </pr>
  */
 long refine_edges2(LensHndl lens,PosType *y_source,PosType r_source,GridHndl grid
-		,ImageInfo *imageinfo,bool *image_overlap,unsigned long Nimages,PosType res_target
+		,ImageInfo *imageinfo,bool *image_overlap,int Nimages,PosType res_target
 		,short criterion,bool kappa_off,bool batch){
 
 	 //printf("entering refine_edges2\n");

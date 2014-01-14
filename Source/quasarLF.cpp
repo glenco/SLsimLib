@@ -68,6 +68,11 @@ QuasarLF::QuasarLF
 
 }
 
+QuasarLF::~QuasarLF(){
+  delete [] mag_arr;
+  delete [] lf_arr;
+}
+
 /// returns random apparent magnitude according to the luminosity function
 double QuasarLF::getRandomMag()
 {
@@ -96,8 +101,9 @@ double QuasarLF::getRandomMag()
 	return mag_out;
 }
 
-/// returns random flux according to the luminosity function
-/// must be divided by an angular area in rad^2 to be a SurfaceBrightness for the ray-tracer
+/** \brief returns random flux according to the luminosity function
+ must be divided by an angular area in rad^2 to be a SurfaceBrightness for the ray-tracer
+ */
 double QuasarLF::getRandomFlux()
 {
 	double mag = getRandomMag();

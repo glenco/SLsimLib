@@ -781,7 +781,7 @@ void TreeKist::_BuildTree(){
   }
   
   if(median_cut){
-    //double_sort_points(cbranch->npoints,x-1,current->points);
+    //PosType_sort_points(cbranch->npoints,x-1,current->points);
     
     // TODO: needs to be fixed *********************************************************
 	  Utilities::quicksortPoints(current->points,x,cbranch->npoints);
@@ -811,8 +811,9 @@ void TreeKist::_BuildTree(){
   
   branch2->npoints=cbranch->npoints - cut;
   //pointlist->current=current->points;
-  pointkist.SetCurrentIt(current->pointit);
-  //JumpDownList(pointlist,cut);
+
+    it = current->pointit;
+    //JumpDownList(pointlist,cut);
   pointkist.JumpDown(cut);
   branch2->points=pointkist.getCurrent();
   branch2->pointit = pointkist.getCurrentIt();
@@ -871,6 +872,7 @@ void TreeKist::_BuildTree(){
 int TreeKist::AddPointsToTree(Point *xpoint,unsigned long Nadd){
   unsigned long j,Ntest;
   //Branch *parent_branch;
+    Kist<Point>::iterator it;
   
   if(Nadd==0) return 1;
   
@@ -906,8 +908,9 @@ int TreeKist::AddPointsToTree(Point *xpoint,unsigned long Nadd){
         current->points->leaf = current;
         // put point into right place in list
         //pointlist->current = current->prev->points;
-        pointkist.SetCurrentIt(current->prev->pointit);
-        if(current == current->prev->child1){
+          Kist<Point>::iterator it = current->prev->pointit;
+
+          if(current == current->prev->child1){
           Point *oldpoint = pointkist.getCurrent();
           Branch *tmp = current;
           
@@ -945,12 +948,12 @@ int TreeKist::AddPointsToTree(Point *xpoint,unsigned long Nadd){
         
         // adds point to end of branches list, note that current->npoints has already been increased
         //pointlist->current = current->points;
-        pointkist.SetCurrentIt(current->pointit);
+        it = current->pointit;
         pointkist.JumpDown(current->npoints-2);
         pointkist.InsertAfterCurrent(&xpoint[j]);
         
         //pointlist->current = current->points;
-        pointkist.SetCurrentIt(current->pointit);
+        it = current->pointit;
         xpoint[j].leaf = current;
         
         /*/ Test lines
@@ -1000,6 +1003,7 @@ int TreeKist::AddPointsToTree(Point *xpoint,unsigned long Nadd){
 }
 
 void TreeKist::_AddPoint(){
+    Kist<Point>::iterator it;
   
   /*/ Test lines
    pointlist->current = current->points;
@@ -1063,7 +1067,7 @@ void TreeKist::_AddPoint(){
     
 		// reorder points
 		//pointlist->current = current->points;
-    pointkist.SetCurrentIt(current->pointit);
+        it = current->pointit;
 		for(i=0;i<current->npoints;++i){
 			x[i] = pointkist.getCurrent()->x[dimension];
 			//MoveDownList(pointlist);
@@ -1091,10 +1095,10 @@ void TreeKist::_AddPoint(){
 		oldfirstpoint = current->points;
 		if(current->npoints == 2){
 			//pointlist->current = current->points;
-      pointkist.SetCurrentIt(current->pointit);
+            it = current->pointit;
 			if(pointkist.getCurrent()->x[dimension] > pointkist.getCurrent()->next->x[dimension]){
 				//pointlist->current = current->points;
-        pointkist.SetCurrentIt(current->pointit);
+                it = current->pointit;
 				bool attop = pointkist.AtTop();
 				Point *point = pointkist.TakeOutCurrent();
 				if(!attop) pointkist.Down();
@@ -1129,16 +1133,16 @@ void TreeKist::_AddPoint(){
 			dimension=!dimension;
       
 			//pointlist->current = current->points;
-      pointkist.SetCurrentIt(current->pointit);
+            it = current->pointit;
 			for(i=0;i<current->npoints;i++){
 				x[i]=pointkist.getCurrent()->x[dimension];
 				pointkist.Down();
 			}
       
 			if(current->npoints == 2){
-        pointkist.SetCurrentIt(current->pointit);
+                it = current->pointit;
 				if(pointkist.getCurrent()->x[dimension] > pointkist.getCurrent()->next->x[dimension]){
-          pointkist.SetCurrentIt(current->pointit);
+                    it = current->pointit;
 					bool attop = pointkist.AtTop();
 					Point *point = pointkist.TakeOutCurrent();
 					if(!attop) pointkist.Down();
@@ -1149,7 +1153,7 @@ void TreeKist::_AddPoint(){
 					x[0] = tmp;
 				}
         if(x[0] == x[1]){
-          pointkist.SetCurrentIt(current->pointit);
+          it = current->pointit;
           for(i=0;i<current->npoints;i++){
             std::cout << std::scientific << pointkist.getCurrent()->x[0] << "  "
             << pointkist.getCurrent()->x[1] << " " << pointkist.getCurrent()->id << "      "
@@ -1202,7 +1206,7 @@ void TreeKist::_AddPoint(){
 		else branch1->points = NULL;
     
 		branch2->npoints = current->npoints - cut;
-    pointkist.SetCurrentIt(current->pointit);
+        it = current->pointit;
 
 		if(branch2->npoints > 0){
       pointkist.JumpDown(cut);
@@ -1531,6 +1535,7 @@ Point * TreeKist::RemoveLeafFromTree(unsigned long *Npoints){
 	Branch *branch;
 	Point *point = NULL;
 	unsigned long i;
+    Kist<Point>::iterator it;
   
 	if(atTop() || !(atLeaf()) ) return NULL;
   
@@ -1550,7 +1555,7 @@ Point * TreeKist::RemoveLeafFromTree(unsigned long *Npoints){
   
 	// leaves of points in the father
 	if(branch->npoints >0){
-    pointkist.SetCurrentIt(branch->pointit);
+    it = branch->pointit;
 
 		assert(inbox(pointkist.getCurrent()->x,branch->boundary_p1,branch->boundary_p2));
     

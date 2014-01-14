@@ -65,6 +65,9 @@ void alphaNSIE(
   RCphase=atan2(-2*f*f*fp*sqrt(b2+bc*bc)*x[1],x[0]*x[0]+pow(f*f*x[1],2)-fp*fp*(b2+bc*bc));
   SCphase=atan2(-2*f*fp*bc*x[1],f*f*r*r-fp*fp*bc*bc);
 
+  //RCphase=atan((-2*f*f*fp*sqrt(b2+bc*bc)*x[1])/(x[0]*x[0]+pow(f*f*x[1],2)-fp*fp*(b2+bc*bc)));
+  //SCphase=atan(-2*f*fp*bc*x[1]/(f*f*r*r-fp*fp*bc*bc));
+
   angle[1]= -0.5*sqrt(f)*(RCphase-SCphase)/fp;
 
   Utilities::rotation(alpha,angle,-theta);
@@ -77,7 +80,7 @@ void alphaNSIE(
 			  ,alpha[0],alpha[1],fp,b2,r,bc,f,theta,x[0],x[1],xt[0],xt[1]);
 	  printf("angle=%e %e Qp=%e Qm=%e RCphase=%e SCphase=%e\n",angle[0],angle[1],Qp,Qm,RCphase,SCphase);
 	  ERROR_MESSAGE();
-	  exit(0);
+	  throw std::runtime_error("Invalid input to alphaNSIE");
 	  alpha[0]=alpha[1]=0;
   }
   return;
