@@ -384,7 +384,7 @@ void map_images(
 
 	//freeKist(subkist);
 
-	//tmp = grid->RefreshSurfaceBrightnesses(source);
+	tmp = grid->RefreshSurfaceBrightnesses(source);
 //	assert(tmp > 0.0 || imageinfo->imagekist->Nunits() == 0);
 
 	/*/********** test lines **********************

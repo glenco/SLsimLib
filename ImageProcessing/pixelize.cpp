@@ -270,6 +270,23 @@ PixelMap operator+(const PixelMap& a, const PixelMap& b)
 	return sum;
 }
 
+/// Subtract the values of another PixelMap from this one.
+PixelMap& PixelMap::operator-=(const PixelMap& rhs)
+{
+	// TODO: maybe check if PixelMaps agree, but is slower
+	map -= rhs.map;
+	return *this;
+}
+
+/// Subtract two PixelMaps.
+PixelMap operator-(const PixelMap& a, const PixelMap& b)
+{
+	PixelMap diff(a);
+	diff -= b;
+	return diff;
+}
+
+
 /** \brief Add an image to the map
  *
  *  If rescale==0 gives constant surface brightness, if < 0
