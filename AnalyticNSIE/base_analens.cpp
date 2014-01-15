@@ -469,7 +469,7 @@ void LensHalo::setEllipModes(double q,double theta){
 		mod[8] = 4*( (3*q*q+1)*(q*q+3)*K-8*q*q*(1+q*q)*E )/( 3*pi*pow(1-q*q,2) );
 		mod[12] = 4*( (1+q*q)*(15+98*q*q+15*q*q*q*q)*K-2*q*q*(23+82*q*q+23*q*q*q*q)*E )/( 15*pi*pow(1-q*q,3) );
 		mod[16]= 4*( -32*q*q*(1+q*q)*(11+74*q*q+11*q*q*q*q)*E+(105+1436*q*q+3062*q*q*q*q+1436*pow(q,6)+105*pow(q,8))*K )/(105*pi*pow(1-q*q,4));
-		mod[18]=0.;
+		//mod[18]=0.;
 	}
 	else{
 		cout << "here" << endl;
@@ -523,30 +523,46 @@ double LensHalo::alpha_asym(double x,double theta){
 
 double LensHalo::kappa_asym(double x,double theta){
 	double F, f[3],g[3], kappa;
-	//setModesToEllip(0.4,0.0);
-	//faxial(theta,f);
+    setEllipModes(0.4,theta);
+    faxial(theta,f);
+    //gradial(x,g);
+    //felliptical(x,0.4,theta,f,g);
+    g[0]=1;
+	g[1]=g[2]=0;
+	F=1-g[0]*f[0];
+	kappa=F*kappa_h(x)-0.5*f[2]/x/x*phi_h(x);
+    
+	return kappa/x;
+}
 
-	//setEllipModes(0.4,0.0);
-	//fangular(theta,f);
+/* makes beta=-2 Power Law Elliptical
+ 
+ void LensHalo::felliptical(double x, double q, double theta, double f[], double g[]){ // q not a function of r
+ double A;
+ //reps=rmax
+ //q=r/reps+q0*(1-r/reps) // q=q0 for small radii, q=1 for large radii
+ A=1/q/q;
+ f[0]=pow((cos(theta)*cos(theta)+A*sin(theta)*sin(theta)),-0.5);
+ g[0]=1; //f[0]/x;
+ f[1]=-((A-1.)*cos(theta)*sin(theta))*pow(f[0],3);
+ f[2]=(A-1.)*(4*(A+1.)*cos(2.*theta)+(A-1)*(cos(4*theta)-5.))/(pow(2,0.5)*pow(1.+A-(A-1.)*cos(2*theta),2.5));
+ g[1]=0.; //f[0]/x;
+ g[2]=0.;
+ }
+ 
+double LensHalo::kappa_asym(double x,double theta){
+	double F, f[3],g[3], kappa;
 
 	felliptical(x,0.4,theta,f,g);
 	g[0]=1;
 	g[1]=g[2]=0;
 
-	//fangular(theta,f);
-	F=1+f[0];
-	//kappa=F*kappa_h(x)/x/x+g[1]*f[0]*alpha_h(x)/x+0.5*(g[2]*f[0]+g[1]*f[0]/x+g[0]*f[2]/x/x)*phi_h(x);
-	//kappa=F*kappa_h(x)/x/x-g[1]*f[0]*alpha_h(x)/x; //+0.5*(g[2]*f[0]+g[1]*f[0]/x+g[0]*f[2]/x/x)*phi_h(x);
+	F=f[0];
 	kappa=F*kappa_h(x)-0.5*f[2]/x/x*phi_h(x);
-	if(x<1){
-		std::cout << F*kappa_h(x) << " " << 0.5*f[2]/x/x*phi_h(x) << std::endl;
-	}
-	kappa/=x*x; // for 2nd term
 
-	return kappa;
+	return kappa/x;
 }
-
-
+*/
 
 /* ANSATZ II
  // eq 34
@@ -589,7 +605,9 @@ double LensHalo::gamma_asym(double x,double theta){
 	double phi_iso = phi_h(x);
 	double gamma_iso = gamma_h(x);
 
-	//felliptical(x,0.2,theta,f,g);
+	felliptical(x,0.4,theta,f,g);
+    g[0]=1;
+	g[1]=g[2]=0;
 	F = f[0];
 	//double gt = F*gamma_iso + g[1]*f[0]*alpha_iso + 0.5*( g[2]*f[0] - g[0]*f[2]/x/x)*phi_iso;
 	double gt = F*gamma_iso + (g[1]*f[0]-F/x/2.)*alpha_iso + 0.5*( g[2]*f[0] - g[1]*f[0]/x - g[0]*f[2]/x/x)*phi_iso;

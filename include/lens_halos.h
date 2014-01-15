@@ -375,28 +375,28 @@ private:
 	// Override internal structure of halos
 	inline double alpha_h(double x){
 		if(x==0) x=1e-6*xmax;
-		assert(beta==2);
-		assert(-1.0*pow(x/xmax,beta+2) != 0.0);
+		//assert(beta==2);
+		//assert(-1.0*pow(x/xmax,beta+2) != 0.0);
 		//cout << x << "  " << -1.0*pow(x/xmax,beta+2) << endl;
-		return -1.0*pow(x/xmax,beta+2);
+		return -1.0*pow(x/xmax,-beta+2);
 	}
 	inline KappaType kappa_h(double x){
 		if(x==0) x=1e-6*xmax;
-		assert(0.5*(beta+2)*pow(x/xmax,beta)*x*x/(xmax*xmax) != 0);
-		return 0.5*(beta+2)*pow(x/xmax,beta)*x*x/(xmax*xmax);
+		//assert(0.5*(beta+2)*pow(x/xmax,beta)*x*x/(xmax*xmax) != 0);
+		return 0.5*(-beta+2)*pow(x/xmax,beta)*x*x/(xmax*xmax);
 	}
 	inline KappaType gamma_h(double x){
 		if(x==0) x=1e-6*xmax;
-		assert(0.5*beta*pow(x/xmax,beta+2) != 0);
-		return 0.5*beta*pow(x/xmax,beta+2);
+		//assert(0.5*beta*pow(x/xmax,beta+2) != 0);
+		return 0.5*(-beta)*pow(x/xmax,-beta+2);
 	}
 	inline KappaType phi_h(double x){
 		//ERROR_MESSAGE();
 		//std::cout << "time delay has not been fixed for PowerLaw profile yet." << std::endl;
 		if(x==0) x=1e-6*xmax;
 		//exit(1);
-		assert( -1.0*pow(x/xmax,beta+2)/(beta+2) !=0.0);
-		return -1.0*pow(x/xmax,beta+2)/(beta+2);
+		//assert( -1.0*pow(x/xmax,beta+2)/(beta+2) !=0.0);
+		return -1.0*pow(x/xmax,-beta+2)/(-beta+2);
 	}
 };
 

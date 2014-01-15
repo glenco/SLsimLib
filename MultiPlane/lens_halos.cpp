@@ -388,9 +388,9 @@ void LensHalo::force_halo(
 				,bool kappa_off
 				,bool subtract_point /// if true contribution from a point mass is subtracted
 				){
-	double q = 1.0; // TODO read theta and q from param file!!!
+	double q = 0.8; // TODO read theta and q from param file!!!
 
-	if (q==1){
+	if (q==1.0){
 		force_halo_sym(alpha,kappa,gamma,xcm,kappa_off,subtract_point);
 		//std::cout << alpha[0] << std::endl;
 	}
@@ -921,6 +921,7 @@ double LensHalo::getParam(std::size_t p) const
 			throw std::invalid_argument("bad parameter index for getParam()");
 	}
 }
+
 
 double LensHalo::setParam(std::size_t p, double val)
 {
