@@ -7,10 +7,10 @@
 #include "source.h"
 
 QuasarLF::QuasarLF
-	(double red                      // redshift
-	, double mag_limit				// magnitude limit
-	, long *seed):
-		red(red), mag_limit(mag_limit), seed(seed)
+	(double my_red                      // redshift
+	, double my_mag_limit				// magnitude limit
+	, long *my_seed):
+		red(my_red), mag_limit(my_mag_limit), seed(my_seed)
 {
 	// the one used in the paper(s)
 	COSMOLOGY cosmo(0.3,0.7,0.7,-1.);
@@ -68,8 +68,13 @@ QuasarLF::QuasarLF
 
 }
 
-// returns random apparent magnitude according to the luminosity function
-double QuasarLF::get()
+QuasarLF::~QuasarLF(){
+  delete [] mag_arr;
+  delete [] lf_arr;
+}
+
+/// returns random apparent magnitude according to the luminosity function
+double QuasarLF::getRandomMag()
 {
 	// extracts random number r between [0,1]
 	// m:P(m) = r is the desired random magnitude
@@ -94,6 +99,15 @@ double QuasarLF::get()
 	mag_out += 5*log10(dl*1.e+05) + kcorr;
 
 	return mag_out;
+}
+
+/** \brief returns random flux according to the luminosity function
+ must be divided by an angular area in rad^2 to be a SurfaceBrightness for the ray-tracer
+ */
+double QuasarLF::getRandomFlux()
+{
+	double mag = getRandomMag();
+	return pow(10, -0.4*(mag+48.6))*inv_hplanck;
 }
 
 double QuasarLF::nintegrateQLF(pt2MemFunc func, double a,double b,double tols) const

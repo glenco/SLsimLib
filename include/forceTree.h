@@ -36,11 +36,11 @@
 class TreeForce : public TreeSimple {
 public:
 	TreeForce(PosType **xp,IndexType Npoints,float *masses,float *rsph,bool Multimass,bool Multisize
-			,double my_kappa_background = 0,int bucket = 5,int dimensions = 2,bool median = false,PosType theta = 0.1
+			,PosType my_kappa_background = 0,int bucket = 5,int dimensions = 2,bool median = false,PosType theta = 0.1
 			);
 
 	TreeForce(PosType **xp,IndexType Npoints,LensHalo *my_halos
-			,bool Multisize = true,double my_kappa_bk=0.0,int bucket = 5,int dimensions = 2
+			,bool Multisize = true,PosType my_kappa_bk=0.0,int bucket = 5,int dimensions = 2
 			,bool median = false,PosType theta = 0.1
 			);
 
@@ -49,7 +49,7 @@ public:
 	/// calculated sph smoothing and store them in the tree, also provide pointer to them
 	float * CalculateSPHsmoothing(int N);
 	/// calculate the deflection and lensing properties
-	void force2D(double *ray,double *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa = true);
+	void force2D(PosType *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa = true);
 	/// provides a way to change the profiles of the particles, by default Gaussian
 	//void ChangeParticleProfile(PartProf partprof);
 
@@ -68,7 +68,7 @@ protected:
 	float *rsph;
 	/// A uniform mass sheet in units of mass_scale/Mpc^2 used to subtract of the contribution
 	/// of the particles to the mean density of the universe
-	double kappa_background;
+	PosType kappa_background;
 
 	PosType force_theta;
 
@@ -84,16 +84,16 @@ protected:
 	void rotate_coordinates(PosType **coord);
 	//void spread_particles();
 
-	inline virtual double alpha_h(double r2s2,double sigma){
+	inline virtual PosType alpha_h(PosType r2s2,PosType sigma){
 	  return (sigma > 0.0 ) ? ( exp(-0.5*r2s2) - 1.0 ) : -1.0;
 	}
-	inline virtual double kappa_h(double r2s2,double sigma){
+	inline virtual PosType kappa_h(PosType r2s2,PosType sigma){
 	  return 0.5*r2s2*exp(-0.5*r2s2);
 	}
-	inline virtual double gamma_h(double r2s2,double sigma){
+	inline virtual PosType gamma_h(PosType r2s2,PosType sigma){
 	  return (sigma > 0.0 ) ? (-2.0 + (2.0 + r2s2)*exp(-0.5*r2s2) ) : -2.0;
 	}
-	inline virtual double phi_o(double r2,double sigma){
+	inline virtual PosType phi_o(PosType r2,PosType sigma){
 		ERROR_MESSAGE();  // not yet written
 		std::cout << "time delay has not been fixed fot this profile yet." << std::endl;
 		exit(1);

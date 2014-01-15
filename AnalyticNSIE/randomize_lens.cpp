@@ -18,7 +18,7 @@ using namespace std;
 
 
 void LensHaloAnaNSIE::RandomizeSigma(long *seed,bool tables){
-	double *sigmaTable;
+	PosType *sigmaTable;
 	int n,NsigmaTable;
 	ifstream file;
 	
@@ -33,7 +33,7 @@ void LensHaloAnaNSIE::RandomizeSigma(long *seed,bool tables){
 	}
 
 	file >> NsigmaTable;
-	sigmaTable=new double[NsigmaTable];
+	sigmaTable=new PosType[NsigmaTable];
 
 	for(n=0;n<NsigmaTable;++n) file >> sigmaTable[n];
 
@@ -45,7 +45,7 @@ void LensHaloAnaNSIE::RandomizeSigma(long *seed,bool tables){
 }
 
 void LensHaloAnaNSIE::RandomizeHost(long *seed,bool tables){
-	double fo,*axisTable;
+	PosType fo,*axisTable;
 	int n;
 	int NaxisTable;
 	ifstream file;
@@ -63,7 +63,7 @@ void LensHaloAnaNSIE::RandomizeHost(long *seed,bool tables){
 
 	file >> NaxisTable;
 
-	axisTable=new double[NaxisTable];
+	axisTable=new PosType[NaxisTable];
 
 	for(n=0;n<NaxisTable;++n) file >> axisTable[n];
 	file.close();
@@ -104,7 +104,7 @@ void LensHaloAnaNSIE::RandomizeHost(long *seed,bool tables){
 void LensHaloAnaNSIE::RandomlyDistortLens(long *seed, int Nmodes){
 
 	int i,k;
-	double tmp,theta;
+	PosType tmp,theta;
 
 	if(Nmodes > 0){
 		// lognormal shear and kappa distribution
@@ -155,9 +155,9 @@ void LensHaloAnaNSIE::RandomlyDistortLens(long *seed, int Nmodes){
  *    This is for randomly distorting a mode but maintaining its alignment
  *    with the ellipticity for example.
  */
-void LensHaloAnaNSIE::AlignedRandomlyDistortLens(long *seed,double theta,int Npole){
+void LensHaloAnaNSIE::AlignedRandomlyDistortLens(long *seed,PosType theta,int Npole){
 
-	double tmp;
+	PosType tmp;
 	int i,k;
 
 	for(i=4;i<perturb_Nmodes;i+=2){
@@ -181,11 +181,11 @@ void LensHaloAnaNSIE::AlignedRandomlyDistortLens(long *seed,double theta,int Npo
 /** \ingEinstein_roup ChangeLens
  *
  */
-void LensHaloAnaNSIE::RandomizeSubstructure2(double rangeInRei,long *seed){
+void LensHaloAnaNSIE::RandomizeSubstructure2(PosType rangeInRei,long *seed){
 	long i,k;
-	double r,theta,rmax,rav[2],r2av=0,area_av=0;
+	PosType r,theta,rmax,rav[2],r2av=0,area_av=0;
 	static unsigned long NsubMax;
-	static double Rm = 0.0,scale = 0.0,ndensity = 0.0,Einstein_ro_save = 0.0;
+	static PosType Rm = 0.0,scale = 0.0,ndensity = 0.0,Einstein_ro_save = 0.0;
 
 	rav[0]=rav[1]=0.0;
 
@@ -315,11 +315,11 @@ void LensHaloAnaNSIE::RandomizeSubstructure2(double rangeInRei,long *seed){
 	 *  This version does not scale to Einstein_ro and
 	 *  sigma
 	 */
-void LensHaloAnaNSIE::RandomizeSubstructure3(double rangeInRei,long *seed){
+void LensHaloAnaNSIE::RandomizeSubstructure3(PosType rangeInRei,long *seed){
 	long i,k;
-	double r,theta,rmax,rav[2],r2av=0,area_av=0;
+	PosType r,theta,rmax,rav[2],r2av=0,area_av=0;
 	static unsigned long NsubMax;
-	static double Rm = 0.0,Einstein_ro_save = 0.0;
+	static PosType Rm = 0.0,Einstein_ro_save = 0.0;
 
 	rav[0]=rav[1]=0.0;
 
@@ -442,8 +442,8 @@ namespace Utilities{
  * \brief Generates a random deviates drawn fEinstein_rom appEinstein_roximately the same as the values of table
  *
  */
-	double RandomFromTable(double *table,unsigned long Ntable,long *seed){
-		double y;
+	PosType RandomFromTable(PosType *table,unsigned long Ntable,long *seed){
+		PosType y;
 		unsigned long j;
 
 		y=ran2(seed)*(Ntable-1);
@@ -452,8 +452,8 @@ namespace Utilities{
 	}
 }
 
-double LensHaloAnaNSIE::FractionWithinRe(double rangeInRei){
-	double B;
+PosType LensHaloAnaNSIE::FractionWithinRe(PosType rangeInRei){
+	PosType B;
 
 	B = (sub_Rmax/pow(sub_Mmax,1./3.)
 			+ pow(2*Einstein_ro/pi/Sigma_crit/1.e-3,1./3.) );
@@ -469,7 +469,7 @@ double LensHaloAnaNSIE::FractionWithinRe(double rangeInRei){
 				);
 }
 
-double LensHaloBaseNSIE::averageSubMass(){
+PosType LensHaloBaseNSIE::averageSubMass(){
 	// average mass of substructures
 	return sub_Mmax*(sub_alpha+1)
 				  /(sub_alpha+2)*(1-pow(sub_Mmin/sub_Mmax,sub_alpha+2))/

@@ -184,38 +184,38 @@ void SourceBLR::printSource(){
 	cout << "source_fK " << source_fK << endl << endl;
 }
 
-double SourceUniform::SurfaceBrightness(double *y){
-	return (double)( (pow(y[0]-getX()[0],2) + pow(y[1]-getX()[1],2)) < source_r*source_r );
+PosType SourceUniform::SurfaceBrightness(PosType *y){
+	return (PosType)( (pow(y[0]-getX()[0],2) + pow(y[1]-getX()[1],2)) < source_r*source_r );
 }
 
-double SourceGaussian::SurfaceBrightness(double *y){
+PosType SourceGaussian::SurfaceBrightness(PosType *y){
 	return exp( -(pow(y[0]-getX()[0],2) + pow(y[1]-getX()[1],2))/source_gauss_r2 );
 }
 // surface brightness for models of the Broad Line Region
-double SourceBLRDisk::SurfaceBrightness(double *y){
-	double x[2] = {y[0]-getX()[0],y[1]-getX()[1]};
+PosType SourceBLRDisk::SurfaceBrightness(PosType *y){
+	PosType x[2] = {y[0]-getX()[0],y[1]-getX()[1]};
 	return blr_surface_brightness_disk(x,this);
 }
 
-double SourceBLRSph1::SurfaceBrightness(double *y){
+PosType SourceBLRSph1::SurfaceBrightness(PosType *y){
 	return blr_surface_brightness_spherical_circular_motions(sqrt((pow(y[0]-getX()[0],2) + pow(y[1]-getX()[1],2))),this);
 }
-double SourceBLRSph2::SurfaceBrightness(double *y){
+PosType SourceBLRSph2::SurfaceBrightness(PosType *y){
 	return blr_surface_brightness_spherical_random_motions(sqrt((pow(y[0]-getX()[0],2) + pow(y[1]-getX()[1],2))),this);
 }
 
-//void in_source(double *y_source,ListHndl sourcelist){
+//void in_source(PosType *y_source,ListHndl sourcelist){
 //  return;
 //}
 SourcePixelled::SourcePixelled(InputParams& params)
 {}
 
 SourcePixelled::SourcePixelled(
-		double my_z            /// redshift of the source
-		, double* my_center  /// center (in rad)
+		PosType my_z            /// redshift of the source
+		, PosType* my_center  /// center (in rad)
 		, int my_Npixels           /// number of pixels per side
-		, double my_resolution  /// resolution (in rad)
-		, double* arr_val          /// array of pixel values (must be of size = Npixels*Npixels)
+		, PosType my_resolution  /// resolution (in rad)
+		, PosType* arr_val          /// array of pixel values (must be of size = Npixels*Npixels)
 		)
 	:Source(), resolution(my_resolution), Npixels (my_Npixels){
 	zsource = my_z;
@@ -241,8 +241,8 @@ SourcePixelled::SourcePixelled(
  */
 SourcePixelled::SourcePixelled(
 		const PixelMap& gal_map  /// Input image and information
-		, double my_z                 /// redshift of the source
-		, double factor                /// optional rescaling factor for the flux
+		, PosType my_z                 /// redshift of the source
+		, PosType factor                /// optional rescaling factor for the flux
 		)
 	:Source(){
 
@@ -267,10 +267,10 @@ SourcePixelled::~SourcePixelled(){
 }
 
 void SourcePixelled::calcCentroid(){
-	double x_sum = 0;
-	double y_sum = 0;
-	double sum = 0;
-	double x[2];
+	PosType x_sum = 0;
+	PosType y_sum = 0;
+	PosType sum = 0;
+	PosType x[2];
 	for (unsigned long i = 0; i < Npixels*Npixels; i++)
 	{
 		Utilities::PositionFromIndex(i,x,Npixels,range,source_x);
@@ -291,7 +291,7 @@ void SourcePixelled::calcEll(){
 		}
 	}
 
-	double x[2];
+	PosType x[2];
 	for (unsigned long i = 0; i < Npixels*Npixels; i++)
 	{
 		Utilities::PositionFromIndex(i,x,Npixels,range,source_x);
@@ -309,10 +309,10 @@ void SourcePixelled::calcEll(){
 }
 
 void SourcePixelled::calcSize(){
-	double r_sum = 0.;
-	double sum = 0.;
-	double rad;
-	double x[2];
+	PosType r_sum = 0.;
+	PosType sum = 0.;
+	PosType rad;
+	PosType x[2];
 
 	for (unsigned long i = 0; i < Npixels*Npixels; i++)
 	{
@@ -324,7 +324,7 @@ void SourcePixelled::calcSize(){
 	size = r_sum/sum;
 }
 
-double SourcePixelled::SurfaceBrightness(double *y){
+PosType SourcePixelled::SurfaceBrightness(PosType *y){
 	long ix = Utilities::IndexFromPosition(y[0],Npixels,range,source_x[0]);
 	long iy = Utilities::IndexFromPosition(y[1],Npixels,range,source_x[1]);
 	if (ix>-1 && iy>-1)
@@ -336,7 +336,7 @@ double SourcePixelled::SurfaceBrightness(double *y){
 }
 
 void SourcePixelled::calcTotalFlux(){
-	double val_tot = 0.;
+	PosType val_tot = 0.;
 	for (int i = 0; i < Npixels*Npixels; i++)
 		val_tot += values[i];
 	flux = val_tot*resolution*resolution;
@@ -348,7 +348,7 @@ void SourcePixelled::assignParams(InputParams& params){}
 /**  \brief Calculates the difference in magnitude when changing the observing filter
  *
  */
-double Source::changeFilter(
+PosType Source::changeFilter(
 		std::string filter_in  				/// file with the old observing filter
 		, std::string filter_out			/// file with the new observing filter
 		, std::string sed					/// file with the galaxy spectral energy distribution
@@ -357,9 +357,9 @@ double Source::changeFilter(
 
 	// reads in the input filter
 	std::ifstream fin(filter_in.c_str());
-	std::vector<double> wavel_in, ampl_in;
+	std::vector<PosType> wavel_in, ampl_in;
 	fin.seekg(0,fin.beg);
-	double x,y;
+	PosType x,y;
 	for (int i = 0; ; i++)
 	{
 		if( fin.eof() ) break;
@@ -376,7 +376,7 @@ double Source::changeFilter(
 
 	// reads in the output filter
 	std::ifstream fout(filter_out.c_str());
-	std::vector<double> wavel_out, ampl_out;
+	std::vector<PosType> wavel_out, ampl_out;
 	fout.seekg(0,fout.beg);
 	for (int i = 0; ; i++)
 	{
@@ -394,7 +394,7 @@ double Source::changeFilter(
 
 	// reads in the source sed
 	std::ifstream sed_input(sed.c_str());
-	std::vector<double> wavel_sed, ampl_sed;
+	std::vector<PosType> wavel_sed, ampl_sed;
 	sed_input.seekg(0,sed_input.beg);
 	for (int i = 0; ; i++)
 	{
@@ -412,20 +412,20 @@ double Source::changeFilter(
 	}
 
 	// Applies Delta m = int (sed*fout) / int (sed*fin) * int fin / int fout
- 	double fin_int = integrateFilter(wavel_in,ampl_in);
-	double fout_int = integrateFilter(wavel_out,ampl_out);
-	double sed_in = integrateFilterSed(wavel_in, ampl_in, wavel_sed, ampl_sed);
-	double sed_out = integrateFilterSed(wavel_out, ampl_out, wavel_sed, ampl_sed);
-	double delta_mag = -2.5 * log10(sed_out/sed_in*fin_int/fout_int);
+ 	PosType fin_int = integrateFilter(wavel_in,ampl_in);
+	PosType fout_int = integrateFilter(wavel_out,ampl_out);
+	PosType sed_in = integrateFilterSed(wavel_in, ampl_in, wavel_sed, ampl_sed);
+	PosType sed_out = integrateFilterSed(wavel_out, ampl_out, wavel_sed, ampl_sed);
+	PosType delta_mag = -2.5 * log10(sed_out/sed_in*fin_int/fout_int);
 	return delta_mag;
 }
 
 /**  \brief Calculates the integral of the filter curve given as an array of (x,y) values.
  *
  */
-double Source::integrateFilter(std::vector<double> wavel_fil, std::vector<double> fil)
+PosType Source::integrateFilter(std::vector<PosType> wavel_fil, std::vector<PosType> fil)
 {
-	double integr = 0.;
+	PosType integr = 0.;
 	for (int i = 0; i < wavel_fil.size()-1; i++)
 		integr += (wavel_fil[i+1] - wavel_fil[i])*(fil[i+1]+fil[i]);
 	integr /= 2.;
@@ -435,19 +435,19 @@ double Source::integrateFilter(std::vector<double> wavel_fil, std::vector<double
 /**  \brief Calculates the integral of the sed multiplied by the filter curve.
  *
  */
-double Source::integrateFilterSed(std::vector<double> wavel_fil, std::vector<double> fil, std::vector<double> wavel_sed, std::vector<double> sed)
+PosType Source::integrateFilterSed(std::vector<PosType> wavel_fil, std::vector<PosType> fil, std::vector<PosType> wavel_sed, std::vector<PosType> sed)
 {
 	int wavel_new_size = 10000;
-	vector<double> wavel_new(wavel_new_size), fil_val(wavel_new_size), sed_val(wavel_new_size);
+	vector<PosType> wavel_new(wavel_new_size), fil_val(wavel_new_size), sed_val(wavel_new_size);
 
-	double integr = 0.;
+	PosType integr = 0.;
 	for (int i = 0; i < wavel_new_size; i++)
 	{
-		wavel_new[i] = max(wavel_fil[0],wavel_sed[0]) + double(i)/double(wavel_new_size-1)*(min(wavel_fil[wavel_fil.size()-1],wavel_sed[wavel_sed.size()-1])-max(wavel_fil[0],wavel_sed[0]) );
-		vector<double>::iterator it_f = lower_bound(wavel_fil.begin(), wavel_fil.end(), wavel_new[i]);
+		wavel_new[i] = max(wavel_fil[0],wavel_sed[0]) + PosType(i)/PosType(wavel_new_size-1)*(min(wavel_fil[wavel_fil.size()-1],wavel_sed[wavel_sed.size()-1])-max(wavel_fil[0],wavel_sed[0]) );
+		vector<PosType>::iterator it_f = lower_bound(wavel_fil.begin(), wavel_fil.end(), wavel_new[i]);
 		int p = it_f-wavel_fil.begin()-1;
 		fil_val[i] = fil[p] + (fil[p+1]-fil[p])*(wavel_new[i]-wavel_fil[p])/(wavel_fil[p+1]-wavel_fil[p]);
-		vector<double>::iterator it_s = lower_bound(wavel_sed.begin(), wavel_sed.end(), wavel_new[i]);
+		vector<PosType>::iterator it_s = lower_bound(wavel_sed.begin(), wavel_sed.end(), wavel_new[i]);
 		int q = it_s-wavel_sed.begin()-1;
 		sed_val[i] = sed[q] + (sed[q+1]-sed[q])*(wavel_new[i]-wavel_sed[q])/(wavel_sed[q+1]-wavel_sed[q]);
 	}
@@ -460,12 +460,12 @@ double Source::integrateFilterSed(std::vector<double> wavel_fil, std::vector<dou
 }
 
 SourceShapelets::SourceShapelets(
-		double my_z                              /// redshift of the source
-		, double* my_center           			/// center (in rad)
-		, double my_mag							/// magnitude
-		, double my_scale						/// scale of the shapelets decomposition
-		, std::valarray<double> my_coeff  	/// coefficients of the shapelets decomposition
-		, double my_ang					/// rotation angle (in rad)
+		PosType my_z                              /// redshift of the source
+		, PosType* my_center           			/// center (in rad)
+		, PosType my_mag							/// magnitude
+		, PosType my_scale						/// scale of the shapelets decomposition
+		, std::valarray<PosType> my_coeff  	/// coefficients of the shapelets decomposition
+		, PosType my_ang					/// rotation angle (in rad)
 		)
 		:Source()
 {
@@ -483,11 +483,11 @@ SourceShapelets::SourceShapelets(
 }
 
 SourceShapelets::SourceShapelets(
-		double my_z							/// redshift of the source
-		, double* my_center					/// center (in rad)
-		, double my_mag						/// magnitude
+		PosType my_z							/// redshift of the source
+		, PosType* my_center					/// center (in rad)
+		, PosType my_mag						/// magnitude
 		, std::string shap_file				/// fits file with coefficients in a square array
-		, double my_ang			/// rotation angle (in rad)
+		, PosType my_ang			/// rotation angle (in rad)
 		)
 		:Source()
 {
@@ -522,9 +522,9 @@ SourceShapelets::SourceShapelets(
 }
 
 SourceShapelets::SourceShapelets(
-		double* my_center  					/// center (in rad)
+		PosType* my_center  					/// center (in rad)
 		, std::string shap_file				/// fits file with coefficients in a square array. Mag and redshift are read from the header.
-		, double my_ang				 /// rotation angle (in rad)
+		, PosType my_ang				 /// rotation angle (in rad)
 		)
 		:Source()
 {
@@ -559,29 +559,29 @@ SourceShapelets::SourceShapelets(
 }
 
 
-double SourceShapelets::SurfaceBrightness(double *y)
+PosType SourceShapelets::SurfaceBrightness(PosType *y)
 {
-	double sb = 0.;
-	double y_norm[2];
+	PosType sb = 0.;
+	PosType y_norm[2];
 	y_norm[0] = ((y[0]-source_x[0])*cos(ang)+(y[1]-source_x[1])*sin(ang))/source_r;
 	y_norm[1] = ((y[0]-source_x[0])*sin(ang)-(y[1]-source_x[1 ])*cos(ang))/source_r;
-	double dist = sqrt(y_norm[0]*y_norm[0]+y_norm[1]*y_norm[1]);
+	PosType dist = sqrt(y_norm[0]*y_norm[0]+y_norm[1]*y_norm[1]);
 	for (int i = 0; i < n1; i++)
 	{
 		for (int j = 0; j < n2; j++)
 		{
-			double norm = 1./sqrt(pow(2,i+j)*pi*factrl(i)*factrl(j));
+			PosType norm = 1./sqrt(pow(2,i+j)*pi*factrl(i)*factrl(j));
 			sb += norm*coeff[j*n1+i]*Hermite(i,y_norm[0])*Hermite(j,y_norm[1]);
 		}
 	}
 	sb *= exp(-dist*dist/2.)/source_r;
-	return max(sb,std::numeric_limits<double>::epsilon());
+	return max(sb,std::numeric_limits<PosType>::epsilon());
 }
 
 /// Returns the value of the Hermite polynomial of degree n at position x
-double SourceShapelets::Hermite(int n, double x)
+PosType SourceShapelets::Hermite(int n, PosType x)
 {
-	double hg[n];
+	PosType hg[n];
 	hg[0] = 1.;
 	for (int i = 1; i <= n; i++)
 	{
@@ -599,7 +599,7 @@ void SourceShapelets::assignParams(InputParams& params){};
 /// Rescales the coefficients to make the source bright as we want.
 void SourceShapelets::NormalizeFlux()
 {
-	double shap_flux = 0.;
+	PosType shap_flux = 0.;
 	for (int i = 0; i < n1; i=i+2)
 	{
 		for (int j = 0; j < n2; j=j+2)

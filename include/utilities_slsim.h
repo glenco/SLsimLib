@@ -563,9 +563,6 @@ namespace Utilities
 			
 			// remove from items
 			items.pop_back();
-			
-			// delete from memory
-			delete back;
 		}
 		
 		/// erase the last element of a specific type
@@ -782,7 +779,7 @@ namespace Utilities
 	};
 	
 	template<class BaseT>
-	std::size_t lower_bound(std::vector<BaseT*>& items, double target){
+	std::size_t lower_bound(std::vector<BaseT*>& items, PosType target){
 		std::size_t ju,jm,jl;
 		
 		jl=0;
@@ -811,10 +808,10 @@ namespace Utilities
   class HilbertCurve{
   public:
     HilbertCurve(
-                 double x_min       /// x coordinate of lower left corner
-                 ,double y_min      /// y coordinate of lower left corner
-                 ,double my_range   /// range in which points will be distributed
-                 ,double smallsize  /// smallest distance of separation that must give unique Hilbert distances
+                 PosType x_min       /// x coordinate of lower left corner
+                 ,PosType y_min      /// y coordinate of lower left corner
+                 ,PosType my_range   /// range in which points will be distributed
+                 ,PosType smallsize  /// smallest distance of separation that must give unique Hilbert distances
                  ):
     range(my_range)
     {
@@ -824,13 +821,13 @@ namespace Utilities
     }
     
     int xy2d (int x, int y);
-    int xy2d (double x, double y);
+    int xy2d (PosType x, PosType y);
     void d2xy(int d, int *x, int *y);
-    void d2xy(int d, double *x, double *y);
+    void d2xy(int d, PosType *x, PosType *y);
     
   private:
     int n;
-    double xo[2],range;
+    PosType xo[2],range;
     void rot(int s,int *x, int *y, int rx, int ry);
   };
 
@@ -847,9 +844,9 @@ namespace Utilities
     RandomNumbers(unsigned int seed);
     ~RandomNumbers(void);
     
-    double operator()(void);
+    PosType operator()(void);
     /// Normally (Gaussian) distributed random numbers with mean 0 and standard deviation 1
-    double gauss(){return norm_dist(rand_gen);}
+    PosType gauss(){return norm_dist(rand_gen);}
   private:
      
     std::normal_distribution<> norm_dist;
@@ -867,14 +864,14 @@ namespace Utilities
     
     RandomNumbers_NR(long seed);
     
-    double operator()(void);
+    PosType operator()(void);
   private:
     long idum;
-    double ran2(void);
+    PosType ran2(void);
     
     int IM1;
     int IM2;
-    double AM;
+    PosType AM;
     //int IMM1 = (IM1-1);
     int IA1;
     int IA2;
@@ -883,8 +880,8 @@ namespace Utilities
     int IR1;
     int IR2;
     int NDIV;
-    double EPS;
-    double RNMX;
+    PosType EPS;
+    PosType RNMX;
     
     long idum2;
     long iy;

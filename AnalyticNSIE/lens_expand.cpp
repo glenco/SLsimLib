@@ -30,8 +30,8 @@
 
 /// removed declaration of Grav -- caused compiler problems and was not needed
 
-double lens_expand(double beta,double *mod,int Nmodes,double *x,double *alpha,KappaType *gamma,KappaType *phi){
-  double F,F1,F2,theta,r,cosx,sinx,cos2theta,sin2theta,gt,gx;
+PosType lens_expand(PosType beta,PosType *mod,int Nmodes,PosType *x,PosType *alpha,KappaType *gamma,KappaType *phi){
+  PosType F,F1,F2,theta,r,cosx,sinx,cos2theta,sin2theta,gt,gx;
   int i,k;
 
   if(Nmodes<=0){

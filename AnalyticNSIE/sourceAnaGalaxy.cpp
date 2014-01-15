@@ -10,14 +10,14 @@
 
 /// Source model for a single analytic galaxy model.
 SourceMultiAnaGalaxy::SourceMultiAnaGalaxy(
-		double mag              /// Total magnitude
-		,double BtoT            /// Bulge to total ratio
-		,double Reff            /// Bulge half light radius (arcs)
-		,double Rh              /// disk scale hight (arcs)
-		,double PA              /// Position angle (radians)
-		,double inclination     /// inclination of disk (radians)
-		,double my_z               /// redshift of source
-		,double *my_theta          /// position on the sky
+		PosType mag              /// Total magnitude
+		,PosType BtoT            /// Bulge to total ratio
+		,PosType Reff            /// Bulge half light radius (arcs)
+		,PosType Rh              /// disk scale hight (arcs)
+		,PosType PA              /// Position angle (radians)
+		,PosType inclination     /// inclination of disk (radians)
+		,PosType my_z               /// redshift of source
+		,PosType *my_theta          /// position on the sky
 		): Source(),index(0){
 	
 	galaxies.push_back(SourceOverzier(mag,BtoT,Reff,Rh,PA,inclination,0,my_z,my_theta));
@@ -58,14 +58,14 @@ void SourceMultiAnaGalaxy::readDataFile(){
 
 	//int type;
 	//long galid,haloid;
-	/*double cx,cy,cz,ra,dec,z_geo ,z_app ,dlum ,vlos ,incl
+	/*PosType cx,cy,cz,ra,dec,z_geo ,z_app ,dlum ,vlos ,incl
 	,acs435 ,acs606 ,acs775,acs850,acs435_bulge,acs606_bulge,acs775_bulge,acs850_bulge
 	,mvir,rvir,vmax,stellarmass,bulgemass,stellardiskradius,bulgesize
 	,inclination,pa,angdist,diskradius_arcsec,bulgesize_arcsec;*/
 	unsigned long i,j;
 
 	unsigned long GalID,HaloID;
-	double ra,dec,z_cosm,z_app,Dlum,inclination,pa,Rh,Ref,SDSS_u,SDSS_g,SDSS_r,SDSS_i,SDSS_z
+	PosType ra,dec,z_cosm,z_app,Dlum,inclination,pa,Rh,Ref,SDSS_u,SDSS_g,SDSS_r,SDSS_i,SDSS_z
 	,J_band,H_band,Ks_band,i1,i2,SDSS_u_Bulge,SDSS_g_Bulge,SDSS_r_Bulge,SDSS_i_Bulge,SDSS_z_Bulge
 	,J_band_Bulge,H_band_Bulge,Ks_band_Bulge,i1_Bulge,i2_Bulge;
 
@@ -115,7 +115,7 @@ void SourceMultiAnaGalaxy::readDataFile(){
 	}
 	std::cout << "skipped "<< i << " comment lines in " << input_gal_file << std::endl;
 
-	double theta[2] = {0.0,0.0};
+	PosType theta[2] = {0.0,0.0};
 
 	const int ncolumns = 31;
 
@@ -154,13 +154,13 @@ void SourceMultiAnaGalaxy::readDataFile(){
 
 
 	unsigned long myint;
-	double mydouble;
+	PosType myPosType;
 	std::string myline;
 	std::string strg;
 	std::string f=",";
 	std::stringstream buffer;
 
-	double mag,mag_bulge;
+	PosType mag,mag_bulge;
 
 	// read in data
 	for(i=0,j=0 ; ; ++i){
@@ -179,8 +179,8 @@ void SourceMultiAnaGalaxy::readDataFile(){
 				*((unsigned long *)addr[l]) = myint;
 			}
 			else{
-				buffer >> mydouble;
-				*((double *)addr[l]) = mydouble;
+				buffer >> myPosType;
+				*((PosType *)addr[l]) = myPosType;
 			}
 			myline.erase(0,pos+1);
 			strg.clear();
@@ -368,13 +368,13 @@ void SourceMultiAnaGalaxy::assignParams(InputParams& params){
  * directly from the range of already existing source positions.  The field is assumed to be rectangular.
  */
 void SourceMultiAnaGalaxy::multiplier(
-		double z                /// limiting redshift, only sources above this redshift are copied
-		,double mag_cut         /// limiting magnitude, only sources with magnitudes below this limit will be copied
+		PosType z                /// limiting redshift, only sources above this redshift are copied
+		,PosType mag_cut         /// limiting magnitude, only sources with magnitudes below this limit will be copied
 		,int multiplicity       /// the number of times each of these sources should be multiplied
 		,long *seed    /// random number seed
 		){
 	unsigned long Nold = galaxies.size(),NtoAdd=0;
-	double x1[2],x2[2],theta[2];
+	PosType x1[2],x2[2],theta[2];
 
 	for(unsigned long i=0;i<Nold;++i){
 		if(galaxies[i].getX()[0] < x1[0]) x1[0] = galaxies[i].getX()[0];

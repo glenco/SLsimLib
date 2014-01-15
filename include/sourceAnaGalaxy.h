@@ -29,19 +29,20 @@
  */
 class SourceMultiAnaGalaxy: public Source{
 public:
-	SourceMultiAnaGalaxy(double mag, double BtoT, double Reff, double Rh, double PA, double inclination,double my_z,double *my_theta);
+	SourceMultiAnaGalaxy(PosType mag, PosType BtoT, PosType Reff, PosType Rh, PosType PA, PosType inclination,PosType my_z,PosType *my_theta);
 	SourceMultiAnaGalaxy(SourceOverzier *my_galaxy);
 	SourceMultiAnaGalaxy(InputParams& params);
 	~SourceMultiAnaGalaxy();
 	
 	/// Surface brightness of current galaxy.
-	double SurfaceBrightness(double* x) {
-		double sb = galaxies[index].SurfaceBrightness(x);
+	PosType SurfaceBrightness(PosType* x) {
+		PosType sb = galaxies[index].SurfaceBrightness(x);
 		if (sb < sb_limit) return 0.;
-		return sb;}
+		return sb;
+  }
 	
 	/// Total flux coming from the current galaxy in erg/sec/Hz/cm^2
-	double getTotalFlux(){return pow(10,-(48.6+galaxies[index].getMag())/2.5);}
+	PosType getTotalFlux(){return pow(10,-(48.6+galaxies[index].getMag())/2.5);}
 
 	void printSource();
 	// Add a pre-constructed galaxy to the source collection
@@ -75,27 +76,27 @@ public:
 	}
 
 	/// Return redshift of current source.
-	double getZ(){return galaxies[index].getZ();}
-	//double getRadius(){return max(galaxies[index]->Reff,galaxies[index]->Rh);}
-	double getRadius(){return galaxies[index].getRadius();}
+	PosType getZ(){return galaxies[index].getZ();}
+	//PosType getRadius(){return max(galaxies[index]->Reff,galaxies[index]->Rh);}
+	PosType getRadius(){return galaxies[index].getRadius();}
 	/// Set redshift of current source.  Only changes the redshift while leaving position fixed.
-	void setZ(double my_z){	galaxies[index].setZ(my_z);}
+	void setZ(PosType my_z){	galaxies[index].setZ(my_z);}
 
 	unsigned long getID(){return galaxies[index].getID();}
 
 
 	/// Return angular position of current source.
-	double *getX(){return galaxies[index].getX();}
+	PosType *getX(){return galaxies[index].getX();}
 	/// Set angular position of current source.
-	void setX(double my_theta[2]){galaxies[index].setX(my_theta);}
-	void setX(double my_x,double my_y){galaxies[index].setX(my_x, my_y);}
+	void setX(PosType my_theta[2]){galaxies[index].setX(my_theta);}
+	void setX(PosType my_x,PosType my_y){galaxies[index].setX(my_x, my_y);}
 	std::size_t getNumberOfGalaxies() const {return galaxies.size();}
 
-	void multiplier(double z,double mag_cut,int Multiplicity,long *seed);
+	void multiplier(PosType z,PosType mag_cut,int Multiplicity,long *seed);
   void sortInRedshift();
   void sortInMag();
   /// returns field-of-view in deg^2 assuming region is square
-  double getFOV(){return (rangex[1]-rangex[0])*(rangey[1]-rangey[0])*180*180/pi/pi;}
+  PosType getFOV(){return (rangex[1]-rangex[0])*(rangey[1]-rangey[0])*180*180/pi/pi;}
   
 private:
 	Band band;
@@ -108,7 +109,7 @@ private:
 	void readDataFile();
 	void assignParams(InputParams& params);
 
-  double rangex[2],rangey[2];
+  PosType rangex[2],rangey[2];
 };
 
 bool redshiftcompare(SourceOverzier s1,SourceOverzier s2);

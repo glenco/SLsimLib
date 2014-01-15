@@ -84,8 +84,8 @@ public:
 	int getNplanes(){return lensing_planes.size();}
 
 	/// field of view in square degrees
-	double getfov(){return fieldofview;};
-	void setfov(double fov){fieldofview=fov;};
+	PosType getfov(){return fieldofview;};
+	void setfov(PosType fov){fieldofview=fov;};
 
 	/// reset te number of planes, but keep the field halos and main lens
 	void resetFieldNplanes(std::size_t field_Nplanes, bool verbose = false);
@@ -95,7 +95,9 @@ public:
 	/// print the main parameters of the lens
 	void printMultiLens();
 
-	double getZlens(){
+  
+  /// Redshift of first main lens plane
+	PosType getZlens(){
 		if(flag_switch_main_halo_on)
 			return main_halos[0]->getZlens();
 		else{
@@ -105,7 +107,7 @@ public:
 		}
 	}
   /// Angular size distance (Mpc) to first main lens plane
-	double getAngDistLens(){
+	PosType getAngDistLens(){
 		if(flag_switch_main_halo_on)
 			return cosmo.angDist( main_halos[0]->getZlens());
 		else{
@@ -144,12 +146,12 @@ public:
 
 	// methods used for use with implanted sources
 
-	short ResetSourcePlane(double z,bool nearest, unsigned long GalID=0, double *xx=NULL,bool verbose = false);
+	short ResetSourcePlane(PosType z,bool nearest, unsigned long GalID=0, PosType *xx=NULL,bool verbose = false);
 
 	/// Revert the source redshift to the value it was when the Lens was created.
 	void RevertSourcePlane(){ toggle_source_plane = false;}
 	//void ImplantSource(unsigned long index,CosmoHndl cosmo);
-	double getSourceZ(){
+	PosType getSourceZ(){
 		if(toggle_source_plane){
 			return zs_implant;
 		}else{
@@ -157,13 +159,13 @@ public:
 		}
 	}
 
-	double getZmax(){return plane_redshifts.back();}
+	PosType getZmax(){return plane_redshifts.back();}
 
 	/// print the cosmological parameters
 	void PrintCosmology() { cosmo.PrintCosmology(); }
 	
 	/// returns the critical density at the main lens in Msun/ Mpc^2 for a source at zsource
-	double getSigmaCrit(double zsource) { return cosmo.SigmaCrit(getZlens(), zsource); }
+	PosType getSigmaCrit(PosType zsource) { return cosmo.SigmaCrit(getZlens(), zsource); }
 	
 
   /// returns a const reference to the cosmology so that constant functions can be used, but the cosmological parameters cannot be changed.
@@ -182,7 +184,7 @@ private:
 	COSMOLOGY cosmo;
 
 	/// field of view in square degrees
-	double fieldofview;
+	PosType fieldofview;
 	
 	void readCosmology(InputParams& params);
 	void assignParams(InputParams& params,bool verbose = false);
@@ -190,15 +192,15 @@ private:
 	/// turns source plane on and off
 	bool toggle_source_plane;
 	/// the distance from the source to the next plane
-	double dDs_implant;
-	double zs_implant,Ds_implant;
+	PosType dDs_implant;
+	PosType zs_implant,Ds_implant;
 	/// This is the index of the plane at one larger distance than the new source distance
 	int index_of_new_sourceplane;
 	
 	/// This is the source redshift that is read in from the parameter file and becomes the maximum redshift
-	double zsource;
+	PosType zsource;
 	
-	void quicksort(LensHaloHndl *halo,double **pos,unsigned long N);
+	void quicksort(LensHaloHndl *halo,PosType **pos,unsigned long N);
 	
 private: /* generation */
 	/// create the lens planes
@@ -235,13 +237,13 @@ private: /* force calculation */
 	/// the lensing planes
 	std::vector<LensPlane *> lensing_planes;
 	/// Dl[j = 0...] angular diameter distances, comoving
-	std::vector<double> Dl;
+	std::vector<PosType> Dl;
 	/// dDl[j] is the distance between plane j-1 and j plane, comoving
-	std::vector<double> dDl;
+	std::vector<PosType> dDl;
 	/// Redshifts of lens planes, 0...Nplanes.  Last one is the source redshift.
-	std::vector<double> plane_redshifts;
+	std::vector<PosType> plane_redshifts;
 	/// charge for the tree force solver (4*pi*G)
-	double charge;
+	PosType charge;
 	
 private: /* field */
 	/// if true, the background is switched off and only the main lens is present
@@ -254,30 +256,30 @@ private: /* field */
 	/// vector of all field planes
 	std::vector<LensPlane*> field_planes;
 	/// vector of field plane redshifts
-	std::vector<double> field_plane_redshifts;
+	std::vector<PosType> field_plane_redshifts;
 	/// vector of field plane distances
-	std::vector<double> field_Dl;
+	std::vector<PosType> field_Dl;
 	
 	/// Perpendicular position of halo TODO: (In proper distance?)
-	double **halo_pos;
+	PosType **halo_pos;
 	
 	/// type of mass function PS (0), ST (1), and power law (2) default is ST
 	MassFuncType field_mass_func_type;
 	/// slope of the mass function is field_mass_func_type == 2
-	double mass_func_PL_slope;
+	PosType mass_func_PL_slope;
 	/// min mass for the halo model
-	double field_min_mass;
+	PosType field_min_mass;
 	/// internal halo profile type; needs to be 0 or PowerLaw, 1 or NFW, 2 or PseudoNFW, 3 or NSIE, 4 or PointMass
 	LensHaloType field_int_prof_type;
 	/// power law or pseudo NFW internal profile slope
-	double field_prof_internal_slope;
+	PosType field_prof_internal_slope;
 	
 	/// if true, each field halo contains an NSIE galaxy inside it
 	bool flag_field_gal_on;
 	/// galaxy subhalo profile type; needs to be 0 or PowerLaw, 1 or NFW, 2 or PseudoNFW, 3 or NSIE, 4 or PointMass
 	GalaxyLensHaloType field_int_prof_gal_type;
 	// mass fraction in the host galaxy
-	//double field_galaxy_mass_fraction;
+	//PosType field_galaxy_mass_fraction;
 	
 	std::string redshift_planes_file;
 	bool read_redshift_planes;
@@ -289,7 +291,7 @@ private: /* field */
 	bool read_sim_file;
 	
 	/// increases are for cosmological mean number density of halos calculation
-	double field_buffer;
+	PosType field_buffer;
 	
 private: /* main */
 	/// having a main halo in the paramfile
@@ -302,9 +304,9 @@ private: /* main */
 	/// vector of all main planes
 	std::vector<LensPlane*> main_planes;
 	/// vector of main plane redshifts
-	std::vector<double> main_plane_redshifts;
+	std::vector<PosType> main_plane_redshifts;
 	/// vector of main plane distances
-	std::vector<double> main_Dl;
+	std::vector<PosType> main_Dl;
 	
 	/// main lens type
 	LensHaloType main_halo_type;

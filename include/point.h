@@ -75,7 +75,7 @@ struct Branch{
 	~Branch();
 
   struct Point *points;        /// pointer to first points in Branch
-  KistIt<Point> pointit;       /// Kist iterator pointing to first point in branch
+  Kist<Point>::iterator pointit;       /// Kist iterator pointing to first point in branch
   
   unsigned long npoints;
   double center[2];

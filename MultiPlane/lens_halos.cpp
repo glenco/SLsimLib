@@ -20,7 +20,7 @@ LensHalo::LensHalo(InputParams& params){
 	stars_implanted = false;
 }
 
-void LensHalo::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, double my_slope, long *seed){
+void LensHalo::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed){
 	mass = my_mass;
 	Rmax = my_Rmax;
 	rscale = my_rscale;
@@ -58,14 +58,14 @@ if(stars_N>0){
 }
 
 void LensHalo::force_stars(
-		double *alpha     /// mass/Mpc
+		PosType *alpha     /// mass/Mpc
 		,KappaType *kappa
 		,KappaType *gamma
-		,double *xcm     /// physical position on lens plane
+		,PosType *xcm     /// physical position on lens plane
 		,bool no_kappa
 		)
 {
-    double alpha_tmp[2];
+    PosType alpha_tmp[2];
     KappaType gamma_tmp[3], tmp = 0;
 
     gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
@@ -92,14 +92,14 @@ LensHalo::~LensHalo()
 }
 
 const long LensHaloNFW::NTABLE = 10000;
-const double LensHaloNFW::maxrm = 100.0;
+const PosType LensHaloNFW::maxrm = 100.0;
 int LensHaloNFW::count = 0;
 
-double* LensHaloNFW::xtable = NULL;
-double* LensHaloNFW::ftable = NULL;
-double* LensHaloNFW::gtable = NULL;
-double* LensHaloNFW::g2table = NULL;
-double* LensHaloNFW::htable = NULL;
+PosType* LensHaloNFW::xtable = NULL;
+PosType* LensHaloNFW::ftable = NULL;
+PosType* LensHaloNFW::gtable = NULL;
+PosType* LensHaloNFW::g2table = NULL;
+PosType* LensHaloNFW::htable = NULL;
 
 LensHaloNFW::LensHaloNFW()
 : LensHalo(), gmax(0)
@@ -118,13 +118,13 @@ LensHaloNFW::LensHaloNFW(InputParams& params)
 void LensHaloNFW::make_tables(){
 	if(count == 0){
 		int i;
-		double x, dx = maxrm/(double)NTABLE;
+		PosType x, dx = maxrm/(PosType)NTABLE;
 
-		xtable = new double[NTABLE];
-		ftable = new double[NTABLE];
-		gtable = new double[NTABLE];
-		g2table = new double[NTABLE];
-		htable = new double[NTABLE];
+		xtable = new PosType[NTABLE];
+		ftable = new PosType[NTABLE];
+		gtable = new PosType[NTABLE];
+		g2table = new PosType[NTABLE];
+		htable = new PosType[NTABLE];
 
 		for(i = 0 ; i< NTABLE; i++){
 			x = i*dx;
@@ -138,7 +138,7 @@ void LensHaloNFW::make_tables(){
   count++;
 }
 
-double LensHaloNFW::InterpolateFromTable(double *table, double y){
+PosType LensHaloNFW::InterpolateFromTable(PosType *table, PosType y){
 	int j;
 	j=(int)(y/maxrm*NTABLE);
 
@@ -189,18 +189,18 @@ void LensHaloNFW::initFromFile(float my_mass, long *seed, float vmax, float r_ha
     gmax = InterpolateFromTable(gtable,xmax);
 }
 
-void LensHaloNFW::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, double my_slope, long* seed)
+void LensHaloNFW::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long* seed)
 {
 	LensHalo::initFromMassFunc(my_mass, my_Rmax, my_rscale, my_slope, seed);
     gmax = InterpolateFromTable(gtable,xmax);
 }
 
 const long LensHaloPseudoNFW::NTABLE = 10000;
-const double LensHaloPseudoNFW::maxrm = 100.0;
+const PosType LensHaloPseudoNFW::maxrm = 100.0;
 int LensHaloPseudoNFW::count = 0;
 
-double* LensHaloPseudoNFW::xtable = NULL;
-double* LensHaloPseudoNFW::mhattable = NULL;
+PosType* LensHaloPseudoNFW::xtable = NULL;
+PosType* LensHaloPseudoNFW::mhattable = NULL;
 
 LensHaloPseudoNFW::LensHaloPseudoNFW()
 : LensHalo()
@@ -215,7 +215,7 @@ LensHaloPseudoNFW::LensHaloPseudoNFW(InputParams& params)
 
 /// Auxiliary function for PseudoNFW profile
 // previously defined in tables.cpp
-double LensHaloPseudoNFW::mhat(double y, double beta){
+PosType LensHaloPseudoNFW::mhat(PosType y, PosType beta){
   if(y==0) y=1e-5;
 	if(beta == 1.0) return y - log(1+y);
 	if(beta == 2.0) return log(1+y) - y/(1+y);
@@ -231,10 +231,10 @@ double LensHaloPseudoNFW::mhat(double y, double beta){
 void LensHaloPseudoNFW::make_tables(){
 	if(count == 0){
 		int i;
-		double x, dx = maxrm/(double)NTABLE;
+		PosType x, dx = maxrm/(PosType)NTABLE;
 
-		xtable = new double[NTABLE];
-		mhattable = new double[NTABLE];
+		xtable = new PosType[NTABLE];
+		mhattable = new PosType[NTABLE];
 
 		for(i = 0 ; i< NTABLE; i++){
 			x = i*dx;
@@ -246,7 +246,7 @@ void LensHaloPseudoNFW::make_tables(){
 	}
 }
 
-double LensHaloPseudoNFW::InterpolateFromTable(double y){
+PosType LensHaloPseudoNFW::InterpolateFromTable(PosType y){
 	int j;
 	j=(int)(y/maxrm*NTABLE);
 
@@ -255,7 +255,7 @@ double LensHaloPseudoNFW::InterpolateFromTable(double y){
 	return (mhattable[j+1]-mhattable[j])/(xtable[j+1]-xtable[j])*(y-xtable[j]) + mhattable[j];
 }
 
-void LensHaloPseudoNFW::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, double my_slope, long *seed){
+void LensHaloPseudoNFW::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed){
 	LensHalo::initFromMassFunc(my_mass,my_Rmax,my_rscale,my_slope,seed);
 	beta = my_slope;
   xmax = my_Rmax/my_rscale;
@@ -282,18 +282,16 @@ LensHaloPseudoNFW::~LensHaloPseudoNFW(){
 
 
 LensHaloPowerLaw::LensHaloPowerLaw() : LensHalo(){
-	rscale = 1.0;
-  beta = -2;
-  xmax = 1.0;
+  beta = -1;
+	rscale = xmax = 1.0;
 }
 
 LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
 	assignParams(params);
-  rscale = 1.0;
-  xmax = 1.0;
+  rscale = xmax = 1.0;
 }
 
-void LensHaloPowerLaw::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, double my_slope, long *seed){
+void LensHaloPowerLaw::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed){
 	LensHalo::initFromMassFunc(my_mass,my_Rmax,my_rscale,my_slope,seed);
 	beta = my_slope;
     xmax = my_Rmax/my_rscale;
@@ -303,7 +301,7 @@ void LensHaloPowerLaw::assignParams(InputParams& params){
 	if(!params.get("main_mass",mass)) error_message1("main_mass",params.filename());
 	if(!params.get("main_Rmax",Rmax)) error_message1("main_Rmax",params.filename());
 	if(!params.get("main_zlens",zlens)) error_message1("main_zlens",params.filename());
-	if(!params.get("main_slope",beta)) error_message1("main_slope",params.filename());
+	if(!params.get("main_slope",beta)) error_message1("main_slope, example -1",params.filename());
 
 	if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
     else if(stars_N){
@@ -376,18 +374,18 @@ void LensHaloSimpleNSIE::initFromFile(float my_mass, long *seed, float vmax, flo
 	initFromMass(my_mass,seed);
 }
 
-void LensHaloSimpleNSIE::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, double my_slope, long *seed){
+void LensHaloSimpleNSIE::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed){
 	initFromMass(my_mass,seed);
 }
 
 void LensHalo::force_halo(
-		double *alpha     /// mass/Mpc
-				,KappaType *kappa
-				,KappaType *gamma
-				,double *xcm
-				,bool kappa_off
-				,bool subtract_point /// if true contribution from a point mass is subtracted
-				){
+	PosType *alpha     /// mass/Mpc
+    ,KappaType *kappa
+    ,KappaType *gamma
+    ,double *xcm
+    ,bool kappa_off
+    ,bool subtract_point /// if true contribution from a point mass is subtracted
+    ){
 	double q = 0.8; // TODO read theta and q from param file!!!
 
 	if (q==1.0){
@@ -405,25 +403,25 @@ void LensHalo::force_halo(
 
 
 void LensHalo::force_halo_sym(
-		double *alpha     /// mass/Mpc
+		PosType *alpha     /// mass/Mpc
 		,KappaType *kappa
 		,KappaType *gamma
-		,double *xcm
+		,PosType *xcm
 		,bool kappa_off
 		,bool subtract_point /// if true contribution from a point mass is subtracted
 		){
 
-	double rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
+	PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
 	if(rcm2 < 1e-20) rcm2 = 1e-20;
 
 	/// intersecting, subtract the point particle
 	if(rcm2 < Rmax*Rmax){
-		double prefac = mass/rcm2/pi;
-		double x = sqrt(rcm2)/rscale;
-		//double xmax = Rmax/rscale;
+		PosType prefac = mass/rcm2/pi;
+		PosType x = sqrt(rcm2)/rscale;
+		//PosType xmax = Rmax/rscale;
 
-    //double tmp = (alpha_h(x,xmax) + 1.0*subtract_point)*prefac;
-		double tmp = (alpha_h(x) + 1.0*subtract_point)*prefac;
+    //PosType tmp = (alpha_h(x,xmax) + 1.0*subtract_point)*prefac;
+		PosType tmp = (alpha_h(x) + 1.0*subtract_point)*prefac;
 		alpha[0] += tmp*xcm[0];
 		alpha[1] += tmp*xcm[1];
 
@@ -443,13 +441,13 @@ void LensHalo::force_halo_sym(
 	{
 		if (subtract_point == false)
 		{
-			double prefac = mass/rcm2/pi;
+			PosType prefac = mass/rcm2/pi;
 			alpha[0] += -1.0*prefac*xcm[0];
 			alpha[1] += -1.0*prefac*xcm[1];
 
 			// can turn off kappa and gamma calculations to save times
 			if(!kappa_off){
-				double tmp = -2.0*prefac/rcm2;
+				PosType tmp = -2.0*prefac/rcm2;
 
 				gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 				gamma[1] += xcm[0]*xcm[1]*tmp;
@@ -467,7 +465,7 @@ void LensHalo::force_halo_sym(
 }
 
 void LensHalo::force_halo_asym(
-		double *alpha     /// mass/Mpc
+		PosType *alpha     /// mass/Mpc
 		,KappaType *kappa
 		,KappaType *gamma
 		,double *xcm
@@ -556,39 +554,43 @@ void LensHalo::force_halo_asym(
 
 
 
+/*
+
 void LensHaloSimpleNSIE::force_halo(
-		double *alpha
+		PosType *alpha
 		,KappaType *kappa
 		,KappaType *gamma
-		,double *xcm
+		,PosType *xcm
 		,bool no_kappa
 		,bool subtract_point /// if true contribution from a point mass is subtracted
 ){
 
-	double rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
+	PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
 	if(rcm2 < 1e-20) rcm2 = 1e-20;
 
   //**** test line
 
 	if(rcm2 < Rmax*Rmax){
-		double ellipR = ellipticRadiusNSIE(xcm,fratio,pa);
+		PosType ellipR = ellipticRadiusNSIE(xcm,fratio,pa);
 		if(ellipR > Rsize){
 			// This is the case when the ray is within the NSIE's circular region of influence but outside its elliptical truncation
 
-			double alpha_out[2],alpha_in[2],rin,x_in[2];
-			double prefac = -1.0*mass/Rmax/pi;
-			double r = sqrt(rcm2);
+			PosType alpha_out[2],alpha_in[2],rin,x_in[2];
+			PosType prefac = -1.0*mass/Rmax/pi;
+			PosType r = sqrt(rcm2);
+			float units = pow(sigma/lightspeed,2)/Grav/sqrt(fratio); // mass/distance(physical)
 
+ 			alpha_in[0] = alpha_in[1] = 0;
+     
+      rin = r*Rsize/ellipR;
+     
 			alpha_out[0] = prefac*xcm[0]/r;
 			alpha_out[1] = prefac*xcm[1]/r;
 
-			rin = r*Rsize/ellipR;
 
 			x_in[0] = rin*xcm[0]/r;
 			x_in[1] = rin*xcm[1]/r;
 
-			alpha_in[0] = alpha_in[1] = 0;
-			float units = pow(sigma/lightspeed,2)/Grav/sqrt(fratio); // mass/distance(physical)
 			alphaNSIE(alpha_in,x_in,fratio,rcore,pa);
 			alpha_in[0] *= units;  // minus sign removed because already included in alphaNSIE
 			alpha_in[1] *= units;
@@ -597,10 +599,11 @@ void LensHaloSimpleNSIE::force_halo(
 			alpha[1] += (r - rin)*(alpha_out[1] - alpha_in[1])/(Rmax - rin) + alpha_in[1];
 			//alpha[0] -= (r - rin)*(alpha_out[0] - alpha_in[0])/(Rmax - rin) + alpha_in[0];
 			//alpha[1] -= (r - rin)*(alpha_out[1] - alpha_in[1])/(Rmax - rin) + alpha_in[1];
+      
 			if(!no_kappa){
         // TODO: this makes the kappa and gamma disagree with the alpha as calculated above
 				KappaType tmp[2]={0,0};
-        double xt[2]={0,0};
+        PosType xt[2]={0,0};
         float units = pow(sigma/lightspeed,2)/Grav/sqrt(fratio); // mass/distance(physical)
         xt[0]=xcm[0];
         xt[1]=xcm[1];
@@ -612,7 +615,7 @@ void LensHaloSimpleNSIE::force_halo(
 			}
 
 		}else{
-			double xt[2]={0,0},tmp[2]={0,0};
+			PosType xt[2]={0,0},tmp[2]={0,0};
 			float units = pow(sigma/lightspeed,2)/Grav/sqrt(fratio); // mass/distance(physical)
 			xt[0]=xcm[0];
 			xt[1]=xcm[1];
@@ -636,13 +639,13 @@ void LensHaloSimpleNSIE::force_halo(
 	{
 		if (subtract_point == false)
 		{
-			double prefac = mass/rcm2/pi;
+			PosType prefac = mass/rcm2/pi;
 			alpha[0] += -1.0*prefac*xcm[0];
 			alpha[1] += -1.0*prefac*xcm[1];
 
 			// can turn off kappa and gamma calculations to save times
 			if(!no_kappa){
-				double tmp = -2.0*prefac/rcm2;
+				PosType tmp = -2.0*prefac/rcm2;
 
 				gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 				gamma[1] += xcm[0]*xcm[1]*tmp;
@@ -652,7 +655,7 @@ void LensHaloSimpleNSIE::force_halo(
 
 
 	if(subtract_point){
-		double fac = mass/rcm2/pi;
+		PosType fac = mass/rcm2/pi;
 		alpha[0] += fac*xcm[0];
 		alpha[1] += fac*xcm[1];
 
@@ -673,16 +676,141 @@ void LensHaloSimpleNSIE::force_halo(
 
        return;
 }
+*/
+void LensHaloSimpleNSIE::force_halo(
+                                    PosType *alpha
+                                    ,KappaType *kappa
+                                    ,KappaType *gamma
+                                    ,PosType *xcm
+                                    ,bool no_kappa
+                                    ,bool subtract_point /// if true contribution from a point mass is subtracted
+                                    ){
+  
+	PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
+	if(rcm2 < 1e-20) rcm2 = 1e-20;
+  
+  //**** test line
+  
+	if(rcm2 < Rmax*Rmax){
+		PosType ellipR = ellipticRadiusNSIE(xcm,fratio,pa);
+		if(rcm2 > Rsize*Rsize){
+			// This is the case when the ray is within the NSIE's circular region of influence but outside its elliptical truncation
+      
+			PosType alpha_iso[2],alpha_ellip[2];
+			PosType prefac = -1.0*mass/Rmax/pi;
+			PosType r = sqrt(rcm2);
+			float units = pow(sigma/lightspeed,2)/Grav/sqrt(fratio); // mass/distance(physical)
+      
+      double f1 = (Rmax - r)/(Rmax - Rsize),f2 = (r - Rsize)/(Rmax - Rsize);
+    
+      // SIE solution
+ 			alpha_ellip[0] = alpha_ellip[1] = 0;
+      alphaNSIE(alpha_ellip,xcm,fratio,rcore,pa);
+      alpha_ellip[0] *= units;
+      alpha_ellip[1] *= units;
+      
+      /*/ SIS solution
+      alpha_iso[0] = alpha_iso[1] = 0;
+      alphaNSIE(alpha_iso,xcm,1,rcore,pa);
+      alpha_iso[0] *= units;
+      alpha_iso[1] *= units;
+      //*/
+      
+      // point mass solution
+      //PosType tmp = mass/rcm2/pi;
+      PosType tmp = mass/Rmax/pi/r;
+			alpha_iso[0] = -1.0*tmp*xcm[0];
+			alpha_iso[1] = -1.0*tmp*xcm[1];
+
+			alpha[0] += alpha_iso[0]*f2 + alpha_ellip[0]*f1;
+			alpha[1] += alpha_iso[1]*f2 + alpha_ellip[1]*f1;
+      
+			// can turn off kappa and gamma calculations to save times
+			if(!no_kappa){
+				PosType tmp = -2.0*prefac/rcm2;
+        
+				gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp*f2;
+				gamma[1] += xcm[0]*xcm[1]*tmp*f2;
+
+        KappaType tmp_k[2]={0,0};
+				*kappa += units*kappaNSIE(xcm,fratio,rcore,pa)*f1;
+				gammaNSIE(tmp_k,xcm,fratio,rcore,pa);
+				gamma[0] += units*tmp_k[0]*f1;
+				gamma[1] += units*tmp_k[1]*f1;
+			}
+      
+		}else{
+			PosType xt[2]={0,0},tmp[2]={0,0};
+			float units = pow(sigma/lightspeed,2)/Grav/sqrt(fratio); // mass/distance(physical)
+			xt[0]=xcm[0];
+			xt[1]=xcm[1];
+			alphaNSIE(tmp,xt,fratio,rcore,pa);
+      
+			//alpha[0] = units*tmp[0];  // minus sign removed because already included in alphaNSIE
+			//alpha[1] = units*tmp[1];  // Why was the "+=" removed?
+			alpha[0] += units*tmp[0];
+			alpha[1] += units*tmp[1];
+      
+			if(!no_kappa){
+				KappaType tmp[2]={0,0};
+				*kappa += units*kappaNSIE(xt,fratio,rcore,pa);
+				gammaNSIE(tmp,xt,fratio,rcore,pa);
+				gamma[0] += units*tmp[0];
+				gamma[1] += units*tmp[1];
+			}
+		}
+
+    if(subtract_point){
+      PosType fac = mass/rcm2/pi;
+      alpha[0] += fac*xcm[0];
+      alpha[1] += fac*xcm[1];
+      
+      // can turn off kappa and gamma calculations to save times
+      if(!no_kappa){
+        fac = 2.0*fac/rcm2;
+        
+        gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*fac;
+        gamma[1] += xcm[0]*xcm[1]*fac;
+      }
+    }
+    
+	}
+	else
+	{  // outside of the halo
+		if (subtract_point == false)
+		{
+			PosType prefac = mass/rcm2/pi;
+			alpha[0] += -1.0*prefac*xcm[0];
+			alpha[1] += -1.0*prefac*xcm[1];
+      
+			// can turn off kappa and gamma calculations to save times
+			if(!no_kappa){
+				PosType tmp = -2.0*prefac/rcm2;
+        
+				gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+				gamma[1] += xcm[0]*xcm[1]*tmp;
+			}
+		}
+	}
+  
+  
+  // add stars for microlensing
+  if(stars_N > 0 && stars_implanted){
+    force_stars(alpha,kappa,gamma,xcm,no_kappa);
+  }
+  
+  return;
+}
 
 const long LensHaloHernquist::NTABLE = 10000;
-const double LensHaloHernquist::maxrm = 100.0;
+const PosType LensHaloHernquist::maxrm = 100.0;
 int LensHaloHernquist::count = 0;
 
-double* LensHaloHernquist::xtable = NULL;
-double* LensHaloHernquist::ftable = NULL;
-double* LensHaloHernquist::gtable = NULL;
-double* LensHaloHernquist::g2table = NULL;
-double* LensHaloHernquist::htable = NULL;
+PosType* LensHaloHernquist::xtable = NULL;
+PosType* LensHaloHernquist::ftable = NULL;
+PosType* LensHaloHernquist::gtable = NULL;
+PosType* LensHaloHernquist::g2table = NULL;
+PosType* LensHaloHernquist::htable = NULL;
 
 LensHaloHernquist::LensHaloHernquist()
 : LensHalo(), gmax(0)
@@ -701,13 +829,13 @@ LensHaloHernquist::LensHaloHernquist(InputParams& params)
 void LensHaloHernquist::make_tables(){
 	if(count == 0){
 		int i;
-		double x, dx = maxrm/(double)NTABLE;
+		PosType x, dx = maxrm/(PosType)NTABLE;
 
-		xtable = new double[NTABLE];
-		ftable = new double[NTABLE];
-		gtable = new double[NTABLE];
-		htable = new double[NTABLE];
-		g2table = new double[NTABLE];
+		xtable = new PosType[NTABLE];
+		ftable = new PosType[NTABLE];
+		gtable = new PosType[NTABLE];
+		htable = new PosType[NTABLE];
+		g2table = new PosType[NTABLE];
 
 		for(i = 0 ; i< NTABLE; i++){
 			x = i*dx;
@@ -722,7 +850,7 @@ void LensHaloHernquist::make_tables(){
   count++;
 }
 
-double LensHaloHernquist::InterpolateFromTable(double *table, double y){
+PosType LensHaloHernquist::InterpolateFromTable(PosType *table, PosType y){
 	int j;
 	j=(int)(y/maxrm*NTABLE);
 
@@ -765,14 +893,14 @@ LensHaloHernquist::~LensHaloHernquist(){
 }
 
 const long LensHaloJaffe::NTABLE = 10000;
-const double LensHaloJaffe::maxrm = 100.0;
+const PosType LensHaloJaffe::maxrm = 100.0;
 int LensHaloJaffe::count = 0;
 
-double* LensHaloJaffe::xtable = NULL;
-double* LensHaloJaffe::ftable = NULL;
-double* LensHaloJaffe::gtable = NULL;
-double* LensHaloJaffe::g2table = NULL;
-//double* LensHaloJaffe::htable = NULL;
+PosType* LensHaloJaffe::xtable = NULL;
+PosType* LensHaloJaffe::ftable = NULL;
+PosType* LensHaloJaffe::gtable = NULL;
+PosType* LensHaloJaffe::g2table = NULL;
+//PosType* LensHaloJaffe::htable = NULL;
 
 LensHaloJaffe::LensHaloJaffe()
 : LensHalo(), gmax(0)
@@ -791,13 +919,13 @@ LensHaloJaffe::LensHaloJaffe(InputParams& params)
 void LensHaloJaffe::make_tables(){
 	if(count == 0){
 		int i;
-		double x, dx = maxrm/(double)NTABLE;
+		PosType x, dx = maxrm/(PosType)NTABLE;
 
-		xtable = new double[NTABLE];
-		ftable = new double[NTABLE];
-		gtable = new double[NTABLE];
-		g2table = new double[NTABLE];
-		//htable = new double[NTABLE];
+		xtable = new PosType[NTABLE];
+		ftable = new PosType[NTABLE];
+		gtable = new PosType[NTABLE];
+		g2table = new PosType[NTABLE];
+		//htable = new PosType[NTABLE];
 
 		for(i = 0 ; i< NTABLE; i++){
 			x = i*dx;
@@ -811,7 +939,7 @@ void LensHaloJaffe::make_tables(){
   count++;
 }
 
-double LensHaloJaffe::InterpolateFromTable(double *table, double y){
+PosType LensHaloJaffe::InterpolateFromTable(PosType *table, PosType y){
 	int j;
 	j=(int)(y/maxrm*NTABLE);
 
@@ -868,7 +996,7 @@ LensHaloDummy::LensHaloDummy(InputParams& params)
 //	mass = 0.;
 }
 
-void LensHaloDummy::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, double my_slope, long *seed){
+void LensHaloDummy::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed){
 	mass = 1.e-10;
 	Rmax = my_Rmax;
 	rscale = my_rscale;
@@ -876,15 +1004,15 @@ void LensHaloDummy::initFromMassFunc(float my_mass, float my_Rmax, float my_rsca
 }
 
 
-void LensHaloDummy::force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa,bool subtract_point)
+void LensHaloDummy::force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xcm,bool no_kappa,bool subtract_point)
 {
-	double rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
-	double prefac = mass/rcm2/pi;
-	double tmp = subtract_point*prefac;
+	PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
+	PosType prefac = mass/rcm2/pi;
+	PosType tmp = subtract_point*prefac;
 	alpha[0] += tmp*xcm[0];
 	alpha[1] += tmp*xcm[1];
   if(subtract_point){
-    double x = sqrt(rcm2)/rscale;
+    PosType x = sqrt(rcm2)/rscale;
 
     // can turn off kappa and gamma calculations to save times
     if(!no_kappa){
@@ -913,7 +1041,7 @@ std::size_t LensHalo::Nparams() const
 	return 0;
 }
 
-double LensHalo::getParam(std::size_t p) const
+PosType LensHalo::getParam(std::size_t p) const
 {
 	switch(p)
 	{
@@ -922,8 +1050,7 @@ double LensHalo::getParam(std::size_t p) const
 	}
 }
 
-
-double LensHalo::setParam(std::size_t p, double val)
+PosType LensHalo::setParam(std::size_t p, PosType val)
 {
 	switch(p)
 	{
