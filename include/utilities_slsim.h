@@ -889,7 +889,88 @@ namespace Utilities
     
   };
   
-  
+  /***************************************************************/
+  /*** isolated integrator used for cosmological calculations ***/
+  /***************************************************************/
+  template <typename T>
+  double trapz(T &func, double a, double b, int n, double *s2)
+  {
+    double x,tnm,del,sum;
+    int it,j;
+    
+    if (n == 1) {
+      return (*s2=0.5*(b-a)*( func(a) + func(b) ));
+    } else {
+      
+      for (it=1,j=1;j<n-1;j++) it <<= 1;
+      tnm=it;
+      del=(b-a)/tnm;
+      x=a+0.5*del;
+      for (sum=0.0,j=1;j<=it;j++,x+=del) sum += func(x);
+      *s2=0.5*(*s2+(b-a)*sum/tnm);
+      
+      return *s2;
+    }
+  }
+  /** \brief Numerical integrator.  The class or structure T must have a () operator that returns
+   a double.  Other access functions or public variable can be used instead of global variables
+   to change variables within the integrand.
+   
+   <pre>
+   example:
+   
+   struct Function{
+   
+   Function(double my_a,double my_b): a(my_a),b(my_b){};
+   double a;
+   double b;
+   
+   
+   double operator = (double x) { return a*x + b*x*x;}
+   }
+   
+   ..............................
+   
+   
+   
+   Function f(21,23.1);
+   
+   f.a = 3;
+   f.b = 10.3;
+   
+   result = Utilities::nintegrate<Function>(f,1.0e-2,1.0e4,1.0e-4);
+   
+   <\pre>
+   */
+  template <typename T>
+  double nintegrate(
+                    T &func        /// struct or class to be integrated
+                    ,double a      /// limit of integrations
+                    ,double b      /// limit of integrations
+                    ,double tols   /// target fractional error
+                    )
+  {
+    const int JMAX = 34,K=6;
+    const int JMAXP = JMAX+1;
+    
+    double ss,dss;
+    double s2[JMAXP],h2[JMAXP+1];
+    double ss2=0;
+    
+    h2[1]=1.0;
+    for (int j=1;j<=JMAX;j++) {
+      s2[j] = Utilities::trapz<T>(func,a,b,j,&ss2);
+      if (j>=K) {
+        polintD(&h2[j-K],&s2[j-K],K,0.0,&ss,&dss);
+        if(fabs(dss) <= tols*fabs(ss)) return ss;
+      }
+      h2[j+1]=0.25*h2[j];
+    }
+    std::cout << "s2= "; for(int j=1;j<=JMAX;j++) std::cout << s2[j] << "  ";
+    std::cout << std::endl << "Too many steps in routine nintegrate<>\n";
+    return 0.0;
+  }
+
 
 }
 
