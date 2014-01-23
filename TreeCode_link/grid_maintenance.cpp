@@ -22,10 +22,10 @@ Grid::Grid(
 		,unsigned long N1d           /// Initial number of grid points in each dimension.
 		,const PosType center[2]  /// Center of grid.
 		,PosType range      /// Full width of grid in whatever units will be used.
-		 ){
+           ): Ngrid_init(N1d),Ngrid_block(3),axisratio(1.0){
 
 	Point *i_points,*s_points;
-  pointID = 0;
+    pointID = 0;
 
 	assert(N1d > 0);
 	assert(range > 0);
@@ -36,11 +36,7 @@ Grid::Grid(
 	  ERROR_MESSAGE();
 	  std::printf("ERROR: Grid cannot be initialized with pixels less than a power of 2\n");
 	  exit(1);
-  }
-
-	Ngrid_init = N1d;
-	Ngrid_block = 3;  // never been tested with anything other than 3
-	
+  }	
 
 	i_points = NewPointArray(Ngrid_init*Ngrid_init,true);
 	xygridpoints(i_points,range,center,Ngrid_init,0);
@@ -59,6 +55,76 @@ Grid::Grid(
 	neighbors = new Kist<Point>;
 	maglimit = 1.0e-4;
   
+}
+
+Grid::Grid(
+           LensHndl lens       /// lens model for initializing grid
+           ,unsigned long Nx   /// Initial number of grid points in X dimension.
+           ,const PosType center[2]  /// Center of grid.
+           ,PosType rangeX   /// Full width of grid in x direction in whatever units will be used.
+           ,PosType rangeY  /// Full width of grid in y direction in whatever units will be used.
+           ): Ngrid_init(Nx),Ngrid_block(3),axisratio(rangeY/rangeX){
+    
+	Point *i_points,*s_points;
+    pointID = 0;
+    
+	assert(Nx > 0);
+	assert(rangeX > 0 && rangeY >0);
+    
+	if(Nx <= 0){ERROR_MESSAGE();
+        std::cout << "cannot make Grid with no points" << std::endl;
+        throw std::runtime_error("");
+    }
+	if(rangeX <= 0 || rangeY <= 0 ){ERROR_MESSAGE();
+        throw std::runtime_error("");
+        std::cout << "cannot make Grid with no range" << std::endl;
+    }
+
+    if(Ngrid_init % 2 == 1 ) ++Ngrid_init;
+	
+    unsigned long Ngrid_init2 = (long)(Ngrid_init*axisratio);
+    if(Ngrid_init2 % 2 == 1) ++Ngrid_init2;
+    
+	i_points = NewPointArray(Ngrid_init*Ngrid_init2,true);
+    
+    size_t i;
+    // set grid of positions
+    for(size_t ii=0;ii<Ngrid_init;++ii){
+        for(size_t jj=0;jj<Ngrid_init2;++jj){
+
+            i = ii + jj*Ngrid_init;
+            
+            i_points[i].id=pointID;
+            ++pointID;
+            
+            i_points[i].x[0] = center[0] + rangeX*ii/(Ngrid_init-1) - 0.5*rangeX;
+            i_points[i].x[1] = center[1] + rangeX*jj/(Ngrid_init-1) - 0.5*rangeY;
+            i_points[i].gridsize=rangeX/(Ngrid_init-1);
+        }
+    }
+
+    assert(i == Ngrid_init*Ngrid_init2);
+ 
+	s_points=LinkToSourcePoints(i_points,Ngrid_init*Ngrid_init2);
+    
+    {
+        std::lock_guard<std::mutex> hold(grid_mutex);
+        lens->rayshooterInternal(Ngrid_init*Ngrid_init2,i_points,false);
+    }
+    
+    *** make sure that the median cut really works on a grid of points
+    when there are many points with the same coordinate values
+    
+    *** need to worry about the reShoot() function
+    
+	// Build trees
+	i_tree = new TreeStruct(i_points,Ngrid_init*Ngrid_init2);
+	s_tree = new TreeStruct(s_points,Ngrid_init*Ngrid_init2,1,rangeX);  // make tree on source plane with a buffer
+    
+	trashkist = new Kist<Point>;
+	neighbors = new Kist<Point>;
+	maglimit = 1.0e-4;
+    
 }
 
 /** \ingroup Constructor

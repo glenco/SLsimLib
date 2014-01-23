@@ -26,14 +26,14 @@ struct Grid{
 	~Grid();
 
 	void ReInitializeGrid(LensHndl lens);
-  void ReShoot(LensHndl lens);
+    void ReShoot(LensHndl lens);
 	void zoom(LensHndl lens,double *center,double scale,bool kappa_off,Branch *top = NULL);
 
 	unsigned long PruneTrees(double resolution,bool useSB,double fluxlimit);
 	unsigned long PrunePointsOutside(double resolution,double *y,double r_in ,double r_out);
 
 	double RefreshSurfaceBrightnesses(SourceHndl source);
-  double ClearSurfaceBrightnesses();
+    double ClearSurfaceBrightnesses();
 	unsigned long getNumberOfPoints();
 
 
@@ -77,6 +77,7 @@ private:
 	bool uniform_mag_from_shooter(double *a,Point *point);
   
   unsigned long pointID;
+    PosType axisratio;
   
   static std::mutex grid_mutex;
 };
