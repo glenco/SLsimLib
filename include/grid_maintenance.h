@@ -23,6 +23,7 @@ class LensHaloMOKA;
 struct Grid{
 
 	Grid(LensHndl lens,unsigned long N1d,const double center[2],double range);
+  Grid(LensHndl lens ,unsigned long Nx ,const PosType center[2] ,PosType rangeX ,PosType rangeY);
 	~Grid();
 
 	void ReInitializeGrid(LensHndl lens);
@@ -64,6 +65,8 @@ struct Grid{
 private:
 	/// one dimensional size of initial grid
 	int Ngrid_init;
+  int Ngrid_init2;
+  
 	/// one dimensional number of cells a cell will be divided into on each refinement step
 	int Ngrid_block;
 	bool initialized;

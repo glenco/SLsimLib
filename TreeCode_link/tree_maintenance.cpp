@@ -8,9 +8,6 @@
  *      the tree.
  */
 
-/* median_cut determines how the cells are subdivided */
-/*    if ==0  equal volume cuts, Warning this option causes an error*/
-/*    if ==1  median point cuts */
 #include <iostream>     // std::cout, std::fixed
 #include <iomanip>      // std::setprecision
 
@@ -90,6 +87,13 @@ bool testLeafs(TreeHndl tree){
 
 /**
  * \brief Build a complete tree from a list of points.
+
+ <p>
+* median_cut determines how the cells are subdivided 
+*    if ==0  equal volume cuts, Warning this option causes an error
+*    if ==1  pseudo-median point cuts, never cuts through a point, but near the median
+<\p>
+ 
  */
 //TreeHndl BuildTree(Point *xp,unsigned long Npoints,short my_median_cut){
 TreeStruct::TreeStruct(Point *xp,unsigned long Npoints,short my_median_cut,PosType buffer){
@@ -418,7 +422,7 @@ void TreeStruct::_BuildTree(){
     /*points[i]=pointlist->current->id;*/
     MoveDownList(pointlist);
   }
-
+  
   /*PrintList(pointlist);*/
 
   //double_sort(cbranch->npoints,x-1,points-1);
@@ -435,10 +439,26 @@ void TreeStruct::_BuildTree(){
   if(median_cut){
     //double_sort_points(cbranch->npoints,x-1,current->points);
 	  Utilities::quicksortPoints(current->points,x,cbranch->npoints);
+    
+    if(x[0] == x[cbranch->npoints-1]){
+      dimension = !dimension;
+      /* reorder points */
+      pointlist->current=current->points;
+      for(i=0;i<cbranch->npoints;++i){
+        x[i]=pointlist->current->x[dimension];
+        MoveDownList(pointlist);
+      }
+
+      Utilities::quicksortPoints(current->points,x,cbranch->npoints);
+    }
 
 	  cut=cbranch->npoints/2;
-      branch1->boundary_p2[dimension]=(x[cut]+x[cut-1])/2;
-      branch2->boundary_p1[dimension]=(x[cut]+x[cut-1])/2;
+    size_t ii = cut-1;
+    while(x[cut] == x[ii] && ii > 0 ) --ii;  // find closest unique value
+    while(x[cut] == x[ii] && ii < cbranch->npoints - 1 ) ++ii;  // try at higher index
+   
+      branch1->boundary_p2[dimension]=(x[cut]+x[ii])/2;
+      branch2->boundary_p1[dimension]=(x[cut]+x[ii])/2;
 
   }else{
 
