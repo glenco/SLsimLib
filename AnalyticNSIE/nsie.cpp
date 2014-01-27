@@ -6,26 +6,27 @@
 */
 
 #include "base_analens.h"
+#include <complex>
 
 /** \ingroup DeflectionL2 \ingroup function
  * \brief Deflection angle for non-singular isothermal ellipsoid in units of Einstein radii
  */
 void alphaNSIE(
-		PosType *alpha /// Deflection angle in units of the Einstein radius
-		,PosType *xt   /// position on the image plane in Einstein radius units
-		,PosType f     /// axis ratio of mass
-		,PosType bc    /// core size in same units as alpha
-		,PosType theta /// position angle of ellipsoid
-		){
-
+               PosType *alpha /// Deflection angle in units of the Einstein radius
+               ,PosType *xt   /// position on the image plane in Einstein radius units
+               ,PosType f     /// axis ratio of mass
+               ,PosType bc    /// core size in same units as alpha
+               ,PosType theta /// position angle of ellipsoid
+               ){
+  
   PosType r=sqrt(xt[0]*xt[0]+xt[1]*xt[1]);
-
+  
   if( r < 1.0e-20 || r > 1.0e20){
 	  alpha[0]=0.0;
 	  alpha[1]=0.0;
 	  return;
   }
-
+  
   // deflection angle alpha has opposite sign with respect to ray position xt
   if( f==1.0 ){
     if(bc == 0.0){
@@ -37,48 +38,40 @@ void alphaNSIE(
     }
     return;
   }
-
-  PosType x[2],angle[2],fp,b2,RCphase,SCphase;
-
+  
+  PosType x[2],angle[2],fp,b2;
+  int s=0;
+  
   Utilities::rotation(x,xt,theta);
-
+  
+  if(x[0] > 0){ s = -1; x[0] *= -1;}
+  else s = 1;
+  
   fp=sqrt(1-f*f);
   b2=x[0]*x[0]+f*f*x[1]*x[1];
+  
+  std::complex<double> c_alpha(0,0),xi(0,0),c_x;
+  
+  c_x.real(x[0]);
+  c_x.imag(x[1]);
+  
+  std::complex<double> tmp = f*f*c_x*c_x - fp*fp*bc*bc;
+  xi = fp/sqrt(tmp);
+  
+  c_alpha = sqrt(f)*( asinh(xi*sqrt(b2 + bc*bc)) - asinh(xi*bc) )/fp;
 
-  PosType Qp=( pow(fp*sqrt(b2+bc*bc)+x[0],2) + f*f*f*f*x[1]*x[1] )
-    /( pow(f*r*r+fp*bc*x[0],2)+fp*fp*bc*bc*x[1]*x[1] );
-
-  PosType Qm=( pow(fp*sqrt(b2+bc*bc)-x[0],2) + f*f*f*f*x[1]*x[1] )
-    /( pow(f*r*r-fp*bc*x[0],2)+fp*fp*bc*bc*x[1]*x[1] );
-
-  //printf("Q = %e %e\n",Qp,Qm);
-
-  //PosType QpQm = ( pow(f*r*r-fp*bc*x[0],2)+fp*fp*bc*bc*x[1]*x[1] )/( pow(f*r*r+fp*bc*x[0],2)+fp*fp*bc*bc*x[1]*x[1] );
-
-  //printf(" fp=%e f=%e \n",fp,f);
-  //printf("Qp=%e Qm=%e\n",Qp,Qm);
-  //printf("Qp/Qm=%e log(Qp/Qm)=%e %e\n",Qp/Qm,log((float)(Qp/Qm)),log(6.853450e-02));
-  angle[0]=0.25*sqrt(f)*log(Qp/Qm)/fp;
-
-  //printf("angle[0]=%e Qp=%e Qm=%e\n",angle[0],Qp,Qm);
-  //exit(0);
-  RCphase=atan2(-2*f*f*fp*sqrt(b2+bc*bc)*x[1],x[0]*x[0]+pow(f*f*x[1],2)-fp*fp*(b2+bc*bc));
-  SCphase=atan2(-2*f*fp*bc*x[1],f*f*r*r-fp*fp*bc*bc);
-
-  //RCphase=atan((-2*f*f*fp*sqrt(b2+bc*bc)*x[1])/(x[0]*x[0]+pow(f*f*x[1],2)-fp*fp*(b2+bc*bc)));
-  //SCphase=atan(-2*f*fp*bc*x[1]/(f*f*r*r-fp*fp*bc*bc));
-
-  angle[1]= -0.5*sqrt(f)*(RCphase-SCphase)/fp;
-
-  Utilities::rotation(alpha,angle,-theta);
-
-  alpha[0] = -1.0*alpha[0];
-  alpha[1] = -1.0*alpha[1];
-
+  alpha[0] = s*c_alpha.real();
+  alpha[1] = -c_alpha.imag();
+  
+  Utilities::rotation(alpha,alpha,-theta);
+  
+  //alpha[0] *= -1.0;
+  //alpha[1] *= -1.0;
+  
   if(alpha[0] != alpha[0] || alpha[1] != alpha[1] ){
 	  printf("alpha is %e %e in nsie.c \n fp=%e b2=%e r=%e bc=%e f=%e theta=%e\n x = %e %e xt= %e %e\n"
-			  ,alpha[0],alpha[1],fp,b2,r,bc,f,theta,x[0],x[1],xt[0],xt[1]);
-	  printf("angle=%e %e Qp=%e Qm=%e RCphase=%e SCphase=%e\n",angle[0],angle[1],Qp,Qm,RCphase,SCphase);
+           ,alpha[0],alpha[1],fp,b2,r,bc,f,theta,x[0],x[1],xt[0],xt[1]);
+	  printf("angle=%e %e\n",angle[0],angle[1]);
 	  ERROR_MESSAGE();
 	  throw std::runtime_error("Invalid input to alphaNSIE");
 	  alpha[0]=alpha[1]=0;

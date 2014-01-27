@@ -245,7 +245,7 @@ void combineCloseImages(PosType linkinglength,ImageInfo *imageinfo,int *Nimages
 void SwapImages(ImageInfo *image1,ImageInfo *image2);
 void SwapImages(OldImageInfo *image1,OldImageInfo *image2);
 void PrintImages(ImageInfo *images,long Nimages);
-void PrintImageInfo(ImageInfo *image);
+//void PrintImageInfo(ImageInfo *image);
 
 // routines using tree
 
