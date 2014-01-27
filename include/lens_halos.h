@@ -75,8 +75,10 @@ public:
   };
 	/// set slope
 	virtual void set_slope(PosType my_slope){};
-
-	/// set cosmology for halo
+    /// set mode number for making elliptical
+    void set_mode(int n){mode_number=n;}
+    
+    /// set cosmology for halo
 	virtual void setCosmology(const COSMOLOGY& cosmo) {}
 	
 	/// calculate the lensing properties -- deflection, convergence, and shear
@@ -117,6 +119,8 @@ public:
 
 	/// Prints star parameters; if show_stars is true, prints data for single stars
 	void PrintStars(bool show_stars) const;
+    
+    
 
 protected:
   
@@ -182,16 +186,20 @@ protected:
   void felliptical(PosType x, PosType q, PosType theta, PosType f[], PosType g[]);
 
 	virtual double gamma_asym(double x,double theta);
-	virtual double kappa_asym(double x,double theta);
+	virtual double kappa_asym(PosType x,PosType theta);
 	virtual double alpha_asym(double x,double theta);
     void setEllipModes(double q,double theta);
-    void fangular(double theta,double f[]);
+    virtual double fourier_coeff(int n);
+    void calcModes(double q, double beta, double rottheta);
+    void fangular(PosType theta,PosType f[]);
 
   const static int Nmod = 18;
-  PosType mod[18];
+  int mode_number;
+  PosType mod[Nmod];
   PosType r_eps;
   
   PosType zlens;
+ 
 };
 
 /** \ingroup DeflectionL2
@@ -363,6 +371,8 @@ public:
 	void set_slope(PosType my_slope){beta=my_slope;};
 	/// initialize from a mass function
 	void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed);
+    
+    
 
 private:
 	/// read-in parameters from the parameter file

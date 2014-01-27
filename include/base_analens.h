@@ -190,6 +190,10 @@ void alphaPowLaw(PosType *alpha,PosType *x,PosType R,PosType mass,PosType beta,P
 KappaType kappaPowLaw(PosType *x,PosType R,PosType mass,PosType beta,PosType *center,PosType Sigma_crit);
 void gammaPowLaw(KappaType *gamma,PosType *x,PosType R,PosType mass,PosType beta,PosType *center,PosType Sigma_crit);
 KappaType phiPowLaw(PosType *x,PosType R,PosType mass,PosType beta,PosType *center,PosType Sigma_crit);
+double fourier_func(double theta);
+
+//double fourier_func(PosType theta, PosType q, PosType beta, int n);
+
 
 // in nfw_lens.c
 void alphaNFW(PosType *alpha,PosType *x,PosType Rtrunc,PosType mass,PosType r_scale

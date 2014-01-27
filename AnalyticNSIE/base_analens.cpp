@@ -351,13 +351,15 @@ void LensHalo::setModesToEllip(PosType q,PosType theta){
 	PosType E = K - (1-1./q/q)*rdD(0,1./q/q,1)/3;
   assert(Nmod == 18);
   
+    
+    
   // set modo to elliptical model
 	for(int i=1;i<=Nmod;++i){
 		mod[i]=0.0;
 	}
 	// fill in modes with their values for an elliptical lens
 	if(q != 1.0){
-		mod[3] = 4*K/pi;
+		mod[3] = 4*K/pi; // /2?
 		mod[4] = 4*( (1+q*q)*K-2*q*q*E )/(1-q*q)/pi/mod[3];
 		mod[8] = 4*( (3*q*q+1)*(q*q+3)*K-8*q*q*(1+q*q)*E )/( 3*pi*pow(1-q*q,2) )/mod[3];
 		mod[12]= 4*( (1+q*q)*(15+98*q*q+15*q*q*q*q)*K-2*q*q*(23+82*q*q+23*q*q*q*q)*E )/( 15*pi*pow(1-q*q,3) )/mod[3];
@@ -371,24 +373,11 @@ void LensHalo::setModesToEllip(PosType q,PosType theta){
   return;
 }
 
-/// Derivatives of the axial potential factor with respect to theta
-void LensHalo::faxial(PosType theta,PosType f[]){
-  int i,k;
-  
-  //f[0] = 0.5*mod[3]; // why is it commented out?
-  f[0] = f[1] = f[2] = 0;
-  for(i=4;i<Nmod;i+=2){
-    k=i/2;
-    f[0] +=  mod[i]*cos(k*theta)     + mod[i+1]*sin(k*theta);
-    f[1] += -mod[i]*k*sin(k*theta)   + mod[i+1]*k*cos(k*theta);
-    f[2] += -mod[i]*k*k*cos(k*theta) - mod[i+1]*k*k*sin(k*theta);
-  }
 
-}
 
 /// Derivatives of the axial potential factor with respect to theta
 
-void LensHalo::fangular(double theta,double f[]){
+void LensHalo::fangular(PosType theta,PosType f[]){
   int i,k;
 
   for(i=0;i<=Nmod/2;++i){
@@ -453,39 +442,68 @@ void LensHalo::desymmeterize(PosType r,PosType theta,PosType *alpha,PosType *kap
   
 }
 
+
+
+
+double LensHalo::fourier_coeff(int n){
+    set_mode(n);
+    return nintegrateD(&fourier_func, 0,2*pi,1e-9);
+}
+
+
 void LensHalo::setEllipModes(double q,double theta){
   // elliptical integrals
-	double K = rfD(0,1./q/q,1);
-	double E = K - (1-1./q/q)*rdD(0,1./q/q,1)/3;
+	PosType K = rfD(0,1./q/q,1);
+	PosType E = K - (1-1./q/q)*rdD(0,1./q/q,1)/3;
   assert(Nmod == 18);
 
+    
   // set modo to elliptical model
 	for(int i=1;i<=Nmod;++i){
 		mod[i]=0;
 	}
+    PosType beta=1;
 	// fill in modes with their values for an elliptical lens
 	if(q != 1.0){
-		mod[0]= 4*K/pi/2;
-		mod[4] = 4*( (1+q*q)*K-2*q*q*E )/(1-q*q)/pi;
-		mod[8] = 4*( (3*q*q+1)*(q*q+3)*K-8*q*q*(1+q*q)*E )/( 3*pi*pow(1-q*q,2) );
-		mod[12] = 4*( (1+q*q)*(15+98*q*q+15*q*q*q*q)*K-2*q*q*(23+82*q*q+23*q*q*q*q)*E )/( 15*pi*pow(1-q*q,3) );
-		mod[16]= 4*( -32*q*q*(1+q*q)*(11+74*q*q+11*q*q*q*q)*E+(105+1436*q*q+3062*q*q*q*q+1436*pow(q,6)+105*pow(q,8))*K )/(105*pi*pow(1-q*q,4));
+		mod[0]= 4*K/pi; //2?;
+		mod[4] = fourier_coeff(2)/(beta*beta-2*2);// 4*( (1+q*q)*K-2*q*q*E )/(1-q*q)/pi/(beta*beta-2*2); ///mod[0];fourier_coeff(2)/pi/(beta*beta-2*2); //
+		mod[8] = fourier_coeff(4)/(beta*beta-4*4); // 4*( (3*q*q+1)*(q*q+3)*K-8*q*q*(1+q*q)*E )/( 3*pi*pow(1-q*q,2) )/(beta*beta-4*4); ///mod[0];
+		mod[12] =fourier_coeff(6)/(beta*beta-6*6); // 4*( (1+q*q)*(15+98*q*q+15*q*q*q*q)*K-2*q*q*(23+82*q*q+23*q*q*q*q)*E )/( 15*pi*pow(1-q*q,3) )/(beta*beta-6*6); ///mod[0];
+		mod[16]=fourier_coeff(8)/(beta*beta-8*8); // 4*( -32*q*q*(1+q*q)*(11+74*q*q+11*q*q*q*q)*E+(105+1436*q*q+3062*q*q*q*q+1436*pow(q,6)+105*pow(q,8))*K )/(105*pi*pow(1-q*q,4))/(beta*beta-8*8); ///mod[0];
 		//mod[18]=0.;
 	}
 	else{
-		cout << "here" << endl;
+		cout << "here in setEllipModes" << endl;
 
 		mod[0]=1.0;
 
 	}
-
+    //mod[0]=1.0;
 	// rotate model
 	//RotateModel(theta,mod,Nmod,0);
 
   return;
 }
 
+void LensHalo::calcModes(double q, double beta, double rottheta){
+    
+return;
+}
 
+/// Derivatives of the axial potential factor with respect to theta
+void LensHalo::faxial(PosType theta,PosType f[]){
+    int i,k;
+    
+    f[0] = 0.5*mod[0]; // why is it commented out?
+    f[1] = f[2] = 0;
+    for(i=4;i<Nmod;i+=2){
+        k=i/2;
+        f[0] +=  mod[i]*cos(k*theta)   + mod[i+1]*sin(k*theta);
+        f[1] += -mod[i]*k*sin(k*theta) + mod[i+1]*k*cos(k*theta);
+        f[2] += -mod[i]*k*k*cos(k*theta) - mod[i+1]*k*k*sin(k*theta);
+    }
+    
+}
 
 // for Ansatz I
 void LensHalo::felliptical(double x, double q, double theta, double f[], double g[]){ // q not a function of r
@@ -522,18 +540,26 @@ double LensHalo::alpha_asym(double x,double theta){
 	return *alpha;
 }
 
-double LensHalo::kappa_asym(double x,double theta){
-	double F, f[3],g[3], kappa;
-    setEllipModes(0.4,theta);
+double LensHalo::kappa_asym(PosType x,PosType theta){
+	PosType F, f[3],g[3], kappa;
+    setEllipModes(0.1, theta);
+    //setModesToEllip(0.5, theta);
     faxial(theta,f);
+    //std::cout <<mod[4] << " " << mod[8] << " " << mod[12] << " " << mod[16] << " " << std::endl;
     //gradial(x,g);
     //felliptical(x,0.4,theta,f,g);
     g[0]=1;
 	g[1]=g[2]=0;
-	F=1-g[0]*f[0];
-	kappa=F*kappa_h(x)-0.5*f[2]/x/x*phi_h(x);
+	F=f[0];
+    PosType beta=1;
+    // kappa=F*kappa_h(x)/x/x-0.5*f[2]/x/x*phi_h(x); // should be correct equation but produces weird patterns
+    //kappa=-F*phi_h(x)/x/x/x/x+0.5*f[2]/x/x*phi_h(x); // gives sth elliptical, I did this to exclude inconsistency between phi and kappa as source of error
+    //std::cout << beta << std::endl;
+    //PosType beta=beta;
+    kappa=0.5*(beta*beta*f[0]+f[2])*pow(x,-1.0);
+    //std::cout << F*kappa_h(x)/x/x << " " << -0.5*f[2]/x/x*phi_h(x)<< std::endl;
     
-	return kappa/x;
+	return kappa;
 }
 
 /* makes beta=-2 Power Law Elliptical
@@ -606,7 +632,7 @@ double LensHalo::gamma_asym(double x,double theta){
 	double phi_iso = phi_h(x);
 	double gamma_iso = gamma_h(x);
 
-	felliptical(x,0.4,theta,f,g);
+	felliptical(x,0.5,theta,f,g);
     g[0]=1;
 	g[1]=g[2]=0;
 	F = f[0];

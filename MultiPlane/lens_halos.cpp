@@ -482,9 +482,17 @@ void LensHalo::force_halo_asym(
 	if(rcm2 < Rmax*Rmax){
 		double x = sqrt(rcm2)/rscale;
 		double theta;
-		if (xcm[0]==0 && xcm[1]==0){
-			xcm[0]=xcm[1]=7.0710678e-21;
+        
+        if (xcm[0]==0){
+			xcm[0]=7.0710678e-21;
 		}
+        
+		if (xcm[1]==0){
+			xcm[1]=7.0710678e-21;
+		}
+        
+        //theta=atan2(xcm[1],xcm[0]);
+        
 		if (xcm[0]>0){
 			theta=atan(xcm[1]/xcm[0]);
 		}
