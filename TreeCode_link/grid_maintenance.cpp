@@ -112,7 +112,7 @@ Grid::Grid(
         }
     }
 
-    assert(i == Ngrid_init*Ngrid_init2);
+    assert(i == Ngrid_init*Ngrid_init2-1);
  
     s_points=LinkToSourcePoints(i_points,Ngrid_init*Ngrid_init2);
     

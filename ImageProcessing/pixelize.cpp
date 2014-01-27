@@ -640,6 +640,8 @@ void PixelMap::drawline(PosType x1[],PosType x2[],PosType value){
 void PixelMap::AddCurve(ImageInfo *curve,PosType value){
 	PosType x[2];
 
+  if(curve->imagekist->Nunits() == 0 ) return;
+
 	curve->imagekist->MoveToTop();
 	x[0] = curve->imagekist->getCurrent()->x[0];
 	x[1] = curve->imagekist->getCurrent()->x[1];

@@ -293,6 +293,8 @@ namespace Utilities{
   PosType cross(const Point *O, const Point *A, const Point *B);
   bool xorder(Point *p1,Point *p2);
   std::vector<Point *> convex_hull(std::vector<Point *> P);
+  std::vector<Point *> concave_hull(std::vector<Point *> P);
+
 
 
 	long IndexFromPosition(PosType *x,long Npixels,PosType range,const PosType *center);
@@ -504,6 +506,8 @@ namespace Utilities{
 	unsigned long order_curve4(Kist<Point> * curve);
   unsigned long order_curve5(Kist<Point> * curve);
   void ordered_convexhull(Kist<Point> * curve);
+  void ordered_concavehull(Kist<Point> * curve);
+  PosType HullArea(Kist<Point> * curve);
 }
 bool order_ExteriorBoundary(Point *curve,long Npoints,long *NewNpoints,PosType *area);
 PosType findAreaOfCurve(TreeHndl tree,ImageInfo *curve,int NimageMax);

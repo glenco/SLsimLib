@@ -926,7 +926,7 @@ namespace Utilities
    double b;
    
    
-   double operator = (double x) { return a*x + b*x*x;}
+   double operator () (double x) { return a*x + b*x*x;}
    }
    
    ..............................

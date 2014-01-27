@@ -1387,7 +1387,7 @@ void PrintImages(ImageInfo *images,long Nimages){
 void ImageInfo::PrintImageInfo(){
 
 	std::printf(" PrintImageInfo\n");
-	std::printf("  Npoints = %li  area = %e +/- %e\n",imagekist->Nunits(),area,area_error);
+	std::printf("  Npoints = %li  area = %e fractional error %e\n",imagekist->Nunits(),area,area_error);
 	std::printf("  gridrange = %e %e %e\n",gridrange[0],gridrange[1],gridrange[2]);
 	std::printf("  borders inner N = %li  outer N = %li\n",innerborder->Nunits(),outerborder->Nunits());
 }
