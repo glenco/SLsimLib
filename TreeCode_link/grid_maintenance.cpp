@@ -13,7 +13,7 @@
 std::mutex Grid::grid_mutex;
 
 /** \ingroup Constructor
- * \brief Constructor for initializing grid.
+ * \brief Constructor for initializing square grid.
  *
  * Note: Deflection solver must be specified before creating a Grid.
  */
@@ -22,10 +22,10 @@ Grid::Grid(
 		,unsigned long N1d           /// Initial number of grid points in each dimension.
 		,const PosType center[2]  /// Center of grid.
 		,PosType range      /// Full width of grid in whatever units will be used.
-		 ){
+           ): Ngrid_init(N1d),Ngrid_init2(N1d),Ngrid_block(3),axisratio(1.0){
 
 	Point *i_points,*s_points;
-  pointID = 0;
+    pointID = 0;
 
 	assert(N1d > 0);
 	assert(range > 0);
@@ -36,11 +36,7 @@ Grid::Grid(
 	  ERROR_MESSAGE();
 	  std::printf("ERROR: Grid cannot be initialized with pixels less than a power of 2\n");
 	  exit(1);
-  }
-
-	Ngrid_init = N1d;
-	Ngrid_block = 3;  // never been tested with anything other than 3
-	
+  }	
 
 	i_points = NewPointArray(Ngrid_init*Ngrid_init,true);
 	xygridpoints(i_points,range,center,Ngrid_init,0);
@@ -59,6 +55,80 @@ Grid::Grid(
 	neighbors = new Kist<Point>;
 	maglimit = 1.0e-4;
   
+}
+
+/** \ingroup Constructor
+ * \brief Constructor for initializing rectangular grid.
+ *
+ * Cells of grid will always be square with initial resolution rangeX/(Nx-1).
+ * The Y range may not be exactly rangeY, but will be the nearest value that 
+ * is a whole number of cells.
+ *
+ * Note: Deflection solver must be specified before creating a Grid.
+ */
+Grid::Grid(
+           LensHndl lens       /// lens model for initializing grid
+           ,unsigned long Nx   /// Initial number of grid points in X dimension.
+           ,const PosType center[2]  /// Center of grid.
+           ,PosType rangeX   /// Full width of grid in x direction in whatever units will be used.
+           ,PosType rangeY  /// Full width of grid in y direction in whatever units will be used.
+           ): Ngrid_init(Nx),Ngrid_block(3),axisratio(rangeY/rangeX){
+    
+	Point *i_points,*s_points;
+    pointID = 0;
+    
+	assert(Nx > 0);
+	assert(rangeX > 0 && rangeY >0);
+    
+	if(Nx <= 0){ERROR_MESSAGE();
+        std::cout << "cannot make Grid with no points" << std::endl;
+        throw std::runtime_error("");
+    }
+	if(rangeX <= 0 || rangeY <= 0 ){ERROR_MESSAGE();
+        throw std::runtime_error("");
+        std::cout << "cannot make Grid with no range" << std::endl;
+    }
+
+    //if(Ngrid_init % 2 == 1 ) ++Ngrid_init;
+	
+    Ngrid_init2 = (int)(Ngrid_init*axisratio);
+    //if(Ngrid_init2 % 2 == 1) ++Ngrid_init2;
+    
+    i_points = NewPointArray(Ngrid_init*Ngrid_init2,true);
+    
+    int i;
+    // set grid of positions
+    for(int ii=0;ii<Ngrid_init;++ii){
+        for(int jj=0;jj<Ngrid_init2;++jj){
+
+            i = ii + jj*Ngrid_init;
+            
+            i_points[i].id=pointID;
+            ++pointID;
+            
+            i_points[i].x[0] = center[0] + rangeX*ii/(Ngrid_init-1) - 0.5*rangeX;
+            i_points[i].x[1] = center[1] + rangeX*jj/(Ngrid_init-1) - 0.5*rangeY;
+            i_points[i].gridsize=rangeX/(Ngrid_init-1);
+        }
+    }
+
+    assert(i == Ngrid_init*Ngrid_init2);
+ 
+    s_points=LinkToSourcePoints(i_points,Ngrid_init*Ngrid_init2);
+    
+    {
+        std::lock_guard<std::mutex> hold(grid_mutex);
+        lens->rayshooterInternal(Ngrid_init*Ngrid_init2,i_points,false);
+    }
+              
+	// Build trees
+	i_tree = new TreeStruct(i_points,Ngrid_init*Ngrid_init2);
+	s_tree = new TreeStruct(s_points,Ngrid_init*Ngrid_init2,1,MAX(rangeX,rangeY));  // make tree on source plane with a buffer
+    
+	trashkist = new Kist<Point>;
+	neighbors = new Kist<Point>;
+	maglimit = 1.0e-4;
+    
 }
 
 /** \ingroup Constructor
@@ -81,10 +151,11 @@ Grid::~Grid(){
 void Grid::ReInitializeGrid(LensHndl lens){
   
 	Point *i_points,*s_points;
-	PosType range,center[2];
+	PosType rangeX,rangeY,center[2];
 	unsigned long i;
   
-	range = i_tree->top->boundary_p2[0] - i_tree->top->boundary_p1[0];
+	rangeX = (i_tree->top->boundary_p2[0] - i_tree->top->boundary_p1[0]);
+  rangeY = (i_tree->top->boundary_p2[1] - i_tree->top->boundary_p1[1]);
 	center[0] = (i_tree->top->boundary_p2[0] + i_tree->top->boundary_p1[0])/2;
 	center[1] = (i_tree->top->boundary_p2[1] + i_tree->top->boundary_p1[1])/2;
   
@@ -97,19 +168,38 @@ void Grid::ReInitializeGrid(LensHndl lens){
   
   
 	// build new initial grid
-	i_points = NewPointArray(Ngrid_init*Ngrid_init,true);
-	xygridpoints(i_points,range,center,Ngrid_init,0);
-	s_points=LinkToSourcePoints(i_points,Ngrid_init*Ngrid_init);
+	i_points = NewPointArray(Ngrid_init*Ngrid_init2,true);
+	if(Ngrid_init == Ngrid_init2){
+    xygridpoints(i_points,rangeX,center,Ngrid_init,0);
+  }else{
+    int i;
+    // set grid of positions
+    for(int ii=0;ii<Ngrid_init;++ii){
+      for(int jj=0;jj<Ngrid_init2;++jj){
+        
+        i = ii + jj*Ngrid_init;
+        
+        i_points[i].id=pointID;
+        ++pointID;
+        
+        i_points[i].x[0] = center[0] + rangeX*ii/(Ngrid_init-1) - 0.5*rangeX;
+        i_points[i].x[1] = center[1] + rangeX*jj/(Ngrid_init-1) - 0.5*rangeY;
+        i_points[i].gridsize=rangeX/(Ngrid_init-1);
+      }
+    }
+
+  }
+	s_points=LinkToSourcePoints(i_points,Ngrid_init*Ngrid_init2);
   
   {
     std::lock_guard<std::mutex> hold(grid_mutex);
-	  lens->rayshooterInternal(Ngrid_init*Ngrid_init,i_points,false);
+	  lens->rayshooterInternal(Ngrid_init*Ngrid_init2,i_points,false);
   }
 	// need to resize root of source tree.  It can change in size
 	s_tree->top->boundary_p1[0]=s_points[0].x[0]; s_tree->top->boundary_p1[1]=s_points[0].x[1];
 	s_tree->top->boundary_p2[0]=s_points[0].x[0]; s_tree->top->boundary_p2[1]=s_points[0].x[1];
   
-	for(i=0;i<Ngrid_init*Ngrid_init;++i){
+	for(i=0;i<Ngrid_init*Ngrid_init2;++i){
     
     /* find X boundary */
 		if(s_points[i].x[0] < s_tree->top->boundary_p1[0] ) s_tree->top->boundary_p1[0]=s_points[i].x[0];
@@ -121,17 +211,17 @@ void Grid::ReInitializeGrid(LensHndl lens){
   }
   
   // a little extra room for future points
-  s_tree->top->boundary_p1[0] -=  range/Ngrid_init;
-  s_tree->top->boundary_p1[1] -=  range/Ngrid_init;
-  s_tree->top->boundary_p2[0] +=  range/Ngrid_init;
-  s_tree->top->boundary_p2[1] +=  range/Ngrid_init;
+  s_tree->top->boundary_p1[0] -=  MAX(rangeX,rangeY)/Ngrid_init;
+  s_tree->top->boundary_p1[1] -=  MAX(rangeX,rangeY)/Ngrid_init;
+  s_tree->top->boundary_p2[0] +=  MAX(rangeX,rangeY)/Ngrid_init;
+  s_tree->top->boundary_p2[1] +=  MAX(rangeX,rangeY)/Ngrid_init;
   
   s_tree->top->center[0] = (s_tree->top->boundary_p1[0]+s_tree->top->boundary_p2[0])/2;
   s_tree->top->center[1] = (s_tree->top->boundary_p1[1]+s_tree->top->boundary_p2[1])/2;
   
 	// fill trees
-	i_tree->FillTree(i_points,Ngrid_init*Ngrid_init);
-	s_tree->FillTree(s_points,Ngrid_init*Ngrid_init);
+	i_tree->FillTree(i_points,Ngrid_init*Ngrid_init2);
+	s_tree->FillTree(s_points,Ngrid_init*Ngrid_init2);
   
 	/*for(i=0;i<Ngrid_init*Ngrid_init;++i){
    assert(i_points[i].leaf->child1 == NULL && i_points[i].leaf->child2 == NULL);
