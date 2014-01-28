@@ -912,7 +912,7 @@ void Lens::createFieldHalos(bool verbose)
 	PosType z1, z2, mass_max,Nhaloestot;
 	int np;
 	PosType rr,theta,maxr;
-	HALO *halo_calc = new HALO(&cosmo,field_min_mass,0.0);
+	HALOCalculator *halo_calc = new HALOCalculator(&cosmo,field_min_mass,0.0);
     PosType mo=7.3113e10,M1=2.8575e10,gam1=7.17,gam2=0.201,be=0.557;
     PosType field_galaxy_mass_fraction = 0;
 
