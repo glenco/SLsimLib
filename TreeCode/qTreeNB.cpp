@@ -124,7 +124,7 @@ void QTreeNB::_freeQTree(short child){
  * isEmpty
  * Returns "true" if the QTreeNB is empty and "false" otherwise.  Exported.
  ************************************************************************/
-bool QTreeNB::isEmpty(){
+const bool QTreeNB::isEmpty(){
 
     return(Nbranches == 0);
 }
@@ -135,7 +135,7 @@ bool QTreeNB::isEmpty(){
  * Exported.
  * Pre: !isEmptyNB(tree)
  ************************************************************************/
-bool QTreeNB::atTop(){
+const bool QTreeNB::atTop(){
 
     if( isEmpty() ){
     	ERROR_MESSAGE();
@@ -149,7 +149,7 @@ bool QTreeNB::atTop(){
  * offEndNB
  * Returns "true" if current is off end and "false" otherwise.  Exported.
  ************************************************************************/
-bool QTreeNB::offEnd(){
+const bool QTreeNB::offEnd(){
 
     return(current == NULL);
 }
@@ -177,7 +177,7 @@ void QTreeNB::getCurrent(IndexType *particles,IndexType *nparticles){
  * getNbranches
  * Returns the NbranchNBes of tree.  Exported.
  ************************************************************************/
-unsigned long QTreeNB::getNbranches(){
+const unsigned long QTreeNB::getNbranches(){
 
     return(Nbranches);
 }
@@ -308,6 +308,65 @@ bool QTreeNB::WalkStep(bool allowDescent){
 		return true;
 	}
 
+	if(current->brother != NULL){
+		current=current->brother;
+		return true;
+	}
+	return false;
+}
+
+bool QTreeNB::iterator::up(){
+  if( current == top ){
+    return false;
+  }
+  current = current->prev;  /* can move off end */
+  return true;
+}
+
+/// Move to child
+bool QTreeNB::iterator::down(short child){
+  
+  if(child==0){
+    if( current->child0 == NULL ){
+      ERROR_MESSAGE(); std::cout << "QTreeNB Error: moveToChild() typing to move to child1 when it doesn't exist" << std::endl;
+      return false;
+    }
+    current = current->child0;
+    return true;
+  }
+  if(child==1){
+    if( current->child1 == NULL ){
+      ERROR_MESSAGE(); std::cout << "QTreeNB Error: moveToChild() typing to move to child1 when it doesn't exist" << std::endl;
+      return false;
+    }
+    current = current->child1;
+    return true;
+  }
+  if(child==2){
+    if( current->child2 == NULL ){
+      ERROR_MESSAGE(); std::cout << "QTreeNB Error: moveToChild() typing to move to child2 when it doesn't exist" << std::endl;
+      return false;
+    }
+    current = current->child2;
+    return true;
+  }
+  if(child==3){
+    if( current->child3 == NULL ){
+      ERROR_MESSAGE(); std::cout << "QTreeNB Error: moveToChild() typing to move to child2 when it doesn't exist" << std::endl;
+      return false;
+    }
+    current = current->child3;
+    return true;
+  }
+  return true;
+}
+
+bool QTreeNB::iterator::TreeWalkStep(bool allowDescent){
+  if(allowDescent && current->child0 != NULL){
+		down(0);
+		return true;
+	}
+  
 	if(current->brother != NULL){
 		current=current->brother;
 		return true;

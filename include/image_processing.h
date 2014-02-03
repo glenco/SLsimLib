@@ -60,6 +60,9 @@ public:
 	
 	PixelMap& operator+=(const PixelMap& rhs);
 	friend PixelMap operator+(const PixelMap&, const PixelMap&);
+
+	PixelMap& operator-=(const PixelMap& rhs);
+	friend PixelMap operator-(const PixelMap&, const PixelMap&);
 	
 	const std::valarray<double>& data() const { return map; }
 	

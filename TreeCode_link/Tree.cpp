@@ -23,8 +23,8 @@
  * Gives each branch a unique number even if branches are destroed.
  */
 /*Branch *NewBranch(Point *points,unsigned long npoints
-		  ,double boundary_p1[2],double boundary_p2[2]
-		  ,double center[2],int level){
+		  ,PosType boundary_p1[2],PosType boundary_p2[2]
+		  ,PosType center[2],int level){
 
     //Branch *branch;
     int i;
@@ -88,8 +88,8 @@ void Point::print(){
 unsigned long Branch::countID = 0;
 
 Branch::Branch(Point *my_points,unsigned long my_npoints
-		  ,double my_boundary_p1[2],double my_boundary_p2[2]
-		  ,double my_center[2],int my_level){
+		  ,PosType my_boundary_p1[2],PosType my_boundary_p2[2]
+		  ,PosType my_center[2],int my_level){
 
     points = my_points;
     npoints = my_npoints;
@@ -151,20 +151,25 @@ Point *NewPointArray(
   unsigned long i;
 
   if(N <= 0) return NULL;
-  points = (Point *) calloc(N, sizeof(Point));
-  if(NewXs) points[0].x = (double *) calloc(2,sizeof(double));
+  //points = (Point *) calloc(N, sizeof(Point));
+  points = new Point[N];
+  //if(NewXs) points[0].x = (PosType *) calloc(2,sizeof(PosType));
+  if(NewXs) points[0].x = new PosType[2];
   points[0].head = N;
   points[0].in_image = FALSE;
   points[0].surface_brightness = 0;
   points[0].leaf = NULL;
+  points[0].image = NULL;
 
   for(i = 1; i < N; i++)
   	  {
-	  	  if(NewXs) points[i].x = (double *) calloc(2,sizeof(double));
+	  	  //if(NewXs) points[i].x = (PosType *) calloc(2,sizeof(PosType));
+	  	  if(NewXs) points[i].x = new PosType[2];
 	  	  points[i].head = 0;
 	  	  points[i].in_image = FALSE;
 	  	  points[i].surface_brightness = 0;
 	  	  points[i].leaf = NULL;
+        points[i].image = NULL;
   	  }
 
   return points;
@@ -178,8 +183,10 @@ void FreePointArray(Point *array,bool NewXs){
   unsigned long i;
 
   if(array[0].head){
-	  if(NewXs) for(i=0;i<array[0].head;++i) free(array[i].x);
-	  free(array);
+	  //if(NewXs) for(i=0;i<array[0].head;++i) free(array[i].x);
+	  //free(array);
+	  if(NewXs) for(i=0;i<array[0].head;++i) delete[] array[i].x;
+	  delete[] array;
   }else{
 	  ERROR_MESSAGE();
 	  std::cout << "ERROR: FreePointArray, miss aligned attempt to free point array" << std::endl;
@@ -195,9 +202,9 @@ void FreePointArray(Point *array,bool NewXs){
 TreeStruct::TreeStruct(
 		Point *xp   /// array of points to be added to the tree
 		,unsigned long npoints   /// number of points
-		,double boundary_p1[2]   /// bottom left hand corner of root
-		,double boundary_p2[2]   /// upper right hand corner of root
-		,double center[2]        /// center of root (this could be the center of mass)
+		,PosType boundary_p1[2]   /// bottom left hand corner of root
+		,PosType boundary_p2[2]   /// upper right hand corner of root
+		,PosType center[2]        /// center of root (this could be the center of mass)
 		,int my_Nbucket             /// maximum number of points allowed in a leaf
 		){
 	construct_root(xp,npoints,boundary_p1,boundary_p2,center,my_Nbucket);
@@ -206,9 +213,9 @@ TreeStruct::TreeStruct(
 void TreeStruct::construct_root(
 		Point *xp   /// array of points to be added to the tree
 		,unsigned long npoints   /// number of points
-		,double boundary_p1[2]   /// bottom left hand corner of root
-		,double boundary_p2[2]   /// upper right hand corner of root
-		,double center[2]        /// center of root (this could be the center of mass)
+		,PosType boundary_p1[2]   /// bottom left hand corner of root
+		,PosType boundary_p2[2]   /// upper right hand corner of root
+		,PosType center[2]        /// center of root (this could be the center of mass)
 		,int my_Nbucket             /// maximum number of points allowed in a leaf
 		){
   unsigned long i;
@@ -243,7 +250,6 @@ void TreeStruct::construct_root(
  * \brief Free tree and the linked list of points in it.
  */
 TreeStruct::~TreeStruct(){
-//short freeTree(TreeHndl tree){
 
 	emptyTree();
 	free(current);
@@ -402,8 +408,8 @@ bool TreeStruct::moveUp(){
  * Pre: !offEnd(tree)
  ************************************************************************/
 /*void insertChildToCurrent(TreeHndl tree,Point *points,unsigned long npoints
-			  ,double boundary_p1[2],double boundary_p2[2]
-			  ,double center[2],int child){
+			  ,PosType boundary_p1[2],PosType boundary_p2[2]
+			  ,PosType center[2],int child){
     
     Branch *branch;
 
@@ -666,14 +672,14 @@ Point *AddPointToArray(Point *points,unsigned long N,unsigned long Nold){
 		  PointCopy(&newpoints[i],&points[i]);
 		  assert(newpoints[i].x);
 	  }
-	  for(i=Nold;i<N;++i) newpoints[i].x = (double *) malloc(2*sizeof(double));
+	  for(i=Nold;i<N;++i) newpoints[i].x = (PosType *) malloc(2*sizeof(PosType));
   }
 
   FreePointArray(points,false);
   return newpoints;
 }
 
-Point *NewPoint(double *x,unsigned long id){
+Point *NewPoint(PosType *x,unsigned long id){
   Point *point;
 
   point=(Point *) malloc(sizeof(Point));
@@ -694,10 +700,10 @@ Point *NewPoint(double *x,unsigned long id){
   return(point);
 }
 
+/** SWAPS information in points without changing
+* pointers to prev and next
+* changes links of image points to follow */
 void SwapPointsInArray(Point *p1,Point *p2){
-  /* SWAPS information in points without changing */
-  /* pointers to prev and next */
-  /* changes links of image points to follow*/
   Point pt;
 
   if(p1==p2) return;
@@ -706,10 +712,10 @@ void SwapPointsInArray(Point *p1,Point *p2){
   PointCopy(p1,p2);
   PointCopy(p2,&pt);
 }
+/** SWAPS information in points without changing
+* pointers to prev and next
+* Does not change links of image points to follow */
 void SwapPointsInArrayData(Point *p1,Point *p2){
-  /* SWAPS information in points without changing */
-  /* pointers to prev and next */
-  /* Does not change links of image points to follow*/
   Point pt;
 
   if(p1==p2) return;
@@ -719,10 +725,10 @@ void SwapPointsInArrayData(Point *p1,Point *p2){
   PointCopyData(p2,&pt);
 }
 
+/** copies information in point without copying
+ * pointers to prev and next, but moving the link
+ * to the image point, does not touch head */
 void PointCopy(Point *pcopy,Point *pin){
-  /* copies information in point without copying
-  * pointers to prev and next, but moving the link
-  * to the image point, does not touch head */
   pcopy->id = pin->id;
   pcopy->image = pin->image;
   pcopy->invmag = pin->invmag;
@@ -763,7 +769,7 @@ void PointCopyData(Point *pcopy,Point *pin){
 /*********************************/
 /*  point extraction routines */
 /*********************************/
-void TreeStruct::PointsInCurrent(unsigned long *ids,double **x){
+void TreeStruct::PointsInCurrent(unsigned long *ids,PosType **x){
   Point *point;
   unsigned long i;
 
@@ -833,11 +839,18 @@ ImageInfo::~ImageInfo(){
  * \brief Copy all information about the image including making copies of the imagekist,
  * innerborder and outerborder.  Previous information in the image will be
  */
-void ImageInfo::copy(ImageInfo &image){
-	imagekist->copy(image.imagekist);
-	innerborder->copy(image.innerborder);
-	outerborder->copy(image.outerborder);
+void ImageInfo::copy(
+                     ImageInfo &image   /// image to be copied
+                     ,bool copykists    /// Turn off copying imagekist, innerborder and outerborder.
+                                        /// This is useful when the grid has already been distroyed.
+                     ){
 
+  if(copykists){
+    imagekist->copy(image.imagekist);
+    innerborder->copy(image.innerborder);
+    outerborder->copy(image.outerborder);
+  }
+  
 	gridrange[0] = image.gridrange[0];
 	gridrange[1] = image.gridrange[1];
 	gridrange[2] = image.gridrange[2];

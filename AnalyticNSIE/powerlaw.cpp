@@ -13,8 +13,8 @@
 #include "lens_halos.h"
 
 ///
-void alphaPowLaw(double *alpha,double *x,double R,double mass,double beta,double *center,double Sigma_crit){
-	double r,b=0;
+void alphaPowLaw(PosType *alpha,PosType *x,PosType R,PosType mass,PosType beta,PosType *center,PosType Sigma_crit){
+	PosType r,b=0;
 
 	r=sqrt(pow(x[0]-center[0],2) + pow(x[1]-center[1],2));
 	if(r==0){
@@ -30,8 +30,8 @@ void alphaPowLaw(double *alpha,double *x,double R,double mass,double beta,double
 	return ;
 }
 ///
-KappaType kappaPowLaw(double *x,double R,double mass,double beta,double *center,double Sigma_crit){
-	double r;
+KappaType kappaPowLaw(PosType *x,PosType R,PosType mass,PosType beta,PosType *center,PosType Sigma_crit){
+	PosType r;
 
 	r=sqrt(pow(x[0]-center[0],2) + pow(x[1]-center[1],2));
 	if(r>R) return 0.0;
@@ -39,9 +39,9 @@ KappaType kappaPowLaw(double *x,double R,double mass,double beta,double *center,
 	return (beta+2)*mass*pow(r/R,beta)/(2*pi*pow(R,2)*Sigma_crit);
 }
 ///
-void gammaPowLaw(KappaType *gamma,double *x,double R,double mass,double beta
-		,double *center,double Sigma_crit){
-	double r,gt=0;
+void gammaPowLaw(KappaType *gamma,PosType *x,PosType R,PosType mass,PosType beta
+		,PosType *center,PosType Sigma_crit){
+	PosType r,gt=0;
 
 	r=sqrt(pow(x[0]-center[0],2) + pow(x[1]-center[1],2));
 	if(r==0.0){
@@ -57,9 +57,9 @@ void gammaPowLaw(KappaType *gamma,double *x,double R,double mass,double beta
 	return ;
 }
 ///
-KappaType phiPowLaw(double *x,double R,double mass,double beta
-		,double *center,double Sigma_crit){
-	double b,r;
+KappaType phiPowLaw(PosType *x,PosType R,PosType mass,PosType beta
+		,PosType *center,PosType Sigma_crit){
+	PosType b,r;
 
 	r=sqrt(pow(x[0]-center[0],2) + pow(x[1]-center[1],2));
 

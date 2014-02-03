@@ -1,9 +1,8 @@
 add_sources(
 	KistDriver.cpp
 	Tree.cpp
+        TreeKist.cpp
 	TreeDriver.cpp
-	change_redshifts.cpp
-	change_redshits.cpp
 	curve_routines.cpp
 	dirtycode.cpp
 	divide_images.cpp

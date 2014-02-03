@@ -17,7 +17,8 @@ struct KistUnit{
 	T * data;
 	struct KistUnit<T> *next;
 	struct KistUnit<T> *prev;
-};// Unit;
+};
+
 
 //typedef struct Point Data;  // change this to make a kist of other objects
 
@@ -48,9 +49,20 @@ struct KistUnit{
  ++i;
  }
  
+ There is also an iterator KistIt<> which works like this:
+ 
+ Kist<Point> kist;
+ 
+ ....
+ 
+ for(Kist<Point>::iterator it = kist.getTopIt(); it != kist.getOffBottomIt() ;--it){
+   cout << i << " x = " << (*it)->x[0] << "  " << (*it)->x[1] << endl;
+ }
+ 
+ 
 <\pre>
  */
-template <class Data = Point>
+template <class Data>
 struct Kist{
 public:
 
@@ -68,22 +80,23 @@ public:
 		  return;
 	};
 	Kist(Kist &a){
-		KistUnit<Data> *current;
+		KistUnit<Data> *tmp_current;
 
 		top=NULL;
 		Number=0;
 		bottom = top;
 		current = top;
 
-		current = a.current;
+		tmp_current = a.current;
 		a.MoveToTop();
 		do{
 			InsertAfterCurrent(a.getCurrent());
 			Down();
 		}while(a.Down());
 		assert(a.Nunits() == Nunits());
-		a.current = current;
+		a.current = tmp_current;
 	};
+  
 	~Kist(){
 		KistUnit<Data> *units;
 		while(heads.size() > 0){
@@ -99,6 +112,8 @@ public:
 	void InsertBeforeCurrent(Data * data);
 	Data *TakeOutCurrent();
 	void Empty();
+    void Clear();
+    
 	//void FreeAll();
 	void Fill(Data * data,unsigned long N);
 	void SwapCurrentWithBottom();
@@ -106,6 +121,7 @@ public:
 	void MoveCurrentToTop();
 	void copy(Kist<Data> *kist);
 	void copy(std::vector<Data *> &vector);
+  void test_iterator();
 
 	// movement
 	bool JumpDown(int jump);
@@ -113,6 +129,135 @@ public:
 	bool Up();
 	bool MoveToTop();
 	bool MoveToBottom();
+    
+    /// Custom itorator class for Kist container
+    //template <class T>
+    class iterator{
+    private:
+      struct KistUnit<Data> *unit;
+      struct KistUnit<Data> offbot;
+        
+    public:
+      
+      iterator(){
+        unit = &offbot;
+        unit->data = NULL;
+      }
+       
+        /// Returns a pointer to the current data.  Same as getCurrent.
+        Data *operator*(){return unit->data;}
+        bool atend(){return (unit==&offbot);}
+      
+        bool operator++(){
+          
+            if(unit == NULL || unit == &offbot){
+                return false;
+            }
+            
+            if(unit->prev == NULL){
+                unit = &offbot;
+                return false;
+            }
+            
+            unit = unit->prev;
+            return true;
+        }
+
+        /// Same as Up()
+        bool operator++(int){
+            
+            if(unit == NULL || unit == &offbot){
+                return false;
+            }
+            
+            if(unit->prev == NULL){
+                unit = &offbot;
+                return false;
+            }
+            
+            unit = unit->prev;
+            return true;
+        }
+
+        
+        /// Same as Down()
+        bool operator--(){
+            
+            if(unit == NULL || unit == &offbot){
+                return false;
+            }
+            
+            if(unit->next == NULL){
+                unit = &offbot;
+                return false;
+            }
+            
+            unit = unit->next;
+            return true;
+        }
+        
+        /// Same as Down()
+        bool operator--(int){
+            
+            if(unit == NULL || unit == &offbot){
+                return false;
+            }
+            
+            if(unit->next == NULL){
+                unit = &offbot;
+                return false;
+            }
+            
+            unit = unit->next;
+            return true;
+        }
+        
+        iterator& operator=(KistUnit<Data> *my_unit){
+            if(my_unit == NULL) unit = &offbot;
+            else unit = my_unit;
+            return *this;
+        }
+        
+        iterator& operator=(const iterator my_it){
+            if(this == &my_it) return *this;
+            if(my_it.unit == NULL) unit = &offbot;
+            else unit = my_it.unit;
+            return *this;
+        }
+      
+      bool operator==(const iterator my_it){
+        return (unit == my_it.unit);
+       }
+      
+      bool operator!=(const iterator my_it){
+        return (unit != my_it.unit);
+      }
+
+    };
+
+//  void SetCurrentIt(iterator it){current = it.getUnit();}
+//    void SetCurrentIt(iterator it){current = it.unit;}
+    
+  iterator getCurrentIt(){
+      iterator it ;
+      it = current;
+      return it;
+  }
+  iterator getTopIt(){
+      iterator it ;
+      it = top;
+      return it;
+  }
+  iterator getBottomIt(){
+    iterator it;
+    it = bottom;
+    return it;
+  }
+  iterator getOffBottomIt(){
+    iterator it;
+    it = &offbot;
+    return it;
+  }
 
 	// status
 	/// Number of elements in list.
@@ -137,9 +282,10 @@ public:
 	/// Same as Down()
 	bool operator--(){return Down();}
 	/// Same as Up()
-	bool operator++(int x){return Up();}
+	bool operator++(int){return Up();}
 	/// Same as Down()
-	bool operator--(int x){return Down();}
+	bool operator--(int){return Down();}
+    
 
 private:
 
@@ -172,6 +318,26 @@ template <class Data> void Kist<Data>::Empty(){
 	while(Number > 0) TakeOutCurrent();
 	//Number = 0;
 	//top = bottom = current = NULL;
+	return;
+}
+
+/**
+ * \brief Removes all elements from list and destroy the data.
+ */
+template <class Data> void Kist<Data>::Clear(){
+  std::list<Data *> list;
+  Data* point;
+  
+	while(Number > 0){
+    point = TakeOutCurrent();
+    if(point->head) list.push_back(point);
+  }
+  while(list.size() > 0){
+    point = list.back();
+    list.pop_back();
+    delete [] point;
+  }
+
 	return;
 }
 
@@ -369,7 +535,7 @@ template <class Data> Data *Kist<Data>::TakeOutCurrent(){
 /// Move down the list jump units from current position
 template <class Data> bool Kist<Data>::JumpDown(int jump){
 	int i;
-	bool ans;
+	bool ans = true;
 
 	if(jump > 0) for(i=0;i<jump;++i) ans=Down();
 	if(jump < 0) for(i=0;i<abs(jump);++i) ans=Up();
@@ -399,15 +565,15 @@ template <class Data> bool Kist<Data>::Up(){
 }
 /// Moves to the top.  Returns false if the kist is empty.
 template <class Data> bool Kist<Data>::MoveToTop(){
-	if(!Number){current=&offbot; return false;}
-	current=top;
+	if(!Number){current = &offbot; return false;}
+	current = top;
 	return true;
 }
 
 /// Moves to the top.  Returns false if the kist is empty.
 template <class Data> bool Kist<Data>::MoveToBottom(){
 	if(!Number){current=&offbot; return false;}
-	current=bottom;
+	current = bottom;
 	return true;
 }
 
@@ -425,7 +591,7 @@ template <class Data> void Kist<Data>::Fill(Data *data_array,unsigned long N){
 /*********************************/
 /// Return pointer to data in current element.  If offend act as if it is at bottem.
 template <class Data> inline Data * Kist<Data>::getCurrent(){
-  if(Number == 0) return NULL;
+  if(Number == 0 || current == NULL) return NULL;
   if(current == &offbot) current = bottom;
 	return current->data;
 }
@@ -527,11 +693,23 @@ template <class Data> void Kist<Data>::copy(std::vector<Data *> &vector){
 	}
 }
 
+template <class Data> void Kist<Data>::test_iterator(){
+    
+    MoveToBottom();
+    int i;
+    Kist<Data>::iterator it = this->getBottomIt();
+    for(i=0;!(it.atend()) ;++it,++i){
+        assert(current->data == (*it));
+        std::cout << "i = " << i << std::endl;
+        Up();
+    }
+    assert(i == Nunits()); 
+}
 
 /*
  * These functions are provided for backwards compatibility, but the kist member methods
  * should be used in the future.
- */
+ *
 inline void EmptyKist(Kist<Point> * kist){
 	kist->Empty();
 }
@@ -574,8 +752,10 @@ inline void FillKist(Kist<Point> * kist,Point *data_array,unsigned long N){
 inline Point *getCurrentKist(Kist<Point> * kist){
 	return kist->getCurrent();
 }
+
 inline void TranformPlanesKist(Kist<Point> * kist){
 	kist->TranformPlanes();
 }
+*/
 
 #endif

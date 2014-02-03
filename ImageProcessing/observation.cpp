@@ -285,8 +285,8 @@ PixelMap Observation::ApplyPSF(PixelMap &pmap)
 	// translates array of data in (normalised) counts map
 	for (unsigned long i = 0; i < Npix*Npix; i++)
 	{
-		ix = i/Npix;
-		iy = i%Npix;
+		//ix = i/Npix;
+		//iy = i%Npix;
 		outmap.AssignValue(i,out2[i]/double(Npix*Npix));
 	}
 	return outmap;

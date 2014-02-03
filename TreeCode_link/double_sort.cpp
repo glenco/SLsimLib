@@ -10,11 +10,11 @@
 #define M 7
 #define NSTACK 50
 namespace Utilities{
-void double_sort(unsigned long n, double *arr, unsigned long *brr)
+void double_sort(unsigned long n, PosType *arr, unsigned long *brr)
 {
   unsigned long i,ir=n,j,k,l=1,*istack,b;
   int jstack=0;
-  double a;
+  PosType a;
   
   istack=lvector(1,NSTACK);
   for (;;) {
@@ -92,10 +92,10 @@ void double_sort(unsigned long n, double *arr, unsigned long *brr)
 * if the array is not  two-way-coupled to another the image
 * pointers in the other array will be untouched
 */
-void double_sort_points(unsigned long n, double *arr, Point *brr){
+void double_sort_points(unsigned long n, PosType *arr, Point *brr){
   unsigned long i,ir=n,j,k,l=1,*istack;
   long jstack=0;
-  double a;
+  PosType a;
   Point b;
 
   istack=lvector(1,NSTACK);
@@ -181,8 +181,8 @@ void double_sort_points(unsigned long n, double *arr, Point *brr){
  * Sorts arr[] and pointarray[] simultaneously.
  */
 
-void quicksortPoints(Point *pointarray,double *arr,unsigned long N){
-	double pivotvalue;
+void quicksortPoints(Point *pointarray,PosType *arr,unsigned long N){
+	PosType pivotvalue;
 	unsigned long pivotindex,newpivotindex,i;
 	
 	if(N <= 1) return ;
@@ -216,8 +216,8 @@ void quicksortPoints(Point *pointarray,double *arr,unsigned long N){
 	return ;
 }
 
-void quicksort(unsigned long *particles,double *arr,unsigned long N){
-	double pivotvalue;
+void quicksort(unsigned long *particles,PosType *arr,unsigned long N){
+	PosType pivotvalue;
 	unsigned long pivotindex,newpivotindex,i;
 	
 	if(N <= 1) return ;
@@ -255,8 +255,8 @@ void quicksort(unsigned long *particles,double *arr,unsigned long N){
  * Partitions arr[] and particles[] into those with x <= pivotvalue and those with
  *  x > pivotvalue  pivotindex is left at first array value with x > pivotvalue
  */
-void quickPartition(double pivotvalue,unsigned long *pivotindex,unsigned long *particles
-		,double *arr,unsigned long N){
+void quickPartition(PosType pivotvalue,unsigned long *pivotindex,unsigned long *particles
+		,PosType *arr,unsigned long N){
 	unsigned long i;
 
 	*pivotindex=0;
@@ -271,8 +271,8 @@ void quickPartition(double pivotvalue,unsigned long *pivotindex,unsigned long *p
 
 	return ;
 }
-void quickPartitionPoints(double pivotvalue,unsigned long *pivotindex
-		,Point *pointarray,double *arr,unsigned long N){
+void quickPartitionPoints(PosType pivotvalue,unsigned long *pivotindex
+		,Point *pointarray,PosType *arr,unsigned long N){
 	unsigned long i;
 
 	*pivotindex=0;
@@ -296,8 +296,8 @@ int cutbox(const PosType* center,PosType *p1,PosType *p2,float rmax){
 	 *            3 if box intersects circle but ray[] is not inside box
 	 */
   short i,tick=0;
-  double close[2],rtmp;
-  double tmp1,tmp2;
+  PosType close[2],rtmp;
+  PosType tmp1,tmp2;
 
   // find closest point on box borders to ray[]
   for(i=0;i<2;++i){

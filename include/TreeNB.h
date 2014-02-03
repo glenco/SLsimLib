@@ -21,11 +21,6 @@
 
 /** type for particle positions and boundaries etc **/
 
-#ifndef PosType_declare
-#define PosType_declare
-typedef double PosType;
-#endif
-
 #ifndef IndexType_declare
 #define IndexType_declare
 typedef unsigned long IndexType;

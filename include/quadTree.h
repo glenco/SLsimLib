@@ -72,35 +72,75 @@ struct QTreeNB{
 			 ,PosType boundary_p1[],PosType boundary_p2[]);
 	~QTreeNB();
 
-	short empty();
-	bool isEmpty();
-	bool atTop();
-	bool noChild();
-	bool offEnd();
+	const bool isEmpty();
+	const bool atTop();
+	const bool noChild();
+	const bool offEnd();
+	const unsigned long getNbranches();
+	const bool atLeaf(){
+		return (current->child0 == NULL)*(current->child1 == NULL)
+    *(current->child2 == NULL)*(current->child3 == NULL);
+	}
+	const bool atLeaf(QBranchNB *branch){
+		return (branch->child0 == NULL)*(branch->child1 == NULL)
+    *(branch->child2 == NULL)*(branch->child3 == NULL);
+	}
+  
+  
 	void getCurrent(IndexType *particles,IndexType *nparticles);
-	unsigned long getNbranches();
 	void moveTop();
 	void moveUp();
 	void moveToChild(int child);
+	bool WalkStep(bool allowDescent);
+  
+  short empty();
 	void attachChildrenToCurrent(QBranchNB *branch0,QBranchNB *branch1
 			,QBranchNB *branch2,QBranchNB *branch3);
-	bool WalkStep(bool allowDescent);
-	inline bool atLeaf(){
-		return (current->child0 == NULL)*(current->child1 == NULL)
-				*(current->child2 == NULL)*(current->child3 == NULL);
-	}
-	inline bool atLeaf(QBranchNB *branch){
-		return (branch->child0 == NULL)*(branch->child1 == NULL)
-				*(branch->child2 == NULL)*(branch->child3 == NULL);
-	}
+
 	QBranchNB *top;
 	QBranchNB *current;
-	/// number of branches in tree
-	unsigned long Nbranches;
 	/// Array of particle positions
 	PosType **xp;
 
+  /**
+   *  \brief A iterator class fore TreeStruct that allows for movement through the tree without changing
+   *      anything in the tree itself.
+   *
+   *   This class should be able to preform all of the constant movements within the tree without causing
+   *   any change to the tree.
+   */
+  class iterator{
+    
+  private:
+    QBranchNB *current;
+    QBranchNB *top;
+    
+  public:
+    /// Sets the top or root to the top of "tree".
+    iterator(QTreeNB * tree){current = top = tree->top;}
+    /// Sets the root to the input branch so that this will be a subtree in branch is not the real root.
+    iterator(QBranchNB *branch){current = top = branch;}
+    
+    /// Returns a pointer to the current Branch.
+    QBranchNB *operator*(){return current;}
+    
+    void movetop(){current = top;}
+    
+    /// Same as up()
+    bool operator++(){ return up();}
+    
+    /// Same as up()
+    bool operator++(int){ return up();}
+    
+    bool up();
+    /// Move to child
+    bool down(short child);
+    bool TreeWalkStep(bool allowDescent);
+  };
+
 private:
+  /// number of branches in tree
+	unsigned long Nbranches;
 	void _freeQTree(short child);
 };
 
@@ -130,22 +170,22 @@ public:
 			,IndexType Npoints
 			,bool Multimass
 			,bool Multisize
-			,double my_sigma_background = 0
+			,PosType my_sigma_background = 0
 			,int bucket = 5
-			,double theta_force = 0.1
+			,PosType theta_force = 0.1
 			);
 	TreeQuad(
 			PosType **xpt
 			,LensHaloHndl *my_halos
 			,IndexType Npoints
-			,double my_sigma_background = 0
+			,PosType my_sigma_background = 0
 			,int bucket = 5
-			,double theta_force = 0.1
+			,PosType theta_force = 0.1
 			);
 	virtual ~TreeQuad();
 
-	virtual void force2D(double *ray,double *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa);
-	virtual void force2D_recur(double *ray,double *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa);
+	virtual void force2D(PosType *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa);
+	virtual void force2D_recur(PosType *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa);
 	virtual void printParticlesInBranch(unsigned long number);
 	virtual void printBranchs(int level = -1);
 
@@ -158,10 +198,10 @@ protected:
 	float *sizes;
 
 	IndexType Nparticles;
-	double sigma_background;
+	PosType sigma_background;
 	int Nbucket;
 
-	double force_theta;
+	PosType force_theta;
 
 	QTreeNBHndl tree;
 	IndexType *index;
@@ -175,7 +215,7 @@ protected:
 	QTreeNBHndl BuildQTreeNB(PosType **xp,IndexType Nparticles,IndexType *particles);
 	void _BuildQTreeNB(IndexType nparticles,IndexType *particles);
 
-	inline short WhichQuad(double *x,QBranchNB &branch);
+	inline short WhichQuad(PosType *x,QBranchNB &branch);
 
 	//inline bool atLeaf();
 	inline bool inbox(PosType *ray,PosType *p1,PosType *p2){
@@ -184,33 +224,33 @@ protected:
 	int cutbox(PosType *ray,PosType *p1,PosType *p2,float rmax);
 	
 	void CalcMoments();
-	void rotate_coordinates(double **coord);
+	void rotate_coordinates(PosType **coord);
 
 	// Internal profiles for a Gaussian particle
-	virtual inline double alpha_h(double r2s2,double sigma){
+	virtual inline PosType alpha_h(PosType r2s2,PosType sigma){
 	  return (sigma > 0.0 ) ? ( exp(-0.5*r2s2) - 1.0 ) : -1.0;
 	}
-	virtual inline double kappa_h(double r2s2,double sigma){
+	virtual inline PosType kappa_h(PosType r2s2,PosType sigma){
 	  return 0.5*r2s2*exp(-0.5*r2s2);
 	}
-	virtual inline double gamma_h(double r2s2,double sigma){
+	virtual inline PosType gamma_h(PosType r2s2,PosType sigma){
 	  return (sigma > 0.0 ) ? (-2.0 + (2.0 + r2s2)*exp(-0.5*r2s2) ) : -2.0;
 	}
-	virtual inline double phi_h(double r2s2,double sigma){
+	virtual inline PosType phi_h(PosType r2s2,PosType sigma){
 		ERROR_MESSAGE();  // not yet written
 		exit(1);
 		return 0;
 	}
 
 	QTreeNBHndl rotate_simulation(PosType **xp,IndexType Nparticles,IndexType *particles
-			,double **coord,double theta,float *rsph,float *mass
+			,PosType **coord,PosType theta,float *rsph,float *mass
 			,bool MultiRadius,bool MultiMass);
 	QTreeNBHndl rotate_project(PosType **xp,IndexType Nparticles,IndexType *particles
-			,double **coord,double theta,float *rsph,float *mass
+			,PosType **coord,PosType theta,float *rsph,float *mass
 			,bool MultiRadius,bool MultiMass);
-	 void cuttoffscale(QTreeNBHndl tree,double *theta);
+	 void cuttoffscale(QTreeNBHndl tree,PosType *theta);
 
-	 void walkTree_recur(QBranchNB *branch,double *ray,double *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa);
+	 void walkTree_recur(QBranchNB *branch,PosType *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa);
 };
 
 #endif /* QUAD_TREE_H_ */

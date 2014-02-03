@@ -152,8 +152,8 @@ InputParams::InputParams(std::string paramfile)
 
 InputParams::~InputParams()
 {
-	print_unused();
-	print_used();
+	//print_unused();
+	//print_used();
 }
 
 /// Print all parameters and values to stdout.
@@ -166,7 +166,7 @@ void InputParams::print() const
 		if(comment != comments.end())
 			printrow(std::cout, it->first, it->second, comment->second);
 		else
-		   printrow(std::cout, it->first, it->second);
+      printrow(std::cout, it->first, it->second);
 	}
 }
 
@@ -228,9 +228,9 @@ void InputParams::PrintToFile(std::string filename, bool strip_unused) const
 		
 		const_iterator comment = comments.find(it->first);
 		if(comment != comments.end())
-			printrow(std::cout, it->first, it->second, comment->second);
+			printrow(file_out, it->first, it->second, comment->second);
 		else
-			printrow(std::cout, it->first, it->second);
+			printrow(file_out, it->first, it->second);
 	}
 }
 

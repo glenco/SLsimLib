@@ -7,35 +7,45 @@
 
 #include "slsimlib.h"
 #include "Tree.h"
-Point *pointofinterest = NULL;
+#include <mutex>
+#include <thread>
+
+std::mutex Grid::grid_mutex;
+
 /** \ingroup Constructor
- * \brief Constructor for initializing grid.
+ * \brief Constructor for initializing square grid.
  *
  * Note: Deflection solver must be specified before creating a Grid.
  */
 Grid::Grid(
 		LensHndl lens      /// lens model for initializing grid
 		,unsigned long N1d           /// Initial number of grid points in each dimension.
-		,const double center[2]  /// Center of grid.
-		,double range      /// Full width of grid in whatever units will be used.
-		 ){
+		,const PosType center[2]  /// Center of grid.
+		,PosType range      /// Full width of grid in whatever units will be used.
+           ): Ngrid_init(N1d),Ngrid_init2(N1d),Ngrid_block(3),axisratio(1.0){
 
 	Point *i_points,*s_points;
+    pointID = 0;
 
 	assert(N1d > 0);
 	assert(range > 0);
 
 	if(N1d <= 0){ERROR_MESSAGE(); std::cout << "cannot make Grid with no points" << std::endl; exit(1);}
 	if(range <= 0){ERROR_MESSAGE(); std::cout << "cannot make Grid with no range" << std::endl; exit(1);}
-
-	Ngrid_init = N1d;
-	Ngrid_block = 3;  // never been tested with anything other than 3
-	
+  if( (N1d & (N1d-1)) != 0){
+	  ERROR_MESSAGE();
+	  std::printf("ERROR: Grid cannot be initialized with pixels less than a power of 2\n");
+	  exit(1);
+  }	
 
 	i_points = NewPointArray(Ngrid_init*Ngrid_init,true);
 	xygridpoints(i_points,range,center,Ngrid_init,0);
 	s_points=LinkToSourcePoints(i_points,Ngrid_init*Ngrid_init);
-	lens->rayshooterInternal(Ngrid_init*Ngrid_init,i_points,false);
+
+  {
+    std::lock_guard<std::mutex> hold(grid_mutex);
+  	lens->rayshooterInternal(Ngrid_init*Ngrid_init,i_points,false);
+  }
   
 	// Build trees
 	i_tree = new TreeStruct(i_points,Ngrid_init*Ngrid_init);
@@ -45,6 +55,80 @@ Grid::Grid(
 	neighbors = new Kist<Point>;
 	maglimit = 1.0e-4;
   
+}
+
+/** \ingroup Constructor
+ * \brief Constructor for initializing rectangular grid.
+ *
+ * Cells of grid will always be square with initial resolution rangeX/(Nx-1).
+ * The Y range may not be exactly rangeY, but will be the nearest value that 
+ * is a whole number of cells.
+ *
+ * Note: Deflection solver must be specified before creating a Grid.
+ */
+Grid::Grid(
+           LensHndl lens       /// lens model for initializing grid
+           ,unsigned long Nx   /// Initial number of grid points in X dimension.
+           ,const PosType center[2]  /// Center of grid.
+           ,PosType rangeX   /// Full width of grid in x direction in whatever units will be used.
+           ,PosType rangeY  /// Full width of grid in y direction in whatever units will be used.
+           ): Ngrid_init(Nx),Ngrid_block(3),axisratio(rangeY/rangeX){
+    
+	Point *i_points,*s_points;
+    pointID = 0;
+    
+	assert(Nx > 0);
+	assert(rangeX > 0 && rangeY >0);
+    
+	if(Nx <= 0){ERROR_MESSAGE();
+        std::cout << "cannot make Grid with no points" << std::endl;
+        throw std::runtime_error("");
+    }
+	if(rangeX <= 0 || rangeY <= 0 ){ERROR_MESSAGE();
+        throw std::runtime_error("");
+        std::cout << "cannot make Grid with no range" << std::endl;
+    }
+
+    //if(Ngrid_init % 2 == 1 ) ++Ngrid_init;
+	
+    Ngrid_init2 = (int)(Ngrid_init*axisratio);
+    //if(Ngrid_init2 % 2 == 1) ++Ngrid_init2;
+    
+    i_points = NewPointArray(Ngrid_init*Ngrid_init2,true);
+    
+    int i;
+    // set grid of positions
+    for(int ii=0;ii<Ngrid_init;++ii){
+        for(int jj=0;jj<Ngrid_init2;++jj){
+
+            i = ii + jj*Ngrid_init;
+            
+            i_points[i].id=pointID;
+            ++pointID;
+            
+            i_points[i].x[0] = center[0] + rangeX*ii/(Ngrid_init-1) - 0.5*rangeX;
+            i_points[i].x[1] = center[1] + rangeX*jj/(Ngrid_init-1) - 0.5*rangeY;
+            i_points[i].gridsize=rangeX/(Ngrid_init-1);
+        }
+    }
+
+    assert(i == Ngrid_init*Ngrid_init2-1);
+ 
+    s_points=LinkToSourcePoints(i_points,Ngrid_init*Ngrid_init2);
+    
+    {
+        std::lock_guard<std::mutex> hold(grid_mutex);
+        lens->rayshooterInternal(Ngrid_init*Ngrid_init2,i_points,false);
+    }
+              
+	// Build trees
+	i_tree = new TreeStruct(i_points,Ngrid_init*Ngrid_init2);
+	s_tree = new TreeStruct(s_points,Ngrid_init*Ngrid_init2,1,MAX(rangeX,rangeY));  // make tree on source plane with a buffer
+    
+	trashkist = new Kist<Point>;
+	neighbors = new Kist<Point>;
+	maglimit = 1.0e-4;
+    
 }
 
 /** \ingroup Constructor
@@ -67,10 +151,11 @@ Grid::~Grid(){
 void Grid::ReInitializeGrid(LensHndl lens){
   
 	Point *i_points,*s_points;
-	double range,center[2];
+	PosType rangeX,rangeY,center[2];
 	unsigned long i;
   
-	range = i_tree->top->boundary_p2[0] - i_tree->top->boundary_p1[0];
+	rangeX = (i_tree->top->boundary_p2[0] - i_tree->top->boundary_p1[0]);
+  rangeY = (i_tree->top->boundary_p2[1] - i_tree->top->boundary_p1[1]);
 	center[0] = (i_tree->top->boundary_p2[0] + i_tree->top->boundary_p1[0])/2;
 	center[1] = (i_tree->top->boundary_p2[1] + i_tree->top->boundary_p1[1])/2;
   
@@ -83,16 +168,38 @@ void Grid::ReInitializeGrid(LensHndl lens){
   
 
 	// build new initial grid
-	i_points = NewPointArray(Ngrid_init*Ngrid_init,true);
-	xygridpoints(i_points,range,center,Ngrid_init,0);
-	s_points=LinkToSourcePoints(i_points,Ngrid_init*Ngrid_init);
-	lens->rayshooterInternal(Ngrid_init*Ngrid_init,i_points,false);
+	i_points = NewPointArray(Ngrid_init*Ngrid_init2,true);
+	if(Ngrid_init == Ngrid_init2){
+    xygridpoints(i_points,rangeX,center,Ngrid_init,0);
+  }else{
+    int i;
+    // set grid of positions
+    for(int ii=0;ii<Ngrid_init;++ii){
+      for(int jj=0;jj<Ngrid_init2;++jj){
+        
+        i = ii + jj*Ngrid_init;
+        
+        i_points[i].id=pointID;
+        ++pointID;
+        
+        i_points[i].x[0] = center[0] + rangeX*ii/(Ngrid_init-1) - 0.5*rangeX;
+        i_points[i].x[1] = center[1] + rangeX*jj/(Ngrid_init-1) - 0.5*rangeY;
+        i_points[i].gridsize=rangeX/(Ngrid_init-1);
+      }
+    }
+
+  }
+	s_points=LinkToSourcePoints(i_points,Ngrid_init*Ngrid_init2);
   
+  {
+    std::lock_guard<std::mutex> hold(grid_mutex);
+	  lens->rayshooterInternal(Ngrid_init*Ngrid_init2,i_points,false);
+  }
 	// need to resize root of source tree.  It can change in size
 	s_tree->top->boundary_p1[0]=s_points[0].x[0]; s_tree->top->boundary_p1[1]=s_points[0].x[1];
 	s_tree->top->boundary_p2[0]=s_points[0].x[0]; s_tree->top->boundary_p2[1]=s_points[0].x[1];
   
-	for(i=0;i<Ngrid_init*Ngrid_init;++i){
+	for(i=0;i<Ngrid_init*Ngrid_init2;++i){
     
     /* find X boundary */
 		if(s_points[i].x[0] < s_tree->top->boundary_p1[0] ) s_tree->top->boundary_p1[0]=s_points[i].x[0];
@@ -104,17 +211,17 @@ void Grid::ReInitializeGrid(LensHndl lens){
   }
   
   // a little extra room for future points
-  s_tree->top->boundary_p1[0] -=  range/Ngrid_init;
-  s_tree->top->boundary_p1[1] -=  range/Ngrid_init;
-  s_tree->top->boundary_p2[0] +=  range/Ngrid_init;
-  s_tree->top->boundary_p2[1] +=  range/Ngrid_init;
+  s_tree->top->boundary_p1[0] -=  MAX(rangeX,rangeY)/Ngrid_init;
+  s_tree->top->boundary_p1[1] -=  MAX(rangeX,rangeY)/Ngrid_init;
+  s_tree->top->boundary_p2[0] +=  MAX(rangeX,rangeY)/Ngrid_init;
+  s_tree->top->boundary_p2[1] +=  MAX(rangeX,rangeY)/Ngrid_init;
   
   s_tree->top->center[0] = (s_tree->top->boundary_p1[0]+s_tree->top->boundary_p2[0])/2;
   s_tree->top->center[1] = (s_tree->top->boundary_p1[1]+s_tree->top->boundary_p2[1])/2;
   
 	// fill trees
-	i_tree->FillTree(i_points,Ngrid_init*Ngrid_init);
-	s_tree->FillTree(s_points,Ngrid_init*Ngrid_init);
+	i_tree->FillTree(i_points,Ngrid_init*Ngrid_init2);
+	s_tree->FillTree(s_points,Ngrid_init*Ngrid_init2);
   
 	/*for(i=0;i<Ngrid_init*Ngrid_init;++i){
    assert(i_points[i].leaf->child1 == NULL && i_points[i].leaf->child2 == NULL);
@@ -134,7 +241,7 @@ void Grid::ReInitializeGrid(LensHndl lens){
 void Grid::ReShoot(LensHndl lens){
   
 	Point *i_points,*s_points;
-	double range,center[2];
+	PosType range,center[2];
 	unsigned long i;
   
 	range = i_tree->top->boundary_p2[0] - i_tree->top->boundary_p1[0];
@@ -159,8 +266,12 @@ void Grid::ReShoot(LensHndl lens){
         s_points[k].id = i_points[j].id;
         s_points[k].gridsize = i_points[j].gridsize;
       };
+
+      {
       // reshoot the rays
-      lens->rayshooterInternal(i_points->head,i_points,false);
+        std::lock_guard<std::mutex> hold(grid_mutex);
+         lens->rayshooterInternal(i_points->head,i_points,false);
+      }
     }
     
     MoveDownList(i_tree->pointlist);
@@ -181,8 +292,8 @@ void Grid::ReShoot(LensHndl lens){
  *
  * returns the sum of the surface brightnesses
  */
-double Grid::RefreshSurfaceBrightnesses(SourceHndl source){
-	double total=0,tmp;
+PosType Grid::RefreshSurfaceBrightnesses(SourceHndl source){
+	PosType total=0,tmp;
   
 	MoveToTopList(s_tree->pointlist);
 	for(unsigned long i=0;i<s_tree->pointlist->Npoints;++i,MoveDownList(s_tree->pointlist)){
@@ -202,8 +313,8 @@ double Grid::RefreshSurfaceBrightnesses(SourceHndl source){
 /**
  *  \brief Reset the surface brightness and in_image flag in every point on image and source planes to zero (false)
  */
-double Grid::ClearSurfaceBrightnesses(){
-	double total=0;
+PosType Grid::ClearSurfaceBrightnesses(){
+	PosType total=0;
   
 	MoveToTopList(s_tree->pointlist);
 	for(unsigned long i=0;i<s_tree->pointlist->Npoints;++i,MoveDownList(s_tree->pointlist)){
@@ -289,8 +400,12 @@ Point * Grid::RefineLeaf(LensHndl lens,Point *point,bool kappa_off){
 	int  Ntemp = Ngrid_block*Ngrid_block-1-Nout;
 
 	s_points = LinkToSourcePoints(i_points,Ntemp);
-	lens->rayshooterInternal(Ntemp,i_points,kappa_off);
-
+  
+  {
+    std::lock_guard<std::mutex> hold(grid_mutex);
+	  lens->rayshooterInternal(Ntemp,i_points,kappa_off);
+  }
+  
 	// remove the points that are outside initial source grid
 	for(kk=0,Nout=0;kk < Ntemp;++kk){
 		assert(s_points[kk - Nout].x[0] == s_points[kk - Nout].x[0]);
@@ -356,25 +471,32 @@ Point * Grid::RefineLeaf(LensHndl lens,Point *point,bool kappa_off){
 	return i_points;
 }
 /**
- * Same as RefineLeaf() but multiple points can be passed.  The rays are shot all together so that more
+ * \brief Same as RefineLeaf() but multiple points can be passed.  The rays are shot all together so that more
  * parallelization can be achieved in the rayshooting.
  */
 Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa_off){
 
+  
 	if(points.size() == 0) return NULL;
 
 	size_t Nleaves = points.size();
 	Point *i_points = NewPointArray((Ngrid_block*Ngrid_block-1)*Nleaves,true);
 	Point *s_points;
-	size_t Nout,kk,ii,addedtocell[Nleaves];
-	long Nadded,Nout_tot;
+	size_t Nout,kk,ii;
+	size_t Nadded,Nout_tot;
+  std::vector<size_t> addedtocell(points.size());
 
 	Nout_tot=0;
 	for(ii=0,Nadded=0;ii<Nleaves;++ii){
 		assert(points[ii]->leaf->child1 == NULL && points[ii]->leaf->child2 == NULL);
 		assert(points[ii]->image->leaf->child1 == NULL && points[ii]->image->leaf->child2 == NULL);
-
-		assert(points[ii]->gridsize > pow(10.,-DBL_DIG)*MAX(fabs(points[ii]->x[0]),fabs(points[ii]->x[1])) ); // If cells are too small they will cause
+    
+    // If cells are too small they will cause problems
+		if(points[ii]->gridsize < pow(10.,-DBL_DIG)*MAX(fabs(points[ii]->x[0]),fabs(points[ii]->x[1])) ){
+      ERROR_MESSAGE();
+      std::cout << "Cell size is too small for double precision " << std::endl;
+      throw std::runtime_error("Cell size is too small for double precision");
+    };
     //assert(points[ii]->gridsize > 1.0e-10*MAX(fabs(points[ii]->x[0]),fabs(points[ii]->x[1])) ); // If cells are too small they will cause problems.
 
 		points[ii]->leaf->refined = true;
@@ -432,8 +554,8 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa
   // This interpolation does not work for some reason and needs to be fixed some time.
 	/*/ Here the points that are in uniform magnification regions are calculated by interpolation and marked with in_image = MAYBE
 	{
-		double aa[4],dx[2];
-		//double a1[4],ss;
+		PosType aa[4],dx[2];
+		//PosType a1[4],ss;
 		//bool tmp;
 		//Point *i_point = NewPointArray(1,true);
 		//Point *s_point = LinkToSourcePoints(i_point,1);
@@ -491,7 +613,10 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa
 
 	}*/
 
-	lens->rayshooterInternal(Nadded,i_points,kappa_off);
+  {
+    std::lock_guard<std::mutex> hold(grid_mutex);
+    lens->rayshooterInternal(Nadded,i_points,kappa_off);
+  }
 
 	/*********************** TODO test line *******************************
 	for(ii=0;ii<Nadded;++ii){
@@ -655,8 +780,8 @@ void Grid::ClearAllMarks(){
  * 	 a[0] = a11, a[1] = a22, a[2] = a12, a[3] = a21
  *
  */
-bool Grid::find_mag_matrix(double *a,Point *p0,Point *p1,Point *p2){
-	double y1[2],y2[2],x1[2],x2[2];
+bool Grid::find_mag_matrix(PosType *a,Point *p0,Point *p1,Point *p2){
+	PosType y1[2],y2[2],x1[2],x2[2];
 
 	x1[0] = p1->x[0] - p0->x[0];
 	x1[1] = p1->x[1] - p0->x[1];
@@ -668,7 +793,7 @@ bool Grid::find_mag_matrix(double *a,Point *p0,Point *p1,Point *p2){
 	y2[0] = p2->image->x[0] - p0->image->x[0];
 	y2[1] = p2->image->x[1] - p0->image->x[1];
 
-	double det = x1[0]*x2[1] - x1[1]*x2[0];
+	PosType det = x1[0]*x2[1] - x1[1]*x2[0];
 	if(det == 0) return false;
 
 	// a[0] = a11, a[1] = a22, a[2] = a12, a[3] = a21
@@ -689,11 +814,11 @@ bool Grid::find_mag_matrix(double *a,Point *p0,Point *p1,Point *p2){
  * set in the Grid constructor.
  */
 bool Grid::uniform_mag_from_deflect(
-		double *a           /// Returned magnification matrix, not specified if returning false
+		PosType *a           /// Returned magnification matrix, not specified if returning false
 		,Point *point       /// point to be tested
 		){
 	Point *point2;
-	double ao[4];
+	PosType ao[4];
 	int count=0;
 
     i_tree->FindAllBoxNeighborsKist(point,neighbors);
@@ -732,7 +857,7 @@ bool Grid::uniform_mag_from_deflect(
  *
  */
 bool Grid::uniform_mag_from_shooter(
-		double *a           /// Returned magnification matrix, not specified if returning false
+		PosType *a           /// Returned magnification matrix, not specified if returning false
 		,Point *point       /// point to be tested
 		){
 	Point *point2;
@@ -763,11 +888,11 @@ bool Grid::uniform_mag_from_shooter(
     return true;
 }
 void Grid::test_mag_matrix(){
-	double aa[4];
+	PosType aa[4];
 	Point *point2;
-	double ao[4];
+	PosType ao[4];
 	int count;
-	double kappa, gamma[3], invmag;
+	PosType kappa, gamma[3], invmag;
 
 	MoveToTopList(i_tree->pointlist);
 	do{
@@ -815,8 +940,8 @@ void Grid::test_mag_matrix(){
  */
 void Grid::zoom(
 		LensHndl lens
-		,double *center      /// center of point where grid is refined
-		,double min_scale    /// the smallest grid size to which the grid is refined
+		,PosType *center      /// center of point where grid is refined
+		,PosType min_scale    /// the smallest grid size to which the grid is refined
 		,bool kappa_off      /// turns the kappa and gamma calculation on or off
 		,Branch *top         /// where on the tree to start, if NULL it will start at the root
 		){
@@ -847,20 +972,20 @@ void Grid::zoom(
 
 /// Outputs a fits image of a lensing variable of choice
 void Grid::writeFits(
-      const double center[]     /// center of image
+      const PosType center[]     /// center of image
       ,size_t Npixels           /// number of pixels in image in on dimension
-      ,double resolution        /// resolution of image in radians
+      ,PosType resolution        /// resolution of image in radians
       ,LensingVariable lensvar  /// which quantity is to be displayed
       ,std::string filename     /// file name for image -- .kappa.fits, .gamma1.fits, etc will be appended
       ){
   PixelMap map(center, Npixels, resolution);
 
-  double range = Npixels*resolution;
+  PosType range = Npixels*resolution;
   ImageInfo tmp_image;
   long i;
   std::string tag;
   i_tree->PointsWithinKist(center,range/sqrt(2.),tmp_image.imagekist,0);
-  std::vector<double> tmp_sb_vec(tmp_image.imagekist->Nunits());
+  std::vector<PosType> tmp_sb_vec(tmp_image.imagekist->Nunits());
 
   for(tmp_image.imagekist->MoveToTop(),i=0;i<tmp_sb_vec.size();++i,tmp_image.imagekist->Down()){
     tmp_sb_vec[i] = tmp_image.imagekist->getCurrent()->surface_brightness;
@@ -878,6 +1003,14 @@ void Grid::writeFits(
         tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->x[1]
         - tmp_image.imagekist->getCurrent()->image->x[1];
         tag = ".alpha2.fits";
+        break;
+      case alpha:
+        tmp_image.imagekist->getCurrent()->surface_brightness = pow(tmp_image.imagekist->getCurrent()->x[0]- tmp_image.imagekist->getCurrent()->image->x[0],2);
+        tmp_image.imagekist->getCurrent()->surface_brightness += pow(tmp_image.imagekist->getCurrent()->x[1]- tmp_image.imagekist->getCurrent()->image->x[1],2);
+        
+        tmp_image.imagekist->getCurrent()->surface_brightness = sqrt(tmp_image.imagekist->getCurrent()->surface_brightness);
+        
+        tag = ".alpha.fits";
         break;
       case kappa:
         tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->kappa;
@@ -914,19 +1047,19 @@ void Grid::writeFits(
 
 /// Outputs a PixelMap of the lensing quantities of a fixed grid
 PixelMap Grid::writePixelMap(
-                     const double center[]     /// center of image
+                     const PosType center[]     /// center of image
                      ,size_t Npixels           /// number of pixels in image in on dimension
-                     ,double resolution        /// resolution of image in radians
+                     ,PosType resolution        /// resolution of image in radians
                      ,LensingVariable lensvar  /// which quantity is to be displayed
                      ){
     PixelMap map(center, Npixels, resolution);
     
-    double range = Npixels*resolution;
+    PosType range = Npixels*resolution;
     ImageInfo tmp_image;
     long i;
     std::string tag;
     i_tree->PointsWithinKist(center,range/sqrt(2.),tmp_image.imagekist,0);
-    std::vector<double> tmp_sb_vec(tmp_image.imagekist->Nunits());
+    std::vector<PosType> tmp_sb_vec(tmp_image.imagekist->Nunits());
     
     for(tmp_image.imagekist->MoveToTop(),i=0;i<tmp_sb_vec.size();++i,tmp_image.imagekist->Down()){
         tmp_sb_vec[i] = tmp_image.imagekist->getCurrent()->surface_brightness;
@@ -944,6 +1077,14 @@ PixelMap Grid::writePixelMap(
                 tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->x[1]
                 - tmp_image.imagekist->getCurrent()->image->x[1];
                 tag = ".alpha2.fits";
+                break;
+            case alpha:
+                tmp_image.imagekist->getCurrent()->surface_brightness = pow(tmp_image.imagekist->getCurrent()->x[0]- tmp_image.imagekist->getCurrent()->image->x[0],2);
+                tmp_image.imagekist->getCurrent()->surface_brightness += pow(tmp_image.imagekist->getCurrent()->x[1]- tmp_image.imagekist->getCurrent()->image->x[1],2);
+            
+                tmp_image.imagekist->getCurrent()->surface_brightness = sqrt(tmp_image.imagekist->getCurrent()->surface_brightness);
+        
+                tag = ".alpha.fits";
                 break;
             case kappa:
                 tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->kappa;
@@ -982,15 +1123,15 @@ PixelMap Grid::writePixelMap(
 
 /// Outputs a fits file for making plots of vector fields
 void Grid::writeFitsVector(
-                     const double center[]     /// center of image
+                     const PosType center[]     /// center of image
                      ,size_t Npixels           /// number of pixels in image in on dimension
-                     ,double resolution        /// resolution of image in radians
+                     ,PosType resolution        /// resolution of image in radians
                      ,LensingVariable lensvar  /// which quantity is to be displayed
                      ,std::string filename     /// file name for image -- .kappa.fits, .gamma1.fits, etc will be appended
                      ){
   throw std::runtime_error("Not done yet!");
   
-  double range = Npixels*resolution,tmp_x[2];
+  PosType range = Npixels*resolution,tmp_x[2];
   ImageInfo tmp_image,tmp_image_theta;
   size_t i;
   std::string tag;
@@ -998,7 +1139,7 @@ void Grid::writeFitsVector(
   i_tree->PointsWithinKist(center,range/sqrt(2.),tmp_image.imagekist,0);
   i_tree->PointsWithinKist(center,range/sqrt(2.),tmp_image_theta.imagekist,0);
   
-  std::vector<double> tmp_sb_vec(tmp_image.imagekist->Nunits());
+  std::vector<PosType> tmp_sb_vec(tmp_image.imagekist->Nunits());
   
   for(tmp_image.imagekist->MoveToTop(),i=0;i<tmp_sb_vec.size();++i,tmp_image.imagekist->Down()){
     tmp_sb_vec[i] = tmp_image.imagekist->getCurrent()->surface_brightness;

@@ -73,9 +73,9 @@ PixelMap::PixelMap(const PixelMap& other)
 }
 
 PixelMap::PixelMap(
-		const double* center,  /// The location of the center of the map
+		const PosType* center,  /// The location of the center of the map
 		std::size_t Npixels,  /// Number of pixels in one dimension of map.
-		double resolution        /// One dimensional range of map in whatever units the point positions are in
+		PosType resolution        /// One dimensional range of map in whatever units the point positions are in
 		)
 : map(0.0, Npixels*Npixels),
   Npixels(Npixels), resolution(resolution)
@@ -130,7 +130,7 @@ PixelMap::PixelMap(std::string filename)
  * If the region exceeds the boundaries of the original map, the new map is completed with zeros.
  */
 PixelMap::PixelMap(const PixelMap& pmap,  /// Input PixelMap (from which the stamp is taken)
-		const double* center, /// center of the region to be duplicated (in rads)
+		const PosType* center, /// center of the region to be duplicated (in rads)
 		std::size_t Npixels /// size of the region to be duplicated (in pixels)
 		)
 : map(0.0, Npixels*Npixels),
@@ -168,7 +168,7 @@ PixelMap::PixelMap(const PixelMap& pmap,  /// Input PixelMap (from which the sta
  */
 PixelMap::PixelMap(
                    const PixelMap& pmap
-                   , double res_ratio     /// resolution of map is res_ratio times the resolution of the input map
+                   , PosType res_ratio     /// resolution of map is res_ratio times the resolution of the input map
                    )
 {
 	resolution = res_ratio*pmap.resolution;
@@ -185,9 +185,9 @@ PixelMap::PixelMap(
 	
 	int old_Npixels = pmap.Npixels;
 	int ix, iy;
-	double area;
-	double* old_p1 = new double[2];
-	double* old_p2 = new double[2];
+	PosType area;
+	PosType* old_p1 = new PosType[2];
+	PosType* old_p2 = new PosType[2];
 
 	for(unsigned long i=0;i < map.size(); ++i)
 	{
@@ -227,19 +227,19 @@ void PixelMap::Clean()
 }
 
 /// Multiplies the whole map by a scalar factor
-void PixelMap::Renormalize(double factor)
+void PixelMap::Renormalize(PosType factor)
 {
 	map *= factor;
 }
 
 /// Adds a value to the i-th pixel
-void PixelMap::AddValue(std::size_t i, double value)
+void PixelMap::AddValue(std::size_t i, PosType value)
 {
 	map[i] += value;
 }
 
 /// Assigns a value to the i-th pixel
-void PixelMap::AssignValue(std::size_t i, double value)
+void PixelMap::AssignValue(std::size_t i, PosType value)
 {
 	map[i] = value;
 }
@@ -270,6 +270,23 @@ PixelMap operator+(const PixelMap& a, const PixelMap& b)
 	return sum;
 }
 
+/// Subtract the values of another PixelMap from this one.
+PixelMap& PixelMap::operator-=(const PixelMap& rhs)
+{
+	// TODO: maybe check if PixelMaps agree, but is slower
+	map -= rhs.map;
+	return *this;
+}
+
+/// Subtract two PixelMaps.
+PixelMap operator-(const PixelMap& a, const PixelMap& b)
+{
+	PixelMap diff(a);
+	diff -= b;
+	return diff;
+}
+
+
 /** \brief Add an image to the map
  *
  *  If rescale==0 gives constant surface brightness, if < 0
@@ -286,27 +303,27 @@ void PixelMap::AddImages(
 	if(Nimages <= 0) return;
 	if(imageinfo->imagekist->Nunits() == 0) return;
 
-	double sb = 1;
+	PosType sb = 1;
     float area = 1;
 	std::list <unsigned long> neighborlist;
 	std::list<unsigned long>::iterator it;
 	for(long ii=0;ii<Nimages;++ii){
 
 		if(imageinfo->imagekist->Nunits() > 0){
-			MoveToTopKist(imageinfo[ii].imagekist);
+			imageinfo[ii].imagekist->MoveToTop();
 			do{
-				if(rescale != 0.0) sb = fabs(rescale)*getCurrentKist(imageinfo[ii].imagekist)->surface_brightness;
+				if(rescale != 0.0) sb = fabs(rescale)*imageinfo[ii].imagekist->getCurrent()->surface_brightness;
 
-				assert(getCurrentKist(imageinfo[ii].imagekist)->leaf);
+				assert(imageinfo[ii].imagekist->getCurrent()->leaf);
 
-				if ((inMapBox(getCurrentKist(imageinfo[ii].imagekist)->leaf)) == true){
-					PointsWithinLeaf(getCurrentKist(imageinfo[ii].imagekist)->leaf,neighborlist);
+				if ((inMapBox(imageinfo[ii].imagekist->getCurrent()->leaf)) == true){
+					PointsWithinLeaf(imageinfo[ii].imagekist->getCurrent()->leaf,neighborlist);
 					for(it = neighborlist.begin();it != neighborlist.end();it++){
-						area = LeafPixelArea(*it,getCurrentKist(imageinfo[ii].imagekist)->leaf);
+						area = LeafPixelArea(*it,imageinfo[ii].imagekist->getCurrent()->leaf);
             map[*it] += sb*area;
 					}
 				}
-			}while(MoveDownKist(imageinfo[ii].imagekist));
+			}while(imageinfo[ii].imagekist->Down());
 		}
 	}
     
@@ -346,15 +363,15 @@ bool PixelMap::inMapBox(Branch * branch1){
 	return true;
 }
 /// checks if point is within map boundaries
-bool PixelMap::inMapBox(double * x){
+bool PixelMap::inMapBox(PosType * x){
 	if (x[0] > map_boundary_p2[0] || x[0] < map_boundary_p1[0]) return false;
 	if (x[1] > map_boundary_p2[1] || x[1] < map_boundary_p1[1]) return false;
 	return true;
 }
 
 //// Finds the area of the intersection between pixel i and branch1
-double PixelMap::LeafPixelArea(IndexType i,Branch * branch1){
-	double area=0;
+PosType PixelMap::LeafPixelArea(IndexType i,Branch * branch1){
+	PosType area=0;
 	PosType p[2],p1[2],p2[2];
 
 	Utilities::PositionFromIndex(i,p,Npixels,range,center);
@@ -378,7 +395,7 @@ double PixelMap::LeafPixelArea(IndexType i,Branch * branch1){
 void PixelMap::AddImages(
 		ImageInfo *imageinfo   /// An array of ImageInfo-s.  There is no reason to separate images for this routine
 		,int Nimages           /// Number of images on input.
-		,double sigma          /// Gaussion width of smoothing kernal
+		,PosType sigma          /// Gaussion width of smoothing kernal
 		){
 
 	if(sigma < resolution){
@@ -389,7 +406,7 @@ void PixelMap::AddImages(
 	if(Nimages <= 0) return;
 	if(imageinfo->imagekist->Nunits() == 0) return;
 
-	double sb,r[2],res,norm=0;
+	PosType sb,r[2],res,norm=0;
 	Kist<Point> * kist = new Kist<Point>();
 
 	// find numerical normalization of mask on grid
@@ -513,8 +530,8 @@ void PixelMap::printFITS(std::string filename, bool verbose) const
  *
  * \brief Smoothes a map with a Gaussian kernel of width sigma (in arcseconds)
  */
-void PixelMap::smooth(double sigma){
-	double sum=0,**mask;
+void PixelMap::smooth(PosType sigma){
+	PosType sum=0,**mask;
 	int ix,iy;
 	int Nmask,Nmask_half;
 	int j_cen, k_cen;
@@ -525,9 +542,9 @@ void PixelMap::smooth(double sigma){
 	if(Nmask < 4 ) std::cout << "WARNING: pixels are large compare to psf Nmask=" << Nmask << std::endl;
 
 	Nmask_half = int(Nmask/2);
-	mask = new double*[Nmask];
+	mask = new PosType*[Nmask];
 	for (int j = 0; j <Nmask; j++)
-		mask[j] = new double[Nmask];
+		mask[j] = new PosType[Nmask];
 
 	for(int j=0;j<Nmask;j++)
 	{
@@ -547,7 +564,7 @@ void PixelMap::smooth(double sigma){
 		}
 	}
 
-	std::valarray<double> map_out(0.0, map.size());
+	std::valarray<PosType> map_out(0.0, map.size());
 	
 	for(long i=0;i<map.size();i++){
 		for(int j=0;j<Nmask;j++){
@@ -579,11 +596,11 @@ void PixelMap::smooth(double sigma){
  * at all before starting.  Could also be improved by making the line fatter
  * by including neighbor points.
  */
-void PixelMap::drawline(double x1[],double x2[],double value){
+void PixelMap::drawline(PosType x1[],PosType x2[],PosType value){
 
-	double x[2],s1,s2,r;
+	PosType x[2],s1,s2,r;
 	size_t index;
-	double d = 0;
+	PosType d = 0;
 
 	r = sqrt( (x2[0] - x1[0])*(x2[0] - x1[0]) + (x2[1] - x1[1])*(x2[1] - x1[1]) );
 
@@ -620,8 +637,10 @@ void PixelMap::drawline(double x1[],double x2[],double value){
  * The points must be ordered already.  Particularly useful for drawing the caustics
  * that may have irregular cell sizes.  The last point will be connected to the first point.
  */
-void PixelMap::AddCurve(ImageInfo *curve,double value){
+void PixelMap::AddCurve(ImageInfo *curve,PosType value){
 	PosType x[2];
+
+  if(curve->imagekist->Nunits() == 0 ) return;
 
 	curve->imagekist->MoveToTop();
 	x[0] = curve->imagekist->getCurrent()->x[0];
@@ -641,7 +660,7 @@ void PixelMap::AddCurve(ImageInfo *curve,double value){
 /**
  *  \brief Fills in pixels where the image plane points in the grid are located with the value given
  */
-void PixelMap::AddGrid(Grid &grid,double value){
+void PixelMap::AddGrid(Grid &grid,PosType value){
   PointList* list = grid.i_tree->pointlist;
   size_t index;
 

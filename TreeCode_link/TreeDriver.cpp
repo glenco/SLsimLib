@@ -6,13 +6,22 @@
 /* median_cut determines how the cells are subdivided */
 /*    if ==0  equal volume cuts, Warning this option causes an error*/
 /*    if ==1  median point cuts */
-static int incell;
-static Point **temp_points;
-static double realray[2];
+//static int incell;
+
+//static PosType realray[2];
 //Point *point_global;
 
-/// Warning: Not garenteed to return Nneighbors if there are less points on the grid
-Point *TreeStruct::NearestNeighbor(const double* center,int Nneighbors,ListHndl neighborlist,short direction){
+/** \ingroup ImageFundingL2
+ *
+ * \brief Finds nearest neighbor points to ray.
+ *
+ *    This is a kludge that relies on NearestNeighbor which uses a List and translates
+ *    the list to a kist.  Could be rewritten.
+ *
+ *    Warning: The number of neighbor points in neighborkist will be less than Nneighbors when
+ *             the number of points in the tree is less than Nneighbors
+ */
+Point *TreeStruct::NearestNeighborKist(const PosType* center,int Nneighbors,Kist<Point>* neighborkist){
   /* nearest neighbor points in a given direction, direction != 0 should not */
   /*    be used except on a grid */
   /* direction = 0 distance */
@@ -21,9 +30,10 @@ Point *TreeStruct::NearestNeighbor(const double* center,int Nneighbors,ListHndl 
   /*           = 3 to up */
   /*           = 4 to down */
   unsigned long i;
-  static int count=0,oldNneighbors=-1;
-  static double *rneighbors;
-  static Point **neighborpoints;
+  //static int oldNneighbors=-1;
+  //static PosType *rneighbors;
+  //static Point **neighborpoints;
+  short direction = 0;
 
   /*std::printf("entering NN\n");*/
 
@@ -33,28 +43,32 @@ Point *TreeStruct::NearestNeighbor(const double* center,int Nneighbors,ListHndl 
 	  //throw std::out_of_range(std::string() + "ERROR: in NearestNeighbor, number of neighbors > total number of points");
     Nneighbors = top->npoints-1;
   }
-  EmptyList(neighborlist);
+//  EmptyList(neighborlist);
+  neighborkist->Empty();
   if(Nneighbors <= 0) return NULL;
-
+/*
   if(count==0){
-    /*std::printf("allocating memory\n");*/
-    rneighbors=(double *)malloc((Nneighbors+Nbucket)*sizeof(double));
+    rneighbors= (PosType *)malloc((Nneighbors+Nbucket)*sizeof(PosType));
     assert(rneighbors);
     neighborpoints=(Point **)malloc((Nneighbors+Nbucket)*sizeof(Point *));
     assert(neighborpoints);
-    temp_points=(Point **)malloc((Nneighbors+Nbucket)*sizeof(Point *));
+    //temp_points = (Point **)malloc((Nneighbors+Nbucket)*sizeof(Point *));
     assert(temp_points);
+    
     ++count;
     oldNneighbors=Nneighbors;
 
-  }else if(oldNneighbors < Nneighbors){ /* if the number of nearest neighbors goes up get more mem */
-    /*std::printf("re-allocating memory\n");*/
-    rneighbors=(double *)realloc(rneighbors,(Nneighbors+Nbucket)*sizeof(double));
+  }else if(oldNneighbors < Nneighbors){ // if the number of nearest neighbors goes up get more mem
+    rneighbors = (PosType *)realloc(rneighbors,(Nneighbors+Nbucket)*sizeof(PosType));
     neighborpoints=(Point **)realloc(neighborpoints,(Nneighbors+Nbucket)*sizeof(Point *));
-    temp_points=(Point **)realloc(temp_points,(Nneighbors+Nbucket)*sizeof(Point *));
+    //temp_points = (Point **)realloc(temp_points,(Nneighbors+Nbucket)*sizeof(Point *));
     oldNneighbors=Nneighbors;
   }
-
+  */
+  
+  PosType rneighbors[Nneighbors+Nbucket];
+  Point *neighborpoints[Nneighbors+Nbucket];
+  tmp_point.resize(Nneighbors+Nbucket);
 
   /*   std::printf("Nneighbors=%i\n",Nneighbors); */
   /*   std::printf("array sizes=%i\n",Nneighbors+Nbucket); */
@@ -68,7 +82,7 @@ Point *TreeStruct::NearestNeighbor(const double* center,int Nneighbors,ListHndl 
   //   std::printf("p1= [%f,%f]\n", current->boundary_p1[0],current->boundary_p1[1]);
   //   std::printf("p2= [%f,%f]\n", current->boundary_p2[0],current->boundary_p2[1]);
 
-  double ray[2] = { center[0], center[1] };
+  PosType ray[2] = { center[0], center[1] };
 	
   realray[0]=ray[0];
   realray[1]=ray[1];
@@ -84,7 +98,7 @@ Point *TreeStruct::NearestNeighbor(const double* center,int Nneighbors,ListHndl 
   }
   incell=1;
 
-  if(direction==0) EmptyList(neighborlist);
+  //if(direction==0) EmptyList(neighborlist);
   if(direction==-1) direction=0;
 
   _NearestNeighbor(ray,Nneighbors,neighborpoints,rneighbors,&direction);
@@ -92,19 +106,26 @@ Point *TreeStruct::NearestNeighbor(const double* center,int Nneighbors,ListHndl 
   /* convert from point array to exported point list */
 
   for(i=0;i<Nneighbors;++i){
+    neighborkist->InsertAfterCurrent(neighborpoints[i]);
+    neighborkist->Down();
+  }
+/*
+  for(i=0;i<Nneighbors;++i){
     InsertAfterCurrent(neighborlist,neighborpoints[i]->x,neighborpoints[i]->id,neighborpoints[i]->image);
     MoveDownList(neighborlist);
-    PointCopyData(neighborlist->current,neighborpoints[i]);/**/
+    PointCopyData(neighborlist->current,neighborpoints[i]);
   }
-
-  return neighborpoints[0];
+*/
+    
+  neighborkist->MoveToTop();
+  return neighborkist->getCurrent();
 }
 
-void TreeStruct::_NearestNeighbor(double* ray,int Nneighbors,Point **neighborpoints,double *rneighbors,short *direction){
+void TreeStruct::_NearestNeighbor(PosType* ray,int Nneighbors,Point **neighborpoints,PosType *rneighbors,short *direction){
 
   int i,incell2=1;
   unsigned long index[Nneighbors+Nbucket];
-  double dx,dy;
+  PosType dx,dy;
 
   //std::printf("**************************************\nlevel %i\n",current->level);
   //for(i=0;i<current->npoints;++i) std::printf("   %i\n",current->points[i]);
@@ -155,13 +176,15 @@ void TreeStruct::_NearestNeighbor(double* ray,int Nneighbors,Point **neighborpoi
     			}
 
      			index[i]=i;
-    			temp_points[i]=pointlist->current;
+    			//temp_points[i]=pointlist->current;
+          tmp_point[i] = pointlist->current;
     			MoveDownList(pointlist);
     		}
 
     		if(current->npoints > 0){
     			Utilities::double_sort(current->npoints,rneighbors-1,index-1);
-    			for(i=0;i<current->npoints;++i) neighborpoints[i] = temp_points[index[i]];
+    			//for(i=0;i<current->npoints;++i) neighborpoints[i] = temp_points[index[i]];
+    			for(i=0;i<current->npoints;++i) neighborpoints[i] = tmp_point[index[i]];
     		}
 
       }else{  // keep going down the tree
@@ -204,7 +227,8 @@ void TreeStruct::_NearestNeighbor(double* ray,int Nneighbors,Point **neighborpoi
 
 			  for(i=0;i<Nneighbors;++i){
 				  index[i]=i;
-				  temp_points[i]=neighborpoints[i];
+				  //temp_points[i]=neighborpoints[i];
+				  tmp_point[i]=neighborpoints[i];
 			  }
 
 			  for(i=Nneighbors;i<(current->npoints+Nneighbors);++i){
@@ -235,14 +259,16 @@ void TreeStruct::_NearestNeighbor(double* ray,int Nneighbors,Point **neighborpoi
 				  }
 
 				  index[i]=i;
-				  temp_points[i]=pointlist->current;
+				  //temp_points[i]=pointlist->current;
+				  tmp_point[i]=pointlist->current;
 				  MoveDownList(pointlist);
 			  }
 
 			  // sort the points found so far
 			  if(current->npoints > 0){
 				  Utilities::double_sort(current->npoints+Nneighbors,rneighbors-1,index-1);
-				  for(i=0;i<(current->npoints+Nneighbors);++i) neighborpoints[i] = temp_points[index[i]];
+				  //for(i=0;i<(current->npoints+Nneighbors);++i) neighborpoints[i] = temp_points[index[i]];
+				  for(i=0;i<(current->npoints+Nneighbors);++i) neighborpoints[i] = tmp_point[index[i]];
 			  }
 
 		  }else{
@@ -278,9 +304,9 @@ bool boxinbox(Branch *branch1,Branch *branch2){
 
 	return true;
 }
-double BoxIntersection(Branch *branch1,Branch *branch2){
+PosType BoxIntersection(Branch *branch1,Branch *branch2){
 	// returns area of intersection between two branches
-	double area=0;
+	PosType area=0;
 
 	area = MIN(branch1->boundary_p2[0],branch2->boundary_p2[0])
 	     - MAX(branch1->boundary_p1[0],branch2->boundary_p1[0]);
@@ -294,14 +320,14 @@ double BoxIntersection(Branch *branch1,Branch *branch2){
 }
 
 // return 1 (0) if box is (not) within rmax of ray
-int cutbox(double *ray,double *p1,double *p2,double rmax){
+int cutbox(PosType *ray,PosType *p1,PosType *p2,PosType rmax){
 	/*  returns:  0 if whole box is outside rmax from ray[]
 	 *            1 if whole box is inside circle but ray is not in the box
 	 *            2 if ray[] is inside box
 	 *            3 if box intersects circle but ray[] is not inside box
 	 */
   short i,tick=0;
-  double close[2],rtmp;
+  PosType close[2],rtmp;
   
   // find closest point on box borders to ray[]
   for(i=0;i<2;++i){
@@ -334,7 +360,7 @@ int cutbox(double *ray,double *p1,double *p2,double rmax){
  * returns true.
  *
  */
-bool CircleInBox(const double* center,double radius,double *p1,double *p2){
+bool CircleInBox(const PosType* center,PosType radius,PosType *p1,PosType *p2){
 
 	if(!inbox(center,p1,p2)) return false;
 
@@ -346,9 +372,9 @@ bool CircleInBox(const double* center,double radius,double *p1,double *p2){
 	return true;
 }
 
-bool BoxInCircle(const double* center,double radius,double *p1,double *p2){
+bool BoxInCircle(const PosType* center,PosType radius,PosType *p1,PosType *p2){
 
-	double rad2 = radius*radius;
+	PosType rad2 = radius*radius;
 
 	if((pow(p1[0] - center[0],2) + pow(p1[1] - center[1],2)) > rad2) return false;
 	if((pow(p2[0] - center[0],2) + pow(p2[1] - center[1],2)) > rad2) return false;
@@ -362,7 +388,7 @@ bool BoxInCircle(const double* center,double radius,double *p1,double *p2){
  *   Finds the leaf the ray is in and adds Nadd to all of is parent leaves
 */
 
-void TreeStruct::_FindLeaf(const double* ray,unsigned long Nadd){
+void TreeStruct::_FindLeaf(const PosType* ray,unsigned long Nadd){
 
 	bool contin;
 
@@ -409,7 +435,7 @@ bool AreBoxNeighbors(Branch *branch1,Branch *branch2){
 /** return the point that is in the same box as ray[2]
  * if Nbuck > 1 the head of the point array is returned
  */
-void TreeStruct::FindBoxPoint(const double* ray,Point *point){
+void TreeStruct::FindBoxPoint(const PosType* ray,Point *point){
 	Branch *branch;
 
 	branch=current;
@@ -441,7 +467,7 @@ void TreeStruct::FindBoxPoint(const double* ray,Point *point){
 	//return point;
 }
 
-void TreeStruct::_FindBox(const double* ray){
+void TreeStruct::_FindBox(const PosType* ray){
 	bool contin;
 
 	// replaced recursion with iteration
@@ -463,11 +489,11 @@ void TreeStruct::_FindBox(const double* ray){
 }
 
 
-Point *sortList(long n, double *arr,ListHndl list,Point *firstpointin){
+Point *sortList(long n, PosType *arr,ListHndl list,Point *firstpointin){
 	/** simple sort for points in linked list **/
 	/** slow for > 20 points **/
   long i,j;
-  double a;
+  PosType a;
   Point *point,*firstpoint;
 
   if(n <= 1) return firstpointin;
@@ -505,7 +531,7 @@ Point *sortList(long n, double *arr,ListHndl list,Point *firstpointin){
  *              = 1  makes in_image=true for all points in image, gives no list of neighbors
  *              = -1 makes in_image=false for all points in image to reset, gives no list of neighbors
  *
-void TreeStruct::PointsWithin(double *ray,float rmax,ListHndl neighborlist,short markpoints){
+void TreeStruct::PointsWithin(PosType *ray,float rmax,ListHndl neighborlist,short markpoints){
 
   if(markpoints==0) EmptyList(neighborlist);
   
@@ -529,11 +555,11 @@ void TreeStruct::PointsWithin(double *ray,float rmax,ListHndl neighborlist,short
   _PointsWithin(ray,&rmax,neighborlist,markpoints);
 }
 
-void TreeStruct::PointsWithin_iter(double *ray,float rmax,ListHndl neighborlist,short markpoints){
+void TreeStruct::PointsWithin_iter(PosType *ray,float rmax,ListHndl neighborlist,short markpoints){
 	bool descend;
 	short desition;
 	unsigned long i,j;
-	double radius,length;
+	PosType radius,length;
 
 	assert(neighborlist);
 
@@ -603,13 +629,13 @@ void TreeStruct::PointsWithin_iter(double *ray,float rmax,ListHndl neighborlist,
 	}while(TreeWalkStep(descend));
 }
 */
-double ClosestBorder(double *ray,double *p1,double *p2){
+PosType ClosestBorder(PosType *ray,PosType *p1,PosType *p2){
 	/*  returns the distance from ray[] to the closest
 	 *    border of the box,
 	 *    < 0 if ray is outside of the box
 	 *    > 0 if ray is inside the box
 	 */
-	double length;
+	PosType length;
 
 	length = MIN(ray[0]-p1[0],p2[0]-ray[0]);
 	length = MIN(ray[1]-p1[1],length);
@@ -617,10 +643,10 @@ double ClosestBorder(double *ray,double *p1,double *p2){
 	return MIN(p2[1]-ray[1],length);
 }
 /*
-void TreeStruct::_PointsWithin(double *ray,float *rmax,ListHndl neighborlist,short markpoints){
+void TreeStruct::_PointsWithin(PosType *ray,float *rmax,ListHndl neighborlist,short markpoints){
 
   int i,j,incell2=1;
-  double radius;
+  PosType radius;
   short pass;
 
 
@@ -835,7 +861,7 @@ void NeighborsOfNeighbors(ListHndl neighbors,ListHndl wholelist){
 	return ;
 }
 /*
-void TreeStruct::FriendsOfFriends(double *start_point,float linkinglength,ListHndl neighborlist
+void TreeStruct::FriendsOfFriends(PosType *start_point,float linkinglength,ListHndl neighborlist
 		      ,Point *filter,unsigned long Nfilter,unsigned long *filter_place){
   unsigned long Nlocal_filter,i;
   Point *placemark,*local_filter;
@@ -926,7 +952,7 @@ void TreeStruct::FriendsOfFriends(double *start_point,float linkinglength,ListHn
 }
 */
 /*
-void TreeStruct::_PointsWithin2(double *ray,float *rmax,ListHndl neighborlist
+void TreeStruct::_PointsWithin2(PosType *ray,float *rmax,ListHndl neighborlist
 		   ,Point *filter,unsigned long Nfilter,unsigned long *filter_place,short compliment){
 
 //   id numbers in filter[*filterplace ... Nfilter-1]
@@ -936,7 +962,7 @@ void TreeStruct::_PointsWithin2(double *ray,float *rmax,ListHndl neighborlist
 //              = 1 search only points in filter after filter_place
 
   int i,j,incell2=1;
-  double radius;
+  PosType radius;
   unsigned long k;
 
   //if(filter != NULL) std::printf("filter_place=%i Nneighborlist=%i\n",*filter_place,neighborlist->Npoints);
@@ -1283,14 +1309,14 @@ void TreeStruct::_FindAllBoxNeighbors(Branch *leaf,ListHndl neighbors){
 
 /// Treating the image as an arc, find its parameters
 void ImageInfo::ArcInfo(
-		double *area        /// area of image with surface brightness limit
-		,double *area_circ   /// 4 * area / circumference^2 of the image, a measure of thinness
-		,double theta        ///
+		PosType *area        /// area of image with surface brightness limit
+		,PosType *area_circ   /// 4 * area / circumference^2 of the image, a measure of thinness
+		,PosType theta        ///
 		){
 
 	throw std::runtime_error("ImageInfo::ArcInfo() is not finished yet.");
 
-	double tmp,dist1,dist2,circumference;
+	PosType tmp,dist1,dist2,circumference;
 	Point *center,*tmp_point,*farthest_p,*furthest_p2;
 	Kist<Point> image;
 //	ImageInfo tmp_image;
@@ -1316,7 +1342,7 @@ void ImageInfo::ArcInfo(
 
 
 	// find the farthest point from the center and calculate the circumference
-	double x[2];
+	PosType x[2];
 	innerborder->MoveToTop();
 	x[0] = innerborder->getCurrent()->x[0];
 	x[1] = innerborder->getCurrent()->x[1];
@@ -1361,7 +1387,41 @@ void PrintImages(ImageInfo *images,long Nimages){
 void ImageInfo::PrintImageInfo(){
 
 	std::printf(" PrintImageInfo\n");
-	std::printf("  Npoints = %li  area = %e +/- %e\n",imagekist->Nunits(),area,area_error);
+	std::printf("  Npoints = %li  area = %e fractional error %e\n",imagekist->Nunits(),area,area_error);
 	std::printf("  gridrange = %e %e %e\n",gridrange[0],gridrange[1],gridrange[2]);
 	std::printf("  borders inner N = %li  outer N = %li\n",innerborder->Nunits(),outerborder->Nunits());
+}
+
+/// checks if all the points within the image have the same lensvar with the tolarence
+bool ImageInfo::constant(
+              LensingVariable lensvar  /// which variable is to be compared
+              ,PosType tol            /// to what tolarence it should be considered equal
+              ){
+  
+  PosType max,min,tmp;
+  
+  if(imagekist->Nunits() < 2) return false;
+  
+  switch(lensvar){
+		case kappa:
+			max = min = imagekist->getCurrent()->kappa;
+			break;
+		case invmag:
+			max = min = imagekist->getCurrent()->invmag;
+			break;
+		default:
+      throw std::runtime_error("ImageInfo::constant() only does kappa and invmag");
+			break;
+  }
+
+  imagekist->MoveToTop();
+  do{
+    if(lensvar == invmag) tmp = imagekist->getCurrent()->invmag;
+    if(lensvar == kappa) tmp = imagekist->getCurrent()->kappa;
+    
+    if(tmp > max ) max = tmp;
+    if(tmp < min ) min = tmp;
+  }while(imagekist->Down());
+  
+  return ( fabs(max-min) < tol );
 }

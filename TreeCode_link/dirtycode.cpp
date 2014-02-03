@@ -22,7 +22,7 @@
 void DirtyFoF(
 		ImageInfo *imageinfo  /// Contains the kists of points in each image
 		,int *Nimages        /// Number of images
-		,double linkinglength /// linking length, If it is <= 0 the gridsize's for the points is used.
+		,PosType linkinglength /// linking length, If it is <= 0 the gridsize's for the points is used.
 		,int MaxNimages       /// Maximum size of imageinfo array
 		){
 
@@ -31,12 +31,12 @@ void DirtyFoF(
 
 	*Nimages = 0;
 
-	while(imageinfo->imagekist->Nunits() > 0) InsertAfterCurrentKist(wholekist,TakeOutCurrentKist(imageinfo->imagekist));
+	while(imageinfo->imagekist->Nunits() > 0) wholekist->InsertAfterCurrent(imageinfo->imagekist->TakeOutCurrent());
 
 	i=0;
 	while(wholekist->Nunits() > 0 && *Nimages < MaxNimages){
-		EmptyKist(imageinfo[i].imagekist);
-		InsertAfterCurrentKist(imageinfo[i].imagekist,TakeOutCurrentKist(wholekist));
+		imageinfo[i].imagekist->Empty();
+		imageinfo[i].imagekist->InsertAfterCurrent(wholekist->TakeOutCurrent());
 		if(wholekist->Nunits() > 0) _DirtyFoF(imageinfo[i].imagekist,wholekist,linkinglength);
 		++(*Nimages);
 		++i;
@@ -47,26 +47,26 @@ void DirtyFoF(
 	delete wholekist;
 	return;
 }
-void _DirtyFoF(Kist<Point> * neighbors,Kist<Point> * wholekist,double linkinglength){
-	double ll2 = linkinglength*linkinglength;
+void _DirtyFoF(Kist<Point> * neighbors,Kist<Point> * wholekist,PosType linkinglength){
+	PosType ll2 = linkinglength*linkinglength;
 	bool check = false;
 
 	assert(neighbors->Nunits() == 1);
 	do{
-		MoveToTopKist(wholekist);
+		wholekist->MoveToTop();
 		do{
 			if(check){
-				MoveUpKist(wholekist);
+				wholekist->Up();
 				check=false;
 			}
-			if(linkinglength <= 0) ll2 = 2.01*pow(getCurrentKist(neighbors)->gridsize + getCurrentKist(wholekist)->gridsize,2);
-			if( ll2 > pow(getCurrentKist(neighbors)->x[0] - getCurrentKist(wholekist)->x[0],2)
-					+ pow(getCurrentKist(neighbors)->x[1] - getCurrentKist(wholekist)->x[1],2)   ){
-				if(AtTopKist(wholekist)) check=true;
-				InsertAfterCurrentKist(neighbors,TakeOutCurrentKist(wholekist));
+			if(linkinglength <= 0) ll2 = 2.01*pow(neighbors->getCurrent()->gridsize + wholekist->getCurrent()->gridsize,2);
+			if( ll2 > pow(neighbors->getCurrent()->x[0] - wholekist->getCurrent()->x[0],2)
+					+ pow(neighbors->getCurrent()->x[1] - wholekist->getCurrent()->x[1],2)   ){
+				if(wholekist->AtTop()) check=true;
+				neighbors->InsertAfterCurrent(wholekist->TakeOutCurrent());
 			}
-		}while(MoveDownKist(wholekist));
-	}while(MoveDownKist(neighbors) && wholekist->Nunits() > 0);
+		}while(wholekist->Down());
+	}while(neighbors->Down() && wholekist->Nunits() > 0);
 
 	return ;
 }
@@ -99,23 +99,23 @@ void DirtyDivider(
 
 	Kist<Point> * wholekist = new Kist<Point>;
 	unsigned long i;
-	double xmin;
+	PosType xmin;
 
 	*Nimages = 0;
 
-	xmin = getCurrentKist(imageinfo->imagekist)->x[0];
+	xmin = imageinfo->imagekist->getCurrent()->x[0];
 	while(imageinfo->imagekist->Nunits() > 0){
-		if(xmin < getCurrentKist(imageinfo->imagekist)->x[0] ){  // keeps most left point first
-			xmin = getCurrentKist(imageinfo->imagekist)->x[0];
-			MoveToTopKist(wholekist);
+		if(xmin < imageinfo->imagekist->getCurrent()->x[0] ){  // keeps most left point first
+			xmin = imageinfo->imagekist->getCurrent()->x[0];
+			wholekist->MoveToTop();
 		}
-		InsertBeforeCurrentKist(wholekist,TakeOutCurrentKist(imageinfo->imagekist));
+		wholekist->InsertBeforeCurrent(imageinfo->imagekist->TakeOutCurrent());
 	}
 
 	i=0;
 	while(wholekist->Nunits() > 0 && *Nimages < MaxNimages){
-		EmptyKist(imageinfo[i].imagekist);
-		InsertAfterCurrentKist(imageinfo[i].imagekist,TakeOutCurrentKist(wholekist));
+		imageinfo[i].imagekist->Empty();
+		imageinfo[i].imagekist->InsertAfterCurrent(wholekist->TakeOutCurrent());
 		if(wholekist->Nunits() > 0) _DirtyDivider(imageinfo[i].imagekist,wholekist,Ngroup);
 		++(*Nimages);
 		++i;
@@ -128,49 +128,49 @@ void DirtyDivider(
 }
 void _DirtyDivider(Kist<Point> * neighbors,Kist<Point> * wholekist,int Ngroup){
 	bool check = false;
-	double xinit[2],rr[Ngroup+1],ll;
+	PosType xinit[2],rr[Ngroup+1],ll;
 	long i,j;
 
 	if(wholekist->Nunits() <= Ngroup){
-		while(wholekist->Nunits() > 0) InsertBeforeCurrentKist(neighbors,TakeOutCurrentKist(wholekist));
+		while(wholekist->Nunits() > 0) neighbors->InsertBeforeCurrent(wholekist->TakeOutCurrent());
 		return;
 	}
 
-	xinit[0] = getCurrentKist(neighbors)->x[0];
-	xinit[1] = getCurrentKist(neighbors)->x[1];
+	xinit[0] = neighbors->getCurrent()->x[0];
+	xinit[1] = neighbors->getCurrent()->x[1];
 
 	for(i=0;i<Ngroup+1;++i) rr[i] = 1.0e200;
 
-	MoveToTopKist(wholekist);
+	wholekist->MoveToTop();
 	do{
 		if(check){
-			MoveUpKist(wholekist);
+			wholekist->Up();
 			check=false;
 		}
 
-		ll = pow(xinit[0]-getCurrentKist(wholekist)->x[0],2)
-				+ pow(xinit[1]-getCurrentKist(wholekist)->x[1],2);
+		ll = pow(xinit[0]-wholekist->getCurrent()->x[0],2)
+				+ pow(xinit[1]-wholekist->getCurrent()->x[1],2);
 
 		if(ll < rr[Ngroup]){
-			MoveToTopKist(neighbors);
-			for(i=0;i<Ngroup+1;++i,MoveDownKist(neighbors)){
+			neighbors->MoveToTop();
+			for(i=0;i<Ngroup+1;++i,neighbors->Down()){
 				if(ll < rr[i]){
-					InsertBeforeCurrentKist(neighbors,TakeOutCurrentKist(wholekist));
+					neighbors->InsertBeforeCurrent(wholekist->TakeOutCurrent());
 					for(j=Ngroup;j>i;--j) rr[j] = rr[j-1];
 					rr[i] = ll;
 					break;
 				}
 			}
-			if(AtTopKist(wholekist)) check=true;
+			if(wholekist->AtTop()) check=true;
 		}
-	}while(MoveDownKist(wholekist));
+	}while(wholekist->Down());
 
 	// put nearby points at the beginning of wholekist
-	MoveToBottomKist(neighbors);
-	MoveToTopKist(wholekist);
+	neighbors->MoveToBottom();
+	wholekist->MoveToTop();
 	while(neighbors->Nunits() > Ngroup){
-		InsertBeforeCurrentKist(wholekist,TakeOutCurrentKist(neighbors));
-		MoveToTopKist(wholekist);
+		wholekist->InsertBeforeCurrent(neighbors->TakeOutCurrent());
+		wholekist->MoveToTop();
 	}
 
 	return ;

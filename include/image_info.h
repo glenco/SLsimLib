@@ -30,13 +30,13 @@ typedef struct ImageInfo{
   /// later addition, holds all points in image, will replace points eventually
   Kist<Point> * imagekist;
   /// gridrange[2] minimum grid size in image, gridrange[0] maximum grid size in outerborder, gridrange[1] maximum grid size in image
-  double gridrange[3];
+  PosType gridrange[3];
   /// Centroid of image
-  double centroid[2];
+  PosType centroid[2];
   /// area of image or, when using map_images(), the total brightness of the image
-  double area;
+  PosType area;
   /// error on the estimate of area
-  double area_error;
+  PosType area_error;
   /// the points on the inner border of the image
   Kist<Point> * innerborder;
   /// the points on the outer border of the image, i.e. not in the image
@@ -51,9 +51,11 @@ typedef struct ImageInfo{
   /// returns number of points currently in the image
   unsigned long getNimagePoints(){return imagekist->Nunits();}
   void PrintImageInfo();
-  void copy(ImageInfo &image);
+  void copy(ImageInfo &image,bool copykists = true);
 
-  void ArcInfo(double *area,double *area_circ,double theta);
+  void ArcInfo(PosType *area,PosType *area_circ,PosType theta);
+  
+  bool constant(LensingVariable lenvar,PosType tol);
 
 } ImageInfo;
 
@@ -74,13 +76,13 @@ typedef struct OldImageInfo{
   /// later addition, holds all points in image, will replace points eventually
   //Kist<Point> * imagekist;
   /// gridrange[2] minimum grid size in image, gridrange[0] maximum grid size in outerborder, gridrange[1] maximum grid size in image
-  double gridrange[3];
+  PosType gridrange[3];
   /// Centroid of image
-  double centroid[2];
+  PosType centroid[2];
   /// area of image or, when using map_images(), the total brightness of the image
-  double area;
+  PosType area;
   /// error on the estimate of area
-  double area_error;
+  PosType area_error;
   /// the points on the inner border of the image
   Kist<Point> * innerborder;
   /// the points on the outer border of the image, i.e. not in the image

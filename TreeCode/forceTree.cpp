@@ -14,11 +14,11 @@ TreeForce::TreeForce(
 		,float *Rsphs
 		,bool Multimass
 		,bool Multisize
-		,double my_kappa_background /// background kappa that is subtracted
+		,PosType my_kappa_background /// background kappa that is subtracted
 		,int bucket
 		,int dimension
 		,bool median
-		,double theta
+		,PosType theta
 		) :
 	TreeSimple(xp,Npoints,bucket,dimension,median)
 	, MultiMass(Multimass), MultiRadius(Multisize), masses(Masses), rsph(Rsphs), kappa_background(my_kappa_background), force_theta(theta)
@@ -36,7 +36,7 @@ TreeForce::TreeForce(
 		,IndexType Npoints         /// number of halos
 		,LensHalo *my_halos   /// array with internal properties of halos
 		,bool Multisize            /// flag false if only one halo size and structure should be used, default is true
-		,double my_kappa_bk        /// Background convergence to be subtracted
+		,PosType my_kappa_bk        /// Background convergence to be subtracted
 		,int bucket                /// maximum number of halos in a leaf of the tree
 		,int dimension             /// 2 or 3, dimension of tree, default 2
 		,bool median               /// If true will divide branches at the median position of the particles, if false an equal area cut is used, default false
@@ -63,7 +63,7 @@ void TreeForce::CalcMoments(){
 	IndexType i;
 	PosType rcom,xcm[2],xcut;
 	BranchNB *cbranch;
-	double tmp;
+	PosType tmp;
 
 	moveTopNB(tree);
 	do{
@@ -134,7 +134,7 @@ void TreeForce::CalcMoments(){
 }
 
 /// simple rotates the coordinates in the xp array
-void TreeForce::rotate_coordinates(double **coord){
+void TreeForce::rotate_coordinates(PosType **coord){
 	IndexType i;
 	short j;
 	PosType tmp[3];
@@ -179,14 +179,14 @@ float * TreeForce::CalculateSPHsmoothing(int N){
  *       4*pi*G*mass_scale to get the deflection angle caused by the plane lens.
  * */
 
-void TreeForce::force2D(double *ray,double *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa){
+void TreeForce::force2D(PosType *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa){
 
   PosType xcm[2],rcm2,tmp;
   int OpenBox(TreeNBHndl tree,PosType r);
   IndexType i;
   bool allowDescent=true;
   unsigned long count=0,index;
-  double rcm, arg1, arg2, prefac;
+  PosType rcm, arg1, arg2, prefac;
 
   assert(tree);
   moveTopNB(tree);

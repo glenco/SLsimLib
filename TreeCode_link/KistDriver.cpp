@@ -10,8 +10,8 @@
 #include "slsimlib.h"
 
 //static int Nbucket = 1;   // must be =1 if each leaf is to coincide with each cell
-static int incell;
-static double realray[2];
+//static int incell;
+//static PosType realray[2];
 
 /** \ingroup ImageFundingL2
  *
@@ -22,10 +22,7 @@ static double realray[2];
 */
 
 void TreeStruct::FindAllBoxNeighborsKist(Point *point,Kist<Point> * neighbors){
-	static int count=0;
-
-	++count;
-	EmptyKist(neighbors);
+	neighbors->Empty();
 
 	//Kist<Point>* testkist = new Kist<Point>;
 
@@ -93,8 +90,8 @@ void TreeStruct::_FindAllBoxNeighborsKist(Branch *leaf,Kist<Point> * neighbors){
 			//if(current->npoints == Nbucket){
 			// What if number is > than Nbucket and it is not in a leaf
 			if(current->number != leaf->number && current->npoints > 0){
-				InsertAfterCurrentKist(neighbors,current->points);
-				MoveDownKist(neighbors);
+				neighbors->InsertAfterCurrent(current->points);
+				neighbors->Down();
 			}
 			return;
 		}
@@ -128,7 +125,7 @@ void TreeStruct::_FindAllBoxNeighborsKist_iter(Branch *leaf,Kist<Point> * neighb
 	bool allowDescent = true;
 	long level = current->level;
 
-	EmptyKist(neighbors);
+	neighbors->Empty();
 
 	while(TreeWalkStep(allowDescent) && current->level > level ){
 
@@ -139,8 +136,8 @@ void TreeStruct::_FindAllBoxNeighborsKist_iter(Branch *leaf,Kist<Point> * neighb
 
 			if( atLeaf() ){
 				if(current != leaf && current->npoints > 0){
-					InsertAfterCurrentKist(neighbors,current->points);
-					MoveDownKist(neighbors);
+					neighbors->InsertAfterCurrent(current->points);
+					neighbors->Down();
 				}
 			}
 
@@ -162,16 +159,16 @@ void TreeStruct::_FindAllBoxNeighborsKist_iter(Branch *leaf,Kist<Point> * neighb
  * The
  */
 void TreeStruct::PointsWithinEllipKist(
-	const double* center         /// center of ellipse
+	const PosType* center         /// center of ellipse
 	,float rmax                  /// major axis
 	,float rmin                  /// minor axis
 	,float posangle              /// position angle of major axis, smallest angle between the x-axis and the long axis
 	,Kist<Point> * neighborkist  /// output neighbor kist, will be emptied if it contains anything on entry
 	){
 	unsigned long i,Ntmp;
-	double *xtmp,x,y,cs,sn;
+	PosType *xtmp,x,y,cs,sn;
 
-	EmptyKist(neighborkist);
+	neighborkist->Empty();
 
 	if(rmax <=0.0 || rmin <= 0.0) return;
 
@@ -181,11 +178,11 @@ void TreeStruct::PointsWithinEllipKist(
 	cs = cos(posangle);
 	sn = sin(posangle);
 	Ntmp = neighborkist->Nunits();
-	for(i=0,MoveToTopKist(neighborkist);i<Ntmp;++i,MoveDownKist(neighborkist) ){
-		xtmp = getCurrentKist(neighborkist)->x;
+	for(i=0,neighborkist->MoveToTop();i<Ntmp;++i,neighborkist->Down() ){
+		xtmp = neighborkist->getCurrent()->x;
 		x = xtmp[0]*cs - xtmp[1]*sn;
 		y = xtmp[0]*sn + xtmp[1]*cs;
-		if( pow(x/rmax,2) + pow(y/rmin,2) > 1)	TakeOutCurrentKist(neighborkist);
+		if( (x*x/rmax/rmax) + (y*y/rmin/rmin) > 1) neighborkist->TakeOutCurrent();
 	}
 	return;
 }
@@ -200,50 +197,49 @@ void TreeStruct::PointsWithinEllipKist(
  *   in the point.  If finding points on the source plane the i_point->gridsize must be set to the same as the
  *   image point to get the largest gridsize on the image plane.
  */
-double TreeStruct::PointsWithinKist(
-		const double* center         /// center of circle
-		,float rmax                  /// radius of circle
+PosType TreeStruct::PointsWithinKist(
+		const PosType* center         /// center of circle
+		,PosType rmax                  /// radius of circle
 		,Kist<Point> * neighborkist  /// output neighbor kist, will be emptied if it contains anything on entry
 		,short markpoints            /// see comment
 		)
 {
 
-	double maxgridsize;
+	PosType maxgridsize;
 
-	if(markpoints==0)
-		EmptyKist(neighborkist);
+	if(markpoints==0) neighborkist->Empty();
 
-	double ray[2] = { center[0], center[1] };
+	PosType tmp_ray[2] = { center[0], center[1] };
 	
-	realray[0]=ray[0];
-	realray[1]=ray[1];
+	realray[0]=tmp_ray[0];
+	realray[1]=tmp_ray[1];
 
 	moveTop();
-	if( inbox(ray,current->boundary_p1,current->boundary_p2) == 0 ){
-		std::printf("Warning: in PointsWithinKist, ray is not inside the simulation box\n    should work in any case\n      ray= %e %e\n     boundary p1 = %e %e p2 = %e %e\n",ray[0],ray[1]
+	if( inbox(tmp_ray,current->boundary_p1,current->boundary_p2) == 0 ){
+		std::printf("Warning: in PointsWithinKist, ray is not inside the simulation box\n    should work in any case\n      ray= %e %e\n     boundary p1 = %e %e p2 = %e %e\n",tmp_ray[0],tmp_ray[1]
 	   ,current->boundary_p1[0],current->boundary_p1[1]
 	   ,current->boundary_p2[0],current->boundary_p2[1]);
 
-		ray[0]=MAX(ray[0],current->boundary_p1[0]);
-		ray[0]=MIN(ray[0],current->boundary_p2[0]);
+		tmp_ray[0]=MAX(tmp_ray[0],current->boundary_p1[0]);
+		tmp_ray[0]=MIN(tmp_ray[0],current->boundary_p2[0]);
 
-		ray[1]=MAX(ray[1],current->boundary_p1[1]);
-		ray[1]=MIN(ray[1],current->boundary_p2[1]);
+		tmp_ray[1]=MAX(tmp_ray[1],current->boundary_p1[1]);
+		tmp_ray[1]=MIN(tmp_ray[1],current->boundary_p2[1]);
 	}
 	incell=1;
 
 	maxgridsize = 0;
-    _PointsWithinKist(ray,&rmax,neighborkist,markpoints,&maxgridsize);
+    _PointsWithinKist(tmp_ray,&rmax,neighborkist,markpoints,&maxgridsize);
 
 	return maxgridsize;
 }
 /** \ingroup LowLevel
  * Used in PointsWithinKist() to walk tree.*/
-void TreeStruct::_PointsWithinKist(double *ray,float *rmax,Kist<Point> * neighborkist
-		,short markpoints,double *maxgridsize){
+void TreeStruct::_PointsWithinKist(PosType *ray,PosType *rmax,Kist<Point> * neighborkist
+		,short markpoints,PosType *maxgridsize){
 
   int i,j,incell2=1;
-  double radius;
+  PosType radius;
   short pass;
 
   if(current->npoints == 0) return;
@@ -284,7 +280,7 @@ void TreeStruct::_PointsWithinKist(double *ray,float *rmax,Kist<Point> * neighbo
      					  pointlist->current->image->in_image=FALSE;
      					  pointlist->current->surface_brightness = pointlist->current->image->surface_brightness = 0.0;
        				  }else if(markpoints == 0){
-         				  InsertAfterCurrentKist(neighborkist,pointlist->current);
+         				  neighborkist->InsertAfterCurrent(pointlist->current);
       				  }
        				  if(*maxgridsize < pointlist->current->gridsize) *maxgridsize = pointlist->current->gridsize;
     			  }
@@ -300,7 +296,7 @@ void TreeStruct::_PointsWithinKist(double *ray,float *rmax,Kist<Point> * neighbo
        				  pointlist->current->image->in_image=FALSE;
  					  pointlist->current->surface_brightness = pointlist->current->image->surface_brightness = 0.0;
       			  }else if(markpoints == 0){
-       				  InsertAfterCurrentKist(neighborkist,pointlist->current);
+       				  neighborkist->InsertAfterCurrent(pointlist->current);
  				  }
   				  if(*maxgridsize < pointlist->current->gridsize) *maxgridsize = pointlist->current->gridsize;
 
@@ -357,7 +353,7 @@ void TreeStruct::_PointsWithinKist(double *ray,float *rmax,Kist<Point> * neighbo
 						  pointlist->current->image->in_image=FALSE;
      					  pointlist->current->surface_brightness = pointlist->current->image->surface_brightness = 0.0;
 					  }else if(markpoints==0){
-						  InsertAfterCurrentKist(neighborkist,pointlist->current);
+						  neighborkist->InsertAfterCurrent(pointlist->current);
      				  }
       				  if(*maxgridsize < pointlist->current->gridsize) *maxgridsize = pointlist->current->gridsize;
 
@@ -380,7 +376,7 @@ void TreeStruct::_PointsWithinKist(double *ray,float *rmax,Kist<Point> * neighbo
  					  pointlist->current->image->in_image=FALSE;
  					  pointlist->current->surface_brightness = pointlist->current->image->surface_brightness = 0.0;
    				  }else if(markpoints==0){
-   					  InsertAfterCurrentKist(neighborkist,pointlist->current);
+   					  neighborkist->InsertAfterCurrent(pointlist->current);
   				  }
   				  if(*maxgridsize < pointlist->current->gridsize) *maxgridsize = pointlist->current->gridsize;
 
@@ -412,12 +408,12 @@ void TreeStruct::_PointsWithinKist(double *ray,float *rmax,Kist<Point> * neighbo
  *
  */
 
-void TreeStruct::PointsWithinKist_iter(const double* center,float rmin,float rmax,Kist<Point> * neighborkist){
+void TreeStruct::PointsWithinKist_iter(const PosType* center,float rmin,float rmax,Kist<Point> * neighborkist){
 	bool decend;
 	unsigned long i;
 	moveTop();
 
-	EmptyKist(neighborkist);
+	neighborkist->Empty();
 
 	if(rmax <= 0.0) return;
 	assert(rmax >= rmin);
@@ -443,7 +439,7 @@ void TreeStruct::PointsWithinKist_iter(const double* center,float rmin,float rma
 				decend = false;
 				if(current->points != NULL) pointlist->current = current->points;
 				for(i=0;i<current->npoints;++i){
-					InsertAfterCurrentKist(neighborkist,pointlist->current);
+					neighborkist->InsertAfterCurrent(pointlist->current);
 					MoveDownList(pointlist);
 				}
 
@@ -457,7 +453,7 @@ void TreeStruct::PointsWithinKist_iter(const double* center,float rmin,float rma
 				if(current->points != NULL) pointlist->current = current->points;
 				for(i=0;i<current->npoints;++i){
 					if(rmax*rmax >= pow(pointlist->current->x[0] - center[0],2) + pow(pointlist->current->x[1] - center[1],2) )
-						InsertAfterCurrentKist(neighborkist,pointlist->current);
+						neighborkist->InsertAfterCurrent(pointlist->current);
 					MoveDownList(pointlist);
 				}
 			}
@@ -466,7 +462,7 @@ void TreeStruct::PointsWithinKist_iter(const double* center,float rmin,float rma
 		}
 
 	}else{  // rmin > 0
-		double r2;
+		PosType r2;
 
 		while(current != top->brother){
 
@@ -482,7 +478,7 @@ void TreeStruct::PointsWithinKist_iter(const double* center,float rmin,float rma
 
 					r2 = pow(pointlist->current->x[0] - center[0],2) + pow(pointlist->current->x[1] - center[1],2);
 					if(rmax*rmax >= r2 && rmin*rmin <= r2){
-						InsertAfterCurrentKist(neighborkist,pointlist->current);
+						neighborkist->InsertAfterCurrent(pointlist->current);
 					}
 					MoveDownList(pointlist);
 				}
@@ -497,7 +493,7 @@ void TreeStruct::PointsWithinKist_iter(const double* center,float rmin,float rma
 				}
 
 				for(i=0;i<current->npoints;++i){
-					InsertAfterCurrentKist(neighborkist,pointlist->current);
+					neighborkist->InsertAfterCurrent(pointlist->current);
 					MoveDownList(pointlist);
 				}
 
@@ -523,8 +519,8 @@ void TreeStruct::PointsWithinKist_iter(const double* center,float rmin,float rma
  * 
  *    Warning: The number of neighbor points in neighborkist will be less than Nneighbors when
  *             the number of points in the tree is less than Nneighbors
- */
-Point * TreeStruct::NearestNeighborKist(const double* center,int Nneighbors,Kist<Point> * neighborkist){
+ *
+Point * TreeStruct::NearestNeighborKist(const PosType* center,int Nneighbors,Kist<Point> * neighborkist){
 	ListHndl neighborlist = NewList();
 	Point *point = 0;
 	unsigned long i;
@@ -533,11 +529,11 @@ Point * TreeStruct::NearestNeighborKist(const double* center,int Nneighbors,Kist
 	point = NearestNeighbor(center,Nneighbors,neighborlist,0);
 
 	// convert from point array to exported point kist
-	EmptyKist(neighborkist);
+	neighborkist->Empty();
 	MoveToTopList(neighborlist);
 	for(i = 0; i < neighborlist->Npoints ;++i){
-		InsertAfterCurrentKist(neighborkist,neighborlist->current->image->image);
-		MoveDownKist(neighborkist);
+		neighborkist->InsertAfterCurrent(neighborlist->current->image->image);
+		neighborkist->Down();
 		MoveDownList(neighborlist);
 	}
 
@@ -548,3 +544,4 @@ Point * TreeStruct::NearestNeighborKist(const double* center,int Nneighbors,Kist
 
 	return point;
 }
+*/

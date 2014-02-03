@@ -563,9 +563,6 @@ namespace Utilities
 			
 			// remove from items
 			items.pop_back();
-			
-			// delete from memory
-			delete back;
 		}
 		
 		/// erase the last element of a specific type
@@ -782,7 +779,7 @@ namespace Utilities
 	};
 	
 	template<class BaseT>
-	std::size_t lower_bound(std::vector<BaseT*>& items, double target){
+	std::size_t lower_bound(std::vector<BaseT*>& items, PosType target){
 		std::size_t ju,jm,jl;
 		
 		jl=0;
@@ -811,10 +808,10 @@ namespace Utilities
   class HilbertCurve{
   public:
     HilbertCurve(
-                 double x_min       /// x coordinate of lower left corner
-                 ,double y_min      /// y coordinate of lower left corner
-                 ,double my_range   /// range in which points will be distributed
-                 ,double smallsize  /// smallest distance of separation that must give unique Hilbert distances
+                 PosType x_min       /// x coordinate of lower left corner
+                 ,PosType y_min      /// y coordinate of lower left corner
+                 ,PosType my_range   /// range in which points will be distributed
+                 ,PosType smallsize  /// smallest distance of separation that must give unique Hilbert distances
                  ):
     range(my_range)
     {
@@ -824,13 +821,13 @@ namespace Utilities
     }
     
     int xy2d (int x, int y);
-    int xy2d (double x, double y);
+    int xy2d (PosType x, PosType y);
     void d2xy(int d, int *x, int *y);
-    void d2xy(int d, double *x, double *y);
+    void d2xy(int d, PosType *x, PosType *y);
     
   private:
     int n;
-    double xo[2],range;
+    PosType xo[2],range;
     void rot(int s,int *x, int *y, int rx, int ry);
   };
 
@@ -847,9 +844,9 @@ namespace Utilities
     RandomNumbers(unsigned int seed);
     ~RandomNumbers(void);
     
-    double operator()(void);
+    PosType operator()(void);
     /// Normally (Gaussian) distributed random numbers with mean 0 and standard deviation 1
-    double gauss(){return norm_dist(rand_gen);}
+    PosType gauss(){return norm_dist(rand_gen);}
   private:
      
     std::normal_distribution<> norm_dist;
@@ -867,14 +864,14 @@ namespace Utilities
     
     RandomNumbers_NR(long seed);
     
-    double operator()(void);
+    PosType operator()(void);
   private:
     long idum;
-    double ran2(void);
+    PosType ran2(void);
     
     int IM1;
     int IM2;
-    double AM;
+    PosType AM;
     //int IMM1 = (IM1-1);
     int IA1;
     int IA2;
@@ -883,8 +880,8 @@ namespace Utilities
     int IR1;
     int IR2;
     int NDIV;
-    double EPS;
-    double RNMX;
+    PosType EPS;
+    PosType RNMX;
     
     long idum2;
     long iy;
@@ -892,7 +889,88 @@ namespace Utilities
     
   };
   
-  
+  /***************************************************************/
+  /*** isolated integrator used for cosmological calculations ***/
+  /***************************************************************/
+  template <typename T>
+  double trapz(T &func, double a, double b, int n, double *s2)
+  {
+    double x,tnm,del,sum;
+    int it,j;
+    
+    if (n == 1) {
+      return (*s2=0.5*(b-a)*( func(a) + func(b) ));
+    } else {
+      
+      for (it=1,j=1;j<n-1;j++) it <<= 1;
+      tnm=it;
+      del=(b-a)/tnm;
+      x=a+0.5*del;
+      for (sum=0.0,j=1;j<=it;j++,x+=del) sum += func(x);
+      *s2=0.5*(*s2+(b-a)*sum/tnm);
+      
+      return *s2;
+    }
+  }
+  /** \brief Numerical integrator.  The class or structure T must have a () operator that returns
+   a double.  Other access functions or public variable can be used instead of global variables
+   to change variables within the integrand.
+   
+   <pre>
+   example:
+   
+   struct Function{
+   
+   Function(double my_a,double my_b): a(my_a),b(my_b){};
+   double a;
+   double b;
+   
+   
+   double operator () (double x) { return a*x + b*x*x;}
+   }
+   
+   ..............................
+   
+   
+   
+   Function f(21,23.1);
+   
+   f.a = 3;
+   f.b = 10.3;
+   
+   result = Utilities::nintegrate<Function>(f,1.0e-2,1.0e4,1.0e-4);
+   
+   <\pre>
+   */
+  template <typename T>
+  double nintegrate(
+                    T &func        /// struct or class to be integrated
+                    ,double a      /// limit of integrations
+                    ,double b      /// limit of integrations
+                    ,double tols   /// target fractional error
+                    )
+  {
+    const int JMAX = 34,K=6;
+    const int JMAXP = JMAX+1;
+    
+    double ss,dss;
+    double s2[JMAXP],h2[JMAXP+1];
+    double ss2=0;
+    
+    h2[1]=1.0;
+    for (int j=1;j<=JMAX;j++) {
+      s2[j] = Utilities::trapz<T>(func,a,b,j,&ss2);
+      if (j>=K) {
+        polintD(&h2[j-K],&s2[j-K],K,0.0,&ss,&dss);
+        if(fabs(dss) <= tols*fabs(ss)) return ss;
+      }
+      h2[j+1]=0.25*h2[j];
+    }
+    std::cout << "s2= "; for(int j=1;j<=JMAX;j++) std::cout << s2[j] << "  ";
+    std::cout << std::endl << "Too many steps in routine nintegrate<>\n";
+    return 0.0;
+  }
+
 
 }
 

@@ -9,7 +9,7 @@
 
 #include <iterator>
 
-LensPlaneTree::LensPlaneTree(PosType **xpt,LensHaloHndl *my_halos,IndexType Nhalos,double my_sigma_background)
+LensPlaneTree::LensPlaneTree(PosType **xpt,LensHaloHndl *my_halos,IndexType Nhalos,PosType my_sigma_background)
 : LensPlane(), halos(my_halos, my_halos + Nhalos)
 {
 	halo_tree = new TreeQuad(xpt,my_halos,Nhalos,my_sigma_background);
@@ -19,7 +19,7 @@ LensPlaneTree::~LensPlaneTree(){
 	delete halo_tree;
 }
 
-void LensPlaneTree::force(double *alpha,KappaType *kappa,KappaType *gamma,double *xx,bool kappa_off){
+void LensPlaneTree::force(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xx,bool kappa_off){
 	halo_tree->force2D_recur(xx,alpha,kappa,gamma,kappa_off);
 }
 
@@ -54,8 +54,7 @@ LensPlaneSingular::~LensPlaneSingular()
 {
 }
 
-void LensPlaneSingular::force(double *alpha,KappaType *kappa,KappaType *gamma,double *xx,bool kappa_off){
-    
+void LensPlaneSingular::force(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xx,bool kappa_off){
 	PosType alpha_tmp[2],x_tmp[2];
 	KappaType kappa_tmp, gamma_tmp[3];
     PosType * xxhalo = new PosType[2];

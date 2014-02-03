@@ -6,9 +6,9 @@
 #include "lens_halos.h"
 
 /// deflection caused by NFW halo
-void LensHaloNFW::alphaNFW(double *alpha,double *x,double Rtrunc,double mass,double r_scale
-		,double *center,double Sigma_crit){
-	double r,b=0;
+void LensHaloNFW::alphaNFW(PosType *alpha,PosType *x,PosType Rtrunc,PosType mass,PosType r_scale
+		,PosType *center,PosType Sigma_crit){
+	PosType r,b=0;
 
 	r=sqrt(pow(x[0]-center[0],2) + pow(x[1]-center[1],2));
 	if(r==0){
@@ -18,8 +18,8 @@ void LensHaloNFW::alphaNFW(double *alpha,double *x,double Rtrunc,double mass,dou
 	b=mass/pow(r,2)/pi/Sigma_crit;
 
 	if(r < Rtrunc){
-		double y;
-		//double gfunction(double);
+		PosType y;
+		//PosType gfunction(PosType);
 
 		y = Rtrunc/r_scale;
 		b/= gfunction(y);
@@ -33,16 +33,16 @@ void LensHaloNFW::alphaNFW(double *alpha,double *x,double Rtrunc,double mass,dou
 	return ;
 }
 /// Convergence for an NFW halo
-KappaType LensHaloNFW::kappaNFW(double *x,double Rtrunc,double mass,double r_scale
-		,double *center,double Sigma_crit){
-	double r;
-	//double gfunction(double),ffunction(double);
+KappaType LensHaloNFW::kappaNFW(PosType *x,PosType Rtrunc,PosType mass,PosType r_scale
+		,PosType *center,PosType Sigma_crit){
+	PosType r;
+	//PosType gfunction(PosType),ffunction(PosType);
 
 	r=sqrt(pow(x[0]-center[0],2) + pow(x[1]-center[1],2));
 	if(r>=Rtrunc) return 0.0;
 	if(r < 1.0e-20) r=1.0e-20;
 
-	double y,b;
+	PosType y,b;
 
 	b=1.0;
 	y = Rtrunc/r_scale;
@@ -54,10 +54,10 @@ KappaType LensHaloNFW::kappaNFW(double *x,double Rtrunc,double mass,double r_sca
 }
 
 /// Shear for and NFW halo. this might have a flaw in it
-void LensHaloNFW::gammaNFW(KappaType *gamma,double *x,double Rtrunc,double mass,double r_scale
-		,double *center,double Sigma_crit){
-	double r,gt=0;
-	//double g2function(double x);
+void LensHaloNFW::gammaNFW(KappaType *gamma,PosType *x,PosType Rtrunc,PosType mass,PosType r_scale
+		,PosType *center,PosType Sigma_crit){
+	PosType r,gt=0;
+	//PosType g2function(PosType x);
 
 	r=sqrt(pow(x[0]-center[0],2) + pow(x[1]-center[1],2));
 	if(r==0.0){
@@ -67,8 +67,8 @@ void LensHaloNFW::gammaNFW(KappaType *gamma,double *x,double Rtrunc,double mass,
 
 	gt=mass/pi/Sigma_crit/pow(r,2);
 	if(r<Rtrunc){
-		double y;
-		//double gfunction(double),ffunction(double);
+		PosType y;
+		//PosType gfunction(PosType),ffunction(PosType);
 
 		y = Rtrunc/r_scale;
 		gt /= gfunction(y);
@@ -82,8 +82,8 @@ void LensHaloNFW::gammaNFW(KappaType *gamma,double *x,double Rtrunc,double mass,
 	return ;
 }
 
-double LensHaloNFW::gfunction(double x){
-	double ans;
+PosType LensHaloNFW::gfunction(PosType x){
+	PosType ans;
 
 	if(x==0) x=1e-5;
 	ans=log(x/2);
@@ -93,8 +93,8 @@ double LensHaloNFW::gfunction(double x){
 	return 0.0;
 }
 
-double LensHaloNFW::ffunction(double x){
-	double ans;
+PosType LensHaloNFW::ffunction(PosType x){
+	PosType ans;
 
 	if(x==0) x=1e-5;
 	if(x==1.0){ return 1.0/3.0;}
@@ -103,8 +103,8 @@ double LensHaloNFW::ffunction(double x){
 	return 0.0;
 }
 
-double LensHaloNFW::g2function(double x){
-	double ans,y;
+PosType LensHaloNFW::g2function(PosType x){
+	PosType ans,y;
 
 	if(x==0) x=1e-5;
 	if(x==1) return 10/3. + 4*log(0.5);
@@ -116,7 +116,7 @@ double LensHaloNFW::g2function(double x){
 	return 0.0;
 }
 
-double LensHaloNFW::hfunction(double x){
+PosType LensHaloNFW::hfunction(PosType x){
 	if(x==0) x=1e-5;
 	if(x<=1.0) return 2.*((log(x/2.)*log(x/2.))-atanh(sqrt(1.-x*x))*atanh(sqrt(1.-x*x)));
 	if(x>1.0) return 2.* ((log(x/2.)*log(x/2.))+ atan(sqrt(x*x-1.))*atan(sqrt(x*x-1.)));

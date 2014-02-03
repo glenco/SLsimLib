@@ -30,24 +30,24 @@ void find_crit(
 		,ImageInfo *critcurve     /// Structure to hold critical curve.  Must be pre-allocated with maxNcrit elements. Stored in critcurve[i].imagekist.
 		,int maxNcrits            /// Maximum number of critical curves.
 		,int *Ncrits              /// The number of critical curves found.
-		,double resolution        /// The target resolution that the critical curve is mapped on the image plane.
+		,PosType resolution        /// The target resolution that the critical curve is mapped on the image plane.
 		,bool *orderingsuccess    /// true if ordering was successful.
 		,bool ordercurve          /// Order the curve so that it can be drawn or used to find the winding number.
     ,bool dividecurves        /// Divide the critical curves into seporate curves by whether they are attached
-    ,double invmag_min        /// finds regions with 1/magnification < invmag_min, set to zero for caustics               
+    ,PosType invmag_min        /// finds regions with 1/magnification < invmag_min, set to zero for caustics               
 		,bool verbose
 		){
 
   long i=0;
   short refinements;
   //short spur,closed;
-  double maxgridsize,mingridsize,x[2];
+  PosType maxgridsize,mingridsize,x[2];
   ImageInfo negimage;
   Kist<Point> newpoint_kist;
 
   ImageInfo *pseudocurve = new ImageInfo[maxNcrits];
-  bool pseudocaustic = false;
-  double pseudolimit = -0.01;
+  bool pseuodcaustic = false;
+  PosType pseudolimit = -0.01;
 
   // find kist of points with negative magnification
   negimage.imagekist->Empty();
@@ -92,17 +92,17 @@ void find_crit(
 
 	  // make inner border of the image
 	  critcurve->imagekist->Empty();
-	  MoveToTopKist(negimage.innerborder);
+	  negimage.innerborder->MoveToTop();
 	  for(i=0,maxgridsize=0.0,mingridsize=1.0e99;i<negimage.innerborder->Nunits();++i){
 
-		  if(getCurrentKist(negimage.innerborder)->gridsize > maxgridsize) maxgridsize = getCurrentKist(negimage.innerborder)->gridsize;
-		  if(getCurrentKist(negimage.innerborder)->gridsize < mingridsize) mingridsize = getCurrentKist(negimage.innerborder)->gridsize;
+		  if(negimage.innerborder->getCurrent()->gridsize > maxgridsize) maxgridsize = negimage.innerborder->getCurrent()->gridsize;
+		  if(negimage.innerborder->getCurrent()->gridsize < mingridsize) mingridsize = negimage.innerborder->getCurrent()->gridsize;
 
-		  critcurve->imagekist->InsertAfterCurrent(getCurrentKist(negimage.innerborder));
+		  critcurve->imagekist->InsertAfterCurrent(negimage.innerborder->getCurrent());
 		  critcurve->imagekist->Down();
 		  critcurve->imagekist->getCurrent()->in_image = TRUE;
 
-		  MoveDownKist(negimage.innerborder);
+		  negimage.innerborder->Down();
 	  }
 	  findborders4(grid->i_tree,critcurve);
 	  //std::printf("came out of findborders 2\n");
@@ -144,11 +144,11 @@ void find_crit(
 			       ,*Ncrits,critcurve->imagekist->getCurrent()->gridsize); exit(1);}
 
 
-  if(pseudocaustic){
+  if(pseuodcaustic){
   	  // Find points within each critical curve that have invmag < pseudolimit
   	  // If there are none use the minimum invmag value point.
   	  Point *minmupoint;
-  	  double mumin = 0.0;
+  	  PosType mumin = 0.0;
   	  Kist<Point> *newpoints = new Kist<Point>;
 
   	  pseudocurve->imagekist->copy(negimage.imagekist);
@@ -244,7 +244,7 @@ void find_crit(
 		  critcurve[i].imagekist->MoveToTop();
 		  //copy points into a point array for compatibility with curve ordering routines
 		  for(ii=0; ii < critcurve[i].imagekist->Nunits() ; ++ii, critcurve[i].imagekist->Down())
-			  PointCopyData(&tmp_points[ii],getCurrentKist(critcurve[i].imagekist));
+			  PointCopyData(&tmp_points[ii],critcurve[i].imagekist->getCurrent());
 
 		  // order the curve
 		  NewNumber = Utilities::order_curve4(tmp_points,critcurve[i].imagekist->Nunits());
@@ -303,7 +303,7 @@ void find_crit(
   /*/******* TODO: test line *****************
   char chrstr[100];
   std::string output = "test_crit";
-  double tmp_range=0,tmp,xx[2];
+  PosType tmp_range=0,tmp,xx[2];
   for(i=0; i< MIN(*Ncrits,50) ; ++i){
     
     if(critcurve[i].getNimagePoints() > 10){
@@ -356,18 +356,18 @@ void find_crit2(
 		,ImageInfo *critcurve     /// Structure to hold critical curve.  Must be pre-allocated with maxNcrit elements. Stored in critcurve[i].imagekist.
 		,int maxNcrits            /// Maximum number of critical curves.
 		,int *Ncrits              /// The number of critical curves found.
-		,double resolution        /// The target resolution that the critical curve is mapped on the image plane.
+		,PosType resolution        /// The target resolution that the critical curve is mapped on the image plane.
 		,bool *orderingsuccess    /// true if ordering was successful.
 		,bool ordercurve          /// Order the curve so that it can be drawn or used to find the winding number.
     ,bool dividecurves        /// Divide the critical curves into seporate curves by whether they are attached
-    ,double invmag_min        /// finds regions with 1/magnification < invmag_min
+    ,PosType invmag_min        /// finds regions with 1/magnification < invmag_min
 		,bool verbose
 		){
 
   long i=0;
   long refinements;
   //short spur,closed;
-  double maxgridsize,mingridsize,x[2];
+  PosType maxgridsize,mingridsize,x[2];
   Kist<Point> newpoint_kist,neighborkist;
 
   // find kist of points with negative magnification
@@ -479,7 +479,7 @@ void find_crit2(
 					  // add point to outerborder
 					  neighborkist.getCurrent()->in_image = MAYBE;
 					  critcurve->outerborder->InsertAfterCurrent(neighborkist.getCurrent());
-					  MoveDownKist(critcurve->outerborder);
+					  critcurve->outerborder->Down();
 				  }
 			  }
 
@@ -667,7 +667,7 @@ void find_crit2(
   /******* TODO: test line *****************
   char chrstr[100];
   std::string output = "test_crit";
-  double tmp_range=0,tmp,xx[2];
+  PosType tmp_range=0,tmp,xx[2];
   for(i=0; i< MIN(*Ncrits,50) ; ++i){
     
     if(critcurve[i].getNimagePoints() > 10){
@@ -725,15 +725,15 @@ void find_crit2(
 void refine_crit_in_image(
                LensHndl lens             /// The lens model.
                ,GridHndl grid            /// The grid.  It must be initialized.
-               ,double r_source
-               ,double x_source[]
-               ,double resolution        /// The target resolution that the critical curve is mapped on the image plane.
+               ,PosType r_source
+               ,PosType x_source[]
+               ,PosType resolution        /// The target resolution that the critical curve is mapped on the image plane.
                ){
     
     unsigned long i=0;
     short refinements;
     //short spur,closed;
-    double maxgridsize,mingridsize,x[2];
+    PosType maxgridsize,mingridsize,x[2];
     ImageInfo negimage,critcurve;
     Kist<Point> newpoint_kist;
         
@@ -766,17 +766,19 @@ void refine_crit_in_image(
         
         // make inner border of the image
         critcurve.imagekist->Empty();
-        MoveToTopKist(negimage.innerborder);
+        negimage.innerborder->MoveToTop();
         for(i=0,maxgridsize=0.0,mingridsize=1.0e99;i<negimage.innerborder->Nunits();++i){
             
-            if(getCurrentKist(negimage.innerborder)->gridsize > maxgridsize) maxgridsize = getCurrentKist(negimage.innerborder)->gridsize;
-            if(getCurrentKist(negimage.innerborder)->gridsize < mingridsize) mingridsize = getCurrentKist(negimage.innerborder)->gridsize;
+            if(negimage.innerborder->getCurrent()->gridsize > maxgridsize) maxgridsize
+              = negimage.innerborder->getCurrent()->gridsize;
+            if(negimage.innerborder->getCurrent()->gridsize < mingridsize) mingridsize
+              = negimage.innerborder->getCurrent()->gridsize;
             
-            critcurve.imagekist->InsertAfterCurrent(getCurrentKist(negimage.innerborder));
+            critcurve.imagekist->InsertAfterCurrent(negimage.innerborder->getCurrent());
             critcurve.imagekist->Down();
             critcurve.imagekist->getCurrent()->in_image = TRUE;
             
-            MoveDownKist(negimage.innerborder);
+            negimage.innerborder->Down();
         }
         findborders4(grid->i_tree,&critcurve);
         

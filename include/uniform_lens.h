@@ -48,8 +48,8 @@
 
 class LensHaloUniform: public LensHalo{
 public:
-	LensHaloUniform(InputParams& params, const COSMOLOGY& cosmo);
-	LensHaloUniform(InputParams& params);
+	LensHaloUniform(InputParams& params, const COSMOLOGY& cosmo, bool verbose = false);
+	LensHaloUniform(InputParams& params,bool verbose =false);
 	~LensHaloUniform();
 
 	void assignParams(InputParams& params);
@@ -61,24 +61,24 @@ public:
   /// Unitless convergence
 	float getKappa_uniform() const {return Sigma_uniform/SigmaCrit;}
   /// Shear times the critical surface density
-	double getAveMag() const { return 1.0/( pow(1-Sigma_uniform/SigmaCrit,2) -
+	PosType getAveMag() const { return 1.0/( pow(1-Sigma_uniform/SigmaCrit,2) -
                                   (gammaCrit_uniform[0]*gammaCrit_uniform[0] + gammaCrit_uniform[1]*gammaCrit_uniform[1])/SigmaCrit/SigmaCrit );}
   /// Critical surface density
-	double getSigmaCrit() const { return SigmaCrit;}
+	PosType getSigmaCrit() const { return SigmaCrit;}
 
-  //double getPerturb_beta(){return perturb_beta;}
+  //PosType getPerturb_beta(){return perturb_beta;}
   //int getPerturb_Nmodes(){return perturb_Nmodes;}    /// this includes two for external shear
-  //double *perturb_modes;  ///first two are shear
+  //PosType *perturb_modes;  ///first two are shear
 
 		/// overridden function to calculate the lensing properties
-  void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa,bool subtract_point=false);
+  void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xcm,bool no_kappa,bool subtract_point=false);
   void setCosmology(const COSMOLOGY& cosmo);
 
 protected:
 
-  double SigmaCrit;
-  double *perturb_modes;  ///first two are shear  
-  double lens_expand(double *mod,double *x,double *alpha,KappaType *gamma,KappaType *phi);
+  PosType SigmaCrit;
+  PosType *perturb_modes;  ///first two are shear  
+  PosType lens_expand(PosType *mod,PosType *x,PosType *alpha,KappaType *gamma,KappaType *phi);
 
   /// Surface density of lens in Msun/ Mpc^2
   float Sigma_uniform;
@@ -88,12 +88,12 @@ protected:
   float kappa_uniform, gamma_uniform[3];
    // perturbations to host.  These are protected so that in some derived classes they can or cann't be changed.
   int perturb_Nmodes;    /// this includes two for external shear
-  double perturb_beta;
-  double *perturb_rms;
+  PosType perturb_beta;
+  PosType *perturb_rms;
 
   /// redshift for which uniform kappa and gamma are valid
   float zsource_reference;
-  double Dl, Ds, Dls;
+  PosType Dl, Ds, Dls;
 };
 
 

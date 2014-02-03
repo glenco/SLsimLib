@@ -14,6 +14,7 @@
 #define pointtypes_declare
 
 #include <standard.h>
+#include "Kist.h"
 
 #ifndef pi
 #define pi  3.141593
@@ -73,7 +74,9 @@ struct Branch{
 			  ,double my_center[2],int my_level);
 	~Branch();
 
-  struct Point *points;        // pointer to first points in Branch
+  struct Point *points;        /// pointer to first points in Branch
+  Kist<Point>::iterator pointit;       /// Kist iterator pointing to first point in branch
+  
   unsigned long npoints;
   double center[2];
   int level;
@@ -158,5 +161,21 @@ void EmptyList(ListHndl list);
 void UnionList(ListHndl list1,ListHndl list2);
 bool ArePointsUniqueList(ListHndl list);
 bool IntersectionList(ListHndl list1,ListHndl list2,ListHndl intersection);
+
+/** \brief Transform all points in kist from image to source plane or vis versus.
+ * Data type must have a "image" attribute.
+ *
+void TranformPlanes(Kist<Point> &kist){
+  
+	if(kist.Nunits() == 0) return;
+	kist.MoveToTop();
+	do{
+		assert(kist.getCurrent());
+		assert(kist.getCurrent()->image);
+		kist.getCurrent() = kist.getCurrent()->image;
+	}while(kist.Down());
+  
+	return;
+}*/
 
 #endif

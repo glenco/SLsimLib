@@ -26,15 +26,15 @@ using namespace std;
 short find_peaks(
 		LensHndl lens         /// Lens model
 		,GridHndl grid        /// Grid to be refined.  It must be initialized.
-		,double rEinsteinMin  /// the Einstein radius of the smallest lens that should be resolved, sets resolution target
-		,double kappa_max     /// highest kappa to be refined to, 1 or 2 is probably good enough
+		,PosType rEinsteinMin  /// the Einstein radius of the smallest lens that should be resolved, sets resolution target
+		,PosType kappa_max     /// highest kappa to be refined to, 1 or 2 is probably good enough
 		,ImageInfo *imageinfo /// the image
 		,int *Nimages		/// number of peaks
 		){
 
 
 	//Point **i_points,*s_points,*dummy;
-	double res_target = 0,threshold;
+	PosType res_target = 0,threshold;
 	long Nnewpoints = 0,Ntemp;
 	unsigned long i;
 	//ImageInfo *imageinfo = new ImageInfo;
@@ -102,7 +102,7 @@ short find_peaks(
 			while(newpointskist->Nunits() > 0){
 				if(newpointskist->getCurrent()->kappa > threshold){
 
-					InsertAfterCurrentKist(imageinfo->imagekist,newpointskist->TakeOutCurrent());
+					imageinfo->imagekist->InsertAfterCurrent(newpointskist->TakeOutCurrent());
 					imageinfo->imagekist->Down();
 					imageinfo->imagekist->getCurrent()->in_image = TRUE;
 
@@ -141,7 +141,7 @@ short find_peaks(
 	return 1;
 }
 
-/** \ingroup ImageFinding
+/* * \ingroup ImageFinding
  *
  *  \brief Refines the grid based on the flux from implanted sources.
  *
@@ -149,23 +149,23 @@ short find_peaks(
  *  grid around that image until the grid anywhere on the image and on the border
  *  reaches the resolution target.  The images are stored in imageinfo[0,...,*Nimages-1]->imagekist.
  *  The image must be within radius of the point theta[2].
- */
+ *
 short refine_on_implanted_source(
 		LensHndl lens        /// Lens model
 		,GridHndl grid         /// Grid to be refined.  It must be initialized.
-		,double *theta         /// position on the sky
-		,double radius         /// size of region to look for image
-		,double res_target     /// the final grid resolution that is required
+		,PosType *theta         /// position on the sky
+		,PosType radius         /// size of region to look for image
+		,PosType res_target     /// the final grid resolution that is required
 		,ImageInfo *imageinfo  /// the output image
 		,int *Nimages		   /// number of images
 		,int NimageMax         /// Maximum number of images.
 		,bool kappa_off        /// turn off convergence and shear calculation to save time
-		,double threshold      /// the surface brightness threshold above which the grid is refined, default is 0
+		,PosType threshold      /// the surface brightness threshold above which the grid is refined, default is 0
 		){
 
 	Kist<Point> * newpointskist = new Kist<Point>;
 	bool foundimage;
-	double tmp;
+	PosType tmp;
 
 	SetInImage(imageinfo->imagekist,FALSE);
 	imageinfo->imagekist->Empty();
@@ -276,3 +276,4 @@ short refine_on_implanted_source(
 
 	return 1;
 }
+*/

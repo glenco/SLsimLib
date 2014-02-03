@@ -11,6 +11,7 @@
 #include "lens.h"
 #include "point.h"
 #include "Tree.h"
+#include <mutex>
 
 class LensHaloBaseNSIE;
 class LensHaloMOKA;
@@ -22,17 +23,18 @@ class LensHaloMOKA;
 struct Grid{
 
 	Grid(LensHndl lens,unsigned long N1d,const double center[2],double range);
+  Grid(LensHndl lens ,unsigned long Nx ,const PosType center[2] ,PosType rangeX ,PosType rangeY);
 	~Grid();
 
 	void ReInitializeGrid(LensHndl lens);
-  void ReShoot(LensHndl lens);
+    void ReShoot(LensHndl lens);
 	void zoom(LensHndl lens,double *center,double scale,bool kappa_off,Branch *top = NULL);
 
 	unsigned long PruneTrees(double resolution,bool useSB,double fluxlimit);
 	unsigned long PrunePointsOutside(double resolution,double *y,double r_in ,double r_out);
 
 	double RefreshSurfaceBrightnesses(SourceHndl source);
-  double ClearSurfaceBrightnesses();
+    double ClearSurfaceBrightnesses();
 	unsigned long getNumberOfPoints();
 
 
@@ -56,10 +58,14 @@ struct Grid{
   void writeFitsVector(const double center[],size_t Npixels,double resolution,LensingVariable lensvar,std::string filename);
   PixelMap writePixelMap(const double center[],size_t Npixels,double resolution,LensingVariable lensvar);
 
+  void xygridpoints(Point *points,double range,const double *center,long Ngrid
+                          ,short remove_center);
 
 private:
 	/// one dimensional size of initial grid
 	int Ngrid_init;
+  int Ngrid_init2;
+  
 	/// one dimensional number of cells a cell will be divided into on each refinement step
 	int Ngrid_block;
 	bool initialized;
@@ -71,7 +77,11 @@ private:
 
 	bool uniform_mag_from_deflect(double *a,Point *point);
 	bool uniform_mag_from_shooter(double *a,Point *point);
-
+  
+  unsigned long pointID;
+    PosType axisratio;
+  
+  static std::mutex grid_mutex;
 };
 
 typedef struct Grid* GridHndl;
@@ -88,12 +98,12 @@ void find_images_microlens(LensHndl lens,double *y_source,double r_source,GridHn
 		,double initial_size,double mu_min,bool splitimages,short edge_refinement
 		,bool verbose,bool kappa_off);
 
-short image_finder_kist(LensHndl lens, double *y_source,double r_source,GridHndl grid
+void image_finder_kist(LensHndl lens, double *y_source,double r_source,GridHndl grid
 		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
 		,short splitparities,short true_images);
 
 int refine_grid_kist(LensHndl lens,GridHndl grid,ImageInfo *imageinfo
-		,unsigned long Nimages,double res_target,short criterion,bool kappa_off
+		,int Nimages,double res_target,short criterion,bool kappa_off
 		,Kist<Point> * newpointkist = NULL,bool batch=true);
 
 void find_crit(LensHndl lens,GridHndl grid,ImageInfo *critcurve,int maxNcrits,int *Ncrits
@@ -107,17 +117,15 @@ int refine_grid(LensHndl lens,GridHndl grid,OldImageInfo *imageinfo
 		,unsigned long Nimages,double res_target,short criterion,bool kappa_off,bool batch=true);
 
 long refine_edges(LensHndl lens,GridHndl grid,ImageInfo *imageinfo
-		,unsigned long Nimages,double res_target,short criterion,bool kappa_off
+		,int Nimages,double res_target,short criterion,bool kappa_off
 		,Kist<Point> * newpointkist = NULL,bool batch=true);
 
 long refine_edges2(LensHndl lens,double *y_source,double r_source,GridHndl grid
-		,ImageInfo *imageinfo,bool *image_overlap,unsigned long Nimages,double res_target
+		,ImageInfo *imageinfo,bool *image_overlap,int Nimages,double res_target
 		,short criterion,bool kappa_off,bool batch=true);
 
 void sort_out_points(Point *i_points,ImageInfo *imageinfo,double r_source,double y_source[]);
 
-void xygridpoints(Point *points,double range,const double *center,long Ngrid
-		,short remove_center);
 
 void saveImage(LensHaloMOKA *mokahalo, GridHndl grid, bool saveprofile=true);
 

@@ -17,7 +17,7 @@ using namespace std;
  * force calculation.
  */
 
-LensHaloUniform::LensHaloUniform(InputParams& params, const COSMOLOGY& cosmo)
+LensHaloUniform::LensHaloUniform(InputParams& params, const COSMOLOGY& cosmo, bool verbose)
 : LensHalo()
 {
   
@@ -29,13 +29,13 @@ LensHaloUniform::LensHaloUniform(InputParams& params, const COSMOLOGY& cosmo)
     Rmax = std::numeric_limits<float>::max();
   }
   perturb_Nmodes=3;
-  perturb_modes = new double[3];
+  perturb_modes = new PosType[3];
   
   setCosmology(cosmo);
-  PrintLens(false,false);
+  if(verbose) PrintLens(false,false);
 }
 
-LensHaloUniform::LensHaloUniform(InputParams& params): LensHalo(){
+LensHaloUniform::LensHaloUniform(InputParams& params, bool verbose): LensHalo(){
   
   assignParams(params);
   
@@ -45,9 +45,9 @@ LensHaloUniform::LensHaloUniform(InputParams& params): LensHalo(){
     Rmax = std::numeric_limits<float>::max();
   }
   perturb_Nmodes=3;
-  perturb_modes = new double[3];
+  perturb_modes = new PosType[3];
   
-  PrintLens(false,false);
+  if(verbose) PrintLens(false,false);
 }
 
 LensHaloUniform::~LensHaloUniform(){
@@ -56,7 +56,7 @@ LensHaloUniform::~LensHaloUniform(){
 
 void LensHaloUniform::setCosmology(const COSMOLOGY& cosmo)
 {
-  double zlens = LensHalo::getZlens();
+  PosType zlens = LensHalo::getZlens();
 	Dl = cosmo.angDist(0,zlens);
 	Ds = cosmo.angDist(0,zsource_reference);
 	Dls = cosmo.angDist(zlens,zsource_reference);
@@ -72,15 +72,15 @@ void LensHaloUniform::setCosmology(const COSMOLOGY& cosmo)
 }
 
 void LensHaloUniform::force_halo(
-		double *alpha     /// mass/Mpc
+		PosType *alpha     /// mass/Mpc
 		,KappaType *kappa
 		,KappaType *gamma
-		,double *xcm
+		,PosType *xcm
 		,bool no_kappa
 		,bool subtract_point /// if true contribution from a point mass is subtracted
 		)
 {
-    double alpha_tmp[2];
+    PosType alpha_tmp[2];
      KappaType gamma_tmp[3], dt = 0;
 
      gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
@@ -95,8 +95,8 @@ void LensHaloUniform::force_halo(
     }
 }
 
-double LensHaloUniform::lens_expand(double *mod,double *x,double *alpha,KappaType *gamma,KappaType *phi){
-  double theta,r,cosx,sinx,cos2theta,sin2theta;
+PosType LensHaloUniform::lens_expand(PosType *mod,PosType *x,PosType *alpha,KappaType *gamma,KappaType *phi){
+  PosType theta,r,cosx,sinx,cos2theta,sin2theta;
 
    // add shear
   alpha[0] +=  x[0]*mod[1] + x[1]*mod[2];
@@ -188,13 +188,13 @@ void LensHaloUniform::PrintLens(bool show_substruct,bool show_stars) const
 
 /* creates a single star halo in pos (x,y)
 void LensHalo::implant_stars(
-      double x, double y,long *seed, IMFtype type){
+      PosType x, PosType y,long *seed, IMFtype type){
 
 	if(Nregions <= 0) return;
 
-	double ** centers = new double*[Nregions];
+	PosType ** centers = new PosType*[Nregions];
 	for (int i = 0; i < Nregions; ++i){
-    centers[i] = new double[2];
+    centers[i] = new PosType[2];
   
     centers[i][0] = x[i];
     centers[i][1] = y[i];

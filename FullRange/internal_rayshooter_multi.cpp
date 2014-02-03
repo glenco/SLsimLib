@@ -47,11 +47,11 @@ struct TmpParams{
   int NPlanes;
   bool flag_switch_deflection_off;
   bool flag_switch_lensing_off;
-  double charge;
+  PosType charge;
   LensPlane** lensing_planes;
-  double* plane_redshifts;
-  double* Dl;
-  double* dDl;
+  PosType* plane_redshifts;
+  PosType* Dl;
+  PosType* dDl;
 };
 
 /** \brief This function calculates the deflection, shear, convergence, rotation
@@ -66,7 +66,7 @@ void Lens::rayshooterInternal(
     //kappa_off =false;
     
   int NLastPlane;
-  double tmpDs,tmpdDs,tmpZs;
+  PosType tmpDs,tmpdDs,tmpZs;
 
   if(Npoints == 0) return;
 
@@ -145,14 +145,14 @@ void *compute_rays_parallel(void *_p)
     
   int i, j;
   
-  double xx[2],fac;
-  double aa,bb,cc;
-  double alpha[2];
+  PosType xx[2],fac;
+  PosType aa,bb,cc;
+  PosType alpha[2];
   KappaType kappa,gamma[3];
-  double xminus[2],xplus[2];
-  double kappa_minus,gamma_minus[3],kappa_plus,gamma_plus[3];
 
-
+  PosType xminus[2],xplus[2];
+  PosType kappa_minus,gamma_minus[3],kappa_plus,gamma_plus[3];
+  
   for(i = start; i< end; i++){
     
 	  if(p->i_points[i].in_image == MAYBE)
