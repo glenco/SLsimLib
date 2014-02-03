@@ -9,13 +9,14 @@
 
 LensHalo::LensHalo(){
 	rscale = 1.0;
-	mass = Rmax = xmax = 0.0;
+	mass = Rmax = xmax = posHalo[0] = posHalo[1] = 0.0;
 	stars_implanted = false;
 }
 
 LensHalo::LensHalo(InputParams& params){
 	assignParams(params);
 	stars_implanted = false;
+    posHalo[0] = posHalo[1] = 0.0;
 }
 
 void LensHalo::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, double my_slope, long *seed){

@@ -85,7 +85,7 @@ public:
 	double getfov(){return fieldofview;};
 	void setfov(double fov){fieldofview=fov;};
 
-	/// reset te number of planes, but keep the field halos and main lens
+	/// reset the number of planes, but keep the field halos and main lens
 	void resetFieldNplanes(std::size_t field_Nplanes);
 	/// keep the main lens and the number of planes constant, but generate new field halos
 	void resetFieldHalos();
@@ -119,9 +119,11 @@ public:
 
 	/// inserts a single main lens halo and adds it to the existing ones
 	void insertMainHalo(LensHalo* halo);
+    
 	/// inserts a sequence of main lens halos and adds them to the existing ones
 	void insertMainHalos(LensHalo** halos, std::size_t Nhalos);
-
+    
+    
 	/// replaces existing main halos with a single main halo
 	void replaceMainHalos(LensHalo* halo);
 	/// replaces existing main halos with a sequence of main halos
@@ -301,8 +303,8 @@ private: /* main */
 	std::vector<double> main_plane_redshifts;
 	/// vector of main plane distances
 	std::vector<double> main_Dl;
-	
-	/// main lens type
+    
+    /// main lens type
 	LensHaloType main_halo_type;
 	/// galaxy lens type
 	GalaxyLensHaloType main_galaxy_halo_type;

@@ -46,7 +46,7 @@ void find_crit(
   Kist<Point> newpoint_kist;
 
   ImageInfo *pseudocurve = new ImageInfo[maxNcrits];
-  bool pseuodcaustic = false;
+  bool pseudocaustic = false;
   double pseudolimit = -0.01;
 
   // find kist of points with negative magnification
@@ -144,7 +144,7 @@ void find_crit(
 			       ,*Ncrits,critcurve->imagekist->getCurrent()->gridsize); exit(1);}
 
 
-  if(pseuodcaustic){
+  if(pseudocaustic){
   	  // Find points within each critical curve that have invmag < pseudolimit
   	  // If there are none use the minimum invmag value point.
   	  Point *minmupoint;

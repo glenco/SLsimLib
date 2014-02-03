@@ -81,7 +81,7 @@ void Grid::ReInitializeGrid(LensHndl lens){
 	i_tree->emptyTree();
 	s_tree->emptyTree();
   
-  
+
 	// build new initial grid
 	i_points = NewPointArray(Ngrid_init*Ngrid_init,true);
 	xygridpoints(i_points,range,center,Ngrid_init,0);

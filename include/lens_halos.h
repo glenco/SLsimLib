@@ -56,22 +56,28 @@ public:
 	float get_rscale() const { return rscale; }
 	/// get the redshift
 	double getZlens() const { return zlens; }
-
+    /// get the position of the Halo
+    void getX(PosType * MyPosHalo) const { MyPosHalo[0] = posHalo[0] ; MyPosHalo[1] = posHalo[1]; }
+    /// set the position of the Halo
+    void setX(PosType PosX, PosType PosY) { posHalo[0] = PosX ; posHalo[1] = PosY ; }
+    /// display the position of the halo
+    void displayPos() { std::cout << "Halo PosX = " << posHalo[0] << " ; Halo PosY = " << posHalo[1] << std::endl; }
+    
 	/// initialize from a simulation file
 	virtual void initFromFile(float my_mass, long *seed, float vmax, float r_halfmass){};
 	/// initialize from a mass function
 	virtual void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, double my_slope, long *seed);
 
-	/// set Rmax
+	/// set Rmax (in Mpc)
 	virtual void set_Rmax(float my_Rmax){Rmax=my_Rmax; xmax = Rmax/rscale;};
-	/// set mass
+	/// set mass (in solar masses)
 	void set_mass(float my_mass){mass=my_mass;};
-	/// set scale radius
+	/// set scale radius (in Mpc)
 	virtual void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rmax/rscale;};
 	/// set redshift
 	void setZlens(double my_zlens){
-    zlens=my_zlens;
-  };
+    zlens=my_zlens; };
+    
 	/// set slope
 	virtual void set_slope(double my_slope){};
 
@@ -133,8 +139,8 @@ protected:
   
 	/// read in parameters from a parameterfile in InputParams params
 	void assignParams(InputParams& params);
-  /// read in star parameters. This is valid for all halos and not overloaded.
-  void assignParams_stars(InputParams& params);
+    /// read in star parameters. This is valid for all halos and not overloaded.
+    void assignParams_stars(InputParams& params);
 
 	/// error message printout
 	void error_message1(std::string name,std::string filename);
@@ -160,23 +166,26 @@ protected:
     double *star_Sigma;
     double **star_xdisk;
 
-  /// point mass case
+    /// point mass case
 	virtual double inline alpha_h(double x){return -1;};
 	virtual KappaType inline kappa_h(double x){return 0;};
 	virtual KappaType inline gamma_h(double x){return -2;};
 	virtual KappaType inline phi_h(double x){return 0;};
-  double xmax;
+    double xmax;
   
-  // Functions for calculating axial dependence
-  void setModesToEllip(double q,double theta);
-  void faxial(double theta,double f[]);
-  void gradial(double r,double g[]);
-  void desymmeterize(double r,double theta,double *alpha,double *kappa,double *gamma);
-  const static int Nmod = 18;
-  double mod[18];
-  double r_eps;
+    // Functions for calculating axial dependence
+    void setModesToEllip(double q,double theta);
+    void faxial(double theta,double f[]);
+    void gradial(double r,double g[]);
+    void desymmeterize(double r,double theta,double *alpha,double *kappa,double *gamma);
+    const static int Nmod = 18;
+    double mod[18];
+    double r_eps;
   
-  double zlens;
+    double zlens;
+    
+    /// Position of the Halo
+    PosType posHalo[2];
 };
 
 /** \ingroup DeflectionL2
@@ -259,6 +268,8 @@ protected:
 private:
   double gmax;
 };
+// ********************
+
 
 /** \ingroup DeflectionL2
  *

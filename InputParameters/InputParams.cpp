@@ -5,6 +5,7 @@
  *      Author: bmetcalf
  */
 #include "slsimlib.h"
+#include <iomanip>
 
 #ifdef ENABLE_FITS
 #include <CCfits/CCfits>
