@@ -89,6 +89,7 @@ public:
 
 	/// reset te number of planes, but keep the field halos and main lens
 	void resetFieldNplanes(std::size_t field_Nplanes, bool verbose = false);
+
 	/// keep the main lens and the number of planes constant, but generate new field halos
 	void resetFieldHalos(bool verbose = false);
 
@@ -121,6 +122,7 @@ public:
 
 	/// inserts a single main lens halo and adds it to the existing ones
 	void insertMainHalo(LensHalo* halo,bool verbose = false);
+
 	/// inserts a sequence of main lens halos and adds them to the existing ones
 	void insertMainHalos(LensHalo** halos, std::size_t Nhalos,bool verbose = false);
 

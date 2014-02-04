@@ -290,7 +290,7 @@ PixelMap operator-(const PixelMap& a, const PixelMap& b)
 /** \brief Add an image to the map
  *
  *  If rescale==0 gives constant surface brightness, if < 0
- *  the surface brightness is not scales by the pixel area as for the flux (default: 1).
+ *  the surface brightness is not scaled by the pixel area as for the flux (default: 1).
  *  Negative values are good for mapping some quantity independant of the pixel size
  */
 void PixelMap::AddImages(

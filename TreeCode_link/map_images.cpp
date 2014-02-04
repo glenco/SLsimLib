@@ -18,7 +18,7 @@ const bool verbose = false;
  *  \brief Find images and refine them based on their surface brightness distribution.
  *
  *  Uses find_images_kist() to initially find and refine images and then uses a surface brightness
- *  based criterion the refine the most important parts of the lens.
+ *  based criterion to refine the most important parts of the lens.
  *
  *  map_images is intended for mapping images of sources more complicated than simple circles.
  *

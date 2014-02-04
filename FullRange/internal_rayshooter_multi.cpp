@@ -98,7 +98,7 @@ void Lens::rayshooterInternal(
 
   pthread_t threads[nthreads];
   TmpParams *thread_params = new TmpParams[nthreads];
-  
+              
   for(int i=0; i<nthreads;i++){
     thread_params[i].i_points = i_points;
     thread_params[i].kappa_off = kappa_off;
@@ -149,6 +149,7 @@ void *compute_rays_parallel(void *_p)
   PosType aa,bb,cc;
   PosType alpha[2];
   KappaType kappa,gamma[3];
+
   PosType xminus[2],xplus[2];
   PosType kappa_minus,gamma_minus[3],kappa_plus,gamma_plus[3];
   
@@ -157,8 +158,6 @@ void *compute_rays_parallel(void *_p)
 	  if(p->i_points[i].in_image == MAYBE)
 			 continue;
 
-    //std::cout << "p->i_points[i].x = " << p->i_points[i].x[0] << " " << p->i_points[i].x[1] << std::endl;
-    
     // find position on first lens plane in comoving units
     p->i_points[i].image->x[0] = p->i_points[i].x[0]*p->Dl[0];
     p->i_points[i].image->x[1] = p->i_points[i].x[1]*p->Dl[0];
@@ -187,14 +186,15 @@ void *compute_rays_parallel(void *_p)
       
       continue;
     }
+      
      /**/
     
-    // time delay at first plane     //TODO: check
+    // time delay at first plane     //TODO Fabien : check
     p->i_points[i].dt = 0.5*( p->i_points[i].image->x[0]*p->i_points[i].image->x[0]
                             +  p->i_points[i].image->x[1]*p->i_points[i].image->x[1] )/p->dDl[0];
 
     for(j = 0; j < p->NPlanes ; ++j){  // each iteration leaves i_point[i].image on plane (j+1)
-      
+
       // convert to physical coordinates on the plane j
       
       xx[0] = p->i_points[i].image->x[0]/(1+p->plane_redshifts[j]);

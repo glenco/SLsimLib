@@ -55,23 +55,32 @@ public:
 	/// get the scale radius
 	float get_rscale() const { return rscale; }
 	/// get the redshift
-	PosType getZlens() const { return zlens; }
 
+	PosType getZlens() const { return zlens; }
+    /// get the position of the Halo
+    void getX(PosType * MyPosHalo) const { MyPosHalo[0] = posHalo[0] ; MyPosHalo[1] = posHalo[1]; }
+    /// set the position of the Halo
+    void setX(PosType PosX, PosType PosY) { posHalo[0] = PosX ; posHalo[1] = PosY ; }
+    /// display the position of the halo
+    void displayPos() { std::cout << "Halo PosX = " << posHalo[0] << " ; Halo PosY = " << posHalo[1] << std::endl; }
+ 
 	/// initialize from a simulation file
 	virtual void initFromFile(float my_mass, long *seed, float vmax, float r_halfmass){};
 	/// initialize from a mass function
 	virtual void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed);
 
-	/// set Rmax
+	/// set Rmax (in Mpc)
 	virtual void set_Rmax(float my_Rmax){Rmax=my_Rmax; xmax = Rmax/rscale;};
-	/// set mass
+	/// set mass (in solar masses)
 	void set_mass(float my_mass){mass=my_mass;};
-	/// set scale radius
+	/// set scale radius (in Mpc)
 	virtual void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rmax/rscale;};
 	/// set redshift
+
 	void setZlens(PosType my_zlens){
     zlens=my_zlens;
   };
+
 	/// set slope
 	virtual void set_slope(PosType my_slope){};
 
@@ -134,8 +143,8 @@ protected:
   
 	/// read in parameters from a parameterfile in InputParams params
 	void assignParams(InputParams& params);
-  /// read in star parameters. This is valid for all halos and not overloaded.
-  void assignParams_stars(InputParams& params);
+    /// read in star parameters. This is valid for all halos and not overloaded.
+    void assignParams_stars(InputParams& params);
 
 	/// error message printout
 	void error_message1(std::string name,std::string filename);
@@ -161,13 +170,15 @@ protected:
     PosType *star_Sigma;
     PosType **star_xdisk;
 
+
   /// point mass case
 	virtual PosType inline alpha_h(PosType x){return -1;};
 	virtual KappaType inline kappa_h(PosType x){return 0;};
 	virtual KappaType inline gamma_h(PosType x){return -2;};
 	virtual KappaType inline phi_h(PosType x){return 0;};
   PosType xmax;
-  
+
+
   // Functions for calculating axial dependence
   void setModesToEllip(PosType q,PosType theta);
   void faxial(PosType theta,PosType f[]);
@@ -177,7 +188,12 @@ protected:
   PosType mod[18];
   PosType r_eps;
   
-  PosType zlens;
+
+    PosType zlens;
+    
+    /// Position of the Halo
+    PosType posHalo[2];
+
 };
 
 /** \ingroup DeflectionL2
@@ -260,6 +276,8 @@ protected:
 private:
   PosType gmax;
 };
+// ********************
+
 
 /** \ingroup DeflectionL2
  *

@@ -831,7 +831,7 @@ void Lens::insertMainHalo(LensHalo* halo,bool verbose)
 {
 	halo->setCosmology(cosmo);
 	main_halos.push_back(halo);
-	
+
 	flag_switch_main_halo_on = true;
 	
 	addMainHaloToPlane(halo);
@@ -856,6 +856,9 @@ void Lens::insertMainHalos(LensHalo** halos, std::size_t Nhalos, bool verbose)
 	
 	combinePlanes(verbose);
 }
+
+
+
 
 /**
  * \brief Inserts a single main lens halo and deletes all previous ones.
