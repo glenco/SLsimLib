@@ -57,12 +57,10 @@ LensPlaneSingular::~LensPlaneSingular()
 void LensPlaneSingular::force(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xx,bool kappa_off){
 	PosType alpha_tmp[2],x_tmp[2];
 	KappaType kappa_tmp, gamma_tmp[3];
-    PosType * xxhalo = new PosType[2];
     
 	alpha[0] = alpha[1] = 0.0;
 	*kappa = 0.0;
 	gamma[0] = gamma[1] = gamma[2] = 0.0;
-    xxhalo[0] = xxhalo[1] = 0.0;
 
 	for(std::size_t i = 0, n = halos.size(); i < n; ++i)
 	{
@@ -70,11 +68,10 @@ void LensPlaneSingular::force(PosType *alpha,KappaType *kappa,KappaType *gamma,P
 		kappa_tmp = 0.0;
 		gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
 
-        halos[i]->getX(xxhalo);
-        // std::cout << "xx[0] = " << xx[0] << " ; xx[1] = " << xx[1] << std::endl;
-        // std::cout << "xxhalo[0] = " << xxhalo[0] << " ; xxhalo[1] = " << xxhalo[1] << std::endl;
-        x_tmp[0] = xx[0] - xxhalo[0];
-        x_tmp[1] = xx[1] - xxhalo[1];
+        halos[i]->getX(x_tmp);
+       
+        x_tmp[0] = xx[0] - x_tmp[0];
+        x_tmp[1] = xx[1] - x_tmp[1];
         
 		halos[i]->force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,x_tmp,kappa_off,false);
     
