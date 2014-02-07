@@ -68,7 +68,3 @@ KappaType phiPowLaw(PosType *x,PosType R,PosType mass,PosType beta
 	return b*(log(r/R) + 1);
 }
 
-double fourier_func(double theta){
-    double q=0.1; double beta=1; double n=1;   //LensHalo::get_mode()
-    return cos(n*theta)/pow(cos(theta)*cos(theta) + (1/q/q)*sin(theta)*sin(theta),beta/2);
-}

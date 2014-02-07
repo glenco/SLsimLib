@@ -20,6 +20,7 @@ LensHalo::LensHalo(InputParams& params){
 	stars_implanted = false;
 }
 
+
 void LensHalo::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed){
 	mass = my_mass;
 	Rmax = my_Rmax;
@@ -283,12 +284,20 @@ LensHaloPseudoNFW::~LensHaloPseudoNFW(){
 
 LensHaloPowerLaw::LensHaloPowerLaw() : LensHalo(){
   beta = -1;
-	rscale = xmax = 1.0;
+  fratio = 1;
+  rscale = xmax = 1.0;
 }
 
 LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
 	assignParams(params);
-  rscale = xmax = 1.0;
+    calcModes(fratio, beta, pa, mod);
+    for(int i=1;i<Nmod;i++){
+        //std::cout << mod[i] << std::endl;
+        if(mod[i]!=0){set_flag_elliptical(true);};
+    }
+    if(get_flag_elliptical()==false){beta=-beta;}; /// TODO the beta used for calculating kappa,gamma,alpha in the symmetric cases is a factor of -1 different from the asymmetric case
+    std::cout << "if mods!=0 this must be 1: " << get_flag_elliptical() << std::endl;
+    rscale = xmax = 1.0;
 }
 
 void LensHaloPowerLaw::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed){
@@ -302,6 +311,10 @@ void LensHaloPowerLaw::assignParams(InputParams& params){
 	if(!params.get("main_Rmax",Rmax)) error_message1("main_Rmax",params.filename());
 	if(!params.get("main_zlens",zlens)) error_message1("main_zlens",params.filename());
 	if(!params.get("main_slope",beta)) error_message1("main_slope, example -1",params.filename());
+    if(beta>=2.0) error_message1("main_slope < 2",params.filename());
+    if(!params.get("main_axis_ratio",fratio)) error_message1("main_axis_ratio, example 1",params.filename());
+    if(!params.get("main_pos_angle",pa)) error_message1("main_pos_angle",params.filename());
+
 
 	if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
     else if(stars_N){
@@ -386,18 +399,12 @@ void LensHalo::force_halo(
     ,bool kappa_off
     ,bool subtract_point /// if true contribution from a point mass is subtracted
     ){
-	double q = 0.8; // TODO read theta and q from param file!!!
-
-	if (q==1.0){
-		force_halo_sym(alpha,kappa,gamma,xcm,kappa_off,subtract_point);
-		//std::cout << alpha[0] << std::endl;
-	}
-	else{
-		//setModesToEllip(q,theta);
-		//faxial(theta,f);
-		//setEllipModes(q,theta);
-		//fangular(theta,f);
-		force_halo_asym(alpha,kappa,gamma,xcm,kappa_off,subtract_point);
+    //std::cout << "In lens_halo.cpp force_halo " << elliptical << std::endl;
+    bool IsElliptical=get_flag_elliptical();
+	if (IsElliptical==true){
+        force_halo_asym(alpha,kappa,gamma,xcm,kappa_off,subtract_point);
+    }else{
+        force_halo_sym(alpha,kappa,gamma,xcm,kappa_off,subtract_point);
 	}
 }
 
@@ -474,7 +481,9 @@ void LensHalo::force_halo_asym(
 		){
 	std::ofstream dfunc;
 	dfunc.open( "dfunc.dat", ios::out | ios::app );
+            
 	double rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
+    
 
 	if(rcm2 < 1e-20) rcm2 = 1e-20;
 
@@ -491,9 +500,9 @@ void LensHalo::force_halo_asym(
 			xcm[1]=7.0710678e-21;
 		}
         
-        //theta=atan2(xcm[1],xcm[0]);
+        theta=atan2(xcm[1],xcm[0]);
         
-		if (xcm[0]>0){
+		/*if (xcm[0]>0){
 			theta=atan(xcm[1]/xcm[0]);
 		}
 		if (xcm[0]<0 && xcm[1]>=0){
@@ -507,7 +516,7 @@ void LensHalo::force_halo_asym(
 		}
 		if (xcm[0]==0 && xcm[1]>0){
 			theta=-1*pi/2;
-		}
+		}*/
 		//double prefac = mass/rcm2/pi;
 
 		//double ellr2=rcm2*0.5*(cos(theta)*cos(theta)+(1./0.5/0.5)*sin(theta)*sin(theta))*pi;
@@ -516,9 +525,11 @@ void LensHalo::force_halo_asym(
 
 		//double xmax = Rmax/rscale;
 		//double tmp = (alpha_h(x,xmax) + 1.0*subtract_point)*prefac;
-		double tmp = (alpha_asym(x,theta) + 1.0*subtract_point)*prefac;
-		alpha[0] += tmp*xcm[0];
-		alpha[1] += tmp*xcm[1];
+        PosType alpha_tmp[2];
+        alpha_asym(x,theta, alpha_tmp);
+		double tmp =  1.0*subtract_point*prefac;
+		alpha[0] +=  alpha_tmp[0]*prefac + tmp*xcm[0];
+		alpha[1] +=  alpha_tmp[1]*prefac + tmp*xcm[1];
 
 		// can turn off kappa and gamma calculations to save times
 		if(!kappa_off){
@@ -526,10 +537,16 @@ void LensHalo::force_halo_asym(
 			//if(kappa_asym(x,theta) < 0.01){
 			//	dfunc << x << " " << theta << " " << kappa_asym(x,theta) << " " << xcm[0] << " " << xcm[1] << std::endl;
 			//}
-			tmp = (gamma_asym(x,theta) + 2.0*subtract_point)*prefac/rcm2;
+            //std::cout << x << std::endl;
+            PosType gamma_tmp[2];
+            gamma_asym(x,theta,gamma_tmp);
+			tmp = (2.0*subtract_point)*prefac/rcm2;
+			//gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*(tmp+gamma_tmp[0]*prefac/rcm2);
+            gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp+gamma_tmp[0];
+            gamma[1] += xcm[0]*xcm[1]*tmp+gamma_tmp[1];
+			//gamma[1] += xcm[0]*xcm[1]*(tmp+gamma_tmp[0]*prefac/rcm2);
+            
 
-			gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
-			gamma[1] += xcm[0]*xcm[1]*tmp;
 		}
 
 	}

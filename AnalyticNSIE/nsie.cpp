@@ -150,6 +150,7 @@ void gammaNSIE(
 /** \ingroup function
  *  \brief Elliptical radius \f$ R^2 = x^2 + f^2 y^2 \f$ of a NonSingular Isothermal Ellipsoid
  */
+
 // TODO: BEN Check pi factor against notes.
 PosType rmaxNSIE(
 		PosType sigma    /// velocity dispersion in km/s

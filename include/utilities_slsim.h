@@ -926,7 +926,7 @@ namespace Utilities
    double b;
    
    
-   double operator = (double x) { return a*x + b*x*x;}
+   double operator () (double x) { return a*x + b*x*x;}
    }
    
    ..............................
@@ -937,6 +937,8 @@ namespace Utilities
    
    f.a = 3;
    f.b = 10.3;
+   
+   tmp = f(192.2);
    
    result = Utilities::nintegrate<Function>(f,1.0e-2,1.0e4,1.0e-4);
    

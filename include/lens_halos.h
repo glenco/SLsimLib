@@ -57,6 +57,7 @@ public:
 	float get_rscale() const { return rscale; }
 	/// get the redshift
 	PosType getZlens() const { return zlens; }
+    
 
 	/// initialize from a simulation file
 	virtual void initFromFile(float my_mass, long *seed, float vmax, float r_halfmass){};
@@ -74,9 +75,12 @@ public:
     zlens=my_zlens;
   };
 	/// set slope
-	virtual void set_slope(PosType my_slope){};
-    /// set mode number for making elliptical
-    void set_mode(int n){mode_number=n;}
+	virtual void set_slope(PosType my_slope){beta=my_slope;};
+    /// get slope
+    virtual PosType get_slope(){return beta;};
+    /// flag=True if halo elliptical
+    bool get_flag_elliptical(){return elliptical;};
+    void set_flag_elliptical(bool ell){elliptical=ell;};
     
     /// set cosmology for halo
 	virtual void setCosmology(const COSMOLOGY& cosmo) {}
@@ -119,8 +123,7 @@ public:
 
 	/// Prints star parameters; if show_stars is true, prints data for single stars
 	void PrintStars(bool show_stars) const;
-    
-    
+
 
 protected:
   
@@ -136,6 +139,7 @@ protected:
   PosType star_theta_force;
   int star_Nregions;
   PosType *star_region;
+  PosType beta;
   void substract_stars_disks(PosType *ray,PosType *alpha
                              ,KappaType *kappa,KappaType *gamma);
   float* stellar_mass_function(IMFtype type, unsigned long Nstars, long *seed, PosType minmass=0.0, PosType maxmass=0.0
@@ -179,22 +183,35 @@ protected:
   PosType xmax;
   
   // Functions for calculating axial dependence
+    bool elliptical;
+
   void setModesToEllip(PosType q,PosType theta);
   void faxial(PosType theta,PosType f[]);
   void gradial(PosType r,PosType g[]);
   void desymmeterize(PosType r,PosType theta,PosType *alpha,PosType *kappa,PosType *gamma);
   void felliptical(PosType x, PosType q, PosType theta, PosType f[], PosType g[]);
 
-	virtual double gamma_asym(double x,double theta);
+	virtual void gamma_asym(PosType x,PosType theta, PosType gamma[2]);
 	virtual double kappa_asym(PosType x,PosType theta);
-	virtual double alpha_asym(double x,double theta);
+    virtual double kappa_dyn(PosType x,PosType theta);
+    
+	virtual void alpha_asym(PosType x,PosType theta, PosType alpha[2]);
     void setEllipModes(double q,double theta);
-    virtual double fourier_coeff(int n);
-    void calcModes(double q, double beta, double rottheta);
     void fangular(PosType theta,PosType f[]);
+    double fourier_coeff(double n, double q, double beta);
+    
+    void calcModes(double q, double beta, double rottheta, PosType newmod[]);
+    
+    struct fourier_func{
+        fourier_func(double my_n, double my_q, double my_beta): n(my_n),q(my_q),beta(my_beta){};
+        double n;
+        double q;
+        double beta;
+        double operator ()(double theta) {return cos(n*theta)/pow(cos(theta)*cos(theta) + (1/q/q)*sin(theta)*sin(theta),beta/2) ;}
+    };
 
-  const static int Nmod = 18;
-  int mode_number;
+  const static int Nmod = 32;
+  
   PosType mod[Nmod];
   PosType r_eps;
   
@@ -367,8 +384,11 @@ public:
 	~LensHaloPowerLaw();
 
 	/// set the slope of the surface density profile
-
 	void set_slope(PosType my_slope){beta=my_slope;};
+    
+    /// get slope
+    PosType get_slope(){return beta;};
+    
 	/// initialize from a mass function
 	void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed);
     
@@ -380,6 +400,9 @@ private:
 
 	///	read in parameters from a parameterfile in InputParams params
 	PosType beta;
+    PosType fratio;
+    PosType pa;
+    
 
 	// Override internal structure of halos
 	inline PosType alpha_h(PosType x){
