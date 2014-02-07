@@ -331,15 +331,50 @@ unsigned long order_curve4(Point *curve,long Npoints){
 
 /// Replaces curve->imagekist with its convex hull.  The number of points will change.
   void ordered_convexhull(Kist<Point> * curve){
+    int i;
     std::vector<Point *> copy;
-    for(curve->MoveToTop();!(curve->OffBottom());curve->Down()){
-      copy.push_back(curve->getCurrent());
+    copy.resize(curve->Nunits());
+    
+    for(i=0,curve->MoveToTop();!(curve->OffBottom());curve->Down(),++i){
+      //copy.push_back(curve->getCurrent());
+      copy[i] = curve->getCurrent();
     }
   
     std::vector<Point *> hull = Utilities::convex_hull(copy);
     curve->copy(hull);
   
     return;
+  }
+  
+  /// Replaces curve->imagekist with its convex hull.  The number of points will change.
+  void ordered_concavehull(Kist<Point> * curve){
+    int i;
+    std::vector<Point *> copy;
+    copy.resize(curve->Nunits());
+    
+    for(i=0,curve->MoveToTop();!(curve->OffBottom());curve->Down(),++i){
+      //copy.push_back(curve->getCurrent());
+      copy[i] = curve->getCurrent();
+    }
+    
+    std::vector<Point *> hull = Utilities::concave_hull(copy);
+    curve->copy(hull);
+    
+    return;
+  }
+
+  /// gives the area within the convex hull of the curve
+  PosType HullArea(Kist<Point> * curve){
+    Kist<Point> tmpkist;
+    PosType area = 0;
+    
+    tmpkist.copy(curve);
+    
+    ordered_convexhull(curve);
+    
+    windings((*tmpkist)->x, curve, &area);
+    
+    return fabs(area);
   }
 }
 
@@ -1833,7 +1868,7 @@ void writeCurves(int m			/// part of te filename, could be the number/index of t
     
     size_t n = P.size();
     size_t k = 0;
-    std::vector<Point *> H(2*n);//,anti_H(2*n);
+    std::vector<Point *> H(2*n);
     
     // Sort points lexicographically
     std::sort(P.begin(), P.end(), xorder);
@@ -1841,7 +1876,6 @@ void writeCurves(int m			/// part of te filename, could be the number/index of t
     // Build lower hull
     for (size_t i = 0; i < n; i++) {
       while (k >= 2 && cross(H[k-2], H[k-1], P[i]) <= 0){
-        //anti_H[j++] = H[k-1];
         k--;
       }
       H[k++] = P[i];
@@ -1850,7 +1884,6 @@ void writeCurves(int m			/// part of te filename, could be the number/index of t
     // Build upper hull
     for (long i = n-2, t = k+1; i >= 0; i--) {
       while (k >= t && cross(H[k-2], H[k-1], P[i]) <= 0){
-        //anti_H[j++] = H[k-1];
         k--;
       }
       H[k++] = P[i];
@@ -1859,10 +1892,107 @@ void writeCurves(int m			/// part of te filename, could be the number/index of t
     
     H.resize(k);
     H.pop_back();
-    //anti_H.resize(j);
     
-    //assert(H.size() + anti_H.size() == P.size());
-    //P = anti_H;
+    return H;
+  }
+  
+  /// Returns a vector of points on the convex hull in counter-clockwise order.
+  std::vector<Point *> concave_hull(std::vector<Point *> P)
+  {
+    
+    ERROR_MESSAGE();
+    throw std::runtime_error("concave_hull() is under construction!");
+    
+    if(P.size() <= 3){
+      std::vector<Point *> H = P;
+      P.resize(0);
+      return H;
+    }
+    
+    size_t n = P.size();
+    size_t k = 0,j,i;
+    int kk=0;
+    std::vector<Point *> H(2*n);
+    std::vector<Point *> sub;
+    
+    // Sort points lexicographically
+    std::sort(P.begin(), P.end(), xorder);
+    
+    H[0] = P[0];
+    
+    i=0;
+    do{
+      sub.resize(0);
+      
+      for(j = 0;j<n;++j){
+        if(AreBoxNeighbors(H[i],P[j]) ){
+          sub.push_back(P[j]);
+        }
+      }
+      convex_hull(sub);
+      j=0;
+      while(sub[j] != H[i]) ++j;
+      if(j<sub.size()-1) H[i+1] = sub[j+1];
+      else H[i+1] = sub[0];
+      ++i;
+    }while(H[i] != H[0]);
+    
+    H.resize(i-1);
+    
+    return H;
+    
+    
+    
+    // Build lower hull
+    H[0] = P[0];
+    H[1] = P[1];
+/*    k=2;
+    for (size_t i = 2; i < n; i++) {
+      
+      for(kk = k; kk >=2; kk--){
+        if(cross(H[kk-2], H[kk-1], P[i]) > 0 && AreBoxNeighbors(H[kk-2], P[i]) ){
+          k = kk - 1;
+        }
+      }
+      H[k++] = P[i];
+    }
+  */  
+    
+    
+    bool added;
+    PosType turn,tmp;
+    kk = 2;
+    do{
+      added = false;
+      turn = 0;
+      for(size_t i=0;i<n-kk;++i){
+        if(turn > (tmp = cross(H[kk-2], H[kk-1], P[i]) ) && AreBoxNeighbors(H[kk-1], P[i])){
+          turn = tmp;
+          H[kk] = P[i];
+          added = true;
+        }
+      }
+      if(added){
+        P[n-1-kk] = H[kk];
+        
+        ++kk;
+      }
+    }while(added);
+    
+    /*
+    // Build upper hull
+    for (long i = n-2, t = k+1; i >= 0; i--) {
+            
+      while ((k >= t && cross(H[k-2], H[k-1], P[i]) <= 0) ){
+        if(AreBoxNeighbors(H[k-2], P[i])) kk = k-1;
+        k--;
+      }
+      H[kk++] = P[i];
+    }
+    */
+    
+    H.resize(kk-1);
+    H.pop_back();
     
     return H;
   }

@@ -121,7 +121,7 @@ public:
 	void MoveCurrentToTop();
 	void copy(Kist<Data> *kist);
 	void copy(std::vector<Data *> &vector);
-    void test_iterator();
+  void test_iterator();
 
 	// movement
 	bool JumpDown(int jump);

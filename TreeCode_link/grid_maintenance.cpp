@@ -112,7 +112,7 @@ Grid::Grid(
         }
     }
 
-    assert(i == Ngrid_init*Ngrid_init2);
+    assert(i == Ngrid_init*Ngrid_init2-1);
  
     s_points=LinkToSourcePoints(i_points,Ngrid_init*Ngrid_init2);
     
@@ -166,7 +166,7 @@ void Grid::ReInitializeGrid(LensHndl lens){
 	i_tree->emptyTree();
 	s_tree->emptyTree();
   
-  
+
 	// build new initial grid
 	i_points = NewPointArray(Ngrid_init*Ngrid_init2,true);
 	if(Ngrid_init == Ngrid_init2){

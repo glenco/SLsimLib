@@ -919,9 +919,9 @@ namespace Utilities
    <pre>
    example:
    
-   struct Function{
+   struct FunctorType{
    
-   Function(double my_a,double my_b): a(my_a),b(my_b){};
+   FunctionType(double my_a,double my_b): a(my_a),b(my_b){};
    double a;
    double b;
    
@@ -933,14 +933,15 @@ namespace Utilities
    
    
    
-   Function f(21,23.1);
+   FunctorType func(21,23.1);
    
-   f.a = 3;
-   f.b = 10.3;
+   // change some internal variables
+   func.a = 3;
+   func.b = 10.3;
+   // use as a function
+   double tmp = func(10);
    
-   tmp = f(192.2);
-   
-   result = Utilities::nintegrate<Function>(f,1.0e-2,1.0e4,1.0e-4);
+   result = Utilities::nintegrate<FunctorType>(func,1.0e-2,1.0e4,1.0e-4);
    
    <\pre>
    */
