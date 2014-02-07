@@ -342,7 +342,7 @@ long refine_edges2(LensHndl lens,PosType *y_source,PosType r_source,GridHndl gri
 
 		if(Ncells > 0){
 
-			//i_points=NewPointArray((Ngrid_block*Ngrid_block-1)*Ncells,true);
+			//i_points=NewPointArray((Ngrid_block*Ngrid_block-1)*Ncells);
 			Ncells_o=Ncells;
 
 			imageinfo[i].outerborder->MoveToTop();

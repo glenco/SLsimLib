@@ -235,7 +235,7 @@ void find_crit(
 	  // order points in curve
 
 	  x[0]=x[1]=0.0;
-	  Point *tmp_points = NewPointArray(Npoints,false);
+	  Point *tmp_points = NewPointArray(Npoints);
 	  for(i=0;i<*Ncrits;++i){
 		  // return in_image value to false
 		  critcurve[i].imagekist->MoveToTop();
@@ -596,7 +596,7 @@ void find_crit2(
 	  // order points in curve
 
 	  x[0]=x[1]=0.0;
-	  //Point *tmp_points = NewPointArray(Npoints,false);
+	  //Point *tmp_points = NewPointArray(Npoints);
 	  unsigned long ii;
 	  for(i=0;i<*Ncrits;++i){
 

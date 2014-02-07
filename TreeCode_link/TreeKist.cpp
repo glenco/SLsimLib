@@ -571,19 +571,19 @@ void TreeKist::RebuildTreeFromList(){
 	PosType *tmp;
   
 	// Make new array of points
-	Point *points = NewPointArray(Npoints,true);
+	Point *points = NewPointArray(Npoints);
   
 	pointkist.MoveToTop();
     Kist<Point>::iterator it = pointkist.getTopIt();
 	for(i=0;i<Npoints;++i,--it){
-		tmp = points[i].x;
+		//tmp = points[i].x;
 		// PointCopy() copies the x pointer which is later freed in
 		// emptyTree() so the information needs to be copied
     
 		PointCopy(&(points[i]),*it);
-		points[i].x = tmp;
-		points[i].x[0] = (*it)->x[0];
-		points[i].x[1] = (*it)->x[1];
+		//points[i].x = tmp;
+		//points[i].x[0] = (*it)->x[0];
+		//points[i].x[1] = (*it)->x[1];
     
 		/* Below is for trash collection in PruneTree().
 		 * When PruneTree has been used not all of the

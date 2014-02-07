@@ -91,7 +91,7 @@ void map_images(
 			//printf(" sb = %e  y = %e %e\n",sb,y[0],y[1]);
 			if(sb > 0.0){
 
-				newpoint = NewPointArray(1,true);
+				newpoint = NewPointArray(1);
 				newpoint->x[0] = y[0] + source->getX()[0];
 				newpoint->x[1] = y[1] + source->getX()[1];
 				newpoint->image = newpoint;
@@ -207,7 +207,7 @@ void map_images(
 		Ntmp = 2*(unsigned long)(source->source_r_out/xmin + 1);
 		Ntmp = (Ntmp > 10000) ? 10000 : Ntmp;
 		Ntmp = 2*prevpower(Ntmp);
-		points = NewPointArray(Ntmp*Ntmp,true);
+		points = NewPointArray(Ntmp*Ntmp);
 		xx[0] = xx[1] = 0.0;
 		xygridpoints(points,2*source->source_r_out,xx,Ntmp,0);
 		tree = BuildTree(points,Ntmp*Ntmp);

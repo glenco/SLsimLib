@@ -38,7 +38,7 @@ Grid::Grid(
 	  exit(1);
   }	
 
-	i_points = NewPointArray(Ngrid_init*Ngrid_init,true);
+	i_points = NewPointArray(Ngrid_init*Ngrid_init);
 	xygridpoints(i_points,range,center,Ngrid_init,0);
 	s_points=LinkToSourcePoints(i_points,Ngrid_init*Ngrid_init);
 
@@ -94,7 +94,7 @@ Grid::Grid(
     Ngrid_init2 = (int)(Ngrid_init*axisratio);
     //if(Ngrid_init2 % 2 == 1) ++Ngrid_init2;
     
-    i_points = NewPointArray(Ngrid_init*Ngrid_init2,true);
+    i_points = NewPointArray(Ngrid_init*Ngrid_init2);
     
     int i;
     // set grid of positions
@@ -168,7 +168,7 @@ void Grid::ReInitializeGrid(LensHndl lens){
   
 
 	// build new initial grid
-	i_points = NewPointArray(Ngrid_init*Ngrid_init2,true);
+	i_points = NewPointArray(Ngrid_init*Ngrid_init2);
 	if(Ngrid_init == Ngrid_init2){
     xygridpoints(i_points,rangeX,center,Ngrid_init,0);
   }else{
@@ -250,7 +250,7 @@ void Grid::ReShoot(LensHndl lens){
   
   // clear source tree
   delete s_tree;
-  s_points = NewPointArray(i_tree->pointlist->Npoints,true);
+  s_points = NewPointArray(i_tree->pointlist->Npoints);
   
 	// build new initial grid
   MoveToTopList(i_tree->pointlist);
@@ -358,7 +358,7 @@ unsigned long Grid::getNumberOfPoints(){
 Point * Grid::RefineLeaf(LensHndl lens,Point *point,bool kappa_off){
 	//Point * RefineLeaf(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,Point *point,int Ngrid,bool kappa_off){
 
-	Point *i_points = NewPointArray(Ngrid_block*Ngrid_block-1,true);
+	Point *i_points = NewPointArray(Ngrid_block*Ngrid_block-1);
 	Point *s_points;
 	int Nout,kk;
 
@@ -480,7 +480,7 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa
 	if(points.size() == 0) return NULL;
 
 	size_t Nleaves = points.size();
-	Point *i_points = NewPointArray((Ngrid_block*Ngrid_block-1)*Nleaves,true);
+	Point *i_points = NewPointArray((Ngrid_block*Ngrid_block-1)*Nleaves);
 	Point *s_points;
 	size_t Nout,kk,ii;
 	size_t Nadded,Nout_tot;
@@ -557,7 +557,7 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa
 		PosType aa[4],dx[2];
 		//PosType a1[4],ss;
 		//bool tmp;
-		//Point *i_point = NewPointArray(1,true);
+		//Point *i_point = NewPointArray(1);
 		//Point *s_point = LinkToSourcePoints(i_point,1);
 
 		for(ii=0,kk=0;ii<Nleaves;++ii){

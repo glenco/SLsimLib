@@ -16,7 +16,7 @@ Point *LinkToSourcePoints(Point *i_points,unsigned long Npoints){
 
   if(Npoints < 1) return NULL;
 
-  s_points = NewPointArray(Npoints,true);
+  s_points = NewPointArray(Npoints);
 
   for(i=0;i<Npoints;++i){
     s_points[i].id=i_points[i].id;

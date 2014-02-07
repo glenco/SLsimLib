@@ -34,7 +34,7 @@ struct KistUnit{
  example:
  
  Kist<Point> kist;
- Point *p_point = NewPointArray(100,true);
+ Point *p_point = NewPointArray(100);
  int i=0;
  
  for(i = 0; i< 100; ++i){

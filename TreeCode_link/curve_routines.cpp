@@ -64,7 +64,7 @@ void split_order_curve4(OldImageInfo *curves,int Maxcurves,int *Ncurves){
 
 	// copy list back into array
 	point=curves[0].points;
-	newpointarray=NewPointArray(NpointsTotal,false);
+	newpointarray=NewPointArray(NpointsTotal);
 	MoveToTopList(orderedlist);
 	m=0;
 	i=0;
@@ -220,7 +220,7 @@ unsigned long order_curve4(Point *curve,long Npoints){
 
     if(Npoints < 3) return Npoints;
 
-    Point *tmpcurve = NewPointArray(curve->Nunits(),false);
+    Point *tmpcurve = NewPointArray(curve->Nunits());
 
     curve->MoveToTop();
     do{
@@ -714,7 +714,7 @@ exit(0);
 	//std::printf("  end of loop j=%i k=%i i=%i Npoints=%i\n",j,k,i,Npoints);
 
 	point=curves[0].points;
-	newpointarray=NewPointArray(curves[0].Npoints,false);
+	newpointarray=NewPointArray(curves[0].Npoints);
 	for(i=0,*Ncurves=0,m=0;i<k;++i){
 		std::printf("lists[%li]->Npoints = %li\n",i,lists[i]->Npoints);
 		if(lists[i]->Npoints > 0){
@@ -1149,7 +1149,7 @@ short backtrack(Point *points,long Npoints,long *j,long jold,long *end){
 	Npoints=images->outerborder->Nunits();
 
 	// make a copy of the border points in a point array
-	borders->points=NewPointArray(Npoints,false);
+	borders->points=NewPointArray(Npoints);
 	// copy outer borders of images to border
 	MoveToTopKist(images->outerborder);
 	for(i=0;i<images->outerborder->Nunits();++i){
@@ -1317,7 +1317,7 @@ short backtrack(Point *points,long Npoints,long *j,long jold,long *end){
 	Npoints=images->innerborder->Nunits();
 
 	// make a copy of the border points in a point array
-	borders->points=NewPointArray(Npoints,false);
+	borders->points=NewPointArray(Npoints);
 	// copy inner borders of images to border
 	MoveToTopKist(images->innerborder);
 	for(i=0;i<images->innerborder->Nunits();++i){
@@ -1492,7 +1492,7 @@ void splitter(OldImageInfo *images,int Maximages,int *Nimages){
 
 	// copy list back into array
 	point = images[0].points;
-	newpointarray = NewPointArray(NpointsTotal,false);
+	newpointarray = NewPointArray(NpointsTotal);
 	MoveToTopList(imagelist);
 	m=0;
 	i=0;
