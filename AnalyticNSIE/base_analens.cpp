@@ -580,20 +580,20 @@ void LensHalo::alpha_asym(PosType x,PosType theta, PosType alpha[]){
 }
 
 
-double LensHalo::kappa_dyn(PosType x,PosType theta){ //
+double LensHalo::kappa_dyn(PosType x,PosType theta){ // directly calculating kappa for powerlaw halo, i.e. w/o taking advantage of kappa_h, phi_h
 	PosType F, f[3],g[3], kappa;
     PosType beta=get_slope();
     faxial(theta,f);
     gradial(x,g);
     F=f[0]-1;
     kappa=0.5*((beta*beta*(1+F*g[0])+g[0]*f[2])*pow(x,beta-2)+((2*beta+1)*F*g[1])*pow(x,beta-1)+(F*g[2])*pow(x,beta));
-    return kappa*((beta+2)/(beta*beta))*pow(x,-2*beta+2);
+    return kappa*(1./(beta*beta))*pow(x,-2*beta+2);
 }
 
 double LensHalo::kappa_asym(PosType x,PosType theta){
 	PosType F, f[3],g[3], kappa;
     PosType beta=get_slope();
-    //std::cout << beta << std::endl;
+    //std::cout << -beta+2 << std::endl;
     faxial(theta,f);
     gradial(x,g);
     F=f[0]-1;
@@ -601,13 +601,18 @@ double LensHalo::kappa_asym(PosType x,PosType theta){
 	//g[1]=g[2]=0;
 	//F=f[0];
     // kappa=0.5*(beta*beta*f[0]+f[2])*pow(x,beta-2); //works fine
-    //kappa=F*kappa_h(x)/x/x-0.5*f[2]/x/x*phi_h(x); // should be correct equation but produces weird patterns
+    //kappa=F*kappa_h(x)/x/x-0.5*f[2]/x/x*phi_h(x);
     //kappa=f[0]*kappa_h(x)*beta*beta/(2-beta)/pow(x,4)-0.5*f[2]/x/x*phi_h(x)*(2-beta)*pow(x,2*beta-2);// heuristic approach
-    kappa=f[0]*kappa_h(x)*beta*beta/(2-beta)/pow(x,4)-0.5*f[2]/x/x*phi_h(x)*(2-beta)*pow(x,2*beta-2);
-    
+    //kappa=f[0]*kappa_h(x)*beta*beta/(2+beta)/pow(x,4)-0.5*f[2]/x/x*phi_h(x)*(2-beta)*pow(x,2*beta-2); // w/o g
+    kappa=0.5*(1+F*g[0])*beta*beta*2*kappa_h(x)/(2+beta)/pow(x,4)-0.5*(F*g[1]/x+F*g[2]+f[2]*g[0]/x/x)*phi_h(x)*(2-beta)*pow(x,2*beta-2)-2*F*g[1]*beta*alpha_h(x)/pow(x,3);
+    //std::cout << "I: " << x << " " << pow(x/xmax,beta+2)/pow(x,3) << std::endl;
+    //kappa=0.5*(1+F*g[0])*beta*beta*pow(x,beta-2)                 +0.5*(F*g[1]/x+F*g[2]+f[2]*g[0]/x/x)*pow(x,beta)                      +2*F*g[1]*beta*pow(x,beta-1);
+    //std::cout << "II: " <<  x << " " << +beta*pow(x,beta-1)       << std::endl;
+
     //kappa=-F*phi_h(x)/x/x/x/x+0.5*f[2]/x/x*phi_h(x); // gives sth elliptical, I did this to exclude inconsistency between phi and kappa as source of error
     //kappa=-F*phi_h(x)/x/x+0.5*f[2]/x/x*phi_h(x);
-	return kappa*((beta+2)/(beta*beta))*pow(x,-2*beta+2);
+
+	return kappa*(1/(beta*beta))*pow(x,-2*beta+2);
 }
 
 
@@ -696,7 +701,7 @@ void LensHalo::gamma_asym(PosType x,PosType theta, PosType gamma[]){
     double gt = 0.5*( (beta*(beta-2)*(1+F*g[0]) -g[0]*f[2])*pow(x,beta-2)+(2*beta-1)*F*g[1]*pow(x,beta-1)+F*g[2]*pow(x,beta)); // with damping
     double g45 = (beta-1)*f[1]*g[0]*pow(x,beta-2)+f[1]*g[1]*pow(x,beta-1) ; // with damping
     
-	gamma[0] = cos(2*theta)*gt- sin(2*theta)*g45;
+	gamma[0] = cos(2*theta)*gt-sin(2*theta)*g45;
     gamma[1] = sin(2*theta)*gt+cos(2*theta)*g45;
     
 	return;
