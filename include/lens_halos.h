@@ -204,7 +204,6 @@ protected:
 
 	virtual void gamma_asym(PosType x,PosType theta, PosType gamma[2]);
 	virtual double kappa_asym(PosType x,PosType theta);
-    virtual double kappa_dyn(PosType x,PosType theta);
     
 	virtual void alpha_asym(PosType x,PosType theta, PosType alpha[2]);
     void setEllipModes(double q,double theta);
@@ -437,6 +436,7 @@ private:
 	inline KappaType gamma_h(PosType x){
 		if(x==0) x=1e-6*xmax;
 		//assert(0.5*beta*pow(x/xmax,beta+2) != 0);
+        //std::cout << "gamma_h(" << 0.5*beta*pow(x/xmax,beta+2) << ")" << std::endl;
 		return 0.5*beta*pow(x/xmax,beta+2);
 	}
 	inline KappaType phi_h(PosType x){

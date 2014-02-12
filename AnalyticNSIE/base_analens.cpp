@@ -556,16 +556,7 @@ void LensHalo::felliptical(double x, double q, double theta, double f[], double 
 void LensHalo::alpha_asym(PosType x,PosType theta, PosType alpha[]){
 	double f[3],g[3];
 	double alpha_r,alpha_theta,F;
-	//double alpha_iso = alpha_h(x);
-	//double phi_iso = phi_h(x);
-	//double alpha[2];
-	//setModesToEllip(0.999,theta);
-	//faxial(theta,f);
-	//fangular(theta,f);
-	//felliptical(x,0.4,theta,f,g);
-	//alpha_r=(F*alpha_iso+g[1]*f[0]*phi_iso);
-	//alpha_theta=g[0]*f[1]*phi_iso/x;
-    //setEllipModes(0.5, theta);
+
     faxial(theta,f);
     F=f[0]-1;
     gradial(x,g);
@@ -580,40 +571,61 @@ void LensHalo::alpha_asym(PosType x,PosType theta, PosType alpha[]){
 }
 
 
-double LensHalo::kappa_dyn(PosType x,PosType theta){ // directly calculating kappa for powerlaw halo, i.e. w/o taking advantage of kappa_h, phi_h
-	PosType F, f[3],g[3], kappa;
-    PosType beta=get_slope();
-    faxial(theta,f);
-    gradial(x,g);
-    F=f[0]-1;
-    kappa=0.5*((beta*beta*(1+F*g[0])+g[0]*f[2])*pow(x,beta-2)+((2*beta+1)*F*g[1])*pow(x,beta-1)+(F*g[2])*pow(x,beta));
-    return kappa*(1./(beta*beta))*pow(x,-2*beta+2);
-}
-
 double LensHalo::kappa_asym(PosType x,PosType theta){
 	PosType F, f[3],g[3], kappa;
     PosType beta=get_slope();
-    //std::cout << -beta+2 << std::endl;
+
     faxial(theta,f);
     gradial(x,g);
     F=f[0]-1;
-    //g[0]=1;
-	//g[1]=g[2]=0;
-	//F=f[0];
-    // kappa=0.5*(beta*beta*f[0]+f[2])*pow(x,beta-2); //works fine
-    //kappa=F*kappa_h(x)/x/x-0.5*f[2]/x/x*phi_h(x);
-    //kappa=f[0]*kappa_h(x)*beta*beta/(2-beta)/pow(x,4)-0.5*f[2]/x/x*phi_h(x)*(2-beta)*pow(x,2*beta-2);// heuristic approach
-    //kappa=f[0]*kappa_h(x)*beta*beta/(2+beta)/pow(x,4)-0.5*f[2]/x/x*phi_h(x)*(2-beta)*pow(x,2*beta-2); // w/o g
-    kappa=0.5*(1+F*g[0])*beta*beta*2*kappa_h(x)/(2+beta)/pow(x,4)-0.5*(F*g[1]/x+F*g[2]+f[2]*g[0]/x/x)*phi_h(x)*(2-beta)*pow(x,2*beta-2)-2*F*g[1]*beta*alpha_h(x)/pow(x,3);
-    //std::cout << "I: " << x << " " << pow(x/xmax,beta+2)/pow(x,3) << std::endl;
-    //kappa=0.5*(1+F*g[0])*beta*beta*pow(x,beta-2)                 +0.5*(F*g[1]/x+F*g[2]+f[2]*g[0]/x/x)*pow(x,beta)                      +2*F*g[1]*beta*pow(x,beta-1);
-    //std::cout << "II: " <<  x << " " << +beta*pow(x,beta-1)       << std::endl;
-
-    //kappa=-F*phi_h(x)/x/x/x/x+0.5*f[2]/x/x*phi_h(x); // gives sth elliptical, I did this to exclude inconsistency between phi and kappa as source of error
-    //kappa=-F*phi_h(x)/x/x+0.5*f[2]/x/x*phi_h(x);
+    
+    //kappa=f[0]*kappa_h(x)*beta*beta/(2+beta)/pow(x,4)-0.5*f[2]/x/x*phi_h(x)*(2-beta)*pow(x,2*beta-2); // for arbitrary halos w/o damping
+    
+    //kappa=0.5*(1+F*g[0])*beta*beta*pow(x,beta-2)+0.5*(F*g[1]/x+F*g[2]+f[2]*g[0]/x/x)*pow(x,beta)                      +2*F*g[1]*beta*pow(x,beta-1); // for powerlaw halo with damping
+    
+    // kappa=0.5*((beta*beta*(1+F*g[0])+g[0]*f[2])*pow(x,beta-2)+((2*beta+1)*F*g[1])*pow(x,beta-1)+(F*g[2])*pow(x,beta)); // equivalent to latter expression: for powerlaw halo with damping
+    
+    kappa=0.5*(1+F*g[0])*beta*beta*2*kappa_h(x)/(2+beta)/pow(x,4)-0.5*(F*g[1]/x+F*g[2]+f[2]*g[0]/x/x)*phi_h(x)*(2-beta)*pow(x,2*beta-2)-2*F*g[1]*beta*alpha_h(x)/pow(x,3); // for arbitrary halos with damping
 
 	return kappa*(1/(beta*beta))*pow(x,-2*beta+2);
 }
+
+
+
+void LensHalo::gamma_asym(PosType x,PosType theta, PosType gamma[]){
+	double f[3],g[3];
+	double F;
+	PosType beta=get_slope();
+
+    faxial(theta,f);
+    F=f[0]-1;
+    gradial(x,g);
+
+    
+    //double gt = 0.5*(beta*(beta-2)*f[0]-f[2])*pow(x,beta-2); // w/o damping
+    //double g45 = (beta-1)*f[1]*pow(x,beta-2) ; // w/o damping
+    
+    //double gt = 0.5*( (beta*(beta-2)*(1+F*g[0]) -g[0]*f[2])*pow(x,beta-2)+(2*beta-1)*F*g[1]*pow(x,beta-1)+F*g[2]*pow(x,beta)); // direct calculation for powerlaw with damping
+    double gt = 0.5*((1+F*g[0])*gamma_h(x)*pow(x,-4)*(beta-2)-0.5*(-F*g[1]/x+F*g[2]-f[2]*g[0]/x/x)*phi_h(x)*pow(x,2*beta-2)*(2-beta)-2*F*g[1]*beta*alpha_h(x)/pow(x,3)); // for arbitrary halos
+    
+    //double g45 = f[1]/x*((beta-1)*g[0]*pow(x,beta-1)+g[1]*pow(x,beta)) ; // direct calculation for powerlaw with damping
+    double g45 = 0.5*f[1]/x*( -alpha_h(x)/pow(x,3)*g[0]-phi_h(x)*pow(x,2*beta-2)*(2-beta)*(g[1]-g[0]/x) ) ; //for arbitrary halos
+    
+    gt *= pow(x,2*beta+2);
+    g45 *= pow(x,2*beta+2);
+    
+	gamma[0] = cos(2*theta)*gt-sin(2*theta)*g45;
+    gamma[1] = sin(2*theta)*gt+cos(2*theta)*g45;
+    
+	return;
+}
+
+
+
+
+
+
+
 
 
 /* makes beta=-2 Power Law Elliptical
@@ -631,80 +643,51 @@ double LensHalo::kappa_asym(PosType x,PosType theta){
  g[2]=0.;
  }
  
-double LensHalo::kappa_asym(double x,double theta){
-	double F, f[3],g[3], kappa;
-
-	felliptical(x,0.4,theta,f,g);
-	g[0]=1;
-	g[1]=g[2]=0;
-
-	F=f[0];
-	kappa=F*kappa_h(x)-0.5*f[2]/x/x*phi_h(x);
-
-	return kappa/x;
-}
-*/
+ double LensHalo::kappa_asym(double x,double theta){
+ double F, f[3],g[3], kappa;
+ 
+ felliptical(x,0.4,theta,f,g);
+ g[0]=1;
+ g[1]=g[2]=0;
+ 
+ F=f[0];
+ kappa=F*kappa_h(x)-0.5*f[2]/x/x*phi_h(x);
+ 
+ return kappa/x;
+ }
+ */
 
 /* ANSATZ II
  // eq 34
  void LensHalo::felliptical(double x, double q, double theta, double f[], double g[]){
-	double A[3];
-	//reps=rmax
-	//q=r/reps+q0*(1-r/reps) // q=q0 for small radii, q=1 for large radii
-	A[0]=1/q/q;
-	A[1]=0.;
-	A[2]=0.;
-	f[0]=x*pow((cos(theta)*cos(theta)+A[0]*sin(theta)*sin(theta)),0.5);
-	g[0]=f[0]/x;
-	f[1]=x*(A[0]-1)*(cos(theta)*sin(theta))/(g[0]);
-	f[2]=(x*(A[0]-1)*(pow(cos(theta),4)-A[0]*pow(sin(theta),4)))/(g[0]*g[0]*g[0]);
-	g[1]=g[0]; // (g[0]*g[0]+0.5*x*A[1]*sin(theta)*sin(theta))/g[0];
-	g[2]=0; //sin(theta)*sin(theta)*(A[1]*(4*g[0]*g[0]-x*A[1]*sin(theta)*sin(theta))+2*f[0]*g[0]*A[2] )/(4*g[0]*g[0]*g[0]);
-	//g[3]=cos(theta)*sin(theta)*(2*(A[0]*A[0]-1-(A[0]-1)*(A[0]-1)*cos(2*theta))+x*A[1]*(3+cos(2*theta)+2*A[0]*sin(theta)*sin(theta)))/(4*g[0]*g[0]*g[0]);
-}
-
-double LensHalo::kappa_asym(double x,double theta){
-	double f[3],g[3];
-	double G,Gr,Grr, Gt,Gtt, kappa;
-	felliptical(x,0.4,theta,f,g);
-	G = f[0];
-	Gt = f[1];
-	Gtt= f[2];
-	Gr=g[1];
-	Grr=g[2];
-	double phitwo=(2*kappa_h(G)/G/G - alpha_h(G)/G/G);
-	kappa=-0.5*alpha_h(G)/G*(Gr/x+Grr+Gtt/x/x)+0.5*phitwo*(Gr*Gr+Gt*Gt/x/x);
-    kappa/=G*G;
-	return kappa;
-}
-*/
-
-void LensHalo::gamma_asym(PosType x,PosType theta, PosType gamma[]){
-	double f[3],g[3];
-	double F;
-	PosType beta=get_slope();
-
-	//g[0]=1;
-	//g[1]=g[2]=0;
-    //F = f[0]-1;
-    //double gt = F*gamma_iso + (g[1]*f[0]-F/x/2.)*alpha_iso + 0.5*( g[2]*f[0] - g[1]*f[0]/x - g[0]*f[2]/x/x)*phi_iso;
-    //double g45 = g[0]*f[1]/x*(alpha_iso + (g[1]/g[0] - 1./x)*phi_iso);
-    //setEllipModes(0.5, theta);
-    faxial(theta,f);
-    F=f[0]-1;
-    gradial(x,g);
-    //g[0]=1;
-    //g[1]=g[2]=0;
-    //double gt = 0.5*(beta*(beta-2)*f[0]-f[2])*pow(x,beta-2);
-    //double g45 = (beta-1)*f[1]*pow(x,beta-2) ;
-    
-    double gt = 0.5*( (beta*(beta-2)*(1+F*g[0]) -g[0]*f[2])*pow(x,beta-2)+(2*beta-1)*F*g[1]*pow(x,beta-1)+F*g[2]*pow(x,beta)); // with damping
-    double g45 = (beta-1)*f[1]*g[0]*pow(x,beta-2)+f[1]*g[1]*pow(x,beta-1) ; // with damping
-    
-	gamma[0] = cos(2*theta)*gt-sin(2*theta)*g45;
-    gamma[1] = sin(2*theta)*gt+cos(2*theta)*g45;
-    
-	return;
-}
-
+ double A[3];
+ //reps=rmax
+ //q=r/reps+q0*(1-r/reps) // q=q0 for small radii, q=1 for large radii
+ A[0]=1/q/q;
+ A[1]=0.;
+ A[2]=0.;
+ f[0]=x*pow((cos(theta)*cos(theta)+A[0]*sin(theta)*sin(theta)),0.5);
+ g[0]=f[0]/x;
+ f[1]=x*(A[0]-1)*(cos(theta)*sin(theta))/(g[0]);
+ f[2]=(x*(A[0]-1)*(pow(cos(theta),4)-A[0]*pow(sin(theta),4)))/(g[0]*g[0]*g[0]);
+ g[1]=g[0]; // (g[0]*g[0]+0.5*x*A[1]*sin(theta)*sin(theta))/g[0];
+ g[2]=0; //sin(theta)*sin(theta)*(A[1]*(4*g[0]*g[0]-x*A[1]*sin(theta)*sin(theta))+2*f[0]*g[0]*A[2] )/(4*g[0]*g[0]*g[0]);
+ //g[3]=cos(theta)*sin(theta)*(2*(A[0]*A[0]-1-(A[0]-1)*(A[0]-1)*cos(2*theta))+x*A[1]*(3+cos(2*theta)+2*A[0]*sin(theta)*sin(theta)))/(4*g[0]*g[0]*g[0]);
+ }
+ 
+ double LensHalo::kappa_asym(double x,double theta){
+ double f[3],g[3];
+ double G,Gr,Grr, Gt,Gtt, kappa;
+ felliptical(x,0.4,theta,f,g);
+ G = f[0];
+ Gt = f[1];
+ Gtt= f[2];
+ Gr=g[1];
+ Grr=g[2];
+ double phitwo=(2*kappa_h(G)/G/G - alpha_h(G)/G/G);
+ kappa=-0.5*alpha_h(G)/G*(Gr/x+Grr+Gtt/x/x)+0.5*phitwo*(Gr*Gr+Gt*Gt/x/x);
+ kappa/=G*G;
+ return kappa;
+ }
+ */
 

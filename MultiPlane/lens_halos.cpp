@@ -445,9 +445,10 @@ void LensHalo::force_halo_sym(
 			//cout << x << endl;
 
 			tmp = (gamma_h(x) + 2.0*subtract_point)*prefac/rcm2;
-
+            //std::cout << gamma_h(x) << std::endl;
 			gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 			gamma[1] += xcm[0]*xcm[1]*tmp;
+            
 		}
 
 	}
@@ -528,7 +529,7 @@ void LensHalo::force_halo_asym(
 
 		//double ellr2=rcm2*0.5*(cos(theta)*cos(theta)+(1./0.5/0.5)*sin(theta)*sin(theta))*pi;
 		//double prefac = mass/ellr2;
-		double prefac = mass/rscale/rscale/pi;
+		double prefac = mass/rcm2/pi; //mass/rscale/rscale/pi;
 
 		//double xmax = Rmax/rscale;
 		//double tmp = (alpha_h(x,xmax) + 1.0*subtract_point)*prefac;
@@ -549,8 +550,9 @@ void LensHalo::force_halo_asym(
             gamma_asym(x,theta,gamma_tmp);
 			tmp = (2.0*subtract_point)*prefac/rcm2;
 			//gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*(tmp+gamma_tmp[0]*prefac/rcm2);
-            gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp+gamma_tmp[0];
-            gamma[1] += xcm[0]*xcm[1]*tmp+gamma_tmp[1];
+            //std::cout << prefac << std::endl;
+            gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp+gamma_tmp[0]*prefac/rcm2;
+            gamma[1] += xcm[0]*xcm[1]*tmp+gamma_tmp[1]*prefac/rcm2;
 			//gamma[1] += xcm[0]*xcm[1]*(tmp+gamma_tmp[0]*prefac/rcm2);
             
 
