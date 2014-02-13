@@ -30,10 +30,13 @@
 typedef enum {FALSE, TRUE, MAYBE} Boo;
 #endif
 
+
 //struct branchstruct;
 struct Branch;
 
+
 /** \brief A point on the source or image plane that contains a position and the lensing quantities */
+
 struct Point{
     
   Point();
@@ -45,12 +48,15 @@ struct Point{
   unsigned long head;         // marks beginning of allocated array of points for easy deallocation
   Boo in_image; // marks if point is in image
 
+    
   // redundant information in image and source points
-  KappaType kappa;        // surface density
-  KappaType gamma[3];    // shear, third component is the rotation quantity that is only non-zero for multi-plane lensing
-  KappaType dt;          // time delay
-  KappaType invmag;     // inverse of magnification
-  double gridsize;   // the size of the most refined grid the point is in
+  KappaType kappa;           // surface density
+  KappaType gamma[3];        // shear, third component is the rotation quantity that is only non-zero for multi-plane lensing
+  KappaType phi;             // PHI BY Fabien
+  KappaType dt;              // time delay
+  KappaType invmag;          // inverse of magnification
+    
+  double gridsize;           // the size of the most refined grid the point is in
   float surface_brightness;  // the surface brightness at this points
 
   Branch *leaf;
