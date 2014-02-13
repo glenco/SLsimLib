@@ -560,13 +560,20 @@ void LensHalo::alpha_asym(PosType x,PosType theta, PosType alpha[]){
     faxial(theta,f);
     F=f[0]-1;
     gradial(x,g);
+
     PosType beta=get_slope();
-	alpha_r=beta*(1+F*g[0])*pow(x,beta-1)+F*g[1]*pow(x,beta);
-    alpha_theta=f[1]*g[0]*pow(x,beta-1);
+	
+    //alpha_r=-beta*(1+F*g[0])*pow(x,-beta-1)-F*g[1]*pow(x,-beta); // for power law halo with damping
+    alpha_r=alpha_h(x)*pow(x,-2*beta-3)*beta*(1+F*g[0])-phi_h(x)*(2-beta)*pow(x,-2)*(F*g[1]); // for arbitrary halos with damping
     
-    
-	alpha[0] = -alpha_r*cos(theta) + alpha_theta*sin(theta);
-	alpha[1] = -alpha_r*sin(theta) - alpha_theta*cos(theta);
+    //alpha_theta=-f[1]*g[0]*pow(x,-beta-1); // for power law halo with damping
+    alpha_theta=-f[1]*g[0]/x*phi_h(x)*(2-beta)*pow(x,-2); // for arbitrary halos with damping
+
+    alpha_r*= pow(x,3);
+    alpha_theta*= pow(x,3);
+
+	alpha[0] = (alpha_r*cos(theta) - alpha_theta*sin(theta))/cos(theta);
+	alpha[1] = (alpha_r*sin(theta) + alpha_theta*cos(theta))/sin(theta);
 	return;
 }
 
@@ -583,11 +590,11 @@ double LensHalo::kappa_asym(PosType x,PosType theta){
     
     //kappa=0.5*(1+F*g[0])*beta*beta*pow(x,beta-2)+0.5*(F*g[1]/x+F*g[2]+f[2]*g[0]/x/x)*pow(x,beta)                      +2*F*g[1]*beta*pow(x,beta-1); // for powerlaw halo with damping
     
-    // kappa=0.5*((beta*beta*(1+F*g[0])+g[0]*f[2])*pow(x,beta-2)+((2*beta+1)*F*g[1])*pow(x,beta-1)+(F*g[2])*pow(x,beta)); // equivalent to latter expression: for powerlaw halo with damping
+    //kappa=0.5*((beta*beta*(1+F*g[0])+g[0]*f[2])*pow(x,beta-2)+((2*beta+1)*F*g[1])*pow(x,beta-1)+(F*g[2])*pow(x,beta)); // equivalent to latter expression: for powerlaw halo with damping
     
     kappa=0.5*(1+F*g[0])*beta*beta*2*kappa_h(x)/(2+beta)/pow(x,4)-0.5*(F*g[1]/x+F*g[2]+f[2]*g[0]/x/x)*phi_h(x)*(2-beta)*pow(x,2*beta-2)-2*F*g[1]*beta*alpha_h(x)/pow(x,3); // for arbitrary halos with damping
 
-	return kappa*(1/(beta*beta))*pow(x,-2*beta+2);
+	return kappa*(1/(beta*beta))*pow(x,-2*beta+4);
 }
 
 

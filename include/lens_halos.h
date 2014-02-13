@@ -425,12 +425,13 @@ private:
 		if(x==0) x=1e-6*xmax;
 		//assert(beta==2);
 		//assert(-1.0*pow(x/xmax,beta+2) != 0.0);
-		//cout << x << "  " << -1.0*pow(x/xmax,beta+2) << endl;
+        //std::cout << x << " " << beta << "  " << -1.0*pow(x/xmax,beta+2) << std::endl;
 		return -1.0*pow(x/xmax,beta+2);
 	}
 	inline KappaType kappa_h(PosType x){
 		if(x==0) x=1e-6*xmax;
 		//assert(0.5*(beta+2)*pow(x/xmax,beta)*x*x/(xmax*xmax) != 0);
+        //std::cout << x << " " << beta << "  " << -1.0*pow(x/xmax,beta+2) << std::endl;
 		return 0.5*(beta+2)*pow(x/xmax,beta)*x*x/(xmax*xmax);
 	}
 	inline KappaType gamma_h(PosType x){

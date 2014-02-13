@@ -437,12 +437,12 @@ void LensHalo::force_halo_sym(
     //PosType tmp = (alpha_h(x,xmax) + 1.0*subtract_point)*prefac;
 		PosType tmp = (alpha_h(x) + 1.0*subtract_point)*prefac;
 		alpha[0] += tmp*xcm[0];
+        //std::cout << alpha_h(x) << std::endl;
 		alpha[1] += tmp*xcm[1];
-
-		// can turn off kappa and gamma calculations to save times
+        // can turn off kappa and gamma calculations to save times
 		if(!kappa_off){
 			*kappa += kappa_h(x)*prefac;
-			//cout << x << endl;
+			
 
 			tmp = (gamma_h(x) + 2.0*subtract_point)*prefac/rcm2;
             //std::cout << gamma_h(x) << std::endl;
@@ -510,34 +510,16 @@ void LensHalo::force_halo_asym(
         
         theta=atan2(xcm[1],xcm[0]);
         
-		/*if (xcm[0]>0){
-			theta=atan(xcm[1]/xcm[0]);
-		}
-		if (xcm[0]<0 && xcm[1]>=0){
-			theta=atan(xcm[1]/xcm[0])+pi;
-		}
-		if (xcm[0]<0 && xcm[1]<0){
-		   theta=atan(xcm[1]/xcm[0])-pi;
-		}
-		if (xcm[0]==0 && xcm[1]>0){
-			theta=pi/2;
-		}
-		if (xcm[0]==0 && xcm[1]>0){
-			theta=-1*pi/2;
-		}*/
-		//double prefac = mass/rcm2/pi;
-
-		//double ellr2=rcm2*0.5*(cos(theta)*cos(theta)+(1./0.5/0.5)*sin(theta)*sin(theta))*pi;
-		//double prefac = mass/ellr2;
-		double prefac = mass/rcm2/pi; //mass/rscale/rscale/pi;
+        double prefac = mass/rcm2/pi; //mass/rscale/rscale/pi;
 
 		//double xmax = Rmax/rscale;
 		//double tmp = (alpha_h(x,xmax) + 1.0*subtract_point)*prefac;
         PosType alpha_tmp[2];
+        
         alpha_asym(x,theta, alpha_tmp);
 		double tmp =  1.0*subtract_point*prefac;
-		alpha[0] +=  alpha_tmp[0]*prefac + tmp*xcm[0];
-		alpha[1] +=  alpha_tmp[1]*prefac + tmp*xcm[1];
+		alpha[0] +=  alpha_tmp[0]*prefac*xcm[0] + tmp*xcm[0];
+        alpha[1] +=  alpha_tmp[1]*prefac*xcm[1] + tmp*xcm[1];
 
 		// can turn off kappa and gamma calculations to save times
 		if(!kappa_off){
