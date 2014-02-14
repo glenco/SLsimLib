@@ -63,7 +63,7 @@ void LensHalo::force_stars(
 		PosType *alpha     /// mass/Mpc
 		,KappaType *kappa
 		,KappaType *gamma
-		,PosType *xcm     /// physical position on lens plane
+		,PosType const *xcm     /// physical position on lens plane
 		,bool no_kappa
 		)
 {
@@ -402,7 +402,7 @@ void LensHalo::force_halo(
 	PosType *alpha     /// mass/Mpc
     ,KappaType *kappa
     ,KappaType *gamma
-    ,double *xcm
+    ,double const *xcm
     ,bool kappa_off
     ,bool subtract_point /// if true contribution from a point mass is subtracted
     ){
@@ -420,7 +420,7 @@ void LensHalo::force_halo_sym(
 		PosType *alpha     /// mass/Mpc
 		,KappaType *kappa
 		,KappaType *gamma
-		,PosType *xcm
+		,PosType const *xcm
 		,bool kappa_off
 		,bool subtract_point /// if true contribution from a point mass is subtracted
 		){
@@ -483,7 +483,7 @@ void LensHalo::force_halo_asym(
 		PosType *alpha     /// mass/Mpc
 		,KappaType *kappa
 		,KappaType *gamma
-		,double *xcm
+		,double const *xcm
 		,bool kappa_off
 		,bool subtract_point /// if true contribution from a point mass is subtracted
 		){
@@ -500,15 +500,8 @@ void LensHalo::force_halo_asym(
 		double x = sqrt(rcm2)/rscale;
 		double theta;
         
-        if (xcm[0]==0){
-			xcm[0]=7.0710678e-21;
-		}
-        
-		if (xcm[1]==0){
-			xcm[1]=7.0710678e-21;
-		}
-        
-        theta=atan2(xcm[1],xcm[0]);
+        if(xcm[0] == 0.0 && xcm[1] == 0.0) theta = 0.0;
+        else theta=atan2(xcm[1],xcm[0]);
         
         double prefac = mass/rcm2/pi; //mass/rscale/rscale/pi;
 

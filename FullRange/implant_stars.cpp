@@ -210,7 +210,7 @@ void LensHalo::remove_stars(){
 /** \brief subtracts the mass in stars from the smooth model to compensate
 * for the mass of the stars the lensing quantities are all updated not replaced
  */
-void LensHalo::substract_stars_disks(PosType *ray,PosType *alpha
+void LensHalo::substract_stars_disks(PosType const *ray,PosType *alpha
 		,KappaType *kappa,KappaType *gamma){
 
 	if(!(stars_implanted)) return;
