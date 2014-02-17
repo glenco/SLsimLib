@@ -385,6 +385,7 @@ void LensHalo::force_halo(
 		PosType *alpha     /// mass/Mpc
 		,KappaType *kappa
 		,KappaType *gamma
+        ,KappaType *phi  // PHI BY Fabien
 		,PosType *xcm
 		,bool kappa_off
 		,bool subtract_point /// if true contribution from a point mass is subtracted
@@ -567,6 +568,7 @@ void LensHaloSimpleNSIE::force_halo(
                                     PosType *alpha
                                     ,KappaType *kappa
                                     ,KappaType *gamma
+                                    ,KappaType *phi      // PHI BY Fabien
                                     ,PosType *xcm
                                     ,bool no_kappa
                                     ,bool subtract_point /// if true contribution from a point mass is subtracted
@@ -890,7 +892,13 @@ void LensHaloDummy::initFromMassFunc(float my_mass, float my_Rmax, float my_rsca
 }
 
 
-void LensHaloDummy::force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xcm,bool no_kappa,bool subtract_point)
+void LensHaloDummy::force_halo(PosType *alpha
+                               ,KappaType *kappa
+                               ,KappaType *gamma
+                               ,KappaType *phi       // PHI BY Fabien
+                               ,PosType *xcm
+                               ,bool no_kappa
+                               ,bool subtract_point)
 {
 	PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
 	PosType prefac = mass/rcm2/pi;

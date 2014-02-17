@@ -160,13 +160,12 @@ void *compute_rays_parallel(void *_p)
   PosType alpha[2];
     
   KappaType kappa,gamma[3];
-  // PHI BY Fabien :
-  KappaType phi;
     
   PosType xminus[2],xplus[2];
   PosType kappa_minus,gamma_minus[3],kappa_plus,gamma_plus[3];
+    
   // PHI BY Fabien :
-  PosType phi_minus, phi_plus;
+  KappaType phi;
     
     
 // Main loop : loop over the points of the image
@@ -189,16 +188,15 @@ for(i = start; i < end; i++)
     gamma_minus[0] = 0;
     gamma_minus[1] = 0;
     gamma_minus[2] = 0;
-    // PHI BY Fabien :
-    phi_minus = 0;
+      
+    // PHI BY Fabien : setting phi on the first plane.
+    phi = 0.0;
       
     // Default values :
     p->i_points[i].kappa = 1;  // This is actually 1-kappa until after the loop through the planes.
     p->i_points[i].gamma[0] = 0;
     p->i_points[i].gamma[1] = 0;
     p->i_points[i].gamma[2] = 0;
-    // PHI BY Fabien : that necessitate to modify the structure Point
-    p->i_points[i].phi = 0;
       
     
     // In case we don't want to compute the values :
@@ -208,10 +206,10 @@ for(i = start; i < end; i++)
       p->i_points[i].image->x[1] /= p->Dl[0];
       p->i_points[i].kappa = p->i_points[i].image->kappa = 0.0;
       p->i_points[i].invmag = 1.0;
-      p->i_points[i].phi = 0.0;
       p->i_points[i].dt = 0.0;
       
-      continue; // We finish this occurence of the main loop if kappa_off = false <=> we go on the next point !
+      continue; // We finish this occurence of the main loop if kappa_off = false
+                // i.e. we go on the next point !
     }
       
       
@@ -237,10 +235,10 @@ for(i = start; i < end; i++)
 
         
       // Calling force : most important part of the calculation !
-      p->lensing_planes[j]->force(alpha,&kappa,gamma,xx,kappa_off);
+      // p->lensing_planes[j]->force(alpha,&kappa,gamma,xx,kappa_off);
         
       // PHI BY Fabien : instead, we would like to have :
-      // p->lensing_planes[j]->force(alpha,&kappa,gamma,&phi,xx,kappa_off);
+      p->lensing_planes[j]->force(alpha,&kappa,gamma,&phi,xx,kappa_off);
 
       cc = p->charge * p->dDl[j+1];
 
@@ -256,10 +254,10 @@ for(i = start; i < end; i++)
     	  gamma[0] *= fac;
     	  gamma[1] *= fac;
     	  gamma[2] *= fac;
-          phi *= fac;
 	
     	  assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
     	  assert(kappa == kappa);
+          assert(phi == phi);
       } // End of if(!kappa_off)
 
         
@@ -314,8 +312,6 @@ for(i = start; i < end; i++)
 	
         gamma_plus[2] = aa*p->i_points[i].gamma[2] - bb*gamma_minus[2]
     	          - cc*(kappa*p->i_points[i].gamma[2] - gamma[1]*p->i_points[i].gamma[0] + gamma[0]*p->i_points[i].gamma[1]);
-        // PHI BY Fabien : Have to find the expression of \phi^{j+1} in terms of \phi^{j} !
-        // phi_plus = ...
         // ------------------------------------------------------------------------------------------
             
             
@@ -324,8 +320,6 @@ for(i = start; i < end; i++)
         gamma_minus[0] = p->i_points[i].gamma[0];
         gamma_minus[1] = p->i_points[i].gamma[1];
         gamma_minus[2] = p->i_points[i].gamma[2];
-        // PHI BY Fabien :
-        phi_minus = p->i_points[i].phi;
         // ------------------------------------------------------------------------------------------
             
             
@@ -336,19 +330,18 @@ for(i = start; i < end; i++)
         p->i_points[i].gamma[0] = gamma_plus[0];
         p->i_points[i].gamma[1] = gamma_plus[1];
         p->i_points[i].gamma[2] = gamma_plus[2];
-        // PHI BY Fabien :
-        p->i_points[i].phi = phi_plus;
         // ----------------------------------------------
+
             
+        
         // TODO: Geometric time delay, potential needs to be added and this needs to be checked
         // p->i_points[i].dt += 0.5*( (xplus[0] - xminus[0])*(xplus[0] - xminus[0]) + (xplus[1] - xminus[1])*(xplus[1] - xminus[1]) )/p->dDl[j+1]; // + phi;
 
         // PHI BY Fabien :
-        p->i_points[i].dt += 0.5*( (xplus[0] - xminus[0])*(xplus[0] - xminus[0]) + (xplus[1] - xminus[1])*(xplus[1] - xminus[1]) )/p->dDl[j+1] - (1 + p->plane_redshifts[j]) * phi_minus ;
+        p->i_points[i].dt += 0.5*( (xplus[0] - xminus[0])*(xplus[0] - xminus[0]) + (xplus[1] - xminus[1])*(xplus[1] - xminus[1]) )/p->dDl[j+1] - (1 + p->plane_redshifts[j]) * phi ;
         // Check that the 1+z factor must indeed be there (because the x positions have been rescaled, so it may be different compared to the draft).
         // Is this sure that we have to use phi_minus ?
 
-            
             
             
         } // End of if(!kappa_off)

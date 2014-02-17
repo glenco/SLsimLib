@@ -457,7 +457,12 @@ void TreeQuad::rotate_coordinates(PosType **coord){
  *       NB : the units of sigma_backgound need to be mass/units(ray)^2
  * */
 
-void TreeQuad::force2D(PosType *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa){
+void TreeQuad::force2D(PosType *ray
+                       ,PosType *alpha
+                       ,KappaType *kappa
+                       ,KappaType *gamma
+                       ,KappaType *phi  // PHI BY Fabien
+                       ,bool no_kappa){
 
   PosType xcm[2],rcm2cell,rcm2,tmp,boxsize2;
   IndexType i;
@@ -545,7 +550,7 @@ void TreeQuad::force2D(PosType *ray,PosType *alpha,KappaType *kappa,KappaType *g
 					  xcm[1] = tree->xp[tmp_index][1] - ray[1];
 
 					  if(haloON){
-						  halos[tmp_index]->force_halo(alpha,kappa,gamma,xcm,no_kappa,true);
+						  halos[tmp_index]->force_halo(alpha,kappa,gamma,phi,xcm,no_kappa,true);
 					  }else{  // case of no halos just particles and no class derived from TreeQuad
 
 						  rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
@@ -663,7 +668,43 @@ void TreeQuad::force2D_recur(PosType *ray,PosType *alpha,KappaType *kappa,KappaT
   return;
 }
 
-void TreeQuad::walkTree_recur(QBranchNB *branch,PosType *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa){
+
+// PHI BY Fabien -----
+void TreeQuad::force2D_recur(PosType *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,bool no_kappa){
+    
+    assert(tree);
+    
+    alpha[0]=alpha[1]=gamma[0]=gamma[1]=gamma[2]=0.0;
+    *kappa=*phi=0.0;
+    
+    // Fabien : decomment this line when it works :
+    // walkTree_recur(tree->top,&ray[0],&alpha[0],kappa,&gamma[0],phi,no_kappa);
+    
+    
+    // Subtract off uniform mass sheet to compensate for the extra mass
+    //  added to the universe in the halos.
+    alpha[0] -= ray[0]*sigma_background;
+    alpha[1] -= ray[1]*sigma_background;
+    if(!no_kappa){      //  taken out to speed up
+        *kappa -= sigma_background;
+    }
+    // Fabien : should I do this subtraction for phi too ?
+    
+    return;
+}
+// -----
+
+
+
+// PHI BY Fabien -----
+
+// Have to put the function "void TreeQuad::walkTree_recur(...)" below and modify it accordingly.
+// Have also to add its declaration in the class TreeQuad.
+// That's a mess !
+
+// -----
+
+void TreeQuad::walkTree_recur(QBranchNB *branch,PosType *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,bool no_kappa){
 
 	PosType xcm[2],rcm2cell,rcm2,tmp,boxsize2;
 	IndexType i;
@@ -725,7 +766,7 @@ void TreeQuad::walkTree_recur(QBranchNB *branch,PosType *ray,PosType *alpha,Kapp
 
 					/////////////////////////////////////////
 					if(haloON){
-						halos[tmp_index]->force_halo(alpha,kappa,gamma,xcm,no_kappa,true);
+						halos[tmp_index]->force_halo(alpha,kappa,gamma,phi,xcm,no_kappa,true); // PHI BY Fabien
 					}else{  // case of no halos just particles and no class derived from TreeQuad
 
 						rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];

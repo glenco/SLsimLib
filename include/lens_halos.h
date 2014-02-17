@@ -77,9 +77,7 @@ public:
 	virtual void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rmax/rscale;};
 	/// set redshift
 
-	void setZlens(PosType my_zlens){
-    zlens=my_zlens;
-  };
+	void setZlens(PosType my_zlens){ zlens=my_zlens; };
 
 	/// set slope
 	virtual void set_slope(PosType my_slope){};
@@ -88,8 +86,9 @@ public:
 	virtual void setCosmology(const COSMOLOGY& cosmo) {}
 	
 	/// calculate the lensing properties -- deflection, convergence, and shear
-	virtual void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xcm,bool no_kappa,bool subtract_point=false);
-
+	virtual void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType *xcm,bool no_kappa,bool subtract_point=false);
+	// virtual void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xcm,bool no_kappa,bool subtract_point=false);
+    
 	/// force tree calculation for stars
 	void force_stars(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xcm,bool no_kappa);
 
@@ -404,8 +403,9 @@ public:
 	~LensHaloSimpleNSIE();
 
 	/// overridden function to calculate the lensing properties
-	void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xcm,bool no_kappa,bool subtract_point=false);
-
+	void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType *xcm,bool no_kappa,bool subtract_point=false);
+	// void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xcm,bool no_kappa,bool subtract_point=false);
+    
 	/// get the velocity dispersion
 	float get_sigma(){return sigma;};
 	/// get the NSIE radius
@@ -616,7 +616,9 @@ public:
 	~LensHaloDummy(){};
 	
 	/// overridden function to calculate the lensing properties
-	void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xcm,bool no_kappa,bool subtract_point=false);
+	void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType *xcm,bool no_kappa,bool subtract_point=false);
+    // void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xcm,bool no_kappa,bool subtract_point=false);
+    
 	/// initialize from a mass function
 	void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed);
 
