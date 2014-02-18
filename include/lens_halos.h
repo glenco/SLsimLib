@@ -161,6 +161,7 @@ protected:
 	/// error message printout
 	void error_message1(std::string name,std::string filename);
 
+
     float mass;
     /// Radius of halo and NSIE if it exists,  This is the radius used in the tree force solver
     /// to determine when a ray intersects an object.
@@ -191,6 +192,8 @@ protected:
     PosType xmax;
 
   // Functions for calculating axial dependence
+    float pa;
+    float fratio=1;
     bool elliptical;
 
   void setModesToEllip(PosType q,PosType theta);
