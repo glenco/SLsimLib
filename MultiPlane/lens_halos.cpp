@@ -115,6 +115,17 @@ LensHaloNFW::LensHaloNFW(InputParams& params)
 	assignParams(params);
 	make_tables();
 	gmax = InterpolateFromTable(gtable, xmax);
+    
+    set_slope(1);
+    
+    calcModes(0.2, 1, pi/2., mod);
+    for(int i=1;i<Nmod;i++){
+        //std::cout << mod[i] << std::endl;
+        if(mod[i]!=0){set_flag_elliptical(true);};
+    }
+    if(get_flag_elliptical()==false){beta=-beta;}; /// TODO the beta used for calculating kappa,gamma,alpha in the symmetric cases is a factor of -1 different from the asymmetric case
+    std::cout << "if mods!=0 this must be 1: " << get_flag_elliptical() << std::endl;
+
 }
 
 void LensHaloNFW::make_tables(){
@@ -442,7 +453,9 @@ void LensHalo::force_halo_sym(
         // can turn off kappa and gamma calculations to save times
 		if(!kappa_off){
 			*kappa += kappa_h(x)*prefac;
-			
+			if(x<4.185 && x>4.18){
+                std::cout << "in force_sym: " <<  x << " " <<  kappa_h(x) << std::endl;
+            }
 
 			tmp = (gamma_h(x) + 2.0*subtract_point)*prefac/rcm2;
             //std::cout << gamma_h(x) << std::endl;
@@ -524,7 +537,11 @@ void LensHalo::force_halo_asym(
 		// can turn off kappa and gamma calculations to save times
 		if(!kappa_off){
 			*kappa += kappa_asym(x,theta)*prefac;
-			//if(kappa_asym(x,theta) < 0.01){
+        
+			if(x<4.185 && x>4.18){
+                std::cout << "in force_asym: " <<  x << " " << kappa_asym(x,theta) << std::endl;
+            }
+
 			//	dfunc << x << " " << theta << " " << kappa_asym(x,theta) << " " << xcm[0] << " " << xcm[1] << std::endl;
 			//}
             //std::cout << x << std::endl;

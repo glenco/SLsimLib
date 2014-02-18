@@ -585,16 +585,30 @@ double LensHalo::kappa_asym(PosType x,PosType theta){
     faxial(theta,f);
     gradial(x,g);
     F=f[0]-1;
-    
+    g[0]=1;
+    g[1]=0;
+    g[2]=0;
     //kappa=f[0]*kappa_h(x)*beta*beta/(2+beta)/pow(x,4)-0.5*f[2]/x/x*phi_h(x)*(2-beta)*pow(x,2*beta-2); // for arbitrary halos w/o damping
     
     //kappa=0.5*(1+F*g[0])*beta*beta*pow(x,beta-2)+0.5*(F*g[1]/x+F*g[2]+f[2]*g[0]/x/x)*pow(x,beta)                      +2*F*g[1]*beta*pow(x,beta-1); // for powerlaw halo with damping
     
     //kappa=0.5*((beta*beta*(1+F*g[0])+g[0]*f[2])*pow(x,beta-2)+((2*beta+1)*F*g[1])*pow(x,beta-1)+(F*g[2])*pow(x,beta)); // equivalent to latter expression: for powerlaw halo with damping
     
-    kappa=0.5*(1+F*g[0])*beta*beta*2*kappa_h(x)/(2+beta)/pow(x,4)-0.5*(F*g[1]/x+F*g[2]+f[2]*g[0]/x/x)*phi_h(x)*(2-beta)*pow(x,2*beta-2)-2*F*g[1]*beta*alpha_h(x)/pow(x,3); // for arbitrary halos with damping
-
-	return kappa*(1/(beta*beta))*pow(x,-2*beta+4);
+    //kappa=0.5*(1+F*g[0])*beta*beta*2*kappa_h(x)/(2+beta)/pow(x,4)-0.5*(F*g[1]/x+F*g[2]+f[2]*g[0]/x/x)*phi_h(x)*(2-beta)*pow(x,2*beta-2)-2*F*g[1]*beta*alpha_h(x)/pow(x,3); // for arbitrary halos with damping
+    //std::cout <<  beta << " " << kappa_h(x) << std::endl;
+   
+    //kappa=0.5*(1+F*g[0])*beta*beta*2*kappa_h(x)-0.5*(f[2]*g[0]/x/x)*phi_h(x)*4*pi; // for arbitrary halos with damping
+    
+    //if(x<4.185 && x>4.18){
+      //  std::cout << "in kappa_asym: " <<  x << " " << kappa_h(x) << std::endl;
+    //}
+    
+    double phi_iso=-x*x*phi_h(x);
+    double alpha_iso=-1*alpha_h(x);
+    kappa=kappa_h(x)*f[0]+0.5*phi_iso*f[2]/x/x; // w/o damping function NFW
+    //kappa=kappa_h(x)*(1+F*g[0])+0.5*F*phi_iso*x*x*(g[1]/x+g[2]+f[2]/x/x);
+    
+	return kappa; //*(1/(beta*beta))*pow(x,-2*beta+4);
 }
 
 

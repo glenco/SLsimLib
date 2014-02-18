@@ -220,7 +220,7 @@ protected:
         double operator ()(double theta) {return cos(n*theta)/pow(cos(theta)*cos(theta) + (1/q/q)*sin(theta)*sin(theta),beta/2) ;}
     };
 
-  const static int Nmod = 32;
+  const static int Nmod = 64;
   
   PosType mod[Nmod];
   PosType r_eps;
