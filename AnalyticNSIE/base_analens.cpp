@@ -17,7 +17,8 @@ void LensHaloBaseNSIE::force_halo(
 		,PosType *xcm
 		,bool no_kappa
 		,bool subtract_point /// if true contribution from a point mass is subtracted
-		){
+		)
+{
      long j;
      PosType alpha_tmp[2];
      KappaType kappa_tmp = 0.0, gamma_tmp[3], dt = 0;
@@ -30,11 +31,15 @@ void LensHaloBaseNSIE::force_halo(
      alpha[0] = alpha[1] = 0.0;
      gamma[0] = gamma[1] = gamma[2] = 0.0;
      *kappa = 0.0;
+     // PHI BY Fabien
+     *phi = 0.0 ;
 
+            
 	 PosType xt[2]={0,0};
-	 float units = pow(sigma/lightspeed,2)/Grav;///sqrt(fratio); // mass/distance(physical)
+	 float units = pow(sigma/lightspeed,2)/Grav; ///sqrt(fratio); // mass/distance(physical)
 	 xt[0]=xcm[0];
 	 xt[1]=xcm[1];
+    
      alphaNSIE(alpha,xt,fratio,rcore,pa);
 	 alpha[0] *= units;
 	 alpha[1] *= units;
@@ -45,14 +50,21 @@ void LensHaloBaseNSIE::force_halo(
     	*kappa *= units;
     	gamma[0] *= units;
     	gamma[1] *= units;
-		  gamma[2] *= units;
+        gamma[2] *= units;
+         
+        // PHI BY Fabien
+        // *phi = phiNSIE(xcm,fratio,rcore,pa);
+        // *phi *= units ; // Fabien : is this necessary for the potential ?
 	 }
 
-  // perturbations of host lens
-     if(perturb_Nmodes > 0){
+     // perturbations of host lens
+     if(perturb_Nmodes > 0)
+     {
     	 *kappa += lens_expand(perturb_beta,perturb_modes
     			 ,perturb_Nmodes,xcm,alpha_tmp,gamma_tmp,&dt);
 
+        // PHI BY Fabien : should I put the computation of the potential somewhere here ?
+         
     	 alpha[0] += alpha_tmp[0];
     	 alpha[1] += alpha_tmp[1];
 
@@ -65,8 +77,10 @@ void LensHaloBaseNSIE::force_halo(
      }
 
      // add substructure
-     if(substruct_implanted){
-    	 for(j=0;j<sub_N;++j){
+     if(substruct_implanted)
+     {
+    	 for(j=0;j<sub_N;++j)
+         {
              
              // PHI BY Fabien
     		 subs[j].force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp,xcm,no_kappa);
@@ -75,10 +89,13 @@ void LensHaloBaseNSIE::force_halo(
     		 alpha[0] += alpha_tmp[0];
     		 alpha[1] += alpha_tmp[1];
 
-    		 if(!no_kappa){
+    		 if(!no_kappa)
+             {
     			 *kappa += kappa_tmp;
     			 gamma[0] += gamma_tmp[0];
     			 gamma[1] += gamma_tmp[1];
+                 
+                 // PHY BY Fabien : add something for potential here ?
     		 }
     	 }
 

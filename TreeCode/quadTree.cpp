@@ -677,8 +677,8 @@ void TreeQuad::force2D_recur(PosType *ray,PosType *alpha,KappaType *kappa,KappaT
     alpha[0]=alpha[1]=gamma[0]=gamma[1]=gamma[2]=0.0;
     *kappa=*phi=0.0;
     
-    // Fabien : decomment this line when it works :
-    // walkTree_recur(tree->top,&ray[0],&alpha[0],kappa,&gamma[0],phi,no_kappa);
+    // PHI BY Fabien :
+    walkTree_recur(tree->top,&ray[0],&alpha[0],kappa,&gamma[0],phi,no_kappa);
     
     
     // Subtract off uniform mass sheet to compensate for the extra mass
@@ -688,7 +688,7 @@ void TreeQuad::force2D_recur(PosType *ray,PosType *alpha,KappaType *kappa,KappaT
     if(!no_kappa){      //  taken out to speed up
         *kappa -= sigma_background;
     }
-    // Fabien : should I do this subtraction for phi too ?
+    // PHI BY Fabien : should I do this subtraction for phi too ?
     
     return;
 }

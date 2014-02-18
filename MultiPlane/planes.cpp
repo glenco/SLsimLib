@@ -19,11 +19,6 @@ LensPlaneTree::~LensPlaneTree(){
 	delete halo_tree;
 }
 
-/*
-void LensPlaneTree::force(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xx,bool kappa_off){
-	halo_tree->force2D_recur(xx,alpha,kappa,gamma,kappa_off);
-}
- */
 
 // PHI BY Fabien : adding the phi component into this function
 void LensPlaneTree::force(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType *xx,bool kappa_off){
