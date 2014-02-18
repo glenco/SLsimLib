@@ -184,18 +184,18 @@ void TreeStruct::RebuildTreeFromList(){
 	PosType *tmp;
 
 	// Make new array of points
-	Point *points = NewPointArray(Npoints,true);
+	Point *points = NewPointArray(Npoints);
 
 	MoveToTopList(pointlist);
 	for(i=0;i<Npoints;++i,MoveDownList(pointlist)){
-		tmp = points[i].x;
+		//tmp = points[i].x;
 		// PointCopy() copies the x pointer which is later freed in
 		// emptyTree() so the information needs to be copied
 
 		PointCopy(&(points[i]),pointlist->current);
-		points[i].x = tmp;
-		points[i].x[0] = pointlist->current->x[0];
-		points[i].x[1] = pointlist->current->x[1];
+		//points[i].x = tmp;
+		//points[i].x[0] = pointlist->current->x[0];
+		//points[i].x[1] = pointlist->current->x[1];
 
 		/* Below is for trash collection in PruneTree().
 		 * When PruneTree has been used not all of the
@@ -431,7 +431,8 @@ void TreeStruct::_BuildTree(){
   /* copy information back to points in new order */
 /*   pointlist->current=current->points; */
 /*   for(i=0;i<cbranch->npoints;++i){ */
-/*     pointlist->current->x=xp[points[i]].x; */
+    /*     pointlist->current->x[0]=xp[points[i]].x[0]; */
+    /*     pointlist->current->x[1]=xp[points[i]].x[1]; */
 /*     pointlist->current->id=points[i]; */
 /*     MoveDownList(pointlist); */
 /*   } */

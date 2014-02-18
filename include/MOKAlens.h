@@ -78,7 +78,11 @@ public:
 	void saveKappaProfile();
 	void saveGammaProfile();
 	void saveProfiles(double &RE3, double &xxc, double &yyc);
+    
 	void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa,bool subtract_point=false);
+    // PHI BY Fabien
+	void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,double *xcm,bool no_kappa,bool subtract_point=false);
+    
 	void saveImage(GridHndl grid,bool saveprofiles);
 	
 	void estSignLambdas();

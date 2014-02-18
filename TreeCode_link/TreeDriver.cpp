@@ -893,7 +893,7 @@ void TreeStruct::FriendsOfFriends(PosType *start_point,float linkinglength,ListH
   if(filter == NULL &&  neighborlist->Npoints > 0){
     Nlocal_filter=neighborlist->Npoints;
     //local_filter=(Point *)malloc(Nlocal_filter*sizeof(Point));
-	local_filter=NewPointArray(Nlocal_filter,false);
+	local_filter=NewPointArray(Nlocal_filter);
 
     MoveToTopList(neighborlist);
     for(i=0;i<Nlocal_filter;++i){

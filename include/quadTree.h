@@ -184,9 +184,17 @@ public:
 			);
 	virtual ~TreeQuad();
 
-	virtual void force2D(PosType *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa);
-	virtual void force2D_recur(PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa);
-	virtual void printParticlesInBranch(unsigned long number);
+	virtual void force2D(PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa);
+
+
+    // PHI BY Fabien :
+    virtual void force2D(PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,bool no_kappa);
+
+    // PHI BY Fabien :
+    virtual void force2D_recur(PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,bool no_kappa);
+    
+    virtual void printParticlesInBranch(unsigned long number);
+
 	virtual void printBranchs(int level = -1);
 
 protected:
@@ -250,7 +258,8 @@ protected:
 			,bool MultiRadius,bool MultiMass);
 	 void cuttoffscale(QTreeNBHndl tree,PosType *theta);
 
-	 void walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa);
-};
+	 void walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,bool no_kappa);
+
+   };
 
 #endif /* QUAD_TREE_H_ */

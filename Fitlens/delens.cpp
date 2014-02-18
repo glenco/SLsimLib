@@ -40,7 +40,7 @@ PixelMap delens(Lens& lens, const PixelMap& lensed, std::size_t Nrays, double re
 	// calculate magnification for each pixel
 	{
 		// points at center each pixel
-		Point* points = NewPointArray(Nbatch, true);
+		Point* points = NewPointArray(Nbatch);
 		
 		// points in source plane
 		Point* spoints = LinkToSourcePoints(points, Nbatch);
@@ -83,7 +83,7 @@ PixelMap delens(Lens& lens, const PixelMap& lensed, std::size_t Nrays, double re
 		std::vector<double> norm(delensed.size(), 0);
 		
 		// create an array of points for each ray
-		Point* points = NewPointArray(Nbatch, true);
+		Point* points = NewPointArray(Nbatch);
 		
 		// create source points
 		Point* spoints = LinkToSourcePoints(points, Nbatch);

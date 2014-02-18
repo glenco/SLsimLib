@@ -97,7 +97,8 @@ void LensHalo::implant_stars(
 		xcm[1] = centers[j][1];
     
     if(!stars_implanted){
-      force_halo(alpha,&Sigma,gamma,xcm,false,false);
+        KappaType phi;
+      force_halo(alpha,&Sigma,gamma,&phi,xcm,false,false);
       star_Sigma[j] = star_fstars*Sigma;
       star_region[j] = 1.0/sqrt(pi*star_Sigma[j]/(mean_mstar[j]*(float)NstarsPerImage));
       

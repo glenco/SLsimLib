@@ -60,6 +60,19 @@
     //return branch;
 }*/
 
+Point::Point(){
+    x[0] = x[1] = 0;
+    head = 0;
+    in_image = FALSE;
+    surface_brightness = 0;
+    leaf = NULL;
+    image = NULL;
+    next = prev = NULL;
+    kappa = dt = invmag = gridsize = 0;
+    gamma[0] = gamma[1] = gamma[2] = 0;
+}
+
+
 /// print out all member data for testing purposes
 void Point::Print(){
 	 std::cout << "Point Data : " << std::endl;
@@ -145,32 +158,18 @@ void FreeBranch(Branch *branch){
  **/
 Point *NewPointArray(
 		unsigned long N  /// number of points in array
-		,bool NewXs   /// Allocate memory for point positions or assign pointer to existing position
+		//,bool NewXs   /// Allocate memory for point positions or assign pointer to existing position
 		){
-  Point *points;
-  unsigned long i;
 
   if(N <= 0) return NULL;
-  //points = (Point *) calloc(N, sizeof(Point));
-  points = new Point[N];
-  //if(NewXs) points[0].x = (PosType *) calloc(2,sizeof(PosType));
-  if(NewXs) points[0].x = new PosType[2];
+  Point *points = new Point[N];
+  //if(NewXs) points[0].x = new PosType[2];
   points[0].head = N;
-  points[0].in_image = FALSE;
-  points[0].surface_brightness = 0;
-  points[0].leaf = NULL;
-  points[0].image = NULL;
 
-  for(i = 1; i < N; i++)
-  	  {
-	  	  //if(NewXs) points[i].x = (PosType *) calloc(2,sizeof(PosType));
-	  	  if(NewXs) points[i].x = new PosType[2];
-	  	  points[i].head = 0;
-	  	  points[i].in_image = FALSE;
-	  	  points[i].surface_brightness = 0;
-	  	  points[i].leaf = NULL;
-        points[i].image = NULL;
-  	  }
+  for(unsigned long i = 1; i < N; i++){
+      //if(NewXs) points[i].x = new PosType[2];
+      points[i].head = 0;
+  }
 
   return points;
 }
@@ -185,7 +184,7 @@ void FreePointArray(Point *array,bool NewXs){
   if(array[0].head){
 	  //if(NewXs) for(i=0;i<array[0].head;++i) free(array[i].x);
 	  //free(array);
-	  if(NewXs) for(i=0;i<array[0].head;++i) delete[] array[i].x;
+	  //if(NewXs) for(i=0;i<array[0].head;++i) delete[] array[i].x;
 	  delete[] array;
   }else{
 	  ERROR_MESSAGE();
@@ -661,10 +660,10 @@ Point *AddPointToArray(Point *points,unsigned long N,unsigned long Nold){
   Point *newpoints;
 
   if(Nold==0){
-	  newpoints = NewPointArray(N,true);
+	  newpoints = NewPointArray(N);
   }else{
 	  if(points[0].head != Nold){ ERROR_MESSAGE(); std::cout << "ERROR: AddPointToArray head not set correctly" << std::endl; exit(0);}
-	  newpoints = NewPointArray(N,false);
+	  newpoints = NewPointArray(N);
 	  for(i=N;i<Nold;++i) free(points[i].x);
 
 	  assert(points);
@@ -672,7 +671,7 @@ Point *AddPointToArray(Point *points,unsigned long N,unsigned long Nold){
 		  PointCopy(&newpoints[i],&points[i]);
 		  assert(newpoints[i].x);
 	  }
-	  for(i=Nold;i<N;++i) newpoints[i].x = (PosType *) malloc(2*sizeof(PosType));
+	  //for(i=Nold;i<N;++i) newpoints[i].x = (PosType *) malloc(2*sizeof(PosType));
   }
 
   FreePointArray(points,false);
@@ -687,7 +686,9 @@ Point *NewPoint(PosType *x,unsigned long id){
 
   point->head = 1;
   point->id=id;
-  point->x=x;
+  //point->x=x;
+    point->x[0] = x[0];
+    point->x[1] = x[1];
   point->in_image=FALSE;
 
   if (!point){
@@ -737,7 +738,9 @@ void PointCopy(Point *pcopy,Point *pin){
   pcopy->gamma[1] = pin->gamma[1];
   pcopy->gamma[2] = pin->gamma[2];
   pcopy->dt = pin->dt;
-  pcopy->x = pin->x;
+  //pcopy->x = pin->x;
+  pcopy->x[0] = pin->x[0];
+  pcopy->x[1] = pin->x[1];
   pcopy->gridsize = pin->gridsize;
   pcopy->in_image = pin->in_image;
   pcopy->surface_brightness = pin->surface_brightness;
@@ -745,10 +748,11 @@ void PointCopy(Point *pcopy,Point *pin){
 
   if((pin->image != NULL) && (pin->image->image == pin)) pin->image->image = pcopy;
 }
+/** copies information in point without copying
+* pointers to prev and next
+* does copy image pointer, does not touch head does not 
+* copy the ->image->image pointer */
 void PointCopyData(Point *pcopy,Point *pin){
-  /* copies information in point without copying */
-  /* pointers to prev and next */
-  /* does copy image pointer, does not touch head */
   pcopy->id = pin->id;
   pcopy->image = pin->image;
   pcopy->invmag = pin->invmag;
@@ -757,9 +761,9 @@ void PointCopyData(Point *pcopy,Point *pin){
   pcopy->gamma[1] = pin->gamma[1];
   pcopy->gamma[2] = pin->gamma[2];
   pcopy->dt = pin->dt;
-  pcopy->x = pin->x;
-//  pcopy->x[0] = pin->x[0];
-//  pcopy->x[1] = pin->x[1];
+  //pcopy->x = pin->x;
+  pcopy->x[0] = pin->x[0];
+  pcopy->x[1] = pin->x[1];
   pcopy->gridsize = pin->gridsize;
   pcopy->in_image = pin->in_image;
   pcopy->surface_brightness = pin->surface_brightness;

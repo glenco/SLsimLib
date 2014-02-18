@@ -227,7 +227,7 @@ bool BoxInCircle(const PosType* center,PosType radius,PosType *p1,PosType *p2);
 // Point arrays
 
 void PrintPoint(Point *point);
-Point *NewPointArray(unsigned long N,bool NewXs);
+Point *NewPointArray(unsigned long N);
 Point *AddPointToArray(Point *points,unsigned long N,unsigned long Nold);
 void FreePointArray(Point *array,bool NewXs = true);
 void SwapPointsInArray(Point *p1,Point *p2);

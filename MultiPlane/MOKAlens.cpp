@@ -446,7 +446,14 @@ void LensHaloMOKA::saveProfiles(double &RE3,double &xxc,double &yyc){
    * a MOKA map (MOKALensHalo), for just one ray!!
    *
 */
-void LensHaloMOKA::force_halo(double *alpha,KappaType *kappa,KappaType *gamma,double *xx,bool kappa_off,bool subtract_point){
+void LensHaloMOKA::force_halo(double *alpha
+                              ,KappaType *kappa
+                              ,KappaType *gamma
+                              ,KappaType *phi        // PHI BY Fabien
+                              ,double *xx
+                              ,bool kappa_off
+                              ,bool subtract_point)
+{
   
   /*
   long index = Utilities::IndexFromPosition(xx,map->nx,map->boxlMpc/map->h,map->center);
@@ -477,6 +484,10 @@ void LensHaloMOKA::force_halo(double *alpha,KappaType *kappa,KappaType *gamma,do
   gamma[2] = 0.0;
   *kappa = interp.interpolate(map->convergence);
 
+  // PHI BY Fabien : I would like to implement something of the type :
+  // *phi = interp.interpolate(map->potential);
+  // but the MOKAmap called map does not have this yet !
+    
 	return;
 }
 
