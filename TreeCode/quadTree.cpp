@@ -643,7 +643,7 @@ void TreeQuad::force2D(PosType *ray,PosType *alpha,KappaType *kappa,KappaType *g
  *       NB : the units of sigma_backgound need to be mass/units(ray)^2
  * */
 
-void TreeQuad::force2D_recur(PosType *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa){
+void TreeQuad::force2D_recur(PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa){
 
   assert(tree);
 
@@ -663,7 +663,7 @@ void TreeQuad::force2D_recur(PosType *ray,PosType *alpha,KappaType *kappa,KappaT
   return;
 }
 
-void TreeQuad::walkTree_recur(QBranchNB *branch,PosType *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa){
+void TreeQuad::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa){
 
 	PosType xcm[2],rcm2cell,rcm2,tmp,boxsize2;
 	IndexType i;

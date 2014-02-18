@@ -96,14 +96,14 @@ public:
 	
 	/// calculate the lensing properties -- deflection, convergence, and shear
 
-	virtual void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa,bool subtract_point=false);
-	void force_halo_sym(PosType *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa,bool subtract_point=false);
-	void force_halo_asym(PosType *alpha,KappaType *kappa,KappaType *gamma,double *xcm,bool no_kappa,bool subtract_point=false);
+	virtual void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,double const *xcm,bool no_kappa,bool subtract_point=false);
+	void force_halo_sym(PosType *alpha,KappaType *kappa,KappaType *gamma,double const *xcm,bool no_kappa,bool subtract_point=false);
+	void force_halo_asym(PosType *alpha,KappaType *kappa,KappaType *gamma,double const *xcm,bool no_kappa,bool subtract_point=false);
 
 
 	//double checkkappa(double x, double theta);
 	/// force tree calculation for stars
-	void force_stars(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xcm,bool no_kappa);
+	void force_stars(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType const *xcm,bool no_kappa);
 
 	/// internal compare redshift function
 	bool compare(PosType z){return z > zlens;};
@@ -149,7 +149,7 @@ protected:
   int star_Nregions;
   PosType *star_region;
   PosType beta;
-  void substract_stars_disks(PosType *ray,PosType *alpha
+  void substract_stars_disks(PosType const *ray,PosType *alpha
                              ,KappaType *kappa,KappaType *gamma);
   float* stellar_mass_function(IMFtype type, unsigned long Nstars, long *seed, PosType minmass=0.0, PosType maxmass=0.0
                                ,PosType bendmass=0.0, PosType powerlo=0.0, PosType powerhi=0.0);
