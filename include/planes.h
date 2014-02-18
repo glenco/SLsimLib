@@ -17,7 +17,7 @@ public:
 	virtual ~LensPlane() {} 
 	
     // PHI BY Fabien
-    virtual void force(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xx,KappaType *phi,bool kappa_off) = 0;
+    virtual void force(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType *xx,bool kappa_off) = 0;
 	// virtual void force(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xx,bool kappa_off) = 0;
 	
 	virtual void addHalo(LensHalo* halo) = 0;

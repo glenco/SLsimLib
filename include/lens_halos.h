@@ -12,6 +12,7 @@
 #include "InputParams.h"
 #include "source.h"
 #include "point.h"
+
 //#include "quadTree.h"
 
 class TreeQuad;
@@ -57,6 +58,7 @@ public:
 	/// get the redshift
 
 	PosType getZlens() const { return zlens; }
+
     /// get the position of the Halo
     void getX(PosType * MyPosHalo) const { MyPosHalo[0] = posHalo[0] ; MyPosHalo[1] = posHalo[1]; }
     /// set the position of the Halo
@@ -80,17 +82,26 @@ public:
 	void setZlens(PosType my_zlens){ zlens=my_zlens; };
 
 	/// set slope
-	virtual void set_slope(PosType my_slope){};
-
-	/// set cosmology for halo
+	virtual void set_slope(PosType my_slope){beta=my_slope;};
+    /// get slope
+    virtual PosType get_slope(){return beta;};
+    /// flag=True if halo elliptical
+    bool get_flag_elliptical(){return elliptical;};
+    void set_flag_elliptical(bool ell){elliptical=ell;};
+    
+    /// set cosmology for halo
 	virtual void setCosmology(const COSMOLOGY& cosmo) {}
 	
 	/// calculate the lensing properties -- deflection, convergence, and shear
-	virtual void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType *xcm,bool no_kappa,bool subtract_point=false);
-	// virtual void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xcm,bool no_kappa,bool subtract_point=false);
-    
+
+
+	virtual void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,double const *xcm,bool no_kappa,bool subtract_point=false);
+	void force_halo_sym(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,double const *xcm,bool no_kappa,bool subtract_point=false);
+	void force_halo_asym(PosType *alpha,KappaType *kappa,KappaType *gamma,double const *xcm,bool no_kappa,bool subtract_point=false);
+
+
 	/// force tree calculation for stars
-	void force_stars(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xcm,bool no_kappa);
+	void force_stars(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType const *xcm,bool no_kappa);
 
 	/// internal compare redshift function
 	bool compare(PosType z){return z > zlens;};
@@ -120,6 +131,7 @@ public:
 	/// Prints star parameters; if show_stars is true, prints data for single stars
 	void PrintStars(bool show_stars) const;
 
+
 protected:
   
   IndexType *stars;
@@ -134,7 +146,8 @@ protected:
   PosType star_theta_force;
   int star_Nregions;
   PosType *star_region;
-  void substract_stars_disks(PosType *ray,PosType *alpha
+  PosType beta;
+  void substract_stars_disks(PosType const *ray,PosType *alpha
                              ,KappaType *kappa,KappaType *gamma);
   float* stellar_mass_function(IMFtype type, unsigned long Nstars, long *seed, PosType minmass=0.0, PosType maxmass=0.0
                                ,PosType bendmass=0.0, PosType powerlo=0.0, PosType powerhi=0.0);
@@ -178,12 +191,35 @@ protected:
     PosType xmax;
 
   // Functions for calculating axial dependence
+    bool elliptical;
+
   void setModesToEllip(PosType q,PosType theta);
   void faxial(PosType theta,PosType f[]);
   void gradial(PosType r,PosType g[]);
   void desymmeterize(PosType r,PosType theta,PosType *alpha,PosType *kappa,PosType *gamma);
-  const static int Nmod = 18;
-  PosType mod[18];
+  void felliptical(PosType x, PosType q, PosType theta, PosType f[], PosType g[]);
+
+	virtual void gamma_asym(PosType x,PosType theta, PosType gamma[2]);
+	virtual double kappa_asym(PosType x,PosType theta);
+    
+	virtual void alpha_asym(PosType x,PosType theta, PosType alpha[2]);
+    void setEllipModes(double q,double theta);
+    void fangular(PosType theta,PosType f[]);
+    double fourier_coeff(double n, double q, double beta);
+    
+    void calcModes(double q, double beta, double rottheta, PosType newmod[]);
+    
+    struct fourier_func{
+        fourier_func(double my_n, double my_q, double my_beta): n(my_n),q(my_q),beta(my_beta){};
+        double n;
+        double q;
+        double beta;
+        double operator ()(double theta) {return cos(n*theta)/pow(cos(theta)*cos(theta) + (1/q/q)*sin(theta)*sin(theta),beta/2) ;}
+    };
+
+  const static int Nmod = 64;
+  
+  PosType mod[Nmod];
   PosType r_eps;
   
 
@@ -268,7 +304,7 @@ protected:
 		//ERROR_MESSAGE();
 		//std::cout << "time delay has not been fixed for NFW profile yet." << std::endl;
 		//exit(1);
-		return InterpolateFromTable(htable,x)/gmax; // -0.5*x*
+		return -0.25*InterpolateFromTable(htable,x)/gmax/pi; // -0.5*x*
 	}
   
 private:
@@ -362,8 +398,14 @@ public:
 
 	/// set the slope of the surface density profile
 	void set_slope(PosType my_slope){beta=my_slope;};
+    
+    /// get slope
+    PosType get_slope(){return beta;};
+    
 	/// initialize from a mass function
 	void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed);
+    
+    
 
 private:
 	/// read-in parameters from the parameter file
@@ -371,28 +413,36 @@ private:
 
 	///	read in parameters from a parameterfile in InputParams params
 	PosType beta;
+    PosType fratio;
+    PosType pa;
+    
 
 	// Override internal structure of halos
 	inline PosType alpha_h(PosType x){
 		if(x==0) x=1e-6*xmax;
+		//assert(beta==2);
+		//assert(-1.0*pow(x/xmax,beta+2) != 0.0);
+        //std::cout << x << " " << beta << "  " << -1.0*pow(x/xmax,beta+2) << std::endl;
 		return -1.0*pow(x/xmax,beta+2);
 	}
 	inline KappaType kappa_h(PosType x){
 		if(x==0) x=1e-6*xmax;
+		//assert(0.5*(beta+2)*pow(x/xmax,beta)*x*x/(xmax*xmax) != 0);
+        //std::cout << x << " " << beta << "  " << -1.0*pow(x/xmax,beta+2) << std::endl;
 		return 0.5*(beta+2)*pow(x/xmax,beta)*x*x/(xmax*xmax);
 	}
 	inline KappaType gamma_h(PosType x){
 		if(x==0) x=1e-6*xmax;
+		//assert(0.5*beta*pow(x/xmax,beta+2) != 0);
+        //std::cout << "gamma_h(" << 0.5*beta*pow(x/xmax,beta+2) << ")" << std::endl;
 		return 0.5*beta*pow(x/xmax,beta+2);
 	}
 	inline KappaType phi_h(PosType x){
-    
-    return pow(x/xmax,beta+2)/(beta+2);
-    
-		ERROR_MESSAGE();
-		std::cout << "time delay has not been fixed for PowerLaw profile yet." << std::endl;
-		exit(1);
-		return 0.0;
+		//ERROR_MESSAGE();
+		//std::cout << "time delay has not been fixed for PowerLaw profile yet." << std::endl;
+		if(x==0) x=1e-6*xmax;
+		//assert( -1.0*pow(x/xmax,beta+2)/(beta+2) !=0.0);
+        return -1.0*pow(x/xmax,-beta+2)/(-beta+2);
 	}
 };
 
@@ -521,7 +571,8 @@ protected:
 		return -0.25*x*x*InterpolateFromTable(g2table,x)/gmax;
 	}
 	inline KappaType phi_h(PosType x){
-		return -1.0*InterpolateFromTable(htable,x)/gmax;
+		return -0.25*InterpolateFromTable(htable,x)/gmax/pi;
+		//return -1.0*InterpolateFromTable(htable,x)/gmax;
 	}
 
 private:

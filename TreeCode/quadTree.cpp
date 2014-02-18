@@ -457,7 +457,7 @@ void TreeQuad::rotate_coordinates(PosType **coord){
  *       NB : the units of sigma_backgound need to be mass/units(ray)^2
  * */
 
-void TreeQuad::force2D(PosType *ray
+void TreeQuad::force2D(PosType const *ray
                        ,PosType *alpha
                        ,KappaType *kappa
                        ,KappaType *gamma
@@ -648,29 +648,10 @@ void TreeQuad::force2D(PosType *ray
  *       NB : the units of sigma_backgound need to be mass/units(ray)^2
  * */
 
-void TreeQuad::force2D_recur(PosType *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa){
-
-  assert(tree);
-
-  alpha[0]=alpha[1]=gamma[0]=gamma[1]=gamma[2]=0.0;
-  *kappa=0.0;
-
-  walkTree_recur(tree->top,&ray[0],&alpha[0],kappa,&gamma[0],no_kappa);
-
-  // Subtract off uniform mass sheet to compensate for the extra mass
-  //  added to the universe in the halos.
-  alpha[0] -= ray[0]*sigma_background;
-  alpha[1] -= ray[1]*sigma_background;
-  if(!no_kappa){      //  taken out to speed up
-	  *kappa -= sigma_background;
-  }
-
-  return;
-}
 
 
 // PHI BY Fabien -----
-void TreeQuad::force2D_recur(PosType *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,bool no_kappa){
+void TreeQuad::force2D_recur(PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,bool no_kappa){
     
     assert(tree);
     
@@ -704,7 +685,9 @@ void TreeQuad::force2D_recur(PosType *ray,PosType *alpha,KappaType *kappa,KappaT
 
 // -----
 
-void TreeQuad::walkTree_recur(QBranchNB *branch,PosType *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,bool no_kappa){
+
+void TreeQuad::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma, KappaType *phi, bool no_kappa){
+    
 
 	PosType xcm[2],rcm2cell,rcm2,tmp,boxsize2;
 	IndexType i;
@@ -798,13 +781,13 @@ void TreeQuad::walkTree_recur(QBranchNB *branch,PosType *ray,PosType *alpha,Kapp
 			}
 
 			if(branch->child0 != NULL)
-				walkTree_recur(branch->child0,&ray[0],&alpha[0],kappa,&gamma[0],no_kappa);
+				walkTree_recur(branch->child0,&ray[0],&alpha[0],kappa,&gamma[0],&phi[0],no_kappa);
 			if(branch->child1 != NULL)
-				walkTree_recur(branch->child1,&ray[0],&alpha[0],kappa,&gamma[0],no_kappa);
+				walkTree_recur(branch->child1,&ray[0],&alpha[0],kappa,&gamma[0],&phi[0],no_kappa);
 			if(branch->child2 != NULL)
-				walkTree_recur(branch->child2,&ray[0],&alpha[0],kappa,&gamma[0],no_kappa);
+				walkTree_recur(branch->child2,&ray[0],&alpha[0],kappa,&gamma[0],&phi[0],no_kappa);
 			if(branch->child3 != NULL)
-				walkTree_recur(branch->child3,&ray[0],&alpha[0],kappa,&gamma[0],no_kappa);
+				walkTree_recur(branch->child3,&ray[0],&alpha[0],kappa,&gamma[0],&phi[0],no_kappa);
 
 		}else{ // use whole cell
 			tmp = -1.0*branch->mass/rcm2cell/pi;
