@@ -118,13 +118,13 @@ LensHaloNFW::LensHaloNFW(InputParams& params)
 	gmax = InterpolateFromTable(gtable, xmax);
     
     set_slope(1);
-    
-    calcModes(fratio, get_slope(), pa, mod);
+    std::cout << "NFW constructor: " << get_slope() << std::endl;
+
+    calcModes(fratio, 2.0-get_slope(), pa, mod);
     for(int i=1;i<Nmod;i++){
         //std::cout << mod[i] << std::endl;
         if(mod[i]!=0){set_flag_elliptical(true);};
     }
-    if(get_flag_elliptical()==false){beta=-beta;}; /// TODO the beta used for calculating kappa,gamma,alpha in the symmetric cases is a factor of -1 different from the asymmetric case
     std::cout << "if mods!=0 this must be 1: " << get_flag_elliptical() << std::endl;
 
 }
@@ -300,14 +300,14 @@ LensHaloPseudoNFW::~LensHaloPseudoNFW(){
 
 
 LensHaloPowerLaw::LensHaloPowerLaw() : LensHalo(){
-  beta = -1;
+  beta = 1;
   fratio = 1;
   rscale = xmax = 1.0;
 }
 
 LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
 	assignParams(params);
-    calcModes(fratio, beta, pa, mod);
+    calcModes(fratio, 2-beta, pa, mod);
     for(int i=1;i<Nmod;i++){
         //std::cout << mod[i] << std::endl;
         if(mod[i]!=0){set_flag_elliptical(true);};

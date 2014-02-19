@@ -220,7 +220,7 @@ protected:
         double operator ()(double theta) {return cos(n*theta)/pow(cos(theta)*cos(theta) + (1/q/q)*sin(theta)*sin(theta),beta/2) ;}
     };
 
-  const static int Nmod = 64;
+  const static int Nmod = 32;
   
   PosType mod[Nmod];
   PosType r_eps;
@@ -431,7 +431,7 @@ private:
 	inline KappaType kappa_h(PosType x){
 		if(x==0) x=1e-6*xmax;
 		//assert(0.5*(beta+2)*pow(x/xmax,beta)*x*x/(xmax*xmax) != 0);
-        std::cout << x << " " << beta << "  " << -1.0*pow(x/xmax,-beta+2) << std::endl;
+        //std::cout << x << " " << beta << "  " << -1.0*pow(x/xmax,beta+2) << std::endl;
         
 		return 0.5*(-beta+2)*pow(x/xmax,-beta)*x*x/(xmax*xmax);
 	}
@@ -446,7 +446,7 @@ private:
 		//std::cout << "time delay has not been fixed for PowerLaw profile yet." << std::endl;
 		if(x==0) x=1e-6*xmax;
 		//assert( -1.0*pow(x/xmax,beta+2)/(beta+2) !=0.0);
-        return -1.0*pow(x/xmax,beta+2)/(beta+2);
+        return -1.0*pow(x/xmax,-beta+2)/(-beta+2);
 	}
 };
 
