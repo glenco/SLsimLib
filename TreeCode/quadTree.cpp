@@ -677,15 +677,6 @@ void TreeQuad::force2D_recur(PosType const *ray,PosType *alpha,KappaType *kappa,
 
 
 
-// PHI BY Fabien -----
-
-// Have to put the function "void TreeQuad::walkTree_recur(...)" below and modify it accordingly.
-// Have also to add its declaration in the class TreeQuad.
-// That's a mess !
-
-// -----
-
-
 void TreeQuad::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma, KappaType *phi, bool no_kappa){
     
 
