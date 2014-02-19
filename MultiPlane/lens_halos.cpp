@@ -119,7 +119,7 @@ LensHaloNFW::LensHaloNFW(InputParams& params)
     
     set_slope(1);
     
-    calcModes(fratio, 1, pa, mod);
+    calcModes(fratio, get_slope(), pa, mod);
     for(int i=1;i<Nmod;i++){
         //std::cout << mod[i] << std::endl;
         if(mod[i]!=0){set_flag_elliptical(true);};
@@ -312,7 +312,7 @@ LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
         //std::cout << mod[i] << std::endl;
         if(mod[i]!=0){set_flag_elliptical(true);};
     }
-    if(get_flag_elliptical()==false){beta=-beta;}; /// TODO the beta used for calculating kappa,gamma,alpha in the symmetric cases is a factor of -1 different from the asymmetric case
+    //if(get_flag_elliptical()==false){beta=-beta;}; /// TODO the beta used for calculating kappa,gamma,alpha in the symmetric cases is a factor of -1 different from the asymmetric case
     std::cout << "if mods!=0 this must be 1: " << get_flag_elliptical() << std::endl;
     rscale = xmax = 1.0;
 }

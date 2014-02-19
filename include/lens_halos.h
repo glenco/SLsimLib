@@ -426,26 +426,27 @@ private:
 		//assert(beta==2);
 		//assert(-1.0*pow(x/xmax,beta+2) != 0.0);
         //std::cout << x << " " << beta << "  " << -1.0*pow(x/xmax,beta+2) << std::endl;
-		return -1.0*pow(x/xmax,beta+2);
+		return -1.0*pow(x/xmax,-beta+2);
 	}
 	inline KappaType kappa_h(PosType x){
 		if(x==0) x=1e-6*xmax;
 		//assert(0.5*(beta+2)*pow(x/xmax,beta)*x*x/(xmax*xmax) != 0);
-        //std::cout << x << " " << beta << "  " << -1.0*pow(x/xmax,beta+2) << std::endl;
-		return 0.5*(beta+2)*pow(x/xmax,beta)*x*x/(xmax*xmax);
+        std::cout << x << " " << beta << "  " << -1.0*pow(x/xmax,-beta+2) << std::endl;
+        
+		return 0.5*(-beta+2)*pow(x/xmax,-beta)*x*x/(xmax*xmax);
 	}
 	inline KappaType gamma_h(PosType x){
 		if(x==0) x=1e-6*xmax;
 		//assert(0.5*beta*pow(x/xmax,beta+2) != 0);
         //std::cout << "gamma_h(" << 0.5*beta*pow(x/xmax,beta+2) << ")" << std::endl;
-		return 0.5*beta*pow(x/xmax,beta+2);
+		return -0.5*beta*pow(x/xmax,-beta+2);
 	}
 	inline KappaType phi_h(PosType x){
 		//ERROR_MESSAGE();
 		//std::cout << "time delay has not been fixed for PowerLaw profile yet." << std::endl;
 		if(x==0) x=1e-6*xmax;
 		//assert( -1.0*pow(x/xmax,beta+2)/(beta+2) !=0.0);
-        return -1.0*pow(x/xmax,-beta+2)/(-beta+2);
+        return -1.0*pow(x/xmax,beta+2)/(beta+2);
 	}
 };
 
