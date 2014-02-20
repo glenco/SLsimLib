@@ -196,18 +196,14 @@ protected:
     float fratio=1;
     bool elliptical;
 
-  void setModesToEllip(PosType q,PosType theta);
   void faxial(PosType theta,PosType f[]);
   void gradial(PosType r,PosType g[]);
-  void desymmeterize(PosType r,PosType theta,PosType *alpha,PosType *kappa,PosType *gamma);
-  void felliptical(PosType x, PosType q, PosType theta, PosType f[], PosType g[]);
+  //void felliptical(PosType x, PosType q, PosType theta, PosType f[], PosType g[]);
 
 	virtual void gamma_asym(PosType x,PosType theta, PosType gamma[2]);
 	virtual double kappa_asym(PosType x,PosType theta);
     
 	virtual void alpha_asym(PosType x,PosType theta, PosType alpha[2]);
-    void setEllipModes(double q,double theta);
-    void fangular(PosType theta,PosType f[]);
     double fourier_coeff(double n, double q, double beta);
     
     void calcModes(double q, double beta, double rottheta, PosType newmod[]);

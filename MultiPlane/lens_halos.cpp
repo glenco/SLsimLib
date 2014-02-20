@@ -466,11 +466,6 @@ void LensHalo::force_halo_sym(
 		if(!kappa_off)
         {
 			*kappa += kappa_h(x)*prefac;
-			if(x<4.185 && x>4.18){
-                std::cout << "in force_sym: " <<  x << " " <<  kappa_h(x) << std::endl;
-            }
-
-
 
 			tmp = (gamma_h(x) + 2.0*subtract_point) * prefac / rcm2;
 			gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
@@ -553,10 +548,6 @@ void LensHalo::force_halo_asym(
 		if(!kappa_off){
 			*kappa += kappa_asym(x,theta)*prefac;
         
-			if(x<4.185 && x>4.18){
-                std::cout << "in force_asym: " <<  x << " " << kappa_asym(x,theta) << std::endl;
-            }
-
 			//	dfunc << x << " " << theta << " " << kappa_asym(x,theta) << " " << xcm[0] << " " << xcm[1] << std::endl;
 			//}
             //std::cout << x << std::endl;
