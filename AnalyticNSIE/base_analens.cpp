@@ -588,14 +588,21 @@ void LensHalo::alpha_asym(PosType x,PosType theta, PosType alpha[]){
 
     PosType beta=get_slope();
 	
+    //alpha_r=alpha_h(x)*f[0]; // w/o damping
+    //alpha_theta=f[1]*phi_h(x)/x; //  w/0 damping
+    
+    alpha_r=alpha_h(x)*(1+F*g[0])+phi_h(x)*F*g[1]; // with damping
+    alpha_theta=f[1]*g[0]*phi_h(x)/x; //  with damping
+
+    
     //alpha_r=-beta*(1+F*g[0])*pow(x,-beta-1)-F*g[1]*pow(x,-beta); // for power law halo with damping
-    alpha_r=alpha_h(x)*pow(x,-2*beta-3)*beta*(1+F*g[0])-phi_h(x)*(2-beta)*pow(x,-2)*(F*g[1]); // for arbitrary halos with damping
+    //alpha_r=alpha_h(x)*pow(x,-2*beta-3)*beta*(1+F*g[0])-phi_h(x)*(2-beta)*pow(x,-2)*(F*g[1]); // for arbitrary halos with damping
     
     //alpha_theta=-f[1]*g[0]*pow(x,-beta-1); // for power law halo with damping
-    alpha_theta=-f[1]*g[0]/x*phi_h(x)*(2-beta)*pow(x,-2); // for arbitrary halos with damping
+    //alpha_theta=-f[1]*g[0]/x*phi_h(x)*(2-beta)*pow(x,-2); // for arbitrary halos with damping
 
-    alpha_r*= pow(x,3);
-    alpha_theta*= pow(x,3);
+    //alpha_r*= pow(x,1);
+    //alpha_theta*= pow(x,1);
 
 	alpha[0] = (alpha_r*cos(theta) - alpha_theta*sin(theta))/cos(theta);
 	alpha[1] = (alpha_r*sin(theta) + alpha_theta*cos(theta))/sin(theta);
