@@ -120,7 +120,7 @@ LensHaloNFW::LensHaloNFW(InputParams& params)
     set_slope(1);
     std::cout << "NFW constructor: " << get_slope() << std::endl;
 
-    calcModes(fratio, 2.0-get_slope(), pa, mod);
+    calcModes(fratio, 2.0-get_slope(), pa+pi/2, mod);
     for(int i=1;i<Nmod;i++){
         //std::cout << mod[i] << std::endl;
         if(mod[i]!=0){set_flag_elliptical(true);};
@@ -307,7 +307,7 @@ LensHaloPowerLaw::LensHaloPowerLaw() : LensHalo(){
 
 LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
 	assignParams(params);
-    calcModes(fratio, 2-beta, pa, mod);
+    calcModes(fratio, 2.0-beta, pa, mod);
     for(int i=1;i<Nmod;i++){
         //std::cout << mod[i] << std::endl;
         if(mod[i]!=0){set_flag_elliptical(true);};

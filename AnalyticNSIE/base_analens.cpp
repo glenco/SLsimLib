@@ -613,14 +613,6 @@ double LensHalo::kappa_asym(PosType x,PosType theta){
     kappa=f[0]*kappa_h(x)-0.5*f[2]*phi_h(x); // for arbitrary halo w/o damping -checked
     //kappa=(1+F*g[0])*kappa_h(x)-0.5*phi_h(x)*(F*g[1]/x+F*g[2]+f[2]*g[0]/x/x)*x*x-F*g[1]*alpha_h(x)*x*x; // for powerlaw halo with damping -checked
     
-    //if(x<4.185 && x>4.18){
-      //  std::cout << "in kappa_asym: " <<  x << " " << kappa_h(x) << std::endl;
-    //}
-    
-    //double phi_iso=-0.25*2*pi*phi_h(x)/x;
-    //double alpha_iso=-1*alpha_h(x);
-    //kappa=(kappa_h(x)/x/x*f[0]+0.5*phi_iso*f[2]/x/x)*x*x; // w/o damping function NFW
-    //kappa=(kappa_h(x)/x/x*(1+F*g[0])+0.5*F*phi_iso*(g[1]/x+g[2]+f[2]/F/x/x)+F*g[1]*alpha_iso)*x*x; // with damping NFW
     
 	return kappa;
 }
@@ -634,21 +626,17 @@ void LensHalo::gamma_asym(PosType x,PosType theta, PosType gamma[]){
 	PosType beta=get_slope();
 
     faxial(theta,f);
-    F=f[0]-1;
     gradial(x,g);
+    F=f[0]-1;
 
+    //double gt = f[0]*gamma_h(x)+0.5*phi_h(x)*f[2];// w/o damping
+    //double g45 = (-alpha_h(x)*f[1]*g[0])*x+(phi_h(x)*f[1]);// w/o damping
     
-    //double gt = 0.5*(beta*(beta-2)*f[0]-f[2])*pow(x,beta-2); // w/o damping
-    //double g45 = (beta-1)*f[1]*pow(x,beta-2) ; // w/o damping
+    double gt = (1+F*g[0])*gamma_h(x)+0.5*phi_h(x)*(-F*g[1]/x+F*g[2]-f[2]*g[0]/x/x)*x*x-F*g[1]*alpha_h(x)*x*x;// with damping
+    double g45 = (-alpha_h(x)*f[1]*g[0]-phi_h(x)*f[1]*g[1])*x+(phi_h(x)*f[1]*g[0]);// with damping
     
-    //double gt = 0.5*( (beta*(beta-2)*(1+F*g[0]) -g[0]*f[2])*pow(x,beta-2)+(2*beta-1)*F*g[1]*pow(x,beta-1)+F*g[2]*pow(x,beta)); // direct calculation for powerlaw with damping
-    double gt = 0.5*((1+F*g[0])*gamma_h(x)*pow(x,-4)*(beta-2)-0.5*(-F*g[1]/x+F*g[2]-f[2]*g[0]/x/x)*phi_h(x)*pow(x,2*beta-2)*(2-beta)-2*F*g[1]*beta*alpha_h(x)/pow(x,3)); // for arbitrary halos
-    
-    //double g45 = f[1]/x*((beta-1)*g[0]*pow(x,beta-1)+g[1]*pow(x,beta)) ; // direct calculation for powerlaw with damping
-    double g45 = 0.5*f[1]/x*( -alpha_h(x)/pow(x,3)*g[0]-phi_h(x)*pow(x,2*beta-2)*(2-beta)*(g[1]-g[0]/x) ) ; //for arbitrary halos
-    
-    gt *= pow(x,2*beta+2);
-    g45 *= pow(x,2*beta+2);
+    gt *= 0.5*pow(x,2);
+    g45 *= 0.5*pow(x,2);
     
 	gamma[0] = cos(2*theta)*gt-sin(2*theta)*g45;
     gamma[1] = sin(2*theta)*gt+cos(2*theta)*g45;
