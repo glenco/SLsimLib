@@ -118,13 +118,13 @@ LensHaloNFW::LensHaloNFW(InputParams& params)
 	gmax = InterpolateFromTable(gtable, xmax);
     
     set_slope(1);
-    
-    calcModes(0.2, 1, pi/2., mod);
+    std::cout << "NFW constructor: " << get_slope() << std::endl;
+
+    calcModes(fratio, 2.0-get_slope(), pa+pi/2, mod);
     for(int i=1;i<Nmod;i++){
         //std::cout << mod[i] << std::endl;
         if(mod[i]!=0){set_flag_elliptical(true);};
     }
-    if(get_flag_elliptical()==false){beta=-beta;}; /// TODO the beta used for calculating kappa,gamma,alpha in the symmetric cases is a factor of -1 different from the asymmetric case
     std::cout << "if mods!=0 this must be 1: " << get_flag_elliptical() << std::endl;
 
 }
@@ -173,6 +173,8 @@ void LensHaloNFW::assignParams(InputParams& params){
 	if(!params.get("main_Rmax",Rmax)) error_message1("main_Rmax",params.filename());
 	if(!params.get("main_zlens",zlens)) error_message1("main_zlens",params.filename());
 	if(!params.get("main_concentration",rscale)) error_message1("main_concentration",params.filename());
+    if(!params.get("main_axis_ratio",fratio)){fratio=1; std::cout << "main_axis_ratio not defined in file " << params.filename() << ", hence set to 1." << std::endl;};
+    if(!params.get("main_pos_angle",pa)){pa=0; std::cout << "main_pos_angle not defined in file " << params.filename() << ", hence set to 0." << std::endl;};
 	rscale = Rmax/rscale; // was the concentration
   xmax = Rmax/rscale;
 
@@ -282,6 +284,8 @@ void LensHaloPseudoNFW::assignParams(InputParams& params){
 	if(!params.get("main_zlens",zlens)) error_message1("main_zlens",params.filename());
 	if(!params.get("main_concentration",rscale)) error_message1("main_concentration",params.filename());
 	if(!params.get("main_slope",beta)) error_message1("main_slope",params.filename());
+    if(!params.get("main_axis_ratio",fratio)){fratio=1; std::cout << "main_axis_ratio not defined in file " << params.filename() << ", hence set to 1." << std::endl;};
+    if(!params.get("main_pos_angle",pa)){pa=0; std::cout << "main_pos_angle not defined in file " << params.filename() << ", hence set to 0." << std::endl;};
 	rscale = Rmax/rscale; // was the concentration
   xmax = Rmax/rscale;
 }
@@ -296,19 +300,19 @@ LensHaloPseudoNFW::~LensHaloPseudoNFW(){
 
 
 LensHaloPowerLaw::LensHaloPowerLaw() : LensHalo(){
-  beta = -1;
+  beta = 1;
   fratio = 1;
   rscale = xmax = 1.0;
 }
 
 LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
 	assignParams(params);
-    calcModes(fratio, beta, pa, mod);
+    calcModes(fratio, 2.0-beta, pa, mod);
     for(int i=1;i<Nmod;i++){
         //std::cout << mod[i] << std::endl;
         if(mod[i]!=0){set_flag_elliptical(true);};
     }
-    if(get_flag_elliptical()==false){beta=-beta;}; /// TODO the beta used for calculating kappa,gamma,alpha in the symmetric cases is a factor of -1 different from the asymmetric case
+    //if(get_flag_elliptical()==false){beta=-beta;}; /// TODO the beta used for calculating kappa,gamma,alpha in the symmetric cases is a factor of -1 different from the asymmetric case
     std::cout << "if mods!=0 this must be 1: " << get_flag_elliptical() << std::endl;
     rscale = xmax = 1.0;
 }
@@ -325,8 +329,8 @@ void LensHaloPowerLaw::assignParams(InputParams& params){
 	if(!params.get("main_zlens",zlens)) error_message1("main_zlens",params.filename());
 	if(!params.get("main_slope",beta)) error_message1("main_slope, example -1",params.filename());
     if(beta>=2.0) error_message1("main_slope < 2",params.filename());
-    if(!params.get("main_axis_ratio",fratio)) error_message1("main_axis_ratio, example 1",params.filename());
-    if(!params.get("main_pos_angle",pa)) error_message1("main_pos_angle",params.filename());
+    if(!params.get("main_axis_ratio",fratio)){fratio=1; std::cout << "main_axis_ratio not defined in file " << params.filename() << ", hence set to 1." << std::endl;};
+    if(!params.get("main_pos_angle",pa)){pa=0; std::cout << "main_pos_angle not defined in file " << params.filename() << ", hence set to 0." << std::endl;};
 
 
 	if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
@@ -460,9 +464,6 @@ void LensHalo::force_halo_sym(
 		if(!kappa_off)
         {
 			*kappa += kappa_h(x)*prefac;
-			if(x<4.185 && x>4.18){
-                std::cout << "in force_sym: " <<  x << " " <<  kappa_h(x) << std::endl;
-            }
 
 			tmp = (gamma_h(x) + 2.0*subtract_point) * prefac / rcm2;
 			gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
@@ -545,10 +546,6 @@ void LensHalo::force_halo_asym(
 		if(!kappa_off){
 			*kappa += kappa_asym(x,theta)*prefac;
         
-			if(x<4.185 && x>4.18){
-                std::cout << "in force_asym: " <<  x << " " << kappa_asym(x,theta) << std::endl;
-            }
-
 			//	dfunc << x << " " << theta << " " << kappa_asym(x,theta) << " " << xcm[0] << " " << xcm[1] << std::endl;
 			//}
             //std::cout << x << std::endl;
@@ -929,7 +926,8 @@ void LensHaloHernquist::assignParams(InputParams& params){
 	if(!params.get("main_zlens",zlens)) error_message1("main_zlens",params.filename());
 	if(!params.get("main_rscale",rscale)) error_message1("main_rscale",params.filename());
   xmax = Rmax/rscale;
-
+    if(!params.get("main_axis_ratio",fratio)){fratio=1; std::cout << "main_axis_ratio not defined in file " << params.filename() << ", hence set to 1." << std::endl;};
+    if(!params.get("main_pos_angle",pa)){pa=0; std::cout << "main_pos_angle not defined in file " << params.filename() << ", hence set to 0." << std::endl;};
 	if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
   else if(stars_N){
   	assignParams_stars(params);
@@ -1018,7 +1016,8 @@ void LensHaloJaffe::assignParams(InputParams& params){
 	if(!params.get("main_zlens",zlens)) error_message1("main_zlens",params.filename());
 	if(!params.get("main_rscale",rscale)) error_message1("main_rscale",params.filename());
   xmax = Rmax/rscale;
-
+    if(!params.get("main_axis_ratio",fratio)){fratio=1; std::cout << "main_axis_ratio not defined in file " << params.filename() << ", hence set to 1." << std::endl;};
+    if(!params.get("main_pos_angle",pa)){pa=0; std::cout << "main_pos_angle not defined in file " << params.filename() << ", hence set to 0." << std::endl;};
 	if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
   else if(stars_N){
   	assignParams_stars(params);

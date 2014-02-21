@@ -184,8 +184,7 @@ public:
 			);
 	virtual ~TreeQuad();
 
-	// virtual void force2D(PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa);
-
+	//virtual void force2D(PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa);
 
     // PHI BY Fabien :
     virtual void force2D(PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,bool no_kappa);

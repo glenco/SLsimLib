@@ -161,6 +161,7 @@ protected:
 	/// error message printout
 	void error_message1(std::string name,std::string filename);
 
+
     float mass;
     /// Radius of halo and NSIE if it exists,  This is the radius used in the tree force solver
     /// to determine when a ray intersects an object.
@@ -191,20 +192,18 @@ protected:
     PosType xmax;
 
   // Functions for calculating axial dependence
+    float pa;
+    float fratio=1;
     bool elliptical;
 
-  void setModesToEllip(PosType q,PosType theta);
   void faxial(PosType theta,PosType f[]);
   void gradial(PosType r,PosType g[]);
-  void desymmeterize(PosType r,PosType theta,PosType *alpha,PosType *kappa,PosType *gamma);
-  void felliptical(PosType x, PosType q, PosType theta, PosType f[], PosType g[]);
+  //void felliptical(PosType x, PosType q, PosType theta, PosType f[], PosType g[]);
 
 	virtual void gamma_asym(PosType x,PosType theta, PosType gamma[2]);
 	virtual double kappa_asym(PosType x,PosType theta);
     
 	virtual void alpha_asym(PosType x,PosType theta, PosType alpha[2]);
-    void setEllipModes(double q,double theta);
-    void fangular(PosType theta,PosType f[]);
     double fourier_coeff(double n, double q, double beta);
     
     void calcModes(double q, double beta, double rottheta, PosType newmod[]);
@@ -217,7 +216,7 @@ protected:
         double operator ()(double theta) {return cos(n*theta)/pow(cos(theta)*cos(theta) + (1/q/q)*sin(theta)*sin(theta),beta/2) ;}
     };
 
-  const static int Nmod = 64;
+  const static int Nmod = 32;
   
   PosType mod[Nmod];
   PosType r_eps;
@@ -423,19 +422,20 @@ private:
 		//assert(beta==2);
 		//assert(-1.0*pow(x/xmax,beta+2) != 0.0);
         //std::cout << x << " " << beta << "  " << -1.0*pow(x/xmax,beta+2) << std::endl;
-		return -1.0*pow(x/xmax,beta+2);
+		return -1.0*pow(x/xmax,-beta+2);
 	}
 	inline KappaType kappa_h(PosType x){
 		if(x==0) x=1e-6*xmax;
 		//assert(0.5*(beta+2)*pow(x/xmax,beta)*x*x/(xmax*xmax) != 0);
         //std::cout << x << " " << beta << "  " << -1.0*pow(x/xmax,beta+2) << std::endl;
-		return 0.5*(beta+2)*pow(x/xmax,beta)*x*x/(xmax*xmax);
+        
+		return 0.5*(-beta+2)*pow(x/xmax,-beta)*x*x/(xmax*xmax);
 	}
 	inline KappaType gamma_h(PosType x){
 		if(x==0) x=1e-6*xmax;
 		//assert(0.5*beta*pow(x/xmax,beta+2) != 0);
         //std::cout << "gamma_h(" << 0.5*beta*pow(x/xmax,beta+2) << ")" << std::endl;
-		return 0.5*beta*pow(x/xmax,beta+2);
+		return -0.5*beta*pow(x/xmax,-beta+2);
 	}
 	inline KappaType phi_h(PosType x){
 		//ERROR_MESSAGE();

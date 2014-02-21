@@ -179,7 +179,7 @@ float * TreeForce::CalculateSPHsmoothing(int N){
  *       4*pi*G*mass_scale to get the deflection angle caused by the plane lens.
  * */
 
-void TreeForce::force2D(PosType *ray
+void TreeForce::force2D(PosType const *ray
                         ,PosType *alpha
                         ,KappaType *kappa
                         ,KappaType *gamma
