@@ -456,8 +456,6 @@ void LensHalo::force_halo_sym(
 		alpha[1] += tmp*xcm[1];
 
 
-
-
 		// can turn off kappa and gamma calculations to save times
 		if(!kappa_off)
         {
@@ -466,14 +464,12 @@ void LensHalo::force_halo_sym(
                 std::cout << "in force_sym: " <<  x << " " <<  kappa_h(x) << std::endl;
             }
 
-
-
 			tmp = (gamma_h(x) + 2.0*subtract_point) * prefac / rcm2;
 			gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 			gamma[1] += xcm[0]*xcm[1]*tmp;
 
             // PHI BY Fabien
-            //*phi += phi_h(x); // Giving the distance x is useless, this functions just does "return 1"... does it make sense ?
+            *phi += phi_h(x); // Giving the distance x is useless, this functions just does "return 1"... does it make sense ?
 		}
 	}
 	else // the point particle is not subtracted

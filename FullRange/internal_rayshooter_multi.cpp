@@ -197,7 +197,7 @@ for(i = start; i < end; i++)
     p->i_points[i].gamma[0] = 0;
     p->i_points[i].gamma[1] = 0;
     p->i_points[i].gamma[2] = 0;
-      
+    // Fabien : should I add this : p->i_points[i].dt = 0; // ???
     
     // In case we don't want to compute the values :
     if(p->flag_switch_lensing_off)
@@ -320,7 +320,6 @@ for(i = start; i < end; i++)
         gamma_minus[0] = p->i_points[i].gamma[0];
         gamma_minus[1] = p->i_points[i].gamma[1];
         gamma_minus[2] = p->i_points[i].gamma[2];
-
         // ------------------------------------------------------------------------------------------
             
         assert(kappa_plus==kappa_plus && gamma_minus[0]==gamma_minus[0] && gamma_minus[1]==gamma_minus[1] && gamma_minus[2]==gamma_minus[2]);
@@ -339,6 +338,8 @@ for(i = start; i < end; i++)
 
         // PHI BY Fabien :
         p->i_points[i].dt += 0.5*( (xplus[0] - xminus[0])*(xplus[0] - xminus[0]) + (xplus[1] - xminus[1])*(xplus[1] - xminus[1]) )/p->dDl[j+1] - (1 + p->plane_redshifts[j]) * phi ;
+            
+        // std::cout << "- (1 + p->plane_redshifts[j]) * phi = " << (- (1 + p->plane_redshifts[j])) * phi << std::endl ;
         // Check that the 1+z factor must indeed be there (because the x positions have been rescaled, so it may be different compared to the draft).
         // Is this sure that we have to use phi_minus ?
 
