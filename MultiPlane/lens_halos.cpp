@@ -432,7 +432,6 @@ void LensHalo::force_halo(
 	}
 }
 
-
 void LensHalo::force_halo_sym(
 		PosType *alpha     /// mass/Mpc
 		,KappaType *kappa
@@ -471,8 +470,7 @@ void LensHalo::force_halo_sym(
 			gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 			gamma[1] += xcm[0]*xcm[1]*tmp;
 
-            // PHI BY Fabien
-            //*phi += phi_h(x); // Giving the distance x is useless, this functions just does "return 1"... does it make sense ?
+            //*phi += phi_h(x); 
 		}
 	}
 	else // the point particle is not subtracted
@@ -859,7 +857,7 @@ void LensHaloSimpleNSIE::force_halo(
 
 
 
-const long LensHaloHernquist::NTABLE = 10000;
+const long LensHaloHernquist::NTABLE = 100000;
 const PosType LensHaloHernquist::maxrm = 100.0;
 int LensHaloHernquist::count = 0;
 
@@ -881,6 +879,17 @@ LensHaloHernquist::LensHaloHernquist(InputParams& params)
 	assignParams(params);
 	make_tables();
 	gmax = InterpolateFromTable(gtable,xmax);
+    
+    set_slope(1);
+    std::cout << "Hernquist constructor: " << get_slope() << std::endl;
+    
+    calcModes(fratio, 2.0-get_slope(), pa+pi/2., mod);
+    for(int i=1;i<Nmod;i++){
+        //std::cout << mod[i] << std::endl;
+        if(mod[i]!=0){set_flag_elliptical(true);};
+    }
+    std::cout << "if mods!=0 this must be 1: " << get_flag_elliptical() << std::endl;
+    
 }
 
 void LensHaloHernquist::make_tables(){
@@ -906,6 +915,8 @@ void LensHaloHernquist::make_tables(){
   }
   count++;
 }
+
+
 
 PosType LensHaloHernquist::InterpolateFromTable(PosType *table, PosType y){
 	int j;
@@ -972,6 +983,17 @@ LensHaloJaffe::LensHaloJaffe(InputParams& params)
 	assignParams(params);
 	make_tables();
 	gmax = InterpolateFromTable(gtable,xmax);
+    
+    set_slope(1);
+    std::cout << "Jaffe constructor: " << get_slope() << std::endl;
+    
+    calcModes(fratio, 2.0-get_slope(), pa+pi/2., mod);
+    for(int i=1;i<Nmod;i++){
+        //std::cout << mod[i] << std::endl;
+        if(mod[i]!=0){set_flag_elliptical(true);};
+    }
+    std::cout << "if mods!=0 this must be 1: " << get_flag_elliptical() << std::endl;
+    
 }
 
 void LensHaloJaffe::make_tables(){
