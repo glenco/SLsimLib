@@ -413,9 +413,16 @@ double LensHalo::fourier_coeff(double n, double q, double beta){
 }
 
 /// Calculates potential (phi_int) from alpha_h
-double LensHalo::alpha_int(PosType x){
-    struct Ialpha_func g(*this);
-    return Utilities::nintegrate<Ialpha_func>(g,1E-8,x,1.0e-9);
+PosType LensHalo::alpha_int(PosType x, bool is_alphah_a_table){
+    if(is_alphah_a_table==true){
+        struct Ig_func g(*this);
+        return Utilities::nintegrate<Ig_func>(g,1E-8,x,1.0e-8);
+    };
+    if(is_alphah_a_table==false){
+        struct Ialpha_func a(*this);
+        return Utilities::nintegrate<Ialpha_func>(a,1E-8,x,1.0e-6);
+    };
+    return 0.0;
 }
 
 
@@ -455,7 +462,7 @@ void LensHalo::alpha_asym(PosType x,PosType theta, PosType alpha[]){
     //alpha_r=alpha_h(x)*f[0]; // w/o damping
     //alpha_theta=f[1]*phi/x; //  w/0 damping
     
-    //std::cout << phi_h(x) << " " << phi_int(x) << " " << phi_h(x) / phi_int(x) << std::endl;
+    std::cout << phi_h(x) << " " << phi_int(x) << " " << phi_h(x) / phi_int(x) << std::endl;
     
     alpha_r=alpha_h(x)*(1+F*g[0])+phi*F*g[1]; // with damping
     alpha_theta=f[1]*g[0]*phi/x; //  with damping

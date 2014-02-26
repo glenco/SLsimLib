@@ -131,9 +131,9 @@ public:
 	/// Prints star parameters; if show_stars is true, prints data for single stars
 	void PrintStars(bool show_stars) const;
  
-    double alpha_int(PosType x);
+    PosType alpha_int(PosType x, bool is_alphah_a_table);
     
-    //friend struct Ialpha_func;
+    //friend struct Ig_func;
     
     struct Ialpha_func{
         Ialpha_func(LensHalo& halo): halo(halo){};
@@ -141,6 +141,13 @@ public:
         PosType operator ()(PosType x) {return halo.alpha_h(x)/x ;}
     };
     
+    struct Ig_func{
+        Ig_func(LensHalo& halo): halo(halo){};
+        LensHalo& halo;
+        PosType operator ()(PosType x) {return halo.gfunction(x)/x ;}
+    };
+    
+
 
 protected:
   
@@ -200,6 +207,9 @@ protected:
 	virtual KappaType inline gamma_h(PosType x){return -2;};
 	virtual KappaType inline phi_h(PosType x){return 1;};
     virtual KappaType inline phi_int(PosType x){return 1;};
+    
+    virtual PosType inline gfunction(PosType x){return -1;};
+	
     
     PosType xmax;
 
@@ -265,6 +275,7 @@ public:
 	PosType gfunction(PosType x);
 	PosType g2function(PosType x);
 	PosType hfunction(PosType x);
+    
 
 	// TODO: BEN: the below functions alphaNFW, kappaNFW and gammaNFW are obsolete and better to be deleted to avoid confusion
 	void alphaNFW(PosType *alpha,PosType *x,PosType Rtrunc,PosType mass,PosType r_scale
@@ -319,7 +330,8 @@ protected:
 		return -0.25*InterpolateFromTable(htable,x)/gmax/pi; // -0.5*x*
 	}
     inline KappaType phi_int(PosType x){
-		return alpha_int(x)/pi;
+        //return -1.0*alpha_int(x,true)/gmax/pi;
+        return alpha_int(x,false)/pi;
     }
     
 private:
@@ -392,7 +404,7 @@ private:
 		return 0.0;
 	}
     inline KappaType phi_int(PosType x){
-		return alpha_int(x)/pi;
+		return alpha_int(x,false)/pi;
     }
 };
 
@@ -464,7 +476,7 @@ private:
         return -1.0*pow(x/xmax,-beta+2)/(-beta+2);
 	}
     inline KappaType phi_int(PosType x){
-		return alpha_int(x)/pi;
+		return alpha_int(x,false);
     }
 };
 
@@ -601,7 +613,9 @@ protected:
 		//return -1.0*InterpolateFromTable(htable,x)/gmax;
 	}
     inline KappaType phi_int(PosType x){
-		return alpha_int(x)/pi;
+		//return alpha_int(x,false)/pi;
+        return -0.25*alpha_int(x,true)/gmax/pi;
+        
     }
     
 
@@ -636,13 +650,13 @@ public:
 	/// set scale radius
 	void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
 
-protected:
-    
     PosType ffunction(PosType x);
 	PosType gfunction(PosType x);
 	PosType hfunction(PosType x);
 	PosType g2function(PosType x);
-
+    
+protected:
+    
 	/// table size
 	static const long NTABLE;
 	/// maximum Rmax/rscale
@@ -677,7 +691,7 @@ protected:
 		//return -1.0*InterpolateFromTable(htable,x)/gmax;
 	}
     inline KappaType phi_int(PosType x){
-		return alpha_int(x)/pi;
+		return alpha_int(x,true)/pi;
     }
 
 private:

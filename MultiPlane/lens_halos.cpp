@@ -104,6 +104,7 @@ PosType* LensHaloNFW::gtable = NULL;
 PosType* LensHaloNFW::g2table = NULL;
 PosType* LensHaloNFW::htable = NULL;
 
+
 LensHaloNFW::LensHaloNFW()
 : LensHalo(), gmax(0)
 {
@@ -867,6 +868,7 @@ PosType* LensHaloHernquist::gtable = NULL;
 PosType* LensHaloHernquist::g2table = NULL;
 PosType* LensHaloHernquist::htable = NULL;
 
+
 LensHaloHernquist::LensHaloHernquist()
 : LensHalo(), gmax(0)
 {
@@ -902,7 +904,7 @@ void LensHaloHernquist::make_tables(){
 		gtable = new PosType[NTABLE];
 		htable = new PosType[NTABLE];
 		g2table = new PosType[NTABLE];
-
+        
 		for(i = 0 ; i< NTABLE; i++){
 			x = i*dx;
 			xtable[i] = x;
@@ -910,7 +912,6 @@ void LensHaloHernquist::make_tables(){
 			gtable[i] = gfunction(x);
 			htable[i] = hfunction(x);
 			g2table[i] = g2function(x);
-
 		}
   }
   count++;
@@ -969,6 +970,7 @@ PosType* LensHaloJaffe::xtable = NULL;
 PosType* LensHaloJaffe::ftable = NULL;
 PosType* LensHaloJaffe::gtable = NULL;
 PosType* LensHaloJaffe::g2table = NULL;
+
 //PosType* LensHaloJaffe::htable = NULL;
 
 LensHaloJaffe::LensHaloJaffe()
