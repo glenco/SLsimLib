@@ -52,6 +52,80 @@ namespace Utilities
 	
 	PosType **PosTypeMatrix(long rows, long cols);
 	void free_PosTypeMatrix(PosType **matrix, long rows, long cols);
+  
+  /// 3 dimensional matrix
+  template<typename T>
+	class D3Matrix{
+  public:
+    D3Matrix(size_t xsize,size_t ysize,size_t zsize)
+    :xn(xsize),yn(ysize),zn(zsize){
+      array = new T[xn*yn*zn];
+    }
+    ~D3Matrix(){
+      delete[] array;
+    }
+    
+    T& operator()(size_t i,size_t j,size_t k){
+      return array[i + j*xn + k*xn*yn];
+    }
+
+    T& operator()(size_t m){
+      return array[m];
+    }
+
+    size_t xindex(size_t m){
+      return m % (xn);
+    }
+    size_t yindex(size_t m){
+      return (m % xn*yn) / xn;
+    }
+
+    size_t zindex(size_t m){
+      return m / (xn*yn);
+    }
+
+  private:
+    size_t xn;
+    size_t yn;
+    size_t zn;
+    T *array;
+  };
+  
+  
+  /// 2 dimensional matrix
+  template<typename T>
+	class D2Matrix{
+  public:
+    D2Matrix(size_t xsize,size_t ysize)
+    :xn(xsize),yn(ysize){
+      array = new T[xn*yn];
+    }
+    ~D2Matrix(){
+      delete[] array;
+    }
+    
+    T& operator()(size_t i,size_t j){
+      return array[i + j*xn];
+    }
+    
+    T& operator()(size_t m){
+      return array[m];
+    }
+
+    size_t xindex(size_t m){
+      return m % xn;
+    }
+    size_t yindex(size_t m){
+      return m / xn;
+    }
+
+    
+  private:
+    size_t xn;
+    size_t yn;
+    T *array;
+  };
+
 	
 	/** \brief A container that can hold mixed objects all derived from
 	 * a base class and retains the ability to access derived class functions/members.
@@ -892,10 +966,50 @@ namespace Utilities
   /***************************************************************/
   /*** isolated integrator used for cosmological calculations ***/
   /***************************************************************/
+  
+  /// interpolation
   template <typename T>
-  double trapz(T &func, double a, double b, int n, double *s2)
+  void polintT(T xa[], T ya[], int n, T x, T *y, T *dy)
   {
-    double x,tnm,del,sum;
+    int i,m,ns=1;
+    T den,dif,dift,ho,hp,w;
+    T *c,*d;
+    
+    dif=fabs(x-xa[1]);
+    
+    c = new T[n+1];
+    d = new T[n+1];
+    
+    for (i=1;i<=n;i++) {
+      if ( (dift=fabs(x-xa[i])) < dif) {
+        ns=i;
+        dif=dift;
+      }
+      c[i]=ya[i];
+      d[i]=ya[i];
+    }
+    *y=ya[ns--];
+    for (m=1;m<n;m++) {
+      for (i=1;i<=n-m;i++) {
+        ho=xa[i]-x;
+        hp=xa[i+m]-x;
+        w=c[i+1]-d[i];
+        if ( (den=ho-hp) == 0.0) throw std::runtime_error("Error in routine polint");
+        den=w/den;
+        d[i]=hp*den;
+        c[i]=ho*den;
+      }
+      *y += (*dy=(2*ns < (n-m) ? c[ns+1] : d[ns--]));
+    }
+    delete[] d;
+    delete[] c;
+  }
+
+  /// used in trapizoidal integral
+  template <typename FunctorType,typename T = double>
+  T trapz(FunctorType &func, T a, T b, int n, T *s2)
+  {
+    T x,tnm,del,sum;
     int it,j;
     
     if (n == 1) {
@@ -912,8 +1026,9 @@ namespace Utilities
       return *s2;
     }
   }
-  /** \brief Numerical integrator.  The class or structure T must have a () operator that returns
-   a double.  Other access functions or public variable can be used instead of global variables
+  
+  /** \brief Numerical integrator.  The class or structure FunctorType must have a () operator that returns
+   a number of type T.  Other access functions or public variable can be used instead of global variables
    to change variables within the integrand.
    
    <pre>
@@ -941,30 +1056,30 @@ namespace Utilities
    // use as a function
    double tmp = func(10);
    
-   result = Utilities::nintegrate<FunctorType>(func,1.0e-2,1.0e4,1.0e-4);
+   result = Utilities::nintegrate<FunctorType,double>(func,1.0e-2,1.0e4,1.0e-4);
    
    <\pre>
    */
-  template <typename T>
-  double nintegrate(
-                    T &func        /// struct or class to be integrated
-                    ,double a      /// limit of integrations
-                    ,double b      /// limit of integrations
-                    ,double tols   /// target fractional error
+  template <typename FunctorType,typename T = double>
+  T nintegrate(
+                    FunctorType &func        /// struct or class to be integrated
+                    ,T a      /// limit of integrations
+                    ,T b      /// limit of integrations
+                    ,T tols   /// target fractional error
                     )
   {
     const int JMAX = 34,K=6;
     const int JMAXP = JMAX+1;
     
-    double ss,dss;
-    double s2[JMAXP],h2[JMAXP+1];
-    double ss2=0;
+    T ss,dss;
+    T s2[JMAXP],h2[JMAXP+1];
+    T ss2=0;
     
     h2[1]=1.0;
     for (int j=1;j<=JMAX;j++) {
-      s2[j] = Utilities::trapz<T>(func,a,b,j,&ss2);
+      s2[j] = Utilities::trapz<FunctorType,T>(func,a,b,j,&ss2);
       if (j>=K) {
-        polintD(&h2[j-K],&s2[j-K],K,0.0,&ss,&dss);
+        Utilities::polintT<T>(&h2[j-K],&s2[j-K],K,0.0,&ss,&dss);
         if(fabs(dss) <= tols*fabs(ss)) return ss;
       }
       h2[j+1]=0.25*h2[j];
@@ -972,7 +1087,7 @@ namespace Utilities
     std::cout << "s2= "; for(int j=1;j<=JMAX;j++) std::cout << s2[j] << "  ";
     std::cout << std::endl << "Too many steps in routine nintegrate<>\n";
     return 0.0;
-  }
+  }  
 
 
 }

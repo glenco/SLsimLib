@@ -298,7 +298,7 @@ namespace Utilities{
 
 
 	long IndexFromPosition(PosType *x,long Npixels,PosType range,const PosType *center);
-	void PositionFromIndex(unsigned long i,PosType *x,long Npixels,PosType range,const PosType *center);
+	void PositionFromIndex(unsigned long i,PosType *x,long Npixels,PosType range,PosType const *center);
 	long IndexFromPosition(PosType x,long Npixels,PosType range,PosType center);
   PosType TwoDInterpolator(PosType *x,int Npixels,PosType range,PosType *center,PosType *map,bool init=true);
   PosType TwoDInterpolator(PosType *map);
@@ -507,7 +507,7 @@ namespace Utilities{
   unsigned long order_curve5(Kist<Point> * curve);
   void ordered_convexhull(Kist<Point> * curve);
   void ordered_concavehull(Kist<Point> * curve);
-  PosType HullArea(Kist<Point> * curve);
+  PosType ConvexHullArea(Kist<Point> * curve);
 }
 bool order_ExteriorBoundary(Point *curve,long Npoints,long *NewNpoints,PosType *area);
 PosType findAreaOfCurve(TreeHndl tree,ImageInfo *curve,int NimageMax);

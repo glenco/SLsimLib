@@ -1374,6 +1374,109 @@ void ImageInfo::ArcInfo(
 	dist2 = sqrt(dist2);
 }
 
+void ImageInfo::FindArc(PosType Rmax,PosType resolution,PosType threshold){
+  
+  throw std::runtime_error("not ready yet");
+  
+  Kist<Point>::iterator it = imagekist->getTopIt();
+  PosType r2,xrange[2],yrange[2],Rmin;
+  size_t k;
+  
+   
+  xrange[0] = xrange[1] = (*it)->x[0];
+  yrange[0] = yrange[1] = (*it)->x[1];
+  
+  for(it = imagekist->getTopIt();!(it.atend());--it){
+    xrange[0] = MIN(xrange[0],(*it)->x[0]);
+    xrange[1] = MAX(xrange[1],(*it)->x[0]);
+    yrange[0] = MIN(yrange[0],(*it)->x[1]);
+    yrange[1] = MAX(yrange[1],(*it)->x[1]);
+  }
+  
+  PosType xcenter[2];
+
+  size_t Npixels = (size_t)(MAX(xrange[1]-xrange[0],yrange[1]-yrange[0])/resolution + 1 );
+  xcenter[0] = (xrange[0]+xrange[1])/2;
+  xcenter[1] = (yrange[0]+yrange[1])/2;
+  
+  PixelMap map(xcenter, Npixels, resolution);
+  map.AddImages(this,1);
+
+  Rmax = (map.getRange()*map.getRange()/4 + resolution*resolution)/2/resolution;
+  Rmin = 2*resolution;
+  
+  size_t Nc,Nr;
+
+  Nc = 2*Rmax/resolution;
+  Nr = (size_t)((Rmax-Rmin)/resolution + 1);
+  
+  std::vector<PosType> x(Nc),y(Nc),R2(Nr);//,votes(Nc*Nc*Nr);
+  Utilities::D3Matrix<PosType> votes(Nc,Nc,Nr);
+  
+  for(size_t i = 0;i<Nc;++i) x[i] = xcenter[0] - Rmax + 2*Rmax*i/(Nc-1);
+  for(size_t i = 0;i<Nc;++i) y[i] = xcenter[1] - Rmax + 2*Rmax*i/(Nc-1);
+  for(size_t i = 0;i<Nr;++i) R2[i] = pow(Rmin + (Rmax-Rmin)*i/(Nr-1),2);
+
+  PosType xc[2];
+  for(size_t m=0;m<Npixels*Npixels;++m){
+    if(map[m] > threshold){
+      Utilities::PositionFromIndex(m, xc, Npixels, map.getRange(), xcenter);
+    
+      for(size_t i=0;i<Nc;++i){
+        for(size_t j=0;j<Nc;++j){
+        
+          r2 = (xc[0]-x[i])*(xc[0]-x[i]) + (xc[1]-y[i])*(xc[1]-y[i]);
+          k = locate(R2,r2);
+        
+          votes(i,j,k) += 1.0;
+
+        }
+      }
+      
+    }
+  }
+  
+  // find maximum votes
+  
+  size_t kmax=0,ksecond=0;
+  PosType maxvotes,secondvotes;
+  maxvotes = votes(0);
+  for(size_t k=0;k<Nc*Nc*Nr;++k){
+    if(votes(k) >= maxvotes ){
+      
+      secondvotes = maxvotes;
+      ksecond = kmax;
+      
+      maxvotes = votes(k);
+      kmax = k;
+    }
+  }
+  
+  PosType radius,arclength,width;
+  
+  xc[0] = x[votes.xindex(kmax)];
+  xc[1] = y[votes.yindex(kmax)];
+  radius = sqrt(R2[votes.zindex(kmax)]);
+  
+  PosType x_tmp[2],r_tmp,rmax,rmin;
+  rmax = rmin = radius;
+  arclength = 0;
+  
+  for(size_t m=0;m<Npixels*Npixels;++m){
+    if(map[m] > threshold){
+      Utilities::PositionFromIndex(m, x_tmp, Npixels, map.getRange(), xcenter);
+      r_tmp = sqrt( (xc[0] - x_tmp[0])*(xc[0] - x_tmp[0]) + (xc[1] - x_tmp[1])*(xc[1] - x_tmp[1]) );
+      
+      if(fabs(r_tmp-radius) < resolution) arclength += 1;
+      rmax = MAX(rmax,r_tmp);
+      rmin = MIN(rmin,r_tmp);
+    }
+  }
+  
+  width = MAX(rmax-rmin,resolution);
+  arclength *= resolution;
+}
+
 
 /// Print positions and gridsizes of all points in all the images to stdout
 void PrintImages(ImageInfo *images,long Nimages){
