@@ -132,8 +132,17 @@ void LensHaloBaseNSIE::assignParams(InputParams& params){
 	if(!params.get("main_pos_angle",pa)) error_message1("main_pos_angle",params.filename());
 
 	Rsize = rmaxNSIE(sigma,mass,fratio,rcore);
+    
+    // PHI BY Fabien
+    cout << "Coucou >" << endl;
+    cout << "Rmax = " << Rmax << endl;
+    
 	Rmax = MAX(1.0,1.0/fratio)*Rsize;  // redefine
-
+    
+    // PHI BY Fabien
+    cout << "Coucou >" << endl;
+    cout << "Rmax = " << Rmax << endl;
+    
 	assert(Rmax >= Rsize);
 
 	if(!params.get("zsource_reference",zsource_reference)) error_message1("zsource_reference",params.filename());

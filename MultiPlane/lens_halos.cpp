@@ -380,7 +380,6 @@ void LensHaloSimpleNSIE::assignParams(InputParams& params){
 
 	Rsize = rmaxNSIE(sigma,mass,fratio,rcore);
 	Rmax = MAX(1.0,1.0/fratio)*Rsize;  // redefine
-
 	assert(Rmax >= Rsize);
 
 	if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
@@ -401,8 +400,17 @@ void LensHaloSimpleNSIE::initFromMass(float my_mass, long *seed){
 	fratio = (ran2(seed)+1)*0.5;  //TODO: Ben change this!  This is a kluge.
 	pa = 2*pi*ran2(seed);  //TODO: This is a kluge.
 	Rsize = rmaxNSIE(sigma,mass,fratio,rcore);
+
+    // PHI BY Fabien
+    cout << "Coucou >" << endl;
+    cout << "Rmax = " << Rmax << endl;
+    
 	Rmax = MAX(1.0,1.0/fratio)*Rsize;  // redefine
 
+    // PHI BY Fabien
+    cout << "Coucou >" << endl;
+    cout << "Rmax = " << Rmax << endl;
+    
 	assert(Rmax >= Rsize);
 }
 
@@ -422,13 +430,20 @@ void LensHalo::force_halo(
     ,double const *xcm
     ,bool kappa_off
     ,bool subtract_point /// if true contribution from a point mass is subtracted
-    ){
+    )
+{
+    // std::cout << "Coucou 2" << std::endl;
+    
     //std::cout << "In lens_halo.cpp force_halo " << elliptical << std::endl;
     bool IsElliptical=get_flag_elliptical();
-	if (IsElliptical==true){
+    
+	if (IsElliptical==true)
+    {
         force_halo_asym(alpha,kappa,gamma,xcm,kappa_off,subtract_point);
+            // std::cout << "Coucou ?" << std::endl;
     }else{
         force_halo_sym(alpha,kappa,gamma,phi,xcm,kappa_off,subtract_point);
+            // std::cout << "Coucou !" << std::endl;
 	}
 }
 
@@ -443,13 +458,20 @@ void LensHalo::force_halo_sym(
 		,bool subtract_point /// if true contribution from a point mass is subtracted
 		){
 
+    // std::cout << "Coucou 3" << std::endl ;
+            
 	PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
+            
 	if(rcm2 < 1e-20) rcm2 = 1e-20;
 
+    // std::cout << "xcm[0] = " << xcm[0] << " ; xcm[1] = " << xcm[1] << endl;
+    // std::cout << "If [rcm2 = " << rcm2 << " < Rmax*Rmax = " << Rmax*Rmax << " ] is true, then we enter the loop." << std::endl ;
+            
 	/// intersecting, subtract the point particle
 	if(rcm2 < Rmax*Rmax)
     {
-		PosType prefac = mass/rcm2/pi;
+		
+        PosType prefac = mass/rcm2/pi;
 		PosType x = sqrt(rcm2)/rscale;
 		//PosType xmax = Rmax/rscale;
 
@@ -469,8 +491,10 @@ void LensHalo::force_halo_sym(
 			gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 			gamma[1] += xcm[0]*xcm[1]*tmp;
 
+            // std::cout << "Coucou 4" << std::endl;
+            
             // PHI BY Fabien
-            *phi += phi_h(x); // Giving the distance x is useless, this functions just does "return 1"... does it make sense ?
+            *phi += phi_h(x); // Giving the distance x is useless, this function just does "return 1"... does it make sense ?
 		}
 	}
 	else // the point particle is not subtracted

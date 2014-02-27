@@ -78,7 +78,6 @@ public:
 	/// set scale radius (in Mpc)
 	virtual void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rmax/rscale;};
 	/// set redshift
-
 	void setZlens(PosType my_zlens){ zlens=my_zlens; };
 
 	/// set slope
@@ -377,13 +376,17 @@ private:
 	}
 };
 
+
+
+
+
 /** \ingroup DeflectionL2
  *
  * \brief A class for calculating the deflection, kappa and gamma caused by a collection of halos
  * with truncated power-law mass profiles.
  *
  * Derived from the TreeQuad class.  The "particles" are replaced with spherical halos.
- *The truncation is in 2d not 3d. \f$ \Sigma \propto r^\beta \f$ so beta would usually be negative.
+ *The truncation is in 2d not 3d. \f$ \Sigma \propto r^{-\beta} \f$ so beta would usually be positive.
  *
  *
  * The default value of theta = 0.1 generally gives better than 1% accuracy on alpha.
@@ -445,6 +448,11 @@ private:
         return -1.0*pow(x/xmax,-beta+2)/(-beta+2);
 	}
 };
+
+
+
+
+
 
 class LensHaloSimpleNSIE : public LensHalo{
 public:
