@@ -104,6 +104,7 @@ PosType* LensHaloNFW::gtable = NULL;
 PosType* LensHaloNFW::g2table = NULL;
 PosType* LensHaloNFW::htable = NULL;
 
+
 LensHaloNFW::LensHaloNFW()
 : LensHalo(), gmax(0)
 {
@@ -257,7 +258,6 @@ void LensHaloPseudoNFW::make_tables(){
 			xtable[i] = x;
 			mhattable[i] = mhat(x,beta);
 		}
-
 		count++;
 	}
 }
@@ -307,6 +307,7 @@ LensHaloPowerLaw::LensHaloPowerLaw() : LensHalo(){
 
 LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
 	assignParams(params);
+    //setModesToEllip(fratio, pa, mod);
     calcModes(fratio, 2.0-beta, pa, mod);
     for(int i=1;i<Nmod;i++){
         //std::cout << mod[i] << std::endl;
@@ -447,7 +448,6 @@ void LensHalo::force_halo(
 	}
 }
 
-
 void LensHalo::force_halo_sym(
 		PosType *alpha     /// mass/Mpc
 		,KappaType *kappa
@@ -491,10 +491,14 @@ void LensHalo::force_halo_sym(
 			gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 			gamma[1] += xcm[0]*xcm[1]*tmp;
 
+<<<<<<< local
             // std::cout << "Coucou 4" << std::endl;
             
             // PHI BY Fabien
             *phi += phi_h(x); // Giving the distance x is useless, this function just does "return 1"... does it make sense ?
+=======
+            //*phi += phi_h(x); 
+>>>>>>> other
 		}
 	}
 	else // the point particle is not subtracted
@@ -881,7 +885,7 @@ void LensHaloSimpleNSIE::force_halo(
 
 
 
-const long LensHaloHernquist::NTABLE = 10000;
+const long LensHaloHernquist::NTABLE = 100000;
 const PosType LensHaloHernquist::maxrm = 100.0;
 int LensHaloHernquist::count = 0;
 
@@ -890,6 +894,7 @@ PosType* LensHaloHernquist::ftable = NULL;
 PosType* LensHaloHernquist::gtable = NULL;
 PosType* LensHaloHernquist::g2table = NULL;
 PosType* LensHaloHernquist::htable = NULL;
+
 
 LensHaloHernquist::LensHaloHernquist()
 : LensHalo(), gmax(0)
@@ -903,6 +908,17 @@ LensHaloHernquist::LensHaloHernquist(InputParams& params)
 	assignParams(params);
 	make_tables();
 	gmax = InterpolateFromTable(gtable,xmax);
+    
+    set_slope(1);
+    std::cout << "Hernquist constructor: " << get_slope() << std::endl;
+    
+    calcModes(fratio, 2.0-get_slope(), pa, mod);
+    for(int i=1;i<Nmod;i++){
+        //std::cout << mod[i] << std::endl;
+        if(mod[i]!=0){set_flag_elliptical(true);};
+    }
+    std::cout << "if mods!=0 this must be 1: " << get_flag_elliptical() << std::endl;
+    
 }
 
 void LensHaloHernquist::make_tables(){
@@ -915,7 +931,7 @@ void LensHaloHernquist::make_tables(){
 		gtable = new PosType[NTABLE];
 		htable = new PosType[NTABLE];
 		g2table = new PosType[NTABLE];
-
+        
 		for(i = 0 ; i< NTABLE; i++){
 			x = i*dx;
 			xtable[i] = x;
@@ -923,11 +939,12 @@ void LensHaloHernquist::make_tables(){
 			gtable[i] = gfunction(x);
 			htable[i] = hfunction(x);
 			g2table[i] = g2function(x);
-
 		}
   }
   count++;
 }
+
+
 
 PosType LensHaloHernquist::InterpolateFromTable(PosType *table, PosType y){
 	int j;
@@ -980,6 +997,7 @@ PosType* LensHaloJaffe::xtable = NULL;
 PosType* LensHaloJaffe::ftable = NULL;
 PosType* LensHaloJaffe::gtable = NULL;
 PosType* LensHaloJaffe::g2table = NULL;
+
 //PosType* LensHaloJaffe::htable = NULL;
 
 LensHaloJaffe::LensHaloJaffe()
@@ -994,6 +1012,17 @@ LensHaloJaffe::LensHaloJaffe(InputParams& params)
 	assignParams(params);
 	make_tables();
 	gmax = InterpolateFromTable(gtable,xmax);
+    
+    set_slope(1);
+    std::cout << "Jaffe constructor: " << get_slope() << std::endl;
+    
+    calcModes(fratio, 2-get_slope(), pa, mod);
+    for(int i=1;i<Nmod;i++){
+        //std::cout << mod[i] << std::endl;
+        if(mod[i]!=0){set_flag_elliptical(true);};
+    }
+    std::cout << "if mods!=0 this must be 1: " << get_flag_elliptical() << std::endl;
+    
 }
 
 void LensHaloJaffe::make_tables(){

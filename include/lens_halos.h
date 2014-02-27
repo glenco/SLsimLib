@@ -129,7 +129,24 @@ public:
 
 	/// Prints star parameters; if show_stars is true, prints data for single stars
 	void PrintStars(bool show_stars) const;
-
+ 
+    PosType alpha_int(PosType x, bool is_alphah_a_table);
+    
+    //friend struct Ig_func;
+    
+    struct Ialpha_func{
+        Ialpha_func(LensHalo& halo): halo(halo){};
+        LensHalo& halo;
+        PosType operator ()(PosType x) {return halo.alpha_h(x)/x ;}
+    };
+    
+    struct Ig_func{
+        Ig_func(LensHalo& halo): halo(halo){};
+        LensHalo& halo;
+        PosType operator ()(PosType x) {return halo.gfunction(x)/x ;}
+    };
+    
+    void setModesToEllip(PosType q,PosType rottheta, PosType mod[]);
 
 protected:
   
@@ -188,6 +205,11 @@ protected:
 	virtual KappaType inline kappa_h(PosType x){return 0;};
 	virtual KappaType inline gamma_h(PosType x){return -2;};
 	virtual KappaType inline phi_h(PosType x){return 1;};
+    virtual KappaType inline phi_int(PosType x){return 1;};
+    
+    virtual PosType inline gfunction(PosType x){return -1;};
+	
+    
     PosType xmax;
 
   // Functions for calculating axial dependence
@@ -200,8 +222,7 @@ protected:
   //void felliptical(PosType x, PosType q, PosType theta, PosType f[], PosType g[]);
 
 	virtual void gamma_asym(PosType x,PosType theta, PosType gamma[2]);
-	virtual double kappa_asym(PosType x,PosType theta);
-    
+	virtual PosType kappa_asym(PosType x,PosType theta);
 	virtual void alpha_asym(PosType x,PosType theta, PosType alpha[2]);
     double fourier_coeff(double n, double q, double beta);
     
@@ -215,7 +236,8 @@ protected:
         double operator ()(double theta) {return cos(n*theta)/pow(cos(theta)*cos(theta) + (1/q/q)*sin(theta)*sin(theta),beta/2) ;}
     };
 
-  const static int Nmod = 32;
+
+  const static int Nmod = 64;
   
   PosType mod[Nmod];
   PosType r_eps;
@@ -252,6 +274,7 @@ public:
 	PosType gfunction(PosType x);
 	PosType g2function(PosType x);
 	PosType hfunction(PosType x);
+    
 
 	// TODO: BEN: the below functions alphaNFW, kappaNFW and gammaNFW are obsolete and better to be deleted to avoid confusion
 	void alphaNFW(PosType *alpha,PosType *x,PosType Rtrunc,PosType mass,PosType r_scale
@@ -267,6 +290,7 @@ public:
     void set_Rmax(float my_Rmax){Rmax=my_Rmax; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
   /// set scale radius
 	void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
+    
 
 protected:
 	/// table size
@@ -304,7 +328,11 @@ protected:
 		//exit(1);
 		return -0.25*InterpolateFromTable(htable,x)/gmax/pi; // -0.5*x*
 	}
-  
+    inline KappaType phi_int(PosType x){
+        //return -1.0*alpha_int(x,true)/gmax/pi;
+        return alpha_int(x,false)/pi;
+    }
+    
 private:
   PosType gmax;
 };
@@ -374,6 +402,9 @@ private:
 		exit(1);
 		return 0.0;
 	}
+    inline KappaType phi_int(PosType x){
+		return alpha_int(x,false)/pi;
+    }
 };
 
 
@@ -447,6 +478,9 @@ private:
 		//assert( -1.0*pow(x/xmax,beta+2)/(beta+2) !=0.0);
         return -1.0*pow(x/xmax,-beta+2)/(-beta+2);
 	}
+    inline KappaType phi_int(PosType x){
+		return alpha_int(x,false);
+    }
 };
 
 
@@ -549,7 +583,11 @@ public:
 	void set_Rmax(float my_Rmax){Rmax=my_Rmax; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
 	/// set scale radius
 	void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
+   // friend struct Ialpha_func;
+    
 
+
+    
 protected:
 	/// table size
 	static const long NTABLE;
@@ -573,7 +611,7 @@ protected:
 		return -0.25*InterpolateFromTable(gtable,x)/gmax;
 	}
 	inline KappaType kappa_h(PosType x){
-		return 0.5*x*x*InterpolateFromTable(ftable,x)/gmax;
+		return 0.25*x*x*InterpolateFromTable(ftable,x)/gmax; // 0.5*
 	}
 	inline KappaType gamma_h(PosType x){
 		return -0.25*x*x*InterpolateFromTable(g2table,x)/gmax;
@@ -582,7 +620,16 @@ protected:
 		return -0.25*InterpolateFromTable(htable,x)/gmax/pi;
 		//return -1.0*InterpolateFromTable(htable,x)/gmax;
 	}
+    inline KappaType phi_int(PosType x){
+		return alpha_int(x,false);
+        //return -0.25*alpha_int(x,true)/gmax/pi;
+        
+    }
+    
 
+
+    
+    
 private:
   PosType gmax;
 };
@@ -611,13 +658,13 @@ public:
 	/// set scale radius
 	void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
 
-protected:
-    
-  PosType ffunction(PosType x);
+    PosType ffunction(PosType x);
 	PosType gfunction(PosType x);
 	PosType hfunction(PosType x);
 	PosType g2function(PosType x);
-
+    
+protected:
+    
 	/// table size
 	static const long NTABLE;
 	/// maximum Rmax/rscale
@@ -637,13 +684,13 @@ protected:
 
 	/// Override internal structure of halos
 	inline PosType alpha_h(PosType x){
-		return -1.0*InterpolateFromTable(gtable,x)/gmax;
+		return -0.25*InterpolateFromTable(gtable,x)/gmax; // -1
 	}
 	inline KappaType kappa_h(PosType x){
-		return 0.5*x*x*InterpolateFromTable(ftable,x)/gmax;
+		return 0.125*x*x*InterpolateFromTable(ftable,x)/gmax; //0.5
 	}
 	inline KappaType gamma_h(PosType x){
-		return -0.25*x*x*InterpolateFromTable(g2table,x)/gmax;
+		return -0.125*x*x*InterpolateFromTable(g2table,x)/gmax; //-0.25
 	}
 	inline KappaType phi_h(PosType x){
 		ERROR_MESSAGE();
@@ -651,6 +698,9 @@ protected:
 		exit(1);
 		//return -1.0*InterpolateFromTable(htable,x)/gmax;
 	}
+    inline KappaType phi_int(PosType x){
+		return alpha_int(x,false);
+    }
 
 private:
   PosType gmax;
