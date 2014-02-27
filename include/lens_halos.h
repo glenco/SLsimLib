@@ -147,7 +147,7 @@ public:
         PosType operator ()(PosType x) {return halo.gfunction(x)/x ;}
     };
     
-
+    void setModesToEllip(PosType q,PosType rottheta, PosType mod[]);
 
 protected:
   
@@ -238,7 +238,7 @@ protected:
     };
 
 
-  const static int Nmod = 32;
+  const static int Nmod = 64;
   
   PosType mod[Nmod];
   PosType r_eps;
@@ -613,8 +613,8 @@ protected:
 		//return -1.0*InterpolateFromTable(htable,x)/gmax;
 	}
     inline KappaType phi_int(PosType x){
-		//return alpha_int(x,false)/pi;
-        return -0.25*alpha_int(x,true)/gmax/pi;
+		return alpha_int(x,false);
+        //return -0.25*alpha_int(x,true)/gmax/pi;
         
     }
     
@@ -676,13 +676,13 @@ protected:
 
 	/// Override internal structure of halos
 	inline PosType alpha_h(PosType x){
-		return -1.0*InterpolateFromTable(gtable,x)/gmax;
+		return -0.25*InterpolateFromTable(gtable,x)/gmax; // -1
 	}
 	inline KappaType kappa_h(PosType x){
-		return 0.5*x*x*InterpolateFromTable(ftable,x)/gmax;
+		return 0.125*x*x*InterpolateFromTable(ftable,x)/gmax; //0.5
 	}
 	inline KappaType gamma_h(PosType x){
-		return -0.25*x*x*InterpolateFromTable(g2table,x)/gmax;
+		return -0.125*x*x*InterpolateFromTable(g2table,x)/gmax; //-0.25
 	}
 	inline KappaType phi_h(PosType x){
 		ERROR_MESSAGE();
@@ -691,7 +691,7 @@ protected:
 		//return -1.0*InterpolateFromTable(htable,x)/gmax;
 	}
     inline KappaType phi_int(PosType x){
-		return alpha_int(x,true)/pi;
+		return alpha_int(x,false);
     }
 
 private:

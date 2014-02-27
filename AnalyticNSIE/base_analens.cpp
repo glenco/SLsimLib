@@ -426,11 +426,43 @@ PosType LensHalo::alpha_int(PosType x, bool is_alphah_a_table){
 }
 
 
-/// Calculates the modes for fourier expansion of power law halo
-void LensHalo::calcModes(double q, double beta, double rottheta, PosType newmod[]){
-    int i,k;
-	//assert(Nmod == 32);
+void LensHalo::setModesToEllip(PosType q,PosType rottheta, PosType mod[]){
+    // elliptical integrals
+    
+    PosType K = rfD(0,1./q/q,1);
+    PosType E = K - (1-1./q/q)*rdD(0,1./q/q,1)/3;
+   // assert(Nmod == 64);
+    
+    
+    
+    // set modo to elliptical model
     for(int i=1;i<=Nmod;++i){
+        mod[i]=0.0;
+    }
+    // fill in modes with their values for an elliptical lens
+    if(q != 1.0){
+        mod[3] = 4*K/pi; // /2?
+        mod[4] = 4*( (1+q*q)*K-2*q*q*E )/(1-q*q)/pi/(1-4); //mod[3];
+        mod[8] = 4*( (3*q*q+1)*(q*q+3)*K-8*q*q*(1+q*q)*E )/( 3*pi*pow(1-q*q,2) )/(1-16); // /mod[3];
+        mod[12]= 4*( (1+q*q)*(15+98*q*q+15*q*q*q*q)*K-2*q*q*(23+82*q*q+23*q*q*q*q)*E )/( 15*pi*pow(1-q*q,3) )/(1-36); ///mod[3];
+        mod[16]= 4*( -32*q*q*(1+q*q)*(11+74*q*q+11*q*q*q*q)*E+(105+1436*q*q+3062*q*q*q*q+1436*pow(q,6)+105*pow(q,8))*K )/(105*pi*pow(1-q*q,4))/(1-64); ///mod[3];
+    }
+    mod[3]=1.0;
+    
+    std::cout << "setModes for beta=1" << " " << mod[3] << " " << mod[4] << " " << mod[8] << " " << std::endl;
+
+    
+    // rotate model
+    RotateModel(rottheta,mod,Nmod,0);
+    
+    return;
+}
+
+/// Calculates the modes for fourier expansion of power law halo
+void LensHalo::calcModes(double q, double beta, double rottheta, PosType mod[]){
+    int i,k;
+    //assert(Nmod == 32);
+    for(int i=1;i<Nmod;++i){
 		mod[i]=0;
 	}
 	// fill in modes with their values for an elliptical lens
@@ -438,11 +470,13 @@ void LensHalo::calcModes(double q, double beta, double rottheta, PosType newmod[
         mod[0] = fourier_coeff(0, q, beta)/pi/2.;
         for(i=4;i<Nmod;i+=2){
             k=i/2;
-            mod[i] = fourier_coeff(k, q, beta)/pi/(beta*beta-k*k);
+            assert(i<=Nmod);
+            mod[i] = beta*beta*fourier_coeff(k, q, beta)/pi/(beta*beta-k*k)/mod[0];
         }
+        mod[0]=1.0;
     }
 	else{
-		cout << "here in calcModes" << endl;
+		cout << "circular case" << endl;
 		mod[0]=1.0;
 	}
     // rotate model
@@ -462,7 +496,7 @@ void LensHalo::alpha_asym(PosType x,PosType theta, PosType alpha[]){
     //alpha_r=alpha_h(x)*f[0]; // w/o damping
     //alpha_theta=f[1]*phi/x; //  w/0 damping
     
-    std::cout << phi_h(x) << " " << phi_int(x) << " " << phi_h(x) / phi_int(x) << std::endl;
+    //std::cout << phi_h(x) << " " << phi_int(x) << " " << phi_h(x) / phi_int(x) << std::endl;
     
     alpha_r=alpha_h(x)*(1+F*g[0])+phi*F*g[1]; // with damping
     alpha_theta=f[1]*g[0]*phi/x; //  with damping
@@ -480,7 +514,6 @@ PosType LensHalo::kappa_asym(PosType x,PosType theta){
     faxial(theta,f);
     F=f[0]-1;
     gradial(x,g);
-    
     kappa=f[0]*kappa_h(x)-0.5*f[2]*phi; // w/o damping
     //kappa=(1+F*g[0])*kappa_h(x)-0.5*phi*(F*g[1]/x+F*g[2]+f[2]*g[0]/x/x)*x*x-F*g[1]*alpha_h(x)*x*x; // with damping
     

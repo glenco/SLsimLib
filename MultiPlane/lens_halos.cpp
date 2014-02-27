@@ -258,7 +258,6 @@ void LensHaloPseudoNFW::make_tables(){
 			xtable[i] = x;
 			mhattable[i] = mhat(x,beta);
 		}
-
 		count++;
 	}
 }
@@ -308,6 +307,7 @@ LensHaloPowerLaw::LensHaloPowerLaw() : LensHalo(){
 
 LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
 	assignParams(params);
+    //setModesToEllip(fratio, pa, mod);
     calcModes(fratio, 2.0-beta, pa, mod);
     for(int i=1;i<Nmod;i++){
         //std::cout << mod[i] << std::endl;
@@ -885,7 +885,7 @@ LensHaloHernquist::LensHaloHernquist(InputParams& params)
     set_slope(1);
     std::cout << "Hernquist constructor: " << get_slope() << std::endl;
     
-    calcModes(fratio, 2.0-get_slope(), pa+pi/2., mod);
+    calcModes(fratio, 2.0-get_slope(), pa, mod);
     for(int i=1;i<Nmod;i++){
         //std::cout << mod[i] << std::endl;
         if(mod[i]!=0){set_flag_elliptical(true);};
@@ -989,7 +989,7 @@ LensHaloJaffe::LensHaloJaffe(InputParams& params)
     set_slope(1);
     std::cout << "Jaffe constructor: " << get_slope() << std::endl;
     
-    calcModes(fratio, 2.0-get_slope(), pa+pi/2., mod);
+    calcModes(fratio, 2-get_slope(), pa, mod);
     for(int i=1;i<Nmod;i++){
         //std::cout << mod[i] << std::endl;
         if(mod[i]!=0){set_flag_elliptical(true);};
