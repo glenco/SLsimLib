@@ -176,8 +176,7 @@ protected:
 	virtual KappaType inline kappa_h(PosType x){return 0;};
 	virtual KappaType inline gamma_h(PosType x){return -2;};
 	virtual KappaType inline phi_h(PosType x){return 1;};
-  PosType xmax;
-
+    PosType xmax;
 
   // Functions for calculating axial dependence
   void setModesToEllip(PosType q,PosType theta);

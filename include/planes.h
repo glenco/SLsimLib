@@ -32,7 +32,9 @@ public:
 	~LensPlaneTree();
 
 	void force(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xx,bool kappa_off);
-	
+    // PHI BY Fabien : adding the phi component into this function
+	void force(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType *xx,bool kappa_off);
+    
 	void addHalo(LensHalo* halo);
 	void removeHalo(LensHalo* halo);
 	
@@ -56,7 +58,9 @@ public:
 	~LensPlaneSingular();
 
 	void force(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xx,bool kappa_off);
-	
+	// PHI BY Fabien : adding the phi component into this function
+    void force(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType *xx,bool kappa_off);
+    
 	void addHalo(LensHalo* halo);
 	void removeHalo(LensHalo* halo);
 	

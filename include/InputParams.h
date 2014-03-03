@@ -92,7 +92,7 @@ public:
 	bool get(std::string label, Number& value) const;
 	
 	template<typename T>
-	T get(std::string label) const;
+	T get(std::string label, const T& def = T()) const;
 	
 	template<typename T>
 	T require(std::string label) const;
@@ -209,10 +209,11 @@ void InputParams::put(std::string label, Number value, std::string comment)
  * Return a parameter value.
  */
 template<typename T>
-T InputParams::get(std::string label) const
+T InputParams::get(std::string label, const T& def) const
 {
 	T value;
-	get(label, value);
+	if(!get(label, value))
+		return def;
 	return value;
 }
 
