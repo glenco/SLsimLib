@@ -110,7 +110,28 @@ PixelMap::PixelMap(std::string filename)
 	
 	h0.readKey("CRVAL1", center[0]);
 	h0.readKey("CRVAL2", center[1]);
-	h0.readKey("CDELT1", resolution);
+	
+	// read the resolution
+	try
+	{
+		double cdelt2;
+		h0.readKey("CDELT1", resolution);
+		h0.readKey("CDELT2", cdelt2);
+		if(std::abs(resolution) - std::abs(cdelt2) > 1e-6)
+			throw std::runtime_error("non-square pixels in FITS file " + filename);
+	}
+	catch(CCfits::HDU::NoSuchKeyword&)
+	{
+		double cd12, cd21, cd22;
+		h0.readKey("CD1_1", resolution);
+		h0.readKey("CD1_2", cd12);
+		h0.readKey("CD2_1", cd21);
+		h0.readKey("CD2_2", cd22);
+		if(std::abs(resolution) - std::abs(cd22) > 1e-6)
+			throw std::runtime_error("non-square pixels in FITS file " + filename);
+		if(cd12 || cd21)
+			throw std::runtime_error("pixels not aligned with coordingate in FITS file " + filename);
+	}
 	
 	resolution = fabs(resolution)*pi/180.;
 	range = resolution*(Npixels-1);

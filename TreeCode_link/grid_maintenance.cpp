@@ -32,20 +32,16 @@ Grid::Grid(
 
 	if(N1d <= 0){ERROR_MESSAGE(); std::cout << "cannot make Grid with no points" << std::endl; exit(1);}
 	if(range <= 0){ERROR_MESSAGE(); std::cout << "cannot make Grid with no range" << std::endl; exit(1);}
-  if( (N1d & (N1d-1)) != 0){
-	  ERROR_MESSAGE();
-	  std::printf("ERROR: Grid cannot be initialized with pixels less than a power of 2\n");
-	  exit(1);
-  }	
+    if( (N1d & (N1d-1)) != 0 ){ERROR_MESSAGE(); std::printf("ERROR: Grid cannot be initialized with pixels less than a power of 2\n"); exit(1);}
 
 	i_points = NewPointArray(Ngrid_init*Ngrid_init);
 	xygridpoints(i_points,range,center,Ngrid_init,0);
 	s_points=LinkToSourcePoints(i_points,Ngrid_init*Ngrid_init);
 
-  {
+    {
     std::lock_guard<std::mutex> hold(grid_mutex);
   	lens->rayshooterInternal(Ngrid_init*Ngrid_init,i_points,false);
-  }
+    }
   
 	// Build trees
 	i_tree = new TreeStruct(i_points,Ngrid_init*Ngrid_init);
