@@ -53,7 +53,7 @@ namespace Utilities
 	PosType **PosTypeMatrix(long rows, long cols);
 	void free_PosTypeMatrix(PosType **matrix, long rows, long cols);
   
-  /// 3 dimensional matrix
+  /// 3 dimensional matrix, fixed size
   template<typename T>
 	class D3Matrix{
   public:
@@ -77,7 +77,7 @@ namespace Utilities
       return m % (xn);
     }
     size_t yindex(size_t m){
-      return (m % xn*yn) / xn;
+      return (m % (xn*yn) ) / xn;
     }
 
     size_t zindex(size_t m){

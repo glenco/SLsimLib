@@ -596,7 +596,11 @@ void PixelMap::smooth(PosType sigma){
  * at all before starting.  Could also be improved by making the line fatter
  * by including neighbor points.
  */
-void PixelMap::drawline(PosType x1[],PosType x2[],PosType value){
+void PixelMap::drawline(
+        PosType x1[]     /// one end point of line
+        ,PosType x2[]    /// other end point of line
+        ,PosType value   /// value that it is set to on the map
+                        ){
 
 	PosType x[2],s1,s2,r;
 	size_t index;
