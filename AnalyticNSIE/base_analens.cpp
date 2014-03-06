@@ -523,9 +523,8 @@ PosType LensHalo::kappa_asym(PosType x,PosType theta){
 
 void LensHalo::gamma_asym(PosType x,PosType theta, PosType gamma[]){
 	PosType F, f[3],g[3];
-    PosType phi2=phi_int(x);
-    PosType phi=phi_h(x);
-
+    PosType phi=phi_int(x);
+    
     faxial(theta,f);
     F=f[0]-1;
     gradial(x,g);
