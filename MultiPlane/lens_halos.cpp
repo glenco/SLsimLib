@@ -118,16 +118,17 @@ LensHaloNFW::LensHaloNFW(InputParams& params)
 	make_tables();
 	gmax = InterpolateFromTable(gtable, xmax);
     
-    set_slope(1); // slope->0. everything get more circular
-    std::cout << "NFW constructor: " << get_slope() << std::endl;
-
-    calcModes(fratio, get_slope(), pa, mod); // to ellipticize potential instead of  kappa take calcModes(fratio, 2-get_slope(), pa, mod);
-    for(int i=1;i<Nmod;i++){
-        //std::cout << mod[i] << std::endl;
-        if(mod[i]!=0){set_flag_elliptical(true);};
+    /// If the 2nd argument in calcModes(fratio, slope, pa, mod), the slope, is set to 1 it yields an elliptical kappa contour of given axis ratio (fratio) at the radius where the slope of the 3D density profile is -2, which is defined as the scale radius for the NFW profile. To ellipticize the potential instead of the convergence use calcModes(fratio, 2-get_slope(), pa, mod), this produces also an ellipse in the convergence map, but at the radius where the slope is 2-get_slope().
+    set_slope(1);
+    /// If the axis ratio given in the parameter file is set to 1 all ellipticizing routines are skipped.
+    if(fratio!=1){
+        std::cout << "NFW constructor: slope set to " << get_slope() << std::endl;
+        calcModes(fratio, get_slope(), pa, mod); // to ellipticize potential instead of  kappa take calcModes(fratio, 2-get_slope(), pa, mod);
+        for(int i=1;i<Nmod;i++){
+            if(mod[i]!=0){set_flag_elliptical(true);};
+        }
+        //std::cout << "if mods!=0 this must be 1: " << get_flag_elliptical() << std::endl;
     }
-    std::cout << "if mods!=0 this must be 1: " << get_flag_elliptical() << std::endl;
-
 }
 
 void LensHaloNFW::make_tables(){
@@ -307,14 +308,15 @@ LensHaloPowerLaw::LensHaloPowerLaw() : LensHalo(){
 
 LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
 	assignParams(params);
-    //setModesToEllip(fratio, pa, mod);
-    calcModes(fratio, beta, pa, mod);
-    for(int i=1;i<Nmod;i++){
-        //std::cout << mod[i] << std::endl;
-        if(mod[i]!=0){set_flag_elliptical(true);};
+    /// If the 2nd argument in calcModes(fratio, slope, pa, mod), the slope, is set to 1 it yields an elliptical kappa contour of given axis ratio (fratio) at the radius where the slope of the 3D density profile is -2, which is defined as the scale radius for the NFW profile. To ellipticize the potential instead of the convergence use calcModes(fratio, 2-get_slope(), pa, mod), this produces also an ellipse in the convergence map, but at the radius where the slope is 2-get_slope().
+    /// If the axis ratio given in the parameter file is set to 1 all ellipticizing routines are skipped.
+    if(fratio!=1){
+        calcModes(fratio, beta, pa, mod);
+        for(int i=1;i<Nmod;i++){
+            //std::cout << mod[i] << std::endl;
+            if(mod[i]!=0){set_flag_elliptical(true);};
+        }
     }
-    //if(get_flag_elliptical()==false){beta=-beta;}; /// TODO the beta used for calculating kappa,gamma,alpha in the symmetric cases is a factor of -1 different from the asymmetric case
-    std::cout << "if mods!=0 this must be 1: " << get_flag_elliptical() << std::endl;
     rscale = xmax = 1.0;
 }
 
@@ -884,15 +886,14 @@ LensHaloHernquist::LensHaloHernquist(InputParams& params)
 	gmax = InterpolateFromTable(gtable,xmax);
     
     set_slope(1);
-    std::cout << "Hernquist constructor: " << get_slope() << std::endl;
-    
-    calcModes(fratio, get_slope(), pa, mod); // to ellipticize potential instead of kappa use (fratio, get_slope()-2, pa, mod)
-    for(int i=1;i<Nmod;i++){
-        //std::cout << mod[i] << std::endl;
-        if(mod[i]!=0){set_flag_elliptical(true);};
+    /// If the axis ratio given in the parameter file is set to 1 all ellipticizing routines are skipped.
+    if(fratio!=1){
+        std::cout << "Hernquist constructor: slope set to " << get_slope() << std::endl;
+        calcModes(fratio, get_slope(), pa, mod); // to ellipticize potential instead of kappa use (fratio, get_slope()-2, pa, mod)
+        for(int i=1;i<Nmod;i++){
+            if(mod[i]!=0){set_flag_elliptical(true);};
+        }
     }
-    std::cout << "if mods!=0 this must be 1: " << get_flag_elliptical() << std::endl;
-    
 }
 
 void LensHaloHernquist::make_tables(){
@@ -988,15 +989,16 @@ LensHaloJaffe::LensHaloJaffe(InputParams& params)
 	gmax = InterpolateFromTable(gtable,xmax);
     
     set_slope(1);
-    std::cout << "Jaffe constructor: " << get_slope() << std::endl;
     
-    calcModes(fratio, get_slope(), pa, mod);
-    for(int i=1;i<Nmod;i++){
-        //std::cout << mod[i] << std::endl;
-        if(mod[i]!=0){set_flag_elliptical(true);};
+    /// If the axis ratio given in the parameter file is set to 1 all ellipticizing routines are skipped.
+    if(fratio!=1){
+        std::cout << "Jaffe constructor: slope set to " << get_slope() << std::endl;
+        calcModes(fratio, get_slope(), pa, mod);
+        for(int i=1;i<Nmod;i++){
+            if(mod[i]!=0){set_flag_elliptical(true);};
+        }
+        //std::cout << "if mods!=0 this must be 1: " << get_flag_elliptical() << std::endl;
     }
-    std::cout << "if mods!=0 this must be 1: " << get_flag_elliptical() << std::endl;
-    
 }
 
 void LensHaloJaffe::make_tables(){

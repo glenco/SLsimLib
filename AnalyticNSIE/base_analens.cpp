@@ -395,14 +395,13 @@ void LensHalo::faxial(PosType theta,PosType f[]){
     }
 }
 
-/// Derivatives of the potential damping factor with respect to r
+/// Derivatives of the potential damping factor with respect to r ... TODO: come up with a better damping faction
 void LensHalo::gradial(PosType r,PosType g[]){
-  double r_eps=0.5*Rmax; // TODO: r_eps = Rmax for now, but must be thought about later
+  double r_eps=0.5*Rmax;
   PosType x = (1+r/r_eps);
   g[0] = 1.0/x/x;
   g[1] = -2.0*g[0]/x/r_eps;
   g[2] = -3.0*g[1]/x/r_eps;
-  //cout << "ginside: rmax " << Rmax  << " "<< g[0] << " " << g[1] << " " << g[2] << endl;
 }
 
 
@@ -412,7 +411,7 @@ double LensHalo::fourier_coeff(double n, double q, double beta){
     return Utilities::nintegrate<fourier_func>(f,0.0,2*pi,1.0e-6);
 }
 
-/// Calculates potential (phi_int) from alpha_h
+/// Calculates potential (phi_int) from alpha_h. If flag is_alphah_a_table is True it takes and integrates directly the gfunction instead of alpha_h. The gfunction is used for the InterpolationTable used in alpha_h. Setting the flag to False speeds up the calculation of phi_h.
 PosType LensHalo::alpha_int(PosType x, bool is_alphah_a_table){
     if(is_alphah_a_table==true){
         struct Ig_func g(*this);
@@ -458,10 +457,9 @@ void LensHalo::setModesToEllip(PosType q,PosType rottheta, PosType mod[]){
     return;
 }
 
-/// Calculates the modes for fourier expansion of power law halo
+/// Calculates the modes for fourier expansion of power law halo. All the modes are relative to the zero mode to conserve mass throughout the calculation of kappa etc.
 void LensHalo::calcModes(double q, double beta, double rottheta, PosType mod[]){
     int i,k;
-    //assert(Nmod == 32);
     for(int i=1;i<Nmod;++i){
 		mod[i]=0;
 	}
@@ -484,6 +482,7 @@ void LensHalo::calcModes(double q, double beta, double rottheta, PosType mod[]){
 	RotateModel(rottheta,mod,Nmod,0);
 }
 
+/// In alpha_asym phi_int(x) is used, which calculates the potential unlike phi_h from alpha_h.
 
 void LensHalo::alpha_asym(PosType x,PosType theta, PosType alpha[]){
 	PosType F,f[3],g[3],alpha_r,alpha_theta;
@@ -506,6 +505,8 @@ void LensHalo::alpha_asym(PosType x,PosType theta, PosType alpha[]){
 	return;
 }
 
+/// In kappa phi_int(x) is used, which calculates the potential unlike phi_h from alpha_h.
+
 PosType LensHalo::kappa_asym(PosType x,PosType theta){
 	PosType F, f[3],g[3], kappa;
     PosType phi=phi_int(x);
@@ -520,6 +521,7 @@ PosType LensHalo::kappa_asym(PosType x,PosType theta){
 	return kappa;
 }
 
+/// In gamma_asym phi_int(x) is used, which calculates the potential unlike phi_h from alpha_h.
 
 void LensHalo::gamma_asym(PosType x,PosType theta, PosType gamma[]){
 	PosType F, f[3],g[3];
