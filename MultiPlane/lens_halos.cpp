@@ -118,10 +118,10 @@ LensHaloNFW::LensHaloNFW(InputParams& params)
 	make_tables();
 	gmax = InterpolateFromTable(gtable, xmax);
     
-    set_slope(1);
+    set_slope(1); // slope->0. everything get more circular
     std::cout << "NFW constructor: " << get_slope() << std::endl;
 
-    calcModes(fratio, 2.0-get_slope(), pa+pi/2, mod);
+    calcModes(fratio, get_slope(), pa, mod); // to ellipticize potential instead of  kappa take calcModes(fratio, 2-get_slope(), pa, mod);
     for(int i=1;i<Nmod;i++){
         //std::cout << mod[i] << std::endl;
         if(mod[i]!=0){set_flag_elliptical(true);};
@@ -308,7 +308,7 @@ LensHaloPowerLaw::LensHaloPowerLaw() : LensHalo(){
 LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
 	assignParams(params);
     //setModesToEllip(fratio, pa, mod);
-    calcModes(fratio, 2.0-beta, pa, mod);
+    calcModes(fratio, beta, pa, mod);
     for(int i=1;i<Nmod;i++){
         //std::cout << mod[i] << std::endl;
         if(mod[i]!=0){set_flag_elliptical(true);};
@@ -329,7 +329,7 @@ void LensHaloPowerLaw::assignParams(InputParams& params){
 	if(!params.get("main_Rmax",Rmax)) error_message1("main_Rmax",params.filename());
 	if(!params.get("main_zlens",zlens)) error_message1("main_zlens",params.filename());
 	if(!params.get("main_slope",beta)) error_message1("main_slope, example -1",params.filename());
-    if(beta>=2.0) error_message1("main_slope < 2",params.filename());
+    //if(beta>=2.0) error_message1("main_slope < 2",params.filename());
     if(!params.get("main_axis_ratio",fratio)){fratio=1; std::cout << "main_axis_ratio not defined in file " << params.filename() << ", hence set to 1." << std::endl;};
     if(!params.get("main_pos_angle",pa)){pa=0; std::cout << "main_pos_angle not defined in file " << params.filename() << ", hence set to 0." << std::endl;};
 
@@ -534,7 +534,7 @@ void LensHalo::force_halo_asym(
         
         double prefac = mass/rcm2/pi; //mass/rscale/rscale/pi;
 
-		//double xmax = Rmax/rscale;
+		// double xmax = Rmax/rscale;
 		//double tmp = (alpha_h(x,xmax) + 1.0*subtract_point)*prefac;
         PosType alpha_tmp[2];
         
@@ -548,8 +548,8 @@ void LensHalo::force_halo_asym(
 			*kappa += kappa_asym(x,theta)*prefac;
         
 			//	dfunc << x << " " << theta << " " << kappa_asym(x,theta) << " " << xcm[0] << " " << xcm[1] << std::endl;
-			//}
-            //std::cout << x << std::endl;
+        
+            //std::cout << x << " " << rscale << " " << xmax << std::endl;
             PosType gamma_tmp[2];
             gamma_asym(x,theta,gamma_tmp);
 			tmp = (2.0*subtract_point)*prefac/rcm2;
@@ -557,6 +557,7 @@ void LensHalo::force_halo_asym(
             //std::cout << prefac << std::endl;
             gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp+gamma_tmp[0]*prefac/rcm2;
             gamma[1] += xcm[0]*xcm[1]*tmp+gamma_tmp[1]*prefac/rcm2;
+            
 			//gamma[1] += xcm[0]*xcm[1]*(tmp+gamma_tmp[0]*prefac/rcm2);
             
 
@@ -885,7 +886,7 @@ LensHaloHernquist::LensHaloHernquist(InputParams& params)
     set_slope(1);
     std::cout << "Hernquist constructor: " << get_slope() << std::endl;
     
-    calcModes(fratio, 2.0-get_slope(), pa, mod);
+    calcModes(fratio, get_slope(), pa, mod); // to ellipticize potential instead of kappa use (fratio, get_slope()-2, pa, mod)
     for(int i=1;i<Nmod;i++){
         //std::cout << mod[i] << std::endl;
         if(mod[i]!=0){set_flag_elliptical(true);};
@@ -962,7 +963,7 @@ LensHaloHernquist::~LensHaloHernquist(){
 	}
 }
 
-const long LensHaloJaffe::NTABLE = 10000;
+const long LensHaloJaffe::NTABLE = 100000;
 const PosType LensHaloJaffe::maxrm = 100.0;
 int LensHaloJaffe::count = 0;
 
@@ -989,7 +990,7 @@ LensHaloJaffe::LensHaloJaffe(InputParams& params)
     set_slope(1);
     std::cout << "Jaffe constructor: " << get_slope() << std::endl;
     
-    calcModes(fratio, 2-get_slope(), pa, mod);
+    calcModes(fratio, get_slope(), pa, mod);
     for(int i=1;i<Nmod;i++){
         //std::cout << mod[i] << std::endl;
         if(mod[i]!=0){set_flag_elliptical(true);};

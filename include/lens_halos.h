@@ -238,7 +238,7 @@ protected:
     };
 
 
-  const static int Nmod = 64;
+  const static int Nmod = 32;
   
   PosType mod[Nmod];
   PosType r_eps;
@@ -327,11 +327,11 @@ protected:
 		//ERROR_MESSAGE();
 		//std::cout << "time delay has not been fixed for NFW profile yet." << std::endl;
 		//exit(1);
-		return -0.25*InterpolateFromTable(htable,x)/gmax/pi; // -0.5*x*
+		return -0.25*InterpolateFromTable(htable,x)/gmax; // -0.5*x*
 	}
     inline KappaType phi_int(PosType x){
         //return -1.0*alpha_int(x,true)/gmax/pi;
-        return alpha_int(x,false)/pi;
+        return alpha_int(x,false);
     }
     
 private:
@@ -404,7 +404,7 @@ private:
 		return 0.0;
 	}
     inline KappaType phi_int(PosType x){
-		return alpha_int(x,false)/pi;
+		return alpha_int(x,false);
     }
 };
 
@@ -455,12 +455,13 @@ private:
         //std::cout << x << " " << beta << "  " << -1.0*pow(x/xmax,beta+2) << std::endl;
 		return -1.0*pow(x/xmax,-beta+2);
 	}
+    /// this is not kappa to be overridden and there is an extra factor of M/pi/x^2 in force_halo
 	inline KappaType kappa_h(PosType x){
 		if(x==0) x=1e-6*xmax;
 		//assert(0.5*(beta+2)*pow(x/xmax,beta)*x*x/(xmax*xmax) != 0);
         //std::cout << x << " " << beta << "  " << -1.0*pow(x/xmax,beta+2) << std::endl;
         
-		return 0.5*(-beta+2)*pow(x/xmax,-beta)*x*x/(xmax*xmax);
+		return 0.5*(-beta+2)*pow(x/xmax,-beta)*x*x; //(xmax*xmax); 
 	}
 	inline KappaType gamma_h(PosType x){
 		if(x==0) x=1e-6*xmax;
@@ -472,11 +473,11 @@ private:
 		//ERROR_MESSAGE();
 		//std::cout << "time delay has not been fixed for PowerLaw profile yet." << std::endl;
 		if(x==0) x=1e-6*xmax;
-		//assert( -1.0*pow(x/xmax,beta+2)/(beta+2) !=0.0);
-        return -1.0*pow(x/xmax,-beta+2)/(-beta+2);
+		return -1.0*pow(x/xmax,-beta+2)/(-beta+2);
 	}
     inline KappaType phi_int(PosType x){
-		return alpha_int(x,false);
+		//return alpha_int(x,false);
+        return -1.0*pow(x/xmax,-beta+2)/(-beta+2)*2/pi;
     }
 };
 
@@ -609,7 +610,7 @@ protected:
 		return -0.25*x*x*InterpolateFromTable(g2table,x)/gmax;
 	}
 	inline KappaType phi_h(PosType x){
-		return -0.25*InterpolateFromTable(htable,x)/gmax/pi;
+		return -0.25*InterpolateFromTable(htable,x)/gmax;
 		//return -1.0*InterpolateFromTable(htable,x)/gmax;
 	}
     inline KappaType phi_int(PosType x){
@@ -686,8 +687,9 @@ protected:
 	}
 	inline KappaType phi_h(PosType x){
 		ERROR_MESSAGE();
-		std::cout << "not yet defined" << std::endl;
-		exit(1);
+		std::cout << "analytic expression not yet defined take numerical" << std::endl;
+        return alpha_int(x,false);
+		//exit(1);
 		//return -1.0*InterpolateFromTable(htable,x)/gmax;
 	}
     inline KappaType phi_int(PosType x){

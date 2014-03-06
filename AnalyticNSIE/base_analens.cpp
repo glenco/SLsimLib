@@ -397,7 +397,7 @@ void LensHalo::faxial(PosType theta,PosType f[]){
 
 /// Derivatives of the potential damping factor with respect to r
 void LensHalo::gradial(PosType r,PosType g[]){
-  double r_eps=0.1*Rmax; // TODO: r_eps = Rmax for now, but must be thought about later
+  double r_eps=0.5*Rmax; // TODO: r_eps = Rmax for now, but must be thought about later
   PosType x = (1+r/r_eps);
   g[0] = 1.0/x/x;
   g[1] = -2.0*g[0]/x/r_eps;
@@ -492,20 +492,19 @@ void LensHalo::alpha_asym(PosType x,PosType theta, PosType alpha[]){
     faxial(theta,f);
     F=f[0]-1;
     gradial(x,g);
-	
+    beta=get_slope();
+    double fac=pi/(beta*beta/(2-beta)/(2-beta));
+    
     //alpha_r=alpha_h(x)*f[0]; // w/o damping
-    //alpha_theta=f[1]*phi/x; //  w/0 damping
+    //alpha_theta=f[1]*phi/x; //  w/o damping
     
-    //std::cout << phi_h(x) << " " << phi_int(x) << " " << phi_h(x) / phi_int(x) << std::endl;
-    
-    alpha_r=alpha_h(x)*(1+F*g[0])+phi*F*g[1]; // with damping
-    alpha_theta=f[1]*g[0]*phi/x; //  with damping
+    alpha_r=alpha_h(x)*(1+F*g[0])+phi*fac*F*g[1]; // with damping
+    alpha_theta=f[1]*g[0]*phi*fac/x; //  with damping
 
 	alpha[0] = (alpha_r*cos(theta) - alpha_theta*sin(theta))/cos(theta);
 	alpha[1] = (alpha_r*sin(theta) + alpha_theta*cos(theta))/sin(theta);
 	return;
 }
-
 
 PosType LensHalo::kappa_asym(PosType x,PosType theta){
 	PosType F, f[3],g[3], kappa;
@@ -514,30 +513,32 @@ PosType LensHalo::kappa_asym(PosType x,PosType theta){
     faxial(theta,f);
     F=f[0]-1;
     gradial(x,g);
-    kappa=f[0]*kappa_h(x)-0.5*f[2]*phi; // w/o damping
-    //kappa=(1+F*g[0])*kappa_h(x)-0.5*phi*(F*g[1]/x+F*g[2]+f[2]*g[0]/x/x)*x*x-F*g[1]*alpha_h(x)*x*x; // with damping
-    
-    
+    beta=get_slope();
+    double fac=pi/2./(beta*beta/(2-beta)/(2-beta));
+    //kappa=f[0]*kappa_h(x)-0.5*f[2]*phi*fac;//  w/o damping
+    kappa=(1+F*g[0])*kappa_h(x)-0.5*phi*fac*(F*g[1]/x+F*g[2]+f[2]*g[0]/x/x)*x*x-F*g[1]*alpha_h(x)*x*x; /// with damping
 	return kappa;
 }
 
 
 void LensHalo::gamma_asym(PosType x,PosType theta, PosType gamma[]){
 	PosType F, f[3],g[3];
-    PosType phi=phi_int(x);
+    PosType phi2=phi_int(x);
+    PosType phi=phi_h(x);
 
     faxial(theta,f);
     F=f[0]-1;
     gradial(x,g);
-
-    //double gt = f[0]*gamma_h(x)+0.5*phi*f[2];// w/o damping
-    //double g45 = (-alpha_h(x)*f[1]*g[0])*x+(phi*f[1]);// w/o damping
+    beta=get_slope();
+    double fac=pi/2./(beta*beta/(2-beta)/(2-beta));
+    //double gt = f[0]*gamma_h(x)+0.5*phi*fac*f[2];// w/o damping
+    //double g45 = (-alpha_h(x)*f[1]*g[0])*x+(phi*fac*f[1]);// w/o damping
     
-    PosType gt = (1+F*g[0])*gamma_h(x)+0.5*phi*(-F*g[1]/x+F*g[2]-f[2]*g[0]/x/x)*x*x-F*g[1]*alpha_h(x)*x*x;// with damping
-    PosType g45 = (-alpha_h(x)*f[1]*g[0]-phi*f[1]*g[1])*x+(phi*f[1]*g[0]);// with damping
+    PosType gt = (1+F*g[0])*gamma_h(x)+0.5*phi*fac*(-F*g[1]/x+F*g[2]-f[2]*g[0]/x/x)*x*x-F*g[1]*alpha_h(x)*x*x;// with damping
+    PosType g45 = (-alpha_h(x)*f[1]*g[0]-phi*fac*f[1]*g[1])*x+(phi*fac*f[1]*g[0]);// with damping
     
-    gt *= 0.5*pow(x,2);
-    g45 *= 0.5*pow(x,2);
+    gt *= 0.5*pow(x/xmax,2);
+    g45 *= 0.5*pow(x/xmax,2);
     
 	gamma[0] = cos(2*theta)*gt-sin(2*theta)*g45;
     gamma[1] = sin(2*theta)*gt+cos(2*theta)*g45;
