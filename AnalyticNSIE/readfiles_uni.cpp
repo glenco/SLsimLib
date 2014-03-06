@@ -75,27 +75,43 @@ void LensHaloUniform::force_halo(
 		PosType *alpha     /// mass/Mpc
 		,KappaType *kappa
 		,KappaType *gamma
+        ,KappaType *phi      // PHI BY Fabien
 		,PosType *xcm
 		,bool no_kappa
 		,bool subtract_point /// if true contribution from a point mass is subtracted
 		)
 {
     PosType alpha_tmp[2];
-     KappaType gamma_tmp[3], dt = 0;
+    // PHI BY Fabien : dt is confusing
+    // and we can replace it by phi_tmp !
+    // KappaType gamma_tmp[3], dt = 0;
+    KappaType gamma_tmp[3], phi_tmp;
 
-     gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
-     alpha_tmp[0] = alpha_tmp[1] = 0.0;
-
+    gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
+    alpha_tmp[0] = alpha_tmp[1] = 0.0;
+    phi_tmp = 0.0;
   
-    *kappa += lens_expand(perturb_modes,xcm,alpha,gamma,&dt);
-
+    // *kappa += lens_expand(perturb_modes,xcm,alpha,gamma,&dt);
+    *kappa += lens_expand(perturb_modes,xcm,alpha,gamma,&phi_tmp);
+    
+    // PHI BY Fabien
+    *phi += phi_tmp ;
+    
     // add stars for microlensing
-    if(stars_N > 0 && stars_implanted){
+    if(stars_N > 0 && stars_implanted)
+    {
       force_stars(alpha,kappa,gamma,xcm,no_kappa);
     }
+    
 }
 
-PosType LensHaloUniform::lens_expand(PosType *mod,PosType *x,PosType *alpha,KappaType *gamma,KappaType *phi){
+PosType LensHaloUniform::lens_expand(PosType *mod
+                                     ,PosType *x
+                                     ,PosType *alpha
+                                     ,KappaType *gamma
+                                     ,KappaType *phi
+                                     )
+{
   PosType theta,r,cosx,sinx,cos2theta,sin2theta;
 
    // add shear
@@ -111,9 +127,13 @@ PosType LensHaloUniform::lens_expand(PosType *mod,PosType *x,PosType *alpha,Kapp
   gamma[1] += mod[2];
  
   r=sqrt(x[0]*x[0] + x[1]*x[1]);
-  if(r == 0.0){
+
+  if(r == 0.0)
+  {
     *phi = 0.0;
-  }else{
+  }
+  else
+  {
     theta=atan2(x[1],x[0]);
     cosx=x[0]/r;
     sinx=x[1]/r;

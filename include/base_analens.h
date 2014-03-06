@@ -104,7 +104,9 @@ public:
   void PrintLens(bool show_substruct,bool show_stars);
   void error_message1(std::string name,std::string filename);
 
-  virtual void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xcm,bool no_kappa,bool subtract_point=false);
+  // PHI BY Fabien
+  virtual void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType *xcm,bool no_kappa,bool subtract_point=false);
+  // virtual void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xcm,bool no_kappa,bool subtract_point=false);
 
   // in randoimize_lens.c
   PosType averageSubMass();
@@ -190,6 +192,8 @@ void alphaPowLaw(PosType *alpha,PosType *x,PosType R,PosType mass,PosType beta,P
 KappaType kappaPowLaw(PosType *x,PosType R,PosType mass,PosType beta,PosType *center,PosType Sigma_crit);
 void gammaPowLaw(KappaType *gamma,PosType *x,PosType R,PosType mass,PosType beta,PosType *center,PosType Sigma_crit);
 KappaType phiPowLaw(PosType *x,PosType R,PosType mass,PosType beta,PosType *center,PosType Sigma_crit);
+
+
 
 // in nfw_lens.c
 void alphaNFW(PosType *alpha,PosType *x,PosType Rtrunc,PosType mass,PosType r_scale

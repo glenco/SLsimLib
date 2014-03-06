@@ -67,3 +67,4 @@ KappaType phiPowLaw(PosType *x,PosType R,PosType mass,PosType beta
 	if(r<=R) return b*pow(r/R,beta+2);
 	return b*(log(r/R) + 1);
 }
+
