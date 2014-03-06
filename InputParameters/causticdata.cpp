@@ -178,14 +178,16 @@ void CausticData::printfile(std::string filename,std::string paramfile,double fi
 
 
   for(size_t i = 0; i < data.size(); ++i){
-    catalog_caustic << data[i].redshift
-    << " " << data[i].crit_center[0] << " " << data[i].crit_center[1]
-    << " " << data[i].crit_radius[0] << " " << data[i].crit_radius[2] << " " << data[i].crit_radius[1]
-    << " " << data[i].crit_area
-    << " " << data[i].caustic_center[0] << " " << data[i].caustic_center[1]
-    << " " << data[i].caustic_radius[0] << " " << data[i].caustic_radius[2] << " " << data[i].caustic_radius[1]
-    << " " << data[i].caustic_area
-    << std::endl;
+    if(data[i].crit_radius[0] != 0){
+      catalog_caustic << data[i].redshift
+      << " " << data[i].crit_center[0] << " " << data[i].crit_center[1]
+      << " " << data[i].crit_radius[0] << " " << data[i].crit_radius[2] << " " << data[i].crit_radius[1]
+      << " " << data[i].crit_area
+      << " " << data[i].caustic_center[0] << " " << data[i].caustic_center[1]
+      << " " << data[i].caustic_radius[0] << " " << data[i].caustic_radius[2] << " " << data[i].caustic_radius[1]
+      << " " << data[i].caustic_area
+      << std::endl;
+    }
   }
 }
 

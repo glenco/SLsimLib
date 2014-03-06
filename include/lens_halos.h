@@ -12,7 +12,6 @@
 #include "InputParams.h"
 #include "source.h"
 #include "point.h"
-//#include "quadTree.h"
 
 class TreeQuad;
 

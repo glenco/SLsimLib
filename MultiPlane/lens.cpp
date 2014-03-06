@@ -1061,7 +1061,7 @@ void Lens::createFieldHalos(bool verbose)
 
 			field_halos[j]->setZlens(halo_zs_vec[i]);
 			if(flag_field_gal_on){
-                field_galaxy_mass_fraction = 2*mo*pow(mass/M1,gam1)
+                field_galaxy_mass_fraction = mo*pow(mass/M1,gam1)
                 /pow(1+pow(mass/M1,be),(gam1-gam2)/be)/mass;
                 if(field_galaxy_mass_fraction > 1.0) field_galaxy_mass_fraction = 1;
 
