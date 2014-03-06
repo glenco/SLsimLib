@@ -52,7 +52,6 @@ struct Point{
   // redundant information in image and source points
   KappaType kappa;           // surface density
   KappaType gamma[3];        // shear, third component is the rotation quantity that is only non-zero for multi-plane lensing
-  KappaType phi;             // PHI BY Fabien
   KappaType dt;              // time delay
   KappaType invmag;          // inverse of magnification
     

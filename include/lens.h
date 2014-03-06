@@ -95,6 +95,7 @@ public:
 
 	/// print the main parameters of the lens
 	void printMultiLens();
+
   
   /// Redshift of first main lens plane
 	PosType getZlens(){

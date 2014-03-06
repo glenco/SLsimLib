@@ -59,7 +59,7 @@ namespace
 		{"main_slope", "1", "main halo slope"},
 		{"main_sigma", "250", "velocity dispersion in km/s"},
 		{"main_core", "1.0E-5", "core radius in Mpc"},
-		{"main_axis_ratio", "0.8", "axis ratio for elliptical models, < 1"},
+		{"main_axis_ratio", "1.0", "axis ratio for elliptical models, < 1"},
 		{"main_pos_angle", "0", "inclination angle in degrees"},
 		{"main_rscale", "", ""},
 		

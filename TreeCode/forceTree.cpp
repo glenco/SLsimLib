@@ -179,7 +179,13 @@ float * TreeForce::CalculateSPHsmoothing(int N){
  *       4*pi*G*mass_scale to get the deflection angle caused by the plane lens.
  * */
 
-void TreeForce::force2D(PosType *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa){
+void TreeForce::force2D(PosType const *ray
+                        ,PosType *alpha
+                        ,KappaType *kappa
+                        ,KappaType *gamma
+                        ,KappaType *phi
+                        ,bool no_kappa)
+{
 
   PosType xcm[2],rcm2,tmp;
   int OpenBox(TreeNBHndl tree,PosType r);
@@ -246,7 +252,7 @@ void TreeForce::force2D(PosType *ray,PosType *alpha,KappaType *kappa,KappaType *
 				  }
 
 				  if(haloON){
-					  halos[index].force_halo(alpha,kappa,gamma,xcm,no_kappa,true);
+					  halos[index].force_halo(alpha,kappa,gamma,phi,xcm,no_kappa,true); // PHI BY Fabien
 				  }else{  // case of no halos just particles and no class derived from TreeQuad
 
 					  arg1 = rcm2/(rsph[index*MultiRadius]*rsph[index*MultiRadius]);

@@ -13,25 +13,33 @@ void LensHaloBaseNSIE::force_halo(
 		PosType *alpha       /// mass/Mpc
 		,KappaType *kappa   /// surface mass density
 		,KappaType *gamma
+        ,KappaType *phi     // PHI BY Fabien
 		,PosType *xcm
 		,bool no_kappa
 		,bool subtract_point /// if true contribution from a point mass is subtracted
-		){
+		)
+{
      long j;
      PosType alpha_tmp[2];
      KappaType kappa_tmp = 0.0, gamma_tmp[3], dt = 0;
-
+     KappaType phi_tmp = 0.0 ; // PHI BY Fabien
+            
+            
      gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
      alpha_tmp[0] = alpha_tmp[1] = 0.0;
 
      alpha[0] = alpha[1] = 0.0;
      gamma[0] = gamma[1] = gamma[2] = 0.0;
      *kappa = 0.0;
+     // PHI BY Fabien
+     *phi = 0.0 ;
 
+            
 	 PosType xt[2]={0,0};
-	 float units = pow(sigma/lightspeed,2)/Grav;///sqrt(fratio); // mass/distance(physical)
+	 float units = pow(sigma/lightspeed,2)/Grav; ///sqrt(fratio); // mass/distance(physical)
 	 xt[0]=xcm[0];
 	 xt[1]=xcm[1];
+    
      alphaNSIE(alpha,xt,fratio,rcore,pa);
 	 alpha[0] *= units;
 	 alpha[1] *= units;
@@ -42,14 +50,22 @@ void LensHaloBaseNSIE::force_halo(
     	*kappa *= units;
     	gamma[0] *= units;
     	gamma[1] *= units;
-		  gamma[2] *= units;
+
+        gamma[2] *= units;
+         
+        // PHI BY Fabien
+        // *phi = phiNSIE(xcm,fratio,rcore,pa);
+        // *phi *= units ; // Fabien : is this necessary for the potential ?
 	 }
 
-  // perturbations of host lens
-     if(perturb_Nmodes > 0){
+     // perturbations of host lens
+     if(perturb_Nmodes > 0)
+     {
     	 *kappa += lens_expand(perturb_beta,perturb_modes
     			 ,perturb_Nmodes,xcm,alpha_tmp,gamma_tmp,&dt);
 
+        // PHI BY Fabien : should I put the computation of the potential somewhere here ?
+         
     	 alpha[0] += alpha_tmp[0];
     	 alpha[1] += alpha_tmp[1];
 
@@ -62,18 +78,25 @@ void LensHaloBaseNSIE::force_halo(
      }
 
      // add substructure
-     if(substruct_implanted){
-    	 for(j=0;j<sub_N;++j){
-
-    		 subs[j].force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,xcm,no_kappa);
+     if(substruct_implanted)
+     {
+    	 for(j=0;j<sub_N;++j)
+         {
+             
+             // PHI BY Fabien
+    		 subs[j].force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp,xcm,no_kappa);
+             // subs[j].force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,xcm,no_kappa);
 
     		 alpha[0] += alpha_tmp[0];
     		 alpha[1] += alpha_tmp[1];
 
-    		 if(!no_kappa){
+    		 if(!no_kappa)
+             {
     			 *kappa += kappa_tmp;
     			 gamma[0] += gamma_tmp[0];
     			 gamma[1] += gamma_tmp[1];
+                 
+                 // PHY BY Fabien : add something for potential here ?
     		 }
     	 }
 
@@ -87,6 +110,8 @@ void LensHaloBaseNSIE::force_halo(
      }
      return ;
 }
+
+
 /**
  * \brief Reads in a parameter file and sets up an analytic lens.
  *
@@ -348,94 +373,256 @@ LensHaloBaseNSIE::~LensHaloBaseNSIE(){
  ******************************************************/
 
 
-/// TODO: This needs to be thought about more. sets axial modes to reproduce a near elliptically shaped surface density
-void LensHalo::setModesToEllip(PosType q,PosType theta){
-  // elliptical integrals
-	PosType K = rfD(0,1./q/q,1);
-	PosType E = K - (1-1./q/q)*rdD(0,1./q/q,1)/3;
-  assert(Nmod == 18);
-  
-  // set modo to elliptical model
-	for(int i=1;i<=Nmod;++i){
-		mod[i]=0;
-	}
-	// fill in modes with their values for an elliptical lens
-	if(q != 1.0){
-    mod[3]=4*K/pi;
-		mod[4] = 4*( (1+q*q)*K-2*q*q*E )/(1-q*q)/pi/mod[3];
-		mod[8] = 4*( (3*q*q+1)*(q*q+3)*K-8*q*q*(1+q*q)*E )
-      /( 3*pi*pow(1-q*q,2) )/mod[3];
-		mod[12] = 4*( (1+q*q)*(15+98*q*q+15*q*q*q*q)*K-2*q*q*(23+82*q*q+23*q*q*q*q)*E )
-      /( 15*pi*pow(1-q*q,3) )/mod[3];
-		mod[16]= 4*( -32*q*q*(1+q*q)*(11+74*q*q+11*q*q*q*q)*E
-                           +(105+1436*q*q+3062*q*q*q*q+1436*pow(q,6)+105*pow(q,8))*K )
-      /(105*pi*pow(1-q*q,4))/mod[3];
-	}
-  mod[3]=1.0;
-  
-	// rotate model
-	RotateModel(theta,mod,Nmod,0);
-  
-  return;
-}
+/** \brief This function returns the lensing quantities for an asymmetric version of the symmetric baseclass halo.
+ *
+ *  This function should only be used by the second generation of classes derived from LensHalo.
+ *
+ *  The math needs to be PosType checked and the sign convention checked.
+ *  The method used to make the lenses asymmetric is laid out in http://metcalf1.bo.astro.it/~bmetcalf/ExtraNotes/notes_elliptical.pdf
+ */
 
-/// Derivatives of the axial potential factor with respect to theta
+/// Derivatives of the potential factor with respect to theta
 void LensHalo::faxial(PosType theta,PosType f[]){
-  int i,k;
-  
-  //f[0] = 0.5*mod[3];
-  f[0] = f[1] = f[2] = 0;
-  for(i=4;i<Nmod;i+=2){
-    k=i/2;
-    f[0] +=  mod[i]*cos(k*theta)     + mod[i+1]*sin(k*theta);
-    f[1] += -mod[i]*k*sin(k*theta)   + mod[i+1]*k*cos(k*theta);
-    f[2] += -mod[i]*k*k*cos(k*theta) - mod[i+1]*k*k*sin(k*theta);
-  }
-
+    int i,k;
+    //std::cout<< mod[4] << std::endl;
+    f[0] = mod[0]; // why is it commented out?
+    f[1] = f[2] = 0;
+    for(i=4;i<Nmod;i+=2){
+        k=i/2;
+        f[0] +=  mod[i]*cos(k*theta)   + mod[i+1]*sin(k*theta);
+        f[1] += -mod[i]*k*sin(k*theta) + mod[i+1]*k*cos(k*theta);
+        f[2] += -mod[i]*k*k*cos(k*theta) - mod[i+1]*k*k*sin(k*theta);
+    }
 }
 
-/// Derivatives of the axial potential factor with respect to theta
+/// Derivatives of the potential damping factor with respect to r ... TODO: come up with a better damping faction
 void LensHalo::gradial(PosType r,PosType g[]){
+  double r_eps=0.5*Rmax;
   PosType x = (1+r/r_eps);
-  
   g[0] = 1.0/x/x;
   g[1] = -2.0*g[0]/x/r_eps;
   g[2] = -3.0*g[1]/x/r_eps;
 }
 
-/** \brief This function returns the lensing quantities for an asymmetric version of the symmetric baseclass halo.
- *  
- *  This function should only be used by the second generation of classes derived from LensHalo.
- *
- *  The math needs to be PosType checked and the sign convention checked.  
- *  The method used to make the lenses asymmetric is laid out in http://metcalf1.bo.astro.it/~bmetcalf/ExtraNotes/notes_elliptical.pdf
- */
-void LensHalo::desymmeterize(PosType r,PosType theta,PosType *alpha,PosType *kappa,PosType *gamma){
-  PosType f[3],g[3];
-  
-  PosType alpha_iso = alpha_h(r/rscale),phi_iso = phi_h(r/rscale)
-  ,kappa_iso = kappa_h(r/rscale),gamma_iso = gamma_h(r/rscale);
-  
-  PosType alpha_r,alpha_theta,F;
 
-  faxial(theta,f);
-  gradial(r,g);
-  
-  F = (1+g[0]*f[0]);
-  
-  alpha_r = (F + g[1]*f[0])*alpha_iso;
-  alpha_theta = g[0]*f[1]*phi_iso/r;
-  
-  alpha[0] = alpha_r*cos(theta) - alpha_theta*sin(theta);
-  alpha[1] = alpha_r*sin(theta) + alpha_theta*cos(theta);
-  
-  *kappa = F*kappa_iso + ( (g[2] + g[1]/r)*f[0] + g[0]*f[2]/r/r )*phi_iso;
-  
-  PosType gt = F*gamma_iso + g[1]*f[0]*alpha_iso + 0.5*( g[2]*f[0] - g[0]*f[2]/r/r)*phi_iso;
-  PosType g45 = f[1]*(alpha_iso*g[0]/r + (g[1]-g[0]/r/r)*phi_iso);
-  
-  gamma[0] = cos(2*theta)*gt + sin(2*theta)*g45;
-  gamma[1] = -sin(2*theta)*gt + cos(2*theta)*g45;
-  
+/// Calculates fourier-coefficients for power law halo
+double LensHalo::fourier_coeff(double n, double q, double beta){
+    struct fourier_func f(n,q,beta);
+    return Utilities::nintegrate<fourier_func>(f,0.0,2*pi,1.0e-6);
 }
+
+/// Calculates potential (phi_int) from alpha_h. If flag is_alphah_a_table is True it takes and integrates directly the gfunction instead of alpha_h. The gfunction is used for the InterpolationTable used in alpha_h. Setting the flag to False speeds up the calculation of phi_h.
+PosType LensHalo::alpha_int(PosType x, bool is_alphah_a_table){
+    if(is_alphah_a_table==true){
+        struct Ig_func g(*this);
+        return Utilities::nintegrate<Ig_func>(g,1E-8,x,1.0e-8);
+    };
+    if(is_alphah_a_table==false){
+        struct Ialpha_func a(*this);
+        return Utilities::nintegrate<Ialpha_func>(a,1E-8,x,1.0e-6);
+    };
+    return 0.0;
+}
+
+
+void LensHalo::setModesToEllip(PosType q,PosType rottheta, PosType mod[]){
+    // elliptical integrals
+    
+    PosType K = rfD(0,1./q/q,1);
+    PosType E = K - (1-1./q/q)*rdD(0,1./q/q,1)/3;
+   // assert(Nmod == 64);
+    
+    
+    
+    // set modo to elliptical model
+    for(int i=1;i<=Nmod;++i){
+        mod[i]=0.0;
+    }
+    // fill in modes with their values for an elliptical lens
+    if(q != 1.0){
+        mod[3] = 4*K/pi; // /2?
+        mod[4] = 4*( (1+q*q)*K-2*q*q*E )/(1-q*q)/pi/(1-4); //mod[3];
+        mod[8] = 4*( (3*q*q+1)*(q*q+3)*K-8*q*q*(1+q*q)*E )/( 3*pi*pow(1-q*q,2) )/(1-16); // /mod[3];
+        mod[12]= 4*( (1+q*q)*(15+98*q*q+15*q*q*q*q)*K-2*q*q*(23+82*q*q+23*q*q*q*q)*E )/( 15*pi*pow(1-q*q,3) )/(1-36); ///mod[3];
+        mod[16]= 4*( -32*q*q*(1+q*q)*(11+74*q*q+11*q*q*q*q)*E+(105+1436*q*q+3062*q*q*q*q+1436*pow(q,6)+105*pow(q,8))*K )/(105*pi*pow(1-q*q,4))/(1-64); ///mod[3];
+    }
+    mod[3]=1.0;
+    
+    std::cout << "setModes for beta=1" << " " << mod[3] << " " << mod[4] << " " << mod[8] << " " << std::endl;
+
+    
+    // rotate model
+    RotateModel(rottheta,mod,Nmod,0);
+    
+    return;
+}
+
+/// Calculates the modes for fourier expansion of power law halo. All the modes are relative to the zero mode to conserve mass throughout the calculation of kappa etc.
+void LensHalo::calcModes(double q, double beta, double rottheta, PosType mod[]){
+    int i,k;
+    for(int i=1;i<Nmod;++i){
+		mod[i]=0;
+	}
+	// fill in modes with their values for an elliptical lens
+	if(q != 1.0){
+        mod[0] = fourier_coeff(0, q, beta)/pi/2.;
+        for(i=4;i<Nmod;i+=2){
+            k=i/2;
+            assert(i<=Nmod);
+            mod[i] = beta*beta*fourier_coeff(k, q, beta)/pi/(beta*beta-k*k)/mod[0];
+        }
+        mod[0]=1.0;
+    }
+	else{
+		cout << "circular case" << endl;
+		mod[0]=1.0;
+	}
+    // rotate model
+    std::cout << "calcModes for beta=" << beta << " " << mod[0] << " " << mod[4] << " " << mod[8] << " " << std::endl;
+	RotateModel(rottheta,mod,Nmod,0);
+}
+
+/// In alpha_asym phi_int(x) is used, which calculates the potential unlike phi_h from alpha_h.
+
+void LensHalo::alpha_asym(PosType x,PosType theta, PosType alpha[]){
+	PosType F,f[3],g[3],alpha_r,alpha_theta;
+    PosType phi=phi_int(x);
+
+    faxial(theta,f);
+    F=f[0]-1;
+    gradial(x,g);
+    beta=get_slope();
+    double fac=pi/(beta*beta/(2-beta)/(2-beta));
+    
+    //alpha_r=alpha_h(x)*f[0]; // w/o damping
+    //alpha_theta=f[1]*phi/x; //  w/o damping
+    
+    alpha_r=alpha_h(x)*(1+F*g[0])+phi*fac*F*g[1]; // with damping
+    alpha_theta=f[1]*g[0]*phi*fac/x; //  with damping
+
+	alpha[0] = (alpha_r*cos(theta) - alpha_theta*sin(theta))/cos(theta);
+	alpha[1] = (alpha_r*sin(theta) + alpha_theta*cos(theta))/sin(theta);
+	return;
+}
+
+/// In kappa phi_int(x) is used, which calculates the potential unlike phi_h from alpha_h.
+
+PosType LensHalo::kappa_asym(PosType x,PosType theta){
+	PosType F, f[3],g[3], kappa;
+    PosType phi=phi_int(x);
+    
+    faxial(theta,f);
+    F=f[0]-1;
+    gradial(x,g);
+    beta=get_slope();
+    double fac=pi/2./(beta*beta/(2-beta)/(2-beta));
+    //kappa=f[0]*kappa_h(x)-0.5*f[2]*phi*fac;//  w/o damping
+    kappa=(1+F*g[0])*kappa_h(x)-0.5*phi*fac*(F*g[1]/x+F*g[2]+f[2]*g[0]/x/x)*x*x-F*g[1]*alpha_h(x)*x*x; /// with damping
+	return kappa;
+}
+
+/// In gamma_asym phi_int(x) is used, which calculates the potential unlike phi_h from alpha_h.
+
+void LensHalo::gamma_asym(PosType x,PosType theta, PosType gamma[]){
+	PosType F, f[3],g[3];
+    PosType phi=phi_int(x);
+    
+    faxial(theta,f);
+    F=f[0]-1;
+    gradial(x,g);
+    beta=get_slope();
+    double fac=pi/2./(beta*beta/(2-beta)/(2-beta));
+    //double gt = f[0]*gamma_h(x)+0.5*phi*fac*f[2];// w/o damping
+    //double g45 = (-alpha_h(x)*f[1]*g[0])*x+(phi*fac*f[1]);// w/o damping
+    
+    PosType gt = (1+F*g[0])*gamma_h(x)+0.5*phi*fac*(-F*g[1]/x+F*g[2]-f[2]*g[0]/x/x)*x*x-F*g[1]*alpha_h(x)*x*x;// with damping
+    PosType g45 = (-alpha_h(x)*f[1]*g[0]-phi*fac*f[1]*g[1])*x+(phi*fac*f[1]*g[0]);// with damping
+    
+    gt *= 0.5*pow(x/xmax,2);
+    g45 *= 0.5*pow(x/xmax,2);
+    
+	gamma[0] = cos(2*theta)*gt-sin(2*theta)*g45;
+    gamma[1] = sin(2*theta)*gt+cos(2*theta)*g45;
+    
+	return;
+}
+
+
+/* makes beta=-2 Power Law Elliptical
+
+ 
+ // for Ansatz I
+ void LensHalo::felliptical(double x, double q, double theta, double f[], double g[]){ // q not a function of r
+ double A;
+ //reps=rmax
+ //q=r/reps+q0*(1-r/reps) // q=q0 for small radii, q=1 for large radii
+ A=1/q/q;
+ f[0]=pow((cos(theta)*cos(theta)+A*sin(theta)*sin(theta)),-0.5);
+ g[0]=1; //f[0]/x;
+ f[1]=-((A-1.)*cos(theta)*sin(theta))*pow(f[0],3);
+ f[2]=(A-1.)*(4*(A+1.)*cos(2.*theta)+(A-1)*(cos(4*theta)-5.))/(pow(2,0.5)*pow(1.+A-(A-1.)*cos(2*theta),2.5));
+ g[1]=0.; //f[0]/x;
+ g[2]=0.;
+ }
+ 
+ void LensHalo::felliptical(double x, double q, double theta, double f[], double g[]){ // q not a function of r
+ double A;
+ //reps=rmax
+ //q=r/reps+q0*(1-r/reps) // q=q0 for small radii, q=1 for large radii
+ A=1/q/q;
+ f[0]=pow((cos(theta)*cos(theta)+A*sin(theta)*sin(theta)),-0.5);
+ g[0]=1; //f[0]/x;
+ f[1]=-((A-1.)*cos(theta)*sin(theta))*pow(f[0],3);
+ f[2]=(A-1.)*(4*(A+1.)*cos(2.*theta)+(A-1)*(cos(4*theta)-5.))/(pow(2,0.5)*pow(1.+A-(A-1.)*cos(2*theta),2.5));
+ g[1]=0.; //f[0]/x;
+ g[2]=0.;
+ }
+ 
+ double LensHalo::kappa_asym(double x,double theta){
+ double F, f[3],g[3], kappa;
+ 
+ felliptical(x,0.4,theta,f,g);
+ g[0]=1;
+ g[1]=g[2]=0;
+ 
+ F=f[0];
+ kappa=F*kappa_h(x)-0.5*f[2]/x/x*phi_h(x);
+ 
+ return kappa/x;
+ }
+ */
+
+/* ANSATZ II
+ // eq 34
+ void LensHalo::felliptical(double x, double q, double theta, double f[], double g[]){
+ double A[3];
+ //reps=rmax
+ //q=r/reps+q0*(1-r/reps) // q=q0 for small radii, q=1 for large radii
+ A[0]=1/q/q;
+ A[1]=0.;
+ A[2]=0.;
+ f[0]=x*pow((cos(theta)*cos(theta)+A[0]*sin(theta)*sin(theta)),0.5);
+ g[0]=f[0]/x;
+ f[1]=x*(A[0]-1)*(cos(theta)*sin(theta))/(g[0]);
+ f[2]=(x*(A[0]-1)*(pow(cos(theta),4)-A[0]*pow(sin(theta),4)))/(g[0]*g[0]*g[0]);
+ g[1]=g[0]; // (g[0]*g[0]+0.5*x*A[1]*sin(theta)*sin(theta))/g[0];
+ g[2]=0; //sin(theta)*sin(theta)*(A[1]*(4*g[0]*g[0]-x*A[1]*sin(theta)*sin(theta))+2*f[0]*g[0]*A[2] )/(4*g[0]*g[0]*g[0]);
+ //g[3]=cos(theta)*sin(theta)*(2*(A[0]*A[0]-1-(A[0]-1)*(A[0]-1)*cos(2*theta))+x*A[1]*(3+cos(2*theta)+2*A[0]*sin(theta)*sin(theta)))/(4*g[0]*g[0]*g[0]);
+ }
+ 
+ double LensHalo::kappa_asym(double x,double theta){
+ double f[3],g[3];
+ double G,Gr,Grr, Gt,Gtt, kappa;
+ felliptical(x,0.4,theta,f,g);
+ G = f[0];
+ Gt = f[1];
+ Gtt= f[2];
+ Gr=g[1];
+ Grr=g[2];
+ double phitwo=(2*kappa_h(G)/G/G - alpha_h(G)/G/G);
+ kappa=-0.5*alpha_h(G)/G*(Gr/x+Grr+Gtt/x/x)+0.5*phitwo*(Gr*Gr+Gt*Gt/x/x);
+ kappa/=G*G;
+ return kappa;
+ }
+ */
 
