@@ -131,7 +131,7 @@ public:
 	/// Prints star parameters; if show_stars is true, prints data for single stars
 	void PrintStars(bool show_stars) const;
  
-    PosType alpha_int(PosType x, bool is_alphah_a_table);
+    PosType alpha_int(PosType x);
     
     //friend struct Ig_func;
     
@@ -147,8 +147,6 @@ public:
         PosType operator ()(PosType x) {return halo.gfunction(x)/x ;}
     };
     
-    void setModesToEllip(PosType q,PosType rottheta, PosType mod[]);
-
 protected:
   
   IndexType *stars;
@@ -268,6 +266,7 @@ protected:
 class LensHaloNFW: public LensHalo{
 public:
 	LensHaloNFW();
+    LensHaloNFW(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,int my_stars_N);
 	LensHaloNFW(InputParams& params);
 	virtual ~LensHaloNFW();
 
@@ -302,7 +301,7 @@ protected:
 	static int count;
 
 	/// tables for lensing properties specific functions
-	static PosType *ftable,*gtable,*g2table,*htable,*xtable;
+	static PosType *ftable,*gtable,*g2table,*htable,*xtable,*xgtable;
 	/// make the specific tables
 	void make_tables();
 	/// interpolates from the specific tables
@@ -327,11 +326,10 @@ protected:
 		//ERROR_MESSAGE();
 		//std::cout << "time delay has not been fixed for NFW profile yet." << std::endl;
 		//exit(1);
-		return -0.25*InterpolateFromTable(htable,x)/gmax; // -0.5*x*
+		return -0.25*InterpolateFromTable(htable,x)/gmax;
 	}
     inline KappaType phi_int(PosType x){
-        //return -1.0*alpha_int(x,true)/gmax/pi;
-        return alpha_int(x,false);
+        return -1.0*InterpolateFromTable(xgtable,x)/gmax; //alpha_int(x);
     }
     
 private:
@@ -356,14 +354,18 @@ private:
 class LensHaloPseudoNFW: public LensHalo{
 public:
 	LensHaloPseudoNFW();
+    LensHaloPseudoNFW(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,PosType my_beta,float my_fratio,float my_pa,int my_stars_N);
 	LensHaloPseudoNFW(InputParams& params);
 	~LensHaloPseudoNFW();
 
 	PosType mhat(PosType y, PosType beta);
-
+    PosType gfunction(PosType x);
+    
 	/// set the slope of the surface density profile
 	void set_slope(PosType my_slope){beta=my_slope; make_tables();};
 	/// initialize from a mass function
+    PosType get_slope(){return beta;};
+	
 	void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed);
 
 private:
@@ -404,7 +406,7 @@ private:
 		return 0.0;
 	}
     inline KappaType phi_int(PosType x){
-		return alpha_int(x,false);
+        return -1.0*alpha_int(x)/InterpolateFromTable(xmax) ;
     }
 };
 
@@ -423,6 +425,7 @@ private:
 class LensHaloPowerLaw: public LensHalo{
 public:
 	LensHaloPowerLaw();
+    LensHaloPowerLaw(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,PosType my_beta,float my_fratio,float my_pa,int my_stars_N);
 	LensHaloPowerLaw(InputParams& params);
 	~LensHaloPowerLaw();
 
@@ -476,14 +479,15 @@ private:
 		return -1.0*pow(x/xmax,-beta+2)/(-beta+2);
 	}
     inline KappaType phi_int(PosType x){
-		//return alpha_int(x,false);
-        return -1.0*pow(x/xmax,-beta+2)/(-beta+2)*2/pi;
+		//return alpha_int(x);
+        return -1.0*pow(x/xmax,-beta+2)/(-beta+2);
     }
 };
 
 class LensHaloSimpleNSIE : public LensHalo{
 public:
 	LensHaloSimpleNSIE();
+    LensHaloSimpleNSIE(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,float my_sigma, float my_rcore,float my_fratio,float my_pa,int my_stars_N);
 	LensHaloSimpleNSIE(InputParams& params);
 	~LensHaloSimpleNSIE();
 
@@ -554,6 +558,7 @@ protected:
 class LensHaloHernquist: public LensHalo{
 public:
 	LensHaloHernquist();
+    LensHaloHernquist(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,int my_stars_N);
 	LensHaloHernquist(InputParams& params);
 	virtual ~LensHaloHernquist();
 
@@ -590,7 +595,7 @@ protected:
 	static int count;
 
 	/// tables for lensing properties specific functions
-	static PosType *ftable,*gtable,*g2table,*htable,*xtable;
+	static PosType *ftable,*gtable,*g2table,*htable,*xtable,*xgtable;
 	/// make the specific tables
 	void make_tables();
 	/// interpolates from the specific tables
@@ -614,13 +619,8 @@ protected:
 		//return -1.0*InterpolateFromTable(htable,x)/gmax;
 	}
     inline KappaType phi_int(PosType x){
-		return alpha_int(x,false);
-        //return -0.25*alpha_int(x,true)/gmax/pi;
-        
+		return -0.25*InterpolateFromTable(xgtable,x)/gmax;
     }
-    
-
-
     
     
 private:
@@ -643,6 +643,7 @@ private:
 class LensHaloJaffe: public LensHalo{
 public:
 	LensHaloJaffe();
+    LensHaloJaffe(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,int my_stars_N);
 	LensHaloJaffe(InputParams& params);
 	virtual ~LensHaloJaffe();
 
@@ -666,7 +667,7 @@ protected:
 	static int count;
 
 	/// tables for lensing properties specific functions
-	static PosType *ftable,*gtable,*g2table,*htable,*xtable;
+	static PosType *ftable,*gtable,*g2table,*htable,*xtable,*xgtable;
 	/// make the specific tables
 	void make_tables();
 	/// interpolates from the specific tables
@@ -677,23 +678,20 @@ protected:
 
 	/// Override internal structure of halos
 	inline PosType alpha_h(PosType x){
-		return -0.25*InterpolateFromTable(gtable,x)/gmax; // -1
+		return -0.25*InterpolateFromTable(gtable,x)/gmax;
 	}
 	inline KappaType kappa_h(PosType x){
-		return 0.125*x*x*InterpolateFromTable(ftable,x)/gmax; //0.5
+		return 0.125*x*x*InterpolateFromTable(ftable,x)/gmax;
 	}
 	inline KappaType gamma_h(PosType x){
-		return -0.125*x*x*InterpolateFromTable(g2table,x)/gmax; //-0.25
+		return -0.125*x*x*InterpolateFromTable(g2table,x)/gmax;
 	}
+    ///std::cout << "no analytic expression defined yet for Jaffe profile, take numerical" << std::endl;
 	inline KappaType phi_h(PosType x){
-		ERROR_MESSAGE();
-		std::cout << "analytic expression not yet defined take numerical" << std::endl;
-        return alpha_int(x,false);
-		//exit(1);
-		//return -1.0*InterpolateFromTable(htable,x)/gmax;
-	}
+        return -0.25*InterpolateFromTable(xgtable,x)/gmax;
+    }
     inline KappaType phi_int(PosType x){
-		return alpha_int(x,false);
+		return -0.25*InterpolateFromTable(xgtable,x)/gmax;
     }
 
 private:
@@ -715,6 +713,7 @@ private:
 class LensHaloDummy: public LensHalo{
 public:
 	LensHaloDummy();
+    LensHaloDummy(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale, int my_stars_N);
 	LensHaloDummy(InputParams& params);
 	~LensHaloDummy(){};
 	
