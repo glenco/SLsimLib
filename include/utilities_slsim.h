@@ -860,7 +860,7 @@ namespace Utilities
 		ju=items.size()-1;
 		while (ju-jl > 1) {
 			jm=(ju+jl) >> 1;
-			if(items[jm]->compare(target))
+			if(items[jm]->compareZ(target))
 				jl=jm;
 			else
 				ju=jm;
@@ -1043,10 +1043,8 @@ namespace Utilities
    
    double operator () (double x) { return a*x + b*x*x;}
    }
-   
-   ..............................
-   
-   
+
+   ............ using it ..................
    
    FunctorType func(21,23.1);
    
@@ -1057,9 +1055,54 @@ namespace Utilities
    double tmp = func(10);
    
    result = Utilities::nintegrate<FunctorType,double>(func,1.0e-2,1.0e4,1.0e-4);
+
+   
+   ***  now a double integral ****
+   
+   \int dy \int dx_y^{10} a*x + b*x*cos(x*y)
+   
+   struct FunctorType2{
+        FunctorType2(FunctorType1 *pfunc1,y): func1(pfunc1),{
+   
+        FunctorType1 *func1;
+        double y;
+   
+        double operator () (double x) { return func1->a*x + func1->b*x*cos(x*y);}
+   }
+
+   
+   struct FunctorType1{
+    FunctionType1(double my_a,double my_b,double xrange1, double xrange2)
+      : a(my_a),b(my_b) 
+   {
+       xrange[0] = xrange1;
+       xrange[1] = xrange2;
+    };
+    double a;
+    double b;
+    double xrange[2];
+   
+     double operator () (double y) {
+        FunctorType2 func2(this);
+        func2.a = a;
+        func2.b = b;
+        func2.y = y;
+        xrange[0] = y;
+   
+        return Utilities::nintegrate<FunctorType2,double>(func2,xrange[0],xrange[1],1.0e-4);
+     }
+   
+   }
+   
+   ............ using it ..................
+   
+   FunctorType1 func(21,23.1,0,10.0);
+   
+   result = Utilities::nintegrate<FunctorType1,double>(func,1.0e-3,5.0e-3,1.0e-4);
    
    <\pre>
    */
+    
   template <typename FunctorType,typename T = double>
   T nintegrate(
                     FunctorType &func        /// struct or class to be integrated

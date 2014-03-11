@@ -59,6 +59,7 @@ if(stars_N>0){
 }
 }
 
+/// calculates the deflection etc. caused by stars alone
 void LensHalo::force_stars(
 		PosType *alpha     /// mass/Mpc
 		,KappaType *kappa
@@ -118,9 +119,9 @@ LensHaloNFW::LensHaloNFW(InputParams& params)
 	make_tables();
 	gmax = InterpolateFromTable(gtable, xmax);
     
-    /// If the 2nd argument in calcModes(fratio, slope, pa, mod), the slope, is set to 1 it yields an elliptical kappa contour of given axis ratio (fratio) at the radius where the slope of the 3D density profile is -2, which is defined as the scale radius for the NFW profile. To ellipticize the potential instead of the convergence use calcModes(fratio, 2-get_slope(), pa, mod), this produces also an ellipse in the convergence map, but at the radius where the slope is 2-get_slope().
+    // If the 2nd argument in calcModes(fratio, slope, pa, mod), the slope, is set to 1 it yields an elliptical kappa contour of given axis ratio (fratio) at the radius where the slope of the 3D density profile is -2, which is defined as the scale radius for the NFW profile. To ellipticize the potential instead of the convergence use calcModes(fratio, 2-get_slope(), pa, mod), this produces also an ellipse in the convergence map, but at the radius where the slope is 2-get_slope().
     set_slope(1);
-    /// If the axis ratio given in the parameter file is set to 1 all ellipticizing routines are skipped.
+    // If the axis ratio given in the parameter file is set to 1 all ellipticizing routines are skipped.
     if(fratio!=1){
         std::cout << "NFW constructor: slope set to " << get_slope() << std::endl;
         calcModes(fratio, get_slope(), pa, mod); // to ellipticize potential instead of  kappa take calcModes(fratio, 2-get_slope(), pa, mod);
@@ -427,8 +428,7 @@ void LensHalo::force_halo(
     ,bool subtract_point /// if true contribution from a point mass is subtracted
     ){
     //std::cout << "In lens_halo.cpp force_halo " << elliptical << std::endl;
-    bool IsElliptical=get_flag_elliptical();
-	if (IsElliptical==true){
+	if (elliptical){
         force_halo_asym(alpha,kappa,gamma,xcm,kappa_off,subtract_point);
     }else{
         force_halo_sym(alpha,kappa,gamma,phi,xcm,kappa_off,subtract_point);

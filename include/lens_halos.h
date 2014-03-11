@@ -54,7 +54,6 @@ public:
 	/// get the scale radius
 	float get_rscale() const { return rscale; }
 	/// get the redshift
-
 	PosType getZlens() const { return zlens; }
 
     /// get the position of the Halo
@@ -85,24 +84,18 @@ public:
     virtual PosType get_slope(){return beta;};
     /// flag=True if halo elliptical
     bool get_flag_elliptical(){return elliptical;};
-    void set_flag_elliptical(bool ell){elliptical=ell;};
     
-    /// set cosmology for halo
+    /// set cosmology for halo, does nothing in most cases
 	virtual void setCosmology(const COSMOLOGY& cosmo) {}
 	
 	/// calculate the lensing properties -- deflection, convergence, and shear
-
-
 	virtual void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,double const *xcm,bool no_kappa,bool subtract_point=false);
-	void force_halo_sym(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,double const *xcm,bool no_kappa,bool subtract_point=false);
-	void force_halo_asym(PosType *alpha,KappaType *kappa,KappaType *gamma,double const *xcm,bool no_kappa,bool subtract_point=false);
-
 
 	/// force tree calculation for stars
 	void force_stars(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType const *xcm,bool no_kappa);
 
-	/// internal compare redshift function
-	bool compare(PosType z){return z > zlens;};
+	/// compares input redshift to internal redshift - true if z is larger
+	bool compareZ(PosType z){return z > zlens;};
 
   /// stars
   bool AreStarsImaplated() const {return stars_implanted;}
@@ -129,7 +122,9 @@ public:
 	/// Prints star parameters; if show_stars is true, prints data for single stars
 	void PrintStars(bool show_stars) const;
  
-    PosType alpha_int(PosType x, bool is_alphah_a_table);
+protected:
+    void set_flag_elliptical(bool ell){elliptical=ell;};
+     PosType alpha_int(PosType x, bool is_alphah_a_table);
     
     //friend struct Ig_func;
     
@@ -146,8 +141,6 @@ public:
     };
     
     void setModesToEllip(PosType q,PosType rottheta, PosType mod[]);
-
-protected:
   
   IndexType *stars;
   PosType **stars_xp;
@@ -246,6 +239,9 @@ protected:
     
     /// Position of the Halo
     PosType posHalo[2];
+
+    void force_halo_sym(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,double const *xcm,bool no_kappa,bool subtract_point=false);
+	void force_halo_asym(PosType *alpha,KappaType *kappa,KappaType *gamma,double const *xcm,bool no_kappa,bool subtract_point=false);
 
 };
 
