@@ -414,9 +414,9 @@ void LensHalo::gradial2(PosType r,PosType g[]){
     g[1] = 0*g[0]*(-1.0*(x-mu)/sigma/sigma);
     g[2] = 0*g[0]*((x-mu)*(x-mu)-sigma*sigma)/pow(sigma,4);
 
-    if(r<mu){
-        std::cout << r << " " << mu << " " << g[0] << std::endl;
-    }
+    //if(r<mu){
+    //    std::cout << r << " " << mu << " " << g[0] << std::endl;
+    //}
 }
 
 /// Calculates fourier-coefficients for power law halo
@@ -489,7 +489,7 @@ PosType LensHalo::kappa_asym(PosType x,PosType theta){
    
     faxial(theta,f);
     F=f[0]-1;
-    gradial2(x,g);
+    gradial(x,g);
     beta=get_slope();
     double fac=1.0/(beta*beta/(2-beta)/(2-beta));
     
