@@ -94,10 +94,9 @@ public:
 	
 	/// calculate the lensing properties -- deflection, convergence, and shear
 
-
-	virtual void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,double const *xcm,bool no_kappa,bool subtract_point=false);
-	void force_halo_sym(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,double const *xcm,bool no_kappa,bool subtract_point=false);
-	void force_halo_asym(PosType *alpha,KappaType *kappa,KappaType *gamma,double const *xcm,bool no_kappa,bool subtract_point=false);
+	virtual void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType *xcm,bool no_kappa,bool subtract_point=false);
+	void force_halo_sym(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType *xcm,bool no_kappa,bool subtract_point=false);
+	void force_halo_asym(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xcm,bool no_kappa,bool subtract_point=false);
 
 
 	/// force tree calculation for stars

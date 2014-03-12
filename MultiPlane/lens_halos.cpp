@@ -531,7 +531,7 @@ void LensHalo::force_halo(
     ,KappaType *kappa
     ,KappaType *gamma
     ,KappaType *phi
-    ,double const *xcm
+    ,PosType *xcm
     ,bool kappa_off
     ,bool subtract_point /// if true contribution from a point mass is subtracted
     ){
@@ -549,7 +549,7 @@ void LensHalo::force_halo_sym(
 		,KappaType *kappa
 		,KappaType *gamma
         ,KappaType *phi    // PHI BY Fabien
-		,PosType const *xcm
+		,PosType *xcm
 		,bool kappa_off
 		,bool subtract_point /// if true contribution from a point mass is subtracted
 		){
@@ -623,7 +623,7 @@ void LensHalo::force_halo_asym(
 		PosType *alpha     /// mass/Mpc
 		,KappaType *kappa
 		,KappaType *gamma
-		,double const *xcm
+		,PosType *xcm
 		,bool kappa_off
 		,bool subtract_point /// if true contribution from a point mass is subtracted
 		){
@@ -1280,7 +1280,7 @@ void LensHaloDummy::force_halo(PosType *alpha
     if(subtract_point)
     {
         PosType x = sqrt(rcm2)/rscale;
-
+       
         // can turn off kappa and gamma calculations to save times
         if(!no_kappa)
         {
