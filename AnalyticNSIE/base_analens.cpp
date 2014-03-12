@@ -408,11 +408,11 @@ void LensHalo::gradial(PosType r,PosType g[]){
 void LensHalo::gradial2(PosType r,PosType g[]){
     PosType x = r;
     double sigma=1;
-    double mu=2*rscale;
+    double mu=0.5*rscale;
     //sigma=sqrt(-1.0*mu*mu/2./log(0.5));
     g[0] = (exp(-1.0*(x-mu)*(x-mu)/2/sigma/sigma));
-    g[1] = 0*g[0]*(-1.0*(x-mu)/sigma/sigma);
-    g[2] = 0*g[0]*((x-mu)*(x-mu)-sigma*sigma)/pow(sigma,4);
+    g[1] = g[0]*(-1.0*(x-mu)/sigma/sigma);
+    g[2] = g[0]*((x-mu)*(x-mu)-sigma*sigma)/pow(sigma,4);
 
     //if(r<mu){
     //    std::cout << r << " " << mu << " " << g[0] << std::endl;
