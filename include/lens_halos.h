@@ -218,6 +218,8 @@ protected:
 
   void faxial(PosType theta,PosType f[]);
   void gradial(PosType r,PosType g[]);
+  void gradial2(PosType r,PosType g[]);
+    
   //void felliptical(PosType x, PosType q, PosType theta, PosType f[], PosType g[]);
 
 	virtual void gamma_asym(PosType x,PosType theta, PosType gamma[2]);

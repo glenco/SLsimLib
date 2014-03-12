@@ -398,12 +398,26 @@ void LensHalo::faxial(PosType theta,PosType f[]){
 /// Derivatives of the potential damping factor with respect to r ... TODO: come up with a better damping faction
 void LensHalo::gradial(PosType r,PosType g[]){
   double r_eps=0.5*Rmax;
+
   PosType x = (1+r/r_eps);
   g[0] = 1.0/x/x;
   g[1] = -2.0*g[0]/x/r_eps;
   g[2] = -3.0*g[1]/x/r_eps;
 }
 
+void LensHalo::gradial2(PosType r,PosType g[]){
+    PosType x = r;
+    double sigma=1;
+    double mu=2*rscale;
+    //sigma=sqrt(-1.0*mu*mu/2./log(0.5));
+    g[0] = (exp(-1.0*(x-mu)*(x-mu)/2/sigma/sigma));
+    g[1] = 0*g[0]*(-1.0*(x-mu)/sigma/sigma);
+    g[2] = 0*g[0]*((x-mu)*(x-mu)-sigma*sigma)/pow(sigma,4);
+
+    if(r<mu){
+        std::cout << r << " " << mu << " " << g[0] << std::endl;
+    }
+}
 
 /// Calculates fourier-coefficients for power law halo
 double LensHalo::fourier_coeff(double n, double q, double beta){
@@ -475,11 +489,11 @@ PosType LensHalo::kappa_asym(PosType x,PosType theta){
    
     faxial(theta,f);
     F=f[0]-1;
-    gradial(x,g);
+    gradial2(x,g);
     beta=get_slope();
     double fac=1.0/(beta*beta/(2-beta)/(2-beta));
     
-    //kappa=0*f[0]*kappa_h(x)-0.5*f[2]*phi*fac;//  w/o damping
+    //kappa=f[0]*kappa_h(x)-0.5*f[2]*phi*fac;//  w/o damping
     //std::cout << x << " " << f[0]*kappa_h(x) / ( 0.5*f[2]*phi*fac ) << std::endl;
     kappa=(1+F*g[0])*kappa_h(x)-0.5*phi*fac*(F*g[1]/x+F*g[2]+f[2]*g[0]/x/x)*x*x-F*g[1]*alpha_h(x)*x*x; /// with damping
 	return kappa;
