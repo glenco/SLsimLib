@@ -63,11 +63,11 @@ struct Grid{
 
 private:
 	/// one dimensional size of initial grid
-	int Ngrid_init;
+	const int Ngrid_init;
   int Ngrid_init2;
   
 	/// one dimensional number of cells a cell will be divided into on each refinement step
-	int Ngrid_block;
+	const int Ngrid_block;
 	bool initialized;
 	Kist<Point> * trashkist;
 

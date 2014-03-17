@@ -104,7 +104,7 @@ public:
 	void force_stars(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType const *xcm,bool no_kappa);
 
 	/// internal compare redshift function
-	bool compare(PosType z){return z > zlens;};
+	bool compareZ(PosType z){return z > zlens;};
 
   /// stars
   bool AreStarsImaplated() const {return stars_implanted;}
