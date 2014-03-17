@@ -520,19 +520,22 @@ void PixelMap::printFITS(std::string filename, bool verbose) const
 	
 	phout.write(1, map.size(), map);
 	
-	phout.addKey("CRPIX1", naxex[0]/2, "");
-	phout.addKey("CRPIX2", naxex[1]/2, "");
-	phout.addKey("CRVAL1", 0.0, "");
-	phout.addKey("CRVAL2", 0.0, "");
-	phout.addKey("CDELT1", -180*resolution/pi, "degrees");
-	phout.addKey("CDELT2", 180*resolution/pi, "degrees");
-	phout.addKey("CTYPE1", "RA--TAN", ""); // TODO: why is this different?
-	phout.addKey("CTYPE2", "RA-TAN", "");
+	phout.addKey("WCSAXES", 2, "number of World Coordinate System axes");
+	phout.addKey("CRPIX1", 0.5*(naxex[0]+1), "x-coordinate of reference pixel");
+	phout.addKey("CRPIX2", 0.5*(naxex[1]+1), "y-coordinate of reference pixel");
+	phout.addKey("CRVAL1", 0.0, "first axis value at reference pixel");
+	phout.addKey("CRVAL2", 0.0, "second axis value at reference pixel");
+	phout.addKey("CTYPE1", "RA---TAN", "the coordinate type for the first axis");
+	phout.addKey("CTYPE2", "DEC--TAN", "the coordinate type for the second axis");
+	phout.addKey("CUNIT1", "deg     ", "the coordinate unit for the first axis");
+	phout.addKey("CUNIT2", "deg     ", "the coordinate unit for the second axis");
+	phout.addKey("CDELT1", -180*resolution/pi, "partial of first axis coordinate w.r.t. x");
+	phout.addKey("CDELT2", 180*resolution/pi, "partial of second axis coordinate w.r.t. y");
 	phout.addKey("CROTA2", 0.0, "");
-	phout.addKey("CD1_1", -180*resolution/pi, "degrees");
-	phout.addKey("CD1_2", 0.0, "");
-	phout.addKey("CD2_1", 0.0, "");
-	phout.addKey("CD2_2", 180*resolution/pi, "degrees");
+	phout.addKey("CD1_1", -180*resolution/pi, "partial of first axis coordinate w.r.t. x");
+	phout.addKey("CD1_2", 0.0, "partial of first axis coordinate w.r.t. y");
+	phout.addKey("CD2_1", 0.0, "partial of second axis coordinate w.r.t. x");
+	phout.addKey("CD2_2", 180*resolution/pi, "partial of second axis coordinate w.r.t. y");
 	
 	phout.addKey("Npixels", Npixels, "");
 	phout.addKey("range", map_boundary_p2[0]-map_boundary_p1[0], "radians");
