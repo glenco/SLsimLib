@@ -20,7 +20,6 @@ LensPlaneTree::~LensPlaneTree(){
 }
 
 
-// PHI BY Fabien : adding the phi component into this function
 void LensPlaneTree::force(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType *xx,bool kappa_off){
 	halo_tree->force2D_recur(xx,alpha,kappa,gamma,phi,kappa_off);
 }
@@ -58,18 +57,23 @@ LensPlaneSingular::~LensPlaneSingular()
 }
 
 
-// PHI BY Fabien : adding the phi component into this function --------------------------------------
-void LensPlaneSingular::force(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType *xx,bool kappa_off){
+void LensPlaneSingular::force(PosType *alpha
+                              ,KappaType *kappa
+                              ,KappaType *gamma
+                              ,KappaType *phi
+                              ,PosType *xx
+                              ,bool kappa_off)
+{
 	PosType alpha_tmp[2],x_tmp[2];
 	KappaType kappa_tmp, gamma_tmp[3];
     KappaType phi_tmp;
     
 	alpha[0] = alpha[1] = 0.0;
+    x_tmp[0] = x_tmp[1] = 0.0;
 	*kappa = 0.0;
 	gamma[0] = gamma[1] = gamma[2] = 0.0;
     *phi = 0.0;
     
-    // std::cout << "Coucou 1" << std::endl;
     // std::cout << "n = halos.size() = " << halos.size() << std::endl;
     
     // Loop over the different halos present in a given lens plane. Right ?
@@ -81,6 +85,8 @@ void LensPlaneSingular::force(PosType *alpha,KappaType *kappa,KappaType *gamma,K
         phi_tmp = 0.0;
         
         halos[i]->getX(x_tmp);
+        
+        // std::cout << "halos[i]->getX(x_tmp) => " << x_tmp[0] << " ; " << x_tmp[1] << std::endl;
         
         x_tmp[0] = xx[0] - x_tmp[0];
         x_tmp[1] = xx[1] - x_tmp[1];
@@ -96,7 +102,6 @@ void LensPlaneSingular::force(PosType *alpha,KappaType *kappa,KappaType *gamma,K
         *phi += phi_tmp;
 	}
 }
-// --------------------------------------------------------------------------------------------------
 
 
 void LensPlaneSingular::addHalo(LensHalo* halo)

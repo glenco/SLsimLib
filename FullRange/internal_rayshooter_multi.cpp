@@ -70,6 +70,7 @@ void Lens::rayshooterInternal(
   int NLastPlane;
   PosType tmpDs,tmpdDs,tmpZs;
 
+  std::cout << "i_points " << i_points << std::endl;
   // If there are no points to shoot, then we quit.
   if(Npoints == 0) return;
 
@@ -164,12 +165,7 @@ void *compute_rays_parallel(void *_p)
   PosType xminus[2],xplus[2];
   PosType kappa_minus,gamma_minus[3],kappa_plus,gamma_plus[3];
     
-  // PHI BY Fabien :
   KappaType phi;
-  // std::fstream FileStockResult ;
-  // FileStockResult.open("/Users/nugierfabien/GLAMER/projects/TimeDelay1/output/FileStockResult.txt", std::ios::out);
-    
-    
     
 // Main loop : loop over the points of the image
 for(i = start; i < end; i++)
@@ -178,9 +174,13 @@ for(i = start; i < end; i++)
     // In case e.g. a temporary point is outside of the grid.
     if(p->i_points[i].in_image == MAYBE) continue;
 
+    //std::cout << "p->i_points[i].x[0] = " << p->i_points[i].x[0] << " ; p->i_points[i].x[1] = " << p->i_points[i].x[1] << " ; p->Dl[0] = " << p->Dl[0] << std::endl;
+      
     // find position on first lens plane in comoving units
     p->i_points[i].image->x[0] = p->i_points[i].x[0] * p->Dl[0];
     p->i_points[i].image->x[1] = p->i_points[i].x[1] * p->Dl[0];
+
+    //std::cout << "p->i_points[i].image->x[0] = " << p->i_points[i].image->x[0] << " ; p->i_points[i].image->x[1] = " << p->i_points[i].image->x[1] << std::endl;
 
     xminus[0] = 0;
     xminus[1] = 0;
@@ -192,7 +192,7 @@ for(i = start; i < end; i++)
     gamma_minus[1] = 0;
     gamma_minus[2] = 0;
       
-    // PHI BY Fabien : setting phi on the first plane.
+    // Setting phi on the first plane.
     phi = 0.0;
       
     // Default values :
@@ -200,6 +200,7 @@ for(i = start; i < end; i++)
     p->i_points[i].gamma[0] = 0;
     p->i_points[i].gamma[1] = 0;
     p->i_points[i].gamma[2] = 0;
+    p->i_points[i].dt = 0;
     // Fabien : should I add this : p->i_points[i].dt = 0; // ???
     
     // In case we don't want to compute the values :
@@ -223,7 +224,9 @@ for(i = start; i < end; i++)
     
     // Time delay at first plane
     p->i_points[i].dt = 0.5*( p->i_points[i].image->x[0]*p->i_points[i].image->x[0] + p->i_points[i].image->x[1]*p->i_points[i].image->x[1] )/ p->dDl[0];
-
+  
+    //std::cout << "Contribution 1 = " << 0.5*( p->i_points[i].image->x[0]*p->i_points[i].image->x[0] + p->i_points[i].image->x[1]*p->i_points[i].image->x[1] )/ p->dDl[0] << std::endl ;
+      
       
     // Begining of the loop through the planes :
     // Each iteration leaves i_point[i].image on plane (j+1)
@@ -236,11 +239,6 @@ for(i = start; i < end; i++)
       
       assert(xx[0] == xx[0] && xx[1] == xx[1]);
 
-        
-      // Calling force : most important part of the calculation !
-      // p->lensing_planes[j]->force(alpha,&kappa,gamma,xx,kappa_off);
-        
-      // PHI BY Fabien : instead, we would like to have :
       p->lensing_planes[j]->force(alpha,&kappa,gamma,&phi,xx,kappa_off);
 
       cc = p->charge * p->dDl[j+1];
@@ -301,12 +299,11 @@ for(i = start; i < end; i++)
         cc = p->charge * p->dDl[j+1] * p->Dl[j] / p->Dl[j+1];
         // ------------------------------------------------------------------------------------
             
-
             
         // Computation of the "plus quantities", i.e. the  next plane quantities --------------------
         kappa_plus = aa*p->i_points[i].kappa - bb*kappa_minus
     			  - cc*(kappa*p->i_points[i].kappa + gamma[0]*p->i_points[i].gamma[0] + gamma[1]*p->i_points[i].gamma[1]);
-	
+            
         gamma_plus[0] = aa*p->i_points[i].gamma[0] - bb*gamma_minus[0]
     	          - cc*(gamma[0]*p->i_points[i].kappa + kappa*p->i_points[i].gamma[0] - gamma[1]*p->i_points[i].gamma[2]);
 	
@@ -325,7 +322,6 @@ for(i = start; i < end; i++)
         gamma_minus[2] = p->i_points[i].gamma[2];
         // ------------------------------------------------------------------------------------------
             
-            
         assert(kappa_plus==kappa_plus && gamma_minus[0]==gamma_minus[0] && gamma_minus[1]==gamma_minus[1] && gamma_minus[2]==gamma_minus[2]);
 
             
@@ -338,30 +334,41 @@ for(i = start; i < end; i++)
 
             
         
-        // TODO: Geometric time delay, potential needs to be added and this needs to be checked
-        // p->i_points[i].dt += 0.5*( (xplus[0] - xminus[0])*(xplus[0] - xminus[0]) + (xplus[1] - xminus[1])*(xplus[1] - xminus[1]) )/p->dDl[j+1]; // + phi;
-
-        // PHI BY Fabien :
+        // Geometric time delay with added potential
         p->i_points[i].dt += 0.5*( (xplus[0] - xminus[0])*(xplus[0] - xminus[0]) + (xplus[1] - xminus[1])*(xplus[1] - xminus[1]) )/p->dDl[j+1] - (1 + p->plane_redshifts[j]) * phi ;
+            
+        //std::cout << "Contribution 2 = " << 0.5*( (xplus[0] - xminus[0])*(xplus[0] - xminus[0]) + (xplus[1] - xminus[1])*(xplus[1] - xminus[1]) )/p->dDl[j+1] << "  ;  " << - (1 + p->plane_redshifts[j]) * phi << std::endl ;
+            
+        // std::cout << "(xplus[0] - xminus[0]) = " << (xplus[0] - xminus[0]) << " ; (xplus[1] - xminus[1]) = " << (xplus[1] - xminus[1]) << std::endl;
             
         // FileStockResult << " Geometrical term = " << 0.5*( (xplus[0] - xminus[0])*(xplus[0] - xminus[0]) + (xplus[1] - xminus[1])*(xplus[1] - xminus[1]) )/p->dDl[j+1] << " ; Potential term = " << (- (1 + p->plane_redshifts[j])) * phi << std::endl ;
             
+            
         // Check that the 1+z factor must indeed be there (because the x positions have been rescaled, so it may be different compared to the draft).
         // Is this sure that we have to use phi_minus ?
-
-            
             
         } // End of if(!kappa_off)
     } // End of the loop going through the planes
 
+      
+      
+    // Subtracting off a term that makes the unperturbed ray to have zero time delay
+    p->i_points[i].dt -=  0.5*( p->i_points[i].image->x[0]*p->i_points[i].image->x[0] + p->i_points[i].image->x[1]*p->i_points[i].image->x[1] ) / p->Dl[p->NPlanes];
+      
+    // std::cout << "Contribution 3 = " << 0.5*( p->i_points[i].image->x[0]*p->i_points[i].image->x[0] + p->i_points[i].image->x[1]*p->i_points[i].image->x[1] ) / p->Dl[p->NPlanes] << std::endl ;
+
+    // std::cout << "p->i_points[i].image->x[0] = " << p->i_points[i].image->x[0] << " ; p->i_points[i].image->x[1] = " << p->i_points[i].image->x[1] << std::endl;
+
+    std::cout << "p->i_points[i].dt = " << p->i_points[i].dt << std::endl ;
+      
       
     // Convert units back to angles.
     p->i_points[i].image->x[0] /= p->Dl[p->NPlanes];
     p->i_points[i].image->x[1] /= p->Dl[p->NPlanes];
     
     // We go from kappa denoting 1-kappa to kappa denoting kappa :
+      std::cout << "p->i_points[i].kappa = " << p->i_points[i].kappa << std::endl ;
     p->i_points[i].kappa = 1 - p->i_points[i].kappa;
-
 
     // Computation of the inverse magnitude --------------------------------------------------------
     if(!kappa_off) p->i_points[i].invmag = (1-p->i_points[i].kappa)*(1-p->i_points[i].kappa)
@@ -378,15 +385,11 @@ for(i = start; i < end; i++)
     p->i_points[i].image->gamma[0] = p->i_points[i].gamma[0];
     p->i_points[i].image->gamma[1] = p->i_points[i].gamma[1];
     p->i_points[i].image->gamma[2] = p->i_points[i].gamma[2];
+    p->i_points[i].image->dt = p->i_points[i].dt;
     // ------------------------------------------------------------------------
       
       
-      // Subtracting off a term that makes the unperturbed ray to have zero time delay
-    p->i_points[i].dt -=  0.5*p->Dl[p->NPlanes]*( p->i_points[i].image->x[0]*p->i_points[i].image->x[0] + p->i_points[i].image->x[1]*p->i_points[i].image->x[1] );
-    // p->i_points[i].dt -=  0.;
 
-      
-    // FileStockResult << " Last geometrical term = " << 0.5*p->Dl[p->NPlanes]*( p->i_points[i].image->x[0]*p->i_points[i].image->x[0] + p->i_points[i].image->x[1]*p->i_points[i].image->x[1] ) << std::endl ;
       
 /*
 /TODO: check
@@ -405,9 +408,6 @@ for(i = start; i < end; i++)
 
       
 } // End of the main loop.
-    
-    // PHI BY Fabien
-    // FileStockResult.close();
   
   return 0;
   

@@ -483,8 +483,7 @@ void TreeQuad::force2D(PosType const *ray
   *kappa=0.0;
   
   //TODO: Need to implement phi and test
-  //float *phi = new KappaType;
-  //*phi = 0.0;
+  *phi = 0.0;
   
   do{
 	  ++count;
@@ -535,7 +534,8 @@ void TreeQuad::force2D(PosType const *ray
 
 						  gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 						  gamma[1] += xcm[0]*xcm[1]*tmp;
-              //*phi = prefac*rcm2*0.5*log(rcm2);
+                          //
+                          *phi = prefac*rcm2*0.5*log(rcm2);
 					  }
 				  }
 			  }
@@ -577,8 +577,8 @@ void TreeQuad::force2D(PosType const *ray
 								  gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 								  gamma[1] += xcm[0]*xcm[1]*tmp;
                   
-                  // TODO: makes sure the normalization of phi_h agrees with this 
-                  //*phi = (phi_h(arg1,arg2) + 0.5*log(rcm2))*prefac*rcm2;
+                                  // TODO: makes sure the normalization of phi_h agrees with this
+                                  *phi = (phi_h(arg1,arg2) + 0.5*log(rcm2))*prefac*rcm2;
 							  }
 						  }
 					  }
@@ -598,9 +598,9 @@ void TreeQuad::force2D(PosType const *ray
 				  gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 				  gamma[1] += xcm[0]*xcm[1]*tmp;
           
-          //*phi += 0.5*tree->current->mass*log( rcm2cell )/pi;
-          //*phi -= 0.5*( tree->current->quad[0]*xcm[0]*xcm[0] + tree->current->quad[1]*xcm[1]*xcm[1]
-          //              + 2*tree->current->quad[2]*xcm[0]*xcm[1] )/(pi*rcm2cell*rcm2cell);
+                  //
+                  *phi += 0.5*tree->current->mass*log( rcm2cell )/pi;
+                  *phi -= 0.5*( tree->current->quad[0]*xcm[0]*xcm[0] + tree->current->quad[1]*xcm[1]*xcm[1] + 2*tree->current->quad[2]*xcm[0]*xcm[1] )/(pi*rcm2cell*rcm2cell);
 			  }
 
 			  // quadrapole contribution
@@ -634,7 +634,7 @@ void TreeQuad::force2D(PosType const *ray
 /** \brief Force2D_recur calculates the defection, convergence and shear using
  *   the plane-lens approximation.
  *
- *  This function should do the same work as TreeQuad::force2D() accept it is
+ *  This function should do the same work as TreeQuad::force2D() except it is
  *  done recursively instead of iteratively.  This is done to enable multi-threading
  *  of the force calculation.
  *
@@ -649,8 +649,6 @@ void TreeQuad::force2D(PosType const *ray
  * */
 
 
-
-// PHI BY Fabien -----
 void TreeQuad::force2D_recur(PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,bool no_kappa){
     
     assert(tree);
@@ -673,7 +671,6 @@ void TreeQuad::force2D_recur(PosType const *ray,PosType *alpha,KappaType *kappa,
     
     return;
 }
-// -----
 
 
 

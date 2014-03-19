@@ -401,16 +401,8 @@ void LensHaloSimpleNSIE::initFromMass(float my_mass, long *seed){
 	fratio = (ran2(seed)+1)*0.5;  //TODO: Ben change this!  This is a kluge.
 	pa = 2*pi*ran2(seed);  //TODO: This is a kluge.
 	Rsize = rmaxNSIE(sigma,mass,fratio,rcore);
-
-    // PHI BY Fabien
-    cout << "Coucou >" << endl;
-    cout << "Rmax = " << Rmax << endl;
     
 	Rmax = MAX(1.0,1.0/fratio)*Rsize;  // redefine
-
-    // PHI BY Fabien
-    cout << "Coucou >" << endl;
-    cout << "Rmax = " << Rmax << endl;
     
 	assert(Rmax >= Rsize);
 }
@@ -433,7 +425,6 @@ void LensHalo::force_halo(
     ,bool subtract_point /// if true contribution from a point mass is subtracted
     )
 {
-    // std::cout << "Coucou 2" << std::endl;
     
     //std::cout << "In lens_halo.cpp force_halo " << elliptical << std::endl;
     bool IsElliptical=get_flag_elliptical();
@@ -441,10 +432,8 @@ void LensHalo::force_halo(
 	if (IsElliptical==true)
     {
         force_halo_asym(alpha,kappa,gamma,xcm,kappa_off,subtract_point);
-            // std::cout << "Coucou ?" << std::endl;
     }else{
         force_halo_sym(alpha,kappa,gamma,phi,xcm,kappa_off,subtract_point);
-            // std::cout << "Coucou !" << std::endl;
 	}
 }
 
@@ -452,13 +441,11 @@ void LensHalo::force_halo_sym(
 		PosType *alpha     /// mass/Mpc
 		,KappaType *kappa
 		,KappaType *gamma
-        ,KappaType *phi    // PHI BY Fabien
+        ,KappaType *phi
 		,PosType const *xcm
 		,bool kappa_off
 		,bool subtract_point /// if true contribution from a point mass is subtracted
 		){
-
-    // std::cout << "Coucou 3" << std::endl ;
             
 	PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
             
@@ -473,12 +460,14 @@ void LensHalo::force_halo_sym(
 		
         PosType prefac = mass/rcm2/pi;
 		PosType x = sqrt(rcm2)/rscale;
-		//PosType xmax = Rmax/rscale;
+		// PosType xmax = Rmax/rscale;
+        
+        // std::cout << "mass/pi = " << mass/pi << std::endl ;
+        // std::cout << "rscale = " << rscale << std::endl ;
 
-        //PosType tmp = (alpha_h(x,xmax) + 1.0*subtract_point)*prefac;
+        // PosType tmp = (alpha_h(x,xmax) + 1.0*subtract_point)*prefac;
 		PosType tmp = (alpha_h(x) + 1.0*subtract_point)*prefac;
 		alpha[0] += tmp*xcm[0];
-        //std::cout << alpha_h(x) << std::endl;
 		alpha[1] += tmp*xcm[1];
 
 
@@ -490,15 +479,8 @@ void LensHalo::force_halo_sym(
 			tmp = (gamma_h(x) + 2.0*subtract_point) * prefac / rcm2;
 			gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 			gamma[1] += xcm[0]*xcm[1]*tmp;
-
-<<<<<<< local
-            // std::cout << "Coucou 4" << std::endl;
             
-            // PHI BY Fabien
-            *phi += phi_h(x); // Giving the distance x is useless, this function just does "return 1"... does it make sense ?
-=======
-            //*phi += phi_h(x); 
->>>>>>> other
+            *phi += phi_h(x) * mass / pi ; // * x ?
 		}
 	}
 	else // the point particle is not subtracted
@@ -514,13 +496,12 @@ void LensHalo::force_halo_sym(
             {
 				PosType tmp = -2.0*prefac/rcm2;
                 
-                // PHI BY Fabien : does not look that kappa is computed here.
+                // Fabien : does not look that kappa is computed here.
 
 				gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 				gamma[1] += xcm[0]*xcm[1]*tmp;
                 
-                // PHI BY Fabien
-                *phi += 0.0; // I guess this is useless.
+                *phi += - 0.5 * log(rcm2) * mass / pi ; // value made to be consistent with alpha above. Sure ?
 			}
 		}
 	}
@@ -746,7 +727,7 @@ void LensHaloSimpleNSIE::force_halo(
                                     PosType *alpha
                                     ,KappaType *kappa
                                     ,KappaType *gamma
-                                    ,KappaType *phi      // PHI BY Fabien
+                                    ,KappaType *phi
                                     ,PosType *xcm
                                     ,bool no_kappa
                                     ,bool subtract_point /// if true contribution from a point mass is subtracted
@@ -1117,7 +1098,7 @@ void LensHaloDummy::initFromMassFunc(float my_mass, float my_Rmax, float my_rsca
 void LensHaloDummy::force_halo(PosType *alpha
                                ,KappaType *kappa
                                ,KappaType *gamma
-                               ,KappaType *phi       // PHI BY Fabien
+                               ,KappaType *phi
                                ,PosType *xcm
                                ,bool no_kappa
                                ,bool subtract_point)
@@ -1143,7 +1124,7 @@ void LensHaloDummy::force_halo(PosType *alpha
             gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
             gamma[1] += xcm[0]*xcm[1]*tmp;
             
-            *phi += phi_h(x); // PHI BY Fabien
+            *phi += phi_h(x); // TO DO Fabien : need to check the factor in front of phi_h() !
         }
     }
     

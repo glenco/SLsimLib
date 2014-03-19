@@ -252,7 +252,7 @@ void TreeForce::force2D(PosType const *ray
 				  }
 
 				  if(haloON){
-					  halos[index].force_halo(alpha,kappa,gamma,phi,xcm,no_kappa,true); // PHI BY Fabien
+					  halos[index].force_halo(alpha,kappa,gamma,phi,xcm,no_kappa,true);
 				  }else{  // case of no halos just particles and no class derived from TreeQuad
 
 					  arg1 = rcm2/(rsph[index*MultiRadius]*rsph[index*MultiRadius]);

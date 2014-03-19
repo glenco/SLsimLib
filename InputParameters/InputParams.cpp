@@ -85,7 +85,6 @@ InputParams::InputParams(std::string paramfile)
 		std::cout << "Can't open parameter file " << paramfile << std::endl;
 		exit(1);
 	}
-
 	paramfile_name = paramfile;
 
 	while(!file_in.eof())

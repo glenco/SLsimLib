@@ -13,7 +13,7 @@ void LensHaloBaseNSIE::force_halo(
 		PosType *alpha       /// mass/Mpc
 		,KappaType *kappa   /// surface mass density
 		,KappaType *gamma
-        ,KappaType *phi     // PHI BY Fabien
+        ,KappaType *phi
 		,PosType *xcm
 		,bool no_kappa
 		,bool subtract_point /// if true contribution from a point mass is subtracted
@@ -22,7 +22,7 @@ void LensHaloBaseNSIE::force_halo(
      long j;
      PosType alpha_tmp[2];
      KappaType kappa_tmp = 0.0, gamma_tmp[3], dt = 0;
-     KappaType phi_tmp = 0.0 ; // PHI BY Fabien
+     KappaType phi_tmp = 0.0 ;
             
             
      gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
@@ -31,7 +31,6 @@ void LensHaloBaseNSIE::force_halo(
      alpha[0] = alpha[1] = 0.0;
      gamma[0] = gamma[1] = gamma[2] = 0.0;
      *kappa = 0.0;
-     // PHI BY Fabien
      *phi = 0.0 ;
 
             
@@ -83,9 +82,7 @@ void LensHaloBaseNSIE::force_halo(
     	 for(j=0;j<sub_N;++j)
          {
              
-             // PHI BY Fabien
     		 subs[j].force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp,xcm,no_kappa);
-             // subs[j].force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,xcm,no_kappa);
 
     		 alpha[0] += alpha_tmp[0];
     		 alpha[1] += alpha_tmp[1];
@@ -133,15 +130,7 @@ void LensHaloBaseNSIE::assignParams(InputParams& params){
 
 	Rsize = rmaxNSIE(sigma,mass,fratio,rcore);
     
-    // PHI BY Fabien
-    cout << "Coucou >" << endl;
-    cout << "Rmax = " << Rmax << endl;
-    
 	Rmax = MAX(1.0,1.0/fratio)*Rsize;  // redefine
-    
-    // PHI BY Fabien
-    cout << "Coucou >" << endl;
-    cout << "Rmax = " << Rmax << endl;
     
 	assert(Rmax >= Rsize);
 
