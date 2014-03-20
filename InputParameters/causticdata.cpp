@@ -178,21 +178,40 @@ void CausticData::printfile(std::string filename,std::string paramfile,double fi
 
 
   for(size_t i = 0; i < data.size(); ++i){
-    catalog_caustic << data[i].redshift
-    << " " << data[i].crit_center[0] << " " << data[i].crit_center[1]
-    << " " << data[i].crit_radius[0] << " " << data[i].crit_radius[2] << " " << data[i].crit_radius[1]
-    << " " << data[i].crit_area
-    << " " << data[i].caustic_center[0] << " " << data[i].caustic_center[1]
-    << " " << data[i].caustic_radius[0] << " " << data[i].caustic_radius[2] << " " << data[i].caustic_radius[1]
-    << " " << data[i].caustic_area
-    << std::endl;
+    if(data[i].crit_radius[0] != 0){
+      catalog_caustic << data[i].redshift
+      << " " << data[i].crit_center[0] << " " << data[i].crit_center[1]
+      << " " << data[i].crit_radius[0] << " " << data[i].crit_radius[2] << " " << data[i].crit_radius[1]
+      << " " << data[i].crit_area
+      << " " << data[i].caustic_center[0] << " " << data[i].caustic_center[1]
+      << " " << data[i].caustic_radius[0] << " " << data[i].caustic_radius[2] << " " << data[i].caustic_radius[1]
+      << " " << data[i].caustic_area
+      << std::endl;
+    }
   }
 }
 
 void CausticData::SortByCritSize(){
+  cummulative_area.resize(0);  // this stops RandomLens from being miss used.
   std::sort(data.begin(),data.end(),comparcritsize);
 }
 
 bool comparcritsize(const CausticStructure &caust1,const CausticStructure &caust2){
   return (caust1.crit_radius[0] > caust2.crit_radius[0]);
 }
+void CausticData::SortByCritArea(){
+  cummulative_area.resize(0);  // this stops RandomLens from being miss used.
+  std::sort(data.begin(),data.end(),comparcritarea);
+}
+bool comparcritarea(const CausticStructure &caust1,const CausticStructure &caust2){
+  return (caust1.crit_area > caust2.crit_area);
+}
+
+void CausticData::SortByCausticArea(){
+  cummulative_area.resize(0);  // this stops RandomLens from being miss used.
+  std::sort(data.begin(),data.end(),comparcausticarea);
+}
+bool comparcausticarea(const CausticStructure &caust1,const CausticStructure &caust2){
+  return (caust1.caustic_area > caust2.caustic_area);
+}
+

@@ -88,7 +88,8 @@ KappaType kappaNSIE(
 		,PosType f      /// axis ratio of mass
 		,PosType bc     /// core size in units of Einstein radius
 		,PosType theta  /// position angle of ellipsoid
-		){
+		)
+{
   PosType x[2],b2;
 
   Utilities::rotation(x,xt,theta);
@@ -143,6 +144,7 @@ void gammaNSIE(
 /** \ingroup function
  *  \brief Elliptical radius \f$ R^2 = x^2 + f^2 y^2 \f$ of a NonSingular Isothermal Ellipsoid
  */
+
 // TODO: BEN Check pi factor against notes.
 PosType rmaxNSIE(
 		PosType sigma    /// velocity dispersion in km/s
@@ -197,11 +199,18 @@ namespace Utilities{
 		xout[1]=xin[1]*cos(theta)+tmp*sin(theta);
 	}
 }
+
 /* potential in Mpc^2 */
-KappaType phiNSIE(PosType *xt,PosType f,PosType bc,PosType theta){
+KappaType phiNSIE(PosType *xt     /// position on the image plane in Einstein radius units
+                  ,PosType f      /// axis ratio of mass
+                  ,PosType bc     /// core size in units of Einstein radius
+                  ,PosType theta  /// position angle of ellipsoid
+                  )
+{
 
 	return 0.0;
 }
+
 
 /**\ingroup function
  *

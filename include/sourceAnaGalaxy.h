@@ -95,6 +95,7 @@ public:
 	void multiplier(PosType z,PosType mag_cut,int Multiplicity,long *seed);
   void sortInRedshift();
   void sortInMag();
+  void sortInID();
   /// returns field-of-view in deg^2 assuming region is square
   PosType getFOV(){return (rangex[1]-rangex[0])*(rangey[1]-rangey[0])*180*180/pi/pi;}
   
@@ -114,6 +115,7 @@ private:
 
 bool redshiftcompare(SourceOverzier s1,SourceOverzier s2);
 bool magcompare(SourceOverzier s1,SourceOverzier s2);
+bool idcompare(SourceOverzier s1,SourceOverzier s2);
 
 /**
  * \brief Class for reading in and handling an array of SourceShapelets, made on the model of SourceMultiAnaGalaxy

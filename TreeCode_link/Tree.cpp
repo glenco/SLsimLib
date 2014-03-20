@@ -664,12 +664,11 @@ Point *AddPointToArray(Point *points,unsigned long N,unsigned long Nold){
   }else{
 	  if(points[0].head != Nold){ ERROR_MESSAGE(); std::cout << "ERROR: AddPointToArray head not set correctly" << std::endl; exit(0);}
 	  newpoints = NewPointArray(N);
-	  for(i=N;i<Nold;++i) free(points[i].x);
+	  //for(i=N;i<Nold;++i) free(points[i].x);
 
 	  assert(points);
 	  for(i=0;(i<N && i<Nold);++i){
 		  PointCopy(&newpoints[i],&points[i]);
-		  assert(newpoints[i].x);
 	  }
 	  //for(i=Nold;i<N;++i) newpoints[i].x = (PosType *) malloc(2*sizeof(PosType));
   }

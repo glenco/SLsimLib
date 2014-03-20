@@ -104,7 +104,9 @@ public:
   void PrintLens(bool show_substruct,bool show_stars);
   void error_message1(std::string name,std::string filename);
 
-  virtual void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xcm,bool no_kappa,bool subtract_point=false);
+  // PHI BY Fabien
+  virtual void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType *xcm,bool no_kappa,bool subtract_point=false);
+  // virtual void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xcm,bool no_kappa,bool subtract_point=false);
 
   // in randoimize_lens.c
   PosType averageSubMass();
@@ -174,9 +176,9 @@ namespace Utilities{
 	void rotation(PosType *xout,PosType *xin,PosType theta);
 }
 
-void alphaNSIE(PosType *alpha,PosType *xt,PosType f,PosType bc,PosType theta);
+void alphaNSIE(PosType *alpha,double *xt,PosType f,PosType bc,PosType theta);
 KappaType kappaNSIE(PosType *xt,PosType f,PosType bc,PosType theta);
-void gammaNSIE(KappaType *gam,PosType *xt,PosType f,PosType bc,PosType theta);
+void gammaNSIE(KappaType *gam,double *xt,PosType f,PosType bc,PosType theta);
 KappaType invmagNSIE(PosType *x,PosType f,PosType bc,PosType theta
                      ,float *gam,float kap);
 PosType rmaxNSIE(PosType sigma,PosType mass,PosType f,PosType rc );
@@ -190,6 +192,8 @@ void alphaPowLaw(PosType *alpha,PosType *x,PosType R,PosType mass,PosType beta,P
 KappaType kappaPowLaw(PosType *x,PosType R,PosType mass,PosType beta,PosType *center,PosType Sigma_crit);
 void gammaPowLaw(KappaType *gamma,PosType *x,PosType R,PosType mass,PosType beta,PosType *center,PosType Sigma_crit);
 KappaType phiPowLaw(PosType *x,PosType R,PosType mass,PosType beta,PosType *center,PosType Sigma_crit);
+
+
 
 // in nfw_lens.c
 void alphaNFW(PosType *alpha,PosType *x,PosType Rtrunc,PosType mass,PosType r_scale

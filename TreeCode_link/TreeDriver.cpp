@@ -1374,6 +1374,37 @@ void ImageInfo::ArcInfo(
 	dist2 = sqrt(dist2);
 }
 
+void ImageInfo::FindArc(PosType &radius,PosType *xc,PosType &arclength,PosType &width
+                        ,PosType resolution,PosType threshold){
+  
+  //throw std::runtime_error("not ready yet");
+  
+  Kist<Point>::iterator it = imagekist->getTopIt();
+  PosType xrange[2],yrange[2];
+   
+  xrange[0] = xrange[1] = (*it)->x[0];
+  yrange[0] = yrange[1] = (*it)->x[1];
+  
+  for(it = imagekist->getTopIt();!(it.atend());--it){
+    xrange[0] = MIN(xrange[0],(*it)->x[0]);
+    xrange[1] = MAX(xrange[1],(*it)->x[0]);
+    yrange[0] = MIN(yrange[0],(*it)->x[1]);
+    yrange[1] = MAX(yrange[1],(*it)->x[1]);
+  }
+  
+  PosType xcenter[2];
+
+  size_t Npixels = (size_t)(MAX(xrange[1]-xrange[0],yrange[1]-yrange[0])/resolution + 1 );
+  xcenter[0] = (xrange[0]+xrange[1])/2;
+  xcenter[1] = (yrange[0]+yrange[1])/2;
+  
+  PixelMap map(xcenter, Npixels, resolution);
+  map.AddImages(this,1);
+
+  map.FindArc(radius, xc, arclength, width, threshold);
+
+}
+
 
 /// Print positions and gridsizes of all points in all the images to stdout
 void PrintImages(ImageInfo *images,long Nimages){
