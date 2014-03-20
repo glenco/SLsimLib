@@ -297,6 +297,7 @@ PosType **PosTypeMatrix(long rows, long cols)
     }
   }
   
+#ifdef ENABLE_CLANG
   RandomNumbers::RandomNumbers(unsigned int seed)
   {        
     rand_gen = std::mt19937(seed);
@@ -310,7 +311,7 @@ PosType **PosTypeMatrix(long rows, long cols)
   PosType RandomNumbers::operator()(void){
     return std::generate_canonical<PosType, 10>(rand_gen);
   }
-  
+#endif
   
   RandomNumbers_NR::RandomNumbers_NR(long seed):
   IM1(2147483399),IM2(2147483399),IA1(40014),IA2(40692),IQ1(53668),

@@ -18,7 +18,12 @@
 class Source
 {
 public:
-	Source();
+  /// shell constructor
+	Source(){
+    source_r = source_x[0] = source_x[1] = zsource = 0;
+    setSBlimit_magarcsec(30.);
+  };
+
 	virtual ~Source();
 	
 	// in lens.cpp

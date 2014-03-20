@@ -192,9 +192,26 @@ void CausticData::printfile(std::string filename,std::string paramfile,double fi
 }
 
 void CausticData::SortByCritSize(){
+  cummulative_area.resize(0);  // this stops RandomLens from being miss used.
   std::sort(data.begin(),data.end(),comparcritsize);
 }
 
 bool comparcritsize(const CausticStructure &caust1,const CausticStructure &caust2){
   return (caust1.crit_radius[0] > caust2.crit_radius[0]);
 }
+void CausticData::SortByCritArea(){
+  cummulative_area.resize(0);  // this stops RandomLens from being miss used.
+  std::sort(data.begin(),data.end(),comparcritarea);
+}
+bool comparcritarea(const CausticStructure &caust1,const CausticStructure &caust2){
+  return (caust1.crit_area > caust2.crit_area);
+}
+
+void CausticData::SortByCausticArea(){
+  cummulative_area.resize(0);  // this stops RandomLens from being miss used.
+  std::sort(data.begin(),data.end(),comparcausticarea);
+}
+bool comparcausticarea(const CausticStructure &caust1,const CausticStructure &caust2){
+  return (caust1.caustic_area > caust2.caustic_area);
+}
+

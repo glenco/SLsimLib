@@ -910,7 +910,8 @@ namespace Utilities
 	{
 		return std::max(l, std::min(u, x));
 	}
-	
+
+#ifdef ENABLE_CLANG
   /// This is a class for generating random numbers. It is actually just a rapper for some std random classes.
   class RandomNumbers{
   public:
@@ -926,6 +927,7 @@ namespace Utilities
     std::normal_distribution<> norm_dist;
     std::mt19937 rand_gen;
   };
+#endif
   
   /**
    * \brief This is a class for generating random numbers. It simplifies and fool proofs initialization and allows for multiple
@@ -939,6 +941,7 @@ namespace Utilities
     RandomNumbers_NR(long seed);
     
     PosType operator()(void);
+    
   private:
     long idum;
     PosType ran2(void);
