@@ -267,7 +267,8 @@ PosType LensHaloBaseNSIE::getParam(std::size_t p) const
 	switch(p - LensHalo::Nparams())
 	{
 		case 0:
-			return std::log10(sigma);
+//			return std::log10(sigma);
+            return sigma*0.02;
 		case 1:
 			return fratio;
 		case 2:
@@ -287,7 +288,8 @@ PosType LensHaloBaseNSIE::setParam(std::size_t p, PosType val)
 	switch(p - LensHalo::Nparams())
 	{
 		case 0:
-			return (sigma = std::pow(10., val));
+//          return (sigma = std::pow(10., val));
+            return (sigma = (float)between<PosType>(val*50., 100., 1000.));
 		case 1:
 			return (fratio = (float)between<PosType>(val, 1e-10, 1.));
 		case 2:
