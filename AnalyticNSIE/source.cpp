@@ -594,7 +594,15 @@ PosType SourceShapelets::Hermite(int n, PosType x)
 	return hg[n];
 }
 
-void SourceShapelets::printSource(){};
+void SourceShapelets::printSource()
+{
+    cout << endl << "**Source model**" << endl;
+    
+	cout << "z_source " << zsource << endl;
+    cout << "mag " << mag << endl;
+    
+};
+
 void SourceShapelets::assignParams(InputParams& params){};
 
 /// Rescales the coefficients to make the source bright as we want.
@@ -616,9 +624,10 @@ void SourceShapelets::NormalizeFlux()
 }
 
 /// Default constructor. Reads in sources from the default catalog.
-SourceMultiShapelets::SourceMultiShapelets()
+SourceMultiShapelets::SourceMultiShapelets(InputParams& params)
 : Source(),index(0)
 {
+    assignParams(params);
     readCatalog();
 }
 
@@ -626,23 +635,24 @@ SourceMultiShapelets::~SourceMultiShapelets()
 {
 }
 
+/// Reads in the default catalog
 void SourceMultiShapelets::readCatalog()
 {
-    int max_num = 10045;
-    int index = 0;
-    for (int i = 0; i < max_num; i++)
+    int max_num = 37012;
+    for (int i = 0; i < max_num+1; i++)
     {
-        string shap_file = "/Users/fabio/lib/Test_sersic/new_siffiles/obj_"+to_string(i)+"_mag_z.sif";
-        ifstream shap_input(shap_file.c_str());
+        std::string shap_file = shapelets_folder+"/obj_"+to_string(i)+"_mag_z.sif";
+        std::ifstream shap_input(shap_file.c_str());
         if (shap_input)
         {
             galaxies.push_back(SourceShapelets(shap_file.c_str()));
-            index++;
+            shap_input.close();
             
         }
-        shap_input.close();
     }
+    
 }
+
 
 void SourceMultiShapelets::assignParams(InputParams& params){
 	if(!params.get("source_mag_limit",mag_limit)){
@@ -655,6 +665,10 @@ void SourceMultiShapelets::assignParams(InputParams& params){
 	else
 		sb_limit = pow(10,-0.4*(48.6+sb_limit))*pow(180*60*60/pi,2)/hplanck;
 
+    if(!params.get("shapelets_folder",shapelets_folder)){
+        std::cout << "ERROR: shapelets_folder not found in parameter file " << params.filename() << std::endl;
+        exit(1);
+    }
 }
 
 /// Print info on current source parameters

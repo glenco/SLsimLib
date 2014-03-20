@@ -130,7 +130,8 @@ namespace
 		{"source_input_galaxy_file", "sources.txt", "Millennium sources input file"},
 		{"source_band", "", ""},
 		{"source_mag_limit", "30", "minimum magnitude for sources"},
-		{"source_sb_limit", "0", "minimum surface brightness for sources"}
+		{"source_sb_limit", "0", "minimum surface brightness for sources"},
+        {"shapelets_folder", "","Shapelets sources input folder"}
 	};
 	
 	// create a set of all labels from the parameter list

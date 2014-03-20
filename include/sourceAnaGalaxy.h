@@ -118,15 +118,13 @@ bool magcompare(SourceOverzier s1,SourceOverzier s2);
 /**
  * \brief Class for reading in and handling an array of SourceShapelets, made on the model of SourceMultiAnaGalaxy
  * Galaxies are read from files in a predifined directory and put into a std::vector that allows 
- * sorting in redshift and magnitude. When the index is set, an individual object can
- * be get through operator [].
+ * sorting in redshift and magnitude. An individual object can be get via CurrentGalaxy() or the overloaded operator [].
  *
  *</pre>
  */
 class SourceMultiShapelets: public Source{
 public:
-    SourceMultiShapelets();
-    SourceMultiShapelets(InputParams params){};
+    SourceMultiShapelets(InputParams& params);
 	~SourceMultiShapelets();
     void sortInRedshift();
     void sortInMag();
@@ -190,6 +188,7 @@ private:
    
     void readCatalog();
  	std::vector<SourceShapelets> galaxies;
+	std::string shapelets_folder;
     
 };
 
