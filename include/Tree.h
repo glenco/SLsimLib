@@ -316,7 +316,7 @@ namespace Utilities{
   class Interpolator{
   public:
     Interpolator(
-                 PosType *x          /// position of point
+                 PosType const *x          /// position of point
                  ,int Npixels       /// Number of pixels in one dimension
                  ,PosType my_range   /// Range of map in same units as x[]
                  ,PosType *my_center /// Center of map in same units as x[]
@@ -436,7 +436,7 @@ namespace Utilities{
     long index;
     int N,Ny;
 
-    void initparams(PosType *x){
+    void initparams(PosType const *x){
       long ix,iy;
       // position in pixel coordinates
       fx = ((x[0] - center[0])/range + 0.5)*(N-1);

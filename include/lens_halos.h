@@ -85,8 +85,8 @@ public:
     /// get slope
     virtual PosType get_slope(){return beta;};
     /// flag=True if halo elliptical
-    bool get_flag_elliptical(){return elliptical;};
-    void set_flag_elliptical(bool ell){elliptical=ell;};
+    bool get_flag_elliptical(){return elliptical_flag;};
+    void set_flag_elliptical(bool ell){elliptical_flag=ell;};
     
     /// set cosmology for halo
 	virtual void setCosmology(const COSMOLOGY& cosmo) {}
@@ -206,19 +206,18 @@ protected:
     
     virtual PosType inline gfunction(PosType x){return -1;};
 	
-    
     PosType xmax;
 
   // Functions for calculating axial dependence
     float pa;
     float fratio=1;
-    bool elliptical;
+    bool elliptical_flag = false;
 
-  void faxial(PosType theta,PosType f[]);
-  void gradial(PosType r,PosType g[]);
-  void gradial2(PosType r,PosType g[]);
+    void faxial(PosType theta,PosType f[]);
+    void gradial(PosType r,PosType g[]);
+    void gradial2(PosType r,PosType g[]);
     
-  //void felliptical(PosType x, PosType q, PosType theta, PosType f[], PosType g[]);
+    //void felliptical(PosType x, PosType q, PosType theta, PosType f[], PosType g[]);
 
 	virtual void gamma_asym(PosType x,PosType theta, PosType gamma[2]);
 	virtual PosType kappa_asym(PosType x,PosType theta);
@@ -498,7 +497,7 @@ public:
 	~LensHaloSimpleNSIE();
 
 	/// overridden function to calculate the lensing properties
-	void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType *xcm,bool no_kappa,bool subtract_point=false);
+	void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool no_kappa,bool subtract_point=false);
 	// void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xcm,bool no_kappa,bool subtract_point=false);
     
 	/// get the velocity dispersion
@@ -724,7 +723,7 @@ public:
 	~LensHaloDummy(){};
 	
 	/// overridden function to calculate the lensing properties
-	void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType *xcm,bool no_kappa,bool subtract_point=false);
+	void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool no_kappa,bool subtract_point=false);
     // void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xcm,bool no_kappa,bool subtract_point=false);
     
 	/// initialize from a mass function

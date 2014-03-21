@@ -76,7 +76,7 @@ void LensHaloUniform::force_halo(
 		,KappaType *kappa
 		,KappaType *gamma
         ,KappaType *phi      // PHI BY Fabien
-		,PosType *xcm
+		,PosType const *xcm
 		,bool no_kappa
 		,bool subtract_point /// if true contribution from a point mass is subtracted
 		)
@@ -106,7 +106,7 @@ void LensHaloUniform::force_halo(
 }
 
 PosType LensHaloUniform::lens_expand(PosType *mod
-                                     ,PosType *x
+                                     ,PosType const *x
                                      ,PosType *alpha
                                      ,KappaType *gamma
                                      ,KappaType *phi

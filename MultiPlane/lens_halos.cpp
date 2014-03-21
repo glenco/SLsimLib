@@ -14,12 +14,14 @@ LensHalo::LensHalo(){
 	rscale = 1.0;
 	mass = Rmax = xmax = posHalo[0] = posHalo[1] = 0.0;
 	stars_implanted = false;
+    elliptical_flag = false;
 }
 
 LensHalo::LensHalo(InputParams& params){
 	assignParams(params);
 	stars_implanted = false;
     posHalo[0] = posHalo[1] = 0.0;
+    elliptical_flag = false;
 }
 
 void LensHalo::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed){
@@ -134,7 +136,8 @@ LensHaloNFW::LensHaloNFW(float my_mass,float my_Rmax,PosType my_zlens,float my_c
             if(mod[i]!=0){set_flag_elliptical(true);};
         }
 
-    }
+    }else set_flag_elliptical(false);
+    
     std::cout << mass << " " << rscale << std::endl;
     
  }
@@ -476,7 +479,8 @@ LensHaloSimpleNSIE::LensHaloSimpleNSIE(float my_mass,PosType my_zlens,float my_s
 	Rsize = rmaxNSIE(sigma,mass,fratio,rcore);
 	Rmax = MAX(1.0,1.0/fratio)*Rsize;  // redefine
 	assert(Rmax >= Rsize);
-}
+ }
+
 
 LensHaloSimpleNSIE::LensHaloSimpleNSIE(InputParams& params){
 	sigma = 0.;
@@ -550,10 +554,12 @@ void LensHalo::force_halo(
     ,bool subtract_point /// if true contribution from a point mass is subtracted
     ){
     //std::cout << "In lens_halo.cpp force_halo " << elliptical << std::endl;
-	if (elliptical){
+	if (elliptical_flag){
         force_halo_asym(alpha,kappa,gamma,xcm,kappa_off,subtract_point);
+        assert(!isinf(*kappa) );
     }else{
         force_halo_sym(alpha,kappa,gamma,phi,xcm,kappa_off,subtract_point);
+        assert(!isinf(*kappa) );
 	}
 }
 
@@ -582,9 +588,6 @@ void LensHalo::force_halo_sym(
 		alpha[0] += tmp*xcm[0];
         //std::cout << alpha_h(x) << std::endl;
 		alpha[1] += tmp*xcm[1];
-
-
-
 
 		// can turn off kappa and gamma calculations to save times
 		if(!kappa_off)
@@ -845,7 +848,7 @@ void LensHaloSimpleNSIE::force_halo(
                                     ,KappaType *kappa
                                     ,KappaType *gamma
                                     ,KappaType *phi      // PHI BY Fabien
-                                    ,PosType *xcm
+                                    ,PosType const *xcm
                                     ,bool no_kappa
                                     ,bool subtract_point /// if true contribution from a point mass is subtracted
                                     )
@@ -1279,7 +1282,7 @@ void LensHaloDummy::force_halo(PosType *alpha
                                ,KappaType *kappa
                                ,KappaType *gamma
                                ,KappaType *phi       // PHI BY Fabien
-                               ,PosType *xcm
+                               ,PosType const *xcm
                                ,bool no_kappa
                                ,bool subtract_point)
 {
