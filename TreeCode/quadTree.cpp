@@ -461,7 +461,7 @@ void TreeQuad::force2D(PosType const *ray
                        ,PosType *alpha
                        ,KappaType *kappa
                        ,KappaType *gamma
-                       ,KappaType *phi  // PHI BY Fabien
+                       ,KappaType *phi
                        ,bool no_kappa){
 
   PosType xcm[2],rcm2cell,rcm2,tmp,boxsize2;
@@ -476,7 +476,7 @@ void TreeQuad::force2D(PosType const *ray
   /*
   QTreeNB::iterator iter(tree);
   iter.movetop();
-*/
+  */
   
   alpha[0]=alpha[1]=gamma[0]=gamma[1]=gamma[2]=0.0;
 
@@ -535,12 +535,13 @@ void TreeQuad::force2D(PosType const *ray
 
 						  gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 						  gamma[1] += xcm[0]*xcm[1]*tmp;
-              //*phi = prefac*rcm2*0.5*log(rcm2);
+                          
+                          *phi = prefac*rcm2*0.5*log(rcm2);
 					  }
 				  }
 			  }
 
-			  // Find the particles that are intersect with ray and add them individually.
+			  // Find the particles that intersect with ray and add them individually.
 			  if(rcm2cell < 5.83*boxsize2){
 				  for(i = 0 ; i < tree->current->Nbig_particles ; ++i){
 
@@ -577,8 +578,8 @@ void TreeQuad::force2D(PosType const *ray
 								  gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 								  gamma[1] += xcm[0]*xcm[1]*tmp;
                   
-                  // TODO: makes sure the normalization of phi_h agrees with this 
-                  //*phi = (phi_h(arg1,arg2) + 0.5*log(rcm2))*prefac*rcm2;
+                                  // TODO: makes sure the normalization of phi_h agrees with this
+                                  *phi = (phi_h(arg1,arg2) + 0.5*log(rcm2))*prefac*rcm2;
 							  }
 						  }
 					  }
@@ -597,10 +598,9 @@ void TreeQuad::force2D(PosType const *ray
 				  tmp=-2.0*tree->current->mass/pi/rcm2cell/rcm2cell;
 				  gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 				  gamma[1] += xcm[0]*xcm[1]*tmp;
-          
-          //*phi += 0.5*tree->current->mass*log( rcm2cell )/pi;
-          //*phi -= 0.5*( tree->current->quad[0]*xcm[0]*xcm[0] + tree->current->quad[1]*xcm[1]*xcm[1]
-          //              + 2*tree->current->quad[2]*xcm[0]*xcm[1] )/(pi*rcm2cell*rcm2cell);
+
+                  *phi += 0.5*tree->current->mass*log( rcm2cell )/pi;
+                  *phi -= 0.5*( tree->current->quad[0]*xcm[0]*xcm[0] + tree->current->quad[1]*xcm[1]*xcm[1] + 2*tree->current->quad[2]*xcm[0]*xcm[1] )/(pi*rcm2cell*rcm2cell);
 			  }
 
 			  // quadrapole contribution
@@ -734,11 +734,13 @@ void TreeQuad::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alph
 
 						gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 						gamma[1] += xcm[0]*xcm[1]*tmp;
+                        
+                        *phi = prefac*rcm2*0.5*log(rcm2);
 					}
 				}
 			}
 
-			// Fined the particles that intersect with ray and add them individually.
+			// Find the particles that intersect with ray and add them individually.
 			if(rcm2cell < 5.83*boxsize2){
 				for(i = 0 ; i < branch->Nbig_particles ; ++i){
 
@@ -774,6 +776,9 @@ void TreeQuad::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alph
 
 								gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 								gamma[1] += xcm[0]*xcm[1]*tmp;
+                                
+                                // TODO: makes sure the normalization of phi_h agrees with this
+                                *phi = (phi_h(arg1,arg2) + 0.5*log(rcm2))*prefac*rcm2;
 							}
 						}
 					}
@@ -799,6 +804,9 @@ void TreeQuad::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alph
 				tmp=-2.0*branch->mass/pi/rcm2cell/rcm2cell;
 				gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 				gamma[1] += xcm[0]*xcm[1]*tmp;
+                
+                *phi += 0.5*tree->current->mass*log( rcm2cell )/pi;
+                *phi -= 0.5*( tree->current->quad[0]*xcm[0]*xcm[0] + tree->current->quad[1]*xcm[1]*xcm[1] + 2*tree->current->quad[2]*xcm[0]*xcm[1] )/(pi*rcm2cell*rcm2cell);
 			}
 
 			// quadrapole contribution
