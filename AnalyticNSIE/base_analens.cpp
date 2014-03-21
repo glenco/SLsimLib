@@ -14,7 +14,7 @@ void LensHaloBaseNSIE::force_halo(
 		,KappaType *kappa   /// surface mass density
 		,KappaType *gamma
         ,KappaType *phi     // PHI BY Fabien
-		,PosType *xcm
+		,PosType const *xcm
 		,bool no_kappa
 		,bool subtract_point /// if true contribution from a point mass is subtracted
 		)

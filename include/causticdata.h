@@ -80,7 +80,11 @@ public:
   /// sort caustics by size of caustic curve area from largest to smallest
   void SortByCausticArea();
   
-  void init_for_random(short type,double limit = 0.0){
+  /// initialize for selection with RandomLens()
+  void init_for_random(
+        short type              /// select according to: (1) critical curve area, (2) caustic curve area
+        ,double limit = 0.0
+  ){
     size_t i;
     if(type == 1){
       SortByCritArea();

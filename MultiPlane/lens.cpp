@@ -1006,24 +1006,25 @@ void Lens::createFieldHalos(bool verbose)
 			theta_pos[1] = rr*sin(theta);//*Ds;
 			theta_pos[2] = 0.0;
 
-      float mass = pow(10,InterpolateYvec(Nhalosbin,Logm,ran2 (seed)));
+            float mass = pow(10,InterpolateYvec(Nhalosbin,Logm,ran2 (seed)));
       
 			halo_calc->reset(mass,halo_zs_vec[i]);
       
 			float Rmax = halo_calc->getRvir();
 			float rscale = Rmax/halo_calc->getConcentration(0);
-      assert(rscale < Rmax);
+            assert(rscale < Rmax);
       
-      float sigma = 0;
-			field_halos[j]->setZlens(halo_zs_vec[i]);
-			if(flag_field_gal_on){
-        // from Moster et al. 2010ApJ...710..903M
-        field_galaxy_mass_fraction = mo*pow(mass/M1,gam1)
-        /pow(1+pow(mass/M1,be),(gam1-gam2)/be)/mass;
-        if(field_galaxy_mass_fraction > 1.0) field_galaxy_mass_fraction = 1;
-        sigma = 126*pow(mass*(1-field_galaxy_mass_fraction)/1.0e10,0.25); // From Tully-Fisher and Bell & de Jong 2001
+            float sigma = 0;
+            if(flag_field_gal_on){
+                // from Moster et al. 2010ApJ...710..903M
+                field_galaxy_mass_fraction = mo*pow(mass/M1,gam1)
+                  /pow(1+pow(mass/M1,be),(gam1-gam2)/be)/mass;
+                if(field_galaxy_mass_fraction > 1.0) field_galaxy_mass_fraction = 1;
+                sigma = 126*pow(mass*(1-field_galaxy_mass_fraction)/1.0e10,0.25); // From Tully-Fisher and Bell & de Jong 2001
 				//field_halos[j]->initFromMassFunc(mass*(1-field_galaxy_mass_fraction),Rmax,rscale,field_prof_internal_slope,seed);
-			}
+            }else{
+                field_galaxy_mass_fraction = 0;
+            }
       
 			switch(field_int_prof_type)
 			{
@@ -1041,7 +1042,7 @@ void Lens::createFieldHalos(bool verbose)
 					field_halos.push_back(new LensHaloPowerLaw);
 					break;
 				case nsie_lens:
-          //std::cout << "Warning: All galaxies are spherical" << std::endl;
+                    //std::cout << "Warning: All galaxies are spherical" << std::endl;
 					field_halos.push_back(new LensHaloSimpleNSIE(mass*(1-field_galaxy_mass_fraction),halo_zs_vec[i],sigma,0.0,1.0,0,0));
 					//field_halos.push_back(new LensHaloSimpleNSIE);
 					break;
@@ -1071,11 +1072,10 @@ void Lens::createFieldHalos(bool verbose)
 					std::cout << "MultiDark not supported." << std::endl;
 					break;
 			}
+            field_halos[j]->setZlens(halo_zs_vec[i]);
+            if(field_int_prof_type != nsie_lens) field_halos[j]->initFromMassFunc(mass*(1-field_galaxy_mass_fraction),Rmax,rscale,field_prof_internal_slope,seed);
 
-		if(!flag_field_gal_on){
-				field_halos[j]->initFromMassFunc(mass,Rmax,rscale,field_prof_internal_slope,seed);
-			}
-
+ 
 			if(mass > mass_max) {
 				mass_max = mass;
 				j_max = i;
@@ -1087,36 +1087,33 @@ void Lens::createFieldHalos(bool verbose)
 			++j;
 
 			if(flag_field_gal_on){
-				switch(field_int_prof_gal_type){
-				case null_gal:
-					ERROR_MESSAGE();
-					std::cout << "flag_field_gal_on is true, but field_int_prof_gal_type is null!!!!" << std::endl;
-					break;
-				case nsie_gal:
+                switch(field_int_prof_gal_type){
+                    case null_gal:
+                        ERROR_MESSAGE();
+                        std::cout << "flag_field_gal_on is true, but field_int_prof_gal_type is null!!!!" << std::endl;
+                        break;
+                    case nsie_gal:
             
-          float sigma = 126*pow(mass*field_galaxy_mass_fraction/1.0e10,0.25); // From Tully-Fisher and Bell & de Jong 2001
-            //std::cout << "Warning: All galaxies are spherical" << std::endl;
-          float fratio = (ran2(seed)+1)*0.5;  //TODO: Ben change this!  This is a kluge.
-          float pa = 2*pi*ran2(seed);  //TODO: This is a kluge.
+                        float sigma = 126*pow(mass*field_galaxy_mass_fraction/1.0e10,0.25); // From Tully-Fisher and Bell & de Jong 2001
+                        //std::cout << "Warning: All galaxies are spherical" << std::endl;
+                        float fratio = (ran2(seed)+1)*0.5;  //TODO: Ben change this!  This is a kluge.
+                        float pa = 2*pi*ran2(seed);  //TODO: This is a kluge.
+                        field_halos.push_back(new LensHaloSimpleNSIE(mass*field_galaxy_mass_fraction,halo_zs_vec[i],sigma,0.0,fratio,pa,0));
 
-					field_halos.push_back(new LensHaloSimpleNSIE(mass*field_galaxy_mass_fraction,halo_zs_vec[i],sigma,0.0,fratio,pa,0));
-
-          //field_halos[j]->initFromMassFunc(mass*field_galaxy_mass_fraction,Rmax,rscale,field_prof_internal_slope,seed);
-            
-            
-					break;
+                        //field_halos[j]->initFromMassFunc(mass*field_galaxy_mass_fraction,Rmax,rscale,field_prof_internal_slope,seed);
+                        break;
 				}
         
-        // Another copy of this position must be made to avoid rescaling it twice when it is converted into
-        // distance on the lens plane in Lens::buildLensPlanes()
-        theta2 = new PosType[3];
-        theta2[0]=theta_pos[0]; theta2[1]=theta_pos[1]; theta2[2]=theta_pos[2];
+                // Another copy of this position must be made to avoid rescaling it twice when it is converted into
+                // distance on the lens plane in Lens::buildLensPlanes()
+                theta2 = new PosType[3];
+                theta2[0]=theta_pos[0]; theta2[1]=theta_pos[1]; theta2[2]=theta_pos[2];
         
-        halo_pos_vec.push_back(theta2);
+                halo_pos_vec.push_back(theta2);
         
-        ++j;
+                ++j;
         
-			}
+            }
 
 		}
 
@@ -1234,21 +1231,21 @@ void Lens::readInputSimFile(bool verbose)
 		theta[0] = -ra*pi/180.;
 		theta[1] = dec*pi/180.;
 
-    if(rmax2 < (rtmp = (theta[0]*theta[0]+theta[1]*theta[1]))) rmax2 = rtmp;
+        if(rmax2 < (rtmp = (theta[0]*theta[0]+theta[1]*theta[1]))) rmax2 = rtmp;
 
-    float mass = np*8.6e8/cosmo.gethubble(),sigma=0;
+        float mass = np*8.6e8/cosmo.gethubble(),sigma=0;
 
-    if(flag_field_gal_on){
-      // from Moster et al. 2010ApJ...710..903M
-      field_galaxy_mass_fraction = mo*pow(mass/M1,gam1)
-      /pow(1+pow(mass/M1,be),(gam1-gam2)/be)/mass;
-      if(field_galaxy_mass_fraction > 1.0) field_galaxy_mass_fraction = 1;
-      sigma = 126*pow(mass*field_galaxy_mass_fraction/1.0e10,0.25); // From Tully-Fisher and Bell & de Jong 2001
+        if(flag_field_gal_on){
+            // from Moster et al. 2010ApJ...710..903M
+            field_galaxy_mass_fraction = mo*pow(mass/M1,gam1)
+              /pow(1+pow(mass/M1,be),(gam1-gam2)/be)/mass;
+            if(field_galaxy_mass_fraction > 1.0) field_galaxy_mass_fraction = 1;
+            sigma = 126*pow(mass*(1-field_galaxy_mass_fraction)/1.0e10,0.25); // From Tully-Fisher and Bell & de Jong 2001
+        }else{
+            field_galaxy_mass_fraction = 0;
+        }
 
-      field_halos[j]->initFromFile(mass*(1-field_galaxy_mass_fraction),seed,vmax,r_halfmass*cosmo.gethubble());
-    }
-
-		if(np > 0.0 && vdisp > 0.0 && z <= zsource){
+        if(np > 0.0 && vdisp > 0.0 && z <= zsource){
 
 			switch(field_int_prof_type)
 			{
@@ -1270,8 +1267,7 @@ void Lens::readInputSimFile(bool verbose)
 					std::cout << "PowerLaw not supported." << std::endl;
 					break;
 				case nsie_lens:
-          
-          field_halos.push_back(new LensHaloSimpleNSIE(mass*(1-field_galaxy_mass_fraction),z,sigma,0.0,1.0,0.0,0));
+                    field_halos.push_back(new LensHaloSimpleNSIE(mass*(1-field_galaxy_mass_fraction),z,sigma,0.0,1.0,0.0,0));
 
 					//field_halos.push_back(new LensHaloSimpleNSIE);
 					break;
@@ -1308,8 +1304,8 @@ void Lens::readInputSimFile(bool verbose)
 
 
 			field_halos[j]->setZlens(z);
-			 if(!flag_field_gal_on){
-         field_halos[j]->initFromFile(mass,seed,vmax,r_halfmass*cosmo.gethubble());
+            if(field_int_prof_type != nsie_lens){
+                field_halos[j]->initFromFile(mass*(1-field_galaxy_mass_fraction),seed,vmax,r_halfmass*cosmo.gethubble());
 			}
 
 
@@ -1329,30 +1325,32 @@ void Lens::readInputSimFile(bool verbose)
 			++j;
 
 			if(flag_field_gal_on){
-				switch(field_int_prof_gal_type){
+                float sigma = 126*pow(mass*field_galaxy_mass_fraction/1.0e10,0.25); // From Tully-Fisher and Bell & de Jong 2001
+                //std::cout << "Warning: All galaxies are spherical" << std::endl;
+                float fratio = (ran2(seed)+1)*0.5;  //TODO: Ben change this!  This is a kluge.
+                float pa = 2*pi*ran2(seed);  //TODO: This is a kluge.
+
+ 				switch(field_int_prof_gal_type){
 				case null_gal:
 					ERROR_MESSAGE();
 					std::cout << "flag_field_gal_on is true, but field_int_prof_gal_type is null!!!!" << std::endl;
 					break;
 				case nsie_gal:
-            float sigma = 126*pow(mass*field_galaxy_mass_fraction/1.0e10,0.25); // From Tully-Fisher and Bell & de Jong 2001
-            //std::cout << "Warning: All galaxies are spherical" << std::endl;
-            float fratio = (ran2(seed)+1)*0.5;  //TODO: Ben change this!  This is a kluge.
-            float pa = 2*pi*ran2(seed);  //TODO: This is a kluge.
-            
-            field_halos.push_back(new LensHaloSimpleNSIE(mass*field_galaxy_mass_fraction,z,sigma,0.0,fratio,pa,0));
-
-					//field_halos.push_back(new LensHaloSimpleNSIE);
-					break;
+                    field_halos.push_back(new LensHaloSimpleNSIE(mass*field_galaxy_mass_fraction,z,sigma,0.0,fratio,pa,0));
+                    //field_halos.push_back(new LensHaloSimpleNSIE);
+                    break;
+                default:
+                    throw std::runtime_error("Don't support any but NSIE galaxies yet!");
+                    break;
 				}
 
-				//field_halos[j]->setZlens(z);
+                //field_halos[j]->setZlens(z);
 				//field_halos[j]->initFromFile(mass*field_galaxy_mass_fraction,seed,vmax,r_halfmass*cosmo.gethubble());
 
-        // Another copy of this position must be made to avoid rescaling it twice when it is converted into
-        // distance on the lens plane in Lens::buildLensPlanes()
-        theta2 = new PosType[2];
-        theta2[0]=theta[0]; theta2[1]=theta[1];
+                // Another copy of this position must be made to avoid rescaling it twice when it is converted into
+                // distance on the lens plane in Lens::buildLensPlanes()
+                theta2 = new PosType[2];
+                theta2[0]=theta[0]; theta2[1]=theta[1];
 				halo_pos_vec.push_back(theta2);
 
 				++j;

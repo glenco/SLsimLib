@@ -450,7 +450,7 @@ void LensHaloMOKA::force_halo(double *alpha
                               ,KappaType *kappa
                               ,KappaType *gamma
                               ,KappaType *phi        // PHI BY Fabien
-                              ,double *xx
+                              ,double const *xx
                               ,bool kappa_off
                               ,bool subtract_point)
 {
