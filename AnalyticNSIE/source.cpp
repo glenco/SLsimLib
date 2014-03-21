@@ -636,9 +636,10 @@ void SourceMultiShapelets::readCatalog()
         std::ifstream shap_input(shap_file.c_str());
         if (shap_input)
         {
-            galaxies.push_back(SourceShapelets(shap_file.c_str()));
-            shap_input.close();
-            
+            SourceShapelets s(shap_file.c_str());
+            if (s.getMag() > 0. && s.getMag() < mag_limit)
+                galaxies.push_back(s);
+            shap_input.close();            
         }
     }
     
