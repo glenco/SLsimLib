@@ -174,9 +174,9 @@ namespace Utilities{
 	void rotation(PosType *xout,PosType *xin,PosType theta);
 }
 
-void alphaNSIE(PosType *alpha,PosType *xt,PosType f,PosType bc,PosType theta);
+void alphaNSIE(PosType *alpha,double *xt,PosType f,PosType bc,PosType theta);
 KappaType kappaNSIE(PosType *xt,PosType f,PosType bc,PosType theta);
-void gammaNSIE(KappaType *gam,PosType *xt,PosType f,PosType bc,PosType theta);
+void gammaNSIE(KappaType *gam,double *xt,PosType f,PosType bc,PosType theta);
 KappaType invmagNSIE(PosType *x,PosType f,PosType bc,PosType theta
                      ,float *gam,float kap);
 PosType rmaxNSIE(PosType sigma,PosType mass,PosType f,PosType rc );

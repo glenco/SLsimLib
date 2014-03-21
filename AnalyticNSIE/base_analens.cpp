@@ -393,16 +393,29 @@ void LensHalo::faxial(PosType theta,PosType f[]){
     }
 }
 
-/// Derivatives of the potential damping factor with respect to r
+/// Derivatives of the potential damping factor with respect to r ... TODO: come up with a better damping faction
 void LensHalo::gradial(PosType r,PosType g[]){
-  double r_eps=0.1*Rmax; // TODO: r_eps = Rmax for now, but must be thought about later
+  double r_eps=0.5*Rmax;
+
   PosType x = (1+r/r_eps);
   g[0] = 1.0/x/x;
   g[1] = -2.0*g[0]/x/r_eps;
   g[2] = -3.0*g[1]/x/r_eps;
-  //cout << "ginside: rmax " << Rmax  << " "<< g[0] << " " << g[1] << " " << g[2] << endl;
 }
 
+void LensHalo::gradial2(PosType r,PosType g[]){
+    PosType x = r;
+    double sigma=1;
+    double mu=2*rscale;
+    //sigma=sqrt(-1.0*mu*mu/2./log(0.5));
+    g[0] = (exp(-1.0*(x-mu)*(x-mu)/2/sigma/sigma));
+    g[1] = 0*g[0]*(-1.0*(x-mu)/sigma/sigma);
+    g[2] = 0*g[0]*((x-mu)*(x-mu)-sigma*sigma)/pow(sigma,4);
+
+    //if(r<mu){
+    //    std::cout << r << " " << mu << " " << g[0] << std::endl;
+    //}
+}
 
 /// Calculates fourier-coefficients for power law halo
 double LensHalo::fourier_coeff(double n, double q, double beta){
@@ -410,56 +423,15 @@ double LensHalo::fourier_coeff(double n, double q, double beta){
     return Utilities::nintegrate<fourier_func>(f,0.0,2*pi,1.0e-6);
 }
 
-/// Calculates potential (phi_int) from alpha_h
-PosType LensHalo::alpha_int(PosType x, bool is_alphah_a_table){
-    if(is_alphah_a_table==true){
-        struct Ig_func g(*this);
-        return Utilities::nintegrate<Ig_func>(g,1E-8,x,1.0e-8);
-    };
-    if(is_alphah_a_table==false){
-        struct Ialpha_func a(*this);
-        return Utilities::nintegrate<Ialpha_func>(a,1E-8,x,1.0e-6);
-    };
-    return 0.0;
+/// Calculates potential (phi_int) from alpha_h. If flag is_alphah_a_table is True it takes and integrates directly the gfunction instead of alpha_h. The gfunction is used for the InterpolationTable used in alpha_h. Setting the flag to False speeds up the calculation of phi_h.
+PosType LensHalo::alpha_int(PosType x){
+    struct Ig_func g(*this);
+    return Utilities::nintegrate<Ig_func>(g,1E-8,x,1.0e-6);
 }
 
-
-void LensHalo::setModesToEllip(PosType q,PosType rottheta, PosType mod[]){
-    // elliptical integrals
-    
-    PosType K = rfD(0,1./q/q,1);
-    PosType E = K - (1-1./q/q)*rdD(0,1./q/q,1)/3;
-   // assert(Nmod == 64);
-    
-    
-    
-    // set modo to elliptical model
-    for(int i=1;i<=Nmod;++i){
-        mod[i]=0.0;
-    }
-    // fill in modes with their values for an elliptical lens
-    if(q != 1.0){
-        mod[3] = 4*K/pi; // /2?
-        mod[4] = 4*( (1+q*q)*K-2*q*q*E )/(1-q*q)/pi/(1-4); //mod[3];
-        mod[8] = 4*( (3*q*q+1)*(q*q+3)*K-8*q*q*(1+q*q)*E )/( 3*pi*pow(1-q*q,2) )/(1-16); // /mod[3];
-        mod[12]= 4*( (1+q*q)*(15+98*q*q+15*q*q*q*q)*K-2*q*q*(23+82*q*q+23*q*q*q*q)*E )/( 15*pi*pow(1-q*q,3) )/(1-36); ///mod[3];
-        mod[16]= 4*( -32*q*q*(1+q*q)*(11+74*q*q+11*q*q*q*q)*E+(105+1436*q*q+3062*q*q*q*q+1436*pow(q,6)+105*pow(q,8))*K )/(105*pi*pow(1-q*q,4))/(1-64); ///mod[3];
-    }
-    mod[3]=1.0;
-    
-    std::cout << "setModes for beta=1" << " " << mod[3] << " " << mod[4] << " " << mod[8] << " " << std::endl;
-
-    
-    // rotate model
-    RotateModel(rottheta,mod,Nmod,0);
-    
-    return;
-}
-
-/// Calculates the modes for fourier expansion of power law halo
+/// Calculates the modes for fourier expansion of power law halo. All the modes are relative to the zero mode to conserve mass throughout the calculation of kappa etc.
 void LensHalo::calcModes(double q, double beta, double rottheta, PosType mod[]){
     int i,k;
-    //assert(Nmod == 32);
     for(int i=1;i<Nmod;++i){
 		mod[i]=0;
 	}
@@ -482,6 +454,7 @@ void LensHalo::calcModes(double q, double beta, double rottheta, PosType mod[]){
 	RotateModel(rottheta,mod,Nmod,0);
 }
 
+/// In alpha_asym phi_int(x) is used, which calculates the potential unlike phi_h from alpha_h.
 
 void LensHalo::alpha_asym(PosType x,PosType theta, PosType alpha[]){
 	PosType F,f[3],g[3],alpha_r,alpha_theta;
@@ -490,52 +463,60 @@ void LensHalo::alpha_asym(PosType x,PosType theta, PosType alpha[]){
     faxial(theta,f);
     F=f[0]-1;
     gradial(x,g);
-	
+    beta=get_slope();
+    double fac=1.0/(beta*beta/(2-beta)/(2-beta));
+    
     //alpha_r=alpha_h(x)*f[0]; // w/o damping
-    //alpha_theta=f[1]*phi/x; //  w/0 damping
+    //alpha_theta=f[1]*phi/x; //  w/o damping
     
-    //std::cout << phi_h(x) << " " << phi_int(x) << " " << phi_h(x) / phi_int(x) << std::endl;
+    alpha_r=alpha_h(x)*(1+F*g[0])+phi*fac*F*g[1]; // with damping
+    alpha_theta=f[1]*g[0]*phi*fac/x; //  with damping
     
-    alpha_r=alpha_h(x)*(1+F*g[0])+phi*F*g[1]; // with damping
-    alpha_theta=f[1]*g[0]*phi/x; //  with damping
-
+    //std::cout << "in alpha_asym: " << beta << " " << alpha_theta << std::endl;
+    
 	alpha[0] = (alpha_r*cos(theta) - alpha_theta*sin(theta))/cos(theta);
 	alpha[1] = (alpha_r*sin(theta) + alpha_theta*cos(theta))/sin(theta);
 	return;
 }
 
+/// In kappa phi_int(x) is used, which calculates the potential unlike phi_h from alpha_h.
 
 PosType LensHalo::kappa_asym(PosType x,PosType theta){
 	PosType F, f[3],g[3], kappa;
     PosType phi=phi_int(x);
-    
+   
     faxial(theta,f);
     F=f[0]-1;
     gradial(x,g);
-    kappa=f[0]*kappa_h(x)-0.5*f[2]*phi; // w/o damping
-    //kappa=(1+F*g[0])*kappa_h(x)-0.5*phi*(F*g[1]/x+F*g[2]+f[2]*g[0]/x/x)*x*x-F*g[1]*alpha_h(x)*x*x; // with damping
+    beta=get_slope();
+    double fac=1.0/(beta*beta/(2-beta)/(2-beta));
     
-    
+    //kappa=f[0]*kappa_h(x)-0.5*f[2]*phi*fac;//  w/o damping
+    //std::cout << x << " " << f[0]*kappa_h(x) / ( 0.5*f[2]*phi*fac ) << std::endl;
+    kappa=(1+F*g[0])*kappa_h(x)-0.5*phi*fac*(F*g[1]/x+F*g[2]+f[2]*g[0]/x/x)*x*x-F*g[1]*alpha_h(x)*x*x; /// with damping
 	return kappa;
 }
 
+/// In gamma_asym phi_int(x) is used, which calculates the potential unlike phi_h from alpha_h.
 
 void LensHalo::gamma_asym(PosType x,PosType theta, PosType gamma[]){
 	PosType F, f[3],g[3];
     PosType phi=phi_int(x);
-
+    
     faxial(theta,f);
     F=f[0]-1;
     gradial(x,g);
-
-    //double gt = f[0]*gamma_h(x)+0.5*phi*f[2];// w/o damping
-    //double g45 = (-alpha_h(x)*f[1]*g[0])*x+(phi*f[1]);// w/o damping
+    beta=get_slope();
+    //double fac=pi/2./(beta*beta/(2-beta)/(2-beta));
+    double fac=1.0/(beta*beta/(2-beta)/(2-beta));
+    //double gt = f[0]*gamma_h(x)+0.5*phi*fac*f[2];// w/o damping
+    //double g45 = (-alpha_h(x)*f[1]*g[0])*x+(phi*fac*f[1]);// w/o damping
     
-    PosType gt = (1+F*g[0])*gamma_h(x)+0.5*phi*(-F*g[1]/x+F*g[2]-f[2]*g[0]/x/x)*x*x-F*g[1]*alpha_h(x)*x*x;// with damping
-    PosType g45 = (-alpha_h(x)*f[1]*g[0]-phi*f[1]*g[1])*x+(phi*f[1]*g[0]);// with damping
+    PosType gt = (1+F*g[0])*gamma_h(x)+0.5*phi*fac*(-F*g[1]/x+F*g[2]-f[2]*g[0]/x/x)*x*x-F*g[1]*alpha_h(x)*x*x;// with damping
+    PosType g45 = (-alpha_h(x)*f[1]*g[0]-phi*fac*f[1]*g[1])*x+(phi*fac*f[1]*g[0]);// with damping
     
-    gt *= 0.5*pow(x,2);
-    g45 *= 0.5*pow(x,2);
+    gt *= 0.5*pow(x/xmax,2);
+    g45 *= 0.5*pow(x/xmax,2);
     
 	gamma[0] = cos(2*theta)*gt-sin(2*theta)*g45;
     gamma[1] = sin(2*theta)*gt+cos(2*theta)*g45;
