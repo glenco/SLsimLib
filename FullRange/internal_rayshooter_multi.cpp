@@ -172,14 +172,10 @@ for(i = start; i < end; i++)
     
     // In case e.g. a temporary point is outside of the grid.
     if(p->i_points[i].in_image == MAYBE) continue;
-
-    //std::cout << "p->i_points[i].x[0] = " << p->i_points[i].x[0] << " ; p->i_points[i].x[1] = " << p->i_points[i].x[1] << " ; p->Dl[0] = " << p->Dl[0] << std::endl;
       
     // find position on first lens plane in comoving units
     p->i_points[i].image->x[0] = p->i_points[i].x[0] * p->Dl[0];
     p->i_points[i].image->x[1] = p->i_points[i].x[1] * p->Dl[0];
-
-    //std::cout << "p->i_points[i].image->x[0] = " << p->i_points[i].image->x[0] << " ; p->i_points[i].image->x[1] = " << p->i_points[i].image->x[1] << std::endl;
 
     xminus[0] = 0;
     xminus[1] = 0;
@@ -220,19 +216,18 @@ for(i = start; i < end; i++)
     In case where kappa_off = true : we compute deflection, shear, convergence, rotation
     and time-delay of rays in parallel.
     ************************************************************************************ */
-    
-    /* TEST FABIEN
-    double GeometricalTerm ; // Added by Fabien, to be removed after phi completely works
-     */
       
     // Time delay at first plane
     p->i_points[i].dt = 0.5*( p->i_points[i].image->x[0]*p->i_points[i].image->x[0] + p->i_points[i].image->x[1]*p->i_points[i].image->x[1] )/ p->dDl[0];
     
+      
     /* TEST FABIEN
-    std::cout << "Contribution 1 = " << 0.5*( p->i_points[i].image->x[0]*p->i_points[i].image->x[0] + p->i_points[i].image->x[1]*p->i_points[i].image->x[1] )/ p->dDl[0] << std::endl ;
+     std::cout << "Contribution 1 = " << 0.5*( p->i_points[i].image->x[0]*p->i_points[i].image->x[0] + p->i_points[i].image->x[1]*p->i_points[i].image->x[1] )/ p->dDl[0] << std::endl ;
   
+    double GeometricalTerm ;
     GeometricalTerm = p->i_points[i].dt;
      */
+      
       
     // Begining of the loop through the planes :
     // Each iteration leaves i_point[i].image on plane (j+1)
@@ -354,7 +349,6 @@ for(i = start; i < end; i++)
             
             
         // Check that the 1+z factor must indeed be there (because the x positions have been rescaled, so it may be different compared to the draft).
-        // Is this sure that we have to use phi_minus ?
             
         } // End of if(!kappa_off)
     } // End of the loop going through the planes
