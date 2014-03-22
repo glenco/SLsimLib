@@ -620,7 +620,11 @@ void PixelMap::smooth(PosType sigma){
  * at all before starting.  Could also be improved by making the line fatter
  * by including neighbor points.
  */
-void PixelMap::drawline(PosType x1[],PosType x2[],PosType value){
+void PixelMap::drawline(
+        PosType x1[]     /// one end point of line
+        ,PosType x2[]    /// other end point of line
+        ,PosType value   /// value that it is set to on the map
+                        ){
 
 	PosType x[2],s1,s2,r;
 	size_t index;
@@ -651,6 +655,29 @@ void PixelMap::drawline(PosType x1[],PosType x2[],PosType value){
 		d += resolution;
 	}
 
+	return;
+}
+
+/**
+ * \brief Draws a circle
+ */
+void PixelMap::drawcircle(
+                        PosType r_center[]    /// center of circle
+                        ,PosType radius       ///  radius of circle
+                        ,PosType value        /// value that it is set to on the map
+                        ){
+  
+	PosType x1[2],x2[2];
+  PosType dtheta = resolution/radius;
+
+  for(float theta = 0; theta < 2*pi; theta += dtheta){
+    x1[0] = r_center[0] + radius*cos(theta);
+    x1[1] = r_center[1] + radius*sin(theta);
+    x2[0] = r_center[0] + radius*cos(theta+dtheta);
+    x2[1] = r_center[1] + radius*sin(theta+dtheta);
+    drawline(x1,x2,value);
+  }
+    
 	return;
 }
 /**
@@ -695,4 +722,128 @@ void PixelMap::AddGrid(Grid &grid,PosType value){
       map[index] = value;
     }
   }while(MoveDownList(list));
+}
+
+
+/// Find arcs in image
+void PixelMap::FindArc(
+                       PosType &radius
+                       ,PosType *xc
+                       ,PosType &arclength
+                       ,PosType &width
+                       ,PosType threshold
+                       ){
+  
+  std::vector<size_t> mask(Npixels*Npixels);
+  size_t j=0;
+  long k=0;
+  PosType const tmp_center[2] = {0,0};
+  
+  // mask pixels below threshhold
+  PosType maxval = map[0];
+  for(size_t i=0;i<Npixels*Npixels;i++){
+    if(map[i] > threshold){
+      mask[j++]=i;
+    }
+    maxval = MAX(maxval,map[i]);
+  }
+  mask.resize(j);
+  
+  if(j == 0){
+    radius = arclength = width = 0.0;
+    xc[0] = xc[1] = 0.0;
+    return;
+  }
+  
+  PosType Rmax,Rmin,r2;
+  Rmax = Npixels;
+  Rmin = 2;
+  
+  size_t Nc,Nr;
+  
+  Nc = (size_t)(2*Rmax);
+  Nr = (size_t)(Rmax-Rmin)/2;
+  
+  std::vector<PosType> x(Nc),y(Nc),R2(Nr);//,votes(Nc*Nc*Nr);
+  Utilities::D3Matrix<float> votes(Nc,Nc,Nr);
+  for(size_t i = 0;i<Nc*Nc*Nr;++i) votes(i) = 0;
+  
+  for(size_t i = 0;i<Nc;++i) x[i] = i*2*Rmax/(Nc-1) - Rmax;
+  for(size_t i = 0;i<Nc;++i) y[i] = i*2*Rmax/(Nc-1) - Rmax;
+  for(size_t i = 0;i<Nr;++i) R2[i] = pow(Rmin + i*(Rmax-Rmin)/(Nr-1),2);
+  
+  const PosType range = 1.0*Npixels;
+  PosType Rmax2 = Rmax*Rmax;
+  PosType rmin2 = Rmax2,rmax2=0;
+  for(size_t m=0;m<mask.size();++m){
+    
+    Utilities::PositionFromIndex(mask[m], xc, Npixels, range, tmp_center);
+    
+    for(size_t ii=0;ii<Nc;++ii){
+      for(size_t jj=0;jj<Nc;++jj){
+        
+        r2 = (xc[0]-x[ii])*(xc[0]-x[ii]) + (xc[1]-y[jj])*(xc[1]-y[jj]);
+        
+        rmin2 = MIN(rmin2,r2);
+        rmax2 = MAX(rmax2,r2);
+        
+        if(r2 < Rmax2){
+          k = locate<PosType>(R2,r2);
+          if(k > -1 && k < Nr){
+            votes(ii,jj,k) += log(map[mask[m]]);
+            //std::cout << "vote = " << votes(ii,jj,k) << std::endl;
+          }
+        }
+      }
+    }
+  }
+  
+  // find maximum votes
+  
+  size_t kmax=0,ksecond=0;
+  PosType maxvotes,secondvotes;
+  maxvotes = votes(0);
+  for(size_t kk=0;kk < Nc*Nc*Nr;++kk){
+    
+    /*if(votes(ii,jj,kk) > votes(ii+1,jj,kk) && votes(ii,jj,kk) > votes(ii-1,jj,kk) ){
+     if(votes(ii,jj,kk) > votes(ii,jj+1,kk) && votes(ii,jj,kk) > votes(ii,jj-1,kk) ){
+     if(votes(ii,jj,kk) > votes(ii,jj,kk+1) && votes(ii,jj,kk) > votes(ii,jj,kk-1) ){
+     
+     }
+     }
+     }*/
+    
+    if(votes(kk) >= maxvotes ){
+      
+      secondvotes = maxvotes;
+      ksecond = kmax;
+      
+      maxvotes = votes(kk);
+      kmax = kk;
+    }
+  }
+  
+  
+  xc[0] = x[votes.xindex(kmax)];
+  xc[1] = y[votes.yindex(kmax)];
+  radius = sqrt(R2[votes.zindex(kmax)])*resolution;
+  
+  PosType x_tmp[2],r_tmp,rmax,rmin;
+  rmax = rmin = radius;
+  arclength = 0;
+  
+  for(size_t m=0;m<mask.size();++m){
+    Utilities::PositionFromIndex(mask[m], x_tmp, Npixels, range, tmp_center);
+    r_tmp = sqrt( (xc[0] - x_tmp[0])*(xc[0] - x_tmp[0]) + (xc[1] - x_tmp[1])*(xc[1] - x_tmp[1]) );
+    
+    if(fabs(r_tmp-radius) < resolution) arclength += 1;
+    rmax = MAX(rmax,r_tmp);
+    rmin = MIN(rmin,r_tmp);
+  }
+  
+  width = MAX(rmax-rmin,1.0)*resolution;
+  arclength *= resolution;
+  
+  xc[0] = xc[0]*resolution + center[0];
+  xc[1] = xc[1]*resolution + center[1];
 }

@@ -449,8 +449,8 @@ void LensHaloMOKA::saveProfiles(double &RE3,double &xxc,double &yyc){
 void LensHaloMOKA::force_halo(double *alpha
                               ,KappaType *kappa
                               ,KappaType *gamma
-                              ,KappaType *phi
-                              ,double *xx
+                              ,KappaType *phi        // PHI BY Fabien
+                              ,double const *xx
                               ,bool kappa_off
                               ,bool subtract_point)
 {

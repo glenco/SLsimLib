@@ -246,7 +246,7 @@ unsigned long order_curve4(Point *curve,long Npoints){
   }
 
 /**
- *  \brief For odering the curve by the convex hull meathod.  Warning: Does not work very well.
+ *  \brief For odering the curve by the convex hull method.  Warning: Does not work very well.
  * 
  *   The convex hull is found for the points in the kist.  Then each additional point
  *   is inserted into the curve where it will increase the length of the curve the least.
@@ -364,7 +364,7 @@ unsigned long order_curve4(Point *curve,long Npoints){
   }
 
   /// gives the area within the convex hull of the curve
-  PosType HullArea(Kist<Point> * curve){
+  PosType ConvexHullArea(Kist<Point> * curve){
     Kist<Point> tmpkist;
     PosType area = 0;
     

@@ -7,7 +7,12 @@
 #include <cmath>
 
 #include "../include/Tree.h"
-
+/**
+* \brief Attempts to create a map of the source given a map of the images and
+* a lens model.
+*
+* TODO: This needs comments.  Also it should take a random seed so that it is reproducable.
+*/
 PixelMap delens(Lens& lens, const PixelMap& lensed, std::size_t Nrays, double res_factor, double mag_min)
 {
 	// number of points to shoot per batch, to not overflow memory

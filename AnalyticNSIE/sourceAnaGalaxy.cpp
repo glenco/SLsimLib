@@ -306,7 +306,7 @@ void SourceMultiAnaGalaxy::readDataFile(){
 			/***************************/
 			galaxies.push_back(
 					SourceOverzier(mag,pow(10,-(mag_bulge-mag)/2.5),Ref,Rh
-							,pa,inclination,GalID,z_cosm,theta)
+							,pa,inclination,HaloID,z_cosm,theta)
 			);
 
 			galaxies.back().setUMag(SDSS_u);
@@ -414,11 +414,19 @@ bool redshiftcompare(SourceOverzier s1,SourceOverzier s2){
 }
 /// Sort the sources by magnitude in assending order
 void SourceMultiAnaGalaxy::sortInMag(){
-    std::sort(galaxies.begin(),galaxies.end(),magcompare);
+  std::sort(galaxies.begin(),galaxies.end(),magcompare);
+}
+/// Sort the sources by magnitude in assending order
+void SourceMultiAnaGalaxy::sortInID(){
+  std::sort(galaxies.begin(),galaxies.end(),idcompare);
 }
 // used in MultiSourceAnaGalaxy::sortInRedshift()
 bool magcompare(SourceOverzier s1,SourceOverzier s2){
-    return (s1.getMag() < s2.getMag());
+  return (s1.getMag() < s2.getMag());
+}
+// used in MultiSourceAnaGalaxy::sortInRedshift()
+bool idcompare(SourceOverzier s1,SourceOverzier s2){
+  return (s1.getID() < s2.getID());
 }
 /// Print info on current source parameters
 void SourceMultiAnaGalaxy::printSource(){

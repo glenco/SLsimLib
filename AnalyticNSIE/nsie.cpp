@@ -13,7 +13,7 @@
  */
 void alphaNSIE(
                PosType *alpha /// Deflection angle in units of the Einstein radius
-               ,PosType *xt   /// position on the image plane in Einstein radius units
+               ,PosType const *xt   /// position on the image plane in Einstein radius units
                ,PosType f     /// axis ratio of mass
                ,PosType bc    /// core size in same units as alpha
                ,PosType theta /// position angle of ellipsoid
@@ -84,7 +84,7 @@ void alphaNSIE(
  * or \f$ \frac{\sigma^2}{\Sigma_{crit}G\, units(xt) } \f$
  */
 KappaType kappaNSIE(
-		PosType *xt     /// position on the image plane in Einstein radius units
+		PosType const *xt     /// position on the image plane in Einstein radius units
 		,PosType f      /// axis ratio of mass
 		,PosType bc     /// core size in units of Einstein radius
 		,PosType theta  /// position angle of ellipsoid
@@ -108,7 +108,7 @@ KappaType kappaNSIE(
 * */
 void gammaNSIE(
 		KappaType *gam    /// output shear
-		,PosType *xt     /// position on the image plane in Einstein radius units
+		,PosType const *xt     /// position on the image plane in Einstein radius units
 		,PosType f       /// axis ratio of mass
 		,PosType bc      /// core size in units of Einstein radius
 		,PosType theta   /// position angle of ellipsoid
@@ -158,7 +158,7 @@ PosType rmaxNSIE(
  *  \brief Elliptical radius \f$ R^2 = x^2 + f^2 y^2 \f$ given f and position angle of model
  */
 PosType ellipticRadiusNSIE(
-		PosType *x
+		PosType const *x
 		,PosType f
 		,PosType pa
 		){
@@ -192,7 +192,7 @@ namespace Utilities{
 		xout[1]=xin[1]*cos(theta)+tmp*sin(theta);
 	}
 	/// Rotates 2 dimensional point without changing input point
-	void rotation(PosType *xout,PosType *xin,PosType theta){
+	void rotation(PosType *xout,PosType const *xin,PosType theta){
     
     PosType tmp = xin[0];  // to make it work if xout == xin
 		xout[0]=tmp*cos(theta)-xin[1]*sin(theta);
