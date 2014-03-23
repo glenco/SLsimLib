@@ -90,14 +90,14 @@ public:
       SortByCritArea();
       cummulative_area.resize(data.size());
       cummulative_area[0] = 0;
-      for(i=0;(i<data.size()-1) && (data[i].crit_area < limit) ;++i) cummulative_area[i+1] = data[i].crit_area + cummulative_area[i];
+      for(i=0;(i<data.size()-1) && (data[i].crit_area > limit) ;++i) cummulative_area[i+1] = data[i].crit_area + cummulative_area[i];
       cummulative_area.resize(i);
     }
     if(type == 2){
       SortByCausticArea();
       cummulative_area.resize(data.size());
       cummulative_area[0] = 0;
-      for(i=0;(i<data.size()-1) && (data[i].caustic_area < limit) ;++i) cummulative_area[i+1] = data[i].caustic_area + cummulative_area[i];
+      for(i=0;(i<data.size()-1) && (data[i].caustic_area > limit) ;++i) cummulative_area[i+1] = data[i].caustic_area + cummulative_area[i];
       cummulative_area.resize(i);
     }
   }

@@ -450,6 +450,13 @@ PosType Source::integrateFilterSed(std::vector<PosType> wavel_fil, std::vector<P
 	return integr;
 }
 
+SourceShapelets::SourceShapelets()
+: 	mag(0),ang(0),n1(0),n2(0)
+{
+    setX(0, 0);
+    zsource=0;
+}
+
 SourceShapelets::SourceShapelets(
 		PosType my_z                              /// redshift of the source
 		, PosType my_mag							/// magnitude
