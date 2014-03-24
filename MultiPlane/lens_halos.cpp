@@ -159,12 +159,20 @@ LensHaloNFW::LensHaloNFW(InputParams& params)
     /// If the axis ratio given in the parameter file is set to 1 all ellipticizing routines are skipped.
     if(fratio!=1){
         std::cout << "NFW constructor: slope set to " << get_slope() << std::endl;
-        calcModes(fratio, get_slope(), pa, mod); // to ellipticize potential instead of  kappa take calcModes(fratio, 2-get_slope(), pa, mod);
+        //for(int i=1;i<20;i++){
+         //  calcModes(fratio, 0.1*i, pa, mod);
+        //}
+        calcModes(fratio, get_slope()-0.5, pa, mod); // to ellipticize potential instead of  kappa take calcModes(fratio, 2-get_slope(), pa, mod);
+        calcModes(fratio, get_slope(), pa, mod1); // to ellipticize potential instead of  kappa take calcModes(fratio, 2-get_slope(), pa, mod);
+        calcModes(fratio, get_slope()+0.5, pa, mod2); // to ellipticize potential instead of  kappa take calcModes(fratio, 2-get_slope(), pa, mod);
+
         for(int i=1;i<Nmod;i++){
             if(mod[i]!=0){set_flag_elliptical(true);};
         }
+        
         //std::cout << "if mods!=0 this must be 1: " << get_flag_elliptical() << std::endl;
     }
+    std::cout << get_flag_elliptical() << std::endl;
 }
 
 void LensHaloNFW::make_tables(){

@@ -213,11 +213,13 @@ protected:
   // Functions for calculating axial dependence
     float pa;
     float fratio=1;
-    bool elliptical;
+    bool elliptical=false;
 
-  void faxial(PosType theta,PosType f[]);
+  void faxial0(PosType theta,PosType f0[]);
+  void faxial1(PosType theta,PosType f1[]);
+  void faxial2(PosType theta,PosType f2[]);
   void gradial(PosType r,PosType g[]);
-  void gradial2(PosType r,PosType g[]);
+  void gradial2(PosType r,PosType mu, PosType sigma,PosType g[]);
     
   //void felliptical(PosType x, PosType q, PosType theta, PosType f[], PosType g[]);
 
@@ -240,6 +242,8 @@ protected:
   const static int Nmod = 32;
   
   PosType mod[Nmod];
+  PosType mod1[Nmod];
+  PosType mod2[Nmod];
   PosType r_eps;
   
 
