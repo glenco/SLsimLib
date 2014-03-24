@@ -750,7 +750,7 @@ void TreeQuad::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alph
 					/////////////////////////////////////////
 					if(haloON){
 						halos[tmp_index]->force_halo(alpha,kappa,gamma,phi,xcm,no_kappa,true); // PHI BY Fabien
-					}else{  // case of no halos just particles and no class derived from TreeQuad
+ 					}else{  // case of no halos just particles and no class derived from TreeQuad
 
 						rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
 						if(rcm2 < 1e-20) rcm2 = 1e-20;
@@ -770,6 +770,7 @@ void TreeQuad::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alph
 							// can turn off kappa and gamma calculations to save times
 							if(!no_kappa){
 								*kappa += kappa_h(arg1,arg2)*prefac;
+
 								tmp = (gamma_h(arg1,arg2) + 2.0)*prefac/rcm2;
 
 								gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;

@@ -15,15 +15,6 @@
 
 using namespace std;
 
-Source::Source()
-{
-	source_r = 0;
-	source_x[0] = 0;
-	source_x[1] = 0;
-	zsource = 0;
-	setSBlimit_magarcsec(30.);
-}
-
 SourceUniform::SourceUniform(InputParams& params) : Source(){
 	assignParams(params);
 }
@@ -459,20 +450,29 @@ PosType Source::integrateFilterSed(std::vector<PosType> wavel_fil, std::vector<P
 	return integr;
 }
 
+SourceShapelets::SourceShapelets()
+: 	mag(0),ang(0),n1(0),n2(0)
+{
+    setX(0, 0);
+    zsource=0;
+}
+
 SourceShapelets::SourceShapelets(
 		PosType my_z                              /// redshift of the source
-		, PosType* my_center           			/// center (in rad)
 		, PosType my_mag							/// magnitude
 		, PosType my_scale						/// scale of the shapelets decomposition
 		, std::valarray<PosType> my_coeff  	/// coefficients of the shapelets decomposition
+        , PosType* my_center           			/// center (in rad)
 		, PosType my_ang					/// rotation angle (in rad)
 		)
 		:Source()
 {
 	zsource = my_z;
 	mag = my_mag;
-	source_x[0] = my_center[0];
-	source_x[1] = my_center[1];
+	if(my_center != NULL)
+		setX(my_center[0], my_center[1]);
+	else
+		setX(0, 0);
 	ang = my_ang;
 	n1 = sqrt(my_coeff.size());
 	n2 = n1;
@@ -484,19 +484,19 @@ SourceShapelets::SourceShapelets(
 
 SourceShapelets::SourceShapelets(
 		PosType my_z							/// redshift of the source
-		, PosType* my_center					/// center (in rad)
 		, PosType my_mag						/// magnitude
 		, std::string shap_file				/// fits file with coefficients in a square array
+        , PosType* my_center           			/// center (in rad)
 		, PosType my_ang			/// rotation angle (in rad)
 		)
 		:Source()
 {
-	//TODO Fabio: add parameter for rotation
-
 	zsource = my_z;
 	mag = my_mag;
-	source_x[0] = my_center[0];
-	source_x[1] = my_center[1];
+	if(my_center != NULL)
+		setX(my_center[0], my_center[1]);
+	else
+		setX(0, 0);
 	ang = my_ang;
 
 #ifdef ENABLE_FITS
@@ -522,16 +522,16 @@ SourceShapelets::SourceShapelets(
 }
 
 SourceShapelets::SourceShapelets(
-		PosType* my_center  					/// center (in rad)
-		, std::string shap_file				/// fits file with coefficients in a square array. Mag and redshift are read from the header.
+		std::string shap_file				/// fits file with coefficients in a square array. Mag and redshift are read from the header.
+        , PosType* my_center  					/// center (in rad)
 		, PosType my_ang				 /// rotation angle (in rad)
 		)
 		:Source()
 {
-	//TODO Fabio: add parameter for rotation
-
-	source_x[0] = my_center[0];
-	source_x[1] = my_center[1];
+	if(my_center != NULL)
+		setX(my_center[0], my_center[1]);
+	else
+		setX(0, 0);
 	ang = my_ang;
 
 #ifdef ENABLE_FITS
@@ -549,7 +549,6 @@ SourceShapelets::SourceShapelets(
 	h0.readKey("DIM", n1);
 	n2 = n1;
 	h0.read(coeff);
-
 #else
 	std::cerr << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
 	exit(1);
@@ -593,7 +592,15 @@ PosType SourceShapelets::Hermite(int n, PosType x)
 	return hg[n];
 }
 
-void SourceShapelets::printSource(){};
+void SourceShapelets::printSource()
+{
+    cout << endl << "**Source model**" << endl;
+    
+	cout << "z_source " << zsource << endl;
+    cout << "mag " << mag << endl;
+    
+};
+
 void SourceShapelets::assignParams(InputParams& params){};
 
 /// Rescales the coefficients to make the source bright as we want.
@@ -613,3 +620,77 @@ void SourceShapelets::NormalizeFlux()
 
 	coeff *= flux/shap_flux;
 }
+
+/// Default constructor. Reads in sources from the default catalog.
+SourceMultiShapelets::SourceMultiShapelets(InputParams& params)
+: Source(),index(0)
+{
+    assignParams(params);
+    readCatalog();
+}
+
+SourceMultiShapelets::~SourceMultiShapelets()
+{
+}
+
+/// Reads in the default catalog
+void SourceMultiShapelets::readCatalog()
+{
+    int max_num = 37012;
+    for (int i = 0; i < max_num+1; i++)
+    {
+        std::string shap_file = shapelets_folder+"/obj_"+to_string(i)+"_mag_z.sif";
+        std::ifstream shap_input(shap_file.c_str());
+        if (shap_input)
+        {
+            SourceShapelets s(shap_file.c_str());
+            if (s.getMag() > 0. && s.getMag() < mag_limit)
+                galaxies.push_back(s);
+            shap_input.close();            
+        }
+    }
+    
+}
+
+
+void SourceMultiShapelets::assignParams(InputParams& params){
+	if(!params.get("source_mag_limit",mag_limit)){
+		std::cout << "ERROR: Must assign source_mag_limit in parameter file " << params.filename() << std::endl;
+		exit(1);
+	}
+    
+	if(!params.get("source_sb_limit",sb_limit))
+		setSBlimit_magarcsec(30.);
+	else
+		sb_limit = pow(10,-0.4*(48.6+sb_limit))*pow(180*60*60/pi,2)/hplanck;
+
+    if(!params.get("shapelets_folder",shapelets_folder)){
+        std::cout << "ERROR: shapelets_folder not found in parameter file " << params.filename() << std::endl;
+        exit(1);
+    }
+}
+
+/// Print info on current source parameters
+void SourceMultiShapelets::printSource(){
+	std::cout << "Shapelets" << std::endl;
+	galaxies[index].printSource();
+}
+/// Sort the sources by redshift in assending order
+void SourceMultiShapelets::sortInRedshift(){
+    std::sort(galaxies.begin(),galaxies.end(),redshiftcompare_shap);
+}
+// used in MultiSourceShapelets::sortInRedshift()
+bool redshiftcompare_shap(SourceShapelets s1,SourceShapelets s2){
+    return (s1.getZ() < s2.getZ());
+}
+/// Sort the sources by magnitude in assending order
+void SourceMultiShapelets::sortInMag(){
+    std::sort(galaxies.begin(),galaxies.end(),magcompare_shap);
+}
+// used in MultiSourceShapelets::sortInRedshift()
+bool magcompare_shap(SourceShapelets s1,SourceShapelets s2){
+    return (s1.getMag() < s2.getMag());
+}
+
+
+

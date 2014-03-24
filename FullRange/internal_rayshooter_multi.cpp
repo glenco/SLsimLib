@@ -242,7 +242,10 @@ for(i = start; i < end; i++)
 
       cc = p->charge * p->dDl[j+1];
 
-      assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
+        assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
+        assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
+        assert(kappa == kappa );
+        assert(!isinf(kappa) );
 
       if(!kappa_off)
       {
@@ -287,16 +290,16 @@ for(i = start; i < end; i++)
         
         if(!kappa_off)
         {
-        // Here the coefficients aa, bb and cc are used for a completely different calculation,
-        // they are not the same as they were defined above. ----------------------------------
-        aa = (p->dDl[j+1] + p->dDl[j]) * p->Dl[j] / p->dDl[j] / p->Dl[j+1];
-        if(j>0)
-        {
-            bb = p->dDl[j+1] * p->Dl[j-1] / p->dDl[j] / p->Dl[j+1];
-        }
-        else bb = 0;
-        cc = p->charge * p->dDl[j+1] * p->Dl[j] / p->Dl[j+1];
-        // ------------------------------------------------------------------------------------
+            // Here the coefficients aa, bb and cc are used for a completely different calculation,
+            // they are not the same as they were defined above. ----------------------------------
+            aa = (p->dDl[j+1] + p->dDl[j]) * p->Dl[j] / p->dDl[j] / p->Dl[j+1];
+            if(j>0)
+            {
+                bb = p->dDl[j+1] * p->Dl[j-1] / p->dDl[j] / p->Dl[j+1];
+            }
+            else bb = 0;
+            cc = p->charge * p->dDl[j+1] * p->Dl[j] / p->Dl[j+1];
+            // ------------------------------------------------------------------------------------
             
 
             

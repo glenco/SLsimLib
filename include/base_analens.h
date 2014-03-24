@@ -105,7 +105,7 @@ public:
   void error_message1(std::string name,std::string filename);
 
   // PHI BY Fabien
-  virtual void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType *xcm,bool no_kappa,bool subtract_point=false);
+  virtual void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool no_kappa,bool subtract_point=false);
   // virtual void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xcm,bool no_kappa,bool subtract_point=false);
 
   // in randoimize_lens.c
@@ -173,16 +173,16 @@ protected:
 namespace Utilities{
 	PosType RandomFromTable(PosType *table,unsigned long Ntable,long *seed);
 	void rotation(float *xout,float *xin,PosType theta);
-	void rotation(PosType *xout,PosType *xin,PosType theta);
+	void rotation(PosType *xout,PosType const *xin,PosType theta);
 }
 
-void alphaNSIE(PosType *alpha,double *xt,PosType f,PosType bc,PosType theta);
-KappaType kappaNSIE(PosType *xt,PosType f,PosType bc,PosType theta);
-void gammaNSIE(KappaType *gam,double *xt,PosType f,PosType bc,PosType theta);
+void alphaNSIE(PosType *alpha,double const *xt,PosType f,PosType bc,PosType theta);
+KappaType kappaNSIE(PosType const *xt,PosType f,PosType bc,PosType theta);
+void gammaNSIE(KappaType *gam,double const *xt,PosType f,PosType bc,PosType theta);
 KappaType invmagNSIE(PosType *x,PosType f,PosType bc,PosType theta
                      ,float *gam,float kap);
 PosType rmaxNSIE(PosType sigma,PosType mass,PosType f,PosType rc );
-PosType ellipticRadiusNSIE(PosType *x,PosType f,PosType pa);
+PosType ellipticRadiusNSIE(PosType const *x,PosType f,PosType pa);
 void quadMomNSIE(float mass,float Rmax,float f,float rc,float theta,PosType *quad);
 
 
@@ -205,7 +205,7 @@ void gammaNFW(KappaType *gamma,PosType *x,PosType Rtrunc,PosType mass,PosType r_
 
 // in lens_expand.c
 
-double lens_expand(double beta,double *mod,int Nmodes,PosType *x,PosType *alpha,KappaType *gamma,KappaType *phi);
+double lens_expand(double beta,double *mod,int Nmodes,PosType const *x,PosType *alpha,KappaType *gamma,KappaType *phi);
 
 // in FullRange/implant_stars.c
 

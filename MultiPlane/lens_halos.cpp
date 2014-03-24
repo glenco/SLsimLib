@@ -9,16 +9,19 @@
 
 using namespace std;
 
+/// Shell constructor
 LensHalo::LensHalo(){
 	rscale = 1.0;
 	mass = Rmax = xmax = posHalo[0] = posHalo[1] = 0.0;
 	stars_implanted = false;
+    elliptical_flag = false;
 }
 
 LensHalo::LensHalo(InputParams& params){
 	assignParams(params);
 	stars_implanted = false;
     posHalo[0] = posHalo[1] = 0.0;
+    elliptical_flag = false;
 }
 
 void LensHalo::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed){
@@ -58,6 +61,7 @@ if(stars_N>0){
 }
 }
 
+/// calculates the deflection etc. caused by stars alone
 void LensHalo::force_stars(
 		PosType *alpha     /// mass/Mpc
 		,KappaType *kappa
@@ -132,7 +136,8 @@ LensHaloNFW::LensHaloNFW(float my_mass,float my_Rmax,PosType my_zlens,float my_c
             if(mod[i]!=0){set_flag_elliptical(true);};
         }
 
-    }
+    }else set_flag_elliptical(false);
+    
     std::cout << mass << " " << rscale << std::endl;
     
  }
@@ -154,9 +159,9 @@ LensHaloNFW::LensHaloNFW(InputParams& params)
 	make_tables();
 	gmax = InterpolateFromTable(gtable, xmax);
     
-    /// If the 2nd argument in calcModes(fratio, slope, pa, mod), the slope, is set to 1 it yields an elliptical kappa contour of given axis ratio (fratio) at the radius where the slope of the 3D density profile is -2, which is defined as the scale radius for the NFW profile. To ellipticize the potential instead of the convergence use calcModes(fratio, 2-get_slope(), pa, mod), this produces also an ellipse in the convergence map, but at the radius where the slope is 2-get_slope().
+    // If the 2nd argument in calcModes(fratio, slope, pa, mod), the slope, is set to 1 it yields an elliptical kappa contour of given axis ratio (fratio) at the radius where the slope of the 3D density profile is -2, which is defined as the scale radius for the NFW profile. To ellipticize the potential instead of the convergence use calcModes(fratio, 2-get_slope(), pa, mod), this produces also an ellipse in the convergence map, but at the radius where the slope is 2-get_slope().
     set_slope(1);
-    /// If the axis ratio given in the parameter file is set to 1 all ellipticizing routines are skipped.
+    // If the axis ratio given in the parameter file is set to 1 all ellipticizing routines are skipped.
     if(fratio!=1){
         std::cout << "NFW constructor: slope set to " << get_slope() << std::endl;
         //for(int i=1;i<20;i++){
@@ -279,12 +284,18 @@ LensHaloPseudoNFW::LensHaloPseudoNFW()
 {
 }
 
-LensHaloPseudoNFW::LensHaloPseudoNFW(float my_mass,float my_Rmax,PosType my_zlens,float my_concentration,PosType my_beta,float my_fratio,float my_pa,int my_stars_N){
-    mass=my_mass, Rmax=my_Rmax, zlens=my_zlens, rscale=my_concentration;
-    beta=my_beta;
-    fratio=my_fratio, pa=my_pa, stars_N=my_stars_N;
+LensHaloPseudoNFW::LensHaloPseudoNFW(float my_mass,float my_Rmax,PosType my_zlens,float my_concentration,PosType my_beta,float my_fratio,float my_pa,int my_stars_N)
+  {
+    mass = my_mass;
+    Rmax = my_Rmax;
+    zlens = my_zlens;
+    beta = my_beta;
+    fratio = my_fratio;
+    pa = my_pa;
+    stars_N = my_stars_N;
+  
     stars_implanted = false;
-	rscale = Rmax/rscale;
+	  rscale = Rmax/my_concentration;
     xmax = Rmax/rscale;
     
     make_tables();
@@ -454,16 +465,9 @@ LensHaloPowerLaw::~LensHaloPowerLaw(){
 }
 
 
-LensHaloSimpleNSIE::LensHaloSimpleNSIE() : LensHalo(){
-	sigma = 0.;
-	zlens = 0.;
-	fratio = 0.;
-	pa = 0.;
-	rcore = 0.;
-
-}
-
-LensHaloSimpleNSIE::LensHaloSimpleNSIE(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,float my_sigma, float my_rcore,float my_fratio,float my_pa,int my_stars_N){
+/*
+LensHaloSimpleNSIE::LensHaloSimpleNSIE(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,float my_sigma
+                                      , float my_rcore,float my_fratio,float my_pa,int my_stars_N){
     mass=my_mass, Rmax=my_Rmax, zlens=my_zlens, rscale=my_rscale;
     sigma=my_sigma, rcore=my_rcore;
     fratio=my_fratio, pa=my_pa, stars_N=my_stars_N;
@@ -472,6 +476,19 @@ LensHaloSimpleNSIE::LensHaloSimpleNSIE(float my_mass,float my_Rmax,PosType my_zl
 	Rmax = MAX(1.0,1.0/fratio)*Rsize;  // redefine
 	assert(Rmax >= Rsize);
 }
+*/
+LensHaloSimpleNSIE::LensHaloSimpleNSIE(float my_mass,PosType my_zlens,float my_sigma
+                                       , float my_rcore,float my_fratio,float my_pa,int my_stars_N):LensHalo(){
+  mass=my_mass, zlens=my_zlens, rscale=1.0;
+  
+  sigma=my_sigma, rcore=my_rcore;
+  fratio=my_fratio, pa=my_pa, stars_N=my_stars_N;
+  stars_implanted = false;
+	Rsize = rmaxNSIE(sigma,mass,fratio,rcore);
+	Rmax = MAX(1.0,1.0/fratio)*Rsize;  // redefine
+	assert(Rmax >= Rsize);
+ }
+
 
 LensHaloSimpleNSIE::LensHaloSimpleNSIE(InputParams& params){
 	sigma = 0.;
@@ -513,6 +530,7 @@ void LensHaloSimpleNSIE::assignParams(InputParams& params){
 LensHaloSimpleNSIE::~LensHaloSimpleNSIE(){
 
 }
+/*
 void LensHaloSimpleNSIE::initFromMass(float my_mass, long *seed){
 	mass = my_mass;
 	rcore = 0.0;
@@ -533,22 +551,23 @@ void LensHaloSimpleNSIE::initFromFile(float my_mass, long *seed, float vmax, flo
 void LensHaloSimpleNSIE::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed){
 	initFromMass(my_mass,seed);
 }
-
+*/
 void LensHalo::force_halo(
 	PosType *alpha     /// mass/Mpc
     ,KappaType *kappa
     ,KappaType *gamma
     ,KappaType *phi
-    ,PosType *xcm
+    ,PosType const *xcm
     ,bool kappa_off
     ,bool subtract_point /// if true contribution from a point mass is subtracted
     ){
     //std::cout << "In lens_halo.cpp force_halo " << elliptical << std::endl;
-    bool IsElliptical=get_flag_elliptical();
-	if (IsElliptical==true){
+	if (elliptical_flag){
         force_halo_asym(alpha,kappa,gamma,xcm,kappa_off,subtract_point);
+        //assert(!isinf(*kappa) );
     }else{
         force_halo_sym(alpha,kappa,gamma,phi,xcm,kappa_off,subtract_point);
+        //assert(!isinf(*kappa) );
 	}
 }
 
@@ -557,7 +576,7 @@ void LensHalo::force_halo_sym(
 		,KappaType *kappa
 		,KappaType *gamma
         ,KappaType *phi    // PHI BY Fabien
-		,PosType *xcm
+		,PosType const *xcm
 		,bool kappa_off
 		,bool subtract_point /// if true contribution from a point mass is subtracted
 		){
@@ -577,9 +596,6 @@ void LensHalo::force_halo_sym(
 		alpha[0] += tmp*xcm[0];
         //std::cout << alpha_h(x) << std::endl;
 		alpha[1] += tmp*xcm[1];
-
-
-
 
 		// can turn off kappa and gamma calculations to save times
 		if(!kappa_off)
@@ -631,7 +647,7 @@ void LensHalo::force_halo_asym(
 		PosType *alpha     /// mass/Mpc
 		,KappaType *kappa
 		,KappaType *gamma
-		,PosType *xcm
+		,PosType const *xcm
 		,bool kappa_off
 		,bool subtract_point /// if true contribution from a point mass is subtracted
 		){
@@ -840,7 +856,7 @@ void LensHaloSimpleNSIE::force_halo(
                                     ,KappaType *kappa
                                     ,KappaType *gamma
                                     ,KappaType *phi      // PHI BY Fabien
-                                    ,PosType *xcm
+                                    ,PosType const *xcm
                                     ,bool no_kappa
                                     ,bool subtract_point /// if true contribution from a point mass is subtracted
                                     )
@@ -1274,7 +1290,7 @@ void LensHaloDummy::force_halo(PosType *alpha
                                ,KappaType *kappa
                                ,KappaType *gamma
                                ,KappaType *phi       // PHI BY Fabien
-                               ,PosType *xcm
+                               ,PosType const *xcm
                                ,bool no_kappa
                                ,bool subtract_point)
 {

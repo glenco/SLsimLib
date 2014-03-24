@@ -44,6 +44,7 @@ public:
 	void AddImages(ImageInfo *imageinfo,int Nimages,float rescale = 1.);
 	void AddCurve(ImageInfo *curve,double value);
 	void drawline(double x1[],double x2[],double value);
+  void drawcircle(PosType r_center[],PosType radius,PosType value);
 	void AddGrid(Grid &grid,double value = 1.0);
 
 	void Renormalize(double factor);
@@ -70,6 +71,8 @@ public:
 	
 	friend void swap(PixelMap&, PixelMap&);
 	
+  void FindArc(PosType &radius,PosType *xc,PosType &arclength,PosType &width
+                         ,PosType threshold);
 private:
 	std::valarray<double> map;
 

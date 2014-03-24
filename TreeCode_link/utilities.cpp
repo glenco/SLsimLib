@@ -120,7 +120,7 @@ long IndexFromPosition(PosType *x,long Npixels,PosType range,const PosType *cent
 /** \ingroup Utill
  *
  */
-void PositionFromIndex(unsigned long i,PosType *x,long Npixels,PosType range,const PosType *center){
+void PositionFromIndex(unsigned long i,PosType *x,long Npixels,PosType range,PosType const *center){
   if(Npixels == 1){
     x[0] = center[0];
     x[1] = center[1];
@@ -297,6 +297,7 @@ PosType **PosTypeMatrix(long rows, long cols)
     }
   }
   
+#ifdef ENABLE_CLANG
   RandomNumbers::RandomNumbers(unsigned int seed)
   {        
     rand_gen = std::mt19937(seed);
@@ -310,7 +311,7 @@ PosType **PosTypeMatrix(long rows, long cols)
   PosType RandomNumbers::operator()(void){
     return std::generate_canonical<PosType, 10>(rand_gen);
   }
-  
+#endif
   
   RandomNumbers_NR::RandomNumbers_NR(long seed):
   IM1(2147483399),IM2(2147483399),IA1(40014),IA2(40692),IQ1(53668),

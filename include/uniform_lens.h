@@ -71,9 +71,9 @@ public:
   //PosType *perturb_modes;  ///first two are shear
 
 		/// overridden function to calculate the lensing properties
-  void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xcm,bool no_kappa,bool subtract_point=false);
+  //void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xcm,bool no_kappa,bool subtract_point=false);
     // PHI BY Fabien
-      void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType *xcm,bool no_kappa,bool subtract_point=false);
+      void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool no_kappa,bool subtract_point=false);
     
   void setCosmology(const COSMOLOGY& cosmo);
 
@@ -81,7 +81,7 @@ protected:
 
   PosType SigmaCrit;
   PosType *perturb_modes;  ///first two are shear  
-  PosType lens_expand(PosType *mod,PosType *x,PosType *alpha,KappaType *gamma,KappaType *phi);
+  PosType lens_expand(PosType *mod,PosType const *x,PosType *alpha,KappaType *gamma,KappaType *phi);
 
   /// Surface density of lens in Msun/ Mpc^2
   float Sigma_uniform;

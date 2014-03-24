@@ -78,7 +78,6 @@ public:
 	/// set scale radius (in Mpc)
 	virtual void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rmax/rscale;};
 	/// set redshift
-
 	void setZlens(PosType my_zlens){ zlens=my_zlens; };
 
 	/// set slope
@@ -86,24 +85,21 @@ public:
     /// get slope
     virtual PosType get_slope(){return beta;};
     /// flag=True if halo elliptical
-    bool get_flag_elliptical(){return elliptical;};
-    void set_flag_elliptical(bool ell){elliptical=ell;};
+    bool get_flag_elliptical(){return elliptical_flag;};
+    void set_flag_elliptical(bool ell){elliptical_flag=ell;};
     
     /// set cosmology for halo
 	virtual void setCosmology(const COSMOLOGY& cosmo) {}
 	
 	/// calculate the lensing properties -- deflection, convergence, and shear
 
-	virtual void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType *xcm,bool no_kappa,bool subtract_point=false);
-	void force_halo_sym(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType *xcm,bool no_kappa,bool subtract_point=false);
-	void force_halo_asym(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xcm,bool no_kappa,bool subtract_point=false);
-
+	virtual void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool no_kappa,bool subtract_point=false);
 
 	/// force tree calculation for stars
 	void force_stars(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType const *xcm,bool no_kappa);
 
 	/// internal compare redshift function
-	bool compare(PosType z){return z > zlens;};
+	bool compareZ(PosType z){return z > zlens;};
 
   /// stars
   bool AreStarsImaplated() const {return stars_implanted;}
@@ -130,24 +126,27 @@ public:
 	/// Prints star parameters; if show_stars is true, prints data for single stars
 	void PrintStars(bool show_stars) const;
  
-    PosType alpha_int(PosType x);
-    
-    //friend struct Ig_func;
-    
-    struct Ialpha_func{
-        Ialpha_func(LensHalo& halo): halo(halo){};
-        LensHalo& halo;
-        PosType operator ()(PosType x) {return halo.alpha_h(x)/x ;}
-    };
-    
-    struct Ig_func{
-        Ig_func(LensHalo& halo): halo(halo){};
-        LensHalo& halo;
-        PosType operator ()(PosType x) {return halo.gfunction(x)/x ;}
-    };
-    
-protected:
   
+protected:
+  PosType alpha_int(PosType x);
+  
+  void force_halo_sym(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool no_kappa,bool subtract_point=false);
+	void force_halo_asym(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType const *xcm,bool no_kappa,bool subtract_point=false);
+
+  //friend struct Ig_func;
+  
+  struct Ialpha_func{
+    Ialpha_func(LensHalo& halo): halo(halo){};
+    LensHalo& halo;
+    PosType operator ()(PosType x) {return halo.alpha_h(x)/x ;}
+  };
+  
+  struct Ig_func{
+    Ig_func(LensHalo& halo): halo(halo){};
+    LensHalo& halo;
+    PosType operator ()(PosType x) {return halo.gfunction(x)/x ;}
+  };
+
   IndexType *stars;
   PosType **stars_xp;
   //TreeForce *star_tree;
@@ -207,13 +206,13 @@ protected:
     
     virtual PosType inline gfunction(PosType x){return -1;};
 	
-    
     PosType xmax;
 
   // Functions for calculating axial dependence
     float pa;
     float fratio=1;
-    bool elliptical=false;
+
+    bool elliptical_flag = false;
 
   void faxial0(PosType theta,PosType f0[]);
   void faxial1(PosType theta,PosType f1[]);
@@ -221,7 +220,7 @@ protected:
   void gradial(PosType r,PosType g[]);
   void gradial2(PosType r,PosType mu, PosType sigma,PosType g[]);
     
-  //void felliptical(PosType x, PosType q, PosType theta, PosType f[], PosType g[]);
+    //void felliptical(PosType x, PosType q, PosType theta, PosType f[], PosType g[]);
 
 	virtual void gamma_asym(PosType x,PosType theta, PosType gamma[2]);
 	virtual PosType kappa_asym(PosType x,PosType theta);
@@ -491,13 +490,19 @@ private:
 
 class LensHaloSimpleNSIE : public LensHalo{
 public:
-	LensHaloSimpleNSIE();
-    LensHaloSimpleNSIE(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,float my_sigma, float my_rcore,float my_fratio,float my_pa,int my_stars_N);
+  /*LensHaloSimpleNSIE(){
+    sigma = zlens = fratio = pa = rcore = 0.;
+  }*/
+
+  //LensHaloSimpleNSIE(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,float my_sigma, float my_rcore,float my_fratio,float my_pa,int my_stars_N);
+  /// explicit constructor
+  LensHaloSimpleNSIE(float my_mass,PosType my_zlens,float my_sigma
+              ,float my_rcore,float my_fratio,float my_pa,int my_stars_N);
 	LensHaloSimpleNSIE(InputParams& params);
 	~LensHaloSimpleNSIE();
 
 	/// overridden function to calculate the lensing properties
-	void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType *xcm,bool no_kappa,bool subtract_point=false);
+	void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool no_kappa,bool subtract_point=false);
 	// void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xcm,bool no_kappa,bool subtract_point=false);
     
 	/// get the velocity dispersion
@@ -522,15 +527,15 @@ public:
 	/// set the core radius
 	void set_rcore(float my_rcore){rcore=my_rcore;};
 
+protected:
 
 	/// initialize from a simulation file
-	void initFromFile(float my_mass, long *seed, float vmax, float r_halfmass);
+	//void initFromFile(float my_mass, long *seed, float vmax, float r_halfmass);
 	/// initialize from a mass function
-	void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed);
-	/// simple initialize from mass
-	void initFromMass(float my_mass, long *seed);
+	//void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed);
+	/// simple initialize from mass while setting a random position angle and ellipticity
+	//void initFromMass(float my_mass, long *seed);
 
-protected:
 	/// read-in parameters from a parameter file
 	void assignParams(InputParams& params);
 
@@ -723,7 +728,7 @@ public:
 	~LensHaloDummy(){};
 	
 	/// overridden function to calculate the lensing properties
-	void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType *xcm,bool no_kappa,bool subtract_point=false);
+	void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool no_kappa,bool subtract_point=false);
     // void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xcm,bool no_kappa,bool subtract_point=false);
     
 	/// initialize from a mass function

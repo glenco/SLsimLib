@@ -70,7 +70,7 @@ public:
 	std::vector<const LensHalo*> getHalos() const;
 	
 private:
-	std::vector<LensHalo*> halos;
+	std::vector<LensHalo*> halos;  
 };
 
 #endif /* PLANES_H_ */

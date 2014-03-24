@@ -18,7 +18,12 @@
 class Source
 {
 public:
-	Source();
+  /// shell constructor
+	Source(){
+    source_r = source_x[0] = source_x[1] = zsource = 0;
+    setSBlimit_magarcsec(30.);
+  };
+
 	virtual ~Source();
 	
 	// in lens.cpp
@@ -124,9 +129,10 @@ private:
  */
 class SourceShapelets: public Source{
 public:
-	SourceShapelets(PosType my_z, PosType* my_center, PosType my_mag, PosType my_scale, std::valarray<PosType> my_coeff, PosType my_ang = 0.);
-	SourceShapelets(PosType my_z, PosType* my_center, PosType my_mag, std::string shap_file, PosType my_ang = 0.);
-	SourceShapelets(PosType* my_center, std::string shap_file, PosType my_ang = 0.);
+    SourceShapelets();
+	SourceShapelets(PosType my_z, PosType my_mag, PosType my_scale, std::valarray<PosType> my_coeff, PosType* my_center = 0, PosType my_ang = 0.);
+	SourceShapelets(PosType my_z, PosType my_mag, std::string shap_file, PosType *my_center = 0, PosType my_ang = 0.);
+	SourceShapelets(std::string shap_file, PosType* my_center = 0, PosType my_ang = 0.);
 	PosType SurfaceBrightness(PosType *y);
 	void printSource();
 	inline PosType getTotalFlux(){return flux;}

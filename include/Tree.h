@@ -298,7 +298,7 @@ namespace Utilities{
 
 
 	long IndexFromPosition(PosType *x,long Npixels,PosType range,const PosType *center);
-	void PositionFromIndex(unsigned long i,PosType *x,long Npixels,PosType range,const PosType *center);
+	void PositionFromIndex(unsigned long i,PosType *x,long Npixels,PosType range,PosType const *center);
 	long IndexFromPosition(PosType x,long Npixels,PosType range,PosType center);
   PosType TwoDInterpolator(PosType *x,int Npixels,PosType range,PosType *center,PosType *map,bool init=true);
   PosType TwoDInterpolator(PosType *map);
@@ -316,7 +316,7 @@ namespace Utilities{
   class Interpolator{
   public:
     Interpolator(
-                 PosType *x          /// position of point
+                 PosType const *x          /// position of point
                  ,int Npixels       /// Number of pixels in one dimension
                  ,PosType my_range   /// Range of map in same units as x[]
                  ,PosType *my_center /// Center of map in same units as x[]
@@ -436,7 +436,7 @@ namespace Utilities{
     long index;
     int N,Ny;
 
-    void initparams(PosType *x){
+    void initparams(PosType const *x){
       long ix,iy;
       // position in pixel coordinates
       fx = ((x[0] - center[0])/range + 0.5)*(N-1);
@@ -507,7 +507,7 @@ namespace Utilities{
   unsigned long order_curve5(Kist<Point> * curve);
   void ordered_convexhull(Kist<Point> * curve);
   void ordered_concavehull(Kist<Point> * curve);
-  PosType HullArea(Kist<Point> * curve);
+  PosType ConvexHullArea(Kist<Point> * curve);
 }
 bool order_ExteriorBoundary(Point *curve,long Npoints,long *NewNpoints,PosType *area);
 PosType findAreaOfCurve(TreeHndl tree,ImageInfo *curve,int NimageMax);

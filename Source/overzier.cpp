@@ -9,6 +9,7 @@
  */
 #include "slsimlib.h"
 
+/// sets everything to zero
 SourceOverzier::SourceOverzier()
 : haloID(0), Reff(0), Rh(0), BtoT(0), PA(0), inclination(0),
   cxx(0), cyy(0), cxy(0), sbDo(0), sbSo(0), mag(0)
