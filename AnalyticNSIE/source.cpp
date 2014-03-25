@@ -512,6 +512,7 @@ SourceShapelets::SourceShapelets(
 	h0.readKey("BETA", source_r);
 	source_r *= 0.03/180./60./60.*pi;
 	h0.readKey("DIM", n1);
+    h0.readKey("ID", id);
 	n2 = n1;
 	h0.read(coeff);
 
@@ -548,6 +549,7 @@ SourceShapelets::SourceShapelets(
 	source_r *= 0.03/180./60./60.*pi;
 	h0.readKey("MAG", mag);
 	h0.readKey("REDSHIFT", zsource);
+    h0.readKey("ID", id);
 	h0.readKey("DIM", n1);
 	n2 = n1;
 	h0.read(coeff);
