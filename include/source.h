@@ -27,6 +27,7 @@ public:
 	virtual ~Source();
 	
 	// in lens.cpp
+	// TODO: make SurfaceBrightness take a const double*
 	/// Surface brightness of source in grid coordinates not source centered coordinates.
 	virtual PosType SurfaceBrightness(PosType *y) = 0;
 	virtual PosType getTotalFlux() = 0;

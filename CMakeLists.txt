@@ -41,6 +41,7 @@ set(N_THREADS 1 CACHE STRING "Number of threads for rayshooting.")
 add_definitions(-DN_THREADS=${N_THREADS})
 message(STATUS "Number of threads: ${N_THREADS}")
 
+
 ####
 # sources
 ####
@@ -53,6 +54,8 @@ add_subdirectory(FullRange)
 add_subdirectory(ImageProcessing)
 add_subdirectory(InputParameters)
 add_subdirectory(MultiPlane)
+add_subdirectory(Numerics)
+add_subdirectory(Render)
 add_subdirectory(Source)
 add_subdirectory(TreeCode)
 add_subdirectory(TreeCode_link)
