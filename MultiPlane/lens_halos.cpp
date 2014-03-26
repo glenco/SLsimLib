@@ -557,10 +557,10 @@ void LensHalo::force_halo(
 {
 	if (elliptical_flag){
         force_halo_asym(alpha,kappa,gamma,xcm,kappa_off,subtract_point);
-        assert(!isinf(*kappa) );
+        //assert(!isinf(*kappa) );
     }else{
         force_halo_sym(alpha,kappa,gamma,phi,xcm,kappa_off,subtract_point);
-        assert(!isinf(*kappa) );
+        //assert(!isinf(*kappa) );
 	}
 }
 

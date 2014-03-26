@@ -129,6 +129,7 @@ private:
  */
 class SourceShapelets: public Source{
 public:
+    //SourceShapelets();
 	SourceShapelets(PosType my_z, PosType my_mag, PosType my_scale, std::valarray<PosType> my_coeff, PosType* my_center = 0, PosType my_ang = 0.);
 	SourceShapelets(PosType my_z, PosType my_mag, std::string shap_file, PosType *my_center = 0, PosType my_ang = 0.);
 	SourceShapelets(std::string shap_file, PosType* my_center = 0, PosType my_ang = 0.);
@@ -137,6 +138,7 @@ public:
 	inline PosType getTotalFlux(){return flux;}
 	inline PosType getRadius(){return source_r*10.;}
 	inline PosType getMag(){return mag;}
+    inline PosType getID(){return id;}
 	inline void setMag(PosType my_mag){mag = my_mag; NormalizeFlux();}
 
 private:
@@ -145,6 +147,7 @@ private:
 	void NormalizeFlux();
 	std::valarray<PosType> coeff;
 	int n1,n2;
+    int id;
 	PosType flux, mag;
 	PosType ang;
 };

@@ -461,7 +461,7 @@ void TreeQuad::force2D(PosType const *ray
                        ,PosType *alpha
                        ,KappaType *kappa
                        ,KappaType *gamma
-                       ,KappaType *phi  // PHI BY Fabien
+                       ,KappaType *phi
                        ,bool no_kappa){
 
   PosType xcm[2],rcm2cell,rcm2,tmp,boxsize2;
@@ -476,7 +476,7 @@ void TreeQuad::force2D(PosType const *ray
   /*
   QTreeNB::iterator iter(tree);
   iter.movetop();
-*/
+  */
   
   alpha[0]=alpha[1]=gamma[0]=gamma[1]=gamma[2]=0.0;
 
@@ -534,13 +534,14 @@ void TreeQuad::force2D(PosType const *ray
 
 						  gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 						  gamma[1] += xcm[0]*xcm[1]*tmp;
+
                           //
                           *phi = prefac*rcm2*0.5*log(rcm2);
 					  }
 				  }
 			  }
 
-			  // Find the particles that are intersect with ray and add them individually.
+			  // Find the particles that intersect with ray and add them individually.
 			  if(rcm2cell < 5.83*boxsize2){
 				  for(i = 0 ; i < tree->current->Nbig_particles ; ++i){
 
@@ -666,7 +667,6 @@ void TreeQuad::force2D_recur(PosType const *ray,PosType *alpha,KappaType *kappa,
     alpha[1] -= ray[1]*sigma_background;
     if(!no_kappa){      //  taken out to speed up
         *kappa -= sigma_background;
-        assert(!isinf(*kappa) );
     }
     // PHI BY Fabien : should I do this subtraction for phi too ?
     
@@ -723,11 +723,13 @@ void TreeQuad::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alph
 
 						gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 						gamma[1] += xcm[0]*xcm[1]*tmp;
+                        
+                        *phi = prefac*rcm2*0.5*log(rcm2);
 					}
 				}
 			}
 
-			// Fined the particles that intersect with ray and add them individually.
+			// Find the particles that intersect with ray and add them individually.
 			if(rcm2cell < 5.83*boxsize2){
 				for(i = 0 ; i < branch->Nbig_particles ; ++i){
 
@@ -739,8 +741,7 @@ void TreeQuad::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alph
 					/////////////////////////////////////////
 					if(haloON){
 						halos[tmp_index]->force_halo(alpha,kappa,gamma,phi,xcm,no_kappa,true); // PHI BY Fabien
-                        assert(!isinf(*kappa) );
-					}else{  // case of no halos just particles and no class derived from TreeQuad
+ 					}else{  // case of no halos just particles and no class derived from TreeQuad
 
 						rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
 						if(rcm2 < 1e-20) rcm2 = 1e-20;
@@ -760,12 +761,14 @@ void TreeQuad::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alph
 							// can turn off kappa and gamma calculations to save times
 							if(!no_kappa){
 								*kappa += kappa_h(arg1,arg2)*prefac;
-                                assert(!isinf(*kappa));
-                                assert(!isnan(*kappa));
+
 								tmp = (gamma_h(arg1,arg2) + 2.0)*prefac/rcm2;
 
 								gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 								gamma[1] += xcm[0]*xcm[1]*tmp;
+                                
+                                // TODO: makes sure the normalization of phi_h agrees with this
+                                *phi = (phi_h(arg1,arg2) + 0.5*log(rcm2))*prefac*rcm2;
 							}
 						}
 					}
@@ -791,6 +794,9 @@ void TreeQuad::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alph
 				tmp=-2.0*branch->mass/pi/rcm2cell/rcm2cell;
 				gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 				gamma[1] += xcm[0]*xcm[1]*tmp;
+                
+                *phi += 0.5*tree->current->mass*log( rcm2cell )/pi;
+                *phi -= 0.5*( tree->current->quad[0]*xcm[0]*xcm[0] + tree->current->quad[1]*xcm[1]*xcm[1] + 2*tree->current->quad[2]*xcm[0]*xcm[1] )/(pi*rcm2cell*rcm2cell);
 			}
 
 			// quadrapole contribution
