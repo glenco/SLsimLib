@@ -668,7 +668,7 @@ void PixelMap::drawcircle(
                         ){
   
 	PosType x1[2],x2[2];
-  PosType dtheta = resolution/radius;
+  PosType dtheta = resolution/fabs(radius);
 
   for(float theta = 0; theta < 2*pi; theta += dtheta){
     x1[0] = r_center[0] + radius*cos(theta);
@@ -729,27 +729,32 @@ void PixelMap::AddGrid(Grid &grid,PosType value){
 void PixelMap::FindArc(
                        PosType &radius
                        ,PosType *xc
+                       ,PosType *arc_center
                        ,PosType &arclength
                        ,PosType &width
-                       ,PosType threshold
+                       ,PosType threshold    // threshold in pixal value
                        ){
   
   std::vector<size_t> mask(Npixels*Npixels);
   size_t j=0;
   long k=0;
   PosType const tmp_center[2] = {0,0};
-  
+    
   // mask pixels below threshhold
-  PosType maxval = map[0];
+  PosType maxval = map[0],minval = map[0];
   for(size_t i=0;i<Npixels*Npixels;i++){
     if(map[i] > threshold){
+      if(j==0) minval = map[i];
+      else minval = MIN(minval,map[i]);
       mask[j++]=i;
     }
     maxval = MAX(maxval,map[i]);
   }
   mask.resize(j);
+  minval *= 0.99;
   
   if(j == 0){
+    std::cout << "PixelMap::FindArc() - No pixels above surface brighness limit" << std::endl;
     radius = arclength = width = 0.0;
     xc[0] = xc[1] = 0.0;
     return;
@@ -764,7 +769,7 @@ void PixelMap::FindArc(
   Nc = (size_t)(2*Rmax);
   Nr = (size_t)(Rmax-Rmin)/2;
   
-  std::vector<PosType> x(Nc),y(Nc),R2(Nr);//,votes(Nc*Nc*Nr);
+  std::vector<PosType> x(Nc),y(Nc),R2(Nr);
   Utilities::D3Matrix<float> votes(Nc,Nc,Nr);
   for(size_t i = 0;i<Nc*Nc*Nr;++i) votes(i) = 0;
   
@@ -773,8 +778,8 @@ void PixelMap::FindArc(
   for(size_t i = 0;i<Nr;++i) R2[i] = pow(Rmin + i*(Rmax-Rmin)/(Nr-1),2);
   
   const PosType range = 1.0*Npixels;
-  PosType Rmax2 = Rmax*Rmax;
-  PosType rmin2 = Rmax2,rmax2=0;
+  PosType RmaxSqr = Rmax*Rmax;
+  PosType rminSqr = RmaxSqr,rmax2=0;
   for(size_t m=0;m<mask.size();++m){
     
     Utilities::PositionFromIndex(mask[m], xc, Npixels, range, tmp_center);
@@ -784,13 +789,14 @@ void PixelMap::FindArc(
         
         r2 = (xc[0]-x[ii])*(xc[0]-x[ii]) + (xc[1]-y[jj])*(xc[1]-y[jj]);
         
-        rmin2 = MIN(rmin2,r2);
+        rminSqr = MIN(rminSqr,r2);
         rmax2 = MAX(rmax2,r2);
         
-        if(r2 < Rmax2){
+        if(r2 < RmaxSqr){
           k = locate<PosType>(R2,r2);
           if(k > -1 && k < Nr){
-            votes(ii,jj,k) += log(map[mask[m]]);
+            //votes(ii,jj,k) += log(map[mask[m]]/minval);
+            votes(ii,jj,k) += map[mask[m]];
             //std::cout << "vote = " << votes(ii,jj,k) << std::endl;
           }
         }
@@ -798,21 +804,14 @@ void PixelMap::FindArc(
     }
   }
   
-  // find maximum votes
+  printFITS("!fit_test.fits");
   
+  // find maximum votes
   size_t kmax=0,ksecond=0;
   PosType maxvotes,secondvotes;
   maxvotes = votes(0);
   for(size_t kk=0;kk < Nc*Nc*Nr;++kk){
-    
-    /*if(votes(ii,jj,kk) > votes(ii+1,jj,kk) && votes(ii,jj,kk) > votes(ii-1,jj,kk) ){
-     if(votes(ii,jj,kk) > votes(ii,jj+1,kk) && votes(ii,jj,kk) > votes(ii,jj-1,kk) ){
-     if(votes(ii,jj,kk) > votes(ii,jj,kk+1) && votes(ii,jj,kk) > votes(ii,jj,kk-1) ){
-     
-     }
-     }
-     }*/
-    
+        
     if(votes(kk) >= maxvotes ){
       
       secondvotes = maxvotes;
@@ -823,27 +822,45 @@ void PixelMap::FindArc(
     }
   }
   
-  
   xc[0] = x[votes.xindex(kmax)];
   xc[1] = y[votes.yindex(kmax)];
-  radius = sqrt(R2[votes.zindex(kmax)])*resolution;
+  radius = sqrt(R2[votes.zindex(kmax)]);
   
   PosType x_tmp[2],r_tmp,rmax,rmin;
-  rmax = rmin = radius;
+  double xave[2] = {0,0};
+  rmax = 0.0;
+  rmin = radius;
   arclength = 0;
   
+  // find arc length, width and center
   for(size_t m=0;m<mask.size();++m){
     Utilities::PositionFromIndex(mask[m], x_tmp, Npixels, range, tmp_center);
     r_tmp = sqrt( (xc[0] - x_tmp[0])*(xc[0] - x_tmp[0]) + (xc[1] - x_tmp[1])*(xc[1] - x_tmp[1]) );
     
-    if(fabs(r_tmp-radius) < resolution) arclength += 1;
+    if(fabs(r_tmp-radius) < 1.0){
+      arclength += 1;
+      xave[0] += x_tmp[0];
+      xave[1] += x_tmp[1];
+    }
     rmax = MAX(rmax,r_tmp);
     rmin = MIN(rmin,r_tmp);
   }
-  
+  xave[0] /= arclength;
+  xave[1] /= arclength;
+
+  double tmp = sqrt( (xave[0] - xc[0])*(xave[0] - xc[0]) + (xave[1] - xc[1])*(xave[1] - xc[1]) );
+  arc_center[0] = radius*(xave[0] - xc[0])/tmp + xc[0];
+  arc_center[1] = radius*(xave[1] - xc[1])/tmp + xc[1];
+
+  // convert from pixel units to angular units
   width = MAX(rmax-rmin,1.0)*resolution;
   arclength *= resolution;
-  
+  radius *= resolution;
+
   xc[0] = xc[0]*resolution + center[0];
   xc[1] = xc[1]*resolution + center[1];
+
+  arc_center[0] = arc_center[0]*resolution + center[0];
+  arc_center[1] = arc_center[1]*resolution + center[1];
+
 }
