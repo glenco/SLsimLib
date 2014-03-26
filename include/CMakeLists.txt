@@ -4,7 +4,6 @@ add_sources(
 	causticdata.h
 	divide_images.h
 	doc.h
-	delens.h
 	fitlens.h
 	forceTree.h
 	grid_maintenance.h
