@@ -426,7 +426,8 @@ LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
             //std::cout << mod[i] << std::endl;
             if(mod[i]!=0){set_flag_elliptical(true);};
         }
-    }
+    }else elliptical_flag = false;
+    
     rscale = xmax = 1.0;
 }
 
@@ -443,7 +444,7 @@ void LensHaloPowerLaw::assignParams(InputParams& params){
 	if(!params.get("main_slope",beta)) error_message1("main_slope, example -1",params.filename());
     //if(beta>=2.0) error_message1("main_slope < 2",params.filename());
     if(!params.get("main_axis_ratio",fratio)){fratio=1; std::cout << "main_axis_ratio not defined in file " << params.filename() << ", hence set to 1." << std::endl;};
-    if(!params.get("main_pos_angle",pa)){pa=0; std::cout << "main_pos_angle not defined in file " << params.filename() << ", hence set to 0." << std::endl;};
+    if(!params.get("main_pos_angle",pa)){pa=0.0; std::cout << "main_pos_angle not defined in file " << params.filename() << ", hence set to 0." << std::endl;};
 
 
 	if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
@@ -554,9 +555,6 @@ void LensHalo::force_halo(
     ,bool subtract_point /// if true contribution from a point mass is subtracted
     )
 {
-    
-    //std::cout << "In lens_halo.cpp force_halo " << elliptical << std::endl;
-
 	if (elliptical_flag){
         force_halo_asym(alpha,kappa,gamma,xcm,kappa_off,subtract_point);
         assert(!isinf(*kappa) );
@@ -570,7 +568,7 @@ void LensHalo::force_halo_sym(
 		PosType *alpha     /// mass/Mpc
 		,KappaType *kappa
 		,KappaType *gamma
-        ,KappaType *phi    // PHI BY Fabien
+        ,KappaType *phi
 		,PosType const *xcm
 		,bool kappa_off
 		,bool subtract_point /// if true contribution from a point mass is subtracted
@@ -590,9 +588,6 @@ void LensHalo::force_halo_sym(
         PosType prefac = mass/rcm2/pi;
 		PosType x = sqrt(rcm2)/rscale;
 		// PosType xmax = Rmax/rscale;
-        
-        // std::cout << "mass/pi = " << mass/pi << std::endl ;
-        // std::cout << "rscale = " << rscale << std::endl ;
 
         // PosType tmp = (alpha_h(x,xmax) + 1.0*subtract_point)*prefac;
 		PosType tmp = (alpha_h(x) + 1.0*subtract_point)*prefac;
@@ -608,8 +603,7 @@ void LensHalo::force_halo_sym(
 			gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 			gamma[1] += xcm[0]*xcm[1]*tmp;
             
-            *phi += phi_h(x) * mass / pi ; // * x ?
-            // std::cout << "phi_h(x) = " << phi_h(x) << std::endl ;
+            *phi += phi_h(x) * mass / pi ;
 		}
 	}
 	else // the point particle is not subtracted
@@ -631,7 +625,6 @@ void LensHalo::force_halo_sym(
 				gamma[1] += xcm[0]*xcm[1]*tmp;
                 
                 *phi += - 0.5 * log(rcm2) * mass / pi ; // value made to be consistent with alpha above. Sure ?
-                // std::cout << "*phi = " << *phi << std::endl ;
 			}
 		}
 	}

@@ -241,12 +241,6 @@ for(i = start; i < end; i++)
       assert(xx[0] == xx[0] && xx[1] == xx[1]);
 
       p->lensing_planes[j]->force(alpha,&kappa,gamma,&phi,xx,kappa_off);
-        
-      // Calling force : most important part of the calculation !
-      // p->lensing_planes[j]->force(alpha,&kappa,gamma,xx,kappa_off);
-        
-      // PHI BY Fabien : instead, we would like to have :
-      p->lensing_planes[j]->force(alpha,&kappa,gamma,&phi,xx,kappa_off);
 
       cc = p->charge * p->dDl[j+1];
 
@@ -280,7 +274,6 @@ for(i = start; i < end; i++)
 
       aa = (p->dDl[j+1] + p->dDl[j])/p->dDl[j];
       bb = p->dDl[j+1]/p->dDl[j];
-      cc = p->charge * p->dDl[j+1];
         
       xplus[0] = aa*p->i_points[i].image->x[0] - bb*xminus[0] - cc*alpha[0];
       xplus[1] = aa*p->i_points[i].image->x[1] - bb*xminus[1] - cc*alpha[1];
@@ -378,7 +371,7 @@ for(i = start; i < end; i++)
      
     std::cout << "p->i_points[i].dt = " << p->i_points[i].dt << std::endl ;
     std::cout << "GeometricalTerm = " << GeometricalTerm << std::endl ;
-     */
+    */
      
      
     // Convert units back to angles.
@@ -390,7 +383,7 @@ for(i = start; i < end; i++)
 
     /* TEST FABIEN
     std::cout << "p->i_points[i].kappa = " << p->i_points[i].kappa << std::endl ;
-     */
+    */
       
     // Computation of the inverse magnitude --------------------------------------------------------
     if(!kappa_off) p->i_points[i].invmag = (1-p->i_points[i].kappa)*(1-p->i_points[i].kappa)
