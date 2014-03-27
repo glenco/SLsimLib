@@ -9,6 +9,6 @@ namespace SLsimLib
 		/**
 		 * \brief Integrate source flux using the isoparameterized lens.
 		 */
-		double isop_render(Source& source, const double nodes[], double a0, double b0, double a1, double b1);
+		double isop_render(Source& source, const double nodx[], const double nody[], double a0, double b0, double a1, double b1);
 	}
 }

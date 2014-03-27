@@ -42,21 +42,21 @@ namespace SLsimLib
 		template<typename Function>
 		struct isop_map
 		{
-			isop_map(const Function& f, const double* x, const double* y) : f(f), x(x), y(y) {}
+			isop_map(Function f, const double* x, const double* y) : f(f), x(x), y(y) {}
 			
-			double operator()(double xi, double eta) const
+			double operator()(double xi, double eta)
 			{
 				return f(isop(x, xi, eta), isop(y, xi, eta));
 			}
 			
-			const Function& f;
+			Function f;
 			const double* x;
 			const double* y;
 		};
 		
 		/// Creates an isoparametric mapping functor.
 		template<typename Function>
-		isop_map<Function> make_isop_map(const Function& f, const double* x, const double* y)
+		isop_map<Function> make_isop_map(Function f, const double* x, const double* y)
 		{
 			return isop_map<Function>(f, x, y);
 		}

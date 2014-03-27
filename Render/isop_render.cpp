@@ -8,7 +8,7 @@ namespace SLsimLib
 {
 	namespace Render
 	{
-		double isop_render(Source& source, const double nodes[], double a0, double b0, double a1, double b1)
+		double isop_render(Source& source, const double nodx[], const double nody[], double a0, double b0, double a1, double b1)
 		{
 			using Numerics::quadrature;
 			using Numerics::quadrature_result;
@@ -23,7 +23,7 @@ namespace SLsimLib
 			double ag = 10e-2;
 			
 			// do the quadrature
-			quadrature_result result = quadrature<rule>(SourceFunctor(source), a0, b0, a1, b1, pg, ag);
+			quadrature_result result = quadrature<rule>(make_isop_map(SourceFunctor(source), nodx, nody), a0, b0, a1, b1, pg, ag);
 			
 			// return the result, error should be within the required limits
 			return result.value;
