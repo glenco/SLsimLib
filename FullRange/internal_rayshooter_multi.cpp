@@ -196,7 +196,7 @@ for(i = start; i < end; i++)
     p->i_points[i].gamma[1] = 0;
     p->i_points[i].gamma[2] = 0;
     p->i_points[i].dt = 0;
-    // Fabien : should I add this : p->i_points[i].dt = 0; // ???
+    // Fabien : should we add this : p->i_points[i].dt = 0; // ???
     
     // In case we don't want to compute the values :
     if(p->flag_switch_lensing_off)
@@ -242,12 +242,12 @@ for(i = start; i < end; i++)
 
       p->lensing_planes[j]->force(alpha,&kappa,gamma,&phi,xx,kappa_off);
 
-      cc = p->charge * p->dDl[j+1];
+      cc = p->charge * p->dDl[j+1]; // Fabien : I think that we can put this coefficient with the aa and bb down below !
 
         assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
         assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
-        assert(kappa == kappa );
-        assert(!isinf(kappa) );
+        assert(kappa == kappa);
+        assert(!isinf(kappa));
 
       if(!kappa_off)
       {
@@ -259,6 +259,8 @@ for(i = start; i < end; i++)
     	  gamma[0] *= fac;
     	  gamma[1] *= fac;
     	  gamma[2] *= fac;
+          
+          // Fabien : should we have this for phi too ?
 	
     	  assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
     	  assert(kappa == kappa);
@@ -274,6 +276,7 @@ for(i = start; i < end; i++)
 
       aa = (p->dDl[j+1] + p->dDl[j])/p->dDl[j];
       bb = p->dDl[j+1]/p->dDl[j];
+      // Fabien : bring the cc above right here ?
         
       xplus[0] = aa*p->i_points[i].image->x[0] - bb*xminus[0] - cc*alpha[0];
       xplus[1] = aa*p->i_points[i].image->x[1] - bb*xminus[1] - cc*alpha[1];
@@ -339,7 +342,7 @@ for(i = start; i < end; i++)
             
         
         // Geometric time delay with added potential
-        p->i_points[i].dt += 0.5*( (xplus[0] - xminus[0])*(xplus[0] - xminus[0]) + (xplus[1] - xminus[1])*(xplus[1] - xminus[1]) )/p->dDl[j+1] - (1 + p->plane_redshifts[j]) * phi * p->charge ;
+            p->i_points[i].dt += 0.5*( (xplus[0] - xminus[0])*(xplus[0] - xminus[0]) + (xplus[1] - xminus[1])*(xplus[1] - xminus[1]) )/p->dDl[j+1] - (1 + p->plane_redshifts[j]) * phi * p->charge ;
         
         /* TEST FABIEN
         GeometricalTerm +=  0.5*( (xplus[0] - xminus[0])*(xplus[0] - xminus[0]) + (xplus[1] - xminus[1])*(xplus[1] - xminus[1]) )/p->dDl[j+1] ;

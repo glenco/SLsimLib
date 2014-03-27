@@ -83,13 +83,21 @@ void LensPlaneSingular::force(PosType *alpha
 		gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
         phi_tmp = 0.0;
         
+        // Getting the halo position (in comoving Mpc) :
         halos[i]->getX(x_tmp);
         
+        // Converting this position in physical coordinates :
+        x_tmp[0] /= (1 + halos[i]->getZlens()) ;
+        x_tmp[1] /= (1 + halos[i]->getZlens()) ;
+        
+        // Taking the shift into account :
         x_tmp[0] = xx[0] - x_tmp[0];
         x_tmp[1] = xx[1] - x_tmp[1];
         
+        // Calling force_halo with temporary variables :
 		halos[i]->force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp,x_tmp,kappa_off,false);
         
+        // Adding the temporary values to the different quantities :
 		alpha[0] -= alpha_tmp[0];
 		alpha[1] -= alpha_tmp[1];
 		*kappa += kappa_tmp;
