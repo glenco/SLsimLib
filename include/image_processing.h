@@ -71,7 +71,7 @@ public:
 	
 	friend void swap(PixelMap&, PixelMap&);
 	
-  void FindArc(PosType &radius,PosType *xc,PosType &arclength,PosType &width
+  void FindArc(PosType &radius,PosType *xc,PosType *arc_center,PosType &arclength,PosType &width
                          ,PosType threshold);
 private:
 	std::valarray<double> map;
