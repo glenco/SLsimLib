@@ -59,10 +59,12 @@ public:
 
 	PosType getZlens() const { return zlens; }
 
-    /// get the position of the Halo
+    /// set the position of the Halo :
+    /// taking as argument the position in comoving Mpc
+    /// storing the position in physical Mpc
+    void setX(PosType PosX, PosType PosY) { posHalo[0] = PosX / (1 + zlens) ; posHalo[1] = PosY / (1 + zlens) ; }
+    /// get the position of the Halo in physical Mpc
     void getX(PosType * MyPosHalo) const { MyPosHalo[0] = posHalo[0] ; MyPosHalo[1] = posHalo[1]; }
-    /// set the position of the Halo
-    void setX(PosType PosX, PosType PosY) { posHalo[0] = PosX ; posHalo[1] = PosY ; }
     /// display the position of the halo
     void displayPos() { std::cout << "Halo PosX = " << posHalo[0] << " ; Halo PosY = " << posHalo[1] << std::endl; }
  

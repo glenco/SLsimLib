@@ -61,7 +61,7 @@ void LensPlaneSingular::force(PosType *alpha
                               ,KappaType *kappa
                               ,KappaType *gamma
                               ,KappaType *phi
-                              ,PosType *xx
+                              ,PosType *xx          // Position in physical Mpc
                               ,bool kappa_off)
 {
 	PosType alpha_tmp[2],x_tmp[2];
@@ -75,7 +75,7 @@ void LensPlaneSingular::force(PosType *alpha
     *phi = 0.0;
 
     
-    // Loop over the different halos present in a given lens plane. Right ?
+    // Loop over the different halos present in a given lens plane.
 	for(std::size_t i = 0, n = halos.size(); i < n; ++i)
 	{
 		alpha_tmp[0] = alpha_tmp[1] = 0.0;
@@ -83,12 +83,8 @@ void LensPlaneSingular::force(PosType *alpha
 		gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
         phi_tmp = 0.0;
         
-        // Getting the halo position (in comoving Mpc) :
+        // Getting the halo position (in physical Mpc) :
         halos[i]->getX(x_tmp);
-        
-        // Converting this position in physical coordinates :
-        x_tmp[0] /= (1 + halos[i]->getZlens()) ;
-        x_tmp[1] /= (1 + halos[i]->getZlens()) ;
         
         // Taking the shift into account :
         x_tmp[0] = xx[0] - x_tmp[0];
