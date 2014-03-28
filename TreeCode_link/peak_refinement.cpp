@@ -92,7 +92,7 @@ short find_peaks(
 
 		//printf("restarget = %e gridrange[2] = %e  gridrange[1] = %e\n",res_target,imageinfo->gridrange[2],imageinfo->gridrange[1]);
 
-		Nnewpoints = refine_grid_kist(lens,grid,imageinfo,1,res_target,2,true,newpointskist);
+		Nnewpoints = refine_grid_kist(lens,grid,imageinfo,1,res_target,2,newpointskist);
 
 
 		while(newpointskist->Nunits() > 0){
@@ -121,7 +121,7 @@ short find_peaks(
 
 			// refine all image points and outer border
 
-			Nnewpoints = refine_grid_kist(lens,grid,imageinfo,1,res_target,2,true,newpointskist);
+			Nnewpoints = refine_grid_kist(lens,grid,imageinfo,1,res_target,2,newpointskist);
 			//printf("Nnewpoints = %li\n",Nnewpoints);
 
 		}
@@ -159,7 +159,6 @@ short refine_on_implanted_source(
 		,ImageInfo *imageinfo  /// the output image
 		,int *Nimages		   /// number of images
 		,int NimageMax         /// Maximum number of images.
-		,bool kappa_off        /// turn off convergence and shear calculation to save time
 		,PosType threshold      /// the surface brightness threshold above which the grid is refined, default is 0
 		){
 
@@ -179,7 +178,7 @@ short refine_on_implanted_source(
 	do{
 		tmp = newpointskist->getCurrent()->surface_brightness;
 		// re-shoot rays to add in surface brightness from implanted sources
-		lens->rayshooterInternal(1,newpointskist->getCurrent(),kappa_off);
+		lens->rayshooterInternal(1,newpointskist->getCurrent());
 
 		if(fabs(newpointskist->getCurrent()->surface_brightness - tmp) > threshold){
 			imageinfo->imagekist->InsertAfterCurrent(newpointskist->getCurrent());

@@ -5,6 +5,7 @@
  *      Author: bmetcalf
  */
 #include "slsimlib.h"
+#include "isop_render.h"
 
 //const float mumin = 0.3;  // actually the sqrt of the minimum magnification
 const PosType FracResTarget = 3.0e-5;
@@ -39,7 +40,6 @@ void map_images(
 		                        /// If < 0 no telescoping is used and only the already existing points are used to
 		                        /// to initiate the image finding.
 		,ExitCriterion criterion  /// see data type
-		,bool kappa_off         /// turns off calculation of surface density, shear, magnification and time delay
 		,bool FindCenter        /// if the center of the source is not known this can be set to true and it will attempt to
 		                        /// find the center, find the size of the source and determine if there is more than one source
 			                    /// The entire source must be within xmax of source->getX() because this is the only
@@ -74,7 +74,6 @@ void map_images(
 
 	unsigned long tmp_count = 0;
 
-	kappa_off = false;
 	ImageInfo *sourceinfo = new ImageInfo[NimageMax];
 
 	if(FindCenter){
@@ -188,7 +187,7 @@ void map_images(
 		//find_images_kist(lens,source->getX(),xmin,grid,Nimages,imageinfo,NimageMax,&Nimagepoints
 		//		,0,true,0,false,true);
 		find_images_kist(lens,source->getX(),xmin,grid,Nimages,imageinfo,NimageMax,&Nimagepoints
-				,0,false,0,verbose,kappa_off);
+				,0,false,0,verbose);
 		if(verbose) std::cout << "number of grid points after find_images_kist: "<< grid->getNumberOfPoints() << std::endl;
 		Nsources = 1;
 		sourceinfo->centroid[0] = source->getX()[0];
@@ -368,7 +367,7 @@ void map_images(
 					printf("     ssize = %e rtemp = %e r_source = %e center = %e %e Nimages = %i\n",ssize,rtemp,r_source,center[0],center[1],*Nimages);
 				}
 
-			}while(refine_grid_kist(grid,imageinfo,*Nimages,rtemp*mumin/Ngrid_block,2,kappa_off,true,dummy_pnt));
+			}while(refine_grid_kist(grid,imageinfo,*Nimages,rtemp*mumin/Ngrid_block,2,true,dummy_pnt));
 
 			printf("      total number of points while telescoping: %li\n",NumberOfPoints(grid));
 
@@ -513,8 +512,8 @@ void map_images(
 	 ******* refine images based on flux in each pixel ******
 	 *******************************************************/
 	i=0;
-	while( refine_grid_on_image(lens,source,grid,maxflux,imageinfo,Nimages,sourceinfo,Nsources,NimageMax
-			,FracResTarget,criterion,kappa_off,divide_images) > 0 ) ++i;
+	while( refine_grid_on_image(lens,source,grid,maxflux,imageinfo,Nimages,sourceinfo
+            ,Nsources,NimageMax,FracResTarget,criterion,divide_images) > 0 ) ++i;
 
 	//printf("i=%i Nold=%li\n",i,Nold);
 	//printf("%li\n",imagelist->Npoints);
@@ -711,7 +710,7 @@ void map_images_fixedgrid(
  */
 int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,PosType maxflux,ImageInfo *imageinfo,int *Nimages
 		,ImageInfo *sourceinfo,int Nsources,int NimageMax,const PosType res_target,ExitCriterion criterion
-		,bool kappa_off,bool divide_images,bool batch){
+		,bool divide_images,bool batch){
 
 	//printf("entering refine_grid\n");
 
@@ -807,7 +806,7 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,PosType maxflux
 					  imageinfo[i].area +=  pow(imageinfo[i].imagekist->getCurrent()->gridsize/grid->getNgrid_block(),2)
 							  *(imageinfo[i].imagekist->getCurrent()->surface_brightness/maxflux);
 				  }else{
-					  i_points = grid->RefineLeaf(lens,imageinfo[i].imagekist->getCurrent(),kappa_off);
+					  i_points = grid->RefineLeaf(lens,imageinfo[i].imagekist->getCurrent());
 					  check_sb_add(source,&imageinfo[i],i_points,maxflux,Nold,number_of_refined);
 
 					  /*if(i_points != NULL){
@@ -851,7 +850,7 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,PosType maxflux
 		  }
 
 		  if(batch){
-			  i_points = grid->RefineLeaves(lens,points_to_refine,kappa_off);
+			  i_points = grid->RefineLeaves(lens,points_to_refine);
 			  check_sb_add(source,&imageinfo[i],i_points,maxflux,Nold,number_of_refined);
 			  points_to_refine.clear();
 		  }
@@ -897,7 +896,7 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,PosType maxflux
 					  if(batch){
 						  points_to_refine.push_back(imageinfo[i].outerborder->getCurrent());
 					  }else{
-						  i_points = grid->RefineLeaf(lens,imageinfo[i].outerborder->getCurrent(),kappa_off);
+						  i_points = grid->RefineLeaf(lens,imageinfo[i].outerborder->getCurrent());
 						  check_sb_add(source,&imageinfo[i],i_points,maxflux,Nold,number_of_refined);
 					  }
 					  /*if(i_points != NULL){
@@ -941,7 +940,7 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,PosType maxflux
 		  assert(imageinfo[i].area >= 0.0);
 
 		  if(batch){
-			  i_points = grid->RefineLeaves(lens,points_to_refine,kappa_off);
+			  i_points = grid->RefineLeaves(lens,points_to_refine);
 			  check_sb_add(source,&imageinfo[i],i_points,maxflux,Nold,number_of_refined);
 			  points_to_refine.clear();
 		  }
@@ -1136,18 +1135,173 @@ bool RefinePoint_sb(Point *point,TreeHndl i_tree,PosType image_area,PosType tota
 }
 // refinement criterion based on difference in surface brightness
 bool RefinePoint_smallsize(Point *point,TreeHndl i_tree,PosType image_area,PosType total_area
-                    ,PosType smallsize,PosType maxflux,Kist<Point> * nearest){
-  
+                           ,PosType smallsize,PosType maxflux,Kist<Point> * nearest){
+    
 	// Prevent cell from getting so small that precision error prevents everything from working
 	if(point->gridsize <= pow(10.,1 - DBL_DIG)) return false;  // this shouldn't be necessary every time
-  
+    
 	if( image_area < 1.0e-3*total_area ) return false;
 	if( point->gridsize*point->gridsize*point->surface_brightness/maxflux > 1.0e-4*image_area)
 		return false;
-  
-  if(point->gridsize*point->gridsize*point->invmag > smallsize*smallsize) return true;
-  
-  return false;
+    
+    if(point->gridsize*point->gridsize*point->invmag > smallsize*smallsize) return true;
+    
+    return false;
+}
+
+/// 
+bool IntegrateFluxInCell(Point *point,TreeHndl i_tree,Source *source){
+    
+    // Check that
+    if(point->leaf->neighbors.size() != 8) return false;
+
+    std::vector<Point *> neighbors;
+    int i = 0;
+    for(std::list<Branch *>::iterator it = point->leaf->neighbors.begin();
+        it != point->leaf->neighbors.end() ; ++it,++i){
+		if((*it)->npoints == 0) return false;
+		neighbors[i] = (*it)->points;
+	}
+
+    // sort neighbors into counterclockwise order from bottom left
+    int j=0,k=7;
+    for(i=0;i<8;++i){
+        if(neighbors[i]->x[1] < point->x[1]){
+            Swap(neighbors[i],neighbors[j]);
+            ++j;
+        }
+        if(neighbors[i]->x[1] > point->x[1]){
+            Swap(neighbors[i],neighbors[k]);
+            --k;
+        }
+    }
+    assert(j == 2);
+    assert(k == 5);
+    j=0;
+    k=2;
+    for(i=0;i<3;++i){
+        if(neighbors[i]->x[0] < point->x[0]){
+            std::swap(neighbors[i],neighbors[j]);
+            ++j;
+        }
+        if(neighbors[i]->x[0] > point->x[0]){
+            std::swap(neighbors[i],neighbors[k]);
+            --k;
+        }
+    }
+    if(neighbors[3]->x[0] < neighbors[4]->x[0] ) std::swap(neighbors[4],neighbors[3]);
+    std::swap(neighbors[4],neighbors[7]);
+    j=4;
+    k=6;
+    for(i=4;i<7;++i){
+        if(neighbors[i]->x[0] > point->x[0]){
+            std::swap(neighbors[i],neighbors[j]);
+            ++j;
+        }
+        if(neighbors[i]->x[0] < point->x[0]){
+            std::swap(neighbors[i],neighbors[k]);
+            --k;
+        }
+    }
+    
+    
+    Numerica::isop()
+    
+    // goto each quadrant
+    PosType x[8],y[8],flux=0.0;
+    {
+        x[0] = neighbors[0]->x[0];
+        y[0] = neighbors[0]->x[1];
+        interpfromPoints(&neighbors[0],&neighbors[1],&x[1],&y[1]);
+        x[2] = neighbors[1]->x[0];
+        y[2] = neighbors[1]->x[1];
+        interpfromPoints(&neighbors[1],point,&x[3],&y[3]);
+        x[4] = point->x[0];
+        y[4] = point->x[1];
+        interpfromPoints(&neighbors[7],point,&x[5],&y[5]);
+        x[6] = neighbors[7]->x[0];
+        y[6] = neighbors[7]->x[1];
+        interpfromPoints(&neighbors[7],&neighbors[0],&x[7],&y[7]);
+        flux +=  SLsimLib::Render::isop_render(source,x,y,0,0,1,1);
+    }
+    {
+        x[0] = neighbors[1]->x[0];
+        y[0] = neighbors[1]->x[1];
+        interpfromPoints(&neighbors[1],&neighbors[2],&x[1],&y[1]);
+        x[2] = neighbors[2]->x[0];
+        y[2] = neighbors[2]->x[1];
+        interpfromPoints(&neighbors[2],&neighbors[3],&x[3],&y[3]);
+        x[4] = neighbors[3]->x[0];
+        y[4] = neighbors[3]->x[1];
+        interpfromPoints(&neighbors[3],point,&x[5],&y[5]);
+        x[6] = point->x[0];
+        y[6] = point->x[1];
+        interpfromPoints(&neighbors[1],point,&x[7],&y[7]);
+        flux +=  isop_render(source,x,y,-1,0,0,1);
+    }
+    {
+        x[0] = point->x[0];
+        y[0] = point->x[1];
+        interpfromPoints(&neighbors[3],point,&x[1],&y[1]);
+        x[2] = neighbors[3]->x[0];
+        y[2] = neighbors[3]->x[1];
+        interpfromPoints(&neighbors[3],&neighbors[4],&x[3],&y[3]);
+        x[4] = neighbors[4]->x[0];
+        y[4] = neighbors[4]->x[1];
+        interpfromPoints(&neighbors[4],&neighbors[5],&x[5],&y[5]);
+        x[6] = neighbors[5]->x[0];
+        y[6] = neighbors[5]->x[1];
+        interpfromPoints(&neighbors[5],point,&x[7],&y[7]);
+        flux +=  isop_render(source,x,y,-1,-1,0,0);
+    }
+    {
+        x[0] = neighbors[7]->x[0];
+        y[0] = neighbors[7]->x[1];
+        interpfromPoints(&neighbors[7],point,&x[1],&y[1]);
+        x[2] = point->x[0];
+        y[2] = point->x[1];
+        interpfromPoints(&neighbors[5],point,&x[3],&y[3]);
+        x[4] = neighbors[5]->x[0];
+        y[4] = neighbors[5]->x[1];
+        interpfromPoints(&neighbors[5],&neighbors[6],&x[5],&y[5]);
+        x[6] = neighbors[6]->x[0];
+        y[6] = neighbors[6]->x[1];
+        interpfromPoints(&neighbors[6],&neighbors[7],&x[7],&y[7]);
+        flux +=  isop_render(source,x,y,0,-1,1,0);
+    }
+        
+    point->surface_brightness = flux/point->gridsize/point->gridsize;
+    return true;
+}
+
+/** \brief Finds the source position of a point that lies half way between points p1 and p2 on the image plane by third order interpolation.
+*/
+void interpfrom2Points(Point const * p1,Point const * p2,PosType *x,PosType *y){
+    PosType dx = p1->x[0] - p2->x[0],dy = p1->x[1] - p2->x[1];
+    PosType l = sqrt(dx*dx +dy*dy);
+    dx /=l;
+    dy /=l;
+    
+    check sign convention!
+    
+    double A1p1 = (1 - p1->kappa - p1->gamma[0])*dx + (p1->gamma[1] + p1->gamma[2])*dy;
+    double A2p1 = (1 - p1->kappa + p1->gamma[0])*dy + (p1->gamma[1] - p1->gamma[2])*dx;
+    double A1p2 = (1 - p2->kappa - p2->gamma[0])*dx + (p2->gamma[1] + p2->gamma[2])*dy;
+    double A2p2 = (1 - p2->kappa + p2->gamma[0])*dy + (p2->gamma[1] - p2->gamma[2])*dx;
+    
+    /*
+    x = p1->image->x[0] + (p2->image->x[0] - p1->image->x[0])*s*s*(3-2*s)
+        + l*A1p1*s*(1-s)*(1-s) + l*A1p2*s*s*(1-s);
+    y = p1->image->x[1] + (p2->image->x[1] - p1->image->x[1])*s*s*(3-2*s)
+        + l*A2p1*s*(1-s)*(1-s) + l*A2p2*s*s*(1-s);
+ */
+    
+    x = (p2->image->x[0] + p1->image->x[0])/2
+      + l*( A1p1 + A1p2 )/8;
+    y = (p2->image->x[1] + p1->image->x[1])/2
+      + l*( A2p1 + A2p2 )/8;
+
+    return;
 }
 
 /*

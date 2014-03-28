@@ -462,7 +462,7 @@ void TreeQuad::force2D(PosType const *ray
                        ,KappaType *kappa
                        ,KappaType *gamma
                        ,KappaType *phi
-                       ,bool no_kappa){
+                       ){
 
   PosType xcm[2],rcm2cell,rcm2,tmp,boxsize2;
   IndexType i;
@@ -530,7 +530,7 @@ void TreeQuad::force2D(PosType const *ray
 					  alpha[1] += tmp*xcm[1];
 
 					  // can turn off kappa and gamma calculations to save times
-					  if(!no_kappa){
+					  {
 						  tmp = -2.0*prefac/rcm2;
 
 						  gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
@@ -551,7 +551,7 @@ void TreeQuad::force2D(PosType const *ray
 					  xcm[1] = tree->xp[tmp_index][1] - ray[1];
 
 					  if(haloON){
-						  halos[tmp_index]->force_halo(alpha,kappa,gamma,phi,xcm,no_kappa,true);
+						  halos[tmp_index]->force_halo(alpha,kappa,gamma,phi,xcm,true);
 					  }else{  // case of no halos just particles and no class derived from TreeQuad
 
 						  rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
@@ -570,7 +570,7 @@ void TreeQuad::force2D(PosType const *ray
 							  alpha[1] += tmp*xcm[1];
 
 							  // can turn off kappa and gamma calculations to save times
-							  if(!no_kappa){
+							  {
 								  *kappa += kappa_h(arg1,arg2)*prefac;
 
 								  tmp = (gamma_h(arg1,arg2) + 2.0)*prefac/rcm2;
@@ -594,7 +594,7 @@ void TreeQuad::force2D(PosType const *ray
 			  alpha[0] += tmp*xcm[0];
 			  alpha[1] += tmp*xcm[1];
 
-			  if(!no_kappa){      //  taken out to speed up
+			  {      //  taken out to speed up
 				  tmp=-2.0*tree->current->mass/pi/rcm2cell/rcm2cell;
 				  gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 				  gamma[1] += xcm[0]*xcm[1]*tmp;
@@ -624,7 +624,7 @@ void TreeQuad::force2D(PosType const *ray
   //  added to the universe in the halos.
   alpha[0] -= ray[0]*sigma_background;
   alpha[1] -= ray[1]*sigma_background;
-  if(!no_kappa){      //  taken out to speed up
+  {      //  taken out to speed up
 	  *kappa -= sigma_background;
   }
 
@@ -651,7 +651,7 @@ void TreeQuad::force2D(PosType const *ray
 
 
 // PHI BY Fabien -----
-void TreeQuad::force2D_recur(PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,bool no_kappa){
+void TreeQuad::force2D_recur(PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi){
     
     assert(tree);
     
@@ -659,14 +659,14 @@ void TreeQuad::force2D_recur(PosType const *ray,PosType *alpha,KappaType *kappa,
     *kappa=*phi=0.0;
     
     // PHI BY Fabien :
-    walkTree_recur(tree->top,&ray[0],&alpha[0],kappa,&gamma[0],phi,no_kappa);
+    walkTree_recur(tree->top,&ray[0],&alpha[0],kappa,&gamma[0],phi);
     
     
     // Subtract off uniform mass sheet to compensate for the extra mass
     //  added to the universe in the halos.
     alpha[0] -= ray[0]*sigma_background;
     alpha[1] -= ray[1]*sigma_background;
-    if(!no_kappa){      //  taken out to speed up
+    {      //  taken out to speed up
         *kappa -= sigma_background;
     }
     // PHI BY Fabien : should I do this subtraction for phi too ?
@@ -686,7 +686,7 @@ void TreeQuad::force2D_recur(PosType const *ray,PosType *alpha,KappaType *kappa,
 // -----
 
 
-void TreeQuad::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma, KappaType *phi, bool no_kappa){
+void TreeQuad::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma, KappaType *phi){
     
 
 	PosType xcm[2],rcm2cell,rcm2,tmp,boxsize2;
@@ -729,7 +729,7 @@ void TreeQuad::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alph
 					alpha[1] += -1.0*prefac*xcm[1];
 
 					// can turn off kappa and gamma calculations to save times
-					if(!no_kappa){
+					{
 						tmp = -2.0*prefac/rcm2;
 
 						gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
@@ -751,7 +751,7 @@ void TreeQuad::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alph
 
 					/////////////////////////////////////////
 					if(haloON){
-						halos[tmp_index]->force_halo(alpha,kappa,gamma,phi,xcm,no_kappa,true); // PHI BY Fabien
+						halos[tmp_index]->force_halo(alpha,kappa,gamma,phi,xcm,true); // PHI BY Fabien
  					}else{  // case of no halos just particles and no class derived from TreeQuad
 
 						rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
@@ -770,7 +770,7 @@ void TreeQuad::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alph
 							alpha[1] += tmp*xcm[1];
 
 							// can turn off kappa and gamma calculations to save times
-							if(!no_kappa){
+							{
 								*kappa += kappa_h(arg1,arg2)*prefac;
 
 								tmp = (gamma_h(arg1,arg2) + 2.0)*prefac/rcm2;
@@ -787,13 +787,13 @@ void TreeQuad::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alph
 			}
 
 			if(branch->child0 != NULL)
-				walkTree_recur(branch->child0,&ray[0],&alpha[0],kappa,&gamma[0],&phi[0],no_kappa);
+				walkTree_recur(branch->child0,&ray[0],&alpha[0],kappa,&gamma[0],&phi[0]);
 			if(branch->child1 != NULL)
-				walkTree_recur(branch->child1,&ray[0],&alpha[0],kappa,&gamma[0],&phi[0],no_kappa);
+				walkTree_recur(branch->child1,&ray[0],&alpha[0],kappa,&gamma[0],&phi[0]);
 			if(branch->child2 != NULL)
-				walkTree_recur(branch->child2,&ray[0],&alpha[0],kappa,&gamma[0],&phi[0],no_kappa);
+				walkTree_recur(branch->child2,&ray[0],&alpha[0],kappa,&gamma[0],&phi[0]);
 			if(branch->child3 != NULL)
-				walkTree_recur(branch->child3,&ray[0],&alpha[0],kappa,&gamma[0],&phi[0],no_kappa);
+				walkTree_recur(branch->child3,&ray[0],&alpha[0],kappa,&gamma[0],&phi[0]);
 
 		}else{ // use whole cell
 			tmp = -1.0*branch->mass/rcm2cell/pi;
@@ -801,7 +801,7 @@ void TreeQuad::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alph
 			alpha[0] += tmp*xcm[0];
 			alpha[1] += tmp*xcm[1];
 
-			if(!no_kappa){      //  taken out to speed up
+			{      //  taken out to speed up
 				tmp=-2.0*branch->mass/pi/rcm2cell/rcm2cell;
 				gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 				gamma[1] += xcm[0]*xcm[1]*tmp;

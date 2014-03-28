@@ -40,7 +40,7 @@ Grid::Grid(
 
     {
     std::lock_guard<std::mutex> hold(grid_mutex);
-  	lens->rayshooterInternal(Ngrid_init*Ngrid_init,i_points,false);
+  	lens->rayshooterInternal(Ngrid_init*Ngrid_init,i_points);
     }
   
 	// Build trees
@@ -114,7 +114,7 @@ Grid::Grid(
     
     {
         std::lock_guard<std::mutex> hold(grid_mutex);
-        lens->rayshooterInternal(Ngrid_init*Ngrid_init2,i_points,false);
+        lens->rayshooterInternal(Ngrid_init*Ngrid_init2,i_points);
     }
               
 	// Build trees
@@ -189,7 +189,7 @@ void Grid::ReInitializeGrid(LensHndl lens){
   
   {
     std::lock_guard<std::mutex> hold(grid_mutex);
-	  lens->rayshooterInternal(Ngrid_init*Ngrid_init2,i_points,false);
+	  lens->rayshooterInternal(Ngrid_init*Ngrid_init2,i_points);
   }
 	// need to resize root of source tree.  It can change in size
 	s_tree->top->boundary_p1[0]=s_points[0].x[0]; s_tree->top->boundary_p1[1]=s_points[0].x[1];
@@ -266,7 +266,7 @@ void Grid::ReShoot(LensHndl lens){
       {
       // reshoot the rays
         std::lock_guard<std::mutex> hold(grid_mutex);
-         lens->rayshooterInternal(i_points->head,i_points,false);
+         lens->rayshooterInternal(i_points->head,i_points);
       }
     }
     
@@ -351,8 +351,7 @@ unsigned long Grid::getNumberOfPoints(){
  * i_tree current is left in one of the new subcells.
  */
 
-Point * Grid::RefineLeaf(LensHndl lens,Point *point,bool kappa_off){
-	//Point * RefineLeaf(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,Point *point,int Ngrid,bool kappa_off){
+Point * Grid::RefineLeaf(LensHndl lens,Point *point){
 
 	Point *i_points = NewPointArray(Ngrid_block*Ngrid_block-1);
 	Point *s_points;
@@ -399,7 +398,7 @@ Point * Grid::RefineLeaf(LensHndl lens,Point *point,bool kappa_off){
   
   {
     std::lock_guard<std::mutex> hold(grid_mutex);
-	  lens->rayshooterInternal(Ntemp,i_points,kappa_off);
+	  lens->rayshooterInternal(Ntemp,i_points);
   }
   
 	// remove the points that are outside initial source grid
@@ -470,7 +469,7 @@ Point * Grid::RefineLeaf(LensHndl lens,Point *point,bool kappa_off){
  * \brief Same as RefineLeaf() but multiple points can be passed.  The rays are shot all together so that more
  * parallelization can be achieved in the rayshooting.
  */
-Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa_off){
+Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points){
 
   
 	if(points.size() == 0) return NULL;
@@ -585,7 +584,7 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa
 					//		  << (i_point->image->x[1] - i_points[jj].image->x[1])/ss  << std::endl;
 
 
-					if(!kappa_off){
+					
 						i_points[jj].kappa = i_points[jj].image->kappa = 1-0.5*(aa[0]+aa[1]);
 						i_points[jj].gamma[0] = i_points[jj].image->gamma[0] = -0.5*(aa[0]-aa[1]);
 						i_points[jj].gamma[1] = i_points[jj].image->gamma[1] = -0.5*(aa[2]+aa[3]);
@@ -594,7 +593,7 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa
 								     - i_points[jj].gamma[0]*i_points[jj].gamma[0]
 								     - i_points[jj].gamma[1]*i_points[jj].gamma[1]
 								     + i_points[jj].gamma[2]*i_points[jj].gamma[2];
-					}
+					
 					i_points[jj].in_image = MAYBE;
 
 				}
@@ -611,7 +610,7 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa
 
   {
     std::lock_guard<std::mutex> hold(grid_mutex);
-    lens->rayshooterInternal(Nadded,i_points,kappa_off);
+    lens->rayshooterInternal(Nadded,i_points);
   }
 
 	/*********************** TODO test line *******************************
@@ -938,7 +937,6 @@ void Grid::zoom(
 		LensHndl lens
 		,PosType *center      /// center of point where grid is refined
 		,PosType min_scale    /// the smallest grid size to which the grid is refined
-		,bool kappa_off      /// turns the kappa and gamma calculation on or off
 		,Branch *top         /// where on the tree to start, if NULL it will start at the root
 		){
 
@@ -955,7 +953,7 @@ void Grid::zoom(
 	i_tree->_FindLeaf(center,0);
 	while(i_tree->current->points->gridsize > min_scale ){
 		tmp = i_tree->current;
-		newpoints = RefineLeaf(lens,i_tree->current->points,kappa_off);
+		newpoints = RefineLeaf(lens,i_tree->current->points);
 		if(newpoints == NULL) break;  // case where all the new points where outside the region
 		i_tree->current = tmp;
 		assert(inbox(center,i_tree->current->boundary_p1,i_tree->current->boundary_p2));

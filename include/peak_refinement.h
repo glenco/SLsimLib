@@ -22,6 +22,6 @@ typedef Beam * BeamHndl;
 
 short find_peaks(LensHndl lens,GridHndl grid,double rEinsteinMin,double kappa_max,ImageInfo *imageinfo, int* Nimages);
 short refine_on_implanted_source(LensHndl lens,GridHndl grid,double *theta,double radius,double res_target,ImageInfo *imageinfo
-		,int *Nimages,int NimageMax,bool kappa_off,double threshold = 0.0);
+		,int *Nimages,int NimageMax,double threshold = 0.0);
 
 #endif

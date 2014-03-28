@@ -21,8 +21,9 @@ LensPlaneTree::~LensPlaneTree(){
 
 
 // PHI BY Fabien : adding the phi component into this function
-void LensPlaneTree::force(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType *xx,bool kappa_off){
-	halo_tree->force2D_recur(xx,alpha,kappa,gamma,phi,kappa_off);
+void LensPlaneTree::force(PosType *alpha,KappaType *kappa,KappaType *gamma
+                          ,KappaType *phi,PosType *xx){
+	halo_tree->force2D_recur(xx,alpha,kappa,gamma,phi);
 }
 
 
@@ -58,7 +59,7 @@ LensPlaneSingular::~LensPlaneSingular()
 }
 
 /*
-void LensPlaneSingular::force(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xx,bool kappa_off){
+void LensPlaneSingular::force(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xx,){
 	PosType alpha_tmp[2],x_tmp[2];
 	KappaType kappa_tmp, gamma_tmp[3];
     
@@ -77,7 +78,7 @@ void LensPlaneSingular::force(PosType *alpha,KappaType *kappa,KappaType *gamma,P
         x_tmp[0] = xx[0] - x_tmp[0];
         x_tmp[1] = xx[1] - x_tmp[1];
         
-		halos[i]->force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,x_tmp,kappa_off,false);
+		halos[i]->force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,x_tmp,false);
     
 		alpha[0] -= alpha_tmp[0];
 		alpha[1] -= alpha_tmp[1];
@@ -90,7 +91,7 @@ void LensPlaneSingular::force(PosType *alpha,KappaType *kappa,KappaType *gamma,P
 */
 
 // PHI BY Fabien : adding the phi component into this function --------------------------------------
-void LensPlaneSingular::force(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType *xx,bool kappa_off){
+void LensPlaneSingular::force(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType *xx){
 	PosType alpha_tmp[2],x_tmp[2];
 	KappaType kappa_tmp, gamma_tmp[3];
     KappaType phi_tmp;
@@ -100,7 +101,6 @@ void LensPlaneSingular::force(PosType *alpha,KappaType *kappa,KappaType *gamma,K
 	gamma[0] = gamma[1] = gamma[2] = 0.0;
     *phi = 0.0;
     
-    // Fabien : I guess this is a loop over the different halos present in a given lens plane.
 	for(std::size_t i = 0, n = halos.size(); i < n; ++i)
 	{
 		alpha_tmp[0] = alpha_tmp[1] = 0.0;
@@ -113,7 +113,7 @@ void LensPlaneSingular::force(PosType *alpha,KappaType *kappa,KappaType *gamma,K
         x_tmp[0] = xx[0] - x_tmp[0];
         x_tmp[1] = xx[1] - x_tmp[1];
         
-		halos[i]->force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp,x_tmp,kappa_off,false);
+		halos[i]->force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp,x_tmp,false);
         
 		alpha[0] -= alpha_tmp[0];
 		alpha[1] -= alpha_tmp[1];
@@ -124,8 +124,6 @@ void LensPlaneSingular::force(PosType *alpha,KappaType *kappa,KappaType *gamma,K
         *phi += phi_tmp;
 	}
 }
-// --------------------------------------------------------------------------------------------------
-
 
 void LensPlaneSingular::addHalo(LensHalo* halo)
 {

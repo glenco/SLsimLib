@@ -50,8 +50,9 @@ public:
 	float * CalculateSPHsmoothing(int N);
 	/// calculate the deflection and lensing properties
     // PHI BY Fabien
-	void force2D(PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,bool no_kappa = true);
-	// void force2D(PosType *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa = true);
+	void force2D(PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma
+                 ,KappaType *phi);
+	// void force2D(PosType *ray,PosType *alpha,KappaType *kappa,KappaType *gamma);
 	/// provides a way to change the profiles of the particles, by default Gaussian
 	//void ChangeParticleProfile(PartProf partprof);
 
