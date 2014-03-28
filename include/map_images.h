@@ -11,6 +11,8 @@
 #include <lens.h>
 #include <grid_maintenance.h>
 
+namespace ImageFinding{
+
 void map_images(LensHndl lens,Source *source,GridHndl grid,int *Nimages,ImageInfo *imageinfo
 		,int Nimagesmax,double xmax,double xmin,double initial_size
 		,ExitCriterion criterion,bool FindCenter,bool divide_images);
@@ -29,6 +31,9 @@ bool RefinePoint_sb(Point *point,TreeHndl i_tree,double image_area,double total_
 		,double sb_limit,Kist<Point> * nearest);
 bool RefinePoint_smallsize(Point *point,TreeHndl i_tree,double image_area,double total_area
                            ,double smallsize,Kist<Point> * nearest);
+bool IntegrateFluxInCell(Point *point,TreeHndl i_tree,Source *source);
+void interpfrom2Points(Point const * p1,Point const * p2,PosType *x,PosType *y);
+    
 void UniformMagCheck(ImageInfo *imageinfo);
-
+}
 #endif

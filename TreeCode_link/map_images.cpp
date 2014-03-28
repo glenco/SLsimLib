@@ -4,9 +4,13 @@
  *  Created on: Oct 6, 2010
  *      Author: bmetcalf
  */
+
+
 #include "slsimlib.h"
 #include "isop.h"
 
+
+namespace ImageFinding{
 using namespace SLsimLib;
 
 //const float mumin = 0.3;  // actually the sqrt of the minimum magnification
@@ -170,7 +174,7 @@ void map_images(
 			center[0] = source->getX()[0];
 			center[1] = source->getX()[1];
 		}
-		find_images_kist(lens,center,rs[0],grid,Nimages,imageinfo,NimageMax,&Nimagepoints,initial_size,true,0,false,true);
+        find_images_kist(lens,center,rs[0],grid,Nimages,imageinfo,NimageMax,&Nimagepoints,initial_size,true,0,false);
 		for(i=1;i<Nsources;++i){
 			if(sourceinfo[i].imagekist->Nunits() > 0){
 				center[0] = sourceinfo[i].centroid[0];
@@ -179,7 +183,7 @@ void map_images(
 				center[0] = source->getX()[0];
 				center[1] = source->getX()[1];
 			}
-			find_images_kist(lens,center,rs[i],grid,Nimages,imageinfo,NimageMax,&Nimagepoints,xmax,true,0,false,true);
+			find_images_kist(lens,center,rs[i],grid,Nimages,imageinfo,NimageMax,&Nimagepoints,xmax,true,0,false);
 		}
 
 		// free array of sourceinfo's'
@@ -388,8 +392,7 @@ void map_images(
 
 	tmp = grid->RefreshSurfaceBrightnesses(source);
 
-  assert(tmp > 0.0 || imageinfo->imagekist->Nunits() == 0);
-
+    assert(tmp > 0.0 || imageinfo->imagekist->Nunits() == 0);
 
 	/*/********** test lines **********************
 	PointsWithinKist_iter(grid->s_tree,source->getX(),0,source->source_r_out,imageinfo->imagekist);
@@ -542,7 +545,7 @@ void map_images(
 		imageinfo[i].imagekist->MoveToTop();
 		imageinfo[i].centroid[0] = 0.0;
 		imageinfo[i].centroid[1] = 0.0;
-    imageinfo[i].area = 0.0;
+        imageinfo[i].area = 0.0;
 		for(j = 0 ; j < imageinfo[i].imagekist->Nunits() ; ++j,imageinfo[i].imagekist->Down() ){
 			imageinfo[i].area += pow(imageinfo[i].imagekist->getCurrent()->gridsize,2)
                *imageinfo[i].imagekist->getCurrent()->surface_brightness;
@@ -728,7 +731,6 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,PosType maxflux
   for(i=0,Nold=0;i<(*Nimages);++i) Nold += imageinfo[i].imagekist->Nunits();
   if(total_area == 0.0) return 0;
 
-  Point *point;
   Kist<Point> * nearest=new Kist<Point>;
   std::vector<Point *> points_to_refine;
 
@@ -1072,8 +1074,9 @@ void check_sb_add(Source *source,ImageInfo *imageinfo,Point *i_points,PosType ma
 	}
 }
 
-bool RefinePoint2(Point *point,TreeHndl i_tree,PosType image_area,PosType total_area,PosType maxflux
-		,ExitCriterion criterion,PosType res_target,Kist<Point> * nearest){
+bool RefinePoint2(Point *point,TreeHndl i_tree,PosType image_area,PosType total_area
+                  ,PosType maxflux,ExitCriterion criterion,PosType res_target
+                  ,Kist<Point> * nearest){
 
 	PosType borderSB = 0,error = 0,maxdiff_sb;
 
@@ -1151,8 +1154,22 @@ bool RefinePoint_smallsize(Point *point,TreeHndl i_tree,PosType image_area,PosTy
     return false;
 }
 
-/// 
-bool IntegrateFluxInCell(Point *point,TreeHndl i_tree,Source *source){
+/** \brief Integrate the flux within a cell using the isoparametric expansion.
+ *
+ *   Will return false if a) the cell does not have 8 equally sized neighbor cells 
+ *   or b) because it is found that the isop expansion is not valid within the 
+ *   specified tolerance.
+ *
+ *   The result is returned in the point->surface_brightness in surface brightness 
+ *   units.
+ *
+ *   The point must have already been linked and entered into a tree.
+ */
+bool IntegrateFluxInCell(
+            Point *point      /// center point of cell to be integrated
+            ,Source &source   /// source to be integrated
+            ,float tolerance  /// tolerance to which isop expantion is checked
+                         ){
     
     // Check that
     if(point->leaf->neighbors.size() != 8) return false;
@@ -1169,11 +1186,11 @@ bool IntegrateFluxInCell(Point *point,TreeHndl i_tree,Source *source){
     int j=0,k=7;
     for(i=0;i<8;++i){
         if(neighbors[i]->x[1] < point->x[1]){
-            Swap(neighbors[i],neighbors[j]);
+            std::swap(neighbors[i],neighbors[j]);
             ++j;
         }
         if(neighbors[i]->x[1] > point->x[1]){
-            Swap(neighbors[i],neighbors[k]);
+            std::swap(neighbors[i],neighbors[k]);
             --k;
         }
     }
@@ -1206,69 +1223,76 @@ bool IntegrateFluxInCell(Point *point,TreeHndl i_tree,Source *source){
         }
     }
     
-    
-    isop()
-    
-    // goto each quadrant
     PosType x[8],y[8],flux=0.0;
+    for(i=0;i<8;++i){
+        x[i] = neighbors[i]->image->x[0];
+        y[i] = neighbors[i]->image->x[1];
+    }
+    
+    double scale = sqrt( (x[0]-x[4])*(x[0]-x[4]) + (y[0]-y[4])*(y[0]-y[4]) );
+   // see if isop expansion is valid
+    if( fabs(point->image->x[0]-isop(x,0,0)) > tolerance*scale) return false;
+    if( fabs(point->image->x[1]-isop(y,0,0)) > tolerance*scale) return false;
+    
+    // goto each quadrant and integrate the function.
     {
-        x[0] = neighbors[0]->x[0];
-        y[0] = neighbors[0]->x[1];
-        interpfromPoints(&neighbors[0],&neighbors[1],&x[1],&y[1]);
-        x[2] = neighbors[1]->x[0];
-        y[2] = neighbors[1]->x[1];
-        interpfromPoints(&neighbors[1],point,&x[3],&y[3]);
+        x[0] = neighbors[0]->image->x[0];
+        y[0] = neighbors[0]->image->x[1];
+        interpfrom2Points(neighbors[0],neighbors[1],&x[1],&y[1]);
+        x[2] = neighbors[1]->image->x[0];
+        y[2] = neighbors[1]->image->x[1];
+        interpfrom2Points(neighbors[1],point,&x[3],&y[3]);
         x[4] = point->x[0];
         y[4] = point->x[1];
-        interpfromPoints(&neighbors[7],point,&x[5],&y[5]);
-        x[6] = neighbors[7]->x[0];
-        y[6] = neighbors[7]->x[1];
-        interpfromPoints(&neighbors[7],&neighbors[0],&x[7],&y[7]);
+        interpfrom2Points(neighbors[7],point,&x[5],&y[5]);
+        x[6] = neighbors[7]->image->x[0];
+        y[6] = neighbors[7]->image->x[1];
+        interpfrom2Points(neighbors[7],neighbors[0],&x[7],&y[7]);
         flux +=  isop_render(source,x,y,0,0,1,1);
     }
     {
-        x[0] = neighbors[1]->x[0];
-        y[0] = neighbors[1]->x[1];
-        interpfromPoints(&neighbors[1],&neighbors[2],&x[1],&y[1]);
-        x[2] = neighbors[2]->x[0];
-        y[2] = neighbors[2]->x[1];
-        interpfromPoints(&neighbors[2],&neighbors[3],&x[3],&y[3]);
-        x[4] = neighbors[3]->x[0];
-        y[4] = neighbors[3]->x[1];
-        interpfromPoints(&neighbors[3],point,&x[5],&y[5]);
+        x[0] = neighbors[1]->image->x[0];
+        y[0] = neighbors[1]->image->x[1];
+        interpfrom2Points(neighbors[1],neighbors[2],&x[1],&y[1]);
+        x[2] = neighbors[2]->image->x[0];
+        y[2] = neighbors[2]->image->x[1];
+        interpfrom2Points(neighbors[2],neighbors[3],&x[3],&y[3]);
+        x[4] = neighbors[3]->image->x[0];
+        y[4] = neighbors[3]->image->x[1];
+        interpfrom2Points(neighbors[3],point,&x[5],&y[5]);
         x[6] = point->x[0];
         y[6] = point->x[1];
-        interpfromPoints(&neighbors[1],point,&x[7],&y[7]);
+        interpfrom2Points(neighbors[1],point,&x[7],&y[7]);
         flux +=  isop_render(source,x,y,-1,0,0,1);
     }
     {
         x[0] = point->x[0];
         y[0] = point->x[1];
-        interpfromPoints(&neighbors[3],point,&x[1],&y[1]);
-        x[2] = neighbors[3]->x[0];
-        y[2] = neighbors[3]->x[1];
-        interpfromPoints(&neighbors[3],&neighbors[4],&x[3],&y[3]);
-        x[4] = neighbors[4]->x[0];
-        y[4] = neighbors[4]->x[1];
-        interpfromPoints(&neighbors[4],&neighbors[5],&x[5],&y[5]);
-        x[6] = neighbors[5]->x[0];
-        y[6] = neighbors[5]->x[1];
-        interpfromPoints(&neighbors[5],point,&x[7],&y[7]);
+        interpfrom2Points(neighbors[3],point,&x[1],&y[1]);
+        x[2] = neighbors[3]->image->x[0];
+        y[2] = neighbors[3]->image->x[1];
+        interpfrom2Points(neighbors[3],neighbors[4],&x[3],&y[3]);
+        x[4] = neighbors[4]->image->x[0];
+        y[4] = neighbors[4]->image->x[1];
+        interpfrom2Points(neighbors[4],neighbors[5],&x[5],&y[5]);
+        x[6] = neighbors[5]->image->x[0];
+        y[6] = neighbors[5]->image->x[1];
+        interpfrom2Points(neighbors[5],point,&x[7],&y[7]);
         flux +=  isop_render(source,x,y,-1,-1,0,0);
     }
     {
-        x[0] = neighbors[7]->x[0];
-        y[0] = neighbors[7]->x[1];
-        interpfromPoints(&neighbors[7],point,&x[1],&y[1]);
+        x[0] = neighbors[7]->image->x[0];
+        y[0] = neighbors[7]->image->x[1];
+        interpfrom2Points(neighbors[7],point,&x[1],&y[1]);
         x[2] = point->x[0];
         y[2] = point->x[1];
-        interpfromPoints(&neighbors[5],point,&x[3],&y[3]);
-        x[4] = neighbors[5]->x[0];
-        y[4] = neighbors[5]->x[1];
-        interpfromPoints(&neighbors[5],&neighbors[6],&x[5],&y[5]);
-        x[6] = neighbors[6]->x[0];
-        y[6] = neighbors[6]->x[1];
-        interpfromPoints(&neighbors[6],&neighbors[7],&x[7],&y[7]);
+        interpfrom2Points(neighbors[5],point,&x[3],&y[3]);
+        x[4] = neighbors[5]->image->x[0];
+        y[4] = neighbors[5]->image->x[1];
+        interpfrom2Points(neighbors[5],neighbors[6],&x[5],&y[5]);
+        x[6] = neighbors[6]->image->x[0];
+        y[6] = neighbors[6]->image->x[1];
+        interpfrom2Points(neighbors[6],neighbors[7],&x[7],&y[7]);
         flux +=  isop_render(source,x,y,0,-1,1,0);
     }
         
@@ -1284,12 +1308,11 @@ void interpfrom2Points(Point const * p1,Point const * p2,PosType *x,PosType *y){
     dx /=l;
     dy /=l;
     
-    check sign convention!
-    
-    double A1p1 = (1 - p1->kappa - p1->gamma[0])*dx + (p1->gamma[1] + p1->gamma[2])*dy;
-    double A2p1 = (1 - p1->kappa + p1->gamma[0])*dy + (p1->gamma[1] - p1->gamma[2])*dx;
-    double A1p2 = (1 - p2->kappa - p2->gamma[0])*dx + (p2->gamma[1] + p2->gamma[2])*dy;
-    double A2p2 = (1 - p2->kappa + p2->gamma[0])*dy + (p2->gamma[1] - p2->gamma[2])*dx;
+    // The sign convention agrees with GLAMER paper II here which should be correct.
+    double A1p1 = (1 - p1->kappa - p1->gamma[0])*dx - (p1->gamma[1] - p1->gamma[2])*dy;
+    double A2p1 = (1 - p1->kappa + p1->gamma[0])*dy - (p1->gamma[1] + p1->gamma[2])*dx;
+    double A1p2 = (1 - p2->kappa - p2->gamma[0])*dx - (p2->gamma[1] - p2->gamma[2])*dy;
+    double A2p2 = (1 - p2->kappa + p2->gamma[0])*dy - (p2->gamma[1] + p2->gamma[2])*dx;
     
     /*
     x = p1->image->x[0] + (p2->image->x[0] - p1->image->x[0])*s*s*(3-2*s)
@@ -1298,9 +1321,9 @@ void interpfrom2Points(Point const * p1,Point const * p2,PosType *x,PosType *y){
         + l*A2p1*s*(1-s)*(1-s) + l*A2p2*s*s*(1-s);
  */
     
-    x = (p2->image->x[0] + p1->image->x[0])/2
+    *x = (p2->image->x[0] + p1->image->x[0])/2
       + l*( A1p1 + A1p2 )/8;
-    y = (p2->image->x[1] + p1->image->x[1])/2
+    *y = (p2->image->x[1] + p1->image->x[1])/2
       + l*( A2p1 + A2p2 )/8;
 
     return;
@@ -1385,4 +1408,5 @@ void UniformMagCheck(ImageInfo *imageinfo){
 			imageinfo->uniform_mag = no;
 		}
 	}
+}
 }

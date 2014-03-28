@@ -87,7 +87,8 @@ private:
 typedef struct Grid* GridHndl;
 
 // in image_finder_kist.c
-
+namespace ImageFinding{
+    
 void find_images_kist(LensHndl lens,double *y_source,double r_source,GridHndl grid
 		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
 		,double initial_size,bool splitimages,short edge_refinement
@@ -110,7 +111,7 @@ void find_crit(LensHndl lens,GridHndl grid,ImageInfo *critcurve,int maxNcrits,in
 		,double resolution,bool *orderingsuccess,bool ordercurve,bool dividecurves,double invmag_min = 0.0,bool verbose = false);
 void find_crit2(LensHndl lens,GridHndl grid,ImageInfo *critcurve,int maxNcrits,int *Ncrits
 		,double resolution,bool *orderingsuccess,bool ordercurve,bool dividecurves,double invmag_min = 0.0,bool verbose = false);
-
+}
 void refine_crit_in_image(LensHndl lens,GridHndl grid,double r_source,double x_source[],double resolution);
 
 int refine_grid(LensHndl lens,GridHndl grid,OldImageInfo *imageinfo

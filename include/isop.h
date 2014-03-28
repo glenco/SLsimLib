@@ -32,8 +32,12 @@ namespace SLsimLib
 		}
 	}
 	
-	/// Do the isoparametric interpolation given a list of 8 nodes.
-	inline double isop(const double nodes[], double xi, double eta)
+	/// Do the isoparametric interpolation given a list of 8 nodes.  See notes for isop_render().
+	inline double isop(
+        const double nodes[]  /// values of interpolated quantity (ie kappa, y coordinate) for the 8 border points
+        , double xi           /// x position where interpolate is wanted in [-1,1 units
+        , double eta          /// y position where interpolate is wanted in [-1,1 units
+                       )
 	{
 		return detail::isop(nodes, xi, eta);
 	}
