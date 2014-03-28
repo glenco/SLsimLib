@@ -284,4 +284,19 @@ class QuasarLF{
 		PosType lf_kernel (PosType mag) const;
 };
 
+/// Functor to turn sources into binary functions
+struct SourceFunctor
+{
+	SourceFunctor(Source& source) : source(source) {}
+	
+	double operator()(double x, double y)
+	{
+		// TODO: make const double[2] as soon as possible
+		double z[2] = {x, y};
+		return source.SurfaceBrightness(z);
+	}
+	
+	Source& source;
+};
+
 #endif /* SOURCE_H_ */

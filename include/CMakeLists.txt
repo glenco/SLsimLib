@@ -10,6 +10,7 @@ add_sources(
 	image_info.h
 	image_processing.h
 	InputParams.h
+	isop.h
 	Kist.h
 	KistDriver.h
 	lens.h
@@ -26,6 +27,7 @@ add_sources(
 	point.h
 	pointlist.h
 	profile.h
+	quadrature.h
 	quadTree.h
 	sersic_source.h
 	simpleTree.h

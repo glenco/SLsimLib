@@ -11,8 +11,10 @@ add_sources(
 	grid_maintenance.cpp
 	image_finder.cpp
 	image_finder_kist.cpp
+	isop_render.cpp
 	map_images.cpp
 	peak_refinement.cpp
+	quadrature.cpp
 	tree_maintenance.cpp
 	utilities.cpp
 	List/list.cpp

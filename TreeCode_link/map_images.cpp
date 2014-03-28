@@ -5,7 +5,9 @@
  *      Author: bmetcalf
  */
 #include "slsimlib.h"
-#include "isop_render.h"
+#include "isop.h"
+
+using namespace SLsimLib;
 
 //const float mumin = 0.3;  // actually the sqrt of the minimum magnification
 const PosType FracResTarget = 3.0e-5;
@@ -1205,7 +1207,7 @@ bool IntegrateFluxInCell(Point *point,TreeHndl i_tree,Source *source){
     }
     
     
-    Numerica::isop()
+    isop()
     
     // goto each quadrant
     PosType x[8],y[8],flux=0.0;
@@ -1222,7 +1224,7 @@ bool IntegrateFluxInCell(Point *point,TreeHndl i_tree,Source *source){
         x[6] = neighbors[7]->x[0];
         y[6] = neighbors[7]->x[1];
         interpfromPoints(&neighbors[7],&neighbors[0],&x[7],&y[7]);
-        flux +=  SLsimLib::Render::isop_render(source,x,y,0,0,1,1);
+        flux +=  isop_render(source,x,y,0,0,1,1);
     }
     {
         x[0] = neighbors[1]->x[0];
