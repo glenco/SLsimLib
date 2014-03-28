@@ -32,7 +32,21 @@ namespace SLsimLib
 		}
 	}
 	
-	/// Do the isoparametric interpolation given a list of 8 nodes.
+	/**
+	 * \brief Do the isoparametric interpolation given a list of 8 nodes.
+	 * 
+	 * This function takes 8 function values on the border of a [-1,1]x[-1,1]
+	 * square region interpolates them over the square.
+	 * 
+	 * The first node is the lower left corner (-1,-1) and the nodes must
+	 * continue in counter-clockwise order.
+	 * 
+	 * \param nodes The nodes to be interpolated.
+	 * \param xi First coordinate (x) in isoparametric space.
+	 * \param eta Second coordinate (y) in isoparametric space.
+	 * 
+	 * \return Interpolation of the nodes at (xi,eta).
+	 */
 	inline double isop(const double nodes[], double xi, double eta)
 	{
 		return detail::isop(nodes, xi, eta);
@@ -56,7 +70,7 @@ namespace SLsimLib
 	
 	/// Creates an isoparametric mapping functor.
 	template<typename Function>
-	isop_map<Function> make_isop_map(Function f, const double* x, const double* y)
+	inline isop_map<Function> make_isop_map(Function f, const double* x, const double* y)
 	{
 		return isop_map<Function>(f, x, y);
 	}
