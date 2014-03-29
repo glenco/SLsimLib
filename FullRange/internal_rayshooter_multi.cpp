@@ -377,6 +377,13 @@ for(i = start; i < end; i++)
     */
      
      
+    // Lines before compute c * dt in physical Mpc.        //
+    // We now express only dt, using a physical time unit. //
+    // For that we use : 1 Mpc / c = 1.02927e14 seconds.   //
+    p->i_points[i].dt = p->i_points[i].dt * 1.02927e14 ;   // in seconds
+      
+      
+      
     // Convert units back to angles.
     p->i_points[i].image->x[0] /= p->Dl[p->NPlanes];
     p->i_points[i].image->x[1] /= p->Dl[p->NPlanes];
