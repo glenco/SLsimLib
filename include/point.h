@@ -52,7 +52,7 @@ struct Point{
   // redundant information in image and source points
   KappaType kappa;           // surface density
   KappaType gamma[3];        // shear, third component is the rotation quantity that is only non-zero for multi-plane lensing
-  KappaType dt;              // time delay
+  double dt;                 // time delay : double implies permanent precision independently from DOUBLE_PRECISION
   KappaType invmag;          // inverse of magnification
     
   double gridsize;           // the size of the most refined grid the point is in
