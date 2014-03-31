@@ -37,8 +37,6 @@ struct Branch;
 
 /** \brief A point on the source or image plane that contains a position and the lensing quantities */
 
-enum TimeUnit {second, minute, hour, day, year} ;
-
 struct Point{
     
   Point();
@@ -72,15 +70,6 @@ struct Point{
   /// dot product of points in 2d
   double dot(Point &p){
     return x[0]*p.x[0] + x[1]*p.x[1];
-  }
-    
-  /// Function that gives dt in adapted units
-  KappaType getDT(TimeUnit * MyTimeUnit){
-      if      (dt < 60)       { *MyTimeUnit = second ; return dt ;}                      // in seconds
-      else if (dt < 3600)     { *MyTimeUnit = minute ; return dt / 60. ;}                // in minutes
-      else if (dt < 86400)    { *MyTimeUnit = hour ; return dt / 3600. ;}                // in hours
-      else if (dt < 31557600) { *MyTimeUnit = day ; return dt / 3600. / 24. ;}           // in days
-      else    { *MyTimeUnit = year ; return dt / 3600. / 24. / 365.25 ;}                 // in years
   }
     
 };

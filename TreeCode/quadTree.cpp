@@ -657,9 +657,7 @@ void TreeQuad::force2D_recur(PosType const *ray,PosType *alpha,KappaType *kappa,
     alpha[0]=alpha[1]=gamma[0]=gamma[1]=gamma[2]=0.0;
     *kappa=*phi=0.0;
     
-    // PHI BY Fabien :
     walkTree_recur(tree->top,&ray[0],&alpha[0],kappa,&gamma[0],phi,no_kappa);
-    
     
     // Subtract off uniform mass sheet to compensate for the extra mass
     //  added to the universe in the halos.
@@ -740,7 +738,7 @@ void TreeQuad::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alph
 
 					/////////////////////////////////////////
 					if(haloON){
-						halos[tmp_index]->force_halo(alpha,kappa,gamma,phi,xcm,no_kappa,true); // PHI BY Fabien
+						halos[tmp_index]->force_halo(alpha,kappa,gamma,phi,xcm,no_kappa,true);
  					}else{  // case of no halos just particles and no class derived from TreeQuad
 
 						rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];

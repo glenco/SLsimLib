@@ -1284,7 +1284,7 @@ void LensHaloDummy::initFromMassFunc(float my_mass, float my_Rmax, float my_rsca
 void LensHaloDummy::force_halo(PosType *alpha
                                ,KappaType *kappa
                                ,KappaType *gamma
-                               ,KappaType *phi       // PHI BY Fabien
+                               ,KappaType *phi
                                ,PosType const *xcm
                                ,bool no_kappa
                                ,bool subtract_point)

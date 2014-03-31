@@ -219,14 +219,6 @@ for(i = start; i < end; i++)
       
     // Time delay at first plane
     p->i_points[i].dt = 0.5*( p->i_points[i].image->x[0]*p->i_points[i].image->x[0] + p->i_points[i].image->x[1]*p->i_points[i].image->x[1] )/ p->dDl[0];
-    
-      
-    /* TEST FABIEN
-     std::cout << "Contribution 1 = " << 0.5*( p->i_points[i].image->x[0]*p->i_points[i].image->x[0] + p->i_points[i].image->x[1]*p->i_points[i].image->x[1] )/ p->dDl[0] << std::endl ;
-  
-    double GeometricalTerm ;
-    GeometricalTerm = p->i_points[i].dt;
-     */
       
       
     // Begining of the loop through the planes :
@@ -343,16 +335,6 @@ for(i = start; i < end; i++)
         
         // Geometric time delay with added potential
             p->i_points[i].dt += 0.5*( (xplus[0] - xminus[0])*(xplus[0] - xminus[0]) + (xplus[1] - xminus[1])*(xplus[1] - xminus[1]) )/p->dDl[j+1] - (1 + p->plane_redshifts[j]) * phi * p->charge ;
-        
-        /* TEST FABIEN
-        GeometricalTerm +=  0.5*( (xplus[0] - xminus[0])*(xplus[0] - xminus[0]) + (xplus[1] - xminus[1])*(xplus[1] - xminus[1]) )/p->dDl[j+1] ;
-            
-        std::cout << "phi = " << phi << std::endl ;
-            
-        std::cout << "Contribution 2 = " << 0.5*( (xplus[0] - xminus[0])*(xplus[0] - xminus[0]) + (xplus[1] - xminus[1])*(xplus[1] - xminus[1]) )/p->dDl[j+1] << "  ;  " << (- (1 + p->plane_redshifts[j]) * phi * p->charge) << std::endl ;
-            
-        // std::cout << "(xplus[0] - xminus[0]) = " << (xplus[0] - xminus[0]) << " ; (xplus[1] - xminus[1]) = " << (xplus[1] - xminus[1]) << std::endl;
-         */
             
             
         // Check that the 1+z factor must indeed be there (because the x positions have been rescaled, so it may be different compared to the draft).
@@ -364,24 +346,6 @@ for(i = start; i < end; i++)
       
     // Subtracting off a term that makes the unperturbed ray to have zero time delay
     p->i_points[i].dt -= 0.5*( p->i_points[i].image->x[0]*p->i_points[i].image->x[0] + p->i_points[i].image->x[1]*p->i_points[i].image->x[1] ) / p->Dl[p->NPlanes];
-    
-    /* TEST FABIEN
-    GeometricalTerm -= 0.5*( p->i_points[i].image->x[0]*p->i_points[i].image->x[0] + p->i_points[i].image->x[1]*p->i_points[i].image->x[1] ) / p->Dl[p->NPlanes];
-      
-    std::cout << "Contribution 3 = " << 0.5*( p->i_points[i].image->x[0]*p->i_points[i].image->x[0] + p->i_points[i].image->x[1]*p->i_points[i].image->x[1] ) / p->Dl[p->NPlanes] << std::endl ;
-
-    // std::cout << "p->i_points[i].image->x[0] = " << p->i_points[i].image->x[0] << " ; p->i_points[i].image->x[1] = " << p->i_points[i].image->x[1] << std::endl;
-     
-    std::cout << "p->i_points[i].dt = " << p->i_points[i].dt << std::endl ;
-    std::cout << "GeometricalTerm = " << GeometricalTerm << std::endl ;
-    */
-     
-     
-    // Lines before compute c * dt in physical Mpc.        //
-    // We now express only dt, using a physical time unit. //
-    // For that we use : 1 Mpc / c = 1.02927e14 seconds.   //
-    p->i_points[i].dt = p->i_points[i].dt * 1.02927e14 ;   // in seconds
-      
       
       
     // Convert units back to angles.
@@ -391,9 +355,6 @@ for(i = start; i < end; i++)
     // We go from kappa denoting 1-kappa to kappa denoting kappa
     p->i_points[i].kappa = 1 - p->i_points[i].kappa;
 
-    /* TEST FABIEN
-    std::cout << "p->i_points[i].kappa = " << p->i_points[i].kappa << std::endl ;
-    */
       
     // Computation of the inverse magnitude --------------------------------------------------------
     if(!kappa_off) p->i_points[i].invmag = (1-p->i_points[i].kappa)*(1-p->i_points[i].kappa)

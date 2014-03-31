@@ -104,9 +104,7 @@ public:
   void PrintLens(bool show_substruct,bool show_stars);
   void error_message1(std::string name,std::string filename);
 
-  // PHI BY Fabien
   virtual void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool no_kappa,bool subtract_point=false);
-  // virtual void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xcm,bool no_kappa,bool subtract_point=false);
 
   // in randoimize_lens.c
   PosType averageSubMass();
