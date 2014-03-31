@@ -1374,8 +1374,10 @@ void ImageInfo::ArcInfo(
 	dist2 = sqrt(dist2);
 }
 
-void ImageInfo::FindArc(PosType &radius,PosType *xc,PosType &arclength,PosType &width
-                        ,PosType resolution,PosType threshold){
+void ImageInfo::FindArc(PosType &radius,PosType *xc,PosType *arc_c,PosType &arclength,PosType &width
+                        ,PosType resolution
+                        ,PosType threshold  /// surface brightness threshold as a fcaction of peak surface brightness
+                        ){
   
   //throw std::runtime_error("not ready yet");
   
@@ -1385,24 +1387,45 @@ void ImageInfo::FindArc(PosType &radius,PosType *xc,PosType &arclength,PosType &
   xrange[0] = xrange[1] = (*it)->x[0];
   yrange[0] = yrange[1] = (*it)->x[1];
   
+  double maxval = (*it)->surface_brightness;
   for(it = imagekist->getTopIt();!(it.atend());--it){
-    xrange[0] = MIN(xrange[0],(*it)->x[0]);
-    xrange[1] = MAX(xrange[1],(*it)->x[0]);
-    yrange[0] = MIN(yrange[0],(*it)->x[1]);
-    yrange[1] = MAX(yrange[1],(*it)->x[1]);
+    maxval = MAX(maxval,(*it)->surface_brightness);
+  }
+
+  ImageInfo tmp_image;
+  
+  for(it = imagekist->getTopIt();!(it.atend());--it){
+    //if((*it)->surface_brightness > threshold*maxval){
+      xrange[0] = MIN(xrange[0],(*it)->x[0]);
+      xrange[1] = MAX(xrange[1],(*it)->x[0]);
+      yrange[0] = MIN(yrange[0],(*it)->x[1]);
+      yrange[1] = MAX(yrange[1],(*it)->x[1]);
+      tmp_image.imagekist->InsertAfterCurrent(*it);
+    //}
+  }
+  
+  if(tmp_image.imagekist->Nunits() == 0){
+    xc[0] = xc[1] = arc_c[0] = arc_c[1] =0.0;
+    arclength = width = 0.0;
+    return;
   }
   
   PosType xcenter[2];
-
   size_t Npixels = (size_t)(MAX(xrange[1]-xrange[0],yrange[1]-yrange[0])/resolution + 1 );
   xcenter[0] = (xrange[0]+xrange[1])/2;
   xcenter[1] = (yrange[0]+yrange[1])/2;
   
   PixelMap map(xcenter, Npixels, resolution);
-  map.AddImages(this,1);
-
-  map.FindArc(radius, xc, arclength, width, threshold);
-
+  map.AddImages(&tmp_image,1);
+  double minval = 0;
+  for(size_t i=0;i<map.size();++i){
+    if(map[i] != 0.0){
+      if(minval ==0) minval = map[i];
+      else minval = MIN(minval,map[i]);
+    }
+  }
+  assert(minval > 0);
+  map.FindArc(radius, xc, arc_c,arclength, width, minval);
 }
 
 

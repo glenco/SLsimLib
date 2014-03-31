@@ -1,6 +1,9 @@
 
 #include "slsimlib.h"
 
+namespace ImageFinding {
+
+
 static const int NpointsRequired = 100;  // number of points required to be within an image
 //static const int Ngrid_block = 3;       // each cell is divided into Ngrid_block^2 subcells
 //static const PosType mumin = 0.3;  // actually the sqrt of the minimum magnification
@@ -33,9 +36,6 @@ static const float telescope_low = 0.01;
  *   - 2 uses refine_edge2() Same as 1, but the images are not found after each refinement.  This can make the
  *	 routine run much faster, but has the disadvantage that the number of images will not change during the final
  *	 stage of refinement.  This is the setting generally recommended.
- *
- *  When finding a finite sized source these quantities are generally not required and slow down the routine.
- *
  *
  */
 
@@ -174,7 +174,7 @@ void find_images_kist(
 
         if(*Nimagepoints == 100){
           grid->s_tree->PointsWithinKist(y_source,rtemp, &subkist, 0);
-          std::cout << "Points within: " << subkist.Nunits() << std::endl;
+          //std::cout << "Points within: " << subkist.Nunits() << std::endl;
           
           if(subkist.Nunits() == 0){
             grid->s_tree->PointsWithinKist(y_source, Ngrid_block*rtemp, &subkist, 0);
@@ -1497,17 +1497,18 @@ void find_images_microlens_exper(
 
 /** \ingroup ImageFindingL2
  *
- * \brief finds images for a given source position and size
+ * \brief Finds images for a given source position and size
  *
  * image points are put into imageinfo[].imagekist
  *      imageinfo[].points and imageinfo[].Npoints are not changed
- * imagemarker array must be large enough to include all images *
+ *
  * splitparities=  0 don't split attached negative and positive parity images
  *              =  1 do split parities  NOTE: this is now obsolete
  *              = -1 doesn't slit into images at all
  *	                 , also does not find borders or change in_image markers
  * true_images = 1 gives just the points that are in the image
  *             = 0 if there are not enough points in images this will include close points to be refined
+ *
  * side-effects :  Will make in_image = true for all image points if splitparities == 0
  */
 void image_finder_kist(LensHndl lens, PosType *y_source,PosType r_source,GridHndl grid
@@ -1690,6 +1691,7 @@ void image_finder_kist(LensHndl lens, PosType *y_source,PosType r_source,GridHnd
    return;
 }
 
+} // end of FindImages namespace
 
 /** \ingroup ImageFindingL2
  *
