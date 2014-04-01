@@ -167,10 +167,20 @@ LensHaloNFW::LensHaloNFW(InputParams& params)
         //for(int i=1;i<20;i++){
          //  calcModes(fratio, 0.1*i, pa, mod);
         //}
-        calcModes(fratio, get_slope()-0.5, pa, mod); // to ellipticize potential instead of  kappa take calcModes(fratio, 2-get_slope(), pa, mod);
-        calcModes(fratio, get_slope(), pa, mod1); // to ellipticize potential instead of  kappa take calcModes(fratio, 2-get_slope(), pa, mod);
-        calcModes(fratio, get_slope()+0.5, pa, mod2); // to ellipticize potential instead of  kappa take calcModes(fratio, 2-get_slope(), pa, mod);
-
+        //calcModes(fratio, get_slope()-0.5, pa, mod); // to ellipticize potential instead of  kappa take calcModes(fratio, 2-get_slope(), pa, mod);
+        calcModes(fratio, get_slope(), pa, mod); // to ellipticize potential instead of  kappa take calcModes(fratio, 2-get_slope(), pa, mod);
+        //calcModes(fratio, get_slope()+0.5, pa, mod2); // to ellipticize potential instead of  kappa take calcModes(fratio, 2-get_slope(), pa, mod);
+        
+        
+        
+            for(int islope=1;islope<20;islope++){
+                for(int ifratio=1;ifratio<10;ifratio++){
+                    calcModes(fratio, get_slope(), pa, mod);
+                    for(int i=4;i<Nmod;i=i+4){
+                        std::cout << i << " " << islope*0.1 << " " << ifratio*0.1 << " "<< mod[i] << " " << modfunc(i, islope*0.1, ifratio*0.1)<< std::endl;
+                    }
+                }
+            }
         for(int i=1;i<Nmod;i++){
             if(mod[i]!=0){set_flag_elliptical(true);};
         }
@@ -416,7 +426,7 @@ LensHaloPowerLaw::LensHaloPowerLaw(float my_mass,float my_Rmax,PosType my_zlens,
     if(fratio!=1){
         calcModes(fratio, beta, pa, mod);
         for(int i=1;i<Nmod;i++){
-            //std::cout << mod[i] << std::endl;
+            //std::cout << i << " " << mod[i] << std::endl;
             if(mod[i]!=0){set_flag_elliptical(true);};
         }
     }
@@ -429,11 +439,14 @@ LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
     /// If the axis ratio given in the parameter file is set to 1 all ellipticizing routines are skipped.
     
     if(fratio!=1){
-        calcModes(fratio, beta, pa, mod);
-        for(int i=1;i<Nmod;i++){
-            //std::cout << mod[i] << std::endl;
-            if(mod[i]!=0){set_flag_elliptical(true);};
-        }
+        //for(int islope=1;islope<20;islope++){
+        //beta=islope*0.1;
+            calcModes(fratio, beta, pa, mod);
+            for(int i=1;i<Nmod;i++){
+                std::cout << i << " " << mod[i] << std::endl;
+                if(mod[i]!=0){set_flag_elliptical(true);};
+            }
+        //}
     }
     rscale = xmax = 1.0;
 }

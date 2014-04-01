@@ -499,7 +499,7 @@ void LensHalo::alpha_asym(PosType x,PosType theta, PosType alpha[]){
 	PosType F,f[3],g[3],alpha_r,alpha_theta;
     PosType phi=phi_int(x);
 
-    faxial1(theta,f);
+    faxial0(theta,f);
     F=f[0]-1;
     gradial(x,g);
     beta=get_slope();
@@ -523,62 +523,22 @@ void LensHalo::alpha_asym(PosType x,PosType theta, PosType alpha[]){
 PosType LensHalo::kappa_asym(PosType x,PosType theta){
 	PosType F, f[3],g[3], kappa;
     PosType phi=phi_int(x);
-    PosType f0[3], f1[3], f2[3];
     
-    faxial0(theta,f0);
-    faxial1(theta,f1);
-    faxial2(theta,f2);
+    faxial0(theta,f);
+    //faxial1(theta,f1);
+    //faxial2(theta,f2);
     //gradial2(x,1,2,g);
     gradial(x,g);
-    g[0]=1;
-    g[1]=0;
-    g[2]=0;
-    /*if(x<rscale){
-        std::cout << x << " " << rscale << std::endl;
-    
-     f[0]=(f1[0]-f2[0])*x+f2[0];
-     f[1]=(f1[1]-f2[1])*x+f2[1];
-     f[2]=(f1[2]-f2[2])*x+f2[2];
-
-    };*/
-    
-    
-    double x0=0.2, x1=1.0, x2=2.5, x3=5;
-//double y0=f0[0], y1=f1[0], y2=f0[0], y3=0.0;
-    double y0=f0[0], y1=f1[0], y2=f2[0], y3=0.0;
-    
-    
-    f[0]=(x-x1)*(x-x2)*(x-x3)/((x0-x1)*(x0-x2)*(x0-x3))*y0+(x-x0)*(x-x2)*(x-x3)/((x1-x0)*(x1-x2)*(x1-x3))*y1+(x-x0)*(x-x1)*(x-x3)/((x2-x0)*(x2-x1)*(x2-x3))*y2+(x-x0)*(x-x1)*(x-x2)/((x3-x0)*(x3-x1)*(x3-x2))*y3;
-    
-    y0=f0[1]; y1=f1[1]; y2=f2[1]; y3=0.0;
-    
-    f[1]=(x-x1)*(x-x2)*(x-x3)/((x0-x1)*(x0-x2)*(x0-x3))*y0+(x-x0)*(x-x2)*(x-x3)/((x1-x0)*(x1-x2)*(x1-x3))*y1+(x-x0)*(x-x1)*(x-x3)/((x2-x0)*(x2-x1)*(x2-x3))*y2+(x-x0)*(x-x1)*(x-x2)/((x3-x0)*(x3-x1)*(x3-x2))*y3;
-    
-    y0=f0[2]; y1=f1[2]; y2=f2[2]; y3=0.0;
-    
-    f[2]=(x-x1)*(x-x2)*(x-x3)/((x0-x1)*(x0-x2)*(x0-x3))*y0*(1.0/(0.5*0.5/(2-0.5)/(2-0.5)))+(x-x0)*(x-x2)*(x-x3)/((x1-x0)*(x1-x2)*(x1-x3))*y1*(1.0/(1/(2-1)/(2-1)))+(x-x0)*(x-x1)*(x-x3)/((x2-x0)*(x2-x1)*(x2-x3))*y2*(1.0/(1.5*1.5/(2-1.5)/(2-1.5)))+(x-x0)*(x-x1)*(x-x2)/((x3-x0)*(x3-x1)*(x3-x2))*y3*(1.0/(1.5*1.5/(2-1.5)/(2-1.5)));
-    
-    
-    
-    //faxial(theta,f);
+  
     
     F=f[0]-1;
-
-   // PosType F2, f2[3],g2[3];
-   // faxial2(theta,f2);
-   // F2=f2[0]-1;
-   // gradial2(x,1.0,3,g);
-    
-    
     beta=get_slope();
     double fac=1.0/(beta*beta/(2-beta)/(2-beta));
     
     
-    kappa=f[0]*kappa_h(x)-0.5*f[2]*phi;//  w/o damping
+    //kappa=f[0]*kappa_h(x)-0.5*f[2]*phi;//  w/o damping
     
-    // kappa=(1+(F*g[0]+F2*g2[0])/(g[0]+g2[0]))*kappa_h(x)-0.5*phi*fac*((F*g[1]+F2*g2[1])/(g[1]+g2[1])/x+(F*g[2]+F2*g2[2])/(g[2]+g2[2])+(f[2]*g[0]+f2[2]*g2[0])/(g[0]+g2[0])/x/x)*x*x-(F*g[1]+F2*g2[1])/(g[1]+g2[1])*alpha_h(x)*x*x; /// with bi-gaussian damping
-	
-    //kappa=(1+F*g[0])*kappa_h(x)-0.5*phi*fac*(F*g[1]/x+F*g[2]+f[2]*g[0]/x/x)*x*x-F*g[1]*alpha_h(x)*x*x; /// with damping
+    kappa=(1+F*g[0])*kappa_h(x)-0.5*phi*fac*(F*g[1]/x+F*g[2]+f[2]*g[0]/x/x)*x*x-F*g[1]*alpha_h(x)*x*x; /// with damping
 	return kappa;
 }
 
@@ -589,7 +549,7 @@ void LensHalo::gamma_asym(PosType x,PosType theta, PosType gamma[]){
     PosType phi=phi_int(x);
     
     
-    faxial1(theta,f);
+    faxial0(theta,f);
     F=f[0]-1;
     gradial(x,g);
     beta=get_slope();
@@ -687,4 +647,6 @@ void LensHalo::gamma_asym(PosType x,PosType theta, PosType gamma[]){
  return kappa;
  }
  */
+
+
 

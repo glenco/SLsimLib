@@ -125,8 +125,30 @@ public:
 
 	/// Prints star parameters; if show_stars is true, prints data for single stars
 	void PrintStars(bool show_stars) const;
- 
-  
+    
+    static constexpr PosType mod_params[2][7][7] = {{{5.45400234e-01, 2.00623559e-01, 1.74273034e-01, 1.86242095e+02, 5.70675374e+00,0,0},
+        {0.98519072, 1.79227955, 0.19333932, 1.05911801, 1.80285544, 175.19794791,0},
+        {1.27286496, 2.52757113, 0.35561051, 1.07921878, 0.40027514, 37.47696142,0},
+        {3.90009539, 4.59744288, -8.40249184, 4.13420228, 3.31751963, 6.35692121,0},
+        {4.31129234, 7.55980323, -2.70971355, 1.20304148, 10.04502808, 4.77684945,0},
+        {28.27243869, 23.49608644, -43.13187974, 1.65596222, 22.72500104, 3.1378364,0},
+        {57.01022684, 33.55782426, -114.00434863, 2.08922268, 22.96852996, 2.53164822,0}},
+        {{2.09778383e+00, -7.99553494e-02, 1.58048481e+00, -3.27089042e+01, 1.36378731e+01, 4.02453963e-04,0},
+            {2.06019572e+00, -4.22588623e-02, 1.55824013e+00, -1.62854932e+01, 1.57266141e+01, 4.93672097e-04,0},
+            {2.06365018e+00, -4.79733978e-02, 1.49994453e+00, -1.21602730e+01, 2.28348079e+01, 4.49107825e-04,0},
+            {1.93036483e+00, -3.94871873e-02, 1.56471642e+00, -5.54299042e+00, 3.62847996e+01, 4.40377288e-04,0},
+            {-2.67369155e+00, -3.43984326e-02, 6.08826051e+00, -4.03323814e-01, 7.02617948e+01, 3.95509769e-04,0},
+            {-7.15392458e+01, -1.93808978e-02, 7.48623502e+01, -1.70286774e-02, 4.20781335e+02, 3.66600276e-04,0},
+            {8.87740013e+00, 4.04947024e-02, -4.83118775e+01, -5.69035567e-02, 7.13574366e+00, -3.34967308e-02, -3.09836552e+03}}};
+
+    
+    PosType modfunc(int modnumber, PosType my_slope, PosType my_fratio);
+    
+    PosType amodfunc(int modnumber, PosType my_fratio);
+    PosType bmodfunc(int modnumber, PosType my_fratio);
+    PosType cmodfunc(PosType my_fratio);
+    PosType dmodfunc(PosType my_fratio);
+    
 protected:
   PosType alpha_int(PosType x);
   
@@ -203,15 +225,14 @@ protected:
 	virtual KappaType inline gamma_h(PosType x){return -2;};
 	virtual KappaType inline phi_h(PosType x){return 1;};
     virtual KappaType inline phi_int(PosType x){return 1;};
-    
     virtual PosType inline gfunction(PosType x){return -1;};
 	
+    
     PosType xmax;
 
   // Functions for calculating axial dependence
     float pa;
     float fratio=1;
-
     bool elliptical_flag = false;
 
   void faxial0(PosType theta,PosType f0[]);
@@ -228,6 +249,7 @@ protected:
     double fourier_coeff(double n, double q, double beta);
     
     void calcModes(double q, double beta, double rottheta, PosType newmod[]);
+    PosType analModes(int ab, int mn, int pn);
     
     struct fourier_func{
         fourier_func(double my_n, double my_q, double my_beta): n(my_n),q(my_q),beta(my_beta){};
@@ -237,9 +259,13 @@ protected:
         double operator ()(double theta) {return cos(n*theta)/pow(cos(theta)*cos(theta) + (1/q/q)*sin(theta)*sin(theta),beta/2) ;}
     };
 
-
   const static int Nmod = 32;
-  
+
+  // Analytic description of Fourier modes
+
+        
+    
+
   PosType mod[Nmod];
   PosType mod1[Nmod];
   PosType mod2[Nmod];
