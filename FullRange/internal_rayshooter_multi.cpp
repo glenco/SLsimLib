@@ -22,7 +22,8 @@
  * dDl[j = 0...Nplanes-1] - The angular size distance between the (j-1)th and jth planes counting the observer plane as j = -1.
  *                      dDl[0] = Dl[0], dDl[Nplane-1] is between the last plane with mass and the source plane.
  *
- * charge = 4*pi*G*mass_scale/c^2 in units of Mpc
+ * charge = 4*pi*G*mass_scale/c^2 in units of Mpc // Fabien : we should remove this ?
+ * charge = 4*pi*G in units of physical Mpc
  *
  * i_points[].x[] is in angular units.
  *
@@ -217,10 +218,11 @@ for(i = start; i < end; i++)
     and time-delay of rays in parallel.
     ************************************************************************************ */
       
-    // Time delay at first plane
-    p->i_points[i].dt = 0.5*( p->i_points[i].image->x[0]*p->i_points[i].image->x[0] + p->i_points[i].image->x[1]*p->i_points[i].image->x[1] )/ p->dDl[0];
-      
-      
+    // Time delay at first plane : position on the observer plane is (0,0) => no need to take difference of positions.
+    // p->i_points[i].dt = 0.5*( p->i_points[i].image->x[0]*p->i_points[i].image->x[0] + p->i_points[i].image->x[1]*p->i_points[i].image->x[1] )/ p->dDl[0] ;
+    p->i_points[i].dt = 0.5*( p->i_points[i].image->x[0]*p->i_points[i].image->x[0] + p->i_points[i].image->x[1]*p->i_points[i].image->x[1] ) / p->dDl[0] / (1+p->plane_redshifts[0]) / (1+p->plane_redshifts[0]) ;
+
+
     // Begining of the loop through the planes :
     // Each iteration leaves i_point[i].image on plane (j+1)
     for(j = 0; j < p->NPlanes ; ++j)
@@ -232,9 +234,7 @@ for(i = start; i < end; i++)
       
       assert(xx[0] == xx[0] && xx[1] == xx[1]);
 
-      p->lensing_planes[j]->force(alpha,&kappa,gamma,&phi,xx,kappa_off);
-
-      cc = p->charge * p->dDl[j+1]; // Fabien : I think that we can put this coefficient with the aa and bb down below !
+      p->lensing_planes[j]->force(alpha,&kappa,gamma,&phi,xx,kappa_off); // Computed in physical coordinates.
 
         assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
         assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
@@ -246,13 +246,13 @@ for(i = start; i < end; i++)
     	  fac = 1/(1+p->plane_redshifts[j]);
     	  /* multiply by fac to obtain 1/comoving_distance/physical_distance
     	   * such that a multiplication with the charge (in units of physical distance)
-    	   * will result in a 1/comoving_distance quantity */
+    	   * will result in a 1/comoving_distance quantity */ // comoving squared ?
     	  kappa *= fac;
     	  gamma[0] *= fac;
     	  gamma[1] *= fac;
     	  gamma[2] *= fac;
-          
-          // Fabien : should we have this for phi too ?
+          // dt *= fac ;
+          // Fabien : should we have this for phi/dt too ? I think no !
 	
     	  assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
     	  assert(kappa == kappa);
@@ -268,7 +268,7 @@ for(i = start; i < end; i++)
 
       aa = (p->dDl[j+1] + p->dDl[j])/p->dDl[j];
       bb = p->dDl[j+1]/p->dDl[j];
-      // Fabien : bring the cc above right here ?
+      cc = p->charge * p->dDl[j+1];
         
       xplus[0] = aa*p->i_points[i].image->x[0] - bb*xminus[0] - cc*alpha[0];
       xplus[1] = aa*p->i_points[i].image->x[1] - bb*xminus[1] - cc*alpha[1];

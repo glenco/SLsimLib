@@ -366,6 +366,8 @@ public:
 	void set_slope(PosType my_slope){beta=my_slope; make_tables();};
 	/// initialize from a mass function
     PosType get_slope(){return beta;};
+    /// set Rmax
+    void set_Rmax(float my_Rmax){Rmax=my_Rmax; xmax = Rmax/rscale;}; // Added by Fabien
 	
 	void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed);
 
