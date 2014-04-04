@@ -54,7 +54,7 @@ struct ImageInfo{
   void copy(ImageInfo &image,bool copykists = true);
 
   void ArcInfo(PosType *area,PosType *area_circ,PosType theta);
-  void FindArc(PosType &radius,PosType *xc,PosType &arclength,PosType &width
+  void FindArc(PosType &radius,PosType *xc,PosType *arc_c,PosType &arclength,PosType &width
             ,PosType resolution,PosType threshold);
   bool constant(LensingVariable lenvar,PosType tol);
 
