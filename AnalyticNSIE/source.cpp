@@ -86,6 +86,8 @@ void SourceGaussian::assignParams(InputParams& params){
 		  exit(0);
 	  }
 
+    source_r = 5*sqrt(source_gauss_r2);
+    
 	  printSource();
 }
 
@@ -652,6 +654,14 @@ void SourceMultiShapelets::readCatalog()
                 galaxies.push_back(s);
             shap_input.close();            
         }
+        else if (i == 1)
+        {
+            std::cout << "Can't open file " << shap_file << std::endl;
+            ERROR_MESSAGE();
+            throw std::runtime_error(" Cannot open file.");
+            exit(1);
+        }
+
     }
     
 }
