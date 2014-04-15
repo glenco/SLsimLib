@@ -20,8 +20,8 @@
  * The particles can be point masses or have multiple sizes in which case they have a Gaussian profile.
  * They can also have the same mass or multiple masses.
  *
- * xp[][], masses[] and rsph[] need to be allocated before constructing a TreeForce is
- * constructed and de-allocated after it is destruction.  If the boolian flags are set to
+ * xp[][], masses[] and rsph[] need to be allocated before a TreeForce is
+ * constructed and de-allocated after it is destructed.  If the boolean flags are set to
  * false these arrays need only be one element long.  Multiple TreeForces can be
  * made from the same particles.  Do not rotate the particles without reconstructing
  * a TreeForce.

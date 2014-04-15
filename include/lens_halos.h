@@ -403,10 +403,11 @@ private:
 		return (0.5*x*x/pow(1+x,beta) - InterpolateFromTable(x))/InterpolateFromTable(xmax);
 	}
 	inline KappaType phi_h(PosType x){
-		ERROR_MESSAGE();
-		std::cout << "time delay has not been fixed for PseudoNFW profile yet." << std::endl;
-		exit(1);
-		return 0.0;
+        return -1.0*alpha_int(x)/InterpolateFromTable(xmax) ;
+		//ERROR_MESSAGE();
+		//std::cout << "time delay has not been fixed for PseudoNFW profile yet." << std::endl;
+		//exit(1);
+		//return 0.0;
 	}
     inline KappaType phi_int(PosType x){
         return -1.0*alpha_int(x)/InterpolateFromTable(xmax) ;

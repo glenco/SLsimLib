@@ -177,7 +177,7 @@ for(i = start; i < end; i++)
     // find position on first lens plane in comoving units
     p->i_points[i].image->x[0] = p->i_points[i].x[0] * p->Dl[0];
     p->i_points[i].image->x[1] = p->i_points[i].x[1] * p->Dl[0];
-
+      
     xminus[0] = 0;
     xminus[1] = 0;
     
@@ -219,10 +219,9 @@ for(i = start; i < end; i++)
     ************************************************************************************ */
       
     // Time delay at first plane : position on the observer plane is (0,0) => no need to take difference of positions.
-    // p->i_points[i].dt = 0.5*( p->i_points[i].image->x[0]*p->i_points[i].image->x[0] + p->i_points[i].image->x[1]*p->i_points[i].image->x[1] )/ p->dDl[0] ;
-    p->i_points[i].dt = 0.5*( p->i_points[i].image->x[0]*p->i_points[i].image->x[0] + p->i_points[i].image->x[1]*p->i_points[i].image->x[1] ) / p->dDl[0] / (1+p->plane_redshifts[0]) / (1+p->plane_redshifts[0]) ;
+    p->i_points[i].dt = 0.5*( p->i_points[i].image->x[0]*p->i_points[i].image->x[0] + p->i_points[i].image->x[1]*p->i_points[i].image->x[1] )/ p->dDl[0] ;
 
-
+      
     // Begining of the loop through the planes :
     // Each iteration leaves i_point[i].image on plane (j+1)
     for(j = 0; j < p->NPlanes ; ++j)
@@ -246,13 +245,12 @@ for(i = start; i < end; i++)
     	  fac = 1/(1+p->plane_redshifts[j]);
     	  /* multiply by fac to obtain 1/comoving_distance/physical_distance
     	   * such that a multiplication with the charge (in units of physical distance)
-    	   * will result in a 1/comoving_distance quantity */ // comoving squared ?
+    	   * will result in a 1/comoving_distance quantity */ // 1 / comoving_distance squared ?
     	  kappa *= fac;
     	  gamma[0] *= fac;
     	  gamma[1] *= fac;
     	  gamma[2] *= fac;
-          // dt *= fac ;
-          // Fabien : should we have this for phi/dt too ? I think no !
+          // dt *= fac ; // Fabien : should we have this for phi/dt too ? I think no !
 	
     	  assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
     	  assert(kappa == kappa);
@@ -276,8 +274,11 @@ for(i = start; i < end; i++)
       xminus[0] = p->i_points[i].image->x[0];
       xminus[1] = p->i_points[i].image->x[1];
       
+
+      // Fabien : Change in the value of the position !
       p->i_points[i].image->x[0] = xplus[0];
       p->i_points[i].image->x[1] = xplus[1];
+
         
       // ----------------------------------------------------------------------------------------
 
@@ -346,12 +347,14 @@ for(i = start; i < end; i++)
       
     // Subtracting off a term that makes the unperturbed ray to have zero time delay
     p->i_points[i].dt -= 0.5*( p->i_points[i].image->x[0]*p->i_points[i].image->x[0] + p->i_points[i].image->x[1]*p->i_points[i].image->x[1] ) / p->Dl[p->NPlanes];
-      
+
       
     // Convert units back to angles.
+    // Fabien : be careful ! These angles are not the same as those computed after the comment 'find position on first lens plane in comoving units' above, namely the angles we start with in this function. Values are close but still different. The change occurs after the comment 'Fabien : Change in the value of the position !' above and by the fact that below we divide by Dl[p->NPlanes] and not Dl[0].
     p->i_points[i].image->x[0] /= p->Dl[p->NPlanes];
     p->i_points[i].image->x[1] /= p->Dl[p->NPlanes];
-    
+      
+      
     // We go from kappa denoting 1-kappa to kappa denoting kappa
     p->i_points[i].kappa = 1 - p->i_points[i].kappa;
 
@@ -378,7 +381,7 @@ for(i = start; i < end; i++)
 
       
 /*
-/TODO: check
+// TODO: check
     if(p->i_points[i].image->x[0] != p->i_points[i].image->x[0] ||
        p->i_points[i].image->x[1] != p->i_points[i].image->x[1] ||
        p->i_points[i].invmag != p->i_points[i].invmag)
@@ -391,7 +394,6 @@ for(i = start; i < end; i++)
       exit(1);
     }
 */
-
       
 } // End of the main loop.
   

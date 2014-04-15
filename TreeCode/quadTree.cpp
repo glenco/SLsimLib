@@ -45,7 +45,7 @@ TreeQuad::TreeQuad(
  * it should only be invoked from the derived classes that have specific defined halo models.
  */
 TreeQuad::TreeQuad(
-		PosType **xpt               /// Perpendicular postion of halo (TODO: In proper distance?)
+		PosType **xpt               /// Perpendicular position of halo (TODO: In proper distance?)
 		,LensHaloHndl *my_halos
 		,IndexType Npoints
 		,PosType my_sigma_background /// background kappa that is subtracted
@@ -464,6 +464,7 @@ void TreeQuad::force2D(PosType const *ray
                        ,KappaType *phi
                        ,bool no_kappa){
 
+    
   PosType xcm[2],rcm2cell,rcm2,tmp,boxsize2;
   IndexType i;
   bool allowDescent=true;
@@ -484,7 +485,8 @@ void TreeQuad::force2D(PosType const *ray
   
   //TODO: Need to implement phi and test
   *phi = 0.0;
-  
+
+    
   do{
 	  ++count;
 	  allowDescent=false;
@@ -543,6 +545,7 @@ void TreeQuad::force2D(PosType const *ray
 
 			  // Find the particles that intersect with ray and add them individually.
 			  if(rcm2cell < 5.83*boxsize2){
+
 				  for(i = 0 ; i < tree->current->Nbig_particles ; ++i){
 
 					  tmp_index = tree->current->big_particles[i];
@@ -552,6 +555,7 @@ void TreeQuad::force2D(PosType const *ray
 
 					  if(haloON){
 						  halos[tmp_index]->force_halo(alpha,kappa,gamma,phi,xcm,no_kappa,true);
+
 					  }else{  // case of no halos just particles and no class derived from TreeQuad
 
 						  rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
@@ -599,7 +603,7 @@ void TreeQuad::force2D(PosType const *ray
 				  gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 				  gamma[1] += xcm[0]*xcm[1]*tmp;
           
-                  //
+                  // Fabien : commented this to test but now decommented.
                   *phi += 0.5*tree->current->mass*log( rcm2cell )/pi;
                   *phi -= 0.5*( tree->current->quad[0]*xcm[0]*xcm[0] + tree->current->quad[1]*xcm[1]*xcm[1] + 2*tree->current->quad[2]*xcm[0]*xcm[1] )/(pi*rcm2cell*rcm2cell);
 			  }
@@ -616,6 +620,8 @@ void TreeQuad::force2D(PosType const *ray
 
 			  alpha[0] += tmp*xcm[0];
 			  alpha[1] += tmp*xcm[1];
+              
+              // Fabien : should phi be computed to this order ?
 		  }
 	  }
   }while(tree->WalkStep(allowDescent));

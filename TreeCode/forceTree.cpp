@@ -202,6 +202,7 @@ void TreeForce::force2D(PosType const *ray
 
   alpha[0]=alpha[1]=gamma[0]=gamma[1]=gamma[2]=0.0;
   *kappa=0.0;
+  *phi=0.0;
 
   do{
 
@@ -243,7 +244,7 @@ void TreeForce::force2D(PosType const *ray
 				  alpha[0] += tmp*xcm[0];
 				  alpha[1] += tmp*xcm[1];
 
-				  // can turn off kappa and gamma calculations to save times
+				  // can turn off kappa and gamma calculations to save time
 				  if(!no_kappa){
 					  tmp = -2.0*prefac/rcm2;
 
@@ -273,6 +274,9 @@ void TreeForce::force2D(PosType const *ray
 
 							  gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 							  gamma[1] += xcm[0]*xcm[1]*tmp;
+                              
+                              *phi += phi_o(arg1,arg2)*prefac ; // Added by Fabien
+                              // Be careful : this phi_o has not been implemented yet !
 						  }
 					  }
 				  }
@@ -314,6 +318,7 @@ void TreeForce::force2D(PosType const *ray
   alpha[1] += ray[1]*kappa_background;
   if(!no_kappa){      //  taken out to speed up
 	  *kappa -= kappa_background;
+      // *phi -= phi_background; // Fabien : Added this bu phi_background does not exists...
   }
 
   return;
