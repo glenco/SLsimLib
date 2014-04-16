@@ -172,6 +172,7 @@ Observation::Observation(float diameter, float transmission, float exp_time, int
  * \param map Input map in photons/(cm^2*Hz)
  * \param psf Decides if the psf smoothing is applied
  * \param noise Decides if noise is added
+ * \param unit Decides units of output (if flux, output is in 10**(-0.4*mag)) 
  */
 PixelMap Observation::Convert (PixelMap &map, bool psf, bool noise, long *seed, unitType unit)
 {
