@@ -172,8 +172,9 @@ Observation::Observation(float diameter, float transmission, float exp_time, int
  * \param map Input map in photons/(cm^2*Hz)
  * \param psf Decides if the psf smoothing is applied
  * \param noise Decides if noise is added
+ * \param unit Decides units of output (if flux, output is in 10**(-0.4*mag)) 
  */
-PixelMap Observation::Convert (PixelMap &map, bool psf, bool noise, long *seed)
+PixelMap Observation::Convert (PixelMap &map, bool psf, bool noise, long *seed, unitType unit)
 {
 	if (telescope == true && fabs(map.getResolution()-pix_size) > std::numeric_limits<double>::epsilon())
 	{
@@ -183,6 +184,12 @@ PixelMap Observation::Convert (PixelMap &map, bool psf, bool noise, long *seed)
 	PixelMap outmap = PhotonToCounts(map);
 	if (psf == true)  outmap = ApplyPSF(outmap);
 	if (noise == true) outmap = AddNoise(outmap,seed);
+    
+    if (unit == flux)
+    {
+        double counts_to_flux = pow(10,-0.4*mag_zeropoint);
+        outmap.Renormalize(counts_to_flux);
+    }
 	return outmap;
 }
 

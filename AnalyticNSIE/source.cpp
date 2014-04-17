@@ -86,6 +86,8 @@ void SourceGaussian::assignParams(InputParams& params){
 		  exit(0);
 	  }
 
+    source_r = 5*sqrt(source_gauss_r2);
+    
 	  printSource();
 }
 
@@ -407,8 +409,16 @@ PosType Source::changeFilter(
 	PosType fout_int = integrateFilter(wavel_out,ampl_out);
 	PosType sed_in = integrateFilterSed(wavel_in, ampl_in, wavel_sed, ampl_sed);
 	PosType sed_out = integrateFilterSed(wavel_out, ampl_out, wavel_sed, ampl_sed);
-	PosType delta_mag = -2.5 * log10(sed_out/sed_in*fin_int/fout_int);
-	return delta_mag;
+
+    if (sed_in < std::numeric_limits<PosType>::epsilon() || sed_out < std::numeric_limits<PosType>::epsilon())
+    {
+        return 99.;
+    }
+    else
+    {
+        PosType delta_mag = -2.5 * log10(sed_out/sed_in*fin_int/fout_int);
+        return std::min(delta_mag,99.);
+    }
 }
 
 /**  \brief Calculates the integral of the filter curve given as an array of (x,y) values.
@@ -436,11 +446,19 @@ PosType Source::integrateFilterSed(std::vector<PosType> wavel_fil, std::vector<P
 	{
 		wavel_new[i] = max(wavel_fil[0],wavel_sed[0]) + PosType(i)/PosType(wavel_new_size-1)*(min(wavel_fil[wavel_fil.size()-1],wavel_sed[wavel_sed.size()-1])-max(wavel_fil[0],wavel_sed[0]) );
 		vector<PosType>::iterator it_f = lower_bound(wavel_fil.begin(), wavel_fil.end(), wavel_new[i]);
-		int p = it_f-wavel_fil.begin()-1;
-		fil_val[i] = fil[p] + (fil[p+1]-fil[p])*(wavel_new[i]-wavel_fil[p])/(wavel_fil[p+1]-wavel_fil[p]);
-		vector<PosType>::iterator it_s = lower_bound(wavel_sed.begin(), wavel_sed.end(), wavel_new[i]);
-		int q = it_s-wavel_sed.begin()-1;
-		sed_val[i] = sed[q] + (sed[q+1]-sed[q])*(wavel_new[i]-wavel_sed[q])/(wavel_sed[q+1]-wavel_sed[q]);
+        int p = it_f-wavel_fil.begin()-1;
+        vector<PosType>::iterator it_s = lower_bound(wavel_sed.begin(), wavel_sed.end(), wavel_new[i]);
+        int q = it_s-wavel_sed.begin()-1;
+        if (p >= 0&& p < wavel_fil.size()-1 && q >= 0 && q < wavel_sed.size())
+        {
+            fil_val[i] = fil[p] + (fil[p+1]-fil[p])*(wavel_new[i]-wavel_fil[p])/(wavel_fil[p+1]-wavel_fil[p]);
+            sed_val[i] = sed[q] + (sed[q+1]-sed[q])*(wavel_new[i]-wavel_sed[q])/(wavel_sed[q+1]-wavel_sed[q]);
+        }
+        else
+        {
+            fil_val[i] = 0.;
+            sed_val[i] = 0.;
+        }
 	}
 	for (int i = 0; i < wavel_new_size-1; i++)
 	{
@@ -652,6 +670,14 @@ void SourceMultiShapelets::readCatalog()
                 galaxies.push_back(s);
             shap_input.close();            
         }
+        else if (i == 1)
+        {
+            std::cout << "Can't open file " << shap_file << std::endl;
+            ERROR_MESSAGE();
+            throw std::runtime_error(" Cannot open file.");
+            exit(1);
+        }
+
     }
     
 }

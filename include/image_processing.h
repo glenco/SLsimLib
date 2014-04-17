@@ -88,7 +88,7 @@ private:
 
 
 typedef enum {Euclid_VIS,Euclid_Y,Euclid_J,Euclid_H,KiDS_u,KiDS_g,KiDS_r,KiDS_i} Telescope;
-
+typedef enum {counts_x_sec, flux} unitType;
 /** \ingroup Image
  * \brief It creates a realistic image from the output of a ray-tracing simulation.
  *
@@ -110,7 +110,7 @@ public:
 	float getSeeing(){return seeing;}
 	float getZeropoint(){return mag_zeropoint;}
 	std::valarray<double> getPSF(){return map_psf;}
-	PixelMap Convert (PixelMap &map, bool psf, bool noise,long *seed);
+	PixelMap Convert (PixelMap &map, bool psf, bool noise,long *seed, unitType unit = counts_x_sec);
 	PixelMap Convert_back (PixelMap &map);
 
 private:
