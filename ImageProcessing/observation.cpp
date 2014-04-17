@@ -20,7 +20,7 @@
 #include <limits>
 
 
-/*\brief Creates an observation setup that mimics a known instrument
+/** * \brief Creates an observation setup that mimics a known instrument
  *
  */
 Observation::Observation(Telescope tel_name)
@@ -118,7 +118,7 @@ Observation::Observation(Telescope tel_name)
 	telescope = true;
 }
 
-/* Creates a custom observation setup with parameters decided by the user.
+/** *  Creates a custom observation setup with parameters decided by the user.
  *
  * \param diameter Diameter of telescope (in cm) (Collecting area is pi/4.*diameter^2)
  * \param transmission Total transmission of the telescope (/int T(\lambda)/\lambda d\lambda)
@@ -135,7 +135,7 @@ Observation::Observation(float diameter, float transmission, float exp_time, int
 			telescope = false;
 		}
 
-/* Creates a custom observation setup with parameters decided by the user. Allows for the use of a psf fits image.
+/**  Creates a custom observation setup with parameters decided by the user. Allows for the use of a psf fits image.
  *
  * \param diameter Diameter of telescope (in cm) (Collecting area is pi/4.*diameter^2)
  * \param transmission Total transmission of the telescope (/int T(\lambda)/\lambda d\lambda)
@@ -167,7 +167,7 @@ Observation::Observation(float diameter, float transmission, float exp_time, int
 		telescope = false;
 		}
 
-/* \brief Converts the input map to a realistic image
+/**  \brief Converts the input map to a realistic image
  *
  * \param map Input map in photons/(cm^2*Hz)
  * \param psf Decides if the psf smoothing is applied
@@ -196,7 +196,7 @@ PixelMap Observation::Convert_back (PixelMap &map)
 }
 
 
-/** \brief Smooths the image with a PSF map.
+/** * \brief Smooths the image with a PSF map.
 *
 */
 PixelMap Observation::ApplyPSF(PixelMap &pmap)
