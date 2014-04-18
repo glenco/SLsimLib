@@ -92,13 +92,13 @@ PixelMap::PixelMap(
 /** \brief Constructs a PixelMap reading in a fits file
 * Infos about resolution, Npixels and center are read from the header.
  */
-PixelMap::PixelMap(std::string filename)
+PixelMap::PixelMap(std::string fitsfilename)
 {
 #ifdef ENABLE_FITS
-	if(filename.empty())
+	if(fitsfilename.empty())
 		throw std::invalid_argument("Please enter a valid filename for the FITS file input");
 	
-	std::auto_ptr<CCfits::FITS> fp(new CCfits::FITS(filename, CCfits::Read));
+	std::auto_ptr<CCfits::FITS> fp(new CCfits::FITS(fitsfilename, CCfits::Read));
 	
 	CCfits::PHDU& h0 = fp->pHDU();
 	
@@ -118,7 +118,7 @@ PixelMap::PixelMap(std::string filename)
 		h0.readKey("CDELT1", resolution);
 		h0.readKey("CDELT2", cdelt2);
 		if(std::abs(resolution) - std::abs(cdelt2) > 1e-6)
-			throw std::runtime_error("non-square pixels in FITS file " + filename);
+			throw std::runtime_error("non-square pixels in FITS file " + fitsfilename);
 	}
 	catch(CCfits::HDU::NoSuchKeyword&)
 	{
@@ -128,9 +128,9 @@ PixelMap::PixelMap(std::string filename)
 		h0.readKey("CD2_1", cd21);
 		h0.readKey("CD2_2", cd22);
 		if(std::abs(resolution) - std::abs(cd22) > 1e-6)
-			throw std::runtime_error("non-square pixels in FITS file " + filename);
+			throw std::runtime_error("non-square pixels in FITS file " + fitsfilename);
 		if(cd12 || cd21)
-			throw std::runtime_error("pixels not aligned with coordingate in FITS file " + filename);
+			throw std::runtime_error("pixels not aligned with coordingate in FITS file " + fitsfilename);
 	}
 	
 	resolution = fabs(resolution)*pi/180.;
@@ -219,7 +219,7 @@ PixelMap::PixelMap(
 		old_p1[1] = std::max(0,int(iy*res_ratio));
 		old_p2[0] = std::min(old_Npixels-1,int((ix+1.)*res_ratio));
 		old_p2[1] = std::min(old_Npixels-1,int((iy+1.)*res_ratio));
-		for (int old_iy = old_p1[1]; old_iy<= old_p2[1]; ++old_iy)
+		for (int old_iy = old_p1[1]; old_iy <= old_p2[1]; ++old_iy)
 		{
 			for (int old_ix = old_p1[0]; old_ix<= old_p2[0]; ++old_ix)
 				{
@@ -279,7 +279,8 @@ bool PixelMap::agrees(const PixelMap& other) const
 PixelMap& PixelMap::operator+=(const PixelMap& rhs)
 {
 	// TODO: maybe check if PixelMaps agree, but is slower
-	map += rhs.map;
+    if(Npixels != rhs.getNpixels()) throw std::runtime_error("Dimensions of maps are not compatible");
+	for(size_t i=0;i<map.size();++i) map[i] += rhs.map[i];
 	return *this;
 }
 

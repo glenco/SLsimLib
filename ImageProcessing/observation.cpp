@@ -78,7 +78,7 @@ Observation::Observation(Telescope tel_name)
 		back_mag = 22.93;
 		ron = 5.;
 		seeing = 1.0;
-		pix_size = .21/60./60./180.*pi;
+		pix_size = .2/60./60./180.*pi;
 	}
 	if (tel_name == KiDS_g)
 	{
@@ -89,7 +89,7 @@ Observation::Observation(Telescope tel_name)
 		back_mag = 22.29;
 		ron = 5.;
 		seeing = 0.8;
-		pix_size = .21/60./60./180.*pi;
+		pix_size = .2/60./60./180.*pi;
 	}
 	if (tel_name == KiDS_r)
 	{
@@ -100,7 +100,7 @@ Observation::Observation(Telescope tel_name)
 		back_mag = 21.40;
 		ron = 5.;
 		seeing = 0.7;
-		pix_size = .21/60./60./180.*pi;
+		pix_size = .2/60./60./180.*pi;
 	}
 	if (tel_name == KiDS_i)
 	{
@@ -111,7 +111,7 @@ Observation::Observation(Telescope tel_name)
 		back_mag = 20.64;
 		ron = 5.;
 		seeing = 1.1;
-		pix_size = .21/60./60./180.*pi;
+		pix_size = .2/60./60./180.*pi;
 	}
 
 	mag_zeropoint = 2.5*log10(diameter*diameter*transmission*pi/4./hplanck) - 48.6;
@@ -178,8 +178,8 @@ PixelMap Observation::Convert (PixelMap &map, bool psf, bool noise, long *seed, 
 {
 	if (telescope == true && fabs(map.getResolution()-pix_size) > std::numeric_limits<double>::epsilon())
 	{
-		std::cout << "The resolution of the input map is different from the one of the simulated instrument!" << std::endl;
-		exit(1);
+		std::cout << "The resolution of the input map is different from the one of the simulated instrument in Observation::Convert!" << std::endl;
+		throw std::runtime_error("The resolution of the input map is different from the one of the simulated instrument!");
 	}
 	PixelMap outmap = PhotonToCounts(map);
 	if (psf == true)  outmap = ApplyPSF(outmap);
