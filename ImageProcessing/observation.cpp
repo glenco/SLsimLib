@@ -20,7 +20,7 @@
 #include <limits>
 
 
-/*\brief Creates an observation setup that mimics a known instrument
+/** * \brief Creates an observation setup that mimics a known instrument
  *
  */
 Observation::Observation(Telescope tel_name)
@@ -78,7 +78,7 @@ Observation::Observation(Telescope tel_name)
 		back_mag = 22.93;
 		ron = 5.;
 		seeing = 1.0;
-		pix_size = .21/60./60./180.*pi;
+		pix_size = .2/60./60./180.*pi;
 	}
 	if (tel_name == KiDS_g)
 	{
@@ -89,7 +89,7 @@ Observation::Observation(Telescope tel_name)
 		back_mag = 22.29;
 		ron = 5.;
 		seeing = 0.8;
-		pix_size = .21/60./60./180.*pi;
+		pix_size = .2/60./60./180.*pi;
 	}
 	if (tel_name == KiDS_r)
 	{
@@ -100,7 +100,7 @@ Observation::Observation(Telescope tel_name)
 		back_mag = 21.40;
 		ron = 5.;
 		seeing = 0.7;
-		pix_size = .21/60./60./180.*pi;
+		pix_size = .2/60./60./180.*pi;
 	}
 	if (tel_name == KiDS_i)
 	{
@@ -111,14 +111,14 @@ Observation::Observation(Telescope tel_name)
 		back_mag = 20.64;
 		ron = 5.;
 		seeing = 1.1;
-		pix_size = .21/60./60./180.*pi;
+		pix_size = .2/60./60./180.*pi;
 	}
 
 	mag_zeropoint = 2.5*log10(diameter*diameter*transmission*pi/4./hplanck) - 48.6;
 	telescope = true;
 }
 
-/* Creates a custom observation setup with parameters decided by the user.
+/** *  Creates a custom observation setup with parameters decided by the user.
  *
  * \param diameter Diameter of telescope (in cm) (Collecting area is pi/4.*diameter^2)
  * \param transmission Total transmission of the telescope (/int T(\lambda)/\lambda d\lambda)
@@ -135,7 +135,7 @@ Observation::Observation(float diameter, float transmission, float exp_time, int
 			telescope = false;
 		}
 
-/* Creates a custom observation setup with parameters decided by the user. Allows for the use of a psf fits image.
+/**  Creates a custom observation setup with parameters decided by the user. Allows for the use of a psf fits image.
  *
  * \param diameter Diameter of telescope (in cm) (Collecting area is pi/4.*diameter^2)
  * \param transmission Total transmission of the telescope (/int T(\lambda)/\lambda d\lambda)
@@ -167,22 +167,29 @@ Observation::Observation(float diameter, float transmission, float exp_time, int
 		telescope = false;
 		}
 
-/* \brief Converts the input map to a realistic image
+/**  \brief Converts the input map to a realistic image
  *
  * \param map Input map in photons/(cm^2*Hz)
  * \param psf Decides if the psf smoothing is applied
  * \param noise Decides if noise is added
+ * \param unit Decides units of output (if flux, output is in 10**(-0.4*mag)) 
  */
-PixelMap Observation::Convert (PixelMap &map, bool psf, bool noise, long *seed)
+PixelMap Observation::Convert (PixelMap &map, bool psf, bool noise, long *seed, unitType unit)
 {
 	if (telescope == true && fabs(map.getResolution()-pix_size) > std::numeric_limits<double>::epsilon())
 	{
-		std::cout << "The resolution of the input map is different from the one of the simulated instrument!" << std::endl;
-		exit(1);
+		std::cout << "The resolution of the input map is different from the one of the simulated instrument in Observation::Convert!" << std::endl;
+		throw std::runtime_error("The resolution of the input map is different from the one of the simulated instrument!");
 	}
 	PixelMap outmap = PhotonToCounts(map);
 	if (psf == true)  outmap = ApplyPSF(outmap);
 	if (noise == true) outmap = AddNoise(outmap,seed);
+    
+    if (unit == flux)
+    {
+        double counts_to_flux = pow(10,-0.4*mag_zeropoint);
+        outmap.Renormalize(counts_to_flux);
+    }
 	return outmap;
 }
 
@@ -196,7 +203,7 @@ PixelMap Observation::Convert_back (PixelMap &map)
 }
 
 
-/** \brief Smooths the image with a PSF map.
+/** * \brief Smooths the image with a PSF map.
 *
 */
 PixelMap Observation::ApplyPSF(PixelMap &pmap)

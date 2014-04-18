@@ -156,7 +156,7 @@ public:
 	PosType getRadius(){return galaxies[index].getRadius();}
 
 	/** Used to change the "current" source that is returned when the surface brightness is subsequently
-	 * called.  It also returns a reference to the particular OverzierSource source model.
+	 * called.
 	 */
 	SourceShapelets& setIndex (std::size_t i){
 		if(i < galaxies.size())
@@ -164,7 +164,7 @@ public:
 		return galaxies[index];
 	}
     /** The indexing operator can be used to change the "current" source that is returned when the surface brightness is subsequently
-	 * called.  It also returns a reference to the particular OverzierSource source model.
+	 * called.
 	 */
 	SourceShapelets& operator[] (std::size_t i){
 		if(i < galaxies.size())
@@ -182,11 +182,19 @@ public:
 		return galaxies[index];
 	}
     
+    /// Sets the active band for all the objects
+	SourceShapelets& setBand (shap_band b){
+        band = b;
+        for (int i = 0; i < galaxies.size(); i++)
+            galaxies[i].setActiveBand(band);
+    }
+    
 
 private:
 	void assignParams(InputParams& params);
  	std::size_t index;
 	float mag_limit;
+    shap_band band;
    
     void readCatalog();
  	std::vector<SourceShapelets> galaxies;

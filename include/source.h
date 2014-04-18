@@ -122,10 +122,12 @@ private:
 	std::valarray<PosType> values;
 };
 
+
 /** \brief Class for sources described by shapelets.
  *
  *  The sources are created from magnitude, scale radius, and the coefficients of their decomposition into the shapelets basis functions (Refregier et al., 2001).
  *  The coefficients can be read from a fits square array.
+ *  In case the magnitude is not given as input, the constructor will read an array of values from the shapelet file header. One can then choose the desired magnitude with setActiveMag.
  *
  */
 class SourceShapelets: public Source{
@@ -140,7 +142,7 @@ public:
 	inline PosType getRadius(){return source_r*10.;}
 	inline PosType getMag(){return mag;}
     inline PosType getID(){return id;}
-	inline void setMag(PosType my_mag){mag = my_mag; NormalizeFlux();}
+    inline void setActiveBand(shap_band band){mag = mags[band]; flux = fluxes[band];}
 
 private:
 	void assignParams(InputParams& params);
@@ -151,6 +153,8 @@ private:
     int id;
 	PosType flux, mag;
 	PosType ang;
+    PosType mags[10], fluxes[10];
+    PosType coeff_flux;
 };
 
 /// A uniform surface brightness circular source.

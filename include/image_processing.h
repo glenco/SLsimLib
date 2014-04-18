@@ -26,7 +26,7 @@ public:
 	PixelMap(const PixelMap& other);
 	PixelMap(const PixelMap& pmap, const double* center, std::size_t Npixels);
 	PixelMap(const double* center, std::size_t Npixels, double resolution);
-	PixelMap(std::string filename);
+	PixelMap(std::string fitsfilename);
 	~PixelMap();
 	
 	PixelMap& operator=(PixelMap other);
@@ -44,7 +44,7 @@ public:
 	void AddImages(ImageInfo *imageinfo,int Nimages,float rescale = 1.);
 	void AddCurve(ImageInfo *curve,double value);
 	void drawline(double x1[],double x2[],double value);
-  void drawcircle(PosType r_center[],PosType radius,PosType value);
+    void drawcircle(PosType r_center[],PosType radius,PosType value);
 	void AddGrid(Grid &grid,double value = 1.0);
 
 	void Renormalize(double factor);
@@ -71,7 +71,7 @@ public:
 	
 	friend void swap(PixelMap&, PixelMap&);
 	
-  void FindArc(PosType &radius,PosType *xc,PosType *arc_center,PosType &arclength,PosType &width
+    void FindArc(PosType &radius,PosType *xc,PosType *arc_center,PosType &arclength,PosType &width
                          ,PosType threshold);
 private:
 	std::valarray<double> map;
@@ -88,7 +88,7 @@ private:
 
 
 typedef enum {Euclid_VIS,Euclid_Y,Euclid_J,Euclid_H,KiDS_u,KiDS_g,KiDS_r,KiDS_i} Telescope;
-
+typedef enum {counts_x_sec, flux} unitType;
 /** \ingroup Image
  * \brief It creates a realistic image from the output of a ray-tracing simulation.
  *
@@ -109,8 +109,10 @@ public:
 	float getRon(){return ron;}
 	float getSeeing(){return seeing;}
 	float getZeropoint(){return mag_zeropoint;}
+    /// pixel size in radians
+    float getPixelSize(){return pix_size;}
 	std::valarray<double> getPSF(){return map_psf;}
-	PixelMap Convert (PixelMap &map, bool psf, bool noise,long *seed);
+	PixelMap Convert (PixelMap &map, bool psf, bool noise,long *seed, unitType unit = counts_x_sec);
 	PixelMap Convert_back (PixelMap &map);
 
 private:

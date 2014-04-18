@@ -650,6 +650,79 @@ bool InputParams::get(std::string label, Band& value) const
 	return false;
 }
 
+
+/** \brief Assigns to "value" the value of the parameter called "label".
+ * If this parameter label does not appear in the parameter file false
+ * is returned.  If the parameter in the file does not "match" the type
+ * of value false will also be returned and a warning printed to stdout.
+ *
+ * shapelets_band entries in the parameter file must be needs to be MAG_B, MAG_V, MAG_I, MAG_Z, MAG_J, MAG_H, MAG_u_KIDS, MAG_g_KIDS, MAG_r_KIDS or MAG_i_KIDS
+ */
+
+bool InputParams::get(std::string label, shap_band& value) const
+{
+	const_iterator it = params.find(label);
+	if(it == params.end())
+		return false;
+	
+	use_counter.use(it->first);
+	
+	if(!it->second.compare("MAG_B"))
+	{
+		value = MAG_B;
+		return true;
+	}
+	if(!it->second.compare("MAG_V"))
+	{
+		value = MAG_V;
+		return true;
+	}
+	if(!it->second.compare("MAG_I"))
+	{
+		value = MAG_I;
+		return true;
+	}
+	if(!it->second.compare("MAG_Z"))
+	{
+		value = MAG_Z;
+		return true;
+	}
+	if(!it->second.compare("MAG_J"))
+	{
+		value = MAG_J;
+		return true;
+	}
+	if(!it->second.compare("MAG_H"))
+	{
+		value = MAG_H;
+		return true;
+	}
+	if(!it->second.compare("MAG_u_KIDS"))
+	{
+		value = MAG_u_KIDS;
+		return true;
+	}
+	if(!it->second.compare("MAG_g_KIDS"))
+	{
+		value = MAG_g_KIDS;
+		return true;
+	}
+	if(!it->second.compare("MAG_r_KIDS"))
+	{
+		value = MAG_r_KIDS;
+		return true;
+	}
+	if(!it->second.compare("MAG_i_KIDS"))
+	{
+		value = MAG_i_KIDS;
+		return true;
+	}
+    
+	std::cout << label << " in parameter file " << paramfile_name << " needs to be MAG_B, MAG_V, MAG_I, MAG_Z, MAG_J, MAG_H, MAG_u_KIDS, MAG_g_KIDS, MAG_r_KIDS, MAG_i_KIDS!" << std::endl;
+	return false;
+}
+
+
 /** \brief Assigns to "value" the value of the parameter called "label".
  * If this parameter label does not appear in the parameter file false
  * is returned.
