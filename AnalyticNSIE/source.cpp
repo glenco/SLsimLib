@@ -499,6 +499,8 @@ SourceShapelets::SourceShapelets(
 	coeff = my_coeff;
 	source_r = my_scale;
 
+	flux = pow(10,-0.4*(mag+48.6))*inv_hplanck;
+    
 	NormalizeFlux();
 }
 
@@ -539,6 +541,8 @@ SourceShapelets::SourceShapelets(
 	exit(1);
 #endif
 
+    flux = pow(10,-0.4*(mag+48.6))*inv_hplanck;
+    
 	NormalizeFlux();
 }
 
@@ -565,7 +569,31 @@ SourceShapelets::SourceShapelets(
 
 	h0.readKey("BETA", source_r);
 	source_r *= 0.03/180./60./60.*pi;
-	h0.readKey("MAG", mag);
+    for (int i = 0; i < 10; i++)
+	h0.readKey("MAG_B", mags[0]);
+	h0.readKey("MAG_V", mags[1]);
+	h0.readKey("MAG_I", mags[2]);
+	h0.readKey("MAG_Z", mags[3]);
+	h0.readKey("MAG_J", mags[4]);
+	h0.readKey("MAG_H", mags[5]);
+	h0.readKey("MAG_u_KIDS", mags[6]);
+	h0.readKey("MAG_g_KIDS", mags[7]);
+	h0.readKey("MAG_r_KIDS", mags[8]);
+	h0.readKey("MAG_i_KIDS", mags[9]);
+    
+    for (int i = 0; i < 10; i++)
+    {
+        if (mags[i] < 0.)
+            fluxes[i] = std::numeric_limits<PosType>::epsilon();
+        else
+            fluxes[i] = pow(10,-0.4*(mags[i]+48.6))*inv_hplanck;
+    }
+
+    // by default, the magnitude is the one in the i band,
+    // whose image has been used for shapelets decomposition
+    mag = mags[2];
+    flux = fluxes[2];
+    
 	h0.readKey("REDSHIFT", zsource);
     h0.readKey("ID", id);
 	h0.readKey("DIM", n1);
@@ -596,6 +624,7 @@ PosType SourceShapelets::SurfaceBrightness(PosType *y)
 		}
 	}
 	sb *= exp(-dist*dist/2.)/source_r;
+    sb *= flux/coeff_flux;
 	return max(sb,std::numeric_limits<PosType>::epsilon());
 }
 
@@ -628,19 +657,16 @@ void SourceShapelets::assignParams(InputParams& params){};
 /// Rescales the coefficients to make the source bright as we want.
 void SourceShapelets::NormalizeFlux()
 {
-	PosType shap_flux = 0.;
+	coeff_flux = 0.;
 	for (int i = 0; i < n1; i=i+2)
 	{
 		for (int j = 0; j < n2; j=j+2)
 		{
-			shap_flux += pow(2,0.5*(2-i-j))*sqrt(factrl(i))/factrl(i/2.)*sqrt(factrl(j))/factrl(j/2.)*coeff[j*n1+i];
+			coeff_flux += pow(2,0.5*(2-i-j))*sqrt(factrl(i))/factrl(i/2.)*sqrt(factrl(j))/factrl(j/2.)*coeff[j*n1+i];
 		}
 	}
-	shap_flux *= sqrt(pi)*source_r;
+	coeff_flux *= sqrt(pi)*source_r;
 
-	flux = pow(10,-0.4*(mag+48.6))*inv_hplanck;
-
-	coeff *= flux/shap_flux;
 }
 
 /// Default constructor. Reads in sources from the default catalog.
@@ -666,6 +692,7 @@ void SourceMultiShapelets::readCatalog()
         if (shap_input)
         {
             SourceShapelets s(shap_file.c_str());
+            s.setActiveBand(band);
             if (s.getMag() > 0. && s.getMag() < mag_limit)
                 galaxies.push_back(s);
             shap_input.close();            
@@ -689,6 +716,7 @@ void SourceMultiShapelets::assignParams(InputParams& params){
 		exit(1);
 	}
     
+    
 	if(!params.get("source_sb_limit",sb_limit))
 		setSBlimit_magarcsec(30.);
 	else
@@ -698,6 +726,13 @@ void SourceMultiShapelets::assignParams(InputParams& params){
         std::cout << "ERROR: shapelets_folder not found in parameter file " << params.filename() << std::endl;
         exit(1);
     }
+    
+  	if(!params.get("shapelets_band",band)){
+		std::cout << "ERROR: Must assign shapelets_band in parameter file " << params.filename() << std::endl;
+		exit(1);
+	}
+    
+  
 }
 
 /// Print info on current source parameters
