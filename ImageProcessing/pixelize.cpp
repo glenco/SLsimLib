@@ -865,3 +865,50 @@ void PixelMap::FindArc(
   arc_center[1] = arc_center[1]*resolution + center[1];
 
 }
+
+/** \brief Reads all the fits files in a directory into a vector of PixelMaps.
+ *
+ *  The input fits files must have .fits in their names in addition to the string filespec.
+ */
+void Utilities::LoadFitsImages(
+                    std::string dir              /// path to directory containing fits files
+                    ,const std::string& filespec /// string of charactors in fits file name that are matched
+                    ,std::vector<PixelMap> & images  /// output vector of PixelMaps
+                    ,int maxN       /// maximum number of images that will be read in
+                    ,bool verbose   /// lists files to stdout
+                    ){
+    
+    DIR *dp = opendir( dir.c_str() );
+    struct dirent *dirp;
+    struct stat filestat;
+    std::string filepath,filename;
+    
+    if (dp == NULL)
+    {
+        throw std::runtime_error("error opening directory");
+        return;
+    }
+    
+    while ((dirp = readdir( dp )) && images.size() < maxN)
+    {
+        filepath = dir + "/" + dirp->d_name;
+        
+        // If the file is a directory (or is in some way invalid) we'll skip it
+        if (stat( filepath.c_str(), &filestat )) continue;
+        if (S_ISDIR( filestat.st_mode ))         continue;
+        
+        filename = dirp->d_name;
+        if(filename.find(".fits") !=  std::string::npos){
+            if(filename.find(filespec) !=  std::string::npos){
+                if(verbose) std::cout << "reading " << filepath << std::endl;
+                images.push_back(filepath);
+            }
+        }
+    }
+    
+    closedir( dp );
+    
+    std::cout << images.size() << " fits files read." << std::endl;
+    return ;
+}
+

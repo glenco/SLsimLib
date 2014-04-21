@@ -141,4 +141,8 @@ void pixelize(double *map,long Npixels,double range,double *center
 void _SplitFluxIntoPixels(TreeHndl ptree,Branch *leaf,double *leaf_sb);
 void smoothmap(double *map_out,double *map_in,long Npixels,double range,double sigma);
 
+namespace Utilities{
+    void LoadFitsImages(std::string dir,const std::string& filespec,std::vector<PixelMap> & images,int maxN,bool verbose = false);
+}
+
 #endif

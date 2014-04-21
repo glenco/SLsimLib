@@ -14,6 +14,11 @@
 #include <random>
 #if __cplusplus >= 201103L
 #include <typeindex>
+#include <dirent.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
 #endif
 
 namespace Utilities
@@ -1134,7 +1139,6 @@ namespace Utilities
     std::cout << std::endl << "Too many steps in routine nintegrate<>\n";
     return 0.0;
   }  
-
 
 }
 
