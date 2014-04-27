@@ -9,21 +9,58 @@
 QuasarLF::QuasarLF
 	(double my_red                      // redshift
 	, double my_mag_limit				// magnitude limit
-	, long *my_seed):
+	, InputParams &params               // input parameters (for kcorrection and colors)
+    , long *my_seed):
 		red(my_red), mag_limit(my_mag_limit), seed(my_seed)
 {
+    if (red > 5.)
+    {
+        ERROR_MESSAGE();
+        std::cout << "The redshift is too high! The database for k-corrections and colors is valid for z <= 5." << std::endl;
+        exit(0);
+    }
+    
+    assignParams(params);
+   
 	// the one used in the paper(s)
 	COSMOLOGY cosmo(0.3,0.7,0.7,-1.);
 
 	// k-correction for i band and quasar SED in the redshift range [0,5.5]
 	// We should check that the input is in a desired range (see also fitting models for LF below)
-	std::ifstream file_in("kcorr_Richards06.txt");
-	double red_arr[550];
-	double kcorr_arr[550];
-	for (int i = 0; i < 550; i++)
+    std::ifstream kcorr_in(kcorr_file.c_str());
+    if (!kcorr_in)
+    {
+        std::cout << "Can't open file " << kcorr_file << std::endl;
+        ERROR_MESSAGE();
+        throw std::runtime_error(" Cannot open file.");
+        exit(1);
+    }
+    // mean colors in SDSS bands for quasars (u-g,g-r,r-i,i-z)
+    std::ifstream col_in(colors_file.c_str());
+    if (!col_in)
+    {
+        std::cout << "Can't open file " << colors_file << std::endl;
+        ERROR_MESSAGE();
+        throw std::runtime_error(" Cannot open file.");
+        exit(1);
+    }
+    
+	double red_arr[501];
+	double kcorr_arr[501];
+    double col_arr[501][4];
+    double trash;
+	for (int i = 0; i < 501; i++)
 	{
-		file_in >> red_arr[i] >> kcorr_arr[i];
-		if (fabs(red_arr[i]-red)<=0.005) kcorr = kcorr_arr[i];
+		kcorr_in >> red_arr[i] >> kcorr_arr[i];
+        col_in >> red_arr[i] >> col_arr[i][0] >> trash >> trash >> col_arr[i][1] >> trash >> trash >> col_arr[i][2] >> trash >> trash >> col_arr[i][3] >> trash >> trash;
+        if (fabs(red_arr[i]-red)<=0.005+std::numeric_limits<double>::epsilon())
+        {
+            kcorr = kcorr_arr[i];
+            colors[0] = col_arr[i][0];
+            colors[1] = col_arr[i][1];
+            colors[2] = col_arr[i][2];
+            colors[3] = col_arr[i][3];
+        }
 	}
 
 	// QLF described as double power law
@@ -73,6 +110,22 @@ QuasarLF::~QuasarLF(){
   delete [] lf_arr;
 }
 
+void QuasarLF::assignParams(InputParams& params){
+	if(!params.get("QSO_kcorrection_file",kcorr_file)){
+        ERROR_MESSAGE();
+        std::cout << "parameter QSO_kcorrection_file needs to be set in the parameter file "
+        << params.filename() << std::endl;
+        exit(0);
+    }
+    if(!params.get("QSO_colors_file",colors_file)){
+        ERROR_MESSAGE();
+        std::cout << "parameter QSO_colors_file needs to be set in the parameter file "
+        << params.filename() << std::endl;
+        exit(0);
+    }
+
+}
+
 /// returns random apparent magnitude according to the luminosity function
 double QuasarLF::getRandomMag()
 {
@@ -108,6 +161,40 @@ double QuasarLF::getRandomFlux()
 {
 	double mag = getRandomMag();
 	return pow(10, -0.4*(mag+48.6))*inv_hplanck;
+}
+
+/** \brief Returns mean color (band - i) for a quasar at the redshift equal to QuasarLF::red
+ */
+double QuasarLF::getColor(char band)
+{
+    if (band == 'u')  return colors[0]+colors[1]+colors[2];
+    else if (band == 'g') return colors[1]+colors[2];
+    else if (band == 'r') return colors[2];
+    else if (band == 'i') return 0.;
+    else if (band == 'z') return -colors[3];
+    else
+    {
+        ERROR_MESSAGE();
+        std::cout << "Required band is not present in the database: allowed bands are u,g,r,i,z" << std::endl;
+    exit(0);
+    }
+}
+
+/** \brief Returns flux ratio (F_band/F_i) for a quasar at the redshift equal to QuasarLF::red
+ */
+double QuasarLF::getFluxRatio(char band)
+{
+    if (band == 'u')  return pow(10, -0.4*(colors[0]+colors[1]+colors[2]));
+    else if (band == 'g') return pow(10, -0.4*(colors[1]+colors[2]));
+    else if (band == 'r') return pow(10, -0.4*(colors[2]));
+    else if (band == 'i') return 1.;
+    else if (band == 'z') return pow(10, -0.4*(-colors[3]));
+    else
+    {
+        ERROR_MESSAGE();
+        std::cout << "Required band is not present in the database: allowed bands are u,g,r,i,z" << std::endl;
+        exit(0);
+    }
 }
 
 double QuasarLF::nintegrateQLF(pt2MemFunc func, double a,double b,double tols) const
