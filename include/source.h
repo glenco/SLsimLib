@@ -255,37 +255,42 @@ public:
  *
  *   At the moment, only i band is available
  *   QLF from Ross et al. 2013
- *   k-correction from Richards et al. 2006
+ *   k-correction and mean QSO colors from Richards et al. 2006 (the k-corr is very close to the one used by Ross, small differencies only for z > 3)
  */
 class QuasarLF{
 	public:
-		QuasarLF(PosType red, PosType mag_limit, long *seed);
+    QuasarLF(PosType red, PosType mag_limit, InputParams &params, long *seed);
     ~QuasarLF();
-		// returns the integral of the luminosity function at redshift red
-		PosType getNorm() {return pow(10,log_phi)*norm;}; // in Mpc^(-3)
-		PosType getRandomMag();
-		PosType getRandomFlux();
+    // returns the integral of the luminosity function at redshift red
+    PosType getNorm() {return pow(10,log_phi)*norm;}; // in Mpc^(-3)
+    PosType getRandomMag();
+    PosType getRandomFlux();
+    PosType getColor(char band);
+    PosType getFluxRatio(char band);
 
 	private:
-		PosType kcorr;
-		PosType red;
-		PosType mag_limit;
-		PosType mstar;
-		PosType log_phi;
-		PosType alpha;
-		PosType beta;
-		long *seed;
-		PosType norm;
-		PosType mag_max, mag_min;
-		int arr_nbin;
-		PosType* mag_arr;
-		PosType* lf_arr;
-		PosType dl;
+    PosType kcorr;
+    PosType red;
+    PosType mag_limit;
+    PosType mstar;
+    PosType log_phi;
+    PosType alpha;
+    PosType beta;
+    long *seed;
+    PosType norm;
+    int arr_nbin;
+    PosType* mag_arr;
+    PosType* lf_arr;
+    PosType dl;
+    PosType colors[4];
+    std::string kcorr_file, colors_file;
 
-		typedef PosType (QuasarLF::*pt2MemFunc)(PosType) const;
-		PosType nintegrateQLF(pt2MemFunc func, PosType a,PosType b,PosType tols) const;
-		PosType trapzQLFlocal(pt2MemFunc func, PosType a, PosType b, int n, PosType *s2) const;
-		PosType lf_kernel (PosType mag) const;
+	void assignParams(InputParams& params);
+    
+    typedef PosType (QuasarLF::*pt2MemFunc)(PosType) const;
+    PosType nintegrateQLF(pt2MemFunc func, PosType a,PosType b,PosType tols) const;
+    PosType trapzQLFlocal(pt2MemFunc func, PosType a, PosType b, int n, PosType *s2) const;
+    PosType lf_kernel (PosType mag) const;
 };
 
 /// Functor to turn sources into binary functions

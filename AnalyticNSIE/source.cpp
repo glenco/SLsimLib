@@ -669,7 +669,7 @@ void SourceShapelets::NormalizeFlux()
 
 }
 
-/// Default constructor. Reads in sources from the default catalog.
+/// Default constructor. Reads in sources from the default catalog. No magnitude limit.
 SourceMultiShapelets::SourceMultiShapelets(InputParams& params)
 : Source(),index(0)
 {
