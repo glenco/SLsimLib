@@ -167,7 +167,7 @@ Observation::Observation(float diameter, float transmission, float exp_time, int
 		telescope = false;
 		}
 
-
+/// Reads in and sets the PSF from a fits file. If the pixel size of the fits is different (smaller) than the one of the telescope, it must be specified.
 void Observation::setPSF(std::string psf_file, float os)
 {
 #ifdef ENABLE_FITS
