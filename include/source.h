@@ -140,6 +140,7 @@ public:
 	inline PosType getTotalFlux(){return flux;}
 	inline PosType getRadius(){return source_r*10.;}
 	inline PosType getMag(){return mag;}
+	inline PosType getMag(shap_band band){return mags[band];}
     inline PosType getID(){return id;}
     inline void setActiveBand(shap_band band){mag = mags[band]; flux = fluxes[band];}
 

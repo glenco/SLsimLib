@@ -275,8 +275,17 @@ LensHaloPseudoNFW::LensHaloPseudoNFW()
 : LensHalo()
 {
 }
-
-LensHaloPseudoNFW::LensHaloPseudoNFW(float my_mass,float my_Rmax,PosType my_zlens,float my_concentration,PosType my_beta,float my_fratio,float my_pa,int my_stars_N)
+/// constructor
+LensHaloPseudoNFW::LensHaloPseudoNFW(
+                                     float my_mass             /// mass in solar masses
+                                     ,float my_Rmax            /// maximum radius in Mpc
+                                     ,PosType my_zlens         /// redshift
+                                     ,float my_concentration   /// Rmax/rscale
+                                     ,PosType my_beta          /// large r slope, see class description
+                                     ,float my_fratio          /// axis ratio
+                                     ,float my_pa              /// position angle
+                                     ,int my_stars_N           /// number of stars, not yet implanted
+                                     )
   {
     mass = my_mass;
     Rmax = my_Rmax;
@@ -400,7 +409,17 @@ LensHaloPowerLaw::LensHaloPowerLaw() : LensHalo(){
   rscale = xmax = 1.0;
 }
 
-LensHaloPowerLaw::LensHaloPowerLaw(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,PosType my_beta,float my_fratio,float my_pa,int my_stars_N){
+/// constructor
+LensHaloPowerLaw::LensHaloPowerLaw(
+                                   float my_mass       /// mass of halo in solar masses
+                                   ,float my_Rmax      /// maximum radius of halo in Mpc
+                                   ,PosType my_zlens   /// redshift of halo
+                                   ,float my_rscale    /// dummy scale,  not acutally used
+                                   ,PosType my_beta    /// logorithmic slop of surface density, kappa \propto r^{-beta}
+                                   ,float my_fratio    /// axis ratio in asymetric case
+                                   ,float my_pa        /// position angle
+                                   ,int my_stars_N     /// number of stars, not yet implanted
+                                   ){
     mass=my_mass, Rmax=my_Rmax, zlens=my_zlens, rscale=my_rscale;
     beta=my_beta;
     fratio=my_fratio, pa=my_pa, stars_N=my_stars_N;
@@ -997,14 +1016,14 @@ PosType* LensHaloHernquist::g2table = NULL;
 PosType* LensHaloHernquist::htable = NULL;
 PosType* LensHaloHernquist::xgtable = NULL;
 
-
+/*
 LensHaloHernquist::LensHaloHernquist()
 : LensHalo(), gmax(0)
 {
 	make_tables();
 	gmax = InterpolateFromTable(gtable,xmax);
 }
-
+*/
 LensHaloHernquist::LensHaloHernquist(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,int my_stars_N){
     
     mass=my_mass, Rmax=my_Rmax, zlens=my_zlens, rscale=my_rscale;
@@ -1131,14 +1150,14 @@ PosType* LensHaloJaffe::xgtable = NULL;
 
 
 //PosType* LensHaloJaffe::htable = NULL;
-
+/*
 LensHaloJaffe::LensHaloJaffe()
 : LensHalo(), gmax(0)
 {
 	make_tables();
 	gmax = InterpolateFromTable(gtable,xmax);
 }
-
+*/
 LensHaloJaffe::LensHaloJaffe(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,int my_stars_N){
     
     mass=my_mass, Rmax=my_Rmax, zlens=my_zlens, rscale=my_rscale;

@@ -212,16 +212,16 @@ void LensHaloAnaNSIE::RandomizeSubstructure2(PosType rangeInRei,long *seed){
 			sub_x=Utilities::PosTypeMatrix(NsubMax,2);
 			switch(main_sub_type){
 			case pointmass:
-				subs=new LensHalo[NsubMax];
+				subs = new LensHalo[NsubMax];
 				break;
 			case powerlaw:
-				subs=new LensHaloPowerLaw[NsubMax];
+				subs = new LensHaloPowerLaw[NsubMax];
 				break;
 			case nfw:
-				subs=new LensHaloNFW[NsubMax];
+				subs = new LensHaloNFW[NsubMax];
 				break;
 			default:
-				subs=new LensHalo[NsubMax];
+				subs = new LensHalo[NsubMax];
 				break;
 			}
 			sub_substructures = new IndexType[NsubMax];
@@ -343,16 +343,16 @@ void LensHaloAnaNSIE::RandomizeSubstructure3(PosType rangeInRei,long *seed){
 		sub_x=Utilities::PosTypeMatrix(NsubMax,2);
 		switch(main_sub_type){
 		case pointmass:
-			subs=new LensHalo[NsubMax];
+			subs = new LensHalo[NsubMax];
 			break;
 		case powerlaw:
-			subs=new LensHaloPowerLaw[NsubMax];
+			subs = new LensHaloPowerLaw[NsubMax];
 			break;
 		case nfw:
-			subs=new LensHaloNFW[NsubMax];
+			subs = new LensHaloNFW[NsubMax];
 			break;
 		default:
-			subs=new LensHalo[NsubMax];
+			subs = new LensHalo[NsubMax];
 			break;
 		}
 		substruct_implanted=true;
