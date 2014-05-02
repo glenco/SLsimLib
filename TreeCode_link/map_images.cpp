@@ -387,7 +387,7 @@ void map_images(
 
 	tmp = grid->RefreshSurfaceBrightnesses(source);
 
-  assert(tmp > 0.0 || imageinfo->imagekist->Nunits() == 0);
+    assert(tmp > 0.0 || imageinfo->imagekist->Nunits() == 0);
 
 
 	/*/********** test lines **********************

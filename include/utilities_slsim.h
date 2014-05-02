@@ -1140,6 +1140,21 @@ namespace Utilities
     return 0.0;
   }  
 
+    /// Shuffles a vector into a random order
+    template <typename T, typename R>
+    void shuffle(
+                 std::vector<T> &vec   /// The vector to be shuffled
+                 ,R ran               /// a random number generator so that ran() gives a number between 0 and 1
+                 ){
+        T tmp;
+        size_t ran_t;
+        for (size_t i = vec.size()-1; i>0; --i) {
+            ran_t = (size_t)(ran()*(i+1));
+            tmp = vec[ran_t];
+            vec[ran_t] = vec[i];
+            vec[i] = tmp;
+        }
+    }
 }
 
 #endif
