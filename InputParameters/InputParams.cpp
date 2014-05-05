@@ -659,7 +659,7 @@ bool InputParams::get(std::string label, Band& value) const
  * shapelets_band entries in the parameter file must be needs to be MAG_B, MAG_V, MAG_I, MAG_Z, MAG_J, MAG_H, MAG_u_KIDS, MAG_g_KIDS, MAG_r_KIDS or MAG_i_KIDS
  */
 
-bool InputParams::get(std::string label, shap_band& value) const
+bool InputParams::get(std::string label, ShapeBand& value) const
 {
 	const_iterator it = params.find(label);
 	if(it == params.end())

@@ -11,6 +11,7 @@
 #include "standard.h"
 #include "InputParams.h"
 #include "image_processing.h"
+#include "utilities_slsim.h"
 
 /** \brief Base class for all sources.
  *
@@ -140,9 +141,9 @@ public:
 	inline PosType getTotalFlux(){return flux;}
 	inline PosType getRadius(){return source_r*10.;}
 	inline PosType getMag(){return mag;}
-	inline PosType getMag(shap_band band){return mags[band];}
+	inline PosType getMag(ShapeBand band){return mags[band];}
     inline PosType getID(){return id;}
-    inline void setActiveBand(shap_band band){mag = mags[band]; flux = fluxes[band];}
+    inline void setActiveBand(ShapeBand band){mag = mags[band]; flux = fluxes[band];}
 
 private:
 	void assignParams(InputParams& params);
@@ -259,14 +260,14 @@ public:
  */
 class QuasarLF{
 	public:
-    QuasarLF(PosType red, PosType mag_limit, InputParams &params, long *seed);
+    QuasarLF(PosType red, PosType mag_limit, InputParams &params);
     ~QuasarLF();
     // returns the integral of the luminosity function at redshift red
     PosType getNorm() {return pow(10,log_phi)*norm;}; // in Mpc^(-3)
-    PosType getRandomMag();
-    PosType getRandomFlux();
-    PosType getColor(char band);
-    PosType getFluxRatio(char band);
+    PosType getRandomMag(Utilities::RandomNumbers_NR &rand);
+    PosType getRandomFlux(Band band,Utilities::RandomNumbers_NR &rand);
+    PosType getColor(Band band);
+    PosType getFluxRatio(Band band);
 
 	private:
     PosType kcorr;
@@ -276,7 +277,6 @@ class QuasarLF{
     PosType log_phi;
     PosType alpha;
     PosType beta;
-    long *seed;
     PosType norm;
     int arr_nbin;
     PosType* mag_arr;
@@ -287,10 +287,25 @@ class QuasarLF{
 
 	void assignParams(InputParams& params);
     
-    typedef PosType (QuasarLF::*pt2MemFunc)(PosType) const;
-    PosType nintegrateQLF(pt2MemFunc func, PosType a,PosType b,PosType tols) const;
-    PosType trapzQLFlocal(pt2MemFunc func, PosType a, PosType b, int n, PosType *s2) const;
-    PosType lf_kernel (PosType mag) const;
+    //typedef PosType (QuasarLF::*pt2MemFunc)(PosType) const;
+    //PosType nintegrateQLF(pt2MemFunc func, PosType a,PosType b,PosType tols) const;
+    //PosType trapzQLFlocal(pt2MemFunc func, PosType a, PosType b, int n, PosType *s2) const;
+    //PosType lf_kernel (PosType mag) const;
+    
+    struct LF_kernel
+    {
+        LF_kernel(PosType alpha,PosType beta,PosType mstar)
+        : alpha(alpha),beta(beta),mstar(mstar){};
+        
+        PosType alpha;
+        PosType beta;
+        PosType mstar;
+        
+        double operator () (double mag) { 
+            return 1.0/( pow(10,0.4*(alpha+1)*(mag-mstar)) + pow(10,0.4*(beta+1)*(mag-mstar)) );
+        }
+    };
+        
 };
 
 #endif /* SOURCE_H_ */

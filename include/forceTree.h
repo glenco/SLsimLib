@@ -10,8 +10,6 @@
 
 #include "simpleTree.h"
 
-//enum PartProf {gaussian,powerlaw};
-
 /** \ingroup DeflectionL2
  *
  * \brief Object used to calculate the force or deflection caused by a collection

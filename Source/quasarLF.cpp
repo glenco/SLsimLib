@@ -5,13 +5,14 @@
 
 #include "standard.h"
 #include "source.h"
+#include "utilities_slsim.h"
 
 QuasarLF::QuasarLF
 	(double my_red                      // redshift
 	, double my_mag_limit				// magnitude limit
 	, InputParams &params               // input parameters (for kcorrection and colors)
-    , long *my_seed):
-		red(my_red), mag_limit(my_mag_limit), seed(my_seed)
+    ):
+		red(my_red), mag_limit(my_mag_limit)
 {
     if (red > 5.)
     {
@@ -93,14 +94,16 @@ QuasarLF::QuasarLF
 	mag_arr = new double[arr_nbin];
 	lf_arr = new double[arr_nbin];
 
+    LF_kernel lf_kernel(alpha,beta,mstar);
 	// integrate the function to get normalisation for P(m)
-	norm = nintegrateQLF(&QuasarLF::lf_kernel, mag_min, mag_max, 0.001);
+	norm = Utilities::nintegrate(lf_kernel, mag_min, mag_max, 0.001);
+    
 
 	// saves array of M_i, P(m_i) for future random extraction
 	for (int i = 0; i < arr_nbin; i++)
 	{
 		mag_arr[i] = mag_min + (mag_max-mag_min)/(arr_nbin-1)*i;
-		lf_arr[i] = nintegrateQLF(&QuasarLF::lf_kernel, mag_min, mag_arr[i], 0.001)/norm;
+		lf_arr[i] = Utilities::nintegrate(lf_kernel, mag_min, mag_arr[i], 0.001)/norm;
 	}
 
 }
@@ -127,11 +130,11 @@ void QuasarLF::assignParams(InputParams& params){
 }
 
 /// returns random apparent magnitude according to the luminosity function
-double QuasarLF::getRandomMag()
+double QuasarLF::getRandomMag(Utilities::RandomNumbers_NR &rand)
 {
 	// extracts random number r between [0,1]
 	// m:P(m) = r is the desired random magnitude
-	double r = ran2(seed);
+	double r = rand();
 	bool found = false;
 	int k;
 	double p;
@@ -157,21 +160,21 @@ double QuasarLF::getRandomMag()
 /** \brief returns random flux according to the luminosity function
  must be divided by an angular area in rad^2 to be a SurfaceBrightness for the ray-tracer
  */
-double QuasarLF::getRandomFlux()
+double QuasarLF::getRandomFlux(Band band,Utilities::RandomNumbers_NR &rand)
 {
-	double mag = getRandomMag();
-	return pow(10, -0.4*(mag+48.6))*inv_hplanck;
+	double mag = getRandomMag(rand);
+	return pow(10, -0.4*(mag+48.6))*inv_hplanck*getFluxRatio(band);
 }
 
 /** \brief Returns mean color (band - i) for a quasar at the redshift equal to QuasarLF::red
  */
-double QuasarLF::getColor(char band)
+double QuasarLF::getColor(Band band)
 {
-    if (band == 'u')  return colors[0]+colors[1]+colors[2];
-    else if (band == 'g') return colors[1]+colors[2];
-    else if (band == 'r') return colors[2];
-    else if (band == 'i') return 0.;
-    else if (band == 'z') return -colors[3];
+    if (band == SDSS_U)  return colors[0]+colors[1]+colors[2];
+    else if (band == SDSS_G) return colors[1]+colors[2];
+    else if (band == SDSS_R) return colors[2];
+    else if (band == SDSS_I) return 0.;
+    else if (band == SDSS_Z) return -colors[3];
     else
     {
         ERROR_MESSAGE();
@@ -182,13 +185,13 @@ double QuasarLF::getColor(char band)
 
 /** \brief Returns flux ratio (F_band/F_i) for a quasar at the redshift equal to QuasarLF::red
  */
-double QuasarLF::getFluxRatio(char band)
+double QuasarLF::getFluxRatio(Band band)
 {
-    if (band == 'u')  return pow(10, -0.4*(colors[0]+colors[1]+colors[2]));
-    else if (band == 'g') return pow(10, -0.4*(colors[1]+colors[2]));
-    else if (band == 'r') return pow(10, -0.4*(colors[2]));
-    else if (band == 'i') return 1.;
-    else if (band == 'z') return pow(10, -0.4*(-colors[3]));
+    if (band == SDSS_U)  return pow(10, -0.4*(colors[0]+colors[1]+colors[2]));
+    else if (band == SDSS_G) return pow(10, -0.4*(colors[1]+colors[2]));
+    else if (band == SDSS_R) return pow(10, -0.4*(colors[2]));
+    else if (band == SDSS_I) return 1.;
+    else if (band == SDSS_Z) return pow(10, -0.4*(-colors[3]));
     else
     {
         ERROR_MESSAGE();
@@ -196,7 +199,7 @@ double QuasarLF::getFluxRatio(char band)
         exit(0);
     }
 }
-
+/*
 double QuasarLF::nintegrateQLF(pt2MemFunc func, double a,double b,double tols) const
 {
 	int jmax = 34;
@@ -241,10 +244,6 @@ double QuasarLF::trapzQLFlocal(pt2MemFunc func, double a, double b, int n, doubl
 	return *s2;
    }
 }
+*/
 
-double QuasarLF::lf_kernel (double mag) const
-{
-	double den = pow(10,0.4*(alpha+1)*(mag-mstar)) + pow(10,0.4*(beta+1)*(mag-mstar));
-	return 1./den;
-}
 
