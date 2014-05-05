@@ -283,6 +283,8 @@ class QuasarLF{
     PosType* lf_arr;
     PosType dl;
     PosType colors[4];
+    PosType ave_colors[4];
+    PosType color_dev;
     std::string kcorr_file, colors_file;
 
 	void assignParams(InputParams& params);

@@ -316,7 +316,8 @@ PosType **PosTypeMatrix(long rows, long cols)
   
   RandomNumbers_NR::RandomNumbers_NR(long seed):
   IM1(2147483399),IM2(2147483399),IA1(40014),IA2(40692),IQ1(53668),
-  IQ2(52774),IR1(12211),IR2(3791),EPS(1.2e-7),idum2(123456789),iy(0)
+  IQ2(52774),IR1(12211),IR2(3791),EPS(1.2e-7),idum2(123456789),iy(0),
+    count(true)
   {
     
     AM = (1.0/IM1);
