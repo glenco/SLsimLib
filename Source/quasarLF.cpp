@@ -49,11 +49,13 @@ QuasarLF::QuasarLF
 	double red_arr[501];
 	double kcorr_arr[501];
     double col_arr[501][4];
+    double colmax_arr[501][4];
+    double colmin_arr[501][4];
     double trash;
 	for (int i = 0; i < 501; i++)
 	{
 		kcorr_in >> red_arr[i] >> kcorr_arr[i];
-        col_in >> red_arr[i] >> col_arr[i][0] >> trash >> trash >> col_arr[i][1] >> trash >> trash >> col_arr[i][2] >> trash >> trash >> col_arr[i][3] >> trash >> trash;
+        col_in >> red_arr[i] >> col_arr[i][0] >> colmin_arr[i][0] >> colmax_arr[i][0] >> col_arr[i][1] >> colmin_arr[i][1] >> colmax_arr[i][1] >> col_arr[i][2] >> colmin_arr[i][2] >> colmax_arr[i][2] >> col_arr[i][3] >> colmin_arr[i][3] >> colmax_arr[i][3];
         if (fabs(red_arr[i]-red)<=0.005+std::numeric_limits<double>::epsilon())
         {
             kcorr = kcorr_arr[i];
@@ -61,6 +63,10 @@ QuasarLF::QuasarLF
             colors[1] = col_arr[i][1];
             colors[2] = col_arr[i][2];
             colors[3] = col_arr[i][3];
+            colors_err[0] = .5*(colmax_arr[i][0]-colmin_arr[i][0]);
+            colors_err[1] = .5*(colmax_arr[i][1]-colmin_arr[i][1]);
+            colors_err[2] = .5*(colmax_arr[i][2]-colmin_arr[i][2]);
+            colors_err[3] = .5*(colmax_arr[i][3]-colmin_arr[i][3]);
         }
 	}
 
