@@ -264,8 +264,9 @@ protected:
  */
 class LensHaloNFW: public LensHalo{
 public:
+  /// Shell constructor that should be avoided
 	LensHaloNFW();
-    LensHaloNFW(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,int my_stars_N);
+  LensHaloNFW(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,int my_stars_N);
 	LensHaloNFW(InputParams& params);
 	virtual ~LensHaloNFW();
 
@@ -337,7 +338,7 @@ private:
 // ********************
 
 
-/** \ingroup DeflectionL2
+/**
  *
  * \brief A class for calculating the deflection, kappa and gamma caused by a collection of
  * halos with a double power-law mass profile.
@@ -352,8 +353,9 @@ private:
  */
 class LensHaloPseudoNFW: public LensHalo{
 public:
+  /// shell constructor, should be avoided
 	LensHaloPseudoNFW();
-    LensHaloPseudoNFW(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,PosType my_beta,float my_fratio,float my_pa,int my_stars_N);
+  LensHaloPseudoNFW(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,PosType my_beta,float my_fratio,float my_pa,int my_stars_N);
 	LensHaloPseudoNFW(InputParams& params);
 	~LensHaloPseudoNFW();
 
@@ -562,8 +564,8 @@ protected:
 
 class LensHaloHernquist: public LensHalo{
 public:
-	LensHaloHernquist();
-    LensHaloHernquist(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,int my_stars_N);
+	//LensHaloHernquist();
+  LensHaloHernquist(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,int my_stars_N);
 	LensHaloHernquist(InputParams& params);
 	virtual ~LensHaloHernquist();
 
@@ -647,8 +649,8 @@ private:
 
 class LensHaloJaffe: public LensHalo{
 public:
-	LensHaloJaffe();
-    LensHaloJaffe(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,int my_stars_N);
+	//LensHaloJaffe();
+  LensHaloJaffe(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,int my_stars_N);
 	LensHaloJaffe(InputParams& params);
 	virtual ~LensHaloJaffe();
 

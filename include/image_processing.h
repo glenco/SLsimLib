@@ -100,7 +100,7 @@ class Observation
 public:
 	Observation(Telescope tel_name);
 	Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, float seeing = 0.);
-	Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, std::string psf_file, float oversample);
+	Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, std::string psf_file, float oversample = 1.);
 	float getExpTime(){return exp_time;}
 	int getExpNum(){return exp_num;}
 	float getBackMag(){return back_mag;}
@@ -112,6 +112,7 @@ public:
     /// pixel size in radians
     float getPixelSize(){return pix_size;}
 	std::valarray<double> getPSF(){return map_psf;}
+    void setPSF(std::string psf_file, float os = 1.);
 	PixelMap Convert (PixelMap &map, bool psf, bool noise,long *seed, unitType unit = counts_x_sec);
 	PixelMap Convert_back (PixelMap &map);
 

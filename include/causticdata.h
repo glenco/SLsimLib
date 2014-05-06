@@ -81,9 +81,9 @@ public:
   void SortByCausticArea();
   
   /// initialize for selection with RandomLens()
-  void init_for_random(
+  size_t init_for_random(
         short type              /// select according to: (1) critical curve area, (2) caustic curve area
-        ,double limit = 0.0
+        ,double limit = 0.0     /// minimum accepted area
   ){
     size_t i;
     if(type == 1){
@@ -100,6 +100,8 @@ public:
       for(i=0;(i<data.size()-1) && (data[i].caustic_area > limit) ;++i) cummulative_area[i+1] = data[i].caustic_area + cummulative_area[i];
       cummulative_area.resize(i);
     }
+      
+      return cummulative_area.size();
   }
   
   /**

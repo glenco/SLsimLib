@@ -183,7 +183,7 @@ public:
 	}
     
     /// Sets the active band for all the objects
-	SourceShapelets& setBand (shap_band b){
+	SourceShapelets& setBand (ShapeBand b){
         band = b;
         for (int i = 0; i < galaxies.size(); i++)
             galaxies[i].setActiveBand(band);
@@ -194,7 +194,7 @@ private:
 	void assignParams(InputParams& params);
  	std::size_t index;
 	float mag_limit;
-    shap_band band;
+    ShapeBand band;
    
     void readCatalog();
  	std::vector<SourceShapelets> galaxies;
