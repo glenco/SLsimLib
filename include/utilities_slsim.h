@@ -946,7 +946,24 @@ namespace Utilities
     RandomNumbers_NR(long seed);
     
     PosType operator()(void);
-    
+    /// generates a Gaussian distributed number with unit variance by polar Box-Muller transform
+    PosType gauss(){
+        if(count){
+            do{
+                u = 2*ran2() - 1;
+                v = 2*ran2() - 1;
+                s = u*u +v*v;
+            }while( s > 1.0 || s == 0.0);
+            
+            s = sqrt(-2*log(s)/s);
+            count = false;
+            return s*u;
+        }else{
+            count = true;
+            return s*v;
+        }
+    };
+      
   private:
     long idum;
     PosType ran2(void);
@@ -968,6 +985,8 @@ namespace Utilities
     long idum2;
     long iy;
     long iv[32];
+    bool count;
+    PosType u,v,s;
     
   };
   

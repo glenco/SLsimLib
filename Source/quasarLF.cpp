@@ -12,8 +12,7 @@ QuasarLF::QuasarLF
 	, double my_mag_limit				// magnitude limit
 	, InputParams &params               // input parameters (for kcorrection and colors)
     ):
-		red(my_red), mag_limit(my_mag_limit)
-{
+		red(my_red), mag_limit(my_mag_limit){
     if (red > 5.)
     {
         ERROR_MESSAGE();
@@ -59,14 +58,14 @@ QuasarLF::QuasarLF
         if (fabs(red_arr[i]-red)<=0.005+std::numeric_limits<double>::epsilon())
         {
             kcorr = kcorr_arr[i];
-            colors[0] = col_arr[i][0];
-            colors[1] = col_arr[i][1];
-            colors[2] = col_arr[i][2];
-            colors[3] = col_arr[i][3];
-            colors_err[0] = .5*(colmax_arr[i][0]-colmin_arr[i][0]);
-            colors_err[1] = .5*(colmax_arr[i][1]-colmin_arr[i][1]);
-            colors_err[2] = .5*(colmax_arr[i][2]-colmin_arr[i][2]);
-            colors_err[3] = .5*(colmax_arr[i][3]-colmin_arr[i][3]);
+            ave_colors[0] = colors[0] = col_arr[i][0];
+            ave_colors[1] = colors[1] = col_arr[i][1];
+            ave_colors[2] = colors[2] = col_arr[i][2];
+            ave_colors[3] = colors[3] = col_arr[i][3];
+            color_dev[0] = .5*(colmax_arr[i][0]-colmin_arr[i][0]);
+            color_dev[1] = .5*(colmax_arr[i][1]-colmin_arr[i][1]);
+            color_dev[2] = .5*(colmax_arr[i][2]-colmin_arr[i][2]);
+            color_dev[3] = .5*(colmax_arr[i][3]-colmin_arr[i][3]);
         }
 	}
 
@@ -135,7 +134,7 @@ void QuasarLF::assignParams(InputParams& params){
 
 }
 
-/// returns random apparent magnitude according to the luminosity function
+/// returns random apparent magnitude according to the luminosity function in I band
 double QuasarLF::getRandomMag(Utilities::RandomNumbers_NR &rand)
 {
 	// extracts random number r between [0,1]
@@ -159,6 +158,13 @@ double QuasarLF::getRandomMag(Utilities::RandomNumbers_NR &rand)
 	double mag_out = mag_arr[k] + p*(mag_arr[k+1]-mag_arr[k]);
 	// converts back to apparent magnitude
 	mag_out += 5*log10(dl*1.e+05) + kcorr;
+    
+    
+    // random adjustment to colors
+    colors[0] = ave_colors[0] + color_dev[0]*rand.gauss();
+    colors[1] = ave_colors[1] + color_dev[1]*rand.gauss();
+    colors[2] = ave_colors[2] + color_dev[2]*rand.gauss();
+    colors[3] = ave_colors[3] + color_dev[3]*rand.gauss();
 
 	return mag_out;
 }
@@ -205,51 +211,4 @@ double QuasarLF::getFluxRatio(Band band)
         exit(0);
     }
 }
-/*
-double QuasarLF::nintegrateQLF(pt2MemFunc func, double a,double b,double tols) const
-{
-	int jmax = 34;
-	int jmaxp = 35;
-	int k = 6;
-   double ss,dss;
-   double s2[jmaxp],h2[jmaxp+1];
-   int j;
-   double ss2=0;
-
-   h2[1]=1.0;
-   for (j=1;j<=jmax;j++) {
-     s2[j]=trapzQLFlocal(func,a,b,j,&ss2);
-	if (j>=k) {
-	   polintD(&h2[j-k],&s2[j-k],k,0.0,&ss,&dss);
-	   if(fabs(dss) <= tols*fabs(ss)) return ss;
-	}
-	h2[j+1]=0.25*h2[j];
-	}
-   std::cout << "s2= "; for(j=1;j<=jmax;j++) std::cout << s2[j] << " ";
-   std::cout << "\n";
-   std::cout << "Too many steps in routine nintegrateQLF\n";
-   return 0.0;
-}
-
-double QuasarLF::trapzQLFlocal(pt2MemFunc func, double a, double b, int n, double *s2) const
-{
-  double x,tnm,del,sum;
-   int it,j;
-
-   if (n == 1) {
-	return (*s2=0.5*(b-a)*( (this->*func)(a) +(this->*func)(b) ));
-   } else {
-
-	for (it=1,j=1;j<n-1;j++) it <<= 1;
-	tnm=it;
-	del=(b-a)/tnm;
-	x=a+0.5*del;
-	for (sum=0.0,j=1;j<=it;j++,x+=del) sum += (this->*func)(x);
-	*s2=0.5*(*s2+(b-a)*sum/tnm);
-
-	return *s2;
-   }
-}
-*/
-
 
