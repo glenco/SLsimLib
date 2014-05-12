@@ -161,8 +161,8 @@ double QuasarLF::getRandomMag(Utilities::RandomNumbers_NR &rand)
     
     
     // random adjustment to colors
-    colors[0] = ave_colors[0] + color_dev[0]*rand.gauss();
-    colors[1] = ave_colors[1] + color_dev[1]*rand.gauss();
+    colors[0] = ave_colors[0] + sqrt(color_dev[0]*color_dev[0]+color_dev[1]*color_dev[1]+color_dev[2]*color_dev[2])*rand.gauss();
+    colors[1] = ave_colors[1] + sqrt(color_dev[1]*color_dev[1]+color_dev[2]*color_dev[2])*rand.gauss();
     colors[2] = ave_colors[2] + color_dev[2]*rand.gauss();
     colors[3] = ave_colors[3] + color_dev[3]*rand.gauss();
 
