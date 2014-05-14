@@ -149,7 +149,6 @@ protected:
 
   IndexType *stars;
   PosType **stars_xp;
-  //TreeForce *star_tree;
   TreeQuad *star_tree;
   int stars_N;
   PosType star_massscale;
