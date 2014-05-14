@@ -127,6 +127,7 @@ private:
   std::vector<CausticStructure> data;
   std::vector<double> cummulative_area;
   size_t offset_index = 0;
+  
 };
 
 bool comparcritsize(const CausticStructure &caust1,const CausticStructure &caust2);
