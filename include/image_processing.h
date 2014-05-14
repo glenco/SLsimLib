@@ -64,12 +64,23 @@ public:
 
 	PixelMap& operator-=(const PixelMap& rhs);
 	friend PixelMap operator-(const PixelMap&, const PixelMap&);
+    
+	PixelMap& operator*=(const PixelMap& rhs);
+	friend PixelMap operator*(const PixelMap&, const PixelMap&);
+
+	PixelMap& operator*=(PosType b);
+	friend PixelMap operator*(const PixelMap&, PosType b);
 	
 	const std::valarray<double>& data() const { return map; }
 	
 	bool agrees(const PixelMap& other) const;
 	
 	friend void swap(PixelMap&, PixelMap&);
+    
+    /// return average pixel value
+    PosType ave() const;
+    /// Total number of pixels
+    size_t size(){return map.size();}
 	
     void FindArc(PosType &radius,PosType *xc,PosType *arc_center,PosType &arclength,PosType &width
                          ,PosType threshold);
@@ -106,6 +117,7 @@ public:
 	float getBackMag(){return back_mag;}
 	float getDiameter(){return diameter;}
 	float getTransmission(){return transmission;}
+    /// read-out noise in electrons/pixel
 	float getRon(){return ron;}
 	float getSeeing(){return seeing;}
 	float getZeropoint(){return mag_zeropoint;}

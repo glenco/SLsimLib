@@ -5,7 +5,6 @@ add_sources(
 	divide_images.h
 	doc.h
 	fitlens.h
-	forceTree.h
 	grid_maintenance.h
 	image_info.h
 	image_processing.h

@@ -8,7 +8,6 @@
 #ifndef BASE_ANALENS_H_
 #define BASE_ANALENS_H_
 
-#include "forceTree.h"
 #include "quadTree.h"
 #include "source.h"
 #include "InputParams.h"

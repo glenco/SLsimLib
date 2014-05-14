@@ -599,8 +599,8 @@ void TreeQuad::force2D(PosType const *ray
 				  gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 				  gamma[1] += xcm[0]*xcm[1]*tmp;
 
-                  *phi += 0.5*tree->current->mass*log( rcm2cell )/pi;
-                  *phi -= 0.5*( tree->current->quad[0]*xcm[0]*xcm[0] + tree->current->quad[1]*xcm[1]*xcm[1] + 2*tree->current->quad[2]*xcm[0]*xcm[1] )/(pi*rcm2cell*rcm2cell);
+          *phi += 0.5*tree->current->mass*log( rcm2cell )/pi;
+          *phi -= 0.5*( tree->current->quad[0]*xcm[0]*xcm[0] + tree->current->quad[1]*xcm[1]*xcm[1] + 2*tree->current->quad[2]*xcm[0]*xcm[1] )/(pi*rcm2cell*rcm2cell);
 			  }
 
 			  // quadrapole contribution

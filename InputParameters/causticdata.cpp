@@ -11,7 +11,7 @@
 CausticData::CausticData(std::string filename){
   ncolumns = 13;
   readfile(filename);
-}
+  }
 CausticData::CausticData(size_t size){
   ncolumns = 13;
   
