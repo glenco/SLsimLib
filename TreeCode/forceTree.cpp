@@ -59,7 +59,7 @@ TreeForce::~TreeForce(){
 // calculates moments of the mass and the cutoff scale for each box
 void TreeForce::CalcMoments(){
 
-	//*** make compatable
+	//*** make compatible
 	IndexType i;
 	PosType rcom,xcm[2],xcut;
 	BranchNB *cbranch;
@@ -308,6 +308,7 @@ void TreeForce::force2D(PosType const *ray
 
 		  alpha[0] += tmp*xcm[0];
 		  alpha[1] += tmp*xcm[1];
+          
 	  }
 
   }while(TreeNBWalkStep(tree,allowDescent));
@@ -318,7 +319,8 @@ void TreeForce::force2D(PosType const *ray
   alpha[1] += ray[1]*kappa_background;
   if(!no_kappa){      //  taken out to speed up
 	  *kappa -= kappa_background;
-      // *phi -= phi_background; // Fabien : Added this bu phi_background does not exists...
+      // *phi -= phi_background; // Fabien : Added this but phi_background does not exists...
+      // *phi -= kappa_background * kappa_background ;
   }
 
   return;

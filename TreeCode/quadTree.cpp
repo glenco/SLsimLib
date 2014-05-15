@@ -463,7 +463,6 @@ void TreeQuad::force2D(PosType const *ray
                        ,KappaType *gamma
                        ,KappaType *phi
                        ,bool no_kappa){
-
     
   PosType xcm[2],rcm2cell,rcm2,tmp,boxsize2;
   IndexType i;
@@ -482,15 +481,14 @@ void TreeQuad::force2D(PosType const *ray
   alpha[0]=alpha[1]=gamma[0]=gamma[1]=gamma[2]=0.0;
 
   *kappa=0.0;
-  
-  //TODO: Need to implement phi and test
   *phi = 0.0;
 
     
   do{
 	  ++count;
 	  allowDescent=false;
-	  if(tree->current->nparticles > 0){
+	  if(tree->current->nparticles > 0)
+      {
 
 		  xcm[0]=tree->current->center[0]-ray[0];
 		  xcm[1]=tree->current->center[1]-ray[1];
@@ -499,16 +497,19 @@ void TreeQuad::force2D(PosType const *ray
 
 		  boxsize2 = (tree->current->boundary_p2[0]-tree->current->boundary_p1[0])*(tree->current->boundary_p2[0]-tree->current->boundary_p1[0]);
 
-		  if( rcm2cell < (tree->current->rcrit_angle)*(tree->current->rcrit_angle) || rcm2cell < 5.83*boxsize2){
-
+		  if( rcm2cell < (tree->current->rcrit_angle)*(tree->current->rcrit_angle) || rcm2cell < 5.83*boxsize2)
+          {
+    
 			  // includes rcrit_particle constraint
 			  allowDescent=true;
 
 
 			  // Treat all particles in a leaf as a point particle
-			  if(tree->atLeaf()){
-
-				  for(i = 0 ; i < tree->current->nparticles ; ++i){
+			  if(tree->atLeaf())
+              {
+                  
+				  for(i = 0 ; i < tree->current->nparticles ; ++i)
+                  {
 
 					  xcm[0] = tree->xp[tree->current->particles[i]][0] - ray[0];
 					  xcm[1] = tree->xp[tree->current->particles[i]][1] - ray[1];
@@ -518,11 +519,8 @@ void TreeQuad::force2D(PosType const *ray
 
 					  tmp_index = MultiMass*tree->current->particles[i];
 
-					  if(haloON ){
-						  prefac = halos[tmp_index]->get_mass();
-					  }else{
-						  prefac = masses[tmp_index];
-					  }
+					  if(haloON){ prefac = halos[tmp_index]->get_mass(); }
+                      else{ prefac = masses[tmp_index]; }
 					  prefac /= rcm2*pi;
 
 					  tmp = -1.0*prefac;
@@ -530,33 +528,43 @@ void TreeQuad::force2D(PosType const *ray
 					  alpha[0] += tmp*xcm[0];
 					  alpha[1] += tmp*xcm[1];
 
-					  // can turn off kappa and gamma calculations to save times
-					  if(!no_kappa){
+					  // can turn off kappa and gamma calculations to save time
+					  if(!no_kappa)
+                      {
+                          
 						  tmp = -2.0*prefac/rcm2;
+                          
+                          // Fabien : Why isn't there any computation of kappa here ?
 
 						  gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 						  gamma[1] += xcm[0]*xcm[1]*tmp;
 
-                          //
-                          *phi = prefac*rcm2*0.5*log(rcm2);
+                          *phi += prefac*rcm2*0.5*log(rcm2); // Fabien : replaced = by += !
+                          
+                                               //   std::cout << "Test 3  " ;
 					  }
-				  }
-			  }
+				  } // end of for
+			  } // end of if(tree->atLeaf())
 
+              
 			  // Find the particles that intersect with ray and add them individually.
-			  if(rcm2cell < 5.83*boxsize2){
-
-				  for(i = 0 ; i < tree->current->Nbig_particles ; ++i){
+			  if(rcm2cell < 5.83*boxsize2)
+              {
+                  
+				  for(i = 0 ; i < tree->current->Nbig_particles ; ++i)
+                  {
 
 					  tmp_index = tree->current->big_particles[i];
 
 					  xcm[0] = tree->xp[tmp_index][0] - ray[0];
 					  xcm[1] = tree->xp[tmp_index][1] - ray[1];
 
-					  if(haloON){
+					  if(haloON)
+                      {
 						  halos[tmp_index]->force_halo(alpha,kappa,gamma,phi,xcm,no_kappa,true);
-
-					  }else{  // case of no halos just particles and no class derived from TreeQuad
+					  }
+                      else
+                      {  // case of no halos just particles and no class derived from TreeQuad
 
 						  rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
 						  if(rcm2 < 1e-20) rcm2 = 1e-20;
@@ -568,13 +576,15 @@ void TreeQuad::force2D(PosType const *ray
 						  tmp = sizes[tmp_index*MultiRadius];
 
 						  /// intersecting, subtract the point particle
-						  if(rcm2 < tmp*tmp){
+						  if(rcm2 < tmp*tmp)
+                          {
 							  tmp = (alpha_h(arg1,arg2) + 1.0)*prefac;
 							  alpha[0] += tmp*xcm[0];
 							  alpha[1] += tmp*xcm[1];
 
 							  // can turn off kappa and gamma calculations to save times
-							  if(!no_kappa){
+							  if(!no_kappa)
+                              {
 								  *kappa += kappa_h(arg1,arg2)*prefac;
 
 								  tmp = (gamma_h(arg1,arg2) + 2.0)*prefac/rcm2;
@@ -583,14 +593,19 @@ void TreeQuad::force2D(PosType const *ray
 								  gamma[1] += xcm[0]*xcm[1]*tmp;
                   
                                   // TODO: makes sure the normalization of phi_h agrees with this
-                                  *phi = (phi_h(arg1,arg2) + 0.5*log(rcm2))*prefac*rcm2;
+                                  *phi += (phi_h(arg1,arg2) + 0.5*log(rcm2))*prefac*rcm2;
+                                  
+                                                    //      std::cout << "Test 4  " ;
 							  }
 						  }
 					  }
 				  }
 			  }
 
-		  }else{ // use whole cell
+		  }
+          else
+          { // use whole cell
+              
 			  allowDescent=false;
 
 			  tmp = -1.0*tree->current->mass/rcm2cell/pi;
@@ -603,9 +618,11 @@ void TreeQuad::force2D(PosType const *ray
 				  gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 				  gamma[1] += xcm[0]*xcm[1]*tmp;
           
-                  // Fabien : commented this to test but now decommented.
+                  // std::cout << "tree->current->mass = " << tree->current->mass << std::endl ;
                   *phi += 0.5*tree->current->mass*log( rcm2cell )/pi;
                   *phi -= 0.5*( tree->current->quad[0]*xcm[0]*xcm[0] + tree->current->quad[1]*xcm[1]*xcm[1] + 2*tree->current->quad[2]*xcm[0]*xcm[1] )/(pi*rcm2cell*rcm2cell);
+                  
+                                     //     std::cout << "Test 5  " ;
 			  }
 
 			  // quadrapole contribution
@@ -621,7 +638,6 @@ void TreeQuad::force2D(PosType const *ray
 			  alpha[0] += tmp*xcm[0];
 			  alpha[1] += tmp*xcm[1];
               
-              // Fabien : should phi be computed to this order ?
 		  }
 	  }
   }while(tree->WalkStep(allowDescent));
@@ -633,6 +649,7 @@ void TreeQuad::force2D(PosType const *ray
   alpha[1] -= ray[1]*sigma_background;
   if(!no_kappa){      //  taken out to speed up
 	  *kappa -= sigma_background;
+      // *phi -= sigma_background * sigma_background ; // Fabien : is that correct ?
   }
 
   return;
@@ -669,10 +686,13 @@ void TreeQuad::force2D_recur(PosType const *ray,PosType *alpha,KappaType *kappa,
     //  added to the universe in the halos.
     alpha[0] -= ray[0]*sigma_background;
     alpha[1] -= ray[1]*sigma_background;
-    if(!no_kappa){      //  taken out to speed up
+    
+    if(!no_kappa)
+    {      //  taken out to speed up
         *kappa -= sigma_background;
+        // PHI BY Fabien : should I do this subtraction for phi too ?
+        // *phi -= sigma_background * sigma_background ;
     }
-    // PHI BY Fabien : should I do this subtraction for phi too ?
     
     return;
 }
@@ -687,7 +707,9 @@ void TreeQuad::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alph
 	std::size_t tmp_index;
 	PosType arg1, arg2, prefac;
 
-	if(branch->nparticles > 0){
+    
+	if(branch->nparticles > 0)
+    {
 		xcm[0]=branch->center[0]-ray[0];
 		xcm[1]=branch->center[1]-ray[1];
 
@@ -695,10 +717,12 @@ void TreeQuad::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alph
 
 		boxsize2 = (branch->boundary_p2[0]-branch->boundary_p1[0])*(branch->boundary_p2[0]-branch->boundary_p1[0]);
 
-		if( rcm2cell < (branch->rcrit_angle)*(branch->rcrit_angle) || rcm2cell < 5.83*boxsize2){
+		if( rcm2cell < (branch->rcrit_angle)*(branch->rcrit_angle) || rcm2cell < 5.83*boxsize2)
+        {
 
 			// Treat all particles in a leaf as a point particle
-			if(tree->atLeaf(branch)){
+			if(tree->atLeaf(branch))
+            {
 
 				for(i = 0 ; i < branch->nparticles ; ++i){
 
@@ -711,31 +735,38 @@ void TreeQuad::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alph
 					tmp_index = MultiMass*branch->particles[i];
 
 
-					  if(haloON ){
-						  prefac = halos[tmp_index]->get_mass();
-					  }else{
-						  prefac = masses[tmp_index];
-					  }
+                    if(haloON ) { prefac = halos[tmp_index]->get_mass(); }
+                      else{ prefac = masses[tmp_index]; }
 					  prefac /= rcm2*pi;
 
+                    
 					alpha[0] += -1.0*prefac*xcm[0];
 					alpha[1] += -1.0*prefac*xcm[1];
 
 					// can turn off kappa and gamma calculations to save times
-					if(!no_kappa){
+					if(!no_kappa)
+                    {
 						tmp = -2.0*prefac/rcm2;
-
+                        
+                        // Fabien : why isn't there anything for kappa here ?
+                        
 						gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 						gamma[1] += xcm[0]*xcm[1]*tmp;
                         
-                        *phi = prefac*rcm2*0.5*log(rcm2);
+                        // *phi = prefac*rcm2*0.5*log(rcm2); // Commented by Fabien
+                        *phi = prefac*rcm2*0.5*log(rcm2) + prefac*rcm2*(rcm2 - 2./rcm2); // New version including correction from the moments ?
+                        
+                                        // std::cout << "Test 1  " ;
 					}
 				}
 			}
 
 			// Find the particles that intersect with ray and add them individually.
-			if(rcm2cell < 5.83*boxsize2){
-				for(i = 0 ; i < branch->Nbig_particles ; ++i){
+			if(rcm2cell < 5.83*boxsize2)
+            {
+                
+				for(i = 0 ; i < branch->Nbig_particles ; ++i)
+                {
 
 					tmp_index = branch->big_particles[i];
 
@@ -743,9 +774,14 @@ void TreeQuad::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alph
 					xcm[1] = tree->xp[tmp_index][1] - ray[1];
 
 					/////////////////////////////////////////
-					if(haloON){
+					if(haloON)
+                    {
 						halos[tmp_index]->force_halo(alpha,kappa,gamma,phi,xcm,no_kappa,true);
- 					}else{  // case of no halos just particles and no class derived from TreeQuad
+                        
+                                           //     std::cout << "Test 2  " ;
+ 					}
+                    else
+                    {  // case of no halos just particles and no class derived from TreeQuad
 
 						rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
 						if(rcm2 < 1e-20) rcm2 = 1e-20;
@@ -757,13 +793,15 @@ void TreeQuad::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alph
 						tmp = sizes[tmp_index*MultiRadius];
 
 						/// intersecting, subtract the point particle
-						if(rcm2 < tmp*tmp){
+						if(rcm2 < tmp*tmp)
+                        {
 							tmp = (alpha_h(arg1,arg2) + 1.0)*prefac;
 							alpha[0] += tmp*xcm[0];
 							alpha[1] += tmp*xcm[1];
 
 							// can turn off kappa and gamma calculations to save times
-							if(!no_kappa){
+							if(!no_kappa)
+                            {
 								*kappa += kappa_h(arg1,arg2)*prefac;
 
 								tmp = (gamma_h(arg1,arg2) + 2.0)*prefac/rcm2;
@@ -788,13 +826,17 @@ void TreeQuad::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alph
 			if(branch->child3 != NULL)
 				walkTree_recur(branch->child3,&ray[0],&alpha[0],kappa,&gamma[0],&phi[0],no_kappa);
 
-		}else{ // use whole cell
+		}
+        else
+        { // use whole cell
+            
 			tmp = -1.0*branch->mass/rcm2cell/pi;
 
 			alpha[0] += tmp*xcm[0];
 			alpha[1] += tmp*xcm[1];
 
-			if(!no_kappa){      //  taken out to speed up
+			if(!no_kappa)
+            {      //  taken out to speed up
 				tmp=-2.0*branch->mass/pi/rcm2cell/rcm2cell;
 				gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 				gamma[1] += xcm[0]*xcm[1]*tmp;
@@ -818,6 +860,7 @@ void TreeQuad::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alph
 
 			return;
 		}
+        
 	}
 	return;
 }
