@@ -8,20 +8,32 @@
 
 #include "causticdata.h"
 
-CausticData::CausticData(std::string filename){
-  ncolumns = 13;
+CausticData::CausticData(std::string filename)
+:ncolumns(13),Nxp(0)
+{
   readfile(filename);
-  }
-CausticData::CausticData(size_t size){
-  ncolumns = 13;
-  
-  data.resize(size);
-
 }
+
+CausticData::CausticData(size_t size)
+:ncolumns(13),Nxp(0)
+{
+  data.resize(size);
+}
+
+CausticData::CausticData(const CausticData &input)
+:ncolumns(13),Nxp(0)
+{
+  data = input.data;
+}
+
+
 CausticData::~CausticData(){
   
+  if(Nxp){
+    delete searchtree;
+    Utilities::free_PosTypeMatrix(xp,Nxp, 2);
+  }
   data.clear();
-
 }
 
 /// Read in data from a caustic catalog file
@@ -149,12 +161,49 @@ void CausticData::readfile(std::string filename){
     myline.clear();
     data.push_back(tmp_data);
   }
+  
   /*for(i=0; i < 20; ++i){
     std::cout << data[i].redshift << " " << data[i].crit_center[0] << " " << data[i].crit_center[1]
     << " " << data[i].crit_radius[0] << " " << data[i].crit_radius[1]<< " " << data[i].crit_radius[2] << std::endl;
   }*/
-  
+
+  SetSearchTree();
+ 
  }
+
+  /// create tree for searching. Assumes xp is not allocated yet!
+void CausticData::SetSearchTree(){
+  
+  if(Nxp){
+    delete searchtree;
+    Utilities::free_PosTypeMatrix(xp,Nxp, 2);
+  }
+  xp = Utilities::PosTypeMatrix(data.size(), 2);
+  for(size_t i=0;i<data.size();++i){
+    xp[i][0] = data[i].crit_center[0];
+    xp[i][1] = data[i].crit_center[1];
+  }
+  searchtree = new TreeSimple(xp,data.size(),1);
+  Nxp = data.size();
+}
+
+/// Finds the nearest critical curve to the point x[].  If that point is within the largest radius of the critical curve it returns true.
+bool CausticData::findNearestCrit(PosType x[2],size_t &index){
+  
+  if(data.size() == 0){
+    index = 0;
+    return false;
+  }
+  if(Nxp == 0 && data.size() != 0){
+    SetSearchTree();
+  }
+
+  float radius;
+  searchtree->NearestNeighbors(x,1,&radius,&index);
+  
+  return (data[index].crit_radius[2] > radius);
+}
+
 void CausticData::printfile(std::string filename,std::string paramfile,double fieldofview,double minscale){
   std::ofstream catalog_caustic(filename.c_str());
   
@@ -194,6 +243,7 @@ void CausticData::printfile(std::string filename,std::string paramfile,double fi
 void CausticData::SortByCritSize(){
   cummulative_area.resize(0);  // this stops RandomLens from being miss used.
   std::sort(data.begin(),data.end(),comparcritsize);
+  SetSearchTree();
 }
 
 bool comparcritsize(const CausticStructure &caust1,const CausticStructure &caust2){
@@ -202,6 +252,7 @@ bool comparcritsize(const CausticStructure &caust1,const CausticStructure &caust
 void CausticData::SortByCritArea(){
   cummulative_area.resize(0);  // this stops RandomLens from being miss used.
   std::sort(data.begin(),data.end(),comparcritarea);
+  SetSearchTree();
 }
 bool comparcritarea(const CausticStructure &caust1,const CausticStructure &caust2){
   return (caust1.crit_area > caust2.crit_area);
@@ -210,6 +261,7 @@ bool comparcritarea(const CausticStructure &caust1,const CausticStructure &caust
 void CausticData::SortByCausticArea(){
   cummulative_area.resize(0);  // this stops RandomLens from being miss used.
   std::sort(data.begin(),data.end(),comparcausticarea);
+  SetSearchTree();
 }
 bool comparcausticarea(const CausticStructure &caust1,const CausticStructure &caust2){
   return (caust1.caustic_area > caust2.caustic_area);

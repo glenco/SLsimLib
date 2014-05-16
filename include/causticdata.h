@@ -12,6 +12,7 @@
 #include <iostream>
 #include "standard.h"
 #include "utilities_slsim.h"
+#include "simpleTree.h"
 
 /// A class used within CausticData class to store information on a caustic and critical curve pair
 struct CausticStructure{
@@ -60,6 +61,7 @@ public:
   CausticData(std::string filename);
   /// creates an empty object 
   CausticData(size_t size);
+  CausticData(const CausticData &input);
   ~CausticData();
 
   
@@ -120,6 +122,7 @@ public:
     return locate<double>(cummulative_area,ran()*cummulative_area.back());
   }
 
+  bool findNearestCrit(PosType x[2],size_t &index);
   
 private:
   
@@ -127,6 +130,11 @@ private:
   std::vector<CausticStructure> data;
   std::vector<double> cummulative_area;
   size_t offset_index = 0;
+  
+  void SetSearchTree();
+  TreeSimple *searchtree;
+  PosType **xp;
+  size_t Nxp;
   
 };
 
