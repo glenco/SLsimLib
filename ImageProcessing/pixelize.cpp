@@ -835,7 +835,7 @@ void PixelMap::FindArc(
         rmax2 = MAX(rmax2,r2);
         
         if(r2 < RmaxSqr){
-          k = locate<PosType>(R2,r2);
+            k = Utilities::locate<PosType>(R2,r2);
           if(k > -1 && k < Nr){
             //votes(ii,jj,k) += log(map[mask[m]]/minval);
             votes(ii,jj,k) += map[mask[m]];
