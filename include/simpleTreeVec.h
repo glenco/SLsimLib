@@ -40,7 +40,7 @@ public:
         Nparticles = Npoints;
         
         points = xpt;
-        
+
         for(ii=0;ii<Npoints;++ii) index[ii] = ii;
         
         BuildTree();
@@ -88,8 +88,8 @@ public:
         BranchV(int my_Ndim,IndexType *my_branch_index,IndexType my_nparticles
                 ,PosType my_boundary_p1[],PosType my_boundary_p2[]
                 ,int my_level,unsigned long my_BranchVnumber)
-        :Ndim(my_Ndim),branch_index(my_branch_index),nparticles(my_nparticles),level(my_level)
-        ,number(my_BranchVnumber)
+        :Ndim(my_Ndim),branch_index(my_branch_index),nparticles(my_nparticles)
+         ,level(my_level),number(my_BranchVnumber)
         {
             
             boundary_p1 = new PosType[Ndim*2];
@@ -158,9 +158,6 @@ protected:
 	void _PointsWithin(PosType *ray,float *rmax,std::list<unsigned long> &neighborkist);
 	void _NearestNeighbors(PosType *ray,int Nneighbors,unsigned long *neighbors,PosType *rneighbors);
     
-	void NewTree(IndexType *index,IndexType nparticles
-                 ,PosType boundary_p1[],PosType boundary_p2[],
-			     short Ndimensions);
 	void freeTree();
     
 	short emptyTree();
@@ -470,7 +467,7 @@ void TreeSimpleVec<T>::_NearestNeighbors(PosType *ray,int Nneighbors,unsigned lo
                 /* calculate the distance to all the particles in cell */
                 for(i=0;i<current->nparticles;++i){
                     for(j=0,rneighbors[i]=0.0;j<Ndimensions;++j){
-                        rneighbors[i] += pow(points[current->branch_index[i]][j]-ray[j],2);
+                        rneighbors[i] += pow(points[current->branch_index[i]].x[j]-ray[j],2);
                     }
                     rneighbors[i]=sqrt( rneighbors[i] );
                     assert(rneighbors[i] < 10);
@@ -517,7 +514,7 @@ void TreeSimpleVec<T>::_NearestNeighbors(PosType *ray,int Nneighbors,unsigned lo
                 /* combine found neighbors with particles in box and resort */
                 for(i=Nneighbors;i<(current->nparticles+Nneighbors);++i){
                     for(j=0,rneighbors[i]=0.0;j<Ndimensions;++j){
-                        rneighbors[i]+=pow(points[current->branch_index[i-Nneighbors]][j]-ray[j],2);
+                        rneighbors[i]+=pow(points[current->branch_index[i-Nneighbors]].x[j]-ray[j],2);
                     }
                     rneighbors[i]=sqrt( rneighbors[i] );
                     assert(rneighbors[i] < 10);
@@ -549,7 +546,7 @@ template <class T>
 void TreeSimpleVec<T>::BuildTree(){
     IndexType i;
     short j;
-    PosType p1[3],p2[3];
+  std::vector<PosType> p1(Ndimensions),p2(Ndimensions);
     
     for(j=0;j<Ndimensions;++j){
         p1[j]=points[0].x[j];
@@ -564,8 +561,14 @@ void TreeSimpleVec<T>::BuildTree(){
     }
     
     /* Initialize tree root */
-    NewTree(index,Nparticles,p1,p2,Ndimensions);
-    
+    top = current = new BranchV(Ndimensions,index,Nparticles,p1.data(),p2.data(),0,0);
+    if (!(top)){
+      ERROR_MESSAGE(); fprintf(stderr,"allocation failure in NewTree()\n");
+      exit(1);
+    }
+  
+    Nbranches = 1;
+  
     /* build the tree */
     _BuildTree(Nparticles,index);
     
@@ -581,7 +584,7 @@ void TreeSimpleVec<T>::_BuildTree(IndexType nparticles,IndexType *tmp_index){
     short j;
     BranchV *cbranch,branch1(*current),branch2(*current);
     PosType xcut;
-    PosType *x;
+
     
     cbranch=current; /* pointer to current branch */
     
@@ -593,23 +596,14 @@ void TreeSimpleVec<T>::_BuildTree(IndexType nparticles,IndexType *tmp_index){
     if(cbranch->nparticles <= Nbucket){
         return;
     }
-    
-    /* initialize boundaries to old boundaries */
-    for(j=0;j<Ndimensions;++j){
-        branch1.boundary_p1[j]=cbranch->boundary_p1[j];
-        branch1.boundary_p2[j]=cbranch->boundary_p2[j];
-        
-        branch2.boundary_p1[j]=cbranch->boundary_p1[j];
-        branch2.boundary_p2[j]=cbranch->boundary_p2[j];
-    }
-    //cbranch->big_particle=0;
+       //cbranch->big_particle=0;
     
     // **** makes sure force does not require nbucket at leaf
     
     /* set dimension to cut box */
     dimension=(cbranch->level % Ndimensions);
-    
-    x=(PosType *)malloc((cbranch->nparticles)*sizeof(PosType));
+  
+    PosType *x = new PosType[cbranch->nparticles];
     for(i=0;i<cbranch->nparticles;++i) x[i]=points[tmp_index[i]].x[dimension];
     
     if(median_cut){
@@ -634,13 +628,12 @@ void TreeSimpleVec<T>::_BuildTree(IndexType nparticles,IndexType *tmp_index){
     
     branch2.prev=cbranch;
     branch2.nparticles=cbranch->nparticles - cut;
-    /*if(cut < (cbranch->nparticles-cbranch->big_particle) )
-        branch2.branch_index=&branch_index[cut+cbranch->big_particle];
+    if(cut < (cbranch->nparticles) )
+        branch2.branch_index = &tmp_index[cut];
     else branch2.branch_index=NULL;
-    */
     
-    free(x);
-    
+    delete[] x;
+  
     if(branch1.nparticles > 0) attachChildToCurrent(branch1,1);
     if(branch2.nparticles > 0) attachChildToCurrent(branch2,2);
     
@@ -668,26 +661,6 @@ void TreeSimpleVec<T>::_BuildTree(IndexType nparticles,IndexType *tmp_index){
     }
     
     return;
-}
-
-/************************************************************************
- * NewTree
- * Returns pointer to new TreeNB struct.  Initializes top, last, and
- * current pointers to NULL.  Sets NBranchVes field to 0.  Exported.
- ************************************************************************/
-template <class T>
-void TreeSimpleVec<T>::NewTree(IndexType *index,IndexType nparticles
-                                    ,PosType boundary_p1[],PosType boundary_p2[],
-                                    short Ndimensions){
-
-    top= new BranchV(Ndimensions,index,nparticles,boundary_p1,boundary_p2,0,0);
-    if (!(top)){
-        ERROR_MESSAGE(); fprintf(stderr,"allocation failure in NewTree()\n");
-        exit(1);
-    }
-    
-    Nbranches = 1;
-    current = top;
 }
 
 /// Free all the tree branches
