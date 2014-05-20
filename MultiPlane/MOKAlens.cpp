@@ -147,7 +147,7 @@ void LensHaloMOKA::initMap()
 
     if(maptype == moka_lens){
       
-        fill_linear(map->x, map->nx, -0.5*map->boxlMpc, 0.5*map->boxlMpc); // physical Mpc/h
+        Utilities::fill_linear(map->x, map->nx, -0.5*map->boxlMpc, 0.5*map->boxlMpc); // physical Mpc/h
       
         /// converts to the code units
         std::cout << "converting the units of the MOKA map" << std::endl;
@@ -323,10 +323,10 @@ void LensHaloMOKA::saveProfiles(double &RE3,double &xxc,double &yyc){
 	}
 	xxc = xcm;
 	yyc = ycm;
-	int ai = locate(map->x,xxc);
+	int ai = Utilities::locate(map->x,xxc);
 	ai = ((ai > 0) ? ai:0);
 	ai = ((ai < map->nx-1) ? ai:map->nx-1);
-	int bi = locate(map->x,yyc);
+	int bi = Utilities::locate(map->x,yyc);
 	bi = ((bi > 0) ? bi:0);
 	bi = ((bi < map->nx-1) ? bi:map->nx-1);
 	std:: cout << "  ------------ center ------------- " << std:: endl;
@@ -435,7 +435,7 @@ void LensHaloMOKA::saveProfiles(double &RE3,double &xxc,double &yyc){
 	  lrOFr[l] = log10(dr0*l + dr0/2.);
 	}
 	filoutprof.close();
-	RE3 = InterpolateYvec(lprofFORre,lrOFr,0.);  
+	RE3 = Utilities::InterpolateYvec(lprofFORre,lrOFr,0.);  
 	if((RE3-lrOFr[0])<1e-4 || (RE3-lrOFr[nbin-1])<1e-4) RE3=0;
 	else RE3 = pow(10.,RE3)*map->inarcsec;
 }
@@ -592,11 +592,11 @@ void LensHaloMOKA::EinsteinRadii(double &RE1, double &RE2, double &xxc, double &
     double xmincpoints,xmaxcpoints;
     xmaxcpoints = *maxit;
     xmincpoints = *minit;
-    int imin = locate(map->x,xmincpoints);
+      int imin = Utilities::locate(map->x,xmincpoints);
     imin = ((imin > 0) ? imin:0);
     imin = ((imin < map->nx-1) ? imin:map->nx-1);
     // imin=GSL_MIN( GSL_MAX( imin, 0 ), map->nx-1 );
-    int imax = locate(map->x,xmaxcpoints);
+      int imax = Utilities::locate(map->x,xmaxcpoints);
     imax = ((imax > 0) ? imax:0);
     imax = ((imax < map->nx-1) ? imax:map->nx-1);
     // imax=GSL_MIN( GSL_MAX( imax, 0 ), map->nx-1 );
@@ -651,7 +651,7 @@ void LensHaloMOKA::EinsteinRadii(double &RE1, double &RE2, double &xxc, double &
       RE.push_back(sqrt(pow(xsup[ii]-xercm,2) + pow(ysup[ii]-yercm,2)));
     }
     RE1=map->inarcsec*sqrt(pixDinL*pixDinL*npixIN/M_PI);
-    RE2=map->inarcsec*median(RE);
+    RE2=map->inarcsec*Utilities::median(RE);
     // if is not in the centre
     std:: cout << "distance " <<  distcentre << std:: endl;
     if(distcentre>1.5*RE2){
