@@ -30,8 +30,9 @@ CausticData::CausticData(const CausticData &input)
 CausticData::~CausticData(){
   
   if(Nxp){
-    delete searchtree;
-    Utilities::free_PosTypeMatrix(xp,Nxp, 2);
+    //delete searchtree;
+    //Utilities::free_PosTypeMatrix(xp,Nxp, 2);
+    delete searchtreevec;
   }
   data.clear();
 }
@@ -168,22 +169,24 @@ void CausticData::readfile(std::string filename){
   }*/
 
   SetSearchTree();
- 
  }
 
   /// create tree for searching. Assumes xp is not allocated yet!
 void CausticData::SetSearchTree(){
   
   if(Nxp){
-    delete searchtree;
-    Utilities::free_PosTypeMatrix(xp,Nxp, 2);
+    //delete searchtree;
+    delete searchtreevec;
+    //Utilities::free_PosTypeMatrix(xp,Nxp, 2);
   }
-  xp = Utilities::PosTypeMatrix(data.size(), 2);
+ /* xp = Utilities::PosTypeMatrix(data.size(), 2);
   for(size_t i=0;i<data.size();++i){
     xp[i][0] = data[i].crit_center[0];
     xp[i][1] = data[i].crit_center[1];
-  }
-  searchtree = new TreeSimple(xp,data.size(),1);
+  }*/
+  //searchtree = new TreeSimple(xp,data.size(),1);
+  searchtreevec = new TreeSimpleVec<CausticStructure>(data.data(),data.size(),1,2,true,CausticData::critCenter);
+  
   Nxp = data.size();
 }
 
@@ -199,8 +202,10 @@ bool CausticData::findNearestCrit(PosType x[2],size_t &index){
   }
 
   float radius;
-  searchtree->NearestNeighbors(x,1,&radius,&index);
-  
+  size_t tmp_index;
+  //searchtree->NearestNeighbors(x,1,&radius,&tmp_index);
+  searchtreevec->NearestNeighbors(x,1,&radius,&index);
+   
   return (data[index].crit_radius[2] > radius);
 }
 
@@ -242,28 +247,19 @@ void CausticData::printfile(std::string filename,std::string paramfile,double fi
 
 void CausticData::SortByCritSize(){
   cummulative_area.resize(0);  // this stops RandomLens from being miss used.
-  std::sort(data.begin(),data.end(),comparcritsize);
+  std::sort(data.begin(),data.end(),CausticData::comparcritsize);
   SetSearchTree();
 }
 
-bool comparcritsize(const CausticStructure &caust1,const CausticStructure &caust2){
-  return (caust1.crit_radius[0] > caust2.crit_radius[0]);
-}
 void CausticData::SortByCritArea(){
   cummulative_area.resize(0);  // this stops RandomLens from being miss used.
-  std::sort(data.begin(),data.end(),comparcritarea);
+  std::sort(data.begin(),data.end(),CausticData::comparcritarea);
   SetSearchTree();
-}
-bool comparcritarea(const CausticStructure &caust1,const CausticStructure &caust2){
-  return (caust1.crit_area > caust2.crit_area);
 }
 
 void CausticData::SortByCausticArea(){
   cummulative_area.resize(0);  // this stops RandomLens from being miss used.
-  std::sort(data.begin(),data.end(),comparcausticarea);
+  std::sort(data.begin(),data.end(),CausticData::comparcausticarea);
   SetSearchTree();
-}
-bool comparcausticarea(const CausticStructure &caust1,const CausticStructure &caust2){
-  return (caust1.caustic_area > caust2.caustic_area);
 }
 

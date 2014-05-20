@@ -12,28 +12,32 @@
 //#include "Tree.h"
 //#include "lens_halos.h"
 
+// used for default position of object
+template<class T>
+PosType  *defaultposition(T &in){return in.x;}
 
-/** \brief
- * A tree for doing quick searches in multidimensional space.  A pointer to an array of 
- *  objects type T is provided.  If they are in a vector, vector.data() can be put in the constructor.
- *  The order of objects in the array is not changed.  Type T must have a method PosType *x().  
- *  It is this coordinate that is used for the objects position.
- */
-
+    /** \brief
+     * A tree for doing quick searches in multidimensional space.  A pointer to an array of
+     *  objects type T is provided.  If they are in a vector, vector.data() can be put in the constructor.
+     *  The order of objects in the array is not changed.  If Mypos is not specified the method PosType * T::x() must exist.
+     *  It is this coordinate that is used for the object's position.  Another definition for the position of and object can made by specifying Mypos.
+     */
 template <class T>
 class TreeSimpleVec {
 public:
     
 	TreeSimpleVec(
-                  T *xpt                  /// array of object, xpt[i].x[0...dimensions-1] must exist
+                  T *xpt                 /// array of object, xpt[i].x[0...dimensions-1] must exist or Mypos must be specified
                   ,IndexType Npoints      /// number of object in array
                   ,int bucket = 5         /// number of points in leaves of tree
                   ,int dimensions = 2     /// dimension of space
                   ,bool median = true     /// whether to use a median cut or a space cut in splitting branches
+                  ,PosType *(*Mypos)(T&) = defaultposition  /// function that takes the object T and returns a pointer to its position, default is t.x[]
                   ){
         index = new IndexType[Npoints];
         IndexType ii;
-        
+        position = Mypos;
+    
         Nbucket = bucket;
         Ndimensions = dimensions;
         median_cut = median;
@@ -45,14 +49,14 @@ public:
         
         BuildTree();
     }
-    
-    virtual ~TreeSimpleVec()
+
+  virtual ~TreeSimpleVec()
     {
         freeTree();
         delete[] index;
         return;
     };
-    
+  
 	/// \brief Finds the points within a circle around center and puts their index numbers in a list
 	void PointsWithinCircle(PosType center[2],float radius,std::list<unsigned long> &neighborkist);
 	/// \brief Finds the points within an ellipse around center and puts their index numbers in a list
@@ -143,6 +147,7 @@ protected:
 	int Nbucket;
 	PosType realray[2];
 	T *points;
+  PosType *(*position)(T&);
     
     BranchV *top;
     BranchV *current;
@@ -467,10 +472,10 @@ void TreeSimpleVec<T>::_NearestNeighbors(PosType *ray,int Nneighbors,unsigned lo
                 /* calculate the distance to all the particles in cell */
                 for(i=0;i<current->nparticles;++i){
                     for(j=0,rneighbors[i]=0.0;j<Ndimensions;++j){
-                        rneighbors[i] += pow(points[current->branch_index[i]].x[j]-ray[j],2);
+                        rneighbors[i] += pow(position(points[current->branch_index[i]])[j]-ray[j],2);
                     }
                     rneighbors[i]=sqrt( rneighbors[i] );
-                    assert(rneighbors[i] < 10);
+                    //assert(rneighbors[i] < 10);
                     neighbors[i]=current->branch_index[i];
                 }
                 
@@ -514,7 +519,7 @@ void TreeSimpleVec<T>::_NearestNeighbors(PosType *ray,int Nneighbors,unsigned lo
                 /* combine found neighbors with particles in box and resort */
                 for(i=Nneighbors;i<(current->nparticles+Nneighbors);++i){
                     for(j=0,rneighbors[i]=0.0;j<Ndimensions;++j){
-                        rneighbors[i]+=pow(points[current->branch_index[i-Nneighbors]].x[j]-ray[j],2);
+                        rneighbors[i]+=pow(position(points[current->branch_index[i-Nneighbors]])[j]-ray[j],2);
                     }
                     rneighbors[i]=sqrt( rneighbors[i] );
                     assert(rneighbors[i] < 10);
@@ -549,14 +554,14 @@ void TreeSimpleVec<T>::BuildTree(){
   std::vector<PosType> p1(Ndimensions),p2(Ndimensions);
     
     for(j=0;j<Ndimensions;++j){
-        p1[j]=points[0].x[j];
-        p2[j]=points[0].x[j];
+        p1[j] = position(points[0])[j];
+        p2[j] = position(points[0])[j];
     }
     
     for(i=0;i<Nparticles;++i){
         for(j=0;j<Ndimensions;++j){
-            if(points[i].x[j] < p1[j] ) p1[j]=points[i].x[j];
-            if(points[i].x[j] > p2[j] ) p2[j]=points[i].x[j];
+            if(position(points[i])[j] < p1[j] ) p1[j] = position(points[i])[j];
+            if(position(points[i])[j] > p2[j] ) p2[j] = position(points[i])[j];
         }
     }
     
@@ -604,7 +609,7 @@ void TreeSimpleVec<T>::_BuildTree(IndexType nparticles,IndexType *tmp_index){
     dimension=(cbranch->level % Ndimensions);
   
     PosType *x = new PosType[cbranch->nparticles];
-    for(i=0;i<cbranch->nparticles;++i) x[i]=points[tmp_index[i]].x[dimension];
+    for(i=0;i<cbranch->nparticles;++i) x[i] = position(points[tmp_index[i]])[dimension];
     
     if(median_cut){
         Utilities::quicksort(tmp_index,x,cbranch->nparticles);

@@ -13,6 +13,7 @@
 #include "standard.h"
 #include "utilities_slsim.h"
 #include "simpleTree.h"
+#include "simpleTreeVec.h"
 
 /// A class used within CausticData class to store information on a caustic and critical curve pair
 struct CausticStructure{
@@ -124,6 +125,18 @@ public:
 
   bool findNearestCrit(PosType x[2],size_t &index);
   
+  static PosType *causticCenter(CausticStructure &tmp){return tmp.caustic_center;}
+  static PosType *critCenter(CausticStructure &tmp){return tmp.crit_center;}
+  static bool comparcritsize(const CausticStructure &caust1,const CausticStructure &caust2){
+    return (caust1.crit_radius[0] > caust2.crit_radius[0]);
+  }
+  static bool comparcritarea(const CausticStructure &caust1,const CausticStructure &caust2){
+    return (caust1.crit_area > caust2.crit_area);
+  }
+  static bool comparcausticarea(const CausticStructure &caust1,const CausticStructure &caust2){
+    return (caust1.caustic_area > caust2.caustic_area);
+  }
+
 private:
   
   int ncolumns;
@@ -132,8 +145,9 @@ private:
   size_t offset_index = 0;
   
   void SetSearchTree();
-  TreeSimple *searchtree;
-  PosType **xp;
+  //TreeSimple *searchtree;
+  TreeSimpleVec<CausticStructure> *searchtreevec;
+  //PosType **xp;
   size_t Nxp;
   
 };
