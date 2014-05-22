@@ -65,6 +65,8 @@ public:
 	PosType integrateFilter(std::vector<PosType> wavel_fil, std::vector<PosType> fil);
 	PosType integrateFilterSed(std::vector<PosType> wavel_fil, std::vector<PosType> fil, std::vector<PosType> wavel_sed, std::vector<PosType> sed);
 
+  static PosType *getx(Source &source){return source.getX();}
+  
 protected:
 	virtual void assignParams(InputParams& params) = 0;
 	
