@@ -197,7 +197,6 @@ for(i = start; i < end; i++)
     p->i_points[i].gamma[1] = 0;
     p->i_points[i].gamma[2] = 0;
     p->i_points[i].dt = 0;
-    // Fabien : should we add this : p->i_points[i].dt = 0; // ???
     
     // In case we don't want to compute the values :
     if(p->flag_switch_lensing_off)
@@ -250,7 +249,7 @@ for(i = start; i < end; i++)
     	  gamma[0] *= fac;
     	  gamma[1] *= fac;
     	  gamma[2] *= fac;
-          // dt *= fac ; // Fabien : should we have this for phi/dt too ? I think no !
+          // dt *= fac ;
 	
     	  assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
     	  assert(kappa == kappa);
@@ -275,7 +274,7 @@ for(i = start; i < end; i++)
       xminus[1] = p->i_points[i].image->x[1];
       
 
-      // Fabien : Change in the value of the position !
+      // Change in the value of the position.
       p->i_points[i].image->x[0] = xplus[0];
       p->i_points[i].image->x[1] = xplus[1];
 
@@ -350,7 +349,7 @@ for(i = start; i < end; i++)
 
       
     // Convert units back to angles.
-    // Fabien : be careful ! These angles are not the same as those computed after the comment 'find position on first lens plane in comoving units' above, namely the angles we start with in this function. Values are close but still different. The change occurs after the comment 'Fabien : Change in the value of the position !' above and by the fact that below we divide by Dl[p->NPlanes] and not Dl[0].
+    // Fabien : be careful ! These angles are not the same as those computed after the comment 'find position on first lens plane in comoving units' above, namely the angles we start with in this function. Values are close but still different. The change occurs after the comment 'Change in the value of the position.' above and by the fact that below we divide by Dl[p->NPlanes] and not Dl[0].
     p->i_points[i].image->x[0] /= p->Dl[p->NPlanes];
     p->i_points[i].image->x[1] /= p->Dl[p->NPlanes];
       

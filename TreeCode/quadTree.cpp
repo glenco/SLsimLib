@@ -541,7 +541,6 @@ void TreeQuad::force2D(PosType const *ray
 
                           *phi += prefac*rcm2*0.5*log(rcm2); // Fabien : replaced = by += !
                           
-                                               //   std::cout << "Test 3  " ;
 					  }
 				  } // end of for
 			  } // end of if(tree->atLeaf())
@@ -595,7 +594,6 @@ void TreeQuad::force2D(PosType const *ray
                                   // TODO: makes sure the normalization of phi_h agrees with this
                                   *phi += (phi_h(arg1,arg2) + 0.5*log(rcm2))*prefac*rcm2;
                                   
-                                                    //      std::cout << "Test 4  " ;
 							  }
 						  }
 					  }
@@ -621,8 +619,6 @@ void TreeQuad::force2D(PosType const *ray
                   // std::cout << "tree->current->mass = " << tree->current->mass << std::endl ;
                   *phi += 0.5*tree->current->mass*log( rcm2cell )/pi;
                   *phi -= 0.5*( tree->current->quad[0]*xcm[0]*xcm[0] + tree->current->quad[1]*xcm[1]*xcm[1] + 2*tree->current->quad[2]*xcm[0]*xcm[1] )/(pi*rcm2cell*rcm2cell);
-                  
-                                     //     std::cout << "Test 5  " ;
 			  }
 
 			  // quadrapole contribution
@@ -753,10 +749,7 @@ void TreeQuad::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alph
 						gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 						gamma[1] += xcm[0]*xcm[1]*tmp;
                         
-                        // *phi = prefac*rcm2*0.5*log(rcm2); // Commented by Fabien
-                        *phi = prefac*rcm2*0.5*log(rcm2) + prefac*rcm2*(rcm2 - 2./rcm2); // New version including correction from the moments ?
-                        
-                                        // std::cout << "Test 1  " ;
+                        *phi += prefac*rcm2*0.5*log(rcm2);  // Fabien : replaced = by += !
 					}
 				}
 			}
@@ -777,8 +770,6 @@ void TreeQuad::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alph
 					if(haloON)
                     {
 						halos[tmp_index]->force_halo(alpha,kappa,gamma,phi,xcm,no_kappa,true);
-                        
-                                           //     std::cout << "Test 2  " ;
  					}
                     else
                     {  // case of no halos just particles and no class derived from TreeQuad
@@ -810,7 +801,7 @@ void TreeQuad::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alph
 								gamma[1] += xcm[0]*xcm[1]*tmp;
                                 
                                 // TODO: makes sure the normalization of phi_h agrees with this
-                                *phi = (phi_h(arg1,arg2) + 0.5*log(rcm2))*prefac*rcm2;
+                                *phi += (phi_h(arg1,arg2) + 0.5*log(rcm2))*prefac*rcm2;  // Fabien : replaced = by += !
 							}
 						}
 					}

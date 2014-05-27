@@ -138,7 +138,7 @@ LensHaloNFW::LensHaloNFW(float my_mass,float my_Rmax,PosType my_zlens,float my_c
 
     }else set_flag_elliptical(false);
     
-    std::cout << mass << " " << rscale << std::endl;
+    // std::cout << mass << " " << rscale << std::endl;
     
  }
 
@@ -1310,7 +1310,7 @@ void LensHaloDummy::force_halo(PosType *alpha
             gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
             gamma[1] += xcm[0]*xcm[1]*tmp;
             
-            *phi += phi_h(x); // TO DO Fabien : need to check the factor in front of phi_h() !
+            *phi += phi_h(x);
         }
     }
     
