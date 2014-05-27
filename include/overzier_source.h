@@ -75,6 +75,7 @@ public:
   */
 	inline PosType getMinSize(PosType f) {return std::min(1.678*Reff*fabs(cos(inclination))*pow(-log (f)/7.67,4),Rh*(-log (f)/1.67));}
 
+  static PosType *getx(SourceOverzier &sourceo){return sourceo.getX();}
 
 private:
 	void assignParams(InputParams& params);

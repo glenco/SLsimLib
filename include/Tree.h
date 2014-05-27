@@ -196,6 +196,10 @@ inline PosType MAX(PosType x,PosType y){
 	return (x > y) ? x : y;
 };
 
+template <class T>
+inline bool BETWEEN(T x,T xmin,T xmax){
+	return (x > xmin)*(x < xmax);
+};
 
 /*  returns the distance from ray[] to the furthest point on the
  *    border of the box,
