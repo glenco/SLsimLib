@@ -1235,3 +1235,180 @@ void UniformMagCheck(ImageInfo *imageinfo){
 		}
 	}
 }
+
+
+/** \brief Integrate the flux within a cell using the isoparametric expansion.
+ *
+ *   Will return false if a) the cell does not have 8 equally sized neighbor cells
+ *   or b) because it is found that the isop expansion is not valid within the
+ *   specified tolerance.
+ *
+ *   The result is returned in the point->surface_brightness in surface brightness
+ *   units.
+ *
+ *   The point must have already been linked and entered into a tree.
+ */
+bool ImageFinding::IntegrateFluxInCell(
+                                       Point *point      /// center point of cell to be integrated
+                                       ,Source &source   /// source to be integrated
+                                       ,float tolerance  /// tolerance to which isop expantion is checked
+                                       ){
+  
+  // Check that
+  if(point->leaf->neighbors.size() != 8) return false;
+  
+  std::vector<Point *> neighbors;
+  int i = 0;
+  for(std::list<Branch *>::iterator it = point->leaf->neighbors.begin();
+      it != point->leaf->neighbors.end() ; ++it,++i){
+		if((*it)->npoints == 0) return false;
+		neighbors[i] = (*it)->points;
+	}
+  
+  // sort neighbors into counterclockwise order from bottom left
+  int j=0,k=7;
+  for(i=0;i<8;++i){
+    if(neighbors[i]->x[1] < point->x[1]){
+      std::swap(neighbors[i],neighbors[j]);
+      ++j;
+    }
+    if(neighbors[i]->x[1] > point->x[1]){
+      std::swap(neighbors[i],neighbors[k]);
+      --k;
+    }
+  }
+  assert(j == 2);
+  assert(k == 5);
+  j=0;
+  k=2;
+  for(i=0;i<3;++i){
+    if(neighbors[i]->x[0] < point->x[0]){
+      std::swap(neighbors[i],neighbors[j]);
+      ++j;
+    }
+    if(neighbors[i]->x[0] > point->x[0]){
+      std::swap(neighbors[i],neighbors[k]);
+      --k;
+    }
+  }
+  if(neighbors[3]->x[0] < neighbors[4]->x[0] ) std::swap(neighbors[4],neighbors[3]);
+  std::swap(neighbors[4],neighbors[7]);
+  j=4;
+  k=6;
+  for(i=4;i<7;++i){
+    if(neighbors[i]->x[0] > point->x[0]){
+      std::swap(neighbors[i],neighbors[j]);
+      ++j;
+    }
+    if(neighbors[i]->x[0] < point->x[0]){
+      std::swap(neighbors[i],neighbors[k]);
+      --k;
+    }
+  }
+  
+  PosType x[8],y[8],flux=0.0;
+  for(i=0;i<8;++i){
+    x[i] = neighbors[i]->image->x[0];
+    y[i] = neighbors[i]->image->x[1];
+  }
+  
+  double scale = sqrt( (x[0]-x[4])*(x[0]-x[4]) + (y[0]-y[4])*(y[0]-y[4]) );
+  // see if isop expansion is valid
+  if( fabs(point->image->x[0]-isop(x,0,0)) > tolerance*scale) return false;
+  if( fabs(point->image->x[1]-isop(y,0,0)) > tolerance*scale) return false;
+  
+  // goto each quadrant and integrate the function.
+  {
+    x[0] = neighbors[0]->image->x[0];
+    y[0] = neighbors[0]->image->x[1];
+    interpfrom2Points(neighbors[0],neighbors[1],&x[1],&y[1]);
+    x[2] = neighbors[1]->image->x[0];
+    y[2] = neighbors[1]->image->x[1];
+    interpfrom2Points(neighbors[1],point,&x[3],&y[3]);
+    x[4] = point->x[0];
+    y[4] = point->x[1];
+    interpfrom2Points(neighbors[7],point,&x[5],&y[5]);
+    x[6] = neighbors[7]->image->x[0];
+    y[6] = neighbors[7]->image->x[1];
+    interpfrom2Points(neighbors[7],neighbors[0],&x[7],&y[7]);
+    flux +=  isop_render(source,x,y,0,0,1,1);
+  }
+  {
+    x[0] = neighbors[1]->image->x[0];
+    y[0] = neighbors[1]->image->x[1];
+    interpfrom2Points(neighbors[1],neighbors[2],&x[1],&y[1]);
+    x[2] = neighbors[2]->image->x[0];
+    y[2] = neighbors[2]->image->x[1];
+    interpfrom2Points(neighbors[2],neighbors[3],&x[3],&y[3]);
+    x[4] = neighbors[3]->image->x[0];
+    y[4] = neighbors[3]->image->x[1];
+    interpfrom2Points(neighbors[3],point,&x[5],&y[5]);
+    x[6] = point->x[0];
+    y[6] = point->x[1];
+    interpfrom2Points(neighbors[1],point,&x[7],&y[7]);
+    flux +=  isop_render(source,x,y,-1,0,0,1);
+  }
+  {
+    x[0] = point->x[0];
+    y[0] = point->x[1];
+    interpfrom2Points(neighbors[3],point,&x[1],&y[1]);
+    x[2] = neighbors[3]->image->x[0];
+    y[2] = neighbors[3]->image->x[1];
+    interpfrom2Points(neighbors[3],neighbors[4],&x[3],&y[3]);
+    x[4] = neighbors[4]->image->x[0];
+    y[4] = neighbors[4]->image->x[1];
+    interpfrom2Points(neighbors[4],neighbors[5],&x[5],&y[5]);
+    x[6] = neighbors[5]->image->x[0];
+    y[6] = neighbors[5]->image->x[1];
+    interpfrom2Points(neighbors[5],point,&x[7],&y[7]);
+    flux +=  isop_render(source,x,y,-1,-1,0,0);
+  }
+  {
+    x[0] = neighbors[7]->image->x[0];
+    y[0] = neighbors[7]->image->x[1];
+    interpfrom2Points(neighbors[7],point,&x[1],&y[1]);
+    x[2] = point->x[0];
+    y[2] = point->x[1];
+    interpfrom2Points(neighbors[5],point,&x[3],&y[3]);
+    x[4] = neighbors[5]->image->x[0];
+    y[4] = neighbors[5]->image->x[1];
+    interpfrom2Points(neighbors[5],neighbors[6],&x[5],&y[5]);
+    x[6] = neighbors[6]->image->x[0];
+    y[6] = neighbors[6]->image->x[1];
+    interpfrom2Points(neighbors[6],neighbors[7],&x[7],&y[7]);
+    flux +=  isop_render(source,x,y,0,-1,1,0);
+  }
+  
+  point->surface_brightness = flux/point->gridsize/point->gridsize;
+  return true;
+}
+
+/** \brief Finds the source position of a point that lies half way between points p1 and p2 on the image plane by third order interpolation.
+ */
+void interpfrom2Points(Point const * p1,Point const * p2,PosType *x,PosType *y){
+  PosType dx = p1->x[0] - p2->x[0],dy = p1->x[1] - p2->x[1];
+  PosType l = sqrt(dx*dx +dy*dy);
+  dx /=l;
+  dy /=l;
+  
+  // The sign convention agrees with GLAMER paper II here which should be correct.
+  double A1p1 = (1 - p1->kappa - p1->gamma[0])*dx - (p1->gamma[1] - p1->gamma[2])*dy;
+  double A2p1 = (1 - p1->kappa + p1->gamma[0])*dy - (p1->gamma[1] + p1->gamma[2])*dx;
+  double A1p2 = (1 - p2->kappa - p2->gamma[0])*dx - (p2->gamma[1] - p2->gamma[2])*dy;
+  double A2p2 = (1 - p2->kappa + p2->gamma[0])*dy - (p2->gamma[1] + p2->gamma[2])*dx;
+  
+  /*
+   x = p1->image->x[0] + (p2->image->x[0] - p1->image->x[0])*s*s*(3-2*s)
+   + l*A1p1*s*(1-s)*(1-s) + l*A1p2*s*s*(1-s);
+   y = p1->image->x[1] + (p2->image->x[1] - p1->image->x[1])*s*s*(3-2*s)
+   + l*A2p1*s*(1-s)*(1-s) + l*A2p2*s*s*(1-s);
+   */
+  
+  *x = (p2->image->x[0] + p1->image->x[0])/2
+  + l*( A1p1 + A1p2 )/8;
+  *y = (p2->image->x[1] + p1->image->x[1])/2
+  + l*( A2p1 + A2p2 )/8;
+  
+  return;
+}
+
