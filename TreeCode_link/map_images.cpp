@@ -5,6 +5,7 @@
  *      Author: bmetcalf
  */
 #include "slsimlib.h"
+#include "isop.h"
 
 //const float mumin = 0.3;  // actually the sqrt of the minimum magnification
 const PosType FracResTarget = 3.0e-5;
@@ -14,16 +15,16 @@ const PosType target_all = 1.0e-3;
 const float tol_UniformMag = 1.0e-3;
 const bool verbose = false;
 
-/** \ingroup ImageFinding
+/**
  *  \brief Find images and refine them based on their surface brightness distribution.
  *
- *  Uses find_images_kist() to initially find and refine images and then uses a surface brightness
+ *  Uses ImageFinding::find_images_kist() to initially find and refine images and then uses a surface brightness
  *  based criterion to refine the most important parts of the lens.
  *
  *  map_images is intended for mapping images of sources more complicated than simple circles.
  *
  */
-void map_images(
+void ImageFinding::map_images(
 	    /// model
 		LensHndl lens
 		,Source *source
@@ -39,7 +40,7 @@ void map_images(
 		                        /// If < 0 no telescoping is used and only the already existing points are used to
 		                        /// to initiate the image finding.
 		,ExitCriterion criterion  /// see data type
-		,bool kappa_off         /// turns off calculation of surface density, shear, magnification and time delay
+		//,bool kappa_off         /// turns off calculation of surface density, shear, magnification and time delay
 		,bool FindCenter        /// if the center of the source is not known this can be set to true and it will attempt to
 		                        /// find the center, find the size of the source and determine if there is more than one source
 			                    /// The entire source must be within xmax of source->getX() because this is the only
@@ -74,7 +75,6 @@ void map_images(
 
 	unsigned long tmp_count = 0;
 
-	kappa_off = false;
 	ImageInfo *sourceinfo = new ImageInfo[NimageMax];
 
 	if(FindCenter){
@@ -169,7 +169,7 @@ void map_images(
 			center[0] = source->getX()[0];
 			center[1] = source->getX()[1];
 		}
-		find_images_kist(lens,center,rs[0],grid,Nimages,imageinfo,NimageMax,&Nimagepoints,initial_size,true,0,false,true);
+		ImageFinding::find_images_kist(lens,center,rs[0],grid,Nimages,imageinfo,NimageMax,&Nimagepoints,initial_size,true,0,false);
 		for(i=1;i<Nsources;++i){
 			if(sourceinfo[i].imagekist->Nunits() > 0){
 				center[0] = sourceinfo[i].centroid[0];
@@ -178,18 +178,18 @@ void map_images(
 				center[0] = source->getX()[0];
 				center[1] = source->getX()[1];
 			}
-			find_images_kist(lens,center,rs[i],grid,Nimages,imageinfo,NimageMax,&Nimagepoints,xmax,true,0,false,true);
+			ImageFinding::find_images_kist(lens,center,rs[i],grid,Nimages,imageinfo,NimageMax,&Nimagepoints,xmax,true,0,false);
 		}
 
 		// free array of sourceinfo's'
 		delete[] rs;
 	}else{
-		if(verbose) std::cout << "number of grid points before find_images_kist: "<< grid->getNumberOfPoints() << std::endl;
-		//find_images_kist(lens,source->getX(),xmin,grid,Nimages,imageinfo,NimageMax,&Nimagepoints
+		if(verbose) std::cout << "number of grid points before ImageFinding::find_images_kist: "<< grid->getNumberOfPoints() << std::endl;
+		//ImageFinding::find_images_kist(lens,source->getX(),xmin,grid,Nimages,imageinfo,NimageMax,&Nimagepoints
 		//		,0,true,0,false,true);
-		find_images_kist(lens,source->getX(),xmin,grid,Nimages,imageinfo,NimageMax,&Nimagepoints
-				,0,false,0,verbose,kappa_off);
-		if(verbose) std::cout << "number of grid points after find_images_kist: "<< grid->getNumberOfPoints() << std::endl;
+		ImageFinding::find_images_kist(lens,source->getX(),xmin,grid,Nimages,imageinfo,NimageMax,&Nimagepoints
+				,0,false,0,verbose);
+		if(verbose) std::cout << "number of grid points after ImageFinding::find_images_kist: "<< grid->getNumberOfPoints() << std::endl;
 		Nsources = 1;
 		sourceinfo->centroid[0] = source->getX()[0];
 		sourceinfo->centroid[1] = source->getX()[1];
@@ -265,9 +265,9 @@ void map_images(
 			if(rs[i] == 0.0) rs[i] = 2*source->source_r_out/Ntmp;
 		}
 
-		find_images_kist(centers[0],rs[0],grid,Nimages,imageinfo,NimageMax,&Nimagepoints,initial_size,true,0,false,true);
+		ImageFinding::find_images_kist(centers[0],rs[0],grid,Nimages,imageinfo,NimageMax,&Nimagepoints,initial_size,true,0,false,true);
 		for(i=1;i<Nsources;++i){
-			find_images_kist(centers[i],rs[i],grid,Nimages,imageinfo,NimageMax,&Nimagepoints,source->source_r_out,true,0,false,true);
+			ImageFinding::find_images_kist(centers[i],rs[i],grid,Nimages,imageinfo,NimageMax,&Nimagepoints,source->source_r_out,true,0,false,true);
 		}
 
 		free_dmatrix(centers,0,Nsources-1,0,1);
@@ -275,7 +275,7 @@ void map_images(
 		freeTree(tree);
 	}else{
 
-		find_images_kist(source->getX(),xmin,grid,Nimages
+		ImageFinding::find_images_kist(source->getX(),xmin,grid,Nimages
 			  ,imageinfo,NimageMax,&Nimagepoints,initial_size,true,0,false,true);
 	}
 */
@@ -293,7 +293,7 @@ void map_images(
 /*
 		// refine grid down to a small size
 		Ntmp = NumberOfPoints(grid);
-		if(initial_size >= 0) find_images_kist(center,r_source,grid,Nimages
+		if(initial_size >= 0) ImageFinding::find_images_kist(center,r_source,grid,Nimages
 			  ,imageinfo,NimageMax,&Nimagepoints,initial_size,true,0,false,true);
 		Ntmp = NumberOfPoints(grid) - Ntmp;
 		if(Ntmp > 0) tmp = RefreshSurfaceBrightnesses(grid,lens);  // Calculate surface brightnesses for points added.
@@ -518,8 +518,8 @@ void map_images(
 	 ******* refine images based on flux in each pixel ******
 	 *******************************************************/
 	i=0;
-	while( refine_grid_on_image(lens,source,grid,maxflux,imageinfo,Nimages,sourceinfo,Nsources,NimageMax
-			,FracResTarget,criterion,kappa_off,divide_images) > 0 ) ++i;
+	while( ImageFinding::refine_grid_on_image(lens,source,grid,maxflux,imageinfo,Nimages,sourceinfo,Nsources,NimageMax
+			,FracResTarget,criterion,divide_images) > 0 ) ++i;
 
 	//printf("i=%i Nold=%li\n",i,Nold);
 	//printf("%li\n",imagelist->Npoints);
@@ -583,7 +583,7 @@ void map_images(
  *   The images centroids and gridranges are maintained.
  **/
 
-void map_images_fixedgrid(
+void ImageFinding::map_images_fixedgrid(
                 Source *source
                 ,GridHndl grid          /// Tree of grid points
                 ,int *Nimages           /// number of images found
@@ -732,7 +732,6 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,PosType maxflux
   for(i=0,Nold=0;i<(*Nimages);++i) Nold += imageinfo[i].imagekist->Nunits();
   if(total_area == 0.0) return 0;
 
-  Point *point;
   Kist<Point> * nearest=new Kist<Point>;
   std::vector<Point *> points_to_refine;
 
@@ -743,7 +742,7 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,PosType maxflux
 
 	  // Constant magnification cut
 	  if(imageinfo[i].uniform_mag == unchecked){
-		  UniformMagCheck(&imageinfo[i]);
+		  ImageFinding::UniformMagCheck(&imageinfo[i]);
 		  if(imageinfo[i].uniform_mag == yes){
 			  if(Nsources > 1){
 				  // Find the closest source
@@ -772,7 +771,7 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,PosType maxflux
 		  for(j = 0 ; j < imageinfo[i].imagekist->Nunits() ; ++j,imageinfo[i].imagekist->Down() ){
 
 			  if(
-					  RefinePoint2(imageinfo[i].imagekist->getCurrent(),grid->i_tree
+					  ImageFinding::RefinePoint2(imageinfo[i].imagekist->getCurrent(),grid->i_tree
 					  	,imageinfo[i].area,total_area,maxflux,criterion,res_target,nearest)
            //RefinePoint_sb(getCurrentKist(imageinfo[i].imagekist),grid->i_tree
            //		,imageinfo[i].area,total_area,2*source->getSBlimit(),nearest)
@@ -812,8 +811,8 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,PosType maxflux
 					  imageinfo[i].area +=  pow(imageinfo[i].imagekist->getCurrent()->gridsize/grid->getNgrid_block(),2)
 							  *(imageinfo[i].imagekist->getCurrent()->surface_brightness/maxflux);
 				  }else{
-					  i_points = grid->RefineLeaf(lens,imageinfo[i].imagekist->getCurrent(),kappa_off);
-					  check_sb_add(source,&imageinfo[i],i_points,maxflux,Nold,number_of_refined);
+					  i_points = grid->RefineLeaf(lens,imageinfo[i].imagekist->getCurrent());
+					  ImageFinding::check_sb_add(source,&imageinfo[i],i_points,maxflux,Nold,number_of_refined);
 
 					  /*if(i_points != NULL){
 						  // link new points into image kist and calculate surface brightnesses
@@ -856,8 +855,8 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,PosType maxflux
 		  }
 
 		  if(batch){
-			  i_points = grid->RefineLeaves(lens,points_to_refine,kappa_off);
-			  check_sb_add(source,&imageinfo[i],i_points,maxflux,Nold,number_of_refined);
+			  i_points = grid->RefineLeaves(lens,points_to_refine);
+			  ImageFinding::check_sb_add(source,&imageinfo[i],i_points,maxflux,Nold,number_of_refined);
 			  points_to_refine.clear();
 		  }
 
@@ -885,7 +884,7 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,PosType maxflux
 			  //assert(getCurrentKist(imageinfo[i].outerborder)->surface_brightness == 0);
 
 			  if(
-					  RefinePoint2(imageinfo[i].outerborder->getCurrent(),grid->i_tree
+					  ImageFinding::RefinePoint2(imageinfo[i].outerborder->getCurrent(),grid->i_tree
 					      ,imageinfo[i].area,total_area,maxflux,criterion,res_target,nearest)
 					  //RefinePoint_sb(getCurrentKist(imageinfo[i].outerborder),grid->i_tree
 					  //    ,imageinfo[i].area,total_area,2*source->getSBlimit(),nearest)
@@ -902,8 +901,8 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,PosType maxflux
 					  if(batch){
 						  points_to_refine.push_back(imageinfo[i].outerborder->getCurrent());
 					  }else{
-						  i_points = grid->RefineLeaf(lens,imageinfo[i].outerborder->getCurrent(),kappa_off);
-						  check_sb_add(source,&imageinfo[i],i_points,maxflux,Nold,number_of_refined);
+						  i_points = grid->RefineLeaf(lens,imageinfo[i].outerborder->getCurrent());
+						  ImageFinding::check_sb_add(source,&imageinfo[i],i_points,maxflux,Nold,number_of_refined);
 					  }
 					  /*if(i_points != NULL){
 						  // link new points into image kist and calculate surface brightnesses
@@ -946,8 +945,8 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,PosType maxflux
 		  assert(imageinfo[i].area >= 0.0);
 
 		  if(batch){
-			  i_points = grid->RefineLeaves(lens,points_to_refine,kappa_off);
-			  check_sb_add(source,&imageinfo[i],i_points,maxflux,Nold,number_of_refined);
+			  i_points = grid->RefineLeaves(lens,points_to_refine);
+			  ImageFinding::check_sb_add(source,&imageinfo[i],i_points,maxflux,Nold,number_of_refined);
 			  points_to_refine.clear();
 		  }
 
@@ -1012,7 +1011,7 @@ int refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,PosType maxflux
 			imageinfo[i].ShouldNotRefine = 0;
 			imageinfo[i].uniform_mag = unchecked;
 
-			UniformMagCheck(&imageinfo[i]);
+			ImageFinding::UniformMagCheck(&imageinfo[i]);
 			if(imageinfo[i].uniform_mag == yes){
 				if(Nsources > 1){
 					// Find the closest source
@@ -1076,7 +1075,7 @@ void check_sb_add(Source *source,ImageInfo *imageinfo,Point *i_points,PosType ma
 	}
 }
 
-bool RefinePoint2(Point *point,TreeHndl i_tree,PosType image_area,PosType total_area,PosType maxflux
+bool ImageFinding::RefinePoint2(Point *point,TreeHndl i_tree,PosType image_area,PosType total_area,PosType maxflux
 		,ExitCriterion criterion,PosType res_target,Kist<Point> * nearest){
 
 	PosType borderSB = 0,error = 0,maxdiff_sb;
@@ -1113,7 +1112,7 @@ bool RefinePoint2(Point *point,TreeHndl i_tree,PosType image_area,PosType total_
 	return false;
 }
 // refinement criterion based on difference in surface brightness
-bool RefinePoint_sb(Point *point,TreeHndl i_tree,PosType image_area,PosType total_area
+bool ImageFinding::RefinePoint_sb(Point *point,TreeHndl i_tree,PosType image_area,PosType total_area
                     ,PosType sb_limit,PosType maxflux,Kist<Point> * nearest){
   
   PosType smallsize = 1.0e-7;
@@ -1140,7 +1139,7 @@ bool RefinePoint_sb(Point *point,TreeHndl i_tree,PosType image_area,PosType tota
 	return false;
 }
 // refinement criterion based on difference in surface brightness
-bool RefinePoint_smallsize(Point *point,TreeHndl i_tree,PosType image_area,PosType total_area
+bool ImageFinding::RefinePoint_smallsize(Point *point,TreeHndl i_tree,PosType image_area,PosType total_area
                     ,PosType smallsize,PosType maxflux,Kist<Point> * nearest){
   
 	// Prevent cell from getting so small that precision error prevents everything from working
@@ -1213,7 +1212,7 @@ bool RefinePoint(Point *point,TreeHndl i_tree,PosType image_area,PosType total_a
  * \brief Checks to see if the image has a nearly uniform magnification across it and thus can be considered linearly
  * distorted.
  */
-void UniformMagCheck(ImageInfo *imageinfo){
+void ImageFinding::UniformMagCheck(ImageInfo *imageinfo){
 
 	// find minimum and maximum magnification on border
 	if(imageinfo->imagekist->Nunits() > 10 && imageinfo->uniform_mag == unchecked){
@@ -1253,7 +1252,8 @@ bool ImageFinding::IntegrateFluxInCell(
                                        ,Source &source   /// source to be integrated
                                        ,float tolerance  /// tolerance to which isop expantion is checked
                                        ){
-  
+  //bool IntegrateFluxInCell(Point *point,Source *source,float tolerance);
+
   // Check that
   if(point->leaf->neighbors.size() != 8) return false;
   
@@ -1314,8 +1314,8 @@ bool ImageFinding::IntegrateFluxInCell(
   
   double scale = sqrt( (x[0]-x[4])*(x[0]-x[4]) + (y[0]-y[4])*(y[0]-y[4]) );
   // see if isop expansion is valid
-  if( fabs(point->image->x[0]-isop(x,0,0)) > tolerance*scale) return false;
-  if( fabs(point->image->x[1]-isop(y,0,0)) > tolerance*scale) return false;
+  if( fabs(point->image->x[0] - SLsimLib::isop(x,0,0)) > tolerance*scale) return false;
+  if( fabs(point->image->x[1] - SLsimLib::isop(y,0,0)) > tolerance*scale) return false;
   
   // goto each quadrant and integrate the function.
   {
@@ -1331,7 +1331,7 @@ bool ImageFinding::IntegrateFluxInCell(
     x[6] = neighbors[7]->image->x[0];
     y[6] = neighbors[7]->image->x[1];
     interpfrom2Points(neighbors[7],neighbors[0],&x[7],&y[7]);
-    flux +=  isop_render(source,x,y,0,0,1,1);
+    flux +=  SLsimLib::isop_render(source,x,y,0,0,1,1);
   }
   {
     x[0] = neighbors[1]->image->x[0];
@@ -1346,7 +1346,7 @@ bool ImageFinding::IntegrateFluxInCell(
     x[6] = point->x[0];
     y[6] = point->x[1];
     interpfrom2Points(neighbors[1],point,&x[7],&y[7]);
-    flux +=  isop_render(source,x,y,-1,0,0,1);
+    flux +=  SLsimLib::isop_render(source,x,y,-1,0,0,1);
   }
   {
     x[0] = point->x[0];
@@ -1361,7 +1361,7 @@ bool ImageFinding::IntegrateFluxInCell(
     x[6] = neighbors[5]->image->x[0];
     y[6] = neighbors[5]->image->x[1];
     interpfrom2Points(neighbors[5],point,&x[7],&y[7]);
-    flux +=  isop_render(source,x,y,-1,-1,0,0);
+    flux +=  SLsimLib::isop_render(source,x,y,-1,-1,0,0);
   }
   {
     x[0] = neighbors[7]->image->x[0];
@@ -1376,7 +1376,7 @@ bool ImageFinding::IntegrateFluxInCell(
     x[6] = neighbors[6]->image->x[0];
     y[6] = neighbors[6]->image->x[1];
     interpfrom2Points(neighbors[6],neighbors[7],&x[7],&y[7]);
-    flux +=  isop_render(source,x,y,0,-1,1,0);
+    flux +=  SLsimLib::isop_render(source,x,y,0,-1,1,0);
   }
   
   point->surface_brightness = flux/point->gridsize/point->gridsize;
@@ -1385,7 +1385,7 @@ bool ImageFinding::IntegrateFluxInCell(
 
 /** \brief Finds the source position of a point that lies half way between points p1 and p2 on the image plane by third order interpolation.
  */
-void interpfrom2Points(Point const * p1,Point const * p2,PosType *x,PosType *y){
+void ImageFinding::interpfrom2Points(Point const * p1,Point const * p2,PosType *x,PosType *y){
   PosType dx = p1->x[0] - p2->x[0],dy = p1->x[1] - p2->x[1];
   PosType l = sqrt(dx*dx +dy*dy);
   dx /=l;

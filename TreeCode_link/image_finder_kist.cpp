@@ -21,7 +21,7 @@ static const float telescope_low = 0.01;
  *
  * \brief  Finds images given a source position and size.
  *
- * find_image_kist returns finite refined images in images[0...*Nimages-1].imagekist
+ * find_images_kist returns finite refined images in images[0...*Nimages-1].imagekist
  *  It starts with a large source and reduces down to the right size refining at each step.
  *  It should not miss any image larger than ~ munin*r_source linear size, but seems to do
  *  much better than that.  It does nothing with the surface brightnesses.
@@ -282,7 +282,7 @@ void find_images_kist(
 			// case where no image is found at any size
       grid->s_tree->PointsWithinKist(y_source,r_source,&subkist,0);
 
-      std::cout << "exiting find_images_kist() without finding an image. N in image = " << subkist.Nunits() << std::endl;
+      std::cout << "exiting ImageFinding::find_images_kist() without finding an image. N in image = " << subkist.Nunits() << std::endl;
 			*Nimages = 0;
 			*Nimagepoints = 0;
 			return ;
@@ -437,7 +437,7 @@ void find_images_kist(
  *
  * \brief  Finds images given a source position and size.
  *
- * find_image_kist returns finite refined images in images[0...*Nimages-1].imagekist
+ * ImageFinding::find_images_kist returns finite refined images in images[0...*Nimages-1].imagekist
  *  It starts with a large source and reduces down to the right size refining at each step.
  *  It should not miss any image larger than ~ munin*r_source linear size, but seems to do
  *  much better than that.  It does nothing with the surface brightnesses.
