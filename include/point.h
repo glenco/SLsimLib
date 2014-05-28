@@ -59,6 +59,7 @@ struct Point{
   float surface_brightness;  // the surface brightness at this points
 
   Branch *leaf;
+  bool flag;
 
   void print();
   void Print();

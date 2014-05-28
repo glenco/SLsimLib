@@ -13,6 +13,7 @@ add_sources(
 	image_finder_kist.cpp
 	isop_render.cpp
 	map_images.cpp
+	map_imagesISOP.cpp
 	peak_refinement.cpp
 	quadrature.cpp
 	tree_maintenance.cpp
