@@ -459,7 +459,7 @@ LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
                     }
                 }
             }
-        */
+    
         calcModes(fratio, beta, pa, mod);
         
         for(int i=0;i<Nmod;i++){
@@ -467,7 +467,7 @@ LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
             mod[i]=modfunc(i, beta, fratio);
             std::cout<< "after: " << mod[i] << std::endl;
         }
-        
+        */
         calcModes(fratio, beta, pa, mod);
         //    std::cout << mod[4] << " " << modfunc(4, 1, 0.5) << std::endl;
         

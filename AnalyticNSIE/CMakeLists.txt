@@ -4,6 +4,7 @@ add_sources(
 	hernquist_lens.cpp
 	jaffe_lens.cpp
 	lens_expand.cpp
+	modes_ana.cpp
 	nfw_lens.cpp
 	nsie.cpp
 	powerlaw.cpp
