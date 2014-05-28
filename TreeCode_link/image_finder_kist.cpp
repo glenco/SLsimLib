@@ -176,7 +176,7 @@ void find_images_kist(
 
         if(*Nimagepoints == 100){
           grid->s_tree->PointsWithinKist(y_source,rtemp, &subkist, 0);
-          std::cout << "Points within: " << subkist.Nunits() << std::endl;
+          //std::cout << "Points within: " << subkist.Nunits() << std::endl;
           
           if(subkist.Nunits() == 0){
             grid->s_tree->PointsWithinKist(y_source, Ngrid_block*rtemp, &subkist, 0);

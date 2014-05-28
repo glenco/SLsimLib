@@ -5,6 +5,7 @@
  *      Author: bmetcalf
  */
 #include "slsimlib.h"
+#include "simpleTreeVec.h"
 
 // TODO: set `mag_limit` and `band` to default values in all constructors
 
@@ -47,10 +48,13 @@ SourceMultiAnaGalaxy::SourceMultiAnaGalaxy(
 
 	readDataFile();
 	index = 0;
+  searchtree = new TreeSimpleVec<SourceOverzier>(galaxies.data(),galaxies.size(),1,2,true,SourceOverzier::getx);
+  //searchtree = new TreeSimpleVec<SourceOverzier>(galaxies.data(),galaxies.size(),1,3,true);
 }
 
 SourceMultiAnaGalaxy::~SourceMultiAnaGalaxy()
 {
+  delete searchtree;
 }
 
 /// read in galaxies from a Millennium simulation file
@@ -406,7 +410,10 @@ void SourceMultiAnaGalaxy::multiplier(
 
 /// Sort the sources by redshift in assending order
 void SourceMultiAnaGalaxy::sortInRedshift(){
-    std::sort(galaxies.begin(),galaxies.end(),redshiftcompare);
+  if(galaxies.size() < 2) return;
+  std::sort(galaxies.begin(),galaxies.end(),redshiftcompare);
+  delete searchtree;
+  searchtree = new TreeSimpleVec<SourceOverzier>(galaxies.data(),galaxies.size(),1,2,true,SourceOverzier::getx);
 }
 // used in MultiSourceAnaGalaxy::sortInRedshift()
 bool redshiftcompare(SourceOverzier s1,SourceOverzier s2){
@@ -414,11 +421,17 @@ bool redshiftcompare(SourceOverzier s1,SourceOverzier s2){
 }
 /// Sort the sources by magnitude in assending order
 void SourceMultiAnaGalaxy::sortInMag(){
+  if(galaxies.size() < 2) return;
   std::sort(galaxies.begin(),galaxies.end(),magcompare);
+  delete searchtree;
+  searchtree = new TreeSimpleVec<SourceOverzier>(galaxies.data(),galaxies.size(),1,2,true,SourceOverzier::getx);
 }
 /// Sort the sources by magnitude in assending order
 void SourceMultiAnaGalaxy::sortInID(){
+  if(galaxies.size() < 2) return;
   std::sort(galaxies.begin(),galaxies.end(),idcompare);
+  delete searchtree;
+  searchtree = new TreeSimpleVec<SourceOverzier>(galaxies.data(),galaxies.size(),1,2,true,SourceOverzier::getx);
 }
 // used in MultiSourceAnaGalaxy::sortInRedshift()
 bool magcompare(SourceOverzier s1,SourceOverzier s2){

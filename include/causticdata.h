@@ -12,6 +12,8 @@
 #include <iostream>
 #include "standard.h"
 #include "utilities_slsim.h"
+#include "simpleTree.h"
+#include "simpleTreeVec.h"
 
 /// A class used within CausticData class to store information on a caustic and critical curve pair
 struct CausticStructure{
@@ -60,6 +62,7 @@ public:
   CausticData(std::string filename);
   /// creates an empty object 
   CausticData(size_t size);
+  CausticData(const CausticData &input);
   ~CausticData();
 
   
@@ -81,9 +84,9 @@ public:
   void SortByCausticArea();
   
   /// initialize for selection with RandomLens()
-  void init_for_random(
+  size_t init_for_random(
         short type              /// select according to: (1) critical curve area, (2) caustic curve area
-        ,double limit = 0.0
+        ,double limit = 0.0     /// minimum accepted area
   ){
     size_t i;
     if(type == 1){
@@ -100,6 +103,8 @@ public:
       for(i=0;(i<data.size()-1) && (data[i].caustic_area > limit) ;++i) cummulative_area[i+1] = data[i].caustic_area + cummulative_area[i];
       cummulative_area.resize(i);
     }
+      
+      return cummulative_area.size();
   }
   
   /**
@@ -115,16 +120,36 @@ public:
 
   int RandomLens(Utilities::RandomNumbers_NR &ran){
     if(cummulative_area.size() == 0 ) throw std::runtime_error("CausticData::RandomLens - CausticData::init_for_random() must be set before using this!  You can also not reorder the caustics without reinitializing");
-    return locate<double>(cummulative_area,ran()*cummulative_area.back());
+      return Utilities::locate<double>(cummulative_area,ran()*cummulative_area.back());
   }
 
+  bool findNearestCrit(PosType x[2],size_t &index);
   
+  static PosType *causticCenter(CausticStructure &tmp){return tmp.caustic_center;}
+  static PosType *critCenter(CausticStructure &tmp){return tmp.crit_center;}
+  static bool comparcritsize(const CausticStructure &caust1,const CausticStructure &caust2){
+    return (caust1.crit_radius[0] > caust2.crit_radius[0]);
+  }
+  static bool comparcritarea(const CausticStructure &caust1,const CausticStructure &caust2){
+    return (caust1.crit_area > caust2.crit_area);
+  }
+  static bool comparcausticarea(const CausticStructure &caust1,const CausticStructure &caust2){
+    return (caust1.caustic_area > caust2.caustic_area);
+  }
+
 private:
   
   int ncolumns;
   std::vector<CausticStructure> data;
   std::vector<double> cummulative_area;
   size_t offset_index = 0;
+  
+  void SetSearchTree();
+  //TreeSimple *searchtree;
+  TreeSimpleVec<CausticStructure> *searchtreevec;
+  //PosType **xp;
+  size_t Nxp;
+  
 };
 
 bool comparcritsize(const CausticStructure &caust1,const CausticStructure &caust2);

@@ -26,7 +26,7 @@ public:
 	PixelMap(const PixelMap& other);
 	PixelMap(const PixelMap& pmap, const double* center, std::size_t Npixels);
 	PixelMap(const double* center, std::size_t Npixels, double resolution);
-	PixelMap(std::string filename);
+	PixelMap(std::string fitsfilename);
 	~PixelMap();
 	
 	PixelMap& operator=(PixelMap other);
@@ -44,7 +44,7 @@ public:
 	void AddImages(ImageInfo *imageinfo,int Nimages,float rescale = 1.);
 	void AddCurve(ImageInfo *curve,double value);
 	void drawline(double x1[],double x2[],double value);
-  void drawcircle(PosType r_center[],PosType radius,PosType value);
+    void drawcircle(PosType r_center[],PosType radius,PosType value);
 	void AddGrid(Grid &grid,double value = 1.0);
 
 	void Renormalize(double factor);
@@ -64,14 +64,25 @@ public:
 
 	PixelMap& operator-=(const PixelMap& rhs);
 	friend PixelMap operator-(const PixelMap&, const PixelMap&);
+    
+	PixelMap& operator*=(const PixelMap& rhs);
+	friend PixelMap operator*(const PixelMap&, const PixelMap&);
+
+	PixelMap& operator*=(PosType b);
+	friend PixelMap operator*(const PixelMap&, PosType b);
 	
 	const std::valarray<double>& data() const { return map; }
 	
 	bool agrees(const PixelMap& other) const;
 	
 	friend void swap(PixelMap&, PixelMap&);
+    
+    /// return average pixel value
+    PosType ave() const;
+    /// Total number of pixels
+    size_t size(){return map.size();}
 	
-  void FindArc(PosType &radius,PosType *xc,PosType &arclength,PosType &width
+    void FindArc(PosType &radius,PosType *xc,PosType *arc_center,PosType &arclength,PosType &width
                          ,PosType threshold);
 private:
 	std::valarray<double> map;
@@ -88,7 +99,7 @@ private:
 
 
 typedef enum {Euclid_VIS,Euclid_Y,Euclid_J,Euclid_H,KiDS_u,KiDS_g,KiDS_r,KiDS_i} Telescope;
-
+typedef enum {counts_x_sec, flux} unitType;
 /** \ingroup Image
  * \brief It creates a realistic image from the output of a ray-tracing simulation.
  *
@@ -100,17 +111,21 @@ class Observation
 public:
 	Observation(Telescope tel_name);
 	Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, float seeing = 0.);
-	Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, std::string psf_file, float oversample);
+	Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, std::string psf_file, float oversample = 1.);
 	float getExpTime(){return exp_time;}
 	int getExpNum(){return exp_num;}
 	float getBackMag(){return back_mag;}
 	float getDiameter(){return diameter;}
 	float getTransmission(){return transmission;}
+    /// read-out noise in electrons/pixel
 	float getRon(){return ron;}
 	float getSeeing(){return seeing;}
 	float getZeropoint(){return mag_zeropoint;}
+    /// pixel size in radians
+    float getPixelSize(){return pix_size;}
 	std::valarray<double> getPSF(){return map_psf;}
-	PixelMap Convert (PixelMap &map, bool psf, bool noise,long *seed);
+    void setPSF(std::string psf_file, float os = 1.);
+	PixelMap Convert (PixelMap &map, bool psf, bool noise,long *seed, unitType unit = counts_x_sec);
 	PixelMap Convert_back (PixelMap &map);
 
 private:
@@ -138,5 +153,9 @@ void pixelize(double *map,long Npixels,double range,double *center
 		,bool write_for_skymaker = false, std::string filename="");
 void _SplitFluxIntoPixels(TreeHndl ptree,Branch *leaf,double *leaf_sb);
 void smoothmap(double *map_out,double *map_in,long Npixels,double range,double sigma);
+
+namespace Utilities{
+    void LoadFitsImages(std::string dir,const std::string& filespec,std::vector<PixelMap> & images,int maxN,bool verbose = false);
+}
 
 #endif

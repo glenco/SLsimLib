@@ -387,8 +387,13 @@ void map_images(
 
 	tmp = grid->RefreshSurfaceBrightnesses(source);
 
-  assert(tmp > 0.0 || imageinfo->imagekist->Nunits() == 0);
-
+	if(tmp == 0.0){  // no flux was found
+	  imageinfo->imagekist->Empty();
+	  *Nimages = 0;
+	  for(i=0; i < NimageMax ; ++i) imageinfo[i].area = 0.0;
+	  return;
+	}
+	assert(tmp > 0.0 || imageinfo->imagekist->Nunits() == 0);
 
 	/*/********** test lines **********************
 	PointsWithinKist_iter(grid->s_tree,source->getX(),0,source->source_r_out,imageinfo->imagekist);

@@ -691,7 +691,7 @@ void Lens::setFieldDist()
 	
 	// spaces interval equally up to the source, including 0 and Dmax
 	// therefore we need field_Nplanes+1 values
-	fill_linear(lD, Np, 0.0, Dmax);
+	Utilities::fill_linear(lD, Np, 0.0, Dmax);
 	
 	// spacing of the distances
 	PosType dlD = lD[1]-lD[0];
@@ -928,7 +928,7 @@ void Lens::createFieldHalos(bool verbose)
     
 	PosType aveNhalos = cosmo.haloNumberInBufferedCone(field_min_mass,0,zsource,fieldofview*pow(pi/180,2),field_buffer,field_mass_func_type,mass_func_PL_slope);
 
-	fill_linear(zbins,Nzbins,0.0,zsource);
+	Utilities::fill_linear(zbins,Nzbins,0.0,zsource);
 	// construct redshift distribution table
 	Nhalosbin[0] = 1;
 	zbins[0] = 0;
@@ -947,7 +947,7 @@ void Lens::createFieldHalos(bool verbose)
 	// assign redsshifts to field_halos according to the redshift distribution
 
 	for(i=0;i < Nhalos;++i){
-		halo_zs_vec.push_back(InterpolateYvec(Nhalosbin,zbins,ran2(seed)));
+		halo_zs_vec.push_back(Utilities::InterpolateYvec(Nhalosbin,zbins,ran2(seed)));
 	}
 
     // sort redshifts
@@ -959,10 +959,10 @@ void Lens::createFieldHalos(bool verbose)
 	// fill the log(mass) vector
 	Logm.resize(Nmassbin);
 	Nhalosbin.resize(Nmassbin);
-	fill_linear(Logm,Nmassbin,log10(field_min_mass),MaxLogm);
+	Utilities::fill_linear(Logm,Nmassbin,log10(field_min_mass),MaxLogm);
 
 	PosType *theta_pos,*theta2;
-	int j = 0;
+	size_t j = 0;
 	k2 = 0;
 	std::vector<PosType>::iterator it1,it2;
 	for(np=0,mass_max=0;np<NZSamples;np++){
@@ -1006,7 +1006,7 @@ void Lens::createFieldHalos(bool verbose)
 			theta_pos[1] = rr*sin(theta);//*Ds;
 			theta_pos[2] = 0.0;
 
-            float mass = pow(10,InterpolateYvec(Nhalosbin,Logm,ran2 (seed)));
+      float mass = pow(10,Utilities::InterpolateYvec(Nhalosbin,Logm,ran2 (seed)));
       
 			halo_calc->reset(mass,halo_zs_vec[i]);
       
@@ -1033,13 +1033,17 @@ void Lens::createFieldHalos(bool verbose)
 					std::cout << "field_int_prof_type is null!!!!" << std::endl;
 					break;
 				case nfw_lens:
-					field_halos.push_back(new LensHaloNFW);
+					//field_halos.push_back(new LensHaloNFW);
+          field_halos.push_back(new LensHaloNFW(mass*(1-field_galaxy_mass_fraction),Rmax,halo_zs_vec[i],Rmax/rscale,1.0,0,0));
 					break;
 				case pnfw_lens:
-					field_halos.push_back(new LensHaloPseudoNFW);
+					//field_halos.push_back(new LensHaloPseudoNFW);
+          field_halos.push_back(new LensHaloPseudoNFW(mass*(1-field_galaxy_mass_fraction),Rmax,halo_zs_vec[i],Rmax/rscale,3,1.0,0,0));
 					break;
 				case pl_lens:
-					field_halos.push_back(new LensHaloPowerLaw);
+					//field_halos.push_back(new LensHaloPowerLaw);
+          field_halos.push_back(new LensHaloPowerLaw(mass*(1-field_galaxy_mass_fraction),Rmax,halo_zs_vec[i],Rmax/rscale,1.0,1.0,0,0));
+
 					break;
 				case nsie_lens:
                     //std::cout << "Warning: All galaxies are spherical" << std::endl;
@@ -1060,20 +1064,21 @@ void Lens::createFieldHalos(bool verbose)
 					break;
 				case dummy_lens:
 					field_halos.push_back(new LensHaloDummy);
+          field_halos[j]->setZlens(halo_zs_vec[i]);
 					break;
 				case hern_lens:
-					field_halos.push_back(new LensHaloHernquist);
+					//field_halos.push_back(new LensHaloHernquist);
+          field_halos.push_back(new LensHaloHernquist(mass*(1-field_galaxy_mass_fraction),Rmax,halo_zs_vec[i],rscale,1.0,0,0));
 					break;
 				case jaffe_lens:
-					field_halos.push_back(new LensHaloJaffe);
+					//field_halos.push_back(new LensHaloJaffe);
+          field_halos.push_back(new LensHaloJaffe(mass*(1-field_galaxy_mass_fraction),Rmax,halo_zs_vec[i],rscale,1.0,0,0));
 					break;
 				case multi_dark_lens:
 					ERROR_MESSAGE();
 					std::cout << "MultiDark not supported." << std::endl;
 					break;
 			}
-            field_halos[j]->setZlens(halo_zs_vec[i]);
-            if(field_int_prof_type != nsie_lens) field_halos[j]->initFromMassFunc(mass*(1-field_galaxy_mass_fraction),Rmax,rscale,field_prof_internal_slope,seed);
 
  
 			if(mass > mass_max) {

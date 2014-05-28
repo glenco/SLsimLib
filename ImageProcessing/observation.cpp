@@ -20,7 +20,7 @@
 #include <limits>
 
 
-/*\brief Creates an observation setup that mimics a known instrument
+/** * \brief Creates an observation setup that mimics a known instrument
  *
  */
 Observation::Observation(Telescope tel_name)
@@ -78,7 +78,7 @@ Observation::Observation(Telescope tel_name)
 		back_mag = 22.93;
 		ron = 5.;
 		seeing = 1.0;
-		pix_size = .21/60./60./180.*pi;
+		pix_size = .2/60./60./180.*pi;
 	}
 	if (tel_name == KiDS_g)
 	{
@@ -89,7 +89,7 @@ Observation::Observation(Telescope tel_name)
 		back_mag = 22.29;
 		ron = 5.;
 		seeing = 0.8;
-		pix_size = .21/60./60./180.*pi;
+		pix_size = .2/60./60./180.*pi;
 	}
 	if (tel_name == KiDS_r)
 	{
@@ -100,7 +100,7 @@ Observation::Observation(Telescope tel_name)
 		back_mag = 21.40;
 		ron = 5.;
 		seeing = 0.7;
-		pix_size = .21/60./60./180.*pi;
+		pix_size = .2/60./60./180.*pi;
 	}
 	if (tel_name == KiDS_i)
 	{
@@ -111,14 +111,14 @@ Observation::Observation(Telescope tel_name)
 		back_mag = 20.64;
 		ron = 5.;
 		seeing = 1.1;
-		pix_size = .21/60./60./180.*pi;
+		pix_size = .2/60./60./180.*pi;
 	}
 
 	mag_zeropoint = 2.5*log10(diameter*diameter*transmission*pi/4./hplanck) - 48.6;
 	telescope = true;
 }
 
-/* Creates a custom observation setup with parameters decided by the user.
+/** *  Creates a custom observation setup with parameters decided by the user.
  *
  * \param diameter Diameter of telescope (in cm) (Collecting area is pi/4.*diameter^2)
  * \param transmission Total transmission of the telescope (/int T(\lambda)/\lambda d\lambda)
@@ -135,7 +135,7 @@ Observation::Observation(float diameter, float transmission, float exp_time, int
 			telescope = false;
 		}
 
-/* Creates a custom observation setup with parameters decided by the user. Allows for the use of a psf fits image.
+/**  Creates a custom observation setup with parameters decided by the user. Allows for the use of a psf fits image.
  *
  * \param diameter Diameter of telescope (in cm) (Collecting area is pi/4.*diameter^2)
  * \param transmission Total transmission of the telescope (/int T(\lambda)/\lambda d\lambda)
@@ -167,22 +167,49 @@ Observation::Observation(float diameter, float transmission, float exp_time, int
 		telescope = false;
 		}
 
-/* \brief Converts the input map to a realistic image
+/// Reads in and sets the PSF from a fits file. If the pixel size of the fits is different (smaller) than the one of the telescope, it must be specified.
+void Observation::setPSF(std::string psf_file, float os)
+{
+#ifdef ENABLE_FITS
+    std::auto_ptr<CCfits::FITS> fp (new CCfits::FITS (psf_file.c_str(), CCfits::Read));
+	CCfits::PHDU *h0=&fp->pHDU();
+	int side_psf = h0->axis(0);
+	int N_psf = side_psf*side_psf;
+	map_psf.resize(N_psf);
+	h0->read(map_psf);
+    
+#else
+    std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
+    exit(1);
+#endif
+    
+    oversample = os;
+
+}
+
+/**  \brief Converts the input map to a realistic image
  *
  * \param map Input map in photons/(cm^2*Hz)
  * \param psf Decides if the psf smoothing is applied
  * \param noise Decides if noise is added
+ * \param unit Decides units of output (if flux, output is in 10**(-0.4*mag)) 
  */
-PixelMap Observation::Convert (PixelMap &map, bool psf, bool noise, long *seed)
+PixelMap Observation::Convert (PixelMap &map, bool psf, bool noise, long *seed, unitType unit)
 {
 	if (telescope == true && fabs(map.getResolution()-pix_size) > std::numeric_limits<double>::epsilon())
 	{
-		std::cout << "The resolution of the input map is different from the one of the simulated instrument!" << std::endl;
-		exit(1);
+		std::cout << "The resolution of the input map is different from the one of the simulated instrument in Observation::Convert!" << std::endl;
+		throw std::runtime_error("The resolution of the input map is different from the one of the simulated instrument!");
 	}
 	PixelMap outmap = PhotonToCounts(map);
 	if (psf == true)  outmap = ApplyPSF(outmap);
 	if (noise == true) outmap = AddNoise(outmap,seed);
+    
+    if (unit == flux)
+    {
+        double counts_to_flux = pow(10,-0.4*mag_zeropoint);
+        outmap.Renormalize(counts_to_flux);
+    }
 	return outmap;
 }
 
@@ -196,7 +223,7 @@ PixelMap Observation::Convert_back (PixelMap &map)
 }
 
 
-/** \brief Smooths the image with a PSF map.
+/** * \brief Smooths the image with a PSF map.
 *
 */
 PixelMap Observation::ApplyPSF(PixelMap &pmap)
@@ -219,77 +246,92 @@ PixelMap Observation::ApplyPSF(PixelMap &pmap)
 #ifdef ENABLE_FITS
 #ifdef ENABLE_FFTW
 
-	PixelMap outmap(pmap);
-	// creates plane for fft of map, sets properly input and output data, then performs fft
-	fftw_plan p;
-	long Npix = outmap.getNpixels();
-	double* in = new double[Npix*Npix];
-	std::complex<double>* out=new std::complex<double> [Npix*(Npix/2+1)];
-	for (unsigned long i = 0; i < Npix*Npix; i++)
-	{
-		in[i] = outmap[i];
-	}
-	p = fftw_plan_dft_r2c_2d(Npix,Npix,in, reinterpret_cast<fftw_complex*>(out), FFTW_ESTIMATE);
-	fftw_execute(p);
+        PixelMap outmap(pmap);
 
-	// creates plane for perform backward fft after convolution, sets output data
-	fftw_plan p2;
-	double* out2 = new double[Npix*Npix];
-	p2 = fftw_plan_dft_c2r_2d(Npix,Npix,reinterpret_cast<fftw_complex*>(out), out2, FFTW_ESTIMATE);
+        // calculates normalisation of psf
+        int N_psf = map_psf.size();
+        int side_psf = sqrt(N_psf);
+        double map_norm = 0.;
+        for (int i = 0; i < N_psf; i++)
+        {
+            map_norm += map_psf[i];
+        }
+        fftw_plan p_psf;
 
-	// calculates normalisation of psf
-	int N_psf = map_psf.size();
-	int side_psf = sqrt(N_psf);
-	double map_norm = 0.;
-	for (int i = 0; i < N_psf; i++)
-	{
-		map_norm += map_psf[i];
-	}
-	fftw_plan p_psf;
+        // creates plane for fft of map, sets properly input and output data, then performs fft
+        fftw_plan p;
+        long Npix = outmap.getNpixels();
+        long Npix_zeropad = Npix + side_psf;
+        std::complex<double>* out=new std::complex<double> [Npix_zeropad*(Npix_zeropad/2+1)];
 
-	// arrange psf data for fft, creates plane, then performs fft
-	int psf_big_Npixels = static_cast<int>(Npix*oversample);
-	double* psf_big = new double[psf_big_Npixels*psf_big_Npixels];
-	std::complex<double>* out_psf=new std::complex<double> [psf_big_Npixels*(psf_big_Npixels/2+1)];
-	p_psf = fftw_plan_dft_r2c_2d(psf_big_Npixels,psf_big_Npixels,psf_big, reinterpret_cast<fftw_complex*>(out_psf), FFTW_ESTIMATE);
-	long ix, iy;
-	for (int i = 0; i < psf_big_Npixels*psf_big_Npixels; i++)
-	{
-		ix = i/psf_big_Npixels;
-		iy = i%psf_big_Npixels;
-		if(ix<side_psf/2 && iy<side_psf/2)
-			psf_big[i] = map_psf[(ix+side_psf/2)*side_psf+(iy+side_psf/2)]/map_norm;
-		else if(ix<side_psf/2 && iy>=psf_big_Npixels-side_psf/2)
-			psf_big[i] = map_psf[(ix+side_psf/2)*side_psf+(iy-(psf_big_Npixels-side_psf/2))]/map_norm;
-		else if(ix>=psf_big_Npixels-side_psf/2 && iy<side_psf/2)
-			psf_big[i] = map_psf[(ix-(psf_big_Npixels-side_psf/2))*side_psf+(iy+side_psf/2)]/map_norm;
-		else if(ix>=psf_big_Npixels-side_psf/2 && iy>=psf_big_Npixels-side_psf/2)
-			psf_big[i] = map_psf[(ix-(psf_big_Npixels-side_psf/2))*side_psf+(iy-(psf_big_Npixels-side_psf/2))]/map_norm;
-		else
-			psf_big[i] = 0.;
-	}
-	fftw_execute(p_psf);
+        // add zero-padding
+        double* in_zeropad = new double[Npix_zeropad*Npix_zeropad];
+        for (int i = 0; i < Npix_zeropad*Npix_zeropad; i++)
+        {
+            long ix = i/Npix_zeropad;
+            long iy = i%Npix_zeropad;
+            if (ix >= side_psf/2 && ix <= (Npix_zeropad-1)-side_psf/2 && iy >= side_psf/2 && iy <= (Npix_zeropad-1)-side_psf/2)
+                in_zeropad[i] = outmap[(ix-side_psf/2)*Npix+(iy-side_psf/2)];
+            else
+                in_zeropad[i] = 0.;
+        }
+        
+        p = fftw_plan_dft_r2c_2d(Npix_zeropad,Npix_zeropad,in_zeropad, reinterpret_cast<fftw_complex*>(out), FFTW_ESTIMATE);
+        fftw_execute(p);
 
-	// performs convolution in Fourier space, and transforms back to real space
-	for (unsigned long i = 0; i < Npix*(Npix/2+1); i++)
-	{
-		ix = i/(Npix/2+1);
-		iy = i%(Npix/2+1);
-		if (ix>Npix/2)
-			out[i] *= out_psf[(psf_big_Npixels-(Npix-ix))*(psf_big_Npixels/2+1)+iy];
-		else
-			out[i] *= out_psf[ix*(psf_big_Npixels/2+1)+iy];
-	}
-	fftw_execute(p2);
+        // creates plane for perform backward fft after convolution, sets output data
+        fftw_plan p2;
+        double* out2 = new double[Npix_zeropad*Npix_zeropad];
+        p2 = fftw_plan_dft_c2r_2d(Npix_zeropad,Npix_zeropad,reinterpret_cast<fftw_complex*>(out), out2, FFTW_ESTIMATE);
 
-	// translates array of data in (normalised) counts map
-	for (unsigned long i = 0; i < Npix*Npix; i++)
-	{
-		//ix = i/Npix;
-		//iy = i%Npix;
-		outmap.AssignValue(i,out2[i]/double(Npix*Npix));
-	}
-	return outmap;
+
+        // arrange psf data for fft, creates plane, then performs fft
+        long psf_big_zeropad_Npixels = static_cast<int>((Npix+side_psf)*oversample);
+        double* psf_big_zeropad = new double[psf_big_zeropad_Npixels*psf_big_zeropad_Npixels];
+        std::complex<double>* out_psf=new std::complex<double> [psf_big_zeropad_Npixels*(psf_big_zeropad_Npixels/2+1)];
+        p_psf = fftw_plan_dft_r2c_2d(psf_big_zeropad_Npixels,psf_big_zeropad_Npixels,psf_big_zeropad, reinterpret_cast<fftw_complex*>(out_psf), FFTW_ESTIMATE);
+        long ix, iy;
+        for (int i = 0; i < psf_big_zeropad_Npixels*psf_big_zeropad_Npixels; i++)
+        {
+            ix = i/psf_big_zeropad_Npixels;
+            iy = i%psf_big_zeropad_Npixels;
+            if(ix<side_psf/2 && iy<side_psf/2)
+                psf_big_zeropad[i] = map_psf[(ix+side_psf/2)*side_psf+(iy+side_psf/2)]/map_norm;
+            else if(ix<side_psf/2 && iy>=psf_big_zeropad_Npixels-side_psf/2)
+                psf_big_zeropad[i] = map_psf[(ix+side_psf/2)*side_psf+(iy-(psf_big_zeropad_Npixels-side_psf/2))]/map_norm;
+            else if(ix>=psf_big_zeropad_Npixels-side_psf/2 && iy<side_psf/2)
+                psf_big_zeropad[i] = map_psf[(ix-(psf_big_zeropad_Npixels-side_psf/2))*side_psf+(iy+side_psf/2)]/map_norm;
+            else if(ix>=psf_big_zeropad_Npixels-side_psf/2 && iy>=psf_big_zeropad_Npixels-side_psf/2)
+                psf_big_zeropad[i] = map_psf[(ix-(psf_big_zeropad_Npixels-side_psf/2))*side_psf+(iy-(psf_big_zeropad_Npixels-side_psf/2))]/map_norm;
+            else
+                psf_big_zeropad[i] = 0.;
+        }
+        fftw_execute(p_psf);
+
+        // performs convolution in Fourier space, and transforms back to real space
+        for (unsigned long i = 0; i < Npix_zeropad*(Npix_zeropad/2+1); i++)
+        {
+            ix = i/(Npix_zeropad/2+1);
+            iy = i%(Npix_zeropad/2+1);
+            if (ix>Npix_zeropad/2)
+                out[i] *= out_psf[(psf_big_zeropad_Npixels-(Npix_zeropad-ix))*(psf_big_zeropad_Npixels/2+1)+iy];
+            else
+                out[i] *= out_psf[ix*(psf_big_zeropad_Npixels/2+1)+iy];
+        }
+        fftw_execute(p2);
+
+        // translates array of data in (normalised) counts map
+        for (unsigned long i = 0; i < Npix_zeropad*Npix_zeropad; i++)
+        {
+            ix = i/Npix_zeropad;
+            iy = i%Npix_zeropad;
+            if (ix >= side_psf/2 && ix <= (Npix_zeropad-1)-side_psf/2 && iy >= side_psf/2 && iy <= (Npix_zeropad-1)-side_psf/2)
+            {
+                int ii = (ix-side_psf/2)*Npix+(iy-side_psf/2);
+                outmap.AssignValue(ii,out2[i]/double(Npix_zeropad*Npix_zeropad));
+            }
+        }
+        return outmap;
 #else
 		std::cout << "Please enable the preprocessor flag ENABLE_FFTW !" << std::endl;
 		exit(1);

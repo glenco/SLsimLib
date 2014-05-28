@@ -86,6 +86,8 @@ void SourceGaussian::assignParams(InputParams& params){
 		  exit(0);
 	  }
 
+    source_r = 5*sqrt(source_gauss_r2);
+    
 	  printSource();
 }
 
@@ -407,8 +409,16 @@ PosType Source::changeFilter(
 	PosType fout_int = integrateFilter(wavel_out,ampl_out);
 	PosType sed_in = integrateFilterSed(wavel_in, ampl_in, wavel_sed, ampl_sed);
 	PosType sed_out = integrateFilterSed(wavel_out, ampl_out, wavel_sed, ampl_sed);
-	PosType delta_mag = -2.5 * log10(sed_out/sed_in*fin_int/fout_int);
-	return delta_mag;
+
+    if (sed_in < std::numeric_limits<PosType>::epsilon() || sed_out < std::numeric_limits<PosType>::epsilon())
+    {
+        return 99.;
+    }
+    else
+    {
+        PosType delta_mag = -2.5 * log10(sed_out/sed_in*fin_int/fout_int);
+        return std::min(delta_mag,99.);
+    }
 }
 
 /**  \brief Calculates the integral of the filter curve given as an array of (x,y) values.
@@ -436,11 +446,19 @@ PosType Source::integrateFilterSed(std::vector<PosType> wavel_fil, std::vector<P
 	{
 		wavel_new[i] = max(wavel_fil[0],wavel_sed[0]) + PosType(i)/PosType(wavel_new_size-1)*(min(wavel_fil[wavel_fil.size()-1],wavel_sed[wavel_sed.size()-1])-max(wavel_fil[0],wavel_sed[0]) );
 		vector<PosType>::iterator it_f = lower_bound(wavel_fil.begin(), wavel_fil.end(), wavel_new[i]);
-		int p = it_f-wavel_fil.begin()-1;
-		fil_val[i] = fil[p] + (fil[p+1]-fil[p])*(wavel_new[i]-wavel_fil[p])/(wavel_fil[p+1]-wavel_fil[p]);
-		vector<PosType>::iterator it_s = lower_bound(wavel_sed.begin(), wavel_sed.end(), wavel_new[i]);
-		int q = it_s-wavel_sed.begin()-1;
-		sed_val[i] = sed[q] + (sed[q+1]-sed[q])*(wavel_new[i]-wavel_sed[q])/(wavel_sed[q+1]-wavel_sed[q]);
+        int p = it_f-wavel_fil.begin()-1;
+        vector<PosType>::iterator it_s = lower_bound(wavel_sed.begin(), wavel_sed.end(), wavel_new[i]);
+        int q = it_s-wavel_sed.begin()-1;
+        if (p >= 0&& p < wavel_fil.size()-1 && q >= 0 && q < wavel_sed.size())
+        {
+            fil_val[i] = fil[p] + (fil[p+1]-fil[p])*(wavel_new[i]-wavel_fil[p])/(wavel_fil[p+1]-wavel_fil[p]);
+            sed_val[i] = sed[q] + (sed[q+1]-sed[q])*(wavel_new[i]-wavel_sed[q])/(wavel_sed[q+1]-wavel_sed[q]);
+        }
+        else
+        {
+            fil_val[i] = 0.;
+            sed_val[i] = 0.;
+        }
 	}
 	for (int i = 0; i < wavel_new_size-1; i++)
 	{
@@ -450,12 +468,14 @@ PosType Source::integrateFilterSed(std::vector<PosType> wavel_fil, std::vector<P
 	return integr;
 }
 
+/*
 SourceShapelets::SourceShapelets()
 : 	mag(0),ang(0),n1(0),n2(0)
 {
     setX(0, 0);
     zsource=0;
 }
+*/
 
 SourceShapelets::SourceShapelets(
 		PosType my_z                              /// redshift of the source
@@ -479,6 +499,8 @@ SourceShapelets::SourceShapelets(
 	coeff = my_coeff;
 	source_r = my_scale;
 
+	flux = pow(10,-0.4*(mag+48.6))*inv_hplanck;
+    
 	NormalizeFlux();
 }
 
@@ -510,6 +532,7 @@ SourceShapelets::SourceShapelets(
 	h0.readKey("BETA", source_r);
 	source_r *= 0.03/180./60./60.*pi;
 	h0.readKey("DIM", n1);
+    h0.readKey("ID", id);
 	n2 = n1;
 	h0.read(coeff);
 
@@ -518,6 +541,8 @@ SourceShapelets::SourceShapelets(
 	exit(1);
 #endif
 
+    flux = pow(10,-0.4*(mag+48.6))*inv_hplanck;
+    
 	NormalizeFlux();
 }
 
@@ -544,8 +569,33 @@ SourceShapelets::SourceShapelets(
 
 	h0.readKey("BETA", source_r);
 	source_r *= 0.03/180./60./60.*pi;
-	h0.readKey("MAG", mag);
+    for (int i = 0; i < 10; i++)
+	h0.readKey("MAG_B", mags[0]);
+	h0.readKey("MAG_V", mags[1]);
+	h0.readKey("MAG_I", mags[2]);
+	h0.readKey("MAG_Z", mags[3]);
+	h0.readKey("MAG_J", mags[4]);
+	h0.readKey("MAG_H", mags[5]);
+	h0.readKey("MAG_u_KIDS", mags[6]);
+	h0.readKey("MAG_g_KIDS", mags[7]);
+	h0.readKey("MAG_r_KIDS", mags[8]);
+	h0.readKey("MAG_i_KIDS", mags[9]);
+    
+    for (int i = 0; i < 10; i++)
+    {
+        if (mags[i] < 0.)
+            fluxes[i] = std::numeric_limits<PosType>::epsilon();
+        else
+            fluxes[i] = pow(10,-0.4*(mags[i]+48.6))*inv_hplanck;
+    }
+
+    // by default, the magnitude is the one in the i band,
+    // whose image has been used for shapelets decomposition
+    mag = mags[2];
+    flux = fluxes[2];
+    
 	h0.readKey("REDSHIFT", zsource);
+    h0.readKey("ID", id);
 	h0.readKey("DIM", n1);
 	n2 = n1;
 	h0.read(coeff);
@@ -574,6 +624,7 @@ PosType SourceShapelets::SurfaceBrightness(PosType *y)
 		}
 	}
 	sb *= exp(-dist*dist/2.)/source_r;
+    sb *= flux/coeff_flux;
 	return max(sb,std::numeric_limits<PosType>::epsilon());
 }
 
@@ -606,22 +657,19 @@ void SourceShapelets::assignParams(InputParams& params){};
 /// Rescales the coefficients to make the source bright as we want.
 void SourceShapelets::NormalizeFlux()
 {
-	PosType shap_flux = 0.;
+	coeff_flux = 0.;
 	for (int i = 0; i < n1; i=i+2)
 	{
 		for (int j = 0; j < n2; j=j+2)
 		{
-			shap_flux += pow(2,0.5*(2-i-j))*sqrt(factrl(i))/factrl(i/2.)*sqrt(factrl(j))/factrl(j/2.)*coeff[j*n1+i];
+			coeff_flux += pow(2,0.5*(2-i-j))*sqrt(factrl(i))/factrl(i/2.)*sqrt(factrl(j))/factrl(j/2.)*coeff[j*n1+i];
 		}
 	}
-	shap_flux *= sqrt(pi)*source_r;
+	coeff_flux *= sqrt(pi)*source_r;
 
-	flux = pow(10,-0.4*(mag+48.6))*inv_hplanck;
-
-	coeff *= flux/shap_flux;
 }
 
-/// Default constructor. Reads in sources from the default catalog.
+/// Default constructor. Reads in sources from the default catalog. No magnitude limit.
 SourceMultiShapelets::SourceMultiShapelets(InputParams& params)
 : Source(),index(0)
 {
@@ -644,10 +692,19 @@ void SourceMultiShapelets::readCatalog()
         if (shap_input)
         {
             SourceShapelets s(shap_file.c_str());
+            s.setActiveBand(band);
             if (s.getMag() > 0. && s.getMag() < mag_limit)
                 galaxies.push_back(s);
             shap_input.close();            
         }
+        else if (i == 1)
+        {
+            std::cout << "Can't open file " << shap_file << std::endl;
+            ERROR_MESSAGE();
+            throw std::runtime_error(" Cannot open file.");
+            exit(1);
+        }
+
     }
     
 }
@@ -659,6 +716,7 @@ void SourceMultiShapelets::assignParams(InputParams& params){
 		exit(1);
 	}
     
+    
 	if(!params.get("source_sb_limit",sb_limit))
 		setSBlimit_magarcsec(30.);
 	else
@@ -668,6 +726,13 @@ void SourceMultiShapelets::assignParams(InputParams& params){
         std::cout << "ERROR: shapelets_folder not found in parameter file " << params.filename() << std::endl;
         exit(1);
     }
+    
+  	if(!params.get("shapelets_band",band)){
+		std::cout << "ERROR: Must assign shapelets_band in parameter file " << params.filename() << std::endl;
+		exit(1);
+	}
+    
+  
 }
 
 /// Print info on current source parameters

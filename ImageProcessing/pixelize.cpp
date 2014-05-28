@@ -92,13 +92,13 @@ PixelMap::PixelMap(
 /** \brief Constructs a PixelMap reading in a fits file
 * Infos about resolution, Npixels and center are read from the header.
  */
-PixelMap::PixelMap(std::string filename)
+PixelMap::PixelMap(std::string fitsfilename)
 {
 #ifdef ENABLE_FITS
-	if(filename.empty())
+	if(fitsfilename.empty())
 		throw std::invalid_argument("Please enter a valid filename for the FITS file input");
 	
-	std::auto_ptr<CCfits::FITS> fp(new CCfits::FITS(filename, CCfits::Read));
+	std::auto_ptr<CCfits::FITS> fp(new CCfits::FITS(fitsfilename, CCfits::Read));
 	
 	CCfits::PHDU& h0 = fp->pHDU();
 	
@@ -118,7 +118,7 @@ PixelMap::PixelMap(std::string filename)
 		h0.readKey("CDELT1", resolution);
 		h0.readKey("CDELT2", cdelt2);
 		if(std::abs(resolution) - std::abs(cdelt2) > 1e-6)
-			throw std::runtime_error("non-square pixels in FITS file " + filename);
+			throw std::runtime_error("non-square pixels in FITS file " + fitsfilename);
 	}
 	catch(CCfits::HDU::NoSuchKeyword&)
 	{
@@ -128,9 +128,9 @@ PixelMap::PixelMap(std::string filename)
 		h0.readKey("CD2_1", cd21);
 		h0.readKey("CD2_2", cd22);
 		if(std::abs(resolution) - std::abs(cd22) > 1e-6)
-			throw std::runtime_error("non-square pixels in FITS file " + filename);
+			throw std::runtime_error("non-square pixels in FITS file " + fitsfilename);
 		if(cd12 || cd21)
-			throw std::runtime_error("pixels not aligned with coordingate in FITS file " + filename);
+			throw std::runtime_error("pixels not aligned with coordingate in FITS file " + fitsfilename);
 	}
 	
 	resolution = fabs(resolution)*pi/180.;
@@ -219,7 +219,7 @@ PixelMap::PixelMap(
 		old_p1[1] = std::max(0,int(iy*res_ratio));
 		old_p2[0] = std::min(old_Npixels-1,int((ix+1.)*res_ratio));
 		old_p2[1] = std::min(old_Npixels-1,int((iy+1.)*res_ratio));
-		for (int old_iy = old_p1[1]; old_iy<= old_p2[1]; ++old_iy)
+		for (int old_iy = old_p1[1]; old_iy <= old_p2[1]; ++old_iy)
 		{
 			for (int old_ix = old_p1[0]; old_ix<= old_p2[0]; ++old_ix)
 				{
@@ -279,7 +279,8 @@ bool PixelMap::agrees(const PixelMap& other) const
 PixelMap& PixelMap::operator+=(const PixelMap& rhs)
 {
 	// TODO: maybe check if PixelMaps agree, but is slower
-	map += rhs.map;
+    if(Npixels != rhs.getNpixels()) throw std::runtime_error("Dimensions of maps are not compatible");
+	for(size_t i=0;i<map.size();++i) map[i] += rhs.map[i];
 	return *this;
 }
 
@@ -295,7 +296,8 @@ PixelMap operator+(const PixelMap& a, const PixelMap& b)
 PixelMap& PixelMap::operator-=(const PixelMap& rhs)
 {
 	// TODO: maybe check if PixelMaps agree, but is slower
-	map -= rhs.map;
+    if(Npixels != rhs.getNpixels()) throw std::runtime_error("Dimensions of maps are not compatible");
+	for(size_t i=0;i<map.size();++i) map[i] -= rhs.map[i];
 	return *this;
 }
 
@@ -305,6 +307,46 @@ PixelMap operator-(const PixelMap& a, const PixelMap& b)
 	PixelMap diff(a);
 	diff -= b;
 	return diff;
+}
+
+/// Multiply the values of another PixelMap by this one.
+PixelMap& PixelMap::operator*=(const PixelMap& rhs)
+{
+    if(Npixels != rhs.getNpixels()) throw std::runtime_error("Dimensions of maps are not compatible");
+	for(size_t i=0;i<map.size();++i) map[i] *= rhs.map[i];
+    //map *= rhs.map;
+	return *this;
+}
+
+PixelMap& PixelMap::operator*=(PosType b)
+{
+    for(size_t i=0;i<map.size();++i) map[i] *= b;
+    //map *= rhs.map;
+	return *this;
+}
+
+/// Multiply two PixelMaps.
+PixelMap operator*(const PixelMap& a, const PixelMap& b)
+{
+	PixelMap diff(a);
+	diff *= b;
+	return diff;
+}
+
+/// Multiply two PixelMaps.
+PixelMap operator*(const PixelMap& a, PosType b)
+{
+	PixelMap diff(a);
+	diff *= b;
+	return diff;
+}
+
+PosType PixelMap::ave() const{
+    PosType tmp=0;
+    for(size_t i=0;i<map.size();++i){
+        tmp += map[i];
+    }
+    return tmp/map.size();
 }
 
 
@@ -668,7 +710,7 @@ void PixelMap::drawcircle(
                         ){
   
 	PosType x1[2],x2[2];
-  PosType dtheta = resolution/radius;
+  PosType dtheta = resolution/fabs(radius);
 
   for(float theta = 0; theta < 2*pi; theta += dtheta){
     x1[0] = r_center[0] + radius*cos(theta);
@@ -729,27 +771,32 @@ void PixelMap::AddGrid(Grid &grid,PosType value){
 void PixelMap::FindArc(
                        PosType &radius
                        ,PosType *xc
+                       ,PosType *arc_center
                        ,PosType &arclength
                        ,PosType &width
-                       ,PosType threshold
+                       ,PosType threshold    // threshold in pixal value
                        ){
   
   std::vector<size_t> mask(Npixels*Npixels);
   size_t j=0;
   long k=0;
   PosType const tmp_center[2] = {0,0};
-  
+    
   // mask pixels below threshhold
-  PosType maxval = map[0];
+  PosType maxval = map[0],minval = map[0];
   for(size_t i=0;i<Npixels*Npixels;i++){
     if(map[i] > threshold){
+      if(j==0) minval = map[i];
+      else minval = MIN(minval,map[i]);
       mask[j++]=i;
     }
     maxval = MAX(maxval,map[i]);
   }
   mask.resize(j);
+  minval *= 0.99;
   
   if(j == 0){
+    std::cout << "PixelMap::FindArc() - No pixels above surface brighness limit" << std::endl;
     radius = arclength = width = 0.0;
     xc[0] = xc[1] = 0.0;
     return;
@@ -764,7 +811,7 @@ void PixelMap::FindArc(
   Nc = (size_t)(2*Rmax);
   Nr = (size_t)(Rmax-Rmin)/2;
   
-  std::vector<PosType> x(Nc),y(Nc),R2(Nr);//,votes(Nc*Nc*Nr);
+  std::vector<PosType> x(Nc),y(Nc),R2(Nr);
   Utilities::D3Matrix<float> votes(Nc,Nc,Nr);
   for(size_t i = 0;i<Nc*Nc*Nr;++i) votes(i) = 0;
   
@@ -773,8 +820,8 @@ void PixelMap::FindArc(
   for(size_t i = 0;i<Nr;++i) R2[i] = pow(Rmin + i*(Rmax-Rmin)/(Nr-1),2);
   
   const PosType range = 1.0*Npixels;
-  PosType Rmax2 = Rmax*Rmax;
-  PosType rmin2 = Rmax2,rmax2=0;
+  PosType RmaxSqr = Rmax*Rmax;
+  PosType rminSqr = RmaxSqr,rmax2=0;
   for(size_t m=0;m<mask.size();++m){
     
     Utilities::PositionFromIndex(mask[m], xc, Npixels, range, tmp_center);
@@ -784,13 +831,14 @@ void PixelMap::FindArc(
         
         r2 = (xc[0]-x[ii])*(xc[0]-x[ii]) + (xc[1]-y[jj])*(xc[1]-y[jj]);
         
-        rmin2 = MIN(rmin2,r2);
+        rminSqr = MIN(rminSqr,r2);
         rmax2 = MAX(rmax2,r2);
         
-        if(r2 < Rmax2){
-          k = locate<PosType>(R2,r2);
+        if(r2 < RmaxSqr){
+            k = Utilities::locate<PosType>(R2,r2);
           if(k > -1 && k < Nr){
-            votes(ii,jj,k) += log(map[mask[m]]);
+            //votes(ii,jj,k) += log(map[mask[m]]/minval);
+            votes(ii,jj,k) += map[mask[m]];
             //std::cout << "vote = " << votes(ii,jj,k) << std::endl;
           }
         }
@@ -798,21 +846,14 @@ void PixelMap::FindArc(
     }
   }
   
-  // find maximum votes
+  printFITS("!fit_test.fits");
   
+  // find maximum votes
   size_t kmax=0,ksecond=0;
   PosType maxvotes,secondvotes;
   maxvotes = votes(0);
   for(size_t kk=0;kk < Nc*Nc*Nr;++kk){
-    
-    /*if(votes(ii,jj,kk) > votes(ii+1,jj,kk) && votes(ii,jj,kk) > votes(ii-1,jj,kk) ){
-     if(votes(ii,jj,kk) > votes(ii,jj+1,kk) && votes(ii,jj,kk) > votes(ii,jj-1,kk) ){
-     if(votes(ii,jj,kk) > votes(ii,jj,kk+1) && votes(ii,jj,kk) > votes(ii,jj,kk-1) ){
-     
-     }
-     }
-     }*/
-    
+        
     if(votes(kk) >= maxvotes ){
       
       secondvotes = maxvotes;
@@ -823,27 +864,92 @@ void PixelMap::FindArc(
     }
   }
   
-  
   xc[0] = x[votes.xindex(kmax)];
   xc[1] = y[votes.yindex(kmax)];
-  radius = sqrt(R2[votes.zindex(kmax)])*resolution;
+  radius = sqrt(R2[votes.zindex(kmax)]);
   
   PosType x_tmp[2],r_tmp,rmax,rmin;
-  rmax = rmin = radius;
+  double xave[2] = {0,0};
+  rmax = 0.0;
+  rmin = radius;
   arclength = 0;
   
+  // find arc length, width and center
   for(size_t m=0;m<mask.size();++m){
     Utilities::PositionFromIndex(mask[m], x_tmp, Npixels, range, tmp_center);
     r_tmp = sqrt( (xc[0] - x_tmp[0])*(xc[0] - x_tmp[0]) + (xc[1] - x_tmp[1])*(xc[1] - x_tmp[1]) );
     
-    if(fabs(r_tmp-radius) < resolution) arclength += 1;
+    if(fabs(r_tmp-radius) < 1.0){
+      arclength += 1;
+      xave[0] += x_tmp[0];
+      xave[1] += x_tmp[1];
+    }
     rmax = MAX(rmax,r_tmp);
     rmin = MIN(rmin,r_tmp);
   }
-  
+  xave[0] /= arclength;
+  xave[1] /= arclength;
+
+  double tmp = sqrt( (xave[0] - xc[0])*(xave[0] - xc[0]) + (xave[1] - xc[1])*(xave[1] - xc[1]) );
+  arc_center[0] = radius*(xave[0] - xc[0])/tmp + xc[0];
+  arc_center[1] = radius*(xave[1] - xc[1])/tmp + xc[1];
+
+  // convert from pixel units to angular units
   width = MAX(rmax-rmin,1.0)*resolution;
   arclength *= resolution;
-  
+  radius *= resolution;
+
   xc[0] = xc[0]*resolution + center[0];
   xc[1] = xc[1]*resolution + center[1];
+
+  arc_center[0] = arc_center[0]*resolution + center[0];
+  arc_center[1] = arc_center[1]*resolution + center[1];
+
 }
+
+/** \brief Reads all the fits files in a directory into a vector of PixelMaps.
+ *
+ *  The input fits files must have .fits in their names in addition to the string filespec.
+ */
+void Utilities::LoadFitsImages(
+                    std::string dir              /// path to directory containing fits files
+                    ,const std::string& filespec /// string of charactors in fits file name that are matched
+                    ,std::vector<PixelMap> & images  /// output vector of PixelMaps
+                    ,int maxN       /// maximum number of images that will be read in
+                    ,bool verbose   /// lists files to stdout
+                    ){
+    
+    DIR *dp = opendir( dir.c_str() );
+    struct dirent *dirp;
+    struct stat filestat;
+    std::string filepath,filename;
+    
+    if (dp == NULL)
+    {
+        throw std::runtime_error("error opening directory");
+        return;
+    }
+    
+    while ((dirp = readdir( dp )) && images.size() < maxN)
+    {
+        filepath = dir + "/" + dirp->d_name;
+        
+        // If the file is a directory (or is in some way invalid) we'll skip it
+        if (stat( filepath.c_str(), &filestat )) continue;
+        if (S_ISDIR( filestat.st_mode ))         continue;
+        
+        filename = dirp->d_name;
+        if(filename.find(".fits") !=  std::string::npos){
+            if(filename.find(filespec) !=  std::string::npos){
+                if(verbose) std::cout << "reading " << filepath << std::endl;
+                images.push_back(filepath);
+            }
+        }
+    }
+    
+    closedir( dp );
+    
+    std::cout << images.size() << " fits files read." << std::endl;
+    return ;
+}
+

@@ -11,6 +11,7 @@
 #include "standard.h"
 #include "InputParams.h"
 #include "image_processing.h"
+#include "utilities_slsim.h"
 
 /** \brief Base class for all sources.
  *
@@ -64,6 +65,8 @@ public:
 	PosType integrateFilter(std::vector<PosType> wavel_fil, std::vector<PosType> fil);
 	PosType integrateFilterSed(std::vector<PosType> wavel_fil, std::vector<PosType> fil, std::vector<PosType> wavel_sed, std::vector<PosType> sed);
 
+  static PosType *getx(Source &source){return source.getX();}
+  
 protected:
 	virtual void assignParams(InputParams& params) = 0;
 	
@@ -121,15 +124,17 @@ private:
 	std::valarray<PosType> values;
 };
 
+
 /** \brief Class for sources described by shapelets.
  *
  *  The sources are created from magnitude, scale radius, and the coefficients of their decomposition into the shapelets basis functions (Refregier et al., 2001).
  *  The coefficients can be read from a fits square array.
+ *  In case the magnitude is not given as input, the constructor will read an array of values from the shapelet file header. One can then choose the desired magnitude with setActiveMag.
  *
  */
 class SourceShapelets: public Source{
 public:
-    SourceShapelets();
+    //SourceShapelets();
 	SourceShapelets(PosType my_z, PosType my_mag, PosType my_scale, std::valarray<PosType> my_coeff, PosType* my_center = 0, PosType my_ang = 0.);
 	SourceShapelets(PosType my_z, PosType my_mag, std::string shap_file, PosType *my_center = 0, PosType my_ang = 0.);
 	SourceShapelets(std::string shap_file, PosType* my_center = 0, PosType my_ang = 0.);
@@ -138,7 +143,9 @@ public:
 	inline PosType getTotalFlux(){return flux;}
 	inline PosType getRadius(){return source_r*10.;}
 	inline PosType getMag(){return mag;}
-	inline void setMag(PosType my_mag){mag = my_mag; NormalizeFlux();}
+	inline PosType getMag(ShapeBand band){return mags[band];}
+    inline PosType getID(){return id;}
+    inline void setActiveBand(ShapeBand band){mag = mags[band]; flux = fluxes[band];}
 
 private:
 	void assignParams(InputParams& params);
@@ -146,8 +153,11 @@ private:
 	void NormalizeFlux();
 	std::valarray<PosType> coeff;
 	int n1,n2;
+    int id;
 	PosType flux, mag;
 	PosType ang;
+    PosType mags[10], fluxes[10];
+    PosType coeff_flux;
 };
 
 /// A uniform surface brightness circular source.
@@ -248,37 +258,59 @@ public:
  *
  *   At the moment, only i band is available
  *   QLF from Ross et al. 2013
- *   k-correction from Richards et al. 2006
+ *   k-correction and mean QSO colors from Richards et al. 2006 (the k-corr is very close to the one used by Ross, small differencies only for z > 3)
  */
 class QuasarLF{
 	public:
-		QuasarLF(PosType red, PosType mag_limit, long *seed);
+    QuasarLF(PosType red, PosType mag_limit, InputParams &params);
     ~QuasarLF();
-		// returns the integral of the luminosity function at redshift red
-		PosType getNorm() {return pow(10,log_phi)*norm;}; // in Mpc^(-3)
-		PosType getRandomMag();
-		PosType getRandomFlux();
+    // returns the integral of the luminosity function at redshift red
+    PosType getNorm() {return pow(10,log_phi)*norm;}; // in Mpc^(-3)
+    PosType getRandomMag(Utilities::RandomNumbers_NR &rand);
+    PosType getRandomFlux(Band band,Utilities::RandomNumbers_NR &rand);
+    PosType getColor(Band band);
+    PosType getFluxRatio(Band band);
 
 	private:
-		PosType kcorr;
-		PosType red;
-		PosType mag_limit;
-		PosType mstar;
-		PosType log_phi;
-		PosType alpha;
-		PosType beta;
-		long *seed;
-		PosType norm;
-		PosType mag_max, mag_min;
-		int arr_nbin;
-		PosType* mag_arr;
-		PosType* lf_arr;
-		PosType dl;
+    PosType kcorr;
+    PosType red;
+    PosType mag_limit;
+    PosType mstar;
+    PosType log_phi;
+    PosType alpha;
+    PosType beta;
+    PosType norm;
+    int arr_nbin;
+    PosType* mag_arr;
+    PosType* lf_arr;
+    PosType dl;
+    PosType colors[4];
+    PosType ave_colors[4];
+    PosType color_dev[4];
 
-		typedef PosType (QuasarLF::*pt2MemFunc)(PosType) const;
-		PosType nintegrateQLF(pt2MemFunc func, PosType a,PosType b,PosType tols) const;
-		PosType trapzQLFlocal(pt2MemFunc func, PosType a, PosType b, int n, PosType *s2) const;
-		PosType lf_kernel (PosType mag) const;
+    std::string kcorr_file, colors_file;
+
+	void assignParams(InputParams& params);
+    
+    //typedef PosType (QuasarLF::*pt2MemFunc)(PosType) const;
+    //PosType nintegrateQLF(pt2MemFunc func, PosType a,PosType b,PosType tols) const;
+    //PosType trapzQLFlocal(pt2MemFunc func, PosType a, PosType b, int n, PosType *s2) const;
+    //PosType lf_kernel (PosType mag) const;
+    
+    struct LF_kernel
+    {
+        LF_kernel(PosType alpha,PosType beta,PosType mstar)
+        : alpha(alpha),beta(beta),mstar(mstar){};
+        
+        PosType alpha;
+        PosType beta;
+        PosType mstar;
+        
+        double operator () (double mag) { 
+            return 1.0/( pow(10,0.4*(alpha+1)*(mag-mstar)) + pow(10,0.4*(beta+1)*(mag-mstar)) );
+        }
+    };
+        
 };
 
 #endif /* SOURCE_H_ */

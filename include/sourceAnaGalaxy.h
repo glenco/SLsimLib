@@ -10,6 +10,7 @@
 
 #include "source.h"
 #include "overzier_source.h"
+#include "simpleTreeVec.h"
 
 /**
  * \brief Source that represents an analytic galaxy surface brightness model.  It encapsulates a
@@ -48,7 +49,7 @@ public:
 	// Add a pre-constructed galaxy to the source collection
 	void AddAGalaxy(SourceOverzier *my_galaxy){galaxies.push_back(*my_galaxy);}
 
-	/** Used to change the "current" source that is returned when the surface brightness is subsequently
+	/** \brief Used to change the "current" source that is returned when the surface brightness is subsequently
 	 * called.  It also returns a reference to the particular OverzierSource source model.
 	 */
 	SourceOverzier& setIndex (std::size_t i){
@@ -56,7 +57,7 @@ public:
 			index = i;
 		return galaxies[index];
 	}
-	/** The indexing operator can be used to change the "current" source that is returned when the surface brightness is subsequently
+	/** \brief The indexing operator can be used to change the "current" source that is returned when the surface brightness is subsequently
 	 * called.  It also returns a reference to the particular OverzierSource source model.
 	 */
 	SourceOverzier& operator[] (std::size_t i){
@@ -99,12 +100,22 @@ public:
   /// returns field-of-view in deg^2 assuming region is square
   PosType getFOV(){return (rangex[1]-rangex[0])*(rangey[1]-rangey[0])*180*180/pi/pi;}
   
+  /** \brief Finds the closest source to the position theta[] on the sky in Cartesian distance.
+   *   Returns the index of that source and its distance from theta[].
+   */
+  std::size_t findclosestonsky(PosType theta[],float *radius){
+    size_t index;
+    searchtree->NearestNeighbors(theta,1,radius,&index);
+    return index;
+  }
+  
 private:
 	Band band;
 	float mag_limit;
 	std::size_t index;
 
 	std::vector<SourceOverzier> galaxies;
+  TreeSimpleVec<SourceOverzier> *searchtree;
 	std::string input_gal_file;
 
 	void readDataFile();
@@ -156,7 +167,7 @@ public:
 	PosType getRadius(){return galaxies[index].getRadius();}
 
 	/** Used to change the "current" source that is returned when the surface brightness is subsequently
-	 * called.  It also returns a reference to the particular OverzierSource source model.
+	 * called.
 	 */
 	SourceShapelets& setIndex (std::size_t i){
 		if(i < galaxies.size())
@@ -164,7 +175,7 @@ public:
 		return galaxies[index];
 	}
     /** The indexing operator can be used to change the "current" source that is returned when the surface brightness is subsequently
-	 * called.  It also returns a reference to the particular OverzierSource source model.
+	 * called.
 	 */
 	SourceShapelets& operator[] (std::size_t i){
 		if(i < galaxies.size())
@@ -182,11 +193,19 @@ public:
 		return galaxies[index];
 	}
     
+    /// Sets the active band for all the objects
+	SourceShapelets& setBand (ShapeBand b){
+        band = b;
+        for (int i = 0; i < galaxies.size(); i++)
+            galaxies[i].setActiveBand(band);
+    }
+    
 
 private:
 	void assignParams(InputParams& params);
  	std::size_t index;
 	float mag_limit;
+    ShapeBand band;
    
     void readCatalog();
  	std::vector<SourceShapelets> galaxies;

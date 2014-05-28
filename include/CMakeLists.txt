@@ -4,9 +4,7 @@ add_sources(
 	causticdata.h
 	divide_images.h
 	doc.h
-	delens.h
 	fitlens.h
-	forceTree.h
 	grid_maintenance.h
 	image_info.h
 	image_processing.h
@@ -30,6 +28,7 @@ add_sources(
 	quadTree.h
 	sersic_source.h
 	simpleTree.h
+        simpleTreeVec.h
 	slsimlib.h
 	source.h
 	source_models.h

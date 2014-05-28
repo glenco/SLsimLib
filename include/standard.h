@@ -41,6 +41,10 @@
 #define Grav  4.7788e-20  // G/c^2 in Mpc
 #endif
 
+#ifndef arcsecTOradians
+#define arcsecTOradians  0.000004848136811  // convert arcesconds to radians
+#endif
+
 #ifndef hplanck
 #define hplanck  6.626068e-27  // in erg*sec
 #endif
@@ -76,7 +80,7 @@ typedef double PosType;
 
 #ifndef IndexType_declare
 #define IndexType_declare
-typedef unsigned long IndexType;
+typedef size_t IndexType;
 #endif
 
 #ifndef swap_declare
