@@ -18,10 +18,10 @@ std::mutex Grid::grid_mutex;
  * Note: Deflection solver must be specified before creating a Grid.
  */
 Grid::Grid(
-		LensHndl lens      /// lens model for initializing grid
-		,unsigned long N1d           /// Initial number of grid points in each dimension.
-		,const PosType center[2]  /// Center of grid.
-		,PosType range      /// Full width of grid in whatever units will be used.
+		LensHndl lens               /// lens model for initializing grid
+		,unsigned long N1d          /// Initial number of grid points in each dimension.
+		,const PosType center[2]    /// Center of grid.
+		,PosType range              /// Full width of grid in whatever units will be used.
            ): Ngrid_init(N1d),Ngrid_init2(N1d),Ngrid_block(3),axisratio(1.0){
 
 	Point *i_points,*s_points;
