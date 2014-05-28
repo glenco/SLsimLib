@@ -122,3 +122,60 @@ PosType LensHaloNFW::hfunction(PosType x){
 	if(x>1.0) return 2.* ((log(x/2.)*log(x/2.))+ atan(sqrt(x*x-1.))*atan(sqrt(x*x-1.)));
 	return 0.0;
 }
+
+PosType LensHaloNFW::bfunction(PosType fx){
+    PosType ans;
+    PosType fac=1.0;
+    PosType x=1.0*fx;
+    if(x==0) x=1e-5;
+    if(x==1){return fac*1.2;}
+    PosType aux=sqrt(x*x-1);
+    if(x>1.0){  ans = (x/ffunction(x)*((aux+2.*x*x*aux-6.0*x*x*atan(sqrt((x-1)/(x+1))))/(x*pow(aux,5)))); return fac*ans;}
+	if(x<1.0){  ans = (x/ffunction(x))*
+        ( sqrt(1./(1.+x))*
+         ( (x-1.)*(1.+2.*x*x*sqrt(1.0/(1.0+x))*sqrt(1.+x))+6.0*x*x*sqrt(-1.0+2.0/(1.+x))*atanh( sqrt(-1.0+2.0/(1.0+x))) )
+        )/(pow(-1.0+x,3)*x*pow(1.0+x,3./2.))
+                       ; return fac*ans;}
+    return 0.0;
+}
+
+
+/// dbfunction and ddbfunction are approximation formulae for dbeta/dr and d^2beta/dr^2 whereas dbnum and ddbnum calculate those derivates numerically using the 5-point rule, i.e. 4th order accuracy.
+
+PosType LensHaloNFW::dbnum(PosType x){
+    PosType h=1e-5;
+    if(x==0) x=1e-5;
+    //if(x>0){return ((1./12.)*log(bfunction(x-2*h))-(2./3.)*log(bfunction(x-h))+(2./3.)*log(bfunction(x+h))-(1./12.)*log(bfunction(x+2*h)))/h;};
+    if(x>0){return ((1./12.)*(bfunction(x-2*h))-(2./3.)*(bfunction(x-h))+(2./3.)*(bfunction(x+h))-(1./12.)*(bfunction(x+2*h)))/h;};
+    return 0.0;
+}
+
+PosType LensHaloNFW::ddbnum(PosType x){
+    PosType h=1e-5;
+    if(x==0) x=1e-5;
+    if(x>0){return (bfunction(x-h)-2.*bfunction(x)+bfunction(x+h))/(h*h);};
+    //if(x>0){return ((-1./12.)*bfunction(x-2*h)+(4./3.)*bfunction(x-h)-(5./2.)*bfunction(x)+(4./3.)*bfunction(x+h)-(1./12.)*bfunction(x+2*h))/(h*h);};
+    //if(x>0){return ((1./90.)*bfunction(x-3*h)+(-3./20.)*bfunction(x-2*h)+(3./2.)*bfunction(x-h)-(49./18.)*bfunction(x)+(3./2.)*bfunction(x+h)-(3./20.)*bfunction(x+2*h)+(1./90.)*bfunction(x+3*h))/(h*h);};
+    return 0.0;
+}
+
+
+PosType LensHaloNFW::dbfunction(PosType x){
+    PosType p[]={0.72708293,0.22082787,1.41708596,-0.22678577,-0.00238127};
+    if(x==0) x=1e-5;
+    if(x>0){return p[0]/(pow(x,p[1])*(1+pow(x,p[2]))+p[3])+p[4];};
+    return 0.0;
+}
+
+PosType LensHaloNFW::ddbfunction(PosType x){
+    PosType p[]={0.72708293,0.22082787,1.41708596,-0.22678577,-0.00238127};
+    if(x==0) x=1e-5;
+    if(x>0){return (-1.0*p[0]*p[1]*pow(x,(p[1]-1.))*(1+(1+p[2]/p[1])*pow(x,p[2])))/pow(p[3]+pow(x,p[1])*(1+pow(x,p[2])),2.0);};
+    return 0.0;
+}
+
+
+
+
+
+

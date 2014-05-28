@@ -171,16 +171,6 @@ LensHaloNFW::LensHaloNFW(InputParams& params)
         calcModes(fratio, get_slope(), pa, mod); // to ellipticize potential instead of  kappa take calcModes(fratio, 2-get_slope(), pa, mod);
         //calcModes(fratio, get_slope()+0.5, pa, mod2); // to ellipticize potential instead of  kappa take calcModes(fratio, 2-get_slope(), pa, mod);
         
-        
-        
-            for(int islope=1;islope<20;islope++){
-                for(int ifratio=1;ifratio<10;ifratio++){
-                    calcModes(fratio, get_slope(), pa, mod);
-                    for(int i=4;i<Nmod;i=i+4){
-                        std::cout << i << " " << islope*0.1 << " " << ifratio*0.1 << " "<< mod[i] << " " << modfunc(i, islope*0.1, ifratio*0.1)<< std::endl;
-                    }
-                }
-            }
         for(int i=1;i<Nmod;i++){
             if(mod[i]!=0){set_flag_elliptical(true);};
         }
@@ -441,9 +431,29 @@ LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
     if(fratio!=1){
         //for(int islope=1;islope<20;islope++){
         //beta=islope*0.1;
-            calcModes(fratio, beta, pa, mod);
+        /*
+            for(int islope=1;islope<20;islope++){
+                for(int ifratio=1;ifratio<10;ifratio++){
+                    calcModes(ifratio*0.1, islope*0.1, pa, mod);
+                    for(int i=4;i<Nmod;i=i+4){
+                        std::cout << i << " " << islope*0.1 << " " << ifratio*0.1 << " "<< mod[i] << " " << modfunc(i, islope*0.1, ifratio*0.1)<< std::endl;
+                    }
+                }
+            }
+        */
+        calcModes(fratio, beta, pa, mod);
+        
+        for(int i=0;i<Nmod;i++){
+            std::cout<< "before: " << mod[i] << std::endl;
+            mod[i]=modfunc(i, beta, fratio);
+            std::cout<< "after: " << mod[i] << std::endl;
+        }
+        
+        calcModes(fratio, beta, pa, mod);
+        //    std::cout << mod[4] << " " << modfunc(4, 1, 0.5) << std::endl;
+        
             for(int i=1;i<Nmod;i++){
-                std::cout << i << " " << mod[i] << std::endl;
+                //std::cout << i << " " << mod[i] << std::endl;
                 if(mod[i]!=0){set_flag_elliptical(true);};
             }
         //}
@@ -664,8 +674,8 @@ void LensHalo::force_halo_asym(
 		,bool kappa_off
 		,bool subtract_point /// if true contribution from a point mass is subtracted
 		){
-	std::ofstream dfunc;
-	dfunc.open( "dfunc.dat", ios::out | ios::app );
+	//std::ofstream dfunc;
+	//dfunc.open( "dfunc.dat", ios::out | ios::app );
             
 	double rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
     
@@ -675,6 +685,7 @@ void LensHalo::force_halo_asym(
 	/// intersecting, subtract the point particle
 	if(rcm2 < Rmax*Rmax){
 		double x = sqrt(rcm2)/rscale;
+        //std::cout << sqrt(rcm2) << " " << rscale << " " << Rmax << std::endl;
 		double theta;
         
         if(xcm[0] == 0.0 && xcm[1] == 0.0) theta = 0.0;
@@ -695,7 +706,7 @@ void LensHalo::force_halo_asym(
 		if(!kappa_off){
 			*kappa += kappa_asym(x,theta)*prefac;
         
-			//	dfunc << x << " " << theta << " " << kappa_asym(x,theta) << " " << xcm[0] << " " << xcm[1] << std::endl;
+			//dfunc << x << " " << theta << " " << kappa_asym(x,theta) << " " << bfunction(x) << " " << xcm[0] << " " << xcm[1] << std::endl;
         
             //std::cout << x << " " << rscale << " " << xmax << std::endl;
             PosType gamma_tmp[2];

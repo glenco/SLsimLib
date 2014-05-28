@@ -384,6 +384,47 @@ LensHaloBaseNSIE::~LensHaloBaseNSIE(){
  */
 
 /// Derivatives of the potential factor with respect to theta
+
+void LensHalo::faxial(PosType x, PosType theta,PosType f[]){
+    int i,k;
+    //for(int i=0;i<Nmod;i++){
+        //mod1[i]=modfunc(i, betaCorr(theta,bfunction(x)), fratio);
+        //mod1[i]=modfunc(i, bfunction(x), fratio);
+        //mod1[i]=hi_order_modfunc(x, i, bfunction(x), fratio);
+        //cout << "comp: " << mod1[i] << " " << hi_order_modfunc(x, i, bfunction(x), fratio) << endl;
+    //}
+    calcModesB(x, fratio, bfunction(x), pa, mod1);
+    
+    //calcModes(fratio, bfunction(x), pa, mod1);
+    //if((x<1 && x>0.99)||(bfunction(x*0.61)<1)){
+    
+    /*if((1.0<bfunction(x) && bfunction(x)<1.02)){
+        //std::cout<< x << " " << bfunction(x) << std::endl;
+        
+        mod1[4]=0;
+        mod1[8]=0;
+        mod1[12]=0;
+    }
+    if((1.5<=bfunction(x) && bfunction(x)<1.51)){
+        //std::cout<< x << " " << bfunction(x) << std::endl;
+        
+        mod1[4]=0;
+        mod1[8]=0;
+        mod1[12]=0;
+    }*/
+    
+    
+    f[0] = mod1[0];
+    f[1] = f[2] = 0;
+    for(i=4;i<Nmod;i+=2){
+        k=i/2;
+        f[0] +=  mod1[i]*cos(k*theta)   + mod1[i+1]*sin(k*theta);
+        f[1] += -mod1[i]*k*sin(k*theta) + mod1[i+1]*k*cos(k*theta);
+        f[2] += -mod1[i]*k*k*cos(k*theta) - mod1[i+1]*k*k*sin(k*theta);
+    }
+}
+
+
 void LensHalo::faxial0(PosType theta,PosType f[]){
     int i,k;
     //std::cout<< mod[4] << std::endl;
@@ -425,7 +466,7 @@ void LensHalo::faxial2(PosType theta,PosType f[]){
 
 /// Derivatives of the potential damping factor with respect to r ... TODO: come up with a better damping faction
 void LensHalo::gradial(PosType r,PosType g[]){
-  double r_eps=0.5*Rmax;
+  double r_eps=0.3*Rmax;
 
   PosType x = (1+r/r_eps);
   g[0] = 1.0/x/x;
@@ -485,7 +526,46 @@ void LensHalo::calcModes(double q, double beta, double rottheta, PosType my_mod[
 		my_mod[0]=1.0;
 	}
   
-    std::cout << "calcModes for beta=" << beta << " " << my_mod[0] << " " << my_mod[4] << " " << my_mod[8] << " " << std::endl;
+    //std::cout << "calcModes for beta=" << beta << " " << my_mod[0] << " " << my_mod[4] << " " << my_mod[8] << " " << std::endl;
+    //for(int i=1;i<Nmod;++i){
+    //    std::cout << i << " " << my_mod[i] << std::endl;
+    //}
+    // rotate model
+    RotateModel(rottheta,my_mod,Nmod,0);
+}
+
+void LensHalo::calcModesB(PosType x,double q, double beta, double rottheta, PosType my_mod[]){
+    int i,k;
+    PosType dla, ddla;
+    for(int i=1;i<Nmod;++i){
+		my_mod[i]=0;
+	}
+	// fill in modes with their values for an elliptical lens
+	if(q != 1.0){
+        my_mod[0] = fourier_coeff(0, q, beta)/pi/2.;
+        for(i=4;i<Nmod;i+=2){
+            dla=dlnmod_dr(x,i, beta, q);
+            ddla=ddlnmod_dr(x,i, beta, q);
+            //std::cout << dla << " dla ddla " << ddla << std::endl;
+            k=i/2;
+            assert(i<=Nmod);
+            //if(x<1){
+            my_mod[i] = beta*beta*fourier_coeff(k, q, beta)/pi/(beta*beta-k*k+0*0.666*(2.*beta+1.0)*x*dla-0*log(10.0)*x*x*(ddla+dla*dla))/my_mod[0];
+        
+            
+    //if(i==4 && x<2.0 && x>0.1 ){
+      //     cout << x << " " << my_mod[i] << " "<< beta*beta-k*k << " " << dbfunction(x) << " " << ddla+dla*dla << endl;
+      //}
+            
+        }
+        my_mod[0]=1.0;
+    }
+	else{
+		cout << "circular case" << endl;
+		my_mod[0]=1.0;
+	}
+    
+    //std::cout << "calcModes for beta=" << beta << " " << my_mod[0] << " " << my_mod[4] << " " << my_mod[8] << " " << std::endl;
     //for(int i=1;i<Nmod;++i){
     //    std::cout << i << " " << my_mod[i] << std::endl;
     //}
@@ -500,6 +580,7 @@ void LensHalo::alpha_asym(PosType x,PosType theta, PosType alpha[]){
     PosType phi=phi_int(x);
 
     faxial0(theta,f);
+    
     F=f[0]-1;
     gradial(x,g);
     beta=get_slope();
@@ -524,21 +605,40 @@ PosType LensHalo::kappa_asym(PosType x,PosType theta){
 	PosType F, f[3],g[3], kappa;
     PosType phi=phi_int(x);
     
+    //faxial(x,theta,f); // only for NFW
+
+    /*for(int i = 1; i < 2000 ; i++){
+      faxial(0.01*i,theta,f); // only for NFW and Jaffe
+      std::cout<< 0.01*i << " " << mod1[4] << " " << mod1[8] << " " << mod1[12] << " " << mod1[16] << " " << dbfunction(0.01*i) << " " << ddbfunction(0.01*i) << " " << bfunction(0.01*i)*bfunction(0.01*i)-4.<< " " << dlnmod_dr(0.01*i, 4, bfunction(x), 0.5) <<  std::endl;
+        
+      //std::cout<< 0.01*i << " " << mod1[4] << " " << mod1[8] << " " << mod1[12] << " " << mod1[16] << " " << dbfunction(0.01*i) << " " << dbnum(0.01*i)<< " " << ddbfunction(0.01*i) << " " << ddbnum(0.01*i)<< " " << " " << bfunction(0.01*i)*bfunction(0.01*i)-4.<< " " << dlnmod_dr(0.01*i, 4, bfunction(x), 0.5) <<  std::endl;
+      //  std::cout<< 0.01*i << " " << bfunction(0.01*i) << " " << 0.01*i/ffunction(0.01*i) <<  std::endl;
+    }
+    
+    assert(phi==0);
+    */
+    
     faxial0(theta,f);
+    
     //faxial1(theta,f1);
     //faxial2(theta,f2);
     //gradial2(x,1,2,g);
-    gradial(x,g);
-  
     
+    
+    gradial(x,g);
     F=f[0]-1;
     beta=get_slope();
-    double fac=1.0/(beta*beta/(2-beta)/(2-beta));
     
+    //beta=betaCorr(theta,bfunction(x));
+    //std::cout << x << " " << bfunction(x) << " " << beta << std::endl;
     
-    //kappa=f[0]*kappa_h(x)-0.5*f[2]*phi;//  w/o damping
+    //beta=bfunction(x); // only for NFW
     
-    kappa=(1+F*g[0])*kappa_h(x)-0.5*phi*fac*(F*g[1]/x+F*g[2]+f[2]*g[0]/x/x)*x*x-F*g[1]*alpha_h(x)*x*x; /// with damping
+    double fac=1.0/(beta*beta/(2.-beta)/(2.-beta));
+    
+    kappa=f[0]*kappa_h(x)-0.5*f[2]*fac*phi;//  w/o damping
+    
+    //kappa=(1+F*g[0])*kappa_h(x)-0.5*phi*fac*(F*g[1]/x+F*g[2]+f[2]*g[0]/x/x)*x*x-F*g[1]*alpha_h(x)*x*x; /// with damping
 	return kappa;
 }
 

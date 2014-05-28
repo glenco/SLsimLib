@@ -143,11 +143,17 @@ public:
 
     
     PosType modfunc(int modnumber, PosType my_slope, PosType my_fratio);
-    
+    PosType hi_order_modfunc(PosType x, int modnumber, PosType my_slope, PosType my_fratio);
     PosType amodfunc(int modnumber, PosType my_fratio);
     PosType bmodfunc(int modnumber, PosType my_fratio);
     PosType cmodfunc(PosType my_fratio);
     PosType dmodfunc(PosType my_fratio);
+    PosType dmod(PosType x, int modnumber, PosType my_slope, PosType my_fratio);
+    PosType ddmod(PosType x, int modnumber, PosType my_slope, PosType my_fratio);
+    PosType dlnmod_dr(PosType x, int modnumber, PosType my_slope, PosType my_fratio);
+    PosType ddlnmod_dr(PosType x, int modnumber, PosType my_slope, PosType my_fratio);
+    
+    PosType betaCorr(PosType theta, PosType bfunc);
     
 protected:
   PosType alpha_int(PosType x);
@@ -225,8 +231,15 @@ protected:
 	virtual KappaType inline gamma_h(PosType x){return -2;};
 	virtual KappaType inline phi_h(PosType x){return 1;};
     virtual KappaType inline phi_int(PosType x){return 1;};
+    virtual PosType inline ffunction(PosType x){return 0;};
     virtual PosType inline gfunction(PosType x){return -1;};
-	
+    virtual PosType inline bfunction(PosType x){return -1;};
+    virtual PosType inline bnumfunction(PosType x){return -1;};
+    virtual PosType inline dbfunction(PosType x){return 0;};
+    virtual PosType inline ddbfunction(PosType x){return 0;};
+    virtual PosType inline dbnum(PosType x){return 0;};
+    virtual PosType inline ddbnum(PosType x){return 0;};
+    
     
     PosType xmax;
 
@@ -235,6 +248,7 @@ protected:
     float fratio=1;
     bool elliptical_flag = false;
 
+  void faxial(PosType x,PosType theta,PosType f[]);
   void faxial0(PosType theta,PosType f0[]);
   void faxial1(PosType theta,PosType f1[]);
   void faxial2(PosType theta,PosType f2[]);
@@ -249,6 +263,8 @@ protected:
     double fourier_coeff(double n, double q, double beta);
     
     void calcModes(double q, double beta, double rottheta, PosType newmod[]);
+    void calcModesB(PosType x, double q, double beta, double rottheta, PosType newmod[]);
+    
     PosType analModes(int ab, int mn, int pn);
     
     struct fourier_func{
@@ -262,9 +278,6 @@ protected:
   const static int Nmod = 32;
 
   // Analytic description of Fourier modes
-
-        
-    
 
   PosType mod[Nmod];
   PosType mod1[Nmod];
@@ -304,6 +317,16 @@ public:
 	PosType gfunction(PosType x);
 	PosType g2function(PosType x);
 	PosType hfunction(PosType x);
+    PosType bfunction(PosType x);
+    PosType dbfunction(PosType x);
+    PosType ddbfunction(PosType x);
+    PosType dbnum(PosType x);
+    PosType ddbnum(PosType x);
+    PosType dmod(PosType x, int modnumber, PosType my_slope, PosType my_fratio);
+    PosType ddmod(PosType x, int modnumber, PosType my_slope, PosType my_fratio);
+    
+    
+    
     
 
 	// TODO: BEN: the below functions alphaNFW, kappaNFW and gammaNFW are obsolete and better to be deleted to avoid confusion
@@ -430,10 +453,11 @@ private:
 		return (0.5*x*x/pow(1+x,beta) - InterpolateFromTable(x))/InterpolateFromTable(xmax);
 	}
 	inline KappaType phi_h(PosType x){
-		ERROR_MESSAGE();
-		std::cout << "time delay has not been fixed for PseudoNFW profile yet." << std::endl;
-		exit(1);
-		return 0.0;
+		return -1.0*alpha_int(x)/InterpolateFromTable(xmax) ;
+        //ERROR_MESSAGE();
+		//std::cout << "time delay has not been fixed for PseudoNFW profile yet." << std::endl;
+		//exit(1);
+		//return 0.0;
 	}
     inline KappaType phi_int(PosType x){
         return -1.0*alpha_int(x)/InterpolateFromTable(xmax) ;
@@ -494,7 +518,7 @@ private:
 		//assert(0.5*(beta+2)*pow(x/xmax,beta)*x*x/(xmax*xmax) != 0);
         //std::cout << x << " " << beta << "  " << -1.0*pow(x/xmax,beta+2) << std::endl;
         
-		return 0.5*(-beta+2)*pow(x/xmax,-beta)*x*x; //(xmax*xmax); 
+		return 0.5*(-beta+2)*pow(x/xmax,-beta)*x*x;
 	}
 	inline KappaType gamma_h(PosType x){
 		if(x==0) x=1e-6*xmax;
@@ -692,6 +716,12 @@ public:
 	PosType gfunction(PosType x);
 	PosType hfunction(PosType x);
 	PosType g2function(PosType x);
+    PosType bfunction(PosType x);
+    PosType dbfunction(PosType x);
+    PosType ddbfunction(PosType x);
+    
+    
+	
     
 protected:
     

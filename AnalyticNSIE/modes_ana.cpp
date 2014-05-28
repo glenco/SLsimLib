@@ -6,13 +6,30 @@
 #include "lens_halos.h"
 
 
+
 PosType LensHalo::modfunc(int modnumber, PosType my_slope, PosType my_fratio){
+    if(modnumber==0){return 1.0;};
     PosType a=amodfunc(modnumber, my_fratio);
     PosType b=bmodfunc(modnumber, my_fratio);
-    //std::cout << "a: "<< a << " b: " << b << " c: " << cmodfunc(my_fratio) << " d: " << dmodfunc(my_fratio) << std::endl;
     PosType ans=a+b*log10(my_slope);
+    //std::cout << "modn: " << modnumber << "slope: " << my_slope << " a: "<< a << " b: " << b << " c: " << cmodfunc(my_fratio) << " d: " << dmodfunc(my_fratio) << " " << ans << std::endl;
     if(modnumber % 4 == 0 && modnumber > 4){return -1.0*pow(10,ans);};
     if(modnumber==4){ans+=(cmodfunc(my_fratio)/(dmodfunc(my_fratio)+my_slope)); return -1.0*pow(10.0,ans);};
+	return 0.0;
+}
+
+PosType LensHalo::hi_order_modfunc(PosType x, int modnumber, PosType my_slope, PosType my_fratio){
+    int k=modnumber/2;
+    double da=dmod(x,modnumber,my_slope,my_fratio), dda=ddmod(x,modnumber,my_slope,my_fratio);
+    PosType dans=(my_slope*my_slope-k*k)/(my_slope*my_slope-k*k+x*(2.*my_slope+1.)*da+x*x*(dda+da*da));
+    if(modnumber==0){return 1.0;};
+    PosType a=amodfunc(modnumber, my_fratio);
+    PosType b=bmodfunc(modnumber, my_fratio);
+    PosType ans=a+b*log10(my_slope);
+    //std::cout << "DANS: " << dans<< " " << 2.*my_slope+1. <<" " << da << std::endl;
+    //std::cout << "modn: " << modnumber << "slope: " << my_slope << " a: "<< a << " b: " << b << " c: " << cmodfunc(my_fratio) << " d: " << dmodfunc(my_fratio) << " " << ans << std::endl;
+    if(modnumber % 4 == 0 && modnumber > 4){return -1.0*pow(10.0,ans)*dans;};
+    if(modnumber==4){ans+=(cmodfunc(my_fratio)/(dmodfunc(my_fratio)+my_slope)); return -1.0*pow(10.0,ans)*dans;};
 	return 0.0;
 }
 
@@ -50,12 +67,65 @@ PosType LensHalo::bmodfunc(int modnumber, PosType my_fratio){
 }
 
 PosType LensHalo::cmodfunc(PosType my_fratio){
-    return 0.079/(0.407-6.909*my_fratio)-0.454;
+    return 0.0079/(0.407+6.909*my_fratio)-0.454;
 }
 
 PosType LensHalo::dmodfunc(PosType my_fratio){
     return 0.002/(0.028+0.709*my_fratio)-2.261;
 }
+
+
+PosType LensHalo::dmod(PosType x, int modnumber, PosType my_slope, PosType my_fratio){
+    PosType b=bmodfunc(modnumber, my_fratio);
+    PosType d=dmodfunc(my_fratio);
+    PosType c=cmodfunc(my_fratio);
+    PosType db=dbfunction(x); //dbnum(x)
+    PosType ans=b*db/(my_slope*log(10));
+    if(modnumber==4){
+        ans+=-c/(d+my_slope)/(d+my_slope)*db;
+    }
+    return ans;
+}
+
+PosType LensHalo::dlnmod_dr(PosType x, int modnumber, PosType my_slope, PosType my_fratio){
+    PosType b=bmodfunc(modnumber, my_fratio);
+    PosType d=dmodfunc(my_fratio);
+    PosType c=cmodfunc(my_fratio);
+    PosType dbdr=dbfunction(x); //dbnum(x)
+    PosType ans=dbdr*(b/my_slope);
+    if(modnumber==4){
+       ans+=-1.0*((c*log(10))/(d+my_slope)/(d+my_slope))*dbdr;
+    }
+    return ans;
+}
+        
+        
+PosType LensHalo::ddmod(PosType x, int modnumber, PosType my_slope, PosType my_fratio){
+    PosType b=bmodfunc(modnumber, my_fratio);
+    PosType d=dmodfunc(my_fratio);
+    PosType c=cmodfunc(my_fratio);
+    PosType db=dbfunction(x);
+    PosType ddb=ddbfunction(x);
+    PosType ans=b*(ddb/(my_slope*log(10))-(db*db/(1/my_slope/my_slope/log(10))));
+    if(modnumber==4){
+        ans+=2*c/(d+my_slope)/(d+my_slope)/(d+my_slope)*db*db-c/(d+my_slope)/(d+my_slope)*ddb;
+    }
+    return ans;
+}
+
+PosType LensHalo::ddlnmod_dr(PosType x, int modnumber, PosType my_slope, PosType my_fratio){
+    PosType b=bmodfunc(modnumber, my_fratio);
+    PosType d=dmodfunc(my_fratio);
+    PosType c=cmodfunc(my_fratio);
+    PosType db=dbfunction(x); //dbnum(x)
+    PosType ddb=ddbfunction(x); //ddbnum(x);
+    PosType ans=(ddb-db*db/my_slope)*b/my_slope;
+    if(modnumber==4){
+        ans+=(ddb-db*db*2./(d+my_slope))*(-1.0*c*log(10))/(d+my_slope)/(d+my_slope);
+    }
+    return ans;
+}
+
 
 // fit parameters to be used in afunc and bfunc for different i
 //mfunc_param [0][][] is parameter a, [1][][] is parameter b, [][i][] is the mode number 0==4,1==8 etc., [][][p_i], p_0=p_1 in eqns. (59,60)
@@ -79,5 +149,22 @@ PosType LensHalo::analModes(int ab, int mn, int pn){
     
     return arr[ab][int(mn/4)-1][pn];
 }
+
+/*PosType LensHalo::betaCorr(PosType theta,PosType bfunc){
+    PosType a=1.05*bfunc-1.011;
+    PosType b=0.2484-0.03362*bfunc;
+    PosType c=0.00425+0.085*bfunc;
+    return a+pow(cos(theta)*cos(theta)+b*sin(theta)*sin(theta),c);
+}*/
+
+PosType LensHalo::betaCorr(PosType thet, PosType bfunc){
+    PosType a,b,c;
+    PosType theta=thet+pi/2.;
+    a=0.03910245;
+    b=0.21480206;
+    c=0.08913886;
+    return bfunc*(a+pow((cos(theta)*cos(theta)+b*sin(theta)*sin(theta)),b));
+}
+
 
 
