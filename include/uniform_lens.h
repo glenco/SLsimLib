@@ -70,12 +70,9 @@ public:
   //int getPerturb_Nmodes(){return perturb_Nmodes;}    /// this includes two for external shear
   //PosType *perturb_modes;  ///first two are shear
 
-		/// overridden function to calculate the lensing properties
-  //void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xcm,bool no_kappa,bool subtract_point=false);
-    // PHI BY Fabien
-      void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool no_kappa,bool subtract_point=false);
+    void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool no_kappa,bool subtract_point=false);
     
-  void setCosmology(const COSMOLOGY& cosmo);
+    void setCosmology(const COSMOLOGY& cosmo);
 
 protected:
 

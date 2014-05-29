@@ -20,7 +20,6 @@ LensPlaneTree::~LensPlaneTree(){
 }
 
 
-// PHI BY Fabien : adding the phi component into this function
 void LensPlaneTree::force(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType *xx,bool kappa_off){
 	halo_tree->force2D_recur(xx,alpha,kappa,gamma,phi,kappa_off);
 }
@@ -57,50 +56,26 @@ LensPlaneSingular::~LensPlaneSingular()
 {
 }
 
-/*
-void LensPlaneSingular::force(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xx,bool kappa_off){
-	PosType alpha_tmp[2],x_tmp[2];
-	KappaType kappa_tmp, gamma_tmp[3];
-    
-	alpha[0] = alpha[1] = 0.0;
-	*kappa = 0.0;
-	gamma[0] = gamma[1] = gamma[2] = 0.0;
 
-	for(std::size_t i = 0, n = halos.size(); i < n; ++i)
-	{
-		alpha_tmp[0] = alpha_tmp[1] = 0.0;
-		kappa_tmp = 0.0;
-		gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
-
-        halos[i]->getX(x_tmp);
-       
-        x_tmp[0] = xx[0] - x_tmp[0];
-        x_tmp[1] = xx[1] - x_tmp[1];
-        
-		halos[i]->force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,x_tmp,kappa_off,false);
-    
-		alpha[0] -= alpha_tmp[0];
-		alpha[1] -= alpha_tmp[1];
-		*kappa += kappa_tmp;
-		gamma[0] += gamma_tmp[0];
-		gamma[1] += gamma_tmp[1];
-		gamma[2] += gamma_tmp[2];
-	}
-}
-*/
-
-// PHI BY Fabien : adding the phi component into this function --------------------------------------
-void LensPlaneSingular::force(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType *xx,bool kappa_off){
+void LensPlaneSingular::force(PosType *alpha
+                              ,KappaType *kappa
+                              ,KappaType *gamma
+                              ,KappaType *phi
+                              ,PosType *xx          // Position in physical Mpc
+                              ,bool kappa_off)
+{
 	PosType alpha_tmp[2],x_tmp[2];
 	KappaType kappa_tmp, gamma_tmp[3];
     KappaType phi_tmp;
     
 	alpha[0] = alpha[1] = 0.0;
+    x_tmp[0] = x_tmp[1] = 0.0;
 	*kappa = 0.0;
 	gamma[0] = gamma[1] = gamma[2] = 0.0;
     *phi = 0.0;
+
     
-    // Fabien : I guess this is a loop over the different halos present in a given lens plane.
+    // Loop over the different halos present in a given lens plane.
 	for(std::size_t i = 0, n = halos.size(); i < n; ++i)
 	{
 		alpha_tmp[0] = alpha_tmp[1] = 0.0;
@@ -108,13 +83,17 @@ void LensPlaneSingular::force(PosType *alpha,KappaType *kappa,KappaType *gamma,K
 		gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
         phi_tmp = 0.0;
         
+        // Getting the halo position (in physical Mpc) :
         halos[i]->getX(x_tmp);
         
+        // Taking the shift into account :
         x_tmp[0] = xx[0] - x_tmp[0];
         x_tmp[1] = xx[1] - x_tmp[1];
         
+        // Calling force_halo with temporary variables :
 		halos[i]->force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp,x_tmp,kappa_off,false);
         
+        // Adding the temporary values to the different quantities :
 		alpha[0] -= alpha_tmp[0];
 		alpha[1] -= alpha_tmp[1];
 		*kappa += kappa_tmp;
@@ -124,7 +103,6 @@ void LensPlaneSingular::force(PosType *alpha,KappaType *kappa,KappaType *gamma,K
         *phi += phi_tmp;
 	}
 }
-// --------------------------------------------------------------------------------------------------
 
 
 void LensPlaneSingular::addHalo(LensHalo* halo)

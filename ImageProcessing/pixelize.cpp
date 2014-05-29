@@ -296,7 +296,8 @@ PixelMap operator+(const PixelMap& a, const PixelMap& b)
 PixelMap& PixelMap::operator-=(const PixelMap& rhs)
 {
 	// TODO: maybe check if PixelMaps agree, but is slower
-	map -= rhs.map;
+    if(Npixels != rhs.getNpixels()) throw std::runtime_error("Dimensions of maps are not compatible");
+	for(size_t i=0;i<map.size();++i) map[i] -= rhs.map[i];
 	return *this;
 }
 
@@ -306,6 +307,46 @@ PixelMap operator-(const PixelMap& a, const PixelMap& b)
 	PixelMap diff(a);
 	diff -= b;
 	return diff;
+}
+
+/// Multiply the values of another PixelMap by this one.
+PixelMap& PixelMap::operator*=(const PixelMap& rhs)
+{
+    if(Npixels != rhs.getNpixels()) throw std::runtime_error("Dimensions of maps are not compatible");
+	for(size_t i=0;i<map.size();++i) map[i] *= rhs.map[i];
+    //map *= rhs.map;
+	return *this;
+}
+
+PixelMap& PixelMap::operator*=(PosType b)
+{
+    for(size_t i=0;i<map.size();++i) map[i] *= b;
+    //map *= rhs.map;
+	return *this;
+}
+
+/// Multiply two PixelMaps.
+PixelMap operator*(const PixelMap& a, const PixelMap& b)
+{
+	PixelMap diff(a);
+	diff *= b;
+	return diff;
+}
+
+/// Multiply two PixelMaps.
+PixelMap operator*(const PixelMap& a, PosType b)
+{
+	PixelMap diff(a);
+	diff *= b;
+	return diff;
+}
+
+PosType PixelMap::ave() const{
+    PosType tmp=0;
+    for(size_t i=0;i<map.size();++i){
+        tmp += map[i];
+    }
+    return tmp/map.size();
 }
 
 
@@ -794,7 +835,7 @@ void PixelMap::FindArc(
         rmax2 = MAX(rmax2,r2);
         
         if(r2 < RmaxSqr){
-          k = locate<PosType>(R2,r2);
+            k = Utilities::locate<PosType>(R2,r2);
           if(k > -1 && k < Nr){
             //votes(ii,jj,k) += log(map[mask[m]]/minval);
             votes(ii,jj,k) += map[mask[m]];

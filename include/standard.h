@@ -80,7 +80,7 @@ typedef double PosType;
 
 #ifndef IndexType_declare
 #define IndexType_declare
-typedef unsigned long IndexType;
+typedef size_t IndexType;
 #endif
 
 #ifndef swap_declare

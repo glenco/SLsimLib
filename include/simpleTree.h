@@ -78,11 +78,10 @@ typedef struct TreeNBStruct * TreeNBHndl;
 typedef int TreeNBElement;
 
 /**
- * \brief A C++ class wrapper for the bianary treeNB used in the Nobody force calculation, but
- * also useful for general purpose searches.
+ * \brief A C++ class wrapper for the bianary treeNB used in the Nobody
+ *  force calculation, but also useful for general purpose searches.
  *
- * Most of the code in TreeNB.c and TreeDriverNB.c is duplicated here as private methods and
- * a few public ones.
+ * Most of the code in TreeNB.c and TreeDriverNB.c is duplicated here as private methods and a few public ones.
  */
 class TreeSimple {
 public:

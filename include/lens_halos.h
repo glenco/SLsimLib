@@ -59,10 +59,12 @@ public:
 
 	PosType getZlens() const { return zlens; }
 
-    /// get the position of the Halo
+    /// set the position of the Halo :
+    /// taking as argument the position in comoving Mpc
+    /// storing the position in physical Mpc
+    void setX(PosType PosX, PosType PosY) { posHalo[0] = PosX / (1 + zlens) ; posHalo[1] = PosY / (1 + zlens) ; }
+    /// get the position of the Halo in physical Mpc
     void getX(PosType * MyPosHalo) const { MyPosHalo[0] = posHalo[0] ; MyPosHalo[1] = posHalo[1]; }
-    /// set the position of the Halo
-    void setX(PosType PosX, PosType PosY) { posHalo[0] = PosX ; posHalo[1] = PosY ; }
     /// display the position of the halo
     void displayPos() { std::cout << "Halo PosX = " << posHalo[0] << " ; Halo PosY = " << posHalo[1] << std::endl; }
  
@@ -149,7 +151,6 @@ protected:
 
   IndexType *stars;
   PosType **stars_xp;
-  //TreeForce *star_tree;
   TreeQuad *star_tree;
   int stars_N;
   PosType star_massscale;
@@ -366,6 +367,8 @@ public:
 	void set_slope(PosType my_slope){beta=my_slope; make_tables();};
 	/// initialize from a mass function
     PosType get_slope(){return beta;};
+    /// set Rmax
+    void set_Rmax(float my_Rmax){Rmax=my_Rmax; xmax = Rmax/rscale;};
 	
 	void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed);
 
@@ -401,15 +404,20 @@ private:
 		return (0.5*x*x/pow(1+x,beta) - InterpolateFromTable(x))/InterpolateFromTable(xmax);
 	}
 	inline KappaType phi_h(PosType x){
-		ERROR_MESSAGE();
-		std::cout << "time delay has not been fixed for PseudoNFW profile yet." << std::endl;
-		exit(1);
-		return 0.0;
+        return -1.0*alpha_int(x)/InterpolateFromTable(xmax) ;
+		//ERROR_MESSAGE();
+		//std::cout << "time delay has not been fixed for PseudoNFW profile yet." << std::endl;
+		//exit(1);
+		//return 0.0;
 	}
     inline KappaType phi_int(PosType x){
         return -1.0*alpha_int(x)/InterpolateFromTable(xmax) ;
     }
 };
+
+
+
+
 
 /** \ingroup DeflectionL2
  *
@@ -417,7 +425,7 @@ private:
  * with truncated power-law mass profiles.
  *
  * Derived from the TreeQuad class.  The "particles" are replaced with spherical halos.
- *The truncation is in 2d not 3d. \f$ \Sigma \propto r^\beta \f$ so beta would usually be negative.
+ *The truncation is in 2d not 3d. \f$ \Sigma \propto r^{-\beta} \f$ so beta would usually be positive.
  *
  *
  * The default value of theta = 0.1 generally gives better than 1% accuracy on alpha.
@@ -484,6 +492,11 @@ private:
         return -1.0*pow(x/xmax,-beta+2)/(-beta+2);
     }
 };
+
+
+
+
+
 
 class LensHaloSimpleNSIE : public LensHalo{
 public:
