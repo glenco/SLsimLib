@@ -147,7 +147,7 @@ public:
 
 private:
 	void assignParams(InputParams& params);
-	PosType Hermite(int n, PosType x);
+    std::vector<double> Hermite(int n, PosType x);
 	void NormalizeFlux();
 	std::valarray<PosType> coeff;
 	int n1,n2;

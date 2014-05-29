@@ -615,12 +615,16 @@ PosType SourceShapelets::SurfaceBrightness(PosType *y)
 	y_norm[0] = ((y[0]-source_x[0])*cos(ang)+(y[1]-source_x[1])*sin(ang))/source_r;
 	y_norm[1] = ((y[0]-source_x[0])*sin(ang)-(y[1]-source_x[1 ])*cos(ang))/source_r;
 	PosType dist = sqrt(y_norm[0]*y_norm[0]+y_norm[1]*y_norm[1]);
+    std::vector<double> Hermite_pol_x(n1);
+    Hermite_pol_x = Hermite(n1,y_norm[0]);
+    std::vector<double> Hermite_pol_y(n2);
+    Hermite_pol_y = Hermite(n2,y_norm[1]);
 	for (int i = 0; i < n1; i++)
 	{
 		for (int j = 0; j < n2; j++)
 		{
 			PosType norm = 1./sqrt(pow(2,i+j)*pi*factrl(i)*factrl(j));
-			sb += norm*coeff[j*n1+i]*Hermite(i,y_norm[0])*Hermite(j,y_norm[1]);
+			sb += norm*coeff[j*n1+i]*Hermite_pol_x[i]*Hermite_pol_y[j];
 		}
 	}
 	sb *= exp(-dist*dist/2.)/source_r;
@@ -629,9 +633,9 @@ PosType SourceShapelets::SurfaceBrightness(PosType *y)
 }
 
 /// Returns the value of the Hermite polynomial of degree n at position x
-PosType SourceShapelets::Hermite(int n, PosType x)
+std::vector<double> SourceShapelets::Hermite(int n, PosType x)
 {
-	PosType hg[n];
+	vector<double> hg(n);
 	hg[0] = 1.;
 	for (int i = 1; i <= n; i++)
 	{
@@ -640,7 +644,7 @@ PosType SourceShapelets::Hermite(int n, PosType x)
 		else
 			hg[i] = 2.*x*hg[i-1]-2.*(i-1)*hg[i-2];
 	}
-	return hg[n];
+	return hg;
 }
 
 void SourceShapelets::printSource()
