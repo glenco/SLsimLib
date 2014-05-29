@@ -1,6 +1,6 @@
 #include "quadrature.h"
 
-namespace SLsimLib
+namespace ISOP
 {
 	namespace Rules
 	{

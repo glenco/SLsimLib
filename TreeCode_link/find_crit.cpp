@@ -407,7 +407,7 @@ void find_crit2(
 
 	  refinements=refine_edges(lens,grid,critcurve,1,resolution/2,1,false,&newpoint_kist);
 	  //refinements=refine_edges(lens,grid,critcurve,1,1.0e-3,0,false,&newpoint_kist);
-	  //refinements=refine_grid_kist(lens,grid,critcurve,1,resolution,2,false,&newpoint_kist);
+	  //refinements=refine_grid_kist(lens,grid,critcurve,1,resolution,2,&newpoint_kist);
 
 	  if(!refinements) break;
 	  critcurve->outerborder->SetInImage(MAYBE);
@@ -782,7 +782,7 @@ void refine_crit_in_image(
         }
         findborders4(grid->i_tree,&critcurve);
         
-        refinements=ImageFinding::refine_grid_kist(lens,grid,&critcurve,1,resolution,2,false,&newpoint_kist);
+        refinements=ImageFinding::refine_grid_kist(lens,grid,&critcurve,1,resolution,2,&newpoint_kist);
         
         if(refinements==0) break;
         //}else free(critcurve->points);

@@ -202,8 +202,7 @@ bool CausticData::findNearestCrit(PosType x[2],size_t &index){
   }
 
   float radius;
-  size_t tmp_index;
-  //searchtree->NearestNeighbors(x,1,&radius,&tmp_index);
+
   searchtreevec->NearestNeighbors(x,1,&radius,&index);
    
   return (data[index].crit_radius[2] > radius);

@@ -44,12 +44,12 @@ void interpfrom2Points(Point const * p1,Point const * p2,PosType *x,PosType *y);
 void UniformMagCheck(ImageInfo *imageinfo);
   
   
-  void map_imagesISOP(LensHndl lens,Source *source,GridHndl grid,int *Nimages,ImageInfo *imageinfo
+void map_imagesISOP(LensHndl lens,Source *source,GridHndl grid,int *Nimages,ImageInfo *imageinfo
                   ,int Nimagesmax,double rmax,double res_min,double initial_size
                   ,ExitCriterion criterion,bool divide_images,bool verbos=false);
 
 
-  int refine_grid_on_imageISOP(Lens *lens,Source *source,GridHndl grid
+int refine_grid_on_imageISOP(Lens *lens,Source *source,GridHndl grid
                            ,ImageInfo *imageinfo,int *Nimages,int Nsources
                            ,int NimageMax,const double res_target,const PosType res_min,ExitCriterion criterion
                            ,bool divide_images);

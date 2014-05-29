@@ -92,12 +92,17 @@ namespace ImageFinding{
 void find_images_kist(LensHndl lens,double *y_source,double r_source,GridHndl grid
 		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
 		,double initial_size,bool splitimages,short edge_refinement
-		,bool verbose);
+		,bool verbose = false);
 
 void find_images_microlens(LensHndl lens,double *y_source,double r_source,GridHndl grid
 		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
 		,double initial_size,double mu_min,bool splitimages,short edge_refinement
 		,bool verbose);
+
+void find_images_microlens_exper(LensHndl lens,PosType *y_source,PosType r_source
+        ,GridHndl grid,int *Nimages,ImageInfo *imageinfo,const int NimageMax
+        ,unsigned long *Nimagepoints,PosType initial_size ,PosType mu_min
+        ,bool splitimages,short edge_refinement,bool verbose);
 
 void image_finder_kist(LensHndl lens, double *y_source,double r_source,GridHndl grid
 		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints

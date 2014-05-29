@@ -2,21 +2,21 @@
 
 #include "source.h"
 
-namespace SLsimLib
+namespace ISOP
 {
 	namespace detail
 	{
 		/// Shape functions of the 8-node quadrilateral element.
 		template<int N> double shape_fun(double xi, double eta);
 		
-		template<> double shape_fun<0>(double xi, double eta) { return -0.25*(1-xi)*(1-eta)*(1+xi+eta); }
-		template<> double shape_fun<1>(double xi, double eta) { return 0.5*(1-xi)*(1+xi)*(1-eta); }
-		template<> double shape_fun<2>(double xi, double eta) { return -0.25*(1+xi)*(1-eta)*(1-xi+eta); }
-		template<> double shape_fun<3>(double xi, double eta) { return 0.5*(1+xi)*(1+eta)*(1-eta); }
-		template<> double shape_fun<4>(double xi, double eta) { return -0.25*(1+xi)*(1+eta)*(1-xi-eta); }
-		template<> double shape_fun<5>(double xi, double eta) { return 0.5*(1-xi)*(1+xi)*(1+eta); }
-		template<> double shape_fun<6>(double xi, double eta) { return -0.25*(1-xi)*(1+eta)*(1+xi-eta); }
-		template<> double shape_fun<7>(double xi, double eta) { return 0.5*(1-xi)*(1+eta)*(1-eta); }
+		template<> inline double shape_fun<0>(double xi, double eta) { return -0.25*(1-xi)*(1-eta)*(1+xi+eta); }
+		template<> inline double shape_fun<1>(double xi, double eta) { return 0.5*(1-xi)*(1+xi)*(1-eta); }
+		template<> inline double shape_fun<2>(double xi, double eta) { return -0.25*(1+xi)*(1-eta)*(1-xi+eta); }
+		template<> inline double shape_fun<3>(double xi, double eta) { return 0.5*(1+xi)*(1+eta)*(1-eta); }
+		template<> inline double shape_fun<4>(double xi, double eta) { return -0.25*(1+xi)*(1+eta)*(1-xi-eta); }
+		template<> inline double shape_fun<5>(double xi, double eta) { return 0.5*(1-xi)*(1+xi)*(1+eta); }
+		template<> inline double shape_fun<6>(double xi, double eta) { return -0.25*(1-xi)*(1+eta)*(1+xi-eta); }
+		template<> inline double shape_fun<7>(double xi, double eta) { return 0.5*(1-xi)*(1+eta)*(1-eta); }
 		
 		/// Static-recurse addition of the shape functions via templates.
 		template<int N = 8>

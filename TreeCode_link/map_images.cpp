@@ -5,7 +5,6 @@
  *      Author: bmetcalf
  */
 #include "slsimlib.h"
-#include "isop.h"
 
 //const float mumin = 0.3;  // actually the sqrt of the minimum magnification
 const PosType FracResTarget = 3.0e-5;
@@ -368,7 +367,7 @@ void ImageFinding::map_images(
 					printf("     ssize = %e rtemp = %e r_source = %e center = %e %e Nimages = %i\n",ssize,rtemp,r_source,center[0],center[1],*Nimages);
 				}
 
-			}while(refine_grid_kist(grid,imageinfo,*Nimages,rtemp*mumin/Ngrid_block,2,kappa_off,true,dummy_pnt));
+			}while(ImageFinding::refine_grid_kist(grid,imageinfo,*Nimages,rtemp*mumin/Ngrid_block,2,kappa_off,true,dummy_pnt));
 
 			printf("      total number of points while telescoping: %li\n",NumberOfPoints(grid));
 
@@ -1045,7 +1044,7 @@ int ImageFinding::refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,P
   return number_of_refined;
 }
 // Assign surface brightness of new points and add the ones that are nonzero to the image
-void check_sb_add(Source *source,ImageInfo *imageinfo,Point *i_points,PosType maxflux,unsigned long &Nold,int &number_of_refined){
+void ImageFinding::check_sb_add(Source *source,ImageInfo *imageinfo,Point *i_points,PosType maxflux,unsigned long &Nold,int &number_of_refined){
 	if(i_points != NULL){
 		// link new points into image kist and calculate surface brightnesses
 		for(unsigned long k=0;k < i_points->head;++k){

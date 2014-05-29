@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <cmath>
 
-namespace SLsimLib
+namespace ISOP
 {	
 	namespace detail
 	{

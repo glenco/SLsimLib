@@ -6,6 +6,8 @@
  */
 #include "slsimlib.h"
 #include "isop.h"
+#include "map_images.h"
+
 const bool verbose = false;
 const PosType FracResTarget = 3.0e-5;
 
@@ -46,9 +48,7 @@ void ImageFinding::map_imagesISOP(
 	unsigned long Nimagepoints,Ntmp;
 	PosType tmp,area_tot,flux;
 	long i,j;
-	static int oldNimages=0;
 	bool go;
-	PosType center[2],y[2],sb,xx[2],source_flux = 0;
 	int Nsources;
 
 	assert(res_min > 0);
@@ -59,7 +59,6 @@ void ImageFinding::map_imagesISOP(
 	if(initial_size == 0) initial_size = 3*(grid->i_tree->top->boundary_p2[0]
                                           - grid->i_tree->top->boundary_p1[0])/grid->getInitNgrid();
 
-	unsigned long tmp_count = 0;
 
   if(verbose) std::cout << "number of grid points before ImageFinding::find_images_kist: "
     << grid->getNumberOfPoints() << std::endl;
@@ -163,7 +162,7 @@ void ImageFinding::map_imagesISOP(
 		assert(imageinfo[i].area >= 0);
 	}
   
-  if(count){
+  if(count*0){
 
 	/********************************************************
 	 ******* refine images based on flux in each pixel ******
@@ -239,7 +238,7 @@ int ImageFinding::refine_grid_on_imageISOP(Lens *lens,Source *source,GridHndl gr
   if((*Nimages) < 1) return 0;
   
   int number_of_refined; /* Ngrid_block must be odd */
-  PosType total_area,r;
+  PosType total_area;
   Point *i_points,*current;
   unsigned long Ncells,Nold,j,i;
   bool reborder=false,redivide=false;
@@ -466,6 +465,8 @@ int ImageFinding::refine_grid_on_imageISOP(Lens *lens,Source *source,GridHndl gr
  *
  *   If 
  */
+
+
 void ImageFinding::IntegrateFluxInCell(
                                        Point *point      /// center point of cell to be integrated
                                        ,Source &source   /// source to be integrated
@@ -473,7 +474,7 @@ void ImageFinding::IntegrateFluxInCell(
                                        ,Boo &outcome     /// FALSE if not 8 neighbors, MAYBE if isop expansion not valid, TRUE is source is integarted successfully
                                        ){
 
-  point->surface_brightness = source.SurfaceBrightness(point->x);
+  point->surface_brightness = source.SurfaceBrightness(point->x);//*point->gridsize*point->gridsize;
 
   // Check that
   if(point->leaf->neighbors.size() != 8){
@@ -481,7 +482,7 @@ void ImageFinding::IntegrateFluxInCell(
     return;
   }
   
-  std::vector<Point *> neighbors(point->leaf->neighbors.size());
+  std::vector<Point *> neighbors(8);
   int i = 0;
   for(std::list<Branch *>::iterator it = point->leaf->neighbors.begin();
       it != point->leaf->neighbors.end() ; ++it,++i){
@@ -493,46 +494,15 @@ void ImageFinding::IntegrateFluxInCell(
 	}
   
   // sort neighbors into counterclockwise order from bottom left
-  int j=0,k=7;
-  for(i=0;i<8;++i){
-    if(neighbors[i]->x[1] < point->x[1]){
-      std::swap(neighbors[i],neighbors[j]);
-      ++j;
-    }
-    if(neighbors[i]->x[1] > point->x[1]){
-      std::swap(neighbors[i],neighbors[k]);
-      --k;
-    }
-  }
-  assert(j == 2);
-  assert(k == 5);
-  j=0;
-  k=2;
-  for(i=0;i<3;++i){
-    if(neighbors[i]->x[0] < point->x[0]){
-      std::swap(neighbors[i],neighbors[j]);
-      ++j;
-    }
-    if(neighbors[i]->x[0] > point->x[0]){
-      std::swap(neighbors[i],neighbors[k]);
-      --k;
-    }
-  }
-  if(neighbors[3]->x[0] < neighbors[4]->x[0] ) std::swap(neighbors[4],neighbors[3]);
-  std::swap(neighbors[4],neighbors[7]);
-  j=4;
-  k=6;
-  for(i=4;i<7;++i){
-    if(neighbors[i]->x[0] > point->x[0]){
-      std::swap(neighbors[i],neighbors[j]);
-      ++j;
-    }
-    if(neighbors[i]->x[0] < point->x[0]){
-      std::swap(neighbors[i],neighbors[k]);
-      --k;
-    }
-  }
   
+  std::sort(neighbors.begin(),neighbors.end(),Point::orderY);
+  std::sort(neighbors.begin(),neighbors.begin() + 2,Point::orderX);
+  std::sort(neighbors.begin() + 3,neighbors.end(),Point::orderXrev);
+  if(neighbors[3]->x[1] > neighbors[4]->x[1] ) std::swap(neighbors[4],neighbors[3]);
+  if(neighbors[6]->x[1] < neighbors[7]->x[1] ) std::swap(neighbors[6],neighbors[7]);
+  
+  //for(int ii=0;ii<8;++ii) std::cout << neighbors[ii]->x[0] - point->x[0] << "  " <<  neighbors[ii]->x[1] - point->x[1] << std::endl;
+   
   PosType x[8],y[8],flux=0.0;
   for(i=0;i<8;++i){
     x[i] = neighbors[i]->image->x[0];
@@ -541,8 +511,8 @@ void ImageFinding::IntegrateFluxInCell(
   
   double scale = sqrt( (x[0]-x[4])*(x[0]-x[4]) + (y[0]-y[4])*(y[0]-y[4]) );
   // see if isop expansion is valid
-  if( fabs(point->image->x[0] - SLsimLib::isop(x,0,0)) > tolerance*scale){outcome = MAYBE; return;}
-  if( fabs(point->image->x[1] - SLsimLib::isop(y,0,0)) > tolerance*scale){outcome = MAYBE; return;}
+  if( fabs(point->image->x[0] - ISOP::isop(x,0,0)) > tolerance*scale){outcome = MAYBE; return;}
+  if( fabs(point->image->x[1] - ISOP::isop(y,0,0)) > tolerance*scale){outcome = MAYBE; return;}
   
   // goto each quadrant and integrate the function.
   {
@@ -558,7 +528,7 @@ void ImageFinding::IntegrateFluxInCell(
     x[6] = neighbors[7]->image->x[0];
     y[6] = neighbors[7]->image->x[1];
     interpfrom2Points(neighbors[7],neighbors[0],&x[7],&y[7]);
-    flux +=  SLsimLib::isop_render(source,x,y,0,0,1,1);
+    flux +=  ISOP::isop_render(source,x,y,0,0,1,1);
   }
   {
     x[0] = neighbors[1]->image->x[0];
@@ -573,7 +543,7 @@ void ImageFinding::IntegrateFluxInCell(
     x[6] = point->x[0];
     y[6] = point->x[1];
     interpfrom2Points(neighbors[1],point,&x[7],&y[7]);
-    flux +=  SLsimLib::isop_render(source,x,y,-1,0,0,1);
+    flux +=  ISOP::isop_render(source,x,y,-1,0,0,1);
   }
   {
     x[0] = point->x[0];
@@ -588,7 +558,7 @@ void ImageFinding::IntegrateFluxInCell(
     x[6] = neighbors[5]->image->x[0];
     y[6] = neighbors[5]->image->x[1];
     interpfrom2Points(neighbors[5],point,&x[7],&y[7]);
-    flux +=  SLsimLib::isop_render(source,x,y,-1,-1,0,0);
+    flux +=  ISOP::isop_render(source,x,y,-1,-1,0,0);
   }
   {
     x[0] = neighbors[7]->image->x[0];
@@ -603,10 +573,10 @@ void ImageFinding::IntegrateFluxInCell(
     x[6] = neighbors[6]->image->x[0];
     y[6] = neighbors[6]->image->x[1];
     interpfrom2Points(neighbors[6],neighbors[7],&x[7],&y[7]);
-    flux +=  SLsimLib::isop_render(source,x,y,0,-1,1,0);
+    flux +=  ISOP::isop_render(source,x,y,0,-1,1,0);
   }
   
-  point->surface_brightness = flux/point->gridsize/point->gridsize;
+  point->surface_brightness = flux;///point->gridsize/point->gridsize;
   outcome = TRUE;
 }
 
@@ -639,3 +609,14 @@ void ImageFinding::interpfrom2Points(Point const * p1,Point const * p2,PosType *
   return;
 }
 
+void partion(Point **neighbors,int n,PosType divide,int dimension){
+  int j=0,k=n-1;
+  while(j<k){
+    if(neighbors[j]->x[dimension] < divide){
+      ++j;
+    }else{
+      std::swap(neighbors[j],neighbors[k]);
+      --k;
+    }
+  }
+}
