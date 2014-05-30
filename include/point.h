@@ -114,6 +114,8 @@ struct Branch{
 
   void print();
 
+  PosType area(){return (boundary_p2[0]-boundary_p1[0])*(boundary_p2[1]-boundary_p1[1]);}
+    
   std::list<Branch *> neighbors;
 private:
   static unsigned long countID;

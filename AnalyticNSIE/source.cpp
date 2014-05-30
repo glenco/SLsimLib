@@ -620,7 +620,7 @@ PosType SourceShapelets::SurfaceBrightness(PosType *y)
   Hermite(Her1,n1,y_norm[0]);
   Hermite(Her2,n2,y_norm[1]);
   
-  size_t coei=1,coej=1
+    size_t coei=1,coej=1;
   
 	for (int i = 0; i < n1; i++,coei *= 2,coej=1 )
 	{

@@ -90,7 +90,7 @@ typedef struct Grid* GridHndl;
 namespace ImageFinding{
     
 void find_images_kist(LensHndl lens,double *y_source,double r_source,GridHndl grid
-		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
+		,int *Nimages,ImageInfo *imageinfo,int NimageMax,unsigned long *Nimagepoints
 		,double initial_size,bool splitimages,short edge_refinement
 		,bool verbose = false);
 

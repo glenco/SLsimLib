@@ -311,14 +311,19 @@ void divide_images_kist(
 		// calculate image centroid
 		imageinfo[i].centroid[0] = 0;
 		imageinfo[i].centroid[1] = 0;
+    imageinfo[i].gridrange[0] = imageinfo[i].gridrange[2] = imageinfo[i].imagekist->getCurrent()->gridsize;
+    
 		imageinfo[i].imagekist->MoveToTop();
 		do{
-			tmp = pow(imageinfo[i].imagekist->getCurrent()->gridsize,2 );
-			imageinfo[i].centroid[0] += tmp*imageinfo[i].imagekist->getCurrent()->x[0];
-			imageinfo[i].centroid[1] += tmp*imageinfo[i].imagekist->getCurrent()->x[1];
+			tmp = imageinfo[i].imagekist->getCurrent()->gridsize;
+			imageinfo[i].centroid[0] += tmp*tmp*imageinfo[i].imagekist->getCurrent()->x[0];
+			imageinfo[i].centroid[1] += tmp*tmp*imageinfo[i].imagekist->getCurrent()->x[1];
+      imageinfo[i].gridrange[0] = MAX(imageinfo[i].gridrange[0],tmp);
+      imageinfo[i].gridrange[2] = MIN(imageinfo[i].gridrange[2],tmp);
 		}while(imageinfo[i].imagekist->Down());
 		imageinfo[i].centroid[0] /= imageinfo[i].area;
 		imageinfo[i].centroid[1] /= imageinfo[i].area;
+    imageinfo[i].gridrange[1] = imageinfo[i].gridrange[2];
 
 		assert((Ntemp - new_imagekist.Nunits() - imageinfo[i].imagekist->Nunits()) == 0);
 		assert(new_imagekist.OffBottom());

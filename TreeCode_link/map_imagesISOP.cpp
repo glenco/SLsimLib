@@ -66,7 +66,11 @@ void ImageFinding::map_imagesISOP(
   ImageFinding::find_images_kist(lens,source->getX(),source->getRadius(),grid,Nimages
                                  ,imageinfo,NimageMax,&Nimagepoints,0.0,false,0,verbose);
   
-  if(verbose) std::cout << "number of grid points after ImageFinding::find_images_kist: "<< grid->getNumberOfPoints() << std::endl;
+// TODO: Seems to miss some images.  Do not know why.
+// TODO: Need some why of refining when the expansion is not valid or the original cells from above are too large.
+  
+  if(verbose) std::cout << "number of grid points after ImageFinding::find_images_kist: "
+      << grid->getNumberOfPoints() << std::endl;
   Nsources = 1;
 
 	if(verbose) printf("total number of points after telescope: %li\n",grid->getNumberOfPoints());
@@ -86,6 +90,7 @@ void ImageFinding::map_imagesISOP(
 	// take out points with no flux
 	if(verbose) printf("before taking out zero surface brightness points: %li\n",imageinfo->imagekist->Nunits());
 	Ntmp = imageinfo->imagekist->Nunits();
+  PosType gridmax=0;
 	for(i=0,imageinfo->imagekist->MoveToTop(),area_tot=0; i < Ntmp ; ++i ){
 
 		flux = imageinfo->imagekist->getCurrent()->surface_brightness * pow(imageinfo->imagekist->getCurrent()->gridsize,2);
@@ -97,6 +102,7 @@ void ImageFinding::map_imagesISOP(
 			imageinfo->imagekist->getCurrent()->in_image = TRUE;
 			imageinfo->imagekist->getCurrent()->image->in_image = TRUE;
 			imageinfo->imagekist->Down();
+      gridmax=MAX(imageinfo->imagekist->getCurrent()->gridsize,gridmax);
 		}else{
 			imageinfo->imagekist->getCurrent()->in_image = FALSE;
 			imageinfo->imagekist->getCurrent()->image->in_image = FALSE;
@@ -106,6 +112,7 @@ void ImageFinding::map_imagesISOP(
 		}
 
 	}
+  if(imageinfo->gridrange[0] > gridmax) imageinfo->gridrange[0] = gridmax;
   
 	if(verbose) printf("after taking out zero surface brightness points: %li\n"
                      ,imageinfo->imagekist->Nunits());
@@ -115,7 +122,12 @@ void ImageFinding::map_imagesISOP(
 		for(i=0; i < NimageMax ; ++i) imageinfo[i].area = 0.0;
 		return;
 	}
-
+ 
+  if(imageinfo[0].gridrange[0] > res_min){
+    ERROR_MESSAGE();
+    exit(0);
+  }
+  
 	// divide up images
 	if(divide_images) divide_images_kist(grid->i_tree,imageinfo,Nimages,NimageMax);
 	else *Nimages = 1;
@@ -128,33 +140,35 @@ void ImageFinding::map_imagesISOP(
 	/////////////////////////////////////////////
 
   Boo outcome;
-  long count=0;
+  long count=0,count_tot=0,count_moreNeighbors=0,count_isopfail=0,count_res=0;
   Point *current;
 
 	// ****** calculate surface brightnesses and flux of each image   ******
 	for(i=0,area_tot=0.0; i < *Nimages ; ++i){
 
 		imageinfo[i].ShouldNotRefine = 0;
-		imageinfo[i].uniform_mag = unchecked;
 
 		findborders4(grid->i_tree,&(imageinfo[i]));
 
 		imageinfo[i].imagekist->MoveToTop();
 		imageinfo[i].area = 0.0;
 		do{
-      
-      current = imageinfo[i].imagekist->getCurrent();
-      ImageFinding::IntegrateFluxInCell(current,*source,1.0e-2,outcome);
-      if(outcome != TRUE || current->gridsize > res_min ){
-        ++count;
-        imageinfo[i].imagekist->getCurrent()->flag = false;
-      }else{
-        imageinfo[i].imagekist->getCurrent()->flag = true;
-      }
-      
-			imageinfo[i].area += pow(imageinfo[i].imagekist->getCurrent()->gridsize,2)
-         *(imageinfo[i].imagekist->getCurrent()->surface_brightness);
+           current = imageinfo[i].imagekist->getCurrent();
+           ImageFinding::IntegrateFluxInCell(current,*source,1.0e-2,outcome);
+           if(outcome != TRUE || current->gridsize > res_min ){
+              ++count;
+              imageinfo[i].imagekist->getCurrent()->flag = false;
+               if(outcome == FALSE) ++count_moreNeighbors;
+               if(outcome == MAYBE) ++count_isopfail;
+               if(current->gridsize > res_min) ++count_res;
+           }else{
+              imageinfo[i].imagekist->getCurrent()->flag = true;
+           }
+         
+           imageinfo[i].area += pow(imageinfo[i].imagekist->getCurrent()->gridsize,2)
+               *(imageinfo[i].imagekist->getCurrent()->surface_brightness);
 
+            ++count_tot;
 		}while(imageinfo[i].imagekist->Down());
 
 		area_tot += imageinfo[i].area;
@@ -162,6 +176,12 @@ void ImageFinding::map_imagesISOP(
 		assert(imageinfo[i].area >= 0);
 	}
   
+    std::cout << "number of IntegrateFluxInCell failures "<< count << "  "
+    << count*100.0/count_tot << "%" << std::endl;
+    std::cout << "    "<< count_moreNeighbors*100.0/count_tot << "% not 8 neighbors" << std::endl;
+    std::cout << "    "<< count_isopfail*100.0/count_tot << "% isop expansion fails" << std::endl;
+    std::cout << "    "<< count_res*100.0/count_tot << "% pixel too large" << std::endl;
+    
   if(count*0){
 
 	/********************************************************
@@ -169,10 +189,13 @@ void ImageFinding::map_imagesISOP(
 	 *******************************************************/
     i=0;
     while( 0 < ImageFinding::refine_grid_on_imageISOP(lens,source,grid,imageinfo,Nimages
-                                                      ,Nsources,NimageMax,FracResTarget,res_min
-                                                ,criterion,divide_images) ) ++i;
+                                                      ,Nsources,NimageMax,FracResTarget
+                                                      ,res_min,res_min*res_min*1.0e-3
+                                                      ,criterion,divide_images) ) ++i;
       
   }
+    
+    std::cout << "  map_imagesISOP: " << i << " refinement steps were taken " << std::endl;
 
 	// find image centroid
 	for(i=0;i<*Nimages;++i){
@@ -229,7 +252,9 @@ void ImageFinding::map_imagesISOP(
 int ImageFinding::refine_grid_on_imageISOP(Lens *lens,Source *source,GridHndl grid
                                            ,ImageInfo *imageinfo,int *Nimages
                                            ,int Nsources,int NimageMax
-                                           ,const PosType res_target,const PosType res_min
+                                           ,PosType res_target
+                                           ,PosType res_min
+                                           ,PosType res_source_area
                                            ,ExitCriterion criterion,bool divide_images
                                            ){
   
@@ -256,8 +281,9 @@ int ImageFinding::refine_grid_on_imageISOP(Lens *lens,Source *source,GridHndl gr
   Boo outcome;
   for(i=0,Ncells=0;i<(*Nimages);++i){
         
-	  assert(imageinfo[i].area >= 0.0);
-	  if(imageinfo[i].ShouldNotRefine == 0 && imageinfo[i].uniform_mag == no){  // If image was not refined on the last round do not revisit unless the images are re-divided.
+    assert(imageinfo[i].area >= 0.0);
+    
+	  if(imageinfo[i].ShouldNotRefine == 0 ){  // If image was not refined on the last round do not revisit unless the images are re-divided.
 		  imageinfo[i].ShouldNotRefine = 1;
       
 		  imageinfo[i].imagekist->MoveToTop();
@@ -269,45 +295,44 @@ int ImageFinding::refine_grid_on_imageISOP(Lens *lens,Source *source,GridHndl gr
           ImageFinding::IntegrateFluxInCell(current,*source,1.0e-2,outcome);
           if(outcome == TRUE && current->gridsize < res_min){
             current->flag = true;
-          }else if(
-            ImageFinding::RefinePoint2(current,grid->i_tree
+          }else if( (outcome == MAYBE && current->image->leaf->area() > res_source_area ) || current->gridsize > res_min
+                   || ImageFinding::RefinePoint2(current,grid->i_tree
                                       ,imageinfo[i].area,total_area,1.0,criterion,res_target,nearest)
                    ){
           
-            ++Ncells;
+          ++Ncells;
+          imageinfo[i].ShouldNotRefine = 0;   // mark to continue refinement on next round
+              
           
-            // adjust contribution to image flux from point that will be refined.
-            assert(imageinfo[i].area > 0.0);
+          // adjust contribution to image flux from point that will be refined.
+          assert(imageinfo[i].area > 0.0);
           
-            // Determine if image point to be refined is a inner border point
-            if(reborder == false){
-              if(nearest->Nunits() == 0 ) grid->i_tree->FindAllBoxNeighborsKist(current,nearest);
-              nearest->MoveToTop();
-              do{
-                if(nearest->getCurrent()->in_image != TRUE){
-                  reborder = true;
-                  break;
-                }
-              }while(nearest->Down());
-            }
+          // Determine if image point to be refined is a inner border point
+          if(reborder == false){
+            if(nearest->Nunits() == 0 ) grid->i_tree->FindAllBoxNeighborsKist(current,nearest);
+            nearest->MoveToTop();
+            do{
+              if(nearest->getCurrent()->in_image != TRUE){
+                reborder = true;
+                break;
+              }
+            }while(nearest->Down());
+          }
           
-            imageinfo[i].area -=  pow(current->gridsize,2)
+          imageinfo[i].area -=  pow(current->gridsize,2)
             *(current->surface_brightness);
           
-            assert(imageinfo[i].area >= 0);
+          assert(imageinfo[i].area >= 0);
           
-            assert(current->leaf->child1 == NULL);
-            assert(current->leaf->child2 == NULL);
+          assert(current->leaf->child1 == NULL);
+          assert(current->leaf->child2 == NULL);
           
+          points_to_refine.push_back(current);
             
-            points_to_refine.push_back(current);
-            
-            imageinfo[i].area +=  pow(current->gridsize/grid->getNgrid_block(),2)
+          imageinfo[i].area +=  pow(current->gridsize/grid->getNgrid_block(),2)
                     *(current->surface_brightness);
           
-            imageinfo[i].ShouldNotRefine = 0;   // mark to continue refinement on next round
-          
-          }
+        }
         }
       }
       
@@ -400,7 +425,7 @@ int ImageFinding::refine_grid_on_imageISOP(Lens *lens,Source *source,GridHndl gr
         
 			  reborder = false;
 		  }
-	  } // if previously refined
+      }
   } // loop through images
   
   delete nearest;
@@ -508,12 +533,7 @@ void ImageFinding::IntegrateFluxInCell(
     x[i] = neighbors[i]->image->x[0];
     y[i] = neighbors[i]->image->x[1];
   }
-  
-  double scale = sqrt( (x[0]-x[4])*(x[0]-x[4]) + (y[0]-y[4])*(y[0]-y[4]) );
-  // see if isop expansion is valid
-  if( fabs(point->image->x[0] - ISOP::isop(x,0,0)) > tolerance*scale){outcome = MAYBE; return;}
-  if( fabs(point->image->x[1] - ISOP::isop(y,0,0)) > tolerance*scale){outcome = MAYBE; return;}
-  
+    
   // goto each quadrant and integrate the function.
   {
     x[0] = neighbors[0]->image->x[0];
@@ -577,6 +597,12 @@ void ImageFinding::IntegrateFluxInCell(
   }
   
   point->surface_brightness = flux;///point->gridsize/point->gridsize;
+  
+  double scale = sqrt( (x[0]-x[4])*(x[0]-x[4]) + (y[0]-y[4])*(y[0]-y[4]) );
+  // see if isop expansion is valid
+  if( fabs(point->image->x[0] - ISOP::isop(x,0,0)) > tolerance*scale){outcome = MAYBE; return;}
+  if( fabs(point->image->x[1] - ISOP::isop(y,0,0)) > tolerance*scale){outcome = MAYBE; return;}
+
   outcome = TRUE;
 }
 
