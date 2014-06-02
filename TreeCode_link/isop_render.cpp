@@ -15,6 +15,6 @@
 		quadrature_result result = quadrature<rule>(ISOP::make_isop_map(SourceFunctor(source), nodx, nody), a0, b0, a1, b1, pg, ag);
 		
 		// return the result, error should be within the required limits
-		return result.value;
+		return result.value/4;
 	}
 

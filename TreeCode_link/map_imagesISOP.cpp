@@ -7,6 +7,7 @@
 #include "slsimlib.h"
 #include "isop.h"
 #include "map_images.h"
+#include <thread>
 
 const bool verbose = false;
 const PosType FracResTarget = 3.0e-5;
@@ -152,6 +153,15 @@ void ImageFinding::map_imagesISOP(
 
 		imageinfo[i].imagekist->MoveToTop();
 		imageinfo[i].area = 0.0;
+    std::thread thread[N_THREADS];
+    Kist<Point>::iterator its[N_THREADS +1];
+    its[0] = imageinfo[i].imagekist->getBottomIt();
+    its[N_THREADS] = imageinfo[i].imagekist->getTopIt();
+    for(int ii = 1;ii<N_THREADS;++ii){
+      its[ii] = its[ii-1];
+      for(int jj=0;jj<imageinfo[i].imagekist->Nunits()/N_THREADS;++jj) ++its[ii];
+    }
+    ***
 		do{
            current = imageinfo[i].imagekist->getCurrent();
            ImageFinding::IntegrateFluxInCell(current,*source,1.0e-2,outcome);
