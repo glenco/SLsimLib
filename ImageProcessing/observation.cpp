@@ -358,7 +358,7 @@ PixelMap Observation::AddNoise(PixelMap &pmap,long *seed)
 		norm_map = outmap[i]*exp_time;
 		if (norm_map+back_mean > 500.)
 		{
-			rms = sqrt(pow(exp_num*ron,2)+norm_map+back_mean);
+			rms = sqrt(exp_num*ron*ron+norm_map+back_mean);
 			noise = gasdev(seed)*rms;
 			outmap.AssignValue(i,double(norm_map+noise)/exp_time);
 		}
