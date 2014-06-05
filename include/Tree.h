@@ -338,7 +338,7 @@ namespace Utilities{
      *  Array must be indexed i = ix + iy * Nx 
      */
     Interpolator(
-                 PosType *x          /// position of point
+                 PosType const *x          /// position of point
                  ,int my_Nx       /// Number of pixels in x dimension
                  ,PosType my_range_x   /// Range of map in x in same units as x[]
                  ,int my_Ny       /// Number of pixels in y dimension
