@@ -13,7 +13,7 @@ void LensHaloBaseNSIE::force_halo(
 		PosType *alpha       /// mass/Mpc
 		,KappaType *kappa   /// surface mass density
 		,KappaType *gamma
-        ,KappaType *phi     // PHI BY Fabien
+        ,KappaType *phi
 		,PosType const *xcm
 		,bool subtract_point /// if true contribution from a point mass is subtracted
 		)
@@ -21,7 +21,7 @@ void LensHaloBaseNSIE::force_halo(
      long j;
      PosType alpha_tmp[2];
      KappaType kappa_tmp = 0.0, gamma_tmp[3], dt = 0;
-     KappaType phi_tmp = 0.0 ; // PHI BY Fabien
+     KappaType phi_tmp = 0.0 ;
             
             
      gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
@@ -30,7 +30,6 @@ void LensHaloBaseNSIE::force_halo(
      alpha[0] = alpha[1] = 0.0;
      gamma[0] = gamma[1] = gamma[2] = 0.0;
      *kappa = 0.0;
-     // PHI BY Fabien
      *phi = 0.0 ;
 
             
@@ -81,8 +80,7 @@ void LensHaloBaseNSIE::force_halo(
      {
     	 for(j=0;j<sub_N;++j)
          {
-             
-             // PHI BY Fabien
+
     		 subs[j].force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp,xcm);
              // subs[j].force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,xcm);
 
@@ -130,8 +128,9 @@ void LensHaloBaseNSIE::assignParams(InputParams& params){
 	if(!params.get("main_pos_angle",pa)) error_message1("main_pos_angle",params.filename());
 
 	Rsize = rmaxNSIE(sigma,mass,fratio,rcore);
+    
 	Rmax = MAX(1.0,1.0/fratio)*Rsize;  // redefine
-
+    
 	assert(Rmax >= Rsize);
 
 	if(!params.get("zsource_reference",zsource_reference)) error_message1("zsource_reference",params.filename());

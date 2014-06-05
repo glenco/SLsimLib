@@ -19,8 +19,6 @@ LensPlaneTree::~LensPlaneTree(){
 	delete halo_tree;
 }
 
-
-// PHI BY Fabien : adding the phi component into this function
 void LensPlaneTree::force(PosType *alpha,KappaType *kappa,KappaType *gamma
                           ,KappaType *phi,PosType *xx){
 	halo_tree->force2D_recur(xx,alpha,kappa,gamma,phi);
@@ -58,70 +56,49 @@ LensPlaneSingular::~LensPlaneSingular()
 {
 }
 
-/*
-void LensPlaneSingular::force(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xx,){
-	PosType alpha_tmp[2],x_tmp[2];
-	KappaType kappa_tmp, gamma_tmp[3];
-    
-	alpha[0] = alpha[1] = 0.0;
-	*kappa = 0.0;
-	gamma[0] = gamma[1] = gamma[2] = 0.0;
+void LensPlaneSingular::force(PosType *alpha
+                              ,KappaType *kappa
+                              ,KappaType *gamma
+                              ,KappaType *phi
+                              ,PosType *xx          // Position in physical Mpc
+                              )
+{
 
-	for(std::size_t i = 0, n = halos.size(); i < n; ++i)
-	{
-		alpha_tmp[0] = alpha_tmp[1] = 0.0;
-		kappa_tmp = 0.0;
-		gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
-
-        halos[i]->getX(x_tmp);
-       
-        x_tmp[0] = xx[0] - x_tmp[0];
-        x_tmp[1] = xx[1] - x_tmp[1];
-        
-		halos[i]->force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,x_tmp,false);
-    
-		alpha[0] -= alpha_tmp[0];
-		alpha[1] -= alpha_tmp[1];
-		*kappa += kappa_tmp;
-		gamma[0] += gamma_tmp[0];
-		gamma[1] += gamma_tmp[1];
-		gamma[2] += gamma_tmp[2];
-	}
-}
-*/
-
-// PHI BY Fabien : adding the phi component into this function --------------------------------------
-void LensPlaneSingular::force(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType *xx){
 	PosType alpha_tmp[2],x_tmp[2];
 	KappaType kappa_tmp, gamma_tmp[3];
     KappaType phi_tmp;
     
 	alpha[0] = alpha[1] = 0.0;
+  x_tmp[0] = x_tmp[1] = 0.0;
 	*kappa = 0.0;
 	gamma[0] = gamma[1] = gamma[2] = 0.0;
-    *phi = 0.0;
-    
+  *phi = 0.0;
+
+    // Loop over the different halos present in a given lens plane.
 	for(std::size_t i = 0, n = halos.size(); i < n; ++i)
 	{
 		alpha_tmp[0] = alpha_tmp[1] = 0.0;
 		kappa_tmp = 0.0;
 		gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
-        phi_tmp = 0.0;
+    phi_tmp = 0.0;
         
-        halos[i]->getX(x_tmp);
+    // Getting the halo position (in physical Mpc) :
+    halos[i]->getX(x_tmp);
         
-        x_tmp[0] = xx[0] - x_tmp[0];
-        x_tmp[1] = xx[1] - x_tmp[1];
-        
+    // Taking the shift into account :
+    x_tmp[0] = xx[0] - x_tmp[0];
+    x_tmp[1] = xx[1] - x_tmp[1];
+
 		halos[i]->force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp,x_tmp,false);
-        
+    
+        // Adding the temporary values to the different quantities :
 		alpha[0] -= alpha_tmp[0];
 		alpha[1] -= alpha_tmp[1];
 		*kappa += kappa_tmp;
 		gamma[0] += gamma_tmp[0];
 		gamma[1] += gamma_tmp[1];
 		gamma[2] += gamma_tmp[2];
-        *phi += phi_tmp;
+    *phi += phi_tmp;
 	}
 }
 

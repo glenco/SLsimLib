@@ -16,9 +16,7 @@ public:
 	LensPlane() {}
 	virtual ~LensPlane() {} 
 	
-    // PHI BY Fabien
-    virtual void force(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType *xx) = 0;
-	// virtual void force(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xx) = 0;
+  virtual void force(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType *xx) = 0;
 	
 	virtual void addHalo(LensHalo* halo) = 0;
 	virtual void removeHalo(LensHalo* halo) = 0;
@@ -33,10 +31,8 @@ public:
 	LensPlaneTree(PosType **xpt,LensHaloHndl *my_halos,IndexType Nhalos,PosType my_sigma_background);
 	~LensPlaneTree();
 
-    // PHI BY Fabien : adding the phi component into this function
 	void force(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType *xx);
-    // void force(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xx);
-    
+   
 	void addHalo(LensHalo* halo);
 	void removeHalo(LensHalo* halo);
 	
@@ -59,9 +55,7 @@ public:
 	LensPlaneSingular(LensHaloHndl *my_halos, IndexType Nhalos);
 	~LensPlaneSingular();
 
-	// PHI BY Fabien : adding the phi component into this function
-    void force(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType *xx);
-	// void force(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xx);
+  void force(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType *xx);
     
 	void addHalo(LensHalo* halo);
 	void removeHalo(LensHalo* halo);

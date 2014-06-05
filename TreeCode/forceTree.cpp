@@ -59,7 +59,7 @@ TreeForce::~TreeForce(){
 // calculates moments of the mass and the cutoff scale for each box
 void TreeForce::CalcMoments(){
 
-	//*** make compatable
+	//*** make compatible
 	IndexType i;
 	PosType rcom,xcm[2],xcut;
 	BranchNB *cbranch;
@@ -202,6 +202,7 @@ void TreeForce::force2D(PosType const *ray
 
   alpha[0]=alpha[1]=gamma[0]=gamma[1]=gamma[2]=0.0;
   *kappa=0.0;
+  *phi=0.0;
 
   do{
 
@@ -243,8 +244,13 @@ void TreeForce::force2D(PosType const *ray
 				  alpha[0] += tmp*xcm[0];
 				  alpha[1] += tmp*xcm[1];
 
+<<<<<<< mine
 				  // can turn off kappa and gamma calculations to save times
 				  {
+=======
+				  // can turn off kappa and gamma calculations to save time
+				  if(!no_kappa){
+>>>>>>> theirs
 					  tmp = -2.0*prefac/rcm2;
 
 					  gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
@@ -252,7 +258,11 @@ void TreeForce::force2D(PosType const *ray
 				  }
 
 				  if(haloON){
+<<<<<<< mine
 					  halos[index].force_halo(alpha,kappa,gamma,phi,xcm,true); // PHI BY Fabien
+=======
+					  halos[index].force_halo(alpha,kappa,gamma,phi,xcm,no_kappa,true);
+>>>>>>> theirs
 				  }else{  // case of no halos just particles and no class derived from TreeQuad
 
 					  arg1 = rcm2/(rsph[index*MultiRadius]*rsph[index*MultiRadius]);
@@ -273,6 +283,9 @@ void TreeForce::force2D(PosType const *ray
 
 							  gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 							  gamma[1] += xcm[0]*xcm[1]*tmp;
+                              
+                              *phi += phi_o(arg1,arg2)*prefac ;
+                              // Fabien : Be careful, this phi_o has not been implemented yet !
 						  }
 					  }
 				  }
@@ -304,6 +317,7 @@ void TreeForce::force2D(PosType const *ray
 
 		  alpha[0] += tmp*xcm[0];
 		  alpha[1] += tmp*xcm[1];
+          
 	  }
 
   }while(TreeNBWalkStep(tree,allowDescent));
@@ -314,6 +328,9 @@ void TreeForce::force2D(PosType const *ray
   alpha[1] += ray[1]*kappa_background;
   {      //  taken out to speed up
 	  *kappa -= kappa_background;
+      // Fabien : Added this but should be checked.
+      // It is not so useful anyway.
+      // *phi -= kappa_background * kappa_background ;
   }
 
   return;

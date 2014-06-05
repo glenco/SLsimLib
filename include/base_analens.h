@@ -105,7 +105,6 @@ public:
 
   // PHI BY Fabien
   virtual void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false);
-  // virtual void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xcm,bool subtract_point=false);
 
   // in randoimize_lens.c
   PosType averageSubMass();

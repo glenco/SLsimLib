@@ -75,7 +75,7 @@ void LensHaloUniform::force_halo(
 		PosType *alpha     /// mass/Mpc
 		,KappaType *kappa
 		,KappaType *gamma
-        ,KappaType *phi      // PHI BY Fabien
+        ,KappaType *phi
 		,PosType const *xcm
 		,bool subtract_point /// if true contribution from a point mass is subtracted
 		)
@@ -93,7 +93,6 @@ void LensHaloUniform::force_halo(
     // *kappa += lens_expand(perturb_modes,xcm,alpha,gamma,&dt);
     *kappa += lens_expand(perturb_modes,xcm,alpha,gamma,&phi_tmp);
     
-    // PHI BY Fabien
     *phi += phi_tmp ;
     
     // add stars for microlensing
