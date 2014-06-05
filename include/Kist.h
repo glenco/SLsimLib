@@ -55,7 +55,7 @@ struct KistUnit{
  
  ....
  
- for(Kist<Point>::iterator it = kist.getTopIt(); it != kist.getOffBottomIt() ;--it){
+ for(Kist<Point>::iterator it = kist.BottomIt(); !(it.atend()) ;--it){
    cout << i << " x = " << (*it)->x[0] << "  " << (*it)->x[1] << endl;
  }
  
@@ -238,22 +238,25 @@ public:
 //  void SetCurrentIt(iterator it){current = it.getUnit();}
 //    void SetCurrentIt(iterator it){current = it.unit;}
     
-  iterator getCurrentIt(){
+  /// returns iterator pointing to entry that current it pointing to
+  iterator CurrentIt(){
       iterator it ;
       it = current;
       return it;
   }
-  iterator getTopIt(){
+  /// returns iterator pointing to first entry with data
+  iterator TopIt(){
       iterator it ;
       it = top;
       return it;
   }
-  iterator getBottomIt(){
+  /// returns iterator pointing to last entry with data
+  iterator BottomIt(){
     iterator it;
     it = bottom;
     return it;
   }
-  iterator getOffBottomIt(){
+  iterator endIt(){
     iterator it;
     it = &offbot;
     return it;

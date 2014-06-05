@@ -1381,20 +1381,20 @@ void ImageInfo::FindArc(PosType &radius,PosType *xc,PosType *arc_c,PosType &arcl
   
   //throw std::runtime_error("not ready yet");
   
-  Kist<Point>::iterator it = imagekist->getTopIt();
+  Kist<Point>::iterator it = imagekist->TopIt();
   PosType xrange[2],yrange[2];
    
   xrange[0] = xrange[1] = (*it)->x[0];
   yrange[0] = yrange[1] = (*it)->x[1];
   
   double maxval = (*it)->surface_brightness;
-  for(it = imagekist->getTopIt();!(it.atend());--it){
+  for(it = imagekist->TopIt();!(it.atend());--it){
     maxval = MAX(maxval,(*it)->surface_brightness);
   }
 
   ImageInfo tmp_image;
   
-  for(it = imagekist->getTopIt();!(it.atend());--it){
+  for(it = imagekist->TopIt();!(it.atend());--it){
     //if((*it)->surface_brightness > threshold*maxval){
       xrange[0] = MIN(xrange[0],(*it)->x[0]);
       xrange[1] = MAX(xrange[1],(*it)->x[0]);

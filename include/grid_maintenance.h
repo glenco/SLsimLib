@@ -28,7 +28,7 @@ struct Grid{
 
 	void ReInitializeGrid(LensHndl lens);
     void ReShoot(LensHndl lens);
-	void zoom(LensHndl lens,double *center,double scale,bool kappa_off,Branch *top = NULL);
+	void zoom(LensHndl lens,double *center,double scale,Branch *top = NULL);
 
 	unsigned long PruneTrees(double resolution,bool useSB,double fluxlimit);
 	unsigned long PrunePointsOutside(double resolution,double *y,double r_in ,double r_out);
@@ -49,8 +49,8 @@ struct Grid{
 	int getNgrid_block(){return Ngrid_block;}
 	/// return initial range of gridded region
 	double getInitRange(){return i_tree->top->boundary_p2[0] - i_tree->top->boundary_p1[0];}
-	Point * RefineLeaf(LensHndl lens,Point *point,bool kappa_off);
-	Point * RefineLeaves(LensHndl lens,std::vector<Point *>& points,bool kappa_off);
+	Point * RefineLeaf(LensHndl lens,Point *point);
+	Point * RefineLeaves(LensHndl lens,std::vector<Point *>& points);
 	void ClearAllMarks();
 
 	void test_mag_matrix();
@@ -87,42 +87,48 @@ private:
 typedef struct Grid* GridHndl;
 
 // in image_finder_kist.c
-
+namespace ImageFinding{
+    
 void find_images_kist(LensHndl lens,double *y_source,double r_source,GridHndl grid
-		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
+		,int *Nimages,ImageInfo *imageinfo,int NimageMax,unsigned long *Nimagepoints
 		,double initial_size,bool splitimages,short edge_refinement
-		,bool verbose,bool kappa_off);
+		,bool verbose = false);
 
 void find_images_microlens(LensHndl lens,double *y_source,double r_source,GridHndl grid
 		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
 		,double initial_size,double mu_min,bool splitimages,short edge_refinement
-		,bool verbose,bool kappa_off);
+		,bool verbose);
+
+void find_images_microlens_exper(LensHndl lens,PosType *y_source,PosType r_source
+        ,GridHndl grid,int *Nimages,ImageInfo *imageinfo,const int NimageMax
+        ,unsigned long *Nimagepoints,PosType initial_size ,PosType mu_min
+        ,bool splitimages,short edge_refinement,bool verbose);
 
 void image_finder_kist(LensHndl lens, double *y_source,double r_source,GridHndl grid
 		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
 		,short splitparities,short true_images);
 
 int refine_grid_kist(LensHndl lens,GridHndl grid,ImageInfo *imageinfo
-		,int Nimages,double res_target,short criterion,bool kappa_off
+		,int Nimages,double res_target,short criterion
 		,Kist<Point> * newpointkist = NULL,bool batch=true);
 
 void find_crit(LensHndl lens,GridHndl grid,ImageInfo *critcurve,int maxNcrits,int *Ncrits
 		,double resolution,bool *orderingsuccess,bool ordercurve,bool dividecurves,double invmag_min = 0.0,bool verbose = false);
 void find_crit2(LensHndl lens,GridHndl grid,ImageInfo *critcurve,int maxNcrits,int *Ncrits
 		,double resolution,bool *orderingsuccess,bool ordercurve,bool dividecurves,double invmag_min = 0.0,bool verbose = false);
-
+}
 void refine_crit_in_image(LensHndl lens,GridHndl grid,double r_source,double x_source[],double resolution);
 
 int refine_grid(LensHndl lens,GridHndl grid,OldImageInfo *imageinfo
-		,unsigned long Nimages,double res_target,short criterion,bool kappa_off,bool batch=true);
+		,unsigned long Nimages,double res_target,short criterion,bool batch=true);
 
 long refine_edges(LensHndl lens,GridHndl grid,ImageInfo *imageinfo
-		,int Nimages,double res_target,short criterion,bool kappa_off
+		,int Nimages,double res_target,short criterion
 		,Kist<Point> * newpointkist = NULL,bool batch=true);
 
 long refine_edges2(LensHndl lens,double *y_source,double r_source,GridHndl grid
 		,ImageInfo *imageinfo,bool *image_overlap,int Nimages,double res_target
-		,short criterion,bool kappa_off,bool batch=true);
+		,short criterion,bool batch=true);
 
 void sort_out_points(Point *i_points,ImageInfo *imageinfo,double r_source,double y_source[]);
 

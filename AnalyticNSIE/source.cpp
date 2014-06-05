@@ -611,40 +611,46 @@ SourceShapelets::SourceShapelets(
 PosType SourceShapelets::SurfaceBrightness(PosType *y)
 {
 	PosType sb = 0.;
-	PosType y_norm[2];
+	PosType y_norm[2],tmp;
 	y_norm[0] = ((y[0]-source_x[0])*cos(ang)+(y[1]-source_x[1])*sin(ang))/source_r;
-	y_norm[1] = ((y[0]-source_x[0])*sin(ang)-(y[1]-source_x[1 ])*cos(ang))/source_r;
+	y_norm[1] = ((y[0]-source_x[0])*sin(ang)-(y[1]-source_x[1])*cos(ang))/source_r;
 	PosType dist = sqrt(y_norm[0]*y_norm[0]+y_norm[1]*y_norm[1]);
-    std::vector<double> Hermite_pol_x(n1);
-    Hermite_pol_x = Hermite(n1,y_norm[0]);
-    std::vector<double> Hermite_pol_y(n2);
-    Hermite_pol_y = Hermite(n2,y_norm[1]);
-	for (int i = 0; i < n1; i++)
+  std::vector<PosType> Her1,Her2;
+  
+  Hermite(Her1,n1,y_norm[0]);
+  Hermite(Her2,n2,y_norm[1]);
+  
+    size_t coei=1,coej=1;
+  
+	for (int i = 0; i < n1; i++,coei *= 2,coej=1 )
 	{
-		for (int j = 0; j < n2; j++)
+    tmp = factrl(i)*pi;
+		for (int j = 0; j < n2; j++,coej *= 2 )
 		{
-			PosType norm = 1./sqrt(pow(2,i+j)*pi*factrl(i)*factrl(j));
-			sb += norm*coeff[j*n1+i]*Hermite_pol_x[i]*Hermite_pol_y[j];
+
+			PosType norm = 1./sqrt(coei*coej*tmp*factrl(j));
+			sb += norm*coeff[j*n1+i]*Her1[i]*Her2[j];
 		}
 	}
 	sb *= exp(-dist*dist/2.)/source_r;
-    sb *= flux/coeff_flux;
+  sb *= flux/coeff_flux;
+
 	return max(sb,std::numeric_limits<PosType>::epsilon());
 }
 
-/// Returns the value of the Hermite polynomial of degree n at position x
-std::vector<double> SourceShapelets::Hermite(int n, PosType x)
+/// Returns the value of the Hermite polynomials from degree 0 to n at position x
+void SourceShapelets::Hermite(std::vector<PosType> &hg,int N, PosType x)
 {
-	vector<double> hg(n);
+	hg.resize(N);
 	hg[0] = 1.;
-	for (int i = 1; i < n; i++)
+	for (int i = 1; i < N; i++)
 	{
 		if (i==1)
 			hg[1] = 2.*x;
 		else
 			hg[i] = 2.*x*hg[i-1]-2.*(i-1)*hg[i-2];
 	}
-	return hg;
+	return;
 }
 
 void SourceShapelets::printSource()

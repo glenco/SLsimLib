@@ -28,6 +28,7 @@ public:
 	virtual ~Source();
 	
 	// in lens.cpp
+	// TODO: make SurfaceBrightness take a const double*
 	/// Surface brightness of source in grid coordinates not source centered coordinates.
 	virtual PosType SurfaceBrightness(PosType *y) = 0;
 	virtual PosType getTotalFlux() = 0;
@@ -149,7 +150,8 @@ public:
 
 private:
 	void assignParams(InputParams& params);
-    std::vector<double> Hermite(int n, PosType x);
+  void Hermite(std::vector<PosType> &hg,int N, PosType x);
+
 	void NormalizeFlux();
 	std::valarray<PosType> coeff;
 	int n1,n2;
@@ -311,6 +313,21 @@ class QuasarLF{
         }
     };
         
+};
+
+/// Functor to turn sources into binary functions
+struct SourceFunctor
+{
+	SourceFunctor(Source& source) : source(source) {}
+	
+	double operator()(double x, double y)
+	{
+		// TODO: make const double[2] as soon as possible
+		double z[2] = {x, y};
+		return source.SurfaceBrightness(z);
+	}
+	
+	Source& source;
 };
 
 #endif /* SOURCE_H_ */

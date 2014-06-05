@@ -144,7 +144,7 @@ public:
 	template<typename HaloType>
 	HaloType* getMainHalo(std::size_t i);
 	
-	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool kappa_off);
+	void rayshooterInternal(unsigned long Npoints, Point *i_points);
 
 	// methods used for use with implanted sources
 

@@ -258,7 +258,7 @@ void PrintImages(ImageInfo *images,long Nimages);
 /*void find_images(PosType *y_source,PosType r_source,GridHndl grid
 		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
 		,PosType initial_size,bool splitimages,short edge_refinement
-		,bool verbose,bool kappa_off);
+		,bool verbose);
 short image_finder(PosType *y_source,PosType r_source,TreeHndl s_tree,TreeHndl i_tree
 		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
 		,short splitparities,short true_images);*/
@@ -528,7 +528,7 @@ void splitlist(ListHndl imagelist,OldImageInfo *images,int *Nimages,int Maximage
 /* externally provided functions */
 /*********************************/
 
-//void rayshooterInternal(unsigned long Npoints,Point *i_points,bool kappa_off);
+//void rayshooterInternal(unsigned long Npoints,Point *i_points);
 void in_source(PosType *y_source,ListHndl sourcelist);
 bool tree_count_test(TreeHndl tree);
 bool testLeafs(TreeHndl tree);

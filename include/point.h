@@ -59,6 +59,7 @@ struct Point{
   float surface_brightness;  // the surface brightness at this points
 
   Branch *leaf;
+  bool flag;
 
   void print();
   void Print();
@@ -71,8 +72,22 @@ struct Point{
   double dot(Point &p){
     return x[0]*p.x[0] + x[1]*p.x[1];
   }
-    
+
+  static bool orderX(Point *p1,Point *p2){
+    return (p1->x[0] < p2->x[0]);
+  }
+  static bool orderXrev(Point *p1,Point *p2){
+    return (p1->x[0] > p2->x[0]);
+  }
+  static bool orderY(Point *p1,Point *p2){
+    return (p1->x[1] < p2->x[1]);
+  }
+  static bool orderYrev(Point *p1,Point *p2){
+    return (p1->x[1] > p2->x[1]);
+  }
+
 };
+
 
 /// The box representing a branch of a binary tree structure.  Used specifically in TreeStruct for organizing points in the grid.
 struct Branch{
@@ -99,6 +114,8 @@ struct Branch{
 
   void print();
 
+  PosType area(){return (boundary_p2[0]-boundary_p1[0])*(boundary_p2[1]-boundary_p1[1]);}
+    
   std::list<Branch *> neighbors;
 private:
   static unsigned long countID;

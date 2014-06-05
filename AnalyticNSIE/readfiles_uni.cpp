@@ -77,7 +77,6 @@ void LensHaloUniform::force_halo(
 		,KappaType *gamma
         ,KappaType *phi
 		,PosType const *xcm
-		,bool no_kappa
 		,bool subtract_point /// if true contribution from a point mass is subtracted
 		)
 {
@@ -99,7 +98,7 @@ void LensHaloUniform::force_halo(
     // add stars for microlensing
     if(stars_N > 0 && stars_implanted)
     {
-      force_stars(alpha,kappa,gamma,xcm,no_kappa);
+      force_stars(alpha,kappa,gamma,xcm);
     }
     
 }
