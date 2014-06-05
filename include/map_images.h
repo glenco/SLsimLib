@@ -38,6 +38,8 @@ bool RefinePoint_sb(Point *point,TreeHndl i_tree,double image_area,double total_
 bool RefinePoint_smallsize(Point *point,TreeHndl i_tree,double image_area,double total_area
                            ,double smallsize,PosType maxflux,Kist<Point> * nearest);
 void IntegrateFluxInCell(Point *point,Source &source,float tolerance,Boo &outcome);
+void IntegrateCellsParallel(Kist<Point>::iterator it1
+                      ,Kist<Point>::iterator it2,Source *source,PosType *area,size_t *count);
                                          
 void interpfrom2Points(Point const * p1,Point const * p2,PosType *x,PosType *y);
     
@@ -47,7 +49,7 @@ void UniformMagCheck(ImageInfo *imageinfo);
 void map_imagesISOP(LensHndl lens,Source *source,GridHndl grid,int *Nimages
                     ,ImageInfo *imageinfo,int Nimagesmax,double rmax
                     ,double res_min,double initial_size,ExitCriterion criterion
-                    ,bool divide_images,bool verbos=false);
+                    ,bool divide_images,bool int_on = false,bool verbos=false);
 
 
 int refine_grid_on_imageISOP(Lens *lens,Source *source,GridHndl grid

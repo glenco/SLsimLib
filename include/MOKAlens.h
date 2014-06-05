@@ -40,6 +40,7 @@ struct MOKAmap{
     // boxlMpc is Mpc/h for MOKA
 	/// lens and source properties
     double zlens,m,zsource,Dlens,DLS,DS,c,cS,fsub,mstar,minsubmass;
+  /// range in x direction, pixels are square
     double boxlarcsec,boxlMpc,boxlrad;
     /// cosmology
     double omegam,omegal,h,wq;

@@ -474,7 +474,8 @@ void LensHaloMOKA::force_halo(double *alpha
   
   // interpolate from the maps
 
-  Utilities::Interpolator<valarray<double> > interp(xx,map->nx,map->boxlMpc,map->center);
+  Utilities::Interpolator<valarray<double> > interp(xx,map->nx,map->boxlMpc,map->ny
+                                              ,map->ny*map->boxlMpc/map->nx,map->center);
 
   alpha[0] = interp.interpolate(map->alpha1);
   alpha[1] = interp.interpolate(map->alpha2);
@@ -483,7 +484,7 @@ void LensHaloMOKA::force_halo(double *alpha
   gamma[2] = 0.0;
   *kappa = interp.interpolate(map->convergence);
 
-  // PHI BY Fabien : I would like to implement something of the type :
+  // TODO: PHI BY Fabien : I would like to implement something of the type :
   // *phi = interp.interpolate(map->potential);
   // but the MOKAmap called map does not have this yet !
     

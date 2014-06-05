@@ -32,6 +32,7 @@ static const float telescope_low = 0.01;
  *   - 1 uses refine_edge().  After an initial refinement of all the pixels in the image(s) the code switches
  *	 to refining only the edges of the images.  The images are found after each refinement.
  *   - 2 uses refine_edge2() Same as 1, but the images are not found after each refinement.  This can make the
+ *   - any other number does no additional refinement after telescoping
  *	 routine run much faster, but has the disadvantage that the number of images will not change during the final
  *	 stage of refinement.  This is the setting generally recommended.
  *
@@ -319,10 +320,15 @@ void ImageFinding::find_images_kist(
 	if(edge_refinement==0){   // uniform refinement over image
 		do{
 			// mark image points in tree
-			grid->s_tree->PointsWithinKist(y_source,r_source,&subkist,1);
+      if(splitimages){
+        grid->s_tree->PointsWithinKist(y_source,r_source,&subkist,1);
 
-			image_finder_kist(lens,y_source,fabs(r_source),grid
-					,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
+        image_finder_kist(lens,y_source,fabs(r_source),grid
+                        ,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
+      }else{
+        image_finder_kist(lens,y_source,fabs(r_source),grid
+                        ,Nimages,imageinfo,NimageMax,Nimagepoints,-1,1);
+      }
 			++i;
 		}while( ImageFinding::refine_grid_kist(lens,grid,imageinfo,*Nimages,FracResTarget,0));
 

@@ -38,6 +38,7 @@ void ImageFinding::map_imagesISOP(
 		                        /// to initiate the image finding.
 		,ExitCriterion criterion  /// see data type
 		,bool divide_images    /// if true will divide images and apply the exit criterion to them separately.
+    ,bool int_on           /// if true the flux in each cell is integrated, if false the surface brightness at the center point of the cell is used 
     ,bool verbose
                                   ){
 
@@ -65,7 +66,9 @@ void ImageFinding::map_imagesISOP(
     << grid->getNumberOfPoints() << std::endl;
     
   ImageFinding::find_images_kist(lens,source->getX(),source->getRadius(),grid,Nimages
-                                 ,imageinfo,NimageMax,&Nimagepoints,0.0,false,0,verbose);
+                                 ,imageinfo,NimageMax,&Nimagepoints,0.0,true,0,verbose);
+  
+  //assert(*Nimages == 1);
   
 // TODO: Seems to miss some images.  Do not know why.
 // TODO: Need some why of refining when the expansion is not valid or the original cells from above are too large.
@@ -86,82 +89,136 @@ void ImageFinding::map_imagesISOP(
 	  for(i=0; i < NimageMax ; ++i) imageinfo[i].area = 0.0;
 	  return;
 	}
-	assert(tmp > 0.0 || imageinfo->imagekist->Nunits() == 0);
-
-	// take out points with no flux
-	if(verbose) printf("before taking out zero surface brightness points: %li\n",imageinfo->imagekist->Nunits());
-	Ntmp = imageinfo->imagekist->Nunits();
-  PosType gridmax=0;
-	for(i=0,imageinfo->imagekist->MoveToTop(),area_tot=0; i < Ntmp ; ++i ){
-
-		flux = imageinfo->imagekist->getCurrent()->surface_brightness * pow(imageinfo->imagekist->getCurrent()->gridsize,2);
-
-		area_tot += flux;
-
-		if(imageinfo->imagekist->getCurrent()->surface_brightness > 0){
-
-			imageinfo->imagekist->getCurrent()->in_image = TRUE;
-			imageinfo->imagekist->getCurrent()->image->in_image = TRUE;
-			imageinfo->imagekist->Down();
-      gridmax=MAX(imageinfo->imagekist->getCurrent()->gridsize,gridmax);
-		}else{
-			imageinfo->imagekist->getCurrent()->in_image = FALSE;
-			imageinfo->imagekist->getCurrent()->image->in_image = FALSE;
-			if(imageinfo->imagekist->AtTop()) go = false; else go = true;
-			imageinfo->imagekist->TakeOutCurrent();
-			if(go) imageinfo->imagekist->Down();
-		}
-
-	}
-  if(imageinfo->gridrange[0] > gridmax) imageinfo->gridrange[0] = gridmax;
   
-	if(verbose) printf("after taking out zero surface brightness points: %li\n"
-                     ,imageinfo->imagekist->Nunits());
+  area_tot = 0;
+  for(i=0;i<*Nimages;++i){
 
-	if(imageinfo->imagekist->Nunits() == 0){
+    // take out points with no flux
+    if(verbose) printf("before taking out zero surface brightness points: %li\n",imageinfo[i].imagekist->Nunits());
+    Ntmp = imageinfo[i].imagekist->Nunits();
+    PosType gridmax=0;
+    size_t ii;
+    for(ii=0,imageinfo[i].imagekist->MoveToTop(); ii < Ntmp ; ++ii ){
+
+      flux = imageinfo[i].imagekist->getCurrent()->surface_brightness * pow(imageinfo[i].imagekist->getCurrent()->gridsize,2);
+
+      area_tot += flux;
+
+      //if(imageinfo[i].imagekist->getCurrent()->surface_brightness > 0){
+
+        imageinfo[i].imagekist->getCurrent()->in_image = TRUE;
+        imageinfo[i].imagekist->getCurrent()->image->in_image = TRUE;
+        imageinfo[i].imagekist->Down();
+        gridmax=MAX(imageinfo[i].imagekist->getCurrent()->gridsize,gridmax);
+      /*}else{
+        imageinfo[i].imagekist->getCurrent()->in_image = FALSE;
+        imageinfo[i].imagekist->getCurrent()->image->in_image = FALSE;
+        if(imageinfo[i].imagekist->AtTop()) go = false; else go = true;
+        imageinfo[i].imagekist->TakeOutCurrent();
+        if(go) imageinfo[i].imagekist->Down();
+      }*/
+
+    }
+    if(imageinfo[i].gridrange[0] > gridmax) imageinfo[i].gridrange[0] = gridmax;
+  
+    // If cell is not smaller than res_min refine it and add the new points to the image
+    if(imageinfo[i].gridrange[0] > res_min){
+      Kist<Point>::iterator it = imageinfo[i].imagekist->BottomIt();
+      std::vector<Point*> points_to_refine;
+      Point *new_points;
+
+      while(imageinfo[i].gridrange[0] > res_min){
+        for(it = imageinfo[i].imagekist->BottomIt()
+            ;!(it.atend());++it){
+          if((*it)->gridsize > res_min){
+            points_to_refine.push_back(*it);
+          }
+        }
+        new_points = grid->RefineLeaves(lens,points_to_refine);
+        for(size_t ii=0;ii<new_points->head;++ii){
+          imageinfo[i].imagekist->InsertBeforeCurrent(&new_points[ii]);
+        }
+        if(new_points->head > 1) imageinfo[i].gridrange[0] /= 3;
+        if(imageinfo[i].gridrange[0] < imageinfo[i].gridrange[2])
+          imageinfo[i].gridrange[1] = imageinfo[i].gridrange[2] = imageinfo[i].gridrange[0];
+      }
+    }
+    
+    if(verbose) printf("after taking out zero surface brightness points: %li\n"
+                     ,imageinfo[i].imagekist->Nunits());
+    
+  }
+	if(area_tot == 0){
 		*Nimages = 0;
 		for(i=0; i < NimageMax ; ++i) imageinfo[i].area = 0.0;
 		return;
 	}
- 
-  if(imageinfo[0].gridrange[0] > res_min){
-    ERROR_MESSAGE();
-    exit(0);
-  }
-  
-	// divide up images
-	if(divide_images) divide_images_kist(grid->i_tree,imageinfo,Nimages,NimageMax);
-	else *Nimages = 1;
-  
-	if(verbose) printf("number of images after first division is %i\n",*Nimages);
 
 	/////////////////////////////////////////////
 	// link image points lists for each image
 	// and calculate surface brightness at each point
 	/////////////////////////////////////////////
 
-  Boo outcome;
   long count=0,count_tot=0,count_moreNeighbors=0,count_isopfail=0,count_res=0;
-  Point *current;
-
+  
 	// ****** calculate surface brightnesses and flux of each image   ******
 	for(i=0,area_tot=0.0; i < *Nimages ; ++i){
 
+    size_t counti = 0;
 		imageinfo[i].ShouldNotRefine = 0;
 
-		findborders4(grid->i_tree,&(imageinfo[i]));
+		//findborders4(grid->i_tree,&(imageinfo[i]));
 
-		imageinfo[i].imagekist->MoveToTop();
 		imageinfo[i].area = 0.0;
-    std::thread thread[N_THREADS];
-    Kist<Point>::iterator its[N_THREADS +1];
-    its[0] = imageinfo[i].imagekist->getBottomIt();
-    its[N_THREADS] = imageinfo[i].imagekist->getTopIt();
-    for(int ii = 1;ii<N_THREADS;++ii){
-      its[ii] = its[ii-1];
-      for(int jj=0;jj<imageinfo[i].imagekist->Nunits()/N_THREADS;++jj) ++its[ii];
+    
+    // integrate cells in parallel
+    if(int_on && imageinfo[i].imagekist->Nunits() > 0){
+      int nthreads = N_THREADS < imageinfo[i].imagekist->Nunits() ? N_THREADS : imageinfo[i].imagekist->Nunits();
+      std::thread thread[N_THREADS];
+      Kist<Point>::iterator its[2];
+      int block_size = (int)(imageinfo[i].imagekist->Nunits()/nthreads);
+      PosType area[N_THREADS];
+      size_t counts[N_THREADS];
+      
+      //std::cout << "block_size " << block_size << " nthreads " << nthreads << " points in image " << imageinfo[i].imagekist->Nunits() << std::endl;
+      int jj;
+      its[0] = its[1] = imageinfo[i].imagekist->BottomIt();
+      for(jj=0;jj< block_size
+          && its[1] !=  imageinfo[i].imagekist->TopIt();++jj) ++its[1];      
+      
+      nthreads = 0;
+      //std::cout << "Start thread " << nthreads << "  = " << jj << "  " << (its[1] == imageinfo[i].imagekist->getTopIt()) << std::endl;
+      thread[nthreads] = std::thread(ImageFinding::IntegrateCellsParallel,its[0],its[1],source
+                                     ,&area[nthreads],&counts[nthreads]);
+      ++nthreads;
+      while(its[1] != imageinfo[i].imagekist->TopIt()){
+        ++its[1];
+        its[0] = its[1];
+        
+        for(jj=0;jj < block_size
+            && its[1] !=  imageinfo[i].imagekist->TopIt();++jj) ++its[1];
+        //std::cout << "Start thread " << nthreads << " jj = " << jj << "  " << (its[1] == imageinfo[i].imagekist->getTopIt()) << std::endl;
+
+        thread[nthreads] = std::thread(ImageFinding::IntegrateCellsParallel,its[0],its[1],source
+                                         ,&area[nthreads],&counts[nthreads]);
+        ++nthreads;
+      }
+      assert(nthreads <= N_THREADS);
+        
+      for(int ii=0;ii<nthreads;++ii) thread[ii].join();
+      for(int ii=0;ii<nthreads;++ii){ imageinfo[i].area += area[ii]; counti += counts[ii];}
+      assert(counti == imageinfo[i].imagekist->Nunits());
+      count += counti;
     }
-    ***
+    
+    // Warning: this will overwrite the areas
+    // divide up images
+    //if(divide_images) divide_images_kist(grid->i_tree,imageinfo,Nimages,NimageMax);
+    //else *Nimages = 1;
+
+    if(verbose) printf("number of images after first division is %i\n",*Nimages);
+
+    /***
 		do{
            current = imageinfo[i].imagekist->getCurrent();
            ImageFinding::IntegrateFluxInCell(current,*source,1.0e-2,outcome);
@@ -180,7 +237,7 @@ void ImageFinding::map_imagesISOP(
 
             ++count_tot;
 		}while(imageinfo[i].imagekist->Down());
-
+*/
 		area_tot += imageinfo[i].area;
 		//printf("   %i area = %e\n",i,imageinfo[i].area);
 		assert(imageinfo[i].area >= 0);
@@ -370,7 +427,7 @@ int ImageFinding::refine_grid_on_imageISOP(Lens *lens,Source *source,GridHndl gr
       // Do the same for the outerborder.
       
       imageinfo[i].outerborder->MoveToTop();
-      for(j = 0 ; j < imageinfo[i].outerborder->Nunits() ; ++j,imageinfo[i].outerborder->Down() ){
+      for(j = 0 ; j < imageinfo[i].outerborder->Nunits()*0 ; ++j,imageinfo[i].outerborder->Down() ){
         
           // TODO: This was taken out and i'm not sure if it was needed.
           //assert(getCurrentKist(imageinfo[i].outerborder)->surface_brightness == 0);
@@ -487,6 +544,47 @@ int ImageFinding::refine_grid_on_imageISOP(Lens *lens,Source *source,GridHndl gr
   return number_of_refined;
 }
 
+/** \brief Integrate the flux within a series of cells using the isoparametric expansion 
+ *    in a thread safe way.
+ *
+ *    The integration is done with ImageFinding::IntegrateFluxInCell().
+ *    Points in the Kist from it1 to it2 inclusive are integrated. 
+ *    source.SurfaceBrightness() must be thread safe.
+ *    
+ *    If outcome from ImageFinding::IntegrateFluxInCell() returns TRUE the 
+ *    flag of that point is set to true.  Otherwise it is false.
+ */
+
+void ImageFinding::IntegrateCellsParallel(
+      Kist<Point>::iterator it1   /// iterator pointing to first point in block
+     ,Kist<Point>::iterator it2   /// iterator pointing to last point in block
+     ,Source *source
+     ,PosType *area              /// returns total flux in these cells
+     ,size_t *count              /// returns total number of cells that were integrated
+                                          ){
+  
+  Boo outcome;
+  *area = 0.0;
+  int i=0;
+  *count = 0;
+  for(Kist<Point>::iterator it = it1; it != it2 ; ++it,++i){
+    if((*it)->flag == false){
+      ImageFinding::IntegrateFluxInCell(*it,*source,1.0e-2,outcome);
+      ++(*count);
+      *area += (*it)->surface_brightness*(*it)->gridsize*(*it)->gridsize;
+      if(outcome == TRUE) (*it)->flag = true;
+      else (*it)->flag = false;
+    }
+  }
+  if((*it2)->flag == false){
+    ImageFinding::IntegrateFluxInCell(*it2,*source,1.0e-2,outcome);
+    ++(*count);
+    *area += (*it2)->surface_brightness*(*it2)->gridsize*(*it2)->gridsize;
+    if(outcome == TRUE) (*it2)->flag = true;
+    else (*it2)->flag = false;
+  }
+  return;
+}
 
 /** \brief Integrate the flux within a cell using the isoparametric expansion.
  *
