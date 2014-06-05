@@ -1,7 +1,8 @@
 #pragma once
 
 #include "source.h"
-
+/**  \brief ISOP namespace is for functions related to isoparametric interpolation
+ */
 namespace ISOP
 {
 	namespace detail

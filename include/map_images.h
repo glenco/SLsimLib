@@ -11,6 +11,8 @@
 #include <lens.h>
 #include <grid_maintenance.h>
 
+/**  \brief The ImageFinding namespace is for functions related to finding and mapping images.
+ */
 namespace ImageFinding{
 
 void map_images(LensHndl lens,Source *source,GridHndl grid,int *Nimages,ImageInfo *imageinfo
@@ -49,7 +51,7 @@ void UniformMagCheck(ImageInfo *imageinfo);
 void map_imagesISOP(LensHndl lens,Source *source,GridHndl grid,int *Nimages
                     ,ImageInfo *imageinfo,int Nimagesmax,double rmax
                     ,double res_min,double initial_size,ExitCriterion criterion
-                    ,bool divide_images,bool int_on = false,bool verbos=false);
+                    ,bool divide_images,bool int_on = true,bool verbos=false);
 
 
 int refine_grid_on_imageISOP(Lens *lens,Source *source,GridHndl grid
