@@ -183,7 +183,7 @@ void find_crit(
 
 
   		  while( pseudocurve[i].imagekist->Nunits() < 100 &&
-  				  refine_edges(lens,grid,&pseudocurve[i],1,0.01*resolution/sqrt(fabs(pseudolimit)),1,false,newpoints)
+                refine_edges(lens,grid,&pseudocurve[i],1,0.01*resolution/sqrt(fabs(pseudolimit)),1,newpoints,false)
   				  ){
   			  // update region
   			  if(pseudocurve[i].ShouldNotRefine == 0){
@@ -405,7 +405,7 @@ void find_crit2(
 
   for(int k=0;;++k){
 
-	  refinements=refine_edges(lens,grid,critcurve,1,resolution/2,1,false,&newpoint_kist);
+	  refinements=refine_edges(lens,grid,critcurve,1,resolution/2,1,&newpoint_kist,false);
 	  //refinements=refine_edges(lens,grid,critcurve,1,1.0e-3,0,false,&newpoint_kist);
 	  //refinements=refine_grid_kist(lens,grid,critcurve,1,resolution,2,&newpoint_kist);
 
