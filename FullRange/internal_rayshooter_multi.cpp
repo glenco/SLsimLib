@@ -227,7 +227,7 @@ for(i = start; i < end; i++)
       
       assert(xx[0] == xx[0] && xx[1] == xx[1]);
 
-        std::cout << "xx[0] = " << xx[0] << "  ;  xx[1] = " << xx[1] << std::endl ;
+      // std::cout << "xx[0] = " << xx[0] << "  ;  xx[1] = " << xx[1] << std::endl ;
         
       p->lensing_planes[j]->force(alpha,&kappa,gamma,&phi,xx); // Computed in physical coordinates.
 
