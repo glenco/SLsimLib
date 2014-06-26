@@ -40,6 +40,7 @@ struct MOKAmap{
     // boxlMpc is Mpc/h for MOKA
 	/// lens and source properties
     double zlens,m,zsource,Dlens,DLS,DS,c,cS,fsub,mstar,minsubmass;
+  /// range in x direction, pixels are square
     double boxlarcsec,boxlMpc,boxlrad;
     /// cosmology
     double omegam,omegal,h,wq;
@@ -79,7 +80,7 @@ public:
 	void saveGammaProfile();
 	void saveProfiles(double &RE3, double &xxc, double &yyc);
     
-	void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,double const *xcm,bool no_kappa,bool subtract_point=false);
+	void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,double const *xcm,bool subtract_point=false);
     
 	void saveImage(GridHndl grid,bool saveprofiles);
 	

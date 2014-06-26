@@ -184,7 +184,7 @@ void TreeForce::force2D(PosType const *ray
                         ,KappaType *kappa
                         ,KappaType *gamma
                         ,KappaType *phi
-                        ,bool no_kappa)
+                        )
 {
 
   PosType xcm[2],rcm2,tmp;
@@ -244,8 +244,13 @@ void TreeForce::force2D(PosType const *ray
 				  alpha[0] += tmp*xcm[0];
 				  alpha[1] += tmp*xcm[1];
 
+<<<<<<< mine
+				  // can turn off kappa and gamma calculations to save times
+				  {
+=======
 				  // can turn off kappa and gamma calculations to save time
 				  if(!no_kappa){
+>>>>>>> theirs
 					  tmp = -2.0*prefac/rcm2;
 
 					  gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
@@ -253,7 +258,11 @@ void TreeForce::force2D(PosType const *ray
 				  }
 
 				  if(haloON){
+<<<<<<< mine
+					  halos[index].force_halo(alpha,kappa,gamma,phi,xcm,true); // PHI BY Fabien
+=======
 					  halos[index].force_halo(alpha,kappa,gamma,phi,xcm,no_kappa,true);
+>>>>>>> theirs
 				  }else{  // case of no halos just particles and no class derived from TreeQuad
 
 					  arg1 = rcm2/(rsph[index*MultiRadius]*rsph[index*MultiRadius]);
@@ -267,7 +276,7 @@ void TreeForce::force2D(PosType const *ray
 						  alpha[1] += tmp*xcm[1];
 
 						  // can turn off kappa and gamma calculations to save times
-						  if(!no_kappa){
+						  {
 							  *kappa += kappa_h(arg1,arg2)*prefac;
 
 							  tmp = (gamma_h(arg1,arg2)+2.0)*prefac/rcm2;
@@ -290,7 +299,7 @@ void TreeForce::force2D(PosType const *ray
 		  alpha[0] += tmp*xcm[0];
 		  alpha[1] += tmp*xcm[1];
 
-		  if(!no_kappa){      //  taken out to speed up
+		  {      //  taken out to speed up
 			  tmp=-2.0*tree->current->mass/pi/rcm2/rcm2;
 			  gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 			  gamma[1] += xcm[0]*xcm[1]*tmp;
@@ -317,7 +326,7 @@ void TreeForce::force2D(PosType const *ray
   //  added to the universe in the halos.
   alpha[0] += ray[0]*kappa_background;
   alpha[1] += ray[1]*kappa_background;
-  if(!no_kappa){      //  taken out to speed up
+  {      //  taken out to speed up
 	  *kappa -= kappa_background;
       // Fabien : Added this but should be checked.
       // It is not so useful anyway.

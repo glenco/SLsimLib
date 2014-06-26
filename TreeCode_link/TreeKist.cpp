@@ -546,7 +546,7 @@ void TreeKist::FillTree(Point *xp,unsigned long Npoints){
     pointkist.Down();
   }
   pointkist.MoveToTop();
-  current->pointit = pointkist.getTopIt();
+  current->pointit = pointkist.TopIt();
   
   // build the tree 
   // make sure there are no branches in the tree
@@ -574,7 +574,7 @@ void TreeKist::RebuildTreeFromList(){
 	Point *points = NewPointArray(Npoints);
   
 	pointkist.MoveToTop();
-    Kist<Point>::iterator it = pointkist.getTopIt();
+    Kist<Point>::iterator it = pointkist.TopIt();
 	for(i=0;i<Npoints;++i,--it){
 		//tmp = points[i].x;
 		// PointCopy() copies the x pointer which is later freed in
@@ -816,7 +816,7 @@ void TreeKist::_BuildTree(){
     //JumpDownList(pointlist,cut);
   pointkist.JumpDown(cut);
   branch2->points=pointkist.getCurrent();
-  branch2->pointit = pointkist.getCurrentIt();
+  branch2->pointit = pointkist.CurrentIt();
   
   delete[] x;
   
@@ -1211,7 +1211,7 @@ void TreeKist::_AddPoint(){
 		if(branch2->npoints > 0){
       pointkist.JumpDown(cut);
 			//branch2->points = pointlist->current;
-      branch2->pointit = pointkist.getCurrentIt();
+      branch2->pointit = pointkist.CurrentIt();
 		}else{
 			branch2->pointit = NULL;
 		}

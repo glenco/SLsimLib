@@ -15,7 +15,6 @@ void LensHaloBaseNSIE::force_halo(
 		,KappaType *gamma
         ,KappaType *phi
 		,PosType const *xcm
-		,bool no_kappa
 		,bool subtract_point /// if true contribution from a point mass is subtracted
 		)
 {
@@ -43,7 +42,7 @@ void LensHaloBaseNSIE::force_halo(
 	 alpha[0] *= units;
 	 alpha[1] *= units;
 
-	 if(!no_kappa){
+	 {
     	gammaNSIE(gamma,xcm,fratio,rcore,pa);
     	*kappa=kappaNSIE(xcm,fratio,rcore,pa);
     	*kappa *= units;
@@ -68,7 +67,7 @@ void LensHaloBaseNSIE::force_halo(
     	 alpha[0] += alpha_tmp[0];
     	 alpha[1] += alpha_tmp[1];
 
-   	      if(!no_kappa){
+   	      {
    	    	  gamma[0] += gamma_tmp[0];
    	    	  gamma[1] += gamma_tmp[1];
    	      }
@@ -81,13 +80,13 @@ void LensHaloBaseNSIE::force_halo(
      {
     	 for(j=0;j<sub_N;++j)
          {
-             
-    		 subs[j].force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp,xcm,no_kappa);
+
+    		 subs[j].force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp,xcm);
+             // subs[j].force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,xcm);
 
     		 alpha[0] += alpha_tmp[0];
     		 alpha[1] += alpha_tmp[1];
 
-    		 if(!no_kappa)
              {
     			 *kappa += kappa_tmp;
     			 gamma[0] += gamma_tmp[0];
@@ -103,7 +102,7 @@ void LensHaloBaseNSIE::force_halo(
 
      // add stars for microlensing
      if(stars_N > 0 && stars_implanted){
-    	 force_stars(alpha,kappa,gamma,xcm,no_kappa);
+    	 force_stars(alpha,kappa,gamma,xcm);
      }
      return ;
 }

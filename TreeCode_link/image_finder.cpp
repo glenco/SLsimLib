@@ -25,9 +25,9 @@ static const float FracResTarget = 1.0e-4;
  *           = 2 stops refining when grid resolution is smaller than res_target in all images
  */
 //int refine_grid(LensHndl lens,TreeHndl i_tree,TreeHndl s_tree,OldImageInfo *imageinfo
-//		,unsigned long Nimages,PosType res_target,short criterion,bool kappa_off){
+//		,unsigned long Nimages,PosType res_target,short criterion){
 int refine_grid(LensHndl lens,GridHndl grid,OldImageInfo *imageinfo
-			,unsigned long Nimages,PosType res_target,short criterion,bool kappa_off,bool batch){
+			,unsigned long Nimages,PosType res_target,short criterion,bool batch){
 
 
 	//printf("entering refine_grid\n");
@@ -90,7 +90,7 @@ int refine_grid(LensHndl lens,GridHndl grid,OldImageInfo *imageinfo
     			if(batch){
     				points_to_refine.push_back(point);
     			}else{
-    				grid->RefineLeaf(lens,point,kappa_off);
+    				grid->RefineLeaf(lens,point);
         			// TODO: This seems like it shouldn't have been there. imageinfo[i].points[j].gridsize /= Ngrid_block;
     			}
     			++count;
@@ -114,7 +114,7 @@ int refine_grid(LensHndl lens,GridHndl grid,OldImageInfo *imageinfo
       			if(batch){
       				points_to_refine.push_back(point);
       			}else{
-      				grid->RefineLeaf(lens,point,kappa_off);
+      				grid->RefineLeaf(lens,point);
       			}
       			++Ncells;
     			  point->in_image = FALSE;  // unmark so that it wouldn't double refine
@@ -130,7 +130,7 @@ int refine_grid(LensHndl lens,GridHndl grid,OldImageInfo *imageinfo
   } /* end of image loop */
 
   if(batch){
-  	grid->RefineLeaves(lens,points_to_refine,kappa_off);
+  	grid->RefineLeaves(lens,points_to_refine);
   	points_to_refine.clear();
   }
 
@@ -157,7 +157,6 @@ long refine_edges(
 		,int Nimages
 		,PosType res_target
 		,short criterion
-		,bool kappa_off
 		,Kist<Point> * newpointskist  /// returns a Kist of the points that were added to the grid on this pass, if == NULL will not be added
 		,bool batch){
 	 //printf("entering refine_edges\n");
@@ -219,7 +218,7 @@ long refine_edges(
 
 					if(batch) points_to_refine.push_back(point);
 					else{
-						Point *i_points = grid->RefineLeaf(lens,point,kappa_off);
+						Point *i_points = grid->RefineLeaf(lens,point);
 						if(newpointskist && i_points != NULL){
 							for(unsigned int k=0;k < i_points->head; ++k) newpointskist->InsertAfterCurrent(&i_points[k]);
 						}
@@ -248,7 +247,7 @@ long refine_edges(
 
     			if(batch) points_to_refine.push_back(imageinfo[i].innerborder->getCurrent());
     			else{
-    				Point *i_points = grid->RefineLeaf(lens,imageinfo[i].innerborder->getCurrent(),kappa_off);
+    				Point *i_points = grid->RefineLeaf(lens,imageinfo[i].innerborder->getCurrent());
     				if(newpointskist && i_points != NULL)
     					for(unsigned int k=0;k < i_points->head; ++k) newpointskist->InsertAfterCurrent(&i_points[k]);
     			}
@@ -260,7 +259,7 @@ long refine_edges(
 	}
 
 	if(batch){
-		Point *i_points = grid->RefineLeaves(lens,points_to_refine,kappa_off);
+		Point *i_points = grid->RefineLeaves(lens,points_to_refine);
 		if(newpointskist && i_points != NULL){
 			for(unsigned int k=0;k < i_points->head; ++k) newpointskist->InsertAfterCurrent(&i_points[k]);
 		}
@@ -294,7 +293,7 @@ long refine_edges(
  */
 long refine_edges2(LensHndl lens,PosType *y_source,PosType r_source,GridHndl grid
 		,ImageInfo *imageinfo,bool *image_overlap,int Nimages,PosType res_target
-		,short criterion,bool kappa_off,bool batch){
+		,short criterion,bool batch){
 
 	 //printf("entering refine_edges2\n");
 
@@ -363,7 +362,7 @@ long refine_edges2(LensHndl lens,PosType *y_source,PosType r_source,GridHndl gri
 						if(batch){
 							points_to_refine.push_back(point);
 						}else{
-							i_points = grid->RefineLeaf(lens,point,kappa_off);
+							i_points = grid->RefineLeaf(lens,point);
 							sort_out_points(i_points,&imageinfo[i],r_source,y_source);
 							/*
 							//  sort new points into in and out of image
@@ -422,7 +421,7 @@ long refine_edges2(LensHndl lens,PosType *y_source,PosType r_source,GridHndl gri
 							if(imageinfo[i].gridrange[2] == point->gridsize/grid->getNgrid_block())
 								imageinfo[i].gridrange[2] = point->gridsize/grid->getNgrid_block();
 						}else{
-							i_points = grid->RefineLeaf(lens,point,kappa_off);
+							i_points = grid->RefineLeaf(lens,point);
 							sort_out_points(i_points,&imageinfo[i],r_source,y_source);
 							//  sort new points into in and out of image
 							//    and add them to inner and outer borders
@@ -464,7 +463,7 @@ long refine_edges2(LensHndl lens,PosType *y_source,PosType r_source,GridHndl gri
 
 
 			if(batch){
-				i_points = grid->RefineLeaves(lens,points_to_refine,kappa_off);
+				i_points = grid->RefineLeaves(lens,points_to_refine);
 				if(i_points) sort_out_points(i_points,&imageinfo[i],r_source,y_source);
 				points_to_refine.clear();
 			}

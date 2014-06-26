@@ -41,6 +41,7 @@ set(N_THREADS 1 CACHE STRING "Number of threads for rayshooting.")
 add_definitions(-DN_THREADS=${N_THREADS})
 message(STATUS "Number of threads: ${N_THREADS}")
 
+
 ####
 # sources
 ####

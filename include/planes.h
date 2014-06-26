@@ -16,7 +16,7 @@ public:
 	LensPlane() {}
 	virtual ~LensPlane() {} 
 	
-    virtual void force(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType *xx,bool kappa_off) = 0;
+  virtual void force(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType *xx) = 0;
 	
 	virtual void addHalo(LensHalo* halo) = 0;
 	virtual void removeHalo(LensHalo* halo) = 0;
@@ -31,8 +31,8 @@ public:
 	LensPlaneTree(PosType **xpt,LensHaloHndl *my_halos,IndexType Nhalos,PosType my_sigma_background);
 	~LensPlaneTree();
 
-	void force(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType *xx,bool kappa_off);
-    
+	void force(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType *xx);
+   
 	void addHalo(LensHalo* halo);
 	void removeHalo(LensHalo* halo);
 	
@@ -55,7 +55,7 @@ public:
 	LensPlaneSingular(LensHaloHndl *my_halos, IndexType Nhalos);
 	~LensPlaneSingular();
 
-    void force(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType *xx,bool kappa_off);
+  void force(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType *xx);
     
 	void addHalo(LensHalo* halo);
 	void removeHalo(LensHalo* halo);

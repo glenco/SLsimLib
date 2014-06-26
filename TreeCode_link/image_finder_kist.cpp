@@ -1,5 +1,6 @@
 
 #include "slsimlib.h"
+#include "grid_maintenance.h"
 
 static const int NpointsRequired = 100;  // number of points required to be within an image
 //static const int Ngrid_block = 3;       // each cell is divided into Ngrid_block^2 subcells
@@ -18,7 +19,7 @@ static const float telescope_low = 0.01;
  *
  * \brief  Finds images given a source position and size.
  *
- * find_image_kist returns finite refined images in images[0...*Nimages-1].imagekist
+ * find_images_kist returns finite refined images in images[0...*Nimages-1].imagekist
  *  It starts with a large source and reduces down to the right size refining at each step.
  *  It should not miss any image larger than ~ munin*r_source linear size, but seems to do
  *  much better than that.  It does nothing with the surface brightnesses.
@@ -31,16 +32,13 @@ static const float telescope_low = 0.01;
  *   - 1 uses refine_edge().  After an initial refinement of all the pixels in the image(s) the code switches
  *	 to refining only the edges of the images.  The images are found after each refinement.
  *   - 2 uses refine_edge2() Same as 1, but the images are not found after each refinement.  This can make the
+ *   - any other number does no additional refinement after telescoping
  *	 routine run much faster, but has the disadvantage that the number of images will not change during the final
  *	 stage of refinement.  This is the setting generally recommended.
  *
- *  kappa_off - This is used to turn off the calculation of surface density, shear, magnification and time delay.
- *  When finding a finite sized source these quantities are generally not required and slow down the routine.
- *
- *
  */
 
-void find_images_kist(
+void ImageFinding::find_images_kist(
 		LensHndl lens,          /// contains the lens/es and source/sources
 		PosType *y_source        /// position of source center
 		,PosType r_source        /// radius of source
@@ -53,7 +51,6 @@ void find_images_kist(
 		,bool splitimages       /// TRUE each image is refined to target accuracy, otherwise all images are treated as one
 		,short edge_refinement  /// see comment
 		,bool verbose           /// verbose
-		,bool kappa_off         /// turns off calculation of surface density, shear, magnification and time delay
 		){
 
 
@@ -151,9 +148,9 @@ void find_images_kist(
 				printf("\n   new source size = %e    Nimages = %i  telescoping to rsource = %e\n",rtemp,*Nimages,r_source);
 
 			j=0;
-			//while(refine_grid_kist(lens,grid,imageinfo,*Nimages,telescope_res,3,kappa_off,NULL)){
-			//while(refine_grid_kist(lens,grid,imageinfo,*Nimages,0.05/Ngrid_block/Ngrid_block,3,kappa_off,NULL)){
-			//while(refine_grid_kist(lens,grid,imageinfo,*Nimages,0.05/Ngrid_block/Ngrid_block,1,kappa_off,NULL)){
+			//while(ImageFinding::refine_grid_kist(lens,grid,imageinfo,*Nimages,telescope_res,3,NULL)){
+			//while(ImageFinding::refine_grid_kist(lens,grid,imageinfo,*Nimages,0.05/Ngrid_block/Ngrid_block,3,NULL)){
+			//while(ImageFinding::refine_grid_kist(lens,grid,imageinfo,*Nimages,0.05/Ngrid_block/Ngrid_block,1,NULL)){
 			do{
 				time(&t1);
 				if(verbose) std::cout << "    refined images" << std::endl;
@@ -198,7 +195,7 @@ void find_images_kist(
                 grid->s_tree->PointsWithinKist(y_source,rtemp,&subkist,1);
                 image_finder_kist(lens,y_source,fabs(rtemp),grid
                                 ,Nimages,imageinfo,NimageMax,Nimagepoints,0,0);
-              }while( refine_grid_kist(lens,grid,imageinfo,*Nimages,1.0e-3,1,kappa_off,NULL));
+              }while( ImageFinding::refine_grid_kist(lens,grid,imageinfo,*Nimages,1.0e-3,1));
             
               
               //map.Clean();
@@ -225,7 +222,7 @@ void find_images_kist(
 				}
 
 				++j;
-			}while(refine_grid_kist(lens,grid,imageinfo,*Nimages,rtemp*mumin/Ngrid_block,2,kappa_off,NULL));
+			}while(ImageFinding::refine_grid_kist(lens,grid,imageinfo,*Nimages,rtemp*mumin/Ngrid_block,2));
 			//}
 
 			time(&t1);
@@ -284,13 +281,13 @@ void find_images_kist(
 			// case where no image is found at any size
       grid->s_tree->PointsWithinKist(y_source,r_source,&subkist,0);
 
-      std::cout << "exiting find_images_kist() without finding an image. N in image = " << subkist.Nunits() << std::endl;
+      std::cout << "exiting ImageFinding::find_images_kist() without finding an image. N in image = " << subkist.Nunits() << std::endl;
 			*Nimages = 0;
 			*Nimagepoints = 0;
 			return ;
 		}
 		++i;
-	}while( refine_grid_kist(lens,grid,imageinfo,*Nimages,1.0/NpointsRequired,flag,kappa_off,NULL));
+	}while( ImageFinding::refine_grid_kist(lens,grid,imageinfo,*Nimages,1.0/NpointsRequired,flag));
 	assert(*Nimages > 0);
 
 	// find points that are truly in the image and not just neighbors
@@ -323,12 +320,17 @@ void find_images_kist(
 	if(edge_refinement==0){   // uniform refinement over image
 		do{
 			// mark image points in tree
-			grid->s_tree->PointsWithinKist(y_source,r_source,&subkist,1);
+      if(splitimages){
+        grid->s_tree->PointsWithinKist(y_source,r_source,&subkist,1);
 
-			image_finder_kist(lens,y_source,fabs(r_source),grid
-					,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
+        image_finder_kist(lens,y_source,fabs(r_source),grid
+                        ,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
+      }else{
+        image_finder_kist(lens,y_source,fabs(r_source),grid
+                        ,Nimages,imageinfo,NimageMax,Nimagepoints,-1,1);
+      }
 			++i;
-		}while( refine_grid_kist(lens,grid,imageinfo,*Nimages,FracResTarget,0,kappa_off,NULL));
+		}while( ImageFinding::refine_grid_kist(lens,grid,imageinfo,*Nimages,FracResTarget,0));
 
 	}else if(edge_refinement==1){    // edge refinement with image finding at each step
 		do{
@@ -342,12 +344,12 @@ void find_images_kist(
 			//printf("\n");
 
 			++i;
-		}while( refine_edges(lens,grid,imageinfo,*Nimages,FracResTarget,flag,kappa_off));
+		}while( refine_edges(lens,grid,imageinfo,*Nimages,FracResTarget,flag));
 
 	}else if(edge_refinement==2){  // edge refinement with no image finding at each step
 		++i;
 		while(refine_edges2(lens,y_source,r_source,grid
-				,imageinfo,&image_overlap,*Nimages,FracResTarget,flag,kappa_off)){
+				,imageinfo,&image_overlap,*Nimages,FracResTarget,flag)){
 			// if an overlap is detected find the images again
 
 			if(image_overlap) image_finder_kist(lens,y_source,fabs(r_source),grid
@@ -439,7 +441,7 @@ void find_images_kist(
  *
  * \brief  Finds images given a source position and size.
  *
- * find_image_kist returns finite refined images in images[0...*Nimages-1].imagekist
+ * ImageFinding::find_images_kist returns finite refined images in images[0...*Nimages-1].imagekist
  *  It starts with a large source and reduces down to the right size refining at each step.
  *  It should not miss any image larger than ~ munin*r_source linear size, but seems to do
  *  much better than that.  It does nothing with the surface brightnesses.
@@ -455,13 +457,12 @@ void find_images_kist(
  *	 routine run much faster, but has the disadvantage that the number of images will not change during the final
  *	 stage of refinement.  This is the setting generally recommended.
  *
- *  kappa_off - This is used to turn off the calculation of surface density, shear, magnification and time delay.
  *  When finding a finite sized source these quantities are generally not required and slow down the routine.
  *
  *
  */
 
-void find_images_microlens(
+void ImageFinding::find_images_microlens(
 		LensHndl lens,          /// contains the lens/es and source/sources
 		//LensHalo *halo,          // contains the lens/es and source/sources
 		PosType *y_source        /// position of source center
@@ -476,7 +477,6 @@ void find_images_microlens(
 		,bool splitimages       /// TRUE each image is refined to target accuracy, otherwise all images are treated as one
 		,short edge_refinement  /// see comment
 		,bool verbose           /// verbose
-		,bool kappa_off         /// turns off calculation of surface density, shear, magnification and time delay
 		){
 
     const float mumin_local = 0.02;
@@ -628,17 +628,17 @@ void find_images_microlens(
         }
 */
 
-        image_finder_kist(lens,y_source,rtemp,grid
+      ImageFinding::image_finder_kist(lens,y_source,rtemp,grid
     				,Nimages,imageinfo,NimageMax,Nimagepoints,-1,0);
 
     	j=0;
         NuniformMags = 0;
         time_in_refine = time_in_find = 0;
         time(&now);
-    	//while(refine_grid_kist(lens,grid,imageinfo,*Nimages,telescope_res,3,kappa_off)){
-       	//while(refine_grid_kist(lens,grid,imageinfo,*Nimages,mu_min,0,kappa_off)){
-        while(refine_grid_kist(lens,grid,imageinfo,*Nimages,mu_min,3,false)){
-       	    	//while( refine_grid_kist(lens,grid,imageinfo,*Nimages,mu_min*telescope_factor*telescope_factor,3,kappa_off) ){
+    	//while(ImageFinding::refine_grid_kist(lens,grid,imageinfo,*Nimages,telescope_res,3)){
+       	//while(ImageFinding::refine_grid_kist(lens,grid,imageinfo,*Nimages,mu_min,0)){
+      while(ImageFinding::refine_grid_kist(lens,grid,imageinfo,*Nimages,mu_min,3)){
+       	    	//while( ImageFinding::refine_grid_kist(lens,grid,imageinfo,*Nimages,mu_min*telescope_factor*telescope_factor,3) ){
     	//do{
 
           time(&t1);
@@ -647,7 +647,7 @@ void find_images_microlens(
           if(verbose) std::cout << "    refined images" << std::endl;
 
             /*for(int i=0;i<lens->stars_N;++i){
-                 grid->zoom(lens,xstars[i],rtemp*0.1/Ngrid_block,kappa_off);//,tmp);
+                 grid->zoom(lens,xstars[i],rtemp*0.1/Ngrid_block);//,tmp);
             }*/
 
     		// refine critical curves
@@ -657,7 +657,7 @@ void find_images_microlens(
 //    		std::cout << "    Ncrits = " << Ncrits << " with " << critcurve->imagekist->Nunits() << " points." << std::endl;
 
     		//************* method that does not separate images ****************
-    		image_finder_kist(lens,y_source,rtemp,grid
+          ImageFinding::image_finder_kist(lens,y_source,rtemp,grid
     				,Nimages,imageinfo,NimageMax,Nimagepoints,-1,0);
     		//imageinfo->imagekist->Print();
     		// *************  ****************/
@@ -710,7 +710,7 @@ void find_images_microlens(
           }
 
           ++j;
-    	//}while(refine_grid_kist(lens,grid,imageinfo,*Nimages,rtemp*mumin_local/Ngrid_block,2,kappa_off,NULL));
+    	//}while(ImageFinding::refine_grid_kist(lens,grid,imageinfo,*Nimages,rtemp*mumin_local/Ngrid_block,2,NULL));
     	}
 
       assert(NuniformMags <= *Nimages);
@@ -742,7 +742,7 @@ void find_images_microlens(
 		//Branch *tmp = grid->i_tree->current;
 		for(i=0;i<lens->stars_N;++i){
 			//if(verbose) std::cout << "  xstars[i] " << i << " " << xstars[i][0] << " " << xstars[i][1] << std::endl;
-			grid->zoom(lens,xstars[i],r_source*0.1,kappa_off);//,tmp);
+			grid->zoom(lens,xstars[i],r_source*0.1);//,tmp);
 		}
 		if(verbose) std::cout << "  out of zoom" << std::endl;
 	}
@@ -817,7 +817,7 @@ void find_images_microlens(
     for(int k=0;k<*Nimages;++k) imageinfo[k].ShouldNotRefine = false;
 		//moved=image_finder_kist(lens,y_source,fabs(r_source),grid
 		//		,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
-		image_finder_kist(lens,y_source,r_source,grid
+    ImageFinding::image_finder_kist(lens,y_source,r_source,grid
 				,Nimages,imageinfo,NimageMax,Nimagepoints,0,0);
 
     area_tot = 0;
@@ -850,7 +850,7 @@ void find_images_microlens(
 			return ;
 		}
 		++i;
-	}while( refine_grid_kist(lens,grid,imageinfo,*Nimages,0.1,3,kappa_off,NULL));
+	}while( ImageFinding::refine_grid_kist(lens,grid,imageinfo,*Nimages,0.1,3));
   for(int k=0;k<*Nimages;++k) imageinfo[k].ShouldNotRefine = false;
 
 	time(&now);
@@ -860,7 +860,7 @@ void find_images_microlens(
 	assert(*Nimages > 0);
 
 	// find points that are truly in the image and not just neighbors
-	image_finder_kist(lens,y_source,fabs(r_source),grid
+  ImageFinding::image_finder_kist(lens,y_source,fabs(r_source),grid
 			,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
   
 	if(*Nimages == 0){
@@ -894,24 +894,24 @@ void find_images_microlens(
 			// mark image points in tree
 			grid->s_tree->PointsWithinKist(y_source,r_source,&subkist,1);
 
-			image_finder_kist(lens,y_source,fabs(r_source),grid
+      ImageFinding::image_finder_kist(lens,y_source,fabs(r_source),grid
 					,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
 			++i;
-		}while( refine_grid_kist(lens,grid,imageinfo,*Nimages,FracResTarget,0,kappa_off,NULL));
+		}while( ImageFinding::refine_grid_kist(lens,grid,imageinfo,*Nimages,FracResTarget,0));
 
 	}else if(edge_refinement==1){    // edge refinement with image finding at each step
 		do{
 			// mark image points in tree
 			grid->s_tree->PointsWithinKist(y_source,r_source,&subkist,1);
 
-			image_finder_kist(lens,y_source,fabs(r_source),grid
+      ImageFinding::image_finder_kist(lens,y_source,fabs(r_source),grid
 					,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
 
 			//for(i = 0; i < *Nimages; ++i) PrintImageInfo(&(imageinfo[i]));
 			//printf("\n");
 
 			++i;
-		}while( refine_edges(lens,grid,imageinfo,*Nimages,FracResTarget,flag,kappa_off));
+		}while( refine_edges(lens,grid,imageinfo,*Nimages,FracResTarget,flag));
 
 	}else if(edge_refinement==2){  // edge refinement with no image finding at each step
 		++i;
@@ -923,11 +923,11 @@ void find_images_microlens(
         else imageinfo[kk].ShouldNotRefine = false;
     }
 		while(refine_edges2(lens,y_source,r_source,grid
-				,imageinfo,&image_overlap,*Nimages,FracResTarget,flag,kappa_off)){
+				,imageinfo,&image_overlap,*Nimages,FracResTarget,flag)){
       // if an overlap is detected find the images again
 
       if(image_overlap){
-        image_finder_kist(lens,y_source,fabs(r_source),grid
+        ImageFinding::image_finder_kist(lens,y_source,fabs(r_source),grid
 					  ,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
         for(int kk=0;kk<*Nimages;++kk){
           if(imageinfo[kk].area < area_tot*1.0e-3){++count; imageinfo[kk].ShouldNotRefine = true;}
@@ -1019,7 +1019,7 @@ void find_images_microlens(
 }
 
 /// experimental version of find_image_microlens()
-void find_images_microlens_exper(
+void ImageFinding::find_images_microlens_exper(
                            LensHndl lens,          /// contains the lens/es and source/sources
                            //LensHalo *halo,          // contains the lens/es and source/sources
                            PosType *y_source        /// position of source center
@@ -1034,7 +1034,6 @@ void find_images_microlens_exper(
                            ,bool splitimages       /// TRUE each image is refined to target accuracy, otherwise all images are treated as one
                            ,short edge_refinement  /// see comment
                            ,bool verbose           /// verbose
-                           ,bool kappa_off         /// turns off calculation of surface density, shear, magnification and time delay
                            ){
     
     const float mumin_local = 0.02;
@@ -1116,10 +1115,10 @@ void find_images_microlens_exper(
         NuniformMags = 0;
         time_in_refine = time_in_find = 0;
         time(&now);
-    	//while(refine_grid_kist(lens,grid,imageinfo,*Nimages,telescope_res,3,kappa_off)){
-       	//while(refine_grid_kist(lens,grid,imageinfo,*Nimages,mu_min,0,kappa_off)){
-        while(refine_grid_kist(lens,grid,imageinfo,*Nimages,mu_min,3,false)){
-            //while( refine_grid_kist(lens,grid,imageinfo,*Nimages,mu_min*telescope_factor*telescope_factor,3,kappa_off) ){
+    	//while(ImageFinding::refine_grid_kist(lens,grid,imageinfo,*Nimages,telescope_res,3)){
+       	//while(ImageFinding::refine_grid_kist(lens,grid,imageinfo,*Nimages,mu_min,0)){
+        while(refine_grid_kist(lens,grid,imageinfo,*Nimages,mu_min,3)){
+            //while( ImageFinding::refine_grid_kist(lens,grid,imageinfo,*Nimages,mu_min*telescope_factor*telescope_factor,3) ){
             //do{
             
             time(&t1);
@@ -1209,7 +1208,7 @@ void find_images_microlens_exper(
             }
             
             ++j;
-            //}while(refine_grid_kist(lens,grid,imageinfo,*Nimages,rtemp*mumin_local/Ngrid_block,2,kappa_off,NULL));
+            //}while(ImageFinding::refine_grid_kist(lens,grid,imageinfo,*Nimages,rtemp*mumin_local/Ngrid_block,2,NULL));
     	}
         
         assert(NuniformMags <= *Nimages);
@@ -1331,7 +1330,7 @@ void find_images_microlens_exper(
 			return ;
 		}
 		++i;
-	}while( refine_grid_kist(lens,grid,imageinfo,*Nimages,0.1,3,kappa_off,NULL));
+	}while( refine_grid_kist(lens,grid,imageinfo,*Nimages,0.1,3));
     for(int k=0;k<*Nimages;++k) imageinfo[k].ShouldNotRefine = false;
     
 	time(&now);
@@ -1378,7 +1377,7 @@ void find_images_microlens_exper(
 			image_finder_kist(lens,y_source,fabs(r_source),grid
                               ,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
 			++i;
-		}while( refine_grid_kist(lens,grid,imageinfo,*Nimages,FracResTarget,0,kappa_off,NULL));
+		}while( refine_grid_kist(lens,grid,imageinfo,*Nimages,FracResTarget,0));
         
 	}else if(edge_refinement==1){    // edge refinement with image finding at each step
 		do{
@@ -1392,7 +1391,7 @@ void find_images_microlens_exper(
 			//printf("\n");
             
 			++i;
-		}while( refine_edges(lens,grid,imageinfo,*Nimages,FracResTarget,flag,kappa_off));
+		}while( refine_edges(lens,grid,imageinfo,*Nimages,FracResTarget,flag));
         
 	}else if(edge_refinement==2){  // edge refinement with no image finding at each step
 		++i;
@@ -1404,7 +1403,7 @@ void find_images_microlens_exper(
             else imageinfo[kk].ShouldNotRefine = false;
         }
 		while(refine_edges2(lens,y_source,r_source,grid
-                            ,imageinfo,&image_overlap,*Nimages,FracResTarget,flag,kappa_off)){
+                            ,imageinfo,&image_overlap,*Nimages,FracResTarget,flag)){
             // if an overlap is detected find the images again
             
             if(image_overlap){
@@ -1502,20 +1501,21 @@ void find_images_microlens_exper(
 
 /** \ingroup ImageFindingL2
  *
- * \brief finds images for a given source position and size
+ * \brief Finds images for a given source position and size
  *
  * image points are put into imageinfo[].imagekist
  *      imageinfo[].points and imageinfo[].Npoints are not changed
- * imagemarker array must be large enough to include all images *
+ *
  * splitparities=  0 don't split attached negative and positive parity images
  *              =  1 do split parities  NOTE: this is now obsolete
  *              = -1 doesn't slit into images at all
  *	                 , also does not find borders or change in_image markers
  * true_images = 1 gives just the points that are in the image
  *             = 0 if there are not enough points in images this will include close points to be refined
+ *
  * side-effects :  Will make in_image = true for all image points if splitparities == 0
  */
-void image_finder_kist(LensHndl lens, PosType *y_source,PosType r_source,GridHndl grid
+void ImageFinding::image_finder_kist(LensHndl lens, PosType *y_source,PosType r_source,GridHndl grid
 		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
 		,short splitparities,short true_images){
 
@@ -1719,14 +1719,13 @@ void image_finder_kist(LensHndl lens, PosType *y_source,PosType r_source,GridHnd
  * Returns the number of points that were added to the grids.
  * 
  */
-int refine_grid_kist(
+int ImageFinding::refine_grid_kist(
 	LensHndl lens            /// the lens model
 	,GridHndl grid           /// the grid
 	,ImageInfo *imageinfo    /// images
 	,int Nimages   /// Number of images to refine
 	,PosType res_target       /// meaning depends on criterion, see general notes
 	,short criterion         /// see general notes
-	,bool kappa_off          /// true = no kappa, gamma and dt are calculated
 	,Kist<Point> * newpointskist  /// returns a Kist of the points that were added to the grid on this pass, if == NULL will not be added
 	,bool batch              /// True, passes all points to rayshooter at once, False shoots rays each cell at a time and new points are in memory blocks of 8 or smaller
 	){
@@ -1822,7 +1821,7 @@ int refine_grid_kist(
 				  if(batch){
  					  points_to_refine.push_back(imageinfo[i].imagekist->getCurrent());
 				  }else{
-					  i_points = grid->RefineLeaf(lens,imageinfo[i].imagekist->getCurrent(),kappa_off);
+					  i_points = grid->RefineLeaf(lens,imageinfo[i].imagekist->getCurrent());
 					  if(newpointskist && i_points != NULL){
 						  for(k=0; k < i_points->head ; ++k) newpointskist->InsertAfterCurrent(&i_points[k]);
 						  ++count;
@@ -1853,7 +1852,7 @@ int refine_grid_kist(
 					  if(batch){
 						  points_to_refine.push_back(point);
 					  }else{
-						  i_points = grid->RefineLeaf(lens,point,kappa_off);
+						  i_points = grid->RefineLeaf(lens,point);
 						  if(newpointskist && i_points != NULL){
 							  for(k=0;k < i_points->head; ++k) newpointskist->InsertAfterCurrent(&i_points[k]);
 							  ++count;;
@@ -1872,7 +1871,7 @@ int refine_grid_kist(
 
   if(batch){
 	  //for(i=0;i<points_to_refine.size();++i) assert(points_to_refine[i]->leaf->child1 == NULL && points_to_refine[i]->leaf->child2 == NULL);
-	  i_points = grid->RefineLeaves(lens,points_to_refine,kappa_off);
+	  i_points = grid->RefineLeaves(lens,points_to_refine);
 	  if(newpointskist && i_points != NULL) for(k=0;k < i_points->head; ++k) newpointskist->InsertAfterCurrent(&i_points[k]);
 	  if(i_points == NULL) number_of_refined = 0;
 	  else number_of_refined = i_points->head;

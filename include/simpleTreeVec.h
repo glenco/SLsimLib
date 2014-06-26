@@ -433,7 +433,7 @@ void TreeSimpleVec<T>::NearestNeighbors(
     
     moveTop();
     if( inbox(ray,current->boundary_p1,current->boundary_p2) == 0 ){
-        ERROR_MESSAGE();
+        //ERROR_MESSAGE();
         
         for(j=0;j<Ndimensions;++j){
             ray[j] = (ray[j] > current->boundary_p1[j]) ? ray[j] : current->boundary_p1[j];
