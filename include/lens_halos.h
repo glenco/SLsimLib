@@ -434,7 +434,7 @@ private:
 class LensHaloPowerLaw: public LensHalo{
 public:
 	LensHaloPowerLaw();
-    LensHaloPowerLaw(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,PosType my_beta,float my_fratio,float my_pa,int my_stars_N);
+  LensHaloPowerLaw(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,PosType my_beta,float my_fratio,float my_pa,int my_stars_N);
 	LensHaloPowerLaw(InputParams& params);
 	~LensHaloPowerLaw();
 

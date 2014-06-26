@@ -25,94 +25,103 @@
  */
 Observation::Observation(Telescope tel_name)
 {
-	if (tel_name == Euclid_VIS)
-	{
-		diameter = 119.;
-		transmission = 0.30;
-		exp_time = 1800.;
-		exp_num = 3;
-		back_mag = 22.8;
-		ron = 5.;
-		seeing = 0.18;
-		pix_size = .1/60./60./180.*pi;
-	}
-	if (tel_name == Euclid_Y)
-	{
-		diameter = 119.;
-		transmission = 0.0961;
-		exp_time = 264.;
-		exp_num = 3;
-		back_mag = 22.57;
-		ron = 5.;
-		seeing = 0.3;
-		pix_size = .3/60./60./180.*pi;
-	}
-	if (tel_name == Euclid_J)
-	{
-		diameter = 119.;
-		transmission = 0.0814;
-		exp_time = 270.;
-		exp_num = 3;
-		back_mag = 22.53;
-		ron = 5.;
-		seeing = 0.3;
-		pix_size = .3/60./60./180.*pi;
-	}
-	if (tel_name == Euclid_H)
-	{
-		diameter = 119.;
-		transmission = 0.1692;
-		exp_time = 162.;
-		exp_num = 3;
-		back_mag = 22.59;
-		ron = 5.;
-		seeing = 0.3;
-		pix_size = .3/60./60./180.*pi;
-	}
-	if (tel_name == KiDS_u)
-	{
-		diameter = 265.;
-		transmission = 0.032;
-		exp_time = 1000.;
-		exp_num = 5;
-		back_mag = 22.93;
-		ron = 5.;
-		seeing = 1.0;
-		pix_size = .2/60./60./180.*pi;
-	}
-	if (tel_name == KiDS_g)
-	{
-		diameter = 265.;
-		transmission = 0.1220;
-		exp_time = 900.;
-		exp_num = 5;
-		back_mag = 22.29;
-		ron = 5.;
-		seeing = 0.8;
-		pix_size = .2/60./60./180.*pi;
-	}
-	if (tel_name == KiDS_r)
-	{
-		diameter = 265.;
-		transmission = 0.089;
-		exp_time = 1800.;
-		exp_num = 5;
-		back_mag = 21.40;
-		ron = 5.;
-		seeing = 0.7;
-		pix_size = .2/60./60./180.*pi;
-	}
-	if (tel_name == KiDS_i)
-	{
-		diameter = 265.;
-		transmission = 0.062;
-		exp_time = 1200.;
-		exp_num = 5;
-		back_mag = 20.64;
-		ron = 5.;
-		seeing = 1.1;
-		pix_size = .2/60./60./180.*pi;
-	}
+  
+  switch (tel_name) {
+     
+    case Euclid_VIS:
+      diameter = 119.;
+      transmission = 0.30;
+      exp_time = 1800.;
+      exp_num = 3;
+      back_mag = 22.8;
+      ron = 5.;
+      seeing = 0.18;
+      pix_size = .1/60./60./180.*pi;
+      break;
+      
+    case Euclid_Y:
+      diameter = 119.;
+      transmission = 0.0961;
+      exp_time = 264.;
+      exp_num = 3;
+      back_mag = 22.57;
+      ron = 5.;
+      seeing = 0.3;
+      pix_size = .3/60./60./180.*pi;
+      break;
+      
+    case Euclid_J:
+      diameter = 119.;
+      transmission = 0.0814;
+      exp_time = 270.;
+      exp_num = 3;
+      back_mag = 22.53;
+      ron = 5.;
+      seeing = 0.3;
+      pix_size = .3/60./60./180.*pi;
+      break;
+      
+    case Euclid_H:
+      diameter = 119.;
+      transmission = 0.1692;
+      exp_time = 162.;
+      exp_num = 3;
+      back_mag = 22.59;
+      ron = 5.;
+      seeing = 0.3;
+      pix_size = .3/60./60./180.*pi;
+      break;
+	
+    case KiDS_u:
+      diameter = 265.;
+      transmission = 0.032;
+      exp_time = 1000.;
+      exp_num = 5;
+      back_mag = 22.93;
+      ron = 5.;
+      seeing = 1.0;
+      pix_size = .2/60./60./180.*pi;
+      break;
+      
+    case KiDS_g:
+      diameter = 265.;
+      transmission = 0.1220;
+      exp_time = 900.;
+      exp_num = 5;
+      back_mag = 22.29;
+      ron = 5.;
+      seeing = 0.8;
+      pix_size = .2/60./60./180.*pi;
+      break;
+      
+    case KiDS_r:
+      diameter = 265.;
+      transmission = 0.089;
+      exp_time = 1800.;
+      exp_num = 5;
+      back_mag = 21.40;
+      ron = 5.;
+      seeing = 0.7;
+      pix_size = .2/60./60./180.*pi;
+      break;
+      
+    case CFHT_i2:
+      throw std::runtime_error("Telescope CFHT_i2 is not available yet.");
+      diameter = 265.;
+      transmission = 0.062;
+      exp_time = 1200.;
+      exp_num = 5;
+      back_mag = 20.64;
+      ron = 5.;
+      seeing = 1.1;
+      
+      pix_size = 0.186/60./60./180.*pi;
+      break;
+
+    default:
+      throw std::runtime_error("The Telescope selected is not available.");
+      break;
+  }
 
 	mag_zeropoint = 2.5*log10(diameter*diameter*transmission*pi/4./hplanck) - 48.6;
 	telescope = true;

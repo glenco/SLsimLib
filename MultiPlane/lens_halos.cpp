@@ -601,7 +601,7 @@ void LensHalo::force_halo_sym(
 	if(rcm2 < Rmax*Rmax)
     {
 		
-        PosType prefac = mass/rcm2/pi;
+    PosType prefac = mass/rcm2/pi;
 		PosType x = sqrt(rcm2)/rscale;
 		// PosType xmax = Rmax/rscale;
 
@@ -619,7 +619,7 @@ void LensHalo::force_halo_sym(
 			gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 			gamma[1] += xcm[0]*xcm[1]*tmp;
             
-            *phi += phi_h(x) * mass / pi ;
+      *phi += phi_h(x) * mass / pi ;
 		}
 	}
 	else // the point particle is not subtracted
@@ -640,7 +640,7 @@ void LensHalo::force_halo_sym(
 				gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 				gamma[1] += xcm[0]*xcm[1]*tmp;
                 
-                *phi += - 0.5 * log(rcm2) * mass / pi ; // value made to be consistent with alpha above. Sure ?
+        *phi += - 0.5 * log(rcm2) * mass / pi ; // value made to be consistent with alpha above. Sure ?
 			}
 		}
 	}
