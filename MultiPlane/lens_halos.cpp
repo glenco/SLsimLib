@@ -588,39 +588,31 @@ void LensHalo::force_halo_sym(
         ,KappaType *phi
 		,PosType const *xcm
 		,bool subtract_point /// if true contribution from a point mass is subtracted
-		){
+		)
+{
             
 	PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
             
 	if(rcm2 < 1e-20) rcm2 = 1e-20;
-
-    // std::cout << "xcm[0] = " << xcm[0] << " ; xcm[1] = " << xcm[1] << endl;
-    // std::cout << "If [rcm2 = " << rcm2 << " < Rmax*Rmax = " << Rmax*Rmax << " ] is true, then we enter the loop." << std::endl ;
             
 	/// intersecting, subtract the point particle
 	if(rcm2 < Rmax*Rmax)
-    {
-		
-        PosType prefac = mass/rcm2/pi;
+  {
+    PosType prefac = mass/rcm2/pi;
 		PosType x = sqrt(rcm2)/rscale;
-		// PosType xmax = Rmax/rscale;
+		PosType xmax = Rmax/rscale;
 
-        // PosType tmp = (alpha_h(x,xmax) + 1.0*subtract_point)*prefac;
 		PosType tmp = (alpha_h(x) + 1.0*subtract_point)*prefac;
 		alpha[0] += tmp*xcm[0];
 		alpha[1] += tmp*xcm[1];
 
-		// can turn off kappa and gamma calculations to save times
+    *kappa += kappa_h(x)*prefac;
 
-        {
-			*kappa += kappa_h(x)*prefac;
-
-			tmp = (gamma_h(x) + 2.0*subtract_point) * prefac / rcm2;
-			gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
-			gamma[1] += xcm[0]*xcm[1]*tmp;
+    tmp = (gamma_h(x) + 2.0*subtract_point) * prefac / rcm2;
+		gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+		gamma[1] += xcm[0]*xcm[1]*tmp;
             
-            *phi += phi_h(x) * mass / pi ;
-		}
+    *phi += phi_h(x) * mass / pi ;
 	}
 	else // the point particle is not subtracted
 	{
@@ -630,18 +622,14 @@ void LensHalo::force_halo_sym(
 			alpha[0] += -1.0 * prefac * xcm[0];
 			alpha[1] += -1.0 * prefac * xcm[1];
 
-			// can turn off kappa and gamma calculations to save times
-			
-            {
-				PosType tmp = -2.0*prefac/rcm2;
+			PosType tmp = -2.0*prefac/rcm2;
                 
-                // Fabien : does not look that kappa is computed here.
+      // Fabien : does not look that kappa is computed here.
 
-				gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
-				gamma[1] += xcm[0]*xcm[1]*tmp;
+			gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+      gamma[1] += xcm[0]*xcm[1]*tmp;
                 
-                *phi += - 0.5 * log(rcm2) * mass / pi ; // value made to be consistent with alpha above. Sure ?
-			}
+      *phi += - 0.5 * log(rcm2) * mass / pi ; // value made to be consistent with alpha above. Sure ?
 		}
 	}
 
@@ -660,7 +648,8 @@ void LensHalo::force_halo_asym(
 		,KappaType *gamma
 		,PosType const *xcm
 		,bool subtract_point /// if true contribution from a point mass is subtracted
-		){
+		)
+{
 	std::ofstream dfunc;
 	dfunc.open( "dfunc.dat", ios::out | ios::app );
             
@@ -670,42 +659,38 @@ void LensHalo::force_halo_asym(
 	if(rcm2 < 1e-20) rcm2 = 1e-20;
 
 	/// intersecting, subtract the point particle
-	if(rcm2 < Rmax*Rmax){
+	if(rcm2 < Rmax*Rmax)
+  {
 		double x = sqrt(rcm2)/rscale;
 		double theta;
         
-        if(xcm[0] == 0.0 && xcm[1] == 0.0) theta = 0.0;
-        else theta=atan2(xcm[1],xcm[0]);
+    if(xcm[0] == 0.0 && xcm[1] == 0.0) theta = 0.0;
+    else theta=atan2(xcm[1],xcm[0]);
         
-        double prefac = mass/rcm2/pi; //mass/rscale/rscale/pi;
+    double prefac = mass/rcm2/pi; //mass/rscale/rscale/pi;
 
-		// double xmax = Rmax/rscale;
-		//double tmp = (alpha_h(x,xmax) + 1.0*subtract_point)*prefac;
-        PosType alpha_tmp[2];
+		double xmax = Rmax/rscale;
+    PosType alpha_tmp[2];
         
-        alpha_asym(x,theta, alpha_tmp);
-        double tmp =  1.0*subtract_point*prefac;
+    alpha_asym(x,theta, alpha_tmp);
+    double tmp =  1.0*subtract_point*prefac;
 		alpha[0] +=  alpha_tmp[0]*prefac*xcm[0] + tmp*xcm[0];
-        alpha[1] +=  alpha_tmp[1]*prefac*xcm[1] + tmp*xcm[1];
+    alpha[1] +=  alpha_tmp[1]*prefac*xcm[1] + tmp*xcm[1];
 
-		// can turn off kappa and gamma calculations to save times
-		{
-			*kappa += kappa_asym(x,theta)*prefac;
-        
-			//	dfunc << x << " " << theta << " " << kappa_asym(x,theta) << " " << xcm[0] << " " << xcm[1] << std::endl;
-        
-            //std::cout << x << " " << rscale << " " << xmax << std::endl;
-            PosType gamma_tmp[2];
-            gamma_asym(x,theta,gamma_tmp);
-			tmp = (2.0*subtract_point)*prefac/rcm2;
-			//gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*(tmp+gamma_tmp[0]*prefac/rcm2);
-            //std::cout << prefac << std::endl;
-            gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp+gamma_tmp[0]*prefac/rcm2;
-            gamma[1] += xcm[0]*xcm[1]*tmp+gamma_tmp[1]*prefac/rcm2;
-            
-			//gamma[1] += xcm[0]*xcm[1]*(tmp+gamma_tmp[0]*prefac/rcm2);
-		}
 
+		*kappa += kappa_asym(x,theta)*prefac;
+        
+		//	dfunc << x << " " << theta << " " << kappa_asym(x,theta) << " " << xcm[0] << " " << xcm[1] << std::endl;
+        
+    //std::cout << x << " " << rscale << " " << xmax << std::endl;
+    PosType gamma_tmp[2];
+    gamma_asym(x,theta,gamma_tmp);
+		tmp = (2.0*subtract_point)*prefac/rcm2;
+		//gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*(tmp+gamma_tmp[0]*prefac/rcm2);
+    //std::cout << prefac << std::endl;
+    gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp+gamma_tmp[0]*prefac/rcm2;
+    gamma[1] += xcm[0]*xcm[1]*tmp+gamma_tmp[1]*prefac/rcm2;
+		//gamma[1] += xcm[0]*xcm[1]*(tmp+gamma_tmp[0]*prefac/rcm2);
 	}
 	else
 	{
