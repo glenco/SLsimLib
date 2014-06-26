@@ -113,6 +113,18 @@ Observation::Observation(Telescope tel_name)
 		seeing = 1.1;
 		pix_size = .2/60./60./180.*pi;
 	}
+    if (tel_name == HST_ACS_I)
+	{
+		diameter = 250.;
+		transmission = 0.095;
+		exp_time = 420.;
+		exp_num = 1;
+		back_mag = 22.8;
+		ron = 3.;
+		seeing = 0.1;
+		pix_size = .05/60./60./180.*pi;
+	}
+
 
 	mag_zeropoint = 2.5*log10(diameter*diameter*transmission*pi/4./hplanck) - 48.6;
 	telescope = true;
@@ -351,6 +363,8 @@ PixelMap Observation::AddNoise(PixelMap &pmap,long *seed)
 	double Q = pow(10,0.4*(mag_zeropoint+48.6));
 	double res_in_arcsec = outmap.getResolution()*180.*60.*60/pi;
 	double back_mean = pow(10,-0.4*(48.6+back_mag))*res_in_arcsec*res_in_arcsec*Q*exp_time;
+    std::cout << back_mean <<std::endl;
+    std::cout << exp_num*ron*ron << std::endl;
 	double rms, noise;
 	double norm_map;
 	for (unsigned long i = 0; i < outmap.getNpixels()*outmap.getNpixels(); i++)
@@ -367,12 +381,14 @@ PixelMap Observation::AddNoise(PixelMap &pmap,long *seed)
 			int k = 0;
 			double p = 1.;
 			double L = exp(-(norm_map+back_mean));
-			while	(p > L)
+			while (p > L)
 			{
 				k++;
 				p *= ran2(seed);
 			}
-			outmap.AssignValue(i,double(k-1-back_mean)/exp_time);
+            rms = sqrt(exp_num*ron*ron);
+ 			noise = gasdev(seed)*rms;
+			outmap.AssignValue(i,double(k-1+noise-back_mean)/exp_time);
 		}
 	}
 	return outmap;

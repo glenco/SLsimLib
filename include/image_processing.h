@@ -98,7 +98,7 @@ private:
 };
 
 
-typedef enum {Euclid_VIS,Euclid_Y,Euclid_J,Euclid_H,KiDS_u,KiDS_g,KiDS_r,KiDS_i} Telescope;
+typedef enum {Euclid_VIS,Euclid_Y,Euclid_J,Euclid_H,KiDS_u,KiDS_g,KiDS_r,KiDS_i,HST_ACS_I} Telescope;
 typedef enum {counts_x_sec, flux} unitType;
 /** \ingroup Image
  * \brief It creates a realistic image from the output of a ray-tracing simulation.
@@ -127,6 +127,7 @@ public:
     void setPSF(std::string psf_file, float os = 1.);
 	PixelMap Convert (PixelMap &map, bool psf, bool noise,long *seed, unitType unit = counts_x_sec);
 	PixelMap Convert_back (PixelMap &map);
+    void setExpTime(float time){exp_time = time;}
 
 private:
 	float diameter;  // diameter of telescope (in cm)
