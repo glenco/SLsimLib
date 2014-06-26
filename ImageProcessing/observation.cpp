@@ -124,6 +124,61 @@ Observation::Observation(Telescope tel_name)
 		seeing = 0.1;
 		pix_size = .05/60./60./180.*pi;
 	}
+    if (tel_name == CFHT_u)
+	{
+		diameter = 358.;
+		transmission = 0.0644;
+		exp_time = 3000.;
+		exp_num = 5;
+		back_mag = 22.7;
+		ron = 5.;
+		seeing = 0.85;
+		pix_size = .187/60./60./180.*pi;
+	}
+    if (tel_name == CFHT_g)
+	{
+		diameter = 358.;
+		transmission = 0.1736;
+		exp_time = 2500.;
+		exp_num = 5;
+		back_mag = 22.0;
+		ron = 5.;
+		seeing = 0.78;
+		pix_size = .187/60./60./180.*pi;
+	}
+    if (tel_name == CFHT_r)
+	{
+		diameter = 358.;
+		transmission = 0.0971;
+		exp_time = 2000.;
+		exp_num = 4;
+		back_mag = 21.3;
+		ron = 5.;
+		seeing = 0.71;
+		pix_size = .187/60./60./180.*pi;
+	}
+    if (tel_name == CFHT_i)
+	{
+		diameter = 358.;
+		transmission = 0.0861;
+		exp_time = 4300.;
+		exp_num = 5;
+		back_mag = 20.3;
+		ron = 5.;
+		seeing = 0.64;
+		pix_size = .187/60./60./180.*pi;
+	}
+    if (tel_name == CFHT_z)
+	{
+		diameter = 358.;
+		transmission = 0.0312;
+		exp_time = 3600.;
+		exp_num = 6;
+		back_mag = 19.4;
+		ron = 5.;
+		seeing = 0.68;
+		pix_size = .187/60./60./180.*pi;
+	}
 
 
 	mag_zeropoint = 2.5*log10(diameter*diameter*transmission*pi/4./hplanck) - 48.6;
