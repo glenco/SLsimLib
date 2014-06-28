@@ -446,7 +446,11 @@ LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
         }
     }else elliptical_flag = false;
     
-    rscale = xmax = 1.0;
+    // rscale = xmax = 1.0; // Commented by Fabien in order to have a correct computation of the potential term in the time delay.
+    // Fabien : replacing it by :
+    rscale = 1;
+    xmax = Rmax/rscale ;
+    // Be careful : the other constructors have not been changed !
 }
 
 void LensHaloPowerLaw::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed){
@@ -585,7 +589,7 @@ void LensHalo::force_halo_sym(
 		PosType *alpha     /// mass/Mpc
 		,KappaType *kappa
 		,KappaType *gamma
-        ,KappaType *phi
+    ,KappaType *phi
 		,PosType const *xcm
 		,bool subtract_point /// if true contribution from a point mass is subtracted
 		)
@@ -600,7 +604,7 @@ void LensHalo::force_halo_sym(
   {
     PosType prefac = mass/rcm2/pi;
 		PosType x = sqrt(rcm2)/rscale;
-		PosType xmax = Rmax/rscale;
+		// PosType xmax = Rmax/rscale;
 
 		PosType tmp = (alpha_h(x) + 1.0*subtract_point)*prefac;
 		alpha[0] += tmp*xcm[0];
@@ -613,6 +617,7 @@ void LensHalo::force_halo_sym(
 		gamma[1] += xcm[0]*xcm[1]*tmp;
             
     *phi += phi_h(x) * mass / pi ;
+    // *phi += phi_h(x,Rmax) * mass / pi ; // To avoid the xmax = 1 condition.
 	}
 	else // the point particle is not subtracted
 	{
@@ -669,7 +674,7 @@ void LensHalo::force_halo_asym(
         
     double prefac = mass/rcm2/pi; //mass/rscale/rscale/pi;
 
-		double xmax = Rmax/rscale;
+		// double xmax = Rmax/rscale;
     PosType alpha_tmp[2];
         
     alpha_asym(x,theta, alpha_tmp);
@@ -700,13 +705,10 @@ void LensHalo::force_halo_asym(
 			alpha[0] += -1.0*prefac*xcm[0];
 			alpha[1] += -1.0*prefac*xcm[1];
 
-			// can turn off kappa and gamma calculations to save times
-			{
-				double tmp = -2.0*prefac/rcm2;
+      double tmp = -2.0*prefac/rcm2;
+      gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+      gamma[1] += xcm[0]*xcm[1]*tmp;
 
-				gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
-				gamma[1] += xcm[0]*xcm[1]*tmp;
-			}
 		}
 	}
 

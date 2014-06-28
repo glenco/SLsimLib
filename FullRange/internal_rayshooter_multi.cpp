@@ -226,8 +226,6 @@ for(i = start; i < end; i++)
       xx[1] = p->i_points[i].image->x[1]/(1+p->plane_redshifts[j]);
       
       assert(xx[0] == xx[0] && xx[1] == xx[1]);
-
-      // std::cout << "xx[0] = " << xx[0] << "  ;  xx[1] = " << xx[1] << std::endl ;
         
       p->lensing_planes[j]->force(alpha,&kappa,gamma,&phi,xx); // Computed in physical coordinates.
 
@@ -244,7 +242,7 @@ for(i = start; i < end; i++)
     	  gamma[0] *= fac;
     	  gamma[1] *= fac;
     	  gamma[2] *= fac;
-          // dt *= fac ;
+        // dt *= fac ;
 	
         assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
         assert(kappa == kappa);
@@ -328,7 +326,8 @@ for(i = start; i < end; i++)
             p->i_points[i].dt += 0.5*( (xplus[0] - xminus[0])*(xplus[0] - xminus[0]) + (xplus[1] - xminus[1])*(xplus[1] - xminus[1]) )/p->dDl[j+1] - (1 + p->plane_redshifts[j]) * phi * p->charge ;
       
         // Check that the 1+z factor must indeed be there (because the x positions have been rescaled, so it may be different compared to the draft).
-
+        // Remark : Here the true lensing potential is not "phi" but "phi * p->charge = phi * 4 pi G".
+      
     } // End of the loop going through the planes
 
       

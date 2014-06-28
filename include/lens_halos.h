@@ -441,8 +441,8 @@ public:
 	/// set the slope of the surface density profile
 	void set_slope(PosType my_slope){beta=my_slope;};
     
-    /// get slope
-    PosType get_slope(){return beta;};
+  /// get slope
+  PosType get_slope(){return beta;};
     
 	/// initialize from a mass function
 	void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed);
@@ -455,8 +455,8 @@ private:
 
 	///	read in parameters from a parameterfile in InputParams params
 	PosType beta;
-    PosType fratio;
-    PosType pa;
+  PosType fratio;
+  PosType pa;
     
 
 	// Override internal structure of halos
@@ -482,12 +482,10 @@ private:
 		return -0.5*beta*pow(x/xmax,-beta+2);
 	}
 	inline KappaType phi_h(PosType x){
-		//ERROR_MESSAGE();
-		//std::cout << "time delay has not been fixed for PowerLaw profile yet." << std::endl;
 		if(x==0) x=1e-6*xmax;
 		return -1.0*pow(x/xmax,-beta+2)/(-beta+2);
 	}
-    inline KappaType phi_int(PosType x){
+  inline KappaType phi_int(PosType x){
 		//return alpha_int(x);
         return -1.0*pow(x/xmax,-beta+2)/(-beta+2);
     }
