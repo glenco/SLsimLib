@@ -255,7 +255,7 @@ void Observation::setPSF(std::string psf_file, float os)
  */
 PixelMap Observation::Convert (PixelMap &map, bool psf, bool noise, long *seed, unitType unit)
 {
-	if (telescope == true && fabs(map.getResolution()-pix_size) > std::numeric_limits<double>::epsilon())
+	if (telescope == true && fabs(map.getResolution()-pix_size) > pix_size*1.0e-5)
 	{
 		std::cout << "The resolution of the input map is different from the one of the simulated instrument in Observation::Convert!" << std::endl;
 		throw std::runtime_error("The resolution of the input map is different from the one of the simulated instrument!");
