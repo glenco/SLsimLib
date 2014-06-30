@@ -126,7 +126,10 @@ public:
 	/// Prints star parameters; if show_stars is true, prints data for single stars
 	void PrintStars(bool show_stars) const;
     
-    static constexpr PosType mod_params[2][7][7] = {{{5.45400234e-01, 2.00623559e-01, 1.74273034e-01, 1.86242095e+02, 5.70675374e+00,0,0},
+    
+    // all of the following functions were used for Ansatz III w derivatives of the Fourier modes
+    
+    /*static constexpr PosType mod_params[2][7][7] = {{{5.45400234e-01, 2.00623559e-01, 1.74273034e-01, 1.86242095e+02, 5.70675374e+00,0,0},
         {0.98519072, 1.79227955, 0.19333932, 1.05911801, 1.80285544, 175.19794791,0},
         {1.27286496, 2.52757113, 0.35561051, 1.07921878, 0.40027514, 37.47696142,0},
         {3.90009539, 4.59744288, -8.40249184, 4.13420228, 3.31751963, 6.35692121,0},
@@ -141,19 +144,18 @@ public:
             {-7.15392458e+01, -1.93808978e-02, 7.48623502e+01, -1.70286774e-02, 4.20781335e+02, 3.66600276e-04,0},
             {8.87740013e+00, 4.04947024e-02, -4.83118775e+01, -5.69035567e-02, 7.13574366e+00, -3.34967308e-02, -3.09836552e+03}}};
 
+    */
+    //PosType modfunc(int modnumber, PosType my_slope, PosType my_fratio);
+    //PosType hi_order_modfunc(PosType x, int modnumber, PosType my_slope, PosType my_fratio);
+    //PosType amodfunc(int modnumber, PosType my_fratio);
+    //PosType bmodfunc(int modnumber, PosType my_fratio);
+    //PosType cmodfunc(PosType my_fratio);
+    //PosType dmodfunc(PosType my_fratio);
+    //PosType dmod(PosType x, int modnumber, PosType my_slope, PosType my_fratio);
+    //PosType ddmod(PosType x, int modnumber, PosType my_slope, PosType my_fratio);
+    //PosType dlnmod_dr(PosType x, int modnumber, PosType my_slope, PosType my_fratio);
+    //PosType ddlnmod_dr(PosType x, int modnumber, PosType my_slope, PosType my_fratio);
     
-    PosType modfunc(int modnumber, PosType my_slope, PosType my_fratio);
-    PosType hi_order_modfunc(PosType x, int modnumber, PosType my_slope, PosType my_fratio);
-    PosType amodfunc(int modnumber, PosType my_fratio);
-    PosType bmodfunc(int modnumber, PosType my_fratio);
-    PosType cmodfunc(PosType my_fratio);
-    PosType dmodfunc(PosType my_fratio);
-    PosType dmod(PosType x, int modnumber, PosType my_slope, PosType my_fratio);
-    PosType ddmod(PosType x, int modnumber, PosType my_slope, PosType my_fratio);
-    PosType dlnmod_dr(PosType x, int modnumber, PosType my_slope, PosType my_fratio);
-    PosType ddlnmod_dr(PosType x, int modnumber, PosType my_slope, PosType my_fratio);
-    
-    PosType betaCorr(PosType theta, PosType bfunc);
     
 protected:
   PosType alpha_int(PosType x);
@@ -233,11 +235,16 @@ protected:
     virtual PosType inline ffunction(PosType x){return 0;};
     virtual PosType inline gfunction(PosType x){return -1;};
     virtual PosType inline bfunction(PosType x){return -1;};
+    virtual PosType inline dhfunction(PosType x){return 1;};
+    virtual PosType inline ddhfunction(PosType x){return 0;};
+    virtual PosType inline dddhfunction(PosType x){return 0;};
     virtual PosType inline bnumfunction(PosType x){return -1;};
     virtual PosType inline dbfunction(PosType x){return 0;};
     virtual PosType inline ddbfunction(PosType x){return 0;};
-    virtual PosType inline dbnum(PosType x){return 0;};
-    virtual PosType inline ddbnum(PosType x){return 0;};
+    virtual PosType inline dmoddb(int whichmod, PosType q, PosType b){return 0;};
+    virtual PosType inline ddmoddb(int whichmod, PosType q, PosType b){return 0;};
+    virtual PosType inline dmoddq(int whichmod, PosType q, PosType b){return 0;};
+    virtual PosType inline ddmoddq(int whichmod, PosType q, PosType b){return 0;};
     
     
     PosType xmax;
@@ -263,15 +270,18 @@ protected:
     
     void calcModes(double q, double beta, double rottheta, PosType newmod[]);
     void calcModesB(PosType x, double q, double beta, double rottheta, PosType newmod[]);
+    void calcModesC(PosType beta_r, double q, double rottheta, PosType newmod[]);
     
-    PosType analModes(int ab, int mn, int pn);
+    virtual PosType inline InterpolateModes(int whichmod, PosType q, PosType b){return 0;};
+    
+    void analModes(int modnumber, PosType my_beta, PosType q, PosType amod[3]);
     
     struct fourier_func{
         fourier_func(double my_n, double my_q, double my_beta): n(my_n),q(my_q),beta(my_beta){};
         double n;
         double q;
         double beta;
-        double operator ()(double theta) {return cos(n*theta)/pow(cos(theta)*cos(theta) + (1/q/q)*sin(theta)*sin(theta),beta/2) ;}
+        double operator ()(double theta) {return cos(n*theta)/pow(cos(theta)*cos(theta) + (q*q)*sin(theta)*sin(theta),beta/2) ;}
     };
 
   const static int Nmod = 32;
@@ -317,16 +327,20 @@ public:
 	PosType gfunction(PosType x);
 	PosType g2function(PosType x);
 	PosType hfunction(PosType x);
+    PosType dhfunction(PosType x);
+    PosType ddhfunction(PosType x);
+    PosType dddhfunction(PosType x);
     PosType bfunction(PosType x);
     PosType dbfunction(PosType x);
     PosType ddbfunction(PosType x);
-    PosType dbnum(PosType x);
-    PosType ddbnum(PosType x);
-    PosType dmod(PosType x, int modnumber, PosType my_slope, PosType my_fratio);
-    PosType ddmod(PosType x, int modnumber, PosType my_slope, PosType my_fratio);
+    PosType dmoddb(int whichmod, PosType q, PosType b);
+    PosType ddmoddb(int whichmod, PosType q, PosType b);
+    PosType dmoddq(int whichmod, PosType q, PosType b);
+    PosType ddmoddq(int whichmod, PosType q, PosType b);
     
-    
-    
+    //PosType dmod(PosType x, int modnumber, PosType my_slope, PosType my_fratio);    // was used for Ansatz III w derivatives of the Fourier modes
+    //PosType ddmod(PosType x, int modnumber, PosType my_slope, PosType my_fratio);   // was used for Ansatz III w derivatives of the Fourier modes 
+       
     
 
 	// TODO: BEN: the below functions alphaNFW, kappaNFW and gammaNFW are obsolete and better to be deleted to avoid confusion
@@ -354,11 +368,12 @@ protected:
 	static int count;
 
 	/// tables for lensing properties specific functions
-	static PosType *ftable,*gtable,*g2table,*htable,*xtable,*xgtable;
+	static PosType *ftable,*gtable,*g2table,*htable,*xtable,*xgtable,***modtable;
 	/// make the specific tables
 	void make_tables();
 	/// interpolates from the specific tables
 	PosType InterpolateFromTable(PosType *table, PosType y);
+    PosType InterpolateModes(int whichmod, PosType q, PosType b);
 
 	/// read in parameters from a parameterfile in InputParams params
 	void assignParams(InputParams& params);
@@ -501,7 +516,6 @@ private:
 
 	///	read in parameters from a parameterfile in InputParams params
 	PosType beta;
-    PosType fratio;
     PosType pa;
     
 

@@ -107,6 +107,8 @@ PosType* LensHaloNFW::gtable = NULL;
 PosType* LensHaloNFW::g2table = NULL;
 PosType* LensHaloNFW::htable = NULL;
 PosType* LensHaloNFW::xgtable = NULL;
+PosType*** LensHaloNFW::modtable= NULL;
+
 
 
 LensHaloNFW::LensHaloNFW()
@@ -182,7 +184,7 @@ LensHaloNFW::LensHaloNFW(InputParams& params)
 
 void LensHaloNFW::make_tables(){
 	if(count == 0){
-		int i;
+		int i,j,k;
         //struct Ig_func g(*this);
 		PosType x, dx = maxrm/(PosType)NTABLE;
 
@@ -192,6 +194,14 @@ void LensHaloNFW::make_tables(){
 		g2table = new PosType[NTABLE];
 		htable = new PosType[NTABLE];
         xgtable = new PosType[NTABLE];
+        
+        modtable = new PosType**[100];
+        for(i = 0; i < 100; i++){
+            modtable[i] = new PosType*[200];
+            for(j = 0; j< 200; j++){
+                modtable[i][j] = new PosType[Nmod];
+            }
+        }
         
         
 		for(i = 0 ; i< NTABLE; i++){
@@ -207,8 +217,46 @@ void LensHaloNFW::make_tables(){
                 //Utilities::nintegrate<Ig_func>(g,1E-4,x,dx/10.);
             }
         }
+        
+        // modtable[axis ratio 100][potential slope beta 1000][Nmods 32]
+        for(i = 0; i<99; i++){
+            std::cout<< i << std::endl;
+            PosType iq=0.01*(i+1);
+            for(j = 0; j< 200; j++){
+                PosType beta_r=0.01*(j+1);
+                calcModesC(beta_r, iq, pa, mod);
+                for(k=0;k<Nmod;k++){
+                    modtable[i][j][k]=mod[k];
+                }
+            }
+        }
+        
+        
   }
   count++;
+}
+
+PosType LensHaloNFW::InterpolateModes(int whichmod, PosType q, PosType b){
+    PosType x1,x2,y1,y2,f11,f12,f21,f22;
+    int i,j,k;
+    int NTABLEB=200;
+    int NTABLEQ=99;
+    PosType const maxb=2.0;
+    PosType const maxq=0.99;
+    k=whichmod;
+    j=(int)(b/maxb*NTABLEB);
+    i=(int)(q/maxq*NTABLEQ);
+    f11=modtable[i][j][k];
+    f12=modtable[i][j+1][k];
+    f21=modtable[i+1][j][k];
+    f22=modtable[i+1][j+1][k];
+    x1=i*maxq/NTABLEQ;
+    x2=(i+1)*maxq/NTABLEQ;
+    y1=j*maxb/NTABLEB;
+    y2=(j+1)*maxb/NTABLEB;
+    //std::cout << "x12y12: " << q << " " << x1 << " " << x2 << " "<< b << " " << y1 << " " << y2 << " " << std::endl;
+    //std::cout << "IM: " << f11 << " " << f12 << " " << f21 << " " << f22 << " " << res << std::endl;
+    return 1.0/(x2-x1)/(y2-y1)*(f11*(x2-q)*(y2-b)+f21*(q-x1)*(y2-b)+f12*(x2-q)*(b-y1)+f22*(q-x1)*(b-y1));
 }
 
 PosType LensHaloNFW::InterpolateFromTable(PosType *table, PosType y){
@@ -249,6 +297,16 @@ LensHaloNFW::~LensHaloNFW(){
 		delete[] g2table;
 		delete[] htable;
         delete[] xgtable;
+        
+        for(int i=0; i<99; i++){
+             for(int j=0; j<200; j++){
+                 delete[] modtable[i][j];
+             }
+            delete[] modtable[i];
+        }
+        delete[] modtable;
+        
+        
 	}
 }
 
@@ -446,7 +504,6 @@ LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
 	assignParams(params);
     /// If the 2nd argument in calcModes(fratio, slope, pa, mod), the slope, is set to 1 it yields an elliptical kappa contour of given axis ratio (fratio) at the radius where the slope of the 3D density profile is -2, which is defined as the scale radius for the NFW profile. To ellipticize the potential instead of the convergence use calcModes(fratio, 2-get_slope(), pa, mod), this produces also an ellipse in the convergence map, but at the radius where the slope is 2-get_slope().
     /// If the axis ratio given in the parameter file is set to 1 all ellipticizing routines are skipped.
-    
     if(fratio!=1){
         //for(int islope=1;islope<20;islope++){
         //beta=islope*0.1;
@@ -470,7 +527,6 @@ LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
         */
         calcModes(fratio, beta, pa, mod);
         //    std::cout << mod[4] << " " << modfunc(4, 1, 0.5) << std::endl;
-        
             for(int i=1;i<Nmod;i++){
                 //std::cout << i << " " << mod[i] << std::endl;
                 if(mod[i]!=0){set_flag_elliptical(true);};
