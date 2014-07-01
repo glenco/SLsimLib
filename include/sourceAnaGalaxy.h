@@ -21,7 +21,7 @@
  * Input Parameters:
  *
  *	source_input_galaxy_file       file with catalog of galaxies
- *	source_band             Band that these sources are to be observed in. Must be one of the following SDSS_u,SDSS_g,SDSS_r,SDSS_i,SDSS_z,J,H,Ks,irac1,irac2
+ *	source_band             Band that these sources are to be observed in. Must be one of the following SDSS_U,SDSS_G,SDSS_R,SDSS_I,SDSS_Z,J,H,Ks,IRAC1,IRAC2
  *	source_band
  *	source_mag_limit        magnitude limit
  *	source_sb_limit         Minimum surface brightness limit for truncating sources.  By default it is 30. mag/sq. arcsec
