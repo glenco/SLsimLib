@@ -62,9 +62,7 @@ typedef enum {nfw,powerlaw,pointmass} ClumpInternal;
 /// Initial mass function type
 enum IMFtype {One,Mono,BrokenPowerLaw,Salpeter,SinglePowerLaw,Kroupa,Chabrier};
 /// Photometric bands
-enum Band {SDSS_U,SDSS_G,SDSS_R,SDSS_I,SDSS_Z,J,H,Ks,i1,i2};
-/// Photometric bands for shapelets galaxies
-enum ShapeBand {MAG_B, MAG_V, MAG_I, MAG_Z, MAG_J, MAG_H, MAG_u_KIDS, MAG_g_KIDS, MAG_r_KIDS, MAG_i_KIDS};
+enum Band {EUC_VIS,EUC_Y,EUC_J,EUC_H,SDSS_U,SDSS_G,SDSS_R,SDSS_I,SDSS_Z,J,H,Ks,IRAC1,IRAC2,F435W,F606W,F775W,F850LP,F814W,F110W,F160W};
 
 /** \brief Structure for reading and writing parameters to and from a parameter file as well as a container 
  * for passing the parameters to other classes and functions.
@@ -87,7 +85,6 @@ public:
 	bool get(std::string label,GalaxyLensHaloType& value) const;
 	bool get(std::string label,ClumpInternal& value) const;
 	bool get(std::string label,Band& value) const;
-	bool get(std::string label,ShapeBand& value) const;
 	bool get(std::string label,IMFtype& value) const;
 	
 	// get numbers
