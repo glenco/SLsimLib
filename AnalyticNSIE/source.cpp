@@ -476,6 +476,22 @@ SourceShapelets::SourceShapelets()
     zsource=0;
 }
 */
+Band SourceShapelets::shape_band[10] = {F435W,F606W,F775W,F850LP,F110W,F160W,SDSS_U,SDSS_G,SDSS_R,SDSS_I};
+
+void SourceShapelets::setActiveBand(Band band)
+{
+    for (int i = 0; i < 10; i++)
+    {
+        if (shape_band[i] == band)
+        {
+            mag = mags[i];
+            flux = fluxes[i];
+            return;
+        }
+    }
+    std::cout << "The band is not available! Available bands are F435W,F606W,F775W,F850LP,F110W,F160W,SDSS_U,SDSS_G,SDSS_R,SDSS_I" << std::endl;
+    exit(1);
+}
 
 SourceShapelets::SourceShapelets(
 		PosType my_z                              /// redshift of the source
