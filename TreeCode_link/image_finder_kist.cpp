@@ -132,7 +132,7 @@ void ImageFinding::find_images_kist(
 
     	time(&t3);
 
- 			/************* method that seporates images ****************
+ 			/************* method that separates images ****************
 			// mark image points in tree
 			PointsWithinKist(grid->s_tree,y_source,rtemp,&subkist,1);
 			image_finder_kist(lens,y_source,rtemp,grid
