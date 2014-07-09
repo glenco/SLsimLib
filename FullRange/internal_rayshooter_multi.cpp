@@ -257,7 +257,7 @@ for(i = start; i < end; i++)
       aa = (p->dDl[j+1] + p->dDl[j])/p->dDl[j];
       bb = p->dDl[j+1]/p->dDl[j];
       cc = p->charge * p->dDl[j+1];
-        
+      
       xplus[0] = aa*p->i_points[i].image->x[0] - bb*xminus[0] - cc*alpha[0];
       xplus[1] = aa*p->i_points[i].image->x[1] - bb*xminus[1] - cc*alpha[1];
       
@@ -330,7 +330,6 @@ for(i = start; i < end; i++)
       
     } // End of the loop going through the planes
 
-      
       
     // Subtracting off a term that makes the unperturbed ray to have zero time delay
     p->i_points[i].dt -= 0.5*( p->i_points[i].image->x[0]*p->i_points[i].image->x[0] + p->i_points[i].image->x[1]*p->i_points[i].image->x[1] ) / p->Dl[p->NPlanes];

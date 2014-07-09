@@ -617,7 +617,7 @@ void LensHalo::force_halo_sym(
 		gamma[1] += xcm[0]*xcm[1]*tmp;
             
     *phi += phi_h(x) * mass / pi ;
-    // *phi += phi_h(x,Rmax) * mass / pi ; // To avoid the xmax = 1 condition.
+    // *phi += phi_h(x,Rmax) * mass / pi ;
 	}
 	else // the point particle is not subtracted
 	{
