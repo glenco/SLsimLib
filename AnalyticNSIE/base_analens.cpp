@@ -627,174 +627,40 @@ void LensHalo::alpha_asym(PosType x,PosType theta, PosType alpha[]){
 
 /// In kappa phi_int(x) is used, which calculates the potential unlike phi_h from alpha_h.
 
-PosType LensHalo::kappa_asym(PosType x,PosType theta){
-	PosType F, f[4],g[3], kappa;
-    PosType amod[3],amodp1[3];
-    
-    PosType imod, imodp1, dmod_db, ddmod_db, dmod_dq, ddmod_dq, dbdr, ddbdr, dqdr, ddqdr;
-    PosType dmod_dbp1, ddmod_dbp1, dmod_dqp1, ddmod_dqp1;
-    
-    
-    //PosType b[Nmod], bp[Nmod], bpp[Nmod];
-    PosType phi=phi_int(x);
-    //calcModesC(dhfunction(x), fratio, bfunction(x), pa, mod1);
-    //for(int i = 1; i < 100 ; i++){
-      //faxial(0.01*i,theta,f); // only for NFW and Jaffe
-     // calcModesC(0.01*i, fratio, pa, mod1); // note that 1st argument is beta not x
-     // std::cout << 0.01*i << " " << dhfunction(0.01*i) << " " << mod1[4] << " " << mod1[8] << " " << mod1[12] << " " << mod1[16] << " " << fratio << std::endl;
-        
-      //std::cout<< 0.01*i << " " << mod1[4] << " " << mod1[8] << " " << mod1[12] << " " << mod1[16] << " " << dbfunction(0.01*i) << " " << dbnum(0.01*i)<< " " << ddbfunction(0.01*i) << " " << ddbnum(0.01*i)<< " " << " " << bfunction(0.01*i)*bfunction(0.01*i)-4.<< " " << dlnmod_dr(0.01*i, 4, bfunction(x), 0.5) <<  std::endl;
-      //  std::cout<< 0.01*i << " " << bfunction(0.01*i) << " " << 0.01*i/ffunction(0.01*i) <<  std::endl;
-   // }
-    
-    /*for(int l=1; l<100; l++ ){
-        PosType q=0.01*float(l);
-        for(int k = -2; k < 101 ; k++){
-            PosType a=pow(10.,k);
-            for(int i = 1; i < 10 ; i++){
-                PosType b=float(i)*a/10.0;
-                calcModesC(b, q, pa, mod1);
-                PosType mybeta= dhfunction(b);
-                std::cout << b << " " << mybeta << " " << mod1[4] << " " << mod1[8] << " " << mod1[12] << " " << mod1[16] << " " << mod1[20] << " " << mod1[24] << " " << q << std::endl;
-                //std::cout << b << " " << mybeta << " " << analModes(4, mybeta, q) << " " << analModes(8, mybeta, q) << " " << analModes(12, mybeta, q) << " " << analModes(16, mybeta, q) << " " << analModes(20, mybeta, q) << " " << analModes(24, mybeta, q) << " " << q << std::endl;
-                
-            }
-        }
-    }*/
-    
-  
-
-    
-    
-   /* for(int l=1; l<99; l++ ){
-        PosType q=0.01*float(l);
-        for(int i = 1; i < 199 ; i++){
-            //calcModesC(i*0.01, q, pa, mod1);
-            //std::cout << i*0.01 << " " <<  mod1[4] << " " << mod1[8] << " " << mod1[12] << " " << mod1[16] << " " << mod1[20] << " " << mod1[24] << " " << mod1[28] << " " << mod1[32] << " " << q << std::endl;
-            std::cout << " " <<  InterpolateModes(4, q+0.005, 1.005) << " " <<  std::endl;
-            //std::cout << i*0.01 << " " <<  InterpolateModes(4, q, i*0.01) << " " << InterpolateModes(8, q, i*0.01) << " " << InterpolateModes(12, q, i*0.01) << " " <<InterpolateModes(16, q, i*0.01) << " " << InterpolateModes(20, q, i*0.01) << " " << InterpolateModes(24, q, i*0.01) << " " << InterpolateModes(28, q, i*0.01) << " " << InterpolateModes(32, q, i*0.01) << " " << q << std::endl;
-            
-        }
-    }
-    */
-
- 
-    //calcModesC(0.01*i, fratio, pa, mod1);
-    
-    //std::cout << 0.01*i << " " << dhfunction(0.01*i) << " " << mod1[4] << " " << mod1[8] << " " << mod1[12] << " " << mod1[16] << " " << fratio << std::endl;
-    
-    
-    
-    
-    
-    //faxial(x,theta,f); // only for NFW
-
-    //faxial0(theta,f);
-    //faxial1(theta,f1);
-    //faxial2(theta,f2);
-    //gradial2(x,1,2,g);
-    
-    /*
-    //--- the following lines are based on Ansatz 3 and work according to the quality of the approximation
-    gradial(x,g);
-    F=f[0]-1;
-    //beta=get_slope(); // only for fixed beta, i.e. PowerLaw
-    beta=bfunction(x); // only for NFW
-    double fac=1.0/(beta*beta/(2.-beta)/(2.-beta));
-    kappa=f[0]*kappa_h(x)-0.5*f[2]*fac*phi;//  w/o damping
-    //kappa=(1+F*g[0])*kappa_h(x)-0.5*phi*fac*(F*g[1]/x+F*g[2]+f[2]*g[0]/x/x)*x*x-F*g[1]*alpha_h(x)*x*x; /// with damping
-    // ---
-    */
-
-    
-    
-    /* Ansatz IV
-    calcModesC(x, fratio, pa, mod1);
-    f[0] = mod1[0];
-    f[1] = f[2] = 0;
-    kappa=kappa(x);
-    for(i=4;i<Nmod;i+=2){
-        k=i/2;
-        kappa+=mod1[i]*(kappa(x)-k*k/x/x*phi/2.)+
-        f[0] +=  mod1[i]*cos(k*theta)   + mod1[i+1]*sin(k*theta);
-        f[1] += -mod1[i]*k*sin(k*theta) + mod1[i+1]*k*cos(k*theta);
-        f[2] += -mod1[i]*k*k*cos(k*theta) - mod1[i+1]*k*k*sin(k*theta);
-    }
-    
-    kappa=kappa(x)
-    */
-    
-    //std::cout << fratio << " " << pa << std::endl;
-    //calcModesC(dhfunction(x),fratio, pa, mod1);
-    //std::vector<PosType> b (mod1, mod1 + sizeof(mod1) / sizeof(PosType));
-
-    //assert(phi==0);
-    
-    PosType b=dhfunction(x);
-    for(int i=4;i<Nmod;i+=2){
-        int k=i/2;
-        //analModes(i,b,fratio, amod);
-        //analModes(i+1,b,fratio, amodp1);
-        imod=InterpolateModes(i, fratio, b);
-        imodp1=0.0;//InterpolateModes(i+1, fratio, b);
-        dmod_db=dmoddb(i, fratio, b);
-        dmod_dbp1=0.0;//dmoddb(i+1, fratio, b);
-        ddmod_db=ddmoddb(i, fratio, b);
-        ddmod_dbp1=0.0;//ddmoddb(i+1, fratio, b);
-        dmod_dq=dmoddq(i, fratio, b);
-        dmod_dqp1=0.0;//dmoddq(i+1, fratio, b);
-        ddmod_dq=ddmoddq(i, fratio, b);
-        ddmod_dqp1=0.0; //ddmoddq(i+1, fratio, b);
-        dbdr=ddhfunction(x,true);
-        ddbdr=dddhfunction(x,true);
-        dqdr=0;
-        ddqdr=0;
-        amod[0]=imod;
-        amodp1[0]=0.0; //imodp1;
-        amod[1]=dmod_db*dbdr+dmod_dq*dqdr;
-        amodp1[1]=0.0; //dmod_dbp1*dbdr+dmod_dqp1*dqdr;
-        amod[2]=ddmod_db*dbdr*dbdr+dmod_db*ddbdr+ddmod_dq*dqdr*dqdr+dmod_dq*ddqdr;
-        amodp1[2]=0.0;// ddmod_dbp1*dbdr*dbdr+dmod_dbp1*ddbdr+ddmod_dqp1*dqdr*dqdr+dmod_dqp1*ddqdr;
-        PosType coskt=cos(k*theta);
-        PosType sinkt=sin(k*theta);
-        PosType aux=amod[0]*coskt+amodp1[0]*sinkt;
-        f[0] +=  aux;
-        f[1] +=  amod[1]*coskt + amodp1[1]*sinkt;
-        f[2] +=  amod[2]*coskt + amodp1[2]*sinkt;
-        f[3] += -k*k*aux;
-        //std::cout<< "1st: "<< amod[0] << " " << amod[1] << " " << amod[2] <<std::endl;
-        //std::cout<< "1st: "<< amod[0] << " " << amod[1] << " " << amod[2] <<std::endl;
-    }
-    
-    double bk=dhfunction(x);
-    double fac=0.5/(bk*bk/(2.-bk)/(2.-bk));
-    
-    //kappa=(1+f[0])*kappa_h(x)-0.5*phi*fac*(f[1]/x+f[2]+f[3]/x/x)*x*x-f[1]*alpha_h(x)*x*x; /// with damping terms
-    kappa=(1+f[0])*kappa_h(x);
-    std::cout<< "1st: "<< kappa <<std::endl;
-    //amod[0]*coskt*kappa_h(x)-phi/2*amod[1]*x*coskt-phi/2*amod[2]*x*x*coskt+phi/2*amod[0]*k*k*coskt-amod[1]*coskt*alpha_h(x)*x*x
-
-    
-    kappa=kappa_h(x);
-    for(int i=4;i<Nmod;i+=2){
-        int k=i/2;
-        amod[0]=InterpolateModes(i, fratio, b);
-        dmod_db=dmoddb(i, fratio, b);
-        dbdr=ddhfunction(x,true);
-        amod[1]=dmod_db*dbdr;
-        ddmod_db=ddmoddb(i, fratio, b);
-        ddbdr=dddhfunction(x,true);
-        amod[2]=ddmod_db*dbdr*dbdr+dmod_db*ddbdr;
-        //std::cout<< "2nd: "<< amod[0] << " " << amod[1] << " " << amod[2] <<std::endl;
-        //kappa+=(amod[0]*(kappa_h(x)+k*k/2*phi*fac)+amod[1]*(-1.0*alpha_h(x)*x*x-phi*fac*x/2)-amod[2]*phi*fac*x*x/2)*cos(k*theta);
-        kappa+=amod[0]*kappa_h(x)*cos(k*theta);
-        
-    }
-    std::cout<< "2nd: "<< kappa <<std::endl;
-
-    
-    return kappa;
+void LensHalo::felliptical(double x, double q, double theta, double f[], double g[]){
+     double A[3];
+     //reps=rmax
+     //q=r/reps+q0*(1-r/reps) // q=q0 for small radii, q=1 for large radii
+     A[0]=1/q/q;
+     A[1]=0.;
+     A[2]=0.;
+     f[0]=x*pow((cos(theta)*cos(theta)+A[0]*sin(theta)*sin(theta)),0.5);
+     g[0]=f[0]/x;
+     f[1]=x*(A[0]-1)*(cos(theta)*sin(theta))/(g[0]);
+     f[2]=(x*(A[0]-1)*(pow(cos(theta),4)-A[0]*pow(sin(theta),4)))/(g[0]*g[0]*g[0]);
+     g[1]=g[0]; // (g[0]*g[0]+0.5*x*A[1]*sin(theta)*sin(theta))/g[0];
+     g[2]=0; //sin(theta)*sin(theta)*(A[1]*(4*g[0]*g[0]-x*A[1]*sin(theta)*sin(theta))+2*f[0]*g[0]*A[2] )/(4*g[0]*g[0]*g[0]);
+     //g[3]=cos(theta)*sin(theta)*(2*(A[0]*A[0]-1-(A[0]-1)*(A[0]-1)*cos(2*theta))+x*A[1]*(3+cos(2*theta)+2*A[0]*sin(theta)*sin(theta)))/(4*g[0]*g[0]*g[0]);
 }
+
+PosType LensHalo::kappa_asym(PosType x,PosType theta){
+     double f[3],g[3];
+     double G,Gr,Grr, Gt,Gtt, kappa;
+     felliptical(x,0.4,theta,f,g);
+     G = f[0];
+     Gt = f[1];
+     Gtt= f[2];
+     Gr=g[1];
+     Grr=g[2];
+     double phitwo=(2*kappa_h(G)/G/G - alpha_h(G)/G/G);
+     kappa=-0.5*alpha_h(G)/G*(Gr/x+Grr+Gtt/x/x)+0.5*phitwo*(Gr*Gr+Gt*Gt/x/x);
+     kappa/=G*G;
+     return kappa;
+}
+    
+    
+    
+    
 
 /// In gamma_asym phi_int(x) is used, which calculates the potential unlike phi_h from alpha_h.
 

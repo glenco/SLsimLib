@@ -261,7 +261,7 @@ protected:
   void gradial(PosType r,PosType g[]);
   void gradial2(PosType r,PosType mu, PosType sigma,PosType g[]);
     
-    //void felliptical(PosType x, PosType q, PosType theta, PosType f[], PosType g[]);
+  void felliptical(PosType x, PosType q, PosType theta, PosType f[], PosType g[]);
 
 	virtual void gamma_asym(PosType x,PosType theta, PosType gamma[2]);
 	virtual PosType kappa_asym(PosType x,PosType theta);
@@ -368,7 +368,7 @@ protected:
 	static int count;
 
 	/// tables for lensing properties specific functions
-	static PosType *ftable,*gtable,*g2table,*htable,*xtable,*xgtable; // ***modtable; // modtable was used for Ansatz IV and worked well
+	static PosType *ftable,*gtable,*g2table,*htable,*xtable,*xgtable,***modtable; // modtable was used for Ansatz IV and worked well
 	/// make the specific tables
 	void make_tables();
 	/// interpolates from the specific tables

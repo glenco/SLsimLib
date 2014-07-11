@@ -107,7 +107,7 @@ PosType* LensHaloNFW::gtable = NULL;
 PosType* LensHaloNFW::g2table = NULL;
 PosType* LensHaloNFW::htable = NULL;
 PosType* LensHaloNFW::xgtable = NULL;
-// PosType*** LensHaloNFW::modtable= NULL; // was used for Ansatz IV
+PosType*** LensHaloNFW::modtable= NULL; // was used for Ansatz IV
 
 
 
@@ -214,7 +214,7 @@ void LensHaloNFW::make_tables(){
         }
         
         // modtable[axis ratio 100][potential slope beta 1000][Nmods 32] for Ansatz IV
-        /*
+        
         int j,k;
         modtable = new PosType**[100];
  
@@ -225,7 +225,7 @@ void LensHaloNFW::make_tables(){
                 modtable[i][j] = new PosType[Nmod];
             }
         }
-         
+        /*
          
         for(i = 0; i<99; i++){
             std::cout<< i << std::endl;
@@ -245,7 +245,7 @@ void LensHaloNFW::make_tables(){
 }
 
 // InterpolateModes was used for Ansatz IV and is an efficient way to calculate the Fourier modes used for elliptisizing the isotropic profiles before the program starts
-/*
+
 PosType LensHaloNFW::InterpolateModes(int whichmod, PosType q, PosType b){
     PosType x1,x2,y1,y2,f11,f12,f21,f22;
     int i,j,k;
@@ -268,7 +268,7 @@ PosType LensHaloNFW::InterpolateModes(int whichmod, PosType q, PosType b){
     //std::cout << "IM: " << f11 << " " << f12 << " " << f21 << " " << f22 << " " << res << std::endl;
     return 1.0/(x2-x1)/(y2-y1)*(f11*(x2-q)*(y2-b)+f21*(q-x1)*(y2-b)+f12*(x2-q)*(b-y1)+f22*(q-x1)*(b-y1));
 }
- */
+
 
 PosType LensHaloNFW::InterpolateFromTable(PosType *table, PosType y){
 	int j;
@@ -310,7 +310,7 @@ LensHaloNFW::~LensHaloNFW(){
         delete[] xgtable;
         
         // was used for Ansatz IV
-        /*
+        
         for(int i=0; i<99; i++){
              for(int j=0; j<200; j++){
                  delete[] modtable[i][j];
@@ -318,7 +318,7 @@ LensHaloNFW::~LensHaloNFW(){
             delete[] modtable[i];
         }
         delete[] modtable;
-        */
+        
         
 	}
 }
