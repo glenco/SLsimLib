@@ -110,7 +110,7 @@ void find_crit(
 	  if(verbose) std::printf("find_crit, going into refine_grid\n");
      //std::printf("  Npoints=%i\n",critcurve->Npoints);
 	  //refinements=refine_grid(lens,grid->i_tree,grid->s_tree,critcurve,1,resolution,2,false);
-	  refinements=refine_grid_kist(lens,grid,critcurve,1,resolution,2,false,&newpoint_kist,true);
+	  refinements=ImageFinding::refine_grid_kist(lens,grid,critcurve,1,resolution,2,&newpoint_kist,true);
 	  if(verbose) std::printf("find_crit, came out of refine_grid\n");
 
 	  if(verbose) cout << "Npoints " << critcurve->imagekist->Nunits() << endl;
@@ -183,7 +183,7 @@ void find_crit(
 
 
   		  while( pseudocurve[i].imagekist->Nunits() < 100 &&
-  				  refine_edges(lens,grid,&pseudocurve[i],1,0.01*resolution/sqrt(fabs(pseudolimit)),1,false,newpoints)
+  				  refine_edges(lens,grid,&pseudocurve[i],1,0.01*resolution/sqrt(fabs(pseudolimit)),1,newpoints)
   				  ){
   			  // update region
   			  if(pseudocurve[i].ShouldNotRefine == 0){
@@ -405,9 +405,9 @@ void find_crit2(
 
   for(int k=0;;++k){
 
-	  refinements=refine_edges(lens,grid,critcurve,1,resolution/2,1,false,&newpoint_kist);
-	  //refinements=refine_edges(lens,grid,critcurve,1,1.0e-3,0,false,&newpoint_kist);
-	  //refinements=refine_grid_kist(lens,grid,critcurve,1,resolution,2,false,&newpoint_kist);
+	  refinements=refine_edges(lens,grid,critcurve,1,resolution/2,1,&newpoint_kist);
+	  //refinements=refine_edges(lens,grid,critcurve,1,1.0e-3,0,&newpoint_kist);
+	  //refinements=refine_grid_kist(lens,grid,critcurve,1,resolution,2,&newpoint_kist);
 
 	  if(!refinements) break;
 	  critcurve->outerborder->SetInImage(MAYBE);
@@ -782,7 +782,7 @@ void refine_crit_in_image(
         }
         findborders4(grid->i_tree,&critcurve);
         
-        refinements=refine_grid_kist(lens,grid,&critcurve,1,resolution,2,false,&newpoint_kist);
+        refinements=ImageFinding::refine_grid_kist(lens,grid,&critcurve,1,resolution,2,&newpoint_kist);
         
         if(refinements==0) break;
         //}else free(critcurve->points);

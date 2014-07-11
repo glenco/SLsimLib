@@ -25,93 +25,152 @@
  */
 Observation::Observation(Telescope tel_name)
 {
-	if (tel_name == Euclid_VIS)
-	{
-		diameter = 119.;
-		transmission = 0.30;
-		exp_time = 1800.;
-		exp_num = 3;
-		back_mag = 22.8;
-		ron = 5.;
-		seeing = 0.18;
-		pix_size = .1/60./60./180.*pi;
-	}
-	if (tel_name == Euclid_Y)
-	{
-		diameter = 119.;
-		transmission = 0.0961;
-		exp_time = 264.;
-		exp_num = 3;
-		back_mag = 22.57;
-		ron = 5.;
-		seeing = 0.3;
-		pix_size = .3/60./60./180.*pi;
-	}
-	if (tel_name == Euclid_J)
-	{
-		diameter = 119.;
-		transmission = 0.0814;
-		exp_time = 270.;
-		exp_num = 3;
-		back_mag = 22.53;
-		ron = 5.;
-		seeing = 0.3;
-		pix_size = .3/60./60./180.*pi;
-	}
-	if (tel_name == Euclid_H)
-	{
-		diameter = 119.;
-		transmission = 0.1692;
-		exp_time = 162.;
-		exp_num = 3;
-		back_mag = 22.59;
-		ron = 5.;
-		seeing = 0.3;
-		pix_size = .3/60./60./180.*pi;
-	}
-	if (tel_name == KiDS_u)
-	{
-		diameter = 265.;
-		transmission = 0.032;
-		exp_time = 1000.;
-		exp_num = 5;
-		back_mag = 22.93;
-		ron = 5.;
-		seeing = 1.0;
-		pix_size = .2/60./60./180.*pi;
-	}
-	if (tel_name == KiDS_g)
-	{
-		diameter = 265.;
-		transmission = 0.1220;
-		exp_time = 900.;
-		exp_num = 5;
-		back_mag = 22.29;
-		ron = 5.;
-		seeing = 0.8;
-		pix_size = .2/60./60./180.*pi;
-	}
-	if (tel_name == KiDS_r)
-	{
-		diameter = 265.;
-		transmission = 0.089;
-		exp_time = 1800.;
-		exp_num = 5;
-		back_mag = 21.40;
-		ron = 5.;
-		seeing = 0.7;
-		pix_size = .2/60./60./180.*pi;
-	}
-	if (tel_name == KiDS_i)
-	{
-		diameter = 265.;
-		transmission = 0.062;
-		exp_time = 1200.;
-		exp_num = 5;
-		back_mag = 20.64;
-		ron = 5.;
-		seeing = 1.1;
-		pix_size = .2/60./60./180.*pi;
+
+  switch (tel_name) {
+    case Euclid_VIS:
+      diameter = 119.;
+      transmission = 0.30;
+      exp_time = 1800.;
+      exp_num = 3;
+      back_mag = 22.8;
+      ron = 5.;
+      seeing = 0.18;
+      pix_size = .1/60./60./180.*pi;
+      break;
+    case Euclid_Y:
+      diameter = 119.;
+      transmission = 0.0961;
+      exp_time = 264.;
+      exp_num = 3;
+      back_mag = 22.57;
+      ron = 5.;
+      seeing = 0.3;
+      pix_size = .3/60./60./180.*pi;
+      break;
+    case Euclid_J:
+      diameter = 119.;
+      transmission = 0.0814;
+      exp_time = 270.;
+      exp_num = 3;
+      back_mag = 22.53;
+      ron = 5.;
+      seeing = 0.3;
+      pix_size = .3/60./60./180.*pi;
+      break;
+    case Euclid_H:
+      diameter = 119.;
+      transmission = 0.1692;
+      exp_time = 162.;
+      exp_num = 3;
+      back_mag = 22.59;
+      ron = 5.;
+      seeing = 0.3;
+      pix_size = .3/60./60./180.*pi;
+      break;
+    case KiDS_u:
+      diameter = 265.;
+      transmission = 0.032;
+      exp_time = 1000.;
+      exp_num = 5;
+      back_mag = 22.93;
+      ron = 5.;
+      seeing = 1.0;
+      pix_size = .2/60./60./180.*pi;
+      break;
+    case KiDS_g:
+      diameter = 265.;
+      transmission = 0.1220;
+      exp_time = 900.;
+      exp_num = 5;
+      back_mag = 22.29;
+      ron = 5.;
+      seeing = 0.8;
+      pix_size = .2/60./60./180.*pi;
+      break;
+    case KiDS_r:
+      diameter = 265.;
+      transmission = 0.089;
+      exp_time = 1800.;
+      exp_num = 5;
+      back_mag = 21.40;
+      ron = 5.;
+      seeing = 0.7;
+      pix_size = .2/60./60./180.*pi;
+      break;
+    case KiDS_i:
+      diameter = 265.;
+      transmission = 0.062;
+      exp_time = 1200.;
+      exp_num = 5;
+      back_mag = 20.64;
+      ron = 5.;
+      seeing = 1.1;
+      pix_size = .2/60./60./180.*pi;
+      break;
+    case HST_ACS_I:
+      diameter = 250.;
+      transmission = 0.095;
+      exp_time = 420.;
+      exp_num = 1;
+      back_mag = 22.8;
+      ron = 3.;
+      seeing = 0.1;
+      pix_size = .05/60./60./180.*pi;
+      break;
+    case CFHT_u:
+      diameter = 358.;
+      transmission = 0.0644;
+      exp_time = 3000.;
+      exp_num = 5;
+      back_mag = 22.7;
+      ron = 5.;
+      seeing = 0.85;
+      pix_size = .187/60./60./180.*pi;
+      break;
+    case CFHT_g:
+      diameter = 358.;
+      transmission = 0.1736;
+      exp_time = 2500.;
+      exp_num = 5;
+      back_mag = 22.0;
+      ron = 5.;
+      seeing = 0.78;
+      pix_size = .187/60./60./180.*pi;
+      break;
+    case CFHT_r:
+      diameter = 358.;
+      transmission = 0.0971;
+      exp_time = 2000.;
+      exp_num = 4;
+      back_mag = 21.3;
+      ron = 5.;
+      seeing = 0.71;
+      pix_size = .187/60./60./180.*pi;
+      break;
+    case CFHT_i:
+      diameter = 358.;
+      transmission = 0.0861;
+      exp_time = 4300.;
+      exp_num = 5;
+      back_mag = 20.3;
+      ron = 5.;
+      seeing = 0.64;
+      pix_size = .187/60./60./180.*pi;
+    break;
+    case CFHT_z:
+      diameter = 358.;
+      transmission = 0.0312;
+      exp_time = 3600.;
+      exp_num = 6;
+      back_mag = 19.4;
+      ron = 5.;
+      seeing = 0.68;
+      pix_size = .187/60./60./180.*pi;
+      break;
+      
+    default:
+      throw std::runtime_error("The Telescope selected is not available.");
+      break;
 	}
 
 	mag_zeropoint = 2.5*log10(diameter*diameter*transmission*pi/4./hplanck) - 48.6;
@@ -196,7 +255,7 @@ void Observation::setPSF(std::string psf_file, float os)
  */
 PixelMap Observation::Convert (PixelMap &map, bool psf, bool noise, long *seed, unitType unit)
 {
-	if (telescope == true && fabs(map.getResolution()-pix_size) > std::numeric_limits<double>::epsilon())
+	if (telescope == true && fabs(map.getResolution()-pix_size) > pix_size*1.0e-5)
 	{
 		std::cout << "The resolution of the input map is different from the one of the simulated instrument in Observation::Convert!" << std::endl;
 		throw std::runtime_error("The resolution of the input map is different from the one of the simulated instrument!");
@@ -351,6 +410,8 @@ PixelMap Observation::AddNoise(PixelMap &pmap,long *seed)
 	double Q = pow(10,0.4*(mag_zeropoint+48.6));
 	double res_in_arcsec = outmap.getResolution()*180.*60.*60/pi;
 	double back_mean = pow(10,-0.4*(48.6+back_mag))*res_in_arcsec*res_in_arcsec*Q*exp_time;
+    std::cout << back_mean <<std::endl;
+    std::cout << exp_num*ron*ron << std::endl;
 	double rms, noise;
 	double norm_map;
 	for (unsigned long i = 0; i < outmap.getNpixels()*outmap.getNpixels(); i++)
@@ -358,7 +419,7 @@ PixelMap Observation::AddNoise(PixelMap &pmap,long *seed)
 		norm_map = outmap[i]*exp_time;
 		if (norm_map+back_mean > 500.)
 		{
-			rms = sqrt(pow(exp_num*ron,2)+norm_map+back_mean);
+			rms = sqrt(exp_num*ron*ron+norm_map+back_mean);
 			noise = gasdev(seed)*rms;
 			outmap.AssignValue(i,double(norm_map+noise)/exp_time);
 		}
@@ -367,12 +428,14 @@ PixelMap Observation::AddNoise(PixelMap &pmap,long *seed)
 			int k = 0;
 			double p = 1.;
 			double L = exp(-(norm_map+back_mean));
-			while	(p > L)
+			while (p > L)
 			{
 				k++;
 				p *= ran2(seed);
 			}
-			outmap.AssignValue(i,double(k-1-back_mean)/exp_time);
+            rms = sqrt(exp_num*ron*ron);
+ 			noise = gasdev(seed)*rms;
+			outmap.AssignValue(i,double(k-1+noise-back_mean)/exp_time);
 		}
 	}
 	return outmap;

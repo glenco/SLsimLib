@@ -28,6 +28,7 @@ public:
 	virtual ~Source();
 	
 	// in lens.cpp
+	// TODO: make SurfaceBrightness take a const double*
 	/// Surface brightness of source in grid coordinates not source centered coordinates.
 	virtual PosType SurfaceBrightness(PosType *y) = 0;
 	virtual PosType getTotalFlux() = 0;
@@ -143,13 +144,14 @@ public:
 	inline PosType getTotalFlux(){return flux;}
 	inline PosType getRadius(){return source_r*10.;}
 	inline PosType getMag(){return mag;}
-	inline PosType getMag(ShapeBand band){return mags[band];}
+	inline PosType getMag(Band band){return mags[band];}
     inline PosType getID(){return id;}
-    inline void setActiveBand(ShapeBand band){mag = mags[band]; flux = fluxes[band];}
+    void setActiveBand(Band band);
 
 private:
 	void assignParams(InputParams& params);
-	PosType Hermite(int n, PosType x);
+  void Hermite(std::vector<PosType> &hg,int N, PosType x);
+
 	void NormalizeFlux();
 	std::valarray<PosType> coeff;
 	int n1,n2;
@@ -158,6 +160,7 @@ private:
 	PosType ang;
     PosType mags[10], fluxes[10];
     PosType coeff_flux;
+    static Band shape_band[10];
 };
 
 /// A uniform surface brightness circular source.
@@ -184,7 +187,7 @@ public:
 	PosType SurfaceBrightness(PosType *y);
 	void assignParams(InputParams& params);
 	void printSource();
-	PosType getTotalFlux(){std::cout << "No total flux in SourceGaussian yet" << std::endl; exit(1);}
+	PosType getTotalFlux(){return 2*pi*source_gauss_r2;/*std::cout << "No total flux in SourceGaussian yet" << std::endl; exit(1);*/}
 };
 
 /// Base class for all sources representing the Broad Line Region (BLR) of a AGN/QSO
@@ -311,6 +314,21 @@ class QuasarLF{
         }
     };
         
+};
+
+/// Functor to turn sources into binary functions
+struct SourceFunctor
+{
+	SourceFunctor(Source& source) : source(source) {}
+	
+	double operator()(double x, double y)
+	{
+		// TODO: make const double[2] as soon as possible
+		double z[2] = {x, y};
+		return source.SurfaceBrightness(z);
+	}
+	
+	Source& source;
 };
 
 #endif /* SOURCE_H_ */

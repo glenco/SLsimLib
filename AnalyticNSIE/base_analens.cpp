@@ -13,16 +13,15 @@ void LensHaloBaseNSIE::force_halo(
 		PosType *alpha       /// mass/Mpc
 		,KappaType *kappa   /// surface mass density
 		,KappaType *gamma
-        ,KappaType *phi     // PHI BY Fabien
+        ,KappaType *phi
 		,PosType const *xcm
-		,bool no_kappa
 		,bool subtract_point /// if true contribution from a point mass is subtracted
 		)
 {
      long j;
      PosType alpha_tmp[2];
      KappaType kappa_tmp = 0.0, gamma_tmp[3], dt = 0;
-     KappaType phi_tmp = 0.0 ; // PHI BY Fabien
+     KappaType phi_tmp = 0.0 ;
             
             
      gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
@@ -31,7 +30,6 @@ void LensHaloBaseNSIE::force_halo(
      alpha[0] = alpha[1] = 0.0;
      gamma[0] = gamma[1] = gamma[2] = 0.0;
      *kappa = 0.0;
-     // PHI BY Fabien
      *phi = 0.0 ;
 
             
@@ -44,7 +42,7 @@ void LensHaloBaseNSIE::force_halo(
 	 alpha[0] *= units;
 	 alpha[1] *= units;
 
-	 if(!no_kappa){
+	 {
     	gammaNSIE(gamma,xcm,fratio,rcore,pa);
     	*kappa=kappaNSIE(xcm,fratio,rcore,pa);
     	*kappa *= units;
@@ -69,7 +67,7 @@ void LensHaloBaseNSIE::force_halo(
     	 alpha[0] += alpha_tmp[0];
     	 alpha[1] += alpha_tmp[1];
 
-   	      if(!no_kappa){
+   	      {
    	    	  gamma[0] += gamma_tmp[0];
    	    	  gamma[1] += gamma_tmp[1];
    	      }
@@ -82,15 +80,13 @@ void LensHaloBaseNSIE::force_halo(
      {
     	 for(j=0;j<sub_N;++j)
          {
-             
-             // PHI BY Fabien
-    		 subs[j].force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp,xcm,no_kappa);
-             // subs[j].force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,xcm,no_kappa);
+
+    		 subs[j].force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp,xcm);
+             // subs[j].force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,xcm);
 
     		 alpha[0] += alpha_tmp[0];
     		 alpha[1] += alpha_tmp[1];
 
-    		 if(!no_kappa)
              {
     			 *kappa += kappa_tmp;
     			 gamma[0] += gamma_tmp[0];
@@ -106,7 +102,7 @@ void LensHaloBaseNSIE::force_halo(
 
      // add stars for microlensing
      if(stars_N > 0 && stars_implanted){
-    	 force_stars(alpha,kappa,gamma,xcm,no_kappa);
+    	 force_stars(alpha,kappa,gamma,xcm);
      }
      return ;
 }
@@ -132,8 +128,9 @@ void LensHaloBaseNSIE::assignParams(InputParams& params){
 	if(!params.get("main_pos_angle",pa)) error_message1("main_pos_angle",params.filename());
 
 	Rsize = rmaxNSIE(sigma,mass,fratio,rcore);
+    
 	Rmax = MAX(1.0,1.0/fratio)*Rsize;  // redefine
-
+    
 	assert(Rmax >= Rsize);
 
 	if(!params.get("zsource_reference",zsource_reference)) error_message1("zsource_reference",params.filename());

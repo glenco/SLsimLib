@@ -70,6 +70,7 @@ Point::Point(){
     next = prev = NULL;
     kappa = dt = invmag = gridsize = 0;
     gamma[0] = gamma[1] = gamma[2] = 0;
+  flag = false;
 }
 
 

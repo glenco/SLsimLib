@@ -156,7 +156,7 @@ typedef int QTreeNBElement;
  * than their size.  In this way particles are stored on all levels of the tree and not just in the
  * leaves.  This improves efficiency when particles of a wide range of sizes overlap in 2D.
  *
-  * The default value of theta = 0.1 generally gives better than 1% accuracy on alpha.
+ * The default value of theta = 0.1 generally gives better than 1% accuracy on alpha.
  * The shear and kappa is always more accurate than the deflection.
  *
  */
@@ -184,16 +184,11 @@ public:
 			);
 	virtual ~TreeQuad();
 
-	//virtual void force2D(PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,bool no_kappa);
+  virtual void force2D(PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi);
 
-
-    // PHI BY Fabien :
-    virtual void force2D(PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,bool no_kappa);
-
-    // PHI BY Fabien :
-    virtual void force2D_recur(PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,bool no_kappa);
+  virtual void force2D_recur(PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi);
     
-    virtual void printParticlesInBranch(unsigned long number);
+  virtual void printParticlesInBranch(unsigned long number);
 
 	virtual void printBranchs(int level = -1);
 
@@ -258,7 +253,7 @@ protected:
 			,bool MultiRadius,bool MultiMass);
 	 void cuttoffscale(QTreeNBHndl tree,PosType *theta);
 
-	 void walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,bool no_kappa);
+	 void walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi);
 
    };
 

@@ -15,6 +15,8 @@
 
 using namespace std;
 
+namespace ImageFinding{
+
 /** \ingroup ImageFinding
  *
  *  \brief Refines the grid based on the convergence so that high density regions have high resolution.
@@ -92,7 +94,7 @@ short find_peaks(
 
 		//printf("restarget = %e gridrange[2] = %e  gridrange[1] = %e\n",res_target,imageinfo->gridrange[2],imageinfo->gridrange[1]);
 
-		Nnewpoints = refine_grid_kist(lens,grid,imageinfo,1,res_target,2,true,newpointskist);
+		Nnewpoints = ImageFinding::refine_grid_kist(lens,grid,imageinfo,1,res_target,2,newpointskist);
 
 
 		while(newpointskist->Nunits() > 0){
@@ -121,7 +123,7 @@ short find_peaks(
 
 			// refine all image points and outer border
 
-			Nnewpoints = refine_grid_kist(lens,grid,imageinfo,1,res_target,2,true,newpointskist);
+			Nnewpoints = ImageFinding::refine_grid_kist(lens,grid,imageinfo,1,res_target,2,newpointskist);
 			//printf("Nnewpoints = %li\n",Nnewpoints);
 
 		}
@@ -140,140 +142,4 @@ short find_peaks(
 
 	return 1;
 }
-
-/* * \ingroup ImageFinding
- *
- *  \brief Refines the grid based on the flux from implanted sources.
- *
- *  If a source has been implanted into a Lens this routine will refine the
- *  grid around that image until the grid anywhere on the image and on the border
- *  reaches the resolution target.  The images are stored in imageinfo[0,...,*Nimages-1]->imagekist.
- *  The image must be within radius of the point theta[2].
- *
-short refine_on_implanted_source(
-		LensHndl lens        /// Lens model
-		,GridHndl grid         /// Grid to be refined.  It must be initialized.
-		,PosType *theta         /// position on the sky
-		,PosType radius         /// size of region to look for image
-		,PosType res_target     /// the final grid resolution that is required
-		,ImageInfo *imageinfo  /// the output image
-		,int *Nimages		   /// number of images
-		,int NimageMax         /// Maximum number of images.
-		,bool kappa_off        /// turn off convergence and shear calculation to save time
-		,PosType threshold      /// the surface brightness threshold above which the grid is refined, default is 0
-		){
-
-	Kist<Point> * newpointskist = new Kist<Point>;
-	bool foundimage;
-	PosType tmp;
-
-	SetInImage(imageinfo->imagekist,FALSE);
-	imageinfo->imagekist->Empty();
-	imageinfo->gridrange[2] = 1.0e99;
-	imageinfo->gridrange[0] = imageinfo->gridrange[1]  = 0.0;
-
-	grid->i_tree->PointsWithinKist(theta,radius,newpointskist,0);
-	if(newpointskist->Nunits() == 0) grid->i_tree->NearestNeighborKist(theta,8,newpointskist);
-
-	newpointskist->MoveToTop();
-	do{
-		tmp = newpointskist->getCurrent()->surface_brightness;
-		// re-shoot rays to add in surface brightness from implanted sources
-		lens->rayshooterInternal(1,newpointskist->getCurrent(),kappa_off);
-
-		if(fabs(newpointskist->getCurrent()->surface_brightness - tmp) > threshold){
-			imageinfo->imagekist->InsertAfterCurrent(newpointskist->getCurrent());
-			imageinfo->imagekist->Down();
-
-			if(imageinfo->imagekist->getCurrent()->gridsize > imageinfo->gridrange[1])
-				imageinfo->gridrange[1] = imageinfo->imagekist->getCurrent()->gridsize;
-
-			if(imageinfo->imagekist->getCurrent()->gridsize < imageinfo->gridrange[2])
-				imageinfo->gridrange[2] = imageinfo->imagekist->getCurrent()->gridsize;
-
-		}else{
-			newpointskist->getCurrent()->in_image = FALSE;
-		}
-	}while(newpointskist->Down());
-
-	newpointskist->Empty();
-
-	// if there are no points
-	if(imageinfo->imagekist->Nunits() == 0){
-		grid->i_tree->NearestNeighborKist(theta,8,imageinfo->imagekist);
-		foundimage = false;
-	}else{
-		foundimage = true;
-	}
-
-	SetInImage(imageinfo->imagekist,TRUE);
-
-	findborders4(grid->i_tree,imageinfo);
-
-	// refine grid to wanted resolution
-	int refinements = 0;
-	long Nnewpoints = 1;
-	while(Nnewpoints || foundimage == false){
-		Nnewpoints = refine_grid_kist(lens,grid,imageinfo,1,res_target,2,true,newpointskist);
-		if(Nnewpoints > 0){
-			newpointskist->MoveToTop();
-			do{
-				if(newpointskist->getCurrent()->surface_brightness > threshold){
-					if(!foundimage){  // Take out points in imageinfo that are not on source.
-						SetInImage(imageinfo->imagekist,FALSE);
-						imageinfo->imagekist->Empty();
-						foundimage = true;
-					}
-
-					imageinfo->imagekist->InsertAfterCurrent(newpointskist->getCurrent());
-					newpointskist->getCurrent()->in_image = TRUE;
-
-					imageinfo->imagekist->Down();
-					if(imageinfo->imagekist->getCurrent()->gridsize > imageinfo->gridrange[1])
-						imageinfo->gridrange[1] = imageinfo->imagekist->getCurrent()->gridsize;
-
-					if(imageinfo->imagekist->getCurrent()->gridsize < imageinfo->gridrange[2])
-						imageinfo->gridrange[2] = imageinfo->imagekist->getCurrent()->gridsize;
-
-				}
-			}while(newpointskist->Down());
-
-			if(!foundimage){
-				SetInImage(imageinfo->imagekist,FALSE);
-				grid->i_tree->NearestNeighborKist(theta,8,imageinfo->imagekist);
-				SetInImage(imageinfo->imagekist,TRUE);
-				imageinfo->imagekist->MoveToTop();
-				do{
-					if(imageinfo->imagekist->getCurrent()->gridsize > imageinfo->gridrange[1])
-						imageinfo->gridrange[1] = imageinfo->imagekist->getCurrent()->gridsize;
-
-					if(imageinfo->imagekist->getCurrent()->gridsize < imageinfo->gridrange[2])
-						imageinfo->gridrange[2] = imageinfo->imagekist->getCurrent()->gridsize;
-				}while(imageinfo->imagekist->Down());
-			}
-
-			findborders4(grid->i_tree,imageinfo);
-		}
-
-		++refinements;
-		if(refinements > 50) break;
-	}
-
-	if(!foundimage){
-		*Nimages = 0;
-		SetInImage(imageinfo->imagekist,FALSE);
-		imageinfo->imagekist->Empty();
-		delete newpointskist;
-
-		return 0;
-	}
-
-	divide_images_kist(grid->i_tree,imageinfo,Nimages,NimageMax);
-
-	for(int i = 0;i<*Nimages;++i) SetInImage(imageinfo[i].imagekist,FALSE);
-
-	delete newpointskist;
-
-	return 1;
-}
-*/
+} // end of namespace ImageFinding

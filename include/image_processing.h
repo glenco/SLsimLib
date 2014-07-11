@@ -26,7 +26,7 @@ public:
 	PixelMap(const PixelMap& other);
 	PixelMap(const PixelMap& pmap, const double* center, std::size_t Npixels);
 	PixelMap(const double* center, std::size_t Npixels, double resolution);
-	PixelMap(std::string fitsfilename);
+	PixelMap(std::string fitsfilename,double resolution = -1);
 	~PixelMap();
 	
 	PixelMap& operator=(PixelMap other);
@@ -97,8 +97,8 @@ private:
 	bool inMapBox(double * branch1);
 };
 
+typedef enum {Euclid_VIS,Euclid_Y,Euclid_J,Euclid_H,KiDS_u,KiDS_g,KiDS_r,KiDS_i,HST_ACS_I,CFHT_u,CFHT_g,CFHT_r,CFHT_i,CFHT_z} Telescope;
 
-typedef enum {Euclid_VIS,Euclid_Y,Euclid_J,Euclid_H,KiDS_u,KiDS_g,KiDS_r,KiDS_i} Telescope;
 typedef enum {counts_x_sec, flux} unitType;
 /** \ingroup Image
  * \brief It creates a realistic image from the output of a ray-tracing simulation.
@@ -119,14 +119,16 @@ public:
 	float getTransmission(){return transmission;}
     /// read-out noise in electrons/pixel
 	float getRon(){return ron;}
+  /// seeing in arcsecs
 	float getSeeing(){return seeing;}
 	float getZeropoint(){return mag_zeropoint;}
     /// pixel size in radians
-    float getPixelSize(){return pix_size;}
+  float getPixelSize(){return pix_size;}
 	std::valarray<double> getPSF(){return map_psf;}
-    void setPSF(std::string psf_file, float os = 1.);
+  void setPSF(std::string psf_file, float os = 1.);
 	PixelMap Convert (PixelMap &map, bool psf, bool noise,long *seed, unitType unit = counts_x_sec);
 	PixelMap Convert_back (PixelMap &map);
+    void setExpTime(float time){exp_time = time;}
 
 private:
 	float diameter;  // diameter of telescope (in cm)
@@ -155,7 +157,7 @@ void _SplitFluxIntoPixels(TreeHndl ptree,Branch *leaf,double *leaf_sb);
 void smoothmap(double *map_out,double *map_in,long Npixels,double range,double sigma);
 
 namespace Utilities{
-    void LoadFitsImages(std::string dir,const std::string& filespec,std::vector<PixelMap> & images,int maxN,bool verbose = false);
+    void LoadFitsImages(std::string dir,const std::string& filespec,std::vector<PixelMap> & images,int maxN,double resolution = -1,bool verbose = false);
 }
 
 #endif

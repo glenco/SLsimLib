@@ -35,6 +35,32 @@ public:
 	
 	/// get magnitude of whole galaxy.  Which band this is in depends on which was passed in the constructor
 	PosType getMag() const { return mag; }
+  PosType getMag(Band band) const {
+
+    switch(band){
+      case SDSS_U:
+        return mag_u;
+      case SDSS_G:
+        return mag_g;
+      case SDSS_R:
+        return mag_r;
+      case SDSS_I:
+        return mag_i;
+      case SDSS_Z:
+        return mag_z;
+      case J:
+        return mag_J;
+      case Ks:
+        return mag_Ks;
+
+      default:
+        throw std::invalid_argument("band not supported");
+        return 0.0;
+        break;
+    }
+  }
+  
+  /*
 	PosType getUMag() const { return mag_u; }
 	PosType getGMag() const { return mag_g; }
 	PosType getRMag() const { return mag_r; }
@@ -43,7 +69,8 @@ public:
 	PosType getJMag() const { return mag_J; }
 	PosType getHMag() const { return mag_H; }
 	PosType getKMag() const { return mag_Ks; }
-	
+	*/
+  
 	/// set u band magnitude
 	void setUMag(PosType m) { mag_u = m; }
 	/// set g band magnitude

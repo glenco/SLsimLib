@@ -67,7 +67,6 @@ void LensHalo::force_stars(
 		,KappaType *kappa
 		,KappaType *gamma
 		,PosType const *xcm     /// physical position on lens plane
-		,bool no_kappa
 		)
 {
     PosType alpha_tmp[2];
@@ -80,12 +79,12 @@ void LensHalo::force_stars(
  	 substract_stars_disks(xcm,alpha,kappa,gamma);
 
 	 // do stars with tree code
-    star_tree->force2D_recur(xcm,alpha_tmp,&tmp,gamma_tmp,&phi,no_kappa);
+    star_tree->force2D_recur(xcm,alpha_tmp,&tmp,gamma_tmp,&phi);
 
     alpha[0] -= star_massscale*alpha_tmp[0];
     alpha[1] -= star_massscale*alpha_tmp[1];
 
-    if(!no_kappa){
+    {
       *kappa += star_massscale*tmp;
       gamma[0] -= star_massscale*gamma_tmp[0];
       gamma[1] -= star_massscale*gamma_tmp[1];
@@ -140,7 +139,7 @@ LensHaloNFW::LensHaloNFW(float my_mass,float my_Rmax,PosType my_zlens,float my_c
 
     }else set_flag_elliptical(false);
     
-    std::cout << mass << " " << rscale << std::endl;
+    // std::cout << mass << " " << rscale << std::endl;
     
  }
 
@@ -537,6 +536,7 @@ LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
             mod[i]=modfunc(i, beta, fratio);
             std::cout<< "after: " << mod[i] << std::endl;
         }
+
         */
         calcModes(fratio, beta, pa, mod);
         //    std::cout << mod[4] << " " << modfunc(4, 1, 0.5) << std::endl;
@@ -545,7 +545,8 @@ LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
                 if(mod[i]!=0){set_flag_elliptical(true);};
             }
         //}
-    }
+
+    }else elliptical_flag = false;
     rscale = xmax = 1.0;
 }
 
@@ -562,7 +563,7 @@ void LensHaloPowerLaw::assignParams(InputParams& params){
 	if(!params.get("main_slope",beta)) error_message1("main_slope, example -1",params.filename());
     //if(beta>=2.0) error_message1("main_slope < 2",params.filename());
     if(!params.get("main_axis_ratio",fratio)){fratio=1; std::cout << "main_axis_ratio not defined in file " << params.filename() << ", hence set to 1." << std::endl;};
-    if(!params.get("main_pos_angle",pa)){pa=0; std::cout << "main_pos_angle not defined in file " << params.filename() << ", hence set to 0." << std::endl;};
+    if(!params.get("main_pos_angle",pa)){pa=0.0; std::cout << "main_pos_angle not defined in file " << params.filename() << ", hence set to 0." << std::endl;};
 
 
 	if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
@@ -628,7 +629,6 @@ void LensHaloSimpleNSIE::assignParams(InputParams& params){
 
 	Rsize = rmaxNSIE(sigma,mass,fratio,rcore);
 	Rmax = MAX(1.0,1.0/fratio)*Rsize;  // redefine
-
 	assert(Rmax >= Rsize);
 
 	if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
@@ -650,8 +650,9 @@ void LensHaloSimpleNSIE::initFromMass(float my_mass, long *seed){
 	fratio = (ran2(seed)+1)*0.5;  //TODO: Ben change this!  This is a kluge.
 	pa = 2*pi*ran2(seed);  //TODO: This is a kluge.
 	Rsize = rmaxNSIE(sigma,mass,fratio,rcore);
+    
 	Rmax = MAX(1.0,1.0/fratio)*Rsize;  // redefine
-
+    
 	assert(Rmax >= Rsize);
 }
 
@@ -669,15 +670,14 @@ void LensHalo::force_halo(
     ,KappaType *gamma
     ,KappaType *phi
     ,PosType const *xcm
-    ,bool kappa_off
     ,bool subtract_point /// if true contribution from a point mass is subtracted
-    ){
-    //std::cout << "In lens_halo.cpp force_halo " << elliptical << std::endl;
+    )
+{
 	if (elliptical_flag){
-        force_halo_asym(alpha,kappa,gamma,xcm,kappa_off,subtract_point);
+        force_halo_asym(alpha,kappa,gamma,xcm,subtract_point);
         //assert(!isinf(*kappa) );
     }else{
-        force_halo_sym(alpha,kappa,gamma,phi,xcm,kappa_off,subtract_point);
+        force_halo_sym(alpha,kappa,gamma,phi,xcm,subtract_point);
         //assert(!isinf(*kappa) );
 	}
 }
@@ -686,38 +686,41 @@ void LensHalo::force_halo_sym(
 		PosType *alpha     /// mass/Mpc
 		,KappaType *kappa
 		,KappaType *gamma
-        ,KappaType *phi    // PHI BY Fabien
+        ,KappaType *phi
 		,PosType const *xcm
-		,bool kappa_off
 		,bool subtract_point /// if true contribution from a point mass is subtracted
 		){
-
+            
 	PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
+            
 	if(rcm2 < 1e-20) rcm2 = 1e-20;
 
+    // std::cout << "xcm[0] = " << xcm[0] << " ; xcm[1] = " << xcm[1] << endl;
+    // std::cout << "If [rcm2 = " << rcm2 << " < Rmax*Rmax = " << Rmax*Rmax << " ] is true, then we enter the loop." << std::endl ;
+            
 	/// intersecting, subtract the point particle
 	if(rcm2 < Rmax*Rmax)
     {
-		PosType prefac = mass/rcm2/pi;
+		
+    PosType prefac = mass/rcm2/pi;
 		PosType x = sqrt(rcm2)/rscale;
-		//PosType xmax = Rmax/rscale;
+		// PosType xmax = Rmax/rscale;
 
-        //PosType tmp = (alpha_h(x,xmax) + 1.0*subtract_point)*prefac;
+        // PosType tmp = (alpha_h(x,xmax) + 1.0*subtract_point)*prefac;
 		PosType tmp = (alpha_h(x) + 1.0*subtract_point)*prefac;
 		alpha[0] += tmp*xcm[0];
-        //std::cout << alpha_h(x) << std::endl;
 		alpha[1] += tmp*xcm[1];
 
 		// can turn off kappa and gamma calculations to save times
-		if(!kappa_off)
+
         {
 			*kappa += kappa_h(x)*prefac;
 
 			tmp = (gamma_h(x) + 2.0*subtract_point) * prefac / rcm2;
 			gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 			gamma[1] += xcm[0]*xcm[1]*tmp;
-
-            //*phi += phi_h(x); 
+            
+      *phi += phi_h(x) * mass / pi ;
 		}
 	}
 	else // the point particle is not subtracted
@@ -729,17 +732,16 @@ void LensHalo::force_halo_sym(
 			alpha[1] += -1.0 * prefac * xcm[1];
 
 			// can turn off kappa and gamma calculations to save times
-			if(!kappa_off)
+			
             {
 				PosType tmp = -2.0*prefac/rcm2;
                 
-                // PHI BY Fabien : does not look that kappa is computed here.
+                // Fabien : does not look that kappa is computed here.
 
 				gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 				gamma[1] += xcm[0]*xcm[1]*tmp;
                 
-                // PHI BY Fabien
-                *phi += 0.0; // I guess this is useless.
+        *phi += - 0.5 * log(rcm2) * mass / pi ; // value made to be consistent with alpha above. Sure ?
 			}
 		}
 	}
@@ -747,9 +749,8 @@ void LensHalo::force_halo_sym(
     /// add stars for microlensing
     if(stars_N > 0 && stars_implanted)
     {
-   	 force_stars(alpha,kappa,gamma,xcm,kappa_off);
+   	 force_stars(alpha,kappa,gamma,xcm);
     }
-
 
 	return;
 }
@@ -759,7 +760,6 @@ void LensHalo::force_halo_asym(
 		,KappaType *kappa
 		,KappaType *gamma
 		,PosType const *xcm
-		,bool kappa_off
 		,bool subtract_point /// if true contribution from a point mass is subtracted
 		){
 	//std::ofstream dfunc;
@@ -791,7 +791,7 @@ void LensHalo::force_halo_asym(
         alpha[1] +=  alpha_tmp[1]*prefac*xcm[1] + tmp*xcm[1];
 
 		// can turn off kappa and gamma calculations to save times
-		if(!kappa_off){
+		{
 			*kappa += kappa_asym(x,theta)*prefac;
         
 			//dfunc << x << " " << theta << " " << kappa_asym(x,theta) << " " << bfunction(x) << " " << xcm[0] << " " << xcm[1] << std::endl;
@@ -806,8 +806,6 @@ void LensHalo::force_halo_asym(
             gamma[1] += xcm[0]*xcm[1]*tmp+gamma_tmp[1]*prefac/rcm2;
             
 			//gamma[1] += xcm[0]*xcm[1]*(tmp+gamma_tmp[0]*prefac/rcm2);
-            
-
 		}
 
 	}
@@ -820,7 +818,7 @@ void LensHalo::force_halo_asym(
 			alpha[1] += -1.0*prefac*xcm[1];
 
 			// can turn off kappa and gamma calculations to save times
-			if(!kappa_off){
+			{
 				double tmp = -2.0*prefac/rcm2;
 
 				gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
@@ -831,7 +829,7 @@ void LensHalo::force_halo_asym(
 
     // add stars for microlensing
     if(stars_N > 0 && stars_implanted){
-   	 force_stars(alpha,kappa,gamma,xcm,kappa_off);
+   	 force_stars(alpha,kappa,gamma,xcm);
     }
 
 
@@ -847,7 +845,6 @@ void LensHaloSimpleNSIE::force_halo(
 		,KappaType *kappa
 		,KappaType *gamma
 		,PosType *xcm
-		,bool no_kappa
 		,bool subtract_point /// if true contribution from a point mass is subtracted
 ){
 
@@ -886,7 +883,7 @@ void LensHaloSimpleNSIE::force_halo(
 			//alpha[0] -= (r - rin)*(alpha_out[0] - alpha_in[0])/(Rmax - rin) + alpha_in[0];
 			//alpha[1] -= (r - rin)*(alpha_out[1] - alpha_in[1])/(Rmax - rin) + alpha_in[1];
       
-			if(!no_kappa){
+			{
         // TODO: this makes the kappa and gamma disagree with the alpha as calculated above
 				KappaType tmp[2]={0,0};
         PosType xt[2]={0,0};
@@ -912,7 +909,7 @@ void LensHaloSimpleNSIE::force_halo(
 			alpha[0] += units*tmp[0];
 			alpha[1] += units*tmp[1];
 
-			if(!no_kappa){
+			{
 				KappaType tmp[2]={0,0};
 				*kappa += units*kappaNSIE(xt,fratio,rcore,pa);
 				gammaNSIE(tmp,xt,fratio,rcore,pa);
@@ -930,7 +927,7 @@ void LensHaloSimpleNSIE::force_halo(
 			alpha[1] += -1.0*prefac*xcm[1];
 
 			// can turn off kappa and gamma calculations to save times
-			if(!no_kappa){
+			{
 				PosType tmp = -2.0*prefac/rcm2;
 
 				gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
@@ -946,7 +943,7 @@ void LensHaloSimpleNSIE::force_halo(
 		alpha[1] += fac*xcm[1];
 
 		// can turn off kappa and gamma calculations to save times
-		if(!no_kappa){
+		{
 			fac = 2.0*fac/rcm2;
 
 			gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*fac;
@@ -957,7 +954,7 @@ void LensHaloSimpleNSIE::force_halo(
 
     // add stars for microlensing
     if(stars_N > 0 && stars_implanted){
-   	 force_stars(alpha,kappa,gamma,xcm,no_kappa);
+   	 force_stars(alpha,kappa,gamma,xcm);
     }
 
        return;
@@ -967,9 +964,8 @@ void LensHaloSimpleNSIE::force_halo(
                                     PosType *alpha
                                     ,KappaType *kappa
                                     ,KappaType *gamma
-                                    ,KappaType *phi      // PHI BY Fabien
+                                    ,KappaType *phi
                                     ,PosType const *xcm
-                                    ,bool no_kappa
                                     ,bool subtract_point /// if true contribution from a point mass is subtracted
                                     )
 {
@@ -1017,7 +1013,6 @@ void LensHaloSimpleNSIE::force_halo(
         alpha[1] += alpha_iso[1]*f2 + alpha_ellip[1]*f1;
       
             // can turn off kappa and gamma calculations to save times
-            if(!no_kappa)
             {
             PosType tmp = -2.0*prefac/rcm2;
         
@@ -1045,7 +1040,6 @@ void LensHaloSimpleNSIE::force_halo(
         alpha[0] += units*tmp[0];
         alpha[1] += units*tmp[1];
       
-            if(!no_kappa)
             {
             KappaType tmp[2]={0,0};
             *kappa += units*kappaNSIE(xt,fratio,rcore,pa);
@@ -1063,7 +1057,6 @@ void LensHaloSimpleNSIE::force_halo(
             alpha[1] += fac*xcm[1];
       
             // can turn off kappa and gamma calculations to save times
-            if(!no_kappa)
             {
                 fac = 2.0*fac/rcm2;
                 
@@ -1083,7 +1076,6 @@ void LensHaloSimpleNSIE::force_halo(
 			alpha[1] += -1.0*prefac*xcm[1];
       
 			// can turn off kappa and gamma calculations to save times
-			if(!no_kappa)
             {
 				PosType tmp = -2.0*prefac/rcm2;
         
@@ -1097,7 +1089,7 @@ void LensHaloSimpleNSIE::force_halo(
   // add stars for microlensing
   if(stars_N > 0 && stars_implanted)
   {
-    force_stars(alpha,kappa,gamma,xcm,no_kappa);
+    force_stars(alpha,kappa,gamma,xcm);
   }
   
   return;
@@ -1401,9 +1393,8 @@ void LensHaloDummy::initFromMassFunc(float my_mass, float my_Rmax, float my_rsca
 void LensHaloDummy::force_halo(PosType *alpha
                                ,KappaType *kappa
                                ,KappaType *gamma
-                               ,KappaType *phi       // PHI BY Fabien
+                               ,KappaType *phi
                                ,PosType const *xcm
-                               ,bool no_kappa
                                ,bool subtract_point)
 {
 	PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
@@ -1418,7 +1409,6 @@ void LensHaloDummy::force_halo(PosType *alpha
         PosType x = sqrt(rcm2)/rscale;
        
         // can turn off kappa and gamma calculations to save times
-        if(!no_kappa)
         {
             *kappa += kappa_h(x)*prefac;
 
@@ -1427,14 +1417,14 @@ void LensHaloDummy::force_halo(PosType *alpha
             gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
             gamma[1] += xcm[0]*xcm[1]*tmp;
             
-            *phi += phi_h(x); // PHI BY Fabien
+            *phi += phi_h(x);
         }
     }
     
     // add stars for microlensing
     if(stars_N > 0 && stars_implanted)
     {
-        force_stars(alpha,kappa,gamma,xcm,no_kappa);
+        force_stars(alpha,kappa,gamma,xcm);
     }
 
 }

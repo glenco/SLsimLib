@@ -59,10 +59,12 @@ public:
 
 	PosType getZlens() const { return zlens; }
 
-    /// get the position of the Halo
+    /// set the position of the Halo :
+    /// taking as argument the position in comoving Mpc
+    /// storing the position in physical Mpc
+    void setX(PosType PosX, PosType PosY) { posHalo[0] = PosX / (1 + zlens) ; posHalo[1] = PosY / (1 + zlens) ; }
+    /// get the position of the Halo in physical Mpc
     void getX(PosType * MyPosHalo) const { MyPosHalo[0] = posHalo[0] ; MyPosHalo[1] = posHalo[1]; }
-    /// set the position of the Halo
-    void setX(PosType PosX, PosType PosY) { posHalo[0] = PosX ; posHalo[1] = PosY ; }
     /// display the position of the halo
     void displayPos() { std::cout << "Halo PosX = " << posHalo[0] << " ; Halo PosY = " << posHalo[1] << std::endl; }
  
@@ -93,10 +95,10 @@ public:
 	
 	/// calculate the lensing properties -- deflection, convergence, and shear
 
-	virtual void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool no_kappa,bool subtract_point=false);
+	virtual void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false);
 
 	/// force tree calculation for stars
-	void force_stars(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType const *xcm,bool no_kappa);
+	void force_stars(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType const *xcm);
 
 	/// internal compare redshift function
 	bool compareZ(PosType z){return z > zlens;};
@@ -160,8 +162,8 @@ public:
 protected:
   PosType alpha_int(PosType x);
   
-  void force_halo_sym(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool no_kappa,bool subtract_point=false);
-	void force_halo_asym(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType const *xcm,bool no_kappa,bool subtract_point=false);
+  void force_halo_sym(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false);
+	void force_halo_asym(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType const *xcm,bool subtract_point=false);
 
   //friend struct Ig_func;
   
@@ -434,6 +436,8 @@ public:
 	void set_slope(PosType my_slope){beta=my_slope; make_tables();};
 	/// initialize from a mass function
     PosType get_slope(){return beta;};
+    /// set Rmax
+    void set_Rmax(float my_Rmax){Rmax=my_Rmax; xmax = Rmax/rscale;};
 	
 	void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed);
 
@@ -480,13 +484,17 @@ private:
     }
 };
 
+
+
+
+
 /** \ingroup DeflectionL2
  *
  * \brief A class for calculating the deflection, kappa and gamma caused by a collection of halos
  * with truncated power-law mass profiles.
  *
  * Derived from the TreeQuad class.  The "particles" are replaced with spherical halos.
- *The truncation is in 2d not 3d. \f$ \Sigma \propto r^\beta \f$ so beta would usually be negative.
+ *The truncation is in 2d not 3d. \f$ \Sigma \propto r^{-\beta} \f$ so beta would usually be positive.
  *
  *
  * The default value of theta = 0.1 generally gives better than 1% accuracy on alpha.
@@ -495,7 +503,7 @@ private:
 class LensHaloPowerLaw: public LensHalo{
 public:
 	LensHaloPowerLaw();
-    LensHaloPowerLaw(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,PosType my_beta,float my_fratio,float my_pa,int my_stars_N);
+  LensHaloPowerLaw(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,PosType my_beta,float my_fratio,float my_pa,int my_stars_N);
 	LensHaloPowerLaw(InputParams& params);
 	~LensHaloPowerLaw();
 
@@ -553,6 +561,11 @@ private:
     }
 };
 
+
+
+
+
+
 class LensHaloSimpleNSIE : public LensHalo{
 public:
   /*LensHaloSimpleNSIE(){
@@ -567,8 +580,8 @@ public:
 	~LensHaloSimpleNSIE();
 
 	/// overridden function to calculate the lensing properties
-	void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool no_kappa,bool subtract_point=false);
-	// void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xcm,bool no_kappa,bool subtract_point=false);
+	void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false);
+	// void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xcm,bool subtract_point=false);
     
 	/// get the velocity dispersion
 	float get_sigma(){return sigma;};
@@ -799,8 +812,8 @@ public:
 	~LensHaloDummy(){};
 	
 	/// overridden function to calculate the lensing properties
-	void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool no_kappa,bool subtract_point=false);
-    // void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xcm,bool no_kappa,bool subtract_point=false);
+	void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false);
+    // void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xcm,bool subtract_point=false);
     
 	/// initialize from a mass function
 	void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed);
