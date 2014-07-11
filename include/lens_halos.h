@@ -236,8 +236,8 @@ protected:
     virtual PosType inline gfunction(PosType x){return -1;};
     virtual PosType inline bfunction(PosType x){return -1;};
     virtual PosType inline dhfunction(PosType x){return 1;};
-    virtual PosType inline ddhfunction(PosType x){return 0;};
-    virtual PosType inline dddhfunction(PosType x){return 0;};
+    virtual PosType inline ddhfunction(PosType x, bool numerical){return 0;};
+    virtual PosType inline dddhfunction(PosType x, bool numerical){return 0;};
     virtual PosType inline bnumfunction(PosType x){return -1;};
     virtual PosType inline dbfunction(PosType x){return 0;};
     virtual PosType inline ddbfunction(PosType x){return 0;};
@@ -281,7 +281,7 @@ protected:
         double n;
         double q;
         double beta;
-        double operator ()(double theta) {return cos(n*theta)/pow(cos(theta)*cos(theta) + (q*q)*sin(theta)*sin(theta),beta/2) ;}
+        double operator ()(double theta) {return cos(n*theta)/pow(cos(theta)*cos(theta) + 1/q/q*sin(theta)*sin(theta),beta/2) ;}
     };
 
   const static int Nmod = 32;
@@ -328,8 +328,8 @@ public:
 	PosType g2function(PosType x);
 	PosType hfunction(PosType x);
     PosType dhfunction(PosType x);
-    PosType ddhfunction(PosType x);
-    PosType dddhfunction(PosType x);
+    PosType ddhfunction(PosType x, bool numerical);
+    PosType dddhfunction(PosType x, bool numerical);
     PosType bfunction(PosType x);
     PosType dbfunction(PosType x);
     PosType ddbfunction(PosType x);
@@ -368,7 +368,7 @@ protected:
 	static int count;
 
 	/// tables for lensing properties specific functions
-	static PosType *ftable,*gtable,*g2table,*htable,*xtable,*xgtable,***modtable;
+	static PosType *ftable,*gtable,*g2table,*htable,*xtable,*xgtable; // ***modtable; // modtable was used for Ansatz IV and worked well
 	/// make the specific tables
 	void make_tables();
 	/// interpolates from the specific tables

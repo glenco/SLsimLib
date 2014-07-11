@@ -393,9 +393,11 @@ void LensHalo::faxial(PosType x, PosType theta,PosType f[]){
         //cout << "comp: " << mod1[i] << " " << hi_order_modfunc(x, i, bfunction(x), fratio) << endl;
     //}
     
-    calcModesC(dhfunction(x), fratio, pa, mod1);
+    //calcModesC(dhfunction(x), fratio, pa, mod1); // used for Ansatz IV
+    //calcModesB(x, fratio, pa, mod1); // used for Ansatz IIIb plus derivatives of Fourier modes
+    calcModes(fratio, bfunction(x), pa, mod1); // used for Ansatz IIIa w/o derivatives of Fourier modes
     
-    //calcModes(fratio, bfunction(x), pa, mod1);
+    
     //if((x<1 && x>0.99)||(bfunction(x*0.61)<1)){
     
     /*if((1.0<bfunction(x) && bfunction(x)<1.02)){
@@ -734,25 +736,25 @@ PosType LensHalo::kappa_asym(PosType x,PosType theta){
         //analModes(i,b,fratio, amod);
         //analModes(i+1,b,fratio, amodp1);
         imod=InterpolateModes(i, fratio, b);
-        imodp1=InterpolateModes(i+1, fratio, b);
+        imodp1=0.0;//InterpolateModes(i+1, fratio, b);
         dmod_db=dmoddb(i, fratio, b);
-        dmod_dbp1=dmoddb(i+1, fratio, b);
+        dmod_dbp1=0.0;//dmoddb(i+1, fratio, b);
         ddmod_db=ddmoddb(i, fratio, b);
-        ddmod_dbp1=ddmoddb(i+1, fratio, b);
+        ddmod_dbp1=0.0;//ddmoddb(i+1, fratio, b);
         dmod_dq=dmoddq(i, fratio, b);
-        dmod_dqp1=dmoddq(i+1, fratio, b);
+        dmod_dqp1=0.0;//dmoddq(i+1, fratio, b);
         ddmod_dq=ddmoddq(i, fratio, b);
-        ddmod_dqp1=ddmoddq(i+1, fratio, b);
-        dbdr=ddhfunction(x);
-        ddbdr=dddhfunction(x);
+        ddmod_dqp1=0.0; //ddmoddq(i+1, fratio, b);
+        dbdr=ddhfunction(x,true);
+        ddbdr=dddhfunction(x,true);
         dqdr=0;
         ddqdr=0;
         amod[0]=imod;
-        amodp1[0]=imodp1;
+        amodp1[0]=0.0; //imodp1;
         amod[1]=dmod_db*dbdr+dmod_dq*dqdr;
-        amodp1[1]=dmod_dbp1*dbdr+dmod_dqp1*dqdr;
+        amodp1[1]=0.0; //dmod_dbp1*dbdr+dmod_dqp1*dqdr;
         amod[2]=ddmod_db*dbdr*dbdr+dmod_db*ddbdr+ddmod_dq*dqdr*dqdr+dmod_dq*ddqdr;
-        amodp1[2]=ddmod_dbp1*dbdr*dbdr+dmod_dbp1*ddbdr+ddmod_dqp1*dqdr*dqdr+dmod_dqp1*ddqdr;
+        amodp1[2]=0.0;// ddmod_dbp1*dbdr*dbdr+dmod_dbp1*ddbdr+ddmod_dqp1*dqdr*dqdr+dmod_dqp1*ddqdr;
         PosType coskt=cos(k*theta);
         PosType sinkt=sin(k*theta);
         PosType aux=amod[0]*coskt+amodp1[0]*sinkt;
@@ -760,10 +762,35 @@ PosType LensHalo::kappa_asym(PosType x,PosType theta){
         f[1] +=  amod[1]*coskt + amodp1[1]*sinkt;
         f[2] +=  amod[2]*coskt + amodp1[2]*sinkt;
         f[3] += -k*k*aux;
+        //std::cout<< "1st: "<< amod[0] << " " << amod[1] << " " << amod[2] <<std::endl;
+        //std::cout<< "1st: "<< amod[0] << " " << amod[1] << " " << amod[2] <<std::endl;
     }
     
-    double fac=1.0/(b*b/(2.-b)/(2.-b));
-    kappa=(1+f[0])*kappa_h(x)-0.5*phi*fac*(f[1]/x+f[2]+f[3]/x/x)*x*x-f[1]*alpha_h(x)*x*x; /// with damping terms
+    double bk=dhfunction(x);
+    double fac=0.5/(bk*bk/(2.-bk)/(2.-bk));
+    
+    //kappa=(1+f[0])*kappa_h(x)-0.5*phi*fac*(f[1]/x+f[2]+f[3]/x/x)*x*x-f[1]*alpha_h(x)*x*x; /// with damping terms
+    kappa=(1+f[0])*kappa_h(x);
+    std::cout<< "1st: "<< kappa <<std::endl;
+    //amod[0]*coskt*kappa_h(x)-phi/2*amod[1]*x*coskt-phi/2*amod[2]*x*x*coskt+phi/2*amod[0]*k*k*coskt-amod[1]*coskt*alpha_h(x)*x*x
+
+    
+    kappa=kappa_h(x);
+    for(int i=4;i<Nmod;i+=2){
+        int k=i/2;
+        amod[0]=InterpolateModes(i, fratio, b);
+        dmod_db=dmoddb(i, fratio, b);
+        dbdr=ddhfunction(x,true);
+        amod[1]=dmod_db*dbdr;
+        ddmod_db=ddmoddb(i, fratio, b);
+        ddbdr=dddhfunction(x,true);
+        amod[2]=ddmod_db*dbdr*dbdr+dmod_db*ddbdr;
+        //std::cout<< "2nd: "<< amod[0] << " " << amod[1] << " " << amod[2] <<std::endl;
+        //kappa+=(amod[0]*(kappa_h(x)+k*k/2*phi*fac)+amod[1]*(-1.0*alpha_h(x)*x*x-phi*fac*x/2)-amod[2]*phi*fac*x*x/2)*cos(k*theta);
+        kappa+=amod[0]*kappa_h(x)*cos(k*theta);
+        
+    }
+    std::cout<< "2nd: "<< kappa <<std::endl;
 
     
     return kappa;
@@ -875,5 +902,109 @@ void LensHalo::gamma_asym(PosType x,PosType theta, PosType gamma[]){
  }
  */
 
+
+
+// Ansatz IV, issues a curl in kappa at larger radii.
+/*
+PosType LensHalo::kappa_asym(PosType x,PosType theta){
+	PosType F, f[4],g[3], kappa;
+    PosType amod[3],amodp1[3];
+    
+    PosType imod, imodp1, dmod_db, ddmod_db, dmod_dq, ddmod_dq, dbdr, ddbdr, dqdr, ddqdr;
+    PosType dmod_dbp1, ddmod_dbp1, dmod_dqp1, ddmod_dqp1;
+    
+    
+    PosType phi=phi_int(x);
+    
+ 
+    // the following for loop is used to check if InterpolateModes yields the correct Fourier modes
+     //for(int l=1; l<99; l++ ){
+        //PosType q=0.01*float(l);
+        //for(int i = 1; i < 199 ; i++){
+            //calcModesC(i*0.01, q, pa, mod1);
+            //std::cout << i*0.01 << " " <<  mod1[4] << " " << mod1[8] << " " << mod1[12] << " " << mod1[16] << " " << mod1[20] << " " << mod1[24] << " " << mod1[28] << " " << mod1[32] << " " << q << std::endl;
+            //std::cout << " " <<  InterpolateModes(4, q+0.005, 1.005) << " " <<  std::endl;
+            //std::cout << i*0.01 << " " <<  InterpolateModes(4, q, i*0.01) << " " << InterpolateModes(8, q, i*0.01) << " " << InterpolateModes(12, q, i*0.01) << " " <<InterpolateModes(16, q, i*0.01) << " " << InterpolateModes(20, q, i*0.01) << " " << InterpolateModes(24, q, i*0.01) << " " << InterpolateModes(28, q, i*0.01) << " " << InterpolateModes(32, q, i*0.01) << " " << q << std::endl;
+     // }
+     //}
+
+
+
+    PosType b=dhfunction(x);
+    for(int i=4;i<Nmod;i+=2){
+        int k=i/2;
+        imod=InterpolateModes(i, fratio, b);
+        imodp1=0.0;//InterpolateModes(i+1, fratio, b);
+        dmod_db=dmoddb(i, fratio, b);
+        dmod_dbp1=0.0;//dmoddb(i+1, fratio, b);
+        ddmod_db=ddmoddb(i, fratio, b);
+        ddmod_dbp1=0.0;//ddmoddb(i+1, fratio, b);
+        dmod_dq=dmoddq(i, fratio, b);
+        dmod_dqp1=0.0;//dmoddq(i+1, fratio, b);
+        ddmod_dq=ddmoddq(i, fratio, b);
+        ddmod_dqp1=0.0; //ddmoddq(i+1, fratio, b);
+        dbdr=ddhfunction(x,true);
+        ddbdr=dddhfunction(x,true);
+        dqdr=0;
+        ddqdr=0;
+        amod[0]=imod;
+        amodp1[0]=0.0; //imodp1;
+        amod[1]=dmod_db*dbdr+dmod_dq*dqdr;
+        amodp1[1]=0.0; //dmod_dbp1*dbdr+dmod_dqp1*dqdr;
+        amod[2]=ddmod_db*dbdr*dbdr+dmod_db*ddbdr+ddmod_dq*dqdr*dqdr+dmod_dq*ddqdr;
+        amodp1[2]=0.0;// ddmod_dbp1*dbdr*dbdr+dmod_dbp1*ddbdr+ddmod_dqp1*dqdr*dqdr+dmod_dqp1*ddqdr;
+        PosType coskt=cos(k*theta);
+        PosType sinkt=sin(k*theta);
+        PosType aux=amod[0]*coskt+amodp1[0]*sinkt;
+        f[0] +=  aux;
+        f[1] +=  amod[1]*coskt + amodp1[1]*sinkt;
+        f[2] +=  amod[2]*coskt + amodp1[2]*sinkt;
+        f[3] += -k*k*aux;
+    }
+    
+    double bk=dhfunction(x);
+    double fac=0.5/(bk*bk/(2.-bk)/(2.-bk));
+    
+    kappa=kappa_h(x);
+    for(int i=4;i<Nmod;i+=2){
+        int k=i/2;
+        amod[0]=InterpolateModes(i, fratio, b);
+        dmod_db=dmoddb(i, fratio, b);
+        dbdr=ddhfunction(x,true);
+        amod[1]=dmod_db*dbdr;
+        ddmod_db=ddmoddb(i, fratio, b);
+        ddbdr=dddhfunction(x,true);
+        amod[2]=ddmod_db*dbdr*dbdr+dmod_db*ddbdr;
+        kappa+=(amod[0]*(kappa_h(x)+k*k/2*phi*fac)+amod[1]*(-1.0*alpha_h(x)*x*x-phi*fac*x/2)-amod[2]*phi*fac*x*x/2)*cos(k*theta);
+    }
+ 
+    return kappa;
+}
+*/
+
+
+
+// The following lines are based on Ansatz IIIb and work according to the quality of the approximation
+
+/*PosType LensHalo::kappa_asym(PosType x,PosType theta){
+	PosType F, f[3],g[3], kappa;
+    PosType phi=phi_int(x);
+    
+     //calcModesB(0.01*i, fratio, pa, mod1);
+    //std::cout << 0.01*i << " " << dhfunction(0.01*i) << " " << mod1[4] << " " << mod1[8] << " " << mod1[12] << " " << mod1[16] << " " << fratio << std::endl;
+
+     faxial(x,theta,f); // for this to work calculate modes in faxial with calcModesB !!
+     gradial(x,g);
+     F=f[0]-1;
+     //beta=get_slope(); // only for fixed beta, i.e. PowerLaw
+     beta=bfunction(x); // only for NFW
+     double fac=1.0/(beta*beta/(2.-beta)/(2.-beta));
+     kappa=f[0]*kappa_h(x)-0.5*f[2]*fac*phi;//  w/o damping
+     //kappa=(1+F*g[0])*kappa_h(x)-0.5*phi*fac*(F*g[1]/x+F*g[2]+f[2]*g[0]/x/x)*x*x-F*g[1]*alpha_h(x)*x*x; /// with damping
+
+    return kappa;
+}
+
+*/
 
 

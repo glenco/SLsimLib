@@ -131,35 +131,50 @@ PosType LensHaloNFW::dhfunction(PosType x){ // d ln phi(x) / d ln(x) = beta
     return 0.0;
 }
 
-PosType LensHaloNFW::ddhfunction(PosType x){ // d dhfunction(x) / dx i.e. dbeta(x)/dx
-    if(x==0) x=1e-5;
-    PosType dh=dhfunction(x);
-    PosType aux=-1.0*dh*dh/x;
-    if(x<1.0)  return aux + (2./x-2./(x*(1-x*x))+2*x*atanh(sqrt(1.-x*x))/(pow(1.-x*x,3./2.)))/(-1.0*atanh(sqrt(1.-x*x))*atanh(sqrt(1.-x*x))+log(x/2.)*log(x/2.));
-    if(x==1.0) return aux + 1.38758;
-    if(x>1.0)  return aux + (2./x+2./(x*(x*x-1.))-2*x*atan(sqrt(x*x-1.))/(pow(x*x-1.,3./2.)))/(atan(sqrt(x*x-1.))*atan(sqrt(x*x-1.))+log(x/2.)*log(x/2.));
+PosType LensHaloNFW::ddhfunction(PosType x, bool numerical){ // d dhfunction(x) / dx i.e. dbeta(x)/dx
+    if(numerical==false){
+        if(x==0) x=1e-5;
+        PosType dh=dhfunction(x);
+        PosType aux=-1.0*dh*dh/x;
+        if(x<1.0)  return aux + (2./x-2./(x*(1-x*x))+2*x*atanh(sqrt(1.-x*x))/(pow(1.-x*x,3./2.)))/(-1.0*atanh(sqrt(1.-x*x))*atanh(sqrt(1.-x*x))+log(x/2.)*log(x/2.));
+        if(x==1.0) return aux + 1.38758;
+            if(x>1.0)  return aux + (2./x+2./(x*(x*x-1.))-2*x*atan(sqrt(x*x-1.))/(pow(x*x-1.,3./2.)))/(atan(sqrt(x*x-1.))*atan(sqrt(x*x-1.))+log(x/2.)*log(x/2.));
+    }
+    if(numerical==true){
+        PosType h=1e-5;
+        if(x==0) x=2e-5;
+        if(x>0){return ((1./12.)*(dhfunction(x-2*h))-(2./3.)*(dhfunction(x-h))+(2./3.)*(dhfunction(x+h))-(1./12.)*(dhfunction(x+2*h)))/h;};
+    }
     return 0.0;
 }
 
 
-PosType LensHaloNFW::dddhfunction(PosType x){ // d^2 dhfunction(x) / dx^2 i.e. d^2 beta(x) / dx^2
-    PosType b=dhfunction(x);
-    PosType db=ddhfunction(x);
-    PosType aux=-b*db/x+(b*b/x/x)*(1-b);
-    if(x==0) x=1e-5;
-    if(x<1.0){
-        PosType aux3=sqrt(1.-x*x);
-        PosType aux2=(pow(atanh(aux3),2)-log(x/2)*log(x/2));
-        return aux+(-(2/x/x)-6/(1-x*x)/(1-x*x)+2/(x*x*(1-x*x))+(6*x*x*atanh(aux3))/ (pow(1-x*x,5./2.)) +(2*atanh(aux3))/pow(aux3,3))/(-1.0*aux2);
+PosType LensHaloNFW::dddhfunction(PosType x, bool numerical){ // d^2 dhfunction(x) / dx^2 i.e. d^2 beta(x) / dx^2
+    if(numerical==false){
+        PosType b=dhfunction(x);
+        PosType db=ddhfunction(x,false);
+        PosType aux=-b*db/x+(b*b/x/x)*(1-b);
+        if(x==0) x=1e-5;
+        if(x<1.0){
+            PosType aux3=sqrt(1.-x*x);
+            PosType aux2=(pow(atanh(aux3),2)-log(x/2)*log(x/2));
+            return aux+(-(2/x/x)-6/(1-x*x)/(1-x*x)+2/(x*x*(1-x*x))+(6*x*x*atanh(aux3))/ (pow(1-x*x,5./2.)) +(2*atanh(aux3))/pow(aux3,3))/(-1.0*aux2);
+        }
+        if(x==1.0) return aux + 1.38758;
+        if(x>1.0){
+            PosType aux3=sqrt(-1.+x*x);
+            PosType aux2=(pow(atan(aux3),2)+log(x/2)*log(x/2));
+            return aux+(-(2/x/x)-6/(-1+x*x)/(1-x*x)-2/(x*x*(-1+x*x))+(6*x*x*atan(aux3))/ (pow(-1+x*x,5./2.)) -(2*atan(aux3))/pow(aux3,3))/(aux2);
+        }
     }
-    if(x==1.0) return aux + 1.38758;
-    if(x>1.0){
-        PosType aux3=sqrt(-1.+x*x);
-        PosType aux2=(pow(atan(aux3),2)+log(x/2)*log(x/2));
-        return aux+(-(2/x/x)-6/(-1+x*x)/(1-x*x)-2/(x*x*(-1+x*x))+(6*x*x*atan(aux3))/ (pow(-1+x*x,5./2.)) -(2*atan(aux3))/pow(aux3,3))/(aux2);
+    if(numerical==true){
+        PosType h=1e-5;
+        if(x==0) x=2e-5;
+        if(x>0){return ((-1./12.)*dhfunction(x-2*h)+(4./3.)*dhfunction(x-h)-(5./2.)*dhfunction(x)+(4./3.)*dhfunction(x+h)-(1./12.)*dhfunction(x+2*h))/(h*h);};
     }
     return 0.0;
 }
+
 
 
 
