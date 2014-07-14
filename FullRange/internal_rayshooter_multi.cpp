@@ -323,7 +323,7 @@ for(i = start; i < end; i++)
             
         
         // Geometric time delay with added potential
-            p->i_points[i].dt += 0.5*( (xplus[0] - xminus[0])*(xplus[0] - xminus[0]) + (xplus[1] - xminus[1])*(xplus[1] - xminus[1]) )/p->dDl[j+1] - (1 + p->plane_redshifts[j]) * phi * p->charge ;
+            p->i_points[i].dt += 0.5*( (xplus[0] - xminus[0])*(xplus[0] - xminus[0]) + (xplus[1] - xminus[1])*(xplus[1] - xminus[1]) )/p->dDl[j+1] - (1 + p->plane_redshifts[j]) * phi * p->charge ; /// in Mpc
       
         // Check that the 1+z factor must indeed be there (because the x positions have been rescaled, so it may be different compared to the draft).
         // Remark : Here the true lensing potential is not "phi" but "phi * p->charge = phi * 4 pi G".
@@ -351,7 +351,15 @@ for(i = start; i < end; i++)
                                             - p->i_points[i].gamma[1]*p->i_points[i].gamma[1]
                                             + p->i_points[i].gamma[2]*p->i_points[i].gamma[2];
     // ---------------------------------------------------------------------------------------------
-      
+    
+    
+    // Conversion of dt from Mpc (physical Mpc) to Years (also possible into days) -----------------
+    
+    p->i_points[i].dt *= MpcToSeconds * SecondToYears ;
+    
+    // ---------------------------------------------------------------------------------------------
+    
+    
     
     // Putting the final values of the quantities in the real image point -----
     p->i_points[i].image->invmag = p->i_points[i].invmag;

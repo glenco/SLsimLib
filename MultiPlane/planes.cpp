@@ -59,7 +59,7 @@ LensPlaneSingular::~LensPlaneSingular()
 void LensPlaneSingular::force(PosType *alpha
                               ,KappaType *kappa
                               ,KappaType *gamma
-                              ,KappaType *phi
+                              ,KappaType *phi       /// in mass
                               ,PosType *xx          // Position in physical Mpc
                               )
 {

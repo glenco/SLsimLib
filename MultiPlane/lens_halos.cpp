@@ -568,10 +568,10 @@ void LensHaloSimpleNSIE::initFromMassFunc(float my_mass, float my_Rmax, float my
 }
 */
 void LensHalo::force_halo(
-	PosType *alpha     /// mass/Mpc
+	PosType *alpha          /// mass/Mpc
     ,KappaType *kappa
     ,KappaType *gamma
-    ,KappaType *phi
+    ,KappaType *phi       /// mass
     ,PosType const *xcm
     ,bool subtract_point /// if true contribution from a point mass is subtracted
     )
@@ -589,7 +589,7 @@ void LensHalo::force_halo_sym(
 		PosType *alpha     /// mass/Mpc
 		,KappaType *kappa
 		,KappaType *gamma
-    ,KappaType *phi
+    ,KappaType *phi      /// mass
 		,PosType const *xcm
 		,bool subtract_point /// if true contribution from a point mass is subtracted
 		)

@@ -106,3 +106,24 @@ typedef float KappaType;
 #endif
 
 #endif
+
+
+#ifndef MpcToSeconds
+#define MpcToSeconds (3.085677e22 / 2.99792458e8)
+// Computed as MpcToMeter(m) / SpeedOfLight(m.s^{-1})
+#endif
+
+#ifndef SecondToDays
+#define SecondToDays (1. / 86400.)
+#endif
+
+#ifndef SecondToYears
+#define SecondToYears (1. / 86400. / 365.25)
+// Taking 365.25 days per year.
+#endif
+
+
+
+
+
+
