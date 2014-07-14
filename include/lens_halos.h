@@ -127,8 +127,38 @@ public:
 
 	/// Prints star parameters; if show_stars is true, prints data for single stars
 	void PrintStars(bool show_stars) const;
- 
-  
+    
+    
+    // all of the following functions were used for Ansatz III w derivatives of the Fourier modes
+    
+    /*static constexpr PosType mod_params[2][7][7] = {{{5.45400234e-01, 2.00623559e-01, 1.74273034e-01, 1.86242095e+02, 5.70675374e+00,0,0},
+        {0.98519072, 1.79227955, 0.19333932, 1.05911801, 1.80285544, 175.19794791,0},
+        {1.27286496, 2.52757113, 0.35561051, 1.07921878, 0.40027514, 37.47696142,0},
+        {3.90009539, 4.59744288, -8.40249184, 4.13420228, 3.31751963, 6.35692121,0},
+        {4.31129234, 7.55980323, -2.70971355, 1.20304148, 10.04502808, 4.77684945,0},
+        {28.27243869, 23.49608644, -43.13187974, 1.65596222, 22.72500104, 3.1378364,0},
+        {57.01022684, 33.55782426, -114.00434863, 2.08922268, 22.96852996, 2.53164822,0}},
+        {{2.09778383e+00, -7.99553494e-02, 1.58048481e+00, -3.27089042e+01, 1.36378731e+01, 4.02453963e-04,0},
+            {2.06019572e+00, -4.22588623e-02, 1.55824013e+00, -1.62854932e+01, 1.57266141e+01, 4.93672097e-04,0},
+            {2.06365018e+00, -4.79733978e-02, 1.49994453e+00, -1.21602730e+01, 2.28348079e+01, 4.49107825e-04,0},
+            {1.93036483e+00, -3.94871873e-02, 1.56471642e+00, -5.54299042e+00, 3.62847996e+01, 4.40377288e-04,0},
+            {-2.67369155e+00, -3.43984326e-02, 6.08826051e+00, -4.03323814e-01, 7.02617948e+01, 3.95509769e-04,0},
+            {-7.15392458e+01, -1.93808978e-02, 7.48623502e+01, -1.70286774e-02, 4.20781335e+02, 3.66600276e-04,0},
+            {8.87740013e+00, 4.04947024e-02, -4.83118775e+01, -5.69035567e-02, 7.13574366e+00, -3.34967308e-02, -3.09836552e+03}}};
+
+    */
+    //PosType modfunc(int modnumber, PosType my_slope, PosType my_fratio);
+    //PosType hi_order_modfunc(PosType x, int modnumber, PosType my_slope, PosType my_fratio);
+    //PosType amodfunc(int modnumber, PosType my_fratio);
+    //PosType bmodfunc(int modnumber, PosType my_fratio);
+    //PosType cmodfunc(PosType my_fratio);
+    //PosType dmodfunc(PosType my_fratio);
+    //PosType dmod(PosType x, int modnumber, PosType my_slope, PosType my_fratio);
+    //PosType ddmod(PosType x, int modnumber, PosType my_slope, PosType my_fratio);
+    //PosType dlnmod_dr(PosType x, int modnumber, PosType my_slope, PosType my_fratio);
+    //PosType ddlnmod_dr(PosType x, int modnumber, PosType my_slope, PosType my_fratio);
+    
+    
 protected:
   PosType alpha_int(PosType x);
   
@@ -204,9 +234,21 @@ protected:
 	virtual KappaType inline gamma_h(PosType x){return -2;};
 	virtual KappaType inline phi_h(PosType x){return 1;};
     virtual KappaType inline phi_int(PosType x){return 1;};
-    
+    virtual PosType inline ffunction(PosType x){return 0;};
     virtual PosType inline gfunction(PosType x){return -1;};
-	
+    virtual PosType inline bfunction(PosType x){return -1;};
+    virtual PosType inline dhfunction(PosType x){return 1;};
+    virtual PosType inline ddhfunction(PosType x, bool numerical){return 0;};
+    virtual PosType inline dddhfunction(PosType x, bool numerical){return 0;};
+    virtual PosType inline bnumfunction(PosType x){return -1;};
+    virtual PosType inline dbfunction(PosType x){return 0;};
+    virtual PosType inline ddbfunction(PosType x){return 0;};
+    virtual PosType inline dmoddb(int whichmod, PosType q, PosType b){return 0;};
+    virtual PosType inline ddmoddb(int whichmod, PosType q, PosType b){return 0;};
+    virtual PosType inline dmoddq(int whichmod, PosType q, PosType b){return 0;};
+    virtual PosType inline ddmoddq(int whichmod, PosType q, PosType b){return 0;};
+    
+    
     PosType xmax;
 
   // Functions for calculating axial dependence
@@ -214,11 +256,14 @@ protected:
     float fratio=1;
     bool elliptical_flag = false;
 
-    void faxial(PosType theta,PosType f[]);
-    void gradial(PosType r,PosType g[]);
-    void gradial2(PosType r,PosType g[]);
+  void faxial(PosType x,PosType theta,PosType f[]);
+  void faxial0(PosType theta,PosType f0[]);
+  void faxial1(PosType theta,PosType f1[]);
+  void faxial2(PosType theta,PosType f2[]);
+  void gradial(PosType r,PosType g[]);
+  void gradial2(PosType r,PosType mu, PosType sigma,PosType g[]);
     
-    //void felliptical(PosType x, PosType q, PosType theta, PosType f[], PosType g[]);
+  void felliptical(PosType x, PosType q, PosType theta, PosType f[], PosType g[]);
 
 	virtual void gamma_asym(PosType x,PosType theta, PosType gamma[2]);
 	virtual PosType kappa_asym(PosType x,PosType theta);
@@ -226,19 +271,28 @@ protected:
     double fourier_coeff(double n, double q, double beta);
     
     void calcModes(double q, double beta, double rottheta, PosType newmod[]);
+    void calcModesB(PosType x, double q, double beta, double rottheta, PosType newmod[]);
+    void calcModesC(PosType beta_r, double q, double rottheta, PosType newmod[]);
+    
+    virtual PosType inline InterpolateModes(int whichmod, PosType q, PosType b){return 0;};
+    
+    void analModes(int modnumber, PosType my_beta, PosType q, PosType amod[3]);
     
     struct fourier_func{
         fourier_func(double my_n, double my_q, double my_beta): n(my_n),q(my_q),beta(my_beta){};
         double n;
         double q;
         double beta;
-        double operator ()(double theta) {return cos(n*theta)/pow(cos(theta)*cos(theta) + (1/q/q)*sin(theta)*sin(theta),beta/2) ;}
+        double operator ()(double theta) {return cos(n*theta)/pow(cos(theta)*cos(theta) + 1/q/q*sin(theta)*sin(theta),beta/2) ;}
     };
 
-
   const static int Nmod = 32;
-  
+
+  // Analytic description of Fourier modes
+
   PosType mod[Nmod];
+  PosType mod1[Nmod];
+  PosType mod2[Nmod];
   PosType r_eps;
   
 
@@ -275,6 +329,20 @@ public:
 	PosType gfunction(PosType x);
 	PosType g2function(PosType x);
 	PosType hfunction(PosType x);
+    PosType dhfunction(PosType x);
+    PosType ddhfunction(PosType x, bool numerical);
+    PosType dddhfunction(PosType x, bool numerical);
+    PosType bfunction(PosType x);
+    PosType dbfunction(PosType x);
+    PosType ddbfunction(PosType x);
+    PosType dmoddb(int whichmod, PosType q, PosType b);
+    PosType ddmoddb(int whichmod, PosType q, PosType b);
+    PosType dmoddq(int whichmod, PosType q, PosType b);
+    PosType ddmoddq(int whichmod, PosType q, PosType b);
+    
+    //PosType dmod(PosType x, int modnumber, PosType my_slope, PosType my_fratio);    // was used for Ansatz III w derivatives of the Fourier modes
+    //PosType ddmod(PosType x, int modnumber, PosType my_slope, PosType my_fratio);   // was used for Ansatz III w derivatives of the Fourier modes 
+       
     
 
 	// TODO: BEN: the below functions alphaNFW, kappaNFW and gammaNFW are obsolete and better to be deleted to avoid confusion
@@ -302,11 +370,12 @@ protected:
 	static int count;
 
 	/// tables for lensing properties specific functions
-	static PosType *ftable,*gtable,*g2table,*htable,*xtable,*xgtable;
+	static PosType *ftable,*gtable,*g2table,*htable,*xtable,*xgtable,***modtable; // modtable was used for Ansatz IV and worked well
 	/// make the specific tables
 	void make_tables();
 	/// interpolates from the specific tables
 	PosType InterpolateFromTable(PosType *table, PosType y);
+    PosType InterpolateModes(int whichmod, PosType q, PosType b);
 
 	/// read in parameters from a parameterfile in InputParams params
 	void assignParams(InputParams& params);
@@ -404,8 +473,8 @@ private:
 		return (0.5*x*x/pow(1+x,beta) - InterpolateFromTable(x))/InterpolateFromTable(xmax);
 	}
 	inline KappaType phi_h(PosType x){
-        return -1.0*alpha_int(x)/InterpolateFromTable(xmax) ;
-		//ERROR_MESSAGE();
+		return -1.0*alpha_int(x)/InterpolateFromTable(xmax) ;
+        //ERROR_MESSAGE();
 		//std::cout << "time delay has not been fixed for PseudoNFW profile yet." << std::endl;
 		//exit(1);
 		//return 0.0;
@@ -455,7 +524,6 @@ private:
 
 	///	read in parameters from a parameterfile in InputParams params
 	PosType beta;
-    PosType fratio;
     PosType pa;
     
 
@@ -473,7 +541,7 @@ private:
 		//assert(0.5*(beta+2)*pow(x/xmax,beta)*x*x/(xmax*xmax) != 0);
         //std::cout << x << " " << beta << "  " << -1.0*pow(x/xmax,beta+2) << std::endl;
         
-		return 0.5*(-beta+2)*pow(x/xmax,-beta)*x*x; //(xmax*xmax); 
+		return 0.5*(-beta+2)*pow(x/xmax,-beta)*x*x;
 	}
 	inline KappaType gamma_h(PosType x){
 		if(x==0) x=1e-6*xmax;
@@ -676,6 +744,12 @@ public:
 	PosType gfunction(PosType x);
 	PosType hfunction(PosType x);
 	PosType g2function(PosType x);
+    PosType bfunction(PosType x);
+    PosType dbfunction(PosType x);
+    PosType ddbfunction(PosType x);
+    
+    
+	
     
 protected:
     
