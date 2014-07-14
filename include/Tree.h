@@ -497,7 +497,8 @@ namespace Utilities{
 	};
 	unsigned long prevpower(unsigned long k);
 
-	int windings(PosType *x,Point *points,unsigned long Npoints,PosType *area,short image = 0 );
+        int windings(PosType *x,Point *points,unsigned long Npoints,PosType *area,short image = 0 );
+        int windings(PosType *x,Point **points,unsigned long Npoints,PosType *area,short image = 0 );
 	int windings(PosType *x,Kist<Point> * kist,PosType *area,short image = 0);
 }
 // in curve_routines.c

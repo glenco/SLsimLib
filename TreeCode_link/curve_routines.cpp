@@ -1650,6 +1650,55 @@ int windings(
 	//if(abs(wn) > 0) exit(0);
 	return wn;
 }
+  int windings(
+               PosType *x              /// Point for which the winding number is calculated
+               ,Point **points         /// The points on the border.  These must be ordered.
+               ,unsigned long Npoints /// number of points in curve
+               ,PosType *area          /// returns absolute the area within the curve with oriented border
+               ,short image           /// if == 1 the image of the curve is uses as the curve
+               ){
+    int wn=0;
+    unsigned long k,i;
+    
+    *area=0.0;
+    if(Npoints < 3) return 0;
+    
+    if(image){
+      for(i=0;i<Npoints;++i){
+        k= i < Npoints-1 ? i+1 : 0;
+        *area+=(points[i]->image->x[0] + points[k]->image->x[0])
+        *(points[i]->image->x[1] - points[k]->image->x[1]);
+        
+        if(points[i]->image->x[1] <= x[1]){
+          if(points[k]->image->x[1] > x[1])
+            if( isLeft(points[i]->image,points[k]->image,x) > 0) ++wn;
+        }else{
+          if(points[k]->image->x[1] <= x[1])
+            if( isLeft(points[i]->image,points[k]->image,x) < 0) --wn;
+        }
+      }
+    }else{
+      
+      for(i=0;i<Npoints;++i){
+        k= i < Npoints-1 ? i+1 : 0;
+        *area+=(points[i]->x[0] + points[k]->x[0])*(points[i]->x[1] - points[k]->x[1]);
+        
+        if(points[i]->x[1] <= x[1]){
+          if(points[k]->x[1] > x[1])
+            if( isLeft(points[i],points[k],x) > 0) ++wn;
+        }else{
+          if(points[k]->x[1] <= x[1])
+            if( isLeft(points[i],points[k],x) < 0) --wn;
+        }
+      }
+      
+    }
+    
+    *area = fabs(*area)*0.5;
+    //std::printf("wn = %i\n",wn);
+    //if(abs(wn) > 0) exit(0);
+    return wn;
+  }
 int windings(
 		PosType *x              /// Point for which the winding number is calculated
 		,Kist<Point> * kist         /// Kist of points on the border.  These must be ordered.
@@ -1896,7 +1945,9 @@ void writeCurves(int m			/// part of te filename, could be the number/index of t
     return H;
   }
   
-  /// Returns a vector of points on the convex hull in counter-clockwise order.
+  /** Orders the points in P according to a iterative minimum curvature method
+   that seeks to find the boundery of the region
+   */
   std::vector<Point *> shrink_rap(std::vector<Point *> P)
   {
     
@@ -1937,7 +1988,7 @@ void writeCurves(int m			/// part of te filename, could be the number/index of t
           p[0] = hull[k]->x[0] - reservour[j]->x[0];
           p[1] = hull[k]->x[1] - reservour[j]->x[1];
 
-          c = ( s[0]*p[0] + s[1]*p[1])/sqrt( (s[0]*s[0]+s[1]*s[1])*(p[0]*p[0]+p[1]*p[1])  );
+          c = ( s[0]*p[0] + s[1]*p[1] )/sqrt( (s[0]*s[0]+s[1]*s[1])*(p[0]*p[0]+p[1]*p[1])  );
         
           if(c < cmin){
             cmin = c;
@@ -1947,6 +1998,8 @@ void writeCurves(int m			/// part of te filename, could be the number/index of t
         }
       }
     
+      double area;
+      assert(Utilities::windings(reservour[jmin]->x,hull.data(),hull.size(),&area) == 1);
       hull.resize(hull.size()+1);
       for(size_t i=hull.size()-1;i>imin+1;--i) hull[i] = hull[i-1];
       hull[imin+1] = reservour[jmin];
