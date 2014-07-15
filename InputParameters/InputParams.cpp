@@ -583,7 +583,7 @@ bool InputParams::get(std::string label, IMFtype& value) const
  * is returned.  If the parameter in the file does not "match" the type
  * of value false will also be returned and a warning printed to stdout.
  *
- * MainLensType entries in the parameter file must be SDSS_U,SDSS_G,SDSS_R,SDSS_I,SDSS_Z,J,H,Ks,i1, or i2
+ * MainLensType entries in the parameter file must be EUC_VIS,EUC_Y,EUC_J,EUC_H,SDSS_U,SDSS_G,SDSS_R,SDSS_I,SDSS_Z,J,H,Ks,IRAC1,IRAC2,F435W,F606W,F775W,F850LP,F814W,F110W,F160W
  */
 
 bool InputParams::get(std::string label, Band& value) const
@@ -594,6 +594,26 @@ bool InputParams::get(std::string label, Band& value) const
 	
 	use_counter.use(it->first);
 	
+	if(!it->second.compare("EUC_VIS"))
+	{
+		value = EUC_VIS;
+		return true;
+	}
+	if(!it->second.compare("EUC_Y"))
+	{
+		value = EUC_Y;
+		return true;
+	}
+	if(!it->second.compare("EUC_J"))
+	{
+		value = EUC_J;
+		return true;
+	}
+	if(!it->second.compare("EUC_H"))
+	{
+		value = EUC_H;
+		return true;
+	}
 	if(!it->second.compare("SDSS_U"))
 	{
 		value = SDSS_U;
@@ -634,92 +654,56 @@ bool InputParams::get(std::string label, Band& value) const
 		value = Ks;
 		return true;
 	}
-	if(!it->second.compare("i1"))
+	if(!it->second.compare("IRAC1"))
 	{
-		value = i1;
+		value = IRAC1;
 		return true;
 	}
-	if(!it->second.compare("i2"))
+	if(!it->second.compare("IRAC2"))
 	{
-		value = i2;
+		value = IRAC2;
+		return true;
+	}
+	if(!it->second.compare("F435W"))
+	{
+		value = F435W;
+		return true;
+	}
+	if(!it->second.compare("F606W"))
+	{
+		value = F606W;
+		return true;
+	}
+	if(!it->second.compare("F775W"))
+	{
+		value = F775W;
+		return true;
+	}
+	if(!it->second.compare("F850LP"))
+	{
+		value = F850LP;
+		return true;
+	}
+	if(!it->second.compare("F814W"))
+	{
+		value = F814W;
+		return true;
+	}
+	if(!it->second.compare("F110W"))
+	{
+		value = F110W;
+		return true;
+	}
+	if(!it->second.compare("F160W"))
+	{
+		value = F160W;
 		return true;
 	}
 
-	std::cout << label << " in parameter file " << paramfile_name << " needs to be SDSS_U,SDSS_G,SDSS_R,SDSS_I,SDSS_Z,J,H,Ks,i1, or i2!" << std::endl;
+	std::cout << label << " in parameter file " << paramfile_name << " needs to be EUC_VIS,EUC_Y,EUC_J,EUC_H,SDSS_U,SDSS_G,SDSS_R,SDSS_I,SDSS_Z,J,H,Ks,IRAC1,IRAC2,F435W,F606W,F775W,F850LP,F814W,F110W or F160W!" << std::endl;
 	return false;
 }
 
-
-/** \brief Assigns to "value" the value of the parameter called "label".
- * If this parameter label does not appear in the parameter file false
- * is returned.  If the parameter in the file does not "match" the type
- * of value false will also be returned and a warning printed to stdout.
- *
- * shapelets_band entries in the parameter file must be needs to be MAG_B, MAG_V, MAG_I, MAG_Z, MAG_J, MAG_H, MAG_u_KIDS, MAG_g_KIDS, MAG_r_KIDS or MAG_i_KIDS
- */
-
-bool InputParams::get(std::string label, ShapeBand& value) const
-{
-	const_iterator it = params.find(label);
-	if(it == params.end())
-		return false;
-	
-	use_counter.use(it->first);
-	
-	if(!it->second.compare("MAG_B"))
-	{
-		value = MAG_B;
-		return true;
-	}
-	if(!it->second.compare("MAG_V"))
-	{
-		value = MAG_V;
-		return true;
-	}
-	if(!it->second.compare("MAG_I"))
-	{
-		value = MAG_I;
-		return true;
-	}
-	if(!it->second.compare("MAG_Z"))
-	{
-		value = MAG_Z;
-		return true;
-	}
-	if(!it->second.compare("MAG_J"))
-	{
-		value = MAG_J;
-		return true;
-	}
-	if(!it->second.compare("MAG_H"))
-	{
-		value = MAG_H;
-		return true;
-	}
-	if(!it->second.compare("MAG_u_KIDS"))
-	{
-		value = MAG_u_KIDS;
-		return true;
-	}
-	if(!it->second.compare("MAG_g_KIDS"))
-	{
-		value = MAG_g_KIDS;
-		return true;
-	}
-	if(!it->second.compare("MAG_r_KIDS"))
-	{
-		value = MAG_r_KIDS;
-		return true;
-	}
-	if(!it->second.compare("MAG_i_KIDS"))
-	{
-		value = MAG_i_KIDS;
-		return true;
-	}
-    
-	std::cout << label << " in parameter file " << paramfile_name << " needs to be MAG_B, MAG_V, MAG_I, MAG_Z, MAG_J, MAG_H, MAG_u_KIDS, MAG_g_KIDS, MAG_r_KIDS, MAG_i_KIDS!" << std::endl;
-	return false;
-}
 
 
 /** \brief Assigns to "value" the value of the parameter called "label".

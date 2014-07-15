@@ -106,6 +106,8 @@ PosType* LensHaloNFW::gtable = NULL;
 PosType* LensHaloNFW::g2table = NULL;
 PosType* LensHaloNFW::htable = NULL;
 PosType* LensHaloNFW::xgtable = NULL;
+PosType*** LensHaloNFW::modtable= NULL; // was used for Ansatz IV
+
 
 
 LensHaloNFW::LensHaloNFW()
@@ -163,12 +165,20 @@ LensHaloNFW::LensHaloNFW(InputParams& params)
     // If the axis ratio given in the parameter file is set to 1 all ellipticizing routines are skipped.
     if(fratio!=1){
         std::cout << "NFW constructor: slope set to " << get_slope() << std::endl;
+        //for(int i=1;i<20;i++){
+         //  calcModes(fratio, 0.1*i, pa, mod);
+        //}
+        //calcModes(fratio, get_slope()-0.5, pa, mod); // to ellipticize potential instead of  kappa take calcModes(fratio, 2-get_slope(), pa, mod);
         calcModes(fratio, get_slope(), pa, mod); // to ellipticize potential instead of  kappa take calcModes(fratio, 2-get_slope(), pa, mod);
+        //calcModes(fratio, get_slope()+0.5, pa, mod2); // to ellipticize potential instead of  kappa take calcModes(fratio, 2-get_slope(), pa, mod);
+        
         for(int i=1;i<Nmod;i++){
             if(mod[i]!=0){set_flag_elliptical(true);};
         }
+        
         //std::cout << "if mods!=0 this must be 1: " << get_flag_elliptical() << std::endl;
     }
+    std::cout << get_flag_elliptical() << std::endl;
 }
 
 void LensHaloNFW::make_tables(){
@@ -185,6 +195,9 @@ void LensHaloNFW::make_tables(){
         xgtable = new PosType[NTABLE];
         
         
+        
+        
+        
 		for(i = 0 ; i< NTABLE; i++){
 			x = i*dx;
 			xtable[i] = x;
@@ -198,9 +211,63 @@ void LensHaloNFW::make_tables(){
                 //Utilities::nintegrate<Ig_func>(g,1E-4,x,dx/10.);
             }
         }
+        
+        // modtable[axis ratio 100][potential slope beta 1000][Nmods 32] for Ansatz IV
+        
+        int j,k;
+        modtable = new PosType**[100];
+ 
+         
+        for(i = 0; i < 100; i++){
+            modtable[i] = new PosType*[200];
+            for(j = 0; j< 200; j++){
+                modtable[i][j] = new PosType[Nmod];
+            }
+        }
+        /*
+         
+        for(i = 0; i<99; i++){
+            std::cout<< i << std::endl;
+            PosType iq=0.01*(i+1);
+            for(j = 0; j< 200; j++){
+                PosType beta_r=0.01*(j+1);
+                calcModesC(beta_r, iq, pa, mod);
+                for(k=0;k<Nmod;k++){
+                    modtable[i][j][k]=mod[k];
+                }
+            }
+        }
+        */
+        
   }
   count++;
 }
+
+// InterpolateModes was used for Ansatz IV and is an efficient way to calculate the Fourier modes used for elliptisizing the isotropic profiles before the program starts
+
+PosType LensHaloNFW::InterpolateModes(int whichmod, PosType q, PosType b){
+    PosType x1,x2,y1,y2,f11,f12,f21,f22;
+    int i,j,k;
+    int NTABLEB=200;
+    int NTABLEQ=99;
+    PosType const maxb=2.0;
+    PosType const maxq=0.99;
+    k=whichmod;
+    j=(int)(b/maxb*NTABLEB);
+    i=(int)(q/maxq*NTABLEQ);
+    f11=modtable[i][j][k];
+    f12=modtable[i][j+1][k];
+    f21=modtable[i+1][j][k];
+    f22=modtable[i+1][j+1][k];
+    x1=i*maxq/NTABLEQ;
+    x2=(i+1)*maxq/NTABLEQ;
+    y1=j*maxb/NTABLEB;
+    y2=(j+1)*maxb/NTABLEB;
+    //std::cout << "x12y12: " << q << " " << x1 << " " << x2 << " "<< b << " " << y1 << " " << y2 << " " << std::endl;
+    //std::cout << "IM: " << f11 << " " << f12 << " " << f21 << " " << f22 << " " << res << std::endl;
+    return 1.0/(x2-x1)/(y2-y1)*(f11*(x2-q)*(y2-b)+f21*(q-x1)*(y2-b)+f12*(x2-q)*(b-y1)+f22*(q-x1)*(b-y1));
+}
+
 
 PosType LensHaloNFW::InterpolateFromTable(PosType *table, PosType y){
 	int j;
@@ -240,6 +307,18 @@ LensHaloNFW::~LensHaloNFW(){
 		delete[] g2table;
 		delete[] htable;
         delete[] xgtable;
+        
+        // was used for Ansatz IV
+        
+        for(int i=0; i<99; i++){
+             for(int j=0; j<200; j++){
+                 delete[] modtable[i][j];
+             }
+            delete[] modtable[i];
+        }
+        delete[] modtable;
+        
+        
 	}
 }
 
@@ -426,7 +505,7 @@ LensHaloPowerLaw::LensHaloPowerLaw(
     if(fratio!=1){
         calcModes(fratio, beta, pa, mod);
         for(int i=1;i<Nmod;i++){
-            //std::cout << mod[i] << std::endl;
+            //std::cout << i << " " << mod[i] << std::endl;
             if(mod[i]!=0){set_flag_elliptical(true);};
         }
     }
@@ -437,15 +516,38 @@ LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
 	assignParams(params);
     /// If the 2nd argument in calcModes(fratio, slope, pa, mod), the slope, is set to 1 it yields an elliptical kappa contour of given axis ratio (fratio) at the radius where the slope of the 3D density profile is -2, which is defined as the scale radius for the NFW profile. To ellipticize the potential instead of the convergence use calcModes(fratio, 2-get_slope(), pa, mod), this produces also an ellipse in the convergence map, but at the radius where the slope is 2-get_slope().
     /// If the axis ratio given in the parameter file is set to 1 all ellipticizing routines are skipped.
-    
     if(fratio!=1){
-        calcModes(fratio, beta, pa, mod);
-        for(int i=1;i<Nmod;i++){
-            //std::cout << mod[i] << std::endl;
-            if(mod[i]!=0){set_flag_elliptical(true);};
-        }
-    }else elliptical_flag = false;
+        //for(int islope=1;islope<20;islope++){
+        //beta=islope*0.1;
+        /*
+            for(int islope=1;islope<20;islope++){
+                for(int ifratio=1;ifratio<10;ifratio++){
+                    calcModes(ifratio*0.1, islope*0.1, pa, mod);
+                    for(int i=4;i<Nmod;i=i+4){
+                        std::cout << i << " " << islope*0.1 << " " << ifratio*0.1 << " "<< mod[i] << " " << modfunc(i, islope*0.1, ifratio*0.1)<< std::endl;
+                    }
+                }
+            }
     
+        calcModes(fratio, beta, pa, mod);
+        
+        for(int i=0;i<Nmod;i++){
+            std::cout<< "before: " << mod[i] << std::endl;
+            mod[i]=modfunc(i, beta, fratio);
+            std::cout<< "after: " << mod[i] << std::endl;
+        }
+
+        */
+        calcModes(fratio, beta, pa, mod);
+        //    std::cout << mod[4] << " " << modfunc(4, 1, 0.5) << std::endl;
+            for(int i=1;i<Nmod;i++){
+                //std::cout << i << " " << mod[i] << std::endl;
+                if(mod[i]!=0){set_flag_elliptical(true);};
+            }
+        //}
+
+    }else elliptical_flag = false;
+
     // rscale = xmax = 1.0; // Commented by Fabien in order to have a correct computation of the potential term in the time delay.
     // Fabien : replacing it by :
     rscale = 1;
@@ -615,7 +717,7 @@ void LensHalo::force_halo_sym(
     tmp = (gamma_h(x) + 2.0*subtract_point) * prefac / rcm2;
 		gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 		gamma[1] += xcm[0]*xcm[1]*tmp;
-            
+    
     *phi += phi_h(x) * mass / pi ;
     // *phi += phi_h(x,Rmax) * mass / pi ;
 	}
@@ -633,7 +735,7 @@ void LensHalo::force_halo_sym(
 
 			gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
       gamma[1] += xcm[0]*xcm[1]*tmp;
-                
+      
       *phi += - 0.5 * log(rcm2) * mass / pi ; // value made to be consistent with alpha above. Sure ?
 		}
 	}
@@ -653,10 +755,9 @@ void LensHalo::force_halo_asym(
 		,KappaType *gamma
 		,PosType const *xcm
 		,bool subtract_point /// if true contribution from a point mass is subtracted
-		)
-{
-	std::ofstream dfunc;
-	dfunc.open( "dfunc.dat", ios::out | ios::app );
+		){
+	//std::ofstream dfunc;
+	//dfunc.open( "dfunc.dat", ios::out | ios::app );
             
 	double rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
     
@@ -667,6 +768,7 @@ void LensHalo::force_halo_asym(
 	if(rcm2 < Rmax*Rmax)
   {
 		double x = sqrt(rcm2)/rscale;
+        //std::cout << sqrt(rcm2) << " " << rscale << " " << Rmax << std::endl;
 		double theta;
         
     if(xcm[0] == 0.0 && xcm[1] == 0.0) theta = 0.0;
@@ -685,7 +787,9 @@ void LensHalo::force_halo_asym(
 
 		*kappa += kappa_asym(x,theta)*prefac;
         
-		//	dfunc << x << " " << theta << " " << kappa_asym(x,theta) << " " << xcm[0] << " " << xcm[1] << std::endl;
+
+    //dfunc << x << " " << theta << " " << kappa_asym(x,theta) << " " << bfunction(x) << " " << xcm[0] << " " << xcm[1] << std::endl;
+
         
     //std::cout << x << " " << rscale << " " << xmax << std::endl;
     PosType gamma_tmp[2];

@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <utility>
 #include <stdexcept>
+#include "image_processing.h"
 
 #if __cplusplus < 201103L
 template<typename T>
@@ -92,7 +93,10 @@ PixelMap::PixelMap(
 /** \brief Constructs a PixelMap reading in a fits file
 * Infos about resolution, Npixels and center are read from the header.
  */
-PixelMap::PixelMap(std::string fitsfilename)
+PixelMap::PixelMap(
+                   std::string fitsfilename   /// file name of fits file to be read
+                   ,double resolution         /// resolution (rad) of fits image if not given in fits file, use default or -1 otherwise
+                   )
 {
 #ifdef ENABLE_FITS
 	if(fitsfilename.empty())
@@ -108,32 +112,42 @@ PixelMap::PixelMap(std::string fitsfilename)
 	if(Npixels != (std::size_t)h0.axis(1))
 		throw std::runtime_error("Only square maps are allowed!");
 	
-	h0.readKey("CRVAL1", center[0]);
-	h0.readKey("CRVAL2", center[1]);
-	
+  try
+	{
+    h0.readKey("CRVAL1", center[0]);
+    h0.readKey("CRVAL2", center[1]);
+	}
+  catch(CCfits::HDU::NoSuchKeyword&)
+	{
+    center[0] = 0.0;
+    center[1] = 0.0;
+  }
+  
+  if(resolution == -1){
 	// read the resolution
-	try
-	{
-		double cdelt2;
-		h0.readKey("CDELT1", resolution);
-		h0.readKey("CDELT2", cdelt2);
-		if(std::abs(resolution) - std::abs(cdelt2) > 1e-6)
-			throw std::runtime_error("non-square pixels in FITS file " + fitsfilename);
-	}
-	catch(CCfits::HDU::NoSuchKeyword&)
-	{
-		double cd12, cd21, cd22;
-		h0.readKey("CD1_1", resolution);
-		h0.readKey("CD1_2", cd12);
-		h0.readKey("CD2_1", cd21);
-		h0.readKey("CD2_2", cd22);
-		if(std::abs(resolution) - std::abs(cd22) > 1e-6)
-			throw std::runtime_error("non-square pixels in FITS file " + fitsfilename);
-		if(cd12 || cd21)
-			throw std::runtime_error("pixels not aligned with coordingate in FITS file " + fitsfilename);
-	}
+    try
+    {
+      double cdelt2;
+      h0.readKey("CDELT1", resolution);
+      h0.readKey("CDELT2", cdelt2);
+      if(std::abs(resolution) - std::abs(cdelt2) > 1e-6)
+        throw std::runtime_error("non-square pixels in FITS file " + fitsfilename);
+    }
+    catch(CCfits::HDU::NoSuchKeyword&)
+    {
+      double cd12, cd21, cd22;
+      h0.readKey("CD1_1", resolution);
+      h0.readKey("CD1_2", cd12);
+      h0.readKey("CD2_1", cd21);
+      h0.readKey("CD2_2", cd22);
+      if(std::abs(resolution) - std::abs(cd22) > 1e-6)
+        throw std::runtime_error("non-square pixels in FITS file " + fitsfilename);
+      if(cd12 || cd21)
+        throw std::runtime_error("pixels not aligned with coordingate in FITS file " + fitsfilename);
+    }
+    resolution = fabs(resolution)*pi/180.;
+  }
 	
-	resolution = fabs(resolution)*pi/180.;
 	range = resolution*(Npixels-1);
 	map_boundary_p1[0] = center[0] - (Npixels*resolution)/2.;
 	map_boundary_p1[1] = center[1] - (Npixels*resolution)/2.;
@@ -916,6 +930,7 @@ void Utilities::LoadFitsImages(
                     ,const std::string& filespec /// string of charactors in fits file name that are matched
                     ,std::vector<PixelMap> & images  /// output vector of PixelMaps
                     ,int maxN       /// maximum number of images that will be read in
+                    ,double resolution  /// resolution (rad) of fits image if not given in fits file, use default or -1 otherwise
                     ,bool verbose   /// lists files to stdout
                     ){
     
@@ -942,7 +957,8 @@ void Utilities::LoadFitsImages(
         if(filename.find(".fits") !=  std::string::npos){
             if(filename.find(filespec) !=  std::string::npos){
                 if(verbose) std::cout << "reading " << filepath << std::endl;
-                images.push_back(filepath);
+                PixelMap map(filepath,resolution);
+                images.push_back(std::move(map));
             }
         }
     }
