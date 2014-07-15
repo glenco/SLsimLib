@@ -510,12 +510,12 @@ public:
 	/// set the slope of the surface density profile
 	void set_slope(PosType my_slope){beta=my_slope;};
     
-    /// get slope
-    PosType get_slope(){return beta;};
+  /// get slope
+  PosType get_slope(){return beta;};
     
 	/// initialize from a mass function
 	void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed);
-    
+  
     
 
 private:
