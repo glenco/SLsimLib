@@ -46,7 +46,7 @@ Grid::Grid(
 	// Build trees
 	i_tree = new TreeStruct(i_points,Ngrid_init*Ngrid_init);
 	s_tree = new TreeStruct(s_points,Ngrid_init*Ngrid_init,1,range);  // make tree on source plane with a buffer
-
+  
 	trashkist = new Kist<Point>;
 	neighbors = new Kist<Point>;
 	maglimit = 1.0e-4;
@@ -471,7 +471,6 @@ Point * Grid::RefineLeaf(LensHndl lens,Point *point){
  */
 Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points){
 
-  
 	if(points.size() == 0) return NULL;
 
 	size_t Nleaves = points.size();
@@ -678,8 +677,7 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points){
   //for(long jj=0;jj<Nadded;++jj){ assert(inbox(i_points[jj].x,i_tree->top->boundary_p1,i_tree->top->boundary_p2));}
   //for(long jj=0;jj<Nadded;++jj){ assert(i_points[jj].gridsize > 0 );}
   //**************************/
-
-  
+ 
     //*****************************************************************************/
     //*** these could be mode more efficient by starting at the current in tree
     i_tree->AddPointsToTree(i_points,i_points->head);

@@ -670,11 +670,11 @@ void LensHaloSimpleNSIE::initFromMassFunc(float my_mass, float my_Rmax, float my
 }
 */
 void LensHalo::force_halo(
-	PosType *alpha          /// mass/Mpc
-    ,KappaType *kappa
-    ,KappaType *gamma
-    ,KappaType *phi       /// mass
-    ,PosType const *xcm
+	PosType *alpha          /// solar mass/Mpc
+    ,KappaType *kappa     /// convergence
+    ,KappaType *gamma     /// three components of shear
+    ,KappaType *phi       /// solar masses
+    ,PosType const *xcm   /// position relative to center (Mpc?)
     ,bool subtract_point /// if true contribution from a point mass is subtracted
     )
 {
@@ -688,11 +688,11 @@ void LensHalo::force_halo(
 }
 
 void LensHalo::force_halo_sym(
-		PosType *alpha     /// mass/Mpc
-		,KappaType *kappa
-		,KappaType *gamma
-    ,KappaType *phi      /// mass
-		,PosType const *xcm
+		PosType *alpha     /// solar mass/Mpc
+		,KappaType *kappa  /// convergence
+		,KappaType *gamma  /// three components of shear
+    ,KappaType *phi      /// solar masses
+		,PosType const *xcm     /// position relative to center (Mpc?)
 		,bool subtract_point /// if true contribution from a point mass is subtracted
 		)
 {

@@ -24,7 +24,7 @@ using namespace std;
   * interest one should be careful that the region of interest is not missed.
   */
 
-void find_crit(
+void ImageFinding::find_crit(
 	    LensHndl lens             /// The lens model.
 		,GridHndl grid            /// The grid.  It must be initialized.
 		,ImageInfo *critcurve     /// Structure to hold critical curve.  Must be pre-allocated with maxNcrit elements. Stored in critcurve[i].imagekist.
@@ -350,7 +350,7 @@ void find_crit(
 
   return ;
 }
-void find_crit2(
+void ImageFinding::find_crit2(
 	    LensHndl lens             /// The lens model.
 		,GridHndl grid            /// The grid.  It must be initialized.
 		,ImageInfo *critcurve     /// Structure to hold critical curve.  Must be pre-allocated with maxNcrit elements. Stored in critcurve[i].imagekist.

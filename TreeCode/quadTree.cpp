@@ -569,7 +569,7 @@ void TreeQuad::force2D(PosType const *ray
 						  arg2 = sizes[tmp_index*MultiRadius];
 						  tmp = sizes[tmp_index*MultiRadius];
 
-						  /// intersecting, subtract the point particle
+						  // intersecting, subtract the point particle
 						  if(rcm2 < tmp*tmp)
                           {
 							  tmp = (alpha_h(arg1,arg2) + 1.0)*prefac;
@@ -771,7 +771,7 @@ void TreeQuad::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alph
 						arg2 = sizes[tmp_index*MultiRadius];
 						tmp = sizes[tmp_index*MultiRadius];
 
-						/// intersecting, subtract the point particle
+						// intersecting, subtract the point particle
 						if(rcm2 < tmp*tmp)
                         {
 							tmp = (alpha_h(arg1,arg2) + 1.0)*prefac;

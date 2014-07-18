@@ -58,6 +58,7 @@ public:
   bool moveUp();
   bool moveToChild(int child);
   bool TreeWalkStep(bool allowDescent);
+  bool Test();
 
   // Adding and removing to branches of tree
   void insertChildToCurrent(Branch *branch,int child);
