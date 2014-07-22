@@ -82,7 +82,10 @@ void LensHaloMOKA::readImage(){
 	    h3.read(map->gamma1);
 	    ExtHDU &h4=ff->extension(4);
 	    h4.read(map->gamma2);
-	    std::cout << *h0 << h1 << h2 << h3  << h4 << std::endl;
+      ExtHDU &h5=ff->extension(5); // Added by Fabien
+	    h5.read(map->phi);
+      
+	    std::cout << *h0 << h1 << h2 << h3  << h4 << h5 << std::endl;
 	  }
 	  /* these are always present in each fits file created by MOKA */
 	  h0->readKey ("SIDEL",map->boxlarcsec);
@@ -249,6 +252,11 @@ void LensHaloMOKA::writeImage(std::string filename){
 	ExtHDU *eh3=fout->addImage("gamma3", FLOAT_IMG, naxex);
 	eh3->write(1,map->nx*map->ny,map->gamma3);
 
+  // Fabien : adding the potential in the writing.
+  // I don't know if eh4 is an adapted name.
+  ExtHDU *eh4=fout->addImage("phi", FLOAT_IMG, naxex);
+	eh4->write(1,map->nx*map->ny,map->phi);
+  
 	std::cout << *phout << std::endl;
 #else
 	std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
@@ -275,7 +283,7 @@ void make_friendship(int ii,int ji,int np,std:: vector<int> &friends, std:: vect
 }
 
 /*
- * given a a set of grid points xci and yci and an interpixeld distance l return the id of the 
+ * given a set of grid points xci and yci and an interpixeled distance l return the id of the
  * fof group nearest to the centre
  */
 
@@ -383,7 +391,7 @@ void LensHaloMOKA::PreProcessFFTWMap(){
 
     int npixels = map->nx;
     double boxl = map->boxlMpc;
-    
+  
     // size of the new map
     int Nnpixels = int(zerosize*npixels);
     double Nboxl = boxl*zerosize;
@@ -507,6 +515,7 @@ void LensHaloMOKA::PreProcessFFTWMap(){
 
     // std:: cout << " remapping the map in the original size " << std:: endl;
 
+    map->phi.resize(npixels*npixels);
     map->gamma1.resize(npixels*npixels);
     map->gamma2.resize(npixels*npixels);
     map->alpha1.resize(npixels*npixels);
@@ -516,7 +525,9 @@ void LensHaloMOKA::PreProcessFFTWMap(){
             for( int j=Nnpixels/2-npixels/2; j<Nnpixels/2+npixels/2; j++ ){
                 int ii = i-int(Nnpixels/2-npixels/2);
                 int jj = j-int(Nnpixels/2-npixels/2);
-        
+
+                map->phi[ii+npixels*jj] = float( phi[i+Nnpixels*j]/Nnpixels/Nnpixels); // Added by Fabien : is it correct to do that ?
+              
                 map->gamma1[ii+npixels*jj] = float( gamma1[i+Nnpixels*j]/Nnpixels/Nnpixels);
                 map->gamma2[ii+npixels*jj] = float(-gamma2[i+Nnpixels*j]/Nnpixels/Nnpixels);
         
