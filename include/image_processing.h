@@ -100,6 +100,7 @@ private:
 typedef enum {Euclid_VIS,Euclid_Y,Euclid_J,Euclid_H,KiDS_u,KiDS_g,KiDS_r,KiDS_i,HST_ACS_I,CFHT_u,CFHT_g,CFHT_r,CFHT_i,CFHT_z} Telescope;
 
 typedef enum {counts_x_sec, flux} unitType;
+
 /** \ingroup Image
  * \brief It creates a realistic image from the output of a ray-tracing simulation.
  *
@@ -158,6 +159,8 @@ void smoothmap(double *map_out,double *map_in,long Npixels,double range,double s
 
 namespace Utilities{
     void LoadFitsImages(std::string dir,const std::string& filespec,std::vector<PixelMap> & images,int maxN,double resolution = -1,bool verbose = false);
+    void ReadFileNames(std::string dir,const std::string filespec,std::vector<std::string> & filenames
+                       ,bool verbose = false);
 }
 
 #endif

@@ -860,6 +860,8 @@ namespace Utilities
 	template<class BaseT>
 	std::size_t lower_bound(std::vector<BaseT*>& items, PosType target){
 		std::size_t ju,jm,jl;
+    
+    if(items.size() == 0) return 0;
 		
 		jl=0;
 		ju=items.size()-1;

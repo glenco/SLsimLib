@@ -586,7 +586,6 @@ void TreeSimpleVec<T>::BuildTree(){
 template <class T>
 void TreeSimpleVec<T>::_BuildTree(IndexType nparticles,IndexType *tmp_index){
     IndexType i,cut,dimension;
-    short j;
     BranchV *cbranch,branch1(*current),branch2(*current);
     PosType xcut;
 

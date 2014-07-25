@@ -142,8 +142,7 @@ private:
   int ncolumns;
   std::vector<CausticStructure> data;
   std::vector<double> cummulative_area;
-  size_t offset_index = 0;
-  
+
   void SetSearchTree();
   //TreeSimple *searchtree;
   TreeSimpleVec<CausticStructure> *searchtreevec;

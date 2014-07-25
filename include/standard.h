@@ -45,6 +45,10 @@
 #define arcsecTOradians  0.000004848136811  // convert arcesconds to radians
 #endif
 
+#ifndef degreesTOradians
+#define degreesTOradians  0.01745329251994  // convert degrees to radians
+#endif
+
 #ifndef hplanck
 #define hplanck  6.626068e-27  // in erg*sec
 #endif
@@ -70,7 +74,7 @@ typedef enum {FALSE, TRUE, MAYBE} Boo;
 
 #ifndef lensquant_declare
 #define lensquant_declare
-typedef enum {dt,alpha,alpha1,alpha2,kappa,gamma1,gamma2,gamma3,invmag} LensingVariable;
+typedef enum {dt,alpha,alpha1,alpha2,kappa,gamma,gamma1,gamma2,gamma3,invmag} LensingVariable;
 #endif
 
 #ifndef PosType_declare

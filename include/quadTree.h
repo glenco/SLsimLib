@@ -173,6 +173,7 @@ public:
 			,PosType my_sigma_background = 0
 			,int bucket = 5
 			,PosType theta_force = 0.1
+      ,bool periodic_buffer = false
 			);
 	TreeQuad(
 			PosType **xpt
@@ -181,6 +182,7 @@ public:
 			,PosType my_sigma_background = 0
 			,int bucket = 5
 			,PosType theta_force = 0.1
+      ,bool periodic_buffer = false
 			);
 	virtual ~TreeQuad();
 
@@ -214,6 +216,9 @@ protected:
 
 	PosType realray[2];
 	int incell,incell2;
+  
+  /// if true there is one layer of peridic buffering
+  bool periodic_buffer;
 
 	QTreeNBHndl BuildQTreeNB(PosType **xp,IndexType Nparticles,IndexType *particles);
 	void _BuildQTreeNB(IndexType nparticles,IndexType *particles);

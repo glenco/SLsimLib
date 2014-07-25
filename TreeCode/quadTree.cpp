@@ -23,9 +23,11 @@ TreeQuad::TreeQuad(
 		,PosType my_sigma_background /// background kappa that is subtracted
 		,int bucket
 		,PosType theta_force
+    ,bool periodic_buffer
 		):
-	xp(xpt),MultiMass(Multimass), MultiRadius(Multisize), masses(my_masses),sizes(my_sizes),Nparticles(Npoints),
-	sigma_background(my_sigma_background),Nbucket(bucket),force_theta(theta_force)
+	xp(xpt),MultiMass(Multimass), MultiRadius(Multisize), masses(my_masses)
+  ,sizes(my_sizes),Nparticles(Npoints),sigma_background(my_sigma_background)
+  ,Nbucket(bucket),force_theta(theta_force),periodic_buffer(periodic_buffer)
 {
 	index = new IndexType[Npoints];
 	IndexType ii;
@@ -46,14 +48,16 @@ TreeQuad::TreeQuad(
  */
 TreeQuad::TreeQuad(
 		PosType **xpt               /// Perpendicular position of halo (TODO: In proper distance?)
-		,LensHaloHndl *my_halos
-		,IndexType Npoints
+		,LensHaloHndl *my_halos     /// list of halos to be put in tree
+		,IndexType Npoints          /// number of halos
 		,PosType my_sigma_background /// background kappa that is subtracted
-		,int bucket
-		,PosType theta_force
+		,int bucket                  /// maximum number of halos in each leaf of the tree
+		,PosType theta_force         /// the openning angle used in the criterion for decending into a subcell
+    ,bool periodic_buffer        /// if true a periodic buffer will be imposed in the force calulation.  See documentation on TreeQuad::force2D() for details.
 		):
-	xp(xpt),MultiMass(true),MultiRadius(true),masses(NULL),sizes(NULL),Nparticles(Npoints),
-	sigma_background(my_sigma_background),Nbucket(bucket),force_theta(theta_force),halos(my_halos)
+	xp(xpt),MultiMass(true),MultiRadius(true),masses(NULL),sizes(NULL)
+  ,Nparticles(Npoints),sigma_background(my_sigma_background),Nbucket(bucket)
+  ,force_theta(theta_force),halos(my_halos),periodic_buffer(periodic_buffer)
 {
 	index = new IndexType[Npoints];
 	IndexType ii;
@@ -482,8 +486,8 @@ void TreeQuad::force2D(PosType const *ray
 
   *kappa=0.0;
   *phi = 0.0;
-
-    
+  
+  tree->moveTop();
   do{
 	  ++count;
 	  allowDescent=false;
@@ -660,6 +664,9 @@ void TreeQuad::force2D(PosType const *ray
  *       kappa and gamma need to by multiplied by mass_scale/Sigma_crit to get
  *       the traditional units for these where Sigma_crit are in the mass/units(ray)^2
  *       NB : the units of sigma_backgound need to be mass/units(ray)^2
+ *
+ *   If periodic_buffer == true a periodic buffer is included.  The ray is calculated as if there
+ *   where identical copies of it on the bourders of the tree's root branch.  This is not the same thing as periodic boundary conditions, because there are not an infinite number of copies in all direction as for the DFT force solver.
  * */
 
 void TreeQuad::force2D_recur(PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi){
@@ -669,18 +676,33 @@ void TreeQuad::force2D_recur(PosType const *ray,PosType *alpha,KappaType *kappa,
     alpha[0]=alpha[1]=gamma[0]=gamma[1]=gamma[2]=0.0;
     *kappa=*phi=0.0;
     
-    walkTree_recur(tree->top,&ray[0],&alpha[0],kappa,&gamma[0],phi);
+    //walkTree_recur(tree->top,ray,&alpha[0],kappa,&gamma[0],phi);
+  
+  if(periodic_buffer){
+    PosType lx,ly,tmp_ray[2],tmp_c[2];
+    lx = tree->top->boundary_p2[0] - tree->top->boundary_p1[0];
+    ly = tree->top->boundary_p2[1] - tree->top->boundary_p1[1];
     
+    tmp_c[0] = ray[0] - lx * (1 + (int)( (ray[0]-tree->top->center[0])/lx/2 ) )/2;
+    tmp_c[1] = ray[1] - ly * (1 + (int)( (ray[1]-tree->top->center[1])/ly/2 ) )/2;
+    
+    for(int i = -1;i<2;++i){
+      for(int j = -1;j<2;++j){
+        tmp_ray[0] = tmp_c[0] + i*lx;
+        tmp_ray[1] = tmp_c[1] + j*ly;
+        walkTree_recur(tree->top,tmp_ray,&alpha[0],kappa,&gamma[0],phi);
+      }
+    }
+  }else{
+    walkTree_recur(tree->top,ray,&alpha[0],kappa,&gamma[0],phi);
+  }
+  
     // Subtract off uniform mass sheet to compensate for the extra mass
     //  added to the universe in the halos.
     alpha[0] -= ray[0]*sigma_background;
     alpha[1] -= ray[1]*sigma_background;
   
-    {      //  taken out to speed up
-        *kappa -= sigma_background;
-        // PHI BY Fabien : should I do this subtraction for phi too ?
-        // *phi -= sigma_background * sigma_background ;
-    }
+    *kappa -= sigma_background;
     
     return;
 }

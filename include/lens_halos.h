@@ -632,12 +632,9 @@ protected:
  * \brief A class for calculating the deflection, kappa and gamma caused by a collection of halos
  * with truncated Hernquist mass profiles.
  *
- * Derived from the TreeQuad class.  The "particles" are replaced with spherical halos.
- *The truncation is in 2d not 3d. \f$ \Sigma \propto r^\beta \f$ so beta would usually be negative.
+ * The profile is \f$ \rho \propto \left( \frac{r}{r_s} \right)^{-1} \left( 1 + \frac{r}{r_s} \right)^{-3} \f$.
  *
  *
- * The default value of theta = 0.1 generally gives better than 1% accuracy on alpha.
- * The shear and kappa is always more accurate than the deflection.
  */
 
 class LensHaloHernquist: public LensHalo{
@@ -647,7 +644,7 @@ public:
 	LensHaloHernquist(InputParams& params);
 	virtual ~LensHaloHernquist();
 
-    PosType ffunction(PosType x);
+  PosType ffunction(PosType x);
 	PosType gfunction(PosType x);
 	PosType hfunction(PosType x);
 	PosType g2function(PosType x);
@@ -667,9 +664,6 @@ public:
 	/// set scale radius
 	void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
    // friend struct Ialpha_func;
-    
-
-
     
 protected:
 	/// table size
@@ -717,13 +711,10 @@ private:
  * \brief A class for calculating the deflection, kappa and gamma caused by a collection of halos
  * with truncated Jaffe mass profiles.
  *
- * Derived from the TreeQuad class.  The "particles" are replaced with spherical halos.
- *The truncation is in 2d not 3d. \f$ \Sigma \propto r^\beta \f$ so beta would usually be negative.
+ * The profile is \f$ \rho \propto \left( \frac{r}{r_s} \right)^{-2} \left( 1 + \frac{r}{r_s} \right)^{-2} \f$ so beta would usually be negative.
  *
  *
- * The default value of theta = 0.1 generally gives better than 1% accuracy on alpha.
- * The shear and kappa is always more accurate than the deflection.
- */
+*/
 
 class LensHaloJaffe: public LensHalo{
 public:
@@ -737,16 +728,13 @@ public:
 	/// set scale radius
 	void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
 
-    PosType ffunction(PosType x);
+  PosType ffunction(PosType x);
 	PosType gfunction(PosType x);
 	PosType hfunction(PosType x);
 	PosType g2function(PosType x);
-    PosType bfunction(PosType x);
-    PosType dbfunction(PosType x);
-    PosType ddbfunction(PosType x);
-    
-    
-	
+  PosType bfunction(PosType x);
+  PosType dbfunction(PosType x);
+  PosType ddbfunction(PosType x);
     
 protected:
     

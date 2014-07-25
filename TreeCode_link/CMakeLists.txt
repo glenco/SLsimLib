@@ -18,5 +18,6 @@ add_sources(
 	quadrature.cpp
 	tree_maintenance.cpp
 	utilities.cpp
+        geometry.cpp
 	List/list.cpp
 )

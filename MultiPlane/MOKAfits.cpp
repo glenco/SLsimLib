@@ -134,7 +134,7 @@ void LensHaloMOKA::readImage(){
 	  try {
 	    // physical size in degrees
             h0->readKey("PHYSICALSIZE",map->boxlarcsec);
-	    map->boxlarcsec*=60.*60;
+            map->boxlarcsec*=60.*60;
             pixLMpc = map->boxlarcsec/npixels/inarcsec;  
             map->boxlMpc = pixLMpc*npixels;
 	    try {
