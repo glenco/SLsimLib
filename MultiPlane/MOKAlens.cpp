@@ -129,6 +129,7 @@ void LensHaloMOKA::initMap()
 	map->gamma1.resize(size);
 	map->gamma2.resize(size); 
 	map->gamma3.resize(size);
+	map->phi.resize(size);
 	
 	readImage();
 	
@@ -139,6 +140,7 @@ void LensHaloMOKA::initMap()
 		map->alpha2 = 0;
 		map->gamma1 = 0;
 		map->gamma2 = 0;
+		map->phi = 0;
 	}
 
     map->center[0] = map->center[1] = 0.0;
@@ -163,6 +165,8 @@ void LensHaloMOKA::initMap()
         map->alpha1 *= fac;
         map->alpha2 *= fac;
 
+        map->phi *= fac; // Added by Fabien : is it the good factor ?
+      
         checkCosmology();
     }else{
         // simulation case
@@ -483,10 +487,7 @@ void LensHaloMOKA::force_halo(double *alpha
   gamma[1] = interp.interpolate(map->gamma2);
   gamma[2] = 0.0;
   *kappa = interp.interpolate(map->convergence);
-
-  // TODO: PHI BY Fabien : I would like to implement something of the type :
-  // *phi = interp.interpolate(map->potential);
-  // but the MOKAmap called map does not have this yet !
+  *phi = interp.interpolate(map->phi);
     
 	return;
 }
