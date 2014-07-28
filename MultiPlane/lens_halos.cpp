@@ -123,21 +123,21 @@ LensHaloNFW::LensHaloNFW(float my_mass,float my_Rmax,PosType my_zlens,float my_c
     stars_implanted = false;
 
 	rscale = Rmax/rscale; // TODO make use of rscale/concentration in NFW clearer
-    xmax = Rmax/rscale;
+  xmax = Rmax/rscale;
     
-    make_tables();
+  make_tables();
 	gmax = InterpolateFromTable(gtable, xmax);
     
-    set_slope(1);
-    /// If the axis ratio given in the parameter file is set to 1 all ellipticizing routines are skipped.
-    if(fratio!=1){
-        std::cout << "NFW constructor: slope set to " << get_slope() << std::endl;
-        calcModes(fratio, get_slope(), pa, mod); // to ellipticize potential instead of  kappa take calcModes(fratio, 2-get_slope(), pa, mod);
-        for(int i=1;i<Nmod;i++){
-            if(mod[i]!=0){set_flag_elliptical(true);};
-        }
+  set_slope(1);
+  /// If the axis ratio given in the parameter file is set to 1 all ellipticizing routines are skipped.
+  if(fratio!=1){
+    std::cout << "NFW constructor: slope set to " << get_slope() << std::endl;
+    calcModes(fratio, get_slope(), pa, mod); // to ellipticize potential instead of  kappa take calcModes(fratio, 2-get_slope(), pa, mod);
+    for(int i=1;i<Nmod;i++){
+      if(mod[i]!=0){set_flag_elliptical(true);};
+    }
 
-    }else set_flag_elliptical(false);
+  }else set_flag_elliptical(false);
     
     // std::cout << mass << " " << rscale << std::endl;
     
@@ -214,7 +214,7 @@ void LensHaloNFW::make_tables(){
         
         // modtable[axis ratio 100][potential slope beta 1000][Nmods 32] for Ansatz IV
         
-        int j,k;
+        int j;
         modtable = new PosType**[100];
  
          
@@ -332,14 +332,14 @@ void LensHaloNFW::initFromFile(float my_mass, long *seed, float vmax, float r_ha
 	// Find the NFW profile with the same mass, Vmax and R_halfmass
 	nfw_util.match_nfw(vmax,r_halfmass,mass,&rscale,&Rmax);
 	rscale = Rmax/rscale; // Was the concentration
-    xmax = Rmax/rscale;
-    gmax = InterpolateFromTable(gtable,xmax);
+  xmax = Rmax/rscale;
+  gmax = InterpolateFromTable(gtable,xmax);
 }
 
 void LensHaloNFW::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long* seed)
 {
 	LensHalo::initFromMassFunc(my_mass, my_Rmax, my_rscale, my_slope, seed);
-    gmax = InterpolateFromTable(gtable,xmax);
+  gmax = InterpolateFromTable(gtable,xmax);
 }
 
 const long LensHaloPseudoNFW::NTABLE = 10000;

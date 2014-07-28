@@ -526,6 +526,37 @@ bool InputParams::get(std::string label, ClumpInternal& value) const
  * is returned.  If the parameter in the file does not "match" the type
  * of value false will also be returned and a warning printed to stdout.
  *
+ * MainLensType entries in the parameter file must be 0 through 2 or NFW, PowerLaw, or PointMass.
+ */
+
+bool InputParams::get(std::string label, HaloCatFormats& value) const
+{
+	const_iterator it = params.find(label);
+	if(it == params.end())
+		return false;
+  
+	use_counter.use(it->first);
+	
+	if(!it->second.compare("MillenniumObs"))
+	{
+		value = MillenniumObs;
+		return true;
+	}
+	if(!it->second.compare("MultiDark"))
+	{
+		value = MultiDark;
+		return true;
+	}
+  
+	std::cout << label << " in parameter file " << paramfile_name << " needs to be MillenniumObs or MultiDark!" << std::endl;
+	return false;
+}
+
+/** \brief Assigns to "value" the value of the parameter called "label".
+ * If this parameter label does not appear in the parameter file false
+ * is returned.  If the parameter in the file does not "match" the type
+ * of value false will also be returned and a warning printed to stdout.
+ *
  * MainLensType entries in the parameter file must be One,Mono,BrokenPowerLaw,Salpeter,SinglePowerLaw,Kroupa or Chabrier
  */
 

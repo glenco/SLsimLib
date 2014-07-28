@@ -978,6 +978,7 @@ void Grid::writeFits(
   std::string tag;
   i_tree->PointsWithinKist(center,range/sqrt(2.),tmp_image.imagekist,0);
   std::vector<PosType> tmp_sb_vec(tmp_image.imagekist->Nunits());
+  PosType tmp_x[2];
 
   for(tmp_image.imagekist->MoveToTop(),i=0;i<tmp_sb_vec.size();++i,tmp_image.imagekist->Down()){
     tmp_sb_vec[i] = tmp_image.imagekist->getCurrent()->surface_brightness;
@@ -1020,6 +1021,14 @@ void Grid::writeFits(
         tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->gamma[2];
         tag = ".gamma3.fits";
         break;
+      case gamma:
+        tmp_x[0] = tmp_image.imagekist->getCurrent()->gamma[0];
+        tmp_x[1] = tmp_image.imagekist->getCurrent()->gamma[1];
+        
+        tmp_image.imagekist->getCurrent()->surface_brightness = sqrt( tmp_x[0]*tmp_x[0] + tmp_x[1]*tmp_x[1]);
+        tag = ".gamma.fits";
+        break;
+
       case invmag:
         tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->invmag;
         tag = ".invmag.fits";
@@ -1052,7 +1061,8 @@ PixelMap Grid::writePixelMap(
     std::string tag;
     i_tree->PointsWithinKist(center,range/sqrt(2.),tmp_image.imagekist,0);
     std::vector<PosType> tmp_sb_vec(tmp_image.imagekist->Nunits());
-    
+    PosType tmp_x[2];
+  
     for(tmp_image.imagekist->MoveToTop(),i=0;i<tmp_sb_vec.size();++i,tmp_image.imagekist->Down()){
         tmp_sb_vec[i] = tmp_image.imagekist->getCurrent()->surface_brightness;
         switch (lensvar) {
@@ -1094,6 +1104,13 @@ PixelMap Grid::writePixelMap(
                 tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->gamma[2];
                 tag = ".gamma3.fits";
                 break;
+            case gamma:
+              tmp_x[0] = tmp_image.imagekist->getCurrent()->gamma[0];
+              tmp_x[1] = tmp_image.imagekist->getCurrent()->gamma[1];
+            
+                tmp_image.imagekist->getCurrent()->surface_brightness = sqrt( tmp_x[0]*tmp_x[0] + tmp_x[1]*tmp_x[1]);
+                tag = ".gamma.fits";
+                break;
             case invmag:
                 tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->invmag;
                 tag = ".invmag.fits";
@@ -1121,7 +1138,7 @@ void Grid::writeFitsVector(
                      ,LensingVariable lensvar  /// which quantity is to be displayed
                      ,std::string filename     /// file name for image -- .kappa.fits, .gamma1.fits, etc will be appended
                      ){
-  throw std::runtime_error("Not done yet!");
+  //throw std::runtime_error("Not done yet!");
   
   PosType range = Npixels*resolution,tmp_x[2];
   ImageInfo tmp_image,tmp_image_theta;
