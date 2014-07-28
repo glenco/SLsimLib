@@ -493,7 +493,7 @@ LensHaloPowerLaw::LensHaloPowerLaw(
                                    ,float my_Rmax      /// maximum radius of halo in Mpc
                                    ,PosType my_zlens   /// redshift of halo
                                    ,float my_rscale    /// dummy scale,  not acutally used
-                                   ,PosType my_beta    /// logorithmic slop of surface density, kappa \propto r^{-beta}
+                                   ,PosType my_beta    /// logarithmic slop of surface density, kappa \propto r^{-beta}
                                    ,float my_fratio    /// axis ratio in asymetric case
                                    ,float my_pa        /// position angle
                                    ,int my_stars_N     /// number of stars, not yet implanted
@@ -509,7 +509,10 @@ LensHaloPowerLaw::LensHaloPowerLaw(
             if(mod[i]!=0){set_flag_elliptical(true);};
         }
     }
-    rscale = xmax = 1.0;
+    // rscale = xmax = 1.0;
+    // Fabien : replacing it by :
+    rscale = 1;
+    xmax = Rmax/rscale ;
 }
 
 LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){

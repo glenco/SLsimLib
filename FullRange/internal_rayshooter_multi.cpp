@@ -309,7 +309,7 @@ for(i = start; i < end; i++)
         gamma_minus[1] = p->i_points[i].gamma[1];
         gamma_minus[2] = p->i_points[i].gamma[2];
         // ------------------------------------------------------------------------------------------
-            
+      
         assert(kappa_plus==kappa_plus && gamma_minus[0]==gamma_minus[0] && gamma_minus[1]==gamma_minus[1] && gamma_minus[2]==gamma_minus[2]);
 
             

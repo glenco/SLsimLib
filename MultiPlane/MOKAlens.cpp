@@ -113,7 +113,7 @@ void LensHaloMOKA::initMap()
 #endif
 
 	map = new MOKAmap();
-	
+  
 	if(std::numeric_limits<float>::has_infinity)
 		Rmax = std::numeric_limits<float>::infinity();
 	else
@@ -132,7 +132,7 @@ void LensHaloMOKA::initMap()
 	map->phi.resize(size);
 	
 	readImage();
-	
+
 	if(flag_background_field == 1)
 	{
 		map->convergence = 0;
