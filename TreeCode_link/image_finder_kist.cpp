@@ -677,7 +677,7 @@ void ImageFinding::find_images_microlens(
           NuniformMags = 0;
           for(int k=0; k < *Nimages; ++k){
               if( 1.0e-4 > imageinfo[k].area/pi/r_source/r_source ) imageinfo[k].ShouldNotRefine = true;
-              if(*Nimages > 10 && (imageinfo[k].imagekist->Nunits() > 10 && imageinfo[k].constant(invmag,1.0e-4)) ){
+              if(*Nimages > 10 && (imageinfo[k].imagekist->Nunits() > 10 && imageinfo[k].constant(INVMAG,1.0e-4)) ){
                   imageinfo[k].ShouldNotRefine = true;
                   ++NuniformMags;
             }
@@ -1004,7 +1004,7 @@ void ImageFinding::find_images_microlens(
 			imageinfo[i].centroid[1] /= tmp;
 		}
 
-    if(imageinfo[i].constant(invmag,1.0e-3))
+    if(imageinfo[i].constant(INVMAG,1.0e-3))
       imageinfo[i].area = fabs(pi*r_source*r_source/imageinfo[i].imagekist->getCurrent()->invmag);
     
 		// redefine error so that it is based on the smallest grid cell on the border of the image
@@ -1158,7 +1158,7 @@ void ImageFinding::find_images_microlens_exper(
             for(int k=0; k < *Nimages; ++k){
                 if( 1.0e-4 > imageinfo[k].area/pi/r_source/r_source ) imageinfo[k].ShouldNotRefine = true;
                 if( (*Nimages > 10) * (imageinfo[k].imagekist->Nunits() > 20)
-                                     * imageinfo[k].constant(invmag,1.0e-4) ){
+                                     * imageinfo[k].constant(INVMAG,1.0e-4) ){
                     if(!(imageinfo[k].ShouldNotRefine)){
                         imageinfo[k].ShouldNotRefine = true;
                     
@@ -1484,7 +1484,7 @@ void ImageFinding::find_images_microlens_exper(
 			imageinfo[i].centroid[1] /= tmp;
 		}
         
-        if(imageinfo[i].constant(invmag,1.0e-3))
+        if(imageinfo[i].constant(INVMAG,1.0e-3))
             imageinfo[i].area = fabs(pi*r_source*r_source/imageinfo[i].imagekist->getCurrent()->invmag);
         
 		// redefine error so that it is based on the smallest grid cell on the border of the image

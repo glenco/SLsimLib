@@ -74,7 +74,7 @@ typedef enum {FALSE, TRUE, MAYBE} Boo;
 
 #ifndef lensquant_declare
 #define lensquant_declare
-typedef enum {dt,alpha,alpha1,alpha2,kappa,gamma,gamma1,gamma2,gamma3,invmag} LensingVariable;
+enum LensingVariable {DT,ALPHA,ALPHA1,ALPHA2,KAPPA,GAMMA,GAMMA1,GAMMA2,GAMMA3,INVMAG} ;
 #endif
 
 #ifndef PosType_declare
