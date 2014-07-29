@@ -983,21 +983,21 @@ void Grid::writeFits(
   for(tmp_image.imagekist->MoveToTop(),i=0;i<tmp_sb_vec.size();++i,tmp_image.imagekist->Down()){
     tmp_sb_vec[i] = tmp_image.imagekist->getCurrent()->surface_brightness;
     switch (lensvar) {
-      case dt:
+      case DT:
         tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->dt;
         tag = ".dt.fits";
         break;
-      case alpha1:
+      case ALPHA1:
         tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->x[0]
         - tmp_image.imagekist->getCurrent()->image->x[0];
         tag = ".alpha1.fits";
         break;
-      case alpha2:
+      case ALPHA2:
         tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->x[1]
         - tmp_image.imagekist->getCurrent()->image->x[1];
         tag = ".alpha2.fits";
         break;
-      case alpha:
+      case ALPHA:
         tmp_image.imagekist->getCurrent()->surface_brightness = pow(tmp_image.imagekist->getCurrent()->x[0]- tmp_image.imagekist->getCurrent()->image->x[0],2);
         tmp_image.imagekist->getCurrent()->surface_brightness += pow(tmp_image.imagekist->getCurrent()->x[1]- tmp_image.imagekist->getCurrent()->image->x[1],2);
         
@@ -1005,23 +1005,23 @@ void Grid::writeFits(
         
         tag = ".alpha.fits";
         break;
-      case kappa:
+      case KAPPA:
         tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->kappa;
         tag = ".kappa.fits";
         break;
-      case gamma1:
+      case GAMMA1:
         tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->gamma[0];
         tag = ".gamma1.fits";
         break;
-      case gamma2:
+      case GAMMA2:
         tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->gamma[1];
         tag = ".gamma2.fits";
         break;
-      case gamma3:
+      case GAMMA3:
         tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->gamma[2];
         tag = ".gamma3.fits";
         break;
-      case gamma:
+      case GAMMA:
         tmp_x[0] = tmp_image.imagekist->getCurrent()->gamma[0];
         tmp_x[1] = tmp_image.imagekist->getCurrent()->gamma[1];
         
@@ -1029,7 +1029,7 @@ void Grid::writeFits(
         tag = ".gamma.fits";
         break;
 
-      case invmag:
+      case INVMAG:
         tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->invmag;
         tag = ".invmag.fits";
         break;
@@ -1066,21 +1066,21 @@ PixelMap Grid::writePixelMap(
     for(tmp_image.imagekist->MoveToTop(),i=0;i<tmp_sb_vec.size();++i,tmp_image.imagekist->Down()){
         tmp_sb_vec[i] = tmp_image.imagekist->getCurrent()->surface_brightness;
         switch (lensvar) {
-            case dt:
+            case DT:
                 tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->dt;
                 tag = ".dt.fits";
                 break;
-            case alpha1:
+            case ALPHA1:
                 tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->x[0]
                 - tmp_image.imagekist->getCurrent()->image->x[0];
                 tag = ".alpha1.fits";
                 break;
-            case alpha2:
+            case ALPHA2:
                 tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->x[1]
                 - tmp_image.imagekist->getCurrent()->image->x[1];
                 tag = ".alpha2.fits";
                 break;
-            case alpha:
+            case ALPHA:
                 tmp_image.imagekist->getCurrent()->surface_brightness = pow(tmp_image.imagekist->getCurrent()->x[0]- tmp_image.imagekist->getCurrent()->image->x[0],2);
                 tmp_image.imagekist->getCurrent()->surface_brightness += pow(tmp_image.imagekist->getCurrent()->x[1]- tmp_image.imagekist->getCurrent()->image->x[1],2);
             
@@ -1088,30 +1088,30 @@ PixelMap Grid::writePixelMap(
         
                 tag = ".alpha.fits";
                 break;
-            case kappa:
+            case KAPPA:
                 tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->kappa;
                 tag = ".kappa.fits";
                 break;
-            case gamma1:
+            case GAMMA1:
                 tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->gamma[0];
                 tag = ".gamma1.fits";
                 break;
-            case gamma2:
+            case GAMMA2:
                 tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->gamma[1];
                 tag = ".gamma2.fits";
                 break;
-            case gamma3:
+            case GAMMA3:
                 tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->gamma[2];
                 tag = ".gamma3.fits";
                 break;
-            case gamma:
+            case GAMMA:
               tmp_x[0] = tmp_image.imagekist->getCurrent()->gamma[0];
               tmp_x[1] = tmp_image.imagekist->getCurrent()->gamma[1];
             
                 tmp_image.imagekist->getCurrent()->surface_brightness = sqrt( tmp_x[0]*tmp_x[0] + tmp_x[1]*tmp_x[1]);
                 tag = ".gamma.fits";
                 break;
-            case invmag:
+            case INVMAG:
                 tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->invmag;
                 tag = ".invmag.fits";
                 break;
@@ -1153,7 +1153,7 @@ void Grid::writeFitsVector(
   for(tmp_image.imagekist->MoveToTop(),i=0;i<tmp_sb_vec.size();++i,tmp_image.imagekist->Down()){
     tmp_sb_vec[i] = tmp_image.imagekist->getCurrent()->surface_brightness;
     switch (lensvar) {
-      case alpha1:
+      case ALPHA1:
         tmp_x[0] = tmp_image.imagekist->getCurrent()->x[0]
             - tmp_image.imagekist->getCurrent()->image->x[0];
 
@@ -1165,7 +1165,7 @@ void Grid::writeFitsVector(
             
         tag = ".alphaV.fits";
         break;
-      case gamma1:
+      case GAMMA:
         
         tmp_x[0] = tmp_image.imagekist->getCurrent()->gamma[0];
         tmp_x[1] = tmp_image.imagekist->getCurrent()->gamma[1];
