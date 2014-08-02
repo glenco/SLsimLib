@@ -93,6 +93,17 @@ PosType LensHaloNFW::gfunction(PosType x){
 	return 0.0;
 }
 
+PosType LensHaloNFW::dgfunctiondx(PosType x){
+	PosType ans;
+	if(x==0) x=1e-5;
+	ans=1./x;
+	if(x==1.0){ return 1./3.;}
+	if(x>1.0){  ans += 1/(x*(x*x-1)) -  2*x*atan(sqrt((x-1)/(x+1)))/pow(x*x-1,1.5); return ans;}
+	if(x<1.0){  ans += 1/(x*(x*x-1)) +  2*x*atanh(sqrt((1-x)/(x+1)))/pow(1-x*x,1.5); return ans;}
+	return 0.0;
+}
+
+
 PosType LensHaloNFW::ffunction(PosType x){
 	PosType ans;
 
