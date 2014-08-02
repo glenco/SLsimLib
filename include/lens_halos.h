@@ -157,16 +157,31 @@ public:
     //PosType ddmod(PosType x, int modnumber, PosType my_slope, PosType my_fratio);
     //PosType dlnmod_dr(PosType x, int modnumber, PosType my_slope, PosType my_fratio);
     //PosType ddlnmod_dr(PosType x, int modnumber, PosType my_slope, PosType my_fratio);
-    
-    
+    PosType renormalization(PosType r_max);
+
 protected:
   PosType alpha_int(PosType x);
-  
+  PosType norm_int(PosType r_max);
+ // PosType norm_intt(PosType theta);
+    
+    
   void force_halo_sym(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false);
 	void force_halo_asym(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType const *xcm,bool subtract_point=false);
 
-  //friend struct Ig_func;
+
+  struct norm_func{
+      norm_func(LensHalo& halo, PosType my_r_max): halo(halo), r_max(my_r_max){};
+      LensHalo& halo;
+      PosType r_max;
+      //PosType operator ()(PosType theta) {halo.alpha_asym(r_max, theta, alpha_arr); return alpha_arr[0]*cos(theta)*cos(theta)+alpha_arr[1]*sin(theta)*sin(theta);}
+    PosType operator ()(PosType theta) {return halo.alpha_ell(r_max, theta);}
+  };
   
+    
+ //friend struct Ig_func;
+  
+    
+    
   struct Ialpha_func{
     Ialpha_func(LensHalo& halo): halo(halo){};
     LensHalo& halo;
@@ -236,6 +251,7 @@ protected:
     virtual KappaType inline phi_int(PosType x){return 1;};
     virtual PosType inline ffunction(PosType x){return 0;};
     virtual PosType inline gfunction(PosType x){return -1;};
+    virtual PosType inline dgfunctiondx(PosType x){return 0;};
     virtual PosType inline bfunction(PosType x){return -1;};
     virtual PosType inline dhfunction(PosType x){return 1;};
     virtual PosType inline ddhfunction(PosType x, bool numerical){return 0;};
@@ -247,10 +263,13 @@ protected:
     virtual PosType inline ddmoddb(int whichmod, PosType q, PosType b){return 0;};
     virtual PosType inline dmoddq(int whichmod, PosType q, PosType b){return 0;};
     virtual PosType inline ddmoddq(int whichmod, PosType q, PosType b){return 0;};
+
+ 
     
     
     PosType xmax;
-
+    PosType mnorm;
+    
   // Functions for calculating axial dependence
     float pa;
     float fratio=1;
@@ -268,6 +287,8 @@ protected:
 	virtual void gamma_asym(PosType x,PosType theta, PosType gamma[2]);
 	virtual PosType kappa_asym(PosType x,PosType theta);
 	virtual void alpha_asym(PosType x,PosType theta, PosType alpha[2]);
+    virtual PosType alpha_ell(PosType x,PosType theta);
+  
     double fourier_coeff(double n, double q, double beta);
     
     void calcModes(double q, double beta, double rottheta, PosType newmod[]);
@@ -327,6 +348,7 @@ public:
 
 	PosType ffunction(PosType x);
 	PosType gfunction(PosType x);
+  PosType dgfunctiondx(PosType x);
 	PosType g2function(PosType x);
 	PosType hfunction(PosType x);
     PosType dhfunction(PosType x);
@@ -404,6 +426,8 @@ protected:
     
 private:
   PosType gmax;
+
+
 };
 // ********************
 
@@ -532,7 +556,7 @@ private:
 		if(x==0) x=1e-6*xmax;
 		//assert(beta==2);
 		//assert(-1.0*pow(x/xmax,beta+2) != 0.0);
-        //std::cout << x << " " << beta << "  " << -1.0*pow(x/xmax,beta+2) << std::endl;
+    //std::cout << xmax << " " << beta << "  " << -1.0*pow(x/xmax,beta+2) << std::endl;
 		return -1.0*pow(x/xmax,-beta+2);
 	}
     /// this is not kappa to be overridden and there is an extra factor of M/pi/x^2 in force_halo

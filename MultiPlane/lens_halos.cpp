@@ -159,6 +159,9 @@ LensHaloNFW::LensHaloNFW(InputParams& params)
 	assignParams(params);
 	make_tables();
 	gmax = InterpolateFromTable(gtable, xmax);
+
+    mnorm = renormalization(get_Rmax());
+    std::cout << "mass normalization: " << mnorm << std::endl;
     
     // If the 2nd argument in calcModes(fratio, slope, pa, mod), the slope, is set to 1 it yields an elliptical kappa contour of given axis ratio (fratio) at the radius where the slope of the 3D density profile is -2, which is defined as the scale radius for the NFW profile. To ellipticize the potential instead of the convergence use calcModes(fratio, 2-get_slope(), pa, mod), this produces also an ellipse in the convergence map, but at the radius where the slope is 2-get_slope().
     set_slope(1);
@@ -193,9 +196,6 @@ void LensHaloNFW::make_tables(){
 		g2table = new PosType[NTABLE];
 		htable = new PosType[NTABLE];
         xgtable = new PosType[NTABLE];
-        
-        
-        
         
         
 		for(i = 0 ; i< NTABLE; i++){
@@ -547,7 +547,10 @@ LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
         //}
 
     }else elliptical_flag = false;
-    rscale = xmax = 1.0;
+  rscale = xmax = 1.0;
+  mnorm = renormalization(get_Rmax());
+  std::cout << "mass normalization: " << mnorm << std::endl;
+  
 }
 
 void LensHaloPowerLaw::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed){
