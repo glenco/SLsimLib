@@ -1457,10 +1457,10 @@ bool ImageInfo::constant(
   if(imagekist->Nunits() < 2) return false;
   
   switch(lensvar){
-		case kappa:
+		case KAPPA:
 			max = min = imagekist->getCurrent()->kappa;
 			break;
-		case invmag:
+		case INVMAG:
 			max = min = imagekist->getCurrent()->invmag;
 			break;
 		default:
@@ -1470,8 +1470,8 @@ bool ImageInfo::constant(
 
   imagekist->MoveToTop();
   do{
-    if(lensvar == invmag) tmp = imagekist->getCurrent()->invmag;
-    if(lensvar == kappa) tmp = imagekist->getCurrent()->kappa;
+    if(lensvar == INVMAG) tmp = imagekist->getCurrent()->invmag;
+    if(lensvar == KAPPA) tmp = imagekist->getCurrent()->kappa;
     
     if(tmp > max ) max = tmp;
     if(tmp < min ) min = tmp;

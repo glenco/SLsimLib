@@ -534,12 +534,12 @@ public:
 	/// set the slope of the surface density profile
 	void set_slope(PosType my_slope){beta=my_slope;};
     
-    /// get slope
-    PosType get_slope(){return beta;};
+  /// get slope
+  PosType get_slope(){return beta;};
     
 	/// initialize from a mass function
 	void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed);
-    
+  
     
 
 private:
@@ -549,7 +549,6 @@ private:
 	///	read in parameters from a parameterfile in InputParams params
 	PosType beta;
     PosType pa;
-    
 
 	// Override internal structure of halos
 	inline PosType alpha_h(PosType x){
@@ -574,12 +573,10 @@ private:
 		return -0.5*beta*pow(x/xmax,-beta+2);
 	}
 	inline KappaType phi_h(PosType x){
-		//ERROR_MESSAGE();
-		//std::cout << "time delay has not been fixed for PowerLaw profile yet." << std::endl;
 		if(x==0) x=1e-6*xmax;
 		return -1.0*pow(x/xmax,-beta+2)/(-beta+2);
 	}
-    inline KappaType phi_int(PosType x){
+  inline KappaType phi_int(PosType x){
 		//return alpha_int(x);
         return -1.0*pow(x/xmax,-beta+2)/(-beta+2);
     }
@@ -659,12 +656,9 @@ protected:
  * \brief A class for calculating the deflection, kappa and gamma caused by a collection of halos
  * with truncated Hernquist mass profiles.
  *
- * Derived from the TreeQuad class.  The "particles" are replaced with spherical halos.
- *The truncation is in 2d not 3d. \f$ \Sigma \propto r^\beta \f$ so beta would usually be negative.
+ * The profile is \f$ \rho \propto \left( \frac{r}{r_s} \right)^{-1} \left( 1 + \frac{r}{r_s} \right)^{-3} \f$.
  *
  *
- * The default value of theta = 0.1 generally gives better than 1% accuracy on alpha.
- * The shear and kappa is always more accurate than the deflection.
  */
 
 class LensHaloHernquist: public LensHalo{
@@ -674,7 +668,7 @@ public:
 	LensHaloHernquist(InputParams& params);
 	virtual ~LensHaloHernquist();
 
-    PosType ffunction(PosType x);
+  PosType ffunction(PosType x);
 	PosType gfunction(PosType x);
 	PosType hfunction(PosType x);
 	PosType g2function(PosType x);
@@ -694,9 +688,6 @@ public:
 	/// set scale radius
 	void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
    // friend struct Ialpha_func;
-    
-
-
     
 protected:
 	/// table size
@@ -744,13 +735,10 @@ private:
  * \brief A class for calculating the deflection, kappa and gamma caused by a collection of halos
  * with truncated Jaffe mass profiles.
  *
- * Derived from the TreeQuad class.  The "particles" are replaced with spherical halos.
- *The truncation is in 2d not 3d. \f$ \Sigma \propto r^\beta \f$ so beta would usually be negative.
+ * The profile is \f$ \rho \propto \left( \frac{r}{r_s} \right)^{-2} \left( 1 + \frac{r}{r_s} \right)^{-2} \f$ so beta would usually be negative.
  *
  *
- * The default value of theta = 0.1 generally gives better than 1% accuracy on alpha.
- * The shear and kappa is always more accurate than the deflection.
- */
+*/
 
 class LensHaloJaffe: public LensHalo{
 public:
@@ -764,16 +752,13 @@ public:
 	/// set scale radius
 	void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
 
-    PosType ffunction(PosType x);
+  PosType ffunction(PosType x);
 	PosType gfunction(PosType x);
 	PosType hfunction(PosType x);
 	PosType g2function(PosType x);
-    PosType bfunction(PosType x);
-    PosType dbfunction(PosType x);
-    PosType ddbfunction(PosType x);
-    
-    
-	
+  PosType bfunction(PosType x);
+  PosType dbfunction(PosType x);
+  PosType ddbfunction(PosType x);
     
 protected:
     

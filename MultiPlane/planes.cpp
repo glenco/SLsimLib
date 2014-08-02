@@ -59,14 +59,14 @@ LensPlaneSingular::~LensPlaneSingular()
 void LensPlaneSingular::force(PosType *alpha
                               ,KappaType *kappa
                               ,KappaType *gamma
-                              ,KappaType *phi
+                              ,KappaType *phi       /// in mass
                               ,PosType *xx          // Position in physical Mpc
                               )
 {
 
 	PosType alpha_tmp[2],x_tmp[2];
 	KappaType kappa_tmp, gamma_tmp[3];
-    KappaType phi_tmp;
+  KappaType phi_tmp;
     
 	alpha[0] = alpha[1] = 0.0;
   x_tmp[0] = x_tmp[1] = 0.0;
@@ -91,10 +91,10 @@ void LensPlaneSingular::force(PosType *alpha
 
 		halos[i]->force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp,x_tmp,false);
     
-        // Adding the temporary values to the different quantities :
+    // Adding the temporary values to the different quantities :
 		alpha[0] -= alpha_tmp[0];
 		alpha[1] -= alpha_tmp[1];
-		*kappa += kappa_tmp;
+    *kappa += kappa_tmp;
 		gamma[0] += gamma_tmp[0];
 		gamma[1] += gamma_tmp[1];
 		gamma[2] += gamma_tmp[2];

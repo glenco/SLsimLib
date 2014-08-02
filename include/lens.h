@@ -11,6 +11,7 @@
 #include "quadTree.h"
 #include "utilities_slsim.h"
 #include "planes.h"
+#include "geometry.h"
 
 #include <map>
 
@@ -172,7 +173,7 @@ public:
 
   /// returns a const reference to the cosmology so that constant functions can be used, but the cosmological parameters cannot be changed.
   const COSMOLOGY & getCosmo(){return cosmo;}
-
+ 
 private:
 	GLAMER_TEST_FRIEND(LensTest)
 	
@@ -216,8 +217,10 @@ private: /* generation */
 	void setupFieldPlanes();
 	/// create field halos as specified in the parameter file
 	void createFieldHalos(bool verbose);
-	/// read field halo data in from a file
-	void readInputSimFile(bool verbose);
+	/// read field halo data in from a file in Millennium output format
+	void readInputSimFileMillennium(bool verbose);
+	/// read field halo data in from a file in MultiDark output format
+	void readInputSimFileMultiDark(bool verbose);
 	/// build the field planes and sort halos onto them
 	void createFieldPlanes(bool verbose);
 	
@@ -287,6 +290,8 @@ private: /* field */
 	bool read_redshift_planes;
 	
 	std::string field_input_sim_file;
+  HaloCatFormats field_input_sim_format;
+  
 	bool sim_input_flag;
 	//std::string input_gal_file;
 	//bool gal_input_flag;
@@ -321,6 +326,11 @@ private: /* input */
 	
  	/// read main halos from a MultiDark simulation
 	void readMultiDark();
+  
+  /// the center of the lens in spherical coordinates
+  Utilities::Geometry::SphericalPoint central_point_sphere;
+  /// optional angular radius of simulation cone that will be included
+  PosType sim_angular_radius;
 };
 
 inline std::size_t Lens::getNMainHalos() const

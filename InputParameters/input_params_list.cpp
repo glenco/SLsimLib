@@ -49,8 +49,12 @@ namespace
 		{"field_min_mass", "1.0e9", "min mass of the halos in the light cone in solar masses"},
 		
 		// Field halos from an input file
-		{"field_input_simulation_file", "halos.txt", "if set, the light cone is read from an input file"},
-		
+		{"field_input_simulation_path", "halos.txt", "if set, the light cone is read from an input file or files in this directory"},
+    {"field_input_simulation_format", "MillenniumObs", "if set, format of halo input data: MillenniumObs, MultiDark,  this is subject to changes"},
+    {"field_input_simulation_center_RA", "0.0","Optional: right ascension in degrees for the center of the simulation, 0 if not included"},
+    {"field_input_simulation_center_DEC","0.0","Optional: declination in degrees the center of the simulation, 0 if not included"},
+    {"field_input_simulation_radius","0.0","Optional: set radius (in degrees) of simulated field radians, infinite (size of input lightcone) if not included"},
+
 		// Main halos
 		{"main_mass", "1e15", "main halo mass"},
 		{"main_zlens", "0.42", "main halo redshift"},

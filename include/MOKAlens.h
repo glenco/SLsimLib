@@ -33,17 +33,18 @@ struct MOKAmap{
 	std::valarray<double> gamma1;
 	std::valarray<double> gamma2;
 	std::valarray<double> gamma3;
+  std::valarray<double> phi; // Added by Fabien
 	std::valarray<double> Signlambdar;
 	std::valarray<double> Signlambdat;
 	std:: vector<double> x;
-    int nx,ny;
-    // boxlMpc is Mpc/h for MOKA
+  int nx,ny;
+  // boxlMpc is Mpc/h for MOKA
 	/// lens and source properties
-    double zlens,m,zsource,Dlens,DLS,DS,c,cS,fsub,mstar,minsubmass;
-  /// range in x direction, pixels are square
-    double boxlarcsec,boxlMpc,boxlrad;
-    /// cosmology
-    double omegam,omegal,h,wq;
+  double zlens,m,zsource,Dlens,DLS,DS,c,cS,fsub,mstar,minsubmass;
+  /// range in x direction, pixels are square
+  double boxlarcsec,boxlMpc,boxlrad;
+  /// cosmology
+  double omegam,omegal,h,wq;
 	double inarcsec;
 	double center[2];
 };
@@ -90,7 +91,7 @@ public:
 	void getDims();
 	void readImage();
 	void writeImage(std::string fn);
-	
+  
 	/// return center in physical Mpc
 	const double* getCenter() const { return map->center; }
 	/// return range of input map in rad

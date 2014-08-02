@@ -213,6 +213,9 @@ for(i = start; i < end; i++)
     p->i_points[i].dt = 0.5*( p->i_points[i].image->x[0]*p->i_points[i].image->x[0] + p->i_points[i].image->x[1]*p->i_points[i].image->x[1] )/ p->dDl[0] ;
 
       
+    //  std::cout << "x1 = " << p->i_points[i].image->x[0] << "  ;  x2 = " << p->i_points[i].image->x[1] << std::endl ;
+    //  std::cout << "d_A(lense) = " << p->Dl[0] << std::endl ;
+      
     // Begining of the loop through the planes :
     // Each iteration leaves i_point[i].image on plane (j+1)
     for(j = 0; j < p->NPlanes ; ++j)
@@ -223,7 +226,7 @@ for(i = start; i < end; i++)
       xx[1] = p->i_points[i].image->x[1]/(1+p->plane_redshifts[j]);
       
       assert(xx[0] == xx[0] && xx[1] == xx[1]);
-
+        
       p->lensing_planes[j]->force(alpha,&kappa,gamma,&phi,xx); // Computed in physical coordinates.
 
         assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
@@ -239,7 +242,7 @@ for(i = start; i < end; i++)
     	  gamma[0] *= fac;
     	  gamma[1] *= fac;
     	  gamma[2] *= fac;
-          // dt *= fac ;
+        // dt *= fac ;
 	
         assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
         assert(kappa == kappa);
@@ -254,7 +257,7 @@ for(i = start; i < end; i++)
       aa = (p->dDl[j+1] + p->dDl[j])/p->dDl[j];
       bb = p->dDl[j+1]/p->dDl[j];
       cc = p->charge * p->dDl[j+1];
-        
+      
       xplus[0] = aa*p->i_points[i].image->x[0] - bb*xminus[0] - cc*alpha[0];
       xplus[1] = aa*p->i_points[i].image->x[1] - bb*xminus[1] - cc*alpha[1];
       
@@ -306,7 +309,7 @@ for(i = start; i < end; i++)
         gamma_minus[1] = p->i_points[i].gamma[1];
         gamma_minus[2] = p->i_points[i].gamma[2];
         // ------------------------------------------------------------------------------------------
-            
+      
         assert(kappa_plus==kappa_plus && gamma_minus[0]==gamma_minus[0] && gamma_minus[1]==gamma_minus[1] && gamma_minus[2]==gamma_minus[2]);
 
             
@@ -320,14 +323,13 @@ for(i = start; i < end; i++)
             
         
         // Geometric time delay with added potential
-            p->i_points[i].dt += 0.5*( (xplus[0] - xminus[0])*(xplus[0] - xminus[0]) + (xplus[1] - xminus[1])*(xplus[1] - xminus[1]) )/p->dDl[j+1] - (1 + p->plane_redshifts[j]) * phi * p->charge ;
-            
-            
+            p->i_points[i].dt += 0.5*( (xplus[0] - xminus[0])*(xplus[0] - xminus[0]) + (xplus[1] - xminus[1])*(xplus[1] - xminus[1]) )/p->dDl[j+1] - (1 + p->plane_redshifts[j]) * phi * p->charge ; /// in Mpc
+      
         // Check that the 1+z factor must indeed be there (because the x positions have been rescaled, so it may be different compared to the draft).
-
+        // Remark : Here the true lensing potential is not "phi" but "phi * p->charge = phi * 4 pi G".
+      
     } // End of the loop going through the planes
 
-      
       
     // Subtracting off a term that makes the unperturbed ray to have zero time delay
     p->i_points[i].dt -= 0.5*( p->i_points[i].image->x[0]*p->i_points[i].image->x[0] + p->i_points[i].image->x[1]*p->i_points[i].image->x[1] ) / p->Dl[p->NPlanes];
@@ -349,7 +351,15 @@ for(i = start; i < end; i++)
                                             - p->i_points[i].gamma[1]*p->i_points[i].gamma[1]
                                             + p->i_points[i].gamma[2]*p->i_points[i].gamma[2];
     // ---------------------------------------------------------------------------------------------
-      
+    
+    
+    // Conversion of dt from Mpc (physical Mpc) to Years (also possible into days) -----------------
+    
+    p->i_points[i].dt *= MpcToSeconds * SecondToYears ;
+    
+    // ---------------------------------------------------------------------------------------------
+    
+    
     
     // Putting the final values of the quantities in the real image point -----
     p->i_points[i].image->invmag = p->i_points[i].invmag;

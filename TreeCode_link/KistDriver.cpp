@@ -9,9 +9,22 @@
 
 #include "slsimlib.h"
 
-//static int Nbucket = 1;   // must be =1 if each leaf is to coincide with each cell
-//static int incell;
-//static PosType realray[2];
+bool TreeStruct::Test(){
+  Branch *treecur = current;
+  Point *listcur = pointlist->current;
+  moveTop();
+  do{
+    pointlist->current = current->points;
+    for(int k = 0; k < current->npoints ; ++k,MoveDownList(pointlist)){
+      assert( inbox(pointlist->current->x,current->boundary_p1,current->boundary_p2) );
+    }
+  }while(TreeWalkStep(true));
+
+  current = treecur;
+  pointlist->current = listcur;
+
+  return true;
+}
 
 /** \ingroup ImageFundingL2
  *

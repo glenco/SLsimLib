@@ -42,4 +42,5 @@ add_sources(
 	TreeNB.h
 	uniform_lens.h
 	utilities_slsim.h
+        geometry.h
 )

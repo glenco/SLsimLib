@@ -192,7 +192,6 @@ long refine_edges(
 			if( criterion==2 && pow(imageinfo[i].innerborder->getCurrent()->gridsize,2)/area_total > res_target ) ++Ncells;
 			imageinfo[i].innerborder->Down();
 		}
-
 		//printf("       %i Nouter=%i Ninner=%i\n",i,imageinfo[i].outerborder->Npoints,imageinfo[i].innerborderkist->Npoints);
 	}
 
@@ -211,7 +210,7 @@ long refine_edges(
 				|| ( criterion==2 && pow(imageinfo[i].outerborder->getCurrent()->gridsize,2)/area_total > res_target) ){
 
 				point = imageinfo[i].outerborder->getCurrent();
-    			assert(point->gridsize > 0);
+        assert(point->gridsize > 0);
 
 				if(point->in_image){ // point has not been refined yet
 					++count;
@@ -239,10 +238,6 @@ long refine_edges(
 					|| (criterion==1 && imageinfo[i].innerborder->getCurrent()->gridsize > res_target)
 					|| (criterion==2 && pow(imageinfo[i].innerborder->getCurrent()->gridsize,2)/area_total > res_target) ){
 
-				//point = getCurrentKist(imageinfo[i].innerborder);
-    			//assert(point->gridsize > 0);
-
-				//if( getCurrentKist(imageinfo[i].innerborderkist)->gridsize == point->gridsize){ /* point has not been refined yet */
     			++count;
 
     			if(batch) points_to_refine.push_back(imageinfo[i].innerborder->getCurrent());
@@ -251,7 +246,7 @@ long refine_edges(
     				if(newpointskist && i_points != NULL)
     					for(unsigned int k=0;k < i_points->head; ++k) newpointskist->InsertAfterCurrent(&i_points[k]);
     			}
-       			++Ncells;
+          ++Ncells;
 			}
 			imageinfo[i].innerborder->Down();
 		}
@@ -263,7 +258,7 @@ long refine_edges(
 		if(newpointskist && i_points != NULL){
 			for(unsigned int k=0;k < i_points->head; ++k) newpointskist->InsertAfterCurrent(&i_points[k]);
 		}
-	  	points_to_refine.clear();
+    points_to_refine.clear();
 	}
 
 	return count;
