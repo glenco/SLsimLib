@@ -61,15 +61,15 @@
 }*/
 
 Point::Point(){
-    x[0] = x[1] = 0;
-    head = 0;
-    in_image = FALSE;
-    surface_brightness = 0;
-    leaf = NULL;
-    image = NULL;
-    next = prev = NULL;
-    kappa = dt = invmag = gridsize = 0;
-    gamma[0] = gamma[1] = gamma[2] = 0;
+  x[0] = x[1] = 0;
+  head = 0;
+  in_image = FALSE;
+  surface_brightness = 0;
+  leaf = NULL;
+  image = NULL;
+  next = prev = NULL;
+  kappa = dt = invmag = gridsize = 0;
+  gamma[0] = gamma[1] = gamma[2] = 0;
   flag = false;
 }
 

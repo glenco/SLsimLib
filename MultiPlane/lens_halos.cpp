@@ -673,10 +673,10 @@ void LensHaloSimpleNSIE::initFromMassFunc(float my_mass, float my_Rmax, float my
 }
 */
 void LensHalo::force_halo(
-	PosType *alpha          /// solar mass/Mpc
+	PosType *alpha          /// deflection solar mass/Mpc
     ,KappaType *kappa     /// convergence
     ,KappaType *gamma     /// three components of shear
-    ,KappaType *phi       /// solar masses
+    ,KappaType *phi       /// potential in solar masses
     ,PosType const *xcm   /// position relative to center (Mpc?)
     ,bool subtract_point /// if true contribution from a point mass is subtracted
     )
@@ -694,8 +694,8 @@ void LensHalo::force_halo_sym(
 		PosType *alpha     /// solar mass/Mpc
 		,KappaType *kappa  /// convergence
 		,KappaType *gamma  /// three components of shear
-    ,KappaType *phi      /// solar masses
-		,PosType const *xcm     /// position relative to center (Mpc?)
+    ,KappaType *phi      /// potential solar masses
+		,PosType const *xcm     /// position relative to center (Mpc)
 		,bool subtract_point /// if true contribution from a point mass is subtracted
 		)
 {
@@ -1455,3 +1455,17 @@ void LensHalo::printCSV(std::ostream&, bool header) const
 	std::cerr << "LensHalo subclass " << type.name() << " does not implement printCSV()" << std::endl;
 	std::exit(1);
 }
+
+/// calculates the mass within radius R by integating kappa in theta and R, used only for testing
+PosType LensHalo::MassBy2DIntegation(PosType R){
+  LensHalo::DMDR dmdr(this);
+  
+  return Utilities::nintegrate<LensHalo::DMDR,PosType>(dmdr,-12,log(R),1.0e-5);
+}
+/// calculates the mass within radius R by integating alpha on a ring and using Gauss' law, used only for testing
+PosType LensHalo::MassBy1DIntegation(PosType R){
+  LensHalo::DMDTHETA dmdtheta(R,this);
+  
+  return R*Utilities::nintegrate<LensHalo::DMDTHETA,PosType>(dmdtheta, 0, 2*pi, 1.0e-6)/2;
+}
+

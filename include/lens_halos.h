@@ -62,11 +62,11 @@ public:
     /// set the position of the Halo :
     /// taking as argument the position in comoving Mpc
     /// storing the position in physical Mpc
-    void setX(PosType PosX, PosType PosY) { posHalo[0] = PosX / (1 + zlens) ; posHalo[1] = PosY / (1 + zlens) ; }
+  void setX(PosType PosX, PosType PosY) { posHalo[0] = PosX / (1 + zlens) ; posHalo[1] = PosY / (1 + zlens) ; }
     /// get the position of the Halo in physical Mpc
-    void getX(PosType * MyPosHalo) const { MyPosHalo[0] = posHalo[0] ; MyPosHalo[1] = posHalo[1]; }
+  void getX(PosType * MyPosHalo) const { MyPosHalo[0] = posHalo[0] ; MyPosHalo[1] = posHalo[1]; }
     /// display the position of the halo
-    void displayPos() { std::cout << "Halo PosX = " << posHalo[0] << " ; Halo PosY = " << posHalo[1] << std::endl; }
+  void displayPos() { std::cout << "Halo PosX = " << posHalo[0] << " ; Halo PosY = " << posHalo[1] << std::endl; }
  
 	/// initialize from a simulation file
 	virtual void initFromFile(float my_mass, long *seed, float vmax, float r_halfmass){};
@@ -85,10 +85,10 @@ public:
 	/// set slope
 	virtual void set_slope(PosType my_slope){beta=my_slope;};
     /// get slope
-    virtual PosType get_slope(){return beta;};
+  virtual PosType get_slope(){return beta;};
     /// flag=True if halo elliptical
-    bool get_flag_elliptical(){return elliptical_flag;};
-    void set_flag_elliptical(bool ell){elliptical_flag=ell;};
+  bool get_flag_elliptical(){return elliptical_flag;};
+  void set_flag_elliptical(bool ell){elliptical_flag=ell;};
     
     /// set cosmology for halo
 	virtual void setCosmology(const COSMOLOGY& cosmo) {}
@@ -127,9 +127,11 @@ public:
 
 	/// Prints star parameters; if show_stars is true, prints data for single stars
 	void PrintStars(bool show_stars) const;
-    
-    
-    // all of the following functions were used for Ansatz III w derivatives of the Fourier modes
+  
+  PosType MassBy2DIntegation(PosType R);
+  PosType MassBy1DIntegation(PosType R);
+
+  // all of the following functions were used for Ansatz III w derivatives of the Fourier modes
     
     /*static constexpr PosType mod_params[2][7][7] = {{{5.45400234e-01, 2.00623559e-01, 1.74273034e-01, 1.86242095e+02, 5.70675374e+00,0,0},
         {0.98519072, 1.79227955, 0.19333932, 1.05911801, 1.80285544, 175.19794791,0},
@@ -299,7 +301,69 @@ protected:
     PosType zlens;
     
     /// Position of the Halo
-    PosType posHalo[2];
+
+  PosType posHalo[2];
+  
+  
+  // These are stucts used in doing tests
+  
+  
+  struct DMDTHETA{
+    DMDTHETA(PosType R,LensHalo *halo): R(R),halo(halo){};
+    PosType operator()(PosType theta){
+      PosType alpha[2] = {0,0},x[2] = {0,0};
+      KappaType kappa = 0,gamma[3] = {0,0,0},phi =0 ;
+      
+      x[0] = R*cos(theta);
+      x[1] = R*sin(theta);
+      
+      halo->force_halo(alpha,&kappa,gamma,&phi,x);
+      
+      PosType alpha_r = -alpha[0]*cos(theta) - alpha[1]*sin(theta);
+      assert( alpha_r == alpha_r );
+      //std::cout << theta << "  " << alpha_r << std::endl;
+      return alpha_r;
+    }
+  private:
+    PosType R;
+    LensHalo *halo;
+  };
+  
+  struct DMDRDTHETA{
+    DMDRDTHETA(PosType R,LensHalo *halo): R(R),halo(halo){};
+    PosType operator()(PosType theta){
+      
+      PosType alpha[2] = {0,0},x[2] = {0,0};
+      KappaType kappa = 0,gamma[3] = {0,0,0} ,phi=0;
+      
+      x[0] = R*cos(theta);
+      x[1] = R*sin(theta);
+      
+      halo->force_halo(alpha,&kappa,gamma,&phi,x);
+      assert(kappa == kappa);
+      return kappa;
+    }
+  protected:
+    PosType R;
+    LensHalo *halo;
+  };
+
+  struct DMDR{
+    DMDR(LensHalo *halo): halo(halo){};
+    PosType operator()(PosType logR){
+      LensHalo::DMDRDTHETA dmdrdtheta(exp(logR),halo);
+      
+      std::cout << " R = " << exp(logR) << std::endl;
+      
+      if(exp(2*logR) == 0.0) return 0.0;
+      return Utilities::nintegrate<LensHalo::DMDRDTHETA,PosType>(dmdrdtheta,0,2*pi,1.0e-7)*exp(2*logR);
+    }
+  protected:
+    LensHalo *halo;
+  };
+
+
+
 
 };
 
@@ -781,6 +845,7 @@ private:
 //	PosType gfunction(PosType x){throw std::runtime_error("Set to temporary invalid value"); return 0;}
 //	PosType hfunction(PosType x){throw std::runtime_error("Set to temporary invalid value"); return 0;}
 //	PosType g2function(PosType x){throw std::runtime_error("Set to temporary invalid value"); return 0;}
+  
 };
 
 

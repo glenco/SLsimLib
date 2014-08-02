@@ -617,8 +617,12 @@ void LensHalo::alpha_asym(PosType x,PosType theta, PosType alpha[]){
     
     //std::cout << "in alpha_asym: " << beta << " " << alpha_theta << std::endl;
     
-	alpha[0] = (alpha_r*cos(theta) - alpha_theta*sin(theta))/cos(theta);
-	alpha[1] = (alpha_r*sin(theta) + alpha_theta*cos(theta))/sin(theta);
+	//alpha[0] = (alpha_r*cos(theta) - alpha_theta*sin(theta))/cos(theta);
+	//alpha[1] = (alpha_r*sin(theta) + alpha_theta*cos(theta))/sin(theta);
+
+	alpha[0] = alpha_r*cos(theta) - alpha_theta*sin(theta);
+	alpha[1] = alpha_r*sin(theta) + alpha_theta*cos(theta);
+  
 	return;
 }
 
