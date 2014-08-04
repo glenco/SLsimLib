@@ -88,7 +88,7 @@ public:
   virtual PosType get_slope(){return beta;};
     /// flag=True if halo elliptical
   bool get_flag_elliptical(){return elliptical_flag;};
-  void set_flag_elliptical(bool ell){elliptical_flag=ell;};
+  void set_flag_elliptical(bool ell){elliptical_flag=ell; r_eps = 0.1*Rmax;};
     
     /// set cosmology for halo
 	virtual void setCosmology(const COSMOLOGY& cosmo) {}
@@ -621,35 +621,34 @@ private:
 
 	// Override internal structure of halos
   /// r |alpha(r)| pi Sigma_crit / Mass
-	inline PosType alpha_h(PosType x){
+	inline PosType alpha_h(
+                  PosType x  /// r/rscale
+                         ){
 		if(x==0) x=1e-6*xmax;
-		//assert(beta==2);
-		//assert(-1.0*pow(x/xmax,beta+2) != 0.0);
-    //std::cout << xmax << " " << beta << "  " << -1.0*pow(x/xmax,beta+2) << std::endl;
 		return -1.0*pow(x/xmax,-beta+2);
 	}
-    /// this is not kappa Sigma_crit pi r^2 / mass
-	inline KappaType kappa_h(PosType x){
+    /// this is kappa Sigma_crit pi (r/rscale)^2 / mass
+	inline KappaType kappa_h(
+                  PosType x   /// r/rscale
+                           ){
 		if(x==0) x=1e-6*xmax;
-		//assert(0.5*(beta+2)*pow(x/xmax,beta)*x*x/(xmax*xmax) != 0);
-        //std::cout << x << " " << beta << "  " << -1.0*pow(x/xmax,beta+2) << std::endl;
-        
-		return 0.5*(-beta+2)*pow(x/xmax,-beta)*x*x;
+    double tmp = x/xmax;
+		return 0.5*(-beta+2)*pow(tmp,2-beta);
 	}
+  /// this is |gamma| Sigma_crit pi (r/rscale)^2 / mass
 	inline KappaType gamma_h(PosType x){
 		if(x==0) x=1e-6*xmax;
-		//assert(0.5*beta*pow(x/xmax,beta+2) != 0);
-        //std::cout << "gamma_h(" << 0.5*beta*pow(x/xmax,beta+2) << ")" << std::endl;
 		return -0.5*beta*pow(x/xmax,-beta+2);
 	}
-	inline KappaType phi_h(PosType x){
+  /// this is phi Sigma_crit pi / mass, the constants are added so that it is continous over the bourder at Rmax
+ 	inline KappaType phi_h(PosType x){
 		if(x==0) x=1e-6*xmax;
-		return -1.0*pow(x/xmax,-beta+2)/(-beta+2);
+		return ( pow(x/xmax,2-beta) - 1 )/(2-beta) + log(Rmax);
 	}
   inline KappaType phi_int(PosType x){
 		//return alpha_int(x);
-        return -1.0*pow(x/xmax,-beta+2)/(-beta+2);
-    }
+    return -1.0*pow(x/xmax,-beta+2)/(-beta+2);
+  }
 };
 
 

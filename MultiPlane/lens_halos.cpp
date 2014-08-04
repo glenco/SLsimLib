@@ -14,14 +14,14 @@ LensHalo::LensHalo(){
 	rscale = 1.0;
 	mass = Rmax = xmax = posHalo[0] = posHalo[1] = 0.0;
 	stars_implanted = false;
-    elliptical_flag = false;
+  elliptical_flag = false;
 }
 
 LensHalo::LensHalo(InputParams& params){
 	assignParams(params);
 	stars_implanted = false;
-    posHalo[0] = posHalo[1] = 0.0;
-    elliptical_flag = false;
+  posHalo[0] = posHalo[1] = 0.0;
+  elliptical_flag = false;
 }
 
 void LensHalo::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed){
@@ -280,7 +280,7 @@ PosType LensHaloNFW::InterpolateFromTable(PosType *table, PosType y){
 		if (table==gtable) return gfunction(y);
 		if (table==g2table) return g2function(y);
 		if (table==htable) return hfunction(y);
-        if (table==xgtable) return alpha_int(y);
+    if (table==xgtable) return alpha_int(y);
 		}
 	return (table[j+1]-table[j])/(xtable[j+1]-xtable[j])*(y-xtable[j]) + table[j];
 }
