@@ -776,25 +776,32 @@ void LensHalo::force_halo_asym(
 	/// intersecting, subtract the point particle
 	if(rcm2 < Rmax*Rmax)
   {
-		double x = sqrt(rcm2)/rscale;
+		double r = sqrt(rcm2);///rscale;
         //std::cout << sqrt(rcm2) << " " << rscale << " " << Rmax << std::endl;
 		double theta;
         
     if(xcm[0] == 0.0 && xcm[1] == 0.0) theta = 0.0;
     else theta=atan2(xcm[1],xcm[0]);
         
-    double prefac = mass/rcm2/pi; //mass/rscale/rscale/pi;
+    double prefac = mass; //mass/rscale/rscale/pi;
 
 		// double xmax = Rmax/rscale;
     PosType alpha_tmp[2];
         
-    alpha_asym(x,theta, alpha_tmp);
-    double tmp =  1.0*subtract_point*prefac;
-		alpha[0] +=  alpha_tmp[0]*prefac*xcm[0] + tmp*xcm[0];
-    alpha[1] +=  alpha_tmp[1]*prefac*xcm[1] + tmp*xcm[1];
+    alpha_asym(r,theta, alpha_tmp);
+    
+		//alpha[0] +=  alpha_tmp[0]*prefac*xcm[0] + tmp*xcm[0];
+    //alpha[1] +=  alpha_tmp[1]*prefac*xcm[1] + tmp*xcm[1];
+    
+		alpha[0] +=  alpha_tmp[0];
+    alpha[1] +=  alpha_tmp[1];
+    if(subtract_point){
+      double tmp =  subtract_point*mass/pi/rcm2;
+      alpha[0] +=  tmp*xcm[0];
+      alpha[1] +=  tmp*xcm[1];
+    }
 
-
-		*kappa += kappa_asym(x,theta)*prefac;
+		*kappa += kappa_asym(r,theta);
         
 
     //dfunc << x << " " << theta << " " << kappa_asym(x,theta) << " " << bfunction(x) << " " << xcm[0] << " " << xcm[1] << std::endl;
@@ -802,8 +809,8 @@ void LensHalo::force_halo_asym(
         
     //std::cout << x << " " << rscale << " " << xmax << std::endl;
     PosType gamma_tmp[2];
-    gamma_asym(x,theta,gamma_tmp);
-		tmp = (2.0*subtract_point)*prefac/rcm2;
+    gamma_asym(r,theta,gamma_tmp);
+		double tmp = (2.0*subtract_point)*prefac/rcm2;
 		//gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*(tmp+gamma_tmp[0]*prefac/rcm2);
     //std::cout << prefac << std::endl;
     gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp+gamma_tmp[0]*prefac/rcm2;

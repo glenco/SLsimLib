@@ -246,6 +246,7 @@ protected:
 
 
   /// point mass case
+  /// r |alpha(r)| pi Sigma_crit / Mass
 	virtual PosType inline alpha_h(PosType x){return -1;};
 	virtual KappaType inline kappa_h(PosType x){return 0;};
 	virtual KappaType inline gamma_h(PosType x){return -2;};
@@ -468,7 +469,8 @@ protected:
 	/// read in parameters from a parameterfile in InputParams params
 	void assignParams(InputParams& params);
 
-	/// Override internal structure of halos
+	// Override internal structure of halos
+  /// r |alpha(r = x*rscale)| pi Sigma_crit / Mass
 	inline PosType alpha_h(PosType x){
 		//return -1.0*InterpolateFromTable(gtable,x)/InterpolateFromTable(gtable,xmax);
 		return -1.0*InterpolateFromTable(gtable,x)/gmax;
@@ -553,6 +555,7 @@ private:
 	PosType beta;
 
 	// Override internal structure of halos
+  /// r |alpha(r)| pi Sigma_crit / Mass
 	inline PosType alpha_h(PosType x){
 		return -1.0*InterpolateFromTable(x)/InterpolateFromTable(xmax);
 	}
@@ -617,6 +620,7 @@ private:
     PosType pa;
 
 	// Override internal structure of halos
+  /// r |alpha(r)| pi Sigma_crit / Mass
 	inline PosType alpha_h(PosType x){
 		if(x==0) x=1e-6*xmax;
 		//assert(beta==2);
@@ -624,7 +628,7 @@ private:
     //std::cout << xmax << " " << beta << "  " << -1.0*pow(x/xmax,beta+2) << std::endl;
 		return -1.0*pow(x/xmax,-beta+2);
 	}
-    /// this is not kappa to be overridden and there is an extra factor of M/pi/x^2 in force_halo
+    /// this is not kappa Sigma_crit pi r^2 / mass
 	inline KappaType kappa_h(PosType x){
 		if(x==0) x=1e-6*xmax;
 		//assert(0.5*(beta+2)*pow(x/xmax,beta)*x*x/(xmax*xmax) != 0);
@@ -773,7 +777,8 @@ protected:
 	/// read in parameters from a parameterfile in InputParams params
 	void assignParams(InputParams& params);
 
-	/// Override internal structure of halos
+	// Override internal structure of halos
+  /// r |alpha(r)| pi Sigma_crit / Mass
 	inline PosType alpha_h(PosType x){
 		return -0.25*InterpolateFromTable(gtable,x)/gmax;
 	}
@@ -845,7 +850,8 @@ protected:
 	/// read in parameters from a parameterfile in InputParams params
 	void assignParams(InputParams& params);
 
-	/// Override internal structure of halos
+	// Override internal structure of halos
+  /// r |alpha(r)| pi Sigma_crit / Mass
 	inline PosType alpha_h(PosType x){
 		return -0.25*InterpolateFromTable(gtable,x)/gmax;
 	}
