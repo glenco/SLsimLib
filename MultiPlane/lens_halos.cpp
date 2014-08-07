@@ -551,16 +551,14 @@ LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
 
     }else elliptical_flag = false;
 
-  rscale = xmax = 1.0;
+  //rscale = xmax = 1.0;
   mnorm = renormalization(get_Rmax());
   std::cout << "mass normalization: " << mnorm << std::endl;
-  
-  
-  
+
     // rscale = xmax = 1.0; // Commented by Fabien in order to have a correct computation of the potential term in the time delay.
     // Fabien : replacing it by :
-    //rscale = 1;
-    //xmax = Rmax/rscale ;
+    rscale = 1;
+    xmax = Rmax/rscale;
     // Be careful : the other constructors have not been changed !
 }
 
@@ -678,9 +676,15 @@ void LensHaloSimpleNSIE::initFromMassFunc(float my_mass, float my_Rmax, float my
 	initFromMass(my_mass,seed);
 }
 */
+
+/** \brief returns the lensing quantaties of a ray in center of mass coordinates.
+ *
+ *  Warning: This adds to input value of alpha, kappa, gamma, and phi.  They need 
+ *  to be veroed out if the contribution of just this halo is wanted.
+ */
 void LensHalo::force_halo(
-	PosType *alpha          /// deflection solar mass/Mpc
-    ,KappaType *kappa     /// convergence
+    PosType *alpha          /// deflection solar mass/Mpc
+    ,KappaType *kappa     /// surface density in Msun/Mpc^2 (?)
     ,KappaType *gamma     /// three components of shear
     ,KappaType *phi       /// potential in solar masses
     ,PosType const *xcm   /// position relative to center (Mpc?)
@@ -782,41 +786,48 @@ void LensHalo::force_halo_asym(
         
     if(xcm[0] == 0.0 && xcm[1] == 0.0) theta = 0.0;
     else theta=atan2(xcm[1],xcm[0]);
-        
-    double prefac = mass; //mass/rscale/rscale/pi;
 
 		// double xmax = Rmax/rscale;
-    PosType alpha_tmp[2];
+    PosType alpha_tmp[2],kappa_tmp,gamma_tmp[2];
         
-    alpha_asym(r,theta, alpha_tmp);
+    alphakappagamma_asym(r,theta, alpha_tmp,&kappa_tmp,gamma_tmp);
     
 		//alpha[0] +=  alpha_tmp[0]*prefac*xcm[0] + tmp*xcm[0];
     //alpha[1] +=  alpha_tmp[1]*prefac*xcm[1] + tmp*xcm[1];
     
 		alpha[0] +=  alpha_tmp[0];
     alpha[1] +=  alpha_tmp[1];
+
+    *kappa += kappa_tmp;
+    gamma[0] += gamma_tmp[0];
+    gamma[1] += gamma_tmp[1];
+
     if(subtract_point){
-      double tmp =  subtract_point*mass/pi/rcm2;
+      double tmp =  mass/pi/rcm2;
       alpha[0] +=  tmp*xcm[0];
       alpha[1] +=  tmp*xcm[1];
+
+      tmp = 2.0*tmp/rcm2;
+      gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+      gamma[1] += xcm[0]*xcm[1]*tmp;
     }
 
+    /*
 		*kappa += kappa_asym(r,theta);
-        
 
     //dfunc << x << " " << theta << " " << kappa_asym(x,theta) << " " << bfunction(x) << " " << xcm[0] << " " << xcm[1] << std::endl;
 
-        
     //std::cout << x << " " << rscale << " " << xmax << std::endl;
-    PosType gamma_tmp[2];
-    gamma_asym(r,theta,gamma_tmp);
+    //PosType gamma_tmp[2];
+    //gamma_asym(r,theta,gamma_tmp);
 		double tmp = (2.0*subtract_point)*prefac/rcm2;
 		//gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*(tmp+gamma_tmp[0]*prefac/rcm2);
     //std::cout << prefac << std::endl;
-    gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp+gamma_tmp[0]*prefac/rcm2;
-    gamma[1] += xcm[0]*xcm[1]*tmp+gamma_tmp[1]*prefac/rcm2;
+    gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp + gamma_tmp[0]*prefac/rcm2;
+    gamma[1] += xcm[0]*xcm[1]*tmp + gamma_tmp[1]*prefac/rcm2;
 		//gamma[1] += xcm[0]*xcm[1]*(tmp+gamma_tmp[0]*prefac/rcm2);
-	}
+     */
+  }
 	else
 	{
 		if (subtract_point == false)

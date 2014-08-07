@@ -74,7 +74,7 @@ class Lens
 public:
 	Lens(long* seed, CosmoParamSet cosmoset = WMAP5yr, bool verbose = false);
 	Lens(InputParams& params, long* my_seed, CosmoParamSet cosmoset = WMAP5yr, bool verbose = false);
-    Lens(Lens &lens);
+  Lens(Lens &lens);
   
 	~Lens();
 

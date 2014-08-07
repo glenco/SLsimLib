@@ -88,7 +88,7 @@ public:
   virtual PosType get_slope(){return beta;};
     /// flag=True if halo elliptical
   bool get_flag_elliptical(){return elliptical_flag;};
-  void set_flag_elliptical(bool ell){elliptical_flag=ell; r_eps = 0.1*Rmax;};
+  void set_flag_elliptical(bool ell){elliptical_flag=ell; r_eps = 0.3*Rmax;};
     
     /// set cosmology for halo
 	virtual void setCosmology(const COSMOLOGY& cosmo) {}
@@ -270,7 +270,7 @@ protected:
  
     
     
-    PosType xmax;
+    PosType xmax;  /// This is Rmax/rscale !!
     PosType mnorm;
     
   // Functions for calculating axial dependence
@@ -289,7 +289,8 @@ protected:
 
 	virtual void gamma_asym(PosType x,PosType theta, PosType gamma[2]);
 	virtual PosType kappa_asym(PosType x,PosType theta);
-	virtual void alpha_asym(PosType x,PosType theta, PosType alpha[2]);
+	virtual void alphakappagamma_asym(PosType x,PosType theta, PosType alpha[2]
+                                    ,PosType *kappa,PosType gamma[]);
     virtual PosType alpha_ell(PosType x,PosType theta);
   
     double fourier_coeff(double n, double q, double beta);

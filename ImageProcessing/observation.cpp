@@ -287,6 +287,11 @@ PixelMap Observation::Convert_back (PixelMap &map)
 */
 PixelMap Observation::ApplyPSF(PixelMap &pmap)
 {
+  if(pmap.getNx() != pmap.getNy()){
+    std::cout << "Observation::AddNoise() Doesn't work on nonsquare maps" << std::endl;
+    throw std::runtime_error("nonsquare");
+  }
+  
 	if (map_psf.size() == 0)
 	{
 		if (seeing > 0.)
@@ -304,98 +309,98 @@ PixelMap Observation::ApplyPSF(PixelMap &pmap)
 	{
 #ifdef ENABLE_FITS
 #ifdef ENABLE_FFTW
-
-        PixelMap outmap(pmap);
-
-        // calculates normalisation of psf
-        int N_psf = map_psf.size();
-        int side_psf = sqrt(N_psf);
-        double map_norm = 0.;
-        for (int i = 0; i < N_psf; i++)
-        {
-            map_norm += map_psf[i];
-        }
-        fftw_plan p_psf;
-
-        // creates plane for fft of map, sets properly input and output data, then performs fft
-        fftw_plan p;
-        long Npix = outmap.getNpixels();
-        long Npix_zeropad = Npix + side_psf;
-        std::complex<double>* out=new std::complex<double> [Npix_zeropad*(Npix_zeropad/2+1)];
-
-        // add zero-padding
-        double* in_zeropad = new double[Npix_zeropad*Npix_zeropad];
-        for (int i = 0; i < Npix_zeropad*Npix_zeropad; i++)
-        {
-            long ix = i/Npix_zeropad;
-            long iy = i%Npix_zeropad;
-            if (ix >= side_psf/2 && ix <= (Npix_zeropad-1)-side_psf/2 && iy >= side_psf/2 && iy <= (Npix_zeropad-1)-side_psf/2)
-                in_zeropad[i] = outmap[(ix-side_psf/2)*Npix+(iy-side_psf/2)];
-            else
-                in_zeropad[i] = 0.;
-        }
-        
-        p = fftw_plan_dft_r2c_2d(Npix_zeropad,Npix_zeropad,in_zeropad, reinterpret_cast<fftw_complex*>(out), FFTW_ESTIMATE);
-        fftw_execute(p);
-
-        // creates plane for perform backward fft after convolution, sets output data
-        fftw_plan p2;
-        double* out2 = new double[Npix_zeropad*Npix_zeropad];
-        p2 = fftw_plan_dft_c2r_2d(Npix_zeropad,Npix_zeropad,reinterpret_cast<fftw_complex*>(out), out2, FFTW_ESTIMATE);
-
-
-        // arrange psf data for fft, creates plane, then performs fft
-        long psf_big_zeropad_Npixels = static_cast<int>((Npix+side_psf)*oversample);
-        double* psf_big_zeropad = new double[psf_big_zeropad_Npixels*psf_big_zeropad_Npixels];
-        std::complex<double>* out_psf=new std::complex<double> [psf_big_zeropad_Npixels*(psf_big_zeropad_Npixels/2+1)];
-        p_psf = fftw_plan_dft_r2c_2d(psf_big_zeropad_Npixels,psf_big_zeropad_Npixels,psf_big_zeropad, reinterpret_cast<fftw_complex*>(out_psf), FFTW_ESTIMATE);
-        long ix, iy;
-        for (int i = 0; i < psf_big_zeropad_Npixels*psf_big_zeropad_Npixels; i++)
-        {
-            ix = i/psf_big_zeropad_Npixels;
-            iy = i%psf_big_zeropad_Npixels;
-            if(ix<side_psf/2 && iy<side_psf/2)
-                psf_big_zeropad[i] = map_psf[(ix+side_psf/2)*side_psf+(iy+side_psf/2)]/map_norm;
-            else if(ix<side_psf/2 && iy>=psf_big_zeropad_Npixels-side_psf/2)
-                psf_big_zeropad[i] = map_psf[(ix+side_psf/2)*side_psf+(iy-(psf_big_zeropad_Npixels-side_psf/2))]/map_norm;
-            else if(ix>=psf_big_zeropad_Npixels-side_psf/2 && iy<side_psf/2)
-                psf_big_zeropad[i] = map_psf[(ix-(psf_big_zeropad_Npixels-side_psf/2))*side_psf+(iy+side_psf/2)]/map_norm;
-            else if(ix>=psf_big_zeropad_Npixels-side_psf/2 && iy>=psf_big_zeropad_Npixels-side_psf/2)
-                psf_big_zeropad[i] = map_psf[(ix-(psf_big_zeropad_Npixels-side_psf/2))*side_psf+(iy-(psf_big_zeropad_Npixels-side_psf/2))]/map_norm;
-            else
-                psf_big_zeropad[i] = 0.;
-        }
-        fftw_execute(p_psf);
-
-        // performs convolution in Fourier space, and transforms back to real space
-        for (unsigned long i = 0; i < Npix_zeropad*(Npix_zeropad/2+1); i++)
-        {
-            ix = i/(Npix_zeropad/2+1);
-            iy = i%(Npix_zeropad/2+1);
-            if (ix>Npix_zeropad/2)
-                out[i] *= out_psf[(psf_big_zeropad_Npixels-(Npix_zeropad-ix))*(psf_big_zeropad_Npixels/2+1)+iy];
-            else
-                out[i] *= out_psf[ix*(psf_big_zeropad_Npixels/2+1)+iy];
-        }
-        fftw_execute(p2);
-
-        // translates array of data in (normalised) counts map
-        for (unsigned long i = 0; i < Npix_zeropad*Npix_zeropad; i++)
-        {
-            ix = i/Npix_zeropad;
-            iy = i%Npix_zeropad;
-            if (ix >= side_psf/2 && ix <= (Npix_zeropad-1)-side_psf/2 && iy >= side_psf/2 && iy <= (Npix_zeropad-1)-side_psf/2)
-            {
-                int ii = (ix-side_psf/2)*Npix+(iy-side_psf/2);
-                outmap.AssignValue(ii,out2[i]/double(Npix_zeropad*Npix_zeropad));
-            }
-        }
-        return outmap;
+    
+    PixelMap outmap(pmap);
+    
+    // calculates normalisation of psf
+    int N_psf = map_psf.size();
+    int side_psf = sqrt(N_psf);
+    double map_norm = 0.;
+    for (int i = 0; i < N_psf; i++)
+    {
+      map_norm += map_psf[i];
+    }
+    fftw_plan p_psf;
+    
+    // creates plane for fft of map, sets properly input and output data, then performs fft
+    fftw_plan p;
+    long Npix = outmap.getNx();
+    long Npix_zeropad = Npix + side_psf;
+    std::complex<double>* out=new std::complex<double> [Npix_zeropad*(Npix_zeropad/2+1)];
+    
+    // add zero-padding
+    double* in_zeropad = new double[Npix_zeropad*Npix_zeropad];
+    for (int i = 0; i < Npix_zeropad*Npix_zeropad; i++)
+    {
+      long ix = i/Npix_zeropad;
+      long iy = i%Npix_zeropad;
+      if (ix >= side_psf/2 && ix <= (Npix_zeropad-1)-side_psf/2 && iy >= side_psf/2 && iy <= (Npix_zeropad-1)-side_psf/2)
+        in_zeropad[i] = outmap[(ix-side_psf/2)*Npix+(iy-side_psf/2)];
+      else
+        in_zeropad[i] = 0.;
+    }
+    
+    p = fftw_plan_dft_r2c_2d(Npix_zeropad,Npix_zeropad,in_zeropad, reinterpret_cast<fftw_complex*>(out), FFTW_ESTIMATE);
+    fftw_execute(p);
+    
+    // creates plane for perform backward fft after convolution, sets output data
+    fftw_plan p2;
+    double* out2 = new double[Npix_zeropad*Npix_zeropad];
+    p2 = fftw_plan_dft_c2r_2d(Npix_zeropad,Npix_zeropad,reinterpret_cast<fftw_complex*>(out), out2, FFTW_ESTIMATE);
+    
+    
+    // arrange psf data for fft, creates plane, then performs fft
+    long psf_big_zeropad_Npixels = static_cast<int>((Npix+side_psf)*oversample);
+    double* psf_big_zeropad = new double[psf_big_zeropad_Npixels*psf_big_zeropad_Npixels];
+    std::complex<double>* out_psf=new std::complex<double> [psf_big_zeropad_Npixels*(psf_big_zeropad_Npixels/2+1)];
+    p_psf = fftw_plan_dft_r2c_2d(psf_big_zeropad_Npixels,psf_big_zeropad_Npixels,psf_big_zeropad, reinterpret_cast<fftw_complex*>(out_psf), FFTW_ESTIMATE);
+    long ix, iy;
+    for (int i = 0; i < psf_big_zeropad_Npixels*psf_big_zeropad_Npixels; i++)
+    {
+      ix = i/psf_big_zeropad_Npixels;
+      iy = i%psf_big_zeropad_Npixels;
+      if(ix<side_psf/2 && iy<side_psf/2)
+        psf_big_zeropad[i] = map_psf[(ix+side_psf/2)*side_psf+(iy+side_psf/2)]/map_norm;
+      else if(ix<side_psf/2 && iy>=psf_big_zeropad_Npixels-side_psf/2)
+        psf_big_zeropad[i] = map_psf[(ix+side_psf/2)*side_psf+(iy-(psf_big_zeropad_Npixels-side_psf/2))]/map_norm;
+      else if(ix>=psf_big_zeropad_Npixels-side_psf/2 && iy<side_psf/2)
+        psf_big_zeropad[i] = map_psf[(ix-(psf_big_zeropad_Npixels-side_psf/2))*side_psf+(iy+side_psf/2)]/map_norm;
+      else if(ix>=psf_big_zeropad_Npixels-side_psf/2 && iy>=psf_big_zeropad_Npixels-side_psf/2)
+        psf_big_zeropad[i] = map_psf[(ix-(psf_big_zeropad_Npixels-side_psf/2))*side_psf+(iy-(psf_big_zeropad_Npixels-side_psf/2))]/map_norm;
+      else
+        psf_big_zeropad[i] = 0.;
+    }
+    fftw_execute(p_psf);
+    
+    // performs convolution in Fourier space, and transforms back to real space
+    for (unsigned long i = 0; i < Npix_zeropad*(Npix_zeropad/2+1); i++)
+    {
+      ix = i/(Npix_zeropad/2+1);
+      iy = i%(Npix_zeropad/2+1);
+      if (ix>Npix_zeropad/2)
+        out[i] *= out_psf[(psf_big_zeropad_Npixels-(Npix_zeropad-ix))*(psf_big_zeropad_Npixels/2+1)+iy];
+      else
+        out[i] *= out_psf[ix*(psf_big_zeropad_Npixels/2+1)+iy];
+    }
+    fftw_execute(p2);
+    
+    // translates array of data in (normalised) counts map
+    for (unsigned long i = 0; i < Npix_zeropad*Npix_zeropad; i++)
+    {
+      ix = i/Npix_zeropad;
+      iy = i%Npix_zeropad;
+      if (ix >= side_psf/2 && ix <= (Npix_zeropad-1)-side_psf/2 && iy >= side_psf/2 && iy <= (Npix_zeropad-1)-side_psf/2)
+      {
+        int ii = (ix-side_psf/2)*Npix+(iy-side_psf/2);
+        outmap.AssignValue(ii,out2[i]/double(Npix_zeropad*Npix_zeropad));
+      }
+    }
+    return outmap;
 #else
 		std::cout << "Please enable the preprocessor flag ENABLE_FFTW !" << std::endl;
 		exit(1);
 #endif
-
+    
 #else
 		std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
 		exit(1);
@@ -406,15 +411,20 @@ PixelMap Observation::ApplyPSF(PixelMap &pmap)
 /// Applies realistic noise (read-out + Poisson) on an image
 PixelMap Observation::AddNoise(PixelMap &pmap,long *seed)
 {
+  if(pmap.getNx() != pmap.getNy()){
+    std::cout << "Observation::AddNoise() Doesn't work on nonsquare maps" << std::endl;
+    throw std::runtime_error("nonsquare");
+  }
+  
 	PixelMap outmap(pmap);
 	double Q = pow(10,0.4*(mag_zeropoint+48.6));
 	double res_in_arcsec = outmap.getResolution()*180.*60.*60/pi;
 	double back_mean = pow(10,-0.4*(48.6+back_mag))*res_in_arcsec*res_in_arcsec*Q*exp_time;
-    std::cout << back_mean <<std::endl;
-    std::cout << exp_num*ron*ron << std::endl;
+  std::cout << back_mean <<std::endl;
+  std::cout << exp_num*ron*ron << std::endl;
 	double rms, noise;
 	double norm_map;
-	for (unsigned long i = 0; i < outmap.getNpixels()*outmap.getNpixels(); i++)
+	for (unsigned long i = 0; i < outmap.getNx()*outmap.getNy(); i++)
 	{
 		norm_map = outmap[i]*exp_time;
 		if (norm_map+back_mean > 500.)
@@ -433,7 +443,7 @@ PixelMap Observation::AddNoise(PixelMap &pmap,long *seed)
 				k++;
 				p *= ran2(seed);
 			}
-            rms = sqrt(exp_num*ron*ron);
+      rms = sqrt(exp_num*ron*ron);
  			noise = gasdev(seed)*rms;
 			outmap.AssignValue(i,double(k-1+noise-back_mean)/exp_time);
 		}

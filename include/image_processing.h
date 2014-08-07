@@ -26,6 +26,7 @@ public:
 	PixelMap(const PixelMap& other);
 	PixelMap(const PixelMap& pmap, const double* center, std::size_t Npixels);
 	PixelMap(const double* center, std::size_t Npixels, double resolution);
+	PixelMap(const double* center, std::size_t Nx, std::size_t Ny, double resolution);
 	PixelMap(std::string fitsfilename,double resolution = -1);
 	~PixelMap();
 	
@@ -34,8 +35,9 @@ public:
 	inline bool valid() const { return map.size(); };
 	inline std::size_t size() const { return map.size(); };
 	
-	inline std::size_t getNpixels() const { return Npixels; }
-	inline double getRange() const { return range; }
+	inline std::size_t getNx() const { return Nx; }
+	inline std::size_t getNy() const { return Ny; }
+	inline double getRangeX() const { return range; }
 	inline const double* getCenter() const { return center; }
 	inline double getResolution() const { return resolution; }
 	
@@ -46,6 +48,7 @@ public:
 	void drawline(double x1[],double x2[],double value);
     void drawcircle(PosType r_center[],PosType radius,PosType value);
 	void AddGrid(Grid &grid,double value = 1.0);
+  void AddGrid(Grid &grid,LensingVariable val);
 
 	void Renormalize(double factor);
 	void AddValue(std::size_t i, double value);
@@ -76,18 +79,19 @@ public:
 	bool agrees(const PixelMap& other) const;
 	
 	friend void swap(PixelMap&, PixelMap&);
-    
-    /// return average pixel value
-    PosType ave() const;
-    /// Total number of pixels
-    size_t size(){return map.size();}
+  
+  /// return average pixel value
+  PosType ave() const;
+  /// Total number of pixels
+  size_t size(){return map.size();}
 	
-    void FindArc(PosType &radius,PosType *xc,PosType *arc_center,PosType &arclength,PosType &width
+  void FindArc(PosType &radius,PosType *xc,PosType *arc_center,PosType &arclength,PosType &width
                          ,PosType threshold);
 private:
 	std::valarray<double> map;
 
-	std::size_t Npixels;
+	std::size_t Nx;
+	std::size_t Ny;
 	double resolution,range,center[2];
 	double map_boundary_p1[2],map_boundary_p2[2];
 
@@ -95,6 +99,13 @@ private:
 	void PointsWithinLeaf(Branch * branch1, std::list <unsigned long> &neighborlist);
 	bool inMapBox(Branch * branch1);
 	bool inMapBox(double * branch1);
+  
+  /// get the index for a position, returns -1 if out of map, this version returns the 2D grid coordinates
+  long find_index(PosType const x[],long &ix,long &iy);
+  /// get the index for a position, returns -1 if out of map
+  long find_index(PosType const x[]);
+  /// get the index for a position, returns -1 if out of map
+  void find_position(PosType x[],std::size_t const index);
 };
 
 typedef enum {Euclid_VIS,Euclid_Y,Euclid_J,Euclid_H,KiDS_u,KiDS_g,KiDS_r,KiDS_i,HST_ACS_I,CFHT_u,CFHT_g,CFHT_r,CFHT_i,CFHT_z} Telescope;

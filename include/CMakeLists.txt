@@ -43,4 +43,5 @@ add_sources(
 	uniform_lens.h
 	utilities_slsim.h
         geometry.h
+        elliptic.h
 )

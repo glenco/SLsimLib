@@ -38,7 +38,8 @@ void swap(PixelMap& x, PixelMap& y)
 	
 	swap(x.map,y.map);
 	
-	swap(x.Npixels, y.Npixels);
+	swap(x.Nx, y.Nx);
+	swap(x.Ny, y.Ny);
 	swap(x.resolution, y.resolution);
 	swap(x.range, y.range);
 	
@@ -52,7 +53,7 @@ void swap(PixelMap& x, PixelMap& y)
 }
 
 PixelMap::PixelMap()
-: map(), Npixels(0), resolution(0), range(0)
+: map(), Nx(0), Ny(0), resolution(0), range(0)
 {
 	center[0] = 0;
 	center[1] = 0;
@@ -65,7 +66,7 @@ PixelMap::PixelMap()
 
 PixelMap::PixelMap(const PixelMap& other)
 : map(other.map),
-  Npixels(other.Npixels), resolution(other.resolution), range(other.range)
+  Nx(other.Nx), Ny(other.Ny), resolution(other.resolution), range(other.range)
 {
 	std::copy(other.center, other.center + 2, center);
 	
@@ -73,21 +74,41 @@ PixelMap::PixelMap(const PixelMap& other)
 	std::copy(other.map_boundary_p2, other.map_boundary_p2 + 2, map_boundary_p2);
 }
 
+/// make square PixelMap
 PixelMap::PixelMap(
 		const PosType* center,  /// The location of the center of the map
 		std::size_t Npixels,  /// Number of pixels in one dimension of map.
 		PosType resolution        /// One dimensional range of map in whatever units the point positions are in
 		)
 : map(0.0, Npixels*Npixels),
-  Npixels(Npixels), resolution(resolution)
+  Nx(Npixels), Ny(Npixels), resolution(resolution)
 {
 	std::copy(center, center + 2, this->center);
-	range = resolution*(Npixels-1);
+	range = resolution*(Nx-1);
 	
 	map_boundary_p1[0] = center[0]-(Npixels*resolution)/2.;
 	map_boundary_p1[1] = center[1]-(Npixels*resolution)/2.;
 	map_boundary_p2[0] = center[0]+(Npixels*resolution)/2.;
 	map_boundary_p2[1] = center[1]+(Npixels*resolution)/2.;
+}
+
+/// make rectangular PixelMap with square pixels
+PixelMap::PixelMap(
+                   const PosType* center,  /// The location of the center of the map
+                   std::size_t Nx,  /// Number of pixels in x dimension of map.
+                   std::size_t Ny,  /// Number of pixels in y dimension of map.
+                   PosType resolution        /// One dimensional range of map in whatever units the point positions are in
+                   )
+: map(0.0, Nx*Ny),
+Nx(Nx), Ny(Ny), resolution(resolution)
+{
+	std::copy(center, center + 2, this->center);
+	range = resolution*(Nx-1);
+	
+	map_boundary_p1[0] = center[0]-(Nx*resolution)/2.;
+	map_boundary_p1[1] = center[1]-(Ny*resolution)/2.;
+	map_boundary_p2[0] = center[0]+(Nx*resolution)/2.;
+	map_boundary_p2[1] = center[1]+(Ny*resolution)/2.;
 }
 
 /** \brief Constructs a PixelMap reading in a fits file
@@ -108,9 +129,8 @@ PixelMap::PixelMap(
 	
 	//const CCfits::ExtMap *h1=&fp->extension();
 	
-	Npixels = h0.axis(0);
-	if(Npixels != (std::size_t)h0.axis(1))
-		throw std::runtime_error("Only square maps are allowed!");
+	Nx = h0.axis(0);
+  Ny = h0.axis(1);
 	
   try
 	{
@@ -148,11 +168,11 @@ PixelMap::PixelMap(
     resolution = fabs(resolution)*pi/180.;
   }
 	
-	range = resolution*(Npixels-1);
-	map_boundary_p1[0] = center[0] - (Npixels*resolution)/2.;
-	map_boundary_p1[1] = center[1] - (Npixels*resolution)/2.;
-	map_boundary_p2[0] = center[0] + (Npixels*resolution)/2.;
-	map_boundary_p2[1] = center[1] + (Npixels*resolution)/2.;
+	range = resolution*(Nx-1);
+	map_boundary_p1[0] = center[0] - (Nx*resolution)/2.;
+	map_boundary_p1[1] = center[1] - (Ny*resolution)/2.;
+	map_boundary_p2[0] = center[0] + (Nx*resolution)/2.;
+	map_boundary_p2[1] = center[1] + (Ny*resolution)/2.;
 	
 	h0.read(map);
 #else
@@ -161,39 +181,39 @@ PixelMap::PixelMap(
 #endif
 }
 
-/** \brief Creates a new PixelMap from a region of a PixelMap.
+/** \brief Creates a new PixelMap from a square region of a PixelMap.
  * If the region exceeds the boundaries of the original map, the new map is completed with zeros.
  */
 PixelMap::PixelMap(const PixelMap& pmap,  /// Input PixelMap (from which the stamp is taken)
 		const PosType* center, /// center of the region to be duplicated (in rads)
-		std::size_t Npixels /// size of the region to be duplicated (in pixels)
+		std::size_t my_Npixels /// size of the region to be duplicated (in pixels)
 		)
-: map(0.0, Npixels*Npixels),
-  Npixels(Npixels), resolution(pmap.resolution)
+: map(0.0, my_Npixels*my_Npixels),
+  Nx(my_Npixels), Ny(my_Npixels), resolution(pmap.resolution)
 	{
 		std::copy(center, center + 2, this->center);
-		range = resolution*(Npixels-1);
+		range = resolution*(Nx-1);
 
-		map_boundary_p1[0] = center[0]-(Npixels*resolution)/2.;
-		map_boundary_p1[1] = center[1]-(Npixels*resolution)/2.;
-		map_boundary_p2[0] = center[0]+(Npixels*resolution)/2.;
-		map_boundary_p2[1] = center[1]+(Npixels*resolution)/2.;
+		map_boundary_p1[0] = center[0]-(Nx*resolution)/2.;
+		map_boundary_p1[1] = center[1]-(Ny*resolution)/2.;
+		map_boundary_p2[0] = center[0]+(Nx*resolution)/2.;
+		map_boundary_p2[1] = center[1]+(Ny*resolution)/2.;
 
 		int * edge = new int[2];
-		edge[0] = (center[0]-pmap.map_boundary_p1[0])/resolution - Npixels/2;
-		edge[1] = (center[1]-pmap.map_boundary_p1[1])/resolution - Npixels/2;
-		if (edge[0] > int(pmap.Npixels) || edge[1] > int(pmap.Npixels) || edge[0]+int(Npixels) < 0 || edge[1]+int(Npixels) < 0)
+		edge[0] = (center[0]-pmap.map_boundary_p1[0])/resolution - Nx/2;
+		edge[1] = (center[1]-pmap.map_boundary_p1[1])/resolution - Ny/2;
+		if (edge[0] > int(pmap.Nx) || edge[1] > int(pmap.Ny) || edge[0]+int(Nx) < 0 || edge[1]+int(Ny) < 0)
 		{
 			std::cout << "The region you selected is completely outside PixelMap!" << std::endl;
 			throw std::runtime_error("Attempting to make Sub-PixelMap outside of parent PixelMap!");
 		}
 		for (unsigned long i=0; i < map.size(); ++i)
 		{
-			int ix = i%Npixels;
-			int iy = i/Npixels;
+			int ix = i%Nx;
+			int iy = i/Nx;
 			map[i] = 0;
-			if (ix+edge[0] > 0 && ix+edge[0] < pmap.Npixels && iy+edge[1] > 0 && iy+edge[1] < pmap.Npixels)
-				map[i] = pmap.map[ix+edge[0]+(iy+edge[1])*pmap.Npixels];
+			if (ix+edge[0] > 0 && ix+edge[0] < pmap.Nx && iy+edge[1] > 0 && iy+edge[1] < pmap.Ny)
+				map[i] = pmap.map[ix+edge[0]+(iy+edge[1])*pmap.Nx];
 		}
 	}
 
@@ -207,18 +227,20 @@ PixelMap::PixelMap(
                    )
 {
 	resolution = res_ratio*pmap.resolution;
-	Npixels = pmap.Npixels/res_ratio + .5;
-	range = resolution*(Npixels-1);
+	Nx = pmap.Nx/res_ratio + .5;
+	Ny = pmap.Ny/res_ratio + .5;
+	range = resolution*(Nx-1);
 	center[0] = pmap.center[0];
 	center[1] = pmap.center[1];
-	map_boundary_p1[0] = center[0] - (Npixels*resolution)/2.;
-	map_boundary_p1[1] = center[1] - (Npixels*resolution)/2.;
-	map_boundary_p2[0] = center[0] + (Npixels*resolution)/2.;
-	map_boundary_p2[1] = center[1] + (Npixels*resolution)/2.;
+	map_boundary_p1[0] = center[0] - (Nx*resolution)/2.;
+	map_boundary_p1[1] = center[1] - (Ny*resolution)/2.;
+	map_boundary_p2[0] = center[0] + (Nx*resolution)/2.;
+	map_boundary_p2[1] = center[1] + (Ny*resolution)/2.;
 	
-	map.resize(Npixels*Npixels);
+	map.resize(Nx*Ny);
 	
-	int old_Npixels = pmap.Npixels;
+	int old_Nx = pmap.Nx;
+	int old_Ny = pmap.Ny;
 	int ix, iy;
 	PosType area;
 	PosType* old_p1 = new PosType[2];
@@ -226,20 +248,22 @@ PixelMap::PixelMap(
 
 	for(unsigned long i=0;i < map.size(); ++i)
 	{
-		ix = i%Npixels;
-		iy = i/Npixels;
-		map[ix+Npixels*iy] = 0.;
+		ix = i%Nx;
+		iy = i/Nx;
+		map[ix+Nx*iy] = 0.;
 		old_p1[0] = std::max(0,int(ix*res_ratio));
 		old_p1[1] = std::max(0,int(iy*res_ratio));
-		old_p2[0] = std::min(old_Npixels-1,int((ix+1.)*res_ratio));
-		old_p2[1] = std::min(old_Npixels-1,int((iy+1.)*res_ratio));
+    
+		old_p2[0] = std::min(old_Nx-1,int((ix+1.)*res_ratio));
+		old_p2[1] = std::min(old_Ny-1,int((iy+1.)*res_ratio));
+    
 		for (int old_iy = old_p1[1]; old_iy <= old_p2[1]; ++old_iy)
 		{
 			for (int old_ix = old_p1[0]; old_ix<= old_p2[0]; ++old_ix)
 				{
 					area = MIN(old_ix+0.5,(ix+1.)*res_ratio-0.5) - MAX(old_ix-0.5,ix*res_ratio-0.5);
 					area *= MIN(old_iy+0.5,(iy+1.)*res_ratio-0.5) - MAX(old_iy-0.5,iy*res_ratio-0.5);
-					map[ix+Npixels*iy] += area*pmap.map[old_ix+old_Npixels*old_iy];
+					map[ix+Nx*iy] += area*pmap.map[old_ix+old_Nx*old_iy];
 				}
 			}
 		}
@@ -283,17 +307,19 @@ void PixelMap::AssignValue(std::size_t i, PosType value)
 bool PixelMap::agrees(const PixelMap& other) const
 {
 	return
-		(Npixels == other.Npixels) &&
-		(resolution == other.resolution) &&
-		(center[0] == other.center[0]) &&
-		(center[1] == other.center[1]);
+  (Nx == other.Nx) &&
+  (Ny == other.Ny) &&
+  (resolution == other.resolution) &&
+  (center[0] == other.center[0]) &&
+  (center[1] == other.center[1]);
 }
 
 /// Add the values of another PixelMap to this one.
 PixelMap& PixelMap::operator+=(const PixelMap& rhs)
 {
 	// TODO: maybe check if PixelMaps agree, but is slower
-    if(Npixels != rhs.getNpixels()) throw std::runtime_error("Dimensions of maps are not compatible");
+  if(Nx != rhs.getNx() || Ny != rhs.getNy())
+    throw std::runtime_error("Dimensions of maps are not compatible");
 	for(size_t i=0;i<map.size();++i) map[i] += rhs.map[i];
 	return *this;
 }
@@ -310,7 +336,8 @@ PixelMap operator+(const PixelMap& a, const PixelMap& b)
 PixelMap& PixelMap::operator-=(const PixelMap& rhs)
 {
 	// TODO: maybe check if PixelMaps agree, but is slower
-    if(Npixels != rhs.getNpixels()) throw std::runtime_error("Dimensions of maps are not compatible");
+  if(Nx != rhs.getNx() || Ny != rhs.getNy())
+    throw std::runtime_error("Dimensions of maps are not compatible");
 	for(size_t i=0;i<map.size();++i) map[i] -= rhs.map[i];
 	return *this;
 }
@@ -326,7 +353,8 @@ PixelMap operator-(const PixelMap& a, const PixelMap& b)
 /// Multiply the values of another PixelMap by this one.
 PixelMap& PixelMap::operator*=(const PixelMap& rhs)
 {
-    if(Npixels != rhs.getNpixels()) throw std::runtime_error("Dimensions of maps are not compatible");
+  if(Nx != rhs.getNx() || Ny != rhs.getNy())
+    throw std::runtime_error("Dimensions of maps are not compatible");
 	for(size_t i=0;i<map.size();++i) map[i] *= rhs.map[i];
     //map *= rhs.map;
 	return *this;
@@ -376,23 +404,23 @@ void PixelMap::AddImages(
 		,float rescale         /// rescales the surface brightness while leaving the image unchanged,
                                ///  see full notes
 		){
-
+  
 	if(Nimages <= 0) return;
 	if(imageinfo->imagekist->Nunits() == 0) return;
-
+  
 	PosType sb = 1;
-    float area = 1;
+  float area = 1;
 	std::list <unsigned long> neighborlist;
 	std::list<unsigned long>::iterator it;
 	for(long ii=0;ii<Nimages;++ii){
-
+    
 		if(imageinfo->imagekist->Nunits() > 0){
 			imageinfo[ii].imagekist->MoveToTop();
 			do{
 				if(rescale != 0.0) sb = fabs(rescale)*imageinfo[ii].imagekist->getCurrent()->surface_brightness;
-
+        
 				assert(imageinfo[ii].imagekist->getCurrent()->leaf);
-
+        
 				if ((inMapBox(imageinfo[ii].imagekist->getCurrent()->leaf)) == true){
 					PointsWithinLeaf(imageinfo[ii].imagekist->getCurrent()->leaf,neighborlist);
 					for(it = neighborlist.begin();it != neighborlist.end();it++){
@@ -403,11 +431,11 @@ void PixelMap::AddImages(
 			}while(imageinfo[ii].imagekist->Down());
 		}
 	}
-    
-    if(rescale < 0){
-        for(size_t i=0; i< Npixels*Npixels ;++i) map[i] /= resolution*resolution;
-    }
-
+  
+  if(rescale < 0){
+    for(size_t i=0; i< Nx*Ny ;++i) map[i] /= resolution*resolution;
+  }
+  
 	return;
 }
 
@@ -416,20 +444,28 @@ void PixelMap::PointsWithinLeaf(Branch * branch1, std::list <unsigned long> &nei
 
 	neighborlist.clear();
 
-	int line_s,line_e,col_s,col_e;
+	long line_s,line_e,col_s,col_e;
 
-	line_s = std::max(0,int(Utilities::IndexFromPosition(branch1->boundary_p1[0],Npixels,range,center[0])));
-	col_s = std::max(0,int(Utilities::IndexFromPosition(branch1->boundary_p1[1],Npixels,range,center[1])));
-	line_e = Utilities::IndexFromPosition(branch1->boundary_p2[0],Npixels,range,center[0]);
-	col_e = Utilities::IndexFromPosition(branch1->boundary_p2[1],Npixels,range,center[1]);
-	if (line_e < 0) line_e = Npixels-1;
-	if (col_e < 0) col_e = Npixels-1;
+  find_index(branch1->boundary_p1,line_s,col_s);
+  find_index(branch1->boundary_p2,line_e,col_e);
+  
+  if(line_s < 0) line_s = 0;
+  if(col_s < 0) col_s = 0;
+  
+	//line_s = std::max(0,int(Utilities::IndexFromPosition(branch1->boundary_p1[0],Nx,range,center[0])));
+	//col_s = std::max(0,int(Utilities::IndexFromPosition(branch1->boundary_p1[1],Ny,range*Ny/Nx,center[1])));
+  
+	//line_e = Utilities::IndexFromPosition(branch1->boundary_p2[0],Nx,range,center[0]);
+	//col_e = Utilities::IndexFromPosition(branch1->boundary_p2[1],Ny,range*Ny/Nx,center[1]);
+  
+	if (line_e < 0) line_e = Nx-1;
+	if (col_e < 0) col_e = Ny-1;
 
 	for (int iy = col_s; iy<= col_e; ++iy)
 	{
 		for (int ix = line_s; ix <= line_e; ++ix)
 			{
-				neighborlist.push_back(ix+Npixels*iy);
+				neighborlist.push_back(ix+Nx*iy);
 			}
 		}
 }
@@ -451,7 +487,8 @@ PosType PixelMap::LeafPixelArea(IndexType i,Branch * branch1){
 	PosType area=0;
 	PosType p[2],p1[2],p2[2];
 
-	Utilities::PositionFromIndex(i,p,Npixels,range,center);
+	//Utilities::PositionFromIndex(i,p,Nx,range,center);
+  find_position(p,i);
 	p1[0] = p[0] - .5*resolution;
 	p1[1] = p[1] - .5*resolution;
 	p2[0] = p[0] + .5*resolution;
@@ -465,72 +502,14 @@ PosType PixelMap::LeafPixelArea(IndexType i,Branch * branch1){
 	if(area < 0) return 0.0;
 
 	return area;
-
 }
 
-/*// Add an image to the map with Gaussian smoothing
-void PixelMap::AddImages(
-		ImageInfo *imageinfo   /// An array of ImageInfo-s.  There is no reason to separate images for this routine
-		,int Nimages           /// Number of images on input.
-		,PosType sigma          /// Gaussion width of smoothing kernal
-		){
-
-	if(sigma < resolution){
-		ERROR_MESSAGE();
-		std::cout << "ERROR in PixelMap::AddImages(), Smoothing scale must be larger than resolution of final image." << std::endl;
-		exit(1);
-	}
-	if(Nimages <= 0) return;
-	if(imageinfo->imagekist->Nunits() == 0) return;
-
-	PosType sb,r[2],res,norm=0;
-	Kist<Point> * kist = new Kist<Point>();
-
-	// find numerical normalization of mask on grid
-//	PointsWithinKist(ptree,center,3*sigma,kist,0);
-	kist->MoveToTop();
-	do{
-		r[0] = kist->getCurrent()->x[0] - center[0];
-		r[1] = kist->getCurrent()->x[1] - center[1];
-		norm += exp(-0.5*(r[0]*r[0] + r[1]*r[1] )/sigma/sigma);
-	}while(kist->Down());
-
-
-	for(long ii=0;ii<Nimages;++ii){
-		if(imageinfo->imagekist->Nunits() > 0){
-			MoveToTopKist(imageinfo[ii].imagekist);
-			do{
-
-				sb = getCurrentKist(imageinfo[ii].imagekist)->surface_brightness;
-				res = getCurrentKist(imageinfo[ii].imagekist)->gridsize;
-
-				if(res >= resolution){
-					ERROR_MESSAGE();
-					std::cout << "ERROR in PixelMap::AddImages(), Resolution of simulation must be higher than resolution of final image." << std::endl;
-					exit(1);
-				}
-//				PointsWithinKist(ptree,imageinfo[ii].imagekist->getCurrent()->x,3*sigma,kist,0);
-				kist->MoveToTop();
-				do{
-					r[0] = kist->getCurrent()->x[0] - imageinfo[ii].imagekist->getCurrent()->x[0];
-					r[1] = kist->getCurrent()->x[1] - imageinfo[ii].imagekist->getCurrent()->x[1];
-					kist->getCurrent()->surface_brightness += sb*res*res*exp(-0.5*(r[0]*r[0] + r[1]*r[1] )/sigma/sigma)/norm;
-				}while(kist->Down());
-
-			}while(MoveDownKist(imageinfo[ii].imagekist));
-		}
-	}
-
-	delete kist;
-	return;
-}
-*/
 /// Print an ASCII table of all the pixel values.
 void PixelMap::printASCII() const
 {
-	std::cout << Npixels << "  " << range << std::endl;
+	std::cout << Nx << " " << Ny << "  " << range << std::endl;
 	for(std::size_t i=0;i < map.size(); ++i) std::cout << map[i] << std::endl;
-	std::cout << Npixels << "  " << range << std::endl;
+	std::cout << Nx << " " << Ny << "  " << range << std::endl;
 
 	//map.resize(0);
 	return;
@@ -545,9 +524,9 @@ void PixelMap::printASCIItoFile(std::string filename) const
 		exit(0);
 	}
 
-	file_map << Npixels << "  " << range << std::endl;
+	std::cout << Nx << " " << Ny << "  " << range << std::endl;
 	for(std::size_t i=0;i < map.size(); ++i) file_map << std::scientific << map[i] << std::endl;
-	file_map << Npixels << "  " << range << std::endl;
+	std::cout << Nx << " " << Ny << "  " << range << std::endl;
 
 	//map.resize(0);
 
@@ -563,14 +542,14 @@ void PixelMap::printFITS(std::string filename, bool verbose) const
 		throw std::invalid_argument("Please enter a valid filename for the FITS file output");
 	
 	long naxis = 2;
-	long naxes[2] = {(long)Npixels, (long)Npixels};
+	long naxes[2] = {(long)Nx, (long)Ny};
 	
 	// might throw CCfits::FITS::CantCreate
 	std::auto_ptr<CCfits::FITS> fout(new CCfits::FITS(filename, FLOAT_IMG, naxis, naxes));
 	
 	std::vector<long> naxex(2);
-	naxex[0] = Npixels;
-	naxex[1] = Npixels;
+	naxex[0] = Nx;
+	naxex[1] = Ny;
 	
 	CCfits::PHDU& phout = fout->pHDU();
 	
@@ -593,8 +572,9 @@ void PixelMap::printFITS(std::string filename, bool verbose) const
 	phout.addKey("CD2_1", 0.0, "partial of second axis coordinate w.r.t. x");
 	phout.addKey("CD2_2", 180*resolution/pi, "partial of second axis coordinate w.r.t. y");
 	
-	phout.addKey("Npixels", Npixels, "");
-	phout.addKey("range", map_boundary_p2[0]-map_boundary_p1[0], "radians");
+	phout.addKey("Nx", Nx, "");
+	phout.addKey("Ny", Ny, "");
+	phout.addKey("range x", map_boundary_p2[0]-map_boundary_p1[0], "radians");
 	phout.addKey("RA", center[0], "radians");
 	phout.addKey("DEC", center[1], "radians");
     
@@ -648,12 +628,12 @@ void PixelMap::smooth(PosType sigma){
 	
 	for(long i=0;i<map.size();i++){
 		for(int j=0;j<Nmask;j++){
-			ix=i%Npixels + j-Nmask_half;
-			if( (ix>-1) && (ix<Npixels) ){
+			ix=i%Nx + j-Nmask_half;
+			if( (ix>-1) && (ix<Nx) ){
 				for(int k=0;k<Nmask;k++){
-					iy=i/Npixels + k-Nmask_half;
-					if( (iy>-1) && (iy<Npixels) ){
-						map_out[ix+Npixels*iy] += mask[j][k]*map[i];
+					iy=i/Nx + k-Nmask_half;
+					if( (iy>-1) && (iy<Ny) ){
+						map_out[ix+Nx*iy] += mask[j][k]*map[i];
 					}
 				}
 			}
@@ -690,7 +670,8 @@ void PixelMap::drawline(
 
 	if(r==0.0){
 		if(inMapBox(x1)){
-			index = Utilities::IndexFromPosition(x1,Npixels,range,center);
+			//index = Utilities::IndexFromPosition(x1,Nx,range,center);
+      index = find_index(x1);
 			map[index] = value;
 		}
 		return;
@@ -703,7 +684,8 @@ void PixelMap::drawline(
 	x[1] = x1[1];
 	while(d <= r){
 		if(inMapBox(x)){
-			index = Utilities::IndexFromPosition(x,Npixels,range,center);
+			//index = Utilities::IndexFromPosition(x,Nx,range,center);
+      index = find_index(x1);
 			map[index] = value;
 		}
 		x[0] += s1*resolution;
@@ -770,14 +752,68 @@ void PixelMap::AddCurve(ImageInfo *curve,PosType value){
 void PixelMap::AddGrid(Grid &grid,PosType value){
   PointList* list = grid.i_tree->pointlist;
   size_t index;
-
+  
   list->current = list->top;
   do{
     if(inMapBox(list->current->x)){
-      index = Utilities::IndexFromPosition(list->current->x,Npixels,range,center);
+      //index = Utilities::IndexFromPosition(list->current->x,Nx,Ny,range,center);
+      index = find_index(list->current->x);
       map[index] = value;
     }
   }while(MoveDownList(list));
+}
+/**
+ *  \brief Fills in pixels with the selected quantity from the grid points.
+ *
+ *  The grid and PixelMap do not need to be related in any way.
+ *  Using this function multiple grids can be added to the same image.
+ *
+ *
+ *  Warning: When adding a new grid it should not overlap with any of the previously added grids.
+ */
+void PixelMap::AddGrid(Grid &grid,LensingVariable val){
+  
+  if(grid.getNumberOfPoints() ==0 ) return;
+  
+  PointList* list = grid.i_tree->pointlist;
+  double tmp,area;
+  
+  std::list <unsigned long> neighborlist;
+  std::list <unsigned long>::iterator it;
+  
+  list->current = list->top;
+  do{
+    switch (val) {
+      case KAPPA:
+        tmp = list->current->kappa/resolution/resolution;
+        break;
+      case GAMMA1:
+        tmp = list->current->gamma[0]/resolution/resolution;
+        break;
+      case GAMMA2:
+        tmp = list->current->gamma[1]/resolution/resolution;
+        break;
+      case GAMMA3:
+        tmp = list->current->gamma[2]/resolution/resolution;
+        break;
+      default:
+        std::cerr << "PixelMap::AddGrid() does not work for the input LensingVariable" << std::endl;
+        throw std::runtime_error("PixelMap::AddGrid() does not work for the input LensingVariable");
+        break;
+        // If this list is to be expanded to include ALPHA or GAMMA take care to add them as vectors
+    }
+
+    if(tmp != 0.0){
+      if ((inMapBox(list->current->leaf)) == true){
+        PointsWithinLeaf(list->current->leaf,neighborlist);
+        for(it = neighborlist.begin();it != neighborlist.end();it++){
+          area = LeafPixelArea(*it,list->current->leaf);
+          map[*it] += tmp*area;
+        }
+      }
+    }
+  }while(MoveDownList(list));
+
 }
 
 
@@ -791,14 +827,18 @@ void PixelMap::FindArc(
                        ,PosType threshold    // threshold in pixal value
                        ){
   
-  std::vector<size_t> mask(Npixels*Npixels);
+  if(Nx != Ny){
+    std::cout << "PixelMap::FindArc() Doesn't work on nonsquare maps" << std::endl;
+    throw std::runtime_error("nonsquare");
+  }
+  std::vector<size_t> mask(Nx*Nx);
   size_t j=0;
   long k=0;
   PosType const tmp_center[2] = {0,0};
     
   // mask pixels below threshhold
   PosType maxval = map[0],minval = map[0];
-  for(size_t i=0;i<Npixels*Npixels;i++){
+  for(size_t i=0;i<Nx*Nx;i++){
     if(map[i] > threshold){
       if(j==0) minval = map[i];
       else minval = MIN(minval,map[i]);
@@ -817,7 +857,7 @@ void PixelMap::FindArc(
   }
   
   PosType Rmax,Rmin,r2;
-  Rmax = Npixels;
+  Rmax = Nx;
   Rmin = 2;
   
   size_t Nc,Nr;
@@ -833,12 +873,12 @@ void PixelMap::FindArc(
   for(size_t i = 0;i<Nc;++i) y[i] = i*2*Rmax/(Nc-1) - Rmax;
   for(size_t i = 0;i<Nr;++i) R2[i] = pow(Rmin + i*(Rmax-Rmin)/(Nr-1),2);
   
-  const PosType range = 1.0*Npixels;
+  const PosType range = 1.0*Nx;
   PosType RmaxSqr = Rmax*Rmax;
   PosType rminSqr = RmaxSqr,rmax2=0;
   for(size_t m=0;m<mask.size();++m){
     
-    Utilities::PositionFromIndex(mask[m], xc, Npixels, range, tmp_center);
+    Utilities::PositionFromIndex(mask[m], xc, Nx, range, tmp_center);
     
     for(size_t ii=0;ii<Nc;++ii){
       for(size_t jj=0;jj<Nc;++jj){
@@ -890,7 +930,7 @@ void PixelMap::FindArc(
   
   // find arc length, width and center
   for(size_t m=0;m<mask.size();++m){
-    Utilities::PositionFromIndex(mask[m], x_tmp, Npixels, range, tmp_center);
+    Utilities::PositionFromIndex(mask[m], x_tmp, Nx, range, tmp_center);
     r_tmp = sqrt( (xc[0] - x_tmp[0])*(xc[0] - x_tmp[0]) + (xc[1] - x_tmp[1])*(xc[1] - x_tmp[1]) );
     
     if(fabs(r_tmp-radius) < 1.0){
@@ -1010,4 +1050,43 @@ void Utilities::ReadFileNames(
   std::cout << filenames.size() << " file names." << std::endl;
   return ;
 }
+
+/// get the index for a position, returns -1 if out of map
+long PixelMap::find_index(PosType const x[],long &ix,long &iy){
+  PosType fx, fy;
+  
+  fx = (x[0] - center[0])/range;
+  fy = (x[1] - center[1])*(Nx-1)/range/(Ny-1);
+  if(fabs(fx) > 0.5 || fabs(fy) > 0.5){
+    ix = iy = -1;
+    return -1;
+  }
+  
+  fx = (fx + 0.5)*(Nx-1) + 0.5;
+  fy = (fy + 0.5)*(Ny-1) + 0.5;
+  
+  ix = (long)(fx);
+  iy = (long)(fy);
+  
+  if( (ix<Nx) && (iy<Ny) ) return ix+Nx*iy;
+  return -1;
+}
+/// get the index for a position, returns -1 if out of map
+long PixelMap::find_index(PosType const x[]){
+  long ix,iy;
+  return find_index(x,ix,iy);
+}
+/// get the index for a position, returns -1 if out of map
+void PixelMap::find_position(PosType x[],std::size_t const index){
+  if(Nx == 1){
+    x[0] = center[0];
+    x[1] = center[1];
+    return;
+  }
+  x[0] = center[0] + range*( 1.0*(index%Nx)/(Nx-1) - 0.5 );
+  x[1] = center[1] + range*( 1.0*(index/Nx)/(Nx-1) ) - 0.5*range*(Ny-1)/(Nx-1);
+  return;
+}
+
+
 

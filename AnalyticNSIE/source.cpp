@@ -233,27 +233,31 @@ SourcePixelled::SourcePixelled(
  *  Factor allows for rescaling of the flux, in case one wants to simulate a different observation.
  */
 SourcePixelled::SourcePixelled(
-		const PixelMap& gal_map  /// Input image and information
-		, PosType my_z                 /// redshift of the source
-		, PosType factor                /// optional rescaling factor for the flux
-		)
-	:Source(){
-
-	zsource = my_z;
-	resolution = gal_map.getResolution();
-	Npixels = gal_map.getNpixels();
-	range = resolution*(Npixels-1);
-	source_x[0] = gal_map.getCenter()[0];
-	source_x[1] = gal_map.getCenter()[1];
-	source_r =  range/sqrt(2.);
-	values.resize(Npixels*Npixels);
-	for (int i = 0; i < Npixels*Npixels; i++)
-			values[i] = gal_map[i]/resolution/resolution*factor;
-
-	calcTotalFlux();
-	calcCentroid();
-	calcEll();
-	calcSize();
+                               const PixelMap& gal_map  /// Input image and information
+                               , PosType my_z                 /// redshift of the source
+                               , PosType factor                /// optional rescaling factor for the flux
+                               )
+:Source(){
+  if(gal_map.getNx() != gal_map.getNy()){
+    std::cout << "SourcePixelled::SourcePixelled() Doesn't work on nonsquare maps" << std::endl;
+    throw std::runtime_error("nonsquare");
+  }
+  
+  zsource = my_z;
+  resolution = gal_map.getResolution();
+  Npixels = gal_map.getNx();
+  range = resolution*(Npixels-1);
+  source_x[0] = gal_map.getCenter()[0];
+  source_x[1] = gal_map.getCenter()[1];
+  source_r =  range/sqrt(2.);
+  values.resize(Npixels*Npixels);
+  for (int i = 0; i < Npixels*Npixels; i++)
+    values[i] = gal_map[i]/resolution/resolution*factor;
+  
+  calcTotalFlux();
+  calcCentroid();
+  calcEll();
+  calcSize();
 }
 
 SourcePixelled::~SourcePixelled(){

@@ -620,12 +620,14 @@ PosType LensHalo::alpha_ell(PosType x,PosType theta){ // used only for calculati
 
 
 
-void LensHalo::alpha_asym(
+void LensHalo::alphakappagamma_asym(
       PosType r         /// Radius in Mpc (not scale lensgths)
       ,PosType theta    /// angle of ray
-      , PosType alpha[] /// output deflection 
+      ,PosType alpha[]  /// output deflection
+      ,PosType *kappa   /// output kappa
+      ,PosType gamma[]  /// outpot gamma
                           ){ // According to Ansatz II
-  PosType f[3],g[3],alpha_r,alpha_theta;
+  PosType f[3],g[4],alpha_r,alpha_theta;
     
   felliptical(r,fratio,theta,f,g);
   
@@ -639,14 +641,27 @@ void LensHalo::alpha_asym(
 
 	alpha[0] = alpha_r*cos(theta) - alpha_theta*sin(theta);
 	alpha[1] = alpha_r*sin(theta) + alpha_theta*cos(theta);
+    
+  double kappa_isoG = mass*kappa_h(f[0]/rscale)/f[0]/f[0]/pi;
+    
+  double phitwo = ( 2*kappa_isoG + alpha_isoG/f[0] );
   
+  *kappa = -0.5*alpha_isoG*(g[1]/r+g[2]+f[2]/r/r) + 0.5*phitwo*(g[1]*g[1]+f[1]*f[1]/r/r);
+  
+  double gt = -0.5*alpha_isoG*(-g[1]/r+g[2]-f[2]/r/r) + 0.5*phitwo*(g[1]*g[1]-f[1]*f[1]/r/r);
+  double g45 = -alpha_isoG*(g[3]/r-f[1]/r/r) + phitwo*g[1]*f[1]/r;
+  
+  gamma[0] = cos(2*theta)*gt + sin(2*theta)*g45;
+  gamma[1] = -sin(2*theta)*gt + cos(2*theta)*g45;
+
 	return;
 }
 
 /**
  \brief Calculate the derivatives of the G function = r*sqrt(cos(theta)^2 + q(r)^2 sin(theta))
  *
- * output: f[0] = G, f[1] = dG/dtheta, f[2] = ddg/dtheta^2, g[0] = R/r, g[1] = dG/dr, g[2] = ddG/dr^2
+ * output: f[0] = G, f[1] = dG/dtheta, f[2] = ddg/dtheta^2, g[0] = R/r, g[1] = dG/dr
+ *   , g[2] = ddG/dr^2, g[3] = ddG/dr/dtheta
  */
 void LensHalo::felliptical(double r, double q, double theta, double f[], double g[]){ // According to Ansatz II
     double A[3];
@@ -657,18 +672,18 @@ void LensHalo::felliptical(double r, double q, double theta, double f[], double 
     //double reps=0.5*Rmax;
     //double dampslope=2;
   
-    // for now I don't consider damped profiles
-    A[0]=q*q; // Compare the two cases: 1/q/q or q*q
-    A[1]=0; // no r dependence thus set to 0
+    // no damping
+    A[0]=q*q; 
+    A[1]=0;
     A[2]=0;
+     
 
-  double sig2 = r_eps*r_eps;
-  double tmp = exp(-0.5*(r-Rmax)*(r-Rmax)/sig2);
+/*    double sig2 = r_eps*r_eps;
+    double tmp = exp(-0.5*(r-Rmax)*(r-Rmax)/sig2);
     A[0] = q*q + (1-q*q)*tmp; // Compare the two cases: 1/q/q or q*q
     A[1] = -(1-q*q)*tmp*(r-Rmax)/sig2; // no r dependence thus set to 0
     A[2] = -(1-q*q)*tmp*(1 - (r-Rmax)*(r-Rmax)/sig2)/sig2;;
- 
-  
+*/ 
     //A[0]=1-eps*(1-pow(x/reps,dampslope));
     //A[1]=eps*dampslope/reps*pow((x/reps),dampslope-1.);
     //A[2]=eps*dampslope*(dampslope-1.)/reps/reps*pow((x/reps),dampslope-2.);
@@ -683,14 +698,15 @@ void LensHalo::felliptical(double r, double q, double theta, double f[], double 
     //g[3]=cos(theta)*sin(theta)*(2*(A[0]*A[0]-1-(A[0]-1)*(A[0]-1)*cos(2*theta))+x*A[1]*(3+cos(2*theta)+2*A[0]*sin(theta)*sin(theta)))/(4*g[0]*g[0]*g[0]); // Gtr not needed here
 */
   
-  double s2 = sin(theta)*sin(theta),c2 = cos(theta)*cos(theta);
+  double s2 = sin(theta)*sin(theta),c2 = cos(theta)*cos(theta),sc=sin(theta)*cos(theta);
   
   f[0] = r*sqrt( c2 + A[0]*s2 );
   g[0] = f[0]/r;
-  f[1] = r*(A[0]-1)*cos(theta)*sin(theta)/g[0]; // Gt
+  f[1] = r*(A[0]-1)*sc/g[0]; // Gt
   f[2] = r*(A[0]-1)*( c2 - s2 - (A[0]-1)*s2*c2/g[0]/g[0] )/g[0]; // Gtt
   g[1] = g[0] + 0.5*r*A[1]*s2/g[0]; // Gr
   g[2] = 0.5*s2*( A[1]*(2 - 0.5*r*s2*A[1]/g[0]/g[0]) + r*A[2] )/g[0];  // Grr
+  g[3] = sc*( A[0]-1 + r*A[1] - 0.5*r*(A[0]-1)*A[1]*s2/g[0]/g[0] )/g[0];
 }
 
 PosType LensHalo::renormalization(PosType r_max){ // Calculates renormalization factor in the constructor of PowerLaw and NFW only (for now)

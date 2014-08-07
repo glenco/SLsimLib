@@ -964,15 +964,26 @@ void Grid::zoom(
 
 /// Outputs a fits image of a lensing variable of choice
 void Grid::writeFits(
-      const PosType center[]     /// center of image
-      ,size_t Npixels           /// number of pixels in image in on dimension
-      ,PosType resolution        /// resolution of image in radians
-      ,LensingVariable lensvar  /// which quantity is to be displayed
-      ,std::string filename     /// file name for image -- .kappa.fits, .gamma1.fits, etc will be appended
-      ){
-  PixelMap map(center, Npixels, resolution);
+                     const PosType center[]     /// center of image
+                     ,size_t Npixels           /// number of pixels in image in on dimension
+                     ,PosType resolution        /// resolution of image in radians
+                     ,LensingVariable lensvar  /// which quantity is to be displayed
+                     ,std::string filename     /// file name for image -- .kappa.fits, .gamma1.fits, etc will be appended
+                     ){
+  writeFits(center,Npixels,Npixels,resolution,lensvar,filename);
+}
+  /// Outputs a fits image of a lensing variable of choice
+  void Grid::writeFits(
+                       const PosType center[]     /// center of image
+                       ,size_t Nx           /// number of pixels in image in x dimension
+                       ,size_t Ny           /// number of pixels in image in y dimension
+                       ,PosType resolution        /// resolution of image in radians
+                       ,LensingVariable lensvar  /// which quantity is to be displayed
+                       ,std::string filename     /// file name for image -- .kappa.fits, .gamma1.fits, etc will be appended
+                       ){
+  PixelMap map(center, Nx,Ny, resolution);
 
-  PosType range = Npixels*resolution;
+  PosType range = MAX(Nx,Ny)*resolution;
   ImageInfo tmp_image;
   long i;
   std::string tag;
@@ -1048,85 +1059,96 @@ void Grid::writeFits(
 
 /// Outputs a PixelMap of the lensing quantities of a fixed grid
 PixelMap Grid::writePixelMap(
-                     const PosType center[]     /// center of image
-                     ,size_t Npixels           /// number of pixels in image in on dimension
-                     ,PosType resolution        /// resolution of image in radians
-                     ,LensingVariable lensvar  /// which quantity is to be displayed
-                     ){
-    PixelMap map(center, Npixels, resolution);
-    
-    PosType range = Npixels*resolution;
-    ImageInfo tmp_image;
-    long i;
-    std::string tag;
-    i_tree->PointsWithinKist(center,range/sqrt(2.),tmp_image.imagekist,0);
-    std::vector<PosType> tmp_sb_vec(tmp_image.imagekist->Nunits());
-    PosType tmp_x[2];
+                             const PosType center[]     /// center of image
+                             ,size_t Npixels           /// number of pixels in image in on dimension
+                             ,PosType resolution        /// resolution of image in radians
+                             ,LensingVariable lensvar  /// which quantity is to be displayed
+                             ){
   
-    for(tmp_image.imagekist->MoveToTop(),i=0;i<tmp_sb_vec.size();++i,tmp_image.imagekist->Down()){
-        tmp_sb_vec[i] = tmp_image.imagekist->getCurrent()->surface_brightness;
-        switch (lensvar) {
-            case DT:
-                tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->dt;
-                tag = ".dt.fits";
-                break;
-            case ALPHA1:
-                tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->x[0]
-                - tmp_image.imagekist->getCurrent()->image->x[0];
-                tag = ".alpha1.fits";
-                break;
-            case ALPHA2:
-                tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->x[1]
-                - tmp_image.imagekist->getCurrent()->image->x[1];
-                tag = ".alpha2.fits";
-                break;
-            case ALPHA:
-                tmp_image.imagekist->getCurrent()->surface_brightness = pow(tmp_image.imagekist->getCurrent()->x[0]- tmp_image.imagekist->getCurrent()->image->x[0],2);
-                tmp_image.imagekist->getCurrent()->surface_brightness += pow(tmp_image.imagekist->getCurrent()->x[1]- tmp_image.imagekist->getCurrent()->image->x[1],2);
-            
-                tmp_image.imagekist->getCurrent()->surface_brightness = sqrt(tmp_image.imagekist->getCurrent()->surface_brightness);
+  return writePixelMap(center,Npixels,Npixels,resolution,lensvar);
+}
+/// Outputs a PixelMap of the lensing quantities of a fixed grid
+PixelMap Grid::writePixelMap(
+                             const PosType center[]     /// center of image
+                             ,size_t Nx           /// number of pixels in image in on dimension
+                             ,size_t Ny           /// number of pixels in image in on dimension
+                             ,PosType resolution        /// resolution of image in radians
+                             ,LensingVariable lensvar  /// which quantity is to be displayed
+                             ){
+  PixelMap map(center, Nx, Ny, resolution);
+  
+  PosType range = MAX(Nx,Ny)*resolution;
+  ImageInfo tmp_image;
+  long i;
+  std::string tag;
+  i_tree->PointsWithinKist(center,range/sqrt(2.),tmp_image.imagekist,0);
+  std::vector<PosType> tmp_sb_vec(tmp_image.imagekist->Nunits());
+  PosType tmp_x[2];
+  
+  for(tmp_image.imagekist->MoveToTop(),i=0;i<tmp_sb_vec.size();++i,tmp_image.imagekist->Down()){
+    tmp_sb_vec[i] = tmp_image.imagekist->getCurrent()->surface_brightness;
+    switch (lensvar) {
+      case DT:
+        tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->dt;
+        tag = ".dt.fits";
+        break;
+      case ALPHA1:
+        tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->x[0]
+        - tmp_image.imagekist->getCurrent()->image->x[0];
+        tag = ".alpha1.fits";
+        break;
+      case ALPHA2:
+        tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->x[1]
+        - tmp_image.imagekist->getCurrent()->image->x[1];
+        tag = ".alpha2.fits";
+        break;
+      case ALPHA:
+        tmp_image.imagekist->getCurrent()->surface_brightness = pow(tmp_image.imagekist->getCurrent()->x[0]- tmp_image.imagekist->getCurrent()->image->x[0],2);
+        tmp_image.imagekist->getCurrent()->surface_brightness += pow(tmp_image.imagekist->getCurrent()->x[1]- tmp_image.imagekist->getCurrent()->image->x[1],2);
         
-                tag = ".alpha.fits";
-                break;
-            case KAPPA:
-                tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->kappa;
-                tag = ".kappa.fits";
-                break;
-            case GAMMA1:
-                tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->gamma[0];
-                tag = ".gamma1.fits";
-                break;
-            case GAMMA2:
-                tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->gamma[1];
-                tag = ".gamma2.fits";
-                break;
-            case GAMMA3:
-                tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->gamma[2];
-                tag = ".gamma3.fits";
-                break;
-            case GAMMA:
-              tmp_x[0] = tmp_image.imagekist->getCurrent()->gamma[0];
-              tmp_x[1] = tmp_image.imagekist->getCurrent()->gamma[1];
-            
-                tmp_image.imagekist->getCurrent()->surface_brightness = sqrt( tmp_x[0]*tmp_x[0] + tmp_x[1]*tmp_x[1]);
-                tag = ".gamma.fits";
-                break;
-            case INVMAG:
-                tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->invmag;
-                tag = ".invmag.fits";
-                break;
-            default:
-                break;
-        }
+        tmp_image.imagekist->getCurrent()->surface_brightness = sqrt(tmp_image.imagekist->getCurrent()->surface_brightness);
+        
+        tag = ".alpha.fits";
+        break;
+      case KAPPA:
+        tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->kappa;
+        tag = ".kappa.fits";
+        break;
+      case GAMMA1:
+        tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->gamma[0];
+        tag = ".gamma1.fits";
+        break;
+      case GAMMA2:
+        tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->gamma[1];
+        tag = ".gamma2.fits";
+        break;
+      case GAMMA3:
+        tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->gamma[2];
+        tag = ".gamma3.fits";
+        break;
+      case GAMMA:
+        tmp_x[0] = tmp_image.imagekist->getCurrent()->gamma[0];
+        tmp_x[1] = tmp_image.imagekist->getCurrent()->gamma[1];
+        
+        tmp_image.imagekist->getCurrent()->surface_brightness = sqrt( tmp_x[0]*tmp_x[0] + tmp_x[1]*tmp_x[1]);
+        tag = ".gamma.fits";
+        break;
+      case INVMAG:
+        tmp_image.imagekist->getCurrent()->surface_brightness = tmp_image.imagekist->getCurrent()->invmag;
+        tag = ".invmag.fits";
+        break;
+      default:
+        break;
     }
-    
-    map.Clean();
-    map.AddImages(&tmp_image,1,-1);
-    
-    for(tmp_image.imagekist->MoveToTop(),i=0;i<tmp_sb_vec.size();++i,tmp_image.imagekist->Down())
-        tmp_image.imagekist->getCurrent()->surface_brightness = tmp_sb_vec[i];
-    
-    return map;
+  }
+  
+  map.Clean();
+  map.AddImages(&tmp_image,1,-1);
+  
+  for(tmp_image.imagekist->MoveToTop(),i=0;i<tmp_sb_vec.size();++i,tmp_image.imagekist->Down())
+    tmp_image.imagekist->getCurrent()->surface_brightness = tmp_sb_vec[i];
+  
+  return map;
 }
 
 

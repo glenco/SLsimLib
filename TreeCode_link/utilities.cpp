@@ -118,19 +118,51 @@ long IndexFromPosition(PosType *x,long Npixels,PosType range,const PosType *cent
 	  return -1;
 }
   
-/** \ingroup Utill
- *
- */
-void PositionFromIndex(unsigned long i,PosType *x,long Npixels,PosType range,PosType const *center){
-  if(Npixels == 1){
-    x[0] = center[0];
-    x[1] = center[1];
+  /// this is the nonsquare version of the function, it will return -1 is outside of region
+  long IndexFromPosition(PosType *x,long Nx,long Ny,PosType range,const PosType *center){
+    long ix,iy;
+    PosType fx, fy;
+    
+    fx = (x[0] - center[0])/range;
+    fy = (x[1] - center[1])*(Nx-1)/range/(Ny-1);
+    if(fabs(fx) > 0.5) return -1;
+    if(fabs(fy) > 0.5) return -1;
+    
+	  fx = (fx + 0.5)*(Nx-1) + 0.5;
+	  fy = (fy + 0.5)*(Ny-1) + 0.5;
+    
+	  if (fx < 0.) ix = -1;
+	  else ix = (long)(fx);
+    
+	  if (fy < 0.) iy = -1;
+	  else iy = (long)(fy);
+    
+	  if( (ix>-1)*(ix<Nx) && (iy>-1)*(iy<Ny) ) return ix+Nx*iy;
+	  return -1;
+  }
+
+  /// This should work for square regions
+  void PositionFromIndex(unsigned long i,PosType *x,long Npixels,PosType range,PosType const *center){
+    if(Npixels == 1){
+      x[0] = center[0];
+      x[1] = center[1];
+      return;
+    }
+    x[0] = center[0] + range*( 1.0*(i%Npixels)/(Npixels-1) - 0.5 );
+    x[1] = center[1] + range*( 1.0*(i/Npixels)/(Npixels-1) - 0.5 );
     return;
   }
-  x[0] = center[0] + range*( 1.0*(i%Npixels)/(Npixels-1) - 0.5 );
-  x[1] = center[1] + range*( 1.0*(i/Npixels)/(Npixels-1) - 0.5 );
-  return;
-}
+  /// This should work for square or rectangular regions as long as Npixels and range are the x-axis values and the pixels are square
+  void PositionFromIndex(unsigned long i,PosType *x,long Nx,long Ny,PosType range,PosType const *center){
+    if(Nx == 1){
+      x[0] = center[0];
+      x[1] = center[1];
+      return;
+    }
+    x[0] = center[0] + range*( 1.0*(i%Nx)/(Nx-1) - 0.5 );
+    x[1] = center[1] + range*( 1.0*(i/Nx)/(Nx-1) ) - 0.5*range*(Ny-1)/(Nx-1);
+    return;
+  }
 
 // 1d version
 long IndexFromPosition(PosType x,long Npixels,PosType range,PosType center){

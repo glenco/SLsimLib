@@ -13,4 +13,5 @@ add_sources(
 	readfiles_uni.cpp
 	source.cpp
 	sourceAnaGalaxy.cpp
+	elliptic.cpp
 )
