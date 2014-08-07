@@ -23,11 +23,11 @@ TreeQuad::TreeQuad(
 		,PosType my_sigma_background /// background kappa that is subtracted
 		,int bucket
 		,PosType theta_force
-    ,bool periodic_buffer
+    ,bool my_periodic_buffer
 		):
 	xp(xpt),MultiMass(Multimass), MultiRadius(Multisize), masses(my_masses)
   ,sizes(my_sizes),Nparticles(Npoints),sigma_background(my_sigma_background)
-  ,Nbucket(bucket),force_theta(theta_force),periodic_buffer(periodic_buffer)
+  ,Nbucket(bucket),force_theta(theta_force),periodic_buffer(my_periodic_buffer)
 {
 	index = new IndexType[Npoints];
 	IndexType ii;
@@ -53,11 +53,11 @@ TreeQuad::TreeQuad(
 		,PosType my_sigma_background /// background kappa that is subtracted
 		,int bucket                  /// maximum number of halos in each leaf of the tree
 		,PosType theta_force         /// the openning angle used in the criterion for decending into a subcell
-    ,bool periodic_buffer        /// if true a periodic buffer will be imposed in the force calulation.  See documentation on TreeQuad::force2D() for details.
+    ,bool my_periodic_buffer        /// if true a periodic buffer will be imposed in the force calulation.  See documentation on TreeQuad::force2D() for details.
 		):
 	xp(xpt),MultiMass(true),MultiRadius(true),masses(NULL),sizes(NULL)
   ,Nparticles(Npoints),sigma_background(my_sigma_background),Nbucket(bucket)
-  ,force_theta(theta_force),halos(my_halos),periodic_buffer(periodic_buffer)
+  ,force_theta(theta_force),halos(my_halos),periodic_buffer(my_periodic_buffer)
 {
 	index = new IndexType[Npoints];
 	IndexType ii;

@@ -173,7 +173,7 @@ public:
 			,PosType my_sigma_background = 0
 			,int bucket = 5
 			,PosType theta_force = 0.1
-      ,bool periodic_buffer = false
+      ,bool my_periodic_buffer = false
 			);
 	TreeQuad(
 			PosType **xpt
@@ -182,7 +182,7 @@ public:
 			,PosType my_sigma_background = 0
 			,int bucket = 5
 			,PosType theta_force = 0.1
-      ,bool periodic_buffer = false
+      ,bool my_periodic_buffer = false
 			);
 	virtual ~TreeQuad();
 

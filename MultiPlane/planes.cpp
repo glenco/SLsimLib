@@ -12,8 +12,8 @@
 LensPlaneTree::LensPlaneTree(PosType **xpt,LensHaloHndl *my_halos,IndexType Nhalos,PosType my_sigma_background)
 : LensPlane(), halos(my_halos, my_halos + Nhalos)
 {
-	halo_tree = new TreeQuad(xpt,my_halos,Nhalos,my_sigma_background);
-}
+	halo_tree = new TreeQuad(xpt,my_halos,Nhalos,my_sigma_background,5,0.1,true);
+ }
 
 LensPlaneTree::~LensPlaneTree(){
 	delete halo_tree;
