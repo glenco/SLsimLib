@@ -34,7 +34,7 @@ namespace
  * \brief Creates an empty lens. Main halos and field halos need to be inserted by hand from the user.
  */
 Lens::Lens(long* my_seed, CosmoParamSet cosmoset,bool verbose)
-: seed(my_seed), cosmo(cosmoset), halo_pos(0), central_point_sphere(1,0,0)
+: seed(my_seed), cosmo(cosmoset), halo_pos(0), central_point_sphere(1,0,0), inv_ang_damping_scale(0)
 {
   init_seed = 0;
   
@@ -61,7 +61,7 @@ Lens::Lens(long* my_seed, CosmoParamSet cosmoset,bool verbose)
  * \brief allocates space for the halo trees and the inout lens, if there is any
  */
 Lens::Lens(InputParams& params, long* my_seed, CosmoParamSet cosmoset, bool verbose)
-: seed(my_seed), cosmo(cosmoset), halo_pos(0), central_point_sphere(1,0,0)
+: seed(my_seed), cosmo(cosmoset), halo_pos(0), central_point_sphere(1,0,0), inv_ang_damping_scale(0)
 {
   
   init_params = params;
@@ -601,6 +601,7 @@ void Lens::createFieldPlanes(bool verbose)
 		
 		PosType sb=0.0;
 		//PosType max_r = 0,tmp;
+    
 		for(std::size_t j = k1; j < k2; ++j)
 		{
 			sb += field_halos[j]->get_mass();
@@ -617,18 +618,25 @@ void Lens::createFieldPlanes(bool verbose)
 		
 		sb /= (pi*pow(sqrt(fieldofview/pi)*pi*field_Dl[i]/180/(1+field_plane_redshifts[i]) + field_buffer,2));
 		
+    
     assert(sb == sb);
     
-		if(verbose) std::cout << "sigma_back from mass function " << sigma_back << " from sum of halos " << sb << " " << sb/sigma_back - 1 << std::endl;
+		if(verbose) std::cout << "sigma_back from mass function " << sigma_back
+      << " from sum of halos " << sb << " " << sb/sigma_back - 1 << std::endl;
 		if(sim_input_flag) sigma_back = sb;
 		
 		/*
 		 * create the lensing plane
 		 */
 		
-		if(verbose) std::cout << "  Building lensing plane " << i << " number of halos: " << k2-k1 << std::endl;
+		if(verbose) std::cout << "  Building lensing plane " << i << " number of halos: "
+      << k2-k1 << std::endl;
 		
-		field_planes.push_back(new LensPlaneTree(&halo_pos[k1], &field_halos[k1], k2-k1, sigma_back));
+    PosType tmp = inv_ang_damping_scale*(1+field_plane_redshifts[i])/field_Dl[i];
+
+    if(tmp > 3) tmp = 0;
+//		field_planes.push_back(new LensPlaneTree(&halo_pos[k1], &field_halos[k1], k2-k1, sigma_back,tmp));
+		field_planes.push_back(new LensPlaneTree(&halo_pos[k1], &field_halos[k1], k2-k1, sigma_back) );
 	}
 	
 	assert(field_planes.size() == field_Nplanes);
@@ -1454,7 +1462,7 @@ void Lens::readInputSimFileMultiDark(bool verbose)
   
   Utilities::Geometry::SphericalPoint tmp_sph_point(1,0,0);
   
-	PosType rmax=0,rtmp=0;
+	PosType rmax=0,rtmp=0,boundary_p1[2],boundary_p2[2],boundary_diagonal[2];
   
   std::vector<std::string> filenames;
   Utilities::ReadFileNames(field_input_sim_file.c_str(),".dat",filenames);
@@ -1543,13 +1551,31 @@ void Lens::readInputSimFileMultiDark(bool verbose)
         tmp_sph_point.phi *= -pi/180;
         
         rtmp = Utilities::Geometry::AngleSeporation(central_point_sphere,tmp_sph_point);
+        
         if(sim_angular_radius > 0 && rtmp > sim_angular_radius) continue;
+
         if(rtmp > rmax) rmax = rtmp;
 
         // position on lens plane
         theta = new PosType[2];
         tmp_sph_point.OrthographicProjection(central_point_sphere,theta);
-        
+
+        if(field_halos.size() > 0 ){
+          if(boundary_p1[0] > theta[0]) boundary_p1[0] = theta[0];
+          if(boundary_p1[1] > theta[1]) boundary_p1[1] = theta[1];
+          
+          if(boundary_p2[0] < theta[0]) boundary_p2[0] = theta[0];
+          if(boundary_p2[1] < theta[1]) boundary_p2[1] = theta[1];
+          
+          PosType tmp = theta[0]+theta[1];
+          if(boundary_diagonal[0] > tmp) boundary_diagonal[0] = tmp;
+          if(boundary_diagonal[1] < tmp) boundary_diagonal[1] = tmp;
+        }else{
+          boundary_p1[0] = boundary_p2[0] = theta[0];
+          boundary_p1[1] = boundary_p2[1] = theta[1];
+          boundary_diagonal[0] = boundary_diagonal[1] = theta[0]+theta[1];
+        }
+
         //theta[0] = -ra*pi/180.;
         //theta[1] = dec*pi/180.;
     
@@ -1700,9 +1726,23 @@ void Lens::readInputSimFileMultiDark(bool verbose)
 		halo_pos[i] = halo_pos_vec[i];
 	}
   
-	std::cout << "Overiding input file field of view to make it fit the simulation light cone." << std::endl;
-	fieldofview = pi*rmax*rmax*pow(180/pi,2);  // Resets field of view to range of input galaxies
+  // determine if the region is a circle or a rectangle
+  PosType diagonal1 = (boundary_diagonal[1] - boundary_diagonal[0])/sqrt(2);
+  PosType diagonal2 = sqrt(pow(boundary_p2[0] - boundary_p1[0],2) + pow(boundary_p2[1] - boundary_p1[1],2));
   
+	std::cout << "Overiding input file field of view to make it fit the simulation light cone." << std::endl;
+  rmax = boundary_p2[0] - boundary_p1[0];
+  if(diagonal1 < diagonal2*0.9){
+    // circular region
+    rmax = diagonal1/2;
+    fieldofview = pi*rmax*rmax*pow(180/pi,2);  // Resets field of view to range of input galaxies
+    inv_ang_damping_scale = 0.0;
+  }else{
+    fieldofview = (boundary_p2[0] - boundary_p1[0])*(boundary_p2[1] - boundary_p1[1])*pow(180/pi,2);
+    rmax = diagonal2/2;
+    inv_ang_damping_scale = 1.0/(1.5*MIN(boundary_p2[0] - boundary_p1[0],boundary_p2[1] - boundary_p1[1]));
+  }
+ 
 	if(verbose) std::cout << "Setting mass function to Sheth-Tormen." << std::endl;
 	field_mass_func_type = ST; // set mass function
   

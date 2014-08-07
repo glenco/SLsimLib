@@ -173,7 +173,8 @@ public:
 			,PosType my_sigma_background = 0
 			,int bucket = 5
 			,PosType theta_force = 0.1
-      ,bool periodic_buffer = false
+      ,bool my_periodic_buffer = false
+      ,PosType my_inv_damping_scale = 0
 			);
 	TreeQuad(
 			PosType **xpt
@@ -182,13 +183,16 @@ public:
 			,PosType my_sigma_background = 0
 			,int bucket = 5
 			,PosType theta_force = 0.1
-      ,bool periodic_buffer = false
+      ,bool my_periodic_buffer = false
+      ,PosType my_inv_damping_scale = 0
 			);
 	virtual ~TreeQuad();
 
-  virtual void force2D(PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi);
+  virtual void force2D(PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma
+                       ,KappaType *phi);
 
-  virtual void force2D_recur(PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi);
+  virtual void force2D_recur(PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma
+                             ,KappaType *phi);
     
   virtual void printParticlesInBranch(unsigned long number);
 
@@ -219,6 +223,7 @@ protected:
   
   /// if true there is one layer of peridic buffering
   bool periodic_buffer;
+  PosType inv_damping_scale;
 
 	QTreeNBHndl BuildQTreeNB(PosType **xp,IndexType Nparticles,IndexType *particles);
 	void _BuildQTreeNB(IndexType nparticles,IndexType *particles);
