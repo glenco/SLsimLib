@@ -499,7 +499,7 @@ double LensHalo::fourier_coeff(double n, double q, double beta){
 }
 
 /// Calculates potential (phi_int) from alpha_h. If flag is_alphah_a_table is True it takes and integrates directly the gfunction instead of alpha_h. The gfunction is used for the InterpolationTable used in alpha_h. Setting the flag to False speeds up the calculation of phi_h.
-PosType LensHalo::alpha_int(PosType x){
+PosType LensHalo::alpha_int(PosType x) const{
     struct Ig_func g(*this);
     return Utilities::nintegrate<Ig_func>(g,1E-8,x,1.0e-6);
 }

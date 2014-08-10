@@ -162,7 +162,7 @@ public:
     PosType renormalization(PosType r_max);
 
 protected:
-  PosType alpha_int(PosType x);
+  PosType alpha_int(PosType x) const;
   PosType norm_int(PosType r_max);
  // PosType norm_intt(PosType theta);
     
@@ -191,8 +191,8 @@ protected:
   };
   
   struct Ig_func{
-    Ig_func(LensHalo& halo): halo(halo){};
-    LensHalo& halo;
+    Ig_func(const LensHalo& halo): halo(halo){};
+    const LensHalo& halo;
     PosType operator ()(PosType x) {return halo.gfunction(x)/x ;}
   };
 
@@ -247,16 +247,16 @@ protected:
 
   /// point mass case
   /// r |alpha(r)| pi Sigma_crit / Mass
-	virtual PosType inline alpha_h(PosType x){return -1;};
-	virtual KappaType inline kappa_h(PosType x){return 0;};
-	virtual KappaType inline gamma_h(PosType x){return -2;};
-	virtual KappaType inline phi_h(PosType x){return 1;};
-    virtual KappaType inline phi_int(PosType x){return 1;};
-    virtual PosType inline ffunction(PosType x){return 0;};
-    virtual PosType inline gfunction(PosType x){return -1;};
+	virtual PosType inline alpha_h(PosType x) const {return -1;};
+	virtual KappaType inline kappa_h(PosType x) const {return 0;};
+	virtual KappaType inline gamma_h(PosType x) const {return -2;};
+	virtual KappaType inline phi_h(PosType x) const {return 1;};
+    virtual KappaType inline phi_int(PosType x) const {return 1;};
+    virtual PosType inline ffunction(PosType x)const {return 0;};
+    virtual PosType inline gfunction(PosType x) const {return -1;};
     virtual PosType inline dgfunctiondx(PosType x){return 0;};
     virtual PosType inline bfunction(PosType x){return -1;};
-    virtual PosType inline dhfunction(PosType x){return 1;};
+    virtual PosType inline dhfunction(PosType x) const {return 1;};
     virtual PosType inline ddhfunction(PosType x, bool numerical){return 0;};
     virtual PosType inline dddhfunction(PosType x, bool numerical){return 0;};
     virtual PosType inline bnumfunction(PosType x){return -1;};
@@ -414,11 +414,11 @@ public:
 	LensHaloNFW(InputParams& params);
 	virtual ~LensHaloNFW();
 
-	PosType ffunction(PosType x);
-	PosType gfunction(PosType x);
+	PosType ffunction(PosType x) const;
+	PosType gfunction(PosType x) const;
   PosType dgfunctiondx(PosType x);
-	PosType g2function(PosType x);
-	PosType hfunction(PosType x);
+	PosType g2function(PosType x) const;
+	PosType hfunction(PosType x) const;
     PosType dhfunction(PosType x);
     PosType ddhfunction(PosType x, bool numerical);
     PosType dddhfunction(PosType x, bool numerical);
@@ -450,7 +450,7 @@ public:
   /// set scale radius
 	void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
     
-
+  
 protected:
 	/// table size
 	static const long NTABLE;
@@ -458,41 +458,41 @@ protected:
 	static const PosType maxrm;
 	/// keeps track of how many time the tables are created, default is just once
 	static int count;
-
+  
 	/// tables for lensing properties specific functions
 	static PosType *ftable,*gtable,*g2table,*htable,*xtable,*xgtable,***modtable; // modtable was used for Ansatz IV and worked well
 	/// make the specific tables
 	void make_tables();
 	/// interpolates from the specific tables
-	PosType InterpolateFromTable(PosType *table, PosType y);
-    PosType InterpolateModes(int whichmod, PosType q, PosType b);
-
+	PosType InterpolateFromTable(PosType *table, PosType y) const;
+  PosType InterpolateModes(int whichmod, PosType q, PosType b);
+  
 	/// read in parameters from a parameterfile in InputParams params
 	void assignParams(InputParams& params);
-
+  
 	// Override internal structure of halos
   /// r |alpha(r = x*rscale)| pi Sigma_crit / Mass
-	inline PosType alpha_h(PosType x){
+	inline PosType alpha_h(PosType x) const {
 		//return -1.0*InterpolateFromTable(gtable,x)/InterpolateFromTable(gtable,xmax);
 		return -1.0*InterpolateFromTable(gtable,x)/gmax;
-	// return -0.5/x*InterpolateFromTable(gtable,x)/gmax;
+    // return -0.5/x*InterpolateFromTable(gtable,x)/gmax;
 	}
-	inline KappaType kappa_h(PosType x){
+	inline KappaType kappa_h(PosType x) const{
 		return 0.5*x*x*InterpolateFromTable(ftable,x)/gmax;
 	}
-	inline KappaType gamma_h(PosType x){
+	inline KappaType gamma_h(PosType x) const{
 		return -0.25*x*x*InterpolateFromTable(g2table,x)/gmax;
 	}
-	inline KappaType phi_h(PosType x){
+	inline KappaType phi_h(PosType x) const{
 		//ERROR_MESSAGE();
 		//std::cout << "time delay has not been fixed for NFW profile yet." << std::endl;
 		//exit(1);
 		return -0.25*InterpolateFromTable(htable,x)/gmax;
 	}
-    inline KappaType phi_int(PosType x){
-        return -1.0*InterpolateFromTable(xgtable,x)/gmax; //alpha_int(x);
-    }
-    
+  inline KappaType phi_int(PosType x){
+    return -1.0*InterpolateFromTable(xgtable,x)/gmax; //alpha_int(x);
+  }
+  
 private:
   PosType gmax;
 
@@ -521,16 +521,16 @@ public:
   LensHaloPseudoNFW(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,PosType my_beta,float my_fratio,float my_pa,int my_stars_N);
 	LensHaloPseudoNFW(InputParams& params);
 	~LensHaloPseudoNFW();
-
-	PosType mhat(PosType y, PosType beta);
-    PosType gfunction(PosType x);
-    
+  
+	PosType mhat(PosType y, PosType beta) const;
+  PosType gfunction(PosType x) const;
+  
 	/// set the slope of the surface density profile
 	void set_slope(PosType my_slope){beta=my_slope; make_tables();};
 	/// initialize from a mass function
-    PosType get_slope(){return beta;};
-    /// set Rmax
-    void set_Rmax(float my_Rmax){Rmax=my_Rmax; xmax = Rmax/rscale;};
+  PosType get_slope(){return beta;};
+  /// set Rmax
+  void set_Rmax(float my_Rmax){Rmax=my_Rmax; xmax = Rmax/rscale;};
 	
 	void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed);
 
@@ -547,7 +547,7 @@ private:
 	/// make the specific tables
 	void make_tables();
 	/// interpolates from the specific tables
-	PosType InterpolateFromTable(PosType y);
+	PosType InterpolateFromTable(PosType y) const;
 
 	/// read in parameters from a parameterfile in InputParams params
 	void assignParams(InputParams& params);
@@ -557,16 +557,16 @@ private:
 
 	// Override internal structure of halos
   /// r |alpha(r)| pi Sigma_crit / Mass
-	inline PosType alpha_h(PosType x){
+	inline PosType alpha_h(PosType x) const {
 		return -1.0*InterpolateFromTable(x)/InterpolateFromTable(xmax);
 	}
-	inline KappaType kappa_h(PosType x){
+	inline KappaType kappa_h(PosType x) const {
 		return 0.5*x*x/InterpolateFromTable(xmax)/pow(1+x,beta);
 	}
-	inline KappaType gamma_h(PosType x){
+	inline KappaType gamma_h(PosType x) const {
 		return (0.5*x*x/pow(1+x,beta) - InterpolateFromTable(x))/InterpolateFromTable(xmax);
 	}
-	inline KappaType phi_h(PosType x){
+	inline KappaType phi_h(PosType x) const {
 		return -1.0*alpha_int(x)/InterpolateFromTable(xmax) ;
         //ERROR_MESSAGE();
 		//std::cout << "time delay has not been fixed for PseudoNFW profile yet." << std::endl;
@@ -624,25 +624,25 @@ private:
   /// r |alpha(r)| pi Sigma_crit / Mass
 	inline PosType alpha_h(
                   PosType x  /// r/rscale
-                         ){
+                         ) const{
 		if(x==0) x=1e-6*xmax;
 		return -1.0*pow(x/xmax,-beta+2);
 	}
     /// this is kappa Sigma_crit pi (r/rscale)^2 / mass
 	inline KappaType kappa_h(
                   PosType x   /// r/rscale
-                           ){
+                           ) const {
 		if(x==0) x=1e-6*xmax;
     double tmp = x/xmax;
 		return 0.5*(-beta+2)*pow(tmp,2-beta);
 	}
   /// this is |gamma| Sigma_crit pi (r/rscale)^2 / mass
-	inline KappaType gamma_h(PosType x){
+	inline KappaType gamma_h(PosType x) const {
 		if(x==0) x=1e-6*xmax;
 		return -0.5*beta*pow(x/xmax,-beta+2);
 	}
   /// this is phi Sigma_crit pi / mass, the constants are added so that it is continous over the bourder at Rmax
- 	inline KappaType phi_h(PosType x){
+ 	inline KappaType phi_h(PosType x) const {
 		if(x==0) x=1e-6*xmax;
 		return ( pow(x/xmax,2-beta) - 1 )/(2-beta) + log(Rmax);
 	}
@@ -738,10 +738,10 @@ public:
 	LensHaloHernquist(InputParams& params);
 	virtual ~LensHaloHernquist();
 
-  PosType ffunction(PosType x);
-	PosType gfunction(PosType x);
-	PosType hfunction(PosType x);
-	PosType g2function(PosType x);
+  PosType ffunction(PosType x) const;
+	PosType gfunction(PosType x) const;
+	PosType hfunction(PosType x) const;
+	PosType g2function(PosType x) const;
 
 	/* the below functions alphaHern, kappaHern and gammaHern are obsolete and better to be deleted to avoid confusion
 	void alphaHern(PosType *alpha,PosType *x,PosType Rtrunc,PosType mass,PosType r_scale
@@ -772,23 +772,23 @@ protected:
 	/// make the specific tables
 	void make_tables();
 	/// interpolates from the specific tables
-	PosType InterpolateFromTable(PosType *table, PosType y);
+	PosType InterpolateFromTable(PosType *table, PosType y) const;
 
 	/// read in parameters from a parameterfile in InputParams params
 	void assignParams(InputParams& params);
 
 	// Override internal structure of halos
   /// r |alpha(r)| pi Sigma_crit / Mass
-	inline PosType alpha_h(PosType x){
+	inline PosType alpha_h(PosType x) const {
 		return -0.25*InterpolateFromTable(gtable,x)/gmax;
 	}
-	inline KappaType kappa_h(PosType x){
+	inline KappaType kappa_h(PosType x) const {
 		return 0.25*x*x*InterpolateFromTable(ftable,x)/gmax; // 0.5*
 	}
-	inline KappaType gamma_h(PosType x){
+	inline KappaType gamma_h(PosType x) const {
 		return -0.25*x*x*InterpolateFromTable(g2table,x)/gmax;
 	}
-	inline KappaType phi_h(PosType x){
+	inline KappaType phi_h(PosType x) const {
 		return -0.25*InterpolateFromTable(htable,x)/gmax;
 		//return -1.0*InterpolateFromTable(htable,x)/gmax;
 	}
@@ -823,10 +823,10 @@ public:
 	/// set scale radius
 	void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
 
-  PosType ffunction(PosType x);
-	PosType gfunction(PosType x);
-	PosType hfunction(PosType x);
-	PosType g2function(PosType x);
+  PosType ffunction(PosType x) const;
+	PosType gfunction(PosType x) const;
+	PosType hfunction(PosType x) const;
+	PosType g2function(PosType x) const;
   PosType bfunction(PosType x);
   PosType dbfunction(PosType x);
   PosType ddbfunction(PosType x);
@@ -845,24 +845,24 @@ protected:
 	/// make the specific tables
 	void make_tables();
 	/// interpolates from the specific tables
-	PosType InterpolateFromTable(PosType *table, PosType y);
+	PosType InterpolateFromTable(PosType *table, PosType y) const;
 
 	/// read in parameters from a parameterfile in InputParams params
 	void assignParams(InputParams& params);
 
 	// Override internal structure of halos
   /// r |alpha(r)| pi Sigma_crit / Mass
-	inline PosType alpha_h(PosType x){
+	inline PosType alpha_h(PosType x) const{
 		return -0.25*InterpolateFromTable(gtable,x)/gmax;
 	}
-	inline KappaType kappa_h(PosType x){
+	inline KappaType kappa_h(PosType x) const {
 		return 0.125*x*x*InterpolateFromTable(ftable,x)/gmax;
 	}
-	inline KappaType gamma_h(PosType x){
+	inline KappaType gamma_h(PosType x) const {
 		return -0.125*x*x*InterpolateFromTable(g2table,x)/gmax;
 	}
     ///std::cout << "no analytic expression defined yet for Jaffe profile, take numerical" << std::endl;
-	inline KappaType phi_h(PosType x){
+	inline KappaType phi_h(PosType x) const {
         return -0.25*InterpolateFromTable(xgtable,x)/gmax;
     }
     inline KappaType phi_int(PosType x){
@@ -904,9 +904,9 @@ public:
 private:
 	/// read-in parameters from a parameter file
 	void assignParams(InputParams& params);
-	inline PosType alpha_h(PosType x){return  0.;}
-	inline KappaType kappa_h(PosType x){return  0.;}
-	inline KappaType gamma_h(PosType x){return  0.;}
+	inline PosType alpha_h(PosType x) const {return  0.;}
+	inline KappaType kappa_h(PosType x) const {return  0.;}
+	inline KappaType gamma_h(PosType x) const {return  0.;}
 };
 
 

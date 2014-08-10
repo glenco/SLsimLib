@@ -973,24 +973,67 @@ void Grid::writeFits(
   writeFits(center,Npixels,Npixels,resolution,lensvar,filename);
 }
   /// Outputs a fits image of a lensing variable of choice
-  void Grid::writeFits(
-                       const PosType center[]     /// center of image
-                       ,size_t Nx           /// number of pixels in image in x dimension
-                       ,size_t Ny           /// number of pixels in image in y dimension
-                       ,PosType resolution        /// resolution of image in radians
-                       ,LensingVariable lensvar  /// which quantity is to be displayed
-                       ,std::string filename     /// file name for image -- .kappa.fits, .gamma1.fits, etc will be appended
-                       ){
+void Grid::writeFits(
+                     const PosType center[]     /// center of image
+                     ,size_t Nx           /// number of pixels in image in x dimension
+                     ,size_t Ny           /// number of pixels in image in y dimension
+                     ,PosType resolution        /// resolution of image in radians
+                     ,LensingVariable lensvar  /// which quantity is to be displayed
+                     ,std::string filename     /// file name for image -- .kappa.fits, .gamma1.fits, etc will be appended
+                     ){
   PixelMap map(center, Nx,Ny, resolution);
+  std::string tag;
+  
+  switch (lensvar) {
+    case DT:
+      tag = ".dt.fits";
+      break;
+    case ALPHA1:
+      tag = ".alpha1.fits";
+      break;
+    case ALPHA2:
+      tag = ".alpha2.fits";
+      break;
+    case ALPHA:
+      tag = ".alpha.fits";
+      break;
+    case KAPPA:
+      tag = ".kappa.fits";
+      break;
+    case GAMMA1:
+      tag = ".gamma1.fits";
+      break;
+    case GAMMA2:
+      tag = ".gamma2.fits";
+      break;
+    case GAMMA3:
+      tag = ".gamma3.fits";
+      break;
+    case GAMMA:
+      tag = ".gamma.fits";
+      break;
+    case INVMAG:
+      tag = ".invmag.fits";
+      break;
+    default:
+      break;
+  }
+  
+  map.AddGrid(*this,lensvar);
+  map.printFITS(filename + tag);
 
+  return;
+  
+  
+  
   PosType range = MAX(Nx,Ny)*resolution;
   ImageInfo tmp_image;
   long i;
-  std::string tag;
   i_tree->PointsWithinKist(center,range/sqrt(2.),tmp_image.imagekist,0);
   std::vector<PosType> tmp_sb_vec(tmp_image.imagekist->Nunits());
   PosType tmp_x[2];
-
+  //Kist<Point>::iterator it = tmp_image.imagekist->BottomIt();
+    
   for(tmp_image.imagekist->MoveToTop(),i=0;i<tmp_sb_vec.size();++i,tmp_image.imagekist->Down()){
     tmp_sb_vec[i] = tmp_image.imagekist->getCurrent()->surface_brightness;
     switch (lensvar) {
@@ -1076,6 +1119,9 @@ PixelMap Grid::writePixelMap(
                              ,LensingVariable lensvar  /// which quantity is to be displayed
                              ){
   PixelMap map(center, Nx, Ny, resolution);
+  map.AddGrid(*this,lensvar);
+
+  return;
   
   PosType range = MAX(Nx,Ny)*resolution;
   ImageInfo tmp_image;

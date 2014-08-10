@@ -1905,6 +1905,15 @@ void writeCurves(int m			/// part of te filename, could be the number/index of t
   bool xorder(Point *p1,Point *p2){
     return p1->x[0] < p2->x[0];
   }
+  
+  PosType crossD(const double *O, const double *A, const double *B)
+  {
+    return (A[0] - O[0]) * (B[1] - O[1]) - (A[1] - O[1]) * (B[0] - O[0]);
+  }
+  bool xorderD(double *p1,double *p2){
+    return p1[0] < p2[0];
+  }
+   
   /// Returns a vector of points on the convex hull in counter-clockwise order.
   std::vector<Point *> convex_hull(std::vector<Point *> P)
   {
@@ -1933,6 +1942,46 @@ void writeCurves(int m			/// part of te filename, could be the number/index of t
     // Build upper hull
     for (long i = n-2, t = k+1; i >= 0; i--) {
       while (k >= t && cross(H[k-2], H[k-1], P[i]) <= 0){
+        k--;
+      }
+      H[k++] = P[i];
+    }
+    
+    
+    H.resize(k);
+    H.pop_back();
+    
+    return H;
+  }
+  
+  /// Returns a vector of points on the convex hull in counter-clockwise order.
+  std::vector<double *> convex_hull(std::vector<double *> P)
+  {
+    
+    if(P.size() <= 3){
+      std::vector<double *> H = P;
+      P.resize(0);
+      return H;
+    }
+    
+    size_t n = P.size();
+    size_t k = 0;
+    std::vector<double *> H(2*n);
+    
+    // Sort points lexicographically
+    std::sort(P.begin(), P.end(), xorderD);
+    
+    // Build lower hull
+    for (size_t i = 0; i < n; i++) {
+      while (k >= 2 && crossD(H[k-2], H[k-1], P[i]) <= 0){
+        k--;
+      }
+      H[k++] = P[i];
+    }
+    
+    // Build upper hull
+    for (long i = n-2, t = k+1; i >= 0; i--) {
+      while (k >= t && crossD(H[k-2], H[k-1], P[i]) <= 0){
         k--;
       }
       H[k++] = P[i];

@@ -89,6 +89,7 @@ public:
                          ,PosType threshold);
 private:
 	std::valarray<double> map;
+  void AddGrid_(PointList list,LensingVariable val);
 
 	std::size_t Nx;
 	std::size_t Ny;
@@ -97,8 +98,8 @@ private:
 
 	double LeafPixelArea(IndexType i,Branch * branch1);
 	void PointsWithinLeaf(Branch * branch1, std::list <unsigned long> &neighborlist);
-	bool inMapBox(Branch * branch1);
-	bool inMapBox(double * branch1);
+	bool inMapBox(Branch * branch1) const;
+	bool inMapBox(double * branch1) const;
   
   /// get the index for a position, returns -1 if out of map, this version returns the 2D grid coordinates
   long find_index(PosType const x[],long &ix,long &iy);

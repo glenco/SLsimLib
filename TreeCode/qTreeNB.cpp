@@ -96,7 +96,7 @@ void QTreeNB::_freeQTree(short child){
       _freeQTree(3);
     }
 
-    if( atLeaf() ){
+    if( atLeaf(current) ){
 
     	if(atTop()) return;
 

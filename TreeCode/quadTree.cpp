@@ -14,20 +14,22 @@
 /** \brief Constructor meant for point particles, simulation particles
  */
 TreeQuad::TreeQuad(
-		PosType **xpt
-		,float *my_masses
-		,float *my_sizes
-		,IndexType Npoints
-		,bool Multimass
-		,bool Multisize
-		,PosType my_sigma_background /// background kappa that is subtracted
-		,int bucket
-		,PosType theta_force
-    ,bool my_periodic_buffer
-		):
+                   PosType **xpt
+                   ,float *my_masses
+                   ,float *my_sizes
+                   ,IndexType Npoints
+                   ,bool Multimass
+                   ,bool Multisize
+                   ,PosType my_sigma_background /// background kappa that is subtracted
+                   ,int bucket
+                   ,PosType theta_force
+                   ,bool my_periodic_buffer  /// if true a periodic buffer will be imposed in the force calulation.  See documentation on TreeQuad::force2D() for details.  See note for TreeQuad::force2D_recur().
+                   ,PosType my_inv_screening_scale   /// the inverse of the square of the sreening length. See note for TreeQuad::force2D_recur().
+                   ):
 	xp(xpt),MultiMass(Multimass), MultiRadius(Multisize), masses(my_masses)
   ,sizes(my_sizes),Nparticles(Npoints),sigma_background(my_sigma_background)
   ,Nbucket(bucket),force_theta(theta_force),periodic_buffer(my_periodic_buffer)
+  ,inv_screening_scale2(my_inv_screening_scale*my_inv_screening_scale)
 {
 	index = new IndexType[Npoints];
 	IndexType ii;
@@ -47,17 +49,19 @@ TreeQuad::TreeQuad(
  * it should only be invoked from the derived classes that have specific defined halo models.
  */
 TreeQuad::TreeQuad(
-		PosType **xpt               /// Perpendicular position of halo (TODO: In proper distance?)
-		,LensHaloHndl *my_halos     /// list of halos to be put in tree
-		,IndexType Npoints          /// number of halos
-		,PosType my_sigma_background /// background kappa that is subtracted
-		,int bucket                  /// maximum number of halos in each leaf of the tree
-		,PosType theta_force         /// the openning angle used in the criterion for decending into a subcell
-    ,bool my_periodic_buffer        /// if true a periodic buffer will be imposed in the force calulation.  See documentation on TreeQuad::force2D() for details.
-		):
-	xp(xpt),MultiMass(true),MultiRadius(true),masses(NULL),sizes(NULL)
-  ,Nparticles(Npoints),sigma_background(my_sigma_background),Nbucket(bucket)
-  ,force_theta(theta_force),halos(my_halos),periodic_buffer(my_periodic_buffer)
+                   PosType **xpt               /// Perpendicular position of halo (TODO: In proper distance?)
+                   ,LensHaloHndl *my_halos     /// list of halos to be put in tree
+                   ,IndexType Npoints          /// number of halos
+                   ,PosType my_sigma_background /// background kappa that is subtracted
+                   ,int bucket                  /// maximum number of halos in each leaf of the tree
+                   ,PosType theta_force         /// the openning angle used in the criterion for decending into a subcell
+                   ,bool periodic_buffer        /// if true a periodic buffer will be imposed in the force calulation.  See documentation on TreeQuad::force2D() for details. See note for TreeQuad::force2D_recur().                   
+                   ,PosType my_inv_screening_scale   /// the inverse of the square of the sreening length. See note for TreeQuad::force2D_recur().
+                   ):
+xp(xpt),MultiMass(true),MultiRadius(true),masses(NULL),sizes(NULL)
+,Nparticles(Npoints),sigma_background(my_sigma_background),Nbucket(bucket)
+,force_theta(theta_force),halos(my_halos),periodic_buffer(periodic_buffer)
+,inv_screening_scale2(my_inv_screening_scale*my_inv_screening_scale)
 {
 	index = new IndexType[Npoints];
 	IndexType ii;
@@ -105,6 +109,11 @@ QTreeNBHndl TreeQuad::BuildQTreeNB(PosType **xp,IndexType Nparticles,IndexType *
 	  p2[0]=0.25;
 	  p2[1]=0.25;
   }
+  
+  // If region is not square, make it square.
+  PosType lengths[2] = {p2[0]-p1[0],p2[1]-p1[1]};
+  j = lengths[0] > lengths[1] ? 1 : 0;
+  p2[j] = p1[j] + lengths[!j];
 
   /* Initialize tree root */
   tree = new QTreeNB(xp,particles,Nparticles,p1,p2);
@@ -449,7 +458,7 @@ void TreeQuad::rotate_coordinates(PosType **coord){
 }
 
 /** \brief Force2D calculates the defection, convergence and shear using
- *   the plane-lens approximation.
+ *   the plane-lens approximation.  The tree is walked iteratively.
  *
  *       The output alpha[] is in units of mass_scale/Mpc, ie it needs to be
  *       divided by Sigma_crit and multiplied by mass_scale to be the deflection
@@ -459,193 +468,223 @@ void TreeQuad::rotate_coordinates(PosType **coord){
  *       kappa and gamma need to by multiplied by mass_scale/Sigma_crit to get
  *       the traditional units for these where Sigma_crit are in the mass/units(ray)^2
  *       NB : the units of sigma_backgound need to be mass/units(ray)^2
+ *
+ *   If periodic_buffer == true a periodic buffer is included.  The ray is calculated as if there
+ *   where identical copies of it on the borders of the tree's root branch.  This is not the same thing as periodic boundary conditions, because
+ *   there are not an infinite number of copies in all direction as for the DFT force solver.
+ *
+ *   If inv_screening_scale2 != 0 the mass of cells are reduced by a factor of exp(-|ray - center of mass|^2*inv_screening_scale2) which
+ *   screens the large scale geometry of the simulation on the sky.  This is useful when the region is rectangular instead of circular.
  * */
 
-void TreeQuad::force2D(PosType const *ray
-                       ,PosType *alpha
-                       ,KappaType *kappa
-                       ,KappaType *gamma
-                       ,KappaType *phi
-                       ){
+void TreeQuad::force2D(const PosType *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi) const{
+  
+  assert(tree);
+  QTreeNB::iterator it(tree);
+  
+  alpha[0]=alpha[1]=gamma[0]=gamma[1]=gamma[2]=0.0;
+  *kappa=*phi=0.0;
+    
+  if(periodic_buffer){
+    PosType lx,ly,tmp_ray[2];
+    lx = tree->top->boundary_p2[0] - tree->top->boundary_p1[0];
+    ly = tree->top->boundary_p2[1] - tree->top->boundary_p1[1];
+        
+    for(int i = -1;i<2;++i){
+      for(int j = -1;j<2;++j){
+        tmp_ray[0] = ray[0] + i*lx;
+        tmp_ray[1] = ray[1] + j*ly;
+        walkTree_iter(it,tmp_ray,alpha,kappa,gamma,phi);
+      }
+    }
+  }else{
+    walkTree_iter(it,ray,alpha,kappa,gamma,phi);
+  }
+  
+  // Subtract off uniform mass sheet to compensate for the extra mass
+  //  added to the universe in the halos.
+  alpha[0] -= ray[0]*sigma_background*(inv_screening_scale2 == 0);
+  alpha[1] -= ray[1]*sigma_background*(inv_screening_scale2 == 0);
+  
+  *kappa -= sigma_background;
+  
+  return;
+}
 
+void TreeQuad::walkTree_iter(
+                             QTreeNB::iterator &treeit,
+                             const PosType *ray
+                             ,PosType *alpha
+                             ,KappaType *kappa
+                             ,KappaType *gamma
+                             ,KappaType *phi
+                             ) const {
+  
   PosType xcm[2],rcm2cell,rcm2,tmp,boxsize2;
   IndexType i;
   bool allowDescent=true;
   unsigned long count=0,tmp_index;
   PosType arg1, arg2, prefac;
-
+  
   assert(tree);
-  tree->moveTop();
   
-  /*
-  QTreeNB::iterator iter(tree);
-  iter.movetop();
-  */
-  
-  alpha[0]=alpha[1]=gamma[0]=gamma[1]=gamma[2]=0.0;
-
-  *kappa=0.0;
-  *phi = 0.0;
-  
-  tree->moveTop();
+  treeit.movetop();
+  //tree->moveTop();
   do{
 	  ++count;
 	  allowDescent=false;
-	  if(tree->current->nparticles > 0)
-      {
-
-		  xcm[0]=tree->current->center[0]-ray[0];
-		  xcm[1]=tree->current->center[1]-ray[1];
-
+	  //if(tree->current->nparticles > 0)
+    if((*treeit)->nparticles > 0)
+    {
+      
+		  xcm[0]=(*treeit)->center[0]-ray[0];
+		  xcm[1]=(*treeit)->center[1]-ray[1];
+      
 		  rcm2cell = xcm[0]*xcm[0] + xcm[1]*xcm[1];
-
-		  boxsize2 = (tree->current->boundary_p2[0]-tree->current->boundary_p1[0])*(tree->current->boundary_p2[0]-tree->current->boundary_p1[0]);
-
-		  if( rcm2cell < (tree->current->rcrit_angle)*(tree->current->rcrit_angle) || rcm2cell < 5.83*boxsize2)
-          {
-    
+      
+		  boxsize2 = ((*treeit)->boundary_p2[0]-(*treeit)->boundary_p1[0])*((*treeit)->boundary_p2[0]-(*treeit)->boundary_p1[0]);
+      
+		  if( rcm2cell < ((*treeit)->rcrit_angle)*((*treeit)->rcrit_angle) || rcm2cell < 5.83*boxsize2)
+      {
+        
 			  // includes rcrit_particle constraint
 			  allowDescent=true;
-
-
+        
+        
 			  // Treat all particles in a leaf as a point particle
-			  if(tree->atLeaf())
-              {
-                  
-				  for(i = 0 ; i < tree->current->nparticles ; ++i)
-                  {
-
-					  xcm[0] = tree->xp[tree->current->particles[i]][0] - ray[0];
-					  xcm[1] = tree->xp[tree->current->particles[i]][1] - ray[1];
-
+			  if(treeit.atLeaf())
+        {
+          
+				  for(i = 0 ; i < (*treeit)->nparticles ; ++i)
+          {
+            
+					  xcm[0] = tree->xp[(*treeit)->particles[i]][0] - ray[0];
+					  xcm[1] = tree->xp[(*treeit)->particles[i]][1] - ray[1];
+            
 					  rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
 					  if(rcm2 < 1e-20) rcm2 = 1e-20;
-
-					  tmp_index = MultiMass*tree->current->particles[i];
-
+            
+					  tmp_index = MultiMass*(*treeit)->particles[i];
+            
 					  if(haloON){ prefac = halos[tmp_index]->get_mass(); }
-                      else{ prefac = masses[tmp_index]; }
+            else{ prefac = masses[tmp_index]; }
 					  prefac /= rcm2*pi;
-
+            
 					  tmp = -1.0*prefac;
-
+            
 					  alpha[0] += tmp*xcm[0];
 					  alpha[1] += tmp*xcm[1];
-
-					  // can turn off kappa and gamma calculations to save times
+            
 					  {
 						  tmp = -2.0*prefac/rcm2;
-                          
-                          // Fabien : Why isn't there any computation of kappa here ?
-
+              
 						  gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 						  gamma[1] += xcm[0]*xcm[1]*tmp;
-
-                          *phi += prefac*rcm2*0.5*log(rcm2); // Fabien : replaced = by += !
-                          
+              
+              *phi += prefac*rcm2*0.5*log(rcm2);              
 					  }
 				  } // end of for
 			  } // end of if(tree->atLeaf())
-
-              
+        
+        
 			  // Find the particles that intersect with ray and add them individually.
 			  if(rcm2cell < 5.83*boxsize2)
-              {
-                  
-				  for(i = 0 ; i < tree->current->Nbig_particles ; ++i)
-                  {
-
-					  tmp_index = tree->current->big_particles[i];
-
+        {
+          
+				  for(i = 0 ; i < (*treeit)->Nbig_particles ; ++i)
+          {
+            
+					  tmp_index = (*treeit)->big_particles[i];
+            
 					  xcm[0] = tree->xp[tmp_index][0] - ray[0];
 					  xcm[1] = tree->xp[tmp_index][1] - ray[1];
-
+            
 					  if(haloON){
 						  halos[tmp_index]->force_halo(alpha,kappa,gamma,phi,xcm,true);
 					  }else{  // case of no halos just particles and no class derived from TreeQuad
-
+              
 						  rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
 						  if(rcm2 < 1e-20) rcm2 = 1e-20;
 						  //rcm = sqrt(rcm2);
-
+              
 						  prefac = masses[MultiMass*tmp_index]/rcm2/pi;
 						  arg1 = rcm2/(sizes[tmp_index*MultiRadius]*sizes[tmp_index*MultiRadius]);
 						  arg2 = sizes[tmp_index*MultiRadius];
 						  tmp = sizes[tmp_index*MultiRadius];
-
+              
 						  // intersecting, subtract the point particle
 						  if(rcm2 < tmp*tmp)
-                          {
+              {
 							  tmp = (alpha_h(arg1,arg2) + 1.0)*prefac;
 							  alpha[0] += tmp*xcm[0];
 							  alpha[1] += tmp*xcm[1];
-
+                
 							  // can turn off kappa and gamma calculations to save times
 							  {
 								  *kappa += kappa_h(arg1,arg2)*prefac;
-
+                  
 								  tmp = (gamma_h(arg1,arg2) + 2.0)*prefac/rcm2;
-
+                  
 								  gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 								  gamma[1] += xcm[0]*xcm[1]*tmp;
                   
-                                  // TODO: makes sure the normalization of phi_h agrees with this
-                                  *phi += (phi_h(arg1,arg2) + 0.5*log(rcm2))*prefac*rcm2;
-                                  
+                  // TODO: makes sure the normalization of phi_h agrees with this
+                  *phi += (phi_h(arg1,arg2) + 0.5*log(rcm2))*prefac*rcm2;
+                  
 							  }
 						  }
 					  }
 				  }
 			  }
-
+        
 		  }
-          else
-          { // use whole cell
-              
+      else
+      { // use whole cell
+        
 			  allowDescent=false;
+                
+        double screening = exp(-rcm2cell*inv_screening_scale2);
+        double tmp = -1.0*(*treeit)->mass/rcm2cell/pi*screening;
+        
+        alpha[0] += tmp*xcm[0];
+        alpha[1] += tmp*xcm[1];
+        
+        {      //  taken out to speed up
+          tmp=-2.0*(*treeit)->mass/pi/rcm2cell/rcm2cell*screening;
+          gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+          gamma[1] += xcm[0]*xcm[1]*tmp;
+          
+          *phi += 0.5*(*treeit)->mass*log( rcm2cell )/pi*screening;
+          *phi -= 0.5*( (*treeit)->quad[0]*xcm[0]*xcm[0] + (*treeit)->quad[1]*xcm[1]*xcm[1] + 2*(*treeit)->quad[2]*xcm[0]*xcm[1] )/(pi*rcm2cell*rcm2cell)*screening;
+        }
+        
+        // quadrapole contribution
+        //   the kappa and gamma are not calculated to this order
+        alpha[0] -= ((*treeit)->quad[0]*xcm[0] + (*treeit)->quad[2]*xcm[1])
+        /(rcm2cell*rcm2cell)/pi*screening;
+        alpha[1] -= ((*treeit)->quad[1]*xcm[1] + (*treeit)->quad[2]*xcm[0])
+        /(rcm2cell*rcm2cell)/pi*screening;
+        
+        tmp = 4*((*treeit)->quad[0]*xcm[0]*xcm[0] + (*treeit)->quad[1]*xcm[1]*xcm[1]
+                 + 2*(*treeit)->quad[2]*xcm[0]*xcm[1])/(rcm2cell*rcm2cell*rcm2cell)/pi*screening;
+        
+        alpha[0] += tmp*xcm[0];
+        alpha[1] += tmp*xcm[1];
 
-			  tmp = -1.0*tree->current->mass/rcm2cell/pi;
-
-			  alpha[0] += tmp*xcm[0];
-			  alpha[1] += tmp*xcm[1];
-
-			  {      //  taken out to speed up
-				  tmp=-2.0*tree->current->mass/pi/rcm2cell/rcm2cell;
-				  gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
-				  gamma[1] += xcm[0]*xcm[1]*tmp;
-
-                  // std::cout << "tree->current->mass = " << tree->current->mass << std::endl ;
-                  *phi += 0.5*tree->current->mass*log( rcm2cell )/pi;
-                  *phi -= 0.5*( tree->current->quad[0]*xcm[0]*xcm[0] + tree->current->quad[1]*xcm[1]*xcm[1] + 2*tree->current->quad[2]*xcm[0]*xcm[1] )/(pi*rcm2cell*rcm2cell);
-			  }
-
-			  // quadrapole contribution
-			  //   the kappa and gamma are not calculated to this order
-			  alpha[0] -= (tree->current->quad[0]*xcm[0] + tree->current->quad[2]*xcm[1])
-    				  /(rcm2cell*rcm2cell)/pi;
-			  alpha[1] -= (tree->current->quad[1]*xcm[1] + tree->current->quad[2]*xcm[0])
-    				  /(rcm2cell*rcm2cell)/pi;
-
-			  tmp = 2*(tree->current->quad[0]*xcm[0]*xcm[0] + tree->current->quad[1]*xcm[1]*xcm[1]
-				  + 2*tree->current->quad[2]*xcm[0]*xcm[1])/(rcm2cell*rcm2cell*rcm2cell)/pi;
-
-			  alpha[0] += tmp*xcm[0];
-			  alpha[1] += tmp*xcm[1];
-              
 		  }
 	  }
-  }while(tree->WalkStep(allowDescent));
-
-
+  }while(treeit.TreeWalkStep(allowDescent));
+  
+  
   // Subtract off uniform mass sheet to compensate for the extra mass
   //  added to the universe in the halos.
-  alpha[0] -= ray[0]*sigma_background;
-  alpha[1] -= ray[1]*sigma_background;
+  alpha[0] -= ray[0]*sigma_background*(inv_screening_scale2 == 0.0);
+  alpha[1] -= ray[1]*sigma_background*(inv_screening_scale2 == 0.0);
   {      //  taken out to speed up
 	  *kappa -= sigma_background;
-      // *phi -= sigma_background * sigma_background ; // Fabien : is that correct ?
+    // *phi -= sigma_background * sigma_background ; // Fabien : is that correct ?
   }
-
+  
   return;
 }
 
@@ -666,157 +705,178 @@ void TreeQuad::force2D(PosType const *ray
  *       NB : the units of sigma_backgound need to be mass/units(ray)^2
  *
  *   If periodic_buffer == true a periodic buffer is included.  The ray is calculated as if there
- *   where identical copies of it on the bourders of the tree's root branch.  This is not the same thing as periodic boundary conditions, because there are not an infinite number of copies in all direction as for the DFT force solver.
+ *   where identical copies of it on the borders of the tree's root branch.  This is not the same thing as periodic boundary conditions, because
+ *   there are not an infinite number of copies in all direction as for the DFT force solver.
+ *
+ *   If inv_screening_scale2 != 0 the mass of cells are reduced by a factor of exp(-|ray - center of mass|^2*inv_screening_scale2) which
+ *   screens the large scale geometry of the simulation on the sky.  This is useful when the region is rectangular instead of circular.
  * */
 
-void TreeQuad::force2D_recur(PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi){
-    
-    assert(tree);
-    
-    alpha[0]=alpha[1]=gamma[0]=gamma[1]=gamma[2]=0.0;
-    *kappa=*phi=0.0;
-    
-    //walkTree_recur(tree->top,ray,&alpha[0],kappa,&gamma[0],phi);
+void TreeQuad::force2D_recur(const PosType *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi){
+  
+  assert(tree);
+  
+  alpha[0]=alpha[1]=gamma[0]=gamma[1]=gamma[2]=0.0;
+  *kappa=*phi=0.0;
+  
+  //walkTree_recur(tree->top,ray,&alpha[0],kappa,&gamma[0],phi);
   
   if(periodic_buffer){
     PosType lx,ly,tmp_ray[2],tmp_c[2];
     lx = tree->top->boundary_p2[0] - tree->top->boundary_p1[0];
     ly = tree->top->boundary_p2[1] - tree->top->boundary_p1[1];
     
-    tmp_c[0] = ray[0] - lx * (1 + (int)( (ray[0]-tree->top->center[0])/lx/2 ) )/2;
-    tmp_c[1] = ray[1] - ly * (1 + (int)( (ray[1]-tree->top->center[1])/ly/2 ) )/2;
+    // for points outside of primary zone shift to primary zone
+    //if(inbox(ray,tree->top->boundary_p1,tree->top->boundary_p2)){
+      tmp_c[0] = ray[0];
+      tmp_c[1] = ray[1];
+    /*}else{
+      int di[2];
+      PosType center[2] = { (tree->top->boundary_p1[0] + tree->top->boundary_p2[0])/2 ,
+        (tree->top->boundary_p1[1] + tree->top->boundary_p2[1])/2 };
+      
+      di[0] = (int)( 2*(ray[0] - center[0])/lx );
+      di[1] = (int)( 2*(ray[1] - center[1])/ly );
+      
+      di[0] = (di[0] > 0) ? (di[0] + 1)/2 : (di[0] - 1)/2;
+      di[1] = (di[1] > 0) ? (di[1] + 1)/2 : (di[1] - 1)/2;
+      
+      tmp_c[0] = ray[0] - lx * di[0];
+      tmp_c[1] = ray[1] - ly * di[1];
+      
+      assert(inbox(tmp_c,tree->top->boundary_p1,tree->top->boundary_p2));
+    }*/
     
     for(int i = -1;i<2;++i){
       for(int j = -1;j<2;++j){
         tmp_ray[0] = tmp_c[0] + i*lx;
         tmp_ray[1] = tmp_c[1] + j*ly;
-        walkTree_recur(tree->top,tmp_ray,&alpha[0],kappa,&gamma[0],phi);
+        walkTree_recur(tree->top,tmp_ray,alpha,kappa,gamma,phi);
       }
     }
   }else{
-    walkTree_recur(tree->top,ray,&alpha[0],kappa,&gamma[0],phi);
+    walkTree_recur(tree->top,ray,alpha,kappa,gamma,phi);
   }
   
-    // Subtract off uniform mass sheet to compensate for the extra mass
-    //  added to the universe in the halos.
-    alpha[0] -= ray[0]*sigma_background;
-    alpha[1] -= ray[1]*sigma_background;
+  // Subtract off uniform mass sheet to compensate for the extra mass
+  //  added to the universe in the halos.
+  alpha[0] -= ray[0]*sigma_background*(inv_screening_scale2 == 0);
+  alpha[1] -= ray[1]*sigma_background*(inv_screening_scale2 == 0);
   
-    *kappa -= sigma_background;
-    
-    return;
+  *kappa -= sigma_background;
+  
+  return;
 }
 
 
 
 void TreeQuad::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma, KappaType *phi){
-    
-
+  
+  
 	PosType xcm[2],rcm2cell,rcm2,tmp,boxsize2;
 	IndexType i;
 	std::size_t tmp_index;
 	PosType arg1, arg2, prefac;
-
-    
+  
+  
 	if(branch->nparticles > 0)
-    {
+  {
 		xcm[0]=branch->center[0]-ray[0];
 		xcm[1]=branch->center[1]-ray[1];
-
+    
 		rcm2cell = xcm[0]*xcm[0] + xcm[1]*xcm[1];
-
-		boxsize2 = (branch->boundary_p2[0]-branch->boundary_p1[0])*(branch->boundary_p2[0]-branch->boundary_p1[0]);
-
-		if( rcm2cell < (branch->rcrit_angle)*(branch->rcrit_angle) || rcm2cell < 5.83*boxsize2)
-        {
-
-			// Treat all particles in a leaf as a point particle
-			if(tree->atLeaf(branch))
-            {
-
-				for(i = 0 ; i < branch->nparticles ; ++i){
-
-					xcm[0] = tree->xp[branch->particles[i]][0] - ray[0];
-					xcm[1] = tree->xp[branch->particles[i]][1] - ray[1];
-
-					rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
-					if(rcm2 < 1e-20) rcm2 = 1e-20;
-
-					tmp_index = MultiMass*branch->particles[i];
-
-
-                    if(haloON ) { prefac = halos[tmp_index]->get_mass(); }
-                      else{ prefac = masses[tmp_index]; }
-					  prefac /= rcm2*pi;
-
-                    
-					alpha[0] += -1.0*prefac*xcm[0];
-					alpha[1] += -1.0*prefac*xcm[1];
-
-					// can turn off kappa and gamma calculations to save times
-					{
-						tmp = -2.0*prefac/rcm2;
-                        
-                        // Fabien : why isn't there anything for kappa here ?
-                        
-						gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
-						gamma[1] += xcm[0]*xcm[1]*tmp;
-                        
-                        *phi += prefac*rcm2*0.5*log(rcm2);  // Fabien : replaced = by += !
-					}
-				}
-			}
-
+    
+    boxsize2 = (branch->boundary_p2[0]-branch->boundary_p1[0])*(branch->boundary_p2[0]-branch->boundary_p1[0]);
+    
+    if( rcm2cell < (branch->rcrit_angle)*(branch->rcrit_angle) || rcm2cell < 5.83*boxsize2)
+    {
+      
+      // Treat all particles in a leaf as a point particle
+      if(tree->atLeaf(branch))
+      {
+        
+        for(i = 0 ; i < branch->nparticles ; ++i){
+          
+          xcm[0] = tree->xp[branch->particles[i]][0] - ray[0];
+          xcm[1] = tree->xp[branch->particles[i]][1] - ray[1];
+          
+          rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
+          if(rcm2 < 1e-20) rcm2 = 1e-20;
+          
+          tmp_index = MultiMass*branch->particles[i];
+          
+          
+          if(haloON ) { prefac = halos[tmp_index]->get_mass(); }
+          else{ prefac = masses[tmp_index]; }
+          prefac /= rcm2*pi;
+          
+          
+          alpha[0] += -1.0*prefac*xcm[0];
+          alpha[1] += -1.0*prefac*xcm[1];
+          
+          // can turn off kappa and gamma calculations to save times
+          {
+            tmp = -2.0*prefac/rcm2;
+            
+            
+            gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+            gamma[1] += xcm[0]*xcm[1]*tmp;
+            
+            *phi += prefac*rcm2*0.5*log(rcm2);  // Fabien : replaced = by += !
+          }
+        }
+      }
+      
 			// Find the particles that intersect with ray and add them individually.
 			if(rcm2cell < 5.83*boxsize2)
-            {
-                
+      {
+        
 				for(i = 0 ; i < branch->Nbig_particles ; ++i)
-                {
-
+        {
+          
 					tmp_index = branch->big_particles[i];
-
+          
 					xcm[0] = tree->xp[tmp_index][0] - ray[0];
 					xcm[1] = tree->xp[tmp_index][1] - ray[1];
-
+          
 					/////////////////////////////////////////
 					if(haloON){
 						halos[tmp_index]->force_halo(alpha,kappa,gamma,phi,xcm,true);
  					}else{  // case of no halos just particles and no class derived from TreeQuad
-
+            
 						rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
 						if(rcm2 < 1e-20) rcm2 = 1e-20;
 						//rcm = sqrt(rcm2);
-
+            
 						prefac = masses[MultiMass*branch->particles[i]]/rcm2/pi;
 						arg1 = rcm2/(sizes[tmp_index*MultiRadius]*sizes[tmp_index*MultiRadius]);
 						arg2 = sizes[tmp_index*MultiRadius];
 						tmp = sizes[tmp_index*MultiRadius];
-
+            
 						// intersecting, subtract the point particle
 						if(rcm2 < tmp*tmp)
-                        {
+            {
 							tmp = (alpha_h(arg1,arg2) + 1.0)*prefac;
 							alpha[0] += tmp*xcm[0];
 							alpha[1] += tmp*xcm[1];
-
+              
 							// can turn off kappa and gamma calculations to save times
 							{
 								*kappa += kappa_h(arg1,arg2)*prefac;
-
+                
 								tmp = (gamma_h(arg1,arg2) + 2.0)*prefac/rcm2;
-
+                
 								gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 								gamma[1] += xcm[0]*xcm[1]*tmp;
-                                
-                                // TODO: makes sure the normalization of phi_h agrees with this
-                                *phi += (phi_h(arg1,arg2) + 0.5*log(rcm2))*prefac*rcm2;  // Fabien : replaced = by += !
+                
+                // TODO: makes sure the normalization of phi_h agrees with this
+                *phi += (phi_h(arg1,arg2) + 0.5*log(rcm2))*prefac*rcm2;  // Fabien : replaced = by += !
 							}
 						}
 					}
 				}
 			}
-
+      
 			if(branch->child0 != NULL)
 				walkTree_recur(branch->child0,&ray[0],&alpha[0],kappa,&gamma[0],&phi[0]);
 			if(branch->child1 != NULL)
@@ -825,41 +885,42 @@ void TreeQuad::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alph
 				walkTree_recur(branch->child2,&ray[0],&alpha[0],kappa,&gamma[0],&phi[0]);
 			if(branch->child3 != NULL)
 				walkTree_recur(branch->child3,&ray[0],&alpha[0],kappa,&gamma[0],&phi[0]);
-
+      
 		}
-        else
-        { // use whole cell
-            
-			tmp = -1.0*branch->mass/rcm2cell/pi;
-
+    else
+    { // use whole cell
+      
+      double screening = exp(-rcm2cell*inv_screening_scale2);
+			double tmp = -1.0*branch->mass/rcm2cell/pi*screening;
+      
 			alpha[0] += tmp*xcm[0];
 			alpha[1] += tmp*xcm[1];
-
+      
 			{      //  taken out to speed up
-				tmp=-2.0*branch->mass/pi/rcm2cell/rcm2cell;
+				tmp=-2.0*branch->mass/pi/rcm2cell/rcm2cell*screening;
 				gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 				gamma[1] += xcm[0]*xcm[1]*tmp;
-                
-                *phi += 0.5*tree->current->mass*log( rcm2cell )/pi;
-                *phi -= 0.5*( tree->current->quad[0]*xcm[0]*xcm[0] + tree->current->quad[1]*xcm[1]*xcm[1] + 2*tree->current->quad[2]*xcm[0]*xcm[1] )/(pi*rcm2cell*rcm2cell);
+        
+        *phi += 0.5*tree->current->mass*log( rcm2cell )/pi*screening;
+        *phi -= 0.5*( tree->current->quad[0]*xcm[0]*xcm[0] + tree->current->quad[1]*xcm[1]*xcm[1] + 2*tree->current->quad[2]*xcm[0]*xcm[1] )/(pi*rcm2cell*rcm2cell)*screening;
 			}
-
+      
 			// quadrapole contribution
 			//   the kappa and gamma are not calculated to this order
 			alpha[0] -= (branch->quad[0]*xcm[0] + branch->quad[2]*xcm[1])
-	    								  /(rcm2cell*rcm2cell)/pi;
+      /(rcm2cell*rcm2cell)/pi*screening;
 			alpha[1] -= (branch->quad[1]*xcm[1] + branch->quad[2]*xcm[0])
-	    								  /(rcm2cell*rcm2cell)/pi;
-
+      /(rcm2cell*rcm2cell)/pi*screening;
+      
 			tmp = 4*(branch->quad[0]*xcm[0]*xcm[0] + branch->quad[1]*xcm[1]*xcm[1]
-					+ 2*branch->quad[2]*xcm[0]*xcm[1])/(rcm2cell*rcm2cell*rcm2cell)/pi;
-
+               + 2*branch->quad[2]*xcm[0]*xcm[1])/(rcm2cell*rcm2cell*rcm2cell)/pi*screening;
+      
 			alpha[0] += tmp*xcm[0];
 			alpha[1] += tmp*xcm[1];
-
+      
 			return;
 		}
-        
+    
 	}
 	return;
 }

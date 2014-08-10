@@ -9,11 +9,12 @@
 
 #include <iterator>
 
-LensPlaneTree::LensPlaneTree(PosType **xpt,LensHaloHndl *my_halos,IndexType Nhalos,PosType my_sigma_background)
+LensPlaneTree::LensPlaneTree(PosType **xpt,LensHaloHndl *my_halos,IndexType Nhalos
+                             ,PosType my_sigma_background,PosType inv_screening_scale)
 : LensPlane(), halos(my_halos, my_halos + Nhalos)
 {
-	halo_tree = new TreeQuad(xpt,my_halos,Nhalos,my_sigma_background,5,0.1,true);
- }
+	halo_tree = new TreeQuad(xpt,my_halos,Nhalos,my_sigma_background,5,0.1,true,inv_screening_scale);
+}
 
 LensPlaneTree::~LensPlaneTree(){
 	delete halo_tree;

@@ -331,6 +331,8 @@ private: /* input */
   Utilities::Geometry::SphericalPoint central_point_sphere;
   /// optional angular radius of simulation cone that will be included
   PosType sim_angular_radius;
+  /// inverse of the angular screening scale in the tree force calculation
+  PosType inv_ang_screening_scale;
 };
 
 inline std::size_t Lens::getNMainHalos() const

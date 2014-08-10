@@ -5,7 +5,7 @@
 
 #include "lens_halos.h"
 
-PosType LensHaloJaffe::gfunction(PosType x){
+PosType LensHaloJaffe::gfunction(PosType x) const{
 	PosType ans;
 	ans=pi;
 	if(x==0) x=1e-5;
@@ -15,7 +15,7 @@ PosType LensHaloJaffe::gfunction(PosType x){
 	return 0.0;
 }
 
-PosType LensHaloJaffe::ffunction(PosType x){
+PosType LensHaloJaffe::ffunction(PosType x) const{
 	PosType ans;
 	if(x==0) x=1e-5;
 	ans=pi/x;
@@ -26,7 +26,7 @@ PosType LensHaloJaffe::ffunction(PosType x){
 }
 
 
-PosType LensHaloJaffe::g2function(PosType x){
+PosType LensHaloJaffe::g2function(PosType x) const{
 	PosType ans;
 	if(x==0) x=1e-5;
 	ans=pi/x;
@@ -36,7 +36,7 @@ PosType LensHaloJaffe::g2function(PosType x){
 	return 0.0;
 }
 
-PosType LensHaloJaffe::hfunction(PosType x){
+PosType LensHaloJaffe::hfunction(PosType x) const{
 	ERROR_MESSAGE();
 	std::cout << "there is yet no analytic expression" << std::endl;
 	exit(1);

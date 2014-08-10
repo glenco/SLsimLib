@@ -16,7 +16,9 @@
 #include <algorithm>
 #include <utility>
 #include <stdexcept>
+#include <thread>
 #include "image_processing.h"
+#include "point.h"
 
 #if __cplusplus < 201103L
 template<typename T>
@@ -470,13 +472,13 @@ void PixelMap::PointsWithinLeaf(Branch * branch1, std::list <unsigned long> &nei
 		}
 }
 /// checks if the branch is within map boundaries
-bool PixelMap::inMapBox(Branch * branch1){
+bool PixelMap::inMapBox(Branch * branch1) const{
 	if (branch1->boundary_p1[0] > map_boundary_p2[0] || branch1->boundary_p2[0] < map_boundary_p1[0]) return false;
 	if (branch1->boundary_p1[1] > map_boundary_p2[1] || branch1->boundary_p2[1] < map_boundary_p1[1]) return false;
 	return true;
 }
 /// checks if point is within map boundaries
-bool PixelMap::inMapBox(PosType * x){
+bool PixelMap::inMapBox(PosType * x) const{
 	if (x[0] > map_boundary_p2[0] || x[0] < map_boundary_p1[0]) return false;
 	if (x[1] > map_boundary_p2[1] || x[1] < map_boundary_p1[1]) return false;
 	return true;
@@ -775,26 +777,68 @@ void PixelMap::AddGrid(Grid &grid,LensingVariable val){
   
   if(grid.getNumberOfPoints() ==0 ) return;
   
-  PointList* list = grid.i_tree->pointlist;
-  double tmp,area;
+  int Nblocks = 16;
+  std::vector<PointList> lists(Nblocks);
   
+  bool allowDecent;
+  grid.i_tree->moveTop();
+  int i = 0;
+  do{
+    if(grid.i_tree->current->level == 4){
+      assert(i < 16);
+      lists[i].top = lists[i].current = grid.i_tree->current->points;
+      lists[i].Npoints = grid.i_tree->current->npoints;
+      ++i;
+      allowDecent = false;
+    }else{
+      allowDecent = true;
+    }
+  }while(grid.i_tree->TreeWalkStep(allowDecent) && i < Nblocks);
+  
+  std::thread thr[16];
+  
+  for(int i = 0; i< Nblocks ;++i){
+    thr[i] = std::thread(&PixelMap::AddGrid_,this,lists[i],val);
+  }
+  for(int ii=0;ii<Nblocks;++ii) thr[ii].join();
+}
+
+void PixelMap::AddGrid_(PointList list,LensingVariable val){
   std::list <unsigned long> neighborlist;
   std::list <unsigned long>::iterator it;
+  double tmp,area;
+  PosType tmp2[2];
   
-  list->current = list->top;
-  do{
+  list.current = list.top;
+  for(size_t i = 0; i< list.Npoints; ++i){
     switch (val) {
+      case ALPHA:
+        tmp2[0] = list.current->x[0] - list.current->image->x[0];
+        tmp2[1] = list.current->x[1] - list.current->image->x[1];
+        tmp = sqrt(tmp2[0]*tmp2[0] + tmp2[1]*tmp2[1])/resolution/resolution;
+        break;
+      case ALPHA1:
+        tmp = (list.current->x[0] - list.current->image->x[0])/resolution/resolution;
+        break;
+      case ALPHA2:
+        tmp = (list.current->x[1] - list.current->image->x[1])/resolution/resolution;
+        break;
       case KAPPA:
-        tmp = list->current->kappa/resolution/resolution;
+        tmp = list.current->kappa/resolution/resolution;
+        break;
+      case GAMMA:
+        tmp2[0] = list.current->gamma[0];
+        tmp2[1] = list.current->gamma[1];
+        tmp = sqrt(tmp2[0]*tmp2[0] + tmp2[1]*tmp2[1])/resolution/resolution;
         break;
       case GAMMA1:
-        tmp = list->current->gamma[0]/resolution/resolution;
+        tmp = list.current->gamma[0]/resolution/resolution;
         break;
       case GAMMA2:
-        tmp = list->current->gamma[1]/resolution/resolution;
+        tmp = list.current->gamma[1]/resolution/resolution;
         break;
       case GAMMA3:
-        tmp = list->current->gamma[2]/resolution/resolution;
+        tmp = list.current->gamma[2]/resolution/resolution;
         break;
       default:
         std::cerr << "PixelMap::AddGrid() does not work for the input LensingVariable" << std::endl;
@@ -802,19 +846,20 @@ void PixelMap::AddGrid(Grid &grid,LensingVariable val){
         break;
         // If this list is to be expanded to include ALPHA or GAMMA take care to add them as vectors
     }
-
+    
     if(tmp != 0.0){
-      if ((inMapBox(list->current->leaf)) == true){
-        PointsWithinLeaf(list->current->leaf,neighborlist);
+      if( inMapBox(list.current->leaf) == true){
+        PointsWithinLeaf(list.current->leaf,neighborlist);
         for(it = neighborlist.begin();it != neighborlist.end();it++){
-          area = LeafPixelArea(*it,list->current->leaf);
+          area = LeafPixelArea(*it,list.current->leaf);
           map[*it] += tmp*area;
         }
       }
     }
-  }while(MoveDownList(list));
-
+    MoveDownList(&list);
+  }
 }
+
 
 
 /// Find arcs in image

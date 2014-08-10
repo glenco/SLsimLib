@@ -269,7 +269,7 @@ PosType LensHaloNFW::InterpolateModes(int whichmod, PosType q, PosType b){
 }
 
 
-PosType LensHaloNFW::InterpolateFromTable(PosType *table, PosType y){
+PosType LensHaloNFW::InterpolateFromTable(PosType *table, PosType y) const{
 	int j;
 	j=(int)(y/maxrm*NTABLE);
 
@@ -406,7 +406,7 @@ LensHaloPseudoNFW::LensHaloPseudoNFW(InputParams& params)
 
 /// Auxiliary function for PseudoNFW profile
 // previously defined in tables.cpp
-PosType LensHaloPseudoNFW::mhat(PosType y, PosType beta){
+PosType LensHaloPseudoNFW::mhat(PosType y, PosType beta) const{
   if(y==0) y=1e-5;
 	if(beta == 1.0) return y - log(1+y);
 	if(beta == 2.0) return log(1+y) - y/(1+y);
@@ -436,7 +436,7 @@ void LensHaloPseudoNFW::make_tables(){
 	}
 }
 
-PosType LensHaloPseudoNFW::gfunction(PosType y){
+PosType LensHaloPseudoNFW::gfunction(PosType y) const{
     int j;
     j=(int)(y/maxrm*NTABLE);
 	assert(y>=xtable[j] && y<=xtable[j+1]);
@@ -444,7 +444,7 @@ PosType LensHaloPseudoNFW::gfunction(PosType y){
     return ((mhattable[j+1]-mhattable[j])/(xtable[j+1]-xtable[j])*(y-xtable[j]) + mhattable[j]);
 }
 
-PosType LensHaloPseudoNFW::InterpolateFromTable(PosType y){
+PosType LensHaloPseudoNFW::InterpolateFromTable(PosType y) const{
 	int j;
 	j=(int)(y/maxrm*NTABLE);
 
@@ -1202,7 +1202,7 @@ void LensHaloHernquist::make_tables(){
 
 
 
-PosType LensHaloHernquist::InterpolateFromTable(PosType *table, PosType y){
+PosType LensHaloHernquist::InterpolateFromTable(PosType *table, PosType y) const{
 	int j;
 	j=(int)(y/maxrm*NTABLE);
 
@@ -1333,7 +1333,7 @@ void LensHaloJaffe::make_tables(){
   count++;
 }
 
-PosType LensHaloJaffe::InterpolateFromTable(PosType *table, PosType y){
+PosType LensHaloJaffe::InterpolateFromTable(PosType *table, PosType y) const{
 	int j;
 	j=(int)(y/maxrm*NTABLE);
 

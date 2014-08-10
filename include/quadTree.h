@@ -77,10 +77,6 @@ struct QTreeNB{
 	const bool noChild();
 	const bool offEnd();
 	const unsigned long getNbranches();
-	const bool atLeaf(){
-		return (current->child0 == NULL)*(current->child1 == NULL)
-    *(current->child2 == NULL)*(current->child3 == NULL);
-	}
 	const bool atLeaf(QBranchNB *branch){
 		return (branch->child0 == NULL)*(branch->child1 == NULL)
     *(branch->child2 == NULL)*(branch->child3 == NULL);
@@ -135,6 +131,10 @@ struct QTreeNB{
     bool up();
     /// Move to child
     bool down(short child);
+    const bool atLeaf(){
+        return (current->child0 == NULL)*(current->child1 == NULL)
+        *(current->child2 == NULL)*(current->child3 == NULL);
+    }
     bool TreeWalkStep(bool allowDescent);
   };
 
@@ -174,6 +174,7 @@ public:
 			,int bucket = 5
 			,PosType theta_force = 0.1
       ,bool my_periodic_buffer = false
+      ,PosType my_inv_screening_scale = 0
 			);
 	TreeQuad(
 			PosType **xpt
@@ -183,12 +184,15 @@ public:
 			,int bucket = 5
 			,PosType theta_force = 0.1
       ,bool my_periodic_buffer = false
+      ,PosType my_inv_screening_scale = 0
 			);
 	virtual ~TreeQuad();
 
-  virtual void force2D(PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi);
+  virtual void force2D(PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma
+                       ,KappaType *phi) const;
 
-  virtual void force2D_recur(PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi);
+  virtual void force2D_recur(const PosType *ray,PosType *alpha,KappaType *kappa,KappaType *gamma
+                             ,KappaType *phi);
     
   virtual void printParticlesInBranch(unsigned long number);
 
@@ -219,6 +223,7 @@ protected:
   
   /// if true there is one layer of peridic buffering
   bool periodic_buffer;
+  PosType inv_screening_scale2;
 
 	QTreeNBHndl BuildQTreeNB(PosType **xp,IndexType Nparticles,IndexType *particles);
 	void _BuildQTreeNB(IndexType nparticles,IndexType *particles);
@@ -226,7 +231,7 @@ protected:
 	inline short WhichQuad(PosType *x,QBranchNB &branch);
 
 	//inline bool atLeaf();
-	inline bool inbox(PosType *ray,PosType *p1,PosType *p2){
+	inline bool inbox(const PosType *ray,const PosType *p1,const PosType *p2){
 	  return (ray[0]>=p1[0])*(ray[0]<=p2[0])*(ray[1]>=p1[1])*(ray[1]<=p2[1]);
 	}
 	int cutbox(PosType *ray,PosType *p1,PosType *p2,float rmax);
@@ -235,16 +240,16 @@ protected:
 	void rotate_coordinates(PosType **coord);
 
 	// Internal profiles for a Gaussian particle
-	virtual inline PosType alpha_h(PosType r2s2,PosType sigma){
+	virtual inline PosType alpha_h(PosType r2s2,PosType sigma) const{
 	  return (sigma > 0.0 ) ? ( exp(-0.5*r2s2) - 1.0 ) : -1.0;
 	}
-	virtual inline PosType kappa_h(PosType r2s2,PosType sigma){
+	virtual inline PosType kappa_h(PosType r2s2,PosType sigma) const{
 	  return 0.5*r2s2*exp(-0.5*r2s2);
 	}
-	virtual inline PosType gamma_h(PosType r2s2,PosType sigma){
+	virtual inline PosType gamma_h(PosType r2s2,PosType sigma) const{
 	  return (sigma > 0.0 ) ? (-2.0 + (2.0 + r2s2)*exp(-0.5*r2s2) ) : -2.0;
 	}
-	virtual inline PosType phi_h(PosType r2s2,PosType sigma){
+	virtual inline PosType phi_h(PosType r2s2,PosType sigma) const{
 		ERROR_MESSAGE();  // not yet written
 		exit(1);
 		return 0;
@@ -259,6 +264,8 @@ protected:
 	 void cuttoffscale(QTreeNBHndl tree,PosType *theta);
 
 	 void walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi);
+   void walkTree_iter(QTreeNB::iterator &treeit, PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma
+                       ,KappaType *phi) const;
 
    };
 

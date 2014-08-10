@@ -124,12 +124,12 @@ private:
 //typedef struct branchstruct Branch;
 
 /** \brief link list for points, uses the linking pointers within the Point type unlike  Kist */
-typedef struct PointList{
+struct PointList{
   Point *top;
   Point *bottom;
   Point *current;
   unsigned long Npoints;
-} PointList;
+};
 
 typedef struct PointList *ListHndl;
 //bool AtTopList(ListHndl list);
