@@ -840,6 +840,12 @@ void PixelMap::AddGrid_(PointList list,LensingVariable val){
       case GAMMA3:
         tmp = list.current->gamma[2]/resolution/resolution;
         break;
+      case INVMAG:
+        tmp = list.current->invmag/resolution/resolution;
+        break;
+      case DT:
+        tmp = list.current->dt/resolution/resolution;
+        break;
       default:
         std::cerr << "PixelMap::AddGrid() does not work for the input LensingVariable" << std::endl;
         throw std::runtime_error("PixelMap::AddGrid() does not work for the input LensingVariable");
