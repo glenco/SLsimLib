@@ -46,7 +46,7 @@ public:
 	void AddImages(ImageInfo *imageinfo,int Nimages,float rescale = 1.);
 	void AddCurve(ImageInfo *curve,double value);
 	void drawline(double x1[],double x2[],double value);
-    void drawcircle(PosType r_center[],PosType radius,PosType value);
+  void drawcircle(PosType r_center[],PosType radius,PosType value);
 	void AddGrid(Grid &grid,double value = 1.0);
   void AddGrid(Grid &grid,LensingVariable val);
 
@@ -60,7 +60,8 @@ public:
 	void smooth(double sigma);
 
 	inline double getValue(std::size_t i) const { return map[i]; }
-	inline double operator[](std::size_t i) const { return map[i]; };
+	inline double & operator[](std::size_t i) { return map[i]; };
+	inline double operator()(std::size_t i) const { return map[i]; };
 	
 	PixelMap& operator+=(const PixelMap& rhs);
 	friend PixelMap operator+(const PixelMap&, const PixelMap&);
@@ -87,6 +88,14 @@ public:
 	
   void FindArc(PosType &radius,PosType *xc,PosType *arc_center,PosType &arclength,PosType &width
                          ,PosType threshold);
+  
+  /// get the index for a position, returns -1 if out of map, this version returns the 2D grid coordinates
+  long find_index(PosType const x[],long &ix,long &iy);
+  /// get the index for a position, returns -1 if out of map
+  long find_index(PosType const x[]);
+  /// get the index for a position, returns -1 if out of map
+  void find_position(PosType x[],std::size_t const index);
+
 private:
 	std::valarray<double> map;
   void AddGrid_(PointList list,LensingVariable val);
@@ -101,12 +110,6 @@ private:
 	bool inMapBox(Branch * branch1) const;
 	bool inMapBox(double * branch1) const;
   
-  /// get the index for a position, returns -1 if out of map, this version returns the 2D grid coordinates
-  long find_index(PosType const x[],long &ix,long &iy);
-  /// get the index for a position, returns -1 if out of map
-  long find_index(PosType const x[]);
-  /// get the index for a position, returns -1 if out of map
-  void find_position(PosType x[],std::size_t const index);
 };
 
 typedef enum {Euclid_VIS,Euclid_Y,Euclid_J,Euclid_H,KiDS_u,KiDS_g,KiDS_r,KiDS_i,HST_ACS_I,CFHT_u,CFHT_g,CFHT_r,CFHT_i,CFHT_z} Telescope;

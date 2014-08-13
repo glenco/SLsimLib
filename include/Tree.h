@@ -301,8 +301,6 @@ namespace Utilities{
   std::vector<Point *> shrink_rap(std::vector<Point *> P);
   std::vector<Point *> concave_hull(std::vector<Point *> P);
 
-
-
 	long IndexFromPosition(PosType *x,long Npixels,PosType range,const PosType *center);
 	void PositionFromIndex(unsigned long i,PosType *x,long Npixels,PosType range,PosType const *center);
 	long IndexFromPosition(PosType x,long Npixels,PosType range,PosType center);

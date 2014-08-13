@@ -252,7 +252,7 @@ SourcePixelled::SourcePixelled(
   source_r =  range/sqrt(2.);
   values.resize(Npixels*Npixels);
   for (int i = 0; i < Npixels*Npixels; i++)
-    values[i] = gal_map[i]/resolution/resolution*factor;
+    values[i] = gal_map(i)/resolution/resolution*factor;
   
   calcTotalFlux();
   calcCentroid();

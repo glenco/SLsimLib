@@ -59,6 +59,7 @@ struct Grid{
   void writeFitsVector(const double center[],size_t Npixels,double resolution,LensingVariable lensvar,std::string filename);
   PixelMap writePixelMap(const double center[],size_t Npixels,double resolution,LensingVariable lensvar);
   PixelMap writePixelMap(const double center[],size_t Nx,size_t Ny,double resolution,LensingVariable lensvar);
+  PixelMap writePixelMapUniform(const PosType center[],size_t Nx,size_t Ny,LensingVariable lensvar);
 
   void xygridpoints(Point *points,double range,const double *center,long Ngrid
                           ,short remove_center);
@@ -81,7 +82,8 @@ private:
 	bool uniform_mag_from_shooter(double *a,Point *point);
   
   unsigned long pointID;
-    PosType axisratio;
+  PosType axisratio;
+  void writePixelMapUniform_(PointList list,PixelMap *map,LensingVariable val);
   
   static std::mutex grid_mutex;
 };

@@ -1046,9 +1046,107 @@ PixelMap Grid::writePixelMap(
   PixelMap map(center, Nx, Ny, resolution);
   map.AddGrid(*this,lensvar);
 
-  return;
+  return map;
 }
 
+/** \brief Make a Pixel map of the without distribution the pixels.
+ *
+ *  This will be faster than Grid::writePixelMap() and Grid::writeFits().
+ *  But it puts each grid pixel in one pixelmap pixel and if there are two 
+ *  grid pixels in one pixelmap pixel it uses one at random.  This is meant 
+ *  for uniform maps to make equal sized PixelMaps.
+ */
+PixelMap Grid::writePixelMapUniform(
+                          const PosType center[]  /// center of image
+                          ,size_t Nx       /// number of pixels in image in on dimension
+                          ,size_t Ny       /// number of pixels in image in on dimension
+                          ,LensingVariable lensvar  /// which quantity is to be displayed
+                          ){
+  
+  if(getNumberOfPoints() ==0 ) return;
+  PixelMap map(center, Nx, Ny,i_tree->pointlist->top->gridsize);
+ 
+  int Nblocks = 16;
+  std::vector<PointList> lists(Nblocks);
+  
+  bool allowDecent;
+  i_tree->moveTop();
+  int i = 0;
+  do{
+    if(i_tree->current->level == 4){
+      assert(i < 16);
+      lists[i].top = lists[i].current = i_tree->current->points;
+      lists[i].Npoints = i_tree->current->npoints;
+      ++i;
+      allowDecent = false;
+    }else{
+      allowDecent = true;
+    }
+  }while(i_tree->TreeWalkStep(allowDecent) && i < Nblocks);
+  
+  std::thread thr[16];
+  
+  for(int ii = 0; ii < i ;++ii){
+    thr[ii] = std::thread(&Grid::writePixelMapUniform_,this,lists[ii],&map,lensvar);
+  }
+  for(int ii = 0; ii < i ;++ii) thr[ii].join();
+  
+  return map;
+}
+
+void Grid::writePixelMapUniform_(PointList list,PixelMap *map,LensingVariable val){
+  double tmp;
+  PosType tmp2[2];
+  
+  list.current = list.top;
+  for(size_t i = 0; i< list.Npoints; ++i){
+    switch (val) {
+      case ALPHA:
+        tmp2[0] = list.current->x[0] - list.current->image->x[0];
+        tmp2[1] = list.current->x[1] - list.current->image->x[1];
+        tmp = sqrt(tmp2[0]*tmp2[0] + tmp2[1]*tmp2[1]);
+        break;
+      case ALPHA1:
+        tmp = (list.current->x[0] - list.current->image->x[0]);
+        break;
+      case ALPHA2:
+        tmp = (list.current->x[1] - list.current->image->x[1]);
+        break;
+      case KAPPA:
+        tmp = list.current->kappa;
+        break;
+      case GAMMA:
+        tmp2[0] = list.current->gamma[0];
+        tmp2[1] = list.current->gamma[1];
+        tmp = sqrt(tmp2[0]*tmp2[0] + tmp2[1]*tmp2[1]);
+        break;
+      case GAMMA1:
+        tmp = list.current->gamma[0];
+        break;
+      case GAMMA2:
+        tmp = list.current->gamma[1];
+        break;
+      case GAMMA3:
+        tmp = list.current->gamma[2];
+        break;
+      case INVMAG:
+        tmp = list.current->invmag;
+        break;
+      case DT:
+        tmp = list.current->dt;
+        break;
+      default:
+        std::cerr << "PixelMap::AddGrid() does not work for the input LensingVariable" << std::endl;
+        throw std::runtime_error("PixelMap::AddGrid() does not work for the input LensingVariable");
+        break;
+        // If this list is to be expanded to include ALPHA or GAMMA take care to add them as vectors
+    }
+    
+    (*map)[map->find_index(list.current->x)] = tmp;
+    
+    MoveDownList(&list);
+  }
+}
 
 /// Outputs a fits file for making plots of vector fields
 void Grid::writeFitsVector(
