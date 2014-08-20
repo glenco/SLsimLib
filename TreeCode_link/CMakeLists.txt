@@ -20,4 +20,5 @@ add_sources(
 	utilities.cpp
         geometry.cpp
 	List/list.cpp
+	gridmap.cpp
 )

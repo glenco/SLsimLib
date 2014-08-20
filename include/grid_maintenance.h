@@ -59,12 +59,15 @@ struct Grid{
   void writeFitsVector(const double center[],size_t Npixels,double resolution,LensingVariable lensvar,std::string filename);
   PixelMap writePixelMap(const double center[],size_t Npixels,double resolution,LensingVariable lensvar);
   PixelMap writePixelMap(const double center[],size_t Nx,size_t Ny,double resolution,LensingVariable lensvar);
+  
   PixelMap writePixelMapUniform(const PosType center[],size_t Nx,size_t Ny,LensingVariable lensvar);
+  void writePixelMapUniform(PixelMap &map,LensingVariable lensvar);
+  void writeFitsUniform(const PosType center[],size_t Nx,size_t Ny,LensingVariable lensvar,std::string filename);
 
+private:
   void xygridpoints(Point *points,double range,const double *center,long Ngrid
                           ,short remove_center);
 
-private:
 	/// one dimensional size of initial grid
 	const int Ngrid_init;
   int Ngrid_init2;
@@ -138,5 +141,6 @@ void sort_out_points(Point *i_points,ImageInfo *imageinfo,double r_source,double
 
 
 void saveImage(LensHaloMOKA *mokahalo, GridHndl grid, bool saveprofile=true);
+
 
 #endif

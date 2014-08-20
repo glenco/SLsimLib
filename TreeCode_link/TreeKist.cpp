@@ -1362,21 +1362,10 @@ unsigned long FreeBranchesBelow(TreeHndl i_tree,TreeHndl s_tree,Kist<Point> * tr
 			//assert(i_tree->current->points->image->leaf);
 			//s_tree->current = i_tree->current->points->image->leaf;  // set s_tree to source of current image cell
       
-			/***************** test line  **************************/
-			assert(i_tree->current->points->next || i_tree->current->points->prev);
-      
-			/***************** test line  **************************/
 			branch = i_tree->current->prev;
 			i = branch->npoints;
       
 			if(i_tree->current != headbranch) i_tree->RemoveLeafFromTree(&Ntmp);
-      
-			/***************** test line  **************************/
-			assert(i_tree->current == branch);
-			assert(i == i_tree->current->npoints);
-      
-			/***************** test line  **************************/
-			assert(i_tree->current->points->next || i_tree->current->points->prev);
       
 			// in a square leaf cell take out extra points that have come up from below
       

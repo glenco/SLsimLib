@@ -228,6 +228,7 @@ bool AreBoxNeighbors(Point *point1,Point *point2);
 bool AreBoxNeighbors(Branch *branch1,Branch *branch2);
 bool CircleInBox(const PosType* center,PosType radius,PosType *p1,PosType *p2);
 bool BoxInCircle(const PosType* center,PosType radius,PosType *p1,PosType *p2);
+bool BoxIntersectCircle(const PosType* center,PosType radius,PosType *p1,PosType *p2);
 
 // Point arrays
 

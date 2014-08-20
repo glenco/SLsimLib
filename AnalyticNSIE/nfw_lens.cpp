@@ -184,9 +184,6 @@ PosType LensHaloNFW::dddhfunction(PosType x, bool numerical){ // d^2 dhfunction(
     return 0.0;
 }
 
-
-
-
 PosType LensHaloNFW::bfunction(PosType fx){
     PosType ans;
     PosType fac=1.0;

@@ -741,10 +741,12 @@ void LensHalo::force_halo_sym(
 			PosType prefac = mass/rcm2/pi;
 			alpha[0] += -1.0 * prefac * xcm[0];
 			alpha[1] += -1.0 * prefac * xcm[1];
+      
+      //std::cout << "rcm2  = " << rcm2 << std::endl;
+      //std::cout << "prefac  = " << prefac << std::endl;
+      //std::cout << "xcm  = " << xcm[0] << " " << xcm[1] << std::endl;
 
 			PosType tmp = -2.0*prefac/rcm2;
-                
-      // Fabien : does not look that kappa is computed here.
 
 			gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
       gamma[1] += xcm[0]*xcm[1]*tmp;
@@ -988,8 +990,6 @@ void LensHaloSimpleNSIE::force_halo(
   
 	PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
 	if(rcm2 < 1e-20) rcm2 = 1e-20;
-  
-  //**** test line
   
 	if(rcm2 < Rmax*Rmax)
     {

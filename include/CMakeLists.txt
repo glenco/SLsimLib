@@ -44,4 +44,5 @@ add_sources(
 	utilities_slsim.h
         geometry.h
         elliptic.h
+	gridmap.h
 )

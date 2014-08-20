@@ -1049,6 +1049,54 @@ PixelMap Grid::writePixelMap(
   return map;
 }
 
+void Grid::writeFitsUniform(
+                                const PosType center[]  /// center of image
+                                ,size_t Nx       /// number of pixels in image in on dimension
+                                ,size_t Ny       /// number of pixels in image in on dimension
+                                ,LensingVariable lensvar  /// which quantity is to be displayed
+                                ,std::string filename     /// file name for image -- .kappa.fits, .gamma1.fits, etc will be appended
+                                ){
+  std::string tag;
+  
+  switch (lensvar) {
+    case DT:
+      tag = ".dt.fits";
+      break;
+    case ALPHA1:
+      tag = ".alpha1.fits";
+      break;
+    case ALPHA2:
+      tag = ".alpha2.fits";
+      break;
+    case ALPHA:
+      tag = ".alpha.fits";
+      break;
+    case KAPPA:
+      tag = ".kappa.fits";
+      break;
+    case GAMMA1:
+      tag = ".gamma1.fits";
+      break;
+    case GAMMA2:
+      tag = ".gamma2.fits";
+      break;
+    case GAMMA3:
+      tag = ".gamma3.fits";
+      break;
+    case GAMMA:
+      tag = ".gamma.fits";
+      break;
+    case INVMAG:
+      tag = ".invmag.fits";
+      break;
+    default:
+      break;
+  }
+
+  PixelMap map = this->writePixelMapUniform(center,Nx,Ny,lensvar);
+  map.printFITS(filename + tag);
+}
+
 /** \brief Make a Pixel map of the without distribution the pixels.
  *
  *  This will be faster than Grid::writePixelMap() and Grid::writeFits().
@@ -1057,15 +1105,16 @@ PixelMap Grid::writePixelMap(
  *  for uniform maps to make equal sized PixelMaps.
  */
 PixelMap Grid::writePixelMapUniform(
-                          const PosType center[]  /// center of image
-                          ,size_t Nx       /// number of pixels in image in on dimension
-                          ,size_t Ny       /// number of pixels in image in on dimension
-                          ,LensingVariable lensvar  /// which quantity is to be displayed
-                          ){
+                                    const PosType center[]  /// center of image
+                                    ,size_t Nx       /// number of pixels in image in on dimension
+                                    ,size_t Ny       /// number of pixels in image in on dimension
+                                    ,LensingVariable lensvar  /// which quantity is to be displayed
+                                    ){
   
   if(getNumberOfPoints() ==0 ) return;
   PixelMap map(center, Nx, Ny,i_tree->pointlist->top->gridsize);
- 
+  map.Clean();
+  
   int Nblocks = 16;
   std::vector<PointList> lists(Nblocks);
   
@@ -1093,10 +1142,45 @@ PixelMap Grid::writePixelMapUniform(
   
   return map;
 }
+void Grid::writePixelMapUniform(
+                                    PixelMap &map
+                                    ,LensingVariable lensvar  /// which quantity is to be displayed
+                                    ){
+  
+  if(getNumberOfPoints() ==0 ) return;
+  
+  map.Clean();
+  int Nblocks = 16;
+  std::vector<PointList> lists(Nblocks);
+  
+  bool allowDecent;
+  i_tree->moveTop();
+  int i = 0;
+  do{
+    if(i_tree->current->level == 4){
+      assert(i < 16);
+      lists[i].top = lists[i].current = i_tree->current->points;
+      lists[i].Npoints = i_tree->current->npoints;
+      ++i;
+      allowDecent = false;
+    }else{
+      allowDecent = true;
+    }
+  }while(i_tree->TreeWalkStep(allowDecent) && i < Nblocks);
+  
+  std::thread thr[16];
+  
+  for(int ii = 0; ii < i ;++ii){
+    thr[ii] = std::thread(&Grid::writePixelMapUniform_,this,lists[ii],&map,lensvar);
+  }
+  for(int ii = 0; ii < i ;++ii) thr[ii].join();
+  
+}
 
 void Grid::writePixelMapUniform_(PointList list,PixelMap *map,LensingVariable val){
   double tmp;
   PosType tmp2[2];
+  long index;
   
   list.current = list.top;
   for(size_t i = 0; i< list.Npoints; ++i){
@@ -1142,7 +1226,8 @@ void Grid::writePixelMapUniform_(PointList list,PixelMap *map,LensingVariable va
         // If this list is to be expanded to include ALPHA or GAMMA take care to add them as vectors
     }
     
-    (*map)[map->find_index(list.current->x)] = tmp;
+    index = map->find_index(list.current->x);
+    if(index != -1)(*map)[index] = tmp;
     
     MoveDownList(&list);
   }

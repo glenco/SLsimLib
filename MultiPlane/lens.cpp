@@ -634,7 +634,7 @@ void Lens::createFieldPlanes(bool verbose)
 		
     PosType tmp = inv_ang_screening_scale*(1+field_plane_redshifts[i])/field_Dl[i];
 
-    if(tmp > 3) tmp = 0;  // TODO: Try to remove this arbitrary minimum distance
+    if(tmp > 1/2.) tmp = 1/2.;  // TODO: Try to remove this arbitrary minimum distance
 		field_planes.push_back(new LensPlaneTree(&halo_pos[k1], &field_halos[k1], k2-k1, sigma_back,tmp));
 		//field_planes.push_back(new LensPlaneTree(&halo_pos[k1], &field_halos[k1], k2-k1, sigma_back) );
 	}
@@ -1373,37 +1373,37 @@ void Lens::readInputSimFileMillennium(bool verbose)
 			++j;
 
 			if(flag_field_gal_on){
-                float sigma = 126*pow(mass*field_galaxy_mass_fraction/1.0e10,0.25); // From Tully-Fisher and Bell & de Jong 2001
-                //std::cout << "Warning: All galaxies are spherical" << std::endl;
-                float fratio = (ran2(seed)+1)*0.5;  //TODO: Ben change this!  This is a kluge.
-                float pa = 2*pi*ran2(seed);  //TODO: This is a kluge.
-
+        float sigma = 126*pow(mass*field_galaxy_mass_fraction/1.0e10,0.25); // From Tully-Fisher and Bell & de Jong 2001
+        //std::cout << "Warning: All galaxies are spherical" << std::endl;
+        float fratio = (ran2(seed)+1)*0.5;  //TODO: Ben change this!  This is a kluge.
+        float pa = 2*pi*ran2(seed);  //TODO: This is a kluge.
+        
  				switch(field_int_prof_gal_type){
-				case null_gal:
-					ERROR_MESSAGE();
-					std::cout << "flag_field_gal_on is true, but field_int_prof_gal_type is null!!!!" << std::endl;
-					break;
-				case nsie_gal:
-                    field_halos.push_back(new LensHaloSimpleNSIE(mass*field_galaxy_mass_fraction,z,sigma,0.0,fratio,pa,0));
-                    //field_halos.push_back(new LensHaloSimpleNSIE);
-                    break;
-                default:
-                    throw std::runtime_error("Don't support any but NSIE galaxies yet!");
-                    break;
+          case null_gal:
+            ERROR_MESSAGE();
+            std::cout << "flag_field_gal_on is true, but field_int_prof_gal_type is null!!!!" << std::endl;
+            break;
+          case nsie_gal:
+            field_halos.push_back(new LensHaloSimpleNSIE(mass*field_galaxy_mass_fraction,z,sigma,0.0,fratio,pa,0));
+            //field_halos.push_back(new LensHaloSimpleNSIE);
+            break;
+          default:
+            throw std::runtime_error("Don't support any but NSIE galaxies yet!");
+            break;
 				}
-
-                //field_halos[j]->setZlens(z);
+        
+        //field_halos[j]->setZlens(z);
 				//field_halos[j]->initFromFile(mass*field_galaxy_mass_fraction,seed,vmax,r_halfmass*cosmo.gethubble());
-
-                // Another copy of this position must be made to avoid rescaling it twice when it is converted into
-                // distance on the lens plane in Lens::buildLensPlanes()
-                theta2 = new PosType[2];
-                theta2[0]=theta[0]; theta2[1]=theta[1];
+        
+        // Another copy of this position must be made to avoid rescaling it twice when it is converted into
+        // distance on the lens plane in Lens::buildLensPlanes()
+        theta2 = new PosType[2];
+        theta2[0]=theta[0]; theta2[1]=theta[1];
 				halo_pos_vec.push_back(theta2);
-
+        
 				++j;
 			}
-
+      
 		}
 	}
 	file_in.close();
@@ -1546,7 +1546,7 @@ void Lens::readInputSimFileMultiDark(bool verbose)
     
       mass = pow(10,mass)*cosmo.gethubble();
       if(mass > 0.0 && z <= zsource){
-
+ 
         tmp_sph_point.theta *= pi/180;
         tmp_sph_point.phi *= -pi/180;
         
@@ -1708,6 +1708,7 @@ void Lens::readInputSimFileMultiDark(bool verbose)
     file_in.close();
   }
   
+  
 	if(verbose) std::cout << field_halos.size() << " halos read in."<< std::endl
     << "Max input mass = " << mass_max << "  R max = " << R_max 
     << " Min imput mass = " << minmass << std::endl;
@@ -1731,7 +1732,7 @@ void Lens::readInputSimFileMultiDark(bool verbose)
   PosType diagonal2 = sqrt(pow(boundary_p2[0] - boundary_p1[0],2) + pow(boundary_p2[1] - boundary_p1[1],2));
   
 	std::cout << "Overiding input file field of view to make it fit the simulation light cone." << std::endl;
-  rmax = boundary_p2[0] - boundary_p1[0];
+  rmax = (boundary_p2[0] - boundary_p1[0])/2;
   /*if(diagonal1 < diagonal2*0.9){
     // circular region
     rmax = diagonal1/2;
@@ -1743,10 +1744,14 @@ void Lens::readInputSimFileMultiDark(bool verbose)
     inv_ang_screening_scale = 5.0/(MIN(boundary_p2[0] - boundary_p1[0],boundary_p2[1] - boundary_p1[1]));
   }*/
  
-  fieldofview = (boundary_p2[0] - boundary_p1[0])*(boundary_p2[1] - boundary_p1[1])*pow(180/pi,2);
-  rmax = diagonal2/2;
-  inv_ang_screening_scale = 3.0/(MIN(boundary_p2[0] - boundary_p1[0],boundary_p2[1] - boundary_p1[1]));
-
+  if(sim_angular_radius == 0.0){
+    fieldofview = (boundary_p2[0] - boundary_p1[0])*(boundary_p2[1] - boundary_p1[1])*pow(180/pi,2);
+    inv_ang_screening_scale = 5.0/(MIN(boundary_p2[0] - boundary_p1[0],boundary_p2[1] - boundary_p1[1]));
+  }else{
+    fieldofview = pi*rmax*rmax*pow(180/pi,2);
+    inv_ang_screening_scale = 0.0;
+  }
+  
 	if(verbose) std::cout << "Setting mass function to Sheth-Tormen." << std::endl;
 	field_mass_func_type = ST; // set mass function
   

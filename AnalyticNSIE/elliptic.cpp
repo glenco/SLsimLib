@@ -40,6 +40,10 @@ PosType Elliptic::DALPHAYDM::operator()(PosType m){
 
 void Elliptic::alpha(PosType x[],PosType alpha[]){
   
+  if(x[0] == 0.0 && x[1] == 0.0){
+    alpha[0] = alpha[1] =0.0;
+    return;
+  }
   std::cerr << "Warning: Elliptic::alpha() seems to give a value that is a factor ~ 1.27 too large." << std::endl;
   double a2=a*a,b2 = b*b;
   double tmp = (a2 + b2 - x[0]*x[0] - x[1]*x[1]);
@@ -47,20 +51,28 @@ void Elliptic::alpha(PosType x[],PosType alpha[]){
   double xtmp[2] = {x[0]*c - x[1]*s
                    ,x[0]*s + x[1]*c};
   
+  //std::cout << "xtmp = " << xtmp[0] << " " << xtmp[1] << std::endl;
+  
   double lambda = (tmp + sqrt(tmp*tmp + 4*(x[0]*x[0]*b2 + x[1]*x[1]*a2 - a2*b2 )))/2;
   //double lambda = (tmp - sqrt(tmp*tmp + 4*(x[0]*x[0]*b2 + x[1]*x[1]*a2 - a2*b2 )))/2;
   assert(lambda == lambda);
+  //std::cout << "lambda = " << lambda << std::endl;
   
   PosType mo = sqrt(xtmp[0]*xtmp[0]/a2 + xtmp[1]*xtmp[1]/b2);
-  
+
+  //std::cout << "mo = " << mo << std::endl;
+
   Elliptic::DALPHAXDM funcX(lambda,a2,b2,xtmp,isohalo);
   //alpha[0] = -8*a*b*xtmp[0]*Utilities::nintegrate<Elliptic::DALPHAXDM,PosType>(funcX,0,MIN(mo,1.0),1.0e-6)/pi;
   alpha[0] = -8*a*b*xtmp[0]*Utilities::nintegrate<Elliptic::DALPHAXDM,PosType>(funcX,log(1.0e-7),log(MIN(mo,1.0)),1.0e-6)/pi;
   
+  
   Elliptic::DALPHAYDM funcY(lambda,a2,b2,xtmp,isohalo);
   alpha[1] = -8*a*b*xtmp[1]*Utilities::nintegrate<Elliptic::DALPHAYDM,PosType>(funcY,0,MIN(mo,1.0),1.0e-6)/pi;
   
-  /// rotate the 
+  //std::cout << "alpha = " << alpha[0] << " " << alpha[1] << std::endl;
+
+  /// rotate the
   tmp = alpha[0];
   alpha[0] = alpha[0]*c + alpha[1]*s;
   alpha[1] = -tmp*s + alpha[1]*c;

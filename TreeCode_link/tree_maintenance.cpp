@@ -1517,10 +1517,6 @@ unsigned long FreeBranchesBelow(TreeHndl i_tree,TreeHndl s_tree,Kist<Point> * tr
 			//assert(i_tree->current->points->image->leaf);
 			//s_tree->current = i_tree->current->points->image->leaf;  // set s_tree to source of current image cell
 
-			/***************** test line  **************************/
-			assert(i_tree->current->points->next || i_tree->current->points->prev);
-
-			/***************** test line  **************************/
 			branch = i_tree->current->prev;
 			i = branch->npoints;
 

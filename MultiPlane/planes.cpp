@@ -13,7 +13,8 @@ LensPlaneTree::LensPlaneTree(PosType **xpt,LensHaloHndl *my_halos,IndexType Nhal
                              ,PosType my_sigma_background,PosType inv_screening_scale)
 : LensPlane(), halos(my_halos, my_halos + Nhalos)
 {
-	halo_tree = new TreeQuad(xpt,my_halos,Nhalos,my_sigma_background,5,0.1,true,inv_screening_scale);
+	if(inv_screening_scale != 0) halo_tree = new TreeQuad(xpt,my_halos,Nhalos,my_sigma_background,5,0.1,true,inv_screening_scale);
+	else halo_tree = new TreeQuad(xpt,my_halos,Nhalos,my_sigma_background);
 }
 
 LensPlaneTree::~LensPlaneTree(){

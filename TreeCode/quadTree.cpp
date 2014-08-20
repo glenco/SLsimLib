@@ -110,8 +110,13 @@ QTreeNBHndl TreeQuad::BuildQTreeNB(PosType **xp,IndexType Nparticles,IndexType *
 	  p2[1]=0.25;
   }
   
-  // If region is not square, make it square.
+  
+  // store true dimensions of simulation
   PosType lengths[2] = {p2[0]-p1[0],p2[1]-p1[1]};
+  original_xl = lengths[0];
+  original_yl = lengths[1];
+ 
+  // If region is not square, make it square.
   j = lengths[0] > lengths[1] ? 1 : 0;
   p2[j] = p1[j] + lengths[!j];
 
@@ -486,14 +491,12 @@ void TreeQuad::force2D(const PosType *ray,PosType *alpha,KappaType *kappa,KappaT
   *kappa=*phi=0.0;
     
   if(periodic_buffer){
-    PosType lx,ly,tmp_ray[2];
-    lx = tree->top->boundary_p2[0] - tree->top->boundary_p1[0];
-    ly = tree->top->boundary_p2[1] - tree->top->boundary_p1[1];
+    PosType tmp_ray[2];
         
     for(int i = -1;i<2;++i){
       for(int j = -1;j<2;++j){
-        tmp_ray[0] = ray[0] + i*lx;
-        tmp_ray[1] = ray[1] + j*ly;
+        tmp_ray[0] = ray[0] + i*original_xl;
+        tmp_ray[1] = ray[1] + j*original_yl;
         walkTree_iter(it,tmp_ray,alpha,kappa,gamma,phi);
       }
     }
@@ -525,6 +528,7 @@ void TreeQuad::walkTree_iter(
   bool allowDescent=true;
   unsigned long count=0,tmp_index;
   PosType arg1, arg2, prefac;
+  //bool notscreen = true;
   
   assert(tree);
   
@@ -533,6 +537,13 @@ void TreeQuad::walkTree_iter(
   do{
 	  ++count;
 	  allowDescent=false;
+    
+    /*
+    if(inv_screening_scale2 != 0) notscreen = BoxIntersectCircle(ray,3*sqrt(1.0/inv_screening_scale2)
+                                                                 ,(*treeit)->boundary_p1
+                                                                 ,(*treeit)->boundary_p2);
+    else notscreen = true;
+*/
 	  //if(tree->current->nparticles > 0)
     if((*treeit)->nparticles > 0)
     {
@@ -722,9 +733,7 @@ void TreeQuad::force2D_recur(const PosType *ray,PosType *alpha,KappaType *kappa,
   //walkTree_recur(tree->top,ray,&alpha[0],kappa,&gamma[0],phi);
   
   if(periodic_buffer){
-    PosType lx,ly,tmp_ray[2],tmp_c[2];
-    lx = tree->top->boundary_p2[0] - tree->top->boundary_p1[0];
-    ly = tree->top->boundary_p2[1] - tree->top->boundary_p1[1];
+    PosType tmp_ray[2],tmp_c[2];
     
     // for points outside of primary zone shift to primary zone
     //if(inbox(ray,tree->top->boundary_p1,tree->top->boundary_p2)){
@@ -749,8 +758,8 @@ void TreeQuad::force2D_recur(const PosType *ray,PosType *alpha,KappaType *kappa,
     
     for(int i = -1;i<2;++i){
       for(int j = -1;j<2;++j){
-        tmp_ray[0] = tmp_c[0] + i*lx;
-        tmp_ray[1] = tmp_c[1] + j*ly;
+        tmp_ray[0] = tmp_c[0] + i*original_xl;
+        tmp_ray[1] = tmp_c[1] + j*original_yl;
         walkTree_recur(tree->top,tmp_ray,alpha,kappa,gamma,phi);
       }
     }
@@ -777,8 +786,10 @@ void TreeQuad::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alph
 	IndexType i;
 	std::size_t tmp_index;
 	PosType arg1, arg2, prefac;
+  /*bool notscreen = true;
   
-  
+  if(inv_screening_scale2 != 0) notscreen = BoxIntersectCircle(ray,3*sqrt(1.0/inv_screening_scale2), branch->boundary_p1, branch->boundary_p2);
+    */
 	if(branch->nparticles > 0)
   {
 		xcm[0]=branch->center[0]-ray[0];

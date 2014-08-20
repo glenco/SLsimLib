@@ -224,7 +224,9 @@ protected:
   /// if true there is one layer of peridic buffering
   bool periodic_buffer;
   PosType inv_screening_scale2;
-
+  PosType original_xl;  // x-axis size of simulation used for peridic buffering.  Requrement that it top branch be square my make it differ from the size of top branch. 
+  PosType original_yl;  // x-axis size of simulation used for peridic buffering.
+  
 	QTreeNBHndl BuildQTreeNB(PosType **xp,IndexType Nparticles,IndexType *particles);
 	void _BuildQTreeNB(IndexType nparticles,IndexType *particles);
 

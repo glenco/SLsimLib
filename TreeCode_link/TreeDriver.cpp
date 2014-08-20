@@ -372,15 +372,27 @@ bool CircleInBox(const PosType* center,PosType radius,PosType *p1,PosType *p2){
 	return true;
 }
 
+/// if any of the corners of the box are outside the circle returns false
 bool BoxInCircle(const PosType* center,PosType radius,PosType *p1,PosType *p2){
 
 	PosType rad2 = radius*radius;
 
-	if((pow(p1[0] - center[0],2) + pow(p1[1] - center[1],2)) > rad2) return false;
-	if((pow(p2[0] - center[0],2) + pow(p2[1] - center[1],2)) > rad2) return false;
-	if((pow(p1[0] - center[0],2) + pow(p2[1] - center[1],2)) > rad2) return false;
-	if((pow(p2[0] - center[0],2) + pow(p1[1] - center[1],2)) > rad2) return false;
+	if(( (p1[0] - center[0])*(p1[0] - center[0]) + (p1[1] - center[1])*(p1[1] - center[1]) ) > rad2) return false;
+	if(( (p2[0] - center[0])*(p2[0] - center[0]) + (p2[1] - center[1])*(p2[1] - center[1]) ) > rad2) return false;
+	if(( (p1[0] - center[0])*(p1[0] - center[0]) + (p2[1] - center[1])*(p2[1] - center[1]) ) > rad2) return false;
+	if(( (p2[0] - center[0])*(p2[0] - center[0]) + (p1[1] - center[1])*(p1[1] - center[1]) ) > rad2) return false;
 
+	return true;
+}
+
+/// true if there is any overlap between the circle and the box
+bool BoxIntersectCircle(const PosType* center,PosType radius,PosType *p1,PosType *p2){
+    
+  if(center[0] + radius < p1[0]) return false;
+  if(center[0] - radius > p2[0]) return false;
+  if(center[1] + radius < p1[1]) return false;
+  if(center[1] - radius > p2[1]) return false;
+  
 	return true;
 }
 
