@@ -33,7 +33,7 @@ struct MOKAmap{
 	std::valarray<double> gamma1;
 	std::valarray<double> gamma2;
 	std::valarray<double> gamma3;
-  std::valarray<double> phi; // Added by Fabien
+  std::valarray<double> phi;
 	std::valarray<double> Signlambdar;
 	std::valarray<double> Signlambdat;
 	std:: vector<double> x;

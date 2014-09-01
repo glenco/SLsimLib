@@ -50,8 +50,7 @@ void LensHaloBaseNSIE::force_halo(
     	gamma[1] *= units;
 
         gamma[2] *= units;
-         
-        // PHI BY Fabien
+     
         // *phi = phiNSIE(xcm,fratio,rcore,pa);
         // *phi *= units ; // Fabien : is this necessary for the potential ?
 	 }

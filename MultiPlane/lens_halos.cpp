@@ -721,13 +721,15 @@ void LensHalo::force_halo_sym(
 		PosType x = sqrt(rcm2)/rscale;
 		// PosType xmax = Rmax/rscale;
 
-		PosType tmp = (alpha_h(x) + 1.0*subtract_point)*prefac;
+    PosType tmp = (alpha_h(x) + 1.0*subtract_point)*prefac;
+		// PosType tmp = (alpha_h(x) - 1.0*subtract_point)*prefac; // Fabien trial.
 		alpha[0] += tmp*xcm[0];
 		alpha[1] += tmp*xcm[1];
 
     *kappa += kappa_h(x)*prefac;
 
     tmp = (gamma_h(x) + 2.0*subtract_point) * prefac / rcm2;
+    // tmp = (gamma_h(x) + 1.0*subtract_point) * prefac / rcm2; // Fabien trial.
 		gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 		gamma[1] += xcm[0]*xcm[1]*tmp;
     
@@ -747,11 +749,13 @@ void LensHalo::force_halo_sym(
       //std::cout << "xcm  = " << xcm[0] << " " << xcm[1] << std::endl;
 
 			PosType tmp = -2.0*prefac/rcm2;
+                
+      // kappa is equal to 0 in the point mass case.
 
 			gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
       gamma[1] += xcm[0]*xcm[1]*tmp;
       
-      *phi += - 0.5 * log(rcm2) * mass / pi ; // value made to be consistent with alpha above. Sure ?
+      *phi += 0.5 * log(rcm2) * mass / pi ;
 		}
 	}
 

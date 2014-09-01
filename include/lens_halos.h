@@ -639,12 +639,15 @@ private:
   /// this is |gamma| Sigma_crit pi (r/rscale)^2 / mass
 	inline KappaType gamma_h(PosType x) const {
 		if(x==0) x=1e-6*xmax;
-		return -0.5*beta*pow(x/xmax,-beta+2);
+		// return -0.5*beta*pow(x/xmax,-beta+2); // Fabien : I think this is wrong.
+    return -1.0*beta*pow(x/xmax,-beta+2);
 	}
   /// this is phi Sigma_crit pi / mass, the constants are added so that it is continous over the bourder at Rmax
  	inline KappaType phi_h(PosType x) const {
 		if(x==0) x=1e-6*xmax;
-		return ( pow(x/xmax,2-beta) - 1 )/(2-beta) + log(Rmax);
+    // return -1.0 * pow(x/xmax,2-beta)/(2-beta) ;                    // How it was before
+    return ( pow(x/xmax,2-beta) - 1 )/(2-beta) + log(Rmax) ;          // Ben's new version
+		// return -1.0*(( pow(x/xmax,2-beta) - 1 )/(2-beta) + log(Rmax)); // Fabien trial 1
 	}
   inline KappaType phi_int(PosType x){
 		//return alpha_int(x);

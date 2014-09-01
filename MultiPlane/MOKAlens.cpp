@@ -165,7 +165,7 @@ void LensHaloMOKA::initMap()
         map->alpha1 *= fac;
         map->alpha2 *= fac;
 
-        map->phi *= fac; // Added by Fabien : is it the good factor ?
+        // No need of fac for phi.
       
         checkCosmology();
     }else{
