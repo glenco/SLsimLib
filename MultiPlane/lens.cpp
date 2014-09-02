@@ -1555,7 +1555,7 @@ void Lens::readInputSimFileMultiDark(bool verbose)
         myline.erase(0,pos);
       }
     
-      mass = pow(10,mass)*cosmo.gethubble();
+      mass = pow(10,mass)/cosmo.gethubble();
       if(mass > 0.0 && z <= zsource){
  
         tmp_sph_point.theta *= pi/180;
