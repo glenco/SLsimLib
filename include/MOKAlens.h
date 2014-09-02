@@ -81,7 +81,7 @@ public:
 	void saveGammaProfile();
 	void saveProfiles(double &RE3, double &xxc, double &yyc);
     
-	void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,double const *xcm,bool subtract_point=false);
+	void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,double const *xcm,bool subtract_point=false,PosType screening = 1.0);
     
 	void saveImage(GridHndl grid,bool saveprofiles);
 	

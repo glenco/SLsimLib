@@ -95,7 +95,7 @@ public:
 	
 	/// calculate the lensing properties -- deflection, convergence, and shear
 
-	virtual void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false);
+	virtual void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening=1.0);
 
 	/// force tree calculation for stars
 	void force_stars(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType const *xcm);
@@ -167,8 +167,8 @@ protected:
  // PosType norm_intt(PosType theta);
     
     
-  void force_halo_sym(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false);
-	void force_halo_asym(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType const *xcm,bool subtract_point=false);
+  void force_halo_sym(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0);
+	void force_halo_asym(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0);
 
 
   struct norm_func{
@@ -671,7 +671,7 @@ public:
 	~LensHaloSimpleNSIE();
 
 	/// overridden function to calculate the lensing properties
-	void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false);
+	void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0);
 	// void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xcm,bool subtract_point=false);
     
 	/// get the velocity dispersion
@@ -894,8 +894,8 @@ public:
 	~LensHaloDummy(){};
 	
 	/// overridden function to calculate the lensing properties
-	void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false);
-    // void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xcm,bool subtract_point=false);
+	void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0);
+    // void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xcm,bool subtract_point=false,PosType screening = 1.0);
     
 	/// initialize from a mass function
 	void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed);

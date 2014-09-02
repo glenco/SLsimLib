@@ -10,101 +10,102 @@
 using namespace std;
 
 void LensHaloBaseNSIE::force_halo(
-		PosType *alpha       /// mass/Mpc
-		,KappaType *kappa   /// surface mass density
-		,KappaType *gamma
-        ,KappaType *phi
-		,PosType const *xcm
-		,bool subtract_point /// if true contribution from a point mass is subtracted
-		)
+                                  PosType *alpha       /// mass/Mpc
+                                  ,KappaType *kappa   /// surface mass density
+                                  ,KappaType *gamma
+                                  ,KappaType *phi
+                                  ,PosType const *xcm
+                                  ,bool subtract_point /// if true contribution from a point mass is subtracted
+                                  ,PosType screening   /// the factor by which to scale the mass for screening of the point mass subtraction
+                                  )
 {
-     long j;
-     PosType alpha_tmp[2];
-     KappaType kappa_tmp = 0.0, gamma_tmp[3], dt = 0;
-     KappaType phi_tmp = 0.0 ;
-            
-            
-     gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
-     alpha_tmp[0] = alpha_tmp[1] = 0.0;
-
-     alpha[0] = alpha[1] = 0.0;
-     gamma[0] = gamma[1] = gamma[2] = 0.0;
-     *kappa = 0.0;
-     *phi = 0.0 ;
-
-            
-	 PosType xt[2]={0,0};
-	 float units = pow(sigma/lightspeed,2)/Grav; ///sqrt(fratio); // mass/distance(physical)
-	 xt[0]=xcm[0];
-	 xt[1]=xcm[1];
+  long j;
+  PosType alpha_tmp[2];
+  KappaType kappa_tmp = 0.0, gamma_tmp[3], dt = 0;
+  KappaType phi_tmp = 0.0 ;
+  
+  
+  gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
+  alpha_tmp[0] = alpha_tmp[1] = 0.0;
+  
+  alpha[0] = alpha[1] = 0.0;
+  gamma[0] = gamma[1] = gamma[2] = 0.0;
+  *kappa = 0.0;
+  *phi = 0.0 ;
+  
+  
+  PosType xt[2]={0,0};
+  float units = pow(sigma/lightspeed,2)/Grav; ///sqrt(fratio); // mass/distance(physical)
+  xt[0]=xcm[0];
+  xt[1]=xcm[1];
+  
+  alphaNSIE(alpha,xt,fratio,rcore,pa);
+  alpha[0] *= units;
+  alpha[1] *= units;
+  
+  {
+    gammaNSIE(gamma,xcm,fratio,rcore,pa);
+    *kappa=kappaNSIE(xcm,fratio,rcore,pa);
+    *kappa *= units;
+    gamma[0] *= units;
+    gamma[1] *= units;
     
-     alphaNSIE(alpha,xt,fratio,rcore,pa);
-	 alpha[0] *= units;
-	 alpha[1] *= units;
-
-	 {
-    	gammaNSIE(gamma,xcm,fratio,rcore,pa);
-    	*kappa=kappaNSIE(xcm,fratio,rcore,pa);
-    	*kappa *= units;
-    	gamma[0] *= units;
-    	gamma[1] *= units;
-
-        gamma[2] *= units;
-         
-        // PHI BY Fabien
-        // *phi = phiNSIE(xcm,fratio,rcore,pa);
-        // *phi *= units ; // Fabien : is this necessary for the potential ?
-	 }
-
-     // perturbations of host lens
-     if(perturb_Nmodes > 0)
-     {
-    	 *kappa += lens_expand(perturb_beta,perturb_modes
-    			 ,perturb_Nmodes,xcm,alpha_tmp,gamma_tmp,&dt);
-
-        // PHI BY Fabien : should I put the computation of the potential somewhere here ?
-         
-    	 alpha[0] += alpha_tmp[0];
-    	 alpha[1] += alpha_tmp[1];
-
-   	      {
-   	    	  gamma[0] += gamma_tmp[0];
-   	    	  gamma[1] += gamma_tmp[1];
-   	      }
-   	     gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
-   	     alpha_tmp[0] = alpha_tmp[1] = 0.0;
-     }
-
-     // add substructure
-     if(substruct_implanted)
-     {
-    	 for(j=0;j<sub_N;++j)
-         {
-
-    		 subs[j].force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp,xcm);
-             // subs[j].force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,xcm);
-
-    		 alpha[0] += alpha_tmp[0];
-    		 alpha[1] += alpha_tmp[1];
-
-             {
-    			 *kappa += kappa_tmp;
-    			 gamma[0] += gamma_tmp[0];
-    			 gamma[1] += gamma_tmp[1];
-                 
-                 // PHY BY Fabien : add something for potential here ?
-    		 }
-    	 }
-
-         gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
-         alpha_tmp[0] = alpha_tmp[1] = 0.0;
-     }
-
-     // add stars for microlensing
-     if(stars_N > 0 && stars_implanted){
-    	 force_stars(alpha,kappa,gamma,xcm);
-     }
-     return ;
+    gamma[2] *= units;
+    
+    // PHI BY Fabien
+    // *phi = phiNSIE(xcm,fratio,rcore,pa);
+    // *phi *= units ; // Fabien : is this necessary for the potential ?
+  }
+  
+  // perturbations of host lens
+  if(perturb_Nmodes > 0)
+  {
+    *kappa += lens_expand(perturb_beta,perturb_modes
+                          ,perturb_Nmodes,xcm,alpha_tmp,gamma_tmp,&dt);
+    
+    // PHI BY Fabien : should I put the computation of the potential somewhere here ?
+    
+    alpha[0] += alpha_tmp[0];
+    alpha[1] += alpha_tmp[1];
+    
+    {
+      gamma[0] += gamma_tmp[0];
+      gamma[1] += gamma_tmp[1];
+    }
+    gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
+    alpha_tmp[0] = alpha_tmp[1] = 0.0;
+  }
+  
+  // add substructure
+  if(substruct_implanted)
+  {
+    for(j=0;j<sub_N;++j)
+    {
+      
+      subs[j].force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp,xcm);
+      // subs[j].force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,xcm);
+      
+      alpha[0] += alpha_tmp[0];
+      alpha[1] += alpha_tmp[1];
+      
+      {
+        *kappa += kappa_tmp;
+        gamma[0] += gamma_tmp[0];
+        gamma[1] += gamma_tmp[1];
+        
+        // PHY BY Fabien : add something for potential here ?
+      }
+    }
+    
+    gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
+    alpha_tmp[0] = alpha_tmp[1] = 0.0;
+  }
+  
+  // add stars for microlensing
+  if(stars_N > 0 && stars_implanted){
+    force_stars(alpha,kappa,gamma,xcm);
+  }
+  return ;
 }
 
 

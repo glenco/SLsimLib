@@ -455,7 +455,9 @@ void LensHaloMOKA::force_halo(double *alpha
                               ,KappaType *gamma
                               ,KappaType *phi
                               ,double const *xx
-                              ,bool subtract_point)
+                              ,bool subtract_point
+                              ,PosType screening
+                              )
 {
   
   /*

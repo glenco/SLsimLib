@@ -687,7 +687,7 @@ void PixelMap::drawline(
 	while(d <= r){
 		if(inMapBox(x)){
 			//index = Utilities::IndexFromPosition(x,Nx,range,center);
-      index = find_index(x1);
+      index = find_index(x);
 			map[index] = value;
 		}
 		x[0] += s1*resolution;

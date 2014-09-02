@@ -683,19 +683,20 @@ void LensHaloSimpleNSIE::initFromMassFunc(float my_mass, float my_Rmax, float my
  *  to be veroed out if the contribution of just this halo is wanted.
  */
 void LensHalo::force_halo(
-    PosType *alpha          /// deflection solar mass/Mpc
-    ,KappaType *kappa     /// surface density in Msun/Mpc^2 (?)
-    ,KappaType *gamma     /// three components of shear
-    ,KappaType *phi       /// potential in solar masses
-    ,PosType const *xcm   /// position relative to center (Mpc?)
-    ,bool subtract_point /// if true contribution from a point mass is subtracted
-    )
+                          PosType *alpha          /// deflection solar mass/Mpc
+                          ,KappaType *kappa     /// surface density in Msun/Mpc^2 (?)
+                          ,KappaType *gamma     /// three components of shear
+                          ,KappaType *phi       /// potential in solar masses
+                          ,PosType const *xcm   /// position relative to center (Mpc?)
+                          ,bool subtract_point /// if true contribution from a point mass is subtracted
+                          ,PosType screening   /// the factor by which to scale the mass for screening of the point mass subtraction
+                          )
 {
 	if (elliptical_flag){
-        force_halo_asym(alpha,kappa,gamma,xcm,subtract_point);
+        force_halo_asym(alpha,kappa,gamma,xcm,subtract_point,screening);
         //assert(!isinf(*kappa) );
     }else{
-        force_halo_sym(alpha,kappa,gamma,phi,xcm,subtract_point);
+        force_halo_sym(alpha,kappa,gamma,phi,xcm,subtract_point,screening);
         //assert(!isinf(*kappa) );
 	}
 }
@@ -707,6 +708,7 @@ void LensHalo::force_halo_sym(
     ,KappaType *phi      /// potential solar masses
 		,PosType const *xcm     /// position relative to center (Mpc)
 		,bool subtract_point /// if true contribution from a point mass is subtracted
+    ,PosType screening   /// the factor by which to scale the mass for screening of the point mass subtraction
 		)
 {
             
@@ -738,7 +740,7 @@ void LensHalo::force_halo_sym(
 	{
 		if (subtract_point == false)
 		{
-			PosType prefac = mass/rcm2/pi;
+			PosType prefac = screening*mass/rcm2/pi;
 			alpha[0] += -1.0 * prefac * xcm[0];
 			alpha[1] += -1.0 * prefac * xcm[1];
       
@@ -770,6 +772,7 @@ void LensHalo::force_halo_asym(
 		,KappaType *gamma
 		,PosType const *xcm
 		,bool subtract_point /// if true contribution from a point mass is subtracted
+    ,PosType screening   /// the factor by which to scale the mass for screening of the point mass subtraction
 		){
 	//std::ofstream dfunc;
 	//dfunc.open( "dfunc.dat", ios::out | ios::app );
@@ -805,7 +808,7 @@ void LensHalo::force_halo_asym(
     gamma[1] += gamma_tmp[1];
 
     if(subtract_point){
-      double tmp =  mass/pi/rcm2;
+      double tmp =  screening*mass/pi/rcm2;
       alpha[0] +=  tmp*xcm[0];
       alpha[1] +=  tmp*xcm[1];
 
@@ -856,14 +859,15 @@ void LensHalo::force_halo_asym(
 
 
 
-/*
-
+/* *
 void LensHaloSimpleNSIE::force_halo(
 		PosType *alpha
 		,KappaType *kappa
 		,KappaType *gamma
-		,PosType *xcm
+    ,KappaType *phi
+		,PosType const *xcm
 		,bool subtract_point /// if true contribution from a point mass is subtracted
+    ,PosType screening   /// the factor by which to scale the mass for screening of the point mass subtraction
 ){
 
 	PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
@@ -875,23 +879,23 @@ void LensHaloSimpleNSIE::force_halo(
 		PosType ellipR = ellipticRadiusNSIE(xcm,fratio,pa);
 		if(ellipR > Rsize){
 			// This is the case when the ray is within the NSIE's circular region of influence but outside its elliptical truncation
-
+      
 			PosType alpha_out[2],alpha_in[2],rin,x_in[2];
 			PosType prefac = -1.0*mass/Rmax/pi;
 			PosType r = sqrt(rcm2);
 			float units = pow(sigma/lightspeed,2)/Grav/sqrt(fratio); // mass/distance(physical)
-
+      
  			alpha_in[0] = alpha_in[1] = 0;
-     
+      
       rin = r*Rsize/ellipR;
-     
+      
 			alpha_out[0] = prefac*xcm[0]/r;
 			alpha_out[1] = prefac*xcm[1]/r;
-
-
+      
+      
 			x_in[0] = rin*xcm[0]/r;
 			x_in[1] = rin*xcm[1]/r;
-
+      
 			alphaNSIE(alpha_in,x_in,fratio,rcore,pa);
 			alpha_in[0] *= units;  // minus sign removed because already included in alphaNSIE
 			alpha_in[1] *= units;
@@ -914,7 +918,7 @@ void LensHaloSimpleNSIE::force_halo(
 				gamma[0] += units*tmp[0];
 				gamma[1] += units*tmp[1];
 			}
-
+      
 		}else{
 			PosType xt[2]={0,0},tmp[2]={0,0};
 			float units = pow(sigma/lightspeed,2)/Grav/sqrt(fratio); // mass/distance(physical)
@@ -926,7 +930,7 @@ void LensHaloSimpleNSIE::force_halo(
 			//alpha[1] = units*tmp[1];  // Why was the "+=" removed?
 			alpha[0] += units*tmp[0];
 			alpha[1] += units*tmp[1];
-
+      
 			{
 				KappaType tmp[2]={0,0};
 				*kappa += units*kappaNSIE(xt,fratio,rcore,pa);
@@ -943,41 +947,41 @@ void LensHaloSimpleNSIE::force_halo(
 			PosType prefac = mass/rcm2/pi;
 			alpha[0] += -1.0*prefac*xcm[0];
 			alpha[1] += -1.0*prefac*xcm[1];
-
+      
 			// can turn off kappa and gamma calculations to save times
 			{
 				PosType tmp = -2.0*prefac/rcm2;
-
+        
 				gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 				gamma[1] += xcm[0]*xcm[1]*tmp;
 			}
 		}
 	}
-
-
+  
+  
 	if(subtract_point){
 		PosType fac = mass/rcm2/pi;
 		alpha[0] += fac*xcm[0];
 		alpha[1] += fac*xcm[1];
-
+    
 		// can turn off kappa and gamma calculations to save times
 		{
 			fac = 2.0*fac/rcm2;
-
+      
 			gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*fac;
 			gamma[1] += xcm[0]*xcm[1]*fac;
 		}
-
+    
 	}
-
-    // add stars for microlensing
-    if(stars_N > 0 && stars_implanted){
-   	 force_stars(alpha,kappa,gamma,xcm);
-    }
-
-       return;
+  
+  // add stars for microlensing
+  if(stars_N > 0 && stars_implanted){
+    force_stars(alpha,kappa,gamma,xcm);
+  }
+  
+  return;
 }
-*/
+/* */
 void LensHaloSimpleNSIE::force_halo(
                                     PosType *alpha
                                     ,KappaType *kappa
@@ -985,6 +989,7 @@ void LensHaloSimpleNSIE::force_halo(
                                     ,KappaType *phi
                                     ,PosType const *xcm
                                     ,bool subtract_point /// if true contribution from a point mass is subtracted
+                                    ,PosType screening   /// the factor by which to scale the mass for screening of the point mass subtraction
                                     )
 {
   
@@ -993,106 +998,109 @@ void LensHaloSimpleNSIE::force_halo(
   
 	if(rcm2 < Rmax*Rmax)
     {
-		PosType ellipR = ellipticRadiusNSIE(xcm,fratio,pa);
+		//PosType ellipR = ellipticRadiusNSIE(xcm,fratio,pa);
         
-		if(rcm2 > Rsize*Rsize)
-        {
+      if(rcm2 > Rsize*Rsize)
+      {
         // This is the case when the ray is within the NSIE's circular region of influence but outside its elliptical truncation
-      
+        
         PosType alpha_iso[2],alpha_ellip[2];
         PosType prefac = -1.0*mass/Rmax/pi;
         PosType r = sqrt(rcm2);
         float units = pow(sigma/lightspeed,2)/Grav/sqrt(fratio); // mass/distance(physical)
-      
+        
         double f1 = (Rmax - r)/(Rmax - Rsize),f2 = (r - Rsize)/(Rmax - Rsize);
-    
+        
         // SIE solution
         alpha_ellip[0] = alpha_ellip[1] = 0;
         alphaNSIE(alpha_ellip,xcm,fratio,rcore,pa);
         alpha_ellip[0] *= units;
         alpha_ellip[1] *= units;
-      
-        /*/ SIS solution
-        alpha_iso[0] = alpha_iso[1] = 0;
-        alphaNSIE(alpha_iso,xcm,1,rcore,pa);
-        alpha_iso[0] *= units;
-        alpha_iso[1] *= units;
-        //*/
-      
+        
+        // SIS solution
+         //alpha_iso[0] = alpha_iso[1] = 0;
+         //alphaNSIE(alpha_iso,xcm,1,rcore,pa);
+         //alpha_iso[0] *= units;
+         //alpha_iso[1] *= units;
+         //
+        
         // point mass solution
         // PosType tmp = mass/rcm2/pi;
         PosType tmp = mass/Rmax/pi/r;
         alpha_iso[0] = -1.0*tmp*xcm[0];
         alpha_iso[1] = -1.0*tmp*xcm[1];
-
+        
         alpha[0] += alpha_iso[0]*f2 + alpha_ellip[0]*f1;
         alpha[1] += alpha_iso[1]*f2 + alpha_ellip[1]*f1;
-      
-            // can turn off kappa and gamma calculations to save times
-            {
-            PosType tmp = -2.0*prefac/rcm2;
         
-            gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp*f2;
-            gamma[1] += xcm[0]*xcm[1]*tmp*f2;
-
-            KappaType tmp_k[2]={0,0};
-            *kappa += units*kappaNSIE(xcm,fratio,rcore,pa)*f1;
-            gammaNSIE(tmp_k,xcm,fratio,rcore,pa);
-            gamma[0] += units*tmp_k[0]*f1;
-            gamma[1] += units*tmp_k[1]*f1;
-            }
-      
-        }
-        else
         {
+          PosType tmp = -2.0*mass/rcm2/pi/rcm2;
+         
+          gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+          gamma[1] += xcm[0]*xcm[1]*tmp;
+
+          /*  test lines to be uncommented
+           PosType tmp = -2.0*prefac/rcm2;
+          gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp*f2;
+          gamma[1] += xcm[0]*xcm[1]*tmp*f2;
+          
+          KappaType tmp_k[2]={0,0};
+          *kappa += units*kappaNSIE(xcm,fratio,rcore,pa)*f1;
+          gammaNSIE(tmp_k,xcm,fratio,rcore,pa);
+          gamma[0] += units*tmp_k[0]*f1;
+          gamma[1] += units*tmp_k[1]*f1;
+           */
+        }
+        
+      }
+      else
+      {
         PosType xt[2]={0,0},tmp[2]={0,0};
         float units = pow(sigma/lightspeed,2)/Grav/sqrt(fratio); // mass/distance(physical)
         xt[0]=xcm[0];
         xt[1]=xcm[1];
         alphaNSIE(tmp,xt,fratio,rcore,pa);
-      
+        
         //alpha[0] = units*tmp[0];  // minus sign removed because already included in alphaNSIE
         //alpha[1] = units*tmp[1];  // Why was the "+=" removed?
         alpha[0] += units*tmp[0];
         alpha[1] += units*tmp[1];
-      
-            {
-            KappaType tmp[2]={0,0};
-            *kappa += units*kappaNSIE(xt,fratio,rcore,pa);
-            gammaNSIE(tmp,xt,fratio,rcore,pa);
-            gamma[0] += units*tmp[0];
-            gamma[1] += units*tmp[1];
-			}
-		}
-
         
-        if(subtract_point)
         {
-            PosType fac = mass/rcm2/pi;
-            alpha[0] += fac*xcm[0];
-            alpha[1] += fac*xcm[1];
-      
-            // can turn off kappa and gamma calculations to save times
-            {
-                fac = 2.0*fac/rcm2;
-                
-                gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*fac;
-                gamma[1] += xcm[0]*xcm[1]*fac;
-            }
+          KappaType tmp[2]={0,0};
+          *kappa += units*kappaNSIE(xt,fratio,rcore,pa);
+          gammaNSIE(tmp,xt,fratio,rcore,pa);
+          gamma[0] += units*tmp[0];
+          gamma[1] += units*tmp[1];
         }
-    
-	}
+      }
+      
+      
+      if(subtract_point)
+      {
+        PosType fac = screening*mass/rcm2/pi;
+        alpha[0] += fac*xcm[0];
+        alpha[1] += fac*xcm[1];
+ 
+        {
+          fac = 2.0*fac/rcm2;
+          
+          gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*fac;
+          gamma[1] += xcm[0]*xcm[1]*fac;
+        }
+      }
+      
+    }
 	else
 	{
-        // outside of the halo
+    // outside of the halo
 		if (subtract_point == false)
 		{
 			PosType prefac = mass/rcm2/pi;
 			alpha[0] += -1.0*prefac*xcm[0];
 			alpha[1] += -1.0*prefac*xcm[1];
       
-			// can turn off kappa and gamma calculations to save times
-            {
+      {
 				PosType tmp = -2.0*prefac/rcm2;
         
 				gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
@@ -1110,7 +1118,7 @@ void LensHaloSimpleNSIE::force_halo(
   
   return;
 }
-
+/**/
 
 
 
@@ -1411,7 +1419,9 @@ void LensHaloDummy::force_halo(PosType *alpha
                                ,KappaType *gamma
                                ,KappaType *phi
                                ,PosType const *xcm
-                               ,bool subtract_point)
+                               ,bool subtract_point
+                               ,PosType screening   /// the factor by which to scale the mass for screening of the point mass subtraction
+                               )
 {
 	PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
 	PosType prefac = mass/rcm2/pi;
@@ -1422,7 +1432,7 @@ void LensHaloDummy::force_halo(PosType *alpha
     // intersecting, subtract the point particle
     if(subtract_point)
     {
-        PosType x = sqrt(rcm2)/rscale;
+        PosType x = screening*sqrt(rcm2)/rscale;
        
         // can turn off kappa and gamma calculations to save times
         {

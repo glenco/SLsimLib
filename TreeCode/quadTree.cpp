@@ -572,14 +572,16 @@ void TreeQuad::walkTree_iter(
 					  xcm[0] = tree->xp[(*treeit)->particles[i]][0] - ray[0];
 					  xcm[1] = tree->xp[(*treeit)->particles[i]][1] - ray[1];
             
+
 					  rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
+            double screening = exp(-rcm2*inv_screening_scale2);
 					  if(rcm2 < 1e-20) rcm2 = 1e-20;
             
 					  tmp_index = MultiMass*(*treeit)->particles[i];
             
 					  if(haloON){ prefac = halos[tmp_index]->get_mass(); }
             else{ prefac = masses[tmp_index]; }
-					  prefac /= rcm2*pi;
+					  prefac /= rcm2*pi/screening;
             
 					  tmp = -1.0*prefac;
             
@@ -610,11 +612,13 @@ void TreeQuad::walkTree_iter(
 					  xcm[0] = tree->xp[tmp_index][0] - ray[0];
 					  xcm[1] = tree->xp[tmp_index][1] - ray[1];
             
+            rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
 					  if(haloON){
-						  halos[tmp_index]->force_halo(alpha,kappa,gamma,phi,xcm,true);
+              double screening = exp(-rcm2*inv_screening_scale2);
+
+						  halos[tmp_index]->force_halo(alpha,kappa,gamma,phi,xcm,true,screening);
 					  }else{  // case of no halos just particles and no class derived from TreeQuad
               
-						  rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
 						  if(rcm2 < 1e-20) rcm2 = 1e-20;
 						  //rcm = sqrt(rcm2);
               
@@ -812,6 +816,7 @@ void TreeQuad::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alph
           xcm[1] = tree->xp[branch->particles[i]][1] - ray[1];
           
           rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
+          double screening = exp(-rcm2*inv_screening_scale2);
           if(rcm2 < 1e-20) rcm2 = 1e-20;
           
           tmp_index = MultiMass*branch->particles[i];
@@ -819,7 +824,7 @@ void TreeQuad::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alph
           
           if(haloON ) { prefac = halos[tmp_index]->get_mass(); }
           else{ prefac = masses[tmp_index]; }
-          prefac /= rcm2*pi;
+          prefac /= rcm2*pi/screening;
           
           
           alpha[0] += -1.0*prefac*xcm[0];
@@ -849,13 +854,14 @@ void TreeQuad::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alph
           
 					xcm[0] = tree->xp[tmp_index][0] - ray[0];
 					xcm[1] = tree->xp[tmp_index][1] - ray[1];
-          
+          rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
+
 					/////////////////////////////////////////
 					if(haloON){
-						halos[tmp_index]->force_halo(alpha,kappa,gamma,phi,xcm,true);
+            double screening = exp(-rcm2*inv_screening_scale2);
+						halos[tmp_index]->force_halo(alpha,kappa,gamma,phi,xcm,true,screening);
  					}else{  // case of no halos just particles and no class derived from TreeQuad
             
-						rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
 						if(rcm2 < 1e-20) rcm2 = 1e-20;
 						//rcm = sqrt(rcm2);
             

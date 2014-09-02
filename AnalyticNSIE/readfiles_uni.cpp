@@ -72,13 +72,14 @@ void LensHaloUniform::setCosmology(const COSMOLOGY& cosmo)
 }
 
 void LensHaloUniform::force_halo(
-		PosType *alpha     /// mass/Mpc
-		,KappaType *kappa
-		,KappaType *gamma
-        ,KappaType *phi
-		,PosType const *xcm
-		,bool subtract_point /// if true contribution from a point mass is subtracted
-		)
+                                 PosType *alpha     /// mass/Mpc
+                                 ,KappaType *kappa
+                                 ,KappaType *gamma
+                                 ,KappaType *phi
+                                 ,PosType const *xcm
+                                 ,bool subtract_point /// if true contribution from a point mass is subtracted
+                                 ,PosType screening
+                                 )
 {
     PosType alpha_tmp[2];
     // PHI BY Fabien : dt is confusing

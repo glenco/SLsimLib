@@ -97,7 +97,7 @@ void LensHalo::implant_stars(
 		xcm[1] = centers[j][1];
     
     if(!stars_implanted){
-        KappaType phi;
+      KappaType phi;
       force_halo(alpha,&Sigma,gamma,&phi,xcm,false);
       star_Sigma[j] = star_fstars*Sigma;
       star_region[j] = 1.0/sqrt(pi*star_Sigma[j]/(mean_mstar[j]*(float)NstarsPerImage));
@@ -106,7 +106,7 @@ void LensHalo::implant_stars(
       star_xdisk[j][1] = centers[j][1];
       
       //std::cout << "star disk centers " << star_xdisk[j][0] << "  " << star_xdisk[j][1] << std::endl;
-
+      
     }
     
 		//printf("kappa = %e  star_region = %e\n",star_Sigma[j],star_region[j]);

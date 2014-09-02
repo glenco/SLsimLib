@@ -231,7 +231,14 @@ void Lens::assignParams(InputParams& params,bool verbose)
 				field_prof_internal_slope = -1.0;
 			if(!params.get("field_prof_internal_slope_pnfw",field_prof_internal_slope) && field_int_prof_type == pnfw_lens)
 				field_prof_internal_slope = 2.0;
-			
+
+      if(params.get("field_input_simulation_file",field_input_sim_file)){
+        ERROR_MESSAGE();
+        std::cout << "parameter field_input_simulation_file should be changed to field_input_simulation_path "
+        << params.filename() << endl;
+        exit(0);
+      }
+
 			if(!params.get("field_input_simulation_path",field_input_sim_file))
 			{
 				// No simulation input file provided
@@ -1315,8 +1322,8 @@ void Lens::readInputSimFileMillennium(bool verbose)
 					std::cout << "PowerLaw not supported." << std::endl;
 					break;
 				case nsie_lens:
-                    field_halos.push_back(new LensHaloSimpleNSIE(mass*(1-field_galaxy_mass_fraction),z,sigma,0.0,1.0,0.0,0));
-
+          field_halos.push_back(new LensHaloSimpleNSIE(mass*field_galaxy_mass_fraction,z,sigma,0.0,1.0,0.0,0));
+          
 					//field_halos.push_back(new LensHaloSimpleNSIE);
 					break;
 				case ana_lens:
@@ -1352,8 +1359,8 @@ void Lens::readInputSimFileMillennium(bool verbose)
 
 
 			field_halos[j]->setZlens(z);
-            if(field_int_prof_type != nsie_lens){
-                field_halos[j]->initFromFile(mass*(1-field_galaxy_mass_fraction),seed,vmax,r_halfmass*cosmo.gethubble());
+      if(field_int_prof_type != nsie_lens){
+            field_halos[j]->initFromFile(mass*(1-field_galaxy_mass_fraction),seed,vmax,r_halfmass*cosmo.gethubble());
 			}
 
 
@@ -1372,9 +1379,13 @@ void Lens::readInputSimFileMillennium(bool verbose)
 
 			++j;
 
-			if(flag_field_gal_on){
+      if(flag_field_gal_on){
         float sigma = 126*pow(mass*field_galaxy_mass_fraction/1.0e10,0.25); // From Tully-Fisher and Bell & de Jong 2001
         //std::cout << "Warning: All galaxies are spherical" << std::endl;
+
+        //****** test lines taken out
+        //field_galaxy_mass_fraction *= 2;
+        
         float fratio = (ran2(seed)+1)*0.5;  //TODO: Ben change this!  This is a kluge.
         float pa = 2*pi*ran2(seed);  //TODO: This is a kluge.
         
@@ -1493,8 +1504,8 @@ void Lens::readInputSimFileMultiDark(bool verbose)
 	addr[9] = &vz;
 	addr[10] = &mass;
 
-  for(int jj=0;jj<filenames.size();++jj){
-  //for(int jj=0;jj<20;++jj){
+  //for(int jj=0;jj<filenames.size();++jj){
+  for(int jj=0;jj<1;++jj){
     
     std::ifstream file_in( field_input_sim_file + filenames[jj].c_str());
     if(!file_in){
@@ -1864,12 +1875,12 @@ void Lens::buildPlanes(InputParams& params,bool verbose)
 		setupFieldPlanes();
 		
 		// create or read the field halos
-		if(sim_input_flag)
+		if(sim_input_flag){
       if(field_input_sim_format == MillenniumObs) readInputSimFileMillennium(verbose);
       if(field_input_sim_format == MultiDark) readInputSimFileMultiDark(verbose);
-		else
+		}else{
 			createFieldHalos(verbose);
-		
+		}
 		// create field planes and sort halos onto them
 		createFieldPlanes(verbose);
 	}
