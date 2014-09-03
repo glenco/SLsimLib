@@ -551,7 +551,7 @@ LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
 
     }else elliptical_flag = false;
 
-  //rscale = xmax = 1.0;
+  // rscale = xmax = 1.0;
   mnorm = renormalization(get_Rmax());
   std::cout << "mass normalization: " << mnorm << std::endl;
 
@@ -722,14 +722,12 @@ void LensHalo::force_halo_sym(
 		// PosType xmax = Rmax/rscale;
 
     PosType tmp = (alpha_h(x) + 1.0*subtract_point)*prefac;
-		// PosType tmp = (alpha_h(x) - 1.0*subtract_point)*prefac; // Fabien trial.
 		alpha[0] += tmp*xcm[0];
 		alpha[1] += tmp*xcm[1];
 
     *kappa += kappa_h(x)*prefac;
 
     tmp = (gamma_h(x) + 2.0*subtract_point) * prefac / rcm2;
-    // tmp = (gamma_h(x) + 1.0*subtract_point) * prefac / rcm2; // Fabien trial.
 		gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 		gamma[1] += xcm[0]*xcm[1]*tmp;
     
