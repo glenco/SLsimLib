@@ -73,22 +73,22 @@ namespace Utilities
     T& operator()(size_t i,size_t j,size_t k){
       return array[i + j*xn + k*xn*yn];
     }
-
+    
     T& operator()(size_t m){
       return array[m];
     }
-
+    
     size_t xindex(size_t m){
       return m % (xn);
     }
     size_t yindex(size_t m){
       return (m % (xn*yn) ) / xn;
     }
-
+    
     size_t zindex(size_t m){
       return m / (xn*yn);
     }
-
+    
   private:
     size_t xn;
     size_t yn;
@@ -116,21 +116,21 @@ namespace Utilities
     T& operator()(size_t m){
       return array[m];
     }
-
+    
     size_t xindex(size_t m){
       return m % xn;
     }
     size_t yindex(size_t m){
       return m / xn;
     }
-
+    
     
   private:
     size_t xn;
     size_t yn;
     T *array;
   };
-
+  
 	
 	/** \brief A container that can hold mixed objects all derived from
 	 * a base class and retains the ability to access derived class functions/members.
@@ -143,31 +143,31 @@ namespace Utilities
 	 *<pre>
 	 * example:
 	 * InputParams params(paramfile);
-     * params.put("gauss_r2",1,"non");
+   * params.put("gauss_r2",1,"non");
  	 * SourceGaussian source1(params);
 	 * SourceUniform source2(params);
-     *
+   *
 	 * Utilities::MixedVector<Source> mvector;
-     *
+   *
 	 * mvector.push_back(source1);
 	 * mvector.push_back(source1);
 	 * mvector.push_back(source2);
 	 * mvector.push_back(source2);
 	 * std::cout << "Number of Uniform Sources " << mvector.size<SourceUniform>() << "   Number of Gausssian Sources "
 	 *           << mvector.size<SourceGaussian>() << std::endl;
-     *
-     * // change derived class attribute
+   *
+   * // change derived class attribute
 	 * mvector.get<SourceGaussian>(0).source_gauss_r2 = 0.5;
 	 * std::cout << "A base class attribute " << mvector[2].getTotalFlux()
 	 *           << " A derived class attribute  "
 	 *           << mvector.get<SourceGaussian>(0).source_gauss_r2
 	 *           << "  " << mvector.get<SourceGaussian>(1).source_gauss_r2
 	 *           << std::endl;
-	 * 
+	 *
 	 * // iterate all sources
 	 * for(Utilities::MixedVector<Source>::iterator<> it = mvector.begin(); it != mvector.end(); ++it)
 	 *   std::cout << "A base class attribute " << it->getTotalFlux() << std::endl;
-	 * 
+	 *
 	 * // iterate SersicSources
 	 * for(Utilities::MixedVector<Source>::iterator<SersicSource> it = mvector.begin<SersicSource>(); it != mvector.end<SersicSource>(); ++it)
 	 *   std::cout << "A derived class attribute " << it->getSersicIndex() << std::endl;
@@ -336,7 +336,7 @@ namespace Utilities
 				return;
 			
 			base_container& titems = found.second;
-						
+      
 			// delete items from vector for subclass
 			for(std::size_t i = 0, n = titems.size(); i < n; ++i)
 				delete titems[i];
@@ -911,13 +911,13 @@ namespace Utilities
     PosType xo[2],range;
     void rot(int s,int *x, int *y, int rx, int ry);
   };
-
+  
 	template<typename T>
 	T between(const T& x, const T& l, const T& u)
 	{
 		return std::max(l, std::min(u, x));
 	}
-
+  
 #ifdef ENABLE_CLANG
   /// This is a class for generating random numbers. It is actually just a rapper for some std random classes.
   class RandomNumbers{
@@ -930,7 +930,7 @@ namespace Utilities
     /// Normally (Gaussian) distributed random numbers with mean 0 and standard deviation 1
     PosType gauss(){return norm_dist(rand_gen);}
   private:
-     
+    
     std::normal_distribution<> norm_dist;
     std::mt19937 rand_gen;
   };
@@ -950,22 +950,22 @@ namespace Utilities
     PosType operator()(void);
     /// generates a Gaussian distributed number with unit variance by polar Box-Muller transform
     PosType gauss(){
-        if(count){
-            do{
-                u = 2*ran2() - 1;
-                v = 2*ran2() - 1;
-                s = u*u +v*v;
-            }while( s > 1.0 || s == 0.0);
-            
-            s = sqrt(-2*log(s)/s);
-            count = false;
-            return s*u;
-        }else{
-            count = true;
-            return s*v;
-        }
+      if(count){
+        do{
+          u = 2*ran2() - 1;
+          v = 2*ran2() - 1;
+          s = u*u +v*v;
+        }while( s > 1.0 || s == 0.0);
+        
+        s = sqrt(-2*log(s)/s);
+        count = false;
+        return s*u;
+      }else{
+        count = true;
+        return s*v;
+      }
     };
-      
+    
   private:
     long idum;
     PosType ran2(void);
@@ -1033,7 +1033,7 @@ namespace Utilities
     delete[] d;
     delete[] c;
   }
-
+  
   /// used in trapizoidal integral
   template <typename FunctorType,typename T = double>
   T trapz(FunctorType &func, T a, T b, int n, T *s2)
@@ -1072,7 +1072,7 @@ namespace Utilities
    
    double operator () (double x) { return a*x + b*x*x;}
    }
-
+   
    ............ using it ..................
    
    FunctorType func(21,23.1);
@@ -1084,42 +1084,42 @@ namespace Utilities
    double tmp = func(10);
    
    result = Utilities::nintegrate<FunctorType,double>(func,1.0e-2,1.0e4,1.0e-4);
-
+   
    
    ***  now a double integral ****
    
    \int dy \int dx_y^{10} a*x + b*x*cos(x*y)
    
    struct FunctorType2{
-        FunctorType2(FunctorType1 *pfunc1,y): func1(pfunc1),{
+   FunctorType2(FunctorType1 *pfunc1,y): func1(pfunc1),{
    
-        FunctorType1 *func1;
-        double y;
+   FunctorType1 *func1;
+   double y;
    
-        double operator () (double x) { return func1->a*x + func1->b*x*cos(x*y);}
+   double operator () (double x) { return func1->a*x + func1->b*x*cos(x*y);}
    }
-
+   
    
    struct FunctorType1{
-    FunctionType1(double my_a,double my_b,double xrange1, double xrange2)
-      : a(my_a),b(my_b) 
+   FunctionType1(double my_a,double my_b,double xrange1, double xrange2)
+   : a(my_a),b(my_b)
    {
-       xrange[0] = xrange1;
-       xrange[1] = xrange2;
-    };
-    double a;
-    double b;
-    double xrange[2];
+   xrange[0] = xrange1;
+   xrange[1] = xrange2;
+   };
+   double a;
+   double b;
+   double xrange[2];
    
-     double operator () (double y) {
-        FunctorType2 func2(this);
-        func2.a = a;
-        func2.b = b;
-        func2.y = y;
-        xrange[0] = y;
+   double operator () (double y) {
+   FunctorType2 func2(this);
+   func2.a = a;
+   func2.b = b;
+   func2.y = y;
+   xrange[0] = y;
    
-        return Utilities::nintegrate<FunctorType2,double>(func2,xrange[0],xrange[1],1.0e-4);
-     }
+   return Utilities::nintegrate<FunctorType2,double>(func2,xrange[0],xrange[1],1.0e-4);
+   }
    
    }
    
@@ -1131,14 +1131,14 @@ namespace Utilities
    
    <\pre>
    */
-    
+  
   template <typename FunctorType,typename T = double>
   T nintegrate(
-                    FunctorType &func        /// struct or class to be integrated
-                    ,T a      /// limit of integrations
-                    ,T b      /// limit of integrations
-                    ,T tols   /// target fractional error
-                    )
+               FunctorType &func        /// struct or class to be integrated
+               ,T a      /// limit of integrations
+               ,T b      /// limit of integrations
+               ,T tols   /// target fractional error
+               )
   {
     const int JMAX = 34,K=6;
     const int JMAXP = JMAX+1;
@@ -1159,23 +1159,24 @@ namespace Utilities
     std::cout << "s2= "; for(int j=1;j<=JMAX;j++) std::cout << s2[j] << "  ";
     std::cout << std::endl << "Too many steps in routine nintegrate<>\n";
     return 0.0;
-  }  
-
-    /// Shuffles a vector into a random order
-    template <typename T, typename R>
-    void shuffle(
-                 std::vector<T> &vec   /// The vector to be shuffled
-                 ,R ran               /// a random number generator so that ran() gives a number between 0 and 1
-                 ){
-        T tmp;
-        size_t ran_t;
-        for (size_t i = vec.size()-1; i>0; --i) {
-            ran_t = (size_t)(ran()*(i+1));
-            tmp = vec[ran_t];
-            vec[ran_t] = vec[i];
-            vec[i] = tmp;
-        }
+  }
+  
+  /// Shuffles a vector into a random order
+  template <typename T, typename R>
+  void shuffle(
+               std::vector<T> &vec   /// The vector to be shuffled
+               ,R ran               /// a random number generator so that ran() gives a number between 0 and 1
+               ){
+    T tmp;
+    size_t ran_t;
+    for (size_t i = vec.size()-1; i>0; --i) {
+      ran_t = (size_t)(ran()*(i+1));
+      tmp = vec[ran_t];
+      vec[ran_t] = vec[i];
+      vec[i] = tmp;
     }
+  }
+  
 }
 
 #endif

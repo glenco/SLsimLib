@@ -178,4 +178,100 @@ namespace Utilities{
                        ,bool verbose = false);
 }
 
+class MultiGridSmoother{
+public:
+  MultiGridSmoother(double center[],std::size_t Nx,std::size_t Ny,double resolution):
+  nx(Nx),ny(Ny),resolution(resolution)
+  {
+    if( (Nx & (Nx-1)) != 0){
+      ERROR_MESSAGE();
+      std::printf("ERROR: MultiGridSmoother, Nx must be a power of 2\n");
+      throw std::runtime_error("ERROR: MultiGridSmoother, Nx must be a power of 2\n");
+    }
+    if( (Ny & (Ny-1)) != 0){
+      ERROR_MESSAGE();
+      std::printf("ERROR: MultiGridSmoother, Ny must be a power of 2\n");
+      throw std::runtime_error("ERROR: MultiGridSmoother, Ny must be a power of 2\n");
+    }
+    
+    p1[0] = center[0] - Nx*resolution/2;
+    p1[1] = center[1] - Ny*resolution/2;
+
+    maps.push_back(PixelMap(center,Nx,Ny,resolution));
+    while(Nx > 32 && Ny > 32){
+      Nx /= 2;
+      Ny /= 2;
+      resolution *= 2;
+      maps.push_back(PixelMap(center,Nx,Ny,resolution));
+    }
+    
+    
+  }
+  ~MultiGridSmoother(void){
+    maps.clear();
+  }
+  
+  void add_particles(std::vector<PosType> x,std::vector<PosType> y){
+    size_t ix,iy,Nxtmp = nx,Nytmp = ny;
+    int i;
+    double res = resolution;
+    
+    for(i=0;i<maps.size();++i){
+        
+      for(size_t j=0;j<x.size();++j){
+        ix = (size_t)( (x[j]-p1[0])/res );
+        if(ix < Nxtmp-1){
+          iy = (size_t)( (y[j]-p1[1])/res );
+          if(iy < Nytmp-1) maps[i][ix + Nxtmp*iy] += 1;
+        }
+      }
+      
+      Nxtmp /= 2;
+      Nytmp /= 2;
+      res *= 2;
+    }
+  }
+  
+  void output_map(PixelMap &map,int Nsmooth){
+    
+    int j;
+    double res,x[2];
+    size_t Nytmp,Nxtmp,index,ix,iy;
+    
+    for(size_t i = 0;i < map.size();++i){
+      map.find_position(x,i);
+      
+      j = 0;
+      Nxtmp = maps[j].getNx();
+      Nytmp = maps[j].getNy();
+      res = maps[j].getResolution();
+      
+      index = maps[j].size();
+      ix = (size_t)( (x[j]-p1[0])/res );
+      if(ix < Nxtmp-1){
+        iy = (size_t)( (y[j]-p1[1])/res );
+        if(iy < Nytmp-1) index = ix + Nxtmp*iy;
+      }
+
+      while(maps[j][index] < Nsmooth && j < maps.size()-1){
+        ++j;
+        Nxtmp = maps[j].getNx();
+        Nytmp = maps[j].getNy();
+        res = maps[j].getResolution();
+        
+        index = (size_t)( (x[i]-p1[0])/res ) + Nxtmp*(size_t)( (y[i]-p1[1])/res );
+      }
+      
+      //interpolate
+    }
+  }
+  
+private:
+  
+  double resolution;
+  double p1[2];
+  size_t nx,ny;
+  std::vector<PixelMap> maps;
+  
+};
 #endif
