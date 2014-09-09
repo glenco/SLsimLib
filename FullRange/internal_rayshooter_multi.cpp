@@ -171,7 +171,7 @@ for(i = start; i < end; i++)
     // find position on first lens plane in comoving units
     p->i_points[i].image->x[0] = p->i_points[i].x[0] * p->Dl[0];
     p->i_points[i].image->x[1] = p->i_points[i].x[1] * p->Dl[0];
-      
+    
     xminus[0] = 0;
     xminus[1] = 0;
     
@@ -292,8 +292,8 @@ for(i = start; i < end; i++)
             else bb = 0;
             cc = p->charge * p->dDl[j+1] * p->Dl[j] / p->Dl[j+1];
             // ------------------------------------------------------------------------------------
-            
-            
+
+      
         // Computation of the "plus quantities", i.e. the  next plane quantities --------------------
         kappa_plus = aa*p->i_points[i].kappa - bb*kappa_minus
     			  - cc*(kappa*p->i_points[i].kappa + gamma[0]*p->i_points[i].gamma[0] + gamma[1]*p->i_points[i].gamma[1]);

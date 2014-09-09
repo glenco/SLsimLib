@@ -100,7 +100,7 @@ public:
 	double getRangeMpc() const { return map->boxlMpc; }
 	/// return number of pixels on a side in original map
 	size_t getN() const { return map->nx; }
-	
+	 
 private:
 	LensHaloType maptype;
 	void initMap();

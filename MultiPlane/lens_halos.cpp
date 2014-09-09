@@ -552,7 +552,8 @@ LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
     }else elliptical_flag = false;
 
   // rscale = xmax = 1.0;
-  mnorm = renormalization(get_Rmax());
+  // mnorm = renormalization(get_Rmax());
+  mnorm = 1. ;
   std::cout << "mass normalization: " << mnorm << std::endl;
 
     // rscale = xmax = 1.0; // Commented by Fabien in order to have a correct computation of the potential term in the time delay.
@@ -720,13 +721,13 @@ void LensHalo::force_halo_sym(
     PosType prefac = mass/rcm2/pi;
 		PosType x = sqrt(rcm2)/rscale;
 		// PosType xmax = Rmax/rscale;
-
+    
     PosType tmp = (alpha_h(x) + 1.0*subtract_point)*prefac;
 		alpha[0] += tmp*xcm[0];
 		alpha[1] += tmp*xcm[1];
 
     *kappa += kappa_h(x)*prefac;
-
+    
     tmp = (gamma_h(x) + 2.0*subtract_point) * prefac / rcm2;
 		gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 		gamma[1] += xcm[0]*xcm[1]*tmp;

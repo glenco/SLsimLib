@@ -160,7 +160,8 @@ public:
     //PosType dlnmod_dr(PosType x, int modnumber, PosType my_slope, PosType my_fratio);
     //PosType ddlnmod_dr(PosType x, int modnumber, PosType my_slope, PosType my_fratio);
     PosType renormalization(PosType r_max);
-
+  
+  
 protected:
   PosType alpha_int(PosType x) const;
   PosType norm_int(PosType r_max);
@@ -639,13 +640,12 @@ private:
   /// this is |gamma| Sigma_crit pi (r/rscale)^2 / mass
 	inline KappaType gamma_h(PosType x) const {
 		if(x==0) x=1e-6*xmax;
-		return -0.5*beta*pow(x/xmax,-beta+2);
-    // return -1.0*beta*pow(x/xmax,-beta+2); // Fabien : Is it more correct ?
+    return -1.0*beta*pow(x/xmax,-beta+2);
 	}
   /// this is phi Sigma_crit pi / mass, the constants are added so that it is continous over the bourder at Rmax
  	inline KappaType phi_h(PosType x) const {
 		if(x==0) x=1e-6*xmax;
-    return ( pow(x/xmax,2-beta) - 1 )/(2-beta) + log(Rmax) ;          // Ben's new version
+    return ( pow(x/xmax,2-beta) - 1 )/(2-beta) + log(Rmax) ;
 	}
   inline KappaType phi_int(PosType x){
 		//return alpha_int(x);
