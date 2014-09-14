@@ -37,8 +37,9 @@ public:
 	
 	inline std::size_t getNx() const { return Nx; }
 	inline std::size_t getNy() const { return Ny; }
-	inline double getRangeX() const { return range; }
-	inline const double* getCenter() const { return center; }
+	inline double getRangeX() const { return rangeX; }
+	inline double getRangeY() const { return rangeY; }
+	inline const double* getCenter() const{ return center; }
 	inline double getResolution() const { return resolution; }
 	
 	void Clean();
@@ -93,8 +94,61 @@ public:
   long find_index(PosType const x[],long &ix,long &iy);
   /// get the index for a position, returns -1 if out of map
   long find_index(PosType const x[]);
+  
+  /// get the index for a position, returns -1 if out of map, this version returns the 2D grid coordinates
+  long find_index(PosType const x,PosType const y,long &ix,long &iy);
+  /// get the index for a position, returns -1 if out of map
+  long find_index(PosType const x,PosType const y);
+  
   /// get the index for a position, returns -1 if out of map
   void find_position(PosType x[],std::size_t const index);
+  /// get the index for a position, returns -1 if out of map
+  void find_position(PosType x[],std::size_t const ix,std::size_t const iy);
+  
+  PosType linear_interpolate(PosType x[]){
+    long ix,iy;
+    PosType f[2];
+    long index;
+    
+    //f[0] = ((x[0] - center[0])/rangeX + 0.5)*(Nx-1);
+    //f[1] = ((x[1] - center[1])/rangeY + 0.5)*(Ny-1);
+
+    /*f[0] = ((x[0] - map_boundary_p1[0])/resolution + 0.5);
+    f[1] = ((x[1] - map_boundary_p1[1])/resolution + 0.5);
+    //std::cout << "(  " << fx << " " << fy << "   ";
+    
+    if (f[0] < 0. || f[0] > Nx-1){return 0;}
+    else ix = (unsigned long)(f[0]);
+    
+    if (f[1] < 0. || f[1] > Ny-1){return 0;}
+    else iy = (unsigned long)(f[1]);
+    */
+    
+    ix = (long)((x[0] - map_boundary_p1[0])/resolution - 0.5);
+    iy = (long)((x[1] - map_boundary_p1[1])/resolution - 0.5);
+
+    if(ix < 0 || iy < 0 || ix > Nx-1 || iy > Ny-1) return 0;
+      
+    if(ix == Nx-1) ix = Nx-2;
+    if(iy == Ny-1) iy = Ny-2;
+    
+    // index of nearest grid point to the lower left
+    index = ix + Nx*iy;
+    
+    find_position(f,index);
+        
+    /** bilinear interpolation */
+    f[0]=(x[0] - f[0])/resolution;
+    f[1]=(x[1] - f[1])/resolution;
+    
+    assert(f[0] > 0 || ix == 0);
+    assert(f[1] > 0 || iy == 0);
+    //assert(f[0] <= 1.0 && f[1] <= 1.0);
+    
+    return (1-f[0])*(1-f[1])*map[index] + f[0]*(1-f[1])*map[index+1] + f[0]*f[1]*map[index+1+Nx]
+    + (1-f[0])*f[1]*map[index+Nx];
+  }
+
 
 private:
 	std::valarray<double> map;
@@ -102,7 +156,7 @@ private:
 
 	std::size_t Nx;
 	std::size_t Ny;
-	double resolution,range,center[2];
+	double resolution,rangeX,rangeY,center[2];
 	double map_boundary_p1[2],map_boundary_p2[2];
 
 	double LeafPixelArea(IndexType i,Branch * branch1);
@@ -174,104 +228,35 @@ void smoothmap(double *map_out,double *map_in,long Npixels,double range,double s
 
 namespace Utilities{
     void LoadFitsImages(std::string dir,const std::string& filespec,std::vector<PixelMap> & images,int maxN,double resolution = -1,bool verbose = false);
+  void LoadFitsImages(std::string dir,std::vector<std::string> filespecs,std::vector<std::string> file_non_specs                                  ,std::vector<PixelMap> & images,std::vector<std::string> & names,int maxN,double resolution = -1,bool verbose = false);
     void ReadFileNames(std::string dir,const std::string filespec,std::vector<std::string> & filenames
                        ,bool verbose = false);
 }
 
+/** \brief Class for doing adaptive smoothing using multiply resolution grids.
+ */
 class MultiGridSmoother{
 public:
-  MultiGridSmoother(double center[],std::size_t Nx,std::size_t Ny,double resolution):
-  nx(Nx),ny(Ny),resolution(resolution)
-  {
-    if( (Nx & (Nx-1)) != 0){
-      ERROR_MESSAGE();
-      std::printf("ERROR: MultiGridSmoother, Nx must be a power of 2\n");
-      throw std::runtime_error("ERROR: MultiGridSmoother, Nx must be a power of 2\n");
-    }
-    if( (Ny & (Ny-1)) != 0){
-      ERROR_MESSAGE();
-      std::printf("ERROR: MultiGridSmoother, Ny must be a power of 2\n");
-      throw std::runtime_error("ERROR: MultiGridSmoother, Ny must be a power of 2\n");
-    }
-    
-    p1[0] = center[0] - Nx*resolution/2;
-    p1[1] = center[1] - Ny*resolution/2;
-
-    maps.push_back(PixelMap(center,Nx,Ny,resolution));
-    while(Nx > 32 && Ny > 32){
-      Nx /= 2;
-      Ny /= 2;
-      resolution *= 2;
-      maps.push_back(PixelMap(center,Nx,Ny,resolution));
-    }
-    
-    
-  }
+  MultiGridSmoother(double center[],std::size_t Nx,std::size_t Ny,double resolution);
+  MultiGridSmoother(double center[],std::size_t Nx,double resolution);
   ~MultiGridSmoother(void){
     maps.clear();
   }
   
-  void add_particles(std::vector<PosType> x,std::vector<PosType> y){
-    size_t ix,iy,Nxtmp = nx,Nytmp = ny;
-    int i;
-    double res = resolution;
-    
-    for(i=0;i<maps.size();++i){
-        
-      for(size_t j=0;j<x.size();++j){
-        ix = (size_t)( (x[j]-p1[0])/res );
-        if(ix < Nxtmp-1){
-          iy = (size_t)( (y[j]-p1[1])/res );
-          if(iy < Nytmp-1) maps[i][ix + Nxtmp*iy] += 1;
-        }
-      }
-      
-      Nxtmp /= 2;
-      Nytmp /= 2;
-      res *= 2;
-    }
-  }
+  /// resolution of finest grid from which interpolation is done
+  PosType getHighestRes(){return maps[0].getResolution();}
+  /// resolution of coarsest grid from which interpolation is done
+  PosType getLowestRes(){return maps.back().getResolution();}
   
-  void output_map(PixelMap &map,int Nsmooth){
-    
-    int j;
-    double res,x[2];
-    size_t Nytmp,Nxtmp,index,ix,iy;
-    
-    for(size_t i = 0;i < map.size();++i){
-      map.find_position(x,i);
-      
-      j = 0;
-      Nxtmp = maps[j].getNx();
-      Nytmp = maps[j].getNy();
-      res = maps[j].getResolution();
-      
-      index = maps[j].size();
-      ix = (size_t)( (x[j]-p1[0])/res );
-      if(ix < Nxtmp-1){
-        iy = (size_t)( (y[j]-p1[1])/res );
-        if(iy < Nytmp-1) index = ix + Nxtmp*iy;
-      }
-
-      while(maps[j][index] < Nsmooth && j < maps.size()-1){
-        ++j;
-        Nxtmp = maps[j].getNx();
-        Nytmp = maps[j].getNy();
-        res = maps[j].getResolution();
-        
-        index = (size_t)( (x[i]-p1[0])/res ) + Nxtmp*(size_t)( (y[i]-p1[1])/res );
-      }
-      
-      //interpolate
-    }
-  }
+  /// Add particles to the map.  These do not need to be kept in memory after they are added.
+  void add_particles(std::vector<PosType> x,std::vector<PosType> y);
+  /// Output a map at the resolution of the map smoothed so that no superpixel as less than Nsmooth particles
+  void output_map(PixelMap &map,int Nsmooth);
+  void smooth(int Nsmooth,PixelMap &map);
   
 private:
-  
-  double resolution;
-  double p1[2];
-  size_t nx,ny;
+  void _smooth_(int k,size_t i,size_t j,int Nsmooth,PixelMap &map);
   std::vector<PixelMap> maps;
-  
+  std::vector<Utilities::Interpolator<PixelMap>> interpolators;
 };
 #endif

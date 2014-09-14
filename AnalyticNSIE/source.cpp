@@ -502,7 +502,7 @@ SourceShapelets::SourceShapelets(
 		, PosType my_mag							/// magnitude
 		, PosType my_scale						/// scale of the shapelets decomposition
 		, std::valarray<PosType> my_coeff  	/// coefficients of the shapelets decomposition
-        , PosType* my_center           			/// center (in rad)
+    , PosType* my_center           			/// center (in rad)
 		, PosType my_ang					/// rotation angle (in rad)
 		)
 		:Source()

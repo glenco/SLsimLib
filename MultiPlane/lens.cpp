@@ -1396,7 +1396,6 @@ void Lens::readInputSimFileMillennium(bool verbose)
             break;
           case nsie_gal:
             field_halos.push_back(new LensHaloSimpleNSIE(mass*field_galaxy_mass_fraction,z,sigma,0.0,fratio,pa,0));
-            //field_halos.push_back(new LensHaloSimpleNSIE);
             break;
           default:
             throw std::runtime_error("Don't support any but NSIE galaxies yet!");

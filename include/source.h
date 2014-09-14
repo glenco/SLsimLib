@@ -145,8 +145,8 @@ public:
 	inline PosType getRadius(){return source_r*10.;}
 	inline PosType getMag(){return mag;}
 	inline PosType getMag(Band band){return mags[band];}
-    inline PosType getID(){return id;}
-    void setActiveBand(Band band);
+  inline PosType getID(){return id;}
+  void setActiveBand(Band band);
 
 private:
 	void assignParams(InputParams& params);
@@ -158,9 +158,9 @@ private:
     int id;
 	PosType flux, mag;
 	PosType ang;
-    PosType mags[10], fluxes[10];
-    PosType coeff_flux;
-    static Band shape_band[10];
+  PosType mags[10], fluxes[10];
+  PosType coeff_flux;
+  static Band shape_band[10];
 };
 
 /// A uniform surface brightness circular source.

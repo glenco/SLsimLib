@@ -43,7 +43,8 @@ void swap(PixelMap& x, PixelMap& y)
 	swap(x.Nx, y.Nx);
 	swap(x.Ny, y.Ny);
 	swap(x.resolution, y.resolution);
-	swap(x.range, y.range);
+	swap(x.rangeX, y.rangeX);
+	swap(x.rangeY, y.rangeY);
 	
 	swap(x.center[0], y.center[0]);
 	swap(x.center[1], y.center[1]);
@@ -55,7 +56,7 @@ void swap(PixelMap& x, PixelMap& y)
 }
 
 PixelMap::PixelMap()
-: map(), Nx(0), Ny(0), resolution(0), range(0)
+: map(), Nx(0), Ny(0), resolution(0), rangeX(0), rangeY(0)
 {
 	center[0] = 0;
 	center[1] = 0;
@@ -68,7 +69,7 @@ PixelMap::PixelMap()
 
 PixelMap::PixelMap(const PixelMap& other)
 : map(other.map),
-  Nx(other.Nx), Ny(other.Ny), resolution(other.resolution), range(other.range)
+  Nx(other.Nx), Ny(other.Ny), resolution(other.resolution), rangeX(other.rangeX), rangeY(other.rangeY)
 {
 	std::copy(other.center, other.center + 2, center);
 	
@@ -86,7 +87,8 @@ PixelMap::PixelMap(
   Nx(Npixels), Ny(Npixels), resolution(resolution)
 {
 	std::copy(center, center + 2, this->center);
-	range = resolution*(Nx-1);
+	rangeX = resolution*Nx;
+	rangeY = resolution*Ny;
 	
 	map_boundary_p1[0] = center[0]-(Npixels*resolution)/2.;
 	map_boundary_p1[1] = center[1]-(Npixels*resolution)/2.;
@@ -105,7 +107,8 @@ PixelMap::PixelMap(
 Nx(Nx), Ny(Ny), resolution(resolution)
 {
 	std::copy(center, center + 2, this->center);
-	range = resolution*(Nx-1);
+	rangeX = resolution*Nx;
+	rangeY = resolution*Ny;
 	
 	map_boundary_p1[0] = center[0]-(Nx*resolution)/2.;
 	map_boundary_p1[1] = center[1]-(Ny*resolution)/2.;
@@ -118,7 +121,7 @@ Nx(Nx), Ny(Ny), resolution(resolution)
  */
 PixelMap::PixelMap(
                    std::string fitsfilename   /// file name of fits file to be read
-                   ,double resolution         /// resolution (rad) of fits image if not given in fits file, use default or -1 otherwise
+                   ,double my_res         /// resolution (rad) of fits image if not given in fits file, use default or -1 otherwise
                    )
 {
 #ifdef ENABLE_FITS
@@ -145,32 +148,33 @@ PixelMap::PixelMap(
     center[1] = 0.0;
   }
   
-  if(resolution == -1){
+  if(my_res == -1){
 	// read the resolution
     try
     {
       double cdelt2;
-      h0.readKey("CDELT1", resolution);
+      h0.readKey("CDELT1", my_res);
       h0.readKey("CDELT2", cdelt2);
-      if(std::abs(resolution) - std::abs(cdelt2) > 1e-6)
+      if(std::abs(my_res) - std::abs(cdelt2) > 1e-6)
         throw std::runtime_error("non-square pixels in FITS file " + fitsfilename);
     }
     catch(CCfits::HDU::NoSuchKeyword&)
     {
       double cd12, cd21, cd22;
-      h0.readKey("CD1_1", resolution);
+      h0.readKey("CD1_1", my_res);
       h0.readKey("CD1_2", cd12);
       h0.readKey("CD2_1", cd21);
       h0.readKey("CD2_2", cd22);
-      if(std::abs(resolution) - std::abs(cd22) > 1e-6)
+      if(std::abs(my_res) - std::abs(cd22) > 1e-6)
         throw std::runtime_error("non-square pixels in FITS file " + fitsfilename);
       if(cd12 || cd21)
         throw std::runtime_error("pixels not aligned with coordingate in FITS file " + fitsfilename);
     }
-    resolution = fabs(resolution)*pi/180.;
+    resolution = fabs(my_res)*pi/180.;
   }
 	
-	range = resolution*(Nx-1);
+	rangeX = resolution*Nx;
+	rangeY = resolution*Ny;
 	map_boundary_p1[0] = center[0] - (Nx*resolution)/2.;
 	map_boundary_p1[1] = center[1] - (Ny*resolution)/2.;
 	map_boundary_p2[0] = center[0] + (Nx*resolution)/2.;
@@ -194,7 +198,8 @@ PixelMap::PixelMap(const PixelMap& pmap,  /// Input PixelMap (from which the sta
   Nx(my_Npixels), Ny(my_Npixels), resolution(pmap.resolution)
 	{
 		std::copy(center, center + 2, this->center);
-		range = resolution*(Nx-1);
+		rangeX = resolution*Nx;
+		rangeY = resolution*Ny;
 
 		map_boundary_p1[0] = center[0]-(Nx*resolution)/2.;
 		map_boundary_p1[1] = center[1]-(Ny*resolution)/2.;
@@ -231,7 +236,8 @@ PixelMap::PixelMap(
 	resolution = res_ratio*pmap.resolution;
 	Nx = pmap.Nx/res_ratio + .5;
 	Ny = pmap.Ny/res_ratio + .5;
-	range = resolution*(Nx-1);
+	rangeX = resolution*Nx;
+	rangeY = resolution*Ny;
 	center[0] = pmap.center[0];
 	center[1] = pmap.center[1];
 	map_boundary_p1[0] = center[0] - (Nx*resolution)/2.;
@@ -509,9 +515,9 @@ PosType PixelMap::LeafPixelArea(IndexType i,Branch * branch1){
 /// Print an ASCII table of all the pixel values.
 void PixelMap::printASCII() const
 {
-	std::cout << Nx << " " << Ny << "  " << range << std::endl;
+	std::cout << Nx << " " << Ny << "  " << rangeX << std::endl;
 	for(std::size_t i=0;i < map.size(); ++i) std::cout << map[i] << std::endl;
-	std::cout << Nx << " " << Ny << "  " << range << std::endl;
+	std::cout << Nx << " " << Ny << "  " << rangeX << std::endl;
 
 	//map.resize(0);
 	return;
@@ -526,9 +532,9 @@ void PixelMap::printASCIItoFile(std::string filename) const
 		exit(0);
 	}
 
-	std::cout << Nx << " " << Ny << "  " << range << std::endl;
+	std::cout << Nx << " " << Ny << "  " << rangeX << std::endl;
 	for(std::size_t i=0;i < map.size(); ++i) file_map << std::scientific << map[i] << std::endl;
-	std::cout << Nx << " " << Ny << "  " << range << std::endl;
+	std::cout << Nx << " " << Ny << "  " << rangeX << std::endl;
 
 	//map.resize(0);
 
@@ -1017,47 +1023,108 @@ void PixelMap::FindArc(
  *  The input fits files must have .fits in their names in addition to the string filespec.
  */
 void Utilities::LoadFitsImages(
-                    std::string dir              /// path to directory containing fits files
-                    ,const std::string& filespec /// string of charactors in fits file name that are matched
-                    ,std::vector<PixelMap> & images  /// output vector of PixelMaps
-                    ,int maxN       /// maximum number of images that will be read in
-                    ,double resolution  /// resolution (rad) of fits image if not given in fits file, use default or -1 otherwise
-                    ,bool verbose   /// lists files to stdout
-                    ){
+                               std::string dir              /// path to directory containing fits files
+                               ,const std::string& filespec /// string of charactors in fits file name that are matched
+                               ,std::vector<PixelMap> & images  /// output vector of PixelMaps
+                               ,int maxN       /// maximum number of images that will be read in
+                               ,double resolution  /// resolution (rad) of fits image if not given in fits file, use default or -1 otherwise
+                               ,bool verbose   /// lists files to stdout
+                               ){
+  
+  DIR *dp = opendir( dir.c_str() );
+  struct dirent *dirp;
+  struct stat filestat;
+  std::string filepath,filename;
+  size_t count = 0;
+  
+  if (dp == NULL)
+  {
+    throw std::runtime_error("error opening directory");
+    return;
+  }
+  
+  while ((dirp = readdir( dp )) && count < maxN)
+  {
+    filepath = dir + "/" + dirp->d_name;
     
-    DIR *dp = opendir( dir.c_str() );
-    struct dirent *dirp;
-    struct stat filestat;
-    std::string filepath,filename;
+    // If the file is a directory (or is in some way invalid) we'll skip it
+    if (stat( filepath.c_str(), &filestat )) continue;
+    if (S_ISDIR( filestat.st_mode ))         continue;
     
-    if (dp == NULL)
-    {
-        throw std::runtime_error("error opening directory");
-        return;
+    filename = dirp->d_name;
+    if(filename.find(".fits") !=  std::string::npos){
+      if(filename.find(filespec) !=  std::string::npos){
+        if(verbose) std::cout << "reading " << filepath << std::endl;
+        //PixelMap map(filepath,resolution);
+        //images.push_back(std::move(map));
+        images.push_back(PixelMap(filepath,resolution));
+        ++count;
+      }
     }
+  }
+  
+  closedir( dp );
+  
+  std::cout << count << " fits files read." << std::endl;
+  return ;
+}
+/** \brief Reads all the fits files in a directory into a vector of PixelMaps.
+ *
+ *  The input fits files must have .fits in their names in addition to the string filespec.
+ */
+void Utilities::LoadFitsImages(
+                               std::string dir              /// path to directory containing fits files
+                               ,std::vector<std::string> filespecs /// string of charactors in fits file name that are matched
+                               ,std::vector<std::string> file_non_specs /// string of charactors in fits file name cannot have
+                               ,std::vector<PixelMap> & images  /// output vector of PixelMaps
+                               ,std::vector<std::string> & names  /// file names
+                               ,int maxN       /// maximum number of images that will be read in
+                               ,double resolution  /// resolution (rad) of fits image if not given in fits file, use default or -1 otherwise
+                               ,bool verbose   /// lists files to stdout
+                               ){
+  
+  DIR *dp = opendir( dir.c_str() );
+  struct dirent *dirp;
+  struct stat filestat;
+  std::string filepath,filename;
+  size_t count = 0;
+
+  
+  if (dp == NULL)
+  {
+    throw std::runtime_error("error opening directory");
+    return;
+  }
+  
+  while ((dirp = readdir( dp )) && count < maxN)
+  {
+    filepath = dir + "/" + dirp->d_name;
     
-    while ((dirp = readdir( dp )) && images.size() < maxN)
-    {
-        filepath = dir + "/" + dirp->d_name;
-        
-        // If the file is a directory (or is in some way invalid) we'll skip it
-        if (stat( filepath.c_str(), &filestat )) continue;
-        if (S_ISDIR( filestat.st_mode ))         continue;
-        
-        filename = dirp->d_name;
-        if(filename.find(".fits") !=  std::string::npos){
-            if(filename.find(filespec) !=  std::string::npos){
-                if(verbose) std::cout << "reading " << filepath << std::endl;
-                PixelMap map(filepath,resolution);
-                images.push_back(std::move(map));
-            }
-        }
+    // If the file is a directory (or is in some way invalid) we'll skip it
+    if (stat( filepath.c_str(), &filestat )) continue;
+    if (S_ISDIR( filestat.st_mode ))         continue;
+    
+    filename = dirp->d_name;
+    if(filename.find(".fits") !=  std::string::npos){
+      bool read =true;
+      for(int i=0;i<filespecs.size();++i) if(filename.find(filespecs[i]) ==  std::string::npos) read = false;
+      for(int i=0;i<file_non_specs.size();++i) if(filename.find(file_non_specs[i]) !=  std::string::npos) read = false;
+      
+      if(read){
+        if(verbose) std::cout << "reading " << filepath << std::endl;
+        //PixelMap map(filepath,resolution);
+        //images.push_back(std::move(map));
+        images.push_back(PixelMap(filepath,resolution));
+        names.push_back(filepath);
+        ++count;
+      }
     }
-    
-    closedir( dp );
-    
-    std::cout << images.size() << " fits files read." << std::endl;
-    return ;
+  }
+  
+  closedir( dp );
+  
+  std::cout << count << " fits files read." << std::endl;
+  return ;
 }
 
 /** \brief Reads the file names in a directory that contain a specific sub string.
@@ -1102,12 +1169,12 @@ void Utilities::ReadFileNames(
   return ;
 }
 
-/// get the index for a position, returns -1 if out of map
+/*// get the index for a position, returns -1 if out of map
 long PixelMap::find_index(PosType const x[],long &ix,long &iy){
   PosType fx, fy;
   
-  fx = (x[0] - center[0])/range;
-  fy = (x[1] - center[1])*(Nx-1)/range/(Ny-1);
+  fx = (x[0] - center[0])/rangeX;
+  fy = (x[1] - center[1])/rangeY;
   if(fabs(fx) > 0.5 || fabs(fy) > 0.5){
     ix = iy = -1;
     return -1;
@@ -1122,10 +1189,56 @@ long PixelMap::find_index(PosType const x[],long &ix,long &iy){
   if( (ix<Nx) && (iy<Ny) ) return ix+Nx*iy;
   return -1;
 }
+*/
+
+/// get the index for a position, returns -1 if out of map
+long PixelMap::find_index(PosType const x[],long &ix,long &iy){
+  
+  ix = (long)((x[0] - map_boundary_p1[0])/resolution);
+  iy = (long)((x[1] - map_boundary_p1[1])/resolution);
+  
+  if( ix < 0 || ix >= Nx){
+    ix = iy = -1;
+    return -1;
+  }
+  if( iy < 0 || iy >= Ny){
+    ix = iy = -1;
+    return -1;
+  }
+  
+  return ix + Nx*iy;
+}
+
+/// get the index for a position, returns -1 if out of map
+long PixelMap::find_index(PosType const x,PosType const y,long &ix,long &iy){
+  
+  //ix = (long)((x - map_boundary_p1[0])/resolution + 0.5);
+  //iy = (long)((y - map_boundary_p1[1])/resolution + 0.5);
+  
+  ix = (long)((x - map_boundary_p1[0])/resolution );
+  iy = (long)((y - map_boundary_p1[1])/resolution );
+  
+  if( ix < 0 || ix >= Nx){
+    ix = iy = -1;
+    return -1;
+  }
+  if( iy < 0 || iy >= Ny){
+    ix = iy = -1;
+    return -1;
+  }
+  
+  return ix + Nx*iy;
+}
+
 /// get the index for a position, returns -1 if out of map
 long PixelMap::find_index(PosType const x[]){
   long ix,iy;
   return find_index(x,ix,iy);
+}
+/// get the index for a position, returns -1 if out of map
+long PixelMap::find_index(PosType const x,PosType const y){
+  long ix,iy;
+  return find_index(x,y,ix,iy);
 }
 /// get the index for a position, returns -1 if out of map
 void PixelMap::find_position(PosType x[],std::size_t const index){
@@ -1134,10 +1247,179 @@ void PixelMap::find_position(PosType x[],std::size_t const index){
     x[1] = center[1];
     return;
   }
-  x[0] = center[0] + range*( 1.0*(index%Nx)/(Nx-1) - 0.5 );
-  x[1] = center[1] + range*( 1.0*(index/Nx)/(Nx-1) ) - 0.5*range*(Ny-1)/(Nx-1);
+  x[0] = map_boundary_p1[0] + resolution*( index%Nx + 0.5);
+  x[1] = map_boundary_p1[1] + resolution*( index/Nx + 0.5);
   return;
 }
+/// get the index for a position, returns -1 if out of map
+void PixelMap::find_position(PosType x[],std::size_t const ix,std::size_t const iy){
+  if(Nx == 1){
+    x[0] = center[0];
+    x[1] = center[1];
+    return;
+  }
+  //x[0] = center[0] + rangeX*( 1.0*ix/(Nx-1) - 0.5);
+  //x[1] = center[1] + rangeY*( iy*1.0/(Ny-1) - 0.5);
+
+  x[0] = map_boundary_p1[0] + resolution*(ix + 0.5);
+  x[1] = map_boundary_p1[1] + resolution*(iy + 0.5);
+  return;
+}
+
+MultiGridSmoother::MultiGridSmoother(
+                                     double center[]    /// center of region to be gridded
+                                     ,std::size_t Nx    /// number of pixels on x-axis in the highest resolution grid
+                                     ,std::size_t Ny    /// number of pixels on y-axis in the highest resolution grid
+                                     ,double resolution /// highest resolution to be used, usually the final desired resolution
+                                     )
+{
+  throw std::runtime_error("does not conserve mass yet");
+  
+  if( (Nx & (Nx-1)) != 0){
+    ERROR_MESSAGE();
+    std::printf("ERROR: MultiGridSmoother, Nx must be a power of 2\n");
+    throw std::runtime_error("ERROR: MultiGridSmoother, Nx must be a power of 2\n");
+  }
+  if( (Ny & (Ny-1)) != 0){
+    ERROR_MESSAGE();
+    std::printf("ERROR: MultiGridSmoother, Ny must be a power of 2\n");
+    throw std::runtime_error("ERROR: MultiGridSmoother, Ny must be a power of 2\n");
+  }
+  
+  maps.push_back(PixelMap(center,Nx,Ny,resolution));
+  while(Nx > 16 && Ny > 16){
+    Nx /= 2;
+    Ny /= 2;
+    resolution *= 2;
+    maps.push_back(PixelMap(center,Nx,Ny,resolution));
+  }
+}
+MultiGridSmoother::MultiGridSmoother(double center[],std::size_t Nx,double resolution)
+{
+  //throw std::runtime_error("does not conserve mass yet");
+
+  if( (Nx & (Nx-1)) != 0){
+    ERROR_MESSAGE();
+    std::printf("ERROR: MultiGridSmoother, Nx must be a power of 2\n");
+    throw std::runtime_error("ERROR: MultiGridSmoother, Nx must be a power of 2\n");
+  }
+  PosType x[2] = {0,0};
+  int k=0;
+  maps.push_back(PixelMap(center,Nx,resolution));
+  interpolators.push_back(Utilities::Interpolator<PixelMap>(x,maps[k].getNx(),maps[k].getRangeX(),maps[k].getNy(),maps[k].getRangeX(),center));
+  while(Nx > 16 ){
+    Nx /= 2;
+    resolution *= 2;
+   // resolution = maps[0].getRangeX()/(Nx-1);
+    maps.push_back(PixelMap(center,Nx,resolution));
+    interpolators.push_back(Utilities::Interpolator<PixelMap>(x,maps[k].getNx(),maps[k].getRangeX(),maps[k].getNy(),maps[k].getRangeX(),center));
+  }
+}
+void MultiGridSmoother::add_particles(std::vector<PosType> x,std::vector<PosType> y){
+  long index;
+  
+  for(int i=0;i<maps.size();++i){
+    for(size_t j=0;j<x.size();++j){
+      if(x[j] < 0 && y[j] < 0 && i == 8){
+        std::cout << "should be in there" << std::endl;
+      }
+      index = maps[i].find_index(x[j],y[j]);
+      assert(index != -1);
+      //assert(index != 5);
+      if(index != -1) maps[i][index] += 1;
+    }
+  }
+  
+  for(int i=0;i<maps[8].size();++i)
+    std::cout << "i = " << i << " " << maps[8][i] << std::endl;
+}
+void MultiGridSmoother::output_map(PixelMap &map,int Nsmooth){
+  
+  int k;
+  double res,x[2];
+  long index,ix,iy;
+  
+  /// find if gids overlap at all
+  
+  for(size_t i = 0;i < map.size();++i){
+    map.find_position(x,i);
+    
+    k =  maps.size()-1;
+    index = maps[k].find_index(x);
+    
+    if(index != -1){
+      
+      while(maps[k][index] > Nsmooth && k > 0){
+        --k;
+        index = maps[k].find_index(x,ix,iy);
+      }
+     
+      res = maps[k].getResolution();
+      //PosType c[2] = {maps[k].getCenter()[0],maps[k].getCenter()[1]};
+      //Utilities::Interpolator<PixelMap>
+      //interp(x,maps[k].getNx(),maps[k].getRangeX(),maps[k].getNy(),maps[k].getRangeX(),c);
+      //map[i] = interp.interpolate(x,maps[k])/res/res;
+      map[i] = maps[k][index]/res/res;
+    }
+  }
+}
+
+void MultiGridSmoother::_smooth_(int k,size_t i,size_t j,int Nsmooth,PixelMap &map){
+  
+  if(k==0){  // highest level grid is reached
+    map[i+j*map.getNx()] = maps[k][i + j*maps[k].getNx()]/maps[k].getResolution()/maps[k].getResolution();
+    return;
+  }
+  
+  if(maps[k][i + j*maps[k].getNx()] > Nsmooth){
+    for(int ii = 0;ii < 2;++ii){
+      for(int jj = 0;jj < 2;++jj){
+        _smooth_(k-1,2*i + ii,2*j + jj,Nsmooth,map);
+      }
+    }
+  }else{
+    
+    double tmp;
+    size_t index;
+    PosType x[2];
+    // check neighbors
+    
+    // look through all
+    size_t Nratio = map.getNx()/maps[k].getNx();
+    //tmp = maps[k][ i + j*maps[k].getNx() ]/maps[k].getResolution()/maps[k].getResolution();
+    tmp = maps[k].getResolution()*maps[k].getResolution();
+        
+    for(int ii = Nratio*i ; ii < Nratio*(i+1) ;++ii){
+      for(int jj = Nratio*j ; jj < Nratio*(j+1) ; ++jj){
+        // interpolate
+        index = ii + jj*map.getNx();
+        map.find_position(x, index);
+        map[ index ] = maps[k].linear_interpolate(x)/tmp;
+        //map[ index ] = tmp;
+
+      }
+    }
+    
+  }
+  
+  return;
+}
+
+void MultiGridSmoother::smooth(int Nsmooth,PixelMap &map){
+  
+  if(!map.agrees(maps[0])){
+    throw std::runtime_error("MultiGridSmoother::smooth() map needs to be of the same size as smoother");
+  }
+  
+  int k = maps.size()-1;
+  for(size_t i = 0;i < maps[k].getNx();++i){
+    for(size_t j = 0;j < maps[k].getNy();++j){
+      _smooth_(k,i,j,Nsmooth,map);
+    }
+  }
+  
+}
+
 
 
 
