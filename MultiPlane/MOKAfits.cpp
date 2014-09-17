@@ -275,8 +275,6 @@ void LensHaloMOKA::writeImage(std::string filename){
 	ExtHDU *eh3=fout->addImage("gamma3", FLOAT_IMG, naxex);
 	eh3->write(1,map->nx*map->ny,map->gamma3);
 
-  // Fabien : adding the potential in the writing.
-  // I don't know if eh4 is an adapted name.
   ExtHDU *eh4=fout->addImage("phi", FLOAT_IMG, naxex);
 	eh4->write(1,map->nx*map->ny,map->phi);
   
@@ -403,7 +401,7 @@ int fof(double l,std:: vector<double> xci, std:: vector<double> yci, std:: vecto
 }
 
 /**
- * \brief pre-process sourface mass density map computing deflection angles and shear in FFT
+ * \brief pre-process surface mass density map computing deflection angles and shear in FFT
  */
 
 void LensHaloMOKA::PreProcessFFTWMap(){
@@ -549,7 +547,7 @@ void LensHaloMOKA::PreProcessFFTWMap(){
                 int ii = i-int(Nnpixels/2-npixels/2);
                 int jj = j-int(Nnpixels/2-npixels/2);
 
-                map->phi[ii+npixels*jj] = float( phi[i+Nnpixels*j]/Nnpixels/Nnpixels); // Added by Fabien : is it correct to do that ?
+                map->phi[ii+npixels*jj] = float( phi[i+Nnpixels*j]/Nnpixels/Nnpixels);
               
                 map->gamma1[ii+npixels*jj] = float( gamma1[i+Nnpixels*j]/Nnpixels/Nnpixels);
                 map->gamma2[ii+npixels*jj] = float(-gamma2[i+Nnpixels*j]/Nnpixels/Nnpixels);

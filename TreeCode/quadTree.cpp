@@ -693,7 +693,7 @@ void TreeQuad::walkTree_iter(
   alpha[1] -= ray[1]*sigma_background*(inv_screening_scale2 == 0.0);
   {      //  taken out to speed up
 	  *kappa -= sigma_background;
-    // *phi -= sigma_background * sigma_background ; // Fabien : is that correct ?
+    // *phi -= sigma_background * sigma_background ;
   }
   
   return;
@@ -833,7 +833,7 @@ void TreeQuad::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alph
             gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
             gamma[1] += xcm[0]*xcm[1]*tmp;
             
-            *phi += prefac*rcm2*0.5*log(rcm2);  // Fabien : replaced = by += !
+            *phi += prefac*rcm2*0.5*log(rcm2);
           }
         }
       }
@@ -881,7 +881,7 @@ void TreeQuad::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alph
 								gamma[1] += xcm[0]*xcm[1]*tmp;
                 
                 // TODO: makes sure the normalization of phi_h agrees with this
-                *phi += (phi_h(arg1,arg2) + 0.5*log(rcm2))*prefac*rcm2;  // Fabien : replaced = by += !
+                *phi += (phi_h(arg1,arg2) + 0.5*log(rcm2))*prefac*rcm2;
 							}
 						}
 					}

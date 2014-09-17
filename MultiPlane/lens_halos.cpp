@@ -678,7 +678,7 @@ void LensHaloSimpleNSIE::initFromMassFunc(float my_mass, float my_Rmax, float my
 }
 */
 
-/** \brief returns the lensing quantaties of a ray in center of mass coordinates.
+/** \brief returns the lensing quantities of a ray in center of mass coordinates.
  *
  *  Warning: This adds to input value of alpha, kappa, gamma, and phi.  They need 
  *  to be veroed out if the contribution of just this halo is wanted.
@@ -701,6 +701,13 @@ void LensHalo::force_halo(
 	}
 }
 
+/** \brief returns the lensing quantities of a ray in center of mass coordinates for a symmetric halo
+ *
+ *  phi is defined here in such a way that it differs from alpha by a sign (as we should have alpha = \nabla_x phi)
+ *  but alpha agrees with the rest of the lensing quantities (kappa and gammas).
+ *  Warning : Be careful, the sign of alpha is changed in LensPlaneSingular::force !
+ *
+ */
 void LensHalo::force_halo_sym(
 		PosType *alpha     /// solar mass/Mpc
 		,KappaType *kappa  /// convergence
@@ -733,7 +740,6 @@ void LensHalo::force_halo_sym(
 		gamma[1] += xcm[0]*xcm[1]*tmp;
     
     *phi += phi_h(x) * mass / pi ;
-    // *phi += phi_h(x,Rmax) * mass / pi ;
 	}
 	else // the point particle is not subtracted
 	{

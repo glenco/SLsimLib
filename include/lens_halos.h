@@ -485,10 +485,8 @@ protected:
 		return -0.25*x*x*InterpolateFromTable(g2table,x)/gmax;
 	}
 	inline KappaType phi_h(PosType x) const{
-		//ERROR_MESSAGE();
-		//std::cout << "time delay has not been fixed for NFW profile yet." << std::endl;
-		//exit(1);
-		return -0.25*InterpolateFromTable(htable,x)/gmax;
+    return 0.25*(InterpolateFromTable(htable,x) - InterpolateFromTable(htable,Rmax/rscale))/gmax + log(Rmax) ;
+    // The constant contribution is made to match with the point mass at x = Rmax/rscale.
 	}
   inline KappaType phi_int(PosType x){
     return -1.0*InterpolateFromTable(xgtable,x)/gmax; //alpha_int(x);

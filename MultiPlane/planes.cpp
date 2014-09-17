@@ -58,6 +58,12 @@ LensPlaneSingular::~LensPlaneSingular()
 {
 }
 
+
+/** \brief returns the lensing quantities of a ray in physical coordinates
+ *
+ *  Warning : Be careful, the sign of alpha is changed after the call of force_halo !
+ *
+ */
 void LensPlaneSingular::force(PosType *alpha
                               ,KappaType *kappa
                               ,KappaType *gamma
