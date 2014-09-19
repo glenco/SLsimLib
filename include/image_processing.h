@@ -105,50 +105,8 @@ public:
   /// get the index for a position, returns -1 if out of map
   void find_position(PosType x[],std::size_t const ix,std::size_t const iy);
   
-  PosType linear_interpolate(PosType x[]){
-    long ix,iy;
-    PosType f[2];
-    long index;
-    
-    //f[0] = ((x[0] - center[0])/rangeX + 0.5)*(Nx-1);
-    //f[1] = ((x[1] - center[1])/rangeY + 0.5)*(Ny-1);
-
-    /*f[0] = ((x[0] - map_boundary_p1[0])/resolution + 0.5);
-    f[1] = ((x[1] - map_boundary_p1[1])/resolution + 0.5);
-    //std::cout << "(  " << fx << " " << fy << "   ";
-    
-    if (f[0] < 0. || f[0] > Nx-1){return 0;}
-    else ix = (unsigned long)(f[0]);
-    
-    if (f[1] < 0. || f[1] > Ny-1){return 0;}
-    else iy = (unsigned long)(f[1]);
-    */
-    
-    ix = (long)((x[0] - map_boundary_p1[0])/resolution - 0.5);
-    iy = (long)((x[1] - map_boundary_p1[1])/resolution - 0.5);
-
-    if(ix < 0 || iy < 0 || ix > Nx-1 || iy > Ny-1) return 0;
-      
-    if(ix == Nx-1) ix = Nx-2;
-    if(iy == Ny-1) iy = Ny-2;
-    
-    // index of nearest grid point to the lower left
-    index = ix + Nx*iy;
-    
-    find_position(f,index);
-        
-    /** bilinear interpolation */
-    f[0]=(x[0] - f[0])/resolution;
-    f[1]=(x[1] - f[1])/resolution;
-    
-    assert(f[0] > 0 || ix == 0);
-    assert(f[1] > 0 || iy == 0);
-    //assert(f[0] <= 1.0 && f[1] <= 1.0);
-    
-    return (1-f[0])*(1-f[1])*map[index] + f[0]*(1-f[1])*map[index+1] + f[0]*f[1]*map[index+1+Nx]
-    + (1-f[0])*f[1]*map[index+Nx];
-  }
-
+  /// interpolate to point x[]
+  PosType linear_interpolate(PosType x[]); 
 
 private:
 	std::valarray<double> map;
