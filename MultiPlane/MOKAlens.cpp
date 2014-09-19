@@ -159,13 +159,12 @@ void LensHaloMOKA::initMap()
         map->convergence *= fac;
         map->gamma1 *= fac;
         map->gamma2 *= fac;
-		
+        map->phi *= fac;
+      
         fac = 1/(4*pi*Grav);
 		
         map->alpha1 *= fac;
         map->alpha2 *= fac;
-
-        // No need of fac for phi.
       
         checkCosmology();
     }else{
