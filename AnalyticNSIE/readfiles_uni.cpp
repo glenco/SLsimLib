@@ -82,9 +82,6 @@ void LensHaloUniform::force_halo(
                                  )
 {
     PosType alpha_tmp[2];
-    // PHI BY Fabien : dt is confusing
-    // and we can replace it by phi_tmp !
-    // KappaType gamma_tmp[3], dt = 0;
     KappaType gamma_tmp[3], phi_tmp;
 
     gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;

@@ -551,8 +551,9 @@ LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
 
     }else elliptical_flag = false;
 
-  //rscale = xmax = 1.0;
-  mnorm = renormalization(get_Rmax());
+  // rscale = xmax = 1.0;
+  // mnorm = renormalization(get_Rmax());
+  mnorm = 1. ;
   std::cout << "mass normalization: " << mnorm << std::endl;
 
     // rscale = xmax = 1.0; // Commented by Fabien in order to have a correct computation of the potential term in the time delay.
@@ -701,6 +702,13 @@ void LensHalo::force_halo(
 	}
 }
 
+/** \brief returns the lensing quantities of a ray in center of mass coordinates for a symmetric halo
+ *
+ *  phi is defined here in such a way that it differs from alpha by a sign (as we should have alpha = \nabla_x phi)
+ *  but alpha agrees with the rest of the lensing quantities (kappa and gammas).
+ *  Warning : Be careful, the sign of alpha is changed in LensPlaneSingular::force !
+ *
+ */
 void LensHalo::force_halo_sym(
 		PosType *alpha     /// solar mass/Mpc
 		,KappaType *kappa  /// convergence
@@ -722,19 +730,18 @@ void LensHalo::force_halo_sym(
     PosType prefac = mass/rcm2/pi;
 		PosType x = sqrt(rcm2)/rscale;
 		// PosType xmax = Rmax/rscale;
-
-		PosType tmp = (alpha_h(x) + 1.0*subtract_point)*prefac;
+    
+    PosType tmp = (alpha_h(x) + 1.0*subtract_point)*prefac;
 		alpha[0] += tmp*xcm[0];
 		alpha[1] += tmp*xcm[1];
 
     *kappa += kappa_h(x)*prefac;
-
+    
     tmp = (gamma_h(x) + 2.0*subtract_point) * prefac / rcm2;
 		gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 		gamma[1] += xcm[0]*xcm[1]*tmp;
     
     *phi += phi_h(x) * mass / pi ;
-    // *phi += phi_h(x,Rmax) * mass / pi ;
 	}
 	else // the point particle is not subtracted
 	{
@@ -749,11 +756,13 @@ void LensHalo::force_halo_sym(
       //std::cout << "xcm  = " << xcm[0] << " " << xcm[1] << std::endl;
 
 			PosType tmp = -2.0*prefac/rcm2;
+                
+      // kappa is equal to 0 in the point mass case.
 
 			gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
       gamma[1] += xcm[0]*xcm[1]*tmp;
       
-      *phi += - 0.5 * log(rcm2) * mass / pi ; // value made to be consistent with alpha above. Sure ?
+      *phi += 0.5 * log(rcm2) * mass / pi ;
 		}
 	}
 

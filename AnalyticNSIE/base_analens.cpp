@@ -19,6 +19,7 @@ void LensHaloBaseNSIE::force_halo(
                                   ,PosType screening   /// the factor by which to scale the mass for screening of the point mass subtraction
                                   )
 {
+
   long j;
   PosType alpha_tmp[2];
   KappaType kappa_tmp = 0.0, gamma_tmp[3], dt = 0;

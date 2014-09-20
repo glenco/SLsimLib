@@ -171,7 +171,7 @@ for(i = start; i < end; i++)
     // find position on first lens plane in comoving units
     p->i_points[i].image->x[0] = p->i_points[i].x[0] * p->Dl[0];
     p->i_points[i].image->x[1] = p->i_points[i].x[1] * p->Dl[0];
-      
+    
     xminus[0] = 0;
     xminus[1] = 0;
     
@@ -242,7 +242,6 @@ for(i = start; i < end; i++)
     	  gamma[0] *= fac;
     	  gamma[1] *= fac;
     	  gamma[2] *= fac;
-        // dt *= fac ;
 	
         assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
         assert(kappa == kappa);
@@ -272,7 +271,14 @@ for(i = start; i < end; i++)
         
       // ----------------------------------------------------------------------------------------
 
-        
+      /*
+      std::cout << "p->dDl[j-1]" << "\t" << "p->dDl[j]" << "\t" << "p->dDl[j+1]" << std::endl;
+      std::cout << p->dDl[j-1] << "\t" << p->dDl[j] << "\t" << p->dDl[j+1] << std::endl;
+      std::cout << "aa" << "\t" << "bb" << "\t" << "cc" << std::endl;
+      std::cout << aa << "\t" << bb << "\t" << cc << std::endl;
+       */
+      
+      
         // This computes (\kappa^{j+1}, \gamma_1^{j+1}, \gamma_2^{j+1}, \gamma_3^{j+1})
         // in terms of the j-plane quantities and according to Eq. (22) of GLAMER II.
         
@@ -286,8 +292,8 @@ for(i = start; i < end; i++)
             else bb = 0;
             cc = p->charge * p->dDl[j+1] * p->Dl[j] / p->Dl[j+1];
             // ------------------------------------------------------------------------------------
-            
-            
+
+      
         // Computation of the "plus quantities", i.e. the  next plane quantities --------------------
         kappa_plus = aa*p->i_points[i].kappa - bb*kappa_minus
     			  - cc*(kappa*p->i_points[i].kappa + gamma[0]*p->i_points[i].gamma[0] + gamma[1]*p->i_points[i].gamma[1]);
@@ -310,8 +316,20 @@ for(i = start; i < end; i++)
         gamma_minus[2] = p->i_points[i].gamma[2];
         // ------------------------------------------------------------------------------------------
       
+        /*
+        std::cout << "p->i_points[i].kappa" << "\t" << "p->i_points[i].gamma[0]" << "\t" << "p->i_points[i].gamma[1]" << "\t" << "p->i_points[i].gamma[2]" << std::endl ;
+        std::cout << p->i_points[i].kappa << "\t" << p->i_points[i].gamma[0] << "\t" << p->i_points[i].gamma[1] << "\t" << p->i_points[i].gamma[2] << std::endl ;
+      
+        std::cout << "x" << "\t" << "y" << std::endl;
+        std::cout << p->i_points[i].image->x[0] << "\t" << p->i_points[i].image->x[0] << std::endl;
+        std::cout << "kappa_minus" << "\t" << "gamma_minus[0]" << "\t" << "gamma_minus[1]" << "\t" << "gamma_minus[2]" << "\t" << std::endl ;
+        std::cout << kappa_minus << "\t" << gamma_minus[0] << "\t" << gamma_minus[1] << "\t" << gamma_minus[2] << "\t" << std::endl ;
+        std::cout << "kappa_plus" << "\t" << "gamma_plus[0]" << "\t" << "gamma_plus[1]" << "\t" << "gamma_plus[2]" << "\t" << std::endl ;
+        std::cout << kappa_plus << "\t" << gamma_plus[0] << "\t" << gamma_plus[1] << "\t" << gamma_plus[2] << "\t" << std::endl ;
+         */
+      
         assert(kappa_plus==kappa_plus && gamma_minus[0]==gamma_minus[0] && gamma_minus[1]==gamma_minus[1] && gamma_minus[2]==gamma_minus[2]);
-
+      
             
         // Updating the point quantities ----------------
         p->i_points[i].kappa = kappa_plus;

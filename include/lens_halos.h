@@ -199,8 +199,10 @@ public:
     
     return true;
   };
-
+  
+  
 protected:
+
   PosType alpha_int(PosType x) const;
   PosType norm_int(PosType r_max);
  // PosType norm_intt(PosType theta);
@@ -525,10 +527,8 @@ protected:
 		return -0.5*x*x*InterpolateFromTable(g2table,x)/gmax;
 	}
 	inline KappaType phi_h(PosType x) const{
-		//ERROR_MESSAGE();
-		//std::cout << "time delay has not been fixed for NFW profile yet." << std::endl;
-		//exit(1);
-		return -0.25*InterpolateFromTable(htable,x)/gmax;
+    return 0.25*(InterpolateFromTable(htable,x) - InterpolateFromTable(htable,Rmax/rscale))/gmax + log(Rmax) ;
+    // The constant contribution is made to match with the point mass at x = Rmax/rscale.
 	}
   inline KappaType phi_int(PosType x){
     return -1.0*InterpolateFromTable(xgtable,x)/gmax; //alpha_int(x);
@@ -652,8 +652,6 @@ public:
 	/// initialize from a mass function
 	void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed);
   
-    
-
 private:
 	/// read-in parameters from the parameter file
 	void assignParams(InputParams& params);
@@ -686,7 +684,7 @@ private:
   /// this is phi Sigma_crit pi / mass, the constants are added so that it is continous over the bourder at Rmax
  	inline KappaType phi_h(PosType x) const {
 		if(x==0) x=1e-6*xmax;
-		return ( pow(x/xmax,2-beta) - 1 )/(2-beta) + log(Rmax);
+    return ( pow(x/xmax,2-beta) - 1 )/(2-beta) + log(Rmax) ;
 	}
   inline KappaType phi_int(PosType x){
 		//return alpha_int(x);
