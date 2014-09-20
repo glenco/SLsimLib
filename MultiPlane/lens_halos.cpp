@@ -677,10 +677,10 @@ void LensHaloSimpleNSIE::initFromMassFunc(float my_mass, float my_Rmax, float my
 }
 */
 
-/** \brief returns the lensing quantaties of a ray in center of mass coordinates.
+/** \brief returns the lensing quantities of a ray in center of mass coordinates.
  *
  *  Warning: This adds to input value of alpha, kappa, gamma, and phi.  They need 
- *  to be veroed out if the contribution of just this halo is wanted.
+ *  to be zeroed out if the contribution of just this halo is wanted.
  */
 void LensHalo::force_halo(
                           PosType *alpha          /// deflection solar mass/Mpc
