@@ -96,6 +96,37 @@ public:
 	PosType getBtoT() const { return BtoT; }
 	PosType getPA() const { return PA; }
 	PosType getInclination() const { return inclination; }
+  PosType oldmag = mag;
+  void setBand(Band band){
+    switch(band){
+      case SDSS_U:
+        mag = mag_u;
+        break;
+      case SDSS_G:
+        mag = mag_g;
+        break;
+      case SDSS_R:
+        mag = mag_r;
+        break;
+      case SDSS_I:
+        mag = mag_i;
+        break;
+      case SDSS_Z:
+        mag = mag_z;
+        break;
+      case J:
+        mag = mag_J;
+        break;
+      case Ks:
+        mag = mag_Ks;
+        break;
+      default:
+        throw std::invalid_argument("band not supported");
+        break;
+    }
+    if(Rh > 0.0) sbDo = pow(10,(-mag+oldmag)/2.5);
+    if(Reff > 0.0) sbSo = pow(10,(-mag+oldmag)/2.5);
+  }
 	
 	/** Returns minimum of the radii at which disk and bulge have a surf. brightness equal to a fraction f of the central one
 	* TODO: Fabio: Needs to be tested and improved (Bulge is so steep in the center that output values are very small)

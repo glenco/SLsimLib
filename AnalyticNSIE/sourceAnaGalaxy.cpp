@@ -420,9 +420,19 @@ bool redshiftcompare(SourceOverzier s1,SourceOverzier s2){
     return (s1.getZ() < s2.getZ());
 }
 /// Sort the sources by magnitude in assending order
-void SourceMultiAnaGalaxy::sortInMag(){
+void SourceMultiAnaGalaxy::sortInMag(Band tmp_band){
   if(galaxies.size() < 2) return;
+  
+  if(tmp_band != band){
+    for(size_t i = 0; i < galaxies.size() ; ++i) galaxies[i].setBand(tmp_band);
+  }
+  
   std::sort(galaxies.begin(),galaxies.end(),magcompare);
+  
+  if(tmp_band != band){
+    for(size_t i = 0; i < galaxies.size() ; ++i) galaxies[i].setBand(band);
+  }
+
   delete searchtree;
   searchtree = new TreeSimpleVec<SourceOverzier>(galaxies.data(),galaxies.size(),1,2,true,SourceOverzier::getx);
 }

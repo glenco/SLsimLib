@@ -82,6 +82,10 @@ public:
 	PosType getRadius(){return galaxies[index].getRadius();}
 	/// Set redshift of current source.  Only changes the redshift while leaving position fixed.
 	void setZ(PosType my_z){	galaxies[index].setZ(my_z);}
+  void resetBand(Band my_band){
+    for(size_t i=0;i<galaxies.size();++i) galaxies[i].setBand(my_band);
+    band = my_band;
+  }
 
 	unsigned long getID(){return galaxies[index].getID();}
 
@@ -95,7 +99,7 @@ public:
 
 	void multiplier(PosType z,PosType mag_cut,int Multiplicity,long *seed);
   void sortInRedshift();
-  void sortInMag();
+  void sortInMag(Band tmp_band);
   void sortInID();
   /// returns field-of-view in deg^2 assuming region is square
   PosType getFOV(){return (rangex[1]-rangex[0])*(rangey[1]-rangey[0])*180*180/pi/pi;}
