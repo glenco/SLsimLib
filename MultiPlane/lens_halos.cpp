@@ -509,8 +509,8 @@ LensHaloPowerLaw::LensHaloPowerLaw(
             if(mod[i]!=0){set_flag_elliptical(true);};
         }
     }
-    // rscale = xmax = 1.0;
-    // Fabien : replacing it by :
+    // rscale = xmax = 1.0; // Commented in order to have a correct computation of the potential term in the time delay.
+    // Replacing it by :
     rscale = 1;
     xmax = Rmax/rscale ;
 }
@@ -556,8 +556,8 @@ LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
   mnorm = 1. ;
   std::cout << "mass normalization: " << mnorm << std::endl;
 
-    // rscale = xmax = 1.0; // Commented by Fabien in order to have a correct computation of the potential term in the time delay.
-    // Fabien : replacing it by :
+    // rscale = xmax = 1.0; // Commented in order to have a correct computation of the potential term in the time delay.
+    // Replacing it by :
     rscale = 1;
     xmax = Rmax/rscale;
     // Be careful : the other constructors have not been changed !

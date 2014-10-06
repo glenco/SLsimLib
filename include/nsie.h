@@ -38,10 +38,6 @@ typedef struct simple_analytic_lens{
 
 } SimpAnaLens;
 
-/// deleted repeated function declarations
-
-float phiNSIE(double *xt,double f,double bc,double theta);
-
 #endif
 
 
