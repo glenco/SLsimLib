@@ -53,9 +53,8 @@ void LensHaloBaseNSIE::force_halo(
     
     gamma[2] *= units;
     
-    // PHI BY Fabien
-    // *phi = phiNSIE(xcm,fratio,rcore,pa);
-    // *phi *= units ; // Fabien : is this necessary for the potential ?
+    *phi = phiNSIE(xcm,fratio,rcore,pa);
+    *phi *= units ;
   }
   
   // perturbations of host lens
@@ -64,7 +63,7 @@ void LensHaloBaseNSIE::force_halo(
     *kappa += lens_expand(perturb_beta,perturb_modes
                           ,perturb_Nmodes,xcm,alpha_tmp,gamma_tmp,&dt);
     
-    // PHI BY Fabien : should I put the computation of the potential somewhere here ?
+    // Should we put the computation of the potential somewhere here ?
     
     alpha[0] += alpha_tmp[0];
     alpha[1] += alpha_tmp[1];
@@ -94,7 +93,7 @@ void LensHaloBaseNSIE::force_halo(
         gamma[0] += gamma_tmp[0];
         gamma[1] += gamma_tmp[1];
         
-        // PHY BY Fabien : add something for potential here ?
+        // Add something for potential here ?
       }
     }
     

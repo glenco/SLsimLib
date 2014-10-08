@@ -200,16 +200,64 @@ namespace Utilities{
 	}
 }
 
-/* potential in Mpc^2 */
-KappaType phiNSIE(PosType *xt     /// position on the image plane in Einstein radius units
+
+
+/**\ingroup function
+ *
+ * Structure that does allow the integration of alphaNSIE in phiNSIE.
+ *
+ */
+struct alphaForInt {
+
+  alphaForInt(PosType f, PosType bc, PosType theta) : f(f), bc(bc), theta(theta) {}
+
+  KappaType operator()(PosType r) /// PosType r : |position| on the image plane in Einstein radius units
+  {
+    PosType alpha[2] ;
+    PosType x[2] = {1.0e-7,r} ;  // 1.0e-7 is arbitrary, any other value should pass the assertion as long as we do not get nan.
+    
+    alphaNSIE(alpha,x,f,bc,theta) ;
+    
+    if(r == 0.) { // Jump over assertion !
+    }
+    else {
+    // std::cout << "alpha[0]/x[0] = " << alpha[0]/x[0] << " , alpha[1]/x[1] = " << alpha[1]/x[1] << std::endl ;
+    assert( (alpha[0]/x[0])/(alpha[1]/x[1]) - 1. < 1.e-7 );   // Works only in symmetric case !!!
+    }
+    
+    return (alpha[0]/x[0]) * r ;
+  }
+  
+  private :
+  PosType f;       /// axis ratio of mass
+  PosType bc;      /// core size in units of Einstein radius
+  PosType theta;   /// position angle of ellipsoid
+};
+
+
+
+/**\ingroup function
+ *
+ * Compute the potential for the NSIE (in Mpc^2) by integration of alphaNSIE.
+ *
+ */
+KappaType phiNSIE(PosType const *xt    /// position on the image plane in Einstein radius units
                   ,PosType f      /// axis ratio of mass
                   ,PosType bc     /// core size in units of Einstein radius
                   ,PosType theta  /// position angle of ellipsoid
-                  )
+                )
 {
-
-	return 0.0;
+  // Here f, bc, and theta are fixed and known.
+  // std::cout << "xt = (" << xt[0] << " , " << xt[1] << " ) " << std::endl ;
+  
+  PosType r = sqrt(xt[0]*xt[0]+xt[1]*xt[1]) ; // So it works only in the symmetric case !!!
+  
+  struct alphaForInt alphaForIntFunc(f,bc,theta);
+  
+  // Doing the integration of alphaForIntFunc :
+  return Utilities::nintegrate<alphaForInt,PosType>(alphaForIntFunc, 1.0e-7, r, 1.0e-7);
 }
+
 
 
 /**\ingroup function

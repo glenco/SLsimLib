@@ -1456,6 +1456,20 @@ void ImageInfo::PrintImageInfo(){
 	std::printf("  Npoints = %li  area = %e fractional error %e\n",imagekist->Nunits(),area,area_error);
 	std::printf("  gridrange = %e %e %e\n",gridrange[0],gridrange[1],gridrange[2]);
 	std::printf("  borders inner N = %li  outer N = %li\n",innerborder->Nunits(),outerborder->Nunits());
+
+    // Displaying the average time delay on each image :
+    int i ;
+    // Doing the average :
+    double tmp_dt = 0. ;
+    imagekist->MoveToTop(); // Move to first point of imagekist
+    for(i=0;i<imagekist->Nunits();i++)
+    {
+      tmp_dt += imagekist->getCurrent()->dt ; // Directly in Years
+      imagekist->Down();
+    }
+    tmp_dt /= imagekist->Nunits() ;
+    // Showing information :
+    std::cout << "Time Delay = " << tmp_dt << " years (averaged over the image)." << std::endl ;
 }
 
 /// checks if all the points within the image have the same lensvar with the tolarence

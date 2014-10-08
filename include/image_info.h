@@ -57,7 +57,7 @@ struct ImageInfo{
   void FindArc(PosType &radius,PosType *xc,PosType *arc_c,PosType &arclength,PosType &width
             ,PosType resolution,PosType threshold);
   bool constant(LensingVariable lenvar,PosType tol);
-
+  
 };
 
 /** \brief This is an old version that should not be used anymore in favor of ImageInfo.

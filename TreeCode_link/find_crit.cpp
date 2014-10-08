@@ -14,7 +14,7 @@ using namespace std;
   *
   * \brief Finds critical curves and caustics.
   *
-  * OUTPUT: each critical curve is in a array of IamgeInfo's
+  * OUTPUT: each critical curve is in a array of ImageInfo's
   *         result.parity = 1 tangential caustic, 2 radial, 0 not enough points to determine
   *  the inner out outer boundaries of the result are the estimated critical curves
   *
@@ -33,7 +33,7 @@ void ImageFinding::find_crit(
 		,PosType resolution        /// The target resolution that the critical curve is mapped on the image plane.
 		,bool *orderingsuccess    /// true if ordering was successful.
 		,bool ordercurve          /// Order the curve so that it can be drawn or used to find the winding number.
-    ,bool dividecurves        /// Divide the critical curves into seporate curves by whether they are attached
+    ,bool dividecurves        /// Divide the critical curves into separate curves by whether they are attached
     ,PosType invmag_min        /// finds regions with 1/magnification < invmag_min, set to zero for caustics               
 		,bool verbose
 		){

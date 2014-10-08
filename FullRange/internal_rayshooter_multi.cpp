@@ -354,7 +354,7 @@ for(i = start; i < end; i++)
 
       
     // Convert units back to angles.
-    // Fabien : be careful ! These angles are not the same as those computed after the comment 'find position on first lens plane in comoving units' above, namely the angles we start with in this function. Values are close but still different. The change occurs after the comment 'Change in the value of the position.' above and by the fact that below we divide by Dl[p->NPlanes] and not Dl[0].
+    // Be careful ! These angles are not the same as those computed after the comment 'find position on first lens plane in comoving units' above, namely the angles we start with in this function. Values are close but still different. The change occurs after the comment 'Change in the value of the position.' above and by the fact that below we divide by Dl[p->NPlanes] and not Dl[0].
     p->i_points[i].image->x[0] /= p->Dl[p->NPlanes];
     p->i_points[i].image->x[1] /= p->Dl[p->NPlanes];
       
