@@ -162,43 +162,7 @@ public:
     PosType renormalization(PosType r_max);
   
   /// perform some basic consistancy checks for halo 
-  bool test(){
-    std::cout << "test alpha's consistance with kappa be comparing mass interior to a radius by 1D integration and Gauss' law and by 2D integration" << std::endl;
-    
-    std::cout << "R/Rmax      Mass 1 D         Mass 2 D         (m1 - m2)/m1 " << std::endl;
-    
-    int N=10;
-    PosType m1,m2;
-    for(int i=1;i<N;++i){
-      m1 = MassBy1DIntegation(Rmax*i/(N-2));
-      m2 = MassBy2DIntegation(Rmax*i/(N-2));
-      std::cout << i*1./(N-2) << "      " << m1 << "       "
-      << m2 << "        "<< (m1-m2)/m1 << std::endl;
-      
-    }
-    
-    PosType r;
-    std::cout << std::endl <<"R/Rmax      alpha/r - kappa        gamma_t         " << std::endl;
-    for(int i=1;i<N;++i){
-      
-      r = Rmax*i/(N-2);
-      if(!elliptical_flag){
-        PosType alpha[2] = {0,0},x[2] = {0,0};
-        KappaType kappa = 0,gamma[3] = {0,0,0} ,phi=0;
-        
-        x[0] = r;
-        x[1] = 0;
-        
-        force_halo(alpha,&kappa,gamma,&phi,x);
-        
-        std::cout << r/Rmax << "       " << -alpha[0]/r - kappa << "         " << -gamma[0] << std::endl;
-      }
-      
-    }
-
-    
-    return true;
-  };
+  bool test();
   
   
 protected:
