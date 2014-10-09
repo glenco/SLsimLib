@@ -22,9 +22,8 @@ void LensHaloBaseNSIE::force_halo(
 
   long j;
   PosType alpha_tmp[2];
-  KappaType kappa_tmp = 0.0, gamma_tmp[3], dt = 0;
-  KappaType phi_tmp = 0.0 ;
-  
+  KappaType kappa_tmp = 0.0, gamma_tmp[3];
+  KappaType * phi_tmp = new KappaType ;
   
   gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
   alpha_tmp[0] = alpha_tmp[1] = 0.0;
@@ -36,7 +35,7 @@ void LensHaloBaseNSIE::force_halo(
   
   
   PosType xt[2]={0,0};
-  float units = pow(sigma/lightspeed,2)/Grav; ///sqrt(fratio); // mass/distance(physical)
+  float units = pow(sigma/lightspeed,2)/Grav ; ///sqrt(fratio); // mass / distance(physical)
   xt[0]=xcm[0];
   xt[1]=xcm[1];
   
@@ -50,18 +49,29 @@ void LensHaloBaseNSIE::force_halo(
     *kappa *= units;
     gamma[0] *= units;
     gamma[1] *= units;
-    
     gamma[2] *= units;
     
-    *phi = phiNSIE(xcm,fratio,rcore,pa);
-    *phi *= units ;
+    *phi = -1.0 * phiNSIE(xcm,fratio,rcore,pa) ;  // phi in Mpc (physical)
+    *phi *= units ;                               // phi now in Msun
   }
+  
+  
+  // Multiplying by 2 Rmax / pi to match with Power Law
+  // Also needed to satisfy test().
+  float extrafac = 2. * Rmax / pi ;
+  alpha[0] *= extrafac;
+  alpha[1] *= extrafac;
+  *kappa   *= extrafac;
+  gamma[0] *= extrafac;
+  gamma[1] *= extrafac;
+  gamma[2] *= extrafac;
+  *phi     *= extrafac; // phi now in Mpc (physical) * Msun
+
   
   // perturbations of host lens
   if(perturb_Nmodes > 0)
   {
-    *kappa += lens_expand(perturb_beta,perturb_modes
-                          ,perturb_Nmodes,xcm,alpha_tmp,gamma_tmp,&dt);
+    *kappa += lens_expand(perturb_beta,perturb_modes,perturb_Nmodes,xcm,alpha_tmp,gamma_tmp,phi_tmp);
     
     // Should we put the computation of the potential somewhere here ?
     
@@ -82,8 +92,7 @@ void LensHaloBaseNSIE::force_halo(
     for(j=0;j<sub_N;++j)
     {
       
-      subs[j].force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp,xcm);
-      // subs[j].force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,xcm);
+      subs[j].force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,phi_tmp,xcm);
       
       alpha[0] += alpha_tmp[0];
       alpha[1] += alpha_tmp[1];
@@ -105,6 +114,7 @@ void LensHaloBaseNSIE::force_halo(
   if(stars_N > 0 && stars_implanted){
     force_stars(alpha,kappa,gamma,xcm);
   }
+  
   return ;
 }
 

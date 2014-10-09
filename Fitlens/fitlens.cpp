@@ -521,14 +521,14 @@ void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *x_cent
 
 double LensHaloAnaNSIE::deflect_translated(double beta,double *mod,double *x,double *y,double *mag,int Nmodes
 		  ,int Nlenses,double Re2,double *x2){
-	KappaType kappa,gamma[2],dt;
-
+	KappaType kappa,gamma[2];
+  KappaType *phi = new KappaType ;
 
   if(mod[0] != 0.0){ERROR_MESSAGE(); std::printf("background kappa should be zero\n"); exit(0);}
   assert(Nlenses < 3);
 
   // use deflection calculator to reduce code duplication
-  kappa = lens_expand(beta,mod,Nmodes,x,y,gamma,&dt);
+  kappa = lens_expand(beta,mod,Nmodes,x,y,gamma,phi);
 
   // translate result to convention used here
 

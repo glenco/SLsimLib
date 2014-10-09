@@ -214,11 +214,14 @@ struct alphaForInt {
   KappaType operator()(PosType r) /// PosType r : |position| on the image plane in Einstein radius units
   {
     PosType alpha[2] ;
-    PosType x[2] = {1.0e-7,r} ;  // 1.0e-7 is arbitrary, any other value should pass the assertion as long as we do not get nan.
+    PosType rmin = 1.e-7 ;
+    PosType x[2] = {rmin,r} ;  // rmin is arbitrary, any other value should pass the assertion as long as we do not get nan.
     
     alphaNSIE(alpha,x,f,bc,theta) ;
     
-    if(r == 0.) { // Jump over assertion !
+    if(r < rmin) {
+      r = rmin ;
+      // Jump over assertion !
     }
     else {
     // std::cout << "alpha[0]/x[0] = " << alpha[0]/x[0] << " , alpha[1]/x[1] = " << alpha[1]/x[1] << std::endl ;
@@ -238,7 +241,7 @@ struct alphaForInt {
 
 /**\ingroup function
  *
- * Compute the potential for the NSIE (in Mpc^2) by integration of alphaNSIE.
+ * Compute the potential for the NSIE (in physical Mpc) by integration of alphaNSIE.
  *
  */
 KappaType phiNSIE(PosType const *xt    /// position on the image plane in Einstein radius units

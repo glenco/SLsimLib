@@ -57,7 +57,7 @@ public:
 
   /// critical surface density
   PosType getSigma_crit(){return Sigma_crit;}
-  /// the time delay scale in days/Mpc^2
+  /// the time delay scale in days/Mpc^2        // Are we sure about that ?
   PosType get_to(){return to;}
    /// Angular size distance to lens plane
   PosType get_Dl(){return Dl;}
