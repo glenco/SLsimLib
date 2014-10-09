@@ -58,6 +58,7 @@ void LensHaloBaseNSIE::force_halo(
   
   // Multiplying by 2 Rmax / pi to match with Power Law
   // Also needed to satisfy test().
+  /*
   float extrafac = 2. * Rmax / pi ;
   alpha[0] *= extrafac;
   alpha[1] *= extrafac;
@@ -66,6 +67,7 @@ void LensHaloBaseNSIE::force_halo(
   gamma[1] *= extrafac;
   gamma[2] *= extrafac;
   *phi     *= extrafac; // phi now in Mpc (physical) * Msun
+  */
 
   
   // perturbations of host lens
