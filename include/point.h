@@ -25,9 +25,9 @@
 #define ERROR_MESSAGE() std::cout << "ERROR: file: " << __FILE__ << " line: " << __LINE__ << std::endl;
 #endif
 
-#ifndef bool_declare
-#define bool_declare
-typedef enum {FALSE, TRUE, MAYBE} Boo;
+#ifndef boo_declare
+#define boo_declare
+typedef enum {NO, YES, MAYBE} Boo;
 #endif
 
 

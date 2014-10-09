@@ -14,7 +14,7 @@ const PosType target_all = 1.0e-3;
 const float tol_UniformMag = 1.0e-3;
 const bool verbose = false;
 
-/**
+/** \ingroup ImageFinding
  *  \brief Find images and refine them based on their surface brightness distribution.
  *
  *  Uses ImageFinding::find_images_kist() to initially find and refine images and then uses a surface brightness
@@ -401,10 +401,10 @@ void ImageFinding::map_images(
 
 		if(getCurrentKist(imageinfo->imagekist)->surface_brightness > 0){
 
-			getCurrentKist(imageinfo->imagekist)->in_image = TRUE;
+			getCurrentKist(imageinfo->imagekist)->in_image = YES;
 			MoveDownKist(imageinfo->imagekist);
 		}else{
-			getCurrentKist(imageinfo->imagekist)->in_image = FALSE;
+			getCurrentKist(imageinfo->imagekist)->in_image = NO;
 			if(AtTopKist(imageinfo->imagekist)) go = false; else go = true;
 			TakeOutCurrentKist(imageinfo->imagekist);
 			if(go) MoveDownKist(imageinfo->imagekist);
@@ -432,12 +432,12 @@ void ImageFinding::map_images(
 
 		if(imageinfo->imagekist->getCurrent()->surface_brightness > 0){
 
-			imageinfo->imagekist->getCurrent()->in_image = TRUE;
-			imageinfo->imagekist->getCurrent()->image->in_image = TRUE;
+			imageinfo->imagekist->getCurrent()->in_image = YES;
+			imageinfo->imagekist->getCurrent()->image->in_image = YES;
 			imageinfo->imagekist->Down();
 		}else{
-			imageinfo->imagekist->getCurrent()->in_image = FALSE;
-			imageinfo->imagekist->getCurrent()->image->in_image = FALSE;
+			imageinfo->imagekist->getCurrent()->in_image = NO;
+			imageinfo->imagekist->getCurrent()->image->in_image = NO;
 			if(imageinfo->imagekist->AtTop()) go = false; else go = true;
 			imageinfo->imagekist->TakeOutCurrent();
 			if(go) imageinfo->imagekist->Down();
@@ -538,8 +538,8 @@ void ImageFinding::map_images(
 /*
 		// Find borders to images
 		for(j = 0,MoveToTopKist(imageinfo[i].imagekist) ; j < imageinfo[i].imagekist->Nunits() ; ++j,MoveDownKist(imageinfo[i].imagekist) ){
-			getCurrentKist(imageinfo[i].imagekist)->in_image = TRUE;  // re-set marks
-			getCurrentKist(imageinfo[i].imagekist)->image->in_image = TRUE;  // re-set marks
+			getCurrentKist(imageinfo[i].imagekist)->in_image = YES;  // re-set marks
+			getCurrentKist(imageinfo[i].imagekist)->image->in_image = YES;  // re-set marks
 		}
 		findborders4(grid->i_tree,&(imageinfo[i]));
 */
@@ -557,8 +557,8 @@ void ImageFinding::map_images(
           *pow(imageinfo[i].imagekist->getCurrent()->gridsize,2)
 					*imageinfo[i].imagekist->getCurrent()->surface_brightness;
 
-			imageinfo[i].imagekist->getCurrent()->in_image = FALSE;  // re-set marks
-			imageinfo[i].imagekist->getCurrent()->image->in_image = FALSE;  // re-set marks
+			imageinfo[i].imagekist->getCurrent()->in_image = NO;  // re-set marks
+			imageinfo[i].imagekist->getCurrent()->image->in_image = NO;  // re-set marks
 		}
 		if(imageinfo[i].getNimagePoints() > 0 ){
 			imageinfo[i].centroid[0] /= imageinfo[i].area;
@@ -628,14 +628,14 @@ void ImageFinding::map_images_fixedgrid(
     imageinfo->area += imageinfo->imagekist->getCurrent()->surface_brightness;
     
     if(imageinfo->imagekist->getCurrent()->surface_brightness == 0.0){
-      imageinfo->imagekist->getCurrent()->in_image = FALSE;  // re-set marks
-			imageinfo->imagekist->getCurrent()->image->in_image = FALSE;  // re-set marks
+      imageinfo->imagekist->getCurrent()->in_image = NO;  // re-set marks
+			imageinfo->imagekist->getCurrent()->image->in_image = NO;  // re-set marks
       move = imageinfo->imagekist->AtTop();
       imageinfo->imagekist->TakeOutCurrent();
       if(!move) imageinfo->imagekist->Down();
     }else{
-      imageinfo->imagekist->getCurrent()->in_image = TRUE;  // re-set marks
-			imageinfo->imagekist->getCurrent()->image->in_image = TRUE;  // re-set marks
+      imageinfo->imagekist->getCurrent()->in_image = YES;  // re-set marks
+			imageinfo->imagekist->getCurrent()->image->in_image = YES;  // re-set marks
       imageinfo->imagekist->Down();
     }
     
@@ -688,8 +688,8 @@ void ImageFinding::map_images_fixedgrid(
                        *pow(imageinfo[i].imagekist->getCurrent()->gridsize,2)
                        *imageinfo[i].imagekist->getCurrent()->surface_brightness;
       
-			imageinfo[i].imagekist->getCurrent()->in_image = FALSE;  // re-set marks
-			imageinfo[i].imagekist->getCurrent()->image->in_image = FALSE;  // re-set marks
+			imageinfo[i].imagekist->getCurrent()->in_image = NO;  // re-set marks
+			imageinfo[i].imagekist->getCurrent()->image->in_image = NO;  // re-set marks
 		}
 		if(imageinfo[i].getNimagePoints() > 0 ){
 			imageinfo[i].centroid[0] /= imageinfo[i].area;
@@ -791,7 +791,7 @@ int ImageFinding::refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,P
 					  if(nearest->Nunits() == 0 ) grid->i_tree->FindAllBoxNeighborsKist(imageinfo[i].imagekist->getCurrent(),nearest);
 					  nearest->MoveToTop();
 					  do{
-						  if(nearest->getCurrent()->in_image != TRUE){
+						  if(nearest->getCurrent()->in_image != YES){
 							  reborder = true;
 							  break;
 						  }
@@ -831,13 +831,13 @@ int ImageFinding::refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,P
 								  InsertAfterCurrentKist(imageinfo[i].imagekist,&(i_points[k]));
 								  MoveDownKist(imageinfo[i].imagekist);
 
-								  i_points[k].in_image = TRUE;
-								  i_points[k].image->in_image = TRUE;
+								  i_points[k].in_image = YES;
+								  i_points[k].image->in_image = YES;
 
 								  imageinfo[i].area += pow(i_points[k].gridsize,2)*(i_points[k].surface_brightness/maxflux);
 
 							  }else{
-								  i_points[k].in_image =  i_points[k].image->in_image = FALSE;
+								  i_points[k].in_image =  i_points[k].image->in_image = NO;
 							  }
 
 							  ++number_of_refined;
@@ -865,7 +865,7 @@ int ImageFinding::refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,P
 		  if(reborder){
 			  if(imageinfo[i].outerborder->MoveToTop()){
 				  do{
-					  imageinfo[i].outerborder->getCurrent()->in_image = FALSE;
+					  imageinfo[i].outerborder->getCurrent()->in_image = NO;
 					  //if(imageinfo[i].outerborder->getCurrent()->surface_brightness > 0)
 						//  point = imageinfo[i].outerborder->getCurrent();
 				  }while(imageinfo[i].outerborder->Down());
@@ -920,12 +920,12 @@ int ImageFinding::refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,P
 								  InsertAfterCurrentKist(imageinfo[i].imagekist,&(i_points[k]));
 								  MoveDownKist(imageinfo[i].imagekist);
 
-								  i_points[k].in_image = TRUE;
-								  i_points[k].image->in_image = TRUE;
+								  i_points[k].in_image = YES;
+								  i_points[k].image->in_image = YES;
 								  imageinfo[i].area += pow(i_points[k].gridsize,2)*(i_points[k].surface_brightness/maxflux);
 
 							  }else{
-								  i_points[k].in_image =  i_points[k].image->in_image = FALSE;
+								  i_points[k].in_image =  i_points[k].image->in_image = NO;
 							  }
 
 							  ++number_of_refined;
@@ -957,7 +957,7 @@ int ImageFinding::refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,P
 
 			  if(imageinfo[i].outerborder->MoveToTop()){
 				  do{
-					  imageinfo[i].outerborder->getCurrent()->in_image = FALSE;
+					  imageinfo[i].outerborder->getCurrent()->in_image = NO;
 					  //if(imageinfo[i].outerborder->getCurrent()->surface_brightness > 0) point = imageinfo[i].outerborder->getCurrent();
 				  }while(imageinfo[i].outerborder->Down());
 			  }
@@ -983,7 +983,7 @@ int ImageFinding::refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,P
 
 	  if(imageinfo[i].outerborder->MoveToTop()){
 		  do{
-			  imageinfo[i].outerborder->getCurrent()->in_image = FALSE;
+			  imageinfo[i].outerborder->getCurrent()->in_image = NO;
 		  }while(imageinfo[i].outerborder->Down());
 	  }
   }
@@ -1061,13 +1061,13 @@ void ImageFinding::check_sb_add(Source *source,ImageInfo *imageinfo,Point *i_poi
 				imageinfo->imagekist->InsertAfterCurrent(&(i_points[k]));
 				imageinfo->imagekist->Down();
 
-				i_points[k].in_image = TRUE;
-				i_points[k].image->in_image = TRUE;
+				i_points[k].in_image = YES;
+				i_points[k].image->in_image = YES;
 
 				imageinfo->area += pow(i_points[k].gridsize,2)*(i_points[k].surface_brightness/maxflux);
 
 			}else{
-				i_points[k].in_image =  i_points[k].image->in_image = FALSE;
+				i_points[k].in_image =  i_points[k].image->in_image = NO;
 			}
 
 			++number_of_refined;

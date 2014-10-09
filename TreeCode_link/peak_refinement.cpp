@@ -65,7 +65,7 @@ short find_peaks(
 		for(i=0;i<Ntemp;++i){
 			if(imageinfo->imagekist->getCurrent()->kappa < threshold){
 
-				imageinfo->imagekist->getCurrent()->in_image = FALSE;
+				imageinfo->imagekist->getCurrent()->in_image = NO;
 				if(imageinfo->imagekist->AtTop()){
 					imageinfo->imagekist->TakeOutCurrent();
 				}else{
@@ -73,7 +73,7 @@ short find_peaks(
 					imageinfo->imagekist->Down();
 				}
 			}else{
-				imageinfo->imagekist->getCurrent()->in_image = TRUE;
+				imageinfo->imagekist->getCurrent()->in_image = YES;
 
 				if(imageinfo->imagekist->getCurrent()->gridsize > imageinfo->gridrange[1])
 					imageinfo->gridrange[1] = imageinfo->imagekist->getCurrent()->gridsize;
@@ -106,7 +106,7 @@ short find_peaks(
 
 					imageinfo->imagekist->InsertAfterCurrent(newpointskist->TakeOutCurrent());
 					imageinfo->imagekist->Down();
-					imageinfo->imagekist->getCurrent()->in_image = TRUE;
+					imageinfo->imagekist->getCurrent()->in_image = YES;
 
 					if(imageinfo->imagekist->getCurrent()->gridsize > imageinfo->gridrange[1])
 						imageinfo->gridrange[1] = imageinfo->imagekist->getCurrent()->gridsize;
@@ -114,7 +114,7 @@ short find_peaks(
 						imageinfo->gridrange[2] = imageinfo->imagekist->getCurrent()->gridsize;
 
 				}else{
-					newpointskist->TakeOutCurrent()->in_image = FALSE;
+					newpointskist->TakeOutCurrent()->in_image = NO;
 				}
 			}
 

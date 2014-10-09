@@ -12,7 +12,7 @@
 const bool verbose = false;
 const PosType FracResTarget = 3.0e-5;
 
-/**
+/** \ingroup ImageFinding
  *  \brief Find images and refine them based on their surface brightness distribution.
  *
  *  Uses ImageFinding::find_images_kist() to initially find and refine images and then using 
@@ -106,13 +106,13 @@ void ImageFinding::map_imagesISOP(
 
       //if(imageinfo[i].imagekist->getCurrent()->surface_brightness > 0){
 
-        imageinfo[i].imagekist->getCurrent()->in_image = TRUE;
-        imageinfo[i].imagekist->getCurrent()->image->in_image = TRUE;
+        imageinfo[i].imagekist->getCurrent()->in_image = YES;
+        imageinfo[i].imagekist->getCurrent()->image->in_image = YES;
         imageinfo[i].imagekist->Down();
         gridmax=MAX(imageinfo[i].imagekist->getCurrent()->gridsize,gridmax);
       /*}else{
-        imageinfo[i].imagekist->getCurrent()->in_image = FALSE;
-        imageinfo[i].imagekist->getCurrent()->image->in_image = FALSE;
+        imageinfo[i].imagekist->getCurrent()->in_image = NO;
+        imageinfo[i].imagekist->getCurrent()->image->in_image = NO;
         if(imageinfo[i].imagekist->AtTop()) go = false; else go = true;
         imageinfo[i].imagekist->TakeOutCurrent();
         if(go) imageinfo[i].imagekist->Down();
@@ -222,10 +222,10 @@ void ImageFinding::map_imagesISOP(
 		do{
            current = imageinfo[i].imagekist->getCurrent();
            ImageFinding::IntegrateFluxInCell(current,*source,1.0e-2,outcome);
-           if(outcome != TRUE || current->gridsize > res_min ){
+           if(outcome != YES || current->gridsize > res_min ){
               ++count;
               imageinfo[i].imagekist->getCurrent()->flag = false;
-               if(outcome == FALSE) ++count_moreNeighbors;
+               if(outcome == NO) ++count_moreNeighbors;
                if(outcome == MAYBE) ++count_isopfail;
                if(current->gridsize > res_min) ++count_res;
            }else{
@@ -284,8 +284,8 @@ void ImageFinding::map_imagesISOP(
           *pow(imageinfo[i].imagekist->getCurrent()->gridsize,2)
 					*imageinfo[i].imagekist->getCurrent()->surface_brightness;
 
-			imageinfo[i].imagekist->getCurrent()->in_image = FALSE;  // re-set marks
-			imageinfo[i].imagekist->getCurrent()->image->in_image = FALSE;  // re-set marks
+			imageinfo[i].imagekist->getCurrent()->in_image = NO;  // re-set marks
+			imageinfo[i].imagekist->getCurrent()->image->in_image = NO;  // re-set marks
       imageinfo[i].imagekist->getCurrent()->flag = false;
       
       
@@ -360,7 +360,7 @@ int ImageFinding::refine_grid_on_imageISOP(Lens *lens,Source *source,GridHndl gr
         
         if(current->flag == false){
           ImageFinding::IntegrateFluxInCell(current,*source,1.0e-2,outcome);
-          if(outcome == TRUE && current->gridsize < res_min){
+          if(outcome == YES && current->gridsize < res_min){
             current->flag = true;
           }else if( (outcome == MAYBE && current->image->leaf->area() > res_source_area ) || current->gridsize > res_min
                    || ImageFinding::RefinePoint2(current,grid->i_tree
@@ -379,7 +379,7 @@ int ImageFinding::refine_grid_on_imageISOP(Lens *lens,Source *source,GridHndl gr
             if(nearest->Nunits() == 0 ) grid->i_tree->FindAllBoxNeighborsKist(current,nearest);
             nearest->MoveToTop();
             do{
-              if(nearest->getCurrent()->in_image != TRUE){
+              if(nearest->getCurrent()->in_image != YES){
                 reborder = true;
                 break;
               }
@@ -413,7 +413,7 @@ int ImageFinding::refine_grid_on_imageISOP(Lens *lens,Source *source,GridHndl gr
       if(reborder){
         if(imageinfo[i].outerborder->MoveToTop()){
           do{
-            imageinfo[i].outerborder->getCurrent()->in_image = FALSE;
+            imageinfo[i].outerborder->getCurrent()->in_image = NO;
             //if(imageinfo[i].outerborder->getCurrent()->surface_brightness > 0)
             //  point = imageinfo[i].outerborder->getCurrent();
           }while(imageinfo[i].outerborder->Down());
@@ -435,7 +435,7 @@ int ImageFinding::refine_grid_on_imageISOP(Lens *lens,Source *source,GridHndl gr
         current = imageinfo[i].outerborder->getCurrent();
         if(current->flag == false){
           ImageFinding::IntegrateFluxInCell(current,*source,1.0e-2,outcome);
-          if(outcome == TRUE && current->gridsize < res_min){
+          if(outcome == YES && current->gridsize < res_min){
             current->flag = true;
           }else if(
              ImageFinding::RefinePoint2(current,grid->i_tree
@@ -476,7 +476,7 @@ int ImageFinding::refine_grid_on_imageISOP(Lens *lens,Source *source,GridHndl gr
         
 			  if(imageinfo[i].outerborder->MoveToTop()){
 				  do{
-					  imageinfo[i].outerborder->getCurrent()->in_image = FALSE;
+					  imageinfo[i].outerborder->getCurrent()->in_image = NO;
 					  //if(imageinfo[i].outerborder->getCurrent()->surface_brightness > 0) point = imageinfo[i].outerborder->getCurrent();
 				  }while(imageinfo[i].outerborder->Down());
 			  }
@@ -502,7 +502,7 @@ int ImageFinding::refine_grid_on_imageISOP(Lens *lens,Source *source,GridHndl gr
     
 	  if(imageinfo[i].outerborder->MoveToTop()){
 		  do{
-			  imageinfo[i].outerborder->getCurrent()->in_image = FALSE;
+			  imageinfo[i].outerborder->getCurrent()->in_image = NO;
 		  }while(imageinfo[i].outerborder->Down());
 	  }
   }
@@ -551,7 +551,7 @@ int ImageFinding::refine_grid_on_imageISOP(Lens *lens,Source *source,GridHndl gr
  *    Points in the Kist from it1 to it2 inclusive are integrated. 
  *    source.SurfaceBrightness() must be thread safe.
  *    
- *    If outcome from ImageFinding::IntegrateFluxInCell() returns TRUE the 
+ *    If outcome from ImageFinding::IntegrateFluxInCell() returns YES the 
  *    flag of that point is set to true.  Otherwise it is false.
  */
 
@@ -572,7 +572,7 @@ void ImageFinding::IntegrateCellsParallel(
       ImageFinding::IntegrateFluxInCell(*it,*source,1.0e-2,outcome);
       ++(*count);
       *area += (*it)->surface_brightness*(*it)->gridsize*(*it)->gridsize;
-      if(outcome == TRUE) (*it)->flag = true;
+      if(outcome == YES) (*it)->flag = true;
       else (*it)->flag = false;
     }
   }
@@ -580,7 +580,7 @@ void ImageFinding::IntegrateCellsParallel(
     ImageFinding::IntegrateFluxInCell(*it2,*source,1.0e-2,outcome);
     ++(*count);
     *area += (*it2)->surface_brightness*(*it2)->gridsize*(*it2)->gridsize;
-    if(outcome == TRUE) (*it2)->flag = true;
+    if(outcome == YES) (*it2)->flag = true;
     else (*it2)->flag = false;
   }
   return;
@@ -588,7 +588,7 @@ void ImageFinding::IntegrateCellsParallel(
 
 /** \brief Integrate the flux within a cell using the isoparametric expansion.
  *
- *   If outcome returns as FALSE or MAYBE the surface brightness will be returned without 
+ *   If outcome returns as NO or MAYBE the surface brightness will be returned without 
  *   integrating.
  *
  *   The result is returned in the point->surface_brightness in surface brightness
@@ -604,14 +604,14 @@ void ImageFinding::IntegrateFluxInCell(
                                        Point *point      /// center point of cell to be integrated
                                        ,Source &source   /// source to be integrated
                                        ,float tolerance  /// tolerance to which isop expantion is checked
-                                       ,Boo &outcome     /// FALSE if not 8 neighbors, MAYBE if isop expansion not valid, TRUE is source is integarted successfully
+                                       ,Boo &outcome     /// NO if not 8 neighbors, MAYBE if isop expansion not valid, YES is source is integarted successfully
                                        ){
 
   point->surface_brightness = source.SurfaceBrightness(point->x);//*point->gridsize*point->gridsize;
 
   // Check that
   if(point->leaf->neighbors.size() != 8){
-    outcome = FALSE;
+    outcome = NO;
     return;
   }
   
@@ -620,7 +620,7 @@ void ImageFinding::IntegrateFluxInCell(
   for(std::list<Branch *>::iterator it = point->leaf->neighbors.begin();
       it != point->leaf->neighbors.end() ; ++it,++i){
 		if((*it)->npoints == 0){
-      outcome = FALSE;
+      outcome = NO;
       return;
     }
 		neighbors[i] = (*it)->points;
@@ -711,7 +711,7 @@ void ImageFinding::IntegrateFluxInCell(
   if( fabs(point->image->x[0] - ISOP::isop(x,0,0)) > tolerance*scale){outcome = MAYBE; return;}
   if( fabs(point->image->x[1] - ISOP::isop(y,0,0)) > tolerance*scale){outcome = MAYBE; return;}
 
-  outcome = TRUE;
+  outcome = YES;
 }
 
 /** \brief Finds the source position of a point that lies half way between points p1 and p2 on the image plane by third order interpolation.

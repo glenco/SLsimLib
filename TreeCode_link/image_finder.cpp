@@ -70,7 +70,7 @@ int refine_grid(LensHndl lens,GridHndl grid,OldImageInfo *imageinfo
     		if( imageinfo[i].outerborder->getCurrent()->gridsize > 1.01*rmax/Ngrid_block ){
     			// border point is marked to prevent refining more than once
     			//   it will be unmarked by the end of refine grid
-    			imageinfo[i].outerborder->getCurrent()->in_image = TRUE;
+    			imageinfo[i].outerborder->getCurrent()->in_image = YES;
     			++Ncells;
     		}
     		imageinfo[i].outerborder->Down();
@@ -117,7 +117,7 @@ int refine_grid(LensHndl lens,GridHndl grid,OldImageInfo *imageinfo
       				grid->RefineLeaf(lens,point);
       			}
       			++Ncells;
-    			  point->in_image = FALSE;  // unmark so that it wouldn't double refine
+    			  point->in_image = NO;  // unmark so that it wouldn't double refine
     		  }
     		  //imageinfo[i].outerborderlist->current->gridsize /= Ngrid_block;/**/
     	  }
@@ -181,7 +181,7 @@ long refine_edges(
 							|| ( criterion==1 && imageinfo[i].outerborder->getCurrent()->gridsize > res_target)
 							|| ( criterion==2 && pow(imageinfo[i].outerborder->getCurrent()->gridsize,2)/area_total > res_target) ){
 				++Ncells;
-				imageinfo[i].outerborder->getCurrent()->in_image = TRUE;  // Temporarily mark point so they are not double refined
+				imageinfo[i].outerborder->getCurrent()->in_image = YES;  // Temporarily mark point so they are not double refined
 			}
 			imageinfo[i].outerborder->Down();
 		}
@@ -223,7 +223,7 @@ long refine_edges(
 						}
 					}
 
-					point->in_image = FALSE;
+					point->in_image = NO;
 
 					++Ncells;
 				}
@@ -318,7 +318,7 @@ long refine_edges2(LensHndl lens,PosType *y_source,PosType r_source,GridHndl gri
 					|| ( criterion==1 && imageinfo[i].outerborder->getCurrent()->gridsize > res_target)
 					|| ( criterion==2 && pow( imageinfo[i].outerborder->getCurrent()->gridsize,2)/area_total > res_target)){
 				++Ncells;
-				imageinfo[i].outerborder->getCurrent()->in_image = TRUE; // temporary mark
+				imageinfo[i].outerborder->getCurrent()->in_image = YES; // temporary mark
 			}
 			imageinfo[i].outerborder->Down();
 		}
@@ -367,8 +367,8 @@ long refine_edges2(LensHndl lens,PosType *y_source,PosType r_source,GridHndl gri
 									+ pow(i_points[j].image->x[1]-y_source[1],2)) < r_source){
 
 									// mark points
-									i_points[j].in_image = TRUE;
-									i_points[j].image->in_image = TRUE;
+									i_points[j].in_image = YES;
+									i_points[j].image->in_image = YES;
 
 									InsertAfterCurrentKist(imageinfo[i].innerborder,&(i_points[j]));
 									InsertAfterCurrentKist(imageinfo[i].imagekist,&(i_points[j]));
@@ -378,13 +378,13 @@ long refine_edges2(LensHndl lens,PosType *y_source,PosType r_source,GridHndl gri
 								}else{
 
 									// un-mark points
-									i_points[j].in_image = FALSE;
-									i_points[j].image->in_image = FALSE;
+									i_points[j].in_image = NO;
+									i_points[j].image->in_image = NO;
 								}
 							}*/
 						}
 
-						point->in_image = FALSE;
+						point->in_image = NO;
 					}else *image_overlap=true;
 
 				}
@@ -426,8 +426,8 @@ long refine_edges2(LensHndl lens,PosType *y_source,PosType r_source,GridHndl gri
 										+ pow(i_points[j].image->x[1]-y_source[1],2)) < r_source){
 
 									// mark points
-									i_points[j].in_image = TRUE;
-									i_points[j].image->in_image = TRUE;
+									i_points[j].in_image = YES;
+									i_points[j].image->in_image = YES;
 
 									InsertAfterCurrentKist(imageinfo[i].innerborder,&(i_points[j]));
 									InsertAfterCurrentKist(imageinfo[i].imagekist,&(i_points[j]));
@@ -438,8 +438,8 @@ long refine_edges2(LensHndl lens,PosType *y_source,PosType r_source,GridHndl gri
 								}else{
 
 									// un-mark points
-									i_points[j].in_image = FALSE;
-									i_points[j].image->in_image = FALSE;
+									i_points[j].in_image = NO;
+									i_points[j].image->in_image = NO;
 
 								}
 							}
@@ -488,7 +488,7 @@ long refine_edges2(LensHndl lens,PosType *y_source,PosType r_source,GridHndl gri
 
 				neighborkist->MoveToTop();
 				for(k=0;k < neighborkist->Nunits() ;++k){
-					if(neighborkist->getCurrent()->in_image == FALSE){
+					if(neighborkist->getCurrent()->in_image == NO){
 						addinner=true;
 
 						imageinfo[i].outerborder->MoveToTop();
@@ -529,8 +529,8 @@ void sort_out_points(Point *i_points,ImageInfo *imageinfo,PosType r_source,PosTy
 			+ pow(i_points[j].image->x[1]-y_source[1],2)) < r_source){
 
 			// mark points
-			i_points[j].in_image = TRUE;
-			i_points[j].image->in_image = TRUE;
+			i_points[j].in_image = YES;
+			i_points[j].image->in_image = YES;
 
 			imageinfo->innerborder->InsertAfterCurrent(&(i_points[j]));
 			imageinfo->imagekist->InsertAfterCurrent(&(i_points[j]));
@@ -540,8 +540,8 @@ void sort_out_points(Point *i_points,ImageInfo *imageinfo,PosType r_source,PosTy
 		}else{
 
 			// un-mark points
-			i_points[j].in_image = FALSE;
-			i_points[j].image->in_image = FALSE;
+			i_points[j].in_image = NO;
+			i_points[j].image->in_image = NO;
 		}
 	}
 }
@@ -752,7 +752,7 @@ void findborders3(TreeHndl i_tree,OldImageInfo *imageinfo){
 		neighborkist->MoveToTop();
 		for(i=0;i<neighborkist->Nunits();++i){
 
-			if( neighborkist->getCurrent()->in_image == FALSE){  // point is a neighbor
+			if( neighborkist->getCurrent()->in_image == NO){  // point is a neighbor
 				addinner=true;
 				// check if point is already in list
 				imageinfo->outerborder->MoveToTop();

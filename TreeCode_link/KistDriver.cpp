@@ -203,8 +203,8 @@ void TreeStruct::PointsWithinEllipKist(
  * \brief Finds all points in tree that lie within rmax of the point ray[]
  *
  *   markpoints = 0  does not change in_image variable in any point, gives a list of neighbors
- *              = 1  makes in_image=TRUE for all points and their images in image, gives no list of neighbors
- *              = -1 makes in_image=FALSE for all points in image to reset, gives no list of neighbors
+ *              = 1  makes in_image=YES for all points and their images in image, gives no list of neighbors
+ *              = -1 makes in_image=NO for all points in image to reset, gives no list of neighbors
  *
  *   Returns the largest gridsize of the points within the circle.  Note that this is the gridsize stored
  *   in the point.  If finding points on the source plane the i_point->gridsize must be set to the same as the
@@ -286,11 +286,11 @@ void TreeStruct::_PointsWithinKist(PosType *ray,PosType *rmax,Kist<Point> * neig
     			  for(j=0,radius=0.0;j<2;++j) radius+=pow(pointlist->current->x[j]-ray[j],2);
     			  if( radius < *rmax**rmax ){
        				  if(markpoints == 1){
-       					  pointlist->current->in_image = TRUE;
-      					  pointlist->current->image->in_image = TRUE;
+       					  pointlist->current->in_image = YES;
+      					  pointlist->current->image->in_image = YES;
       				  }else if(markpoints == -1){
-      					  pointlist->current->in_image=FALSE;
-     					  pointlist->current->image->in_image=FALSE;
+      					  pointlist->current->in_image=NO;
+     					  pointlist->current->image->in_image=NO;
      					  pointlist->current->surface_brightness = pointlist->current->image->surface_brightness = 0.0;
        				  }else if(markpoints == 0){
          				  neighborkist->InsertAfterCurrent(pointlist->current);
@@ -302,11 +302,11 @@ void TreeStruct::_PointsWithinKist(PosType *ray,PosType *rmax,Kist<Point> * neig
     	  }else{ // put all of points in box into getCurrentKist(imagekist)
        		  for(i=0;i<current->npoints;++i){
        			  if(markpoints == 1){
-       				  pointlist->current->in_image=TRUE;
-       				  pointlist->current->image->in_image=TRUE;
+       				  pointlist->current->in_image=YES;
+       				  pointlist->current->image->in_image=YES;
        			  }else if(markpoints == -1){
-       				  pointlist->current->in_image=FALSE;
-       				  pointlist->current->image->in_image=FALSE;
+       				  pointlist->current->in_image=NO;
+       				  pointlist->current->image->in_image=NO;
  					  pointlist->current->surface_brightness = pointlist->current->image->surface_brightness = 0.0;
       			  }else if(markpoints == 0){
        				  neighborkist->InsertAfterCurrent(pointlist->current);
@@ -359,11 +359,11 @@ void TreeStruct::_PointsWithinKist(PosType *ray,PosType *rmax,Kist<Point> * neig
 				  for(j=0,radius=0.0;j<2;++j) radius+=pow(pointlist->current->x[j]-ray[j],2);
 				  if( radius < *rmax**rmax ){
 					  if(markpoints==1){
-						  pointlist->current->in_image=TRUE;
-						  pointlist->current->image->in_image=TRUE;
+						  pointlist->current->in_image=YES;
+						  pointlist->current->image->in_image=YES;
 					  }else if(markpoints==-1){
-						  pointlist->current->in_image=FALSE;
-						  pointlist->current->image->in_image=FALSE;
+						  pointlist->current->in_image=NO;
+						  pointlist->current->image->in_image=NO;
      					  pointlist->current->surface_brightness = pointlist->current->image->surface_brightness = 0.0;
 					  }else if(markpoints==0){
 						  neighborkist->InsertAfterCurrent(pointlist->current);
@@ -382,11 +382,11 @@ void TreeStruct::_PointsWithinKist(PosType *ray,PosType *rmax,Kist<Point> * neig
 				  //assert( *rmax**rmax >= (pow(pointlist->current->x[0] - ray[0],2) + pow(pointlist->current->x[1] - ray[1],2) ));
 
 				  if(markpoints==1){
-   					  pointlist->current->in_image=TRUE;
-  					  pointlist->current->image->in_image=TRUE;
+   					  pointlist->current->in_image=YES;
+  					  pointlist->current->image->in_image=YES;
   				  }else if(markpoints==-1){
-  					  pointlist->current->in_image=FALSE;
- 					  pointlist->current->image->in_image=FALSE;
+  					  pointlist->current->in_image=NO;
+ 					  pointlist->current->image->in_image=NO;
  					  pointlist->current->surface_brightness = pointlist->current->image->surface_brightness = 0.0;
    				  }else if(markpoints==0){
    					  neighborkist->InsertAfterCurrent(pointlist->current);

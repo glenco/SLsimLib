@@ -593,11 +593,11 @@ void TreeStruct::PointsWithin_iter(PosType *ray,float rmax,ListHndl neighborlist
 		   	  pointlist->current=current->points;
     		  for(i=0;i<current->npoints;++i){
      			  if(markpoints == 1){
-     				  pointlist->current->in_image=TRUE;
-     				  pointlist->current->image->in_image=TRUE;
+     				  pointlist->current->in_image=YES;
+     				  pointlist->current->image->in_image=YES;
      			  }else if(markpoints == -1){
-     				  pointlist->current->in_image=FALSE;
-     				  pointlist->current->image->in_image=FALSE;
+     				  pointlist->current->in_image=NO;
+     				  pointlist->current->image->in_image=NO;
 					  pointlist->current->surface_brightness = pointlist->current->image->surface_brightness = 0.0;
     			  }else if(markpoints == 0){
      				  InsertAfterCurrent(neighborlist,pointlist->current->x
@@ -620,11 +620,11 @@ void TreeStruct::PointsWithin_iter(PosType *ray,float rmax,ListHndl neighborlist
 	    			  for(j=0,radius=0.0;j<2;++j) radius+=pow(pointlist->current->x[j]-ray[j],2);
 	    			  if( radius < rmax*rmax ){
 	       				  if(markpoints == 1){
-	       					  pointlist->current->in_image=TRUE;
-	      					  pointlist->current->image->in_image=TRUE;
+	       					  pointlist->current->in_image=YES;
+	      					  pointlist->current->image->in_image=YES;
 	      				  }else if(markpoints == -1){
-	      					  pointlist->current->in_image=FALSE;
-	     					  pointlist->current->image->in_image=FALSE;
+	      					  pointlist->current->in_image=NO;
+	     					  pointlist->current->image->in_image=NO;
 	     					  pointlist->current->surface_brightness = pointlist->current->image->surface_brightness = 0.0;
 	       				  }else if(markpoints == 0){
 	         				  InsertAfterCurrent(neighborlist,pointlist->current->x
@@ -691,11 +691,11 @@ void TreeStruct::_PointsWithin(PosType *ray,float *rmax,ListHndl neighborlist,sh
     			  for(j=0,radius=0.0;j<2;++j) radius+=pow(pointlist->current->x[j]-ray[j],2);
     			  if( radius < *rmax**rmax ){
        				  if(markpoints == 1){
-       					  pointlist->current->in_image=TRUE;
-      					  pointlist->current->image->in_image=TRUE;
+       					  pointlist->current->in_image=YES;
+      					  pointlist->current->image->in_image=YES;
       				  }else if(markpoints == -1){
-      					  pointlist->current->in_image=FALSE;
-     					  pointlist->current->image->in_image=FALSE;
+      					  pointlist->current->in_image=NO;
+     					  pointlist->current->image->in_image=NO;
      					  pointlist->current->surface_brightness = pointlist->current->image->surface_brightness = 0.0;
        				  }else if(markpoints == 0){
          				  InsertAfterCurrent(neighborlist,pointlist->current->x
@@ -711,11 +711,11 @@ void TreeStruct::_PointsWithin(PosType *ray,float *rmax,ListHndl neighborlist,sh
     	  }else{ // put all of points in box into neighborlist
        		  for(i=0;i<current->npoints;++i){
        			  if(markpoints == 1){
-       				  pointlist->current->in_image=TRUE;
-       				  pointlist->current->image->in_image=TRUE;
+       				  pointlist->current->in_image=YES;
+       				  pointlist->current->image->in_image=YES;
        			  }else if(markpoints == -1){
-       				  pointlist->current->in_image=FALSE;
-       				  pointlist->current->image->in_image=FALSE;
+       				  pointlist->current->in_image=NO;
+       				  pointlist->current->image->in_image=NO;
  					  pointlist->current->surface_brightness = pointlist->current->image->surface_brightness = 0.0;
       			  }else if(markpoints == 0){
        				  InsertAfterCurrent(neighborlist,pointlist->current->x
@@ -780,11 +780,11 @@ void TreeStruct::_PointsWithin(PosType *ray,float *rmax,ListHndl neighborlist,sh
 				  for(j=0,radius=0.0;j<2;++j) radius+=pow(pointlist->current->x[j]-ray[j],2);
 				  if( radius < *rmax**rmax ){
 					  if(markpoints==1){
-						  pointlist->current->in_image=TRUE;
-						  pointlist->current->image->in_image=TRUE;
+						  pointlist->current->in_image=YES;
+						  pointlist->current->image->in_image=YES;
 					  }else if(markpoints==-1){
-						  pointlist->current->in_image=FALSE;
-						  pointlist->current->image->in_image=FALSE;
+						  pointlist->current->in_image=NO;
+						  pointlist->current->image->in_image=NO;
      					  pointlist->current->surface_brightness = pointlist->current->image->surface_brightness = 0.0;
 					  }else if(markpoints==0){
 						  InsertAfterCurrent(neighborlist,pointlist->current->x
@@ -802,11 +802,11 @@ void TreeStruct::_PointsWithin(PosType *ray,float *rmax,ListHndl neighborlist,sh
 
 			  for(i=0;i<current->npoints;++i){
   				  if(markpoints==1){
-   					  pointlist->current->in_image=TRUE;
-  					  pointlist->current->image->in_image=TRUE;
+   					  pointlist->current->in_image=YES;
+  					  pointlist->current->image->in_image=YES;
   				  }else if(markpoints==-1){
-  					  pointlist->current->in_image=FALSE;
- 					  pointlist->current->image->in_image=FALSE;
+  					  pointlist->current->in_image=NO;
+ 					  pointlist->current->image->in_image=NO;
  					  pointlist->current->surface_brightness = pointlist->current->image->surface_brightness = 0.0;
    				  }else if(markpoints==0){
    					  InsertAfterCurrent(neighborlist,pointlist->current->x

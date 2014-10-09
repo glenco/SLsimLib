@@ -63,7 +63,7 @@
 Point::Point(){
   x[0] = x[1] = 0;
   head = 0;
-  in_image = FALSE;
+  in_image = NO;
   surface_brightness = 0;
   leaf = NULL;
   image = NULL;
@@ -689,7 +689,7 @@ Point *NewPoint(PosType *x,unsigned long id){
   //point->x=x;
     point->x[0] = x[0];
     point->x[1] = x[1];
-  point->in_image=FALSE;
+  point->in_image=NO;
 
   if (!point){
     ERROR_MESSAGE(); std::cout << "allocation failure in NewPoint()" << std::endl;

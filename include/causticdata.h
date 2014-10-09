@@ -114,13 +114,13 @@ public:
 #ifdef ENABLE_CLANG
   int RandomLens(Utilities::RandomNumbers &ran){
     if(cummulative_area.size() == 0 ) throw std::runtime_error("CausticData::RandomLens - CausticData::init_for_random() must be set before using this!   You can also not reorder the caustics without reinitializing.");
-      return locate<double>(cummulative_area,ran()*cummulative_area.back());
+      return Utilities::locate<double>(cummulative_area,ran()*cummulative_area.back());
   }
 #endif
 
   int RandomLens(Utilities::RandomNumbers_NR &ran){
     if(cummulative_area.size() == 0 ) throw std::runtime_error("CausticData::RandomLens - CausticData::init_for_random() must be set before using this!  You can also not reorder the caustics without reinitializing");
-      return Utilities::locate<double>(cummulative_area,ran()*cummulative_area.back());
+    return Utilities::locate<double>(cummulative_area,ran()*cummulative_area.back());
   }
 
   bool findNearestCrit(PosType x[2],size_t &index);

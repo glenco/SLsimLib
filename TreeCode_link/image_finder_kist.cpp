@@ -48,7 +48,7 @@ void ImageFinding::find_images_kist(
 		,const int NimageMax    /// maximum number of images allowed
 		,unsigned long *Nimagepoints  /// number of points in final images
 		,PosType initial_size    /// Initial size of source for telescoping, 0 to start from the initial grid size.
-		,bool splitimages       /// TRUE each image is refined to target accuracy, otherwise all images are treated as one
+		,bool splitimages       /// true each image is refined to target accuracy, otherwise all images are treated as one
 		,short edge_refinement  /// see comment
 		,bool verbose           /// verbose
 		){
@@ -474,7 +474,7 @@ void ImageFinding::find_images_microlens(
 		,unsigned long *Nimagepoints  /// number of points in final images
 		,PosType initial_size    /// Initial size of source for telescoping, 0 to start from the initial grid size.
         ,PosType mu_min
-		,bool splitimages       /// TRUE each image is refined to target accuracy, otherwise all images are treated as one
+		,bool splitimages       /// true each image is refined to target accuracy, otherwise all images are treated as one
 		,short edge_refinement  /// see comment
 		,bool verbose           /// verbose
 		){
@@ -1617,8 +1617,8 @@ void ImageFinding::image_finder_kist(LensHndl lens, PosType *y_source,PosType r_
   if(imageinfo->imagekist->Nunits() > 0 && splitparities == 0){
 	  imageinfo->imagekist->MoveToTop();
 	  do{
-		  imageinfo->imagekist->getCurrent()->in_image = TRUE;
-		  imageinfo->imagekist->getCurrent()->image->in_image = TRUE;
+		  imageinfo->imagekist->getCurrent()->in_image = YES;
+		  imageinfo->imagekist->getCurrent()->image->in_image = YES;
 
 	  }while(imageinfo->imagekist->Down());
   }
@@ -1781,7 +1781,7 @@ int ImageFinding::refine_grid_kist(
     			if( imageinfo[i].outerborder->getCurrent()->gridsize > 1.01*rmax/Ngrid_block){
     				// border point is marked to prevent refining more than once
     				//   it will be unmarked by the end of refine grid
-    				imageinfo[i].outerborder->getCurrent()->in_image = TRUE;
+    				imageinfo[i].outerborder->getCurrent()->in_image = YES;
     				++Ncells;
     			}
     		}while( imageinfo[i].outerborder->Down() );
@@ -1860,7 +1860,7 @@ int ImageFinding::refine_grid_kist(
 					  }
 
 					  ++Ncells;
-					  point->in_image = FALSE;  // unmark so that it wouldn't double refine
+					  point->in_image = NO;  // unmark so that it wouldn't double refine
 				  }
 			  }
 		  }
@@ -1941,7 +1941,7 @@ void findborders4(TreeHndl i_tree,ImageInfo *imageinfo){
 			neighborkist->MoveToTop();
 			for(i=0;i<neighborkist->Nunits();++i){
 
-				if( neighborkist->getCurrent()->in_image != TRUE){  // point is a neighbor
+				if( neighborkist->getCurrent()->in_image != YES){  // point is a neighbor
 					addinner=true;
 					/*
 					// check if point is already in list
@@ -1958,7 +1958,7 @@ void findborders4(TreeHndl i_tree,ImageInfo *imageinfo){
 					}
 					*/
 					
-					if(neighborkist->getCurrent()->in_image == FALSE){  // if point is not yet in outerborder
+					if(neighborkist->getCurrent()->in_image == NO){  // if point is not yet in outerborder
 						// add point to outerborder
 						neighborkist->getCurrent()->in_image = MAYBE;
 						imageinfo->outerborder->InsertAfterCurrent(neighborkist->getCurrent());
@@ -1977,12 +1977,12 @@ void findborders4(TreeHndl i_tree,ImageInfo *imageinfo){
 
 	}
 
-		// mark outer borders back to in_image=FALSE
+		// mark outer borders back to in_image=NO
 		
 	if(!allin  && imageinfo->outerborder->Nunits() > 0){
 		imageinfo->outerborder->MoveToTop();
 		do{
-			imageinfo->outerborder->getCurrent()->in_image = FALSE;
+			imageinfo->outerborder->getCurrent()->in_image = NO;
 
 			if(imageinfo->gridrange[0] < imageinfo->outerborder->getCurrent()->gridsize)
 				imageinfo->gridrange[0] = imageinfo->outerborder->getCurrent()->gridsize;

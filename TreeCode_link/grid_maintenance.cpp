@@ -301,7 +301,7 @@ PosType Grid::RefreshSurfaceBrightnesses(SourceHndl source){
 		total += tmp;//*pow( s_tree->pointlist->current->gridsize,2);
 		assert(s_tree->pointlist->current->surface_brightness >= 0.0);
 		s_tree->pointlist->current->in_image = s_tree->pointlist->current->image->in_image
-    = FALSE;
+    = NO;
 	}
   
 	return total;
@@ -317,7 +317,7 @@ PosType Grid::ClearSurfaceBrightnesses(){
 		s_tree->pointlist->current->surface_brightness = s_tree->pointlist->current->image->surface_brightness
     = 0.0;
 		s_tree->pointlist->current->in_image = s_tree->pointlist->current->image->in_image
-    = FALSE;
+    = NO;
 	}
   
 	return total;
@@ -759,8 +759,8 @@ void Grid::ClearAllMarks(){
 
 	MoveToTopList(i_tree->pointlist);
 	for(i=0;i<i_tree->pointlist->Npoints;++i){
-		i_tree->pointlist->current->in_image=FALSE;
-		i_tree->pointlist->current->image->in_image=FALSE;
+		i_tree->pointlist->current->in_image=NO;
+		i_tree->pointlist->current->image->in_image=NO;
 		MoveDownList(i_tree->pointlist);
 	}
 }

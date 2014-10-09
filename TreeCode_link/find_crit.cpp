@@ -79,7 +79,7 @@ void ImageFinding::find_crit(
   for(;;){
 
 	  negimage.imagekist->MoveToTop();
-	  do{negimage.imagekist ->getCurrent()->in_image = TRUE;} while(negimage.imagekist->Down());
+	  do{negimage.imagekist ->getCurrent()->in_image = YES;} while(negimage.imagekist->Down());
 
 	  if(verbose) std::printf("find_crit, going into findborders 1\n");
 	  //findborders2(grid->i_tree,critcurve);
@@ -88,7 +88,7 @@ void ImageFinding::find_crit(
 
 	  // unmark image points
 	  negimage.imagekist->MoveToTop();
-	  do{negimage.imagekist->getCurrent()->in_image = FALSE;} while(negimage.imagekist->Down());
+	  do{negimage.imagekist->getCurrent()->in_image = NO;} while(negimage.imagekist->Down());
 
 	  // make inner border of the image
 	  critcurve->imagekist->Empty();
@@ -100,7 +100,7 @@ void ImageFinding::find_crit(
 
 		  critcurve->imagekist->InsertAfterCurrent(negimage.innerborder->getCurrent());
 		  critcurve->imagekist->Down();
-		  critcurve->imagekist->getCurrent()->in_image = TRUE;
+		  critcurve->imagekist->getCurrent()->in_image = YES;
 
 		  negimage.innerborder->Down();
 	  }
@@ -130,7 +130,7 @@ void ImageFinding::find_crit(
   newpoint_kist.Empty();
   if(critcurve->imagekist->Nunits()){
 	  critcurve->imagekist->MoveToTop();
-	  do{critcurve->imagekist->getCurrent()->in_image = FALSE;}while(critcurve->imagekist->Down());
+	  do{critcurve->imagekist->getCurrent()->in_image = NO;}while(critcurve->imagekist->Down());
   }
 
   if(verbose) std::printf("find_crit, number of caustic points: %li\n",critcurve->imagekist->Nunits());
@@ -163,14 +163,14 @@ void ImageFinding::find_crit(
   				  mumin = pseudocurve[i].imagekist->getCurrent()->invmag;
   			  }
   			  if(pseudocurve[i].imagekist->getCurrent()->invmag > pseudolimit){
-  				  pseudocurve[i].imagekist->getCurrent()->in_image = FALSE;
+  				  pseudocurve[i].imagekist->getCurrent()->in_image = NO;
   				  pseudocurve[i].imagekist->TakeOutCurrent();
   			  }
   		  }while(pseudocurve[i].imagekist->Up());
 
   		  // in case one before top was taken out
   		  if(pseudocurve[i].imagekist->getCurrent()->invmag > pseudolimit){
-  			  pseudocurve[i].imagekist->getCurrent()->in_image = FALSE;
+  			  pseudocurve[i].imagekist->getCurrent()->in_image = NO;
   			  pseudocurve[i].imagekist->TakeOutCurrent();
   		  }
 
@@ -189,7 +189,7 @@ void ImageFinding::find_crit(
   			  if(pseudocurve[i].ShouldNotRefine == 0){
   				  mumin = pseudocurve[i].imagekist->getCurrent()->invmag;
   				  minmupoint = pseudocurve[i].imagekist->getCurrent();
-  				  pseudocurve[i].imagekist->getCurrent()->in_image = FALSE;
+  				  pseudocurve[i].imagekist->getCurrent()->in_image = NO;
   				  pseudocurve[i].imagekist->TakeOutCurrent();
   			  }
 
@@ -202,7 +202,7 @@ void ImageFinding::find_crit(
   				  if(newpoints->getCurrent()->invmag < 0.0)
   					  negimage.imagekist->InsertAfterCurrent(newpoints->getCurrent());
   				  if(newpoints->getCurrent()->invmag < pseudolimit){
-  					  newpoints->getCurrent()->in_image = TRUE;
+  					  newpoints->getCurrent()->in_image = YES;
   					  pseudocurve[i].imagekist->InsertAfterCurrent(newpoints->getCurrent());
   				  }
   			  }while(newpoints->Down());
@@ -210,7 +210,7 @@ void ImageFinding::find_crit(
   			  if(pseudocurve[i].ShouldNotRefine == 0){
 
   				  if(pseudocurve[i].imagekist->Nunits() == 0){
-  					  minmupoint->in_image = TRUE;
+  					  minmupoint->in_image = YES;
   					  pseudocurve[i].imagekist->InsertAfterCurrent(minmupoint);
   				  }else{
   					  pseudocurve[i].ShouldNotRefine = 1;
@@ -221,7 +221,7 @@ void ImageFinding::find_crit(
 
   		  pseudocurve[i].imagekist->MoveToTop();
   		  do{
-  			pseudocurve[i].imagekist->getCurrent()->in_image = FALSE;
+  			pseudocurve[i].imagekist->getCurrent()->in_image = NO;
   		  }while(pseudocurve[i].imagekist->Down());
   	  }
   }
@@ -239,7 +239,7 @@ void ImageFinding::find_crit(
 	  for(i=0;i<*Ncrits;++i){
 		  // return in_image value to false
 		  critcurve[i].imagekist->MoveToTop();
-		  do{critcurve[i].imagekist->getCurrent()->in_image = FALSE;}while(critcurve[i].imagekist->Down());
+		  do{critcurve[i].imagekist->getCurrent()->in_image = NO;}while(critcurve[i].imagekist->Down());
 
 		  critcurve[i].imagekist->MoveToTop();
 		  //copy points into a point array for compatibility with curve ordering routines
@@ -399,7 +399,7 @@ void ImageFinding::find_crit2(
 	  maxpoint =true;
   }
 
-  critcurve->imagekist->SetInImage(TRUE);
+  critcurve->imagekist->SetInImage(YES);
 
   findborders4(grid->i_tree,critcurve);
 
@@ -417,7 +417,7 @@ void ImageFinding::find_crit2(
 	  critcurve->imagekist->MoveToBottom();
 	  do{
 		  if(newpoint_kist.getCurrent()->invmag < invmag_min){
-			  newpoint_kist.getCurrent()->in_image = TRUE;
+			  newpoint_kist.getCurrent()->in_image = YES;
 			  critcurve->imagekist->InsertAfterCurrent(newpoint_kist.getCurrent());
 
 			  // It is possible that gridrange[] will not be maintained
@@ -428,7 +428,7 @@ void ImageFinding::find_crit2(
 				  critcurve->gridrange[2] = newpoint_kist.getCurrent()->gridsize;
 
 		  }else{
-			  newpoint_kist.getCurrent()->in_image = FALSE;
+			  newpoint_kist.getCurrent()->in_image = NO;
 		  }
 	  }while(newpoint_kist.Down());
 
@@ -438,7 +438,7 @@ void ImageFinding::find_crit2(
 			  critcurve->imagekist->MoveToTop();
 			  do{
 				  if(critcurve->imagekist->getCurrent()->invmag > 0){
-					  critcurve->imagekist->getCurrent()->in_image = FALSE;
+					  critcurve->imagekist->getCurrent()->in_image = NO;
 					  critcurve->imagekist->TakeOutCurrent();
 					  break;
 				  }
@@ -450,9 +450,9 @@ void ImageFinding::find_crit2(
 			  do{
 				  if(newpoint_kist.getCurrent()->kappa
 						  > critcurve->imagekist->getCurrent()->kappa ){
-					  critcurve->imagekist->getCurrent()->in_image = FALSE;
+					  critcurve->imagekist->getCurrent()->in_image = NO;
 					  critcurve->imagekist->TakeOutCurrent();
-					  newpoint_kist.getCurrent()->in_image = TRUE;
+					  newpoint_kist.getCurrent()->in_image = YES;
 					  critcurve->imagekist->InsertAfterCurrent(newpoint_kist.getCurrent());
 				  }
 			  }while(newpoint_kist.Down());
@@ -472,10 +472,10 @@ void ImageFinding::find_crit2(
 		  neighborkist.MoveToTop();
 		  do{
 
-			  if( neighborkist.getCurrent()->in_image != TRUE){  // point is a neighbor
+			  if( neighborkist.getCurrent()->in_image != YES){  // point is a neighbor
 				  ininner=true;
 
-				  if(neighborkist.getCurrent()->in_image == FALSE){  // if point is not yet in outerborder
+				  if(neighborkist.getCurrent()->in_image == NO){  // if point is not yet in outerborder
 					  // add point to outerborder
 					  neighborkist.getCurrent()->in_image = MAYBE;
 					  critcurve->outerborder->InsertAfterCurrent(neighborkist.getCurrent());
@@ -506,8 +506,8 @@ void ImageFinding::find_crit2(
 		  grid->i_tree->FindAllBoxNeighborsKist(critcurve->outerborder->getCurrent(),&neighborkist);
 		  neighborkist.MoveToTop();
 		  do{
-			  if(neighborkist.getCurrent()->in_image == TRUE){
-				  //critcurve->outerborder->getCurrent()->in_image = FALSE;
+			  if(neighborkist.getCurrent()->in_image == YES){
+				  //critcurve->outerborder->getCurrent()->in_image = NO;
 				  if(critcurve->outerborder->getCurrent()->gridsize
 						  > critcurve->gridrange[0]) critcurve->gridrange[0]
 						           = critcurve->outerborder->getCurrent()->gridsize;
@@ -518,7 +518,7 @@ void ImageFinding::find_crit2(
 
 		  if(tmpbool){  // no neighbor in image was found
 			  bool tmp = critcurve->outerborder->AtTop();
-			  critcurve->outerborder->getCurrent()->in_image = FALSE;
+			  critcurve->outerborder->getCurrent()->in_image = NO;
 			  critcurve->outerborder->TakeOutCurrent();
 			  if(!tmp) critcurve->outerborder->Down();
 		  }else{
@@ -537,19 +537,19 @@ void ImageFinding::find_crit2(
 			  tmpbool = true;
 			  neighborkist.MoveToTop();
 			  do{
-				  if( newpoint_kist.getCurrent()->in_image == TRUE){
-					  if(neighborkist.getCurrent()->in_image != TRUE){
+				  if( newpoint_kist.getCurrent()->in_image == YES){
+					  if(neighborkist.getCurrent()->in_image != YES){
 						  if(tmpbool){
 							  critcurve->innerborder->InsertAfterCurrent(newpoint_kist.getCurrent());
 							  tmpbool = false;
 						  }
-						  if(neighborkist.getCurrent()->in_image == FALSE){
+						  if(neighborkist.getCurrent()->in_image == NO){
 							  neighborkist.getCurrent()->in_image = MAYBE;
 							  critcurve->outerborder->InsertAfterCurrent(neighborkist.getCurrent());
 						  }
 					  }
 				  }else{
-					  if(neighborkist.getCurrent()->in_image == TRUE){
+					  if(neighborkist.getCurrent()->in_image == YES){
 						  newpoint_kist.getCurrent()->in_image = MAYBE;
 						  critcurve->outerborder->InsertAfterCurrent(newpoint_kist.getCurrent());
 						  break;
@@ -559,13 +559,13 @@ void ImageFinding::find_crit2(
 		  }
 	  }while(newpoint_kist.Down());
 
-	  critcurve->outerborder->SetInImage(FALSE);
+	  critcurve->outerborder->SetInImage(NO);
   }
 
   if(maxpoint){
  	  *Ncrits = 0;
  	  assert(critcurve->imagekist->Nunits() == 1);
- 	  critcurve->imagekist->getCurrent()->in_image = FALSE;
+ 	  critcurve->imagekist->getCurrent()->in_image = NO;
  	  critcurve->imagekist->Empty();
  	  critcurve->outerborder->Empty();
  	  critcurve->innerborder->Empty();
@@ -573,7 +573,7 @@ void ImageFinding::find_crit2(
    }
 
   // make inner border the image
-  critcurve->imagekist->SetInImage(FALSE);
+  critcurve->imagekist->SetInImage(NO);
   critcurve->imagekist->Empty();
   critcurve->imagekist->copy(critcurve->innerborder);
 
@@ -585,7 +585,7 @@ void ImageFinding::find_crit2(
 				       ,*Ncrits,critcurve->imagekist->getCurrent()->gridsize); exit(1);}
 
 
-  for(i=0;i<*Ncrits;++i) critcurve[i].imagekist->SetInImage(FALSE);
+  for(i=0;i<*Ncrits;++i) critcurve[i].imagekist->SetInImage(NO);
 
 
   *orderingsuccess = true;
@@ -756,13 +756,13 @@ void refine_crit_in_image(
     for(;;){
         
         negimage.imagekist->MoveToTop();
-        do{negimage.imagekist ->getCurrent()->in_image = TRUE;} while(negimage.imagekist->Down());
+        do{negimage.imagekist ->getCurrent()->in_image = YES;} while(negimage.imagekist->Down());
         
         findborders4(grid->i_tree,&negimage);
         
         // unmark image points
         negimage.imagekist->MoveToTop();
-        do{negimage.imagekist->getCurrent()->in_image = FALSE;} while(negimage.imagekist->Down());
+        do{negimage.imagekist->getCurrent()->in_image = NO;} while(negimage.imagekist->Down());
         
         // make inner border of the image
         critcurve.imagekist->Empty();
@@ -776,7 +776,7 @@ void refine_crit_in_image(
             
             critcurve.imagekist->InsertAfterCurrent(negimage.innerborder->getCurrent());
             critcurve.imagekist->Down();
-            critcurve.imagekist->getCurrent()->in_image = TRUE;
+            critcurve.imagekist->getCurrent()->in_image = YES;
             
             negimage.innerborder->Down();
         }
@@ -802,7 +802,7 @@ void refine_crit_in_image(
     newpoint_kist.Empty();
     if(critcurve.imagekist->Nunits()){
         critcurve.imagekist->MoveToTop();
-        do{critcurve.imagekist->getCurrent()->in_image = FALSE;}while(critcurve.imagekist->Down());
+        do{critcurve.imagekist->getCurrent()->in_image = NO;}while(critcurve.imagekist->Down());
     }
     
     //std::cout << " number of points in critical curves: " << critcurve.imagekist->Nunits() << std::endl;
