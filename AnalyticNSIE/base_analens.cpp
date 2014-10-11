@@ -39,6 +39,8 @@ void LensHaloBaseNSIE::force_halo(
   xt[0]=xcm[0];
   xt[1]=xcm[1];
   
+  units *= 2. * Rmax / pi ; // units now in mass /// Multiplying by 2*Rmax/pi to match with Power Law
+  
   alphaNSIE(alpha,xt,fratio,rcore,pa);
   alpha[0] *= units;
   alpha[1] *= units;
@@ -46,28 +48,14 @@ void LensHaloBaseNSIE::force_halo(
   {
     gammaNSIE(gamma,xcm,fratio,rcore,pa);
     *kappa=kappaNSIE(xcm,fratio,rcore,pa);
-    *kappa *= units;
-    gamma[0] *= units;
-    gamma[1] *= units;
-    gamma[2] *= units;
+    *kappa *= units ;
+    gamma[0] *= units ;
+    gamma[1] *= units ;
+    gamma[2] *= units ;
     
     *phi = -1.0 * phiNSIE(xcm,fratio,rcore,pa) ;  // phi in Mpc (physical)
-    *phi *= units ;                               // phi now in Msun
+    *phi *= units ;                               // phi now in Msun * Mpc
   }
-  
-  
-  // Multiplying by 2 Rmax / pi to match with Power Law
-  // Also needed to satisfy test().
-  /*
-  float extrafac = 2. * Rmax / pi ;
-  alpha[0] *= extrafac;
-  alpha[1] *= extrafac;
-  *kappa   *= extrafac;
-  gamma[0] *= extrafac;
-  gamma[1] *= extrafac;
-  gamma[2] *= extrafac;
-  *phi     *= extrafac; // phi now in Mpc (physical) * Msun
-  */
 
   
   // perturbations of host lens
@@ -75,17 +63,18 @@ void LensHaloBaseNSIE::force_halo(
   {
     *kappa += lens_expand(perturb_beta,perturb_modes,perturb_Nmodes,xcm,alpha_tmp,gamma_tmp,phi_tmp);
     
-    // Should we put the computation of the potential somewhere here ?
-    
     alpha[0] += alpha_tmp[0];
     alpha[1] += alpha_tmp[1];
     
     {
       gamma[0] += gamma_tmp[0];
       gamma[1] += gamma_tmp[1];
+      // Why don't we have gamma[2] here ?
+      *phi += *phi_tmp;
     }
     gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
     alpha_tmp[0] = alpha_tmp[1] = 0.0;
+    *phi_tmp = 0.0;
   }
   
   // add substructure
@@ -104,19 +93,21 @@ void LensHaloBaseNSIE::force_halo(
         gamma[0] += gamma_tmp[0];
         gamma[1] += gamma_tmp[1];
         
-        // Add something for potential here ?
+        // Why don't we have gamma[2] here ?
+        *phi += *phi_tmp;
       }
     }
     
     gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
     alpha_tmp[0] = alpha_tmp[1] = 0.0;
+    *phi_tmp = 0.0;
   }
   
   // add stars for microlensing
   if(stars_N > 0 && stars_implanted){
     force_stars(alpha,kappa,gamma,xcm);
   }
-  
+
   return ;
 }
 

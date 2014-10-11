@@ -219,13 +219,19 @@ struct alphaForInt {
     
     alphaNSIE(alpha,x,f,bc,theta) ;
     
-    if(r < rmin) {
-      r = rmin ;
-      // Jump over assertion !
+    if(f==1.)     // Spherical case
+    {
+      if(r < rmin) { r = rmin ;
+        // And jump over assertion !
+      }
+      else { // std::cout << "alpha[0]/x[0] = " << alpha[0]/x[0] << " , alpha[1]/x[1] = " << alpha[1]/x[1] << std::endl ;
+      assert( (alpha[0]/x[0])/(alpha[1]/x[1]) - 1. < 1.e-7 );   // Works only in symmetric case !!!
+      }
     }
-    else {
-    // std::cout << "alpha[0]/x[0] = " << alpha[0]/x[0] << " , alpha[1]/x[1] = " << alpha[1]/x[1] << std::endl ;
-    assert( (alpha[0]/x[0])/(alpha[1]/x[1]) - 1. < 1.e-7 );   // Works only in symmetric case !!!
+    else          // Elliptical case
+    {
+      std::cout << "We have to write the code for phi in the NSIE elliptical case." << std::endl ;
+      exit(0);
     }
     
     return (alpha[0]/x[0]) * r ;

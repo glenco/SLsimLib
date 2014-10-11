@@ -177,7 +177,6 @@ void alphaNSIE(PosType *alpha,double const *xt,PosType f,PosType bc,PosType thet
 KappaType kappaNSIE(PosType const *xt,PosType f,PosType bc,PosType theta);
 void gammaNSIE(KappaType *gam,double const *xt,PosType f,PosType bc,PosType theta);
 KappaType invmagNSIE(PosType *x,PosType f,PosType bc,PosType theta,float *gam,float kap);
-
 KappaType phiNSIE(PosType const *xt,PosType f,PosType bc,PosType theta);
 
 PosType rmaxNSIE(PosType sigma,PosType mass,PosType f,PosType rc );
