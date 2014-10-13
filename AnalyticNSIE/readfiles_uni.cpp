@@ -88,7 +88,6 @@ void LensHaloUniform::force_halo(
     alpha_tmp[0] = alpha_tmp[1] = 0.0;
     phi_tmp = 0.0;
   
-    // *kappa += lens_expand(perturb_modes,xcm,alpha,gamma,&dt);
     *kappa += lens_expand(perturb_modes,xcm,alpha,gamma,&phi_tmp);
     
     *phi += phi_tmp ;

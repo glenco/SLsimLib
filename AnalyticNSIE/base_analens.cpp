@@ -22,9 +22,8 @@ void LensHaloBaseNSIE::force_halo(
 
   long j;
   PosType alpha_tmp[2];
-  KappaType kappa_tmp = 0.0, gamma_tmp[3], dt = 0;
-  KappaType phi_tmp = 0.0 ;
-  
+  KappaType kappa_tmp = 0.0, gamma_tmp[3];
+  KappaType * phi_tmp = new KappaType ;
   
   gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
   alpha_tmp[0] = alpha_tmp[1] = 0.0;
@@ -36,9 +35,11 @@ void LensHaloBaseNSIE::force_halo(
   
   
   PosType xt[2]={0,0};
-  float units = pow(sigma/lightspeed,2)/Grav; ///sqrt(fratio); // mass/distance(physical)
+  float units = pow(sigma/lightspeed,2)/Grav ; ///sqrt(fratio); // mass / distance(physical)
   xt[0]=xcm[0];
   xt[1]=xcm[1];
+  
+  units *= 2. * Rmax / pi ; // units now in mass /// Multiplying by 2*Rmax/pi to match with Power Law
   
   alphaNSIE(alpha,xt,fratio,rcore,pa);
   alpha[0] *= units;
@@ -47,23 +48,20 @@ void LensHaloBaseNSIE::force_halo(
   {
     gammaNSIE(gamma,xcm,fratio,rcore,pa);
     *kappa=kappaNSIE(xcm,fratio,rcore,pa);
-    *kappa *= units;
-    gamma[0] *= units;
-    gamma[1] *= units;
+    *kappa *= units ;
+    gamma[0] *= units ;
+    gamma[1] *= units ;
+    gamma[2] *= units ;
     
-    gamma[2] *= units;
-    
-    *phi = phiNSIE(xcm,fratio,rcore,pa);
-    *phi *= units ;
+    *phi = -1.0 * phiNSIE(xcm,fratio,rcore,pa) ;  // phi in Mpc (physical)
+    *phi *= units ;                               // phi now in Msun * Mpc
   }
+
   
   // perturbations of host lens
   if(perturb_Nmodes > 0)
   {
-    *kappa += lens_expand(perturb_beta,perturb_modes
-                          ,perturb_Nmodes,xcm,alpha_tmp,gamma_tmp,&dt);
-    
-    // Should we put the computation of the potential somewhere here ?
+    *kappa += lens_expand(perturb_beta,perturb_modes,perturb_Nmodes,xcm,alpha_tmp,gamma_tmp,phi_tmp);
     
     alpha[0] += alpha_tmp[0];
     alpha[1] += alpha_tmp[1];
@@ -71,9 +69,12 @@ void LensHaloBaseNSIE::force_halo(
     {
       gamma[0] += gamma_tmp[0];
       gamma[1] += gamma_tmp[1];
+      // Why don't we have gamma[2] here ?
+      *phi += *phi_tmp;
     }
     gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
     alpha_tmp[0] = alpha_tmp[1] = 0.0;
+    *phi_tmp = 0.0;
   }
   
   // add substructure
@@ -82,8 +83,7 @@ void LensHaloBaseNSIE::force_halo(
     for(j=0;j<sub_N;++j)
     {
       
-      subs[j].force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp,xcm);
-      // subs[j].force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,xcm);
+      subs[j].force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,phi_tmp,xcm);
       
       alpha[0] += alpha_tmp[0];
       alpha[1] += alpha_tmp[1];
@@ -93,18 +93,21 @@ void LensHaloBaseNSIE::force_halo(
         gamma[0] += gamma_tmp[0];
         gamma[1] += gamma_tmp[1];
         
-        // Add something for potential here ?
+        // Why don't we have gamma[2] here ?
+        *phi += *phi_tmp;
       }
     }
     
     gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
     alpha_tmp[0] = alpha_tmp[1] = 0.0;
+    *phi_tmp = 0.0;
   }
   
   // add stars for microlensing
   if(stars_N > 0 && stars_implanted){
     force_stars(alpha,kappa,gamma,xcm);
   }
+
   return ;
 }
 

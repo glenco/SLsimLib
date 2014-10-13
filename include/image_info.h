@@ -50,6 +50,9 @@ struct ImageInfo{
 
   /// returns number of points currently in the image
   unsigned long getNimagePoints(){return imagekist->Nunits();}
+  /// Computes the time delay averaged over the image
+  KappaType aveTimeDelay();
+  /// Print information about the image
   void PrintImageInfo();
   void copy(ImageInfo &image,bool copykists = true);
 

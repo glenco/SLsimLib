@@ -57,7 +57,7 @@ public:
 
   /// critical surface density
   PosType getSigma_crit(){return Sigma_crit;}
-  /// the time delay scale in days/Mpc^2
+  /// the time delay scale in days/Mpc^2        // Are we sure about that ?
   PosType get_to(){return to;}
    /// Angular size distance to lens plane
   PosType get_Dl(){return Dl;}
@@ -177,7 +177,6 @@ void alphaNSIE(PosType *alpha,double const *xt,PosType f,PosType bc,PosType thet
 KappaType kappaNSIE(PosType const *xt,PosType f,PosType bc,PosType theta);
 void gammaNSIE(KappaType *gam,double const *xt,PosType f,PosType bc,PosType theta);
 KappaType invmagNSIE(PosType *x,PosType f,PosType bc,PosType theta,float *gam,float kap);
-
 KappaType phiNSIE(PosType const *xt,PosType f,PosType bc,PosType theta);
 
 PosType rmaxNSIE(PosType sigma,PosType mass,PosType f,PosType rc );
