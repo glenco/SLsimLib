@@ -266,7 +266,7 @@ private: /* field */
 	std::vector<PosType> field_Dl;
 	
 	/// Perpendicular position of halo TODO: (In proper distance?)
-	PosType **halo_pos;
+	//PosType **halo_pos;
 	
 	/// type of mass function PS (0), ST (1), and power law (2) default is ST
 	MassFuncType field_mass_func_type;

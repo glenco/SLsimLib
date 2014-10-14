@@ -34,7 +34,7 @@ namespace
  * \brief Creates an empty lens. Main halos and field halos need to be inserted by hand from the user.
  */
 Lens::Lens(long* my_seed, CosmoParamSet cosmoset,bool verbose)
-: seed(my_seed), cosmo(cosmoset), halo_pos(0), central_point_sphere(1,0,0), inv_ang_screening_scale(0)
+: seed(my_seed), cosmo(cosmoset), central_point_sphere(1,0,0), inv_ang_screening_scale(0)
 {
   init_seed = 0;
   
@@ -61,7 +61,7 @@ Lens::Lens(long* my_seed, CosmoParamSet cosmoset,bool verbose)
  * \brief allocates space for the halo trees and the inout lens, if there is any
  */
 Lens::Lens(InputParams& params, long* my_seed, CosmoParamSet cosmoset, bool verbose)
-: seed(my_seed), cosmo(cosmoset), halo_pos(0), central_point_sphere(1,0,0), inv_ang_screening_scale(0)
+: seed(my_seed), cosmo(cosmoset), central_point_sphere(1,0,0), inv_ang_screening_scale(0)
 {
   
   init_params = params;
@@ -93,7 +93,7 @@ Lens::Lens(InputParams& params, long* my_seed, CosmoParamSet cosmoset, bool verb
 /** Recontructor constructor.  This recreates the original lens before any new additions might have been added or changes to the InputParam object.
  */
 Lens::Lens(Lens &lens)
-: cosmo(lens.cosmo), halo_pos(0), central_point_sphere(1,0,0)
+: cosmo(lens.cosmo), central_point_sphere(1,0,0)
 {
   if(init_seed == 0){
     std::cout << "Cann't use copy constructor on Lens that was not created from a parameter file!" << std::endl;
@@ -131,7 +131,7 @@ Lens::~Lens()
 {
 	Utilities::delete_container(lensing_planes);
 
-	Utilities::free_PosTypeMatrix(halo_pos, field_halos.size(), 3);
+	//Utilities::free_PosTypeMatrix(halo_pos, field_halos.size(), 3);
 
 	Utilities::delete_container(main_halos_created);
 	Utilities::delete_container(field_halos);
@@ -397,7 +397,7 @@ void Lens::resetFieldHalos(bool verbose)
 	Utilities::delete_container(field_halos);
 	Utilities::delete_container(field_planes);
 	
-	Utilities::free_PosTypeMatrix(halo_pos, field_halos.size(), 3);
+	//Utilities::free_PosTypeMatrix(halo_pos, field_halos.size(), 3);
 	
 	if(sim_input_flag){
 		if(read_sim_file == false){
@@ -616,9 +616,14 @@ void Lens::createFieldPlanes(bool verbose)
 			//** test lines********
 			//if(max_r < (tmp = halo_pos[j][0]*halo_pos[j][0] + halo_pos[j][1]*halo_pos[j][1])) max_r = tmp;
 			
+      PosType tmp[2];
+      
 			// convert to proper distance on the lens plane
-			halo_pos[j][0] *= field_Dl[i]/(1+field_plane_redshifts[i]);
-			halo_pos[j][1] *= field_Dl[i]/(1+field_plane_redshifts[i]);
+      field_halos[j]->getX(tmp);
+      field_halos[j]->setX(tmp[0]*field_Dl[i]/(1+field_plane_redshifts[i])
+                          ,tmp[1]*field_Dl[i]/(1+field_plane_redshifts[i]));
+			//halo_pos[j][0] *= field_Dl[i]/(1+field_plane_redshifts[i]);
+			//halo_pos[j][1] *= field_Dl[i]/(1+field_plane_redshifts[i]);
 		}
 		
 		//max_r=sqrt(max_r);
@@ -642,7 +647,7 @@ void Lens::createFieldPlanes(bool verbose)
     PosType tmp = inv_ang_screening_scale*(1+field_plane_redshifts[i])/field_Dl[i];
 
     if(tmp > 1/2.) tmp = 1/2.;  // TODO: Try to remove this arbitrary minimum distance
-		field_planes.push_back(new LensPlaneTree(&halo_pos[k1], &field_halos[k1], k2-k1, sigma_back,tmp));
+		field_planes.push_back(new LensPlaneTree(&field_halos[k1], k2-k1, sigma_back,tmp));
 		//field_planes.push_back(new LensPlaneTree(&halo_pos[k1], &field_halos[k1], k2-k1, sigma_back) );
 	}
 	
@@ -983,7 +988,7 @@ void Lens::createFieldHalos(bool verbose)
 	std::size_t Nhalos = static_cast<std::size_t>(poidev(float(aveNhalos), seed));
 
 	std::vector<PosType> halo_zs_vec;
-	std::vector<PosType *> halo_pos_vec;
+	//std::vector<PosType *> halo_pos_vec;  /// temporary vector to store angular positions
 
 	// assign redsshifts to field_halos according to the redshift distribution
 
@@ -1128,7 +1133,8 @@ void Lens::createFieldHalos(bool verbose)
 				z_max = halo_zs_vec[i];
 			}
 
-			halo_pos_vec.push_back(theta_pos);
+			//halo_pos_vec.push_back(theta_pos);
+      field_halos.back()->setX(theta_pos);
 
 			++j;
 
@@ -1155,7 +1161,9 @@ void Lens::createFieldHalos(bool verbose)
                 theta2 = new PosType[3];
                 theta2[0]=theta_pos[0]; theta2[1]=theta_pos[1]; theta2[2]=theta_pos[2];
         
-                halo_pos_vec.push_back(theta2);
+                //halo_pos_vec.push_back(theta2);
+                field_halos.back()->setX(theta2);
+
         
                 ++j;
         
@@ -1172,11 +1180,11 @@ void Lens::createFieldHalos(bool verbose)
 	if(verbose) std::cout << Nhalos << " halos created." << std::endl;
 
 	Nhalos = field_halos.size();
-	halo_pos = Utilities::PosTypeMatrix(Nhalos,3);
+	//halo_pos = Utilities::PosTypeMatrix(Nhalos,3);
 
-	for(i=0;i<Nhalos;++i){
-		halo_pos[i] = halo_pos_vec[i];
-	}
+	//for(i=0;i<Nhalos;++i){
+	//	halo_pos[i] = halo_pos_vec[i];
+	//}
 
 	if(verbose) std::cout << "leaving Lens::createFieldHalos()" << std::endl;
 }
@@ -1217,7 +1225,7 @@ void Lens::readInputSimFileMillennium(bool verbose)
 	}
 	if(verbose) std::cout << "skipped "<< i << " comment lines in file " << field_input_sim_file << std::endl;
 
-	std::vector<PosType *> halo_pos_vec;
+	//std::vector<PosType *> halo_pos_vec;
   Utilities::Geometry::SphericalPoint tmp_sph_point(1,0,0);
 
 	// read in data
@@ -1367,7 +1375,9 @@ void Lens::readInputSimFileMillennium(bool verbose)
 			if(field_halos[j]->get_Rmax() > R_max) R_max = field_halos[j]->get_Rmax();
 			if(vdisp > V_max) V_max = vdisp;
 
-			halo_pos_vec.push_back(theta);
+			//halo_pos_vec.push_back(theta);
+      field_halos.back()->setX(theta);
+
 
 			if(mass > mass_max) {
 				mass_max = mass;
@@ -1409,7 +1419,9 @@ void Lens::readInputSimFileMillennium(bool verbose)
         // distance on the lens plane in Lens::buildLensPlanes()
         theta2 = new PosType[2];
         theta2[0]=theta[0]; theta2[1]=theta[1];
-				halo_pos_vec.push_back(theta2);
+				//halo_pos_vec.push_back(theta2);
+        field_halos.back()->setX(theta2);
+
         
 				++j;
 			}
@@ -1428,12 +1440,12 @@ void Lens::readInputSimFileMillennium(bool verbose)
 		field_buffer = 0.0;
 	}
 
-	halo_pos = Utilities::PosTypeMatrix(field_halos.size(), 3);
+	//halo_pos = Utilities::PosTypeMatrix(field_halos.size(), 3);
 
-	for(i = 0; i < field_halos.size(); ++i)
-	{
-		halo_pos[i] = halo_pos_vec[i];
-	}
+	//for(i = 0; i < field_halos.size(); ++i)
+	//{
+	//	halo_pos[i] = halo_pos_vec[i];
+	//}
 
 	std::cout << "Overiding input file field of view to make it fit the simulation light cone." << std::endl;
 	fieldofview = pi*rmax*rmax*pow(180/pi,2);  // Resets field of view to range of input galaxies
@@ -1444,7 +1456,8 @@ void Lens::readInputSimFileMillennium(bool verbose)
 
 	if(verbose) std::cout << "sorting in Lens::readInputSimFileMillennium()" << std::endl;
 	// sort the field_halos by readshift
-	Lens::quicksort(field_halos.data(),halo_pos,field_halos.size());
+	//Lens::quicksort(field_halos.data(),halo_pos,field_halos.size());
+  std::sort(field_halos.begin(),field_halos.end(),LensHaloZcompare);
 
 	if(verbose) std::cout << "leaving Lens::readInputSimFileMillennium()" << std::endl;
 
@@ -1476,7 +1489,7 @@ void Lens::readInputSimFileMultiDark(bool verbose)
   
   std::vector<std::string> filenames;
   Utilities::ReadFileNames(field_input_sim_file.c_str(),".dat",filenames);
-  std::vector<PosType *> halo_pos_vec;
+  //std::vector<PosType *> halo_pos_vec;
   //std::vector<Utilities::Geometry::SphericalPoint> sph_halo_pos_vec;
   
   int j_max;
@@ -1630,7 +1643,7 @@ void Lens::readInputSimFileMultiDark(bool verbose)
             break;
           case nsie_lens:
             field_halos.push_back(new LensHaloSimpleNSIE(mass*(1-field_galaxy_mass_fraction),z,sigma,0.0,1.0,0.0,0));
-                   
+
             //field_halos.push_back(new LensHaloSimpleNSIE);
             break;
           case ana_lens:
@@ -1664,7 +1677,8 @@ void Lens::readInputSimFileMultiDark(bool verbose)
             break;
         }
       
-        if(mass > 0.0) halo_pos_vec.push_back(theta);
+        //if(mass > 0.0) halo_pos_vec.push_back(theta);
+        if(mass > 0.0) field_halos.back()->setX(theta);
       
         if(mass > mass_max) {
           mass_max = mass;
@@ -1702,7 +1716,8 @@ void Lens::readInputSimFileMultiDark(bool verbose)
           // distance on the lens plane in Lens::buildLensPlanes()
           theta2 = new PosType[2];
           theta2[0]=theta[0]; theta2[1]=theta[1];
-          halo_pos_vec.push_back(theta2);
+          //halo_pos_vec.push_back(theta2);
+          field_halos.back()->setX(theta2);
         
           ++j;
         }
@@ -1730,12 +1745,12 @@ void Lens::readInputSimFileMultiDark(bool verbose)
 		field_buffer = 0.0;
 	}
   
-	halo_pos = Utilities::PosTypeMatrix(field_halos.size(), 3);
+	//halo_pos = Utilities::PosTypeMatrix(field_halos.size(), 3);
   
-	for(i = 0; i < field_halos.size(); ++i)
-	{
-		halo_pos[i] = halo_pos_vec[i];
-	}
+	//for(i = 0; i < field_halos.size(); ++i)
+	//{
+	//	halo_pos[i] = halo_pos_vec[i];
+	//}
   
   // determine if the region is a circle or a rectangle
   PosType diagonal1 = (boundary_diagonal[1] - boundary_diagonal[0])/sqrt(2);
@@ -1767,7 +1782,9 @@ void Lens::readInputSimFileMultiDark(bool verbose)
   
 	if(verbose) std::cout << "sorting in Lens::readInputSimFileMultiDark()" << std::endl;
 	// sort the field_halos by readshift
-	Lens::quicksort(field_halos.data(),halo_pos,field_halos.size());
+	//Lens::quicksort(field_halos.data(),halo_pos,field_halos.size());
+  std::sort(field_halos.begin(),field_halos.end(),LensHaloZcompare);
+
   
 	if(verbose) std::cout << "leaving Lens::readInputSimFileMultiDark()" << std::endl;
   

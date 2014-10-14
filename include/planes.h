@@ -28,11 +28,14 @@ public:
 /// A LensPlane with a TreeQuad on it to calculate the deflection caused by field lenses
 class LensPlaneTree : public LensPlane{
 public:
-	LensPlaneTree(PosType **xpt,LensHaloHndl *my_halos,IndexType Nhalos,PosType my_sigma_background,PosType my_inv_screening_scale = 0);
+	LensPlaneTree(LensHaloHndl *my_halos,IndexType Nhalos,PosType my_sigma_background,PosType my_inv_screening_scale = 0);
 	~LensPlaneTree();
 
 	void force(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType *xx);
-   
+  void closestHalos(PosType *xx,std::list<LensHalo *> neighbors){
+    
+  };
+
 	void addHalo(LensHalo* halo);
 	void removeHalo(LensHalo* halo);
 	
