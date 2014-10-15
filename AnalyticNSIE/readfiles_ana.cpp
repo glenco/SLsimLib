@@ -43,7 +43,7 @@ void LensHaloAnaNSIE::assignParams(InputParams& params){
 		if(!params.get("main_perturb_quadrapole",perturb_rms[3])) error_message1("main_perturb_quadrapole",params.filename());
 		if(!params.get("main_perturb_hexopole",perturb_rms[4])) error_message1("main_perturb_hexopole",params.filename());
 		if(!params.get("main_perturb_octopole",perturb_rms[5])) error_message1("main_perturb_octopole",params.filename());
-
+    
 	}
 
 }
@@ -79,13 +79,13 @@ void LensHaloAnaNSIE::PrintLens(bool show_substruct,bool show_stars){
 LensHaloAnaNSIE::LensHaloAnaNSIE(InputParams& params, bool verbose) : LensHaloBaseNSIE(params){
 
   assignParams(params);
-
+  
   if(perturb_Nmodes){
   	perturb_modes = new PosType[perturb_Nmodes+1];
-  	// zero perturbation modes until use BaseNSIELensHalo::RandomlyDistortLens()
+  	// zero perturbation modes until use LensHaloAnaNSIE::RandomlyDistortLens()
   	for(int i=0;i< perturb_Nmodes+1 ;++i) perturb_modes[i] =  0;
   }
-
+  
   if(verbose) PrintLens(false,false);
 }
 

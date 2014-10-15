@@ -208,7 +208,7 @@ namespace Utilities{
  *
  */
 struct alphaForInt {
-
+  
   alphaForInt(PosType f, PosType bc, PosType theta) : f(f), bc(bc), theta(theta) {}
 
   KappaType operator()(PosType r) /// PosType r : |position| on the image plane in Einstein radius units
@@ -230,8 +230,8 @@ struct alphaForInt {
     }
     else          // Elliptical case
     {
-      std::cout << "We have to write the code for phi in the NSIE elliptical case." << std::endl ;
-      exit(0);
+      // std::cout << "We have to write the code for phi in the NSIE elliptical case." << std::endl ;
+      // exit(0);
     }
     
     return (alpha[0]/x[0]) * r ;
@@ -260,6 +260,11 @@ KappaType phiNSIE(PosType const *xt    /// position on the image plane in Einste
   // std::cout << "xt = (" << xt[0] << " , " << xt[1] << " ) " << std::endl ;
   
   PosType r = sqrt(xt[0]*xt[0]+xt[1]*xt[1]) ; // So it works only in the symmetric case !!!
+  
+  
+  // double q,beta;
+  // calcModes(q, beta, pa, perturb_modes);
+
   
   struct alphaForInt alphaForIntFunc(f,bc,theta);
   
