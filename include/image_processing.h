@@ -9,6 +9,10 @@
 #define IMAGE_PROCESSING_H_
  
 #include "Tree.h"
+#ifdef ENABLE_FFTW
+#include "fftw3.h"
+#endif
+
 
 // forward declaration
 struct Grid;
@@ -106,7 +110,64 @@ public:
   void find_position(PosType x[],std::size_t const ix,std::size_t const iy);
   
   /// interpolate to point x[]
-  PosType linear_interpolate(PosType x[]); 
+  PosType linear_interpolate(PosType x[]);
+  
+#ifdef ENABLE_FFTW
+
+  void PowerSpectrum(std::vector<PosType> &power_spectrum,bool logbins){
+    
+    int Nbins = power_spectrum.size();
+    std::vector<size_t> NinBins(Nbins,0);
+    std::vector<size_t> bin_vec(Nbins + 1);
+    
+    PosType nyquist = sqrt(Nx*Nx + Ny*Ny)/2;
+    
+    int l;
+    if(!logbins) for(l=0;l<Nbins+1;++l) bin_vec[l] = l*nyquist/Nbins;
+    else{
+      PosType f = pow(nyquist,1.0/Nbins);
+      bin_vec[0]=0;
+      bin_vec[1]=f;
+      for(l=2;l<Nbins+1;++l) bin_vec[l] = bin_vec[l-1]*f;
+    }
+    
+    //if(Nx != Ny ) throw std::runtime_error("PixelMap must be square to find Power Spectrum");
+    
+    //PosType *tmp_map = new PosType[map.size()];
+    //for(size_t i=0; i<map.size();++i ) tmp_map[i] = map[i];
+    
+    // Fourier tranform the plane
+    fftw_complex *fftoutput = new fftw_complex[Nx*(Ny/2+1)];
+    //fftw_plan p = fftw_plan_dft_r2c_2d(Nx,Ny,tmp_map,fftoutput,FFTW_ESTIMATE);
+    fftw_plan p = fftw_plan_dft_r2c_2d(Nx,Ny,std::begin(map),fftoutput,FFTW_ESTIMATE);
+    fftw_execute( p );
+    fftw_destroy_plan(p);
+    //delete[] tmp_map;
+
+    for(l=0;l<Nbins;++l) power_spectrum[l] = 0.0;
+
+    // build modes for each pixel in the fourier space
+    size_t k2,ii;
+    long kx;
+    for( size_t i=0; i<Nx; i++ ){
+      kx=(i<Nx/2)? (i):(i-Nx);
+      for( int j=0; j<Ny/2+1; j++ ){
+        k2 = sqrt(kx*kx + j*j);
+        ii = j+(Ny/2+1)*i;
+        
+        l = Utilities::locate<size_t>(bin_vec, k2);
+        //std::cout << fftoutput[ii][0] << "  " << fftoutput[ii][1] << std::endl;
+        
+        if(l >= 0 && l < Nbins ) power_spectrum[l] += fftoutput[ii][0]*fftoutput[ii][0] +
+                                                     fftoutput[ii][1]*fftoutput[ii][1];
+        ++(NinBins[l]);
+      }
+    }
+    for(l=0;l<Nbins;++l) power_spectrum[l] /= NinBins[l];
+    
+    delete[] fftoutput;
+  }
+#endif
 
 private:
 	std::valarray<double> map;
