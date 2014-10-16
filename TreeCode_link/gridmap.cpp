@@ -148,7 +148,7 @@ PixelMap GridMap::writePixelMapUniform(
                                     ,LensingVariable lensvar  /// which quantity is to be displayed
                                     ){
   
-  if(getNumberOfPoints() == 0 ) return;
+  if(getNumberOfPoints() == 0 ) return PixelMap();
   PixelMap map(center, Nx, Ny,x_range/Nx);
   map.Clean();
   

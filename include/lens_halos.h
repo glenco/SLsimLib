@@ -425,7 +425,7 @@ public:
   PosType dgfunctiondx(PosType x);
 	PosType g2function(PosType x) const;
 	PosType hfunction(PosType x) const;
-  PosType dhfunction(PosType x);
+  PosType dhfunction(PosType x) const;
   PosType ddhfunction(PosType x, bool numerical);
   PosType dddhfunction(PosType x, bool numerical);
   PosType bfunction(PosType x);
@@ -494,7 +494,7 @@ protected:
     return 0.25*(InterpolateFromTable(htable,x) - InterpolateFromTable(htable,Rmax/rscale))/gmax + log(Rmax) ;
     // The constant contribution is made to match with the point mass at x = Rmax/rscale.
 	}
-  inline KappaType phi_int(PosType x){
+  inline KappaType phi_int(PosType x) const{
     return -1.0*InterpolateFromTable(xgtable,x)/gmax; //alpha_int(x);
   }
   
@@ -579,7 +579,7 @@ private:
 		//exit(1);
 		//return 0.0;
 	}
-    inline KappaType phi_int(PosType x){
+    inline KappaType phi_int(PosType x) const{
         return -1.0*alpha_int(x)/InterpolateFromTable(xmax) ;
     }
 };
@@ -650,7 +650,7 @@ private:
 		if(x==0) x=1e-6*xmax;
     return ( pow(x/xmax,2-beta) - 1 )/(2-beta) + log(Rmax) ;
 	}
-  inline KappaType phi_int(PosType x){
+  inline KappaType phi_int(PosType x) const{
 		//return alpha_int(x);
     return -1.0*pow(x/xmax,-beta+2)/(-beta+2);
   }
@@ -796,7 +796,7 @@ protected:
 		return -0.25*InterpolateFromTable(htable,x)/gmax;
 		//return -1.0*InterpolateFromTable(htable,x)/gmax;
 	}
-    inline KappaType phi_int(PosType x){
+    inline KappaType phi_int(PosType x) const{
 		return -0.25*InterpolateFromTable(xgtable,x)/gmax;
     }
     
@@ -870,7 +870,7 @@ protected:
 	inline KappaType phi_h(PosType x) const {
         return -0.25*InterpolateFromTable(xgtable,x)/gmax;
     }
-    inline KappaType phi_int(PosType x){
+    inline KappaType phi_int(PosType x) const{
 		return -0.25*InterpolateFromTable(xgtable,x)/gmax;
     }
 

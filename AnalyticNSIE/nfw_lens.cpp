@@ -132,7 +132,7 @@ PosType LensHaloNFW::hfunction(PosType x) const{
 	return 0.0;
 }
 
-PosType LensHaloNFW::dhfunction(PosType x){ // d ln phi(x) / d ln(x) = beta
+PosType LensHaloNFW::dhfunction(PosType x) const { // d ln phi(x) / d ln(x) = beta
     if(x==0) x=1e-5;
     if(x<1.0)  return x*((((2*x*atanh(sqrt(1.-x*x)))/(sqrt(1.-x*x)*x*x)+(2.*log(x/2))/x))/(-pow(atanh(sqrt(1.-x*x)),2)+log(0.5*x)*log(0.5*x)));
     if(x==1.0) return 2.0*(log(0.5)+1.0)/(log(0.5)*log(0.5));
