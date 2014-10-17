@@ -7,6 +7,7 @@
 
 #include "slsimlib.h"
 #include <algorithm>
+#include "lens_halos.h"
 
 using namespace std;
 
