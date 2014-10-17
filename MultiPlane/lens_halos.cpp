@@ -1553,3 +1553,5 @@ bool LensHalo::test(){
   
   return true;
 };
+
+bool compare(LensHalo *lh1,LensHalo *lh2){return (lh1->getZlens() < lh1->getZlens());}

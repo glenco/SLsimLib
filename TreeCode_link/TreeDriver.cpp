@@ -1319,7 +1319,7 @@ void TreeStruct::_FindAllBoxNeighbors(Branch *leaf,ListHndl neighbors){
 }
 */
 
-/// Treating the image as an arc, find its parameters
+/// Treating the image as an arc, find its parameters,  THIS HAS NOT BEEN FINISHED YET!!!
 void ImageInfo::ArcInfo(
 		PosType *area        /// area of image with surface brightness limit
 		,PosType *area_circ   /// 4 * area / circumference^2 of the image, a measure of thinness
@@ -1386,6 +1386,7 @@ void ImageInfo::ArcInfo(
 	dist2 = sqrt(dist2);
 }
 
+/// Treating the image as an arc, find its parameters,  THIS HAS NOT BEEN FINISHED YET!!!
 void ImageInfo::FindArc(PosType &radius,PosType *xc,PosType *arc_c,PosType &arclength,PosType &width
                         ,PosType resolution
                         ,PosType threshold  /// surface brightness threshold as a fcaction of peak surface brightness
