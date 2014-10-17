@@ -1526,7 +1526,9 @@ void Lens::readInputSimFileMultiDark(bool verbose)
       throw std::runtime_error(" Cannot open file.");
       exit(1);
     }
-  
+    
+    std::cout << "reading halos from file: " << field_input_sim_file + filenames[jj] << std::endl;
+    exit(0);
     // skip through header information in data file
     i=0;
     while(file_in.peek() == '#'){
