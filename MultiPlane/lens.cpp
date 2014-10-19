@@ -1489,7 +1489,8 @@ void Lens::readInputSimFileMultiDark(bool verbose)
 	PosType rmax=0,rtmp=0,boundary_p1[2],boundary_p2[2],boundary_diagonal[2];
   
   std::vector<std::string> filenames;
-  Utilities::ReadFileNames(field_input_sim_file.c_str(),".dat",filenames);
+  //Utilities::ReadFileNames(field_input_sim_file.c_str(),".dat",filenames);
+  filenames.push_back(" ");
   //std::vector<PosType *> halo_pos_vec;
   //std::vector<Utilities::Geometry::SphericalPoint> sph_halo_pos_vec;
   
@@ -1520,7 +1521,8 @@ void Lens::readInputSimFileMultiDark(bool verbose)
   //for(int jj=0;jj<filenames.size();++jj){
   for(int jj=0;jj<1;++jj){
     
-    std::ifstream file_in( field_input_sim_file + filenames[jj].c_str());
+    //std::ifstream file_in( field_input_sim_file + filenames[jj].c_str());
+    std::ifstream file_in( field_input_sim_file );
     if(!file_in){
       std::cout << "Can't open file " << field_input_sim_file + filenames[jj] << std::endl;
       ERROR_MESSAGE();
