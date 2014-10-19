@@ -114,7 +114,7 @@ public:
   
 #ifdef ENABLE_FFTW
 
-  void PowerSpectrum(std::vector<PosType> &power_spectrum,bool logbins){
+  void PowerSpectrum(std::vector<PosType> &power_spectrum,std::vector<PosType> &lvec,bool logbins){
     
     int Nbins = power_spectrum.size();
     std::vector<size_t> NinBins(Nbins,0);
@@ -164,6 +164,9 @@ public:
       }
     }
     for(l=0;l<Nbins;++l) power_spectrum[l] /= NinBins[l];
+    
+    lvec.resize(Nbins);
+    if(!logbins) for(l=0;l<Nbins;++l) lvec[l] = (bin_vec[l] + bin_vec[l+1])/2/resolution/nyquist;
     
     delete[] fftoutput;
   }
