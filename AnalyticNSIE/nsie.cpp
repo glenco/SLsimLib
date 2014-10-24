@@ -250,26 +250,161 @@ struct alphaForInt {
  * Compute the potential for the NSIE (in physical Mpc) by integration of alphaNSIE.
  *
  */
-KappaType phiNSIE(PosType const *xt    /// position on the image plane in Einstein radius units
+KappaType LensHaloBaseNSIE::phiNSIE(PosType const *xt    /// position on the image plane in Einstein radius units
                   ,PosType f      /// axis ratio of mass
                   ,PosType bc     /// core size in units of Einstein radius
                   ,PosType theta  /// position angle of ellipsoid
                 )
 {
   // Here f, bc, and theta are fixed and known.
-  // std::cout << "xt = (" << xt[0] << " , " << xt[1] << " ) " << std::endl ;
-  
-  PosType r = sqrt(xt[0]*xt[0]+xt[1]*xt[1]) ; // So it works only in the symmetric case !!!
-  
-  
-  // double q,beta;
-  // calcModes(q, beta, pa, perturb_modes);
 
+  PosType r = sqrt(xt[0]*xt[0]+xt[1]*xt[1]) ;
+
+  // std::cout << "xt = (" << xt[0] << " , " << xt[1] << " ) " << std::endl ;
+  // std::cout << fratio << "  " << beta << "  " << pa << std::endl ;
+  // std::cout << f << "  " << bc << "  " << theta << std::endl ;
   
-  struct alphaForInt alphaForIntFunc(f,bc,theta);
   
-  // Doing the integration of alphaForIntFunc :
-  return Utilities::nintegrate<alphaForInt,PosType>(alphaForIntFunc, 1.0e-7, r, 1.0e-7);
+  set_slope(1.); // sets the slope beta. // HAVE TO GENERALISE THAT !
+  
+  
+  if(fratio==1) // Spherical case
+  {
+    struct alphaForInt alphaForIntFunc(f,bc,theta);
+    
+    // Returning phi from the integration of alphaForIntFunc :
+    // =======================================================
+    return Utilities::nintegrate<alphaForInt,PosType>(alphaForIntFunc, 1.0e-7, r, 1.0e-7);
+  }
+  else          // Elliptical case
+  {
+    // PosType tmp_pert_modes[Nmod];
+
+    
+    // Calculating the modes necessary to ellipticize phi :
+    // ====================================================
+    
+    //for(int i=0;i<perturb_Nmodes;i++) { std::cout << perturb_modes[i] << "  " ; }
+    //std::cout << std::endl ;
+    
+    // calcModes(f, 2-beta, theta, tmp_pert_modes);
+    
+    
+    // main_perturbation beta  -> perturb_beta
+    // main_perturbation kappa -> perturb_rms[0]
+    // main_perturbation gamma -> perturb_rms[1]
+    // main_perturb_monopole   -> perturb_rms[2]
+    // main_perturb_quadrapole -> perturb_rms[3]
+    // main_perturb_hexopole   -> perturb_rms[4]
+    // main_perturb_octopole   -> perturb_rms[5]
+    
+    /*
+    perturb_modes[0] = tmp_pert_modes[0];  // perturbation kappa
+    perturb_modes[1] = tmp_pert_modes[2];  // perturbation gamma1
+    perturb_modes[2] = tmp_pert_modes[2];  // perturbation gamma2
+    perturb_modes[3] = tmp_pert_modes[4];  // Monopole
+    perturb_modes[4] = tmp_pert_modes[6];  // Quadrupole
+    perturb_modes[5] = tmp_pert_modes[8];  // Hexapole
+    perturb_modes[6] = tmp_pert_modes[10]; // Octupole
+    */
+
+    /*
+    perturb_modes[0] = 0.03;  // perturbation kappa
+    perturb_modes[1] = 0.03;  // perturbation gamma1
+    perturb_modes[2] = 0.03;  // perturbation gamma2
+    perturb_modes[3] = 0.0;   // Monopole
+    perturb_modes[4] = 0.005; // Quadrupole
+    perturb_modes[5] = 0.005; // Hexapole
+    perturb_modes[6] = 0.01;  // Octupole
+     */
+    
+    // std::cout << std::endl << "Reading perturbation modes by hand." << std::endl ;
+    
+    /*
+    perturb_modes[0] = 0;  // perturbation kappa
+    perturb_modes[1] = -0.353292;  // perturbation gamma1
+    perturb_modes[2] = 4.04853e-10;  // perturbation gamma2
+    perturb_modes[3] = 0.000770027;   // Monopole
+    perturb_modes[4] = 0.000171016; // Quadrupole
+    perturb_modes[5] = 1.94105e-13; // Hexapole
+    perturb_modes[6] = -4.14327e-39;  // Octupole
+    */
+    
+    // for(int i=0;i<perturb_Nmodes;i++) { std::cout << perturb_modes[i] << "  " ; }
+    // std::cout << std::endl << std::endl ;
+    
+    
+    // Computing phi from the method in lens_expand :
+    // ==============================================
+    
+    PosType tmp_theta, cosx, sinx, cos2theta, sin2theta ;
+    PosType F, F1, F2;
+    int i, k;
+    
+    tmp_theta = atan2(xt[1],xt[0]);
+    cosx = xt[0]/r;
+    sinx = xt[1]/r;
+
+    if(perturb_Nmodes > 3) F=0.5*perturb_modes[3];
+    else F = 0;
+    F1=0;
+    F2=0;
+    for(i=4; i<perturb_Nmodes; i+=2)
+    {
+      k=i/2;
+      F += perturb_modes[i]*cos(k*theta)     + perturb_modes[i+1]*sin(k*theta);
+      F1+=-perturb_modes[i]*k*sin(k*theta)   + perturb_modes[i+1]*k*cos(k*theta);
+      F2+=-perturb_modes[i]*k*k*cos(k*theta) - perturb_modes[i+1]*k*k*sin(k*theta);
+    }
+    cos2theta=2*cosx*cosx-1;
+    sin2theta=2*cosx*sinx;
+    
+    return F*pow(r,beta) + r*r*(perturb_modes[0] + perturb_modes[1]*cos2theta + perturb_modes[2]*sin2theta)/2;
+    
+    
+    
+    // Test :
+    // Compare kappa, gamma, alpha as computed with lens_expand with kappaNSIE, gammaNSIE, alphaNSIE
+    // in order to validate the elliptisation of phi.
+    /*
+    bool test = false ;
+    
+    KappaType kappa_tmp, gamma_tmp, phi_tmp;
+    kappa_tmp = gamma_tmp = phi_tmp = 0.;
+    PosType * alpha_tmp = new PosType ;
+    
+    // Computing all quantities with lens_expand :
+    kappa_tmp = lens_expand(beta, tmp_pert_modes, perturb_Nmodes, xt, alpha_tmp, &gamma_tmp, &phi_tmp);
+    
+    
+    // Computing alpha with NSIE function :
+    PosType * alpha_tmpNew = new PosType ;
+    alphaNSIE(alpha_tmpNew, xt, f, beta, theta);
+    
+    // Computing kappa with NSIE function :
+    KappaType kappa_tmpNew = kappaNSIE(xt, f, beta, theta);
+    
+    // Showing comparison :
+    std::cout << "Comparison alpha1 : " << alpha_tmp[0] << "  " << alpha_tmpNew[0] << std::endl;
+    std::cout << "Comparison alpha2 : " << alpha_tmp[1] << "  " << alpha_tmpNew[1] << std::endl;
+    std::cout << "Comparison kappa : " << kappa_tmp << "  " << kappa_tmpNew << std::endl;
+    
+    // if(alpha_tmp[0] == alpha_tmp[1] && alpha_tmp[1] == alpha_tmpNew[1]) test = true ;
+    
+    
+    // Returning phi given by lens_expand :
+    // ====================================
+    
+    if (test == true) {
+      return F*pow(r,beta) + r*r*(mod[0] + mod[1]*cos2theta + mod[2]*sin2theta)/2;
+    }
+    else {
+      return 0. ;
+    }
+    */
+    
+  }
+
 }
 
 

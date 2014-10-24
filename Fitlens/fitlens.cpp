@@ -24,6 +24,8 @@ void LensHaloAnaNSIE::FindLensSimple(
 		,Point *image_positions   /// Array of points with point[i].x set to the image positions
 		,double *y                /// output source position
 		,double **dx_sub          /// dx_sub[Nimages][2] pre-calculated deflections caused by substructures or external masses at each image
+    ,PosType * out_perturb_modes  /// Output array of perturbation modes
+    ,int * Noutmodes                /// Number of output perturbation modes
 		){
 
 	ImageInfo* imageinfo = new ImageInfo[Nimages];
@@ -34,7 +36,11 @@ void LensHaloAnaNSIE::FindLensSimple(
 	}
 
 	FindLensSimple(imageinfo,Nimages,y,dx_sub);
-	
+
+  *Noutmodes = perturb_Nmodes;
+      
+  for(int i=0;i<perturb_Nmodes;++i){ out_perturb_modes[i] = perturb_modes[i]; }
+      
 	delete[] imageinfo;
 }
 /** \ingroup FitLens
@@ -79,7 +85,7 @@ void LensHaloAnaNSIE::FindLensSimple(
 	double **xob,**xg,q[6],*mods;
 	double re2 = 0,x_center[2],scale;
 
-	xob = dmatrix(0,Nimages-1,0,1);
+  xob = dmatrix(0,Nimages-1,0,1);
 	xg = dmatrix(0,1,0,1);
 	mods=dvector(0,perturb_Nmodes + 2*Nsources + 1 );
 
@@ -133,7 +139,7 @@ void LensHaloAnaNSIE::FindLensSimple(
 	free_dmatrix(xob,0,Nimages-1,0,1);
 	free_dmatrix(xg,0,1,0,1);
 	free_dvector(mods,0,perturb_Nmodes + 2*Nsources + 1);
-
+      
 	return ;
 }
 
@@ -327,10 +333,10 @@ double minEllip(double *par){
 				+(105+1436*q*q+3062*q*q*q*q+1436*pow(q,6)+105*pow(q,8))*K )
 				/(105*pi*pow(1-q*q,4))/(1-64);
 	}
-
+  
 	// rotate model
 	RotateModel(theta,modoT,NmodT,NsourcesT);   // xobT is used as a dumby variable
-
+  
 	x_center[0]=x_centerT[0];
 	x_center[1]=x_centerT[1];
 
@@ -361,10 +367,10 @@ double minEllip(double *par){
 		}
 		find_lens(NimagesT,NsourcesT,pairingT,xobT,x_center,betaT,NmodT,&degenT,modT,vT,dx_subTt);
 	}
-
+  
 	// find most elliptical model
 	sm=regularize(NmodT,3,NmodT,NsourcesT,degenT,modT,vT,modoT);
-
+  
 	if( sm < oldsm || oldsm < 0.0){
 		oldsm=sm;
 		for(i=1;i<=NmodT+2*NsourcesT;++i) modTT[i]=modT[i];
@@ -510,6 +516,23 @@ void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *x_cent
 }
 
 
+/**
+ *   Sets the perturbation modes in the Ana
+ *
+ */
+void LensHaloAnaNSIE::set_perturbmodes(PosType * ListModes, int Nmodes)
+{
+  perturb_Nmodes = Nmodes ;
+  
+  for(int i=0; i < Nmodes; i++)
+  {
+  perturb_modes[i] = ListModes[i];
+  }
+  
+  return ;
+}
+
+
 /** \ingroup FitLensL2
  *
 * \brief  calculate the sources position, surface density and magnification at x
@@ -630,7 +653,7 @@ double regularize(int Nmax,int Nmin,int N,int Nsources,int degen
 		  ,double *mod,double **v,double *modo){
   double Dsum,sum=0,sumold,aa,*weights;
 
-
+  
   int i,j;
 
   /*
@@ -649,7 +672,7 @@ double regularize(int Nmax,int Nmin,int N,int Nsources,int degen
     else Dsum += pow(1-pow(i/2,2.),2)*pow( mod[i]-modo[i],2);
   }
   sumold=Dsum;
-
+  
   while(Dsum > 1.0e-6*sumold){
 
     if(modo[3] != 0.0){
@@ -668,7 +691,7 @@ double regularize(int Nmax,int Nmin,int N,int Nsources,int degen
     	if(aa > 0.0) for(i=3;i<=Nmax;++i) modo[i]*=aa;
     }
     /** move in degenerate space to find best model **/
-	for(j=1;j<=degen;++j){
+    for(j=1;j<=degen;++j){
       for(i=Nmin,sum=0.0;i<=Nmax;i+=1){
     	  if(i<=3) sum += ( mod[i] - modo[i]  )*v[i][j];
     	  else sum += pow(1-pow(i/2,2.),2.)*( mod[i] - modo[i]  )*v[i][j];
@@ -686,7 +709,7 @@ double regularize(int Nmax,int Nmin,int N,int Nsources,int degen
       }
       if(sum < 0) std::printf("max found\n");
       /*std::printf("weights[%i]=%e\n",j,weights[j]);*/
-	}
+    }
 
     for(i=Nmin,sum=0.0;i<=Nmax;i+=1){
       if(i<=3) sum += pow(mod[i]-modo[i],2);

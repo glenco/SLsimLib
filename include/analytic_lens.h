@@ -77,10 +77,13 @@ public:
   void RandomizeSubstructure2(double rangeInRei,long *seed);
   void RandomizeSubstructure3(double rangeInRei,long *seed);
 
-  void FindLensSimple(int Nimages,Point *image_positions,double *y,double **dx_sub);
+  void FindLensSimple(int Nimages,Point *image_positions,double *y,double **dx_sub,PosType * out_perturb_modes,int * Noutmodes);
   void FindLensSimple(ImageInfo *imageinfo ,int Nimages ,double *y,double **dx_sub);
 
+  int getNmodes(){return perturb_Nmodes;};
 
+  void set_perturbmodes(PosType * ListModes, int Nmodes);
+  
 private:
 
    // Things added to manipulate and fit lenses.

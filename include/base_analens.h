@@ -138,7 +138,11 @@ public:
 	/// set the core radius
 	void set_rcore(float my_rcore){rcore = my_rcore;}
   
-  
+  /// computes phi for NSIE
+  KappaType phiNSIE(PosType const *xt,PosType f,PosType bc,PosType theta);
+  /// returns zsource_reference
+  float get_zsourceref() { return zsource_reference ; }
+
 protected:
 
   /// critical surface density
@@ -174,8 +178,8 @@ protected:
    PosType MpcToAsec;
 
    /// redshift for which the perturbation modes are normalised
-   float zsource_reference;
-   PosType Ds, Dls;
+  float zsource_reference;
+  PosType Ds, Dls;
 
 };
 
@@ -189,7 +193,6 @@ void alphaNSIE(PosType *alpha,double const *xt,PosType f,PosType bc,PosType thet
 KappaType kappaNSIE(PosType const *xt,PosType f,PosType bc,PosType theta);
 void gammaNSIE(KappaType *gam,double const *xt,PosType f,PosType bc,PosType theta);
 KappaType invmagNSIE(PosType *x,PosType f,PosType bc,PosType theta,float *gam,float kap);
-KappaType phiNSIE(PosType const *xt,PosType f,PosType bc,PosType theta);
 
 PosType rmaxNSIE(PosType sigma,PosType mass,PosType f,PosType rc );
 PosType ellipticRadiusNSIE(PosType const *x,PosType f,PosType pa);
