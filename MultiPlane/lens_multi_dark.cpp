@@ -14,9 +14,9 @@ void Lens::readMultiDark()
 {
 	std::ifstream list(main_input_file.c_str());
 	if(!list.good())
-		throw new std::runtime_error("Could not open MultiDark list file" + main_input_file + "!");
+		throw new std::runtime_error("Could not open MultiDarkMap list file" + main_input_file + "!");
 	
-	std::cout << "MultiDark files:" << std::endl;
+	std::cout << "MultiDarkMap files:" << std::endl;
 	
 	std::string line;
 	while(std::getline(list, line))

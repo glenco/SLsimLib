@@ -77,7 +77,7 @@ LensHaloMOKA::LensHaloMOKA(const std::string& filename, LensHaloType my_maptype,
 /**
  * \brief allocates and reads the MOKA map in
  *
- *  In the future this could be used to read in individual MultiDark or other types of maps if the type were specified in the paramfile.
+ *  In the future this could be used to read in individual MultiDarkMaps or other types of maps if the type were specified in the paramfile.
  */
 LensHaloMOKA::LensHaloMOKA(InputParams& params, const COSMOLOGY& lenscosmo)
 : LensHalo(), maptype(moka_lens), cosmo(lenscosmo)

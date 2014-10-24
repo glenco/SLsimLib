@@ -443,7 +443,7 @@ bool InputParams::get(std::string label, LensHaloType& value) const
 		value = jaffe_lens;
 		return true;
 	}
-	if(!it->second.compare("11") || !it->second.compare("MultiDark"))
+	if(!it->second.compare("11") || !it->second.compare("MultiDarkMap"))
 	{
 		value = multi_dark_lens;
 		return true;

@@ -28,7 +28,7 @@ namespace
 		
 		// Main halos type
 		{"main_halo_on", "1", "insert a main halo into the simulation"},
-		{"main_DM_halo_type", "DummyLens", "main halo type: nolens, NFW, PseudoNFW, PowerLaw, NSIE, AnaLens, UniLens, MOKALens, DummyLens, Hernquist, Jaffe, MultiDark"},
+		{"main_DM_halo_type", "DummyLens", "main halo type: nolens, NFW, PseudoNFW, PowerLaw, NSIE, AnaLens, UniLens, MOKALens, DummyLens, Hernquist, Jaffe, MultiDarkMap"},
 		{"main_galaxy_halo_type", "0", "if set, a main halo galaxy profile is chosen: 0 or none, 1 or NSIE"},
 		
 		// Field halos
@@ -111,7 +111,7 @@ namespace
 		// 
 		{"zsource_reference", "2.0", "reference redshift for halo quantities that depend on source z"},
 		
-		// MultiDark lenses
+		// MultiDarkMap lenses
 		{"MultiDark_input_file", "MultiDark.txt", "list of MOKA FITS files for MultiDark-like simulations"},
 		
 		// Type of source SB model

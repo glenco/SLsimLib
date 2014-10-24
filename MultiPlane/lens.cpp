@@ -455,7 +455,7 @@ void Lens::printMultiLens(){
 		std::cout << "Jaffe lens" << endl;
 		break;
 	case multi_dark_lens:
-		std::cout << "MultiDark lens" << endl;
+		std::cout << "MultiDarkMap lens" << endl;
 		break;
 	}
 
@@ -532,7 +532,7 @@ void Lens::printMultiLens(){
 				std::cout << "Jaffe field type" << endl;
 				break;
 			case multi_dark_lens:
-				std::cout << "MultiDark field type" << endl;
+				std::cout << "MultiDarkMap field type" << endl;
 				break;
 		}
 
@@ -1205,7 +1205,7 @@ void Lens::readInputSimFileMillennium(bool verbose)
 	PosType ra,dec,z,vmax,vdisp,r_halfmass;
 	unsigned long i,j;
 	unsigned long haloid,idd,np;
-	PosType mo=7.3113e10,M1=2.8575e10,gam1=7.17,gam2=0.201,be=0.557;
+	const PosType mo=7.3113e10,M1=2.8575e10,gam1=7.17,gam2=0.201,be=0.557;
   PosType field_galaxy_mass_fraction = 0;
 
 	PosType rmax=0,rtmp=0;
@@ -1481,8 +1481,10 @@ void Lens::readInputSimFileMultiDark(bool verbose)
   std::cout << "Reading Field Halos from " << field_input_sim_file << std::endl;
 	PosType z,zob,xpos,ypos,zpos,vx,vy,vz,mass;
 	unsigned long i,j;
-	PosType mo=7.3113e10,M1=2.8575e10,gam1=7.17,gam2=0.201,be=0.557;
+	const PosType mo=7.3113e10,M1=2.8575e10,gam1=7.17,gam2=0.201,be=0.557;
   PosType field_galaxy_mass_fraction = 0;
+  const PosType masslimit =2.0e12;
+
   
   Utilities::Geometry::SphericalPoint tmp_sph_point(1,0,0);
   
@@ -1573,7 +1575,7 @@ void Lens::readInputSimFileMultiDark(bool verbose)
       }
     
       mass = pow(10,mass)/cosmo.gethubble();
-      if(mass > 0.0 && z <= zsource){
+      if(mass > masslimit && z <= zsource){
  
         tmp_sph_point.theta *= pi/180;
         tmp_sph_point.phi *= -pi/180;
@@ -1678,7 +1680,7 @@ void Lens::readInputSimFileMultiDark(bool verbose)
             break;
           case multi_dark_lens:
             ERROR_MESSAGE();
-            std::cout << "MultiDark not supported." << std::endl;
+            std::cout << "MultiDarkMap not supported." << std::endl;
             break;
         }
       
