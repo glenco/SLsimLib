@@ -301,13 +301,13 @@ void Lens::assignParams(InputParams& params,bool verbose)
 		}
 	}
 	
-	// read MultiDark parameters if necessary
+	// read Pixeliz parameters if necessary
 	if(main_halo_type == multi_dark_lens)
 	{
-		if(!params.get("MultiDark_input_file", main_input_file))
+		if(!params.get("Pixeliz_input_file", main_input_file))
 		{
 			ERROR_MESSAGE();
-			std::cout << "parameter MultiDark_input_file needs to be set in the parameter file " << params.filename() << endl;
+			std::cout << "parameter Pixeliz_input_file needs to be set in the parameter file " << params.filename() << endl;
 			exit(1);
 		}
 	}
@@ -403,7 +403,7 @@ void Lens::resetFieldHalos(bool verbose)
 	if(sim_input_flag){
 		if(read_sim_file == false){
       if(field_input_sim_format == MillenniumObs) readInputSimFileMillennium(verbose);
-      if(field_input_sim_format == MultiDark) readInputSimFileMultiDark(verbose);
+      if(field_input_sim_format == MultiDarkHalos) readInputSimFileMultiDarkHalos(verbose);
     }
 	}
 	else{
@@ -455,7 +455,7 @@ void Lens::printMultiLens(){
 		std::cout << "Jaffe lens" << endl;
 		break;
 	case multi_dark_lens:
-		std::cout << "MultiDarkMap lens" << endl;
+		std::cout << "PixelizMap lens" << endl;
 		break;
 	}
 
@@ -532,7 +532,7 @@ void Lens::printMultiLens(){
 				std::cout << "Jaffe field type" << endl;
 				break;
 			case multi_dark_lens:
-				std::cout << "MultiDarkMap field type" << endl;
+				std::cout << "PixelizMap field type" << endl;
 				break;
 		}
 
@@ -834,7 +834,7 @@ void Lens::createMainHalos(InputParams& params)
 		main_halos.push_back(new LensHaloJaffe(params));
 		break;
 	case multi_dark_lens:
-		readMultiDark();
+		readPixelizedDensity();
 		break;
 	}
 
@@ -1123,7 +1123,7 @@ void Lens::createFieldHalos(bool verbose)
 					break;
 				case multi_dark_lens:
 					ERROR_MESSAGE();
-					std::cout << "MultiDark not supported." << std::endl;
+					std::cout << "Pixeliz not supported." << std::endl;
 					break;
 			}
 
@@ -1362,7 +1362,7 @@ void Lens::readInputSimFileMillennium(bool verbose)
 					break;
 				case multi_dark_lens:
 					ERROR_MESSAGE();
-					std::cout << "MultiDark not supported." << std::endl;
+					std::cout << "Pixeliz not supported." << std::endl;
 					break;
 			}
 
@@ -1476,7 +1476,7 @@ void Lens::readInputSimFileMillennium(bool verbose)
  * The comments must be removed from the beginning of the data file and the total number of field_halos must be added
  * as the first line.
  */
-void Lens::readInputSimFileMultiDark(bool verbose)
+void Lens::readInputSimFileMultiDarkHalos(bool verbose)
 {
   std::cout << "Reading Field Halos from " << field_input_sim_file << std::endl;
 	PosType z,zob,xpos,ypos,zpos,vx,vy,vz,mass;
@@ -1680,7 +1680,7 @@ void Lens::readInputSimFileMultiDark(bool verbose)
             break;
           case multi_dark_lens:
             ERROR_MESSAGE();
-            std::cout << "MultiDarkMap not supported." << std::endl;
+            std::cout << "PixelizMap not supported." << std::endl;
             break;
         }
       
@@ -1787,13 +1787,13 @@ void Lens::readInputSimFileMultiDark(bool verbose)
 	if(verbose) std::cout << "Setting mass function to Sheth-Tormen." << std::endl;
 	field_mass_func_type = ST; // set mass function
   
-	if(verbose) std::cout << "sorting in Lens::readInputSimFileMultiDark()" << std::endl;
+	if(verbose) std::cout << "sorting in Lens::readInputSimFileMultiDarkHalos()" << std::endl;
 	// sort the field_halos by readshift
 	//Lens::quicksort(field_halos.data(),halo_pos,field_halos.size());
   std::sort(field_halos.begin(),field_halos.end(),LensHaloZcompare);
 
   
-	if(verbose) std::cout << "leaving Lens::readInputSimFileMultiDark()" << std::endl;
+	if(verbose) std::cout << "leaving Lens::readInputSimFileMultiDarkHalos()" << std::endl;
   
   field_buffer = 0.0;
 	read_sim_file = true;
@@ -1900,7 +1900,7 @@ void Lens::buildPlanes(InputParams& params,bool verbose)
 		// create or read the field halos
 		if(sim_input_flag){
       if(field_input_sim_format == MillenniumObs) readInputSimFileMillennium(verbose);
-      if(field_input_sim_format == MultiDark) readInputSimFileMultiDark(verbose);
+      if(field_input_sim_format == MultiDarkHalos) readInputSimFileMultiDarkHalos(verbose);
 		}else{
 			createFieldHalos(verbose);
 		}

@@ -77,7 +77,7 @@ LensHaloMOKA::LensHaloMOKA(const std::string& filename, LensHaloType my_maptype,
 /**
  * \brief allocates and reads the MOKA map in
  *
- *  In the future this could be used to read in individual MultiDarkMaps or other types of maps if the type were specified in the paramfile.
+ *  In the future this could be used to read in individual PixelizMaps or other types of maps if the type were specified in the paramfile.
  */
 LensHaloMOKA::LensHaloMOKA(InputParams& params, const COSMOLOGY& lenscosmo)
 : LensHalo(), maptype(moka_lens), cosmo(lenscosmo)
@@ -145,7 +145,7 @@ void LensHaloMOKA::initMap()
 
     map->center[0] = map->center[1] = 0.0;
     map->boxlrad = map->boxlarcsec*pi/180/3600.;
-    map->inarcsec  = 10800./M_PI/map->Dlens*60.; // Mpc/h to arcsec for MOKA while Mpc to arcsec for MultiDark
+    map->inarcsec  = 10800./M_PI/map->Dlens*60.; // Mpc/h to arcsec for MOKA while Mpc to arcsec for Pixeliz
 
     if(maptype == moka_lens){
       

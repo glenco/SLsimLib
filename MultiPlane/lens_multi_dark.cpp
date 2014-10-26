@@ -10,13 +10,13 @@ namespace
 	const char* char_whitespace = " \t";
 }
 
-void Lens::readMultiDark()
+void Lens::readPixelizedDensity()
 {
 	std::ifstream list(main_input_file.c_str());
 	if(!list.good())
-		throw new std::runtime_error("Could not open MultiDarkMap list file" + main_input_file + "!");
+		throw new std::runtime_error("Could not open PixelizMap list file" + main_input_file + "!");
 	
-	std::cout << "MultiDarkMap files:" << std::endl;
+	std::cout << "PixelizMap files:" << std::endl;
 	
 	std::string line;
 	while(std::getline(list, line))

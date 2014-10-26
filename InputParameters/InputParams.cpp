@@ -443,7 +443,7 @@ bool InputParams::get(std::string label, LensHaloType& value) const
 		value = jaffe_lens;
 		return true;
 	}
-	if(!it->second.compare("11") || !it->second.compare("MultiDarkMap"))
+	if(!it->second.compare("11") || !it->second.compare("PixelizMap"))
 	{
 		value = multi_dark_lens;
 		return true;
@@ -542,13 +542,13 @@ bool InputParams::get(std::string label, HaloCatFormats& value) const
 		value = MillenniumObs;
 		return true;
 	}
-	if(!it->second.compare("MultiDark"))
+	if(!it->second.compare("MultiDarkHalos"))
 	{
-		value = MultiDark;
+		value = MultiDarkHalos;
 		return true;
 	}
   
-	std::cout << label << " in parameter file " << paramfile_name << " needs to be MillenniumObs or MultiDark!" << std::endl;
+	std::cout << label << " in parameter file " << paramfile_name << " needs to be MillenniumObs or MultiDarkHalos!" << std::endl;
 	return false;
 }
 

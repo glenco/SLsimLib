@@ -28,8 +28,9 @@ namespace
 		
 		// Main halos type
 		{"main_halo_on", "1", "insert a main halo into the simulation"},
-		{"main_DM_halo_type", "DummyLens", "main halo type: nolens, NFW, PseudoNFW, PowerLaw, NSIE, AnaLens, UniLens, MOKALens, DummyLens, Hernquist, Jaffe, MultiDarkMap"},
+		{"main_DM_halo_type", "DummyLens", "main halo type: nolens, NFW, PseudoNFW, PowerLaw, NSIE, AnaLens, UniLens, MOKALens, DummyLens, Hernquist, Jaffe, PixelizMap"},
 		{"main_galaxy_halo_type", "0", "if set, a main halo galaxy profile is chosen: 0 or none, 1 or NSIE"},
+    {"Pixeliz_input_file","surfacedensity.fits","Density map to be read in as main lens."},
 		
 		// Field halos
 		{"field_off", "0", "turn off field halos"},
@@ -43,14 +44,14 @@ namespace
 		
 		// Field halos from a mass function
 		{"field_mass_func_type", "1", "mass function type, 0: Press-Schechter, 1: Sheth-Tormen, 2: PowerLaw"},
-		{"field_mass_func_alpha", "", ""},
+		{"field_mass_func_alpha", "2", "Only valid with field_mass_func_type = PowerLaw"},
 		{"field_fov", "1.0e4", "random light cone field of view in square arcseconds"},
 		{"field_buffer", "1.0", "in physical Mpc"},
 		{"field_min_mass", "1.0e9", "min mass of the halos in the light cone in solar masses"},
 		
 		// Field halos from an input file
 		{"field_input_simulation_path", "halos.txt", "if set, the light cone is read from an input file or files in this directory"},
-    {"field_input_simulation_format", "MillenniumObs", "if set, format of halo input data: MillenniumObs, MultiDark,  this is subject to changes"},
+    {"field_input_simulation_format", "MillenniumObs", "if set, format of halo input data: MillenniumObs, MultiDarkHalos,  this is subject to changes"},
     {"field_input_simulation_center_RA", "0.0","Optional: right ascension in degrees for the center of the simulation, 0 if not included"},
     {"field_input_simulation_center_DEC","0.0","Optional: declination in degrees the center of the simulation, 0 if not included"},
     {"field_input_simulation_radius","0.0","Optional: set radius (in degrees) of simulated field radians, infinite (size of input lightcone) if not included"},
@@ -112,7 +113,7 @@ namespace
 		{"zsource_reference", "2.0", "reference redshift for halo quantities that depend on source z"},
 		
 		// MultiDarkMap lenses
-		{"MultiDark_input_file", "MultiDark.txt", "list of MOKA FITS files for MultiDark-like simulations"},
+		{"PixelizedDensityMap_input_file", "PixelizedMapFiles.txt", "list of MOKA FITS files for MultiDark-like simulations"},
 		
 		// Type of source SB model
 		{"SourceSBType", "Uniform", "Uniform, Gaussian, BLR_Disk, BLR_Sph1, BLR_Sph2"},
