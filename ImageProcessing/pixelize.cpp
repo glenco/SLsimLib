@@ -86,6 +86,7 @@ PixelMap::PixelMap(
 : map(0.0, Npixels*Npixels),
   Nx(Npixels), Ny(Npixels), resolution(resolution)
 {
+  if(Npixels == 0 || resolution <=0) throw std::invalid_argument("invalid arguments");
 	std::copy(center, center + 2, this->center);
 	rangeX = resolution*Nx;
 	rangeY = resolution*Ny;

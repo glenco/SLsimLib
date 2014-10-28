@@ -404,14 +404,14 @@ PosType **PosTypeMatrix(long rows, long cols)
   
   
   void powerspectrum2d(
-                       std::valarray<double> aa
-                       ,std::valarray<double> bb
-                       ,int nx
+                       std::valarray<double> const &aa
+                       ,std::valarray<double> const &bb
+                       ,int nx                       
                        ,int ny
                        ,double boxlx
                        ,double boxly
-                       ,std::vector<double> &ll      /// output multiplot number of bins, values reset, but not size
-                       ,std::vector<double> &Pl      /// output binned power spectrum
+                       ,std::vector<double> &ll
+                       ,std::vector<double> &Pl
                        )
   {
     // go in the fourir space doing the zero padding

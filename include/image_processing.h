@@ -119,9 +119,17 @@ public:
   /// Find the power spectrum of the map
   void PowerSpectrum(std::vector<PosType> &power_spectrum   /// output power spectrum
                      ,std::vector<PosType> &lvec            /// output l values of bands
+                     ,bool overwrite = true                 /// if false add power to existing power_spectrum (used for averaging over many fields
                      ){
     
-    Utilities::powerspectrum2d(map,map,Nx,Ny,rangeX,rangeY, lvec, power_spectrum);
+    if(power_spectrum.size() != lvec.size()) throw std::invalid_argument("these must be the same size");
+    
+    if(overwrite) Utilities::powerspectrum2d(map,map,Nx,Ny,rangeX,rangeY, lvec, power_spectrum);
+    else{
+      std::vector<PosType> tmp_power(power_spectrum.size());
+      Utilities::powerspectrum2d(map,map,Nx,Ny,rangeX,rangeY, lvec, tmp_power);
+      for(size_t ii=0;ii<power_spectrum.size();++ii) power_spectrum[ii] += tmp_power[ii];
+    }
   }
 
 

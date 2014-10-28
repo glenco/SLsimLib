@@ -77,7 +77,7 @@ LensHaloMOKA::LensHaloMOKA(const std::string& filename, LensHaloType my_maptype,
 /**
  * \brief allocates and reads the MOKA map in
  *
- *  In the future this could be used to read in individual PixelizMaps or other types of maps if the type were specified in the paramfile.
+ *  In the future this could be used to read in individual PixelDMaps or other types of maps if the type were specified in the paramfile.
  */
 LensHaloMOKA::LensHaloMOKA(InputParams& params, const COSMOLOGY& lenscosmo)
 : LensHalo(), maptype(moka_lens), cosmo(lenscosmo)
@@ -87,7 +87,7 @@ LensHaloMOKA::LensHaloMOKA(InputParams& params, const COSMOLOGY& lenscosmo)
 	
 	// initialize MOKA map
 	initMap();
-	assert(maptype == multi_dark_lens || maptype == moka_lens);
+	assert(maptype == pix_map_lens || maptype == moka_lens);
 	
 	// set redshift if necessary
 	if(zlens == -1)
@@ -102,7 +102,7 @@ LensHaloMOKA::~LensHaloMOKA()
 void LensHaloMOKA::initMap()
 {
   
-  if(!(maptype == multi_dark_lens || maptype == moka_lens)){
+  if(!(maptype == pix_map_lens || maptype == moka_lens)){
     ERROR_MESSAGE();
     throw runtime_error("Does not recognize input lens map type");
   }
@@ -147,7 +147,7 @@ void LensHaloMOKA::initMap()
     map->boxlrad = map->boxlarcsec*pi/180/3600.;
     map->inarcsec  = 10800./M_PI/map->Dlens*60.; // Mpc/h to arcsec for MOKA while Mpc to arcsec for Pixeliz
 
-    if(maptype == moka_lens){
+    if(maptype == moka_lens || maptype == pix_map_lens){
       
         Utilities::fill_linear(map->x, map->nx, -0.5*map->boxlMpc, 0.5*map->boxlMpc); // physical Mpc/h
       
@@ -175,7 +175,7 @@ void LensHaloMOKA::initMap()
 }
 
 void LensHaloMOKA::convertmap(MOKAmap *map,LensHaloType maptype){
-  assert(maptype == multi_dark_lens);
+  assert(maptype == pix_map_lens);
 
   // TODO: convert units
   throw std::runtime_error("needs to be finished");

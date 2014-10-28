@@ -172,7 +172,7 @@ void LensHaloMOKA::readImage(){
 	  catch(CCfits::HDU::NoSuchKeyword)
     {
             std::cout << "unable to read map physical size and pixelunit" << std::endl;
-            std::cout << "assuming is the PixelizMap file" << std::endl;
+            std::cout << "assuming is the PixelDMap file" << std::endl;
 	    
             map->boxlarcsec = 4*60.*60.;    // the square is 4x4 by hand
             pixLMpc = map->boxlarcsec/npixels/inarcsec;  
