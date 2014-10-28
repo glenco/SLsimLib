@@ -275,20 +275,19 @@ KappaType LensHaloBaseNSIE::phiNSIE(PosType const *xt    /// position on the ima
     // Returning phi from the integration of alphaForIntFunc :
     // =======================================================
     return Utilities::nintegrate<alphaForInt,PosType>(alphaForIntFunc, 1.0e-7, r, 1.0e-7);
+    
   }
   else          // Elliptical case
   {
-    // PosType tmp_pert_modes[Nmod];
-
     
-    // Calculating the modes necessary to ellipticize phi :
+    // Calculating the modes necessary to ellipticize phi : OLD METHOD -- DOES NOT WORK !
     // ====================================================
-    
+
     //for(int i=0;i<perturb_Nmodes;i++) { std::cout << perturb_modes[i] << "  " ; }
     //std::cout << std::endl ;
     
+    // PosType tmp_pert_modes[Nmod];
     // calcModes(f, 2-beta, theta, tmp_pert_modes);
-    
     
     // main_perturbation beta  -> perturb_beta
     // main_perturbation kappa -> perturb_rms[0]
@@ -298,41 +297,20 @@ KappaType LensHaloBaseNSIE::phiNSIE(PosType const *xt    /// position on the ima
     // main_perturb_hexopole   -> perturb_rms[4]
     // main_perturb_octopole   -> perturb_rms[5]
     
-    /*
-    perturb_modes[0] = tmp_pert_modes[0];  // perturbation kappa
-    perturb_modes[1] = tmp_pert_modes[2];  // perturbation gamma1
-    perturb_modes[2] = tmp_pert_modes[2];  // perturbation gamma2
-    perturb_modes[3] = tmp_pert_modes[4];  // Monopole
-    perturb_modes[4] = tmp_pert_modes[6];  // Quadrupole
-    perturb_modes[5] = tmp_pert_modes[8];  // Hexapole
-    perturb_modes[6] = tmp_pert_modes[10]; // Octupole
-    */
-
-    /*
-    perturb_modes[0] = 0.03;  // perturbation kappa
-    perturb_modes[1] = 0.03;  // perturbation gamma1
-    perturb_modes[2] = 0.03;  // perturbation gamma2
-    perturb_modes[3] = 0.0;   // Monopole
-    perturb_modes[4] = 0.005; // Quadrupole
-    perturb_modes[5] = 0.005; // Hexapole
-    perturb_modes[6] = 0.01;  // Octupole
-     */
+    // perturb_modes[0] = 1. ;  // perturbation kappa
+    // perturb_modes[1] = 0.03;  // perturbation gamma1
+    // perturb_modes[2] = 0.03;  // perturbation gamma2
+    // perturb_modes[3] = 0.0;   // Monopole
+    // perturb_modes[4] = 0.005; // Quadrupole
+    // perturb_modes[5] = 0.005; // Hexapole
+    // perturb_modes[6] = 0.01;  // Octupole
     
-    // std::cout << std::endl << "Reading perturbation modes by hand." << std::endl ;
-    
-    /*
-    perturb_modes[0] = 0;  // perturbation kappa
-    perturb_modes[1] = -0.353292;  // perturbation gamma1
-    perturb_modes[2] = 4.04853e-10;  // perturbation gamma2
-    perturb_modes[3] = 0.000770027;   // Monopole
-    perturb_modes[4] = 0.000171016; // Quadrupole
-    perturb_modes[5] = 1.94105e-13; // Hexapole
-    perturb_modes[6] = -4.14327e-39;  // Octupole
-    */
-    
+    // std::cout << "perturbation modes extracted from phiNSIE : " << std::endl ;
     // for(int i=0;i<perturb_Nmodes;i++) { std::cout << perturb_modes[i] << "  " ; }
     // std::cout << std::endl << std::endl ;
     
+    
+
     
     // Computing phi from the method in lens_expand :
     // ==============================================
@@ -360,7 +338,6 @@ KappaType LensHaloBaseNSIE::phiNSIE(PosType const *xt    /// position on the ima
     sin2theta=2*cosx*sinx;
     
     return F*pow(r,beta) + r*r*(perturb_modes[0] + perturb_modes[1]*cos2theta + perturb_modes[2]*sin2theta)/2;
-    
     
     
     // Test :

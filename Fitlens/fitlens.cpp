@@ -115,6 +115,8 @@ void LensHaloAnaNSIE::FindLensSimple(
 	ElliptisizeLens(Nimages,Nsources,1,pairing,xob,x_center,xg,0,perturb_beta
 			,perturb_Nmodes-1,mods,dx_sub,&re2,q);
 
+      std::cout << "Final axis ratio = " << q[1] << std::endl ;
+      
 	for(i=1;i<perturb_Nmodes;++i) perturb_modes[i] = mods[i];
 
 	// source position

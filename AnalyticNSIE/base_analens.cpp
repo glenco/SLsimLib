@@ -39,7 +39,7 @@ void LensHaloBaseNSIE::force_halo(
   xt[0]=xcm[0];
   xt[1]=xcm[1];
   
-  units *= 2. * Rmax / pi ; // units now in mass /// Multiplying by 2*Rmax/pi to match with Power Law
+  // units *= 2. * Rmax / pi ; // units now in mass /// Multiplying by 2*Rmax/pi to match with Power Law
   
   alphaNSIE(alpha,xt,fratio,rcore,pa);
   alpha[0] *= units;
