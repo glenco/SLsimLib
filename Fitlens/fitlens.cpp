@@ -114,8 +114,6 @@ void LensHaloAnaNSIE::FindLensSimple(
 	//ERROR_MESSAGE();
 	ElliptisizeLens(Nimages,Nsources,1,pairing,xob,x_center,xg,0,perturb_beta
 			,perturb_Nmodes-1,mods,dx_sub,&re2,q);
-
-      std::cout << "Final axis ratio = " << q[1] << std::endl ;
       
 	for(i=1;i<perturb_Nmodes;++i) perturb_modes[i] = mods[i];
 
@@ -142,6 +140,9 @@ void LensHaloAnaNSIE::FindLensSimple(
 	free_dmatrix(xg,0,1,0,1);
 	free_dvector(mods,0,perturb_Nmodes + 2*Nsources + 1);
       
+  // storing q :
+  for(int i = 0 ; i < 7 ; i++) qpriv[i] = q[i] ;
+  
 	return ;
 }
 
@@ -232,11 +233,11 @@ double LensHaloAnaNSIE::ElliptisizeLens(
 		xgT[i][0] = xg[i][0];
 		xgT[i][1] = xg[i][1];
 	}
-
-	// find lens with degeneracy information
+      
+  // find lens with degeneracy information
 	//ERROR_MESSAGE();
 	find_lens(NimagesT,NsourcesT,pairingT,xobT,x_center,betaT,NmodT,&degenT,modT,vT,dx_subT);
-
+   
 	//std::printf("found model\n");
 	for(i=1;i<=Nmod + 2*Nsources;++i) mod[i] = modT[i];
 
@@ -519,7 +520,7 @@ void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *x_cent
 
 
 /**
- *   Sets the perturbation modes in the Ana
+ *   Sets the perturbation modes in the AnaLens
  *
  */
 void LensHaloAnaNSIE::set_perturbmodes(PosType * ListModes, int Nmodes)
@@ -554,13 +555,13 @@ double LensHaloAnaNSIE::deflect_translated(double beta,double *mod,double *x,dou
 
   // use deflection calculator to reduce code duplication
   kappa = lens_expand(beta,mod,Nmodes,x,y,gamma,phi);
-
+  
   // translate result to convention used here
 
   /// changed from alpha to y,  also convention on shear is opposite
   y[0] = x[0] + 2*(x[0]*mod[1] + x[1]*mod[2]) - y[0];
   y[1] = x[1] - 2*(x[1]*mod[1] + x[0]*mod[2]) - y[1];
-
+  
   mag[0] = 1 - kappa - gamma[0];
   mag[1] = 1 - kappa + gamma[0];
   mag[3] = -gamma[1];

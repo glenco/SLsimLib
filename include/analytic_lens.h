@@ -81,8 +81,9 @@ public:
   void FindLensSimple(ImageInfo *imageinfo ,int Nimages ,double *y,double **dx_sub);
 
   int getNmodes(){return perturb_Nmodes;};
-
+  
   void set_perturbmodes(PosType * ListModes, int Nmodes);
+  double * getq() { return qpriv; };
   
 private:
 
@@ -95,6 +96,9 @@ private:
    double ElliptisizeLens(int Nimages,int Nsources,int Nlenses,int *pairing,double **xob
    		       ,double *xc,double **xg,double sigG,double beta,int Nmod
    		       ,double *mod,double **dx,double *re2,double *q);
+  
+  // output of ElliptisizeLens
+  double qpriv[7];
 
 };
 
