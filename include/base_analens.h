@@ -24,7 +24,7 @@
  *  **** Distortion parameters
  *	main_NDistortionModes       Number of distortion modes to be used.  If zero the other distortion parameters are not needed.
  *	main_perturb_beta
- *	kappa_peturb
+ *	main_kappa_peturb
  *	gamma_peturb
  *	monopole_peturb
  *	quadrapole_peturb

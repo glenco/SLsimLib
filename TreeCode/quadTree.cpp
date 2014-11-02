@@ -49,8 +49,7 @@ TreeQuad::TreeQuad(
  * it should only be invoked from the derived classes that have specific defined halo models.
  */
 TreeQuad::TreeQuad(
-                   PosType **xpt               /// Perpendicular position of halo (TODO: In proper distance?)
-                   ,LensHaloHndl *my_halos     /// list of halos to be put in tree
+                   LensHaloHndl *my_halos     /// list of halos to be put in tree
                    ,IndexType Npoints          /// number of halos
                    ,PosType my_sigma_background /// background kappa that is subtracted
                    ,int bucket                  /// maximum number of halos in each leaf of the tree
@@ -58,7 +57,7 @@ TreeQuad::TreeQuad(
                    ,bool periodic_buffer        /// if true a periodic buffer will be imposed in the force calulation.  See documentation on TreeQuad::force2D() for details. See note for TreeQuad::force2D_recur().                   
                    ,PosType my_inv_screening_scale   /// the inverse of the square of the sreening length. See note for TreeQuad::force2D_recur().
                    ):
-xp(xpt),MultiMass(true),MultiRadius(true),masses(NULL),sizes(NULL)
+MultiMass(true),MultiRadius(true),masses(NULL),sizes(NULL)
 ,Nparticles(Npoints),sigma_background(my_sigma_background),Nbucket(bucket)
 ,force_theta(theta_force),halos(my_halos),periodic_buffer(periodic_buffer)
 ,inv_screening_scale2(my_inv_screening_scale*my_inv_screening_scale)
@@ -67,6 +66,10 @@ xp(xpt),MultiMass(true),MultiRadius(true),masses(NULL),sizes(NULL)
 	IndexType ii;
 
 	for(ii=0;ii<Npoints;++ii) index[ii] = ii;
+  
+  // copy halo postions into xp array to make compatable with QTreeNB
+  xp = Utilities::PosTypeMatrix(Npoints,2);
+  for(ii=0;ii<Npoints;++ii) halos[ii]->getX(xp[ii]);
 
 	haloON = true; //use internal halo parameters
 
@@ -82,6 +85,7 @@ TreeQuad::~TreeQuad()
 {
 	delete tree;
 	delete[] index;
+  if(haloON) Utilities::free_PosTypeMatrix(xp,Nparticles,2);
 	return;
 }
 

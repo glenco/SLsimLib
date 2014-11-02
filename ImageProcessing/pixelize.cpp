@@ -86,6 +86,7 @@ PixelMap::PixelMap(
 : map(0.0, Npixels*Npixels),
   Nx(Npixels), Ny(Npixels), resolution(resolution)
 {
+  if(Npixels == 0 || resolution <=0) throw std::invalid_argument("invalid arguments");
 	std::copy(center, center + 2, this->center);
 	rangeX = resolution*Nx;
 	rangeY = resolution*Ny;
@@ -875,7 +876,7 @@ void PixelMap::AddGrid_(PointList list,LensingVariable val){
 
 
 
-/// Find arcs in image
+/// Find arcs in image  WARNING: THIS IS UNDER CONSTRUCTION!
 void PixelMap::FindArc(
                        PosType &radius
                        ,PosType *xc
@@ -907,7 +908,7 @@ void PixelMap::FindArc(
   mask.resize(j);
   minval *= 0.99;
   
-  if(j == 0){
+  if(j == 0 || j == Nx*Nx){
     std::cout << "PixelMap::FindArc() - No pixels above surface brighness limit" << std::endl;
     radius = arclength = width = 0.0;
     xc[0] = xc[1] = 0.0;

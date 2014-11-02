@@ -100,7 +100,8 @@ Construct the Grid
 The `Grid` structure contains the image points and thier source points along
 with other information. Without further grid refinement the `Grid` can be used
 to make a map of deflection, convergence, shear or time-delay. `Grid` contains
-functions for outputing these.
+functions for outputing these.  If no further grid refinement is desired for image or caustic finding,
+the `GridMap` structure can be used which requires signifcantly less memory overhead.
 
 
 Image finding and Grid refinement
@@ -111,6 +112,9 @@ The mean functions used for image finding are
 -   `find_images_kist()`,
 -   `find_images_microlens()` and 
 -   `map_images()`.
+And for finding critical curves / caustics
+-   `find_crit()` or 
+-   `find_crit2()`
 
 These take a `Grid` and a `Lens` object. The found images are then stored in an
 array of `ImageInfo` structures.

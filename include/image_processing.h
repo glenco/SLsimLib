@@ -9,6 +9,12 @@
 #define IMAGE_PROCESSING_H_
  
 #include "Tree.h"
+#ifdef ENABLE_FFTW
+#include "fftw3.h"
+#endif
+
+#include "utilities_slsim.h"
+
 
 // forward declaration
 struct Grid;
@@ -106,7 +112,28 @@ public:
   void find_position(PosType x[],std::size_t const ix,std::size_t const iy);
   
   /// interpolate to point x[]
-  PosType linear_interpolate(PosType x[]); 
+  PosType linear_interpolate(PosType x[]);
+  
+#ifdef ENABLE_FFTW
+
+  /// Find the power spectrum of the map
+  void PowerSpectrum(std::vector<PosType> &power_spectrum   /// output power spectrum
+                     ,std::vector<PosType> &lvec            /// output l values of bands
+                     ,bool overwrite = true                 /// if false add power to existing power_spectrum (used for averaging over many fields
+                     ){
+    
+    if(power_spectrum.size() != lvec.size()) throw std::invalid_argument("these must be the same size");
+    
+    if(overwrite) Utilities::powerspectrum2d(map,map,Nx,Ny,rangeX,rangeY, lvec, power_spectrum);
+    else{
+      std::vector<PosType> tmp_power(power_spectrum.size());
+      Utilities::powerspectrum2d(map,map,Nx,Ny,rangeX,rangeY, lvec, tmp_power);
+      for(size_t ii=0;ii<power_spectrum.size();++ii) power_spectrum[ii] += tmp_power[ii];
+    }
+  }
+
+
+#endif
 
 private:
 	std::valarray<double> map;

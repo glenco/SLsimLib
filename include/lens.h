@@ -219,8 +219,8 @@ private: /* generation */
 	void createFieldHalos(bool verbose);
 	/// read field halo data in from a file in Millennium output format
 	void readInputSimFileMillennium(bool verbose);
-	/// read field halo data in from a file in MultiDark output format
-	void readInputSimFileMultiDark(bool verbose);
+	/// read field halo data in from a file in MultiDarkHalos output format
+	void readInputSimFileMultiDarkHalos(bool verbose);
 	/// build the field planes and sort halos onto them
 	void createFieldPlanes(bool verbose);
 	
@@ -266,7 +266,7 @@ private: /* field */
 	std::vector<PosType> field_Dl;
 	
 	/// Perpendicular position of halo TODO: (In proper distance?)
-	PosType **halo_pos;
+	//PosType **halo_pos;
 	
 	/// type of mass function PS (0), ST (1), and power law (2) default is ST
 	MassFuncType field_mass_func_type;
@@ -324,8 +324,8 @@ private: /* input */
 	/// file for multiple main halo input
 	std::string main_input_file;
 	
- 	/// read main halos from a MultiDark simulation
-	void readMultiDark();
+ 	/// read main halos from a pixelized density map
+	void readPixelizedDensity();
   
   /// the center of the lens in spherical coordinates
   Utilities::Geometry::SphericalPoint central_point_sphere;

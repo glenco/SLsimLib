@@ -177,8 +177,7 @@ public:
       ,PosType my_inv_screening_scale = 0
 			);
 	TreeQuad(
-			PosType **xpt
-			,LensHaloHndl *my_halos
+			LensHaloHndl *my_halos
 			,IndexType Npoints
 			,PosType my_sigma_background = 0
 			,int bucket = 5

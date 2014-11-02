@@ -48,7 +48,7 @@ public:
 	LensHalo();
 	LensHalo(InputParams& params);
 	virtual ~LensHalo();
-
+  
 	/// get the Rmax
 	float get_Rmax() const { return Rmax; }
 	/// get the mass
@@ -56,23 +56,27 @@ public:
 	/// get the scale radius
 	float get_rscale() const { return rscale; }
 	/// get the redshift
-
+  
 	PosType getZlens() const { return zlens; }
-
-    /// set the position of the Halo :
-    /// taking as argument the position in comoving Mpc
-    /// storing the position in physical Mpc
-  void setX(PosType PosX, PosType PosY) { posHalo[0] = PosX / (1 + zlens) ; posHalo[1] = PosY / (1 + zlens) ; }
-    /// get the position of the Halo in physical Mpc
+  
+  /// set the position of the Halo :
+  /// taking as argument the position in comoving Mpc
+  /// storing the position in physical Mpc
+  //void setX(PosType PosX, PosType PosY) { posHalo[0] = PosX / (1 + zlens) ; posHalo[1] = PosY / (1 + zlens) ; }
+  
+  void setX(PosType PosX, PosType PosY) { posHalo[0] = PosX ; posHalo[1] = PosY ; }
+  void setX(PosType *PosXY) { posHalo[0] = PosXY[0] ; posHalo[1] = PosXY[1] ; }
+  
+  /// get the position of the Halo in physical Mpc
   void getX(PosType * MyPosHalo) const { MyPosHalo[0] = posHalo[0] ; MyPosHalo[1] = posHalo[1]; }
-    /// display the position of the halo
+  /// display the position of the halo
   void displayPos() { std::cout << "Halo PosX = " << posHalo[0] << " ; Halo PosY = " << posHalo[1] << std::endl; }
- 
+  
 	/// initialize from a simulation file
 	virtual void initFromFile(float my_mass, long *seed, float vmax, float r_halfmass){};
 	/// initialize from a mass function
 	virtual void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed);
-
+  
 	/// set Rmax (in Mpc)
 	virtual void set_Rmax(float my_Rmax){Rmax=my_Rmax; xmax = Rmax/rscale;};
 	/// set mass (in solar masses)
@@ -81,28 +85,28 @@ public:
 	virtual void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rmax/rscale;};
 	/// set redshift
 	void setZlens(PosType my_zlens){ zlens=my_zlens; };
-
+  
 	/// set slope
 	virtual void set_slope(PosType my_slope){beta=my_slope;};
-    /// get slope
+  /// get slope
   virtual PosType get_slope(){return beta;};
-    /// flag=True if halo elliptical
+  /// flag=True if halo elliptical
   bool get_flag_elliptical(){return elliptical_flag;};
   void set_flag_elliptical(bool ell){elliptical_flag=ell; r_eps = 0.3*Rmax;};
-    
-    /// set cosmology for halo
+  
+  /// set cosmology for halo
 	virtual void setCosmology(const COSMOLOGY& cosmo) {}
 	
 	/// calculate the lensing properties -- deflection, convergence, and shear
-
+  
 	virtual void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening=1.0);
-
+  
 	/// force tree calculation for stars
 	void force_stars(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType const *xcm);
-
+  
 	/// internal compare redshift function
 	bool compareZ(PosType z){return z > zlens;};
-
+  
   /// stars
   bool AreStarsImaplated() const {return stars_implanted;}
   void implant_stars(PosType **centers,int Nregions,long *seed, IMFtype type=One);
@@ -114,7 +118,7 @@ public:
   PosType getFstars() const {return star_fstars;}
   /// The mass of the stars if they are all the same mass
   PosType getStarMass() const {if(stars_implanted)return star_masses[0]; else return 0.0;}
-
+  
 	/// get the number of halo parameters
 	virtual std::size_t Nparams() const;
 	/// get the value of a scaled halo parameter by index
@@ -124,278 +128,254 @@ public:
 	
 	/// print the halo parameters in CSV format
 	virtual void printCSV(std::ostream&, bool header = false) const;
-
+  
 	/// Prints star parameters; if show_stars is true, prints data for single stars
 	void PrintStars(bool show_stars) const;
   
   PosType MassBy2DIntegation(PosType R);
   PosType MassBy1DIntegation(PosType R);
-
-  // all of the following functions were used for Ansatz III w derivatives of the Fourier modes
-    
-    /*static constexpr PosType mod_params[2][7][7] = {{{5.45400234e-01, 2.00623559e-01, 1.74273034e-01, 1.86242095e+02, 5.70675374e+00,0,0},
-        {0.98519072, 1.79227955, 0.19333932, 1.05911801, 1.80285544, 175.19794791,0},
-        {1.27286496, 2.52757113, 0.35561051, 1.07921878, 0.40027514, 37.47696142,0},
-        {3.90009539, 4.59744288, -8.40249184, 4.13420228, 3.31751963, 6.35692121,0},
-        {4.31129234, 7.55980323, -2.70971355, 1.20304148, 10.04502808, 4.77684945,0},
-        {28.27243869, 23.49608644, -43.13187974, 1.65596222, 22.72500104, 3.1378364,0},
-        {57.01022684, 33.55782426, -114.00434863, 2.08922268, 22.96852996, 2.53164822,0}},
-        {{2.09778383e+00, -7.99553494e-02, 1.58048481e+00, -3.27089042e+01, 1.36378731e+01, 4.02453963e-04,0},
-            {2.06019572e+00, -4.22588623e-02, 1.55824013e+00, -1.62854932e+01, 1.57266141e+01, 4.93672097e-04,0},
-            {2.06365018e+00, -4.79733978e-02, 1.49994453e+00, -1.21602730e+01, 2.28348079e+01, 4.49107825e-04,0},
-            {1.93036483e+00, -3.94871873e-02, 1.56471642e+00, -5.54299042e+00, 3.62847996e+01, 4.40377288e-04,0},
-            {-2.67369155e+00, -3.43984326e-02, 6.08826051e+00, -4.03323814e-01, 7.02617948e+01, 3.95509769e-04,0},
-            {-7.15392458e+01, -1.93808978e-02, 7.48623502e+01, -1.70286774e-02, 4.20781335e+02, 3.66600276e-04,0},
-            {8.87740013e+00, 4.04947024e-02, -4.83118775e+01, -5.69035567e-02, 7.13574366e+00, -3.34967308e-02, -3.09836552e+03}}};
-
-    */
-    //PosType modfunc(int modnumber, PosType my_slope, PosType my_fratio);
-    //PosType hi_order_modfunc(PosType x, int modnumber, PosType my_slope, PosType my_fratio);
-    //PosType amodfunc(int modnumber, PosType my_fratio);
-    //PosType bmodfunc(int modnumber, PosType my_fratio);
-    //PosType cmodfunc(PosType my_fratio);
-    //PosType dmodfunc(PosType my_fratio);
-    //PosType dmod(PosType x, int modnumber, PosType my_slope, PosType my_fratio);
-    //PosType ddmod(PosType x, int modnumber, PosType my_slope, PosType my_fratio);
-    //PosType dlnmod_dr(PosType x, int modnumber, PosType my_slope, PosType my_fratio);
-    //PosType ddlnmod_dr(PosType x, int modnumber, PosType my_slope, PosType my_fratio);
-    PosType renormalization(PosType r_max);
   
-  /// perform some basic consistancy checks for halo 
+  // all of the following functions were used for Ansatz III w derivatives of the Fourier modes
+  
+
+  /// perform some basic consistancy checks for halo
   bool test();
   
   
 protected:
 
+  PosType renormalization(PosType r_max);
+  
   PosType alpha_int(PosType x) const;
   PosType norm_int(PosType r_max);
- // PosType norm_intt(PosType theta);
-    
-    
-       void force_halo_sym(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0);
-       void force_halo_asym(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0);
-       
-       
-       struct norm_func{
-         norm_func(LensHalo& halo, PosType my_r_max): halo(halo), r_max(my_r_max){};
-         LensHalo& halo;
-         PosType r_max;
-         //PosType operator ()(PosType theta) {halo.alpha_asym(r_max, theta, alpha_arr); return alpha_arr[0]*cos(theta)*cos(theta)+alpha_arr[1]*sin(theta)*sin(theta);}
-         PosType operator ()(PosType theta) {return halo.alpha_ell(r_max, theta);}
-       };
-       
-       
-       //friend struct Ig_func;
-       
-       struct Ialpha_func{
-         Ialpha_func(LensHalo& halo): halo(halo){};
-         LensHalo& halo;
-         PosType operator ()(PosType x) {return halo.alpha_h(x)/x ;}
-       };
-       
-       struct Ig_func{
-         Ig_func(const LensHalo& halo): halo(halo){};
-         const LensHalo& halo;
-         PosType operator ()(PosType x) {return halo.gfunction(x)/x ;}
-       };
-       
-       IndexType *stars;
-       PosType **stars_xp;
-       TreeQuad *star_tree;
-       int stars_N;
-       PosType star_massscale;
-       /// star masses relative to star_massscles
-       float *star_masses;
-       PosType star_fstars;
-       PosType star_theta_force;
-       int star_Nregions;
-       PosType *star_region;
-       PosType beta;
-       void substract_stars_disks(PosType const *ray,PosType *alpha
-                                  ,KappaType *kappa,KappaType *gamma);
-       float* stellar_mass_function(IMFtype type, unsigned long Nstars, long *seed, PosType minmass=0.0, PosType maxmass=0.0
-                                    ,PosType bendmass=0.0, PosType powerlo=0.0, PosType powerhi=0.0);
-       
-       
-       /// read in parameters from a parameterfile in InputParams params
-       void assignParams(InputParams& params);
-       /// read in star parameters. This is valid for all halos and not overloaded.
-       void assignParams_stars(InputParams& params);
-       
-       /// error message printout
-       void error_message1(std::string name,std::string filename);
-       
-       
-       float mass;
-       /// Radius of halo and NSIE if it exists,  This is the radius used in the tree force solver
-       /// to determine when a ray intersects an object.
-       float Rmax;
-       /// scale length or core size.  Different meaning in different cases.  Not used in NSIE case.
-       float rscale;
-       /// redshift
-       //PosType zlens;
-       
-       bool stars_implanted;
-       /// Number of regions to be subtracted to compensate for the mass in stars
-       IMFtype main_stars_imf_type;
-       PosType main_stars_min_mass;
-       PosType main_stars_max_mass;
-       PosType bend_mstar;
-       PosType lo_mass_slope;
-       PosType hi_mass_slope;
-       /// parameters for stellar mass function: minimal and maximal stellar mass, bending point for a broken power law IMF
-       PosType *star_Sigma;
-       PosType **star_xdisk;
-       
-       
-       /// point mass case
-       /// r |alpha(r)| pi Sigma_crit / Mass
-       virtual PosType inline alpha_h(PosType x) const {return -1;};
-       virtual KappaType inline kappa_h(PosType x) const {return 0;};
-       virtual KappaType inline gamma_h(PosType x) const {return -2;};
-       virtual KappaType inline phi_h(PosType x) const {return 1;};
-       virtual KappaType inline phi_int(PosType x) const {return 1;};
-       virtual PosType inline ffunction(PosType x)const {return 0;};
-       virtual PosType inline gfunction(PosType x) const {return -1;};
-       virtual PosType inline dgfunctiondx(PosType x){return 0;};
-       virtual PosType inline bfunction(PosType x){return -1;};
-       virtual PosType inline dhfunction(PosType x) const {return 1;};
-       virtual PosType inline ddhfunction(PosType x, bool numerical){return 0;};
-       virtual PosType inline dddhfunction(PosType x, bool numerical){return 0;};
-       virtual PosType inline bnumfunction(PosType x){return -1;};
-       virtual PosType inline dbfunction(PosType x){return 0;};
-       virtual PosType inline ddbfunction(PosType x){return 0;};
-       virtual PosType inline dmoddb(int whichmod, PosType q, PosType b){return 0;};
-       virtual PosType inline ddmoddb(int whichmod, PosType q, PosType b){return 0;};
-       virtual PosType inline dmoddq(int whichmod, PosType q, PosType b){return 0;};
-       virtual PosType inline ddmoddq(int whichmod, PosType q, PosType b){return 0;};
-       
-       PosType xmax;  /// This is Rmax/rscale !!
-       PosType mnorm;
-       
-       // Functions for calculating axial dependence
-       float pa;
-       float fratio=1;
-       bool elliptical_flag = false;
-       
-       void faxial(PosType x,PosType theta,PosType f[]);
-       void faxial0(PosType theta,PosType f0[]);
-       void faxial1(PosType theta,PosType f1[]);
-       void faxial2(PosType theta,PosType f2[]);
-       void gradial(PosType r,PosType g[]);
-       void gradial2(PosType r,PosType mu, PosType sigma,PosType g[]);
-       
-       void felliptical(PosType x, PosType q, PosType theta, PosType f[], PosType g[]);
-       
-       virtual void gamma_asym(PosType x,PosType theta, PosType gamma[2]);
-       virtual PosType kappa_asym(PosType x,PosType theta);
-       virtual void alphakappagamma_asym(PosType x,PosType theta, PosType alpha[2]
-                                         ,PosType *kappa,PosType gamma[]);
-       virtual PosType alpha_ell(PosType x,PosType theta);
-       
-       double fourier_coeff(double n, double q, double beta);
-       
-       void calcModes(double q, double beta, double rottheta, PosType newmod[]);
-       void calcModesB(PosType x, double q, double beta, double rottheta, PosType newmod[]);
-       void calcModesC(PosType beta_r, double q, double rottheta, PosType newmod[]);
-       
-       virtual PosType inline InterpolateModes(int whichmod, PosType q, PosType b){return 0;};
-       
-       void analModes(int modnumber, PosType my_beta, PosType q, PosType amod[3]);
-       
-       struct fourier_func{
-         fourier_func(double my_n, double my_q, double my_beta): n(my_n),q(my_q),beta(my_beta){};
-         double n;
-         double q;
-         double beta;
-         double operator ()(double theta) {return cos(n*theta)/pow(cos(theta)*cos(theta) + 1/q/q*sin(theta)*sin(theta),beta/2) ;}
-       };
-       
-       const static int Nmod = 32;
-       
-       // Analytic description of Fourier modes
-       
-       PosType mod[Nmod];
-       PosType mod1[Nmod];
-       PosType mod2[Nmod];
-       PosType r_eps;
-       
-       
-       PosType zlens;
-       
-       /// Position of the Halo
-       
-       PosType posHalo[2];
-       
-       
-       // These are stucts used in doing tests
-       
-       
-       struct DMDTHETA{
-         DMDTHETA(PosType R,LensHalo *halo): R(R),halo(halo){};
-         PosType operator()(PosType theta){
-           PosType alpha[2] = {0,0},x[2] = {0,0};
-           KappaType kappa = 0,gamma[3] = {0,0,0},phi =0 ;
-           
-           x[0] = R*cos(theta);
-           x[1] = R*sin(theta);
-           
-           halo->force_halo(alpha,&kappa,gamma,&phi,x);
-           
-           PosType alpha_r = -alpha[0]*cos(theta) - alpha[1]*sin(theta);
-           assert( alpha_r == alpha_r );
-           //std::cout << theta << "  " << alpha_r << std::endl;
-           return alpha_r;
-         }
-       private:
-         PosType R;
-         LensHalo *halo;
-       };
-       
-       struct DMDRDTHETA{
-         DMDRDTHETA(PosType R,LensHalo *halo): R(R),halo(halo){};
-         PosType operator()(PosType theta){
-           
-           PosType alpha[2] = {0,0},x[2] = {0,0};
-           KappaType kappa = 0,gamma[3] = {0,0,0} ,phi=0;
-           
-           x[0] = R*cos(theta);
-           x[1] = R*sin(theta);
-           
-           halo->force_halo(alpha,&kappa,gamma,&phi,x);
-           assert(kappa == kappa);
-           assert(kappa != INFINITY);
-           return kappa;
-         }
-       protected:
-         PosType R;
-         LensHalo *halo;
-       };
-       
-       struct DMDR{
-         DMDR(LensHalo *halo): halo(halo){};
-         PosType operator()(PosType logR){
-           if(halo->get_flag_elliptical()){
-             LensHalo::DMDRDTHETA dmdrdtheta(exp(logR),halo);
-             //std::cout << " R = " << exp(logR) << std::endl;
-           
-             if(exp(2*logR) == 0.0) return 0.0;
-             return Utilities::nintegrate<LensHalo::DMDRDTHETA,PosType>(dmdrdtheta,0,2*pi,1.0e-7)
-             *exp(2*logR);
-           }else{
-             PosType alpha[2] = {0,0},x[2] = {0,0};
-             KappaType kappa = 0,gamma[3] = {0,0,0} ,phi=0;
-             
-             x[0] = exp(logR);
-             x[1] = 0;
-             
-             halo->force_halo(alpha,&kappa,gamma,&phi,x);
-             return 2*pi*kappa*exp(2*logR);
-           }
-         }
-       protected:
-         LensHalo *halo;
-       };
+
+  // PosType norm_intt(PosType theta);
+  
+  
+  void force_halo_sym(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0);
+  void force_halo_asym(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0);
+  
+  
+  struct norm_func{
+    norm_func(LensHalo& halo, PosType my_r_max): halo(halo), r_max(my_r_max){};
+    LensHalo& halo;
+    PosType r_max;
+    //PosType operator ()(PosType theta) {halo.alpha_asym(r_max, theta, alpha_arr); return alpha_arr[0]*cos(theta)*cos(theta)+alpha_arr[1]*sin(theta)*sin(theta);}
+    PosType operator ()(PosType theta) {return halo.alpha_ell(r_max, theta);}
+  };
+  
+  
+  //friend struct Ig_func;
+  
+  struct Ialpha_func{
+    Ialpha_func(LensHalo& halo): halo(halo){};
+    LensHalo& halo;
+    PosType operator ()(PosType x) {return halo.alpha_h(x)/x ;}
+  };
+  
+  struct Ig_func{
+    Ig_func(const LensHalo& halo): halo(halo){};
+    const LensHalo& halo;
+    PosType operator ()(PosType x) {return halo.gfunction(x)/x ;}
+  };
+  
+  IndexType *stars;
+  PosType **stars_xp;
+  TreeQuad *star_tree;
+  int stars_N;
+  PosType star_massscale;
+  /// star masses relative to star_massscles
+  float *star_masses;
+  PosType star_fstars;
+  PosType star_theta_force;
+  int star_Nregions;
+  PosType *star_region;
+  PosType beta;
+  void substract_stars_disks(PosType const *ray,PosType *alpha
+                             ,KappaType *kappa,KappaType *gamma);
+  float* stellar_mass_function(IMFtype type, unsigned long Nstars, long *seed, PosType minmass=0.0, PosType maxmass=0.0
+                               ,PosType bendmass=0.0, PosType powerlo=0.0, PosType powerhi=0.0);
+  
+  
+  /// read in parameters from a parameterfile in InputParams params
+  void assignParams(InputParams& params);
+  /// read in star parameters. This is valid for all halos and not overloaded.
+  void assignParams_stars(InputParams& params);
+  
+  /// error message printout
+  void error_message1(std::string name,std::string filename);
+  
+  
+  float mass;
+  /// Radius of halo and NSIE if it exists,  This is the radius used in the tree force solver
+  /// to determine when a ray intersects an object.
+  float Rmax;
+  /// scale length or core size.  Different meaning in different cases.  Not used in NSIE case.
+  float rscale;
+  /// redshift
+  //PosType zlens;
+  
+  bool stars_implanted;
+  /// Number of regions to be subtracted to compensate for the mass in stars
+  IMFtype main_stars_imf_type;
+  PosType main_stars_min_mass;
+  PosType main_stars_max_mass;
+  PosType bend_mstar;
+  PosType lo_mass_slope;
+  PosType hi_mass_slope;
+  /// parameters for stellar mass function: minimal and maximal stellar mass, bending point for a broken power law IMF
+  PosType *star_Sigma;
+  PosType **star_xdisk;
+  
+  
+  /// point mass case
+  /// r |alpha(r)| pi Sigma_crit / Mass
+  virtual PosType inline alpha_h(PosType x) const {return -1;};
+  virtual KappaType inline kappa_h(PosType x) const {return 0;};
+  virtual KappaType inline gamma_h(PosType x) const {return -2;};
+  virtual KappaType inline phi_h(PosType x) const {return 1;};
+  virtual KappaType inline phi_int(PosType x) const {return 1;};
+  virtual PosType inline ffunction(PosType x)const {return 0;};
+  virtual PosType inline gfunction(PosType x) const {return -1;};
+  virtual PosType inline dgfunctiondx(PosType x){return 0;};
+  virtual PosType inline bfunction(PosType x){return -1;};
+  virtual PosType inline dhfunction(PosType x) const {return 1;};
+  virtual PosType inline ddhfunction(PosType x, bool numerical){return 0;};
+  virtual PosType inline dddhfunction(PosType x, bool numerical){return 0;};
+  virtual PosType inline bnumfunction(PosType x){return -1;};
+  virtual PosType inline dbfunction(PosType x){return 0;};
+  virtual PosType inline ddbfunction(PosType x){return 0;};
+  virtual PosType inline dmoddb(int whichmod, PosType q, PosType b){return 0;};
+  virtual PosType inline ddmoddb(int whichmod, PosType q, PosType b){return 0;};
+  virtual PosType inline dmoddq(int whichmod, PosType q, PosType b){return 0;};
+  virtual PosType inline ddmoddq(int whichmod, PosType q, PosType b){return 0;};
+  
+  PosType xmax;  /// This is Rmax/rscale !!
+  PosType mnorm;
+  
+  // Functions for calculating axial dependence
+  float pa;
+  float fratio=1;
+  bool elliptical_flag = false;
+  
+  void faxial(PosType x,PosType theta,PosType f[]);
+  void faxial0(PosType theta,PosType f0[]);
+  void faxial1(PosType theta,PosType f1[]);
+  void faxial2(PosType theta,PosType f2[]);
+  void gradial(PosType r,PosType g[]);
+  void gradial2(PosType r,PosType mu, PosType sigma,PosType g[]);
+  
+  void felliptical(PosType x, PosType q, PosType theta, PosType f[], PosType g[]);
+  
+  virtual void gamma_asym(PosType x,PosType theta, PosType gamma[2]);
+  virtual PosType kappa_asym(PosType x,PosType theta);
+  virtual void alphakappagamma_asym(PosType x,PosType theta, PosType alpha[2]
+                                    ,PosType *kappa,PosType gamma[]);
+  virtual PosType alpha_ell(PosType x,PosType theta);
+  
+  double fourier_coeff(double n, double q, double beta);
+  
+  void calcModes(double q, double beta, double rottheta, PosType newmod[]);
+  void calcModesB(PosType x, double q, double beta, double rottheta, PosType newmod[]);
+  void calcModesC(PosType beta_r, double q, double rottheta, PosType newmod[]);
+  
+  virtual PosType inline InterpolateModes(int whichmod, PosType q, PosType b){return 0;};
+  
+  void analModes(int modnumber, PosType my_beta, PosType q, PosType amod[3]);
+  
+  struct fourier_func{
+    fourier_func(double my_n, double my_q, double my_beta): n(my_n),q(my_q),beta(my_beta){};
+    double n;
+    double q;
+    double beta;
+    double operator ()(double theta) {return cos(n*theta)/pow(cos(theta)*cos(theta) + 1/q/q*sin(theta)*sin(theta),beta/2) ;}
+  };
+  
+  const static int Nmod = 32;
+  
+  // Analytic description of Fourier modes
+  
+  PosType mod[Nmod];
+  PosType mod1[Nmod];
+  PosType mod2[Nmod];
+  PosType r_eps;
+  
+  
+  PosType zlens;
+  
+  /// Position of the Halo
+  PosType posHalo[2];
+  
+  
+  // These are stucts used in doing tests
+  
+  
+  struct DMDTHETA{
+    DMDTHETA(PosType R,LensHalo *halo): R(R),halo(halo){};
+    PosType operator()(PosType theta){
+      PosType alpha[2] = {0,0},x[2] = {0,0};
+      KappaType kappa = 0,gamma[3] = {0,0,0},phi =0 ;
+      
+      x[0] = R*cos(theta);
+      x[1] = R*sin(theta);
+      
+      halo->force_halo(alpha,&kappa,gamma,&phi,x);
+      
+      PosType alpha_r = -alpha[0]*cos(theta) - alpha[1]*sin(theta);
+      assert( alpha_r == alpha_r );
+      //std::cout << theta << "  " << alpha_r << std::endl;
+      return alpha_r;
+    }
+  private:
+    PosType R;
+    LensHalo *halo;
+  };
+  
+  struct DMDRDTHETA{
+    DMDRDTHETA(PosType R,LensHalo *halo): R(R),halo(halo){};
+    PosType operator()(PosType theta){
+      
+      PosType alpha[2] = {0,0},x[2] = {0,0};
+      KappaType kappa = 0,gamma[3] = {0,0,0} ,phi=0;
+      
+      x[0] = R*cos(theta);
+      x[1] = R*sin(theta);
+      
+      halo->force_halo(alpha,&kappa,gamma,&phi,x);
+      assert(kappa == kappa);
+      assert(kappa != INFINITY);
+      return kappa;
+    }
+  protected:
+    PosType R;
+    LensHalo *halo;
+  };
+  
+  struct DMDR{
+    DMDR(LensHalo *halo): halo(halo){};
+    PosType operator()(PosType logR){
+      if(halo->get_flag_elliptical()){
+        LensHalo::DMDRDTHETA dmdrdtheta(exp(logR),halo);
+        //std::cout << " R = " << exp(logR) << std::endl;
+        
+        if(exp(2*logR) == 0.0) return 0.0;
+        return Utilities::nintegrate<LensHalo::DMDRDTHETA,PosType>(dmdrdtheta,0,2*pi,1.0e-7)
+        *exp(2*logR);
+      }else{
+        PosType alpha[2] = {0,0},x[2] = {0,0};
+        KappaType kappa = 0,gamma[3] = {0,0,0} ,phi=0;
+        
+        x[0] = exp(logR);
+        x[1] = 0;
+        
+        halo->force_halo(alpha,&kappa,gamma,&phi,x);
+        return 2*pi*kappa*exp(2*logR);
+      }
+    }
+  protected:
+    LensHalo *halo;
+  };
+
 };
 
 /** \ingroup DeflectionL2
@@ -408,7 +388,7 @@ protected:
  * This class uses the true expressions for the NFW profile.  This is
  * time consuming and not usually necessary. See TreeQuadPseudoNFW for a faster alternative.
  *
-* The default value of theta = 0.1 generally gives better than 1% accuracy on alpha.
+ * The default value of theta = 0.1 generally gives better than 1% accuracy on alpha.
  * The shear and kappa is always more accurate than the deflection.
  *
  */
@@ -419,7 +399,7 @@ public:
   LensHaloNFW(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,int my_stars_N);
 	LensHaloNFW(InputParams& params);
 	virtual ~LensHaloNFW();
-
+  
 	PosType ffunction(PosType x) const;
 	PosType gfunction(PosType x) const;
   PosType dgfunctiondx(PosType x);
@@ -436,26 +416,26 @@ public:
   PosType dmoddq(int whichmod, PosType q, PosType b);
   PosType ddmoddq(int whichmod, PosType q, PosType b);
   
-    //PosType dmod(PosType x, int modnumber, PosType my_slope, PosType my_fratio);    // was used for Ansatz III w derivatives of the Fourier modes
-    //PosType ddmod(PosType x, int modnumber, PosType my_slope, PosType my_fratio);   // was used for Ansatz III w derivatives of the Fourier modes 
-       
-    
-
+  //PosType dmod(PosType x, int modnumber, PosType my_slope, PosType my_fratio);    // was used for Ansatz III w derivatives of the Fourier modes
+  //PosType ddmod(PosType x, int modnumber, PosType my_slope, PosType my_fratio);   // was used for Ansatz III w derivatives of the Fourier modes
+  
+  
+  
 	// TODO: BEN: the below functions alphaNFW, kappaNFW and gammaNFW are obsolete and better to be deleted to avoid confusion
 	void alphaNFW(PosType *alpha,PosType *x,PosType Rtrunc,PosType mass,PosType r_scale
-			,PosType *center,PosType Sigma_crit);
+                ,PosType *center,PosType Sigma_crit);
 	KappaType kappaNFW(PosType *x,PosType Rtrunc,PosType mass,PosType r_scale
-			,PosType *center,PosType Sigma_crit);
+                     ,PosType *center,PosType Sigma_crit);
 	void gammaNFW(KappaType *gamma,PosType *x,PosType Rtrunc,PosType mass,PosType r_scale
-			,PosType *center,PosType Sigma_crit);
-
+                ,PosType *center,PosType Sigma_crit);
+  
 	void initFromFile(float my_mass, long *seed, float vmax, float r_halfmass);
 	void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed);
   /// set Rmax
   void set_Rmax(float my_Rmax){Rmax=my_Rmax; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
   /// set scale radius
 	void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
-    
+  
   
 protected:
 	/// table size
@@ -500,8 +480,8 @@ protected:
   
 private:
   PosType gmax;
-
-
+  
+  
 };
 // ********************
 
@@ -538,7 +518,7 @@ public:
   void set_Rmax(float my_Rmax){Rmax=my_Rmax; xmax = Rmax/rscale;};
 	
 	void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed);
-
+  
 private:
 	/// table size
 	static const long NTABLE;
@@ -546,20 +526,20 @@ private:
 	static const PosType maxrm;
 	/// keeps track of how many time the tables are created, default is just once
 	static int count;
-
+  
 	/// tables for lensing properties specific functions
 	static PosType *mhattable,*xtable;
 	/// make the specific tables
 	void make_tables();
 	/// interpolates from the specific tables
 	PosType InterpolateFromTable(PosType y) const;
-
+  
 	/// read in parameters from a parameterfile in InputParams params
 	void assignParams(InputParams& params);
-
+  
 	/// slope of the surface density profile
 	PosType beta;
-
+  
 	// Override internal structure of halos
   /// r |alpha(r)| pi Sigma_crit / Mass
 	inline PosType alpha_h(PosType x) const {
@@ -574,7 +554,7 @@ private:
 	}
 	inline KappaType phi_h(PosType x) const {
 		return -1.0*alpha_int(x)/InterpolateFromTable(xmax) ;
-        //ERROR_MESSAGE();
+    //ERROR_MESSAGE();
 		//std::cout << "time delay has not been fixed for PseudoNFW profile yet." << std::endl;
 		//exit(1);
 		//return 0.0;
@@ -606,35 +586,35 @@ public:
   LensHaloPowerLaw(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,PosType my_beta,float my_fratio,float my_pa,int my_stars_N);
 	LensHaloPowerLaw(InputParams& params);
 	~LensHaloPowerLaw();
-
+  
 	/// set the slope of the surface density profile
 	void set_slope(PosType my_slope){beta=my_slope;};
-    
+  
   /// get slope
   PosType get_slope(){return beta;};
-    
+  
 	/// initialize from a mass function
 	void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed);
   
 private:
 	/// read-in parameters from the parameter file
 	void assignParams(InputParams& params);
-
+  
 	///	read in parameters from a parameterfile in InputParams params
 	PosType beta;
-    PosType pa;
-
+  PosType pa;
+  
 	// Override internal structure of halos
   /// r |alpha(r)| pi Sigma_crit / Mass
 	inline PosType alpha_h(
-                  PosType x  /// r/rscale
+                         PosType x  /// r/rscale
                          ) const{
 		if(x==0) x=1e-6*xmax;
 		return -1.0*pow(x/xmax,-beta+2);
 	}
-    /// this is kappa Sigma_crit pi (r/rscale)^2 / mass
+  /// this is kappa Sigma_crit pi (r/rscale)^2 / mass
 	inline KappaType kappa_h(
-                  PosType x   /// r/rscale
+                           PosType x   /// r/rscale
                            ) const {
 		if(x==0) x=1e-6*xmax;
     double tmp = x/xmax;
@@ -664,20 +644,20 @@ private:
 class LensHaloSimpleNSIE : public LensHalo{
 public:
   /*LensHaloSimpleNSIE(){
-    sigma = zlens = fratio = pa = rcore = 0.;
-  }*/
-
+   sigma = zlens = fratio = pa = rcore = 0.;
+   }*/
+  
   //LensHaloSimpleNSIE(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,float my_sigma, float my_rcore,float my_fratio,float my_pa,int my_stars_N);
   /// explicit constructor
   LensHaloSimpleNSIE(float my_mass,PosType my_zlens,float my_sigma
-              ,float my_rcore,float my_fratio,float my_pa,int my_stars_N);
+                     ,float my_rcore,float my_fratio,float my_pa,int my_stars_N);
 	LensHaloSimpleNSIE(InputParams& params);
 	~LensHaloSimpleNSIE();
-
+  
 	/// overridden function to calculate the lensing properties
 	void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0);
 	// void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xcm,bool subtract_point=false);
-    
+  
 	/// get the velocity dispersion
 	float get_sigma(){return sigma;};
 	/// get the NSIE radius
@@ -688,7 +668,7 @@ public:
 	float get_pa(){return pa;};
 	/// get the core radius
 	float get_rcore(){return rcore;};
-
+  
 	/// set the velocity dispersion
 	void set_sigma(float my_sigma){sigma=my_sigma;};
 	/// set the NSIE radius
@@ -699,19 +679,19 @@ public:
 	void set_pa(float my_pa){pa=my_pa;};
 	/// set the core radius
 	void set_rcore(float my_rcore){rcore=my_rcore;};
-
+  
 protected:
-
+  
 	/// initialize from a simulation file
 	//void initFromFile(float my_mass, long *seed, float vmax, float r_halfmass);
 	/// initialize from a mass function
 	//void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed);
 	/// simple initialize from mass while setting a random position angle and ellipticity
 	//void initFromMass(float my_mass, long *seed);
-
+  
 	/// read-in parameters from a parameter file
 	void assignParams(InputParams& params);
-
+  
 	/// velocity dispersion of NSIE
 	float sigma;
 	/// Actual edge of mass distribution in elliptical radius, Rmax is the range beyond which the halo is a point mass
@@ -722,7 +702,7 @@ protected:
 	float pa;
 	/// core size of NSIE
 	float rcore;
-
+  
 };
 
 /** \ingroup DeflectionL2
@@ -741,28 +721,28 @@ public:
   LensHaloHernquist(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,int my_stars_N);
 	LensHaloHernquist(InputParams& params);
 	virtual ~LensHaloHernquist();
-
+  
   PosType ffunction(PosType x) const;
 	PosType gfunction(PosType x) const;
 	PosType hfunction(PosType x) const;
 	PosType g2function(PosType x) const;
-
+  
 	/* the below functions alphaHern, kappaHern and gammaHern are obsolete and better to be deleted to avoid confusion
-	void alphaHern(PosType *alpha,PosType *x,PosType Rtrunc,PosType mass,PosType r_scale
-			,PosType *center,PosType Sigma_crit);
-	KappaType kappaHern(PosType *x,PosType Rtrunc,PosType mass,PosType r_scale
-			,PosType *center,PosType Sigma_crit);
-	void gammaHern(KappaType *gamma,PosType *x,PosType Rtrunc,PosType mass,PosType r_scale
-			,PosType *center,PosType Sigma_crit);
-  */
+   void alphaHern(PosType *alpha,PosType *x,PosType Rtrunc,PosType mass,PosType r_scale
+   ,PosType *center,PosType Sigma_crit);
+   KappaType kappaHern(PosType *x,PosType Rtrunc,PosType mass,PosType r_scale
+   ,PosType *center,PosType Sigma_crit);
+   void gammaHern(KappaType *gamma,PosType *x,PosType Rtrunc,PosType mass,PosType r_scale
+   ,PosType *center,PosType Sigma_crit);
+   */
 	//void initFromFile(float my_mass, long *seed, float vmax, float r_halfmass);
-
+  
 	/// set Rmax
 	void set_Rmax(float my_Rmax){Rmax=my_Rmax; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
 	/// set scale radius
 	void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
-   // friend struct Ialpha_func;
-    
+  // friend struct Ialpha_func;
+  
 protected:
 	/// table size
 	static const long NTABLE;
@@ -770,17 +750,17 @@ protected:
 	static const PosType maxrm;
 	/// keeps track of how many time the tables are created, default is just once
 	static int count;
-
+  
 	/// tables for lensing properties specific functions
 	static PosType *ftable,*gtable,*g2table,*htable,*xtable,*xgtable;
 	/// make the specific tables
 	void make_tables();
 	/// interpolates from the specific tables
 	PosType InterpolateFromTable(PosType *table, PosType y) const;
-
+  
 	/// read in parameters from a parameterfile in InputParams params
 	void assignParams(InputParams& params);
-
+  
 	// Override internal structure of halos
   /// r |alpha(r)| pi Sigma_crit / Mass
 	inline PosType alpha_h(PosType x) const {
@@ -798,9 +778,9 @@ protected:
 	}
     inline KappaType phi_int(PosType x) const{
 		return -0.25*InterpolateFromTable(xgtable,x)/gmax;
-    }
-    
-    
+  }
+  
+  
 private:
   PosType gmax;
 };
@@ -813,7 +793,7 @@ private:
  * The profile is \f$ \rho \propto \left( \frac{r}{r_s} \right)^{-2} \left( 1 + \frac{r}{r_s} \right)^{-2} \f$ so beta would usually be negative.
  *
  *
-*/
+ */
 
 class LensHaloJaffe: public LensHalo{
 public:
@@ -821,12 +801,12 @@ public:
   LensHaloJaffe(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,int my_stars_N);
 	LensHaloJaffe(InputParams& params);
 	virtual ~LensHaloJaffe();
-
+  
 	/// set Rmax
 	void set_Rmax(float my_Rmax){Rmax=my_Rmax; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
 	/// set scale radius
 	void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
-
+  
   PosType ffunction(PosType x) const;
 	PosType gfunction(PosType x) const;
 	PosType hfunction(PosType x) const;
@@ -834,26 +814,26 @@ public:
   PosType bfunction(PosType x);
   PosType dbfunction(PosType x);
   PosType ddbfunction(PosType x);
-    
+  
 protected:
-    
+  
 	/// table size
 	static const long NTABLE;
 	/// maximum Rmax/rscale
 	static const PosType maxrm;
 	/// keeps track of how many time the tables are created, default is just once
 	static int count;
-
+  
 	/// tables for lensing properties specific functions
 	static PosType *ftable,*gtable,*g2table,*htable,*xtable,*xgtable;
 	/// make the specific tables
 	void make_tables();
 	/// interpolates from the specific tables
 	PosType InterpolateFromTable(PosType *table, PosType y) const;
-
+  
 	/// read in parameters from a parameterfile in InputParams params
 	void assignParams(InputParams& params);
-
+  
 	// Override internal structure of halos
   /// r |alpha(r)| pi Sigma_crit / Mass
 	inline PosType alpha_h(PosType x) const{
@@ -866,22 +846,22 @@ protected:
 		//return -0.125*x*x*InterpolateFromTable(g2table,x)/gmax;
 		return -0.25*x*x*InterpolateFromTable(g2table,x)/gmax;
 	}
-    ///std::cout << "no analytic expression defined yet for Jaffe profile, take numerical" << std::endl;
+  ///std::cout << "no analytic expression defined yet for Jaffe profile, take numerical" << std::endl;
 	inline KappaType phi_h(PosType x) const {
         return -0.25*InterpolateFromTable(xgtable,x)/gmax;
     }
     inline KappaType phi_int(PosType x) const{
 		return -0.25*InterpolateFromTable(xgtable,x)/gmax;
-    }
-
+  }
+  
 private:
   PosType gmax;
   
   // I have temporarily set these functions to 0 to make the code compile, Ben
-//  PosType ffunction(PosType x){throw std::runtime_error("Set to temporary invalid value"); return 0;}
-//	PosType gfunction(PosType x){throw std::runtime_error("Set to temporary invalid value"); return 0;}
-//	PosType hfunction(PosType x){throw std::runtime_error("Set to temporary invalid value"); return 0;}
-//	PosType g2function(PosType x){throw std::runtime_error("Set to temporary invalid value"); return 0;}
+  //  PosType ffunction(PosType x){throw std::runtime_error("Set to temporary invalid value"); return 0;}
+  //	PosType gfunction(PosType x){throw std::runtime_error("Set to temporary invalid value"); return 0;}
+  //	PosType hfunction(PosType x){throw std::runtime_error("Set to temporary invalid value"); return 0;}
+  //	PosType g2function(PosType x){throw std::runtime_error("Set to temporary invalid value"); return 0;}
   
 };
 
@@ -894,17 +874,17 @@ private:
 class LensHaloDummy: public LensHalo{
 public:
 	LensHaloDummy();
-    LensHaloDummy(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale, int my_stars_N);
+  LensHaloDummy(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale, int my_stars_N);
 	LensHaloDummy(InputParams& params);
 	~LensHaloDummy(){};
 	
 	/// overridden function to calculate the lensing properties
 	void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0);
-    // void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xcm,bool subtract_point=false,PosType screening = 1.0);
-    
+  // void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xcm,bool subtract_point=false,PosType screening = 1.0);
+  
 	/// initialize from a mass function
 	void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed);
-
+  
 	
 private:
 	/// read-in parameters from a parameter file
@@ -916,6 +896,9 @@ private:
 
 
 typedef LensHalo* LensHaloHndl;
+
+bool LensHaloZcompare(LensHalo *lh1,LensHalo *lh2);//{return (lh1->getZlens() < lh1->getZlens());}
+//bool LensHaloZcompare(LensHalo lh1,LensHalo lh2){return (lh1.getZlens() < lh1.getZlens());}
 
 
 #endif /* LENS_HALOS_H_ */

@@ -131,39 +131,39 @@ void LensHaloBaseNSIE::assignParams(InputParams& params){
     exit(1);
   }
 	if(!params.get("main_pos_angle",pa)) error_message1("main_pos_angle",params.filename());
-
+  
 	Rsize = rmaxNSIE(sigma,mass,fratio,rcore);
-    
+  
 	Rmax = MAX(1.0,1.0/fratio)*Rsize;  // redefine
-    
+  
 	assert(Rmax >= Rsize);
-
+  
 	if(!params.get("zsource_reference",zsource_reference)) error_message1("zsource_reference",params.filename());
-
-    // Substructure parameters
-    if(!params.get("main_sub_Ndensity",sub_Ndensity)) error_message1("main_sub_Ndensity",params.filename());
-
-    else if(sub_Ndensity > 0){
-    	if(!params.get("main_sub_beta",sub_beta)) error_message1("main_sub_beta",params.filename());
-    	if(!params.get("main_sub_alpha",sub_alpha)) error_message1("main_sub_alpha",params.filename());
-    	if(!params.get("main_sub_Rmax",sub_Rmax)) error_message1("main_sub_Rmax",params.filename());
-    	if(!params.get("main_sub_mass_max",sub_Mmax)) error_message1("main_sub_mass_max",params.filename());
-    	if(!params.get("main_sub_mass_min",sub_Mmin)) error_message1("main_sub_mass_min",params.filename());
-    	if(sub_Mmin < 1.0e3){
-    		ERROR_MESSAGE();
-    		std::cout << "Are you sure the minimum halo mass should be " << sub_Mmin << " Msun?" << std::endl;
-    		exit(1);
-    	}
-    	if(!params.get("main_sub_type",main_sub_type)) error_message1("main_sub_type",params.filename());
-
+  
+  // Substructure parameters
+  if(!params.get("main_sub_Ndensity",sub_Ndensity)) error_message1("main_sub_Ndensity",params.filename());
+  
+  else if(sub_Ndensity > 0){
+    if(!params.get("main_sub_beta",sub_beta)) error_message1("main_sub_beta",params.filename());
+    if(!params.get("main_sub_alpha",sub_alpha)) error_message1("main_sub_alpha",params.filename());
+    if(!params.get("main_sub_Rmax",sub_Rmax)) error_message1("main_sub_Rmax",params.filename());
+    if(!params.get("main_sub_mass_max",sub_Mmax)) error_message1("main_sub_mass_max",params.filename());
+    if(!params.get("main_sub_mass_min",sub_Mmin)) error_message1("main_sub_mass_min",params.filename());
+    if(sub_Mmin < 1.0e3){
+      ERROR_MESSAGE();
+      std::cout << "Are you sure the minimum halo mass should be " << sub_Mmin << " Msun?" << std::endl;
+      exit(1);
     }
-	  // Stars parameters
-    if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
-
-    else if(stars_N){
-    	assignParams_stars(params);
-    }
-
+    if(!params.get("main_sub_type",main_sub_type)) error_message1("main_sub_type",params.filename());
+    
+  }
+  // Stars parameters
+  if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
+  
+  else if(stars_N){
+    assignParams_stars(params);
+  }
+  
 }
 
 void LensHaloBaseNSIE::error_message1(std::string parameter,std::string file){
