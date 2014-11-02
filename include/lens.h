@@ -324,7 +324,7 @@ private: /* input */
 	/// file for multiple main halo input
 	std::string main_input_file;
 	
- 	/// read main halos from a pixelized density map
+ 	/// read main halos from a pixelized density map 
 	void readPixelizedDensity();
   
   /// the center of the lens in spherical coordinates

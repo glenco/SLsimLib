@@ -2033,16 +2033,38 @@ void writeCurves(int m			/// part of te filename, could be the number/index of t
           
           if(i == hull.size()-1) k=0;
           else k=i+1;
+          
+          k = i < hull.size()-1 ? i+1 : 0;
          
           p[0] = hull[k]->x[0] - reservour[j]->x[0];
           p[1] = hull[k]->x[1] - reservour[j]->x[1];
 
           c = ( s[0]*p[0] + s[1]*p[1] )/sqrt( (s[0]*s[0]+s[1]*s[1])*(p[0]*p[0]+p[1]*p[1])  );
-        
+          
+          // Check to see if the curve would be self-intersecting
+          
+          
           if(c < cmin){
-            cmin = c;
-            imin=i;
-            jmin=j;
+ 
+            needs to be an exit
+            
+            bool inter=false;
+          for(size_t ii=0;ii<hull.size()-1;++ii){
+            inter = Utilities::Geometry::intersect(hull[ii]->x,hull[ii+1]->x
+                                                   ,hull[i]->x,reservour[j]->x);
+            inter = Utilities::Geometry::intersect(hull[ii]->x,hull[ii+1]->x
+                                                   ,hull[k]->x,reservour[j]->x);
+          }
+          inter = Utilities::Geometry::intersect(hull[hull.size()-1]->x,hull[0]->x
+                                                 ,hull[i]->x,reservour[j]->x);
+          inter = Utilities::Geometry::intersect(hull[hull.size()-1]->x,hull[0]->x
+                                                 ,hull[k]->x,reservour[j]->x);
+        
+            if(!inter){
+              cmin = c;
+              imin=i;
+              jmin=j;
+            }
           }
         }
       }
