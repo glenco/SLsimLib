@@ -77,12 +77,17 @@ public:
   void RandomizeSubstructure2(double rangeInRei,long *seed);
   void RandomizeSubstructure3(double rangeInRei,long *seed);
 
-  void FindLensSimple(int Nimages,Point *image_positions,double *y,double **dx_sub,PosType * out_perturb_modes,int * Noutmodes);
+  void FindLensSimple(int Nimages,Point *image_positions,double *y,double **dx_sub);
   void FindLensSimple(ImageInfo *imageinfo ,int Nimages ,double *y,double **dx_sub);
 
   int getNmodes(){return perturb_Nmodes;};
   
   void set_perturbmodes(PosType * ListModes, int Nmodes);
+  void get_perturbmodes(PosType * ListModes)
+  {
+    for(int i=0; i < perturb_Nmodes; i++) ListModes[i] = perturb_modes[i];
+    return ;
+  };
   double * getq() { return qpriv; };
   
 private:

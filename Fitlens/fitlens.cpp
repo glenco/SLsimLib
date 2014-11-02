@@ -24,8 +24,6 @@ void LensHaloAnaNSIE::FindLensSimple(
 		,Point *image_positions   /// Array of points with point[i].x set to the image positions
 		,double *y                /// output source position
 		,double **dx_sub          /// dx_sub[Nimages][2] pre-calculated deflections caused by substructures or external masses at each image
-    ,PosType * out_perturb_modes  /// Output array of perturbation modes
-    ,int * Noutmodes                /// Number of output perturbation modes
 		){
 
 	ImageInfo* imageinfo = new ImageInfo[Nimages];
@@ -36,10 +34,6 @@ void LensHaloAnaNSIE::FindLensSimple(
 	}
 
 	FindLensSimple(imageinfo,Nimages,y,dx_sub);
-
-  *Noutmodes = perturb_Nmodes;
-      
-  for(int i=0;i<perturb_Nmodes;++i){ out_perturb_modes[i] = perturb_modes[i]; }
       
 	delete[] imageinfo;
 }
@@ -526,12 +520,7 @@ void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *x_cent
 void LensHaloAnaNSIE::set_perturbmodes(PosType * ListModes, int Nmodes)
 {
   perturb_Nmodes = Nmodes ;
-  
-  for(int i=0; i < Nmodes; i++)
-  {
-  perturb_modes[i] = ListModes[i];
-  }
-  
+  for(int i=0; i < Nmodes; i++) perturb_modes[i] = ListModes[i];
   return ;
 }
 
