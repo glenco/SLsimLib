@@ -48,7 +48,7 @@ enum LensHaloType
 	dummy_lens,
 	hern_lens,
 	jaffe_lens,
-	multi_dark_lens
+	pix_map_lens
 };
 
 enum GalaxyLensHaloType

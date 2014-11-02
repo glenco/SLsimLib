@@ -28,9 +28,9 @@ namespace
 		
 		// Main halos type
 		{"main_halo_on", "1", "insert a main halo into the simulation"},
-		{"main_DM_halo_type", "DummyLens", "main halo type: nolens, NFW, PseudoNFW, PowerLaw, NSIE, AnaLens, UniLens, MOKALens, DummyLens, Hernquist, Jaffe, PixelizMap"},
+		{"main_DM_halo_type", "DummyLens", "main halo type: nolens, NFW, PseudoNFW, PowerLaw, NSIE, AnaLens, UniLens, MOKALens, DummyLens, Hernquist, Jaffe, PixelDMap"},
 		{"main_galaxy_halo_type", "0", "if set, a main halo galaxy profile is chosen: 0 or none, 1 or NSIE"},
-    {"Pixeliz_input_file","surfacedensity.fits","Density map to be read in as main lens."},
+    {"PixelizedDensityMap_input_file","surfacedensity.fits","Density map to be read in as main lens."},
 		
 		// Field halos
 		{"field_off", "0", "turn off field halos"},

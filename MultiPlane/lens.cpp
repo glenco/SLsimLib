@@ -302,12 +302,12 @@ void Lens::assignParams(InputParams& params,bool verbose)
 	}
 	
 	// read Pixeliz parameters if necessary
-	if(main_halo_type == multi_dark_lens)
+	if(main_halo_type == pix_map_lens)
 	{
-		if(!params.get("Pixeliz_input_file", main_input_file))
+		if(!params.get("PixelizedDensityMap_input_file", main_input_file))
 		{
 			ERROR_MESSAGE();
-			std::cout << "parameter Pixeliz_input_file needs to be set in the parameter file " << params.filename() << endl;
+			std::cout << "parameter PixelizedDensityMap_input_file needs to be set in the parameter file " << params.filename() << endl;
 			exit(1);
 		}
 	}
@@ -454,8 +454,8 @@ void Lens::printMultiLens(){
 	case jaffe_lens:
 		std::cout << "Jaffe lens" << endl;
 		break;
-	case multi_dark_lens:
-		std::cout << "PixelizMap lens" << endl;
+	case pix_map_lens:
+		std::cout << "PixelDMap lens" << endl;
 		break;
 	}
 
@@ -531,8 +531,8 @@ void Lens::printMultiLens(){
 			case jaffe_lens:
 				std::cout << "Jaffe field type" << endl;
 				break;
-			case multi_dark_lens:
-				std::cout << "PixelizMap field type" << endl;
+			case pix_map_lens:
+				std::cout << "PixelDMap field type" << endl;
 				break;
 		}
 
@@ -833,7 +833,7 @@ void Lens::createMainHalos(InputParams& params)
 	case jaffe_lens:
 		main_halos.push_back(new LensHaloJaffe(params));
 		break;
-	case multi_dark_lens:
+	case pix_map_lens:
 		readPixelizedDensity();
 		break;
 	}
@@ -1121,7 +1121,7 @@ void Lens::createFieldHalos(bool verbose)
 					//field_halos.push_back(new LensHaloJaffe);
           field_halos.push_back(new LensHaloJaffe(mass*(1-field_galaxy_mass_fraction),Rmax,halo_zs_vec[i],rscale,1.0,0,0));
 					break;
-				case multi_dark_lens:
+				case pix_map_lens:
 					ERROR_MESSAGE();
 					std::cout << "Pixeliz not supported." << std::endl;
 					break;
@@ -1360,7 +1360,7 @@ void Lens::readInputSimFileMillennium(bool verbose)
 					ERROR_MESSAGE();
 					std::cout << "Jaffe not supported." << std::endl;
 					break;
-				case multi_dark_lens:
+				case pix_map_lens:
 					ERROR_MESSAGE();
 					std::cout << "Pixeliz not supported." << std::endl;
 					break;
@@ -1678,9 +1678,9 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose)
             ERROR_MESSAGE();
             std::cout << "Jaffe not supported." << std::endl;
             break;
-          case multi_dark_lens:
+          case pix_map_lens:
             ERROR_MESSAGE();
-            std::cout << "PixelizMap not supported." << std::endl;
+            std::cout << "PixelDMap not supported." << std::endl;
             break;
         }
       
@@ -1760,8 +1760,8 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose)
 	//}
   
   // determine if the region is a circle or a rectangle
-  PosType diagonal1 = (boundary_diagonal[1] - boundary_diagonal[0])/sqrt(2);
-  PosType diagonal2 = sqrt(pow(boundary_p2[0] - boundary_p1[0],2) + pow(boundary_p2[1] - boundary_p1[1],2));
+  //PosType diagonal1 = (boundary_diagonal[1] - boundary_diagonal[0])/sqrt(2);
+  //PosType diagonal2 = sqrt(pow(boundary_p2[0] - boundary_p1[0],2) + pow(boundary_p2[1] - boundary_p1[1],2));
   
 	std::cout << "Overiding input file field of view to make it fit the simulation light cone." << std::endl;
   rmax = (boundary_p2[0] - boundary_p1[0])/2;

@@ -1198,12 +1198,12 @@ namespace Utilities
    *   Adaptied from Calor Gioccoli's pl() routine.
    */
   void powerspectrum2d(
-                       std::valarray<double> aa
-                       ,std::valarray<double> bb
-                       ,int nx
-                       ,int ny
-                       ,double boxlx
-                       ,double boxly
+                       std::valarray<double> const &aa      /// first realspace map to be
+                       ,std::valarray<double> const &bb     /// second realspace map, same as aa to get power spectrum
+                       ,int nx                       /// number of pixels in x direction
+                       ,int ny                       /// number of pixels in y direction
+                       ,double boxlx                 /// range of image in x direction
+                       ,double boxly                 /// range of image in y direction
                        ,std::vector<double> &ll      /// output multiplot number of bins
                        ,std::vector<double> &Pl      /// output binned power spectrum
                        );
