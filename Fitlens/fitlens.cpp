@@ -19,7 +19,7 @@ static double oldsm;//,tang[2],length,yot[2],radsourceT;
  *
  */
 
-void LensHaloAnaNSIE::FindLensSimple(
+void LensHaloFit::FindLensSimple(
 		int Nimages               /// Number of images to be fit
 		,Point *image_positions   /// Array of points with point[i].x set to the image positions
 		,double *y                /// output source position
@@ -46,7 +46,7 @@ void LensHaloAnaNSIE::FindLensSimple(
  *
  */
 
-void LensHaloAnaNSIE::FindLensSimple(
+void LensHaloFit::FindLensSimple(
 		ImageInfo *imageinfo    /// Positions of images relative to center of lens.  Only imageinfo[].centoid[] is used.
 		,int Nimages             /// input number of images
 		,double *y               /// output source position
@@ -127,8 +127,8 @@ void LensHaloAnaNSIE::FindLensSimple(
 	x_center[0] *= scale;
 	x_center[1] *= scale;
 
-	Einstein_ro = 0.0; // the monople is now included in the modes
-	sigma = 0.0;
+	//Einstein_ro = 0.0; // the monople is now included in the modes
+	//sigma = 0.0;
 
 	free_dmatrix(xob,0,Nimages-1,0,1);
 	free_dmatrix(xg,0,1,0,1);
@@ -156,7 +156,7 @@ void LensHaloAnaNSIE::FindLensSimple(
 *
 *************************************
 **************************************/
-double LensHaloAnaNSIE::ElliptisizeLens(
+double LensHaloFit::ElliptisizeLens(
 		int Nimages   /// number of images
 		,int Nsources /// number of sources
 		,int Nlenses  /// number of lens centers

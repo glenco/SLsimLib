@@ -512,7 +512,7 @@ namespace Utilities{
 	unsigned long order_curve4(Kist<Point> * curve);
   unsigned long order_curve5(Kist<Point> * curve);
   void ordered_convexhull(Kist<Point> * curve);
-  void ordered_concavehull(Kist<Point> * curve);
+  void ordered_shrink_rap(Kist<Point> * curve);
   PosType ConvexHullArea(Kist<Point> * curve);
 }
 bool order_ExteriorBoundary(Point *curve,long Npoints,long *NewNpoints,PosType *area);

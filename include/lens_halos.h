@@ -641,18 +641,18 @@ private:
 
 
 
-class LensHaloSimpleNSIE : public LensHalo{
+class LensHaloRealNSIE : public LensHalo{
 public:
-  /*LensHaloSimpleNSIE(){
+  /*LensHaloRealNSIE(){
    sigma = zlens = fratio = pa = rcore = 0.;
    }*/
   
-  //LensHaloSimpleNSIE(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,float my_sigma, float my_rcore,float my_fratio,float my_pa,int my_stars_N);
+  //LensHaloRealNSIE(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,float my_sigma, float my_rcore,float my_fratio,float my_pa,int my_stars_N);
   /// explicit constructor
-  LensHaloSimpleNSIE(float my_mass,PosType my_zlens,float my_sigma
+  LensHaloRealNSIE(float my_mass,PosType my_zlens,float my_sigma
                      ,float my_rcore,float my_fratio,float my_pa,int my_stars_N);
-	LensHaloSimpleNSIE(InputParams& params);
-	~LensHaloSimpleNSIE();
+	LensHaloRealNSIE(InputParams& params);
+	~LensHaloRealNSIE();
   
 	/// overridden function to calculate the lensing properties
 	void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0);

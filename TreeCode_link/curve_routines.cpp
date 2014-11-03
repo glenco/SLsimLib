@@ -347,7 +347,7 @@ unsigned long order_curve4(Point *curve,long Npoints){
   }
   
   /// Replaces curve->imagekist with its convex hull.  The number of points will change.
-  void ordered_concavehull(Kist<Point> * curve){
+  void ordered_shrink_rap(Kist<Point> * curve){
     int i;
     std::vector<Point *> copy;
     copy.resize(curve->Nunits());
@@ -357,7 +357,7 @@ unsigned long order_curve4(Point *curve,long Npoints){
       copy[i] = curve->getCurrent();
     }
     
-    std::vector<Point *> hull = Utilities::concave_hull(copy);
+    std::vector<Point *> hull = Utilities::shrink_rap(copy);
     curve->copy(hull);
     
     return;
@@ -1995,7 +1995,8 @@ void writeCurves(int m			/// part of te filename, could be the number/index of t
   }
   
   /** Orders the points in P according to a iterative minimum curvature method
-   that seeks to find the boundery of the region
+   that seeks to find the boundery of the region while minimizing curvature and 
+   not allowing self intersection
    */
   std::vector<Point *> shrink_rap(std::vector<Point *> P)
   {
@@ -2023,7 +2024,8 @@ void writeCurves(int m			/// part of te filename, could be the number/index of t
     double s[2],p[2],c,cmin;
     size_t k,imin,jmin;
     
-    while(reservour.size() > 0){
+    cmin=1.0;
+    while(reservour.size() > 0 && cmin != 2.0){
       cmin = 2.0;
       for(int i=0; i<hull.size(); ++i){
         for(int j=0; j<reservour.size(); ++j){
@@ -2041,25 +2043,22 @@ void writeCurves(int m			/// part of te filename, could be the number/index of t
 
           c = ( s[0]*p[0] + s[1]*p[1] )/sqrt( (s[0]*s[0]+s[1]*s[1])*(p[0]*p[0]+p[1]*p[1])  );
           
-          // Check to see if the curve would be self-intersecting
-          
-          
           if(c < cmin){
- 
-            needs to be an exit
             
-            bool inter=false;
-          for(size_t ii=0;ii<hull.size()-1;++ii){
-            inter = Utilities::Geometry::intersect(hull[ii]->x,hull[ii+1]->x
+            // Check to see if the curve would be self-intersecting
+           bool inter=false;
+            /*for(size_t ii=0;ii<hull.size()-1;++ii){
+              inter = Utilities::Geometry::intersect(hull[ii]->x,hull[ii+1]->x
+                                                     ,hull[i]->x,reservour[j]->x);
+              inter = Utilities::Geometry::intersect(hull[ii]->x,hull[ii+1]->x
+                                                     ,hull[k]->x,reservour[j]->x);
+            }
+            inter = Utilities::Geometry::intersect(hull[hull.size()-1]->x,hull[0]->x
                                                    ,hull[i]->x,reservour[j]->x);
-            inter = Utilities::Geometry::intersect(hull[ii]->x,hull[ii+1]->x
+            inter = Utilities::Geometry::intersect(hull[hull.size()-1]->x,hull[0]->x
                                                    ,hull[k]->x,reservour[j]->x);
-          }
-          inter = Utilities::Geometry::intersect(hull[hull.size()-1]->x,hull[0]->x
-                                                 ,hull[i]->x,reservour[j]->x);
-          inter = Utilities::Geometry::intersect(hull[hull.size()-1]->x,hull[0]->x
-                                                 ,hull[k]->x,reservour[j]->x);
-        
+             */
+            
             if(!inter){
               cmin = c;
               imin=i;
@@ -2069,16 +2068,19 @@ void writeCurves(int m			/// part of te filename, could be the number/index of t
         }
       }
     
-      double area;
-      assert(Utilities::windings(reservour[jmin]->x,hull.data(),hull.size(),&area) == 1);
-      hull.resize(hull.size()+1);
-      for(size_t i=hull.size()-1;i>imin+1;--i) hull[i] = hull[i-1];
-      hull[imin+1] = reservour[jmin];
-      std::swap(reservour[jmin],reservour[reservour.size()-1]);
-      reservour.pop_back();
+      if(cmin != 2.0){
+        // insert new point into hull
+        double area;
+        //assert(Utilities::windings(reservour[jmin]->x,hull.data(),hull.size(),&area) == 1);
+        hull.resize(hull.size()+1);
+        for(size_t i=hull.size()-1;i>imin+1;--i) hull[i] = hull[i-1];
+        hull[imin+1] = reservour[jmin];
+        std::swap(reservour[jmin],reservour[reservour.size()-1]);
+        reservour.pop_back();
+      }
     }
     
-    assert(hull.size() == P.size());
+//    assert(hull.size() == P.size());
     
     return hull;
   }

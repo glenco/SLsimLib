@@ -48,19 +48,13 @@ void LensHaloAnaNSIE::assignParams(InputParams& params){
 
 }
 
-
-void LensHaloAnaNSIE::PrintLens(bool show_substruct,bool show_stars){
+void LensHaloFit::PrintLens(bool show_substruct,bool show_stars){
 	int i;
 
 	LensHaloBaseNSIE::PrintLens(show_substruct,show_stars);
 
 	// parameters of host elliptical
 	cout << endl << "**Host lens model**" << endl;
-	// redshifts
-	cout << "sigma " << sigma << "km/s" << endl;
-	cout << "core " << rcore << " Mpc" << endl;
-	cout << "axis_ratio " << fratio << endl;
-	cout << "position angle " <<pa << endl;
 
 			// parameters of distortion to host elliptical
 	cout << endl << "Nmodes " << perturb_Nmodes << endl;
@@ -71,26 +65,61 @@ void LensHaloAnaNSIE::PrintLens(bool show_substruct,bool show_stars){
 		cout << "modes" << endl;
 		for(i=0;i<perturb_Nmodes;++i) cout << "  " << perturb_modes[i] << endl;
 	}
+}
 
-
+void LensHaloAnaNSIE::PrintLens(bool show_substruct,bool show_stars){
+  int i;
+  
+  LensHaloBaseNSIE::PrintLens(show_substruct,show_stars);
+  
+  // parameters of host elliptical
+  cout << endl << "**Host lens model**" << endl;
+  // redshifts
+  cout << "sigma " << sigma << "km/s" << endl;
+  cout << "core " << rcore << " Mpc" << endl;
+  cout << "axis_ratio " << fratio << endl;
+  cout << "position angle " <<pa << endl;
+  
+  // parameters of distortion to host elliptical
+  cout << endl << "Nmodes " << perturb_Nmodes << endl;
+  if(perturb_Nmodes>0){
+    cout << "beta = " << perturb_beta << endl;
+    cout << "rms" << endl;
+    for(i=0;i<6;++i) cout << "  " << perturb_rms[i] << endl;
+    cout << "modes" << endl;
+    for(i=0;i<perturb_Nmodes;++i) cout << "  " << perturb_modes[i] << endl;
+  }
 }
 
 
 LensHaloAnaNSIE::LensHaloAnaNSIE(InputParams& params, bool verbose) : LensHaloBaseNSIE(params){
-
+  
   assignParams(params);
   
   if(perturb_Nmodes){
-  	perturb_modes = new PosType[perturb_Nmodes+1];
-  	// zero perturbation modes until use LensHaloAnaNSIE::RandomlyDistortLens()
-  	for(int i=0;i< perturb_Nmodes+1 ;++i) perturb_modes[i] =  0;
+    perturb_modes = new PosType[perturb_Nmodes+1];
+    // zero perturbation modes until use LensHaloAnaNSIE::RandomlyDistortLens()
+    for(int i=0;i< perturb_Nmodes+1 ;++i) perturb_modes[i] =  0;
   }
   
   if(verbose) PrintLens(false,false);
 }
+LensHaloFit::LensHaloFit(const COSMOLOGY& cosmo) : LensHaloBaseNSIE(){
+  
+  //assignParams(params);
+  
+  if(perturb_Nmodes){
+    perturb_modes = new PosType[perturb_Nmodes+1];
+    // zero perturbation modes until use LensHaloAnaNSIE::RandomlyDistortLens()
+    for(int i=0;i< perturb_Nmodes+1 ;++i) perturb_modes[i] =  0;
+  }
+  
+  sigma = 0.0;
+  setCosmology(cosmo);
+  //if(verbose) PrintLens(false,false);
+}
 
 
 
-LensHaloAnaNSIE::~LensHaloAnaNSIE(){
-
+LensHaloFit::~LensHaloFit(){
 }

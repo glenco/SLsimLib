@@ -591,13 +591,13 @@ void ImageFinding::find_crit2(
   *orderingsuccess = true;
   if(ordercurve && dividecurves){
 
-	  unsigned long NewNumber;
+	  //unsigned long NewNumber;
 
 	  // order points in curve
 
 	  x[0]=x[1]=0.0;
 	  //Point *tmp_points = NewPointArray(Npoints);
-	  unsigned long ii;
+	  //unsigned long ii;
 	  for(i=0;i<*Ncrits;++i){
 
 		  //critcurve[i].imagekist->MoveToTop();
@@ -609,7 +609,10 @@ void ImageFinding::find_crit2(
 //		  NewNumber = Utilities::order_curve4(tmp_points,critcurve[i].imagekist->Nunits());
 //		  NewNumber = Utilities::order_curve4(critcurve[i].imagekist);
 //		  NewNumber = Utilities::order_curve5(critcurve[i].imagekist);
-      Utilities::ordered_convexhull(critcurve[i].imagekist);
+      
+      //Utilities::ordered_convexhull(critcurve[i].imagekist);
+      Utilities::ordered_shrink_rap(critcurve[i].imagekist);
+      
 /*		  if(NewNumber != critcurve[i].imagekist->Nunits() ){
         std::cout << "find_crit2(), i = " << i << " ordering curve NewNumber = " << NewNumber << " oldnumber = " << critcurve[i].imagekist->Nunits() << std::endl;
         *orderingsuccess = false;

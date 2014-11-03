@@ -813,7 +813,7 @@ void Lens::createMainHalos(InputParams& params)
 		main_halos.push_back(new LensHaloPowerLaw(params));
 		break;
 	case nsie_lens:
-		main_halos.push_back(new LensHaloSimpleNSIE(params));
+		main_halos.push_back(new LensHaloRealNSIE(params));
 		break;
 	case ana_lens:
 		main_halos.push_back(new LensHaloAnaNSIE(params));
@@ -845,7 +845,7 @@ void Lens::createMainHalos(InputParams& params)
 		case null_gal:
 			break;
 		case nsie_gal:
-			main_halos.push_back(new LensHaloSimpleNSIE(params));
+			main_halos.push_back(new LensHaloRealNSIE(params));
 			break;
 		}
 	}
@@ -1094,8 +1094,8 @@ void Lens::createFieldHalos(bool verbose)
 					break;
 				case nsie_lens:
                     //std::cout << "Warning: All galaxies are spherical" << std::endl;
-					field_halos.push_back(new LensHaloSimpleNSIE(mass*(1-field_galaxy_mass_fraction),halo_zs_vec[i],sigma,0.0,1.0,0,0));
-					//field_halos.push_back(new LensHaloSimpleNSIE);
+					field_halos.push_back(new LensHaloRealNSIE(mass*(1-field_galaxy_mass_fraction),halo_zs_vec[i],sigma,0.0,1.0,0,0));
+					//field_halos.push_back(new LensHaloRealNSIE);
 					break;
 				case ana_lens:
 					ERROR_MESSAGE();
@@ -1151,7 +1151,7 @@ void Lens::createFieldHalos(bool verbose)
                         //std::cout << "Warning: All galaxies are spherical" << std::endl;
                         float fratio = (ran2(seed)+1)*0.5;  //TODO: Ben change this!  This is a kluge.
                         float pa = 2*pi*ran2(seed);  //TODO: This is a kluge.
-                        field_halos.push_back(new LensHaloSimpleNSIE(mass*field_galaxy_mass_fraction,halo_zs_vec[i],sigma,0.0,fratio,pa,0));
+                        field_halos.push_back(new LensHaloRealNSIE(mass*field_galaxy_mass_fraction,halo_zs_vec[i],sigma,0.0,fratio,pa,0));
 
                         //field_halos[j]->initFromMassFunc(mass*field_galaxy_mass_fraction,Rmax,rscale,field_prof_internal_slope,seed);
                         break;
@@ -1331,9 +1331,9 @@ void Lens::readInputSimFileMillennium(bool verbose)
 					std::cout << "PowerLaw not supported." << std::endl;
 					break;
 				case nsie_lens:
-          field_halos.push_back(new LensHaloSimpleNSIE(mass*field_galaxy_mass_fraction,z,sigma,0.0,1.0,0.0,0));
+          field_halos.push_back(new LensHaloRealNSIE(mass*field_galaxy_mass_fraction,z,sigma,0.0,1.0,0.0,0));
           
-					//field_halos.push_back(new LensHaloSimpleNSIE);
+					//field_halos.push_back(new LensHaloRealNSIE);
 					break;
 				case ana_lens:
 					ERROR_MESSAGE();
@@ -1406,7 +1406,7 @@ void Lens::readInputSimFileMillennium(bool verbose)
             std::cout << "flag_field_gal_on is true, but field_int_prof_gal_type is null!!!!" << std::endl;
             break;
           case nsie_gal:
-            field_halos.push_back(new LensHaloSimpleNSIE(mass*field_galaxy_mass_fraction,z,sigma,0.0,fratio,pa,0));
+            field_halos.push_back(new LensHaloRealNSIE(mass*field_galaxy_mass_fraction,z,sigma,0.0,fratio,pa,0));
             break;
           default:
             throw std::runtime_error("Don't support any but NSIE galaxies yet!");
@@ -1649,9 +1649,9 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose)
             std::cout << "PowerLaw not supported." << std::endl;
             break;
           case nsie_lens:
-            field_halos.push_back(new LensHaloSimpleNSIE(mass*(1-field_galaxy_mass_fraction),z,sigma,0.0,1.0,0.0,0));
+            field_halos.push_back(new LensHaloRealNSIE(mass*(1-field_galaxy_mass_fraction),z,sigma,0.0,1.0,0.0,0));
 
-            //field_halos.push_back(new LensHaloSimpleNSIE);
+            //field_halos.push_back(new LensHaloRealNSIE);
             break;
           case ana_lens:
             ERROR_MESSAGE();
@@ -1709,7 +1709,7 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose)
               std::cout << "flag_field_gal_on is true, but field_int_prof_gal_type is null!!!!" << std::endl;
               break;
             case nsie_gal:
-              field_halos.push_back(new LensHaloSimpleNSIE(mass*field_galaxy_mass_fraction,z,sigma,0.0,fratio,pa,0));
+              field_halos.push_back(new LensHaloRealNSIE(mass*field_galaxy_mass_fraction,z,sigma,0.0,fratio,pa,0));
               break;
             default:
               throw std::runtime_error("Don't support any but NSIE galaxies yet!");
