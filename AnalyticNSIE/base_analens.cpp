@@ -23,7 +23,7 @@ void LensHaloBaseNSIE::force_halo(
   long j;
   PosType alpha_tmp[2];
   KappaType kappa_tmp = 0.0, gamma_tmp[3];
-  KappaType * phi_tmp = new KappaType ;
+  KappaType phi_tmp ;
   
   gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
   alpha_tmp[0] = alpha_tmp[1] = 0.0;
@@ -61,7 +61,7 @@ void LensHaloBaseNSIE::force_halo(
   // perturbations of host lens
   if(perturb_Nmodes > 0)
   {
-    *kappa += lens_expand(perturb_beta,perturb_modes,perturb_Nmodes,xcm,alpha_tmp,gamma_tmp,phi_tmp);
+    *kappa += lens_expand(perturb_beta,perturb_modes,perturb_Nmodes,xcm,alpha_tmp,gamma_tmp,&phi_tmp);
     
     alpha[0] += alpha_tmp[0];
     alpha[1] += alpha_tmp[1];
@@ -71,11 +71,11 @@ void LensHaloBaseNSIE::force_halo(
       gamma[1] += gamma_tmp[1];
       // Why don't we have gamma[2] here ?
       // std::cout << "phi = " << *phi << " phi_tmp = " << *phi_tmp << std::endl;
-      *phi += *phi_tmp ; // Should we also multiply by the factor 2*Rmax/pi ?
+      *phi += phi_tmp ; // Should we also multiply by the factor 2*Rmax/pi ?
     }
     gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
     alpha_tmp[0] = alpha_tmp[1] = 0.0;
-    *phi_tmp = 0.0;
+    phi_tmp = 0.0;
   }
   
   // add substructure
@@ -84,7 +84,7 @@ void LensHaloBaseNSIE::force_halo(
     for(j=0;j<sub_N;++j)
     {
       
-      subs[j].force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,phi_tmp,xcm);
+      subs[j].force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp,xcm);
       
       alpha[0] += alpha_tmp[0];
       alpha[1] += alpha_tmp[1];
@@ -95,13 +95,13 @@ void LensHaloBaseNSIE::force_halo(
         gamma[1] += gamma_tmp[1];
         
         // Why don't we have gamma[2] here ?
-        *phi += *phi_tmp;
+        *phi += phi_tmp;
       }
     }
     
     gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
     alpha_tmp[0] = alpha_tmp[1] = 0.0;
-    *phi_tmp = 0.0;
+    phi_tmp = 0.0;
   }
   
   // add stars for microlensing

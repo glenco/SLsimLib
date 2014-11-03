@@ -21,6 +21,8 @@ void alphaNSIE(
   
   PosType r=sqrt(xt[0]*xt[0]+xt[1]*xt[1]);
   
+  if(f>1.) throw std::runtime_error("f should not be greater than 1 !") ;
+                 
   if( r < 1.0e-20 || r > 1.0e20){
 	  alpha[0]=0.0;
 	  alpha[1]=0.0;
@@ -270,6 +272,7 @@ KappaType LensHaloBaseNSIE::phiNSIE(PosType const *xt    /// position on the ima
   
   if(fratio==1) // Spherical case
   {
+  
     struct alphaForInt alphaForIntFunc(f,bc,theta);
     
     // Returning phi from the integration of alphaForIntFunc :
