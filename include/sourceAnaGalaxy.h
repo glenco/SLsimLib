@@ -202,6 +202,7 @@ public:
         band = b;
         for (int i = 0; i < galaxies.size(); i++)
             galaxies[i].setActiveBand(band);
+    return galaxies[index];
     }
     
 

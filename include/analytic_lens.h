@@ -38,6 +38,17 @@ public:
   virtual PosType get_pa(){return 0.0;};
   /// get the core radius
   virtual PosType get_rcore(){return 0.0;};
+  
+  int getNmodes(){return perturb_Nmodes;};
+  
+  void set_perturbmodes(PosType * ListModes, int Nmodes);
+  void get_perturbmodes(PosType * ListModes)
+  {
+    for(int i=0; i < perturb_Nmodes; i++) ListModes[i] = perturb_modes[i];
+    return ;
+  };
+  double * getq() { return qpriv; };
+
 
 private:
 
@@ -51,6 +62,9 @@ private:
    		       ,double *xc,double **xg,double sigG,double beta,int Nmod
    		       ,double *mod,double **dx,double *re2,double *q);
   void setCosmology(const COSMOLOGY& cosmo);
+  
+  // output of ElliptisizeLens
+  double qpriv[7];
 
   //void assignParams(InputParams& params);
 };
@@ -133,6 +147,7 @@ public:
   virtual PosType get_pa(){return pa;};
   /// get the core radius
   virtual PosType get_rcore(){return rcore;};
+  
 
 private:
   
@@ -144,7 +159,6 @@ private:
                             ,int Nlenses,double Re2,double *x2);
   
 };
-
 
 
 // in mark_points.c
