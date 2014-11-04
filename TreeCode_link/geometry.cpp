@@ -132,3 +132,10 @@ bool Utilities::Geometry::onSegment(PosType p[], PosType q[], PosType r[])
   
   return false;
 }
+
+double Utilities::Geometry::AngleBetween2d(double v1[],double v2[]){
+  double y = (v1[0] * v2[1]) - (v2[0] * v1[1]);
+  double x = (v1[0] * v2[0]) + (v1[1] * v2[1]);
+
+  return atan2(y, x);
+}

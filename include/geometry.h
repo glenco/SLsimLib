@@ -33,7 +33,7 @@ namespace Utilities {
       PosType theta;
       PosType phi;
       
-      /// output cartisian coordinates of the point
+      /// output Cartesian coordinates of the point
       void sphericalTOcartisian(PosType x[]) const;
       void cartisianTOspherical(PosType const x[]);
       void StereographicProjection(const SphericalPoint &central,PosType x[]) const;
@@ -51,15 +51,18 @@ namespace Utilities {
     /** \brief To find orientation of the triangle formed by the ordered triplet (p, q, r).
      
      The function returns following values
-     0 --> p, q and r are colinear
+     0 --> p, q and r are collinear
      1 --> Clockwise
      2 --> Counterclockwise
      */
     int orientation(PosType p[],PosType q[],PosType r[]);
-    /** \brief Given three colinear points p, q, r, the function checks if
+    /** \brief Given three collinear points p, q, r, the function checks if
      point q lies on line segment 'pr', but not at p or r
      */
     bool onSegment(PosType p[], PosType q[], PosType r[]);
+    
+    /// returns the angle between two 2 dimensional vectors in radians.
+    double AngleBetween2d(double v1[],double v2[]);
 
   }  
 }

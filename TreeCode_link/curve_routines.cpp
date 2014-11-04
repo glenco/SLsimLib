@@ -1914,7 +1914,10 @@ void writeCurves(int m			/// part of te filename, could be the number/index of t
   bool xorderD(double *p1,double *p2){
     return p1[0] < p2[0];
   }
-   
+  bool yorderD(double *p1,double *p2){
+    return p1[1] < p2[1];
+  }
+
   /// Returns a vector of points on the convex hull in counter-clockwise order.
   std::vector<Point *> convex_hull(std::vector<Point *> P)
   {
@@ -2002,29 +2005,37 @@ void writeCurves(int m			/// part of te filename, could be the number/index of t
   {
     
     if(P.size() <= 3){
-      std::vector<double *> H = P;
-      P.resize(0);
+      std::vector<double *> H(P);
       return H;
     }
     
-    size_t n = P.size();
+    if(k < 3) k=3;
+    if( k > P.size() ) k = P.size();
+      
     size_t j = 0;
     std::vector<double *> H;
-    
+    std::vector<double *> Res(P);
+
+    std::sort(Res.rbegin(), Res.rend(), yorderD);
+    H.push_back(Res.back());
+
     std::vector<double> slist(k);
     std::vector<size_t> indexlist(k);
-    double s;
+    double s,v1[2],v2[2];
     
-    while(P.size() > 0){
+    while(Res.size() > 0 && (H[0] != H.back() || j==0)){
+      
+      if(k < Res.size()) k = Res.size();
+      
       // find list of nearest neighbors
       for(size_t kk=0;kk<k;++kk)
-        slist[kk] = (P[kk][0]- H[j][0])*(P[kk][0]- H[j][0]) + (P[kk][0]- H[j][0])*(P[kk][0]- H[j][0]);
+        slist[kk] = (Res[kk][0]- H[j][0])*(Res[kk][0]- H[j][0]) + (Res[kk][1]- H[j][1])*(Res[kk][1]- H[j][1]);
       Utilities::sort_indexes(slist,indexlist);
       std::sort(slist.begin(),slist.end());
       
-      for(size_t kk=k;kk<P.size();++kk){
-        s = (P[kk][0]- H[j][0])*(P[kk][0]- H[j][0]) + (P[kk][0]- H[j][0])*(P[kk][0]- H[j][0]);
-        if(s < slist.back()){
+      for(size_t kk=k;kk<Res.size();++kk){
+        s = (Res[kk][0]- H[j][0])*(Res[kk][0]- H[j][0]) + (Res[kk][1]- H[j][1])*(Res[kk][1]- H[j][1]);
+        if(s < slist.back() && Res[kk] != H[j]){
           slist.back() = s;
           indexlist.back() = kk;
           int ii = slist.size() - 1 ;
@@ -2038,23 +2049,40 @@ void writeCurves(int m			/// part of te filename, could be the number/index of t
       
       
       // find which one has the furthest right hand turn
-      double smax = atan2( P[indexlist[0]][1] - H[j][1], P[indexlist[0]][0] - H[j][0] );
+      if(j > 0){
+        v1[0] = H[j][0] - H[j-1][0];
+        v1[1] = H[j][1] - H[j-1][1];
+      }else{
+        v1[0] = 0;
+        v1[1] = 1.0;
+      }
+      v2[0] = Res[indexlist[0]][0] - H[j][0];
+      v2[1] = Res[indexlist[0]][1] - H[j][1];
+      
+      double smin = Utilities::Geometry::AngleBetween2d( v1, v2 );
       size_t imin = indexlist[0];
       for(int i=1;i<k;++i){
-        s = atan2( P[indexlist[i]][1] - H[j][1], P[indexlist[i]][0] - H[j][0] );
-        if(s > smax){
+        v2[0] = Res[indexlist[i]][0] - H[j][0];
+        v2[1] = Res[indexlist[i]][1] - H[j][1];
+        
+        s = Utilities::Geometry::AngleBetween2d( v1, v2 );
+        if(s < smin){
           imin = indexlist[i];
-          smax = s;
+          smin = s;
         }
       }
       
-      // check for self intersection
+      // check for self intersection  ****
       
       // add point to Hull
-      std::swap(P[imin],P.back());
-      H.push_back(P.back());
-      P.pop_back();
+      std::swap(Res[imin],Res.back());
+      H.push_back(Res.back());
+      ++j;
+      Res.pop_back();
     }
+    
+    // check to make sure all remaining points are within the hull ****
+    
     return H;
   }
 

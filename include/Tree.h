@@ -300,7 +300,7 @@ namespace Utilities{
   bool xorder(Point *p1,Point *p2);
   std::vector<Point *> convex_hull(std::vector<Point *> P);
   std::vector<Point *> shrink_wrap(std::vector<Point *> P);
-  std::vector<Point *> concave_hull(std::vector<Point *> P);
+  std::vector<Point *> concave_hull(std::vector<Point *> &P,int k);
 
 	long IndexFromPosition(PosType *x,long Npixels,PosType range,const PosType *center);
 	void PositionFromIndex(unsigned long i,PosType *x,long Npixels,PosType range,PosType const *center);
