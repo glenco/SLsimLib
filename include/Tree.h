@@ -299,7 +299,7 @@ namespace Utilities{
   PosType cross(const Point *O, const Point *A, const Point *B);
   bool xorder(Point *p1,Point *p2);
   std::vector<Point *> convex_hull(std::vector<Point *> P);
-  std::vector<Point *> shrink_rap(std::vector<Point *> P);
+  std::vector<Point *> shrink_wrap(std::vector<Point *> P);
   std::vector<Point *> concave_hull(std::vector<Point *> P);
 
 	long IndexFromPosition(PosType *x,long Npixels,PosType range,const PosType *center);
@@ -512,7 +512,7 @@ namespace Utilities{
 	unsigned long order_curve4(Kist<Point> * curve);
   unsigned long order_curve5(Kist<Point> * curve);
   void ordered_convexhull(Kist<Point> * curve);
-  void ordered_shrink_rap(Kist<Point> * curve);
+  void ordered_shrink_wrap(Kist<Point> * curve);
   PosType ConvexHullArea(Kist<Point> * curve);
 }
 bool order_ExteriorBoundary(Point *curve,long Npoints,long *NewNpoints,PosType *area);

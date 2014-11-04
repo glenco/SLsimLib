@@ -294,7 +294,7 @@ void TreeStruct::_NearestNeighbor(PosType* ray,int Nneighbors,Point **neighborpo
   return;
 }
 
-// returns true if branch1 is fully inside barnch2
+/// returns true if branch1 is fully inside barnch2
 bool boxinbox(Branch *branch1,Branch *branch2){
 
 	if( branch1 == branch2 ) return true;
@@ -304,8 +304,8 @@ bool boxinbox(Branch *branch1,Branch *branch2){
 
 	return true;
 }
+/// returns area of intersection between two branches
 PosType BoxIntersection(Branch *branch1,Branch *branch2){
-	// returns area of intersection between two branches
 	PosType area=0;
 
 	area = MIN(branch1->boundary_p2[0],branch2->boundary_p2[0])

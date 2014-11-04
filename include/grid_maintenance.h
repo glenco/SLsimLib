@@ -64,6 +64,104 @@ struct Grid{
   void writePixelMapUniform(PixelMap &map,LensingVariable lensvar);
   void writeFitsUniform(const PosType center[],size_t Nx,size_t Ny,LensingVariable lensvar,std::string filename);
 
+  
+  PosType TotalAreaInCaustic(int N,std::list<Branch *> branches){
+
+    branches.clear();
+    PosType area = 0.0;
+    bool decend;
+    i_tree->moveTop();
+    do{
+      
+      if(i_tree->current->child1->npoints < N || i_tree->current->child2->npoints < N){
+        i_tree->pointlist->current = i_tree->current->points;
+        
+        for(int ii = 0;ii<i_tree->current->npoints;MoveDownList(i_tree->pointlist),++ii){
+          if(i_tree->pointlist->current->invmag < 0){
+            area += i_tree->current->area();
+            branches.push_back(i_tree->current);
+            break;
+          }
+        }
+        
+        decend = false;
+      }else{
+        
+        decend = true;
+      }
+      
+    }while(i_tree->TreeWalkStep(decend));
+
+    return area;
+  }
+  
+  PosType AreaInCaustic(Kist<Point> * critcurve,int N,std::list<Branch *> branches){
+    
+    if(critcurve->Nunits() <3) return 0.0;
+
+    Point point;
+    PosType area=0.0;
+    std::vector<Point *> copy;
+    copy.resize(critcurve->Nunits());
+    size_t i;
+    
+    critcurve->TranformPlanes();
+    for(i=0,critcurve->MoveToTop();!(critcurve->OffBottom());critcurve->Down(),++i){
+      copy[i] = critcurve->getCurrent();
+    }
+    critcurve->TranformPlanes();
+    
+    std::vector<Point *> hull = Utilities::convex_hull(copy);
+    
+    if(hull.size() == copy.size()){  // a convex caustic
+      Utilities::windings(hull[0]->x,hull.data(),hull.size(),&area);
+      return area;
+    }
+    
+    // find square boundary around caustic
+    PosType boundary_p1[2],boundary_p2[2];
+    boundary_p1[0] = boundary_p2[0] = hull[0]->x[0];
+    boundary_p1[1] = boundary_p2[1] = hull[0]->x[1];
+    for(size_t ii = 1; ii < hull.size(); ++ii){
+      boundary_p1[0] = MIN(boundary_p1[0],hull[ii]->x[0]);
+      boundary_p1[1] = MIN(boundary_p1[1],hull[ii]->x[1]);
+      
+      boundary_p2[0] = MAX(boundary_p1[0],hull[ii]->x[0]);
+      boundary_p2[1] = MAX(boundary_p1[1],hull[ii]->x[1]);
+    }
+      
+    i_tree->current = hull[0]->leaf;
+    while(inbox(i_tree->current->boundary_p1,boundary_p1,boundary_p2) ||
+          inbox(i_tree->current->boundary_p2,boundary_p1,boundary_p2) ) i_tree->moveUp();
+    
+    Branch *root = i_tree->current;
+    branches.clear();
+    bool decend;
+    do{
+      if(i_tree->current)
+      if(i_tree->current->child1->npoints < N || i_tree->current->child2->npoints < N){
+        i_tree->pointlist->current = i_tree->current->points;
+        
+        for(int ii = 0;ii<i_tree->current->npoints;MoveDownList(i_tree->pointlist),++ii){
+          if(i_tree->pointlist->current->invmag < 0){
+            area += i_tree->current->area();
+            branches.push_back(i_tree->current);
+            break;
+          }
+        }
+        
+        decend = false;
+      }else{
+        
+        decend = true;
+      }
+      
+    }while(i_tree->TreeWalkStep(decend) && i_tree->current != root->brother);
+    
+    return area;
+  }
+  
+
 private:
   void xygridpoints(Point *points,double range,const double *center,long Ngrid
                           ,short remove_center);

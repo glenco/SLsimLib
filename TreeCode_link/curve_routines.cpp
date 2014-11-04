@@ -347,7 +347,7 @@ unsigned long order_curve4(Point *curve,long Npoints){
   }
   
   /// Replaces curve->imagekist with its convex hull.  The number of points will change.
-  void ordered_shrink_rap(Kist<Point> * curve){
+  void ordered_shrink_wrap(Kist<Point> * curve){
     int i;
     std::vector<Point *> copy;
     copy.resize(curve->Nunits());
@@ -357,7 +357,7 @@ unsigned long order_curve4(Point *curve,long Npoints){
       copy[i] = curve->getCurrent();
     }
     
-    std::vector<Point *> hull = Utilities::shrink_rap(copy);
+    std::vector<Point *> hull = Utilities::shrink_wrap(copy);
     curve->copy(hull);
     
     return;
@@ -377,6 +377,7 @@ unsigned long order_curve4(Point *curve,long Npoints){
     return fabs(area);
   }
 }
+
 
 /**
  *
@@ -1954,6 +1955,8 @@ void writeCurves(int m			/// part of te filename, could be the number/index of t
     return H;
   }
   
+  
+  
   /// Returns a vector of points on the convex hull in counter-clockwise order.
   std::vector<double *> convex_hull(std::vector<double *> P)
   {
@@ -1993,12 +1996,79 @@ void writeCurves(int m			/// part of te filename, could be the number/index of t
     
     return H;
   }
-  
+ 
+  /// Returns a vector of points on the convex hull in counter-clockwise order.
+  std::list<double *> concave_hull(std::list<double *> P,int k)
+  {
+    
+    if(P.size() <= 3){
+      std::list<double *> H = P;
+      P.resize(0);
+      return H;
+    }
+    
+    size_t n = P.size();
+    size_t j = 0;
+    std::list<double *> H;
+    
+    // Sort points lexicographically
+    std::sort(P.begin(), P.end(), xorderD);
+    
+    H.push_back(P.front());
+    P.pop_front();
+    
+    std::sort(P.begin(),P.end(),[&H](double *x1,double *x2) {return
+      ( (H.back()[0]-x1[0])*(H.back()[0]-x1[0]) + (H.back()[1]-x1[1])*(H.back()[1]-x1[1]) ) <
+      ( (H.back()[0]-x2[0])*(H.back()[0]-x2[0]) + (H.back()[1]-x2[1])*(H.back()[1]-x2[1]) );});
+    
+    PosType s[2],p[2];
+    std::list<double *>::iterator ith_last = H.begin();
+    std::list<double *>::iterator
+    s[0] = H[j][0] - H[j-1][0];
+    s[1] = H[j][1] - H[j-1][1];
+    
+    p[0] = P[i][0] - H[j][0];
+    p[1] = P[i][1] - H[j][1];
+    
+    
+    maxcross = crossD(H[j-1], H[j], P[0]);
+    for(int i = 0;i<k;++i){
+      
+      tmp = crossD(H[j-1], H[j], P[i]);
+      if(tmp > macross){
+        maxcross = tmp;
+        i_add = i;
+      }
+    }
+    
+    // Build lower hull
+    for (size_t i = 0; i < n; i++) {
+      while (k >= 2 && crossD(H[k-2], H[k-1], P[i]) <= 0){
+        j--;
+      }
+      H[k++] = P[i];
+    }
+    
+    // Build upper hull
+    for (long i = n-2, t = k+1; i >= 0; i--) {
+      while (k >= t && crossD(H[k-2], H[k-1], P[i]) <= 0){
+        k--;
+      }
+      H[k++] = P[i];
+    }
+    
+    
+    H.resize(k);
+    H.pop_back();
+    */
+    return H;
+  }
+
   /** Orders the points in P according to a iterative minimum curvature method
    that seeks to find the boundery of the region while minimizing curvature and 
    not allowing self intersection
    */
-  std::vector<Point *> shrink_rap(std::vector<Point *> P)
+  std::vector<Point *> shrink_wrap(std::vector<Point *> P)
   {
     
     if(P.size() <= 3){

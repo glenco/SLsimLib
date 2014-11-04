@@ -611,7 +611,7 @@ void ImageFinding::find_crit2(
 //		  NewNumber = Utilities::order_curve5(critcurve[i].imagekist);
       
       //Utilities::ordered_convexhull(critcurve[i].imagekist);
-      Utilities::ordered_shrink_rap(critcurve[i].imagekist);
+      Utilities::ordered_shrink_wrap(critcurve[i].imagekist);
       
 /*		  if(NewNumber != critcurve[i].imagekist->Nunits() ){
         std::cout << "find_crit2(), i = " << i << " ordering curve NewNumber = " << NewNumber << " oldnumber = " << critcurve[i].imagekist->Nunits() << std::endl;
