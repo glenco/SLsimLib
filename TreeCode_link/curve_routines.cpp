@@ -1998,69 +1998,63 @@ void writeCurves(int m			/// part of te filename, could be the number/index of t
   }
  
   /// Returns a vector of points on the convex hull in counter-clockwise order.
-  std::list<double *> concave_hull(std::list<double *> P,int k)
+  std::vector<double *> concave_hull(std::vector<double *> P,int k)
   {
     
     if(P.size() <= 3){
-      std::list<double *> H = P;
+      std::vector<double *> H = P;
       P.resize(0);
       return H;
     }
     
     size_t n = P.size();
     size_t j = 0;
-    std::list<double *> H;
+    std::vector<double *> H;
     
-    // Sort points lexicographically
-    std::sort(P.begin(), P.end(), xorderD);
+    std::vector<double> slist(k);
+    std::vector<size_t> indexlist(k);
+    double s;
     
-    H.push_back(P.front());
-    P.pop_front();
-    
-    std::sort(P.begin(),P.end(),[&H](double *x1,double *x2) {return
-      ( (H.back()[0]-x1[0])*(H.back()[0]-x1[0]) + (H.back()[1]-x1[1])*(H.back()[1]-x1[1]) ) <
-      ( (H.back()[0]-x2[0])*(H.back()[0]-x2[0]) + (H.back()[1]-x2[1])*(H.back()[1]-x2[1]) );});
-    
-    PosType s[2],p[2];
-    std::list<double *>::iterator ith_last = H.begin();
-    std::list<double *>::iterator
-    s[0] = H[j][0] - H[j-1][0];
-    s[1] = H[j][1] - H[j-1][1];
-    
-    p[0] = P[i][0] - H[j][0];
-    p[1] = P[i][1] - H[j][1];
-    
-    
-    maxcross = crossD(H[j-1], H[j], P[0]);
-    for(int i = 0;i<k;++i){
+    while(P.size() > 0){
+      // find list of nearest neighbors
+      for(size_t kk=0;kk<k;++kk)
+        slist[kk] = (P[kk][0]- H[j][0])*(P[kk][0]- H[j][0]) + (P[kk][0]- H[j][0])*(P[kk][0]- H[j][0]);
+      Utilities::sort_indexes(slist,indexlist);
+      std::sort(slist.begin(),slist.end());
       
-      tmp = crossD(H[j-1], H[j], P[i]);
-      if(tmp > macross){
-        maxcross = tmp;
-        i_add = i;
+      for(size_t kk=k;kk<P.size();++kk){
+        s = (P[kk][0]- H[j][0])*(P[kk][0]- H[j][0]) + (P[kk][0]- H[j][0])*(P[kk][0]- H[j][0]);
+        if(s < slist.back()){
+          slist.back() = s;
+          indexlist.back() = kk;
+          int ii = slist.size() - 1 ;
+          while(slist[ii] < slist[ii-1] && ii > 0){
+            std::swap(slist[ii],slist[ii-1]);
+            std::swap(indexlist[ii],indexlist[ii-1]);
+            --ii;
+          }
+        }
       }
-    }
-    
-    // Build lower hull
-    for (size_t i = 0; i < n; i++) {
-      while (k >= 2 && crossD(H[k-2], H[k-1], P[i]) <= 0){
-        j--;
+      
+      
+      // find which one has the furthest right hand turn
+      double smax = atan2( P[indexlist[0]][1] - H[j][1], P[indexlist[0]][0] - H[j][0] );
+      size_t imin = indexlist[0];
+      for(int i=1;i<k;++i){
+        s = atan2( P[indexlist[i]][1] - H[j][1], P[indexlist[i]][0] - H[j][0] );
+        if(s > smax){
+          imin = indexlist[i];
+          smax = s;
+        }
       }
-      H[k++] = P[i];
+      
+      // check for self intersection
+      
+      // add point to Hull
+      std::swap(P[imin],P.back());
+      H.push_back(P.back());
+      P.pop_back();
     }
-    
-    // Build upper hull
-    for (long i = n-2, t = k+1; i >= 0; i--) {
-      while (k >= t && crossD(H[k-2], H[k-1], P[i]) <= 0){
-        k--;
-      }
-      H[k++] = P[i];
-    }
-    
-    
-    H.resize(k);
-    H.pop_back();
-    */
     return H;
   }
 
