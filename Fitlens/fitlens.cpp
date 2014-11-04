@@ -34,7 +34,7 @@ void LensHaloFit::FindLensSimple(
 	}
 
 	FindLensSimple(imageinfo,Nimages,y,dx_sub);
-	
+      
 	delete[] imageinfo;
 }
 /** \ingroup FitLens
@@ -79,7 +79,7 @@ void LensHaloFit::FindLensSimple(
 	double **xob,**xg,q[6],*mods;
 	double re2 = 0,x_center[2],scale;
 
-	xob = dmatrix(0,Nimages-1,0,1);
+  xob = dmatrix(0,Nimages-1,0,1);
 	xg = dmatrix(0,1,0,1);
 	mods=dvector(0,perturb_Nmodes + 2*Nsources + 1 );
 
@@ -108,7 +108,7 @@ void LensHaloFit::FindLensSimple(
 	//ERROR_MESSAGE();
 	ElliptisizeLens(Nimages,Nsources,1,pairing,xob,x_center,xg,0,perturb_beta
 			,perturb_Nmodes-1,mods,dx_sub,&re2,q);
-
+      
 	for(i=1;i<perturb_Nmodes;++i) perturb_modes[i] = mods[i];
 
 	// source position
@@ -133,7 +133,10 @@ void LensHaloFit::FindLensSimple(
 	free_dmatrix(xob,0,Nimages-1,0,1);
 	free_dmatrix(xg,0,1,0,1);
 	free_dvector(mods,0,perturb_Nmodes + 2*Nsources + 1);
-
+      
+  // storing q :
+  for(int i = 0 ; i < 7 ; i++) qpriv[i] = q[i] ;
+  
 	return ;
 }
 
@@ -224,11 +227,11 @@ double LensHaloFit::ElliptisizeLens(
 		xgT[i][0] = xg[i][0];
 		xgT[i][1] = xg[i][1];
 	}
-
-	// find lens with degeneracy information
+      
+  // find lens with degeneracy information
 	//ERROR_MESSAGE();
 	find_lens(NimagesT,NsourcesT,pairingT,xobT,x_center,betaT,NmodT,&degenT,modT,vT,dx_subT);
-
+   
 	//std::printf("found model\n");
 	for(i=1;i<=Nmod + 2*Nsources;++i) mod[i] = modT[i];
 
@@ -327,10 +330,10 @@ double minEllip(double *par){
 				+(105+1436*q*q+3062*q*q*q*q+1436*pow(q,6)+105*pow(q,8))*K )
 				/(105*pi*pow(1-q*q,4))/(1-64);
 	}
-
+  
 	// rotate model
 	RotateModel(theta,modoT,NmodT,NsourcesT);   // xobT is used as a dumby variable
-
+  
 	x_center[0]=x_centerT[0];
 	x_center[1]=x_centerT[1];
 
@@ -361,10 +364,10 @@ double minEllip(double *par){
 		}
 		find_lens(NimagesT,NsourcesT,pairingT,xobT,x_center,betaT,NmodT,&degenT,modT,vT,dx_subTt);
 	}
-
+  
 	// find most elliptical model
 	sm=regularize(NmodT,3,NmodT,NsourcesT,degenT,modT,vT,modoT);
-
+  
 	if( sm < oldsm || oldsm < 0.0){
 		oldsm=sm;
 		for(i=1;i<=NmodT+2*NsourcesT;++i) modTT[i]=modT[i];
@@ -510,6 +513,18 @@ void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *x_cent
 }
 
 
+/**
+ *   Sets the perturbation modes in the AnaLens
+ *
+ */
+void LensHaloFit::set_perturbmodes(PosType * ListModes, int Nmodes)
+{
+  perturb_Nmodes = Nmodes ;
+  for(int i=0; i < Nmodes; i++) perturb_modes[i] = ListModes[i];
+  return ;
+}
+
+
 /** \ingroup FitLensL2
  *
 * \brief  calculate the sources position, surface density and magnification at x
@@ -529,13 +544,13 @@ double LensHaloAnaNSIE::deflect_translated(double beta,double *mod,double *x,dou
 
   // use deflection calculator to reduce code duplication
   kappa = lens_expand(beta,mod,Nmodes,x,y,gamma,phi);
-
+  
   // translate result to convention used here
 
   /// changed from alpha to y,  also convention on shear is opposite
   y[0] = x[0] + 2*(x[0]*mod[1] + x[1]*mod[2]) - y[0];
   y[1] = x[1] - 2*(x[1]*mod[1] + x[0]*mod[2]) - y[1];
-
+  
   mag[0] = 1 - kappa - gamma[0];
   mag[1] = 1 - kappa + gamma[0];
   mag[3] = -gamma[1];
@@ -630,7 +645,7 @@ double regularize(int Nmax,int Nmin,int N,int Nsources,int degen
 		  ,double *mod,double **v,double *modo){
   double Dsum,sum=0,sumold,aa,*weights;
 
-
+  
   int i,j;
 
   /*
@@ -649,7 +664,7 @@ double regularize(int Nmax,int Nmin,int N,int Nsources,int degen
     else Dsum += pow(1-pow(i/2,2.),2)*pow( mod[i]-modo[i],2);
   }
   sumold=Dsum;
-
+  
   while(Dsum > 1.0e-6*sumold){
 
     if(modo[3] != 0.0){
@@ -668,7 +683,7 @@ double regularize(int Nmax,int Nmin,int N,int Nsources,int degen
     	if(aa > 0.0) for(i=3;i<=Nmax;++i) modo[i]*=aa;
     }
     /** move in degenerate space to find best model **/
-	for(j=1;j<=degen;++j){
+    for(j=1;j<=degen;++j){
       for(i=Nmin,sum=0.0;i<=Nmax;i+=1){
     	  if(i<=3) sum += ( mod[i] - modo[i]  )*v[i][j];
     	  else sum += pow(1-pow(i/2,2.),2.)*( mod[i] - modo[i]  )*v[i][j];
@@ -686,7 +701,7 @@ double regularize(int Nmax,int Nmin,int N,int Nsources,int degen
       }
       if(sum < 0) std::printf("max found\n");
       /*std::printf("weights[%i]=%e\n",j,weights[j]);*/
-	}
+    }
 
     for(i=Nmin,sum=0.0;i<=Nmax;i+=1){
       if(i<=3) sum += pow(mod[i]-modo[i],2);
