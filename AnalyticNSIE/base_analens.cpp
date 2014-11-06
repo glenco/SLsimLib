@@ -199,11 +199,23 @@ void LensHaloAnaNSIE::setCosmology(const COSMOLOGY& cosmo)
 	Dls = cosmo.angDist(zlens,zsource_reference);
 	MpcToAsec = 60*60*180 / pi / Dl;
 		// in Mpc
-	//Einstein_ro=4*pi*pow(sigma/lightspeed,2)*Dl
-	//	*Dls/Ds;
+	Einstein_ro=4*pi*pow(sigma/lightspeed,2)*Dl
+		*Dls/Ds;
 	// find critical density
 	Sigma_crit=Ds/Dls/Dl/4/pi/Grav;
 	to = (1+zlens)*Ds/Dls/Dl/8.39428142e-10;
+}
+void LensHaloFit::setCosmology(const COSMOLOGY& cosmo)
+{
+  PosType zlens = getZlens();
+  Dl = cosmo.angDist(0,zlens);
+  Ds = cosmo.angDist(0,zsource_reference);
+  Dls = cosmo.angDist(zlens,zsource_reference);
+  MpcToAsec = 60*60*180 / pi / Dl;
+
+  // find critical density
+  Sigma_crit=Ds/Dls/Dl/4/pi/Grav;
+  to = (1+zlens)*Ds/Dls/Dl/8.39428142e-10;
 }
 
 

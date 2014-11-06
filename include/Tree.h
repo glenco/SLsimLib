@@ -294,13 +294,13 @@ namespace Utilities{
 	int cutbox(const PosType* center,PosType *p1,PosType *p2,float rmax);
 	void log_polar_grid(Point *i_points,PosType rmax,PosType rmin,PosType *center,long Ngrid);
 	void findarea(ImageInfo *imageinfo);
-	int windings2(PosType *x,Point *points,unsigned long Npoints,PosType *area,short image);
 	void writeCurves(int m, ImageInfo *critical, int Ncrit, int index);
   PosType cross(const Point *O, const Point *A, const Point *B);
   bool xorder(Point *p1,Point *p2);
+  bool yorder(Point *p1,Point *p2);
   std::vector<Point *> convex_hull(std::vector<Point *> P);
   std::vector<Point *> shrink_wrap(std::vector<Point *> P);
-  std::vector<Point *> concave_hull(std::vector<Point *> &P,int k);
+  std::vector<Point *> concave_hull(std::vector<Point *> P,int k);
 
 	long IndexFromPosition(PosType *x,long Npixels,PosType range,const PosType *center);
 	void PositionFromIndex(unsigned long i,PosType *x,long Npixels,PosType range,PosType const *center);
@@ -497,9 +497,11 @@ namespace Utilities{
 	};
 	unsigned long prevpower(unsigned long k);
 
-        int windings(PosType *x,Point *points,unsigned long Npoints,PosType *area,short image = 0 );
-        int windings(PosType *x,Point **points,unsigned long Npoints,PosType *area,short image = 0 );
+  int windings(PosType *x,Point *points,unsigned long Npoints,PosType *area,short image = 0 );
+  int windings(PosType *x,Point **points,unsigned long Npoints,PosType *area,short image = 0 );
 	int windings(PosType *x,Kist<Point> * kist,PosType *area,short image = 0);
+  int windings2(PosType *x,Point *points,unsigned long Npoints,PosType *area,short image);
+  int incurve(PosType x[],std::vector<Point *> curve);
 }
 // in curve_routines.c
 void nesting_curve(OldImageInfo *curves,int Ncurves);
@@ -513,6 +515,7 @@ namespace Utilities{
   unsigned long order_curve5(Kist<Point> * curve);
   void ordered_convexhull(Kist<Point> * curve);
   void ordered_shrink_wrap(Kist<Point> * curve);
+  void ordered_concavehull(Kist<Point> * curve);
   PosType ConvexHullArea(Kist<Point> * curve);
 }
 bool order_ExteriorBoundary(Point *curve,long Npoints,long *NewNpoints,PosType *area);

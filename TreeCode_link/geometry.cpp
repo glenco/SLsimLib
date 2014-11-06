@@ -114,10 +114,10 @@ bool Utilities::Geometry::intersect(PosType a1[],PosType a2[],PosType b1[],PosTy
 int Utilities::Geometry::orientation(PosType p[],PosType q[],PosType r[])
 {
   // See 10th slides from following link for derivation of the formula
-  int val = (q[1] - p[1]) * (r[0] - q[0]) -
+  double val = (q[1] - p[1]) * (r[0] - q[0]) -
   (q[0] - p[0]) * (r[1] - q[1]);
   
-  if (val == 0) return 0;  // colinear
+  if (val == 0.0) return 0;  // colinear
   
   return (val > 0)? 1: 2; // clock or counterclock wise
 }
@@ -139,3 +139,28 @@ double Utilities::Geometry::AngleBetween2d(double v1[],double v2[]){
 
   return atan2(y, x);
 }
+
+int Utilities::Geometry::incurve(PosType x[],std::vector<double *> curve){
+  int number = 0;
+  size_t i;
+  
+  Point point;
+  for(i=0;i<curve.size()-1;++i){
+    
+    if( (x[1] >= curve[i][1])*(x[1] < curve[i+1][1]) ){
+      if(Utilities::Geometry::orientation(curve[i], x, curve[i+1]) <= 1) ++number;
+    }else if( (x[1] <= curve[i][1])*(x[1] > curve[i+1][1]) ){
+      if(Utilities::Geometry::orientation(curve[i], x, curve[i+1]) == 2) --number;
+    }
+    
+  }
+  
+  if( (x[1] >= curve[i][1])*(x[1] < curve[0][1]) ){
+    if(Utilities::Geometry::orientation(curve[i], x, curve[0]) <= 1) ++number;
+  }else if( (x[1] <= curve[i][1])*(x[1] > curve[0][1]) ){
+    if(Utilities::Geometry::orientation(curve[i], x, curve[0]) == 2) --number;
+  }
+  
+  return number;
+}
+

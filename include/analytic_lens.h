@@ -126,7 +126,7 @@ public:
   double FractionWithinRe(double rangeInRei);
   void PrintLens(bool show_substruct,bool show_stars);
   
-  void setCosmology(const COSMOLOGY& cosmo);
+  virtual void setCosmology(const COSMOLOGY& cosmo);
   
   // in randoimize_lens.c
   void RandomizeHost(long *seed,bool tables);

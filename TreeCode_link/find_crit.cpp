@@ -610,7 +610,8 @@ void ImageFinding::find_crit2(
 //		  NewNumber = Utilities::order_curve4(critcurve[i].imagekist);
 //		  NewNumber = Utilities::order_curve5(critcurve[i].imagekist);
       
-      Utilities::ordered_convexhull(critcurve[i].imagekist);
+      //Utilities::ordered_convexhull(critcurve[i].imagekist);
+      Utilities::ordered_concavehull(critcurve[i].imagekist);
       //Utilities::ordered_shrink_wrap(critcurve[i].imagekist);
       
 /*		  if(NewNumber != critcurve[i].imagekist->Nunits() ){

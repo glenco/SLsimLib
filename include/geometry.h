@@ -63,6 +63,13 @@ namespace Utilities {
     
     /// returns the angle between two 2 dimensional vectors in radians.
     double AngleBetween2d(double v1[],double v2[]);
+    /** \brief returns number of times curve winds around point x[]
+     *
+     *  > 0 is clockwise
+     *
+     *  This is faster than the windings() functions which also calulate the area
+     */
+    int incurve(PosType x[],std::vector<double *> curve);
 
   }  
 }

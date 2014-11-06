@@ -104,6 +104,10 @@ LensHaloAnaNSIE::LensHaloAnaNSIE(InputParams& params, bool verbose) : LensHaloBa
   
   if(verbose) PrintLens(false,false);
 }
+LensHaloAnaNSIE::~LensHaloAnaNSIE(){
+  if(perturb_Nmodes) delete [] perturb_modes;
+}
+
 LensHaloFit::LensHaloFit(const COSMOLOGY& cosmo) : LensHaloBaseNSIE(){
   
   //assignParams(params);
