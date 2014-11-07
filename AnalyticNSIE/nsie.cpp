@@ -286,10 +286,6 @@ KappaType LensHaloBaseNSIE::phiNSIE(PosType const *xt    /// position on the ima
     // Calculating the modes necessary to ellipticize phi : OLD METHOD -- DOES NOT WORK !
     // ====================================================
 
-    //for(int i=0;i<perturb_Nmodes;i++) { std::cout << perturb_modes[i] << "  " ; }
-    //std::cout << std::endl ;
-    
-    // PosType tmp_pert_modes[Nmod];
     // calcModes(f, 2-beta, theta, tmp_pert_modes);
     
     // main_perturbation beta  -> perturb_beta
@@ -300,24 +296,18 @@ KappaType LensHaloBaseNSIE::phiNSIE(PosType const *xt    /// position on the ima
     // main_perturb_hexopole   -> perturb_rms[4]
     // main_perturb_octopole   -> perturb_rms[5]
     
-    // perturb_modes[0] = 1. ;  // perturbation kappa
-    // perturb_modes[1] = 0.03;  // perturbation gamma1
-    // perturb_modes[2] = 0.03;  // perturbation gamma2
-    // perturb_modes[3] = 0.0;   // Monopole
-    // perturb_modes[4] = 0.005; // Quadrupole
-    // perturb_modes[5] = 0.005; // Hexapole
-    // perturb_modes[6] = 0.01;  // Octupole
-    
-    // std::cout << "perturbation modes extracted from phiNSIE : " << std::endl ;
-    // for(int i=0;i<perturb_Nmodes;i++) { std::cout << perturb_modes[i] << "  " ; }
-    // std::cout << std::endl << std::endl ;
-    
-    
+    // perturb_modes[0] = perturbation kappa
+    // perturb_modes[1] = perturbation gamma1
+    // perturb_modes[2] = perturbation gamma2
+    // perturb_modes[3] = Monopole
+    // perturb_modes[4] = Quadrupole
+    // perturb_modes[5] = Hexapole
+    // perturb_modes[6] = Octupole
 
     
     // Computing phi from the method in lens_expand :
     // ==============================================
-    
+    /*
     PosType tmp_theta, cosx, sinx, cos2theta, sin2theta ;
     PosType F, F1, F2;
     int i, k;
@@ -341,48 +331,12 @@ KappaType LensHaloBaseNSIE::phiNSIE(PosType const *xt    /// position on the ima
     sin2theta=2*cosx*sinx;
     
     return F*pow(r,beta) + r*r*(perturb_modes[0] + perturb_modes[1]*cos2theta + perturb_modes[2]*sin2theta)/2;
-    
-    
-    // Test :
-    // Compare kappa, gamma, alpha as computed with lens_expand with kappaNSIE, gammaNSIE, alphaNSIE
-    // in order to validate the elliptisation of phi.
-    /*
-    bool test = false ;
-    
-    KappaType kappa_tmp, gamma_tmp, phi_tmp;
-    kappa_tmp = gamma_tmp = phi_tmp = 0.;
-    PosType * alpha_tmp = new PosType ;
-    
-    // Computing all quantities with lens_expand :
-    kappa_tmp = lens_expand(beta, tmp_pert_modes, perturb_Nmodes, xt, alpha_tmp, &gamma_tmp, &phi_tmp);
-    
-    
-    // Computing alpha with NSIE function :
-    PosType * alpha_tmpNew = new PosType ;
-    alphaNSIE(alpha_tmpNew, xt, f, beta, theta);
-    
-    // Computing kappa with NSIE function :
-    KappaType kappa_tmpNew = kappaNSIE(xt, f, beta, theta);
-    
-    // Showing comparison :
-    std::cout << "Comparison alpha1 : " << alpha_tmp[0] << "  " << alpha_tmpNew[0] << std::endl;
-    std::cout << "Comparison alpha2 : " << alpha_tmp[1] << "  " << alpha_tmpNew[1] << std::endl;
-    std::cout << "Comparison kappa : " << kappa_tmp << "  " << kappa_tmpNew << std::endl;
-    
-    // if(alpha_tmp[0] == alpha_tmp[1] && alpha_tmp[1] == alpha_tmpNew[1]) test = true ;
-    
-    
-    // Returning phi given by lens_expand :
-    // ====================================
-    
-    if (test == true) {
-      return F*pow(r,beta) + r*r*(mod[0] + mod[1]*cos2theta + mod[2]*sin2theta)/2;
-    }
-    else {
-      return 0. ;
-    }
     */
     
+    // Possible test :
+    // Compare kappa, gamma, alpha as computed with lens_expand with kappaNSIE, gammaNSIE, alphaNSIE
+    // in order to validate the elliptization of phi.
+     
   }
 
 }

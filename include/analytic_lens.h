@@ -29,7 +29,7 @@ public:
   void FindLensSimple(int Nimages,Point *image_positions,double *y,double **dx_sub);
   void FindLensSimple(ImageInfo *imageinfo ,int Nimages ,double *y,double **dx_sub);
   
-  // these need to be written so that they translate between modes and thes quantities
+  // these need to be written so that they translate between modes and these quantities
   /// get the velocity dispersion
   virtual PosType get_sigma(){return 0.0;};
   /// get the axis ratio
@@ -39,14 +39,22 @@ public:
   /// get the core radius
   virtual PosType get_rcore(){return 0.0;};
   
-  int getNmodes(){return perturb_Nmodes;};
   
-  void set_perturbmodes(PosType * ListModes, int Nmodes);
-  void get_perturbmodes(PosType * ListModes)
+  /// Initialise the lens with velocity dispersion, axis ratio, position angle and core radius
+  void InitializeLensHaloFit(PosType my_sigma, PosType my_fratio, PosType my_pa, PosType my_rcore)
   {
-    for(int i=0; i < perturb_Nmodes; i++) ListModes[i] = perturb_modes[i];
-    return ;
-  };
+    sigma = my_sigma ; fratio = my_fratio ; pa = my_pa ; rcore = my_rcore ;
+  }
+  
+  /// set the number of perturbation modes -- Does the same as LensHaloBaseNSIE::getPerturb_Nmodes().
+  int setNmodes(int my_Nmodes){perturb_Nmodes = my_Nmodes;};
+  /// get the number of perturbation modes
+  int getNmodes(){return perturb_Nmodes;};
+  /// set the perturbation modes
+  void set_perturbmodes(PosType * ListModes, const int Nmodes);
+  /// get the perturbation modes
+  void get_perturbmodes(PosType * ListModes, const int Nmodes);
+  /// get the ouput of ElliptisizeLens :
   double * getq() { return qpriv; };
 
 
@@ -126,7 +134,7 @@ public:
   double FractionWithinRe(double rangeInRei);
   void PrintLens(bool show_substruct,bool show_stars);
   
-  virtual void setCosmology(const COSMOLOGY& cosmo);
+  void setCosmology(const COSMOLOGY& cosmo);
   
   // in randoimize_lens.c
   void RandomizeHost(long *seed,bool tables);

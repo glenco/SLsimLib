@@ -514,15 +514,32 @@ void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *x_cent
 
 
 /**
- *   Sets the perturbation modes in the AnaLens
+ *   Sets the perturbation modes in the LensHaloFit
  *
  */
-void LensHaloFit::set_perturbmodes(PosType * ListModes, int Nmodes)
+void LensHaloFit::set_perturbmodes(PosType * ListModes, const int Nmodes)
 {
   perturb_Nmodes = Nmodes ;
   for(int i=0; i < Nmodes; i++) perturb_modes[i] = ListModes[i];
   return ;
 }
+
+/**
+ *   Gets the perturbation modes in the LensHaloFit
+ *
+ */
+void LensHaloFit::get_perturbmodes(PosType * ListModes, const int Nmodes)
+{
+  assert(Nmodes == perturb_Nmodes);
+  
+  for(int i=0; i < perturb_Nmodes; i++)
+  {
+    ListModes[i] = perturb_modes[i] ;
+    std::cout << "i = " << i << std::endl ;
+  }
+  return ;
+};
+
 
 
 /** \ingroup FitLensL2
