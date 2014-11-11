@@ -107,7 +107,7 @@ void LensHaloBaseNSIE::force_halo(
   if(stars_N > 0 && stars_implanted){
     force_stars(alpha,kappa,gamma,xcm);
   }
-
+  
   return ;
 }
 

@@ -1004,7 +1004,7 @@ void LensHaloRealNSIE::force_halo(
   
 	PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
 	if(rcm2 < 1e-20) rcm2 = 1e-20;
-  
+
 	if(rcm2 < Rmax*Rmax)
     {
 		//PosType ellipR = ellipticRadiusNSIE(xcm,fratio,pa);
