@@ -1823,10 +1823,13 @@ int windings2(
     int number = 0;
     size_t i;
     
+    // The reason this does not return the winding number is because horizontal
+    //  sections of the curve can be overcounted if they are colinear with x
+    
     Point point;
     for(i=0;i<curve.size()-1;++i){
       
-      if( (x[1] >= curve[i]->x[1])*(x[1] < curve[i+1]->x[1]) ){
+      if( (x[1] >= curve[i]->x[1])*(x[1] <= curve[i+1]->x[1]) ){
         if(Utilities::Geometry::orientation(curve[i]->x, x, curve[i+1]->x) <= 1) ++number;
       }else if( (x[1] <= curve[i]->x[1])*(x[1] > curve[i+1]->x[1]) ){
         if(Utilities::Geometry::orientation(curve[i]->x, x, curve[i+1]->x) == 2) --number;
@@ -1834,13 +1837,13 @@ int windings2(
       
     }
     
-    if( (x[1] >= curve[i]->x[1])*(x[1] < curve[0]->x[1]) ){
+    if( (x[1] >= curve[i]->x[1])*(x[1] <= curve[0]->x[1]) ){
       if(Utilities::Geometry::orientation(curve[i]->x, x, curve[0]->x) <= 1) ++number;
     }else if( (x[1] <= curve[i]->x[1])*(x[1] > curve[0]->x[1]) ){
       if(Utilities::Geometry::orientation(curve[i]->x, x, curve[0]->x) == 2) --number;
     }
     
-    return number;
+    return number == 0 ? 0 : 1;
   }
 
 
@@ -2044,16 +2047,59 @@ void writeCurves(int m			/// part of te filename, could be the number/index of t
     
     return H;
   }
- 
+ /*
+  double * convex_hull(double P1[],double P2[],std::vector<double *> P)
+  {
+    
+    if(P.size() == 0) return NULL;
+    
+    if(P.size() == 1) return P[0];
+    
+    size_t n = P.size();
+    size_t k = 0;
+    std::vector<double *> H(2*n);
+    
+    // Sort points lexicographically
+    std::sort(P.begin(), P.end(), xorderD);
+    
+    
+    
+    
+    // Build lower hull
+    for (size_t i = 0; i < n; i++) {
+      while (k >= 2 && crossD(H[k-2], H[k-1], P[i]) <= 0){
+        k--;
+      }
+      H[k++] = P[i];
+    }
+    
+    // Build upper hull
+    for (long i = n-2, t = k+1; i >= 0; i--) {
+      while (k >= t && crossD(H[k-2], H[k-1], P[i]) <= 0){
+        k--;
+      }
+      H[k++] = P[i];
+    }
+    
+    
+    H.resize(k);
+    H.pop_back();
+    
+    return H[0];
+  }
+*/
   /** \brief Returns a vector of points on the convcave hull in counter-clockwise order.
    
    This uses a K-nearest neighbour adapted from Moreira & Santos (GRAPP 2007 conference
    proceedings).  This is a modified gift wrap algorithm using k neighbours.  The value
    of k will automatically increase when certain special cases are encountered.
    
+   This is an overloaded vertion of the other concave_hull()
+   
    */
   std::vector<double *> concave_hull(std::vector<double *> P,int k )
   {
+    
     if(P.size() <= 3){
       std::vector<double *> hull(P);
       return hull;
@@ -2070,6 +2116,7 @@ void writeCurves(int m			/// part of te filename, could be the number/index of t
     double s,v1[2],v2[2];
     int tmp_k ;
     bool intersects = true,failed=false;
+    
     
     
     do{
@@ -2142,10 +2189,11 @@ void writeCurves(int m			/// part of te filename, could be the number/index of t
             v2[1] = Res[indexlist[i]][1] - hull[j][1];
             
             s = Utilities::Geometry::AngleBetween2d( v1, v2 );
-            if(s <= smin){
+            if(s <= smin ){
               imin = indexlist[i];
               smin = s;
               i_min = i;
+              
             }
           }
           // check for self intersection
@@ -2154,14 +2202,8 @@ void writeCurves(int m			/// part of te filename, could be the number/index of t
             for(int ii=0;ii<hull.size()-2;++ii){
               if(Utilities::Geometry::intersect(hull.back(),Res[imin], hull[ii], hull[ii+1])){
                 intersects = true;
-                //std::cout << "intersecting line segments ii = " << ii << std::endl;
-                //std::cout << hull.back()->x[0] << " " << hull.back()->x[1] << " -- "
-                //<< Res[imin][0] << " " << Res[imin][1] << std::endl;
                 
-                //std::cout << hull[ii][0] << " " << hull[ii][1] << " -- "
-                //<< hull[ii+1][0] << " " << hull[ii+1][1] << std::endl;
-                
-                //move this point to back and try again with lower tmp_k
+                 //move this point to back and try again with lower tmp_k
                 std::swap(indexlist[i_min],indexlist[tmp_k-1]);
                 --tmp_k;
                 break;
@@ -2181,6 +2223,8 @@ void writeCurves(int m			/// part of te filename, could be the number/index of t
         }else{
           failed = true;
           ++k;
+          
+          
           break;
         }
       }
@@ -2188,10 +2232,11 @@ void writeCurves(int m			/// part of te filename, could be the number/index of t
         // check to make sure all remaining points are within the hull
         
         for(size_t ii=0;ii<Res.size();++ii){
-          std::cout << Res[ii][0] << " " << Res[ii][1] << std::endl;
+          //std::cout << Res[ii][0] << " " << Res[ii][1] << std::endl;
           if(Utilities::Geometry::incurve(Res[ii],hull) == 0){
             failed = true;
             ++k;
+                        
             break;
           }
         }
@@ -2214,6 +2259,10 @@ void writeCurves(int m			/// part of te filename, could be the number/index of t
    */
   std::vector<Point *> concave_hull(std::vector<Point *> P,int k )
   {
+    const bool test =false;
+    PixelMap *testmap;
+    int nt=0;
+
     
     if(P.size() <= 3){
       std::vector<Point *> hull(P);
@@ -2231,6 +2280,25 @@ void writeCurves(int m			/// part of te filename, could be the number/index of t
     double s,v1[2],v2[2];
     int tmp_k ;
     bool intersects = true,failed=false;
+    
+    if(test){
+      PosType bound_p1[2],bound_p2[2],center[2];
+      bound_p1[0] = bound_p2[0] = P[0]->x[0];
+      bound_p1[1] = bound_p2[1] = P[0]->x[1];
+      for(size_t ii = 1; ii<P.size();++ii){
+        bound_p1[0] = MIN(P[ii]->x[0],bound_p1[0]);
+        bound_p2[0] = MAX(P[ii]->x[0],bound_p2[0]);
+        bound_p1[1] = MIN(P[ii]->x[1],bound_p1[1]);
+        bound_p2[1] = MAX(P[ii]->x[1],bound_p2[1]);
+      }
+      center[0] = (bound_p2[0] + bound_p1[0])/2;
+      center[1] = (bound_p2[1] + bound_p1[1])/2;
+      testmap = new PixelMap(center,512
+                             ,1.05*MAX((bound_p2[0] - bound_p1[0]),(bound_p2[1] - bound_p1[1]))/512);
+      
+      testmap->drawPoints(P,0,1.0);
+      testmap->printFITS("!test_"+std::to_string(nt++)+".fits");
+    }
     
 
     do{
@@ -2303,11 +2371,12 @@ void writeCurves(int m			/// part of te filename, could be the number/index of t
             v2[1] = Res[indexlist[i]]->x[1] - hull[j]->x[1];
             
             s = Utilities::Geometry::AngleBetween2d( v1, v2 );
-            if(s <= smin){
+            if(s <= smin ){
               imin = indexlist[i];
               smin = s;
               i_min = i;
-            }
+              
+             }
           }
           // check for self intersection
           intersects = false;
@@ -2315,13 +2384,16 @@ void writeCurves(int m			/// part of te filename, could be the number/index of t
             for(int ii=0;ii<hull.size()-2;++ii){
               if(Utilities::Geometry::intersect(hull.back()->x,Res[imin]->x, hull[ii]->x, hull[ii+1]->x)){
                 intersects = true;
-                //std::cout << "intersecting line segments ii = " << ii << std::endl;
-                //std::cout << hull.back()->x[0] << " " << hull.back()->x[1] << " -- "
-                //<< Res[imin]->x[0] << " " << Res[imin]->x[1] << std::endl;
                 
-                //std::cout << hull[ii]->x[0] << " " << hull[ii]->x[1] << " -- "
-                //<< hull[ii+1]->x[0] << " " << hull[ii+1]->x[1] << std::endl;
-                
+                if(test){
+                  std::cout << "smin/pi = " << smin/pi << std::endl;
+                  std::cout << "intersecting line segments ii = " << ii << std::endl;
+                  std::cout << hull.back()->x[0] << " " << hull.back()->x[1] << " -- "
+                  << Res[imin]->x[0] << " " << Res[imin]->x[1] << std::endl;
+                  
+                  std::cout << hull[ii]->x[0] << " " << hull[ii]->x[1] << " -- "
+                  << hull[ii+1]->x[0] << " " << hull[ii+1]->x[1] << std::endl;
+                }
                 //move this point to back and try again with lower tmp_k
                 std::swap(indexlist[i_min],indexlist[tmp_k-1]);
                 --tmp_k;
@@ -2342,6 +2414,24 @@ void writeCurves(int m			/// part of te filename, could be the number/index of t
         }else{
           failed = true;
           ++k;
+          
+          if(test){
+            testmap->Clean();
+            testmap->drawPoints(P,0,1.0);
+            testmap->drawCurve(hull,2.0);
+            testmap->printFITS("!test_"+std::to_string(nt)+".fits");
+            
+            assert(hull[j] != hull[j-1]);
+            PixelMap map(hull.back()->x,512,
+                         MAX(fabs(hull[j]->x[0] - hull[j-1]->x[0]),fabs(hull[j]->x[1] - hull[j-1]->x[1]))/5 );
+            
+            map.drawPoints(P,0,1.0);
+            map.drawCurve(hull,2.0);
+            map.printFITS("!test_"+std::to_string(nt++)+".1.fits");
+            for(int ii=0;ii<hull.size()-1;++ii) std::cout << hull[ii]->x[0] << " " << hull[ii]->x[1] << std::endl;
+            
+          }
+
           break;
         }
       }
@@ -2349,10 +2439,29 @@ void writeCurves(int m			/// part of te filename, could be the number/index of t
         // check to make sure all remaining points are within the hull
         
         for(size_t ii=0;ii<Res.size();++ii){
-          std::cout << Res[ii]->x[0] << " " << Res[ii]->x[1] << std::endl;
+          //std::cout << Res[ii]->x[0] << " " << Res[ii]->x[1] << std::endl;
           if(incurve(Res[ii]->x,hull) == 0){
             failed = true;
             ++k;
+            
+            if(test){
+              
+              testmap->Clean();
+              testmap->drawPoints(P,0,1.0);
+              testmap->drawCurve(hull,2.0);
+              testmap->printFITS("!test_"+std::to_string(nt)+".fits");
+              
+              PixelMap map(Res[ii]->x,512,
+                           MAX(fabs(hull[j]->x[0] - hull[j-1]->x[0]),fabs(hull[j]->x[1] - hull[j-1]->x[1]))/5 );
+              
+              map.drawPoints(P,0,1.0);
+              //map.drawCurve(hull,2.0);
+              map.drawPoints(hull,0,2.0);
+              map.printFITS("!test_"+std::to_string(nt++)+".1.fits");
+              for(int ii=0;ii<hull.size()-1;++ii) std::cout << hull[ii]->x[0] << " " << hull[ii]->x[1] << std::endl;
+
+            }
+
             break;
           }
         }

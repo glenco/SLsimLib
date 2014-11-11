@@ -137,6 +137,7 @@ double Utilities::Geometry::AngleBetween2d(double v1[],double v2[]){
   double y = (v1[0] * v2[1]) - (v2[0] * v1[1]);
   double x = (v1[0] * v2[0]) + (v1[1] * v2[1]);
 
+  if(y == 0 && x < 0 ) return pi;
   return atan2(y, x);
 }
 
@@ -147,7 +148,7 @@ int Utilities::Geometry::incurve(PosType x[],std::vector<double *> curve){
   Point point;
   for(i=0;i<curve.size()-1;++i){
     
-    if( (x[1] >= curve[i][1])*(x[1] < curve[i+1][1]) ){
+    if( (x[1] >= curve[i][1])*(x[1] <= curve[i+1][1]) ){
       if(Utilities::Geometry::orientation(curve[i], x, curve[i+1]) <= 1) ++number;
     }else if( (x[1] <= curve[i][1])*(x[1] > curve[i+1][1]) ){
       if(Utilities::Geometry::orientation(curve[i], x, curve[i+1]) == 2) --number;
@@ -155,12 +156,12 @@ int Utilities::Geometry::incurve(PosType x[],std::vector<double *> curve){
     
   }
   
-  if( (x[1] >= curve[i][1])*(x[1] < curve[0][1]) ){
+  if( (x[1] >= curve[i][1])*(x[1] <= curve[0][1]) ){
     if(Utilities::Geometry::orientation(curve[i], x, curve[0]) <= 1) ++number;
   }else if( (x[1] <= curve[i][1])*(x[1] > curve[0][1]) ){
     if(Utilities::Geometry::orientation(curve[i], x, curve[0]) == 2) --number;
   }
   
-  return number;
+  return number == 0 ? 0 : 1;
 }
 

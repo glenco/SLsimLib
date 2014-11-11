@@ -501,6 +501,7 @@ namespace Utilities{
   int windings(PosType *x,Point **points,unsigned long Npoints,PosType *area,short image = 0 );
 	int windings(PosType *x,Kist<Point> * kist,PosType *area,short image = 0);
   int windings2(PosType *x,Point *points,unsigned long Npoints,PosType *area,short image);
+  /// returns 1 if it is in the curve and 0 if it is out.  Borders count as in.
   int incurve(PosType x[],std::vector<Point *> curve);
 }
 // in curve_routines.c
