@@ -41,10 +41,10 @@ public:
   
   
   /// Initialise the lens with velocity dispersion, axis ratio, position angle and core radius
-  void InitializeLensHaloFit(PosType my_sigma, PosType my_fratio, PosType my_pa, PosType my_rcore)
-  {
-    sigma = my_sigma ; fratio = my_fratio ; pa = my_pa ; rcore = my_rcore ;
-  }
+//  void InitializeLensHaloFit(PosType my_sigma, PosType my_fratio, PosType my_pa, PosType my_rcore)
+//  {
+//    sigma = my_sigma ; fratio = my_fratio ; pa = my_pa ; rcore = my_rcore ;
+//  }
   
   /// set the number of perturbation modes -- Does the same as LensHaloBaseNSIE::getPerturb_Nmodes().
   int setNmodes(int my_Nmodes){perturb_Nmodes = my_Nmodes;};
