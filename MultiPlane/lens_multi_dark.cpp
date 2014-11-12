@@ -12,14 +12,16 @@ namespace
 
 void Lens::readPixelizedDensity()
 {
-	/*std::ifstream list(main_input_file.c_str());
-  if(!list.good()){
-    std::cerr << "Cannpt open file " << main_input_file << std::endl;
-		throw new std::runtime_error("Could not open PixelDMap list file" + main_input_file + "!");
-  }*/
+	std::ifstream list(main_input_file.c_str());
+	if(!list.good())
+	{
+		std::cerr << "Cannot open file " << main_input_file << std::endl;
+		throw std::runtime_error("Could not open PixelDMap list file" + main_input_file + "!");
+	}
+	
 	std::cout << "reading PixelDMap files: " << main_input_file << std::endl;
 	
-	/*std::string line;
+	std::string line;
 	while(std::getline(list, line))
 	{
 		// skip empty lines
@@ -45,8 +47,6 @@ void Lens::readPixelizedDensity()
 		std::cout << "- " << mokafile << std::endl;
 		
 		// create the MOKA halo
-        
-		main_halos.push_back(new LensHaloMOKA(main_input_file,pix_map_lens,cosmo));
-	}*/
-  main_halos.push_back(new LensHaloMOKA(main_input_file,pix_map_lens,cosmo));
+		main_halos.push_back(new LensHaloMOKA(mokafile, pix_map_lens, cosmo));
+	}
 }
