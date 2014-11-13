@@ -147,7 +147,7 @@ void LensHaloMOKA::initMap()
     map->boxlrad = map->boxlarcsec*pi/180/3600.;
     map->inarcsec  = 10800./M_PI/map->Dlens*60.; // Mpc/h to arcsec for MOKA while Mpc to arcsec for Pixeliz
 
-    if(maptype == moka_lens || maptype == pix_map_lens){
+    if(maptype == moka_lens){
       
         Utilities::fill_linear(map->x, map->nx, -0.5*map->boxlMpc, 0.5*map->boxlMpc); // physical Mpc/h
       
