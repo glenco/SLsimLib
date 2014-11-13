@@ -109,36 +109,35 @@ void LensHaloMOKA::readImage(){
 	  
 	}else{
 	  int npixels = map->nx;
-	  // cut a square!
-	  // if(map->ny<map->nx) npixels = map->ny;
-	  // std:: valarray<double> mapbut(map->nx*map->ny);
-	  // for(int i=0;i<map->nx;i++) for(int j=0;j<map->ny;j++){
-	  //    mapbut[i+map->nx*j] = map->convergence[i+map->nx*j];
-	  //  }
-	  // map->convergence.resize(npixels*npixels);
-	  // keep it like it is, even if is a rectangle
-	  if(map->ny!=map->nx){
-	    std:: cout << " " << std:: endl;
-	    std:: cout << " the plane maps are rectangles! " << std:: endl;
-	    std:: cout << " " << std:: endl;
-	  }
+	  if(map->ny<map->nx) npixels = map->ny;
+	  std:: valarray<double> mapbut(map->nx*map->ny);
+	  for(int i=0;i<map->nx;i++) for(int j=0;j<map->ny;j++)
+    {
+	      mapbut[i+map->nx*j] = map->convergence[i+map->nx*j];
+    }
+	  map->convergence.resize(npixels*npixels);
+    
 	  // FITS file must contain the following keywords:
 	  /*
             ZLENS or REDSHIFT                                 double
             PHYSICALSIZE                                      double
 	  */
 	  
-	  try {
+	  try
+    {
             h0->readKey("ZLENS",map->zlens);
 	  }
-	  catch(CCfits::HDU::NoSuchKeyword) {
-            try {
-	      h0->readKey("REDSHIFT",map->zlens);
+	  catch(CCfits::HDU::NoSuchKeyword)
+    {
+            try
+            {
+              h0->readKey("REDSHIFT",map->zlens);
             }
-            catch(CCfits::HDU::NoSuchKeyword){
-	      std::cout << "unable to read map zlmap" << std::endl;
-	      std::cout << "I will STOP here!!!" << std::endl;
-	      exit(1);
+            catch(CCfits::HDU::NoSuchKeyword)
+            {
+              std::cout << "unable to read map zlmap" << std::endl;
+              std::cout << "I will STOP here!!!" << std::endl;
+              exit(1);
             }
 	  }
 	  double d1, d2;
@@ -184,74 +183,73 @@ void LensHaloMOKA::readImage(){
 	  map->Dlens = cosmo.angDist(0.,map->zlens);  // physical
 	  double inarcsec  = 180./M_PI/map->Dlens*60.*60.;
 	  double pixLMpc,pixelunit;
-	  try {
+	  try
+    {
 	    // physical size in degrees
             h0->readKey("PHYSICALSIZE",map->boxlarcsec);
-	    map->boxlarcsec=map->boxlarcsec*60.*60.;
+            map->boxlarcsec*=60.*60;
             pixLMpc = map->boxlarcsec/npixels/inarcsec;  
             map->boxlMpc = pixLMpc*npixels;
 	    try {
 	      h0->readKey("PIXELUNIT",pixelunit);
-	      pixelunit=pixelunit/pixLMpc/pixLMpc;	      
+	      pixelunit/=pixLMpc/pixLMpc;	      
 	    }
-	    catch(CCfits::HDU::NoSuchKeyword) {
+	    catch(CCfits::HDU::NoSuchKeyword)
+      {
 	      std::cout << " unable to read map pixelunit" << std::endl;
 	      std::cout << " check this out in MOKAfits.cpp " << std::endl;
-	      std::cout << " I will STOP here !!! " << std:: endl; 
+	      std:: cout << " I will STOP here !!! " << std:: endl; 
 	      exit(1);
 	    }
 	  }
-	  catch(CCfits::HDU::NoSuchKeyword) {
+	  catch(CCfits::HDU::NoSuchKeyword)
+    {
             std::cout << "unable to read map physical size and pixelunit" << std::endl;
-            std::cout << "assuming is the MultiDark file" << std::endl;
-            map->boxlarcsec = 8.7*60.*60.;    // W1 x-field of view
-            // map->boxlarcsec = 5.5*60.*60.;    // W4 x-field of view
+            std::cout << "assuming is the PixelDMap file" << std::endl;
+	    
+            map->boxlarcsec = 4*60.*60.;    // the square is 4x4 by hand
             pixLMpc = map->boxlarcsec/npixels/inarcsec;  
             map->boxlMpc = pixLMpc*npixels;
-	    pixelunit = 1.e+10/cosmo.gethubble()/pixLMpc/pixLMpc; // by hand 
+            pixelunit = 1.e+10/cosmo.gethubble()/pixLMpc/pixLMpc; // by hand
 	  }
 	  
 	  double avkappa = 0;
 	  
 	  // made square // need to be
-	  // 1. take the part located in the left side
-	  //for(int i=0;i<npixels;i++) for(int j=0;j<npixels;j++){
-	  //    map->convergence[i+npixels*j] = mapbut[i+map->nx*j]*pixelunit;
-	  //    avkappa += map->convergence[i+npixels*j];
-	  //  }
-	  // 2. take the part located in the right side
-	  // for(int i=0;i<npixels;i++) for(int j=0;j<npixels;j++){
-	  //    map->convergence[i+npixels*j] = mapbut[(map->nx-npixels+i)+map->nx*j]*pixelunit;
-	  //    avkappa += map->convergence[i+npixels*j];
-	  //  }
-	  // avkappa /= (npixels*npixels);
+	  for(int i=0;i<npixels;i++) for(int j=0;j<npixels;j++)
+    {
+	      map->convergence[i+npixels*j] = mapbut[i+map->nx*j]*pixelunit;
+	      avkappa += map->convergence[i+npixels*j];
+    }
+	  avkappa /= (npixels*npixels);
 	  
-	  for(int i=0;i<map->nx;i++) for(int j=0;j<map->ny;j++){
-	      map->convergence[i+map->nx*j]=map->convergence[i+map->nx*j]*pixelunit;
-	      avkappa += map->convergence[i+map->nx*j];
-	    }
-	  avkappa /= (map->nx*map->ny);
-
-	  for(int i=0;i<map->nx;i++) for(int j=0;j<map->ny;j++){
-	      map->convergence[i+map->nx*j] = (map->convergence[i+map->nx*j] - avkappa); 
-	    }
+	  //std:: cout << "  <<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>> " << std:: endl;
+	  //std:: cout << "     average kappa = " << avkappa << std:: endl;
+	  //std:: cout << "  <<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>> " << std:: endl;
+	  for(int i=0;i<npixels;i++) for(int j=0;j<npixels;j++)
+    {
+	      map->convergence[i+npixels*j] = (map->convergence[i+npixels*j] - avkappa); 
+    }
+	  
 	  // kappa is not divided by the critical surface density
 	  // they don't need to be preprocessed by fact
 	  // create alpha and gamma arrays by FFT
-	  // valid only to force the map to be square map->nx = map->ny = npixels;
+	  map->nx = map->ny = npixels;
+
 #ifdef ENABLE_FFTW
 	  std:: cout << "  preProcessing Map " << std:: endl;
-	  // reducing the size of the maps
 	  PreProcessFFTWMap();
+	  
 #else
 	  std::cout << "Please enable the preprocessor flag ENABLE_FFTW !" << std::endl;
 	  exit(1);
 #endif
 	}
 	
-	// std:: cout << map->boxlMpc << "  " << map->boxlarcsec << std:: endl;
+	std:: cout << map->boxlMpc << "  " << map->boxlarcsec << std:: endl;
 	
-	for(size_t i=0;i<map->convergence.size();++i){
+	for(size_t i=0;i<map->convergence.size();++i)
+  {
 	  assert(map->convergence[i] == map->convergence[i]);
 	}
 #else
@@ -339,7 +337,7 @@ void make_friendship(int ii,int ji,int np,std:: vector<int> &friends, std:: vect
 }
 
 /*
- * given a a set of grid points xci and yci and an interpixeld distance l return the id of the 
+ * given a set of grid points xci and yci and an interpixeled distance l return the id of the
  * fof group nearest to the centre
  */
 
@@ -436,56 +434,60 @@ int fof(double l,std:: vector<double> xci, std:: vector<double> yci, std:: vecto
 }
 
 /**
- * \brief pre-process sourface mass density map computing deflection angles and shear in FFT, 
- *  generalized to work with rectangular maps
+ * \brief pre-process surface mass density map computing deflection angles and shear in FFT
  */
 
 void LensHaloMOKA::PreProcessFFTWMap(){
     #ifdef ENABLE_FFTW
     // initialize the quantities and does the zeropadding
     int zerosize = 4;      // zero padding region
-    int npix_filter = 0;   // filter the map if you want on a given number of pixels: CHECK IT NOT IMPLEMENTED YET
+    int npix_filter = 0;   // filter the map if you want on a given number of pixels
 
-    // size of the new map in x and y directions, factor by which each size is increased
-    int Nnx=int(zerosize*map->nx);
-    int Nny=int(zerosize*map->ny);
-    double Nboxlx = map->boxlMpc*zerosize;
-    double Nboxly = map->boxlMpc*zerosize/map->nx*map->ny;
-
-    std:: valarray<float> Nmap;
-    Nmap.resize( Nnx*Nny );
+    int npixels = map->nx;
+    double boxl = map->boxlMpc;
+  
+    // size of the new map
+    int Nnpixels = int(zerosize*npixels);
+    double Nboxl = boxl*zerosize;
     
-    // assume locate in a rectangular map and build up the new one
-    for( int i=0; i<Nnx; i++ ) for( int j=0; j<Nny; j++ ){ 
-	Nmap[i+Nnx*j]=0; 
-	if(i>=int(Nnx/2-map->nx/2) && i<int(Nnx/2+map->nx/2) && j>=int(Nny/2-map->ny/2) && j<int(Nny/2+map->ny/2)){
-	  int ii = i-int(Nnx/2-map->nx/2); 
-	  int jj = j-int(Nny/2-map->ny/2); 
-	  
-	  if(ii>=map->nx || jj>=map->ny){ 
-	    std::cout << " 1 error mapping " << ii << "  " << jj << std::endl; 
-	    exit(1); 
-	  } 
-	  if(ii<0 || jj<0){ 
-	    std::cout << " 2 error mapping " << ii << "  " << jj << std::endl; 
-	    exit(1); 
-	  } 
-	  Nmap[i+Nnx*j]=map->convergence[ii+map->nx*jj];
-	}
+    // filter the map in the fourier space to avoid spikes if you want
+    double sigmag = 0;
+    if(npix_filter>0) sigmag = (2.*M_PI/boxl)*npixels/npix_filter;
+    
+    std:: valarray<double> Nmap( Nnpixels*Nnpixels );
+        
+    // assume locate in a squared map and build up the new map with the zero padding region
+    for( int i=0; i<Nnpixels; i++ ) for( int j=0; j<Nnpixels; j++ ){
+            Nmap[i+Nnpixels*j]=0;
+            if(i>=int(Nnpixels/2-npixels/2) && i<int(Nnpixels/2+npixels/2) &&
+               j>=int(Nnpixels/2-npixels/2) && j<int(Nnpixels/2+npixels/2)){
+                int ii = i-int(Nnpixels/2-npixels/2);
+                int jj = j-int(Nnpixels/2-npixels/2);
+                
+                if(ii>=npixels || jj>=npixels){
+                    std::cout << " 1 error mapping " << ii << "  " << jj << std::endl; 
+                    exit(1); 
+                } 
+                if(ii<0 || jj<0){ 
+                    std::cout << " 2 error mapping " << ii << "  " << jj << std::endl; 
+                    exit(1); 
+                } 
+                Nmap[i+Nnpixels*j]=map->convergence[ii+npixels*jj];
+            }
       }
     
-    double *dNmap=new double[Nnx*Nny];
-    double *input=new double[Nnx*Nny];
-    fftw_complex *fNmap=new fftw_complex[Nny*(Nnx/2+1)];
-    fftw_complex *output=new fftw_complex[Nny*(Nnx/2+1)];
-    for(int k=0;k<Nnx*Nny;k++) dNmap[k] = double(Nmap[k]);
+    double *dNmap=new double[Nnpixels*Nnpixels];
+    double *input=new double[Nnpixels*Nnpixels];
+    fftw_complex *fNmap=new fftw_complex[Nnpixels*(Nnpixels/2+1)];
+    fftw_complex *output=new fftw_complex[Nnpixels*(Nnpixels/2+1)];
+    for(int k=0;k<Nnpixels*Nnpixels;k++) dNmap[k] = double(Nmap[k]);
     fftw_plan p;
-    p=fftw_plan_dft_r2c_2d(Nny,Nnx,input,output,FFTW_ESTIMATE);
-    for(int i=0;i<Nnx*Nny;i++) input[i] = dNmap[i];
+    p=fftw_plan_dft_r2c_2d(Nnpixels,Nnpixels,input,output,FFTW_ESTIMATE);
+    for (int i=0; i<Nnpixels*Nnpixels; i++) input[i] = dNmap[i];
     fftw_execute( p );
-    for(int i=0; i<Nny*(Nnx/2+1);i++){
-      fNmap[i][0] = output[i][0];
-      fNmap[i][1] = output[i][1];
+    for(int i=0; i<Nnpixels*(Nnpixels/2+1);i++){
+        fNmap[i][0] = output[i][0];
+        fNmap[i][1] = output[i][1];
     }
     delete[] input;
     delete[] output;
@@ -493,97 +495,100 @@ void LensHaloMOKA::PreProcessFFTWMap(){
 
     // fourier space
     // std:: cout << " allocating fourier space maps " << std:: endl;
-    fftw_complex *fphi   = new fftw_complex[Nny*(Nnx/2+1)];
-    fftw_complex *falpha1= new fftw_complex[Nny*(Nnx/2+1)];
-    fftw_complex *falpha2= new fftw_complex[Nny*(Nnx/2+1)];
-    fftw_complex *fgamma1= new fftw_complex[Nny*(Nnx/2+1)];
-    fftw_complex *fgamma2= new fftw_complex[Nny*(Nnx/2+1)];
+    fftw_complex *fphi   = new fftw_complex[Nnpixels*(Nnpixels/2+1)];
+    fftw_complex *falpha1= new fftw_complex[Nnpixels*(Nnpixels/2+1)];
+    fftw_complex *falpha2= new fftw_complex[Nnpixels*(Nnpixels/2+1)];
+    fftw_complex *fgamma1= new fftw_complex[Nnpixels*(Nnpixels/2+1)];
+    fftw_complex *fgamma2= new fftw_complex[Nnpixels*(Nnpixels/2+1)];
     
     // build modes for each pixel in the fourier space
-    for( int i=0; i<Nnx/2+1; i++ ){
-      double kx=double(i);
-      kx=kx*2.*M_PI/Nboxlx;
-      for( int j=0; j<Nny; j++ ){
-	double ky=(j<Nny/2)?double(j):double(j-Nny);
-	ky=ky*2.*M_PI/Nboxly;
-	double k2 = kx*kx+ky*ky;
-	//smooth if you want to IMPLEMENT
-	// if(npix_filter>0){
-	// fNmap[j+(Nnpixels/2+1)*i][0] = fNmap[j+(Nnpixels/2+1)*i][0]*exp(-k2/sigmag/sigmag/2.);
-	// fNmap[j+(Nnpixels/2+1)*i][1] = fNmap[j+(Nnpixels/2+1)*i][1]*exp(-k2/sigmag/sigmag/2.);
-	// }
-	
-	// fphi
-	fphi[i+(Nnx/2+1)*j][0]= -2.*fNmap[i+(Nnx/2+1)*j][0]/k2;
-	fphi[i+(Nnx/2+1)*j][1]= -2.*fNmap[i+(Nnx/2+1)*j][1]/k2;
-	// null for k2 = 0 no divergence
-	if(k2 == 0){
-	  fphi[i+(Nnx/2+1)*j][0] = 0.;
-	  fphi[i+(Nnx/2+1)*j][1] = 0.;
-	}
-	// gamma
-	fgamma1[i+(Nnx/2+1)*j][0] = 0.5*(kx*kx-ky*ky)*fphi[i+(Nnx/2+1)*j][0];
-	fgamma1[i+(Nnx/2+1)*j][1] = 0.5*(kx*kx-ky*ky)*fphi[i+(Nnx/2+1)*j][1];
-	fgamma2[i+(Nnx/2+1)*j][0] = kx*ky*fphi[i+(Nnx/2+1)*j][0];
-	fgamma2[i+(Nnx/2+1)*j][1] = kx*ky*fphi[i+(Nnx/2+1)*j][1];
-	
-	// alpha
-	falpha1[i+(Nnx/2+1)*j][0] = -kx*fphi[i+(Nnx/2+1)*j][1];
-	falpha1[i+(Nnx/2+1)*j][1] =  kx*fphi[i+(Nnx/2+1)*j][0];
-	falpha2[i+(Nnx/2+1)*j][0] = -ky*fphi[i+(Nnx/2+1)*j][1];
-	falpha2[i+(Nnx/2+1)*j][1] =  ky*fphi[i+(Nnx/2+1)*j][0];
-      } 
+    for( int i=0; i<Nnpixels; i++ ){
+        // kx = i if i<n/2 else i-n
+        double kx=(i<Nnpixels/2)?double(i):double(i-Nnpixels);
+        kx=kx*2.*M_PI/Nboxl;
+        for( int j=0; j<Nnpixels/2+1; j++ ){
+            double ky=double(j);
+            ky=ky*2.*M_PI/Nboxl;
+            // rescale respect to the box size
+            double k2 = (kx*kx + ky*ky);
+            // smooth if you want
+            if(npix_filter>0){
+                fNmap[j+(Nnpixels/2+1)*i][0] = fNmap[j+(Nnpixels/2+1)*i][0]*exp(-k2/sigmag/sigmag/2.);
+                fNmap[j+(Nnpixels/2+1)*i][1] = fNmap[j+(Nnpixels/2+1)*i][1]*exp(-k2/sigmag/sigmag/2.);
+            }
+            // fphi
+            fphi[j+(Nnpixels/2+1)*i][0]= -2.*fNmap[j+(Nnpixels/2+1)*i][0]/k2;
+            fphi[j+(Nnpixels/2+1)*i][1]= -2.*fNmap[j+(Nnpixels/2+1)*i][1]/k2;
+            // null for k2 = 0 no divergence
+            if(k2 == 0){
+                fphi[j+(Nnpixels/2+1)*i][0] = 0.;
+                fphi[j+(Nnpixels/2+1)*i][1] = 0.;
+            }
+            // gamma
+            fgamma1[j+(Nnpixels/2+1)*i][0] = 0.5*(kx*kx-ky*ky)*fphi[j+(Nnpixels/2+1)*i][0];
+            fgamma1[j+(Nnpixels/2+1)*i][1] = 0.5*(kx*kx-ky*ky)*fphi[j+(Nnpixels/2+1)*i][1];
+            fgamma2[j+(Nnpixels/2+1)*i][0] = kx*ky*fphi[j+(Nnpixels/2+1)*i][0];
+            fgamma2[j+(Nnpixels/2+1)*i][1] = kx*ky*fphi[j+(Nnpixels/2+1)*i][1];
+            // alpha
+            falpha1[j+(Nnpixels/2+1)*i][0] = -kx*fphi[j+(Nnpixels/2+1)*i][1];
+            falpha1[j+(Nnpixels/2+1)*i][1] =  kx*fphi[j+(Nnpixels/2+1)*i][0];
+            falpha2[j+(Nnpixels/2+1)*i][0] = -ky*fphi[j+(Nnpixels/2+1)*i][1];
+            falpha2[j+(Nnpixels/2+1)*i][1] =  ky*fphi[j+(Nnpixels/2+1)*i][0];
+        } 
     }
     
     fftw_destroy_plan(p);  
     delete[] fNmap;
     
-    double *phi    = new double[Nnx*Nny];
-    double *alpha1 = new double[Nnx*Nny];
-    double *alpha2 = new double[Nnx*Nny];
-    double *gamma1 = new double[Nnx*Nny];
-    double *gamma2 = new double[Nnx*Nny];
-    
+    double *phi    = new double[Nnpixels*Nnpixels];
+    double *alpha1 = new double[Nnpixels*Nnpixels];
+    double *alpha2 = new double[Nnpixels*Nnpixels];
+    double *gamma1 = new double[Nnpixels*Nnpixels];
+    double *gamma2 = new double[Nnpixels*Nnpixels];
+
     fftw_plan pp;
-    pp=fftw_plan_dft_c2r_2d(Nny,Nnx,fphi,phi,FFTW_ESTIMATE);
+    pp=fftw_plan_dft_c2r_2d(Nnpixels,Nnpixels,fphi,phi,FFTW_ESTIMATE);
     fftw_execute( pp );
     fftw_destroy_plan(pp);
 
-    pp=fftw_plan_dft_c2r_2d(Nny,Nnx,falpha1,alpha1,FFTW_ESTIMATE);
+    pp=fftw_plan_dft_c2r_2d(Nnpixels,Nnpixels,falpha1,alpha1,FFTW_ESTIMATE);
     fftw_execute( pp );
     fftw_destroy_plan(pp);
 
-    pp=fftw_plan_dft_c2r_2d(Nny,Nnx,falpha2,alpha2,FFTW_ESTIMATE);
+    pp=fftw_plan_dft_c2r_2d(Nnpixels,Nnpixels,falpha2,alpha2,FFTW_ESTIMATE);
     fftw_execute( pp );
     fftw_destroy_plan(pp);
 
-    pp=fftw_plan_dft_c2r_2d(Nny,Nnx,fgamma1,gamma1,FFTW_ESTIMATE);
+    pp=fftw_plan_dft_c2r_2d(Nnpixels,Nnpixels,fgamma1,gamma1,FFTW_ESTIMATE);
     fftw_execute( pp );
     fftw_destroy_plan(pp);
 
-    pp=fftw_plan_dft_c2r_2d(Nny,Nnx,fgamma2,gamma2,FFTW_ESTIMATE);
+    pp=fftw_plan_dft_c2r_2d(Nnpixels,Nnpixels,fgamma2,gamma2,FFTW_ESTIMATE);
     fftw_execute( pp );
     fftw_destroy_plan(pp);
 
     // std:: cout << " remapping the map in the original size " << std:: endl;
 
-    map->gamma1.resize(map->nx*map->ny);
-    map->gamma2.resize(map->nx*map->ny);
-    map->alpha1.resize(map->nx*map->ny);
-    map->alpha2.resize(map->nx*map->ny);
-    
-    for( int i=Nnx/2-map->nx/2; i<Nnx/2+map->nx/2; i++ )
-      for( int j=Nny/2-map->ny/2; j<Nny/2+map->ny/2; j++ ){
-	int ii = i-int(Nnx/2-map->nx/2);
-	int jj = j-int(Nny/2-map->ny/2);
+    map->phi.resize(npixels*npixels);
+    map->gamma1.resize(npixels*npixels);
+    map->gamma2.resize(npixels*npixels);
+    map->alpha1.resize(npixels*npixels);
+    map->alpha2.resize(npixels*npixels);
+
+    for( int i=Nnpixels/2-npixels/2; i<Nnpixels/2+npixels/2; i++ ){
+            for( int j=Nnpixels/2-npixels/2; j<Nnpixels/2+npixels/2; j++ ){
+                int ii = i-int(Nnpixels/2-npixels/2);
+                int jj = j-int(Nnpixels/2-npixels/2);
+
+                map->phi[ii+npixels*jj] = float( phi[i+Nnpixels*j]/Nnpixels/Nnpixels);
+              
+                map->gamma1[ii+npixels*jj] = float( gamma1[i+Nnpixels*j]/Nnpixels/Nnpixels);
+                map->gamma2[ii+npixels*jj] = float(-gamma2[i+Nnpixels*j]/Nnpixels/Nnpixels);
         
-	map->gamma1[ii+map->nx*jj] = float( gamma1[i+Nnx*j]/Nnx/Nny);
-	map->gamma2[ii+map->nx*jj] = float(-gamma2[i+Nnx*j]/Nnx/Nny);
-        
-	map->alpha1[ii+map->nx*jj] = float(alpha1[i+Nnx*j]/Nnx/Nny);
-	map->alpha2[ii+map->nx*jj] = float(alpha2[i+Nnx*j]/Nnx/Nny);
-      }
-    
+                map->alpha1[ii+npixels*jj] = float(alpha1[i+Nnpixels*j]/Nnpixels/Nnpixels);
+                map->alpha2[ii+npixels*jj] = float(alpha2[i+Nnpixels*j]/Nnpixels/Nnpixels);
+	    }
+    }
     delete[] fphi;
     delete[] falpha1;
     delete[] falpha2;
