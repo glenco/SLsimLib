@@ -21,7 +21,7 @@ class LensHaloFit : public LensHaloBaseNSIE{
 public:
   //LensHaloAnaNSIE(InputParams& params,bool verbose = false);
   /// Creates a AnaLens which initially has no mass,  Use FindLensSimple() to give it mass
-  LensHaloFit(const COSMOLOGY& cosmo);
+  LensHaloFit(const COSMOLOGY& cosmo, int MyNmodes);
 	~LensHaloFit();
 
   void PrintLens(bool show_substruct,bool show_stars);
@@ -40,14 +40,12 @@ public:
   virtual PosType get_rcore(){return 0.0;};
   
   
-  /// Initialise the lens with velocity dispersion, axis ratio, position angle and core radius
+  // Initialise the lens with velocity dispersion, axis ratio, position angle and core radius
   void InitializeLensHaloFit(PosType my_sigma, PosType my_fratio, PosType my_pa, PosType my_rcore)
   {
     sigma = my_sigma ; fratio = my_fratio ; pa = my_pa ; rcore = my_rcore ;
   }
   
-  /// set the number of perturbation modes -- Does the same as LensHaloBaseNSIE::getPerturb_Nmodes().
-  int setNmodes(int my_Nmodes){perturb_Nmodes = my_Nmodes;};
   /// get the number of perturbation modes
   int getNmodes(){return perturb_Nmodes;};
   /// set the perturbation modes
