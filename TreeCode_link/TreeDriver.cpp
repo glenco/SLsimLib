@@ -319,13 +319,12 @@ PosType BoxIntersection(Branch *branch1,Branch *branch2){
 	return area;
 }
 
-// return 1 (0) if box is (not) within rmax of ray
+/*  returns:  0 if whole box is outside rmax from ray[]
+ *            1 if whole box is inside circle but ray is not in the box
+ *            2 if ray[] is inside box
+ *            3 if box intersects circle but ray[] is not inside box
+ */
 int cutbox(PosType *ray,PosType *p1,PosType *p2,PosType rmax){
-	/*  returns:  0 if whole box is outside rmax from ray[]
-	 *            1 if whole box is inside circle but ray is not in the box
-	 *            2 if ray[] is inside box
-	 *            3 if box intersects circle but ray[] is not inside box
-	 */
   short i,tick=0;
   PosType close[2],rtmp;
   

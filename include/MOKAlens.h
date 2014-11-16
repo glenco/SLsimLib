@@ -109,6 +109,8 @@ private:
 	const COSMOLOGY& cosmo;
 	void PreProcessFFTWMap();
 };
+  
+
 
 void make_friendship(int ii,int ji,int np,std:: vector<int> &friends, std:: vector<double> &pointdist);
 

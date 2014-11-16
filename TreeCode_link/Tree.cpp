@@ -159,16 +159,13 @@ void FreeBranch(Branch *branch){
  **/
 Point *NewPointArray(
 		unsigned long N  /// number of points in array
-		//,bool NewXs   /// Allocate memory for point positions or assign pointer to existing position
 		){
 
   if(N <= 0) return NULL;
   Point *points = new Point[N];
-  //if(NewXs) points[0].x = new PosType[2];
   points[0].head = N;
 
   for(unsigned long i = 1; i < N; i++){
-      //if(NewXs) points[i].x = new PosType[2];
       points[i].head = 0;
   }
 

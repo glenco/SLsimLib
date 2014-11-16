@@ -131,9 +131,9 @@ Lens::Lens(Lens &lens)
 Lens::~Lens()
 {
 	Utilities::delete_container(lensing_planes);
-
+  
 	//Utilities::free_PosTypeMatrix(halo_pos, field_halos.size(), 3);
-
+  
 	Utilities::delete_container(main_halos_created);
 	Utilities::delete_container(field_halos);
 }
@@ -150,7 +150,7 @@ void Lens::readCosmology(InputParams& params)
 	if(params.get("sigma_8", tmp)) cosmo.power_normalize(tmp);
 }
 
-/// Retrieve input parameters for construction. 
+/// Retrieve input parameters for construction.
 void Lens::assignParams(InputParams& params,bool verbose)
 {
 	if(!params.get("main_halo_on",flag_switch_main_halo_on))
@@ -232,14 +232,14 @@ void Lens::assignParams(InputParams& params,bool verbose)
 				field_prof_internal_slope = -1.0;
 			if(!params.get("field_prof_internal_slope_pnfw",field_prof_internal_slope) && field_int_prof_type == pnfw_lens)
 				field_prof_internal_slope = 2.0;
-
+      
       if(params.get("field_input_simulation_file",field_input_sim_file)){
         ERROR_MESSAGE();
         std::cout << "parameter field_input_simulation_file should be changed to field_input_simulation_path "
         << params.filename() << endl;
         exit(0);
       }
-
+      
 			if(!params.get("field_input_simulation_path",field_input_sim_file))
 			{
 				// No simulation input file provided
@@ -419,80 +419,80 @@ void Lens::printMultiLens(){
 	std::cout << endl << "MAIN HALOS" << endl;
 	std::cout << "Main lens profile type:" << endl;
 	switch(main_halo_type){
-	case null_lens:
-		std::cout << "no lens" << endl;
-		break;
-	case nfw_lens:
-		std::cout << "NFW lens" << endl;
-		break;
-	case pnfw_lens:
-		std::cout << "PseudoNFW lens" << endl;
-		std::cout << "slope: " << field_prof_internal_slope << endl;
-		break;
-	case pl_lens:
-		std::cout << "PowerLaw lens" << endl;
-		std::cout << "slope: " << field_prof_internal_slope << endl;
-		break;
-	case nsie_lens:
-		std::cout << "NSIE lens" << endl;
-		break;
-	case ana_lens:
-		std::cout << "AnaNSIE lens" << endl;
-		break;
-	case uni_lens:
-		std::cout << "UniNSIE lens" << endl;
-		break;
-	case moka_lens:
-		std::cout << "MOKA lens" << endl;
-		break;
-	case dummy_lens:
-		std::cout << "Dummy lens" << endl;
-		break;
-	case hern_lens:
-		std::cout << "Hernquist lens" << endl;
-		break;
-	case jaffe_lens:
-		std::cout << "Jaffe lens" << endl;
-		break;
-	case pix_map_lens:
-		std::cout << "PixelDMap lens" << endl;
-		break;
+    case null_lens:
+      std::cout << "no lens" << endl;
+      break;
+    case nfw_lens:
+      std::cout << "NFW lens" << endl;
+      break;
+    case pnfw_lens:
+      std::cout << "PseudoNFW lens" << endl;
+      std::cout << "slope: " << field_prof_internal_slope << endl;
+      break;
+    case pl_lens:
+      std::cout << "PowerLaw lens" << endl;
+      std::cout << "slope: " << field_prof_internal_slope << endl;
+      break;
+    case nsie_lens:
+      std::cout << "NSIE lens" << endl;
+      break;
+    case ana_lens:
+      std::cout << "AnaNSIE lens" << endl;
+      break;
+    case uni_lens:
+      std::cout << "UniNSIE lens" << endl;
+      break;
+    case moka_lens:
+      std::cout << "MOKA lens" << endl;
+      break;
+    case dummy_lens:
+      std::cout << "Dummy lens" << endl;
+      break;
+    case hern_lens:
+      std::cout << "Hernquist lens" << endl;
+      break;
+    case jaffe_lens:
+      std::cout << "Jaffe lens" << endl;
+      break;
+    case pix_map_lens:
+      std::cout << "PixelDMap lens" << endl;
+      break;
 	}
-
+  
 	std::cout << endl << "Main galaxies profile type:" << endl;
 	switch(main_galaxy_halo_type){
-	case null_gal:
-		std::cout << "no galaxy" << endl;
-		break;
-	case nsie_gal:
-		std::cout << "NSIE galaxy" << endl;
-		break;
+    case null_gal:
+      std::cout << "no galaxy" << endl;
+      break;
+    case nsie_gal:
+      std::cout << "NSIE galaxy" << endl;
+      break;
 	}
-
+  
 	if(flag_switch_field_off == false){
-
+    
 		std::cout << "field of view " << fieldofview << endl;
-
+    
 		std::cout << endl << "FIELD HALOS" << endl;
-
+    
 		std::cout << "field Nplanes " << field_Nplanes << endl;
-
+    
 		std::cout << "min mass " << field_min_mass << endl;
 		std::cout << "Mass function type: "<< endl;
-
+    
 		switch(field_mass_func_type){
-		case PS:
-			std::cout << "  Press-Schechter mass function " << endl;
-			break;
-		case ST:
-			std::cout << "  Sheth-Tormen mass function " << endl;
-			break;
-		case PL:
-			std::cout << "  Power law mass function " << endl;
-			std::cout << "  slope: " << mass_func_PL_slope << endl;
-			break;
+      case PS:
+        std::cout << "  Press-Schechter mass function " << endl;
+        break;
+      case ST:
+        std::cout << "  Sheth-Tormen mass function " << endl;
+        break;
+      case PL:
+        std::cout << "  Power law mass function " << endl;
+        std::cout << "  slope: " << mass_func_PL_slope << endl;
+        break;
 		}
-
+    
 		std::cout << endl << "Field halos profile type:" << endl;
 		switch(field_int_prof_type)
 		{
@@ -535,18 +535,18 @@ void Lens::printMultiLens(){
 				std::cout << "PixelDMap field type" << endl;
 				break;
 		}
-
+    
 		std::cout << endl << "Field galaxies profile type:" << endl;
 		switch(field_int_prof_gal_type){
-		case null_gal:
-			std::cout << "no field galaxy type" << endl;
-			break;
-		case nsie_gal:
-			std::cout << "NSIE field galaxy type" << endl;
-			break;
+      case null_gal:
+        std::cout << "no field galaxy type" << endl;
+        break;
+      case nsie_gal:
+        std::cout << "NSIE field galaxy type" << endl;
+        break;
 		}
 	}
-
+  
 	std::cout << endl;
 }
 
@@ -556,7 +556,7 @@ void Lens::setupFieldPlanes()
 	if(read_redshift_planes)
 		setFieldDistFromFile();
 	else
-		setFieldDist();	
+		setFieldDist();
 }
 
 /**
@@ -622,7 +622,7 @@ void Lens::createFieldPlanes(bool verbose)
 			// convert to proper distance on the lens plane
       field_halos[j]->getX(tmp);
       field_halos[j]->setX(tmp[0]*field_Dl[i]/(1+field_plane_redshifts[i])
-                          ,tmp[1]*field_Dl[i]/(1+field_plane_redshifts[i]));
+                           ,tmp[1]*field_Dl[i]/(1+field_plane_redshifts[i]));
 			//halo_pos[j][0] *= field_Dl[i]/(1+field_plane_redshifts[i]);
 			//halo_pos[j][1] *= field_Dl[i]/(1+field_plane_redshifts[i]);
 		}
@@ -646,7 +646,7 @@ void Lens::createFieldPlanes(bool verbose)
       << k2-k1 << std::endl;
 		
     PosType tmp = inv_ang_screening_scale*(1+field_plane_redshifts[i])/field_Dl[i];
-
+    
     if(tmp > 1/2.) tmp = 1/2.;  // TODO: Try to remove this arbitrary minimum distance
 		field_planes.push_back(new LensPlaneTree(&field_halos[k1], k2-k1, sigma_back,tmp));
 		//field_planes.push_back(new LensPlaneTree(&halo_pos[k1], &field_halos[k1], k2-k1, sigma_back) );
@@ -702,8 +702,8 @@ void Lens::createMainPlanes()
 	std::sort(main_halos.begin(), main_halos.end(), lens_halo_less(cosmo));
 	
 	// put everything with same redshift (within epsilon) onto a plane
-
-	Utilities::MixedVector<LensHalo*>::iterator<> it = main_halos.begin(); 
+  
+	Utilities::MixedVector<LensHalo*>::iterator<> it = main_halos.begin();
 	while(it != main_halos.end())
 	{
 		// find halos with higher redshift
@@ -723,7 +723,7 @@ void Lens::createMainPlanes()
 
 /**
  * /brief Calculate the coordinate distances of the field planes.
- * 
+ *
  * Set the redshifts and distances of the field planes by dividing the
  * coordinate distance space into equal intervals.
  */
@@ -801,55 +801,55 @@ void Lens::createMainHalos(InputParams& params)
 {
 	switch(main_halo_type)
 	{
-	case null_lens:
-		break;
-	case nfw_lens:
-		main_halos.push_back(new LensHaloNFW(params));
-		break;
-	case pnfw_lens:
-		main_halos.push_back(new LensHaloPseudoNFW(params));
-		break;
-	case pl_lens:
-		main_halos.push_back(new LensHaloPowerLaw(params));
-		break;
-	case nsie_lens:
-		main_halos.push_back(new LensHaloRealNSIE(params));
-		break;
-	case ana_lens:
-		main_halos.push_back(new LensHaloAnaNSIE(params));
-		break;
-	case uni_lens:
-		main_halos.push_back(new LensHaloUniform(params));
-		break;
-	case moka_lens:
-		main_halos.push_back(new LensHaloMOKA(params, cosmo));
-		break;
-	case dummy_lens:
-		main_halos.push_back(new LensHaloDummy(params));
-		break;
-	case hern_lens:
-		main_halos.push_back(new LensHaloHernquist(params));
-		break;
-	case jaffe_lens:
-		main_halos.push_back(new LensHaloJaffe(params));
-		break;
-	case pix_map_lens:
-		readPixelizedDensity();
-		break;
+    case null_lens:
+      break;
+    case nfw_lens:
+      main_halos.push_back(new LensHaloNFW(params));
+      break;
+    case pnfw_lens:
+      main_halos.push_back(new LensHaloPseudoNFW(params));
+      break;
+    case pl_lens:
+      main_halos.push_back(new LensHaloPowerLaw(params));
+      break;
+    case nsie_lens:
+      main_halos.push_back(new LensHaloRealNSIE(params));
+      break;
+    case ana_lens:
+      main_halos.push_back(new LensHaloAnaNSIE(params));
+      break;
+    case uni_lens:
+      main_halos.push_back(new LensHaloUniform(params));
+      break;
+    case moka_lens:
+      main_halos.push_back(new LensHaloMOKA(params, cosmo));
+      break;
+    case dummy_lens:
+      main_halos.push_back(new LensHaloDummy(params));
+      break;
+    case hern_lens:
+      main_halos.push_back(new LensHaloHernquist(params));
+      break;
+    case jaffe_lens:
+      main_halos.push_back(new LensHaloJaffe(params));
+      break;
+    case pix_map_lens:
+      readPixelizedDensity();
+      break;
 	}
-
+  
 	if(main_galaxy_halo_type != 0)
 	{
 		switch(main_galaxy_halo_type)
 		{
-		case null_gal:
-			break;
-		case nsie_gal:
-			main_halos.push_back(new LensHaloRealNSIE(params));
-			break;
+      case null_gal:
+        break;
+      case nsie_gal:
+        main_halos.push_back(new LensHaloRealNSIE(params));
+        break;
 		}
 	}
-
+  
 	for(std::size_t i = 0; i < main_halos.size(); ++i){
 		main_halos[i]->setCosmology(cosmo);
   }
@@ -861,7 +861,7 @@ void Lens::clearMainHalos(bool verbose)
 	main_halos.clear();
 	
 	flag_switch_main_halo_on = false;
-
+  
 	
 	Utilities::delete_container(main_planes);
 	main_plane_redshifts.clear();
@@ -878,7 +878,7 @@ void Lens::insertMainHalo(LensHalo* halo,bool verbose)
 {
 	halo->setCosmology(cosmo);
 	main_halos.push_back(halo);
-
+  
 	flag_switch_main_halo_on = true;
 	
 	addMainHaloToPlane(halo);
@@ -958,120 +958,121 @@ void Lens::createFieldHalos(bool verbose)
 	unsigned long i,k,j_max,k1,k2;
 	std::vector<PosType> Logm;
 	//PosType pos_max[2];
-    PosType z_max;
+  PosType z_max;
 	const PosType MaxLogm=16.;
 	PosType z1, z2, mass_max,Nhaloestot;
 	int np;
 	PosType rr,theta,maxr;
 	HALOCalculator *halo_calc = new HALOCalculator(&cosmo,field_min_mass,0.0);
-    PosType mo=7.3113e10,M1=2.8575e10,gam1=7.17,gam2=0.201,be=0.557;
-    PosType field_galaxy_mass_fraction = 0;
-
-
-    if (field_min_mass < 1.0e5) {
-       std::cout << "Are you sure you want the minimum field halo mass to be " << field_min_mass << " Msun?" << std::endl;
-       throw;
-    }
-    
+  PosType mo=7.3113e10,M1=2.8575e10,gam1=7.17,gam2=0.201,be=0.557;
+  PosType field_galaxy_mass_fraction = 0;
+  size_t haloid=0;
+  
+  
+  if (field_min_mass < 1.0e5) {
+    std::cout << "Are you sure you want the minimum field halo mass to be " << field_min_mass << " Msun?" << std::endl;
+    throw;
+  }
+  
 	PosType aveNhalos = cosmo.haloNumberInBufferedCone(field_min_mass,0,zsource,fieldofview*pow(pi/180,2),field_buffer,field_mass_func_type,mass_func_PL_slope);
-
+  
 	Utilities::fill_linear(zbins,Nzbins,0.0,zsource);
 	// construct redshift distribution table
 	Nhalosbin[0] = 1;
 	zbins[0] = 0;
-
+  
 	for(k=1;k<Nzbins-1;++k){
 		Nhalosbin[k] = cosmo.haloNumberInBufferedCone(field_min_mass,zbins[k],zsource,fieldofview*pow(pi/180,2),field_buffer,field_mass_func_type,mass_func_PL_slope)/aveNhalos;
 	}
 	zbins[Nzbins-1] = zsource;
 	Nhalosbin[Nzbins-1] = 0.0;
-
+  
 	std::size_t Nhalos = static_cast<std::size_t>(poidev(float(aveNhalos), seed));
-
+  
 	std::vector<PosType> halo_zs_vec;
 	//std::vector<PosType *> halo_pos_vec;  /// temporary vector to store angular positions
-
+  
 	// assign redsshifts to field_halos according to the redshift distribution
-
+  
 	for(i=0;i < Nhalos;++i){
 		halo_zs_vec.push_back(Utilities::InterpolateYvec(Nhalosbin,zbins,ran2(seed)));
 	}
-
-    // sort redshifts
+  
+  // sort redshifts
 	std::sort(halo_zs_vec.begin(),halo_zs_vec.end());
-
+  
 	assert(halo_zs_vec[0] < halo_zs_vec[1]);
 	assert(halo_zs_vec[0] < halo_zs_vec[Nhalos-1]);
-
+  
 	// fill the log(mass) vector
 	Logm.resize(Nmassbin);
 	Nhalosbin.resize(Nmassbin);
 	Utilities::fill_linear(Logm,Nmassbin,log10(field_min_mass),MaxLogm);
-
+  
 	PosType *theta_pos,*theta2;
 	size_t j = 0;
 	k2 = 0;
 	std::vector<PosType>::iterator it1,it2;
 	for(np=0,mass_max=0;np<NZSamples;np++){
-
+    
 		z1 = np*zsource/(NZSamples);
 		z2 = (np+1)*zsource/(NZSamples);
-
+    
 		it1 = std::lower_bound(halo_zs_vec.begin(),halo_zs_vec.end(),z1);
 		it2 = std::lower_bound(halo_zs_vec.begin(),halo_zs_vec.end(),z2);
-
+    
 		k1 = it1 - halo_zs_vec.begin();
 		k2 = it2 - halo_zs_vec.begin();
-
+    
 		Nhaloestot = cosmo.haloNumberInBufferedCone(pow(10,Logm[0]),z1,z2,fieldofview*pow(pi/180,2),field_buffer,field_mass_func_type,mass_func_PL_slope);
-
+    
 		Nhalosbin[0] = 1;
-
+    
 #ifdef _OPENMP
 #pragma omp parallel for default(shared) private(k)
 #endif
 		for(k=1;k<Nmassbin-1;k++){
 			// cumulative number density in one square degree
 			Nhalosbin[k] = cosmo.haloNumberInBufferedCone(pow(10,Logm[k]),z1,z2,fieldofview*pow(pi/180,2),field_buffer,field_mass_func_type,mass_func_PL_slope)
-					/Nhaloestot;
+      /Nhaloestot;
 		}
 		Nhalosbin[Nmassbin-1] = 0;
-
+    
 		for(i = k1; i < k2; i++){
 			PosType Ds = cosmo.angDist(0,halo_zs_vec[i]);
-
+      
 			maxr = pi*sqrt(fieldofview/pi)/180. + field_buffer/Ds; // fov is a circle
 			rr = maxr*sqrt(ran2(seed));
-
+      
 			assert(rr == rr);
-
+      
 			theta_pos = new PosType[3];
-
+      
 			theta = 2*pi*ran2(seed);
-
+      
 			theta_pos[0] = rr*cos(theta);//*Ds;
 			theta_pos[1] = rr*sin(theta);//*Ds;
 			theta_pos[2] = 0.0;
-
+      
       float mass = pow(10,Utilities::InterpolateYvec(Nhalosbin,Logm,ran2 (seed)));
       
 			halo_calc->reset(mass,halo_zs_vec[i]);
       
 			float Rmax = halo_calc->getRvir();
 			float rscale = Rmax/halo_calc->getConcentration(0);
-            assert(rscale < Rmax);
+      assert(rscale < Rmax);
       
-            float sigma = 0;
-            if(flag_field_gal_on){
-                // from Moster et al. 2010ApJ...710..903M
-                field_galaxy_mass_fraction = mo*pow(mass/M1,gam1)
-                  /pow(1+pow(mass/M1,be),(gam1-gam2)/be)/mass;
-                if(field_galaxy_mass_fraction > 1.0) field_galaxy_mass_fraction = 1;
-                sigma = 126*pow(mass*(1-field_galaxy_mass_fraction)/1.0e10,0.25); // From Tully-Fisher and Bell & de Jong 2001
+      float sigma = 0;
+      if(flag_field_gal_on){
+        // from Moster et al. 2010ApJ...710..903M
+        field_galaxy_mass_fraction = mo*pow(mass/M1,gam1)
+        /pow(1+pow(mass/M1,be),(gam1-gam2)/be)/mass;
+        if(field_galaxy_mass_fraction > 1.0) field_galaxy_mass_fraction = 1;
+        sigma = 126*pow(mass*(1-field_galaxy_mass_fraction)/1.0e10,0.25); // From Tully-Fisher and Bell & de Jong 2001
 				//field_halos[j]->initFromMassFunc(mass*(1-field_galaxy_mass_fraction),Rmax,rscale,field_prof_internal_slope,seed);
-            }else{
-                field_galaxy_mass_fraction = 0;
-            }
+      }else{
+        field_galaxy_mass_fraction = 0;
+      }
       
 			switch(field_int_prof_type)
 			{
@@ -1090,10 +1091,10 @@ void Lens::createFieldHalos(bool verbose)
 				case pl_lens:
 					//field_halos.push_back(new LensHaloPowerLaw);
           field_halos.push_back(new LensHaloPowerLaw(mass*(1-field_galaxy_mass_fraction),Rmax,halo_zs_vec[i],Rmax/rscale,1.0,1.0,0,0));
-
+          
 					break;
 				case nsie_lens:
-                    //std::cout << "Warning: All galaxies are spherical" << std::endl;
+          //std::cout << "Warning: All galaxies are spherical" << std::endl;
 					field_halos.push_back(new LensHaloRealNSIE(mass*(1-field_galaxy_mass_fraction),halo_zs_vec[i],sigma,0.0,1.0,0,0));
 					//field_halos.push_back(new LensHaloRealNSIE);
 					break;
@@ -1126,67 +1127,69 @@ void Lens::createFieldHalos(bool verbose)
 					std::cout << "Pixeliz not supported." << std::endl;
 					break;
 			}
-
- 
+      
+      
 			if(mass > mass_max) {
 				mass_max = mass;
 				j_max = i;
 				z_max = halo_zs_vec[i];
 			}
-
+      
 			//halo_pos_vec.push_back(theta_pos);
       field_halos.back()->setX(theta_pos);
-
+      ++haloid;
+      field_halos.back()->setID(haloid);
+      
 			++j;
-
+      
 			if(flag_field_gal_on){
-                switch(field_int_prof_gal_type){
-                    case null_gal:
-                        ERROR_MESSAGE();
-                        std::cout << "flag_field_gal_on is true, but field_int_prof_gal_type is null!!!!" << std::endl;
-                        break;
-                    case nsie_gal:
+        switch(field_int_prof_gal_type){
+          case null_gal:
+            ERROR_MESSAGE();
+            std::cout << "flag_field_gal_on is true, but field_int_prof_gal_type is null!!!!" << std::endl;
+            break;
+          case nsie_gal:
             
-                        float sigma = 126*pow(mass*field_galaxy_mass_fraction/1.0e10,0.25); // From Tully-Fisher and Bell & de Jong 2001
-                        //std::cout << "Warning: All galaxies are spherical" << std::endl;
-                        float fratio = (ran2(seed)+1)*0.5;  //TODO: Ben change this!  This is a kluge.
-                        float pa = 2*pi*ran2(seed);  //TODO: This is a kluge.
-                        field_halos.push_back(new LensHaloRealNSIE(mass*field_galaxy_mass_fraction,halo_zs_vec[i],sigma,0.0,fratio,pa,0));
-
-                        //field_halos[j]->initFromMassFunc(mass*field_galaxy_mass_fraction,Rmax,rscale,field_prof_internal_slope,seed);
-                        break;
+            float sigma = 126*pow(mass*field_galaxy_mass_fraction/1.0e10,0.25); // From Tully-Fisher and Bell & de Jong 2001
+            //std::cout << "Warning: All galaxies are spherical" << std::endl;
+            float fratio = (ran2(seed)+1)*0.5;  //TODO: Ben change this!  This is a kluge.
+            float pa = 2*pi*ran2(seed);  //TODO: This is a kluge.
+            field_halos.push_back(new LensHaloRealNSIE(mass*field_galaxy_mass_fraction,halo_zs_vec[i],sigma,0.0,fratio,pa,0));
+            
+            //field_halos[j]->initFromMassFunc(mass*field_galaxy_mass_fraction,Rmax,rscale,field_prof_internal_slope,seed);
+            break;
 				}
         
-                // Another copy of this position must be made to avoid rescaling it twice when it is converted into
-                // distance on the lens plane in Lens::buildLensPlanes()
-                theta2 = new PosType[3];
-                theta2[0]=theta_pos[0]; theta2[1]=theta_pos[1]; theta2[2]=theta_pos[2];
+        // Another copy of this position must be made to avoid rescaling it twice when it is converted into
+        // distance on the lens plane in Lens::buildLensPlanes()
+        theta2 = new PosType[3];
+        theta2[0]=theta_pos[0]; theta2[1]=theta_pos[1]; theta2[2]=theta_pos[2];
         
-                //halo_pos_vec.push_back(theta2);
-                field_halos.back()->setX(theta2);
-
+        //halo_pos_vec.push_back(theta2);
+        field_halos.back()->setX(theta2);
+        field_halos.back()->setID(haloid);
         
-                ++j;
+        ++j;
         
-            }
-
+      }
+      
 		}
-
+    
 		Nhalosbin.empty();
 	}
-
+  
 	assert(k2 == Nhalos);
 	delete halo_calc;
-
+  
 	if(verbose) std::cout << Nhalos << " halos created." << std::endl;
-
+  
 	Nhalos = field_halos.size();
 	//halo_pos = Utilities::PosTypeMatrix(Nhalos,3);
-
+  
 	//for(i=0;i<Nhalos;++i){
 	//	halo_pos[i] = halo_pos_vec[i];
 	//}
-
+  
 	if(verbose) std::cout << "leaving Lens::createFieldHalos()" << std::endl;
 }
 
@@ -1198,6 +1201,10 @@ void Lens::createFieldHalos(bool verbose)
  * This is information on the dark matter field_halos only.  There are 13 entries in each line separated by commas.
  * The comments must be removed from the beginning of the data file and the total number of field_halos must be added
  * as the first line.
+ *
+ * The LensHalo id numbers are set to the id of the parent halo in the simulation.  This
+ * is not the FOF parent.  Multiple LensHalos can have the same id because they were derived from the same simulation halo (ex. one for galaxy and one for DM halo).
+ *
  */
 void Lens::readInputSimFileMillennium(bool verbose)
 {
@@ -1207,9 +1214,9 @@ void Lens::readInputSimFileMillennium(bool verbose)
 	unsigned long haloid,idd,np;
 	const PosType mo=7.3113e10,M1=2.8575e10,gam1=7.17,gam2=0.201,be=0.557;
   PosType field_galaxy_mass_fraction = 0;
-
+  
 	PosType rmax=0,rtmp=0;
-
+  
 	std::ifstream file_in(field_input_sim_file.c_str());
 	if(!file_in){
 		std::cout << "Can't open file " << field_input_sim_file << std::endl;
@@ -1217,7 +1224,7 @@ void Lens::readInputSimFileMillennium(bool verbose)
     throw std::runtime_error(" Cannot open file.");
 		exit(1);
 	}
-
+  
 	// skip through header information in data file
 	i=0;
 	while(file_in.peek() == '#'){
@@ -1225,17 +1232,17 @@ void Lens::readInputSimFileMillennium(bool verbose)
 		++i;
 	}
 	if(verbose) std::cout << "skipped "<< i << " comment lines in file " << field_input_sim_file << std::endl;
-
+  
 	//std::vector<PosType *> halo_pos_vec;
   Utilities::Geometry::SphericalPoint tmp_sph_point(1,0,0);
-
+  
 	// read in data
 	int j_max;
 	PosType mass_max=0,R_max=0,V_max=0,minmass=1e30;
 	PosType *theta,*theta2;
 	int ncolumns = 9;
 	//int ncolumns = 13;
-
+  
 	void *addr[ncolumns];
   
 	addr[0] = &haloid;
@@ -1256,12 +1263,12 @@ void Lens::readInputSimFileMillennium(bool verbose)
 	std::string strg;
 	std::string f=",";
 	std::stringstream buffer;
-
+  
 	for(i=0,j=0 ; ; ++i){
 		// read a line of data
 		myline.clear();
 		std::getline(file_in,myline);
-
+    
 		if(myline[0] == '#')
 			break;
 		for(int l=0;l<ncolumns; l++){
@@ -1269,7 +1276,7 @@ void Lens::readInputSimFileMillennium(bool verbose)
 			strg.assign(myline,0,pos);
 			buffer << strg;
 			if(l <= 1 || l == 5){
-      //  if(l <= 2 || l == 7){
+        //  if(l <= 2 || l == 7){
 				buffer >> myint;
 				*((unsigned long *)addr[l]) = myint;
 			}
@@ -1282,35 +1289,35 @@ void Lens::readInputSimFileMillennium(bool verbose)
 			buffer.clear();
 			buffer.str(std::string());
 		}
-
+    
 		//PosType Ds = cosmo->angDist(0,z);
 		//theta[0] = -ra*pi/180.;
 		//theta[1] = dec*pi/180.;
     tmp_sph_point.theta *= pi/180;
     tmp_sph_point.phi *= -pi/180;
-
+    
     rtmp = Utilities::Geometry::AngleSeporation(central_point_sphere,tmp_sph_point);
     if(sim_angular_radius > 0 && rtmp > sim_angular_radius) continue;
     if(rtmp > rmax) rmax = rtmp;
-     
+    
 		// position on lens plane
 		theta = new PosType[2];
     tmp_sph_point.OrthographicProjection(central_point_sphere,theta);
     
     float mass = np*8.6e8/cosmo.gethubble(),sigma=0;
-
+    
     if(flag_field_gal_on){
       // from Moster et al. 2010ApJ...710..903M
       field_galaxy_mass_fraction = mo*pow(mass/M1,gam1)
-        /pow(1+pow(mass/M1,be),(gam1-gam2)/be)/mass;
+      /pow(1+pow(mass/M1,be),(gam1-gam2)/be)/mass;
       if(field_galaxy_mass_fraction > 1.0) field_galaxy_mass_fraction = 1;
       sigma = 126*pow(mass*(1-field_galaxy_mass_fraction)/1.0e10,0.25); // From Tully-Fisher and Bell & de Jong 2001
     }else{
       field_galaxy_mass_fraction = 0;
     }
-
+    
     if(np > 0.0 && vdisp > 0.0 && z <= zsource){
-
+      
       switch(field_int_prof_type)
 			{
 				case null_lens:
@@ -1365,21 +1372,21 @@ void Lens::readInputSimFileMillennium(bool verbose)
 					std::cout << "Pixeliz not supported." << std::endl;
 					break;
 			}
-
-
+      field_halos[j]->setID(haloid);
+      
 			field_halos[j]->setZlens(z);
       if(field_int_prof_type != nsie_lens){
-            field_halos[j]->initFromFile(mass*(1-field_galaxy_mass_fraction),seed,vmax,r_halfmass*cosmo.gethubble());
+        field_halos[j]->initFromFile(mass*(1-field_galaxy_mass_fraction),seed,vmax,r_halfmass*cosmo.gethubble());
 			}
-
-
+      
+      
 			if(field_halos[j]->get_Rmax() > R_max) R_max = field_halos[j]->get_Rmax();
 			if(vdisp > V_max) V_max = vdisp;
-
+      
 			//halo_pos_vec.push_back(theta);
       field_halos.back()->setX(theta);
-
-
+      
+      
 			if(mass > mass_max) {
 				mass_max = mass;
 				j_max = j;
@@ -1387,13 +1394,13 @@ void Lens::readInputSimFileMillennium(bool verbose)
 			if(mass < minmass) {
 				minmass = mass;
 			}
-
+      
 			++j;
-
+      
       if(flag_field_gal_on){
         float sigma = 126*pow(mass*field_galaxy_mass_fraction/1.0e10,0.25); // From Tully-Fisher and Bell & de Jong 2001
         //std::cout << "Warning: All galaxies are spherical" << std::endl;
-
+        
         //****** test lines taken out
         //field_galaxy_mass_fraction *= 2;
         
@@ -1422,7 +1429,8 @@ void Lens::readInputSimFileMillennium(bool verbose)
         theta2[0]=theta[0]; theta2[1]=theta[1];
 				//halo_pos_vec.push_back(theta2);
         field_halos.back()->setX(theta2);
-
+        field_halos.back()->setID(haloid);
+        
         
 				++j;
 			}
@@ -1431,43 +1439,43 @@ void Lens::readInputSimFileMillennium(bool verbose)
 	}
 	file_in.close();
 	if(verbose) std::cout << field_halos.size() << " halos read in."<< std::endl
-			<< "Max input mass = " << mass_max << "  R max = " << R_max << "  V max = " << V_max
-      << "Min imput mass = " << minmass << std::endl;
-
+    << "Max input mass = " << mass_max << "  R max = " << R_max << "  V max = " << V_max
+    << "Min imput mass = " << minmass << std::endl;
+  
 	/// setting the minimum halo mass in the simulation
 	field_min_mass = minmass;
 	if(field_buffer > 0.0){
 		if(verbose) std::cout << "Overiding field_buffer to make it 0 because halos are read in." << std::endl;
 		field_buffer = 0.0;
 	}
-
+  
 	//halo_pos = Utilities::PosTypeMatrix(field_halos.size(), 3);
-
+  
 	//for(i = 0; i < field_halos.size(); ++i)
 	//{
 	//	halo_pos[i] = halo_pos_vec[i];
 	//}
-
+  
 	std::cout << "Overiding input file field of view to make it fit the simulation light cone." << std::endl;
 	fieldofview = pi*rmax*rmax*pow(180/pi,2);  // Resets field of view to range of input galaxies
 	std::cout << "    It is now " << fieldofview << " deg^2" << std::endl;
-
+  
 	if(verbose) std::cout << "Setting mass function to Sheth-Tormen." << std::endl;
 	field_mass_func_type = ST; // set mass function
-
+  
 	if(verbose) std::cout << "sorting in Lens::readInputSimFileMillennium()" << std::endl;
 	// sort the field_halos by readshift
 	//Lens::quicksort(field_halos.data(),halo_pos,field_halos.size());
   std::sort(field_halos.begin(),field_halos.end(),LensHaloZcompare);
-
+  
 	if(verbose) std::cout << "leaving Lens::readInputSimFileMillennium()" << std::endl;
-
+  
   field_buffer = 0.0;
 	read_sim_file = true;
 }
 
 /**
- * \brief Read in information from a Virgo Millennium Data Base 
+ * \brief Read in information from a Virgo Millennium Data Base
  *  http://gavo.mpa-garching.mpg.de/MyMillennium/
  *
  * query select * from MockLensing.dbo.m21_20_39_021_bc03_Ben_halos
@@ -1475,6 +1483,8 @@ void Lens::readInputSimFileMillennium(bool verbose)
  * This is information on the dark matter field_halos only.  There are 13 entries in each line separated by commas.
  * The comments must be removed from the beginning of the data file and the total number of field_halos must be added
  * as the first line.
+ 
+ * The LensHalo id numbers are set to the id of the parent halo in the simulation.  In this case the id numbers are the order they appear in the halo catalog.
  */
 void Lens::readInputSimFileMultiDarkHalos(bool verbose)
 {
@@ -1484,7 +1494,7 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose)
 	const PosType mo=7.3113e10,M1=2.8575e10,gam1=7.17,gam2=0.201,be=0.557;
   PosType field_galaxy_mass_fraction = 0;
   const PosType masslimit =2.0e12;
-
+  
   
   Utilities::Geometry::SphericalPoint tmp_sph_point(1,0,0);
   
@@ -1501,7 +1511,8 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose)
 	PosType *theta,*theta2;
   PosType center[2] = {0.0,0.0};
 	int ncolumns = 11;
-
+  size_t haloid = 0;
+  
   void *addr[ncolumns];
   
 	//addr[0] = &ra;
@@ -1509,7 +1520,7 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose)
   
   addr[0] = &(tmp_sph_point.phi);
 	addr[1] = &(tmp_sph_point.theta);
-
+  
 	addr[2] = &z;
 	addr[3] = &zob;
 	addr[4] = &xpos;
@@ -1519,7 +1530,7 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose)
 	addr[8] = &vy;
 	addr[9] = &vz;
 	addr[10] = &mass;
-
+  
   //for(int jj=0;jj<filenames.size();++jj){
   for(int jj=0;jj<1;++jj){
     
@@ -1550,13 +1561,13 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose)
     std::string strg;
     std::string f=" ";
     std::stringstream buffer;
-      
+    
     i=j=0;
     myline.clear();
     while(std::getline(file_in,myline)){
       
-       int pos = myline.find_first_not_of(f);
-       myline.erase(0,pos);
+      int pos = myline.find_first_not_of(f);
+      myline.erase(0,pos);
       
       for(int l=0;l<ncolumns; l++){
         pos = myline.find(f);
@@ -1564,7 +1575,7 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose)
         buffer << strg;
         buffer >> myPosType;
         *((PosType *)addr[l]) = myPosType;
-
+        
         myline.erase(0,pos);
         strg.clear();
         buffer.clear();
@@ -1573,23 +1584,24 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose)
         pos = myline.find_first_not_of(f);
         myline.erase(0,pos);
       }
-    
+      ++haloid;
+      
       mass = pow(10,mass)/cosmo.gethubble();
       if(mass > masslimit && z <= zsource){
- 
+        
         tmp_sph_point.theta *= pi/180;
         tmp_sph_point.phi *= -pi/180;
         
         rtmp = Utilities::Geometry::AngleSeporation(central_point_sphere,tmp_sph_point);
         
         if(sim_angular_radius > 0 && rtmp > sim_angular_radius) continue;
-
+        
         if(rtmp > rmax) rmax = rtmp;
-
+        
         // position on lens plane
         theta = new PosType[2];
         tmp_sph_point.OrthographicProjection(central_point_sphere,theta);
-
+        
         if(field_halos.size() > 0 ){
           if(boundary_p1[0] > theta[0]) boundary_p1[0] = theta[0];
           if(boundary_p1[1] > theta[1]) boundary_p1[1] = theta[1];
@@ -1605,15 +1617,15 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose)
           boundary_p1[1] = boundary_p2[1] = theta[1];
           boundary_diagonal[0] = boundary_diagonal[1] = theta[0]+theta[1];
         }
-
+        
         //theta[0] = -ra*pi/180.;
         //theta[1] = dec*pi/180.;
-    
+        
         center[0] += tmp_sph_point.theta;
         center[1] += tmp_sph_point.phi;
-    
+        
         float sigma=0;
-    
+        
         if(flag_field_gal_on){
           // from Moster et al. 2010ApJ...710..903M
           field_galaxy_mass_fraction = mo*pow(mass/M1,gam1)
@@ -1623,7 +1635,7 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose)
         }else{
           field_galaxy_mass_fraction = 0;
         }
-      
+        
         switch(field_int_prof_type)
         {
           case null_lens:
@@ -1634,7 +1646,7 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose)
             // calculate the average size and concentration of a NFW at the mass and reshift
             if(mass > 0){
               HALOCalculator hcalc(&cosmo,mass*(1-field_galaxy_mass_fraction),z);
-          
+              
               field_halos.push_back(new LensHaloNFW(mass*(1-field_galaxy_mass_fraction),hcalc.getRvir(),z,hcalc.getConcentration(),1.0,0.0,0));
             }
             break;
@@ -1650,7 +1662,7 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose)
             break;
           case nsie_lens:
             field_halos.push_back(new LensHaloRealNSIE(mass*(1-field_galaxy_mass_fraction),z,sigma,0.0,1.0,0.0,0));
-
+            
             //field_halos.push_back(new LensHaloRealNSIE);
             break;
           case ana_lens:
@@ -1683,10 +1695,12 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose)
             std::cout << "PixelDMap not supported." << std::endl;
             break;
         }
-      
+        
         //if(mass > 0.0) halo_pos_vec.push_back(theta);
-        if(mass > 0.0) field_halos.back()->setX(theta);
-      
+        if(mass > 0.0){
+          field_halos.back()->setX(theta);
+          field_halos.back()->setID(haloid);
+        }
         if(mass > mass_max) {
           mass_max = mass;
           j_max = j;
@@ -1694,15 +1708,15 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose)
         if(mass < minmass) {
           minmass = mass;
         }
-      
+        
         ++j;
-      
+        
         if(flag_field_gal_on){
           float sigma = 126*pow(mass*field_galaxy_mass_fraction/1.0e10,0.25); // From Tully-Fisher and Bell & de Jong 2001
           //std::cout << "Warning: All galaxies are spherical" << std::endl;
           float fratio = (ran2(seed)+1)*0.5;  //TODO: Ben change this!  This is a kluge.
           float pa = 2*pi*ran2(seed);  //TODO: This is a kluge.
-        
+          
           switch(field_int_prof_gal_type){
             case null_gal:
               ERROR_MESSAGE();
@@ -1715,20 +1729,21 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose)
               throw std::runtime_error("Don't support any but NSIE galaxies yet!");
               break;
           }
-        
+          
           //field_halos[j]->setZlens(z);
           //field_halos[j]->initFromFile(mass*field_galaxy_mass_fraction,seed,vmax,r_halfmass*cosmo.gethubble());
-        
+          
           // Another copy of this position must be made to avoid rescaling it twice when it is converted into
           // distance on the lens plane in Lens::buildLensPlanes()
           theta2 = new PosType[2];
           theta2[0]=theta[0]; theta2[1]=theta[1];
           //halo_pos_vec.push_back(theta2);
           field_halos.back()->setX(theta2);
-        
+          field_halos.back()->setID(haloid);
+          
           ++j;
         }
-      
+        
       }
       myline.clear();
       ++i;
@@ -1742,7 +1757,7 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose)
   
   
 	if(verbose) std::cout << field_halos.size() << " halos read in."<< std::endl
-    << "Max input mass = " << mass_max << "  R max = " << R_max 
+    << "Max input mass = " << mass_max << "  R max = " << R_max
     << " Min imput mass = " << minmass << std::endl;
   
 	/// setting the minimum halo mass in the simulation
@@ -1766,16 +1781,16 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose)
 	std::cout << "Overiding input file field of view to make it fit the simulation light cone." << std::endl;
   rmax = (boundary_p2[0] - boundary_p1[0])/2;
   /*if(diagonal1 < diagonal2*0.9){
-    // circular region
-    rmax = diagonal1/2;
-    fieldofview = pi*rmax*rmax*pow(180/pi,2);  // Resets field of view to range of input galaxies
-    inv_ang_screening_scale = 0.0;
-  }else{
-    fieldofview = (boundary_p2[0] - boundary_p1[0])*(boundary_p2[1] - boundary_p1[1])*pow(180/pi,2);
-    rmax = diagonal2/2;
-    inv_ang_screening_scale = 5.0/(MIN(boundary_p2[0] - boundary_p1[0],boundary_p2[1] - boundary_p1[1]));
-  }*/
- 
+   // circular region
+   rmax = diagonal1/2;
+   fieldofview = pi*rmax*rmax*pow(180/pi,2);  // Resets field of view to range of input galaxies
+   inv_ang_screening_scale = 0.0;
+   }else{
+   fieldofview = (boundary_p2[0] - boundary_p1[0])*(boundary_p2[1] - boundary_p1[1])*pow(180/pi,2);
+   rmax = diagonal2/2;
+   inv_ang_screening_scale = 5.0/(MIN(boundary_p2[0] - boundary_p1[0],boundary_p2[1] - boundary_p1[1]));
+   }*/
+  
   if(sim_angular_radius == 0.0){
     fieldofview = (boundary_p2[0] - boundary_p1[0])*(boundary_p2[1] - boundary_p1[1])*pow(180/pi,2);
     inv_ang_screening_scale = 5.0/(MIN(boundary_p2[0] - boundary_p1[0],boundary_p2[1] - boundary_p1[1]));
@@ -1791,7 +1806,7 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose)
 	// sort the field_halos by readshift
 	//Lens::quicksort(field_halos.data(),halo_pos,field_halos.size());
   std::sort(field_halos.begin(),field_halos.end(),LensHaloZcompare);
-
+  
   
 	if(verbose) std::cout << "leaving Lens::readInputSimFileMultiDarkHalos()" << std::endl;
   
@@ -1874,9 +1889,9 @@ void Lens::combinePlanes(bool verbose)
 	
 	// output resulting setup
 	if(verbose) std::cout
-	<< "\ncombinePlanes()"
-	<< "\n---------------"
-	<< std::endl;
+    << "\ncombinePlanes()"
+    << "\n---------------"
+    << std::endl;
 	if(verbose) std::cout << "\nz:";
 	for(std::size_t i = 0, n = plane_redshifts.size(); i < n; ++i)
 		if(verbose) std::cout << " " << plane_redshifts[i];
@@ -1933,34 +1948,34 @@ void Lens::buildPlanes(InputParams& params,bool verbose)
  *
  */
 short Lens::ResetSourcePlane(
-		PosType z                 /// redshift of implanted source
-		,bool nearest           /** If true, set the source plane to the nearest (in coordinate distance)
-			                      * lensing plane that was created already.  This can be used to avoid self-lensing
-			                      * by the halo of the source.  If the source is at higher redshift than the simulation
-			                      * volume the source will be at its real redshift.
-			                      */
-		,unsigned long GalID
-		,PosType *xx
-    ,bool verbose
-		){
+                             PosType z                 /// redshift of implanted source
+                             ,bool nearest           /** If true, set the source plane to the nearest (in coordinate distance)
+                                                      * lensing plane that was created already.  This can be used to avoid self-lensing
+                                                      * by the halo of the source.  If the source is at higher redshift than the simulation
+                                                      * volume the source will be at its real redshift.
+                                                      */
+                             ,unsigned long GalID
+                             ,PosType *xx
+                             ,bool verbose
+                             ){
 	unsigned long j;
 	short out=0;
-
+  
 	toggle_source_plane = true;
-
+  
 	if(z<=0.0){
 		std::cout << "Warning: Source redshift can't be set to " << z << " in MultiLens::ResetSourcePlane." << endl;
 		return out;
 	}
-
-
+  
+  
 	// distance to new source plane
 	PosType Ds = cosmo.coorDist(0,z);
 	// find bounding index
 	locateD(Dl.data()-1,lensing_planes.size(),Ds,&j);
 	// j is the index of the next plane at higher redshift, This plane will be temporarily replaced and used as a source plane
 	assert(j <= lensing_planes.size() && j >=0);
-
+  
 	if(j > 0)
 	{
 		// check if source plane coincides with previous lens plane
@@ -1970,11 +1985,11 @@ short Lens::ResetSourcePlane(
 		else if(nearest)
 		{
 			PosType z1 = cosmo.invCoorDist(Dl[j]-0.5*dDl[j]);
-			if(z < z1) 
+			if(z < z1)
 				--j;
 		}
 	}
-
+  
 	if(nearest && (j < lensing_planes.size()) ){
 		zs_implant = plane_redshifts[j];
 		Ds_implant = Dl[j];
@@ -1987,11 +2002,11 @@ short Lens::ResetSourcePlane(
 		if(j > 0) dDs_implant = cosmo.coorDist(plane_redshifts[j-1],z); //Ds - Dl[j-1];
 		else  dDs_implant = Ds;
 	}
-
+  
 	if(verbose) std::cout << "Source on plane " << j << " zs " << zs_implant << " Ds " << Ds << " dDs " << dDs_implant << std::endl;
-
+  
 	index_of_new_sourceplane = j;
-
+  
 	out = j;
 	return out;
 }
@@ -2000,22 +2015,22 @@ short Lens::ResetSourcePlane(
 void Lens::quicksort(LensHaloHndl *halos,PosType **pos,unsigned long N){
 	PosType pivotvalue;
 	unsigned long pivotindex,newpivotindex,i;
-
+  
 	if(N <= 1) return ;
-
+  
 	// pick pivot as the median of the first, last and middle values
 	if ((halos[0]->getZlens() >= halos[N/2]->getZlens() && halos[0]->getZlens() <= halos[N-1]->getZlens())
 			|| (halos[0]->getZlens() >= halos[N-1]->getZlens() && halos[0]->getZlens() <= halos[N/2]->getZlens())) pivotindex = 0;
 	else if ((halos[N/2]->getZlens() >= halos[0]->getZlens() && halos[N/2]->getZlens() <= halos[N-1]->getZlens())
-			|| (halos[N/2]->getZlens() >= halos[N-1]->getZlens() && halos[N/2]->getZlens() <= halos[0]->getZlens())) pivotindex = N/2;
+           || (halos[N/2]->getZlens() >= halos[N-1]->getZlens() && halos[N/2]->getZlens() <= halos[0]->getZlens())) pivotindex = N/2;
 	else pivotindex = N-1;
 	pivotvalue=halos[pivotindex]->getZlens();
-
+  
 	// move pivet to end of halosay
 	std::swap(halos[pivotindex],halos[N-1]);
 	std::swap(pos[pivotindex],pos[N-1]);
 	newpivotindex=0;
-
+  
 	// partition list and halosay
 	for(i=0;i<N;++i){
 		if(halos[i]->getZlens() <= pivotvalue){
@@ -2025,9 +2040,9 @@ void Lens::quicksort(LensHaloHndl *halos,PosType **pos,unsigned long N){
 		}
 	}
 	--newpivotindex;
-
+  
 	quicksort(&halos[0],pos,newpivotindex);
 	quicksort(&halos[newpivotindex+1],&pos[newpivotindex+1],N-newpivotindex-1);
-
+  
 	return ;
 }

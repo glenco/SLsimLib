@@ -146,6 +146,12 @@ public:
 	HaloType* getMainHalo(std::size_t i);
 	
 	void rayshooterInternal(unsigned long Npoints, Point *i_points);
+  void info_rayshooter(Point *i_point
+                      ,std::vector<std::vector<double>> ang_positions
+                      ,std::vector<KappaType> kappa_on_planes
+                      ,std::vector<std::vector<LensHalo*>> halo_neighbors
+                      ,PosType rmax,short mode = 0  /// 0:physical distance, 1: comoving distance, 2: angular distance
+                                       );
 
 	// methods used for use with implanted sources
 

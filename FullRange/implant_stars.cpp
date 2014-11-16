@@ -183,10 +183,10 @@ void LensHalo::implant_stars(
                              ,long *seed
                              ,IMFtype type
                              ){
-  PosType **tmp_p;
-  tmp_p[0] = center;
+  PosType *tmp_p;// = new double *;
+  tmp_p = center;
   
-  implant_stars(tmp_p,1,seed,type);
+  implant_stars(&tmp_p,1,seed,type);
 }
 /// Un-implant stars.  Remove stars an any information about the number and size of star regions.
 void LensHalo::remove_stars(){  

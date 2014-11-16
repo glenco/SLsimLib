@@ -542,5 +542,4 @@ PosType **PosTypeMatrix(long rows, long cols)
   
 #endif
 
-
 }

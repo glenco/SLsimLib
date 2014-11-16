@@ -44,6 +44,12 @@ std::vector<LensHalo*> LensPlaneTree::getHalos()
 	return halos;
 }
 
+void LensPlaneTree::getNeighborHalos(PosType ray[],PosType rmax
+                                     ,std::vector<LensHalo*> &neighbors)
+{
+  halo_tree->neighbors(ray,rmax,neighbors);
+}
+
 std::vector<const LensHalo*> LensPlaneTree::getHalos() const
 {
 	return std::vector<const LensHalo*>(halos.begin(), halos.end());
@@ -131,3 +137,14 @@ std::vector<const LensHalo*> LensPlaneSingular::getHalos() const
 {
 	return std::vector<const LensHalo*>(halos.begin(), halos.end());
 }
+
+void LensPlaneSingular::getNeighborHalos(PosType ray[],PosType rmax
+                                         ,std::vector<LensHalo*> &neighbors){
+  PosType x[2],r2 = rmax*rmax;
+  for(int i=0;i<halos.size();i++){
+     halos[i]->getX(x);
+    if(r2 > ( (ray[0]-x[0])*(ray[0]-x[0]) + (ray[1]-x[1])*(ray[1]-x[1]) ))
+      neighbors.push_back(halos[i]);
+  }
+};
+
