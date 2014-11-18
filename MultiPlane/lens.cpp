@@ -305,10 +305,10 @@ void Lens::assignParams(InputParams& params,bool verbose)
   if(!params.get("pixelmaps_on",pixel_map_on)) pixel_map_on = 0;
 	if(pixel_map_on)
 	{
-		if(!params.get("PixelizedDensityMap_input_file", pixel_map_input_file))
+		if(!params.get("pixelmaps_input_file", pixel_map_input_file))
 		{
 			ERROR_MESSAGE();
-			std::cout << "parameter PixelizedDensityMap_input_file needs to be set in the parameter file " << params.filename() << endl;
+			std::cout << "parameter pixelmaps_input_file needs to be set in the parameter file " << params.filename() << endl;
 			exit(1);
 		}
 	}
@@ -455,11 +455,10 @@ void Lens::printMultiLens(){
     case jaffe_lens:
       std::cout << "Jaffe lens" << endl;
       break;
-    case pix_map_lens:
-      std::cout << "PixelDMap lens" << endl;
-      break;
 	}
   
+  if(pixel_map_on) std::cout << "PixelDMap lens" << endl;
+    
 	std::cout << endl << "Main galaxies profile type:" << endl;
 	switch(main_galaxy_halo_type){
     case null_gal:
@@ -520,9 +519,9 @@ void Lens::printMultiLens(){
 			case uni_lens:
 				std::cout << "UniNSIE field type" << endl;
 				break;
-			case moka_lens:
-				std::cout << "MOKA field type" << endl;
-				break;
+      case moka_lens:
+        std::cout << "MOKA field type" << endl;
+        break;
 			case dummy_lens:
 				std::cout << "Dummy field type" << endl;
 				break;
@@ -532,11 +531,10 @@ void Lens::printMultiLens(){
 			case jaffe_lens:
 				std::cout << "Jaffe field type" << endl;
 				break;
-			case pix_map_lens:
-				std::cout << "PixelDMap field type" << endl;
-				break;
 		}
     
+    if(pixel_map_on) std::cout << "PixelDMap lens" << endl;
+
 		std::cout << endl << "Field galaxies profile type:" << endl;
 		switch(field_int_prof_gal_type){
       case null_gal:
@@ -834,10 +832,9 @@ void Lens::createMainHalos(InputParams& params)
     case jaffe_lens:
       main_halos.push_back(new LensHaloJaffe(params));
       break;
-    case pix_map_lens:
-      readPixelizedDensity();
-      break;
 	}
+  
+  if(pixel_map_on) readPixelizedDensity();
   
 	if(main_galaxy_halo_type != 0)
 	{
@@ -1107,10 +1104,10 @@ void Lens::createFieldHalos(bool verbose)
 					ERROR_MESSAGE();
 					std::cout << "UniNSIE not supported." << std::endl;
 					break;
-				case moka_lens:
-					ERROR_MESSAGE();
-					std::cout << "MOKA not supported." << std::endl;
-					break;
+        case moka_lens:
+          ERROR_MESSAGE();
+          std::cout << "MOKA not supported." << std::endl;
+          break;
 				case dummy_lens:
 					field_halos.push_back(new LensHaloDummy);
           field_halos[j]->setZlens(halo_zs_vec[i]);
@@ -1122,10 +1119,6 @@ void Lens::createFieldHalos(bool verbose)
 				case jaffe_lens:
 					//field_halos.push_back(new LensHaloJaffe);
           field_halos.push_back(new LensHaloJaffe(mass*(1-field_galaxy_mass_fraction),Rmax,halo_zs_vec[i],rscale,1.0,0,0));
-					break;
-				case pix_map_lens:
-					ERROR_MESSAGE();
-					std::cout << "Pixeliz not supported." << std::endl;
 					break;
 			}
       
@@ -1351,10 +1344,10 @@ void Lens::readInputSimFileMillennium(bool verbose)
 					ERROR_MESSAGE();
 					std::cout << "UniNSIE not supported." << std::endl;
 					break;
-				case moka_lens:
-					ERROR_MESSAGE();
-					std::cout << "MOKA not supported." << std::endl;
-					break;
+        case moka_lens:
+          ERROR_MESSAGE();
+          std::cout << "MOKA not supported." << std::endl;
+          break;
 				case dummy_lens:
 					field_halos.push_back(new LensHaloDummy);
 					ERROR_MESSAGE();
@@ -1367,10 +1360,6 @@ void Lens::readInputSimFileMillennium(bool verbose)
 				case jaffe_lens:
 					ERROR_MESSAGE();
 					std::cout << "Jaffe not supported." << std::endl;
-					break;
-				case pix_map_lens:
-					ERROR_MESSAGE();
-					std::cout << "Pixeliz not supported." << std::endl;
 					break;
 			}
       field_halos[j]->setID(haloid);
@@ -1678,7 +1667,7 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose)
             ERROR_MESSAGE();
             std::cout << "MOKA not supported." << std::endl;
             break;
-          case dummy_lens:
+         case dummy_lens:
             field_halos.push_back(new LensHaloDummy);
             ERROR_MESSAGE();
             std::cout << "Why would you want dummy file halos???" << std::endl;
@@ -1690,10 +1679,6 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose)
           case jaffe_lens:
             ERROR_MESSAGE();
             std::cout << "Jaffe not supported." << std::endl;
-            break;
-          case pix_map_lens:
-            ERROR_MESSAGE();
-            std::cout << "PixelDMap not supported." << std::endl;
             break;
         }
         

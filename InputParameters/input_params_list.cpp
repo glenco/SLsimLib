@@ -28,12 +28,12 @@ namespace
 		
 		// Main halos type
 		{"main_halo_on", "1", "insert a main halo into the simulation"},
-		{"main_DM_halo_type", "DummyLens", "main halo type: nolens, NFW, PseudoNFW, PowerLaw, NSIE, AnaLens, UniLens, MOKALens, DummyLens, Hernquist, Jaffe, PixelDMap"},
+		{"main_DM_halo_type", "DummyLens", "main halo type: nolens, NFW, PseudoNFW, PowerLaw, NSIE, AnaLens, UniLens, MOKALens, DummyLens, Hernquist, Jaffe"},
 		{"main_galaxy_halo_type", "0", "if set, a main halo galaxy profile is chosen: 0 or none, 1 or NSIE"},
     
-    // Pixelized Mass maps if main_DM_halo_type == PixelDMap
+    // Pixelized Mass maps 
     {"pixelmaps_on","0","Input one or more pixelized density maps"},
-    {"PixelizedDensityMap_input_file","surfacedensity.fits","Density map(s) to be read in as main lens.  This can be a single map (*.fits) or a file with a list of fits files."},
+    {"pixelmaps_input_file","surfacedensity.fits","Density map(s) to be read in as main lens.  This can be a single map (*.fits) or a file with a list of fits files."},
     // MultiDarkMap lenses
     //{"PixelizedDensityMap_input_file", "PixelizedMapFiles.txt", "list of MOKA FITS files for MultiDark-like simulations"},
     
