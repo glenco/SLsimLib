@@ -108,9 +108,11 @@ LensHaloAnaNSIE::~LensHaloAnaNSIE(){
   if(perturb_Nmodes) delete [] perturb_modes;
 }
 
-LensHaloFit::LensHaloFit(const COSMOLOGY& cosmo) : LensHaloBaseNSIE(){
+LensHaloFit::LensHaloFit(const COSMOLOGY& cosmo, int MyNmodes) : LensHaloBaseNSIE(){
   
   //assignParams(params);
+  
+  perturb_Nmodes = MyNmodes ;
   
   if(perturb_Nmodes){
     perturb_modes = new PosType[perturb_Nmodes+1];

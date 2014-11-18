@@ -119,7 +119,7 @@ void ImageFinding::find_images_kist(
   if(verbose) printf("Ntemp=%i\n",Nsizes);
 
   grid->ClearAllMarks();
-
+      
     //////////////////////////////////////////
     // telescope source size down to target
     //////////////////////////////////////////

@@ -32,7 +32,7 @@ void LensHaloFit::FindLensSimple(
 		imageinfo[i].centroid[0] = image_positions[i].x[0];
 		imageinfo[i].centroid[1] = image_positions[i].x[1];
 	}
-
+      
 	FindLensSimple(imageinfo,Nimages,y,dx_sub);
       
 	delete[] imageinfo;
@@ -87,9 +87,9 @@ void LensHaloFit::FindLensSimple(
 	x_center[0] = x_center[1] = 0.0;
 
 	// calculate scale to re-normalize.  Otherwise the linear algebra routines will fail.
-	for(i=0,scale=0;i<Nimages;++i)
-		scale = DMAX(scale,sqrt( pow(imageinfo[0].centroid[0] - imageinfo[i].centroid[0],2)
-		    	 + pow(imageinfo[0].centroid[1] - imageinfo[i].centroid[1],2) ) );
+  for(i=0,scale=0;i<Nimages;++i)
+    scale = DMAX(scale,sqrt( pow(imageinfo[0].centroid[0] - imageinfo[i].centroid[0],2)
+	    	 + pow(imageinfo[0].centroid[1] - imageinfo[i].centroid[1],2) ) );
 
 	for(i=0;i<Nimages;++i){
 
@@ -532,10 +532,9 @@ void LensHaloFit::get_perturbmodes(PosType * ListModes, const int Nmodes)
 {
   assert(Nmodes == perturb_Nmodes);
   
-  for(int i=0; i < perturb_Nmodes; i++)
+  for(int i=0 ; i < perturb_Nmodes ; i++)
   {
     ListModes[i] = perturb_modes[i] ;
-    std::cout << "i = " << i << std::endl ;
   }
   return ;
 };
