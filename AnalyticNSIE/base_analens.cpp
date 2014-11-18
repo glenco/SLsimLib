@@ -27,6 +27,7 @@ void LensHaloBaseNSIE::force_halo(
   
   gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
   alpha_tmp[0] = alpha_tmp[1] = 0.0;
+  phi_tmp = 0.0 ;
   
   alpha[0] = alpha[1] = 0.0;
   gamma[0] = gamma[1] = gamma[2] = 0.0;

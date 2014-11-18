@@ -78,6 +78,7 @@ void LensHaloFit::FindLensSimple(
 	int pairing[Nimages],Nsources = 1;
 	double **xob,**xg,q[6],*mods;
 	double re2 = 0,x_center[2],scale;
+  for(int i=0;i<6;i++) q[i] = 0. ;
 
   xob = dmatrix(0,Nimages-1,0,1);
 	xg = dmatrix(0,1,0,1);
@@ -106,8 +107,8 @@ void LensHaloFit::FindLensSimple(
 	x_center[1] /= scale;
 
 	//ERROR_MESSAGE();
-	ElliptisizeLens(Nimages,Nsources,1,pairing,xob,x_center,xg,0,perturb_beta
-			,perturb_Nmodes-1,mods,dx_sub,&re2,q);
+  // ElliptisizeLens(Nimages,Nsources,1,pairing,xob,x_center,xg,0,perturb_beta,perturb_Nmodes-1,mods,dx_sub,&re2,q); // THAT LOOKS WRONG !
+  ElliptisizeLens(Nimages,Nsources,1,pairing,xob,x_center,xg,0,perturb_beta,perturb_Nmodes,mods,dx_sub,&re2,q);
       
 	for(i=1;i<perturb_Nmodes;++i) perturb_modes[i] = mods[i];
 

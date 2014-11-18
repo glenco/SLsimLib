@@ -232,6 +232,7 @@ for(i = start; i < end; i++)
         assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
         assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
         assert(kappa == kappa);
+        if(isinf(kappa)) { std::cout << "xx = " << xx[0] << " " << xx[1] << std::endl ;}
         assert(!isinf(kappa));
 
         fac = 1/(1+p->plane_redshifts[j]);
@@ -246,10 +247,9 @@ for(i = start; i < end; i++)
         assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
         assert(kappa == kappa);
         assert(phi == phi);
-        
+
       if(p->flag_switch_deflection_off){ alpha[0] = alpha[1] = 0.0; }
       
-        
       // This computes \vec{x}^{j+1} in terms of \vec{x}^{j} , \vec{x}^{j-1} and \vec{\alpha}^{j}
       // according to Eq. (19) of paper GLAMER II -----------------------------------------------
 
@@ -268,16 +268,8 @@ for(i = start; i < end; i++)
       p->i_points[i].image->x[0] = xplus[0];
       p->i_points[i].image->x[1] = xplus[1];
 
-        
       // ----------------------------------------------------------------------------------------
 
-      /*
-      std::cout << "p->dDl[j-1]" << "\t" << "p->dDl[j]" << "\t" << "p->dDl[j+1]" << std::endl;
-      std::cout << p->dDl[j-1] << "\t" << p->dDl[j] << "\t" << p->dDl[j+1] << std::endl;
-      std::cout << "aa" << "\t" << "bb" << "\t" << "cc" << std::endl;
-      std::cout << aa << "\t" << bb << "\t" << cc << std::endl;
-       */
-      
       
         // This computes (\kappa^{j+1}, \gamma_1^{j+1}, \gamma_2^{j+1}, \gamma_3^{j+1})
         // in terms of the j-plane quantities and according to Eq. (22) of GLAMER II.
@@ -316,33 +308,45 @@ for(i = start; i < end; i++)
         gamma_minus[2] = p->i_points[i].gamma[2];
         // ------------------------------------------------------------------------------------------
       
-        /*
+      
+      if(!(kappa_plus==kappa_plus && gamma_minus[0]==gamma_minus[0] && gamma_minus[1]==gamma_minus[1] && gamma_minus[2]==gamma_minus[2])){
+        std::cout << "p->dDl[j-1]" << "\t" << "p->dDl[j]" << "\t" << "p->dDl[j+1]" << std::endl;
+        std::cout << p->dDl[j-1] << "\t" << p->dDl[j] << "\t" << p->dDl[j+1] << std::endl;
+        std::cout << "aa" << "\t" << "bb" << "\t" << "cc" << std::endl;
+        std::cout << aa << "\t" << bb << "\t" << cc << std::endl;
+        
+        
+        std::cout << "kappa" << "\t" << "gamma[0]" << "\t" << "gamma[1]" << "\t" << "gamma[2]" << std::endl ;
+        std::cout << kappa << "\t" << gamma[0] << "\t" << gamma[1] << "\t" << gamma[2] << std::endl ;
+        
+        
         std::cout << "p->i_points[i].kappa" << "\t" << "p->i_points[i].gamma[0]" << "\t" << "p->i_points[i].gamma[1]" << "\t" << "p->i_points[i].gamma[2]" << std::endl ;
         std::cout << p->i_points[i].kappa << "\t" << p->i_points[i].gamma[0] << "\t" << p->i_points[i].gamma[1] << "\t" << p->i_points[i].gamma[2] << std::endl ;
-      
+        
         std::cout << "x" << "\t" << "y" << std::endl;
-        std::cout << p->i_points[i].image->x[0] << "\t" << p->i_points[i].image->x[0] << std::endl;
+        std::cout << p->i_points[i].image->x[0] << "\t" << p->i_points[i].image->x[1] << std::endl;
         std::cout << "kappa_minus" << "\t" << "gamma_minus[0]" << "\t" << "gamma_minus[1]" << "\t" << "gamma_minus[2]" << "\t" << std::endl ;
         std::cout << kappa_minus << "\t" << gamma_minus[0] << "\t" << gamma_minus[1] << "\t" << gamma_minus[2] << "\t" << std::endl ;
         std::cout << "kappa_plus" << "\t" << "gamma_plus[0]" << "\t" << "gamma_plus[1]" << "\t" << "gamma_plus[2]" << "\t" << std::endl ;
         std::cout << kappa_plus << "\t" << gamma_plus[0] << "\t" << gamma_plus[1] << "\t" << gamma_plus[2] << "\t" << std::endl ;
-         */
+      }
       
-        assert(kappa_plus==kappa_plus && gamma_minus[0]==gamma_minus[0] && gamma_minus[1]==gamma_minus[1] && gamma_minus[2]==gamma_minus[2]);
       
-            
-        // Updating the point quantities ----------------
-        p->i_points[i].kappa = kappa_plus;
-        p->i_points[i].gamma[0] = gamma_plus[0];
-        p->i_points[i].gamma[1] = gamma_plus[1];
-        p->i_points[i].gamma[2] = gamma_plus[2];
-        // ----------------------------------------------
+      assert(kappa_plus==kappa_plus && gamma_minus[0]==gamma_minus[0] && gamma_minus[1]==gamma_minus[1] && gamma_minus[2]==gamma_minus[2]);
+      
+      
+      // Updating the point quantities ----------------
+      p->i_points[i].kappa = kappa_plus;
+      p->i_points[i].gamma[0] = gamma_plus[0];
+      p->i_points[i].gamma[1] = gamma_plus[1];
+      p->i_points[i].gamma[2] = gamma_plus[2];
+      // ----------------------------------------------
+      
+      
+      
+      // Geometric time delay with added potential
+      p->i_points[i].dt += 0.5*( (xplus[0] - xminus[0])*(xplus[0] - xminus[0]) + (xplus[1] - xminus[1])*(xplus[1] - xminus[1]) )/p->dDl[j+1] - (1 + p->plane_redshifts[j]) * phi * p->charge ; /// in Mpc
 
-            
-        
-        // Geometric time delay with added potential
-            p->i_points[i].dt += 0.5*( (xplus[0] - xminus[0])*(xplus[0] - xminus[0]) + (xplus[1] - xminus[1])*(xplus[1] - xminus[1]) )/p->dDl[j+1] - (1 + p->plane_redshifts[j]) * phi * p->charge ; /// in Mpc
-      
         // Check that the 1+z factor must indeed be there (because the x positions have been rescaled, so it may be different compared to the draft).
         // Remark : Here the true lensing potential is not "phi" but "phi * p->charge = phi * 4 pi G".
       
