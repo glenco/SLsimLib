@@ -238,7 +238,7 @@ namespace Utilities{
                        ,bool verbose = false);
 }
 
-/** \brief Class for doing adaptive smoothing using multiply resolution grids.
+/** \brief Warning: Not tested yet. Class for doing adaptive smoothing using multiply resolution grids.
  */
 class MultiGridSmoother{
 public:

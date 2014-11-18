@@ -302,9 +302,10 @@ void Lens::assignParams(InputParams& params,bool verbose)
 	}
 	
 	// read Pixeliz parameters if necessary
-	if(main_halo_type == pix_map_lens)
+  if(!params.get("pixelmaps_on",pixel_map_on)) pixel_map_on = 0;
+	if(pixel_map_on)
 	{
-		if(!params.get("PixelizedDensityMap_input_file", main_input_file))
+		if(!params.get("PixelizedDensityMap_input_file", pixel_map_input_file))
 		{
 			ERROR_MESSAGE();
 			std::cout << "parameter PixelizedDensityMap_input_file needs to be set in the parameter file " << params.filename() << endl;

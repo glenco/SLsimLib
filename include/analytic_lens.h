@@ -21,7 +21,7 @@ class LensHaloFit : public LensHaloBaseNSIE{
 public:
   //LensHaloAnaNSIE(InputParams& params,bool verbose = false);
   /// Creates a AnaLens which initially has no mass,  Use FindLensSimple() to give it mass
-  LensHaloFit(const COSMOLOGY& cosmo);
+  LensHaloFit(const COSMOLOGY& cosmo, int MyNmodes);
 	~LensHaloFit();
 
   void PrintLens(bool show_substruct,bool show_stars);
