@@ -190,6 +190,25 @@ typedef int TreeElement;
 bool BoxInCircle(PosType *ray,PosType radius,PosType *p1,PosType *p2);
 PosType ClosestBorder(PosType *ray,PosType *p1,PosType *p2);
 
+inline PosType MIN(PosType x,PosType y){
+  return (x < y) ? x : y;
+};
+inline PosType MAX(PosType x,PosType y){
+  return (x > y) ? x : y;
+};
+template <class T>
+inline T MIN(T x,T y){
+  return (x < y) ? x : y;
+};
+template <class T>
+inline T MAX(T x,T y){
+  return (x > y) ? x : y;
+};
+
+template <class T>
+inline bool BETWEEN(T x,T xmin,T xmax){
+  return (x > xmin)*(x < xmax);
+};
 
 /*  returns the distance from ray[] to the furthest point on the
  *    border of the box,
@@ -287,9 +306,11 @@ namespace Utilities{
   PosType cross(const Point *O, const Point *A, const Point *B);
   bool xorder(Point *p1,Point *p2);
   bool yorder(Point *p1,Point *p2);
-  std::vector<Point *> convex_hull(std::vector<Point *> P);
-  std::vector<Point *> shrink_wrap(std::vector<Point *> P);
-  std::vector<Point *> concave_hull(std::vector<Point *> P,int k);
+  std::vector<Point *> convex_hull(std::vector<Point *> &P);
+  std::vector<double *> convex_hull(std::vector<double *> &P);
+  //std::vector<Point *> shrink_wrap(std::vector<Point *> P);
+  std::vector<Point *> concave_hull(std::vector<Point *> &P,int k);
+  std::vector<double *> concave_hull(std::vector<double *> &P,int k);
 
 	long IndexFromPosition(PosType *x,long Npixels,PosType range,const PosType *center);
 	void PositionFromIndex(unsigned long i,PosType *x,long Npixels,PosType range,PosType const *center);
@@ -492,6 +513,14 @@ namespace Utilities{
   int windings2(PosType *x,Point *points,unsigned long Npoints,PosType *area,short image);
   /// returns 1 if it is in the curve and 0 if it is out.  Borders count as in.
   int incurve(PosType x[],std::vector<Point *> curve);
+
+  unsigned long order_curve4(Point *curve,long Npoints);
+  unsigned long order_curve4(Kist<Point> * curve);
+  unsigned long order_curve5(Kist<Point> * curve);
+  void ordered_convexhull(Kist<Point> * curve);
+  void ordered_shrink_wrap(Kist<Point> * curve);
+  void ordered_concavehull(Kist<Point> * curve);
+  PosType ConvexHullArea(Kist<Point> * curve);
 }
 // in curve_routines.c
 void nesting_curve(OldImageInfo *curves,int Ncurves);
@@ -499,15 +528,7 @@ void split_order_curve(OldImageInfo *curves,int Maxcurves,int *Ncurves);
 void split_order_curve2(OldImageInfo *curves,int Maxcurves,int *Ncurves);
 void split_order_curve3(OldImageInfo *curves,int Maxcurves,int *Ncurves);
 void split_order_curve4(OldImageInfo *curves,int Maxcurves,int *Ncurves);
-namespace Utilities{
-	unsigned long order_curve4(Point *curve,long Npoints);
-	unsigned long order_curve4(Kist<Point> * curve);
-  unsigned long order_curve5(Kist<Point> * curve);
-  void ordered_convexhull(Kist<Point> * curve);
-  void ordered_shrink_wrap(Kist<Point> * curve);
-  void ordered_concavehull(Kist<Point> * curve);
-  PosType ConvexHullArea(Kist<Point> * curve);
-}
+
 bool order_ExteriorBoundary(Point *curve,long Npoints,long *NewNpoints,PosType *area);
 PosType findAreaOfCurve(TreeHndl tree,ImageInfo *curve,int NimageMax);
 void walkcurve(Point *points,long Npoints,long *j,long *end);

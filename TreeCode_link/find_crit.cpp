@@ -367,7 +367,7 @@ void ImageFinding::find_crit2(
   long i=0;
   long refinements;
   //short spur,closed;
-  PosType maxgridsize,mingridsize,x[2];
+  PosType x[2];
   Kist<Point> newpoint_kist,neighborkist;
 
   // find kist of points with negative magnification

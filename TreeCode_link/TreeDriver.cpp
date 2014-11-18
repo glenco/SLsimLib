@@ -1511,3 +1511,56 @@ bool ImageInfo::constant(
   
   return ( fabs(max-min) < tol );
 }
+
+PosType ImageInfo::ConcaveHullImageArea(bool useborder){
+  
+  size_t i;
+  std::vector<Point *> copy;
+  if(useborder){
+    copy.resize(innerborder->Nunits());
+    for(i=0,innerborder->MoveToTop();!(innerborder->OffBottom());innerborder->Down(),++i){
+      copy[i] = innerborder->getCurrent();
+    }
+  }else{
+    copy.resize(imagekist->Nunits());
+    for(i=0,imagekist->MoveToTop();!(imagekist->OffBottom());imagekist->Down(),++i){
+      copy[i] = imagekist->getCurrent();
+    }
+  }
+  //std::vector<Point *> Utilities::concave_hull(std::vector<Point *> &P,int k );
+  
+  PosType tmp_area;
+  std::vector<Point *> hull = Utilities::concave_hull(copy,8);
+  Utilities::windings(hull[0]->x,hull.data(),hull.size(),&tmp_area);
+  
+  return tmp_area;
+}
+
+PosType ImageInfo::ConcaveHullSourceArea(bool useborder){
+  
+  size_t i;
+  std::vector<Point *> copy;
+  if(useborder){
+    innerborder->TranformPlanes();
+    copy.resize(innerborder->Nunits());
+    for(i=0,innerborder->MoveToTop();!(innerborder->OffBottom());innerborder->Down(),++i){
+      copy[i] = innerborder->getCurrent();
+    }
+    innerborder->TranformPlanes();
+  }else{
+    copy.resize(imagekist->Nunits());
+    imagekist->TranformPlanes();
+    for(i=0,imagekist->MoveToTop();!(imagekist->OffBottom());imagekist->Down(),++i){
+      copy[i] = imagekist->getCurrent();
+    }
+    imagekist->TranformPlanes();
+  }
+  //std::vector<Point *> Utilities::concave_hull(std::vector<Point *> &P,int k );
+  
+  PosType tmp_area;
+  std::vector<Point *> hull = Utilities::concave_hull(copy,8);
+  Utilities::windings(hull[0]->x,hull.data(),hull.size(),&tmp_area);
+
+  return tmp_area;
+}
+

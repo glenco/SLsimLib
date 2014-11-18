@@ -422,6 +422,9 @@ void Lens::info_rayshooter(
         ,std::vector<std::vector<double>> ang_positions  /// angular positions on each plane
         ,std::vector<KappaType> kappa_on_planes          /// convergence on each plane
         ,std::vector<std::vector<LensHalo*>> halo_neighbors  /// neighboring halos within rmax of ray on each plane
+        ,LensHalo *halo_max
+        ,KappaType &kappa_max
+        ,KappaType gamma_max[]
         ,PosType rmax  /// distance from ray on each plane, units depend on mode parameter
         ,short mode  /// 0:physical distance (Mpc), 1: comoving distance (Mpc), 2: angular distance (rad)
                            )
@@ -460,13 +463,13 @@ void Lens::info_rayshooter(
 
   int j;
   
-  PosType xx[2],fac;
+  PosType xx[2];
   PosType aa,bb,cc;
   PosType alpha[2];
   
-  PosType xminus[2],xplus[2],tmp_r;
-  KappaType gamma[2],phi;
-  
+  PosType xminus[2],xplus[2],tmp_r,x_tmp[2];
+  KappaType gamma[3],phi,kappa_tmp;
+  kappa_max = -1.0;
       
     // find position on first lens plane in comoving units
     i_point->image->x[0] = i_point->x[0] * Dl[0];
@@ -498,8 +501,34 @@ void Lens::info_rayshooter(
       ang_positions[j][0] = i_point->image->x[0]/Dl[j];
       ang_positions[j][1] = i_point->image->x[1]/Dl[j];
       
+      PosType SigmaCrit = cosmo.SigmaCrit(plane_redshifts[j],tmpZs);
+      
+      // Find the halo with the largest kappa
+      for(int ii=0;ii<halo_neighbors[j].size();++ii){
+        alpha[0] = alpha[1] = 0.0;
+        kappa_tmp = 0.0;
+        gamma[0] = gamma[1] = gamma[2] = 0.0;
+        phi = 0.0;
+        
+        // Getting the halo position (in physical Mpc) :
+        halo_neighbors[j][ii]->getX(x_tmp);
+        
+        // Taking the shift into account :
+        x_tmp[0] = xx[0] - x_tmp[0];
+        x_tmp[1] = xx[1] - x_tmp[1];
+        
+        halo_neighbors[j][ii]->force_halo(alpha,&kappa_tmp,gamma,&phi,x_tmp,false);
+        kappa_tmp /=SigmaCrit;
+        if(kappa_tmp > kappa_max){
+          kappa_max = kappa_tmp;
+          halo_max = halo_neighbors[j][ii];
+          gamma_max[0] = gamma[0]/SigmaCrit;
+          gamma_max[1] = gamma[1]/SigmaCrit;
+        }
+      }
+
       //kappa_on_planes[j] *= 1/(1+plane_redshifts[j]);
-      kappa_on_planes[j] /= cosmo.SigmaCrit(plane_redshifts[j],tmpZs);
+      kappa_on_planes[j] /= SigmaCrit;
       
       aa = (dDl[j+1] + dDl[j])/dDl[j];
       bb = dDl[j+1]/dDl[j];
