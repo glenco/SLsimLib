@@ -323,7 +323,7 @@ PosType BoxIntersection(Branch *branch1,Branch *branch2){
  *            1 if whole box is inside circle but ray is not in the box
  *            2 if ray[] is inside box
  *            3 if box intersects circle but ray[] is not inside box
- */
+ *
 int cutbox(PosType *ray,PosType *p1,PosType *p2,PosType rmax){
   short i,tick=0;
   PosType close[2],rtmp;
@@ -352,7 +352,7 @@ int cutbox(PosType *ray,PosType *p1,PosType *p2,PosType rmax){
   if(rtmp<rmax*rmax) return 1;  // box is all inside circle
 
   return 3;  // box intersects circle
-}
+}*/
 
 /**
  * \brief If the circle centered at ray with radius is entirely within the box

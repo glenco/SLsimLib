@@ -10,6 +10,7 @@
  */
 
 #include "slsimlib.h"
+#include "Tree.h"
 
 /** \brief Constructor meant for point particles, simulation particles
  */
@@ -528,7 +529,7 @@ void TreeQuad::neighbors(PosType ray[],PosType rmax,std::list<IndexType> &neighb
   bool decend=true;
   it.movetop();
   do{
-    int cut = cutbox(ray,(*it)->boundary_p1,(*it)->boundary_p2,rmax);
+    int cut = Utilities::cutbox(ray,(*it)->boundary_p1,(*it)->boundary_p2,rmax);
     decend = true;
     
     if(cut == 0){      // box outside circle

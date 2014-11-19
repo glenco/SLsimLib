@@ -330,14 +330,14 @@ void Lens::assignParams(InputParams& params,bool verbose)
 		flag_switch_lensing_off = false;
   
 	// Some checks for valid parameters
-	if(flag_switch_field_off == false && field_Nplanes == 0)
+	if(flag_switch_field_off == false && field_Nplanes == 0 )
 	{
 		ERROR_MESSAGE();
 		std::cout << "Do you want to run _with_ field halos, but with _without_ field planes? Change field_Nplanes to a bigger number!" << endl;
 		exit(1);
 	}
 	
-	if(flag_switch_main_halo_on == false && flag_switch_field_off == true)
+	if(flag_switch_main_halo_on == false && flag_switch_field_off == true && !pixel_map_on)
 	{
 		ERROR_MESSAGE();
 		std::cout << "Do you want an empty simulation? Set main_halo_on to true for a main lens, or field_off to false for field lenses." << endl;
@@ -1912,7 +1912,7 @@ void Lens::buildPlanes(InputParams& params,bool verbose)
 	}
 	
 	// build main
-	if(flag_switch_main_halo_on)
+	if(flag_switch_main_halo_on || pixel_map_on)
 	{
 		// create the main halos
 		createMainHalos(params);
