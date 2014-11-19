@@ -311,6 +311,9 @@ void Lens::assignParams(InputParams& params,bool verbose)
 			std::cout << "parameter pixelmaps_input_file needs to be set in the parameter file " << params.filename() << endl;
 			exit(1);
 		}
+    if(flag_switch_field_off == false && pixel_map_input_file.find(".fits") == pixel_map_input_file.npos){
+      std::cerr << "Warning: Are you sure you want to put both field lenses and pixel maps in the light-cone?" << endl;
+    }
 	}
 	
 	if(!params.get("z_source",zsource))
@@ -399,7 +402,6 @@ void Lens::resetFieldHalos(bool verbose)
 	Utilities::delete_container(field_halos);
 	Utilities::delete_container(field_planes);
 	
-	//Utilities::free_PosTypeMatrix(halo_pos, field_halos.size(), 3);
 	
 	if(sim_input_flag){
 		if(read_sim_file == false){

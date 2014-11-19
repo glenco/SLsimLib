@@ -139,12 +139,12 @@ namespace
 		{"source_band", "", ""},
 		{"source_mag_limit", "30", "minimum magnitude for sources"},
 		{"source_sb_limit", "0", "minimum surface brightness for sources"},
-        {"shapelets_folder", "","Shapelets sources input folder"},
-        {"shapelets_band", "","Shapelets band for initialisation"},
+    {"shapelets_folder", "","Shapelets sources input folder"},
+    {"shapelets_band", "","Shapelets band for initialisation"},
         
-        // QSO data
-        {"QSO_kcorrection_file","","Table with k-correction in the i band for quasars as a function of redshift"},
-        {"QSO_colors_file","","Table with SDSS colors for quasars as a function of redshift"},
+    // QSO data
+    {"QSO_kcorrection_file","","Table with k-correction in the i band for quasars as a function of redshift"},
+    {"QSO_colors_file","","Table with SDSS colors for quasars as a function of redshift"},
        
 	};
 	
