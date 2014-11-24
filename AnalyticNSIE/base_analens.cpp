@@ -69,10 +69,8 @@ void LensHaloBaseNSIE::force_halo(
     {
       gamma[0] += gamma_tmp[0];
       gamma[1] += gamma_tmp[1];
-      gamma[2] += gamma_tmp[2]; // Added by Fabien
-      // Why don't we have gamma[2] here ?
-      // std::cout << "phi = " << *phi << " phi_tmp = " << *phi_tmp << std::endl;
-      *phi += phi_tmp ; // Should we also multiply by the factor 2*Rmax/pi ?
+
+      *phi += phi_tmp ;
     }
     gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
     alpha_tmp[0] = alpha_tmp[1] = 0.0;
