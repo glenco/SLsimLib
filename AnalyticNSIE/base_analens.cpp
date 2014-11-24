@@ -40,7 +40,7 @@ void LensHaloBaseNSIE::force_halo(
     xt[0]=xcm[0];
     xt[1]=xcm[1];
     
-    //units *= 2. * Rmax / pi ; // units now in mass /// Multiplying by 2*Rmax/pi to match with Power Law
+    units *= 2. * Rmax / pi ; // units now in mass /// Multiplying by 2*Rmax/pi to match with Power Law
     
     alphaNSIE(alpha,xt,fratio,rcore,pa);
     alpha[0] *= units;
@@ -62,13 +62,14 @@ void LensHaloBaseNSIE::force_halo(
   if(perturb_Nmodes > 0)
   {
     *kappa += lens_expand(perturb_beta,perturb_modes,perturb_Nmodes,xcm,alpha_tmp,gamma_tmp,&phi_tmp);
-    
+
     alpha[0] += alpha_tmp[0];
     alpha[1] += alpha_tmp[1];
     
     {
       gamma[0] += gamma_tmp[0];
       gamma[1] += gamma_tmp[1];
+      gamma[2] += gamma_tmp[2]; // Added by Fabien
       // Why don't we have gamma[2] here ?
       // std::cout << "phi = " << *phi << " phi_tmp = " << *phi_tmp << std::endl;
       *phi += phi_tmp ; // Should we also multiply by the factor 2*Rmax/pi ?

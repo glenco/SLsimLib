@@ -35,12 +35,13 @@ GLAMER_TEST_USES(LensTest)
  *   redshift_planes_file -- asci file with the redshifts of the lensing planes, if not set then created internaly
  *   flag_switch_field_off -- false: field halos are created, true: no field halos are created; default is false
  *
- *   if flag_switch_field_off == false, i.e. there are field halos then also the following are used:
+ *   if field_off == false, i.e. there are field halos then also the following are used:
  *   field_Nplanes -- number of field planes
- *   fieldofview -- field of view of the light cone, filled with field halos
+ *   field_fov -- field of view of the light cone, filled with field halos
  *   field_internal_profile -- profile type of the DM field lens halos
  *   	0 or nolens, 1 or NFW, 2 or PseudoNFW, 3 or PowerLaw, 4 or NSIE, 5 or AnaLens, 6 or UniLens, 7 or MOKALens, 8 or DummyLens, 9 or Hernquist, 10 or Jaffe
- *   field_prof_internal_slope -- slope of the surface density for power law or pseudo nfw profiles
+ *   field_prof_internal_slope_pl -- slope of the surface density for power law
+ *   field_prof_internal_slope_pnfw -- slope of the surface density for pseudo nfw profiles
  *   field_internal_profile_galaxy -- profile type of the galaxy field halos; if not set, no galaxies are used
  *   	0 or none, 1 or NSIE
  *

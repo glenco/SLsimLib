@@ -226,8 +226,12 @@ for(i = start; i < end; i++)
       xx[1] = p->i_points[i].image->x[1]/(1+p->plane_redshifts[j]);
       
       assert(xx[0] == xx[0] && xx[1] == xx[1]);
-        
+      
+      ////////////////////////////////////////////////////////////////
+      
       p->lensing_planes[j]->force(alpha,&kappa,gamma,&phi,xx); // Computed in physical coordinates.
+
+      ////////////////////////////////////////////////////////////////
 
         assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
         assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);

@@ -80,7 +80,7 @@ void LensHaloFit::FindLensSimple(
 	double re2 = 0,x_center[2],scale;
   for(int i=0;i<6;i++) q[i] = 0. ;
 
-  xob = dmatrix(0,Nimages-1,0,1);
+  xob = dmatrix(0,Nimages-1,0,1); // For the rescaled positions of the images
 	xg = dmatrix(0,1,0,1);
 	mods=dvector(0,perturb_Nmodes + 2*Nsources + 1 );
 

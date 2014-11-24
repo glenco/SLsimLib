@@ -81,10 +81,8 @@ void LensPlaneSingular::force(PosType *alpha
 	*kappa = 0.0;
 	gamma[0] = gamma[1] = gamma[2] = 0.0;
   *phi = 0.0;
-
-      // std::cout << "LensPlaneSingular : halos.size() = " << halos.size() << std::endl ;
   
-    // Loop over the different halos present in a given lens plane.
+  // Loop over the different halos present in a given lens plane.
 	for(std::size_t i = 0, n = halos.size(); i < n; ++i)
 	{
 		alpha_tmp[0] = alpha_tmp[1] = 0.0;
@@ -98,15 +96,8 @@ void LensPlaneSingular::force(PosType *alpha
     // Taking the shift into account :
     x_tmp[0] = xx[0] - x_tmp[0];
     x_tmp[1] = xx[1] - x_tmp[1];
-
-    // std::cout << "LensPlaneSingular : " << xx[0] << "\t" << xx[1] << std::endl ;
-    // std::cout << "LensPlaneSingular : " << x_tmp[0] << "\t" << x_tmp[1] << std::endl ;
     
 		halos[i]->force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp,x_tmp,false);
-
-    // std::cout << "LensPlaneSingular : " << kappa_tmp << std::endl ;
-    // std::cout << "LensPlaneSingular : " << gamma_tmp[0] << "\t" << gamma_tmp[1] << "\t" << gamma_tmp[2] << std::endl ;
-    // std::cout << "LensPlaneSingular : " << phi_tmp << "\t" << std::endl ;
     
     // Adding the temporary values to the different quantities :
 		alpha[0] -= alpha_tmp[0];
