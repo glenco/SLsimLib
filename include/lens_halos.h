@@ -66,9 +66,10 @@ public:
   
   void setX(PosType PosX, PosType PosY) { posHalo[0] = PosX ; posHalo[1] = PosY ; }
   void setX(PosType *PosXY) { posHalo[0] = PosXY[0] ; posHalo[1] = PosXY[1] ; }
-  
   /// get the position of the Halo in physical Mpc
   void getX(PosType * MyPosHalo) const { MyPosHalo[0] = posHalo[0] ; MyPosHalo[1] = posHalo[1]; }
+
+  /// get the position of the Halo in physical Mpc
   /// display the position of the halo
   void displayPos() { std::cout << "Halo PosX = " << posHalo[0] << " ; Halo PosY = " << posHalo[1] << std::endl; }
   
@@ -141,9 +142,12 @@ public:
   /// perform some basic consistancy checks for halo
   bool test();
   
+  size_t getID(){return idnumber;}
+  void setID(size_t id){idnumber = id;}
   
 protected:
 
+  size_t idnumber; /// Identification number of halo.  It is not always used.
   PosType renormalization(PosType r_max);
   
   PosType alpha_int(PosType x) const;
@@ -376,6 +380,7 @@ protected:
     LensHalo *halo;
   };
 
+  
 };
 
 /** \ingroup DeflectionL2

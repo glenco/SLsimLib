@@ -39,6 +39,7 @@ public:
   /// get the core radius
   virtual PosType get_rcore(){return 0.0;};
   
+
   /// set the number of perturbation modes -- Does the same as LensHaloBaseNSIE::getPerturb_Nmodes().
   void setNmodes(int my_Nmodes){perturb_Nmodes = my_Nmodes;};
 

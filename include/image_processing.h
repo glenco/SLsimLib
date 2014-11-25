@@ -229,7 +229,7 @@ void pixelize(double *map,long Npixels,double range,double *center
 		,ImageInfo *imageinfo,int Nimages,bool constant_sb,bool cleanmap
 		,bool write_for_skymaker = false, std::string filename="");
 void _SplitFluxIntoPixels(TreeHndl ptree,Branch *leaf,double *leaf_sb);
-void smoothmap(double *map_out,double *map_in,long Npixels,double range,double sigma);
+//void smoothmap(double *map_out,double *map_in,long Npixels,double range,double sigma);
 
 namespace Utilities{
     void LoadFitsImages(std::string dir,const std::string& filespec,std::vector<PixelMap> & images,int maxN,double resolution = -1,bool verbose = false);
@@ -238,7 +238,7 @@ namespace Utilities{
                        ,bool verbose = false);
 }
 
-/** \brief Class for doing adaptive smoothing using multiply resolution grids.
+/** \brief Warning: Not tested yet. Class for doing adaptive smoothing using multiply resolution grids.
  */
 class MultiGridSmoother{
 public:

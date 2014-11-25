@@ -28,10 +28,15 @@ namespace
 		
 		// Main halos type
 		{"main_halo_on", "1", "insert a main halo into the simulation"},
-		{"main_DM_halo_type", "DummyLens", "main halo type: nolens, NFW, PseudoNFW, PowerLaw, NSIE, AnaLens, UniLens, MOKALens, DummyLens, Hernquist, Jaffe, PixelDMap"},
+		{"main_DM_halo_type", "DummyLens", "main halo type: nolens, NFW, PseudoNFW, PowerLaw, NSIE, AnaLens, UniLens, MOKALens, DummyLens, Hernquist, Jaffe"},
 		{"main_galaxy_halo_type", "0", "if set, a main halo galaxy profile is chosen: 0 or none, 1 or NSIE"},
-    {"PixelizedDensityMap_input_file","surfacedensity.fits","Density map to be read in as main lens."},
-		
+    
+    // Pixelized Mass maps 
+    {"pixelmaps_on","0","Input one or more pixelized density maps"},
+    {"pixelmaps_input_file","surfacedensity.fits","Density map(s) to be read in as main lens.  This can be a single map (*.fits) or a file with a list of fits files."},
+    // MultiDarkMap lenses
+    //{"PixelizedDensityMap_input_file", "PixelizedMapFiles.txt", "list of MOKA FITS files for MultiDark-like simulations"},
+    
 		// Field halos
 		{"field_off", "0", "turn off field halos"},
 		{"field_Nplanes", "8", "number of field halo planes"},
@@ -112,9 +117,7 @@ namespace
 		// 
 		{"zsource_reference", "2.0", "reference redshift for halo quantities that depend on source z"},
 		
-		// MultiDarkMap lenses
-		{"PixelizedDensityMap_input_file", "PixelizedMapFiles.txt", "list of MOKA FITS files for MultiDark-like simulations"},
-		
+	
 		// Type of source SB model
 		{"SourceSBType", "Uniform", "Uniform, Gaussian, BLR_Disk, BLR_Sph1, BLR_Sph2"},
 		
@@ -136,12 +139,12 @@ namespace
 		{"source_band", "", ""},
 		{"source_mag_limit", "30", "minimum magnitude for sources"},
 		{"source_sb_limit", "0", "minimum surface brightness for sources"},
-        {"shapelets_folder", "","Shapelets sources input folder"},
-        {"shapelets_band", "","Shapelets band for initialisation"},
+    {"shapelets_folder", "","Shapelets sources input folder"},
+    {"shapelets_band", "","Shapelets band for initialisation"},
         
-        // QSO data
-        {"QSO_kcorrection_file","","Table with k-correction in the i band for quasars as a function of redshift"},
-        {"QSO_colors_file","","Table with SDSS colors for quasars as a function of redshift"},
+    // QSO data
+    {"QSO_kcorrection_file","","Table with k-correction in the i band for quasars as a function of redshift"},
+    {"QSO_colors_file","","Table with SDSS colors for quasars as a function of redshift"},
        
 	};
 	

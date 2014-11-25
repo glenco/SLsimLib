@@ -345,25 +345,8 @@ unsigned long order_curve4(Point *curve,long Npoints){
   
     return;
   }
-  
-  /// Replaces curve->imagekist with its convex hull.  The number of points will change.
-  void ordered_shrink_wrap(Kist<Point> * curve){
-    int i;
-    std::vector<Point *> copy;
-    copy.resize(curve->Nunits());
     
-    for(i=0,curve->MoveToTop();!(curve->OffBottom());curve->Down(),++i){
-      //copy.push_back(curve->getCurrent());
-      copy[i] = curve->getCurrent();
-    }
-    
-    std::vector<Point *> hull = Utilities::shrink_wrap(copy);
-    curve->copy(hull);
-    
-    return;
-  }
-  
-  /// Replaces curve->imagekist with its convex hull.  The number of points will change.
+  /// Replaces curve with its convex hull.  The number of points will change.
   void ordered_concavehull(Kist<Point> * curve){
     int i;
     std::vector<Point *> copy;
@@ -1965,9 +1948,9 @@ void writeCurves(int m			/// part of te filename, could be the number/index of t
   bool yorderD(double *p1,double *p2){
     return p1[1] < p2[1];
   }
-
+}
   /// Returns a vector of points on the convex hull in counter-clockwise order.
-  std::vector<Point *> convex_hull(std::vector<Point *> P)
+std::vector<Point *> Utilities::convex_hull(std::vector<Point *> &P)
   {
     
     if(P.size() <= 3){
@@ -2009,7 +1992,7 @@ void writeCurves(int m			/// part of te filename, could be the number/index of t
   
   
   /// Returns a vector of points on the convex hull in counter-clockwise order.
-  std::vector<double *> convex_hull(std::vector<double *> P)
+std::vector<double *> Utilities::convex_hull(std::vector<double *> &P)
   {
     
     if(P.size() <= 3){
@@ -2097,7 +2080,7 @@ void writeCurves(int m			/// part of te filename, could be the number/index of t
    This is an overloaded vertion of the other concave_hull()
    
    */
-  std::vector<double *> concave_hull(std::vector<double *> P,int k )
+std::vector<double *> Utilities::concave_hull(std::vector<double *> &P,int k )
   {
     
     if(P.size() <= 3){
@@ -2257,7 +2240,7 @@ void writeCurves(int m			/// part of te filename, could be the number/index of t
    of k will automatically increase when certain special cases are encountered.
    
    */
-  std::vector<Point *> concave_hull(std::vector<Point *> P,int k )
+std::vector<Point *> Utilities::concave_hull(std::vector<Point *> &P,int k )
   {
     const bool test =false;
     PixelMap *testmap;
@@ -2476,176 +2459,6 @@ void writeCurves(int m			/// part of te filename, could be the number/index of t
     return hull;
   }
 
-  /** Orders the points in P according to a iterative minimum curvature method
-   that seeks to find the boundery of the region while minimizing curvature and 
-   not allowing self intersection
-   */
-  std::vector<Point *> shrink_wrap(std::vector<Point *> P)
-  {
-    
-    if(P.size() <= 3){
-      std::vector<Point *> H = P;
-      P.resize(0);
-      return H;
-    }
-    
-    std::vector<Point *> hull = Utilities::convex_hull(P);
-    if(hull.size() == P.size()) return hull;
-    std::vector<Point *> reservour = P;
-    int Nres = reservour.size();
-    for(int i = 0; i < Nres; ++i){
-      for(int j = 0; j < hull.size(); ++j){
-        if(reservour[i] == hull[j]){
-          std::swap(reservour[i],reservour[Nres-1]);
-          --Nres;
-          --i;
-          continue;
-        }
-      }
-    }
-    double s[2],p[2],c,cmin;
-    size_t k,imin,jmin;
-    
-    cmin=1.0;
-    while(reservour.size() > 0 && cmin != 2.0){
-      cmin = 2.0;
-      for(int i=0; i<hull.size(); ++i){
-        for(int j=0; j<reservour.size(); ++j){
-        
-          s[0] = hull[i]->x[0] - reservour[j]->x[0];
-          s[1] = hull[i]->x[1] - reservour[j]->x[1];
-          
-          if(i == hull.size()-1) k=0;
-          else k=i+1;
-          
-          k = i < hull.size()-1 ? i+1 : 0;
-         
-          p[0] = hull[k]->x[0] - reservour[j]->x[0];
-          p[1] = hull[k]->x[1] - reservour[j]->x[1];
 
-          c = ( s[0]*p[0] + s[1]*p[1] )/sqrt( (s[0]*s[0]+s[1]*s[1])*(p[0]*p[0]+p[1]*p[1])  );
-          
-          if(c < cmin){
-            
-            // Check to see if the curve would be self-intersecting
-           bool inter=false;
-            /*for(size_t ii=0;ii<hull.size()-1;++ii){
-              inter = Utilities::Geometry::intersect(hull[ii]->x,hull[ii+1]->x
-                                                     ,hull[i]->x,reservour[j]->x);
-              inter = Utilities::Geometry::intersect(hull[ii]->x,hull[ii+1]->x
-                                                     ,hull[k]->x,reservour[j]->x);
-            }
-            inter = Utilities::Geometry::intersect(hull[hull.size()-1]->x,hull[0]->x
-                                                   ,hull[i]->x,reservour[j]->x);
-            inter = Utilities::Geometry::intersect(hull[hull.size()-1]->x,hull[0]->x
-                                                   ,hull[k]->x,reservour[j]->x);
-             */
-            
-            if(!inter){
-              cmin = c;
-              imin=i;
-              jmin=j;
-            }
-          }
-        }
-      }
-    
-      if(cmin != 2.0){
-        // insert new point into hull
-        //assert(Utilities::windings(reservour[jmin]->x,hull.data(),hull.size(),&area) == 1);
-        hull.resize(hull.size()+1);
-        for(size_t i=hull.size()-1;i>imin+1;--i) hull[i] = hull[i-1];
-        hull[imin+1] = reservour[jmin];
-        std::swap(reservour[jmin],reservour[reservour.size()-1]);
-        reservour.pop_back();
-      }
-    }
-    
-//    assert(hull.size() == P.size());
-    
-    return hull;
-  }
-
-  /*// Returns a vector of points on the convex hull in counter-clockwise order.
-  std::vector<Point *> concave_hull(std::vector<Point *> P)
-  {
-    
-    ERROR_MESSAGE();
-    throw std::runtime_error("concave_hull() is under construction!");
-    
-    if(P.size() <= 3){
-      std::vector<Point *> H = P;
-      P.resize(0);
-      return H;
-    }
-    
-    size_t n = P.size();
-    size_t k = 0,j,i;
-    int kk=0;
-    std::vector<Point *> H(2*n);
-    std::vector<Point *> sub;
-    
-    // Sort points lexicographically
-    std::sort(P.begin(), P.end(), xorder);
-    
-    H[0] = P[0];
-    
-    i=0;
-    do{
-      sub.resize(0);
-      
-      for(j = 0;j<n;++j){
-        if(AreBoxNeighbors(H[i],P[j]) ){
-          sub.push_back(P[j]);
-        }
-      }
-      convex_hull(sub);
-      j=0;
-      while(sub[j] != H[i]) ++j;
-      if(j<sub.size()-1) H[i+1] = sub[j+1];
-      else H[i+1] = sub[0];
-      ++i;
-    }while(H[i] != H[0]);
-    
-    H.resize(i-1);
-    
-    return H;
-    
-    
-    
-    // Build lower hull
-    H[0] = P[0];
-    H[1] = P[1];
-   
-    
-    bool added;
-    PosType turn,tmp;
-    kk = 2;
-    do{
-      added = false;
-      turn = 0;
-      for(size_t i=0;i<n-kk;++i){
-        if(turn > (tmp = cross(H[kk-2], H[kk-1], P[i]) ) && AreBoxNeighbors(H[kk-1], P[i])){
-          turn = tmp;
-          H[kk] = P[i];
-          added = true;
-        }
-      }
-      if(added){
-        P[n-1-kk] = H[kk];
-        
-        ++kk;
-      }
-    }while(added);
-    
-   
-    H.resize(kk-1);
-    H.pop_back();
-    
-    return H;
-  }*/
-
-
-}
 
 

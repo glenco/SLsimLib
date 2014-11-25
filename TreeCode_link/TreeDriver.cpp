@@ -319,13 +319,12 @@ PosType BoxIntersection(Branch *branch1,Branch *branch2){
 	return area;
 }
 
-// return 1 (0) if box is (not) within rmax of ray
+/*  returns:  0 if whole box is outside rmax from ray[]
+ *            1 if whole box is inside circle but ray is not in the box
+ *            2 if ray[] is inside box
+ *            3 if box intersects circle but ray[] is not inside box
+ *
 int cutbox(PosType *ray,PosType *p1,PosType *p2,PosType rmax){
-	/*  returns:  0 if whole box is outside rmax from ray[]
-	 *            1 if whole box is inside circle but ray is not in the box
-	 *            2 if ray[] is inside box
-	 *            3 if box intersects circle but ray[] is not inside box
-	 */
   short i,tick=0;
   PosType close[2],rtmp;
   
@@ -353,7 +352,7 @@ int cutbox(PosType *ray,PosType *p1,PosType *p2,PosType rmax){
   if(rtmp<rmax*rmax) return 1;  // box is all inside circle
 
   return 3;  // box intersects circle
-}
+}*/
 
 /**
  * \brief If the circle centered at ray with radius is entirely within the box
@@ -1512,3 +1511,56 @@ bool ImageInfo::constant(
   
   return ( fabs(max-min) < tol );
 }
+
+PosType ImageInfo::ConcaveHullImageArea(bool useborder){
+  
+  size_t i;
+  std::vector<Point *> copy;
+  if(useborder){
+    copy.resize(innerborder->Nunits());
+    for(i=0,innerborder->MoveToTop();!(innerborder->OffBottom());innerborder->Down(),++i){
+      copy[i] = innerborder->getCurrent();
+    }
+  }else{
+    copy.resize(imagekist->Nunits());
+    for(i=0,imagekist->MoveToTop();!(imagekist->OffBottom());imagekist->Down(),++i){
+      copy[i] = imagekist->getCurrent();
+    }
+  }
+  //std::vector<Point *> Utilities::concave_hull(std::vector<Point *> &P,int k );
+  
+  PosType tmp_area;
+  std::vector<Point *> hull = Utilities::concave_hull(copy,8);
+  Utilities::windings(hull[0]->x,hull.data(),hull.size(),&tmp_area);
+  
+  return tmp_area;
+}
+
+PosType ImageInfo::ConcaveHullSourceArea(bool useborder){
+  
+  size_t i;
+  std::vector<Point *> copy;
+  if(useborder){
+    innerborder->TranformPlanes();
+    copy.resize(innerborder->Nunits());
+    for(i=0,innerborder->MoveToTop();!(innerborder->OffBottom());innerborder->Down(),++i){
+      copy[i] = innerborder->getCurrent();
+    }
+    innerborder->TranformPlanes();
+  }else{
+    copy.resize(imagekist->Nunits());
+    imagekist->TranformPlanes();
+    for(i=0,imagekist->MoveToTop();!(imagekist->OffBottom());imagekist->Down(),++i){
+      copy[i] = imagekist->getCurrent();
+    }
+    imagekist->TranformPlanes();
+  }
+  //std::vector<Point *> Utilities::concave_hull(std::vector<Point *> &P,int k );
+  
+  PosType tmp_area;
+  std::vector<Point *> hull = Utilities::concave_hull(copy,8);
+  Utilities::windings(hull[0]->x,hull.data(),hull.size(),&tmp_area);
+
+  return tmp_area;
+}
+

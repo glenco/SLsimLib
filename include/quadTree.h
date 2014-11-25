@@ -190,9 +190,13 @@ public:
   virtual void force2D(PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma
                        ,KappaType *phi) const;
 
-  virtual void force2D_recur(const PosType *ray,PosType *alpha,KappaType *kappa,KappaType *gamma
-                             ,KappaType *phi);
-    
+  virtual void force2D_recur(const PosType *ray,PosType *alpha,KappaType *kappa
+                             ,KappaType *gamma,KappaType *phi);
+  
+  /// find all points within rmax of ray in 2D
+  void neighbors(PosType ray[],PosType rmax,std::list<IndexType> &neighbors);
+  void neighbors(PosType ray[],PosType rmax,std::vector<LensHalo *> &neighbors);
+  
   virtual void printParticlesInBranch(unsigned long number);
 
 	virtual void printBranchs(int level = -1);
@@ -235,7 +239,7 @@ protected:
 	inline bool inbox(const PosType *ray,const PosType *p1,const PosType *p2){
 	  return (ray[0]>=p1[0])*(ray[0]<=p2[0])*(ray[1]>=p1[1])*(ray[1]<=p2[1]);
 	}
-	int cutbox(PosType *ray,PosType *p1,PosType *p2,float rmax);
+	//int cutbox(PosType *ray,PosType *p1,PosType *p2,float rmax);
 	
 	void CalcMoments();
 	void rotate_coordinates(PosType **coord);

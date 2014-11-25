@@ -44,11 +44,15 @@ enum LensHaloType
 	nsie_lens,
 	ana_lens,
 	uni_lens,
-	moka_lens,
+  moka_lens,
 	dummy_lens,
 	hern_lens,
-	jaffe_lens,
-	pix_map_lens
+	jaffe_lens
+};
+enum PixelMapType
+{
+  moka,
+  pix_map
 };
 
 enum GalaxyLensHaloType

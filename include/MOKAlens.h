@@ -62,7 +62,7 @@ struct MOKAmap{
 class LensHaloMOKA : public LensHalo
 {
 public:
-	LensHaloMOKA(const std::string& filename, LensHaloType maptype, const COSMOLOGY& lenscosmo);
+	LensHaloMOKA(const std::string& filename, PixelMapType maptype, const COSMOLOGY& lenscosmo);
 	LensHaloMOKA(InputParams& params, const COSMOLOGY& lenscosmo);
 	
 	~LensHaloMOKA();
@@ -102,13 +102,15 @@ public:
 	size_t getN() const { return map->nx; }
 	
 private:
-	LensHaloType maptype;
+	PixelMapType maptype;
 	void initMap();
-	void convertmap(MOKAmap *map,LensHaloType maptype);
+	void convertmap(MOKAmap *map,PixelMapType maptype);
 	MOKAmap* map;
 	const COSMOLOGY& cosmo;
 	void PreProcessFFTWMap();
 };
+  
+
 
 void make_friendship(int ii,int ji,int np,std:: vector<int> &friends, std:: vector<double> &pointdist);
 
