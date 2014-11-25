@@ -52,6 +52,7 @@ public:
 
 	void AddImages(ImageInfo *imageinfo,int Nimages,float rescale = 1.);
 	void AddCurve(ImageInfo *curve,double value);
+  
 	void drawline(double x1[],double x2[],double value);
   void drawcircle(PosType r_center[],PosType radius,PosType value);
 	void AddGrid(Grid &grid,double value = 1.0);
@@ -133,6 +134,8 @@ public:
   void drawCurve(std::vector<Point *> points,PosType value){
     for(int i=0;i<points.size()-1;++i) drawline(points[i]->x,points[i+1]->x,value);
   }
+  /// Draw a rectangle
+  void drawBox(PosType p1[],PosType p2[],PosType value);
   
 #ifdef ENABLE_FFTW
 

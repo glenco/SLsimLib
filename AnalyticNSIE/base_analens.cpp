@@ -656,7 +656,7 @@ PosType LensHalo::alpha_ell(PosType x,PosType theta){ // used only for calculati
 
 
 void LensHalo::alphakappagamma_asym(
-      PosType r         /// Radius in Mpc (not scale lensgths)
+      PosType r         /// Radius in Mpc (not scale lengths)
       ,PosType theta    /// angle of ray
       ,PosType alpha[]  /// output deflection
       ,PosType *kappa   /// output kappa

@@ -271,9 +271,9 @@ protected:
   
   void felliptical(PosType x, PosType q, PosType theta, PosType f[], PosType g[]);
   
-  virtual void gamma_asym(PosType x,PosType theta, PosType gamma[2]);
+  virtual void gamma_asym(PosType x,PosType theta, PosType gamma[]);
   virtual PosType kappa_asym(PosType x,PosType theta);
-  virtual void alphakappagamma_asym(PosType x,PosType theta, PosType alpha[2]
+  virtual void alphakappagamma_asym(PosType x,PosType theta, PosType alpha[]
                                     ,PosType *kappa,PosType gamma[]);
   virtual PosType alpha_ell(PosType x,PosType theta);
   
