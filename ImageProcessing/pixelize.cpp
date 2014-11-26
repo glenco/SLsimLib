@@ -728,6 +728,53 @@ void PixelMap::drawcircle(
     
 	return;
 }
+void PixelMap::drawgrid(int N,PosType value){
+  
+  PosType x1[2],x2[2];
+  x1[1] = map_boundary_p1[1];
+  x2[1] = map_boundary_p2[1];
+  for(int i=1;i<N;++i){
+    x1[0] = x2[0] = map_boundary_p1[0] + i*rangeX/N;
+    drawline(x1,x2,value);
+  }
+  
+  x1[0] = map_boundary_p1[0];
+  x2[0] = map_boundary_p2[0];
+  for(int i=1;i<N;++i){
+    x1[1] = x2[1] = map_boundary_p1[1] + i*rangeY/N;
+    drawline(x1,x2,value);
+  }
+}
+void PixelMap::drawBox(PosType p1[],PosType p2[],PosType value){
+  PosType x1[2],x2[2];
+  
+  x1[0] = p1[0];
+  x1[1] = p1[1];
+  x2[0] = p2[0];
+  x2[1] = p1[1];
+  drawline(x1,x2,value);
+  
+  x1[0] = p2[0];
+  x1[1] = p1[1];
+  x2[0] = p2[0];
+  x2[1] = p2[1];
+  drawline(x1,x2,value);
+  
+  x1[0] = p2[0];
+  x1[1] = p2[1];
+  x2[0] = p1[0];
+  x2[1] = p2[1];
+  drawline(x1,x2,value);
+  
+  x1[0] = p1[0];
+  x1[1] = p2[1];
+  x2[0] = p1[0];
+  x2[1] = p1[1];
+  drawline(x1,x2,value);
+  
+  
+}
+
 /**
  * \brief Draws a closed curve through the points in curve->imagekist
  *

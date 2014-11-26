@@ -33,7 +33,7 @@ namespace Utilities {
       PosType theta;
       PosType phi;
       
-      /// output cartisian coordinates of the point
+      /// output Cartesian coordinates of the point
       void sphericalTOcartisian(PosType x[]) const;
       void cartisianTOspherical(PosType const x[]);
       void StereographicProjection(const SphericalPoint &central,PosType x[]) const;
@@ -45,7 +45,31 @@ namespace Utilities {
     PosType Seporation(const SphericalPoint &p1,const SphericalPoint &p2);
     ///  Angular seporation between points
     PosType AngleSeporation(const SphericalPoint &p1,const SphericalPoint &p2);
-  }
+
+  /// Determine if line segments a1a2 and b1b2 intersect.  Sharing an endpoint does not count as intersecting
+    bool intersect(PosType a1[],PosType a2[],PosType b1[],PosType b2[]);
+    /** \brief To find orientation of the triangle formed by the ordered triplet (p, q, r).
+     
+     The function returns following values
+     0 --> p, q and r are collinear
+     1 --> Clockwise
+     2 --> Counterclockwise
+     */
+    int orientation(PosType p[],PosType q[],PosType r[]);
+    /** \brief Given three collinear points p, q, r, the function checks if
+     point q lies on line segment 'pr', but not at p or r
+     */
+    bool onSegment(PosType p[], PosType q[], PosType r[]);
+    
+    /// returns the angle between two 2 dimensional vectors in radians.
+    double AngleBetween2d(double v1[],double v2[]);
+    /**   \brief returns 1 if it is in the curve and 0 if it is out.  Borders count as in.
+    *
+     *  This is faster than the windings() functions which also calulate the area
+     */
+    int incurve(PosType x[],std::vector<double *> curve);
+
+  }  
 }
 
 #endif /* defined(__GLAMER__geometry__) */

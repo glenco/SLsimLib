@@ -146,6 +146,15 @@ public:
 	HaloType* getMainHalo(std::size_t i);
 	
 	void rayshooterInternal(unsigned long Npoints, Point *i_points);
+  void info_rayshooter(Point *i_point
+                      ,std::vector<std::vector<double>> ang_positions
+                      ,std::vector<KappaType> kappa_on_planes
+                      ,std::vector<std::vector<LensHalo*>> halo_neighbors
+                      ,LensHalo *halo_max
+                      ,KappaType &kappa_max
+                      ,KappaType gamma_max[]
+                      ,PosType rmax,short mode = 0  /// 0:physical distance, 1: comoving distance, 2: angular distance
+                                       );
 
 	// methods used for use with implanted sources
 
@@ -322,9 +331,10 @@ private: /* main */
 	
 private: /* input */
 	/// file for multiple main halo input
-	std::string main_input_file;
+	std::string pixel_map_input_file;
 	
  	/// read main halos from a pixelized density map
+  short pixel_map_on;
 	void readPixelizedDensity();
   
   /// the center of the lens in spherical coordinates

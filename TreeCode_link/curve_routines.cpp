@@ -1,4 +1,4 @@
-/*
+ /*
  * curve_routines.c
  *
  *  Created on: Jan 15, 2010
@@ -345,8 +345,8 @@ unsigned long order_curve4(Point *curve,long Npoints){
   
     return;
   }
-  
-  /// Replaces curve->imagekist with its convex hull.  The number of points will change.
+    
+  /// Replaces curve with its convex hull.  The number of points will change.
   void ordered_concavehull(Kist<Point> * curve){
     int i;
     std::vector<Point *> copy;
@@ -357,7 +357,7 @@ unsigned long order_curve4(Point *curve,long Npoints){
       copy[i] = curve->getCurrent();
     }
     
-    std::vector<Point *> hull = Utilities::concave_hull(copy);
+    std::vector<Point *> hull = Utilities::concave_hull(copy,10);
     curve->copy(hull);
     
     return;
@@ -377,6 +377,7 @@ unsigned long order_curve4(Point *curve,long Npoints){
     return fabs(area);
   }
 }
+
 
 /**
  *
@@ -1800,6 +1801,34 @@ int windings2(
 
 	return wn;
 }
+  
+  int incurve(PosType x[],std::vector<Point *> curve){
+    int number = 0;
+    size_t i;
+    
+    // The reason this does not return the winding number is because horizontal
+    //  sections of the curve can be overcounted if they are colinear with x
+    
+    Point point;
+    for(i=0;i<curve.size()-1;++i){
+      
+      if( (x[1] >= curve[i]->x[1])*(x[1] <= curve[i+1]->x[1]) ){
+        if(Utilities::Geometry::orientation(curve[i]->x, x, curve[i+1]->x) <= 1) ++number;
+      }else if( (x[1] <= curve[i]->x[1])*(x[1] > curve[i+1]->x[1]) ){
+        if(Utilities::Geometry::orientation(curve[i]->x, x, curve[i+1]->x) == 2) --number;
+      }
+      
+    }
+    
+    if( (x[1] >= curve[i]->x[1])*(x[1] <= curve[0]->x[1]) ){
+      if(Utilities::Geometry::orientation(curve[i]->x, x, curve[0]->x) <= 1) ++number;
+    }else if( (x[1] <= curve[i]->x[1])*(x[1] > curve[0]->x[1]) ){
+      if(Utilities::Geometry::orientation(curve[i]->x, x, curve[0]->x) == 2) --number;
+    }
+    
+    return number == 0 ? 0 : 1;
+  }
+
 
 /**
  * writes in four files the critical curves and the caustics for all the curves found and also for a
@@ -1905,6 +1934,9 @@ void writeCurves(int m			/// part of te filename, could be the number/index of t
   bool xorder(Point *p1,Point *p2){
     return p1->x[0] < p2->x[0];
   }
+  bool yorder(Point *p1,Point *p2){
+    return p1->x[1] < p2->x[1];
+  }
   
   PosType crossD(const double *O, const double *A, const double *B)
   {
@@ -1913,9 +1945,12 @@ void writeCurves(int m			/// part of te filename, could be the number/index of t
   bool xorderD(double *p1,double *p2){
     return p1[0] < p2[0];
   }
-   
+  bool yorderD(double *p1,double *p2){
+    return p1[1] < p2[1];
+  }
+}
   /// Returns a vector of points on the convex hull in counter-clockwise order.
-  std::vector<Point *> convex_hull(std::vector<Point *> P)
+std::vector<Point *> Utilities::convex_hull(std::vector<Point *> &P)
   {
     
     if(P.size() <= 3){
@@ -1954,8 +1989,10 @@ void writeCurves(int m			/// part of te filename, could be the number/index of t
     return H;
   }
   
+  
+  
   /// Returns a vector of points on the convex hull in counter-clockwise order.
-  std::vector<double *> convex_hull(std::vector<double *> P)
+std::vector<double *> Utilities::convex_hull(std::vector<double *> &P)
   {
     
     if(P.size() <= 3){
@@ -1993,176 +2030,435 @@ void writeCurves(int m			/// part of te filename, could be the number/index of t
     
     return H;
   }
-  
-  /** Orders the points in P according to a iterative minimum curvature method
-   that seeks to find the boundery of the region
-   */
-  std::vector<Point *> shrink_rap(std::vector<Point *> P)
+ /*
+  double * convex_hull(double P1[],double P2[],std::vector<double *> P)
   {
     
-    if(P.size() <= 3){
-      std::vector<Point *> H = P;
-      P.resize(0);
-      return H;
-    }
+    if(P.size() == 0) return NULL;
     
-    std::vector<Point *> hull = Utilities::convex_hull(P);
-    if(hull.size() == P.size()) return hull;
-    std::vector<Point *> reservour = P;
-    int Nres = reservour.size();
-    for(int i = 0; i < Nres; ++i){
-      for(int j = 0; j < hull.size(); ++j){
-        if(reservour[i] == hull[j]){
-          std::swap(reservour[i],reservour[Nres-1]);
-          --Nres;
-          --i;
-          continue;
-        }
-      }
-    }
-    double s[2],p[2],c,cmin;
-    size_t k,imin,jmin;
-    
-    while(reservour.size() > 0){
-      cmin = 2.0;
-      for(int i=0; i<hull.size(); ++i){
-        for(int j=0; j<reservour.size(); ++j){
-        
-          s[0] = hull[i]->x[0] - reservour[j]->x[0];
-          s[1] = hull[i]->x[1] - reservour[j]->x[1];
-          
-          if(i == hull.size()-1) k=0;
-          else k=i+1;
-         
-          p[0] = hull[k]->x[0] - reservour[j]->x[0];
-          p[1] = hull[k]->x[1] - reservour[j]->x[1];
-
-          c = ( s[0]*p[0] + s[1]*p[1] )/sqrt( (s[0]*s[0]+s[1]*s[1])*(p[0]*p[0]+p[1]*p[1])  );
-        
-          if(c < cmin){
-            cmin = c;
-            imin=i;
-            jmin=j;
-          }
-        }
-      }
-    
-      double area;
-      assert(Utilities::windings(reservour[jmin]->x,hull.data(),hull.size(),&area) == 1);
-      hull.resize(hull.size()+1);
-      for(size_t i=hull.size()-1;i>imin+1;--i) hull[i] = hull[i-1];
-      hull[imin+1] = reservour[jmin];
-      std::swap(reservour[jmin],reservour[reservour.size()-1]);
-      reservour.pop_back();
-    }
-    
-    assert(hull.size() == P.size());
-    
-    return hull;
-  }
-
-  /// Returns a vector of points on the convex hull in counter-clockwise order.
-  std::vector<Point *> concave_hull(std::vector<Point *> P)
-  {
-    
-    ERROR_MESSAGE();
-    throw std::runtime_error("concave_hull() is under construction!");
-    
-    if(P.size() <= 3){
-      std::vector<Point *> H = P;
-      P.resize(0);
-      return H;
-    }
+    if(P.size() == 1) return P[0];
     
     size_t n = P.size();
-    size_t k = 0,j,i;
-    int kk=0;
-    std::vector<Point *> H(2*n);
-    std::vector<Point *> sub;
+    size_t k = 0;
+    std::vector<double *> H(2*n);
     
     // Sort points lexicographically
-    std::sort(P.begin(), P.end(), xorder);
+    std::sort(P.begin(), P.end(), xorderD);
     
-    H[0] = P[0];
-    
-    i=0;
-    do{
-      sub.resize(0);
-      
-      for(j = 0;j<n;++j){
-        if(AreBoxNeighbors(H[i],P[j]) ){
-          sub.push_back(P[j]);
-        }
-      }
-      convex_hull(sub);
-      j=0;
-      while(sub[j] != H[i]) ++j;
-      if(j<sub.size()-1) H[i+1] = sub[j+1];
-      else H[i+1] = sub[0];
-      ++i;
-    }while(H[i] != H[0]);
-    
-    H.resize(i-1);
-    
-    return H;
     
     
     
     // Build lower hull
-    H[0] = P[0];
-    H[1] = P[1];
-/*    k=2;
-    for (size_t i = 2; i < n; i++) {
-      
-      for(kk = k; kk >=2; kk--){
-        if(cross(H[kk-2], H[kk-1], P[i]) > 0 && AreBoxNeighbors(H[kk-2], P[i]) ){
-          k = kk - 1;
-        }
+    for (size_t i = 0; i < n; i++) {
+      while (k >= 2 && crossD(H[k-2], H[k-1], P[i]) <= 0){
+        k--;
       }
       H[k++] = P[i];
     }
-  */  
     
-    
-    bool added;
-    PosType turn,tmp;
-    kk = 2;
-    do{
-      added = false;
-      turn = 0;
-      for(size_t i=0;i<n-kk;++i){
-        if(turn > (tmp = cross(H[kk-2], H[kk-1], P[i]) ) && AreBoxNeighbors(H[kk-1], P[i])){
-          turn = tmp;
-          H[kk] = P[i];
-          added = true;
-        }
-      }
-      if(added){
-        P[n-1-kk] = H[kk];
-        
-        ++kk;
-      }
-    }while(added);
-    
-    /*
     // Build upper hull
     for (long i = n-2, t = k+1; i >= 0; i--) {
-            
-      while ((k >= t && cross(H[k-2], H[k-1], P[i]) <= 0) ){
-        if(AreBoxNeighbors(H[k-2], P[i])) kk = k-1;
+      while (k >= t && crossD(H[k-2], H[k-1], P[i]) <= 0){
         k--;
       }
-      H[kk++] = P[i];
+      H[k++] = P[i];
     }
-    */
     
-    H.resize(kk-1);
+    
+    H.resize(k);
     H.pop_back();
     
-    return H;
+    return H[0];
+  }
+*/
+  /** \brief Returns a vector of points on the convcave hull in counter-clockwise order.
+   
+   This uses a K-nearest neighbour adapted from Moreira & Santos (GRAPP 2007 conference
+   proceedings).  This is a modified gift wrap algorithm using k neighbours.  The value
+   of k will automatically increase when certain special cases are encountered.
+   
+   This is an overloaded vertion of the other concave_hull()
+   
+   */
+std::vector<double *> Utilities::concave_hull(std::vector<double *> &P,int k )
+  {
+    
+    if(P.size() <= 3){
+      std::vector<double *> hull(P);
+      return hull;
+    }
+    
+    if(k  < 3) k =3;
+    if( k  > P.size() ) k  = P.size();
+    
+    size_t j = 0;
+    std::vector<double *> hull;
+    
+    std::vector<double> slist(k);
+    std::vector<size_t> indexlist(k);
+    double s,v1[2],v2[2];
+    int tmp_k ;
+    bool intersects = true,failed=false;
+    
+    
+    
+    do{
+      std::vector<double *> Res(P);
+      hull.resize(0);
+      std::sort(Res.rbegin(), Res.rend(), yorderD);
+      hull.push_back(Res.back());
+      
+      //std::cout << Res[0][1] << "  " << Res.back()->x[1] << std::endl;
+      
+      tmp_k = k;
+      failed = false;
+      j=0;
+      while(Res.size() > 0 && (hull[0] != hull.back() || hull.size() == 1)){
+        
+        if(tmp_k  > Res.size()) tmp_k  = Res.size();
+        size_t imin;
+        
+        slist.resize(tmp_k);
+        indexlist.resize(tmp_k);
+        // find list of nearest neighbors
+        for(size_t kk=0;kk<tmp_k;++kk){
+          slist[kk] = (Res[kk][0]- hull[j][0])*(Res[kk][0]- hull[j][0])
+          + (Res[kk][1]- hull[j][1])*(Res[kk][1]- hull[j][1]);
+        }
+        Utilities::sort_indexes(slist,indexlist);
+        std::sort(slist.begin(),slist.end());
+        
+        for(size_t kk=tmp_k ; kk<Res.size() ; ++kk){
+          s = (Res[kk][0]- hull[j][0])*(Res[kk][0]- hull[j][0])
+          + (Res[kk][1]- hull[j][1])*(Res[kk][1]- hull[j][1]);
+          if(s < slist.back() && Res[kk] != hull[j]){
+            slist.back() = s;
+            indexlist.back() = kk;
+            int ii = slist.size() - 1 ;
+            while(ii > 0 && slist[ii] < slist[ii-1]){
+              std::swap(slist[ii],slist[ii-1]);
+              std::swap(indexlist[ii],indexlist[ii-1]);
+              --ii;
+            }
+          }
+        }
+        
+        //std::cout << "closest points form hull point " << j << std::endl;
+        //for(int ii=0;ii<tmp_k;++ii) std::cout << indexlist[ii] << "  " << slist[ii] << " x: "
+        //  << Res[indexlist[ii]][0] << "  " << Res[indexlist[ii]][1] << std::endl;
+        
+        // find which one has the furthest right hand turn
+        if(j > 0){
+          v1[0] = hull[j][0] - hull[j-1][0];
+          v1[1] = hull[j][1] - hull[j-1][1];
+        }else{
+          v1[0] = 0;
+          v1[1] = 1.0;
+        }
+        
+        intersects = true;
+        
+        while(intersects && tmp_k > 0){
+          
+          v2[0] = Res[indexlist[0]][0] - hull[j][0];
+          v2[1] = Res[indexlist[0]][1] - hull[j][1];
+          
+          double smin = Utilities::Geometry::AngleBetween2d( v1, v2 );
+          imin = indexlist[0];
+          int i_min = 0;
+          
+          for(int i=1;i<tmp_k;++i){
+            v2[0] = Res[indexlist[i]][0] - hull[j][0];
+            v2[1] = Res[indexlist[i]][1] - hull[j][1];
+            
+            s = Utilities::Geometry::AngleBetween2d( v1, v2 );
+            if(s <= smin ){
+              imin = indexlist[i];
+              smin = s;
+              i_min = i;
+              
+            }
+          }
+          // check for self intersection
+          intersects = false;
+          if(hull.size() > 3){
+            for(int ii=0;ii<hull.size()-2;++ii){
+              if(Utilities::Geometry::intersect(hull.back(),Res[imin], hull[ii], hull[ii+1])){
+                intersects = true;
+                
+                 //move this point to back and try again with lower tmp_k
+                std::swap(indexlist[i_min],indexlist[tmp_k-1]);
+                --tmp_k;
+                break;
+              }
+            }
+          }
+        }
+        
+        
+        if(!intersects){
+          // add point to Hull
+          std::swap(Res[imin],Res.back());
+          hull.push_back(Res.back());
+          ++j;
+          Res.pop_back();
+          tmp_k = k;
+        }else{
+          failed = true;
+          ++k;
+          
+          
+          break;
+        }
+      }
+      if(!failed){
+        // check to make sure all remaining points are within the hull
+        
+        for(size_t ii=0;ii<Res.size();++ii){
+          //std::cout << Res[ii][0] << " " << Res[ii][1] << std::endl;
+          if(Utilities::Geometry::incurve(Res[ii],hull) == 0){
+            failed = true;
+            ++k;
+                        
+            break;
+          }
+        }
+      }
+      // try again with larger k if not all the points are within the hull or no non-self-intersecting path was found
+    }while(failed && k < P.size()-1);
+    
+    // if all else fails use the convex hull
+    if(failed) hull = Utilities::convex_hull(P);
+    else hull.pop_back();
+    
+    return hull;
+  }
+  /** \brief Returns a vector of points on the convcave hull in counter-clockwise order.
+   
+   This uses a K-nearest neighbour adapted from Moreira & Santos (GRAPP 2007 conference
+   proceedings).  This is a modified gift wrap algorithm using k neighbours.  The value 
+   of k will automatically increase when certain special cases are encountered.
+   
+   */
+std::vector<Point *> Utilities::concave_hull(std::vector<Point *> &P,int k )
+  {
+    const bool test =false;
+    PixelMap *testmap;
+    int nt=0;
+
+    
+    if(P.size() <= 3){
+      std::vector<Point *> hull(P);
+      return hull;
+    }
+    
+    if(k  < 3) k =3;
+    if( k  > P.size() ) k  = P.size();
+    
+    size_t j = 0;
+    std::vector<Point *> hull;
+    
+    std::vector<double> slist(k);
+    std::vector<size_t> indexlist(k);
+    double s,v1[2],v2[2];
+    int tmp_k ;
+    bool intersects = true,failed=false;
+    
+    if(test){
+      PosType bound_p1[2],bound_p2[2],center[2];
+      bound_p1[0] = bound_p2[0] = P[0]->x[0];
+      bound_p1[1] = bound_p2[1] = P[0]->x[1];
+      for(size_t ii = 1; ii<P.size();++ii){
+        bound_p1[0] = MIN(P[ii]->x[0],bound_p1[0]);
+        bound_p2[0] = MAX(P[ii]->x[0],bound_p2[0]);
+        bound_p1[1] = MIN(P[ii]->x[1],bound_p1[1]);
+        bound_p2[1] = MAX(P[ii]->x[1],bound_p2[1]);
+      }
+      center[0] = (bound_p2[0] + bound_p1[0])/2;
+      center[1] = (bound_p2[1] + bound_p1[1])/2;
+      testmap = new PixelMap(center,512
+                             ,1.05*MAX((bound_p2[0] - bound_p1[0]),(bound_p2[1] - bound_p1[1]))/512);
+      
+      testmap->drawPoints(P,0,1.0);
+      testmap->printFITS("!test_"+std::to_string(nt++)+".fits");
+    }
+    
+
+    do{
+      std::vector<Point *> Res(P);
+      hull.resize(0);
+      std::sort(Res.rbegin(), Res.rend(), yorder);
+      hull.push_back(Res.back());
+      
+      //std::cout << Res[0]->x[1] << "  " << Res.back()->x[1] << std::endl;
+      
+      tmp_k = k;
+      failed = false;
+      j=0;
+      while(Res.size() > 0 && (hull[0] != hull.back() || hull.size() == 1)){
+        
+        if(tmp_k  > Res.size()) tmp_k  = Res.size();
+        size_t imin;
+        
+        slist.resize(tmp_k);
+        indexlist.resize(tmp_k);
+        // find list of nearest neighbors
+        for(size_t kk=0;kk<tmp_k;++kk){
+          slist[kk] = (Res[kk]->x[0]- hull[j]->x[0])*(Res[kk]->x[0]- hull[j]->x[0])
+          + (Res[kk]->x[1]- hull[j]->x[1])*(Res[kk]->x[1]- hull[j]->x[1]);
+        }
+        Utilities::sort_indexes(slist,indexlist);
+        std::sort(slist.begin(),slist.end());
+        
+        for(size_t kk=tmp_k ; kk<Res.size() ; ++kk){
+          s = (Res[kk]->x[0]- hull[j]->x[0])*(Res[kk]->x[0]- hull[j]->x[0])
+          + (Res[kk]->x[1]- hull[j]->x[1])*(Res[kk]->x[1]- hull[j]->x[1]);
+          if(s < slist.back() && Res[kk] != hull[j]){
+            slist.back() = s;
+            indexlist.back() = kk;
+            int ii = slist.size() - 1 ;
+            while(ii > 0 && slist[ii] < slist[ii-1]){
+              std::swap(slist[ii],slist[ii-1]);
+              std::swap(indexlist[ii],indexlist[ii-1]);
+              --ii;
+            }
+          }
+        }
+        
+        //std::cout << "closest points form hull point " << j << std::endl;
+        //for(int ii=0;ii<tmp_k;++ii) std::cout << indexlist[ii] << "  " << slist[ii] << " x: "
+        //  << Res[indexlist[ii]]->x[0] << "  " << Res[indexlist[ii]]->x[1] << std::endl;
+        
+        // find which one has the furthest right hand turn
+        if(j > 0){
+          v1[0] = hull[j]->x[0] - hull[j-1]->x[0];
+          v1[1] = hull[j]->x[1] - hull[j-1]->x[1];
+        }else{
+          v1[0] = 0;
+          v1[1] = 1.0;
+        }
+        
+        intersects = true;
+        
+        while(intersects && tmp_k > 0){
+          
+          v2[0] = Res[indexlist[0]]->x[0] - hull[j]->x[0];
+          v2[1] = Res[indexlist[0]]->x[1] - hull[j]->x[1];
+          
+          double smin = Utilities::Geometry::AngleBetween2d( v1, v2 );
+          imin = indexlist[0];
+          int i_min = 0;
+          
+          for(int i=1;i<tmp_k;++i){
+            v2[0] = Res[indexlist[i]]->x[0] - hull[j]->x[0];
+            v2[1] = Res[indexlist[i]]->x[1] - hull[j]->x[1];
+            
+            s = Utilities::Geometry::AngleBetween2d( v1, v2 );
+            if(s <= smin ){
+              imin = indexlist[i];
+              smin = s;
+              i_min = i;
+              
+             }
+          }
+          // check for self intersection
+          intersects = false;
+          if(hull.size() > 3){
+            for(int ii=0;ii<hull.size()-2;++ii){
+              if(Utilities::Geometry::intersect(hull.back()->x,Res[imin]->x, hull[ii]->x, hull[ii+1]->x)){
+                intersects = true;
+                
+                if(test){
+                  std::cout << "smin/pi = " << smin/pi << std::endl;
+                  std::cout << "intersecting line segments ii = " << ii << std::endl;
+                  std::cout << hull.back()->x[0] << " " << hull.back()->x[1] << " -- "
+                  << Res[imin]->x[0] << " " << Res[imin]->x[1] << std::endl;
+                  
+                  std::cout << hull[ii]->x[0] << " " << hull[ii]->x[1] << " -- "
+                  << hull[ii+1]->x[0] << " " << hull[ii+1]->x[1] << std::endl;
+                }
+                //move this point to back and try again with lower tmp_k
+                std::swap(indexlist[i_min],indexlist[tmp_k-1]);
+                --tmp_k;
+                break;
+              }
+            }
+          }
+        }
+        
+        
+        if(!intersects){
+          // add point to Hull
+          std::swap(Res[imin],Res.back());
+          hull.push_back(Res.back());
+          ++j;
+          Res.pop_back();
+          tmp_k = k;
+        }else{
+          failed = true;
+          ++k;
+          
+          if(test){
+            testmap->Clean();
+            testmap->drawPoints(P,0,1.0);
+            testmap->drawCurve(hull,2.0);
+            testmap->printFITS("!test_"+std::to_string(nt)+".fits");
+            
+            assert(hull[j] != hull[j-1]);
+            PixelMap map(hull.back()->x,512,
+                         MAX(fabs(hull[j]->x[0] - hull[j-1]->x[0]),fabs(hull[j]->x[1] - hull[j-1]->x[1]))/5 );
+            
+            map.drawPoints(P,0,1.0);
+            map.drawCurve(hull,2.0);
+            map.printFITS("!test_"+std::to_string(nt++)+".1.fits");
+            for(int ii=0;ii<hull.size()-1;++ii) std::cout << hull[ii]->x[0] << " " << hull[ii]->x[1] << std::endl;
+            
+          }
+
+          break;
+        }
+      }
+      if(!failed){
+        // check to make sure all remaining points are within the hull
+        
+        for(size_t ii=0;ii<Res.size();++ii){
+          //std::cout << Res[ii]->x[0] << " " << Res[ii]->x[1] << std::endl;
+          if(incurve(Res[ii]->x,hull) == 0){
+            failed = true;
+            ++k;
+            
+            if(test){
+              
+              testmap->Clean();
+              testmap->drawPoints(P,0,1.0);
+              testmap->drawCurve(hull,2.0);
+              testmap->printFITS("!test_"+std::to_string(nt)+".fits");
+              
+              PixelMap map(Res[ii]->x,512,
+                           MAX(fabs(hull[j]->x[0] - hull[j-1]->x[0]),fabs(hull[j]->x[1] - hull[j-1]->x[1]))/5 );
+              
+              map.drawPoints(P,0,1.0);
+              //map.drawCurve(hull,2.0);
+              map.drawPoints(hull,0,2.0);
+              map.printFITS("!test_"+std::to_string(nt++)+".1.fits");
+              for(int ii=0;ii<hull.size()-1;++ii) std::cout << hull[ii]->x[0] << " " << hull[ii]->x[1] << std::endl;
+
+            }
+
+            break;
+          }
+        }
+      }
+      // try again with larger k if not all the points are within the hull or no non-self-intersecting path was found
+    }while(failed && k < P.size()-1);
+    
+    // if all else fails use the convex hull
+    if(failed) hull = Utilities::convex_hull(P);
+    else hull.pop_back();
+    
+    return hull;
   }
 
 
-}
 
 

@@ -119,7 +119,7 @@ void ImageFinding::find_images_kist(
   if(verbose) printf("Ntemp=%i\n",Nsizes);
 
   grid->ClearAllMarks();
-
+      
     //////////////////////////////////////////
     // telescope source size down to target
     //////////////////////////////////////////
@@ -135,7 +135,7 @@ void ImageFinding::find_images_kist(
  			/************* method that separates images ****************
 			// mark image points in tree
 			PointsWithinKist(grid->s_tree,y_source,rtemp,&subkist,1);
-			image_finder_kist(lens,y_source,rtemp,grid
+			ImageFinding::image_finder_kist(lens,y_source,rtemp,grid
 				  ,Nimages,imageinfo,NimageMax,Nimagepoints,0,0);
 			// unmark image points in tree
 			PointsWithinKist(grid->s_tree,y_source,rtemp,&subkist,-1);
@@ -156,14 +156,14 @@ void ImageFinding::find_images_kist(
 				if(verbose) std::cout << "    refined images" << std::endl;
 
 				//************* method that does not separate images ****************
-				image_finder_kist(lens,y_source,rtemp,grid
+				ImageFinding::image_finder_kist(lens,y_source,rtemp,grid
 						,Nimages,imageinfo,NimageMax,Nimagepoints,-1,0);
 				/************* method that separates images ****************/
 
 				/************* method that separates images ****************
 				// mark image points in tree
 				PointsWithinKist(grid->s_tree,y_source,rtemp,&subkist,1);
-				image_finder_kist(lens,y_source,rtemp,grid
+				ImageFinding::image_finder_kist(lens,y_source,rtemp,grid
 						,Nimages,imageinfo,NimageMax,Nimagepoints,0,0);
 				// unmark image points in tree
 				PointsWithinKist(grid->s_tree,y_source,rtemp,&subkist,-1);
@@ -182,7 +182,7 @@ void ImageFinding::find_images_kist(
             if(subkist.Nunits() > 0){
               
               rtemp *= Ngrid_block;
-              image_finder_kist(lens,y_source,rtemp,grid
+              ImageFinding::image_finder_kist(lens,y_source,rtemp,grid
                               ,Nimages,imageinfo,NimageMax,Nimagepoints,-1,1);
             
               //PixelMap map(imageinfo->imagekist->getCurrent()->x,512,imageinfo->imagekist->getCurrent()->gridsize);
@@ -193,7 +193,7 @@ void ImageFinding::find_images_kist(
               do{
                 // mark image points in tree
                 grid->s_tree->PointsWithinKist(y_source,rtemp,&subkist,1);
-                image_finder_kist(lens,y_source,fabs(rtemp),grid
+                ImageFinding::image_finder_kist(lens,y_source,fabs(rtemp),grid
                                 ,Nimages,imageinfo,NimageMax,Nimagepoints,0,0);
               }while( ImageFinding::refine_grid_kist(lens,grid,imageinfo,*Nimages,1.0e-3,1));
             
@@ -263,9 +263,9 @@ void ImageFinding::find_images_kist(
 		// mark image points in tree
 		grid->s_tree->PointsWithinKist(y_source,r_source,&subkist,1);
 
-		//image_finder_kist(lens,y_source,fabs(r_source),grid
+		//ImageFinding::image_finder_kist(lens,y_source,fabs(r_source),grid
 		//		,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
-		image_finder_kist(lens,y_source,fabs(r_source),grid
+		ImageFinding::image_finder_kist(lens,y_source,fabs(r_source),grid
 				,Nimages,imageinfo,NimageMax,Nimagepoints,0,0);
 
 		//if(*Nimages < 1) printf("  Nimages=%i i=%i\n",*Nimages,i);
@@ -291,7 +291,7 @@ void ImageFinding::find_images_kist(
 	assert(*Nimages > 0);
 
 	// find points that are truly in the image and not just neighbors
-	image_finder_kist(lens,y_source,fabs(r_source),grid
+	ImageFinding::image_finder_kist(lens,y_source,fabs(r_source),grid
 			,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
 	assert(*Nimages > 0);
 
@@ -323,10 +323,10 @@ void ImageFinding::find_images_kist(
       if(splitimages){
         grid->s_tree->PointsWithinKist(y_source,r_source,&subkist,1);
 
-        image_finder_kist(lens,y_source,fabs(r_source),grid
+        ImageFinding::image_finder_kist(lens,y_source,fabs(r_source),grid
                         ,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
       }else{
-        image_finder_kist(lens,y_source,fabs(r_source),grid
+        ImageFinding::image_finder_kist(lens,y_source,fabs(r_source),grid
                         ,Nimages,imageinfo,NimageMax,Nimagepoints,-1,1);
       }
 			++i;
@@ -337,7 +337,7 @@ void ImageFinding::find_images_kist(
 			// mark image points in tree
 			grid->s_tree->PointsWithinKist(y_source,r_source,&subkist,1);
 
-			image_finder_kist(lens,y_source,fabs(r_source),grid
+			ImageFinding::image_finder_kist(lens,y_source,fabs(r_source),grid
 					,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
 
 			//for(i = 0; i < *Nimages; ++i) PrintImageInfo(&(imageinfo[i]));
@@ -352,7 +352,7 @@ void ImageFinding::find_images_kist(
 				,imageinfo,&image_overlap,*Nimages,FracResTarget,flag)){
 			// if an overlap is detected find the images again
 
-			if(image_overlap) image_finder_kist(lens,y_source,fabs(r_source),grid
+			if(image_overlap) ImageFinding::image_finder_kist(lens,y_source,fabs(r_source),grid
 					,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
 			++i;
 		}
@@ -435,6 +435,60 @@ void ImageFinding::find_images_kist(
 	//freeKist(pointkist);
 
 	return;
+}
+
+/**  \brief Find a image position for a source position.
+ 
+ This routine finds the image position by minimizing the seporation on the source plane with Powell's method of minimization.  This will not find all images.  For that you must use another routine.  In the weak lensing regiam this should be sufficient.
+ 
+ Warning: This is not thread safe because it uses global variable in the ImageFinding::Temporary namespace.
+ 
+ */
+
+//using namespace ImageFinding::Temporary;
+namespace ImageFinding {
+  namespace Temporary {
+  Lens * lens;
+  Point *point;
+    PosType *y;
+  }
+}
+
+
+void ImageFinding::find_image_simple(LensHndl lens,PosType *y_source,PosType z_source,PosType *image_x,PosType ytol2,PosType &fret){
+  
+  PosType tmp_zs = lens->getSourceZ();
+  lens->ResetSourcePlane(z_source,false);
+  Point point;
+  LinkToSourcePoints(&point,1);
+  
+  Temporary::point = &point;
+  Temporary::y = y_source;
+  Temporary::lens = lens;
+  double **xi = Utilities::PosTypeMatrix(3,3) ;
+  int iter;
+  
+  xi[1][1] = xi[2][2] = 1.0;
+  xi[1][2] = xi[2][1] = 0.0;
+  
+  image_x[0] = y_source[0];
+  image_x[1] = y_source[1];
+  
+  powellD(image_x-1,xi,2,ytol2,&iter,&fret,ImageFinding::Temporary::mindyfunc);
+
+  lens->ResetSourcePlane(tmp_zs,false);
+  Utilities::free_PosTypeMatrix(xi,3,3);
+}
+
+PosType ImageFinding::Temporary::mindyfunc(PosType *x){
+
+  point->x[0] = x[1];
+  point->x[1] = x[2];
+  
+  lens->rayshooterInternal(1,point);
+  
+  return (y[0]-point->image->x[0])*(y[0]-point->image->x[0])
+       + (y[1]-point->image->x[1])*(y[1]-point->image->x[1]);
 }
 
 /** \ingroup ImageFinding
@@ -578,7 +632,7 @@ void ImageFinding::find_images_microlens(
     	/************* method that seporates images ****************
     	// mark image points in tree
     	grid->s_tree->PointsWithinKist(y_source,rtemp,&subkist,1);
-    	image_finder_kist(lens,y_source,rtemp,grid
+    	ImageFinding::image_finder_kist(lens,y_source,rtemp,grid
     			,Nimages,imageinfo,NimageMax,Nimagepoints,0,0);
     	// unmark image points in tree
     	grid->s_tree->PointsWithinKist(y_source,rtemp,&subkist,-1);
@@ -667,7 +721,7 @@ void ImageFinding::find_images_microlens(
       		for(int k=0; k < *Nimages; ++k) imageinfo[k].ShouldNotRefine = false;
       		// mark image points in tree
     		//grid->s_tree->PointsWithinKist(y_source,rtemp,&subkist,1);
-    		moved = image_finder_kist(lens,y_source,rtemp,grid
+    		moved = ImageFinding::image_finder_kist(lens,y_source,rtemp,grid
     				,Nimages,imageinfo,NimageMax,Nimagepoints,-1,0);
             divide_images_kist(grid->i_tree,imageinfo,Nimages,NimageMax);
             for(int k=0; k < *Nimages; ++k) imageinfo[k].outerborder->Empty();
@@ -815,7 +869,7 @@ void ImageFinding::find_images_microlens(
 		grid->s_tree->PointsWithinKist(y_source,r_source,&subkist,1);
 
     for(int k=0;k<*Nimages;++k) imageinfo[k].ShouldNotRefine = false;
-		//moved=image_finder_kist(lens,y_source,fabs(r_source),grid
+		//moved=ImageFinding::image_finder_kist(lens,y_source,fabs(r_source),grid
 		//		,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
     ImageFinding::image_finder_kist(lens,y_source,r_source,grid
 				,Nimages,imageinfo,NimageMax,Nimagepoints,0,0);
@@ -1108,7 +1162,7 @@ void ImageFinding::find_images_microlens_exper(
     	if(verbose)
             printf("\n   new source size = %e    Nimages = %i  telescoping rsource = %e\n",rtemp,*Nimages,r_source);
  
-        image_finder_kist(lens,y_source,rtemp,grid
+        ImageFinding::image_finder_kist(lens,y_source,rtemp,grid
                           ,Nimages,imageinfo,NimageMax,Nimagepoints,-1,0);
         
     	j=0;
@@ -1131,11 +1185,11 @@ void ImageFinding::find_images_microlens_exper(
             
            
     		//************* method that does not separate images ****************
-    		//image_finder_kist(lens,y_source,rtemp,grid
+    		//ImageFinding::image_finder_kist(lens,y_source,rtemp,grid
             //                  ,Nimages,imageinfo,NimageMax,Nimagepoints,-1,0);
             
     		//************* method that does not separate images ****************
-    		image_finder_kist(lens,y_source,rtemp,grid
+    		ImageFinding::image_finder_kist(lens,y_source,rtemp,grid
                               ,Nimages,imageinfo,NimageMax,Nimagepoints,0,0);
  
             // unmark image points in tree
@@ -1148,7 +1202,7 @@ void ImageFinding::find_images_microlens_exper(
 
              // mark image points in tree
              //grid->s_tree->PointsWithinKist(y_source,rtemp,&subkist,1);
-             //image_finder_kist(lens,y_source,rtemp,grid
+             //ImageFinding::image_finder_kist(lens,y_source,rtemp,grid
              //    ,Nimages,imageinfo,NimageMax,Nimagepoints,-1,0);
              //divide_images_kist(grid->i_tree,imageinfo,Nimages,NimageMax);
              //for(int k=0; k < *Nimages; ++k) imageinfo[k].outerborder->Empty();
@@ -1295,9 +1349,9 @@ void ImageFinding::find_images_microlens_exper(
 		grid->s_tree->PointsWithinKist(y_source,r_source,&subkist,1);
         
         for(int k=0;k<*Nimages;++k) imageinfo[k].ShouldNotRefine = false;
-		//moved=image_finder_kist(lens,y_source,fabs(r_source),grid
+		//moved=ImageFinding::image_finder_kist(lens,y_source,fabs(r_source),grid
 		//		,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
-		image_finder_kist(lens,y_source,r_source,grid
+		ImageFinding::image_finder_kist(lens,y_source,r_source,grid
                           ,Nimages,imageinfo,NimageMax,Nimagepoints,0,0);
         
         area_tot = 0;
@@ -1340,7 +1394,7 @@ void ImageFinding::find_images_microlens_exper(
 	assert(*Nimages > 0);
     
 	// find points that are truly in the image and not just neighbors
-	image_finder_kist(lens,y_source,fabs(r_source),grid
+	ImageFinding::image_finder_kist(lens,y_source,fabs(r_source),grid
                       ,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
     
 	if(*Nimages == 0){
@@ -1374,7 +1428,7 @@ void ImageFinding::find_images_microlens_exper(
 			// mark image points in tree
 			grid->s_tree->PointsWithinKist(y_source,r_source,&subkist,1);
             
-			image_finder_kist(lens,y_source,fabs(r_source),grid
+			ImageFinding::image_finder_kist(lens,y_source,fabs(r_source),grid
                               ,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
 			++i;
 		}while( refine_grid_kist(lens,grid,imageinfo,*Nimages,FracResTarget,0));
@@ -1384,7 +1438,7 @@ void ImageFinding::find_images_microlens_exper(
 			// mark image points in tree
 			grid->s_tree->PointsWithinKist(y_source,r_source,&subkist,1);
             
-			image_finder_kist(lens,y_source,fabs(r_source),grid
+			ImageFinding::image_finder_kist(lens,y_source,fabs(r_source),grid
                               ,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
             
 			//for(i = 0; i < *Nimages; ++i) PrintImageInfo(&(imageinfo[i]));
@@ -1407,7 +1461,7 @@ void ImageFinding::find_images_microlens_exper(
             // if an overlap is detected find the images again
             
             if(image_overlap){
-                image_finder_kist(lens,y_source,fabs(r_source),grid
+                ImageFinding::image_finder_kist(lens,y_source,fabs(r_source),grid
                                   ,Nimages,imageinfo,NimageMax,Nimagepoints,0,1);
                 for(int kk=0;kk<*Nimages;++kk){
                     if(imageinfo[kk].area < area_tot*1.0e-3){++count; imageinfo[kk].ShouldNotRefine = true;}
@@ -1515,6 +1569,7 @@ void ImageFinding::find_images_microlens_exper(
  *
  * side-effects :  Will make in_image = true for all image points if splitparities == 0
  */
+
 void ImageFinding::image_finder_kist(LensHndl lens, PosType *y_source,PosType r_source,GridHndl grid
 		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
 		,short splitparities,short true_images){
@@ -1523,7 +1578,7 @@ void ImageFinding::image_finder_kist(LensHndl lens, PosType *y_source,PosType r_
   //static long count=0,Nold_images;
   //static PosType oldy[2];
   //short moved;
-  PosType r;
+  //PosType r;
 
   
   //if(count==0) oldy[0]=oldy[1]=0;
@@ -1642,7 +1697,7 @@ void ImageFinding::image_finder_kist(LensHndl lens, PosType *y_source,PosType r_
 		  imageinfo->area += pow(imageinfo->imagekist->getCurrent()->gridsize,2);
 	  }while(imageinfo->imagekist->Down());
     
-    //std::cout << "magnification in image_finder_kist = " << imageinfo->area/pi/r_source/r_source << std::endl;
+    //std::cout << "magnification in ImageFinding::image_finder_kist = " << imageinfo->area/pi/r_source/r_source << std::endl;
   }
 
   // don't copy information into array

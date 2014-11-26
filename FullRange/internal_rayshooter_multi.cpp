@@ -55,51 +55,51 @@ struct TmpParams{
 
 /** \brief This function calculates the deflection, shear, convergence, rotation
  and time-delay of rays in parallel.
-*/
+ */
 void Lens::rayshooterInternal(
-		unsigned long Npoints   /// number of points to be shot
-		,Point *i_points        /// point on the image plane
-		){
-    
+                              unsigned long Npoints   /// number of points to be shot
+                              ,Point *i_points        /// point on the image plane
+                              ){
+  
   // To force the computation of convergence, shear... -----
   // -------------------------------------------------------
-            
+  
   int NLastPlane;
   PosType tmpDs,tmpdDs,tmpZs;
-
+  
   // If there are no points to shoot, then we quit.
   if(Npoints == 0) return;
-
+  
   // If a lower redshift source (compared to the farthest lens plane) is being used
   if(toggle_source_plane)
   {
     NLastPlane = index_of_new_sourceplane;
-
+    
     assert(NLastPlane <= lensing_planes.size());
     tmpDs = Dl[index_of_new_sourceplane];
     tmpdDs = dDl[index_of_new_sourceplane];
     tmpZs = plane_redshifts[index_of_new_sourceplane];
-
+    
     Dl[index_of_new_sourceplane] = Ds_implant;
     dDl[index_of_new_sourceplane] = dDs_implant;
     plane_redshifts[index_of_new_sourceplane] = zs_implant;
   }
   else{ NLastPlane = lensing_planes.size(); }
-
-
+  
+  
   // For refining the grid and shoot new rays.
   int nthreads, rc;
   nthreads = N_THREADS;
-
+  
   int chunk_size;
   do{
     chunk_size = (int)Npoints/nthreads;
     if(chunk_size == 0) nthreads /= 2;
   }while(chunk_size == 0);
-
+  
   pthread_t threads[nthreads];
   TmpParams *thread_params = new TmpParams[nthreads];
-            
+  
   // This is for multi-threading :
   for(int i=0; i<nthreads;i++)
   {
@@ -120,15 +120,15 @@ void Lens::rayshooterInternal(
     rc = pthread_create(&threads[i], NULL, compute_rays_parallel, (void*) &thread_params[i]);
     assert(rc==0);
   }
-    
+  
   for(int i = 0; i < nthreads; i++)
   {
     rc = pthread_join(threads[i], NULL);
     assert(rc==0);
   }
-
+  
   delete[] thread_params;
-
+  
   if(toggle_source_plane)
   {
     // The initial values for the plane are reset here
@@ -136,7 +136,7 @@ void Lens::rayshooterInternal(
     dDl[index_of_new_sourceplane] = tmpdDs;
     plane_redshifts[index_of_new_sourceplane] = tmpZs;
   }
-
+  
 }
 
 
@@ -147,27 +147,27 @@ void *compute_rays_parallel(void *_p)
   int chunk_size = p->size;
   int start      = p->start;
   int end        = start + chunk_size;
-    
+  
   int i, j;
   
   PosType xx[2],fac;
   PosType aa,bb,cc;
   PosType alpha[2];
-    
+  
   KappaType kappa,gamma[3];
-    
+  
   PosType xminus[2],xplus[2];
   PosType kappa_minus,gamma_minus[3],kappa_plus,gamma_plus[3];
-    
+  
   KappaType phi;
-    
-// Main loop : loop over the points of the image
-for(i = start; i < end; i++)
+  
+  // Main loop : loop over the points of the image
+  for(i = start; i < end; i++)
   {
     
     // In case e.g. a temporary point is outside of the grid.
     if(p->i_points[i].in_image == MAYBE) continue;
-      
+    
     // find position on first lens plane in comoving units
     p->i_points[i].image->x[0] = p->i_points[i].x[0] * p->Dl[0];
     p->i_points[i].image->x[1] = p->i_points[i].x[1] * p->Dl[0];
@@ -180,10 +180,10 @@ for(i = start; i < end; i++)
     gamma_minus[0] = 0;
     gamma_minus[1] = 0;
     gamma_minus[2] = 0;
-      
+    
     // Setting phi on the first plane.
     phi = 0.0;
-      
+    
     // Default values :
     p->i_points[i].kappa = 1;  // This is actually 1-kappa until after the loop through the planes.
     p->i_points[i].gamma[0] = 0;
@@ -202,57 +202,57 @@ for(i = start; i < end; i++)
       
       continue;
     }
-      
-      
+    
+    
     /* ************************************************************************************
-    We compute deflection, shear, convergence, rotation
-    and time-delay of rays in parallel.
-    ************************************************************************************ */
-      
+     We compute deflection, shear, convergence, rotation
+     and time-delay of rays in parallel.
+     ************************************************************************************ */
+    
     // Time delay at first plane : position on the observer plane is (0,0) => no need to take difference of positions.
     p->i_points[i].dt = 0.5*( p->i_points[i].image->x[0]*p->i_points[i].image->x[0] + p->i_points[i].image->x[1]*p->i_points[i].image->x[1] )/ p->dDl[0] ;
-
-      
+    
+    
     //  std::cout << "x1 = " << p->i_points[i].image->x[0] << "  ;  x2 = " << p->i_points[i].image->x[1] << std::endl ;
     //  std::cout << "d_A(lense) = " << p->Dl[0] << std::endl ;
-      
+    
     // Begining of the loop through the planes :
     // Each iteration leaves i_point[i].image on plane (j+1)
     for(j = 0; j < p->NPlanes ; ++j)
     {
-
+      
       // convert to physical coordinates on the plane j
       xx[0] = p->i_points[i].image->x[0]/(1+p->plane_redshifts[j]);
       xx[1] = p->i_points[i].image->x[1]/(1+p->plane_redshifts[j]);
       
       assert(xx[0] == xx[0] && xx[1] == xx[1]);
-        
+      
       p->lensing_planes[j]->force(alpha,&kappa,gamma,&phi,xx); // Computed in physical coordinates.
-
-        assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
-        assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
-        assert(kappa == kappa);
-        assert(!isinf(kappa));
-
-        fac = 1/(1+p->plane_redshifts[j]);
-    	  /* multiply by fac to obtain 1/comoving_distance/physical_distance
-    	   * such that a multiplication with the charge (in units of physical distance)
-    	   * will result in a 1/comoving_distance quantity */ // 1 / comoving_distance squared ?
-    	  kappa *= fac;
-    	  gamma[0] *= fac;
-    	  gamma[1] *= fac;
-    	  gamma[2] *= fac;
-	
-        assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
-        assert(kappa == kappa);
-        assert(phi == phi);
-        
+      
+      assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
+      assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
+      assert(kappa == kappa);
+      assert(!isinf(kappa));
+      
+      fac = 1/(1+p->plane_redshifts[j]);
+      /* multiply by fac to obtain 1/comoving_distance/physical_distance
+       * such that a multiplication with the charge (in units of physical distance)
+       * will result in a 1/comoving_distance quantity */ // 1 / comoving_distance squared ?
+      kappa *= fac;
+      gamma[0] *= fac;
+      gamma[1] *= fac;
+      gamma[2] *= fac;
+      
+      assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
+      assert(kappa == kappa);
+      assert(phi == phi);
+      
       if(p->flag_switch_deflection_off){ alpha[0] = alpha[1] = 0.0; }
       
-        
+      
       // This computes \vec{x}^{j+1} in terms of \vec{x}^{j} , \vec{x}^{j-1} and \vec{\alpha}^{j}
       // according to Eq. (19) of paper GLAMER II -----------------------------------------------
-
+      
       aa = (p->dDl[j+1] + p->dDl[j])/p->dDl[j];
       bb = p->dDl[j+1]/p->dDl[j];
       cc = p->charge * p->dDl[j+1];
@@ -263,111 +263,111 @@ for(i = start; i < end; i++)
       xminus[0] = p->i_points[i].image->x[0];
       xminus[1] = p->i_points[i].image->x[1];
       
-
+      
       // Change in the value of the position.
       p->i_points[i].image->x[0] = xplus[0];
       p->i_points[i].image->x[1] = xplus[1];
-
-        
+      
+      
       // ----------------------------------------------------------------------------------------
-
+      
       /*
-      std::cout << "p->dDl[j-1]" << "\t" << "p->dDl[j]" << "\t" << "p->dDl[j+1]" << std::endl;
-      std::cout << p->dDl[j-1] << "\t" << p->dDl[j] << "\t" << p->dDl[j+1] << std::endl;
-      std::cout << "aa" << "\t" << "bb" << "\t" << "cc" << std::endl;
-      std::cout << aa << "\t" << bb << "\t" << cc << std::endl;
+       std::cout << "p->dDl[j-1]" << "\t" << "p->dDl[j]" << "\t" << "p->dDl[j+1]" << std::endl;
+       std::cout << p->dDl[j-1] << "\t" << p->dDl[j] << "\t" << p->dDl[j+1] << std::endl;
+       std::cout << "aa" << "\t" << "bb" << "\t" << "cc" << std::endl;
+       std::cout << aa << "\t" << bb << "\t" << cc << std::endl;
        */
       
       
-        // This computes (\kappa^{j+1}, \gamma_1^{j+1}, \gamma_2^{j+1}, \gamma_3^{j+1})
-        // in terms of the j-plane quantities and according to Eq. (22) of GLAMER II.
-        
-            // Here the coefficients aa, bb and cc are used for a completely different calculation,
-            // they are not the same as they were defined above. ----------------------------------
-            aa = (p->dDl[j+1] + p->dDl[j]) * p->Dl[j] / p->dDl[j] / p->Dl[j+1];
-            if(j>0)
-            {
-                bb = p->dDl[j+1] * p->Dl[j-1] / p->dDl[j] / p->Dl[j+1];
-            }
-            else bb = 0;
-            cc = p->charge * p->dDl[j+1] * p->Dl[j] / p->Dl[j+1];
-            // ------------------------------------------------------------------------------------
-
+      // This computes (\kappa^{j+1}, \gamma_1^{j+1}, \gamma_2^{j+1}, \gamma_3^{j+1})
+      // in terms of the j-plane quantities and according to Eq. (22) of GLAMER II.
       
-        // Computation of the "plus quantities", i.e. the  next plane quantities --------------------
-        kappa_plus = aa*p->i_points[i].kappa - bb*kappa_minus
-    			  - cc*(kappa*p->i_points[i].kappa + gamma[0]*p->i_points[i].gamma[0] + gamma[1]*p->i_points[i].gamma[1]);
-            
-        gamma_plus[0] = aa*p->i_points[i].gamma[0] - bb*gamma_minus[0]
-    	          - cc*(gamma[0]*p->i_points[i].kappa + kappa*p->i_points[i].gamma[0] - gamma[1]*p->i_points[i].gamma[2]);
-	
-        gamma_plus[1] = aa*p->i_points[i].gamma[1] - bb*gamma_minus[1]
-    	          - cc*(gamma[1]*p->i_points[i].kappa + kappa*p->i_points[i].gamma[1] + gamma[0]*p->i_points[i].gamma[2]);
-	
-        gamma_plus[2] = aa*p->i_points[i].gamma[2] - bb*gamma_minus[2]
-    	          - cc*(kappa*p->i_points[i].gamma[2] - gamma[1]*p->i_points[i].gamma[0] + gamma[0]*p->i_points[i].gamma[1]);
-        // ------------------------------------------------------------------------------------------
-            
-            
-        // Assigning them to the "minus quantities" for next plane occurence of the loop ------------
-        kappa_minus = p->i_points[i].kappa;
-        gamma_minus[0] = p->i_points[i].gamma[0];
-        gamma_minus[1] = p->i_points[i].gamma[1];
-        gamma_minus[2] = p->i_points[i].gamma[2];
-        // ------------------------------------------------------------------------------------------
+      // Here the coefficients aa, bb and cc are used for a completely different calculation,
+      // they are not the same as they were defined above. ----------------------------------
+      aa = (p->dDl[j+1] + p->dDl[j]) * p->Dl[j] / p->dDl[j] / p->Dl[j+1];
+      if(j>0)
+      {
+        bb = p->dDl[j+1] * p->Dl[j-1] / p->dDl[j] / p->Dl[j+1];
+      }
+      else bb = 0;
+      cc = p->charge * p->dDl[j+1] * p->Dl[j] / p->Dl[j+1];
+      // ------------------------------------------------------------------------------------
       
-        /*
-        std::cout << "p->i_points[i].kappa" << "\t" << "p->i_points[i].gamma[0]" << "\t" << "p->i_points[i].gamma[1]" << "\t" << "p->i_points[i].gamma[2]" << std::endl ;
-        std::cout << p->i_points[i].kappa << "\t" << p->i_points[i].gamma[0] << "\t" << p->i_points[i].gamma[1] << "\t" << p->i_points[i].gamma[2] << std::endl ;
       
-        std::cout << "x" << "\t" << "y" << std::endl;
-        std::cout << p->i_points[i].image->x[0] << "\t" << p->i_points[i].image->x[0] << std::endl;
-        std::cout << "kappa_minus" << "\t" << "gamma_minus[0]" << "\t" << "gamma_minus[1]" << "\t" << "gamma_minus[2]" << "\t" << std::endl ;
-        std::cout << kappa_minus << "\t" << gamma_minus[0] << "\t" << gamma_minus[1] << "\t" << gamma_minus[2] << "\t" << std::endl ;
-        std::cout << "kappa_plus" << "\t" << "gamma_plus[0]" << "\t" << "gamma_plus[1]" << "\t" << "gamma_plus[2]" << "\t" << std::endl ;
-        std::cout << kappa_plus << "\t" << gamma_plus[0] << "\t" << gamma_plus[1] << "\t" << gamma_plus[2] << "\t" << std::endl ;
-         */
+      // Computation of the "plus quantities", i.e. the  next plane quantities --------------------
+      kappa_plus = aa*p->i_points[i].kappa - bb*kappa_minus
+      - cc*(kappa*p->i_points[i].kappa + gamma[0]*p->i_points[i].gamma[0] + gamma[1]*p->i_points[i].gamma[1]);
       
-        assert(kappa_plus==kappa_plus && gamma_minus[0]==gamma_minus[0] && gamma_minus[1]==gamma_minus[1] && gamma_minus[2]==gamma_minus[2]);
+      gamma_plus[0] = aa*p->i_points[i].gamma[0] - bb*gamma_minus[0]
+      - cc*(gamma[0]*p->i_points[i].kappa + kappa*p->i_points[i].gamma[0] - gamma[1]*p->i_points[i].gamma[2]);
       
-            
-        // Updating the point quantities ----------------
-        p->i_points[i].kappa = kappa_plus;
-        p->i_points[i].gamma[0] = gamma_plus[0];
-        p->i_points[i].gamma[1] = gamma_plus[1];
-        p->i_points[i].gamma[2] = gamma_plus[2];
-        // ----------------------------------------------
-
-            
-        
-        // Geometric time delay with added potential
-            p->i_points[i].dt += 0.5*( (xplus[0] - xminus[0])*(xplus[0] - xminus[0]) + (xplus[1] - xminus[1])*(xplus[1] - xminus[1]) )/p->dDl[j+1] - (1 + p->plane_redshifts[j]) * phi * p->charge ; /// in Mpc
+      gamma_plus[1] = aa*p->i_points[i].gamma[1] - bb*gamma_minus[1]
+      - cc*(gamma[1]*p->i_points[i].kappa + kappa*p->i_points[i].gamma[1] + gamma[0]*p->i_points[i].gamma[2]);
       
-        // Check that the 1+z factor must indeed be there (because the x positions have been rescaled, so it may be different compared to the draft).
-        // Remark : Here the true lensing potential is not "phi" but "phi * p->charge = phi * 4 pi G".
+      gamma_plus[2] = aa*p->i_points[i].gamma[2] - bb*gamma_minus[2]
+      - cc*(kappa*p->i_points[i].gamma[2] - gamma[1]*p->i_points[i].gamma[0] + gamma[0]*p->i_points[i].gamma[1]);
+      // ------------------------------------------------------------------------------------------
+      
+      
+      // Assigning them to the "minus quantities" for next plane occurence of the loop ------------
+      kappa_minus = p->i_points[i].kappa;
+      gamma_minus[0] = p->i_points[i].gamma[0];
+      gamma_minus[1] = p->i_points[i].gamma[1];
+      gamma_minus[2] = p->i_points[i].gamma[2];
+      // ------------------------------------------------------------------------------------------
+      
+      /*
+       std::cout << "p->i_points[i].kappa" << "\t" << "p->i_points[i].gamma[0]" << "\t" << "p->i_points[i].gamma[1]" << "\t" << "p->i_points[i].gamma[2]" << std::endl ;
+       std::cout << p->i_points[i].kappa << "\t" << p->i_points[i].gamma[0] << "\t" << p->i_points[i].gamma[1] << "\t" << p->i_points[i].gamma[2] << std::endl ;
+       
+       std::cout << "x" << "\t" << "y" << std::endl;
+       std::cout << p->i_points[i].image->x[0] << "\t" << p->i_points[i].image->x[0] << std::endl;
+       std::cout << "kappa_minus" << "\t" << "gamma_minus[0]" << "\t" << "gamma_minus[1]" << "\t" << "gamma_minus[2]" << "\t" << std::endl ;
+       std::cout << kappa_minus << "\t" << gamma_minus[0] << "\t" << gamma_minus[1] << "\t" << gamma_minus[2] << "\t" << std::endl ;
+       std::cout << "kappa_plus" << "\t" << "gamma_plus[0]" << "\t" << "gamma_plus[1]" << "\t" << "gamma_plus[2]" << "\t" << std::endl ;
+       std::cout << kappa_plus << "\t" << gamma_plus[0] << "\t" << gamma_plus[1] << "\t" << gamma_plus[2] << "\t" << std::endl ;
+       */
+      
+      assert(kappa_plus==kappa_plus && gamma_minus[0]==gamma_minus[0] && gamma_minus[1]==gamma_minus[1] && gamma_minus[2]==gamma_minus[2]);
+      
+      
+      // Updating the point quantities ----------------
+      p->i_points[i].kappa = kappa_plus;
+      p->i_points[i].gamma[0] = gamma_plus[0];
+      p->i_points[i].gamma[1] = gamma_plus[1];
+      p->i_points[i].gamma[2] = gamma_plus[2];
+      // ----------------------------------------------
+      
+      
+      
+      // Geometric time delay with added potential
+      p->i_points[i].dt += 0.5*( (xplus[0] - xminus[0])*(xplus[0] - xminus[0]) + (xplus[1] - xminus[1])*(xplus[1] - xminus[1]) )/p->dDl[j+1] - (1 + p->plane_redshifts[j]) * phi * p->charge ; /// in Mpc
+      
+      // Check that the 1+z factor must indeed be there (because the x positions have been rescaled, so it may be different compared to the draft).
+      // Remark : Here the true lensing potential is not "phi" but "phi * p->charge = phi * 4 pi G".
       
     } // End of the loop going through the planes
-
-      
+    
+    
     // Subtracting off a term that makes the unperturbed ray to have zero time delay
     p->i_points[i].dt -= 0.5*( p->i_points[i].image->x[0]*p->i_points[i].image->x[0] + p->i_points[i].image->x[1]*p->i_points[i].image->x[1] ) / p->Dl[p->NPlanes];
-
-      
+    
+    
     // Convert units back to angles.
     // Be careful ! These angles are not the same as those computed after the comment 'find position on first lens plane in comoving units' above, namely the angles we start with in this function. Values are close but still different. The change occurs after the comment 'Change in the value of the position.' above and by the fact that below we divide by Dl[p->NPlanes] and not Dl[0].
     p->i_points[i].image->x[0] /= p->Dl[p->NPlanes];
     p->i_points[i].image->x[1] /= p->Dl[p->NPlanes];
-      
-      
+    
+    
     // We go from kappa denoting 1-kappa to kappa denoting kappa
     p->i_points[i].kappa = 1 - p->i_points[i].kappa;
-
-      
+    
+    
     // Computation of the inverse magnitude --------------------------------------------------------
     p->i_points[i].invmag = (1-p->i_points[i].kappa)*(1-p->i_points[i].kappa)
-                                            - p->i_points[i].gamma[0]*p->i_points[i].gamma[0]
-                                            - p->i_points[i].gamma[1]*p->i_points[i].gamma[1]
-                                            + p->i_points[i].gamma[2]*p->i_points[i].gamma[2];
+    - p->i_points[i].gamma[0]*p->i_points[i].gamma[0]
+    - p->i_points[i].gamma[1]*p->i_points[i].gamma[1]
+    + p->i_points[i].gamma[2]*p->i_points[i].gamma[2];
     // ---------------------------------------------------------------------------------------------
     
     
@@ -387,27 +387,171 @@ for(i = start; i < end; i++)
     p->i_points[i].image->gamma[2] = p->i_points[i].gamma[2];
     p->i_points[i].image->dt = p->i_points[i].dt;
     // ------------------------------------------------------------------------
-      
-      
-
-      
-/*
-// TODO: check
-    if(p->i_points[i].image->x[0] != p->i_points[i].image->x[0] ||
-       p->i_points[i].image->x[1] != p->i_points[i].image->x[1] ||
-       p->i_points[i].invmag != p->i_points[i].invmag)
-    {
-      ERROR_MESSAGE();
-      std::cout << p->i_points[i].image->x[0] << "  " << p->i_points[i].image->x[1] << "  " << p->i_points[i].invmag << std::endl;
-      std::cout << p->i_points[i].gamma[0] << "  " << p->i_points[i].gamma[1] << "  " << p->i_points[i].gamma[2] << "  " <<
-    		  p->i_points[i].kappa << std::endl;
-      //	assert(0);
-      exit(1);
-    }
-*/
-      
-} // End of the main loop.
+    
+    
+    
+    
+    /*
+     // TODO: check
+     if(p->i_points[i].image->x[0] != p->i_points[i].image->x[0] ||
+     p->i_points[i].image->x[1] != p->i_points[i].image->x[1] ||
+     p->i_points[i].invmag != p->i_points[i].invmag)
+     {
+     ERROR_MESSAGE();
+     std::cout << p->i_points[i].image->x[0] << "  " << p->i_points[i].image->x[1] << "  " << p->i_points[i].invmag << std::endl;
+     std::cout << p->i_points[i].gamma[0] << "  " << p->i_points[i].gamma[1] << "  " << p->i_points[i].gamma[2] << "  " <<
+     p->i_points[i].kappa << std::endl;
+     //	assert(0);
+     exit(1);
+     }
+     */
+    
+  } // End of the main loop.
   
   return 0;
+  
+}
+/** \brief Collects information about the halos and kappa contributions along the light path
+ 
+ Information on the nearest halos is collected where nearest is defined by rmax and mode.
+ When mode == 2 the unlensed angular coordinates are used to evaluate proximity not the lensed ones.
+ 
+ */
+void Lens::info_rayshooter(
+        Point *i_point     /// point to be shot, must have image point linked
+        ,std::vector<std::vector<double>> ang_positions  /// angular positions on each plane
+        ,std::vector<KappaType> kappa_on_planes          /// convergence on each plane
+        ,std::vector<std::vector<LensHalo*>> halo_neighbors  /// neighboring halos within rmax of ray on each plane
+        ,LensHalo *halo_max
+        ,KappaType &kappa_max
+        ,KappaType gamma_max[]
+        ,PosType rmax  /// distance from ray on each plane, units depend on mode parameter
+        ,short mode  /// 0:physical distance (Mpc), 1: comoving distance (Mpc), 2: angular distance (rad)
+                           )
+{
+  
+ 
+  // !!! would like to find the maximum contributing halo so that its contribution can be subtracted from the total
+  
+
+  int NLastPlane;
+  PosType tmpDs,tmpdDs,tmpZs;
+  
+  // If there are no points to shoot, then we quit.
+  
+  // If a lower redshift source (compared to the farthest lens plane) is being used
+  if(toggle_source_plane)
+  {
+    NLastPlane = index_of_new_sourceplane;
+    
+    assert(NLastPlane <= lensing_planes.size());
+    tmpDs = Dl[index_of_new_sourceplane];
+    tmpdDs = dDl[index_of_new_sourceplane];
+    tmpZs = plane_redshifts[index_of_new_sourceplane];
+    
+    Dl[index_of_new_sourceplane] = Ds_implant;
+    dDl[index_of_new_sourceplane] = dDs_implant;
+    plane_redshifts[index_of_new_sourceplane] = zs_implant;
+  }
+  else{ NLastPlane = lensing_planes.size(); }
+
+  
+  ang_positions.resize(NLastPlane);
+  for(int ii=0;ii<NLastPlane;++ii) ang_positions[ii].resize(2);
+  halo_neighbors.resize(NLastPlane);
+  kappa_on_planes.resize(NLastPlane);
+
+  int j;
+  
+  PosType xx[2];
+  PosType aa,bb,cc;
+  PosType alpha[2];
+  
+  PosType xminus[2],xplus[2],tmp_r,x_tmp[2];
+  KappaType gamma[3],phi,kappa_tmp;
+  kappa_max = -1.0;
+      
+    // find position on first lens plane in comoving units
+    i_point->image->x[0] = i_point->x[0] * Dl[0];
+    i_point->image->x[1] = i_point->x[1] * Dl[0];
+    
+    xminus[0] = 0;
+    xminus[1] = 0;
+     
+    // Begining of the loop through the planes :
+    // Each iteration leaves i_point[i].image on plane (j+1)
+    
+    for(j = 0; j < NLastPlane ; ++j)
+    {
+      
+      // convert to physical coordinates on the plane j
+      xx[0] = i_point->image->x[0]/(1+plane_redshifts[j]);
+      xx[1] = i_point->image->x[1]/(1+plane_redshifts[j]);
+      
+      assert(xx[0] == xx[0] && xx[1] == xx[1]);
+      
+      lensing_planes[j]->force(alpha,&kappa_on_planes[j],gamma,&phi,xx); // Computed in physical coordinates.
+      if(flag_switch_deflection_off){ alpha[0] = alpha[1] = 0.0; }
+      
+      tmp_r = rmax;
+      if(mode == 1) tmp_r /= (1+plane_redshifts[j]);
+      if(mode == 2) tmp_r *= Dl[j];
+      lensing_planes[j]->getNeighborHalos(xx,tmp_r,halo_neighbors[j]);
+      
+      ang_positions[j][0] = i_point->image->x[0]/Dl[j];
+      ang_positions[j][1] = i_point->image->x[1]/Dl[j];
+      
+      PosType SigmaCrit = cosmo.SigmaCrit(plane_redshifts[j],tmpZs);
+      
+      // Find the halo with the largest kappa
+      for(int ii=0;ii<halo_neighbors[j].size();++ii){
+        alpha[0] = alpha[1] = 0.0;
+        kappa_tmp = 0.0;
+        gamma[0] = gamma[1] = gamma[2] = 0.0;
+        phi = 0.0;
+        
+        // Getting the halo position (in physical Mpc) :
+        halo_neighbors[j][ii]->getX(x_tmp);
+        
+        // Taking the shift into account :
+        x_tmp[0] = xx[0] - x_tmp[0];
+        x_tmp[1] = xx[1] - x_tmp[1];
+        
+        halo_neighbors[j][ii]->force_halo(alpha,&kappa_tmp,gamma,&phi,x_tmp,false);
+        kappa_tmp /=SigmaCrit;
+        if(kappa_tmp > kappa_max){
+          kappa_max = kappa_tmp;
+          halo_max = halo_neighbors[j][ii];
+          gamma_max[0] = gamma[0]/SigmaCrit;
+          gamma_max[1] = gamma[1]/SigmaCrit;
+        }
+      }
+
+      //kappa_on_planes[j] *= 1/(1+plane_redshifts[j]);
+      kappa_on_planes[j] /= SigmaCrit;
+      
+      aa = (dDl[j+1] + dDl[j])/dDl[j];
+      bb = dDl[j+1]/dDl[j];
+      cc = charge * dDl[j+1];
+      
+      xplus[0] = aa*i_point->image->x[0] - bb*xminus[0] - cc*alpha[0];
+      xplus[1] = aa*i_point->image->x[1] - bb*xminus[1] - cc*alpha[1];
+      
+      xminus[0] = i_point->image->x[0];
+      xminus[1] = i_point->image->x[1];
+      
+      
+      // Change in the value of the position.
+      i_point->image->x[0] = xplus[0];
+      i_point->image->x[1] = xplus[1];
+      
+      
+    } // End of the loop going through the planes
+    
+    // Convert units back to angles.
+    i_point->image->x[0] /= Dl[NLastPlane];
+    i_point->image->x[1] /= Dl[NLastPlane];
+  
+  return;
   
 }

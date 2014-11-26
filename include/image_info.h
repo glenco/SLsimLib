@@ -8,9 +8,9 @@
 #ifndef IMAGE_INFO_H_
 #define IMAGE_INFO_H_
 
-#include <Kist.h>
-#include <pointlist.h>
-#include <Tree.h>
+#include "Kist.h"
+#include "pointlist.h"
+#include "Tree.h"
 //#include <grid_maintenance.h>
 
 #ifndef gate_declare
@@ -61,6 +61,18 @@ struct ImageInfo{
             ,PosType resolution,PosType threshold);
   bool constant(LensingVariable lenvar,PosType tol);
   
+  /** \brief Area of the image using the concave hull of the points on the image plane.
+   
+   If useborder is true it will use the inner border to save time.  When a bourder has 
+   not been calculated,as with a critical cureve, it should be set to false.
+   */
+  PosType ConcaveHullImageArea(bool useborder);
+  /** \brief Area of the image using the concave hull of the points on the image plane.
+   
+   If useborder is true it will use the inner border to save time.  When a bourder has
+   not been calculated,as with a critical cureve, it should be set to false.
+   */
+  PosType ConcaveHullSourceArea(bool useborder);
 };
 
 /** \brief This is an old version that should not be used anymore in favor of ImageInfo.

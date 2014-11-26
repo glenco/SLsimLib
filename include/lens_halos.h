@@ -66,9 +66,10 @@ public:
   
   void setX(PosType PosX, PosType PosY) { posHalo[0] = PosX ; posHalo[1] = PosY ; }
   void setX(PosType *PosXY) { posHalo[0] = PosXY[0] ; posHalo[1] = PosXY[1] ; }
-  
   /// get the position of the Halo in physical Mpc
   void getX(PosType * MyPosHalo) const { MyPosHalo[0] = posHalo[0] ; MyPosHalo[1] = posHalo[1]; }
+
+  /// get the position of the Halo in physical Mpc
   /// display the position of the halo
   void displayPos() { std::cout << "Halo PosX = " << posHalo[0] << " ; Halo PosY = " << posHalo[1] << std::endl; }
   
@@ -141,9 +142,12 @@ public:
   /// perform some basic consistancy checks for halo
   bool test();
   
+  size_t getID(){return idnumber;}
+  void setID(size_t id){idnumber = id;}
   
 protected:
 
+  size_t idnumber; /// Identification number of halo.  It is not always used.
   PosType renormalization(PosType r_max);
   
   PosType alpha_int(PosType x) const;
@@ -267,9 +271,9 @@ protected:
   
   void felliptical(PosType x, PosType q, PosType theta, PosType f[], PosType g[]);
   
-  virtual void gamma_asym(PosType x,PosType theta, PosType gamma[2]);
+  virtual void gamma_asym(PosType x,PosType theta, PosType gamma[]);
   virtual PosType kappa_asym(PosType x,PosType theta);
-  virtual void alphakappagamma_asym(PosType x,PosType theta, PosType alpha[2]
+  virtual void alphakappagamma_asym(PosType x,PosType theta, PosType alpha[]
                                     ,PosType *kappa,PosType gamma[]);
   virtual void alphakappagamma1asym(PosType x,PosType theta, PosType alpha[2]
                                     ,PosType *kappa,PosType gamma[],PosType *phi);
@@ -379,6 +383,7 @@ protected:
     LensHalo *halo;
   };
 
+  
 };
 
 /** \ingroup DeflectionL2
@@ -644,18 +649,18 @@ private:
 
 
 
-class LensHaloSimpleNSIE : public LensHalo{
+class LensHaloRealNSIE : public LensHalo{
 public:
-  /*LensHaloSimpleNSIE(){
+  /*LensHaloRealNSIE(){
    sigma = zlens = fratio = pa = rcore = 0.;
    }*/
   
-  //LensHaloSimpleNSIE(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,float my_sigma, float my_rcore,float my_fratio,float my_pa,int my_stars_N);
+  //LensHaloRealNSIE(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,float my_sigma, float my_rcore,float my_fratio,float my_pa,int my_stars_N);
   /// explicit constructor
-  LensHaloSimpleNSIE(float my_mass,PosType my_zlens,float my_sigma
+  LensHaloRealNSIE(float my_mass,PosType my_zlens,float my_sigma
                      ,float my_rcore,float my_fratio,float my_pa,int my_stars_N);
-	LensHaloSimpleNSIE(InputParams& params);
-	~LensHaloSimpleNSIE();
+	LensHaloRealNSIE(InputParams& params);
+	~LensHaloRealNSIE();
   
 	/// overridden function to calculate the lensing properties
 	void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0);

@@ -592,7 +592,7 @@ LensHaloPowerLaw::~LensHaloPowerLaw(){
 
 
 /*
-LensHaloSimpleNSIE::LensHaloSimpleNSIE(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,float my_sigma
+LensHaloRealNSIE::LensHaloRealNSIE(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,float my_sigma
                                       , float my_rcore,float my_fratio,float my_pa,int my_stars_N){
     mass=my_mass, Rmax=my_Rmax, zlens=my_zlens, rscale=my_rscale;
     sigma=my_sigma, rcore=my_rcore;
@@ -603,7 +603,7 @@ LensHaloSimpleNSIE::LensHaloSimpleNSIE(float my_mass,float my_Rmax,PosType my_zl
 	assert(Rmax >= Rsize);
 }
 */
-LensHaloSimpleNSIE::LensHaloSimpleNSIE(float my_mass,PosType my_zlens,float my_sigma
+LensHaloRealNSIE::LensHaloRealNSIE(float my_mass,PosType my_zlens,float my_sigma
                                        , float my_rcore,float my_fratio,float my_pa,int my_stars_N):LensHalo(){
   mass=my_mass, zlens=my_zlens, rscale=1.0;
   
@@ -616,7 +616,7 @@ LensHaloSimpleNSIE::LensHaloSimpleNSIE(float my_mass,PosType my_zlens,float my_s
  }
 
 
-LensHaloSimpleNSIE::LensHaloSimpleNSIE(InputParams& params){
+LensHaloRealNSIE::LensHaloRealNSIE(InputParams& params){
 	sigma = 0.;
 	zlens = 0.;
 	fratio = 0.;
@@ -626,7 +626,7 @@ LensHaloSimpleNSIE::LensHaloSimpleNSIE(InputParams& params){
 	assignParams(params);
 }
 
-void LensHaloSimpleNSIE::assignParams(InputParams& params){
+void LensHaloRealNSIE::assignParams(InputParams& params){
 	if(!params.get("main_mass",mass)) error_message1("main_mass",params.filename());
 	if(!params.get("main_zlens",zlens)) error_message1("main_zlens",params.filename());
 
@@ -652,11 +652,11 @@ void LensHaloSimpleNSIE::assignParams(InputParams& params){
 
 }
 
-LensHaloSimpleNSIE::~LensHaloSimpleNSIE(){
+LensHaloRealNSIE::~LensHaloRealNSIE(){
 
 }
 /*
-void LensHaloSimpleNSIE::initFromMass(float my_mass, long *seed){
+void LensHaloRealNSIE::initFromMass(float my_mass, long *seed){
 	mass = my_mass;
 	rcore = 0.0;
 	sigma = 126*pow(mass/1.0e10,0.25); // From Tully-Fisher and Bell & de Jong 2001
@@ -670,11 +670,11 @@ void LensHaloSimpleNSIE::initFromMass(float my_mass, long *seed){
 	assert(Rmax >= Rsize);
 }
 
-void LensHaloSimpleNSIE::initFromFile(float my_mass, long *seed, float vmax, float r_halfmass){
+void LensHaloRealNSIE::initFromFile(float my_mass, long *seed, float vmax, float r_halfmass){
 	initFromMass(my_mass,seed);
 }
 
-void LensHaloSimpleNSIE::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed){
+void LensHaloRealNSIE::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed){
 	initFromMass(my_mass,seed);
 }
 */
@@ -874,7 +874,7 @@ void LensHalo::force_halo_asym(
 
 
 /* *
-void LensHaloSimpleNSIE::force_halo(
+void LensHaloRealNSIE::force_halo(
 		PosType *alpha
 		,KappaType *kappa
 		,KappaType *gamma
@@ -996,7 +996,7 @@ void LensHaloSimpleNSIE::force_halo(
   return;
 }
 /* */
-void LensHaloSimpleNSIE::force_halo(
+void LensHaloRealNSIE::force_halo(
                                     PosType *alpha
                                     ,KappaType *kappa
                                     ,KappaType *gamma
@@ -1009,7 +1009,7 @@ void LensHaloSimpleNSIE::force_halo(
   
 	PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
 	if(rcm2 < 1e-20) rcm2 = 1e-20;
-  
+
 	if(rcm2 < Rmax*Rmax)
     {
 		//PosType ellipR = ellipticRadiusNSIE(xcm,fratio,pa);

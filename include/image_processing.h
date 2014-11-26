@@ -52,6 +52,7 @@ public:
 
 	void AddImages(ImageInfo *imageinfo,int Nimages,float rescale = 1.);
 	void AddCurve(ImageInfo *curve,double value);
+  
 	void drawline(double x1[],double x2[],double value);
   void drawcircle(PosType r_center[],PosType radius,PosType value);
 	void AddGrid(Grid &grid,double value = 1.0);
@@ -113,6 +114,28 @@ public:
   
   /// interpolate to point x[]
   PosType linear_interpolate(PosType x[]);
+  
+  /// draw a grid on the image that divides the each demension into N cells
+  void drawgrid(int N,PosType value);
+  void drawPoints(std::vector<Point *> points,PosType size,PosType value){
+    if(size < resolution*3){
+      size_t index;
+      for(int i=0;i<points.size();++i){
+        if(inMapBox(points[i]->x)){
+          //index = Utilities::IndexFromPosition(x1,Nx,range,center);
+          index = find_index(points[i]->x);
+          map[index] = value;
+        }
+      }
+    }else
+      for(int i=0;i<points.size();++i) drawcircle(points[i]->x,0.01*rangeX,value);
+    
+  }
+  void drawCurve(std::vector<Point *> points,PosType value){
+    for(int i=0;i<points.size()-1;++i) drawline(points[i]->x,points[i+1]->x,value);
+  }
+  /// Draw a rectangle
+  void drawBox(PosType p1[],PosType p2[],PosType value);
   
 #ifdef ENABLE_FFTW
 
@@ -209,7 +232,7 @@ void pixelize(double *map,long Npixels,double range,double *center
 		,ImageInfo *imageinfo,int Nimages,bool constant_sb,bool cleanmap
 		,bool write_for_skymaker = false, std::string filename="");
 void _SplitFluxIntoPixels(TreeHndl ptree,Branch *leaf,double *leaf_sb);
-void smoothmap(double *map_out,double *map_in,long Npixels,double range,double sigma);
+//void smoothmap(double *map_out,double *map_in,long Npixels,double range,double sigma);
 
 namespace Utilities{
     void LoadFitsImages(std::string dir,const std::string& filespec,std::vector<PixelMap> & images,int maxN,double resolution = -1,bool verbose = false);
@@ -218,7 +241,7 @@ namespace Utilities{
                        ,bool verbose = false);
 }
 
-/** \brief Class for doing adaptive smoothing using multiply resolution grids.
+/** \brief Warning: Not tested yet. Class for doing adaptive smoothing using multiply resolution grids.
  */
 class MultiGridSmoother{
 public:

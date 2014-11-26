@@ -23,7 +23,7 @@ void LensHaloBaseNSIE::force_halo(
   long j;
   PosType alpha_tmp[2];
   KappaType kappa_tmp = 0.0, gamma_tmp[3];
-  KappaType * phi_tmp = new KappaType ;
+  KappaType phi_tmp ;
   
   gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
   alpha_tmp[0] = alpha_tmp[1] = 0.0;
@@ -33,35 +33,34 @@ void LensHaloBaseNSIE::force_halo(
   *kappa = 0.0;
   *phi = 0.0 ;
   
-  
-  PosType xt[2]={0,0};
-  float units = pow(sigma/lightspeed,2)/Grav ; ///sqrt(fratio); // mass / distance(physical)
-  xt[0]=xcm[0];
-  xt[1]=xcm[1];
-  
-  units *= 2. * Rmax / pi ; // units now in mass /// Multiplying by 2*Rmax/pi to match with Power Law
-  
-  alphaNSIE(alpha,xt,fratio,rcore,pa);
-  alpha[0] *= units;
-  alpha[1] *= units;
-  
-  {
-    gammaNSIE(gamma,xcm,fratio,rcore,pa);
-    *kappa=kappaNSIE(xcm,fratio,rcore,pa);
-    *kappa *= units ;
-    gamma[0] *= units ;
-    gamma[1] *= units ;
-    gamma[2] *= units ;
+  if(sigma > 0.0){
+    PosType xt[2]={0,0};
+    float units = pow(sigma/lightspeed,2)/Grav ; ///sqrt(fratio); // mass / distance(physical)
+    xt[0]=xcm[0];
+    xt[1]=xcm[1];
     
-    *phi = -1.0 * phiNSIE(xcm,fratio,rcore,pa) ;  // phi in Mpc (physical)
-    *phi *= units ;                               // phi now in Msun * Mpc
+    //units *= 2. * Rmax / pi ; // units now in mass /// Multiplying by 2*Rmax/pi to match with Power Law
+    
+    alphaNSIE(alpha,xt,fratio,rcore,pa);
+    alpha[0] *= units;
+    alpha[1] *= units;
+    
+    {
+      gammaNSIE(gamma,xcm,fratio,rcore,pa);
+      *kappa=kappaNSIE(xcm,fratio,rcore,pa);
+      *kappa *= units ;
+      gamma[0] *= units ;
+      gamma[1] *= units ;
+      gamma[2] *= units ;
+      
+      *phi = -1.0 * phiNSIE(xcm,fratio,rcore,pa) ;  // phi in Mpc (physical)
+      *phi *= units ;                               // phi now in Msun * Mpc
+    }
   }
-
-  
   // perturbations of host lens
   if(perturb_Nmodes > 0)
   {
-    *kappa += lens_expand(perturb_beta,perturb_modes,perturb_Nmodes,xcm,alpha_tmp,gamma_tmp,phi_tmp);
+    *kappa += lens_expand(perturb_beta,perturb_modes,perturb_Nmodes,xcm,alpha_tmp,gamma_tmp,&phi_tmp);
     
     alpha[0] += alpha_tmp[0];
     alpha[1] += alpha_tmp[1];
@@ -71,11 +70,11 @@ void LensHaloBaseNSIE::force_halo(
       gamma[1] += gamma_tmp[1];
       // Why don't we have gamma[2] here ?
       // std::cout << "phi = " << *phi << " phi_tmp = " << *phi_tmp << std::endl;
-      *phi += *phi_tmp ; // Should we also multiply by the factor 2*Rmax/pi ?
+      *phi += phi_tmp ; // Should we also multiply by the factor 2*Rmax/pi ?
     }
     gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
     alpha_tmp[0] = alpha_tmp[1] = 0.0;
-    *phi_tmp = 0.0;
+    phi_tmp = 0.0;
   }
   
   // add substructure
@@ -84,7 +83,7 @@ void LensHaloBaseNSIE::force_halo(
     for(j=0;j<sub_N;++j)
     {
       
-      subs[j].force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,phi_tmp,xcm);
+      subs[j].force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp,xcm);
       
       alpha[0] += alpha_tmp[0];
       alpha[1] += alpha_tmp[1];
@@ -95,20 +94,20 @@ void LensHaloBaseNSIE::force_halo(
         gamma[1] += gamma_tmp[1];
         
         // Why don't we have gamma[2] here ?
-        *phi += *phi_tmp;
+        *phi += phi_tmp;
       }
     }
     
     gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
     alpha_tmp[0] = alpha_tmp[1] = 0.0;
-    *phi_tmp = 0.0;
+    phi_tmp = 0.0;
   }
   
   // add stars for microlensing
   if(stars_N > 0 && stars_implanted){
     force_stars(alpha,kappa,gamma,xcm);
   }
-
+  
   return ;
 }
 
@@ -206,6 +205,18 @@ void LensHaloAnaNSIE::setCosmology(const COSMOLOGY& cosmo)
 	Sigma_crit=Ds/Dls/Dl/4/pi/Grav;
 	to = (1+zlens)*Ds/Dls/Dl/8.39428142e-10;
 }
+void LensHaloFit::setCosmology(const COSMOLOGY& cosmo)
+{
+  PosType zlens = getZlens();
+  Dl = cosmo.angDist(0,zlens);
+  Ds = cosmo.angDist(0,zsource_reference);
+  Dls = cosmo.angDist(zlens,zsource_reference);
+  MpcToAsec = 60*60*180 / pi / Dl;
+
+  // find critical density
+  Sigma_crit=Ds/Dls/Dl/4/pi/Grav;
+  to = (1+zlens)*Ds/Dls/Dl/8.39428142e-10;
+}
 
 
 LensHaloBaseNSIE::LensHaloBaseNSIE(InputParams& params) : LensHalo(){
@@ -220,7 +231,7 @@ LensHaloBaseNSIE::LensHaloBaseNSIE(InputParams& params) : LensHalo(){
   sub_theta_force = 0.1;
 
   perturb_Nmodes = 0;
-  sub_sigmaScale = sigma = pa = Einstein_ro = fratio = rcore = 0.0;
+  //sub_sigmaScale = sigma = pa = Einstein_ro = fratio = rcore = 0.0;
 
   if(sub_Ndensity == 0)
 	  sub_N = 0;
@@ -230,7 +241,25 @@ LensHaloBaseNSIE::LensHaloBaseNSIE(InputParams& params) : LensHalo(){
   substruct_implanted = false;
 
 }
-
+LensHaloBaseNSIE::LensHaloBaseNSIE() : LensHalo(){
+  
+  perturb_rms = new PosType[6];
+  
+  // parameters for stars
+  stars_implanted = false; // stars are implanted later
+  star_theta_force = 0.1;
+  sub_theta_force = 0.1;
+  
+  perturb_Nmodes = 0;
+  //sub_sigmaScale = sigma = pa = Einstein_ro = fratio = rcore = 0.0;
+  
+  if(sub_Ndensity == 0)
+    sub_N = 0;
+  
+  Sigma_crit = 0;
+  
+  substruct_implanted = false;
+}
 
 void LensHaloBaseNSIE::PrintLens(bool show_substruct,bool show_stars){
 	int i;
@@ -285,6 +314,7 @@ std::size_t LensHaloBaseNSIE::Nparams() const
 {
 	return LensHalo::Nparams() + 3;
 }
+
 
 PosType LensHaloBaseNSIE::getParam(std::size_t p) const
 {
@@ -628,7 +658,7 @@ PosType LensHalo::alpha_ell(PosType x,PosType theta){ // used only for calculati
 
 
 void LensHalo::alphakappagamma_asym(
-      PosType r         /// Radius in Mpc (not scale lensgths)
+      PosType r         /// Radius in Mpc (not scale lengths)
       ,PosType theta    /// angle of ray
       ,PosType alpha[]  /// output deflection
       ,PosType *kappa   /// output kappa

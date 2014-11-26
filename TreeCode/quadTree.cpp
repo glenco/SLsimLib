@@ -10,6 +10,7 @@
  */
 
 #include "slsimlib.h"
+#include "Tree.h"
 
 /** \brief Constructor meant for point particles, simulation particles
  */
@@ -514,6 +515,56 @@ void TreeQuad::force2D(const PosType *ray,PosType *alpha,KappaType *kappa,KappaT
   alpha[1] -= ray[1]*sigma_background*(inv_screening_scale2 == 0);
   
   *kappa -= sigma_background;
+  
+  return;
+}
+
+/** \brief Returns the halos that are within rmax of ray[]
+ */
+void TreeQuad::neighbors(PosType ray[],PosType rmax,std::list<IndexType> &neighbors){
+  QTreeNB::iterator it(tree);
+  neighbors.clear();
+  
+  PosType r2 = rmax*rmax;
+  bool decend=true;
+  it.movetop();
+  do{
+    int cut = Utilities::cutbox(ray,(*it)->boundary_p1,(*it)->boundary_p2,rmax);
+    decend = true;
+    
+    if(cut == 0){      // box outside circle
+      decend = false;
+    }else if(cut == 1){  // whole box inside circle
+      for(int i=0;i<(*it)->nparticles;++i) neighbors.push_back((*it)->particles[i]);
+      decend = false;
+    }else if((*it)->child0 == NULL){  // at leaf
+      for(int i=0;i<(*it)->nparticles;++i){
+        if( (tree->xp[(*it)->particles[i]][0] - ray[0])*(tree->xp[(*it)->particles[i]][0] - ray[0]) + (tree->xp[(*it)->particles[i]][1] - ray[1])*(tree->xp[(*it)->particles[i]][1] - ray[1]) < r2) neighbors.push_back((*it)->particles[i]);
+      }
+      decend = false;
+    }
+  }while(it.TreeWalkStep(decend));
+  
+}
+/** \brief Returns the halos that are within rmax of ray[]
+ */
+void TreeQuad::neighbors(PosType ray[],PosType rmax,std::vector<LensHalo *> &neighbors){
+  neighbors.clear();
+  
+  if(halos == NULL){
+    std::cerr << "TreeQuad::neighbors - The are no halos in this tree use other version of this function" << std::endl;
+    throw std::runtime_error("no halos");
+    return;
+  }
+  
+  std::list<IndexType> neighbor_indexes;
+  TreeQuad::neighbors(ray,rmax,neighbor_indexes);
+  
+  neighbors.resize(neighbor_indexes.size());
+  std::list<IndexType>::iterator it = neighbor_indexes.begin();
+  for(size_t i=0;i<neighbors.size();++i,++it){
+      neighbors[i] = halos[*it];
+  }
   
   return;
 }

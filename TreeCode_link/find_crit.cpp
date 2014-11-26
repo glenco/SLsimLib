@@ -367,7 +367,7 @@ void ImageFinding::find_crit2(
   long i=0;
   long refinements;
   //short spur,closed;
-  PosType maxgridsize,mingridsize,x[2];
+  PosType x[2];
   Kist<Point> newpoint_kist,neighborkist;
 
   // find kist of points with negative magnification
@@ -591,13 +591,13 @@ void ImageFinding::find_crit2(
   *orderingsuccess = true;
   if(ordercurve && dividecurves){
 
-	  unsigned long NewNumber;
+	  //unsigned long NewNumber;
 
 	  // order points in curve
 
 	  x[0]=x[1]=0.0;
 	  //Point *tmp_points = NewPointArray(Npoints);
-	  unsigned long ii;
+	  //unsigned long ii;
 	  for(i=0;i<*Ncrits;++i){
 
 		  //critcurve[i].imagekist->MoveToTop();
@@ -609,7 +609,11 @@ void ImageFinding::find_crit2(
 //		  NewNumber = Utilities::order_curve4(tmp_points,critcurve[i].imagekist->Nunits());
 //		  NewNumber = Utilities::order_curve4(critcurve[i].imagekist);
 //		  NewNumber = Utilities::order_curve5(critcurve[i].imagekist);
-      Utilities::ordered_convexhull(critcurve[i].imagekist);
+      
+      //Utilities::ordered_convexhull(critcurve[i].imagekist);
+      Utilities::ordered_concavehull(critcurve[i].imagekist);
+      //Utilities::ordered_shrink_wrap(critcurve[i].imagekist);
+      
 /*		  if(NewNumber != critcurve[i].imagekist->Nunits() ){
         std::cout << "find_crit2(), i = " << i << " ordering curve NewNumber = " << NewNumber << " oldnumber = " << critcurve[i].imagekist->Nunits() << std::endl;
         *orderingsuccess = false;

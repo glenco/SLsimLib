@@ -8,15 +8,80 @@
 #ifndef analens_declare
 #define analens_declare
 
-#include <Tree.h>
-#include <source.h>
-#include <base_analens.h>
+#include "Tree.h"
+#include "source.h"
+#include "base_analens.h"
+
+/**  \brief LensHalo class primarily used for fitting point source lenses.
+ 
+ The model is a power law with axial modes made to be as elliptical as possible.
+ */
+// TODO: BEN finish this documentation for perturbation parameters.
+class LensHaloFit : public LensHaloBaseNSIE{
+public:
+  //LensHaloAnaNSIE(InputParams& params,bool verbose = false);
+  /// Creates a AnaLens which initially has no mass,  Use FindLensSimple() to give it mass
+  LensHaloFit(const COSMOLOGY& cosmo, int MyNmodes);
+	~LensHaloFit();
+
+  void PrintLens(bool show_substruct,bool show_stars);
+
+  void FindLensSimple(int Nimages,Point *image_positions,double *y,double **dx_sub);
+  void FindLensSimple(ImageInfo *imageinfo ,int Nimages ,double *y,double **dx_sub);
+  
+  // these need to be written so that they translate between modes and these quantities
+  /// get the velocity dispersion
+  virtual PosType get_sigma(){return 0.0;};
+  /// get the axis ratio
+  virtual PosType get_fratio(){return 0.0;};
+  /// get the position angle
+  virtual PosType get_pa(){return 0.0;};
+  /// get the core radius
+  virtual PosType get_rcore(){return 0.0;};
+  
+  
+  /// Initialise the lens with velocity dispersion, axis ratio, position angle and core radius
+//  void InitializeLensHaloFit(PosType my_sigma, PosType my_fratio, PosType my_pa, PosType my_rcore)
+//  {
+//    sigma = my_sigma ; fratio = my_fratio ; pa = my_pa ; rcore = my_rcore ;
+//  }
+  
+  /// set the number of perturbation modes -- Does the same as LensHaloBaseNSIE::getPerturb_Nmodes().
+  void setNmodes(int my_Nmodes){perturb_Nmodes = my_Nmodes;};
+  /// get the number of perturbation modes
+  int getNmodes(){return perturb_Nmodes;};
+  /// set the perturbation modes
+  void set_perturbmodes(PosType * ListModes, const int Nmodes);
+  /// get the perturbation modes
+  void get_perturbmodes(PosType * ListModes, const int Nmodes);
+  /// get the ouput of ElliptisizeLens :
+  double * getq() { return qpriv; };
+
+
+private:
+
+   // Things added to manipulate and fit lenses.
+   int check_model(int Nimages,int Nsources,int Nlenses,int *pairing,double **xob,double *x_center
+   		,int Nmod,double *mod,double **xg,double Re2,double **dx_sub,double **Amag,double ytol);
+   double find_axis(double *mod,int Nmod);
+   double deflect_translated(double beta,double *mod,double *x,double *y,double *mag,int N
+      ,int Nlenses,double Re2,double *x2);
+   double ElliptisizeLens(int Nimages,int Nsources,int Nlenses,int *pairing,double **xob
+   		       ,double *xc,double **xg,double sigG,double beta,int Nmod
+   		       ,double *mod,double **dx,double *re2,double *q);
+  void setCosmology(const COSMOLOGY& cosmo);
+  
+  // output of ElliptisizeLens
+  double qpriv[7];
+
+  //void assignParams(InputParams& params);
+};
 
 /**
  * \brief An "analytic" model to represent a lens on a single plane.
  *
  * The lens consists of a "host" lens which is a non-singular isothermal ellipsoid (NSIE) plus axial distortion
- * modes, substructures and stars.  LensHaloAnaNSIE differs from a LensHaloBaseNSIE in that there are additional 
+ * modes, substructures and stars.  LensHaloAnaNSIE differs from a LensHaloBaseNSIE in that there are additional
  * functions for fitting the lens to image positions and for giving the lens random substructures and distortions.
  *
  *<pre>
@@ -60,14 +125,17 @@
 // TODO: BEN finish this documentation for perturbation parameters.
 class LensHaloAnaNSIE : public LensHaloBaseNSIE{
 public:
-	LensHaloAnaNSIE(InputParams& params,bool verbose = false);
-	~LensHaloAnaNSIE();
-
+  LensHaloAnaNSIE(InputParams& params,bool verbose = false);
+  /// Creates a AnaLens which initially has no mass,  Use FindLensSimple() to give it mass
+  //LensHaloAnaNSIE(const COSMOLOGY& cosmo);
+  ~LensHaloAnaNSIE();
+  
   void assignParams(InputParams& params);
   double FractionWithinRe(double rangeInRei);
   void PrintLens(bool show_substruct,bool show_stars);
+  
   void setCosmology(const COSMOLOGY& cosmo);
-
+  
   // in randoimize_lens.c
   void RandomizeHost(long *seed,bool tables);
   void RandomizeSigma(long *seed,bool tables);
@@ -76,23 +144,28 @@ public:
   void RandomizeSubstructure(double rangeInRei,long *seed);
   void RandomizeSubstructure2(double rangeInRei,long *seed);
   void RandomizeSubstructure3(double rangeInRei,long *seed);
-
-  void FindLensSimple(int Nimages,Point *image_positions,double *y,double **dx_sub);
-  void FindLensSimple(ImageInfo *imageinfo ,int Nimages ,double *y,double **dx_sub);
-
+  
+  /// get the velocity dispersion
+  virtual PosType get_sigma(){return sigma;};
+  /// get the NSIE radius
+  //PosType get_Rsize(){return Rsize;};
+  /// get the axis ratio
+  virtual PosType get_fratio(){return fratio;};
+  /// get the position angle
+  virtual PosType get_pa(){return pa;};
+  /// get the core radius
+  virtual PosType get_rcore(){return rcore;};
+  
 
 private:
-
-   // Things added to manipulate and fit lenses.
-   int check_model(int Nimages,int Nsources,int Nlenses,int *pairing,double **xob,double *x_center
-   		,int Nmod,double *mod,double **xg,double Re2,double **dx_sub,double **Amag,double ytol);
-   double find_axis(double *mod,int Nmod);
-   double deflect_translated(double beta,double *mod,double *x,double *y,double *mag,int N
-      ,int Nlenses,double Re2,double *x2);
-   double ElliptisizeLens(int Nimages,int Nsources,int Nlenses,int *pairing,double **xob
-   		       ,double *xc,double **xg,double sigG,double beta,int Nmod
-   		       ,double *mod,double **dx,double *re2,double *q);
-
+  
+  // Things added to manipulate and fit lenses.
+  int check_model(int Nimages,int Nsources,int Nlenses,int *pairing,double **xob,double *x_center
+                  ,int Nmod,double *mod,double **xg,double Re2,double **dx_sub,double **Amag,double ytol);
+  double find_axis(double *mod,int Nmod);
+  double deflect_translated(double beta,double *mod,double *x,double *y,double *mag,int N
+                            ,int Nlenses,double Re2,double *x2);
+  
 };
 
 

@@ -757,12 +757,14 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points){
 void Grid::ClearAllMarks(){
 	unsigned long i;
 
-	MoveToTopList(i_tree->pointlist);
-	for(i=0;i<i_tree->pointlist->Npoints;++i){
-		i_tree->pointlist->current->in_image=NO;
-		i_tree->pointlist->current->image->in_image=NO;
-		MoveDownList(i_tree->pointlist);
-	}
+  if(i_tree->pointlist->Npoints > 0){
+    MoveToTopList(i_tree->pointlist);
+    for(i=0;i<i_tree->pointlist->Npoints;++i){
+      i_tree->pointlist->current->in_image=NO;
+      i_tree->pointlist->current->image->in_image=NO;
+      MoveDownList(i_tree->pointlist);
+    }
+  }
 }
 /**
  *\brief Find the magnification given three points.

@@ -21,6 +21,8 @@ void alphaNSIE(
   
   PosType r=sqrt(xt[0]*xt[0]+xt[1]*xt[1]);
   
+  if(f>1.) throw std::runtime_error("f should not be greater than 1 !") ;
+                 
   if( r < 1.0e-20 || r > 1.0e20){
 	  alpha[0]=0.0;
 	  alpha[1]=0.0;
@@ -250,26 +252,93 @@ struct alphaForInt {
  * Compute the potential for the NSIE (in physical Mpc) by integration of alphaNSIE.
  *
  */
-KappaType phiNSIE(PosType const *xt    /// position on the image plane in Einstein radius units
+KappaType LensHaloBaseNSIE::phiNSIE(PosType const *xt    /// position on the image plane in Einstein radius units
                   ,PosType f      /// axis ratio of mass
                   ,PosType bc     /// core size in units of Einstein radius
                   ,PosType theta  /// position angle of ellipsoid
                 )
 {
   // Here f, bc, and theta are fixed and known.
-  // std::cout << "xt = (" << xt[0] << " , " << xt[1] << " ) " << std::endl ;
-  
-  PosType r = sqrt(xt[0]*xt[0]+xt[1]*xt[1]) ; // So it works only in the symmetric case !!!
-  
-  
-  // double q,beta;
-  // calcModes(q, beta, pa, perturb_modes);
 
+  PosType r = sqrt(xt[0]*xt[0]+xt[1]*xt[1]) ;
+
+  // std::cout << "xt = (" << xt[0] << " , " << xt[1] << " ) " << std::endl ;
+  // std::cout << fratio << "  " << beta << "  " << pa << std::endl ;
+  // std::cout << f << "  " << bc << "  " << theta << std::endl ;
   
-  struct alphaForInt alphaForIntFunc(f,bc,theta);
   
-  // Doing the integration of alphaForIntFunc :
-  return Utilities::nintegrate<alphaForInt,PosType>(alphaForIntFunc, 1.0e-7, r, 1.0e-7);
+  set_slope(1.); // sets the slope beta. // HAVE TO GENERALISE THAT !
+  
+  
+  if(fratio==1) // Spherical case
+  {
+  
+    struct alphaForInt alphaForIntFunc(f,bc,theta);
+    
+    // Returning phi from the integration of alphaForIntFunc :
+    // =======================================================
+    return Utilities::nintegrate<alphaForInt,PosType>(alphaForIntFunc, 1.0e-7, r, 1.0e-7);
+    
+  }
+  else          // Elliptical case
+  {
+    
+    // Calculating the modes necessary to ellipticize phi : OLD METHOD -- DOES NOT WORK !
+    // ====================================================
+
+    // calcModes(f, 2-beta, theta, tmp_pert_modes);
+    
+    // main_perturbation beta  -> perturb_beta
+    // main_perturbation kappa -> perturb_rms[0]
+    // main_perturbation gamma -> perturb_rms[1]
+    // main_perturb_monopole   -> perturb_rms[2]
+    // main_perturb_quadrapole -> perturb_rms[3]
+    // main_perturb_hexopole   -> perturb_rms[4]
+    // main_perturb_octopole   -> perturb_rms[5]
+    
+    // perturb_modes[0] = perturbation kappa
+    // perturb_modes[1] = perturbation gamma1
+    // perturb_modes[2] = perturbation gamma2
+    // perturb_modes[3] = Monopole
+    // perturb_modes[4] = Quadrupole
+    // perturb_modes[5] = Hexapole
+    // perturb_modes[6] = Octupole
+
+    
+    // Computing phi from the method in lens_expand :
+    // ==============================================
+    /*
+    PosType tmp_theta, cosx, sinx, cos2theta, sin2theta ;
+    PosType F, F1, F2;
+    int i, k;
+    
+    tmp_theta = atan2(xt[1],xt[0]);
+    cosx = xt[0]/r;
+    sinx = xt[1]/r;
+
+    if(perturb_Nmodes > 3) F=0.5*perturb_modes[3];
+    else F = 0;
+    F1=0;
+    F2=0;
+    for(i=4; i<perturb_Nmodes; i+=2)
+    {
+      k=i/2;
+      F += perturb_modes[i]*cos(k*theta)     + perturb_modes[i+1]*sin(k*theta);
+      F1+=-perturb_modes[i]*k*sin(k*theta)   + perturb_modes[i+1]*k*cos(k*theta);
+      F2+=-perturb_modes[i]*k*k*cos(k*theta) - perturb_modes[i+1]*k*k*sin(k*theta);
+    }
+    cos2theta=2*cosx*cosx-1;
+    sin2theta=2*cosx*sinx;
+    
+    return F*pow(r,beta) + r*r*(perturb_modes[0] + perturb_modes[1]*cos2theta + perturb_modes[2]*sin2theta)/2;
+    */
+    
+    // Possible test :
+    // Compare kappa, gamma, alpha as computed with lens_expand with kappaNSIE, gammaNSIE, alphaNSIE
+    // in order to validate the elliptization of phi.
+     
+  }
+
 }
 
 

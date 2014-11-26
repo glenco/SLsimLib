@@ -443,14 +443,9 @@ bool InputParams::get(std::string label, LensHaloType& value) const
 		value = jaffe_lens;
 		return true;
 	}
-	if(!it->second.compare("11") || !it->second.compare("PixelDMap"))
-	{
-		value = pix_map_lens;
-		return true;
-	}
 
 	std::cout << label << " in parameter file " << paramfile_name << " needs to be 0 or nolens, 1 or NFW, 2 or PseudoNFW,"
-		"3 or PowerLaw, 4 or NSIE, 5 or AnaLens, 6 or UniLens, 7 or MOKALens, 8 or DummyLens, 9 or Hernquist, 10 or Jaffe, 11 or PixelDMap" << std::endl;
+		"3 or PowerLaw, 4 or NSIE, 5 or AnaLens, 6 or UniLens, 7 or MOKALens, 8 or DummyLens, 9 or Hernquist, 10 or Jaffe" << std::endl;
 	return false;
 }
 

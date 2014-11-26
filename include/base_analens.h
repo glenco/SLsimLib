@@ -53,7 +53,9 @@
 class LensHaloBaseNSIE : public LensHalo{
 public:
 	LensHaloBaseNSIE(InputParams& params);
-	virtual ~LensHaloBaseNSIE();
+  LensHaloBaseNSIE();
+
+  virtual ~LensHaloBaseNSIE();
 
   /// critical surface density
   PosType getSigma_crit(){return Sigma_crit;}
@@ -67,15 +69,15 @@ public:
   // private derived quantities
 
 	/// get the velocity dispersion
-	PosType get_sigma(){return sigma;};
+	virtual PosType get_sigma(){return sigma;};
 	/// get the NSIE radius
-	PosType get_Rsize(){return Rsize;};
+	//PosType get_Rsize(){return Rsize;};
 	/// get the axis ratio
-	PosType get_fratio(){return fratio;};
+	virtual PosType get_fratio(){return fratio;};
 	/// get the position angle
-	PosType get_pa(){return pa;};
+	virtual PosType get_pa(){return pa;};
 	/// get the core radius
-	PosType get_rcore(){return rcore;};
+	virtual PosType get_rcore(){return rcore;};
 
   /// substructures
   bool AreSubStructImaplated(){return substruct_implanted;}
@@ -114,7 +116,7 @@ public:
 
   PosType getHost_Dl(){return Dl;}
 
-  PosType getEinstein_ro(){return Einstein_ro;}
+  //PosType getEinstein_ro(){return Einstein_ro;}
 
   PosType getPerturb_beta(){return perturb_beta;}
   IMFtype getIMF_type(){return main_stars_imf_type;}
@@ -128,17 +130,21 @@ public:
 	void printCSV(std::ostream& out, bool header = false) const;
 
   /// set the velocity dispersion of NSIE
-	void set_sigma(float my_sigma){sigma = my_sigma;}
+	//void set_sigma(float my_sigma){sigma = my_sigma;}
   /// set the NSIE radius
-	void set_Rsize(float my_Rsize){Rsize = my_Rsize;}
+	//void set_Rsize(float my_Rsize){Rsize = my_Rsize;}
 	/// set the axis ratio
-	void set_fratio(float my_fratio){fratio = my_fratio;}
+	//void set_fratio(float my_fratio){fratio = my_fratio;}
 	/// set the position angle
-	void set_pa(float my_pa){pa = my_pa;}
+	//void set_pa(float my_pa){pa = my_pa;}
 	/// set the core radius
-	void set_rcore(float my_rcore){rcore = my_rcore;}
+	//void set_rcore(float my_rcore){rcore = my_rcore;}
   
-  
+  /// computes phi for NSIE
+  KappaType phiNSIE(PosType const *xt,PosType f,PosType bc,PosType theta);
+  /// returns zsource_reference
+  float get_zsourceref() { return zsource_reference ; }
+
 protected:
 
   /// critical surface density
@@ -174,8 +180,8 @@ protected:
    PosType MpcToAsec;
 
    /// redshift for which the perturbation modes are normalised
-   float zsource_reference;
-   PosType Ds, Dls;
+  float zsource_reference;
+  PosType Ds, Dls;
 
 };
 
@@ -189,7 +195,6 @@ void alphaNSIE(PosType *alpha,double const *xt,PosType f,PosType bc,PosType thet
 KappaType kappaNSIE(PosType const *xt,PosType f,PosType bc,PosType theta);
 void gammaNSIE(KappaType *gam,double const *xt,PosType f,PosType bc,PosType theta);
 KappaType invmagNSIE(PosType *x,PosType f,PosType bc,PosType theta,float *gam,float kap);
-KappaType phiNSIE(PosType const *xt,PosType f,PosType bc,PosType theta);
 
 PosType rmaxNSIE(PosType sigma,PosType mass,PosType f,PosType rc );
 PosType ellipticRadiusNSIE(PosType const *x,PosType f,PosType pa);
