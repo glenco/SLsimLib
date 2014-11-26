@@ -8,9 +8,9 @@
 #ifndef analens_declare
 #define analens_declare
 
-#include <Tree.h>
-#include <source.h>
-#include <base_analens.h>
+#include "Tree.h"
+#include "source.h"
+#include "base_analens.h"
 
 /**  \brief LensHalo class primarily used for fitting point source lenses.
  

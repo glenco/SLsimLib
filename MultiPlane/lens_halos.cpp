@@ -541,10 +541,11 @@ LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
         }
 
         */
-        calcModes(fratio, beta, pa, mod);
+      
+        calcModes(fratio, beta, pa, mod1);
         //    std::cout << mod[4] << " " << modfunc(4, 1, 0.5) << std::endl;
             for(int i=1;i<Nmod;i++){
-                //std::cout << i << " " << mod[i] << std::endl;
+                std::cout << i << " " << mod1[i] << " " << fratio << " " << beta <<  " " << pa << " " <<  std::endl;
                 if(mod[i]!=0){set_flag_elliptical(true);};
             }
         //}
@@ -694,7 +695,7 @@ void LensHalo::force_halo(
                           )
 {
 	if (elliptical_flag){
-        force_halo_asym(alpha,kappa,gamma,xcm,subtract_point,screening);
+        force_halo_asym(alpha,kappa,gamma,phi,xcm,subtract_point,screening);
         //assert(!isinf(*kappa) );
     }else{
         force_halo_sym(alpha,kappa,gamma,phi,xcm,subtract_point,screening);
@@ -779,14 +780,14 @@ void LensHalo::force_halo_asym(
 		PosType *alpha     /// mass/Mpc
 		,KappaType *kappa
 		,KappaType *gamma
+    ,KappaType *phi      /// potential solar masses
 		,PosType const *xcm
 		,bool subtract_point /// if true contribution from a point mass is subtracted
     ,PosType screening   /// the factor by which to scale the mass for screening of the point mass subtraction
 		){
 	//std::ofstream dfunc;
 	//dfunc.open( "dfunc.dat", ios::out | ios::app );
-            
-	double rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
+  double rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
     
 
 	if(rcm2 < 1e-20) rcm2 = 1e-20;
@@ -802,20 +803,22 @@ void LensHalo::force_halo_asym(
     else theta=atan2(xcm[1],xcm[0]);
 
 		// double xmax = Rmax/rscale;
-    PosType alpha_tmp[2],kappa_tmp,gamma_tmp[2];
+    PosType alpha_tmp[2],kappa_tmp,gamma_tmp[2],phi_tmp;
         
-    alphakappagamma_asym(r,theta, alpha_tmp,&kappa_tmp,gamma_tmp);
-    
+    alphakappagamma1asym(r,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);
+    //std::cout<< "really: " << kappa_tmp << std::endl;
 		//alpha[0] +=  alpha_tmp[0]*prefac*xcm[0] + tmp*xcm[0];
     //alpha[1] +=  alpha_tmp[1]*prefac*xcm[1] + tmp*xcm[1];
     
 		alpha[0] +=  alpha_tmp[0];
     alpha[1] +=  alpha_tmp[1];
-
+    
     *kappa += kappa_tmp;
     gamma[0] += gamma_tmp[0];
     gamma[1] += gamma_tmp[1];
-
+    
+    *phi += phi_tmp;
+    
     if(subtract_point){
       double tmp =  screening*mass/pi/rcm2;
       alpha[0] +=  tmp*xcm[0];
@@ -824,6 +827,8 @@ void LensHalo::force_halo_asym(
       tmp = 2.0*tmp/rcm2;
       gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
       gamma[1] += xcm[0]*xcm[1]*tmp;
+      
+      *phi += 0.5 * log(rcm2) * mass / pi ;
     }
 
     /*
