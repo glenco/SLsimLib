@@ -397,7 +397,9 @@ void LensHalo::faxial(PosType x, PosType theta,PosType f[]){
     
     //calcModesC(dhfunction(x), fratio, pa, mod1); // used for Ansatz IV
     //calcModesB(x, fratio, pa, mod1); // used for Ansatz IIIb plus derivatives of Fourier modes
-    calcModes(fratio, bfunction(x), pa, mod1); // used for Ansatz IIIa w/o derivatives of Fourier modes
+    //calcModes(fratio, beta, pa, mod1);
+    //std::cout << "fratio:: " << fratio << " " << beta <<" " << pa <<  std::endl;
+    //calcModes(fratio, bfunction(x), pa, mod1); // used for Ansatz IIIa w/o derivatives of Fourier modes
     
     
     //if((x<1 && x>0.99)||(bfunction(x*0.61)<1)){
@@ -444,11 +446,11 @@ void LensHalo::faxial0(PosType theta,PosType f[]){
 
 void LensHalo::faxial1(PosType theta,PosType f[]){
     int i,k;
-    //std::cout<< mod[4] << std::endl;
     f[0] = mod1[0]; // why is it commented out?
     f[1] = f[2] = 0;
     for(i=4;i<Nmod;i+=2){
         k=i/2;
+        //std::cout<< mod1[i] << std::endl;
         f[0] +=  mod1[i]*cos(k*theta)   + mod1[i+1]*sin(k*theta);
         f[1] += -mod1[i]*k*sin(k*theta) + mod1[i+1]*k*cos(k*theta);
         f[2] += -mod1[i]*k*k*cos(k*theta) - mod1[i+1]*k*k*sin(k*theta);
@@ -458,7 +460,7 @@ void LensHalo::faxial1(PosType theta,PosType f[]){
 void LensHalo::faxial2(PosType theta,PosType f[]){
     int i,k;
     //std::cout<< mod[4] << std::endl;
-    f[0] = mod2[0]; // why is it commented out?
+    f[0] = mod2[0];
     f[1] = f[2] = 0;
     for(i=4;i<Nmod;i+=2){
         k=i/2;
@@ -662,6 +664,62 @@ void LensHalo::alphakappagamma_asym(
 	return;
 }
 
+
+void LensHalo::alphakappagamma1asym(
+       PosType r        /// Radius in Mpc (not scale lensgths)
+      ,PosType theta    /// angle of ray
+      ,PosType alpha[]  /// output deflection
+      ,PosType *kappa   /// output kappa
+      ,PosType gamma[]
+      ,PosType *phi
+                                    ){
+  PosType f[3],g[4],alpha_r,alpha_theta;
+  PosType F;
+  //PosType phi_iso=mass*(phi_int(r/rscale))/pi/r/r;
+  PosType phi_iso=-1.0*mass*(phi_h(r/rscale)-log(Rmax)+1./(2-beta))/pi/r/r;    //  ( pow(x/xmax,2-beta) - 1 )/(2-beta) + log(Rmax)
+  PosType alpha_iso=mass*alpha_h(r/rscale)/pi/r/r;
+  PosType kappa_iso=mass*kappa_h(r/rscale)/pi/r/r;
+  PosType gamma_iso=mass*gamma_h(r/rscale)/pi/r/r;
+  
+ 
+  faxial1(theta,f);
+  gradial(r,g);
+  
+  F=f[0]-1.;
+
+  beta=get_slope(); // only for fixed beta, i.e. PowerLaw
+  //beta=bfunction(x); // only for NFW
+  PosType fac=1.0/(beta*beta/(2.-beta)/(2.-beta));
+  
+  alpha_r = (alpha_iso*r*f[0]); // w/o damping
+  alpha_theta = (phi_iso*f[1]); //  w/o damping
+  
+  //alpha_r = (alpha_iso*(1+F*g[0])+phi_iso*F*g[1]); // with damping
+  //alpha_theta =  (phi_iso*g[0]*f[1]/r); //  with damping
+  
+	alpha[0] = alpha_r*cos(theta) - alpha_theta*sin(theta);
+	alpha[1] = alpha_r*sin(theta) + alpha_theta*cos(theta);
+ 
+  *kappa = (f[0]*kappa_iso-0.5*f[2]*fac*phi_iso);//  w/o damping
+  //*kappa=(1+F*g[0])*kappa_iso-0.5*phi_iso*fac*(F*g[1]/r+F*g[2]+f[2]*g[0]/r/r)*r*r-F*g[1]*alpha_iso*r*r; /// with damping
+  
+  PosType gt = 1./3.*(f[0]*gamma_iso+0.5*phi_iso*fac*f[2]);// w/o damping
+  PosType g45 =  1./3.*(-alpha_iso*f[1]*g[0])*r+(phi_iso*fac*f[1]);// w/o damping
+  
+  //PosType gt = (1+F*g[0])*gamma_iso+0.5*phi_iso*fac*(-F*g[1]/r+F*g[2]-f[2]*g[0]/r/r)*r*r-F*g[1]*alpha_iso*r*r;// with damping
+  //PosType g45 = (-alpha_iso*f[1]*g[0]-phi_iso*fac*f[1]*g[1])*r+(phi_iso*fac*f[1]*g[0]);// with damping
+  
+  gamma[0] = cos(2*theta)*gt - sin(2*theta)*g45;
+  gamma[1] = sin(2*theta)*gt - cos(2*theta)*g45;
+  
+  //*phi= f[0]*phi_h(r/rscale)*mass/pi; // w/o damping
+  *phi= f[0]*phi_iso; // w/o damping
+  
+  
+  return;
+}
+
+
 /**
  \brief Calculate the derivatives of the G function = r*sqrt(cos(theta)^2 + q(r)^2 sin(theta))
  *
@@ -719,74 +777,67 @@ PosType LensHalo::renormalization(PosType r_max){ // Calculates renormalization 
   return norm_int(fac*r_max)*fac*r_max/2.0/pi/(-1.0*alpha_h(fac*r_max)/r_max/fac);
 }
 
-PosType LensHalo::kappa_asym(
-      PosType r     /// radius in Mpc (Not x = r/rscale)
-      ,PosType theta
-                             ){ // According to Ansatz II
+PosType LensHalo::kappa_asym(PosType r, PosType theta){ /// radius in Mpc (Not x = r/rscale)
+  PosType F, f[3],g[3], kappa, x;
+  x=r;
+  PosType phi=phi_int(x);
+  faxial(x,theta,f); // for this to work calculate modes in faxial with calcModesB !!
+  gradial(x,g);
+  F=f[0]-1;
+  beta=get_slope(); // only for fixed beta, i.e. PowerLaw
+  //beta=bfunction(x); // only for NFW
+  double fac=1.0/(beta*beta/(2.-beta)/(2.-beta));
+  kappa=f[0]*kappa_h(x)-0.5*f[2]*fac*phi;//  w/o damping
+  //kappa=(1+F*g[0])*kappa_h(x)-0.5*phi*fac*(F*g[1]/x+F*g[2]+f[2]*g[0]/x/x)*x*x-F*g[1]*alpha_h(x)*x*x; /// with damping
+  return kappa;
+}
+
+
+
+
+
+
+
+/* Phi(G(r)) ansatz (IV in notes)  with r-dependent modes a_n(r) [requires renormalization?]
+PosType LensHalo::renormalization(PosType r_max){ // Calculates renormalization factor in the constructor of PowerLaw and NFW only (for now)
+  double fac=1;
+  return norm_int(fac*r_max)*fac*r_max/2.0/pi/(-1.0*alpha_h(fac*r_max)/r_max/fac);
+}
+
+PosType LensHalo::kappa_asym(PosType r, PosType theta){ /// radius in Mpc (Not x = r/rscale)
+  // According to Ansatz II
   double f[3],g[3];
   //double kappa;
   felliptical(r,fratio,theta,f,g);
-  
   double alpha_isoG = mass*alpha_h(f[0]/rscale)/f[0]/pi;
   double kappa_isoG = mass*kappa_h(f[0]/rscale)/f[0]/f[0]/pi;
   
-    // double b=dbfunction(G);
-    // std::cout<< b << std::endl;
-    // double fac=1.0/(b*b/(2.-b)/(2.-b));
+  // double b=dbfunction(G);
+  // std::cout<< b << std::endl;
+  // double fac=1.0/(b*b/(2.-b)/(2.-b));
   
-      // we agreed on the following to be wrong - this was an attempt to express phitwo in terms of iso kappa and alpha
-     //double phitwo=(2.0*kappa_h(f[0]/rscale) - alpha_h(f[0]/rscale)/f[0]/f[0]*(g[1]/r+g[2]))/g[1]/g[1];
+  // we agreed on the following to be wrong - this was an attempt to express phitwo in terms of iso kappa and alpha
+  //double phitwo=(2.0*kappa_h(f[0]/rscale) - alpha_h(f[0]/rscale)/f[0]/f[0]*(g[1]/r+g[2]))/g[1]/g[1];
   
   double phitwo = ( 2*kappa_isoG + alpha_isoG/f[0] );
   
   
-     //double phitwo=(2.0*kappa_h(G) - alpha_h(G)/G*(Gr/x+Grr))/Gr/Gr;
-     // double phitwo = (2.0*kappa_h(x)+alpha_h(x)/x/x+alpha_h(G)/G*Grr)/Gr/Gr;
+  //double phitwo=(2.0*kappa_h(G) - alpha_h(G)/G*(Gr/x+Grr))/Gr/Gr;
+  // double phitwo = (2.0*kappa_h(x)+alpha_h(x)/x/x+alpha_h(G)/G*Grr)/Gr/Gr;
   
-     //double phitwo=-1.0*ddhfunction(G,true); // correct phi'' for NFW, the flag distinguishes numerical calculation (true) from an analytic one (false), caution the false-case might contain an error.
+  //double phitwo=-1.0*ddhfunction(G,true); // correct phi'' for NFW, the flag distinguishes numerical calculation (true) from an analytic one (false), caution the false-case might contain an error.
   
-
-     //double beta=get_slope(); // needed for PowerLawHalos
-     //double phitwo = mass*(1-beta)*pow(f[0]/Rmax,-beta)/pi/Rmax/Rmax; // works for PowerLawHalos
   
-     //phitwo=dgfunctiondx(G); // used for a check of values, leave it here for now.
+  //double beta=get_slope(); // needed for PowerLawHalos
+  //double phitwo = mass*(1-beta)*pow(f[0]/Rmax,-beta)/pi/Rmax/Rmax; // works for PowerLawHalos
+  
+  //phitwo=dgfunctiondx(G); // used for a check of values, leave it here for now.
   
   return -0.5*alpha_isoG*(g[1]/r+g[2]+f[2]/r/r) + 0.5*phitwo*(g[1]*g[1]+f[1]*f[1]/r/r); //#print1
-     //return 0.5*kappa*x*x*(2.-beta) ; ///pow(mnorm,4./3.); // if A(r)=1/q/q  E(A)^(4/3) gives sort-of the correct normalization, i.e mnorm^(4/3.)  for now I tool the normalization out again.
+  //return 0.5*kappa*x*x*(2.-beta) ; ///pow(mnorm,4./3.); // if A(r)=1/q/q  E(A)^(4/3) gives sort-of the correct normalization, i.e mnorm^(4/3.)  for now I tool the normalization out again.
 }
 
-
-
-// NOTE THAT GAMMA_ASYM does not use Ansatz II yet!
-// In gamma_asym phi_int(x) is used, which calculates the potential unlike phi_h from alpha_h.
-
-void LensHalo::gamma_asym(PosType x,PosType theta, PosType gamma[]){
-	PosType F, f[3],g[3];
-    PosType phi=phi_int(x);
-    
-    
-    faxial0(theta,f);
-    F=f[0]-1;
-    gradial(x,g);
-    beta=get_slope();
-    double fac=1.0/(beta*beta/(2-beta)/(2-beta));
-    //double gt = f[0]*gamma_h(x)+0.5*phi*fac*f[2];// w/o damping
-    //double g45 = (-alpha_h(x)*f[1]*g[0])*x+(phi*fac*f[1]);// w/o damping
-    
-    PosType gt = (1+F*g[0])*gamma_h(x)+0.5*phi*fac*(-F*g[1]/x+F*g[2]-f[2]*g[0]/x/x)*x*x-F*g[1]*alpha_h(x)*x*x;// with damping
-    PosType g45 = (-alpha_h(x)*f[1]*g[0]-phi*fac*f[1]*g[1])*x+(phi*fac*f[1]*g[0]);// with damping
-    
-    gt *= 0.5*pow(x/xmax,2);
-    g45 *= 0.5*pow(x/xmax,2);
-    
-	gamma[0] = cos(2*theta)*gt-sin(2*theta)*g45;
-    gamma[1] = sin(2*theta)*gt+cos(2*theta)*g45;
-    
-	return;
-}
-
-
-
+*/
 
 
 /* makes beta=-2 Power Law Elliptical
@@ -997,5 +1048,36 @@ PosType LensHalo::kappa_asym(PosType x,PosType theta){
      }
  
 */
+
+
+
+// NOTE THAT GAMMA_ASYM does not use Ansatz II yet!
+// In gamma_asym phi_int(x) is used, which calculates the potential unlike phi_h from alpha_h.
+
+void LensHalo::gamma_asym(PosType x,PosType theta, PosType gamma[]){
+	PosType F, f[3],g[3];
+  PosType phi=phi_int(x);
+  
+  
+  faxial0(theta,f);
+  F=f[0]-1;
+  gradial(x,g);
+  beta=get_slope();
+  double fac=1.0/(beta*beta/(2-beta)/(2-beta));
+  //double gt = f[0]*gamma_h(x)+0.5*phi*fac*f[2];// w/o damping
+  //double g45 = (-alpha_h(x)*f[1]*g[0])*x+(phi*fac*f[1]);// w/o damping
+  
+  PosType gt = (1+F*g[0])*gamma_h(x)+0.5*phi*fac*(-F*g[1]/x+F*g[2]-f[2]*g[0]/x/x)*x*x-F*g[1]*alpha_h(x)*x*x;// with damping
+  PosType g45 = (-alpha_h(x)*f[1]*g[0]-phi*fac*f[1]*g[1])*x+(phi*fac*f[1]*g[0]);// with damping
+  
+  gt *= 0.5*pow(x/xmax,2);
+  g45 *= 0.5*pow(x/xmax,2);
+  
+	gamma[0] = cos(2*theta)*gt-sin(2*theta)*g45;
+  gamma[1] = sin(2*theta)*gt+cos(2*theta)*g45;
+  
+	return;
+}
+
 
 

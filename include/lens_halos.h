@@ -153,7 +153,7 @@ protected:
   
   
   void force_halo_sym(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0);
-  void force_halo_asym(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0);
+  void force_halo_asym(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0);
   
   
   struct norm_func{
@@ -255,7 +255,7 @@ protected:
   
   // Functions for calculating axial dependence
   float pa;
-  float fratio=1;
+  float fratio=1.0;
   bool elliptical_flag = false;
   
   void faxial(PosType x,PosType theta,PosType f[]);
@@ -271,6 +271,9 @@ protected:
   virtual PosType kappa_asym(PosType x,PosType theta);
   virtual void alphakappagamma_asym(PosType x,PosType theta, PosType alpha[2]
                                     ,PosType *kappa,PosType gamma[]);
+  virtual void alphakappagamma1asym(PosType x,PosType theta, PosType alpha[2]
+                                    ,PosType *kappa,PosType gamma[],PosType *phi);
+  
   virtual PosType alpha_ell(PosType x,PosType theta);
   
   double fourier_coeff(double n, double q, double beta);
