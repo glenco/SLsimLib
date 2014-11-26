@@ -444,6 +444,17 @@ void ImageFinding::find_images_kist(
  Warning: This is not thread safe because it uses global variable in the ImageFinding::Temporary namespace.
  
  */
+
+//using namespace ImageFinding::Temporary;
+namespace ImageFinding {
+  namespace Temporary {
+  Lens * lens;
+  Point *point;
+    PosType *y;
+  }
+}
+
+
 void ImageFinding::find_image_simple(LensHndl lens,PosType *y_source,PosType z_source,PosType *image_x,PosType ytol2,PosType &fret){
   
   PosType tmp_zs = lens->getSourceZ();
@@ -451,9 +462,9 @@ void ImageFinding::find_image_simple(LensHndl lens,PosType *y_source,PosType z_s
   Point point;
   LinkToSourcePoints(&point,1);
   
-  ImageFinding::Temporary::point = &point;
-  ImageFinding::Temporary::y = y_source;
-  ImageFinding::Temporary::lens = lens;
+  Temporary::point = &point;
+  Temporary::y = y_source;
+  Temporary::lens = lens;
   double **xi = Utilities::PosTypeMatrix(3,3) ;
   int iter;
   

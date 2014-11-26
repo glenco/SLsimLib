@@ -95,7 +95,6 @@ typedef struct Grid* GridHndl;
 
 // in image_finder_kist.c
 namespace ImageFinding{
-  
   void find_images_kist(LensHndl lens,PosType *y_source,PosType r_source,GridHndl grid
                         ,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
                         ,PosType initial_size,bool splitimages,short edge_refinement
@@ -128,10 +127,10 @@ namespace ImageFinding{
                   ,double resolution,bool *orderingsuccess,bool ordercurve,bool dividecurves,double invmag_min = 0.0,bool verbose = false);
   
   namespace Temporary{
-    PosType *y;
-    Lens * lens;
-    Point *point;
-
+    //PosType *y;
+    //Lens * lens;
+    //Point *point;
+    
     PosType mindyfunc(PosType *x);
   }
 }
