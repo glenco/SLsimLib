@@ -428,9 +428,9 @@ void *compute_rays_parallel(void *_p)
  */
 void Lens::info_rayshooter(
         Point *i_point     /// point to be shot, must have image point linked
-        ,std::vector<std::vector<double>> ang_positions  /// angular positions on each plane
-        ,std::vector<KappaType> kappa_on_planes          /// convergence on each plane
-        ,std::vector<std::vector<LensHalo*>> halo_neighbors  /// neighboring halos within rmax of ray on each plane
+        ,std::vector<std::vector<double>> & ang_positions  /// angular positions on each plane
+        ,std::vector<KappaType> & kappa_on_planes          /// convergence on each plane
+        ,std::vector<std::vector<LensHalo*>> & halo_neighbors  /// neighboring halos within rmax of ray on each plane
         ,LensHalo *halo_max
         ,KappaType &kappa_max
         ,KappaType gamma_max[]
@@ -439,11 +439,12 @@ void Lens::info_rayshooter(
                            )
 {
   
- 
+
   // !!! would like to find the maximum contributing halo so that its contribution can be subtracted from the total
   
-
-  int NLastPlane;
+  int NLastPlane = lensing_planes.size() ;
+  
+  // int NLastPlane;
   PosType tmpDs,tmpdDs,tmpZs;
   
   // If there are no points to shoot, then we quit.
@@ -462,7 +463,19 @@ void Lens::info_rayshooter(
     dDl[index_of_new_sourceplane] = dDs_implant;
     plane_redshifts[index_of_new_sourceplane] = zs_implant;
   }
-  else{ NLastPlane = lensing_planes.size(); }
+  else
+  {
+    NLastPlane = lensing_planes.size();
+    tmpDs = cosmo.angDist(zsource);
+    assert(plane_redshifts[NLastPlane] == zsource);
+    tmpdDs = cosmo.angDist(plane_redshifts[NLastPlane-1], zsource);
+    tmpZs = zsource ;
+    for(int i=0 ; i<NLastPlane ; i++)
+    {
+    Dl[i] = cosmo.angDist(plane_redshifts[i]);
+    dDl[i] = cosmo.angDist(plane_redshifts[i-1], plane_redshifts[i]);
+    }
+  }
 
   
   ang_positions.resize(NLastPlane);

@@ -148,9 +148,9 @@ public:
 	
 	void rayshooterInternal(unsigned long Npoints, Point *i_points);
   void info_rayshooter(Point *i_point
-                      ,std::vector<std::vector<double>> ang_positions
-                      ,std::vector<KappaType> kappa_on_planes
-                      ,std::vector<std::vector<LensHalo*>> halo_neighbors
+                      ,std::vector<std::vector<double>> & ang_positions
+                      ,std::vector<KappaType> & kappa_on_planes
+                      ,std::vector<std::vector<LensHalo*>> & halo_neighbors
                       ,LensHalo *halo_max
                       ,KappaType &kappa_max
                       ,KappaType gamma_max[]
