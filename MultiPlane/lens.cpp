@@ -267,7 +267,7 @@ void Lens::assignParams(InputParams& params,bool verbose)
 			}
 			else
 			{
-				field_min_mass = 0.0;
+        field_min_mass = 0.0;
 				sim_input_flag = true;
         
         if(!params.get("field_input_simulation_format",field_input_sim_format)){

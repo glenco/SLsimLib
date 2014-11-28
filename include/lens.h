@@ -183,6 +183,13 @@ public:
 
   /// returns a const reference to the cosmology so that constant functions can be used, but the cosmological parameters cannot be changed.
   const COSMOLOGY & getCosmo(){return cosmo;}
+  
+  /// set flag_switch_field_off :
+  void set_field_off(bool my_flag_field_off) { flag_switch_field_off = my_flag_field_off ; }
+  
+  /// get the field min mass :
+  PosType getFieldMinMass() { return field_min_mass ; }
+  
  
 private:
 	GLAMER_TEST_FRIEND(LensTest)
