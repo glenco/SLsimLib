@@ -22,10 +22,10 @@ void LensHaloBaseNSIE::force_halo(
 
   long j;
   PosType alpha_tmp[2];
-  KappaType kappa_tmp = 0.0, gamma_tmp[3];
+  KappaType kappa_tmp = 0.0, gamma_tmp[2];
   KappaType phi_tmp ;
   
-  gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
+  gamma_tmp[0] = gamma_tmp[1] = 0.0;
   alpha_tmp[0] = alpha_tmp[1] = 0.0;
   phi_tmp = 0.0 ;
   
@@ -72,7 +72,7 @@ void LensHaloBaseNSIE::force_halo(
 
       *phi += phi_tmp ;
     }
-    gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
+    gamma_tmp[0] = gamma_tmp[1] = 0.0;
     alpha_tmp[0] = alpha_tmp[1] = 0.0;
     phi_tmp = 0.0;
   }
@@ -98,7 +98,7 @@ void LensHaloBaseNSIE::force_halo(
       }
     }
     
-    gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
+    gamma_tmp[0] = gamma_tmp[1] = 0.0;
     alpha_tmp[0] = alpha_tmp[1] = 0.0;
     phi_tmp = 0.0;
   }

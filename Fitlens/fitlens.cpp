@@ -78,8 +78,9 @@ void LensHaloFit::FindLensSimple(
 	int pairing[Nimages],Nsources = 1;
 	double **xob,**xg,q[6],*mods;
 	double re2 = 0,x_center[2],scale;
-  for(int i=0;i<6;i++) q[i] = 0. ;
-
+  //for(int i=0;i<6;i++) q[i] = 0.;
+  //  !!! need to set initial guess to something
+      
   xob = dmatrix(0,Nimages-1,0,1); // For the rescaled positions of the images
 	xg = dmatrix(0,1,0,1);
 	mods=dvector(0,perturb_Nmodes + 2*Nsources + 1 );
