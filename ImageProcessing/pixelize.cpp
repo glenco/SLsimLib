@@ -161,15 +161,22 @@ PixelMap::PixelMap(
     }
     catch(CCfits::HDU::NoSuchKeyword&)
     {
-      double cd12, cd21, cd22;
-      h0.readKey("CD1_1", my_res);
-      h0.readKey("CD1_2", cd12);
-      h0.readKey("CD2_1", cd21);
-      h0.readKey("CD2_2", cd22);
-      if(std::abs(my_res) - std::abs(cd22) > 1e-6)
-        throw std::runtime_error("non-square pixels in FITS file " + fitsfilename);
-      if(cd12 || cd21)
-        throw std::runtime_error("pixels not aligned with coordingate in FITS file " + fitsfilename);
+      try{
+        double cd12, cd21, cd22;
+        h0.readKey("CD1_1", my_res);
+        h0.readKey("CD1_2", cd12);
+        h0.readKey("CD2_1", cd21);
+        h0.readKey("CD2_2", cd22);
+        if(std::abs(my_res) - std::abs(cd22) > 1e-6)
+          throw std::runtime_error("non-square pixels in FITS file " + fitsfilename);
+        if(cd12 || cd21)
+          throw std::runtime_error("pixels not aligned with coordingate in FITS file " + fitsfilename);
+      }
+      catch(CCfits::HDU::NoSuchKeyword&){
+        double ps;
+        h0.readKey("PHYSICALSIZE",ps);
+        my_res = ps/Nx;
+      }
     }
     resolution = fabs(my_res)*pi/180.;
   }

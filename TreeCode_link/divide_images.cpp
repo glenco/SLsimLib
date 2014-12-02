@@ -13,25 +13,25 @@
  */
 void find_divide_images(TreeHndl i_tree,TreeHndl s_tree
 	,PosType *source_x,PosType source_r
-	,ImageInfo *imageinfo,int *Nimages,int Nimagesmax){
+  ,std::vector<ImageInfo> &imageinfo,int *Nimages){
 
-	s_tree->PointsWithinKist(source_x,source_r,imageinfo->imagekist,0);
+	s_tree->PointsWithinKist(source_x,source_r,imageinfo[0].imagekist,0);
 
 	// no image points found
-	if(imageinfo->imagekist->Nunits() == 0){
+	if(imageinfo[0].imagekist->Nunits() == 0){
 		*Nimages = 0;
 		return;
 	}
 
 	// move from source plane to image plane
-	imageinfo->imagekist->TranformPlanes();
+	imageinfo[0].imagekist->TranformPlanes();
 
-	if(imageinfo->imagekist->Nunits() == 1){
+	if(imageinfo[0].imagekist->Nunits() == 1){
 		*Nimages = 1;
 		return;
 	}
 
-	divide_images_kist(i_tree,imageinfo,Nimages,Nimagesmax);
+	divide_images_kist(i_tree,imageinfo,Nimages);
 	return;
 }
 
@@ -243,33 +243,33 @@ void divide_images(TreeHndl i_tree,ImageInfo *imageinfo
  */
 void divide_images_kist(
 	    TreeHndl i_tree
-	    ,ImageInfo *imageinfo
+      ,std::vector<ImageInfo> &imageinfo
 	    ,int *Nimages
-	    ,int Nimagesmax
 	    ){
 	unsigned long i,j,Ntemp,Ntest;
 	Kist<Point> new_imagekist;
 	PosType tmp = 0;
 
-	if(imageinfo->imagekist->Nunits() < 2){
+	if(imageinfo[0].imagekist->Nunits() < 2){
 		*Nimages = 1;
 		return ;
 	}
 
 	  // mark points in tree as in image and transfer points to temporary temporary new_imagekist
 
-	imageinfo->imagekist->MoveToTop();
-	Ntest = imageinfo->imagekist->Nunits();
-	while(imageinfo->imagekist->Nunits() > 0){
-		imageinfo->imagekist->getCurrent()->in_image = YES;
-		imageinfo->imagekist->getCurrent()->image->in_image = YES;
-		new_imagekist.InsertAfterCurrent(imageinfo->imagekist->TakeOutCurrent());
+	imageinfo[0].imagekist->MoveToTop();
+	Ntest = imageinfo[0].imagekist->Nunits();
+	while(imageinfo[0].imagekist->Nunits() > 0){
+		imageinfo[0].imagekist->getCurrent()->in_image = YES;
+		imageinfo[0].imagekist->getCurrent()->image->in_image = YES;
+		new_imagekist.InsertAfterCurrent(imageinfo[0].imagekist->TakeOutCurrent());
 		new_imagekist.Down();
 	}
 
 	i=0;
 	do{
 
+    if(i > imageinfo.size()-1) imageinfo.resize(i+2);
 		//printf("   new_imagekist %li\n",new_imagekist.Nunits());
 		imageinfo[i].area = partition_images_kist(new_imagekist.getCurrent(),imageinfo[i].imagekist,i_tree);
 
@@ -328,13 +328,13 @@ void divide_images_kist(
 		assert((Ntemp - new_imagekist.Nunits() - imageinfo[i].imagekist->Nunits()) == 0);
 		assert(new_imagekist.OffBottom());
 		++i;
-	}while(new_imagekist.Nunits() > 0 && i < Nimagesmax);
+	}while(new_imagekist.Nunits() > 0 );
 
 	*Nimages = i;
 
 
 	// If there are more than NimageMax images, put the extra points into the closest image.
-	if(i == Nimagesmax){
+	/*if(i == Nimagesmax){
 		PosType r2,rmin;
 
 		while(new_imagekist.Nunits() > 0){
@@ -354,7 +354,7 @@ void divide_images_kist(
 			imageinfo[j].area += tmp;
 			imageinfo[j].imagekist->InsertAfterCurrent(new_imagekist.TakeOutCurrent());
 		}
-	}
+	}*/
 
 	assert(new_imagekist.Nunits() == 0);
 
