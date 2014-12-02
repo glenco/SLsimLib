@@ -1569,7 +1569,7 @@ void ImageFinding::find_images_microlens_exper(
  */
 
 void ImageFinding::image_finder_kist(LensHndl lens, PosType *y_source,PosType r_source,GridHndl grid
-                                     ,int *Nimages,std::vector<ImageInfo> imageinfo,unsigned long *Nimagepoints
+                                     ,int *Nimages,std::vector<ImageInfo> &imageinfo,unsigned long *Nimagepoints
                                      ,short splitparities,short true_images){
   
   unsigned long i,Nsource_points=0;

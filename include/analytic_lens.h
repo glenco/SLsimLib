@@ -21,7 +21,7 @@ class LensHaloFit : public LensHaloBaseNSIE{
 public:
   //LensHaloAnaNSIE(InputParams& params,bool verbose = false);
   /// Creates a AnaLens which initially has no mass,  Use FindLensSimple() to give it mass
-  LensHaloFit(const COSMOLOGY& cosmo, int MyNmodes, PosType zlensref, PosType zsourceref);
+  LensHaloFit(const COSMOLOGY& cosmo, int MyNmodes, PosType beta,PosType zlensref, PosType zsourceref);
 	~LensHaloFit();
 
   void PrintLens(bool show_substruct,bool show_stars);
@@ -70,6 +70,9 @@ private:
   
   // output of ElliptisizeLens
   double qpriv[7];
+
+  //void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *xg,double beta
+  //               ,int N,int *degen,double *mod,double **v,double **dx);
 
   //void assignParams(InputParams& params);
 };
@@ -171,7 +174,5 @@ void MarkPoints(TreeHndl s_tree,LensHaloAnaNSIE *lens,bool sb_cut,short invert);
 void _MarkPoints(TreeHndl s_tree,LensHaloAnaNSIE *lens,bool *sbcut);
 bool InSource(double *ray,LensHaloAnaNSIE *lens,bool surfacebright);
 
-void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *xg,double beta
-		 ,int N,int *degen,double *mod,double **v,double **dx);
 
 #endif

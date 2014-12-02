@@ -53,7 +53,9 @@ Lens::Lens(long* my_seed, CosmoParamSet cosmoset,bool verbose)
 	// initially let source be the one inputed from parameter file
 	index_of_new_sourceplane = -1;
 	toggle_source_plane = false;
+  flag_switch_deflection_off = false;
 	
+  combinePlanes(true);
 	std:: cout << " done " << std:: endl;
 }
 

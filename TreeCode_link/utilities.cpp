@@ -250,20 +250,36 @@ unsigned long prevpower(unsigned long k){
 }
 
 
-PosType **PosTypeMatrix(long rows, long cols)
-{
-  PosType **matrix = new PosType*[rows];
-  matrix[0] = new PosType[rows*cols];
-  for (long i = 1; i < rows; ++i)
-    matrix[i] = matrix[0] + i * cols;
-
-  return matrix;
-}
-
-
+  PosType **PosTypeMatrix(long rows, long cols)
+  {
+    PosType **matrix = new PosType*[rows];
+    matrix[0] = new PosType[rows*cols];
+    for (long i = 1; i < rows; ++i)
+      matrix[i] = matrix[0] + i * cols;
+    
+    return matrix;
+  }
+  
+  
   void free_PosTypeMatrix(PosType **matrix, long rows, long cols){
     if(rows) delete[] matrix[0];
     delete[] matrix;
+  }
+  
+  PosType **PosTypeMatrix(long rows1,long rows2, long cols1,long cols2)
+  {
+    PosType **matrix = new PosType*[(rows2-rows1)+1] - rows1;
+    matrix[rows1] = new PosType[(rows2-rows1+1)*(cols2-cols1+1)];
+    for (long i = 1; i < (rows2-rows1+1); ++i)
+      matrix[rows1 + i] = matrix[rows1] + i * (cols2-cols1+1);
+    
+    return matrix;
+  }
+  
+  
+  void free_PosTypeMatrix(PosType **matrix, long rows1,long rows2, long cols1,long cols2){
+    if(rows2-rows1) delete[] matrix[rows1];
+    delete[] &matrix[rows1];
   }
   
   

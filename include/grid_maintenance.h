@@ -113,7 +113,7 @@ namespace ImageFinding{
                                    ,bool splitimages,short edge_refinement,bool verbose);
   
   void image_finder_kist(LensHndl lens, PosType *y_source,PosType r_source,GridHndl grid
-                         ,int *Nimages,std::vector<ImageInfo> imageinfo,unsigned long *Nimagepoints
+                         ,int *Nimages,std::vector<ImageInfo> &imageinfo,unsigned long *Nimagepoints
                          ,short splitparities,short true_images);
   
   int refine_grid_kist(LensHndl lens,GridHndl grid,ImageInfo *imageinfo

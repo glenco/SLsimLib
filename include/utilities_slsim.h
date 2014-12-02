@@ -57,6 +57,8 @@ namespace Utilities
   
   PosType **PosTypeMatrix(long rows, long cols);
   void free_PosTypeMatrix(PosType **matrix, long rows, long cols);
+  PosType **PosTypeMatrix(long rows1,long rows2, long cols1, long cols2);
+  void free_PosTypeMatrix(PosType **matrix, long rows1,long rows2, long cols1, long cols2);
   
   /// 3 dimensional matrix, fixed size
   template<typename T>

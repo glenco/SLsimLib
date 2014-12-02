@@ -108,7 +108,7 @@ LensHaloAnaNSIE::~LensHaloAnaNSIE(){
   if(perturb_Nmodes) delete [] perturb_modes;
 }
 
-LensHaloFit::LensHaloFit(const COSMOLOGY& cosmo, int MyNmodes, PosType zlensref, PosType zsourceref) : LensHaloBaseNSIE(){
+LensHaloFit::LensHaloFit(const COSMOLOGY& cosmo, int MyNmodes, PosType beta,PosType zlensref, PosType zsourceref) : LensHaloBaseNSIE(){
   
   //assignParams(params);
   
@@ -129,6 +129,7 @@ LensHaloFit::LensHaloFit(const COSMOLOGY& cosmo, int MyNmodes, PosType zlensref,
 
   Sigma_crit = cosmo.SigmaCrit(zlens, zsource_reference);
   
+  perturb_beta = beta;
   //if(verbose) PrintLens(false,false);
 }
 

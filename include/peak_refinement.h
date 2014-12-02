@@ -21,7 +21,7 @@ typedef struct Beam{
 typedef Beam * BeamHndl;
 
 namespace FindImages {
-    short find_peaks(LensHndl lens,GridHndl grid,double rEinsteinMin,double kappa_max,ImageInfo *imageinfo, int* Nimages);
+  short find_peaks(LensHndl lens,GridHndl grid,double rEinsteinMin,double kappa_max,std::vector<ImageInfo> &imageinfo, int* Nimages);
 }
 
 #endif

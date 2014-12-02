@@ -35,6 +35,9 @@ void LensHaloFit::FindLensSimple(
       
 	FindLensSimple(imageinfo,Nimages,y,dx_sub);
       
+      std::cout << "perturbation mades" << std::endl;
+      for(int i=0;i<perturb_Nmodes;++i)  std::cout << perturb_modes[i] << std::endl;
+      
 	delete[] imageinfo;
 }
 /** \ingroup FitLens
@@ -171,7 +174,7 @@ double LensHaloFit::ElliptisizeLens(
 		,double **xg  /// ??? [0...Nlenses-1][0...1] centers of additional lenses
 		,double sigG  /// amount by which the center of the lens is allowed to vary
 		,double beta  /// - slope of density profile  kappa propto r^-beta
-		,int Nmod    /// number of modes used in lens fitting,  this must be greater then ???
+		,int Nmod    /// number of modes used in lens fitting, this must be greater then ???
 		,double *mod  /// Axial modes of lens model
 		,double **dx_sub  /// [0,Nimages-1][0,1] deflection offset for each image caused by any masses not included in the host model (ex substructure)
 		,double *re2     /// Einstein radius of additional lens
@@ -231,7 +234,6 @@ double LensHaloFit::ElliptisizeLens(
 	}
       
   // find lens with degeneracy information
-	//ERROR_MESSAGE();
 	find_lens(NimagesT,NsourcesT,pairingT,xobT,x_center,betaT,NmodT,&degenT,modT,vT,dx_subT);
    
 	//std::printf("found model\n");
@@ -241,7 +243,7 @@ double LensHaloFit::ElliptisizeLens(
 	 * find the most elliptical model amongst the degenerate models that
 	 * fit the image positions
 	 */
-
+      return sm;
 	//if(count == 1){
 		q[1] = 0.9;
 		q[2] = 0.0; /*find_axis(modT,NmodT);*/
@@ -413,12 +415,18 @@ void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *x_cent
 
 	y=dvector(0,1);
 	temp=dvector(0,1);
-    
+
+  /*
 	x=dmatrix(0,Nimages-1,0,1);
 	c=dmatrix(1,2*Nimages+1,1,Nmodes+2*Nsources+1);
 	a=dmatrix(1,2*Nimages+1,1,Nmodes+2*Nsources+1);
+   */
 	b=dvector(1,2*Nimages+1);
 	w=dvector(1,Nmodes+2*Nsources+1);
+
+  x= Utilities::PosTypeMatrix(0,Nimages-1,0,1);
+  c= Utilities::PosTypeMatrix(1,2*Nimages+1,1,Nmodes+2*Nsources+1);
+  a= Utilities::PosTypeMatrix(1,2*Nimages+1,1,Nmodes+2*Nsources+1);
 
 	betaT = beta;
 	NmodT = Nmodes;
@@ -483,8 +491,8 @@ void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *x_cent
 	//ERROR_MESSAGE();
 	svbksbD(c,w,v,2*Nimages,Nmodes+2*Nsources,b,mod);
 
-	//for(i=1;i<=Nmodes + 2*Nsources;++i) std::printf("mod[%i]=%e\n",i,mod[i]);
-	//for(i=1;i<=Nmodes + 2*Nsources;++i) std::printf("w[%i]=%e\n",i,w[i]);
+	for(i=1;i<=Nmodes + 2*Nsources;++i) std::printf("mod[%i]=%e\n",i,mod[i]);
+	for(i=1;i<=Nmodes + 2*Nsources;++i) std::printf("w[%i]=%e\n",i,w[i]);
 
 	/* find degeneracy vectors
 	* and make them the first *degen columns of v
@@ -505,9 +513,15 @@ void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *x_cent
 
 	free_dvector(y,0,1);
 	free_dvector(temp,0,1);
+  /*
 	free_dmatrix(x,0,Nimages-1,0,1);
 	free_dmatrix(c,1,2*Nimages+1,1,Nmodes+2*Nsources+1);
 	free_dmatrix(a,1,2*Nimages+1,1,Nmodes+2*Nsources+1);
+  */
+  Utilities::free_PosTypeMatrix(x,0,Nimages-1,0,1);
+  Utilities::free_PosTypeMatrix(c,1,2*Nimages+1,1,Nmodes+2*Nsources+1);
+  Utilities::free_PosTypeMatrix(a,1,2*Nimages+1,1,Nmodes+2*Nsources+1);
+
 	free_dvector(b,1,2*Nimages+1);
 	free_dvector(w,1,Nmodes+2*Nsources+1);
 
@@ -516,7 +530,7 @@ void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *x_cent
 
 
 /**
- *   Sets the perturbation modes in the LensHaloFit
+ *   \brief Sets the perturbation modes in the LensHaloFit
  *
  */
 void LensHaloFit::set_perturbmodes(PosType * ListModes, const int Nmodes)
@@ -527,7 +541,7 @@ void LensHaloFit::set_perturbmodes(PosType * ListModes, const int Nmodes)
 }
 
 /**
- *   Gets the perturbation modes in the LensHaloFit
+ *   \brief Gets the perturbation modes in the LensHaloFit
  *
  */
 void LensHaloFit::get_perturbmodes(PosType * ListModes, const int Nmodes)
@@ -546,7 +560,7 @@ void LensHaloFit::get_perturbmodes(PosType * ListModes, const int Nmodes)
 /** \ingroup FitLensL2
  *
 * \brief  calculate the sources position, surface density and magnification at x
-*given lens model
+* given lens model
 *        - mod given
 *        - Re2 - Einstein radius of second lens
 *        - x2 - position of second lens relative to center of lens
