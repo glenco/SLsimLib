@@ -331,14 +331,12 @@ unsigned long order_curve4(Point *curve,long Npoints){
 
 /// Replaces curve->imagekist with its convex hull.  The number of points will change.
   void ordered_convexhull(Kist<Point> * curve){
-    int i;
-    std::vector<Point *> copy;
-    copy.resize(curve->Nunits());
-    
-    for(i=0,curve->MoveToTop();!(curve->OffBottom());curve->Down(),++i){
-      //copy.push_back(curve->getCurrent());
-      copy[i] = curve->getCurrent();
-    }
+    //int i;
+    std::vector<Point *> copy = curve->copytovector();
+    //copy.resize(curve->Nunits());
+    //for(i=0,curve->MoveToTop();!(curve->OffBottom());curve->Down(),++i){
+    //  copy[i] = curve->getCurrent();
+    //}
   
     std::vector<Point *> hull = Utilities::convex_hull(copy);
     curve->copy(hull);
@@ -349,13 +347,11 @@ unsigned long order_curve4(Point *curve,long Npoints){
   /// Replaces curve with its convex hull.  The number of points will change.
   void ordered_concavehull(Kist<Point> * curve){
     int i;
-    std::vector<Point *> copy;
-    copy.resize(curve->Nunits());
-    
-    for(i=0,curve->MoveToTop();!(curve->OffBottom());curve->Down(),++i){
-      //copy.push_back(curve->getCurrent());
-      copy[i] = curve->getCurrent();
-    }
+    std::vector<Point *> copy = curve->copytovector();
+    //copy.resize(curve->Nunits());
+    //for(i=0,curve->MoveToTop();!(curve->OffBottom());curve->Down(),++i){
+//      copy[i] = curve->getCurrent();
+  //  }
     
     std::vector<Point *> hull = Utilities::concave_hull(copy,10);
     curve->copy(hull);

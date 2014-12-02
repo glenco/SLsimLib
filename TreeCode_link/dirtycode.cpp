@@ -20,10 +20,9 @@
  */
 
 void DirtyFoF(
-		ImageInfo *imageinfo  /// Contains the kists of points in each image
+    std::vector<ImageInfo> &imageinfo  /// Contains the kists of points in each image
 		,int *Nimages        /// Number of images
 		,PosType linkinglength /// linking length, If it is <= 0 the gridsize's for the points is used.
-		,int MaxNimages       /// Maximum size of imageinfo array
 		){
 
 	Kist<Point> * wholekist = new Kist<Point>;
@@ -31,18 +30,17 @@ void DirtyFoF(
 
 	*Nimages = 0;
 
-	while(imageinfo->imagekist->Nunits() > 0) wholekist->InsertAfterCurrent(imageinfo->imagekist->TakeOutCurrent());
+	while(imageinfo[0].imagekist->Nunits() > 0) wholekist->InsertAfterCurrent(imageinfo[0].imagekist->TakeOutCurrent());
 
 	i=0;
-	while(wholekist->Nunits() > 0 && *Nimages < MaxNimages){
+	while(wholekist->Nunits() > 0){
+    if(i > imageinfo.size()-1) imageinfo.resize(i+2);
 		imageinfo[i].imagekist->Empty();
 		imageinfo[i].imagekist->InsertAfterCurrent(wholekist->TakeOutCurrent());
 		if(wholekist->Nunits() > 0) _DirtyFoF(imageinfo[i].imagekist,wholekist,linkinglength);
 		++(*Nimages);
 		++i;
 	}
-
-	assert(*Nimages < MaxNimages);
 
 	delete wholekist;
 	return;

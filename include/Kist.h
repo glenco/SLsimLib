@@ -288,7 +288,19 @@ public:
 	bool operator++(int){return Up();}
 	/// Same as Down()
 	bool operator--(int){return Down();}
+  
+  /// make a copy of the data in a vector of pointers form
+  std::vector<Data *> copytovector(){
+    std::vector<Data *> vec(Number);
+
+    Kist<Data>::iterator it=TopIt();
+    for(size_t i=0;!(it.atend()) ;--it,++i){
+      vec[i] = *it;
+    }
     
+    return vec;
+  }
+  
 
 private:
 
