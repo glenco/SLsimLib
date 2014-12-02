@@ -44,7 +44,7 @@ Point *TreeStruct::NearestNeighborKist(const PosType* center,int Nneighbors,Kist
     Nneighbors = top->npoints-1;
   }
 //  EmptyList(neighborlist);
-  neighborkist->Empty();
+    neighborkist->Empty();
   if(Nneighbors <= 0) return NULL;
 /*
   if(count==0){
