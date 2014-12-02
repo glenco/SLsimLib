@@ -184,8 +184,9 @@ public:
   /// returns a const reference to the cosmology so that constant functions can be used, but the cosmological parameters cannot be changed.
   const COSMOLOGY & getCosmo(){return cosmo;}
   
-  /// set flag_switch_field_off :
-  void set_field_off(bool my_flag_field_off) { flag_switch_field_off = my_flag_field_off ; }
+  /// set flag_switch_field_off, turn the field On/Off :
+  void TurnFieldOff() { flag_switch_field_off = true ; }
+  void TurnFieldOn() { flag_switch_field_off = false ; }
   
   /// get the field min mass :
   PosType getFieldMinMass() { return field_min_mass ; }

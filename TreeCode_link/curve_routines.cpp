@@ -1738,7 +1738,7 @@ int windings(
 
 /** \ingroup Utill
  *
- *  \brief determines the whether a point is inside a curve, that has been stretched 1.2 times
+ *  \brief determines whether a point is inside a curve, that has been stretched 1.2 times
  *  returns the area of the stretched curve
  */
 int windings2(
@@ -1746,7 +1746,7 @@ int windings2(
 		,Point *points_original         /// The points on the border.  These must be ordered.
 		,unsigned long Npoints /// number of points in curve
 		,PosType *area          /// returns absolute the area within the curve with oriented border
-		,short image           /// if == 0 the image of the curve is uses as the curve
+		,short image           /// if == 0 the image of the curve is used as the curve
 		){
 	int wn=0;
 	unsigned long k,i;

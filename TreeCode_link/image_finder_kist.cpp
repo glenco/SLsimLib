@@ -116,7 +116,7 @@ void ImageFinding::find_images_kist(
   
   
   if(verbose) printf("Ntemp=%i\n",Nsizes);
-  
+
   grid->ClearAllMarks();
   
   //////////////////////////////////////////
@@ -153,7 +153,7 @@ void ImageFinding::find_images_kist(
     do{
       time(&t1);
       if(verbose) std::cout << "    refined images" << std::endl;
-      
+
       //************* method that does not separate images ****************
       ImageFinding::image_finder_kist(lens,y_source,rtemp,grid
                                       ,Nimages,imageinfo,Nimagepoints,-1,0);
@@ -1635,6 +1635,7 @@ void ImageFinding::image_finder_kist(LensHndl lens, PosType *y_source,PosType r_
   Nsource_points = imageinfo[0].imagekist->Nunits();
   
   // if there are not enough points in source find nearest ones
+
   if(!true_images && imageinfo[0].imagekist->Nunits() < NpointsRequired){
     if(imageinfo[0].imagekist->Nunits() == 0){
       s_tree->NearestNeighborKist(y_source,NpointsRequired,imageinfo[0].imagekist);
@@ -1705,7 +1706,6 @@ void ImageFinding::image_finder_kist(LensHndl lens, PosType *y_source,PosType r_
   if( splitparities == 0 ) for(i=0;i<*Nimages;++i) findborders4(i_tree,&imageinfo[i]);
   
   for(i=0;i<*Nimages;++i){
-    
     if(splitparities == -1){
       // avoid finding image borders, but need to set grid range for each image
       imageinfo[i].innerborder->Empty();

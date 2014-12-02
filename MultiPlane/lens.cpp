@@ -97,7 +97,7 @@ Lens::Lens(Lens &lens)
 : cosmo(lens.cosmo), central_point_sphere(1,0,0)
 {
   if(init_seed == 0){
-    std::cout << "Cann't use copy constructor on Lens that was not created from a parameter file!" << std::endl;
+    std::cout << "Can't use copy constructor on Lens that was not created from a parameter file!" << std::endl;
     throw std::runtime_error("cannot use copy constructor");
   }
   

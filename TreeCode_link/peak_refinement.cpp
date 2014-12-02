@@ -131,8 +131,8 @@ short find_peaks(
 
 	int NimageMax = 1000;
 
-	divide_images_kist(grid->i_tree,imageinfo,Nimages,NimageMax);
-
+	divide_images(grid->i_tree,imageinfo,Nimages,NimageMax);
+      
 	// need some way of returning all the points
 
 	// free memory in grids, trees and images
