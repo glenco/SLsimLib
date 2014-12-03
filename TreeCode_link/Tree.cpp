@@ -838,11 +838,10 @@ ImageInfo::~ImageInfo(){
 }
 /**
  * \brief Copy all information about the image including making copies of the imagekist,
- * innerborder and outerborder.  Previous information in the image will be
+ * innerborder and outerborder.  Previous information in the image will be ???
  */
-void ImageInfo::copy(
-                     const ImageInfo &image   /// image to be copied
-                     ,bool copykists    /// Turn off copying imagekist, innerborder and outerborder.
+void ImageInfo::copy(const ImageInfo & image   /// image to be copied
+                     ,bool copykists    /// Turn on copying imagekist, innerborder and outerborder.
                                         /// This is useful when the grid has already been distroyed.
                      ){
 

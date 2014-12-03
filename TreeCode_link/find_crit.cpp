@@ -290,7 +290,7 @@ void ImageFinding::find_crit(
 		  critcurve[i].centroid[1] /= critcurve[i].imagekist->Nunits();
 	  }else{
 		  // take out curves with no points
-		  critcurve[i].copy(critcurve[*Ncrits-1]);
+		  critcurve[i].copy(critcurve[*Ncrits-1],true);
 		  *Ncrits -= 1;
 		  --i;
 	  }
@@ -651,7 +651,7 @@ void ImageFinding::find_crit2(
       critcurve[i].centroid[1] /= critcurve[i].imagekist->Nunits();
     }else{
       // take out curves with no points
-      critcurve[i].copy(critcurve[*Ncrits-1]);
+      critcurve[i].copy(critcurve[*Ncrits-1],true);
       *Ncrits -= 1;
       --i;
     }

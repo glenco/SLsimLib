@@ -1228,13 +1228,15 @@ namespace Utilities
 /*
 #define ITMAX 100
 #define SHFT(a,b,c,d) (a)=(b);(b)=(c);(c)=(d);
-
+*/
 /** \brief One dimensional minimization routine
  *
  *  ax < bx < cx and functor(ax) > functor(bx) and functor(cx) > functor(bx)
  * returns functor(xmin)
  * Based on NR's brent() function
  *
+ */
+/*
 template <typename T>
 double bart(
             double ax     /// lower boundary of x range

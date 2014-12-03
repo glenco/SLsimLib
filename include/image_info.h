@@ -60,7 +60,7 @@ struct ImageInfo{
   KappaType aveTimeDelay();
   /// Print information about the image
   void PrintImageInfo();
-  void copy(const ImageInfo &image,bool copykists = true);
+  void copy(const ImageInfo & image,bool copykists = true);
 
   void ArcInfo(PosType *area,PosType *area_circ,PosType theta);
   void FindArc(PosType &radius,PosType *xc,PosType *arc_c,PosType &arclength,PosType &width
