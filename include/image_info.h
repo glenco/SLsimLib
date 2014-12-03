@@ -22,7 +22,13 @@ typedef enum{unchecked,yes,no} GATE;
 struct ImageInfo{
 
 	ImageInfo();
+  ImageInfo(const ImageInfo & rhs){copy(rhs,true);}
 	~ImageInfo();
+  ImageInfo & operator=(const ImageInfo & rhs){
+    if(this == &rhs) return *this;
+    copy(rhs,true);
+    return *this;
+  }
     /// Array of points in image,  SHOULD NOT BE USED IN FAVOR OF imagekist!  Still used by caustic finding routines.
   //Point *points;
   /// Number of points in image, SHOULD NOT BE USED IN FAVOR OF imagekist->Nunits().  Still used by caustic finding routines.
@@ -54,7 +60,7 @@ struct ImageInfo{
   KappaType aveTimeDelay();
   /// Print information about the image
   void PrintImageInfo();
-  void copy(ImageInfo &image,bool copykists = true);
+  void copy(const ImageInfo &image,bool copykists = true);
 
   void ArcInfo(PosType *area,PosType *area_circ,PosType theta);
   void FindArc(PosType &radius,PosType *xc,PosType *arc_c,PosType &arclength,PosType &width

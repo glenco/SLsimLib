@@ -52,7 +52,7 @@ void ImageFinding::find_images_kist(
                                     ,bool verbose           /// verbose
 ){
   
-  if(imageinfo.size() < 2) imageinfo.resize(2);
+  if(imageinfo.size() < 3) imageinfo.resize(3);
   
   if(  grid->s_tree->top->boundary_p1[0] > (y_source[0] + r_source)
      || grid->s_tree->top->boundary_p2[0] < (y_source[0] - r_source)
@@ -1578,7 +1578,7 @@ void ImageFinding::image_finder_kist(LensHndl lens, PosType *y_source,PosType r_
   //short moved;
   //PosType r;
   
-  
+  if(imageinfo.size() < 3) imageinfo.resize(3);
   //if(count==0) oldy[0]=oldy[1]=0;
   TreeHndl i_tree = grid->i_tree,s_tree = grid->s_tree;
   

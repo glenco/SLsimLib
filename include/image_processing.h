@@ -50,7 +50,8 @@ public:
 	
 	void Clean();
 
-	void AddImages(ImageInfo *imageinfo,int Nimages,float rescale = 1.);
+  void AddImages(ImageInfo *imageinfo,int Nimages,float rescale = 1.);
+  void AddImages(std::vector<ImageInfo> &imageinfo,int Nimages,float rescale = 1.);
 	void AddCurve(ImageInfo *curve,double value);
   
 	void drawline(double x1[],double x2[],double value);

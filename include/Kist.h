@@ -105,6 +105,12 @@ public:
 			delete[] units;
 		}
 	};
+  
+  Kist & operator=(const Kist &a){
+    if(this == &a) return *this;
+    copy(a);
+    return *this;
+  }
 
 	inline Data *getCurrent();
 
@@ -112,7 +118,7 @@ public:
 	void InsertBeforeCurrent(Data * data);
 	Data *TakeOutCurrent();
 	void Empty();
-    void Clear();
+  void Clear();
     
 	//void FreeAll();
 	void Fill(Data * data,unsigned long N);
@@ -120,7 +126,8 @@ public:
 	void MoveCurrentToBottom();
 	void MoveCurrentToTop();
 	void copy(Kist<Data> *kist);
-	void copy(std::vector<Data *> &vector);
+  void copy(const Kist<Data> &kist);
+  void copy(std::vector<Data *> &vector);
   void test_iterator();
 
 	// movement
@@ -690,14 +697,28 @@ template <class Data> void Kist<Data>::SetInImage(Boo value){
  * \brief copy contains of kist into this kist.  Destroys former content and leaves current of kist in
  * new place.
  */
-template <class Data> void Kist<Data>::copy(Kist<Data> *kist){
-	Empty();
-	if(kist->Nunits() == 0) return;
-	kist->MoveToTop();
-	do{
-		InsertAfterCurrent(kist->getCurrent());
-		Down();
-	}while(kist->Down());
+template <class Data>
+void Kist<Data>::copy(Kist<Data> *kist){
+  Empty();
+  if(kist->Nunits() == 0) return;
+  kist->MoveToTop();
+  do{
+    InsertAfterCurrent(kist->getCurrent());
+    Down();
+  }while(kist->Down());
+}
+/**
+ * \brief copy contains of kist into this kist.  Destroys former content and leaves current of kist in
+ * new place.
+ */
+template <class Data> void Kist<Data>::copy(const Kist<Data> &kist){
+  Empty();
+  if(kist.Nunits() == 0) return;
+  Kist<Data>::iterator it = kist.getBottomIt();
+  for(;!(it.atend()) ;++it){
+    InsertAfterCurrent(*it);
+    Down();
+  };
 }
 template <class Data> void Kist<Data>::copy(std::vector<Data *> &vector){
 	Empty();

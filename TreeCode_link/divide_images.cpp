@@ -250,6 +250,7 @@ void divide_images_kist(
 	Kist<Point> new_imagekist;
 	PosType tmp = 0;
 
+  assert(imageinfo.size() > 0);
 	if(imageinfo[0].imagekist->Nunits() < 2){
 		*Nimages = 1;
 		return ;
@@ -269,7 +270,7 @@ void divide_images_kist(
 	i=0;
 	do{
 
-    if(i > imageinfo.size()-1) imageinfo.resize(i+2);
+    if(i > imageinfo.size()-1) imageinfo.resize(i+5);
 		//printf("   new_imagekist %li\n",new_imagekist.Nunits());
 		imageinfo[i].area = partition_images_kist(new_imagekist.getCurrent(),imageinfo[i].imagekist,i_tree);
 
@@ -385,9 +386,6 @@ void partition_images(Point *point,unsigned long *N_in_image,TreeHndl i_tree){
 	assert(i_tree);
 
 	Kist<Point> * neighbors = new Kist<Point>;
-	  /**************** TODO: test line ******************
-	  ERROR_MESSAGE();
-	  // ****************  ******************/
 
 	// find all the neighbors of point
 	i_tree->FindAllBoxNeighborsKist(point,neighbors);
@@ -402,9 +400,6 @@ void partition_images(Point *point,unsigned long *N_in_image,TreeHndl i_tree){
 			if(!(neighbors->Down())) break;
 		}
 	}
-	  /**************** TODO test line ******************
-	  ERROR_MESSAGE();
-	  // ****************  ******************/
 
 	while(neighbors->Nunits() > 0){
 		if(neighbors->getCurrent()->in_image == YES){
@@ -420,9 +415,6 @@ void partition_images(Point *point,unsigned long *N_in_image,TreeHndl i_tree){
 
 	assert(neighbors->Nunits() == 0);
 	delete neighbors;
-	  /**************** TODO test line ******************
-	  ERROR_MESSAGE();
-	  // ****************  ******************/
 
 	return;
 }

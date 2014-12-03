@@ -456,6 +456,15 @@ void PixelMap::AddImages(
 	return;
 }
 
+void PixelMap::AddImages(
+                         std::vector<ImageInfo> &imageinfo   /// An array of ImageInfo-s.  There is no reason to separate images for this routine
+                         ,int Nimages           /// Number of images on input.
+                         ,float rescale         /// rescales the surface brightness while leaving the image unchanged,
+///  see full notes
+){
+  AddImages(imageinfo.data(),Nimages,rescale);
+}
+
 /// returns the grid points within the branch
 void PixelMap::PointsWithinLeaf(Branch * branch1, std::list <unsigned long> &neighborlist){
 

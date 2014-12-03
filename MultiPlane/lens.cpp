@@ -34,8 +34,8 @@ namespace
 /**
  * \brief Creates an empty lens. Main halos and field halos need to be inserted by hand from the user.
  */
-Lens::Lens(long* my_seed, CosmoParamSet cosmoset,bool verbose)
-: seed(my_seed), cosmo(cosmoset), central_point_sphere(1,0,0), inv_ang_screening_scale(0)
+Lens::Lens(long* my_seed,PosType z_source, CosmoParamSet cosmoset,bool verbose)
+: seed(my_seed), cosmo(cosmoset),zsource(z_source), central_point_sphere(1,0,0), inv_ang_screening_scale(0)
 {
   init_seed = 0;
   
@@ -54,7 +54,9 @@ Lens::Lens(long* my_seed, CosmoParamSet cosmoset,bool verbose)
 	index_of_new_sourceplane = -1;
 	toggle_source_plane = false;
   flag_switch_deflection_off = false;
-	
+  flag_switch_lensing_off = false;
+  
+  charge = 1.0;
   combinePlanes(true);
 	std:: cout << " done " << std:: endl;
 }
