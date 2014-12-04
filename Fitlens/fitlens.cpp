@@ -35,7 +35,7 @@ void LensHaloFit::FindLensSimple(
   
   FindLensSimple(imageinfo,Nimages,y,dx_sub);
   
-  std::cout << "perturbation mades" << std::endl;
+  std::cout << "perturbation modes" << std::endl;
   for(int i=0;i<perturb_Nmodes;++i)  std::cout << perturb_modes[i] << std::endl;
   
   delete[] imageinfo;
@@ -111,8 +111,8 @@ void LensHaloFit::FindLensSimple(
   x_center[1] /= scale;
   
   //ERROR_MESSAGE();
-  //ElliptisizeLens(Nimages,Nsources,1,pairing,xob,x_center,xg,0,perturb_beta,perturb_Nmodes-1,mods,dx_sub,&re2,q); // THAT LOOKS WRONG !
-  ElliptisizeLens(Nimages,Nsources,1,pairing,xob,x_center,xg,0,perturb_beta,perturb_Nmodes,mods,dx_sub,&re2,q);
+  ElliptisizeLens(Nimages,Nsources,1,pairing,xob,x_center,xg,0,perturb_beta,perturb_Nmodes-1,mods,dx_sub,&re2,q); // THAT LOOKS WRONG !
+  //ElliptisizeLens(Nimages,Nsources,1,pairing,xob,x_center,xg,0,perturb_beta,perturb_Nmodes,mods,dx_sub,&re2,q);
   
   for(i=1;i<perturb_Nmodes;++i) perturb_modes[i] = mods[i];
   
@@ -134,15 +134,25 @@ void LensHaloFit::FindLensSimple(
   // source position
   y[0] = mods[i]*scale;
   y[1] = mods[i+1]*scale;
-  
- for(i=3;i<perturb_Nmodes;++i) perturb_modes[i] *= scale; // checked
-  
+    
   for(i=0;i<Nimages;++i){
     dx_sub[i][0] *= scale;
     dx_sub[i][1] *= scale;
   }
   x_center[0] *= scale;
   x_center[1] *= scale;
+  
+  /************** test **********************/
+  COSMOLOGY cosmo(Planck1yr);
+  scale *= cosmo.angDist(3.5)/(4*pi*Grav)/cosmo.angDist(0.3,3.5);
+  /******************************************/
+  
+  for(i=3;i<perturb_Nmodes;++i) perturb_modes[i] *= scale; // checked
+
+  /************** test **********************/
+  scale /= cosmo.angDist(0.3);
+  for(i=0;i<3;++i) perturb_modes[i] *= scale;
+  /******************************************/
   
   //Einstein_ro = 0.0; // the monople is now included in the modes
   //sigma = 0.0;
@@ -506,8 +516,8 @@ void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *x_cent
   //ERROR_MESSAGE();
   svbksbD(c,w,v,2*Nimages,Nmodes+2*Nsources,b,mod);
   
-  for(i=1;i<=Nmodes + 2*Nsources;++i) std::printf("mod[%i]=%e\n",i,mod[i]);
-  for(i=1;i<=Nmodes + 2*Nsources;++i) std::printf("w[%i]=%e\n",i,w[i]);
+  //for(i=1;i<=Nmodes + 2*Nsources;++i) std::printf("mod[%i]=%e\n",i,mod[i]);
+  //for(i=1;i<=Nmodes + 2*Nsources;++i) std::printf("w[%i]=%e\n",i,w[i]);
   
   /* find degeneracy vectors
    * and make them the first *degen columns of v

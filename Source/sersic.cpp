@@ -12,7 +12,7 @@ SourceSersic::SourceSersic(
 	,double my_PA            /// Position angle (radians)
 	,double my_index         /// Sersic index
 	,double my_q             /// axes ratio
-	,double my_z             /// optional redshift
+	,double my_z             /// redshift
 	,const double *my_theta  /// optional angular position on the sky
 )
 : Source()

@@ -59,7 +59,7 @@ struct TmpParams{
 void Lens::rayshooterInternal(
                               unsigned long Npoints   /// number of points to be shot
                               ,Point *i_points        /// point on the image plane
-                              ){
+){
   
   // To force the computation of convergence, shear... -----
   // -------------------------------------------------------
@@ -226,33 +226,33 @@ void *compute_rays_parallel(void *_p)
       xx[1] = p->i_points[i].image->x[1]/(1+p->plane_redshifts[j]);
       
       assert(xx[0] == xx[0] && xx[1] == xx[1]);
-
+      
       
       ////////////////////////////////////////////////////////////////
       
       p->lensing_planes[j]->force(alpha,&kappa,gamma,&phi,xx); // Computed in physical coordinates.
-
+      
       ////////////////////////////////////////////////////////////////
-
-        assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
-        assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
-        assert(kappa == kappa);
-        if(isinf(kappa)) { std::cout << "xx = " << xx[0] << " " << xx[1] << std::endl ;}
-        assert(!isinf(kappa));
-
-        fac = 1/(1+p->plane_redshifts[j]);
-    	  /* multiply by fac to obtain 1/comoving_distance/physical_distance
-    	   * such that a multiplication with the charge (in units of physical distance)
-    	   * will result in a 1/comoving_distance quantity */ // 1 / comoving_distance squared ?
-    	  kappa *= fac;
-    	  gamma[0] *= fac;
-    	  gamma[1] *= fac;
-    	  gamma[2] *= fac;
-	
-        assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
-        assert(kappa == kappa);
-        assert(phi == phi);
-
+      
+      assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
+      assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
+      assert(kappa == kappa);
+      if(isinf(kappa)) { std::cout << "xx = " << xx[0] << " " << xx[1] << std::endl ;}
+      assert(!isinf(kappa));
+      
+      fac = 1/(1+p->plane_redshifts[j]);
+      /* multiply by fac to obtain 1/comoving_distance/physical_distance
+       * such that a multiplication with the charge (in units of physical distance)
+       * will result in a 1/comoving_distance quantity */ // 1 / comoving_distance squared ?
+      kappa *= fac;
+      gamma[0] *= fac;
+      gamma[1] *= fac;
+      gamma[2] *= fac;
+      
+      assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
+      assert(kappa == kappa);
+      assert(phi == phi);
+      
       if(p->flag_switch_deflection_off){ alpha[0] = alpha[1] = 0.0; }
       
       // This computes \vec{x}^{j+1} in terms of \vec{x}^{j} , \vec{x}^{j-1} and \vec{\alpha}^{j}
@@ -272,46 +272,46 @@ void *compute_rays_parallel(void *_p)
       // Change in the value of the position.
       p->i_points[i].image->x[0] = xplus[0];
       p->i_points[i].image->x[1] = xplus[1];
-
+      
       // ----------------------------------------------------------------------------------------
-
       
-        // This computes (\kappa^{j+1}, \gamma_1^{j+1}, \gamma_2^{j+1}, \gamma_3^{j+1})
-        // in terms of the j-plane quantities and according to Eq. (22) of GLAMER II.
-        
-            // Here the coefficients aa, bb and cc are used for a completely different calculation,
-            // they are not the same as they were defined above. ----------------------------------
-            aa = (p->dDl[j+1] + p->dDl[j]) * p->Dl[j] / p->dDl[j] / p->Dl[j+1];
-            if(j>0)
-            {
-                bb = p->dDl[j+1] * p->Dl[j-1] / p->dDl[j] / p->Dl[j+1];
-            }
-            else bb = 0;
-            cc = p->charge * p->dDl[j+1] * p->Dl[j] / p->Dl[j+1];
-            // ------------------------------------------------------------------------------------
-
       
-        // Computation of the "plus quantities", i.e. the  next plane quantities --------------------
-        kappa_plus = aa*p->i_points[i].kappa - bb*kappa_minus
-    			  - cc*(kappa*p->i_points[i].kappa + gamma[0]*p->i_points[i].gamma[0] + gamma[1]*p->i_points[i].gamma[1]);
-            
-        gamma_plus[0] = aa*p->i_points[i].gamma[0] - bb*gamma_minus[0]
-    	          - cc*(gamma[0]*p->i_points[i].kappa + kappa*p->i_points[i].gamma[0] - gamma[1]*p->i_points[i].gamma[2]);
-	
-        gamma_plus[1] = aa*p->i_points[i].gamma[1] - bb*gamma_minus[1]
-    	          - cc*(gamma[1]*p->i_points[i].kappa + kappa*p->i_points[i].gamma[1] + gamma[0]*p->i_points[i].gamma[2]);
-	
-        gamma_plus[2] = aa*p->i_points[i].gamma[2] - bb*gamma_minus[2]
-    	          - cc*(kappa*p->i_points[i].gamma[2] - gamma[1]*p->i_points[i].gamma[0] + gamma[0]*p->i_points[i].gamma[1]);
-        // ------------------------------------------------------------------------------------------
-            
-            
-        // Assigning them to the "minus quantities" for next plane occurence of the loop ------------
-        kappa_minus = p->i_points[i].kappa;
-        gamma_minus[0] = p->i_points[i].gamma[0];
-        gamma_minus[1] = p->i_points[i].gamma[1];
-        gamma_minus[2] = p->i_points[i].gamma[2];
-        // ------------------------------------------------------------------------------------------
+      // This computes (\kappa^{j+1}, \gamma_1^{j+1}, \gamma_2^{j+1}, \gamma_3^{j+1})
+      // in terms of the j-plane quantities and according to Eq. (22) of GLAMER II.
+      
+      // Here the coefficients aa, bb and cc are used for a completely different calculation,
+      // they are not the same as they were defined above. ----------------------------------
+      aa = (p->dDl[j+1] + p->dDl[j]) * p->Dl[j] / p->dDl[j] / p->Dl[j+1];
+      if(j>0)
+      {
+        bb = p->dDl[j+1] * p->Dl[j-1] / p->dDl[j] / p->Dl[j+1];
+      }
+      else bb = 0;
+      cc = p->charge * p->dDl[j+1] * p->Dl[j] / p->Dl[j+1];
+      // ------------------------------------------------------------------------------------
+      
+      
+      // Computation of the "plus quantities", i.e. the  next plane quantities --------------------
+      kappa_plus = aa*p->i_points[i].kappa - bb*kappa_minus
+      - cc*(kappa*p->i_points[i].kappa + gamma[0]*p->i_points[i].gamma[0] + gamma[1]*p->i_points[i].gamma[1]);
+      
+      gamma_plus[0] = aa*p->i_points[i].gamma[0] - bb*gamma_minus[0]
+      - cc*(gamma[0]*p->i_points[i].kappa + kappa*p->i_points[i].gamma[0] - gamma[1]*p->i_points[i].gamma[2]);
+      
+      gamma_plus[1] = aa*p->i_points[i].gamma[1] - bb*gamma_minus[1]
+      - cc*(gamma[1]*p->i_points[i].kappa + kappa*p->i_points[i].gamma[1] + gamma[0]*p->i_points[i].gamma[2]);
+      
+      gamma_plus[2] = aa*p->i_points[i].gamma[2] - bb*gamma_minus[2]
+      - cc*(kappa*p->i_points[i].gamma[2] - gamma[1]*p->i_points[i].gamma[0] + gamma[0]*p->i_points[i].gamma[1]);
+      // ------------------------------------------------------------------------------------------
+      
+      
+      // Assigning them to the "minus quantities" for next plane occurence of the loop ------------
+      kappa_minus = p->i_points[i].kappa;
+      gamma_minus[0] = p->i_points[i].gamma[0];
+      gamma_minus[1] = p->i_points[i].gamma[1];
+      gamma_minus[2] = p->i_points[i].gamma[2];
+      // ------------------------------------------------------------------------------------------
       
       
       if(!(kappa_plus==kappa_plus && gamma_minus[0]==gamma_minus[0] && gamma_minus[1]==gamma_minus[1] && gamma_minus[2]==gamma_minus[2])){
@@ -351,9 +351,9 @@ void *compute_rays_parallel(void *_p)
       
       // Geometric time delay with added potential
       p->i_points[i].dt += 0.5*( (xplus[0] - xminus[0])*(xplus[0] - xminus[0]) + (xplus[1] - xminus[1])*(xplus[1] - xminus[1]) )/p->dDl[j+1] - (1 + p->plane_redshifts[j]) * phi * p->charge ; /// in Mpc
-
-        // Check that the 1+z factor must indeed be there (because the x positions have been rescaled, so it may be different compared to the draft).
-        // Remark : Here the true lensing potential is not "phi" but "phi * p->charge = phi * 4 pi G".
+      
+      // Check that the 1+z factor must indeed be there (because the x positions have been rescaled, so it may be different compared to the draft).
+      // Remark : Here the true lensing potential is not "phi" but "phi * p->charge = phi * 4 pi G".
       
     } // End of the loop going through the planes
     
@@ -429,19 +429,19 @@ void *compute_rays_parallel(void *_p)
  
  */
 void Lens::info_rayshooter(
-        Point *i_point     /// point to be shot, must have image point linked
-        ,std::vector<std::vector<double>> & ang_positions  /// angular positions on each plane
-        ,std::vector<KappaType> & kappa_on_planes          /// convergence on each plane
-        ,std::vector<std::vector<LensHalo*>> & halo_neighbors  /// neighboring halos within rmax of ray on each plane
-        ,LensHalo *halo_max
-        ,KappaType &kappa_max
-        ,KappaType gamma_max[]
-        ,PosType rmax  /// distance from ray on each plane, units depend on mode parameter
-        ,short mode  /// 0:physical distance (Mpc), 1: comoving distance (Mpc), 2: angular distance (rad)
-                           )
+                           Point *i_point     /// point to be shot, must have image point linked
+                           ,std::vector<std::vector<double>> & ang_positions  /// angular positions on each plane
+                           ,std::vector<KappaType> & kappa_on_planes          /// convergence on each plane
+                           ,std::vector<std::vector<LensHalo*>> & halo_neighbors  /// neighboring halos within rmax of ray on each plane
+                           ,LensHalo *halo_max
+                           ,KappaType &kappa_max
+                           ,KappaType gamma_max[]
+                           ,PosType rmax  /// distance from ray on each plane, units depend on mode parameter
+                           ,short mode  /// 0:physical distance (Mpc), 1: comoving distance (Mpc), 2: angular distance (rad)
+)
 {
   
-
+  
   // !!! would like to find the maximum contributing halo so that its contribution can be subtracted from the total
   
   int NLastPlane = lensing_planes.size() ;
@@ -474,17 +474,17 @@ void Lens::info_rayshooter(
     tmpZs = zsource ;
     for(int i=0 ; i<NLastPlane ; i++)
     {
-    Dl[i] = cosmo.angDist(plane_redshifts[i]);
-    dDl[i] = cosmo.angDist(plane_redshifts[i-1], plane_redshifts[i]);
+      Dl[i] = cosmo.angDist(plane_redshifts[i]);
+      dDl[i] = cosmo.angDist(plane_redshifts[i-1], plane_redshifts[i]);
     }
   }
-
+  
   
   ang_positions.resize(NLastPlane);
   for(int ii=0;ii<NLastPlane;++ii) ang_positions[ii].resize(2);
   halo_neighbors.resize(NLastPlane);
   kappa_on_planes.resize(NLastPlane);
-
+  
   int j;
   
   PosType xx[2];
@@ -494,87 +494,87 @@ void Lens::info_rayshooter(
   PosType xminus[2],xplus[2],tmp_r,x_tmp[2];
   KappaType gamma[3],phi,kappa_tmp;
   kappa_max = -1.0;
-      
-    // find position on first lens plane in comoving units
-    i_point->image->x[0] = i_point->x[0] * Dl[0];
-    i_point->image->x[1] = i_point->x[1] * Dl[0];
+  
+  // find position on first lens plane in comoving units
+  i_point->image->x[0] = i_point->x[0] * Dl[0];
+  i_point->image->x[1] = i_point->x[1] * Dl[0];
+  
+  xminus[0] = 0;
+  xminus[1] = 0;
+  
+  // Begining of the loop through the planes :
+  // Each iteration leaves i_point[i].image on plane (j+1)
+  
+  for(j = 0; j < NLastPlane ; ++j)
+  {
     
-    xminus[0] = 0;
-    xminus[1] = 0;
-     
-    // Begining of the loop through the planes :
-    // Each iteration leaves i_point[i].image on plane (j+1)
+    // convert to physical coordinates on the plane j
+    xx[0] = i_point->image->x[0]/(1+plane_redshifts[j]);
+    xx[1] = i_point->image->x[1]/(1+plane_redshifts[j]);
     
-    for(j = 0; j < NLastPlane ; ++j)
-    {
+    assert(xx[0] == xx[0] && xx[1] == xx[1]);
+    
+    lensing_planes[j]->force(alpha,&kappa_on_planes[j],gamma,&phi,xx); // Computed in physical coordinates.
+    if(flag_switch_deflection_off){ alpha[0] = alpha[1] = 0.0; }
+    
+    tmp_r = rmax;
+    if(mode == 1) tmp_r /= (1+plane_redshifts[j]);
+    if(mode == 2) tmp_r *= Dl[j];
+    lensing_planes[j]->getNeighborHalos(xx,tmp_r,halo_neighbors[j]);
+    
+    ang_positions[j][0] = i_point->image->x[0]/Dl[j];
+    ang_positions[j][1] = i_point->image->x[1]/Dl[j];
+    
+    PosType SigmaCrit = cosmo.SigmaCrit(plane_redshifts[j],tmpZs);
+    
+    // Find the halo with the largest kappa
+    for(int ii=0;ii<halo_neighbors[j].size();++ii){
+      alpha[0] = alpha[1] = 0.0;
+      kappa_tmp = 0.0;
+      gamma[0] = gamma[1] = gamma[2] = 0.0;
+      phi = 0.0;
       
-      // convert to physical coordinates on the plane j
-      xx[0] = i_point->image->x[0]/(1+plane_redshifts[j]);
-      xx[1] = i_point->image->x[1]/(1+plane_redshifts[j]);
+      // Getting the halo position (in physical Mpc) :
+      halo_neighbors[j][ii]->getX(x_tmp);
       
-      assert(xx[0] == xx[0] && xx[1] == xx[1]);
+      // Taking the shift into account :
+      x_tmp[0] = xx[0] - x_tmp[0];
+      x_tmp[1] = xx[1] - x_tmp[1];
       
-      lensing_planes[j]->force(alpha,&kappa_on_planes[j],gamma,&phi,xx); // Computed in physical coordinates.
-      if(flag_switch_deflection_off){ alpha[0] = alpha[1] = 0.0; }
-      
-      tmp_r = rmax;
-      if(mode == 1) tmp_r /= (1+plane_redshifts[j]);
-      if(mode == 2) tmp_r *= Dl[j];
-      lensing_planes[j]->getNeighborHalos(xx,tmp_r,halo_neighbors[j]);
-      
-      ang_positions[j][0] = i_point->image->x[0]/Dl[j];
-      ang_positions[j][1] = i_point->image->x[1]/Dl[j];
-      
-      PosType SigmaCrit = cosmo.SigmaCrit(plane_redshifts[j],tmpZs);
-      
-      // Find the halo with the largest kappa
-      for(int ii=0;ii<halo_neighbors[j].size();++ii){
-        alpha[0] = alpha[1] = 0.0;
-        kappa_tmp = 0.0;
-        gamma[0] = gamma[1] = gamma[2] = 0.0;
-        phi = 0.0;
-        
-        // Getting the halo position (in physical Mpc) :
-        halo_neighbors[j][ii]->getX(x_tmp);
-        
-        // Taking the shift into account :
-        x_tmp[0] = xx[0] - x_tmp[0];
-        x_tmp[1] = xx[1] - x_tmp[1];
-        
-        halo_neighbors[j][ii]->force_halo(alpha,&kappa_tmp,gamma,&phi,x_tmp,false);
-        kappa_tmp /=SigmaCrit;
-        if(kappa_tmp > kappa_max){
-          kappa_max = kappa_tmp;
-          halo_max = halo_neighbors[j][ii];
-          gamma_max[0] = gamma[0]/SigmaCrit;
-          gamma_max[1] = gamma[1]/SigmaCrit;
-        }
+      halo_neighbors[j][ii]->force_halo(alpha,&kappa_tmp,gamma,&phi,x_tmp,false);
+      kappa_tmp /=SigmaCrit;
+      if(kappa_tmp > kappa_max){
+        kappa_max = kappa_tmp;
+        halo_max = halo_neighbors[j][ii];
+        gamma_max[0] = gamma[0]/SigmaCrit;
+        gamma_max[1] = gamma[1]/SigmaCrit;
       }
-
-      //kappa_on_planes[j] *= 1/(1+plane_redshifts[j]);
-      kappa_on_planes[j] /= SigmaCrit;
-      
-      aa = (dDl[j+1] + dDl[j])/dDl[j];
-      bb = dDl[j+1]/dDl[j];
-      cc = charge * dDl[j+1];
-      
-      xplus[0] = aa*i_point->image->x[0] - bb*xminus[0] - cc*alpha[0];
-      xplus[1] = aa*i_point->image->x[1] - bb*xminus[1] - cc*alpha[1];
-      
-      xminus[0] = i_point->image->x[0];
-      xminus[1] = i_point->image->x[1];
-      
-      
-      // Change in the value of the position.
-      i_point->image->x[0] = xplus[0];
-      i_point->image->x[1] = xplus[1];
-      
-      
-    } // End of the loop going through the planes
+    }
     
-    // Convert units back to angles.
-    i_point->image->x[0] /= Dl[NLastPlane];
-    i_point->image->x[1] /= Dl[NLastPlane];
+    //kappa_on_planes[j] *= 1/(1+plane_redshifts[j]);
+    kappa_on_planes[j] /= SigmaCrit;
+    
+    aa = (dDl[j+1] + dDl[j])/dDl[j];
+    bb = dDl[j+1]/dDl[j];
+    cc = charge * dDl[j+1];
+    
+    xplus[0] = aa*i_point->image->x[0] - bb*xminus[0] - cc*alpha[0];
+    xplus[1] = aa*i_point->image->x[1] - bb*xminus[1] - cc*alpha[1];
+    
+    xminus[0] = i_point->image->x[0];
+    xminus[1] = i_point->image->x[1];
+    
+    
+    // Change in the value of the position.
+    i_point->image->x[0] = xplus[0];
+    i_point->image->x[1] = xplus[1];
+    
+    
+  } // End of the loop going through the planes
+  
+  // Convert units back to angles.
+  i_point->image->x[0] /= Dl[NLastPlane];
+  i_point->image->x[1] /= Dl[NLastPlane];
   
   return;
   

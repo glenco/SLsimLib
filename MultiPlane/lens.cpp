@@ -47,7 +47,7 @@ Lens::Lens(long* my_seed,PosType z_source, CosmoParamSet cosmoset,bool verbose)
 	
 	read_sim_file = false;
 	
-	charge = 4*pi*Grav;
+  charge = 4*pi*Grav;
 	if(verbose) std::cout << "charge: " << charge << std::endl;
 	
 	// initially let source be the one inputed from parameter file
@@ -56,7 +56,8 @@ Lens::Lens(long* my_seed,PosType z_source, CosmoParamSet cosmoset,bool verbose)
   flag_switch_deflection_off = false;
   flag_switch_lensing_off = false;
   
-  charge = 1.0;
+  //charge = cosmo.angDist(zsource)/cosmo.angDist(0.3)/cosmo.angDist(0.3,zsource);
+  //charge = 4*pi/cosmo.angDist(0.3);
   combinePlanes(true);
 	std:: cout << " done " << std:: endl;
 }

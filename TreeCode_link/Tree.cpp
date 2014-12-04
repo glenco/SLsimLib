@@ -842,7 +842,7 @@ ImageInfo::~ImageInfo(){
  */
 void ImageInfo::copy(
                      const ImageInfo &image   /// image to be copied
-                     ,bool copykists    /// Turn off copying imagekist, innerborder and outerborder.
+                     ,bool copykists    /// false for turning off copying imagekist, innerborder and outerborder.
                                         /// This is useful when the grid has already been distroyed.
                      ){
 
