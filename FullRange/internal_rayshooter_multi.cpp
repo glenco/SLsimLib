@@ -264,6 +264,8 @@ void *compute_rays_parallel(void *_p)
       
       xplus[0] = aa*p->i_points[i].image->x[0] - bb*xminus[0] - cc*alpha[0];
       xplus[1] = aa*p->i_points[i].image->x[1] - bb*xminus[1] - cc*alpha[1];
+      std::cout << "xplus contributions : " << aa*p->i_points[i].image->x[0] << " " << bb*xminus[0] << " " << cc*alpha[0] << std::endl ;
+      std::cout << "xplus contributions : " << aa*p->i_points[i].image->x[1] << " " << bb*xminus[1] << " " << cc*alpha[1] << std::endl ;
       
       xminus[0] = p->i_points[i].image->x[0];
       xminus[1] = p->i_points[i].image->x[1];
@@ -274,6 +276,8 @@ void *compute_rays_parallel(void *_p)
       p->i_points[i].image->x[1] = xplus[1];
       
       // ----------------------------------------------------------------------------------------
+      
+      // std::cout << "alpha : " << p->charge*alpha[0] << " " << p->charge*alpha[1] << std::endl ;
       
       
       // This computes (\kappa^{j+1}, \gamma_1^{j+1}, \gamma_2^{j+1}, \gamma_3^{j+1})

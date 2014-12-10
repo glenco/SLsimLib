@@ -123,18 +123,33 @@ void LensHaloFit::FindLensSimple(
   {
     PosType alpha[2];
     KappaType gamma[2],phi;
-    
+
+    std::cout << "/// In HaloFit ///" << std::endl ;
     std::cout << "test FindLensSimple solution" << std::endl;
+    std::cout << "perturb_beta = " << perturb_beta << " , perturb_Nmodes = " << perturb_Nmodes << std::endl ;
+    std::cout << "Modes in FindLensSimple before calling lens_expand :" << std::endl ;
+    for(int i=0 ; i<perturb_Nmodes ; i++) std::cout << perturb_modes[i] << " " ;
+    std::cout << std::endl ;
+    for(int i=0;i<Nimages;++i) std::cout << "xob : " << xob[i][0] << " " << xob[i][1] << std::endl ;
+    
+    // THE FUCKING PROBLEM IS THAT THE MODES ARE NOT THE GOOD ONES HERE !
+    
     for(int i=0;i<Nimages;++i){
+      // xob[i][0] *=scale ; xob[i][1] *= scale ; // Doing that destroys the consistency !
       lens_expand(perturb_beta,perturb_modes,perturb_Nmodes,xob[i],alpha,gamma,&phi);
-      std::cout << xob[i][0] - alpha[0] << "  " << xob[i][1] - alpha[1] << std::endl;
+      // std::cout << "alpha in FindLensSimple : " << alpha[0]*scale << "  " << alpha[1]*scale << std::endl;
+      std::cout << "alpha in FindLensSimple : " << alpha[0] << "  " << alpha[1] << std::endl;
+      std::cout << (xob[i][0] - alpha[0])*scale << "  " << (xob[i][1] - alpha[1])*scale << std::endl;
     }
 
   }
   // source position
+  std::cout << "i = " << i << std::endl ;
   y[0] = mods[i]*scale;
   y[1] = mods[i+1]*scale;
-    
+  std::cout << "scale = " << scale << std::endl;
+  std::cout << "source : y[0] = " << y[0] << " , y[1] = " << y[1] << std::endl;
+  
   for(i=0;i<Nimages;++i){
     dx_sub[i][0] *= scale;
     dx_sub[i][1] *= scale;
@@ -143,15 +158,18 @@ void LensHaloFit::FindLensSimple(
   x_center[1] *= scale;
   
   /************** test **********************/
-  COSMOLOGY cosmo(Planck1yr);
-  scale *= cosmo.angDist(3.5)/(4*pi*Grav)/cosmo.angDist(0.3,3.5);
+  // COSMOLOGY cosmo(Planck1yr);
+  // scale *= cosmo.angDist(3.5)/(4*pi*Grav)/cosmo.angDist(0.3,3.5);
+  // COSMOLOGY cosmo(WMAP5yr);
+  // scale *= cosmo.angDist(zsource_reference)/(4*pi*Grav)/cosmo.angDist(zlens,zsource_reference);
+  
+  // for(i=3;i<perturb_Nmodes;++i) perturb_modes[i] *= scale; // checked
   /******************************************/
   
-  for(i=3;i<perturb_Nmodes;++i) perturb_modes[i] *= scale; // checked
-
   /************** test **********************/
-  scale /= cosmo.angDist(0.3);
-  for(i=0;i<3;++i) perturb_modes[i] *= scale;
+  // scale /= cosmo.angDist(zlens);
+  // scale /= cosmo.angDist(0.3);
+  // for(i=0;i<3;++i) perturb_modes[i] *= scale;
   /******************************************/
   
   //Einstein_ro = 0.0; // the monople is now included in the modes
@@ -166,6 +184,8 @@ void LensHaloFit::FindLensSimple(
   
   return ;
 }
+
+
 
 /** \ingroup FitLensL2
  * \brief Find most elliptical lens

@@ -61,8 +61,55 @@ void LensHaloBaseNSIE::force_halo(
   // perturbations of host lens
   if(perturb_Nmodes > 0)
   {
-    *kappa += lens_expand(perturb_beta,perturb_modes,perturb_Nmodes,xcm,alpha_tmp,gamma_tmp,&phi_tmp);
+    PosType xt[2]={0,0};
+    xt[0]=xcm[0] / Dl ;
+    xt[1]=xcm[1] / Dl ;
+    
+    // std::cout << "perturb_beta = " << perturb_beta << " , perturb_Nmodes = " << perturb_Nmodes << std::endl ;
+    
+    /************** Reversing the test **********************/
+    /*
+    double scale_tmp ;
+    scale_tmp = scaleForLensExp ;
+   
+    PosType * perturb_modesReversed = new PosType [perturb_Nmodes] ;
+    
+    COSMOLOGY cosmo (Planck1yr);
+    scale_tmp *= cosmo.angDist(3.5)/(4*pi*Grav)/cosmo.angDist(0.3,3.5);
+    for(int i=3;i<perturb_Nmodes;++i) perturb_modesReversed[i] = perturb_modes[i]/scale_tmp; // reverse !
+    
+    scale_tmp /= cosmo.angDist(0.3);
+    for(int i=0;i<3;++i) perturb_modesReversed[i] = perturb_modes[i]/scale_tmp; // reverse !
+     
+    std::cout << std::endl ;
+    for(int i=0 ; i<perturb_Nmodes ; i++) std::cout << perturb_modesReversed[i] << " " ;
+    std::cout << std::endl ;
+     */
+    /********************************************************/
+    
+    // std::cout << "!!! xt = " << xt[0] << " " << xt[1] << " !!!" << std::endl ;
+    
+    std::cout << "!!! scaleForLensExp = " << scaleForLensExp << " !!!" << std::endl ;
+    xt[0] /= scaleForLensExp ;
+    xt[1] /= scaleForLensExp ;
+    
+    std::cout << "!!! xt = " << xt[0] << " " << xt[1] << " !!!" << std::endl ;
+    
+    // *kappa += lens_expand(perturb_beta,perturb_modesReversed,perturb_Nmodes,xt,alpha_tmp,gamma_tmp,&phi_tmp);
+    *kappa += lens_expand(perturb_beta,perturb_modes,perturb_Nmodes,xt,alpha_tmp,gamma_tmp,&phi_tmp);
+    
+    // alpha_tmp[0] = alpha_tmp[0]/(cosmo.angDist(3.5)/cosmo.angDist(0.3,3.5)) ;
+    // alpha_tmp[1] = alpha_tmp[1]/(cosmo.angDist(3.5)/cosmo.angDist(0.3,3.5)) ;
+    // std::cout << ">>> " << cosmo.angDist(3.5) << " " << cosmo.angDist(0.3,3.5) << std::endl ;
+    // std::cout << "alpha_tmp[0] = " << - alpha_tmp[0] * (4 * pi * Grav) << " , alpha_tmp[1] = " << - alpha_tmp[1] * (4 * pi * Grav) << std::endl ;
 
+    std::cout << "alpha_tmp[0] = " << alpha_tmp[0] << " , alpha_tmp[1] = " << alpha_tmp[1] << std::endl ;
+    
+    alpha_tmp[0] /= (4 * pi * Grav) ;
+    alpha_tmp[1] /= (4 * pi * Grav) ;
+    
+    
+    // As before :
     alpha[0] += alpha_tmp[0];
     alpha[1] += alpha_tmp[1];
     

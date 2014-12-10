@@ -190,7 +190,6 @@ public:
   
   /// get the field min mass :
   PosType getFieldMinMass() { return field_min_mass ; }
-  
  
 private:
 	GLAMER_TEST_FRIEND(LensTest)

@@ -54,6 +54,8 @@ public:
 
   /// set the velocity dispersion
   void set_sigma(PosType my_sigma){sigma = my_sigma; };
+  /// set the axis ratio
+  void set_fratio(PosType my_fratio){fratio = my_fratio;};
   
 private:
 
