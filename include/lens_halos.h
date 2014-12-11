@@ -135,6 +135,9 @@ public:
   
   PosType MassBy2DIntegation(PosType R);
   PosType MassBy1DIntegation(PosType R);
+  PosType test_average_gt(PosType R);
+  PosType test_average_kappa(PosType R);
+  
   
   // all of the following functions were used for Ansatz III w derivatives of the Fourier modes
   
@@ -145,10 +148,14 @@ public:
   size_t getID(){return idnumber;}
   void setID(size_t id){idnumber = id;}
   
+  PosType renormalization(PosType r_max);
+  PosType mnorm;
+
+  
 protected:
 
   size_t idnumber; /// Identification number of halo.  It is not always used.
-  PosType renormalization(PosType r_max);
+  
   
   PosType alpha_int(PosType x) const;
   PosType norm_int(PosType r_max);
@@ -255,7 +262,6 @@ protected:
   virtual PosType inline ddmoddq(int whichmod, PosType q, PosType b){return 0;};
   
   PosType xmax;  /// This is Rmax/rscale !!
-  PosType mnorm;
   
   // Functions for calculating axial dependence
   float pa;
@@ -274,8 +280,10 @@ protected:
   virtual void gamma_asym(PosType x,PosType theta, PosType gamma[]);
   virtual PosType kappa_asym(PosType x,PosType theta);
   virtual void alphakappagamma_asym(PosType x,PosType theta, PosType alpha[]
-                                    ,PosType *kappa,PosType gamma[]);
+                                    ,PosType *kappa,PosType gamma[],PosType *phi);
   virtual void alphakappagamma1asym(PosType x,PosType theta, PosType alpha[2]
+                                    ,PosType *kappa,PosType gamma[],PosType *phi);
+  virtual void alphakappagamma2asym(PosType x,PosType theta, PosType alpha[2]
                                     ,PosType *kappa,PosType gamma[],PosType *phi);
   
   virtual PosType alpha_ell(PosType x,PosType theta);
@@ -296,6 +304,24 @@ protected:
     double q;
     double beta;
     double operator ()(double theta) {return cos(n*theta)/pow(cos(theta)*cos(theta) + 1/q/q*sin(theta)*sin(theta),beta/2) ;}
+  };
+ 
+  struct test_gt_func{
+    test_gt_func(LensHalo& halo,PosType my_r): halo(halo),r(my_r){};
+    LensHalo& halo;
+    PosType r;
+    PosType a[2] = {0,0},x[2] = {0,0};
+    KappaType k = 0,g[3] = {0,0,0} ,p=0;
+    double operator ()(PosType t) {x[0]=r*cos(t); x[1]=r*sin(t); halo.force_halo(a,&k,g,&p,x); return g[0]*cos(2*t)+g[1]*sin(2*t);}
+  };
+
+  struct test_kappa_func{
+    test_kappa_func(LensHalo& halo,PosType my_r): halo(halo),r(my_r){};
+    LensHalo& halo;
+    PosType r;
+    PosType a[2] = {0,0},x[2] = {0,0};
+    KappaType k = 0,g[3] = {0,0,0} ,p=0;
+    double operator ()(PosType t) {x[0]=r*cos(t); x[1]=r*sin(t); halo.force_halo(a,&k,g,&p,x);return k;}
   };
   
   const static int Nmod = 32;
@@ -329,6 +355,7 @@ protected:
       halo->force_halo(alpha,&kappa,gamma,&phi,x);
       
       PosType alpha_r = -alpha[0]*cos(theta) - alpha[1]*sin(theta);
+      //std::cout << alpha[0] << "  " << alpha[1] << std::endl;
       assert( alpha_r == alpha_r );
       //std::cout << theta << "  " << alpha_r << std::endl;
       return alpha_r;
