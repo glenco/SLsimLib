@@ -21,7 +21,7 @@ class LensHaloFit : public LensHaloBaseNSIE{
 public:
   //LensHaloAnaNSIE(InputParams& params,bool verbose = false);
   /// Creates a AnaLens which initially has no mass,  Use FindLensSimple() to give it mass
-  LensHaloFit(const COSMOLOGY& cosmo, int MyNmodes);
+  LensHaloFit(const COSMOLOGY& cosmo, int MyNmodes, PosType beta,PosType zlensref, PosType zsourceref);
 	~LensHaloFit();
 
   void PrintLens(bool show_substruct,bool show_stars);
@@ -39,15 +39,10 @@ public:
   /// get the core radius
   virtual PosType get_rcore(){return 0.0;};
   
-  
-  /// Initialise the lens with velocity dispersion, axis ratio, position angle and core radius
-//  void InitializeLensHaloFit(PosType my_sigma, PosType my_fratio, PosType my_pa, PosType my_rcore)
-//  {
-//    sigma = my_sigma ; fratio = my_fratio ; pa = my_pa ; rcore = my_rcore ;
-//  }
-  
+
   /// set the number of perturbation modes -- Does the same as LensHaloBaseNSIE::getPerturb_Nmodes().
   void setNmodes(int my_Nmodes){perturb_Nmodes = my_Nmodes;};
+
   /// get the number of perturbation modes
   int getNmodes(){return perturb_Nmodes;};
   /// set the perturbation modes
@@ -57,7 +52,9 @@ public:
   /// get the ouput of ElliptisizeLens :
   double * getq() { return qpriv; };
 
-
+  /// set the velocity dispersion
+  void set_sigma(PosType my_sigma){sigma = my_sigma; };
+  
 private:
 
    // Things added to manipulate and fit lenses.
@@ -73,6 +70,9 @@ private:
   
   // output of ElliptisizeLens
   double qpriv[7];
+
+  //void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *xg,double beta
+  //               ,int N,int *degen,double *mod,double **v,double **dx);
 
   //void assignParams(InputParams& params);
 };
@@ -174,7 +174,5 @@ void MarkPoints(TreeHndl s_tree,LensHaloAnaNSIE *lens,bool sb_cut,short invert);
 void _MarkPoints(TreeHndl s_tree,LensHaloAnaNSIE *lens,bool *sbcut);
 bool InSource(double *ray,LensHaloAnaNSIE *lens,bool surfacebright);
 
-void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *xg,double beta
-		 ,int N,int *degen,double *mod,double **v,double **dx);
 
 #endif

@@ -57,6 +57,8 @@ namespace Utilities
   
   PosType **PosTypeMatrix(long rows, long cols);
   void free_PosTypeMatrix(PosType **matrix, long rows, long cols);
+  PosType **PosTypeMatrix(long rows1,long rows2, long cols1, long cols2);
+  void free_PosTypeMatrix(PosType **matrix, long rows1,long rows2, long cols1, long cols2);
   
   /// 3 dimensional matrix, fixed size
   template<typename T>
@@ -1226,13 +1228,15 @@ namespace Utilities
 /*
 #define ITMAX 100
 #define SHFT(a,b,c,d) (a)=(b);(b)=(c);(c)=(d);
-
+*/
 /** \brief One dimensional minimization routine
  *
  *  ax < bx < cx and functor(ax) > functor(bx) and functor(cx) > functor(bx)
  * returns functor(xmin)
  * Based on NR's brent() function
  *
+ */
+/*
 template <typename T>
 double bart(
             double ax     /// lower boundary of x range

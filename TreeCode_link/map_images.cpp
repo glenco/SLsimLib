@@ -29,8 +29,7 @@ void ImageFinding::map_images(
 		,Source *source
 		,GridHndl grid          /// Tree of grid points
 		,int *Nimages           /// number of images found
-		,ImageInfo *imageinfo   /// information on each image
-		,int NimageMax          /// Size of imageinfo array on entry.  This could increase if more images are found
+    ,std::vector<ImageInfo> &imageinfo   /// information on each image
 		,PosType xmax            /// Maximum size of source on image plane.  The entire source must be within this distance from
 		                        ///  source->getX()[]
 		,PosType xmin            /// The smallest scale of the source measured on the lens plane.  The more accurate these
@@ -50,7 +49,9 @@ void ImageFinding::map_images(
 	assert(lens);
 	assert(grid->s_tree);
 	assert(grid->i_tree);
-	assert(imageinfo->imagekist);
+	assert(imageinfo[0].imagekist);
+      
+      if(imageinfo.size() < 2) imageinfo.resize(2);
 
 	unsigned long Nimagepoints,Ntmp;
 	PosType tmp,area_tot,flux;
@@ -74,7 +75,7 @@ void ImageFinding::map_images(
 
 	unsigned long tmp_count = 0;
 
-	ImageInfo *sourceinfo = new ImageInfo[NimageMax];
+  std::vector<ImageInfo> sourceinfo(imageinfo.size());
 
 	if(FindCenter){
 		Point *newpoint;
@@ -97,29 +98,29 @@ void ImageFinding::map_images(
 				newpoint->surface_brightness = sb;
 				newpoint->gridsize = 2*xmax/(Ntmp-1);
 
-				sourceinfo->imagekist->InsertAfterCurrent(newpoint);
+				sourceinfo[0].imagekist->InsertAfterCurrent(newpoint);
 
 				++tmp_count;
 				source_flux += sb*pow(newpoint->gridsize,2);
 			}
 		}
 
-		if(sourceinfo->imagekist->Nunits() == 0){
+		if(sourceinfo[0].imagekist->Nunits() == 0){
 			Nsources = 0;
 			*Nimages = 0;
-			for(i=0; i < NimageMax ; ++i) imageinfo[i].area = 0.0;
+			for(i=0; i < sourceinfo.size() ; ++i) imageinfo[i].area = 0.0;
 
-			delete[] sourceinfo;
+			sourceinfo.clear();
 			return;
 		}else{
-			DirtyFoF(sourceinfo,&Nsources,0,NimageMax);
+			DirtyFoF(sourceinfo,&Nsources,0);
 		}
-		if(verbose) printf(" number of source points found %li in %i sources\n",sourceinfo->imagekist->Nunits(),Nsources);
+		if(verbose) printf(" number of source points found %li in %i sources\n",sourceinfo[0].imagekist->Nunits(),Nsources);
 
 		// brakes source into four if there is only one
 		//if(Nsources == 1 && sourceinfo->imagekist->Nunits() > 100) DirtyDivider(sourceinfo,&Nsources,NimageMax,(sourceinfo->imagekist->Nunits()/4+1));
 
-		if(verbose) printf(" number of source points found %li in %i sources divided\n",sourceinfo->imagekist->Nunits(),Nsources);
+		if(verbose) printf(" number of source points found %li in %i sources divided\n",sourceinfo[0].imagekist->Nunits(),Nsources);
 
 		// split source into groups
 
@@ -157,7 +158,7 @@ void ImageFinding::map_images(
 
 		}
 
-		if(sourceinfo->imagekist->Nunits() == 0) rs[0] = xmin;
+		if(sourceinfo[0].imagekist->Nunits() == 0) rs[0] = xmin;
 
 		// **** what if undetected or one point in image
 		// refine both grids to each source
@@ -168,7 +169,7 @@ void ImageFinding::map_images(
 			center[0] = source->getX()[0];
 			center[1] = source->getX()[1];
 		}
-		ImageFinding::find_images_kist(lens,center,rs[0],grid,Nimages,imageinfo,NimageMax,&Nimagepoints,initial_size,true,0,false);
+		ImageFinding::find_images_kist(lens,center,rs[0],grid,Nimages,imageinfo,&Nimagepoints,initial_size,true,0,false);
 		for(i=1;i<Nsources;++i){
 			if(sourceinfo[i].imagekist->Nunits() > 0){
 				center[0] = sourceinfo[i].centroid[0];
@@ -177,7 +178,7 @@ void ImageFinding::map_images(
 				center[0] = source->getX()[0];
 				center[1] = source->getX()[1];
 			}
-			ImageFinding::find_images_kist(lens,center,rs[i],grid,Nimages,imageinfo,NimageMax,&Nimagepoints,xmax,true,0,false);
+			ImageFinding::find_images_kist(lens,center,rs[i],grid,Nimages,imageinfo,&Nimagepoints,xmax,true,0,false);
 		}
 
 		// free array of sourceinfo's'
@@ -186,13 +187,13 @@ void ImageFinding::map_images(
 		if(verbose) std::cout << "number of grid points before ImageFinding::find_images_kist: "<< grid->getNumberOfPoints() << std::endl;
 		//ImageFinding::find_images_kist(lens,source->getX(),xmin,grid,Nimages,imageinfo,NimageMax,&Nimagepoints
 		//		,0,true,0,false,true);
-		ImageFinding::find_images_kist(lens,source->getX(),xmin,grid,Nimages,imageinfo,NimageMax,&Nimagepoints
+		ImageFinding::find_images_kist(lens,source->getX(),xmin,grid,Nimages,imageinfo,&Nimagepoints
 				,0,false,0,verbose);
 		if(verbose) std::cout << "number of grid points after ImageFinding::find_images_kist: "<< grid->getNumberOfPoints() << std::endl;
 		Nsources = 1;
-		sourceinfo->centroid[0] = source->getX()[0];
-		sourceinfo->centroid[1] = source->getX()[1];
-		sourceinfo->area = source->getTotalFlux();
+		sourceinfo[0].centroid[0] = source->getX()[0];
+		sourceinfo[0].centroid[1] = source->getX()[1];
+		sourceinfo[0].area = source->getTotalFlux();
 	}
 
   
@@ -387,12 +388,12 @@ void ImageFinding::map_images(
 	tmp = grid->RefreshSurfaceBrightnesses(source);
 
 	if(tmp == 0.0){  // no flux was found
-	  imageinfo->imagekist->Empty();
+	  imageinfo[0].imagekist->Empty();
 	  *Nimages = 0;
-	  for(i=0; i < NimageMax ; ++i) imageinfo[i].area = 0.0;
+	  for(i=0; i < imageinfo.size() ; ++i) imageinfo[i].area = 0.0;
 	  return;
 	}
-	assert(tmp > 0.0 || imageinfo->imagekist->Nunits() == 0);
+	assert(tmp > 0.0 || imageinfo[0].imagekist->Nunits() == 0);
 
 	/*/********** test lines **********************
 	PointsWithinKist_iter(grid->s_tree,source->getX(),0,source->source_r_out,imageinfo->imagekist);
@@ -415,46 +416,46 @@ void ImageFinding::map_images(
 	/ *******************************************************/
 
 	//PointsWithinKist(grid->s_tree,source->getX(),source->source_r_out,imageinfo->imagekist,0);
-	grid->s_tree->PointsWithinKist_iter(source->getX(),0,source->getRadius(),imageinfo->imagekist);
+	grid->s_tree->PointsWithinKist_iter(source->getX(),0,source->getRadius(),imageinfo[0].imagekist);
 
 
 	// move from source plane to image plane
-	imageinfo->imagekist->TranformPlanes();
+	imageinfo[0].imagekist->TranformPlanes();
 
 	// take out points with no flux
-	if(verbose) printf("before taking out zero surface brightness points: %li\n",imageinfo->imagekist->Nunits());
-	Ntmp = imageinfo->imagekist->Nunits();
-	for(i=0,imageinfo->imagekist->MoveToTop(),area_tot=0,maxflux=0.0; i < Ntmp ; ++i ){
+	if(verbose) printf("before taking out zero surface brightness points: %li\n",imageinfo[0].imagekist->Nunits());
+	Ntmp = imageinfo[0].imagekist->Nunits();
+	for(i=0,imageinfo[0].imagekist->MoveToTop(),area_tot=0,maxflux=0.0; i < Ntmp ; ++i ){
 
-		flux = imageinfo->imagekist->getCurrent()->surface_brightness * pow(imageinfo->imagekist->getCurrent()->gridsize,2);
+		flux = imageinfo[0].imagekist->getCurrent()->surface_brightness * pow(imageinfo[0].imagekist->getCurrent()->gridsize,2);
 		maxflux = MAX(flux,maxflux);
 		area_tot += flux;
 
-		if(imageinfo->imagekist->getCurrent()->surface_brightness > 0){
+		if(imageinfo[0].imagekist->getCurrent()->surface_brightness > 0){
 
-			imageinfo->imagekist->getCurrent()->in_image = YES;
-			imageinfo->imagekist->getCurrent()->image->in_image = YES;
-			imageinfo->imagekist->Down();
+			imageinfo[0].imagekist->getCurrent()->in_image = YES;
+			imageinfo[0].imagekist->getCurrent()->image->in_image = YES;
+			imageinfo[0].imagekist->Down();
 		}else{
-			imageinfo->imagekist->getCurrent()->in_image = NO;
-			imageinfo->imagekist->getCurrent()->image->in_image = NO;
-			if(imageinfo->imagekist->AtTop()) go = false; else go = true;
-			imageinfo->imagekist->TakeOutCurrent();
-			if(go) imageinfo->imagekist->Down();
+			imageinfo[0].imagekist->getCurrent()->in_image = NO;
+			imageinfo[0].imagekist->getCurrent()->image->in_image = NO;
+			if(imageinfo[0].imagekist->AtTop()) go = false; else go = true;
+			imageinfo[0].imagekist->TakeOutCurrent();
+			if(go) imageinfo[0].imagekist->Down();
 		}
 
 	}
 	if(maxflux == 0 ) maxflux = 1.0;
-	if(verbose) printf("after taking out zero surface brightness points: %li\n",imageinfo->imagekist->Nunits());
+	if(verbose) printf("after taking out zero surface brightness points: %li\n",imageinfo[0].imagekist->Nunits());
 
-	if(imageinfo->imagekist->Nunits() == 0){
+	if(imageinfo[0].imagekist->Nunits() == 0){
 		*Nimages = 0;
-		for(i=0; i < NimageMax ; ++i) imageinfo[i].area = 0.0;
+		for(i=0; i < imageinfo.size() ; ++i) imageinfo[i].area = 0.0;
 		return;
 	}
 
 	// divide up images
-	if(divide_images) divide_images_kist(grid->i_tree,imageinfo,Nimages,NimageMax);
+	if(divide_images) divide_images_kist(grid->i_tree,imageinfo,Nimages);
 	else *Nimages = 1;
 	if(verbose) printf("number of images after first division is %i\n",*Nimages);
 
@@ -518,7 +519,7 @@ void ImageFinding::map_images(
 	 *******************************************************/
 	i=0;
 	while( ImageFinding::refine_grid_on_image(lens,source,grid,maxflux,imageinfo,Nimages
-                                            ,sourceinfo,Nsources,NimageMax,FracResTarget
+                                            ,sourceinfo,Nsources,FracResTarget
                                             ,criterion,divide_images) > 0 ) ++i;
 
 	//printf("i=%i Nold=%li\n",i,Nold);
@@ -569,7 +570,6 @@ void ImageFinding::map_images(
 		//                                    ,imageinfo[i].Npoints);
 	}
 
-	delete[] sourceinfo;
 	return ;
 }
 
@@ -587,8 +587,7 @@ void ImageFinding::map_images_fixedgrid(
                 Source *source
                 ,GridHndl grid          /// Tree of grid points
                 ,int *Nimages           /// number of images found
-                ,ImageInfo *imageinfo   /// information on each image
-                ,int NimageMax          /// Size of imageinfo array on entry.  This could increase if more images are found
+                ,std::vector<ImageInfo> &imageinfo   /// information on each image
                 ,PosType xmax            /// Maximum size of source on image plane.  The entire source must be within this distance from
                                         ///  source->getX()[].  Decreasing it will make the code run faster.  Making xmax much bigger than
                                         /// the grid boundaries will check all points for surface brightness.
@@ -596,68 +595,70 @@ void ImageFinding::map_images_fixedgrid(
                 ,bool find_borders      /// if true will find the inner and outer borders of each image
   ){
   
+  if(imageinfo.size() < 2) imageinfo.resize(2);
+
 	assert(grid->s_tree);
 	assert(grid->i_tree);
-	assert(imageinfo->imagekist);
+	assert(imageinfo[0].imagekist);
   
-  imageinfo->area = 0.0;
-  imageinfo->area_error = 0.0;
+  imageinfo[0].area = 0.0;
+  imageinfo[0].area_error = 0.0;
 
-  imageinfo->innerborder->Empty();
-  imageinfo->outerborder->Empty();
+  imageinfo[0].innerborder->Empty();
+  imageinfo[0].outerborder->Empty();
   
   grid->RefreshSurfaceBrightnesses(source);
   grid->ClearAllMarks();  // TODO: might be nice to elliminate the need for this
 
   PosType x[2];
   
-  grid->s_tree->PointsWithinKist(source->getX(), xmax, imageinfo->imagekist, 0);
+  grid->s_tree->PointsWithinKist(source->getX(), xmax, imageinfo[0].imagekist, 0);
   
   bool move;
   // Assign surface brightnesses and remove points from image without flux
-  for(imageinfo->imagekist->MoveToTop();!(imageinfo->imagekist->OffBottom());){
+  for(imageinfo[0].imagekist->MoveToTop();!(imageinfo[0].imagekist->OffBottom());){
     
-    x[0] = imageinfo->imagekist->getCurrent()->x[0] - source->getX()[0];
-    x[1] = imageinfo->imagekist->getCurrent()->x[1] - source->getX()[1];
+    x[0] = imageinfo[0].imagekist->getCurrent()->x[0] - source->getX()[0];
+    x[1] = imageinfo[0].imagekist->getCurrent()->x[1] - source->getX()[1];
     
-    imageinfo->imagekist->getCurrent()->surface_brightness
-    = imageinfo->imagekist->getCurrent()->image->surface_brightness
+    imageinfo[0].imagekist->getCurrent()->surface_brightness
+    = imageinfo[0].imagekist->getCurrent()->image->surface_brightness
       //= source->SurfaceBrightness( x );
-    = source->SurfaceBrightness(imageinfo->imagekist->getCurrent()->x);
+    = source->SurfaceBrightness(imageinfo[0].imagekist->getCurrent()->x);
     
-    imageinfo->area += imageinfo->imagekist->getCurrent()->surface_brightness;
+    imageinfo[0].area += imageinfo[0].imagekist->getCurrent()->surface_brightness;
     
-    if(imageinfo->imagekist->getCurrent()->surface_brightness == 0.0){
-      imageinfo->imagekist->getCurrent()->in_image = NO;  // re-set marks
-			imageinfo->imagekist->getCurrent()->image->in_image = NO;  // re-set marks
-      move = imageinfo->imagekist->AtTop();
-      imageinfo->imagekist->TakeOutCurrent();
-      if(!move) imageinfo->imagekist->Down();
+    if(imageinfo[0].imagekist->getCurrent()->surface_brightness == 0.0){
+      imageinfo[0].imagekist->getCurrent()->in_image = NO;  // re-set marks
+			imageinfo[0].imagekist->getCurrent()->image->in_image = NO;  // re-set marks
+      move = imageinfo[0].imagekist->AtTop();
+      imageinfo[0].imagekist->TakeOutCurrent();
+      if(!move) imageinfo[0].imagekist->Down();
     }else{
-      imageinfo->imagekist->getCurrent()->in_image = YES;  // re-set marks
-			imageinfo->imagekist->getCurrent()->image->in_image = YES;  // re-set marks
-      imageinfo->imagekist->Down();
+      imageinfo[0].imagekist->getCurrent()->in_image = YES;  // re-set marks
+			imageinfo[0].imagekist->getCurrent()->image->in_image = YES;  // re-set marks
+      imageinfo[0].imagekist->Down();
     }
     
   }
   
-  if(imageinfo->imagekist->Nunits() == 0){
+  if(imageinfo[0].imagekist->Nunits() == 0){
     *Nimages = 0;
     return;
   }
   
   *Nimages = 1;
-  imageinfo->imagekist->TranformPlanes();
+  imageinfo[0].imagekist->TranformPlanes();
   
   int i;
 
   // divide up images
-  if(divide_images) divide_images_kist(grid->i_tree,imageinfo,Nimages,NimageMax);
+  if(divide_images) divide_images_kist(grid->i_tree,imageinfo,Nimages);
  
   // calculate grid range for images
   for(i=0;i<*Nimages;++i){
     
-    imageinfo[i].gridrange[0] = imageinfo->gridrange[1] = 0.0;
+    imageinfo[i].gridrange[0] = imageinfo[0].gridrange[1] = 0.0;
     imageinfo[i].gridrange[2] = 1.0e99; // minimum grid size in image
     
     for(imageinfo[i].imagekist->MoveToTop();!(imageinfo[i].imagekist->OffBottom());imageinfo[i].imagekist->Down()){
@@ -715,8 +716,9 @@ void ImageFinding::map_images_fixedgrid(
  *
  */
 int ImageFinding::refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,PosType maxflux
-                                       ,ImageInfo *imageinfo,int *Nimages,ImageInfo *sourceinfo
-                                       ,int Nsources,int NimageMax,const PosType res_target
+                                       ,std::vector<ImageInfo> &imageinfo,int *Nimages
+                                       ,std::vector<ImageInfo> &sourceinfo
+                                       ,int Nsources,const PosType res_target
                                        ,ExitCriterion criterion,bool divide_images,bool batch){
 
 	//printf("entering refine_grid\n");
@@ -990,16 +992,16 @@ int ImageFinding::refine_grid_on_image(Lens *lens,Source *source,GridHndl grid,P
 
   if( number_of_refined == 0 || (divide_images && redivide) ){
 		// Put all the images together.
-		imageinfo->imagekist->MoveToBottom();
+		imageinfo[0].imagekist->MoveToBottom();
 		for(i=1 ; i < *Nimages ; ++i){
 			imageinfo[i].imagekist->MoveToTop();
 			while(imageinfo[i].imagekist->Nunits() > 0)
-					imageinfo->imagekist->InsertAfterCurrent(imageinfo[i].imagekist->TakeOutCurrent());
-          imageinfo->imagekist->Down();
+					imageinfo[0].imagekist->InsertAfterCurrent(imageinfo[i].imagekist->TakeOutCurrent());
+          imageinfo[0].imagekist->Down();
 		}
 
 		// divide up images
-		divide_images_kist(grid->i_tree,imageinfo,Nimages,NimageMax);
+		divide_images_kist(grid->i_tree,imageinfo,Nimages);
 
 		// find borders again and include them in the image
 		for(i=0 ; i < (*Nimages) ; ++i){
@@ -1058,13 +1060,13 @@ void ImageFinding::check_sb_add(Source *source,ImageInfo *imageinfo,Point *i_poi
 
 			// if new point has flux add to image
 			if(i_points[k].surface_brightness > 0.0){
-				imageinfo->imagekist->InsertAfterCurrent(&(i_points[k]));
-				imageinfo->imagekist->Down();
+				imageinfo[0].imagekist->InsertAfterCurrent(&(i_points[k]));
+				imageinfo[0].imagekist->Down();
 
 				i_points[k].in_image = YES;
 				i_points[k].image->in_image = YES;
 
-				imageinfo->area += pow(i_points[k].gridsize,2)*(i_points[k].surface_brightness/maxflux);
+				imageinfo[0].area += pow(i_points[k].gridsize,2)*(i_points[k].surface_brightness/maxflux);
 
 			}else{
 				i_points[k].in_image =  i_points[k].image->in_image = NO;

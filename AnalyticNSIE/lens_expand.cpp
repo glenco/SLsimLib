@@ -39,8 +39,8 @@ PosType lens_expand(PosType beta,PosType *mod,int Nmodes,PosType const *x,PosTyp
 	  gamma[0]=gamma[1]=0;
 	  return 0.0;
   }
-
-  r=sqrt(x[0]*x[0] + x[1]*x[1]);  
+  
+  r=sqrt(x[0]*x[0] + x[1]*x[1]);
     theta=atan2(x[1],x[0]);
     cosx=x[0]/r;
     sinx=x[1]/r;

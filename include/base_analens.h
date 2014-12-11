@@ -144,7 +144,8 @@ public:
   KappaType phiNSIE(PosType const *xt,PosType f,PosType bc,PosType theta);
   /// returns zsource_reference
   float get_zsourceref() { return zsource_reference ; }
-
+  
+  
 protected:
 
   /// critical surface density

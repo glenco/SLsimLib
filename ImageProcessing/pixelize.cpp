@@ -161,15 +161,22 @@ PixelMap::PixelMap(
     }
     catch(CCfits::HDU::NoSuchKeyword&)
     {
-      double cd12, cd21, cd22;
-      h0.readKey("CD1_1", my_res);
-      h0.readKey("CD1_2", cd12);
-      h0.readKey("CD2_1", cd21);
-      h0.readKey("CD2_2", cd22);
-      if(std::abs(my_res) - std::abs(cd22) > 1e-6)
-        throw std::runtime_error("non-square pixels in FITS file " + fitsfilename);
-      if(cd12 || cd21)
-        throw std::runtime_error("pixels not aligned with coordingate in FITS file " + fitsfilename);
+      try{
+        double cd12, cd21, cd22;
+        h0.readKey("CD1_1", my_res);
+        h0.readKey("CD1_2", cd12);
+        h0.readKey("CD2_1", cd21);
+        h0.readKey("CD2_2", cd22);
+        if(std::abs(my_res) - std::abs(cd22) > 1e-6)
+          throw std::runtime_error("non-square pixels in FITS file " + fitsfilename);
+        if(cd12 || cd21)
+          throw std::runtime_error("pixels not aligned with coordingate in FITS file " + fitsfilename);
+      }
+      catch(CCfits::HDU::NoSuchKeyword&){
+        double ps;
+        h0.readKey("PHYSICALSIZE",ps);
+        my_res = ps/Nx;
+      }
     }
     resolution = fabs(my_res)*pi/180.;
   }
@@ -447,6 +454,15 @@ void PixelMap::AddImages(
   }
   
 	return;
+}
+
+void PixelMap::AddImages(
+                         std::vector<ImageInfo> &imageinfo   /// An array of ImageInfo-s.  There is no reason to separate images for this routine
+                         ,int Nimages           /// Number of images on input.
+                         ,float rescale         /// rescales the surface brightness while leaving the image unchanged,
+///  see full notes
+){
+  AddImages(imageinfo.data(),Nimages,rescale);
 }
 
 /// returns the grid points within the branch

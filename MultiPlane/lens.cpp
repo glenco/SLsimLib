@@ -34,8 +34,8 @@ namespace
 /**
  * \brief Creates an empty lens. Main halos and field halos need to be inserted by hand from the user.
  */
-Lens::Lens(long* my_seed, CosmoParamSet cosmoset,bool verbose)
-: seed(my_seed), cosmo(cosmoset), central_point_sphere(1,0,0), inv_ang_screening_scale(0)
+Lens::Lens(long* my_seed,PosType z_source, CosmoParamSet cosmoset,bool verbose)
+: seed(my_seed), cosmo(cosmoset),zsource(z_source), central_point_sphere(1,0,0), inv_ang_screening_scale(0)
 {
   init_seed = 0;
   
@@ -47,13 +47,18 @@ Lens::Lens(long* my_seed, CosmoParamSet cosmoset,bool verbose)
 	
 	read_sim_file = false;
 	
-	charge = 4*pi*Grav;
+  charge = 4*pi*Grav;
 	if(verbose) std::cout << "charge: " << charge << std::endl;
 	
 	// initially let source be the one inputed from parameter file
 	index_of_new_sourceplane = -1;
 	toggle_source_plane = false;
-	
+  flag_switch_deflection_off = false;
+  flag_switch_lensing_off = false;
+  
+  //charge = cosmo.angDist(zsource)/cosmo.angDist(0.3)/cosmo.angDist(0.3,zsource);
+  //charge = 4*pi/cosmo.angDist(0.3);
+  combinePlanes(true);
 	std:: cout << " done " << std:: endl;
 }
 
@@ -97,7 +102,7 @@ Lens::Lens(Lens &lens)
 : cosmo(lens.cosmo), central_point_sphere(1,0,0)
 {
   if(init_seed == 0){
-    std::cout << "Cann't use copy constructor on Lens that was not created from a parameter file!" << std::endl;
+    std::cout << "Can't use copy constructor on Lens that was not created from a parameter file!" << std::endl;
     throw std::runtime_error("cannot use copy constructor");
   }
   
@@ -267,7 +272,7 @@ void Lens::assignParams(InputParams& params,bool verbose)
 			}
 			else
 			{
-				field_min_mass = 0.0;
+        field_min_mass = 0.0;
 				sim_input_flag = true;
         
         if(!params.get("field_input_simulation_format",field_input_sim_format)){

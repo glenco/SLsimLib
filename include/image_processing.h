@@ -50,7 +50,8 @@ public:
 	
 	void Clean();
 
-	void AddImages(ImageInfo *imageinfo,int Nimages,float rescale = 1.);
+  void AddImages(ImageInfo *imageinfo,int Nimages,float rescale = 1.);
+  void AddImages(std::vector<ImageInfo> &imageinfo,int Nimages,float rescale = 1.);
 	void AddCurve(ImageInfo *curve,double value);
   
 	void drawline(double x1[],double x2[],double value);
@@ -83,7 +84,7 @@ public:
 	PixelMap& operator*=(PosType b);
 	friend PixelMap operator*(const PixelMap&, PosType b);
 	
-	const std::valarray<double>& data() const { return map; }
+	std::valarray<double>& data() { return map; }
 	
 	bool agrees(const PixelMap& other) const;
 	
@@ -155,6 +156,11 @@ public:
     }
   }
 
+  void AdaptiveSmooth(PosType value){
+    
+    std::valarray<double> tmp = Utilities::AdaptiveSmooth(data(),Nx,Ny,value);
+    map = tmp;
+  }
 
 #endif
 

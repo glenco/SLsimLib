@@ -44,7 +44,7 @@ Point *TreeStruct::NearestNeighborKist(const PosType* center,int Nneighbors,Kist
     Nneighbors = top->npoints-1;
   }
 //  EmptyList(neighborlist);
-  neighborkist->Empty();
+    neighborkist->Empty();
   if(Nneighbors <= 0) return NULL;
 /*
   if(count==0){
@@ -1514,18 +1514,23 @@ bool ImageInfo::constant(
 
 PosType ImageInfo::ConcaveHullImageArea(bool useborder){
   
-  size_t i;
+  //size_t i;
   std::vector<Point *> copy;
   if(useborder){
-    copy.resize(innerborder->Nunits());
-    for(i=0,innerborder->MoveToTop();!(innerborder->OffBottom());innerborder->Down(),++i){
-      copy[i] = innerborder->getCurrent();
-    }
+    //copy.resize(innerborder->Nunits());
+    //for(i=0,innerborder->MoveToTop();!(innerborder->OffBottom());innerborder->Down(),++i){
+    //  copy[i] = innerborder->getCurrent();
+    //}
+    
+    copy = innerborder->copytovector();
   }else{
-    copy.resize(imagekist->Nunits());
-    for(i=0,imagekist->MoveToTop();!(imagekist->OffBottom());imagekist->Down(),++i){
-      copy[i] = imagekist->getCurrent();
-    }
+    //copy.resize(imagekist->Nunits());
+    //for(i=0,imagekist->MoveToTop();!(imagekist->OffBottom());imagekist->Down(),++i){
+    //  copy[i] = imagekist->getCurrent();
+    //}
+    
+    copy = imagekist->copytovector();
+
   }
   //std::vector<Point *> Utilities::concave_hull(std::vector<Point *> &P,int k );
   
@@ -1538,21 +1543,23 @@ PosType ImageInfo::ConcaveHullImageArea(bool useborder){
 
 PosType ImageInfo::ConcaveHullSourceArea(bool useborder){
   
-  size_t i;
+  //size_t i;
   std::vector<Point *> copy;
   if(useborder){
     innerborder->TranformPlanes();
-    copy.resize(innerborder->Nunits());
-    for(i=0,innerborder->MoveToTop();!(innerborder->OffBottom());innerborder->Down(),++i){
-      copy[i] = innerborder->getCurrent();
-    }
+    //copy.resize(innerborder->Nunits());
+    //for(i=0,innerborder->MoveToTop();!(innerborder->OffBottom());innerborder->Down(),++i){
+    //  copy[i] = innerborder->getCurrent();
+    //}
+    copy = innerborder->copytovector();
     innerborder->TranformPlanes();
   }else{
-    copy.resize(imagekist->Nunits());
+    //copy.resize(imagekist->Nunits());
     imagekist->TranformPlanes();
-    for(i=0,imagekist->MoveToTop();!(imagekist->OffBottom());imagekist->Down(),++i){
-      copy[i] = imagekist->getCurrent();
-    }
+    //for(i=0,imagekist->MoveToTop();!(imagekist->OffBottom());imagekist->Down(),++i){
+    //  copy[i] = imagekist->getCurrent();
+    //}
+    copy = imagekist->copytovector();
     imagekist->TranformPlanes();
   }
   //std::vector<Point *> Utilities::concave_hull(std::vector<Point *> &P,int k );

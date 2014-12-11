@@ -96,7 +96,7 @@ typedef struct Grid* GridHndl;
 // in image_finder_kist.c
 namespace ImageFinding{
   void find_images_kist(LensHndl lens,PosType *y_source,PosType r_source,GridHndl grid
-                        ,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
+                        ,int *Nimages,std::vector<ImageInfo> &imageinfo,unsigned long *Nimagepoints
                         ,PosType initial_size,bool splitimages,short edge_refinement
                         ,bool verbose = false);
   
@@ -104,26 +104,25 @@ namespace ImageFinding{
                          ,PosType xtol2,PosType &fret);
   
   void find_images_microlens(LensHndl lens,double *y_source,double r_source,GridHndl grid
-                             ,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
+                             ,int *Nimages,std::vector<ImageInfo> &imageinfo,unsigned long *Nimagepoints
                              ,double initial_size,double mu_min,bool splitimages,short edge_refinement
                              ,bool verbose);
   
   void find_images_microlens_exper(LensHndl lens,PosType *y_source,PosType r_source
-                                   ,GridHndl grid,int *Nimages,ImageInfo *imageinfo,const int NimageMax
-                                   ,unsigned long *Nimagepoints,PosType initial_size ,PosType mu_min
+                                   ,GridHndl grid,int *Nimages,std::vector<ImageInfo> &imageinfo,unsigned long *Nimagepoints,PosType initial_size ,PosType mu_min
                                    ,bool splitimages,short edge_refinement,bool verbose);
   
   void image_finder_kist(LensHndl lens, PosType *y_source,PosType r_source,GridHndl grid
-                         ,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
+                         ,int *Nimages,std::vector<ImageInfo> &imageinfo,unsigned long *Nimagepoints
                          ,short splitparities,short true_images);
   
   int refine_grid_kist(LensHndl lens,GridHndl grid,ImageInfo *imageinfo
                        ,int Nimages,double res_target,short criterion
                        ,Kist<Point> * newpointkist = NULL,bool batch=true);
   
-  void find_crit(LensHndl lens,GridHndl grid,ImageInfo *critcurve,int maxNcrits,int *Ncrits
+  void find_crit(LensHndl lens,GridHndl grid,std::vector<ImageInfo> &critcurve,int *Ncrits
                  ,double resolution,bool *orderingsuccess,bool ordercurve,bool dividecurves,double invmag_min = 0.0,bool verbose = false);
-  void find_crit2(LensHndl lens,GridHndl grid,ImageInfo *critcurve,int maxNcrits,int *Ncrits
+  void find_crit2(LensHndl lens,GridHndl grid,std::vector<ImageInfo> &critcurve,int *Ncrits
                   ,double resolution,bool *orderingsuccess,bool ordercurve,bool dividecurves,double invmag_min = 0.0,bool verbose = false);
   
   namespace Temporary{

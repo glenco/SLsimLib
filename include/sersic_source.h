@@ -19,7 +19,7 @@
 class SourceSersic : public Source
 {
 public:
-	SourceSersic(PosType mag,PosType Reff,PosType PA,PosType my_index,PosType my_q,PosType my_z=0,const PosType *theta=0);
+	SourceSersic(PosType mag,PosType Reff,PosType PA,PosType my_index,PosType my_q,PosType my_z,const PosType *theta=0);
 	~SourceSersic();
 	
 	/// calculates radius where the surface brightness drops by a factor f with respect to the central peak

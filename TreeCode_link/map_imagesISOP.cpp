@@ -28,8 +28,7 @@ void ImageFinding::map_imagesISOP(
 		,Source *source
 		,GridHndl grid          /// Tree of grid points
 		,int *Nimages           /// number of images found
-		,ImageInfo *imageinfo   /// information on each image
-		,int NimageMax          /// Size of imageinfo array on entry.  This could increase if more images are found
+    ,std::vector<ImageInfo> &imageinfo   /// information on each image
 		,PosType rmax            /// Maximum size of source on souce plane.  The entire source must be within this distance from
 		                        ///  source->getX()[]
 		,PosType res_min        /// requred resolution of image, typically the pixel size of the final image
@@ -42,10 +41,11 @@ void ImageFinding::map_imagesISOP(
     ,bool verbose
                                   ){
 
+  if(imageinfo.size() < 2) imageinfo.resize(2);
 	assert(lens);
 	assert(grid->s_tree);
 	assert(grid->i_tree);
-	assert(imageinfo->imagekist);
+	assert(imageinfo[0].imagekist);
 
 	unsigned long Nimagepoints,Ntmp;
 	PosType tmp,area_tot,flux;
@@ -66,7 +66,7 @@ void ImageFinding::map_imagesISOP(
     << grid->getNumberOfPoints() << std::endl;
     
   ImageFinding::find_images_kist(lens,source->getX(),source->getRadius(),grid,Nimages
-                                 ,imageinfo,NimageMax,&Nimagepoints,0.0,true,0,verbose);
+                                 ,imageinfo,&Nimagepoints,0.0,true,0,verbose);
   
   //assert(*Nimages == 1);
   
@@ -84,9 +84,9 @@ void ImageFinding::map_imagesISOP(
 	tmp = grid->RefreshSurfaceBrightnesses(source);
 
 	if(tmp == 0.0){  // no flux was found
-	  imageinfo->imagekist->Empty();
+	  imageinfo[0].imagekist->Empty();
 	  *Nimages = 0;
-	  for(i=0; i < NimageMax ; ++i) imageinfo[i].area = 0.0;
+	  for(i=0; i < imageinfo.size() ; ++i) imageinfo[i].area = 0.0;
 	  return;
 	}
   
@@ -150,7 +150,7 @@ void ImageFinding::map_imagesISOP(
   }
 	if(area_tot == 0){
 		*Nimages = 0;
-		for(i=0; i < NimageMax ; ++i) imageinfo[i].area = 0.0;
+		for(i=0; i < imageinfo.size() ; ++i) imageinfo[i].area = 0.0;
 		return;
 	}
 
@@ -256,7 +256,7 @@ void ImageFinding::map_imagesISOP(
 	 *******************************************************/
     i=0;
     while( 0 < ImageFinding::refine_grid_on_imageISOP(lens,source,grid,imageinfo,Nimages
-                                                      ,Nsources,NimageMax,FracResTarget
+                                                      ,Nsources,FracResTarget
                                                       ,res_min,res_min*res_min*1.0e-3
                                                       ,criterion,divide_images) ) ++i;
       
@@ -317,8 +317,8 @@ void ImageFinding::map_imagesISOP(
  *
  */
 int ImageFinding::refine_grid_on_imageISOP(Lens *lens,Source *source,GridHndl grid
-                                           ,ImageInfo *imageinfo,int *Nimages
-                                           ,int Nsources,int NimageMax
+                                           ,std::vector<ImageInfo> &imageinfo,int *Nimages
+                                           ,int Nsources
                                            ,PosType res_target
                                            ,PosType res_min
                                            ,PosType res_source_area
@@ -509,16 +509,16 @@ int ImageFinding::refine_grid_on_imageISOP(Lens *lens,Source *source,GridHndl gr
   
   if( number_of_refined == 0 || (divide_images && redivide) ){
 		// Put all the images together.
-		imageinfo->imagekist->MoveToBottom();
+		imageinfo[0].imagekist->MoveToBottom();
 		for(i=1 ; i < *Nimages ; ++i){
 			imageinfo[i].imagekist->MoveToTop();
 			while(imageinfo[i].imagekist->Nunits() > 0)
-        imageinfo->imagekist->InsertAfterCurrent(imageinfo[i].imagekist->TakeOutCurrent());
-      imageinfo->imagekist->Down();
+        imageinfo[0].imagekist->InsertAfterCurrent(imageinfo[i].imagekist->TakeOutCurrent());
+      imageinfo[0].imagekist->Down();
 		}
     
 		// divide up images
-		divide_images_kist(grid->i_tree,imageinfo,Nimages,NimageMax);
+		divide_images_kist(grid->i_tree,imageinfo,Nimages);
     
 		// find borders again and include them in the image
 		for(i=0 ; i < (*Nimages) ; ++i){
