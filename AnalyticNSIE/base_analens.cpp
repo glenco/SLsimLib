@@ -14,7 +14,7 @@ void LensHaloBaseNSIE::force_halo(
                                   ,KappaType *kappa   /// surface mass density
                                   ,KappaType *gamma
                                   ,KappaType *phi
-                                  ,PosType const *xcm
+                                  ,PosType const *xcm /// Position in physical Mpc
                                   ,bool subtract_point /// if true contribution from a point mass is subtracted
                                   ,PosType screening   /// the factor by which to scale the mass for screening of the point mass subtraction
                                   )
@@ -61,9 +61,9 @@ void LensHaloBaseNSIE::force_halo(
   // perturbations of host lens
   if(perturb_Nmodes > 0)
   {
-    PosType xt[2]={0,0};
-    xt[0]=xcm[0] / Dl ;
-    xt[1]=xcm[1] / Dl ;
+    // PosType xt[2]={0,0};
+    // xt[0]=xcm[0] * (1+zlens) ;
+    // xt[1]=xcm[1] * (1+zlens) ;
     
     // std::cout << "perturb_beta = " << perturb_beta << " , perturb_Nmodes = " << perturb_Nmodes << std::endl ;
     
@@ -84,30 +84,29 @@ void LensHaloBaseNSIE::force_halo(
     std::cout << std::endl ;
     for(int i=0 ; i<perturb_Nmodes ; i++) std::cout << perturb_modesReversed[i] << " " ;
     std::cout << std::endl ;
-     */
+    */
     /********************************************************/
-    
-    // std::cout << "!!! xt = " << xt[0] << " " << xt[1] << " !!!" << std::endl ;
-    
-    std::cout << "!!! scaleForLensExp = " << scaleForLensExp << " !!!" << std::endl ;
-    xt[0] /= scaleForLensExp ;
-    xt[1] /= scaleForLensExp ;
-    
-    std::cout << "!!! xt = " << xt[0] << " " << xt[1] << " !!!" << std::endl ;
-    
-    // *kappa += lens_expand(perturb_beta,perturb_modesReversed,perturb_Nmodes,xt,alpha_tmp,gamma_tmp,&phi_tmp);
-    *kappa += lens_expand(perturb_beta,perturb_modes,perturb_Nmodes,xt,alpha_tmp,gamma_tmp,&phi_tmp);
-    
-    // alpha_tmp[0] = alpha_tmp[0]/(cosmo.angDist(3.5)/cosmo.angDist(0.3,3.5)) ;
-    // alpha_tmp[1] = alpha_tmp[1]/(cosmo.angDist(3.5)/cosmo.angDist(0.3,3.5)) ;
-    // std::cout << ">>> " << cosmo.angDist(3.5) << " " << cosmo.angDist(0.3,3.5) << std::endl ;
-    // std::cout << "alpha_tmp[0] = " << - alpha_tmp[0] * (4 * pi * Grav) << " , alpha_tmp[1] = " << - alpha_tmp[1] * (4 * pi * Grav) << std::endl ;
 
-    std::cout << "alpha_tmp[0] = " << alpha_tmp[0] << " , alpha_tmp[1] = " << alpha_tmp[1] << std::endl ;
+    /*
+    std::cout << "Modes in force_halo :" << std::endl ;
+    for(int i=0 ; i<perturb_Nmodes ; i++) std::cout << perturb_modes[i] << " " ;
+    std::cout << std::endl ;
+    */
     
-    alpha_tmp[0] /= (4 * pi * Grav) ;
-    alpha_tmp[1] /= (4 * pi * Grav) ;
+    COSMOLOGY cosmo (Planck1yr);
+    for(int i=0;i<3;i++) perturb_modes[i] /= cosmo.angDist(0.3) ; // Corresponds to [cosmo.angDist(0.3) * (1+zlens)] / (1+zlens)
     
+    // std::cout << "distance in force_halo : " << cosmo.angDist(0.3,3.5) << " " << cosmo.angDist(0.3,3.5) * 4.5 << std::endl ;
+    
+    // *kappa += lens_expand(perturb_beta,perturb_modes,perturb_Nmodes,xcm,alpha_tmp,gamma_tmp,&phi_tmp);
+    *kappa += lens_expand(perturb_beta,perturb_modes,perturb_Nmodes-1,xcm,alpha_tmp,gamma_tmp,&phi_tmp);
+    
+    std::cout << "    alpha in force_halo : " << alpha_tmp[0] << " " << alpha_tmp[1] << std::endl ;
+    
+    alpha_tmp[0] = alpha_tmp[0]/(4*pi*Grav * cosmo.angDist(0.3,3.5) * (1+3.5)) ;
+    alpha_tmp[1] = alpha_tmp[1]/(4*pi*Grav * cosmo.angDist(0.3,3.5) * (1+3.5)) ;
+    
+    for(int i=0;i<3;i++) perturb_modes[i] *= cosmo.angDist(0.3) ; // Corresponds to [cosmo.angDist(0.3) * (1+zlens)] / (1+zlens)
     
     // As before :
     alpha[0] += alpha_tmp[0];

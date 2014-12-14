@@ -35,8 +35,9 @@ void LensHaloFit::FindLensSimple(
   
   FindLensSimple(imageinfo,Nimages,y,dx_sub);
   
-  std::cout << "perturbation modes" << std::endl;
-  for(int i=0;i<perturb_Nmodes;++i)  std::cout << perturb_modes[i] << std::endl;
+  std::cout << "perturbation modes (in LensHaloFit::FindLensSimple)" << std::endl;
+  for(int i=0;i<perturb_Nmodes;++i) std::cout << perturb_modes[i] << " " ;
+  std::cout << std::endl;
   
   delete[] imageinfo;
 }
@@ -92,9 +93,9 @@ void LensHaloFit::FindLensSimple(
   x_center[0] = x_center[1] = 0.0;
   
   // calculate scale to re-normalize.  Otherwise the linear algebra routines will fail.
-  for(i=0,scale=0;i<Nimages;++i)
-    scale = DMAX(scale,sqrt( pow(imageinfo[0].centroid[0] - imageinfo[i].centroid[0],2)
-                            + pow(imageinfo[0].centroid[1] - imageinfo[i].centroid[1],2) ) );
+  for(i=0,scale=0;i<Nimages;++i) scale = DMAX(scale,sqrt( pow(imageinfo[0].centroid[0] - imageinfo[i].centroid[0],2) + pow(imageinfo[0].centroid[1] - imageinfo[i].centroid[1],2) ) );
+  
+  double scale_old = scale ;
   
   for(i=0;i<Nimages;++i){
     
@@ -111,8 +112,8 @@ void LensHaloFit::FindLensSimple(
   x_center[1] /= scale;
   
   //ERROR_MESSAGE();
-  ElliptisizeLens(Nimages,Nsources,1,pairing,xob,x_center,xg,0,perturb_beta,perturb_Nmodes-1,mods,dx_sub,&re2,q); // THAT LOOKS WRONG !
-  //ElliptisizeLens(Nimages,Nsources,1,pairing,xob,x_center,xg,0,perturb_beta,perturb_Nmodes,mods,dx_sub,&re2,q);
+  ElliptisizeLens(Nimages,Nsources,1,pairing,xob,x_center,xg,0,perturb_beta,perturb_Nmodes-1,mods,dx_sub,&re2,q); // THAT LOOKS WRONG ! // THAT WAS THE UNCOMMENTED ONE ON BEN'S VERSION.
+  // ElliptisizeLens(Nimages,Nsources,1,pairing,xob,x_center,xg, 0,perturb_beta,perturb_Nmodes,mods,dx_sub,&re2,q);
   
   for(i=1;i<perturb_Nmodes;++i) perturb_modes[i] = mods[i];
   
@@ -132,21 +133,18 @@ void LensHaloFit::FindLensSimple(
     std::cout << std::endl ;
     for(int i=0;i<Nimages;++i) std::cout << "xob : " << xob[i][0] << " " << xob[i][1] << std::endl ;
     
-    // THE FUCKING PROBLEM IS THAT THE MODES ARE NOT THE GOOD ONES HERE !
-    
     for(int i=0;i<Nimages;++i){
       // xob[i][0] *=scale ; xob[i][1] *= scale ; // Doing that destroys the consistency !
-      lens_expand(perturb_beta,perturb_modes,perturb_Nmodes,xob[i],alpha,gamma,&phi);
-      // std::cout << "alpha in FindLensSimple : " << alpha[0]*scale << "  " << alpha[1]*scale << std::endl;
-      std::cout << "alpha in FindLensSimple : " << alpha[0] << "  " << alpha[1] << std::endl;
+      lens_expand(perturb_beta,perturb_modes,perturb_Nmodes-1,xob[i],alpha,gamma,&phi);
+      std::cout << "alpha in FindLensSimple : " << alpha[0]*scale << "  " << alpha[1]*scale << std::endl;
       std::cout << (xob[i][0] - alpha[0])*scale << "  " << (xob[i][1] - alpha[1])*scale << std::endl;
     }
 
   }
   // source position
-  std::cout << "i = " << i << std::endl ;
   y[0] = mods[i]*scale;
   y[1] = mods[i+1]*scale;
+  std::cout << "i = " << i << std::endl ;
   std::cout << "scale = " << scale << std::endl;
   std::cout << "source : y[0] = " << y[0] << " , y[1] = " << y[1] << std::endl;
   
@@ -158,22 +156,59 @@ void LensHaloFit::FindLensSimple(
   x_center[1] *= scale;
   
   /************** test **********************/
-  // COSMOLOGY cosmo(Planck1yr);
-  // scale *= cosmo.angDist(3.5)/(4*pi*Grav)/cosmo.angDist(0.3,3.5);
-  // COSMOLOGY cosmo(WMAP5yr);
+  COSMOLOGY cosmo(Planck1yr);
+  // Ben :
+  // scale *= cosmo.angDist(3.5)/(4*pi*Grav)/cosmo.angDist(0.3,3.5) ; // initial scale * Mpc / Msun here !
   // scale *= cosmo.angDist(zsource_reference)/(4*pi*Grav)/cosmo.angDist(zlens,zsource_reference);
   
-  // for(i=3;i<perturb_Nmodes;++i) perturb_modes[i] *= scale; // checked
+  for(i=3;i<perturb_Nmodes;i++) perturb_modes[i] /= 1. ; // checked
   /******************************************/
   
   /************** test **********************/
+  // Ben :
+  // scale /= cosmo.angDist(0.3) ; // initial scale * 1 / Msun here !
   // scale /= cosmo.angDist(zlens);
-  // scale /= cosmo.angDist(0.3);
-  // for(i=0;i<3;++i) perturb_modes[i] *= scale;
+
+  for(i=0;i<3;i++) perturb_modes[i] /= scale_old ;
   /******************************************/
   
   //Einstein_ro = 0.0; // the monople is now included in the modes
   //sigma = 0.0;
+  
+  // test solutions
+  {
+    COSMOLOGY cosmo(Planck1yr);
+    
+    PosType alpha[2];
+    KappaType gamma[2],phi;
+    
+    for(int i=0 ; i<4 ; i++)
+    {
+    // xob[i][0] *= scale_old * cosmo.angDist(0.3) / (1 + zlens) ;
+    // xob[i][1] *= scale_old * cosmo.angDist(0.3) / (1 + zlens) ;
+    xob[i][0] *= scale_old ;
+    xob[i][1] *= scale_old ;
+      // xob[i][0] *= 1 ;
+      // xob[i][1] *= 1 ;
+      // xob[i][0] *= cosmo.angDist(0.3) / (1 + zlens) ;
+      // xob[i][1] *= cosmo.angDist(0.3) / (1 + zlens) ;
+    }
+    
+    std::cout << "/// In HaloFit ///" << std::endl ;
+    std::cout << "test FindLensSimple solution" << std::endl;
+    std::cout << "perturb_beta = " << perturb_beta << " , perturb_Nmodes = " << perturb_Nmodes << std::endl ;
+    std::cout << "Modes in FindLensSimple before calling lens_expand :" << std::endl ;
+    for(int i=0 ; i<perturb_Nmodes ; i++) std::cout << perturb_modes[i] << " " ;
+    std::cout << std::endl ;
+    for(int i=0;i<Nimages;++i) std::cout << "xob : " << xob[i][0] << " " << xob[i][1] << std::endl ;
+    
+    for(int i=0;i<Nimages;++i){
+      lens_expand(perturb_beta,perturb_modes,perturb_Nmodes-1,xob[i],alpha,gamma,&phi); // The -1 is needed here too !
+      std::cout << "alpha in FindLensSimple : " << alpha[0]*scale_old << "  " << alpha[1]*scale_old << std::endl;
+      std::cout << xob[i][0] - alpha[0]*scale_old << "  " << xob[i][1] - alpha[1]*scale_old << std::endl;
+    }
+  }
+  
   
   free_dmatrix(xob,0,Nimages-1,0,1);
   free_dmatrix(xg,0,1,0,1);

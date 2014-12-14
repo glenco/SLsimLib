@@ -234,6 +234,8 @@ void *compute_rays_parallel(void *_p)
       
       ////////////////////////////////////////////////////////////////
       
+      
+      
       assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
       assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
       assert(kappa == kappa);
@@ -264,8 +266,10 @@ void *compute_rays_parallel(void *_p)
       
       xplus[0] = aa*p->i_points[i].image->x[0] - bb*xminus[0] - cc*alpha[0];
       xplus[1] = aa*p->i_points[i].image->x[1] - bb*xminus[1] - cc*alpha[1];
-      std::cout << "xplus contributions : " << aa*p->i_points[i].image->x[0] << " " << bb*xminus[0] << " " << cc*alpha[0] << std::endl ;
-      std::cout << "xplus contributions : " << aa*p->i_points[i].image->x[1] << " " << bb*xminus[1] << " " << cc*alpha[1] << std::endl ;
+      // std::cout << "xplus contributions : " << aa << " " << p->i_points[i].image->x[0] << " " << bb*xminus[0] << " " << cc << " " << alpha[0] << std::endl ;
+      // std::cout << "xplus contributions : " << aa << " " << p->i_points[i].image->x[1] << " " << bb*xminus[1] << " " << cc << " " << alpha[1] << std::endl ;
+      
+      std::cout << "-cc*alpha in rayshooter : " << -1.*cc*alpha[0] << " " << -1.*cc*alpha[1] << std::endl ;
       
       xminus[0] = p->i_points[i].image->x[0];
       xminus[1] = p->i_points[i].image->x[1];
