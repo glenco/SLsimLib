@@ -37,11 +37,11 @@ void ImageFinding::map_imagesISOP(
 		                        /// to initiate the image finding.
 		,ExitCriterion criterion  /// see data type
 		,bool divide_images    /// if true will divide images and apply the exit criterion to them separately.
-    ,bool int_on           /// if true the flux in each cell is integrated, if false the surface brightness at the center point of the cell is used 
+    ,bool int_on           /// if true the flux in each cell is integrated, if false the surface brightness at the center point of the cell is used
     ,bool verbose
                                   ){
 
-  if(imageinfo.size() < 2) imageinfo.resize(2);
+  if(imageinfo.size() < 5) imageinfo.resize(5);
 	assert(lens);
 	assert(grid->s_tree);
 	assert(grid->i_tree);

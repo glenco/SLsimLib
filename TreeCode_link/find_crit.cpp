@@ -359,6 +359,8 @@ void ImageFinding::find_crit2(
 		,bool verbose
 		){
 
+  if(critcurve.size() <2)critcurve.resize(2);
+  
   long i=0;
   long refinements;
   //short spur,closed;
