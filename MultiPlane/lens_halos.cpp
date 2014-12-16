@@ -132,7 +132,7 @@ LensHaloNFW::LensHaloNFW(float my_mass,float my_Rmax,PosType my_zlens,float my_c
   /// If the axis ratio given in the parameter file is set to 1 all ellipticizing routines are skipped.
   if(fratio!=1){
     std::cout << "NFW constructor: slope set to " << get_slope() << std::endl;
-    calcModes(fratio, get_slope(), pa, mod); // to ellipticize potential instead of  kappa take calcModes(fratio, 2-get_slope(), pa, mod);
+    calcModes(fratio, get_slope(), pa, mod1); // to ellipticize potential instead of  kappa take calcModes(fratio, 2-get_slope(), pa, mod);
     for(int i=1;i<Nmod;i++){
       if(mod[i]!=0){set_flag_elliptical(true);};
     }
@@ -172,11 +172,11 @@ LensHaloNFW::LensHaloNFW(InputParams& params)
          //  calcModes(fratio, 0.1*i, pa, mod);
         //}
         //calcModes(fratio, get_slope()-0.5, pa, mod); // to ellipticize potential instead of  kappa take calcModes(fratio, 2-get_slope(), pa, mod);
-        calcModes(fratio, get_slope(), pa, mod); // to ellipticize potential instead of  kappa take calcModes(fratio, 2-get_slope(), pa, mod);
+        calcModes(fratio, get_slope(), pa, mod1); // to ellipticize potential instead of  kappa take calcModes(fratio, 2-get_slope(), pa, mod);
         //calcModes(fratio, get_slope()+0.5, pa, mod2); // to ellipticize potential instead of  kappa take calcModes(fratio, 2-get_slope(), pa, mod);
         
         for(int i=1;i<Nmod;i++){
-            if(mod[i]!=0){set_flag_elliptical(true);};
+            if(mod1[i]!=0){set_flag_elliptical(true);};
         }
         
         //std::cout << "if mods!=0 this must be 1: " << get_flag_elliptical() << std::endl;
@@ -502,8 +502,12 @@ LensHaloPowerLaw::LensHaloPowerLaw(
     beta=my_beta;
     fratio=my_fratio, pa=my_pa, stars_N=my_stars_N;
     stars_implanted = false;
+                                     
+    //mnorm = renormalization(get_Rmax());
+    //std::cout << "mass normalization in PowerLaw: " << mnorm << std::endl;
+                                     
     if(fratio!=1){
-        calcModes(fratio, beta, pa, mod);
+        calcModes(fratio, beta, pa, mod1);
         for(int i=1;i<Nmod;i++){
             //std::cout << i << " " << mod[i] << std::endl;
             if(mod[i]!=0){set_flag_elliptical(true);};
@@ -806,12 +810,13 @@ void LensHalo::force_halo_asym(
     PosType alpha_tmp[2],kappa_tmp,gamma_tmp[2],phi_tmp;
         
     alphakappagamma1asym(r,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);
-    //std::cout<< "really: " << kappa_tmp << std::endl;
+    //std::cout<< "kappa_tmp: " << kappa_tmp << std::endl;
 		//alpha[0] +=  alpha_tmp[0]*prefac*xcm[0] + tmp*xcm[0];
     //alpha[1] +=  alpha_tmp[1]*prefac*xcm[1] + tmp*xcm[1];
     
-		alpha[0] +=  alpha_tmp[0];
-    alpha[1] +=  alpha_tmp[1];
+		alpha[0] +=  alpha_tmp[0]; //*xcm[0];
+    alpha[1] +=  alpha_tmp[1]; //*xcm[1];
+    //std::cout<< "alpha[1] " << alpha_tmp[1]*xcm[1] << std::endl;
     
     *kappa += kappa_tmp;
     gamma[0] += gamma_tmp[0];
@@ -820,7 +825,7 @@ void LensHalo::force_halo_asym(
     *phi += phi_tmp;
     
     if(subtract_point){
-      double tmp =  screening*mass/pi/rcm2;
+      PosType tmp =  screening*mass/pi/rcm2;
       alpha[0] +=  tmp*xcm[0];
       alpha[1] +=  tmp*xcm[1];
 
@@ -830,44 +835,36 @@ void LensHalo::force_halo_asym(
       
       *phi += 0.5 * log(rcm2) * mass / pi ;
     }
-
-    /*
-		*kappa += kappa_asym(r,theta);
-
-    //dfunc << x << " " << theta << " " << kappa_asym(x,theta) << " " << bfunction(x) << " " << xcm[0] << " " << xcm[1] << std::endl;
-
-    //std::cout << x << " " << rscale << " " << xmax << std::endl;
-    //PosType gamma_tmp[2];
-    //gamma_asym(r,theta,gamma_tmp);
-		double tmp = (2.0*subtract_point)*prefac/rcm2;
-		//gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*(tmp+gamma_tmp[0]*prefac/rcm2);
-    //std::cout << prefac << std::endl;
-    gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp + gamma_tmp[0]*prefac/rcm2;
-    gamma[1] += xcm[0]*xcm[1]*tmp + gamma_tmp[1]*prefac/rcm2;
-		//gamma[1] += xcm[0]*xcm[1]*(tmp+gamma_tmp[0]*prefac/rcm2);
-     */
   }
-	else
+	else // the point particle is not subtracted
 	{
 		if (subtract_point == false)
 		{
-			double prefac = mass/rcm2/pi;
-			alpha[0] += -1.0*prefac*xcm[0];
-			alpha[1] += -1.0*prefac*xcm[1];
-
-      double tmp = -2.0*prefac/rcm2;
-      gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+			PosType prefac = screening*mass/rcm2/pi;
+			alpha[0] += -1.0 * prefac * xcm[0];
+			alpha[1] += -1.0 * prefac * xcm[1];
+      
+      //std::cout << "rcm2  = " << rcm2 << std::endl;
+      //std::cout << "prefac  = " << prefac << std::endl;
+      //std::cout << "xcm  = " << xcm[0] << " " << xcm[1] << std::endl;
+      
+			PosType tmp = -2.0*prefac/rcm2;
+      
+      // kappa is equal to 0 in the point mass case.
+      
+			gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
       gamma[1] += xcm[0]*xcm[1]*tmp;
-
+      
+      *phi += 0.5 * log(rcm2) * mass / pi ;
 		}
 	}
-
-    // add stars for microlensing
-    if(stars_N > 0 && stars_implanted){
-   	 force_stars(alpha,kappa,gamma,xcm);
-    }
-
-
+      
+      /// add stars for microlensing
+      if(stars_N > 0 && stars_implanted)
+      {
+        force_stars(alpha,kappa,gamma,xcm);
+      }
+      
 	return;
 }
 
@@ -1517,6 +1514,17 @@ PosType LensHalo::MassBy1DIntegation(PosType R){
   return R*Utilities::nintegrate<LensHalo::DMDTHETA,PosType>(dmdtheta, 0, 2*pi, 1.0e-6)/2;
 }
 
+/// calculates the average gamma_t for LensHalo::test()
+double LensHalo::test_average_gt(PosType R){
+  struct test_gt_func f(*this,R);
+  return Utilities::nintegrate<test_gt_func>(f,0.0,2*pi,1.0e-6);
+}
+
+double LensHalo::test_average_kappa(PosType R){
+  struct test_kappa_func f(*this,R);
+  return Utilities::nintegrate<test_kappa_func>(f,0.0,2*pi,1.0e-2);
+}
+
 bool LensHalo::test(){
   std::cout << "test alpha's consistance with kappa by comparing mass interior to a radius by 1D integration and Gauss' law and by 2D integration" << std::endl;
   
@@ -1535,11 +1543,12 @@ bool LensHalo::test(){
   std::cout << "test gamma_t's consistance with kappa and alpha by comparing gamma_t to <kappa>_R - kappa(R)" << std::endl;
 
   PosType r;
-  std::cout << std::endl <<"R/Rmax      alpha/r - kappa        gamma_t         " << std::endl;
-  for(int i=1;i<N;++i){
-    
-    r = Rmax*i/(N-2);
-    if(!elliptical_flag){
+  
+  if(!elliptical_flag){
+    std::cout << std::endl <<"R/Rmax      alpha/r - kappa        gamma_t         " << std::endl;
+    for(int i=1;i<N;++i){
+      r = Rmax*i/(N-2);
+
       PosType alpha[2] = {0,0},x[2] = {0,0};
       KappaType kappa = 0,gamma[3] = {0,0,0} ,phi=0;
       
@@ -1549,10 +1558,25 @@ bool LensHalo::test(){
       force_halo(alpha,&kappa,gamma,&phi,x);
       
       std::cout << r/Rmax << "       " << -alpha[0]/r - kappa << "         " << -gamma[0] << std::endl;
-    }else{
-      throw std::runtime_error("this is not done yet for asymetric lenses but can be.");
     }
+
+  }else{
+    std::cout << std::endl <<"R/Rmax      gamma_t       <kappa>_R=m1           kappa(R)     " << std::endl;
+    for(int i=1;i<N;++i){
+      r = Rmax*i/(N-2);
+
+      //integrate over t
+      PosType average_gt, average_kappa;
+      average_gt=test_average_gt(r)/2/pi;
+      average_kappa=test_average_kappa(r)/2/pi;
+      m1 = MassBy1DIntegation(r)/pi/r/r;
+      //PosType sig_crit=COSMOLOGY().SigmaCrit(zlens,2.0);
+      
     
+    std::cout << r/Rmax << "       " << average_gt << "         " << m1 << "          " <<  average_kappa << std::endl;
+    //throw std::runtime_error("this is not done yet for asymetric lenses but can be.");
+    }
+  
   }
   
   
