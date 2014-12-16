@@ -152,7 +152,7 @@ public:
     scaleForLensExp = scale ;
     // std::cout << "Computed scale = " << scale << std::endl ;
   }
-  void getscale() { return scaleForLensExp ; }
+  PosType getscale() { return scaleForLensExp ; }
 
   
 protected:

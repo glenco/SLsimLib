@@ -257,6 +257,7 @@ void *compute_rays_parallel(void *_p)
       
       if(p->flag_switch_deflection_off){ alpha[0] = alpha[1] = 0.0; }
       
+      
       // This computes \vec{x}^{j+1} in terms of \vec{x}^{j} , \vec{x}^{j-1} and \vec{\alpha}^{j}
       // according to Eq. (19) of paper GLAMER II -----------------------------------------------
       
@@ -264,20 +265,24 @@ void *compute_rays_parallel(void *_p)
       bb = p->dDl[j+1]/p->dDl[j];
       cc = p->charge * p->dDl[j+1];
       
+      // std::cout << "p->dDl[j+1] = " << p->dDl[j+1] << std::endl;
+      
       xplus[0] = aa*p->i_points[i].image->x[0] - bb*xminus[0] - cc*alpha[0];
       xplus[1] = aa*p->i_points[i].image->x[1] - bb*xminus[1] - cc*alpha[1];
-      // std::cout << "xplus contributions : " << aa << " " << p->i_points[i].image->x[0] << " " << bb*xminus[0] << " " << cc << " " << alpha[0] << std::endl ;
-      // std::cout << "xplus contributions : " << aa << " " << p->i_points[i].image->x[1] << " " << bb*xminus[1] << " " << cc << " " << alpha[1] << std::endl ;
       
-      std::cout << "-cc*alpha in rayshooter : " << -1.*cc*alpha[0] << " " << -1.*cc*alpha[1] << std::endl ;
+      // On the other hand this works :
+      // std::cout << "xplus contributions : " << (aa*p->i_points[i].image->x[0] - bb*xminus[0]) - cc*alpha[0] << " " << (aa*p->i_points[i].image->x[1] - bb*xminus[1]) - cc*alpha[1] << std::endl ;
       
       xminus[0] = p->i_points[i].image->x[0];
       xminus[1] = p->i_points[i].image->x[1];
-      
+    
       
       // Change in the value of the position.
       p->i_points[i].image->x[0] = xplus[0];
       p->i_points[i].image->x[1] = xplus[1];
+      
+      std::cout << "In rayshooter : " << p->i_points[i].image->x[0] << " " << p->i_points[i].image->x[1] << std::endl ;
+      
       
       // ----------------------------------------------------------------------------------------
       
@@ -374,7 +379,7 @@ void *compute_rays_parallel(void *_p)
     p->i_points[i].image->x[0] /= p->Dl[p->NPlanes];
     p->i_points[i].image->x[1] /= p->Dl[p->NPlanes];
     
-    //std::cout << "   Ds = " << p->Dl[p->NPlanes] << std::endl;
+    // std::cout << "   Ds = " << p->Dl[p->NPlanes] << std::endl;
     //std::cout << "   dx = " << p->i_points[i].image->x[0]-p->i_points[i].x[0] <<  "  "
     //<< p->i_points[i].image->x[1]-p->i_points[i].x[1] << std::endl;
     

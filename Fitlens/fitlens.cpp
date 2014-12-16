@@ -184,14 +184,8 @@ void LensHaloFit::FindLensSimple(
     
     for(int i=0 ; i<4 ; i++)
     {
-    // xob[i][0] *= scale_old * cosmo.angDist(0.3) / (1 + zlens) ;
-    // xob[i][1] *= scale_old * cosmo.angDist(0.3) / (1 + zlens) ;
     xob[i][0] *= scale_old ;
     xob[i][1] *= scale_old ;
-      // xob[i][0] *= 1 ;
-      // xob[i][1] *= 1 ;
-      // xob[i][0] *= cosmo.angDist(0.3) / (1 + zlens) ;
-      // xob[i][1] *= cosmo.angDist(0.3) / (1 + zlens) ;
     }
     
     std::cout << "/// In HaloFit ///" << std::endl ;

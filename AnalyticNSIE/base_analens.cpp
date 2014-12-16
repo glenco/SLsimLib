@@ -61,31 +61,11 @@ void LensHaloBaseNSIE::force_halo(
   // perturbations of host lens
   if(perturb_Nmodes > 0)
   {
-    // PosType xt[2]={0,0};
-    // xt[0]=xcm[0] * (1+zlens) ;
-    // xt[1]=xcm[1] * (1+zlens) ;
-    
-    // std::cout << "perturb_beta = " << perturb_beta << " , perturb_Nmodes = " << perturb_Nmodes << std::endl ;
-    
-    /************** Reversing the test **********************/
-    /*
-    double scale_tmp ;
-    scale_tmp = scaleForLensExp ;
-   
-    PosType * perturb_modesReversed = new PosType [perturb_Nmodes] ;
+    PosType xt[2]={0,0};
+    xt[0]=xcm[0] ;
+    xt[1]=xcm[1] ;
     
     COSMOLOGY cosmo (Planck1yr);
-    scale_tmp *= cosmo.angDist(3.5)/(4*pi*Grav)/cosmo.angDist(0.3,3.5);
-    for(int i=3;i<perturb_Nmodes;++i) perturb_modesReversed[i] = perturb_modes[i]/scale_tmp; // reverse !
-    
-    scale_tmp /= cosmo.angDist(0.3);
-    for(int i=0;i<3;++i) perturb_modesReversed[i] = perturb_modes[i]/scale_tmp; // reverse !
-     
-    std::cout << std::endl ;
-    for(int i=0 ; i<perturb_Nmodes ; i++) std::cout << perturb_modesReversed[i] << " " ;
-    std::cout << std::endl ;
-    */
-    /********************************************************/
 
     /*
     std::cout << "Modes in force_halo :" << std::endl ;
@@ -93,20 +73,48 @@ void LensHaloBaseNSIE::force_halo(
     std::cout << std::endl ;
     */
     
-    COSMOLOGY cosmo (Planck1yr);
-    for(int i=0;i<3;i++) perturb_modes[i] /= cosmo.angDist(0.3) ; // Corresponds to [cosmo.angDist(0.3) * (1+zlens)] / (1+zlens)
+    // Rescaling in order to get the positions in radians :
+    xt[0] *= 1/cosmo.angDist(0.3) ;
+    xt[1] *= 1/cosmo.angDist(0.3) ;
     
-    // std::cout << "distance in force_halo : " << cosmo.angDist(0.3,3.5) << " " << cosmo.angDist(0.3,3.5) * 4.5 << std::endl ;
-    
+    // Calling lens_expand :
     // *kappa += lens_expand(perturb_beta,perturb_modes,perturb_Nmodes,xcm,alpha_tmp,gamma_tmp,&phi_tmp);
-    *kappa += lens_expand(perturb_beta,perturb_modes,perturb_Nmodes-1,xcm,alpha_tmp,gamma_tmp,&phi_tmp);
+    *kappa += lens_expand(perturb_beta,perturb_modes,perturb_Nmodes-1,xt,alpha_tmp,gamma_tmp,&phi_tmp);
+
+    // Getting the scale of FindLensSimple :
+    PosType scale = getscale() ;
+    std::cout << "         xt in force_halo : " << xt[0] << " " << xt[1] << std::endl ;
+    std::cout << "alpha*scale in force_halo : " << alpha_tmp[0]*scale << " " << alpha_tmp[1]*scale << std::endl ;
     
-    std::cout << "    alpha in force_halo : " << alpha_tmp[0] << " " << alpha_tmp[1] << std::endl ;
+    // Proving that the scale is necessary :
+    std::cout << "xt - alphascale in force_halo : !!! " << xt[0] - alpha_tmp[0]*scale << " " << xt[1] - alpha_tmp[1]*scale << " !!!" << std::endl ;
+
+    // Multiplying by the scale :
+    alpha_tmp[0] *= scale ;
+    alpha_tmp[1] *= scale ;
     
+    
+    // Up to here alpha was like in FindLensSimple, but now we need to adapt it for rayshooter !
+    
+    // Inverting the sign :
+    alpha_tmp[0] *= -1. ;
+    alpha_tmp[1] *= -1. ;
+    
+    // Adding a contribution to remove p->i_points[i].image->x[0]*p->dDl[j+1]/p->dDl[j] to aa*p->i_points[i].image->x[0] :
+    alpha_tmp[0] += -1. * xt[0] * (cosmo.angDist(0.3,3.5)*(1+3.5))/(cosmo.angDist(0.3)*(1+0.3)) ;
+    alpha_tmp[1] += -1. * xt[1] * (cosmo.angDist(0.3,3.5)*(1+3.5))/(cosmo.angDist(0.3)*(1+0.3)) ;
+    
+    // Multiplying by the factors that will cancel the ones in rayshooter :
     alpha_tmp[0] = alpha_tmp[0]/(4*pi*Grav * cosmo.angDist(0.3,3.5) * (1+3.5)) ;
     alpha_tmp[1] = alpha_tmp[1]/(4*pi*Grav * cosmo.angDist(0.3,3.5) * (1+3.5)) ;
     
-    for(int i=0;i<3;i++) perturb_modes[i] *= cosmo.angDist(0.3) ; // Corresponds to [cosmo.angDist(0.3) * (1+zlens)] / (1+zlens)
+    
+    // Multiplying alpha by cosmo.angDist(0.3) so that it combines with the remaining contributions of p->i_points[i].image->x[0] :
+    alpha_tmp[0] *= cosmo.angDist(0.3) * (1+0.3) ;
+    alpha_tmp[1] *= cosmo.angDist(0.3) * (1+0.3) ;
+    
+    
+    // ======================================== NOT MODIFIED AFTER !
     
     // As before :
     alpha[0] += alpha_tmp[0];
