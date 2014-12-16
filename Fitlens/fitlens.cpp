@@ -185,9 +185,9 @@ void LensHaloFit::FindLensSimple(
     
     for(int i=0;i<Nimages;++i){
       lens_expand(perturb_beta,perturb_modes,perturb_Nmodes-1,xob[i],alpha,gamma,&phi); // The -1 is needed here too !
-      std::cout << "xob : " << xob[i][0] << " " << xob[i][1] << std::endl ;
-      std::cout << "alpha in FindLensSimple : " << alpha[0]*scale_old << "  " << alpha[1]*scale_old << std::endl;
-      std::cout << xob[i][0] - alpha[0]*scale_old << "  " << xob[i][1] - alpha[1]*scale_old << std::endl;
+      std::cout << "xob : @@@ " << xob[i][0] << " " << xob[i][1] << " @@@" << std::endl ;
+      std::cout << "alpha in FindLensSimple : ??? " << alpha[0]*scale_old << "  " << alpha[1]*scale_old << " ???" << std::endl;
+      std::cout << "source in FindLensSimple : !!! " << xob[i][0] - alpha[0]*scale_old << "  " << xob[i][1] - alpha[1]*scale_old << " !!!" << std::endl;
     }
   }
   

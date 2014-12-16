@@ -86,11 +86,13 @@ void LensHaloBaseNSIE::force_halo(
 
     // Getting the scale of FindLensSimple :
     PosType scale = getscale() ;
-    std::cout << "         xt in force_halo : " << xt[0] << " " << xt[1] << std::endl ;
-    std::cout << "alpha*scale in force_halo : " << alpha_tmp[0]*scale << " " << alpha_tmp[1]*scale << std::endl ;
     
-    // Proving that the scale is necessary :
+    // Printing quantities for control :
+    
+    std::cout << "         xt in force_halo : @@@ " << xt[0] << " " << xt[1] << " @@@" << std::endl ;
+    std::cout << "alpha*scale in force_halo : " << alpha_tmp[0]*scale << " " << alpha_tmp[1]*scale << std::endl ;
     std::cout << "xt - alphascale in force_halo : !!! " << xt[0] - alpha_tmp[0]*scale << " " << xt[1] - alpha_tmp[1]*scale << " !!!" << std::endl ;
+    
 
     // Multiplying by the scale :
     alpha_tmp[0] *= scale ;
@@ -116,7 +118,7 @@ void LensHaloBaseNSIE::force_halo(
     alpha_tmp[0] *= cosmo.angDist(zlens) * (1+zlens) ;
     alpha_tmp[1] *= cosmo.angDist(zlens) * (1+zlens) ;
     
-    
+    // std::cout << "alpha final in force_halo : " << alpha_tmp[0] << " " << alpha_tmp[1] << std::endl ;
     
     
     // ======================================== NOT MODIFIED AFTER !
