@@ -54,13 +54,6 @@ public:
 
   /// set the velocity dispersion
   void set_sigma(PosType my_sigma){sigma = my_sigma; };
-  /// set the axis ratio
-  void set_fratio(PosType my_fratio){fratio = my_fratio;};
-  
-  /// adjust the modes perturb_modes[0,1,2] :
-  void AdjustFirstModes(PosType factor) {
-  for(int i=0;i<3;i++) perturb_modes[i] /= factor ;
-  }
   
 private:
 
