@@ -1076,7 +1076,6 @@ void LensHaloRealNSIE::force_halo(
         //alpha[1] = units*tmp[1];  // Why was the "+=" removed?
         alpha[0] += units*tmp[0];
         alpha[1] += units*tmp[1];
-        
         {
           KappaType tmp[2]={0,0};
           *kappa += units*kappaNSIE(xt,fratio,rcore,pa);
@@ -1521,8 +1520,8 @@ double LensHalo::test_average_gt(PosType R){
 }
 
 double LensHalo::test_average_kappa(PosType R){
-  struct test_kappa_func f(*this,R);
-  return Utilities::nintegrate<test_kappa_func>(f,0.0,2*pi,1.0e-2);
+  struct test_kappa_func f(R,this);
+  return Utilities::nintegrate<test_kappa_func>(f,0.0,2*pi,1.0e-3);
 }
 
 bool LensHalo::test(){
@@ -1544,8 +1543,8 @@ bool LensHalo::test(){
 
   PosType r;
   
-  if(!elliptical_flag){
-    std::cout << std::endl <<"R/Rmax      alpha/r - kappa        gamma_t         " << std::endl;
+  if(elliptical_flag){
+    std::cout << std::endl <<"R/Rmax      alpha/r - kappa        gamma_t            alpha/r           kappa  " << std::endl;
     for(int i=1;i<N;++i){
       r = Rmax*i/(N-2);
 
@@ -1557,23 +1556,22 @@ bool LensHalo::test(){
       
       force_halo(alpha,&kappa,gamma,&phi,x);
       
-      std::cout << r/Rmax << "       " << -alpha[0]/r - kappa << "         " << -gamma[0] << std::endl;
+      std::cout << r/Rmax << "       " << -alpha[0]/r - kappa << "         " << -gamma[0] << "         " << alpha[0]/r << "         " << kappa << std::endl;
     }
 
   }else{
-    std::cout << std::endl <<"R/Rmax      gamma_t       <kappa>_R=m1           kappa(R)     " << std::endl;
+    std::cout << std::endl <<"R/Rmax      gamma_t       <kappa>_R=m1           kappa(R)         delta/gt  " << std::endl;
     for(int i=1;i<N;++i){
       r = Rmax*i/(N-2);
 
       //integrate over t
       PosType average_gt, average_kappa;
-      average_gt=test_average_gt(r)/2/pi;
-      average_kappa=test_average_kappa(r)/2/pi;
-      m1 = MassBy1DIntegation(r)/pi/r/r;
-      //PosType sig_crit=COSMOLOGY().SigmaCrit(zlens,2.0);
-      
+      average_gt=test_average_gt(r);
+      average_kappa=test_average_kappa(r);
+      m1 = MassBy1DIntegation(r);
+     
     
-    std::cout << r/Rmax << "       " << average_gt << "         " << m1 << "          " <<  average_kappa << std::endl;
+    std::cout << r/Rmax << "       " << average_gt << "         " << m1 << "          " <<  average_kappa << "     "  << (m1-average_kappa)/average_gt << std::endl;
     //throw std::runtime_error("this is not done yet for asymetric lenses but can be.");
     }
   
