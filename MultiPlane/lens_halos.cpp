@@ -461,14 +461,14 @@ void LensHaloPseudoNFW::initFromMassFunc(float my_mass, float my_Rmax, float my_
 }
 
 void LensHaloPseudoNFW::assignParams(InputParams& params){
-	if(!params.get("main_mass",mass)) error_message1("main_mass",params.filename());
-	if(!params.get("main_Rmax",Rmax)) error_message1("main_Rmax",params.filename());
-	if(!params.get("main_zlens",zlens)) error_message1("main_zlens",params.filename());
-	if(!params.get("main_concentration",rscale)) error_message1("main_concentration",params.filename());
-	if(!params.get("main_slope",beta)) error_message1("main_slope",params.filename());
-    if(!params.get("main_axis_ratio",fratio)){fratio=1; std::cout << "main_axis_ratio not defined in file " << params.filename() << ", hence set to 1." << std::endl;};
-    if(!params.get("main_pos_angle",pa)){pa=0; std::cout << "main_pos_angle not defined in file " << params.filename() << ", hence set to 0." << std::endl;};
-	rscale = Rmax/rscale; // was the concentration
+  if(!params.get("main_mass",mass)) error_message1("main_mass",params.filename());
+  if(!params.get("main_Rmax",Rmax)) error_message1("main_Rmax",params.filename());
+  if(!params.get("main_zlens",zlens)) error_message1("main_zlens",params.filename());
+  if(!params.get("main_concentration",rscale)) error_message1("main_concentration",params.filename());
+  if(!params.get("main_slope",beta)) error_message1("main_slope",params.filename());
+  if(!params.get("main_axis_ratio",fratio)){fratio=1; std::cout << "main_axis_ratio not defined in file " << params.filename() << ", hence set to 1." << std::endl;};
+  if(!params.get("main_pos_angle",pa)){pa=0; std::cout << "main_pos_angle not defined in file " << params.filename() << ", hence set to 0." << std::endl;};
+  rscale = Rmax/rscale; // was the concentration
   xmax = Rmax/rscale;
 }
 
@@ -575,13 +575,13 @@ void LensHaloPowerLaw::initFromMassFunc(float my_mass, float my_Rmax, float my_r
 }
 
 void LensHaloPowerLaw::assignParams(InputParams& params){
-	if(!params.get("main_mass",mass)) error_message1("main_mass",params.filename());
-	if(!params.get("main_Rmax",Rmax)) error_message1("main_Rmax",params.filename());
-	if(!params.get("main_zlens",zlens)) error_message1("main_zlens",params.filename());
-	if(!params.get("main_slope",beta)) error_message1("main_slope, example -1",params.filename());
-    //if(beta>=2.0) error_message1("main_slope < 2",params.filename());
-    if(!params.get("main_axis_ratio",fratio)){fratio=1; std::cout << "main_axis_ratio not defined in file " << params.filename() << ", hence set to 1." << std::endl;};
-    if(!params.get("main_pos_angle",pa)){pa=0.0; std::cout << "main_pos_angle not defined in file " << params.filename() << ", hence set to 0." << std::endl;};
+  if(!params.get("main_mass",mass)) error_message1("main_mass",params.filename());
+  if(!params.get("main_Rmax",Rmax)) error_message1("main_Rmax",params.filename());
+  if(!params.get("main_zlens",zlens)) error_message1("main_zlens",params.filename());
+  if(!params.get("main_slope",beta)) error_message1("main_slope, example -1",params.filename());
+  //if(beta>=2.0) error_message1("main_slope < 2",params.filename());
+  if(!params.get("main_axis_ratio",fratio)){fratio=1; std::cout << "main_axis_ratio not defined in file " << params.filename() << ", hence set to 1." << std::endl;};
+  if(!params.get("main_pos_angle",pa)){pa=0.0; std::cout << "main_pos_angle not defined in file " << params.filename() << ", hence set to 0." << std::endl;};
 
 
 	if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());

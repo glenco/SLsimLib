@@ -49,10 +49,10 @@ void ImageFinding::map_images(
 	assert(lens);
 	assert(grid->s_tree);
 	assert(grid->i_tree);
-      if(imageinfo.size() < 2) imageinfo.resize(2);
-	assert(imageinfo[0].imagekist);
+
       
-     
+  if(imageinfo.size() < 10) imageinfo.resize(10);
+  assert(imageinfo[0].imagekist);
 
 	unsigned long Nimagepoints,Ntmp;
 	PosType tmp,area_tot,flux;
