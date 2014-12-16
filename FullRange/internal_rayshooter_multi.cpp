@@ -266,12 +266,11 @@ void *compute_rays_parallel(void *_p)
       cc = p->charge * p->dDl[j+1];
       
       // std::cout << "p->dDl[j+1] = " << p->dDl[j+1] << std::endl;
+      // On the other hand this works :
+      // std::cout << "xplus contributions : " << (aa*p->i_points[i].image->x[0] - bb*xminus[0]) - cc*alpha[0] << " " << (aa*p->i_points[i].image->x[1] - bb*xminus[1]) - cc*alpha[1] << std::endl ;
       
       xplus[0] = aa*p->i_points[i].image->x[0] - bb*xminus[0] - cc*alpha[0];
       xplus[1] = aa*p->i_points[i].image->x[1] - bb*xminus[1] - cc*alpha[1];
-      
-      // On the other hand this works :
-      // std::cout << "xplus contributions : " << (aa*p->i_points[i].image->x[0] - bb*xminus[0]) - cc*alpha[0] << " " << (aa*p->i_points[i].image->x[1] - bb*xminus[1]) - cc*alpha[1] << std::endl ;
       
       xminus[0] = p->i_points[i].image->x[0];
       xminus[1] = p->i_points[i].image->x[1];

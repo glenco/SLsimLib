@@ -66,16 +66,19 @@ void LensHaloBaseNSIE::force_halo(
     xt[1]=xcm[1] ;
     
     COSMOLOGY cosmo (Planck1yr);
-
+    double zsource = zsource_reference ;
+    
+    // assert(zlens == 0.3 && zsource_reference == 3.5); // To be removed after !
     /*
     std::cout << "Modes in force_halo :" << std::endl ;
     for(int i=0 ; i<perturb_Nmodes ; i++) std::cout << perturb_modes[i] << " " ;
     std::cout << std::endl ;
     */
     
+    
     // Rescaling in order to get the positions in radians :
-    xt[0] *= 1/cosmo.angDist(0.3) ;
-    xt[1] *= 1/cosmo.angDist(0.3) ;
+    xt[0] *= 1/cosmo.angDist(zlens) ;
+    xt[1] *= 1/cosmo.angDist(zlens) ;
     
     // Calling lens_expand :
     // *kappa += lens_expand(perturb_beta,perturb_modes,perturb_Nmodes,xcm,alpha_tmp,gamma_tmp,&phi_tmp);
@@ -101,17 +104,19 @@ void LensHaloBaseNSIE::force_halo(
     alpha_tmp[1] *= -1. ;
     
     // Adding a contribution to remove p->i_points[i].image->x[0]*p->dDl[j+1]/p->dDl[j] to aa*p->i_points[i].image->x[0] :
-    alpha_tmp[0] += -1. * xt[0] * (cosmo.angDist(0.3,3.5)*(1+3.5))/(cosmo.angDist(0.3)*(1+0.3)) ;
-    alpha_tmp[1] += -1. * xt[1] * (cosmo.angDist(0.3,3.5)*(1+3.5))/(cosmo.angDist(0.3)*(1+0.3)) ;
+    alpha_tmp[0] += -1. * xt[0] * (cosmo.angDist(zlens,zsource)*(1+zsource))/(cosmo.angDist(zlens)*(1+zlens)) ;
+    alpha_tmp[1] += -1. * xt[1] * (cosmo.angDist(zlens,zsource)*(1+zsource))/(cosmo.angDist(zlens)*(1+zlens)) ;
     
     // Multiplying by the factors that will cancel the ones in rayshooter :
-    alpha_tmp[0] = alpha_tmp[0]/(4*pi*Grav * cosmo.angDist(0.3,3.5) * (1+3.5)) ;
-    alpha_tmp[1] = alpha_tmp[1]/(4*pi*Grav * cosmo.angDist(0.3,3.5) * (1+3.5)) ;
+    alpha_tmp[0] = alpha_tmp[0]/(4*pi*Grav * cosmo.angDist(zlens,zsource) * (1+zsource)) ;
+    alpha_tmp[1] = alpha_tmp[1]/(4*pi*Grav * cosmo.angDist(zlens,zsource) * (1+zsource)) ;
     
     
     // Multiplying alpha by cosmo.angDist(0.3) so that it combines with the remaining contributions of p->i_points[i].image->x[0] :
-    alpha_tmp[0] *= cosmo.angDist(0.3) * (1+0.3) ;
-    alpha_tmp[1] *= cosmo.angDist(0.3) * (1+0.3) ;
+    alpha_tmp[0] *= cosmo.angDist(zlens) * (1+zlens) ;
+    alpha_tmp[1] *= cosmo.angDist(zlens) * (1+zlens) ;
+    
+    
     
     
     // ======================================== NOT MODIFIED AFTER !
@@ -146,8 +151,6 @@ void LensHaloBaseNSIE::force_halo(
         *kappa += kappa_tmp;
         gamma[0] += gamma_tmp[0];
         gamma[1] += gamma_tmp[1];
-        
-        // Why don't we have gamma[2] here ?
         *phi += phi_tmp;
       }
     }
