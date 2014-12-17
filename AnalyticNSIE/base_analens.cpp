@@ -75,28 +75,18 @@ void LensHaloBaseNSIE::force_halo(
     std::cout << std::endl ;
     */
     
+    PosType Dl= cosmo.angDist(zlens), Dls =cosmo.angDist(zlens,zsource),Ds = cosmo.angDist(zsource);
     
-    // Rescaling in order to get the positions in radians :
-    xt[0] *= 1/cosmo.angDist(zlens) ;
-    xt[1] *= 1/cosmo.angDist(zlens) ;
     
     // Calling lens_expand :
     // *kappa += lens_expand(perturb_beta,perturb_modes,perturb_Nmodes,xcm,alpha_tmp,gamma_tmp,&phi_tmp);
-    *kappa += lens_expand(perturb_beta,perturb_modes,perturb_Nmodes-1,xt,alpha_tmp,gamma_tmp,&phi_tmp);
-
-    // Getting the scale of FindLensSimple :
-    PosType scale = getscale() ;
+    *kappa += lens_expand(perturb_beta,perturb_modes,perturb_Nmodes,xt,alpha_tmp,gamma_tmp,&phi_tmp);
     
     // Printing quantities for control :
     
     std::cout << "         xt in force_halo : @@@ " << xt[0] << " " << xt[1] << " @@@" << std::endl ;
-    std::cout << "alpha*scale in force_halo : " << alpha_tmp[0]*scale << " " << alpha_tmp[1]*scale << std::endl ;
-    std::cout << "xt - alphascale in force_halo : !!! " << xt[0] - alpha_tmp[0]*scale << " " << xt[1] - alpha_tmp[1]*scale << " !!!" << std::endl ;
-    
-
-    // Multiplying by the scale :
-    alpha_tmp[0] *= scale ;
-    alpha_tmp[1] *= scale ;
+    std::cout << "alpha*scale in force_halo : " << alpha_tmp[0] << " " << alpha_tmp[1] << std::endl ;
+    std::cout << "xt - alphascale in force_halo : !!! " << xt[0] - alpha_tmp[0] << " " << xt[1] - alpha_tmp[1] << " !!!" << std::endl ;
     
     
     // Up to here alpha was like in FindLensSimple, but now we need to adapt it for rayshooter !
@@ -106,19 +96,23 @@ void LensHaloBaseNSIE::force_halo(
     alpha_tmp[1] *= -1. ;
     
     // Adding a contribution to remove p->i_points[i].image->x[0]*p->dDl[j+1]/p->dDl[j] to aa*p->i_points[i].image->x[0] :
-    alpha_tmp[0] += -1. * xt[0] * (cosmo.angDist(zlens,zsource)*(1+zsource))/(cosmo.angDist(zlens)*(1+zlens)) ;
-    alpha_tmp[1] += -1. * xt[1] * (cosmo.angDist(zlens,zsource)*(1+zsource))/(cosmo.angDist(zlens)*(1+zlens)) ;
+    
+    
+    alpha_tmp[0] += -1. * xt[0] /(Dl*(1+zlens))/(4*pi*Grav ) ;
+    alpha_tmp[1] += -1. * xt[1] /(Dl*(1+zlens))/(4*pi*Grav ) ;
     
     // Multiplying by the factors that will cancel the ones in rayshooter :
-    alpha_tmp[0] = alpha_tmp[0]/(4*pi*Grav * cosmo.angDist(zlens,zsource) * (1+zsource)) ;
-    alpha_tmp[1] = alpha_tmp[1]/(4*pi*Grav * cosmo.angDist(zlens,zsource) * (1+zsource)) ;
+    //alpha_tmp[0] /= (4*pi*Grav * Dls * (1+zsource)) ;
+    //alpha_tmp[1] /= (4*pi*Grav * Dls * (1+zsource)) ;
     
     
     // Multiplying alpha by cosmo.angDist(0.3) so that it combines with the remaining contributions of p->i_points[i].image->x[0] :
-    alpha_tmp[0] *= cosmo.angDist(zlens) * (1+zlens) ;
-    alpha_tmp[1] *= cosmo.angDist(zlens) * (1+zlens) ;
+    alpha_tmp[0] *=  (1+zlens) ;
+    alpha_tmp[1] *=  (1+zlens) ;
     
     // std::cout << "alpha final in force_halo : " << alpha_tmp[0] << " " << alpha_tmp[1] << std::endl ;
+    
+    
     
     
     // ======================================== NOT MODIFIED AFTER !

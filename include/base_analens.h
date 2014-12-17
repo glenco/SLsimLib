@@ -144,15 +144,6 @@ public:
   KappaType phiNSIE(PosType const *xt,PosType f,PosType bc,PosType theta);
   /// returns zsource_reference
   float get_zsourceref() { return zsource_reference ; }
-  
-  /// set/get the scale for lens_expand :
-  void setscale(Point * image_pos, int Nimages) {
-    double scale = 0. ;
-    for(int i=0;i<Nimages;i++) scale = MAX(scale,sqrt( pow(image_pos[0].x[0] - image_pos[i].x[0],2) + pow(image_pos[0].x[1] - image_pos[i].x[1],2) ) );
-    scaleForLensExp = scale ;
-    // std::cout << "Computed scale = " << scale << std::endl ;
-  }
-  PosType getscale() { return scaleForLensExp ; }
 
   
 protected:
@@ -192,9 +183,6 @@ protected:
    /// redshift for which the perturbation modes are normalised
   float zsource_reference;
   PosType Ds, Dls;
-  
-  /// scale for lens_expand :
-  double scaleForLensExp ;
 
 };
 
