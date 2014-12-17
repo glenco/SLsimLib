@@ -22,7 +22,13 @@ typedef enum{unchecked,yes,no} GATE;
 struct ImageInfo{
 
 	ImageInfo();
-  ImageInfo(const ImageInfo & rhs){copy(rhs,true);}
+  ImageInfo(const ImageInfo & rhs){
+    imagekist = new Kist<Point>;
+    innerborder = new Kist<Point>;
+    outerborder = new Kist<Point>;
+
+    copy(rhs,true);
+  }
 	~ImageInfo();
   ImageInfo & operator=(const ImageInfo & rhs){
     if(this == &rhs) return *this;

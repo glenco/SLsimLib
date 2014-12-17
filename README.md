@@ -54,7 +54,7 @@ file with `InputParams::PrintToFile()`.
 int main(int argc, const char* argv[])
 {
     // create InputParams with sample values
-    InputParams params(paramfile) = InputParams::sample();
+    InputParams params = InputParams::sample();
     
     // print sample parameter file
     params.PrintToFile("sample_paramfile");
