@@ -110,7 +110,7 @@ void LensHaloFit::FindLensSimple(
   x_center[1] /= scale;
   
   //ERROR_MESSAGE();
-  ElliptisizeLens(Nimages,Nsources,1,pairing,xob,x_center,xg,0,perturb_beta,perturb_Nmodes,mods,dx_sub,&re2,q);
+  ElliptisizeLens(Nimages,Nsources,1,pairing,xob,x_center,xg,0,perturb_beta,perturb_Nmodes-1,mods,dx_sub,&re2,q); // The -1 in after perturb_Nmodes is important !
   
   for(i=1;i<perturb_Nmodes;++i) perturb_modes[i] = mods[i];
   
@@ -133,7 +133,7 @@ void LensHaloFit::FindLensSimple(
     for(int i=0;i<Nimages;++i){
       std::cout << "xob : " << xob[i][0] << " " << xob[i][1] << std::endl ;
       
-      lens_expand(perturb_beta,perturb_modes,perturb_Nmodes,xob[i],alpha,gamma,&phi);
+      lens_expand(perturb_beta,perturb_modes,perturb_Nmodes-1,xob[i],alpha,gamma,&phi);
       
       std::cout << "alpha in FindLensSimple : " << alpha[0]*scale << "  " << alpha[1]*scale << std::endl;
       std::cout << (xob[i][0] - alpha[0])*scale << "  " << (xob[i][1] - alpha[1])*scale << std::endl;
@@ -142,8 +142,8 @@ void LensHaloFit::FindLensSimple(
   }
   
   // source position
-  y[0] = mods[i+1]*scale;
-  y[1] = mods[i+2]*scale;
+  y[0] = mods[i]*scale;
+  y[1] = mods[i+1]*scale;
   std::cout << "i = " << i << std::endl ;
   std::cout << "scale = " << scale << std::endl;
   std::cout << "source : y[0] = " << y[0] << " , y[1] = " << y[1] << std::endl;
@@ -175,21 +175,22 @@ void LensHaloFit::FindLensSimple(
     xob[i][1] *= scale ;
     }
     
-    
+    /*
     std::cout << "/// In HaloFit ///" << std::endl ;
     std::cout << "test FindLensSimple solution" << std::endl;
     std::cout << "perturb_beta = " << perturb_beta << " , perturb_Nmodes = " << perturb_Nmodes << std::endl ;
     std::cout << "Modes in FindLensSimple before calling lens_expand :" << std::endl ;
     for(int i=0 ; i<perturb_Nmodes ; i++) std::cout << perturb_modes[i] << " " ;
     std::cout << std::endl ;
-    
+    */
     
     for(int i=0;i<Nimages;++i){
-      lens_expand(perturb_beta,perturb_modes,perturb_Nmodes,xob[i],alpha,gamma,&phi); // The -1 is needed here too !
-      
+      lens_expand(perturb_beta,perturb_modes,perturb_Nmodes-1,xob[i],alpha,gamma,&phi); // The -1 is needed here too !
+    /*
     std::cout << "xob : @@@ " << xob[i][0] << " " << xob[i][1] << " @@@" << std::endl ;
     std::cout << "alpha in FindLensSimple : ??? " << alpha[0] << "  " << alpha[1] << " ???" << std::endl;
     std::cout << "source in FindLensSimple : !!! " << xob[i][0] - alpha[0] << "  " << xob[i][1] - alpha[1] << " !!!" << std::endl;
+    */
       
     }
   }

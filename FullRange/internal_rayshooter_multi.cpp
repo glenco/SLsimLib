@@ -269,7 +269,7 @@ void *compute_rays_parallel(void *_p)
       // On the other hand this works :
       // std::cout << "xplus contributions : " << (aa*p->i_points[i].image->x[0] - bb*xminus[0]) - cc*alpha[0] << " " << (aa*p->i_points[i].image->x[1] - bb*xminus[1]) - cc*alpha[1] << std::endl ;
       
-      std::cout << "alpha in rayshooter : " << cc*alpha[0]/p->dDl[j+1] << " " << cc*alpha[1]/p->dDl[j+1] << std::endl ;
+      // std::cout << "alpha in rayshooter : " << cc*alpha[0] << " " << cc*alpha[1] << std::endl ;
       
       xplus[0] = aa*p->i_points[i].image->x[0] - bb*xminus[0] - cc*alpha[0];
       xplus[1] = aa*p->i_points[i].image->x[1] - bb*xminus[1] - cc*alpha[1];
@@ -282,7 +282,7 @@ void *compute_rays_parallel(void *_p)
       p->i_points[i].image->x[0] = xplus[0];
       p->i_points[i].image->x[1] = xplus[1];
       
-      std::cout << "In rayshooter : !!! " << p->i_points[i].image->x[0]/p->dDl[j] << " " << p->i_points[i].image->x[1]/p->dDl[j] << " !!!" << std::endl ;
+      // std::cout << "In rayshooter : !!! " << p->i_points[i].image->x[0]/p->dDl[j] << " " << p->i_points[i].image->x[1]/p->dDl[j] << " !!!" << std::endl ;
       
       
       // ----------------------------------------------------------------------------------------

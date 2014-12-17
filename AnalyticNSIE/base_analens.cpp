@@ -58,6 +58,7 @@ void LensHaloBaseNSIE::force_halo(
       *phi *= units ;                               // phi now in Msun * Mpc
     }
   }
+  
   // perturbations of host lens
   if(perturb_Nmodes > 0)
   {
@@ -65,50 +66,35 @@ void LensHaloBaseNSIE::force_halo(
     xt[0]=xcm[0] ;
     xt[1]=xcm[1] ;
     
-    COSMOLOGY cosmo (Planck1yr);
-    double zsource = zsource_reference ;
-    
-    // assert(zlens == 0.3 && zsource_reference == 3.5); // To be removed after !
     /*
     std::cout << "Modes in force_halo :" << std::endl ;
     for(int i=0 ; i<perturb_Nmodes ; i++) std::cout << perturb_modes[i] << " " ;
     std::cout << std::endl ;
     */
     
-    PosType Dl= cosmo.angDist(zlens), Dls =cosmo.angDist(zlens,zsource),Ds = cosmo.angDist(zsource);
-    
-    
     // Calling lens_expand :
     // *kappa += lens_expand(perturb_beta,perturb_modes,perturb_Nmodes,xcm,alpha_tmp,gamma_tmp,&phi_tmp);
-    *kappa += lens_expand(perturb_beta,perturb_modes,perturb_Nmodes,xt,alpha_tmp,gamma_tmp,&phi_tmp);
+    *kappa += lens_expand(perturb_beta,perturb_modes,perturb_Nmodes-1,xt,alpha_tmp,gamma_tmp,&phi_tmp);
     
     // Printing quantities for control :
-    
+    /*
     std::cout << "         xt in force_halo : @@@ " << xt[0] << " " << xt[1] << " @@@" << std::endl ;
-    std::cout << "alpha*scale in force_halo : " << alpha_tmp[0] << " " << alpha_tmp[1] << std::endl ;
-    std::cout << "xt - alphascale in force_halo : !!! " << xt[0] - alpha_tmp[0] << " " << xt[1] - alpha_tmp[1] << " !!!" << std::endl ;
-    
-    
-    // Up to here alpha was like in FindLensSimple, but now we need to adapt it for rayshooter !
-    
+    std::cout << "alpha in force_halo : " << alpha_tmp[0] << " " << alpha_tmp[1] << std::endl ;
+    std::cout << "xt - alpha in force_halo : !!! " << xt[0] - alpha_tmp[0] << " " << xt[1] - alpha_tmp[1] << " !!!" << std::endl ;
+    std::cout << "Dl = " << Dl << " , Dls = " << Dls << " , Ds = " << Ds << std::endl ;
+    */
+     
     // Inverting the sign :
     alpha_tmp[0] *= -1. ;
     alpha_tmp[1] *= -1. ;
     
     // Adding a contribution to remove p->i_points[i].image->x[0]*p->dDl[j+1]/p->dDl[j] to aa*p->i_points[i].image->x[0] :
-    
-    
-    alpha_tmp[0] += -1. * xt[0] /(Dl*(1+zlens))/(4*pi*Grav ) ;
-    alpha_tmp[1] += -1. * xt[1] /(Dl*(1+zlens))/(4*pi*Grav ) ;
-    
-    // Multiplying by the factors that will cancel the ones in rayshooter :
-    //alpha_tmp[0] /= (4*pi*Grav * Dls * (1+zsource)) ;
-    //alpha_tmp[1] /= (4*pi*Grav * Dls * (1+zsource)) ;
-    
+    alpha_tmp[0] += -1. * xt[0] / (Dl*(1+zlens)) / (4*pi*Grav) ;
+    alpha_tmp[1] += -1. * xt[1] / (Dl*(1+zlens)) / (4*pi*Grav) ;
     
     // Multiplying alpha by cosmo.angDist(0.3) so that it combines with the remaining contributions of p->i_points[i].image->x[0] :
-    alpha_tmp[0] *=  (1+zlens) ;
-    alpha_tmp[1] *=  (1+zlens) ;
+    alpha_tmp[0] *= (1+zlens) ;
+    alpha_tmp[1] *= (1+zlens) ;
     
     // std::cout << "alpha final in force_halo : " << alpha_tmp[0] << " " << alpha_tmp[1] << std::endl ;
     

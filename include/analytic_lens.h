@@ -67,7 +67,6 @@ private:
    		       ,double *xc,double **xg,double sigG,double beta,int Nmod
    		       ,double *mod,double **dx,double *re2,double *q);
   void setCosmology(const COSMOLOGY& cosmo);
-  double Ds,Dl,Dls;
   // output of ElliptisizeLens
   double qpriv[7];
 
