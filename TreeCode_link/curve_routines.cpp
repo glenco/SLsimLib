@@ -347,12 +347,7 @@ unsigned long order_curve4(Point *curve,long Npoints){
   /// Replaces curve with its convex hull.  The number of points will change.
   void ordered_concavehull(Kist<Point> * curve){
     int i;
-    std::vector<Point *> copy = curve->copytovector();
-    //copy.resize(curve->Nunits());
-    //for(i=0,curve->MoveToTop();!(curve->OffBottom());curve->Down(),++i){
-//      copy[i] = curve->getCurrent();
-  //  }
-    
+    std::vector<Point *> copy = curve->copytovector();   
     std::vector<Point *> hull = Utilities::concave_hull(copy,10);
     curve->copy(hull);
     

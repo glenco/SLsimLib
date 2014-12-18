@@ -15,6 +15,17 @@
  */
 namespace ImageFinding{
   
+  struct CriticalCurve{
+
+    std::vector<PosType [2]> crit_curve;
+    std::vector<PosType [2]> caustic_curve;
+    
+    PosType critical_center[2];      /// center of critical curve
+    PosType caustic_center[2];   /// center of caustic curve
+    PosType critical_area;        /// area of critical curve (radians^2)
+    PosType caustic_area;        /// area of caustic curve (radians^2)
+  };
+  
   void map_images(LensHndl lens,Source *source,GridHndl grid,int *Nimages
                   ,std::vector<ImageInfo> &imageinfo
                   ,double xmax,double xmin,double initial_size

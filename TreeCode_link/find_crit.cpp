@@ -6,6 +6,7 @@
  */
 
 #include "slsimlib.h"
+#include "map_images.h"
 
 #define NMAXCRITS 1000
 
@@ -344,6 +345,26 @@ void ImageFinding::find_crit(
   }
   //************************************/
 
+  std::vector<CriticalCurve> crtcurve(*Ncrits);
+  
+  for(size_t ii=0;ii<*Ncrits;++ii){
+  
+    crtcurve[ii].crit_curve.resize(critcurve[ii].imagekist->Nunits());
+    for(Kist<Point>::iterator it = critcurve[ii].imagekist->TopIt()
+        ;!(it.atend()); it--){
+      
+      crtcurve[ii].crit_curve[ii][0] = (*it)->x[0];
+      crtcurve[ii].crit_curve[ii][1] = (*it)->x[1];
+    }
+    crtcurve[ii].crit_curve = Utilities::concave_hull(crtcurve[ii].crit_curve,10);
+
+    critcurve[ii].imagekist->TranformPlanes();
+    copy = critcurve[ii].imagekist->copytovector();
+    crtcurve[ii].critical_area = Utilities::concave_hull(copy,5);
+
+    
+  }
+  
   return ;
 }
 void ImageFinding::find_crit2(
