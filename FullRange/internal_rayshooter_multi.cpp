@@ -211,10 +211,7 @@ void *compute_rays_parallel(void *_p)
     
     // Time delay at first plane : position on the observer plane is (0,0) => no need to take difference of positions.
     p->i_points[i].dt = 0.5*( p->i_points[i].image->x[0]*p->i_points[i].image->x[0] + p->i_points[i].image->x[1]*p->i_points[i].image->x[1] )/ p->dDl[0] ;
-    
-    
-    //  std::cout << "x1 = " << p->i_points[i].image->x[0] << "  ;  x2 = " << p->i_points[i].image->x[1] << std::endl ;
-    //  std::cout << "d_A(lense) = " << p->Dl[0] << std::endl ;
+
     
     // Begining of the loop through the planes :
     // Each iteration leaves i_point[i].image on plane (j+1)
@@ -224,16 +221,18 @@ void *compute_rays_parallel(void *_p)
       // convert to physical coordinates on the plane j
       xx[0] = p->i_points[i].image->x[0]/(1+p->plane_redshifts[j]);
       xx[1] = p->i_points[i].image->x[1]/(1+p->plane_redshifts[j]);
+      // PhysMpc = Mpc * (1+z)
+      // so xx is in Mpc / (1+z) here, does not look to be PhysMpc, is it ?
       
       assert(xx[0] == xx[0] && xx[1] == xx[1]);
       
+      // std::cout << "p->i_points[i].image->x[0] = " << p->i_points[i].image->x[0] << " , p->i_points[i].image->x[1] = " << p->i_points[i].image->x[1] << std::endl ;
       
       ////////////////////////////////////////////////////////////////
       
       p->lensing_planes[j]->force(alpha,&kappa,gamma,&phi,xx); // Computed in physical coordinates.
       
       ////////////////////////////////////////////////////////////////
-      
       
       
       assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
@@ -265,14 +264,9 @@ void *compute_rays_parallel(void *_p)
       bb = p->dDl[j+1]/p->dDl[j];
       cc = p->charge * p->dDl[j+1];
       
-      // std::cout << "p->dDl[j+1] = " << p->dDl[j+1] << std::endl;
-      // On the other hand this works :
-      // std::cout << "xplus contributions : " << (aa*p->i_points[i].image->x[0] - bb*xminus[0]) - cc*alpha[0] << " " << (aa*p->i_points[i].image->x[1] - bb*xminus[1]) - cc*alpha[1] << std::endl ;
-      
-      // std::cout << "alpha in rayshooter : " << cc*alpha[0] << " " << cc*alpha[1] << std::endl ;
-      
       xplus[0] = aa*p->i_points[i].image->x[0] - bb*xminus[0] - cc*alpha[0];
       xplus[1] = aa*p->i_points[i].image->x[1] - bb*xminus[1] - cc*alpha[1];
+      // x (should be) in physical Mpc, cc*alpha in (PhysMpc/mass)*(mass/Mpc)=1/(1+z).
       
       xminus[0] = p->i_points[i].image->x[0];
       xminus[1] = p->i_points[i].image->x[1];
@@ -282,12 +276,8 @@ void *compute_rays_parallel(void *_p)
       p->i_points[i].image->x[0] = xplus[0];
       p->i_points[i].image->x[1] = xplus[1];
       
-      // std::cout << "In rayshooter : !!! " << p->i_points[i].image->x[0]/p->dDl[j] << " " << p->i_points[i].image->x[1]/p->dDl[j] << " !!!" << std::endl ;
-      
-      
+      // std::cout << "In rayshooter : !!! " << p->i_points[i].image->x[0] / p->Dl[p->NPlanes] << " " << p->i_points[i].image->x[1] / p->Dl[p->NPlanes] << " !!!" << std::endl ; // This step is done after !
       // ----------------------------------------------------------------------------------------
-      
-      // std::cout << "alpha : " << p->charge*alpha[0] << " " << p->charge*alpha[1] << std::endl ;
       
       
       // This computes (\kappa^{j+1}, \gamma_1^{j+1}, \gamma_2^{j+1}, \gamma_3^{j+1})
@@ -350,7 +340,6 @@ void *compute_rays_parallel(void *_p)
         std::cout << kappa_plus << "\t" << gamma_plus[0] << "\t" << gamma_plus[1] << "\t" << gamma_plus[2] << "\t" << std::endl ;
       }
       
-      
       assert(kappa_plus==kappa_plus && gamma_minus[0]==gamma_minus[0] && gamma_minus[1]==gamma_minus[1] && gamma_minus[2]==gamma_minus[2]);
       
       
@@ -368,6 +357,9 @@ void *compute_rays_parallel(void *_p)
       
       // Check that the 1+z factor must indeed be there (because the x positions have been rescaled, so it may be different compared to the draft).
       // Remark : Here the true lensing potential is not "phi" but "phi * p->charge = phi * 4 pi G".
+      
+      
+      // std::cout << "Comp dist : " << p->Dl[p->NPlanes] << " " << p->dDl[j+1] << std::endl ;
       
     } // End of the loop going through the planes
     
