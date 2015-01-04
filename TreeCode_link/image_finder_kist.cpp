@@ -54,10 +54,10 @@ void ImageFinding::find_images_kist(
   
   if(imageinfo.size() < 3) imageinfo.resize(3);
   
-  if(  grid->s_tree->top->boundary_p1[0] > (y_source[0] + r_source)
-     || grid->s_tree->top->boundary_p2[0] < (y_source[0] - r_source)
-     || grid->s_tree->top->boundary_p1[1] > (y_source[1] + r_source)
-     || grid->s_tree->top->boundary_p2[1] < (y_source[1] - r_source)
+  if(  grid->s_tree->getTop()->boundary_p1[0] > (y_source[0] + r_source)
+     || grid->s_tree->getTop()->boundary_p2[0] < (y_source[0] - r_source)
+     || grid->s_tree->getTop()->boundary_p1[1] > (y_source[1] + r_source)
+     || grid->s_tree->getTop()->boundary_p2[1] < (y_source[1] - r_source)
      ){
     // source is not within initialized grid
     *Nimages = 0;
@@ -533,10 +533,10 @@ void ImageFinding::find_images_microlens(
   
   const float mumin_local = 0.02;
   
-  if(  grid->s_tree->top->boundary_p1[0] > (y_source[0] + r_source)
-     || grid->s_tree->top->boundary_p2[0] < (y_source[0] - r_source)
-     || grid->s_tree->top->boundary_p1[1] > (y_source[1] + r_source)
-     || grid->s_tree->top->boundary_p2[1] < (y_source[1] - r_source)
+  if(  grid->s_tree->getTop()->boundary_p1[0] > (y_source[0] + r_source)
+     || grid->s_tree->getTop()->boundary_p2[0] < (y_source[0] - r_source)
+     || grid->s_tree->getTop()->boundary_p1[1] > (y_source[1] + r_source)
+     || grid->s_tree->getTop()->boundary_p2[1] < (y_source[1] - r_source)
      ){
     // source is not within initialized grid
     *Nimages = 0;
@@ -593,7 +593,7 @@ void ImageFinding::find_images_microlens(
   
   /**** TODO test line **********************
 	  bool map_on = true;
-   PixelMap map(2000,(grid->i_tree->top->boundary_p2[0]-grid->i_tree->top->boundary_p1[0])/2,grid->i_tree->top->center);
+   PixelMap map(2000,(grid->i_tree->getTop()->boundary_p2[0]-grid->i_tree->getTop()->boundary_p1[0])/2,grid->i_tree->getTop()->center);
    char chrstr[100];
    std::string output = "image_proportional";
    int Nmaps=0;
@@ -1090,10 +1090,10 @@ void ImageFinding::find_images_microlens_exper(
   const float mumin_local = 0.02;
   if(imageinfo.size() < 2) imageinfo.resize(10);
   
-  if(  grid->s_tree->top->boundary_p1[0] > (y_source[0] + r_source)
-     || grid->s_tree->top->boundary_p2[0] < (y_source[0] - r_source)
-     || grid->s_tree->top->boundary_p1[1] > (y_source[1] + r_source)
-     || grid->s_tree->top->boundary_p2[1] < (y_source[1] - r_source)
+  if(  grid->s_tree->getTop()->boundary_p1[0] > (y_source[0] + r_source)
+     || grid->s_tree->getTop()->boundary_p2[0] < (y_source[0] - r_source)
+     || grid->s_tree->getTop()->boundary_p1[1] > (y_source[1] + r_source)
+     || grid->s_tree->getTop()->boundary_p2[1] < (y_source[1] - r_source)
      ){
     // source is not within initialized grid
     *Nimages = 0;
