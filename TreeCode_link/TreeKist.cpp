@@ -1336,7 +1336,7 @@ void TreeKist::_AddPoint(){
  *          points and branches are also removed.
  */
 
-unsigned long FreeBranchesBelow(TreeHndl i_tree,TreeHndl s_tree,Kist<Point> * trashkist){
+unsigned long TreeKist::FreeBranchesBelow(TreeHndl i_tree,TreeHndl s_tree,Kist<Point> * trashkist){
   
 	if(!i_tree->CurrentIsSquareBranch()) return 0;
 	if(i_tree->atLeaf()) return 0;

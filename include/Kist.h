@@ -128,6 +128,8 @@ public:
 	void copy(Kist<Data> *kist);
   void copy(const Kist<Data> &kist);
   void copy(std::vector<Data *> &vector);
+  void add(Kist<Data> *kist);
+  void add(const Kist<Data> &kist);
   void test_iterator();
 
 	// movement
@@ -694,7 +696,7 @@ template <class Data> void Kist<Data>::SetInImage(Boo value){
 	}while(Down());
 }
 /**
- * \brief copy contains of kist into this kist.  Destroys former content and leaves current of kist in
+ * \brief copy contents of kist into this kist.  Destroys former content and leaves current of kist in
  * new place.
  */
 template <class Data>
@@ -708,10 +710,11 @@ void Kist<Data>::copy(Kist<Data> *kist){
   }while(kist->Down());
 }
 /**
- * \brief copy contains of kist into this kist.  Destroys former content and leaves current of kist in
+ * \brief copy contents of kist into this kist.  Destroys former content and leaves current of kist in
  * new place.
  */
-template <class Data> void Kist<Data>::copy(const Kist<Data> &kist){
+template <class Data>
+void Kist<Data>::copy(const Kist<Data> &kist){
   Empty();
   if(kist.Nunits() == 0) return;
   Kist<Data>::iterator it = kist.getBottomIt();
@@ -720,7 +723,8 @@ template <class Data> void Kist<Data>::copy(const Kist<Data> &kist){
     Down();
   };
 }
-template <class Data> void Kist<Data>::copy(std::vector<Data *> &vector){
+template <class Data>
+void Kist<Data>::copy(std::vector<Data *> &vector){
 	Empty();
 	if(vector.size() == 0) return;
 	for(size_t i=0;i<vector.size();++i){
@@ -728,6 +732,31 @@ template <class Data> void Kist<Data>::copy(std::vector<Data *> &vector){
 		Down();
 	}
 }
+/**
+ * \brief copy contents of kist into this kist without destroying what is already there.
+ */
+template <class Data>
+void Kist<Data>::add(Kist<Data> *kist){
+  if(kist->Nunits() == 0) return;
+  kist->MoveToTop();
+  do{
+    InsertAfterCurrent(kist->getCurrent());
+    Down();
+  }while(kist->Down());
+}
+/**
+ * \brief copy contents of kist into this kist without destroying what is already there.
+ */
+template <class Data>
+void Kist<Data>::add(const Kist<Data> &kist){
+  if(kist.Nunits() == 0) return;
+  Kist<Data>::iterator it = kist.getBottomIt();
+  for(;!(it.atend()) ;++it){
+    InsertAfterCurrent(*it);
+    Down();
+  };
+}
+
 
 template <class Data> void Kist<Data>::test_iterator(){
     

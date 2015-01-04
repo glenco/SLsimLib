@@ -578,7 +578,7 @@ TreeNBHndl TreeSimple::NewTreeNB(IndexType *particles,IndexType nparticles
 
     TreeNBHndl tree;
     
-    tree = (TreeNBStruct *)malloc(sizeof(TreeNBStruct));
+  tree = new TreeNBStruct;// *)malloc(sizeof(TreeNBStruct));
     if (!tree){
       ERROR_MESSAGE(); fprintf(stderr,"allocation failure in NewTreeNB()\n");
       exit(1);
@@ -605,8 +605,8 @@ void TreeSimple::freeTreeNB(TreeNBHndl tree){
 	if(tree == NULL) return;
 
 	emptyTreeNB(tree);
-  	FreeBranchNB(tree->top);
-	free(tree);
+  FreeBranchNB(tree->top);
+  delete tree;
 
 	return;
 }

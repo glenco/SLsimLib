@@ -63,7 +63,7 @@ struct BranchNB{
  * Also flags for the number of dimensions the tree is defined in (2 or 3), and if multiple
  * masses and sizes should be used.
  */
-typedef struct TreeNBStruct{
+struct TreeNBStruct{
   BranchNB *top;
   BranchNB *current;
   /// number of branches in tree
@@ -72,7 +72,7 @@ typedef struct TreeNBStruct{
   short Ndimensions;
   /// Array of particle positions
   PosType **xp;
-} TreeNBStruct;
+};
 
 typedef struct TreeNBStruct * TreeNBHndl;
 typedef int TreeNBElement;

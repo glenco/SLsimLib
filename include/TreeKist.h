@@ -120,6 +120,8 @@ private:
   void _freeBranches_iter();
   void _FindBox(const double* ray);
 
+  unsigned long FreeBranchesBelow(TreeHndl i_tree,TreeHndl s_tree,Kist<Point> * trashkist);
+
   // Should be obsolete
   Point *NearestNeighbor(const double* center,int Nneighbors,ListHndl neighborlist
   		,short direction);

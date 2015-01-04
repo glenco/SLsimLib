@@ -852,20 +852,25 @@ void PixelMap::AddGrid(Grid &grid,LensingVariable val){
   std::vector<PointList> lists(Nblocks);
   
   bool allowDecent;
-  grid.i_tree->moveTop();
+  //grid.i_tree->moveTop();
+  TreeStruct::iterator treeit(grid.i_tree);
   int i = 0;
   do{
-    if(grid.i_tree->current->level == 4){
+    //    if(grid.i_tree->current->level == 4){
+    if((*treeit)->level == 4){
       assert(i < 16);
-      lists[i].top = lists[i].current = grid.i_tree->current->points;
-      lists[i].Npoints = grid.i_tree->current->npoints;
+      //lists[i].top = lists[i].current = grid.i_tree->current->points;
+      lists[i].top = lists[i].current = (*treeit)->points;
+      //lists[i].Npoints = grid.i_tree->current->npoints;
+      lists[i].Npoints = (*treeit)->npoints;
       ++i;
       allowDecent = false;
     }else{
       allowDecent = true;
     }
-  }while(grid.i_tree->TreeWalkStep(allowDecent) && i < Nblocks);
-  
+    //  }while(grid.i_tree->TreeWalkStep(allowDecent) && i < Nblocks);
+  }while(treeit.TreeWalkStep(allowDecent) && i < Nblocks);
+
   std::thread thr[16];
   
   for(int i = 0; i< Nblocks ;++i){
