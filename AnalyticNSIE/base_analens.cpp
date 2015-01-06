@@ -98,7 +98,7 @@ void LensHaloBaseNSIE::force_halo(
     alpha_tmp[1] *= -1. * (1+zlens) ;
     
     // std::cout << "alpha final in force_halo : " << alpha_tmp[0] << " " << alpha_tmp[1] << std::endl ;
-
+    
     
     // As before :
     alpha[0] += alpha_tmp[0];

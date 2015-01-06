@@ -268,6 +268,8 @@ void *compute_rays_parallel(void *_p)
       xplus[1] = aa*p->i_points[i].image->x[1] - bb*xminus[1] - cc*alpha[1];
       // x (should be) in physical Mpc, cc*alpha in (PhysMpc/mass)*(mass/Mpc)=1/(1+z).
       
+      // std::cout << "cc*alpha/p->Dl[p->NPlanes] in rayshooter : ??? " << cc*alpha[0] / p->Dl[p->NPlanes] << " " << cc*alpha[1] / p->Dl[p->NPlanes] << " ???" << std::endl ;
+      
       xminus[0] = p->i_points[i].image->x[0];
       xminus[1] = p->i_points[i].image->x[1];
     
