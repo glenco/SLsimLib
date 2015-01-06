@@ -54,18 +54,19 @@ void ImageFinding::find_crit(
   
   // find kist of points with negative magnification
   negimage.imagekist->Empty();
-  MoveToTopList(grid->i_tree->pointlist);
-  Point *minpoint = grid->i_tree->pointlist->current;
+
+  PointList::iterator i_tree_pointlist_current(grid->i_tree->pointlist->top);
+  Point *minpoint = *i_tree_pointlist_current;
   
   for(i=0;i<grid->i_tree->pointlist->Npoints;++i){
-    if(grid->i_tree->pointlist->current->invmag < invmag_min){
-      negimage.imagekist->InsertAfterCurrent(grid->i_tree->pointlist->current);
+    if((*i_tree_pointlist_current)->invmag < invmag_min){
+      negimage.imagekist->InsertAfterCurrent(*i_tree_pointlist_current);
       negimage.imagekist->Down();
     }
     
     // record point of maximum kappa
-    if(grid->i_tree->pointlist->current->kappa > minpoint->kappa) minpoint = grid->i_tree->pointlist->current;
-    MoveDownList(grid->i_tree->pointlist);
+    if((*i_tree_pointlist_current)->kappa > minpoint->kappa) minpoint = *i_tree_pointlist_current;
+    --i_tree_pointlist_current;
   }
   
   if(negimage.imagekist ->Nunits() == 0){
@@ -323,18 +324,18 @@ void ImageFinding::find_crit2(
   
   // find kist of points with negative magnification
   critcurve[0].imagekist->Empty();
-  MoveToTopList(grid->i_tree->pointlist);
-  Point *minpoint = grid->i_tree->pointlist->current;
+  PointList::iterator i_tree_pointlist_current(grid->i_tree->pointlist->Top());
+  Point *minpoint = *i_tree_pointlist_current;
   
   for(i=0;i<grid->i_tree->pointlist->Npoints;++i){
-    if(grid->i_tree->pointlist->current->invmag < invmag_min){
-      critcurve[0].imagekist->InsertAfterCurrent(grid->i_tree->pointlist->current);
+    if((*i_tree_pointlist_current)->invmag < invmag_min){
+      critcurve[0].imagekist->InsertAfterCurrent(*i_tree_pointlist_current);
       critcurve[0].imagekist->Down();
     }
     
     // record point of maximum kappa
-    if(grid->i_tree->pointlist->current->kappa > minpoint->kappa) minpoint = grid->i_tree->pointlist->current;
-    MoveDownList(grid->i_tree->pointlist);
+    if((*i_tree_pointlist_current)->kappa > minpoint->kappa) minpoint = *i_tree_pointlist_current;
+    --i_tree_pointlist_current;
   }
   bool maxpoint = false;
   
@@ -631,16 +632,16 @@ void refine_crit_in_image(
   
   // find kist of points with negative magnification
   negimage.imagekist->Empty();
-  MoveToTopList(grid->i_tree->pointlist);
+  PointList::iterator i_tree_pointlist_current(grid->i_tree->pointlist->Top());
   for(i=0;i<grid->i_tree->pointlist->Npoints;++i){
-    x[0] = grid->i_tree->pointlist->current->image->x[0] - x_source[0];
-    x[1] = grid->i_tree->pointlist->current->image->x[1] - x_source[1];
+    x[0] = (*i_tree_pointlist_current)->image->x[0] - x_source[0];
+    x[1] = (*i_tree_pointlist_current)->image->x[1] - x_source[1];
     
-    if(grid->i_tree->pointlist->current->invmag < 0 && r_source*r_source > (x[0]*x[0] + x[1]*x[1]) ){
-      negimage.imagekist->InsertAfterCurrent(grid->i_tree->pointlist->current);
+    if( (*i_tree_pointlist_current)->invmag < 0 && r_source*r_source > (x[0]*x[0] + x[1]*x[1]) ){
+      negimage.imagekist->InsertAfterCurrent(*i_tree_pointlist_current);
       negimage.imagekist->Down();
     }
-    MoveDownList(grid->i_tree->pointlist);
+    --i_tree_pointlist_current;
   }
   
   if(negimage.imagekist->Nunits() == 0) return;
@@ -683,8 +684,8 @@ void refine_crit_in_image(
     newpoint_kist.MoveToTop();
     negimage.imagekist->MoveToBottom();
     do{
-      x[0] = grid->i_tree->pointlist->current->image->x[0] - x_source[0];
-      x[1] = grid->i_tree->pointlist->current->image->x[1] - x_source[1];
+      x[0] = (*i_tree_pointlist_current)->image->x[0] - x_source[0];
+      x[1] = (*i_tree_pointlist_current)->image->x[1] - x_source[1];
       
       if(newpoint_kist.getCurrent()->image->invmag < 0 && r_source*r_source > (x[0]*x[0] + x[1]*x[1]) )
         negimage.imagekist->InsertAfterCurrent(newpoint_kist.getCurrent());

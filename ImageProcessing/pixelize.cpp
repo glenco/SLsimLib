@@ -826,14 +826,15 @@ void PixelMap::AddGrid(Grid &grid,PosType value){
   PointList* list = grid.i_tree->pointlist;
   size_t index;
   
-  list->current = list->top;
+  //list->current = list->top;
+  PointList::iterator list_current(list->Top());
   do{
-    if(inMapBox(list->current->x)){
+    if(inMapBox((*list_current)->x)){
       //index = Utilities::IndexFromPosition(list->current->x,Nx,Ny,range,center);
-      index = find_index(list->current->x);
+      index = find_index((*list_current)->x);
       map[index] = value;
     }
-  }while(MoveDownList(list));
+  }while(--list_current);
 }
 /**
  *  \brief Fills in pixels with the selected quantity from the grid points.
@@ -860,7 +861,7 @@ void PixelMap::AddGrid(Grid &grid,LensingVariable val){
     if((*treeit)->level == 4){
       assert(i < 16);
       //lists[i].top = lists[i].current = grid.i_tree->current->points;
-      lists[i].top = lists[i].current = (*treeit)->points;
+      lists[i].top = (*treeit)->points;
       //lists[i].Npoints = grid.i_tree->current->npoints;
       lists[i].Npoints = (*treeit)->npoints;
       ++i;
@@ -885,42 +886,43 @@ void PixelMap::AddGrid_(PointList list,LensingVariable val){
   double tmp,area;
   PosType tmp2[2];
   
-  list.current = list.top;
+  //list.current = list.top;
+  PointList::iterator pl_it(list.top);
   for(size_t i = 0; i< list.Npoints; ++i){
     switch (val) {
       case ALPHA:
-        tmp2[0] = list.current->x[0] - list.current->image->x[0];
-        tmp2[1] = list.current->x[1] - list.current->image->x[1];
+        tmp2[0] = (*pl_it)->x[0] - (*pl_it)->image->x[0];
+        tmp2[1] = (*pl_it)->x[1] - (*pl_it)->image->x[1];
         tmp = sqrt(tmp2[0]*tmp2[0] + tmp2[1]*tmp2[1])/resolution/resolution;
         break;
       case ALPHA1:
-        tmp = (list.current->x[0] - list.current->image->x[0])/resolution/resolution;
+        tmp = ((*pl_it)->x[0] - (*pl_it)->image->x[0])/resolution/resolution;
         break;
       case ALPHA2:
-        tmp = (list.current->x[1] - list.current->image->x[1])/resolution/resolution;
+        tmp = ((*pl_it)->x[1] - (*pl_it)->image->x[1])/resolution/resolution;
         break;
       case KAPPA:
-        tmp = list.current->kappa/resolution/resolution;
+        tmp = (*pl_it)->kappa/resolution/resolution;
         break;
       case GAMMA:
-        tmp2[0] = list.current->gamma[0];
-        tmp2[1] = list.current->gamma[1];
+        tmp2[0] = (*pl_it)->gamma[0];
+        tmp2[1] = (*pl_it)->gamma[1];
         tmp = sqrt(tmp2[0]*tmp2[0] + tmp2[1]*tmp2[1])/resolution/resolution;
         break;
       case GAMMA1:
-        tmp = list.current->gamma[0]/resolution/resolution;
+        tmp = (*pl_it)->gamma[0]/resolution/resolution;
         break;
       case GAMMA2:
-        tmp = list.current->gamma[1]/resolution/resolution;
+        tmp = (*pl_it)->gamma[1]/resolution/resolution;
         break;
       case GAMMA3:
-        tmp = list.current->gamma[2]/resolution/resolution;
+        tmp = (*pl_it)->gamma[2]/resolution/resolution;
         break;
       case INVMAG:
-        tmp = list.current->invmag/resolution/resolution;
+        tmp = (*pl_it)->invmag/resolution/resolution;
         break;
       case DT:
-        tmp = list.current->dt/resolution/resolution;
+        tmp = (*pl_it)->dt/resolution/resolution;
         break;
       default:
         std::cerr << "PixelMap::AddGrid() does not work for the input LensingVariable" << std::endl;
@@ -930,15 +932,15 @@ void PixelMap::AddGrid_(PointList list,LensingVariable val){
     }
     
     if(tmp != 0.0){
-      if( inMapBox(list.current->leaf) == true){
-        PointsWithinLeaf(list.current->leaf,neighborlist);
+      if( inMapBox((*pl_it)->leaf) == true){
+        PointsWithinLeaf((*pl_it)->leaf,neighborlist);
         for(it = neighborlist.begin();it != neighborlist.end();it++){
-          area = LeafPixelArea(*it,list.current->leaf);
+          area = LeafPixelArea(*it,(*pl_it)->leaf);
           map[*it] += tmp*area;
         }
       }
     }
-    MoveDownList(&list);
+    --pl_it;
   }
 }
 

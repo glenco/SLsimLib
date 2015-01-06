@@ -45,10 +45,11 @@ short find_peaks(
 	if(grid->getInitRange() != grid->getNumberOfPoints() ) grid->ReInitializeGrid(lens);
 
 	// Add all points to imageinfo
-	MoveToTopList(grid->i_tree->pointlist);
+	//MoveToTopList(grid->i_tree->pointlist);
+      PointList::iterator i_tree_pl_current(grid->i_tree->pointlist->top);
 	do{
-		imageinfo[0].imagekist->InsertAfterCurrent(grid->i_tree->pointlist->current);
-	}while(MoveDownList(grid->i_tree->pointlist));
+		imageinfo[0].imagekist->InsertAfterCurrent(*i_tree_pl_current);
+	}while(--i_tree_pl_current);
 
 
 	// increase threshold while increasing angular resolution
@@ -128,8 +129,6 @@ short find_peaks(
 
 		}
 	}
-
-	int NimageMax = 1000;
 
 	divide_images_kist(grid->i_tree,imageinfo,Nimages);
 

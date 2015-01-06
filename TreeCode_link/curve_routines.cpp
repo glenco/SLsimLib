@@ -1472,8 +1472,9 @@ void splitter(OldImageInfo *images,int Maximages,int *Nimages){
 
 	NpointsTotal = images[0].Npoints;
 
+  PointList::iterator imagelist_current(imagelist->bottom);
 	// copy image points into a list
-	for(i=0;i<images[0].Npoints;++i) InsertPointAfterCurrent(imagelist,&(images[0].points[i]));
+	for(i=0;i<images[0].Npoints;++i) imagelist->InsertPointAfterCurrent(imagelist_current,&(images[0].points[i]));
 
 	assert(imagelist->Npoints == images[0].Npoints);
 	//std::printf("imagelist = %il\n",imagelist->Npoints);
@@ -1485,17 +1486,18 @@ void splitter(OldImageInfo *images,int Maximages,int *Nimages){
 	// copy list back into array
 	point = images[0].points;
 	newpointarray = NewPointArray(NpointsTotal);
-	MoveToTopList(imagelist);
+
+  imagelist_current = imagelist->top;
 	m=0;
 	i=0;
 	do{
-		if(i < *Nimages && images[i].points==imagelist->current){
+		if(i < *Nimages && images[i].points == *imagelist_current){
 			images[i].points=&(newpointarray[m]);
 			++i;
 		}
-		PointCopyData(&(newpointarray[m]),imagelist->current);
+		PointCopyData(&(newpointarray[m]),*imagelist_current);
 		++m;
-	}while(MoveDownList(imagelist));
+	}while(--imagelist_current);
 
 	assert(m == NpointsTotal);
 
@@ -1535,11 +1537,14 @@ void splitlist(ListHndl imagelist,OldImageInfo *images,int *Nimages,int Maximage
 	//std::printf("imagelist = %li\n",imagelist->Npoints);
 	// divide images into disconnected curves using neighbors-of-neighbors
 
+  PointList::iterator imagelist_current(*imagelist);
+  PointList::iterator orderedlist_current;
+  
 	while(imagelist->Npoints > 0 && i < Maximages){
-		images[i].points = TakeOutCurrent(imagelist);
-		MoveToBottomList(orderedlist);
-		InsertPointAfterCurrent(orderedlist,images[i].points);
-		MoveDownList(orderedlist);
+		images[i].points = imagelist->TakeOutCurrent(imagelist_current);
+    orderedlist_current = orderedlist->bottom;
+		orderedlist->InsertPointAfterCurrent(orderedlist_current,images[i].points);
+		--orderedlist_current;
 		NeighborsOfNeighbors(orderedlist,imagelist);
 		images[i].Npoints = orderedlist->Npoints - m;
 		m += images[i].Npoints;
@@ -1551,10 +1556,11 @@ void splitlist(ListHndl imagelist,OldImageInfo *images,int *Nimages,int Maximage
 	if(i == Maximages && imagelist->Npoints > 0){
 		Point *point;
 		do{
-			point = TakeOutCurrent(imagelist);
-			MoveToBottomList(orderedlist);
-			InsertPointAfterCurrent(orderedlist,point);
-			MoveDownList(orderedlist);
+			point = imagelist->TakeOutCurrent(imagelist_current);
+			//MoveToBottomList(orderedlist);
+      orderedlist_current = orderedlist->bottom;
+			orderedlist->InsertPointAfterCurrent(orderedlist_current,point);
+      --orderedlist_current;
 			++(images[Maximages-1].Npoints);
 		}while(imagelist->Npoints > 0);
 	}
@@ -1569,7 +1575,6 @@ void splitlist(ListHndl imagelist,OldImageInfo *images,int *Nimages,int Maximage
 	imagelist->Npoints = orderedlist->Npoints;
 	imagelist->top = orderedlist->top;
 	imagelist->bottom = orderedlist->bottom;
-	imagelist->current = orderedlist->current;
 
 	//EmptyList(imagelist);
 	//free(imagelist);
