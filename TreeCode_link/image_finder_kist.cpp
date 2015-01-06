@@ -257,7 +257,7 @@ void ImageFinding::find_images_kist(
     time(&t3);
     if(verbose)
       printf("     time in image refinement %f min\n           points in grid=%li\n"
-             ,fabs(difftime(t3,now)/60.),grid->i_tree->pointlist->Npoints);
+             ,fabs(difftime(t3,now)/60.),grid->i_tree->pointlist->size());
     
     // mark image points in tree
     grid->s_tree->PointsWithinKist(y_source,r_source,&subkist,1);
@@ -861,7 +861,7 @@ void ImageFinding::find_images_microlens(
     time(&t3);
     if(verbose)
       printf("     time in image refinement %f min\n           points in grid=%li\n"
-             ,fabs(difftime(t3,now)/60.),grid->i_tree->pointlist->Npoints);
+             ,fabs(difftime(t3,now)/60.),grid->i_tree->pointlist->size());
     
     // mark image points in tree
     grid->s_tree->PointsWithinKist(y_source,r_source,&subkist,1);
@@ -1341,7 +1341,7 @@ void ImageFinding::find_images_microlens_exper(
     time(&t3);
     if(verbose)
       printf("     time in image refinement %f min\n           points in grid=%li\n"
-             ,fabs(difftime(t3,now)/60.),grid->i_tree->pointlist->Npoints);
+             ,fabs(difftime(t3,now)/60.),grid->i_tree->pointlist->size());
     
     // mark image points in tree
     grid->s_tree->PointsWithinKist(y_source,r_source,&subkist,1);
@@ -1685,7 +1685,7 @@ void ImageFinding::image_finder_kist(LensHndl lens, PosType *y_source,PosType r_
   // At this point all the image points are in imageinfo->imagekist and not divided up into separate images
   
   // split images
-  if( splitparities == 0 && imageinfo[0].imagekist->Nunits() < i_tree->pointlist->Npoints){
+  if( splitparities == 0 && imageinfo[0].imagekist->Nunits() < i_tree->pointlist->size()){
     divide_images_kist(i_tree,imageinfo,Nimages);
   }else{
     *Nimages = 1;
@@ -1956,7 +1956,7 @@ void findborders4(TreeHndl i_tree,ImageInfo *imageinfo){
   bool allin = false;
   
   
-  if(i_tree->pointlist->Npoints == imageinfo->imagekist->Nunits()) allin = true;    // all points on the grid are in the image
+  if(i_tree->pointlist->size() == imageinfo->imagekist->Nunits()) allin = true;    // all points on the grid are in the image
   
   //printf("beginning findborders2\n");
   //checkTree(i_tree);

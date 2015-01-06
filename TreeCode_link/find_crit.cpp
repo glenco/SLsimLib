@@ -55,10 +55,10 @@ void ImageFinding::find_crit(
   // find kist of points with negative magnification
   negimage.imagekist->Empty();
 
-  PointList::iterator i_tree_pointlist_current(grid->i_tree->pointlist->top);
+  PointList::iterator i_tree_pointlist_current(grid->i_tree->pointlist->Top());
   Point *minpoint = *i_tree_pointlist_current;
   
-  for(i=0;i<grid->i_tree->pointlist->Npoints;++i){
+  for(i=0;i<grid->i_tree->pointlist->size();++i){
     if((*i_tree_pointlist_current)->invmag < invmag_min){
       negimage.imagekist->InsertAfterCurrent(*i_tree_pointlist_current);
       negimage.imagekist->Down();
@@ -327,7 +327,7 @@ void ImageFinding::find_crit2(
   PointList::iterator i_tree_pointlist_current(grid->i_tree->pointlist->Top());
   Point *minpoint = *i_tree_pointlist_current;
   
-  for(i=0;i<grid->i_tree->pointlist->Npoints;++i){
+  for(i=0;i<grid->i_tree->pointlist->size();++i){
     if((*i_tree_pointlist_current)->invmag < invmag_min){
       critcurve[0].imagekist->InsertAfterCurrent(*i_tree_pointlist_current);
       critcurve[0].imagekist->Down();
@@ -633,7 +633,7 @@ void refine_crit_in_image(
   // find kist of points with negative magnification
   negimage.imagekist->Empty();
   PointList::iterator i_tree_pointlist_current(grid->i_tree->pointlist->Top());
-  for(i=0;i<grid->i_tree->pointlist->Npoints;++i){
+  for(i=0;i<grid->i_tree->pointlist->size();++i){
     x[0] = (*i_tree_pointlist_current)->image->x[0] - x_source[0];
     x[1] = (*i_tree_pointlist_current)->image->x[1] - x_source[1];
     

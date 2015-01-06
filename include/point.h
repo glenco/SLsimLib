@@ -125,6 +125,12 @@ private:
 
 /** \brief link list for points, uses the linking pointers within the Point type unlike  Kist */
 struct PointList{
+  PointList(){
+    top=NULL;
+    Npoints=0;
+    bottom = top;
+  }
+  ~PointList(){EmptyList();}
   
   class iterator{
   private:
@@ -205,17 +211,17 @@ struct PointList{
     
   };
   
-  unsigned long size(){return Npoints;}
+  unsigned long size() const {return Npoints;}
 
-  inline bool IsTop(PointList::iterator &it){
+  inline bool IsTop(PointList::iterator &it) const{
     return *it == top;
   };
-  inline bool IsBottom(PointList::iterator &it){
+  inline bool IsBottom(PointList::iterator &it) const{
     return *it == bottom;
   };
   
-  Point *Top(){return top;}
-  Point *Bottom(){return bottom;}
+  Point *Top() const {return top;}
+  Point *Bottom() const {return bottom;}
   
   void EmptyList();
   void InsertAfterCurrent(iterator &current,double *x,unsigned long id,Point *image);
@@ -235,7 +241,11 @@ struct PointList{
                 ,unsigned long idmin);
   void PrintList();
 
-//private:
+  void setN(unsigned long N){Npoints = N;}
+  void setTop(Point *p){top = p;}
+  void setBottom(Point *p){bottom = p;}
+
+private:
   Point *top;
   Point *bottom;
   //Point *current;
@@ -260,7 +270,6 @@ inline void MoveToBottomList(ListHndl list){
    routines for linked list of points
 ************************************************************/
 
-ListHndl NewList(void);
 Point *NewPoint(double *x,unsigned long id);
 
 //void JumpDownList(ListHndl list,int jump);

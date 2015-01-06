@@ -861,9 +861,9 @@ void PixelMap::AddGrid(Grid &grid,LensingVariable val){
     if((*treeit)->level == 4){
       assert(i < 16);
       //lists[i].top = lists[i].current = grid.i_tree->current->points;
-      lists[i].top = (*treeit)->points;
+      lists[i].setTop((*treeit)->points);
       //lists[i].Npoints = grid.i_tree->current->npoints;
-      lists[i].Npoints = (*treeit)->npoints;
+      lists[i].setN((*treeit)->npoints);
       ++i;
       allowDecent = false;
     }else{
@@ -887,8 +887,8 @@ void PixelMap::AddGrid_(PointList list,LensingVariable val){
   PosType tmp2[2];
   
   //list.current = list.top;
-  PointList::iterator pl_it(list.top);
-  for(size_t i = 0; i< list.Npoints; ++i){
+  PointList::iterator pl_it(list.Top());
+  for(size_t i = 0; i< list.size(); ++i){
     switch (val) {
       case ALPHA:
         tmp2[0] = (*pl_it)->x[0] - (*pl_it)->image->x[0];

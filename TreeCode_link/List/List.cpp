@@ -9,33 +9,6 @@
 /***********************************************************
    routines for linked list of points
 ************************************************************/
-/** \ingroup ConstructorL2
- *  \brief Constructor for a new list
- */
-ListHndl NewList(void){
-  PointList *pointlist;
-
-  pointlist=(PointList *) malloc(sizeof(PointList));
-  if (!pointlist){
-    ERROR_MESSAGE(); std::fprintf(stderr,"allocation failure in NewList()\n");
-    exit(1);
-  }
-  pointlist->top=NULL;
-  pointlist->Npoints=0;
-  pointlist->bottom = pointlist->top;
-  //pointlist->current = pointlist->top;
-
-  return pointlist;
-}
-/** \ingroup ConstructorL2
- *  \brief Destructor for a new list
- */
-
-void freeList(ListHndl list){
-
-	list->EmptyList();
-	free(list);
-}
 
 void PointList::InsertAfterCurrent(iterator &current,PosType *x,unsigned long id,Point *image){
 
@@ -354,10 +327,10 @@ void SwapPointsInList(ListHndl list,Point *p1,Point *p2){
   p2->prev=pt.prev;
   p2->next=pt.next;
 
-  if(list->top == p1) list->top = p2;
-  else if(list->top == p2) list->top = p1;
-  if(list->bottom == p1) list->bottom = p2;
-  else if(list->bottom == p2) list->bottom = p1;
+  if(list->Top() == p1) list->setTop(p2);
+  else if(list->Top() == p2) list->setTop(p1);
+  if(list->Bottom() == p1) list->setBottom(p2);
+  else if(list->Bottom() == p2) list->setBottom(p1);
 }
 
 void PointList::PrintList(){

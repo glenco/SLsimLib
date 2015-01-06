@@ -248,7 +248,7 @@ void LensHaloMOKA::saveImage(GridHndl grid,bool saveprofiles){
 	}
 	filename = f.str();
 
-  PointList::iterator i_tree_pointlist_current(grid->i_tree->pointlist->top);
+  PointList::iterator i_tree_pointlist_current(grid->i_tree->pointlist->Top());
 
 	do{
 		long index = Utilities::IndexFromPosition((*i_tree_pointlist_current)->x,map->nx,map->boxlrad,map->center);

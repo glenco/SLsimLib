@@ -225,7 +225,8 @@ void TreeStruct::construct_root(
   }*/
 
     /* make linked list of points */
-  pointlist=NewList();
+      //pointlist=NewList();
+      pointlist= new PointList;
    //EmptyList(pointlist);
       PointList::iterator pointlist_current;
   for(i=0;i<npoints;++i){
@@ -233,7 +234,7 @@ void TreeStruct::construct_root(
     --pointlist_current;
   }
 
-  top = new Branch(pointlist->top,npoints,boundary_p1,boundary_p2
+  top = new Branch(pointlist->Top(),npoints,boundary_p1,boundary_p2
 		      ,center,0);
 
   Nbranches = 1;

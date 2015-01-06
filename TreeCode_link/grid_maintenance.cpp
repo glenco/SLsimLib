@@ -246,12 +246,12 @@ void Grid::ReShoot(LensHndl lens){
   
   // clear source tree
   delete s_tree;
-  s_points = NewPointArray(i_tree->pointlist->Npoints);
+  s_points = NewPointArray(i_tree->pointlist->size());
   
 	// build new initial grid
   PointList::iterator i_tree_pointlist_current(i_tree->pointlist->Top());
   size_t k;
-  for(i=0,k=0;i<i_tree->pointlist->Npoints;++i){
+  for(i=0,k=0;i<i_tree->pointlist->size();++i){
     i_points = *i_tree_pointlist_current;
     if(i_points->head > 0){
       
@@ -292,7 +292,7 @@ PosType Grid::RefreshSurfaceBrightnesses(SourceHndl source){
 	PosType total=0,tmp;
   
   PointList::iterator s_tree_pointlist_current(s_tree->pointlist->Top());
-	for(unsigned long i=0;i<s_tree->pointlist->Npoints;++i,--s_tree_pointlist_current){
+	for(unsigned long i=0;i<s_tree->pointlist->size();++i,--s_tree_pointlist_current){
 		//y[0] = s_tree->pointlist->current->x[0]; - source->getX()[0];
 		//y[1] = s_tree->pointlist->current->x[1]; - source->getX()[1];
 		tmp = source->SurfaceBrightness((*s_tree_pointlist_current)->x);
@@ -313,7 +313,7 @@ PosType Grid::ClearSurfaceBrightnesses(){
 	PosType total=0;
   
   PointList::iterator s_tree_pointlist_current(s_tree->pointlist->Top());
-	for(unsigned long i=0;i<s_tree->pointlist->Npoints;++i,--s_tree_pointlist_current){
+	for(unsigned long i=0;i<s_tree->pointlist->size();++i,--s_tree_pointlist_current){
 		(*s_tree_pointlist_current)->surface_brightness = (*s_tree_pointlist_current)->image->surface_brightness
     = 0.0;
 		(*s_tree_pointlist_current)->in_image = (*s_tree_pointlist_current)->image->in_image
@@ -328,8 +328,8 @@ PosType Grid::ClearSurfaceBrightnesses(){
  */
 unsigned long Grid::getNumberOfPoints(){
 	assert(i_tree->getTop()->npoints == s_tree->getTop()->npoints);
-	assert(i_tree->getTop()->npoints == i_tree->pointlist->Npoints);
-	assert(s_tree->getTop()->npoints == s_tree->pointlist->Npoints);
+	assert(i_tree->getTop()->npoints == i_tree->pointlist->size());
+	assert(s_tree->getTop()->npoints == s_tree->pointlist->size());
 
 	return i_tree->getTop()->npoints;
 }
@@ -764,9 +764,9 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points){
 void Grid::ClearAllMarks(){
 	unsigned long i;
 
-  if(i_tree->pointlist->Npoints > 0){
+  if(i_tree->pointlist->size() > 0){
     PointList::iterator i_tree_pointlist_current(i_tree->pointlist->Top());
-    for(i=0;i<i_tree->pointlist->Npoints;++i){
+    for(i=0;i<i_tree->pointlist->size();++i){
       (*i_tree_pointlist_current)->in_image=NO;
       (*i_tree_pointlist_current)->image->in_image=NO;
       --i_tree_pointlist_current;
@@ -1123,7 +1123,7 @@ PixelMap Grid::writePixelMapUniform(
                                     ){
   
   if(getNumberOfPoints() ==0 ) return PixelMap();
-  PixelMap map(center, Nx, Ny,i_tree->pointlist->top->gridsize);
+  PixelMap map(center, Nx, Ny,i_tree->pointlist->Top()->gridsize);
   map.Clean();
   
   int Nblocks = 16;
@@ -1135,8 +1135,8 @@ PixelMap Grid::writePixelMapUniform(
   do{
     if((*i_tree_current)->level == 4){
       assert(i < 16);
-      lists[i].top = (*i_tree_current)->points;
-      lists[i].Npoints = (*i_tree_current)->npoints;
+      lists[i].setTop( (*i_tree_current)->points );
+      lists[i].setN( (*i_tree_current)->npoints );
       ++i;
       allowDecent = false;
     }else{
@@ -1172,8 +1172,8 @@ void Grid::writePixelMapUniform(
   do{
     if((*i_tree_current)->level == 4){
       assert(i < 16);
-      lists[i].top = (*i_tree_current)->points;
-      lists[i].Npoints = (*i_tree_current)->npoints;
+      lists[i].setTop( (*i_tree_current)->points );
+      lists[i].setN( (*i_tree_current)->npoints );
       ++i;
       allowDecent = false;
     }else{
@@ -1196,7 +1196,7 @@ void Grid::writePixelMapUniform_(PointList list,PixelMap *map,LensingVariable va
   long index;
   
   PointList::iterator list_current(list.Top());
-  for(size_t i = 0; i< list.Npoints; ++i){
+  for(size_t i = 0; i< list.size(); ++i){
     switch (val) {
       case ALPHA:
         tmp2[0] = (*list_current)->x[0] - (*list_current)->image->x[0];

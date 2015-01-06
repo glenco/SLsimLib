@@ -519,7 +519,7 @@ Point *sortList(long n, PosType *arr,ListHndl list,Point *firstpointin){
     }
     arr[i+1]=a;
 
-    if( *list_current==list->top && i==-1) list->InsertPointBeforeCurrent(list_current,point);
+    if( *list_current==list->Top() && i==-1) list->InsertPointBeforeCurrent(list_current,point);
     else list->InsertPointAfterCurrent(list_current,point);
 
     if(i == -1) firstpoint=point;
@@ -843,25 +843,25 @@ void NeighborsOfNeighbors(ListHndl neighbors,ListHndl wholelist){
 	short check=0;
 	Point *point;
 
-	if(neighbors->Npoints < 1 || wholelist->Npoints < 1) return;
+	if(neighbors->size() < 1 || wholelist->size() < 1) return;
 
   PointList::iterator wholelist_current(*wholelist);
   PointList::iterator neighbors_current(*neighbors);
   
 	do{
-    wholelist_current = wholelist->top;
+    wholelist_current = wholelist->Top();
 		do{
 			if(check==1){
         ++wholelist_current;
 				check=0;
 			}
 			if(AreBoxNeighbors(*neighbors_current,*wholelist_current) ){
-				if( wholelist->top == *wholelist_current ) check=1;
+				if( wholelist->Top() == *wholelist_current ) check=1;
 				point = wholelist->TakeOutCurrent(wholelist_current);
 				neighbors->InsertPointAfterCurrent(neighbors_current,point);
 			}
 		}while(--wholelist_current);
-	}while((--neighbors_current) && wholelist->Npoints > 0);
+	}while((--neighbors_current) && wholelist->size() > 0);
 
 	return ;
 }
@@ -1171,9 +1171,9 @@ void TransformPoints(ListHndl listout,ListHndl listin){
   unsigned long i;
 
   listout->EmptyList();
-  PointList::iterator listin_current(listin->top);
-  PointList::iterator listout_current(listout->top);
-  for(i=0;i<listin->Npoints;++i){
+  PointList::iterator listin_current(listin->Top());
+  PointList::iterator listout_current(listout->Top());
+  for(i=0;i<listin->size();++i){
     listout->InsertAfterCurrent(listout_current,(*listin_current)->image->x
                                 ,(*listin_current)->image->id,*listin_current);
     --listin_current;

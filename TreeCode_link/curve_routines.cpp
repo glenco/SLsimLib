@@ -1459,7 +1459,7 @@ short backtrack(Point *points,long Npoints,long *j,long jold,long *end){
  */
 void splitter(OldImageInfo *images,int Maximages,int *Nimages){
 	long i,m,j;
-	ListHndl imagelist=NewList();
+	ListHndl imagelist= new PointList;
 	unsigned long NpointsTotal=0;
 	Point *point,*newpointarray;
 
@@ -1472,22 +1472,22 @@ void splitter(OldImageInfo *images,int Maximages,int *Nimages){
 
 	NpointsTotal = images[0].Npoints;
 
-  PointList::iterator imagelist_current(imagelist->bottom);
+  PointList::iterator imagelist_current(imagelist->Bottom());
 	// copy image points into a list
 	for(i=0;i<images[0].Npoints;++i) imagelist->InsertPointAfterCurrent(imagelist_current,&(images[0].points[i]));
 
-	assert(imagelist->Npoints == images[0].Npoints);
+	assert(imagelist->size() == images[0].Npoints);
 	//std::printf("imagelist = %il\n",imagelist->Npoints);
 
 	splitlist(imagelist,images,Nimages,Maximages);
 	//std::printf("imagelist = %il NpointsTotal = %il\n",imagelist->Npoints,NpointsTotal);
-	assert(imagelist->Npoints == NpointsTotal);
+	assert(imagelist->size() == NpointsTotal);
 
 	// copy list back into array
 	point = images[0].points;
 	newpointarray = NewPointArray(NpointsTotal);
 
-  imagelist_current = imagelist->top;
+  imagelist_current = imagelist->Top();
 	m=0;
 	i=0;
 	do{
@@ -1532,7 +1532,7 @@ void splitter(OldImageInfo *images,int Maximages,int *Nimages){
  */
 void splitlist(ListHndl imagelist,OldImageInfo *images,int *Nimages,int Maximages){
 	unsigned long i=0,m=0;
-	ListHndl orderedlist = NewList();
+	ListHndl orderedlist = new PointList;
 
 	//std::printf("imagelist = %li\n",imagelist->Npoints);
 	// divide images into disconnected curves using neighbors-of-neighbors
@@ -1540,29 +1540,29 @@ void splitlist(ListHndl imagelist,OldImageInfo *images,int *Nimages,int Maximage
   PointList::iterator imagelist_current(*imagelist);
   PointList::iterator orderedlist_current;
   
-	while(imagelist->Npoints > 0 && i < Maximages){
+	while(imagelist->size() > 0 && i < Maximages){
 		images[i].points = imagelist->TakeOutCurrent(imagelist_current);
-    orderedlist_current = orderedlist->bottom;
+    orderedlist_current = orderedlist->Bottom();
 		orderedlist->InsertPointAfterCurrent(orderedlist_current,images[i].points);
 		--orderedlist_current;
 		NeighborsOfNeighbors(orderedlist,imagelist);
-		images[i].Npoints = orderedlist->Npoints - m;
+		images[i].Npoints = orderedlist->size() - m;
 		m += images[i].Npoints;
 		++i;
 	}
 	*Nimages = i;
 
 	// if there are too many images put the extra points in one last image
-	if(i == Maximages && imagelist->Npoints > 0){
+	if(i == Maximages && imagelist->size() > 0){
 		Point *point;
 		do{
 			point = imagelist->TakeOutCurrent(imagelist_current);
 			//MoveToBottomList(orderedlist);
-      orderedlist_current = orderedlist->bottom;
+      orderedlist_current = orderedlist->Bottom();
 			orderedlist->InsertPointAfterCurrent(orderedlist_current,point);
       --orderedlist_current;
 			++(images[Maximages-1].Npoints);
-		}while(imagelist->Npoints > 0);
+		}while(imagelist->size() > 0);
 	}
 
 	if(i >= Maximages){
@@ -1570,11 +1570,11 @@ void splitlist(ListHndl imagelist,OldImageInfo *images,int *Nimages,int Maximage
 		std::printf("Too many images for Note enough images\n");
 	}
 
-	assert(imagelist->Npoints == 0);
+	assert(imagelist->size() == 0);
 
-	imagelist->Npoints = orderedlist->Npoints;
-	imagelist->top = orderedlist->top;
-	imagelist->bottom = orderedlist->bottom;
+	imagelist->setN(orderedlist->size());
+	imagelist->setTop(orderedlist->Top());
+	imagelist->setBottom(orderedlist->Bottom());
 
 	//EmptyList(imagelist);
 	//free(imagelist);
