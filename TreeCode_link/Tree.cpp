@@ -190,6 +190,7 @@ void FreePointArray(Point *array,bool NewXs){
   }
 }
 
+std::mutex TreeStruct::mutex;
 /**
  *  \brief  Make a new tree and the linked list of points in it.  Does
  *  not build the tree structure.  The other constructor should be used

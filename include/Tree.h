@@ -225,7 +225,6 @@ private:
 typedef struct TreeStruct *TreeHndl;
 typedef int TreeElement;
 
-std::mutex TreeStruct::mutex;
 
 bool BoxInCircle(PosType *ray,PosType radius,PosType *p1,PosType *p2);
 PosType ClosestBorder(PosType *ray,PosType *p1,PosType *p2);

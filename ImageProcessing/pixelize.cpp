@@ -819,6 +819,25 @@ void PixelMap::AddCurve(ImageInfo *curve,PosType value){
 	return;
 }
 
+void PixelMap::AddCurve(std::vector<Point_2d> &curve,double value){
+  PosType x[2];
+  
+  if(curve.size() == 0 ) return;
+  
+  x[0] = curve[0][0];
+  x[1] = curve[0][1];
+  for(size_t ii=1;ii<curve.size();++ii){
+    drawline(x,curve[ii].x,value);
+    x[0] = curve[ii][0];
+    x[1] = curve[ii][1];
+  }
+  drawline(x,curve[0].x,value);
+  
+  return;
+
+}
+
+
 /**
  *  \brief Fills in pixels where the image plane points in the grid are located with the value given
  */
@@ -849,8 +868,13 @@ void PixelMap::AddGrid(Grid &grid,LensingVariable val){
   
   if(grid.getNumberOfPoints() ==0 ) return;
   
+  AddGrid_(*(grid.i_tree->pointlist),val);
+  
+  exit(0);
+  
   int Nblocks = 16;
   std::vector<PointList> lists(Nblocks);
+  PointList::iterator list_current;
   
   bool allowDecent;
   //grid.i_tree->moveTop();
@@ -864,6 +888,10 @@ void PixelMap::AddGrid(Grid &grid,LensingVariable val){
       lists[i].setTop((*treeit)->points);
       //lists[i].Npoints = grid.i_tree->current->npoints;
       lists[i].setN((*treeit)->npoints);
+      list_current = lists[i].Top();
+      list_current.JumpDownList( (*treeit)->npoints -1);
+      lists[i].setBottom(*list_current);
+      
       ++i;
       allowDecent = false;
     }else{

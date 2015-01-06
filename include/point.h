@@ -285,5 +285,80 @@ Point *sortList(long n, double arr[],ListHndl list,Point *firstpoint);
 //bool ArePointsUniqueList(ListHndl list);
 //bool IntersectionList(ListHndl list1,ListHndl list2,ListHndl intersection);
 
+/**  \brief Class for representing points or vectors in 2 dimensions.  Not that the dereferencing operator is overridden.
+ 
+ */
+struct Point_2d{
+  Point_2d(){
+    x[0]=x[1]=0.0;
+  }
+  ~Point_2d(){};
+  
+  Point_2d(const Point_2d &p){
+    x[0]=p.x[0];
+    x[1]=p.x[1];
+  }
+  Point_2d & operator=(const Point_2d &p){
+    if(this == &p) return *this;
+    x[0]=p.x[0];
+    x[1]=p.x[1];
+    return *this;
+  }
+  Point_2d & operator=(const Point &p){
+    x[0]=p.x[0];
+    x[1]=p.x[1];
+    return *this;
+  }
+  
+  Point_2d & operator+=(const Point &p){
+    x[0]+=p.x[0];
+    x[1]+=p.x[1];
+    return *this;
+  }
+  Point_2d  operator+(const Point &p){
+    Point_2d tmp;
+    tmp.x[0] = x[0] + p.x[0];
+    tmp.x[1] = x[1] + p.x[1];
+    return tmp;
+  }
+  Point_2d  operator-(const Point &p){
+    Point_2d tmp;
+    tmp.x[0] = x[0] - p.x[0];
+    tmp.x[1] = x[1] - p.x[1];
+    return tmp;
+  }
+  Point_2d & operator+=(const Point_2d &p){
+    x[0]+=p.x[0];
+    x[1]+=p.x[1];
+    return *this;
+  }
+  Point_2d & operator/=(PosType value){
+    x[0]/=value;
+    x[1]/=value;
+    return *this;
+  }
+  Point_2d & operator/(PosType value){
+    x[0]/=value;
+    x[1]/=value;
+    return *this;
+  }
+  Point_2d & operator*=(PosType value){
+    x[0]*=value;
+    x[1]*=value;
+    return *this;
+  }
+  /// scalar product
+  PosType operator*(const Point_2d &p){
+    return x[0]*p.x[0] + x[1]*p.x[1];
+  }
+  /// outer product
+  PosType operator^(const Point_2d &p){
+    return x[0]*p.x[1] - x[1]*p.x[0];
+  }
+  
+  PosType x[2];
+  PosType & operator[](size_t i){return x[i];}
+};
+
 
 #endif
