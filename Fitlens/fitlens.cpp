@@ -156,6 +156,10 @@ void LensHaloFit::FindLensSimple(
   // for(i=0;i<perturb_Nmodes;i++) std::cout << perturb_modes[i] << " " ;
   // std::cout << std::endl ;
 
+  // Converting source position to physical angle :
+  y[0] *= Dl * (1+zlens) / (Ds * (1+zsource_reference)) ;
+  y[1] *= Dl * (1+zlens) / (Ds * (1+zsource_reference)) ;
+
   
   free_dmatrix(xob,0,Nimages-1,0,1);
   free_dmatrix(xg,0,1,0,1);
