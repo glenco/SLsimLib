@@ -848,8 +848,15 @@ void PixelMap::AddGrid(Grid &grid,LensingVariable val){
   
   if(grid.getNumberOfPoints() ==0 ) return;
   
+  AddGrid_(*(grid.i_tree->pointlist),val);
+  
+  exit(0);
+  //***********************************************************************
+
   int Nblocks = 16;
   std::vector<PointList> lists(Nblocks);
+  
+  Kist<Point> kist;
   
   bool allowDecent;
   //grid.i_tree->moveTop();

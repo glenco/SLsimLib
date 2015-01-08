@@ -134,6 +134,8 @@ public:
 	/// replaces existing main halos with a sequence of main halos
 	void replaceMainHalos(LensHalo** halos, std::size_t Nhalos,bool verbose = false);
 
+  void insertSubstructures(PosType Rregion,PosType NumberDensity,PosType Mass_min,PosType Mass_max,PosType redshift,PosType alpha,PosType center[],PosType density_contrast,bool verbose);
+  
 	/// get number of main halos
 	std::size_t getNMainHalos() const;
 	/// get number of main halos of given type
@@ -272,8 +274,10 @@ private: /* field */
 	/// if true, the background is switched off and only the main lens is present
 	bool flag_switch_field_off;
 	
-	/// vector of all field halos
-	std::vector<LensHalo*> field_halos;
+  /// vector of all field halos
+  std::vector<LensHalo*> field_halos;
+  /// vector of all field halos
+  std::vector<LensHalo*> substruct_halos;
 	/// number of field planes
 	std::size_t field_Nplanes;
 	/// vector of all field planes
