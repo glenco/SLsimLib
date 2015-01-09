@@ -407,7 +407,12 @@ void Lens::resetFieldHalos(bool verbose)
 	Utilities::delete_container(field_halos);
 	Utilities::delete_container(field_planes);
 	
-	
+  // Define the number of Halos binning table :
+  const int Nzbins = 64 ;
+  std::vector<PosType> zbins(Nzbins) ;
+  std::vector<PosType> Nhalosbin (Nzbins) ;
+  PosType aveNhalos = 0. ;
+  
 	if(sim_input_flag){
 		if(read_sim_file == false){
       if(field_input_sim_format == MillenniumObs) readInputSimFileMillennium(verbose);
@@ -415,11 +420,13 @@ void Lens::resetFieldHalos(bool verbose)
     }
 	}
 	else{
-		createFieldHalos(verbose);
+    ComputeNhalosbin(Nzbins, zbins, Nhalosbin, aveNhalos);
+    
+		createFieldHalos(Nzbins, zbins, Nhalosbin, aveNhalos, verbose); // Too Long !
 	}
 	
 	createFieldPlanes(verbose);
-	
+
 	combinePlanes(verbose);
 }
 
@@ -953,13 +960,43 @@ void Lens::replaceMainHalos(LensHalo** halos, std::size_t Nhalos,bool verbose)
 	combinePlanes(verbose);
 }
 
-void Lens::createFieldHalos(bool verbose)
+
+
+void Lens::ComputeNhalosbin (const int Nzbins, std::vector<PosType> & zbins, std::vector<PosType> & Nhalosbin, PosType & aveNhalos)
 {
+  // const int Nzbins=64 ;
+  // std::vector<PosType> Nhalosbin(Nzbins) ;
+  // std::vector<PosType> zbins(Nzbins) ;
+  
+  aveNhalos = cosmo.haloNumberInBufferedCone(field_min_mass,0,zsource,fieldofview*pow(pi/180,2),field_buffer,field_mass_func_type,mass_func_PL_slope);
+  
+  Utilities::fill_linear(zbins,Nzbins,0.0,zsource);
+  // construct redshift distribution table
+  Nhalosbin[0] = 1;
+  zbins[0] = 0;
+  
+  for(int k=1;k<Nzbins-1;++k){
+    Nhalosbin[k] = cosmo.haloNumberInBufferedCone(field_min_mass,zbins[k],zsource,fieldofview*pow(pi/180,2),field_buffer,field_mass_func_type,mass_func_PL_slope)/aveNhalos;
+    // std::cout << Nhalosbin[k] ;
+  }
+  // std::cout << std::endl ;
+  zbins[Nzbins-1] = zsource;
+  Nhalosbin[Nzbins-1] = 0.0;
+}
+
+
+
+
+void Lens::createFieldHalos(const int Nzbins, std::vector<PosType> zbins, std::vector<PosType> Nhalosbin, PosType aveNhalos, bool verbose)
+{
+  time_t t_TMP1, t_TMP2, t_TMP3, t_TMP4, t_TMP5, t_TMP6, t_TMP7, t_TMP8;
+  time(&t_TMP1);
+  
   std::cout << "Creating Field Halos from Mass Function" << std::endl;
-	const int Nzbins=64;
+	// const int Nzbins=64;
 	const int Nmassbin=64;
 	int NZSamples = 50;
-	std::vector<PosType> zbins,Nhalosbin(Nzbins);
+	// std::vector<PosType> zbins,Nhalosbin(Nzbins);
 	unsigned long i,k,j_max,k1,k2;
 	std::vector<PosType> Logm;
 	//PosType pos_max[2];
@@ -973,14 +1010,18 @@ void Lens::createFieldHalos(bool verbose)
   PosType field_galaxy_mass_fraction = 0;
   size_t haloid=0;
   
+  time(&t_TMP2);
   
   if (field_min_mass < 1.0e5) {
     std::cout << "Are you sure you want the minimum field halo mass to be " << field_min_mass << " Msun?" << std::endl;
     throw;
   }
   
-	PosType aveNhalos = cosmo.haloNumberInBufferedCone(field_min_mass,0,zsource,fieldofview*pow(pi/180,2),field_buffer,field_mass_func_type,mass_func_PL_slope);
+	// PosType aveNhalos = cosmo.haloNumberInBufferedCone(field_min_mass,0,zsource,fieldofview*pow(pi/180,2),field_buffer,field_mass_func_type,mass_func_PL_slope);
   
+  time(&t_TMP3);
+  
+  /*
 	Utilities::fill_linear(zbins,Nzbins,0.0,zsource);
 	// construct redshift distribution table
 	Nhalosbin[0] = 1;
@@ -988,9 +1029,14 @@ void Lens::createFieldHalos(bool verbose)
   
 	for(k=1;k<Nzbins-1;++k){
 		Nhalosbin[k] = cosmo.haloNumberInBufferedCone(field_min_mass,zbins[k],zsource,fieldofview*pow(pi/180,2),field_buffer,field_mass_func_type,mass_func_PL_slope)/aveNhalos;
+    // std::cout << Nhalosbin[k] ;
 	}
+  // std::cout << std::endl ;
 	zbins[Nzbins-1] = zsource;
 	Nhalosbin[Nzbins-1] = 0.0;
+  */
+  
+  time(&t_TMP4); // This last step is too long for simulations !
   
 	std::size_t Nhalos = static_cast<std::size_t>(poidev(float(aveNhalos), seed));
   
@@ -1033,6 +1079,8 @@ void Lens::createFieldHalos(bool verbose)
     
 		Nhalosbin[0] = 1;
     
+  time(&t_TMP5);
+    
 #ifdef _OPENMP
 #pragma omp parallel for default(shared) private(k)
 #endif
@@ -1042,6 +1090,8 @@ void Lens::createFieldHalos(bool verbose)
       /Nhaloestot;
 		}
 		Nhalosbin[Nmassbin-1] = 0;
+    
+  time(&t_TMP6);
     
 		for(i = k1; i < k2; i++){
 			PosType Ds = cosmo.angDist(0,halo_zs_vec[i]);
@@ -1129,6 +1179,7 @@ void Lens::createFieldHalos(bool verbose)
 					break;
 			}
       
+  time(&t_TMP7);
       
 			if(mass > mass_max) {
 				mass_max = mass;
@@ -1178,6 +1229,10 @@ void Lens::createFieldHalos(bool verbose)
     
 		Nhalosbin.empty();
 	}
+  
+  time(&t_TMP8);
+  
+  std::cout << std::endl << "CreateFieldHalos : " << difftime(t_TMP2,t_TMP1)/60. << " , " << difftime(t_TMP3,t_TMP2)/60. << " , " << difftime(t_TMP4,t_TMP3)/60. << " , " << difftime(t_TMP5,t_TMP4)/60. << " , " << difftime(t_TMP6,t_TMP5)/60. << " , " << difftime(t_TMP7,t_TMP6)/60. << " , " << difftime(t_TMP8,t_TMP7)/60. << " mins." << std::endl;
   
 	assert(k2 == Nhalos);
 	delete halo_calc;
@@ -1905,12 +1960,22 @@ void Lens::buildPlanes(InputParams& params,bool verbose)
 		// set the distances of the field planes
 		setupFieldPlanes();
 		
+    // Define the number of Halos binning table :
+    const int Nzbins = 64 ;
+    std::vector<PosType> zbins(Nzbins) ;
+    std::vector<PosType> Nhalosbin (Nzbins) ;
+    PosType aveNhalos = 0. ;
+    
 		// create or read the field halos
 		if(sim_input_flag){
       if(field_input_sim_format == MillenniumObs) readInputSimFileMillennium(verbose);
       if(field_input_sim_format == MultiDarkHalos) readInputSimFileMultiDarkHalos(verbose);
 		}else{
-			createFieldHalos(verbose);
+      ComputeNhalosbin(Nzbins, zbins, Nhalosbin, aveNhalos);
+      for (int i=0; i<Nzbins; i++) std::cout << Nhalosbin[i] ;
+      std::cout << std::endl ;
+      
+			createFieldHalos(Nzbins, zbins, Nhalosbin, aveNhalos, verbose);
 		}
 		// create field planes and sort halos onto them
 		createFieldPlanes(verbose);

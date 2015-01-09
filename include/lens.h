@@ -233,7 +233,8 @@ private: /* generation */
 	/// setup the field plane distances
 	void setupFieldPlanes();
 	/// create field halos as specified in the parameter file
-	void createFieldHalos(bool verbose);
+  void ComputeNhalosbin (const int Nzbins, std::vector<PosType> & zbins, std::vector<PosType> & Nhalosbin, PosType & aveNhalos);
+	void createFieldHalos(const int Nzbins, std::vector<PosType> zbins, std::vector<PosType> Nhalosbin, PosType aveNhalos, bool verbose);
 	/// read field halo data in from a file in Millennium output format
 	void readInputSimFileMillennium(bool verbose);
 	/// read field halo data in from a file in MultiDarkHalos output format
