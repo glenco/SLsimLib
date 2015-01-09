@@ -254,10 +254,16 @@ private: /* generation */
 	
   // Variables used by buildPLanes and createFieldHalos :
   const int Nzbins = 64 ;
+  const int Nmassbin=64;
+  int NZSamples = 50;
   std::vector<PosType> zbins ;
   std::vector<PosType> Nhalosbin ;
+  std::vector<PosType> Nhaloestot_Tab ;
   PosType aveNhalos ;
-  
+  std::vector<PosType> Logm;
+  std::vector<PosType> halo_zs_vec;
+  std::size_t Nhalos ;
+  std::vector<std::vector<PosType>> NhalosbinNew;
   
 private: /* force calculation */
 	/// if >= 1, deflection in the rayshooting is switched off
