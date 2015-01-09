@@ -91,9 +91,37 @@ Lens::Lens(InputParams& params, long* my_seed, CosmoParamSet cosmoset, bool verb
 	// initially let source be the one inputed from parameter file
 	index_of_new_sourceplane = -1;
 	toggle_source_plane = false;
-	
-	// set up the lens contents
-	buildPlanes(params,verbose);
+
+  
+  if(flag_switch_field_off == false) {
+    std::cout << "Nzbins = " << Nzbins << std::endl ;
+    
+    // Resizing the "number of Halos" binning table :
+    zbins.resize(Nzbins) ;
+    Nhalosbin.resize(Nzbins) ;
+    
+    // Initialising the "number of Halos" binning table :
+    for(int k=0 ; k<Nzbins ; k++)
+    {
+      zbins[k] = 0. ;
+      Nhalosbin[k] = 0. ;
+    }
+    aveNhalos = 0. ;
+    
+    // Computing the number of halos per bins :
+    if(sim_input_flag){
+      // Do Nothing ! No step is necessary here !
+    }
+    else {
+      // Compute the numbers :
+      ComputeNhalosbin();
+      for (int i=0; i<Nzbins; i++) std::cout << Nhalosbin[i] << " " ;
+      std::cout << std::endl ;
+    }
+  }
+  
+	// set up the lens contents :
+	buildPlanes(params, verbose);
 }
 
 /** Recontructor constructor.  This recreates the original lens before any new additions might have been added or changes to the InputParam object.
@@ -129,8 +157,36 @@ Lens::Lens(Lens &lens)
 	index_of_new_sourceplane = -1;
 	toggle_source_plane = false;
 	
+
+  if(flag_switch_field_off == false) {
+    std::cout << "Nzbins = " << Nzbins << std::endl ;
+    
+    // Resizing the "number of Halos" binning table :
+    zbins.resize(Nzbins) ;
+    Nhalosbin.resize(Nzbins) ;
+    
+    // Initialising the "number of Halos" binning table :
+    for(int k=0 ; k<Nzbins ; k++)
+    {
+      zbins[k] = 0. ;
+      Nhalosbin[k] = 0. ;
+    }
+    aveNhalos = 0. ;
+  
+    // Computing the number of halos per bins :
+    if(sim_input_flag){
+      // Do Nothing ! No step is necessary here !
+    }
+    else {
+      // Compute the numbers :
+      ComputeNhalosbin();
+      for (int i=0; i<Nzbins; i++) std::cout << Nhalosbin[i] << " " ;
+      std::cout << std::endl ;
+    }
+  }
+  
 	// set up the lens contents
-	buildPlanes(init_params,false);
+	buildPlanes(init_params, false);
 }
 
 Lens::~Lens()
@@ -406,12 +462,6 @@ void Lens::resetFieldHalos(bool verbose)
 {
 	Utilities::delete_container(field_halos);
 	Utilities::delete_container(field_planes);
-	
-  // Define the number of Halos binning table :
-  const int Nzbins = 64 ;
-  std::vector<PosType> zbins(Nzbins) ;
-  std::vector<PosType> Nhalosbin (Nzbins) ;
-  PosType aveNhalos = 0. ;
   
 	if(sim_input_flag){
 		if(read_sim_file == false){
@@ -420,13 +470,11 @@ void Lens::resetFieldHalos(bool verbose)
     }
 	}
 	else{
-    ComputeNhalosbin(Nzbins, zbins, Nhalosbin, aveNhalos);
-    
-		createFieldHalos(Nzbins, zbins, Nhalosbin, aveNhalos, verbose); // Too Long !
+		createFieldHalos(verbose);
 	}
-	
-	createFieldPlanes(verbose);
 
+  // set up the lens contents :
+	createFieldPlanes(verbose);
 	combinePlanes(verbose);
 }
 
@@ -962,7 +1010,7 @@ void Lens::replaceMainHalos(LensHalo** halos, std::size_t Nhalos,bool verbose)
 
 
 
-void Lens::ComputeNhalosbin (const int Nzbins, std::vector<PosType> & zbins, std::vector<PosType> & Nhalosbin, PosType & aveNhalos)
+void Lens::ComputeNhalosbin ()
 {
   // const int Nzbins=64 ;
   // std::vector<PosType> Nhalosbin(Nzbins) ;
@@ -987,7 +1035,7 @@ void Lens::ComputeNhalosbin (const int Nzbins, std::vector<PosType> & zbins, std
 
 
 
-void Lens::createFieldHalos(const int Nzbins, std::vector<PosType> zbins, std::vector<PosType> Nhalosbin, PosType aveNhalos, bool verbose)
+void Lens::createFieldHalos(bool verbose)
 {
   time_t t_TMP1, t_TMP2, t_TMP3, t_TMP4, t_TMP5, t_TMP6, t_TMP7, t_TMP8;
   time(&t_TMP1);
@@ -1179,8 +1227,6 @@ void Lens::createFieldHalos(const int Nzbins, std::vector<PosType> zbins, std::v
 					break;
 			}
       
-  time(&t_TMP7);
-      
 			if(mass > mass_max) {
 				mass_max = mass;
 				j_max = i;
@@ -1230,9 +1276,9 @@ void Lens::createFieldHalos(const int Nzbins, std::vector<PosType> zbins, std::v
 		Nhalosbin.empty();
 	}
   
-  time(&t_TMP8);
+  time(&t_TMP7);
   
-  std::cout << std::endl << "CreateFieldHalos : " << difftime(t_TMP2,t_TMP1)/60. << " , " << difftime(t_TMP3,t_TMP2)/60. << " , " << difftime(t_TMP4,t_TMP3)/60. << " , " << difftime(t_TMP5,t_TMP4)/60. << " , " << difftime(t_TMP6,t_TMP5)/60. << " , " << difftime(t_TMP7,t_TMP6)/60. << " , " << difftime(t_TMP8,t_TMP7)/60. << " mins." << std::endl;
+  std::cout << std::endl << "CreateFieldHalos : " << difftime(t_TMP2,t_TMP1)/60. << " , " << difftime(t_TMP3,t_TMP2)/60. << " , " << difftime(t_TMP4,t_TMP3)/60. << " , " << difftime(t_TMP5,t_TMP4)/60. << " , " << difftime(t_TMP6,t_TMP5)/60. << " , " << difftime(t_TMP7,t_TMP6)/60. << " mins." << std::endl;
   
 	assert(k2 == Nhalos);
 	delete halo_calc;
@@ -1952,7 +1998,7 @@ void Lens::combinePlanes(bool verbose)
 	if(verbose) std::cout << "\n" << std::endl;
 }
 
-void Lens::buildPlanes(InputParams& params,bool verbose)
+void Lens::buildPlanes(InputParams& params, bool verbose)
 {
 	// build field
 	if(!flag_switch_field_off)
@@ -1960,22 +2006,13 @@ void Lens::buildPlanes(InputParams& params,bool verbose)
 		// set the distances of the field planes
 		setupFieldPlanes();
 		
-    // Define the number of Halos binning table :
-    const int Nzbins = 64 ;
-    std::vector<PosType> zbins(Nzbins) ;
-    std::vector<PosType> Nhalosbin (Nzbins) ;
-    PosType aveNhalos = 0. ;
-    
 		// create or read the field halos
 		if(sim_input_flag){
       if(field_input_sim_format == MillenniumObs) readInputSimFileMillennium(verbose);
       if(field_input_sim_format == MultiDarkHalos) readInputSimFileMultiDarkHalos(verbose);
-		}else{
-      ComputeNhalosbin(Nzbins, zbins, Nhalosbin, aveNhalos);
-      for (int i=0; i<Nzbins; i++) std::cout << Nhalosbin[i] ;
-      std::cout << std::endl ;
-      
-			createFieldHalos(Nzbins, zbins, Nhalosbin, aveNhalos, verbose);
+		}
+    else{
+			createFieldHalos(verbose);
 		}
 		// create field planes and sort halos onto them
 		createFieldPlanes(verbose);

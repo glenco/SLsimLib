@@ -224,7 +224,7 @@ private:
 	
 private: /* generation */
 	/// create the lens planes
-	void buildPlanes(InputParams& params,bool verbose);
+	void buildPlanes(InputParams& params, bool verbose);
 	
 	/// sets the distances and redshifts of the field planes equidistant
 	void setFieldDist();
@@ -233,8 +233,8 @@ private: /* generation */
 	/// setup the field plane distances
 	void setupFieldPlanes();
 	/// create field halos as specified in the parameter file
-  void ComputeNhalosbin (const int Nzbins, std::vector<PosType> & zbins, std::vector<PosType> & Nhalosbin, PosType & aveNhalos);
-	void createFieldHalos(const int Nzbins, std::vector<PosType> zbins, std::vector<PosType> Nhalosbin, PosType aveNhalos, bool verbose);
+  void ComputeNhalosbin ();
+	void createFieldHalos(bool verbose);
 	/// read field halo data in from a file in Millennium output format
 	void readInputSimFileMillennium(bool verbose);
 	/// read field halo data in from a file in MultiDarkHalos output format
@@ -252,6 +252,13 @@ private: /* generation */
 	/// combine field and main planes
 	void combinePlanes(bool verbose);
 	
+  // Variables used by buildPLanes and createFieldHalos :
+  const int Nzbins = 64 ;
+  std::vector<PosType> zbins ;
+  std::vector<PosType> Nhalosbin ;
+  PosType aveNhalos ;
+  
+  
 private: /* force calculation */
 	/// if >= 1, deflection in the rayshooting is switched off
 	bool flag_switch_deflection_off;
