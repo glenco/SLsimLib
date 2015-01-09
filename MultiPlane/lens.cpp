@@ -108,10 +108,7 @@ Lens::Lens(InputParams& params, long* my_seed, CosmoParamSet cosmoset, bool verb
       Nhaloestot_Tab[k] = 0. ;
     }
     aveNhalos = 0. ;
-    for(int k=0 ; k<NZSamples ; k++)
-    {
-      Nhalosbin[k] = 0. ;
-    }
+    for(int k=0 ; k<NZSamples ; k++) Nhalosbin[k] = 0. ;
     
     // Computing the number of halos per bins :
     if(sim_input_flag){
@@ -120,9 +117,8 @@ Lens::Lens(InputParams& params, long* my_seed, CosmoParamSet cosmoset, bool verb
     else {
       // Compute the numbers :
       ComputeNhalosbin();
-      
-      for (int i=0; i<Nzbins; i++) std::cout << Nhalosbin[i] << " " ;
-      std::cout << std::endl ;
+      // for (int i=0; i<Nzbins; i++) std::cout << Nhalosbin[i] << " " ;
+      // std::cout << std::endl ;
     }
   }
   
@@ -170,6 +166,7 @@ Lens::Lens(Lens &lens)
     // Resizing the "number of Halos" binning table :
     zbins.resize(Nzbins) ;
     Nhalosbin.resize(Nzbins) ;
+    Nhaloestot_Tab.resize (NZSamples);
     
     // Initialising the "number of Halos" binning table :
     for(int k=0 ; k<Nzbins ; k++)
@@ -178,6 +175,7 @@ Lens::Lens(Lens &lens)
       Nhalosbin[k] = 0. ;
     }
     aveNhalos = 0. ;
+    for(int k=0 ; k<NZSamples ; k++) Nhalosbin[k] = 0. ;
   
     // Computing the number of halos per bins :
     if(sim_input_flag){
@@ -186,8 +184,8 @@ Lens::Lens(Lens &lens)
     else {
       // Compute the numbers :
       ComputeNhalosbin();
-      for (int i=0; i<Nzbins; i++) std::cout << Nhalosbin[i] << " " ;
-      std::cout << std::endl ;
+      // for (int i=0; i<Nzbins; i++) std::cout << Nhalosbin[i] << " " ;
+      // std::cout << std::endl ;
     }
   }
   
@@ -1029,7 +1027,6 @@ void Lens::ComputeNhalosbin ()
   
   for(int k=1;k<Nzbins-1;++k){
     Nhalosbin[k] = cosmo.haloNumberInBufferedCone(field_min_mass,zbins[k],zsource,fieldofview*pow(pi/180,2),field_buffer,field_mass_func_type,mass_func_PL_slope)/aveNhalos;
-    // std::cout << Nhalosbin[k] << " "  ;
   }
   // std::cout << std::endl ;
   zbins[Nzbins-1] = zsource;
@@ -1091,9 +1088,6 @@ void Lens::ComputeNhalosbin ()
 
 void Lens::createFieldHalos(bool verbose)
 {
-  time_t t_TMP1, t_TMP2, t_TMP3, t_TMP4, t_TMP5, t_TMP6, t_TMP7, t_TMP8;
-  time(&t_TMP1);
-  
   std::cout << "Creating Field Halos from Mass Function" << std::endl;
 	// const int Nzbins=64;
 	// const int Nmassbin=64;
@@ -1112,16 +1106,12 @@ void Lens::createFieldHalos(bool verbose)
   PosType field_galaxy_mass_fraction = 0;
   size_t haloid=0;
   
-  time(&t_TMP2);
-  
   if (field_min_mass < 1.0e5) {
     std::cout << "Are you sure you want the minimum field halo mass to be " << field_min_mass << " Msun?" << std::endl;
     throw;
   }
   
 	// PosType aveNhalos = cosmo.haloNumberInBufferedCone(field_min_mass,0,zsource,fieldofview*pow(pi/180,2),field_buffer,field_mass_func_type,mass_func_PL_slope);
-  
-  time(&t_TMP3);
   
   /*
 	Utilities::fill_linear(zbins,Nzbins,0.0,zsource);
@@ -1138,7 +1128,6 @@ void Lens::createFieldHalos(bool verbose)
 	Nhalosbin[Nzbins-1] = 0.0;
   */
   
-  time(&t_TMP4); // This last step is too long for simulations !
   /*
 	std::size_t Nhalos = static_cast<std::size_t>(poidev(float(aveNhalos), seed));
   
@@ -1162,6 +1151,10 @@ void Lens::createFieldHalos(bool verbose)
 	Nhalosbin.resize(Nmassbin);
 	Utilities::fill_linear(Logm,Nmassbin,log10(field_min_mass),MaxLogm);
   */
+  
+  assert(halo_zs_vec[0] < halo_zs_vec[1]);
+  assert(halo_zs_vec[0] < halo_zs_vec[Nhalos-1]);
+  
 	PosType *theta_pos,*theta2;
 	size_t j = 0;
 	k2 = 0;
@@ -1184,23 +1177,15 @@ void Lens::createFieldHalos(bool verbose)
     
 		Nhalosbin[0] = 1;
     
-  time(&t_TMP5);
-    
 #ifdef _OPENMP
 #pragma omp parallel for default(shared) private(k)
 #endif
     
-    time_t t_TMP10, t_TMP11 ;
-    time(&t_TMP10);
 		for(k=1;k<Nmassbin-1;k++){
 			// cumulative number density in one square degree
       Nhalosbin[k] = NhalosbinNew[np][k];
 		}
 		Nhalosbin[Nmassbin-1] = 0;
-    time(&t_TMP11);
-    // std::cout << "Time here = " << difftime(t_TMP11,t_TMP10)/60. << std::endl ;
-    
-  time(&t_TMP6);
     
 		for(i = k1; i < k2; i++){
 			PosType Ds = cosmo.angDist(0,halo_zs_vec[i]);
@@ -1208,7 +1193,6 @@ void Lens::createFieldHalos(bool verbose)
 			maxr = pi*sqrt(fieldofview/pi)/180. + field_buffer/Ds; // fov is a circle
 			rr = maxr*sqrt(ran2(seed));
       
-      // std::cout << "maxr = " << maxr << " , Ds = " << Ds << std::endl ;
 			assert(rr == rr);
       
 			theta_pos = new PosType[3];
@@ -1337,10 +1321,6 @@ void Lens::createFieldHalos(bool verbose)
     
 		Nhalosbin.empty();
 	}
-  
-  time(&t_TMP7);
-  
-  std::cout << std::endl << "CreateFieldHalos : " << difftime(t_TMP2,t_TMP1)/60. << " , " << difftime(t_TMP3,t_TMP2)/60. << " , " << difftime(t_TMP4,t_TMP3)/60. << " , " << difftime(t_TMP5,t_TMP4)/60. << " , " << difftime(t_TMP6,t_TMP5)/60. << " , " << difftime(t_TMP7,t_TMP6)/60. << " mins." << std::endl;
   
   // std::cout << "k2 = " << k2 << " , Nhalos = " << Nhalos << std::endl ;
 	assert(k2 == Nhalos);
