@@ -132,9 +132,6 @@ public:
   //bool TreeWalkStep(bool allowDescent);
   bool Test();
 
-  // Adding and removing to branches of tree
-  void insertChildToCurrent(Branch *current,Branch *branch,int child);
-  void attachChildrenToCurrent(Branch *current,Branch *child1,Branch *child2);
   Point *RemoveLeafFromTree(TreeStruct::iterator &current,unsigned long *Npoints);
 
   // Higher level builds
@@ -152,7 +149,7 @@ public:
   //bool CurrentIsSquareBranch();
   //bool noChild();
 
-  void getCurrent(Point *points,unsigned long *npoints);
+  //void getCurrent(Point *points,unsigned long *npoints);
   unsigned long getNbranches();
   void printTree(TreeStruct::iterator &current);
   void checkTree();
@@ -163,8 +160,13 @@ public:
   
   void _FindLeaf(TreeStruct::iterator &current,const PosType* ray,unsigned long Nadd = 0) const;
 
-
+  static std::mutex mutex;
 private:
+  
+  // Adding and removing to branches of tree
+  void insertChildToCurrent(Branch *current,Branch *branch,int child);
+  void attachChildrenToCurrent(Branch *current,Branch *child1,Branch *child2);
+
 	 /// root branch
   Branch *top;
 
@@ -222,6 +224,7 @@ private:
 
 typedef struct TreeStruct *TreeHndl;
 typedef int TreeElement;
+
 
 bool BoxInCircle(PosType *ray,PosType radius,PosType *p1,PosType *p2);
 PosType ClosestBorder(PosType *ray,PosType *p1,PosType *p2);

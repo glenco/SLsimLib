@@ -15,7 +15,6 @@
 
 #include "utilities_slsim.h"
 
-
 // forward declaration
 struct Grid;
 
@@ -52,7 +51,8 @@ public:
 
   void AddImages(ImageInfo *imageinfo,int Nimages,float rescale = 1.);
   void AddImages(std::vector<ImageInfo> &imageinfo,int Nimages,float rescale = 1.);
-	void AddCurve(ImageInfo *curve,double value);
+  void AddCurve(ImageInfo *curve,double value);
+  void AddCurve(std::vector<Point_2d> &curve,double value);
   
 	void drawline(double x1[],double x2[],double value);
   void drawcircle(PosType r_center[],PosType radius,PosType value);

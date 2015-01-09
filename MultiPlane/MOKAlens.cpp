@@ -248,17 +248,17 @@ void LensHaloMOKA::saveImage(GridHndl grid,bool saveprofiles){
 	}
 	filename = f.str();
 
-	MoveToTopList(grid->i_tree->pointlist);
+  PointList::iterator i_tree_pointlist_current(grid->i_tree->pointlist->Top());
 
 	do{
-		long index = Utilities::IndexFromPosition(grid->i_tree->pointlist->current->x,map->nx,map->boxlrad,map->center);
+		long index = Utilities::IndexFromPosition((*i_tree_pointlist_current)->x,map->nx,map->boxlrad,map->center);
 		if(index > -1){
-			map->convergence[index] = grid->i_tree->pointlist->current->kappa;
-			map->gamma1[index] = grid->i_tree->pointlist->current->gamma[0];
-			map->gamma2[index] = grid->i_tree->pointlist->current->gamma[1];
-			map->gamma3[index] = grid->i_tree->pointlist->current->gamma[2];
+			map->convergence[index] = (*i_tree_pointlist_current)->kappa;
+			map->gamma1[index] = (*i_tree_pointlist_current)->gamma[0];
+			map->gamma2[index] = (*i_tree_pointlist_current)->gamma[1];
+			map->gamma3[index] = (*i_tree_pointlist_current)->gamma[2];
 		}
-	}while(MoveDownList(grid->i_tree->pointlist)==true);
+	}while( (--i_tree_pointlist_current)==true );
 
 	writeImage(filename);
 

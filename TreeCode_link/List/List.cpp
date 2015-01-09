@@ -9,221 +9,153 @@
 /***********************************************************
    routines for linked list of points
 ************************************************************/
-/** \ingroup ConstructorL2
- *  \brief Constructor for a new list
- */
-ListHndl NewList(void){
-  PointList *pointlist;
 
-  pointlist=(PointList *) malloc(sizeof(PointList));
-  if (!pointlist){
-    ERROR_MESSAGE(); std::fprintf(stderr,"allocation failure in NewList()\n");
-    exit(1);
-  }
-  pointlist->top=NULL;
-  pointlist->Npoints=0;
-  pointlist->bottom = pointlist->top;
-  pointlist->current = pointlist->top;
-
-  return pointlist;
-}
-/** \ingroup ConstructorL2
- *  \brief Destructor for a new list
- */
-
-void freeList(ListHndl list){
-
-	EmptyList(list);
-	free(list);
-}
-
-void InsertAfterCurrent(ListHndl list,PosType *x,unsigned long id,Point *image){
-	assert(list);
+void PointList::InsertAfterCurrent(iterator &current,PosType *x,unsigned long id,Point *image){
 
 	Point *point;
   /* leaves current unchanged */
 
-    point=NewPoint(x,id);
-    point->image=image;
+  point=NewPoint(x,id);
+  point->image=image;
 
-    if(list->Npoints > 0){
-    	assert(list->top);
-    	assert(list->bottom);
-    	assert(list->current);
-      point->prev=list->current;
-      point->next=list->current->next;
-
-      if(list->current == list->bottom) list->bottom=point;
-      else list->current->next->prev=point;
-      list->current->next=point;
-    }else{  /* empty list case */
-      list->current=point;
-      list->top=point;
-      list->bottom=point;
-    }
-    list->Npoints++;
-
+  InsertPointAfterCurrent(current,point);
     return;
 }
 
-void InsertBeforeCurrent(ListHndl list,PosType *x,unsigned long id,Point *image){
+void PointList::InsertPointAfterCurrent(iterator &current,Point *point){
+  // leaves current unchanged
+  // changes only list and links in point
+  
+  if(Npoints > 0){
+    assert(top);
+    assert(bottom);
+    
+    point->prev=*current;
+    point->next=(*current)->next;
+    
+    if(*current == bottom) bottom=point;
+    else (*current)->next->prev=point;
+    (*current)->next=point;
+  }else{  /* empty list case */
+    current=point;
+    top=point;
+    bottom=point;
+    point->prev = point->next = NULL;
+    current = point;
+  }
+  Npoints++;
+  return;
+}
+
+void PointList::InsertBeforeCurrent(iterator &current,PosType *x,unsigned long id,Point *image){
     Point *point;
   /* leaves current unchanged */
 
-    assert(list);
     point=NewPoint(x,id);
     point->image=image;
 
-    if(list->Npoints > 0){
-    	assert(list->top);
-    	assert(list->bottom);
-    	assert(list->current);
-
-      point->prev=list->current->prev;
-      point->next=list->current;
-      if(list->current == list->top) list->top=point;
-      else list->current->prev->next=point;
-      list->current->prev=point;
-    }else{  /* empty list case */
-      list->current=point;
-      list->top=point;
-      list->bottom=point;
-      point->prev = point->next = NULL;
-    }
-
-    list->Npoints++;
-
+  InsertPointBeforeCurrent(current,point);
     return;
 }
 
-void InsertPointAfterCurrent(ListHndl list,Point *point){
- // leaves current unchanged
-  // changes only list and links in point
-	assert(list);
-    if(list->Npoints > 0){
-    	assert(list);
-    	assert(list->top);
-    	assert(list->bottom);
-    	assert(list->current);
+void PointList::InsertPointBeforeCurrent(iterator &current,Point *point){
+  
+  if(Npoints > 0){
+    assert(top);
+    assert(bottom);
+    
+    point->prev = (*current)->prev;
+    point->next = *current;
+    if(*current == top) top=point;
+    else (*current)->prev->next=point;
+    (*current)->prev=point;
+  }else{  /* empty list case */
+    current=point;
+    top=point;
+    bottom=point;
+    point->prev = point->next = NULL;
+    current = point;
+  }
+  
+  Npoints++;
 
-      point->prev=list->current;
-      point->next=list->current->next;
-
-      if(list->current == list->bottom) list->bottom=point;
-      else list->current->next->prev=point;
-      list->current->next=point;
-    }else{  /* empty list case */
-      list->current=point;
-      list->top=point;
-      list->bottom=point;
-      point->prev = point->next = NULL;
-    }
-    list->Npoints++;
-    return;
+  return;
 }
 
-void InsertPointBeforeCurrent(ListHndl list,Point *point){
-	assert(list);
+void PointList::MoveCurrentToBottom(iterator &current){
 
-	/* leaves current unchanged */
-
-    if(list->Npoints > 0){
-      point->prev=list->current->prev;
-      point->next=list->current;
-      if(list->current == list->top) list->top=point;
-      else list->current->prev->next=point;
-      list->current->prev=point;
-    }else{
-    	assert(list->top);
-    	assert(list->bottom);
-    	assert(list->current);
-
-      list->current=point;
-      list->top=point;
-      list->bottom=point;
-      point->prev=NULL;
-      point->next=NULL;
-    }
-    list->Npoints++;
-    return;
-}
-
-void MoveCurrentToBottom(ListHndl list){
-	assert(list);
-	assert(list->top);
-	assert(list->bottom);
-	assert(list->current);
+	assert(top);
+	assert(bottom);
 
 	Point *point,*point_current;
 	// leaves current one above former current
 
-	point=TakeOutCurrent(list);
-	point_current=list->current;
-	MoveToBottomList(list);
-	InsertPointAfterCurrent(list,point);
-	list->current=point_current;
+	point=TakeOutCurrent(current);
+	point_current=*current;
+  current = bottom;
+	InsertPointAfterCurrent(current,point);
+	current=point_current;
 }
 
 /**
  *  takes out current point and set current to point previous */
 /* Except at top where current is set to new top */
 /* returns pointer to removed point */
-Point *TakeOutCurrent(ListHndl list){
+Point *PointList::TakeOutCurrent(iterator &current){
 
     Point *point;
 
-    if(list == NULL || list->Npoints <= 0) return NULL;
-    assert(list->current);
+    if(Npoints <= 0) return NULL;
+    assert(*current);
 
-    point=list->current;
+    point = *current;
 
-    if(list->top == list->bottom){  /* last point */
-      list->current=NULL;
-      list->top=NULL;
-      list->bottom=NULL;
-    }else if(list->current==list->top){
-      list->top=list->top->next;
-      list->current=list->top;
-      list->top->prev=NULL;
-    } else if(list->current==list->bottom){
-      list->bottom=list->bottom->prev;
-      list->current=list->bottom;
-      list->bottom->next=NULL;
+    if(top == bottom){  /* last point */
+      current=NULL;
+      top=NULL;
+      bottom=NULL;
+    }else if(*current==top){
+      top=top->next;
+      current = top;
+      top->prev=NULL;
+    } else if(*current == bottom){
+      bottom = bottom->prev;
+      current = bottom;
+      bottom->next=NULL;
     }else{
-      list->current->prev->next=list->current->next;
-      list->current->next->prev=list->current->prev;
-      list->current=list->current->prev;
+      (*current)->prev->next=(*current)->next;
+      (*current)->next->prev=(*current)->prev;
+      current = (*current)->prev;
     }
 
-    list->Npoints--;
+    Npoints--;
 
     point->prev=point->next=NULL;
 
     return point;
 }
 
-void MergeLists(ListHndl list1,ListHndl list2){
+void PointList::MergeLists(ListHndl list2){
 	/* list 1 is made into the union of lists 1 & 2
 	 *   list 2 remains a sublist
 	 */
 
 	if(list2->Npoints==0) return;
-	if(list1->Npoints == 0){
-		list1->Npoints=list2->Npoints;
-		list1->top=list2->top;
-		list1->bottom=list2->bottom;
-		list1->current=list2->current;
+	if(Npoints == 0){
+		Npoints=list2->Npoints;
+		top=list2->top;
+		bottom=list2->bottom;
 		return;
 	}
 
-	list1->bottom->next=list2->top;
-	list2->top->prev=list1->bottom;
-	list1->bottom=list2->bottom;
-	list1->Npoints+=list2->Npoints;
+	bottom->next=list2->top;
+	list2->top->prev=bottom;
+	bottom=list2->bottom;
+	Npoints += list2->Npoints;
 	return;
 }
 
-void InsertListAfterCurrent(ListHndl list1,ListHndl list2){
+void PointList::InsertListAfterCurrent(iterator &current,ListHndl list2){
 	/* inserts list2 into list1
 	 *  leaves list2 as a sublist
 	 *  leaves currents unchanged
@@ -231,96 +163,94 @@ void InsertListAfterCurrent(ListHndl list1,ListHndl list2){
 	Point *point;
 
 	if(list2->Npoints==0) return;
-	if(list1->Npoints == 0){
-		list1->Npoints=list2->Npoints;
-		list1->top=list2->top;
-		list1->bottom=list2->bottom;
-		list1->current=list2->current;
+  
+	if(Npoints == 0){
+		Npoints=list2->Npoints;
+		top=list2->top;
+		bottom=list2->bottom;
 		return;
 	}
 
-	point=list1->current->next;
-	list1->current->next=list2->top;
-	list2->top->prev=list1->current;
+	point = (*current)->next;
+	(*current)->next = list2->top;
+	list2->top->prev = *current;
 
-	if(list1->current==list1->bottom){
-		list1->bottom=list2->bottom;
+	if(*current == bottom){
+		bottom=list2->bottom;
 	}else{
 		point->prev=list2->bottom;
 		list2->bottom->next=point;
 	}
 
-	list1->Npoints+=list2->Npoints;
+	Npoints += list2->Npoints;
 	return;
 }
-void InsertListBeforeCurrent(ListHndl list1,ListHndl list2){
-	/* inserts list2 into list1
+void PointList::InsertListBeforeCurrent(iterator &current,ListHndl list2){
+	/* inserts list2 into list
 	 *  leaves list2 as a sublist
 	 *  leaves currents unchanged
 	 */
 	Point *point;
 
 	if(list2->Npoints==0) return;
-	if(list1->Npoints == 0){
-		list1->Npoints=list2->Npoints;
-		list1->top=list2->top;
-		list1->bottom=list2->bottom;
-		list1->current=list2->current;
+	if(Npoints == 0){
+		Npoints=list2->Npoints;
+		top=list2->top;
+		bottom=list2->bottom;
 		return;
 	}
 
-	point=list1->current->prev;
-	list1->current->prev=list2->bottom;
-	list2->bottom->next=list1->current;
+	point = (*current)->prev;
+	(*current)->prev=list2->bottom;
+	list2->bottom->next = *current;
 
-	if(list1->current==list1->top){
-		list1->top=list2->top;
+	if( *current == top){
+		top=list2->top;
 	}else{
 		point->next=list2->top;
 		list2->top->prev=point;
 	}
 
-	list1->Npoints+=list2->Npoints;
+	Npoints += list2->Npoints;
 	return;
 }
 
-void EmptyList(ListHndl list){
-	/* This function should properly release the memory for all the
-	 * points in a list leaving the list with NULL pointers
-	 *  points need to have been allocated in blocks of 1
-	 */
+/* This function should properly release the memory for all the
+ * points in a list leaving the list with NULL pointers
+ *  points need to have been allocated in blocks of 1
+ */
+void PointList::EmptyList(){
 
-	if(list == NULL || list->Npoints==0) return;
+	if(Npoints==0) return;
 
-	assert(list->top);
-	assert(list->bottom);
-	assert(list->current);
+	assert(top);
+	assert(bottom);
 
 	Point **point;
 	unsigned long blocks=0,i=0,Nfreepoints=0;
 
-	MoveToTopList(list);
-	do{
-	  if(list->current->head > 0){ ++blocks; Nfreepoints += list->current->head;}
-	}while(MoveDownList(list));
+  iterator current(top);
 
-	assert(blocks <= list->Npoints);
-	assert(Nfreepoints == list->Npoints);
+	do{
+	  if((*current)->head > 0){ ++blocks; Nfreepoints += (*current)->head;}
+	}while(current--);
+
+	assert(blocks <= Npoints);
+	assert(Nfreepoints == Npoints);
 
 	point=(Point **)malloc(blocks*sizeof(Point*));
 
-	MoveToTopList(list);
+  current = top;
 	do{
-	  if(list->current->head > 0){ point[i] = list->current; ++i;}
-	}while(MoveDownList(list));
+	  if((*current)->head > 0){ point[i] = *current; ++i;}
+	}while(current--);
 
 	for(i=0;i<blocks;++i) free(point[i]);
 	free(point);
 
-	list->Npoints = 0;
-	list->top = NULL;
-	list->bottom = NULL;
-	list->current = NULL;
+	Npoints = 0;
+	top = NULL;
+	bottom = NULL;
 
   /*
   Point *point;
@@ -334,61 +264,46 @@ void EmptyList(ListHndl list){
 */
 }
 
-void JumpDownList(ListHndl list,int jump){
-  int i;
 
-  if(jump > 0) for(i=0;i<jump;++i) MoveDownList(list);
-  if(jump < 0) for(i=0;i<abs(jump);++i) MoveUpList(list);
-}
-
-bool MoveDownList(ListHndl list){
+/*bool MoveDownList(ListHndl list){
 
 	if(list->Npoints == 0) return false;
 	if(list->current==list->bottom) return false;
 	list->current=list->current->next;
 
 	return true;
-}
+}*/
 
-bool MoveUpList(ListHndl list){
 
-	if(list->Npoints == 0) return false;
-	if(list->current==list->top) return false;
-	list->current=list->current->prev;
-
-	return true;
-}
-
-void ShiftList(ListHndl list){
+void PointList::ShiftList(iterator &current){
 	// cyclic shift of list
 	// to make current top
 
 	// link into ring
-	list->top->prev=list->bottom;
-	list->bottom->next=list->top;
+	top->prev=bottom;
+	bottom->next=top;
 
-	list->top=list->current;
-	list->bottom=list->top->prev;
+	top= *current;
+	bottom=top->prev;
 
 	// break ring
-	list->bottom->next=NULL;
-	list->top->prev=NULL;
+	bottom->next=NULL;
+	top->prev=NULL;
 }
 
-void FillList(ListHndl list,PosType **x,unsigned long N
+void PointList::FillList(PosType **x,unsigned long N
 	      ,unsigned long idmin){
   unsigned long i;
   /* add N points to to end of list */
   /* id numbers are given in order from idmin */
   /* this is used to initialize list */
 
-  std::printf("Inserting  %li points after %li x= %e %e\n",N,list->current->id
-	 ,list->current->x[0],list->current->x[1]);
-  MoveToBottomList(list);
-  InsertAfterCurrent(list,x[0],idmin,NULL);
+
+  iterator current(bottom);
+  InsertAfterCurrent(current,x[0],idmin,NULL);
   for(i=1;i<N;++i){
-    MoveDownList(list);
-    InsertAfterCurrent(list,x[i],i+idmin,NULL);
+    --current;
+    InsertAfterCurrent(current,x[i],i+idmin,NULL);
   }
 }
 
@@ -412,26 +327,24 @@ void SwapPointsInList(ListHndl list,Point *p1,Point *p2){
   p2->prev=pt.prev;
   p2->next=pt.next;
 
-  if(list->top == p1) list->top = p2;
-  else if(list->top == p2) list->top = p1;
-  if(list->bottom == p1) list->bottom = p2;
-  else if(list->bottom == p2) list->bottom = p1;
+  if(list->Top() == p1) list->setTop(p2);
+  else if(list->Top() == p2) list->setTop(p1);
+  if(list->Bottom() == p1) list->setBottom(p2);
+  else if(list->Bottom() == p2) list->setBottom(p1);
 }
 
-void PrintList(ListHndl list){
+void PointList::PrintList(){
   unsigned long i;
-  Point *placemark;
 
-  placemark=list->current;
-  MoveToTopList(list);
+  iterator current(top);
+
 //  std::printf("%i points in list\n",list->Npoints);
-  std::printf("%li\n",list->Npoints);
+  std::printf("%li\n",Npoints);
 
-  for(i=0;i<list->Npoints;++i){
-    std::printf("%li  %li  %e %e %e\n",i,list->current->id,list->current->x[0],list->current->x[1]
-                                  ,list->current->gridsize);
-    MoveDownList(list);
+  for(i=0;i<Npoints;++i){
+    std::printf("%li  %li  %e %e %e\n",i,(*current)->id,(*current)->x[0],(*current)->x[1]
+                                  ,(*current)->gridsize);
+    --current;
   }
 
-  list->current=placemark;
 }

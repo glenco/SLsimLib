@@ -125,9 +125,130 @@ private:
 
 /** \brief link list for points, uses the linking pointers within the Point type unlike  Kist */
 struct PointList{
+  PointList(){
+    top=NULL;
+    Npoints=0;
+    bottom = top;
+  }
+  ~PointList(){EmptyList();}
+  
+  class iterator{
+  private:
+    Point *current;
+  public:
+    
+    iterator(){
+      current = NULL;
+    }
+    iterator(PointList &list){
+      current = list.top;
+    }
+    iterator(iterator &it){
+      current = *it;
+    }
+    iterator(Point *p){
+      current = p;
+    }
+    
+    Point *operator*(){return current;}
+    PointList::iterator &operator=(PointList::iterator &p){
+      if(&p == this) return *this;
+      current = p.current;
+      return *this;
+    }
+    
+    PointList::iterator &operator=(Point *point){
+      current = point;
+      return *this;
+    }
+    
+    bool operator++(){
+      assert(current);
+      if(current->prev == NULL) return false;
+      current=current->prev;
+      return true;
+    }
+    
+    /// Same as Up()
+    bool operator++(int){
+      assert(current);
+      if(current->prev == NULL) return false;
+      current=current->prev;
+      return true;
+    }
+    
+    /// Same as Down()
+    bool operator--(){
+      assert(current);
+      if(current->next == NULL) return false;
+      current=current->next;
+      return true;
+     }
+    
+    /// Same as Down()
+    bool operator--(int){
+      assert(current);
+      if(current->next == NULL) return false;
+      current=current->next;
+      return true;
+    }
+    
+    void JumpDownList(int jump){
+      int i;
+      
+      if(jump > 0) for(i=0;i<jump;++i) --(*this);
+      if(jump < 0) for(i=0;i<abs(jump);++i) ++(*this);
+    }
+
+    
+    bool operator==(const iterator my_it){
+      return (current == my_it.current);
+    }
+    
+    bool operator!=(const iterator my_it){
+      return (current != my_it.current);
+    }
+    
+  };
+  
+  unsigned long size() const {return Npoints;}
+
+  inline bool IsTop(PointList::iterator &it) const{
+    return *it == top;
+  };
+  inline bool IsBottom(PointList::iterator &it) const{
+    return *it == bottom;
+  };
+  
+  Point *Top() const {return top;}
+  Point *Bottom() const {return bottom;}
+  
+  void EmptyList();
+  void InsertAfterCurrent(iterator &current,double *x,unsigned long id,Point *image);
+  void InsertBeforeCurrent(iterator &current,double *x,unsigned long id,Point *image);
+  void InsertPointAfterCurrent(iterator &current,Point *);
+  void InsertPointBeforeCurrent(iterator &current,Point *);
+  
+  void MoveCurrentToBottom(iterator &current);
+  Point *TakeOutCurrent(iterator &current);
+
+  void InsertListAfterCurrent(iterator &current,PointList *list2);
+  void InsertListBeforeCurrent(iterator &current,PointList *list2);
+  void MergeLists(PointList* list2);
+  void ShiftList(iterator &current);
+
+  void FillList(double **x,unsigned long N
+                ,unsigned long idmin);
+  void PrintList();
+
+  void setN(unsigned long N){Npoints = N;}
+  void setTop(Point *p){top = p;}
+  void setBottom(Point *p){bottom = p;}
+
+private:
   Point *top;
   Point *bottom;
-  Point *current;
+  //Point *current;
   unsigned long Npoints;
 };
 
@@ -135,19 +256,10 @@ typedef struct PointList *ListHndl;
 //bool AtTopList(ListHndl list);
 //bool AtBottomList(ListHndl list);
 
-inline bool AtTopList(ListHndl list){
-	assert(list);
-	if(list->current==list->top) return true;
-	else return false;
-};
-inline bool AtBottomList(ListHndl list){
-	assert(list);
-	if(list->current==list->bottom) return true;
-	else return false;
-};
+
 //inline void MoveToTopList(ListHndl list);
 //inline void MoveToBottomList(ListHndl list);
-inline void MoveToTopList(ListHndl list){
+/*inline void MoveToTopList(ListHndl list){
   list->current=list->top;
 };
 inline void MoveToBottomList(ListHndl list){
@@ -158,48 +270,95 @@ inline void MoveToBottomList(ListHndl list){
    routines for linked list of points
 ************************************************************/
 
-ListHndl NewList(void);
 Point *NewPoint(double *x,unsigned long id);
-void InsertAfterCurrent(ListHndl list,double *x,unsigned long id,Point *image);
-void InsertBeforeCurrent(ListHndl list,double *x,unsigned long id,Point *image);
-void InsertPointAfterCurrent(ListHndl list,Point *);
-void InsertPointBeforeCurrent(ListHndl list,Point *);
 
-void JumpDownList(ListHndl list,int jump);
-bool MoveDownList(ListHndl list);
-bool MoveUpList(ListHndl list);
-void ShiftList(ListHndl list);
+//void JumpDownList(ListHndl list,int jump);
+//bool MoveDownList(ListHndl list);
+//bool MoveUpList(ListHndl list);
 
 
-void FillList(ListHndl list,double **x,unsigned long N
-	      ,unsigned long idmin);
+
 void SwapPointsInList(ListHndl list,Point *p1,Point *p2);
-void PrintList(ListHndl list);
 Point *sortList(long n, double arr[],ListHndl list,Point *firstpoint);
-void MoveCurrentToBottom(ListHndl list);
-Point *TakeOutCurrent(ListHndl list);
-void MergeLists(ListHndl list1,ListHndl list2);
-void InsertListAfterCurrent(ListHndl list1,ListHndl list2);
-void InsertListBeforeCurrent(ListHndl list1,ListHndl list2);
-void EmptyList(ListHndl list);
-void UnionList(ListHndl list1,ListHndl list2);
-bool ArePointsUniqueList(ListHndl list);
-bool IntersectionList(ListHndl list1,ListHndl list2,ListHndl intersection);
 
-/** \brief Transform all points in kist from image to source plane or vis versus.
- * Data type must have a "image" attribute.
- *
-void TranformPlanes(Kist<Point> &kist){
+//void UnionList(ListHndl list1,ListHndl list2);
+//bool ArePointsUniqueList(ListHndl list);
+//bool IntersectionList(ListHndl list1,ListHndl list2,ListHndl intersection);
+
+/**  \brief Class for representing points or vectors in 2 dimensions.  Not that the dereferencing operator is overridden.
+ 
+ */
+struct Point_2d{
+  Point_2d(){
+    x[0]=x[1]=0.0;
+  }
+  ~Point_2d(){};
   
-	if(kist.Nunits() == 0) return;
-	kist.MoveToTop();
-	do{
-		assert(kist.getCurrent());
-		assert(kist.getCurrent()->image);
-		kist.getCurrent() = kist.getCurrent()->image;
-	}while(kist.Down());
+  Point_2d(const Point_2d &p){
+    x[0]=p.x[0];
+    x[1]=p.x[1];
+  }
+  Point_2d & operator=(const Point_2d &p){
+    if(this == &p) return *this;
+    x[0]=p.x[0];
+    x[1]=p.x[1];
+    return *this;
+  }
+  Point_2d & operator=(const Point &p){
+    x[0]=p.x[0];
+    x[1]=p.x[1];
+    return *this;
+  }
   
-	return;
-}*/
+  Point_2d & operator+=(const Point &p){
+    x[0]+=p.x[0];
+    x[1]+=p.x[1];
+    return *this;
+  }
+  Point_2d  operator+(const Point &p){
+    Point_2d tmp;
+    tmp.x[0] = x[0] + p.x[0];
+    tmp.x[1] = x[1] + p.x[1];
+    return tmp;
+  }
+  Point_2d  operator-(const Point &p){
+    Point_2d tmp;
+    tmp.x[0] = x[0] - p.x[0];
+    tmp.x[1] = x[1] - p.x[1];
+    return tmp;
+  }
+  Point_2d & operator+=(const Point_2d &p){
+    x[0]+=p.x[0];
+    x[1]+=p.x[1];
+    return *this;
+  }
+  Point_2d & operator/=(PosType value){
+    x[0]/=value;
+    x[1]/=value;
+    return *this;
+  }
+  Point_2d & operator/(PosType value){
+    x[0]/=value;
+    x[1]/=value;
+    return *this;
+  }
+  Point_2d & operator*=(PosType value){
+    x[0]*=value;
+    x[1]*=value;
+    return *this;
+  }
+  /// scalar product
+  PosType operator*(const Point_2d &p){
+    return x[0]*p.x[0] + x[1]*p.x[1];
+  }
+  /// outer product
+  PosType operator^(const Point_2d &p){
+    return x[0]*p.x[1] - x[1]*p.x[0];
+  }
+  
+  PosType x[2];
+  PosType & operator[](size_t i){return x[i];}
+};
+
 
 #endif

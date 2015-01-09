@@ -127,7 +127,8 @@ void TreeStruct::_NearestNeighbor(TreeStruct::iterator &current,int Nneighbors,P
   int i,incell2=1;
   unsigned long index[Nneighbors+Nbucket];
   PosType dx,dy;
-
+  PointList::iterator pointlist_current;
+  
   //std::printf("**************************************\nlevel %i\n",(*current)->level);
   //for(i=0;i<(*current)->npoints;++i) std::printf("   %i\n",(*current)->points[i]);
 
@@ -145,11 +146,11 @@ void TreeStruct::_NearestNeighbor(TreeStruct::iterator &current,int Nneighbors,P
     		globs.ray[1] = globs.realray[1];
 
     		/* calculate the distance to all the points in cell */
-    		if((*current)->points != NULL ) pointlist->current=(*current)->points;
+    		if((*current)->points != NULL ) pointlist_current = (*current)->points;
     		for(i=0;i<(*current)->npoints;++i){
 
-    			dx = pointlist->current->x[0] - globs.ray[0];
-    			dy = pointlist->current->x[1] - globs.ray[1];
+    			dx = (*pointlist_current)->x[0] - globs.ray[0];
+    			dy = (*pointlist_current)->x[1] - globs.ray[1];
 
     			switch(*direction){
     			case 0: /* distance */
@@ -175,8 +176,8 @@ void TreeStruct::_NearestNeighbor(TreeStruct::iterator &current,int Nneighbors,P
 
      			index[i]=i;
     			//temp_points[i]=pointlist->current;
-          globs.tmp_point[i] = pointlist->current;
-    			MoveDownList(pointlist);
+          globs.tmp_point[i] = (*pointlist_current);
+          --pointlist_current;
     		}
 
     		if((*current)->npoints > 0){
@@ -221,7 +222,7 @@ void TreeStruct::_NearestNeighbor(TreeStruct::iterator &current,int Nneighbors,P
 		  if( current.atLeaf() ){  /* leaf case */
 
 			  /* combine found neighbors with points in box and resort */
-			  if((*current)->points != NULL) pointlist->current=(*current)->points;
+			  if((*current)->points != NULL) pointlist_current=(*current)->points;
 
 			  for(i=0;i<Nneighbors;++i){
 				  index[i]=i;
@@ -231,8 +232,8 @@ void TreeStruct::_NearestNeighbor(TreeStruct::iterator &current,int Nneighbors,P
 
 			  for(i=Nneighbors;i<((*current)->npoints+Nneighbors);++i){
 
-				  dx=pointlist->current->x[0] - globs.ray[0];
-				  dy=pointlist->current->x[1] - globs.ray[1];
+				  dx=(*pointlist_current)->x[0] - globs.ray[0];
+				  dy=(*pointlist_current)->x[1] - globs.ray[1];
 
 				  switch(*direction){
 				  case 0: /* distance */
@@ -257,8 +258,8 @@ void TreeStruct::_NearestNeighbor(TreeStruct::iterator &current,int Nneighbors,P
 				  }
 
 				  index[i]=i;
-				  globs.tmp_point[i]=pointlist->current;
-				  MoveDownList(pointlist);
+				  globs.tmp_point[i] = *pointlist_current;
+          --pointlist_current;
 			  }
 
 			  // sort the points found so far
@@ -496,6 +497,7 @@ Point *sortList(long n, PosType *arr,ListHndl list,Point *firstpointin){
   long i,j;
   PosType a;
   Point *point,*firstpoint;
+  PointList::iterator list_current;
 
   if(n <= 1) return firstpointin;
 
@@ -504,21 +506,21 @@ Point *sortList(long n, PosType *arr,ListHndl list,Point *firstpointin){
   for(j=1;j<n;j++){
     a=arr[j];
 
-    list->current=firstpoint;
-    JumpDownList(list,j);
+    list_current=firstpoint;
+    list_current.JumpDownList(j);
 
-    point=TakeOutCurrent(list);
+    point=list->TakeOutCurrent(list_current);
 
     i=j-1;
     while(i>-1 && arr[i] > a){
       arr[i+1]=arr[i];
       i--;
-      MoveUpList(list);
+      ++list_current;
     }
     arr[i+1]=a;
 
-    if( list->current==list->top && i==-1) InsertPointBeforeCurrent(list,point);
-    else InsertPointAfterCurrent(list,point);
+    if( *list_current==list->Top() && i==-1) list->InsertPointBeforeCurrent(list_current,point);
+    else list->InsertPointAfterCurrent(list_current,point);
 
     if(i == -1) firstpoint=point;
   }
@@ -841,22 +843,25 @@ void NeighborsOfNeighbors(ListHndl neighbors,ListHndl wholelist){
 	short check=0;
 	Point *point;
 
-	if(neighbors->Npoints < 1 || wholelist->Npoints < 1) return;
+	if(neighbors->size() < 1 || wholelist->size() < 1) return;
 
+  PointList::iterator wholelist_current(*wholelist);
+  PointList::iterator neighbors_current(*neighbors);
+  
 	do{
-		MoveToTopList(wholelist);
+    wholelist_current = wholelist->Top();
 		do{
 			if(check==1){
-				MoveUpList(wholelist);
+        ++wholelist_current;
 				check=0;
 			}
-			if(AreBoxNeighbors(neighbors->current,wholelist->current) ){
-				if(AtTopList(wholelist)) check=1;
-				point=TakeOutCurrent(wholelist);
-				InsertPointAfterCurrent(neighbors,point);
+			if(AreBoxNeighbors(*neighbors_current,*wholelist_current) ){
+				if( wholelist->Top() == *wholelist_current ) check=1;
+				point = wholelist->TakeOutCurrent(wholelist_current);
+				neighbors->InsertPointAfterCurrent(neighbors_current,point);
 			}
-		}while(MoveDownList(wholelist));
-	}while(MoveDownList(neighbors) && wholelist->Npoints > 0);
+		}while(--wholelist_current);
+	}while((--neighbors_current) && wholelist->size() > 0);
 
 	return ;
 }
@@ -1164,18 +1169,19 @@ void TreeStruct::_PointsWithin2(PosType *ray,float *rmax,ListHndl neighborlist
 void TransformPoints(ListHndl listout,ListHndl listin){
 
   unsigned long i;
-  Point *placemarker;
 
-  placemarker=listin->current;
-  EmptyList(listout);
-  MoveToTopList(listin);
-  for(i=0;i<listin->Npoints;++i){
-    InsertAfterCurrent(listout,listin->current->image->x,listin->current->image->id,listin->current);
-    MoveDownList(listin);
+  listout->EmptyList();
+  PointList::iterator listin_current(listin->Top());
+  PointList::iterator listout_current(listout->Top());
+  for(i=0;i<listin->size();++i){
+    listout->InsertAfterCurrent(listout_current,(*listin_current)->image->x
+                                ,(*listin_current)->image->id,*listin_current);
+    --listin_current;
   }
-  listin->current=placemarker;
+  
 }
 
+/*
 bool ArePointsUniqueList(ListHndl list){
 	long i,j;
 	Point *point,*init;
@@ -1197,7 +1203,8 @@ bool ArePointsUniqueList(ListHndl list){
 	list->current=init;
 	return true;
 }
-
+*/
+/*
 bool IntersectionList(ListHndl list1,ListHndl list2,ListHndl intersection){
 	long i,j;
 	Point *init1,*init2;
@@ -1227,7 +1234,8 @@ bool IntersectionList(ListHndl list1,ListHndl list2,ListHndl intersection){
 	if(intersection->Npoints < 1) return false;
 	return true;
 }
-
+*/
+/*
 void UnionList(ListHndl list1,ListHndl list2){
 	// on exit list1 will be the union of the two lists
 	// and list 2 will still be the subset
@@ -1238,6 +1246,7 @@ void UnionList(ListHndl list1,ListHndl list2){
 
 	return ;
 }
+ */
 
 /*
 void TreeStruct::FindAllBoxNeighbors(Point *point,ListHndl neighbors){
