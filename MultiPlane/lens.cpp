@@ -1013,7 +1013,11 @@ void Lens::replaceMainHalos(LensHalo** halos, std::size_t Nhalos,bool verbose)
 }
 
 
-
+/**
+ * \brief Compute some quantities necessary for the function createFieldHalos.
+ *
+ * Especially it computes the quantities related to the mass function. By calling this function in the constructor of the lens, we make that these quantities are stored in the lens and do not have to be recomputed for each new realisation of the field.
+ */
 void Lens::ComputeNhalosbin ()
 {
   const PosType MaxLogm=16.;
@@ -1034,10 +1038,7 @@ void Lens::ComputeNhalosbin ()
   
   Nhalos = static_cast<std::size_t>(poidev(float(aveNhalos), seed));
   
-  //std::vector<PosType *> halo_pos_vec;  /// temporary vector to store angular positions
-  
-  // assign redsshifts to field_halos according to the redshift distribution
-  
+  // assign redshifts to field_halos according to the redshift distribution
   for(int i=0;i < Nhalos;++i){
     halo_zs_vec.push_back(Utilities::InterpolateYvec(Nhalosbin,zbins,ran2(seed)));
   }
@@ -1052,6 +1053,8 @@ void Lens::ComputeNhalosbin ()
   Logm.resize(Nmassbin);
   Nhalosbin.resize(Nmassbin);
   Utilities::fill_linear(Logm,Nmassbin,log10(field_min_mass),MaxLogm);
+  
+  // this will be used for the cumulative number density in one square degree
   NhalosbinNew.resize(NZSamples);
   for(int np=0;np<NZSamples;np++) NhalosbinNew[np].resize(Nmassbin);
   
@@ -1059,6 +1062,7 @@ void Lens::ComputeNhalosbin ()
   unsigned long k1,k2;
   k2 = 0;
   std::vector<PosType>::iterator it1,it2;
+  
   for(int np=0;np<NZSamples;np++){
     z1 = np*zsource/(NZSamples);
     z2 = (np+1)*zsource/(NZSamples);
@@ -1070,7 +1074,7 @@ void Lens::ComputeNhalosbin ()
     k2 = it2 - halo_zs_vec.begin();
     
     Nhaloestot_Tab[np] = cosmo.haloNumberInBufferedCone(pow(10,Logm[0]),z1,z2,fieldofview*pow(pi/180,2),field_buffer,field_mass_func_type,mass_func_PL_slope);
-    std::cout << Nhaloestot_Tab[np] << " "  ;
+    // std::cout << Nhaloestot_Tab[np] << " "  ;
     
     for(int k=1;k<Nmassbin-1;k++){
       // cumulative number density in one square degree
@@ -1079,25 +1083,22 @@ void Lens::ComputeNhalosbin ()
   Nhalosbin[Nmassbin-1] = 0;
     
   }
-  std::cout << std::endl ;
+  // std::cout << std::endl ;
   
 }
 
 
 
-
+/**
+ * \brief Creates the field of halos as specified in the parameter file.
+ *
+ */
 void Lens::createFieldHalos(bool verbose)
 {
   std::cout << "Creating Field Halos from Mass Function" << std::endl;
-	// const int Nzbins=64;
-	// const int Nmassbin=64;
-	// int NZSamples = 25;
-	// std::vector<PosType> zbins,Nhalosbin(Nzbins);
+
 	unsigned long i,k,j_max,k1,k2;
-	// std::vector<PosType> Logm;
-	//PosType pos_max[2];
   PosType z_max;
-  // const PosType MaxLogm=16.;
 	PosType z1, z2, mass_max,Nhaloestot;
 	int np;
 	PosType rr,theta,maxr;
@@ -1110,50 +1111,6 @@ void Lens::createFieldHalos(bool verbose)
     std::cout << "Are you sure you want the minimum field halo mass to be " << field_min_mass << " Msun?" << std::endl;
     throw;
   }
-  
-	// PosType aveNhalos = cosmo.haloNumberInBufferedCone(field_min_mass,0,zsource,fieldofview*pow(pi/180,2),field_buffer,field_mass_func_type,mass_func_PL_slope);
-  
-  /*
-	Utilities::fill_linear(zbins,Nzbins,0.0,zsource);
-	// construct redshift distribution table
-	Nhalosbin[0] = 1;
-	zbins[0] = 0;
-  
-	for(k=1;k<Nzbins-1;++k){
-		Nhalosbin[k] = cosmo.haloNumberInBufferedCone(field_min_mass,zbins[k],zsource,fieldofview*pow(pi/180,2),field_buffer,field_mass_func_type,mass_func_PL_slope)/aveNhalos;
-    // std::cout << Nhalosbin[k] ;
-	}
-  // std::cout << std::endl ;
-	zbins[Nzbins-1] = zsource;
-	Nhalosbin[Nzbins-1] = 0.0;
-  */
-  
-  /*
-	std::size_t Nhalos = static_cast<std::size_t>(poidev(float(aveNhalos), seed));
-  
-	std::vector<PosType> halo_zs_vec;
-	//std::vector<PosType *> halo_pos_vec;  /// temporary vector to store angular positions
-  
-	// assign redsshifts to field_halos according to the redshift distribution
-  
-	for(i=0;i < Nhalos;++i){
-		halo_zs_vec.push_back(Utilities::InterpolateYvec(Nhalosbin,zbins,ran2(seed)));
-	}
-  
-  // sort redshifts
-	std::sort(halo_zs_vec.begin(),halo_zs_vec.end());
-  
-	assert(halo_zs_vec[0] < halo_zs_vec[1]);
-	assert(halo_zs_vec[0] < halo_zs_vec[Nhalos-1]);
-  
-	// fill the log(mass) vector
-	Logm.resize(Nmassbin);
-	Nhalosbin.resize(Nmassbin);
-	Utilities::fill_linear(Logm,Nmassbin,log10(field_min_mass),MaxLogm);
-  */
-  
-  assert(halo_zs_vec[0] < halo_zs_vec[1]);
-  assert(halo_zs_vec[0] < halo_zs_vec[Nhalos-1]);
   
 	PosType *theta_pos,*theta2;
 	size_t j = 0;
@@ -1172,9 +1129,8 @@ void Lens::createFieldHalos(bool verbose)
 		k1 = it1 - halo_zs_vec.begin();
 		k2 = it2 - halo_zs_vec.begin();
 
-		// Nhaloestot = cosmo.haloNumberInBufferedCone(pow(10,Logm[0]),z1,z2,fieldofview*pow(pi/180,2),field_buffer,field_mass_func_type,mass_func_PL_slope);
-    Nhaloestot = Nhaloestot_Tab[np] ; // New version of above line
-    
+    Nhaloestot = Nhaloestot_Tab[np] ;
+
 		Nhalosbin[0] = 1;
     
 #ifdef _OPENMP
@@ -1322,7 +1278,6 @@ void Lens::createFieldHalos(bool verbose)
 		Nhalosbin.empty();
 	}
   
-  // std::cout << "k2 = " << k2 << " , Nhalos = " << Nhalos << std::endl ;
 	assert(k2 == Nhalos);
 	delete halo_calc;
   
@@ -1337,6 +1292,7 @@ void Lens::createFieldHalos(bool verbose)
   
 	if(verbose) std::cout << "leaving Lens::createFieldHalos()" << std::endl;
 }
+
 
 /**
  * \brief Read in information from a Virgo Millennium Data Base http://gavo.mpa-garching.mpg.de/MyMillennium/
