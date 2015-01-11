@@ -662,7 +662,7 @@ void Lens::createFieldPlanes(bool verbose)
 	assert(field_planes.size() == field_Nplanes);
 }
 
-void Lens::insertSubstructures(PosType Rregion,PosType NumberDensity,PosType Mass_min,PosType Mass_max,PosType redshift,PosType alpha,PosType center[],PosType density_contrast,bool verbose)
+void Lens::insertSubstructures(PosType Rregion,PosType center[],PosType NumberDensity,PosType Mass_min,PosType Mass_max,PosType redshift,PosType alpha,PosType density_contrast,bool verbose)
 {
   
   if(alpha == -1) throw std::invalid_argument("alpha must not be -1 in Lens::createOneFieldPlane");
@@ -671,8 +671,9 @@ void Lens::insertSubstructures(PosType Rregion,PosType NumberDensity,PosType Mas
   
   std::size_t Nhalos = static_cast<std::size_t>(poidev(float(aveNhalos), seed));
   
+  if(Nhalos == 0) return;
+  
   size_t offset = field_halos.size();
-  //std::vector<LensHalo*> substruct_halos;
 
   PosType Dl = cosmo.angDist(redshift)/(1+redshift),rr,theta;
   PosType *theta_pos;
@@ -732,9 +733,11 @@ void Lens::insertSubstructures(PosType Rregion,PosType NumberDensity,PosType Mas
     ++itd;
   }
   
-  field_planes.insert(it, new LensPlaneTree(substruct_halos.data(), Nhalos, 0, 0));
+  
+  it = field_planes.insert(it, new LensPlaneTree(substruct_halos.data(), Nhalos, 0, 0));
   field_plane_redshifts.insert(itz,redshift);
   field_Dl.insert(itd,Dl*(1+redshift));
+  substructure_plane = *it;
   
   ++field_Nplanes;
 
@@ -742,6 +745,69 @@ void Lens::insertSubstructures(PosType Rregion,PosType NumberDensity,PosType Mas
   //*****************************
   
   assert(field_planes.size() == field_Nplanes);
+}
+
+void Lens::randomizeSubstructure(){
+
+  need a test of whether insertSubstructures has been called;
+  
+  // find which plane has the substructures on it
+  int i = 0;
+  while(field_planes[i] != substructure_plane) ++i;
+  
+  PosType redshift = field_plane_redshifts[i];
+  PosType Dlsub = Dl[i];
+
+  PosType aveNhalos = sub_Ndensity/sub_Rmax/sub_Rmax/pi;
+  
+  std::size_t Nhalos = static_cast<std::size_t>(poidev(float(aveNhalos), seed));
+  
+  if(Nhalos == 0) return;
+  
+  size_t haloid = field_halos.size();
+  
+  PosType rr,theta;
+  PosType *theta_pos;
+  PosType r = sub_Mmin/sub_Mmax,f,mass;
+  
+  PosType Rmax;
+  
+  PosType rho = sub_rho_tidal*cosmo.rho_crit(0)*cosmo.getOmega_matter()*(1+redshift)*(1+redshift)*(1+redshift);
+  
+  Utilities::delete_container(substruct_halos);
+  
+  for(size_t ii=0;ii<Nhalos;++ii){
+    
+    // random postion
+    rr = sub_Rmax*sqrt(ran2(seed));
+    theta_pos = new PosType[3];
+    
+    theta = 2*pi*ran2(seed);
+    
+    // position in proper distance
+    theta_pos[0] = (rr*cos(theta) + sub_center[0])*Dlsub;
+    theta_pos[1] = (rr*sin(theta) + sub_center[1])*Dlsub;
+    theta_pos[2] = 0.0;
+    
+    f = ran2(seed);
+    
+    // mass from power law mass function
+    mass = sub_Mmax*pow( f + pow(r,sub_alpha+1)*(1-f), 1.0/(1+sub_alpha) );
+    
+    // Rmax from tidal truncation
+    Rmax = pow(mass/rho/4/pi,1.0/3.);
+    
+    //could make some other cases here, What does Xu use?
+    
+    substruct_halos.push_back(new LensHaloPowerLaw(mass,Rmax,redshift,Rmax,1.0,1.0,0,0));
+    substruct_halos.back()->setX(theta_pos);
+    ++haloid;
+    substruct_halos.back()->setID(haloid);
+  }
+  
+  delete substructure_plane;
+  field_planes[i] = substructure_plane = new LensPlaneTree(substruct_halos.data(), Nhalos, 0, 0);
+  
 }
 
 void Lens::addMainHaloToPlane(LensHalo* halo)

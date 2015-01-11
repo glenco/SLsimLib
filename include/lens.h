@@ -134,7 +134,25 @@ public:
 	/// replaces existing main halos with a sequence of main halos
 	void replaceMainHalos(LensHalo** halos, std::size_t Nhalos,bool verbose = false);
 
-  void insertSubstructures(PosType Rregion,PosType NumberDensity,PosType Mass_min,PosType Mass_max,PosType redshift,PosType alpha,PosType center[],PosType density_contrast,bool verbose);
+  /** \brief Add substructures to the lens.
+   
+   This method is meant for inserting substructure to a main lens.  All the substructure will be at 
+   one redshift.  The mass function follows a power law.  The density of substructures is constant within 
+   a circulare region.  The tidal truncation is controlled through the parameter density_contrast which is 
+   the average density within the substructures orbit in units of the average density to the universe at 
+   the redshift where they are places.  For example density_contrast=200 would give them the truncation radius appropriate at R_200. 
+   */
+  void insertSubstructures(
+        PosType Rregion            /// radius of region in which substructures are inserted (radians)
+        ,PosType center[]          /// center of region in which the substructures are inserted (radians)
+        ,PosType NumberDensity     /// number density per radian^2 of all substructures
+        ,PosType Mass_min          /// minimum mass of substructures
+        ,PosType Mass_max          /// maximum mass of substructures
+        ,PosType redshift          /// redshift of substructures
+        ,PosType alpha             /// index of mass function (dN/dm \propto m^alpha)
+        ,PosType density_contrast  ///
+        ,bool verbose
+  );
   
 	/// get number of main halos
 	std::size_t getNMainHalos() const;
@@ -276,8 +294,6 @@ private: /* field */
 	
   /// vector of all field halos
   std::vector<LensHalo*> field_halos;
-  /// vector of all field halos
-  std::vector<LensHalo*> substruct_halos;
 	/// number of field planes
 	std::size_t field_Nplanes;
 	/// vector of all field planes
@@ -286,6 +302,19 @@ private: /* field */
 	std::vector<PosType> field_plane_redshifts;
 	/// vector of field plane distances
 	std::vector<PosType> field_Dl;
+  
+  // things for substructures
+  /// vector of all substructur halos
+  std::vector<LensHalo*> substruct_halos;
+  LensPlane *substructure_plane;
+  PosType sub_Rmax;
+  PosType sub_Mmax;
+  PosType sub_Mmin;
+  PosType sub_alpha;
+  PosType sub_Ndensity;
+  Point_2d sub_center;
+  PosType sub_rho_tidal;
+
 	
 	/// Perpendicular position of halo TODO: (In proper distance?)
 	//PosType **halo_pos;
