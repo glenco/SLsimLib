@@ -257,8 +257,11 @@ private: /* generation */
 	void setFieldDistFromFile();
 	/// setup the field plane distances
 	void setupFieldPlanes();
-	/// create field halos as specified in the parameter file
-  void ComputeNhalosbin ();
+	/// computes the distribution variables for field halos as specified in the parameter file
+  /// this material was before computed in createFieldHalos
+  void ComputeHalosDistributionVariables ();
+  /// computes sigma_back for createFieldPlanes :
+  void ComputeHalosSigmaBack();
 	void createFieldHalos(bool verbose);
 	/// read field halo data in from a file in Millennium output format
 	void readInputSimFileMillennium(bool verbose);
@@ -277,18 +280,36 @@ private: /* generation */
 	/// combine field and main planes
 	void combinePlanes(bool verbose);
 	
-  // Variables used by buildPLanes and createFieldHalos :
+  /* Variables used by buildPlanes, createFieldHalos, and createFieldPlanes */
+  /// TO DO : should check the correctness of the following descriptions.
+  
+  /// number of redshift bins for mass function
   const int Nzbins = 64 ;
+  /// number of mass bins for mass function
   const int Nmassbin=64;
+  /// number of redshifts sampled for each bin
   int NZSamples = 50;
+  // table for redshift bins for mass function
   std::vector<PosType> zbins ;
+  // table of number of halos per redshift bins for mass function
   std::vector<PosType> Nhalosbin ;
+  /// same for the cumulative number density in one square degree
   std::vector<PosType> Nhaloestot_Tab ;
+  /// averaged number of halos
   PosType aveNhalos ;
+  /// Log(mass) vector
   std::vector<PosType> Logm;
-  std::vector<PosType> halo_zs_vec;
+  /// Number of halos
   std::size_t Nhalos ;
+  /// table of halos bins for each sampled redshifts
   std::vector<std::vector<PosType>> NhalosbinNew;
+  /// table for sigma_back in createFieldPlanes
+  std::vector<PosType> sigma_back_Tab;
+  
+  /* ----- */
+  
+  // get the adress of field_plane_redshifts
+  std::vector<PosType> & get_field_plane_redshifts () { return field_plane_redshifts ; }
   
 private: /* force calculation */
 	/// if >= 1, deflection in the rayshooting is switched off
