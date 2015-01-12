@@ -153,6 +153,7 @@ public:
         ,PosType density_contrast  ///
         ,bool verbose
   );
+  void resetSubstructure();
   
 	/// get number of main halos
 	std::size_t getNMainHalos() const;
@@ -303,18 +304,21 @@ private: /* field */
 	/// vector of field plane distances
 	std::vector<PosType> field_Dl;
   
+  struct SubStructureInfo{
   // things for substructures
   /// vector of all substructur halos
-  std::vector<LensHalo*> substruct_halos;
-  LensPlane *substructure_plane;
-  PosType sub_Rmax;
-  PosType sub_Mmax;
-  PosType sub_Mmin;
-  PosType sub_alpha;
-  PosType sub_Ndensity;
-  Point_2d sub_center;
-  PosType sub_rho_tidal;
-
+  std::vector<LensHalo*> halos;
+  LensPlane *plane;
+  PosType Rregion = 0;
+  PosType Mmax = 0;
+  PosType Mmin = 0;
+  PosType alpha = 0;
+  PosType Ndensity = 0;
+  Point_2d center;
+  PosType rho_tidal = 0;
+  };
+  
+  SubStructureInfo substructure;
 	
 	/// Perpendicular position of halo TODO: (In proper distance?)
 	//PosType **halo_pos;
