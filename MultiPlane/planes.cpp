@@ -98,7 +98,7 @@ void LensPlaneSingular::force(PosType *alpha
         
     // Getting the halo position (in physical Mpc) :
     halos[i]->getX(x_tmp);
-        
+    
     // Taking the shift into account :
     x_tmp[0] = xx[0] - x_tmp[0];
     x_tmp[1] = xx[1] - x_tmp[1];

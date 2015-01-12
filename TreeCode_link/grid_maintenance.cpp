@@ -254,7 +254,7 @@ void Grid::ReShoot(LensHndl lens){
   for(i=0,k=0;i<i_tree->pointlist->size();++i){
     i_points = *i_tree_pointlist_current;
     if(i_points->head > 0){
-      
+
       // link source and image points
       for(size_t j=0;j<i_points->head;++j,++k){
         i_points[j].image = &s_points[k];

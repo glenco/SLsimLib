@@ -96,7 +96,7 @@ protected:
 
   /// redshift for which uniform kappa and gamma are valid
   float zsource_reference;
-  PosType Dl, Ds, Dls;
+  PosType Dl, Ds, Dls; // In comoving Mpc
 };
 
 

@@ -14,7 +14,7 @@ void LensHaloBaseNSIE::force_halo(
                                   ,KappaType *kappa   /// surface mass density
                                   ,KappaType *gamma
                                   ,KappaType *phi
-                                  ,PosType const *xcm
+                                  ,PosType const *xcm /// Position in physical Mpc
                                   ,bool subtract_point /// if true contribution from a point mass is subtracted
                                   ,PosType screening   /// the factor by which to scale the mass for screening of the point mass subtraction
                                   )
@@ -58,11 +58,49 @@ void LensHaloBaseNSIE::force_halo(
       *phi *= units ;                               // phi now in Msun * Mpc
     }
   }
+  
   // perturbations of host lens
   if(perturb_Nmodes > 0)
   {
-    *kappa += lens_expand(perturb_beta,perturb_modes,perturb_Nmodes,xcm,alpha_tmp,gamma_tmp,&phi_tmp);
-
+    PosType xt[2]={0,0};
+    xt[0]=xcm[0] ; // in PhysMpc
+    xt[1]=xcm[1] ;
+    
+    // Calling lens_expand : xt in PhysMpc, mod[0,1,2] in mass/PhysMpc, mod[4,5,...] in mass/(PhysMpc*Mpc) :
+    
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    *kappa += lens_expand(perturb_beta,perturb_modes,perturb_Nmodes-1,xt,alpha_tmp,gamma_tmp,&phi_tmp);
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    
+    
+    // alpha_tmp is in mass / PhyMpc here !
+    
+    // Printing quantities for control :
+    /*
+    std::cout << "         xt in force_halo : @@@ " << xt[0] << " " << xt[1] << " @@@" << std::endl ;
+    std::cout << "alpha in force_halo : " << alpha_tmp[0] << " " << alpha_tmp[1] << std::endl ;
+    std::cout << "xt - alpha in force_halo : !!! " << xt[0] - alpha_tmp[0] << " " << xt[1] - alpha_tmp[1] << " !!!" << std::endl ;
+    std::cout << "Dl = " << Dl << " , Dls = " << Dls << " , Ds = " << Ds << std::endl ;
+    */
+    
+    // Adding a contribution to remove p->i_points[i].image->x[0]*p->dDl[j+1]/p->dDl[j] to aa*p->i_points[i].image->x[0] :
+    alpha_tmp[0] += xt[0] / (Dl*(1+zlens)) / (4*pi*Grav) ; // contribution in mass/PhysMpc
+    alpha_tmp[1] += xt[1] / (Dl*(1+zlens)) / (4*pi*Grav) ;
+    
+    // WHY DO WE NEED THIS STEP ???
+    
+    // We need it because rayshooter computes alpha such that y = Ds/Dl * x - cc*alpha is the initial position of the source, but with the modes computed here it turns out that Dls/Dl * x - cc*alpha is the position of the source (as when we test it with different images we get the same position of the source).
+    
+    // WE SHOULD UNDERSTAND WHY THIS IS SO !
+    
+    // Multiplying alpha by cosmo.angDist(0.3) so that it combines with the remaining contributions of p->i_points[i].image->x[0], it probably cancels the (1+zl) factor called fac in rayshooter :
+    alpha_tmp[0] *= -1. * (1+zlens) ; // alpha here in mass/Mpc
+    alpha_tmp[1] *= -1. * (1+zlens) ;
+    
+    // std::cout << "alpha final in force_halo : " << alpha_tmp[0] << " " << alpha_tmp[1] << std::endl ;
+    
+    
+    // As before :
     alpha[0] += alpha_tmp[0];
     alpha[1] += alpha_tmp[1];
     
@@ -92,8 +130,6 @@ void LensHaloBaseNSIE::force_halo(
         *kappa += kappa_tmp;
         gamma[0] += gamma_tmp[0];
         gamma[1] += gamma_tmp[1];
-        
-        // Why don't we have gamma[2] here ?
         *phi += phi_tmp;
       }
     }

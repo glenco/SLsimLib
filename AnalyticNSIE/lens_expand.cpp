@@ -62,7 +62,7 @@ PosType lens_expand(PosType beta,PosType *mod,int Nmodes,PosType const *x,PosTyp
     // add shear
     alpha[0] +=  x[0]*mod[1] + x[1]*mod[2];
     alpha[1] += -x[1]*mod[1] + x[0]*mod[2];
-
+  
     // add flat kappa
     alpha[0] += -1.0*x[0]*mod[0];
     alpha[1] += -1.0*x[1]*mod[0];

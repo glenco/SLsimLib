@@ -211,7 +211,6 @@ public:
   
   /// get the field min mass :
   PosType getFieldMinMass() { return field_min_mass ; }
-  
  
 private:
 	GLAMER_TEST_FRIEND(LensTest)
@@ -246,7 +245,7 @@ private:
 	
 private: /* generation */
 	/// create the lens planes
-	void buildPlanes(InputParams& params,bool verbose);
+	void buildPlanes(InputParams& params, bool verbose);
 	
 	/// sets the distances and redshifts of the field planes equidistant
 	void setFieldDist();
@@ -255,6 +254,7 @@ private: /* generation */
 	/// setup the field plane distances
 	void setupFieldPlanes();
 	/// create field halos as specified in the parameter file
+  void ComputeNhalosbin ();
 	void createFieldHalos(bool verbose);
 	/// read field halo data in from a file in Millennium output format
 	void readInputSimFileMillennium(bool verbose);
@@ -273,6 +273,19 @@ private: /* generation */
 	/// combine field and main planes
 	void combinePlanes(bool verbose);
 	
+  // Variables used by buildPLanes and createFieldHalos :
+  const int Nzbins = 64 ;
+  const int Nmassbin=64;
+  int NZSamples = 50;
+  std::vector<PosType> zbins ;
+  std::vector<PosType> Nhalosbin ;
+  std::vector<PosType> Nhaloestot_Tab ;
+  PosType aveNhalos ;
+  std::vector<PosType> Logm;
+  std::vector<PosType> halo_zs_vec;
+  std::size_t Nhalos ;
+  std::vector<std::vector<PosType>> NhalosbinNew;
+  
 private: /* force calculation */
 	/// if >= 1, deflection in the rayshooting is switched off
 	bool flag_switch_deflection_off;
