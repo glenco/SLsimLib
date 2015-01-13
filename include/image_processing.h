@@ -56,8 +56,8 @@ public:
   
 	void drawline(double x1[],double x2[],double value);
   void drawcircle(PosType r_center[],PosType radius,PosType value);
-	void AddGrid(Grid &grid,double value = 1.0);
-  void AddGrid(Grid &grid,LensingVariable val);
+	void AddGrid(const Grid &grid,double value = 1.0);
+  void AddGrid(const Grid &grid,LensingVariable val);
 
 	void Renormalize(double factor);
 	void AddValue(std::size_t i, double value);
@@ -166,7 +166,7 @@ public:
 
 private:
 	std::valarray<double> map;
-  void AddGrid_(PointList list,LensingVariable val);
+  void AddGrid_(const PointList &list,LensingVariable val);
 
 	std::size_t Nx;
 	std::size_t Ny;

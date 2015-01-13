@@ -841,7 +841,7 @@ void PixelMap::AddCurve(std::vector<Point_2d> &curve,double value){
 /**
  *  \brief Fills in pixels where the image plane points in the grid are located with the value given
  */
-void PixelMap::AddGrid(Grid &grid,PosType value){
+void PixelMap::AddGrid(const Grid &grid,PosType value){
   PointList* list = grid.i_tree->pointlist;
   size_t index;
   
@@ -863,9 +863,9 @@ void PixelMap::AddGrid(Grid &grid,PosType value){
  *
  *  Warning: When adding a new grid it should not overlap with any of the previously added grids.
  */
-void PixelMap::AddGrid(Grid &grid,LensingVariable val){
+void PixelMap::AddGrid(const Grid &grid,LensingVariable val){
   
-  if(grid.getNumberOfPoints() ==0 ) return;
+  if(grid.getNumberOfPoints() == 0 ) return;
   
   AddGrid_(*(grid.i_tree->pointlist),val);
   
@@ -907,9 +907,7 @@ void PixelMap::AddGrid(Grid &grid,LensingVariable val){
   for(int ii=0;ii<Nblocks;++ii) thr[ii].join();
 }
 
-void PixelMap::AddGrid_(PointList list,LensingVariable val){
-  std::list <unsigned long> neighborlist;
-  std::list <unsigned long>::iterator it;
+void PixelMap::AddGrid_(const PointList &list,LensingVariable val){
   double tmp,area;
   PosType tmp2[2];
   
@@ -958,6 +956,9 @@ void PixelMap::AddGrid_(PointList list,LensingVariable val){
         // If this list is to be expanded to include ALPHA or GAMMA take care to add them as vectors
     }
     
+    std::list <unsigned long> neighborlist;
+    std::list <unsigned long>::iterator it;
+
     if(tmp != 0.0){
       if( inMapBox((*pl_it)->leaf) == true){
         PointsWithinLeaf((*pl_it)->leaf,neighborlist);

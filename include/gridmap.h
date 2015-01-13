@@ -29,7 +29,7 @@ struct GridMap{
   
 	double RefreshSurfaceBrightnesses(SourceHndl source);
   void ClearSurfaceBrightnesses();
-	size_t getNumberOfPoints(){return Ngrid_init*Ngrid_init2;}
+	size_t getNumberOfPoints() const {return Ngrid_init*Ngrid_init2;}
   
 	/// return initial number of grid points in each direction
 	int getInitNgrid(){return Ngrid_init;}

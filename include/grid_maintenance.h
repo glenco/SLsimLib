@@ -35,7 +35,7 @@ struct Grid{
   
   double RefreshSurfaceBrightnesses(SourceHndl source);
   double ClearSurfaceBrightnesses();
-  unsigned long getNumberOfPoints();
+  unsigned long getNumberOfPoints() const;
   
   
   /// tree on image plane

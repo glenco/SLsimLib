@@ -326,7 +326,7 @@ PosType Grid::ClearSurfaceBrightnesses(){
 /** \ingroup ImageFinding
  * \brief Returns number of points on image plane.
  */
-unsigned long Grid::getNumberOfPoints(){
+unsigned long Grid::getNumberOfPoints() const{
 	assert(i_tree->getTop()->npoints == s_tree->getTop()->npoints);
 	assert(i_tree->getTop()->npoints == i_tree->pointlist->size());
 	assert(s_tree->getTop()->npoints == s_tree->pointlist->size());
