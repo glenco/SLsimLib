@@ -325,14 +325,35 @@ protected:
   
   // These are stucts used in doing tests
   
-  struct test_gt_func{
+  /*struct test_gt_func{
     test_gt_func(LensHalo& halo,PosType my_r): halo(halo),r(my_r){};
     LensHalo& halo;
     PosType r;
     PosType a[2] = {0,0},x[2] = {0,0};
     KappaType k = 0,g[3] = {0,0,0} ,p=0;
-    double operator ()(PosType t) {x[0]=r*cos(t); x[1]=r*sin(t); halo.force_halo(a,&k,g,&p,x); return (g[0]*cos(2*t)+g[1]*sin(2*t))*2*pi*r*r;}
+    //double operator ()(PosType t) {x[0]=r*cos(t); x[1]=r*sin(t);  halo.force_halo(a,&k,g,&p,x); if(r>1){std::cout << r << " " << g[0]*cos(2*t)+g[1]*sin(2*t) << std::endl;} return (g[0]*cos(2*t)+g[1]*sin(2*t));}
+    double operator ()(PosType t) {x[0]=r*cos(t); x[1]=r*sin(t);  halo.force_halo(a,&k,g,&p,x); return (g[0]*cos(2*t)+g[1]*sin(2*t));}
+    
+  };*/
+  
+  
+  struct test_gt_func{
+    test_gt_func(PosType my_r,LensHalo *halo): r(my_r),halo(halo){};
+    double operator ()(PosType t) {
+      PosType alpha[2] = {0,0},x[2] = {0,0};
+      KappaType kappa = 0,gamma[3] = {0,0,0},phi =0 ;
+      x[0]=r*cos(t);
+      x[1]=r*sin(t);
+      halo->force_halo(alpha,&kappa,gamma,&phi,x);
+      assert(gamma[0]==gamma[0]);
+      assert(gamma[1]==gamma[1]);
+       return (gamma[0]*cos(2*t)+gamma[1]*sin(2*t));}
+    //double operator ()(PosType t) {x[0]=r*cos(t); x[1]=r*sin(t);  halo.force_halo(a,&k,g,&p,x); if(r>1){std::cout << r << " " << g[0]*cos(2*t)+g[1]*sin(2*t) << std::endl;} return (g[0]*cos(2*t)+g[1]*sin(2*t));}
+  private:
+    PosType r;
+    LensHalo *halo;
   };
+
   
  /* struct test_kappa_func{
     test_kappa_func(LensHalo& halo,PosType my_r): halo(halo),r(my_r){};
@@ -353,7 +374,7 @@ protected:
       x[1]=r*sin(t);
       halo->force_halo(alpha,&kappa,gamma,&phi,x);
       assert(kappa==kappa);
-      return 2*pi*kappa*r*r; }
+      return kappa; }
   private:
     PosType r;
     LensHalo *halo;

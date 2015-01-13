@@ -819,8 +819,8 @@ void LensHalo::force_halo_asym(
     //std::cout<< "alpha[1] " << alpha_tmp[1]*xcm[1] << std::endl;
     
     *kappa += kappa_tmp;
-    gamma[0] += gamma_tmp[0];
-    gamma[1] += gamma_tmp[1];
+    gamma[0] += 0.5*gamma_tmp[0];
+    gamma[1] += 0.5*gamma_tmp[1];
     
     *phi += phi_tmp;
     
@@ -844,9 +844,11 @@ void LensHalo::force_halo_asym(
 			alpha[0] += -1.0 * prefac * xcm[0];
 			alpha[1] += -1.0 * prefac * xcm[1];
       
+      //if(rcm2==1.125){
       //std::cout << "rcm2  = " << rcm2 << std::endl;
       //std::cout << "prefac  = " << prefac << std::endl;
       //std::cout << "xcm  = " << xcm[0] << " " << xcm[1] << std::endl;
+      //}
       
 			PosType tmp = -2.0*prefac/rcm2;
       
@@ -1515,15 +1517,16 @@ PosType LensHalo::MassBy1DIntegation(PosType R){
 
 /// calculates the average gamma_t for LensHalo::test()
 double LensHalo::test_average_gt(PosType R){
-  struct test_gt_func f(*this,R);
-  return Utilities::nintegrate<test_gt_func>(f,0.0,2*pi,1.0e-6);
+  struct test_gt_func f(R,this);
+  return Utilities::nintegrate<test_gt_func>(f,0.0,2.*pi,1.0e-3);
 }
 
 double LensHalo::test_average_kappa(PosType R){
   struct test_kappa_func f(R,this);
-  return Utilities::nintegrate<test_kappa_func>(f,0.0,2*pi,1.0e-3);
+  return Utilities::nintegrate<test_kappa_func>(f,0.0,2.*pi,1.0e-3);
 }
 
+/// Three tests: 1st - Mass via 1D integration vs mass via 2D integration. 2nd: gamma_t=alpha/r - kappa(R) which can be used for spherical distributions. Deviations are expected for axis ratios <1. For the latter case we use the next test. 3rd: The average along a circular aperture of gamma_t should be equal to <kappa(<R)> minus the average along a circular aperture over kappa. Note that also  alpha/r - kappa is checked for consistency with kappa(<R)-<kappa(R)>. For axis ratios < 1 the factor between the two is expected to be of order O(10%).
 bool LensHalo::test(){
   std::cout << "test alpha's consistance with kappa by comparing mass interior to a radius by 1D integration and Gauss' law and by 2D integration" << std::endl;
   
@@ -1539,12 +1542,11 @@ bool LensHalo::test(){
     
   }
   
-  std::cout << "test gamma_t's consistance with kappa and alpha by comparing gamma_t to <kappa>_R - kappa(R)" << std::endl;
-
+  
   PosType r;
   
-  if(elliptical_flag){
-    std::cout << std::endl <<"R/Rmax      alpha/r - kappa        gamma_t            alpha/r           kappa  " << std::endl;
+    std::cout << "test gamma_t's consistance with kappa and alpha by comparing gamma_t to alpha/r - kappa" << std::endl;
+    std::cout << std::endl <<"R/Rmax         gamma_t       alpha/r - kappa          alpha/r           kappa        delta/gt "  << std::endl;
     for(int i=1;i<N;++i){
       r = Rmax*i/(N-2);
 
@@ -1556,26 +1558,45 @@ bool LensHalo::test(){
       
       force_halo(alpha,&kappa,gamma,&phi,x);
       
-      std::cout << r/Rmax << "       " << -alpha[0]/r - kappa << "         " << -gamma[0] << "         " << alpha[0]/r << "         " << kappa << std::endl;
-    }
-
-  }else{
-    std::cout << std::endl <<"R/Rmax      gamma_t       <kappa>_R=m1           kappa(R)         delta/gt  " << std::endl;
-    for(int i=1;i<N;++i){
-      r = Rmax*i/(N-2);
-
-      //integrate over t
-      PosType average_gt, average_kappa;
-      average_gt=test_average_gt(r);
-      average_kappa=test_average_kappa(r);
-      m1 = MassBy1DIntegation(r);
-     
-    
-    std::cout << r/Rmax << "       " << average_gt << "         " << m1 << "          " <<  average_kappa << "     "  << (m1-average_kappa)/average_gt << std::endl;
-    //throw std::runtime_error("this is not done yet for asymetric lenses but can be.");
+      std::cout << r/Rmax << "       " <<  -gamma[0]  << "         " << -alpha[0]/r - kappa << "         " << -alpha[0]/r << "         " << kappa << "      " <<  (alpha[0]/r + kappa)/gamma[0]   <<std::endl;
     }
   
-  }
+  
+    std::cout << "test gamma_t's consistance with kappa and alpha by comparing gamma_t to <kappa>_R - kappa(R)" << std::endl;
+    std::cout << std::endl <<"R/Rmax        gamma_t         m1-kappa             <kappa>_R=m1           kappa(R)         delta/gt  " << std::endl;
+  
+  
+    for(int i=1;i<N;++i){
+      r = Rmax*i/(N-2);
+      
+      //integrate over t
+      PosType average_gt, average_kappa;
+      average_gt=test_average_gt(r)/2/pi;
+      average_kappa=test_average_kappa(r)/2/pi;
+      m1 = MassBy1DIntegation(r)/pi/r/r;
+      
+      
+      std::cout << r/Rmax << "       " << -1.0*average_gt << "         " << m1-average_kappa << "         " <<  m1 << "          " <<  average_kappa << "     "  << -1.0*(m1-average_kappa)/average_gt << std::endl;
+      
+      
+      PosType alpha[2] = {0,0},x[2] = {0,0};
+      KappaType kappa = 0,gamma[3] = {0,0,0} ,phi=0;
+      x[0] = r;
+      x[1] = 0;
+      force_halo(alpha,&kappa,gamma,&phi,x);
+      //std::cout << abs(-1.0*(m1-average_kappa)/average_gt-1.) << std::endl;
+      assert( abs(-1.0*(m1-average_kappa)/average_gt-1.) < 1e-2 ); // <g_t> = <k(<R)>-<kappa(R)> test
+      //std::cout << abs(abs(-alpha[0]/r)/m1-1.)  << std::endl;
+      assert( abs(abs(-alpha[0]/r)/m1-1.) < 1e-1 ); // alpha/r ~ <kappa(R)>
+      //std::cout << abs( -alpha[0]/r - kappa ) / abs(m1-average_kappa  ) -1.  << std::endl;
+      assert( abs( -alpha[0]/r - kappa ) / abs(m1-average_kappa  ) -1.  < 1 ); // alpha/r ~ <kappa(R)>
+      if(!elliptical_flag){
+        assert( abs(abs(alpha[0]/r + kappa)/gamma[0]-1.) < 1e-2); // g_t = alpha/r - kappa test
+      }
+      
+      
+    }
+    
   
   
   return true;
