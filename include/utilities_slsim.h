@@ -878,9 +878,10 @@ namespace Utilities
     return jl;
   }
   
+  /// delete the objects that are pointed to in a container of pointers
   template<typename Container>
   void delete_container(Container& c) { while(!c.empty()) delete c.back(), c.pop_back(); }
-  
+    
   /** \brief Class for calculating the Hilbert curve distance in two dimensions
    *
    *  The Hilbert Curve maps two dimensional positions on a grid into distance in one dimension.

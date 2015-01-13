@@ -10,18 +10,16 @@
 #include "slsimlib.h"
 
 bool TreeStruct::Test(){
-  Branch *treecur = current;
-  Point *listcur = pointlist->current;
-  moveTop();
-  do{
-    pointlist->current = current->points;
-    for(int k = 0; k < current->npoints ; ++k,MoveDownList(pointlist)){
-      assert( inbox(pointlist->current->x,current->boundary_p1,current->boundary_p2) );
-    }
-  }while(TreeWalkStep(true));
+  
+  PointList::iterator pl_current(*pointlist);
+  TreeStruct::iterator treeit(top);
 
-  current = treecur;
-  pointlist->current = listcur;
+  do{
+      pl_current = (*treeit)->points;
+      for(int k = 0; k < (*treeit)->npoints ; ++k,--pl_current){
+      assert( inbox((*pl_current)->x,(*treeit)->boundary_p1,(*treeit)->boundary_p2) );
+    }
+  }while(treeit.TreeWalkStep(true));
 
   return true;
 }
@@ -34,7 +32,7 @@ bool TreeStruct::Test(){
 * Warning: Does not take empty leaves into account.
 */
 
-void TreeStruct::FindAllBoxNeighborsKist(Point *point,Kist<Point> * neighbors){
+void TreeStruct::FindAllBoxNeighborsKist(Point *point,Kist<Point> * neighbors) const{
 	neighbors->Empty();
 
 	//Kist<Point>* testkist = new Kist<Point>;
@@ -91,34 +89,34 @@ void TreeStruct::FindAllBoxNeighborsKist(Point *point,Kist<Point> * neighbors){
  * A recessive function that was used in FindAllBoxNeighborsKist().
 *    It has been known to cause stack overflow. Use _FindAllBoxNeighborsKist_iter instead.
 */
-void TreeStruct::_FindAllBoxNeighborsKist(Branch *leaf,Kist<Point> * neighbors){
+void TreeStruct::_FindAllBoxNeighborsKist(Branch *leaf,TreeStruct::iterator &current,Kist<Point> * neighbors) const{
 
-	if(  leaf->boundary_p1[0] <= current->boundary_p2[0]
-	  && leaf->boundary_p2[0] >= current->boundary_p1[0]
-	  && leaf->boundary_p1[1] <= current->boundary_p2[1]
-	  && leaf->boundary_p2[1] >= current->boundary_p1[1]){
+	if(  leaf->boundary_p1[0] <= (*current)->boundary_p2[0]
+	  && leaf->boundary_p2[0] >= (*current)->boundary_p1[0]
+	  && leaf->boundary_p1[1] <= (*current)->boundary_p2[1]
+	  && leaf->boundary_p2[1] >= (*current)->boundary_p1[1]){
 
-		if( atLeaf() ){
-			assert(current->npoints <= Nbucket);
+		if(current.atLeaf() ){
+			assert((*current)->npoints <= Nbucket);
 			//if(current->npoints == Nbucket){
 			// What if number is > than Nbucket and it is not in a leaf
-			if(current->number != leaf->number && current->npoints > 0){
-				neighbors->InsertAfterCurrent(current->points);
+			if((*current)->number != leaf->number && (*current)->npoints > 0){
+				neighbors->InsertAfterCurrent((*current)->points);
 				neighbors->Down();
 			}
 			return;
 		}
 
-		if(current->child1 !=NULL){
-			moveToChild(1);
-			_FindAllBoxNeighborsKist(leaf,neighbors);
-			moveUp();
+		if((*current)->child1 !=NULL){
+			current.down(1);
+			_FindAllBoxNeighborsKist(leaf,current,neighbors);
+			current.up();
 		}
 
-		if(current->child2 !=NULL){
-			moveToChild(2);
-			_FindAllBoxNeighborsKist(leaf,neighbors);
-			moveUp();
+		if((*current)->child2 !=NULL){
+			current.down(2);
+			_FindAllBoxNeighborsKist(leaf,current,neighbors);
+			current.up();
 		}
 	}
 
@@ -127,7 +125,7 @@ void TreeStruct::_FindAllBoxNeighborsKist(Branch *leaf,Kist<Point> * neighbors){
 /**  \ingroup LowLevel
  * Used in FindAllBoxNeighborsKist to walk tree for neighbors.
 */
-void TreeStruct::_FindAllBoxNeighborsKist_iter(Branch *leaf,Kist<Point> * neighbors){
+void TreeStruct::_FindAllBoxNeighborsKist_iter(Branch *leaf,TreeStruct::iterator &current,Kist<Point> * neighbors) const{
 
 	/** Iterative instead of recursive method for finding neighbors
 	 *   the current must be preset so that leaf is within it.
@@ -136,20 +134,20 @@ void TreeStruct::_FindAllBoxNeighborsKist_iter(Branch *leaf,Kist<Point> * neighb
 	 */
 
 	bool allowDescent = true;
-	long level = current->level;
+	long level = (*current)->level;
 
 	neighbors->Empty();
 
-	while(TreeWalkStep(allowDescent) && current->level > level ){
+	while(current.TreeWalkStep(allowDescent) && (*current)->level > level ){
 
-		if(  leaf->boundary_p1[0] <= current->boundary_p2[0]
-		  && leaf->boundary_p2[0] >= current->boundary_p1[0]
-	      && leaf->boundary_p1[1] <= current->boundary_p2[1]
-	      && leaf->boundary_p2[1] >= current->boundary_p1[1]){
+		if(  leaf->boundary_p1[0] <= (*current)->boundary_p2[0]
+		  && leaf->boundary_p2[0] >= (*current)->boundary_p1[0]
+	      && leaf->boundary_p1[1] <= (*current)->boundary_p2[1]
+	      && leaf->boundary_p2[1] >= (*current)->boundary_p1[1]){
 
-			if( atLeaf() ){
-				if(current != leaf && current->npoints > 0){
-					neighbors->InsertAfterCurrent(current->points);
+			if( current.atLeaf() ){
+				if((*current) != leaf && (*current)->npoints > 0){
+					neighbors->InsertAfterCurrent((*current)->points);
 					neighbors->Down();
 				}
 			}
@@ -177,7 +175,7 @@ void TreeStruct::PointsWithinEllipKist(
 	,float rmin                  /// minor axis
 	,float posangle              /// position angle of major axis, smallest angle between the x-axis and the long axis
 	,Kist<Point> * neighborkist  /// output neighbor kist, will be emptied if it contains anything on entry
-	){
+	) const {
 	unsigned long i,Ntmp;
 	PosType *xtmp,x,y,cs,sn;
 
@@ -215,130 +213,131 @@ PosType TreeStruct::PointsWithinKist(
 		,PosType rmax                  /// radius of circle
 		,Kist<Point> * neighborkist  /// output neighbor kist, will be emptied if it contains anything on entry
 		,short markpoints            /// see comment
-		)
+		) const
 {
 
 	PosType maxgridsize;
 
 	if(markpoints==0) neighborkist->Empty();
 
-	PosType tmp_ray[2] = { center[0], center[1] };
-	
-	realray[0]=tmp_ray[0];
-	realray[1]=tmp_ray[1];
+  TreeStruct::Globals globs;
+  globs.ray[0] = globs.realray[0] = center[0];
+  globs.ray[1] = globs.realray[1] = center[1];
+  
+	//moveTop();
+  TreeStruct::iterator current(top);
+	if( inbox(globs.ray,(*current)->boundary_p1,(*current)->boundary_p2) == 0 ){
+		std::printf("Warning: in PointsWithinKist, ray is not inside the simulation box\n    should work in any case\n      ray= %e %e\n     boundary p1 = %e %e p2 = %e %e\n",globs.ray[0],globs.ray[1]
+	   ,(*current)->boundary_p1[0],(*current)->boundary_p1[1]
+	   ,(*current)->boundary_p2[0],(*current)->boundary_p2[1]);
 
-	moveTop();
-	if( inbox(tmp_ray,current->boundary_p1,current->boundary_p2) == 0 ){
-		std::printf("Warning: in PointsWithinKist, ray is not inside the simulation box\n    should work in any case\n      ray= %e %e\n     boundary p1 = %e %e p2 = %e %e\n",tmp_ray[0],tmp_ray[1]
-	   ,current->boundary_p1[0],current->boundary_p1[1]
-	   ,current->boundary_p2[0],current->boundary_p2[1]);
+		globs.ray[0]=MAX(globs.ray[0],(*current)->boundary_p1[0]);
+		globs.ray[0]=MIN(globs.ray[0],(*current)->boundary_p2[0]);
 
-		tmp_ray[0]=MAX(tmp_ray[0],current->boundary_p1[0]);
-		tmp_ray[0]=MIN(tmp_ray[0],current->boundary_p2[0]);
-
-		tmp_ray[1]=MAX(tmp_ray[1],current->boundary_p1[1]);
-		tmp_ray[1]=MIN(tmp_ray[1],current->boundary_p2[1]);
+		globs.ray[1]=MAX(globs.ray[1],(*current)->boundary_p1[1]);
+		globs.ray[1]=MIN(globs.ray[1],(*current)->boundary_p2[1]);
 	}
-	incell=1;
+	globs.incell=1;
 
 	maxgridsize = 0;
-    _PointsWithinKist(tmp_ray,&rmax,neighborkist,markpoints,&maxgridsize);
+  _PointsWithinKist(current,&rmax,neighborkist,markpoints,&maxgridsize,globs);
 
 	return maxgridsize;
 }
 /** \ingroup LowLevel
  * Used in PointsWithinKist() to walk tree.*/
-void TreeStruct::_PointsWithinKist(PosType *ray,PosType *rmax,Kist<Point> * neighborkist
-		,short markpoints,PosType *maxgridsize){
+void TreeStruct::_PointsWithinKist(TreeStruct::iterator &current,PosType *rmax,Kist<Point> * neighborkist
+                                   ,short markpoints,PosType *maxgridsize,TreeStruct::Globals &globs) const{
 
   int i,j,incell2=1;
   PosType radius;
   short pass;
+  PointList::iterator pointlist_current;
+  
+  if((*current)->npoints == 0) return;
 
-  if(current->npoints == 0) return;
+  //std::printf("**************************************\nlevel %i\n",(*current)->level);
+  //   std::printf("   %i incell=%i\n",(*current)->points->id,incell);
 
-  //std::printf("**************************************\nlevel %i\n",current->level);
-  //   std::printf("   %i incell=%i\n",current->points->id,incell);
+  if(globs.incell){  // not found cell yet
 
-  if(incell){  // not found cell yet
-
-    if( inbox(ray,current->boundary_p1,current->boundary_p2) ){
+    if( inbox(globs.ray,(*current)->boundary_p1,(*current)->boundary_p2) ){
 
       // found the box small enough
-    	if( Utilities::cutbox(ray,current->boundary_p1,current->boundary_p2,*rmax)==1
-    			|| atLeaf() ){
+    	if( Utilities::cutbox(globs.ray,(*current)->boundary_p1,(*current)->boundary_p2,*rmax)==1
+    			|| current.atLeaf() ){
     		// whole box in circle or a leaf with ray in it
 
-    	  incell=0;
+    	  globs.incell=0;
 
     	  // this sets ray back to real value once closest leaf box is found
     	  //assert((ray[0] == realray[0])*(ray[1] == realray[1]));
     	  //if( (ray[0]!=realray[0])*(ray[1]!=realray[1]) ){ std::printf("ray != realray _PointsWithinKist\n"); exit(0);}
 
-    	  ray[0]=realray[0];
-    	  ray[1]=realray[1];
+    	  globs.ray[0] = globs.realray[0];
+    	  globs.ray[1] = globs.realray[1];
 
-    	  if(current->points != NULL) pointlist->current=current->points;
+    	  if((*current)->points != NULL) pointlist_current=(*current)->points;
 
-    	  if( atLeaf() ){
+    	  if( current.atLeaf() ){
     	   	  // if leaf calculate the distance to all the points in cell
-    		  for(i=0;i<current->npoints;++i){
-    			  for(j=0,radius=0.0;j<2;++j) radius+=pow(pointlist->current->x[j]-ray[j],2);
+    		  for(i=0;i<(*current)->npoints;++i){
+    			  for(j=0,radius=0.0;j<2;++j) radius+=pow((*pointlist_current)->x[j] - globs.ray[j],2);
     			  if( radius < *rmax**rmax ){
        				  if(markpoints == 1){
-       					  pointlist->current->in_image = YES;
-      					  pointlist->current->image->in_image = YES;
+       					  (*pointlist_current)->in_image = YES;
+      					  (*pointlist_current)->image->in_image = YES;
       				  }else if(markpoints == -1){
-      					  pointlist->current->in_image=NO;
-     					  pointlist->current->image->in_image=NO;
-     					  pointlist->current->surface_brightness = pointlist->current->image->surface_brightness = 0.0;
+      					  (*pointlist_current)->in_image=NO;
+                  (*pointlist_current)->image->in_image=NO;
+                  (*pointlist_current)->surface_brightness = (*pointlist_current)->image->surface_brightness = 0.0;
        				  }else if(markpoints == 0){
-         				  neighborkist->InsertAfterCurrent(pointlist->current);
+         				  neighborkist->InsertAfterCurrent(*pointlist_current);
       				  }
-       				  if(*maxgridsize < pointlist->current->gridsize) *maxgridsize = pointlist->current->gridsize;
+       				  if(*maxgridsize < (*pointlist_current)->gridsize) *maxgridsize = (*pointlist_current)->gridsize;
     			  }
-    			  MoveDownList(pointlist);
+            --pointlist_current;
     		  }
     	  }else{ // put all of points in box into getCurrentKist(imagekist)
-       		  for(i=0;i<current->npoints;++i){
+       		  for(i=0;i<(*current)->npoints;++i){
        			  if(markpoints == 1){
-       				  pointlist->current->in_image=YES;
-       				  pointlist->current->image->in_image=YES;
+       				  (*pointlist_current)->in_image=YES;
+       				  (*pointlist_current)->image->in_image=YES;
        			  }else if(markpoints == -1){
-       				  pointlist->current->in_image=NO;
-       				  pointlist->current->image->in_image=NO;
- 					  pointlist->current->surface_brightness = pointlist->current->image->surface_brightness = 0.0;
+       				  (*pointlist_current)->in_image=NO;
+       				  (*pointlist_current)->image->in_image=NO;
+                (*pointlist_current)->surface_brightness = (*pointlist_current)->image->surface_brightness = 0.0;
       			  }else if(markpoints == 0){
-       				  neighborkist->InsertAfterCurrent(pointlist->current);
+       				  neighborkist->InsertAfterCurrent(*pointlist_current);
  				  }
-  				  if(*maxgridsize < pointlist->current->gridsize) *maxgridsize = pointlist->current->gridsize;
+  				  if(*maxgridsize < (*pointlist_current)->gridsize) *maxgridsize = (*pointlist_current)->gridsize;
 
-       			  MoveDownList(pointlist);
+              --pointlist_current;
        		  }
     	  }
 
     	}else{ // keep going down the tree
 
-     	  if(current->child1 !=NULL){
-    		  moveToChild(1);
-    		  _PointsWithinKist(ray,rmax,neighborkist,markpoints,maxgridsize);
-    		  moveUp();
+     	  if((*current)->child1 !=NULL){
+    		  current.down(1);
+    		  _PointsWithinKist(current,rmax,neighborkist,markpoints,maxgridsize,globs);
+          current.up();
 
-    		  incell2=incell;
+    		  incell2 = globs.incell;
     	  }
 
-    	  if(current->child2 !=NULL){
-    		  moveToChild(2);
-    		  _PointsWithinKist(ray,rmax,neighborkist,markpoints,maxgridsize);
-    		  moveUp();
+    	  if((*current)->child2 !=NULL){
+    		  current.down(2);
+    		  _PointsWithinKist(current,rmax,neighborkist,markpoints,maxgridsize,globs);
+    		  current.up();
     	  }
 
     	  // if ray found in second child go back to first to search for neighbors
-    	  if( (incell2==1) && (incell==0) ){
-    		  if(current->child1 !=NULL){
-    			  moveToChild(1);
-    			  _PointsWithinKist(ray,rmax,neighborkist,markpoints,maxgridsize);
-    			  moveUp();
+    	  if( (incell2==1) && (globs.incell==0) ){
+    		  if((*current)->child1 !=NULL){
+            current.down(1);
+    			  _PointsWithinKist(current,rmax,neighborkist,markpoints,maxgridsize,globs);
+            current.up();
     		  }
     	  }
       }
@@ -346,66 +345,66 @@ void TreeStruct::_PointsWithinKist(PosType *ray,PosType *rmax,Kist<Point> * neig
 
   }else{    // found cell
 
-	  pass=Utilities::cutbox(ray,current->boundary_p1,current->boundary_p2,*rmax);
+	  pass=Utilities::cutbox(globs.ray,(*current)->boundary_p1,(*current)->boundary_p2,*rmax);
 	  // does radius cut into the box
 	  if( pass ){
 
-    	  if(current->points != NULL) pointlist->current=current->points;
+      if((*current)->points != NULL) pointlist_current = (*current)->points;
 
-		  if( atLeaf()  ){  /* leaf case */
+		  if( current.atLeaf()  ){  /* leaf case */
 
-			  for(i=0;i<current->npoints;++i){
+			  for(i=0;i<(*current)->npoints;++i){
 
-				  for(j=0,radius=0.0;j<2;++j) radius+=pow(pointlist->current->x[j]-ray[j],2);
+				  for(j=0,radius=0.0;j<2;++j) radius+=pow((*pointlist_current)->x[j] - globs.ray[j],2);
 				  if( radius < *rmax**rmax ){
 					  if(markpoints==1){
-						  pointlist->current->in_image=YES;
-						  pointlist->current->image->in_image=YES;
+						  (*pointlist_current)->in_image=YES;
+						  (*pointlist_current)->image->in_image=YES;
 					  }else if(markpoints==-1){
-						  pointlist->current->in_image=NO;
-						  pointlist->current->image->in_image=NO;
-     					  pointlist->current->surface_brightness = pointlist->current->image->surface_brightness = 0.0;
+						  (*pointlist_current)->in_image=NO;
+						  (*pointlist_current)->image->in_image=NO;
+     					  (*pointlist_current)->surface_brightness = (*pointlist_current)->image->surface_brightness = 0.0;
 					  }else if(markpoints==0){
-						  neighborkist->InsertAfterCurrent(pointlist->current);
+						  neighborkist->InsertAfterCurrent((*pointlist_current));
      				  }
-      				  if(*maxgridsize < pointlist->current->gridsize) *maxgridsize = pointlist->current->gridsize;
+      				  if(*maxgridsize < (*pointlist_current)->gridsize) *maxgridsize = (*pointlist_current)->gridsize;
 
 				  }
-				  MoveDownList(pointlist);
+          --pointlist_current;
 			  }
 		  }else if(pass==1){ // whole box is inside radius
 
-			  pointlist->current = current->points;
-			  for(i=0;i<current->npoints;++i){
+			  pointlist_current = (*current)->points;
+			  for(i=0;i<(*current)->npoints;++i){
 
-				  //assert( inbox(pointlist->current->x,current->boundary_p1,current->boundary_p2) );
-				  //assert( *rmax**rmax >= (pow(pointlist->current->x[0] - ray[0],2) + pow(pointlist->current->x[1] - ray[1],2) ));
+				  //assert( inbox((*pointlist_current)->x,(*current)->boundary_p1,(*current)->boundary_p2) );
+				  //assert( *rmax**rmax >= (pow((*pointlist_current)->x[0] - ray[0],2) + pow((*pointlist_current)->x[1] - ray[1],2) ));
 
 				  if(markpoints==1){
-   					  pointlist->current->in_image=YES;
-  					  pointlist->current->image->in_image=YES;
+   					  (*pointlist_current)->in_image=YES;
+  					  (*pointlist_current)->image->in_image=YES;
   				  }else if(markpoints==-1){
-  					  pointlist->current->in_image=NO;
- 					  pointlist->current->image->in_image=NO;
- 					  pointlist->current->surface_brightness = pointlist->current->image->surface_brightness = 0.0;
+  					  (*pointlist_current)->in_image=NO;
+ 					  (*pointlist_current)->image->in_image=NO;
+ 					  (*pointlist_current)->surface_brightness = (*pointlist_current)->image->surface_brightness = 0.0;
    				  }else if(markpoints==0){
-   					  neighborkist->InsertAfterCurrent(pointlist->current);
+   					  neighborkist->InsertAfterCurrent((*pointlist_current));
   				  }
-  				  if(*maxgridsize < pointlist->current->gridsize) *maxgridsize = pointlist->current->gridsize;
+  				  if(*maxgridsize < (*pointlist_current)->gridsize) *maxgridsize = (*pointlist_current)->gridsize;
 
-				  MoveDownList(pointlist);
+          --pointlist_current;
 			  }
 		  }else{
-			  if(current->child1 !=NULL){
-				  moveToChild(1);
-				  _PointsWithinKist(ray,rmax,neighborkist,markpoints,maxgridsize);
-				  moveUp();
+			  if((*current)->child1 !=NULL){
+				  current.down(1);
+				  _PointsWithinKist(current,rmax,neighborkist,markpoints,maxgridsize,globs);
+          current.up();
 			  }
 
-			  if(current->child2 !=NULL){
-				  moveToChild(2);
-				  _PointsWithinKist(ray,rmax,neighborkist,markpoints,maxgridsize);
-				  moveUp();
+			  if((*current)->child2 !=NULL){
+				  current.down(2);
+				  _PointsWithinKist(current,rmax,neighborkist,markpoints,maxgridsize,globs);
+          current.up();
 			  }
 		  }
 
@@ -421,11 +420,13 @@ void TreeStruct::_PointsWithinKist(PosType *ray,PosType *rmax,Kist<Point> * neig
  *
  */
 
-void TreeStruct::PointsWithinKist_iter(const PosType* center,float rmin,float rmax,Kist<Point> * neighborkist){
+void TreeStruct::PointsWithinKist_iter(const PosType* center,float rmin,float rmax,Kist<Point> * neighborkist) const {
 	bool decend;
 	unsigned long i;
-	moveTop();
 
+  TreeStruct::iterator current(top);
+  PointList::iterator pointlist_current;
+  
 	neighborkist->Empty();
 
 	if(rmax <= 0.0) return;
@@ -433,91 +434,91 @@ void TreeStruct::PointsWithinKist_iter(const PosType* center,float rmin,float rm
 	if(rmax <= rmin) return;
 
 	if( CircleInBox(center,rmax,top->boundary_p1,top->boundary_p2) ){
-		_FindLeaf(center,0);
+		_FindLeaf(current,center,0);
 		// Move up the tree till the whole circle is inside the box
-		while(!CircleInBox(center,rmax,current->boundary_p1,current->boundary_p2) && moveUp());
+		while(!CircleInBox(center,rmax,(*current)->boundary_p1,(*current)->boundary_p2) && current.up());
 	}
 
-	Branch *top = current;
+	Branch *top = (*current);
 
 	if(rmin <= 0.0){
 
-		while(current != top->brother){
+		while( (*current) != top->brother){
 
 			decend = true;
 
-			if(BoxInCircle(center,rmax,current->boundary_p1,current->boundary_p2)  // box is all inside outer circle
+			if(BoxInCircle(center,rmax,(*current)->boundary_p1,(*current)->boundary_p2)  // box is all inside outer circle
 			){
 
 				decend = false;
-				if(current->points != NULL) pointlist->current = current->points;
-				for(i=0;i<current->npoints;++i){
-					neighborkist->InsertAfterCurrent(pointlist->current);
-					MoveDownList(pointlist);
+				if((*current)->points != NULL) pointlist_current = (*current)->points;
+				for(i=0;i<(*current)->npoints;++i){
+					neighborkist->InsertAfterCurrent((*pointlist_current));
+          --pointlist_current;
 				}
 
-			}else if(Utilities::cutbox(center,current->boundary_p1,current->boundary_p2,rmax) == 0  // box is all outside outer circle
+			}else if(Utilities::cutbox(center,(*current)->boundary_p1,(*current)->boundary_p2,rmax) == 0  // box is all outside outer circle
 			){
 
 				decend = false;
 
-			}else if(atLeaf()){      // box is a leaf that intersects the circle
+			}else if(current.atLeaf()){      // box is a leaf that intersects the circle
 
-				if(current->points != NULL) pointlist->current = current->points;
-				for(i=0;i<current->npoints;++i){
-					if(rmax*rmax >= pow(pointlist->current->x[0] - center[0],2) + pow(pointlist->current->x[1] - center[1],2) )
-						neighborkist->InsertAfterCurrent(pointlist->current);
-					MoveDownList(pointlist);
+				if((*current)->points != NULL) pointlist_current = (*current)->points;
+				for(i=0;i<(*current)->npoints;++i){
+					if(rmax*rmax >= pow((*pointlist_current)->x[0] - center[0],2) + pow((*pointlist_current)->x[1] - center[1],2) )
+						neighborkist->InsertAfterCurrent((*pointlist_current));
+          --pointlist_current;
 				}
 			}
 
-			if(!TreeWalkStep(decend)) break;
+			if(!(current.TreeWalkStep(decend))) break;
 		}
 
 	}else{  // rmin > 0
 		PosType r2;
 
-		while(current != top->brother){
+		while(*current != top->brother){
 
 			decend = true;
 
-			if(atLeaf()){      // box is a leaf that intersects the circle
+			if(current.atLeaf()){      // box is a leaf that intersects the circle
 
-				if(current->points != NULL){
-					pointlist->current = current->points;
+				if((*current)->points != NULL){
+					pointlist_current = (*current)->points;
 				}
 
-				for(i=0;i<current->npoints;++i){
+				for(i=0;i<(*current)->npoints;++i){
 
-					r2 = pow(pointlist->current->x[0] - center[0],2) + pow(pointlist->current->x[1] - center[1],2);
+					r2 = pow((*pointlist_current)->x[0] - center[0],2) + pow((*pointlist_current)->x[1] - center[1],2);
 					if(rmax*rmax >= r2 && rmin*rmin <= r2){
-						neighborkist->InsertAfterCurrent(pointlist->current);
+						neighborkist->InsertAfterCurrent((*pointlist_current));
 					}
-					MoveDownList(pointlist);
+          --pointlist_current;
 				}
 
-			}else if(BoxInCircle(center,rmax,current->boundary_p1,current->boundary_p2)  // box is all inside outer circle
-					&& Utilities::cutbox(center,current->boundary_p1,current->boundary_p2,rmin) == 0  // box is all outside inner circle
+			}else if(BoxInCircle(center,rmax,(*current)->boundary_p1,(*current)->boundary_p2)  // box is all inside outer circle
+					&& Utilities::cutbox(center,(*current)->boundary_p1,(*current)->boundary_p2,rmin) == 0  // box is all outside inner circle
 			){
 
 				decend = false;
-				if(current->points != NULL){
-					pointlist->current = current->points;
+				if((*current)->points != NULL){
+					pointlist_current = (*current)->points;
 				}
 
-				for(i=0;i<current->npoints;++i){
-					neighborkist->InsertAfterCurrent(pointlist->current);
-					MoveDownList(pointlist);
+				for(i=0;i<(*current)->npoints;++i){
+					neighborkist->InsertAfterCurrent((*pointlist_current));
+          --pointlist_current;
 				}
 
-			}else if(Utilities::cutbox(center,current->boundary_p1,current->boundary_p2,rmax) == 0  // box is all outside outer circle
-					|| BoxInCircle(center,rmin,current->boundary_p1,current->boundary_p2) // box is all inside inner circle
+			}else if(Utilities::cutbox(center,(*current)->boundary_p1,(*current)->boundary_p2,rmax) == 0  // box is all outside outer circle
+					|| BoxInCircle(center,rmin,(*current)->boundary_p1,(*current)->boundary_p2) // box is all inside inner circle
 			){
 
 				decend = false;
 
 			}
-			if(!TreeWalkStep(decend)) break;
+			if(!(current.TreeWalkStep(decend))) break;
 		}
 
 	}

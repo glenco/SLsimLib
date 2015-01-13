@@ -72,7 +72,7 @@ void ImageFinding::map_images(
 	assert(xmin > 0);
 	assert(xmax > 0);
 
-	if(initial_size == 0) initial_size = 3*(grid->i_tree->top->boundary_p2[0] - grid->i_tree->top->boundary_p1[0])/grid->getInitNgrid();
+	if(initial_size == 0) initial_size = 3*(grid->i_tree->getTop()->boundary_p2[0] - grid->i_tree->getTop()->boundary_p1[0])/grid->getInitNgrid();
 
 	unsigned long tmp_count = 0;
 

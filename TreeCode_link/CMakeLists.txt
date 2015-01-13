@@ -1,7 +1,7 @@
 add_sources(
 	KistDriver.cpp
 	Tree.cpp
-        TreeKist.cpp
+        #TreeKist.cpp
 	TreeDriver.cpp
 	curve_routines.cpp
 	dirtycode.cpp

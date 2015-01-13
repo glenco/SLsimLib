@@ -134,6 +134,31 @@ public:
 	/// replaces existing main halos with a sequence of main halos
 	void replaceMainHalos(LensHalo** halos, std::size_t Nhalos,bool verbose = false);
 
+  /** \brief Add substructures to the lens.
+   
+   This method is meant for inserting substructure to a main lens.  All the substructure will be at 
+   one redshift.  The mass function follows a power law.  The density of substructures is constant within 
+   a circular region.  The tidal truncation is controlled through the parameter density_contrast which is
+   the average density within the substructures orbit in units of the average density to the universe at 
+   the redshift where they are places.  For example density_contrast=200 would give them the truncation radius appropriate at R_200. 
+   */
+  void insertSubstructures(
+        PosType Rregion            /// radius of region in which substructures are inserted (radians)
+        ,PosType center[]          /// center of region in which the substructures are inserted (radians)
+        ,PosType NumberDensity     /// number density per radian^2 of all substructures
+        ,PosType Mass_min          /// minimum mass of substructures
+        ,PosType Mass_max          /// maximum mass of substructures
+        ,PosType redshift          /// redshift of substructures
+        ,PosType alpha             /// index of mass function (dN/dm \propto m^alpha)
+        ,PosType density_contrast  ///
+        ,bool verbose
+  );
+  /** \brief This function will randomize the substructure without changing the region, mass function, etc.
+   
+   The Lens::insertSubstructures() function must have been called on this instance of the Lens before.
+   */
+  void resetSubstructure();
+  
 	/// get number of main halos
 	std::size_t getNMainHalos() const;
 	/// get number of main halos of given type
@@ -190,7 +215,6 @@ public:
   
   /// get the field min mass :
   PosType getFieldMinMass() { return field_min_mass ; }
-  
  
 private:
 	GLAMER_TEST_FRIEND(LensTest)
@@ -225,7 +249,7 @@ private:
 	
 private: /* generation */
 	/// create the lens planes
-	void buildPlanes(InputParams& params,bool verbose);
+	void buildPlanes(InputParams& params, bool verbose);
 	
 	/// sets the distances and redshifts of the field planes equidistant
 	void setFieldDist();
@@ -233,7 +257,11 @@ private: /* generation */
 	void setFieldDistFromFile();
 	/// setup the field plane distances
 	void setupFieldPlanes();
-	/// create field halos as specified in the parameter file
+	/// computes the distribution variables for field halos as specified in the parameter file
+  /// this material was before computed in createFieldHalos
+  void ComputeHalosDistributionVariables ();
+  /// computes sigma_back for createFieldPlanes :
+  void ComputeHalosSigmaBack();
 	void createFieldHalos(bool verbose);
 	/// read field halo data in from a file in Millennium output format
 	void readInputSimFileMillennium(bool verbose);
@@ -252,6 +280,37 @@ private: /* generation */
 	/// combine field and main planes
 	void combinePlanes(bool verbose);
 	
+  /* Variables used by buildPlanes, createFieldHalos, and createFieldPlanes */
+  /// TO DO : should check the correctness of the following descriptions.
+  
+  /// number of redshift bins for mass function
+  const int Nzbins = 64 ;
+  /// number of mass bins for mass function
+  const int Nmassbin=64;
+  /// number of redshifts sampled for each bin
+  int NZSamples = 50;
+  // table for redshift bins for mass function
+  std::vector<PosType> zbins ;
+  // table of number of halos per redshift bins for mass function
+  std::vector<PosType> Nhalosbin ;
+  /// same for the cumulative number density in one square degree
+  std::vector<PosType> Nhaloestot_Tab ;
+  /// averaged number of halos
+  PosType aveNhalos ;
+  /// Log(mass) vector
+  std::vector<PosType> Logm;
+  /// Number of halos
+  std::size_t Nhalos ;
+  /// table of halos bins for each sampled redshifts
+  std::vector<std::vector<PosType>> NhalosbinNew;
+  /// table for sigma_back in createFieldPlanes
+  std::vector<PosType> sigma_back_Tab;
+  
+  /* ----- */
+  
+  // get the adress of field_plane_redshifts
+  std::vector<PosType> & get_field_plane_redshifts () { return field_plane_redshifts ; }
+  
 private: /* force calculation */
 	/// if >= 1, deflection in the rayshooting is switched off
 	bool flag_switch_deflection_off;
@@ -272,8 +331,8 @@ private: /* field */
 	/// if true, the background is switched off and only the main lens is present
 	bool flag_switch_field_off;
 	
-	/// vector of all field halos
-	std::vector<LensHalo*> field_halos;
+  /// vector of all field halos
+  std::vector<LensHalo*> field_halos;
 	/// number of field planes
 	std::size_t field_Nplanes;
 	/// vector of all field planes
@@ -282,6 +341,22 @@ private: /* field */
 	std::vector<PosType> field_plane_redshifts;
 	/// vector of field plane distances
 	std::vector<PosType> field_Dl;
+  
+  struct SubStructureInfo{
+  // things for substructures
+  /// vector of all substructur halos
+  std::vector<LensHalo*> halos;
+  LensPlane *plane;
+  PosType Rregion = 0;
+  PosType Mmax = 0;
+  PosType Mmin = 0;
+  PosType alpha = 0;
+  PosType Ndensity = 0;
+  Point_2d center;
+  PosType rho_tidal = 0;
+  };
+  
+  SubStructureInfo substructure;
 	
 	/// Perpendicular position of halo TODO: (In proper distance?)
 	//PosType **halo_pos;

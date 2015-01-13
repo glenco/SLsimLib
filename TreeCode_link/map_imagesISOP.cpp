@@ -50,7 +50,6 @@ void ImageFinding::map_imagesISOP(
 	unsigned long Nimagepoints,Ntmp;
 	PosType tmp,area_tot,flux;
 	long i,j;
-	bool go;
 	int Nsources;
 
 	assert(res_min > 0);
@@ -58,8 +57,8 @@ void ImageFinding::map_imagesISOP(
 
   if(source->getRadius() <= 0.0){ERROR_MESSAGE(); printf("ERROR: find_images, point source must have a resolution target\n"); exit(1);}
 
-	if(initial_size == 0) initial_size = 3*(grid->i_tree->top->boundary_p2[0]
-                                          - grid->i_tree->top->boundary_p1[0])/grid->getInitNgrid();
+	if(initial_size == 0) initial_size = 3*(grid->i_tree->getTop()->boundary_p2[0]
+                                          - grid->i_tree->getTop()->boundary_p1[0])/grid->getInitNgrid();
 
 
   if(verbose) std::cout << "number of grid points before ImageFinding::find_images_kist: "

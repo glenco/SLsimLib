@@ -57,7 +57,7 @@ LensHaloUniform::~LensHaloUniform(){
 void LensHaloUniform::setCosmology(const COSMOLOGY& cosmo)
 {
   PosType zlens = LensHalo::getZlens();
-	Dl = cosmo.angDist(0,zlens);
+	Dl = cosmo.angDist(0,zlens); // In comoving Mpc
 	Ds = cosmo.angDist(0,zsource_reference);
 	Dls = cosmo.angDist(zlens,zsource_reference);
   SigmaCrit = Ds/Dl/Dls/(4*pi*Grav);

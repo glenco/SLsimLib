@@ -54,10 +54,10 @@ void ImageFinding::find_images_kist(
   
   if(imageinfo.size() < 3) imageinfo.resize(3);
   
-  if(  grid->s_tree->top->boundary_p1[0] > (y_source[0] + r_source)
-     || grid->s_tree->top->boundary_p2[0] < (y_source[0] - r_source)
-     || grid->s_tree->top->boundary_p1[1] > (y_source[1] + r_source)
-     || grid->s_tree->top->boundary_p2[1] < (y_source[1] - r_source)
+  if(  grid->s_tree->getTop()->boundary_p1[0] > (y_source[0] + r_source)
+     || grid->s_tree->getTop()->boundary_p2[0] < (y_source[0] - r_source)
+     || grid->s_tree->getTop()->boundary_p1[1] > (y_source[1] + r_source)
+     || grid->s_tree->getTop()->boundary_p2[1] < (y_source[1] - r_source)
      ){
     // source is not within initialized grid
     *Nimages = 0;
@@ -257,7 +257,7 @@ void ImageFinding::find_images_kist(
     time(&t3);
     if(verbose)
       printf("     time in image refinement %f min\n           points in grid=%li\n"
-             ,fabs(difftime(t3,now)/60.),grid->i_tree->pointlist->Npoints);
+             ,fabs(difftime(t3,now)/60.),grid->i_tree->pointlist->size());
     
     // mark image points in tree
     grid->s_tree->PointsWithinKist(y_source,r_source,&subkist,1);
@@ -533,10 +533,10 @@ void ImageFinding::find_images_microlens(
   
   const float mumin_local = 0.02;
   
-  if(  grid->s_tree->top->boundary_p1[0] > (y_source[0] + r_source)
-     || grid->s_tree->top->boundary_p2[0] < (y_source[0] - r_source)
-     || grid->s_tree->top->boundary_p1[1] > (y_source[1] + r_source)
-     || grid->s_tree->top->boundary_p2[1] < (y_source[1] - r_source)
+  if(  grid->s_tree->getTop()->boundary_p1[0] > (y_source[0] + r_source)
+     || grid->s_tree->getTop()->boundary_p2[0] < (y_source[0] - r_source)
+     || grid->s_tree->getTop()->boundary_p1[1] > (y_source[1] + r_source)
+     || grid->s_tree->getTop()->boundary_p2[1] < (y_source[1] - r_source)
      ){
     // source is not within initialized grid
     *Nimages = 0;
@@ -593,7 +593,7 @@ void ImageFinding::find_images_microlens(
   
   /**** TODO test line **********************
 	  bool map_on = true;
-   PixelMap map(2000,(grid->i_tree->top->boundary_p2[0]-grid->i_tree->top->boundary_p1[0])/2,grid->i_tree->top->center);
+   PixelMap map(2000,(grid->i_tree->getTop()->boundary_p2[0]-grid->i_tree->getTop()->boundary_p1[0])/2,grid->i_tree->getTop()->center);
    char chrstr[100];
    std::string output = "image_proportional";
    int Nmaps=0;
@@ -861,7 +861,7 @@ void ImageFinding::find_images_microlens(
     time(&t3);
     if(verbose)
       printf("     time in image refinement %f min\n           points in grid=%li\n"
-             ,fabs(difftime(t3,now)/60.),grid->i_tree->pointlist->Npoints);
+             ,fabs(difftime(t3,now)/60.),grid->i_tree->pointlist->size());
     
     // mark image points in tree
     grid->s_tree->PointsWithinKist(y_source,r_source,&subkist,1);
@@ -1090,10 +1090,10 @@ void ImageFinding::find_images_microlens_exper(
   const float mumin_local = 0.02;
   if(imageinfo.size() < 2) imageinfo.resize(10);
   
-  if(  grid->s_tree->top->boundary_p1[0] > (y_source[0] + r_source)
-     || grid->s_tree->top->boundary_p2[0] < (y_source[0] - r_source)
-     || grid->s_tree->top->boundary_p1[1] > (y_source[1] + r_source)
-     || grid->s_tree->top->boundary_p2[1] < (y_source[1] - r_source)
+  if(  grid->s_tree->getTop()->boundary_p1[0] > (y_source[0] + r_source)
+     || grid->s_tree->getTop()->boundary_p2[0] < (y_source[0] - r_source)
+     || grid->s_tree->getTop()->boundary_p1[1] > (y_source[1] + r_source)
+     || grid->s_tree->getTop()->boundary_p2[1] < (y_source[1] - r_source)
      ){
     // source is not within initialized grid
     *Nimages = 0;
@@ -1341,7 +1341,7 @@ void ImageFinding::find_images_microlens_exper(
     time(&t3);
     if(verbose)
       printf("     time in image refinement %f min\n           points in grid=%li\n"
-             ,fabs(difftime(t3,now)/60.),grid->i_tree->pointlist->Npoints);
+             ,fabs(difftime(t3,now)/60.),grid->i_tree->pointlist->size());
     
     // mark image points in tree
     grid->s_tree->PointsWithinKist(y_source,r_source,&subkist,1);
@@ -1685,7 +1685,7 @@ void ImageFinding::image_finder_kist(LensHndl lens, PosType *y_source,PosType r_
   // At this point all the image points are in imageinfo->imagekist and not divided up into separate images
   
   // split images
-  if( splitparities == 0 && imageinfo[0].imagekist->Nunits() < i_tree->pointlist->Npoints){
+  if( splitparities == 0 && imageinfo[0].imagekist->Nunits() < i_tree->pointlist->size()){
     divide_images_kist(i_tree,imageinfo,Nimages);
   }else{
     *Nimages = 1;
@@ -1956,7 +1956,7 @@ void findborders4(TreeHndl i_tree,ImageInfo *imageinfo){
   bool allin = false;
   
   
-  if(i_tree->pointlist->Npoints == imageinfo->imagekist->Nunits()) allin = true;    // all points on the grid are in the image
+  if(i_tree->pointlist->size() == imageinfo->imagekist->Nunits()) allin = true;    // all points on the grid are in the image
   
   //printf("beginning findborders2\n");
   //checkTree(i_tree);

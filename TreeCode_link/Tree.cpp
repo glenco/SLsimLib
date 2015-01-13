@@ -177,7 +177,6 @@ Point *NewPointArray(
  */
 void FreePointArray(Point *array,bool NewXs){
   /* Note: this deallocates positions!! */
-  unsigned long i;
 
   if(array[0].head){
 	  //if(NewXs) for(i=0;i<array[0].head;++i) free(array[i].x);
@@ -191,6 +190,7 @@ void FreePointArray(Point *array,bool NewXs){
   }
 }
 
+std::mutex TreeStruct::mutex;
 /**
  *  \brief  Make a new tree and the linked list of points in it.  Does
  *  not build the tree structure.  The other constructor should be used
@@ -226,18 +226,20 @@ void TreeStruct::construct_root(
   }*/
 
     /* make linked list of points */
-  pointlist=NewList();
+      //pointlist=NewList();
+      pointlist= new PointList;
    //EmptyList(pointlist);
+      PointList::iterator pointlist_current;
   for(i=0;i<npoints;++i){
-    InsertPointAfterCurrent(pointlist,&xp[i]);
-    MoveDownList(pointlist);
+    pointlist->InsertPointAfterCurrent(pointlist_current,&xp[i]);
+    --pointlist_current;
   }
 
-  top = new Branch(pointlist->top,npoints,boundary_p1,boundary_p2
+  top = new Branch(pointlist->Top(),npoints,boundary_p1,boundary_p2
 		      ,center,0);
 
   Nbranches = 1;
-  current = top;
+  //current = top;
 
   Nbucket = my_Nbucket;
   //return(tree);
@@ -249,14 +251,11 @@ void TreeStruct::construct_root(
 TreeStruct::~TreeStruct(){
 
 	emptyTree();
-	free(current);
+	//free(current);
+  free(top);
 	--Nbranches;
 
 	free(pointlist);
-	//free(tree);
-
-	/*tree = NULL;
-	return 1;*/
 }
 
 
@@ -272,35 +271,12 @@ bool TreeStruct::isEmpty(){
 }
 
 /************************************************************************
- * atTop
- * Returns "true" if current is the same as top and "false" otherwise.
- * Exported.
- * Pre: !isEmpty(tree)
- ************************************************************************/
-bool TreeStruct::atTop(){
-
-    if( isEmpty() ){
-	
-	ERROR_MESSAGE();
-    std::cout << "Tree Error: calling atTop() on empty tree" << std::endl;
-	exit(1);
-    }
-    return(current == top);
-}
-
-/************************************************************************
  * noChild
  * Returns "true" if the child of the current branch does not exist and "false" otherwise.
  * Exported.
  * Pre: !isEmpty(tree)
  ************************************************************************/
-bool TreeStruct::noChild(){
-
-	if( isEmpty() ){
-		ERROR_MESSAGE();
-		std::cout << "Tree Error: calling atTop() on empty tree" << std::endl;
-		exit(1);
-    }
+bool TreeStruct::iterator::noChild(){
 
     if( (current->child1 == NULL) || (current->child2 == NULL) ) return true;
     return false;
@@ -310,11 +286,11 @@ bool TreeStruct::noChild(){
  * offEnd
  * Returns "true" if current is off end and "false" otherwise.  Exported.
  ************************************************************************/
-bool TreeStruct::offEnd(){
+bool TreeStruct::iterator::offEnd(){
     return(current == NULL);
 }
 
-bool TreeStruct::CurrentIsSquareBranch(){
+bool TreeStruct::iterator::IsSquareBranch(){
 	if( fabs(1 - (current->boundary_p2[0] - current->boundary_p1[0])
 			    /(current->boundary_p2[1] - current->boundary_p1[1]) )
 			< 0.05){
@@ -328,7 +304,7 @@ bool TreeStruct::CurrentIsSquareBranch(){
  * getCurrent
  * Returns the points of current.  Exported.
  * Pre: !offEnd(tree)
- ************************************************************************/
+ ************************************************************************
 void TreeStruct::getCurrent(Point *points,unsigned long *npoints){
 
     if( offEnd() ){
@@ -341,7 +317,7 @@ void TreeStruct::getCurrent(Point *points,unsigned long *npoints){
     points=current->points;
 
     return;
-}
+}*/
 
 /************************************************************************
  * getNbranches
@@ -359,7 +335,7 @@ unsigned long TreeStruct::getNbranches(){
  * Moves current to the branch before it in tree.  This can move current
  * off end.  Exported.
  * Pre: !offEnd(tree)
- ************************************************************************/
+ ************************************************************************
 bool TreeStruct::moveToChild(int child){
     
     assert(current != NULL);
@@ -375,22 +351,17 @@ bool TreeStruct::moveToChild(int child){
       return true;
     }
     return false;
-}
+}*/
 
-bool TreeStruct::moveUp(){
+/*bool TreeStruct::moveUp(){
 
     assert(!offEnd());
-    /*if( offEnd(tree) ){
-      ERROR_MESSAGE();
-      std::cout << "Tree Error: calling moveUp() when current is off end" << std::endl;
-      exit(1);
-    }*/
 
     if( current == top ) return false;
     assert(current->prev);
-    current = current->prev;  /* can move off end */
+    current = current->prev;  // can move off end
     return true;
-}
+}*/
 
 /************************************************************************
  * moveToChild
@@ -448,18 +419,13 @@ bool TreeStruct::moveUp(){
 
     return;
 }*/
-void TreeStruct::insertChildToCurrent(Branch *branch,int child){
+void TreeStruct::insertChildToCurrent(Branch *current,Branch *branch,int child){
 
     assert(branch->boundary_p1[0] >= current->boundary_p1[0]);
     assert(branch->boundary_p1[1] >= current->boundary_p1[1]);
     assert(branch->boundary_p2[0] <= current->boundary_p2[0]);
     assert(branch->boundary_p2[1] <= current->boundary_p2[1]);
 
-    if( offEnd() ){
-    	ERROR_MESSAGE();
-        std::cout << "Tree Error: calling insertChildToCurrent() when current is off end" << std::endl;
-    	exit(1);
-    }
 
     branch->prev = current;
 
@@ -483,10 +449,10 @@ void TreeStruct::insertChildToCurrent(Branch *branch,int child){
     }
 
     if(branch->npoints > 0){
-    	pointlist->current = branch->points;
+      PointList::iterator pointlist_current(branch->points);
     	for(unsigned long i=0;i<branch->npoints;++i){
-    		pointlist->current->leaf = branch;
-    		MoveDownList(pointlist);
+    		(*pointlist_current)->leaf = branch;
+        --pointlist_current;
     	}
     }
 
@@ -504,20 +470,13 @@ void attachChildToCurrent(TreeHndl tree,Branch data,int child){
   return;
 }*/
 
-void TreeStruct::attachChildrenToCurrent(Branch* child1,Branch* child2){
+void TreeStruct::attachChildrenToCurrent(Branch *current,Branch* child1,Branch* child2){
 	// this is an addition that keeps assigns the brother pointers
 
-	/*
-	insertChildToCurrent(tree,child1.points,child1.npoints
-			,child1.boundary_p1,child1.boundary_p2,child1.center,1);
-	insertChildToCurrent(tree,child2.points,child2.npoints
-			,child2.boundary_p1,child2.boundary_p2,child2.center,2);
-*/
-
 	assert(current->child1 == NULL);
-	insertChildToCurrent(child1,1);
+	insertChildToCurrent(current,child1,1);
 	assert(current->child2 == NULL);
-	insertChildToCurrent(child2,2);
+	insertChildToCurrent(current,child2,2);
 
 	current->child1->brother = current->child2;
 	current->child2->brother = current->brother;
@@ -559,34 +518,35 @@ void TreeStruct::attachChildrenToCurrent(Branch* child1,Branch* child2){
  * is one, will be enclosed in []'s.  Currently, only to be used when the
  * TreeElements is are integers.  Exported.
  ************************************************************************/  
-void TreeStruct::printTree(){
+void TreeStruct::printTree(TreeStruct::iterator &current){
   int i;
 
-    printBranch(current);
-    pointlist->current=current->points;
-    for(i=0;i<current->npoints;++i){
-      std::cout << pointlist->current->id << " " << pointlist->current->x[0] << " " << pointlist->current->x[1] << std::endl;
-      MoveDownList(pointlist);
+    printBranch(*current);
+  PointList::iterator pointlist_current((*current)->points);
+    for(i=0;i<(*current)->npoints;++i){
+      std::cout << (*pointlist_current)->id << " " << (*pointlist_current)->x[0] <<
+      " " << (*pointlist_current)->x[1] << std::endl;
+      --pointlist_current;
     }
-    if(current->child1 == NULL) return;
+    if((*current)->child1 == NULL) return;
 
-    if( (current->boundary_p1[0]==current->boundary_p2[0]) ||
-    		(current->boundary_p1[0]==current->boundary_p2[0])	){
+    if( ((*current)->boundary_p1[0]==(*current)->boundary_p2[0]) ||
+    		((*current)->boundary_p1[0]==(*current)->boundary_p2[0])	){
     	ERROR_MESSAGE();
     	std::cout << "ERROR: zero area branch" << std::endl;
     	exit(0);
     }
-    moveToChild(1);
-    printTree();
+  current.down(1);
+  printTree(current);
 
-    moveUp();
+  current.up();
 
-    moveToChild(2);
-    printTree();
+  current.down(2);
+    printTree(current);
 
-    moveUp();
-
-    return;
+  current.up();
+  
+  return;
 }
 
 void printBranch(Branch *data){
@@ -603,36 +563,35 @@ void printBranch(Branch *data){
  *****************************************************************/
 
 void TreeStruct::checkTree(){
-	Branch *initial;
+
 	unsigned long count=0;
 
-	initial=current;
+  TreeStruct::iterator current(top);
 
-	moveTop();
-	_checkTree(&count);
+	_checkTree(current,&count);
 
 	if(count != Nbranches){ std::cout << "checkTree did not reach all branches" << std::endl; exit(0);}
-	current=initial;
+  
 	return;
 }
 
-void TreeStruct::_checkTree(unsigned long *count){
+void TreeStruct::_checkTree(TreeStruct::iterator &current,unsigned long *count){
 	int checkBranch(Branch *branch);
 
 	//std::printf("     hello\n");
 	++*count;
-	if(checkBranch(current)) exit(1);
+	if(checkBranch(*current)) exit(1);
 
-	if(current->child1 != NULL){
-		moveToChild(1);
-		_checkTree(count);
-		moveUp();
+	if((*current)->child1 != NULL){
+    current.down(1);
+		_checkTree(current,count);
+    current.up();
 	}
 
-	if(current->child2 != NULL){
-		moveToChild(2);
-		_checkTree(count);
-		moveUp();
+	if((*current)->child2 != NULL){
+    current.down(2);
+		_checkTree(current,count);
+    current.up();
 	}
 
     return;
@@ -769,7 +728,7 @@ void PointCopyData(Point *pcopy,Point *pin){
 
 /*********************************/
 /*  point extraction routines */
-/*********************************/
+/*********************************
 void TreeStruct::PointsInCurrent(unsigned long *ids,PosType **x){
   Point *point;
   unsigned long i;
@@ -784,7 +743,7 @@ void TreeStruct::PointsInCurrent(unsigned long *ids,PosType **x){
   }
 
   return;
-}
+}*/
 
 void PrintPoint(Point *point){
   std::cout << "Point id = " << point->id << std::endl;
@@ -890,7 +849,7 @@ OldImageInfo::~OldImageInfo(){
 
 /** \ingroup LowLevel
  *  step for walking tree by iteration instead of recursion
- */
+ *
 bool TreeStruct::TreeWalkStep(bool allowDescent){
 
 	if(allowDescent && current->child1 != NULL){
@@ -908,5 +867,5 @@ bool TreeStruct::TreeWalkStep(bool allowDescent){
 	}
 
 	return false;
-}
+}*/
 

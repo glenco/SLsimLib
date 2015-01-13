@@ -31,66 +31,6 @@ public:
 
 	 ~TreeStruct();
 
-	 /// root branch
-	 Branch *top;
-	 Branch *current;
-	 /// list of points
-	 PointList *pointlist;
-
-	 /*  *** Constructor****
-	TreeHndl NewTree(Point *xp,unsigned long npoints
-			 ,PosType boundary_p1[2],PosType boundary_p2[2]
-			 ,PosType center[2],int Nbucket);
-	short freeTree(TreeHndl tree);*/
-
-  //void FindAllBoxNeighbors(Point *point,ListHndl neighbors);
-  void FindAllBoxNeighborsKist(Point *point,Kist<Point> * neighbors);
-  void PointsWithinEllipKist(const PosType* center,float rmax,float rmin,float posangle,Kist<Point> * neighborkist);
-  PosType PointsWithinKist(const PosType* center,PosType rmax,Kist<Point> * neighborkist,short markpoints);
-  void PointsWithinKist_iter(const PosType* center,float rmin,float rmax,Kist<Point> * neighborkist);
-  Point *NearestNeighborKist(const PosType* center,int Nneighbors,Kist<Point> * neighborkist);
-
-  void PointsInCurrent(unsigned long *ids,PosType **x);
-
-  /***** Movement on tree *****/
-
-  void moveTop(){ current = top;}
-  bool moveUp();
-  bool moveToChild(int child);
-  bool TreeWalkStep(bool allowDescent);
-  bool Test();
-
-  // Adding and removing to branches of tree
-  void insertChildToCurrent(Branch *branch,int child);
-  void attachChildrenToCurrent(Branch *child1,Branch *child2);
-  Point *RemoveLeafFromTree(unsigned long *Npoints);
-
-  // Higher level builds
-  void FillTree(Point *xp,unsigned long Npoints);
-  int AddPointsToTree(Point *xpoint,unsigned long Nadd);
-
-  short emptyTree();
-  void RebuildTreeFromList();
-
-  /***** State of tree functions *****/
-  bool isEmpty();
-  bool atTop();
-  bool atLeaf(){ return( (current->child1==NULL)*(current->child2==NULL) ); }
-  bool offEnd();
-  bool CurrentIsSquareBranch();
-  bool noChild();
-
-  void getCurrent(Point *points,unsigned long *npoints);
-  unsigned long getNbranches();
-  void printTree();
-  void checkTree();
-
-  void FindBoxPoint(const PosType* ray,Point *point);
-
-  void _FindLeaf(const PosType* ray,unsigned long Nadd = 0);
-  
-  TreeStruct * spawn();
-
   /**
    *  \brief A iterator class fore TreeStruct that allows for movement through the tree without changing
    *      anything in the tree itself.
@@ -109,6 +49,26 @@ public:
     iterator(TreeStruct * tree){current = top = tree->top;}
     /// Sets the root to the input branch so that this will be a subtree in branch is not the real root.
     iterator(Branch *branch){current = top = branch;}
+    iterator(iterator &p){
+      top = p.top;
+      current = p.current;
+    }
+    
+    iterator &operator=(iterator &p){
+      if(&p == this){
+        return *this;
+      }
+      
+      top = p.top;
+      current = p.current;
+      
+      return *this;
+    }
+    
+    iterator &operator=(Branch *branch){
+      current = branch;
+      return *this;
+    }
     
     /// Returns a pointer to the current Branch.
     Branch *operator*(){return current;}
@@ -117,7 +77,6 @@ public:
     
     /// Same as up()
     bool operator++(){ return up();}
-    
     /// Same as up()
     bool operator++(int){ return up();}
     
@@ -126,23 +85,102 @@ public:
     bool brother();
     /// Move to child
     bool down(short child);
+    bool atLeaf(){ return( (current->child1==NULL)*(current->child2==NULL) ); }
+    
     bool TreeWalkStep(bool allowDescent);
+    
+    bool noChild();
+    bool offEnd();
+    bool IsSquareBranch();
+    bool atTop(){return current==top;}
+  };
+  
+  struct Globals{
+    bool incell;
+    PosType ray[2];
+    PosType realray[2];
+    std::vector<Point *> tmp_point;
   };
 
+  /// root branch
+	 Branch * getTop(){return top;}
+
+	 //Branch *current;
+	 /// list of points
+	 PointList *pointlist;
+
+	 /*  *** Constructor****
+	TreeHndl NewTree(Point *xp,unsigned long npoints
+			 ,PosType boundary_p1[2],PosType boundary_p2[2]
+			 ,PosType center[2],int Nbucket);
+	short freeTree(TreeHndl tree);*/
+
+  //void FindAllBoxNeighbors(Point *point,ListHndl neighbors);
+  void FindAllBoxNeighborsKist(Point *point,Kist<Point> * neighbors) const;
+  void PointsWithinEllipKist(const PosType* center,float rmax,float rmin,float posangle,Kist<Point> * neighborkist) const;
+  PosType PointsWithinKist(const PosType* center,PosType rmax,Kist<Point> * neighborkist,short markpoints) const;
+  void PointsWithinKist_iter(const PosType* center,float rmin,float rmax,Kist<Point> * neighborkist) const;
+  Point *NearestNeighborKist(const PosType* center,int Nneighbors,Kist<Point> * neighborkist) const;
+
+  //void PointsInCurrent(unsigned long *ids,PosType **x);
+
+  /***** Movement on tree *****/
+
+  //void moveTop(){ current = top;}
+  //bool moveUp();
+  //bool moveToChild(int child);
+  //bool TreeWalkStep(bool allowDescent);
+  bool Test();
+
+  Point *RemoveLeafFromTree(TreeStruct::iterator &current,unsigned long *Npoints);
+
+  // Higher level builds
+  void FillTree(Point *xp,unsigned long Npoints);
+  int AddPointsToTree(Point *xpoint,unsigned long Nadd);
+
+  short emptyTree();
+  void RebuildTreeFromList();
+
+  /***** State of tree functions *****/
+  bool isEmpty();
+  //bool atTop();
+  //bool atLeaf(){ return( (current->child1==NULL)*(current->child2==NULL) ); }
+  //bool offEnd();
+  //bool CurrentIsSquareBranch();
+  //bool noChild();
+
+  //void getCurrent(Point *points,unsigned long *npoints);
+  unsigned long getNbranches();
+  void printTree(TreeStruct::iterator &current);
+  void checkTree();
+
+  void FindBoxPoint(const PosType* ray,Point *point) const;
+  
+  TreeStruct * spawn(TreeStruct::iterator &current);
+  
+  void _FindLeaf(TreeStruct::iterator &current,const PosType* ray,unsigned long Nadd = 0) const;
+
+  static std::mutex mutex;
 private:
+  
+  // Adding and removing to branches of tree
+  void insertChildToCurrent(Branch *current,Branch *branch,int child);
+  void attachChildrenToCurrent(Branch *current,Branch *child1,Branch *child2);
+
+	 /// root branch
+  Branch *top;
 
   TreeStruct(){};
 
   Point **temp_points;
-  std::vector<Point *> tmp_point;
   
   /// number of barnches in tree */
   unsigned long Nbranches;
    /// number of points allowed in leaves of tree
   int Nbucket;
   short median_cut;
-  int incell;
-  PosType realray[2];
+  //int incell;
+  //PosType realray[2];
 
 
   void construct_root(Point *xp,unsigned long npoints
@@ -151,23 +189,23 @@ private:
 
 
   //void _FindAllBoxNeighbors(Branch *leaf,ListHndl neighbors);
-  void _FindAllBoxNeighborsKist(Branch *leaf,Kist<Point> * neighbors);
-  void _FindAllBoxNeighborsKist_iter(Branch *leaf,Kist<Point> * neighbors);
-  void _PointsWithinKist(PosType *ray,PosType *rmax,Kist<Point> * neighborkist
-  		,short markpoints,PosType *maxgridsize);
+  void _FindAllBoxNeighborsKist(Branch *leaf,TreeStruct::iterator &treeit,Kist<Point> * neighbors) const;
+  void _FindAllBoxNeighborsKist_iter(Branch *leaf,TreeStruct::iterator &treeit,Kist<Point> * neighbors) const;
+  void _PointsWithinKist(TreeStruct::iterator &treeit,PosType *rmax,Kist<Point> * neighborkist
+                         ,short markpoints,PosType *maxgridsize,TreeStruct::Globals &glabs) const;
 
-  void _freeBranches(short child);
-  void _AddPoint();
-  void _BuildTree();
+  void _freeBranches(TreeStruct::iterator &current, short child);
+  void _AddPoint(TreeStruct::iterator &current);
+  void _BuildTree(TreeStruct::iterator &current);
 
-  void _checkTree(unsigned long *count);
+  void _checkTree(TreeStruct::iterator &current, unsigned long *count);
   void _freeBranches_iter();
-  void _FindBox(const PosType* ray);
+  void _FindBox(TreeStruct::iterator &current,const PosType* ray) const;
 
   // Should be obsolete
   //Point *NearestNeighbor(const PosType* center,int Nneighbors,ListHndl neighborlist
   //		,short direction);
-  void _NearestNeighbor(PosType* ray,int Nneighbors,Point **neighborpoints,PosType *rneighbors,short *direction);
+  void _NearestNeighbor(TreeStruct::iterator &current,int Nneighbors,Point **neighborpoints,PosType *rneighbors,short *direction,TreeStruct::Globals &glabs) const;
 
 
   // Are obsolete
@@ -186,6 +224,7 @@ private:
 
 typedef struct TreeStruct *TreeHndl;
 typedef int TreeElement;
+
 
 bool BoxInCircle(PosType *ray,PosType radius,PosType *p1,PosType *p2);
 PosType ClosestBorder(PosType *ray,PosType *p1,PosType *p2);
@@ -336,7 +375,7 @@ namespace Utilities{
                  ,PosType my_range   /// Range of map in same units as x[]
                  ,PosType *my_center /// Center of map in same units as x[]
                  ):
-    N(Npixels),range(my_range),map_p(NULL),Ny(Npixels),range_y(my_range)
+    N(Npixels),range(my_range),map_p(NULL),range_y(my_range),Ny(Npixels)
     {
       center[0] = my_center[0];
       center[1] = my_center[1];
@@ -356,7 +395,7 @@ namespace Utilities{
                  ,PosType my_range_y   /// Range of map in y in same units as x[]
                  ,PosType *my_center /// Center of map in same units as x[]
                  ):
-    N(my_Nx),range(my_range_x),map_p(NULL),Ny(my_Ny),range_y(my_range_y)
+    N(my_Nx),range(my_range_x),map_p(NULL),range_y(my_range_y),Ny(my_Ny)
     {
       center[0] = my_center[0];
       center[1] = my_center[1];
@@ -513,7 +552,9 @@ namespace Utilities{
   int windings2(PosType *x,Point *points,unsigned long Npoints,PosType *area,short image);
   /// returns 1 if it is in the curve and 0 if it is out.  Borders count as in.
   int incurve(PosType x[],std::vector<Point *> curve);
-
+  /// returns 1 if it is in the curve and 0 if it is out.  Borders count as in.
+  int incurve(PosType x[],std::vector<Point_2d> curve);
+  
   unsigned long order_curve4(Point *curve,long Npoints);
   unsigned long order_curve4(Kist<Point> * curve);
   unsigned long order_curve5(Kist<Point> * curve);

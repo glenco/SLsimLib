@@ -347,12 +347,7 @@ unsigned long order_curve4(Point *curve,long Npoints){
   /// Replaces curve with its convex hull.  The number of points will change.
   void ordered_concavehull(Kist<Point> * curve){
     int i;
-    std::vector<Point *> copy = curve->copytovector();
-    //copy.resize(curve->Nunits());
-    //for(i=0,curve->MoveToTop();!(curve->OffBottom());curve->Down(),++i){
-//      copy[i] = curve->getCurrent();
-  //  }
-    
+    std::vector<Point *> copy = curve->copytovector();   
     std::vector<Point *> hull = Utilities::concave_hull(copy,10);
     curve->copy(hull);
     
@@ -1464,7 +1459,7 @@ short backtrack(Point *points,long Npoints,long *j,long jold,long *end){
  */
 void splitter(OldImageInfo *images,int Maximages,int *Nimages){
 	long i,m,j;
-	ListHndl imagelist=NewList();
+	ListHndl imagelist= new PointList;
 	unsigned long NpointsTotal=0;
 	Point *point,*newpointarray;
 
@@ -1477,30 +1472,32 @@ void splitter(OldImageInfo *images,int Maximages,int *Nimages){
 
 	NpointsTotal = images[0].Npoints;
 
+  PointList::iterator imagelist_current(imagelist->Bottom());
 	// copy image points into a list
-	for(i=0;i<images[0].Npoints;++i) InsertPointAfterCurrent(imagelist,&(images[0].points[i]));
+	for(i=0;i<images[0].Npoints;++i) imagelist->InsertPointAfterCurrent(imagelist_current,&(images[0].points[i]));
 
-	assert(imagelist->Npoints == images[0].Npoints);
+	assert(imagelist->size() == images[0].Npoints);
 	//std::printf("imagelist = %il\n",imagelist->Npoints);
 
 	splitlist(imagelist,images,Nimages,Maximages);
 	//std::printf("imagelist = %il NpointsTotal = %il\n",imagelist->Npoints,NpointsTotal);
-	assert(imagelist->Npoints == NpointsTotal);
+	assert(imagelist->size() == NpointsTotal);
 
 	// copy list back into array
 	point = images[0].points;
 	newpointarray = NewPointArray(NpointsTotal);
-	MoveToTopList(imagelist);
+
+  imagelist_current = imagelist->Top();
 	m=0;
 	i=0;
 	do{
-		if(i < *Nimages && images[i].points==imagelist->current){
+		if(i < *Nimages && images[i].points == *imagelist_current){
 			images[i].points=&(newpointarray[m]);
 			++i;
 		}
-		PointCopyData(&(newpointarray[m]),imagelist->current);
+		PointCopyData(&(newpointarray[m]),*imagelist_current);
 		++m;
-	}while(MoveDownList(imagelist));
+	}while(--imagelist_current);
 
 	assert(m == NpointsTotal);
 
@@ -1535,33 +1532,37 @@ void splitter(OldImageInfo *images,int Maximages,int *Nimages){
  */
 void splitlist(ListHndl imagelist,OldImageInfo *images,int *Nimages,int Maximages){
 	unsigned long i=0,m=0;
-	ListHndl orderedlist = NewList();
+	ListHndl orderedlist = new PointList;
 
 	//std::printf("imagelist = %li\n",imagelist->Npoints);
 	// divide images into disconnected curves using neighbors-of-neighbors
 
-	while(imagelist->Npoints > 0 && i < Maximages){
-		images[i].points = TakeOutCurrent(imagelist);
-		MoveToBottomList(orderedlist);
-		InsertPointAfterCurrent(orderedlist,images[i].points);
-		MoveDownList(orderedlist);
+  PointList::iterator imagelist_current(*imagelist);
+  PointList::iterator orderedlist_current;
+  
+	while(imagelist->size() > 0 && i < Maximages){
+		images[i].points = imagelist->TakeOutCurrent(imagelist_current);
+    orderedlist_current = orderedlist->Bottom();
+		orderedlist->InsertPointAfterCurrent(orderedlist_current,images[i].points);
+		--orderedlist_current;
 		NeighborsOfNeighbors(orderedlist,imagelist);
-		images[i].Npoints = orderedlist->Npoints - m;
+		images[i].Npoints = orderedlist->size() - m;
 		m += images[i].Npoints;
 		++i;
 	}
 	*Nimages = i;
 
 	// if there are too many images put the extra points in one last image
-	if(i == Maximages && imagelist->Npoints > 0){
+	if(i == Maximages && imagelist->size() > 0){
 		Point *point;
 		do{
-			point = TakeOutCurrent(imagelist);
-			MoveToBottomList(orderedlist);
-			InsertPointAfterCurrent(orderedlist,point);
-			MoveDownList(orderedlist);
+			point = imagelist->TakeOutCurrent(imagelist_current);
+			//MoveToBottomList(orderedlist);
+      orderedlist_current = orderedlist->Bottom();
+			orderedlist->InsertPointAfterCurrent(orderedlist_current,point);
+      --orderedlist_current;
 			++(images[Maximages-1].Npoints);
-		}while(imagelist->Npoints > 0);
+		}while(imagelist->size() > 0);
 	}
 
 	if(i >= Maximages){
@@ -1569,12 +1570,11 @@ void splitlist(ListHndl imagelist,OldImageInfo *images,int *Nimages,int Maximage
 		std::printf("Too many images for Note enough images\n");
 	}
 
-	assert(imagelist->Npoints == 0);
+	assert(imagelist->size() == 0);
 
-	imagelist->Npoints = orderedlist->Npoints;
-	imagelist->top = orderedlist->top;
-	imagelist->bottom = orderedlist->bottom;
-	imagelist->current = orderedlist->current;
+	imagelist->setN(orderedlist->size());
+	imagelist->setTop(orderedlist->Top());
+	imagelist->setBottom(orderedlist->Bottom());
 
 	//EmptyList(imagelist);
 	//free(imagelist);
@@ -1820,6 +1820,32 @@ int windings2(
       if(Utilities::Geometry::orientation(curve[i]->x, x, curve[0]->x) <= 1) ++number;
     }else if( (x[1] <= curve[i]->x[1])*(x[1] > curve[0]->x[1]) ){
       if(Utilities::Geometry::orientation(curve[i]->x, x, curve[0]->x) == 2) --number;
+    }
+    
+    return number == 0 ? 0 : 1;
+  }
+  int incurve(PosType x[],std::vector<Point_2d> curve){
+    int number = 0;
+    size_t i;
+    
+    // The reason this does not return the winding number is because horizontal
+    //  sections of the curve can be overcounted if they are colinear with x
+    
+    Point point;
+    for(i=0;i<curve.size()-1;++i){
+      
+      if( (x[1] >= curve[i][1])*(x[1] <= curve[i+1][1]) ){
+        if(Utilities::Geometry::orientation(curve[i].x, x, curve[i+1].x) <= 1) ++number;
+      }else if( (x[1] <= curve[i][1])*(x[1] > curve[i+1][1]) ){
+        if(Utilities::Geometry::orientation(curve[i].x, x, curve[i+1].x) == 2) --number;
+      }
+      
+    }
+    
+    if( (x[1] >= curve[i][1])*(x[1] <= curve[0][1]) ){
+      if(Utilities::Geometry::orientation(curve[i].x, x, curve[0].x) <= 1) ++number;
+    }else if( (x[1] <= curve[i][1])*(x[1] > curve[0][1]) ){
+      if(Utilities::Geometry::orientation(curve[i].x, x, curve[0].x) == 2) --number;
     }
     
     return number == 0 ? 0 : 1;

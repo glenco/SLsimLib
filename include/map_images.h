@@ -11,6 +11,7 @@
 #include <lens.h>
 #include <grid_maintenance.h>
 
+
 /**  \brief The ImageFinding namespace is for functions related to finding and mapping images.
  */
 namespace ImageFinding{

@@ -35,7 +35,7 @@ struct Grid{
   
   double RefreshSurfaceBrightnesses(SourceHndl source);
   double ClearSurfaceBrightnesses();
-  unsigned long getNumberOfPoints();
+  unsigned long getNumberOfPoints() const;
   
   
   /// tree on image plane
@@ -48,7 +48,7 @@ struct Grid{
   /// return number of cells in each dimension into which each cell is divided when a refinement is made
   int getNgrid_block(){return Ngrid_block;}
   /// return initial range of gridded region
-  double getInitRange(){return i_tree->top->boundary_p2[0] - i_tree->top->boundary_p1[0];}
+  double getInitRange(){return i_tree->getTop()->boundary_p2[0] - i_tree->getTop()->boundary_p1[0];}
   Point * RefineLeaf(LensHndl lens,Point *point);
   Point * RefineLeaves(LensHndl lens,std::vector<Point *>& points);
   void ClearAllMarks();
@@ -93,8 +93,60 @@ private:
 
 typedef struct Grid* GridHndl;
 
+
 // in image_finder_kist.c
 namespace ImageFinding{
+  
+  struct CriticalCurve{
+    
+    CriticalCurve(){
+      critical_center[0] = critical_center[1] = 0.0;
+      caustic_center[0] = caustic_center[1] = 0.0;
+      critical_area = 0.0;
+      caustic_area = 0.0;
+    };
+    CriticalCurve(const CriticalCurve &p){
+      //critical_curve.resize(p.critical_curve.size());
+      critical_curve = p.critical_curve;
+      caustic_curve = p.caustic_curve;
+      critical_center = p.critical_center;
+      caustic_center = p.caustic_center;
+      critical_area = p.critical_area;
+      caustic_area = p.caustic_area;
+    }
+    CriticalCurve & operator=(const CriticalCurve &p){
+      if(this == &p) return *this;
+      
+      critical_curve = p.critical_curve;
+      caustic_curve = p.caustic_curve;
+      critical_center = p.critical_center;
+      caustic_center = p.caustic_center;
+      critical_area = p.critical_area;
+      caustic_area = p.caustic_area;
+      
+      return *this;
+    }
+    
+    // !!!! need assignment oportor
+    
+    std::vector<Point_2d> critical_curve;
+    std::vector<Point_2d> caustic_curve;
+    
+    Point_2d critical_center;      /// center of critical curve
+    Point_2d caustic_center;   /// center of caustic curve
+    PosType critical_area;        /// area of critical curve (radians^2)
+    PosType caustic_area;        /// area of caustic curve (radians^2)
+    
+    /// return true if x is inside or on the border of the caustic curve
+    bool inCausticCurve(Point_2d x){
+      return Utilities::incurve(x.x,caustic_curve);
+    }
+    /// return true if x is inside or on the border of the critical curve
+    bool inCriticalCurve(Point_2d x){
+      return Utilities::incurve(x.x,critical_curve);
+    }
+  };
+  
   void find_images_kist(LensHndl lens,PosType *y_source,PosType r_source,GridHndl grid
                         ,int *Nimages,std::vector<ImageInfo> &imageinfo,unsigned long *Nimagepoints
                         ,PosType initial_size,bool splitimages,short edge_refinement
@@ -120,9 +172,9 @@ namespace ImageFinding{
                        ,int Nimages,double res_target,short criterion
                        ,Kist<Point> * newpointkist = NULL,bool batch=true);
   
-  void find_crit(LensHndl lens,GridHndl grid,std::vector<ImageInfo> &critcurve,int *Ncrits
+  void find_crit(LensHndl lens,GridHndl grid,std::vector<CriticalCurve> &crtcurve,int *Ncrits
                  ,double resolution,bool *orderingsuccess,bool ordercurve,bool dividecurves,double invmag_min = 0.0,bool verbose = false);
-  void find_crit2(LensHndl lens,GridHndl grid,std::vector<ImageInfo> &critcurve,int *Ncrits
+  void find_crit2(LensHndl lens,GridHndl grid,std::vector<CriticalCurve> &critcurve,int *Ncrits
                   ,double resolution,bool *orderingsuccess,bool ordercurve,bool dividecurves,double invmag_min = 0.0,bool verbose = false);
   
   namespace Temporary{
