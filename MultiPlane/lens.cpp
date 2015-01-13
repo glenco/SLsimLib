@@ -1471,7 +1471,7 @@ void Lens::createFieldHalos(bool verbose)
       
 		}
     
-		Nhalosbin.empty();
+		// Nhalosbin.empty();
 	}
   
 	assert(k2 == Nhalos);
