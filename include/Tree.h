@@ -552,7 +552,9 @@ namespace Utilities{
   int windings2(PosType *x,Point *points,unsigned long Npoints,PosType *area,short image);
   /// returns 1 if it is in the curve and 0 if it is out.  Borders count as in.
   int incurve(PosType x[],std::vector<Point *> curve);
-
+  /// returns 1 if it is in the curve and 0 if it is out.  Borders count as in.
+  int incurve(PosType x[],std::vector<Point_2d> curve);
+  
   unsigned long order_curve4(Point *curve,long Npoints);
   unsigned long order_curve4(Kist<Point> * curve);
   unsigned long order_curve5(Kist<Point> * curve);

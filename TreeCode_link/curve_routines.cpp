@@ -1824,6 +1824,32 @@ int windings2(
     
     return number == 0 ? 0 : 1;
   }
+  int incurve(PosType x[],std::vector<Point_2d> curve){
+    int number = 0;
+    size_t i;
+    
+    // The reason this does not return the winding number is because horizontal
+    //  sections of the curve can be overcounted if they are colinear with x
+    
+    Point point;
+    for(i=0;i<curve.size()-1;++i){
+      
+      if( (x[1] >= curve[i][1])*(x[1] <= curve[i+1][1]) ){
+        if(Utilities::Geometry::orientation(curve[i].x, x, curve[i+1].x) <= 1) ++number;
+      }else if( (x[1] <= curve[i][1])*(x[1] > curve[i+1][1]) ){
+        if(Utilities::Geometry::orientation(curve[i].x, x, curve[i+1].x) == 2) --number;
+      }
+      
+    }
+    
+    if( (x[1] >= curve[i][1])*(x[1] <= curve[0][1]) ){
+      if(Utilities::Geometry::orientation(curve[i].x, x, curve[0].x) <= 1) ++number;
+    }else if( (x[1] <= curve[i][1])*(x[1] > curve[0][1]) ){
+      if(Utilities::Geometry::orientation(curve[i].x, x, curve[0].x) == 2) --number;
+    }
+    
+    return number == 0 ? 0 : 1;
+  }
 
 
 /**
