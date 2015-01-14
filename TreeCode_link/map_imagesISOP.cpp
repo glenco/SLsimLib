@@ -16,7 +16,7 @@ const PosType FracResTarget = 3.0e-5;
  *  \brief Find images and refine them based on their surface brightness distribution.
  *
  *  Uses ImageFinding::find_images_kist() to initially find and refine images and then using 
- *  IntegrateFluxInCell().  If cells cannot be integrated refiments are madebased on a surface brightness
+ *  IF_routines::IntegrateFluxInCell().  If cells cannot be integrated refiments are madebased on a surface brightness
  *  based criterion to refine the most important parts of the lens.
  *
  *  map_images is intended for mapping images of sources more complicated than simple circles.
@@ -187,7 +187,7 @@ void ImageFinding::map_imagesISOP(
       
       nthreads = 0;
       //std::cout << "Start thread " << nthreads << "  = " << jj << "  " << (its[1] == imageinfo[i].imagekist->getTopIt()) << std::endl;
-      thread[nthreads] = std::thread(ImageFinding::IntegrateCellsParallel,its[0],its[1],source
+      thread[nthreads] = std::thread(IF_routines::IntegrateCellsParallel,its[0],its[1],source
                                      ,&area[nthreads],&counts[nthreads]);
       ++nthreads;
       while(its[1] != imageinfo[i].imagekist->TopIt()){
@@ -198,7 +198,7 @@ void ImageFinding::map_imagesISOP(
             && its[1] !=  imageinfo[i].imagekist->TopIt();++jj) ++its[1];
         //std::cout << "Start thread " << nthreads << " jj = " << jj << "  " << (its[1] == imageinfo[i].imagekist->getTopIt()) << std::endl;
 
-        thread[nthreads] = std::thread(ImageFinding::IntegrateCellsParallel,its[0],its[1],source
+        thread[nthreads] = std::thread(IF_routines::IntegrateCellsParallel,its[0],its[1],source
                                          ,&area[nthreads],&counts[nthreads]);
         ++nthreads;
       }
@@ -220,7 +220,7 @@ void ImageFinding::map_imagesISOP(
     /***
 		do{
            current = imageinfo[i].imagekist->getCurrent();
-           ImageFinding::IntegrateFluxInCell(current,*source,1.0e-2,outcome);
+           ImageFinding::IF_routines::IntegrateFluxInCell(current,*source,1.0e-2,outcome);
            if(outcome != YES || current->gridsize > res_min ){
               ++count;
               imageinfo[i].imagekist->getCurrent()->flag = false;
@@ -242,7 +242,7 @@ void ImageFinding::map_imagesISOP(
 		assert(imageinfo[i].area >= 0);
 	}
   
-    std::cout << "number of IntegrateFluxInCell failures "<< count << "  "
+    std::cout << "number of IF_routines::IntegrateFluxInCell failures "<< count << "  "
     << count*100.0/count_tot << "%" << std::endl;
     std::cout << "    "<< count_moreNeighbors*100.0/count_tot << "% not 8 neighbors" << std::endl;
     std::cout << "    "<< count_isopfail*100.0/count_tot << "% isop expansion fails" << std::endl;
@@ -254,7 +254,7 @@ void ImageFinding::map_imagesISOP(
 	 ******* refine images based on flux in each pixel ******
 	 *******************************************************/
     i=0;
-    while( 0 < ImageFinding::refine_grid_on_imageISOP(lens,source,grid,imageinfo,Nimages
+    while( 0 < ImageFinding::IF_routines::refine_grid_on_imageISOP(lens,source,grid,imageinfo,Nimages
                                                       ,Nsources,FracResTarget
                                                       ,res_min,res_min*res_min*1.0e-3
                                                       ,criterion,divide_images) ) ++i;
@@ -315,7 +315,7 @@ void ImageFinding::map_imagesISOP(
  *     Warning:     set imageinfo[i].ShouldNotRefine = 0 and imageinfo[i].uniform_mag = unchecked;
  *
  */
-int ImageFinding::refine_grid_on_imageISOP(Lens *lens,Source *source,GridHndl grid
+int ImageFinding::IF_routines::refine_grid_on_imageISOP(Lens *lens,Source *source,GridHndl grid
                                            ,std::vector<ImageInfo> &imageinfo,int *Nimages
                                            ,int Nsources
                                            ,PosType res_target
@@ -358,11 +358,11 @@ int ImageFinding::refine_grid_on_imageISOP(Lens *lens,Source *source,GridHndl gr
         current = imageinfo[i].imagekist->getCurrent();
         
         if(current->flag == false){
-          ImageFinding::IntegrateFluxInCell(current,*source,1.0e-2,outcome);
+          ImageFinding::IF_routines::IntegrateFluxInCell(current,*source,1.0e-2,outcome);
           if(outcome == YES && current->gridsize < res_min){
             current->flag = true;
           }else if( (outcome == MAYBE && current->image->leaf->area() > res_source_area ) || current->gridsize > res_min
-                   || ImageFinding::RefinePoint2(current,grid->i_tree
+                   || ImageFinding::IF_routines::RefinePoint2(current,grid->i_tree
                                       ,imageinfo[i].area,total_area,1.0,criterion,res_target,nearest)
                    ){
           
@@ -404,7 +404,7 @@ int ImageFinding::refine_grid_on_imageISOP(Lens *lens,Source *source,GridHndl gr
       
         
       i_points = grid->RefineLeaves(lens,points_to_refine);
-      ImageFinding::check_sb_add(source,&imageinfo[i],i_points,1.0,Nold,number_of_refined);
+      ImageFinding::IF_routines::check_sb_add(source,&imageinfo[i],i_points,1.0,Nold,number_of_refined);
       points_to_refine.clear();
         
       
@@ -433,11 +433,11 @@ int ImageFinding::refine_grid_on_imageISOP(Lens *lens,Source *source,GridHndl gr
         
         current = imageinfo[i].outerborder->getCurrent();
         if(current->flag == false){
-          ImageFinding::IntegrateFluxInCell(current,*source,1.0e-2,outcome);
+          ImageFinding::IF_routines::IntegrateFluxInCell(current,*source,1.0e-2,outcome);
           if(outcome == YES && current->gridsize < res_min){
             current->flag = true;
           }else if(
-             ImageFinding::RefinePoint2(current,grid->i_tree
+             ImageFinding::IF_routines::RefinePoint2(current,grid->i_tree
                                       ,imageinfo[i].area,total_area,1.0,criterion,res_target,nearest)
            ){
           
@@ -465,7 +465,7 @@ int ImageFinding::refine_grid_on_imageISOP(Lens *lens,Source *source,GridHndl gr
 		  assert(imageinfo[i].area >= 0.0);
       
       i_points = grid->RefineLeaves(lens,points_to_refine);
-      ImageFinding::check_sb_add(source,&imageinfo[i],i_points,1.0,Nold,number_of_refined);
+      ImageFinding::IF_routines::check_sb_add(source,&imageinfo[i],i_points,1.0,Nold,number_of_refined);
       points_to_refine.clear();
 		  
       
@@ -546,15 +546,15 @@ int ImageFinding::refine_grid_on_imageISOP(Lens *lens,Source *source,GridHndl gr
 /** \brief Integrate the flux within a series of cells using the isoparametric expansion 
  *    in a thread safe way.
  *
- *    The integration is done with ImageFinding::IntegrateFluxInCell().
+ *    The integration is done with ImageFinding::IF_routines::IntegrateFluxInCell().
  *    Points in the Kist from it1 to it2 inclusive are integrated. 
  *    source.SurfaceBrightness() must be thread safe.
  *    
- *    If outcome from ImageFinding::IntegrateFluxInCell() returns YES the 
+ *    If outcome from ImageFinding::IF_routines::IntegrateFluxInCell() returns YES the 
  *    flag of that point is set to true.  Otherwise it is false.
  */
 
-void ImageFinding::IntegrateCellsParallel(
+void ImageFinding::IF_routines::IntegrateCellsParallel(
       Kist<Point>::iterator it1   /// iterator pointing to first point in block
      ,Kist<Point>::iterator it2   /// iterator pointing to last point in block
      ,Source *source
@@ -568,7 +568,7 @@ void ImageFinding::IntegrateCellsParallel(
   *count = 0;
   for(Kist<Point>::iterator it = it1; it != it2 ; ++it,++i){
     if((*it)->flag == false){
-      ImageFinding::IntegrateFluxInCell(*it,*source,1.0e-2,outcome);
+      ImageFinding::IF_routines::IntegrateFluxInCell(*it,*source,1.0e-2,outcome);
       ++(*count);
       *area += (*it)->surface_brightness*(*it)->gridsize*(*it)->gridsize;
       if(outcome == YES) (*it)->flag = true;
@@ -576,7 +576,7 @@ void ImageFinding::IntegrateCellsParallel(
     }
   }
   if((*it2)->flag == false){
-    ImageFinding::IntegrateFluxInCell(*it2,*source,1.0e-2,outcome);
+    ImageFinding::IF_routines::IntegrateFluxInCell(*it2,*source,1.0e-2,outcome);
     ++(*count);
     *area += (*it2)->surface_brightness*(*it2)->gridsize*(*it2)->gridsize;
     if(outcome == YES) (*it2)->flag = true;
@@ -599,7 +599,7 @@ void ImageFinding::IntegrateCellsParallel(
  */
 
 
-void ImageFinding::IntegrateFluxInCell(
+void ImageFinding::IF_routines::IntegrateFluxInCell(
                                        Point *point      /// center point of cell to be integrated
                                        ,Source &source   /// source to be integrated
                                        ,float tolerance  /// tolerance to which isop expantion is checked
@@ -645,61 +645,61 @@ void ImageFinding::IntegrateFluxInCell(
   {
     x[0] = neighbors[0]->image->x[0];
     y[0] = neighbors[0]->image->x[1];
-    interpfrom2Points(neighbors[0],neighbors[1],&x[1],&y[1]);
+    IF_routines::interpfrom2Points(neighbors[0],neighbors[1],&x[1],&y[1]);
     x[2] = neighbors[1]->image->x[0];
     y[2] = neighbors[1]->image->x[1];
-    interpfrom2Points(neighbors[1],point,&x[3],&y[3]);
+    IF_routines::interpfrom2Points(neighbors[1],point,&x[3],&y[3]);
     x[4] = point->x[0];
     y[4] = point->x[1];
-    interpfrom2Points(neighbors[7],point,&x[5],&y[5]);
+    IF_routines::interpfrom2Points(neighbors[7],point,&x[5],&y[5]);
     x[6] = neighbors[7]->image->x[0];
     y[6] = neighbors[7]->image->x[1];
-    interpfrom2Points(neighbors[7],neighbors[0],&x[7],&y[7]);
+    IF_routines::interpfrom2Points(neighbors[7],neighbors[0],&x[7],&y[7]);
     flux +=  ISOP::isop_render(source,x,y,0,0,1,1);
   }
   {
     x[0] = neighbors[1]->image->x[0];
     y[0] = neighbors[1]->image->x[1];
-    interpfrom2Points(neighbors[1],neighbors[2],&x[1],&y[1]);
+    IF_routines::interpfrom2Points(neighbors[1],neighbors[2],&x[1],&y[1]);
     x[2] = neighbors[2]->image->x[0];
     y[2] = neighbors[2]->image->x[1];
-    interpfrom2Points(neighbors[2],neighbors[3],&x[3],&y[3]);
+    IF_routines::interpfrom2Points(neighbors[2],neighbors[3],&x[3],&y[3]);
     x[4] = neighbors[3]->image->x[0];
     y[4] = neighbors[3]->image->x[1];
-    interpfrom2Points(neighbors[3],point,&x[5],&y[5]);
+    IF_routines::interpfrom2Points(neighbors[3],point,&x[5],&y[5]);
     x[6] = point->x[0];
     y[6] = point->x[1];
-    interpfrom2Points(neighbors[1],point,&x[7],&y[7]);
+    IF_routines::interpfrom2Points(neighbors[1],point,&x[7],&y[7]);
     flux +=  ISOP::isop_render(source,x,y,-1,0,0,1);
   }
   {
     x[0] = point->x[0];
     y[0] = point->x[1];
-    interpfrom2Points(neighbors[3],point,&x[1],&y[1]);
+    IF_routines::interpfrom2Points(neighbors[3],point,&x[1],&y[1]);
     x[2] = neighbors[3]->image->x[0];
     y[2] = neighbors[3]->image->x[1];
-    interpfrom2Points(neighbors[3],neighbors[4],&x[3],&y[3]);
+    IF_routines::interpfrom2Points(neighbors[3],neighbors[4],&x[3],&y[3]);
     x[4] = neighbors[4]->image->x[0];
     y[4] = neighbors[4]->image->x[1];
-    interpfrom2Points(neighbors[4],neighbors[5],&x[5],&y[5]);
+    IF_routines::interpfrom2Points(neighbors[4],neighbors[5],&x[5],&y[5]);
     x[6] = neighbors[5]->image->x[0];
     y[6] = neighbors[5]->image->x[1];
-    interpfrom2Points(neighbors[5],point,&x[7],&y[7]);
+    IF_routines::interpfrom2Points(neighbors[5],point,&x[7],&y[7]);
     flux +=  ISOP::isop_render(source,x,y,-1,-1,0,0);
   }
   {
     x[0] = neighbors[7]->image->x[0];
     y[0] = neighbors[7]->image->x[1];
-    interpfrom2Points(neighbors[7],point,&x[1],&y[1]);
+    IF_routines::interpfrom2Points(neighbors[7],point,&x[1],&y[1]);
     x[2] = point->x[0];
     y[2] = point->x[1];
-    interpfrom2Points(neighbors[5],point,&x[3],&y[3]);
+    IF_routines::interpfrom2Points(neighbors[5],point,&x[3],&y[3]);
     x[4] = neighbors[5]->image->x[0];
     y[4] = neighbors[5]->image->x[1];
-    interpfrom2Points(neighbors[5],neighbors[6],&x[5],&y[5]);
+    IF_routines::interpfrom2Points(neighbors[5],neighbors[6],&x[5],&y[5]);
     x[6] = neighbors[6]->image->x[0];
     y[6] = neighbors[6]->image->x[1];
-    interpfrom2Points(neighbors[6],neighbors[7],&x[7],&y[7]);
+    IF_routines::interpfrom2Points(neighbors[6],neighbors[7],&x[7],&y[7]);
     flux +=  ISOP::isop_render(source,x,y,0,-1,1,0);
   }
   
@@ -715,7 +715,7 @@ void ImageFinding::IntegrateFluxInCell(
 
 /** \brief Finds the source position of a point that lies half way between points p1 and p2 on the image plane by third order interpolation.
  */
-void ImageFinding::interpfrom2Points(Point const * p1,Point const * p2,PosType *x,PosType *y){
+void ImageFinding::IF_routines::interpfrom2Points(Point const * p1,Point const * p2,PosType *x,PosType *y){
   PosType dx = p1->x[0] - p2->x[0],dy = p1->x[1] - p2->x[1];
   PosType l = sqrt(dx*dx +dy*dy);
   dx /=l;

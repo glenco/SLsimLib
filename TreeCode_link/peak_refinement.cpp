@@ -95,7 +95,7 @@ short find_peaks(
 
 		//printf("restarget = %e gridrange[2] = %e  gridrange[1] = %e\n",res_target,imageinfo[0].gridrange[2],imageinfo[0].gridrange[1]);
 
-		Nnewpoints = ImageFinding::refine_grid_kist(lens,grid,imageinfo.data(),1,res_target,2,newpointskist);
+		Nnewpoints = IF_routines::refine_grid_kist(lens,grid,imageinfo.data(),1,res_target,2,newpointskist);
 
 
 		while(newpointskist->Nunits() > 0){
@@ -124,7 +124,7 @@ short find_peaks(
 
 			// refine all image points and outer border
 
-			Nnewpoints = ImageFinding::refine_grid_kist(lens,grid,imageinfo.data(),1,res_target,2,newpointskist);
+			Nnewpoints = IF_routines::refine_grid_kist(lens,grid,imageinfo.data(),1,res_target,2,newpointskist);
 			//printf("Nnewpoints = %li\n",Nnewpoints);
 
 		}

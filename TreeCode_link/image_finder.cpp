@@ -150,7 +150,7 @@ int refine_grid(LensHndl lens,GridHndl grid,OldImageInfo *imageinfo
  *
  * </pr>
  */
-long refine_edges(
+long ImageFinding::IF_routines::refine_edges(
 		LensHndl lens
 		,GridHndl grid
 		,ImageInfo *imageinfo
@@ -286,7 +286,7 @@ long refine_edges(
  *
  * </pr>
  */
-long refine_edges2(LensHndl lens,PosType *y_source,PosType r_source,GridHndl grid
+long ImageFinding::IF_routines::refine_edges2(LensHndl lens,PosType *y_source,PosType r_source,GridHndl grid
 		,ImageInfo *imageinfo,bool *image_overlap,int Nimages,PosType res_target
 		,short criterion,bool batch){
 
@@ -358,7 +358,7 @@ long refine_edges2(LensHndl lens,PosType *y_source,PosType r_source,GridHndl gri
 							points_to_refine.push_back(point);
 						}else{
 							i_points = grid->RefineLeaf(lens,point);
-							sort_out_points(i_points,&imageinfo[i],r_source,y_source);
+							ImageFinding::IF_routines::sort_out_points(i_points,&imageinfo[i],r_source,y_source);
 							/*
 							//  sort new points into in and out of image
 							//    and add them to inner and outer borders
@@ -417,7 +417,7 @@ long refine_edges2(LensHndl lens,PosType *y_source,PosType r_source,GridHndl gri
 								imageinfo[i].gridrange[2] = point->gridsize/grid->getNgrid_block();
 						}else{
 							i_points = grid->RefineLeaf(lens,point);
-							sort_out_points(i_points,&imageinfo[i],r_source,y_source);
+							ImageFinding::IF_routines::sort_out_points(i_points,&imageinfo[i],r_source,y_source);
 							//  sort new points into in and out of image
 							//    and add them to inner and outer borders
 							/*
@@ -459,7 +459,7 @@ long refine_edges2(LensHndl lens,PosType *y_source,PosType r_source,GridHndl gri
 
 			if(batch){
 				i_points = grid->RefineLeaves(lens,points_to_refine);
-				if(i_points) sort_out_points(i_points,&imageinfo[i],r_source,y_source);
+				if(i_points) ImageFinding::IF_routines::sort_out_points(i_points,&imageinfo[i],r_source,y_source);
 				points_to_refine.clear();
 			}
 
@@ -523,7 +523,7 @@ long refine_edges2(LensHndl lens,PosType *y_source,PosType r_source,GridHndl gri
 
 //  sort new points into in and out of image and add them to inner and outer borders
 // Also adds the area of new image points to the image area.
-void sort_out_points(Point *i_points,ImageInfo *imageinfo,PosType r_source,PosType y_source[]){
+void ImageFinding::IF_routines::sort_out_points(Point *i_points,ImageInfo *imageinfo,PosType r_source,PosType y_source[]){
 	for(unsigned long j=0;j<i_points->head;++j){
 		if( sqrt(pow(i_points[j].image->x[0]-y_source[0],2)
 			+ pow(i_points[j].image->x[1]-y_source[1],2)) < r_source){
