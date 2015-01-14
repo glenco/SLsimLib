@@ -1,4 +1,4 @@
-/*
+ /*
  * map_images.c
  *
  *  Created on: Oct 6, 2010
@@ -49,6 +49,7 @@ void ImageFinding::map_images(
 	assert(lens);
 	assert(grid->s_tree);
 	assert(grid->i_tree);
+
       
   if(imageinfo.size() < 10) imageinfo.resize(10);
   assert(imageinfo[0].imagekist);
