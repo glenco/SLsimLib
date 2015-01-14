@@ -145,6 +145,18 @@ namespace ImageFinding{
     bool inCriticalCurve(Point_2d x){
       return Utilities::incurve(x.x,critical_curve);
     }
+    
+    /** \brief Returns a vector of random point within the caustic.  It is more efficient to call this once for many point rather than repeatedly one at a time.
+     */
+    void RandomSourceWithinCaustic(
+                                   int N                   /// number of points needed
+                                   ,std::vector<Point_2d> &y  /// output vector of points
+                                   ,Utilities::RandomNumbers_NR &rng  /// random number generator
+                                   );
+    
+  private:
+    void init();
+    Point_2d p1,p2;
   };
   
   void find_images_kist(LensHndl lens,PosType *y_source,PosType r_source,GridHndl grid
