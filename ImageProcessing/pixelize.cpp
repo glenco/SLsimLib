@@ -869,7 +869,7 @@ void PixelMap::AddGrid(const Grid &grid,LensingVariable val){
   
   AddGrid_(*(grid.i_tree->pointlist),val);
   
-  exit(0);
+  return;
   //***********************************************************************
   
   int Nblocks = 16;
