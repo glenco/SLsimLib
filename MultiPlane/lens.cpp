@@ -105,10 +105,10 @@ Lens::Lens(InputParams& params, long* my_seed, CosmoParamSet cosmoset, bool verb
     for(int k=0 ; k<Nzbins ; k++)
     {
       zbins[k] = 0. ;
-      Nhaloestot_Tab[k] = 0. ;
+      Nhalosbin[k] = 0. ;
     }
     aveNhalos = 0. ;
-    for(int k=0 ; k<NZSamples ; k++) Nhalosbin[k] = 0. ;
+    for(int k=0 ; k<NZSamples ; k++) Nhaloestot_Tab[k] = 0. ;
     
     // Computing the number of halos per bins :
     if(sim_input_flag){
@@ -181,7 +181,7 @@ Lens::Lens(Lens &lens)
       Nhalosbin[k] = 0. ;
     }
     aveNhalos = 0. ;
-    for(int k=0 ; k<NZSamples ; k++) Nhalosbin[k] = 0. ;
+    for(int k=0 ; k<NZSamples ; k++) Nhaloestot_Tab[k] = 0. ;
   
     // Computing the number of halos per bins :
     if(sim_input_flag){
@@ -477,7 +477,7 @@ void Lens::resetFieldNplanes(std::size_t Np, bool verbose)
 
 void Lens::resetFieldHalos(bool verbose)
 {
-	Utilities::delete_container(field_halos);
+  Utilities::delete_container(field_halos);
 	Utilities::delete_container(field_planes);
   
 	if(sim_input_flag){
@@ -489,7 +489,7 @@ void Lens::resetFieldHalos(bool verbose)
 	else{
 		createFieldHalos(verbose);
 	}
-
+  
   // set up the lens contents :
 	createFieldPlanes(verbose);
 	combinePlanes(verbose);
@@ -634,7 +634,7 @@ void Lens::setupFieldPlanes()
 	if(read_redshift_planes)
 		setFieldDistFromFile();
 	else
-		setFieldDist();
+    setFieldDist();
 }
 
 /**
@@ -1312,10 +1312,10 @@ void Lens::createFieldHalos(bool verbose)
 	size_t j = 0;
 	k2 = 0;
 	std::vector<PosType>::iterator it1,it2;
-  
+
   ///////////////////////////////////////
 	for(np=0,mass_max=0;np<NZSamples;np++){
-    
+
 		z1 = np*zsource/(NZSamples);
 		z2 = (np+1)*zsource/(NZSamples);
 
@@ -2200,19 +2200,19 @@ void Lens::buildPlanes(InputParams& params, bool verbose)
 	{
 		// set the distances of the field planes
 		setupFieldPlanes();
-		
+
 		// create or read the field halos
 		if(sim_input_flag){
       if(field_input_sim_format == MillenniumObs) readInputSimFileMillennium(verbose);
       if(field_input_sim_format == MultiDarkHalos) readInputSimFileMultiDarkHalos(verbose);
 		}
     else{
-			createFieldHalos(verbose);
+      createFieldHalos(verbose);
 		}
 		// create field planes and sort halos onto them
 		createFieldPlanes(verbose);
 	}
-	
+  
 	// build main
 	if(flag_switch_main_halo_on || pixel_map_on)
 	{
