@@ -264,11 +264,11 @@ typedef struct PointList *ListHndl;
 };
 inline void MoveToBottomList(ListHndl list){
   list->current=list->bottom;
-};
+};*/
 
-/***********************************************************
-   routines for linked list of points
-************************************************************/
+// ***********************************************************
+//   routines for linked list of points
+// ************************************************************
 
 Point *NewPoint(double *x,unsigned long id);
 

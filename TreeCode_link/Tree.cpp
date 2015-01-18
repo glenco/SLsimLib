@@ -869,3 +869,29 @@ bool TreeStruct::TreeWalkStep(bool allowDescent){
 	return false;
 }*/
 
+void ImageFinding::CriticalCurve::RandomSourceWithinCaustic(int N,std::vector<Point_2d> &y
+                                                            ,Utilities::RandomNumbers_NR &rng){
+
+  init();
+  y.resize(N);
+  for(int ii=0;ii<N;++ii){
+    do{
+      y[ii][0] = (p2[0] - p1[0])*rng() + p1[0];
+      y[ii][1] = (p2[1] - p1[1])*rng() + p1[1];
+    }while(!inCausticCurve(y[ii]));
+  }
+}
+
+void ImageFinding::CriticalCurve::init(){
+  p1 = p2 = caustic_curve[0];
+  
+  for(size_t ii=1;ii < caustic_curve.size();++ii){
+    if(caustic_curve[ii][0] < p1[0] ) p1[0] = caustic_curve[ii][0];
+    if(caustic_curve[ii][0] > p2[0] ) p2[0] = caustic_curve[ii][0];
+    if(caustic_curve[ii][1] < p1[1] ) p1[1] = caustic_curve[ii][1];
+    if(caustic_curve[ii][1] > p2[1] ) p2[1] = caustic_curve[ii][1];
+  }
+}
+
+
+

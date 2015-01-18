@@ -147,9 +147,9 @@ void ImageFinding::find_images_kist(
       printf("\n   new source size = %e    Nimages = %i  telescoping to rsource = %e\n",rtemp,*Nimages,r_source);
     
     j=0;
-    //while(ImageFinding::refine_grid_kist(lens,grid,imageinfo,*Nimages,telescope_res,3,NULL)){
-    //while(ImageFinding::refine_grid_kist(lens,grid,imageinfo,*Nimages,0.05/Ngrid_block/Ngrid_block,3,NULL)){
-    //while(ImageFinding::refine_grid_kist(lens,grid,imageinfo,*Nimages,0.05/Ngrid_block/Ngrid_block,1,NULL)){
+    //while(ImageFinding::IF_routines::refine_grid_kist(lens,grid,imageinfo,*Nimages,telescope_res,3,NULL)){
+    //while(ImageFinding::IF_routines::refine_grid_kist(lens,grid,imageinfo,*Nimages,0.05/Ngrid_block/Ngrid_block,3,NULL)){
+    //while(ImageFinding::IF_routines::refine_grid_kist(lens,grid,imageinfo,*Nimages,0.05/Ngrid_block/Ngrid_block,1,NULL)){
     do{
       time(&t1);
       if(verbose) std::cout << "    refined images" << std::endl;
@@ -194,7 +194,7 @@ void ImageFinding::find_images_kist(
               grid->s_tree->PointsWithinKist(y_source,rtemp,&subkist,1);
               ImageFinding::image_finder_kist(lens,y_source,fabs(rtemp),grid
                                               ,Nimages,imageinfo,Nimagepoints,0,0);
-            }while( ImageFinding::refine_grid_kist(lens,grid,imageinfo.data(),*Nimages,1.0e-3,1));
+            }while( ImageFinding::IF_routines::refine_grid_kist(lens,grid,imageinfo.data(),*Nimages,1.0e-3,1));
             
             
             //map.Clean();
@@ -221,7 +221,7 @@ void ImageFinding::find_images_kist(
       }
       
       ++j;
-    }while(ImageFinding::refine_grid_kist(lens,grid,imageinfo.data(),*Nimages,rtemp*mumin/Ngrid_block,2));
+    }while(ImageFinding::IF_routines::refine_grid_kist(lens,grid,imageinfo.data(),*Nimages,rtemp*mumin/Ngrid_block,2));
     //}
     
     time(&t1);
@@ -286,7 +286,7 @@ void ImageFinding::find_images_kist(
       return ;
     }
     ++i;
-  }while( ImageFinding::refine_grid_kist(lens,grid,imageinfo.data(),*Nimages,1.0/NpointsRequired,flag));
+  }while( ImageFinding::IF_routines::refine_grid_kist(lens,grid,imageinfo.data(),*Nimages,1.0/NpointsRequired,flag));
   assert(*Nimages > 0);
   
   // find points that are truly in the image and not just neighbors
@@ -329,7 +329,7 @@ void ImageFinding::find_images_kist(
                                         ,Nimages,imageinfo,Nimagepoints,-1,1);
       }
       ++i;
-    }while( ImageFinding::refine_grid_kist(lens,grid,imageinfo.data(),*Nimages,FracResTarget,0));
+    }while( ImageFinding::IF_routines::refine_grid_kist(lens,grid,imageinfo.data(),*Nimages,FracResTarget,0));
     
   }else if(edge_refinement==1){    // edge refinement with image finding at each step
     do{
@@ -343,11 +343,11 @@ void ImageFinding::find_images_kist(
       //printf("\n");
       
       ++i;
-    }while( refine_edges(lens,grid,imageinfo.data(),*Nimages,FracResTarget,flag));
+    }while( IF_routines::refine_edges(lens,grid,imageinfo.data(),*Nimages,FracResTarget,flag));
     
   }else if(edge_refinement==2){  // edge refinement with no image finding at each step
     ++i;
-    while(refine_edges2(lens,y_source,r_source,grid
+    while(IF_routines::refine_edges2(lens,y_source,r_source,grid
                         ,imageinfo.data(),&image_overlap,*Nimages,FracResTarget,flag)){
       // if an overlap is detected find the images again
       
@@ -447,12 +447,23 @@ namespace ImageFinding {
   namespace Temporary {
     Lens * lens;
     Point *point;
-    PosType *y;
+    Point_2d y;
   }
 }
+/** \brief  Find the image position of a source without grid refinement.
+ 
+ This uses Powell's algorithm to minimise the distance between the source point of an image and the desired source point.  No grid is necessary.  This should be fast, but will miss multiple images.  This is useful for finding the position of weakly lensed images or the rough region where a grid should be put down for a strong lens.
+ 
+ */
 
-
-void ImageFinding::find_image_simple(LensHndl lens,PosType *y_source,PosType z_source,PosType *image_x,PosType ytol2,PosType &fret){
+void ImageFinding::find_image_simple(
+          LensHndl lens         /// lens to be shot through
+          ,Point_2d y_source    /// input position of source (radians)
+          ,PosType z_source     /// redshift of source
+          ,Point_2d &image_x    /// output image position (radians)
+          ,PosType ytol2        /// target tolerance in source position squared
+          ,PosType &fret        /// 
+                                     ){
   
   PosType tmp_zs = lens->getSourceZ();
   lens->ResetSourcePlane(z_source,false);
@@ -468,10 +479,10 @@ void ImageFinding::find_image_simple(LensHndl lens,PosType *y_source,PosType z_s
   xi[1][1] = xi[2][2] = 1.0;
   xi[1][2] = xi[2][1] = 0.0;
   
-  image_x[0] = y_source[0];
-  image_x[1] = y_source[1];
+  image_x[0] = y_source.x[0];
+  image_x[1] = y_source.x[1];
   
-  powellD(image_x-1,xi,2,ytol2,&iter,&fret,ImageFinding::Temporary::mindyfunc);
+  powellD(image_x.x-1,xi,2,ytol2,&iter,&fret,ImageFinding::Temporary::mindyfunc);
   
   lens->ResetSourcePlane(tmp_zs,false);
   Utilities::free_PosTypeMatrix(xi,3,3);
@@ -687,10 +698,10 @@ void ImageFinding::find_images_microlens(
     NuniformMags = 0;
     time_in_refine = time_in_find = 0;
     time(&now);
-    //while(ImageFinding::refine_grid_kist(lens,grid,imageinfo,*Nimages,telescope_res,3)){
-    //while(ImageFinding::refine_grid_kist(lens,grid,imageinfo,*Nimages,mu_min,0)){
-    while(ImageFinding::refine_grid_kist(lens,grid,imageinfo.data(),*Nimages,mu_min,3)){
-      //while( ImageFinding::refine_grid_kist(lens,grid,imageinfo,*Nimages,mu_min*telescope_factor*telescope_factor,3) ){
+    //while(ImageFinding::IF_routines::refine_grid_kist(lens,grid,imageinfo,*Nimages,telescope_res,3)){
+    //while(ImageFinding::IF_routines::refine_grid_kist(lens,grid,imageinfo,*Nimages,mu_min,0)){
+    while(ImageFinding::IF_routines::refine_grid_kist(lens,grid,imageinfo.data(),*Nimages,mu_min,3)){
+      //while( ImageFinding::IF_routines::refine_grid_kist(lens,grid,imageinfo,*Nimages,mu_min*telescope_factor*telescope_factor,3) ){
       //do{
       
       time(&t1);
@@ -704,7 +715,7 @@ void ImageFinding::find_images_microlens(
       
     		// refine critical curves
     		//find_crit(lens,grid,critcurve,NimageMax,&Ncrits,rtemp*0.01,&dummybool,false,false,verbose);
-      refine_crit_in_image(lens,grid,r_source,y_source,rtemp*0.01);
+      IF_routines::refine_crit_in_image(lens,grid,r_source,y_source,rtemp*0.01);
       
       //    		std::cout << "    Ncrits = " << Ncrits << " with " << critcurve->imagekist->Nunits() << " points." << std::endl;
       
@@ -762,7 +773,7 @@ void ImageFinding::find_images_microlens(
       }
       
       ++j;
-      //}while(ImageFinding::refine_grid_kist(lens,grid,imageinfo,*Nimages,rtemp*mumin_local/Ngrid_block,2,NULL));
+      //}while(ImageFinding::IF_routines::refine_grid_kist(lens,grid,imageinfo,*Nimages,rtemp*mumin_local/Ngrid_block,2,NULL));
     }
     
     assert(NuniformMags <= *Nimages);
@@ -902,7 +913,7 @@ void ImageFinding::find_images_microlens(
       return ;
     }
     ++i;
-  }while( ImageFinding::refine_grid_kist(lens,grid,imageinfo.data(),*Nimages,0.1,3));
+  }while( ImageFinding::IF_routines::refine_grid_kist(lens,grid,imageinfo.data(),*Nimages,0.1,3));
   for(int k=0;k<*Nimages;++k) imageinfo[k].ShouldNotRefine = false;
   
   time(&now);
@@ -949,7 +960,7 @@ void ImageFinding::find_images_microlens(
       ImageFinding::image_finder_kist(lens,y_source,fabs(r_source),grid
                                       ,Nimages,imageinfo,Nimagepoints,0,1);
       ++i;
-    }while( ImageFinding::refine_grid_kist(lens,grid,imageinfo.data(),*Nimages,FracResTarget,0));
+    }while( ImageFinding::IF_routines::refine_grid_kist(lens,grid,imageinfo.data(),*Nimages,FracResTarget,0));
     
   }else if(edge_refinement==1){    // edge refinement with image finding at each step
     do{
@@ -963,7 +974,7 @@ void ImageFinding::find_images_microlens(
       //printf("\n");
       
       ++i;
-    }while( refine_edges(lens,grid,imageinfo.data(),*Nimages,FracResTarget,flag));
+    }while( IF_routines::refine_edges(lens,grid,imageinfo.data(),*Nimages,FracResTarget,flag));
     
   }else if(edge_refinement==2){  // edge refinement with no image finding at each step
     ++i;
@@ -974,7 +985,7 @@ void ImageFinding::find_images_microlens(
       if(imageinfo[kk].area < area_tot*1.0e-3){++count; imageinfo[kk].ShouldNotRefine = true;}
       else imageinfo[kk].ShouldNotRefine = false;
     }
-    while(refine_edges2(lens,y_source,r_source,grid
+    while(IF_routines::refine_edges2(lens,y_source,r_source,grid
                         ,imageinfo.data(),&image_overlap,*Nimages,FracResTarget,flag)){
       // if an overlap is detected find the images again
       
@@ -1167,10 +1178,10 @@ void ImageFinding::find_images_microlens_exper(
     NuniformMags = 0;
     time_in_refine = time_in_find = 0;
     time(&now);
-    //while(ImageFinding::refine_grid_kist(lens,grid,imageinfo,*Nimages,telescope_res,3)){
+    //while(ImageFinding::IF_routines::refine_grid_kist(lens,grid,imageinfo,*Nimages,telescope_res,3)){
     //while(ImageFinding::refine_grid_kist(lens,grid,imageinfo,*Nimages,mu_min,0)){
-    while(refine_grid_kist(lens,grid,imageinfo.data(),*Nimages,mu_min,3)){
-      //while( ImageFinding::refine_grid_kist(lens,grid,imageinfo,*Nimages,mu_min*telescope_factor*telescope_factor,3) ){
+    while(IF_routines::refine_grid_kist(lens,grid,imageinfo.data(),*Nimages,mu_min,3)){
+      //while( ImageFinding::IF_routines::refine_grid_kist(lens,grid,imageinfo,*Nimages,mu_min*telescope_factor*telescope_factor,3) ){
       //do{
       
       time(&t1);
@@ -1260,7 +1271,7 @@ void ImageFinding::find_images_microlens_exper(
       }
       
       ++j;
-      //}while(ImageFinding::refine_grid_kist(lens,grid,imageinfo,*Nimages,rtemp*mumin_local/Ngrid_block,2,NULL));
+      //}while(ImageFinding::IF_routines::refine_grid_kist(lens,grid,imageinfo,*Nimages,rtemp*mumin_local/Ngrid_block,2,NULL));
     }
     
     assert(NuniformMags <= *Nimages);
@@ -1382,7 +1393,7 @@ void ImageFinding::find_images_microlens_exper(
       return ;
     }
     ++i;
-  }while( refine_grid_kist(lens,grid,imageinfo.data(),*Nimages,0.1,3));
+  }while( IF_routines::refine_grid_kist(lens,grid,imageinfo.data(),*Nimages,0.1,3));
   for(int k=0;k<*Nimages;++k) imageinfo[k].ShouldNotRefine = false;
   
   time(&now);
@@ -1429,7 +1440,7 @@ void ImageFinding::find_images_microlens_exper(
       ImageFinding::image_finder_kist(lens,y_source,fabs(r_source),grid
                                       ,Nimages,imageinfo,Nimagepoints,0,1);
       ++i;
-    }while( refine_grid_kist(lens,grid,imageinfo.data(),*Nimages,FracResTarget,0));
+    }while( IF_routines::refine_grid_kist(lens,grid,imageinfo.data(),*Nimages,FracResTarget,0));
     
   }else if(edge_refinement==1){    // edge refinement with image finding at each step
     do{
@@ -1443,7 +1454,7 @@ void ImageFinding::find_images_microlens_exper(
       //printf("\n");
       
       ++i;
-    }while( refine_edges(lens,grid,imageinfo.data(),*Nimages,FracResTarget,flag));
+    }while( IF_routines::refine_edges(lens,grid,imageinfo.data(),*Nimages,FracResTarget,flag));
     
   }else if(edge_refinement==2){  // edge refinement with no image finding at each step
     ++i;
@@ -1454,7 +1465,7 @@ void ImageFinding::find_images_microlens_exper(
       if(imageinfo[kk].area < area_tot*1.0e-3){++count; imageinfo[kk].ShouldNotRefine = true;}
       else imageinfo[kk].ShouldNotRefine = false;
     }
-    while(refine_edges2(lens,y_source,r_source,grid
+    while(IF_routines::refine_edges2(lens,y_source,r_source,grid
                         ,imageinfo.data(),&image_overlap,*Nimages,FracResTarget,flag)){
       // if an overlap is detected find the images again
       
@@ -1772,7 +1783,7 @@ void ImageFinding::image_finder_kist(LensHndl lens, PosType *y_source,PosType r_
  * Returns the number of points that were added to the grids.
  *
  */
-int ImageFinding::refine_grid_kist(
+int ImageFinding::IF_routines::refine_grid_kist(
                                    LensHndl lens            /// the lens model
                                    ,GridHndl grid           /// the grid
                                    ,ImageInfo *imageinfo    /// images

@@ -145,6 +145,18 @@ namespace ImageFinding{
     bool inCriticalCurve(Point_2d x){
       return Utilities::incurve(x.x,critical_curve);
     }
+    
+    /** \brief Returns a vector of random point within the caustic.  It is more efficient to call this once for many point rather than repeatedly one at a time.
+     */
+    void RandomSourceWithinCaustic(
+                                   int N                   /// number of points needed
+                                   ,std::vector<Point_2d> &y  /// output vector of points
+                                   ,Utilities::RandomNumbers_NR &rng  /// random number generator
+                                   );
+    
+  private:
+    void init();
+    Point_2d p1,p2;
   };
   
   void find_images_kist(LensHndl lens,PosType *y_source,PosType r_source,GridHndl grid
@@ -152,7 +164,7 @@ namespace ImageFinding{
                         ,PosType initial_size,bool splitimages,short edge_refinement
                         ,bool verbose = false);
   
-  void find_image_simple(LensHndl lens,PosType *y_source,PosType z_source,PosType *image_x
+  void find_image_simple(LensHndl lens,Point_2d y_source,PosType z_source,Point_2d &image_x
                          ,PosType xtol2,PosType &fret);
   
   void find_images_microlens(LensHndl lens,double *y_source,double r_source,GridHndl grid
@@ -168,9 +180,6 @@ namespace ImageFinding{
                          ,int *Nimages,std::vector<ImageInfo> &imageinfo,unsigned long *Nimagepoints
                          ,short splitparities,short true_images);
   
-  int refine_grid_kist(LensHndl lens,GridHndl grid,ImageInfo *imageinfo
-                       ,int Nimages,double res_target,short criterion
-                       ,Kist<Point> * newpointkist = NULL,bool batch=true);
   
   void find_crit(LensHndl lens,GridHndl grid,std::vector<CriticalCurve> &crtcurve,int *Ncrits
                  ,double resolution,bool *orderingsuccess,bool ordercurve,bool dividecurves,double invmag_min = 0.0,bool verbose = false);
@@ -184,21 +193,30 @@ namespace ImageFinding{
     
     PosType mindyfunc(PosType *x);
   }
+
+  namespace IF_routines{
+    int refine_grid_kist(LensHndl lens,GridHndl grid,ImageInfo *imageinfo
+                       ,int Nimages,double res_target,short criterion
+                       ,Kist<Point> * newpointkist = NULL,bool batch=true);
+    
+
+    void refine_crit_in_image(LensHndl lens,GridHndl grid,double r_source,double x_source[],double resolution);
+    
+    int refine_grid(LensHndl lens,GridHndl grid,OldImageInfo *imageinfo
+                    ,unsigned long Nimages,double res_target,short criterion,bool batch=true);
+    
+    long refine_edges(LensHndl lens,GridHndl grid,ImageInfo *imageinfo
+                      ,int Nimages,double res_target,short criterion
+                      ,Kist<Point> * newpointkist = NULL,bool batch=true);
+    
+    long refine_edges2(LensHndl lens,double *y_source,double r_source,GridHndl grid
+                       ,ImageInfo *imageinfo,bool *image_overlap,int Nimages,double res_target
+                       ,short criterion,bool batch=true);
+    
+    void sort_out_points(Point *i_points,ImageInfo *imageinfo,double r_source,double y_source[]);
+
+  }
 }
-void refine_crit_in_image(LensHndl lens,GridHndl grid,double r_source,double x_source[],double resolution);
-
-int refine_grid(LensHndl lens,GridHndl grid,OldImageInfo *imageinfo
-                ,unsigned long Nimages,double res_target,short criterion,bool batch=true);
-
-long refine_edges(LensHndl lens,GridHndl grid,ImageInfo *imageinfo
-                  ,int Nimages,double res_target,short criterion
-                  ,Kist<Point> * newpointkist = NULL,bool batch=true);
-
-long refine_edges2(LensHndl lens,double *y_source,double r_source,GridHndl grid
-                   ,ImageInfo *imageinfo,bool *image_overlap,int Nimages,double res_target
-                   ,short criterion,bool batch=true);
-
-void sort_out_points(Point *i_points,ImageInfo *imageinfo,double r_source,double y_source[]);
 
 
 void saveImage(LensHaloMOKA *mokahalo, GridHndl grid, bool saveprofile=true);
