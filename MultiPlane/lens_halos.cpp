@@ -1586,12 +1586,13 @@ bool LensHalo::test(){
       force_halo(alpha,&kappa,gamma,&phi,x);
       //std::cout << abs(-1.0*(m1-average_kappa)/average_gt-1.) << std::endl;
       assert( abs(-1.0*(m1-average_kappa)/average_gt-1.) < 1e-2 ); // <g_t> = <k(<R)>-<kappa(R)> test
-      //std::cout << abs(abs(-alpha[0]/r)/m1-1.)  << std::endl;
-      assert( abs(abs(-alpha[0]/r)/m1-1.) < 1e-1 ); // alpha/r ~ <kappa(R)>
-      //std::cout << abs( -alpha[0]/r - kappa ) / abs(m1-average_kappa  ) -1.  << std::endl;
+            //std::cout << abs( -alpha[0]/r - kappa ) / abs(m1-average_kappa  ) -1.  << std::endl;
       assert( abs( -alpha[0]/r - kappa ) / abs(m1-average_kappa  ) -1.  < 1 ); // alpha/r ~ <kappa(R)>
       if(!elliptical_flag){
-        assert( abs(abs(alpha[0]/r + kappa)/gamma[0]-1.) < 1e-2); // g_t = alpha/r - kappa test
+        //std::cout << abs(abs(-alpha[0]/r)/m1-1.)  << std::endl;
+        assert( abs(abs(-alpha[0]/r)/m1-1.) < 1e-1 ); // alpha/r ~ <kappa(R)>
+        //std::cout << abs(abs(alpha[0]/r + kappa)/gamma[0])-1.0 << std::endl;
+        assert( abs(abs(alpha[0]/r + kappa)/gamma[0])-1.0 < 1e-2); // g_t = alpha/r - kappa test
       }
       
       
