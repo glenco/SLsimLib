@@ -736,7 +736,7 @@ void Lens::createFieldPlanes(bool verbose)
 void Lens::insertSubstructures(PosType Rregion,PosType center[],PosType NumberDensity,PosType Mass_min,PosType Mass_max,PosType redshift,PosType alpha,PosType density_contrast,bool verbose)
 {
   
-  substructure.alpha = alpha;;
+  substructure.alpha = alpha;
   substructure.center.x[0] = center[0];
   substructure.center.x[1] = center[1];
   substructure.Mmax = Mass_max;
@@ -774,9 +774,10 @@ void Lens::insertSubstructures(PosType Rregion,PosType center[],PosType NumberDe
     throw std::runtime_error("Can only add substructure halos ones to a lens.");
   }
   
+  std::cout << "Nhalos in Lens::insertSubstructures : " << Nhalos << std::endl ;
   for(size_t ii=0;ii<Nhalos;++ii){
     
-    // random postion
+    // random position
     rr = Rregion*sqrt(ran2(seed));
     theta_pos = new PosType[3];
     
@@ -801,8 +802,15 @@ void Lens::insertSubstructures(PosType Rregion,PosType center[],PosType NumberDe
     substructure.halos.back()->setX(theta_pos);
     ++haloid;
     substructure.halos.back()->setID(haloid);
+    
+    WasInsertSubStructuresCalled = true ;
   }
   
+  
+  // Test :
+  // std::cout << " field_plane_redshifts.begin() : " << field_plane_redshifts.size() << std::endl ;
+  // for(int i = 0 ; i < field_plane_redshifts.size() ; i++) std::cout << field_plane_redshifts[i] << " " ;
+  // std::cout << std::endl ;
   
   // the new plane must be inserted in order of redshift
   std::vector<LensPlane*>::iterator it = field_planes.begin();
@@ -812,7 +820,7 @@ void Lens::insertSubstructures(PosType Rregion,PosType center[],PosType NumberDe
     ++it;
     ++itz;
     ++itd;
-  }
+  };
   
   
   it = field_planes.insert(it, new LensPlaneTree(substructure.halos.data(), Nhalos, 0, 0));
@@ -828,9 +836,16 @@ void Lens::insertSubstructures(PosType Rregion,PosType center[],PosType NumberDe
   assert(field_planes.size() == field_Nplanes);
 }
 
+
+
 void Lens::resetSubstructure(){
 
-  // !!!!need a test of whether insertSubstructures has been called;
+  // test of whether insertSubstructures has been called :
+  if(!WasInsertSubStructuresCalled)
+  {
+    ERROR_MESSAGE();
+    cout << "Lens::insertSubStructures() has to be called before Lens::resetSubStructure() !" << endl;
+  }
   
   // find which plane has the substructures on it
   int i = 0;
@@ -852,7 +867,7 @@ void Lens::resetSubstructure(){
   PosType r = substructure.Mmin/substructure.Mmax,f,mass;
   
   PosType Rmax;
-  
+
   PosType rho = substructure.rho_tidal*cosmo.rho_crit(0)*cosmo.getOmega_matter()*(1+redshift)*(1+redshift)*(1+redshift);
   
   Utilities::delete_container(substructure.halos);
