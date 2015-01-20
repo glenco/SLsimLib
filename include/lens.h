@@ -357,7 +357,10 @@ private: /* field */
   };
   
   SubStructureInfo substructure;
-	
+  
+  /// Flag to know if InsertSubStructures was called
+  bool WasInsertSubStructuresCalled = false ;
+  
 	/// Perpendicular position of halo TODO: (In proper distance?)
 	//PosType **halo_pos;
 	
