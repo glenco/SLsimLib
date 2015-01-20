@@ -809,7 +809,7 @@ void LensHalo::force_halo_asym(
 		// double xmax = Rmax/rscale;
     PosType alpha_tmp[2],kappa_tmp,gamma_tmp[2],phi_tmp;
         
-    alphakappagamma1asym(r,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);
+    alphakappagamma_asym(r,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);
     //std::cout<< "kappa_tmp: " << kappa_tmp << std::endl;
 		//alpha[0] +=  alpha_tmp[0]*prefac*xcm[0] + tmp*xcm[0];
     //alpha[1] +=  alpha_tmp[1]*prefac*xcm[1] + tmp*xcm[1];

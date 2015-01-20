@@ -734,8 +734,7 @@ PosType LensHalo::alpha_ell(PosType x,PosType theta){ // used only for calculati
 }*/
 
 
-
-
+/** \brief Pseudo-elliptical profiles by Phi(G)-Ansatz */
 void LensHalo::alphakappagamma_asym(
  PosType r         /// Radius in Mpc (not scale lengths)
  ,PosType theta    /// angle of ray
@@ -746,11 +745,12 @@ void LensHalo::alphakappagamma_asym(
  ){ // According to Ansatz II
  PosType f[3],g[4],alpha_r,alpha_theta;
  PosType x=r/rscale;
-  
  felliptical(x,fratio,theta,f,g);
  
- PosType alpha_isoG = mass*alpha_h(f[0])/x/x/pi;
- PosType kappa_isoG = mass*kappa_h(f[0])/x/x/pi;
+ PosType alpha_isoG = mass*alpha_h(f[0])/f[0]/pi;
+  
+ PosType kappa_isoG = mass*kappa_h(f[0])/f[0]/f[0]/pi;
+  
  PosType phi_isoG = mass*phi_int(f[0])/pi;
 
  alpha_r = alpha_isoG * g[1]; // with damping
@@ -758,28 +758,30 @@ void LensHalo::alphakappagamma_asym(
  
  alpha[0] = (alpha_r*cos(theta) - alpha_theta*sin(theta));
  alpha[1] = (alpha_r*sin(theta) + alpha_theta*cos(theta));
+
+ PosType G=f[0];
  
- //alpha[0] = (alpha_r*cos(theta) - alpha_theta*sin(theta));
- //alpha[1] = alpha_r*sin(theta) + alpha_theta*cos(theta);
+ /* To check for the correctness of alpha_isoG being the first derivatice of phi
+  PosType h=1e-4;
+  double phione=mass/pi*(phi_int(G+h)-phi_int(G-h))/2/h;
+  std::cout << "I: " << alpha_isoG << " "  <<  phione << " " <<std::endl;
+  */
+  
+  double phitwo=(2.0*kappa_isoG + alpha_isoG/G);
+  *kappa = -0.5*alpha_isoG*(g[2]+g[1]/x+f[2]/x/x)+0.5*phitwo*(g[1]*g[1]+f[1]*f[1]/x/x);
  
- double phitwo = ( 2.0*kappa_isoG - alpha_isoG/g[0] );
- 
- *kappa = -0.5*alpha_isoG*(g[1]/x+g[2]+f[2]/x/x)*x*g[1] + 0.5*phitwo*(g[1]*g[1]+f[1]*f[1]/x/x)*x*g[1];
- 
- double gt = -0.5*alpha_isoG*(-g[1]/x+g[2]-f[2]/x/x)*x*g[1] + 0.5*phitwo*(g[1]*g[1]-f[1]*f[1]/x/x)*x*g[1];
- double g45 = -alpha_isoG*(g[3]/x-f[1]/x/x)*x*g[1] + phitwo*g[1]*f[1]*g[1];
+ double gt =2.0*( -0.5*alpha_isoG*(g[2]-g[1]/x-f[2]/x/x) + 0.5*phitwo*(g[1]*g[1]-f[1]*f[1]/x/x));
+ double g45 = 2.0*(-alpha_isoG*(g[3]/x-f[1]/x/x) + phitwo*g[1]*f[1]*g[1]);
  
  gamma[0] = cos(2*theta)*gt - sin(2*theta)*g45;
  gamma[1] = sin(2*theta)*gt + cos(2*theta)*g45;
  
- *phi= phi_isoG; // <- THIS IS JUST A PLACEHOLDER
- 
+  *phi= -1.0*phi_isoG;
  return;
  }
 
-
-
-void LensHalo::alphakappagamma1asym( // this produces powerlaw outputs according to the correct formulae
+/** \brief Elliptical profiles by Fourier-Ansatz */
+void LensHalo::alphakappagamma1asym(
        PosType r        /// Radius in Mpc (not scale lensgths)
       ,PosType theta    /// angle of ray
       ,PosType alpha[]  /// output deflection
@@ -837,7 +839,6 @@ void LensHalo::alphakappagamma1asym( // this produces powerlaw outputs according
   
   return;
 }
-
 
 
 
