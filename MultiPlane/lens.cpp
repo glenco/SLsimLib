@@ -729,9 +729,10 @@ void Lens::createFieldPlanes(bool verbose)
 		field_planes.push_back(new LensPlaneTree(&field_halos[k1], k2-k1, sigma_back,tmp));
 		//field_planes.push_back(new LensPlaneTree(&halo_pos[k1], &field_halos[k1], k2-k1, sigma_back) );
 	}
-	
+  
 	assert(field_planes.size() == field_Nplanes);
 }
+
 
 void Lens::insertSubstructures(PosType Rregion,PosType center[],PosType NumberDensity,PosType Mass_min,PosType Mass_max,PosType redshift,PosType alpha,PosType density_contrast,bool verbose)
 {
@@ -744,7 +745,7 @@ void Lens::insertSubstructures(PosType Rregion,PosType center[],PosType NumberDe
   substructure.Ndensity = NumberDensity;
   substructure.rho_tidal = density_contrast;
   substructure.Rregion = Rregion;
-
+  
   if(alpha == -1) throw std::invalid_argument("alpha must not be -1 in Lens::createOneFieldPlane");
 
   PosType aveNhalos = NumberDensity/Rregion/Rregion/pi;
@@ -755,7 +756,7 @@ void Lens::insertSubstructures(PosType Rregion,PosType center[],PosType NumberDe
   
   size_t offset = field_halos.size();
 
-  PosType Dl = cosmo.angDist(redshift)/(1+redshift),rr,theta;
+  PosType Dl = cosmo.angDist(redshift),rr,theta;
   PosType *theta_pos;
   PosType r = Mass_min/Mass_max,f,mass;
   size_t haloid = offset;
@@ -768,15 +769,15 @@ void Lens::insertSubstructures(PosType Rregion,PosType center[],PosType NumberDe
   if(substructure.halos.size() > 0){
     // Problem: Expanding the vector is a problem if we want to add substructure
     // multiple times because if the vector is copied it will invalidate the pointers
-    // on privious planes.  To do this we would need to be able to expand the vector
+    // on previous planes. To do this we would need to be able to expand the vector
     // without copying it or have multiple substructure_halo vectors.
     
     throw std::runtime_error("Can only add substructure halos ones to a lens.");
   }
   
-  std::cout << "Nhalos in Lens::insertSubstructures : " << Nhalos << std::endl ;
-  for(size_t ii=0;ii<Nhalos;++ii){
-    
+  
+    for(size_t ii=0;ii<Nhalos;++ii){
+      
     // random position
     rr = Rregion*sqrt(ran2(seed));
     theta_pos = new PosType[3];
@@ -795,7 +796,10 @@ void Lens::insertSubstructures(PosType Rregion,PosType center[],PosType NumberDe
     
     // Rmax from tidal truncation
     Rmax = pow(mass/rho/4/pi,1.0/3.);
-    
+  
+  
+    // std::cout << "Lens::insertSubstructures : aveNhalos = " << aveNhalos << " , Nhalos = " << Nhalos << " , rho = " << rho << " , Rmax = " << Rmax << " , Dl = " << Dl << std::endl ;
+  
     //could make some other cases here, What does Xu use?
     
     substructure.halos.push_back(new LensHaloPowerLaw(mass,Rmax,redshift,Rmax,1.0,1.0,0,0));
@@ -820,20 +824,25 @@ void Lens::insertSubstructures(PosType Rregion,PosType center[],PosType NumberDe
     ++it;
     ++itz;
     ++itd;
-  };
+  }
   
   
   it = field_planes.insert(it, new LensPlaneTree(substructure.halos.data(), Nhalos, 0, 0));
   field_plane_redshifts.insert(itz,redshift);
-  field_Dl.insert(itd,Dl*(1+redshift));
+  // field_Dl.insert(itd,Dl*(1+redshift));
+  field_Dl.insert(itd,Dl);
   substructure.plane = *it;
   
   ++field_Nplanes;
 
   combinePlanes(verbose);
-  //*****************************
   
   assert(field_planes.size() == field_Nplanes);
+  
+  // Test :
+  // std::cout << "field_plane and field_plane_redshifts : " << std::endl ;
+  // for(int k=0 ; k<field_planes.size() ; k++) std::cout << field_planes[k] << " " << field_plane_redshifts[k] << std::endl ;
+  // std::cout << std::endl ;
 }
 
 
@@ -848,11 +857,12 @@ void Lens::resetSubstructure(){
   }
   
   // find which plane has the substructures on it
-  int i = 0;
-  while(field_planes[i] != substructure.plane) ++i;
+  int fplane_index = 0,lplane_index = 0;
+  while(field_planes[fplane_index] != substructure.plane) ++fplane_index;
+  while(lensing_planes[lplane_index] != substructure.plane) ++lplane_index;
   
-  PosType redshift = field_plane_redshifts[i];
-  PosType Dlsub = Dl[i];
+  PosType redshift = field_plane_redshifts[fplane_index];
+  PosType Dlsub = Dl[fplane_index]/(1+redshift);
 
   PosType aveNhalos = substructure.Ndensity/substructure.Rregion/substructure.Rregion/pi;
   
@@ -871,6 +881,7 @@ void Lens::resetSubstructure(){
   PosType rho = substructure.rho_tidal*cosmo.rho_crit(0)*cosmo.getOmega_matter()*(1+redshift)*(1+redshift)*(1+redshift);
   
   Utilities::delete_container(substructure.halos);
+  
   
   for(size_t ii=0;ii<Nhalos;++ii){
     
@@ -893,6 +904,8 @@ void Lens::resetSubstructure(){
     // Rmax from tidal truncation
     Rmax = pow(mass/rho/4/pi,1.0/3.);
     
+    // std::cout << "Lens::insertSubstructures : aveNhalos = " << aveNhalos << " , Nhalos = " << Nhalos << " , rho = " << rho << " , Rmax = " << Rmax << " , Dlsub = " << Dlsub << std::endl ;
+    
     //could make some other cases here, What does Xu use?
     
     substructure.halos.push_back(new LensHaloPowerLaw(mass,Rmax,redshift,Rmax,1.0,1.0,0,0));
@@ -901,10 +914,13 @@ void Lens::resetSubstructure(){
     substructure.halos.back()->setID(haloid);
   }
   
-  delete substructure.plane;
-  field_planes[i] = substructure.plane = new LensPlaneTree(substructure.halos.data(), Nhalos, 0, 0);
+  assert(substructure.halos.size() == Nhalos);
   
+  delete substructure.plane;
+  lensing_planes[lplane_index] = field_planes[fplane_index] = substructure.plane = new LensPlaneTree(substructure.halos.data(), Nhalos, 0, 0);
 }
+
+
 
 void Lens::addMainHaloToPlane(LensHalo* halo)
 {
