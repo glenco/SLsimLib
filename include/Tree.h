@@ -350,6 +350,8 @@ namespace Utilities{
   //std::vector<Point *> shrink_wrap(std::vector<Point *> P);
   std::vector<Point *> concave_hull(std::vector<Point *> &P,int k);
   std::vector<double *> concave_hull(std::vector<double *> &P,int k);
+  void contour_ellipse(std::vector<Point_2d> &P, Point_2d center, unsigned long Npoints ,std::vector<Point_2d> &C, double *ellipticity, double *ellipse_area) ;
+  Point_2d contour_center(std::vector<Point_2d> &P, unsigned long Npoints);
 
 	long IndexFromPosition(PosType *x,long Npixels,PosType range,const PosType *center);
 	void PositionFromIndex(unsigned long i,PosType *x,long Npixels,PosType range,PosType const *center);

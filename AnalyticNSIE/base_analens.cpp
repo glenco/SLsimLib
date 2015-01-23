@@ -978,9 +978,6 @@ PosType LensHalo::kappa_asym(PosType r, PosType theta){ /// radius in Mpc (Not x
 
 
 
-
-
-
 /* Phi(G(r)) ansatz (IV in notes)  with r-dependent modes a_n(r) [requires renormalization?]
 PosType LensHalo::renormalization(PosType r_max){ // Calculates renormalization factor in the constructor of PowerLaw and NFW only (for now)
   double fac=1;

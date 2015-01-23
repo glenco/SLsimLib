@@ -104,6 +104,8 @@ namespace ImageFinding{
       caustic_center[0] = caustic_center[1] = 0.0;
       critical_area = 0.0;
       caustic_area = 0.0;
+      contour_ell = 0.0;
+      ellipse_area = 0.0;
     };
     CriticalCurve(const CriticalCurve &p){
       //critical_curve.resize(p.critical_curve.size());
@@ -113,6 +115,9 @@ namespace ImageFinding{
       caustic_center = p.caustic_center;
       critical_area = p.critical_area;
       caustic_area = p.caustic_area;
+      ellipse_curve = p.ellipse_curve;
+      contour_ell = p.contour_ell;
+      ellipse_area = p.ellipse_area;
     }
     CriticalCurve & operator=(const CriticalCurve &p){
       if(this == &p) return *this;
@@ -123,7 +128,9 @@ namespace ImageFinding{
       caustic_center = p.caustic_center;
       critical_area = p.critical_area;
       caustic_area = p.caustic_area;
-      
+      ellipse_curve = p.ellipse_curve;
+      contour_ell = p.contour_ell;
+      ellipse_area = p.ellipse_area;
       return *this;
     }
     
@@ -131,11 +138,16 @@ namespace ImageFinding{
     
     std::vector<Point_2d> critical_curve;
     std::vector<Point_2d> caustic_curve;
+    std::vector<Point_2d> ellipse_curve;
+    
     
     Point_2d critical_center;      /// center of critical curve
     Point_2d caustic_center;   /// center of caustic curve
+    
     PosType critical_area;        /// area of critical curve (radians^2)
     PosType caustic_area;        /// area of caustic curve (radians^2)
+    PosType contour_ell;  /// axis ratio of a contour defined by the ratio of the max to min distance between center (as given by hull alg) and contour
+    PosType ellipse_area;  /// area of an ellipse with axis ratio contour_ell and major axis = max distance between center (as given by hull alg) and contour
     
     /// return true if x is inside or on the border of the caustic curve
     bool inCausticCurve(Point_2d x){
@@ -185,6 +197,8 @@ namespace ImageFinding{
                  ,double resolution,bool *orderingsuccess,bool ordercurve,bool dividecurves,double invmag_min = 0.0,bool verbose = false);
   void find_crit2(LensHndl lens,GridHndl grid,std::vector<CriticalCurve> &critcurve,int *Ncrits
                   ,double resolution,bool *orderingsuccess,bool ordercurve,bool dividecurves,double invmag_min = 0.0,bool verbose = false);
+  
+  void find_contour(LensHndl lens,GridHndl grid,std::vector<CriticalCurve> &contour,int *Ncrits,PosType resolution,bool *orderingsuccess,bool ordercurve, bool dividecurves, double kappa_val=0.0,bool verbose = false);
   
   namespace Temporary{
     //PosType *y;

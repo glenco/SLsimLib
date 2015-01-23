@@ -2481,5 +2481,63 @@ std::vector<Point *> Utilities::concave_hull(std::vector<Point *> &P,int k )
   }
 
 
+/** \brief Returns axis ratio, area and points of an ellipse engulfed by some contour (e.g. a contour of same convergence calculated with find_contour).
+ 
+    The axis ratio of the ellipse b/a is equal to the ratio of the distances between center and the nearest contour point (i.e. b) and between center and the farthest contour point (i.e. a).
+    NOTE that the center used to calculate a and b is an input parameter. The definition of the center is crucial to the meaning of above output parameters. The center of the convex_hull
+    produces for even slightly distorted hulls significant offsets resulting in overestimated major axis values (a).
+    The function Utilities::contour_center() calculates the center as the midpoint between the two points in the contour that are farthest apart from one another, which gives already more reliable results.
+    The output vector describing the ellipse is resized to match the size of the contour vector.
+ 
+ */
+
+void Utilities::contour_ellipse(std::vector<Point_2d> &P, Point_2d center, unsigned long Npoints ,std::vector<Point_2d> &C, double *ellipticity, double *ellipse_area){
+  double nearest_contour_pnt=1E12;
+  double mostdistant_contour_pnt=0.0;
+  double tmp_dist=1E12;
+  double t,pa,farpoint[2],nearpoint[2];
+  
+  
+  for(size_t jj=0;jj<Npoints;++jj){
+    tmp_dist=sqrt((P[jj].x[0]-center.x[0])*(P[jj].x[0]-center.x[0])+(P[jj].x[1]-center.x[1])*(P[jj].x[1]-center.x[1]));
+    if (nearest_contour_pnt>tmp_dist && tmp_dist!=0){nearest_contour_pnt=tmp_dist;nearpoint[0]=P[jj].x[0];nearpoint[1]=P[jj].x[1];}
+    if (mostdistant_contour_pnt<tmp_dist){mostdistant_contour_pnt=tmp_dist;farpoint[0]=P[jj].x[0];farpoint[1]=P[jj].x[1];}
+  }
+  *ellipticity=nearest_contour_pnt/mostdistant_contour_pnt;
+  *ellipse_area=nearest_contour_pnt*mostdistant_contour_pnt*pi;
+  pa=atan2f(farpoint[1]-center.x[1],farpoint[0]-center.x[0]);
+  
+  C.resize(Npoints);
+  
+  for(size_t jj=0;jj<Npoints;++jj){
+      t=jj*2.*pi/Npoints;
+      C[jj].x[0]=cos(pa)*mostdistant_contour_pnt*cos(t)-sin(pa)*nearest_contour_pnt*sin(t);
+      C[jj].x[1]=sin(pa)*mostdistant_contour_pnt*cos(t)+cos(pa)*nearest_contour_pnt*sin(t);
+  }
+}
+
+/** \brief Returns the center of a contour defined as the midpoint between the two points in the contour that are farthest apart from one another.
+ 
+    The performance of the algorithm is ~O(N^2). Less naive methods go like O(N) at best. Most commonly a combined convex hull plus rotating calipers algorithm is used.
+    Since we have the convex_hull already, we only need to implement the latter algorithm.
+ */
 
 
+Point_2d Utilities::contour_center(std::vector<Point_2d> &P, unsigned long Npoints){
+  double dPx,dPy,dist,jx[2],ix[2];
+  double maxdist=0.0;
+  Point_2d center;
+  
+  for(size_t jj=0;jj<Npoints;++jj){
+    for(size_t ii=0;ii<Npoints;++ii){
+      dPx=P[jj].x[0]-P[ii].x[0];
+      dPy=P[jj].x[1]-P[ii].x[1];
+      dist=sqrt(dPx*dPx+dPy*dPy);
+      if (dist>maxdist){maxdist=dist;jx[0]=P[jj].x[0];jx[1]=P[jj].x[1];ix[0]=P[ii].x[0];ix[1]=P[ii].x[1];}
+    }
+  }
+  
+  center.x[0]=0.5*(ix[0]+jx[0]);
+  center.x[1]=0.5*(ix[1]+jx[1]);
+  return center;
+}
