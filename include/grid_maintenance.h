@@ -110,7 +110,8 @@ namespace ImageFinding{
     CriticalCurve(const CriticalCurve &p){
       //critical_curve.resize(p.critical_curve.size());
       critical_curve = p.critical_curve;
-      caustic_curve = p.caustic_curve;
+      caustic_curve_outline = p.caustic_curve_outline;
+      caustic_curve_intersecting = p.caustic_curve_intersecting;
       critical_center = p.critical_center;
       caustic_center = p.caustic_center;
       critical_area = p.critical_area;
@@ -123,7 +124,8 @@ namespace ImageFinding{
       if(this == &p) return *this;
       
       critical_curve = p.critical_curve;
-      caustic_curve = p.caustic_curve;
+      caustic_curve_outline = p.caustic_curve_outline;
+      caustic_curve_intersecting = p.caustic_curve_intersecting;
       critical_center = p.critical_center;
       caustic_center = p.caustic_center;
       critical_area = p.critical_area;
@@ -137,7 +139,8 @@ namespace ImageFinding{
     // !!!! need assignment oportor
     
     std::vector<Point_2d> critical_curve;
-    std::vector<Point_2d> caustic_curve;
+    std::vector<Point_2d> caustic_curve_outline;
+    std::vector<Point_2d> caustic_curve_intersecting;
     std::vector<Point_2d> ellipse_curve;
     
     
@@ -151,7 +154,7 @@ namespace ImageFinding{
     
     /// return true if x is inside or on the border of the caustic curve
     bool inCausticCurve(Point_2d x){
-      return Utilities::incurve(x.x,caustic_curve);
+      return Utilities::incurve(x.x,caustic_curve_outline);
     }
     /// return true if x is inside or on the border of the critical curve
     bool inCriticalCurve(Point_2d x){
@@ -165,9 +168,13 @@ namespace ImageFinding{
                                    ,std::vector<Point_2d> &y  /// output vector of points
                                    ,Utilities::RandomNumbers_NR &rng  /// random number generator
                                    );
+    /// find rectangular region enclosing critical curve
+    void CritRange(Point_2d &p1,Point_2d &p2);
+    /// find rectangular region enclosing caustic curve
+    void CausticRange(Point_2d &p1,Point_2d &p2);
+  
     
   private:
-    void init();
     Point_2d p1,p2;
   };
   

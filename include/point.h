@@ -315,13 +315,13 @@ struct Point_2d{
     x[1]+=p.x[1];
     return *this;
   }
-  Point_2d  operator+(const Point &p){
+  Point_2d  operator+(const Point_2d &p) const{
     Point_2d tmp;
     tmp.x[0] = x[0] + p.x[0];
     tmp.x[1] = x[1] + p.x[1];
     return tmp;
   }
-  Point_2d  operator-(const Point &p){
+  Point_2d  operator-(const Point_2d &p) const{
     Point_2d tmp;
     tmp.x[0] = x[0] - p.x[0];
     tmp.x[1] = x[1] - p.x[1];

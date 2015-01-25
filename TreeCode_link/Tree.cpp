@@ -872,7 +872,7 @@ bool TreeStruct::TreeWalkStep(bool allowDescent){
 void ImageFinding::CriticalCurve::RandomSourceWithinCaustic(int N,std::vector<Point_2d> &y
                                                             ,Utilities::RandomNumbers_NR &rng){
 
-  init();
+  CausticRange(p1,p2);
   y.resize(N);
   for(int ii=0;ii<N;++ii){
     do{
@@ -882,16 +882,27 @@ void ImageFinding::CriticalCurve::RandomSourceWithinCaustic(int N,std::vector<Po
   }
 }
 
-void ImageFinding::CriticalCurve::init(){
-  p1 = p2 = caustic_curve[0];
+void ImageFinding::CriticalCurve::CritRange(Point_2d &my_p1,Point_2d &my_p2){
+  my_p1 = my_p2 = critical_curve[0];
   
-  for(size_t ii=1;ii < caustic_curve.size();++ii){
-    if(caustic_curve[ii][0] < p1[0] ) p1[0] = caustic_curve[ii][0];
-    if(caustic_curve[ii][0] > p2[0] ) p2[0] = caustic_curve[ii][0];
-    if(caustic_curve[ii][1] < p1[1] ) p1[1] = caustic_curve[ii][1];
-    if(caustic_curve[ii][1] > p2[1] ) p2[1] = caustic_curve[ii][1];
+  for(size_t ii=1;ii < critical_curve.size();++ii){
+    if(critical_curve[ii][0] < my_p1[0] ) my_p1[0] = critical_curve[ii][0];
+    if(critical_curve[ii][0] > my_p2[0] ) my_p2[0] = critical_curve[ii][0];
+    if(critical_curve[ii][1] < my_p1[1] ) my_p1[1] = critical_curve[ii][1];
+    if(critical_curve[ii][1] > my_p2[1] ) my_p2[1] = critical_curve[ii][1];
   }
 }
+void ImageFinding::CriticalCurve::CausticRange(Point_2d &my_p1,Point_2d &my_p2){
+  my_p1 = my_p2 = caustic_curve_outline[0];
+  
+  for(size_t ii=1;ii < caustic_curve_outline.size();++ii){
+    if(caustic_curve_outline[ii][0] < my_p1[0] ) my_p1[0] = caustic_curve_outline[ii][0];
+    if(caustic_curve_outline[ii][0] > my_p2[0] ) my_p2[0] = caustic_curve_outline[ii][0];
+    if(caustic_curve_outline[ii][1] < my_p1[1] ) my_p1[1] = caustic_curve_outline[ii][1];
+    if(caustic_curve_outline[ii][1] > my_p2[1] ) my_p2[1] = caustic_curve_outline[ii][1];
+  }
+}
+
 
 
 
