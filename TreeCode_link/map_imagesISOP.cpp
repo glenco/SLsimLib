@@ -241,13 +241,13 @@ void ImageFinding::map_imagesISOP(
 		//printf("   %i area = %e\n",i,imageinfo[i].area);
 		assert(imageinfo[i].area >= 0);
 	}
-  
+  /*
     std::cout << "number of IF_routines::IntegrateFluxInCell failures "<< count << "  "
     << count*100.0/count_tot << "%" << std::endl;
     std::cout << "    "<< count_moreNeighbors*100.0/count_tot << "% not 8 neighbors" << std::endl;
     std::cout << "    "<< count_isopfail*100.0/count_tot << "% isop expansion fails" << std::endl;
     std::cout << "    "<< count_res*100.0/count_tot << "% pixel too large" << std::endl;
-    
+    */
   if(count*0){
 
 	/********************************************************
