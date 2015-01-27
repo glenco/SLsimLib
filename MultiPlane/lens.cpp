@@ -817,22 +817,28 @@ void Lens::insertSubstructures(PosType Rregion,PosType center[],PosType NumberDe
   // std::cout << std::endl ;
   
   // the new plane must be inserted in order of redshift
-  std::vector<LensPlane*>::iterator it = field_planes.begin();
-  std::vector<PosType>::iterator itz = field_plane_redshifts.begin();
-  std::vector<PosType>::iterator itd = field_Dl.begin();
-  while(*itz < redshift){
-    ++it;
-    ++itz;
-    ++itd;
+  if(field_Nplanes != 0)
+  {
+    std::vector<LensPlane*>::iterator it = field_planes.begin();
+    std::vector<PosType>::iterator itz = field_plane_redshifts.begin();
+    std::vector<PosType>::iterator itd = field_Dl.begin();
+    while(*itz < redshift){
+      ++it;
+      ++itz;
+      ++itd;
+    }
+    it = field_planes.insert(it, new LensPlaneTree(substructure.halos.data(), Nhalos, 0, 0));
+    field_plane_redshifts.insert(itz,redshift);
+    field_Dl.insert(itd,Dl);
+    substructure.plane = *it;
   }
-  
-  
-  it = field_planes.insert(it, new LensPlaneTree(substructure.halos.data(), Nhalos, 0, 0));
-  field_plane_redshifts.insert(itz,redshift);
-  // field_Dl.insert(itd,Dl*(1+redshift));
-  field_Dl.insert(itd,Dl);
-  substructure.plane = *it;
-  
+  else // in the case where no field plane exists
+  {
+    field_planes.push_back(new LensPlaneTree(substructure.halos.data(), Nhalos, 0, 0));
+    field_plane_redshifts.push_back(redshift);
+    field_Dl.push_back(Dl);
+    substructure.plane = field_planes[0];
+  }
   ++field_Nplanes;
 
   combinePlanes(verbose);
@@ -843,6 +849,7 @@ void Lens::insertSubstructures(PosType Rregion,PosType center[],PosType NumberDe
   // std::cout << "field_plane and field_plane_redshifts : " << std::endl ;
   // for(int k=0 ; k<field_planes.size() ; k++) std::cout << field_planes[k] << " " << field_plane_redshifts[k] << std::endl ;
   // std::cout << std::endl ;
+
 }
 
 
