@@ -111,7 +111,7 @@ The mean functions used for image finding are
 
 -   `find_images_kist()`,
 -   `find_images_microlens()` and 
--   `map_images()`.
+-   `map_images_kist()`.
 And for finding critical curves / caustics
 -   `find_crit()` or 
 -   `find_crit2()`
@@ -128,3 +128,4 @@ on sources (kappa, gamma, etc.). The ImageInfo structure has some information
 about the images found and contains a linked list of all the points within the
 image. Each point contains information about the kappa, gamma, source position,
 time-delay and in some cases the the surface brightness at that point.
+# CosmoLib

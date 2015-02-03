@@ -304,13 +304,6 @@ void PrintImages(ImageInfo *images,long Nimages);
 
 // in image_finder.c
 
-/*void find_images(PosType *y_source,PosType r_source,GridHndl grid
-		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
-		,PosType initial_size,bool splitimages,short edge_refinement
-		,bool verbose);
-short image_finder(PosType *y_source,PosType r_source,TreeHndl s_tree,TreeHndl i_tree
-		,int *Nimages,ImageInfo *imageinfo,const int NimageMax,unsigned long *Nimagepoints
-		,short splitparities,short true_images);*/
 void findborders2(TreeHndl i_tree,OldImageInfo *imageinfo);
 void findborders3(TreeHndl i_tree,OldImageInfo *imageinfo);
 
