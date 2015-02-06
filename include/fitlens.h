@@ -8,6 +8,7 @@
 #ifndef FITLENS_H_
 #define FITLENS_H_
 
+#include <mutex>
 #include <analytic_lens.h>
 
 
