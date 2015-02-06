@@ -1985,8 +1985,8 @@ std::vector<Point *> Utilities::convex_hull(std::vector<Point *> &P)
   std::vector<Point *> H(2*n);
   
   // Sort points lexicographically
-  std::sort(P.begin(), P.end(), [](double *p1,double *p2){
-    return p1[0] < p2[0];});
+  std::sort(P.begin(), P.end(), [](Point *p1,Point *p2){
+    return p1->x[0] < p2->x[0];});
 
   
   // Build lower hull
@@ -2315,7 +2315,7 @@ std::vector<Point *> Utilities::concave_hull(std::vector<Point *> &P,int k )
     std::vector<Point *> Res(P);
     hull.resize(0);
     std::sort(Res.rbegin(), Res.rend(),
-              [](double *p1,double *p2){return p1[1] < p2[1];});
+              [](Point *p1,Point *p2){return p1->x[1] < p2->x[1];});
 
     hull.push_back(Res.back());
     
