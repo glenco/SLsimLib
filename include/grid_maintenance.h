@@ -172,7 +172,46 @@ namespace ImageFinding{
     void CritRange(Point_2d &p1,Point_2d &p2);
     /// find rectangular region enclosing caustic curve
     void CausticRange(Point_2d &p1,Point_2d &p2);
-  
+    
+    /// find 3 measures of the critical curve radius
+    void CriticalRadius(PosType &rmax,PosType &rmin,PosType &rave) const{
+      rave = 0;
+      rmax = 0;
+      rmin = std::numeric_limits<double>::max();
+      PosType rad;
+      
+      for(size_t ii=0; ii< critical_curve.size(); ++ii){
+        Point_2d tmp = critical_center - critical_curve[ii];
+        
+        rad = tmp.length();
+        
+        rave += rad;
+        if(rad < rmin) rmin = rad;
+        if(rad > rmax) rmax = rad;
+      }
+      
+      rave /= critical_curve.size();
+    }
+    /// find 3 measures of the caustic curve radius
+    void CausticRadius(PosType &rmax,PosType &rmin,PosType &rave) const{
+      rave = 0;
+      rmax = 0;
+      rmin = std::numeric_limits<double>::max();
+      PosType rad;
+      
+      for(size_t ii=0; ii< caustic_curve_outline.size(); ++ii){
+        Point_2d tmp = caustic_center - caustic_curve_outline[ii];
+        
+        rad = tmp.length();
+        
+        rave += rad;
+        if(rad < rmin) rmin = rad;
+        if(rad > rmax) rmax = rad;
+      }
+      
+      rave /= caustic_curve_outline.size();
+    }
+
     
   private:
     Point_2d p1,p2;

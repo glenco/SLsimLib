@@ -244,21 +244,65 @@ void CausticData::printfile(std::string filename,std::string paramfile,double fi
   }
 }
 
+/*ImageFinding::log_caustic_data(std::string filename,std::string paramfile,double fieldofview,double minscalestd::vector<ImageFinding::CriticalCurve> critcurves){
+  
+  std::ofstream catalog_caustic(filename.c_str());
+  
+  catalog_caustic << "# column 1 redshift of source plane" << std::endl;
+  catalog_caustic << "# column 2 critical curve center x position in degrees" << std::endl;
+  catalog_caustic << "# column 3 critical curve center y position in degrees" << std::endl;
+  catalog_caustic << "# column 4 critical curve average radius" << std::endl;
+  catalog_caustic << "# column 5 critical curve max radius" << std::endl;
+  catalog_caustic << "# column 6 critical curve min radius" << std::endl;
+  catalog_caustic << "# column 7 critical curve area" << std::endl;
+  catalog_caustic << "# column 8 caustic center x position in degrees" << std::endl;
+  catalog_caustic << "# column 9 caustic center y position in degrees" << std::endl;
+  catalog_caustic << "# column 10 caustic average radius" << std::endl;
+  catalog_caustic << "# column 11 caustic max radius" << std::endl;
+  catalog_caustic << "# column 12 caustic min radius" << std::endl;
+  catalog_caustic << "# column 13 caustic area" << std::endl;
+  catalog_caustic << "# parameter file: " << paramfile << std::endl;
+  
+  catalog_caustic << "# " << " all critical lines above a scale of " << 180*60*60*minscale/pi << " arcsec,  field of view: " << fieldofview << " square degrees" << std::endl;
+  catalog_caustic << "# " << " number of caustics found: " << data.size() << std::endl;
+
+  for(size_t i = 0; i < critcurve.size(); ++i){
+    if(critcurve[i].crit_radius[0] != 0){
+      catalog_caustic << critcurve[i].redshift
+      << " " << critcurve[i].crit_center[0] << " " << critcurve[i].crit_center[1]
+      << " " << critcurve[i].crit_radius[0] << " " << critcurve[i].crit_radius[2] << " " << critcurve[i].crit_radius[1]
+      << " " << critcurve[i].crit_area
+      << " " << critcurve[i].caustic_center[0] << " " << critcurve[i].caustic_center[1]
+      << " " << critcurve[i].caustic_radius[0] << " " << critcurve[i].caustic_radius[2] << " " << critcurve[i].caustic_radius[1]
+      << " " << critcurve[i].caustic_area
+      << std::endl;
+    }
+  }
+
+}*/
+
 void CausticData::SortByCritSize(){
   cummulative_area.resize(0);  // this stops RandomLens from being miss used.
-  std::sort(data.begin(),data.end(),CausticData::comparcritsize);
+  std::sort(data.begin(),data.end(),[](const CausticStructure &c1,const CausticStructure &c2){
+              return (c1.crit_radius[0] > c2.crit_radius[0]);});
+
   SetSearchTree();
 }
 
 void CausticData::SortByCritArea(){
   cummulative_area.resize(0);  // this stops RandomLens from being miss used.
-  std::sort(data.begin(),data.end(),CausticData::comparcritarea);
+  //std::sort(data.begin(),data.end(),CausticData::comparcritarea);
+
+  std::sort(data.begin(),data.end(),[](const CausticStructure &c1,const CausticStructure &c2){
+    return (c1.crit_area > c2.crit_area);});
   SetSearchTree();
 }
 
 void CausticData::SortByCausticArea(){
   cummulative_area.resize(0);  // this stops RandomLens from being miss used.
-  std::sort(data.begin(),data.end(),CausticData::comparcausticarea);
+  //std::sort(data.begin(),data.end(),CausticData::comparcausticarea);
+  std::sort(data.begin(),data.end(),[](const CausticStructure &c1,const CausticStructure &c2){
+    return (c1.caustic_area > c2.caustic_area);});
   SetSearchTree();
 }
 

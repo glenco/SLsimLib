@@ -356,6 +356,11 @@ struct Point_2d{
     return x[0]*p.x[1] - x[1]*p.x[0];
   }
   
+  /// length
+  PosType length(){
+    return sqrt(x[0]*x[0] - x[1]*x[1]);
+  }
+  
   PosType x[2];
   PosType & operator[](size_t i){return x[i];}
 };

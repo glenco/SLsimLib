@@ -20,15 +20,13 @@ struct CausticStructure{
   CausticStructure(){}
   CausticStructure(const CausticStructure &tmp){
     redshift = tmp.redshift;
-    crit_center[0] = tmp.crit_center[0];
-    crit_center[1] = tmp.crit_center[1];
+    crit_center = tmp.crit_center;
     crit_radius[0] = tmp.crit_radius[0];
     crit_radius[1] = tmp.crit_radius[1];
     crit_radius[2] = tmp.crit_radius[2];
     crit_area = tmp.crit_area;
 
-    caustic_center[0] = tmp.caustic_center[0];
-    caustic_center[1] = tmp.caustic_center[1];
+    caustic_center = tmp.caustic_center;
     caustic_radius[0] = tmp.caustic_radius[0];
     caustic_radius[1] = tmp.caustic_radius[1];
     caustic_radius[2] = tmp.caustic_radius[2];
@@ -38,14 +36,14 @@ struct CausticStructure{
   /// redshift of source plane
   double redshift;
   /// center of critical line in radians
-  double crit_center[2];
+  Point_2d crit_center;
   /// average radius, smallest radius and largest radius of critical curve
   double crit_radius[3];
   /// area of critical curve in radian^2
   double crit_area;
   
   /// center of caustic curve in radians
-  double caustic_center[2];
+  Point_2d caustic_center;
   /// average radius, smallest radius and largest radius of caustic curve
   double caustic_radius[3];
   /// area of caustic curve in radian^2
@@ -125,17 +123,17 @@ public:
 
   bool findNearestCrit(PosType x[2],size_t &index);
   
-  static PosType *causticCenter(CausticStructure &tmp){return tmp.caustic_center;}
-  static PosType *critCenter(CausticStructure &tmp){return tmp.crit_center;}
-  static bool comparcritsize(const CausticStructure &caust1,const CausticStructure &caust2){
-    return (caust1.crit_radius[0] > caust2.crit_radius[0]);
-  }
-  static bool comparcritarea(const CausticStructure &caust1,const CausticStructure &caust2){
-    return (caust1.crit_area > caust2.crit_area);
-  }
-  static bool comparcausticarea(const CausticStructure &caust1,const CausticStructure &caust2){
-    return (caust1.caustic_area > caust2.caustic_area);
-  }
+  static PosType *causticCenter(CausticStructure &tmp){return tmp.caustic_center.x;}
+  static PosType *critCenter(CausticStructure &tmp){return tmp.crit_center.x;}
+//  static bool comparcritsize(const CausticStructure &caust1,const CausticStructure &caust2){
+//    return (caust1.crit_radius[0] > caust2.crit_radius[0]);
+//  }
+//  static bool comparcritarea(const CausticStructure &caust1,const CausticStructure &caust2){
+//    return (caust1.crit_area > caust2.crit_area);
+//  }
+//  static bool comparcausticarea(const CausticStructure &caust1,const CausticStructure &caust2){
+//    return (caust1.caustic_area > caust2.caustic_area);
+//  }
 
 private:
   
@@ -151,8 +149,8 @@ private:
   
 };
 
-bool comparcritsize(const CausticStructure &caust1,const CausticStructure &caust2);
-bool comparcritarea(const CausticStructure &caust1,const CausticStructure &caust2);
-bool comparcausticarea(const CausticStructure &caust1,const CausticStructure &caust2);
+//bool comparcritsize(const CausticStructure &caust1,const CausticStructure &caust2);
+//bool comparcritarea(const CausticStructure &caust1,const CausticStructure &caust2);
+//bool comparcausticarea(const CausticStructure &caust1,const CausticStructure &caust2);
 
 #endif /* defined(__SLsimLib__causticdata__) */
