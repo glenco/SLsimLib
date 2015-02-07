@@ -156,10 +156,31 @@ namespace ImageFinding{
     bool inCausticCurve(Point_2d x){
       return Utilities::incurve(x.x,caustic_curve_outline);
     }
+    
     /// return true if x is inside or on the border of the critical curve
     bool inCriticalCurve(Point_2d x){
       return Utilities::incurve(x.x,critical_curve);
     }
+
+    /// return true if x is strictly inside (entirely) the caustic curve
+    bool EntirelyinCausticCurve(Point_2d x, PosType sourceRadius)
+    {
+      int i; // index going over the different points of the caustic curve
+      bool IsInCurve = Utilities::incurve(x.x,caustic_curve_outline);
+      
+      if(IsInCurve)
+      {
+        for(
+      }
+      else return false ;
+    }
+    
+    /// return true if x is strictly inside (entirely) the critical curve
+    bool EntirelyinCriticalCurve(Point_2d x, PosType sourceRadius)
+    {
+      return Utilities::incurve(x.x,critical_curve);
+    }
+    
     
     /** \brief Returns a vector of random point within the caustic.  It is more efficient to call this once for many point rather than repeatedly one at a time.
      */
@@ -168,6 +189,13 @@ namespace ImageFinding{
                                    ,std::vector<Point_2d> &y  /// output vector of points
                                    ,Utilities::RandomNumbers_NR &rng  /// random number generator
                                    );
+    /** \brief Returns a vector of random point strictly within the caustic (i.e. not touching the border).  It is more efficient to call this once for many point rather than repeatedly one at a time.
+     */
+    void RandomSourceStrictlyWithinCaustic(int N                              /// number of points needed
+                                           ,std::vector<Point_2d> &y          /// output vector of points
+                                           ,Utilities::RandomNumbers_NR &rng  /// random number generator
+                                           ,PosType sourceRadius              /// radius of the source
+                                           );
     /// find rectangular region enclosing critical curve
     void CritRange(Point_2d &p1,Point_2d &p2);
     /// find rectangular region enclosing caustic curve
