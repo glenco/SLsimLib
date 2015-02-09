@@ -41,6 +41,100 @@ void LensHaloFit::FindLensSimple(
   
   delete[] imageinfo;
 }
+
+
+
+/** \ingroup FitLens
+ *
+ *  \brief Same as FindLensSimple but with some tests in it.
+ *
+ *
+ */
+
+void LensHaloFit::SafeFindLensSimple(
+                                 int Nimages               /// Number of images to be fit
+                                 ,Point *image_positions   /// Array of points with point[i].x set to the image positions
+                                 ,double *y                /// output source position
+                                 ,double **dx_sub          /// dx_sub[Nimages][2] pre-calculated deflections caused by substructures or external masses at each image
+                                 ,int SafetyNum            /// integer of the number of time you want to check the modes
+                                 ,bool verbose             /// verbose mode switch
+){
+  // Array to store the modes over the different calls of FindLensSimple :
+  PosType ModesMin [perturb_Nmodes] ; // Minimal value for the modes (among all calls)
+  PosType ModesMax [perturb_Nmodes] ; // Maximal value for the modes (among all calls)
+  PosType ModesAve [perturb_Nmodes] ; // Average value for the modes (among all calls)
+  const double ToleranceModes = 0.1 ; // Tolerance on the ratio (Max-Min)/Average for the modes
+  
+  // Doing the proper initialisation of these quantities :
+  for(int k=0;k<perturb_Nmodes;++k)
+  {
+    ModesMin[k] = 1.e100 ; // So the modes have to be less than that !
+    ModesMax[k] = -1.e100 ; // So the modes have to be more than that !
+    ModesAve[k] = 0. ;
+  }
+  
+  // Defining the imageinfo used after :
+  ImageInfo* imageinfo = new ImageInfo[Nimages];
+  for(int i=0;i<Nimages;++i){
+    imageinfo[i].centroid[0] = image_positions[i].x[0];
+    imageinfo[i].centroid[1] = image_positions[i].x[1];
+  }
+  
+  // We compute the modes SafetyNum times and retain the min, the max, and the sum :
+  for(int i=0;i<SafetyNum;i++)
+  {
+    // Calling FindLensSimple (the one that really computes the modes) :
+    FindLensSimple(imageinfo,Nimages,y,dx_sub);
+    
+    // Filling the check tables :
+    for(int k=0;k<perturb_Nmodes;++k)
+    {
+      if(perturb_modes[k]<ModesMin[k]) ModesMin[k] = perturb_modes[k];
+      if(perturb_modes[k]>ModesMax[k]) ModesMax[k] = perturb_modes[k];
+      ModesAve[k] += perturb_modes[k]; // Summing the modes
+    }
+    std::cout << std::endl ;
+  }
+  // Dividing by the number of values to get the average :
+  for(int k=0;k<perturb_Nmodes;++k) ModesAve[k] /= perturb_Nmodes ;
+  
+  // We compare the min and max values with the average :
+  for(int k=0;k<perturb_Nmodes;++k)
+  {
+    if(abs(ModesMax[k]-ModesMin[k]) > abs(ToleranceModes*ModesAve[k]))
+    {
+      ERROR_MESSAGE();
+      std::cout << "Error of unstability in SafeFindLensSimple !" << std::endl ;
+      exit(0);
+    }
+  }
+  
+  if(verbose)
+  {
+    std::cout << "Values of the modes :" << std::endl ;
+    std::cout << "Ave :" ;
+    for(int k=0;k<perturb_Nmodes;++k) std::cout << perturb_modes[k] << " " ;
+    std::cout << std::endl << "Min :" ;
+    for(int k=0;k<perturb_Nmodes;++k) std::cout << ModesMin[k] << " " ;
+    std::cout << std::endl << "Max :" ;
+    for(int k=0;k<perturb_Nmodes;++k) std::cout << ModesMax[k] << " " ;
+    std::cout << std::endl ;
+  }
+  
+  // OTHER TESTS ?
+  // E.G. : testing the image positions are consistent when traced back to the source plane.
+  
+  
+  // Otherwise we keep the last computed modes and display them :
+  std::cout << std::endl << "Perturbation modes (in LensHaloFit::FindLensSimple)" << std::endl;
+  for(int i=0;i<perturb_Nmodes;++i) std::cout << perturb_modes[i] << " " ;
+  std::cout << std::endl;
+  
+  
+  delete[] imageinfo;
+}
+
+
 /** \ingroup FitLens
  *
  *  \brief Wrapper that allows simple lens to be found with a single
@@ -111,7 +205,7 @@ void LensHaloFit::FindLensSimple(
   
   //ERROR_MESSAGE();
   ElliptisizeLens(Nimages,Nsources,1,pairing,xob,x_center,xg,0,perturb_beta,perturb_Nmodes
-                  ,mods,dx_sub,&re2,q); // The -1 in after perturb_Nmodes is important !
+                  ,mods,dx_sub,&re2,q); // The -1 in after perturb_Nmodes WAS MAKING FINDLENSSIMPLE UNSTABLE !
   
   // Assigning the modes :
   for(i=1;i<perturb_Nmodes;++i) perturb_modes[i] = mods[i];

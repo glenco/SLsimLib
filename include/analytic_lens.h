@@ -27,6 +27,7 @@ public:
   void PrintLens(bool show_substruct,bool show_stars);
 
   void FindLensSimple(int Nimages,Point *image_positions,double *y,double **dx_sub);
+  void SafeFindLensSimple(int Nimages,Point *image_positions,double *y,double **dx_sub,int SafetyNum,bool verbose);
   void FindLensSimple(ImageInfo *imageinfo ,int Nimages ,double *y,double **dx_sub);
   
   // these need to be written so that they translate between modes and these quantities
