@@ -244,7 +244,7 @@ namespace ImageFinding{
   void find_crit2(LensHndl lens,GridHndl grid,std::vector<CriticalCurve> &critcurve,int *Ncrits
                   ,double resolution,bool *orderingsuccess,bool ordercurve,bool dividecurves,double invmag_min = 0.0,bool verbose = false);
   
-  void find_contour(LensHndl lens,GridHndl grid,std::vector<CriticalCurve> &contour,int *Ncrits,PosType resolution,bool *orderingsuccess,bool ordercurve, bool dividecurves, double kappa_val=0.0,bool verbose = false);
+  void find_contour(LensHndl lens,GridHndl grid,std::vector<CriticalCurve> &contour,int *Ncrits,PosType resolution,bool *orderingsuccess,bool ordercurve, bool dividecurves, double contour_value,LensingVariable contour_type,bool verbose = false);
   
   namespace Temporary{
     //PosType *y;
