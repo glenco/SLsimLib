@@ -13,7 +13,7 @@
 
 
 void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *xg,double beta
-		 ,int N,int *degen,double *mod,double **v,double **dx);
+               ,int N,int *degen,double *mod,double **v,double **dx);
 double modfind(double theta);
 //void find_crit(double *mod,int Nmod,int Nlenses,double Re2,double *x2);
 void deflection_total(double *ximage,double *angle,int fulllens,double sdeg,double *ang_lens
