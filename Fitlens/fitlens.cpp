@@ -401,7 +401,7 @@ double LensHaloFit::ElliptisizeLens(
   find_lens(NimagesT,NsourcesT,pairingT,xobT,x_center,betaT,NmodT,&degenT,modT,vT,dx_subT);
   
   //std::printf("found model\n");
-  for(i=1;i<=Nmod+2*Nsource+1;++i) mod[i] = modT[i];
+  for(i=1;i<=Nmod+2*Nsources+1;++i) mod[i] = modT[i];
   
   /*
    * find the most elliptical model amongst the degenerate models that
