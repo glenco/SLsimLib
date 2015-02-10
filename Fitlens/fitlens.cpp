@@ -378,7 +378,7 @@ double LensHaloFit::ElliptisizeLens(
   NmodT=Nmod;
   sigGT=sigG;
   
-  for(i=1;i<=Nmod+2*Nsources;++i) mod[i]=0.0;
+  for(i=1;i<=Nmod+2*Nsources+1;++i) mod[i]=0.0;
   
   for(i=0;i<Nimages;++i){
     xobT[i][0] = xob[i][0];
@@ -401,7 +401,7 @@ double LensHaloFit::ElliptisizeLens(
   find_lens(NimagesT,NsourcesT,pairingT,xobT,x_center,betaT,NmodT,&degenT,modT,vT,dx_subT);
   
   //std::printf("found model\n");
-  for(i=1;i<=Nmod+2*Nsources;++i) mod[i] = modT[i];
+  for(i=1;i<=Nmod+2*Nsource+1;++i) mod[i] = modT[i];
   
   /*
    * find the most elliptical model amongst the degenerate models that
@@ -451,7 +451,7 @@ double LensHaloFit::ElliptisizeLens(
     x_center[0] = q[3];
     x_center[1] = q[4];
   }
-  for(i=1;i<=Nmod+2*Nsources;++i) mod[i]=modTT[i];
+  for(i=1;i<=Nmod+2*Nsources+1;++i) mod[i]=modTT[i];
   
   //std::printf("iter = %i\n",iter);
   free_ivector(pairingT,0,Nimages-1);
@@ -538,7 +538,7 @@ double minEllip(double *par){
   
   if( sm < oldsm || oldsm < 0.0){
     oldsm=sm;
-    for(i=1;i<=NmodT+2*NsourcesT;++i) modTT[i]=modT[i];
+    for(i=1;i<=NmodT+2*NsourcesT+1;++i) modTT[i]=modT[i];
   }
   //std::printf("q=%e   theta=%e gamma=%e %e\n",q,theta*180/pi,modT[1],modT[2]);
   //std::printf("%e %e %e %e %e %e\n",modoT[3],modoT[4],modoT[5],modoT[6],modoT[7],modoT[8]);
@@ -664,10 +664,10 @@ void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *x_cent
    * mod[i] + a_1 v[i][1] + ... + a_degen v[i][degen] is a solution
    **/
   
-  for(i=1,j=0;i<=Nmodes+2*Nsources;++i){
+  for(i=1,j=0;i<=Nmodes+2*Nsources+1;++i){
     if (w[i] == 0.0){
       ++j;
-      for(k=1;k<=Nmodes+2*Nsources;++k){
+      for(k=1;k<=Nmodes+2*Nsources+1;++k){
         v[k][j]=v[k][i];
       }
     }
@@ -892,7 +892,7 @@ double regularize(int Nmax,int Nmin,int N,int Nsources,int degen
       }
       weights[j] /= sum;
       
-      for(i=1;i<=N+2*Nsources;++i){
+      for(i=1;i<=N+2*Nsources+1;++i){
         //std::printf("i=%i j=%i w=%e v=%e\n",i,j,weights[j],v[i][j]);
         if(weights[j] == weights[j]) mod[i] += weights[j]*v[i][j];
       }
