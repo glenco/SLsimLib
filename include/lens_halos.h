@@ -109,7 +109,7 @@ public:
 	bool compareZ(PosType z){return z > zlens;};
   
   /// stars
-  bool AreStarsImaplated() const {return stars_implanted;}
+  bool AreStarsImplanted() const {return stars_implanted;}
   void implant_stars(PosType **centers,int Nregions,long *seed, IMFtype type=One);
   void implant_stars(PosType *center,long *seed,IMFtype type = One);
   //void implant_stars(PosType *x,PosType *y,int Nregions,long *seed,IMFtype type=One);

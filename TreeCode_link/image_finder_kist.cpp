@@ -800,7 +800,7 @@ void ImageFinding::find_images_microlens(
   //time(&to);
   
   /**** Refine grid around each star so that no images are missed
-   if(lens->AreStarsImaplated()){
+   if(lens->AreStarsImplanted()){
    if(verbose) std::cout << "  zooming in around " << lens->stars_N << " stars" << std::endl;
    //Branch *tmp = grid->i_tree->current;
    for(i=0;i<lens->stars_N;++i){

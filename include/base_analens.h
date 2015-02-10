@@ -80,7 +80,7 @@ public:
 	virtual PosType get_rcore(){return rcore;};
 
   /// substructures
-  bool AreSubStructImaplated(){return substruct_implanted;}
+  bool AreSubStructImplanted(){return substruct_implanted;}
   PosType sub_sigmaScale;
   PosType sub_Ndensity;
   /// actual number of substructures

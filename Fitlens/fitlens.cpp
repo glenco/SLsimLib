@@ -112,21 +112,25 @@ void LensHaloFit::SafeFindLensSimple(
   if(verbose)
   {
     std::cout << "Values of the modes :" << std::endl ;
-    std::cout << "Ave :" ;
+    std::cout << "Ave : " ;
     for(int k=0;k<perturb_Nmodes;++k) std::cout << perturb_modes[k] << " " ;
-    std::cout << std::endl << "Min :" ;
+    std::cout << std::endl << "Min : " ;
     for(int k=0;k<perturb_Nmodes;++k) std::cout << ModesMin[k] << " " ;
-    std::cout << std::endl << "Max :" ;
+    std::cout << std::endl << "Max : " ;
     for(int k=0;k<perturb_Nmodes;++k) std::cout << ModesMax[k] << " " ;
     std::cout << std::endl ;
   }
   
+
+  // Testing that the image positions are consistent when traced back to the source plane :
+  LinkToSourcePoints(image_positions, Nimages);
+  // rayshooterInternal(Nimages,image_positions);
+
   // OTHER TESTS ?
-  // E.G. : testing the image positions are consistent when traced back to the source plane.
   
   
   // Otherwise we keep the last computed modes and display them :
-  std::cout << std::endl << "Perturbation modes (in LensHaloFit::FindLensSimple)" << std::endl;
+  std::cout << std::endl << "Perturbation modes (in LensHaloFit::FindLensSimple) :" << std::endl;
   for(int i=0;i<perturb_Nmodes;++i) std::cout << perturb_modes[i] << " " ;
   std::cout << std::endl;
   
