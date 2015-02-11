@@ -263,10 +263,14 @@ private: /* generation */
   /// computes sigma_back for createFieldPlanes :
   void ComputeHalosSigmaBack();
 	void createFieldHalos(bool verbose);
+  
 	/// read field halo data in from a file in Millennium output format
 	void readInputSimFileMillennium(bool verbose);
 	/// read field halo data in from a file in MultiDarkHalos output format
 	void readInputSimFileMultiDarkHalos(bool verbose);
+  /// read field halo data in from a file in Cabriel Caminha's input format 
+  void readInputSimFileObservedGalaxies(bool verbose);
+  
 	/// build the field planes and sort halos onto them
 	void createFieldPlanes(bool verbose);
 	
