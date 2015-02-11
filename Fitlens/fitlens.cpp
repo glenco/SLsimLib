@@ -41,6 +41,104 @@ void LensHaloFit::FindLensSimple(
   
   delete[] imageinfo;
 }
+
+
+
+/** \ingroup FitLens
+ *
+ *  \brief Same as FindLensSimple but with some tests in it.
+ *
+ *
+ */
+
+void LensHaloFit::SafeFindLensSimple(
+                                 int Nimages               /// Number of images to be fit
+                                 ,Point *image_positions   /// Array of points with point[i].x set to the image positions
+                                 ,double *y                /// output source position
+                                 ,double **dx_sub          /// dx_sub[Nimages][2] pre-calculated deflections caused by substructures or external masses at each image
+                                 ,int SafetyNum            /// integer of the number of time you want to check the modes
+                                 ,bool verbose             /// verbose mode switch
+){
+  // Array to store the modes over the different calls of FindLensSimple :
+  PosType ModesMin [perturb_Nmodes] ; // Minimal value for the modes (among all calls)
+  PosType ModesMax [perturb_Nmodes] ; // Maximal value for the modes (among all calls)
+  PosType ModesAve [perturb_Nmodes] ; // Average value for the modes (among all calls)
+  const double ToleranceModes = 0.1 ; // Tolerance on the ratio (Max-Min)/Average for the modes
+  
+  // Doing the proper initialisation of these quantities :
+  for(int k=0;k<perturb_Nmodes;++k)
+  {
+    ModesMin[k] = 1.e100 ; // So the modes have to be less than that !
+    ModesMax[k] = -1.e100 ; // So the modes have to be more than that !
+    ModesAve[k] = 0. ;
+  }
+  
+  // Defining the imageinfo used after :
+  ImageInfo* imageinfo = new ImageInfo[Nimages];
+  for(int i=0;i<Nimages;++i){
+    imageinfo[i].centroid[0] = image_positions[i].x[0];
+    imageinfo[i].centroid[1] = image_positions[i].x[1];
+  }
+  
+  // We compute the modes SafetyNum times and retain the min, the max, and the sum :
+  for(int i=0;i<SafetyNum;i++)
+  {
+    // Calling FindLensSimple (the one that really computes the modes) :
+    FindLensSimple(imageinfo,Nimages,y,dx_sub);
+    
+    // Filling the check tables :
+    for(int k=0;k<perturb_Nmodes;++k)
+    {
+      if(perturb_modes[k]<ModesMin[k]) ModesMin[k] = perturb_modes[k];
+      if(perturb_modes[k]>ModesMax[k]) ModesMax[k] = perturb_modes[k];
+      ModesAve[k] += perturb_modes[k]; // Summing the modes
+    }
+    std::cout << std::endl ;
+  }
+  // Dividing by the number of values to get the average :
+  for(int k=0;k<perturb_Nmodes;++k) ModesAve[k] /= perturb_Nmodes ;
+  
+  // We compare the min and max values with the average :
+  for(int k=0;k<perturb_Nmodes;++k)
+  {
+    if(abs(ModesMax[k]-ModesMin[k]) > abs(ToleranceModes*ModesAve[k]))
+    {
+      ERROR_MESSAGE();
+      std::cout << "Error of unstability in SafeFindLensSimple !" << std::endl ;
+      exit(0);
+    }
+  }
+  
+  if(verbose)
+  {
+    std::cout << "Values of the modes :" << std::endl ;
+    std::cout << "Ave : " ;
+    for(int k=0;k<perturb_Nmodes;++k) std::cout << perturb_modes[k] << " " ;
+    std::cout << std::endl << "Min : " ;
+    for(int k=0;k<perturb_Nmodes;++k) std::cout << ModesMin[k] << " " ;
+    std::cout << std::endl << "Max : " ;
+    for(int k=0;k<perturb_Nmodes;++k) std::cout << ModesMax[k] << " " ;
+    std::cout << std::endl ;
+  }
+  
+
+  // Testing that the image positions are consistent when traced back to the source plane :
+  LinkToSourcePoints(image_positions, Nimages);
+  // rayshooterInternal(Nimages,image_positions);
+
+  // OTHER TESTS ?
+  
+  
+  // Otherwise we keep the last computed modes and display them :
+  std::cout << std::endl << "Perturbation modes (in LensHaloFit::FindLensSimple) :" << std::endl;
+  for(int i=0;i<perturb_Nmodes;++i) std::cout << perturb_modes[i] << " " ;
+  std::cout << std::endl;
+  
+  
+  delete[] imageinfo;
+}
+
+
 /** \ingroup FitLens
  *
  *  \brief Wrapper that allows simple lens to be found with a single
@@ -110,8 +208,8 @@ void LensHaloFit::FindLensSimple(
   x_center[1] /= scale;
   
   //ERROR_MESSAGE();
-  ElliptisizeLens(Nimages,Nsources,1,pairing,xob,x_center,xg,0,perturb_beta,perturb_Nmodes-1
-                  ,mods,dx_sub,&re2,q); // The -1 in after perturb_Nmodes is important !
+  ElliptisizeLens(Nimages,Nsources,1,pairing,xob,x_center,xg,0,perturb_beta,perturb_Nmodes
+                  ,mods,dx_sub,&re2,q); // The -1 in after perturb_Nmodes WAS MAKING FINDLENSSIMPLE UNSTABLE !
   
   // Assigning the modes :
   for(i=1;i<perturb_Nmodes;++i) perturb_modes[i] = mods[i];
@@ -280,7 +378,7 @@ double LensHaloFit::ElliptisizeLens(
   NmodT=Nmod;
   sigGT=sigG;
   
-  for(i=1;i<=Nmod+2*Nsources;++i) mod[i]=0.0;
+  for(i=1;i<=Nmod+2*Nsources+1;++i) mod[i]=0.0;
   
   for(i=0;i<Nimages;++i){
     xobT[i][0] = xob[i][0];
@@ -303,7 +401,7 @@ double LensHaloFit::ElliptisizeLens(
   find_lens(NimagesT,NsourcesT,pairingT,xobT,x_center,betaT,NmodT,&degenT,modT,vT,dx_subT);
   
   //std::printf("found model\n");
-  for(i=1;i<=Nmod + 2*Nsources;++i) mod[i] = modT[i];
+  for(i=1;i<=Nmod+2*Nsources+1;++i) mod[i] = modT[i];
   
   /*
    * find the most elliptical model amongst the degenerate models that
@@ -353,7 +451,7 @@ double LensHaloFit::ElliptisizeLens(
     x_center[0] = q[3];
     x_center[1] = q[4];
   }
-  for(i=1;i<=Nmod+2*Nsources;++i) mod[i]=modTT[i];
+  for(i=1;i<=Nmod+2*Nsources+1;++i) mod[i]=modTT[i];
   
   //std::printf("iter = %i\n",iter);
   free_ivector(pairingT,0,Nimages-1);
@@ -440,7 +538,7 @@ double minEllip(double *par){
   
   if( sm < oldsm || oldsm < 0.0){
     oldsm=sm;
-    for(i=1;i<=NmodT+2*NsourcesT;++i) modTT[i]=modT[i];
+    for(i=1;i<=NmodT+2*NsourcesT+1;++i) modTT[i]=modT[i];
   }
   //std::printf("q=%e   theta=%e gamma=%e %e\n",q,theta*180/pi,modT[1],modT[2]);
   //std::printf("%e %e %e %e %e %e\n",modoT[3],modoT[4],modoT[5],modoT[6],modoT[7],modoT[8]);
@@ -471,9 +569,7 @@ double minEllip(double *par){
  * - [3]=ao
  *******************************************************/
 //void AnaNSIELensHalo::find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *x_center,double beta
-void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *x_center,double beta
-               ,int Nmodes,int *degen,double *mod,double **v,double **dx_sub){
-  
+void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *x_center,double beta,int Nmodes,int *degen,double *mod,double **v,double **dx_sub){
   double **c,*b,*w,r,theta,wmax,**a,*y,*temp,**x;
   int i,k,j;
   
@@ -568,10 +664,10 @@ void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *x_cent
    * mod[i] + a_1 v[i][1] + ... + a_degen v[i][degen] is a solution
    **/
   
-  for(i=1,j=0;i<=Nmodes+2*Nsources;++i){
+  for(i=1,j=0;i<=Nmodes+2*Nsources+1;++i){
     if (w[i] == 0.0){
       ++j;
-      for(k=1;k<=Nmodes+2*Nsources;++k){
+      for(k=1;k<=Nmodes+2*Nsources+1;++k){
         v[k][j]=v[k][i];
       }
     }
@@ -746,7 +842,7 @@ double regularize(int Nmax,int Nmin,int N,int Nsources,int degen
                   ,double *mod,double **v,double *modo){
   double Dsum,sum=0,sumold,aa,*weights;
   
-  
+
   int i,j;
   
   /*
@@ -796,7 +892,7 @@ double regularize(int Nmax,int Nmin,int N,int Nsources,int degen
       }
       weights[j] /= sum;
       
-      for(i=1;i<=N+2*Nsources;++i){
+      for(i=1;i<=N+2*Nsources+1;++i){
         //std::printf("i=%i j=%i w=%e v=%e\n",i,j,weights[j],v[i][j]);
         if(weights[j] == weights[j]) mod[i] += weights[j]*v[i][j];
       }

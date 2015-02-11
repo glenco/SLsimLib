@@ -12,6 +12,7 @@
 #include "point.h"
 #include "Tree.h"
 #include <mutex>
+#include <utilities_slsim.h>
 
 class LensHaloBaseNSIE;
 class LensHaloMOKA;
@@ -156,10 +157,58 @@ namespace ImageFinding{
     bool inCausticCurve(Point_2d x){
       return Utilities::incurve(x.x,caustic_curve_outline);
     }
+    
     /// return true if x is inside or on the border of the critical curve
     bool inCriticalCurve(Point_2d x){
       return Utilities::incurve(x.x,critical_curve);
     }
+
+    /// return true if x is strictly inside (entirely) the caustic curve
+    bool EntirelyinCausticCurve(Point_2d x, PosType sourceRadius)
+    {
+      // Testing if the center of the source is within the caustic :
+      bool IsInCurve = Utilities::incurve(x.x,caustic_curve_outline);
+      
+      // Testing now that it is not too close from it (i.e. farther than source radius) :
+      int i=0; // index going over the different points of the caustic curve
+      PosType DistSourceToCautic; // distance between the source center and the considered point of the caustic line.
+      
+      if(IsInCurve == true) // center inside the caustic
+      {
+        while(i<caustic_curve_outline.size()) // testing that the source size does not overlap with the caustic line.
+        {
+          DistSourceToCautic = sqrt((caustic_curve_outline[i].x[0] - x.x[0])*(caustic_curve_outline[i].x[0] - x.x[0]) + (caustic_curve_outline[i].x[1] - x.x[1])*(caustic_curve_outline[i].x[1] - x.x[1]));
+          if (DistSourceToCautic < sourceRadius) return false ; // source too close, we return false and don't consider the point.
+          i++;
+        }
+        return true ; // if not we return true (the source is valid)
+      }
+      else return false ; // center not inside the caustic
+    }
+    
+    /// return true if x is strictly inside (entirely) the critical curve
+    bool EntirelyinCriticalCurve(Point_2d x, PosType sourceRadius)
+    {
+      // Testing if the center of the source is within the critical curve :
+      bool IsInCurve = Utilities::incurve(x.x,critical_curve);
+      
+      // Testing now that it is not too close from it (i.e. farther than source radius) :
+      int i=0; // index going over the different points of the critical curve
+      PosType DistSourceToCritCurve; // distance between the source center and the considered point of the critical line.
+      
+      if(IsInCurve == true) // center inside the critical line
+      {
+        while(i<critical_curve.size()) // testing that the source size does not overlap with the critical line.
+        {
+          DistSourceToCritCurve = sqrt((critical_curve[i].x[0] - x.x[0])*(critical_curve[i].x[0] - x.x[0]) + (critical_curve[i].x[1] - x.x[1])*(critical_curve[i].x[1] - x.x[1]));
+          if (DistSourceToCritCurve < sourceRadius) return false ; // source too close, we return false and don't consider the point.
+          i++;
+        }
+        return true ; // if not we return true (the source is valid)
+      }
+      else return false ; // center not inside the critical line
+    }
+    
     
     /** \brief Returns a vector of random point within the caustic.  It is more efficient to call this once for many point rather than repeatedly one at a time.
      */
@@ -168,6 +217,13 @@ namespace ImageFinding{
                                    ,std::vector<Point_2d> &y  /// output vector of points
                                    ,Utilities::RandomNumbers_NR &rng  /// random number generator
                                    );
+    /** \brief Returns a vector of random point strictly within the caustic (i.e. not touching the border).  It is more efficient to call this once for many point rather than repeatedly one at a time.
+     */
+    void RandomSourceStrictlyWithinCaustic(int N                              /// number of points needed
+                                           ,std::vector<Point_2d> &y          /// output vector of points
+                                           ,Utilities::RandomNumbers_NR &rng  /// random number generator
+                                           ,PosType sourceRadius              /// radius of the source
+                                           );
     /// find rectangular region enclosing critical curve
     void CritRange(Point_2d &p1,Point_2d &p2);
     /// find rectangular region enclosing caustic curve
