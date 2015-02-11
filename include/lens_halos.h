@@ -468,7 +468,13 @@ class LensHaloNFW: public LensHalo{
 public:
   /// Shell constructor that should be avoided
 	LensHaloNFW();
-  LensHaloNFW(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,int my_stars_N);
+  LensHaloNFW(float my_mass   /// in solar masses
+              ,float my_Rmax  /// in Mpc
+              ,PosType my_zlens   /// redshift
+              ,float my_rscale    /// in Mpc
+              ,float my_fratio    /// axis ratio
+              ,float my_pa
+              ,int my_stars_N);
 	LensHaloNFW(InputParams& params);
 	virtual ~LensHaloNFW();
   
