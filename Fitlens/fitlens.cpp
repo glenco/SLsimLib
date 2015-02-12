@@ -195,7 +195,9 @@ void LensHaloFit::SafeFindLensSimple(
       {
         ERROR_MESSAGE();
         std::cout << "Error of precision in source-position reconstruction in SafeFindLensSimple !" << std::endl ;
-        exit(0);
+        // exit(0);
+        
+        // ADD A TEST OF THE SUBSTRUCTURE WHEN THIS FAILS !
       }
       // Else we can continue !
     }
