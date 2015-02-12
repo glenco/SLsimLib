@@ -1,6 +1,4 @@
-
 #include "slsimlib.h"
-
 #include <nrutil.h>
 
 using namespace std;
@@ -8,7 +6,6 @@ using namespace std;
 static double betaT,*modT,**xobT,**dx_subT,sigGT,*modTT,*modoT,**vT,x_centerT[2],**xgT,**dx_subTt;
 static int NmodT,NsourcesT,NimagesT,*pairingT,degenT,Nmin;
 static double oldsm;//,tang[2],length,yot[2],radsourceT;
-
 
 /** \ingroup FitLens
  *
@@ -63,7 +60,8 @@ void LensHaloFit::SafeFindLensSimple(
   PosType ModesMin [perturb_Nmodes] ; // Minimal value for the modes (among all calls)
   PosType ModesMax [perturb_Nmodes] ; // Maximal value for the modes (among all calls)
   PosType ModesAve [perturb_Nmodes] ; // Average value for the modes (among all calls)
-  const double ToleranceModes = 0.1 ; // Tolerance on the ratio (Max-Min)/Average for the modes
+  const double ToleranceModes = 0.01 ; // Tolerance on the ratio (Max-Min)/Average for the modes
+  const double ToleranceSourcePos = 0.01 ; // Tolerance on the ratio (y-x)/alpha on the source position reconstruction
   
   // Doing the proper initialisation of these quantities :
   for(int k=0;k<perturb_Nmodes;++k)
@@ -81,10 +79,13 @@ void LensHaloFit::SafeFindLensSimple(
   }
   
   // We compute the modes SafetyNum times and retain the min, the max, and the sum :
+  // ===============================================================================
   for(int i=0;i<SafetyNum;i++)
   {
     // Calling FindLensSimple (the one that really computes the modes) :
+    ///////////////////////////////////////////
     FindLensSimple(imageinfo,Nimages,y,dx_sub);
+    ///////////////////////////////////////////
     
     // Filling the check tables :
     for(int k=0;k<perturb_Nmodes;++k)
@@ -93,7 +94,6 @@ void LensHaloFit::SafeFindLensSimple(
       if(perturb_modes[k]>ModesMax[k]) ModesMax[k] = perturb_modes[k];
       ModesAve[k] += perturb_modes[k]; // Summing the modes
     }
-    std::cout << std::endl ;
   }
   // Dividing by the number of values to get the average :
   for(int k=0;k<perturb_Nmodes;++k) ModesAve[k] /= perturb_Nmodes ;
@@ -119,14 +119,92 @@ void LensHaloFit::SafeFindLensSimple(
     std::cout << std::endl << "Max : " ;
     for(int k=0;k<perturb_Nmodes;++k) std::cout << ModesMax[k] << " " ;
     std::cout << std::endl ;
+    
+    std::cout << std::endl << "Estimation made with " << SafetyNum << " calls of FindLensSimple, with a tolerance of " << ToleranceModes*100. << " % on the modes." << std::endl;
+    
+    // Caption :
+    // q[1] : ellipticity of nearest elliptical lens
+    // q[2] : position angle of nearest elliptical lens
+    // if sigG > 0 :
+    // q[3,4] : center of lens, copied to x_center
+    
+    cout << "Ellipticity : " << qpriv[1] << " , position angle : " << qpriv[2] << std::endl ;
+    if (sigGT > 0) cout << "Center of the lens : " << qpriv[3] << " , " << qpriv[4] << std::endl ;
   }
   
 
   // Testing that the image positions are consistent when traced back to the source plane :
-  LinkToSourcePoints(image_positions, Nimages);
-  // rayshooterInternal(Nimages,image_positions);
+  // ======================================================================================
+  
+  std::cout << std::endl << "Evaluated position of the source from each image :" << std::endl ;
+  // alpha that we are going to use after to get the source position form the back-traced image position :
+  PosType * alphaTMP = new PosType [2];
+  alphaTMP[0] = 0. ; alphaTMP[1] = 0. ;
+  // Quantities not used for the moment :
+  double betaTMP = perturb_beta ;
+  KappaType * gammaTMP = new KappaType [3];
+  KappaType * phiTMP = new KappaType ;
+  KappaType kappaTMP;
+  gammaTMP[0] = 0. ; gammaTMP[1] = 0. ; gammaTMP[2] = 0. ;
+  *phiTMP = 0. ;
+  kappaTMP = 0. ;
+  
+  // Ratios for (y-x)/alpha :
+  PosType ratioSourcePos [2] ;
+  ratioSourcePos[0] = ratioSourcePos[1] = 0. ;
+
+  // Displaying the back-traced positions :
+  for(int i=0;i<Nimages;++i)
+  {
+    Point pointTMP ;
+    pointTMP.x[0] = image_positions[i].x[0] * Dl ;
+    pointTMP.x[1] = image_positions[i].x[1] * Dl ;
+    
+    kappaTMP = lens_expand(betaTMP, perturb_modes, perturb_Nmodes, pointTMP.x, alphaTMP, gammaTMP, phiTMP); // We removed the -1 after perturb_Nmodes AS IT SHOULD NOT BE THERE but it is still used this way in LensHaloBaseNSIE::force_halo !
+    
+    // Applying the factors of LensHaloBaseNSIE::force_halo :
+    alphaTMP[0] += pointTMP.x[0] / (Dl*(1+zlens)) / (4*pi*Grav) ;
+    alphaTMP[1] += pointTMP.x[1] / (Dl*(1+zlens)) / (4*pi*Grav) ;
+    alphaTMP[0] *= -1. * (1+zlens) ;
+    alphaTMP[1] *= -1. * (1+zlens) ;
+    
+    // Applying the extra factors of RayShooter :
+    alphaTMP[0] *= -4*pi*Grav ;
+    alphaTMP[1] *= -4*pi*Grav ;
+    alphaTMP[0] *= Dls / Ds ;
+    alphaTMP[1] *= Dls / Ds ;
+    
+    // Computing ratios :
+    ratioSourcePos[0] = abs(alphaTMP[0]) / abs(y[0] - image_positions[i].x[0]) ;
+    ratioSourcePos[1] = abs(alphaTMP[1]) / abs(y[1] - image_positions[i].x[1]) ;
+    
+    // Displaying the values :
+    if(verbose)
+    {
+    std::cout << "Image : " << image_positions[i].x[0] << " " << image_positions[i].x[1] << std::endl ;
+    std::cout << "y - x : " << y[0] - image_positions[i].x[0] << " " << y[1] - image_positions[i].x[1] << std::endl ;
+    std::cout << "alpha : " << alphaTMP[0] << " " << alphaTMP[1] << std::endl ;
+    std::cout << "ratios : " << ratioSourcePos[0] << " " << ratioSourcePos[1] << std::endl << std::endl ;
+    }
+    
+    // Deciding if the test is sufficient to keep on with the rest :
+    for(int k=0;k<2;k++)
+    {
+      // In the case where we are above the tolerance on the source position & the real source position is not too close to (0,0) :
+      if( abs(ratioSourcePos[k]-1) > ToleranceSourcePos && abs(y[k] - image_positions[i].x[k]) > 1.e-15 ) // assuming positions to be in radians.
+      {
+        ERROR_MESSAGE();
+        std::cout << "Error of precision in source-position reconstruction in SafeFindLensSimple !" << std::endl ;
+        exit(0);
+      }
+      // Else we can continue !
+    }
+    std::cout << "Back-traced source position : " << image_positions[i].x[0] - alphaTMP[0] << " " << image_positions[i].x[1] - alphaTMP[1] << std::endl ;
+    
+  }
 
   // OTHER TESTS ?
+  // =============
   
   
   // Otherwise we keep the last computed modes and display them :
@@ -1046,3 +1124,64 @@ int LensHaloAnaNSIE::check_model(int Nimages,int Nsources,int Nlenses,int *pairi
   
   return 0;
 }
+
+
+// Copied from lens_expand.c
+PosType LensHaloFit::lens_expand(PosType beta,PosType *mod,int Nmodes,PosType const *x,PosType *alpha,KappaType *gamma,KappaType *phi)
+{
+  PosType F,F1,F2,theta,r,cosx,sinx,cos2theta,sin2theta,gt,gx;
+  int i,k;
+  
+  if(Nmodes<=0){
+    alpha[0]=alpha[1]=0;
+    gamma[0]=gamma[1]=0;
+    return 0.0;
+  }
+  
+  r=sqrt(x[0]*x[0] + x[1]*x[1]);
+  theta=atan2(x[1],x[0]);
+  cosx=x[0]/r;
+  sinx=x[1]/r;
+  
+  if(Nmodes > 3) F=0.5*mod[3];
+  else F = 0;
+  F1=0;
+  F2=0;
+  for(i=4;i<Nmodes;i+=2){
+    k=i/2;
+    F += mod[i]*cos(k*theta)     + mod[i+1]*sin(k*theta);
+    F1+=-mod[i]*k*sin(k*theta)   + mod[i+1]*k*cos(k*theta);
+    F2+=-mod[i]*k*k*cos(k*theta) - mod[i+1]*k*k*sin(k*theta);
+  }
+  
+  alpha[0] = pow(r,beta-1)*(beta*cosx*F - sinx*F1);
+  alpha[1] = pow(r,beta-1)*(beta*sinx*F + cosx*F1);
+  
+  // add shear
+  alpha[0] +=  x[0]*mod[1] + x[1]*mod[2];
+  alpha[1] += -x[1]*mod[1] + x[0]*mod[2];
+  
+  // add flat kappa
+  alpha[0] += -1.0*x[0]*mod[0];
+  alpha[1] += -1.0*x[1]*mod[0];
+  
+  gt=-0.5*pow(r,beta-2)*(beta*(beta-2)*F-F2);
+  gx=pow(r,beta-2)*(beta-1)*F1;
+  
+  cos2theta=2*cosx*cosx-1;
+  sin2theta=2*cosx*sinx;
+  
+  gamma[0]=-(gt*cos2theta+gx*sin2theta) + mod[1];
+  gamma[1]=-gt*sin2theta+gx*cos2theta  + mod[2];
+  
+  //gamma[0]=-0.5*( x[0]*(r*dxdr - dyda) - x[1]*(r*dydr + dxda) )/r/r;
+  //gamma[1]=-(  x[0]*dxda + r*x[1]*dxdr )/r/r;
+  
+  // potential
+  *phi = F*pow(r,beta) + r*r*(mod[0] + mod[1]*cos2theta + mod[2]*sin2theta)/2;
+  
+  //printf("  lens_expand *phi = %e\n",*phi);
+  return 0.5*(beta*beta*F+F2)*pow(r,beta-2) + mod[0];
+}
+
+

@@ -75,6 +75,9 @@ private:
   //               ,int N,int *degen,double *mod,double **v,double **dx);
 
   //void assignParams(InputParams& params);
+  
+  // Copied from lens_expand.c
+  double lens_expand(double beta,double *mod,int Nmodes,PosType const *x,PosType *alpha,KappaType *gamma,KappaType *phi);
 };
 
 /**

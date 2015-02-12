@@ -375,8 +375,7 @@ void *compute_rays_parallel(void *_p)
     p->i_points[i].image->x[1] /= p->Dl[p->NPlanes];
     
     // std::cout << "   Ds = " << p->Dl[p->NPlanes] << std::endl;
-    //std::cout << "   dx = " << p->i_points[i].image->x[0]-p->i_points[i].x[0] <<  "  "
-    //<< p->i_points[i].image->x[1]-p->i_points[i].x[1] << std::endl;
+    // std::cout << "   dx = " << p->i_points[i].image->x[0]-p->i_points[i].x[0] << "  " << p->i_points[i].image->x[1]-p->i_points[i].x[1] << std::endl;
     
     // We go from kappa denoting 1-kappa to kappa denoting kappa
     p->i_points[i].kappa = 1 - p->i_points[i].kappa;
