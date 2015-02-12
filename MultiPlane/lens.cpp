@@ -1772,7 +1772,7 @@ void Lens::readInputSimFileMillennium(bool verbose)
 	file_in.close();
 	if(verbose) std::cout << field_halos.size() << " halos read in."<< std::endl
     << "Max input mass = " << mass_max << "  R max = " << R_max << "  V max = " << V_max
-    << "Min imput mass = " << minmass << std::endl;
+    << "Min input mass = " << minmass << std::endl;
   
 	/// setting the minimum halo mass in the simulation
 	field_min_mass = minmass;
@@ -2148,8 +2148,7 @@ void Lens::readInputSimFileObservedGalaxies(bool verbose)
   const PosType mo=7.3113e10,M1=2.8575e10,gam1=7.17,gam2=0.201,be=0.557;
   PosType field_galaxy_mass_fraction = 0;
   const PosType masslimit =2.0e12;
-  
-  
+
   Utilities::Geometry::SphericalPoint tmp_sph_point(1,0,0);
   
   PosType rmax=0,rtmp=0,boundary_p1[2],boundary_p2[2],boundary_diagonal[2];
@@ -2213,6 +2212,8 @@ void Lens::readInputSimFileObservedGalaxies(bool verbose)
     myline.erase(0,pos);
     
     for(int l=0;l<ncolumns; l++){
+      //std::cout << myline << std::endl;
+      
       pos = myline.find(f);
       strg.assign(myline,0,pos);
       buffer << strg;
@@ -2228,8 +2229,12 @@ void Lens::readInputSimFileObservedGalaxies(bool verbose)
       myline.erase(0,pos);
     }
     
+    for(int l=0;l<ncolumns; l++) std::cout << *((PosType *)(addr[l])) << "  ";
+    std::cout << std::endl;
+      
     tmp_sph_point.theta *= pi/180;
-    tmp_sph_point.phi *= -pi/180;
+    tmp_sph_point.phi *= pi/180;
+    rcut *= 1.0e-3;
     
     rtmp = Utilities::Geometry::AngleSeporation(central_point_sphere,tmp_sph_point);
     
@@ -2286,7 +2291,7 @@ void Lens::readInputSimFileObservedGalaxies(bool verbose)
 
         std::cout << "Making an NFW halo, but not of the right mass!!!!" << std::endl;
       {
-        mass = pi*vdist*vdist*rmax*1.0e-3/Grav/lightspeed/lightspeed/field_galaxy_mass_fraction;
+        mass = pi*vdist*vdist*rcut/Grav/lightspeed/lightspeed/field_galaxy_mass_fraction;
         
         HALOCalculator hcalc(&cosmo,mass,z);
         
@@ -2303,7 +2308,7 @@ void Lens::readInputSimFileObservedGalaxies(bool verbose)
         break;
       case nsie_lens:
         
-        mass = pi*vdist*vdist*rmax*1.0e-3/Grav/lightspeed/lightspeed;
+        mass = pi*vdist*vdist*rmax/Grav/lightspeed/lightspeed;
         field_halos.push_back(new LensHaloRealNSIE(mass,z,vdist,0.0,1.0,0.0,0));
         
         break;
@@ -2389,7 +2394,7 @@ void Lens::readInputSimFileObservedGalaxies(bool verbose)
   }
   if(verbose){
     std::cout << field_halos.size() << " halos read in."<< std::endl;
-    std::cout << "center is : theta:" << center[0]/field_halos.size() << "  phi:" << center[1]/field_halos.size() << std::endl;
+    std::cout << "center is at: theta:" << center[0]*180/pi/field_halos.size() << "  phi:" << center[1]*180/pi/field_halos.size() << " degrees" << std::endl;
   }
   file_in.close();
   
@@ -2397,7 +2402,7 @@ void Lens::readInputSimFileObservedGalaxies(bool verbose)
   
   if(verbose) std::cout << field_halos.size() << " halos read in."<< std::endl
     << "Max input mass = " << mass_max << "  R max = " << R_max
-    << " Min imput mass = " << minmass << std::endl;
+    << " Min input mass = " << minmass << std::endl;
   
   /// setting the minimum halo mass in the simulation
   field_min_mass = minmass;
@@ -2419,35 +2424,19 @@ void Lens::readInputSimFileObservedGalaxies(bool verbose)
   
   std::cout << "Overiding input file field of view to make it fit the simulation light cone." << std::endl;
   rmax = (boundary_p2[0] - boundary_p1[0])/2;
-  /*if(diagonal1 < diagonal2*0.9){
-   // circular region
-   rmax = diagonal1/2;
-   fieldofview = pi*rmax*rmax*pow(180/pi,2);  // Resets field of view to range of input galaxies
-   inv_ang_screening_scale = 0.0;
-   }else{
-   fieldofview = (boundary_p2[0] - boundary_p1[0])*(boundary_p2[1] - boundary_p1[1])*pow(180/pi,2);
-   rmax = diagonal2/2;
-   inv_ang_screening_scale = 5.0/(MIN(boundary_p2[0] - boundary_p1[0],boundary_p2[1] - boundary_p1[1]));
-   }*/
   
-  if(sim_angular_radius == 0.0){
-    fieldofview = (boundary_p2[0] - boundary_p1[0])*(boundary_p2[1] - boundary_p1[1])*pow(180/pi,2);
-    inv_ang_screening_scale = 5.0/(MIN(boundary_p2[0] - boundary_p1[0],boundary_p2[1] - boundary_p1[1]));
-  }else{
-    fieldofview = pi*rmax*rmax*pow(180/pi,2);
-    inv_ang_screening_scale = 0.0;
-  }
+  fieldofview = (boundary_p2[0] - boundary_p1[0])*(boundary_p2[1] - boundary_p1[1])*pow(180/pi,2);
+  std::cout << "Field of view is " << fieldofview << " sq.deg." << std::endl;
+  inv_ang_screening_scale = 0.0;
+
   
-  if(verbose) std::cout << "Setting mass function to Sheth-Tormen." << std::endl;
-  field_mass_func_type = ST; // set mass function
-  
-  if(verbose) std::cout << "sorting in Lens::readInputSimFileMultiDarkHalos()" << std::endl;
+  if(verbose) std::cout << "sorting in Lens::readInputSimFileObservedGalaxies()" << std::endl;
   // sort the field_halos by readshift
   std::sort(field_halos.begin(),field_halos.end(),
             [](LensHalo *lh1,LensHalo *lh2){return (lh1->getZlens() < lh1->getZlens());});
   
   
-  if(verbose) std::cout << "leaving Lens::readInputSimFileMultiDarkHalos()" << std::endl;
+  if(verbose) std::cout << "leaving Lens::readInputSimFileObservedGalaxies()" << std::endl;
   
   field_buffer = 0.0;
   read_sim_file = true;
