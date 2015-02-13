@@ -61,7 +61,7 @@ void LensHaloFit::SafeFindLensSimple(
   PosType ModesMax [perturb_Nmodes] ; // Maximal value for the modes (among all calls)
   PosType ModesAve [perturb_Nmodes] ; // Average value for the modes (among all calls)
   const double ToleranceModes = 0.01 ; // Tolerance on the ratio (Max-Min)/Average for the modes
-  const double ToleranceSourcePos = 0.01 ; // Tolerance on the ratio (y-x)/alpha on the source position reconstruction
+  const double ToleranceSourcePos = 0.1 ; // Tolerance on the ratio (y-x)/alpha on the source position reconstruction
   
   // Doing the proper initialisation of these quantities :
   for(int k=0;k<perturb_Nmodes;++k)
@@ -184,7 +184,7 @@ void LensHaloFit::SafeFindLensSimple(
     std::cout << "Image : " << image_positions[i].x[0] << " " << image_positions[i].x[1] << std::endl ;
     std::cout << "y - x : " << y[0] - image_positions[i].x[0] << " " << y[1] - image_positions[i].x[1] << std::endl ;
     std::cout << "alpha : " << alphaTMP[0] << " " << alphaTMP[1] << std::endl ;
-    std::cout << "ratios : " << ratioSourcePos[0] << " " << ratioSourcePos[1] << std::endl << std::endl ;
+    std::cout << "ratios : " << ratioSourcePos[0] << " " << ratioSourcePos[1] << std::endl ;
     }
     
     // Deciding if the test is sufficient to keep on with the rest :
@@ -201,7 +201,7 @@ void LensHaloFit::SafeFindLensSimple(
       }
       // Else we can continue !
     }
-    std::cout << "Back-traced source position : " << image_positions[i].x[0] - alphaTMP[0] << " " << image_positions[i].x[1] - alphaTMP[1] << std::endl ;
+    std::cout << "Back-traced source position : " << image_positions[i].x[0] - alphaTMP[0] << " " << image_positions[i].x[1] - alphaTMP[1] << std::endl << std::endl ;
     
   }
 
