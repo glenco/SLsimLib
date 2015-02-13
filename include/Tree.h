@@ -9,10 +9,12 @@
 #ifndef treetypes_declare
 #define treetypes_declare
 
+#include <mutex>
 //#include "pointlist.h"
 #include "point.h"
 #include "Kist.h"
 #include "image_info.h"
+
 
 /***** Exported Types *****/
 

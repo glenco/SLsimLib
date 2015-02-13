@@ -831,7 +831,8 @@ void ImageFinding::find_contour(
                                 ,bool *orderingsuccess    /// true if ordering was successful.
                                 ,bool ordercurve          /// Order the curve so that it can be drawn or used to find the winding number.
                                 ,bool dividecurves        /// Divide the critical curves into seporate curves by whether they are attached
-                                ,double kappa_val        /// finds regions with 1/magnification < invmag_min
+                                ,double contour_value    /// value at which the contour is wanted
+                                ,LensingVariable contour_type  /// KAPPA, INVMAG or DT
                                 ,bool verbose
                                 ){
   
@@ -848,14 +849,34 @@ void ImageFinding::find_contour(
   PointList::iterator i_tree_pointlist_current(grid->i_tree->pointlist->Top());
   Point *minpoint = *i_tree_pointlist_current;
   
+  KappaType value,maxval=0;
+  
   for(i=0;i<grid->i_tree->pointlist->size();++i){
-    if((*i_tree_pointlist_current)->kappa > kappa_val){
+    
+    switch (contour_type) {
+      case KAPPA:
+        value = (*i_tree_pointlist_current)->kappa;
+        maxval = minpoint->kappa;
+        break;
+      case INVMAG:
+        value = (*i_tree_pointlist_current)->invmag;
+        maxval = minpoint->invmag;
+        break;
+      case DT:
+        value = (*i_tree_pointlist_current)->dt;
+        maxval = minpoint->dt;
+        break;
+      default:
+        break;
+    }
+    
+    if(value > contour_value){
       critcurve[0].imagekist->InsertAfterCurrent(*i_tree_pointlist_current);
       critcurve[0].imagekist->Down();
     }
-    
+
     // record point of maximum kappa
-    if((*i_tree_pointlist_current)->kappa > minpoint->kappa) minpoint = *i_tree_pointlist_current;
+    if(value > maxval) minpoint = *i_tree_pointlist_current;
     --i_tree_pointlist_current;
   }
   bool maxpoint = false;
@@ -895,7 +916,21 @@ void ImageFinding::find_contour(
       newpoint_kist.MoveToTop();
       critcurve[ii].imagekist->MoveToBottom();
       do{
-        if(newpoint_kist.getCurrent()->kappa > kappa_val){
+        switch (contour_type) {
+          case KAPPA:
+            value = newpoint_kist.getCurrent()->kappa;
+            break;
+          case INVMAG:
+            value = newpoint_kist.getCurrent()->invmag;
+            break;
+          case DT:
+            value = newpoint_kist.getCurrent()->dt;
+            break;
+          default:
+            break;
+        }
+
+        if(value > contour_value){
           newpoint_kist.getCurrent()->in_image = YES;
           critcurve[ii].imagekist->InsertAfterCurrent(newpoint_kist.getCurrent());
           
@@ -910,33 +945,6 @@ void ImageFinding::find_contour(
           newpoint_kist.getCurrent()->in_image = NO;
         }
       }while(newpoint_kist.Down());
-      
-      if(maxpoint){
-        if(critcurve[ii].imagekist->Nunits() > 1){
-          // take out old max point
-          critcurve[ii].imagekist->MoveToTop();
-          do{
-            if(critcurve[ii].imagekist->getCurrent()->kappa > 0){
-              critcurve[ii].imagekist->getCurrent()->in_image = NO;
-              critcurve[ii].imagekist->TakeOutCurrent();
-              break;
-            }
-          }while(critcurve[ii].imagekist->Down());
-          maxpoint = false;
-        }else{
-          // update maximum kappa point if no negative magnification points have been found
-          newpoint_kist.MoveToTop();
-          do{
-            if(newpoint_kist.getCurrent()->kappa
-               > critcurve[ii].imagekist->getCurrent()->kappa ){
-              critcurve[ii].imagekist->getCurrent()->in_image = NO;
-              critcurve[ii].imagekist->TakeOutCurrent();
-              newpoint_kist.getCurrent()->in_image = YES;
-              critcurve[ii].imagekist->InsertAfterCurrent(newpoint_kist.getCurrent());
-            }
-          }while(newpoint_kist.Down());
-        }
-      }
       
       // check which points in inner border are still in the border
       bool ininner;
@@ -1039,17 +1047,6 @@ void ImageFinding::find_contour(
       critcurve[ii].outerborder->SetInImage(NO);
     }
   }
-  
-  if(maxpoint){
- 	  *Ncrits = 0;
- 	  assert(critcurve[0].imagekist->Nunits() == 1);
- 	  critcurve[0].imagekist->getCurrent()->in_image = NO;
- 	  critcurve[0].imagekist->Empty();
- 	  critcurve[0].outerborder->Empty();
- 	  critcurve[0].innerborder->Empty();
- 	  return;
-  }
-  
   
   // make inner border of all regions the image of region 0
   //  This is done so that regions that have grown together during refinement can be joined
