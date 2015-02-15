@@ -48,7 +48,7 @@ void LensHaloFit::FindLensSimple(
  *
  */
 
-void LensHaloFit::SafeFindLensSimple(
+bool LensHaloFit::SafeFindLensSimple(
                                  int Nimages               /// Number of images to be fit
                                  ,Point *image_positions   /// Array of points with point[i].x set to the image positions
                                  ,double *y                /// output source position
@@ -66,6 +66,8 @@ void LensHaloFit::SafeFindLensSimple(
   // const double ToleranceSourcePos = 0.1 ;  // Tolerance on the ratio (y-x)/alpha on the source position reconstruction
   // way 2 :
   const double ToleranceSourcePos = 1. ;      // Tolerance on the difference y-x+alpha , with respect to the pixel size, on the source position reconstruction
+  bool ReturnCode = true ;                    // Boolean that returns whether or not the Fit was a success.
+  
   
   // Doing the proper initialisation of these quantities :
   for(int k=0;k<perturb_Nmodes;++k)
@@ -109,7 +111,9 @@ void LensHaloFit::SafeFindLensSimple(
     {
       ERROR_MESSAGE();
       std::cout << "Error of unstability in SafeFindLensSimple !" << std::endl ;
-      exit(0);
+      ReturnCode = false ;
+      return ReturnCode ;
+      // exit(0);
     }
   }
   
@@ -208,12 +212,9 @@ void LensHaloFit::SafeFindLensSimple(
       {
         ERROR_MESSAGE();
         std::cout << "Error of precision in source-position reconstruction in SafeFindLensSimple !" << std::endl ;
+        ReturnCode = false ;
+        return ReturnCode ;
         // exit(0);
-        
-        // ADD A TEST OF THE SUBSTRUCTURE WHEN THIS FAILS !
-        
-        // SAME FOR THE STRUCTURE ALONG THE LINE OF SIGHT !
-        
       }
       // Else we can continue !
     }
@@ -224,7 +225,6 @@ void LensHaloFit::SafeFindLensSimple(
   // OTHER TESTS ?
   // =============
   
-  
   // Otherwise we keep the last computed modes and display them :
   std::cout << std::endl << "Perturbation modes (in LensHaloFit::FindLensSimple) :" << std::endl;
   for(int i=0;i<perturb_Nmodes;++i) std::cout << perturb_modes[i] << " " ;
@@ -232,6 +232,8 @@ void LensHaloFit::SafeFindLensSimple(
   
   
   delete[] imageinfo;
+  
+  return ReturnCode ;
 }
 
 
