@@ -54,20 +54,24 @@ void LensHaloFit::SafeFindLensSimple(
                                  ,double *y                /// output source position
                                  ,double **dx_sub          /// dx_sub[Nimages][2] pre-calculated deflections caused by substructures or external masses at each image
                                  ,int SafetyNum            /// integer of the number of time you want to check the modes
+                                 ,PosType PixelSizeRad     /// Pixel size in radians used for the maps
                                  ,bool verbose             /// verbose mode switch
 ){
   // Array to store the modes over the different calls of FindLensSimple :
-  PosType ModesMin [perturb_Nmodes] ; // Minimal value for the modes (among all calls)
-  PosType ModesMax [perturb_Nmodes] ; // Maximal value for the modes (among all calls)
-  PosType ModesAve [perturb_Nmodes] ; // Average value for the modes (among all calls)
-  const double ToleranceModes = 0.01 ; // Tolerance on the ratio (Max-Min)/Average for the modes
-  const double ToleranceSourcePos = 0.1 ; // Tolerance on the ratio (y-x)/alpha on the source position reconstruction
+  PosType ModesMin [perturb_Nmodes] ;         // Minimal value for the modes (among all calls)
+  PosType ModesMax [perturb_Nmodes] ;         // Maximal value for the modes (among all calls)
+  PosType ModesAve [perturb_Nmodes] ;         // Average value for the modes (among all calls)
+  const double ToleranceModes = 0.01 ;        // Tolerance on the ratio (Max-Min)/Average for the modes
+  // way 1 :
+  // const double ToleranceSourcePos = 0.1 ;  // Tolerance on the ratio (y-x)/alpha on the source position reconstruction
+  // way 2 :
+  const double ToleranceSourcePos = 1. ;      // Tolerance on the difference y-x+alpha , with respect to the pixel size, on the source position reconstruction
   
   // Doing the proper initialisation of these quantities :
   for(int k=0;k<perturb_Nmodes;++k)
   {
-    ModesMin[k] = 1.e100 ; // So the modes have to be less than that !
-    ModesMax[k] = -1.e100 ; // So the modes have to be more than that !
+    ModesMin[k] = 1.e100 ;    // So the modes have to be less than that !
+    ModesMax[k] = -1.e100 ;   // So the modes have to be more than that !
     ModesAve[k] = 0. ;
   }
   
@@ -137,6 +141,7 @@ void LensHaloFit::SafeFindLensSimple(
   // ======================================================================================
   
   std::cout << std::endl << "Evaluated position of the source from each image :" << std::endl ;
+  
   // alpha that we are going to use after to get the source position form the back-traced image position :
   PosType * alphaTMP = new PosType [2];
   alphaTMP[0] = 0. ; alphaTMP[1] = 0. ;
@@ -188,20 +193,31 @@ void LensHaloFit::SafeFindLensSimple(
     }
     
     // Deciding if the test is sufficient to keep on with the rest :
+    if(verbose)
+    {
+    std::cout << "(y-x+alpha)/pixelsize : " << abs(y[0] - image_positions[i].x[0] + alphaTMP[0]) / PixelSizeRad << " , " << abs(y[1] - image_positions[i].x[1] + alphaTMP[1]) / PixelSizeRad << " pixels." << std::endl ;
+    std::cout << "! x - alpha : " << image_positions[i].x[0] - alphaTMP[0] << " , " << image_positions[i].x[1] - alphaTMP[1] << " !" << std::endl << std::endl ;
+    }
     for(int k=0;k<2;k++)
     {
       // In the case where we are above the tolerance on the source position & the real source position is not too close to (0,0) :
-      if( abs(ratioSourcePos[k]-1) > ToleranceSourcePos && abs(y[k] - image_positions[i].x[k]) > 1.e-15 ) // assuming positions to be in radians.
+      // way 1 :
+      // if( abs(ratioSourcePos[k]-1) > ToleranceSourcePos && abs(y[k] - image_positions[i].x[k]) > 1.e-15 ) // assuming positions to be in radians.
+      // way 2 :
+      if( abs(y[k] - image_positions[i].x[k] + alphaTMP[k]) > PixelSizeRad * ToleranceSourcePos && abs(y[k] - image_positions[i].x[k]) > 1.e-15 ) // assuming positions to be in radians.
       {
         ERROR_MESSAGE();
         std::cout << "Error of precision in source-position reconstruction in SafeFindLensSimple !" << std::endl ;
         // exit(0);
         
         // ADD A TEST OF THE SUBSTRUCTURE WHEN THIS FAILS !
+        
+        // SAME FOR THE STRUCTURE ALONG THE LINE OF SIGHT !
+        
       }
       // Else we can continue !
     }
-    std::cout << "Back-traced source position : " << image_positions[i].x[0] - alphaTMP[0] << " " << image_positions[i].x[1] - alphaTMP[1] << std::endl << std::endl ;
+    if(!verbose) std::cout << "Back-traced source position : " << image_positions[i].x[0] - alphaTMP[0] << " " << image_positions[i].x[1] - alphaTMP[1] << std::endl << std::endl ;
     
   }
 
