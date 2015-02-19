@@ -1569,3 +1569,15 @@ PosType ImageInfo::ConcaveHullSourceArea(bool useborder){
   return tmp_area;
 }
 
+/// returns true if image is the merger of two or more images of opposite parity
+bool ImageInfo::IsMergedImages(){
+  
+  Kist<Point>::iterator it = imagekist->TopIt();
+  bool sig = ( (*it)->invmag > 0);
+  
+  while(--it){
+    if( ( ((*it)->invmag > 0) != sig ) ) return true;
+  }
+
+  return false;
+}
