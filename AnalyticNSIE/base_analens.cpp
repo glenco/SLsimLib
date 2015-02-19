@@ -76,12 +76,11 @@ void LensHaloBaseNSIE::force_halo(
     // alpha_tmp is in mass / PhyMpc here !
     
     // Printing quantities for control :
-    /*
-    std::cout << "         xt in force_halo : @@@ " << xt[0] << " " << xt[1] << " @@@" << std::endl ;
-    std::cout << "alpha in force_halo : " << alpha_tmp[0] << " " << alpha_tmp[1] << std::endl ;
-    std::cout << "xt - alpha in force_halo : !!! " << xt[0] - alpha_tmp[0] << " " << xt[1] - alpha_tmp[1] << " !!!" << std::endl ;
-    std::cout << "Dl = " << Dl << " , Dls = " << Dls << " , Ds = " << Ds << std::endl ;
-    */
+    // std::cout << "         xt in force_halo : @@@ " << xt[0] << " " << xt[1] << " @@@" << std::endl ;
+    // std::cout << "alpha in force_halo : " << alpha_tmp[0] << " " << alpha_tmp[1] << std::endl ;
+    // std::cout << "xt - alpha in force_halo : !!! " << xt[0] - alpha_tmp[0] << " " << xt[1] - alpha_tmp[1] << " !!!" << std::endl ;
+    // std::cout << "Dl = " << Dl << " , Dls = " << Dls << " , Ds = " << Ds << std::endl ;
+
     
     // Adding a contribution to remove p->i_points[i].image->x[0]*p->dDl[j+1]/p->dDl[j] to aa*p->i_points[i].image->x[0] :
     alpha_tmp[0] += xt[0] / (Dl*(1+zlens)) / (4*pi*Grav) ; // contribution in mass/PhysMpc
@@ -98,7 +97,7 @@ void LensHaloBaseNSIE::force_halo(
     alpha_tmp[1] *= -1. * (1+zlens) ;
     
     // std::cout << "alpha final in force_halo : " << alpha_tmp[0] << " " << alpha_tmp[1] << std::endl ;
-    
+    // std::cout << "alpha final in force_halo : " << alpha_tmp[0] * (4*pi*Grav) << " " << alpha_tmp[1] * (4*pi*Grav) << std::endl ;
     
     // As before :
     alpha[0] += alpha_tmp[0];
