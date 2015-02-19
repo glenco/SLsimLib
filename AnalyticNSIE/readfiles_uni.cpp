@@ -182,7 +182,7 @@ void LensHaloUniform::assignParams(InputParams& params){
     else if(stars_N){
     	assignParams_stars(params);
     }
-
+  
 	return;
 }
 

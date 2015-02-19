@@ -120,6 +120,8 @@ public:
 
   PosType getPerturb_beta(){return perturb_beta;}
   IMFtype getIMF_type(){return main_stars_imf_type;}
+  EllipMethod getEllipMethod(){return main_ellip_method;}
+  
   int getPerturb_Nmodes(){return perturb_Nmodes;}    /// this includes two for external shear
   PosType *perturb_modes;  ///first two are shear
 	

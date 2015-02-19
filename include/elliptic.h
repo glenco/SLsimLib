@@ -12,6 +12,8 @@
 #include <iostream>
 #include "standard.h"
 #include "slsimlib.h"
+//#include "lens.h"
+
 /** \brief Class to convert isotropic LensHalos into elliptical halos.
  *
  *  This class changes the mass distribution into an elliptical shape 

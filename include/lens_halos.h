@@ -120,6 +120,10 @@ public:
   /// The mass of the stars if they are all the same mass
   PosType getStarMass() const {if(stars_implanted)return star_masses[0]; else return 0.0;}
   
+  /// the method used to ellipticize a halo if fratio!=1 and halo is not NSIE
+  EllipMethod getEllipMethod() const {return main_ellip_method;}
+  
+  
 	/// get the number of halo parameters
 	virtual std::size_t Nparams() const;
 	/// get the value of a scaled halo parameter by index
@@ -150,8 +154,7 @@ public:
   
   PosType renormalization(PosType r_max);
   PosType mnorm;
-
-  
+   
 protected:
 
   size_t idnumber; /// Identification number of halo.  It is not always used.
@@ -231,6 +234,7 @@ protected:
   IMFtype main_stars_imf_type;
   PosType main_stars_min_mass;
   PosType main_stars_max_mass;
+  EllipMethod main_ellip_method;
   PosType bend_mstar;
   PosType lo_mass_slope;
   PosType hi_mass_slope;
@@ -285,10 +289,18 @@ protected:
                                     ,PosType *kappa,PosType gamma[],PosType *phi);
   virtual void alphakappagamma2asym(PosType x,PosType theta, PosType alpha[2]
                                     ,PosType *kappa,PosType gamma[],PosType *phi);
+  virtual void alphakappagamma3asym(PosType x,PosType theta, PosType alpha[2]
+                                    ,PosType *kappa,PosType gamma[],PosType *phi);
   
   virtual PosType alpha_ell(PosType x,PosType theta);
   
   double fourier_coeff(double n, double q, double beta);
+  double IDAXDM(double lambda, double a2, double b2, double x[], double rmax, double mo);
+  double IDAYDM(double lambda, double a2, double b2, double x[], double rmax, double mo);
+  double SCHRAMMKN(double n, double x[], double rmax);
+  double SCHRAMMJN(double n, double x[], double rmax);
+  double SCHRAMMI(double x[], double rmax);
+
   
   void calcModes(double q, double beta, double rottheta, PosType newmod[]);
   void calcModesB(PosType x, double q, double beta, double rottheta, PosType newmod[]);
@@ -306,7 +318,125 @@ protected:
     double operator ()(double theta) {return cos(n*theta)/pow(cos(theta)*cos(theta) + 1/q/q*sin(theta)*sin(theta),beta/2) ;}
   };
  
-   
+  struct SCHRAMMJ_func{
+    SCHRAMMJ_func(double my_n, double my_x[], double my_rmax, LensHalo *my_halo): n(my_n), x(my_x), rmx(my_rmax), halo(my_halo){};
+    double n, *x, rmx;
+    double operator ()(double u) {
+      
+      // PosType xisq=sqrt(u*(x[0]*x[0]+x[1]*x[1]/(1-(1-halo->fratio*halo->fratio)*u)));
+      PosType xisq=sqrt((x[0]*x[0]+x[1]*x[1]/(1-u*(1-halo->fratio*halo->fratio))));
+      
+      if(xisq*xisq < 1e-20) xisq = 1.0e-10;
+      KappaType kappa=halo->kappa_h(xisq)/pi/xisq/xisq;
+      //std::cout << "Schramm: n=" << n << " " << u << " " << xisq << " " << halo->fratio << " " << rmx << " " << halo->Rmax << " " << halo->rscale << std::endl;
+      return kappa*halo->mass/pow((1.-(1.-halo->fratio*halo->fratio)*u),n+0.5);
+    }
+  private:
+    LensHalo *halo;
+  };
+  
+  struct SCHRAMMK_func{
+    SCHRAMMK_func(double my_n, double my_x[], double my_rmax, LensHalo *my_halo): n(my_n), x(my_x), rmx(my_rmax), halo(my_halo){};
+    double n, *x, rmx;
+    double operator ()(double u) {
+      
+     // PosType xisq=sqrt(u*(x[0]*x[0]+x[1]*x[1]/(1-(1-halo->fratio*halo->fratio)*u)));
+      PosType xisq=sqrt((x[0]*x[0]+x[1]*x[1]/(1-u*(1-halo->fratio*halo->fratio))));
+      if(xisq*xisq < 1e-20) xisq = 1.0e-10;
+      PosType h=0.0001;
+      PosType kp1=halo->kappa_h(xisq+h)/((xisq+h)*(xisq+h));
+      PosType km1=halo->kappa_h(xisq-h)/((xisq-h)*(xisq-h));
+      PosType kp2=halo->kappa_h(xisq+2*h)/((xisq+2*h)*(xisq+2*h));
+      PosType km2=halo->kappa_h(xisq-2*h)/((xisq-2*h)*(xisq-2*h));
+      PosType dkdxi=(8*kp1-8*km1-kp2+km2)/12/h/pi;
+      
+
+
+      //std::cout << "Schramm: n=" << n << " " << u << " " << xisq << " " << halo->fratio << " " << rmx << " " << halo->Rmax << " " << halo->rscale << std::endl;
+      return u*dkdxi/pow((1.-(1.-halo->fratio*halo->fratio)*u),n+0.5);
+      }
+    private:
+      LensHalo *halo;
+    };
+
+  
+  struct SCHRAMMI_func{
+    SCHRAMMI_func(double my_x[], double my_rmax, LensHalo *my_halo): x(my_x), rmx(my_rmax), halo(my_halo){};
+    double *x, rmx;
+    double operator ()(double u) {
+      
+      // PosType xisq=sqrt(u*(x[0]*x[0]+x[1]*x[1]/(1-(1-halo->fratio*halo->fratio)*u)));
+      PosType xisq=sqrt((x[0]*x[0]+x[1]*x[1]/(1-u*(1-halo->fratio*halo->fratio))));
+      
+      if(xisq*xisq < 1e-20) xisq = 1.0e-10;
+      PosType alpha=halo->alpha_h(xisq)/pi/xisq;
+      //std::cout << "Schramm: n=" << n << " " << u << " " << xisq << " " << halo->fratio << " " << rmx << " " << halo->Rmax << " " << halo->rscale << std::endl;
+      return xisq*alpha*halo->mass/pow((1.-(1.-halo->fratio*halo->fratio)*u),0.5);
+    }
+  private:
+    LensHalo *halo;
+  };
+
+  
+  struct IDAXDM_func{
+    IDAXDM_func(double my_lambda,double my_a2, double my_b2, double my_x[], double my_rmax, LensHalo *my_halo): lambda(my_lambda), a2(my_a2), b2(my_b2), x(my_x), rmx(my_rmax), halo(my_halo){};
+    double lambda, a2,b2, *x, rmx;
+    double operator ()(double m) {
+      double ap = m*m*a2 + lambda,bp = m*m*b2 + lambda;
+      double p2 = x[0]*x[0]/ap/ap/ap/ap + x[1]*x[1]/bp/bp/bp/bp;  // actually the inverse of equation (5) in Schramm 1990
+      PosType tmp = m*rmx;
+      if(tmp*tmp < 1e-20) tmp = 1.0e-10;
+      PosType xiso=tmp/halo->rscale;
+      KappaType kappa=halo->kappa_h(xiso)/pi/xiso/xiso;
+      
+      PosType alpha[2]={0,0},tm[2] = {m*rmx,0};
+      KappaType kappam=0,gamma[2]={0,0},phi;
+      halo->force_halo_sym(alpha,&kappam,gamma,&phi,tm);
+      
+      
+      //std::cout << "output x: " << m << " " << xiso << " " << m*kappa/(ap*ap*ap*bp*p2)*halo->mass << " " << m*kappam/(ap*ap*ap*bp*p2)<< std::endl;
+      double integrandA=m*kappa/(ap*ap*ap*bp*p2)*halo->mass;
+      double integrandB=m*kappam/(ap*ap*ap*bp*p2);
+      //std::cout << integrandA-integrandB << std::endl;
+      assert( abs((integrandA - integrandB)/integrandA)<1E-5);
+
+      assert(kappa >= 0.0);
+
+      //return m*kappa/(ap*ap*ap*bp*p2)*halo->mass; // integrand of equation (28) in Schramm 1990
+      return integrandB;
+    }
+  private:
+    LensHalo *halo;
+  };
+  
+  struct IDAYDM_func{
+    IDAYDM_func(double my_lambda,double my_a2, double my_b2, double my_x[], double my_rmax, LensHalo *my_halo): lambda(my_lambda), a2(my_a2), b2(my_b2), x(my_x), rmx(my_rmax), halo(my_halo){};
+    double lambda, a2,b2, *x, rmx;
+    double operator ()(double m) {
+      double ap = m*m*a2 + lambda,bp = m*m*b2 + lambda;
+      double p2 = x[0]*x[0]/ap/ap/ap/ap + x[1]*x[1]/bp/bp/bp/bp;  // actually the inverse of equation (5) in Schramm 1990
+      PosType tmp = m*rmx;
+      if(tmp*tmp < 1e-20) tmp = 1.0e-10;
+      PosType xiso=tmp/halo->rscale;
+      KappaType kappa=halo->kappa_h(xiso)/pi/xiso/xiso;
+      
+      PosType alpha[2]={0,0},tm[2] = {m*rmx,0};
+      KappaType kappam=0,gamma[2]={0,0},phi;
+      halo->force_halo_sym(alpha,&kappam,gamma,&phi,tm);
+      
+      double integrandA=m*kappa/(ap*ap*ap*bp*p2)*halo->mass;
+      double integrandB=m*kappam/(ap*bp*bp*bp*p2);
+      assert( abs((integrandA - integrandB)/integrandA)<1E-5);
+
+      assert(kappa >= 0.0);
+      //return m*kappa/(ap*bp*bp*bp*p2)*halo->mass; // integrand of equation (28) in Schramm 1990
+      return integrandB;
+    }
+  private:
+    LensHalo *halo;
+  };
+
+  
   const static int Nmod = 32;
   
   // Analytic description of Fourier modes
@@ -445,8 +575,36 @@ protected:
     }
   protected:
     LensHalo *halo;
+    
   };
 
+  struct DALPHAXDM{
+    DALPHAXDM(PosType lambda,PosType a2,PosType b2,PosType X[],LensHalo* myisohalo)
+    :lambda(lambda),a2(a2),b2(b2),x(X),isohalo(myisohalo){};
+    
+    PosType operator()(PosType m);
+  private:
+    PosType lambda;
+    PosType a2;
+    PosType b2;
+    PosType *x;
+    LensHalo* isohalo;
+  };
+  struct DALPHAYDM{
+    DALPHAYDM(PosType lambda,PosType a2,PosType b2,PosType X[],LensHalo* isohalo)
+    :lambda(lambda),a2(a2),b2(b2),x(X),isohalo(isohalo){};
+    
+    PosType operator()(PosType m);
+  private:
+    PosType lambda;
+    PosType a2;
+    PosType b2;
+    PosType *x;
+    LensHalo* isohalo;
+  };
+
+  
+  
   
 };
 
@@ -468,7 +626,7 @@ class LensHaloNFW: public LensHalo{
 public:
   /// Shell constructor that should be avoided
 	LensHaloNFW();
-  LensHaloNFW(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,int my_stars_N);
+  LensHaloNFW(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,int my_stars_N, EllipMethod my_ellip_method=Schramm);
 	LensHaloNFW(InputParams& params);
 	virtual ~LensHaloNFW();
   
@@ -508,7 +666,6 @@ public:
   /// set scale radius
 	void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
   
-  
 protected:
 	/// table size
 	static const long NTABLE;
@@ -519,7 +676,7 @@ protected:
   
 	/// tables for lensing properties specific functions
 	static PosType *ftable,*gtable,*g2table,*htable,*xtable,*xgtable,***modtable; // modtable was used for Ansatz IV and worked well
-	/// make the specific tables
+  /// make the specific tables
 	void make_tables();
 	/// interpolates from the specific tables
 	PosType InterpolateFromTable(PosType *table, PosType y) const;
@@ -655,7 +812,7 @@ private:
 class LensHaloPowerLaw: public LensHalo{
 public:
 	LensHaloPowerLaw();
-  LensHaloPowerLaw(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,PosType my_beta,float my_fratio,float my_pa,int my_stars_N);
+  LensHaloPowerLaw(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,PosType my_beta,float my_fratio,float my_pa, int my_stars_N, EllipMethod my_ellip_method=Schramm);
 	LensHaloPowerLaw(InputParams& params);
 	~LensHaloPowerLaw();
   
@@ -674,7 +831,6 @@ private:
   
 	///	read in parameters from a parameterfile in InputParams params
 	PosType beta;
-  PosType pa;
   
 	// Override internal structure of halos
   /// r |alpha(r)| pi Sigma_crit / Mass
@@ -790,7 +946,7 @@ protected:
 class LensHaloHernquist: public LensHalo{
 public:
 	//LensHaloHernquist();
-  LensHaloHernquist(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,int my_stars_N);
+  LensHaloHernquist(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,int my_stars_N, EllipMethod my_ellip_method=Schramm);
 	LensHaloHernquist(InputParams& params);
 	virtual ~LensHaloHernquist();
   
@@ -870,7 +1026,7 @@ private:
 class LensHaloJaffe: public LensHalo{
 public:
 	//LensHaloJaffe();
-  LensHaloJaffe(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,int my_stars_N);
+  LensHaloJaffe(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,int my_stars_N, EllipMethod my_ellip_method=Schramm);
 	LensHaloJaffe(InputParams& params);
 	virtual ~LensHaloJaffe();
   
