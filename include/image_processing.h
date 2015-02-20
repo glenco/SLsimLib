@@ -51,6 +51,8 @@ public:
 
   void AddImages(ImageInfo *imageinfo,int Nimages,float rescale = 1.);
   void AddImages(std::vector<ImageInfo> &imageinfo,int Nimages,float rescale = 1.);
+  void AddUniformImages(ImageInfo *imageinfo,int Nimages,double value);
+  
   void AddCurve(ImageInfo *curve,double value);
   void AddCurve(std::vector<Point_2d> &curve,double value);
   

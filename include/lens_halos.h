@@ -109,7 +109,7 @@ public:
 	bool compareZ(PosType z){return z > zlens;};
   
   /// stars
-  bool AreStarsImaplated() const {return stars_implanted;}
+  bool AreStarsImplanted() const {return stars_implanted;}
   void implant_stars(PosType **centers,int Nregions,long *seed, IMFtype type=One);
   void implant_stars(PosType *center,long *seed,IMFtype type = One);
   //void implant_stars(PosType *x,PosType *y,int Nregions,long *seed,IMFtype type=One);
@@ -626,7 +626,14 @@ class LensHaloNFW: public LensHalo{
 public:
   /// Shell constructor that should be avoided
 	LensHaloNFW();
-  LensHaloNFW(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,int my_stars_N, EllipMethod my_ellip_method=Schramm);
+  LensHaloNFW(float my_mass   /// in solar masses
+              ,float my_Rmax  /// in Mpc
+              ,PosType my_zlens   /// redshift
+              ,float my_rscale    /// in Mpc
+              ,float my_fratio    /// axis ratio
+              ,float my_pa
+              ,int my_stars_N
+              ,EllipMethod my_ellip_method=Schramm);
 	LensHaloNFW(InputParams& params);
 	virtual ~LensHaloNFW();
   

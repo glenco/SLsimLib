@@ -1,6 +1,4 @@
-
 #include "slsimlib.h"
-
 #include <nrutil.h>
 
 using namespace std;
@@ -8,7 +6,6 @@ using namespace std;
 static double betaT,*modT,**xobT,**dx_subT,sigGT,*modTT,*modoT,**vT,x_centerT[2],**xgT,**dx_subTt;
 static int NmodT,NsourcesT,NimagesT,*pairingT,degenT,Nmin;
 static double oldsm;//,tang[2],length,yot[2],radsourceT;
-
 
 /** \ingroup FitLens
  *
@@ -41,6 +38,205 @@ void LensHaloFit::FindLensSimple(
   
   delete[] imageinfo;
 }
+
+
+
+/** \ingroup FitLens
+ *
+ *  \brief Same as FindLensSimple but with some tests in it.
+ *
+ *
+ */
+
+bool LensHaloFit::SafeFindLensSimple(
+                                 int Nimages               /// Number of images to be fit
+                                 ,Point *image_positions   /// Array of points with point[i].x set to the image positions
+                                 ,double *y                /// output source position
+                                 ,double **dx_sub          /// dx_sub[Nimages][2] pre-calculated deflections caused by substructures or external masses at each image
+                                 ,int SafetyNum            /// integer of the number of time you want to check the modes
+                                 ,PosType PixelSizeRad     /// Pixel size in radians used for the maps
+                                 ,bool verbose             /// verbose mode switch
+){
+  // Array to store the modes over the different calls of FindLensSimple :
+  PosType ModesMin [perturb_Nmodes] ;         // Minimal value for the modes (among all calls)
+  PosType ModesMax [perturb_Nmodes] ;         // Maximal value for the modes (among all calls)
+  PosType ModesAve [perturb_Nmodes] ;         // Average value for the modes (among all calls)
+  const double ToleranceModes = 0.01 ;        // Tolerance on the ratio (Max-Min)/Average for the modes
+  // way 1 :
+  // const double ToleranceSourcePos = 0.1 ;  // Tolerance on the ratio (y-x)/alpha on the source position reconstruction
+  // way 2 :
+  const double ToleranceSourcePos = 1. ;      // Tolerance on the difference y-x+alpha , with respect to the pixel size, on the source position reconstruction
+  bool ReturnCode = true ;                    // Boolean that returns whether or not the Fit was a success.
+  
+  
+  // Doing the proper initialisation of these quantities :
+  for(int k=0;k<perturb_Nmodes;++k)
+  {
+    ModesMin[k] = 1.e100 ;    // So the modes have to be less than that !
+    ModesMax[k] = -1.e100 ;   // So the modes have to be more than that !
+    ModesAve[k] = 0. ;
+  }
+  
+  // Defining the imageinfo used after :
+  ImageInfo* imageinfo = new ImageInfo[Nimages];
+  for(int i=0;i<Nimages;++i){
+    imageinfo[i].centroid[0] = image_positions[i].x[0];
+    imageinfo[i].centroid[1] = image_positions[i].x[1];
+  }
+  
+  // We compute the modes SafetyNum times and retain the min, the max, and the sum :
+  // ===============================================================================
+  for(int i=0;i<SafetyNum;i++)
+  {
+    // Calling FindLensSimple (the one that really computes the modes) :
+    ///////////////////////////////////////////
+    FindLensSimple(imageinfo,Nimages,y,dx_sub);
+    ///////////////////////////////////////////
+    
+    // Filling the check tables :
+    for(int k=0;k<perturb_Nmodes;++k)
+    {
+      if(perturb_modes[k]<ModesMin[k]) ModesMin[k] = perturb_modes[k];
+      if(perturb_modes[k]>ModesMax[k]) ModesMax[k] = perturb_modes[k];
+      ModesAve[k] += perturb_modes[k]; // Summing the modes
+    }
+  }
+  // Dividing by the number of values to get the average :
+  for(int k=0;k<perturb_Nmodes;++k) ModesAve[k] /= perturb_Nmodes ;
+  
+  // We compare the min and max values with the average :
+  for(int k=0;k<perturb_Nmodes;++k)
+  {
+    if(abs(ModesMax[k]-ModesMin[k]) > abs(ToleranceModes*ModesAve[k]))
+    {
+      ERROR_MESSAGE();
+      std::cout << "Error of unstability in SafeFindLensSimple !" << std::endl ;
+      ReturnCode = false ;
+      return ReturnCode ;
+      // exit(0);
+    }
+  }
+  
+  if(verbose)
+  {
+    std::cout << "Values of the modes :" << std::endl ;
+    std::cout << "Ave : " ;
+    for(int k=0;k<perturb_Nmodes;++k) std::cout << perturb_modes[k] << " " ;
+    std::cout << std::endl << "Min : " ;
+    for(int k=0;k<perturb_Nmodes;++k) std::cout << ModesMin[k] << " " ;
+    std::cout << std::endl << "Max : " ;
+    for(int k=0;k<perturb_Nmodes;++k) std::cout << ModesMax[k] << " " ;
+    std::cout << std::endl ;
+    
+    std::cout << std::endl << "Estimation made with " << SafetyNum << " calls of FindLensSimple, with a tolerance of " << ToleranceModes*100. << " % on the modes." << std::endl;
+    
+    // Caption :
+    // q[1] : ellipticity of nearest elliptical lens
+    // q[2] : position angle of nearest elliptical lens
+    // if sigG > 0 :
+    // q[3,4] : center of lens, copied to x_center
+    
+    cout << "Ellipticity : " << qpriv[1] << " , position angle : " << qpriv[2] << std::endl ;
+    if (sigGT > 0) cout << "Center of the lens : " << qpriv[3] << " , " << qpriv[4] << std::endl ;
+  }
+  
+
+  // Testing that the image positions are consistent when traced back to the source plane :
+  // ======================================================================================
+  
+  std::cout << std::endl << "Evaluated position of the source from each image :" << std::endl ;
+  
+  // alpha that we are going to use after to get the source position form the back-traced image position :
+  PosType * alphaTMP = new PosType [2];
+  alphaTMP[0] = 0. ; alphaTMP[1] = 0. ;
+  // Quantities not used for the moment :
+  double betaTMP = perturb_beta ;
+  KappaType * gammaTMP = new KappaType [3];
+  KappaType * phiTMP = new KappaType ;
+  KappaType kappaTMP;
+  gammaTMP[0] = 0. ; gammaTMP[1] = 0. ; gammaTMP[2] = 0. ;
+  *phiTMP = 0. ;
+  kappaTMP = 0. ;
+  
+  // Ratios for (y-x)/alpha :
+  PosType ratioSourcePos [2] ;
+  ratioSourcePos[0] = ratioSourcePos[1] = 0. ;
+
+  // Displaying the back-traced positions :
+  for(int i=0;i<Nimages;++i)
+  {
+    Point pointTMP ;
+    pointTMP.x[0] = image_positions[i].x[0] * Dl ;
+    pointTMP.x[1] = image_positions[i].x[1] * Dl ;
+    
+    kappaTMP = lens_expand(betaTMP, perturb_modes, perturb_Nmodes, pointTMP.x, alphaTMP, gammaTMP, phiTMP); // We removed the -1 after perturb_Nmodes AS IT SHOULD NOT BE THERE but it is still used this way in LensHaloBaseNSIE::force_halo !
+    
+    // Applying the factors of LensHaloBaseNSIE::force_halo :
+    alphaTMP[0] += pointTMP.x[0] / (Dl*(1+zlens)) / (4*pi*Grav) ;
+    alphaTMP[1] += pointTMP.x[1] / (Dl*(1+zlens)) / (4*pi*Grav) ;
+    alphaTMP[0] *= -1. * (1+zlens) ;
+    alphaTMP[1] *= -1. * (1+zlens) ;
+    
+    // Applying the extra factors of RayShooter :
+    alphaTMP[0] *= -4*pi*Grav ;
+    alphaTMP[1] *= -4*pi*Grav ;
+    alphaTMP[0] *= Dls / Ds ;
+    alphaTMP[1] *= Dls / Ds ;
+    
+    // Computing ratios :
+    ratioSourcePos[0] = abs(alphaTMP[0]) / abs(y[0] - image_positions[i].x[0]) ;
+    ratioSourcePos[1] = abs(alphaTMP[1]) / abs(y[1] - image_positions[i].x[1]) ;
+    
+    // Displaying the values :
+    if(verbose)
+    {
+    std::cout << "Image : " << image_positions[i].x[0] << " " << image_positions[i].x[1] << std::endl ;
+    std::cout << "y - x : " << y[0] - image_positions[i].x[0] << " " << y[1] - image_positions[i].x[1] << std::endl ;
+    std::cout << "alpha : " << alphaTMP[0] << " " << alphaTMP[1] << std::endl ;
+    std::cout << "ratios : " << ratioSourcePos[0] << " " << ratioSourcePos[1] << std::endl ;
+    }
+    
+    // Deciding if the test is sufficient to keep on with the rest :
+    if(verbose)
+    {
+    std::cout << "(y-x+alpha)/pixelsize : " << abs(y[0] - image_positions[i].x[0] + alphaTMP[0]) / PixelSizeRad << " , " << abs(y[1] - image_positions[i].x[1] + alphaTMP[1]) / PixelSizeRad << " pixels." << std::endl ;
+    std::cout << "! x - alpha : " << image_positions[i].x[0] - alphaTMP[0] << " , " << image_positions[i].x[1] - alphaTMP[1] << " !" << std::endl << std::endl ;
+    }
+    for(int k=0;k<2;k++)
+    {
+      // In the case where we are above the tolerance on the source position & the real source position is not too close to (0,0) :
+      // way 1 :
+      // if( abs(ratioSourcePos[k]-1) > ToleranceSourcePos && abs(y[k] - image_positions[i].x[k]) > 1.e-15 ) // assuming positions to be in radians.
+      // way 2 :
+      if( abs(y[k] - image_positions[i].x[k] + alphaTMP[k]) > PixelSizeRad * ToleranceSourcePos && abs(y[k] - image_positions[i].x[k]) > 1.e-15 ) // assuming positions to be in radians.
+      {
+        ERROR_MESSAGE();
+        std::cout << "Error of precision in source-position reconstruction in SafeFindLensSimple !" << std::endl ;
+        ReturnCode = false ;
+        return ReturnCode ;
+        // exit(0);
+      }
+      // Else we can continue !
+    }
+    if(!verbose) std::cout << "Back-traced source position : " << image_positions[i].x[0] - alphaTMP[0] << " " << image_positions[i].x[1] - alphaTMP[1] << std::endl << std::endl ;
+    
+  }
+
+  // OTHER TESTS ?
+  // =============
+  
+  // Otherwise we keep the last computed modes and display them :
+  std::cout << std::endl << "Perturbation modes (in LensHaloFit::FindLensSimple) :" << std::endl;
+  for(int i=0;i<perturb_Nmodes;++i) std::cout << perturb_modes[i] << " " ;
+  std::cout << std::endl;
+  
+  
+  delete[] imageinfo;
+  
+  return ReturnCode ;
+}
+
+
 /** \ingroup FitLens
  *
  *  \brief Wrapper that allows simple lens to be found with a single
@@ -110,7 +306,8 @@ void LensHaloFit::FindLensSimple(
   x_center[1] /= scale;
   
   //ERROR_MESSAGE();
-  ElliptisizeLens(Nimages,Nsources,1,pairing,xob,x_center,xg,0,perturb_beta,perturb_Nmodes-1,mods,dx_sub,&re2,q); // The -1 in after perturb_Nmodes is important !
+  ElliptisizeLens(Nimages,Nsources,1,pairing,xob,x_center,xg,0,perturb_beta,perturb_Nmodes
+                  ,mods,dx_sub,&re2,q); // The -1 in after perturb_Nmodes WAS MAKING FINDLENSSIMPLE UNSTABLE !
   
   // Assigning the modes :
   for(i=1;i<perturb_Nmodes;++i) perturb_modes[i] = mods[i];
@@ -279,7 +476,7 @@ double LensHaloFit::ElliptisizeLens(
   NmodT=Nmod;
   sigGT=sigG;
   
-  for(i=1;i<=Nmod+2*Nsources;++i) mod[i]=0.0;
+  for(i=1;i<=Nmod+2*Nsources+1;++i) mod[i]=0.0;
   
   for(i=0;i<Nimages;++i){
     xobT[i][0] = xob[i][0];
@@ -302,7 +499,7 @@ double LensHaloFit::ElliptisizeLens(
   find_lens(NimagesT,NsourcesT,pairingT,xobT,x_center,betaT,NmodT,&degenT,modT,vT,dx_subT);
   
   //std::printf("found model\n");
-  for(i=1;i<=Nmod + 2*Nsources;++i) mod[i] = modT[i];
+  for(i=1;i<=Nmod+2*Nsources+1;++i) mod[i] = modT[i];
   
   /*
    * find the most elliptical model amongst the degenerate models that
@@ -352,7 +549,7 @@ double LensHaloFit::ElliptisizeLens(
     x_center[0] = q[3];
     x_center[1] = q[4];
   }
-  for(i=1;i<=Nmod+2*Nsources;++i) mod[i]=modTT[i];
+  for(i=1;i<=Nmod+2*Nsources+1;++i) mod[i]=modTT[i];
   
   //std::printf("iter = %i\n",iter);
   free_ivector(pairingT,0,Nimages-1);
@@ -439,7 +636,7 @@ double minEllip(double *par){
   
   if( sm < oldsm || oldsm < 0.0){
     oldsm=sm;
-    for(i=1;i<=NmodT+2*NsourcesT;++i) modTT[i]=modT[i];
+    for(i=1;i<=NmodT+2*NsourcesT+1;++i) modTT[i]=modT[i];
   }
   //std::printf("q=%e   theta=%e gamma=%e %e\n",q,theta*180/pi,modT[1],modT[2]);
   //std::printf("%e %e %e %e %e %e\n",modoT[3],modoT[4],modoT[5],modoT[6],modoT[7],modoT[8]);
@@ -470,9 +667,7 @@ double minEllip(double *par){
  * - [3]=ao
  *******************************************************/
 //void AnaNSIELensHalo::find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *x_center,double beta
-void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *x_center,double beta
-               ,int Nmodes,int *degen,double *mod,double **v,double **dx_sub){
-  
+void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *x_center,double beta,int Nmodes,int *degen,double *mod,double **v,double **dx_sub){
   double **c,*b,*w,r,theta,wmax,**a,*y,*temp,**x;
   int i,k,j;
   
@@ -567,10 +762,10 @@ void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *x_cent
    * mod[i] + a_1 v[i][1] + ... + a_degen v[i][degen] is a solution
    **/
   
-  for(i=1,j=0;i<=Nmodes+2*Nsources;++i){
+  for(i=1,j=0;i<=Nmodes+2*Nsources+1;++i){
     if (w[i] == 0.0){
       ++j;
-      for(k=1;k<=Nmodes+2*Nsources;++k){
+      for(k=1;k<=Nmodes+2*Nsources+1;++k){
         v[k][j]=v[k][i];
       }
     }
@@ -745,7 +940,7 @@ double regularize(int Nmax,int Nmin,int N,int Nsources,int degen
                   ,double *mod,double **v,double *modo){
   double Dsum,sum=0,sumold,aa,*weights;
   
-  
+
   int i,j;
   
   /*
@@ -795,7 +990,7 @@ double regularize(int Nmax,int Nmin,int N,int Nsources,int degen
       }
       weights[j] /= sum;
       
-      for(i=1;i<=N+2*Nsources;++i){
+      for(i=1;i<=N+2*Nsources+1;++i){
         //std::printf("i=%i j=%i w=%e v=%e\n",i,j,weights[j],v[i][j]);
         if(weights[j] == weights[j]) mod[i] += weights[j]*v[i][j];
       }
@@ -949,3 +1144,64 @@ int LensHaloAnaNSIE::check_model(int Nimages,int Nsources,int Nlenses,int *pairi
   
   return 0;
 }
+
+
+// Copied from lens_expand.c
+PosType LensHaloFit::lens_expand(PosType beta,PosType *mod,int Nmodes,PosType const *x,PosType *alpha,KappaType *gamma,KappaType *phi)
+{
+  PosType F,F1,F2,theta,r,cosx,sinx,cos2theta,sin2theta,gt,gx;
+  int i,k;
+  
+  if(Nmodes<=0){
+    alpha[0]=alpha[1]=0;
+    gamma[0]=gamma[1]=0;
+    return 0.0;
+  }
+  
+  r=sqrt(x[0]*x[0] + x[1]*x[1]);
+  theta=atan2(x[1],x[0]);
+  cosx=x[0]/r;
+  sinx=x[1]/r;
+  
+  if(Nmodes > 3) F=0.5*mod[3];
+  else F = 0;
+  F1=0;
+  F2=0;
+  for(i=4;i<Nmodes;i+=2){
+    k=i/2;
+    F += mod[i]*cos(k*theta)     + mod[i+1]*sin(k*theta);
+    F1+=-mod[i]*k*sin(k*theta)   + mod[i+1]*k*cos(k*theta);
+    F2+=-mod[i]*k*k*cos(k*theta) - mod[i+1]*k*k*sin(k*theta);
+  }
+  
+  alpha[0] = pow(r,beta-1)*(beta*cosx*F - sinx*F1);
+  alpha[1] = pow(r,beta-1)*(beta*sinx*F + cosx*F1);
+  
+  // add shear
+  alpha[0] +=  x[0]*mod[1] + x[1]*mod[2];
+  alpha[1] += -x[1]*mod[1] + x[0]*mod[2];
+  
+  // add flat kappa
+  alpha[0] += -1.0*x[0]*mod[0];
+  alpha[1] += -1.0*x[1]*mod[0];
+  
+  gt=-0.5*pow(r,beta-2)*(beta*(beta-2)*F-F2);
+  gx=pow(r,beta-2)*(beta-1)*F1;
+  
+  cos2theta=2*cosx*cosx-1;
+  sin2theta=2*cosx*sinx;
+  
+  gamma[0]=-(gt*cos2theta+gx*sin2theta) + mod[1];
+  gamma[1]=-gt*sin2theta+gx*cos2theta  + mod[2];
+  
+  //gamma[0]=-0.5*( x[0]*(r*dxdr - dyda) - x[1]*(r*dydr + dxda) )/r/r;
+  //gamma[1]=-(  x[0]*dxda + r*x[1]*dxdr )/r/r;
+  
+  // potential
+  *phi = F*pow(r,beta) + r*r*(mod[0] + mod[1]*cos2theta + mod[2]*sin2theta)/2;
+  
+  //printf("  lens_expand *phi = %e\n",*phi);
+  return 0.5*(beta*beta*F+F2)*pow(r,beta-2) + mod[0];
+}
+
+

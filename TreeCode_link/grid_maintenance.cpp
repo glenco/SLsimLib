@@ -1060,6 +1060,14 @@ PixelMap Grid::writePixelMap(
   return map;
 }
 
+/** \brief Output a fits map of the without distribution the pixels.
+ *
+ *  This will be faster than Grid::writePixelMap() and Grid::writeFits().
+ *  But it puts each grid pixel in one pixelmap pixel and if there are two
+ *  grid pixels in one pixelmap pixel it uses one at random.  This is meant
+ *  for uniform maps to make equal sized PixelMaps.
+ */
+
 void Grid::writeFitsUniform(
                                 const PosType center[]  /// center of image
                                 ,size_t Nx       /// number of pixels in image in on dimension

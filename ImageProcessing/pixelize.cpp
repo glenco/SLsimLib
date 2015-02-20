@@ -420,6 +420,7 @@ void PixelMap::AddImages(
                          ,int Nimages           /// Number of images on input.
                          ,float rescale         /// rescales the surface brightness while leaving the image unchanged,
 ///  see full notes
+
 ){
   
   if(Nimages <= 0) return;
@@ -458,13 +459,48 @@ void PixelMap::AddImages(
 
 void PixelMap::AddImages(
                          std::vector<ImageInfo> &imageinfo   /// An array of ImageInfo-s.  There is no reason to separate images for this routine
-                         ,int Nimages           /// Number of images on input.
+                          ,int Nimages           /// Number of images on input.
                          ,float rescale         /// rescales the surface brightness while leaving the image unchanged,
 ///  see full notes
 ){
   AddImages(imageinfo.data(),Nimages,rescale);
 }
 
+/** \brief Add images with uniform surface brightness set by input parameter value.
+ *
+ *   This does not use the surface brightnesses stored in the image points.
+ */
+void PixelMap::AddUniformImages(
+                      ImageInfo *imageinfo   /// An array of ImageInfo-s.  There is no reason to separate images for this routine
+                      ,int Nimages,double value){
+  
+  if(Nimages <= 0) return;
+  if(imageinfo->imagekist->Nunits() == 0) return;
+  
+  float area = 1;
+  std::list <unsigned long> neighborlist;
+  std::list<unsigned long>::iterator it;
+  for(long ii=0;ii<Nimages;++ii){
+    
+    if(imageinfo->imagekist->Nunits() > 0){
+      imageinfo[ii].imagekist->MoveToTop();
+      do{
+        
+        assert(imageinfo[ii].imagekist->getCurrent()->leaf);
+        
+        if ((inMapBox(imageinfo[ii].imagekist->getCurrent()->leaf)) == true){
+          PointsWithinLeaf(imageinfo[ii].imagekist->getCurrent()->leaf,neighborlist);
+          for(it = neighborlist.begin();it != neighborlist.end();it++){
+            area = LeafPixelArea(*it,imageinfo[ii].imagekist->getCurrent()->leaf);
+            map[*it] += value*area/resolution/resolution;
+          }
+        }
+      }while(imageinfo[ii].imagekist->Down());
+    }
+  }
+  
+  return;
+}
 /// returns the grid points within the branch
 void PixelMap::PointsWithinLeaf(Branch * branch1, std::list <unsigned long> &neighborlist){
   

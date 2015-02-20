@@ -439,7 +439,9 @@ void SourceMultiAnaGalaxy::sortInMag(Band tmp_band){
 /// Sort the sources by magnitude in assending order
 void SourceMultiAnaGalaxy::sortInID(){
   if(galaxies.size() < 2) return;
-  std::sort(galaxies.begin(),galaxies.end(),idcompare);
+  std::sort(galaxies.begin(),galaxies.end(),
+            [](SourceOverzier s1,SourceOverzier s2){return (s1.getID() < s2.getID());});
+
   delete searchtree;
   searchtree = new TreeSimpleVec<SourceOverzier>(galaxies.data(),galaxies.size(),1,2,true,SourceOverzier::getx);
 }

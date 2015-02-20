@@ -537,13 +537,18 @@ bool InputParams::get(std::string label, HaloCatFormats& value) const
 		value = MillenniumObs;
 		return true;
 	}
-	if(!it->second.compare("MultiDarkHalos"))
-	{
-		value = MultiDarkHalos;
-		return true;
-	}
+  if(!it->second.compare("MultiDarkHalos"))
+  {
+    value = MultiDarkHalos;
+    return true;
+  }
+  if(!it->second.compare("ObservedData"))
+  {
+    value = ObservedData;
+    return true;
+  }
   
-	std::cout << label << " in parameter file " << paramfile_name << " needs to be MillenniumObs or MultiDarkHalos!" << std::endl;
+	std::cout << label << " in parameter file " << paramfile_name << " needs to be MillenniumObs, MultiDarkHalos or ObservedData!" << std::endl;
 	return false;
 }
 

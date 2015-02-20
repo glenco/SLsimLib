@@ -1181,13 +1181,13 @@ namespace Utilities
     }
   }
   
-  /// Find the indexes that sort a vector in assending order
+  /// Find the indexes that sort a vector in asending order
   template <typename T>
   void sort_indexes(const std::vector<T> &v     /// the original data that is not changed
                     ,std::vector<size_t> &index /// vector of indexes that if put into v will sort it
   ) {
     
-    // initialize original index locations
+    // initialise original index locations
     index.resize(v.size());
     for (size_t i = 0; i != index.size(); ++i) index[i] = i;
     
@@ -1199,7 +1199,7 @@ namespace Utilities
 #ifdef ENABLE_FFTW
   /** \brief Calculates power spectrum from a 2d map or the cross-power spectrum between two 2d maps.
    *
-   *   Adaptied from Calor Gioccoli's pl() routine.
+   *   Adaptied from Carlo Gioccoli's pl() routine.
    */
   void powerspectrum2d(
                        std::valarray<double> const &aa      /// first realspace map to be
