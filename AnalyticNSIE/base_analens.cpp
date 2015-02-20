@@ -746,7 +746,6 @@ void LensHalo::alphakappagamma_asym(
  ){ // According to Ansatz II
  PosType f[3],g[4],alpha_r,alpha_theta;
  PosType x=r/rscale;
- std::cout << "PSEUDO"  << std::endl;
  felliptical(x,fratio,theta,f,g);
  
  PosType alpha_isoG = mass*alpha_h(f[0])/f[0]/pi;
@@ -791,7 +790,6 @@ void LensHalo::alphakappagamma1asym(
       ,PosType gamma[]
       ,PosType *phi
                                     ){
-  std::cout << "FOURIER"  << std::endl;
   PosType f[3],g[3],alpha_r,alpha_theta;
   PosType F;
   PosType x=r/rscale;
@@ -852,7 +850,6 @@ void LensHalo::alphakappagamma2asym( // Schramm 1990
                                     ,PosType gamma[]
                                     ,PosType *phi
                                     ){
-  std::cout << "SCHRAMM"  << std::endl;
   double a = Rmax*sqrt(fratio);
   double b = Rmax/sqrt(fratio);
   double a2=a*a,b2 = b*b;
@@ -899,7 +896,6 @@ void LensHalo::alphakappagamma3asym( // Keeton's 2001 adaption of Schramm 1990
                                     ,PosType gamma[]
                                     ,PosType *phi
                                     ){
-  std::cout << "KEETON"  << std::endl;
   //double a = Rmax*sqrt(fratio);
   //double b = Rmax/sqrt(fratio);
   //double a2=a*a,b2 = b*b;

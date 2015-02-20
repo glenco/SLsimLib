@@ -93,7 +93,7 @@ public:
   virtual PosType get_slope(){return beta;};
   /// flag=True if halo elliptical
   bool get_flag_elliptical(){return elliptical_flag;};
-  void set_flag_elliptical(bool ell){elliptical_flag=ell; r_eps = 0.3*Rmax;};
+  void set_flag_elliptical(bool ell){elliptical_flag=ell;};
   
   /// set cosmology for halo
 	virtual void setCosmology(const COSMOLOGY& cosmo) {}

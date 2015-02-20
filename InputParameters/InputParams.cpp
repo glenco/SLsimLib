@@ -640,7 +640,7 @@ bool InputParams::get(std::string label, EllipMethod& value) const
 		value = Keeton;
 		return true;
 	}
-	 
+
 	std::cout << label << " in parameter file " << paramfile_name << " needs to be Fourier, Pseudo, Schramm or Keeton!" << std::endl;
 	return false;
 }
