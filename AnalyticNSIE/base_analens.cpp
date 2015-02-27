@@ -453,6 +453,7 @@ LensHaloBaseNSIE::~LensHaloBaseNSIE(){
 
 /// Derivatives of the potential factor with respect to theta
 
+
 void LensHalo::faxial(PosType x, PosType theta,PosType f[]){
     int i,k;
     //for(int i=0;i<Nmod;i++){
@@ -841,8 +842,7 @@ void LensHalo::alphakappagamma1asym(
 }
 
 
-
-void LensHalo::alphakappagamma2asym( // remove this when everything else ( e.g. alphakappagamma1asym and phi(G) implementation ) works
+void LensHalo::alphakappagamma2asym( // Schramm 1990
                                     PosType r        /// Radius in Mpc (not scale lensgths)
                                     ,PosType theta    /// angle of ray
                                     ,PosType alpha[]  /// output deflection
@@ -850,57 +850,111 @@ void LensHalo::alphakappagamma2asym( // remove this when everything else ( e.g. 
                                     ,PosType gamma[]
                                     ,PosType *phi
                                     ){
-  PosType f[3],g[4],alpha_r,alpha_theta;
-  PosType F;
-  //PosType phi_iso=mass*(phi_int(r/rscale))/pi/r/r;
-  PosType phi_iso=-1.0*mass*(phi_h(r/rscale)-log(Rmax)+1./(2-beta))/pi/r/r;    //  ( pow(x/xmax,2-beta) - 1 )/(2-beta) + log(Rmax)
-  PosType alpha_iso=mass*alpha_h(r/rscale)/pi/r/r;
-  PosType kappa_iso=mass*kappa_h(r/rscale)/pi/r/r;
-  PosType gamma_iso=mass*gamma_h(r/rscale)/pi;
+  double a = Rmax*sqrt(fratio);
+  double b = Rmax/sqrt(fratio);
+  double a2=a*a,b2 = b*b;
+  double xm[2];
+  xm[0]=r*cos(theta);
+  xm[1]=r*sin(theta);
+  
+  //std::cout << "inside akg2: " << pa << " " << xm[0] << " " << xm[1] <<  std::endl;
+  double tmp = (a2 + b2 - xm[0]*xm[0] - xm[1]*xm[1]);
+  double c = cos(pa),s = sin(pa);
+  double xtmp[2] = {xm[0]*c - xm[1]*s,xm[0]*s + xm[1]*c};
+  //double xtmp[2] = {xm[0],xm[1]};
   
   
-  faxial1(theta,f);
-  gradial(r,g);
+  double lambda = (tmp + sqrt(tmp*tmp + 4*(xm[0]*xm[0]*b2 + xm[1]*xm[1]*a2 - a2*b2 )) )/2;
+  assert(lambda == lambda);
   
-  F=f[0]-1.;
+  PosType mo = sqrt(xtmp[0]*xtmp[0]/a2 + xtmp[1]*xtmp[1]/b2);
+  //std::cout<< mo << " " << lambda << " " << xtmp[0] << " " << xtmp[1] << " " << r << " " << theta << std::endl;
+  //DALPHAXDM funcX(lambda,a2,b2,xtmp,this);
+  alpha[0] = -8*a*b*xtmp[0]*IDAXDM(lambda,a2,b2,xtmp,Rmax,mo)/pi;
+  //alpha[0] = -8*a*b*xtmp[0]*Utilities::nintegrate<DALPHAXDM,PosType>(funcX,0,MIN(mo,1.0),1.0e-1)/pi;
+  //DALPHAYDM funcY(lambda,a2,b2,xtmp,this);
+  alpha[1] = -8*a*b*xtmp[1]*IDAYDM(lambda,a2,b2,xtmp,Rmax,mo)/pi;
+  //alpha[1] = -8*a*b*xtmp[1]*Utilities::nintegrate<DALPHAYDM,PosType>(funcY,0,MIN(mo,1.0),1.0e-1)/pi;
+  double temp = alpha[0];
+  //std::cout << c << " " << s <<  std::endl;
+  alpha[0] = temp*c + alpha[1]*s;
+  alpha[1] = -temp*s + alpha[1]*c;
+  *kappa = 0.0;
+  gamma[0] = 0.0;
+  gamma[1] = 0.0;
   
-  beta=get_slope(); // only for fixed beta, i.e. PowerLaw
-  //beta=bfunction(x); // only for NFW
-  PosType fac=1.0/(beta*beta/(2.-beta)/(2.-beta));
+  *phi = 0;
   
-  alpha_r = (alpha_iso*f[0]); // w/o damping
-  alpha_theta = (phi_iso*r*f[1]); //  w/o damping
+};
+
+
+void LensHalo::alphakappagamma3asym( // Keeton's 2001 adaption of Schramm 1990
+                                    PosType r        /// Radius in Mpc (not scale lensgths)
+                                    ,PosType theta    /// angle of ray
+                                    ,PosType alpha[]  /// output deflection
+                                    ,PosType *kappa   /// output kappa
+                                    ,PosType gamma[]
+                                    ,PosType *phi
+                                    ){
+  //double a = Rmax*sqrt(fratio);
+  //double b = Rmax/sqrt(fratio);
+  //double a2=a*a,b2 = b*b;
+  double xm[2];
+  xm[0]=r*cos(theta)/Rmax;
+  xm[1]=r*sin(theta)/Rmax;
   
-  //alpha_r = (alpha_iso*(1+F*g[0])+phi_iso*F*g[1]); // with damping
-  //alpha_theta =  (phi_iso*g[0]*f[1]/r); //  with damping
+  //std::cout << "inside akg4: " << pa << " " << xm[0] << " " << Rmax <<  std::endl;
+  double c = cos(pa),s = sin(pa);
+  double xtmp[2] = {xm[0]*c - xm[1]*s,xm[0]*s + xm[1]*c};
   
-  alpha[0] = (alpha_r*cos(theta) - alpha_theta*sin(theta))/cos(theta);
-	alpha[1] = (alpha_r*sin(theta) + alpha_theta*cos(theta))/sin(theta);
-  
-  
-	//alpha[0] = alpha_r*cos(theta) - alpha_theta*sin(theta);
-	//alpha[1] = alpha_r*sin(theta) + alpha_theta*cos(theta);
-  
-  *kappa = (f[0]*kappa_iso-0.5*f[2]*fac*phi_iso);//  w/o damping
-  //*kappa=(1+F*g[0])*kappa_iso-0.5*phi_iso*fac*(F*g[1]/r+F*g[2]+f[2]*g[0]/r/r)*r*r-F*g[1]*alpha_iso*r*r; /// with damping
-  
-  PosType gt = (f[0]*gamma_iso+0.5*phi_iso*fac*f[2]);// w/o damping
-  PosType g45 = (-alpha_iso*f[1]*g[0])*r+(phi_iso*fac*f[1]);// w/o damping
-  
-  //PosType gt = (1+F*g[0])*gamma_iso+0.5*phi_iso*fac*(-F*g[1]/r+F*g[2]-f[2]*g[0]/r/r)*r*r-F*g[1]*alpha_iso*r*r;// with damping
-  //PosType g45 = (-alpha_iso*f[1]*g[0]-phi_iso*fac*f[1]*g[1])*r+(phi_iso*fac*f[1]*g[0]);// with damping
-  // PosType gt = mass*0.5*pow(r/rscale,beta-2)*((beta*(beta-2)*f[0])-f[2])/pi;// according to phi=r^beta w/o damping
-  // PosType g45 = mass*(beta-1)*f[1]*pow(r/rscale,beta-2)/pi;// according to phi=r^beta w/o damping
-  
-  gamma[0] = cos(2*theta)*gt - sin(2*theta)*g45;
-  gamma[1] = sin(2*theta)*gt - cos(2*theta)*g45;
-  
-  //*phi= f[0]*phi_h(r/rscale)*mass/pi; // w/o damping
-  *phi= f[0]*phi_iso; // w/o damping
+  double j0=SCHRAMMJN(0,xtmp,Rmax);
+  double j1=SCHRAMMJN(1,xtmp,Rmax);
   
   
-  return;
+  alpha[0] = -fratio*xtmp[0]*j0*2.75;
+	alpha[1] = -fratio*xtmp[1]*j1*2.25;
+  
+  double temp = alpha[0];
+  //std::cout << c << " " << s <<  std::endl;
+  alpha[0] = temp*c + alpha[1]*s;
+  alpha[1] = -temp*s + alpha[1]*c;
+  
+  double xi=sqrt(xtmp[0]*xtmp[0]+xtmp[1]*xtmp[1]/fratio/fratio);
+  *kappa = mass*kappa_h(xi)/pi/xi/xi;
+  double gt = 0.5*(2.0*fratio*xtmp[0]*xtmp[0]*SCHRAMMKN(0,xtmp,Rmax)+fratio*j0*2.75 - 2.0*fratio*xtmp[1]*xtmp[1]*SCHRAMMKN(2,xtmp,Rmax)-fratio*j1*2.25);
+  double g45 = -2.0*fratio*xtmp[0]*xtmp[1]*SCHRAMMKN(1,xtmp,Rmax);
+  gamma[0] = (cos(2*theta)*gt - sin(2*theta)*g45);
+  gamma[1] = (sin(2*theta)*gt + cos(2*theta)*g45);
+  
+  *phi = -0.5*fratio*SCHRAMMI(xtmp,Rmax);
+  
+};
+
+double LensHalo::SCHRAMMKN(double n, double x[], double rmax){
+  struct SCHRAMMK_func f(n,x,rmax,this);
+  return Utilities::nintegrate<SCHRAMMK_func>(f,0.0,1.0,1.0e-3);
 }
+
+double LensHalo::SCHRAMMJN(double n, double x[], double rmax){
+  struct SCHRAMMJ_func f(n,x,rmax,this);
+  return Utilities::nintegrate<SCHRAMMJ_func>(f,0.0,1.0,1.0e-3);
+}
+
+double LensHalo::SCHRAMMI(double x[], double rmax){
+  struct SCHRAMMI_func f(x,rmax,this);
+  return Utilities::nintegrate<SCHRAMMI_func>(f,0.0,1.0,1.0e-3);
+}
+
+double LensHalo::IDAXDM(double lambda, double a2, double b2, double x[], double rmax, double mo){
+  struct IDAXDM_func f(lambda,a2,b2,x,rmax,this);
+  return Utilities::nintegrate<IDAXDM_func>(f,0.0,MIN(mo,1.0),1.0e-4);
+}
+
+double LensHalo::IDAYDM(double lambda, double a2, double b2, double x[], double rmax, double mo){
+  struct IDAYDM_func f(lambda,a2,b2,x,rmax,this);
+  return Utilities::nintegrate<IDAYDM_func>(f,0.0,MIN(mo,1.0),1.0e-4);
+}
+
 
 
 /**

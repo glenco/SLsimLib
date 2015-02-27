@@ -70,8 +70,11 @@ namespace
 		{"main_sigma", "250", "velocity dispersion in km/s"},
 		{"main_core", "1.0E-5", "core radius in Mpc"},
 		{"main_axis_ratio", "1.0", "axis ratio for elliptical models, < 1"},
-		{"main_pos_angle", "0", "inclination angle in degrees"},
+		{"main_ellip_method", "Pseudo", "method to make an isotropic halo elliptical: 0 Fourier, 1 or Pseudo, 2 or Schramm, 3 or Keeton"},
+		
+    {"main_pos_angle", "0", "inclination angle in degrees"},
 		{"main_rscale", "", ""},
+
 		
 		// AnaNSIE perturbations
 		{"main_NDistortionModes", "0", "number of ellipsoid distortion modes"},

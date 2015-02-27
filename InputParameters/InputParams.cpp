@@ -614,6 +614,48 @@ bool InputParams::get(std::string label, IMFtype& value) const
  * is returned.  If the parameter in the file does not "match" the type
  * of value false will also be returned and a warning printed to stdout.
  *
+ * MainLensType entries in the parameter file must be Fourier,Pseudo,Schramm or Keeton
+ */
+
+bool InputParams::get(std::string label, EllipMethod& value) const
+{
+	const_iterator it = params.find(label);
+	if(it == params.end())
+		return false;
+	
+	use_counter.use(it->first);
+	
+  if(!it->second.compare("0") || !it->second.compare("Fourier"))
+	{
+		value = Fourier;
+		return true;
+	}
+	if(!it->second.compare("1") || !it->second.compare("Pseudo"))
+	{
+		value = Pseudo;
+		return true;
+	}
+	if(!it->second.compare("2") || !it->second.compare("Schramm"))
+	{
+		value = Schramm;
+		return true;
+	}
+	if(!it->second.compare("3") || !it->second.compare("Keeton"))
+	{
+		value = Keeton;
+		return true;
+	}
+
+	std::cout << label << " in parameter file " << paramfile_name << " needs to be Fourier, Pseudo, Schramm or Keeton!" << std::endl;
+	return false;
+}
+
+
+/** \brief Assigns to "value" the value of the parameter called "label".
+ * If this parameter label does not appear in the parameter file false
+ * is returned.  If the parameter in the file does not "match" the type
+ * of value false will also be returned and a warning printed to stdout.
+ *
  * MainLensType entries in the parameter file must be EUC_VIS,EUC_Y,EUC_J,EUC_H,SDSS_U,SDSS_G,SDSS_R,SDSS_I,SDSS_Z,J,H,Ks,IRAC1,IRAC2,F435W,F606W,F775W,F850LP,F814W,F110W,F160W
  */
 
