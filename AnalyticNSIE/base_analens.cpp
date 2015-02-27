@@ -69,7 +69,8 @@ void LensHaloBaseNSIE::force_halo(
     // Calling lens_expand : xt in PhysMpc, mod[0,1,2] in mass/PhysMpc, mod[4,5,...] in mass/(PhysMpc*Mpc) :
     
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    *kappa += lens_expand(perturb_beta,perturb_modes,perturb_Nmodes-1,xt,alpha_tmp,gamma_tmp,&phi_tmp);
+    // *kappa += lens_expand(perturb_beta,perturb_modes,perturb_Nmodes-1,xt,alpha_tmp,gamma_tmp,&phi_tmp);
+    *kappa += lens_expand(perturb_beta,perturb_modes,perturb_Nmodes,xt,alpha_tmp,gamma_tmp,&phi_tmp); // For consistency with FindLensSimple and other calls of lens_expand.
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     
     
