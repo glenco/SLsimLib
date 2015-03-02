@@ -42,7 +42,7 @@ void LensHaloFit::FindLensSimple(
 
 
 /** \ingroup FitLens
- *
+ *
  *  \brief Same as FindLensSimple but with some tests in it.
  *
  *
