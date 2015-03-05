@@ -72,8 +72,8 @@ bool LensHaloFit::SafeFindLensSimple(
   // Doing the proper initialisation of these quantities :
   for(int k=0;k<perturb_Nmodes;++k)
   {
-    ModesMin[k] = 1.e100 ;    // So the modes have to be less than that !
-    ModesMax[k] = -1.e100 ;   // So the modes have to be more than that !
+    ModesMin[k] = 1.e200 ;    // So the modes have to be less than that !
+    ModesMax[k] = -1.e200 ;   // So the modes have to be more than that !
     ModesAve[k] = 0. ;
   }
   
@@ -86,12 +86,28 @@ bool LensHaloFit::SafeFindLensSimple(
   
   // We compute the modes SafetyNum times and retain the min, the max, and the sum :
   // ===============================================================================
+  
+  // We call FindLensSimple many times :
   for(int i=0;i<SafetyNum;i++)
   {
     // Calling FindLensSimple (the one that really computes the modes) :
     ///////////////////////////////////////////
     FindLensSimple(imageinfo,Nimages,y,dx_sub);
     ///////////////////////////////////////////
+    
+    // Test (temporary) :
+    // if(verbose)
+    // {
+    // std::cout << "perturbation modes (in LensHaloFit::SafeFindLensSimple) : " ;
+    // for(int i=0;i<perturb_Nmodes;++i) std::cout << perturb_modes[i] << " " ;
+    // std::cout << std::endl;
+    // }
+
+    // Test that no 'nan' occurs :
+    for(int k=0;k<perturb_Nmodes;++k)
+    {
+      assert(perturb_modes[k] == perturb_modes[k]) ;
+    }
     
     // Filling the check tables :
     for(int k=0;k<perturb_Nmodes;++k)
@@ -104,19 +120,50 @@ bool LensHaloFit::SafeFindLensSimple(
   // Dividing by the number of values to get the average :
   for(int k=0;k<perturb_Nmodes;++k) ModesAve[k] /= perturb_Nmodes ;
   
-  // We compare the min and max values with the average :
+  // We check that the modes are not > 1e50 (which is clearly wrong) :
+  PosType UpperBoundForModes = 1.e50 ;
   for(int k=0;k<perturb_Nmodes;++k)
   {
-    if(abs(ModesMax[k]-ModesMin[k]) > abs(ToleranceModes*ModesAve[k]))
+    if(abs(ModesAve[k])>UpperBoundForModes)
+    {
+      std::cout << "Mode k = " << k << " : Av = " << abs(ModesAve[k]) << " > " << UpperBoundForModes << std::endl ;
+      ReturnCode = false ;
+    }
+  }
+  if(ReturnCode == false)
+  {
+    ERROR_MESSAGE();
+    std::cout << "Error of unstability in SafeFindLensSimple !" << std::endl ;
+    // exit(0);
+  }
+  
+  // We compare the min and max values with the average :
+  if(ReturnCode == true)
+  {
+    for(int k=0;k<perturb_Nmodes;++k)
+    {
+      if(abs(ModesMax[k]-ModesMin[k]) > abs(ToleranceModes*ModesAve[k]))
+      {
+        std::cout << "Mode k = " << k << " : Max-Min = " << abs(ModesMax[k]-ModesMin[k]) << " < " << "Tol * Av = " << abs(ToleranceModes*ModesAve[k]) << std::endl ;
+        ReturnCode = false ;
+      }
+    }
+    if(ReturnCode == false)
     {
       ERROR_MESSAGE();
       std::cout << "Error of unstability in SafeFindLensSimple !" << std::endl ;
-      ReturnCode = false ;
-      return ReturnCode ;
       // exit(0);
     }
   }
+
+  // If the modes are crazy then we return the false value here :
+  if(ReturnCode == false)
+  {
+    std::cout << "Not doing the check of the back-traced images because of the unstability in SafeFindLensSimple !" << std::endl ;
+    return ReturnCode ;
+  }
   
+  // Printing values otherwise :
   if(verbose)
   {
     std::cout << "Values of the modes :" << std::endl ;

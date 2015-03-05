@@ -348,7 +348,7 @@ private: /* field */
   
   struct SubStructureInfo{
   // things for substructures
-  /// vector of all substructur halos
+  /// vector of all substructure halos
   std::vector<LensHalo*> halos;
   LensPlane *plane;
   PosType Rregion = 0;
