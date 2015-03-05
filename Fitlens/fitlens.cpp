@@ -96,12 +96,12 @@ bool LensHaloFit::SafeFindLensSimple(
     ///////////////////////////////////////////
     
     // Test (temporary) :
-    if(verbose)
-    {
-    std::cout << "perturbation modes (in LensHaloFit::SafeFindLensSimple) : " ;
-    for(int i=0;i<perturb_Nmodes;++i) std::cout << perturb_modes[i] << " " ;
-    std::cout << std::endl;
-    }
+    // if(verbose)
+    // {
+    // std::cout << "perturbation modes (in LensHaloFit::SafeFindLensSimple) : " ;
+    // for(int i=0;i<perturb_Nmodes;++i) std::cout << perturb_modes[i] << " " ;
+    // std::cout << std::endl;
+    // }
 
     // Test that no 'nan' occurs :
     for(int k=0;k<perturb_Nmodes;++k)
