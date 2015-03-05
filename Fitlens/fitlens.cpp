@@ -103,6 +103,12 @@ bool LensHaloFit::SafeFindLensSimple(
     std::cout << std::endl;
     }
 
+    // Test that no 'nan' occurs :
+    for(int k=0;k<perturb_Nmodes;++k)
+    {
+      assert(perturb_modes[k] == perturb_modes[k]) ;
+    }
+    
     // Filling the check tables :
     for(int k=0;k<perturb_Nmodes;++k)
     {
@@ -114,19 +120,50 @@ bool LensHaloFit::SafeFindLensSimple(
   // Dividing by the number of values to get the average :
   for(int k=0;k<perturb_Nmodes;++k) ModesAve[k] /= perturb_Nmodes ;
   
-  // We compare the min and max values with the average :
+  // We check that the modes are not > 1e50 (which is clearly wrong) :
+  PosType UpperBoundForModes = 1.e50 ;
   for(int k=0;k<perturb_Nmodes;++k)
   {
-    if(abs(ModesMax[k]-ModesMin[k]) > abs(ToleranceModes*ModesAve[k]))
+    if(abs(ModesAve[k])>UpperBoundForModes)
+    {
+      std::cout << "Mode k = " << k << " : Av = " << abs(ModesAve[k]) << " > " << UpperBoundForModes << std::endl ;
+      ReturnCode = false ;
+    }
+  }
+  if(ReturnCode == false)
+  {
+    ERROR_MESSAGE();
+    std::cout << "Error of unstability in SafeFindLensSimple !" << std::endl ;
+    // exit(0);
+  }
+  
+  // We compare the min and max values with the average :
+  if(ReturnCode == true)
+  {
+    for(int k=0;k<perturb_Nmodes;++k)
+    {
+      if(abs(ModesMax[k]-ModesMin[k]) > abs(ToleranceModes*ModesAve[k]))
+      {
+        std::cout << "Mode k = " << k << " : Max-Min = " << abs(ModesMax[k]-ModesMin[k]) << " < " << "Tol * Av = " << abs(ToleranceModes*ModesAve[k]) << std::endl ;
+        ReturnCode = false ;
+      }
+    }
+    if(ReturnCode == false)
     {
       ERROR_MESSAGE();
       std::cout << "Error of unstability in SafeFindLensSimple !" << std::endl ;
-      std::cout << "Mode k = " << k << " : Max-Min = " << abs(ModesMax[k]-ModesMin[k]) << " < " << "Tol * Av = " << abs(ToleranceModes*ModesAve[k]) << std::endl ;
-      ReturnCode = false ;
       // exit(0);
     }
   }
+
+  // If the modes are crazy then we return the false value here :
+  if(ReturnCode == false)
+  {
+    std::cout << "Not doing the check of the back-traced images because of the unstability in SafeFindLensSimple !" << std::endl ;
+    return ReturnCode ;
+  }
   
+  // Printing values otherwise :
   if(verbose)
   {
     std::cout << "Values of the modes :" << std::endl ;
@@ -149,11 +186,6 @@ bool LensHaloFit::SafeFindLensSimple(
     cout << "Ellipticity : " << qpriv[1] << " , position angle : " << qpriv[2] << std::endl ;
     if (sigGT > 0) cout << "Center of the lens : " << qpriv[3] << " , " << qpriv[4] << std::endl ;
   }
-  
-  
-  // If the modes are crazy then we return the false value here :
-  std::cout << "Not doing the check of the back-traced images because of the unstability in SafeFindLensSimple !" << std::endl ;
-  if(ReturnCode == false) return ReturnCode ;
   
 
   // Testing that the image positions are consistent when traced back to the source plane :
