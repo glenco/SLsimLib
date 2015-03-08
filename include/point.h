@@ -358,7 +358,7 @@ struct Point_2d{
   
   /// length
   PosType length(){
-    return sqrt(x[0]*x[0] - x[1]*x[1]);
+    return sqrt(x[0]*x[0] + x[1]*x[1]);
   }
   
   PosType x[2];
