@@ -14,8 +14,8 @@
 #include "utilities_slsim.h"
 #include "simpleTree.h"
 #include "simpleTreeVec.h"
+#include "grid_maintenance.h"
 
-/// A class used within CausticData class to store information on a caustic and critical curve pair
 struct CausticStructure{
   CausticStructure(){}
   CausticStructure(const CausticStructure &tmp){
@@ -25,13 +25,13 @@ struct CausticStructure{
     crit_radius[1] = tmp.crit_radius[1];
     crit_radius[2] = tmp.crit_radius[2];
     crit_area = tmp.crit_area;
-
+    
     caustic_center = tmp.caustic_center;
     caustic_radius[0] = tmp.caustic_radius[0];
     caustic_radius[1] = tmp.caustic_radius[1];
     caustic_radius[2] = tmp.caustic_radius[2];
     caustic_area = tmp.caustic_area;
-
+    
   };
   /// redshift of source plane
   double redshift;
@@ -49,20 +49,27 @@ struct CausticStructure{
   /// area of caustic curve in radian^2
   double caustic_area;
 };
+
+
 /** \brief A class for holding, printing and reading the information about the caustics and critical curves in an image.
  *
  *  Information about individual caustics/critical curves are stored in a CausticStructure class that can be obtaine
  *  with the [] operator.
  */
-class CausticData{
+class CausticDataStore{
+  
+  /// A class used within CausticDataStore class to store information on a caustic and critical curve pair
   
 public:
-  CausticData(std::string filename);
+  CausticDataStore(std::string filename);
   /// creates an empty object 
-  CausticData(size_t size);
-  CausticData(const CausticData &input);
-  ~CausticData();
+  CausticDataStore(std::vector<ImageFinding::CriticalCurve> &crticurve_vec);
+  CausticDataStore(const CausticDataStore &input);
+  ~CausticDataStore();
 
+ 
+  /// add some critical curves to the store
+  void addcrits(std::vector<ImageFinding::CriticalCurve> &crticurve_vec);
   
   /// print to a file,  Produces a file that can be later read with the constructor.
   void printfile(std::string filename,std::string paramfile,double fieldofview,double minscale);
@@ -73,6 +80,7 @@ public:
   size_t numberOfCaustics(){return data.size();}
   
   CausticStructure & operator[](size_t index){return data[index];}
+  
   void readfile(std::string filename);
   /// sort caustics by size of critical curve radius from largest to smallest
   void SortByCritSize();
@@ -111,33 +119,22 @@ public:
   */
 #ifdef ENABLE_CLANG
   int RandomLens(Utilities::RandomNumbers &ran){
-    if(cummulative_area.size() == 0 ) throw std::runtime_error("CausticData::RandomLens - CausticData::init_for_random() must be set before using this!   You can also not reorder the caustics without reinitializing.");
+    if(cummulative_area.size() == 0 ) throw std::runtime_error("CausticDataStore::RandomLens - CausticDataStore::init_for_random() must be set before using this!   You can also not reorder the caustics without reinitializing.");
       return Utilities::locate<double>(cummulative_area,ran()*cummulative_area.back());
   }
 #endif
 
   int RandomLens(Utilities::RandomNumbers_NR &ran){
-    if(cummulative_area.size() == 0 ) throw std::runtime_error("CausticData::RandomLens - CausticData::init_for_random() must be set before using this!  You can also not reorder the caustics without reinitializing");
+    if(cummulative_area.size() == 0 ) throw std::runtime_error("CausticDataStore::RandomLens - CausticDataStore::init_for_random() must be set before using this!  You can also not reorder the caustics without reinitializing");
     return Utilities::locate<double>(cummulative_area,ran()*cummulative_area.back());
   }
 
   bool findNearestCrit(PosType x[2],size_t &index);
   
-  static PosType *causticCenter(CausticStructure &tmp){return tmp.caustic_center.x;}
-  static PosType *critCenter(CausticStructure &tmp){return tmp.crit_center.x;}
-//  static bool comparcritsize(const CausticStructure &caust1,const CausticStructure &caust2){
-//    return (caust1.crit_radius[0] > caust2.crit_radius[0]);
-//  }
-//  static bool comparcritarea(const CausticStructure &caust1,const CausticStructure &caust2){
-//    return (caust1.crit_area > caust2.crit_area);
-//  }
-//  static bool comparcausticarea(const CausticStructure &caust1,const CausticStructure &caust2){
-//    return (caust1.caustic_area > caust2.caustic_area);
-//  }
-
 private:
   
   int ncolumns;
+//  std::vector<CausticStructure> data;
   std::vector<CausticStructure> data;
   std::vector<double> cummulative_area;
 
@@ -147,10 +144,7 @@ private:
   //PosType **xp;
   size_t Nxp;
   
+  
 };
-
-//bool comparcritsize(const CausticStructure &caust1,const CausticStructure &caust2);
-//bool comparcritarea(const CausticStructure &caust1,const CausticStructure &caust2);
-//bool comparcausticarea(const CausticStructure &caust1,const CausticStructure &caust2);
 
 #endif /* defined(__SLsimLib__causticdata__) */
