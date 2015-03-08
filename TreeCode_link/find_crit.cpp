@@ -46,7 +46,7 @@ void ImageFinding::find_crit(
   
   std::vector<ImageInfo> pseudocurve(critcurve.size());
   std::vector<CriticalCurve> psecurve;
-  bool pseuodcaustic = true;
+  bool pseuodcaustic = false;
   PosType pseudolimit = -100.0;
   int Npseudo;
   
@@ -137,12 +137,13 @@ void ImageFinding::find_crit(
     do{critcurve[0].imagekist->getCurrent()->in_image = NO;}while(critcurve[0].imagekist->Down());
   }
   
-  if(verbose) std::printf("find_crit, number of caustic points: %li\n",critcurve[0].imagekist->Nunits());
+  if(verbose) ;
+  std::printf("find_crit, number of caustic points: %li\n",critcurve[0].imagekist->Nunits());
   
   if(dividecurves) divide_images_kist(grid->i_tree,critcurve,Ncrits);
   else *Ncrits = 1;
   
-  if(pseuodcaustic && negimage.imagekist->Nunits() > 0){
+  if(pseuodcaustic && negimage.imagekist->Nunits() > 1){
     // Find points within each critical curve that have invmag < pseudolimit
     // If there are none use the minimum invmag value point.
     Point *minmupoint;
