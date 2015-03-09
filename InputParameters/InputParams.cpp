@@ -92,6 +92,8 @@ InputParams::InputParams(std::string paramfile)
 		std::string myline;
 		getline(file_in, myline);
 
+    //std::cout << myline << std::endl;
+    
 		// remove all tabs from the string
 		std::size_t np = myline.find('\t');
 		while(np != std::string::npos)

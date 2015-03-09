@@ -2208,7 +2208,7 @@ std::vector<double *> Utilities::concave_hull(std::vector<double *> &P,int k )
         }
         // check for self intersection
         intersects = false;
-        if(hull.size() > 3){
+        if(hull.size() > 2){
           for(int ii=0;ii<hull.size()-2;++ii){
             if(Utilities::Geometry::intersect(hull.back(),Res[imin], hull[ii], hull[ii+1])){
               intersects = true;
@@ -2269,7 +2269,7 @@ std::vector<double *> Utilities::concave_hull(std::vector<double *> &P,int k )
  */
 std::vector<Point *> Utilities::concave_hull(std::vector<Point *> &P,int k )
 {
-  const bool test =false;
+  const bool test = false;
   PixelMap *testmap;
   int nt=0;
   
@@ -2392,8 +2392,8 @@ std::vector<Point *> Utilities::concave_hull(std::vector<Point *> &P,int k )
         }
         // check for self intersection
         intersects = false;
-        if(hull.size() > 3){
-          for(int ii=0;ii<hull.size()-2;++ii){
+        if(hull.size() > 2){
+          for(int ii=0;ii<hull.size()-1;++ii){
             if(Utilities::Geometry::intersect(hull.back()->x,Res[imin]->x, hull[ii]->x, hull[ii+1]->x)){
               intersects = true;
               
@@ -2417,15 +2417,32 @@ std::vector<Point *> Utilities::concave_hull(std::vector<Point *> &P,int k )
       
       
       if(!intersects){
+ 
+        assert(tmp_k >0);
         // add point to Hull
         std::swap(Res[imin],Res.back());
         hull.push_back(Res.back());
         ++j;
         Res.pop_back();
         tmp_k = k;
+        
+        if(test){
+          for(int ii=0;ii<hull.size()-1;++ii){
+            for(int jj=ii+1;jj<hull.size()-1;++jj){
+              if(Utilities::Geometry::intersect(hull[jj]->x,hull[jj+1]->x, hull[ii]->x, hull[ii+1]->x)){
+                std::cout << "ii: " << ii << "  jj: " << jj << std::endl;
+                throw std::runtime_error("Hull should not self intersect");
+              }
+            }
+          }
+        }
+
       }else{
+        assert(tmp_k == 0);
+
         failed = true;
         ++k;
+        tmp_k = k;
         
         if(test){
           testmap->Clean();
@@ -2481,10 +2498,21 @@ std::vector<Point *> Utilities::concave_hull(std::vector<Point *> &P,int k )
     // try again with larger k if not all the points are within the hull or no non-self-intersecting path was found
   }while(failed && k < P.size()-1);
   
+  
   // if all else fails use the convex hull
   if(failed) hull = Utilities::convex_hull(P);
   else hull.pop_back();
   
+  if(test){
+    for(int ii=0;ii<hull.size()-1;++ii){
+      for(int jj=ii+1;jj<hull.size()-1;++jj){
+        if(Utilities::Geometry::intersect(hull[jj]->x,hull[jj+1]->x, hull[ii]->x, hull[ii+1]->x)){
+          std::cout << "ii: " << ii << "  jj: " << jj << std::endl;
+          throw std::runtime_error("Hull should not self intersect");
+        }
+      }
+    }
+  }
   return hull;
 }
 
