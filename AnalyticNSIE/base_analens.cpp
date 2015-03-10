@@ -878,7 +878,10 @@ void LensHalo::alphakappagamma2asym( // Schramm 1990
   //std::cout << c << " " << s <<  std::endl;
   alpha[0] = temp*c + alpha[1]*s;
   alpha[1] = -temp*s + alpha[1]*c;
-  *kappa = 0.0;
+  
+  double xi=sqrt(xm[0]*xm[0]+xm[1]*xm[1]/fratio/fratio);
+  *kappa = mass*kappa_h(xi)/pi/xi/xi;
+  
   gamma[0] = 0.0;
   gamma[1] = 0.0;
   
