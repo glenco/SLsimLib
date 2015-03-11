@@ -453,7 +453,6 @@ void Lens::info_rayshooter(
   
   int NLastPlane = lensing_planes.size() ;
   
-  // int NLastPlane;
   PosType tmpDs,tmpdDs,tmpZs;
   
   // If there are no points to shoot, then we quit.
@@ -479,11 +478,6 @@ void Lens::info_rayshooter(
     assert(plane_redshifts[NLastPlane] == zsource);
     tmpdDs = cosmo.angDist(plane_redshifts[NLastPlane-1], zsource);
     tmpZs = zsource ;
-    for(int i=0 ; i<NLastPlane ; i++)
-    {
-      Dl[i] = cosmo.angDist(plane_redshifts[i]);
-      dDl[i] = cosmo.angDist(plane_redshifts[i-1], plane_redshifts[i]);
-    }
   }
   
   
@@ -560,6 +554,8 @@ void Lens::info_rayshooter(
     
     //kappa_on_planes[j] *= 1/(1+plane_redshifts[j]);
     kappa_on_planes[j] /= SigmaCrit;
+    
+    assert(dDl[j] != 0);
     
     aa = (dDl[j+1] + dDl[j])/dDl[j];
     bb = dDl[j+1]/dDl[j];

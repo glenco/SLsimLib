@@ -832,14 +832,14 @@ void Lens::insertSubstructures(PosType Rregion,PosType center[],PosType NumberDe
     }
     it = field_planes.insert(it, new LensPlaneTree(substructure.halos.data(), NhalosSub, 0, 0));
     field_plane_redshifts.insert(itz,redshift);
-    field_Dl.insert(itd,Dl);
+    field_Dl.insert(itd,Dl*(1+redshift));
     substructure.plane = *it;
   }
   else // in the case where no field plane exists
   {
     field_planes.push_back(new LensPlaneTree(substructure.halos.data(), NhalosSub, 0, 0));
     field_plane_redshifts.push_back(redshift);
-    field_Dl.push_back(Dl);
+    field_Dl.push_back(Dl*(1+redshift));
     substructure.plane = field_planes[0];
   }
   ++field_Nplanes_current;
@@ -2518,7 +2518,7 @@ void Lens::combinePlanes(bool verbose)
 	// calculate deltas
 	dDl.push_back(Dl[0]);
 	for(std::size_t i = 1; i < Dl.size(); ++i)
-		dDl.push_back(Dl[i] - Dl[i-1]); // distance from plane i-1 to plane i
+		dDl.push_back(MAX(Dl[i] - Dl[i-1],MIN_PLANE_DIST)); // distance from plane i-1 to plane i
 	
 	// output resulting setup
 	if(verbose) std::cout
