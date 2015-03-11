@@ -39,7 +39,7 @@ namespace
     
 		// Field halos
 		{"field_off", "0", "turn off field halos"},
-		{"field_Nplanes", "8", "number of field halo planes"},
+		{"field_Nplanes", "10", "number of field halo planes"},
 		
 		// Field halos type
 		{"field_internal_profile", "NFW", "field halo type: nolens, NFW, PseudoNFW, PowerLaw, NSIE, AnaLens, UniLens, DummyLens"},
