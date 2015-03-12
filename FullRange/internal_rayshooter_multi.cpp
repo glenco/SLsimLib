@@ -353,7 +353,6 @@ void *compute_rays_parallel(void *_p)
       // ----------------------------------------------
       
       
-      
       // Geometric time delay with added potential
       p->i_points[i].dt += 0.5*( (xplus[0] - xminus[0])*(xplus[0] - xminus[0]) + (xplus[1] - xminus[1])*(xplus[1] - xminus[1]) )/p->dDl[j+1] - (1 + p->plane_redshifts[j]) * phi * p->charge ; /// in Mpc
       

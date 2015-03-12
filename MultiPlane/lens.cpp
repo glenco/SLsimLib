@@ -123,6 +123,7 @@ Lens::Lens(InputParams& params, long* my_seed, CosmoParamSet cosmoset, bool verb
     
     // Initialising the sigma_back table :
     sigma_back_Tab.resize(field_Nplanes_original);
+    std::cout << "Lens : field_Nplanes_original = " << field_Nplanes_original << std::endl ;
   }
   
 	// set up the lens contents :
@@ -496,6 +497,8 @@ void Lens::resetFieldHalos(bool verbose)
   // set up the lens contents :
 	createFieldPlanes(verbose);
 	combinePlanes(verbose);
+  
+  // if(WasInsertSubStructuresCalled == YES) WasInsertSubStructuresCalled = MAYBE ;
 }
 
 void Lens::printMultiLens(){
@@ -740,7 +743,6 @@ void Lens::createFieldPlanes(bool verbose)
 
 void Lens::insertSubstructures(PosType Rregion,PosType center[],PosType NumberDensity,PosType Mass_min,PosType Mass_max,PosType redshift,PosType alpha,PosType density_contrast,bool verbose)
 {
-  
   substructure.alpha = alpha;
   substructure.center.x[0] = center[0];
   substructure.center.x[1] = center[1];
@@ -749,6 +751,10 @@ void Lens::insertSubstructures(PosType Rregion,PosType center[],PosType NumberDe
   substructure.Ndensity = NumberDensity;
   substructure.rho_tidal = density_contrast;
   substructure.Rregion = Rregion;
+  // Adding quantities for the resetting of the substructure
+  // (when WasInsertSubStructuresCalled = MAYBE) :
+  substructure.redshift = redshift;
+  substructure.verbose = verbose;
   
   if(alpha == -1) throw std::invalid_argument("alpha must not be -1 in Lens::createOneFieldPlane");
 
@@ -847,10 +853,12 @@ void Lens::insertSubstructures(PosType Rregion,PosType center[],PosType NumberDe
   Nhalos += NhalosSub;
   
   combinePlanes(verbose);
+  std::cout << "InsertSubStructure : field_planes.size() = " << field_planes.size() << std::endl;
+  // assert(field_planes.size() == field_Nplanes);
+  
+  WasInsertSubStructuresCalled = YES ;
   
   assert(field_planes.size() == field_Nplanes_current);
-  
-  WasInsertSubStructuresCalled = true ;
 
   // Test :
   // std::cout << "field_plane and field_plane_redshifts : " << std::endl ;
@@ -864,11 +872,128 @@ void Lens::insertSubstructures(PosType Rregion,PosType center[],PosType NumberDe
 void Lens::resetSubstructure(){
 
   // test of whether insertSubstructures has been called :
-  if(!WasInsertSubStructuresCalled)
+  if(WasInsertSubStructuresCalled == NO)
   {
     ERROR_MESSAGE();
     cout << "Lens::insertSubStructures() has to be called before Lens::resetSubStructure() !" << endl;
+    exit(0);
   }
+/*  else if(WasInsertSubStructuresCalled == MAYBE)
+  {
+    
+    // Reconstructing the plane with arguments given to insertSubStructures :
+    PosType Rregion = substructure.Rregion;
+    PosType center[2];
+    center[0] = substructure.center.x[0];
+    center[1] = substructure.center.x[1];
+    PosType NumberDensity = substructure.Ndensity;
+    PosType Mass_min = substructure.Mmin;
+    PosType Mass_max = substructure.Mmax;
+    PosType alpha = substructure.alpha;
+    PosType density_contrast = substructure.rho_tidal;
+    PosType redshift = substructure.redshift;
+    bool verbose = substructure.verbose;
+    
+    // Clearing the substructure halos :
+    Utilities::delete_container(substructure.halos);
+    // substructure.halos.clear();
+    
+    // Calling insertSubStructures :
+    insertSubstructures(Rregion,center,NumberDensity,Mass_min,Mass_max,redshift,alpha,density_contrast,verbose);
+
+    // Copy of the content of insertSubStructures :
+
+    if(alpha == -1) throw std::invalid_argument("alpha must not be -1 in Lens::createOneFieldPlane");
+    
+    PosType aveNhalos = NumberDensity/Rregion/Rregion/pi;
+    
+    std::size_t Nhalos = static_cast<std::size_t>(poidev(float(aveNhalos), seed));
+    std::cout << "Nhalos = " << Nhalos << std::endl ;
+    
+    if(Nhalos == 0) return;
+    
+    size_t offset = field_halos.size();
+    PosType Dl = cosmo.angDist(redshift),rr,theta;
+    PosType *theta_pos;
+    PosType r = Mass_min/Mass_max,f,mass;
+    size_t haloid = offset;
+    PosType Rmax;
+    PosType rho = density_contrast*cosmo.rho_crit(0)*cosmo.getOmega_matter()*(1+redshift)*(1+redshift)*(1+redshift);
+    
+    std::cout << "substructure.halos.size() = " << substructure.halos.size() << std::endl;
+    if(substructure.halos.size() > 0){
+      // Problem: Expanding the vector is a problem if we want to add substructure
+      // multiple times because if the vector is copied it will invalidate the pointers
+      // on previous planes. To do this we would need to be able to expand the vector
+      // without copying it or have multiple substructure_halo vectors.
+      
+      throw std::runtime_error("Can only add substructure halos ones to a lens.");
+    }
+    
+    
+    for(size_t ii=0;ii<Nhalos;++ii)
+    {
+      // random position
+      rr = Rregion*sqrt(ran2(seed));
+      theta_pos = new PosType[3];
+      
+      theta = 2*pi*ran2(seed);
+      
+      // position in proper distance
+      theta_pos[0] = (rr*cos(theta) + center[0])*Dl;
+      theta_pos[1] = (rr*sin(theta) + center[1])*Dl;
+      theta_pos[2] = 0.0;
+      
+      f = ran2(seed);
+      
+      // mass from power law mass function
+      mass = Mass_max*pow( f + pow(r,alpha+1)*(1-f), 1.0/(1+alpha) );
+      
+      // Rmax from tidal truncation
+      Rmax = pow(mass/rho/4/pi,1.0/3.);
+      
+      substructure.halos.push_back(new LensHaloPowerLaw(mass,Rmax,redshift,Rmax,1.0,1.0,0,0));
+      substructure.halos.back()->setX(theta_pos);
+      ++haloid;
+      substructure.halos.back()->setID(haloid);
+      
+    }
+    
+    // the new plane must be inserted in order of redshift
+    if(field_Nplanes != 0)
+    {
+      std::vector<LensPlane*>::iterator it = field_planes.begin();
+      std::vector<PosType>::iterator itz = field_plane_redshifts.begin();
+      std::vector<PosType>::iterator itd = field_Dl.begin();
+      while(*itz < redshift){
+        ++it;
+        ++itz;
+        ++itd;
+      }
+      it = field_planes.insert(it, new LensPlaneTree(substructure.halos.data(), Nhalos, 0, 0));
+      field_plane_redshifts.insert(itz,redshift);
+      field_Dl.insert(itd,Dl*(1+redshift));
+      substructure.plane = *it;
+    }
+    else // in the case where no field plane exists
+    {
+      field_planes.push_back(new LensPlaneTree(substructure.halos.data(), Nhalos, 0, 0));
+      field_plane_redshifts.push_back(redshift);
+      field_Dl.push_back(Dl*(1+redshift));
+      substructure.plane = field_planes[0];
+    }
+    ++field_Nplanes;
+    
+    combinePlanes(verbose);
+    std::cout << "field_planes.size() = " << field_planes.size() << std::endl;
+    for(int i=0;i<field_planes.size();i++) std::cout << field_plane_redshifts[i] << " " ;
+    std::cout << std::endl ;
+    assert(field_planes.size() == field_Nplanes);
+    
+    WasInsertSubStructuresCalled = YES ;
+    return ;
+  }
+*/
   
   // find which plane has the substructures on it
   int fplane_index = 0,lplane_index = 0;
@@ -877,7 +1002,7 @@ void Lens::resetSubstructure(){
   
   PosType redshift = field_plane_redshifts[fplane_index];
   PosType Dlsub = Dl[fplane_index]/(1+redshift);
-
+  
   PosType aveNhalos = substructure.Ndensity/substructure.Rregion/substructure.Rregion/pi;
   
   std::size_t Nhalos = static_cast<std::size_t>(poidev(float(aveNhalos), seed));
@@ -895,7 +1020,6 @@ void Lens::resetSubstructure(){
   PosType rho = substructure.rho_tidal*cosmo.rho_crit(0)*cosmo.getOmega_matter()*(1+redshift)*(1+redshift)*(1+redshift);
   
   Utilities::delete_container(substructure.halos);
-  
   
   for(size_t ii=0;ii<Nhalos;++ii){
     

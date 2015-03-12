@@ -362,12 +362,16 @@ private: /* field */
   PosType Ndensity = 0;
   Point_2d center;
   PosType rho_tidal = 0;
+  // Added quantities for the resetting of the substructure
+  // (when WasInsertSubStructuresCalled = MAYBE) :
+  PosType redshift = 0;
+  bool verbose = false;
   };
   
   SubStructureInfo substructure;
   
   /// Flag to know if InsertSubStructures was called
-  bool WasInsertSubStructuresCalled = false ;
+  Boo WasInsertSubStructuresCalled = NO ;
   
 	/// Perpendicular position of halo TODO: (In proper distance?)
 	//PosType **halo_pos;
