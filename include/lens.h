@@ -89,10 +89,11 @@ public:
 	PosType getfov(){return fieldofview;};
 	void setfov(PosType fov){fieldofview=fov;};
 
-	/// reset te number of planes, but keep the field halos and main lens
+	/// reset the number of planes, but keep the field halos and main lens
 	void resetFieldNplanes(std::size_t field_Nplanes, bool verbose = false);
 
-	/// keep the main lens and the number of planes constant, but generate new field halos
+	/// keep the main lens and the number of planes constant, but generate new field halos.
+  ///  This function will also erase the substructure halos so they need to be regenerated.
 	void resetFieldHalos(bool verbose = false);
 
 	/// print the main parameters of the lens
@@ -303,7 +304,7 @@ private: /* generation */
   PosType aveNhalos ;
   /// Log(mass) vector
   std::vector<PosType> Logm;
-  /// Number of halos
+  /// Number of halos  field + substructure
   std::size_t Nhalos ;
   /// table of halos bins for each sampled redshifts
   std::vector<std::vector<PosType>> NhalosbinNew;
@@ -337,8 +338,11 @@ private: /* field */
 	
   /// vector of all field halos
   std::vector<LensHalo*> field_halos;
-	/// number of field planes
-	std::size_t field_Nplanes;
+	/// original number of field planes
+  std::size_t field_Nplanes_original;
+  /// current number of field planes which may include substructure plane
+  std::size_t field_Nplanes_current;
+  
 	/// vector of all field planes
 	std::vector<LensPlane*> field_planes;
 	/// vector of field plane redshifts
@@ -358,12 +362,16 @@ private: /* field */
   PosType Ndensity = 0;
   Point_2d center;
   PosType rho_tidal = 0;
+  // Added quantities for the resetting of the substructure
+  // (when WasInsertSubStructuresCalled = MAYBE) :
+  PosType redshift = 0;
+  bool verbose = false;
   };
   
   SubStructureInfo substructure;
   
   /// Flag to know if InsertSubStructures was called
-  bool WasInsertSubStructuresCalled = false ;
+  Boo WasInsertSubStructuresCalled = NO ;
   
 	/// Perpendicular position of halo TODO: (In proper distance?)
 	//PosType **halo_pos;

@@ -28,9 +28,6 @@ void ImageFinding::find_crit(
                              ,std::vector<CriticalCurve> &crtcurve     /// Structure to hold critical curve.
                              ,int *Ncrits              /// The number of critical curves found.
                              ,PosType resolution        /// The target resolution that the critical curve is mapped on the image plane.
-                             ,bool *orderingsuccess    /// true if ordering was successful.
-                             ,bool ordercurve          /// Order the curve so that it can be drawn or used to find the winding number.
-                             ,bool dividecurves        /// Divide the critical curves into separate curves by whether they are attached
                              ,PosType invmag_min        /// finds regions with 1/magnification < invmag_min, set to zero for caustics
                              ,bool verbose
                              ){
@@ -69,7 +66,6 @@ void ImageFinding::find_crit(
   if(negimage.imagekist ->Nunits() == 0){
     if(minpoint->gridsize <= resolution){  // no caustic found at this resolution
       *Ncrits=0;
-      *orderingsuccess = false;
       return;
     }
     
@@ -140,8 +136,7 @@ void ImageFinding::find_crit(
   if(verbose) ;
   std::printf("find_crit, number of caustic points: %li\n",critcurve[0].imagekist->Nunits());
   
-  if(dividecurves) divide_images_kist(grid->i_tree,critcurve,Ncrits);
-  else *Ncrits = 1;
+  divide_images_kist(grid->i_tree,critcurve,Ncrits);
   
   if(pseuodcaustic && negimage.imagekist->Nunits() > 1){
     // Find points within each critical curve that have invmag < pseudolimit
@@ -234,8 +229,6 @@ void ImageFinding::find_crit(
     }
   }
   
-  *orderingsuccess = true;
-  
   if(critcurve[0].imagekist->Nunits() == 0) *Ncrits=0;
   
   for(i=0;i<*Ncrits;++i){
@@ -261,11 +254,20 @@ void ImageFinding::find_crit(
   {
     crtcurve.resize(*Ncrits);
     
+    Kist<Point> neighbors;
+    
     for(size_t ii=0;ii<*Ncrits;++ii){
       
+      // classify critical curve
+      
+      grid->i_tree->FindAllBoxNeighborsKist(critcurve[ii].imagekist->getCurrent(),&neighbors);
+      Kist<Point>::iterator it = neighbors.TopIt();
+      while((*it)->invmag < 0 && !it.atend() ) --it;
+      if( 1 < ( (*it)->kappa - sqrt( (*it)->gamma[0]*(*it)->gamma[0] + (*it)->gamma[1]*(*it)->gamma[1]) ) ) crtcurve[ii].type = radial;
+      else crtcurve[ii].type = tangential;
       
       std::vector<Point *> hull = critcurve[ii].imagekist->copytovector();
-      if(ordercurve) hull = Utilities::concave_hull(hull,10);
+      hull = Utilities::concave_hull(hull,10);
       
       crtcurve[ii].critical_curve.resize(hull.size());
       crtcurve[ii].caustic_curve_intersecting.resize(hull.size());
@@ -285,7 +287,7 @@ void ImageFinding::find_crit(
       
       critcurve[ii].imagekist->TranformPlanes();
       hull = critcurve[ii].imagekist->copytovector();
-      if(ordercurve) hull = Utilities::concave_hull(hull,5);
+      hull = Utilities::concave_hull(hull,5);
       
       crtcurve[ii].caustic_curve_outline.resize(hull.size());
       crtcurve[ii].caustic_center[0] = 0;

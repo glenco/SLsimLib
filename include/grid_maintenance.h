@@ -98,6 +98,9 @@ typedef struct Grid* GridHndl;
 // in image_finder_kist.c
 namespace ImageFinding{
   
+  /// enumerates the types of critical curves. ND is "not defined".
+  enum CritType {ND,radial,tangential};
+  
   struct CriticalCurve{
     
     CriticalCurve(){
@@ -108,6 +111,7 @@ namespace ImageFinding{
       contour_ell = 0.0;
       ellipse_area = 0.0;
       z_source = 0.0;
+      type = ND;
     };
     CriticalCurve(const CriticalCurve &p){
       //critical_curve.resize(p.critical_curve.size());
@@ -122,7 +126,9 @@ namespace ImageFinding{
       contour_ell = p.contour_ell;
       ellipse_area = p.ellipse_area;
       z_source = p.z_source;
-    }
+      type = p.type;
+   }
+
     CriticalCurve & operator=(const CriticalCurve &p){
       if(this == &p) return *this;
       
@@ -137,6 +143,7 @@ namespace ImageFinding{
       contour_ell = p.contour_ell;
       ellipse_area = p.ellipse_area;
       z_source = p.z_source;
+      type = p.type;
       return *this;
     }
     
@@ -148,6 +155,8 @@ namespace ImageFinding{
     std::vector<Point_2d> ellipse_curve;
     
     PosType z_source;
+    CritType type;
+
     Point_2d critical_center;      /// center of critical curve
     Point_2d caustic_center;   /// center of caustic curve
     
@@ -310,7 +319,8 @@ namespace ImageFinding{
   
   
   void find_crit(LensHndl lens,GridHndl grid,std::vector<CriticalCurve> &crtcurve,int *Ncrits
-                 ,double resolution,bool *orderingsuccess,bool ordercurve,bool dividecurves,double invmag_min = 0.0,bool verbose = false);
+                 ,double resolution,double invmag_min = 0.0,bool verbose = false);
+ 
   void find_crit2(LensHndl lens,GridHndl grid,std::vector<CriticalCurve> &critcurve,int *Ncrits
                   ,double resolution,bool *orderingsuccess,bool ordercurve,bool dividecurves,double invmag_min = 0.0,bool verbose = false);
   
