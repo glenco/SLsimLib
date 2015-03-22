@@ -212,7 +212,6 @@ void *compute_rays_parallel(void *_p)
     // Time delay at first plane : position on the observer plane is (0,0) => no need to take difference of positions.
     p->i_points[i].dt = 0.5*( p->i_points[i].image->x[0]*p->i_points[i].image->x[0] + p->i_points[i].image->x[1]*p->i_points[i].image->x[1] )/ p->dDl[0] ;
 
-    
     // Begining of the loop through the planes :
     // Each iteration leaves i_point[i].image on plane (j+1)
     for(j = 0; j < p->NPlanes ; ++j)
@@ -263,6 +262,10 @@ void *compute_rays_parallel(void *_p)
       aa = (p->dDl[j+1] + p->dDl[j])/p->dDl[j];
       bb = p->dDl[j+1]/p->dDl[j];
       cc = p->charge * p->dDl[j+1];
+      
+      assert(aa == aa);
+      assert(bb == bb);
+      assert(cc == cc);
       
       xplus[0] = aa*p->i_points[i].image->x[0] - bb*xminus[0] - cc*alpha[0];
       xplus[1] = aa*p->i_points[i].image->x[1] - bb*xminus[1] - cc*alpha[1];

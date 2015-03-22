@@ -75,9 +75,10 @@ public:
 
   void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0);
     
-  void setCosmology(const COSMOLOGY& cosmo);
 
 protected:
+
+  virtual void setCosmology(const COSMOLOGY& cosmo);
 
   PosType SigmaCrit;
   PosType *perturb_modes;  ///first two are shear  

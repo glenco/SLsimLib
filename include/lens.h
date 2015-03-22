@@ -261,8 +261,6 @@ private: /* generation */
 	/// computes the distribution variables for field halos as specified in the parameter file
   /// this material was before computed in createFieldHalos
   void ComputeHalosDistributionVariables ();
-  /// computes sigma_back for createFieldPlanes :
-  void ComputeHalosSigmaBack();
 	void createFieldHalos(bool verbose);
   
 	/// read field halo data in from a file in Millennium output format
@@ -346,7 +344,9 @@ private: /* field */
 	/// vector of all field planes
 	std::vector<LensPlane*> field_planes;
 	/// vector of field plane redshifts
-	std::vector<PosType> field_plane_redshifts;
+  std::vector<PosType> field_plane_redshifts;
+  /// original field plane redshift
+  std::vector<PosType> field_plane_redshifts_original;
 	/// vector of field plane distances
 	std::vector<PosType> field_Dl;
   
