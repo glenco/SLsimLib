@@ -696,9 +696,13 @@ void Lens::insertSubstructures(PosType Rregion,PosType center[],PosType NumberDe
   
   if(alpha == -1) throw std::invalid_argument("alpha must not be -1 in Lens::createOneFieldPlane");
 
-  PosType aveNhalos = NumberDensity/Rregion/Rregion/pi;
+  PosType aveNhalos = NumberDensity*Rregion*Rregion*pi;
+  if(verbose) std::cout << "Average number of Substructures : " << aveNhalos << std::endl;
   
   std::size_t NhalosSub = static_cast<std::size_t>(poidev(float(aveNhalos), seed));
+  
+  if(verbose) std::cout << "Actual number of Substructures : " << NhalosSub << std::endl;
+
   
   if(NhalosSub == 0) return;
   
