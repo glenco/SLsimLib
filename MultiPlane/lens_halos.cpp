@@ -134,7 +134,7 @@ LensHaloNFW::LensHaloNFW(float my_mass,float my_Rmax,PosType my_zlens,float my_c
     std::cout << getEllipMethod() << " method to ellipticise" << std::endl;
     if(getEllipMethod()==Fourier){
       std::cout << "NFW constructor: slope set to " << get_slope() << std::endl;
-      calcModes(fratio, get_slope(), pa, mod1); // to ellipticize potential instead of  kappa take calcModes(fratio, 2-get_slope(), pa, mod);
+      calcModes(fratio, get_slope(), pa, mod); // to ellipticize potential instead of  kappa take calcModes(fratio, 2-get_slope(), pa, mod);
       for(int i=1;i<Nmod;i++){
         if(mod[i]!=0){set_flag_elliptical(true);};
       }
@@ -175,11 +175,11 @@ LensHaloNFW::LensHaloNFW(InputParams& params)
          //  calcModes(fratio, 0.1*i, pa, mod);
         //}
         //calcModes(fratio, get_slope()-0.5, pa, mod); // to ellipticize potential instead of  kappa take calcModes(fratio, 2-get_slope(), pa, mod);
-        calcModes(fratio, get_slope(), pa, mod1); // to ellipticize potential instead of  kappa take calcModes(fratio, 2-get_slope(), pa, mod);
-        //calcModes(fratio, get_slope()+0.5, pa, mod2); // to ellipticize potential instead of  kappa take calcModes(fratio, 2-get_slope(), pa, mod);
+        calcModes(fratio, get_slope(), pa, mod); // to ellipticize potential instead of  kappa take calcModes(fratio, 2-get_slope(), pa, mod);
+        //calcModes(fratio, get_slope()+0.5, pa, mod); // to ellipticize potential instead of  kappa take calcModes(fratio, 2-get_slope(), pa, mod);
         
         for(int i=1;i<Nmod;i++){
-            if(mod1[i]!=0){set_flag_elliptical(true);};
+            if(mod[i]!=0){set_flag_elliptical(true);};
         }
       }else set_flag_elliptical(true);
     }else set_flag_elliptical(false);
@@ -522,7 +522,7 @@ LensHaloPowerLaw::LensHaloPowerLaw(
     if(fratio!=1){
         std::cout << getEllipMethod() << " method to ellipticise" << std::endl;
         if(getEllipMethod()==Fourier){
-          calcModes(fratio, beta, pa, mod1);
+          calcModes(fratio, beta, pa, mod);
           for(int i=1;i<Nmod;i++){
             //std::cout << i << " " << mod[i] << std::endl;
             if(mod[i]!=0){set_flag_elliptical(true);};
@@ -564,9 +564,9 @@ LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
         */
       std::cout << getEllipMethod() << " method to ellipticise" << std::endl;
       if(getEllipMethod()==Fourier){
-        calcModes(fratio, beta, pa, mod1);
+        calcModes(fratio, beta, pa, mod);
         for(int i=1;i<Nmod;i++){
-          //std::cout << i << " " << mod1[i] << " " << fratio << " " << beta <<  " " << pa << " " <<  std::endl;
+          //std::cout << i << " " << mod[i] << " " << fratio << " " << beta <<  " " << pa << " " <<  std::endl;
           if(mod[i]!=0){set_flag_elliptical(true);};
         }
       }else set_flag_elliptical(true);

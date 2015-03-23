@@ -122,7 +122,10 @@ public:
   
   /// the method used to ellipticize a halo if fratio!=1 and halo is not NSIE
   EllipMethod getEllipMethod() const {return main_ellip_method;}
-  
+  /// get vector of Fourier modes, which are calculated in the constructors of the LensHaloes when main_ellip_method is set to 'Fourier'
+  std::vector<double> get_mod() { std::vector<double> fmodes(Nmod); for(int i=0;i<Nmod;i++){fmodes[i]= mod[i] ;}  ;return fmodes;}
+  /// get length of mod array, which is Nmod. Not to be confused with getNmodes in the class LensHaloFit
+  const static int get_Nmod() {return Nmod;}
   
 	/// get the number of halo parameters
 	virtual std::size_t Nparams() const;
@@ -633,7 +636,7 @@ public:
               ,float my_fratio    /// axis ratio
               ,float my_pa
               ,int my_stars_N
-              ,EllipMethod my_ellip_method=Schramm);
+              ,EllipMethod my_ellip_method=Pseudo);
 	LensHaloNFW(InputParams& params);
 	virtual ~LensHaloNFW();
   
@@ -819,7 +822,7 @@ private:
 class LensHaloPowerLaw: public LensHalo{
 public:
 	LensHaloPowerLaw();
-  LensHaloPowerLaw(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,PosType my_beta,float my_fratio,float my_pa, int my_stars_N, EllipMethod my_ellip_method=Schramm);
+  LensHaloPowerLaw(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,PosType my_beta,float my_fratio,float my_pa, int my_stars_N, EllipMethod my_ellip_method=Pseudo);
 	LensHaloPowerLaw(InputParams& params);
 	~LensHaloPowerLaw();
   
@@ -953,7 +956,7 @@ protected:
 class LensHaloHernquist: public LensHalo{
 public:
 	//LensHaloHernquist();
-  LensHaloHernquist(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,int my_stars_N, EllipMethod my_ellip_method=Schramm);
+  LensHaloHernquist(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,int my_stars_N, EllipMethod my_ellip_method=Pseudo);
 	LensHaloHernquist(InputParams& params);
 	virtual ~LensHaloHernquist();
   
@@ -1033,7 +1036,7 @@ private:
 class LensHaloJaffe: public LensHalo{
 public:
 	//LensHaloJaffe();
-  LensHaloJaffe(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,int my_stars_N, EllipMethod my_ellip_method=Schramm);
+  LensHaloJaffe(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,int my_stars_N, EllipMethod my_ellip_method=Pseudo);
 	LensHaloJaffe(InputParams& params);
 	virtual ~LensHaloJaffe();
   
