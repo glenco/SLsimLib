@@ -94,12 +94,12 @@ private:
 
 typedef struct Grid* GridHndl;
 
-
+/// enumerates the types of critical curves. ND is "not defined".
+enum CritType {ND,radial,tangential};
 // in image_finder_kist.c
 namespace ImageFinding{
   
-  /// enumerates the types of critical curves. ND is "not defined".
-  enum CritType {ND,radial,tangential};
+  
   
   struct CriticalCurve{
     

@@ -25,6 +25,7 @@ struct CausticStructure{
     crit_radius[1] = tmp.crit_radius[1];
     crit_radius[2] = tmp.crit_radius[2];
     crit_area = tmp.crit_area;
+    crit_type = tmp.crit_type;
     
     caustic_center = tmp.caustic_center;
     caustic_radius[0] = tmp.caustic_radius[0];
@@ -41,7 +42,8 @@ struct CausticStructure{
   double crit_radius[3];
   /// area of critical curve in radian^2
   double crit_area;
-  
+  /// caustic type : tangential or radial
+  CritType crit_type;
   /// center of caustic curve in radians
   Point_2d caustic_center;
   /// average radius, smallest radius and largest radius of caustic curve
@@ -89,7 +91,7 @@ public:
   /// sort caustics by size of caustic curve area from largest to smallest
   void SortByCausticArea();
   
-  /// initialize for selection with RandomLens()
+  /// initialize for selection with CausticDataStore::RandomLens()
   size_t init_for_random(
         short type              /// select according to: (1) critical curve area, (2) caustic curve area
         ,double limit = 0.0     /// minimum accepted area
