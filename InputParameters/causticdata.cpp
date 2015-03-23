@@ -47,7 +47,7 @@ void CausticDataStore::addcrits(std::vector<ImageFinding::CriticalCurve> &critcu
   data.resize(ii + critcurves_vec.size());
   for(size_t jj = 0 ;ii < data.size();++ii,++jj){
     
-    data[ii].redshift = critcurves_vec[ii].z_source;
+    data[ii].redshift = critcurves_vec[jj].z_source;
     data[ii].crit_center[0] = critcurves_vec[jj].critical_center[0];
     data[ii].crit_center[1] = critcurves_vec[jj].critical_center[1];
     critcurves_vec[jj].CriticalRadius(rmax,rmin,rave);

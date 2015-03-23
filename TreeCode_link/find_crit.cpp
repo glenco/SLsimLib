@@ -395,6 +395,10 @@ void ImageFinding::find_crit2(
                               ){
   
   
+  std::cerr << "There are known bugs in ImageFinding::find_crit2() that we are trying to remove.  Use ImageFinding::find_crit()."
+  << std::endl;
+  throw std::runtime_error("Under construction");
+  
   long i=0;
   long refinements;
   int Nregions=0;

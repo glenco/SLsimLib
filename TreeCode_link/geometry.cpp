@@ -117,11 +117,11 @@ int Utilities::Geometry::intersect(const std::vector<Point_2d> &curve){
   
   int intersections = 0;
   for(size_t i=0;i<curve.size()-2;++i){
-    for(size_t j=i+2;j<curve.size()-1;++i){
+    for(size_t j=i+2;j<curve.size()-1;++j){
       intersections += Utilities::Geometry::intersect(curve[i].x,curve[i+1].x,curve[j].x,curve[j+1].x);
     }
     intersections += Utilities::Geometry::intersect(curve[i].x,curve[i+1].x
-                                                    ,curve[curve.size()-1].x,curve[0].x);
+                                                    ,curve.back().x,curve[0].x);
   }
   
   return intersections;

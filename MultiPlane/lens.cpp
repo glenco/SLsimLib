@@ -117,6 +117,10 @@ Lens::Lens(InputParams& params, long* my_seed, CosmoParamSet cosmoset, bool verb
     else {
       // Compute the distribution variables :
       ComputeHalosDistributionVariables();
+      if(field_buffer == 0.0){
+        field_buffer = pow(3.0e14/800/pi/cosmo.rho_crit(0),1.0/3.);
+        std::cout << "    Resetting field buffer to " << field_buffer << " Mpc." << std::endl;
+      }
       // for (int i=0; i<Nzbins; i++) std::cout << NhalosbinZ[i] << " " ;
       // std::cout << std::endl ;
     }
@@ -259,7 +263,7 @@ void Lens::assignParams(InputParams& params,bool verbose)
 				if(!params.get("field_buffer",field_buffer))
 				{
 					field_buffer = 0.0;
-					std::cout << "default field buffer of 0 Mpc is being used." << endl;
+					std::cout << "default field buffer of 0 Mpc is being used for now." << endl;
 				}
         if(!params.get("field_fov",fieldofview))
         {
@@ -584,7 +588,7 @@ void Lens::setupFieldPlanes()
 void Lens::createFieldPlanes(bool verbose)
 {
 	if(verbose) std::cout << "Lens::createFieldPlanes zsource = " << zsource << std::endl;
-	
+    
 	assert(field_plane_redshifts.size() == field_Nplanes_original);
 	
 	// the bounds for sorting field halos onto redshifts
@@ -653,10 +657,10 @@ void Lens::createFieldPlanes(bool verbose)
     
     assert(sb == sb);
     
-		if(verbose) std::cout << "sigma_back from mass function " << sigma_back
+    if(verbose) std::cout << "sigma_back from mass function " << sigma_back
       << " from sum of halos " << sb << " " << sb/sigma_back - 1 << std::endl;
 		if(sim_input_flag) sigma_back = sb;
-		
+		//sigma_back = sb;
 		/*
 		 * create the lensing plane
 		 */
