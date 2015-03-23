@@ -115,12 +115,12 @@ Lens::Lens(InputParams& params, long* my_seed, CosmoParamSet cosmoset, bool verb
       // Do Nothing ! No step is necessary here !
     }
     else {
-      // Compute the distribution variables :
-      ComputeHalosDistributionVariables();
       if(field_buffer == 0.0){
         field_buffer = pow(3.0e14/800/pi/cosmo.rho_crit(0),1.0/3.);
         std::cout << "    Resetting field buffer to " << field_buffer << " Mpc." << std::endl;
       }
+      // Compute the distribution variables :
+      ComputeHalosDistributionVariables();
       // for (int i=0; i<Nzbins; i++) std::cout << NhalosbinZ[i] << " " ;
       // std::cout << std::endl ;
     }
