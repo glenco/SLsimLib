@@ -91,7 +91,7 @@ public:
   /// sort caustics by size of caustic curve area from largest to smallest
   void SortByCausticArea();
   
-  /// initialize for selection with RandomLens()
+  /// initialize for selection with CausticDataStore::RandomLens()
   size_t init_for_random(
         short type              /// select according to: (1) critical curve area, (2) caustic curve area
         ,double limit = 0.0     /// minimum accepted area
