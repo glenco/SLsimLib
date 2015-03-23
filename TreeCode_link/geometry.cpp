@@ -8,6 +8,7 @@
 
 #include "geometry.h"
 #include "Tree.h"
+#include "point.h"
 
 /// output cartisian coordinates of the point
 void Utilities::Geometry::SphericalPoint::sphericalTOcartisian(PosType x[]) const{
@@ -81,7 +82,7 @@ PosType Utilities::Geometry::AngleSeporation(const SphericalPoint &p1,const Sphe
   return acos(sin(p1.theta)*sin(p2.theta) + cos(p1.theta)*cos(p2.theta)*cos(p1.phi-p2.phi));
 }
 
-bool Utilities::Geometry::intersect(PosType a1[],PosType a2[],PosType b1[],PosType b2[]){
+bool Utilities::Geometry::intersect(const PosType a1[],const PosType a2[],const PosType b1[],const PosType b2[]){
   
   if(a1 == b1 || a1 == b2) return false;
   if(a2 == b1 || a2 == b2) return false;
@@ -111,7 +112,22 @@ bool Utilities::Geometry::intersect(PosType a1[],PosType a2[],PosType b1[],PosTy
   return false; // Doesn't fall in any of the above cases
 }
 
-int Utilities::Geometry::orientation(PosType p[],PosType q[],PosType r[])
+int Utilities::Geometry::intersect(const std::vector<Point_2d> &curve){
+  if(curve.size() < 4) return 0;
+  
+  int intersections = 0;
+  for(size_t i=0;i<curve.size()-2;++i){
+    for(size_t j=i+2;j<curve.size()-1;++i){
+      intersections += Utilities::Geometry::intersect(curve[i].x,curve[i+1].x,curve[j].x,curve[j+1].x);
+    }
+    intersections += Utilities::Geometry::intersect(curve[i].x,curve[i+1].x
+                                                    ,curve[curve.size()-1].x,curve[0].x);
+  }
+  
+  return intersections;
+}
+
+int Utilities::Geometry::orientation(const PosType p[],const PosType q[],const PosType r[])
 {
   // See 10th slides from following link for derivation of the formula
   double val = (q[1] - p[1]) * (r[0] - q[0]) -
@@ -124,7 +140,7 @@ int Utilities::Geometry::orientation(PosType p[],PosType q[],PosType r[])
 /** \brief Given three colinear points p, q, r, the function checks if
  point q lies on line segment 'pr', but not at p or r
  */
-bool Utilities::Geometry::onSegment(PosType p[], PosType q[], PosType r[])
+bool Utilities::Geometry::onSegment(const PosType p[], const PosType q[], const PosType r[])
 {
   if (q[0] < MAX(p[0], r[0]) && q[0] > MIN(p[0], r[0]) &&
       q[1] < MAX(p[1], r[1]) && q[1] > MIN(p[1], r[1]))

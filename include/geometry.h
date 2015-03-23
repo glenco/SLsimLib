@@ -11,6 +11,7 @@
 
 #include <iostream>
 #include "standard.h"
+#include "point.h"
 //
 //  geometry.h
 //  GLAMER
@@ -46,8 +47,11 @@ namespace Utilities {
     ///  Angular seporation between points
     PosType AngleSeporation(const SphericalPoint &p1,const SphericalPoint &p2);
 
-  /// Determine if line segments a1a2 and b1b2 intersect.  Sharing an endpoint does not count as intersecting
-    bool intersect(PosType a1[],PosType a2[],PosType b1[],PosType b2[]);
+    /// Determine if line segments a1a2 and b1b2 intersect.  Sharing an endpoint does not count as intersecting
+    bool intersect(const PosType a1[],const PosType a2[],const PosType b1[],const PosType b2[]);
+    /// returns the number of times a closed curve intersects itself
+    int intersect(const std::vector<Point_2d> &curve);
+    
     /** \brief To find orientation of the triangle formed by the ordered triplet (p, q, r).
      
      The function returns following values
@@ -55,11 +59,11 @@ namespace Utilities {
      1 --> Clockwise
      2 --> Counterclockwise
      */
-    int orientation(PosType p[],PosType q[],PosType r[]);
+    int orientation(const PosType p[],const PosType q[],const PosType r[]);
     /** \brief Given three collinear points p, q, r, the function checks if
      point q lies on line segment 'pr', but not at p or r
      */
-    bool onSegment(PosType p[], PosType q[], PosType r[]);
+    bool onSegment(const PosType p[], const PosType q[], const PosType r[]);
     
     /// returns the angle between two 2 dimensional vectors in radians.
     double AngleBetween2d(double v1[],double v2[]);

@@ -303,6 +303,7 @@ void ImageFinding::find_crit(
       
       Utilities::windings(crtcurve[ii].caustic_center.x,hull.data(),hull.size(),&(crtcurve[ii].caustic_area));
       
+      crtcurve[ii].caustic_intersections = Utilities::Geometry::intersect(crtcurve[ii].caustic_curve_intersecting);
       
     }
   }
