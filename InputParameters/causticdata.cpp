@@ -29,6 +29,7 @@ CausticDataStore::CausticDataStore(std::vector<ImageFinding::CriticalCurve> &cri
     data[ii].crit_radius[2] = rmin;
     data[ii].crit_radius[1] = rave;
     data[ii].crit_area = critcurves_vec[ii].critical_area;
+    data[ii].crit_type = critcurves_vec[ii].type;
     
     data[ii].caustic_center[0] = critcurves_vec[ii].caustic_center[0];
     data[ii].caustic_center[1] = critcurves_vec[ii].caustic_center[1];
@@ -55,6 +56,7 @@ void CausticDataStore::addcrits(std::vector<ImageFinding::CriticalCurve> &critcu
     data[ii].crit_radius[2] = rmin;
     data[ii].crit_radius[1] = rave;
     data[ii].crit_area = critcurves_vec[jj].critical_area;
+    data[ii].crit_type = critcurves_vec[jj].type;
     
     data[ii].caustic_center[0] = critcurves_vec[jj].caustic_center[0];
     data[ii].caustic_center[1] = critcurves_vec[jj].caustic_center[1];
@@ -94,6 +96,7 @@ void CausticDataStore::readfile(std::string filename){
   std::string myline;
   std::string space = " ";
 	double mydouble;
+  CritType myCritType = ND;
 
 	std::string strg;
 	std::string f=",";
@@ -194,6 +197,10 @@ void CausticDataStore::readfile(std::string filename){
           buffer >> mydouble;
           tmp_data.caustic_area = mydouble;
           break;
+        case 13:
+          buffer >> mydouble;
+          tmp_data.crit_type = myCritType;
+          break;
           
         default:
           break;
@@ -273,6 +280,7 @@ void CausticDataStore::printfile(std::string filename,std::string paramfile,doub
   catalog_caustic << "# column 11 caustic max radius" << std::endl;
   catalog_caustic << "# column 12 caustic min radius" << std::endl;
   catalog_caustic << "# column 13 caustic area" << std::endl;
+  catalog_caustic << "# column 14 caustic type" << std::endl;
   catalog_caustic << "# parameter file: " << paramfile << std::endl;
   
   catalog_caustic << "# " << " all critical lines above a scale of " << 180*60*60*minscale/pi << " arcsec,  field of view: " << fieldofview << " square degrees" << std::endl;
@@ -288,7 +296,7 @@ void CausticDataStore::printfile(std::string filename,std::string paramfile,doub
       << " | " << data[i].caustic_center[0] << " | " << data[i].caustic_center[1]
       << " | " << data[i].caustic_radius[0] << " | " << data[i].caustic_radius[2]
       << " | " << data[i].caustic_radius[1]
-      << " | " << data[i].caustic_area
+      << " | " << data[i].caustic_area << " | " << data[i].crit_type
       << std::endl;
     }
   }
