@@ -112,6 +112,7 @@ namespace ImageFinding{
       ellipse_area = 0.0;
       z_source = 0.0;
       type = ND;
+      caustic_intersections = -1;
     };
     CriticalCurve(const CriticalCurve &p){
       //critical_curve.resize(p.critical_curve.size());
@@ -127,6 +128,7 @@ namespace ImageFinding{
       ellipse_area = p.ellipse_area;
       z_source = p.z_source;
       type = p.type;
+      caustic_intersections = p.caustic_intersections;
    }
 
     CriticalCurve & operator=(const CriticalCurve &p){
@@ -144,6 +146,7 @@ namespace ImageFinding{
       ellipse_area = p.ellipse_area;
       z_source = p.z_source;
       type = p.type;
+      caustic_intersections = p.caustic_intersections;
       return *this;
     }
     
@@ -156,6 +159,7 @@ namespace ImageFinding{
     
     PosType z_source;
     CritType type;
+    int caustic_intersections;  /// estimated number of intersections of the caustic, -1 if not set
 
     Point_2d critical_center;      /// center of critical curve
     Point_2d caustic_center;   /// center of caustic curve
