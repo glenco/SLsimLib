@@ -75,7 +75,7 @@ class Lens
 public:
 	Lens(long* seed, PosType z_source,CosmoParamSet cosmoset = WMAP5yr, bool verbose = false);
 	Lens(InputParams& params, long* my_seed, CosmoParamSet cosmoset = WMAP5yr, bool verbose = false);
-  Lens(Lens &lens);
+  //Lens(Lens &lens);
   
 	~Lens();
 
@@ -295,7 +295,7 @@ private: /* generation */
   // table for redshift bins for mass function
   std::vector<PosType> zbins ;
   // table of number of halos per redshift bins for mass function
-  std::vector<PosType> Nhalosbin ;
+  std::vector<PosType> NhalosbinZ ;
   /// same for the cumulative number density in one square degree
   std::vector<PosType> Nhaloestot_Tab ;
   /// averaged number of halos
@@ -305,7 +305,7 @@ private: /* generation */
   /// Number of halos  field + substructure
   std::size_t Nhalos ;
   /// table of halos bins for each sampled redshifts
-  std::vector<std::vector<PosType>> NhalosbinNew;
+  std::vector<std::vector<PosType>> NhalosbinMass;
   /// table for sigma_back in createFieldPlanes
   std::vector<PosType> sigma_back_Tab;
   

@@ -98,14 +98,14 @@ Lens::Lens(InputParams& params, long* my_seed, CosmoParamSet cosmoset, bool verb
     
     // Resizing the "number of Halos" binning table :
     zbins.resize(Nzbins) ;
-    Nhalosbin.resize(Nzbins) ;
+    NhalosbinZ.resize(Nzbins) ;
     Nhaloestot_Tab.resize (NZSamples);
     
     // Initialising the "number of Halos" binning table :
     for(int k=0 ; k<Nzbins ; k++)
     {
       zbins[k] = 0. ;
-      Nhalosbin[k] = 0. ;
+      NhalosbinZ[k] = 0. ;
     }
     aveNhalos = 0. ;
     for(int k=0 ; k<NZSamples ; k++) Nhaloestot_Tab[k] = 0. ;
@@ -117,7 +117,7 @@ Lens::Lens(InputParams& params, long* my_seed, CosmoParamSet cosmoset, bool verb
     else {
       // Compute the distribution variables :
       ComputeHalosDistributionVariables();
-      // for (int i=0; i<Nzbins; i++) std::cout << Nhalosbin[i] << " " ;
+      // for (int i=0; i<Nzbins; i++) std::cout << NhalosbinZ[i] << " " ;
       // std::cout << std::endl ;
     }
     
@@ -128,75 +128,6 @@ Lens::Lens(InputParams& params, long* my_seed, CosmoParamSet cosmoset, bool verb
 	buildPlanes(params, verbose);
   std::cout << "number of field halos :" << field_halos.size() << std::endl;
 
-}
-
-/** Recontructor constructor.  This recreates the original lens before any new additions might have been added or changes to the InputParam object.
- */
-Lens::Lens(Lens &lens)
-: cosmo(lens.cosmo), central_point_sphere(1,0,0)
-{
-  if(init_seed == 0){
-    std::cout << "Can't use copy constructor on Lens that was not created from a parameter file!" << std::endl;
-    throw std::runtime_error("cannot use copy constructor");
-  }
-  
-  init_params = lens.init_params;
-  init_seed = lens.init_seed;
-  seed = new long;
-  *seed = lens.init_seed;
-  
-	readCosmology(lens.init_params);
-  
-	if((cosmo.getOmega_matter() + cosmo.getOmega_lambda()) != 1.0)
-	{
-		printf("ERROR: Lens can only handle flat universes at present. Must change cosmology.\n");
-		exit(1);
-	}
-	
-	assignParams(lens.init_params);
-	
-	read_sim_file = false;
-	
-	charge = 4*pi*Grav;
-	
-	// initially let source be the one inputed from parameter file
-	index_of_new_sourceplane = -1;
-	toggle_source_plane = false;
-	
-
-  if(flag_switch_field_off == false) {
-    std::cout << "Nzbins = " << Nzbins << std::endl ;
-    
-    // Resizing the "number of Halos" binning table :
-    zbins.resize(Nzbins) ;
-    Nhalosbin.resize(Nzbins) ;
-    Nhaloestot_Tab.resize (NZSamples);
-    
-    // Initialising the "number of Halos" binning table :
-    for(int k=0 ; k<Nzbins ; k++)
-    {
-      zbins[k] = 0. ;
-      Nhalosbin[k] = 0. ;
-    }
-    aveNhalos = 0. ;
-    for(int k=0 ; k<NZSamples ; k++) Nhaloestot_Tab[k] = 0. ;
-  
-    // Computing the number of halos per bins :
-    if(sim_input_flag){
-      // Do Nothing ! No step is necessary here !
-    }
-    else {
-      // Compute the distribution variables :
-      ComputeHalosDistributionVariables();
-      // for (int i=0; i<Nzbins; i++) std::cout << Nhalosbin[i] << " " ;
-      // std::cout << std::endl ;
-    }
-    
-  }
-  
-	// set up the lens contents
-	buildPlanes(init_params, false);
-  
 }
 
 Lens::~Lens()
@@ -1277,26 +1208,25 @@ void Lens::ComputeHalosDistributionVariables ()
   
   Utilities::fill_linear(zbins,Nzbins,0.0,zsource);
   // construct redshift distribution table
-  Nhalosbin[0] = 1;
+  NhalosbinZ[0] = 1;
   zbins[0] = 0;
   
   for(int k=1;k<Nzbins-1;++k){
-    Nhalosbin[k] = cosmo.haloNumberInBufferedCone(field_min_mass,zbins[k],zsource,fieldofview*pow(pi/180,2),field_buffer,field_mass_func_type,mass_func_PL_slope)/aveNhalos;
+    NhalosbinZ[k] = cosmo.haloNumberInBufferedCone(field_min_mass,zbins[k],zsource,fieldofview*pow(pi/180,2),field_buffer,field_mass_func_type,mass_func_PL_slope)/aveNhalos;
   }
   // std::cout << std::endl ;
   zbins[Nzbins-1] = zsource;
-  Nhalosbin[Nzbins-1] = 0.0;
+  NhalosbinZ[Nzbins-1] = 0.0;
   
   Nhalos = static_cast<std::size_t>(poidev(float(aveNhalos), seed));
   
   // fill the log(mass) vector
   Logm.resize(Nmassbin);
-  Nhalosbin.resize(Nmassbin);
   Utilities::fill_linear(Logm,Nmassbin,log10(field_min_mass),MaxLogm);
   
   // this will be used for the cumulative number density in one square degree
-  NhalosbinNew.resize(NZSamples);
-  for(int np=0;np<NZSamples;np++) NhalosbinNew[np].resize(Nmassbin);
+  NhalosbinMass.resize(NZSamples);
+  for(int np=0;np<NZSamples;np++) NhalosbinMass[np].resize(Nmassbin);
   
   for(int np=0;np<NZSamples;np++){
     PosType z1, z2;
@@ -1306,11 +1236,12 @@ void Lens::ComputeHalosDistributionVariables ()
     Nhaloestot_Tab[np] = cosmo.haloNumberInBufferedCone(pow(10,Logm[0]),z1,z2,fieldofview*pow(pi/180,2),field_buffer,field_mass_func_type,mass_func_PL_slope);
     // std::cout << Nhaloestot_Tab[np] << " "  ;
     
+    NhalosbinMass[np][0] = 1;
     for(int k=1;k<Nmassbin-1;k++){
       // cumulative number density in one square degree
-      NhalosbinNew[np][k] = cosmo.haloNumberInBufferedCone(pow(10,Logm[k]),z1,z2,fieldofview*pow(pi/180,2),field_buffer,field_mass_func_type,mass_func_PL_slope)/Nhaloestot_Tab[np];
+      NhalosbinMass[np][k] = cosmo.haloNumberInBufferedCone(pow(10,Logm[k]),z1,z2,fieldofview*pow(pi/180,2),field_buffer,field_mass_func_type,mass_func_PL_slope)/Nhaloestot_Tab[np];
     }
-  Nhalosbin[Nmassbin-1] = 0;
+    NhalosbinMass[np][Nmassbin-1] = 0;
     
   }
   // std::cout << std::endl ;
@@ -1326,7 +1257,7 @@ void Lens::createFieldHalos(bool verbose)
   std::cout << "Creating Field Halos from Mass Function" << std::endl;
   //verbose = true;
   
-	unsigned long i,k,j_max,k1,k2;
+	unsigned long i,j_max,k1,k2;
   PosType z_max;
 	PosType z1, z2, mass_max,Nhaloestot;
 	int np;
@@ -1347,7 +1278,16 @@ void Lens::createFieldHalos(bool verbose)
   // assign redshifts to field_halos according to the redshift distribution
   
   for(int i=0;i < Nhalos;++i){
-    halo_zs_vec.push_back(Utilities::InterpolateYvec(Nhalosbin,zbins,ran2(seed)));
+    halo_zs_vec.push_back(Utilities::InterpolateYvec(NhalosbinZ,zbins,ran2(seed)));
+  }
+  
+  if(verbose){
+    std::cout << "redshift distribution function" << std::endl;
+    std::cout << "zbins[]       NhalosbinZ[]" << std::endl;
+    
+    for(int i=0;i<zbins.size();++i){
+      std::cout << zbins[i] << "  " << NhalosbinZ[i] << std::endl;
+    }
   }
   
   // sort redshifts
@@ -1374,24 +1314,11 @@ void Lens::createFieldHalos(bool verbose)
 		k2 = it2 - halo_zs_vec.begin();
 
     Nhaloestot = Nhaloestot_Tab[np] ;
-
-		Nhalosbin[0] = 1;
     
     if(verbose){
       std::cout << "   np = " << np << " z: " << z1 << " " << z2 << std::endl;
       std::cout << "          n = " << k2 - k1 << std::endl;
-     
     }
-    
-#ifdef _OPENMP
-#pragma omp parallel for default(shared) private(k)
-#endif
-    
-		for(k=1;k<Nmassbin-1;k++){
-			// cumulative number density in one square degree
-      Nhalosbin[k] = NhalosbinNew[np][k];
-		}
-		Nhalosbin[Nmassbin-1] = 0;
     
 		for(i = k1; i < k2; i++){
 			PosType Ds = cosmo.angDist(0,halo_zs_vec[i]);
@@ -1400,7 +1327,6 @@ void Lens::createFieldHalos(bool verbose)
 			rr = maxr*sqrt(ran2(seed));
       
       if(verbose) std::cout << "          maxr = " << maxr << std::endl;
-
 
 			assert(rr == rr);
       
@@ -1412,7 +1338,7 @@ void Lens::createFieldHalos(bool verbose)
 			theta_pos[1] = rr*sin(theta);//*Ds;
 			theta_pos[2] = 0.0;
       
-      float mass = pow(10,Utilities::InterpolateYvec(Nhalosbin,Logm,ran2 (seed)));
+      float mass = pow(10,Utilities::InterpolateYvec(NhalosbinMass[np],Logm,ran2 (seed)));
       
 			halo_calc->reset(mass,halo_zs_vec[i]);
       
@@ -1527,21 +1453,17 @@ void Lens::createFieldHalos(bool verbose)
       }
       
 		}
-    
-		// Nhalosbin.empty();
 	}
   
 	assert(k2 == Nhalos);
 	delete halo_calc;
   
-	if(verbose) std::cout << Nhalos << " halos created." << std::endl;
-  
+  if(verbose){
+    std::cout << Nhalos << " halos created." << std::endl
+    << "   largest mass: " << mass_max << "  at redshift redshift: " << z_max << std::endl;
+    
+  }
 	Nhalos = field_halos.size();
-	//halo_pos = Utilities::PosTypeMatrix(Nhalos,3);
-  
-	//for(i=0;i<Nhalos;++i){
-	//	halo_pos[i] = halo_pos_vec[i];
-	//}
   
 	if(verbose) std::cout << "leaving Lens::createFieldHalos()" << std::endl;
 }
