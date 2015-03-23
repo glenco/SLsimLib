@@ -13,8 +13,8 @@
 //#include "lens_halos.h"
 
 // used for default position of object
-template<class T>
-PosType  *defaultposition(T &in){return in.x;}
+//template<class T>
+//PosType  *defaultposition(T &in){return in.x;}
 
     /** \brief
      * A tree for doing quick searches in multidimensional space.  A pointer to an array of
@@ -32,7 +32,8 @@ public:
                   ,int bucket = 5         /// number of points in leaves of tree
                   ,int dimensions = 2     /// dimension of space
                   ,bool median = true     /// whether to use a median cut or a space cut in splitting branches
-                  ,PosType *(*Mypos)(T&) = defaultposition  /// function that takes the object T and returns a pointer to its position, default is t.x[]
+                //  ,PosType *(*Mypos)(T&) = defaultposition  /// function that takes
+                ,PosType *(*Mypos)(T&) = [](T& in){return in.x;}  /// function that takes the object T and returns a pointer to its position, default is t.x[]
                   ){
         index = new IndexType[Npoints];
         IndexType ii;

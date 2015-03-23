@@ -42,7 +42,7 @@ void LensHaloFit::FindLensSimple(
 
 
 /** \ingroup FitLens
- *
+ *
  *  \brief Same as FindLensSimple but with some tests in it.
  *
  *
@@ -247,7 +247,7 @@ bool LensHaloFit::SafeFindLensSimple(
     if(verbose)
     {
     std::cout << "(y-x+alpha)/pixelsize : " << abs(y[0] - image_positions[i].x[0] + alphaTMP[0]) / PixelSizeRad << " , " << abs(y[1] - image_positions[i].x[1] + alphaTMP[1]) / PixelSizeRad << " pixels." << std::endl ;
-      std::cout << "! x - alpha : " << image_positions[i].x[0] - alphaTMP[0] << " , " << image_positions[i].x[1] - alphaTMP[1] << " !" << std::endl << std::endl ;
+    std::cout << "! x - alpha : " << image_positions[i].x[0] - alphaTMP[0] << " , " << image_positions[i].x[1] - alphaTMP[1] << " !" << std::endl << std::endl ;
     }
     for(int k=0;k<2;k++)
     {
@@ -258,8 +258,9 @@ bool LensHaloFit::SafeFindLensSimple(
       if( abs(y[k] - image_positions[i].x[k] + alphaTMP[k]) > PixelSizeRad * ToleranceSourcePos && abs(y[k] - image_positions[i].x[k]) > 1.e-15 ) // assuming positions to be in radians.
       {
         ERROR_MESSAGE();
-        std::cout << "Error of precision in source-position reconstruction in SafeFindLensSimple !" << std::endl << std::endl ;
+        std::cout << "Error of precision in source-position reconstruction in SafeFindLensSimple !" << std::endl ;
         ReturnCode = false ;
+        return ReturnCode ;
         // exit(0);
       }
       // Else we can continue !

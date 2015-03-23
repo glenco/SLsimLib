@@ -59,7 +59,7 @@ Lens::Lens(long* my_seed,PosType z_source, CosmoParamSet cosmoset,bool verbose)
   //charge = cosmo.angDist(zsource)/cosmo.angDist(0.3)/cosmo.angDist(0.3,zsource);
   //charge = 4*pi/cosmo.angDist(0.3);
   combinePlanes(true);
-	std:: cout << " done " << std:: endl;
+  std::cout << "number of field halos :" << field_halos.size() << std::endl;
 }
 
 /**
@@ -121,15 +121,13 @@ Lens::Lens(InputParams& params, long* my_seed, CosmoParamSet cosmoset, bool verb
       // std::cout << std::endl ;
     }
     
-    // Initialising the sigma_back table :
-    sigma_back_Tab.resize(field_Nplanes);
+    std::cout << "Lens : field_Nplanes_original = " << field_Nplanes_original << std::endl ;
   }
   
-	// set up the lens contents :
+  // set up the lens contents :
 	buildPlanes(params, verbose);
-  
-  // computes sigma_back :
-  ComputeHalosSigmaBack();
+  std::cout << "number of field halos :" << field_halos.size() << std::endl;
+
 }
 
 /** Recontructor constructor.  This recreates the original lens before any new additions might have been added or changes to the InputParam object.
@@ -194,15 +192,11 @@ Lens::Lens(Lens &lens)
       // std::cout << std::endl ;
     }
     
-    // Initialising the sigma_back table :
-    sigma_back_Tab.resize(field_Nplanes);
   }
   
 	// set up the lens contents
 	buildPlanes(init_params, false);
   
-  // computes sigma_back :
-  ComputeHalosSigmaBack();
 }
 
 Lens::~Lens()
@@ -272,13 +266,13 @@ void Lens::assignParams(InputParams& params,bool verbose)
 	{
 		if(!flag_switch_field_off)
 		{
-			if(!params.get("field_Nplanes",field_Nplanes))
+			if(!params.get("field_Nplanes",field_Nplanes_original))
 			{
 				ERROR_MESSAGE();
 				std::cout << "parameter field_Nplanes needs to be set in the parameter file " << params.filename() << endl;
 				exit(0);
 			}
-			
+      field_Nplanes_current = field_Nplanes_original;
 			
 			if(!params.get("field_internal_profile",field_int_prof_type))
 			{
@@ -375,7 +369,7 @@ void Lens::assignParams(InputParams& params,bool verbose)
 		else
 		{
 			// no field
-			field_Nplanes = 0;
+			field_Nplanes_original = field_Nplanes_current = 0;
 			fieldofview = 0;
 		}
 	}
@@ -409,7 +403,7 @@ void Lens::assignParams(InputParams& params,bool verbose)
 		flag_switch_lensing_off = false;
   
 	// Some checks for valid parameters
-	if(flag_switch_field_off == false && field_Nplanes == 0 )
+	if(flag_switch_field_off == false && field_Nplanes_original == 0 )
 	{
 		ERROR_MESSAGE();
 		std::cout << "Do you want to run _with_ field halos, but with _without_ field planes? Change field_Nplanes to a bigger number!" << endl;
@@ -465,7 +459,7 @@ void Lens::resetFieldNplanes(std::size_t Np, bool verbose)
 {
 	Utilities::delete_container(field_planes);
 	
-	field_Nplanes = Np;
+	field_Nplanes_original = field_Nplanes_current = Np;
 	
 	field_plane_redshifts.clear();
 	field_Dl.clear();
@@ -474,12 +468,16 @@ void Lens::resetFieldNplanes(std::size_t Np, bool verbose)
 	createFieldPlanes(verbose);
 	
 	combinePlanes(verbose);
+  
+  field_plane_redshifts_original = field_plane_redshifts;
 }
 
 void Lens::resetFieldHalos(bool verbose)
 {
   Utilities::delete_container(field_halos);
 	Utilities::delete_container(field_planes);
+  field_Nplanes_current = field_Nplanes_original;
+  field_plane_redshifts = field_plane_redshifts_original;
   
 	if(sim_input_flag){
 		if(read_sim_file == false){
@@ -495,6 +493,10 @@ void Lens::resetFieldHalos(bool verbose)
   // set up the lens contents :
 	createFieldPlanes(verbose);
 	combinePlanes(verbose);
+  
+  if(WasInsertSubStructuresCalled == YES) WasInsertSubStructuresCalled = MAYBE ;
+  std::cout << "number of field halos :" << field_halos.size() << std::endl;
+
 }
 
 void Lens::printMultiLens(){
@@ -556,7 +558,8 @@ void Lens::printMultiLens(){
     
 		std::cout << endl << "FIELD HALOS" << endl;
     
-		std::cout << "field Nplanes " << field_Nplanes << endl;
+    std::cout << "field Nplanes original" << field_Nplanes_original << endl;
+    std::cout << "field Nplanes current" << field_Nplanes_current << endl;
     
 		std::cout << "min mass " << field_min_mass << endl;
 		std::cout << "Mass function type: "<< endl;
@@ -651,14 +654,14 @@ void Lens::createFieldPlanes(bool verbose)
 {
 	if(verbose) std::cout << "Lens::createFieldPlanes zsource = " << zsource << std::endl;
 	
-	assert(field_plane_redshifts.size() == field_Nplanes);
+	assert(field_plane_redshifts.size() == field_Nplanes_original);
 	
 	// the bounds for sorting field halos onto redshifts
 	PosType z1 = 0, z2 = 0;
 	std::size_t k1 = 0, k2 = 0;
 	
 	// go through planes
-	for(std::size_t i = 0; i < field_Nplanes; ++i)
+	for(std::size_t i = 0; i < field_Nplanes_original; ++i)
 	{
 		assert(field_plane_redshifts[i] > 0);
 		assert(field_Dl[i] > 0);
@@ -668,7 +671,7 @@ void Lens::createFieldPlanes(bool verbose)
 		k1 = k2;
 		
 		// find upper bound
-		if(i == field_Nplanes-1)
+		if(i == field_Nplanes_original-1)
 		{
 			z2 = zsource;
 			k2 = field_halos.size();
@@ -682,10 +685,15 @@ void Lens::createFieldPlanes(bool verbose)
 		/*
 		 * finding the average mass surface density in field_halos
 		 */
-		
-		// TODO: Ben: test this
-		// PosType sigma_back = cosmo.haloMassInBufferedCone(field_min_mass,z1,z2,fieldofview*pow(pi/180,2),field_buffer,field_mass_func_type,mass_func_PL_slope)/(pi*pow(sqrt(fieldofview/pi)*pi*field_Dl[i]/180/(1+field_plane_redshifts[i]) + field_buffer,2));
-    PosType sigma_back = sigma_back_Tab[i] ;
+    
+    PosType sigma_back;
+    if(sigma_back_Tab.size() < field_Nplanes_original){
+      sigma_back =
+        cosmo.haloMassInBufferedCone(field_min_mass,z1,z2,fieldofview*pow(pi/180,2),field_buffer,field_mass_func_type,mass_func_PL_slope)/(pi*pow(sqrt(fieldofview/pi)*pi*field_Dl[i]/180/(1+field_plane_redshifts[i]) + field_buffer,2));
+      sigma_back_Tab.push_back(sigma_back);
+    }else{
+      sigma_back = sigma_back_Tab[i];
+    }
 		
 		PosType sb=0.0;
 		//PosType max_r = 0,tmp;
@@ -732,13 +740,12 @@ void Lens::createFieldPlanes(bool verbose)
 		//field_planes.push_back(new LensPlaneTree(&halo_pos[k1], &field_halos[k1], k2-k1, sigma_back) );
 	}
   
-	assert(field_planes.size() == field_Nplanes);
+	assert(field_planes.size() == field_Nplanes_original);
 }
 
 
 void Lens::insertSubstructures(PosType Rregion,PosType center[],PosType NumberDensity,PosType Mass_min,PosType Mass_max,PosType redshift,PosType alpha,PosType density_contrast,bool verbose)
 {
-  
   substructure.alpha = alpha;
   substructure.center.x[0] = center[0];
   substructure.center.x[1] = center[1];
@@ -747,14 +754,18 @@ void Lens::insertSubstructures(PosType Rregion,PosType center[],PosType NumberDe
   substructure.Ndensity = NumberDensity;
   substructure.rho_tidal = density_contrast;
   substructure.Rregion = Rregion;
+  // Adding quantities for the resetting of the substructure
+  // (when WasInsertSubStructuresCalled = MAYBE) :
+  substructure.redshift = redshift;
+  substructure.verbose = verbose;
   
   if(alpha == -1) throw std::invalid_argument("alpha must not be -1 in Lens::createOneFieldPlane");
 
   PosType aveNhalos = NumberDensity/Rregion/Rregion/pi;
   
-  std::size_t Nhalos = static_cast<std::size_t>(poidev(float(aveNhalos), seed));
+  std::size_t NhalosSub = static_cast<std::size_t>(poidev(float(aveNhalos), seed));
   
-  if(Nhalos == 0) return;
+  if(NhalosSub == 0) return;
   
   size_t offset = field_halos.size();
 
@@ -778,7 +789,7 @@ void Lens::insertSubstructures(PosType Rregion,PosType center[],PosType NumberDe
   }
   
   
-    for(size_t ii=0;ii<Nhalos;++ii){
+    for(size_t ii=0;ii<NhalosSub;++ii){
       
     // random position
     rr = Rregion*sqrt(ran2(seed));
@@ -809,7 +820,6 @@ void Lens::insertSubstructures(PosType Rregion,PosType center[],PosType NumberDe
     ++haloid;
     substructure.halos.back()->setID(haloid);
     
-    WasInsertSubStructuresCalled = true ;
   }
   
   
@@ -819,7 +829,7 @@ void Lens::insertSubstructures(PosType Rregion,PosType center[],PosType NumberDe
   // std::cout << std::endl ;
   
   // the new plane must be inserted in order of redshift
-  if(field_Nplanes != 0)
+  if(field_Nplanes_current != 0)
   {
     std::vector<LensPlane*>::iterator it = field_planes.begin();
     std::vector<PosType>::iterator itz = field_plane_redshifts.begin();
@@ -829,24 +839,30 @@ void Lens::insertSubstructures(PosType Rregion,PosType center[],PosType NumberDe
       ++itz;
       ++itd;
     }
-    it = field_planes.insert(it, new LensPlaneTree(substructure.halos.data(), Nhalos, 0, 0));
+    it = field_planes.insert(it, new LensPlaneTree(substructure.halos.data(), NhalosSub, 0, 0));
     field_plane_redshifts.insert(itz,redshift);
     field_Dl.insert(itd,Dl*(1+redshift));
     substructure.plane = *it;
   }
   else // in the case where no field plane exists
   {
-    field_planes.push_back(new LensPlaneTree(substructure.halos.data(), Nhalos, 0, 0));
+    field_planes.push_back(new LensPlaneTree(substructure.halos.data(), NhalosSub, 0, 0));
     field_plane_redshifts.push_back(redshift);
     field_Dl.push_back(Dl*(1+redshift));
     substructure.plane = field_planes[0];
   }
-  ++field_Nplanes;
+  ++field_Nplanes_current;
 
+  Nhalos += NhalosSub;
+  
   combinePlanes(verbose);
+  std::cout << "InsertSubStructure : field_planes.size() = " << field_planes.size() << std::endl;
+  // assert(field_planes.size() == field_Nplanes);
   
-  assert(field_planes.size() == field_Nplanes);
+  WasInsertSubStructuresCalled = YES ;
   
+  assert(field_planes.size() == field_Nplanes_current);
+
   // Test :
   // std::cout << "field_plane and field_plane_redshifts : " << std::endl ;
   // for(int k=0 ; k<field_planes.size() ; k++) std::cout << field_planes[k] << " " << field_plane_redshifts[k] << std::endl ;
@@ -859,10 +875,30 @@ void Lens::insertSubstructures(PosType Rregion,PosType center[],PosType NumberDe
 void Lens::resetSubstructure(){
 
   // test of whether insertSubstructures has been called :
-  if(!WasInsertSubStructuresCalled)
+  if(WasInsertSubStructuresCalled == NO)
   {
     ERROR_MESSAGE();
     cout << "Lens::insertSubStructures() has to be called before Lens::resetSubStructure() !" << endl;
+    exit(0);
+  }
+  else if(WasInsertSubStructuresCalled == MAYBE)
+  {
+    
+    // Reconstructing the plane with arguments given to insertSubStructures :
+
+    // Clearing the substructure halos :
+    Utilities::delete_container(substructure.halos);
+    // substructure.halos.clear();
+    
+    // Calling insertSubStructures :
+
+    assert(field_Nplanes_current == field_Nplanes_original);
+    assert(field_plane_redshifts.size() == field_plane_redshifts_original.size());
+    
+    insertSubstructures(substructure.Rregion,substructure.center.x,substructure.Ndensity,substructure.Mmin,substructure.Mmax,substructure.redshift,substructure.alpha,substructure.rho_tidal,false);
+
+    WasInsertSubStructuresCalled = YES ;
+    return ;
   }
   
   // find which plane has the substructures on it
@@ -872,7 +908,7 @@ void Lens::resetSubstructure(){
   
   PosType redshift = field_plane_redshifts[fplane_index];
   PosType Dlsub = Dl[fplane_index]/(1+redshift);
-
+  
   PosType aveNhalos = substructure.Ndensity/substructure.Rregion/substructure.Rregion/pi;
   
   std::size_t Nhalos = static_cast<std::size_t>(poidev(float(aveNhalos), seed));
@@ -891,7 +927,8 @@ void Lens::resetSubstructure(){
   
   Utilities::delete_container(substructure.halos);
   
-  
+  assert(substructure.halos.size() == 0);
+
   for(size_t ii=0;ii<Nhalos;++ii){
     
     // random postion
@@ -1008,7 +1045,7 @@ void Lens::setFieldDist()
 	PosType Dmax = cosmo.coorDist(0, zsource);
 	
 	std::vector<PosType> lD;
-	std::size_t Np = field_Nplanes + 1;
+	std::size_t Np = field_Nplanes_current + 1;
 	
 	assert(Np > 1);
 	
@@ -1029,10 +1066,10 @@ void Lens::setFieldDist()
 		field_Dl.push_back(lD[i]);
 	}
 	
-	assert(field_Dl.size() == field_Nplanes);
+	assert(field_Dl.size() == field_Nplanes_current);
 	
 	// assigns the redshifts and plugs in the input plane
-	for(std::size_t i = 0; i < field_Nplanes; ++i)
+	for(std::size_t i = 0; i < field_Nplanes_current; ++i)
 	{
 		// get redshift for calculated distance
 		PosType z = cosmo.invCoorDist(field_Dl[i]);
@@ -1042,7 +1079,8 @@ void Lens::setFieldDist()
 		field_Dl[i] = cosmo.coorDist(0, z);
 	}
 	
-	assert(field_plane_redshifts.size() == field_Nplanes);
+	assert(field_plane_redshifts.size() == field_Nplanes_current);
+  field_plane_redshifts_original = field_plane_redshifts;
 }
 
 void Lens::setFieldDistFromFile()
@@ -1063,10 +1101,11 @@ void Lens::setFieldDistFromFile()
 	
 	file_in.close();
 	
-	assert(field_plane_redshifts.size() == field_Nplanes);
+	assert(field_plane_redshifts.size() == field_Nplanes_current);
 	
 	for(std::size_t i = 0; i < field_plane_redshifts.size(); ++i)
 		field_Dl.push_back(cosmo.coorDist(0, field_plane_redshifts[i]));
+  field_plane_redshifts_original = field_plane_redshifts;
 }
 
 /**
@@ -1278,38 +1317,6 @@ void Lens::ComputeHalosDistributionVariables ()
   
 }
 
-
-
-/**
- * \brief Computes sigma_back for createFieldPlanes.
- *
- */
-void Lens::ComputeHalosSigmaBack()
-{
-  std::vector<PosType> field_plane_redshifts_Tmp = get_field_plane_redshifts() ;
-  assert(field_plane_redshifts_Tmp.size() == field_Nplanes);
-
-  PosType z1 = 0, z2 = 0;
-
-  // loop through planes
-  for(std::size_t i = 0; i < field_Nplanes; ++i)
-  {
-    assert(&field_plane_redshifts[i] > 0);
-    assert(field_Dl[i] > 0);
-    
-    // previous upper bound is now lower bound
-    z1 = z2;
-    
-    // find upper bound
-    if(i == field_Nplanes-1) z2 = zsource;
-    else z2 = cosmo.invCoorDist(0.5*(field_Dl[i] + field_Dl[i+1]));
-    
-    PosType z1 = 0, z2 = 0;
-    sigma_back_Tab[i] = cosmo.haloMassInBufferedCone(field_min_mass,z1,z2,fieldofview*pow(pi/180,2),field_buffer,field_mass_func_type,mass_func_PL_slope)/(pi*pow(sqrt(fieldofview/pi)*pi*field_Dl[i]/180/(1+field_plane_redshifts[i]) + field_buffer,2));
-  }
-}
-
-
 /**
  * \brief Creates the field of halos as specified in the parameter file.
  *
@@ -1317,7 +1324,8 @@ void Lens::ComputeHalosSigmaBack()
 void Lens::createFieldHalos(bool verbose)
 {
   std::cout << "Creating Field Halos from Mass Function" << std::endl;
-
+  //verbose = true;
+  
 	unsigned long i,k,j_max,k1,k2;
   PosType z_max;
 	PosType z1, z2, mass_max,Nhaloestot;
@@ -1369,6 +1377,12 @@ void Lens::createFieldHalos(bool verbose)
 
 		Nhalosbin[0] = 1;
     
+    if(verbose){
+      std::cout << "   np = " << np << " z: " << z1 << " " << z2 << std::endl;
+      std::cout << "          n = " << k2 - k1 << std::endl;
+     
+    }
+    
 #ifdef _OPENMP
 #pragma omp parallel for default(shared) private(k)
 #endif
@@ -1385,6 +1399,9 @@ void Lens::createFieldHalos(bool verbose)
 			maxr = pi*sqrt(fieldofview/pi)/180. + field_buffer/Ds; // fov is a circle
 			rr = maxr*sqrt(ran2(seed));
       
+      if(verbose) std::cout << "          maxr = " << maxr << std::endl;
+
+
 			assert(rr == rr);
       
 			theta_pos = new PosType[3];

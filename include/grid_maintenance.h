@@ -98,6 +98,9 @@ typedef struct Grid* GridHndl;
 // in image_finder_kist.c
 namespace ImageFinding{
   
+  /// enumerates the types of critical curves. ND is "not defined".
+  enum CritType {ND,radial,tangential};
+  
   struct CriticalCurve{
     
     CriticalCurve(){
@@ -107,6 +110,8 @@ namespace ImageFinding{
       caustic_area = 0.0;
       contour_ell = 0.0;
       ellipse_area = 0.0;
+      z_source = 0.0;
+      type = ND;
     };
     CriticalCurve(const CriticalCurve &p){
       //critical_curve.resize(p.critical_curve.size());
@@ -120,7 +125,10 @@ namespace ImageFinding{
       ellipse_curve = p.ellipse_curve;
       contour_ell = p.contour_ell;
       ellipse_area = p.ellipse_area;
-    }
+      z_source = p.z_source;
+      type = p.type;
+   }
+
     CriticalCurve & operator=(const CriticalCurve &p){
       if(this == &p) return *this;
       
@@ -134,6 +142,8 @@ namespace ImageFinding{
       ellipse_curve = p.ellipse_curve;
       contour_ell = p.contour_ell;
       ellipse_area = p.ellipse_area;
+      z_source = p.z_source;
+      type = p.type;
       return *this;
     }
     
@@ -144,12 +154,16 @@ namespace ImageFinding{
     std::vector<Point_2d> caustic_curve_intersecting;
     std::vector<Point_2d> ellipse_curve;
     
-    
+    PosType z_source;
+    CritType type;
+
     Point_2d critical_center;      /// center of critical curve
     Point_2d caustic_center;   /// center of caustic curve
     
     PosType critical_area;        /// area of critical curve (radians^2)
     PosType caustic_area;        /// area of caustic curve (radians^2)
+    
+    
     PosType contour_ell;  /// axis ratio of a contour defined by the ratio of the max to min distance between center (as given by hull alg) and contour
     PosType ellipse_area;  /// area of an ellipse with axis ratio contour_ell and major axis = max distance between center (as given by hull alg) and contour
     
@@ -231,6 +245,11 @@ namespace ImageFinding{
     
     /// find 3 measures of the critical curve radius
     void CriticalRadius(PosType &rmax,PosType &rmin,PosType &rave) const{
+      if(critical_curve.size() < 2){
+        rave = rmax = rmin = 0.0;
+        return;
+      }
+      
       rave = 0;
       rmax = 0;
       rmin = std::numeric_limits<double>::max();
@@ -250,6 +269,10 @@ namespace ImageFinding{
     }
     /// find 3 measures of the caustic curve radius
     void CausticRadius(PosType &rmax,PosType &rmin,PosType &rave) const{
+      if(caustic_curve_outline.size() < 2){
+        rave = rmax = rmin = 0.0;
+        return;
+      }
       rave = 0;
       rmax = 0;
       rmin = std::numeric_limits<double>::max();
@@ -296,7 +319,8 @@ namespace ImageFinding{
   
   
   void find_crit(LensHndl lens,GridHndl grid,std::vector<CriticalCurve> &crtcurve,int *Ncrits
-                 ,double resolution,bool *orderingsuccess,bool ordercurve,bool dividecurves,double invmag_min = 0.0,bool verbose = false);
+                 ,double resolution,double invmag_min = 0.0,bool verbose = false);
+ 
   void find_crit2(LensHndl lens,GridHndl grid,std::vector<CriticalCurve> &critcurve,int *Ncrits
                   ,double resolution,bool *orderingsuccess,bool ordercurve,bool dividecurves,double invmag_min = 0.0,bool verbose = false);
   

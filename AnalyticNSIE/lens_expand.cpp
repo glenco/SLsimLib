@@ -45,15 +45,15 @@ PosType lens_expand(PosType beta,PosType *mod,int Nmodes,PosType const *x,PosTyp
     cosx=x[0]/r;
     sinx=x[1]/r;
 
-    if(Nmodes > 3) F=0.5*mod[3];
+    if(Nmodes > 3) F = 0.5*mod[3];
     else F = 0;
     F1=0;
     F2=0;
     for(i=4;i<Nmodes;i+=2){
       k=i/2;
-      F += mod[i]*cos(k*theta)     + mod[i+1]*sin(k*theta);
-      F1+=-mod[i]*k*sin(k*theta)   + mod[i+1]*k*cos(k*theta);
-      F2+=-mod[i]*k*k*cos(k*theta) - mod[i+1]*k*k*sin(k*theta);
+      F  += mod[i]*cos(k*theta)     + mod[i+1]*sin(k*theta);
+      F1 +=-mod[i]*k*sin(k*theta)   + mod[i+1]*k*cos(k*theta);
+      F2 +=-mod[i]*k*k*cos(k*theta) - mod[i+1]*k*k*sin(k*theta);
     }
 
     alpha[0] = pow(r,beta-1)*(beta*cosx*F - sinx*F1);
