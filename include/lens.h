@@ -92,8 +92,10 @@ public:
 	/// reset the number of planes, but keep the field halos and main lens
 	void resetFieldNplanes(std::size_t field_Nplanes, bool verbose = false);
 
-	/// keep the main lens and the number of planes constant, but generate new field halos.
-  ///  This function will also erase the substructure halos so they need to be regenerated.
+	/** keep the main lens and the number of planes constant, but generate new field halos.
+    This function will also erase the substructure halos so they need to be regenerated using 
+   resetSubstructure() if they are desired .
+   */
 	void resetFieldHalos(bool verbose = false);
 
 	/// print the main parameters of the lens
@@ -158,7 +160,7 @@ public:
    
    The Lens::insertSubstructures() function must have been called on this instance of the Lens before.
    */
-  void resetSubstructure();
+  void resetSubstructure(bool verbose = false);
   
 	/// get number of main halos
 	std::size_t getNMainHalos() const;
@@ -299,11 +301,11 @@ private: /* generation */
   /// same for the cumulative number density in one square degree
   std::vector<PosType> Nhaloestot_Tab ;
   /// averaged number of halos
-  PosType aveNhalos ;
+  PosType aveNhalosField ;
   /// Log(mass) vector
   std::vector<PosType> Logm;
   /// Number of halos  field + substructure
-  std::size_t Nhalos ;
+  //std::size_t Nhalos ;
   /// table of halos bins for each sampled redshifts
   std::vector<std::vector<PosType>> NhalosbinMass;
   /// table for sigma_back in createFieldPlanes
@@ -313,6 +315,9 @@ private: /* generation */
   
   // get the adress of field_plane_redshifts
   std::vector<PosType> & get_field_plane_redshifts () { return field_plane_redshifts ; }
+  
+  size_t getNFieldHalos() const {return field_halos.size();}
+  size_t getNSubHalos() const {return substructure.halos.size();}
   
 private: /* force calculation */
 	/// if >= 1, deflection in the rayshooting is switched off
@@ -347,25 +352,27 @@ private: /* field */
   std::vector<PosType> field_plane_redshifts;
   /// original field plane redshift
   std::vector<PosType> field_plane_redshifts_original;
-	/// vector of field plane distances
-	std::vector<PosType> field_Dl;
+  /// vector of field plane distances
+  std::vector<PosType> field_Dl;
+  /// original vector of field plane distances
+  std::vector<PosType> field_Dl_original;
   
   struct SubStructureInfo{
-  // things for substructures
-  /// vector of all substructure halos
-  std::vector<LensHalo*> halos;
-  LensPlane *plane;
-  PosType Rregion = 0;
-  PosType Mmax = 0;
-  PosType Mmin = 0;
-  PosType alpha = 0;
-  PosType Ndensity = 0;
-  Point_2d center;
-  PosType rho_tidal = 0;
-  // Added quantities for the resetting of the substructure
-  // (when WasInsertSubStructuresCalled = MAYBE) :
-  PosType redshift = 0;
-  bool verbose = false;
+    // things for substructures
+    /// vector of all substructure halos
+    std::vector<LensHalo*> halos;
+    LensPlane *plane;
+    PosType Rregion = 0;
+    PosType Mmax = 0;
+    PosType Mmin = 0;
+    PosType alpha = 0;
+    PosType Ndensity = 0;
+    Point_2d center;
+    PosType rho_tidal = 0;
+    // Added quantities for the resetting of the substructure
+    // (when WasInsertSubStructuresCalled = MAYBE) :
+    PosType redshift = 0;
+    bool verbose = false;
   };
   
   SubStructureInfo substructure;
