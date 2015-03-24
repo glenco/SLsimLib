@@ -121,7 +121,7 @@ int Utilities::Geometry::intersect(const std::vector<Point_2d> &curve){
       intersections += Utilities::Geometry::intersect(curve[i].x,curve[i+1].x,curve[j].x,curve[j+1].x);
     }
     intersections += Utilities::Geometry::intersect(curve[i].x,curve[i+1].x
-                                                    ,curve[curve.size()-1].x,curve[0].x);
+                                                    ,curve.back().x,curve[0].x);
   }
   
   return intersections;
