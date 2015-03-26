@@ -9,6 +9,7 @@ documentation to find further information. The installation and usage of
 *GLAMER* is described on the [installation page](@ref install). If you would
 like to obtain the code, please see the [appropriate section](@ref copying).
 
+The code can be made available to you through GitHub.com upon request.  Requests should be sent to Ben Metcalf at robertbenton.metcalf@unibo.it.
 
 Getting started
 ---------------
