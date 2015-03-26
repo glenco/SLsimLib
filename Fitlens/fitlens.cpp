@@ -260,7 +260,6 @@ bool LensHaloFit::SafeFindLensSimple(
         ERROR_MESSAGE();
         std::cout << "Error of precision in source-position reconstruction in SafeFindLensSimple !" << std::endl ;
         ReturnCode = false ;
-        return ReturnCode ;
         // exit(0);
       }
       // Else we can continue !
