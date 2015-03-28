@@ -1210,6 +1210,7 @@ namespace Utilities
                        ,double boxly                 /// range of image in y direction
                        ,std::vector<double> &ll      /// output multiplot number of bins
                        ,std::vector<double> &Pl      /// output binned power spectrum
+                       ,double zeropaddingfactor = 4  
   );
 #endif
   
