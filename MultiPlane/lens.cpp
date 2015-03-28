@@ -1106,7 +1106,7 @@ void Lens::createMainHalos(InputParams& params)
       main_halos.push_back(new LensHaloUniform(params));
       break;
     case moka_lens:
-      main_halos.push_back(new LensHaloMOKA(params, cosmo));
+      main_halos.push_back(new LensHaloMassMap(params, cosmo));
       break;
     case dummy_lens:
       main_halos.push_back(new LensHaloDummy(params));

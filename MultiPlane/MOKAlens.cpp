@@ -63,7 +63,7 @@ void cmass(int n, std::valarray<double> map, std:: vector<double> x, double &xcm
  * \brief loads a MOKA map from a given filename
  */
 
-LensHaloMOKA::LensHaloMOKA(const std::string& filename, PixelMapType my_maptype, const COSMOLOGY& lenscosmo)
+LensHaloMassMap::LensHaloMassMap(const std::string& filename, PixelMapType my_maptype, const COSMOLOGY& lenscosmo)
 : LensHalo(),
   MOKA_input_file(filename), flag_MOKA_analyze(0), flag_background_field(0),
   maptype(my_maptype), cosmo(lenscosmo)
@@ -79,7 +79,7 @@ LensHaloMOKA::LensHaloMOKA(const std::string& filename, PixelMapType my_maptype,
  *
  *  In the future this could be used to read in individual PixelDMaps or other types of maps if the type were specified in the paramfile.
  */
-LensHaloMOKA::LensHaloMOKA(InputParams& params, const COSMOLOGY& lenscosmo)
+LensHaloMassMap::LensHaloMassMap(InputParams& params, const COSMOLOGY& lenscosmo)
 : LensHalo(), maptype(moka), cosmo(lenscosmo)
 {
 	// read in parameters
@@ -93,12 +93,12 @@ LensHaloMOKA::LensHaloMOKA(InputParams& params, const COSMOLOGY& lenscosmo)
 		setZlens(map->zlens);
 }
 
-LensHaloMOKA::~LensHaloMOKA()
+LensHaloMOKA::~LensHaloMassMap()
 {
 	delete map;
 }
 
-void LensHaloMOKA::initMap()
+void LensHaloMassMap::initMap()
 {
   
   if(!(maptype == pix_map || maptype == moka)){
@@ -130,7 +130,7 @@ void LensHaloMOKA::initMap()
 	map->gamma3.resize(size);
 	map->phi.resize(size);
 	
-	readImage();
+	readMap();
 
 	if(flag_background_field == 1)
 	{
@@ -173,7 +173,7 @@ void LensHaloMOKA::initMap()
   }
 }
 
-void LensHaloMOKA::convertmap(MOKAmap *map,PixelMapType maptype){
+void LensHaloMassMap::convertmap(MOKAmap *map,PixelMapType maptype){
 
   // TODO: convert units
   throw std::runtime_error("needs to be finished");
@@ -197,21 +197,21 @@ void LensHaloMOKA::convertmap(MOKAmap *map,PixelMapType maptype){
 /** \brief checks the cosmology against the MOKA map parameters
  */
 /// checks that cosmology in the header of the input fits map is the same as the one set
-void LensHaloMOKA::checkCosmology()
+void LensHaloMassMap::checkCosmology()
 {
 	if(cosmo.getOmega_matter() == map->omegam)
-		std::cerr << "LensHaloMOKA: Omega_matter " << cosmo.getOmega_matter() << " (cosmology) != " << map->omegam << " (MOKA)" << std::endl;
+		std::cerr << "LensHaloMassMap: Omega_matter " << cosmo.getOmega_matter() << " (cosmology) != " << map->omegam << " (MOKA)" << std::endl;
 	if(cosmo.getOmega_lambda() == map->omegal)
-		std::cerr << "LensHaloMOKA: Omega_lambda " << cosmo.getOmega_lambda() << " (cosmology) != " << map->omegal << " (MOKA)" << std::endl;
+		std::cerr << "LensHaloMassMap: Omega_lambda " << cosmo.getOmega_lambda() << " (cosmology) != " << map->omegal << " (MOKA)" << std::endl;
 	if(cosmo.gethubble() == map->h)
-		std::cerr << "LensHaloMOKA: hubble " << cosmo.gethubble() << " (cosmology) != " << map->h << " (MOKA)" << std::endl;
+		std::cerr << "LensHaloMassMap: hubble " << cosmo.gethubble() << " (cosmology) != " << map->h << " (MOKA)" << std::endl;
 }
 
 /**
  * Sets many parameters within the MOKA lens model
  */
 
-void LensHaloMOKA::assignParams(InputParams& params)
+void LensHaloMassMap::assignParams(InputParams& params)
 {
 	if(!params.get("z_lens", zlens))
 		zlens = -1; // set to -1 so that it will be set to the MOKA map value
@@ -237,7 +237,7 @@ void LensHaloMOKA::assignParams(InputParams& params)
  * and then saving to a fits file and computing the radial profile
  * of the convergence
  */
-void LensHaloMOKA::saveImage(GridHndl grid,bool saveprofiles){
+void LensHaloMassMap::saveImage(GridHndl grid,bool saveprofiles){
 	std::stringstream f;
 	std::string filename;
 
@@ -289,7 +289,7 @@ void LensHaloMOKA::saveImage(GridHndl grid,bool saveprofiles){
 /**
  * computing and saving the radial profile of the convergence, reduced tangential and parallel shear and of the shear
  *  */
-void LensHaloMOKA::saveProfiles(double &RE3,double &xxc,double &yyc){
+void LensHaloMassMap::saveProfiles(double &RE3,double &xxc,double &yyc){
 	/* measuring the differential and cumulative profile*/
 	double xmin = -map->boxlMpc*0.5;
 	double xmax =  map->boxlMpc*0.5;
@@ -447,7 +447,7 @@ void LensHaloMOKA::saveProfiles(double &RE3,double &xxc,double &yyc){
    * a MOKA map (MOKALensHalo), for just one ray!!
    *
 */
-void LensHaloMOKA::force_halo(double *alpha
+void LensHaloMassMap::force_halo(double *alpha
                               ,KappaType *kappa
                               ,KappaType *gamma
                               ,KappaType *phi
@@ -494,7 +494,7 @@ void LensHaloMOKA::force_halo(double *alpha
 /**
  * compute the signal of \lambda_r and \lambda_t
  */
-void LensHaloMOKA::estSignLambdas(){
+void LensHaloMassMap::estSignLambdas(){
   map->Signlambdar.resize(map->nx*map->ny);
   map->Signlambdat.resize(map->nx*map->ny);
   double gamma,lambdar,lambdat;
@@ -518,7 +518,7 @@ void LensHaloMOKA::estSignLambdas(){
  * measure the effective and the median Einstein radii of the connected critical 
  * points present at the halo center
  */
-void LensHaloMOKA::EinsteinRadii(double &RE1, double &RE2, double &xxc, double &yyc){
+void LensHaloMassMap::EinsteinRadii(double &RE1, double &RE2, double &xxc, double &yyc){
   double signV;
   //  std:: vector<double> xci1,yci1;
   std:: vector<double> xci2,yci2;
@@ -670,7 +670,7 @@ void LensHaloMOKA::EinsteinRadii(double &RE1, double &RE2, double &xxc, double &
  * saves MAP properties, computing the radial profile
  * of the convergence and shear
  */
-void LensHaloMOKA::saveImage(bool saveprofiles){
+void LensHaloMassMap::saveImage(bool saveprofiles){
         std::stringstream f;
         std::string filename;  
 	if(flag_background_field==1) f << MOKA_input_file << "_only_noise.fits";

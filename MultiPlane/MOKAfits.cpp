@@ -65,7 +65,7 @@ using namespace CCfits;
  */
 // carlo test end
 
-void LensHaloMOKA::getDims(){
+void LensHaloMassMap::getDims(){
 #ifdef ENABLE_FITS
   try{
     std::auto_ptr<FITS> ff(new FITS (MOKA_input_file, Read));
@@ -88,11 +88,11 @@ void LensHaloMOKA::getDims(){
 }
 
 /**
- * \brief reads in the fits file for the MOKA map and saves it in the structure map
+ * \brief reads in the fits file for the MOKA or mass map and saves it in the structure map
  */
-void LensHaloMOKA::readImage(){
+void LensHaloMassMap::readMap(){
 #ifdef ENABLE_FITS
-  std:: cout << " reading MOKA file: " << MOKA_input_file << std:: endl;
+  std:: cout << " reading lens density map file: " << MOKA_input_file << std:: endl;
   std::auto_ptr<FITS> ff(new FITS (MOKA_input_file, Read));
   
   PHDU *h0=&ff->pHDU();
@@ -131,23 +131,44 @@ void LensHaloMOKA::readImage(){
       h4.read(map->gamma2);
       std::cout << *h0 << h1 << h2 << h3  << h4 << std::endl;
     }
-    /* these are always present in each fits file created by MOKA */
-    h0->readKey ("SIDEL",map->boxlarcsec);
-    h0->readKey ("SIDEL2",map->boxlMpc);  // recall you that MOKA Mpc/h
-    h0->readKey ("ZLENS",map->zlens);
-    h0->readKey ("ZSOURCE",map->zsource);
-    h0->readKey ("OMEGA",map->omegam);
-    h0->readKey ("LAMBDA",map->omegal);
-    h0->readKey ("H",map->h);
-    h0->readKey ("W",map->wq);
-    h0->readKey ("MSTAR",map->mstar);
+    try{
+      /* these are always present in each fits file created by MOKA */
+      h0->readKey ("SIDEL",map->boxlarcsec);
+      h0->readKey ("SIDEL2",map->boxlMpc);  // recall you that MOKA Mpc/h
+      h0->readKey ("ZLENS",map->zlens);
+      h0->readKey ("ZSOURCE",map->zsource);
+      h0->readKey ("OMEGA",map->omegam);
+      h0->readKey ("LAMBDA",map->omegal);
+      h0->readKey ("H",map->h);
+      h0->readKey ("W",map->wq);
+      h0->readKey ("MSTAR",map->mstar);
     // h0->readKey ("MVIR",map->m);
-    h0->readKey ("CONCENTRATION",map->c);
-    h0->readKey ("DL",map->Dlens);
-    h0->readKey ("DLS",map->DLS);
-    h0->readKey ("DS",map->DS);
+      h0->readKey ("CONCENTRATION",map->c);
+      h0->readKey ("DL",map->Dlens);
+      h0->readKey ("DLS",map->DLS);
+      h0->readKey ("DS",map->DS);
+    }
+    catch(CCfits::HDU::NoSuchKeyword){
+      std::cerr << "MOKA fits map must have header keywords:" << std::endl
+      << " SIDEL - length on a side in Mpc/h" << std::endl
+      << " SIDEL2 - length on other side in Mpc/h" << std::endl
+      << " ZLENS - redshift of lens" << std::endl
+      << " ZSOURCE - redshift of source" << std::endl
+      << " OMEGA - Omega matter" << std::endl
+      << " LAMBDA - Omega lambda" << std::endl
+      << " H - hubble constant" << std::endl
+      << " W - " << std::endl
+      << " MSTAR - MSTAR" << std::endl
+      << " CONCENTRATION - " << std::endl
+      << " DL - " << std::endl
+      << " DLS - " << std::endl
+      << " DS - " << std::endl
+      << " W - " << std::endl;
+      exit(1);
+    }
+
+  }else{  // Pixelized mass map
     
-  }else{
     int npixels = map->nx;
     // cut a square!
     // if(map->ny<map->nx) npixels = map->ny;
@@ -176,11 +197,11 @@ void LensHaloMOKA::readImage(){
         h0->readKey("REDSHIFT",map->zlens);
       }
       catch(CCfits::HDU::NoSuchKeyword){
-        std::cout << "unable to read map zlmap" << std::endl;
-        std::cout << "I will STOP here!!!" << std::endl;
+        std::cout << "unable to read fits mass map header keyword REDSHIFT" << std::endl;
         exit(1);
       }
     }
+    /*{
     double d1, d2;
     std:: vector<double> zi;
     int ni=2048;
@@ -199,7 +220,7 @@ void LensHaloMOKA::readImage(){
         h0->readKey("DLLOW",d1);
       }
       catch(CCfits::HDU::NoSuchKeyword){
-        std:: cout << " no keyword that define the comoving angular diameter distance 1 (LOW) " << std:: endl;
+        std:: cout << " no keyword that define the comoving angular diameter distance 1 (DLLOW) " << std:: endl;
         exit(1);
       }
     }
@@ -212,7 +233,7 @@ void LensHaloMOKA::readImage(){
         h0->readKey("DLUP",d2);
       }
       catch(CCfits::HDU::NoSuchKeyword){
-        std:: cout << " no keyword that define the comoving angular diameter distance 2 (UP) " << std:: endl;
+        std:: cout << " no keyword that define the comoving angular diameter distance 2 (DLUP) " << std:: endl;
         exit(1);
       }
     }
@@ -221,6 +242,8 @@ void LensHaloMOKA::readImage(){
     double dll = ( d1 + d2 )*0.5; // comoving dists
     double zll = Utilities::InterpolateYvec(dli,zi,dll);
     map->zlens = zll; // set the redshift of the plane
+    }*/
+    
     map->Dlens = cosmo.angDist(0.,map->zlens);  // physical
     double inarcsec  = 180./M_PI/map->Dlens*60.*60.;
     double pixLMpc,pixelunit;
@@ -235,14 +258,28 @@ void LensHaloMOKA::readImage(){
         pixelunit=pixelunit/pixLMpc/pixLMpc;
       }
       catch(CCfits::HDU::NoSuchKeyword) {
-        std::cout << " unable to read map pixelunit" << std::endl;
-        std::cout << " check this out in MOKAfits.cpp " << std::endl;
-        std::cout << " I will STOP here !!! " << std:: endl;
+        
+        std::cerr << "fits mass map must have header keywords:" << std::endl
+        << " REDSHIFT - redshift of map plane" << std::endl
+        //<< " DLOW - ?? Mpc/h" << std::endl
+        //<< " DLUP - ?? Mpc/h" << std::endl
+        << " PHYSICALSIZE - size of map in degrees" << std::endl
+        << " PIXELUNITS - ??" << std::endl;
+
+        std::cout << " unable to read map PIXELUNITS" << std::endl;
         exit(1);
       }
     }
     catch(CCfits::HDU::NoSuchKeyword) {
-      std::cout << "unable to read map physical size and pixelunit" << std::endl;
+      
+      std::cerr << "fits mass map should have header keywords:" << std::endl
+      << " REDSHIFT - redshift of map plane" << std::endl
+      //<< " DLOW - ?? Mpc/h" << std::endl
+      //<< " DLUP - ?? Mpc/h" << std::endl
+      << " PHYSICALSIZE - size of map in degrees" << std::endl
+      << " PIXELUNITS - ??" << std::endl;
+
+      std::cout << "unable to read map PHYSICALSIZE" << std::endl;
       std::cout << "assuming is the MultiDark file" << std::endl;
       map->boxlarcsec = 8.7*60.*60.;    // W1 x-field of view
       // map->boxlarcsec = 5.5*60.*60.;    // W4 x-field of view
@@ -251,6 +288,7 @@ void LensHaloMOKA::readImage(){
       pixelunit = 1.e+10/cosmo.gethubble()/pixLMpc/pixLMpc; // by hand
     }
     
+
     double avkappa = 0;
     
     // made square // need to be
@@ -331,7 +369,7 @@ void LensHaloMOKA::readImage(){
 /**
  * \brief write the fits file of the new MOKA map from the structure map
  */
-void LensHaloMOKA::writeImage(std::string filename){
+void LensHaloMassMap::writeImage(std::string filename){
 #ifdef ENABLE_FITS
   long naxis=2;
   long naxes[2]={map->nx,map->ny};
@@ -504,7 +542,7 @@ int fof(double l,std:: vector<double> xci, std:: vector<double> yci, std:: vecto
  *  generalized to work with rectangular maps
  */
 
-void LensHaloMOKA::PreProcessFFTWMap(){
+void LensHaloMassMap::PreProcessFFTWMap(){
 #ifdef ENABLE_FFTW
   // initialize the quantities and does the zeropadding
   int zerosize = 4;      // zero padding region
@@ -520,7 +558,7 @@ void LensHaloMOKA::PreProcessFFTWMap(){
   try{
     Nmap.resize( Nnx*Nny );
   }catch(std::exception &e){
-    std::cerr << "exception thrown in LensHaloMOKA::PreProcessFFTWMap(): " << e.what() << std::endl;
+    std::cerr << "exception thrown in LensHaloMassMap::PreProcessFFTWMap(): " << e.what() << std::endl;
   }
   // assume locate in a rectangular map and build up the new one
   for( int i=0; i<Nnx; i++ ) for( int j=0; j<Nny; j++ ){
