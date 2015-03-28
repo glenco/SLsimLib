@@ -1,5 +1,6 @@
 #include "slsimlib.h"
 #include <nrutil.h>
+#include <iomanip>      // std::setprecision
 
 using namespace std;
 
@@ -49,13 +50,15 @@ void LensHaloFit::FindLensSimple(
  */
 
 bool LensHaloFit::SafeFindLensSimple(
-                                 int Nimages               /// Number of images to be fit
-                                 ,Point *image_positions   /// Array of points with point[i].x set to the image positions
-                                 ,double *y                /// output source position
-                                 ,double **dx_sub          /// dx_sub[Nimages][2] pre-calculated deflections caused by substructures or external masses at each image
-                                 ,int SafetyNum            /// integer of the number of time you want to check the modes
-                                 ,PosType PixelSizeRad     /// Pixel size in radians used for the maps
-                                 ,bool verbose             /// verbose mode switch
+                                 int Nimages                      /// Number of images to be fit
+                                 ,Point *image_positions          /// Array of points with point[i].x set to the image positions
+                                 ,double *y                       /// output source position
+                                 ,double **dx_sub                 /// dx_sub[Nimages][2] pre-calculated deflections caused by substructures or external masses at each image
+                                 ,int SafetyNum                   /// integer of the number of time you want to check the modes
+                                 ,PosType PixelSizeRad            /// Pixel size in radians used for the maps
+                                 ,std::vector<std::vector<PosType>> & PrecisionBackTracedPos  /// Table that will receive the back-traced images uncertainty (in units of PixelSizeRad).
+                                 ,std::vector<std::vector<PosType>> & alphaTab                /// Table that will receive the deviation angle in radians
+                                 ,bool verbose                    /// verbose mode switch
 ){
   // Array to store the modes over the different calls of FindLensSimple :
   PosType ModesMin [perturb_Nmodes] ;         // Minimal value for the modes (among all calls)
@@ -168,11 +171,11 @@ bool LensHaloFit::SafeFindLensSimple(
   {
     std::cout << "Values of the modes :" << std::endl ;
     std::cout << "Ave : " ;
-    for(int k=0;k<perturb_Nmodes;++k) std::cout << perturb_modes[k] << " " ;
+    for(int k=0;k<perturb_Nmodes;++k) std::cout << std::setprecision(7) << perturb_modes[k] << " " ;
     std::cout << std::endl << "Min : " ;
-    for(int k=0;k<perturb_Nmodes;++k) std::cout << ModesMin[k] << " " ;
+    for(int k=0;k<perturb_Nmodes;++k) std::cout << std::setprecision(7) << ModesMin[k] << " " ;
     std::cout << std::endl << "Max : " ;
-    for(int k=0;k<perturb_Nmodes;++k) std::cout << ModesMax[k] << " " ;
+    for(int k=0;k<perturb_Nmodes;++k) std::cout << std::setprecision(7) << ModesMax[k] << " " ;
     std::cout << std::endl ;
     
     std::cout << std::endl << "Estimation made with " << SafetyNum << " calls of FindLensSimple, with a tolerance of " << ToleranceModes*100. << " % on the modes." << std::endl;
@@ -230,6 +233,10 @@ bool LensHaloFit::SafeFindLensSimple(
     alphaTMP[0] *= Dls / Ds ;
     alphaTMP[1] *= Dls / Ds ;
     
+    // Saving alpha in the argument :
+    alphaTab[i][0] = alphaTMP[0];
+    alphaTab[i][1] = alphaTMP[1];
+    
     // Computing ratios :
     ratioSourcePos[0] = abs(alphaTMP[0]) / abs(y[0] - image_positions[i].x[0]) ;
     ratioSourcePos[1] = abs(alphaTMP[1]) / abs(y[1] - image_positions[i].x[1]) ;
@@ -243,11 +250,15 @@ bool LensHaloFit::SafeFindLensSimple(
     std::cout << "ratios : " << ratioSourcePos[0] << " " << ratioSourcePos[1] << std::endl ;
     }
     
+    // Saving the relative precision of the back-traced images in the source plane (in units of pixels of the map) :
+    PrecisionBackTracedPos[i][0] = abs(y[0] - image_positions[i].x[0] + alphaTMP[0]) / PixelSizeRad ;
+    PrecisionBackTracedPos[i][1] = abs(y[1] - image_positions[i].x[1] + alphaTMP[1]) / PixelSizeRad ;
+    
     // Deciding if the test is sufficient to keep on with the rest :
     if(verbose)
     {
-    std::cout << "(y-x+alpha)/pixelsize : " << abs(y[0] - image_positions[i].x[0] + alphaTMP[0]) / PixelSizeRad << " , " << abs(y[1] - image_positions[i].x[1] + alphaTMP[1]) / PixelSizeRad << " pixels." << std::endl ;
-    std::cout << "! x - alpha : " << image_positions[i].x[0] - alphaTMP[0] << " , " << image_positions[i].x[1] - alphaTMP[1] << " !" << std::endl << std::endl ;
+    std::cout << "(y-x+alpha)/pixelsize : " << PrecisionBackTracedPos[i][0] << " , " << PrecisionBackTracedPos[i][1] << " pixels." << std::endl ;
+    std::cout << "! y = x - alpha : " << image_positions[i].x[0] - alphaTMP[0] << " , " << image_positions[i].x[1] - alphaTMP[1] << " !" << std::endl << std::endl ;
     }
     for(int k=0;k<2;k++)
     {
