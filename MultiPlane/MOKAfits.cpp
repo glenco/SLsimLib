@@ -189,61 +189,76 @@ void LensHaloMassMap::readMap(){
      PHYSICALSIZE                                      double
      */
     
-    try {
-      h0->readKey("ZLENS",map->zlens);
-    }
-    catch(CCfits::HDU::NoSuchKeyword) {
-      try {
-        h0->readKey("REDSHIFT",map->zlens);
-      }
-      catch(CCfits::HDU::NoSuchKeyword){
-        std::cout << "unable to read fits mass map header keyword REDSHIFT" << std::endl;
-        exit(1);
-      }
-    }
-    /*  I am not sure why this was here 
-     {
-    double d1, d2;
-    std:: vector<double> zi;
-    int ni=2048;
-    std:: vector<double> dli(ni);
-    Utilities::fill_linear(zi,ni,0.,3.); // max redshift should be around 2.5!
-    for(int i=0;i<ni;i++) dli[i] = cosmo.angDist(0.,zi[i])*(1+zi[i]);
-    // for(int i=0;i<ni;i++) std:: cout << zi[i] << "  " << dli[i] << std:: endl;
-    // std:: cout << dli[ni-1] << std:: endl;
-    // exit(1);
-    try{
-      h0->readKey("WLOW",d1);
-      d1=d1/cosmo.gethubble();
-    }
-    catch(CCfits::HDU::NoSuchKeyword){
+    {
+      double d1, d2;
+      
+      // for(int i=0;i<ni;i++) std:: cout << zi[i] << "  " << dli[i] << std:: endl;
+      // std:: cout << dli[ni-1] << std:: endl;
+      // exit(1);
       try{
-        h0->readKey("DLLOW",d1);
+        h0->readKey("WLOW",d1);
+        d1=d1/cosmo.gethubble();
       }
       catch(CCfits::HDU::NoSuchKeyword){
-        std:: cout << " no keyword that define the comoving angular diameter distance 1 (DLLOW) " << std:: endl;
-        exit(1);
+        try{
+          h0->readKey("DLLOW",d1);
+        }
+        catch(CCfits::HDU::NoSuchKeyword){
+          d1 = d2 = 0;
+        }
+        
+        try{
+          h0->readKey("WUP",d2);
+          d2=d2/cosmo.gethubble();
+        }
+        catch(CCfits::HDU::NoSuchKeyword){
+          try{
+            h0->readKey("DLUP",d2);
+          }
+          catch(CCfits::HDU::NoSuchKeyword){
+            d1 = d2 = 0;
+         }
+        }
+        if(d2 != 0 ){
+          double dll = ( d1 + d2 )*0.5; // comoving dists
+          
+          std:: vector<double> zi;
+          int ni=2048;
+          std:: vector<double> dli(ni);
+          Utilities::fill_linear(zi,ni,0.,5.); // max redshift should be around 2.5!
+          for(int i=0;i<ni;i++) dli[i] = cosmo.angDist(zi[i])*(1+zi[i]);
+
+          if(dli[ni-1] < dll){
+            std::cerr << "ERROR: redshift table in LensHaloMassMap::readMap() does not extend to high enough redshift" << std::endl;
+            throw std::runtime_error("small redshift table");
+          }
+          
+          // set the redshift of the plane half distance between
+          // d1 and d2
+ 
+          map->zlens = Utilities::InterpolateYvec(dli,zi,dll);
+        
+        }else{
+          
+          // if angular size distances are not set use ZLENS or REDSHIFT
+          
+          try {
+            h0->readKey("ZLENS",map->zlens);
+          }
+          catch(CCfits::HDU::NoSuchKeyword) {
+            try {
+              h0->readKey("REDSHIFT",map->zlens);
+            }
+            catch(CCfits::HDU::NoSuchKeyword){
+              std::cout << "unable to read fits mass map header keywords" << std::endl <<  "  either DLUP and DLLOW need to be set or ZLENS or REDSHIFT" << std::endl;
+               exit(1);
+            }
+          }
+          
+        }
+
       }
     }
-    try{
-      h0->readKey("WUP",d2);
-      d2=d2/cosmo.gethubble();
-    }
-    catch(CCfits::HDU::NoSuchKeyword){
-      try{
-        h0->readKey("DLUP",d2);
-      }
-      catch(CCfits::HDU::NoSuchKeyword){
-        std:: cout << " no keyword that define the comoving angular diameter distance 2 (DLUP) " << std:: endl;
-        exit(1);
-      }
-    }
-    // set the redshift of the plane half distance between
-    // d1 and d2
-    double dll = ( d1 + d2 )*0.5; // comoving dists
-    double zll = Utilities::InterpolateYvec(dli,zi,dll);
-    map->zlens = zll; // set the redshift of the plane
-    }*/
     
     map->Dlens = cosmo.angDist(0.,map->zlens);  // physical
     double inarcsec  = 180./M_PI/map->Dlens*60.*60.;
