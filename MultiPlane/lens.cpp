@@ -322,6 +322,9 @@ void Lens::assignParams(InputParams& params,bool verbose)
     if(flag_switch_field_off == false && pixel_map_input_file.find(".fits") == pixel_map_input_file.npos){
       std::cerr << "Warning: Are you sure you want to put both field lenses and pixel maps in the light-cone?" << endl;
     }
+    if(!params.get("pixelmaps_padding_factor",pixel_map_zeropad)){
+      pixel_map_zeropad = 4;
+    }
 	}
 	
 	if(!params.get("z_source",zsource))
@@ -1106,7 +1109,7 @@ void Lens::createMainHalos(InputParams& params)
       main_halos.push_back(new LensHaloUniform(params));
       break;
     case moka_lens:
-      main_halos.push_back(new LensHaloMOKA(params, cosmo));
+      main_halos.push_back(new LensHaloMassMap(params, cosmo));
       break;
     case dummy_lens:
       main_halos.push_back(new LensHaloDummy(params));

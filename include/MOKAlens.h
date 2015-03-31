@@ -59,13 +59,14 @@ struct MOKAmap{
  * Note: To use this class requires setting the ENABLE_FITS compiler flag and linking
  * the cfits library.
  */
-class LensHaloMOKA : public LensHalo
+class LensHaloMassMap : public LensHalo
 {
 public:
-	LensHaloMOKA(const std::string& filename, PixelMapType maptype, const COSMOLOGY& lenscosmo);
-	LensHaloMOKA(InputParams& params, const COSMOLOGY& lenscosmo);
+	LensHaloMassMap(const std::string& filename, PixelMapType maptype,
+                  int pixel_map_zeropad, const COSMOLOGY& lenscosmo);
+	LensHaloMassMap(InputParams& params, const COSMOLOGY& lenscosmo);
 	
-	~LensHaloMOKA();
+	~LensHaloMassMap();
 	
 	std::string MOKA_input_file;
 	/// if >=1 (true), do analyzis only; if = 0 (false) change units to internal GLAMER units and prepare for ray-shooting
@@ -89,7 +90,7 @@ public:
 	void EinsteinRadii(double &RE1, double &RE2, double &xxc, double &yyc);
 	
 	void getDims();
-	void readImage();
+	void readMap();
 	void writeImage(std::string fn);
   
 	/// return center in physical Mpc
@@ -108,6 +109,7 @@ private:
 	MOKAmap* map;
 	const COSMOLOGY& cosmo;
 	void PreProcessFFTWMap();
+  int zerosize;
 };
   
 
