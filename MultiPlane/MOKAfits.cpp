@@ -142,7 +142,7 @@ void LensHaloMassMap::readMap(){
       h0->readKey ("H",map->h);
       h0->readKey ("W",map->wq);
       h0->readKey ("MSTAR",map->mstar);
-    // h0->readKey ("MVIR",map->m);
+      // h0->readKey ("MVIR",map->m);
       h0->readKey ("CONCENTRATION",map->c);
       h0->readKey ("DL",map->Dlens);
       h0->readKey ("DLS",map->DLS);
@@ -166,7 +166,7 @@ void LensHaloMassMap::readMap(){
       << " W - " << std::endl;
       exit(1);
     }
-
+    
   }else{  // Pixelized mass map
     
     int npixels = map->nx;
@@ -217,7 +217,7 @@ void LensHaloMassMap::readMap(){
           }
           catch(CCfits::HDU::NoSuchKeyword){
             d1 = d2 = 0;
-         }
+          }
         }
         if(d2 != 0 ){
           double dll = ( d1 + d2 )*0.5; // comoving dists
@@ -227,7 +227,7 @@ void LensHaloMassMap::readMap(){
           std:: vector<double> dli(ni);
           Utilities::fill_linear(zi,ni,0.,5.); // max redshift should be around 2.5!
           for(int i=0;i<ni;i++) dli[i] = cosmo.angDist(zi[i])*(1+zi[i]);
-
+          
           if(dli[ni-1] < dll){
             std::cerr << "ERROR: redshift table in LensHaloMassMap::readMap() does not extend to high enough redshift" << std::endl;
             throw std::runtime_error("small redshift table");
@@ -235,9 +235,9 @@ void LensHaloMassMap::readMap(){
           
           // set the redshift of the plane half distance between
           // d1 and d2
- 
+          
           map->zlens = Utilities::InterpolateYvec(dli,zi,dll);
-        
+          
         }else{
           
           // if angular size distances are not set use ZLENS or REDSHIFT
@@ -251,15 +251,20 @@ void LensHaloMassMap::readMap(){
             }
             catch(CCfits::HDU::NoSuchKeyword){
               std::cout << "unable to read fits mass map header keywords" << std::endl <<  "  either DLUP and DLLOW need to be set or ZLENS or REDSHIFT" << std::endl;
-               exit(1);
+              exit(1);
             }
+            
+            
           }
           
         }
-
+        
       }
     }
-    
+    if(map->zlens <= 0.0){
+      std::cerr << "Pixel map lens planes cannot have zero or negative redshifts!" << std::endl;
+      throw std::runtime_error("Invalid header");
+    }
     map->Dlens = cosmo.angDist(0.,map->zlens);  // physical
     double inarcsec  = 180./M_PI/map->Dlens*60.*60.;
     double pixLMpc,pixelunit;
@@ -281,7 +286,7 @@ void LensHaloMassMap::readMap(){
         //<< " DLUP - ?? Mpc/h" << std::endl
         << " PHYSICALSIZE - size of map in the x-direction (degrees)" << std::endl
         << " PIXELUNIT - pixel units in solar masses" << std::endl;
-
+        
         std::cout << " unable to read map PIXELUNITS" << std::endl;
         exit(1);
       }
@@ -294,7 +299,7 @@ void LensHaloMassMap::readMap(){
       //<< " DLUP - ?? Mpc/h" << std::endl
       << " PHYSICALSIZE - size of map in the x-direction (degrees)" << std::endl
       << " PIXELUNIT - pixel units in solar masses" << std::endl;
-
+      
       std::cout << "unable to read map PHYSICALSIZE" << std::endl;
       std::cout << "assuming is the MultiDark file" << std::endl;
       map->boxlarcsec = 8.7*60.*60.;    // W1 x-field of view
@@ -304,7 +309,7 @@ void LensHaloMassMap::readMap(){
       pixelunit = 1.e+10/cosmo.gethubble()/pixLMpc/pixLMpc; // by hand
     }
     
-
+    
     double avkappa = 0;
     
     // made square // need to be
@@ -561,8 +566,7 @@ int fof(double l,std:: vector<double> xci, std:: vector<double> yci, std:: vecto
 void LensHaloMassMap::PreProcessFFTWMap(){
 #ifdef ENABLE_FFTW
   // initialize the quantities and does the zeropadding
-  //int zerosize = 4;      // zero padding region
-  int npix_filter = 0;   // filter the map if you want on a given number of pixels: CHECK IT NOT IMPLEMENTED YET
+  //int npix_filter = 0;   // filter the map if you want on a given number of pixels: CHECK IT NOT IMPLEMENTED YET
   
   // size of the new map in x and y directions, factor by which each size is increased
   size_t Nnx=int(zerosize*map->nx);
@@ -602,6 +606,7 @@ void LensHaloMassMap::PreProcessFFTWMap(){
   for(int k=0;k<Nnx*Nny;k++) dNmap[k] = double(Nmap[k]);
   fftw_plan p;
   p=fftw_plan_dft_r2c_2d(Nny,Nnx,input,output,FFTW_ESTIMATE);
+
   for(int i=0;i<Nnx*Nny;i++) input[i] = dNmap[i];
   fftw_execute( p );
   for(int i=0; i<Nny*(Nnx/2+1);i++){
@@ -611,15 +616,13 @@ void LensHaloMassMap::PreProcessFFTWMap(){
   delete[] input;
   delete[] output;
   delete[] dNmap;
+  fftw_destroy_plan(p);
   
   // fourier space
   // std:: cout << " allocating fourier space maps " << std:: endl;
-  fftw_complex *fphi   = new fftw_complex[Nny*(Nnx/2+1)];
-  fftw_complex *falpha1= new fftw_complex[Nny*(Nnx/2+1)];
-  fftw_complex *falpha2= new fftw_complex[Nny*(Nnx/2+1)];
-  fftw_complex *fgamma1= new fftw_complex[Nny*(Nnx/2+1)];
-  fftw_complex *fgamma2= new fftw_complex[Nny*(Nnx/2+1)];
   
+  
+  fftw_complex *fphi   = new fftw_complex[Nny*(Nnx/2+1)];
   // build modes for each pixel in the fourier space
   for( int i=0; i<Nnx/2+1; i++ ){
     double kx=double(i);
@@ -642,79 +645,163 @@ void LensHaloMassMap::PreProcessFFTWMap(){
         fphi[i+(Nnx/2+1)*j][0] = 0.;
         fphi[i+(Nnx/2+1)*j][1] = 0.;
       }
-      // gamma
-      fgamma1[i+(Nnx/2+1)*j][0] = 0.5*(kx*kx-ky*ky)*fphi[i+(Nnx/2+1)*j][0];
-      fgamma1[i+(Nnx/2+1)*j][1] = 0.5*(kx*kx-ky*ky)*fphi[i+(Nnx/2+1)*j][1];
-      fgamma2[i+(Nnx/2+1)*j][0] = kx*ky*fphi[i+(Nnx/2+1)*j][0];
-      fgamma2[i+(Nnx/2+1)*j][1] = kx*ky*fphi[i+(Nnx/2+1)*j][1];
-      
-      // alpha
-      falpha1[i+(Nnx/2+1)*j][0] = -kx*fphi[i+(Nnx/2+1)*j][1];
-      falpha1[i+(Nnx/2+1)*j][1] =  kx*fphi[i+(Nnx/2+1)*j][0];
-      falpha2[i+(Nnx/2+1)*j][0] = -ky*fphi[i+(Nnx/2+1)*j][1];
-      falpha2[i+(Nnx/2+1)*j][1] =  ky*fphi[i+(Nnx/2+1)*j][0];
     }
   }
   
-  fftw_destroy_plan(p);
   delete[] fNmap;
   
-  double *phi    = new double[Nnx*Nny];
-  double *alpha1 = new double[Nnx*Nny];
-  double *alpha2 = new double[Nnx*Nny];
-  double *gamma1 = new double[Nnx*Nny];
-  double *gamma2 = new double[Nnx*Nny];
   
+  fftw_complex *fft= new fftw_complex[Nny*(Nnx/2+1)];
+  double *realsp = new double[Nnx*Nny];
+  //fftw_plan pp = fftw_plan_dft_c2r_2d(Nny,Nnx,fft,realsp,FFTW_ESTIMATE);
+  fftw_plan pp = fftw_plan_dft_c2r_2d(Nny,Nnx,fft,realsp,FFTW_MEASURE);
+  
+  // alpha1
+  {
+    
+    // build modes for each pixel in the fourier space
+    for( int i=0; i<Nnx/2+1; i++ ){
+      double kx=double(i);
+      kx=kx*2.*M_PI/Nboxlx;
+      for( int j=0; j<Nny; j++ ){
+        double ky=(j<Nny/2)?double(j):double(j-Nny);
+        ky=ky*2.*M_PI/Nboxly;
+        
+        fft[i+(Nnx/2+1)*j][0] = -kx*fphi[i+(Nnx/2+1)*j][1];
+        fft[i+(Nnx/2+1)*j][1] =  kx*fphi[i+(Nnx/2+1)*j][0];
+      }
+    }
+    
+    //pp=fftw_plan_dft_c2r_2d(Nny,Nnx,fft,realsp,FFTW_ESTIMATE);
+    fftw_execute( pp );
+    //fftw_destroy_plan(pp);
+    
+    map->alpha1.resize(map->nx*map->ny);
+    
+    for( int i=Nnx/2-map->nx/2; i<Nnx/2+map->nx/2; i++ )
+      for( int j=Nny/2-map->ny/2; j<Nny/2+map->ny/2; j++ ){
+        int ii = i-int(Nnx/2-map->nx/2);
+        int jj = j-int(Nny/2-map->ny/2);
+        
+        map->alpha1[ii+map->nx*jj] = float(realsp[i+Nnx*j]/Nnx/Nny);
+      }
+  }
+  
+  // alpha2
+  {
+    
+    // build modes for each pixel in the fourier space
+    for( int i=0; i<Nnx/2+1; i++ ){
+      double kx=double(i);
+      kx=kx*2.*M_PI/Nboxlx;
+      for( int j=0; j<Nny; j++ ){
+        double ky=(j<Nny/2)?double(j):double(j-Nny);
+        ky=ky*2.*M_PI/Nboxly;
+        
+        // alpha
+        fft[i+(Nnx/2+1)*j][0] = -ky*fphi[i+(Nnx/2+1)*j][1];
+        fft[i+(Nnx/2+1)*j][1] =  ky*fphi[i+(Nnx/2+1)*j][0];
+        
+      }
+    }
+    
+    //pp=fftw_plan_dft_c2r_2d(Nny,Nnx,fft,realsp,FFTW_ESTIMATE);
+    fftw_execute( pp );
+    //fftw_destroy_plan(pp);
+    
+    map->alpha2.resize(map->nx*map->ny);
+    
+    for( int i=Nnx/2-map->nx/2; i<Nnx/2+map->nx/2; i++ ){
+      for( int j=Nny/2-map->ny/2; j<Nny/2+map->ny/2; j++ ){
+        int ii = i-int(Nnx/2-map->nx/2);
+        int jj = j-int(Nny/2-map->ny/2);
+        
+        map->alpha2[ii+map->nx*jj] = float(realsp[i+Nnx*j]/Nnx/Nny);
+      }
+    }
+  }
+  // gamma1
+  {
+    
+    // build modes for each pixel in the fourier space
+    for( int i=0; i<Nnx/2+1; i++ ){
+      double kx=double(i);
+      kx=kx*2.*M_PI/Nboxlx;
+      for( int j=0; j<Nny; j++ ){
+        double ky=(j<Nny/2)?double(j):double(j-Nny);
+        ky=ky*2.*M_PI/Nboxly;
+        
+        // gamma
+        fft[i+(Nnx/2+1)*j][0] = 0.5*(kx*kx-ky*ky)*fphi[i+(Nnx/2+1)*j][0];
+        fft[i+(Nnx/2+1)*j][1] = 0.5*(kx*kx-ky*ky)*fphi[i+(Nnx/2+1)*j][1];
+                
+      }
+    }
+    
+    //pp=fftw_plan_dft_c2r_2d(Nny,Nnx,fft,realsp,FFTW_ESTIMATE);
+    fftw_execute( pp );
+    //fftw_destroy_plan(pp);
+    
+    map->gamma1.resize(map->nx*map->ny);
+    
+    for( int i=Nnx/2-map->nx/2; i<Nnx/2+map->nx/2; i++ ){
+      for( int j=Nny/2-map->ny/2; j<Nny/2+map->ny/2; j++ ){
+        int ii = i-int(Nnx/2-map->nx/2);
+        int jj = j-int(Nny/2-map->ny/2);
+        
+        map->gamma1[ii+map->nx*jj] = float( realsp[i+Nnx*j]/Nnx/Nny);
+        
+      }
+    }
+  }
+  // gamma2
+  {
+    
+    // build modes for each pixel in the fourier space
+    for( int i=0; i<Nnx/2+1; i++ ){
+      double kx=double(i);
+      kx=kx*2.*M_PI/Nboxlx;
+      for( int j=0; j<Nny; j++ ){
+        double ky=(j<Nny/2)?double(j):double(j-Nny);
+        ky=ky*2.*M_PI/Nboxly;
+        
+        // gamma
+        fft[i+(Nnx/2+1)*j][0] = kx*ky*fphi[i+(Nnx/2+1)*j][0];
+        fft[i+(Nnx/2+1)*j][1] = kx*ky*fphi[i+(Nnx/2+1)*j][1];
+        
+      }
+    }
+    
+    //pp=fftw_plan_dft_c2r_2d(Nny,Nnx,fft,realsp,FFTW_ESTIMATE);
+    fftw_execute( pp );
+    //fftw_destroy_plan(pp);
+    
+    map->gamma2.resize(map->nx*map->ny);
+    
+    for( int i=Nnx/2-map->nx/2; i<Nnx/2+map->nx/2; i++ ){
+      for( int j=Nny/2-map->ny/2; j<Nny/2+map->ny/2; j++ ){
+        int ii = i-int(Nnx/2-map->nx/2);
+        int jj = j-int(Nny/2-map->ny/2);
+        
+        map->gamma2[ii+map->nx*jj] = float(-realsp[i+Nnx*j]/Nnx/Nny);
+        
+      }
+    }
+  }
+  
+  /*
+  double *phi    = new double[Nnx*Nny];
   fftw_plan pp;
   pp=fftw_plan_dft_c2r_2d(Nny,Nnx,fphi,phi,FFTW_ESTIMATE);
   fftw_execute( pp );
   fftw_destroy_plan(pp);
-  
-  pp=fftw_plan_dft_c2r_2d(Nny,Nnx,falpha1,alpha1,FFTW_ESTIMATE);
-  fftw_execute( pp );
-  fftw_destroy_plan(pp);
-  
-  pp=fftw_plan_dft_c2r_2d(Nny,Nnx,falpha2,alpha2,FFTW_ESTIMATE);
-  fftw_execute( pp );
-  fftw_destroy_plan(pp);
-  
-  pp=fftw_plan_dft_c2r_2d(Nny,Nnx,fgamma1,gamma1,FFTW_ESTIMATE);
-  fftw_execute( pp );
-  fftw_destroy_plan(pp);
-  
-  pp=fftw_plan_dft_c2r_2d(Nny,Nnx,fgamma2,gamma2,FFTW_ESTIMATE);
-  fftw_execute( pp );
-  fftw_destroy_plan(pp);
+  delete[] phi;
+  */
   
   // std:: cout << " remapping the map in the original size " << std:: endl;
-  
-  map->gamma1.resize(map->nx*map->ny);
-  map->gamma2.resize(map->nx*map->ny);
-  map->alpha1.resize(map->nx*map->ny);
-  map->alpha2.resize(map->nx*map->ny);
-  
-  for( int i=Nnx/2-map->nx/2; i<Nnx/2+map->nx/2; i++ )
-    for( int j=Nny/2-map->ny/2; j<Nny/2+map->ny/2; j++ ){
-      int ii = i-int(Nnx/2-map->nx/2);
-      int jj = j-int(Nny/2-map->ny/2);
-      
-      map->gamma1[ii+map->nx*jj] = float( gamma1[i+Nnx*j]/Nnx/Nny);
-      map->gamma2[ii+map->nx*jj] = float(-gamma2[i+Nnx*j]/Nnx/Nny);
-      
-      map->alpha1[ii+map->nx*jj] = float(alpha1[i+Nnx*j]/Nnx/Nny);
-      map->alpha2[ii+map->nx*jj] = float(alpha2[i+Nnx*j]/Nnx/Nny);
-    }
-  
+  delete[] fft;
+  delete[] realsp;
   delete[] fphi;
-  delete[] falpha1;
-  delete[] falpha2;
-  delete[] fgamma1;
-  delete[] fgamma2;
-  delete[] phi;
-  delete[] alpha1;
-  delete[] alpha2;
-  delete[] gamma1;
-  delete[] gamma2;
 #endif
 }
 
