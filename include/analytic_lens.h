@@ -50,6 +50,7 @@ public:
   void set_perturbmodes(PosType * ListModes, const int Nmodes);
   /// get the perturbation modes
   void get_perturbmodes(PosType * ListModes, const int Nmodes);
+  void get_perturbmodes(std::vector<PosType> & ListModes);
   /// get the ouput of ElliptisizeLens :
   double * getq() { return qpriv; };
 

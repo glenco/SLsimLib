@@ -791,7 +791,7 @@ ImageInfo::ImageInfo(){
  * Destructor of imageinfo types.
  */
 ImageInfo::~ImageInfo(){
-	delete imagekist;
+    delete imagekist;
     delete innerborder;
     delete outerborder;
 }

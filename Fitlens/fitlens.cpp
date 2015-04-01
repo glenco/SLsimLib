@@ -80,12 +80,6 @@ bool LensHaloFit::SafeFindLensSimple(
     ModesAve[k] = 0. ;
   }
   
-  // Defining the imageinfo used after :
-  ImageInfo* imageinfo = new ImageInfo[Nimages];
-  for(int i=0;i<Nimages;++i){
-    imageinfo[i].centroid[0] = image_positions[i].x[0];
-    imageinfo[i].centroid[1] = image_positions[i].x[1];
-  }
   
   // We compute the modes SafetyNum times and retain the min, the max, and the sum :
   // ===============================================================================
@@ -95,7 +89,7 @@ bool LensHaloFit::SafeFindLensSimple(
   {
     // Calling FindLensSimple (the one that really computes the modes) :
     ///////////////////////////////////////////
-    FindLensSimple(imageinfo,Nimages,y,dx_sub);
+    FindLensSimple(Nimages,image_positions,y,dx_sub);
     ///////////////////////////////////////////
     
     // Test (temporary) :
@@ -286,9 +280,6 @@ bool LensHaloFit::SafeFindLensSimple(
   std::cout << std::endl << "Perturbation modes (in LensHaloFit::FindLensSimple) :" << std::endl;
   for(int i=0;i<perturb_Nmodes;++i) std::cout << perturb_modes[i] << " " ;
   std::cout << std::endl;
-  
-  
-  delete[] imageinfo;
   
   return ReturnCode ;
 }
@@ -867,6 +858,22 @@ void LensHaloFit::set_perturbmodes(PosType * ListModes, const int Nmodes)
 void LensHaloFit::get_perturbmodes(PosType * ListModes, const int Nmodes)
 {
   assert(Nmodes == perturb_Nmodes);
+  
+  for(int i=0 ; i < perturb_Nmodes ; i++)
+  {
+    ListModes[i] = perturb_modes[i] ;
+  }
+  return ;
+};
+
+
+/**
+ *   \brief Gets the perturbation modes in the LensHaloFit
+ *
+ */
+void LensHaloFit::get_perturbmodes(std::vector<PosType> & ListModes)
+{
+  assert(ListModes.size() == perturb_Nmodes);
   
   for(int i=0 ; i < perturb_Nmodes ; i++)
   {
