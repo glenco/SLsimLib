@@ -88,17 +88,9 @@ bool LensHaloFit::SafeFindLensSimple(
   for(int i=0;i<SafetyNum;i++)
   {
     // Calling FindLensSimple (the one that really computes the modes) :
-    ///////////////////////////////////////////
+    ////////////////////////////////////////////////
     FindLensSimple(Nimages,image_positions,y,dx_sub);
-    ///////////////////////////////////////////
-    
-    // Test (temporary) :
-    // if(verbose)
-    // {
-    // std::cout << "perturbation modes (in LensHaloFit::SafeFindLensSimple) : " ;
-    // for(int i=0;i<perturb_Nmodes;++i) std::cout << perturb_modes[i] << " " ;
-    // std::cout << std::endl;
-    // }
+    ////////////////////////////////////////////////
 
     // Test that no 'nan' occurs :
     for(int k=0;k<perturb_Nmodes;++k)

@@ -92,7 +92,7 @@ void ImageFinding::find_images_kist(
    if(oldr==0){ oldr=r_source; Npoints_old = grid->i_tree->pointlist->Npoints;}
    if((Npoints_old <= grid->i_tree->pointlist->Npoints )* // if grid has not been refreshed
 			(oldy[0]==y_source[0])*(oldy[1]==y_source[1])* // and source not moved
-			(oldr > r_source)  // and source size has gotten smaller
+			(oldr > r_source)  // and source size has gotten smaller
    ){
    Nsizes=(int)( log(oldr/r_source/mumin)/log(Ngrid_block) ); // round up
    rtemp = r_source*pow(1.0*Ngrid_block,Nsizes);
