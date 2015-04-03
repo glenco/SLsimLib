@@ -569,8 +569,8 @@ void LensHaloMassMap::PreProcessFFTWMap(){
   //int npix_filter = 0;   // filter the map if you want on a given number of pixels: CHECK IT NOT IMPLEMENTED YET
   
   // size of the new map in x and y directions, factor by which each size is increased
-  size_t Nnx=int(zerosize*map->nx);
-  size_t Nny=int(zerosize*map->ny);
+  int Nnx=int(zerosize*map->nx);
+  int Nny=int(zerosize*map->ny);
   double Nboxlx = map->boxlMpc*zerosize;
   double Nboxly = map->boxlMpc*zerosize/map->nx*map->ny;
   
