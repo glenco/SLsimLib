@@ -2440,6 +2440,11 @@ void Lens::combinePlanes(bool verbose)
 		if(main_plane_redshifts[i_main] <= field_plane_redshifts[i_field])
 		{
 			// next plane is main
+      if(main_plane_redshifts[i_main] <= 0){
+        std::cerr << "Cannot make a lens plane at redshift " << main_plane_redshifts[i_main]
+        << " Dl " << main_Dl[i_main];
+        throw std::runtime_error("bad redshift");
+      }
 			lensing_planes.push_back(main_planes[i_main]);
 			plane_redshifts.push_back(main_plane_redshifts[i_main]);
 			Dl.push_back(main_Dl[i_main]);
@@ -2453,7 +2458,13 @@ void Lens::combinePlanes(bool verbose)
 			lensing_planes.push_back(field_planes[i_field]);
 			plane_redshifts.push_back(field_plane_redshifts[i_field]);
 			Dl.push_back(field_Dl[i_field]);
-			
+      
+      if(field_plane_redshifts[i_field] <= 0){
+        std::cerr << "Cannot make a lens plane at redshift " << field_plane_redshifts[i_field]
+        << " Dl " << field_Dl[i_field];
+        throw std::runtime_error("bad redshift");
+      }
+
 			// check if planes are too close together
 			if(fabs(field_Dl[i_field] - main_Dl[i_main]) < MIN_PLANE_DIST)
 			{
