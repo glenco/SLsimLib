@@ -428,6 +428,7 @@ unsigned long prevpower(unsigned long k){
                        ,double boxly
                        ,std::vector<double> &ll
                        ,std::vector<double> &Pl
+                       ,double zeropaddingfactor
                        )
   {
     // go in the fourir space doing the zero padding

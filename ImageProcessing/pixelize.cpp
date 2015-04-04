@@ -143,7 +143,7 @@ PixelMap::PixelMap(
     h0.readKey("CRVAL1", center[0]);
     h0.readKey("CRVAL2", center[1]);
   }
-  catch(CCfits::HDU::NoSuchKeyword&)
+  catch(CCfits::HDU::NoSuchKeyword)
   {
     center[0] = 0.0;
     center[1] = 0.0;
@@ -159,7 +159,7 @@ PixelMap::PixelMap(
       if(std::abs(my_res) - std::abs(cdelt2) > 1e-6)
         throw std::runtime_error("non-square pixels in FITS file " + fitsfilename);
     }
-    catch(CCfits::HDU::NoSuchKeyword&)
+    catch(CCfits::HDU::NoSuchKeyword)
     {
       try{
         double cd12, cd21, cd22;
@@ -172,9 +172,17 @@ PixelMap::PixelMap(
         if(cd12 || cd21)
           throw std::runtime_error("pixels not aligned with coordingate in FITS file " + fitsfilename);
       }
-      catch(CCfits::HDU::NoSuchKeyword&){
+      catch(CCfits::HDU::NoSuchKeyword){
         double ps;
-        h0.readKey("PHYSICALSIZE",ps);
+        try{
+          h0.readKey("PHYSICALSIZE",ps);
+        }
+        catch(CCfits::HDU::NoSuchKeyword){
+          std::cerr << "PixelMap input fits fiel must have header keywords:" << std::endl
+          << " PHYSICALSIZE - size of map in degrees" <<std::endl
+          << " or CDELT1 and CDELT2 or CD1_1, DC1_2, CD2_1 and CD2_2" << std::endl;
+          exit(1);
+        }
         my_res = ps/Nx;
       }
     }

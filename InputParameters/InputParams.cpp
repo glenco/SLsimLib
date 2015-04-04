@@ -264,13 +264,25 @@ void InputParams::readMOKA()
 		double omega_l; // omega_lambda
 		double hubble; // hubble constant H/100
 		
-		h0->readKey("SIDEL", sidel);
-		h0->readKey("ZLENS", zlens);
-		h0->readKey("ZSOURCE", zsource);
-		h0->readKey("OMEGA", omega_m);
-		h0->readKey("LAMBDA", omega_l);
-		h0->readKey("H", hubble);
-		
+    try{
+      h0->readKey("SIDEL", sidel);
+      h0->readKey("ZLENS", zlens);
+      h0->readKey("ZSOURCE", zsource);
+      h0->readKey("OMEGA", omega_m);
+      h0->readKey("LAMBDA", omega_l);
+      h0->readKey("H", hubble);
+    }
+    catch(CCfits::HDU::NoSuchKeyword){
+      std::cerr << "MOKA fits file must have header keywords:" << std::endl
+      << " SIDEL - length on a side" << std::endl
+      << " ZLENS - redshift of lens" << std::endl
+      << " ZSOURCE - redshift of source" << std::endl
+      << " OMEGA - Omega matter" << std::endl
+      << " LAMBDA - Omega lambda" << std::endl
+      << " H - hubble constant" << std::endl;
+      exit(1);
+    }
+
 		double fov = 1.4142*1.4142*sidel*sidel;
 		
 		params["field_fov"] = to_str(fov);
