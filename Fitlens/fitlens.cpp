@@ -73,6 +73,7 @@ bool LensHaloFit::SafeFindLensSimple(
   
   
   // Doing the proper initialisation of these quantities :
+  
   for(int k=0;k<perturb_Nmodes;++k)
   {
     ModesMin[k] = 1.e200 ;    // So the modes have to be less than that !
