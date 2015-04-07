@@ -254,18 +254,18 @@ public:
       return it;
   }
   /// returns iterator pointing to first entry with data
-  iterator TopIt(){
+  iterator TopIt() const{
       iterator it ;
       it = top;
       return it;
   }
   /// returns iterator pointing to last entry with data
-  iterator BottomIt(){
+  iterator BottomIt() const{
     iterator it;
     it = bottom;
     return it;
   }
-  iterator endIt(){
+  iterator endIt() const{
     iterator it;
     it = &offbot;
     return it;
@@ -273,7 +273,7 @@ public:
 
 	// status
 	/// Number of elements in list.
-	unsigned long Nunits(){return Number;}
+	unsigned long Nunits() const {return Number;}
 	bool AtTop();
 	bool AtBottom();
 	void Print();
@@ -310,7 +310,6 @@ public:
     return vec;
   }
   
-
 private:
 
 	KistUnit<Data> * pop_from_reserve();
@@ -717,7 +716,7 @@ template <class Data>
 void Kist<Data>::copy(const Kist<Data> &kist){
   Empty();
   if(kist.Nunits() == 0) return;
-  Kist<Data>::iterator it = kist.getBottomIt();
+  Kist<Data>::iterator it = kist.BottomIt();
   for(;!(it.atend()) ;++it){
     InsertAfterCurrent(*it);
     Down();
