@@ -280,7 +280,9 @@ public:
 
 	void TranformPlanes();
 	bool AreDataUnique();
-	void SetInImage(Boo value);
+  void SetInImage(Boo value);
+  // check is all in_image flags are set to value
+  bool CheckInImage(Boo value);
 
   /// Test if Down() (or --) was last called from last element in list.  Used to stop a for loop. 
   bool OffBottom(){
@@ -688,12 +690,33 @@ template <class Data> void Kist<Data>::SetInImage(Boo value){
 
 	if(Nunits() == 0) return;
 
+  KistUnit<Data> *temp = current;
 	MoveToTop();
 	do{
 		getCurrent()->in_image = value;
 		getCurrent()->image->in_image = value;
 	}while(Down());
+  
+  current = temp;
 }
+template <class Data> bool Kist<Data>::CheckInImage(Boo value){
+  
+  if(Nunits() == 0) return true;
+  
+  KistUnit<Data> *temp = current;
+  MoveToTop();
+  do{
+    if(getCurrent()->in_image != value){
+        current = temp;
+      return false;
+    }
+  }while(Down());
+  
+  current = temp;
+
+  return true;
+}
+
 /**
  * \brief copy contents of kist into this kist.  Destroys former content and leaves current of kist in
  * new place.
