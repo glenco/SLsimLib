@@ -15,7 +15,7 @@
 #include <utilities_slsim.h>
 
 class LensHaloBaseNSIE;
-class LensHaloMOKA;
+class LensHaloMassMap;
 
 /** \ingroup ImageFinding
  * \brief Structure to contain both source and image trees.
@@ -363,7 +363,7 @@ namespace ImageFinding{
 }
 
 
-void saveImage(LensHaloMOKA *mokahalo, GridHndl grid, bool saveprofile=true);
+void saveImage(LensHaloMassMap *mokahalo, GridHndl grid, bool saveprofile=true);
 
 
 #endif

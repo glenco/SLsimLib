@@ -34,6 +34,7 @@ namespace
     // Pixelized Mass maps 
     {"pixelmaps_on","0","Input one or more pixelized density maps"},
     {"pixelmaps_input_file","surfacedensity.fits","Density map(s) to be read in as main lens.  This can be a single map (*.fits) or a file with a list of fits files."},
+    {"pixelmap_padding_factor","4","The factor by which the map is zero padded when doing FFTS."},
     // MultiDarkMap lenses
     //{"PixelizedDensityMap_input_file", "PixelizedMapFiles.txt", "list of MOKA FITS files for MultiDark-like simulations"},
     

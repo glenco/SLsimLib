@@ -322,6 +322,9 @@ void Lens::assignParams(InputParams& params,bool verbose)
     if(flag_switch_field_off == false && pixel_map_input_file.find(".fits") == pixel_map_input_file.npos){
       std::cerr << "Warning: Are you sure you want to put both field lenses and pixel maps in the light-cone?" << endl;
     }
+    if(!params.get("pixelmaps_padding_factor",pixel_map_zeropad)){
+      pixel_map_zeropad = 4;
+    }
 	}
 	
 	if(!params.get("z_source",zsource))
@@ -1106,7 +1109,7 @@ void Lens::createMainHalos(InputParams& params)
       main_halos.push_back(new LensHaloUniform(params));
       break;
     case moka_lens:
-      main_halos.push_back(new LensHaloMOKA(params, cosmo));
+      main_halos.push_back(new LensHaloMassMap(params, cosmo));
       break;
     case dummy_lens:
       main_halos.push_back(new LensHaloDummy(params));
@@ -2437,6 +2440,11 @@ void Lens::combinePlanes(bool verbose)
 		if(main_plane_redshifts[i_main] <= field_plane_redshifts[i_field])
 		{
 			// next plane is main
+      if(main_plane_redshifts[i_main] <= 0){
+        std::cerr << "Cannot make a lens plane at redshift " << main_plane_redshifts[i_main]
+        << " Dl " << main_Dl[i_main];
+        throw std::runtime_error("bad redshift");
+      }
 			lensing_planes.push_back(main_planes[i_main]);
 			plane_redshifts.push_back(main_plane_redshifts[i_main]);
 			Dl.push_back(main_Dl[i_main]);
@@ -2450,7 +2458,13 @@ void Lens::combinePlanes(bool verbose)
 			lensing_planes.push_back(field_planes[i_field]);
 			plane_redshifts.push_back(field_plane_redshifts[i_field]);
 			Dl.push_back(field_Dl[i_field]);
-			
+      
+      if(field_plane_redshifts[i_field] <= 0){
+        std::cerr << "Cannot make a lens plane at redshift " << field_plane_redshifts[i_field]
+        << " Dl " << field_Dl[i_field];
+        throw std::runtime_error("bad redshift");
+      }
+
 			// check if planes are too close together
 			if(fabs(field_Dl[i_field] - main_Dl[i_main]) < MIN_PLANE_DIST)
 			{
