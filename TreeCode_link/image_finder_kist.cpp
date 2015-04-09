@@ -540,6 +540,10 @@ void ImageFinding::find_images_microlens(
                                          ,bool verbose           /// verbose
 ){
   
+    std::cerr << "There are known bugs in ImageFinding::find_images_microlens() that we are trying to remove."
+    << std::endl;
+  throw std::runtime_error("Under construction");
+  
   if(imageinfo.size() < 2) imageinfo.resize(10);
   
   const float mumin_local = 0.02;
@@ -1098,6 +1102,10 @@ void ImageFinding::find_images_microlens_exper(
                                                ,bool verbose           /// verbose
 ){
   
+  std::cerr << "There are known bugs in ImageFinding::find_images_microlens_exper() that we are trying to remove."
+  << std::endl;
+  throw std::runtime_error("Under construction");
+
   const float mumin_local = 0.02;
   if(imageinfo.size() < 2) imageinfo.resize(10);
   
