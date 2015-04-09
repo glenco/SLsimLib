@@ -83,7 +83,7 @@ void LensHaloNFW::gammaNFW(KappaType *gamma,PosType *x,PosType Rtrunc,PosType ma
 PosType LensHaloNFW::gfunction(PosType x) const{
 	PosType ans;
 
-	if(x==0) x=1e-5;
+	if(x<1e-5) x=1e-5;
 	ans=log(x/2);
 	if(x==1.0){ ans += 1.0; return ans;}
 	if(x>1.0){  ans +=  2*atan(sqrt((x-1)/(x+1)))/sqrt(x*x-1);; return ans;}
