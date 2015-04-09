@@ -146,8 +146,8 @@ public:
   PosType test_average_kappa(PosType R);
   
   /// In case of a pseudo-elliptical halo calculate normalization factor
-  void get_norm_factor(){std::cout << mass << " " << MassBy1DIntegation(0.99999*Rmax) << std::endl ; mass_norm_factor=mass/MassBy1DIntegation(0.99999*Rmax);}
-  void set_norm_factor(double my_norm){mass_norm_factor=my_norm;}
+  void set_norm_factor(){std::cout << mass << " " << MassBy1DIntegation(0.99999*Rmax) << std::endl ; mass_norm_factor=mass/MassBy1DIntegation(0.99999*Rmax);}
+  
   
   // all of the following functions were used for Ansatz III w derivatives of the Fourier modes
   
@@ -746,7 +746,7 @@ class LensHaloPseudoNFW: public LensHalo{
 public:
   /// shell constructor, should be avoided
 	LensHaloPseudoNFW();
-  LensHaloPseudoNFW(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,PosType my_beta,float my_fratio,float my_pa,int my_stars_N);
+  LensHaloPseudoNFW(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,PosType my_beta,float my_fratio,float my_pa,int my_stars_N, EllipMethod my_ellip_method=Pseudo);
 	LensHaloPseudoNFW(InputParams& params);
 	~LensHaloPseudoNFW();
   

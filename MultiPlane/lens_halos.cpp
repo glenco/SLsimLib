@@ -140,12 +140,12 @@ LensHaloNFW::LensHaloNFW(float my_mass,float my_Rmax,PosType my_zlens,float my_c
         if(mod[i]!=0){set_flag_elliptical(true);};
       }
     }else set_flag_elliptical(true);
+    if (getEllipMethod()==Pseudo){
+      set_norm_factor();
+    }
   }else set_flag_elliptical(false);
   
-  get_norm_factor();
-  //std::cout << mass << " " << MassBy1DIntegation(Rmax) << std::endl;
-  //void set_norm_factor(){std::cout << mass << " " << MassBy1DIntegation(Rmax) << std::endl ; mass_norm_factor=mass/MassBy1DIntegation(Rmax);}
-  //set_norm_factor(mass/MassBy1DIntegation(0.999*Rmax));
+
   
   
  }
@@ -188,6 +188,9 @@ LensHaloNFW::LensHaloNFW(InputParams& params)
             if(mod[i]!=0){set_flag_elliptical(true);};
         }
       }else set_flag_elliptical(true);
+      if (getEllipMethod()==Pseudo){
+        set_norm_factor();
+      }
     }else set_flag_elliptical(false);
 }
 
@@ -373,6 +376,7 @@ LensHaloPseudoNFW::LensHaloPseudoNFW(
                                      ,float my_fratio          /// axis ratio
                                      ,float my_pa              /// position angle
                                      ,int my_stars_N           /// number of stars, not yet implanted
+                                     ,EllipMethod my_ellip_method /// ellipticizing method
                                      )
   {
     mass = my_mass;
@@ -398,6 +402,9 @@ LensHaloPseudoNFW::LensHaloPseudoNFW(
             if(mod[i]!=0){set_flag_elliptical(true);};
         }
       }else set_flag_elliptical(true);
+      if (getEllipMethod()==Pseudo){
+        set_norm_factor();
+      }
     }else set_flag_elliptical(false);
 
 }
@@ -417,6 +424,9 @@ LensHaloPseudoNFW::LensHaloPseudoNFW(InputParams& params)
             if(mod[i]!=0){set_flag_elliptical(true);};
         }
       }else set_flag_elliptical(true);
+      if (getEllipMethod()==Pseudo){
+        set_norm_factor();
+      }
     }else set_flag_elliptical(false);
 }
 
@@ -534,6 +544,9 @@ LensHaloPowerLaw::LensHaloPowerLaw(
             if(mod[i]!=0){set_flag_elliptical(true);};
           }
         }else set_flag_elliptical(true);
+        if (getEllipMethod()==Pseudo){
+          set_norm_factor();
+        }
     }else set_flag_elliptical(false);
     // rscale = xmax = 1.0; // Commented in order to have a correct computation of the potential term in the time delay.
     // Replacing it by :
@@ -576,6 +589,9 @@ LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
           if(mod[i]!=0){set_flag_elliptical(true);};
         }
       }else set_flag_elliptical(true);
+      if (getEllipMethod()==Pseudo){
+        set_norm_factor();
+      }
     }else set_flag_elliptical(false);
 
   // rscale = xmax = 1.0;
@@ -1212,6 +1228,9 @@ LensHaloHernquist::LensHaloHernquist(float my_mass,float my_Rmax,PosType my_zlen
             if(mod[i]!=0){set_flag_elliptical(true);};
         }
       }else set_flag_elliptical(true);
+      if (getEllipMethod()==Pseudo){
+        set_norm_factor();
+      }
     }else set_flag_elliptical(false);
     
 }
@@ -1233,6 +1252,9 @@ LensHaloHernquist::LensHaloHernquist(InputParams& params)
             if(mod[i]!=0){set_flag_elliptical(true);};
           }
         }else set_flag_elliptical(true);
+        if (getEllipMethod()==Pseudo){
+          set_norm_factor();
+        }
     }else set_flag_elliptical(false);
 }
 
@@ -1352,6 +1374,9 @@ LensHaloJaffe::LensHaloJaffe(float my_mass,float my_Rmax,PosType my_zlens,float 
             if(mod[i]!=0){set_flag_elliptical(true);};
         }
       }else set_flag_elliptical(true);
+      if (getEllipMethod()==Pseudo){
+        set_norm_factor();
+      }
     }else set_flag_elliptical(false);
     
 }
@@ -1374,6 +1399,9 @@ LensHaloJaffe::LensHaloJaffe(InputParams& params)
             if(mod[i]!=0){set_flag_elliptical(true);};
         }
       }else set_flag_elliptical(true);
+      if (getEllipMethod()==Pseudo){
+        set_norm_factor();
+      }
     }else set_flag_elliptical(false);
 }
 
