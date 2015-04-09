@@ -141,12 +141,11 @@ LensHaloNFW::LensHaloNFW(float my_mass,float my_Rmax,PosType my_zlens,float my_c
       }
     }else set_flag_elliptical(true);
   }else set_flag_elliptical(false);
-    
- 
-  /// In case of
-  double mass_norm_factor;
-  mass_norm_factor=my_mass/MassBy1DIntegation(Rmax);
-  cout << "mass norm factor: " << mass_norm_factor << " " << MassBy1DIntegation(Rmax) << " " << my_mass << " " <<Rmax << endl;
+  
+  get_norm_factor();
+  //std::cout << mass << " " << MassBy1DIntegation(Rmax) << std::endl;
+  //void set_norm_factor(){std::cout << mass << " " << MassBy1DIntegation(Rmax) << std::endl ; mass_norm_factor=mass/MassBy1DIntegation(Rmax);}
+  //set_norm_factor(mass/MassBy1DIntegation(0.999*Rmax));
   
   
  }
@@ -860,7 +859,7 @@ void LensHalo::force_halo_asym(
     *phi += phi_tmp;
     
     if(subtract_point){
-      PosType tmp =  screening*mass/pi/rcm2;
+      PosType tmp =  screening*mass_norm_factor*mass/pi/rcm2;
       alpha[0] +=  tmp*xcm[0];
       alpha[1] +=  tmp*xcm[1];
 
@@ -868,22 +867,26 @@ void LensHalo::force_halo_asym(
       gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
       gamma[1] += xcm[0]*xcm[1]*tmp;
       
-      *phi += 0.5 * log(rcm2) * mass / pi ;
+      *phi += 0.5 * log(rcm2) * mass_norm_factor*mass / pi ;
     }
   }
 	else // the point particle is not subtracted
 	{
-		if (subtract_point == false)
+    if (subtract_point == false)
 		{
 			PosType prefac = screening*mass/rcm2/pi;
 			alpha[0] += -1.0 * prefac * xcm[0];
 			alpha[1] += -1.0 * prefac * xcm[1];
-      
-      //if(rcm2==1.125){
-      //std::cout << "rcm2  = " << rcm2 << std::endl;
-      //std::cout << "prefac  = " << prefac << std::endl;
-      //std::cout << "xcm  = " << xcm[0] << " " << xcm[1] << std::endl;
+      //if(rcm2==Rmax*Rmax){
+       // std::cout << "rcm2  = " << rcm2 << " " << mass << " " << Rmax*Rmax << " " << prefac <<  std::endl;
+
       //}
+		  // rcm2  = 1 1e+14 1 3.1831e+13
+      if(rcm2==1.125){
+      std::cout << "rcm2  = " << rcm2 << std::endl;
+      std::cout << "prefac  = " << prefac << std::endl;
+      std::cout << "xcm  = " << xcm[0] << " " << xcm[1] << std::endl;
+      }
       
 			PosType tmp = -2.0*prefac/rcm2;
       

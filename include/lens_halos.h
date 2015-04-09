@@ -145,6 +145,9 @@ public:
   PosType test_average_gt(PosType R);
   PosType test_average_kappa(PosType R);
   
+  /// In case of a pseudo-elliptical halo calculate normalization factor
+  void get_norm_factor(){std::cout << mass << " " << MassBy1DIntegation(0.99999*Rmax) << std::endl ; mass_norm_factor=mass/MassBy1DIntegation(0.99999*Rmax);}
+  void set_norm_factor(double my_norm){mass_norm_factor=my_norm;}
   
   // all of the following functions were used for Ansatz III w derivatives of the Fourier modes
   
@@ -157,7 +160,8 @@ public:
   
   PosType renormalization(PosType r_max);
   PosType mnorm;
-   
+  
+  
 protected:
 
   size_t idnumber; /// Identification number of halo.  It is not always used.
@@ -166,7 +170,6 @@ protected:
   PosType alpha_int(PosType x) const;
   PosType norm_int(PosType r_max);
 
-  // PosType norm_intt(PosType theta);
   
   
   void force_halo_sym(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0);
@@ -269,6 +272,8 @@ protected:
   virtual PosType inline ddmoddq(int whichmod, PosType q, PosType b){return 0;};
   
   PosType xmax;  /// This is Rmax/rscale !!
+  
+  PosType mass_norm_factor=1;
   
   // Functions for calculating axial dependence
   float pa;
@@ -658,7 +663,6 @@ public:
   
   //PosType dmod(PosType x, int modnumber, PosType my_slope, PosType my_fratio);    // was used for Ansatz III w derivatives of the Fourier modes
   //PosType ddmod(PosType x, int modnumber, PosType my_slope, PosType my_fratio);   // was used for Ansatz III w derivatives of the Fourier modes
-  
   
   
 	// TODO: BEN: the below functions alphaNFW, kappaNFW and gammaNFW are obsolete and better to be deleted to avoid confusion
