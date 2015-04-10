@@ -830,61 +830,80 @@ void LensHalo::force_halo_asym(
 		,bool subtract_point /// if true contribution from a point mass is subtracted
     ,PosType screening   /// the factor by which to scale the mass for screening of the point mass subtraction
 		){
-	//std::ofstream dfunc;
-	//dfunc.open( "dfunc.dat", ios::out | ios::app );
+	
+  double Rsize=0.95*Rmax;
+  assert(Rsize<Rmax);
   double rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
-    
-
+  PosType alpha_tmp[2],kappa_tmp,gamma_tmp[2],phi_tmp;
 	if(rcm2 < 1e-20) rcm2 = 1e-20;
-
+  
 	/// intersecting, subtract the point particle
-	if(rcm2 < Rmax*Rmax)
-  {
-		double r = sqrt(rcm2);///rscale;
-        //std::cout << sqrt(rcm2) << " " << rscale << " " << Rmax << std::endl;
-		double theta;
-        
+	if(rcm2 < Rmax*Rmax){
+    
+    double r = sqrt(rcm2);///rscale;
+    double theta;
+    
+    
     if(xcm[0] == 0.0 && xcm[1] == 0.0) theta = 0.0;
     else theta=atan2(xcm[1],xcm[0]);
 
-		// double xmax = Rmax/rscale;
-    PosType alpha_tmp[2],kappa_tmp,gamma_tmp[2],phi_tmp;
-    //std::cout << "outside akg2: " << pa << " " << xcm[0] << " " << xcm[1] <<  std::endl;
-    
-    
-    if(main_ellip_method==Pseudo) {alphakappagamma_asym(r,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
-    if(main_ellip_method==Fourier){alphakappagamma1asym(r,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
-    if(main_ellip_method==Schramm){alphakappagamma2asym(r,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
-    if(main_ellip_method==Keeton) {alphakappagamma3asym(r,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
-    
-
-    
-    //std::cout<< "kappa_tmp: " << kappa_tmp << std::endl;
-		//alpha[0] +=  alpha_tmp[0]*prefac*xcm[0] + tmp*xcm[0];
-    //alpha[1] +=  alpha_tmp[1]*prefac*xcm[1] + tmp*xcm[1];
-    
-		alpha[0] +=  alpha_tmp[0]; //*xcm[0];
-    alpha[1] +=  alpha_tmp[1]; //*xcm[1];
-    //std::cout<< "alpha[1] " << alpha_tmp[1]*xcm[1] << std::endl;
-    
-    
-    *kappa += kappa_tmp;
-    gamma[0] += 0.5*gamma_tmp[0];
-    gamma[1] += 0.5*gamma_tmp[1];
-    
-    *phi += phi_tmp;
-    
-    if(subtract_point){
-      PosType tmp =  screening*mass_norm_factor*mass/pi/rcm2;
-      alpha[0] +=  tmp*xcm[0];
-      alpha[1] +=  tmp*xcm[1];
-
-      tmp = 2.0*tmp/rcm2;
-      gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
-      gamma[1] += xcm[0]*xcm[1]*tmp;
+    if(rcm2 > Rsize*Rsize){
       
-      *phi += 0.5 * log(rcm2) * mass_norm_factor*mass / pi ;
+      PosType alpha_iso[2],alpha_ellip[2];
+      alpha_ellip[0] = alpha_ellip[1] = 0;
+      if(main_ellip_method==Pseudo){alphakappagamma_asym(Rsize,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
+      if(main_ellip_method==Fourier){alphakappagamma1asym(Rsize,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
+      if(main_ellip_method==Schramm){alphakappagamma2asym(Rsize,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
+      if(main_ellip_method==Keeton){alphakappagamma3asym(Rsize,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
+      alpha_ellip[0]=alpha_tmp[0];
+      alpha_ellip[1]=alpha_tmp[1];
+    
+      double f1 = (Rmax - r)/(Rmax - Rsize),f2 = (r - Rsize)/(Rmax - Rsize);
+    
+      PosType prefac = screening*mass/Rmax/pi;
+      alpha_iso[0] += -1.0 * prefac * xcm[0];
+      alpha_iso[1] += -1.0 * prefac * xcm[1];
+    
+      alpha[0] += alpha_iso[0]*f2 + alpha_ellip[0]*f1;
+      alpha[1] += alpha_iso[1]*f2 + alpha_ellip[1]*f1;
+      
+      {
+        PosType tmp = -2.0*mass/rcm2/pi/rcm2;
+        gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+        gamma[1] += xcm[0]*xcm[1]*tmp;
+        
+        *phi += 0.5 * log(rcm2) * mass_norm_factor*mass / pi ;
+      }
+        
+    }else{
+
+      if(main_ellip_method==Pseudo){alphakappagamma_asym(r,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
+      if(main_ellip_method==Fourier){alphakappagamma1asym(r,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
+      if(main_ellip_method==Schramm){alphakappagamma2asym(r,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
+      if(main_ellip_method==Keeton){alphakappagamma3asym(r,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
+      
+      alpha[0] +=  alpha_tmp[0];
+      alpha[1] +=  alpha_tmp[1];
+      
+      *kappa += kappa_tmp;
+      gamma[0] += 0.5*gamma_tmp[0];
+      gamma[1] += 0.5*gamma_tmp[1];
+      
+      *phi += phi_tmp;
+      
+      if(subtract_point){
+        PosType tmp =  screening*mass_norm_factor*mass/pi/rcm2;
+        alpha[0] +=  tmp*xcm[0];
+        alpha[1] +=  tmp*xcm[1];
+
+        tmp = 2.0*tmp/rcm2;
+        gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+        gamma[1] += xcm[0]*xcm[1]*tmp;
+        
+        *phi += 0.5 * log(rcm2) * mass_norm_factor*mass / pi ;
+      }
     }
+    
   }
 	else // the point particle is not subtracted
 	{
@@ -893,16 +912,12 @@ void LensHalo::force_halo_asym(
 			PosType prefac = screening*mass/rcm2/pi;
 			alpha[0] += -1.0 * prefac * xcm[0];
 			alpha[1] += -1.0 * prefac * xcm[1];
-      //if(rcm2==Rmax*Rmax){
-       // std::cout << "rcm2  = " << rcm2 << " " << mass << " " << Rmax*Rmax << " " << prefac <<  std::endl;
-
+      
+      //if(rcm2==1.125){
+      //std::cout << "rcm2  = " << rcm2 << std::endl;
+      //std::cout << "prefac  = " << prefac << std::endl;
+      //std::cout << "xcm  = " << xcm[0] << " " << xcm[1] << std::endl;
       //}
-		  // rcm2  = 1 1e+14 1 3.1831e+13
-      if(rcm2==1.125){
-      std::cout << "rcm2  = " << rcm2 << std::endl;
-      std::cout << "prefac  = " << prefac << std::endl;
-      std::cout << "xcm  = " << xcm[0] << " " << xcm[1] << std::endl;
-      }
       
 			PosType tmp = -2.0*prefac/rcm2;
       
@@ -920,7 +935,7 @@ void LensHalo::force_halo_asym(
       {
         force_stars(alpha,kappa,gamma,xcm);
       }
-      
+  
 	return;
 }
 
