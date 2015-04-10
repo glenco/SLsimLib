@@ -145,8 +145,8 @@ public:
   PosType test_average_gt(PosType R);
   PosType test_average_kappa(PosType R);
   
-  /// In case of a pseudo-elliptical halo calculate normalization factor
-  void set_norm_factor(){std::cout << mass << " " << MassBy1DIntegation(0.99999*Rmax) << std::endl ; mass_norm_factor=mass/MassBy1DIntegation(0.99999*Rmax);}
+  /// In case of a pseudo-elliptical halo calculate normalization factor std::cout << mass << " " << MassBy1DIntegation(0.99999*Rmax) << std::endl ;
+  void set_norm_factor(){mass_norm_factor=mass/MassBy1DIntegation(0.99999*Rmax);}
   
   
   // all of the following functions were used for Ansatz III w derivatives of the Fourier modes

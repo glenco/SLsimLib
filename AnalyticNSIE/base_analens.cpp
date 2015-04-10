@@ -747,13 +747,11 @@ void LensHalo::alphakappagamma_asym(
  PosType f[3],g[4],alpha_r,alpha_theta;
  PosType x=r/rscale;
  felliptical(x,fratio,theta,f,g);
-
+  
  PosType alpha_isoG = mass_norm_factor*mass*alpha_h(f[0])/f[0]/pi;
-  
  PosType kappa_isoG = mass_norm_factor*mass*kappa_h(f[0])/f[0]/f[0]/pi;
-  
  PosType phi_isoG = mass_norm_factor*mass*phi_int(f[0])/pi;
-
+  
  alpha_r = alpha_isoG * g[1]; // with damping
  alpha_theta = alpha_isoG * f[1]/x; //  with damping
  

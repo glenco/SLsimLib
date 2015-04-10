@@ -282,7 +282,7 @@ PosType LensHaloNFW::InterpolateModes(int whichmod, PosType q, PosType b){
 PosType LensHaloNFW::InterpolateFromTable(PosType *table, PosType y) const{
 	int j;
 	j=(int)(y/maxrm*NTABLE);
-
+  //std::cout << "Interp: " << std::setprecision(7) << y-0.95 << " " << std::setprecision(7) << xtable[j]-0.95 << " " << xtable[j+1] <<std::endl;
 	assert(y>=xtable[j] && y<=xtable[j+1]);
 	if (j==0)
 		{
@@ -831,22 +831,18 @@ void LensHalo::force_halo_asym(
     ,PosType screening   /// the factor by which to scale the mass for screening of the point mass subtraction
 		){
 	
-  double Rsize=0.95*Rmax;
+  PosType Rsize=0.951*Rmax;
   assert(Rsize<Rmax);
-  double rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
+  PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
   PosType alpha_tmp[2],kappa_tmp,gamma_tmp[2],phi_tmp;
 	if(rcm2 < 1e-20) rcm2 = 1e-20;
   
 	/// intersecting, subtract the point particle
 	if(rcm2 < Rmax*Rmax){
-    
-    double r = sqrt(rcm2);///rscale;
+    double r = sqrt(rcm2); ///rscale;
     double theta;
-    
-    
     if(xcm[0] == 0.0 && xcm[1] == 0.0) theta = 0.0;
     else theta=atan2(xcm[1],xcm[0]);
-
     if(rcm2 > Rsize*Rsize){
       
       PosType alpha_iso[2],alpha_ellip[2];
@@ -857,7 +853,7 @@ void LensHalo::force_halo_asym(
       if(main_ellip_method==Keeton){alphakappagamma3asym(Rsize,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
       alpha_ellip[0]=alpha_tmp[0];
       alpha_ellip[1]=alpha_tmp[1];
-    
+      
       double f1 = (Rmax - r)/(Rmax - Rsize),f2 = (r - Rsize)/(Rmax - Rsize);
     
       PosType prefac = screening*mass/Rmax/pi;
@@ -1077,11 +1073,9 @@ void LensHaloRealNSIE::force_halo(
   
 	PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
 	if(rcm2 < 1e-20) rcm2 = 1e-20;
-
-	if(rcm2 < Rmax*Rmax)
+  if(rcm2 < Rmax*Rmax)
     {
 		//PosType ellipR = ellipticRadiusNSIE(xcm,fratio,pa);
-        
       if(rcm2 > Rsize*Rsize)
       {
         // This is the case when the ray is within the NSIE's circular region of influence but outside its elliptical truncation
