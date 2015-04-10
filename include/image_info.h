@@ -64,6 +64,8 @@ struct ImageInfo{
   unsigned long getNimagePoints(){return imagekist->Nunits();}
   /// Computes the time delay averaged over the image
   KappaType aveTimeDelay();
+  /// Computes the inverse magnitude averaged over the image
+  KappaType aveInvMag();
   /// Print information about the image
   void PrintImageInfo();
   void copy(const ImageInfo & image,bool copykists = true);
