@@ -136,6 +136,7 @@ LensHaloNFW::LensHaloNFW(float my_mass,float my_Rmax,PosType my_zlens,float my_c
     if(getEllipMethod()==Fourier){
       std::cout << "NFW constructor: slope set to " << get_slope() << std::endl;
       calcModes(fratio, get_slope(), pa, mod); // to ellipticize potential instead of  kappa take calcModes(fratio, 2-get_slope(), pa, mod);
+      std::cout << "NFW constructor: Fourier modes computed" << std::endl;
       for(int i=1;i<Nmod;i++){
         if(mod[i]!=0){set_flag_elliptical(true);};
       }
@@ -830,49 +831,47 @@ void LensHalo::force_halo_asym(
 		,bool subtract_point /// if true contribution from a point mass is subtracted
     ,PosType screening   /// the factor by which to scale the mass for screening of the point mass subtraction
 		){
-	
-  PosType Rsize=0.951*Rmax;
-  assert(Rsize<Rmax);
+      
+    float r_size=get_rsize()*Rmax;
+    assert(r_size<=Rmax);
   PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
   PosType alpha_tmp[2],kappa_tmp,gamma_tmp[2],phi_tmp;
 	if(rcm2 < 1e-20) rcm2 = 1e-20;
-  
+
 	/// intersecting, subtract the point particle
-	if(rcm2 < Rmax*Rmax){
+  if(rcm2 < Rmax*Rmax){
     double r = sqrt(rcm2); ///rscale;
     double theta;
     if(xcm[0] == 0.0 && xcm[1] == 0.0) theta = 0.0;
     else theta=atan2(xcm[1],xcm[0]);
-    if(rcm2 > Rsize*Rsize){
-      
+    if(rcm2 > r_size*r_size){
       PosType alpha_iso[2],alpha_ellip[2];
       alpha_ellip[0] = alpha_ellip[1] = 0;
-      if(main_ellip_method==Pseudo){alphakappagamma_asym(Rsize,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
-      if(main_ellip_method==Fourier){alphakappagamma1asym(Rsize,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
-      if(main_ellip_method==Schramm){alphakappagamma2asym(Rsize,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
-      if(main_ellip_method==Keeton){alphakappagamma3asym(Rsize,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
+      if(main_ellip_method==Pseudo){alphakappagamma_asym(r_size,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
+      if(main_ellip_method==Fourier){alphakappagamma1asym(r_size,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
+      if(main_ellip_method==Schramm){alphakappagamma2asym(r_size,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
+      if(main_ellip_method==Keeton){alphakappagamma3asym(r_size,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
       alpha_ellip[0]=alpha_tmp[0];
       alpha_ellip[1]=alpha_tmp[1];
       
-      double f1 = (Rmax - r)/(Rmax - Rsize),f2 = (r - Rsize)/(Rmax - Rsize);
-    
-      PosType prefac = screening*mass/Rmax/pi;
-      alpha_iso[0] += -1.0 * prefac * xcm[0];
-      alpha_iso[1] += -1.0 * prefac * xcm[1];
-    
+      double f1 = (Rmax - r)/(Rmax - r_size),f2 = (r - r_size)/(Rmax - r_size);
+      
+      PosType tmp = mass/Rmax/pi/r;
+      alpha_iso[0] = -1.0*tmp*xcm[0];
+      alpha_iso[1] = -1.0*tmp*xcm[1];
+      
       alpha[0] += alpha_iso[0]*f2 + alpha_ellip[0]*f1;
       alpha[1] += alpha_iso[1]*f2 + alpha_ellip[1]*f1;
       
       {
-        PosType tmp = -2.0*mass/rcm2/pi/rcm2;
+        PosType tmp = -2.0*mass_norm_factor*mass/rcm2/pi/rcm2; // dev by mass_norm_factor
         gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
         gamma[1] += xcm[0]*xcm[1]*tmp;
         
-        *phi += 0.5 * log(rcm2) * mass_norm_factor*mass / pi ;
+        *phi += 0.5 * log(rcm2) * mass_norm_factor*mass / pi ; //  dev by mass_norm_factor
       }
         
     }else{
-
       if(main_ellip_method==Pseudo){alphakappagamma_asym(r,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
       if(main_ellip_method==Fourier){alphakappagamma1asym(r,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
       if(main_ellip_method==Schramm){alphakappagamma2asym(r,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
@@ -888,7 +887,7 @@ void LensHalo::force_halo_asym(
       *phi += phi_tmp;
       
       if(subtract_point){
-        PosType tmp =  screening*mass_norm_factor*mass/pi/rcm2;
+        PosType tmp =  screening*mass_norm_factor*mass/pi/rcm2; // *mass_norm_factor
         alpha[0] +=  tmp*xcm[0];
         alpha[1] +=  tmp*xcm[1];
 
@@ -896,7 +895,7 @@ void LensHalo::force_halo_asym(
         gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
         gamma[1] += xcm[0]*xcm[1]*tmp;
         
-        *phi += 0.5 * log(rcm2) * mass_norm_factor*mass / pi ;
+        *phi += 0.5 * log(rcm2) * mass_norm_factor*mass / pi ; // mass_norm_factor
       }
     }
     
@@ -1623,9 +1622,9 @@ bool LensHalo::test(){
   
   std::cout << "R/Rmax      Mass 1 D         Mass 2 D         (m1 - m2)/m1 " << std::endl;
   
-  int N=10;
+  int N=22;
   PosType m1,m2;
-  for(int i=1;i<N;++i){
+  for(int i=12;i<N;++i){
     m1 = MassBy1DIntegation(Rmax*i/(N-2));
     m2 = MassBy2DIntegation(Rmax*i/(N-2));
     std::cout <<  i*1./(N-2) << "      " << m1 << "       "
@@ -1675,16 +1674,24 @@ bool LensHalo::test(){
       x[0] = r;
       x[1] = 0;
       force_halo(alpha,&kappa,gamma,&phi,x);
-      //std::cout << abs(-1.0*(m1-average_kappa)/average_gt-1.) << std::endl;
+      /*
       assert( abs(-1.0*(m1-average_kappa)/average_gt-1.) < 1e-2 ); // <g_t> = <k(<R)>-<kappa(R)> test
-            //std::cout << abs( -alpha[0]/r - kappa ) / abs(m1-average_kappa  ) -1.  << std::endl;
-      //assert( abs( -alpha[0]/r - kappa ) / abs(m1-average_kappa  ) -1.  < 1 ); // alpha/r ~ <kappa(R)>
       if(!elliptical_flag){
-        //std::cout << abs(abs(-alpha[0]/r)/m1-1.)  << std::endl;
         assert( abs(abs(-alpha[0]/r)/m1-1.) < 1e-1 ); // alpha/r ~ <kappa(R)>
-        //std::cout << abs(abs(alpha[0]/r + kappa)/gamma[0])-1.0 << std::endl;
         assert( abs(abs(alpha[0]/r + kappa)/gamma[0])-1.0 < 1e-2); // g_t = alpha/r - kappa test
       }
+      */
+       
+      // This is a list of possible assertion test that can be made
+      //if(!elliptical_flag){
+        //std::cout << abs(abs(-alpha[0]/r)/m1-1.)  << std::endl;
+        //assert( abs(abs(-alpha[0]/r)/m1-1.) < 1e-1 ); // alpha/r ~ <kappa(R)>
+        //std::cout << abs(abs(alpha[0]/r + kappa)/gamma[0])-1.0 << std::endl;
+        //assert( abs(abs(alpha[0]/r + kappa)/gamma[0])-1.0 < 1e-2); // g_t = alpha/r - kappa test
+      //}
+      //std::cout << abs(-1.0*(m1-average_kappa)/average_gt-1.) << std::endl;
+            //std::cout << abs( -alpha[0]/r - kappa ) / abs(m1-average_kappa  ) -1.  << std::endl;
+      //assert( abs( -alpha[0]/r - kappa ) / abs(m1-average_kappa  ) -1.  < 1 ); // alpha/r ~ <kappa(R)>
       
       
     }
