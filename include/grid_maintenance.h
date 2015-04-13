@@ -95,7 +95,7 @@ private:
 typedef struct Grid* GridHndl;
 
 /// enumerates the types of critical curves. ND is "not defined".
-enum CritType {ND,radial,tangential};
+enum CritType {ND,radial,tangential,pseudo};
 // in image_finder_kist.c
 namespace ImageFinding{
   
@@ -327,6 +327,10 @@ namespace ImageFinding{
  
   void find_crit2(LensHndl lens,GridHndl grid,std::vector<CriticalCurve> &critcurve,int *Ncrits
                   ,double resolution,bool *orderingsuccess,bool ordercurve,bool dividecurves,double invmag_min = 0.0,bool verbose = false);
+  
+  CritType find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
+                                 ,PosType pseudolimit,LensHndl lens,GridHndl grid
+                                 ,PosType resolution,Kist<Point> &paritypoints);
   
   void find_contour(LensHndl lens,GridHndl grid,std::vector<CriticalCurve> &contour,int *Ncrits,PosType resolution,bool *orderingsuccess,bool ordercurve, bool dividecurves, double contour_value,LensingVariable contour_type,bool verbose = false);
   

@@ -49,22 +49,18 @@ public:
 	LensHalo(InputParams& params);
 	virtual ~LensHalo();
   
-	/// get the Rmax
+	/// get the Rmax in Mpc
 	float get_Rmax() const { return Rmax; }
-	/// get the mass
+	/// get the mass solar units
 	float get_mass() const { return mass; }
-	/// get the scale radius
+	/// get the scale radius in Mpc
 	float get_rscale() const { return rscale; }
 	/// get the redshift
-  
 	PosType getZlens() const { return zlens; }
-  
-  /// set the position of the Halo :
-  /// taking as argument the position in comoving Mpc
-  /// storing the position in physical Mpc
-  //void setX(PosType PosX, PosType PosY) { posHalo[0] = PosX / (1 + zlens) ; posHalo[1] = PosY / (1 + zlens) ; }
-  
+    
+  /// set the position of the Halo in physical Mpc
   void setX(PosType PosX, PosType PosY) { posHalo[0] = PosX ; posHalo[1] = PosY ; }
+  /// set the position of the Halo in physical Mpc
   void setX(PosType *PosXY) { posHalo[0] = PosXY[0] ; posHalo[1] = PosXY[1] ; }
   /// get the position of the Halo in physical Mpc
   void getX(PosType * MyPosHalo) const { MyPosHalo[0] = posHalo[0] ; MyPosHalo[1] = posHalo[1]; }
