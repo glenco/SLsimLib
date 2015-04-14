@@ -141,7 +141,7 @@ LensHaloNFW::LensHaloNFW(float my_mass,float my_Rmax,PosType my_zlens,float my_c
         if(mod[i]!=0){set_flag_elliptical(true);};
       }
     }else set_flag_elliptical(true);
-    if (getEllipMethod()==Pseudo){
+    if (getEllipMethod()==Pseudo or getEllipMethod()==Fourier){
       set_norm_factor();
     }
   }else set_flag_elliptical(false);
@@ -837,7 +837,9 @@ void LensHalo::force_halo_asym(
   PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
   PosType alpha_tmp[2],kappa_tmp,gamma_tmp[2],phi_tmp;
 	if(rcm2 < 1e-20) rcm2 = 1e-20;
-
+  
+  //std::cout << "rsize , rmax,  mass_norm =" << r_size << " , " << Rmax << " , " << mass_norm_factor << std::endl;
+      
 	/// intersecting, subtract the point particle
   if(rcm2 < Rmax*Rmax){
     double r = sqrt(rcm2); ///rscale;
@@ -851,8 +853,8 @@ void LensHalo::force_halo_asym(
       if(main_ellip_method==Fourier){alphakappagamma1asym(r_size,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
       if(main_ellip_method==Schramm){alphakappagamma2asym(r_size,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
       if(main_ellip_method==Keeton){alphakappagamma3asym(r_size,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
-      alpha_ellip[0]=alpha_tmp[0];
-      alpha_ellip[1]=alpha_tmp[1];
+      alpha_ellip[0]=alpha_tmp[0]/Rmax;
+      alpha_ellip[1]=alpha_tmp[1]/Rmax;
       
       double f1 = (Rmax - r)/(Rmax - r_size),f2 = (r - r_size)/(Rmax - r_size);
       
@@ -877,8 +879,8 @@ void LensHalo::force_halo_asym(
       if(main_ellip_method==Schramm){alphakappagamma2asym(r,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
       if(main_ellip_method==Keeton){alphakappagamma3asym(r,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
       
-      alpha[0] +=  alpha_tmp[0];
-      alpha[1] +=  alpha_tmp[1];
+      alpha[0] +=  alpha_tmp[0]/Rmax;
+      alpha[1] +=  alpha_tmp[1]/Rmax;
       
       *kappa += kappa_tmp;
       gamma[0] += 0.5*gamma_tmp[0];
