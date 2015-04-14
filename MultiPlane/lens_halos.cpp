@@ -305,6 +305,7 @@ void LensHaloNFW::assignParams(InputParams& params){
   if(!params.get("main_axis_ratio",fratio)){fratio=1; std::cout << "main_axis_ratio not defined in file " << params.filename() << ", hence set to 1." << std::endl;};
   if(!params.get("main_pos_angle",pa)){pa=0; std::cout << "main_pos_angle not defined in file " << params.filename() << ", hence set to 0." << std::endl;};
   if(!params.get("main_ellip_method",main_ellip_method)){if(fratio!=1){main_ellip_method=Pseudo;std::cout << "main_ellip_method is not defined in file " << params.filename() << ", hence set to Pseudo." << endl;};};
+
   
 
 	rscale = Rmax/rscale; // was the concentration
@@ -621,12 +622,11 @@ void LensHaloPowerLaw::assignParams(InputParams& params){
   if(!params.get("main_mass",mass)) error_message1("main_mass",params.filename());
   if(!params.get("main_Rmax",Rmax)) error_message1("main_Rmax",params.filename());
   if(!params.get("main_zlens",zlens)) error_message1("main_zlens",params.filename());
-  if(!params.get("main_slope",beta)) error_message1("main_slope, example -1",params.filename());
+  if(!params.get("main_slope",beta)) error_message1("main_slope, example 1",params.filename());
   //if(beta>=2.0) error_message1("main_slope < 2",params.filename());
   if(!params.get("main_axis_ratio",fratio)){fratio=1; std::cout << "main_axis_ratio not defined in file " << params.filename() << ", hence set to 1." << std::endl;};
   if(!params.get("main_pos_angle",pa)){pa=0.0; std::cout << "main_pos_angle not defined in file " << params.filename() << ", hence set to 0." << std::endl;};
   if(!params.get("main_ellip_method",main_ellip_method)){if(fratio!=1){main_ellip_method=Pseudo;std::cout << "main_ellip_method is not defined in file " << params.filename() << ", hence set to Pseudo." << endl;};};
-  
 
 	if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
     else if(stars_N){
@@ -1327,7 +1327,6 @@ void LensHaloHernquist::assignParams(InputParams& params){
     if(!params.get("main_axis_ratio",fratio)){fratio=1; std::cout << "main_axis_ratio not defined in file " << params.filename() << ", hence set to 1." << std::endl;};
     if(!params.get("main_pos_angle",pa)){pa=0; std::cout << "main_pos_angle not defined in file " << params.filename() << ", hence set to 0." << std::endl;};
   if(!params.get("main_ellip_method",main_ellip_method)){if(fratio!=1){main_ellip_method=Pseudo;std::cout << "main_ellip_method is not defined in file " << params.filename() << ", hence set to Pseudo." << endl;};};
-  
 	if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
   else if(stars_N){
   	assignParams_stars(params);
@@ -1468,6 +1467,7 @@ void LensHaloJaffe::assignParams(InputParams& params){
   xmax = Rmax/rscale;
     if(!params.get("main_axis_ratio",fratio)){fratio=1; std::cout << "main_axis_ratio not defined in file " << params.filename() << ", hence set to 1." << std::endl;};
     if(!params.get("main_pos_angle",pa)){pa=0; std::cout << "main_pos_angle not defined in file " << params.filename() << ", hence set to 0." << std::endl;};
+
   if(!params.get("main_ellip_method",main_ellip_method)){if(fratio!=1){main_ellip_method=Pseudo;std::cout << "main_ellip_method is not defined in file " << params.filename() << ", hence set to Pseudo." << endl;};};
   
 	if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
