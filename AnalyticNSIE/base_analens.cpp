@@ -750,7 +750,7 @@ void LensHalo::alphakappagamma_asym(
  PosType alpha_isoG = mass_norm_factor*mass*alpha_h(f[0])/f[0]/pi;
  PosType kappa_isoG = mass_norm_factor*mass*kappa_h(f[0])/f[0]/f[0]/pi;
  PosType phi_isoG = mass_norm_factor*mass*phi_int(f[0])/pi;
-
+ 
  alpha_r = alpha_isoG * g[1]; // with damping
  alpha_theta = alpha_isoG * f[1]/x; //  with damping
  
@@ -798,7 +798,7 @@ void LensHalo::alphakappagamma1asym(
   
  
   faxial0(theta,f);
-    
+
   //gradial(x,g);
   g[0]=1;
   g[1]=0;
@@ -806,7 +806,6 @@ void LensHalo::alphakappagamma1asym(
   
   
   F=f[0]-1.;
-
   beta=get_slope(); // only for fixed beta, i.e. PowerLaw
   //beta=bfunction(x); // only for NFW
   PosType fac=1.0/(beta*beta/(2.-beta)/(2.-beta));

@@ -532,7 +532,10 @@ LensHaloPowerLaw::LensHaloPowerLaw(
     beta=my_beta;
     fratio=my_fratio, pa=my_pa, main_ellip_method=my_ellip_method, stars_N=my_stars_N;
     stars_implanted = false;
-                                     
+   // rscale = xmax = 1.0; // Commented in order to have a correct computation of the potential term in the time delay.
+   // Replacing it by :
+    rscale = 1;
+    xmax = Rmax/rscale ; /// xmax needs to be in initialized before the mass_norm_factor for Pseudo ellip method is calculated via  set_norm_factor()
     //mnorm = renormalization(get_Rmax());
     //std::cout << "PA in PowerLawConstructor: " << pa << std::endl;
                                      
@@ -546,19 +549,23 @@ LensHaloPowerLaw::LensHaloPowerLaw(
           }
         }else set_flag_elliptical(true);
         if (getEllipMethod()==Pseudo){
-          set_norm_factor();
+         set_norm_factor();
         }
     }else set_flag_elliptical(false);
-    // rscale = xmax = 1.0; // Commented in order to have a correct computation of the potential term in the time delay.
-    // Replacing it by :
-    rscale = 1;
-    xmax = Rmax/rscale ;
+
+
 }
 
 LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
 	assignParams(params);
     /// If the 2nd argument in calcModes(fratio, slope, pa, mod), the slope, is set to 1 it yields an elliptical kappa contour of given axis ratio (fratio) at the radius where the slope of the 3D density profile is -2, which is defined as the scale radius for the NFW profile. To ellipticize the potential instead of the convergence use calcModes(fratio, 2-get_slope(), pa, mod), this produces also an ellipse in the convergence map, but at the radius where the slope is 2-get_slope().
     /// If the axis ratio given in the parameter file is set to 1 all ellipticizing routines are skipped.
+  
+    // rscale = xmax = 1.0; // Commented in order to have a correct computation of the potential term in the time delay.
+    // Replacing it by :
+    rscale = 1;
+    xmax = Rmax/rscale;
+  
     if(fratio!=1){
       
         //for(int islope=1;islope<20;islope++){
@@ -600,11 +607,8 @@ LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
   mnorm = 1. ;
   //std::cout << "mass normalization: " << mnorm << std::endl;
 
-    // rscale = xmax = 1.0; // Commented in order to have a correct computation of the potential term in the time delay.
-    // Replacing it by :
-    rscale = 1;
-    xmax = Rmax/rscale;
-    // Be careful : the other constructors have not been changed !
+
+
 }
 
 void LensHaloPowerLaw::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed){
@@ -832,11 +836,11 @@ void LensHalo::force_halo_asym(
     ,PosType screening   /// the factor by which to scale the mass for screening of the point mass subtraction
 		){
       
-    float r_size=get_rsize()*Rmax;
-    assert(r_size<=Rmax);
+  float r_size=get_rsize()*Rmax;
+  assert(r_size<=Rmax);
   PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
   PosType alpha_tmp[2],kappa_tmp,gamma_tmp[2],phi_tmp;
-	if(rcm2 < 1e-20) rcm2 = 1e-20;
+  if(rcm2 < 1e-20) rcm2 = 1e-20;
   
   //std::cout << "rsize , rmax,  mass_norm =" << r_size << " , " << Rmax << " , " << mass_norm_factor << std::endl;
       
@@ -881,7 +885,7 @@ void LensHalo::force_halo_asym(
       
       alpha[0] +=  alpha_tmp[0]/Rmax;
       alpha[1] +=  alpha_tmp[1]/Rmax;
-      
+
       *kappa += kappa_tmp;
       gamma[0] += 0.5*gamma_tmp[0];
       gamma[1] += 0.5*gamma_tmp[1];
