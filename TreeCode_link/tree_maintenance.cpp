@@ -378,7 +378,7 @@ void TreeStruct::_freeBranches_iter(){
 void TreeStruct::_BuildTree(TreeStruct::iterator &current){
   /* pointlist must be both a linked list and an array of points in the */
   /* same order as the linked list */
-  unsigned long i,cut,dimension;
+  unsigned long cut,dimension;
   Branch *cbranch;//,branch1,branch2;
   PosType xcut;
 
@@ -396,64 +396,42 @@ void TreeStruct::_BuildTree(TreeStruct::iterator &current){
 	Branch* branch2 = new Branch(NULL,0,cbranch->boundary_p1,cbranch->boundary_p2
 			,cbranch->center,cbranch->level+1);
 
-
-  /* initialize boundaries to old boundaries
-  for(i=0;i<2;++i){
-      branch1->boundary_p1[i]=cbranch->boundary_p1[i];
-      branch1->boundary_p2[i]=cbranch->boundary_p2[i];
-
-      branch2->boundary_p1[i]=cbranch->boundary_p1[i];
-      branch2->boundary_p2[i]=cbranch->boundary_p2[i];
-  }*/
-
   /* set dimension to cut box */
   dimension=(cbranch->level % 2);
 
-  PosType *x = new PosType[cbranch->npoints];
-  assert(x);
+  //PosType *x = new PosType[cbranch->npoints];
+  //assert(x);
 
    /* reorder points */
   PointList::iterator pointlist_current( (*current)->points );
-  for(i=0;i<cbranch->npoints;++i){
-    x[i] = (*pointlist_current)->x[dimension];
-    /*points[i]=pointlist->current->id;*/
-    --pointlist_current;
-  }
+
+  double (*func)(Point &);
+  if(dimension == 0) func = pointx;
+  else func = pointy;
   
-  /*PrintList(pointlist);*/
-
-  //double_sort(cbranch->npoints,x-1,points-1);
-  //double_sort_points(cbranch->npoints,x-1,current->points);
-
-  /* copy information back to points in new order */
-/*   pointlist->current=current->points; */
-/*   for(i=0;i<cbranch->npoints;++i){ */
-    /*     pointlist->current->x[0]=xp[points[i]].x[0]; */
-    /*     pointlist->current->x[1]=xp[points[i]].x[1]; */
-/*     pointlist->current->id=points[i]; */
-/*     MoveDownList(pointlist); */
-/*   } */
-
+  Point *points = (*current)->points;
+  
   if(median_cut){
     //double_sort_points(cbranch->npoints,x-1,current->points);
-	  Utilities::quicksortPoints((*current)->points,x,cbranch->npoints);
-        
-    if(x[0] == x[cbranch->npoints-1]){
-      dimension = !dimension;
-      /* reorder points */
-      pointlist_current = (*current)->points;
-      for(i=0;i<cbranch->npoints;++i){
-        x[i] = (*pointlist_current)->x[dimension];
-        --pointlist_current;
-      }
+    //Utilities::quicksortPoints_multithread<4>((*current)->points,x,cbranch->npoints);
+    Utilities::quicksortPoints_multithread<4>(points,func,cbranch->npoints);
+    //Utilities::quicksortPoints((*current)->points,x,cbranch->npoints);
 
-      Utilities::quicksortPoints((*current)->points,x,cbranch->npoints);
+    if(func(points[0]) == func(points[cbranch->npoints-1])){
+      dimension = !dimension;
+      // reorder points
+      if(dimension == 0) func = pointx;
+      else func = pointy;
+
+      //Utilities::quicksortPoints_multithread<4>((*current)->points,x,cbranch->npoints);
+      //Utilities::quicksortPoints((*current)->points,x,cbranch->npoints);
+      Utilities::quicksortPoints_multithread<4>(points,func,cbranch->npoints);
     }
 
 	  cut=cbranch->npoints/2;
     size_t ii = cut-1;
-    while(x[cut] == x[ii] && ii > 0 ) --ii;  // find closest unique value
-    while(x[cut] == x[ii] && ii < cbranch->npoints - 1 ) ++ii;  // try at higher index
+    while(func(points[cut]) == func(points[ii]) && ii > 0 ) --ii;  // find closest unique value
+    while(func(points[cut]) == func(points[ii]) && ii < cbranch->npoints - 1 ) ++ii;  // try at higher index
    
     if(ii < cut){
       cut = ii + 1;
@@ -461,8 +439,8 @@ void TreeStruct::_BuildTree(TreeStruct::iterator &current){
       cut = ii;
       --ii;
     }
-    branch1->boundary_p2[dimension]=(x[cut]+x[ii])/2;
-    branch2->boundary_p1[dimension]=(x[cut]+x[ii])/2;
+    branch1->boundary_p2[dimension]=(func(points[cut])+func(points[ii]))/2;
+    branch2->boundary_p1[dimension]=(func(points[cut])+func(points[ii]))/2;
     
   }else{
 
@@ -470,7 +448,8 @@ void TreeStruct::_BuildTree(TreeStruct::iterator &current){
     branch1->boundary_p2[dimension]=xcut;
     branch2->boundary_p1[dimension]=xcut;
 
-	  Utilities::quickPartitionPoints(xcut,&cut,(*current)->points,x,cbranch->npoints);
+    //Utilities::quickPartitionPoints(xcut,&cut,points,x,cbranch->npoints);
+    Utilities::quickPartitionPoints(xcut,&cut,points,func,cbranch->npoints);
 
   }
 
@@ -484,8 +463,8 @@ void TreeStruct::_BuildTree(TreeStruct::iterator &current){
 
   /* set point numbers and pointers to points */
   branch1->npoints=cut;
-  assert((*current)->points->next || (*current)->points->prev);
-  branch1->points = (*current)->points;
+  assert(points->next || points->prev);
+  branch1->points = points;
 
   /*/ Test lines /////////////////////////////////////////////////
   pointlist->current = branch1->points;
@@ -496,7 +475,7 @@ void TreeStruct::_BuildTree(TreeStruct::iterator &current){
 
   
   branch2->npoints=cbranch->npoints - cut;
-  pointlist_current = (*current)->points;
+  pointlist_current = points;
   pointlist_current.JumpDownList(cut);
   branch2->points = *pointlist_current;
 
@@ -507,7 +486,7 @@ void TreeStruct::_BuildTree(TreeStruct::iterator &current){
   }
   //////////////////////////////////////////////////////////////*/
   
-  delete[] x;
+  //delete[] x;
 
 
 	/* use geometric center */

@@ -270,6 +270,18 @@ public:
     it = &offbot;
     return it;
   }
+  
+  iterator begin(){
+    iterator it;
+    it = bottom;
+    return it;
+  }
+  
+  iterator end(){
+    iterator it;
+    it = &offbot;
+    return it;
+  }
 
 	// status
 	/// Number of elements in list.

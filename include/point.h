@@ -367,4 +367,7 @@ struct Point_2d{
 
 std::ostream &operator<<(std::ostream &os, Point_2d const &p);
 
+inline double pointx(Point &p){return p.x[0];}
+inline double pointy(Point &p){return p.x[1];}
+
 #endif
