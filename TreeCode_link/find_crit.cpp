@@ -360,8 +360,8 @@ CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
   
   // case where no radial caustic has been detected yet
   pseudocurve.imagekist->copy(negimage.imagekist);
-  PosType mumin = 0;
-  Point *minmupoint;
+  Point *minmupoint = pseudocurve.imagekist->getCurrent();
+  PosType mumin = minmupoint->invmag;
 
   //std::cout << " pseudocurve size " << pseudocurve.imagekist->Nunits() << std::endl;
   
