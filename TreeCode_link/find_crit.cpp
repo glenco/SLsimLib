@@ -306,7 +306,7 @@ void ImageFinding::find_crit(
     negimage[ii].imagekist->SetInImage(NO);
   
   *Ncrits = crtcurve.size();
-  if(verbose) std::cout << "***********************" << std::endl;
+  if(verbose) std::cout << "********* find_crit() out **************" << std::endl;
 
   return ;
 }
@@ -380,7 +380,7 @@ CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
   
   
   // in case one before top was taken out
-  if(pseudocurve.imagekist->getCurrent()->invmag > pseudolimit){
+  if( pseudocurve.imagekist->Nunits() > 0 && pseudocurve.imagekist->getCurrent()->invmag > pseudolimit){
     pseudocurve.imagekist->getCurrent()->in_image = NO;
     pseudocurve.imagekist->TakeOutCurrent();
   }
