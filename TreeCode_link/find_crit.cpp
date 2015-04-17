@@ -132,10 +132,11 @@ void ImageFinding::find_crit(
     crtcurve.resize(*Ncrits);
     
     Kist<Point> neighbors;
-    
-    for(size_t ii=0;ii<*Ncrits;++ii){
+    size_t ii = 0;
+    for(size_t jj=0;jj<*Ncrits;++jj){
       
-      // classify critical curve
+      if(critcurve[ii].imagekist->Nunits() <= 1) continue;
+       // classify critical curve
       
       grid->i_tree->FindAllBoxNeighborsKist(critcurve[ii].imagekist->getCurrent(),&neighbors);
       Kist<Point>::iterator it = neighbors.TopIt();
@@ -182,7 +183,11 @@ void ImageFinding::find_crit(
       
       crtcurve[ii].caustic_intersections = Utilities::Geometry::intersect(crtcurve[ii].caustic_curve_intersecting);
       
+      ++ii;
     }
+    
+    *Ncrits = ii;
+    crtcurve.resize(*Ncrits);
   }
   
   if(pseuodcaustic && negimage[0].imagekist->Nunits() > 1){
@@ -234,7 +239,7 @@ void ImageFinding::find_crit(
       Point *current = pseudocurve[i].imagekist->getCurrent();
       
       crtcurve[ii].type = types[i];
-
+      
       std::vector<Point *> hull = pseudocurve[i].innerborder->copytovector();
       if(verbose) std::cout << " doing concave hull with " << hull.size() << " points..." << std::endl;
       hull = Utilities::concave_hull(hull,10);

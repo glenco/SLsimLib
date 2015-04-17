@@ -288,7 +288,6 @@ void CausticDataStore::printfile(std::string filename,std::string paramfile,doub
 
 
   for(size_t i = 0; i < data.size(); ++i){
-    if(data[i].crit_radius[0] != 0){
       catalog_caustic << data[i].redshift
       << " | " << data[i].crit_center[0] << " | " << data[i].crit_center[1]
       << " | " << data[i].crit_radius[0] << " | " << data[i].crit_radius[2]
@@ -298,7 +297,6 @@ void CausticDataStore::printfile(std::string filename,std::string paramfile,doub
       << " | " << data[i].caustic_radius[1]
       << " | " << data[i].caustic_area << " | " << data[i].crit_type
       << std::endl;
-    }
   }
 }
 
