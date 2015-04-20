@@ -35,6 +35,7 @@ namespace
     {"pixelmaps_on","0","Input one or more pixelized density maps"},
     {"pixelmaps_input_file","surfacedensity.fits","Density map(s) to be read in as main lens.  This can be a single map (*.fits) or a file with a list of fits files."},
     {"pixelmap_padding_factor","4","The factor by which the map is zero padded when doing FFTS."},
+    {"pixelmap_zeromean","true","By default the mean surface density is subtracted from the map. Set to false to turn this off"},
     // MultiDarkMap lenses
     //{"PixelizedDensityMap_input_file", "PixelizedMapFiles.txt", "list of MOKA FITS files for MultiDark-like simulations"},
     
