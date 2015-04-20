@@ -2124,9 +2124,9 @@ void Lens::readInputSimFileObservedGalaxies(bool verbose)
   std::cout << "Reading Field Halos from " << field_input_sim_file << std::endl;
   PosType z,mass,rcut,vdist;
   unsigned long i,j;
-  const PosType mo=7.3113e10,M1=2.8575e10,gam1=7.17,gam2=0.201,be=0.557;
+  //const PosType mo=7.3113e10,M1=2.8575e10,gam1=7.17,gam2=0.201,be=0.557;
   PosType field_galaxy_mass_fraction = 0;
-  const PosType masslimit =2.0e12;
+  //const PosType masslimit =2.0e12;
 
   Utilities::Geometry::SphericalPoint tmp_sph_point(1,0,0);
   
@@ -2139,7 +2139,7 @@ void Lens::readInputSimFileObservedGalaxies(bool verbose)
   
   int j_max;
   PosType mass_max=0,R_max=0,minmass=1e30;
-  PosType *theta,*theta2;
+  PosType *theta;
   PosType center[2] = {0.0,0.0};
   int ncolumns = 6;
   size_t haloid = 0;

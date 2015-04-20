@@ -96,7 +96,7 @@ public:
 	PosType getBtoT() const { return BtoT; }
 	PosType getPA() const { return PA; }
 	PosType getInclination() const { return inclination; }
-  PosType oldmag = mag;
+  PosType oldmag = 0;
   void setBand(Band band){
     switch(band){
       case SDSS_U:

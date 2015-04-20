@@ -67,6 +67,7 @@ public:
 	void printASCII() const;
 	void printASCIItoFile(std::string filename) const;
 	void printFITS(std::string filename, bool verbose = false) const;
+  void printFITS(std::string filename,std::vector<std::tuple<std::string,double,std::string>> &extra_header_info, bool verbose) const;
 
 	void smooth(double sigma);
 

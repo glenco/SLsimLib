@@ -50,7 +50,7 @@ QuasarLF::QuasarLF
     double col_arr[501][4];
     double colmax_arr[501][4];
     double colmin_arr[501][4];
-    double trash;
+    //double trash;
 	for (int i = 0; i < 501; i++)
 	{
 		kcorr_in >> red_arr[i] >> kcorr_arr[i];
