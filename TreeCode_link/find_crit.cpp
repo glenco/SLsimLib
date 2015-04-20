@@ -87,7 +87,7 @@ void ImageFinding::find_crit(
       findborders4(grid->i_tree,&negimage[ii]);
       //negimage[ii].imagekist->SetInImage(NO);
 
-      if(negimage[ii].innerborder->Nunits() > 2000) break;
+      //if(negimage[ii].innerborder->Nunits() > 2000) break;
       
       refinements=ImageFinding::IF_routines::refine_edges(lens,grid,&negimage[ii]
                         ,1,resolution,1,&newpoint_kist,true);
