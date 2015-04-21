@@ -110,7 +110,7 @@ void ImageFinding::find_crit(
     critcurve[ii].imagekist->copy(negimage[ii].innerborder);
     // set the old regions back to yes incase there are overlaping regions
     newpoint_kist.Empty();
-    //negimage[ii].imagekist->SetInImage(YES);
+    negimage[ii].imagekist->SetInImage(YES);
   }
   
   for(int ii=0;ii<negimage.size();++ii){
@@ -143,7 +143,12 @@ void ImageFinding::find_crit(
       while((*it)->invmag < 0 && !it.atend() ) --it;
       if( 1 < ( (*it)->kappa - sqrt( (*it)->gamma[0]*(*it)->gamma[0] + (*it)->gamma[1]*(*it)->gamma[1]) ) ) crtcurve[ii].type = radial;
       else crtcurve[ii].type = tangential;
-      
+      /************ test line ****************
+      std::cout << "neighbors" << std::endl;
+      for(it = neighbors.TopIt(); !it.atend() ; --it){
+        std::cout << (*it)->invmag << " " << 1 - ( (*it)->kappa - sqrt( (*it)->gamma[0]*(*it)->gamma[0] + (*it)->gamma[1]*(*it)->gamma[1] ) ) << std::endl;
+      }
+      // ***************************************/
       std::vector<Point *> hull = critcurve[ii].imagekist->copytovector();
       hull = Utilities::concave_hull(hull,10);
       
