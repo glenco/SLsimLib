@@ -389,7 +389,17 @@ void LensHaloFit::FindLensSimple(
   for(i=0;i<perturb_Nmodes;i++) perturb_modes[i] /= (4*pi*Grav * Dls * (1+zsource_reference)) ;
   // mod[4,5,...] are now in radian * mass / (PhysMpc * Mpc) = mass / (PhysMpc * Mpc).
   // mod[0,1,2] are now in mass*Mpc/(PhysMpc*Mpc) = mass / PhysMpc.
-  
+
+    
+  // FRANKENSTEIN BOX : **************************
+    
+    // for(i=0;i<perturb_Nmodes;i++) perturb_modes[i] *= 4.1 ;
+    for(i=0;i<perturb_Nmodes;i++) perturb_modes[i] *= Ds * (1+zsource_reference) / Dl ;
+    std::cout << "FRANKENSTEIN : " << Dl << " " << Dls << " " << Ds << std::endl;
+    
+  // ********************************************* 
+    
+    
   // Print modes :
   // for(i=0;i<perturb_Nmodes;i++) std::cout << perturb_modes[i] << " " ;
   // std::cout << std::endl ;
