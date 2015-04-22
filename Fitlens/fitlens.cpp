@@ -231,10 +231,10 @@ bool LensHaloFit::SafeFindLensSimple(
     // Displaying the values :
     if(verbose)
     {
-    std::cout << "Image : " << image_positions[i].x[0] << " " << image_positions[i].x[1] << std::endl ;
-    std::cout << "y - x : " << y[0] - image_positions[i].x[0] << " " << y[1] - image_positions[i].x[1] << std::endl ;
-    std::cout << "alpha : " << alphaTMP[0] << " " << alphaTMP[1] << std::endl ;
-    std::cout << "ratios : " << ratioSourcePos[0] << " " << ratioSourcePos[1] << std::endl ;
+      std::cout << "Image : " << image_positions[i].x[0] << " " << image_positions[i].x[1] << std::endl ;
+      std::cout << "y - x : " << y[0] - image_positions[i].x[0] << " " << y[1] - image_positions[i].x[1] << std::endl ;
+      std::cout << "alpha : " << alphaTMP[0] << " " << alphaTMP[1] << std::endl ;
+      std::cout << "ratios : " << ratioSourcePos[0] << " " << ratioSourcePos[1] << std::endl ;
     }
     
     // Saving the relative precision of the back-traced images in the source plane (in units of pixels of the map) :
@@ -244,8 +244,8 @@ bool LensHaloFit::SafeFindLensSimple(
     // Deciding if the test is sufficient to keep on with the rest :
     if(verbose)
     {
-    std::cout << "(y-x+alpha)/pixelsize : " << PrecisionBackTracedPos[i][0] << " , " << PrecisionBackTracedPos[i][1] << " pixels." << std::endl ;
-    std::cout << "! y = x - alpha : " << image_positions[i].x[0] - alphaTMP[0] << " , " << image_positions[i].x[1] - alphaTMP[1] << " !" << std::endl << std::endl ;
+      std::cout << "(y-x+alpha)/pixelsize : " << PrecisionBackTracedPos[i][0] << " , " << PrecisionBackTracedPos[i][1] << " pixels." << std::endl ;
+      std::cout << "! y = x - alpha : " << image_positions[i].x[0] - alphaTMP[0] << " , " << image_positions[i].x[1] - alphaTMP[1] << " !" << std::endl << std::endl ;
     }
     for(int k=0;k<2;k++)
     {
