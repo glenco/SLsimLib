@@ -231,8 +231,8 @@ void TreeSimple::_PointsWithin(PosType *ray,float *rmax,std::list <unsigned long
 void TreeSimple::NearestNeighbors(
             PosType *ray       /// position
             ,int Nneighbors    /// number of neighbors to be found
-            ,float *radius     /// distance of furthest neighbor found from ray[]
-            ,IndexType *neighborsout  /// list of the indexes ofx the neighbors
+            ,float *radius     /// distance of neighbor found from ray[]
+            ,IndexType *neighborsout  /// list of the indexes of the neighbors
                                   ){
   IndexType i;
   //static int count=0,oldNneighbors=-1;

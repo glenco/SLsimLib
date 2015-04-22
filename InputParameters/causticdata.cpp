@@ -264,6 +264,43 @@ bool CausticDataStore::findNearestCrit(PosType x[2],size_t &index){
   return (data[index].crit_radius[2] > radius);
 }
 
+/** \breaf Finds the nearest critical curve to the point x[] of type 'type'.
+If that point is within the largest radius of the critical curve it returns true.
+ */
+bool CausticDataStore::findNearestCrit(PosType x[2],size_t &index,CritType type){
+  
+  if(data.size() == 0){
+    index = 0;
+    return false;
+  }
+  if(Nxp == 0 && data.size() != 0){
+    SetSearchTree();
+  }
+  
+  std::vector<float> radius(10);
+  std::vector<IndexType> neighbors(10);
+  
+  bool found = false;
+  int i;
+  for(int N=2 ; !found && N < data.size(); N += 1){
+    
+    if(N > radius.size()){
+      radius.resize(N+2);
+      neighbors.resize(N+2);
+    }
+    searchtreevec->NearestNeighbors(x,N,radius.data(),neighbors.data());
+    for(i=0;i<N;++i){
+      if(data[neighbors[i]].crit_type == type){
+        index = neighbors[i];
+        found = true;
+        break;
+      }
+    }
+  };
+  
+  return (data[index].crit_radius[2] > radius[i]);
+}
+
 void CausticDataStore::printfile(std::string filename,std::string paramfile,double fieldofview,double minscale){
   std::ofstream catalog_caustic(filename.c_str());
   
