@@ -291,7 +291,7 @@ void LensHaloFit::FindLensSimple(
                                  ImageInfo *imageinfo    /// Positions of images relative to center of lens.  Only imageinfo[].centoid[] is used. Centroids must be in radians.
                                  ,int Nimages             /// input number of images
                                  ,double *y               /// output source position
-                                 ,double **dx_sub         /// dx_sub[Nimages][2] pre-calculated deflections caused by substructures or external masses at each image
+                                 ,double **dx_sub         /// dx_sub[Nimages][2] pre-calculated deflections caused by substructures or external masses at each image (in radians)
 ){
   
   assert(Nimages < 200);
@@ -329,21 +329,20 @@ void LensHaloFit::FindLensSimple(
   xg[0][0] = xg[0][1] = 0.0;
   x_center[0] = x_center[1] = 0.0;
   
-  // calculate scale to re-normalize. Otherwise the linear algebra routines will fail.
+  // calculate scale to re-normalize (in radians). Otherwise the linear algebra routines will fail.
   for(i=0,scale=0;i<Nimages;++i) scale = DMAX(scale,sqrt( pow(imageinfo[0].centroid[0] - imageinfo[i].centroid[0],2) + pow(imageinfo[0].centroid[1] - imageinfo[i].centroid[1],2) ) );
   
   for(i=0;i<Nimages;++i){
-    
     pairing[i] = 1;
     xob[i][0] = imageinfo[i].centroid[0]/scale; // xob is rescaled here (i.e. values = xob / xobmax ~ 1)
-    xob[i][1] = imageinfo[i].centroid[1]/scale;
+    xob[i][1] = imageinfo[i].centroid[1]/scale; // i.e. xob is dimensionless
     
     dx_sub[i][0] /= scale;
     dx_sub[i][1] /= scale;
     //std::printf("xob = %e %e  dx = %e %e\n",xob[i][0],xob[i][1],dx_sub[i][0],dx_sub[i][1]);
   }
   
-  x_center[0] /= scale;
+  x_center[0] /= scale; // x_center made non-dimensional
   x_center[1] /= scale;
   
   //ERROR_MESSAGE();
@@ -352,6 +351,9 @@ void LensHaloFit::FindLensSimple(
   
   // Assigning the modes :
   for(i=1;i<perturb_Nmodes;++i) perturb_modes[i] = mods[i];
+  cout << "# " ;
+  for(i=1;i<perturb_Nmodes;++i) cout << perturb_modes[i] << " " ;
+  cout << endl ;
   
   perturb_modes[0] = 0.0;
   perturb_modes[1] *= -1;  // checked
@@ -362,15 +364,15 @@ void LensHaloFit::FindLensSimple(
   y[1] = mods[i+1]*scale;
   
   // std::cout << "i = " << i << std::endl ;
-  // std::cout << "scale = " << scale << std::endl;
-  // std::cout << "source : y[0] = " << y[0] << " , y[1] = " << y[1] << std::endl;
+  std::cout << "scale = " << scale << std::endl;
+  std::cout << "source : y[0] = " << y[0] << " , y[1] = " << y[1] << std::endl;
   
+  // dx_sub and x_center back in radians :
   for(i=0;i<Nimages;++i)
   {
     dx_sub[i][0] *= scale;
     dx_sub[i][1] *= scale;
   }
-  
   x_center[0] *= scale;
   x_center[1] *= scale;
   
