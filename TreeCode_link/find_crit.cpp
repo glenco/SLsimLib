@@ -124,7 +124,7 @@ void ImageFinding::find_crit(
         negimage.imagekist->InsertAfterCurrent(newpoint_kist.getCurrent());
     }while(newpoint_kist.Down());
   }
-  
+    
   //  borders are no refined and negimages contains only the border of the region
   
   newpoint_kist.Empty();
@@ -262,8 +262,8 @@ void ImageFinding::find_crit(
       
       grid->i_tree->FindAllBoxNeighborsKist(critcurve[ii].imagekist->getCurrent(),&neighbors);
       Kist<Point>::iterator it = neighbors.TopIt();
-      while((*it)->invmag < 0 && !it.atend() ) --it;
-      if( 1 < ( (*it)->kappa - sqrt( (*it)->gamma[0]*(*it)->gamma[0] + (*it)->gamma[1]*(*it)->gamma[1]) ) ) crtcurve[ii].type = radial;
+      while((*it).invmag < 0 && !it.atend() ) --it;
+      if( 1 < ( (*it).kappa - sqrt( (*it).gamma[0]*(*it).gamma[0] + (*it).gamma[1]*(*it).gamma[1]) ) ) crtcurve[ii].type = radial;
       else crtcurve[ii].type = tangential;
       
       std::vector<Point *> hull = critcurve[ii].imagekist->copytovector();

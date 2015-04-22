@@ -411,6 +411,11 @@ void TreeStruct::_BuildTree(TreeStruct::iterator &current){
   
   Point *points = (*current)->points;
   
+  /********* test lines *************
+  points[cbranch->npoints-1].print();
+  std::cout << func(points[cbranch->npoints-1]) << " " << cbranch->npoints << std::endl;
+  // ***********************************/
+  
   if(median_cut){
     //double_sort_points(cbranch->npoints,x-1,current->points);
     //Utilities::quicksortPoints_multithread<4>((*current)->points,x,cbranch->npoints);
