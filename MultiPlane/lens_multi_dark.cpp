@@ -16,12 +16,13 @@ void Lens::readPixelizedDensity()
 	if(!list.good())
 	{
 		std::cerr << "Cannot open file " << pixel_map_input_file << std::endl;
-		throw std::runtime_error("Could not open PixelDMap list file" + pixel_map_input_file + "!");
+		throw std::runtime_error("Could not open PixelDMap list file " + pixel_map_input_file + "!");
 	}
 	
   if(pixel_map_input_file.find(".fits") != pixel_map_input_file.npos){
     std::cout << "inputing PixelDensityMap file: " << pixel_map_input_file << std::endl;
-    main_halos.push_back(new LensHaloMassMap(pixel_map_input_file, pix_map, pixel_map_zeropad,cosmo));
+    main_halos.push_back(new LensHaloMassMap(pixel_map_input_file, pix_map, pixel_map_zeropad
+                                             ,pixel_map_zeromean,cosmo));
   }else{
     
     std::cout << "reading PixelDMap files: " << pixel_map_input_file << std::endl;
@@ -52,7 +53,7 @@ void Lens::readPixelizedDensity()
       std::cout << "- " << mokafile << std::endl;
       
       // create the MOKA halo
-      main_halos.push_back(new LensHaloMassMap(mokafile, pix_map,pixel_map_zeropad, cosmo));
+      main_halos.push_back(new LensHaloMassMap(mokafile, pix_map,pixel_map_zeropad,pixel_map_zeromean, cosmo));
     }
   }
 }

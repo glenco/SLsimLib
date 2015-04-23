@@ -63,7 +63,8 @@ class LensHaloMassMap : public LensHalo
 {
 public:
 	LensHaloMassMap(const std::string& filename, PixelMapType maptype,
-                  int pixel_map_zeropad, const COSMOLOGY& lenscosmo);
+                  int pixel_map_zeropad,bool my_zeromean, const COSMOLOGY& lenscosmo);
+  
 	LensHaloMassMap(InputParams& params, const COSMOLOGY& lenscosmo);
 	
 	~LensHaloMassMap();
@@ -110,6 +111,7 @@ private:
 	const COSMOLOGY& cosmo;
 	void PreProcessFFTWMap();
   int zerosize;
+  bool zeromean;
 };
   
 
