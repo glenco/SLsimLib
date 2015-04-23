@@ -394,9 +394,12 @@ void LensHaloFit::FindLensSimple(
   // FRANKENSTEIN BOX : **************************
     
     // for(i=0;i<perturb_Nmodes;i++) perturb_modes[i] *= 4.1 ;
-    for(i=0;i<perturb_Nmodes;i++) perturb_modes[i] *= Ds * (1+zsource_reference) / Dl ;
+    for(i=3;i<perturb_Nmodes;i++) perturb_modes[i] *= Ds * (1+zsource_reference) / Dl ;
     std::cout << "FRANKENSTEIN : " << Dl << " " << Dls << " " << Ds << std::endl;
     
+    y[0] *= Dl * (1+zlens) / (Ds * (1+zsource_reference)) ;
+    y[1] *= Dl * (1+zlens) / (Ds * (1+zsource_reference)) ;
+
   // ********************************************* 
     
     
@@ -405,10 +408,12 @@ void LensHaloFit::FindLensSimple(
   // std::cout << std::endl ;
 
   // Converting source position to physical angle :
-  y[0] *= Dl * (1+zlens) / (Ds * (1+zsource_reference)) ;
-  y[1] *= Dl * (1+zlens) / (Ds * (1+zsource_reference)) ;
+  // y[0] *= Dl * (1+zlens) / (Ds * (1+zsource_reference)) ;
+  // y[1] *= Dl * (1+zlens) / (Ds * (1+zsource_reference)) ;
 
-  
+
+    
+    
   free_dmatrix(xob,0,Nimages-1,0,1);
   free_dmatrix(xg,0,1,0,1);
   free_dvector(mods,0,perturb_Nmodes + 2*Nsources + 1);

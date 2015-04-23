@@ -60,6 +60,7 @@ PosType lens_expand(PosType beta,PosType *mod,int Nmodes,PosType const *x,PosTyp
     alpha[1] = pow(r,beta-1)*(beta*sinx*F + cosx*F1);
 
     // add shear
+    
     alpha[0] +=  x[0]*mod[1] + x[1]*mod[2];
     alpha[1] += -x[1]*mod[1] + x[0]*mod[2];
   
