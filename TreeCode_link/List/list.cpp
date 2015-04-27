@@ -348,3 +348,9 @@ void PointList::PrintList(){
   }
 
 }
+
+std::ostream &operator<<(std::ostream &os, Point_2d const &p) {
+ return os << p.x[0] << " " << p.x[1];
+ }
+
+
