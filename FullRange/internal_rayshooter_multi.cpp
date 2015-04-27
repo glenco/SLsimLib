@@ -220,8 +220,7 @@ void *compute_rays_parallel(void *_p)
       // convert to physical coordinates on the plane j
       xx[0] = p->i_points[i].image->x[0]/(1+p->plane_redshifts[j]);
       xx[1] = p->i_points[i].image->x[1]/(1+p->plane_redshifts[j]);
-      // PhysMpc = Mpc * (1+z)
-      // so xx is in Mpc / (1+z) here, does not look to be PhysMpc, is it ?
+      // PhysMpc = ComMpc / (1+z)
       
       assert(xx[0] == xx[0] && xx[1] == xx[1]);
       
@@ -229,7 +228,7 @@ void *compute_rays_parallel(void *_p)
       
       ////////////////////////////////////////////////////////////////
       
-      p->lensing_planes[j]->force(alpha,&kappa,gamma,&phi,xx); // Computed in physical coordinates.
+      p->lensing_planes[j]->force(alpha,&kappa,gamma,&phi,xx); // Computed in physical coordinates. // xx is in PhysMpc
       
       ////////////////////////////////////////////////////////////////
       
