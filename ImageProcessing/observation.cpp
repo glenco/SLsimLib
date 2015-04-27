@@ -326,6 +326,10 @@ PixelMap Observation::ApplyPSF(PixelMap &pmap)
     fftw_plan p;
     long Npix = outmap.getNx();
     long Npix_zeropad = Npix + side_psf;
+        
+    // rows and columns between first_p and last_p are copied in the zero-padded version
+    long first_p = side_psf/2;
+    long last_p = first_p + (Npix-1);
     std::complex<double>* out=new std::complex<double> [Npix_zeropad*(Npix_zeropad/2+1)];
     
     // add zero-padding
@@ -334,7 +338,7 @@ PixelMap Observation::ApplyPSF(PixelMap &pmap)
     {
       long ix = i/Npix_zeropad;
       long iy = i%Npix_zeropad;
-      if (ix >= side_psf/2 && ix <= (Npix_zeropad-1)-side_psf/2 && iy >= side_psf/2 && iy <= (Npix_zeropad-1)-side_psf/2)
+      if (ix >= first_p && ix <= last_p && iy >= first_p && iy <= last_p)
         in_zeropad[i] = outmap[(ix-side_psf/2)*Npix+(iy-side_psf/2)];
       else
         in_zeropad[i] = 0.;
@@ -343,13 +347,14 @@ PixelMap Observation::ApplyPSF(PixelMap &pmap)
     p = fftw_plan_dft_r2c_2d(Npix_zeropad,Npix_zeropad,in_zeropad, reinterpret_cast<fftw_complex*>(out), FFTW_ESTIMATE);
     fftw_execute(p);
     
-    // creates plane for perform backward fft after convolution, sets output data
+    // creates plane for perform backward fft after convolution, sets output data 
     fftw_plan p2;
     double* out2 = new double[Npix_zeropad*Npix_zeropad];
     p2 = fftw_plan_dft_c2r_2d(Npix_zeropad,Npix_zeropad,reinterpret_cast<fftw_complex*>(out), out2, FFTW_ESTIMATE);
     
     
     // arrange psf data for fft, creates plane, then performs fft
+    // psf data are moved into the four corners of psf_big_zeropad
     long psf_big_zeropad_Npixels = static_cast<int>((Npix+side_psf)*oversample);
     double* psf_big_zeropad = new double[psf_big_zeropad_Npixels*psf_big_zeropad_Npixels];
     std::complex<double>* out_psf=new std::complex<double> [psf_big_zeropad_Npixels*(psf_big_zeropad_Npixels/2+1)];
@@ -372,7 +377,7 @@ PixelMap Observation::ApplyPSF(PixelMap &pmap)
     }
     fftw_execute(p_psf);
     
-    // performs convolution in Fourier space, and transforms back to real space
+    // performs convolution in Fourier space , and transforms back to real space
     for (unsigned long i = 0; i < Npix_zeropad*(Npix_zeropad/2+1); i++)
     {
       ix = i/(Npix_zeropad/2+1);
@@ -389,7 +394,7 @@ PixelMap Observation::ApplyPSF(PixelMap &pmap)
     {
       ix = i/Npix_zeropad;
       iy = i%Npix_zeropad;
-      if (ix >= side_psf/2 && ix <= (Npix_zeropad-1)-side_psf/2 && iy >= side_psf/2 && iy <= (Npix_zeropad-1)-side_psf/2)
+      if (ix >= first_p && ix <= last_p && iy >= first_p && iy <= last_p)
       {
         int ii = (ix-side_psf/2)*Npix+(iy-side_psf/2);
         outmap.AssignValue(ii,out2[i]/double(Npix_zeropad*Npix_zeropad));
