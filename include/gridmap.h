@@ -60,4 +60,17 @@ private:
   static std::mutex grid_mutex;
 };
 
+struct GridRandom{
+  GridRandom(LensHndl lens,size_t Nsources,double zsource,const Point_2d &center,double rangeX
+             ,double rangeY,long &seed);
+  
+  
+private:
+  
+  Point *i_points;
+  Point *s_points;
+  Point_2d center;
+  PosType rangeX;
+  PosType rangeY;
+};
 #endif /* defined(__GLAMER__gridmap__) */

@@ -9,6 +9,7 @@
 #include "gridmap.h"
 #include <mutex>
 #include <thread>
+#include "grid_maintenance.h"
 
 std::mutex GridMap::grid_mutex;
 
@@ -316,3 +317,45 @@ void GridMap::xygridpoints(Point *i_points,PosType range,const PosType *center,l
   
   return;
 }
+
+GridRandom::GridRandom(LensHndl lens,size_t Nsources,double zsource,const Point_2d &my_center
+                       ,double my_rangeX,double my_rangeY,long &seed):
+rangeX(my_rangeX),rangeY(my_rangeY)
+{
+  center = my_center;
+  // reset lens redshift
+  lens->ResetSourcePlane(zsource,false);
+  
+  if(rangeX <= 0 || rangeY <= 0){ERROR_MESSAGE(); std::cout << "cannot make GridRandom with no range" << std::endl; exit(1);}
+  
+  i_points = NewPointArray(Nsources);
+  s_points=LinkToSourcePoints(i_points,Nsources);
+
+  Point_2d source_x,image_x;
+  PosType xtol2,fret;
+  
+  xtol2 = pow(0.01*pi/180/60/60,2);
+  
+  Utilities::RandomNumbers_NR random(seed);
+  for(size_t ii=0;ii<Nsources;++ii){
+    
+    source_x[0] = center[0] - 0.5*rangeX*random();
+    source_x[1] = center[1] - 0.5*rangeY*random();
+    
+    // a guess
+    image_x = source_x;
+    
+    ImageFinding::find_image_simple(lens,source_x,zsource,image_x
+                      ,xtol2,fret);
+    
+    i_points[ii].x[0] = center[0] - 0.5*rangeX*random();
+    i_points[ii].x[1] = center[1] - 0.5*rangeY*random();
+
+  }
+  
+  {
+    // std::lock_guard<std::mutex> hold(grid_mutex);
+    lens->rayshooterInternal(Nsources,i_points);
+  }
+}
+
