@@ -57,7 +57,6 @@ struct KistUnit{
  
  for(Kist<Point>::iterator it = kist.begin(); !(it.atend()) ;++it){
    cout << i << " x = " << (*it).x[0] << "  " << (*it).x[1] << endl;
- }
  
  or
  
