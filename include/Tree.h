@@ -14,6 +14,7 @@
 #include "point.h"
 #include "Kist.h"
 #include "image_info.h"
+#include <future>
 
 
 /***** Exported Types *****/
@@ -78,9 +79,9 @@ public:
     void movetop(){current = top;}
     
     /// Same as up()
-    bool operator++(){ return up();}
+    //bool operator++(){ return up();}
     /// Same as up()
-    bool operator++(int){ return up();}
+    //bool operator++(int){ return up();}
     
     bool up();
     /// Move to brother if it exists
@@ -103,19 +104,23 @@ public:
     PosType realray[2];
     std::vector<Point *> tmp_point;
   };
+  
+  iterator begin() const{
+    iterator it(top);
+    return it;
+  };
+  
+  iterator end() const{
+    iterator it(top->brother);
+    return it;
+  };
 
   /// root branch
 	 Branch * getTop(){return top;}
 
-	 //Branch *current;
 	 /// list of points
 	 PointList *pointlist;
 
-	 /*  *** Constructor****
-	TreeHndl NewTree(Point *xp,unsigned long npoints
-			 ,PosType boundary_p1[2],PosType boundary_p2[2]
-			 ,PosType center[2],int Nbucket);
-	short freeTree(TreeHndl tree);*/
 
   //void FindAllBoxNeighbors(Point *point,ListHndl neighbors);
   void FindAllBoxNeighborsKist(Point *point,Kist<Point> * neighbors) const;
@@ -124,14 +129,7 @@ public:
   void PointsWithinKist_iter(const PosType* center,float rmin,float rmax,Kist<Point> * neighborkist) const;
   Point *NearestNeighborKist(const PosType* center,int Nneighbors,Kist<Point> * neighborkist) const;
 
-  //void PointsInCurrent(unsigned long *ids,PosType **x);
-
-  /***** Movement on tree *****/
-
-  //void moveTop(){ current = top;}
-  //bool moveUp();
-  //bool moveToChild(int child);
-  //bool TreeWalkStep(bool allowDescent);
+ 
   bool Test();
 
   Point *RemoveLeafFromTree(TreeStruct::iterator &current,unsigned long *Npoints);
@@ -145,11 +143,6 @@ public:
 
   /***** State of tree functions *****/
   bool isEmpty();
-  //bool atTop();
-  //bool atLeaf(){ return( (current->child1==NULL)*(current->child2==NULL) ); }
-  //bool offEnd();
-  //bool CurrentIsSquareBranch();
-  //bool noChild();
 
   //void getCurrent(Point *points,unsigned long *npoints);
   unsigned long getNbranches();
@@ -181,46 +174,28 @@ private:
    /// number of points allowed in leaves of tree
   int Nbucket;
   short median_cut;
-  //int incell;
-  //PosType realray[2];
-
 
   void construct_root(Point *xp,unsigned long npoints
 			 ,PosType boundary_p1[2],PosType boundary_p2[2]
 			 ,PosType center[2],int Nbucket);
 
+  void _freeBranches(TreeStruct::iterator &current, short child);
+  void _AddPoint(TreeStruct::iterator &current);
+  void _BuildTree(TreeStruct::iterator &current);
+  
+  void _checkTree(TreeStruct::iterator &current, unsigned long *count);
+  void _freeBranches_iter();
 
-  //void _FindAllBoxNeighbors(Branch *leaf,ListHndl neighbors);
+  // const functions
   void _FindAllBoxNeighborsKist(Branch *leaf,TreeStruct::iterator &treeit,Kist<Point> * neighbors) const;
   void _FindAllBoxNeighborsKist_iter(Branch *leaf,TreeStruct::iterator &treeit,Kist<Point> * neighbors) const;
   void _PointsWithinKist(TreeStruct::iterator &treeit,PosType *rmax,Kist<Point> * neighborkist
                          ,short markpoints,PosType *maxgridsize,TreeStruct::Globals &glabs) const;
 
-  void _freeBranches(TreeStruct::iterator &current, short child);
-  void _AddPoint(TreeStruct::iterator &current);
-  void _BuildTree(TreeStruct::iterator &current);
-
-  void _checkTree(TreeStruct::iterator &current, unsigned long *count);
-  void _freeBranches_iter();
   void _FindBox(TreeStruct::iterator &current,const PosType* ray) const;
-
-  // Should be obsolete
-  //Point *NearestNeighbor(const PosType* center,int Nneighbors,ListHndl neighborlist
-  //		,short direction);
+  
   void _NearestNeighbor(TreeStruct::iterator &current,int Nneighbors,Point **neighborpoints,PosType *rneighbors,short *direction,TreeStruct::Globals &glabs) const;
 
-
-  // Are obsolete
-  //void PointsWithin(PosType *ray,float rmax,ListHndl neighborlist,short markpoints);
-  //void PointsWithin_iter(PosType *ray,float rmax,ListHndl neighborlist,short markpoints);
-  //void FriendsOfFriends(PosType *starting_point,float rlink
-  //		      ,ListHndl neighborlist,Point *filter
-  //		      ,unsigned long Nfilter,unsigned long *filter_place);
-  //void _PointsWithin2(PosType *ray,float *rmax,ListHndl neighborlist
-  //		   ,Point *filter,unsigned long Nfilter
-  //		   ,unsigned long *filter_place,short compliment);
-  //void _PointsWithin(PosType *ray,float *rmax,ListHndl neighborlist
-  //		,short markpoints);
 
 };
 
@@ -328,11 +303,14 @@ namespace Utilities{
 	void double_sort_points(unsigned long n, PosType *arr, Point *brr);
 
 	void quicksortPoints(Point *pointarray,PosType *arr,unsigned long N);
+  //void quicksortPoints_multithread(Point *pointarray,PosType *arr,unsigned long N,int level = 0);
 	void quicksort(unsigned long *particles,PosType *arr,unsigned long N);
 	void quickPartition(PosType pivotvalue,unsigned long *pivotindex,unsigned long *particles
 		,PosType *arr,unsigned long N);
 	void quickPartitionPoints(PosType pivotvalue,unsigned long *pivotindex
 		,Point *pointsarray,PosType *arr,unsigned long N);
+  void quickPartitionPoints(PosType pivotvalue,unsigned long *pivotindex
+                            ,Point *pointarray,PosType (*func)(Point &p),unsigned long N);
 	int cutbox(const PosType* center,PosType *p1,PosType *p2,float rmax);
 	void log_polar_grid(Point *i_points,PosType rmax,PosType rmin,PosType *center,long Ngrid);
 	void findarea(ImageInfo *imageinfo);
@@ -353,6 +331,140 @@ namespace Utilities{
 	long IndexFromPosition(PosType x,long Npixels,PosType range,PosType center);
   PosType TwoDInterpolator(PosType *x,int Npixels,PosType range,PosType *center,PosType *map,bool init=true);
   PosType TwoDInterpolator(PosType *map);
+
+  /// Multi-threaded quicksort.  The maximum number of threads used is 2^lev.  The last parameter should be left out when calling so that it takes the default value
+  template<int lev>
+  void quicksortPoints_multithread(Point *pointarray,PosType *arr,unsigned long N,int level=0){
+    PosType pivotvalue;
+    unsigned long pivotindex,newpivotindex,i;
+    
+    if(N <= 1) return ;
+    
+    // pick pivot as the median of the first, last and middle values
+    if ((arr[0] >= arr[N/2] && arr[0] <= arr[N-1])
+        || (arr[0] >= arr[N-1] && arr[0] <= arr[N/2])) pivotindex = 0;
+    else if ((arr[N/2] >= arr[0] && arr[N/2] <= arr[N-1])
+             || (arr[N/2] >= arr[N-1] && arr[N/2] <= arr[0])) pivotindex = N/2;
+    else pivotindex = N-1;
+    pivotvalue=arr[pivotindex];
+    
+    // move pivot to end of array
+    std::swap(arr[pivotindex],arr[N-1]);
+    SwapPointsInArray(&pointarray[pivotindex],&pointarray[N-1]);
+    newpivotindex=0;
+    
+    // partition list and array
+    for(i=0;i<N;++i){
+      if(arr[i] <= pivotvalue){
+        std::swap(arr[newpivotindex],arr[i]);
+        SwapPointsInArray(&pointarray[newpivotindex],&pointarray[i]);
+        ++newpivotindex;
+      }
+    }
+    --newpivotindex;
+    
+    if(level < lev && N > 500){
+      auto thread1 = std::async(std::launch::async, [&] {
+        return quicksortPoints_multithread<lev>(pointarray,arr,newpivotindex,level + 1); });
+
+      quicksortPoints_multithread<lev>(&pointarray[newpivotindex+1],&arr[newpivotindex+1],N-newpivotindex-1,level + 1);
+      
+      //thread1.wait();
+    }else{
+      quicksortPoints_multithread<lev>(pointarray,arr,newpivotindex,level + 1);
+      quicksortPoints_multithread<lev>(&pointarray[newpivotindex+1],&arr[newpivotindex+1],N-newpivotindex-1,level + 1);
+    }
+    return ;
+  }
+  /** \brief Multi-threaded quicksort.  The maximum number of threads used is 2^lev.  The function `func` takes a point and returns the value that is should be sorted by.  The last parameter should be left out when calling so that it takes the default value.
+   
+   This function is different from quicksort_multithread() in that it uses SwapPointsInArray() instead of std::swap() which is needed to make the image pointers follow the swap.
+   */
+  template<int lev>
+  void quicksortPoints_multithread(Point *pointarray,double (*func)(Point &),unsigned long N,int level=0){
+    
+    PosType pivotvalue;
+    unsigned long pivotindex,newpivotindex,i;
+    
+    if(N <= 1) return ;
+    
+    // pick pivot as the median of the first, last and middle values
+    if ((func(pointarray[0]) >= func(pointarray[N/2]) && func(pointarray[0]) <= func(pointarray[N-1]))
+        || (func(pointarray[0]) >= func(pointarray[N-1]) && func(pointarray[0]) <= func(pointarray[N/2]))) pivotindex = 0;
+    else if ((func(pointarray[N/2]) >= func(pointarray[0]) && func(pointarray[N/2]) <= func(pointarray[N-1]))
+             || (func(pointarray[N/2]) >= func(pointarray[N-1]) && func(pointarray[N/2]) <= func(pointarray[0]))) pivotindex = N/2;
+    else pivotindex = N-1;
+    pivotvalue=func(pointarray[pivotindex]);
+    
+    // move pivot to end of array
+    SwapPointsInArray(&pointarray[pivotindex],&pointarray[N-1]);
+    newpivotindex=0;
+    
+    // partition list and array
+    for(i=0;i<N;++i){
+      if(func(pointarray[i]) <= pivotvalue){
+        SwapPointsInArray(&pointarray[newpivotindex],&pointarray[i]);
+        ++newpivotindex;
+      }
+    }
+    --newpivotindex;
+    
+    if(level < lev && N > 500){
+      auto thread1 = std::async(std::launch::async, [&] {
+        return quicksortPoints_multithread<lev>(pointarray,func,newpivotindex,level + 1); });
+      quicksortPoints_multithread<lev>(&pointarray[newpivotindex+1],func,N-newpivotindex-1,level + 1);
+      
+      //thread1.wait();
+    }else{
+      quicksortPoints_multithread<lev>(pointarray,func,newpivotindex,level + 1);
+      quicksortPoints_multithread<lev>(&pointarray[newpivotindex+1],func,N-newpivotindex-1,level + 1);
+    }
+    return ;
+  }
+  /** \brief Multi-threaded quicksort.  The maximum number of threads used is 2^lev.  The function `func` takes a T type and returns the value that is should be sorted by.  The last parameter should be left out when calling so that it takes the default value.  std::swap() is used to swap elements of the array.
+*/
+  template<typename T,int lev>
+  void quicksort_multithread(T *array,double (*func)(T &),unsigned long N,int level=0){
+    
+    PosType pivotvalue;
+    unsigned long pivotindex,newpivotindex,i;
+    
+    if(N <= 1) return ;
+    
+    // pick pivot as the median of the first, last and middle values
+    if ((func(array[0]) >= func(array[N/2]) && func(array[0]) <= func(array[N-1]))
+        || (func(array[0]) >= func(array[N-1]) && func(array[0]) <= func(array[N/2]))) pivotindex = 0;
+    else if ((func(array[N/2]) >= func(array[0]) && func(array[N/2]) <= func(array[N-1]))
+             || (func(array[N/2]) >= func(array[N-1]) && func(array[N/2]) <= func(array[0]))) pivotindex = N/2;
+    else pivotindex = N-1;
+    pivotvalue=func(array[pivotindex]);
+    
+    // move pivot to end of array
+    SwapPointsInArray(&array[pivotindex],&array[N-1]);
+    newpivotindex=0;
+    
+    // partition list and array
+    for(i=0;i<N;++i){
+      if(func(array[i]) <= pivotvalue){
+        std::swap(array[newpivotindex],array[i]);
+        ++newpivotindex;
+      }
+    }
+    --newpivotindex;
+    
+    if(level < lev && N > 500){
+      auto thread1 = std::async(std::launch::async, [&] {
+        return quicksortPoints_multithread<lev>(array,func,newpivotindex,level + 1); });
+      quicksort_multithread<lev>(&array[newpivotindex+1],func,N-newpivotindex-1,level + 1);
+      
+      //thread1.wait();
+    }else{
+      quicksort_multithread<lev>(array,func,newpivotindex,level + 1);
+      quicksort_multithread<lev>(&array[newpivotindex+1],func,N-newpivotindex-1,level + 1);
+    }
+    return ;
+  }
+
 
   /** \ingroup Utill
    * \brief Bilinear interpolation class for interpolating from a 2D uniform grid.
