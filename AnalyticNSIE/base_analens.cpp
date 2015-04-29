@@ -82,14 +82,20 @@ void LensHaloBaseNSIE::force_halo(
     std::cout << "         xt in force_halo : @@@ " << xt[0]/Dls << " " << xt[1]/Dls << " @@@" << std::endl ;
     std::cout << "alpha in force_halo : " << alpha_tmp[0] * (4*pi*Grav) << " " << alpha_tmp[1]* (4*pi*Grav) << std::endl ;
     std::cout << "xt - alpha in force_halo : !!! " << xt[0] - alpha_tmp[0] << " " << xt[1] - alpha_tmp[1] << " !!!" << std::endl ;
-    std::cout << "Dl = " << Dl << " , Dls = " << Dls << " , Ds = " << Ds << std::endl ;
-       */
+        */
+    // std::cout << "Dl = " << Dl << " , Dls = " << Dls << " , Ds = " << Ds << std::endl ;
+
+    
+    // std::cout << "Before : " << alpha_tmp[0] << " " << alpha_tmp[1] << std::endl;
     
     // Adding a contribution to remove p->i_points[i].image->x[0]*p->dDl[j+1]/p->dDl[j] to aa*p->i_points[i].image->x[0] :
     alpha_tmp[0] -= xt[0] / Dl / (4*pi*Grav) ; // contribution in PhysMpc / PhysMpc / (PhysMpc/mass) = mass / PhysMpc
     alpha_tmp[1] -= xt[1] / Dl / (4*pi*Grav) ;
-    
 
+    // std::cout << "Subtracting : " << xt[0] / Dl / (4*pi*Grav) << " " << xt[1] / Dl / (4*pi*Grav) << std::endl;
+
+      alpha_tmp[0] *= 1. * (1+zlens)*2 ;
+      alpha_tmp[1] *= 1. * (1+zlens)*2 ;
       
     // ========================================================
     // TRANSFORMATIONS ON ALPHA BEFORE I DISCOVER THE PROBLEM :

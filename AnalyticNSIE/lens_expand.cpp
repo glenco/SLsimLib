@@ -84,7 +84,7 @@ PosType lens_expand(PosType beta,
 
     // shear
     gamma[0]=-(gt*cos2theta+gx*sin2theta) + mod[1];
-    gamma[1]=-gt*sin2theta+gx*cos2theta  + mod[2];
+    gamma[1]=-gt*sin2theta+gx*cos2theta + mod[2];
     // CONSISTENCY :
     // first terms in mass / PhysMpc^2
     // second terms, mod[1,2], in mass / PhysMpc^2
@@ -100,6 +100,20 @@ PosType lens_expand(PosType beta,
     // first term F*pow(r,beta) in (mass / PhysMpc) * PhysMpc = mass for beta = 1
     // second terms in PhysMpc^2 * (mass / PhysMpc^2) = mass
     // => DIMENSIONALLY CONSISTENT !
+    
+    // More tests :
+    
+    std::cout << "x[0] = " << x[0] << " , x[1] = " << x[1] << std::endl ;
+    std::cout << "F = " << F << " , " ;
+    for(i=4;i<Nmodes;i+=2){
+        k=i/2;
+        std::cout << cos(k*theta) << " " << cos(k*theta) << " " ;
+    }
+    std::cout << std::endl;
+    std::cout << "beta = " << beta << " , Nmodes = " << Nmodes << " , mod[0,1,2] = " << mod[0] << " " << mod[1] << " " << mod[2] << std::endl;
+    std::cout << "cos2theta = " << cos2theta << " , sin2theta = " << sin2theta << std::endl;
+    std::cout << std::endl;
+    
     
     //printf("  lens_expand *phi = %e\n",*phi);
     return 0.5*(beta*beta*F+F2)*pow(r,beta-2) + mod[0];
