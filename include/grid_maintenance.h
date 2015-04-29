@@ -50,6 +50,7 @@ struct Grid{
   int getNgrid_block(){return Ngrid_block;}
   /// return initial range of gridded region
   double getInitRange(){return i_tree->getTop()->boundary_p2[0] - i_tree->getTop()->boundary_p1[0];}
+  Point_2d getInitCenter();
   Point * RefineLeaf(LensHndl lens,Point *point);
   Point * RefineLeaves(LensHndl lens,std::vector<Point *>& points);
   void ClearAllMarks();
@@ -57,6 +58,10 @@ struct Grid{
   void test_mag_matrix();
   void writeFits(const double center[],size_t Npixels,double resolution,LensingVariable lensvar,std::string filename);
   void writeFits(const double center[],size_t Nx,size_t Ny,double resolution,LensingVariable lensvar,std::string filename);
+  void writePixeFits(size_t Nx           /// number of pixels in image in x dimension
+                    ,LensingVariable lensvar  /// which quantity is to be displayed
+                    ,std::string filename     /// file name for image -- .kappa.fits, .gamma1.fits, etc will be appended
+                    );
   void writeFitsVector(const double center[],size_t Npixels,double resolution,LensingVariable lensvar,std::string filename);
   PixelMap writePixelMap(const double center[],size_t Npixels,double resolution,LensingVariable lensvar);
   PixelMap writePixelMap(const double center[],size_t Nx,size_t Ny,double resolution,LensingVariable lensvar);

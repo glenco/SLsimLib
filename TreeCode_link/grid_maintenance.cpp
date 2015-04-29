@@ -20,7 +20,7 @@ std::mutex Grid::grid_mutex;
 Grid::Grid(
 		LensHndl lens               /// lens model for initializing grid
 		,unsigned long N1d          /// Initial number of grid points in each dimension.
-		,const PosType center[2]    /// Center of grid.
+		,const PosType center[2]    /// Center of grid (usually in radian units)
 		,PosType range              /// Full width of grid in whatever units will be used.
            ): Ngrid_init(N1d),Ngrid_init2(N1d),Ngrid_block(3),axisratio(1.0){
 
@@ -1058,6 +1058,21 @@ PixelMap Grid::writePixelMap(
   map.AddGrid(*this,lensvar);
 
   return map;
+}
+/** \brief Make a fits map that is automatically centered on the grid and has approximately the same range as the grid.  Nx can be used to change the resolution.  Nx = grid.getInitNgrid() will give the initial grid resolution
+ */
+void Grid::writePixeFits(
+                         size_t Nx           /// number of pixels in image in x dimension
+                         ,LensingVariable lensvar  /// which quantity is to be displayed
+                         ,std::string filename     /// file name for image -- .kappa.fits, .gamma1.fits, etc will be appended
+){
+  
+  Point_2d center = getInitCenter();
+  PosType resolution =  getInitRange()/Nx;
+  size_t Ny = (size_t)(Nx*axisratio);
+  writeFits(center.x,Nx,Ny,resolution, lensvar, filename);
+  
+  return;
 }
 
 /** \brief Output a fits map of the without distribution the pixels.

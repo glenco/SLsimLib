@@ -1523,6 +1523,7 @@ void Lens::createFieldHalos(bool verbose)
  */
 void Lens::readInputSimFileMillennium(bool verbose)
 {
+    
   std::cout << "Reading Field Halos from " << field_input_sim_file << std::endl;
 	PosType z,vmax,vdisp,r_halfmass;
 	unsigned long i,j;
@@ -1531,6 +1532,7 @@ void Lens::readInputSimFileMillennium(bool verbose)
   PosType field_galaxy_mass_fraction = 0;
   
 	PosType rmax=0,rtmp=0;
+  PosType theta[2];
   
 	std::ifstream file_in(field_input_sim_file.c_str());
 	if(!file_in){
@@ -1554,7 +1556,7 @@ void Lens::readInputSimFileMillennium(bool verbose)
 	// read in data
 	int j_max;
 	PosType mass_max=0,R_max=0,V_max=0,minmass=1e30;
-	PosType *theta,*theta2;
+	//PosType *theta,*theta2;
 	int ncolumns = 9;
 	//int ncolumns = 13;
   
@@ -1616,7 +1618,7 @@ void Lens::readInputSimFileMillennium(bool verbose)
     if(rtmp > rmax) rmax = rtmp;
     
 		// position on lens plane
-		theta = new PosType[2];
+		//theta = new PosType[2];
     tmp_sph_point.OrthographicProjection(central_point_sphere,theta);
     
     float mass = np*8.6e8/cosmo.gethubble(),sigma=0;
@@ -1697,6 +1699,13 @@ void Lens::readInputSimFileMillennium(bool verbose)
 			//halo_pos_vec.push_back(theta);
       field_halos.back()->setX(theta);
       
+      /****** test **********
+      {
+        PosType tmpx[2];
+        field_halos.back()->getX(tmpx);
+        std::cout << "halo " << tmpx[0] << "  " << tmpx[1] << " " << field_halos.back()->get_mass()
+        << " " << field_halos.back()->get_Rmax() << " " << field_halos.back()->getID() << std::endl;
+      }*/
       
 			if(mass > mass_max) {
 				mass_max = mass;
@@ -1736,13 +1745,19 @@ void Lens::readInputSimFileMillennium(bool verbose)
         
         // Another copy of this position must be made to avoid rescaling it twice when it is converted into
         // distance on the lens plane in Lens::buildLensPlanes()
-        theta2 = new PosType[2];
-        theta2[0]=theta[0]; theta2[1]=theta[1];
+        //theta2 = new PosType[2];
+        //theta2[0]=theta[0]; theta2[1]=theta[1];
 				//halo_pos_vec.push_back(theta2);
-        field_halos.back()->setX(theta2);
+        field_halos.back()->setX(theta);
         field_halos.back()->setID(haloid);
         
-        
+        /****** test **********
+        {
+          PosType tmpx[2];
+          field_halos.back()->getX(tmpx);
+          std::cout << "gal " << tmpx[0] << "  " << tmpx[1] << " " << field_halos.back()->get_mass()
+          << " " << field_halos.back()->get_Rmax() << " " << sigma << " " << fratio << " " << field_halos.back()->getID() << std::endl;
+        }*/
 				++j;
 			}
       
@@ -1783,6 +1798,7 @@ void Lens::readInputSimFileMillennium(bool verbose)
   
   field_buffer = 0.0;
 	read_sim_file = true;
+  
 }
 
 /**
@@ -1796,7 +1812,8 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose)
 	unsigned long i,j;
 	const PosType mo=7.3113e10,M1=2.8575e10,gam1=7.17,gam2=0.201,be=0.557;
   PosType field_galaxy_mass_fraction = 0;
-  const PosType masslimit =2.0e12;
+//  const PosType masslimit =2.0e12;
+  const PosType masslimit = 0.0;
   
   
   Utilities::Geometry::SphericalPoint tmp_sph_point(1,0,0);
@@ -1811,7 +1828,7 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose)
   
   int j_max;
 	PosType mass_max=0,R_max=0,minmass=1e30;
-	PosType *theta,*theta2;
+	PosType theta[2];
   PosType center[2] = {0.0,0.0};
 	int ncolumns = 11;
   size_t haloid = 0;
@@ -1902,7 +1919,7 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose)
         if(rtmp > rmax) rmax = rtmp;
         
         // position on lens plane
-        theta = new PosType[2];
+        //theta = new PosType[2];
         tmp_sph_point.OrthographicProjection(central_point_sphere,theta);
         
         if(field_halos.size() > 0 ){
@@ -2032,12 +2049,11 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose)
           //field_halos[j]->setZlens(z);
           //field_halos[j]->initFromFile(mass*field_galaxy_mass_fraction,seed,vmax,r_halfmass*cosmo.gethubble());
           
-          // Another copy of this position must be made to avoid rescaling it twice when it is converted into
-          // distance on the lens plane in Lens::buildLensPlanes()
-          theta2 = new PosType[2];
-          theta2[0]=theta[0]; theta2[1]=theta[1];
+          // Another copy of this position must be made to avoid rescaling it twice when it is converted into distance on the lens plane in Lens::buildLensPlanes()
+          //theta2 = new PosType[2];
+          //theta2[0]=theta[0]; theta2[1]=theta[1];
           //halo_pos_vec.push_back(theta2);
-          field_halos.back()->setX(theta2);
+          field_halos.back()->setX(theta);
           field_halos.back()->setID(haloid);
           
           ++j;

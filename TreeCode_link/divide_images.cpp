@@ -234,7 +234,6 @@ void divide_images(TreeHndl i_tree,ImageInfo *imageinfo
  *	   image point flags in_image == YES
  *	   the area and area_error of each image are calculated
  *
- *	   If more than Nimagesmax images are found imageinfo the remaining points are put into the nearest images.
  *
  *	   imageinfo[i].ShouldNotRefile = 0 is set for every image.
  *

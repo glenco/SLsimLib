@@ -899,21 +899,26 @@ void PixelMap::drawBox(PosType p1[],PosType p2[],PosType value){
  * that may have irregular cell sizes.  The last point will be connected to the first point.
  */
 void PixelMap::AddCurve(ImageInfo *curve,PosType value){
+  AddCurve(curve->imagekist,value);
+  return;
+}
+
+void PixelMap::AddCurve(Kist<Point> *imagekist,PosType value){
   PosType x[2];
   
-  if(curve->imagekist->Nunits() == 0 ) return;
+  if(imagekist->Nunits() == 0 ) return;
   
-  curve->imagekist->MoveToTop();
-  x[0] = curve->imagekist->getCurrent()->x[0];
-  x[1] = curve->imagekist->getCurrent()->x[1];
-  curve->imagekist->Down();
-  for(;!(curve->imagekist->OffBottom());curve->imagekist->Down()){
-    drawline(x,curve->imagekist->getCurrent()->x,value);
-    x[0] = curve->imagekist->getCurrent()->x[0];
-    x[1] = curve->imagekist->getCurrent()->x[1];
+  imagekist->MoveToTop();
+  x[0] = imagekist->getCurrent()->x[0];
+  x[1] = imagekist->getCurrent()->x[1];
+  imagekist->Down();
+  for(;!(imagekist->OffBottom());imagekist->Down()){
+    drawline(x,imagekist->getCurrent()->x,value);
+    x[0] = imagekist->getCurrent()->x[0];
+    x[1] = imagekist->getCurrent()->x[1];
   }
-  curve->imagekist->MoveToTop();
-  drawline(x,curve->imagekist->getCurrent()->x,value);
+  imagekist->MoveToTop();
+  drawline(x,imagekist->getCurrent()->x,value);
   
   return;
 }
