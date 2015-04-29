@@ -160,7 +160,8 @@ void ImageFinding::find_crit(
       for(size_t jj=0;jj<hull.size();++jj){
         crtcurve[ii].critical_curve[jj] = *hull[jj];
         crtcurve[ii].caustic_curve_intersecting[jj] = *(hull[jj]->image);
-        crtcurve[ii].critical_center += *hull[jj];
+        crtcurve[ii].critical_center[0] += hull[jj]->x[0];
+        crtcurve[ii].critical_center[1] += hull[jj]->x[1];
       }
       
       crtcurve[ii].critical_center /= hull.size();
@@ -178,7 +179,8 @@ void ImageFinding::find_crit(
       
       for(size_t jj=0;jj<hull.size();++jj){
         crtcurve[ii].caustic_curve_outline[jj] = *hull[jj];
-        crtcurve[ii].caustic_center += *hull[jj];
+        crtcurve[ii].caustic_center[0] += hull[jj]->x[0];
+        crtcurve[ii].caustic_center[1] += hull[jj]->x[1];
       }
       
       crtcurve[ii].caustic_center[0] /= hull.size();
@@ -264,7 +266,8 @@ void ImageFinding::find_crit(
           crtcurve[ii].critical_curve[jj] = *hull[jj];
           crtcurve[ii].caustic_curve_intersecting[jj] = *(hull[jj]->image);
         }
-        crtcurve[ii].critical_center += *hull[jj];
+        crtcurve[ii].critical_center[0] += hull[jj]->x[0];
+        crtcurve[ii].critical_center[1] += hull[jj]->x[1];
       }
       
       crtcurve[ii].critical_center /= hull.size();
@@ -286,7 +289,8 @@ void ImageFinding::find_crit(
       
       for(size_t jj=0;jj<hull.size();++jj){
         crtcurve[ii].caustic_curve_outline[jj] = *hull[jj];
-        crtcurve[ii].caustic_center += *hull[jj];
+        crtcurve[ii].caustic_center[0] += hull[jj]->x[0];
+        crtcurve[ii].caustic_center[1] += hull[jj]->x[1];
       }
       
       crtcurve[ii].caustic_center[0] /= hull.size();

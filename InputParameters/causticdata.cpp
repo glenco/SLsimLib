@@ -305,14 +305,14 @@ void CausticDataStore::printfile(std::string filename,std::string paramfile,doub
   std::ofstream catalog_caustic(filename.c_str());
   
   catalog_caustic << "# column 1 redshift of source plane" << std::endl;
-  catalog_caustic << "# column 2 critical curve center x position in degrees" << std::endl;
-  catalog_caustic << "# column 3 critical curve center y position in degrees" << std::endl;
+  catalog_caustic << "# column 2 critical curve center x position in radians" << std::endl;
+  catalog_caustic << "# column 3 critical curve center y position in radians" << std::endl;
   catalog_caustic << "# column 4 critical curve average radius" << std::endl;
   catalog_caustic << "# column 5 critical curve max radius" << std::endl;
   catalog_caustic << "# column 6 critical curve min radius" << std::endl;
   catalog_caustic << "# column 7 critical curve area" << std::endl;
-  catalog_caustic << "# column 8 caustic center x position in degrees" << std::endl;
-  catalog_caustic << "# column 9 caustic center y position in degrees" << std::endl;
+  catalog_caustic << "# column 8 caustic center x position in radians" << std::endl;
+  catalog_caustic << "# column 9 caustic center y position in radians" << std::endl;
   catalog_caustic << "# column 10 caustic average radius" << std::endl;
   catalog_caustic << "# column 11 caustic max radius" << std::endl;
   catalog_caustic << "# column 12 caustic min radius" << std::endl;
@@ -327,11 +327,11 @@ void CausticDataStore::printfile(std::string filename,std::string paramfile,doub
   for(size_t i = 0; i < data.size(); ++i){
       catalog_caustic << data[i].redshift
       << " | " << data[i].crit_center[0] << " | " << data[i].crit_center[1]
-      << " | " << data[i].crit_radius[0] << " | " << data[i].crit_radius[2]
-      << " | " << data[i].crit_radius[1] << " | " << data[i].crit_area
+      << " | " << data[i].crit_radius[1] << " | " << data[i].crit_radius[0]
+      << " | " << data[i].crit_radius[2] << " | " << data[i].crit_area
       << " | " << data[i].caustic_center[0] << " | " << data[i].caustic_center[1]
-      << " | " << data[i].caustic_radius[0] << " | " << data[i].caustic_radius[2]
-      << " | " << data[i].caustic_radius[1]
+      << " | " << data[i].caustic_radius[1] << " | " << data[i].caustic_radius[0]
+      << " | " << data[i].caustic_radius[2]
       << " | " << data[i].caustic_area << " | " << data[i].crit_type
       << std::endl;
   }
