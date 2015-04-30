@@ -365,7 +365,7 @@ void LensHaloFit::FindLensSimple(
   perturb_modes[2] *= -1;  // checked
   
   // source position :
-  y[0] = mods[i]*scale;
+  y[0] = mods[i]*scale; std::cout << "iii = " << i << std::endl;
   y[1] = mods[i+1]*scale;
   // now in radians.
     
@@ -396,11 +396,11 @@ void LensHaloFit::FindLensSimple(
     
 
   // Multiplying the first 3 modes by scale :
-  for(i=0;i<perturb_Nmodes;i++) perturb_modes[i] *= scale ; // Important step !
+  for(i=3;i<perturb_Nmodes;i++) perturb_modes[i] *= scale ; // Important step !
   // mod[0,1,2] are now in radians.
   // mod[3,4,5,...] are now in radians.
-
-  for(i=3;i<perturb_Nmodes;i++) perturb_modes[i] *= Dl ;
+    
+  // for(i=3;i<perturb_Nmodes;i++) perturb_modes[i] *= Dl ;
   // mod[0,1,2] are in radians.
   // mod[3,4,5,...] are now in PhysMpc.
 
@@ -408,7 +408,7 @@ void LensHaloFit::FindLensSimple(
   // assert(Dl*(1+zl) + Dls*(1+zs) - Ds*(1+zs) == 0.);
   // std::cout << "Dl (1+zl) + Dls (1+zs) = " << Dl*(1+zl) + Dls*(1+zs) << " , Ds (1+zs) = " << Ds*(1+zs) << std::endl ;
   
-  for(i=0;i<perturb_Nmodes;i++) perturb_modes[i] /= (4*pi*Grav * Dls) ; // OR TRY WITH Dls -> Dls * Dl / Ds IF IT DOES NOT WORK.
+  for(i=0;i<perturb_Nmodes;i++) perturb_modes[i] /= (4*pi*Grav * Dls * Dl / Ds) ; // OR TRY WITH Dls -> Dls * Dl / Ds IF IT DOES NOT WORK.
   // mod[0,1,2] are now in radians / ((PhysMpc / mass) * PhysMpc) = mass / PhysMpc^2.
   // mod[3,4,5,...] are now in PhysMpc / ((PhysMpc / mass) * PhysMpc) = mass / PhysMpc for beta = 1.
   
