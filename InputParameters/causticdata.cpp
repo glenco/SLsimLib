@@ -140,7 +140,7 @@ void CausticDataStore::readfile(std::string filename){
 	 }*/
 
 		for(int l=0;l<ncolumns; l++){
-			pos = myline.find(space);
+			pos = myline.find("|");
 			strg.assign(myline,0,pos);
 			buffer << strg;
       switch (l) {
@@ -158,15 +158,15 @@ void CausticDataStore::readfile(std::string filename){
           break;
         case 3:
           buffer >> mydouble;
-          tmp_data.crit_radius[0] = mydouble;
+          tmp_data.crit_radius[1] = mydouble;
           break;
         case 4:
           buffer >> mydouble;
-          tmp_data.crit_radius[2] = mydouble;
+          tmp_data.crit_radius[0] = mydouble;
           break;
         case 5:
           buffer >> mydouble;
-          tmp_data.crit_radius[1] = mydouble;
+          tmp_data.crit_radius[2] = mydouble;
           break;
         case 6:
           buffer >> mydouble;
@@ -183,15 +183,15 @@ void CausticDataStore::readfile(std::string filename){
           break;
         case 9:
           buffer >> mydouble;
-          tmp_data.caustic_radius[0] = mydouble;
+          tmp_data.caustic_radius[1] = mydouble;
           break;
         case 10:
           buffer >> mydouble;
-          tmp_data.caustic_radius[2] = mydouble;
+          tmp_data.caustic_radius[0] = mydouble;
           break;
         case 11:
           buffer >> mydouble;
-          tmp_data.caustic_radius[1] = mydouble;
+          tmp_data.caustic_radius[2] = mydouble;
           break;
         case 12:
           buffer >> mydouble;
