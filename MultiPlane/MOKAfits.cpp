@@ -720,7 +720,7 @@ void LensHaloMassMap::readMap(){
           int ii = i-int(Nnx/2-map->nx/2);
           int jj = j-int(Nny/2-map->ny/2);
           
-          map->alpha1[ii+map->nx*jj] = float(realsp[i+Nnx*j]/Nnx/Nny);
+          map->alpha1[ii+map->nx*jj] = -1*float(realsp[i+Nnx*j]/Nnx/Nny);
         }
     }
     
@@ -753,7 +753,7 @@ void LensHaloMassMap::readMap(){
           int ii = i-int(Nnx/2-map->nx/2);
           int jj = j-int(Nny/2-map->ny/2);
           
-          map->alpha2[ii+map->nx*jj] = float(realsp[i+Nnx*j]/Nnx/Nny);
+          map->alpha2[ii+map->nx*jj] = -1*float(realsp[i+Nnx*j]/Nnx/Nny);
         }
       }
     }
