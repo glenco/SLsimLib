@@ -310,8 +310,8 @@ void LensHaloFit::FindLensSimple(
   
   if(Nimages == 1){
     for(i=1;i<perturb_Nmodes;++i) perturb_modes[i] = 0.0;
-    y[0] = imageinfo[0].centroid[0];
-    y[1] = imageinfo[0].centroid[1];
+    y[0] = imageinfo[0].centroid[0]; // (radians)
+    y[1] = imageinfo[0].centroid[1]; // (radians)
     
     return ;
   }
@@ -337,18 +337,23 @@ void LensHaloFit::FindLensSimple(
     xob[i][0] = imageinfo[i].centroid[0]/scale; // xob is rescaled here (i.e. values = xob / xobmax ~ 1)
     xob[i][1] = imageinfo[i].centroid[1]/scale; // i.e. xob is dimensionless
     
-    dx_sub[i][0] /= scale;
-    dx_sub[i][1] /= scale;
+    dx_sub[i][0] /= scale; // same with dx_sub now in units of scale
+    dx_sub[i][1] /= scale; // in units of scale
     //std::printf("xob = %e %e  dx = %e %e\n",xob[i][0],xob[i][1],dx_sub[i][0],dx_sub[i][1]);
   }
   
-  x_center[0] /= scale; // x_center made non-dimensional
+  x_center[0] /= scale; // x_center now in units of scale
   x_center[1] /= scale;
   
   //ERROR_MESSAGE();
   ElliptisizeLens(Nimages,Nsources,1,pairing,xob,x_center,xg,0,perturb_beta,perturb_Nmodes
                   ,mods,dx_sub,&re2,q); // The -1 in after perturb_Nmodes WAS MAKING FINDLENSSIMPLE UNSTABLE !
   
+  // At this point we should have :
+  // mod[0] = 0
+  // mod[1] and mod[2] : in units of scale (i.e. dimensionless)
+  // mod[3] and further : in units of scale^(beta-1) = 1 (i.e. no units) for beta = 1
+    
   // Assigning the modes :
   for(i=1;i<perturb_Nmodes;++i) perturb_modes[i] = mods[i];
   cout << "# " ;
@@ -359,14 +364,24 @@ void LensHaloFit::FindLensSimple(
   perturb_modes[1] *= -1;  // checked
   perturb_modes[2] *= -1;  // checked
   
-  // source position (in radians) :
-  y[0] = mods[i]*scale;
+  // source position :
+  y[0] = mods[i]*scale; std::cout << "iii = " << i << std::endl;
   y[1] = mods[i+1]*scale;
-  
+  // now in radians.
+    
   // std::cout << "i = " << i << std::endl ;
   std::cout << "scale = " << scale << std::endl;
   std::cout << "source : y[0] = " << y[0] << " , y[1] = " << y[1] << std::endl;
   
+  // For convenience :
+  PosType zl = zlens ;
+  PosType zs = zsource_reference ;
+    
+  // Converting source position to physical angle :
+  y[0] *= Dl * (1+zl) / (Ds * (1+zs)) ;
+  y[1] *= Dl * (1+zl) / (Ds * (1+zs)) ;
+  // y[0] and y[1] are still in radians.
+    
   // dx_sub and x_center back in radians :
   for(i=0;i<Nimages;++i)
   {
@@ -378,29 +393,50 @@ void LensHaloFit::FindLensSimple(
   
   //Einstein_ro = 0.0; // the monople is now included in the modes
   //sigma = 0.0;
-  
-  // Multiplying the first 3 modes by the scale :
-  for(i=3;i<perturb_Nmodes;i++) perturb_modes[i] *= scale ; // Important step !
-  // mod[0,1,2] are now also in radians
-  
-  // test solutions (see below) !
+    
 
-  for(i=3;i<perturb_Nmodes;i++) perturb_modes[i] *= Dl ;
-  // mod[0,1,2] are now in Mpc (comoving).
+  // Multiplying the first 3 modes by scale :
+  for(i=3;i<perturb_Nmodes;i++) perturb_modes[i] *= scale ; // Important step !
+  // mod[0,1,2] are now in radians.
+  // mod[3,4,5,...] are now in radians.
+    
+  // for(i=3;i<perturb_Nmodes;i++) perturb_modes[i] *= Dl ;
+  // mod[0,1,2] are in radians.
+  // mod[3,4,5,...] are now in PhysMpc.
+
+  // Check that Dl*(1+zl) + Dls*(1+zs) = Ds*(1+zs), i.e. that D*(1+z) are here the comoving distances :
+  // assert(Dl*(1+zl) + Dls*(1+zs) - Ds*(1+zs) == 0.);
+  // std::cout << "Dl (1+zl) + Dls (1+zs) = " << Dl*(1+zl) + Dls*(1+zs) << " , Ds (1+zs) = " << Ds*(1+zs) << std::endl ;
   
-  for(i=0;i<perturb_Nmodes;i++) perturb_modes[i] /= (4*pi*Grav * Dls * (1+zsource_reference)) ;
-  // mod[4,5,...] are now in radian * mass / (PhysMpc * Mpc) = mass / (PhysMpc * Mpc).
-  // mod[0,1,2] are now in mass*Mpc/(PhysMpc*Mpc) = mass / PhysMpc.
+  for(i=0;i<perturb_Nmodes;i++) perturb_modes[i] /= (4*pi*Grav * Dls * Dl / Ds) ; // OR TRY WITH Dls -> Dls * Dl / Ds IF IT DOES NOT WORK.
+  // mod[0,1,2] are now in radians / ((PhysMpc / mass) * PhysMpc) = mass / PhysMpc^2.
+  // mod[3,4,5,...] are now in PhysMpc / ((PhysMpc / mass) * PhysMpc) = mass / PhysMpc for beta = 1.
   
+
+    
+  // FRANKENSTEIN BOX : **************************
+    
+    // for(i=0;i<perturb_Nmodes;i++) perturb_modes[i] *= 4.1 ;
+    
+    // for(i=3;i<perturb_Nmodes;i++) perturb_modes[i] *= Ds * (1+zs) / Dl ;
+    // mod[3,4,5,...] are now in (mass/PhysMpc)*(ComMpc/PhysMpc) = mass * ComMpc / (PhysMpc)^2
+    
+
+
+  // ********************************************* 
+    
+    
+  // ================================================
+  // So when the modes go out they are in the units :
+  // mod[0,1,2] in mass / PhysMpc^2.
+  // mod[3,4,5,...] in mass / PhysMpc.
+  // ================================================
+    
+    
   // Print modes :
   // for(i=0;i<perturb_Nmodes;i++) std::cout << perturb_modes[i] << " " ;
   // std::cout << std::endl ;
-
-  // Converting source position to physical angle :
-  y[0] *= Dl * (1+zlens) / (Ds * (1+zsource_reference)) ;
-  y[1] *= Dl * (1+zlens) / (Ds * (1+zsource_reference)) ;
-
-  
+    
   free_dmatrix(xob,0,Nimages-1,0,1);
   free_dmatrix(xg,0,1,0,1);
   free_dvector(mods,0,perturb_Nmodes + 2*Nsources + 1);
@@ -410,6 +446,13 @@ void LensHaloFit::FindLensSimple(
   
   return ;
 }
+
+// OPERATIONS ON THE MODES BEFORE I DISCOVER THE PROBLEM :
+// for(i=3;i<perturb_Nmodes;i++) perturb_modes[i] *= scale ;
+// for(i=3;i<perturb_Nmodes;i++) perturb_modes[i] *= Dl ;
+// for(i=0;i<perturb_Nmodes;i++) perturb_modes[i] /= (4*pi*Grav * Dls * (1+zs)) ;
+
+
 
 
 
@@ -474,16 +517,16 @@ double LensHaloFit::ElliptisizeLens(
                                     ,int Nsources /// number of sources
                                     ,int Nlenses  /// number of lens centers
                                     ,int *pairing  /// [0...Nimages-1] which source each image belongs to, indexed 1 through Nsources
-                                    ,double **xob  /// [0...Nimages-1][0...1]  observed image positions
-                                    ,double *x_center  /// x_center[][] - ??? expected center of lens
+                                    ,double **xob  /// [0...Nimages-1][0...1]  observed image positions (in units of scale when used in LensHaloFit::FindLensSimple)
+                                    ,double *x_center  /// x_center[][] - ??? expected center of lens (in units of scale when used in LensHaloFit::FindLensSimple)
                                     ,double **xg  /// ??? [0...Nlenses-1][0...1] centers of additional lenses
                                     ,double sigG  /// amount by which the center of the lens is allowed to vary
                                     ,double beta  /// - slope of density profile  kappa propto r^-beta
                                     ,int Nmod    /// number of modes used in lens fitting, this must be greater then ???
-                                    ,double *mod  /// Axial modes of lens model
-                                    ,double **dx_sub  /// [0,Nimages-1][0,1] deflection offset for each image caused by any masses not included in the host model (ex substructure)
-                                    ,double *re2     /// Einstein radius of additional lens
-                                    ,double *q       /// output, see comment
+                                    ,double *mod  /// Axial modes of lens model (to be computed here)
+                                    ,double **dx_sub  /// [0,Nimages-1][0,1] deflection offset for each image caused by any masses not included in the host model, ex substructure (in units of scale when used in LensHaloFit::FindLensSimple)
+                                    ,double *re2     /// Einstein radius of additional lens (to be computed here)
+                                    ,double *q       /// output, see comment (to be computed here)
 ){
   
   int iter,i;
@@ -519,8 +562,10 @@ double LensHaloFit::ElliptisizeLens(
   NmodT=Nmod;
   sigGT=sigG;
   
+  // clean modes to zero (in case it was not done before calling the function)
   for(i=1;i<=Nmod+2*Nsources+1;++i) mod[i]=0.0;
   
+  // copying the input objects
   for(i=0;i<Nimages;++i){
     xobT[i][0] = xob[i][0];
     xobT[i][1] = xob[i][1];
@@ -541,6 +586,11 @@ double LensHaloFit::ElliptisizeLens(
   // find lens with degeneracy information
   find_lens(NimagesT,NsourcesT,pairingT,xobT,x_center,betaT,NmodT,&degenT,modT,vT,dx_subT);
   
+  // Looking inside find_lens, we have :
+  // mod[0] : not touched, it is zero
+  // mod[1] and mod[2] : in units of scale when used in LensHaloFit::FindLensSimple
+  // mod[3] and further : in units of scale^(beta-1) = 1 (i.e. no units) when used in LensHaloFit::FindLensSimple and for beta = 1
+    
   //std::printf("found model\n");
   for(i=1;i<=Nmod+2*Nsources+1;++i) mod[i] = modT[i];
   
@@ -569,7 +619,7 @@ double LensHaloFit::ElliptisizeLens(
   if(sigG == 0.0){   /// keep center of lens fixed
     if(Nlenses==1 || count>1){
       Nmin=2;
-      powellD(q,xi,Nmin,1.0e-18,&iter,&sm,minEllip);
+      powellD(q,xi,Nmin,1.0e-18,&iter,&sm,minEllip); // This should not affect the units of the modes.
     }else{
       Nmin=3;
       if(count == 1) q[3]=1.0e-5;
