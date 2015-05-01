@@ -235,25 +235,25 @@ public:
       return it;
   }
   /// returns iterator pointing to first entry with data
-  Kist<Data>::iterator TopIt(){
+  Kist<Data>::iterator TopIt() const{
       Kist<Data>::iterator it ;
       it = top;
       return it;
   }
   /// returns iterator pointing to last entry with data
-  Kist<Data>::iterator BottomIt(){
+  Kist<Data>::iterator BottomIt() const{
     Kist<Data>::iterator it;
     it = bottom;
     return it;
   }
   
-  Kist<Data>::iterator begin(){
+  Kist<Data>::iterator begin() const{
     Kist<Data>::iterator it;
     it = bottom;
     return it;
   }
   
-  Kist<Data>::iterator end(){
+  Kist<Data>::iterator end() const{
     Kist<Data>::iterator it;
     it = NULL;
     return it;
@@ -261,14 +261,16 @@ public:
 
 	// status
 	/// Number of elements in list.
-	unsigned long Nunits(){return Number;}
+	unsigned long Nunits() const {return Number;}
 	bool AtTop();
 	bool AtBottom();
 	void Print();
 
 	void TranformPlanes();
 	bool AreDataUnique();
-	void SetInImage(Boo value);
+  void SetInImage(Boo value);
+  // check is all in_image flags are set to value
+  bool CheckInImage(Boo value);
 
   /// Test if Down() (or --) was last called from last element in list.  Used to stop a for loop. 
   bool OffBottom(){
@@ -298,7 +300,6 @@ public:
     return vec;
   }
   
-
 private:
 
 	KistUnit<Data> * pop_from_reserve();
@@ -681,12 +682,33 @@ template <class Data> void Kist<Data>::SetInImage(Boo value){
 
 	if(Nunits() == 0) return;
 
+  KistUnit<Data> *temp = current;
 	MoveToTop();
 	do{
 		getCurrent()->in_image = value;
 		getCurrent()->image->in_image = value;
 	}while(Down());
+  
+  current = temp;
 }
+template <class Data> bool Kist<Data>::CheckInImage(Boo value){
+  
+  if(Nunits() == 0) return true;
+  
+  KistUnit<Data> *temp = current;
+  MoveToTop();
+  do{
+    if(getCurrent()->in_image != value){
+        current = temp;
+      return false;
+    }
+  }while(Down());
+  
+  current = temp;
+
+  return true;
+}
+
 /**
  * \brief copy contents of kist into this kist.  Destroys former content and leaves current of kist in
  * new place.
@@ -709,9 +731,9 @@ template <class Data>
 void Kist<Data>::copy(const Kist<Data> &kist){
   Empty();
   if(kist.Nunits() == 0) return;
-  Kist<Data>::iterator it = kist.getBottomIt();
+  Kist<Data>::iterator it = kist.BottomIt();
   for(;!(it.atend()) ;++it){
-    InsertAfterCurrent(*it);
+    InsertAfterCurrent(&(*it));
     Down();
   };
 }

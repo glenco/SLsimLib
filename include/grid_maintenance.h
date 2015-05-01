@@ -50,6 +50,7 @@ struct Grid{
   int getNgrid_block(){return Ngrid_block;}
   /// return initial range of gridded region
   double getInitRange(){return i_tree->getTop()->boundary_p2[0] - i_tree->getTop()->boundary_p1[0];}
+  Point_2d getInitCenter();
   Point * RefineLeaf(LensHndl lens,Point *point);
   Point * RefineLeaves(LensHndl lens,std::vector<Point *>& points);
   void ClearAllMarks();
@@ -57,6 +58,10 @@ struct Grid{
   void test_mag_matrix();
   void writeFits(const double center[],size_t Npixels,double resolution,LensingVariable lensvar,std::string filename);
   void writeFits(const double center[],size_t Nx,size_t Ny,double resolution,LensingVariable lensvar,std::string filename);
+  void writePixeFits(size_t Nx           /// number of pixels in image in x dimension
+                    ,LensingVariable lensvar  /// which quantity is to be displayed
+                    ,std::string filename     /// file name for image -- .kappa.fits, .gamma1.fits, etc will be appended
+                    );
   void writeFitsVector(const double center[],size_t Npixels,double resolution,LensingVariable lensvar,std::string filename);
   PixelMap writePixelMap(const double center[],size_t Npixels,double resolution,LensingVariable lensvar);
   PixelMap writePixelMap(const double center[],size_t Nx,size_t Ny,double resolution,LensingVariable lensvar);
@@ -95,7 +100,7 @@ private:
 typedef struct Grid* GridHndl;
 
 /// enumerates the types of critical curves. ND is "not defined".
-enum CritType {ND,radial,tangential};
+enum CritType {ND,radial,tangential,pseudo};
 // in image_finder_kist.c
 namespace ImageFinding{
   
@@ -327,6 +332,10 @@ namespace ImageFinding{
  
   void find_crit2(LensHndl lens,GridHndl grid,std::vector<CriticalCurve> &critcurve,int *Ncrits
                   ,double resolution,bool *orderingsuccess,bool ordercurve,bool dividecurves,double invmag_min = 0.0,bool verbose = false);
+  
+  CritType find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
+                                 ,PosType pseudolimit,LensHndl lens,GridHndl grid
+                                 ,PosType resolution,Kist<Point> &paritypoints);
   
   void find_contour(LensHndl lens,GridHndl grid,std::vector<CriticalCurve> &contour,int *Ncrits,PosType resolution,bool *orderingsuccess,bool ordercurve, bool dividecurves, double contour_value,LensingVariable contour_type,bool verbose = false);
   

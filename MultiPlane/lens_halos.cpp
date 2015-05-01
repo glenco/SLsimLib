@@ -127,7 +127,8 @@ LensHaloNFW::LensHaloNFW(float my_mass,float my_Rmax,PosType my_zlens,float my_c
     
   make_tables();
 	gmax = InterpolateFromTable(gtable, xmax);
-    
+  
+  
   set_slope(1);
   /// If the axis ratio given in the parameter file is set to 1 all ellipticizing routines are skipped.
   if(fratio!=1){
@@ -135,13 +136,19 @@ LensHaloNFW::LensHaloNFW(float my_mass,float my_Rmax,PosType my_zlens,float my_c
     if(getEllipMethod()==Fourier){
       std::cout << "NFW constructor: slope set to " << get_slope() << std::endl;
       calcModes(fratio, get_slope(), pa, mod); // to ellipticize potential instead of  kappa take calcModes(fratio, 2-get_slope(), pa, mod);
+      std::cout << "NFW constructor: Fourier modes computed" << std::endl;
       for(int i=1;i<Nmod;i++){
         if(mod[i]!=0){set_flag_elliptical(true);};
       }
     }else set_flag_elliptical(true);
+    if (getEllipMethod()==Pseudo or getEllipMethod()==Fourier){
+      set_norm_factor();
+    }
   }else set_flag_elliptical(false);
-    
-    // std::cout << mass << " " << rscale << std::endl;
+  
+
+  
+  
  }
 
 /* LensHalo::LensHalo(mass,Rmax,zlens, // base
@@ -182,6 +189,9 @@ LensHaloNFW::LensHaloNFW(InputParams& params)
             if(mod[i]!=0){set_flag_elliptical(true);};
         }
       }else set_flag_elliptical(true);
+      if (getEllipMethod()==Pseudo){
+        set_norm_factor();
+      }
     }else set_flag_elliptical(false);
 }
 
@@ -273,7 +283,7 @@ PosType LensHaloNFW::InterpolateModes(int whichmod, PosType q, PosType b){
 PosType LensHaloNFW::InterpolateFromTable(PosType *table, PosType y) const{
 	int j;
 	j=(int)(y/maxrm*NTABLE);
-
+  //std::cout << "Interp: " << std::setprecision(7) << y-0.95 << " " << std::setprecision(7) << xtable[j]-0.95 << " " << xtable[j+1] <<std::endl;
 	assert(y>=xtable[j] && y<=xtable[j+1]);
 	if (j==0)
 		{
@@ -294,7 +304,8 @@ void LensHaloNFW::assignParams(InputParams& params){
 	if(!params.get("main_concentration",rscale)) error_message1("main_concentration",params.filename());
   if(!params.get("main_axis_ratio",fratio)){fratio=1; std::cout << "main_axis_ratio not defined in file " << params.filename() << ", hence set to 1." << std::endl;};
   if(!params.get("main_pos_angle",pa)){pa=0; std::cout << "main_pos_angle not defined in file " << params.filename() << ", hence set to 0." << std::endl;};
-  if(!params.get("main_ellip_method",main_ellip_method)){if(fratio!=1){main_ellip_method=Schramm;std::cout << "main_ellip_method is not defined in file " << params.filename() << ", hence set to Schramm." << endl;};};
+  if(!params.get("main_ellip_method",main_ellip_method)){if(fratio!=1){main_ellip_method=Pseudo;std::cout << "main_ellip_method is not defined in file " << params.filename() << ", hence set to Pseudo." << endl;};};
+
   
 
 	rscale = Rmax/rscale; // was the concentration
@@ -367,6 +378,7 @@ LensHaloPseudoNFW::LensHaloPseudoNFW(
                                      ,float my_fratio          /// axis ratio
                                      ,float my_pa              /// position angle
                                      ,int my_stars_N           /// number of stars, not yet implanted
+                                     ,EllipMethod my_ellip_method /// ellipticizing method
                                      )
   {
     mass = my_mass;
@@ -392,6 +404,9 @@ LensHaloPseudoNFW::LensHaloPseudoNFW(
             if(mod[i]!=0){set_flag_elliptical(true);};
         }
       }else set_flag_elliptical(true);
+      if (getEllipMethod()==Pseudo){
+        set_norm_factor();
+      }
     }else set_flag_elliptical(false);
 
 }
@@ -411,6 +426,9 @@ LensHaloPseudoNFW::LensHaloPseudoNFW(InputParams& params)
             if(mod[i]!=0){set_flag_elliptical(true);};
         }
       }else set_flag_elliptical(true);
+      if (getEllipMethod()==Pseudo){
+        set_norm_factor();
+      }
     }else set_flag_elliptical(false);
 }
 
@@ -478,7 +496,7 @@ void LensHaloPseudoNFW::assignParams(InputParams& params){
   if(!params.get("main_slope",beta)) error_message1("main_slope",params.filename());
   if(!params.get("main_axis_ratio",fratio)){fratio=1; std::cout << "main_axis_ratio not defined in file " << params.filename() << ", hence set to 1." << std::endl;};
   if(!params.get("main_pos_angle",pa)){pa=0; std::cout << "main_pos_angle not defined in file " << params.filename() << ", hence set to 0." << std::endl;};
-  if(!params.get("main_ellip_method",main_ellip_method)){if(fratio!=1){main_ellip_method=Schramm;std::cout << "main_ellip_method is not defined in file " << params.filename() << ", hence set to Schramm. CAUTION: Ellipticizing methods have not been tested with PseudoNFW yet!" << endl;};};
+  if(!params.get("main_ellip_method",main_ellip_method)){if(fratio!=1){main_ellip_method=Pseudo;std::cout << "main_ellip_method is not defined in file " << params.filename() << ", hence set to Pseudo. CAUTION: Ellipticizing methods have not been tested with PseudoNFW yet!" << endl;};};
   
   rscale = Rmax/rscale; // was the concentration
   xmax = Rmax/rscale;
@@ -515,7 +533,10 @@ LensHaloPowerLaw::LensHaloPowerLaw(
     beta=my_beta;
     fratio=my_fratio, pa=my_pa, main_ellip_method=my_ellip_method, stars_N=my_stars_N;
     stars_implanted = false;
-                                     
+   // rscale = xmax = 1.0; // Commented in order to have a correct computation of the potential term in the time delay.
+   // Replacing it by :
+    rscale = 1;
+    xmax = Rmax/rscale ; /// xmax needs to be in initialized before the mass_norm_factor for Pseudo ellip method is calculated via  set_norm_factor()
     //mnorm = renormalization(get_Rmax());
     //std::cout << "PA in PowerLawConstructor: " << pa << std::endl;
                                      
@@ -528,17 +549,24 @@ LensHaloPowerLaw::LensHaloPowerLaw(
             if(mod[i]!=0){set_flag_elliptical(true);};
           }
         }else set_flag_elliptical(true);
+        if (getEllipMethod()==Pseudo){
+         set_norm_factor();
+        }
     }else set_flag_elliptical(false);
-    // rscale = xmax = 1.0; // Commented in order to have a correct computation of the potential term in the time delay.
-    // Replacing it by :
-    rscale = 1;
-    xmax = Rmax/rscale ;
+
+
 }
 
 LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
 	assignParams(params);
     /// If the 2nd argument in calcModes(fratio, slope, pa, mod), the slope, is set to 1 it yields an elliptical kappa contour of given axis ratio (fratio) at the radius where the slope of the 3D density profile is -2, which is defined as the scale radius for the NFW profile. To ellipticize the potential instead of the convergence use calcModes(fratio, 2-get_slope(), pa, mod), this produces also an ellipse in the convergence map, but at the radius where the slope is 2-get_slope().
     /// If the axis ratio given in the parameter file is set to 1 all ellipticizing routines are skipped.
+  
+    // rscale = xmax = 1.0; // Commented in order to have a correct computation of the potential term in the time delay.
+    // Replacing it by :
+    rscale = 1;
+    xmax = Rmax/rscale;
+  
     if(fratio!=1){
       
         //for(int islope=1;islope<20;islope++){
@@ -570,6 +598,9 @@ LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
           if(mod[i]!=0){set_flag_elliptical(true);};
         }
       }else set_flag_elliptical(true);
+      if (getEllipMethod()==Pseudo){
+        set_norm_factor();
+      }
     }else set_flag_elliptical(false);
 
   // rscale = xmax = 1.0;
@@ -577,11 +608,8 @@ LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
   mnorm = 1. ;
   //std::cout << "mass normalization: " << mnorm << std::endl;
 
-    // rscale = xmax = 1.0; // Commented in order to have a correct computation of the potential term in the time delay.
-    // Replacing it by :
-    rscale = 1;
-    xmax = Rmax/rscale;
-    // Be careful : the other constructors have not been changed !
+
+
 }
 
 void LensHaloPowerLaw::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed){
@@ -594,12 +622,11 @@ void LensHaloPowerLaw::assignParams(InputParams& params){
   if(!params.get("main_mass",mass)) error_message1("main_mass",params.filename());
   if(!params.get("main_Rmax",Rmax)) error_message1("main_Rmax",params.filename());
   if(!params.get("main_zlens",zlens)) error_message1("main_zlens",params.filename());
-  if(!params.get("main_slope",beta)) error_message1("main_slope, example -1",params.filename());
+  if(!params.get("main_slope",beta)) error_message1("main_slope, example 1",params.filename());
   //if(beta>=2.0) error_message1("main_slope < 2",params.filename());
   if(!params.get("main_axis_ratio",fratio)){fratio=1; std::cout << "main_axis_ratio not defined in file " << params.filename() << ", hence set to 1." << std::endl;};
   if(!params.get("main_pos_angle",pa)){pa=0.0; std::cout << "main_pos_angle not defined in file " << params.filename() << ", hence set to 0." << std::endl;};
-  if(!params.get("main_ellip_method",main_ellip_method)){if(fratio!=1){main_ellip_method=Schramm;std::cout << "main_ellip_method is not defined in file " << params.filename() << ", hence set to Schramm." << endl;};};
-  
+  if(!params.get("main_ellip_method",main_ellip_method)){if(fratio!=1){main_ellip_method=Pseudo;std::cout << "main_ellip_method is not defined in file " << params.filename() << ", hence set to Pseudo." << endl;};};
 
 	if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
     else if(stars_N){
@@ -808,65 +835,80 @@ void LensHalo::force_halo_asym(
 		,bool subtract_point /// if true contribution from a point mass is subtracted
     ,PosType screening   /// the factor by which to scale the mass for screening of the point mass subtraction
 		){
-	//std::ofstream dfunc;
-	//dfunc.open( "dfunc.dat", ios::out | ios::app );
-  double rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
-    
-
-	if(rcm2 < 1e-20) rcm2 = 1e-20;
-
+      
+  float r_size=get_rsize()*Rmax;
+  assert(r_size<=Rmax);
+  PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
+  PosType alpha_tmp[2],kappa_tmp,gamma_tmp[2],phi_tmp;
+  if(rcm2 < 1e-20) rcm2 = 1e-20;
+  
+  //std::cout << "rsize , rmax,  mass_norm =" << r_size << " , " << Rmax << " , " << mass_norm_factor << std::endl;
+      
 	/// intersecting, subtract the point particle
-	if(rcm2 < Rmax*Rmax)
-  {
-		double r = sqrt(rcm2);///rscale;
-        //std::cout << sqrt(rcm2) << " " << rscale << " " << Rmax << std::endl;
-		double theta;
-        
+  if(rcm2 < Rmax*Rmax){
+    double r = sqrt(rcm2); ///rscale;
+    double theta;
     if(xcm[0] == 0.0 && xcm[1] == 0.0) theta = 0.0;
     else theta=atan2(xcm[1],xcm[0]);
-
-		// double xmax = Rmax/rscale;
-    PosType alpha_tmp[2],kappa_tmp,gamma_tmp[2],phi_tmp;
-    //std::cout << "outside akg2: " << pa << " " << xcm[0] << " " << xcm[1] <<  std::endl;
-    
-    
-    if(main_ellip_method==Pseudo) {alphakappagamma_asym(r,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
-    if(main_ellip_method==Fourier){alphakappagamma1asym(r,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
-    if(main_ellip_method==Schramm){alphakappagamma2asym(r,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
-    if(main_ellip_method==Keeton) {alphakappagamma3asym(r,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
-    
-
-    
-    //std::cout<< "kappa_tmp: " << kappa_tmp << std::endl;
-		//alpha[0] +=  alpha_tmp[0]*prefac*xcm[0] + tmp*xcm[0];
-    //alpha[1] +=  alpha_tmp[1]*prefac*xcm[1] + tmp*xcm[1];
-    
-		alpha[0] +=  alpha_tmp[0]; //*xcm[0];
-    alpha[1] +=  alpha_tmp[1]; //*xcm[1];
-    //std::cout<< "alpha[1] " << alpha_tmp[1]*xcm[1] << std::endl;
-    
-    
-    *kappa += kappa_tmp;
-    gamma[0] += 0.5*gamma_tmp[0];
-    gamma[1] += 0.5*gamma_tmp[1];
-    
-    *phi += phi_tmp;
-    
-    if(subtract_point){
-      PosType tmp =  screening*mass/pi/rcm2;
-      alpha[0] +=  tmp*xcm[0];
-      alpha[1] +=  tmp*xcm[1];
-
-      tmp = 2.0*tmp/rcm2;
-      gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
-      gamma[1] += xcm[0]*xcm[1]*tmp;
+    if(rcm2 > r_size*r_size){
+      PosType alpha_iso[2],alpha_ellip[2];
+      alpha_ellip[0] = alpha_ellip[1] = 0;
+      if(main_ellip_method==Pseudo){alphakappagamma_asym(r_size,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
+      if(main_ellip_method==Fourier){alphakappagamma1asym(r_size,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
+      if(main_ellip_method==Schramm){alphakappagamma2asym(r_size,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
+      if(main_ellip_method==Keeton){alphakappagamma3asym(r_size,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
+      alpha_ellip[0]=alpha_tmp[0]/Rmax;
+      alpha_ellip[1]=alpha_tmp[1]/Rmax;
       
-      *phi += 0.5 * log(rcm2) * mass / pi ;
+      double f1 = (Rmax - r)/(Rmax - r_size),f2 = (r - r_size)/(Rmax - r_size);
+      
+      PosType tmp = mass/Rmax/pi/r;
+      alpha_iso[0] = -1.0*tmp*xcm[0];
+      alpha_iso[1] = -1.0*tmp*xcm[1];
+      
+      alpha[0] += alpha_iso[0]*f2 + alpha_ellip[0]*f1;
+      alpha[1] += alpha_iso[1]*f2 + alpha_ellip[1]*f1;
+      
+      {
+        PosType tmp = -2.0*mass_norm_factor*mass/rcm2/pi/rcm2; // dev by mass_norm_factor
+        gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+        gamma[1] += xcm[0]*xcm[1]*tmp;
+        
+        *phi += 0.5 * log(rcm2) * mass_norm_factor*mass / pi ; //  dev by mass_norm_factor
+      }
+        
+    }else{
+      if(main_ellip_method==Pseudo){alphakappagamma_asym(r,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
+      if(main_ellip_method==Fourier){alphakappagamma1asym(r,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
+      if(main_ellip_method==Schramm){alphakappagamma2asym(r,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
+      if(main_ellip_method==Keeton){alphakappagamma3asym(r,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
+      
+      alpha[0] +=  alpha_tmp[0]/Rmax;
+      alpha[1] +=  alpha_tmp[1]/Rmax;
+
+      *kappa += kappa_tmp;
+      gamma[0] += 0.5*gamma_tmp[0];
+      gamma[1] += 0.5*gamma_tmp[1];
+      
+      *phi += phi_tmp;
+      
+      if(subtract_point){
+        PosType tmp =  screening*mass_norm_factor*mass/pi/rcm2; // *mass_norm_factor
+        alpha[0] +=  tmp*xcm[0];
+        alpha[1] +=  tmp*xcm[1];
+
+        tmp = 2.0*tmp/rcm2;
+        gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+        gamma[1] += xcm[0]*xcm[1]*tmp;
+        
+        *phi += 0.5 * log(rcm2) * mass_norm_factor*mass / pi ; // mass_norm_factor
+      }
     }
+    
   }
 	else // the point particle is not subtracted
 	{
-		if (subtract_point == false)
+    if (subtract_point == false)
 		{
 			PosType prefac = screening*mass/rcm2/pi;
 			alpha[0] += -1.0 * prefac * xcm[0];
@@ -894,7 +936,7 @@ void LensHalo::force_halo_asym(
       {
         force_stars(alpha,kappa,gamma,xcm);
       }
-      
+  
 	return;
 }
 
@@ -914,7 +956,7 @@ void LensHaloRealNSIE::force_halo(
 	PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
 	if(rcm2 < 1e-20) rcm2 = 1e-20;
 
-  //**** test line
+  // **** test line
 
 	if(rcm2 < Rmax*Rmax){
 		PosType ellipR = ellipticRadiusNSIE(xcm,fratio,pa);
@@ -1036,17 +1078,15 @@ void LensHaloRealNSIE::force_halo(
   
 	PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
 	if(rcm2 < 1e-20) rcm2 = 1e-20;
-
-	if(rcm2 < Rmax*Rmax)
+  if(rcm2 < Rmax*Rmax)
     {
 		//PosType ellipR = ellipticRadiusNSIE(xcm,fratio,pa);
-        
       if(rcm2 > Rsize*Rsize)
       {
         // This is the case when the ray is within the NSIE's circular region of influence but outside its elliptical truncation
         
         PosType alpha_iso[2],alpha_ellip[2];
-        PosType prefac = -1.0*mass/Rmax/pi;
+        //PosType prefac = -1.0*mass/Rmax/pi;
         PosType r = sqrt(rcm2);
         float units = pow(sigma/lightspeed,2)/Grav/sqrt(fratio); // mass/distance(physical)
         
@@ -1202,6 +1242,9 @@ LensHaloHernquist::LensHaloHernquist(float my_mass,float my_Rmax,PosType my_zlen
             if(mod[i]!=0){set_flag_elliptical(true);};
         }
       }else set_flag_elliptical(true);
+      if (getEllipMethod()==Pseudo){
+        set_norm_factor();
+      }
     }else set_flag_elliptical(false);
     
 }
@@ -1223,6 +1266,9 @@ LensHaloHernquist::LensHaloHernquist(InputParams& params)
             if(mod[i]!=0){set_flag_elliptical(true);};
           }
         }else set_flag_elliptical(true);
+        if (getEllipMethod()==Pseudo){
+          set_norm_factor();
+        }
     }else set_flag_elliptical(false);
 }
 
@@ -1280,8 +1326,7 @@ void LensHaloHernquist::assignParams(InputParams& params){
   xmax = Rmax/rscale;
     if(!params.get("main_axis_ratio",fratio)){fratio=1; std::cout << "main_axis_ratio not defined in file " << params.filename() << ", hence set to 1." << std::endl;};
     if(!params.get("main_pos_angle",pa)){pa=0; std::cout << "main_pos_angle not defined in file " << params.filename() << ", hence set to 0." << std::endl;};
-  if(!params.get("main_ellip_method",main_ellip_method)){if(fratio!=1){main_ellip_method=Schramm;std::cout << "main_ellip_method is not defined in file " << params.filename() << ", hence set to Schramm." << endl;};};
-  
+  if(!params.get("main_ellip_method",main_ellip_method)){if(fratio!=1){main_ellip_method=Pseudo;std::cout << "main_ellip_method is not defined in file " << params.filename() << ", hence set to Pseudo." << endl;};};
 	if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
   else if(stars_N){
   	assignParams_stars(params);
@@ -1342,6 +1387,9 @@ LensHaloJaffe::LensHaloJaffe(float my_mass,float my_Rmax,PosType my_zlens,float 
             if(mod[i]!=0){set_flag_elliptical(true);};
         }
       }else set_flag_elliptical(true);
+      if (getEllipMethod()==Pseudo){
+        set_norm_factor();
+      }
     }else set_flag_elliptical(false);
     
 }
@@ -1364,6 +1412,9 @@ LensHaloJaffe::LensHaloJaffe(InputParams& params)
             if(mod[i]!=0){set_flag_elliptical(true);};
         }
       }else set_flag_elliptical(true);
+      if (getEllipMethod()==Pseudo){
+        set_norm_factor();
+      }
     }else set_flag_elliptical(false);
 }
 
@@ -1416,7 +1467,8 @@ void LensHaloJaffe::assignParams(InputParams& params){
   xmax = Rmax/rscale;
     if(!params.get("main_axis_ratio",fratio)){fratio=1; std::cout << "main_axis_ratio not defined in file " << params.filename() << ", hence set to 1." << std::endl;};
     if(!params.get("main_pos_angle",pa)){pa=0; std::cout << "main_pos_angle not defined in file " << params.filename() << ", hence set to 0." << std::endl;};
-  if(!params.get("main_ellip_method",main_ellip_method)){if(fratio!=1){main_ellip_method=Schramm;std::cout << "main_ellip_method is not defined in file " << params.filename() << ", hence set to Schramm." << endl;};};
+
+  if(!params.get("main_ellip_method",main_ellip_method)){if(fratio!=1){main_ellip_method=Pseudo;std::cout << "main_ellip_method is not defined in file " << params.filename() << ", hence set to Pseudo." << endl;};};
   
 	if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
   else if(stars_N){
@@ -1576,12 +1628,12 @@ bool LensHalo::test(){
   
   std::cout << "R/Rmax      Mass 1 D         Mass 2 D         (m1 - m2)/m1 " << std::endl;
   
-  int N=10;
+  int N=22;
   PosType m1,m2;
-  for(int i=1;i<N;++i){
+  for(int i=12;i<N;++i){
     m1 = MassBy1DIntegation(Rmax*i/(N-2));
     m2 = MassBy2DIntegation(Rmax*i/(N-2));
-    std::cout << i*1./(N-2) << "      " << m1 << "       "
+    std::cout <<  i*1./(N-2) << "      " << m1 << "       "
     << m2 << "        "<< (m1-m2)/m1 << std::endl;
     
   }
@@ -1628,16 +1680,24 @@ bool LensHalo::test(){
       x[0] = r;
       x[1] = 0;
       force_halo(alpha,&kappa,gamma,&phi,x);
-      //std::cout << abs(-1.0*(m1-average_kappa)/average_gt-1.) << std::endl;
+      /*
       assert( abs(-1.0*(m1-average_kappa)/average_gt-1.) < 1e-2 ); // <g_t> = <k(<R)>-<kappa(R)> test
-            //std::cout << abs( -alpha[0]/r - kappa ) / abs(m1-average_kappa  ) -1.  << std::endl;
-      assert( abs( -alpha[0]/r - kappa ) / abs(m1-average_kappa  ) -1.  < 1 ); // alpha/r ~ <kappa(R)>
       if(!elliptical_flag){
-        //std::cout << abs(abs(-alpha[0]/r)/m1-1.)  << std::endl;
         assert( abs(abs(-alpha[0]/r)/m1-1.) < 1e-1 ); // alpha/r ~ <kappa(R)>
-        //std::cout << abs(abs(alpha[0]/r + kappa)/gamma[0])-1.0 << std::endl;
         assert( abs(abs(alpha[0]/r + kappa)/gamma[0])-1.0 < 1e-2); // g_t = alpha/r - kappa test
       }
+      */
+       
+      // This is a list of possible assertion test that can be made
+      //if(!elliptical_flag){
+        //std::cout << abs(abs(-alpha[0]/r)/m1-1.)  << std::endl;
+        //assert( abs(abs(-alpha[0]/r)/m1-1.) < 1e-1 ); // alpha/r ~ <kappa(R)>
+        //std::cout << abs(abs(alpha[0]/r + kappa)/gamma[0])-1.0 << std::endl;
+        //assert( abs(abs(alpha[0]/r + kappa)/gamma[0])-1.0 < 1e-2); // g_t = alpha/r - kappa test
+      //}
+      //std::cout << abs(-1.0*(m1-average_kappa)/average_gt-1.) << std::endl;
+            //std::cout << abs( -alpha[0]/r - kappa ) / abs(m1-average_kappa  ) -1.  << std::endl;
+      //assert( abs( -alpha[0]/r - kappa ) / abs(m1-average_kappa  ) -1.  < 1 ); // alpha/r ~ <kappa(R)>
       
       
     }

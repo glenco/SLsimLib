@@ -418,6 +418,7 @@ void LensHaloMassMap::readMap(){
       assert(map->convergence[i] == map->convergence[i]);
     }
 #else
+
     std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
     exit(1);
 #endif

@@ -11,8 +11,8 @@ static const PosType mumin = 0.3;
 
 static const float FracResTarget = 4.0e-4;
 //static const float FracResTarget = 1.0e-4;
-static const float telescope_high = 1.0e-3;
-static const float telescope_low = 0.01;
+//static const float telescope_high = 1.0e-3;
+//static const float telescope_low = 0.01;
 //extern const PosType initialgridsize;
 
 /** \ingroup ImageFinding

@@ -817,6 +817,13 @@ void Grid::xygridpoints(Point *i_points,PosType range,const PosType *center,long
   return;
 }
 
+Point_2d Grid::getInitCenter(){
+  Point_2d c;
+  c[0] = (i_tree->getTop()->boundary_p2[0] + i_tree->getTop()->boundary_p1[0])/2;
+  c[1] = (i_tree->getTop()->boundary_p2[1] + i_tree->getTop()->boundary_p1[1])/2;
+  return c;
+}
+
 void combineCloseImages(PosType linkinglength,ImageInfo *imageinfo,int *Nimages
 		,int *NewNimages,int NimagesMax){
 	unsigned long i,j,k;

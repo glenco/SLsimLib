@@ -114,8 +114,7 @@ The mean functions used for image finding are
 -   `find_images_microlens()` and 
 -   `map_images_kist()`.
 And for finding critical curves / caustics
--   `find_crit()` or 
--   `find_crit2()`
+-   `find_crit()`
 
 These take a `Grid` and a `Lens` object. The found images are then stored in an
 array of `ImageInfo` structures.
