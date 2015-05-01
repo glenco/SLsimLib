@@ -5,6 +5,10 @@
 #include "slsimlib.h"
 
 #include <nrutil.h>
+#include <mutex>
+#include <thread>
+#include <future>
+
 
 #define NRANSI
 #define M 7
@@ -216,6 +220,7 @@ namespace Utilities{
     return ;
   }
   
+
   void quicksort(unsigned long *particles,PosType *arr,unsigned long N){
     PosType pivotvalue;
     unsigned long pivotindex,newpivotindex,i;
@@ -287,7 +292,22 @@ namespace Utilities{
     
     return ;
   }
-  
+  void quickPartitionPoints(PosType pivotvalue,unsigned long *pivotindex
+                            ,Point *pointarray,PosType (*func)(Point &p),unsigned long N){
+    unsigned long i;
+    
+    *pivotindex=0;
+    
+    for(i=0;i<N;++i){
+      if(func(pointarray[i]) <= pivotvalue){
+        SwapPointsInArray(&pointarray[*pivotindex],&pointarray[i]);
+        ++(*pivotindex);
+      }
+    }
+    
+    return ;
+  }
+ 
   // return 1 (0) if box is (not) within rmax of ray
   int cutbox(const PosType* center,PosType *p1,PosType *p2,float rmax){
     /*  returns:  0 if whole box is outside rmax from ray[]

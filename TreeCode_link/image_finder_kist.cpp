@@ -85,6 +85,8 @@ void ImageFinding::find_images_kist(
   
   if(r_source==0.0){ERROR_MESSAGE(); printf("ERROR: find_images, point source must have a resolution target\n"); exit(1);}
   
+  if(grid->getInitRange() < 2*r_source ){std::cerr << "Warning: In ImageFinding::find_images_kist() source size is larger than grid size.  Continuing but might cause problems." << std::endl;}
+  
   if(initial_size==0 || grid->getNumberOfPoints() == grid->getInitNgrid()*grid->getInitNgrid())
     initial_size=grid->getInitRange()/grid->getInitNgrid();
   
@@ -249,7 +251,7 @@ void ImageFinding::find_images_kist(
   
   time(&now);
   
-  assert(*Nimages > 0);
+  //assert(*Nimages > 0);
   // do an initial uniform refinement to make sure there are enough point in
   //  the images
   i=0;

@@ -443,6 +443,7 @@ private: /* input */
   short pixel_map_on;
   /// zero padding for FFTs with pixelized density maps
   int pixel_map_zeropad;
+  bool pixel_map_zeromean;
 	void readPixelizedDensity();
   
   /// the center of the lens in spherical coordinates

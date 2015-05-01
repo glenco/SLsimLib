@@ -340,8 +340,7 @@ void LensHaloMassMap::readMap(){
       }*/
       
       
-      double avkappa = 0;
-      
+    
       // made square // need to be
       // 1. take the part located in the left side
       //for(int i=0;i<npixels;i++) for(int j=0;j<npixels;j++){
@@ -354,9 +353,15 @@ void LensHaloMassMap::readMap(){
       //    avkappa += map->convergence[i+npixels*j];
       //  }
       // avkappa /= (npixels*npixels);
-      
+    
+    for(int i=0;i<map->nx;i++) for(int j=0;j<map->ny;j++){
+      map->convergence[i+map->nx*j] *= pixelunit;
+    }
+    
+    if(zeromean){
+      double avkappa = 0;
+
       for(int i=0;i<map->nx;i++) for(int j=0;j<map->ny;j++){
-        map->convergence[i+map->nx*j] *= pixelunit;
         avkappa += map->convergence[i+map->nx*j];
       }
       avkappa /= (map->nx*map->ny);
@@ -364,6 +369,8 @@ void LensHaloMassMap::readMap(){
       for(int i=0;i<map->nx;i++) for(int j=0;j<map->ny;j++){
         map->convergence[i+map->nx*j] = (map->convergence[i+map->nx*j] - avkappa);
       }
+    }
+    
       // kappa is not divided by the critical surface density
       // they don't need to be preprocessed by fact
       // create alpha and gamma arrays by FFT
@@ -411,6 +418,7 @@ void LensHaloMassMap::readMap(){
       assert(map->convergence[i] == map->convergence[i]);
     }
 #else
+
     std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
     exit(1);
 #endif
@@ -713,7 +721,7 @@ void LensHaloMassMap::readMap(){
           int ii = i-int(Nnx/2-map->nx/2);
           int jj = j-int(Nny/2-map->ny/2);
           
-          map->alpha1[ii+map->nx*jj] = float(realsp[i+Nnx*j]/Nnx/Nny);
+          map->alpha1[ii+map->nx*jj] = -1*float(realsp[i+Nnx*j]/Nnx/Nny);
         }
     }
     
@@ -746,7 +754,7 @@ void LensHaloMassMap::readMap(){
           int ii = i-int(Nnx/2-map->nx/2);
           int jj = j-int(Nny/2-map->ny/2);
           
-          map->alpha2[ii+map->nx*jj] = float(realsp[i+Nnx*j]/Nnx/Nny);
+          map->alpha2[ii+map->nx*jj] = -1*float(realsp[i+Nnx*j]/Nnx/Nny);
         }
       }
     }

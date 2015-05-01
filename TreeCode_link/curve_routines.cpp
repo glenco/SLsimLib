@@ -98,7 +98,7 @@ void split_order_curve4(OldImageInfo *curves,int Maxcurves,int *Ncurves){
         theta[m]=atan2(curves[i].points[m].x[1]-center[1]
                        ,curves[i].points[m].x[0]-center[0]);
       }
-      Utilities::quicksortPoints(curves[i].points,theta,curves[i].Npoints);
+      Utilities::quicksortPoints_multithread<4>(curves[i].points,theta,curves[i].Npoints);
       
       // check to make sure the center is inside the curves
       //assert(abs(windings(center,curves[i].points,curves[i].Npoints,&tmp1,0)));
@@ -183,7 +183,7 @@ namespace Utilities{
       theta[m]=atan2(curve[m].x[1]-center[1]
                      ,curve[m].x[0]-center[0]);
     }
-    Utilities::quicksortPoints(curve,theta,Npoints);
+    Utilities::quicksortPoints_multithread<4>(curve,theta,Npoints);
     
     // check to make sure the center is inside the curves
     

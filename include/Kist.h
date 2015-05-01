@@ -49,16 +49,26 @@ struct KistUnit{
  ++i;
  }
  
- There is also an iterator KistIt<> which works like this:
+ There is also an iterator Kist<T>::iterator class which works like this:
  
- Kist<Point> kist;
+ Kist<Point>::iterator kist;
  
  ....
  
- for(Kist<Point>::iterator it = kist.BottomIt(); !(it.atend()) ;--it){
-   cout << i << " x = " << (*it)->x[0] << "  " << (*it)->x[1] << endl;
+ for(Kist<Point>::iterator it = kist.begin(); !(it.atend()) ;++it){
+   cout << i << " x = " << (*it).x[0] << "  " << (*it).x[1] << endl;
+ 
+ or
+ 
+ for(auto it = kist.begin() ; it != kist.end() ; ++it){
+  cout  << " x = " << (*it).x[0] << "  " << (*it).x[1] << endl;
  }
  
+ or
+ 
+ for(auto p : kist){
+   cout  << " x = " << p.x[0] << "  " << p.x[1] << endl;
+ }
  
 <\pre>
  */
@@ -139,98 +149,65 @@ public:
 	bool MoveToTop();
 	bool MoveToBottom();
     
-    /// Custom itorator class for Kist container
-    //template <class T>
+    /// Custom iterator class for Kist container
     class iterator{
-    private:
-      struct KistUnit<Data> *unit;
-      struct KistUnit<Data> offbot;
-        
+      
     public:
       
       iterator(){
-        unit = &offbot;
-        unit->data = NULL;
+        unit = NULL;
       }
-       
+ 
+      iterator(const iterator &my_it ){
+        unit = my_it.unit;
+      }
+
         /// Returns a pointer to the current data.  Same as getCurrent.
-        Data *operator*(){return unit->data;}
-        bool atend(){return (unit==&offbot);}
+        Data & operator*(){return *(unit->data);}
       
-        bool operator++(){
+        bool atend(){return (unit==NULL);}
+      
+        iterator& operator++(){
           
-            if(unit == NULL || unit == &offbot){
-                return false;
-            }
-            
-            if(unit->prev == NULL){
-                unit = &offbot;
-                return false;
-            }
-            
-            unit = unit->prev;
-            return true;
-        }
+          if(unit == NULL ) return *this;
+          unit = unit->prev;
+          return *this;
+       }
 
-        /// Same as Up()
-        bool operator++(int){
-            
-            if(unit == NULL || unit == &offbot){
-                return false;
-            }
-            
-            if(unit->prev == NULL){
-                unit = &offbot;
-                return false;
-            }
-            
+        iterator operator++(int){
+          
+          if(unit == NULL) return *this;
+             iterator tmp = *this;
             unit = unit->prev;
-            return true;
-        }
-
-        
-        /// Same as Down()
-        bool operator--(){
-            
-            if(unit == NULL || unit == &offbot){
-                return false;
-            }
-            
-            if(unit->next == NULL){
-                unit = &offbot;
-                return false;
-            }
-            
-            unit = unit->next;
-            return true;
+             return tmp;
         }
         
         /// Same as Down()
-        bool operator--(int){
-            
-            if(unit == NULL || unit == &offbot){
-                return false;
-            }
-            
-            if(unit->next == NULL){
-                unit = &offbot;
-                return false;
-            }
-            
-            unit = unit->next;
-            return true;
+        iterator& operator--(){
+          
+          
+          if(unit == NULL ) return *this;
+          unit = unit->next;
+          return *this;
+      }
+        
+        /// Same as Down()
+        iterator operator--(int){
+          
+          if(unit == NULL) return *this;
+             iterator tmp = *this;
+             unit = unit->next;
+             return tmp;
         }
         
         iterator& operator=(KistUnit<Data> *my_unit){
-            if(my_unit == NULL) unit = &offbot;
-            else unit = my_unit;
+             unit = my_unit;
             return *this;
         }
         
-        iterator& operator=(const iterator my_it){
+        iterator& operator=(const iterator &my_it){
             if(this == &my_it) return *this;
-            if(my_it.unit == NULL) unit = &offbot;
-            else unit = my_it.unit;
+          unit = my_it.unit;
             return *this;
         }
       
@@ -242,32 +219,43 @@ public:
         return (unit != my_it.unit);
       }
 
+    private:
+      struct KistUnit<Data> *unit;
+      //struct KistUnit<Data> offbot2;
+
     };
 
 //  void SetCurrentIt(iterator it){current = it.getUnit();}
 //    void SetCurrentIt(iterator it){current = it.unit;}
     
   /// returns iterator pointing to entry that current it pointing to
-  iterator CurrentIt(){
-      iterator it ;
+  Kist<Data>::iterator CurrentIt(){
+      Kist<Data>::iterator it ;
       it = current;
       return it;
   }
   /// returns iterator pointing to first entry with data
-  iterator TopIt() const{
-      iterator it ;
+  Kist<Data>::iterator TopIt() const{
+      Kist<Data>::iterator it ;
       it = top;
       return it;
   }
   /// returns iterator pointing to last entry with data
-  iterator BottomIt() const{
-    iterator it;
+  Kist<Data>::iterator BottomIt() const{
+    Kist<Data>::iterator it;
     it = bottom;
     return it;
   }
-  iterator endIt() const{
-    iterator it;
-    it = &offbot;
+  
+  Kist<Data>::iterator begin() const{
+    Kist<Data>::iterator it;
+    it = bottom;
+    return it;
+  }
+  
+  Kist<Data>::iterator end() const{
+    Kist<Data>::iterator it;
+    it = NULL;
     return it;
   }
 
@@ -306,7 +294,7 @@ public:
 
     Kist<Data>::iterator it=TopIt();
     for(size_t i=0;!(it.atend()) ;--it,++i){
-      vec[i] = *it;
+      vec[i] = &(*it);
     }
     
     return vec;
@@ -430,7 +418,9 @@ template <class Data> void Kist<Data>::InsertAfterCurrent(Data *data){
       if(current == bottom) bottom = unit;
       else current->next->prev = unit;
       current->next = unit;
-      
+
+      if(unit == bottom) unit->next = NULL;
+
     }else{  // empty kist case
       current=unit;
       top=unit;
@@ -467,6 +457,8 @@ template <class Data> void Kist<Data>::InsertBeforeCurrent(Data *data){
       else current->prev->next=unit;
       current->prev=unit;
       
+      if(unit == top) unit->prev = NULL;
+
     }else{  /* empty kist case */
       current=unit;
       top=unit;
@@ -741,7 +733,7 @@ void Kist<Data>::copy(const Kist<Data> &kist){
   if(kist.Nunits() == 0) return;
   Kist<Data>::iterator it = kist.BottomIt();
   for(;!(it.atend()) ;++it){
-    InsertAfterCurrent(*it);
+    InsertAfterCurrent(&(*it));
     Down();
   };
 }
@@ -793,6 +785,34 @@ template <class Data> void Kist<Data>::test_iterator(){
     assert(i == Nunits()); 
 }
 
+template <class Data> void test_iterator(Kist<Data> &kist){
+  
+  kist.MoveToBottom();
+  int i=0;
+  for(auto p = kist.begin() ; p != kist.end(); ++p ){
+    assert( &(*p)== kist.getCurrent() );
+    (*p).print();
+    std::cout << "i = " << i << std::endl;
+    kist.Up();
+    ++i;
+  }
+  assert(i == kist.Nunits());
+}
+
+template <class Data> void test_iterator2(Kist<Data> &kist){
+  int i=0;
+  auto p2 = kist.begin();
+  for(auto p : kist ){
+    
+    assert(p.id == (*p2).id);
+    
+    p.print();
+    std::cout << "i = " << i << std::endl;
+    ++p2;
+    ++i;
+  }
+  assert(i == kist.Nunits());
+}
 /*
  * These functions are provided for backwards compatibility, but the kist member methods
  * should be used in the future.

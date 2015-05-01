@@ -325,6 +325,9 @@ void Lens::assignParams(InputParams& params,bool verbose)
     if(!params.get("pixelmaps_padding_factor",pixel_map_zeropad)){
       pixel_map_zeropad = 4;
     }
+    if(!params.get("pixelmaps_zeromean",pixel_map_zeromean)){
+      pixel_map_zeromean = true;
+    }
 	}
 	
 	if(!params.get("z_source",zsource))

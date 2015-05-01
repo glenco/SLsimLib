@@ -1394,23 +1394,23 @@ void ImageInfo::FindArc(PosType &radius,PosType *xc,PosType *arc_c,PosType &arcl
   Kist<Point>::iterator it = imagekist->TopIt();
   PosType xrange[2],yrange[2];
    
-  xrange[0] = xrange[1] = (*it)->x[0];
-  yrange[0] = yrange[1] = (*it)->x[1];
+  xrange[0] = xrange[1] = (*it).x[0];
+  yrange[0] = yrange[1] = (*it).x[1];
   
-  double maxval = (*it)->surface_brightness;
+  double maxval = (*it).surface_brightness;
   for(it = imagekist->TopIt();!(it.atend());--it){
-    maxval = MAX(maxval,(*it)->surface_brightness);
+    maxval = MAX(maxval,(*it).surface_brightness);
   }
 
   ImageInfo tmp_image;
   
   for(it = imagekist->TopIt();!(it.atend());--it){
     //if((*it)->surface_brightness > threshold*maxval){
-      xrange[0] = MIN(xrange[0],(*it)->x[0]);
-      xrange[1] = MAX(xrange[1],(*it)->x[0]);
-      yrange[0] = MIN(yrange[0],(*it)->x[1]);
-      yrange[1] = MAX(yrange[1],(*it)->x[1]);
-      tmp_image.imagekist->InsertAfterCurrent(*it);
+      xrange[0] = MIN(xrange[0],(*it).x[0]);
+      xrange[1] = MAX(xrange[1],(*it).x[0]);
+      yrange[0] = MIN(yrange[0],(*it).x[1]);
+      yrange[1] = MAX(yrange[1],(*it).x[1]);
+      tmp_image.imagekist->InsertAfterCurrent(&(*it));
     //}
   }
   
@@ -1573,10 +1573,10 @@ PosType ImageInfo::ConcaveHullSourceArea(bool useborder){
 bool ImageInfo::IsMergedImages(){
   
   Kist<Point>::iterator it = imagekist->TopIt();
-  bool sig = ( (*it)->invmag > 0);
+  bool sig = ( (*it).invmag > 0);
   
-  while(--it){
-    if( ( ((*it)->invmag > 0) != sig ) ) return true;
+  for(;!(it.atend());--it){
+    if( ( ((*it).invmag > 0) != sig ) ) return true;
   }
 
   return false;

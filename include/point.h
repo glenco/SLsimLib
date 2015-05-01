@@ -97,7 +97,7 @@ struct Branch{
 	~Branch();
 
   struct Point *points;        /// pointer to first points in Branch
-  Kist<Point>::iterator pointit;       /// Kist iterator pointing to first point in branch
+  //Kist<Point>::iterator pointit;       /// Kist iterator pointing to first point in branch
   
   unsigned long npoints;
   double center[2];
@@ -365,5 +365,9 @@ struct Point_2d{
   PosType & operator[](size_t i){return x[i];}
 };
 
+std::ostream &operator<<(std::ostream &os, Point_2d const &p);
+
+inline double pointx(Point &p){return p.x[0];}
+inline double pointy(Point &p){return p.x[1];}
 
 #endif

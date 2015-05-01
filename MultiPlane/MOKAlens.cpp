@@ -63,10 +63,10 @@ void cmass(int n, std::valarray<double> map, std:: vector<double> x, double &xcm
  * \brief loads a MOKA map from a given filename
  */
 
-LensHaloMassMap::LensHaloMassMap(const std::string& filename, PixelMapType my_maptype,int pixel_map_zeropad, const COSMOLOGY& lenscosmo)
+LensHaloMassMap::LensHaloMassMap(const std::string& filename, PixelMapType my_maptype,int pixel_map_zeropad,bool my_zeromean, const COSMOLOGY& lenscosmo)
 : LensHalo(),
 MOKA_input_file(filename), flag_MOKA_analyze(0), flag_background_field(0),
-maptype(my_maptype), cosmo(lenscosmo),zerosize(pixel_map_zeropad)
+maptype(my_maptype), cosmo(lenscosmo),zerosize(pixel_map_zeropad),zeromean(my_zeromean)
 {
   initMap();
  	
@@ -229,6 +229,7 @@ void LensHaloMassMap::assignParams(InputParams& params)
   if(!params.get("MOKA_analyze",flag_MOKA_analyze))
     flag_MOKA_analyze = 0;
   
+  zeromean = true;
   zerosize = 4;  /// not really used
   maptype = moka;
 }

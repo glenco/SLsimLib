@@ -129,8 +129,8 @@ void ImageFinding::map_imagesISOP(
       while(imageinfo[i].gridrange[0] > res_min){
         for(it = imageinfo[i].imagekist->BottomIt()
             ;!(it.atend());++it){
-          if((*it)->gridsize > res_min){
-            points_to_refine.push_back(*it);
+          if((*it).gridsize > res_min){
+            points_to_refine.push_back(&(*it));
           }
         }
         new_points = grid->RefineLeaves(lens,points_to_refine);
@@ -567,20 +567,20 @@ void ImageFinding::IF_routines::IntegrateCellsParallel(
   int i=0;
   *count = 0;
   for(Kist<Point>::iterator it = it1; it != it2 ; ++it,++i){
-    if((*it)->flag == false){
-      ImageFinding::IF_routines::IntegrateFluxInCell(*it,*source,1.0e-2,outcome);
+    if((*it).flag == false){
+      ImageFinding::IF_routines::IntegrateFluxInCell(&(*it),*source,1.0e-2,outcome);
       ++(*count);
-      *area += (*it)->surface_brightness*(*it)->gridsize*(*it)->gridsize;
-      if(outcome == YES) (*it)->flag = true;
-      else (*it)->flag = false;
+      *area += (*it).surface_brightness*(*it).gridsize*(*it).gridsize;
+      if(outcome == YES) (*it).flag = true;
+      else (*it).flag = false;
     }
   }
-  if((*it2)->flag == false){
-    ImageFinding::IF_routines::IntegrateFluxInCell(*it2,*source,1.0e-2,outcome);
+  if((*it2).flag == false){
+    ImageFinding::IF_routines::IntegrateFluxInCell(&(*it2),*source,1.0e-2,outcome);
     ++(*count);
-    *area += (*it2)->surface_brightness*(*it2)->gridsize*(*it2)->gridsize;
-    if(outcome == YES) (*it2)->flag = true;
-    else (*it2)->flag = false;
+    *area += (*it2).surface_brightness*(*it2).gridsize*(*it2).gridsize;
+    if(outcome == YES) (*it2).flag = true;
+    else (*it2).flag = false;
   }
   return;
 }
