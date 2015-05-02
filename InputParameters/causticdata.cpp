@@ -247,10 +247,10 @@ void CausticDataStore::SetSearchTree(){
 }
 
 /// Finds the nearest critical curve to the point x[].  If that point is within the largest radius of the critical curve it returns true.
-bool CausticDataStore::findNearestCrit(PosType x[2],size_t &index){
+bool CausticDataStore::findNearestCrit(PosType x[2],long &index){
   
   if(data.size() == 0){
-    index = 0;
+    index = -1;
     return false;
   }
   if(Nxp == 0 && data.size() != 0){
@@ -258,16 +258,18 @@ bool CausticDataStore::findNearestCrit(PosType x[2],size_t &index){
   }
 
   float radius;
+  size_t tmp_index;
+  searchtreevec->NearestNeighbors(x,1,&radius,&tmp_index);
+  index = tmp_index;
 
-  searchtreevec->NearestNeighbors(x,1,&radius,&index);
-   
   return (data[index].crit_radius[2] > radius);
 }
 
 /** \breaf Finds the nearest critical curve to the point x[] of type 'type'.
 If that point is within the largest radius of the critical curve it returns true.
+ If there are no caustics of type "type" index will be set to -1.
  */
-bool CausticDataStore::findNearestCrit(PosType x[2],size_t &index,CritType type){
+bool CausticDataStore::findNearestCrit(PosType x[2],long &index,CritType type){
   
   if(data.size() == 0){
     index = 0;
@@ -282,11 +284,13 @@ bool CausticDataStore::findNearestCrit(PosType x[2],size_t &index,CritType type)
   
   bool found = false;
   int i;
-  for(int N=2 ; !found && N < data.size(); N += 1){
+  for(int N=2 ; !found && N < data.size(); N += 10){
+    
+    if(N > data.size()) N = data.size();
     
     if(N > radius.size()){
-      radius.resize(N+2);
-      neighbors.resize(N+2);
+      radius.resize(N+10);
+      neighbors.resize(N+10);
     }
     searchtreevec->NearestNeighbors(x,N,radius.data(),neighbors.data());
     for(i=0;i<N;++i){
@@ -297,6 +301,11 @@ bool CausticDataStore::findNearestCrit(PosType x[2],size_t &index,CritType type)
       }
     }
   };
+  
+  if(!found){
+    index = -1;
+    return false;
+  }
   
   return (data[index].crit_radius[2] > radius[i]);
 }
@@ -398,4 +407,11 @@ void CausticDataStore::SortByCausticArea(){
     return (c1.caustic_area > c2.caustic_area);});
   SetSearchTree();
 }
+
+
+std::ostream &operator<<(std::ostream &os, CausticStructure const &caust) {
+  return os << " crit center: " << caust.crit_center << " caustic center: "
+  << caust.caustic_center << " type : " << caust.crit_type;
+}
+
 

@@ -132,8 +132,8 @@ public:
     return Utilities::locate<double>(cummulative_area,ran()*cummulative_area.back());
   }
 
-  bool findNearestCrit(PosType x[2],size_t &index);
-  bool findNearestCrit(PosType x[2],size_t &index,CritType type);
+  bool findNearestCrit(PosType x[2],long &index);
+  bool findNearestCrit(PosType x[2],long &index,CritType type);
   
 private:
   
@@ -150,5 +150,7 @@ private:
   
   
 };
+
+std::ostream &operator<<(std::ostream &os, CausticStructure const &caust);
 
 #endif /* defined(__SLsimLib__causticdata__) */
