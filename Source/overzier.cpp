@@ -23,7 +23,7 @@ SourceOverzier::SourceOverzier(
 		,double my_Rh           /// disk scale hight (arcs)
 		,double my_PA           /// Position angle (radians)
 		,double my_inclination  /// inclination of disk (radians)
-		,unsigned long my_id          /// optional angular position on the sky
+		,unsigned long my_id          ///          id number
 		,double my_z            /// optional redshift
 		,const double *my_theta          /// optional angular position on the sky
 		){
@@ -113,3 +113,166 @@ void SourceOverzier::printSource(){
 void SourceOverzier::assignParams(InputParams& /* params */)
 {
 }
+
+SourceOverzierPlus::SourceOverzierPlus(PosType mag,PosType BtoT,PosType Reff,PosType Rh,PosType PA,PosType inclination,unsigned long my_id,PosType my_z,const PosType *theta,Utilities::RandomNumbers_NR &ran):
+SourceOverzier(mag,BtoT,Reff,Rh,PA,inclination,my_id,my_z,theta)
+{
+  
+  float minA = 0.01,maxA = 0.5; // minimum and maximum amplitude of arms
+  Narms = 4;  // number of arms
+  arm_alpha = (21 + 10*(ran()-0.5)*2)*degreesTOradians; // arm pitch angle
+  mctalpha = Narms/tan(arm_alpha);
+  disk_phase = pi*ran(); // add phase of arms
+  Ad = minA + (maxA-minA)*ran();
+  
+  // spheroid
+  
+  // extra cersic component
+  //double index = 4 + 3*(ran()-0.5)*2;
+
+  
+  double index = 4*pow(MAX(BtoT,0.03),0.4)*pow(10,0.2*(ran()-0.5));
+  double q = 1 + (0.7-1)*ran();
+  
+  //double q = 0.5;
+  double muSo = mag-2.5*log10(BtoT);  // this is not correct!
+  
+  //spheroid.reset(new SourceSersic(muSo,Reff,-PA + 10*(ran() - 0.5)*pi/180,index,q,my_z,theta));
+  spheroid = new SourceSersic(muSo,Reff,-PA + 10*(ran() - 0.5)*pi/180,index,q,my_z,theta);
+  
+  cospa = cos(PA);
+  sinpa = sin(PA);
+  cosi  = cos(inclination);
+  
+  modes.resize(6);
+  for(PosType mod : modes){
+    mod = 2.0e-2*ran();
+  }
+
+}
+
+SourceOverzierPlus::~SourceOverzierPlus(){
+  delete spheroid;
+}
+
+SourceOverzierPlus::SourceOverzierPlus(const SourceOverzierPlus &p):
+SourceOverzier(p),
+Narms(p.Narms),Ad(p.Ad),mctalpha(p.mctalpha),arm_alpha(p.arm_alpha)
+,disk_phase(p.disk_phase),cospa(p.cospa),sinpa(p.sinpa),cosi(p.cosi)
+{
+  spheroid = new SourceSersic(p.spheroid->getMag(),p.getReff(),p.spheroid->getPA()
+                              ,p.spheroid->getSersicIndex(),p.spheroid->getAxesRatio()
+                              ,p.spheroid->getZ(),p.spheroid->getX());
+  modes = p.modes;
+}
+
+SourceOverzierPlus & SourceOverzierPlus::operator=(const SourceOverzierPlus &p){
+  if(this == &p) return *this;
+  SourceOverzier::operator=(p);
+  
+  Narms=p.Narms;
+  Ad=p.Ad;
+  mctalpha=p.mctalpha;
+  arm_alpha=p.arm_alpha;
+  disk_phase=p.disk_phase;
+  cospa=p.cospa;
+  sinpa=p.sinpa;
+  cosi=p.cosi;
+  
+  spheroid = new SourceSersic(p.spheroid->getMag(),p.getReff(),p.spheroid->getPA()
+                              ,p.spheroid->getSersicIndex(),p.spheroid->getAxesRatio()
+                              ,p.spheroid->getZ(),p.spheroid->getX());
+  modes = p.modes;
+  
+  return *this;
+}
+
+
+PosType SourceOverzierPlus::SurfaceBrightness(PosType *y){
+  // position relative to center
+  Point_2d x;
+  x[0] = y[0]-getX()[0];
+  x[1] = y[1]-getX()[1];
+  
+  Point_2d z;
+  
+  z[0] = cospa*x[0] - sinpa*x[1];
+  z[1] = ( sinpa*x[0] + cospa*x[1] )/cosi;
+  
+  //PosType R = sqrt( cxx*x[0]*x[0] + cyy*x[1]*x[1] + cxy*x[0]*x[1] );
+  PosType R = z.length()/Rh;
+  PosType theta = atan2(z[1],z[0]);
+  
+  PosType disk_sb,bulge_sb;
+  
+  //disk
+  disk_sb = sbDo*exp(-R);
+  //spiral arms
+  PosType phir = mctalpha*log(R) + disk_phase;
+  disk_sb *= 1 + Ad*cos(Narms*theta + phir);
+  
+  
+  PosType sb = disk_sb;
+  sb *= pow(10,-0.4*48.6)*inv_hplanck;
+  
+  // bulge
+  if(Reff > 0.0){
+    // bulge perturbations
+    PosType perturb = 1.0,tmp;
+    int N = modes.size()/2;
+    PosType c1 = x[0]/x.length();
+    PosType s1 = x[1]/x.length();
+    PosType cn=1,sn=0;
+    for(int n=0;n<N;++n){
+      tmp = cn;
+      cn = (cn*c1 - sn*s1);
+      sn = (sn*c1 + tmp*s1);
+      perturb += modes[2*n]*cn + modes[2*n+1]*sn;
+    }
+    // spheroid contribution
+    sb += spheroid->SurfaceBrightness(x.x)*perturb;
+   }else{
+    bulge_sb = 0.0;
+  }
+
+  if(sb< sb_limit)
+    return 0.;
+  
+  return sb;
+}
+
+void SourceOverzierPlus::setBand(Band band){
+  switch(band){
+    case SDSS_U:
+      mag = mag_u;
+      break;
+    case SDSS_G:
+      mag = mag_g;
+      break;
+    case SDSS_R:
+      mag = mag_r;
+      break;
+    case SDSS_I:
+      mag = mag_i;
+      break;
+    case SDSS_Z:
+      mag = mag_z;
+      break;
+    case J:
+      mag = mag_J;
+      break;
+    case Ks:
+      mag = mag_Ks;
+      break;
+    default:
+      throw std::invalid_argument("band not supported");
+      break;
+  }
+  if(Rh > 0.0) sbDo = pow(10,(-mag+oldmag)/2.5);
+  if(Reff > 0.0){
+    spheroid->setMag(mag-2.5*log10(BtoT));
+  }
+}
+
+
+

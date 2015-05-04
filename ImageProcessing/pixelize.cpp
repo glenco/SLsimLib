@@ -19,6 +19,7 @@
 #include <thread>
 #include "image_processing.h"
 #include "point.h"
+#include "source.h"
 
 #if __cplusplus < 201103L
 template<typename T>
@@ -1670,6 +1671,13 @@ void MultiGridSmoother::smooth(int Nsmooth,PixelMap &map){
   
 }
 
+void PixelMap::AddSource(Source &source){
+  PosType y[2];
+  for(size_t index =0 ;index < map.size(); ++index){
+    find_position(y,index);
+    map[index] = source.SurfaceBrightness(y);
+  }
+}
 
 
 

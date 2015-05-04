@@ -8,6 +8,7 @@
 #define OVERZIER_SOURCE_H_
 
 #include "source.h"
+#include "sersic_source.h"
 
 // define pi here if not done via include
 #ifndef pi
@@ -23,10 +24,10 @@ class SourceOverzier : public Source
 public:
 	SourceOverzier();
 	SourceOverzier(PosType mag,PosType BtoT,PosType Reff,PosType Rh,PosType PA,PosType inclination,unsigned long my_id,PosType my_z=0,const PosType *theta=0);
-	~SourceOverzier();
+	virtual ~SourceOverzier();
 	
 	void setInternals(PosType mag,PosType BtoT,PosType Reff,PosType Rh,PosType PA,PosType inclination,unsigned long my_id,PosType my_z=0,const PosType *my_theta=0);
-	PosType SurfaceBrightness(PosType *x);
+  virtual PosType SurfaceBrightness(PosType *x);
 	PosType getTotalFlux();
 	void printSource();
 	
@@ -97,7 +98,7 @@ public:
 	PosType getPA() const { return PA; }
 	PosType getInclination() const { return inclination; }
   PosType oldmag = 0;
-  void setBand(Band band){
+  virtual void setBand(Band band){
     switch(band){
       case SDSS_U:
         mag = mag_u;
@@ -135,7 +136,7 @@ public:
 
   static PosType *getx(SourceOverzier &sourceo){return sourceo.getX();}
 
-private:
+protected:
 	void assignParams(InputParams& params);
 	
 	/// haloID
@@ -170,4 +171,39 @@ private:
 	// optional position variables
 };
 
+class SourceOverzierPlus : public SourceOverzier
+{
+public:
+  //SourceOverzierPlus();
+  SourceOverzierPlus(PosType mag,PosType BtoT,PosType Reff,PosType Rh,PosType PA,PosType inclination,unsigned long my_id,PosType my_z,const PosType *theta,Utilities::RandomNumbers_NR &ran);
+  ~SourceOverzierPlus();
+  
+  SourceOverzierPlus(const SourceOverzierPlus &p);
+  SourceOverzierPlus & operator=(const SourceOverzierPlus &p);
+  
+  //*** meed to be able to change band
+  //*** put modes and phases into surface brightness
+  //*** possible put gaussian texture on disk
+
+  PosType SurfaceBrightness(PosType *y);
+
+  int getNarms() const {return Narms;}
+  PosType getArmAmplitude() const {return Ad;}
+  PosType getArmAlpha() const {return arm_alpha;}
+  PosType getSphIndex() const {return spheroid->getSersicIndex();}
+  PosType getSphAxisRatio() const {return spheroid->getAxesRatio();}
+  PosType getSphPA() const {return spheroid->getPA();}
+  
+  void setBand(Band band);
+  static PosType *getx(SourceOverzierPlus &sourceo){return sourceo.getX();}
+
+private:
+  int Narms;
+  PosType Ad,mctalpha,arm_alpha;
+  //std::unique_ptr<SourceSersic> spheroid;
+  SourceSersic *spheroid;
+  std::vector<PosType> modes;
+  PosType disk_phase;
+  PosType cospa,sinpa,cosi;
+};
 #endif /* GALAXIES_OVERZIER_H_ */

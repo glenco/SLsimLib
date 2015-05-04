@@ -140,7 +140,7 @@ void CausticDataStore::readfile(std::string filename){
 	 }*/
 
 		for(int l=0;l<ncolumns; l++){
-			pos = myline.find("|");
+      pos = myline.find("|");
 			strg.assign(myline,0,pos);
 			buffer << strg;
       switch (l) {
@@ -253,14 +253,30 @@ bool CausticDataStore::findNearestCrit(PosType x[2],size_t &index){
     index = 0;
     return false;
   }
-  if(Nxp == 0 && data.size() != 0){
+  if(Nxp != data.size() ){
     SetSearchTree();
   }
 
   float radius;
 
   searchtreevec->NearestNeighbors(x,1,&radius,&index);
-   
+  
+  /*********************** test result ***************
+  PosType rmin = 1.0e60,r;
+  size_t t_index=0;
+  
+  for(size_t i=0;i<data.size();++i){
+
+      r = (data[i].crit_center[0]-x[0])*(data[i].crit_center[0]-x[0])
+      + (data[i].crit_center[1]-x[1])*(data[i].crit_center[1]-x[1]);
+      if(rmin > r){
+        rmin = r;
+        t_index = i;
+      }
+    
+  }
+  assert(index == t_index);*/
+
   return (data[index].crit_radius[2] > radius);
 }
 
@@ -273,7 +289,7 @@ bool CausticDataStore::findNearestCrit(PosType x[2],size_t &index,CritType type)
     index = 0;
     return false;
   }
-  if(Nxp == 0 && data.size() != 0){
+  if(Nxp != data.size() ){
     SetSearchTree();
   }
   
@@ -297,6 +313,21 @@ bool CausticDataStore::findNearestCrit(PosType x[2],size_t &index,CritType type)
       }
     }
   };
+  
+  /*PosType rmin = 1.0e60,r;
+  size_t t_index;
+
+  for(size_t i=0;i<data.size();++i){
+    if(data[i].crit_type == type){
+      r = (data[i].crit_center[0]-x[0])*(data[i].crit_center[0]-x[0])
+      + (data[i].crit_center[1]-x[1])*(data[i].crit_center[1]-x[1]);
+      if(rmin > r){
+        rmin = r;
+        t_index = i;
+      }
+    }
+  }
+  assert(index == t_index);*/
   
   return (data[index].crit_radius[2] > radius[i]);
 }
