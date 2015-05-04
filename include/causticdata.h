@@ -133,7 +133,7 @@ public:
   }
 
   bool findNearestCrit(PosType x[2],long &index);
-  bool findNearestCrit(PosType x[2],long &index,CritType type);
+  bool findNearestCrit(PosType x[2],long &index,CritType type,bool &found_type);
   
 private:
   

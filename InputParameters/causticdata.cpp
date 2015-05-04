@@ -9,13 +9,13 @@
 #include "causticdata.h"
 
 CausticDataStore::CausticDataStore(std::string filename)
-:ncolumns(13),Nxp(0)
+:ncolumns(14),Nxp(0)
 {
   readfile(filename);
 }
 
 CausticDataStore::CausticDataStore(std::vector<ImageFinding::CriticalCurve> &critcurves_vec)
-:ncolumns(13),Nxp(0)
+:ncolumns(14),Nxp(0)
 {
   PosType rmax,rmin,rave;
   data.resize(critcurves_vec.size());
@@ -71,7 +71,7 @@ void CausticDataStore::addcrits(std::vector<ImageFinding::CriticalCurve> &critcu
 
 
 CausticDataStore::CausticDataStore(const CausticDataStore &input)
-:ncolumns(13),Nxp(0)
+:ncolumns(14),Nxp(0)
 {
   data = input.data;
 }
@@ -96,7 +96,8 @@ void CausticDataStore::readfile(std::string filename){
   std::string myline;
   std::string space = " ";
 	double mydouble;
-  CritType myCritType = ND;
+  int myint;
+  CritType myCritType;
 
 	std::string strg;
 	std::string f=",";
@@ -140,6 +141,7 @@ void CausticDataStore::readfile(std::string filename){
 	 }*/
 
 		for(int l=0;l<ncolumns; l++){
+    //  std::cout << l << std::endl;
 			pos = myline.find("|");
 			strg.assign(myline,0,pos);
 			buffer << strg;
@@ -198,8 +200,8 @@ void CausticDataStore::readfile(std::string filename){
           tmp_data.caustic_area = mydouble;
           break;
         case 13:
-          buffer >> mydouble;
-          tmp_data.crit_type = myCritType;
+          buffer >> myint;
+          tmp_data.crit_type = static_cast<CritType>(myint);
           break;
           
         default:
@@ -262,17 +264,16 @@ bool CausticDataStore::findNearestCrit(PosType x[2],long &index){
   searchtreevec->NearestNeighbors(x,1,&radius,&tmp_index);
   index = tmp_index;
 
-  return (data[index].crit_radius[2] > radius);
+  return (data[index].crit_radius[0] > radius);
 }
 
-/** \breaf Finds the nearest critical curve to the point x[] of type 'type'.
-If that point is within the largest radius of the critical curve it returns true.
- If there are no caustics of type "type" index will be set to -1.
+/** \brief Finds the nearest critical curve to the point x[] of type 'type'.
+ There are two bool types: found returns true if any neighbour was found, found_type is true if a neighbour with correct CritType "type" was found. If there are no caustics of CritType "type" index will be set to -1.
  */
-bool CausticDataStore::findNearestCrit(PosType x[2],long &index,CritType type){
+bool CausticDataStore::findNearestCrit(PosType x[2],long &index,CritType type, bool &found_type){
   
   if(data.size() == 0){
-    index = 0;
+    index = -1;
     return false;
   }
   if(Nxp == 0 && data.size() != 0){
@@ -281,10 +282,10 @@ bool CausticDataStore::findNearestCrit(PosType x[2],long &index,CritType type){
   
   std::vector<float> radius(10);
   std::vector<IndexType> neighbors(10);
-  
   bool found = false;
+  found_type = false;
   int i;
-  for(int N=2 ; !found && N < data.size(); N += 10){
+  for(int N=2 ; !found_type && N < data.size(); N += 10){
     
     if(N > data.size()) N = data.size();
     
@@ -294,20 +295,21 @@ bool CausticDataStore::findNearestCrit(PosType x[2],long &index,CritType type){
     }
     searchtreevec->NearestNeighbors(x,N,radius.data(),neighbors.data());
     for(i=0;i<N;++i){
+      found = true;
       if(data[neighbors[i]].crit_type == type){
         index = neighbors[i];
-        found = true;
+        found_type = true;
         break;
       }
     }
   };
   
-  if(!found){
+  if(!found_type){
     index = -1;
-    return false;
+    //return false;
   }
   
-  return (data[index].crit_radius[2] > radius[i]);
+  return found;
 }
 
 void CausticDataStore::printfile(std::string filename,std::string paramfile,double fieldofview,double minscale){
