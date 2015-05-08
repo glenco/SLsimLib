@@ -285,6 +285,7 @@ bool CausticDataStore::findNearestCrit(PosType x[2],long &index,CritType type, b
   bool found = false;
   found_type = false;
   int i;
+  PosType rmin=1E12; //radius[0];
   for(int N=2 ; !found_type && N < data.size(); N += 10){
     
     if(N > data.size()) N = data.size();
@@ -294,13 +295,18 @@ bool CausticDataStore::findNearestCrit(PosType x[2],long &index,CritType type, b
       neighbors.resize(N+10);
     }
     searchtreevec->NearestNeighbors(x,N,radius.data(),neighbors.data());
+    rmin=1E12; //radius[0];
     for(i=0;i<N;++i){
       found = true;
+      
       if(data[neighbors[i]].crit_type == type){
-        index = neighbors[i];
-        found_type = true;
-        break;
+        if(rmin> radius[i]){
+          index = neighbors[i];
+          found_type = true;
+          rmin = radius[i];
+        }
       }
+      if(found_type){break;}
     }
   };
   
@@ -309,7 +315,7 @@ bool CausticDataStore::findNearestCrit(PosType x[2],long &index,CritType type, b
     //return false;
   }
   
-  return found;
+  return (data[index].crit_radius[0] > rmin);
 }
 
 void CausticDataStore::printfile(std::string filename,std::string paramfile,double fieldofview,double minscale){
