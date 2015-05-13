@@ -656,6 +656,61 @@ void PixelMap::printFITS(std::string filename, bool verbose) const
 #endif
 }
 
+void PixelMap::printFITS(std::string filename,std::vector<std::tuple<std::string,double,std::string>> &extra_header_info, bool verbose) const
+{
+#ifdef ENABLE_FITS
+  if(filename.empty())
+    throw std::invalid_argument("Please enter a valid filename for the FITS file output");
+  
+  long naxis = 2;
+  long naxes[2] = {(long)Nx, (long)Ny};
+
+  // might throw CCfits::FITS::CantCreate
+  std::auto_ptr<CCfits::FITS> fout(new CCfits::FITS(filename, FLOAT_IMG, naxis, naxes));
+  
+  std::vector<long> naxex(2);
+  naxex[0] = Nx;
+  naxex[1] = Ny;
+  
+  CCfits::PHDU& phout = fout->pHDU();
+  
+  phout.write(1, map.size(), map);
+  
+  phout.addKey("WCSAXES", 2, "number of World Coordinate System axes");
+  phout.addKey("CRPIX1", 0.5*(naxex[0]+1), "x-coordinate of reference pixel");
+  phout.addKey("CRPIX2", 0.5*(naxex[1]+1), "y-coordinate of reference pixel");
+  phout.addKey("CRVAL1", 0.0, "first axis value at reference pixel");
+  phout.addKey("CRVAL2", 0.0, "second axis value at reference pixel");
+  phout.addKey("CTYPE1", "RA---TAN", "the coordinate type for the first axis");
+  phout.addKey("CTYPE2", "DEC--TAN", "the coordinate type for the second axis");
+  phout.addKey("CUNIT1", "deg     ", "the coordinate unit for the first axis");
+  phout.addKey("CUNIT2", "deg     ", "the coordinate unit for the second axis");
+  phout.addKey("CDELT1", -180*resolution/pi, "partial of first axis coordinate w.r.t. x");
+  phout.addKey("CDELT2", 180*resolution/pi, "partial of second axis coordinate w.r.t. y");
+  phout.addKey("CROTA2", 0.0, "");
+  phout.addKey("CD1_1", -180*resolution/pi, "partial of first axis coordinate w.r.t. x");
+  phout.addKey("CD1_2", 0.0, "partial of first axis coordinate w.r.t. y");
+  phout.addKey("CD2_1", 0.0, "partial of second axis coordinate w.r.t. x");
+  phout.addKey("CD2_2", 180*resolution/pi, "partial of second axis coordinate w.r.t. y");
+  
+  phout.addKey("Nx", Nx, "");
+  phout.addKey("Ny", Ny, "");
+  phout.addKey("range x", map_boundary_p2[0]-map_boundary_p1[0], "radians");
+  phout.addKey("RA", center[0], "radians");
+  phout.addKey("DEC", center[1], "radians");
+  
+  for(auto hp : extra_header_info){
+    phout.addKey<double>(std::get<0>(hp),std::get<1>(hp),std::get<2>(hp));
+  }
+  
+  if(verbose)
+    std::cout << phout << std::endl;
+#else
+  std::cerr << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
+  exit(1);
+#endif
+}
+
 /** \ingroup Image
  *
  * \brief Smoothes a map with a Gaussian kernel of width sigma (in arcseconds)
@@ -844,21 +899,26 @@ void PixelMap::drawBox(PosType p1[],PosType p2[],PosType value){
  * that may have irregular cell sizes.  The last point will be connected to the first point.
  */
 void PixelMap::AddCurve(ImageInfo *curve,PosType value){
+  AddCurve(curve->imagekist,value);
+  return;
+}
+
+void PixelMap::AddCurve(Kist<Point> *imagekist,PosType value){
   PosType x[2];
   
-  if(curve->imagekist->Nunits() == 0 ) return;
+  if(imagekist->Nunits() == 0 ) return;
   
-  curve->imagekist->MoveToTop();
-  x[0] = curve->imagekist->getCurrent()->x[0];
-  x[1] = curve->imagekist->getCurrent()->x[1];
-  curve->imagekist->Down();
-  for(;!(curve->imagekist->OffBottom());curve->imagekist->Down()){
-    drawline(x,curve->imagekist->getCurrent()->x,value);
-    x[0] = curve->imagekist->getCurrent()->x[0];
-    x[1] = curve->imagekist->getCurrent()->x[1];
+  imagekist->MoveToTop();
+  x[0] = imagekist->getCurrent()->x[0];
+  x[1] = imagekist->getCurrent()->x[1];
+  imagekist->Down();
+  for(;!(imagekist->OffBottom());imagekist->Down()){
+    drawline(x,imagekist->getCurrent()->x,value);
+    x[0] = imagekist->getCurrent()->x[0];
+    x[1] = imagekist->getCurrent()->x[1];
   }
-  curve->imagekist->MoveToTop();
-  drawline(x,curve->imagekist->getCurrent()->x,value);
+  imagekist->MoveToTop();
+  drawline(x,imagekist->getCurrent()->x,value);
   
   return;
 }

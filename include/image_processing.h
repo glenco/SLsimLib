@@ -54,6 +54,7 @@ public:
   void AddUniformImages(ImageInfo *imageinfo,int Nimages,double value);
   
   void AddCurve(ImageInfo *curve,double value);
+  void AddCurve(Kist<Point> *imagekist,PosType value);
   void AddCurve(std::vector<Point_2d> &curve,double value);
   
 	void drawline(double x1[],double x2[],double value);
@@ -67,6 +68,7 @@ public:
 	void printASCII() const;
 	void printASCIItoFile(std::string filename) const;
 	void printFITS(std::string filename, bool verbose = false) const;
+  void printFITS(std::string filename,std::vector<std::tuple<std::string,double,std::string>> &extra_header_info, bool verbose) const;
 
 	void smooth(double sigma);
 

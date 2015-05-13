@@ -140,7 +140,7 @@ void CausticDataStore::readfile(std::string filename){
 	 }*/
 
 		for(int l=0;l<ncolumns; l++){
-			pos = myline.find(space);
+			pos = myline.find("|");
 			strg.assign(myline,0,pos);
 			buffer << strg;
       switch (l) {
@@ -158,15 +158,15 @@ void CausticDataStore::readfile(std::string filename){
           break;
         case 3:
           buffer >> mydouble;
-          tmp_data.crit_radius[0] = mydouble;
+          tmp_data.crit_radius[1] = mydouble;
           break;
         case 4:
           buffer >> mydouble;
-          tmp_data.crit_radius[2] = mydouble;
+          tmp_data.crit_radius[0] = mydouble;
           break;
         case 5:
           buffer >> mydouble;
-          tmp_data.crit_radius[1] = mydouble;
+          tmp_data.crit_radius[2] = mydouble;
           break;
         case 6:
           buffer >> mydouble;
@@ -183,15 +183,15 @@ void CausticDataStore::readfile(std::string filename){
           break;
         case 9:
           buffer >> mydouble;
-          tmp_data.caustic_radius[0] = mydouble;
+          tmp_data.caustic_radius[1] = mydouble;
           break;
         case 10:
           buffer >> mydouble;
-          tmp_data.caustic_radius[2] = mydouble;
+          tmp_data.caustic_radius[0] = mydouble;
           break;
         case 11:
           buffer >> mydouble;
-          tmp_data.caustic_radius[1] = mydouble;
+          tmp_data.caustic_radius[2] = mydouble;
           break;
         case 12:
           buffer >> mydouble;
@@ -264,18 +264,55 @@ bool CausticDataStore::findNearestCrit(PosType x[2],size_t &index){
   return (data[index].crit_radius[2] > radius);
 }
 
+/** \breaf Finds the nearest critical curve to the point x[] of type 'type'.
+If that point is within the largest radius of the critical curve it returns true.
+ */
+bool CausticDataStore::findNearestCrit(PosType x[2],size_t &index,CritType type){
+  
+  if(data.size() == 0){
+    index = 0;
+    return false;
+  }
+  if(Nxp == 0 && data.size() != 0){
+    SetSearchTree();
+  }
+  
+  std::vector<float> radius(10);
+  std::vector<IndexType> neighbors(10);
+  
+  bool found = false;
+  int i;
+  for(int N=2 ; !found && N < data.size(); N += 1){
+    
+    if(N > radius.size()){
+      radius.resize(N+2);
+      neighbors.resize(N+2);
+    }
+    searchtreevec->NearestNeighbors(x,N,radius.data(),neighbors.data());
+    for(i=0;i<N;++i){
+      if(data[neighbors[i]].crit_type == type){
+        index = neighbors[i];
+        found = true;
+        break;
+      }
+    }
+  };
+  
+  return (data[index].crit_radius[2] > radius[i]);
+}
+
 void CausticDataStore::printfile(std::string filename,std::string paramfile,double fieldofview,double minscale){
   std::ofstream catalog_caustic(filename.c_str());
   
   catalog_caustic << "# column 1 redshift of source plane" << std::endl;
-  catalog_caustic << "# column 2 critical curve center x position in degrees" << std::endl;
-  catalog_caustic << "# column 3 critical curve center y position in degrees" << std::endl;
+  catalog_caustic << "# column 2 critical curve center x position in radians" << std::endl;
+  catalog_caustic << "# column 3 critical curve center y position in radians" << std::endl;
   catalog_caustic << "# column 4 critical curve average radius" << std::endl;
   catalog_caustic << "# column 5 critical curve max radius" << std::endl;
   catalog_caustic << "# column 6 critical curve min radius" << std::endl;
   catalog_caustic << "# column 7 critical curve area" << std::endl;
-  catalog_caustic << "# column 8 caustic center x position in degrees" << std::endl;
-  catalog_caustic << "# column 9 caustic center y position in degrees" << std::endl;
+  catalog_caustic << "# column 8 caustic center x position in radians" << std::endl;
+  catalog_caustic << "# column 9 caustic center y position in radians" << std::endl;
   catalog_caustic << "# column 10 caustic average radius" << std::endl;
   catalog_caustic << "# column 11 caustic max radius" << std::endl;
   catalog_caustic << "# column 12 caustic min radius" << std::endl;
@@ -288,17 +325,15 @@ void CausticDataStore::printfile(std::string filename,std::string paramfile,doub
 
 
   for(size_t i = 0; i < data.size(); ++i){
-    if(data[i].crit_radius[0] != 0){
       catalog_caustic << data[i].redshift
       << " | " << data[i].crit_center[0] << " | " << data[i].crit_center[1]
-      << " | " << data[i].crit_radius[0] << " | " << data[i].crit_radius[2]
-      << " | " << data[i].crit_radius[1] << " | " << data[i].crit_area
+      << " | " << data[i].crit_radius[1] << " | " << data[i].crit_radius[0]
+      << " | " << data[i].crit_radius[2] << " | " << data[i].crit_area
       << " | " << data[i].caustic_center[0] << " | " << data[i].caustic_center[1]
-      << " | " << data[i].caustic_radius[0] << " | " << data[i].caustic_radius[2]
-      << " | " << data[i].caustic_radius[1]
+      << " | " << data[i].caustic_radius[1] << " | " << data[i].caustic_radius[0]
+      << " | " << data[i].caustic_radius[2]
       << " | " << data[i].caustic_area << " | " << data[i].crit_type
       << std::endl;
-    }
   }
 }
 

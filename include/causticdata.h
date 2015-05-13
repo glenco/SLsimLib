@@ -16,6 +16,7 @@
 #include "simpleTreeVec.h"
 #include "grid_maintenance.h"
 
+
 struct CausticStructure{
   CausticStructure(){}
   CausticStructure(const CausticStructure &tmp){
@@ -132,6 +133,7 @@ public:
   }
 
   bool findNearestCrit(PosType x[2],size_t &index);
+  bool findNearestCrit(PosType x[2],size_t &index,CritType type);
   
 private:
   

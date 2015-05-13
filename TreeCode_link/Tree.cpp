@@ -900,6 +900,11 @@ void ImageFinding::CriticalCurve::RandomSourceStrictlyWithinCaustic(int N,std::v
 
 
 void ImageFinding::CriticalCurve::CritRange(Point_2d &my_p1,Point_2d &my_p2){
+  if(critical_curve.size() == 0){
+    my_p1 *= 0;
+    my_p2 *= 0;
+    return;
+  }
   my_p1 = my_p2 = critical_curve[0];
   
   for(size_t ii=1;ii < critical_curve.size();++ii){
@@ -910,6 +915,11 @@ void ImageFinding::CriticalCurve::CritRange(Point_2d &my_p1,Point_2d &my_p2){
   }
 }
 void ImageFinding::CriticalCurve::CausticRange(Point_2d &my_p1,Point_2d &my_p2){
+  if(caustic_curve_outline.size() == 0){
+    my_p1 *= 0;
+    my_p2 *= 0;
+    return;
+  }
   my_p1 = my_p2 = caustic_curve_outline[0];
   
   for(size_t ii=1;ii < caustic_curve_outline.size();++ii){

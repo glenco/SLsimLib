@@ -158,7 +158,7 @@ void ImageFinding::map_imagesISOP(
 	// and calculate surface brightness at each point
 	/////////////////////////////////////////////
 
-  long count=0,count_tot=0,count_moreNeighbors=0,count_isopfail=0,count_res=0;
+  long count=0;//,count_tot=0,count_moreNeighbors=0,count_isopfail=0,count_res=0;
   
 	// ****** calculate surface brightnesses and flux of each image   ******
 	for(i=0,area_tot=0.0; i < *Nimages ; ++i){

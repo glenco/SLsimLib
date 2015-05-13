@@ -49,22 +49,18 @@ public:
 	LensHalo(InputParams& params);
 	virtual ~LensHalo();
   
-	/// get the Rmax
+	/// get the Rmax in Mpc
 	float get_Rmax() const { return Rmax; }
-	/// get the mass
+	/// get the mass solar units
 	float get_mass() const { return mass; }
-	/// get the scale radius
+	/// get the scale radius in Mpc
 	float get_rscale() const { return rscale; }
 	/// get the redshift
-  
 	PosType getZlens() const { return zlens; }
-  
-  /// set the position of the Halo :
-  /// taking as argument the position in comoving Mpc
-  /// storing the position in physical Mpc
-  //void setX(PosType PosX, PosType PosY) { posHalo[0] = PosX / (1 + zlens) ; posHalo[1] = PosY / (1 + zlens) ; }
-  
+    
+  /// set the position of the Halo in physical Mpc
   void setX(PosType PosX, PosType PosY) { posHalo[0] = PosX ; posHalo[1] = PosY ; }
+  /// set the position of the Halo in physical Mpc
   void setX(PosType *PosXY) { posHalo[0] = PosXY[0] ; posHalo[1] = PosXY[1] ; }
   /// get the position of the Halo in physical Mpc
   void getX(PosType * MyPosHalo) const { MyPosHalo[0] = posHalo[0] ; MyPosHalo[1] = posHalo[1]; }
@@ -86,8 +82,7 @@ public:
 	virtual void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rmax/rscale;};
 	/// set redshift
 	void setZlens(PosType my_zlens){ zlens=my_zlens; };
-  
-	/// set slope
+  /// set slope
 	virtual void set_slope(PosType my_slope){beta=my_slope;};
   /// get slope
   virtual PosType get_slope(){return beta;};
@@ -145,6 +140,12 @@ public:
   PosType test_average_gt(PosType R);
   PosType test_average_kappa(PosType R);
   
+  /// In case of a pseudo-elliptical halo calculate normalization factor, the value 0.99999 is used as the norm integral should not include Rmax because all force_halo function make the case distinction rcm^2<rmax*rmax and not "<=", defining the force_halo functions differenly however creates occasional ring features. Setting Rsize to 0.9, i.e. 0.9*Rmax keeps the maximum deviation in terms of mass at the central radial position between Rsize and Rmax to be ~5%. Changing rsize to 0.8 increases the max. deviation to 10%. 
+  void set_norm_factor(){set_rsize(1);mass_norm_factor=mass/MassBy1DIntegation(0.99999*Rmax);set_rsize(0.9);}
+  /// set radius rsize beyond which interpolation values between alpha_ellip and alpha_iso are computed
+  void set_rsize(float my_rsize){ Rsize = my_rsize;};
+	float get_rsize(){return Rsize;};
+	
   
   // all of the following functions were used for Ansatz III w derivatives of the Fourier modes
   
@@ -157,7 +158,8 @@ public:
   
   PosType renormalization(PosType r_max);
   PosType mnorm;
-   
+  
+  
 protected:
 
   size_t idnumber; /// Identification number of halo.  It is not always used.
@@ -166,12 +168,12 @@ protected:
   PosType alpha_int(PosType x) const;
   PosType norm_int(PosType r_max);
 
-  // PosType norm_intt(PosType theta);
   
   
   void force_halo_sym(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0);
   void force_halo_asym(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0);
-  
+  /// only used for force_halo_asym: inner radius in terms of Rmax of interpolation region between elliptical and isotropic alpha, e.g. Rsize=0.8 means that between 80 per cent of Rmax and Rmax alpha values are interpolated
+  float Rsize = 1;
   
   struct norm_func{
     norm_func(LensHalo& halo, PosType my_r_max): halo(halo), r_max(my_r_max){};
@@ -227,9 +229,10 @@ protected:
   /// Radius of halo and NSIE if it exists,  This is the radius used in the tree force solver
   /// to determine when a ray intersects an object.
   float Rmax;
+  
   /// scale length or core size.  Different meaning in different cases.  Not used in NSIE case.
   float rscale;
-  /// redshift
+  // redshift
   //PosType zlens;
   
   bool stars_implanted;
@@ -269,6 +272,8 @@ protected:
   virtual PosType inline ddmoddq(int whichmod, PosType q, PosType b){return 0;};
   
   PosType xmax;  /// This is Rmax/rscale !!
+  
+  PosType mass_norm_factor=1;
   
   // Functions for calculating axial dependence
   float pa;
@@ -564,7 +569,7 @@ protected:
         
         if(exp(2*logR) == 0.0) return 0.0;
         return Utilities::nintegrate<LensHalo::DMDRDTHETA,PosType>(dmdrdtheta,0,2*pi,1.0e-7)
-        *exp(2*logR);
+        *exp(2*logR)/halo->Rmax; /// for the elliptical case and 2D integration an extra term of 1/Rmax comes in here.
       }else{
         PosType alpha[2] = {0,0},x[2] = {0,0};
         KappaType kappa = 0,gamma[3] = {0,0,0} ,phi=0;
@@ -660,7 +665,6 @@ public:
   //PosType ddmod(PosType x, int modnumber, PosType my_slope, PosType my_fratio);   // was used for Ansatz III w derivatives of the Fourier modes
   
   
-  
 	// TODO: BEN: the below functions alphaNFW, kappaNFW and gammaNFW are obsolete and better to be deleted to avoid confusion
 	void alphaNFW(PosType *alpha,PosType *x,PosType Rtrunc,PosType mass,PosType r_scale
                 ,PosType *center,PosType Sigma_crit);
@@ -742,7 +746,7 @@ class LensHaloPseudoNFW: public LensHalo{
 public:
   /// shell constructor, should be avoided
 	LensHaloPseudoNFW();
-  LensHaloPseudoNFW(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,PosType my_beta,float my_fratio,float my_pa,int my_stars_N);
+  LensHaloPseudoNFW(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,PosType my_beta,float my_fratio,float my_pa,int my_stars_N, EllipMethod my_ellip_method=Pseudo);
 	LensHaloPseudoNFW(InputParams& params);
 	~LensHaloPseudoNFW();
   
