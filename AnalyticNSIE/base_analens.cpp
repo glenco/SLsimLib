@@ -70,9 +70,21 @@ void LensHaloBaseNSIE::force_halo(
     
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    *kappa += lens_expand(perturb_beta,perturb_modes,perturb_Nmodes,xt,alpha_tmp,gamma_tmp,&phi_tmp);
-    // For consistency with FindLensSimple and other calls of lens_expand we removed the -1 after perturb_Nmodes.
-    
+    // std::cout << "??? perturb_Nmodes-1 = " << perturb_Nmodes-1 << std::endl;
+      
+    *kappa += lens_expand(perturb_beta,perturb_modes,perturb_Nmodes-1,xt,alpha_tmp,gamma_tmp,&phi_tmp);
+
+    // For consistency with FindLensSimple and other calls of lens_expand we had removed the -1 after perturb_Nmodes.
+      
+    // We put it back because otherwise the modes mod[i+1] in lens_expand would be used up to mod[imax+1] with :
+    // - if Nmodes (in lens_expand) is odd  : imax = Nmodes - 1 ;
+    // - if Nmodes (in lens_expand) is even : imax = Nmodes - 2 ;
+    // Hence, with Nmodes = perturb_Nmodes - 1 we have for example :
+    // perturb_Nmodes = 7  =>  Nmodes = perturb_Nmodes - 1 = 6  =>  imax = 4  => max mode used is mod[5].
+    // Without the -1 we would have :
+    // perturb_Nmodes = 7  =>  Nmodes = perturb_Nmodes = 7  =>  imax = 6  => max mode used is mod[7].
+    // This is not possible because 7 modes mean we use mod[0], mod[1], ... , mod[6] !
+      
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     std::cout << "alpha_tmp just after lens_expand : " << alpha_tmp[0] << " " << alpha_tmp[1] << std::endl;
