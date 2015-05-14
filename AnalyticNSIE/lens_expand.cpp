@@ -103,11 +103,11 @@ PosType lens_expand(PosType beta,
     
     // More tests :
     
-    std::cout << "x[0] = " << x[0] << " , x[1] = " << x[1] << std::endl ;
+    std::cout << "x1 = " << x[0] << " , x2 = " << x[1] << std::endl ;
     std::cout << "F = " << F << " , " ;
     for(i=4;i<Nmodes;i+=2){
         k=i/2;
-        std::cout << cos(k*theta) << " " << cos(k*theta) << " " ;
+        std::cout << cos(k*theta) << " " << sin(k*theta) << " " ;
     }
     std::cout << std::endl;
     std::cout << "beta = " << beta << " , Nmodes = " << Nmodes << " , mod[0,1,2] = " << mod[0] << " " << mod[1] << " " << mod[2] << std::endl;

@@ -7,6 +7,10 @@
 
 #include "slsimlib.h"
 
+template <typename T> PosType sgn(T val) {
+    return (T(0) < val) - (val - T(0));
+}
+
 using namespace std;
 
 void LensHaloBaseNSIE::force_halo(
@@ -87,7 +91,7 @@ void LensHaloBaseNSIE::force_halo(
       
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    std::cout << "alpha_tmp just after lens_expand : " << alpha_tmp[0] << " " << alpha_tmp[1] << std::endl;
+    // std::cout << "alpha_tmp just after lens_expand : " << alpha_tmp[0] << " " << alpha_tmp[1] << std::endl;
       
     // alpha_tmp is in mass / PhyMpc here !
     
@@ -106,11 +110,19 @@ void LensHaloBaseNSIE::force_halo(
     // alpha_tmp[0] -= xt[0] / Dl / (4*pi*Grav) ; // contribution in PhysMpc / PhysMpc / (PhysMpc/mass) = mass / PhysMpc
     // alpha_tmp[1] -= xt[1] / Dl / (4*pi*Grav) ;
 
-    // std::cout << "Subtracting : " << xt[0] / Dl / (4*pi*Grav) << " " << xt[1] / Dl / (4*pi*Grav) << std::endl;
+    std::cout << "Subtracting : " << xt[0] / (4*pi*Grav) << " " << xt[1] / (4*pi*Grav) << std::endl;
 
-      // alpha_tmp[0] *= -1. ;
-      // alpha_tmp[1] *= -1. ;
+
+      // alpha_tmp[0] += xt[0] / (Dl*(1+zlens)) / (4*pi*Grav) ;
+      // alpha_tmp[1] += xt[1] / (Dl*(1+zlens)) / (4*pi*Grav) ;
       
+      PosType zl = zlens ;
+      PosType zs = zsource_reference ;
+      
+      alpha_tmp[0] *= (1+zs)/(1+zl) ;
+      alpha_tmp[1] *= (1+zs)/(1+zl) ;
+
+/*
     // ========================================================
     // TRANSFORMATIONS ON ALPHA BEFORE I DISCOVER THE PROBLEM :
     alpha_tmp[0] += xt[0] / (Dl*(1+zlens)) / (4*pi*Grav) ;
@@ -122,7 +134,8 @@ void LensHaloBaseNSIE::force_halo(
     alpha_tmp[1] *= -1. * (1+zlens) ;
     // Multiplying alpha by cosmo.angDist(0.3) so that it combines with the remaining contributions of p->i_points[i].image->x[0], it probably cancels the (1+zl) factor called fac in rayshooter :
     // ========================================================
-
+*/
+      
       
 /*
     std::cout << "alpha final in force_halo : " << alpha_tmp[0] << " " << alpha_tmp[1] << std::endl ;
