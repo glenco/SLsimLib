@@ -400,30 +400,17 @@ void LensHaloFit::FindLensSimple(
   // mod[0,1,2] are now in radians.
   // mod[3,4,5,...] are now in radians.
     
-  // for(i=3;i<perturb_Nmodes;i++) perturb_modes[i] *= Dl ;
+  for(i=3;i<perturb_Nmodes;i++) perturb_modes[i] *= Dl ;
   // mod[0,1,2] are in radians.
   // mod[3,4,5,...] are now in PhysMpc.
 
   // Check that Dl*(1+zl) + Dls*(1+zs) = Ds*(1+zs), i.e. that D*(1+z) are here the comoving distances :
-  // assert(Dl*(1+zl) + Dls*(1+zs) - Ds*(1+zs) == 0.);
+  assert(Dl*(1+zl) + Dls*(1+zs) - Ds*(1+zs) == 0.);
   // std::cout << "Dl (1+zl) + Dls (1+zs) = " << Dl*(1+zl) + Dls*(1+zs) << " , Ds (1+zs) = " << Ds*(1+zs) << std::endl ;
   
-  for(i=0;i<perturb_Nmodes;i++) perturb_modes[i] /= (4*pi*Grav * Dls * Dl / Ds) ; // OR TRY WITH Dls -> Dls * Dl / Ds IF IT DOES NOT WORK.
+  for(i=0;i<perturb_Nmodes;i++) perturb_modes[i] /= (4*pi*Grav * Dls * Dl / Ds) ;
   // mod[0,1,2] are now in radians / ((PhysMpc / mass) * PhysMpc) = mass / PhysMpc^2.
   // mod[3,4,5,...] are now in PhysMpc / ((PhysMpc / mass) * PhysMpc) = mass / PhysMpc for beta = 1.
-  
-
-    
-  // FRANKENSTEIN BOX : **************************
-    
-    // for(i=0;i<perturb_Nmodes;i++) perturb_modes[i] *= 4.1 ;
-    
-    // for(i=3;i<perturb_Nmodes;i++) perturb_modes[i] *= Ds * (1+zs) / Dl ;
-    // mod[3,4,5,...] are now in (mass/PhysMpc)*(ComMpc/PhysMpc) = mass * ComMpc / (PhysMpc)^2
-    
-
-
-  // ********************************************* 
     
     
   // ================================================

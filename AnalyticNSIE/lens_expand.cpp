@@ -102,7 +102,6 @@ PosType lens_expand(PosType beta,
     // => DIMENSIONALLY CONSISTENT !
     
     // More tests :
-    
     std::cout << "x1 = " << x[0] << " , x2 = " << x[1] << std::endl ;
     std::cout << "F = " << F << " , " ;
     for(i=4;i<Nmodes;i+=2){
