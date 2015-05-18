@@ -258,9 +258,9 @@ void *compute_rays_parallel(void *_p)
       // This computes \vec{x}^{j+1} in terms of \vec{x}^{j} , \vec{x}^{j-1} and \vec{\alpha}^{j}
       // according to Eq. (19) of paper GLAMER II -----------------------------------------------
       
-      aa = (p->dDl[j+1] + p->dDl[j])/p->dDl[j];
-      bb = p->dDl[j+1]/p->dDl[j];
-      cc = p->charge * p->dDl[j+1];
+      aa = (p->dDl[j+1] + p->dDl[j])/p->dDl[j]; // (Dls*(1+zs) + Dl*(1+zl)) / Dl*(1+zl) = 1 + (Dls/Dl)*((1+zs)/(1+zl)) ;
+      bb = p->dDl[j+1]/p->dDl[j]; // (Dls/Dl)*((1+zs)/(1+zl)) ;
+      cc = p->charge * p->dDl[j+1]; // 4 pi G * Dls * (1+zs) ;
       
       assert(aa == aa);
       assert(bb == bb);
@@ -269,22 +269,13 @@ void *compute_rays_parallel(void *_p)
       xplus[0] = aa*p->i_points[i].image->x[0] - bb*xminus[0] - cc*alpha[0];
       xplus[1] = aa*p->i_points[i].image->x[1] - bb*xminus[1] - cc*alpha[1];
       // x (should be) in physical Mpc, cc*alpha in (PhysMpc/mass)*(mass/Mpc)=1/(1+z).
+        
+      // For the test with a source at the position (0,0) centered on the lens :
+      // std::cout << "alpha we have at the end of force_halo : " << alpha[0] << " " << alpha[1] << std::endl ;
+      // std::cout << "alpha we should have at the end of force_halo : " << aa*p->i_points[i].image->x[0] / cc << " " << aa*p->i_points[i].image->x[1] / cc << std::endl << std::endl ;
 
-      std::cout << "alpha we have at the end of force_halo : " << alpha[0] << " " << alpha[1] << std::endl ;
-      std::cout << "alpha we should have at the end of force_halo : " << -1. * aa*p->i_points[i].image->x[0] / cc << " " << -1. * aa*p->i_points[i].image->x[1] / cc << std::endl << std::endl ;
-      // The minus sign is due to the change of sign in LensPlaneSingular::force !
-        
-        /*
-      std::cout << "abc : " << aa << "\t" << bb << "\t" << cc << std::endl;
-      std::cout << "im. : " << p->i_points[i].image->x[0] << " " << p->i_points[i].image->x[1] << " | " << xminus[0] << " " << xminus[1] << std::endl;
-      std::cout << std::endl;
-        */
-        
-      // std::cout << "cc*alpha/p->Dl[p->NPlanes] in rayshooter : ??? " << cc*alpha[0] / p->Dl[p->NPlanes] << " " << cc*alpha[1] / p->Dl[p->NPlanes] << " ???" << std::endl ;
-      
       xminus[0] = p->i_points[i].image->x[0];
       xminus[1] = p->i_points[i].image->x[1];
-    
       
       // Change in the value of the position.
       p->i_points[i].image->x[0] = xplus[0];

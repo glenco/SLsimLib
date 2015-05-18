@@ -82,37 +82,40 @@ PosType lens_expand(PosType beta,
     cos2theta=2*cosx*cosx-1;
     sin2theta=2*cosx*sinx;
 
-    // shear
+    // Old thing :
+    //gamma[0]=-0.5*( x[0]*(r*dxdr - dyda) - x[1]*(r*dydr + dxda) )/r/r;
+    //gamma[1]=-(  x[0]*dxda + r*x[1]*dxdr )/r/r;
+    
+    
+    // shear :
     gamma[0]=-(gt*cos2theta+gx*sin2theta) + mod[1];
     gamma[1]=-gt*sin2theta+gx*cos2theta + mod[2];
     // CONSISTENCY :
     // first terms in mass / PhysMpc^2
     // second terms, mod[1,2], in mass / PhysMpc^2
     // => DIMENSIONALLY CONSISTENT !
-
-    // Old thing :
-    //gamma[0]=-0.5*( x[0]*(r*dxdr - dyda) - x[1]*(r*dydr + dxda) )/r/r;
-    //gamma[1]=-(  x[0]*dxda + r*x[1]*dxdr )/r/r;
-
-    // potential
+    
+    // potential :
     *phi = F*pow(r,beta) + r*r*(mod[0] + mod[1]*cos2theta + mod[2]*sin2theta)/2;
     // CONSISTENCY :
     // first term F*pow(r,beta) in (mass / PhysMpc) * PhysMpc = mass for beta = 1
     // second terms in PhysMpc^2 * (mass / PhysMpc^2) = mass
     // => DIMENSIONALLY CONSISTENT !
     
-    // More tests :
     
-    std::cout << "x[0] = " << x[0] << " , x[1] = " << x[1] << std::endl ;
+    // More displays :
+    /*
+    std::cout << "x1 = " << x[0] << " , x2 = " << x[1] << std::endl ;
     std::cout << "F = " << F << " , " ;
     for(i=4;i<Nmodes;i+=2){
         k=i/2;
-        std::cout << cos(k*theta) << " " << cos(k*theta) << " " ;
+        std::cout << cos(k*theta) << " " << sin(k*theta) << " " ;
     }
     std::cout << std::endl;
     std::cout << "beta = " << beta << " , Nmodes = " << Nmodes << " , mod[0,1,2] = " << mod[0] << " " << mod[1] << " " << mod[2] << std::endl;
     std::cout << "cos2theta = " << cos2theta << " , sin2theta = " << sin2theta << std::endl;
     std::cout << std::endl;
+     */
     
     
     //printf("  lens_expand *phi = %e\n",*phi);
