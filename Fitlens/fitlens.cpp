@@ -394,7 +394,9 @@ void LensHaloFit::FindLensSimple(
   //Einstein_ro = 0.0; // the monople is now included in the modes
   //sigma = 0.0;
     
-
+    
+  // ===== Applying factors to the modes ======================================================
+    
   // Multiplying the first 3 modes by scale :
   for(i=3;i<perturb_Nmodes;i++) perturb_modes[i] *= scale ; // Important step !
   // mod[0,1,2] are now in radians.
@@ -411,6 +413,8 @@ void LensHaloFit::FindLensSimple(
   for(i=0;i<perturb_Nmodes;i++) perturb_modes[i] /= (4*pi*Grav * Dls * Dl / Ds) ;
   // mod[0,1,2] are now in radians / ((PhysMpc / mass) * PhysMpc) = mass / PhysMpc^2.
   // mod[3,4,5,...] are now in PhysMpc / ((PhysMpc / mass) * PhysMpc) = mass / PhysMpc for beta = 1.
+    
+  // ==========================================================================================
     
     
   // ================================================

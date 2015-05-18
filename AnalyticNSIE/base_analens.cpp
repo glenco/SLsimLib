@@ -74,8 +74,6 @@ void LensHaloBaseNSIE::force_halo(
     
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    // std::cout << "??? perturb_Nmodes-1 = " << perturb_Nmodes-1 << std::endl;
-      
     *kappa += lens_expand(perturb_beta,perturb_modes,perturb_Nmodes-1,xt,alpha_tmp,gamma_tmp,&phi_tmp);
 
     // For consistency with FindLensSimple and other calls of lens_expand we had removed the -1 after perturb_Nmodes.
@@ -92,44 +90,17 @@ void LensHaloBaseNSIE::force_halo(
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     // std::cout << "alpha_tmp just after lens_expand : " << alpha_tmp[0] << " " << alpha_tmp[1] << std::endl;
-      
     // alpha_tmp is in mass / PhyMpc here !
     
     // Printing quantities for control :
-      /*
-    std::cout << "         xt in force_halo : @@@ " << xt[0]/Dls << " " << xt[1]/Dls << " @@@" << std::endl ;
-    std::cout << "alpha in force_halo : " << alpha_tmp[0] * (4*pi*Grav) << " " << alpha_tmp[1]* (4*pi*Grav) << std::endl ;
-    std::cout << "xt - alpha in force_halo : !!! " << xt[0] - alpha_tmp[0] << " " << xt[1] - alpha_tmp[1] << " !!!" << std::endl ;
-        */
-      
-    // std::cout << "Dl = " << Dl << " , Dls = " << Dls << " , Ds = " << Ds << std::endl ;
-    // std::cout << "Before : " << alpha_tmp[0] << " " << alpha_tmp[1] << std::endl;
+    // std::cout << "         xt in force_halo : @@@ " << xt[0]/Dls << " " << xt[1]/Dls << " @@@" << std::endl ;
+    // std::cout << "alpha in force_halo : " << alpha_tmp[0] * (4*pi*Grav) << " " << alpha_tmp[1]* (4*pi*Grav) << std::endl ;
+    // std::cout << "xt - alpha in force_halo : !!! " << xt[0] - alpha_tmp[0] << " " << xt[1] - alpha_tmp[1] << " !!!" << std::endl ;
 
     // Changing the sign because there is a change of sign in LensPlaneSingular::force :
     alpha_tmp[0] *= -1. ;
     alpha_tmp[1] *= -1. ;
       
-/*
-    // ========================================================
-    PosType zl = zlens ;
-    PosType zs = zsource_reference ;
-    // TRANSFORMATIONS ON ALPHA BEFORE I DISCOVER THE PROBLEM :
-    alpha_tmp[0] += xt[0] / (Dl*(1+zl)) / (4*pi*Grav) ;
-    alpha_tmp[1] += xt[1] / (Dl*(1+zl)) / (4*pi*Grav) ;
-    // WHY DO WE NEED THIS STEP ???
-    // We need it because rayshooter computes alpha such that y = Ds/Dl * x - cc*alpha is the initial position of the source, but with the modes computed here it turns out that Dls/Dl * x - cc*alpha is the position of the source (as when we test it with different images we get the same position of the source).
-    // WE SHOULD UNDERSTAND WHY THIS IS SO !
-    alpha_tmp[0] *= -1. * (1+zl) ;
-    alpha_tmp[1] *= -1. * (1+zl) ;
-    // Multiplying alpha by cosmo.angDist(0.3) so that it combines with the remaining contributions of p->i_points[i].image->x[0], it probably cancels the (1+zl) factor called fac in rayshooter :
-    // ========================================================
-*/
-      
-      
-/*
-    std::cout << "alpha final in force_halo : " << alpha_tmp[0] << " " << alpha_tmp[1] << std::endl ;
-    std::cout << "alpha final in force_halo : " << alpha_tmp[0] * (4*pi*Grav) << " " << alpha_tmp[1] * (4*pi*Grav) << std::endl << std:endl ;
-*/
     
     // As before :
     alpha[0] += alpha_tmp[0];
