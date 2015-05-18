@@ -270,8 +270,9 @@ void *compute_rays_parallel(void *_p)
       xplus[1] = aa*p->i_points[i].image->x[1] - bb*xminus[1] - cc*alpha[1];
       // x (should be) in physical Mpc, cc*alpha in (PhysMpc/mass)*(mass/Mpc)=1/(1+z).
         
-      std::cout << "alpha we have at the end of force_halo : " << alpha[0] << " " << alpha[1] << std::endl ;
-      std::cout << "alpha we should have at the end of force_halo : " << aa*p->i_points[i].image->x[0] / cc << " " << aa*p->i_points[i].image->x[1] / cc << std::endl << std::endl ;
+      // For the test with a source at the position (0,0) centered on the lens :
+      // std::cout << "alpha we have at the end of force_halo : " << alpha[0] << " " << alpha[1] << std::endl ;
+      // std::cout << "alpha we should have at the end of force_halo : " << aa*p->i_points[i].image->x[0] / cc << " " << aa*p->i_points[i].image->x[1] / cc << std::endl << std::endl ;
 
       xminus[0] = p->i_points[i].image->x[0];
       xminus[1] = p->i_points[i].image->x[1];
