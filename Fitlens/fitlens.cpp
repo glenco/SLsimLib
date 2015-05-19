@@ -367,7 +367,7 @@ void LensHaloFit::FindLensSimple(
   // source position :
   y[0] = mods[i]*scale; std::cout << "iii = " << i << std::endl;
   y[1] = mods[i+1]*scale;
-  // now in radians.
+  // y[0] and y[1] are now in radians.
     
   // std::cout << "i = " << i << std::endl ;
   std::cout << "scale = " << scale << std::endl;
@@ -399,7 +399,7 @@ void LensHaloFit::FindLensSimple(
     
   // Multiplying the first 3 modes by scale :
   for(i=3;i<perturb_Nmodes;i++) perturb_modes[i] *= scale ; // Important step !
-  // mod[0,1,2] are now in radians.
+  // mod[0,1,2] are already in radians (see in ElliptisizeLens).
   // mod[3,4,5,...] are now in radians.
     
   for(i=3;i<perturb_Nmodes;i++) perturb_modes[i] *= Dl ;

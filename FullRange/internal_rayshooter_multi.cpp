@@ -259,8 +259,8 @@ void *compute_rays_parallel(void *_p)
       // according to Eq. (19) of paper GLAMER II -----------------------------------------------
       
       aa = (p->dDl[j+1] + p->dDl[j])/p->dDl[j]; // (Dls*(1+zs) + Dl*(1+zl)) / Dl*(1+zl) = 1 + (Dls/Dl)*((1+zs)/(1+zl)) ;
-      bb = p->dDl[j+1]/p->dDl[j]; // (Dls/Dl)*((1+zs)/(1+zl)) ;
-      cc = p->charge * p->dDl[j+1]; // 4 pi G * Dls * (1+zs) ;
+      bb = p->dDl[j+1]/p->dDl[j];               // (Dls/Dl)*((1+zs)/(1+zl)) ;
+      cc = p->charge * p->dDl[j+1];             // 4 pi G * Dls * (1+zs) ;
       
       assert(aa == aa);
       assert(bb == bb);

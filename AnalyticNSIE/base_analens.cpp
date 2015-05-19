@@ -14,7 +14,7 @@ template <typename T> PosType sgn(T val) {
 using namespace std;
 
 void LensHaloBaseNSIE::force_halo(
-                                  PosType *alpha       /// mass/Mpc
+                                  PosType *alpha       /// mass/PhysMpc
                                   ,KappaType *kappa    /// surface mass density
                                   ,KappaType *gamma
                                   ,KappaType *phi
