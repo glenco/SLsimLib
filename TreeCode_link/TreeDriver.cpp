@@ -1447,6 +1447,26 @@ void PrintImages(ImageInfo *images,long Nimages){
 	for(i=0;i<Nimages;++i)	images[i].imagekist->Print();
 }
 
+
+/// Computes the inverse magnification averaged over the image
+KappaType ImageInfo::aveInvMag()
+{
+  int i ;
+  KappaType tmp_invmag = 0. ;
+  
+  // Doing the average :
+  imagekist->MoveToTop(); // Move to first point of imagekist
+  for(i=0;i<imagekist->Nunits();i++)
+  {
+    tmp_invmag += imagekist->getCurrent()->invmag ;
+    imagekist->Down();
+  }
+  tmp_invmag /= imagekist->Nunits() ;
+  
+  return tmp_invmag;
+}
+
+
 /// Computes the time delay averaged over the image
 KappaType ImageInfo::aveTimeDelay()
 {

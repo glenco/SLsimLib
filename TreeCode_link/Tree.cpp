@@ -791,7 +791,7 @@ ImageInfo::ImageInfo(){
  * Destructor of imageinfo types.
  */
 ImageInfo::~ImageInfo(){
-	delete imagekist;
+    delete imagekist;
     delete innerborder;
     delete outerborder;
 }
@@ -881,17 +881,23 @@ void ImageFinding::CriticalCurve::RandomSourceWithinCaustic(int N,std::vector<Po
   }
 }
 
-void ImageFinding::CriticalCurve::RandomSourceStrictlyWithinCaustic(int N,std::vector<Point_2d> &y,Utilities::RandomNumbers_NR &rng, PosType sourceRadius)
+/**
+ *  Returns N source positions which are not overlapping with the caustic lines.
+ *  i.e. the distance between the caustic line and the center of the source is larger than radius of the source.
+ */
+void ImageFinding::CriticalCurve::RandomSourceStrictlyWithinCaustic(int N,std::vector<Point_2d> &y,Utilities::RandomNumbers_NR &rng, PosType sourceRadius, PosType distSourceToCaustic)
 {
+  assert(distSourceToCaustic > sourceRadius);
   CausticRange(p1,p2);
   y.resize(N);
   for(int ii=0;ii<N;++ii){
     do{
       y[ii][0] = (p2[0] - p1[0])*rng() + p1[0];
       y[ii][1] = (p2[1] - p1[1])*rng() + p1[1];
-    }while(!EntirelyinCausticCurve(y[ii],sourceRadius));
+    }while(!EntirelyinCausticCurve(y[ii],distSourceToCaustic));
   }
 }
+
 
 void ImageFinding::CriticalCurve::CritRange(Point_2d &my_p1,Point_2d &my_p2){
   if(critical_curve.size() == 0){

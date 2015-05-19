@@ -246,6 +246,7 @@ namespace ImageFinding{
                                            ,std::vector<Point_2d> &y          /// output vector of points
                                            ,Utilities::RandomNumbers_NR &rng  /// random number generator
                                            ,PosType sourceRadius              /// radius of the source
+                                           ,PosType distSourceToCaustic       /// distance wanted between the source and the caustic line (must be larger than sourceRadius)
                                            );
     /// find rectangular region enclosing critical curve
     void CritRange(Point_2d &p1,Point_2d &p2);
