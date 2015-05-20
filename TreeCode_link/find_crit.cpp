@@ -125,7 +125,6 @@ void ImageFinding::find_crit(
       // *******************************/
       
       //negimage[ii].imagekist->SetInImage(NO);
-
       //if(negimage[ii].innerborder->Nunits() > 2000) break;
       
       refinements=ImageFinding::IF_routines::refine_edges(lens,grid,&negimage[ii]
@@ -277,7 +276,6 @@ void ImageFinding::find_crit(
     
     std::vector<ImageInfo> pseudocurve(negimage.size());
     std::vector<CritType> types(negimage.size());
-    //std::vector<CriticalCurve> psecurve;
     const PosType pseudolimit = -100.0;
     int Npseudo = 0;
     Point *current;
@@ -398,7 +396,41 @@ void ImageFinding::find_crit(
   
   *Ncrits = crtcurve.size();
   if(verbose) std::cout << "********* find_crit() out **************" << std::endl;
-
+  {
+    
+    //*********************  test lines ****************************
+    // This tests that every every radial or pseudo critical line is near at
+    // least one negative mag point
+    Kist<Point> nkist;
+    for(auto &crit : crtcurve){
+      
+      if(crit.type != tangential){
+        Point *pointp = nullptr;
+        if(crit.type == radial){
+          for(Point_2d &p : crit.critical_curve){
+            pointp = grid->i_tree->FindBoxPoint(p.x);
+            grid->i_tree->FindAllBoxNeighborsKist(pointp,&nkist);
+            bool good = false;
+            for(auto np : nkist){
+              if(np.invmag < 0){ good = true; break;}
+            }
+            assert(good);
+          }
+        }else if(crit.type == pseudo){
+          pointp = grid->i_tree->FindBoxPoint(crit.critical_center.x);
+          grid->i_tree->FindAllBoxNeighborsKist(pointp,&nkist);
+          bool good = false;
+          for(auto np : nkist){
+            if(np.invmag < 0){ good = true; break;}
+          }
+          assert(good);
+        }
+      }
+    }
+    //**************************************************************/
+    
+  }
+  
   return ;
 }
 /*  This function is not meant for an external user.  It is only used by 
