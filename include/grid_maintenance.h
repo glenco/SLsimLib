@@ -155,8 +155,6 @@ namespace ImageFinding{
       return *this;
     }
     
-    // !!!! need assignment oportor
-    
     std::vector<Point_2d> critical_curve;
     std::vector<Point_2d> caustic_curve_outline;
     std::vector<Point_2d> caustic_curve_intersecting;

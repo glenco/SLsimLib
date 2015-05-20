@@ -100,7 +100,6 @@ void LensHaloBaseNSIE::force_halo(
     // Changing the sign because there is a change of sign in LensPlaneSingular::force :
     alpha_tmp[0] *= -1. ;
     alpha_tmp[1] *= -1. ;
-      
     
     // As before :
     alpha[0] += alpha_tmp[0];

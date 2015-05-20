@@ -19,15 +19,16 @@ SourceMultiAnaGalaxy::SourceMultiAnaGalaxy(
 		,PosType inclination     /// inclination of disk (radians)
 		,PosType my_z               /// redshift of source
 		,PosType *my_theta          /// position on the sky
+    ,Utilities::RandomNumbers_NR &ran
 		): Source(),index(0){
 	
-	galaxies.push_back(SourceOverzier(mag,BtoT,Reff,Rh,PA,inclination,0,my_z,my_theta));
+	galaxies.push_back(SourceOverzierPlus(mag,BtoT,Reff,Rh,PA,inclination,0,my_z,my_theta,ran));
 }
 /** Constructor for passing in a pointer to the galaxy model or a list of galaxies instead of constructing it internally.
 *   Useful when there is a list of pre-allocated sources.  The redshifts and sky positions need to be set separately.
 */
 SourceMultiAnaGalaxy::SourceMultiAnaGalaxy(
-		SourceOverzier *my_galaxy
+		SourceOverzierPlus *my_galaxy
 		): Source(),index(0){
 	
 	galaxies.push_back(*my_galaxy);
@@ -35,6 +36,7 @@ SourceMultiAnaGalaxy::SourceMultiAnaGalaxy(
 /// Constructor for importing from data file.
 SourceMultiAnaGalaxy::SourceMultiAnaGalaxy(
 		InputParams& params   /// Input data file for galaxies
+    ,Utilities::RandomNumbers_NR &ran
 		): Source(),index(0){
 
 	if(!params.get("source_input_galaxy_file",input_gal_file)){
@@ -46,10 +48,10 @@ SourceMultiAnaGalaxy::SourceMultiAnaGalaxy(
 
 	std::cout << "Constructing SourceAnaGalaxy" << std::endl;
 
-	readDataFile();
+	readDataFile(ran);
 	index = 0;
-  searchtree = new TreeSimpleVec<SourceOverzier>(galaxies.data(),galaxies.size(),1,2,true,SourceOverzier::getx);
-  //searchtree = new TreeSimpleVec<SourceOverzier>(galaxies.data(),galaxies.size(),1,3,true);
+  searchtree = new TreeSimpleVec<SourceOverzierPlus>(galaxies.data(),galaxies.size(),1,2,true,SourceOverzierPlus::getx);
+  //searchtree = new TreeSimpleVec<SourceOverzierPlus>(galaxies.data(),galaxies.size(),1,3,true);
 }
 
 SourceMultiAnaGalaxy::~SourceMultiAnaGalaxy()
@@ -58,7 +60,7 @@ SourceMultiAnaGalaxy::~SourceMultiAnaGalaxy()
 }
 
 /// read in galaxies from a Millennium simulation file
-void SourceMultiAnaGalaxy::readDataFile(){
+void SourceMultiAnaGalaxy::readDataFile(Utilities::RandomNumbers_NR &ran){
 
 	//int type;
 	//long galid,haloid;
@@ -309,8 +311,10 @@ void SourceMultiAnaGalaxy::readDataFile(){
       
 			/***************************/
 			galaxies.push_back(
-					SourceOverzier(mag,pow(10,-(mag_bulge-mag)/2.5),Ref,Rh
-							,pa,inclination,HaloID,z_cosm,theta)
+                         SourceOverzierPlus(mag,pow(10,-(mag_bulge-mag)/2.5),Ref,Rh
+                                            ,pa,inclination,HaloID,z_cosm,theta,ran)
+                         //SourceOverzier(mag,pow(10,-(mag_bulge-mag)/2.5),Ref,Rh
+                         //                   ,pa,inclination,HaloID,z_cosm,theta)
 			);
 
 			galaxies.back().setUMag(SDSS_u);
@@ -375,7 +379,7 @@ void SourceMultiAnaGalaxy::multiplier(
 		PosType z                /// limiting redshift, only sources above this redshift are copied
 		,PosType mag_cut         /// limiting magnitude, only sources with magnitudes below this limit will be copied
 		,int multiplicity       /// the number of times each of these sources should be multiplied
-		,long *seed    /// random number seed
+		,Utilities::RandomNumbers_NR &ran    /// random number seed
 		){
 	unsigned long Nold = galaxies.size(),NtoAdd=0;
 	PosType x1[2],x2[2],theta[2];
@@ -394,12 +398,12 @@ void SourceMultiAnaGalaxy::multiplier(
 		if(galaxies[i].getZ() > z && galaxies[i].getMag() < mag_cut){
 
 			for(int j=0;j<multiplicity;++j){
-				theta[0] = x1[0] + (x2[0] - x1[0])*ran2(seed);
-				theta[1] = x1[1] + (x2[1] - x1[1])*ran2(seed);
+				theta[0] = x1[0] + (x2[0] - x1[0])*ran();
+				theta[1] = x1[1] + (x2[1] - x1[1])*ran();
 
-				galaxies.push_back(SourceOverzier(galaxies[i].getMag(),galaxies[i].getBtoT(),galaxies[i].getReff()
-					,galaxies[i].getRh(),ran2(seed)*pi,ran2(seed)*2*pi
-					,Nold+NtoAdd,galaxies[i].getZ(),theta));
+				galaxies.push_back(SourceOverzierPlus(galaxies[i].getMag(),galaxies[i].getBtoT()
+                ,galaxies[i].getReff(),galaxies[i].getRh(),ran()*pi,ran()*2*pi
+					,Nold+NtoAdd,galaxies[i].getZ(),theta,ran));
 
 				++NtoAdd;
 			}
@@ -413,44 +417,49 @@ void SourceMultiAnaGalaxy::sortInRedshift(){
   if(galaxies.size() < 2) return;
   std::sort(galaxies.begin(),galaxies.end(),redshiftcompare);
   delete searchtree;
-  searchtree = new TreeSimpleVec<SourceOverzier>(galaxies.data(),galaxies.size(),1,2,true,SourceOverzier::getx);
+  searchtree = new TreeSimpleVec<SourceOverzierPlus>(galaxies.data(),galaxies.size(),1,2,true,SourceOverzierPlus::getx);
 }
 // used in MultiSourceAnaGalaxy::sortInRedshift()
-bool redshiftcompare(SourceOverzier s1,SourceOverzier s2){
+bool redshiftcompare(SourceOverzierPlus s1,SourceOverzierPlus s2){
     return (s1.getZ() < s2.getZ());
 }
 /// Sort the sources by magnitude in assending order
 void SourceMultiAnaGalaxy::sortInMag(Band tmp_band){
   if(galaxies.size() < 2) return;
   
-  if(tmp_band != band){
+  /*if(tmp_band != band){
     for(size_t i = 0; i < galaxies.size() ; ++i) galaxies[i].setBand(tmp_band);
+  }*/
+  
+  //std::sort(galaxies.begin(),galaxies.end(),magcompare);
+  std::sort(galaxies.begin(),galaxies.end()
+            ,[&tmp_band](SourceOverzierPlus s1,SourceOverzierPlus s2){
+    return (s1.getMag(tmp_band) < s2.getMag(tmp_band));
   }
+);
   
-  std::sort(galaxies.begin(),galaxies.end(),magcompare);
-  
-  if(tmp_band != band){
+/*  if(tmp_band != band){
     for(size_t i = 0; i < galaxies.size() ; ++i) galaxies[i].setBand(band);
-  }
+  }*/
 
   delete searchtree;
-  searchtree = new TreeSimpleVec<SourceOverzier>(galaxies.data(),galaxies.size(),1,2,true,SourceOverzier::getx);
+  searchtree = new TreeSimpleVec<SourceOverzierPlus>(galaxies.data(),galaxies.size(),1,2,true,SourceOverzierPlus::getx);
 }
 /// Sort the sources by magnitude in assending order
 void SourceMultiAnaGalaxy::sortInID(){
   if(galaxies.size() < 2) return;
   std::sort(galaxies.begin(),galaxies.end(),
-            [](SourceOverzier s1,SourceOverzier s2){return (s1.getID() < s2.getID());});
+            [](SourceOverzierPlus s1,SourceOverzierPlus s2){return (s1.getID() < s2.getID());});
 
   delete searchtree;
-  searchtree = new TreeSimpleVec<SourceOverzier>(galaxies.data(),galaxies.size(),1,2,true,SourceOverzier::getx);
+  searchtree = new TreeSimpleVec<SourceOverzierPlus>(galaxies.data(),galaxies.size(),1,2,true,SourceOverzierPlus::getx);
 }
 // used in MultiSourceAnaGalaxy::sortInRedshift()
-bool magcompare(SourceOverzier s1,SourceOverzier s2){
+bool magcompare(SourceOverzierPlus s1,SourceOverzierPlus s2){
   return (s1.getMag() < s2.getMag());
 }
 // used in MultiSourceAnaGalaxy::sortInRedshift()
-bool idcompare(SourceOverzier s1,SourceOverzier s2){
+bool idcompare(SourceOverzierPlus s1,SourceOverzierPlus s2){
   return (s1.getID() < s2.getID());
 }
 /// Print info on current source parameters

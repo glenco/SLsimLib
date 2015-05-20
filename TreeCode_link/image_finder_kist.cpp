@@ -61,8 +61,8 @@ void ImageFinding::find_images_kist(
      ){
     // source is not within initialized grid
     *Nimages = 0;
-    std::cout << "source not within initialized grid" << std::endl;
-    ERROR_MESSAGE();
+    std::cout << "Warning: source not within initialized grid" << std::endl;
+    //ERROR_MESSAGE();
     return;
   }
   

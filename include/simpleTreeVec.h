@@ -313,7 +313,7 @@ void TreeSimpleVec<T>::_PointsWithin(PosType *ray,float *rmax,std::list <unsigne
                 if( atLeaf() ){
                     // if leaf calculate the distance to all the points in cell
                     for(i=0;i<current->nparticles;++i){
-                        for(j=0,radius=0.0;j<2;++j) radius+=pow(points[current->branch_index[i]][j]-ray[j],2);
+                        for(j=0,radius=0.0;j<2;++j) radius+=pow(position(points[current->branch_index[i]])[j]-ray[j],2);
                         if( radius < *rmax**rmax ){
                             neighborlist.push_back(current->branch_index[i]);
                             //cout << "add point to list" << neighborlist.size() << endl;
@@ -365,7 +365,7 @@ void TreeSimpleVec<T>::_PointsWithin(PosType *ray,float *rmax,std::list <unsigne
             if( atLeaf()  ){  /* leaf case */
                 
                 for(i=0;i<current->nparticles;++i){
-                    for(j=0,radius=0.0;j<2;++j) radius+=pow(points[current->branch_index[i]][j]-ray[j],2);
+                    for(j=0,radius=0.0;j<2;++j) radius+=pow(position(points[current->branch_index[i]])[j]-ray[j],2);
                     if( radius < *rmax**rmax ){
                         neighborlist.push_back(current->branch_index[i]);
                         //InsertAfterCurrentKist(neighborlist,current->branch_index[i]);

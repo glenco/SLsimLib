@@ -30,9 +30,9 @@
  */
 class SourceMultiAnaGalaxy: public Source{
 public:
-	SourceMultiAnaGalaxy(PosType mag, PosType BtoT, PosType Reff, PosType Rh, PosType PA, PosType inclination,PosType my_z,PosType *my_theta);
-	SourceMultiAnaGalaxy(SourceOverzier *my_galaxy);
-	SourceMultiAnaGalaxy(InputParams& params);
+	SourceMultiAnaGalaxy(PosType mag, PosType BtoT, PosType Reff, PosType Rh, PosType PA, PosType inclination,PosType my_z,PosType *my_theta,Utilities::RandomNumbers_NR &ran);
+	SourceMultiAnaGalaxy(SourceOverzierPlus *my_galaxy);
+	SourceMultiAnaGalaxy(InputParams& params,Utilities::RandomNumbers_NR &ran);
 	~SourceMultiAnaGalaxy();
 	
 	/// Surface brightness of current galaxy.
@@ -47,12 +47,12 @@ public:
 
 	void printSource();
 	// Add a pre-constructed galaxy to the source collection
-	void AddAGalaxy(SourceOverzier *my_galaxy){galaxies.push_back(*my_galaxy);}
+	void AddAGalaxy(SourceOverzierPlus *my_galaxy){galaxies.push_back(*my_galaxy);}
 
 	/** \brief Used to change the "current" source that is returned when the surface brightness is subsequently
 	 * called.  It also returns a reference to the particular OverzierSource source model.
 	 */
-	SourceOverzier& setIndex (std::size_t i){
+	SourceOverzierPlus& setIndex (std::size_t i){
 		if(i < galaxies.size())
 			index = i;
 		return galaxies[index];
@@ -60,19 +60,19 @@ public:
 	/** \brief The indexing operator can be used to change the "current" source that is returned when the surface brightness is subsequently
 	 * called.  It also returns a reference to the particular OverzierSource source model.
 	 */
-	SourceOverzier& operator[] (std::size_t i){
+	SourceOverzierPlus& operator[] (std::size_t i){
 		if(i < galaxies.size())
 			return galaxies[i];
 		return galaxies[index];
 	}
 	
-	const SourceOverzier& operator[] (std::size_t i) const {
+	const SourceOverzierPlus& operator[] (std::size_t i) const {
 		if(i < galaxies.size())
 			return galaxies[i];
 		return galaxies[index];
 	}
 
-	SourceOverzier& CurrentGalaxy(){
+	SourceOverzierPlus& CurrentGalaxy(){
 		return galaxies[index];
 	}
 
@@ -97,7 +97,7 @@ public:
 	void setX(PosType my_x,PosType my_y){galaxies[index].setX(my_x, my_y);}
 	std::size_t getNumberOfGalaxies() const {return galaxies.size();}
 
-	void multiplier(PosType z,PosType mag_cut,int Multiplicity,long *seed);
+	void multiplier(PosType z,PosType mag_cut,int Multiplicity,Utilities::RandomNumbers_NR &ran);
   void sortInRedshift();
   void sortInMag(Band tmp_band);
   void sortInID();
@@ -112,25 +112,40 @@ public:
     searchtree->NearestNeighbors(theta,1,radius,&index);
     return index;
   }
-  
+
+  /** \brief finds closest sources to theta on umlensed sky.  "radius" should have a size equal ti the number wanted
+   */
+  void findclosestonsky(PosType theta[],std::vector<float> &radius,std::vector<size_t> &indexes){
+    indexes.resize(radius.size());
+    searchtree->NearestNeighbors(theta,radius.size(),radius.data(),indexes.data());
+    return;
+  }
+ 
+  /** \brief finds objects within radios of theta[] on umlensed sky.    */
+  void findonsky(PosType theta[],float radius,std::list<size_t> &indexes){
+    indexes.clear();
+    searchtree->PointsWithinCircle(theta,radius,indexes);
+    return;
+  }
+
 private:
 	Band band;
 	float mag_limit;
 	std::size_t index;
 
-	std::vector<SourceOverzier> galaxies;
-  TreeSimpleVec<SourceOverzier> *searchtree;
+	std::vector<SourceOverzierPlus> galaxies;
+  TreeSimpleVec<SourceOverzierPlus> *searchtree;
 	std::string input_gal_file;
 
-	void readDataFile();
+	void readDataFile(Utilities::RandomNumbers_NR &ran);
 	void assignParams(InputParams& params);
 
   PosType rangex[2],rangey[2];
 };
 
-bool redshiftcompare(SourceOverzier s1,SourceOverzier s2);
-bool magcompare(SourceOverzier s1,SourceOverzier s2);
-bool idcompare(SourceOverzier s1,SourceOverzier s2);
+bool redshiftcompare(SourceOverzierPlus s1,SourceOverzierPlus s2);
+bool magcompare(SourceOverzierPlus s1,SourceOverzierPlus s2);
+bool idcompare(SourceOverzierPlus s1,SourceOverzierPlus s2);
 
 /**
  * \brief Class for reading in and handling an array of SourceShapelets, made on the model of SourceMultiAnaGalaxy
