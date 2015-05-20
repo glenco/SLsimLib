@@ -219,6 +219,9 @@ public:
   /// get the field min mass :
   PosType getFieldMinMass() { return field_min_mass ; }
  
+  // get the field_Off value :
+  bool getfieldOff() {return flag_switch_field_off ;}
+  
 private:
 	GLAMER_TEST_FRIEND(LensTest)
 	
@@ -452,6 +455,7 @@ private: /* input */
   PosType sim_angular_radius;
   /// inverse of the angular screening scale in the tree force calculation
   PosType inv_ang_screening_scale;
+  
 };
 
 inline std::size_t Lens::getNMainHalos() const
