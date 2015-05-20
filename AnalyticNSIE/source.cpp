@@ -270,7 +270,7 @@ void SourcePixelled::calcCentroid(){
   PosType x[2];
   for (unsigned long i = 0; i < Npixels*Npixels; i++)
   {
-    Utilities::PositionFromIndex(i,x,Npixels,range,source_x);
+    Utilities::PositionFromIndex(i,x,Npixels,range,source_x.x);
     x_sum += x[0]*values[i];
     y_sum += x[1]*values[i];
     sum += values[i];
@@ -291,7 +291,7 @@ void SourcePixelled::calcEll(){
   PosType x[2];
   for (unsigned long i = 0; i < Npixels*Npixels; i++)
   {
-    Utilities::PositionFromIndex(i,x,Npixels,range,source_x);
+    Utilities::PositionFromIndex(i,x,Npixels,range,source_x.x);
     for (int j = 0; j < 2; j++)
     {
       for (int k = 0; k < 2; k++)
@@ -313,7 +313,7 @@ void SourcePixelled::calcSize(){
   
   for (unsigned long i = 0; i < Npixels*Npixels; i++)
   {
-    Utilities::PositionFromIndex(i,x,Npixels,range,source_x);
+    Utilities::PositionFromIndex(i,x,Npixels,range,source_x.x);
     rad = sqrt((x[0]-centroid[0])*(x[0]-centroid[0])+(x[1]-centroid[1])*(x[1]-centroid[1]));
     r_sum += rad*values[i];
     sum += values[i];

@@ -311,8 +311,10 @@ void SourceMultiAnaGalaxy::readDataFile(Utilities::RandomNumbers_NR &ran){
       
 			/***************************/
 			galaxies.push_back(
-					SourceOverzierPlus(mag,pow(10,-(mag_bulge-mag)/2.5),Ref,Rh
-							,pa,inclination,HaloID,z_cosm,theta,ran)
+                         SourceOverzierPlus(mag,pow(10,-(mag_bulge-mag)/2.5),Ref,Rh
+                                            ,pa,inclination,HaloID,z_cosm,theta,ran)
+                         //SourceOverzier(mag,pow(10,-(mag_bulge-mag)/2.5),Ref,Rh
+                         //                   ,pa,inclination,HaloID,z_cosm,theta)
 			);
 
 			galaxies.back().setUMag(SDSS_u);
@@ -425,15 +427,20 @@ bool redshiftcompare(SourceOverzierPlus s1,SourceOverzierPlus s2){
 void SourceMultiAnaGalaxy::sortInMag(Band tmp_band){
   if(galaxies.size() < 2) return;
   
-  if(tmp_band != band){
+  /*if(tmp_band != band){
     for(size_t i = 0; i < galaxies.size() ; ++i) galaxies[i].setBand(tmp_band);
+  }*/
+  
+  //std::sort(galaxies.begin(),galaxies.end(),magcompare);
+  std::sort(galaxies.begin(),galaxies.end()
+            ,[&tmp_band](SourceOverzierPlus s1,SourceOverzierPlus s2){
+    return (s1.getMag(tmp_band) < s2.getMag(tmp_band));
   }
+);
   
-  std::sort(galaxies.begin(),galaxies.end(),magcompare);
-  
-  if(tmp_band != band){
+/*  if(tmp_band != band){
     for(size_t i = 0; i < galaxies.size() ; ++i) galaxies[i].setBand(band);
-  }
+  }*/
 
   delete searchtree;
   searchtree = new TreeSimpleVec<SourceOverzierPlus>(galaxies.data(),galaxies.size(),1,2,true,SourceOverzierPlus::getx);

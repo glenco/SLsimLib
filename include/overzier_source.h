@@ -61,17 +61,6 @@ public:
     }
   }
   
-  /*
-	PosType getUMag() const { return mag_u; }
-	PosType getGMag() const { return mag_g; }
-	PosType getRMag() const { return mag_r; }
-	PosType getIMag() const { return mag_i; }
-	PosType getZMag() const { return mag_z; }
-	PosType getJMag() const { return mag_J; }
-	PosType getHMag() const { return mag_H; }
-	PosType getKMag() const { return mag_Ks; }
-	*/
-  
 	/// set u band magnitude
 	void setUMag(PosType m) { mag_u = m; }
 	/// set g band magnitude
