@@ -86,6 +86,8 @@ struct Point{
     return (p1->x[1] > p2->x[1]);
   }
 
+  /// returns true if the image is double inverted
+  bool inverted(){ return 0 > (1 - kappa + sqrt( (1-kappa)*(1-kappa) - invmag ) ); }
 };
 
 

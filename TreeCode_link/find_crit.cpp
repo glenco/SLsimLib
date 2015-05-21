@@ -39,6 +39,7 @@ void ImageFinding::find_crit(
                              ,PosType resolution        /// The target resolution that the critical curve is mapped on the image plane.
                              ,PosType invmag_min        /// finds regions with 1/magnification < invmag_min, set to zero for caustics
                              ,bool verbose
+                             ,bool test
                              ){
   
   long i=0;
@@ -322,7 +323,8 @@ void ImageFinding::find_crit(
       
       crtcurve[ii].type = types[i];
       
-      std::vector<Point *> hull = pseudocurve[i].innerborder->copytovector();
+      //std::vector<Point *> hull = pseudocurve[i].innerborder->copytovector();
+      std::vector<Point *> hull = pseudocurve[i].outerborder->copytovector();
       if(verbose) std::cout << " doing concave hull with " << hull.size() << " points..." << std::endl;
       hull = Utilities::concave_hull(hull,10);
       
@@ -396,7 +398,8 @@ void ImageFinding::find_crit(
   
   *Ncrits = crtcurve.size();
   if(verbose) std::cout << "********* find_crit() out **************" << std::endl;
-  {
+  
+  if(test){
     
     //*********************  test lines ****************************
     // This tests that every every radial or pseudo critical line is near at
@@ -413,6 +416,15 @@ void ImageFinding::find_crit(
             bool good = false;
             for(auto np : nkist){
               if(np.invmag < 0){ good = true; break;}
+            }
+            if(!good){
+              std::cout << "invmag " << pointp->invmag << std::endl;
+              std::cout << "inverted ? " << pointp->inverted() << std::endl;
+              std::cout << "neighbors: " << std::endl;
+              for(auto np : nkist){
+                std::cout << i++ << "    inverted ? " << np.inverted() << std::endl;
+              }
+              std::cout << " # of points in crit curve: " << crit.critical_curve.size() << std::endl;
             }
             assert(good);
           }
