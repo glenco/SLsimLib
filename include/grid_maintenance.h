@@ -155,8 +155,6 @@ namespace ImageFinding{
       return *this;
     }
     
-    // !!!! need assignment oportor
-    
     std::vector<Point_2d> critical_curve;
     std::vector<Point_2d> caustic_curve_outline;
     std::vector<Point_2d> caustic_curve_intersecting;
@@ -246,6 +244,7 @@ namespace ImageFinding{
                                            ,std::vector<Point_2d> &y          /// output vector of points
                                            ,Utilities::RandomNumbers_NR &rng  /// random number generator
                                            ,PosType sourceRadius              /// radius of the source
+                                           ,PosType distSourceToCaustic       /// distance wanted between the source and the caustic line (must be larger than sourceRadius)
                                            );
     /// find rectangular region enclosing critical curve
     void CritRange(Point_2d &p1,Point_2d &p2);
@@ -328,10 +327,10 @@ namespace ImageFinding{
   
   
   void find_crit(LensHndl lens,GridHndl grid,std::vector<CriticalCurve> &crtcurve,int *Ncrits
-                 ,double resolution,double invmag_min = 0.0,bool verbose = false);
+                 ,double resolution,double invmag_min = 0.0,bool verbose = false,bool test=false);
  
-  void find_crit2(LensHndl lens,GridHndl grid,std::vector<CriticalCurve> &critcurve,int *Ncrits
-                  ,double resolution,bool *orderingsuccess,bool ordercurve,bool dividecurves,double invmag_min = 0.0,bool verbose = false);
+  //void find_crit2(LensHndl lens,GridHndl grid,std::vector<CriticalCurve> &critcurve,int *Ncrits
+  //                ,double resolution,bool *orderingsuccess,bool ordercurve,bool dividecurves,double invmag_min = 0.0,bool verbose = false);
   
   CritType find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
                                  ,PosType pseudolimit,LensHndl lens,GridHndl grid

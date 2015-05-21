@@ -19,7 +19,16 @@ using namespace std;
  * The critical curve is found by refining the edges of regions of negative magnification.
  * If there are no regions of negative magnification in the original grid the grid is refined
  * around the point of highest kappa.  If there are other points of high kappa that are not of
- * interest one should be careful that the region of interest is not missed.
+ * interest one should be careful that the region of interest is not missed. For this reason
+ * critical curves that are smaller than the grid resolution (could be un-uniform)
+ * are not guaranteed to be found.
+ *
+ * After the borders of the negative regions are found the code looks for radial and pseudo
+ * caustics within the island.  It usually finds at least one, but if there are more than one
+ * per island some might be missed.
+ *
+ * All the critical curve / caustic pairs are classified as radial, tangential or pseudo.  
+ * small enough radial critical curve could be miss classified as a pseudo caustic.
  */
 
 void ImageFinding::find_crit(
@@ -30,6 +39,7 @@ void ImageFinding::find_crit(
                              ,PosType resolution        /// The target resolution that the critical curve is mapped on the image plane.
                              ,PosType invmag_min        /// finds regions with 1/magnification < invmag_min, set to zero for caustics
                              ,bool verbose
+                             ,bool test
                              ){
   
   long i=0;
@@ -116,7 +126,6 @@ void ImageFinding::find_crit(
       // *******************************/
       
       //negimage[ii].imagekist->SetInImage(NO);
-
       //if(negimage[ii].innerborder->Nunits() > 2000) break;
       
       refinements=ImageFinding::IF_routines::refine_edges(lens,grid,&negimage[ii]
@@ -192,7 +201,7 @@ void ImageFinding::find_crit(
       for(it = neighbors.TopIt(); !it.atend() ; --it){
         std::cout << (*it)->invmag << " " << 1 - ( (*it)->kappa - sqrt( (*it)->gamma[0]*(*it)->gamma[0] + (*it)->gamma[1]*(*it)->gamma[1] ) ) << std::endl;
       }
-      // ***************************************/
+      ***************************************/
       
       std::vector<Point *> hull = critcurve[jj].imagekist->copytovector();
       
@@ -212,11 +221,11 @@ void ImageFinding::find_crit(
       crtcurve[ii].critical_center[0] = 0;
       crtcurve[ii].critical_center[1] = 0;
       
-      for(size_t jj=0;jj<hull.size();++jj){
-        crtcurve[ii].critical_curve[jj] = *hull[jj];
-        crtcurve[ii].caustic_curve_intersecting[jj] = *(hull[jj]->image);
-        crtcurve[ii].critical_center[0] += hull[jj]->x[0];
-        crtcurve[ii].critical_center[1] += hull[jj]->x[1];
+      for(size_t kk=0;kk<hull.size();++kk){
+        crtcurve[ii].critical_curve[kk] = *hull[kk];
+        crtcurve[ii].caustic_curve_intersecting[kk] = *(hull[kk]->image);
+        crtcurve[ii].critical_center[0] += hull[kk]->x[0];
+        crtcurve[ii].critical_center[1] += hull[kk]->x[1];
       }
       
       /******* test *****************
@@ -239,10 +248,10 @@ void ImageFinding::find_crit(
       crtcurve[ii].caustic_center[0] = 0;
       crtcurve[ii].caustic_center[1] = 0;
       
-      for(size_t jj=0;jj<hull.size();++jj){
-        crtcurve[ii].caustic_curve_outline[jj] = *hull[jj];
-        crtcurve[ii].caustic_center[0] += hull[jj]->x[0];
-        crtcurve[ii].caustic_center[1] += hull[jj]->x[1];
+      for(size_t kk=0;kk<hull.size();++kk){
+        crtcurve[ii].caustic_curve_outline[kk] = *hull[kk];
+        crtcurve[ii].caustic_center[0] += hull[kk]->x[0];
+        crtcurve[ii].caustic_center[1] += hull[kk]->x[1];
       }
       
       crtcurve[ii].caustic_center[0] /= hull.size();
@@ -268,7 +277,6 @@ void ImageFinding::find_crit(
     
     std::vector<ImageInfo> pseudocurve(negimage.size());
     std::vector<CritType> types(negimage.size());
-    //std::vector<CriticalCurve> psecurve;
     const PosType pseudolimit = -100.0;
     int Npseudo = 0;
     Point *current;
@@ -308,13 +316,15 @@ void ImageFinding::find_crit(
     int Nc = crtcurve.size();
     crtcurve.resize(Npseudo+Nc);
     
+    // convert to CriticalCurve structure
     for(size_t ii=Nc,i=0;ii<crtcurve.size();++ii,++i){
 
       //Point *current = pseudocurve[i].imagekist->getCurrent();
       
       crtcurve[ii].type = types[i];
       
-      std::vector<Point *> hull = pseudocurve[i].innerborder->copytovector();
+      //std::vector<Point *> hull = pseudocurve[i].innerborder->copytovector();
+      std::vector<Point *> hull = pseudocurve[i].outerborder->copytovector();
       if(verbose) std::cout << " doing concave hull with " << hull.size() << " points..." << std::endl;
       hull = Utilities::concave_hull(hull,10);
       
@@ -388,7 +398,51 @@ void ImageFinding::find_crit(
   
   *Ncrits = crtcurve.size();
   if(verbose) std::cout << "********* find_crit() out **************" << std::endl;
-
+  
+  if(test){
+    
+    //*********************  test lines ****************************
+    // This tests that every every radial or pseudo critical line is near at
+    // least one negative mag point
+    Kist<Point> nkist;
+    for(auto &crit : crtcurve){
+      
+      if(crit.type != tangential){
+        Point *pointp = nullptr;
+        if(crit.type == radial){
+          for(Point_2d &p : crit.critical_curve){
+            pointp = grid->i_tree->FindBoxPoint(p.x);
+            grid->i_tree->FindAllBoxNeighborsKist(pointp,&nkist);
+            bool good = false;
+            for(auto np : nkist){
+              if(np.invmag < 0){ good = true; break;}
+            }
+            if(!good){
+              std::cout << "invmag " << pointp->invmag << std::endl;
+              std::cout << "inverted ? " << pointp->inverted() << std::endl;
+              std::cout << "neighbors: " << std::endl;
+              for(auto np : nkist){
+                std::cout << i++ << "    inverted ? " << np.inverted() << std::endl;
+              }
+              std::cout << " # of points in crit curve: " << crit.critical_curve.size() << std::endl;
+            }
+            assert(good);
+          }
+        }else if(crit.type == pseudo){
+          pointp = grid->i_tree->FindBoxPoint(crit.critical_center.x);
+          grid->i_tree->FindAllBoxNeighborsKist(pointp,&nkist);
+          bool good = false;
+          for(auto np : nkist){
+            if(np.invmag < 0){ good = true; break;}
+          }
+          assert(good);
+        }
+      }
+    }
+    //**************************************************************/
+    
+  }
+  
   return ;
 }
 /*  This function is not meant for an external user.  It is only used by 
@@ -611,7 +665,7 @@ CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
  order from find_crit().
  
  Unlike find_crit() there is no pseuodcaustic option.
- */
+ *
 void ImageFinding::find_crit2(
                               LensHndl lens             /// The lens model.
                               ,GridHndl grid            /// The grid.  It must be initialized.
@@ -933,7 +987,7 @@ void ImageFinding::find_crit2(
   
   return ;
 }
-
+*/
 /**
  *  This is a stripped down version of find_crit() for use in find_image_microlens() that
  *  refines the critical lines that are within the image.

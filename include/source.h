@@ -48,7 +48,7 @@ public:
   /// Reset the radius of the source in radians
 	virtual void setRadius(PosType my_radius){source_r = my_radius;}
 	/// position of source in radians
-	virtual inline PosType* getX(){return source_x;}
+	virtual inline PosType* getX(){return source_x.x;}
   /// Reset the position of the source in radians
 	virtual inline void setX(PosType *xx){source_x[0] = xx[0]; source_x[1] = xx[1];}
 	void setX(PosType my_x,PosType my_y){source_x[0] = my_x; source_x[1] = my_y;}
@@ -75,7 +75,7 @@ protected:
 	/// total source size, ie no flux outside this radius
 	PosType source_r;
 	/// center of source
-	PosType source_x[2];
+	Point_2d source_x;
 	
 	/// redshift of source
 	PosType zsource;

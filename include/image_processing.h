@@ -14,6 +14,7 @@
 #endif
 
 #include "utilities_slsim.h"
+#include "source.h"
 
 // forward declaration
 struct Grid;
@@ -23,6 +24,8 @@ struct Grid;
  * can be exported as a fits file, smoothed, etc. like an image.
  *
  */
+class Source;
+
 class PixelMap
 {
 public:
@@ -52,6 +55,7 @@ public:
   void AddImages(ImageInfo *imageinfo,int Nimages,float rescale = 1.);
   void AddImages(std::vector<ImageInfo> &imageinfo,int Nimages,float rescale = 1.);
   void AddUniformImages(ImageInfo *imageinfo,int Nimages,double value);
+  void AddSource(Source &source);
   
   void AddCurve(ImageInfo *curve,double value);
   void AddCurve(Kist<Point> *imagekist,PosType value);
@@ -59,6 +63,7 @@ public:
   
 	void drawline(double x1[],double x2[],double value);
   void drawcircle(PosType r_center[],PosType radius,PosType value);
+  void drawball(PosType r_center[],PosType radius,PosType value,int Nstrip);
 	void AddGrid(const Grid &grid,double value = 1.0);
   void AddGrid(const Grid &grid,LensingVariable val);
 
@@ -140,7 +145,8 @@ public:
     for(int i=0;i<points.size()-1;++i) drawline(points[i]->x,points[i+1]->x,value);
   }
   /// Draw a rectangle
-  void drawBox(PosType p1[],PosType p2[],PosType value);
+  void drawSquare(PosType p1[],PosType p2[],PosType value);
+  void drawBox(PosType p1[],PosType p2[],PosType value,int Nstrip);
   
 #ifdef ENABLE_FFTW
 

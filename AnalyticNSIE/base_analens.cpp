@@ -7,14 +7,18 @@
 
 #include "slsimlib.h"
 
+template <typename T> PosType sgn(T val) {
+    return (T(0) < val) - (val - T(0));
+}
+
 using namespace std;
 
 void LensHaloBaseNSIE::force_halo(
-                                  PosType *alpha       /// mass/Mpc
-                                  ,KappaType *kappa   /// surface mass density
+                                  PosType *alpha       /// mass/PhysMpc
+                                  ,KappaType *kappa    /// surface mass density
                                   ,KappaType *gamma
                                   ,KappaType *phi
-                                  ,PosType const *xcm /// Position in physical Mpc
+                                  ,PosType const *xcm  /// Position in PhysMpc
                                   ,bool subtract_point /// if true contribution from a point mass is subtracted
                                   ,PosType screening   /// the factor by which to scale the mass for screening of the point mass subtraction
                                   )
@@ -36,11 +40,11 @@ void LensHaloBaseNSIE::force_halo(
   
   if(sigma > 0.0){
     PosType xt[2]={0,0};
-    float units = pow(sigma/lightspeed,2)/Grav ; ///sqrt(fratio); // mass / distance(physical)
-    xt[0]=xcm[0];
-    xt[1]=xcm[1];
-    
+    float units = pow(sigma/lightspeed,2)/Grav ; /// sqrt(fratio); // in mass / PhysMpc
     units *= 2. * Rmax / pi ; // units now in mass /// Multiplying by 2*Rmax/pi to match with Power Law
+      
+    xt[0]=xcm[0]; // in PhysMpc
+    xt[1]=xcm[1];
     
     alphaNSIE(alpha,xt,fratio,rcore,pa);
     alpha[0] *= units;
@@ -66,39 +70,36 @@ void LensHaloBaseNSIE::force_halo(
     xt[0]=xcm[0] ; // in PhysMpc
     xt[1]=xcm[1] ;
     
-    // Calling lens_expand : xt in PhysMpc, mod[0,1,2] in mass/PhysMpc, mod[4,5,...] in mass/(PhysMpc*Mpc) :
+    // Calling lens_expand : xt in PhysMpc, mod[0,1,2] in mass / PhysMpc^2, mod[3,4,5,...] in mass / PhysMpc :
     
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // *kappa += lens_expand(perturb_beta,perturb_modes,perturb_Nmodes-1,xt,alpha_tmp,gamma_tmp,&phi_tmp);
-    *kappa += lens_expand(perturb_beta,perturb_modes,perturb_Nmodes,xt,alpha_tmp,gamma_tmp,&phi_tmp); // For consistency with FindLensSimple and other calls of lens_expand.
+
+    *kappa += lens_expand(perturb_beta,perturb_modes,perturb_Nmodes-1,xt,alpha_tmp,gamma_tmp,&phi_tmp);
+
+    // For consistency with FindLensSimple and other calls of lens_expand we had removed the -1 after perturb_Nmodes.
+      
+    // We put it back because otherwise the modes mod[i+1] in lens_expand would be used up to mod[imax+1] with :
+    // - if Nmodes (in lens_expand) is odd  : imax = Nmodes - 1 ;
+    // - if Nmodes (in lens_expand) is even : imax = Nmodes - 2 ;
+    // Hence, with Nmodes = perturb_Nmodes - 1 we have for example :
+    // perturb_Nmodes = 7  =>  Nmodes = perturb_Nmodes - 1 = 6  =>  imax = 4  => max mode used is mod[5].
+    // Without the -1 we would have :
+    // perturb_Nmodes = 7  =>  Nmodes = perturb_Nmodes = 7  =>  imax = 6  => max mode used is mod[7].
+    // This is not possible because 7 modes mean we use mod[0], mod[1], ... , mod[6] !
+      
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    
-    
+
+    // std::cout << "alpha_tmp just after lens_expand : " << alpha_tmp[0] << " " << alpha_tmp[1] << std::endl;
     // alpha_tmp is in mass / PhyMpc here !
     
     // Printing quantities for control :
-    // std::cout << "         xt in force_halo : @@@ " << xt[0] << " " << xt[1] << " @@@" << std::endl ;
-    // std::cout << "alpha in force_halo : " << alpha_tmp[0] << " " << alpha_tmp[1] << std::endl ;
+    // std::cout << "         xt in force_halo : @@@ " << xt[0]/Dls << " " << xt[1]/Dls << " @@@" << std::endl ;
+    // std::cout << "alpha in force_halo : " << alpha_tmp[0] * (4*pi*Grav) << " " << alpha_tmp[1]* (4*pi*Grav) << std::endl ;
     // std::cout << "xt - alpha in force_halo : !!! " << xt[0] - alpha_tmp[0] << " " << xt[1] - alpha_tmp[1] << " !!!" << std::endl ;
-    // std::cout << "Dl = " << Dl << " , Dls = " << Dls << " , Ds = " << Ds << std::endl ;
 
-    
-    // Adding a contribution to remove p->i_points[i].image->x[0]*p->dDl[j+1]/p->dDl[j] to aa*p->i_points[i].image->x[0] :
-    alpha_tmp[0] += xt[0] / (Dl*(1+zlens)) / (4*pi*Grav) ; // contribution in mass/PhysMpc
-    alpha_tmp[1] += xt[1] / (Dl*(1+zlens)) / (4*pi*Grav) ;
-    
-    // WHY DO WE NEED THIS STEP ???
-    
-    // We need it because rayshooter computes alpha such that y = Ds/Dl * x - cc*alpha is the initial position of the source, but with the modes computed here it turns out that Dls/Dl * x - cc*alpha is the position of the source (as when we test it with different images we get the same position of the source).
-    
-    // WE SHOULD UNDERSTAND WHY THIS IS SO !
-    
-    // Multiplying alpha by cosmo.angDist(0.3) so that it combines with the remaining contributions of p->i_points[i].image->x[0], it probably cancels the (1+zl) factor called fac in rayshooter :
-    alpha_tmp[0] *= -1. * (1+zlens) ; // alpha here in mass/Mpc
-    alpha_tmp[1] *= -1. * (1+zlens) ;
-    
-    // std::cout << "alpha final in force_halo : " << alpha_tmp[0] << " " << alpha_tmp[1] << std::endl ;
-    // std::cout << "alpha final in force_halo : " << alpha_tmp[0] * (4*pi*Grav) << " " << alpha_tmp[1] * (4*pi*Grav) << std::endl ;
+    // Changing the sign because there is a change of sign in LensPlaneSingular::force :
+    alpha_tmp[0] *= -1. ;
+    alpha_tmp[1] *= -1. ;
     
     // As before :
     alpha[0] += alpha_tmp[0];
@@ -115,6 +116,9 @@ void LensHaloBaseNSIE::force_halo(
     phi_tmp = 0.0;
   }
   
+   // std::cout << "alpha at the end of force_halo : " << alpha[0] << " " << alpha[1] << std::endl;
+    
+    
   // add substructure
   if(substruct_implanted)
   {

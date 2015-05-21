@@ -19,6 +19,7 @@
 #include <thread>
 #include "image_processing.h"
 #include "point.h"
+#include "source.h"
 
 #if __cplusplus < 201103L
 template<typename T>
@@ -826,7 +827,7 @@ void PixelMap::drawline(
  */
 void PixelMap::drawcircle(
                           PosType r_center[]    /// center of circle
-                          ,PosType radius       ///  radius of circle
+                          ,PosType radius       /// radius of circle
                           ,PosType value        /// value that it is set to on the map
 ){
   
@@ -843,6 +844,41 @@ void PixelMap::drawcircle(
   
   return;
 }
+
+/**
+ * \brief Draws a bawl
+ */
+void PixelMap::drawball(
+                          PosType r_center[]    /// center of ball
+                          ,PosType radius       /// radius of ball
+                          ,PosType value        /// value that it is set to on the map
+                          ,int Nstrip           /// number of lines we want
+){
+  
+  PosType x1[2],x2[2];
+  PosType N = double(Nstrip);
+  
+  // To do the circle (easy) :
+  // ========================
+  drawcircle(r_center,radius,value);
+  
+  // To fill the circle :
+  // ====================
+  
+  for(float theta = 0; theta < 2*pi; theta += pi/N){
+    x1[0] = r_center[0] - radius*cos(theta);
+    x2[0] = r_center[0] + radius*cos(theta);
+    x1[1] = x2[1] = r_center[1] + radius*sin(theta);
+    drawline(x1,x2,value);
+  }
+  
+  return;
+}
+
+
+/**
+ * \brief Draws a grid
+ */
 void PixelMap::drawgrid(int N,PosType value){
   
   PosType x1[2],x2[2];
@@ -860,7 +896,11 @@ void PixelMap::drawgrid(int N,PosType value){
     drawline(x1,x2,value);
   }
 }
-void PixelMap::drawBox(PosType p1[],PosType p2[],PosType value){
+
+/**
+ * \brief Draws a square
+ */
+void PixelMap::drawSquare(PosType p1[],PosType p2[],PosType value){
   PosType x1[2],x2[2];
   
   x1[0] = p1[0];
@@ -886,8 +926,54 @@ void PixelMap::drawBox(PosType p1[],PosType p2[],PosType value){
   x2[0] = p1[0];
   x2[1] = p1[1];
   drawline(x1,x2,value);
+}
+
+/**
+ * \brief Draws a box (filling the inside with horizontal lines, starting from the top)
+ */
+void PixelMap::drawBox(PosType p1[],PosType p2[],PosType value,int Nstrip)
+{
+  PosType x1ini[2],x2ini[2];
+  PosType x1[2],x2[2];
+  PosType N = double(Nstrip);
   
+  // To do the frame (easy) :
+  // ========================
+  drawSquare(p1,p2,value);
   
+  // To fill the square :
+  // ====================
+
+  // Initiating :
+  if(p2[1]-p1[1]<0)
+  {
+    x1ini[0] = p1[0]; x1ini[1] = p1[1];
+    x2ini[0] = p2[0]; x2ini[1] = p1[1];
+    N *= -1. ;
+  }
+  else if(p2[1]-p1[1]>0)
+  {
+    x1ini[0] = p1[0]; x1ini[1] = p2[1];
+    x2ini[0] = p2[0]; x2ini[1] = p2[1];
+  }
+  else
+  {
+    ERROR_MESSAGE();
+    std::cout << "Error with drawbox." << std::endl;
+    exit(0);
+  }
+
+  // Filling :
+  x1[0] = x1ini[0] ;
+  x2[0] = x2ini[0] ;
+  for(int i=1;i<Nstrip;i++)
+  {
+    x1[1] = x1ini[1]-i*(p2[1]-p1[1])/N;
+    x2[1] = x2ini[1]-i*(p2[1]-p1[1])/N;
+    drawline(x1,x2,value);
+  }
+
+  return ;
 }
 
 /**
@@ -1670,6 +1756,13 @@ void MultiGridSmoother::smooth(int Nsmooth,PixelMap &map){
   
 }
 
+void PixelMap::AddSource(Source &source){
+  PosType y[2];
+  for(size_t index =0 ;index < map.size(); ++index){
+    find_position(y,index);
+    map[index] = source.SurfaceBrightness(y);
+  }
+}
 
 
 
