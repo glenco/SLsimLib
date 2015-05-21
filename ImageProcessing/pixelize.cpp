@@ -846,11 +846,11 @@ void PixelMap::drawcircle(
 }
 
 /**
- * \brief Draws a bawl
+ * \brief Draws a disk
  */
-void PixelMap::drawball(
-                          PosType r_center[]    /// center of ball
-                          ,PosType radius       /// radius of ball
+void PixelMap::drawdisk(
+                          PosType r_center[]    /// center of disk
+                          ,PosType radius       /// radius of disk
                           ,PosType value        /// value that it is set to on the map
                           ,int Nstrip           /// number of lines we want
 ){
