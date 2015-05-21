@@ -1,4 +1,3 @@
-
 #include "slsimlib.h"
 
 #include <nrutil.h>
@@ -435,15 +434,15 @@ bool AreBoxNeighbors(Branch *branch1,Branch *branch2){
 	return false;
 }
 
-/** return the point that is in the same box as ray[2]
+/** return a pointer to the point that is in the same box as ray[2]
  * if Nbuck > 1 the head of the point array is returned
+ *
+ * Memory
  */
-void TreeStruct::FindBoxPoint(const PosType* ray,Point *point) const{
+Point * TreeStruct::FindBoxPoint(const PosType* ray) const{
 	Branch *branch;
 
   TreeStruct::iterator current(branch = top);
-	//branch=current;
-	//moveTop();
 	   // check if ray is outside initial box
 	if( inbox(ray,(*current)->boundary_p1,(*current)->boundary_p2) == 0 ){
 		std::printf("FindBox: ray outside of grided range\n");
@@ -451,22 +450,8 @@ void TreeStruct::FindBoxPoint(const PosType* ray,Point *point) const{
 	}
 
 	_FindBox(current,ray);
-	PointCopyData(point,(*current)->points);
-
-	//if(foundpoint == 0){ std::printf("FindBoxPoint failed to find point\n"); exit(1);}
-	//PrintPoint(point);
-
-	/*/ error check
-	if(fabs(ray[0]-point->x[0]) > point->gridsize/2
-			|| fabs(ray[1]-point->x[1]) > point->gridsize/2){
-		ERROR_MESSAGE();
-		std::printf("ERROR: FindBox did not find box\n  ray = %e %e\n  Delta/gridsize = %e %e\n"
-				,ray[0],ray[1]
-		        ,2*(ray[0]-point->x[0])/point->gridsize
-				,2*(ray[1]-point->x[1])/point->gridsize);
-		exit(0);
-	}*/
-
+  
+  return (*current)->points;
 }
 
 void TreeStruct::_FindBox(TreeStruct::iterator &current,const PosType* ray) const{

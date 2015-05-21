@@ -149,7 +149,7 @@ public:
   void printTree(TreeStruct::iterator &current);
   void checkTree();
 
-  void FindBoxPoint(const PosType* ray,Point *point) const;
+  Point * FindBoxPoint(const PosType* ray) const;
   
   TreeStruct * spawn(TreeStruct::iterator &current);
   

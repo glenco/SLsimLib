@@ -327,7 +327,7 @@ namespace ImageFinding{
   
   
   void find_crit(LensHndl lens,GridHndl grid,std::vector<CriticalCurve> &crtcurve,int *Ncrits
-                 ,double resolution,double invmag_min = 0.0,bool verbose = false);
+                 ,double resolution,double invmag_min = 0.0,bool verbose = false,bool test=false);
  
   //void find_crit2(LensHndl lens,GridHndl grid,std::vector<CriticalCurve> &critcurve,int *Ncrits
   //                ,double resolution,bool *orderingsuccess,bool ordercurve,bool dividecurves,double invmag_min = 0.0,bool verbose = false);
