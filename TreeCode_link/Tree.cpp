@@ -88,15 +88,16 @@ void Point::Print(){
 	 std::cout << "  gamma " << gamma[0] << " " << gamma[1] << " " << gamma[3] << std::endl;
 	 std::cout << "  dt " << dt << std::endl;
 	 std::cout << "  invmag " << invmag << std::endl;
+	 std::cout << "  invverted " << inverted() << std::endl;
 	 std::cout << "  gridsize " << gridsize << std::endl;
 	 std::cout << "  surface_brightness " << surface_brightness << std::endl;
 	 std::cout << "  leaf " << leaf << std::endl;
 }
-/// print just position and gridsize
-void Point::print(){
-	std::cout << x[0] <<  "  " << x[1] << "  " << gridsize << std::endl;
-}
 
+/// print just position and gridsize
+std::ostream &operator<<(std::ostream &os, Point const &p) {
+  return os << p.x[0] << " " << p.x[1];
+}
 
 
 unsigned long Branch::countID = 0;

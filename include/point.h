@@ -61,7 +61,7 @@ struct Point{
   Branch *leaf;
   bool flag;
 
-  void print();
+  //void print();
   void Print();
   
   /// cross product of points 2d positions
@@ -90,6 +90,7 @@ struct Point{
   bool inverted(){ return 0 > (1 - kappa + sqrt( (1-kappa)*(1-kappa) - invmag ) ); }
 };
 
+std::ostream &operator<<(std::ostream &os, Point const &p);
 
 /// The box representing a branch of a binary tree structure.  Used specifically in TreeStruct for organizing points in the grid.
 struct Branch{

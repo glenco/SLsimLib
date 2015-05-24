@@ -39,7 +39,7 @@ void ImageFinding::find_crit(
                              ,PosType resolution        /// The target resolution that the critical curve is mapped on the image plane.
                              ,PosType invmag_min        /// finds regions with 1/magnification < invmag_min, set to zero for caustics
                              ,bool verbose
-                             ,bool test
+                             ,bool TEST
                              ){
   
   long i=0;
@@ -399,7 +399,7 @@ void ImageFinding::find_crit(
   *Ncrits = crtcurve.size();
   if(verbose) std::cout << "********* find_crit() out **************" << std::endl;
   
-  if(test){
+  if(TEST){
     
     //*********************  test lines ****************************
     // This tests that every every radial or pseudo critical line is near at
@@ -407,6 +407,8 @@ void ImageFinding::find_crit(
     Kist<Point> nkist;
     for(auto &crit : crtcurve){
       
+      // check that all non-tangent critical line points have a neighbor
+      //  with negative magnification
       if(crit.type != tangential){
         Point *pointp = nullptr;
         if(crit.type == radial){
@@ -418,6 +420,8 @@ void ImageFinding::find_crit(
               if(np.invmag < 0){ good = true; break;}
             }
             if(!good){
+              std::cout << "Caustic point without negative neighbor"
+              << std::endl;
               std::cout << "invmag " << pointp->invmag << std::endl;
               std::cout << "inverted ? " << pointp->inverted() << std::endl;
               std::cout << "neighbors: " << std::endl;
@@ -438,6 +442,44 @@ void ImageFinding::find_crit(
           assert(good);
         }
       }
+      
+      // check that all non-tangent critical line points have a neighbor
+      //  with negative magnification
+      if(crit.type != tangential){
+        
+        int count = 0;
+        PosType rmax,rmin,rave;
+        for(auto &critt : crtcurve){
+          if(critt.type == tangential){
+            critt.CriticalRadius(rmax,rmin,rave);
+            assert(rmax >= rmin);
+            assert(rave >= rmin);
+            assert(rmax >= rave);
+            if( rmax >
+               (critt.caustic_center - crit.caustic_center).length() )
+              ++count;
+          }
+        }
+        
+        Point *pointp;
+        if(count == 0){
+          std::cout << "Radial or pseudo caustic without tangential partner"
+          << std::endl;
+          pointp = grid->i_tree->FindBoxPoint(crit.critical_center.x);
+          grid->i_tree->FindAllBoxNeighborsKist(pointp,&nkist);
+          pointp->Print();
+          
+        }
+        if(count > 1){
+          std::cout << "Radial or pseudo caustic has " << count << " tangential critical line within rmax"
+          << std::endl;
+        }
+        
+        assert(count > 0);
+        assert(count < 2);
+
+      }
+
     }
     //**************************************************************/
     
