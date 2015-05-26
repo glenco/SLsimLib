@@ -110,11 +110,11 @@ Image finding and Grid refinement
 
 The mean functions used for image finding are
 
--   `find_images_kist()`,
--   `find_images_microlens()` and 
--   `map_images_kist()`.
+-   `ImageFinding::find_images_kist()` 
+-   `ImageFinding::map_images_fixedgrid` and
+-   `ImageFinding::map_images()`.
 And for finding critical curves / caustics
--   `find_crit()`
+-   `ImageFinding::find_crit()`
 
 These take a `Grid` and a `Lens` object. The found images are then stored in an
 array of `ImageInfo` structures.

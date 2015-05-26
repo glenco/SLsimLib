@@ -227,9 +227,11 @@ PosType TreeStruct::PointsWithinKist(
 	//moveTop();
   TreeStruct::iterator current(top);
 	if( inbox(globs.ray,(*current)->boundary_p1,(*current)->boundary_p2) == 0 ){
-		std::printf("Warning: in PointsWithinKist, ray is not inside the simulation box\n    should work in any case\n      ray= %e %e\n     boundary p1 = %e %e p2 = %e %e\n",globs.ray[0],globs.ray[1]
-	   ,(*current)->boundary_p1[0],(*current)->boundary_p1[1]
-	   ,(*current)->boundary_p2[0],(*current)->boundary_p2[1]);
+    //ray is not inside the simulation
+    
+		//std::printf("Warning: in PointsWithinKist, ray is not inside the simulation box\n    should work in any case\n      ray= %e %e\n     boundary p1 = %e %e p2 = %e %e\n",globs.ray[0],globs.ray[1]
+	   //,(*current)->boundary_p1[0],(*current)->boundary_p1[1]
+	   //,(*current)->boundary_p2[0],(*current)->boundary_p2[1]);
 
 		globs.ray[0]=MAX(globs.ray[0],(*current)->boundary_p1[0]);
 		globs.ray[0]=MIN(globs.ray[0],(*current)->boundary_p2[0]);

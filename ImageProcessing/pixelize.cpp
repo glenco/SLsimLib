@@ -19,6 +19,7 @@
 #include <thread>
 #include "image_processing.h"
 #include "point.h"
+#include "source.h"
 
 #if __cplusplus < 201103L
 template<typename T>
@@ -826,7 +827,7 @@ void PixelMap::drawline(
  */
 void PixelMap::drawcircle(
                           PosType r_center[]    /// center of circle
-                          ,PosType radius       ///  radius of circle
+                          ,PosType radius       /// radius of circle
                           ,PosType value        /// value that it is set to on the map
 ){
   
@@ -845,22 +846,29 @@ void PixelMap::drawcircle(
 }
 
 /**
- * \brief Draws a bawl
+ * \brief Draws a disk
  */
-void PixelMap::drawball(
-                          PosType r_center[]    /// center of ball
-                          ,PosType radius       ///  radius of ball
+void PixelMap::drawdisk(
+                          PosType r_center[]    /// center of disk
+                          ,PosType radius       /// radius of disk
                           ,PosType value        /// value that it is set to on the map
+                          ,int Nstrip           /// number of lines we want
 ){
   
   PosType x1[2],x2[2];
-  PosType dtheta = resolution/fabs(radius);
+  PosType N = double(Nstrip);
   
-  for(float theta = 0; theta < 2*pi; theta += dtheta){
-    x1[0] = r_center[0] + radius*cos(theta);
-    x1[1] = r_center[1] + radius*sin(theta);
-    x2[0] = r_center[0] + radius*cos(theta+dtheta);
-    x2[1] = r_center[1] + radius*sin(theta+dtheta);
+  // To do the circle (easy) :
+  // ========================
+  drawcircle(r_center,radius,value);
+  
+  // To fill the circle :
+  // ====================
+  
+  for(float theta = 0; theta < 2*pi; theta += pi/N){
+    x1[0] = r_center[0] - radius*cos(theta);
+    x2[0] = r_center[0] + radius*cos(theta);
+    x1[1] = x2[1] = r_center[1] + radius*sin(theta);
     drawline(x1,x2,value);
   }
   
@@ -1748,6 +1756,13 @@ void MultiGridSmoother::smooth(int Nsmooth,PixelMap &map){
   
 }
 
+void PixelMap::AddSource(Source &source){
+  PosType y[2];
+  for(size_t index =0 ;index < map.size(); ++index){
+    find_position(y,index);
+    map[index] = source.SurfaceBrightness(y);
+  }
+}
 
 
 

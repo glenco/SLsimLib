@@ -261,7 +261,7 @@ void ImageFinding::map_imagesISOP(
       
   }
     
-    std::cout << "  map_imagesISOP: " << i << " refinement steps were taken " << std::endl;
+    //std::cout << "  map_imagesISOP: " << i << " refinement steps were taken " << std::endl;
 
 	// find image centroid
 	for(i=0;i<*Nimages;++i){

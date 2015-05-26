@@ -31,7 +31,6 @@ SourceSersic::SourceSersic(
 	if(q > 1)
 		throw std::invalid_argument("Error: q must be < 1!");
   
-
 }
 
 SourceSersic::~SourceSersic()
@@ -44,13 +43,14 @@ PosType SourceSersic::SurfaceBrightness(
 {
 
 	PosType x_new[2];
-	x_new[0] = (x[0]-source_x[0])*cos(PA)+(x[1]-source_x[1])*sin(PA);
-	x_new[1] = (x[0]-source_x[0])*sin(PA)-(x[1]-source_x[1])*cos(PA);
+	x_new[0] = (x[0]-source_x[0])*cosPA+(x[1]-source_x[1])*sinPA;
+	x_new[1] = (x[0]-source_x[0])*sinPA-(x[1]-source_x[1])*cosPA;
 
 	PosType r = sqrt(x_new[0]*x_new[0]+x_new[1]*x_new[1]/q/q);
 
-	PosType sb = flux * I_n * I_q * I_r * exp(-bn*pow(r/Reff,1./index))*inv_hplanck;
-	if (sb < sb_limit) return 0.;
+	PosType sb = flux * I_n * I_q * I_r *inv_hplanck * exp(-bn*pow(r/Reff,1./index));
+  
+  if (sb < sb_limit) return 0.;
 	return sb;
 }
 

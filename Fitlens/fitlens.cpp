@@ -209,10 +209,8 @@ bool LensHaloFit::SafeFindLensSimple(
     kappaTMP = lens_expand(betaTMP, perturb_modes, perturb_Nmodes, pointTMP.x, alphaTMP, gammaTMP, phiTMP); // We removed the -1 after perturb_Nmodes AS IT SHOULD NOT BE THERE but it is still used this way in LensHaloBaseNSIE::force_halo !
     
     // Applying the factors of LensHaloBaseNSIE::force_halo :
-    alphaTMP[0] += pointTMP.x[0] / (Dl*(1+zlens)) / (4*pi*Grav) ;
-    alphaTMP[1] += pointTMP.x[1] / (Dl*(1+zlens)) / (4*pi*Grav) ;
-    alphaTMP[0] *= -1. * (1+zlens) ;
-    alphaTMP[1] *= -1. * (1+zlens) ;
+    alphaTMP[0] *= -1. ;
+    alphaTMP[1] *= -1. ;
     
     // Applying the extra factors of RayShooter :
     alphaTMP[0] *= -4*pi*Grav ;
@@ -355,15 +353,18 @@ void LensHaloFit::FindLensSimple(
   // mod[3] and further : in units of scale^(beta-1) = 1 (i.e. no units) for beta = 1
     
   // Assigning the modes :
-  for(i=1;i<perturb_Nmodes;++i) perturb_modes[i] = mods[i];
+  for(int j=1;j<perturb_Nmodes;++j) perturb_modes[j] = mods[j];
+  cout << "# " ;
+  for(int j=1;j<perturb_Nmodes;++j) cout << perturb_modes[j] << " " ;
+  cout << endl ;
   
   perturb_modes[0] = 0.0;
   perturb_modes[1] *= -1;  // checked
   perturb_modes[2] *= -1;  // checked
   
   // source position :
-  y[0] = mods[i]*scale;
-  y[1] = mods[i+1]*scale;
+  y[0] = mods[perturb_Nmodes+1]*scale;
+  y[1] = mods[perturb_Nmodes+2]*scale;
   // y[0] and y[1] are now in radians.
     
   // std::cout << "i = " << i << std::endl ;
@@ -375,10 +376,10 @@ void LensHaloFit::FindLensSimple(
   PosType zs = zsource_reference ;
     
   // Converting source position to physical angle :
-  y[0] *= Dl * (1+zl) / (Ds * (1+zs)) ;
-  y[1] *= Dl * (1+zl) / (Ds * (1+zs)) ;
+  // y[0] *= Dl * (1+zl) / (Ds * (1+zs)) ;
+  // y[1] *= Dl * (1+zl) / (Ds * (1+zs)) ;
   // y[0] and y[1] are still in radians.
-    
+  
   // dx_sub and x_center back in radians :
   for(i=0;i<Nimages;++i)
   {

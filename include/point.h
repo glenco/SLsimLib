@@ -86,6 +86,8 @@ struct Point{
     return (p1->x[1] > p2->x[1]);
   }
 
+  /// returns true if the image is double inverted
+  bool inverted(){ return 0 > (1 - kappa + sqrt( (1-kappa)*(1-kappa) - invmag ) ); }
 };
 
 
@@ -359,6 +361,13 @@ struct Point_2d{
   /// length
   PosType length(){
     return sqrt(x[0]*x[0] + x[1]*x[1]);
+  }
+  
+  void rotate(PosType theta){
+    PosType c = cos(theta),s = sin(theta);
+    PosType tmp = x[0];
+    x[0] = c*tmp + s*x[1];
+    x[1] = c*x[1] + s*tmp;
   }
   
   PosType x[2];
