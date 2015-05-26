@@ -1470,6 +1470,48 @@ KappaType ImageInfo::aveTimeDelay()
   return tmp_dt;
 }
 
+ImageInfo & ImageInfo::operator+=(ImageInfo & rhs){
+  
+  if(!(uniform_mag && rhs.uniform_mag
+       && std::abs(imagekist->getCurrent()->invmag - rhs.imagekist->getCurrent()->invmag) < 1.0e-5 ) ) uniform_mag = no;
+  
+  imagekist->MoveToBottom();
+  for(auto &p : *(rhs.imagekist)){
+    imagekist->InsertAfterCurrent(&p);
+    imagekist->Down();
+  }
+  innerborder->MoveToBottom();
+  for(auto &p : *(rhs.innerborder)){
+    innerborder->InsertAfterCurrent(&p);
+    innerborder->Down();
+  }
+  outerborder->MoveToBottom();
+  for(auto &p : *(rhs.outerborder)){
+    outerborder->InsertAfterCurrent(&p);
+    outerborder->Down();
+  }
+  
+  gridrange[0] = std::max(gridrange[0],rhs.gridrange[0]);
+  gridrange[1] = std::min(gridrange[1],rhs.gridrange[1]);
+  gridrange[2] = std::min(gridrange[2],rhs.gridrange[2]);
+  
+  centroid[0] = centroid[0]*area + rhs.centroid[0]*rhs.area;
+  centroid[1] = centroid[1]*area + rhs.centroid[1]*rhs.area;
+  
+  area_error = area_error*area + rhs.area_error*rhs.area;
+  
+  area += rhs.area;
+  
+  area_error /= area;
+  centroid[0] /= area;
+  centroid[1] /= area;
+  
+  if(ShouldNotRefine == 1 && rhs.ShouldNotRefine == 1) ShouldNotRefine = 1;
+    else ShouldNotRefine = 0;
+      
+  return *this;
+}
+
 
 /// Print information about the image
 void ImageInfo::PrintImageInfo(){

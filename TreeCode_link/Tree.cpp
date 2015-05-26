@@ -88,7 +88,7 @@ void Point::Print(){
 	 std::cout << "  gamma " << gamma[0] << " " << gamma[1] << " " << gamma[3] << std::endl;
 	 std::cout << "  dt " << dt << std::endl;
 	 std::cout << "  invmag " << invmag << std::endl;
-	 std::cout << "  invverted " << inverted() << std::endl;
+	 std::cout << "  inverted " << inverted() << std::endl;
 	 std::cout << "  gridsize " << gridsize << std::endl;
 	 std::cout << "  surface_brightness " << surface_brightness << std::endl;
 	 std::cout << "  leaf " << leaf << std::endl;
