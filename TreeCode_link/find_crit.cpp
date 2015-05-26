@@ -27,7 +27,7 @@ using namespace std;
  * caustics within the island.  It usually finds at least one, but if there are more than one
  * per island some might be missed.
  *
- * All the critical curve / caustic pairs are classified as radial, tangential or pseudo.  
+ * All the critical curve / caustic pairs are classified as radial, tangential or pseudo.
  * small enough radial critical curve could be miss classified as a pseudo caustic.
  */
 
@@ -83,37 +83,37 @@ void ImageFinding::find_crit(
   }
   
   /******* test *****************
-  {
-  Point_2d c = grid->getInitCenter();
-  grid->writeFits(c.x, grid->getInitNgrid() ,grid->getInitRange()/grid->getInitNgrid(),INVMAG,"!infind_crit");
-  PixelMap map(c.x, grid->getInitNgrid() ,grid->getInitRange()/grid->getInitNgrid());
-  map.AddImages(negimage,1,0);
-    map.printFITS("!infind_crit_cit");
-  }
-  *******************************/
+   {
+   Point_2d c = grid->getInitCenter();
+   grid->writeFits(c.x, grid->getInitNgrid() ,grid->getInitRange()/grid->getInitNgrid(),INVMAG,"!infind_crit");
+   PixelMap map(c.x, grid->getInitNgrid() ,grid->getInitRange()/grid->getInitNgrid());
+   map.AddImages(negimage,1,0);
+   map.printFITS("!infind_crit_cit");
+   }
+   *******************************/
   
   
   divide_images_kist(grid->i_tree,negimage,Ncrits);
   /******* test *****************
-  {
-    Point_2d c = grid->getInitCenter();
-    PixelMap map(c.x, grid->getInitNgrid() ,grid->getInitRange()/grid->getInitNgrid());
-    map.AddImages(negimage,*Ncrits,0);
-    map.printFITS("!infind_crit_cit2");
-  }
-  *******************************/
-
+   {
+   Point_2d c = grid->getInitCenter();
+   PixelMap map(c.x, grid->getInitNgrid() ,grid->getInitRange()/grid->getInitNgrid());
+   map.AddImages(negimage,*Ncrits,0);
+   map.printFITS("!infind_crit_cit2");
+   }
+   *******************************/
+  
   std::vector<ImageInfo> critcurve(*Ncrits);     /// Structure to hold critical curve.  Must be pre-
   negimage.resize(*Ncrits);
   
   if(verbose) std::cout << *Ncrits << " negative islands found." << std::endl;
   
   /******* test *****************
+   
+   Point_2d c = grid->getInitCenter();
+   PixelMap map(c.x, grid->getInitNgrid() ,grid->getInitRange()/grid->getInitNgrid());
+   **********************************/
   
-    Point_2d c = grid->getInitCenter();
-    PixelMap map(c.x, grid->getInitNgrid() ,grid->getInitRange()/grid->getInitNgrid());
-  **********************************/
-    
   //assert(negimage[0].imagekist->CheckInImage(NO));
   for(int ii=0;ii<negimage.size();++ii){
     negimage[ii].imagekist->SetInImage(YES);
@@ -123,19 +123,19 @@ void ImageFinding::find_crit(
       
       findborders4(grid->i_tree,&negimage[ii]);
       /******* test *****************
-        map.AddCurve(negimage[ii].outerborder,1);
-      // *******************************/
+       map.AddCurve(negimage[ii].outerborder,1);
+       // *******************************/
       
       //negimage[ii].imagekist->SetInImage(NO);
       //if(negimage[ii].innerborder->Nunits() > 2000) break;
       
       refinements=ImageFinding::IF_routines::refine_edges(lens,grid,&negimage[ii]
-                        ,1,resolution,1,&newpoint_kist,true);
-    
+                                                          ,1,resolution,1,&newpoint_kist,true);
+      
       if(refinements==0) break;
       
       if(verbose) cout << "      adding " << newpoint_kist.Nunits() << " points to grid" << endl;
-     // add new negative points to negpoints
+      // add new negative points to negpoints
       newpoint_kist.MoveToTop();
       negimage[ii].imagekist->MoveToBottom();
       do{
@@ -154,20 +154,20 @@ void ImageFinding::find_crit(
   }
   
   /******* test *****************
-  map.printFITS("!infind_crit_outer");
-  *******************************/
+   map.printFITS("!infind_crit_outer");
+   *******************************/
   
   for(int ii=0;ii<negimage.size();++ii){
     negimage[ii].imagekist->SetInImage(NO);
   }
   
   /******* test *****************
-  map.Clean();
-  map.AddImages(critcurve,*Ncrits,0);
-  map.printFITS("!infind_crit_critcurve");
-  map.Clean();
-  *******************************/
-
+   map.Clean();
+   map.AddImages(critcurve,*Ncrits,0);
+   map.printFITS("!infind_crit_critcurve");
+   map.Clean();
+   *******************************/
+  
   
   // gather all the curves together and re-divide them to avoid overlaps
   for(int ii=1;ii<negimage.size();++ii) critcurve[0].imagekist->add(critcurve[ii].imagekist);
@@ -176,7 +176,7 @@ void ImageFinding::find_crit(
   divide_images_kist(grid->i_tree,critcurve,Ncrits);
   for(int ii=0;ii<*Ncrits;++ii) critcurve[ii].imagekist->SetInImage(NO);
   if(verbose) std::cout << *Ncrits << " borders found." << std::endl;
- 
+  
   if(critcurve[0].imagekist->Nunits() == 0) *Ncrits=0;
   
   // ****  Convert the imagekist into a CriticalCurve structure
@@ -189,7 +189,7 @@ void ImageFinding::find_crit(
     for(size_t jj=0;jj<*Ncrits;++jj){
       
       if(critcurve[jj].imagekist->Nunits() < 1) continue;
-       // classify critical curve
+      // classify critical curve
       
       grid->i_tree->FindAllBoxNeighborsKist(critcurve[jj].imagekist->getCurrent(),&neighbors);
       Kist<Point>::iterator it = neighbors.TopIt();
@@ -198,23 +198,23 @@ void ImageFinding::find_crit(
       else crtcurve[ii].type = tangential;
       
       /************ test line ****************
-      std::cout << "neighbors" << std::endl;
-      for(it = neighbors.TopIt(); !it.atend() ; --it){
-        std::cout << (*it)->invmag << " " << 1 - ( (*it)->kappa - sqrt( (*it)->gamma[0]*(*it)->gamma[0] + (*it)->gamma[1]*(*it)->gamma[1] ) ) << std::endl;
-      }
-      ***************************************/
+       std::cout << "neighbors" << std::endl;
+       for(it = neighbors.TopIt(); !it.atend() ; --it){
+       std::cout << (*it)->invmag << " " << 1 - ( (*it)->kappa - sqrt( (*it)->gamma[0]*(*it)->gamma[0] + (*it)->gamma[1]*(*it)->gamma[1] ) ) << std::endl;
+       }
+       ***************************************/
       
       std::vector<Point *> hull = critcurve[jj].imagekist->copytovector();
       
       /******* test *****************
-      it = critcurve[jj].imagekist->TopIt();
-      for(auto pp : hull){
-        assert(pp->x[0] == (*it)->x[0]);
-        assert(pp->x[1] == (*it)->x[1]);
-        --it;
-      }
-     // *******************************/
-
+       it = critcurve[jj].imagekist->TopIt();
+       for(auto pp : hull){
+       assert(pp->x[0] == (*it)->x[0]);
+       assert(pp->x[1] == (*it)->x[1]);
+       --it;
+       }
+       // *******************************/
+      
       hull = Utilities::concave_hull(hull,10);
       
       crtcurve[ii].critical_curve.resize(hull.size());
@@ -230,11 +230,11 @@ void ImageFinding::find_crit(
       }
       
       /******* test *****************
-      {
-        map.AddCurve(crtcurve[ii].critical_curve,1);
-      }
-      // *******************************/
-     
+       {
+       map.AddCurve(crtcurve[ii].critical_curve,1);
+       }
+       // *******************************/
+      
       
       crtcurve[ii].critical_center /= hull.size();
       
@@ -265,10 +265,10 @@ void ImageFinding::find_crit(
       ++ii;
     }
     /******* test *****************
-    map.printFITS("!infind_crit_hulled");
-    map.Clean();
-    // *******************************/
-
+     map.printFITS("!infind_crit_hulled");
+     map.Clean();
+     // *******************************/
+    
     
     *Ncrits = ii;
     crtcurve.resize(*Ncrits);
@@ -278,7 +278,7 @@ void ImageFinding::find_crit(
     
     // regroup the negative islands
     for(int ii=1;ii<negimage.size();++ii) negimage[0] += negimage[ii];
-
+    
     
     // find all negative points again??? *******************************************
     negimage.resize(1);
@@ -326,19 +326,19 @@ void ImageFinding::find_crit(
                                                  ,pseudolimit,lens,grid
                                                  ,resolution,paritypoints);
       if(types[Npseudo] != ND ) ++Npseudo;
-    
+      
     }
-
+    
     if(verbose) std::cout << "  " << Npseudo << " additional radial or pseudo caustics found after further refinement " << std::endl;
-
+    
     pseudocurve.resize(Npseudo);
-
+    
     int Nc = crtcurve.size();
     crtcurve.resize(Npseudo+Nc);
     
     // convert to CriticalCurve structure
     for(size_t ii=Nc,i=0;ii<crtcurve.size();++ii,++i){
-
+      
       //Point *current = pseudocurve[i].imagekist->getCurrent();
       
       crtcurve[ii].type = types[i];
@@ -377,7 +377,7 @@ void ImageFinding::find_crit(
       pseudocurve[i].imagekist->TranformPlanes();
       hull = pseudocurve[i].imagekist->copytovector();
       if(verbose) std::cout << " doing concave hull with " << hull.size() << " points..." << std::endl;
-    
+      
       hull = Utilities::concave_hull(hull,10);
       
       crtcurve[ii].caustic_curve_outline.resize(hull.size());
@@ -398,19 +398,19 @@ void ImageFinding::find_crit(
     }
     
     /***** test lines *******
-    if(Npseudo >= 0){
-      PosType rmax,rmin,rave;
-      psecurve[0].CausticRadius(rmax,rmin,rave);
-      std::cout << "caustic " << rmax << " " << rmin << " " << rave << std::endl;
-      PixelMap map(psecurve[0].critical_center.x,1000,rmax/500);
-      map.AddCurve(psecurve[0].critical_curve,1.0);
-      map.AddCurve(psecurve[0].caustic_curve_outline,2.0);
-      map.printFITS("!test_pseudo.fits");
-      
-      psecurve[0].CriticalRadius(rmax,rmin,rave);
-      std::cout << "critical " << rmax << " " << rmin << " " << rave << std::endl;
-      
-    }// **/
+     if(Npseudo >= 0){
+     PosType rmax,rmin,rave;
+     psecurve[0].CausticRadius(rmax,rmin,rave);
+     std::cout << "caustic " << rmax << " " << rmin << " " << rave << std::endl;
+     PixelMap map(psecurve[0].critical_center.x,1000,rmax/500);
+     map.AddCurve(psecurve[0].critical_curve,1.0);
+     map.AddCurve(psecurve[0].caustic_curve_outline,2.0);
+     map.printFITS("!test_pseudo.fits");
+     
+     psecurve[0].CriticalRadius(rmax,rmin,rave);
+     std::cout << "critical " << rmax << " " << rmin << " " << rave << std::endl;
+     
+     }// **/
   }
   
   for(int ii=0;ii<negimage.size();++ii)
@@ -463,8 +463,7 @@ void ImageFinding::find_crit(
       }
       
       
-      // check that all non-tangent critical line points have a neighbor
-      //  with negative magnification
+      // check for no tangential orphans
       if(crit.type != tangential){
         
         int count = 0;
@@ -473,9 +472,9 @@ void ImageFinding::find_crit(
         - grid->i_tree->getTop()->boundary_p1[0];
         
         PosType crmax,crmin,crave;
-
+        
         CriticalCurve *crit_closest = nullptr;
-
+        
         for(auto &critt : crtcurve){
           if(critt.type == tangential){
             critt.CriticalRadius(rmax,rmin,rave);
@@ -529,29 +528,93 @@ void ImageFinding::find_crit(
         
         assert(count > 0);
         assert(count < 2);
-
+        
+        if(crit.type == tangential){
+          
+          int count = 0;
+          PosType rmax,rmin,rave,r;
+          PosType r_closest = grid->i_tree->getTop()->boundary_p2[0]
+          - grid->i_tree->getTop()->boundary_p1[0];
+          
+          PosType crmax,crmin,crave;
+          
+          CriticalCurve *crit_closest = nullptr;
+          
+          for(auto &critt : crtcurve){
+            if(critt.type != tangential){
+              crit.CriticalRadius(rmax,rmin,rave);
+              assert(rmax >= rmin);
+              assert(rave >= rmin);
+              assert(rmax >= rave);
+              r = (critt.critical_center - crit.critical_center).length();
+              if( rmax > r) ++count;
+              if( r < r_closest){
+                r_closest = r;
+                crit_closest = &critt;
+                crmax = rmax;
+                crmin = rmin;
+                crave = rave;
+              }
+            }
+          }
+          
+          Point *pointp;
+          if(count == 0){
+            std::cout << " Tangential caustic without radial or pseudo partner, plots have been made named ophan*.fits"
+            << std::endl;
+            pointp = grid->i_tree->FindBoxPoint(crit.critical_center.x);
+            grid->i_tree->FindAllBoxNeighborsKist(pointp,&nkist);
+            pointp->Print();
+            
+            std::cout << "closest radial or pseudo caustic is " << r_closest << " radians away and tangential radius is (" << crmax <<","<<crave<<","<<crmin<<")" << std::endl;
+            
+            /// make some figures
+            Point_2d p1,p2;
+            crit.CritRange(p1,p2);
+            PosType range = 2.3*r_closest;
+            PixelMap map(crit.critical_center.x,1000,range/1000);
+            map.AddCurve(crit.critical_curve,1.0);
+            map.printFITS("!orphin_pseudo.fits");
+            
+            grid->writeFits(crit.critical_center.x,1000,range/1000,INVMAG,"!orphin_pseudo");
+            map.Clean();
+            
+            for(auto &critt : crtcurve){
+              map.AddCurve(critt.critical_curve,1.0);
+            }
+            
+            map.printFITS("!orphin_pseudo_all.fits");
+            
+          }
+          
+          assert(count > 0);
+          
+        }
+        
       }
-
+      
+      
     }
+    
     std::cout << "No orphan critical curves where found and every critical curve point has a negative magnification neighbour." << std::endl;
-
+    
     //**************************************************************/
     
   }
   if(verbose) std::cout << "********* find_crit() out **************" << std::endl;
-
+  
   return ;
 }
-/*  This function is not meant for an external user.  It is only used by 
+/*  This function is not meant for an external user.  It is only used by
  find_crit().
  */
 CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
-                               ,PosType pseudolimit,LensHndl lens,GridHndl grid
-                               ,PosType resolution,Kist<Point> &paritypoints){
+                                   ,PosType pseudolimit,LensHndl lens,GridHndl grid
+                                   ,PosType resolution,Kist<Point> &paritypoints){
   
   Kist<Point> newpoints;
   Point *current;
-
+  
   // case where radial caustic has been detected, but not refined
   if(paritypoints.Nunits() > 0 ){
     // pseudo-caustic detected
@@ -588,13 +651,13 @@ CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
     
     return radial;
   }
-
+  
   
   // case where no radial caustic has been detected yet
   pseudocurve.imagekist->copy(negimage.imagekist);
   Point *minmupoint = pseudocurve.imagekist->getCurrent();
   PosType mumin = minmupoint->invmag;
-
+  
   //std::cout << " pseudocurve size " << pseudocurve.imagekist->Nunits() << std::endl;
   
   /// remove all but the points below tmp_pseudolimit
@@ -690,7 +753,7 @@ CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
   if(mumin > pseudolimit){
     PosType eigmin,tmp;
     Point *pmin;
-
+    
     pseudocurve.imagekist->Empty();
     
     // find point with minimum largest Eigenvalue
@@ -740,14 +803,14 @@ CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
     }
     
     if( eigmin < 0){
-    // a radial caustic has been detected, repeat
+      // a radial caustic has been detected, repeat
       return find_pseudo(pseudocurve,negimage,pseudolimit,lens,grid,resolution,paritypoints);
     }else{
       // everything has failed
       return ND;
     }
   }
-
+  
   // pseudo-caustic was found
   return pseudo;
 }
@@ -763,328 +826,328 @@ CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
  
  Unlike find_crit() there is no pseuodcaustic option.
  *
-void ImageFinding::find_crit2(
-                              LensHndl lens             /// The lens model.
-                              ,GridHndl grid            /// The grid.  It must be initialized.
-                              ,std::vector<CriticalCurve> &crtcurve     /// Structure to hold critical curve.  Must be pre-allocated with maxNcrit elements. Stored in critcurve[i].imagekist.
-                              ,int *Ncrits              /// The number of critical curves found.
-                              ,PosType resolution        /// The target resolution that the critical curve is mapped on the image plane.
-                              ,bool *orderingsuccess    /// true if ordering was successful.
-                              ,bool ordercurve          /// Order the curve so that it can be drawn or used to find the winding number.
-                              ,bool dividecurves        /// Divide the critical curves into seporate curves by whether they are attached
-                              ,PosType invmag_min        /// finds regions with 1/magnification < invmag_min
-                              ,bool verbose
-                              ){
-  
-  
-  std::cerr << "There are known bugs in ImageFinding::find_crit2() that we are trying to remove.  Use ImageFinding::find_crit()."
-  << std::endl;
-  throw std::runtime_error("Under construction");
-  
-  long i=0;
-  long refinements;
-  int Nregions=0;
-  //short spur,closed;
-  Kist<Point> newpoint_kist,neighborkist;
-  
-  std::vector<ImageInfo> critcurve(10);
-  
-  // find kist of points with 1/magnification less than invmag_min
-  critcurve[0].imagekist->Empty();
-  PointList::iterator i_tree_pointlist_current(grid->i_tree->pointlist->Top());
-  Point *minpoint = *i_tree_pointlist_current;
-  
-  for(i=0;i<grid->i_tree->pointlist->size();++i){
-    if((*i_tree_pointlist_current)->invmag < invmag_min){
-      critcurve[0].imagekist->InsertAfterCurrent(*i_tree_pointlist_current);
-      critcurve[0].imagekist->Down();
-    }
-    
-    // record point of maximum kappa
-    if((*i_tree_pointlist_current)->kappa > minpoint->kappa) minpoint = *i_tree_pointlist_current;
-    --i_tree_pointlist_current;
-  }
-  bool maxpoint = false;
-  
-  if(critcurve[0].imagekist->Nunits() == 0){ // no point with small enough invmag
-    
-    if(minpoint->gridsize <= resolution){  // no caustic found at this resolution
-      *Ncrits=0;
-      *orderingsuccess = false;
-      return;
-    }
-    
-    // if there is no negative magnification points use maximum mag point
-    critcurve[0].imagekist->InsertAfterCurrent(minpoint);
-    maxpoint =true;
-  }
-  
-  // divide into regions that are widely seporated
-  if(critcurve[0].imagekist->Nunits() >1 ) divide_images_kist(grid->i_tree,critcurve,&Nregions);
-  for(int ii=0;ii<Nregions;++ii){
-    critcurve[ii].imagekist->SetInImage(YES);
-    findborders4(grid->i_tree,&critcurve[ii]);
-  }
-  
-  // loop through seporated regions, this could be done in parrellel
-  for(int ii=0;ii<Nregions;++ii){
-    
-    // refine borders until target resolution is found
-    for(int k=0;;++k){
-      
-      refinements=IF_routines::refine_edges(lens,grid,&critcurve[ii],1,resolution/2,1,&newpoint_kist);
-      //refinements=refine_edges(lens,grid,&critcurve[ii],1,1.0e-3,0,&newpoint_kist);
-      //refinements=IF_routines::refine_grid_kist(lens,grid,&critcurve[ii],1,resolution,2,&newpoint_kist);
-      
-      if(!refinements) break;
-      critcurve[ii].outerborder->SetInImage(MAYBE);
-      
-      // add new points to negative region
-      newpoint_kist.MoveToTop();
-      critcurve[ii].imagekist->MoveToBottom();
-      do{
-        if(newpoint_kist.getCurrent()->invmag < invmag_min){
-          newpoint_kist.getCurrent()->in_image = YES;
-          critcurve[ii].imagekist->InsertAfterCurrent(newpoint_kist.getCurrent());
-          
-          // It is possible that gridrange[] will not be maintained
-          if(critcurve[ii].gridrange[1] < newpoint_kist.getCurrent()->gridsize)
-            critcurve[ii].gridrange[1] = newpoint_kist.getCurrent()->gridsize;
-          
-          if(critcurve[ii].gridrange[2] > newpoint_kist.getCurrent()->gridsize)
-            critcurve[ii].gridrange[2] = newpoint_kist.getCurrent()->gridsize;
-          
-        }else{
-          newpoint_kist.getCurrent()->in_image = NO;
-        }
-      }while(newpoint_kist.Down());
-      
-      if(maxpoint){
-        if(critcurve[ii].imagekist->Nunits() > 1){
-          // take out old max point
-          critcurve[ii].imagekist->MoveToTop();
-          do{
-            if(critcurve[ii].imagekist->getCurrent()->invmag > 0){
-              critcurve[ii].imagekist->getCurrent()->in_image = NO;
-              critcurve[ii].imagekist->TakeOutCurrent();
-              break;
-            }
-          }while(critcurve[ii].imagekist->Down());
-          maxpoint = false;
-        }else{
-          // update maximum kappa point if no negative magnification points have been found
-          newpoint_kist.MoveToTop();
-          do{
-            if(newpoint_kist.getCurrent()->kappa
-               > critcurve[ii].imagekist->getCurrent()->kappa ){
-              critcurve[ii].imagekist->getCurrent()->in_image = NO;
-              critcurve[ii].imagekist->TakeOutCurrent();
-              newpoint_kist.getCurrent()->in_image = YES;
-              critcurve[ii].imagekist->InsertAfterCurrent(newpoint_kist.getCurrent());
-            }
-          }while(newpoint_kist.Down());
-        }
-      }
-      
-      // check which points in inner border are still in the border
-      bool ininner;
-      unsigned long Ntmp = critcurve[0].innerborder->Nunits();
-      critcurve[0].innerborder->MoveToTop();
-      for(unsigned long j=0;j < Ntmp;++j){
-        
-        ininner=false;
-        
-        grid->i_tree->FindAllBoxNeighborsKist(critcurve[ii].innerborder->getCurrent(),&neighborkist);
-        
-        neighborkist.MoveToTop();
-        do{
-          
-          if( neighborkist.getCurrent()->in_image != YES){  // point is a neighbor
-            ininner=true;
-            
-            if(neighborkist.getCurrent()->in_image == NO){  // if point is not yet in outerborder
-              // add point to outerborder
-              neighborkist.getCurrent()->in_image = MAYBE;
-              critcurve[ii].outerborder->InsertAfterCurrent(neighborkist.getCurrent());
-              critcurve[ii].outerborder->Down();
-            }
-          }
-          
-        }while(neighborkist.Down());
-        
-        if(!ininner){
-          bool tmp = critcurve[ii].innerborder->AtTop();
-          critcurve[ii].innerborder->TakeOutCurrent();
-          if(!tmp) critcurve[ii].innerborder->Down();
-        }else{
-          critcurve[ii].innerborder->Down();
-        }
-      }
-      
-      // Take out outer border points that are no longer in outer border
-      critcurve[ii].gridrange[0] = 0.0;
-      Ntmp = critcurve[ii].outerborder->Nunits();
-      critcurve[ii].outerborder->MoveToTop();
-      bool tmpbool;
-      for(unsigned long j=0;j<Ntmp;++j){
-        
-        tmpbool = true;
-        assert(critcurve[ii].outerborder->getCurrent()->in_image == MAYBE);
-        grid->i_tree->FindAllBoxNeighborsKist(critcurve[ii].outerborder->getCurrent(),&neighborkist);
-        neighborkist.MoveToTop();
-        do{
-          if(neighborkist.getCurrent()->in_image == YES){
-            if(critcurve[ii].outerborder->getCurrent()->gridsize
-               > critcurve[ii].gridrange[0])
-              critcurve[ii].gridrange[0] = critcurve[ii].outerborder->getCurrent()->gridsize;
-            tmpbool = false;
-            break;
-          }
-        }while(neighborkist.Down());
-        
-        if(tmpbool){  // no neighbor in image was found
-          bool tmp = critcurve[ii].outerborder->AtTop();
-          critcurve[ii].outerborder->getCurrent()->in_image = NO;
-          critcurve[ii].outerborder->TakeOutCurrent();
-          if(!tmp) critcurve[ii].outerborder->Down();
-        }else{
-          critcurve[ii].outerborder->Down();
-        }
-      }
-      
-      // sort new points into inner and outer borders
-      newpoint_kist.MoveToTop();
-      do{
-        
-        if(newpoint_kist.getCurrent()->in_image != MAYBE){
-          grid->i_tree->FindAllBoxNeighborsKist(newpoint_kist.getCurrent(),&neighborkist);
-          
-          tmpbool = true;
-          neighborkist.MoveToTop();
-          do{
-            if( newpoint_kist.getCurrent()->in_image == YES){
-              if(neighborkist.getCurrent()->in_image != YES){
-                if(tmpbool){
-                  critcurve[ii].innerborder->InsertAfterCurrent(newpoint_kist.getCurrent());
-                  tmpbool = false;
-                }
-                if(neighborkist.getCurrent()->in_image == NO){
-                  neighborkist.getCurrent()->in_image = MAYBE;
-                  critcurve[ii].outerborder->InsertAfterCurrent(neighborkist.getCurrent());
-                }
-              }
-            }else{
-              if(neighborkist.getCurrent()->in_image == YES){
-                newpoint_kist.getCurrent()->in_image = MAYBE;
-                critcurve[ii].outerborder->InsertAfterCurrent(newpoint_kist.getCurrent());
-                break;
-              }
-            }
-          }while(neighborkist.Down());
-        }
-      }while(newpoint_kist.Down());
-      
-      critcurve[ii].outerborder->SetInImage(NO);
-    }
-  }
-  
-  //  borders are no refined and critcurve[ii].imagekist contains all of the region
-  
-  if(maxpoint){
- 	  *Ncrits = 0;
- 	  assert(critcurve[0].imagekist->Nunits() == 1);
- 	  critcurve[0].imagekist->getCurrent()->in_image = NO;
- 	  critcurve[0].imagekist->Empty();
- 	  critcurve[0].outerborder->Empty();
- 	  critcurve[0].innerborder->Empty();
- 	  return;
-  }
-  
-  
-  // make inner border of all regions the image of region 0
-  //  This is done so that regions that have grown together during refinement can be joined
-  critcurve[0].imagekist->SetInImage(NO);
-  critcurve[0].imagekist->Empty();
-  critcurve[0].imagekist->copy(critcurve[0].innerborder);
-  
-  for(int ii=1;ii<Nregions;++ii){
-    // make inner borders the image
-    critcurve[ii].imagekist->SetInImage(NO);
-    critcurve[ii].imagekist->Empty();
-    critcurve[0].imagekist->add(critcurve[ii].innerborder);
-  }
-  
-  // Now critcurve[0].imagekist constains all the inner borders
-  
-  //size_t Npoints = critcurve[0].imagekist->Nunits();
-  if(dividecurves) divide_images_kist(grid->i_tree,critcurve,Ncrits);
-  else *Ncrits = 1;
-  
-  for(i=0;i<*Ncrits;++i) critcurve[i].imagekist->SetInImage(NO);
-  
-  *orderingsuccess = true;
-  
-  if(critcurve[0].imagekist->Nunits() == 0) *Ncrits=0;
-  
-  for(i=0;i<*Ncrits;++i){
-    if(critcurve[i].imagekist->Nunits() == 0){      // take out curves with no points
-      critcurve[i].copy(critcurve[*Ncrits-1],true);
-      *Ncrits -= 1;
-      --i;
-    }
-  }
-  
-  // ****  Convert the imagekist into a CriticalCurve structure
-  
-  
-  crtcurve.resize(*Ncrits);
-  
-  for(size_t ii=0;ii<*Ncrits;++ii){
-    
-    
-    std::vector<Point *> hull = critcurve[ii].imagekist->copytovector();
-    if(ordercurve) hull = Utilities::concave_hull(hull,10);
-    
-    crtcurve[ii].critical_curve.resize(hull.size());
-    crtcurve[ii].caustic_curve_intersecting.resize(hull.size());
-    crtcurve[ii].critical_center[0] = 0;
-    crtcurve[ii].critical_center[1] = 0;
-    
-    for(size_t jj=0;jj<hull.size();++jj){
-      crtcurve[ii].critical_curve[jj] = *hull[jj];
-      crtcurve[ii].caustic_curve_intersecting[jj] = *(hull[jj]->image);
-      crtcurve[ii].critical_center += *hull[jj];
-    }
-    
-    crtcurve[ii].critical_center /= hull.size();
-    
-    Utilities::windings(crtcurve[ii].critical_center.x,hull.data(),hull.size(),&(crtcurve[ii].critical_area));
-    
-    critcurve[ii].imagekist->TranformPlanes();
-    hull = critcurve[ii].imagekist->copytovector();
-    if(ordercurve) hull = Utilities::concave_hull(hull,5);
-    
-    crtcurve[ii].caustic_curve_outline.resize(hull.size());
-    crtcurve[ii].caustic_center[0] = 0;
-    crtcurve[ii].caustic_center[1] = 0;
-    
-    for(size_t jj=0;jj<hull.size();++jj){
-      crtcurve[ii].caustic_curve_outline[jj] = *hull[jj];
-      crtcurve[ii].caustic_center += *hull[jj];
-    }
-    
-    crtcurve[ii].caustic_center[0] /= hull.size();
-    crtcurve[ii].caustic_center[1] /= hull.size();
-    
-    Utilities::windings(crtcurve[ii].caustic_center.x,hull.data(),hull.size(),&(crtcurve[ii].caustic_area));
-    
-    
-  }
-  
-  
-  return ;
-}
-*/
+ void ImageFinding::find_crit2(
+ LensHndl lens             /// The lens model.
+ ,GridHndl grid            /// The grid.  It must be initialized.
+ ,std::vector<CriticalCurve> &crtcurve     /// Structure to hold critical curve.  Must be pre-allocated with maxNcrit elements. Stored in critcurve[i].imagekist.
+ ,int *Ncrits              /// The number of critical curves found.
+ ,PosType resolution        /// The target resolution that the critical curve is mapped on the image plane.
+ ,bool *orderingsuccess    /// true if ordering was successful.
+ ,bool ordercurve          /// Order the curve so that it can be drawn or used to find the winding number.
+ ,bool dividecurves        /// Divide the critical curves into seporate curves by whether they are attached
+ ,PosType invmag_min        /// finds regions with 1/magnification < invmag_min
+ ,bool verbose
+ ){
+ 
+ 
+ std::cerr << "There are known bugs in ImageFinding::find_crit2() that we are trying to remove.  Use ImageFinding::find_crit()."
+ << std::endl;
+ throw std::runtime_error("Under construction");
+ 
+ long i=0;
+ long refinements;
+ int Nregions=0;
+ //short spur,closed;
+ Kist<Point> newpoint_kist,neighborkist;
+ 
+ std::vector<ImageInfo> critcurve(10);
+ 
+ // find kist of points with 1/magnification less than invmag_min
+ critcurve[0].imagekist->Empty();
+ PointList::iterator i_tree_pointlist_current(grid->i_tree->pointlist->Top());
+ Point *minpoint = *i_tree_pointlist_current;
+ 
+ for(i=0;i<grid->i_tree->pointlist->size();++i){
+ if((*i_tree_pointlist_current)->invmag < invmag_min){
+ critcurve[0].imagekist->InsertAfterCurrent(*i_tree_pointlist_current);
+ critcurve[0].imagekist->Down();
+ }
+ 
+ // record point of maximum kappa
+ if((*i_tree_pointlist_current)->kappa > minpoint->kappa) minpoint = *i_tree_pointlist_current;
+ --i_tree_pointlist_current;
+ }
+ bool maxpoint = false;
+ 
+ if(critcurve[0].imagekist->Nunits() == 0){ // no point with small enough invmag
+ 
+ if(minpoint->gridsize <= resolution){  // no caustic found at this resolution
+ *Ncrits=0;
+ *orderingsuccess = false;
+ return;
+ }
+ 
+ // if there is no negative magnification points use maximum mag point
+ critcurve[0].imagekist->InsertAfterCurrent(minpoint);
+ maxpoint =true;
+ }
+ 
+ // divide into regions that are widely seporated
+ if(critcurve[0].imagekist->Nunits() >1 ) divide_images_kist(grid->i_tree,critcurve,&Nregions);
+ for(int ii=0;ii<Nregions;++ii){
+ critcurve[ii].imagekist->SetInImage(YES);
+ findborders4(grid->i_tree,&critcurve[ii]);
+ }
+ 
+ // loop through seporated regions, this could be done in parrellel
+ for(int ii=0;ii<Nregions;++ii){
+ 
+ // refine borders until target resolution is found
+ for(int k=0;;++k){
+ 
+ refinements=IF_routines::refine_edges(lens,grid,&critcurve[ii],1,resolution/2,1,&newpoint_kist);
+ //refinements=refine_edges(lens,grid,&critcurve[ii],1,1.0e-3,0,&newpoint_kist);
+ //refinements=IF_routines::refine_grid_kist(lens,grid,&critcurve[ii],1,resolution,2,&newpoint_kist);
+ 
+ if(!refinements) break;
+ critcurve[ii].outerborder->SetInImage(MAYBE);
+ 
+ // add new points to negative region
+ newpoint_kist.MoveToTop();
+ critcurve[ii].imagekist->MoveToBottom();
+ do{
+ if(newpoint_kist.getCurrent()->invmag < invmag_min){
+ newpoint_kist.getCurrent()->in_image = YES;
+ critcurve[ii].imagekist->InsertAfterCurrent(newpoint_kist.getCurrent());
+ 
+ // It is possible that gridrange[] will not be maintained
+ if(critcurve[ii].gridrange[1] < newpoint_kist.getCurrent()->gridsize)
+ critcurve[ii].gridrange[1] = newpoint_kist.getCurrent()->gridsize;
+ 
+ if(critcurve[ii].gridrange[2] > newpoint_kist.getCurrent()->gridsize)
+ critcurve[ii].gridrange[2] = newpoint_kist.getCurrent()->gridsize;
+ 
+ }else{
+ newpoint_kist.getCurrent()->in_image = NO;
+ }
+ }while(newpoint_kist.Down());
+ 
+ if(maxpoint){
+ if(critcurve[ii].imagekist->Nunits() > 1){
+ // take out old max point
+ critcurve[ii].imagekist->MoveToTop();
+ do{
+ if(critcurve[ii].imagekist->getCurrent()->invmag > 0){
+ critcurve[ii].imagekist->getCurrent()->in_image = NO;
+ critcurve[ii].imagekist->TakeOutCurrent();
+ break;
+ }
+ }while(critcurve[ii].imagekist->Down());
+ maxpoint = false;
+ }else{
+ // update maximum kappa point if no negative magnification points have been found
+ newpoint_kist.MoveToTop();
+ do{
+ if(newpoint_kist.getCurrent()->kappa
+ > critcurve[ii].imagekist->getCurrent()->kappa ){
+ critcurve[ii].imagekist->getCurrent()->in_image = NO;
+ critcurve[ii].imagekist->TakeOutCurrent();
+ newpoint_kist.getCurrent()->in_image = YES;
+ critcurve[ii].imagekist->InsertAfterCurrent(newpoint_kist.getCurrent());
+ }
+ }while(newpoint_kist.Down());
+ }
+ }
+ 
+ // check which points in inner border are still in the border
+ bool ininner;
+ unsigned long Ntmp = critcurve[0].innerborder->Nunits();
+ critcurve[0].innerborder->MoveToTop();
+ for(unsigned long j=0;j < Ntmp;++j){
+ 
+ ininner=false;
+ 
+ grid->i_tree->FindAllBoxNeighborsKist(critcurve[ii].innerborder->getCurrent(),&neighborkist);
+ 
+ neighborkist.MoveToTop();
+ do{
+ 
+ if( neighborkist.getCurrent()->in_image != YES){  // point is a neighbor
+ ininner=true;
+ 
+ if(neighborkist.getCurrent()->in_image == NO){  // if point is not yet in outerborder
+ // add point to outerborder
+ neighborkist.getCurrent()->in_image = MAYBE;
+ critcurve[ii].outerborder->InsertAfterCurrent(neighborkist.getCurrent());
+ critcurve[ii].outerborder->Down();
+ }
+ }
+ 
+ }while(neighborkist.Down());
+ 
+ if(!ininner){
+ bool tmp = critcurve[ii].innerborder->AtTop();
+ critcurve[ii].innerborder->TakeOutCurrent();
+ if(!tmp) critcurve[ii].innerborder->Down();
+ }else{
+ critcurve[ii].innerborder->Down();
+ }
+ }
+ 
+ // Take out outer border points that are no longer in outer border
+ critcurve[ii].gridrange[0] = 0.0;
+ Ntmp = critcurve[ii].outerborder->Nunits();
+ critcurve[ii].outerborder->MoveToTop();
+ bool tmpbool;
+ for(unsigned long j=0;j<Ntmp;++j){
+ 
+ tmpbool = true;
+ assert(critcurve[ii].outerborder->getCurrent()->in_image == MAYBE);
+ grid->i_tree->FindAllBoxNeighborsKist(critcurve[ii].outerborder->getCurrent(),&neighborkist);
+ neighborkist.MoveToTop();
+ do{
+ if(neighborkist.getCurrent()->in_image == YES){
+ if(critcurve[ii].outerborder->getCurrent()->gridsize
+ > critcurve[ii].gridrange[0])
+ critcurve[ii].gridrange[0] = critcurve[ii].outerborder->getCurrent()->gridsize;
+ tmpbool = false;
+ break;
+ }
+ }while(neighborkist.Down());
+ 
+ if(tmpbool){  // no neighbor in image was found
+ bool tmp = critcurve[ii].outerborder->AtTop();
+ critcurve[ii].outerborder->getCurrent()->in_image = NO;
+ critcurve[ii].outerborder->TakeOutCurrent();
+ if(!tmp) critcurve[ii].outerborder->Down();
+ }else{
+ critcurve[ii].outerborder->Down();
+ }
+ }
+ 
+ // sort new points into inner and outer borders
+ newpoint_kist.MoveToTop();
+ do{
+ 
+ if(newpoint_kist.getCurrent()->in_image != MAYBE){
+ grid->i_tree->FindAllBoxNeighborsKist(newpoint_kist.getCurrent(),&neighborkist);
+ 
+ tmpbool = true;
+ neighborkist.MoveToTop();
+ do{
+ if( newpoint_kist.getCurrent()->in_image == YES){
+ if(neighborkist.getCurrent()->in_image != YES){
+ if(tmpbool){
+ critcurve[ii].innerborder->InsertAfterCurrent(newpoint_kist.getCurrent());
+ tmpbool = false;
+ }
+ if(neighborkist.getCurrent()->in_image == NO){
+ neighborkist.getCurrent()->in_image = MAYBE;
+ critcurve[ii].outerborder->InsertAfterCurrent(neighborkist.getCurrent());
+ }
+ }
+ }else{
+ if(neighborkist.getCurrent()->in_image == YES){
+ newpoint_kist.getCurrent()->in_image = MAYBE;
+ critcurve[ii].outerborder->InsertAfterCurrent(newpoint_kist.getCurrent());
+ break;
+ }
+ }
+ }while(neighborkist.Down());
+ }
+ }while(newpoint_kist.Down());
+ 
+ critcurve[ii].outerborder->SetInImage(NO);
+ }
+ }
+ 
+ //  borders are no refined and critcurve[ii].imagekist contains all of the region
+ 
+ if(maxpoint){
+ *Ncrits = 0;
+ assert(critcurve[0].imagekist->Nunits() == 1);
+ critcurve[0].imagekist->getCurrent()->in_image = NO;
+ critcurve[0].imagekist->Empty();
+ critcurve[0].outerborder->Empty();
+ critcurve[0].innerborder->Empty();
+ return;
+ }
+ 
+ 
+ // make inner border of all regions the image of region 0
+ //  This is done so that regions that have grown together during refinement can be joined
+ critcurve[0].imagekist->SetInImage(NO);
+ critcurve[0].imagekist->Empty();
+ critcurve[0].imagekist->copy(critcurve[0].innerborder);
+ 
+ for(int ii=1;ii<Nregions;++ii){
+ // make inner borders the image
+ critcurve[ii].imagekist->SetInImage(NO);
+ critcurve[ii].imagekist->Empty();
+ critcurve[0].imagekist->add(critcurve[ii].innerborder);
+ }
+ 
+ // Now critcurve[0].imagekist constains all the inner borders
+ 
+ //size_t Npoints = critcurve[0].imagekist->Nunits();
+ if(dividecurves) divide_images_kist(grid->i_tree,critcurve,Ncrits);
+ else *Ncrits = 1;
+ 
+ for(i=0;i<*Ncrits;++i) critcurve[i].imagekist->SetInImage(NO);
+ 
+ *orderingsuccess = true;
+ 
+ if(critcurve[0].imagekist->Nunits() == 0) *Ncrits=0;
+ 
+ for(i=0;i<*Ncrits;++i){
+ if(critcurve[i].imagekist->Nunits() == 0){      // take out curves with no points
+ critcurve[i].copy(critcurve[*Ncrits-1],true);
+ *Ncrits -= 1;
+ --i;
+ }
+ }
+ 
+ // ****  Convert the imagekist into a CriticalCurve structure
+ 
+ 
+ crtcurve.resize(*Ncrits);
+ 
+ for(size_t ii=0;ii<*Ncrits;++ii){
+ 
+ 
+ std::vector<Point *> hull = critcurve[ii].imagekist->copytovector();
+ if(ordercurve) hull = Utilities::concave_hull(hull,10);
+ 
+ crtcurve[ii].critical_curve.resize(hull.size());
+ crtcurve[ii].caustic_curve_intersecting.resize(hull.size());
+ crtcurve[ii].critical_center[0] = 0;
+ crtcurve[ii].critical_center[1] = 0;
+ 
+ for(size_t jj=0;jj<hull.size();++jj){
+ crtcurve[ii].critical_curve[jj] = *hull[jj];
+ crtcurve[ii].caustic_curve_intersecting[jj] = *(hull[jj]->image);
+ crtcurve[ii].critical_center += *hull[jj];
+ }
+ 
+ crtcurve[ii].critical_center /= hull.size();
+ 
+ Utilities::windings(crtcurve[ii].critical_center.x,hull.data(),hull.size(),&(crtcurve[ii].critical_area));
+ 
+ critcurve[ii].imagekist->TranformPlanes();
+ hull = critcurve[ii].imagekist->copytovector();
+ if(ordercurve) hull = Utilities::concave_hull(hull,5);
+ 
+ crtcurve[ii].caustic_curve_outline.resize(hull.size());
+ crtcurve[ii].caustic_center[0] = 0;
+ crtcurve[ii].caustic_center[1] = 0;
+ 
+ for(size_t jj=0;jj<hull.size();++jj){
+ crtcurve[ii].caustic_curve_outline[jj] = *hull[jj];
+ crtcurve[ii].caustic_center += *hull[jj];
+ }
+ 
+ crtcurve[ii].caustic_center[0] /= hull.size();
+ crtcurve[ii].caustic_center[1] /= hull.size();
+ 
+ Utilities::windings(crtcurve[ii].caustic_center.x,hull.data(),hull.size(),&(crtcurve[ii].caustic_area));
+ 
+ 
+ }
+ 
+ 
+ return ;
+ }
+ */
 /**
  *  This is a stripped down version of find_crit() for use in find_image_microlens() that
  *  refines the critical lines that are within the image.
