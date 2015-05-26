@@ -41,7 +41,7 @@ void ImageFinding::find_crit(
   
   if(verbose) std::cout << "****  find_crit() ****" << std::endl;
   
-  bool pseuodcaustic = true;
+  bool pseudocaustic = true;
   
   // find kist of points with 1/magnification less than invmag_min
   negimage[0].imagekist->Empty();
@@ -264,7 +264,7 @@ void ImageFinding::find_crit(
     crtcurve.resize(*Ncrits);
   }
   
-  if(pseuodcaustic && negimage[0].imagekist->Nunits() > 1){
+  if(pseudocaustic && negimage[0].imagekist->Nunits() > 1){
     
     std::vector<ImageInfo> pseudocurve(negimage.size());
     std::vector<CritType> types(negimage.size());

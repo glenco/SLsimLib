@@ -356,16 +356,13 @@ void LensHaloFit::FindLensSimple(
     
   // Assigning the modes :
   for(i=1;i<perturb_Nmodes;++i) perturb_modes[i] = mods[i];
-  cout << "# " ;
-  for(i=1;i<perturb_Nmodes;++i) cout << perturb_modes[i] << " " ;
-  cout << endl ;
   
   perturb_modes[0] = 0.0;
   perturb_modes[1] *= -1;  // checked
   perturb_modes[2] *= -1;  // checked
   
   // source position :
-  y[0] = mods[i]*scale; std::cout << "iii = " << i << std::endl;
+  y[0] = mods[i]*scale;
   y[1] = mods[i+1]*scale;
   // y[0] and y[1] are now in radians.
     
