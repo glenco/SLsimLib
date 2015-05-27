@@ -714,7 +714,11 @@ void Lens::insertSubstructures(PosType Rregion,PosType center[],PosType NumberDe
   if(verbose) std::cout << "Actual number of Substructures : " << NhalosSub << std::endl;
 
   
-  if(NhalosSub == 0) return;
+  if(NhalosSub == 0) {
+    WasInsertSubStructuresCalled = YES ;
+    WasNhalosSubZero = true ;
+    return;
+  }
   
   size_t offset = field_halos.size();
 
@@ -860,6 +864,9 @@ void Lens::resetSubstructure(bool verbose){
     WasInsertSubStructuresCalled = YES ;
     return ;
   }
+  
+  // We can have WasInsertSubStructuresCalled = YES but NhalosSub = 0 which makes it leave insertSubstructures with no quantities computed. We detect that case here :
+  if (WasNhalosSubZero == true) { return ; }
   
   // find which plane has the substructures on it
   int fplane_index = 0,lplane_index = 0;
