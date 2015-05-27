@@ -56,4 +56,13 @@ void Lens::readPixelizedDensity()
       main_halos.push_back(new LensHaloMassMap(mokafile, pix_map,pixel_map_zeropad,pixel_map_zeromean, cosmo));
     }
   }
+  
+  // make sure fieldof view covers all of the map
+  PosType tmp;
+  PosType tmp_fov = sqrt(fieldofview)*degreesTOradians;
+  for(size_t i=0; i < main_halos.size<LensHaloMassMap>() ; ++i){
+    tmp = main_halos.get<LensHaloMassMap>(i)->getRangeRad();
+    if(tmp > tmp_fov) tmp_fov = tmp;
+  }
+  fieldofview = tmp_fov*tmp_fov/degreesTOradians/degreesTOradians;
 }

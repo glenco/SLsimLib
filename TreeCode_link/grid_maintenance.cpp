@@ -1335,3 +1335,13 @@ void Grid::writeFitsVector(
   for(tmp_image.imagekist->MoveToTop(),i=0;i<tmp_sb_vec.size();++i,tmp_image.imagekist->Down())
     tmp_image.imagekist->getCurrent()->surface_brightness = tmp_sb_vec[i];
 }
+
+void Grid::writeFits(double strech,LensingVariable lensvar ,std::string filename){
+  Point_2d center = getInitCenter();
+  size_t N1 = (size_t)(strech*Ngrid_init);
+  size_t N2 = (size_t)(strech*Ngrid_init2);
+  
+  writeFits(center.x,N1,N2,getInitRange()/N1,lensvar,filename);
+}
+
+

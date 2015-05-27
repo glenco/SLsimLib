@@ -107,6 +107,7 @@ void ImageFinding::find_crit(
   
   if(verbose) std::cout << *Ncrits << " negative islands found." << std::endl;
   
+  
   /******* test *****************
   
     Point_2d c = grid->getInitCenter();
@@ -165,17 +166,22 @@ void ImageFinding::find_crit(
   map.AddImages(critcurve,*Ncrits,0);
   map.printFITS("!infind_crit_critcurve");
   map.Clean();
-  *******************************/
+  //*******************************/
 
   
   // gather all the curves together and re-divide them to avoid overlaps
   for(int ii=1;ii<negimage.size();++ii) critcurve[0].imagekist->add(critcurve[ii].imagekist);
-  if(verbose) ;
+  if(verbose)
   std::printf("find_crit, number of caustic points: %li\n",critcurve[0].imagekist->Nunits());
   divide_images_kist(grid->i_tree,critcurve,Ncrits);
   for(int ii=0;ii<*Ncrits;++ii) critcurve[ii].imagekist->SetInImage(NO);
   if(verbose) std::cout << *Ncrits << " borders found." << std::endl;
- 
+
+  /******* test **********************************
+  grid->writeFits(5,INVMAG,"!invmag_in_findcrit");
+  grid->writeFits(5,KAPPA,"!invmag_in_findcrit");
+  //************************************************/
+  
   if(critcurve[0].imagekist->Nunits() == 0) *Ncrits=0;
   
   // ****  Convert the imagekist into a CriticalCurve structure
