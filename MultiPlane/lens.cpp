@@ -70,7 +70,7 @@ Lens::Lens(InputParams& params, long* my_seed, CosmoParamSet cosmoset, bool verb
 : seed(my_seed), cosmo(cosmoset), central_point_sphere(1,0,0), inv_ang_screening_scale(0)
 {
   
-  init_params = params;
+  //init_params = params;
   init_seed = *my_seed;
   
 	readCosmology(params);
@@ -143,6 +143,7 @@ Lens::~Lens()
 	Utilities::delete_container(main_halos_created);
 	Utilities::delete_container(field_halos);
   Utilities::delete_container(substructure.halos);
+  std::cout << "In Lens structure" << std::endl;
 }
 
 /// read in Cosmological Parameters
