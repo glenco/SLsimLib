@@ -221,7 +221,11 @@ public:
  
   // get the field_Off value :
   bool getfieldOff() {return flag_switch_field_off ;}
-  
+
+protected:
+  /// field of view in square degrees
+  PosType fieldofview;
+
 private:
 	GLAMER_TEST_FRIEND(LensTest)
 	
@@ -229,13 +233,11 @@ private:
 	long *seed;
   
   long init_seed;
-  InputParams init_params;
+  //InputParams init_params;
   
   // the cosmology
 	COSMOLOGY cosmo;
 
-	/// field of view in square degrees
-	PosType fieldofview;
 	
 	void readCosmology(InputParams& params);
 	void assignParams(InputParams& params,bool verbose = false);
