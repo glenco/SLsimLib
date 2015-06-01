@@ -722,7 +722,7 @@ void Lens::insertSubstructures(PosType Rregion,PosType center[],PosType NumberDe
   
   size_t offset = field_halos.size();
 
-  PosType Dl = cosmo.angDist(redshift),rr,theta;
+  PosType Dl = cosmo.angDist(redshift),rr,theta; // angular distance of the lens in PhysMpc
   PosType *theta_pos;
   PosType r = Mass_min/Mass_max,f,mass;
   size_t haloid = offset;
@@ -768,9 +768,9 @@ void Lens::insertSubstructures(PosType Rregion,PosType center[],PosType NumberDe
     rmax_max = MAX(Rmax,rmax_max);
 
   
-    // std::cout << "Lens::insertSubstructures : aveNhalos = " << aveNhalos << " , Nhalos = " << Nhalos << " , rho = " << rho << " , Rmax = " << Rmax << " , Dl = " << Dl << std::endl ;
+    std::cout << "Lens::insertSubstructures : aveNhalos = " << aveNhalos << " , NhalosSub = " << NhalosSub << " , rho = " << rho << " , Rmax = " << Rmax << " , Dl = " << Dl << std::endl ;
   
-    //could make some other cases here, What does Xu use?
+    // could make some other cases here, What does Xu use?
     
     substructure.halos.push_back(new LensHaloPowerLaw(mass,Rmax,redshift,Rmax,1.0,1.0,0,0));
     substructure.halos.back()->setX(theta_pos);
