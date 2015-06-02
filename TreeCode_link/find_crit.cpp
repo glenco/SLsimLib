@@ -216,6 +216,7 @@ void ImageFinding::find_crit(
        // *******************************/
       
       hull = Utilities::concave_hull(hull,10);
+      //hull = Utilities::convex_hull(hull);
       
       crtcurve[ii].critical_curve.resize(hull.size());
       crtcurve[ii].caustic_curve_intersecting.resize(hull.size());
@@ -243,7 +244,8 @@ void ImageFinding::find_crit(
       hull.clear();
       critcurve[jj].imagekist->TranformPlanes();
       hull = critcurve[jj].imagekist->copytovector();
-      hull = Utilities::concave_hull(hull,5);
+      // ?? hull = Utilities::concave_hull(hull,5);
+      hull = Utilities::convex_hull(hull);
       
       crtcurve[ii].caustic_curve_outline.resize(hull.size());
       crtcurve[ii].caustic_center[0] = 0;
@@ -274,13 +276,210 @@ void ImageFinding::find_crit(
     crtcurve.resize(*Ncrits);
   }
   
+  if(TEST){
+    
+    //*********************  test lines ****************************
+    // This tests that every every radial or pseudo critical line is near at
+    // least one negative mag point
+    Kist<Point> nkist;
+    for(auto &crit : crtcurve){
+      
+      // check that all non-tangent critical line points have a neighbor
+      //  with negative magnification
+      if(crit.type != tangential){
+        Point *pointp = nullptr;
+        if(crit.type == radial){
+          for(Point_2d &p : crit.critical_curve){
+            pointp = grid->i_tree->FindBoxPoint(p.x);
+            grid->i_tree->FindAllBoxNeighborsKist(pointp,&nkist);
+            bool good = false;
+            for(auto &np : nkist){
+              if(np.invmag < 0){ good = true; break;}
+            }
+            if(!good){
+              
+              grid->i_tree->Test();
+              grid->s_tree->Test();
+              
+              std::cout << "Caustic point without negative neighbor"
+              << std::endl;
+              std::cout << "invmag " << pointp->invmag << std::endl;
+              std::cout << "inverted ? " << pointp->inverted() << std::endl;
+              std::cout << "id " << pointp->id << std::endl;
+              std::cout << "neighbors: " << std::endl;
+              if(pointp->leaf->boundary_p1[0] == grid->i_tree->getTop()->boundary_p1[0])
+                std::cout << "At left boundary of grid." << std::endl;
+              if(pointp->leaf->boundary_p1[1] == grid->i_tree->getTop()->boundary_p1[1])
+                std::cout << "At bottom boundary of grid." << std::endl;
+              if(pointp->leaf->boundary_p2[0] == grid->i_tree->getTop()->boundary_p2[0])
+                std::cout << "At right boundary of grid." << std::endl;
+              if(pointp->leaf->boundary_p2[1] == grid->i_tree->getTop()->boundary_p2[1])
+                std::cout << "At top boundary of grid." << std::endl;
+              for(auto &np : nkist){
+                std::cout << np.id << "    inverted ? " << np.inverted() << std::endl;
+              }
+              std::cout << " # of points in crit curve: " << crit.critical_curve.size() << std::endl;
+            }
+            assert(good);
+          }
+        }else if(crit.type == pseudo){
+          pointp = grid->i_tree->FindBoxPoint(crit.critical_center.x);
+          grid->i_tree->FindAllBoxNeighborsKist(pointp,&nkist);
+          bool good = false;
+          for(auto &np : nkist){
+            if(np.invmag < 0){ good = true; break;}
+          }
+          assert(good);
+        }
+      }
+      
+      
+      // check for no tangential orphans
+      if(crit.type != tangential){
+        
+        int count = 0;
+        PosType rmax,rmin,rave,r;
+        PosType r_closest = grid->i_tree->getTop()->boundary_p2[0]
+        - grid->i_tree->getTop()->boundary_p1[0];
+        
+        PosType crmax,crmin,crave;
+        
+        CriticalCurve *crit_closest = nullptr;
+        
+        for(auto &critt : crtcurve){
+          if(critt.type == tangential){
+            critt.CriticalRadius(rmax,rmin,rave);
+            assert(rmax >= rmin);
+            assert(rave >= rmin);
+            assert(rmax >= rave);
+            r = (critt.critical_center - crit.critical_center).length();
+            if( rmax > r) ++count;
+            if( r < r_closest){
+              r_closest = r;
+              crit_closest = &critt;
+              crmax = rmax;
+              crmin = rmin;
+              crave = rave;
+            }
+          }
+        }
+        
+        Point *pointp;
+        if(count == 0){
+          std::cout << "Radial or pseudo caustic without tangential partner, plots have been made named ophan*.fits"
+          << std::endl;
+          pointp = grid->i_tree->FindBoxPoint(crit.critical_center.x);
+          grid->i_tree->FindAllBoxNeighborsKist(pointp,&nkist);
+          pointp->Print();
+          
+          std::cout << "closest tangential caustic is " << r_closest << " radians away and has a radius of (" << crmax <<","<<crave<<","<<crmin<<")" << std::endl;
+          
+          /// make some figures
+          Point_2d p1,p2;
+          crit.CritRange(p1,p2);
+          PosType range = 2.3*r_closest;
+          PixelMap map(crit.critical_center.x,1000,range/1000);
+          map.AddCurve(crit.critical_curve,1.0);
+          map.printFITS("!orphin_pseudo.fits");
+          
+          grid->writeFits(crit.critical_center.x,1000,range/1000,INVMAG,"!orphin_pseudo");
+          map.Clean();
+          
+          for(auto &critt : crtcurve){
+            map.AddCurve(critt.critical_curve,1.0);
+          }
+          
+          map.printFITS("!orphin_pseudo_all.fits");
+          
+        }
+        if(count > 1){
+          std::cout << "Radial or pseudo caustic has " << count << " tangential critical line within rmax"
+          << std::endl;
+        }
+        
+        assert(count > 0);
+        assert(count < 2);
+        
+        if(crit.type == tangential){
+          
+          int count = 0;
+          PosType rmax,rmin,rave,r;
+          PosType r_closest = grid->i_tree->getTop()->boundary_p2[0]
+          - grid->i_tree->getTop()->boundary_p1[0];
+          
+          PosType crmax,crmin,crave;
+          
+          CriticalCurve *crit_closest = nullptr;
+          
+          for(auto &critt : crtcurve){
+            if(critt.type != tangential){
+              crit.CriticalRadius(rmax,rmin,rave);
+              assert(rmax >= rmin);
+              assert(rave >= rmin);
+              assert(rmax >= rave);
+              r = (critt.critical_center - crit.critical_center).length();
+              if( rmax > r) ++count;
+              if( r < r_closest){
+                r_closest = r;
+                crit_closest = &critt;
+                crmax = rmax;
+                crmin = rmin;
+                crave = rave;
+              }
+            }
+          }
+          
+          Point *pointp;
+          if(count == 0){
+            std::cout << " Tangential caustic without radial or pseudo partner, plots have been made named ophan*.fits"
+            << std::endl;
+            pointp = grid->i_tree->FindBoxPoint(crit.critical_center.x);
+            grid->i_tree->FindAllBoxNeighborsKist(pointp,&nkist);
+            pointp->Print();
+            
+            std::cout << "closest radial or pseudo caustic is " << r_closest << " radians away and tangential radius is (" << crmax <<","<<crave<<","<<crmin<<")" << std::endl;
+            
+            /// make some figures
+            Point_2d p1,p2;
+            crit.CritRange(p1,p2);
+            PosType range = 2.3*r_closest;
+            PixelMap map(crit.critical_center.x,1000,range/1000);
+            map.AddCurve(crit.critical_curve,1.0);
+            map.printFITS("!orphin_pseudo.fits");
+            
+            grid->writeFits(crit.critical_center.x,1000,range/1000,INVMAG,"!orphin_pseudo");
+            map.Clean();
+            
+            for(auto &critt : crtcurve){
+              map.AddCurve(critt.critical_curve,1.0);
+            }
+            
+            map.printFITS("!orphin_pseudo_all.fits");
+            
+          }
+          
+          assert(count > 0);
+          
+        }
+        
+      }
+      
+      
+    }
+    
+    std::cout << "No orphan critical curves where found and every critical curve point has a negative magnification neighbour before pseudos are found." << std::endl;
+    
+    //**************************************************************/
+    
+  }
   if(pseuodcaustic && negimage[0].imagekist->Nunits() > 1){
+    
     
     // regroup the negative islands
     for(int ii=1;ii<negimage.size();++ii) negimage[0] += negimage[ii];
     
     
-    // find all negative points again??? *******************************************
+    // find all negative island again *******************************************
     negimage.resize(1);
     int tmp;
     divide_images_kist(grid->i_tree,negimage,&tmp);
@@ -300,7 +499,7 @@ void ImageFinding::find_crit(
     bool found;
     Kist<Point> paritypoints;
     
-    int nfound = 0;
+    int nfound = 0,Nnotdefined = 0;
     for(int ii = 0;ii<negimage.size();++ii){
       found = false;
       paritypoints.Empty();
@@ -326,10 +525,15 @@ void ImageFinding::find_crit(
                                                  ,pseudolimit,lens,grid
                                                  ,resolution,paritypoints);
       if(types[Npseudo] != ND ) ++Npseudo;
+      else ++Nnotdefined;
       
     }
     
+    if(verbose) std::cout << "  " << nfound << " radial caustics found with tangential caustics " << std::endl;
     if(verbose) std::cout << "  " << Npseudo << " additional radial or pseudo caustics found after further refinement " << std::endl;
+    if(verbose) std::cout << "  " << Nnotdefined << " not defined caustics " << std::endl;
+    
+    
     
     pseudocurve.resize(Npseudo);
     
@@ -347,6 +551,8 @@ void ImageFinding::find_crit(
       std::vector<Point *> hull = pseudocurve[i].outerborder->copytovector();
       if(verbose) std::cout << " doing concave hull with " << hull.size() << " points..." << std::endl;
       hull = Utilities::concave_hull(hull,10);
+      //hull = Utilities::convex_hull(hull);
+      assert(hull.size() <= pseudocurve[i].outerborder->Nunits());
       
       if(crtcurve[ii].type != pseudo){
         crtcurve[ii].critical_curve.resize(hull.size());
@@ -379,6 +585,7 @@ void ImageFinding::find_crit(
       if(verbose) std::cout << " doing concave hull with " << hull.size() << " points..." << std::endl;
       
       hull = Utilities::concave_hull(hull,10);
+      //hull = Utilities::convex_hull(hull);
       
       crtcurve[ii].caustic_curve_outline.resize(hull.size());
       crtcurve[ii].caustic_center[0] = 0;
@@ -435,19 +642,33 @@ void ImageFinding::find_crit(
             pointp = grid->i_tree->FindBoxPoint(p.x);
             grid->i_tree->FindAllBoxNeighborsKist(pointp,&nkist);
             bool good = false;
-            for(auto np : nkist){
+            for(auto &np : nkist){
               if(np.invmag < 0){ good = true; break;}
             }
             if(!good){
+              
+              grid->i_tree->Test();
+              grid->s_tree->Test();
+              
               std::cout << "Caustic point without negative neighbor"
               << std::endl;
               std::cout << "invmag " << pointp->invmag << std::endl;
               std::cout << "inverted ? " << pointp->inverted() << std::endl;
+              std::cout << "id " << pointp->id << std::endl;
               std::cout << "neighbors: " << std::endl;
-              for(auto np : nkist){
-                std::cout << i++ << "    inverted ? " << np.inverted() << std::endl;
+              if(pointp->leaf->boundary_p1[0] == grid->i_tree->getTop()->boundary_p1[0])
+                std::cout << "At left boundary of grid." << std::endl;
+              if(pointp->leaf->boundary_p1[1] == grid->i_tree->getTop()->boundary_p1[1])
+                std::cout << "At bottom boundary of grid." << std::endl;
+              if(pointp->leaf->boundary_p2[0] == grid->i_tree->getTop()->boundary_p2[0])
+                std::cout << "At right boundary of grid." << std::endl;
+              if(pointp->leaf->boundary_p2[1] == grid->i_tree->getTop()->boundary_p2[1])
+                std::cout << "At top boundary of grid." << std::endl;
+              for(auto &np : nkist){
+                std::cout << np.id << "    inverted ? " << np.inverted() << std::endl;
               }
-              std::cout << " # of points in crit curve: " << crit.critical_curve.size() << std::endl;
+              std::cout << " # of points in crit curve: " << crit.critical_curve.size()
+              << std::endl;
             }
             assert(good);
           }
@@ -455,7 +676,7 @@ void ImageFinding::find_crit(
           pointp = grid->i_tree->FindBoxPoint(crit.critical_center.x);
           grid->i_tree->FindAllBoxNeighborsKist(pointp,&nkist);
           bool good = false;
-          for(auto np : nkist){
+          for(auto &np : nkist){
             if(np.invmag < 0){ good = true; break;}
           }
           assert(good);

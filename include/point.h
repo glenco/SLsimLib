@@ -48,7 +48,7 @@ struct Point{
   unsigned long head;         // marks beginning of allocated array of points for easy deallocation
   Boo in_image; // marks if point is in image
 
-    
+  
   // redundant information in image and source points
   KappaType kappa;           // surface density
   KappaType gamma[3];        // shear, third component is the rotation quantity that is only non-zero for multi-plane lensing
@@ -88,6 +88,12 @@ struct Point{
 
   /// returns true if the image is double inverted
   bool inverted(){ return 0 > (1 - kappa + sqrt( (1-kappa)*(1-kappa) - invmag ) ); }
+  
+private:
+  // make a point uncopyable
+  Point(const Point &p);
+  Point &operator=(Point &p);
+  Point &operator=(const Point &p);
 };
 
 std::ostream &operator<<(std::ostream &os, Point const &p);
@@ -122,6 +128,12 @@ struct Branch{
   std::list<Branch *> neighbors;
 private:
   static unsigned long countID;
+
+  // make a Branch uncopyable
+  Branch(const Branch &p);
+  Branch &operator=(Branch &p);
+  Branch &operator=(const Branch &p);
+
 } ;
 
 //typedef struct branchstruct Branch;
@@ -253,6 +265,12 @@ private:
   Point *bottom;
   //Point *current;
   unsigned long Npoints;
+  
+private:
+  // make a point uncopyable
+  //PointList(const PointList &p);
+  PointList &operator=(const PointList &p);
+
 };
 
 typedef struct PointList *ListHndl;

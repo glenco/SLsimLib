@@ -1210,10 +1210,10 @@ void Grid::writePixelMapUniform(
     thr[ii] = std::thread(&Grid::writePixelMapUniform_,this,lists[ii],&map,lensvar);
   }
   for(int ii = 0; ii < i ;++ii) thr[ii].join();
-  
+
 }
 
-void Grid::writePixelMapUniform_(PointList list,PixelMap *map,LensingVariable val){
+void Grid::writePixelMapUniform_(const PointList &list,PixelMap *map,LensingVariable val){
   double tmp;
   PosType tmp2[2];
   long index;
