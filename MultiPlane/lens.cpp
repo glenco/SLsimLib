@@ -690,7 +690,16 @@ void Lens::createFieldPlanes(bool verbose)
 }
 
 
-void Lens::insertSubstructures(PosType Rregion,PosType center[],PosType NumberDensity,PosType Mass_min,PosType Mass_max,PosType redshift,PosType alpha,PosType density_contrast,bool verbose)
+void Lens::insertSubstructures(PosType Rregion,           // in radians
+                               PosType center[],
+                               PosType NumberDensity,     // in number / unit^2
+                               PosType Mass_min,          // in M_sun
+                               PosType Mass_max,          // in M_sun
+                               PosType redshift,
+                               PosType alpha,
+                               PosType density_contrast,  // dimensionless
+                               bool verbose
+                               )
 {
   substructure.alpha = alpha;
   substructure.center.x[0] = center[0];
@@ -704,10 +713,12 @@ void Lens::insertSubstructures(PosType Rregion,PosType center[],PosType NumberDe
   // (when WasInsertSubStructuresCalled = MAYBE) :
   substructure.redshift = redshift;
   
+  // Variable for the sum of the substructure masses :
+  PosType SumMassSub = 0. ;
   
   if(alpha == -1) throw std::invalid_argument("alpha must not be -1 in Lens::createOneFieldPlane");
 
-  PosType aveNhalos = NumberDensity*Rregion*Rregion*pi;
+  PosType aveNhalos = NumberDensity*Rregion*Rregion*pi; // in Number/radians^2 * radians^2 = dimensionless
   if(verbose) std::cout << "Average number of Substructures : " << aveNhalos << std::endl;
   
   std::size_t NhalosSub = static_cast<std::size_t>(poidev(float(aveNhalos), seed));
@@ -732,6 +743,8 @@ void Lens::insertSubstructures(PosType Rregion,PosType center[],PosType NumberDe
   PosType Rmax;
   
   PosType rho = density_contrast*cosmo.rho_crit(0)*cosmo.getOmega_matter()*(1+redshift)*(1+redshift)*(1+redshift);
+  // rho in 1 * (M_sun/Mpc^3) * 1 * (1+z)^3 = M_sun / PhysMpc^3,
+  // where Mpc \equiv comoving Mpc.
   
   if(substructure.halos.size() > 0){
     // Problem: Expanding the vector is a problem if we want to add substructure
@@ -747,29 +760,28 @@ void Lens::insertSubstructures(PosType Rregion,PosType center[],PosType NumberDe
     for(size_t ii=0;ii<NhalosSub;++ii){
       
     // random position
-    rr = Rregion*sqrt(ran2(seed));
+    rr = Rregion*sqrt(ran2(seed)); // in radians
     theta_pos = new PosType[3];
     
-    theta = 2*pi*ran2(seed);
+    theta = 2*pi*ran2(seed);       // in radians
     
     // position in proper distance
-    theta_pos[0] = (rr*cos(theta) + center[0])*Dl;
-    theta_pos[1] = (rr*sin(theta) + center[1])*Dl;
+    theta_pos[0] = (rr*cos(theta) + center[0])*Dl; // in radians * angular Distance in PhysMpc = PhysMpc
+    theta_pos[1] = (rr*sin(theta) + center[1])*Dl; // same
     theta_pos[2] = 0.0;
 
-    f = ran2(seed);
+    f = ran2(seed); // dimensionless and between 0 and 1
     
     // mass from power law mass function
-    mass = Mass_max*pow( f + pow(r,alpha+1)*(1-f), 1.0/(1+alpha) );
-
+    mass = Mass_max*pow( f + pow(r,alpha+1)*(1-f), 1.0/(1+alpha) ); // in Msun, r = Mass_Min / Mass_Max is dimensionless.
+    SumMassSub += mass ;
+      
     // Rmax from tidal truncation
-    Rmax = pow(mass/rho/4/pi,1.0/3.);
+    Rmax = pow(mass/rho/4/pi,1.0/3.); // in [Msun / (Msun / PhysMpc^3)]^(1/3) = PhysMpc
   
-    mass_max = MAX(mass,mass_max);
-    rmax_max = MAX(Rmax,rmax_max);
+    mass_max = MAX(mass,mass_max); // in Msun
+    rmax_max = MAX(Rmax,rmax_max); // in PhysMpc
 
-  
-    std::cout << "Lens::insertSubstructures : aveNhalos = " << aveNhalos << " , NhalosSub = " << NhalosSub << " , rho = " << rho << " , Rmax = " << Rmax << " , Dl = " << Dl << std::endl ;
   
     // could make some other cases here, What does Xu use?
     
@@ -781,8 +793,12 @@ void Lens::insertSubstructures(PosType Rregion,PosType center[],PosType NumberDe
   }
   
   if(verbose){
+    std::cout << "Lens::insertSubstructures : aveNhalos = " << aveNhalos << " , NhalosSub = " << NhalosSub << " , rho = " << rho << " Msun/PhysMpc^3, Rmax = " << Rmax << " PhysMpc , Dl = " << Dl << " PhysMpc." << std::endl ;
     std::cout << "Lens::insertSubstructures : Max mass = " << mass_max << " , Max radius = "
     << rmax_max << " number of substructure halos = " << substructure.halos.size() << std::endl ;
+    std::cout << "Lens::insertSubstructures : SumMassSub = " << SumMassSub << " Msun." << std::endl ;
+    std::cout << "Lens::insertSubstructures : Sigma_crit = " << cosmo.SigmaCrit(redshift, zsource) << " Msun/PhysMpc^2." << std::endl ;
+    std::cout << "Lens::insertSubstructures : 4 pi G = " << 4*pi*Grav << " Mpc/Msun." << std::endl ;
   }
 
   // Test :
