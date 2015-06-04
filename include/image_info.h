@@ -36,6 +36,8 @@ struct ImageInfo{
     return *this;
   }
   
+  void Empty();
+  
   ImageInfo & operator+=(ImageInfo & rhs);
   
     /// Array of points in image,  SHOULD NOT BE USED IN FAVOR OF imagekist!  Still used by caustic finding routines.

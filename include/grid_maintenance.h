@@ -328,7 +328,7 @@ namespace ImageFinding{
   
   CritType find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
                                  ,PosType pseudolimit,LensHndl lens,GridHndl grid
-                                 ,PosType resolution,Kist<Point> &paritypoints);
+                                 ,PosType resolution,Kist<Point> &paritypoints,bool TEST=false);
   
   void find_contour(LensHndl lens,GridHndl grid,std::vector<CriticalCurve> &contour,int *Ncrits,PosType resolution,bool *orderingsuccess,bool ordercurve, bool dividecurves, double contour_value,LensingVariable contour_type,bool verbose = false);
   

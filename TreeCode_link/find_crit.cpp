@@ -523,7 +523,7 @@ void ImageFinding::find_crit(
       }
       types[Npseudo] = ImageFinding::find_pseudo(pseudocurve[Npseudo],negimage[ii]
                                                  ,pseudolimit,lens,grid
-                                                 ,resolution,paritypoints);
+                                                 ,resolution,paritypoints,TEST);
       if(types[Npseudo] != ND ) ++Npseudo;
       else ++Nnotdefined;
       
@@ -540,10 +540,14 @@ void ImageFinding::find_crit(
     int Nc = crtcurve.size();
     crtcurve.resize(Npseudo+Nc);
     
+    size_t ii,i;
     // convert to CriticalCurve structure
-    for(size_t ii=Nc,i=0;ii<crtcurve.size();++ii,++i){
+    for(ii=Nc-1,i=0;i<Npseudo;++i){
       
       //Point *current = pseudocurve[i].imagekist->getCurrent();
+      
+      if(types[i] == ND) continue;
+      ++ii;
       
       crtcurve[ii].type = types[i];
       
@@ -603,7 +607,9 @@ void ImageFinding::find_crit(
       Utilities::windings(crtcurve[ii].caustic_center.x,hull.data(),hull.size(),&(crtcurve[ii].caustic_area));
       
     }
-    
+    // remove cases that were ND type
+    crtcurve.resize(ii+1);
+
     /***** test lines *******
      if(Npseudo >= 0){
      PosType rmax,rmin,rave;
@@ -665,9 +671,11 @@ void ImageFinding::find_crit(
               if(pointp->leaf->boundary_p2[1] == grid->i_tree->getTop()->boundary_p2[1])
                 std::cout << "At top boundary of grid." << std::endl;
               for(auto &np : nkist){
-                std::cout << np.id << "    inverted ? " << np.inverted() << std::endl;
+                std::cout << np.id << "    inverted ? " << np.inverted() <<
+                " invmag " << np.invmag << std::endl;
               }
               std::cout << " # of points in crit curve: " << crit.critical_curve.size()
+              << " type: " << crit.type
               << std::endl;
             }
             assert(good);
@@ -714,7 +722,7 @@ void ImageFinding::find_crit(
           }
         }
         
-        Point *pointp;
+        Point *pointp = nullptr;
         if(count == 0){
           std::cout << "Radial or pseudo caustic without tangential partner, plots have been made named ophan*.fits"
           << std::endl;
@@ -827,11 +835,11 @@ void ImageFinding::find_crit(
   return ;
 }
 /*  This function is not meant for an external user.  It is only used by
- find_crit().
+ find_crit(). paritypoints must be empty on first entry.
  */
 CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
                                    ,PosType pseudolimit,LensHndl lens,GridHndl grid
-                                   ,PosType resolution,Kist<Point> &paritypoints){
+                                   ,PosType resolution,Kist<Point> &paritypoints,bool TEST){
   
   Kist<Point> newpoints;
   Point *current;
@@ -843,6 +851,15 @@ CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
     
     pseudocurve.imagekist->SetInImage(YES);
     findborders4(grid->i_tree,&pseudocurve);
+    if(TEST){
+      for(auto &p : *(pseudocurve.outerborder) ){
+        assert( p.invmag < 0 );
+      }
+      for(auto &p : *(pseudocurve.innerborder) ){
+        assert( p.invmag > 0 );
+      }
+   }
+
     while(pseudocurve.innerborder->Nunits() < 2000 &&
           IF_routines::refine_edges(lens,grid,&pseudocurve,1,0.1*resolution,1,&newpoints)
           ){
@@ -851,11 +868,10 @@ CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
       do{
         current = newpoints.getCurrent();
         
-        if( 1 < ( current->kappa - sqrt( current->gamma[0]*current->gamma[0]
-                                        + current->gamma[1]*current->gamma[1]) ) ){
+        if( current->inverted() ){
           pseudocurve.imagekist->InsertAfterCurrent(current);
           current->in_image = YES;
-        }
+        }else current->in_image = NO;
         
         if( current->invmag < 0 )
           negimage.imagekist->InsertAfterCurrent(current);
@@ -864,12 +880,22 @@ CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
       }while(newpoints.Down());
       
       findborders4(grid->i_tree,&pseudocurve);
+      
+      if(TEST){
+        for(auto &p : *(pseudocurve.outerborder) ){
+          assert( p.invmag < 0 );
+        }
+        for(auto &p : *(pseudocurve.innerborder) ){
+          assert( p.invmag > 0 );
+        }
+      }
     }  // refinement loop
     
     pseudocurve.imagekist->SetInImage(NO);
     
     paritypoints.Empty();
-    
+    pseudocurve.ShouldNotRefine = 0;
+
     return radial;
   }
   
@@ -941,8 +967,7 @@ CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
         pseudocurve.imagekist->InsertAfterCurrent(current);
       }
       
-      if( 1 < ( current->kappa - sqrt( current->gamma[0]*current->gamma[0]
-                                      + current->gamma[1]*current->gamma[1]) ) ){
+      if( current->inverted() ){
         paritypoints.InsertAfterCurrent(current);
       }
       
@@ -966,8 +991,7 @@ CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
   
   // radial caustic was detected
   if(paritypoints.Nunits() > 0){
-    find_pseudo(pseudocurve,negimage,pseudolimit,lens,grid,resolution,paritypoints);
-    return radial;
+    return find_pseudo(pseudocurve,negimage,pseudolimit,lens,grid,resolution,paritypoints,TEST);
   }
   // neither a region with a magnification below pseudolimit or a radiual caustic were found
   //  now minimize the largest eigenvalue and see if it is negative
@@ -1023,15 +1047,20 @@ CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
       findborders4(grid->i_tree,&pseudocurve);
     }
     
+    pseudocurve.ShouldNotRefine = 0;
     if( eigmin < 0){
+      assert(paritypoints.Nunits() > 0);
       // a radial caustic has been detected, repeat
       return find_pseudo(pseudocurve,negimage,pseudolimit,lens,grid,resolution,paritypoints);
     }else{
       // everything has failed
+      assert(paritypoints.Nunits() == 0);
+      pseudocurve.Empty();
       return ND;
     }
   }
   
+  pseudocurve.ShouldNotRefine = 0;
   // pseudo-caustic was found
   return pseudo;
 }

@@ -796,6 +796,19 @@ ImageInfo::~ImageInfo(){
     delete innerborder;
     delete outerborder;
 }
+
+/// return to original state after construction
+void ImageInfo::Empty(){
+  imagekist->Empty();
+  innerborder->Empty();
+  outerborder->Empty();
+  centroid[0] = centroid[1] =0.0;
+  area = area_error = 0.0;
+  gridrange[0] = gridrange[1] = gridrange[2] = 0.0;
+  ShouldNotRefine = 0;
+  uniform_mag = unchecked;
+}
+
 /**
  * \brief Copy all information about the image including making copies of the imagekist,
  * innerborder and outerborder.  Previous information in the image will be
