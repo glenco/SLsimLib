@@ -221,7 +221,7 @@ public:
  
   // get the field_Off value :
   bool getfieldOff() {return flag_switch_field_off ;}
-
+  
 protected:
   /// field of view in square degrees
   PosType fieldofview;
