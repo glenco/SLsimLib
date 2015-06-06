@@ -2546,23 +2546,21 @@ void Lens::combinePlanes(bool verbose)
 	// calculate deltas
 	dDl.push_back(Dl[0]);
 	for(std::size_t i = 1; i < Dl.size(); ++i)
-		dDl.push_back(MAX(Dl[i] - Dl[i-1],MIN_PLANE_DIST)); // distance from plane i-1 to plane i
+  dDl.push_back(MAX(Dl[i] - Dl[i-1],MIN_PLANE_DIST)); // distance from plane i-1 to plane i
 	
 	// output resulting setup
-	if(verbose) std::cout
-    << "\ncombinePlanes()"
-    << "\n---------------"
-    << std::endl;
-	if(verbose) std::cout << "\nz:";
-	for(std::size_t i = 0, n = plane_redshifts.size(); i < n; ++i)
-		if(verbose) std::cout << " " << plane_redshifts[i];
-	if(verbose) std::cout << "\nDl:";
-	for(std::size_t i = 0, n = Dl.size(); i < n; ++i)
-		if(verbose) std::cout << " " << Dl[i];
-	if(verbose) std::cout << "\ndDl:";
-	for(std::size_t i = 0, n = dDl.size(); i < n; ++i)
-		if(verbose) std::cout << " " << dDl[i];
-	if(verbose) std::cout << "\n" << std::endl;
+	if(verbose)
+  {
+    std::cout << "\ncombinePlanes()" << "\n---------------" << std::endl;
+    std::cout << "\nz:";
+    for(std::size_t i = 0, n = plane_redshifts.size(); i < n; ++i) std::cout << " " << plane_redshifts[i];
+    std::cout << "\nDl:";
+    for(std::size_t i = 0, n = Dl.size(); i < n; ++i) std::cout << " " << Dl[i];
+    std::cout << "\ndDl:";
+    for(std::size_t i = 0, n = dDl.size(); i < n; ++i) std::cout << " " << dDl[i];
+    std::cout << "\n" << std::endl;
+  }
+  
 }
 
 void Lens::buildPlanes(InputParams& params, bool verbose)
