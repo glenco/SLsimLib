@@ -312,8 +312,13 @@ void *compute_rays_parallel(void *_p)
       gamma_plus[2] = aa*p->i_points[i].gamma[2] - bb*gamma_minus[2]
       - cc*(kappa*p->i_points[i].gamma[2] - gamma[1]*p->i_points[i].gamma[0] + gamma[0]*p->i_points[i].gamma[1]);
       // ------------------------------------------------------------------------------------------
-      
-      
+
+      std::cout << std::endl ;
+      // std::cout << "RayshooterInternal : kappa_minus = " << kappa_minus << " , kappa = " << kappa << " , gamma[0] = " << gamma[0] << " , gamma[1] = " << gamma[1] << std::endl ;
+      // std::cout << "RayshooterInternal : aa = " << aa << " , bb = " << bb << " , cc = " << cc << std::endl ;
+      // std::cout << "RayshooterInternal : p->points[i] : kappa = " << p->i_points[i].kappa << " , gamma[0] = " << p->i_points[i].gamma[0] << " , gamma[1] = " << p->i_points[i].gamma[1] << std::endl ;
+      std::cout << "RayshooterInternal : plane " << j << " , 1-kappa_plus = " << 1-kappa_plus << std::endl ;
+        
       // Assigning them to the "minus quantities" for next plane occurence of the loop ------------
       kappa_minus = p->i_points[i].kappa;
       gamma_minus[0] = p->i_points[i].gamma[0];
@@ -381,7 +386,7 @@ void *compute_rays_parallel(void *_p)
     // We go from kappa denoting 1-kappa to kappa denoting kappa
     p->i_points[i].kappa = 1 - p->i_points[i].kappa;
     
-    std::cout << "RayshooterInternal : force => kappa = " << p->i_points[i].kappa << std::endl ;
+    std::cout << "RayshooterInternal : kappa final = " << p->i_points[i].kappa << std::endl ;
     
     // Computation of the inverse magnitude --------------------------------------------------------
     p->i_points[i].invmag = (1-p->i_points[i].kappa)*(1-p->i_points[i].kappa)
