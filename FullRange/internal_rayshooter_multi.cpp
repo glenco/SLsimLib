@@ -232,7 +232,6 @@ void *compute_rays_parallel(void *_p)
       
       ////////////////////////////////////////////////////////////////
       
-      
       assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
       assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
       assert(kappa == kappa);
@@ -382,6 +381,7 @@ void *compute_rays_parallel(void *_p)
     // We go from kappa denoting 1-kappa to kappa denoting kappa
     p->i_points[i].kappa = 1 - p->i_points[i].kappa;
     
+    std::cout << "RayshooterInternal : force => kappa = " << p->i_points[i].kappa << std::endl ;
     
     // Computation of the inverse magnitude --------------------------------------------------------
     p->i_points[i].invmag = (1-p->i_points[i].kappa)*(1-p->i_points[i].kappa)
