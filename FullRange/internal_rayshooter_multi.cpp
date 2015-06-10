@@ -317,7 +317,7 @@ void *compute_rays_parallel(void *_p)
       // std::cout << "RayshooterInternal : kappa_minus = " << kappa_minus << " , kappa = " << kappa << " , gamma[0] = " << gamma[0] << " , gamma[1] = " << gamma[1] << std::endl ;
       // std::cout << "RayshooterInternal : aa = " << aa << " , bb = " << bb << " , cc = " << cc << std::endl ;
       // std::cout << "RayshooterInternal : p->points[i] : kappa = " << p->i_points[i].kappa << " , gamma[0] = " << p->i_points[i].gamma[0] << " , gamma[1] = " << p->i_points[i].gamma[1] << std::endl ;
-      std::cout << "RayshooterInternal : plane " << j << " , 1-kappa_plus = " << 1-kappa_plus << std::endl ;
+      std::cout << "RayshooterInternal : plane " << j << " , z = " << p->plane_redshifts[j] << " , 1-kappa_plus = " << 1-kappa_plus << std::endl ;
         
       // Assigning them to the "minus quantities" for next plane occurence of the loop ------------
       kappa_minus = p->i_points[i].kappa;
