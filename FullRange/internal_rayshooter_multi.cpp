@@ -313,7 +313,7 @@ void *compute_rays_parallel(void *_p)
       - cc*(kappa*p->i_points[i].gamma[2] - gamma[1]*p->i_points[i].gamma[0] + gamma[0]*p->i_points[i].gamma[1]);
       // ------------------------------------------------------------------------------------------
 
-      std::cout << std::endl ;
+      // std::cout << std::endl ;
       // std::cout << "RayshooterInternal : kappa_minus = " << kappa_minus << " , kappa = " << kappa << " , gamma[0] = " << gamma[0] << " , gamma[1] = " << gamma[1] << std::endl ;
       // std::cout << "RayshooterInternal : aa = " << aa << " , bb = " << bb << " , cc = " << cc << std::endl ;
       // std::cout << "RayshooterInternal : p->points[i] : kappa = " << p->i_points[i].kappa << " , gamma[0] = " << p->i_points[i].gamma[0] << " , gamma[1] = " << p->i_points[i].gamma[1] << std::endl ;
@@ -387,7 +387,8 @@ void *compute_rays_parallel(void *_p)
     p->i_points[i].kappa = 1 - p->i_points[i].kappa;
     
     std::cout << "RayshooterInternal : kappa final = " << p->i_points[i].kappa << std::endl ;
-    
+    std::cout << std::endl ;
+      
     // Computation of the inverse magnitude --------------------------------------------------------
     p->i_points[i].invmag = (1-p->i_points[i].kappa)*(1-p->i_points[i].kappa)
     - p->i_points[i].gamma[0]*p->i_points[i].gamma[0]
