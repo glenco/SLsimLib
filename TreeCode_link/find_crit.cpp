@@ -852,7 +852,15 @@ CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
     pseudocurve.imagekist->SetInImage(YES);
     findborders4(grid->i_tree,&pseudocurve);
     if(TEST){
+      for(auto &p : *(pseudocurve.imagekist) ){
+        assert( p.inverted());
+        assert( p.invmag > 0 );
+      }
       for(auto &p : *(pseudocurve.outerborder) ){
+        if( p.invmag > 0 ){
+          p.Print();
+        }
+
         assert( p.invmag < 0 );
       }
       for(auto &p : *(pseudocurve.innerborder) ){
