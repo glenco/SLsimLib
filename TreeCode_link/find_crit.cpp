@@ -194,7 +194,8 @@ void ImageFinding::find_crit(
       grid->i_tree->FindAllBoxNeighborsKist(critcurve[jj].imagekist->getCurrent(),&neighbors);
       Kist<Point>::iterator it = neighbors.TopIt();
       while((*it).invmag < 0 && !it.atend() ) --it;
-      if( 1 < ( (*it).kappa - sqrt( (*it).gamma[0]*(*it).gamma[0] + (*it).gamma[1]*(*it).gamma[1]) ) ) crtcurve[ii].type = radial;
+      //if( 1 < ( (*it).kappa - sqrt( (*it).gamma[0]*(*it).gamma[0] + (*it).gamma[1]*(*it).gamma[1]) ) ) crtcurve[ii].type = radial;
+      if( (*it).inverted()  ) crtcurve[ii].type = radial;
       else crtcurve[ii].type = tangential;
       
       /************ test line ****************
@@ -508,8 +509,10 @@ void ImageFinding::find_crit(
       negimage[ii].outerborder->MoveToTop();
       do{
         current = negimage[ii].outerborder->getCurrent();
-        if(1 < ( current->kappa - sqrt( current->gamma[0]*current->gamma[0]
-                                       + current->gamma[1]*current->gamma[1]) )){
+        //if(1 < ( current->kappa - sqrt( current->gamma[0]*current->gamma[0]
+        //                               + current->gamma[1]*current->gamma[1]) )){
+        
+        if( current->inverted() ){
           // radial caustic must already have been found
           found = true;
           break;
@@ -852,7 +855,15 @@ CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
     pseudocurve.imagekist->SetInImage(YES);
     findborders4(grid->i_tree,&pseudocurve);
     if(TEST){
+      for(auto &p : *(pseudocurve.imagekist) ){
+        assert( p.inverted());
+        assert( p.invmag > 0 );
+      }
       for(auto &p : *(pseudocurve.outerborder) ){
+        if( p.invmag > 0 ){
+          p.Print();
+        }
+
         assert( p.invmag < 0 );
       }
       for(auto &p : *(pseudocurve.innerborder) ){
@@ -1004,13 +1015,15 @@ CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
     // find point with minimum largest Eigenvalue
     negimage.imagekist->MoveCurrentToTop();
     current = negimage.imagekist->getCurrent();
-    eigmin = 1-current->kappa + sqrt( current->gamma[0]*current->gamma[0]
-                                     + current->gamma[1]*current->gamma[1]) ;
+    //eigmin = 1-current->kappa + sqrt( current->gamma[0]*current->gamma[0]
+    //                                 + current->gamma[1]*current->gamma[1]) ;
+    eigmin = 1-current->kappa + sqrt( (1-current->kappa)*(1-current->kappa)
+                                     + current->invmag) ;
     pmin = negimage.imagekist->getCurrent();
     while(negimage.imagekist->Down()){
       current = negimage.imagekist->getCurrent();
-      tmp = 1-current->kappa + sqrt( current->gamma[0]*current->gamma[0]
-                                    + current->gamma[1]*current->gamma[1]) ;
+      tmp = 1-current->kappa + sqrt( (1-current->kappa)*(1-current->kappa)
+                                    + current->invmag) ;
       if(eigmin > tmp ){
         eigmin = tmp;
         pmin = current;
@@ -1027,9 +1040,11 @@ CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
       newpoints.MoveToTop();
       do{
         current = newpoints.getCurrent();
-        tmp = 1-current->kappa + sqrt( current->gamma[0]*current->gamma[0]
-                                      + current->gamma[1]*current->gamma[1]) ;
-        if(eigmin > tmp ){
+        //tmp = 1-current->kappa + sqrt( current->gamma[0]*current->gamma[0]
+        //                              + current->gamma[1]*current->gamma[1]) ;
+        tmp = 1-current->kappa + sqrt( (1-current->kappa)*(1-current->kappa)
+                                      + current->invmag) ;
+       if(eigmin > tmp ){
           eigmin = tmp;
           pmin->in_image = NO;
           pmin = current;
