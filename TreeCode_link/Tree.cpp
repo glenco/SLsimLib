@@ -88,15 +88,16 @@ void Point::Print(){
 	 std::cout << "  gamma " << gamma[0] << " " << gamma[1] << " " << gamma[3] << std::endl;
 	 std::cout << "  dt " << dt << std::endl;
 	 std::cout << "  invmag " << invmag << std::endl;
+	 std::cout << "  inverted " << inverted() << std::endl;
 	 std::cout << "  gridsize " << gridsize << std::endl;
 	 std::cout << "  surface_brightness " << surface_brightness << std::endl;
 	 std::cout << "  leaf " << leaf << std::endl;
 }
-/// print just position and gridsize
-void Point::print(){
-	std::cout << x[0] <<  "  " << x[1] << "  " << gridsize << std::endl;
-}
 
+/// print just position and gridsize
+std::ostream &operator<<(std::ostream &os, Point const &p) {
+  return os << p.x[0] << " " << p.x[1];
+}
 
 
 unsigned long Branch::countID = 0;
@@ -795,6 +796,19 @@ ImageInfo::~ImageInfo(){
     delete innerborder;
     delete outerborder;
 }
+
+/// return to original state after construction
+void ImageInfo::Empty(){
+  imagekist->Empty();
+  innerborder->Empty();
+  outerborder->Empty();
+  centroid[0] = centroid[1] =0.0;
+  area = area_error = 0.0;
+  gridrange[0] = gridrange[1] = gridrange[2] = 0.0;
+  ShouldNotRefine = 0;
+  uniform_mag = unchecked;
+}
+
 /**
  * \brief Copy all information about the image including making copies of the imagekist,
  * innerborder and outerborder.  Previous information in the image will be
