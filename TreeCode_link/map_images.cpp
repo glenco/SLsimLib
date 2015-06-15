@@ -50,6 +50,7 @@ void ImageFinding::map_images(
 	assert(grid->s_tree);
 	assert(grid->i_tree);
 
+  grid->RefreshSurfaceBrightnesses(source);
       
   if(imageinfo.size() < 10) imageinfo.resize(10);
   assert(imageinfo[0].imagekist);
@@ -598,6 +599,9 @@ void ImageFinding::map_images_fixedgrid(
   
   if(imageinfo.size() < 2) imageinfo.resize(2);
 
+  grid->RefreshSurfaceBrightnesses(source);
+    
+    
 	assert(grid->s_tree);
 	assert(grid->i_tree);
 	assert(imageinfo[0].imagekist);
