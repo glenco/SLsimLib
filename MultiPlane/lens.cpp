@@ -833,6 +833,7 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
   }
   else // in the case where no field plane exists
   {
+    if(verbose) std::cout << "InsertSubStructure : inserting a new plane at redshift z = " << redshift << std::endl;
     field_planes.push_back(new LensPlaneTree(substructure.halos.data(), NhalosSub, 0, 0));
     field_plane_redshifts.push_back(redshift);
     field_Dl.push_back(Dl*(1+redshift));
