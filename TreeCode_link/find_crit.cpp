@@ -862,6 +862,7 @@ CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
         assert( p.inverted());
         assert( p.invmag > 0 );
       }
+
       size_t i=0;
       for(auto &p : *(pseudocurve.outerborder) ){
         if( p.invmag > 0 ){
