@@ -58,6 +58,14 @@ struct Grid{
   void test_mag_matrix();
   void writeFits(const double center[],size_t Npixels,double resolution,LensingVariable lensvar,std::string filename);
   void writeFits(const double center[],size_t Nx,size_t Ny,double resolution,LensingVariable lensvar,std::string filename);
+  
+  /// make a fits image of whole grid region
+  void writeFits(
+                 double strech  /// resolution relative to the initial resolution
+                 ,LensingVariable lensvar /// which quantity is to be displayed
+                 ,std::string filename    /// file name for image -- .kappa.fits, .gamma1.fits, etc will be appended
+                 );
+  
   void writePixeFits(size_t Nx           /// number of pixels in image in x dimension
                     ,LensingVariable lensvar  /// which quantity is to be displayed
                     ,std::string filename     /// file name for image -- .kappa.fits, .gamma1.fits, etc will be appended
