@@ -100,7 +100,7 @@ private:
   
   unsigned long pointID;
   PosType axisratio;
-  void writePixelMapUniform_(PointList list,PixelMap *map,LensingVariable val);
+  void writePixelMapUniform_(const PointList &list,PixelMap *map,LensingVariable val);
   
   static std::mutex grid_mutex;
 };
@@ -266,15 +266,11 @@ namespace ImageFinding{
         return;
       }
       
-      rave = 0;
-      rmax = 0;
-      rmin = std::numeric_limits<double>::max();
+      rave = rmin = rmax = (critical_center - critical_curve[0]).length();
       PosType rad;
       
-      for(size_t ii=0; ii< critical_curve.size(); ++ii){
-        Point_2d tmp = critical_center - critical_curve[ii];
-        
-        rad = tmp.length();
+      for(size_t ii=1; ii< critical_curve.size(); ++ii){
+        rad = (critical_center - critical_curve[ii]).length();
         
         rave += rad;
         if(rad < rmin) rmin = rad;
@@ -289,15 +285,13 @@ namespace ImageFinding{
         rave = rmax = rmin = 0.0;
         return;
       }
-      rave = 0;
-      rmax = 0;
-      rmin = std::numeric_limits<double>::max();
+      
+      rave = rmin = rmax = (caustic_center - caustic_curve_outline[0]).length();
+
       PosType rad;
       
-      for(size_t ii=0; ii< caustic_curve_outline.size(); ++ii){
-        Point_2d tmp = caustic_center - caustic_curve_outline[ii];
-        
-        rad = tmp.length();
+      for(size_t ii=1; ii< caustic_curve_outline.size(); ++ii){
+        rad = (caustic_center - caustic_curve_outline[ii]).length();
         
         rave += rad;
         if(rad < rmin) rmin = rad;
@@ -342,7 +336,7 @@ namespace ImageFinding{
   
   CritType find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
                                  ,PosType pseudolimit,LensHndl lens,GridHndl grid
-                                 ,PosType resolution,Kist<Point> &paritypoints);
+                                 ,PosType resolution,Kist<Point> &paritypoints,bool TEST=false);
   
   void find_contour(LensHndl lens,GridHndl grid,std::vector<CriticalCurve> &contour,int *Ncrits,PosType resolution,bool *orderingsuccess,bool ordercurve, bool dividecurves, double contour_value,LensingVariable contour_type,bool verbose = false);
   

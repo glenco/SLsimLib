@@ -321,7 +321,7 @@ namespace Utilities{
   std::vector<Point *> convex_hull(std::vector<Point *> &P);
   std::vector<double *> convex_hull(std::vector<double *> &P);
   //std::vector<Point *> shrink_wrap(std::vector<Point *> P);
-  std::vector<Point *> concave_hull(std::vector<Point *> &P,int k);
+  std::vector<Point *> concave_hull(std::vector<Point *> &P,int k,bool test=false);
   std::vector<double *> concave_hull(std::vector<double *> &P,int k);
   void contour_ellipse(std::vector<Point_2d> &P, Point_2d center, unsigned long Npoints ,std::vector<Point_2d> &C, double *ellipticity, double *ellipse_area) ;
   Point_2d contour_center(std::vector<Point_2d> &P, unsigned long Npoints);

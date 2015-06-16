@@ -1075,8 +1075,9 @@ void PixelMap::AddGrid(const Grid &grid,LensingVariable val){
   do{
     if((*treeit)->level == 4){
       assert(i < 16);
+      
       lists[i].setTop((*treeit)->points);
-       lists[i].setN((*treeit)->npoints);
+      lists[i].setN((*treeit)->npoints);
       list_current = lists[i].Top();
       list_current.JumpDownList( (*treeit)->npoints -1);
       lists[i].setBottom(*list_current);
@@ -1093,8 +1094,10 @@ void PixelMap::AddGrid(const Grid &grid,LensingVariable val){
   
   for(int i = 0; i< Nblocks ;++i){
     thr[i] = std::thread(&PixelMap::AddGrid_,this,lists[i],val);
+    //thr[i] = std::async(&PixelMap::AddGrid_,this,lists[i],val);
   }
   for(int ii=0;ii<Nblocks;++ii) thr[ii].join();
+
 }
 
 void PixelMap::AddGrid_(const PointList &list,LensingVariable val){

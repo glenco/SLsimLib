@@ -2045,6 +2045,7 @@ std::vector<double *> Utilities::convex_hull(std::vector<double *> &P)
   for (long i = n-2, t = k+1; i >= 0; i--) {
     while (k >= t && crossD(H[k-2], H[k-1], P[i]) <= 0){
       k--;
+      assert(k > 1);
     }
     H[k++] = P[i];
   }
@@ -2267,9 +2268,8 @@ std::vector<double *> Utilities::concave_hull(std::vector<double *> &P,int k )
  of k will automatically increase when certain special cases are encountered.
  
  */
-std::vector<Point *> Utilities::concave_hull(std::vector<Point *> &P,int k )
+std::vector<Point *> Utilities::concave_hull(std::vector<Point *> &P,int k,bool test )
 {
-  const bool test = false;
   PixelMap *testmap;
   int nt=0;
   

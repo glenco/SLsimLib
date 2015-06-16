@@ -11,15 +11,35 @@
 
 bool TreeStruct::Test(){
   
+  std::cout << "Running Test on tree ..." << std::endl;
   PointList::iterator pl_current(*pointlist);
   TreeStruct::iterator treeit(top);
 
+  pl_current = (*treeit)->points;
+  for(int k = 0; k < (*treeit)->npoints ; ++k,--pl_current){
+    assert( !std::isnan((*pl_current)->invmag) );
+  }
+  
+  size_t count = 0;
   do{
+    
+    // check that every points is actually in the branch it should be in
       pl_current = (*treeit)->points;
       for(int k = 0; k < (*treeit)->npoints ; ++k,--pl_current){
-      assert( inbox((*pl_current)->x,(*treeit)->boundary_p1,(*treeit)->boundary_p2) );
-    }
+        assert( inbox((*pl_current)->x,(*treeit)->boundary_p1,(*treeit)->boundary_p2) );
+        assert( !std::isnan((*pl_current)->invmag) );
+      }
+    
+      Branch *branch = *treeit;
+      // check that neighbors are next to neighbors
+      for(auto &it : branch->neighbors){
+        assert(AreBoxNeighbors(branch, &(*it) ));
+      }
+    ++count;
   }while(treeit.TreeWalkStep(true));
+
+  assert(count == Nbranches);
+  std::cout << "Tree Test successful" << std::endl;
 
   return true;
 }

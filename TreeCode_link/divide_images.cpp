@@ -357,7 +357,7 @@ void divide_images_kist(
 	}*/
 
 	assert(new_imagekist.Nunits() == 0);
-
+  
 	// mark all image points
 	for(i=0;i<*Nimages;++i){
 		imageinfo[i].ShouldNotRefine = 0;
@@ -369,6 +369,8 @@ void divide_images_kist(
 		}while(imageinfo[i].imagekist->Down());
 	}
 
+  imageinfo.resize(*Nimages);
+  
 	assert(Ntest == 0);
 	return;
 }

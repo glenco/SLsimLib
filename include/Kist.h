@@ -635,7 +635,7 @@ template <class Data> void Kist<Data>::Print(){
 	std::cout << Nunits() << std::endl;
 	MoveToTop();
 	do{
-		getCurrent()->print();
+    std::cout << *(getCurrent()) << std::endl;
 	}while(Down());
 }
 
