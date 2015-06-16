@@ -68,8 +68,9 @@ Point::Point(){
   leaf = NULL;
   image = NULL;
   next = prev = NULL;
-  kappa = dt = invmag = gridsize = 0;
+  kappa = dt = gridsize = 0;
   gamma[0] = gamma[1] = gamma[2] = 0;
+  invmag = 1;
   flag = false;
 }
 
@@ -85,7 +86,7 @@ void Point::Print(){
 	 std::cout << "  head " << head << std::endl;
 	 std::cout << "  in_image " << in_image << std::endl;
 	 std::cout << "  kappa " << kappa << std::endl;
-	 std::cout << "  gamma " << gamma[0] << " " << gamma[1] << " " << gamma[3] << std::endl;
+	 std::cout << "  gamma " << gamma[0] << " " << gamma[1] << " " << gamma[2] << std::endl;
 	 std::cout << "  dt " << dt << std::endl;
 	 std::cout << "  invmag " << invmag << std::endl;
 	 std::cout << "  inverted " << inverted() << std::endl;

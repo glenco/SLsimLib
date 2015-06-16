@@ -53,7 +53,7 @@ struct Point{
   KappaType kappa;           // surface density
   KappaType gamma[3];        // shear, third component is the rotation quantity that is only non-zero for multi-plane lensing
   double dt;                 // time delay : double implies permanent precision independently from DOUBLE_PRECISION
-  KappaType invmag;          // inverse of magnification
+  KappaType invmag = 1;          // inverse of magnification
     
   double gridsize;           // the size of the most refined grid the point is in
   float surface_brightness;  // the surface brightness at this points

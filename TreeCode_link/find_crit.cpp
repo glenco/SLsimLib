@@ -526,7 +526,7 @@ void ImageFinding::find_crit(
       }
       types[Npseudo] = ImageFinding::find_pseudo(pseudocurve[Npseudo],negimage[ii]
                                                  ,pseudolimit,lens,grid
-                                                 ,resolution,paritypoints,TEST);
+                                                 ,resolution,paritypoints,false);
       if(types[Npseudo] != ND ) ++Npseudo;
       else ++Nnotdefined;
       
@@ -659,7 +659,7 @@ void ImageFinding::find_crit(
               grid->i_tree->Test();
               grid->s_tree->Test();
               
-              std::cout << "Caustic point without negative neighbor"
+              std::cout << "Critical point without negative neighbor"
               << std::endl;
               std::cout << "invmag " << pointp->invmag << std::endl;
               std::cout << "inverted ? " << pointp->inverted() << std::endl;
@@ -676,12 +676,13 @@ void ImageFinding::find_crit(
               for(auto &np : nkist){
                 std::cout << np.id << "    inverted ? " << np.inverted() <<
                 " invmag " << np.invmag << std::endl;
+                np.Print();
               }
               std::cout << " # of points in crit curve: " << crit.critical_curve.size()
               << " type: " << crit.type
               << std::endl;
             }
-            assert(good);
+            //assert(good);
           }
         }else if(crit.type == pseudo){
           pointp = grid->i_tree->FindBoxPoint(crit.critical_center.x);
@@ -690,7 +691,7 @@ void ImageFinding::find_crit(
           for(auto &np : nkist){
             if(np.invmag < 0){ good = true; break;}
           }
-          assert(good);
+          //assert(good);
         }
       }
       
@@ -727,8 +728,10 @@ void ImageFinding::find_crit(
         
         Point *pointp = nullptr;
         if(count == 0){
-          std::cout << "Radial or pseudo caustic without tangential partner, plots have been made named ophan*.fits"
+          std::cout << crit.type << " caustic without tangential partner, plots have been made named ophan*.fits"
           << std::endl;
+          
+          
           pointp = grid->i_tree->FindBoxPoint(crit.critical_center.x);
           grid->i_tree->FindAllBoxNeighborsKist(pointp,&nkist);
           pointp->Print();
@@ -754,12 +757,12 @@ void ImageFinding::find_crit(
           
         }
         if(count > 1){
-          std::cout << "Radial or pseudo caustic has " << count << " tangential critical line within rmax"
+          std::cout << crit.type << " caustic has " << count << " tangential critical line within rmax"
           << std::endl;
         }
         
-        assert(count > 0);
-        assert(count < 2);
+        assert(count > 0 || crit_closest->critical_curve.size() < 3);  // no partners
+        assert(count < 2);  // more than one partner
         
         if(crit.type == tangential){
           
@@ -859,11 +862,14 @@ CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
         assert( p.inverted());
         assert( p.invmag > 0 );
       }
+      size_t i=0;
       for(auto &p : *(pseudocurve.outerborder) ){
         if( p.invmag > 0 ){
           p.Print();
+          std::cout << "invmag recalculated = " << (1-p.kappa)*(1-p.kappa) - (p.gamma[0]*p.gamma[0]) - (p.gamma[1]*p.gamma[1]) + p.gamma[2]*p.gamma[2] <<
+          std::endl;
         }
-
+        ++i;
         assert( p.invmag < 0 );
       }
       for(auto &p : *(pseudocurve.innerborder) ){
