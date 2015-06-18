@@ -384,8 +384,6 @@ private: /* field */
   
   /// Flag to know if InsertSubStructures was called
   Boo WasInsertSubStructuresCalled = NO ;
-  // Flag to know if the number of substructure halos was zero
-  bool WasNhalosSubZero = false ;
   
 	/// Perpendicular position of halo TODO: (In proper distance?)
 	//PosType **halo_pos;

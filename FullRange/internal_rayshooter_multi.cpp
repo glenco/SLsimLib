@@ -212,10 +212,16 @@ void *compute_rays_parallel(void *_p)
     // Time delay at first plane : position on the observer plane is (0,0) => no need to take difference of positions.
     p->i_points[i].dt = 0.5*( p->i_points[i].image->x[0]*p->i_points[i].image->x[0] + p->i_points[i].image->x[1]*p->i_points[i].image->x[1] )/ p->dDl[0] ;
 
+    // For Test :
+    // std::cout << "> p->Nplanes = " << p->NPlanes << std::endl ;
+    
     // Begining of the loop through the planes :
     // Each iteration leaves i_point[i].image on plane (j+1)
     for(j = 0; j < p->NPlanes ; ++j)
     {
+
+      // For Test :
+      // std::cout << "> p->plane_redshifts = " << p->plane_redshifts[j] << std::endl ;
       
       // convert to physical coordinates on the plane j
       xx[0] = p->i_points[i].image->x[0]/(1+p->plane_redshifts[j]);

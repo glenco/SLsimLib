@@ -11,7 +11,7 @@
 
 using namespace std;
 
-#define MIN_PLANE_DIST 1E-8
+#define MIN_PLANE_DIST 1.E-8
 
 namespace
 {
@@ -730,12 +730,12 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
   // projected number of halos (less than the non-projected, ie. 3D, number) :
   std::size_t NhalosSub = static_cast<std::size_t>(poidev(float(aveNhalos), seed));
   if(verbose) std::cout << "Lens::insertSubstructures : Actual number of Substructures : " << NhalosSub << std::endl;
-
+  
   // in case there is none :
-  if(NhalosSub == 0) {
-    WasInsertSubStructuresCalled = YES ;
-    WasNhalosSubZero = true ;
-    return;
+  if(NhalosSub == 0)
+  {
+   WasInsertSubStructuresCalled = YES ;
+   return;
   }
   
   size_t offset = field_halos.size();
@@ -744,12 +744,14 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
   PosType r = Mass_min/Mass_max,f,mass;
   size_t haloid = offset;
   PosType Rmax;
+  PosType AveMassTh;
   
   PosType rho = density_contrast*cosmo.rho_crit(0)*cosmo.getOmega_matter()*(1+redshift)*(1+redshift)*(1+redshift);
   // rho in 1 * (M_sun/Mpc^3) * 1 * (1+z)^3 = M_sun / PhysMpc^3,
   // where Mpc \equiv comoving Mpc.
   
-  if(substructure.halos.size() > 0){
+  if(substructure.halos.size() > 0)
+  {
     // Problem: Expanding the vector is a problem if we want to add substructure
     // multiple times because if the vector is copied it will invalidate the pointers
     // on previous planes. To do this we would need to be able to expand the vector
@@ -778,7 +780,11 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
     // mass from power law mass function (inversing the integration of Eq. (9) in Metcalf, Amara 2011 with f \equiv (eta(m)/eta_*)*(sigma/sigma_*) ) :
     mass = Mass_max*pow( f + pow(r,alpha+1)*(1-f) , 1.0/(1+alpha) ); // in Msun, r = Mass_Min / Mass_Max is dimensionless.
     SumMassSub += mass ;
-
+    
+    // Averaged mass estimated from theory :
+    AveMassTh = Mass_max * ((1+alpha)/(2+alpha)) * ((1-pow(r,2+alpha))/(1-pow(r,1+alpha))); // Average mass for one sub halo.
+    AveMassTh *= NhalosSub ; // Now for the total amount of sub halos.
+    
     // keeping track of the highest substructure mass :
     mass_max = MAX(mass,mass_max); // in Msun
     
@@ -787,7 +793,7 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
   
     // keeping track of the highest substructure rmax :
     rmax_max = MAX(Rmax,rmax_max); // in PhysMpc
-
+    
     // Adding the randomly-generated halo into the substructure :
     substructure.halos.push_back(new LensHaloPowerLaw(mass,Rmax,redshift,Rmax,1.0,1.0,0,0));
     substructure.halos.back()->setX(theta_pos);
@@ -797,10 +803,11 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
   
   if(verbose)
   {
-    std::cout << "Lens::insertSubstructures : aveNhalos = " << aveNhalos << " , NhalosSub = " << NhalosSub << " , rho = " << rho << " Msun/PhysMpc^3, Rmax = " << Rmax << " PhysMpc , Dl = " << Dl << " PhysMpc." << std::endl ;
-    std::cout << "Lens::insertSubstructures : Max mass = " << mass_max << " , Max radius = "
-    << rmax_max << " number of substructure halos = " << substructure.halos.size() << std::endl ;
-    std::cout << "Lens::insertSubstructures : SumMassSub = " << SumMassSub << " Msun." << std::endl ;
+    std::cout << std::endl ;
+    std::cout << "Lens::insertSubstructures : aveNhalos = " << aveNhalos << " , NhalosSub = " << NhalosSub << " , rho = " << rho << " Msun/PhysMpc^3, Dl = " << Dl << " PhysMpc." << std::endl ;
+    std::cout << "Lens::insertSubstructures : Max mass = " << mass_max << " Msun , Max radius = "
+    << rmax_max << " PhysMpc, Number of substructure halos = " << substructure.halos.size() << std::endl ;
+    std::cout << "Lens::insertSubstructures : SumMassSub = " << SumMassSub << " Msun, Theoretical total averaged mass = " << AveMassTh << " Msun." << std::endl ;
     std::cout << "Lens::insertSubstructures : Sigma_crit = " << cosmo.SigmaCrit(redshift, zsource) << " Msun/PhysMpc^2." << std::endl ;
     std::cout << "Lens::insertSubstructures : 4 pi G = " << 4*pi*Grav << " Mpc/Msun." << std::endl ;
   }
@@ -825,7 +832,7 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
       ++itz;
       ++itd;
     }
-    if(verbose) std::cout << "InsertSubStructure : redshift " << redshift << " nearest plane z = " << *itz << std::endl;
+    if(verbose) std::cout << "Lens::insertSubstructures : redshift " << redshift << " nearest plane z = " << *itz << std::endl;
     it = field_planes.insert(it, new LensPlaneTree(substructure.halos.data(), NhalosSub, 0., 0));
     field_plane_redshifts.insert(itz,redshift);
     field_Dl.insert(itd,Dl*(1+redshift));
@@ -833,16 +840,39 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
   }
   else // in the case where no field plane exists
   {
-    if(verbose) std::cout << "InsertSubStructure : inserting a new plane at redshift z = " << redshift << std::endl;
+    // Before insertion :
+    if(verbose)
+    {
+      std::cout << "Lens::insertSubstructures : Before insertion of plane :" << std::endl;
+      if(field_plane_redshifts.size()==0) std::cout << "X" ;
+      for (int i=0;i<field_plane_redshifts.size();i++) std::cout << field_plane_redshifts[i] << " " ;
+      std::cout << std::endl ;
+      if(field_Dl.size()==0) std::cout << "X" ;
+      for (int i=0;i<field_Dl.size();i++) std::cout << field_Dl[i] << " " ;
+      std::cout << std::endl ;
+    }
+    
+    // Insertion :
+    if(verbose) std::cout << "Lens::insertSubstructures : inserting a new plane at redshift z = " << redshift << std::endl;
     field_planes.push_back(new LensPlaneTree(substructure.halos.data(), NhalosSub, 0, 0));
     field_plane_redshifts.push_back(redshift);
     field_Dl.push_back(Dl*(1+redshift));
     substructure.plane = field_planes[0];
+
+    // After insertion :
+    if(verbose)
+    {
+      std::cout << "Lens::insertSubstructures : After insertion of plane :" << std::endl;
+      for (int i=0;i<field_plane_redshifts.size();i++) std::cout << field_plane_redshifts[i] << " " ;
+      std::cout << std::endl ;
+      for (int i=0;i<field_Dl.size();i++) std::cout << field_Dl[i] << " " ;
+      std::cout << std::endl ;
+    }
   }
   ++field_Nplanes_current;
   
   combinePlanes(verbose);
-  std::cout << "InsertSubStructure : field_planes.size() = " << field_planes.size() << std::endl;
+  std::cout << "Lens::insertSubstructures : field_planes.size() = " << field_planes.size() << std::endl;
   // assert(field_planes.size() == field_Nplanes);
   
   WasInsertSubStructuresCalled = YES ;
@@ -890,9 +920,7 @@ void Lens::resetSubstructure(bool verbose){
     WasInsertSubStructuresCalled = YES ;
     return ;
   }
-  
-  // We can have WasInsertSubStructuresCalled = YES but NhalosSub = 0 which makes it leave insertSubstructures with no quantities computed. We detect that case here :
-  if (WasNhalosSubZero == true) { return ; }
+  // We have WasInsertSubStructuresCalled = YES after this point.
   
   // find which plane has the substructures on it
   int fplane_index = 0,lplane_index = 0;
@@ -909,6 +937,10 @@ void Lens::resetSubstructure(bool verbose){
   std::size_t NhalosSub = static_cast<std::size_t>(poidev(float(aveNhalos), seed));
   
   if(verbose) std::cout << "Lens::resetSubstructures : Actual number of Substructures : " << NhalosSub << std::endl;
+  
+  
+  //  Testing if NhalosSub = 0 :
+  if (NhalosSub == 0) std::cout << "Be careful ! NhalosSub = 0 in resetSubstructure !" << std::endl;
   
   size_t haloid = field_halos.size();
   
@@ -2476,6 +2508,18 @@ void Lens::readInputSimFileObservedGalaxies(bool verbose)
 
 void Lens::combinePlanes(bool verbose)
 {
+  if(verbose)
+  {
+    std::cout << std::endl << "Lens::combinePlanes before clearing." << std::endl ;
+    for(int i=0;i<plane_redshifts.size();i++) std::cout << plane_redshifts[i] << " " ;
+    std::cout << std::endl ;
+    for(int i=0;i<Dl.size();i++) std::cout << Dl[i] << " " ;
+    std::cout << std::endl ;
+    for(int i=0;i<dDl.size();i++) std::cout << dDl[i] << " " ;
+    std::cout << std::endl << std::endl ;
+    std::cout << "field_planes.size() = " << field_planes.size() << " , main_planes.size() = " << main_planes.size() << std::endl ;
+  }
+  
 	// clear old plane configuration
 	lensing_planes.clear();
 	plane_redshifts.clear();
@@ -2489,7 +2533,9 @@ void Lens::combinePlanes(bool verbose)
 	while(i_field < field_planes.size() && i_main < main_planes.size())
 	{
 		// decide if main or field plane is next
-		if(main_plane_redshifts[i_main] <= field_plane_redshifts[i_field])
+    if(verbose) std::cout << "main_plane_redshifts[i_main] = " << main_plane_redshifts[i_main] << " , field_plane_redshifts[i_field] = " <<  field_plane_redshifts[i_field] << std::endl ;
+    
+		if(main_plane_redshifts[i_main] < field_plane_redshifts[i_field])
 		{
 			// next plane is main
       if(main_plane_redshifts[i_main] <= 0){
@@ -2500,7 +2546,7 @@ void Lens::combinePlanes(bool verbose)
 			lensing_planes.push_back(main_planes[i_main]);
 			plane_redshifts.push_back(main_plane_redshifts[i_main]);
 			Dl.push_back(main_Dl[i_main]);
-			
+      
 			// advance main index
 			++i_main;
 		}
@@ -2516,17 +2562,17 @@ void Lens::combinePlanes(bool verbose)
         << " Dl " << field_Dl[i_field];
         throw std::runtime_error("bad redshift");
       }
-
-			// check if planes are too close together
-			if(fabs(field_Dl[i_field] - main_Dl[i_main]) < MIN_PLANE_DIST)
-			{
-				// move back the inserted field plane
-				Dl.back() = main_Dl[i_main] + MIN_PLANE_DIST;
-				plane_redshifts.back() = cosmo.invCoorDist(Dl.back());
-				
-				// TODO: make this more intelligent or make it possible to have all halos on the same planes
-			}
 			
+      // check if planes are too close together
+      if(fabs(field_Dl[i_field] - main_Dl[i_main]) < MIN_PLANE_DIST)
+      {
+        // move back the inserted field plane
+        Dl.back() = main_Dl[i_main] - MIN_PLANE_DIST;
+        plane_redshifts.back() = cosmo.invCoorDist(Dl.back());
+        
+        // TODO: make this more intelligent or make it possible to have all halos on the same planes
+      }
+      
 			// advance field index
 			++i_field;
 		}
