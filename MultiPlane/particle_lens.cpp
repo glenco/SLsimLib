@@ -13,6 +13,7 @@ LensHaloParticles::LensHaloParticles(
             ,int Nsmooth         /// number of neighbours for adaptive smoothing
             ,const COSMOLOGY& cosmo /// cosmology
             ,Point_2d theta_rotate /// rotation of particles around the origin
+            ,bool recenter
 ): simfile(simulation_filename)
 {
   
@@ -37,6 +38,21 @@ LensHaloParticles::LensHaloParticles(
     xp[i][0] *= scale_factor;
     xp[i][1] *= scale_factor;
     xp[i][2] *= scale_factor;
+    
+    mcenter[0] += xp[i][0];
+    mcenter[1] += xp[i][1];
+    mcenter[2] += xp[i][2];
+    
+  }
+  
+  mcenter /= Npoints;
+  
+  if(recenter){
+    for(size_t i=0;i<Npoints;++i){
+      xp[i][0] -= mcenter[0];
+      xp[i][1] -= mcenter[1];
+      xp[i][2] -= mcenter[2];
+    }
   }
   
   // rotate positions

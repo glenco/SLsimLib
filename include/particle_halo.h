@@ -35,6 +35,7 @@ public:
                     ,int Nsmooth          /// number of neighbours for the smoothing
                     ,const COSMOLOGY& lenscosmo /// cosmology
                     ,Point_2d theta_rotate      /// rotation of simulation, x-axis ratation angle and then y-axis rotation angle
+                    ,bool recenter = false     /// re-center the coordinates to the center of mass
                     );
   
   ~LensHaloParticles();
@@ -47,8 +48,12 @@ public:
   /// rotate the simulation
   void rotate(Point_2d theta);
   
+  /// center of mass in input coordinates
+  Point_3d CenterOfMass(){return mcenter;}
+  
 private:
 
+  Point_3d mcenter;
   void rotate_particles(PosType theta_x,PosType theta_y);
 
   void calculate_smoothing(int Nsmooth);
