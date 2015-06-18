@@ -2555,11 +2555,11 @@ void Lens::buildPlanes(InputParams& params, bool verbose)
       if(field_input_sim_format == MillenniumObs) readInputSimFileMillennium(verbose);
       if(field_input_sim_format == MultiDarkHalos) readInputSimFileMultiDarkHalos(verbose);
       if(field_input_sim_format == ObservedData) readInputSimFileObservedGalaxies(verbose);
-		}
+    }
     else{
       createFieldHalos(verbose);
 		}
-		// create field planes and sort halos onto them
+    // create field planes and sort halos onto them
 		createFieldPlanes(verbose);
 	}
   

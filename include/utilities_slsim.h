@@ -55,8 +55,8 @@ namespace Utilities
     delete []matrix;
   }
   
-  PosType **PosTypeMatrix(long rows, long cols);
-  void free_PosTypeMatrix(PosType **matrix, long rows, long cols);
+  PosType **PosTypeMatrix(size_t rows, size_t cols);
+  void free_PosTypeMatrix(PosType **matrix, size_t rows, size_t cols);
   PosType **PosTypeMatrix(long rows1,long rows2, long cols1, long cols2);
   void free_PosTypeMatrix(PosType **matrix, long rows1,long rows2, long cols1, long cols2);
   
