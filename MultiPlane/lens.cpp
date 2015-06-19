@@ -8,6 +8,7 @@
 #include "slsimlib.h"
 #include <algorithm>
 #include "lens_halos.h"
+#include <iomanip>      // std::setprecision
 
 using namespace std;
 
@@ -731,6 +732,8 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
   std::size_t NhalosSub = static_cast<std::size_t>(poidev(float(aveNhalos), seed));
   if(verbose) std::cout << "Lens::insertSubstructures : Actual number of Substructures : " << NhalosSub << std::endl;
   
+  NhalosSub = 1 ; // JUST FOR TEST !
+  
   // in case there is none :
   if(NhalosSub == 0)
   {
@@ -770,6 +773,11 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
     
     theta = 2*pi*ran2(seed);       // in radians
     
+    rr = 6.82618e-05 /4. ; // JUST FOR TEST !
+    theta = (pi/2.) ; // JUST FOR TEST !
+    center[0] = 0. ; // JUST FOR TEST !
+    center[1] = 0. ; // JUST FOR TEST !
+    
     // position in proper distance
     theta_pos[0] = (rr*cos(theta) + center[0])*Dl; // in radians * angular Distance in PhysMpc = PhysMpc
     theta_pos[1] = (rr*sin(theta) + center[1])*Dl; // same : PhysMpc
@@ -795,7 +803,9 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
     rmax_max = MAX(Rmax,rmax_max); // in PhysMpc
     
     // Adding the randomly-generated halo into the substructure :
-    substructure.halos.push_back(new LensHaloPowerLaw(mass,Rmax,redshift,Rmax,1.0,1.0,0,0));
+    // substructure.halos.push_back(new LensHaloPowerLaw(mass,Rmax,redshift,Rmax,1.0,1.0,0,0));
+    Rmax = 6.82618e-05 / 10. ; // JUST FOR TEST !
+    substructure.halos.push_back(new LensHaloPowerLaw(1.e11,Rmax,redshift,Rmax,1.0,1.0,0,0)); // JUST FOR TEST !
     substructure.halos.back()->setX(theta_pos);
     ++haloid;
     substructure.halos.back()->setID(haloid);
@@ -2517,7 +2527,13 @@ void Lens::combinePlanes(bool verbose)
     std::cout << std::endl ;
     for(int i=0;i<dDl.size();i++) std::cout << dDl[i] << " " ;
     std::cout << std::endl << std::endl ;
-    std::cout << "field_planes.size() = " << field_planes.size() << " , main_planes.size() = " << main_planes.size() << std::endl ;
+    std::cout << "Lens::combinePlanes : field_planes.size() = " << field_planes.size() << " , main_planes.size() = " << main_planes.size() << std::endl ;
+    std::cout << "field_plane_redshifts = " << std::endl ;
+    for(int i=0;i<field_plane_redshifts.size();i++) std::cout << field_plane_redshifts[i] << " " ;
+    std::cout << std::endl ;
+    std::cout << "main_plane_redshifts = " << std::endl ;
+    for(int i=0;i<main_plane_redshifts.size();i++) std::cout << main_plane_redshifts[i] << " " ;
+    std::cout << std::endl ;
   }
   
 	// clear old plane configuration
@@ -2533,12 +2549,13 @@ void Lens::combinePlanes(bool verbose)
 	while(i_field < field_planes.size() && i_main < main_planes.size())
 	{
 		// decide if main or field plane is next
-    if(verbose) std::cout << "main_plane_redshifts[i_main] = " << main_plane_redshifts[i_main] << " , field_plane_redshifts[i_field] = " <<  field_plane_redshifts[i_field] << std::endl ;
+    if(verbose) std::cout << "Lens::combinePlanes : main_plane_redshifts[i_main] = " << main_plane_redshifts[i_main] << " , field_plane_redshifts[i_field] = " <<  field_plane_redshifts[i_field] << std::endl ;
     
 		if(main_plane_redshifts[i_main] < field_plane_redshifts[i_field])
 		{
 			// next plane is main
-      if(main_plane_redshifts[i_main] <= 0){
+      if(main_plane_redshifts[i_main] <= 0)
+      {
         std::cerr << "Cannot make a lens plane at redshift " << main_plane_redshifts[i_main]
         << " Dl " << main_Dl[i_main];
         throw std::runtime_error("bad redshift");
@@ -2601,7 +2618,10 @@ void Lens::combinePlanes(bool verbose)
 	// calculate deltas
 	dDl.push_back(Dl[0]);
 	for(std::size_t i = 1; i < Dl.size(); ++i)
-  dDl.push_back(MAX(Dl[i] - Dl[i-1],MIN_PLANE_DIST)); // distance from plane i-1 to plane i
+  {
+    assert(Dl[i] - Dl[i-1]>0); // This shows that we must have Dl.back() = main_Dl[i_main] - MIN_PLANE_DIST a few lines above (with the minus sign !).
+    dDl.push_back(MAX(Dl[i] - Dl[i-1],MIN_PLANE_DIST)); // distance from plane i-1 to plane i
+  }
 	
 	// output resulting setup
 	if(verbose)
@@ -2610,7 +2630,7 @@ void Lens::combinePlanes(bool verbose)
     std::cout << "\nz:";
     for(std::size_t i = 0, n = plane_redshifts.size(); i < n; ++i) std::cout << " " << plane_redshifts[i];
     std::cout << "\nDl:";
-    for(std::size_t i = 0, n = Dl.size(); i < n; ++i) std::cout << " " << Dl[i];
+    for(std::size_t i = 0, n = Dl.size(); i < n; ++i) std::cout << std::setprecision(12) << " " << Dl[i];
     std::cout << "\ndDl:";
     for(std::size_t i = 0, n = dDl.size(); i < n; ++i) std::cout << " " << dDl[i];
     std::cout << "\n" << std::endl;

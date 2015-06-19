@@ -270,6 +270,7 @@ void *compute_rays_parallel(void *_p)
       assert(aa == aa);
       assert(bb == bb);
       assert(cc == cc);
+      // std::cout << "RayshooterInternal : aa = " << aa << " , bb = " << bb << " , cc = " << cc << std::endl ;
       
       xplus[0] = aa*p->i_points[i].image->x[0] - bb*xminus[0] - cc*alpha[0];
       xplus[1] = aa*p->i_points[i].image->x[1] - bb*xminus[1] - cc*alpha[1];
