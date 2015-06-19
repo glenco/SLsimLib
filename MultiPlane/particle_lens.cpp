@@ -36,14 +36,15 @@ LensHaloParticles::LensHaloParticles(
   // convert from comoving to physical coordinates
   PosType scale_factor = 1/(1+redshift);
   mass = 0.0;
+  mcenter *= 0.0;
   for(size_t i=0;i<Npoints;++i){
     xp[i][0] *= scale_factor;
     xp[i][1] *= scale_factor;
     xp[i][2] *= scale_factor;
     
-    mcenter[0] += xp[i][0];
-    mcenter[1] += xp[i][1];
-    mcenter[2] += xp[i][2];
+    mcenter[0] += xp[i][0]*masses[multimass*i];
+    mcenter[1] += xp[i][1]*masses[multimass*i];
+    mcenter[2] += xp[i][2]*masses[multimass*i];
     
     mass += masses[multimass*i];
   }
@@ -135,7 +136,7 @@ void LensHaloParticles::readPositionFileASCII(const std::string &filename){
     
     // read in particle positions
     if(!multimass){
-      while(std::getline(myfile, str)){
+      while(std::getline(myfile, str) && row < Npoints){
         if(str[0] == '#') continue; //for comments
         std::stringstream ss(str);
       
@@ -148,7 +149,7 @@ void LensHaloParticles::readPositionFileASCII(const std::string &filename){
         row++;
       }
     }else{
-      while(std::getline(myfile, str)){
+      while(std::getline(myfile, str) && row < Npoints){
         if(str[0] == '#') continue; //for comments
         std::stringstream ss(str);
         
