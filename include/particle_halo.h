@@ -24,7 +24,7 @@
  *            near the top of the file. # is otherwise a comment character.  
  *            Only one type of particle in a single input file.
  *
- *
+ *   More input formats will be added in the future. 
 */
 class LensHaloParticles : public LensHalo
 {
@@ -57,6 +57,8 @@ private:
   void rotate_particles(PosType theta_x,PosType theta_y);
 
   void calculate_smoothing(int Nsmooth);
+  void smooth_(TreeSimple *tree3d,PosType **xp,float *sizes,size_t N,int Nsmooth);
+
   void readPositionFileASCII(const std::string& filename);
   bool readSizesFile(const std::string& filename,int Nsmooth);
   void writeSizes(const std::string& filename,int Nsmooth);

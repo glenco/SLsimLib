@@ -233,12 +233,12 @@ void TreeSimple::NearestNeighbors(
             ,int Nneighbors    /// number of neighbors to be found
             ,float *radius     /// distance furthest neighbor found from ray[]
             ,IndexType *neighborsout  /// list of the indexes of the neighbors
-                                  ){
+                                  ) const{
   IndexType i;
   //static int count=0,oldNneighbors=-1;
    short j;
 
-  Ndim = tree->Ndimensions;
+  //Ndim = tree->Ndimensions;
 
   PosType rneighbors[Nneighbors+Nbucket];
   IndexType neighbors[Nneighbors+Nbucket];
@@ -255,27 +255,124 @@ void TreeSimple::NearestNeighbors(
     neighbors[i] = 0;
   }
 
-  for(j=0;j<Ndim;++j) realray[j]=ray[j];
+  PosType rlray[tree->Ndimensions];
+  for(j=0;j<tree->Ndimensions;++j) rlray[j]=ray[j];
 
-  moveTopNB(tree);
+  //moveTopNB(tree);
+                                    
+  TreeSimple::iterator iter(tree->top);
   if( inbox(ray,tree->current->boundary_p1,tree->current->boundary_p2) == 0 ){
-	  ERROR_MESSAGE();
-
-    for(j=0;j<Ndim;++j){
+    for(j=0;j<tree->Ndimensions;++j){
         ray[j] = (ray[j] > tree->current->boundary_p1[j]) ? ray[j] : tree->current->boundary_p1[j];
         ray[j] = (ray[j] < tree->current->boundary_p2[j]) ? ray[j] : tree->current->boundary_p2[j];
-
-        //ray[j]=DMAX(ray[j],tree->current->boundary_p1[j]);
-        //ray[j]=DMIN(ray[j],tree->current->boundary_p2[j]);
     }
   }
-  incell = 1;
+  int notfound = 1;
 
-  _NearestNeighbors(ray,Nneighbors,neighbors,rneighbors);
+  _NearestNeighbors(ray,rlray,Nneighbors,neighbors,rneighbors,iter,notfound);
 
   for(i=0;i<Nneighbors;++i) neighborsout[i] = neighbors[i];
   *radius = rneighbors[Nneighbors-1];
 
+  return;
+}
+
+void TreeSimple::_NearestNeighbors(PosType *ray,PosType *rlray,int Nneighbors,unsigned long *neighbors
+                                   ,PosType *rneighbors
+                                   ,TreeSimple::iterator &it,int &notfound) const {
+  
+  int incellNB2=1;
+  IndexType i;
+  short j;
+  
+  if(notfound){  /* not found cell yet */
+    
+    if( inbox(ray,(*it)->boundary_p1,(*it)->boundary_p2) ){
+      
+      /* found the box small enough */
+      if( (*it)->nparticles <= Nneighbors+Nbucket ){
+        notfound=0;
+        for(j=0;j<tree->Ndimensions;++j) ray[j]=rlray[j];
+        
+        /* calculate the distance to all the particles in cell */
+        for(i=0;i<(*it)->nparticles;++i){
+          for(j=0,rneighbors[i]=0.0;j<tree->Ndimensions;++j){
+            rneighbors[i] += pow(tree->xp[(*it)->particles[i]][j]-ray[j],2);
+          }
+          rneighbors[i]=sqrt( rneighbors[i] );
+          assert(rneighbors[i] < 10);
+          neighbors[i]=(*it)->particles[i];
+        }
+        
+        Utilities::quicksort(neighbors,rneighbors,(*it)->nparticles);
+        
+      }else{ /* keep going down the tree */
+        
+        if(it.down(1)){
+          //moveToChildNB(tree,1);
+          _NearestNeighbors(ray,rlray,Nneighbors,neighbors,rneighbors,it,notfound);
+          /*printf("moving up from level %i\n",(*it)->level);*/
+          //moveUpNB(tree);
+          it.up();
+          incellNB2=notfound;
+        }
+        
+        if(it.down(2)){
+          /*printf("moving to child2 from level %i\n",(*it)->level);*/
+          //moveToChildNB(tree,2);
+          _NearestNeighbors(ray,rlray,Nneighbors,neighbors,rneighbors,it,notfound);
+          /*printf("moving up from level %i\n",(*it)->level);*/
+          //moveUpNB(tree);
+          it.up();
+        }
+        
+        /** if ray found in second child go back to first to search for neighbors **/
+        if( (incellNB2==1) && (notfound==0) ){
+          if(it.down(1)){
+            //moveToChildNB(tree,1);
+            _NearestNeighbors(ray,rlray,Nneighbors,neighbors,rneighbors,it,notfound);
+            //moveUpNB(tree);
+            it.up();
+          }
+        }
+      }
+    }
+  }else{ // found cell
+    /* does radius cut into the box */
+    if( Utilities::cutbox(ray,(*it)->boundary_p1,(*it)->boundary_p2,rneighbors[Nneighbors-1]) ){
+      
+      if( ((*it)->child1 == NULL)*((*it)->child2 == NULL)){  /* leaf case */
+        
+        /* combine found neighbors with particles in box and resort */
+        for(i=Nneighbors;i<((*it)->nparticles+Nneighbors);++i){
+          for(j=0,rneighbors[i]=0.0;j<tree->Ndimensions;++j){
+            rneighbors[i]+=pow(tree->xp[(*it)->particles[i-Nneighbors]][j]-ray[j],2);
+          }
+          rneighbors[i]=sqrt( rneighbors[i] );
+          assert(rneighbors[i] < 10);
+          neighbors[i]=(*it)->particles[i-Nneighbors];
+        }
+        
+        Utilities::quicksort(neighbors,rneighbors,Nneighbors+Nbucket);
+        
+      }else{
+        
+        if(it.down(1)){
+          //moveToChildNB(tree,1);
+          _NearestNeighbors(ray,rlray,Nneighbors,neighbors,rneighbors,it,notfound);
+          //moveUpNB(tree);
+          it.up();
+        }
+        
+        if(it.down(2)){
+          //moveToChildNB(tree,2);
+          _NearestNeighbors(ray,rlray,Nneighbors,neighbors,rneighbors,it,notfound);
+          //moveUpNB(tree);
+          it.up();
+        }
+      }
+    }
+  }
   return;
 }
 
@@ -293,11 +390,11 @@ void TreeSimple::_NearestNeighbors(PosType *ray,int Nneighbors,unsigned long *ne
       /* found the box small enough */
     	if( tree->current->nparticles <= Nneighbors+Nbucket ){
     		incell=0;
-    		for(j=0;j<Ndim;++j) ray[j]=realray[j];
+    		for(j=0;j<tree->Ndimensions;++j) ray[j]=realray[j];
 
     		/* calculate the distance to all the particles in cell */
     		for(i=0;i<tree->current->nparticles;++i){
-    			for(j=0,rneighbors[i]=0.0;j<Ndim;++j){
+    			for(j=0,rneighbors[i]=0.0;j<tree->Ndimensions;++j){
     				rneighbors[i] += pow(tree->xp[tree->current->particles[i]][j]-ray[j],2);
     			}
      			rneighbors[i]=sqrt( rneighbors[i] );
@@ -344,7 +441,7 @@ void TreeSimple::_NearestNeighbors(PosType *ray,int Nneighbors,unsigned long *ne
 
     		/* combine found neighbors with particles in box and resort */
     		for(i=Nneighbors;i<(tree->current->nparticles+Nneighbors);++i){
-    			for(j=0,rneighbors[i]=0.0;j<Ndim;++j){
+    			for(j=0,rneighbors[i]=0.0;j<tree->Ndimensions;++j){
     				rneighbors[i]+=pow(tree->xp[tree->current->particles[i-Nneighbors]][j]-ray[j],2);
 	  			}
     			rneighbors[i]=sqrt( rneighbors[i] );
@@ -372,6 +469,7 @@ void TreeSimple::_NearestNeighbors(PosType *ray,int Nneighbors,unsigned long *ne
   }
   return;
 }
+
 
 
 TreeNBHndl TreeSimple::BuildTreeNB(PosType **xp,IndexType Nparticles,IndexType *particles,int Ndims

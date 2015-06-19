@@ -1,6 +1,8 @@
 #include "slsimlib.h"
 #include "particle_halo.h"
 #include <fstream>
+#include <mutex>
+#include <thread>
 
 #ifdef ENABLE_FITS
 #include <CCfits/CCfits>
@@ -256,14 +258,38 @@ void LensHaloParticles::calculate_smoothing(int Nsmooth){
   TreeSimple tree3d(xp,Npoints,10,3,true);
   
   // find distance to nth neighbour for every particle
-  IndexType neighbors[Nsmooth];
-  for(size_t i=0;i<Npoints;++i){
-    tree3d.NearestNeighbors(xp[i],Nsmooth,sizes + i,neighbors);
+  if(Npoints < 1000){
+    IndexType neighbors[Nsmooth];
+    for(size_t i=0;i<Npoints;++i){
+      tree3d.NearestNeighbors(xp[i],Nsmooth,sizes + i,neighbors);
+    }
+  }else{
+    size_t chunksize = Npoints/N_THREADS;
+    std::thread thr[N_THREADS];
+    
+    size_t N;
+    for(int ii = 0; ii < N_THREADS ;++ii){
+      if(ii == N_THREADS-1){
+        N = Npoints - ii*chunksize;
+      }else N = chunksize;
+      
+      thr[ii] = std::thread(&LensHaloParticles::smooth_,this,&tree3d
+                            ,&(xp[ii*chunksize]),&(sizes[ii*chunksize]),N,Nsmooth);
+    }
+    for(int ii = 0; ii < N_THREADS ;++ii) thr[ii].join();
   }
   std::cout << "done" << std::endl;
 
   // save result to a file for future use
   writeSizes(sizefile,Nsmooth);
+}
+
+void LensHaloParticles::smooth_(TreeSimple *tree3d,PosType **xp,float *sizes,size_t N,int Nsmooth){
+
+  IndexType neighbors[Nsmooth];
+  for(size_t i=0;i<N;++i){
+    tree3d->NearestNeighbors(xp[i],Nsmooth,sizes + i,neighbors);
+  }
 }
 
 void LensHaloParticles::writeSizes(const std::string &filename,int Nsmooth){
