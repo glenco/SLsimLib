@@ -33,6 +33,11 @@
 #define N_THREADS 1
 #endif
 
+#ifndef MIN_PLANE_DIST
+#define MIN_PLANE_DIST 1E-8
+#endif
+
+
 void *compute_rays_parallel(void *_p);
 
 /**
@@ -225,12 +230,23 @@ void *compute_rays_parallel(void *_p)
       assert(xx[0] == xx[0] && xx[1] == xx[1]);
       
       // std::cout << "p->i_points[i].image->x[0] = " << p->i_points[i].image->x[0] << " , p->i_points[i].image->x[1] = " << p->i_points[i].image->x[1] << std::endl ;
+      // std::cout << "dDl[" << j << "] = " << p->dDl[j] << " , dDl[" << j+1 << "] = " << p->dDl[j+1] << std::endl;
       
-      ////////////////////////////////////////////////////////////////
+      if(p->dDl[j] < MIN_PLANE_DIST)
+      {
+        std::cout << "here !" << std::endl;
+        
+      }
+      else
+      {
+        ////////////////////////////////////////////////////////
+        
+        p->lensing_planes[j]->force(alpha,&kappa,gamma,&phi,xx);
+        // Computed in physical coordinates. // xx is in PhysMpc
+        
+        ////////////////////////////////////////////////////////
+      }
       
-      p->lensing_planes[j]->force(alpha,&kappa,gamma,&phi,xx); // Computed in physical coordinates. // xx is in PhysMpc
-      
-      ////////////////////////////////////////////////////////////////
       
       
       assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);

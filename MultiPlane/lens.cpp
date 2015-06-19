@@ -8,6 +8,7 @@
 #include "slsimlib.h"
 #include <algorithm>
 #include "lens_halos.h"
+#include <iomanip>
 
 using namespace std;
 
@@ -2443,6 +2444,24 @@ void Lens::readInputSimFileObservedGalaxies(bool verbose)
 
 void Lens::combinePlanes(bool verbose)
 {
+  if(verbose)
+  {
+    std::cout << std::endl << "Lens::combinePlanes before clearing." << std::endl ;
+    for(int i=0;i<plane_redshifts.size();i++) std::cout << plane_redshifts[i] << " " ;
+    std::cout << std::endl ;
+    for(int i=0;i<Dl.size();i++) std::cout << Dl[i] << " " ;
+    std::cout << std::endl ;
+    for(int i=0;i<dDl.size();i++) std::cout << dDl[i] << " " ;
+    std::cout << std::endl << std::endl ;
+    std::cout << "Lens::combinePlanes : field_planes.size() = " << field_planes.size() << " , main_planes.size() = " << main_planes.size() << std::endl ;
+    std::cout << "Lens::combinePlanes : field_plane_redshifts = " ;
+    for(int i=0;i<field_plane_redshifts.size();i++) std::cout << field_plane_redshifts[i] << " " ;
+    std::cout << std::endl ;
+    std::cout << "Lens::combinePlanes : main_plane_redshifts = " ;
+    for(int i=0;i<main_plane_redshifts.size();i++) std::cout << main_plane_redshifts[i] << " " ;
+    std::cout << std::endl ;
+  }
+  
   // clear old plane configuration
   lensing_planes.clear();
   plane_redshifts.clear();
@@ -2459,15 +2478,32 @@ void Lens::combinePlanes(bool verbose)
   while(i < Dl.size()){
     Dl[i++] = main_Dl[j++];
   }
-  // sort these Dl and keep a index so that the identity of each Dl is remebered
+  
+  if(verbose)
+  {
+    std::cout << "Lens::combinePlanes : before sorting : Dl master = " ;
+    for(int i=0;i<Dl.size();i++) std::cout << std::setprecision(13) << Dl[i] << " " ;
+    std::cout << std::endl ;
+  }
+        
+  // sort these Dl and keep an index so that the identity of each Dl is remembered
   std::vector<size_t> index(Dl.size());
   Utilities::sort_indexes(Dl,index);
   std::sort(Dl.begin(),Dl.end());
   
+  // changing the position of the planes too close to each other
   for(int i=1; i < Dl.size(); ++i){
     if( (Dl[i] - Dl[i-1]) < MIN_PLANE_DIST) Dl[i] = Dl[i-1] + MIN_PLANE_DIST;
   }
+
+  if(verbose)
+  {
+    std::cout << "Lens::combinePlanes : after sorting and adjusting distances : Dl master = " ;
+    for(int i=0;i<Dl.size();i++) std::cout << std::setprecision(13) << Dl[i] << " " ;
+    std::cout << std::endl ;
+  }
   
+  // filling the tables for redshift and lensing planes
   for(auto i : index){
     if(i<field_Dl.size()){
       plane_redshifts.push_back(field_plane_redshifts[i]);
@@ -2476,6 +2512,13 @@ void Lens::combinePlanes(bool verbose)
       plane_redshifts.push_back(main_plane_redshifts[i - field_Dl.size()]);
       lensing_planes.push_back(main_planes[i - field_Dl.size()]);
     }
+  }
+  
+  if(verbose)
+  {
+    std::cout << "Lens::combinePlanes : redshifts = " ;
+    for(int i=0;i<plane_redshifts.size();i++) std::cout << std::setprecision(13) << plane_redshifts[i] << " " ;
+    std::cout << std::endl ;
   }
   
   assert(lensing_planes.size() == field_planes.size() + main_planes.size());
@@ -2492,21 +2535,21 @@ void Lens::combinePlanes(bool verbose)
     dDl.push_back(Dl[i] - Dl[i-1]); // distance from plane i-1 to plane i
   
   // output resulting setup
-  if(verbose) std::cout
-    << "\ncombinePlanes()"
-    << "\n---------------"
-    << std::endl;
-  if(verbose) std::cout << "\nz:";
-  for(std::size_t i = 0, n = plane_redshifts.size(); i < n; ++i)
-    if(verbose) std::cout << " " << plane_redshifts[i];
-  if(verbose) std::cout << "\nDl:";
-  for(std::size_t i = 0, n = Dl.size(); i < n; ++i)
-    if(verbose) std::cout << " " << Dl[i];
-  if(verbose) std::cout << "\ndDl:";
-  for(std::size_t i = 0, n = dDl.size(); i < n; ++i)
-    if(verbose) std::cout << " " << dDl[i];
-  if(verbose) std::cout << "\n" << std::endl;
+  if(verbose)
+  {
+    std::cout << "\ncombinePlanes()" << "\n---------------" << std::endl;
+    std::cout << "\nz:";
+    for(std::size_t i = 0, n = plane_redshifts.size(); i < n; ++i) std::cout << " " << plane_redshifts[i];
+    std::cout << "\nDl:";
+    for(std::size_t i = 0, n = Dl.size(); i < n; ++i) std::cout << std::setprecision(12) << " " << Dl[i];
+    std::cout << "\ndDl:";
+    for(std::size_t i = 0, n = dDl.size(); i < n; ++i) std::cout << " " << dDl[i];
+    std::cout << "\n" << std::endl;
+  }
+  
 }
+
+
 
 void Lens::buildPlanes(InputParams& params, bool verbose)
 {
