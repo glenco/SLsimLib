@@ -36,6 +36,8 @@ public:
                     ,const COSMOLOGY& lenscosmo /// cosmology
                     ,Point_2d theta_rotate      /// rotation of simulation, x-axis ratation angle and then y-axis rotation angle
                     ,bool recenter = false     /// re-center the coordinates to the center of mass
+                    ,bool multimass = false     /** allows the particles to have different masses
+                                                 , the masses for each particles must be provided as a 4th column in the particle data file */
                     );
   
   ~LensHaloParticles();
@@ -66,8 +68,9 @@ private:
   void assignParams(InputParams& params);
 
   PosType **xp;
-  float mass;
-  float *sizes;
+  std::vector<float> masses;
+  std::vector<float> sizes;
+  bool multimass;
   
   Utilities::Geometry::SphericalPoint center;
   

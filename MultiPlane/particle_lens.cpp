@@ -16,7 +16,8 @@ LensHaloParticles::LensHaloParticles(
             ,const COSMOLOGY& cosmo /// cosmology
             ,Point_2d theta_rotate /// rotation of particles around the origin
             ,bool recenter
-): simfile(simulation_filename)
+            ,bool my_multimass
+        ): multimass(my_multimass),simfile(simulation_filename)
 {
   
   LensHalo::setZlens(redshift);
@@ -28,14 +29,13 @@ LensHaloParticles::LensHaloParticles(
   sizefile = simfile + "." + std::to_string(Nsmooth) + "sizes";
   if(!readSizesFile(sizefile,Nsmooth)){
     // calculate sizes
-    sizes = new float[Npoints];
+    sizes.resize(Npoints);
     calculate_smoothing(Nsmooth);
   }
-
-  LensHalo::set_mass(Npoints*mass);
   
   // convert from comoving to physical coordinates
   PosType scale_factor = 1/(1+redshift);
+  mass = 0.0;
   for(size_t i=0;i<Npoints;++i){
     xp[i][0] *= scale_factor;
     xp[i][1] *= scale_factor;
@@ -45,9 +45,10 @@ LensHaloParticles::LensHaloParticles(
     mcenter[1] += xp[i][1];
     mcenter[2] += xp[i][2];
     
+    mass += masses[multimass*i];
   }
   
-  mcenter /= Npoints;
+  mcenter /= mass;
   
   if(recenter){
     for(size_t i=0;i<Npoints;++i){
@@ -60,13 +61,12 @@ LensHaloParticles::LensHaloParticles(
   // rotate positions
   rotate_particles(theta_rotate[0],theta_rotate[1]);
 
-  qtree = new TreeQuad(xp,&mass,sizes,Npoints,false,true,0,20);
+  qtree = new TreeQuad(xp,masses.data(),sizes.data(),Npoints,multimass,true,0,20);
   
 }
 
 LensHaloParticles::~LensHaloParticles(){
   delete qtree;
-  delete [] sizes;
   Utilities::free_PosTypeMatrix(xp,Npoints,3);
 }
 
@@ -78,7 +78,7 @@ void LensHaloParticles::force_halo(double *alpha,KappaType *kappa,KappaType *gam
 void LensHaloParticles::rotate(Point_2d theta){
   rotate_particles(theta[0],theta[1]);
   delete qtree;
-  qtree =new TreeQuad(xp,&mass,sizes,Npoints,false,true,0,20);
+  qtree =new TreeQuad(xp,masses.data(),sizes.data(),Npoints,multimass,true,0,20);
 }
 
 /** \breaf Reads number of particle and particle positons into Npoint and xp from a ASCII file.
@@ -96,6 +96,7 @@ void LensHaloParticles::readPositionFileASCII(const std::string &filename){
   
   if (myfile.is_open()){
     
+    float tmp_mass;
     std::string str,label;
     int count =0;
     while(std::getline(myfile, str)){
@@ -107,36 +108,58 @@ void LensHaloParticles::readPositionFileASCII(const std::string &filename){
           ss >> Npoints;
           ++count;
         }
-        if(label == "mass"){
-          ss >> mass;
-          ++count;
+        if(!multimass){
+          if(label == "mass"){
+            ss >> tmp_mass;
+            ++count;
+          }
         }
       }else break;
-      if(count == 2) break;
+      if(multimass && count == 2 ) break;
+      if(!multimass && count == 1 ) break;
     }
     
-    if(count != 2){
+    if(count == 0){
       std::cerr << "File " << filename << " must have the header lines: " << std::endl
       << "# nparticles   ****" << std::endl << "# mass   ****" << std::endl;
       throw std::runtime_error("file reading error");
     }
     
     xp = Utilities::PosTypeMatrix(Npoints,3);
+    if(multimass) masses.resize(Npoints);
+    else masses.push_back(tmp_mass);
     
     size_t row = 0;
     
     // read in particle positions
-    while(std::getline(myfile, str)){
-      if(str[0] == '#') continue; //for comments
-      std::stringstream ss(str);
+    if(!multimass){
+      while(std::getline(myfile, str)){
+        if(str[0] == '#') continue; //for comments
+        std::stringstream ss(str);
       
-      ss >> xp[row][0];
-      if(!(ss >> xp[row][1])) std::cerr << "3 columns are expected in line " << row
-        << " of " << filename << std::endl;
-      if(!(ss >> xp[row][2])) std::cerr << "3 columns are expected in line " << row
-        << " of " << filename << std::endl;
+        ss >> xp[row][0];
+        if(!(ss >> xp[row][1])) std::cerr << "3 columns are expected in line " << row
+          << " of " << filename << std::endl;
+        if(!(ss >> xp[row][2])) std::cerr << "3 columns are expected in line " << row
+          << " of " << filename << std::endl;
       
-      row++;
+        row++;
+      }
+    }else{
+      while(std::getline(myfile, str)){
+        if(str[0] == '#') continue; //for comments
+        std::stringstream ss(str);
+        
+        ss >> xp[row][0];
+        if(!(ss >> xp[row][1])) std::cerr << "3 columns are expected in line " << row
+          << " of " << filename << std::endl;
+        if(!(ss >> xp[row][2])) std::cerr << "3 columns are expected in line " << row
+          << " of " << filename << std::endl;
+        if(!(ss >> masses[row])) std::cerr << "4 columns are expected in line " << row
+          << " of " << filename << std::endl;
+        
+        row++;
+      }
     }
     
     if(row != Npoints){
@@ -194,7 +217,7 @@ bool LensHaloParticles::readSizesFile(const std::string &filename,int Nsmooth){
       throw std::runtime_error("file reading error");
     }
     
-    sizes = new float[Npoints];
+    sizes.resize(Npoints);
     
     size_t row = 0;
     
@@ -261,7 +284,7 @@ void LensHaloParticles::calculate_smoothing(int Nsmooth){
   if(Npoints < 1000){
     IndexType neighbors[Nsmooth];
     for(size_t i=0;i<Npoints;++i){
-      tree3d.NearestNeighbors(xp[i],Nsmooth,sizes + i,neighbors);
+      tree3d.NearestNeighbors(xp[i],Nsmooth,sizes.data() + i,neighbors);
     }
   }else{
     size_t chunksize = Npoints/N_THREADS;
@@ -284,11 +307,11 @@ void LensHaloParticles::calculate_smoothing(int Nsmooth){
   writeSizes(sizefile,Nsmooth);
 }
 
-void LensHaloParticles::smooth_(TreeSimple *tree3d,PosType **xp,float *sizes,size_t N,int Nsmooth){
+void LensHaloParticles::smooth_(TreeSimple *tree3d,PosType **xp,float *sizesp,size_t N,int Nsmooth){
 
   IndexType neighbors[Nsmooth];
   for(size_t i=0;i<N;++i){
-    tree3d->NearestNeighbors(xp[i],Nsmooth,sizes + i,neighbors);
+    tree3d->NearestNeighbors(xp[i],Nsmooth,sizesp + i,neighbors);
   }
 }
 
