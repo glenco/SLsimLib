@@ -96,7 +96,7 @@ void LensHaloParticles::readPositionFileASCII(const std::string &filename){
   
   if (myfile.is_open()){
     
-    float tmp_mass;
+    float tmp_mass = 0.0;
     std::string str,label;
     int count =0;
     while(std::getline(myfile, str)){
@@ -115,13 +115,15 @@ void LensHaloParticles::readPositionFileASCII(const std::string &filename){
           }
         }
       }else break;
-      if(multimass && count == 2 ) break;
-      if(!multimass && count == 1 ) break;
+      if(multimass && count == 1 ) break;
+      if(!multimass && count == 2 ) break;
     }
     
     if(count == 0){
-      std::cerr << "File " << filename << " must have the header lines: " << std::endl
-      << "# nparticles   ****" << std::endl << "# mass   ****" << std::endl;
+      if(multimass) std::cerr << "File " << filename << " must have the header lines: " << std::endl
+        << "# nparticles   ****" << std::endl << "# mass   ****" << std::endl;
+      if(!multimass) std::cerr << "File " << filename << " must have the header lines: " << std::endl
+        << "# nparticles   ****" << std::endl;
       throw std::runtime_error("file reading error");
     }
     
@@ -151,9 +153,9 @@ void LensHaloParticles::readPositionFileASCII(const std::string &filename){
         std::stringstream ss(str);
         
         ss >> xp[row][0];
-        if(!(ss >> xp[row][1])) std::cerr << "3 columns are expected in line " << row
+        if(!(ss >> xp[row][1])) std::cerr << "4 columns are expected in line " << row
           << " of " << filename << std::endl;
-        if(!(ss >> xp[row][2])) std::cerr << "3 columns are expected in line " << row
+        if(!(ss >> xp[row][2])) std::cerr << "4 columns are expected in line " << row
           << " of " << filename << std::endl;
         if(!(ss >> masses[row])) std::cerr << "4 columns are expected in line " << row
           << " of " << filename << std::endl;
