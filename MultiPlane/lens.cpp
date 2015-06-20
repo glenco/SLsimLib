@@ -8,10 +8,11 @@
 #include "slsimlib.h"
 #include <algorithm>
 #include "lens_halos.h"
+#include <iomanip>
 
 using namespace std;
 
-#define MIN_PLANE_DIST 1E-8
+#define MIN_PLANE_DIST 1E-2
 
 namespace
 {
@@ -2441,106 +2442,114 @@ void Lens::readInputSimFileObservedGalaxies(bool verbose)
   read_sim_file = true;
 }
 
-
 void Lens::combinePlanes(bool verbose)
 {
-	// clear old plane configuration
-	lensing_planes.clear();
-	plane_redshifts.clear();
-	Dl.clear();
-	dDl.clear();
-	
-	// index of current main/field plane
-	std::size_t i_field = 0, i_main = 0;
-	
-	// always get plane with least redshift from either field or main
-	while(i_field < field_planes.size() && i_main < main_planes.size())
-	{
-		// decide if main or field plane is next
-		if(main_plane_redshifts[i_main] <= field_plane_redshifts[i_field])
-		{
-			// next plane is main
-      if(main_plane_redshifts[i_main] <= 0){
-        std::cerr << "Cannot make a lens plane at redshift " << main_plane_redshifts[i_main]
-        << " Dl " << main_Dl[i_main];
-        throw std::runtime_error("bad redshift");
-      }
-			lensing_planes.push_back(main_planes[i_main]);
-			plane_redshifts.push_back(main_plane_redshifts[i_main]);
-			Dl.push_back(main_Dl[i_main]);
-			
-			// advance main index
-			++i_main;
-		}
-		else
-		{
-			// next plane is field
-			lensing_planes.push_back(field_planes[i_field]);
-			plane_redshifts.push_back(field_plane_redshifts[i_field]);
-			Dl.push_back(field_Dl[i_field]);
-      
-      if(field_plane_redshifts[i_field] <= 0){
-        std::cerr << "Cannot make a lens plane at redshift " << field_plane_redshifts[i_field]
-        << " Dl " << field_Dl[i_field];
-        throw std::runtime_error("bad redshift");
-      }
+  if(verbose)
+  {
+    std::cout << std::endl << "Lens::combinePlanes before clearing." << std::endl ;
+    for(int i=0;i<plane_redshifts.size();i++) std::cout << plane_redshifts[i] << " " ;
+    std::cout << std::endl ;
+    for(int i=0;i<Dl.size();i++) std::cout << Dl[i] << " " ;
+    std::cout << std::endl ;
+    for(int i=0;i<dDl.size();i++) std::cout << dDl[i] << " " ;
+    std::cout << std::endl << std::endl ;
+    std::cout << "Lens::combinePlanes : field_planes.size() = " << field_planes.size() << " , main_planes.size() = " << main_planes.size() << std::endl ;
+    std::cout << "Lens::combinePlanes : field_plane_redshifts = " ;
+    for(int i=0;i<field_plane_redshifts.size();i++) std::cout << field_plane_redshifts[i] << " " ;
+    std::cout << std::endl ;
+    std::cout << "Lens::combinePlanes : main_plane_redshifts = " ;
+    for(int i=0;i<main_plane_redshifts.size();i++) std::cout << main_plane_redshifts[i] << " " ;
+    std::cout << std::endl ;
+  }
+  
+  // clear old plane configuration
+  lensing_planes.clear();
+  plane_redshifts.clear();
+  Dl.clear();
+  dDl.clear();
 
-			// check if planes are too close together
-			if(fabs(field_Dl[i_field] - main_Dl[i_main]) < MIN_PLANE_DIST)
-			{
-				// move back the inserted field plane
-				Dl.back() = main_Dl[i_main] + MIN_PLANE_DIST;
-				plane_redshifts.back() = cosmo.invCoorDist(Dl.back());
-				
-				// TODO: make this more intelligent or make it possible to have all halos on the same planes
-			}
-			
-			// advance field index
-			++i_field;
-		}
-	}
-	
-	// add rest of planes, one array will already be at end
-	for(; i_field < field_planes.size(); ++i_field)
-	{
-		lensing_planes.push_back(field_planes[i_field]);
-		plane_redshifts.push_back(field_plane_redshifts[i_field]);
-		Dl.push_back(field_Dl[i_field]);
-	}
-	for(; i_main < main_planes.size(); ++i_main)
-	{
-		lensing_planes.push_back(main_planes[i_main]);
-		plane_redshifts.push_back(main_plane_redshifts[i_main]);
-		Dl.push_back(main_Dl[i_main]);
-	}
-	
-	assert(lensing_planes.size() == field_planes.size() + main_planes.size());
-	
-	// add the pseudo-plane for rayshooting at the end of the arrays
-	plane_redshifts.push_back(zsource);
-	Dl.push_back(cosmo.coorDist(0, zsource));
-	
-	// calculate deltas
-	dDl.push_back(Dl[0]);
-	for(std::size_t i = 1; i < Dl.size(); ++i)
-		dDl.push_back(MAX(Dl[i] - Dl[i-1],MIN_PLANE_DIST)); // distance from plane i-1 to plane i
-	
-	// output resulting setup
-	if(verbose) std::cout
-    << "\ncombinePlanes()"
-    << "\n---------------"
-    << std::endl;
-	if(verbose) std::cout << "\nz:";
-	for(std::size_t i = 0, n = plane_redshifts.size(); i < n; ++i)
-		if(verbose) std::cout << " " << plane_redshifts[i];
-	if(verbose) std::cout << "\nDl:";
-	for(std::size_t i = 0, n = Dl.size(); i < n; ++i)
-		if(verbose) std::cout << " " << Dl[i];
-	if(verbose) std::cout << "\ndDl:";
-	for(std::size_t i = 0, n = dDl.size(); i < n; ++i)
-		if(verbose) std::cout << " " << dDl[i];
-	if(verbose) std::cout << "\n" << std::endl;
+  // copy main and field planes into master Dl
+  Dl.resize(field_Dl.size() + main_Dl.size());
+  int i;
+  for(i =0; i < field_Dl.size(); ++i){
+    Dl[i] = field_Dl[i];
+  }
+  int j = 0;
+  while(i < Dl.size()){
+    Dl[i++] = main_Dl[j++];
+  }
+  
+  if(verbose)
+  {
+    std::cout << "Lens::combinePlanes : before sorting : Dl master = " ;
+    for(int i=0;i<Dl.size();i++) std::cout << std::setprecision(13) << Dl[i] << " " ;
+    std::cout << std::endl ;
+  }
+        
+  // sort these Dl and keep an index so that the identity of each Dl is remembered
+  std::vector<size_t> index(Dl.size());
+  Utilities::sort_indexes(Dl,index);
+  std::sort(Dl.begin(),Dl.end());
+  
+  // changing the position of the planes too close to each other
+  for(int i=1; i < Dl.size(); ++i){
+    if( (Dl[i] - Dl[i-1]) < MIN_PLANE_DIST) Dl[i] = Dl[i-1] + MIN_PLANE_DIST;
+  }
+
+  if(verbose)
+  {
+    std::cout << "Lens::combinePlanes : after sorting and adjusting distances : Dl master = " ;
+    for(int i=0;i<Dl.size();i++) std::cout << std::setprecision(13) << Dl[i] << " " ;
+    std::cout << std::endl ;
+  }
+  
+  // filling the tables for redshift and lensing planes
+  for(auto i : index){
+    if(i<field_Dl.size()){
+      plane_redshifts.push_back(field_plane_redshifts[i]);
+      lensing_planes.push_back(field_planes[i]);
+    }else{
+      plane_redshifts.push_back(main_plane_redshifts[i - field_Dl.size()]);
+      lensing_planes.push_back(main_planes[i - field_Dl.size()]);
+    }
+  }
+  
+  if(verbose)
+  {
+    std::cout << "Lens::combinePlanes : redshifts = " ;
+    for(int i=0;i<plane_redshifts.size();i++) std::cout << std::setprecision(13) << plane_redshifts[i] << " " ;
+    std::cout << std::endl ;
+  }
+  
+  assert(lensing_planes.size() == field_planes.size() + main_planes.size());
+  assert(zsource > plane_redshifts.back());
+  
+  
+  // add the pseudo-plane for rayshooting at the end of the arrays
+  plane_redshifts.push_back(zsource);
+  Dl.push_back(cosmo.coorDist(0, zsource));
+  
+  // calculate deltas
+  dDl.push_back(Dl[0]);
+  for(std::size_t i = 1; i < Dl.size(); ++i)
+    dDl.push_back(Dl[i] - Dl[i-1]); // distance from plane i-1 to plane i
+  
+  // output resulting setup
+  if(verbose)
+  {
+    std::cout << "\ncombinePlanes()" << "\n---------------" << std::endl;
+    std::cout << "\nz:";
+    for(std::size_t i = 0, n = plane_redshifts.size(); i < n; ++i) std::cout << " " << plane_redshifts[i];
+    std::cout << "\nDl:";
+    for(std::size_t i = 0, n = Dl.size(); i < n; ++i) std::cout << std::setprecision(12) << " " << Dl[i];
+    std::cout << "\ndDl:";
+    for(std::size_t i = 0, n = dDl.size(); i < n; ++i) std::cout << " " << dDl[i];
+    std::cout << "\n" << std::endl;
+  }
+  
 }
+
+
 
 void Lens::buildPlanes(InputParams& params, bool verbose)
 {
