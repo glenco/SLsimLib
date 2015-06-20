@@ -12,7 +12,7 @@
 
 using namespace std;
 
-#define MIN_PLANE_DIST 1E-3
+#define MIN_PLANE_DIST 1E-2
 
 namespace
 {
