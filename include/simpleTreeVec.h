@@ -418,10 +418,10 @@ void TreeSimpleVec<T>::NearestNeighbors(
     PosType rneighbors[Nneighbors+Nbucket];
     IndexType neighbors[Nneighbors+Nbucket];
     
-    if(top->nparticles <= Nneighbors){
+    if(top->nparticles < Nneighbors){
         ERROR_MESSAGE();
         printf("ERROR: in NearestNeighbors, number of neighbors > total number of particles\n");
-        exit(1);
+      throw std::runtime_error("Asked for too many neighbors");
     }
     
     /* initalize distance to neighbors to a large number */
