@@ -209,6 +209,7 @@ void *compute_rays_parallel(void *_p)
     }
     
     
+    
     /* ************************************************************************************
      We compute deflection, shear, convergence, rotation
      and time-delay of rays in parallel.
