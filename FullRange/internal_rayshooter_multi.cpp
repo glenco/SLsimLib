@@ -145,8 +145,8 @@ void Lens::rayshooterInternal(
 }
 
 
-// void *compute_rays_parallel(void *_p)
-void *compute_rays_parallel_Fabien(void *_p)
+void *compute_rays_parallel(void *_p)
+// void *compute_rays_parallel_Fabien(void *_p)
 {
   TmpParams *p = (TmpParams *) _p;
   int chunk_size = p->size;
@@ -219,7 +219,7 @@ void *compute_rays_parallel_Fabien(void *_p)
     
     // TEST : showing initial quantities
     // =================================
-    std::cout << "RSI initial : X X | " << p->i_points[i].image->x[0] << " " << p->i_points[i].image->x[1] << " | " << p->i_points[i].kappa << " " << p->i_points[i].gamma[0] << " " << p->i_points[i].gamma[1] << " " << p->i_points[i].gamma[2] << " " << p->i_points[i].dt << " X" << std::endl ;
+    std::cout << "RSI initial : X X | X | " << p->i_points[i].image->x[0] << " " << p->i_points[i].image->x[1] << " | " << p->i_points[i].kappa << " " << p->i_points[i].gamma[0] << " " << p->i_points[i].gamma[1] << " " << p->i_points[i].gamma[2] << " X | " << p->i_points[i].dt << std::endl ;
     
     
     // Begining of the loop through the planes :
@@ -288,7 +288,7 @@ void *compute_rays_parallel_Fabien(void *_p)
       // they are not the same as they were defined above.
       
       aa = p->Dl[j] / p->Dl[j+1];
-      bb = p->dDl[j+1] / p->Dl[j];
+      bb = p->dDl[j+1] / p->Dl[j+1];
       cc = p->charge * p->Dl[j];
       
       // Sum_{k=1}^{j} Dl[k] A^k.G^k
@@ -298,10 +298,10 @@ void *compute_rays_parallel_Fabien(void *_p)
       SumPrevAGs[3] += cc*(kappa*p->i_points[i].gamma[2] - gamma[1]*p->i_points[i].gamma[0] + gamma[0]*p->i_points[i].gamma[1]) ;
       
       // Computation of the "plus quantities", i.e. the  next plane quantities :
-      kappa_plus = aa*p->i_points[i].kappa + bb*(1 - SumPrevAGs[0]) ;
-      gamma_plus[0] = aa*p->i_points[i].gamma[0] + bb*SumPrevAGs[1] ;
-      gamma_plus[1] = aa*p->i_points[i].gamma[1] + bb*SumPrevAGs[2] ;
-      gamma_plus[2] = aa*p->i_points[i].gamma[2] + bb*SumPrevAGs[3] ;
+      kappa_plus = aa*p->i_points[i].kappa + bb*(1-SumPrevAGs[0]) ;
+      gamma_plus[0] = aa*p->i_points[i].gamma[0] - bb*SumPrevAGs[1] ;
+      gamma_plus[1] = aa*p->i_points[i].gamma[1] - bb*SumPrevAGs[2] ;
+      gamma_plus[2] = aa*p->i_points[i].gamma[2] - bb*SumPrevAGs[3] ;
       
       // ------------------------------------------------------------------------------------------
       
@@ -319,6 +319,7 @@ void *compute_rays_parallel_Fabien(void *_p)
       
       // Geometric time delay with added potential
       p->i_points[i].dt += 0.5*( (xplus[0] - p->i_points[i].image->x[0])*(xplus[0] - p->i_points[i].image->x[0]) + (xplus[1] - p->i_points[i].image->x[1])*(xplus[1] - p->i_points[i].image->x[1]) )/p->dDl[j+1] - (1 + p->plane_redshifts[j]) * phi * p->charge ; /// in Mpc
+
       
       // Check that the 1+z factor must indeed be there (because the x positions have been rescaled, so it may be different compared to the draft).
       // Remark : Here the true lensing potential is not "phi" but "phi * p->charge = phi * 4 pi G".
@@ -326,7 +327,7 @@ void *compute_rays_parallel_Fabien(void *_p)
       
       // TEST : showing plus quantities
       // ==============================
-      std::cout << "RSI plane " << j << " : " << p->i_points[i].image->x[0] << " " << p->i_points[i].image->x[1] << " | " << p->i_points[i].kappa << " " << p->i_points[i].gamma[0] << " " << p->i_points[i].gamma[1] << " " << p->i_points[i].gamma[2] << " " << p->i_points[i].dt << std::endl ;
+      std::cout << "RSI plane " << j << " : " << p->i_points[i].image->x[0] << " " << p->i_points[i].image->x[1] << " | " << p->Dl[j] << " | " << p->i_points[i].kappa << " " << p->i_points[i].gamma[0] << " " << p->i_points[i].gamma[1] << " " << p->i_points[i].gamma[2] << " X | " << p->i_points[i].dt << std::endl ;
       
       
     } // End of the loop going through the planes
@@ -371,7 +372,7 @@ void *compute_rays_parallel_Fabien(void *_p)
     
     // TEST : showing final quantities
     // ===============================
-    std::cout << "RSI final : X X | " << p->i_points[i].kappa << " " << p->i_points[i].gamma[0] << " " << p->i_points[i].gamma[1] << " " << p->i_points[i].gamma[2] << " " << p->i_points[i].dt << " " << p->i_points[i].invmag << std::endl ;
+    std::cout << "RSI final : X X | " << p->Dl[p->NPlanes] << " | " << p->i_points[i].kappa << " " << p->i_points[i].gamma[0] << " " << p->i_points[i].gamma[1] << " " << p->i_points[i].gamma[2] << " " << p->i_points[i].invmag << " | " << p->i_points[i].dt << std::endl ;
     
     
     
@@ -386,8 +387,8 @@ void *compute_rays_parallel_Fabien(void *_p)
 
 
 
-void *compute_rays_parallel(void *_p)
-// void *compute_rays_parallel_Ben(void *_p)
+// void *compute_rays_parallel(void *_p)
+void *compute_rays_parallel_Ben(void *_p)
 {
   TmpParams *p = (TmpParams *) _p;
   int chunk_size = p->size;
@@ -456,7 +457,7 @@ void *compute_rays_parallel(void *_p)
     
     // TEST : showing initial quantities
     // =================================
-    std::cout << "RSI initial : X X | " << p->i_points[i].image->x[0] << " " << p->i_points[i].image->x[1] << " | " << p->i_points[i].kappa << " " << p->i_points[i].gamma[0] << " " << p->i_points[i].gamma[1] << " " << p->i_points[i].gamma[2] << " " << p->i_points[i].dt << " X" << std::endl ;
+    // std::cout << "RSI initial : X X | X | " << p->i_points[i].image->x[0] << " " << p->i_points[i].image->x[1] << " | " << p->i_points[i].kappa << " " << p->i_points[i].gamma[0] << " " << p->i_points[i].gamma[1] << " " << p->i_points[i].gamma[2] << " X | " << p->i_points[i].dt << std::endl ;
     
     
     // Begining of the loop through the planes :
@@ -618,7 +619,7 @@ void *compute_rays_parallel(void *_p)
       
       // TEST : showing plus quantities
       // ==============================
-      std::cout << "RSI plane " << j << " : " << p->i_points[i].image->x[0] << " " << p->i_points[i].image->x[1] << " | " << p->i_points[i].kappa << " " << p->i_points[i].gamma[0] << " " << p->i_points[i].gamma[1] << " " << p->i_points[i].gamma[2] << " " << p->i_points[i].dt << std::endl ;
+      // std::cout << "RSI plane " << j << " : " << p->i_points[i].image->x[0] << " " << p->i_points[i].image->x[1] << " | " << p->Dl[j] << " | " << p->i_points[i].kappa << " " << p->i_points[i].gamma[0] << " " << p->i_points[i].gamma[1] << " " << p->i_points[i].gamma[2] << " X | " << p->i_points[i].dt << std::endl ;
       
       
     } // End of the loop going through the planes
@@ -667,7 +668,7 @@ void *compute_rays_parallel(void *_p)
     
     // TEST : showing final quantities
     // ===============================
-    std::cout << "RSI final : X X | " << p->i_points[i].kappa << " " << p->i_points[i].gamma[0] << " " << p->i_points[i].gamma[1] << " " << p->i_points[i].gamma[2] << " " << p->i_points[i].dt << " " << p->i_points[i].invmag << std::endl ;
+    // std::cout << "RSI final : X X | " << p->Dl[p->NPlanes] << " | " << p->i_points[i].kappa << " " << p->i_points[i].gamma[0] << " " << p->i_points[i].gamma[1] << " " << p->i_points[i].gamma[2] << " " << p->i_points[i].invmag << " | " << p->i_points[i].dt << std::endl ;
     
     
     /*
