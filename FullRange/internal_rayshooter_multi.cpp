@@ -33,10 +33,6 @@
 #define N_THREADS 1
 #endif
 
-#ifndef MIN_PLANE_DIST
-#define MIN_PLANE_DIST 1E-3
-#endif
-
 
 void *compute_rays_parallel(void *_p);
 
@@ -145,6 +141,7 @@ void Lens::rayshooterInternal(
 }
 
 
+
 void *compute_rays_parallel(void *_p)
 // void *compute_rays_parallel_Fabien(void *_p)
 {
@@ -162,7 +159,7 @@ void *compute_rays_parallel(void *_p)
   KappaType kappa,gamma[3];
   KappaType phi;
   
-  PosType xplus[2];
+  PosType xminus[2],xplus[2];
   PosType kappa_plus,gamma_plus[3];
 
   PosType Theta[2];
@@ -179,6 +176,9 @@ void *compute_rays_parallel(void *_p)
     // find position on first lens plane in comoving units
     p->i_points[i].image->x[0] = p->i_points[i].x[0] * p->Dl[0]; // x^1 = Theta * D_1
     p->i_points[i].image->x[1] = p->i_points[i].x[1] * p->Dl[0];
+    
+    xminus[0] = 0;
+    xminus[1] = 0;
     
     // Initializing the observed Theta :
     Theta[0] = p->i_points[i].x[0] ;
@@ -274,6 +274,10 @@ void *compute_rays_parallel(void *_p)
       xplus[1] = p->i_points[i].image->x[1] + p->dDl[j+1] * (Theta[1] - SumPrevAlphas[1]);
       // x is in ComMpc, p->dDl[j+1] in ComMpc, SumPrevAlphas in (PhysMpc/mass)*(mass/PhysMpc) ~ radians.
       
+      // saving x^j for the computation of dt :
+      xminus[0] = p->i_points[i].image->x[0] ;
+      xminus[1] = p->i_points[i].image->x[1] ;
+      
       // x^{j+1} becomes x^j
       p->i_points[i].image->x[0] = xplus[0];
       p->i_points[i].image->x[1] = xplus[1];
@@ -318,8 +322,8 @@ void *compute_rays_parallel(void *_p)
 
       
       // Geometric time delay with added potential
-      p->i_points[i].dt += 0.5*( (xplus[0] - p->i_points[i].image->x[0])*(xplus[0] - p->i_points[i].image->x[0]) + (xplus[1] - p->i_points[i].image->x[1])*(xplus[1] - p->i_points[i].image->x[1]) )/p->dDl[j+1] - (1 + p->plane_redshifts[j]) * phi * p->charge ; /// in Mpc
-
+      p->i_points[i].dt += 0.5*( (xplus[0] - xminus[0])*(xplus[0] - xminus[0]) + (xplus[1] - xminus[1])*(xplus[1] - xminus[1]) )/p->dDl[j+1] - (1 + p->plane_redshifts[j]) * phi * p->charge ; /// in Mpc
+      
       
       // Check that the 1+z factor must indeed be there (because the x positions have been rescaled, so it may be different compared to the draft).
       // Remark : Here the true lensing potential is not "phi" but "phi * p->charge = phi * 4 pi G".
@@ -457,7 +461,7 @@ void *compute_rays_parallel_Ben(void *_p)
     
     // TEST : showing initial quantities
     // =================================
-    // std::cout << "RSI initial : X X | X | " << p->i_points[i].image->x[0] << " " << p->i_points[i].image->x[1] << " | " << p->i_points[i].kappa << " " << p->i_points[i].gamma[0] << " " << p->i_points[i].gamma[1] << " " << p->i_points[i].gamma[2] << " X | " << p->i_points[i].dt << std::endl ;
+    std::cout << "RSI initial : X X | X | " << p->i_points[i].image->x[0] << " " << p->i_points[i].image->x[1] << " | " << p->i_points[i].kappa << " " << p->i_points[i].gamma[0] << " " << p->i_points[i].gamma[1] << " " << p->i_points[i].gamma[2] << " X | " << p->i_points[i].dt << std::endl ;
     
     
     // Begining of the loop through the planes :
@@ -612,6 +616,7 @@ void *compute_rays_parallel_Ben(void *_p)
       
       // Geometric time delay with added potential
       p->i_points[i].dt += 0.5*( (xplus[0] - xminus[0])*(xplus[0] - xminus[0]) + (xplus[1] - xminus[1])*(xplus[1] - xminus[1]) )/p->dDl[j+1] - (1 + p->plane_redshifts[j]) * phi * p->charge ; /// in Mpc
+
       
       // Check that the 1+z factor must indeed be there (because the x positions have been rescaled, so it may be different compared to the draft).
       // Remark : Here the true lensing potential is not "phi" but "phi * p->charge = phi * 4 pi G".
@@ -619,7 +624,7 @@ void *compute_rays_parallel_Ben(void *_p)
       
       // TEST : showing plus quantities
       // ==============================
-      // std::cout << "RSI plane " << j << " : " << p->i_points[i].image->x[0] << " " << p->i_points[i].image->x[1] << " | " << p->Dl[j] << " | " << p->i_points[i].kappa << " " << p->i_points[i].gamma[0] << " " << p->i_points[i].gamma[1] << " " << p->i_points[i].gamma[2] << " X | " << p->i_points[i].dt << std::endl ;
+      std::cout << "RSI plane " << j << " : " << p->i_points[i].image->x[0] << " " << p->i_points[i].image->x[1] << " | " << p->Dl[j] << " | " << p->i_points[i].kappa << " " << p->i_points[i].gamma[0] << " " << p->i_points[i].gamma[1] << " " << p->i_points[i].gamma[2] << " X | " << p->i_points[i].dt << std::endl ;
       
       
     } // End of the loop going through the planes
@@ -668,7 +673,7 @@ void *compute_rays_parallel_Ben(void *_p)
     
     // TEST : showing final quantities
     // ===============================
-    // std::cout << "RSI final : X X | " << p->Dl[p->NPlanes] << " | " << p->i_points[i].kappa << " " << p->i_points[i].gamma[0] << " " << p->i_points[i].gamma[1] << " " << p->i_points[i].gamma[2] << " " << p->i_points[i].invmag << " | " << p->i_points[i].dt << std::endl ;
+    std::cout << "RSI final : X X | " << p->Dl[p->NPlanes] << " | " << p->i_points[i].kappa << " " << p->i_points[i].gamma[0] << " " << p->i_points[i].gamma[1] << " " << p->i_points[i].gamma[2] << " " << p->i_points[i].invmag << " | " << p->i_points[i].dt << std::endl ;
     
     
     /*
