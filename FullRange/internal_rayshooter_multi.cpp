@@ -52,14 +52,19 @@ struct TmpParams{
   PosType* plane_redshifts;
   PosType* Dl;
   PosType* dDl;
+  bool verbose;
 };
+
+
+
 
 /** \brief This function calculates the deflection, shear, convergence, rotation
  and time-delay of rays in parallel.
  */
 void Lens::rayshooterInternal(
-                              unsigned long Npoints   /// number of points to be shot
-                              ,Point *i_points        /// point on the image plane
+                                unsigned long Npoints   /// number of points to be shot
+                              , Point *i_points         /// point on the image plane
+                              , bool RSIVerbose         /// verbose option
 ){
   
   // To force the computation of convergence, shear... -----
@@ -118,6 +123,7 @@ void Lens::rayshooterInternal(
     thread_params[i].Dl = &Dl[0];
     thread_params[i].dDl = &dDl[0];
     thread_params[i].NPlanes = NLastPlane;
+    thread_params[i].verbose = RSIVerbose;
     rc = pthread_create(&threads[i], NULL, compute_rays_parallel, (void*) &thread_params[i]);
     assert(rc==0);
   }
@@ -151,6 +157,8 @@ void *compute_rays_parallel(void *_p)
   int end        = start + chunk_size;
   
   int i, j;
+  
+  bool verbose = p->verbose ;
   
   PosType xx[2],fac;
   PosType aa,bb,cc;
@@ -219,7 +227,7 @@ void *compute_rays_parallel(void *_p)
     
     // TEST : showing initial quantities
     // =================================
-    std::cout << "RSI initial : X X | X | " << p->i_points[i].image->x[0] << " " << p->i_points[i].image->x[1] << " | " << p->i_points[i].kappa << " " << p->i_points[i].gamma[0] << " " << p->i_points[i].gamma[1] << " " << p->i_points[i].gamma[2] << " X | " << p->i_points[i].dt << std::endl ;
+    if(verbose) std::cout << "RSI initial : X X | X | " << p->i_points[i].image->x[0] << " " << p->i_points[i].image->x[1] << " | " << p->i_points[i].kappa << " " << p->i_points[i].gamma[0] << " " << p->i_points[i].gamma[1] << " " << p->i_points[i].gamma[2] << " X | " << p->i_points[i].dt << std::endl ;
     
     
     // Begining of the loop through the planes :
@@ -331,7 +339,7 @@ void *compute_rays_parallel(void *_p)
       
       // TEST : showing plus quantities
       // ==============================
-      std::cout << "RSI plane " << j << " : " << p->i_points[i].image->x[0] << " " << p->i_points[i].image->x[1] << " | " << p->Dl[j] << " | " << p->i_points[i].kappa << " " << p->i_points[i].gamma[0] << " " << p->i_points[i].gamma[1] << " " << p->i_points[i].gamma[2] << " X | " << p->i_points[i].dt << std::endl ;
+      if(verbose) std::cout << "RSI plane " << j << " : " << p->i_points[i].image->x[0] << " " << p->i_points[i].image->x[1] << " | " << p->Dl[j] << " | " << p->i_points[i].kappa << " " << p->i_points[i].gamma[0] << " " << p->i_points[i].gamma[1] << " " << p->i_points[i].gamma[2] << " X | " << p->i_points[i].dt << std::endl ;
       
       
     } // End of the loop going through the planes
@@ -376,7 +384,7 @@ void *compute_rays_parallel(void *_p)
     
     // TEST : showing final quantities
     // ===============================
-    std::cout << "RSI final : X X | " << p->Dl[p->NPlanes] << " | " << p->i_points[i].kappa << " " << p->i_points[i].gamma[0] << " " << p->i_points[i].gamma[1] << " " << p->i_points[i].gamma[2] << " " << p->i_points[i].invmag << " | " << p->i_points[i].dt << std::endl ;
+    if(verbose) std::cout << "RSI final : X X | " << p->Dl[p->NPlanes] << " | " << p->i_points[i].kappa << " " << p->i_points[i].gamma[0] << " " << p->i_points[i].gamma[1] << " " << p->i_points[i].gamma[2] << " " << p->i_points[i].invmag << " | " << p->i_points[i].dt << std::endl ;
     
     
     
