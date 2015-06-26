@@ -148,8 +148,9 @@ void Lens::rayshooterInternal(
 
 
 
+// NEW VERSION OF RAYSHOOTER USING ONLY PLANE i TO COMPUTE THE RAY POSITIONS AND LENSING QUANTITIES ON PLANE i+1.
+
 void *compute_rays_parallel(void *_p)
-// void *compute_rays_parallel_Fabien(void *_p)
 {
   TmpParams *p = (TmpParams *) _p;
   int chunk_size = p->size;
@@ -396,11 +397,9 @@ void *compute_rays_parallel(void *_p)
 
 
 
-
-
-
-// void *compute_rays_parallel(void *_p)
-void *compute_rays_parallel_Ben(void *_p)
+// FORMER VERSION OF RAYSHOOTER USING PLANES i AND i-1 TO COMPUTE THE RAY POSITIONS AND LENSING QUANTITIES ON PLANE i+1.
+/*
+void *compute_rays_parallel(void *_p)
 {
   TmpParams *p = (TmpParams *) _p;
   int chunk_size = p->size;
@@ -504,9 +503,10 @@ void *compute_rays_parallel_Ben(void *_p)
       assert(!isinf(kappa));
       
       fac = 1/(1+p->plane_redshifts[j]);
-      /* multiply by fac to obtain 1/comoving_distance/physical_distance
-       * such that a multiplication with the charge (in units of physical distance)
-       * will result in a 1/comoving_distance quantity */ // 1 / comoving_distance squared ?
+      // multiply by fac to obtain 1/comoving_distance/physical_distance
+      // such that a multiplication with the charge (in units of physical distance)
+      // will result in a 1/comoving_distance quantity
+      // 1 / comoving_distance squared ?
       kappa *= fac;
       gamma[0] *= fac;
       gamma[1] *= fac;
@@ -683,26 +683,27 @@ void *compute_rays_parallel_Ben(void *_p)
     // ===============================
     std::cout << "RSI final : X X | " << p->Dl[p->NPlanes] << " | " << p->i_points[i].kappa << " " << p->i_points[i].gamma[0] << " " << p->i_points[i].gamma[1] << " " << p->i_points[i].gamma[2] << " " << p->i_points[i].invmag << " | " << p->i_points[i].dt << std::endl ;
     
-    
-    /*
+ 
      // TODO: check
-     if(p->i_points[i].image->x[0] != p->i_points[i].image->x[0] ||
-     p->i_points[i].image->x[1] != p->i_points[i].image->x[1] ||
-     p->i_points[i].invmag != p->i_points[i].invmag)
-     {
-     ERROR_MESSAGE();
-     std::cout << p->i_points[i].image->x[0] << "  " << p->i_points[i].image->x[1] << "  " << p->i_points[i].invmag << std::endl;
-     std::cout << p->i_points[i].gamma[0] << "  " << p->i_points[i].gamma[1] << "  " << p->i_points[i].gamma[2] << "  " <<
-     p->i_points[i].kappa << std::endl;
+     // if(p->i_points[i].image->x[0] != p->i_points[i].image->x[0] ||
+     // p->i_points[i].image->x[1] != p->i_points[i].image->x[1] ||
+     // p->i_points[i].invmag != p->i_points[i].invmag)
+     // {
+     // ERROR_MESSAGE();
+     // std::cout << p->i_points[i].image->x[0] << "  " << p->i_points[i].image->x[1] << "  " << p->i_points[i].invmag << std::endl;
+     // std::cout << p->i_points[i].gamma[0] << "  " << p->i_points[i].gamma[1] << "  " << p->i_points[i].gamma[2] << "  " <<
+     // p->i_points[i].kappa << std::endl;
      //	assert(0);
-     exit(1);
-     }
-     */
+     // exit(1);
+     // }
     
   } // End of the main loop.
   
   return 0;
 }
+*/
+
+
 
 
 
