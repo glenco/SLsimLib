@@ -33,6 +33,11 @@
 #define N_THREADS 1
 #endif
 
+#ifndef MIN_PLANE_DIST
+#define MIN_PLANE_DIST 1E-3
+#endif
+
+
 void *compute_rays_parallel(void *_p);
 
 /**
@@ -231,12 +236,16 @@ void *compute_rays_parallel(void *_p)
       assert(xx[0] == xx[0] && xx[1] == xx[1]);
       
       // std::cout << "p->i_points[i].image->x[0] = " << p->i_points[i].image->x[0] << " , p->i_points[i].image->x[1] = " << p->i_points[i].image->x[1] << std::endl ;
+      // std::cout << "dDl[" << j << "] = " << p->dDl[j] << " , dDl[" << j+1 << "] = " << p->dDl[j+1] << std::endl;
       
-      ////////////////////////////////////////////////////////////////
+
+      ////////////////////////////////////////////////////////
       
-      p->lensing_planes[j]->force(alpha,&kappa,gamma,&phi,xx); // Computed in physical coordinates. // xx is in PhysMpc
+      p->lensing_planes[j]->force(alpha,&kappa,gamma,&phi,xx);
+      // Computed in physical coordinates. // xx is in PhysMpc
       
-      ////////////////////////////////////////////////////////////////
+      ////////////////////////////////////////////////////////
+      
       
       assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
       assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
@@ -305,7 +314,7 @@ void *compute_rays_parallel(void *_p)
       cc = p->charge * p->dDl[j+1] * p->Dl[j] / p->Dl[j+1];
       // ------------------------------------------------------------------------------------
       
-      
+
       // Computation of the "plus quantities", i.e. the  next plane quantities --------------------
       kappa_plus = aa*p->i_points[i].kappa - bb*kappa_minus
       - cc*(kappa*p->i_points[i].kappa + gamma[0]*p->i_points[i].gamma[0] + gamma[1]*p->i_points[i].gamma[1]);

@@ -47,6 +47,8 @@ void ImageFinding::map_imagesISOP(
 	assert(grid->i_tree);
 	assert(imageinfo[0].imagekist);
 
+  grid->RefreshSurfaceBrightnesses(source);
+  
 	unsigned long Nimagepoints,Ntmp;
 	PosType tmp,area_tot,flux;
 	long i,j;
