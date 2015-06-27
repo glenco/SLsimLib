@@ -21,7 +21,7 @@
  * dDl[j = 0...Nplanes-1] - The angular size distance between the (j-1)th and jth planes counting the observer plane as j = -1.
  *                      dDl[0] = Dl[0], dDl[Nplane-1] is between the last plane with mass and the source plane.
  *
- * charge = 4*pi*G*mass_scale/c^2 in units of Mpc // Fabien : we should remove this ?
+ * charge = 4*pi*G*mass_scale/c^2 in units of Mpc // we should remove this ?
  * charge = 4*pi*G in units of physical Mpc
  *
  * i_points[].x[] is in angular units.
@@ -427,10 +427,10 @@ void *compute_rays_parallel(void *_p)
     if(p->i_points[i].in_image == MAYBE) continue;
     
     // find position on first lens plane in comoving units
-    p->i_points[i].image->x[0] = p->i_points[i].x[0] * p->Dl[0];
+    p->i_points[i].image->x[0] = p->i_points[i].x[0] * p->Dl[0]; // x^1 = \theta * D_1
     p->i_points[i].image->x[1] = p->i_points[i].x[1] * p->Dl[0];
     
-    xminus[0] = 0;
+    xminus[0] = 0; // x^0 = 0
     xminus[1] = 0;
     
     // Set magnification matrix on first plane.
