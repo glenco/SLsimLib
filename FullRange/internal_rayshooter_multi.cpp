@@ -465,16 +465,18 @@ void *compute_rays_parallel(void *_p)
     // Time delay at first plane : position on the observer plane is (0,0) => no need to take difference of positions.
     p->i_points[i].dt = 0.5*( p->i_points[i].image->x[0]*p->i_points[i].image->x[0] + p->i_points[i].image->x[1]*p->i_points[i].image->x[1] )/ p->dDl[0] ;
 
-    
+
     // TEST : showing initial quantities
     // =================================
     std::cout << "RSI initial : X X | X | " << p->i_points[i].image->x[0] << " " << p->i_points[i].image->x[1] << " | " << p->i_points[i].kappa << " " << p->i_points[i].gamma[0] << " " << p->i_points[i].gamma[1] << " " << p->i_points[i].gamma[2] << " X | " << p->i_points[i].dt << std::endl ;
-    
     
     // Begining of the loop through the planes :
     // Each iteration leaves i_point[i].image on plane (j+1)
     for(j = 0; j < p->NPlanes ; ++j)
     {
+
+      // For Test :
+      // std::cout << "> p->plane_redshifts = " << p->plane_redshifts[j] << std::endl ;
       
       // convert to physical coordinates on the plane j, just for force calculation
       xx[0] = p->i_points[i].image->x[0]/(1+p->plane_redshifts[j]);
@@ -493,7 +495,6 @@ void *compute_rays_parallel(void *_p)
       // Computed in physical coordinates, xx is in PhysMpc.
       
       ////////////////////////////////////////////////////////
-      
       
       
       assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
@@ -529,6 +530,7 @@ void *compute_rays_parallel(void *_p)
       assert(aa == aa);
       assert(bb == bb);
       assert(cc == cc);
+      // std::cout << "RayshooterInternal : aa = " << aa << " , bb = " << bb << " , cc = " << cc << std::endl ;
       
       xplus[0] = aa*p->i_points[i].image->x[0] - bb*xminus[0] - cc*alpha[0];
       xplus[1] = aa*p->i_points[i].image->x[1] - bb*xminus[1] - cc*alpha[1];
@@ -579,8 +581,14 @@ void *compute_rays_parallel(void *_p)
       - cc*(kappa*p->i_points[i].gamma[2] - gamma[1]*p->i_points[i].gamma[0] + gamma[0]*p->i_points[i].gamma[1]);
       
       // ------------------------------------------------------------------------------------------
-      
-      
+
+      // std::cout << std::endl ;
+      // std::cout << "RayshooterInternal : kappa_minus = " << kappa_minus << " , kappa = " << kappa << " , gamma[0] = " << gamma[0] << " , gamma[1] = " << gamma[1] << std::endl ;
+      // std::cout << "RayshooterInternal : aa = " << aa << " , bb = " << bb << " , cc = " << cc << std::endl ;
+      // std::cout << "RayshooterInternal : p->points[i] : kappa = " << p->i_points[i].kappa << " , gamma[0] = " << p->i_points[i].gamma[0] << " , gamma[1] = " << p->i_points[i].gamma[1] << std::endl ;
+
+      // std::cout << "RayshooterInternal : plane " << j << " , z = " << p->plane_redshifts[j] << " , 1-kappa_plus = " << 1-kappa_plus << std::endl ;
+        
       // Assigning them to the "minus quantities" for next plane occurence of the loop ------------
       kappa_minus = p->i_points[i].kappa;
       gamma_minus[0] = p->i_points[i].gamma[0];
@@ -652,7 +660,9 @@ void *compute_rays_parallel(void *_p)
     // We go from kappa denoting 1-kappa to kappa denoting kappa
     p->i_points[i].kappa = 1 - p->i_points[i].kappa;
     
-    
+    // std::cout << "RayshooterInternal : kappa final = " << p->i_points[i].kappa << std::endl ;
+    // std::cout << std::endl ;
+      
     // Computation of the inverse magnitude --------------------------------------------------------
     p->i_points[i].invmag = (1-p->i_points[i].kappa)*(1-p->i_points[i].kappa)
     - p->i_points[i].gamma[0]*p->i_points[i].gamma[0]

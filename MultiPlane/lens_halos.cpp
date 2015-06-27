@@ -522,7 +522,7 @@ LensHaloPowerLaw::LensHaloPowerLaw(
                                    float my_mass       /// mass of halo in solar masses
                                    ,float my_Rmax      /// maximum radius of halo in Mpc
                                    ,PosType my_zlens   /// redshift of halo
-                                   ,float my_rscale    /// dummy scale,  not acutally used
+                                   ,float my_rscale    /// dummy scale,  not actually used
                                    ,PosType my_beta    /// logarithmic slop of surface density, kappa \propto r^{-beta}
                                    ,float my_fratio    /// axis ratio in asymetric case
                                    ,float my_pa        /// position angle
