@@ -63,7 +63,7 @@ public:
   
 	void drawline(double x1[],double x2[],double value);
   void drawcircle(PosType r_center[],PosType radius,PosType value);
-  void drawball(PosType r_center[],PosType radius,PosType value,int Nstrip);
+  void drawdisk(PosType r_center[],PosType radius,PosType value,int Nstrip);
 	void AddGrid(const Grid &grid,double value = 1.0);
   void AddGrid(const Grid &grid,LensingVariable val);
 

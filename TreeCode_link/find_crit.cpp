@@ -176,11 +176,6 @@ void ImageFinding::find_crit(
   divide_images_kist(grid->i_tree,critcurve,Ncrits);
   for(int ii=0;ii<*Ncrits;++ii) critcurve[ii].imagekist->SetInImage(NO);
   if(verbose) std::cout << *Ncrits << " borders found." << std::endl;
-
-  /******* test **********************************
-  grid->writeFits(5,INVMAG,"!invmag_in_findcrit");
-  grid->writeFits(5,KAPPA,"!invmag_in_findcrit");
-  //************************************************/
   
   if(critcurve[0].imagekist->Nunits() == 0) *Ncrits=0;
   

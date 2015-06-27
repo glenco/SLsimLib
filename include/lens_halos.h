@@ -58,11 +58,11 @@ public:
 	/// get the redshift
 	PosType getZlens() const { return zlens; }
     
-  /// set the position of the Halo in physical Mpc
+  /// set the position of the Halo in radians
   void setX(PosType PosX, PosType PosY) { posHalo[0] = PosX ; posHalo[1] = PosY ; }
-  /// set the position of the Halo in physical Mpc
+  /// set the position of the Halo in radians
   void setX(PosType *PosXY) { posHalo[0] = PosXY[0] ; posHalo[1] = PosXY[1] ; }
-  /// get the position of the Halo in physical Mpc
+  /// get the position of the Halo in radians
   void getX(PosType * MyPosHalo) const { MyPosHalo[0] = posHalo[0] ; MyPosHalo[1] = posHalo[1]; }
 
   /// get the position of the Halo in physical Mpc
