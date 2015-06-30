@@ -2587,7 +2587,8 @@ void Lens::combinePlanes(bool verbose)
   }
   
   assert(lensing_planes.size() == field_planes.size() + main_planes.size());
-  assert(zsource > plane_redshifts.back());
+  // std::cout << "assert : " << zsource << " , " << plane_redshifts.back() << std::endl ;
+  // assert(zsource > plane_redshifts.back()); // !!!
   
   
   // add the pseudo-plane for rayshooting at the end of the arrays
@@ -2597,7 +2598,7 @@ void Lens::combinePlanes(bool verbose)
   // calculate deltas
   dDl.push_back(Dl[0]);
   for(std::size_t i = 1; i < Dl.size(); ++i)
-    dDl.push_back(Dl[i] - Dl[i-1]); // distance from plane i-1 to plane i
+  dDl.push_back(Dl[i] - Dl[i-1]); // distance from plane i-1 to plane i
   
   // output resulting setup
   if(verbose)

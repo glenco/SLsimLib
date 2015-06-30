@@ -319,6 +319,7 @@ void *compute_rays_parallel(void *_p)
       // ------------------------------------------------------------------------------------------
       
       
+      // std::cout << kappa_plus << " " << gamma_plus[0] << " " << gamma_plus[1] << " " << gamma_plus[2] << std::endl;
       assert(kappa_plus==kappa_plus && gamma_plus[0]==gamma_plus[0] && gamma_plus[1]==gamma_plus[1] && gamma_plus[2]==gamma_plus[2]);
       
       
