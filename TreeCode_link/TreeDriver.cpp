@@ -446,7 +446,7 @@ Point * TreeStruct::FindBoxPoint(const PosType* ray) const{
 	   // check if ray is outside initial box
 	if( inbox(ray,(*current)->boundary_p1,(*current)->boundary_p2) == 0 ){
 		std::printf("FindBox: ray outside of grided range\n");
-		return;
+    return nullptr;
 	}
 
 	_FindBox(current,ray);
