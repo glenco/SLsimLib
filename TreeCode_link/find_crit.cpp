@@ -245,8 +245,8 @@ void ImageFinding::find_crit(
       hull.clear();
       critcurve[jj].imagekist->TranformPlanes();
       hull = critcurve[jj].imagekist->copytovector();
-      // ?? hull = Utilities::concave_hull(hull,5);
-      hull = Utilities::convex_hull(hull);
+      hull = Utilities::concave_hull(hull,5);
+      //hull = Utilities::convex_hull(hull);
       
       crtcurve[ii].caustic_curve_outline.resize(hull.size());
       crtcurve[ii].caustic_center[0] = 0;
