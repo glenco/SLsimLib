@@ -116,7 +116,7 @@ bool LensHaloFit::SafeFindLensSimple(
   {
     if(abs(ModesAve[k])>UpperBoundForModes)
     {
-      std::cout << "Mode k = " << k << " : Av = " << abs(ModesAve[k]) << " > " << UpperBoundForModes << std::endl ;
+      if(verbose) std::cout << "Mode k = " << k << " : Av = " << abs(ModesAve[k]) << " > " << UpperBoundForModes << std::endl ;
       ReturnCode = false ;
     }
   }
@@ -134,7 +134,7 @@ bool LensHaloFit::SafeFindLensSimple(
     {
       if(abs(ModesMax[k]-ModesMin[k]) > abs(ToleranceModes*ModesAve[k]))
       {
-        std::cout << "Mode k = " << k << " : Max-Min = " << abs(ModesMax[k]-ModesMin[k]) << " < " << "Tol * Av = " << abs(ToleranceModes*ModesAve[k]) << std::endl ;
+        if(verbose) std::cout << "Mode k = " << k << " : Max-Min = " << abs(ModesMax[k]-ModesMin[k]) << " < " << "Tol * Av = " << abs(ToleranceModes*ModesAve[k]) << std::endl ;
         ReturnCode = false ;
       }
     }
@@ -149,7 +149,7 @@ bool LensHaloFit::SafeFindLensSimple(
   // If the modes are crazy then we return the false value here :
   if(ReturnCode == false)
   {
-    std::cout << "Not doing the check of the back-traced images because of the unstability in SafeFindLensSimple !" << std::endl ;
+    if(verbose) std::cout << "Not doing the check of the back-traced images because of the unstability in SafeFindLensSimple !" << std::endl ;
     return ReturnCode ;
   }
   
@@ -181,7 +181,7 @@ bool LensHaloFit::SafeFindLensSimple(
   // Testing that the image positions are consistent when traced back to the source plane :
   // ======================================================================================
   
-  std::cout << std::endl << "Evaluated position of the source from each image :" << std::endl ;
+  if(verbose) std::cout << std::endl << "Evaluated position of the source from each image :" << std::endl ;
   
   // alpha that we are going to use after to get the source position form the back-traced image position :
   PosType * alphaTMP = new PosType [2];
@@ -260,7 +260,7 @@ bool LensHaloFit::SafeFindLensSimple(
       }
       // Else we can continue !
     }
-    if(!verbose) std::cout << "Back-traced source position : " << image_positions[i].x[0] - alphaTMP[0] << " " << image_positions[i].x[1] - alphaTMP[1] << std::endl << std::endl ;
+    if(verbose) std::cout << "Back-traced source position : " << image_positions[i].x[0] - alphaTMP[0] << " " << image_positions[i].x[1] - alphaTMP[1] << std::endl << std::endl ;
     
   }
 
@@ -268,9 +268,12 @@ bool LensHaloFit::SafeFindLensSimple(
   // =============
   
   // Otherwise we keep the last computed modes and display them :
-  std::cout << std::endl << "Perturbation modes (in LensHaloFit::FindLensSimple) :" << std::endl;
-  for(int i=0;i<perturb_Nmodes;++i) std::cout << perturb_modes[i] << " " ;
-  std::cout << std::endl;
+  if(verbose)
+  {
+    std::cout << std::endl << "Perturbation modes (in LensHaloFit::FindLensSimple) :" << std::endl;
+    for(int i=0;i<perturb_Nmodes;++i) std::cout << perturb_modes[i] << " " ;
+    std::cout << std::endl;
+  }
   
   return ReturnCode ;
 }
@@ -354,9 +357,6 @@ void LensHaloFit::FindLensSimple(
     
   // Assigning the modes :
   for(int j=1;j<perturb_Nmodes;++j) perturb_modes[j] = mods[j];
-  cout << "# " ;
-  for(int j=1;j<perturb_Nmodes;++j) cout << perturb_modes[j] << " " ;
-  cout << endl ;
   
   perturb_modes[0] = 0.0;
   perturb_modes[1] *= -1;  // checked
@@ -368,8 +368,8 @@ void LensHaloFit::FindLensSimple(
   // y[0] and y[1] are now in radians.
     
   // std::cout << "i = " << i << std::endl ;
-  std::cout << "scale = " << scale << std::endl;
-  std::cout << "source : y[0] = " << y[0] << " , y[1] = " << y[1] << std::endl;
+  // std::cout << "scale = " << scale << std::endl;
+  // std::cout << "source : y[0] = " << y[0] << " , y[1] = " << y[1] << std::endl;
   
   // For convenience :
   PosType zl = zlens ;
