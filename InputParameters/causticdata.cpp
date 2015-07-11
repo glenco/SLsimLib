@@ -227,7 +227,7 @@ void CausticDataStore::readfile(std::string filename){
     << " " << data[i].crit_radius[0] << " " << data[i].crit_radius[1]<< " " << data[i].crit_radius[2] << std::endl;
   }*/
 
-  SetSearchTree();
+  if(data.size() > 1) SetSearchTree();
  }
 
   /// create tree for searching. Assumes xp is not allocated yet!
@@ -251,7 +251,7 @@ void CausticDataStore::SetSearchTree(){
 }
 
 /// Finds the nearest critical curve to the point x[].  If that point is within the largest radius of the critical curve it returns true.  If there are no caustics index = -1
-bool CausticDataStore::findNearestCrit(PosType x[2],long &index){
+bool CausticDataStore::findNearestCrit(PosType *x,long &index){
   
   if(data.size() == 0){
     index = -1;
@@ -292,7 +292,7 @@ bool CausticDataStore::findNearestCrit(PosType x[2],long &index){
 /** \brief Finds the nearest critical curve to the point x[] of type 'type'.
  There are two bool types: found returns true if any neighbour was found, found_type is true if a neighbour with correct CritType "type" was found. If there are no caustics of CritType "type" index will be set to -1.
  */
-bool CausticDataStore::findNearestCrit(PosType x[2],long &index,CritType type){
+bool CausticDataStore::findNearestCrit(PosType *x,long &index,CritType type){
   
   if(data.size() == 0){
     index = -1;
@@ -425,7 +425,7 @@ void CausticDataStore::SortByCritSize(){
   std::sort(data.begin(),data.end(),[](const CausticStructure &c1,const CausticStructure &c2){
               return (c1.crit_radius[0] > c2.crit_radius[0]);});
 
-  SetSearchTree();
+  if(data.size() > 1) SetSearchTree();
 }
 
 void CausticDataStore::SortByCritArea(){
@@ -434,7 +434,7 @@ void CausticDataStore::SortByCritArea(){
 
   std::sort(data.begin(),data.end(),[](const CausticStructure &c1,const CausticStructure &c2){
     return (c1.crit_area > c2.crit_area);});
-  SetSearchTree();
+  if(data.size() > 1) SetSearchTree();
 }
 
 void CausticDataStore::SortByCausticArea(){
@@ -442,7 +442,7 @@ void CausticDataStore::SortByCausticArea(){
   //std::sort(data.begin(),data.end(),CausticDataStore::comparcausticarea);
   std::sort(data.begin(),data.end(),[](const CausticStructure &c1,const CausticStructure &c2){
     return (c1.caustic_area > c2.caustic_area);});
-  SetSearchTree();
+  if(data.size() > 1) SetSearchTree();
 }
 
 
