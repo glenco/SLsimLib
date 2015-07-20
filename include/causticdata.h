@@ -132,8 +132,8 @@ public:
     return Utilities::locate<double>(cummulative_area,ran()*cummulative_area.back());
   }
 
-  bool findNearestCrit(PosType x[2],long &index);
-  bool findNearestCrit(PosType x[2],long &index,CritType type);
+  bool findNearestCrit(PosType *x,long &index);
+  bool findNearestCrit(PosType *x,long &index,CritType type);
   
 private:
   

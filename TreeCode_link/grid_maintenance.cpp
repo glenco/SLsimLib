@@ -921,7 +921,7 @@ void Grid::test_mag_matrix(){
 		gamma[0] = -0.5*(aa[0]-aa[1]);
 		gamma[1] = -0.5*(aa[2]+aa[3]);
 		gamma[2] = -0.5*(aa[2]-aa[3]);
-		invmag = (1-kappa)*(1-kappa)-gamma[0]*gamma[0]-gamma[1]*gamma[1]+gamma[2]*gamma[2];
+		invmag = (1-kappa)*(1-kappa) - gamma[0]*gamma[0] - gamma[1]*gamma[1] + gamma[2]*gamma[2];
 
 		(*i_tree_pointlist_current)->kappa =  kappa/(*i_tree_pointlist_current)->kappa - 1.0;
 		(*i_tree_pointlist_current)->gamma[0] = gamma[0]/(*i_tree_pointlist_current)->gamma[0] - 1.0;
