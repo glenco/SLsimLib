@@ -292,7 +292,7 @@ void findborders4(TreeHndl i_tree,ImageInfo *imageinfo);
 void findborders(TreeHndl i_tree,ImageInfo *imageinfo);
 
 Point *LinkToSourcePoints(Point *i_points,unsigned long Npoints);
-
+                       
 /// \ingroup Util
 namespace Utilities{
     ///Separation squared between two positions in 2 dimensions.

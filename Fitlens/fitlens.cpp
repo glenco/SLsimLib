@@ -43,6 +43,41 @@ void LensHaloFit::FindLensSimple(
 
 
 /** \ingroup FitLens
+ *
+ *  \brief Wrapper that allows simple lens to be found with a single
+ * lens with a single source and translates result into data structures used in the other code.
+ *
+ * The lens is NOT centered on [0,0] and we take into account the shift by removing the position of [0,0] ending on the main lens plane.
+ *
+ */
+
+void LensHaloFit::FindLensSimple2(
+                                 int Nimages               /// Number of images to be fit
+                                 ,Point *image_positions   /// Array of points with point[i].x set to the image positions
+                                 ,Point *FiducialLineShift /// Point that contains the fiducial line position on the main lens plane
+                                 ,double *y                /// output source position
+                                 ,double **dx_sub          /// dx_sub[Nimages][2] pre-calculated deflections caused by substructures or external masses at each image
+){
+  
+  ImageInfo* imageinfo = new ImageInfo[Nimages];
+  
+  for(int i=0;i<Nimages;++i){
+    imageinfo[i].centroid[0] = image_positions[i].x[0];
+    imageinfo[i].centroid[1] = image_positions[i].x[1];
+  }
+  
+  FindLensSimple2(imageinfo,Nimages,FiducialLineShift,y,dx_sub);
+  
+  std::cout << "perturbation modes (in LensHaloFit::FindLensSimple)" << std::endl;
+  for(int i=0;i<perturb_Nmodes;++i) std::cout << perturb_modes[i] << " " ;
+  std::cout << std::endl;
+  
+  delete[] imageinfo;
+}
+
+
+
+/** \ingroup FitLens
  *
  *  \brief Same as FindLensSimple but with some tests in it.
  *
@@ -279,6 +314,8 @@ bool LensHaloFit::SafeFindLensSimple(
 }
 
 
+
+
 /** \ingroup FitLens
  *
  *  \brief Wrapper that allows simple lens to be found with a single
@@ -436,10 +473,168 @@ void LensHaloFit::FindLensSimple(
   return ;
 }
 
-// OPERATIONS ON THE MODES BEFORE I DISCOVER THE PROBLEM :
-// for(i=3;i<perturb_Nmodes;i++) perturb_modes[i] *= scale ;
-// for(i=3;i<perturb_Nmodes;i++) perturb_modes[i] *= Dl ;
-// for(i=0;i<perturb_Nmodes;i++) perturb_modes[i] /= (4*pi*Grav * Dls * (1+zs)) ;
+
+
+/** \ingroup FitLens
+ *
+ *  \brief Wrapper that allows simple lens to be found with a single
+ * lens with a single source and translates result into data structures used in the other code.
+ *
+ * The lens is NOT centered on [0,0] and we take into account the shift by removing the position of [0,0] ending on the main lens plane.
+ *
+ */
+
+void LensHaloFit::FindLensSimple2(
+                                 ImageInfo *imageinfo      /// Positions of images relative to center of lens.  Only imageinfo[].centoid[] is used. Centroids must be in radians.
+                                 ,int Nimages              /// input number of images
+                                 ,Point *FiducialLineShift /// Point that contains the fiducial line position on the main lens plane
+                                 ,double *y                /// output source position
+                                 ,double **dx_sub          /// dx_sub[Nimages][2] pre-calculated deflections caused by substructures or external masses at each image (in radians)
+){
+  
+  assert(Nimages < 200);
+  
+  if(perturb_Nmodes <= 0 || Nimages <= 0){
+    ERROR_MESSAGE();
+    std::printf("must set perturb_Nmodes lens->perturb_Nmodes = %i Nimages = %i \n"
+                ,perturb_Nmodes,Nimages);
+    exit(1);
+  }
+  
+  int i;
+  
+  //PrintAnaLens(lens,false,false);
+  //for(i=0;i<Nimages;++i) std::printf("  x = %e %e\n",image_positions[i].x[0],image_positions[i].x[1]);
+  
+  if(Nimages == 1){
+    for(i=1;i<perturb_Nmodes;++i) perturb_modes[i] = 0.0;
+    y[0] = imageinfo[0].centroid[0]; // (radians)
+    y[1] = imageinfo[0].centroid[1]; // (radians)
+    
+    return ;
+  }
+  
+  int pairing[Nimages],Nsources = 1;
+  double **xob,**xg,q[6],*mods;
+  double re2 = 0,x_center[2],scale;
+  //for(int i=0;i<6;i++) q[i] = 0.;
+  //  !!! need to set initial guess to something
+  
+  xob = dmatrix(0,Nimages-1,0,1); // For the rescaled positions of the images
+  xg = dmatrix(0,1,0,1);
+  mods = dvector(0,perturb_Nmodes + 2*Nsources + 1 );
+  
+  xg[0][0] = xg[0][1] = 0.0;
+  // Accounting for the displacement of the fiducial line (0,0) when it arrives in the main plane containing the fitted halo :
+  x_center[0] = FiducialLineShift->x[0];
+  x_center[1] = FiducialLineShift->x[1];
+  
+  // calculate scale to re-normalize (in radians). Otherwise the linear algebra routines will fail.
+  for(i=0,scale=0;i<Nimages;++i) scale = DMAX(scale,sqrt( pow(imageinfo[0].centroid[0] - imageinfo[i].centroid[0],2) + pow(imageinfo[0].centroid[1] - imageinfo[i].centroid[1],2) ) );
+  
+  for(i=0;i<Nimages;++i){
+    pairing[i] = 1;
+    xob[i][0] = imageinfo[i].centroid[0]/scale; // xob is rescaled here (i.e. values = xob / xobmax ~ 1)
+    xob[i][1] = imageinfo[i].centroid[1]/scale; // i.e. xob is dimensionless
+    
+    dx_sub[i][0] /= scale; // same with dx_sub now in units of scale
+    dx_sub[i][1] /= scale; // in units of scale
+    //std::printf("xob = %e %e  dx = %e %e\n",xob[i][0],xob[i][1],dx_sub[i][0],dx_sub[i][1]);
+  }
+  
+  x_center[0] /= scale; // x_center now in units of scale
+  x_center[1] /= scale;
+  
+  //ERROR_MESSAGE();
+  ElliptisizeLens(Nimages,Nsources,1,pairing,xob,x_center,xg,0,perturb_beta,perturb_Nmodes
+                  ,mods,dx_sub,&re2,q); // The -1 in after perturb_Nmodes WAS MAKING FINDLENSSIMPLE UNSTABLE !
+  
+  // At this point we should have :
+  // mod[0] = 0
+  // mod[1] and mod[2] : in units of scale (i.e. dimensionless)
+  // mod[3] and further : in units of scale^(beta-1) = 1 (i.e. no units) for beta = 1
+  
+  // Assigning the modes :
+  for(int j=1;j<perturb_Nmodes;++j) perturb_modes[j] = mods[j];
+  
+  perturb_modes[0] = 0.0;
+  perturb_modes[1] *= -1;  // checked
+  perturb_modes[2] *= -1;  // checked
+  
+  // source position :
+  y[0] = mods[perturb_Nmodes+1]*scale;
+  y[1] = mods[perturb_Nmodes+2]*scale;
+  // y[0] and y[1] are now in radians.
+  
+  // std::cout << "i = " << i << std::endl ;
+  // std::cout << "scale = " << scale << std::endl;
+  // std::cout << "source : y[0] = " << y[0] << " , y[1] = " << y[1] << std::endl;
+  
+  // For convenience :
+  PosType zl = zlens ;
+  PosType zs = zsource_reference ;
+  
+  // Converting source position to physical angle :
+  // y[0] *= Dl * (1+zl) / (Ds * (1+zs)) ;
+  // y[1] *= Dl * (1+zl) / (Ds * (1+zs)) ;
+  // y[0] and y[1] are still in radians.
+  
+  // dx_sub and x_center back in radians :
+  for(i=0;i<Nimages;++i)
+  {
+    dx_sub[i][0] *= scale;
+    dx_sub[i][1] *= scale;
+  }
+  x_center[0] *= scale;
+  x_center[1] *= scale;
+  
+  //Einstein_ro = 0.0; // the monople is now included in the modes
+  //sigma = 0.0;
+  
+  
+  // ===== Applying factors to the modes ======================================================
+  
+  // Multiplying the first 3 modes by scale :
+  for(i=3;i<perturb_Nmodes;i++) perturb_modes[i] *= scale ; // Important step !
+  // mod[0,1,2] are already in radians (see in ElliptisizeLens).
+  // mod[3,4,5,...] are now in radians.
+  
+  for(i=3;i<perturb_Nmodes;i++) perturb_modes[i] *= Dl ;
+  // mod[0,1,2] are in radians.
+  // mod[3,4,5,...] are now in PhysMpc.
+  
+  // Check that Dl*(1+zl) + Dls*(1+zs) = Ds*(1+zs), i.e. that D*(1+z) are here the comoving distances :
+  assert(Dl*(1+zl) + Dls*(1+zs) - Ds*(1+zs) == 0.);
+  // std::cout << "Dl (1+zl) + Dls (1+zs) = " << Dl*(1+zl) + Dls*(1+zs) << " , Ds (1+zs) = " << Ds*(1+zs) << std::endl ;
+  
+  for(i=0;i<perturb_Nmodes;i++) perturb_modes[i] /= (4*pi*Grav * Dls * Dl / Ds) ;
+  // mod[0,1,2] are now in radians / ((PhysMpc / mass) * PhysMpc) = mass / PhysMpc^2.
+  // mod[3,4,5,...] are now in PhysMpc / ((PhysMpc / mass) * PhysMpc) = mass / PhysMpc for beta = 1.
+  
+  // ==========================================================================================
+  
+  
+  // ================================================
+  // So when the modes go out they are in the units :
+  // mod[0,1,2] in mass / PhysMpc^2.
+  // mod[3,4,5,...] in mass / PhysMpc.
+  // ================================================
+  
+  
+  // Print modes :
+  // for(i=0;i<perturb_Nmodes;i++) std::cout << perturb_modes[i] << " " ;
+  // std::cout << std::endl ;
+  
+  free_dmatrix(xob,0,Nimages-1,0,1);
+  free_dmatrix(xg,0,1,0,1);
+  free_dvector(mods,0,perturb_Nmodes + 2*Nsources + 1);
+  
+  // storing q :
+  for(int i = 0 ; i < 7 ; i++) qpriv[i] = q[i] ;
+  
+  return ;
+}
+
 
 
 

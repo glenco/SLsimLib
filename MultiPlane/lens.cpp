@@ -532,6 +532,14 @@ void Lens::assignParams(InputParams& params,bool verbose)
 	if(verbose) printMultiLens();
 }
 
+
+// get the redshift of a plane
+PosType Lens::getFieldPlaneZ(int n)
+{
+  return field_plane_redshifts[n] ;
+}
+
+
 void Lens::resetFieldNplanes(std::size_t Np, bool verbose)
 {
 	Utilities::delete_container(field_planes);

@@ -94,6 +94,12 @@ public:
 	/// reset the number of planes, but keep the field halos and main lens
 	void resetFieldNplanes(std::size_t field_Nplanes, bool verbose = false);
 
+  /// get the redshift of a plane
+  PosType getFieldPlaneZ(int n);
+
+  /// get WasInsertSubStructuresCalled
+  bool getWasInsertSubStructuresCalled() {return WasInsertSubStructuresCalled;}
+  
 	/** keep the main lens and the number of planes constant, but generate new field halos.
     This function will also erase the substructure halos so they need to be regenerated using 
    resetSubstructure() if they are desired .
