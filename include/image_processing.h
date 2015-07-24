@@ -98,6 +98,7 @@ public:
 	bool agrees(const PixelMap& other) const;
 	
 	friend void swap(PixelMap&, PixelMap&);
+  void swap(PixelMap&, PixelMap&);
   
   /// return average pixel value
   PosType ave() const;

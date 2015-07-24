@@ -227,25 +227,26 @@ void ImageFinding::find_crit(
       for(size_t kk=0;kk<hull.size();++kk){
         crtcurve[ii].critical_curve[kk] = *hull[kk];
         crtcurve[ii].caustic_curve_intersecting[kk] = *(hull[kk]->image);
-        crtcurve[ii].critical_center[0] += hull[kk]->x[0];
-        crtcurve[ii].critical_center[1] += hull[kk]->x[1];
+      }
+      for(size_t jj=0;jj<hull.size();++jj){
+        crtcurve[ii].critical_center -= crtcurve[ii].critical_curve[0] - *hull[jj];
       }
       
+      crtcurve[ii].critical_center /= hull.size();
+      crtcurve[ii].critical_center += crtcurve[ii].critical_curve[0];
+     
       /******* test *****************
        {
        map.AddCurve(crtcurve[ii].critical_curve,1);
        }
        // *******************************/
       
-      
-      crtcurve[ii].critical_center /= hull.size();
-      
       Utilities::windings(crtcurve[ii].critical_center.x,hull.data(),hull.size(),&(crtcurve[ii].critical_area));
       
       hull.clear();
       critcurve[jj].imagekist->TranformPlanes();
       hull = critcurve[jj].imagekist->copytovector();
-      hull = Utilities::concave_hull(hull,5);
+      hull = Utilities::concave_hull(hull,10);
       //hull = Utilities::convex_hull(hull);
       
       crtcurve[ii].caustic_curve_outline.resize(hull.size());
@@ -576,11 +577,18 @@ void ImageFinding::find_crit(
           crtcurve[ii].critical_curve[jj] = *hull[jj];
           crtcurve[ii].caustic_curve_intersecting[jj] = *(hull[jj]->image);
         }
-        crtcurve[ii].critical_center[0] += hull[jj]->x[0];
-        crtcurve[ii].critical_center[1] += hull[jj]->x[1];
-      }
+       }
       
-      crtcurve[ii].critical_center /= hull.size();
+      if(hull.size()){
+        Point_2d po;
+        po = *hull[0];
+        for(size_t jj=0;jj<hull.size();++jj){
+          crtcurve[ii].critical_center -= po - *hull[jj];
+        }
+        
+        crtcurve[ii].critical_center /= hull.size();
+        crtcurve[ii].critical_center += po;
+      }
       
       if(crtcurve[ii].type != pseudo)
         Utilities::windings(crtcurve[ii].critical_center.x,hull.data(),hull.size(),&(crtcurve[ii].critical_area));
@@ -1902,19 +1910,11 @@ void ImageFinding::find_contour(
     
     for(size_t jj=0;jj<hull.size();++jj){
       crtcurve[ii].critical_curve[jj] = *hull[jj];
-      crtcurve[ii].critical_center += *hull[jj];
-      //std::cout << crtcurve[ii].critical_curve[jj].x[0] << " " << crtcurve[ii].critical_curve[jj].x[1]<< std::endl;
-      //std::cout << crtcurve[ii].critical_center.x[0] << " " << crtcurve[ii].critical_center.x[1]<< std::endl;
-      
-      /*tmp_dist=sqrt((crtcurve[ii].critical_curve[jj].x[0]-crtcurve[ii].critical_center.x[0])*(crtcurve[ii].critical_curve[jj].x[0]-crtcurve[ii].critical_center.x[0])+(crtcurve[ii].critical_curve[jj].x[1]-crtcurve[ii].critical_center.x[1])*(crtcurve[ii].critical_curve[jj].x[1]-crtcurve[ii].critical_center.x[1]));
-       
-       if (nearest_contour_pnt>tmp_dist && tmp_dist!=0){nearest_contour_pnt=tmp_dist;}
-       if (mostdistant_contour_pnt<tmp_dist){mostdistant_contour_pnt=tmp_dist;}*/
-      
+      crtcurve[ii].critical_center -= crtcurve[ii].critical_curve[0] - *hull[jj];
     }
     
     crtcurve[ii].critical_center /= hull.size();
-    
+    crtcurve[ii].critical_center += crtcurve[ii].critical_curve[0];
     
     Utilities::contour_ellipse(crtcurve[ii].critical_curve ,Utilities::contour_center(crtcurve[ii].critical_curve, hull.size()) , hull.size(), crtcurve[ii].ellipse_curve ,&(crtcurve[ii].contour_ell), &(crtcurve[ii].ellipse_area));
     
@@ -1923,7 +1923,7 @@ void ImageFinding::find_contour(
     
     critcurve[ii].imagekist->TranformPlanes();
     hull = critcurve[ii].imagekist->copytovector();
-    if(ordercurve) hull = Utilities::concave_hull(hull,5);
+    if(ordercurve) hull = Utilities::concave_hull(hull,10);
     
     crtcurve[ii].caustic_curve_outline.resize(hull.size());
     crtcurve[ii].caustic_center[0] = 0;

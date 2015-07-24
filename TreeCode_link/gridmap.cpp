@@ -27,24 +27,24 @@ GridMap::GridMap(
                  ,const PosType center[2]  /// Center of grid.
                  ,PosType rangeX   /// Full width of grid in x direction in whatever units will be used.
                  ,PosType rangeY  /// Full width of grid in y direction in whatever units will be used.
-                 ): Ngrid_init(Nx),x_range(rangeX),axisratio(rangeY/rangeX){
+): Ngrid_init(Nx),axisratio(rangeY/rangeX),x_range(rangeX){
   
   pointID = 0;
   
-	assert(Nx > 0);
-	assert(rangeX > 0 && rangeY >0);
-
-	if(Nx <= 0){ERROR_MESSAGE();
+  assert(Nx > 0);
+  assert(rangeX > 0 && rangeY >0);
+  
+  if(Nx <= 0){ERROR_MESSAGE();
     std::cout << "cannot make GridMap with no points" << std::endl;
     throw std::runtime_error("");
   }
-	if(rangeX <= 0 || rangeY <= 0 ){ERROR_MESSAGE();
+  if(rangeX <= 0 || rangeY <= 0 ){ERROR_MESSAGE();
     throw std::runtime_error("");
     std::cout << "cannot make GridMap with no range" << std::endl;
   }
   
   //if(Ngrid_init % 2 == 1 ) ++Ngrid_init;
-	
+  
   Ngrid_init2 = (int)(Ngrid_init*axisratio);
   //if(Ngrid_init2 % 2 == 1) ++Ngrid_init2;
   
@@ -85,23 +85,23 @@ GridMap::GridMap(
                  ,unsigned long N1d          /// Initial number of grid points in each dimension.
                  ,const PosType center[2]    /// Center of grid.
                  ,PosType range              /// Full width of grid in whatever units will be used.
-                 ): Ngrid_init(N1d),Ngrid_init2(N1d),axisratio(1.0),x_range(range){
+): Ngrid_init(N1d),Ngrid_init2(N1d),axisratio(1.0),x_range(range){
   
   pointID = 0;
   
-	assert(N1d > 0);
-	assert(range > 0);
+  assert(N1d > 0);
+  assert(range > 0);
   
-	if(N1d <= 0){ERROR_MESSAGE(); std::cout << "cannot make GridMap with no points" << std::endl; exit(1);}
-	if(range <= 0){ERROR_MESSAGE(); std::cout << "cannot make GridMap with no range" << std::endl; exit(1);}
+  if(N1d <= 0){ERROR_MESSAGE(); std::cout << "cannot make GridMap with no points" << std::endl; exit(1);}
+  if(range <= 0){ERROR_MESSAGE(); std::cout << "cannot make GridMap with no range" << std::endl; exit(1);}
   
-	i_points = NewPointArray(Ngrid_init*Ngrid_init);
-	xygridpoints(i_points,range,center,Ngrid_init,0);
-	s_points=LinkToSourcePoints(i_points,Ngrid_init*Ngrid_init);
-  
+  i_points = NewPointArray(Ngrid_init*Ngrid_init);
+  xygridpoints(i_points,range,center,Ngrid_init,0);
+  s_points=LinkToSourcePoints(i_points,Ngrid_init*Ngrid_init);
+    
   {
     std::lock_guard<std::mutex> hold(grid_mutex);
-  	lens->rayshooterInternal(Ngrid_init*Ngrid_init,i_points);
+    lens->rayshooterInternal(Ngrid_init*Ngrid_init,i_points);
   }
 }
 
@@ -110,27 +110,64 @@ GridMap::~GridMap(){
   FreePointArray(s_points);
 }
 
+void GridMap::ReInitializeGrid(LensHndl lens){
+  
+  {
+    std::lock_guard<std::mutex> hold(grid_mutex);
+    lens->rayshooterInternal(Ngrid_init*Ngrid_init,i_points);
+  }
+  ClearSurfaceBrightnesses();
+}
+
+PixelMap GridMap::getPixelMap(int resf){
+  
+  if(resf <=0){
+    ERROR_MESSAGE();
+    throw std::invalid_argument("resf must be > 0");
+  }
+  PosType center[2];
+  size_t N = Ngrid_init*Ngrid_init2;
+  
+  center[0] = (i_points[0].x[0] + i_points[N-1].x[0])/2;
+  center[1] = (i_points[0].x[1] + i_points[N-1].x[1])/2;
+  
+  PixelMap map(center,Ngrid_init/resf,Ngrid_init2/resf,x_range*resf/Ngrid_init);
+  
+  int factor = resf*resf;
+  for(size_t i = 0 ; i < Ngrid_init ; ++i){
+    for(size_t j = 0 ; j < Ngrid_init2 ; ++j){
+      map.data()[i/resf + map.getNx() * (j / resf)] +=
+      i_points[ i + Ngrid_init * j].surface_brightness/factor;
+    }
+  }
+  
+  map.Renormalize(map.getResolution()*map.getResolution());
+  
+  return map;
+}
+
+
 double GridMap::RefreshSurfaceBrightnesses(SourceHndl source){
-	PosType total=0,tmp;
+  PosType total=0,tmp;
   
-	for(size_t i=0;i <s_points[0].head;++i){
-		tmp = source->SurfaceBrightness(s_points[i].x);
-		s_points[i].surface_brightness = s_points[i].image->surface_brightness
+  for(size_t i=0;i <s_points[0].head;++i){
+    tmp = source->SurfaceBrightness(s_points[i].x);
+    s_points[i].surface_brightness = s_points[i].image->surface_brightness
     = tmp;
-		total += tmp;
+    total += tmp;
     s_points[i].in_image = s_points[i].image->in_image = NO;
-	}
+  }
   
-	return total;
+  return total;
 }
 
 void GridMap::ClearSurfaceBrightnesses(){
   
-	for(size_t i=0;i <s_points[0].head;++i){
-		s_points[i].surface_brightness = s_points[i].image->surface_brightness
+  for(size_t i=0;i <s_points[0].head;++i){
+    s_points[i].surface_brightness = s_points[i].image->surface_brightness
     = 0.0;
     s_points[i].in_image = s_points[i].image->in_image = NO;
-	}
+  }
   
 }
 
@@ -142,11 +179,11 @@ void GridMap::ClearSurfaceBrightnesses(){
  *  for uniform maps to make equal sized PixelMaps.
  */
 PixelMap GridMap::writePixelMapUniform(
-                                    const PosType center[]  /// center of image
-                                    ,size_t Nx       /// number of pixels in image in on dimension
-                                    ,size_t Ny       /// number of pixels in image in on dimension
-                                    ,LensingVariable lensvar  /// which quantity is to be displayed
-                                    ){
+                                       const PosType center[]  /// center of image
+                                       ,size_t Nx       /// number of pixels in image in on dimension
+                                       ,size_t Ny       /// number of pixels in image in on dimension
+                                       ,LensingVariable lensvar  /// which quantity is to be displayed
+){
   
   if(getNumberOfPoints() == 0 ) return PixelMap();
   PixelMap map(center, Nx, Ny,x_range/Nx);
@@ -157,14 +194,14 @@ PixelMap GridMap::writePixelMapUniform(
   return map;
 }
 void GridMap::writePixelMapUniform(
-                                PixelMap &map
-                                ,LensingVariable lensvar  /// which quantity is to be displayed
-                                ){
+                                   PixelMap &map
+                                   ,LensingVariable lensvar  /// which quantity is to be displayed
+){
   
   if(getNumberOfPoints() ==0 ) return;
   
   map.Clean();
-    
+  
   std::thread thr[20];
   int nthreads = N_THREADS;
   
@@ -173,7 +210,7 @@ void GridMap::writePixelMapUniform(
     chunk_size =  getNumberOfPoints()/nthreads;
     if(chunk_size == 0) nthreads /= 2;
   }while(chunk_size == 0);
-    
+  
   size_t size = chunk_size;
   for(int ii = 0; ii < nthreads ;++ii){
     if(ii == nthreads-1)
@@ -238,12 +275,12 @@ void GridMap::writePixelMapUniform_(Point* points,size_t size,PixelMap *map,Lens
 }
 
 void GridMap::writeFitsUniform(
-                            const PosType center[]  /// center of image
-                            ,size_t Nx       /// number of pixels in image in on dimension
-                            ,size_t Ny       /// number of pixels in image in on dimension
-                            ,LensingVariable lensvar  /// which quantity is to be displayed
-                            ,std::string filename     /// file name for image -- .kappa.fits, .gamma1.fits, etc will be appended
-                            ){
+                               const PosType center[]  /// center of image
+                               ,size_t Nx       /// number of pixels in image in on dimension
+                               ,size_t Ny       /// number of pixels in image in on dimension
+                               ,LensingVariable lensvar  /// which quantity is to be displayed
+                               ,std::string filename     /// file name for image -- .kappa.fits, .gamma1.fits, etc will be appended
+){
   std::string tag;
   
   switch (lensvar) {

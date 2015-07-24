@@ -13,6 +13,7 @@
 #include "lens.h"
 #include "point.h"
 #include "Tree.h"
+#include "source.h"
 #include <mutex>
 
 /** \ingroup ImageFinding
@@ -21,12 +22,17 @@
  *  GripMap is faster and uses less memory than Grid.  It does not construct the tree structures for the points 
  *  and thus cannot be used for adaptive mapping or image finding.
  */
+
+//class PixelMap;
+
 struct GridMap{
   
 	GridMap(LensHndl lens,unsigned long N1d,const double center[2],double range);
   GridMap(LensHndl lens ,unsigned long Nx ,const PosType center[2] ,PosType rangeX ,PosType rangeY);
 	~GridMap();
   
+  /// reshoot the rays for example when the source plane has been changed
+  void ReInitializeGrid(LensHndl lens);
 	double RefreshSurfaceBrightnesses(SourceHndl source);
   void ClearSurfaceBrightnesses();
 	size_t getNumberOfPoints() const {return Ngrid_init*Ngrid_init2;}
@@ -40,6 +46,9 @@ struct GridMap{
   PixelMap writePixelMapUniform(const PosType center[],size_t Nx,size_t Ny,LensingVariable lensvar);
   void writePixelMapUniform(PixelMap &map,LensingVariable lensvar);
   void writeFitsUniform(const PosType center[],size_t Nx,size_t Ny,LensingVariable lensvar,std::string filename);
+  
+  /// returns a PixelMap with the flux in pixels at a resolution of res times the original resolution
+  PixelMap getPixelMap(int res);
   
 private:
   void xygridpoints(Point *points,double range,const double *center,long Ngrid

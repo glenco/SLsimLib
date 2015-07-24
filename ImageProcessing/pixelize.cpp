@@ -20,6 +20,7 @@
 #include "image_processing.h"
 #include "point.h"
 #include "source.h"
+#include "gridmap.h"
 
 #if __cplusplus < 201103L
 template<typename T>
@@ -301,8 +302,28 @@ PixelMap::~PixelMap()
 
 PixelMap& PixelMap::operator=(PixelMap other)
 {
-  swap(*this, other);
+  PixelMap::swap(*this, other);
   return *this;
+}
+
+void PixelMap::swap(PixelMap &map1,PixelMap &map2)
+{
+
+  std::swap(map1.map,map2.map);
+  std::swap(map1.Nx,map2.Ny);
+  std::swap(map1.resolution,map2.resolution);
+  std::swap(map1.rangeX,map2.rangeX);
+  std::swap(map1.rangeY,map2.rangeY);
+  std::swap(map1.center[0],map2.center[0]);
+  std::swap(map1.center[1],map2.center[1]);
+
+  std::swap(map1.map_boundary_p1[0],map2.map_boundary_p1[0]);
+  std::swap(map1.map_boundary_p1[1],map2.map_boundary_p1[1]);
+
+  std::swap(map1.map_boundary_p2[0],map2.map_boundary_p2[0]);
+  std::swap(map1.map_boundary_p2[1],map2.map_boundary_p2[1]);
+
+  return;
 }
 
 /// Zero the whole map
@@ -474,6 +495,16 @@ void PixelMap::AddImages(
 ){
   AddImages(imageinfo.data(),Nimages,rescale);
 }
+
+/*
+void PixelMap::AddImages(const GridMap &map){
+  Point_2d x;
+  for(size_t i=0; i < map.getNumberOfPoints(); ++i){
+    Utilities::PositionFromIndex(i,x.x,map.getInitNgrid(),map.getXRange,center);
+  }
+}
+*/
+
 
 /** \brief Add images with uniform surface brightness set by input parameter value.
  *
@@ -865,13 +896,19 @@ void PixelMap::drawdisk(
   // To fill the circle :
   // ====================
   
-  for(float theta = 0; theta < 2*pi; theta += pi/N){
+/*  for(float theta = 0; theta < 2*pi; theta += pi/N){
     x1[0] = r_center[0] - radius*cos(theta);
     x2[0] = r_center[0] + radius*cos(theta);
     x1[1] = x2[1] = r_center[1] + radius*sin(theta);
     drawline(x1,x2,value);
   }
-  
+  */
+  for(float y = -radius + resolution/2 ; y <= radius; y += resolution){
+    x1[0] = sqrt(radius*radius - y*y) + r_center[0];
+    x2[0] = -sqrt(radius*radius - y*y) + r_center[0];
+    x1[1] = x2[1] = r_center[1] + y;
+    drawline(x1,x2,value);
+  }
   return;
 }
 

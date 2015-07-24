@@ -1195,6 +1195,20 @@ namespace Utilities
     std::sort(index.begin(), index.end(),
               [&v](size_t i1, size_t i2) {return v[i1] < v[i2];});
   }
+  /// Find the indexes that sort a vector in descending order
+  template <typename T>
+  void sort_indexes_decending(const std::vector<T> &v     /// the original data that is not changed
+                    ,std::vector<size_t> &index /// vector of indexes that if put into v will sort it
+  ) {
+    
+    // initialise original index locations
+    index.resize(v.size());
+    for (size_t i = 0; i != index.size(); ++i) index[i] = i;
+    
+    // sort indexes based on comparing values in v
+    std::sort(index.begin(), index.end(),
+              [&v](size_t i1, size_t i2) {return v[i1] > v[i2];});
+  }
   
 #ifdef ENABLE_FFTW
   /** \brief Calculates power spectrum from a 2d map or the cross-power spectrum between two 2d maps.

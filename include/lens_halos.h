@@ -406,7 +406,7 @@ protected:
       double integrandA=m*kappa/(ap*ap*ap*bp*p2)*halo->mass;
       double integrandB=m*kappam/(ap*ap*ap*bp*p2);
       //std::cout << integrandA-integrandB << std::endl;
-      assert( abs((integrandA - integrandB)/integrandA)<1E-5);
+      assert( std::abs((integrandA - integrandB)/integrandA)<1E-5);
 
       assert(kappa >= 0.0);
 
@@ -434,7 +434,7 @@ protected:
       
       double integrandA=m*kappa/(ap*ap*ap*bp*p2)*halo->mass;
       double integrandB=m*kappam/(ap*bp*bp*bp*p2);
-      assert( abs((integrandA - integrandB)/integrandA)<1E-5);
+      assert( std::abs((integrandA - integrandB)/integrandA)<1E-5);
 
       assert(kappa >= 0.0);
       //return m*kappa/(ap*bp*bp*bp*p2)*halo->mass; // integrand of equation (28) in Schramm 1990

@@ -157,7 +157,7 @@ bool idcompare(SourceOverzierPlus s1,SourceOverzierPlus s2);
 class SourceMultiShapelets: public Source{
 public:
     SourceMultiShapelets(InputParams& params);
-	~SourceMultiShapelets();
+    ~SourceMultiShapelets();
     void sortInRedshift();
     void sortInMag();
 
@@ -225,9 +225,9 @@ private:
 	void assignParams(InputParams& params);
  	std::size_t index;
 	float mag_limit;
-    Band band;
+  Band band;
    
-    void readCatalog();
+  void readCatalog();
  	std::vector<SourceShapelets> galaxies;
 	std::string shapelets_folder;
     
