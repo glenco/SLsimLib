@@ -475,6 +475,75 @@ void LensHaloFit::FindLensSimple(
 
 
 
+
+/** \ingroup FitLens
+ *
+ *  \brief Function that will compute dx_sub for FindLensSimple.
+ *
+ */
+
+void LensHaloFit::compute_dxSub(double ** dx_sub,                   // dx_sub we want to get updated
+                                     int Nimages,                   // number of images
+                                     std::vector<Point> & ImagePos,   // vector of points for the different images
+                                     bool IsFieldOff,               // to tell if the LoS structure is off
+                                     bool IsSubOn,                  // to tell if the substructure is on
+                                     bool verbose                   // verbose option
+                                     )
+{
+  // INITIALISING :
+  for (int i = 0; i < Nimages; i++)
+  {
+    for (int j = 0; j < 2; j++) dx_sub[i][j] = 0. ;
+  }
+  
+  
+  // CASE OF ONLY SUBSTRUCTURE :
+  if(IsFieldOff==true && IsSubOn==true)
+  {
+    std::vector<std::vector<PosType>> alphaFromSub (Nimages);
+    for(int k=0;k<Nimages;k++) alphaFromSub[k].resize(2);
+    if(verbose) cout << endl << "Showing alpha from substructure :" << endl;
+    for(int k=0;k<Nimages;k++)
+    {
+      alphaFromSub[k][0] = ImagePos[k].x[0] - ImagePos[k].image->x[0];
+      alphaFromSub[k][1] = ImagePos[k].x[1] - ImagePos[k].image->x[1];
+      if(verbose) cout << alphaFromSub[k][0] << " " << alphaFromSub[k][1] << endl;
+    }
+    if(verbose) cout << endl;
+    
+    // Putting the deviation of the LoS+sub structure into dx_sub (for subtraction) :
+    if(verbose) cout << "dx_sub :" << endl;
+    for (int i = 0; i < Nimages; i++)
+    {
+      for (int j = 0; j < 2; j++) dx_sub[i][j] = -1. * alphaFromSub[i][j] ;
+      if(verbose) cout << dx_sub[i][0] << " " << dx_sub[i][1] << endl ;
+    }
+    if(verbose) cout << endl;
+  }
+  
+  
+  // CASE OF ONLY LOS STRUCTURE :
+  if(IsFieldOff==false && IsSubOn==false)
+  {
+    // ONLY PRE-LOS STRUCTURE :
+    std::cout << "NEEDS TO BE WRITTEN !" << std::endl ;
+    
+    // GENERAL CASE WHERE LOS IS BOTH IN FRONT AND BEHIND MAIN LENS PLANE :
+    std::cout << "NEEDS TO BE WRITTEN !" << std::endl ;
+  }
+  
+  
+  // CASE OF LOS STRUCTURE + SUBSTRUCTURE (MAY BE INCLUDED IN THE LATER ONE) :
+  if(IsFieldOff==false && IsSubOn==true)
+  {
+    std::cout << "NEEDS TO BE WRITTEN !" << std::endl ;
+  }
+  
+  return ;
+}
+
+
+
 /** \ingroup FitLens
  *
  *  \brief Wrapper that allows simple lens to be found with a single
