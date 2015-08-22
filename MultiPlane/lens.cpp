@@ -12,7 +12,7 @@
 
 using namespace std;
 
-#define MIN_PLANE_DIST 1E-8
+#define MIN_PLANE_DIST 1E-6
 
 namespace
 {
@@ -59,7 +59,7 @@ Lens::Lens(long* my_seed,PosType z_source, CosmoParamSet cosmoset,bool verbose)
   
   //charge = cosmo.angDist(zsource)/cosmo.angDist(0.3)/cosmo.angDist(0.3,zsource);
   //charge = 4*pi/cosmo.angDist(0.3);
-  combinePlanes(true);
+  combinePlanes(false);
   std::cout << "number of field halos :" << field_halos.size() << std::endl;
 }
 
@@ -607,6 +607,9 @@ void Lens::createFieldPlanes(bool verbose)
 	PosType z1 = 0, z2 = 0;
 	std::size_t k1 = 0, k2 = 0;
 	
+  //for(size_t i=0;i<field_halos.size()-1;++i)
+  //  assert(field_halos[i]->getZlens() <= field_halos[i+1]->getZlens());
+  
 	// go through planes
 	for(std::size_t i = 0; i < field_Nplanes_original; ++i)
 	{
@@ -654,6 +657,7 @@ void Lens::createFieldPlanes(bool verbose)
 			
       PosType tmp[2];
       
+      assert( field_Dl[i] > 0 );
 			// convert to proper distance on the lens plane
       field_halos[j]->getX(tmp);
       field_halos[j]->setX(tmp[0]*field_Dl[i]/(1+field_plane_redshifts[i])
@@ -1002,10 +1006,6 @@ void Lens::resetSubstructure(bool verbose){
   lensing_planes[lplane_index] = field_planes[fplane_index] = substructure.plane = new LensPlaneTree(substructure.halos.data(), NhalosSub, 0, 0);
 }
 
-
-
-
-
 void Lens::addMainHaloToPlane(LensHalo* halo)
 {
 	// the redshift and distance of the halo
@@ -1041,6 +1041,29 @@ void Lens::addMainHaloToPlane(LensHalo* halo)
 		main_Dl.insert(main_Dl.begin() + i, halo_Dl);
 	}
 }
+
+/* This adds halo to the closest (in angular size distance) plane.  Only if 
+ there are no main_planes will it add one
+*/
+void Lens::addMainHaloToNearestPlane(LensHalo* halo)
+{
+  // the redshift and distance of the halo
+  PosType halo_z = halo->getZlens();
+  PosType halo_Dl = cosmo.coorDist(0, halo_z);
+  
+  if(main_Dl.size() == 0){
+    main_planes.push_back(new LensPlaneSingular(&halo, 1));
+    main_plane_redshifts.push_back(halo_z);
+    main_Dl.push_back(halo_Dl);
+  }
+  
+  // find the position of the new lens plane
+  std::size_t i = Utilities::closest(main_Dl,halo_Dl);
+
+  main_planes[i]->addHalo(halo);
+}
+
+
 
 void Lens::createMainPlanes()
 {
@@ -1228,30 +1251,38 @@ void Lens::clearMainHalos(bool verbose)
 /**
  * \brief Inserts a single main lens halo.
  * Then all lensing planes are updated accordingly.
+ * If addplanes is true new planes will be added otherwise 
+ * the halo is added to the nearest plane and a plane is added only 
+ * if none exited on entry.
  */
-void Lens::insertMainHalo(LensHalo* halo,bool verbose)
+void Lens::insertMainHalo(LensHalo* halo,bool addplanes,bool verbose)
 {
 	halo->setCosmology(cosmo);
 	main_halos.push_back(halo);
   
 	flag_switch_main_halo_on = true;
 	
-	addMainHaloToPlane(halo);
-	
+	if(addplanes) addMainHaloToPlane(halo);
+  else addMainHaloToNearestPlane(halo);
+  
 	combinePlanes(verbose);
 }
 
 /**
  * \brief Inserts a sequense of main lens halos and ads them to the existing ones.
  * Then all lensing planes are updated accordingly.
+ * If addplanes is true new planes will be added otherwise
+ * the halo is added to the nearest plane and a plane is added only
+ * if none exited on entry.
  */
-void Lens::insertMainHalos(LensHalo** halos, std::size_t Nhalos, bool verbose)
+void Lens::insertMainHalos(LensHalo** halos, std::size_t Nhalos,bool addplanes, bool verbose)
 {
 	for(std::size_t i = 0; i < Nhalos; ++i)
 	{
 		halos[i]->setCosmology(cosmo);
 		main_halos.push_back(halos[i]);
-		addMainHaloToPlane(halos[i]);
+		if(addplanes) addMainHaloToPlane(halos[i]);
+    else addMainHaloToNearestPlane(halos[i]);
 	}
 	
 	flag_switch_main_halo_on = true;
@@ -1603,6 +1634,8 @@ void Lens::readInputSimFileMillennium(bool verbose)
 	PosType rmax=0,rtmp=0;
   PosType theta[2];
   
+  size_t idnumber = 1;
+  
 	std::ifstream file_in(field_input_sim_file.c_str());
 	if(!file_in){
 		std::cout << "Can't open file " << field_input_sim_file << std::endl;
@@ -1819,6 +1852,7 @@ void Lens::readInputSimFileMillennium(bool verbose)
 				//halo_pos_vec.push_back(theta2);
         field_halos.back()->setX(theta);
         field_halos.back()->setID(haloid);
+
         
         /****** test **********
         {
@@ -1861,7 +1895,20 @@ void Lens::readInputSimFileMillennium(bool verbose)
 	if(verbose) std::cout << "sorting in Lens::readInputSimFileMillennium()" << std::endl;
 	// sort the field_halos by readshift
 	//Lens::quicksort(field_halos.data(),halo_pos,field_halos.size());
-  std::sort(field_halos.begin(),field_halos.end(),LensHaloZcompare);
+  
+  //for(size_t ii=0;ii<4;++ii){
+  //  std::cout << field_halos[ii]->getZlens() << " " << field_halos[ii+1]->getZlens() << std::endl;
+  //}
+  //std::cout << std::endl;
+
+  //std::sort(field_halos.begin(),field_halos.end(),LensHaloZcompare);
+  std::sort(field_halos.begin(),field_halos.end(),[](LensHalo *lh1,LensHalo *lh2)
+  {return (lh1->getZlens() < lh2->getZlens());});
+  
+  //for(size_t ii=0;ii<field_halos.size()-1;++ii){
+  //  std::cout << field_halos[ii]->getZlens() << " " << field_halos[ii+1]->getZlens() << std::endl;
+  //  assert(field_halos[ii]->getZlens() <= field_halos[ii+1]->getZlens());
+  //}
   
 	if(verbose) std::cout << "leaving Lens::readInputSimFileMillennium()" << std::endl;
   
@@ -2189,7 +2236,9 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose)
 	if(verbose) std::cout << "sorting in Lens::readInputSimFileMultiDarkHalos()" << std::endl;
 	// sort the field_halos by readshift
 	//Lens::quicksort(field_halos.data(),halo_pos,field_halos.size());
-  std::sort(field_halos.begin(),field_halos.end(),LensHaloZcompare);
+  std::sort(field_halos.begin(),field_halos.end(),[](LensHalo *lh1,LensHalo *lh2)
+            {return (lh1->getZlens() < lh2->getZlens());});
+  //,LensHaloZcompare);
   
   
 	if(verbose) std::cout << "leaving Lens::readInputSimFileMultiDarkHalos()" << std::endl;
@@ -2508,6 +2557,7 @@ void Lens::readInputSimFileObservedGalaxies(bool verbose)
 
 void Lens::combinePlanes(bool verbose)
 {
+
   if(verbose)
   {
     std::cout << std::endl << "Lens::combinePlanes before clearing." << std::endl ;

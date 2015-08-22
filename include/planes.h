@@ -23,7 +23,7 @@ public:
 	
 	virtual std::vector<LensHalo*> getHalos() = 0;
 	virtual std::vector<const LensHalo*> getHalos() const = 0;
-  virtual void getNeighborHalos(PosType ray[],PosType rmax,std::vector<LensHalo*> &neighbors){};
+  virtual void getNeighborHalos(PosType ray[],PosType rmax,std::vector<LensHalo*> &neighbors) const{};
 };
 
 /// A LensPlane with a TreeQuad on it to calculate the deflection caused by field lenses
@@ -43,7 +43,7 @@ public:
 	std::vector<LensHalo*> getHalos();
 	std::vector<const LensHalo*> getHalos() const;
   /// Get the halos on this plane that are wthin rmax of ray[]
-  void getNeighborHalos(PosType ray[],PosType rmax,std::vector<LensHalo*> &neighbors);
+  void getNeighborHalos(PosType ray[],PosType rmax,std::vector<LensHalo*> &neighbors) const;
 	
 private:
 	std::vector<LensHalo*> halos;
@@ -68,7 +68,7 @@ public:
 	
 	std::vector<LensHalo*> getHalos();
 	std::vector<const LensHalo*> getHalos() const;
-  void getNeighborHalos(PosType ray[],PosType rmax,std::vector<LensHalo*> &neighbors);
+  void getNeighborHalos(PosType ray[],PosType rmax,std::vector<LensHalo*> &neighbors) const;
   
 private:
 	std::vector<LensHalo*> halos;  

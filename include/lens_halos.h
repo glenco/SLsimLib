@@ -153,7 +153,7 @@ public:
   /// perform some basic consistancy checks for halo
   bool test();
   
-  size_t getID(){return idnumber;}
+  size_t getID() const {return idnumber;}
   void setID(size_t id){idnumber = id;}
   
   PosType renormalization(PosType r_max);
@@ -1139,8 +1139,8 @@ private:
 
 typedef LensHalo* LensHaloHndl;
 
-bool LensHaloZcompare(LensHalo *lh1,LensHalo *lh2);//{return (lh1->getZlens() < lh1->getZlens());}
-//bool LensHaloZcompare(LensHalo lh1,LensHalo lh2){return (lh1.getZlens() < lh1.getZlens());}
+//bool LensHaloZcompare(LensHalo *lh1,LensHalo *lh2);//{return (lh1->getZlens() < lh2->getZlens());}
+//bool LensHaloZcompare(LensHalo lh1,LensHalo lh2){return (lh1.getZlens() < lh2.getZlens());}
 
 
 #endif /* LENS_HALOS_H_ */

@@ -1747,5 +1747,5 @@ PosType LensHalo::DALPHAYDM::operator()(PosType m){
 }
 
 
-bool LensHaloZcompare(LensHalo *lh1,LensHalo *lh2){return (lh1->getZlens() < lh1->getZlens());}
-bool compare(LensHalo *lh1,LensHalo *lh2){return (lh1->getZlens() < lh1->getZlens());}
+//bool LensHaloZcompare(LensHalo *lh1,LensHalo *lh2){return (lh1->getZlens() < lh2->getZlens());}
+//bool compare(LensHalo *lh1,LensHalo *lh2){return (lh1->getZlens() < lh2->getZlens());}

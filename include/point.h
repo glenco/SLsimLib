@@ -86,7 +86,7 @@ struct Point{
     return (p1->x[1] > p2->x[1]);
   }
 
-  /// returns true if the image is double inverted
+  /// returns true if the image is double inverted,  At very low magnification this can fail.
   bool inverted(){ return 0 > (1 - kappa + sqrt( fabs((1-kappa)*(1-kappa) - invmag) ) ); }
   
 private:
@@ -319,6 +319,10 @@ struct Point_2d{
     x[0]=p.x[0];
     x[1]=p.x[1];
   }
+  Point_2d(const PosType *p){
+    x[0]=p[0];
+    x[1]=p[1];
+  }
   Point_2d & operator=(const Point_2d &p){
     if(this == &p) return *this;
     x[0]=p.x[0];
@@ -419,5 +423,6 @@ std::ostream &operator<<(std::ostream &os, Point_2d const &p);
 
 inline double pointx(Point &p){return p.x[0];}
 inline double pointy(Point &p){return p.x[1];}
+inline PosType *positionfunc(Point &p){return p.x;}
 
 #endif

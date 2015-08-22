@@ -726,14 +726,15 @@ void *compute_rays_parallel(void *_p)
  */
 void Lens::info_rayshooter(
                            Point *i_point     /// point to be shot, must have image point linked
-                           ,std::vector<std::vector<double>> & ang_positions  /// angular positions on each plane
+                           ,std::vector<Point_2d> & ang_positions  /// angular positions on each plane
                            ,std::vector<KappaType> & kappa_on_planes          /// convergence on each plane
                            ,std::vector<std::vector<LensHalo*>> & halo_neighbors  /// neighboring halos within rmax of ray on each plane
-                           ,LensHalo *halo_max
+                           ,LensHalo **halo_max
                            ,KappaType &kappa_max
                            ,KappaType gamma_max[]
                            ,PosType rmax  /// distance from ray on each plane, units depend on mode parameter
                            ,short mode  /// 0:physical distance (Mpc), 1: comoving distance (Mpc), 2: angular distance (rad)
+                           ,bool verbose
 )
 {
   
@@ -771,7 +772,6 @@ void Lens::info_rayshooter(
   
   
   ang_positions.resize(NLastPlane);
-  for(int ii=0;ii<NLastPlane;++ii) ang_positions[ii].resize(2);
   halo_neighbors.resize(NLastPlane);
   kappa_on_planes.resize(NLastPlane);
   
@@ -779,10 +779,10 @@ void Lens::info_rayshooter(
   
   PosType xx[2];
   PosType aa,bb,cc;
-  PosType alpha[2];
+  PosType alpha[2],alpha_tmp[2];
   
   PosType xminus[2],xplus[2],tmp_r,x_tmp[2];
-  KappaType gamma[3],phi,kappa_tmp;
+  KappaType gamma[3],gamma_tmp[3],phi,phi_tmp,kappa_tmp;
   kappa_max = -1.0;
   
   // find position on first lens plane in comoving units
@@ -802,6 +802,8 @@ void Lens::info_rayshooter(
     xx[0] = i_point->image->x[0]/(1+plane_redshifts[j]);
     xx[1] = i_point->image->x[1]/(1+plane_redshifts[j]);
     
+    if(verbose) std::cout << j << " " << "x: " << xx[0] << " " << xx[1] << std::endl;
+    
     assert(xx[0] == xx[0] && xx[1] == xx[1]);
     
     lensing_planes[j]->force(alpha,&kappa_on_planes[j],gamma,&phi,xx); // Computed in physical coordinates.
@@ -810,6 +812,7 @@ void Lens::info_rayshooter(
     tmp_r = rmax;
     if(mode == 1) tmp_r /= (1+plane_redshifts[j]);
     if(mode == 2) tmp_r *= Dl[j];
+    
     lensing_planes[j]->getNeighborHalos(xx,tmp_r,halo_neighbors[j]);
     
     ang_positions[j][0] = i_point->image->x[0]/Dl[j];
@@ -819,10 +822,10 @@ void Lens::info_rayshooter(
     
     // Find the halo with the largest kappa
     for(int ii=0;ii<halo_neighbors[j].size();++ii){
-      alpha[0] = alpha[1] = 0.0;
+      alpha_tmp[0] = alpha_tmp[1] = 0.0;
       kappa_tmp = 0.0;
-      gamma[0] = gamma[1] = gamma[2] = 0.0;
-      phi = 0.0;
+      gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
+      phi_tmp = 0.0;
       
       // Getting the halo position (in physical Mpc) :
       halo_neighbors[j][ii]->getX(x_tmp);
@@ -831,13 +834,13 @@ void Lens::info_rayshooter(
       x_tmp[0] = xx[0] - x_tmp[0];
       x_tmp[1] = xx[1] - x_tmp[1];
       
-      halo_neighbors[j][ii]->force_halo(alpha,&kappa_tmp,gamma,&phi,x_tmp,false);
-      kappa_tmp /=SigmaCrit;
+      halo_neighbors[j][ii]->force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp,x_tmp,false);
+      kappa_tmp /= SigmaCrit;
       if(kappa_tmp > kappa_max){
         kappa_max = kappa_tmp;
-        halo_max = halo_neighbors[j][ii];
-        gamma_max[0] = gamma[0]/SigmaCrit;
-        gamma_max[1] = gamma[1]/SigmaCrit;
+        *halo_max = halo_neighbors[j][ii];
+        gamma_max[0] = gamma_tmp[0]/SigmaCrit;
+        gamma_max[1] = gamma_tmp[1]/SigmaCrit;
       }
     }
     
@@ -868,6 +871,14 @@ void Lens::info_rayshooter(
   i_point->image->x[0] /= Dl[NLastPlane];
   i_point->image->x[1] /= Dl[NLastPlane];
   
+  if(toggle_source_plane)
+  {
+    // The initial values for the plane are reset here
+    Dl[index_of_new_sourceplane] = tmpDs;
+    dDl[index_of_new_sourceplane] = tmpdDs;
+    plane_redshifts[index_of_new_sourceplane] = tmpZs;
+  }
+
   return;
   
 }
