@@ -1139,8 +1139,7 @@ private:
 
 typedef LensHalo* LensHaloHndl;
 
-bool LensHaloZcompare(LensHalo *lh1,LensHalo *lh2);//{return (lh1->getZlens() < lh1->getZlens());}
-//bool LensHaloZcompare(LensHalo lh1,LensHalo lh2){return (lh1.getZlens() < lh1.getZlens());}
+bool LensHaloZcompare(LensHalo *lh1,LensHalo *lh2);
 
 
 #endif /* LENS_HALOS_H_ */

@@ -2188,7 +2188,6 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose)
   
 	if(verbose) std::cout << "sorting in Lens::readInputSimFileMultiDarkHalos()" << std::endl;
 	// sort the field_halos by readshift
-	//Lens::quicksort(field_halos.data(),halo_pos,field_halos.size());
   std::sort(field_halos.begin(),field_halos.end(),LensHaloZcompare);
   
   
@@ -2497,7 +2496,7 @@ void Lens::readInputSimFileObservedGalaxies(bool verbose)
   if(verbose) std::cout << "sorting in Lens::readInputSimFileObservedGalaxies()" << std::endl;
   // sort the field_halos by readshift
   std::sort(field_halos.begin(),field_halos.end(),
-            [](LensHalo *lh1,LensHalo *lh2){return (lh1->getZlens() < lh1->getZlens());});
+            [](LensHalo *lh1,LensHalo *lh2){return (lh1->getZlens() < lh2->getZlens());});
   
   
   if(verbose) std::cout << "leaving Lens::readInputSimFileObservedGalaxies()" << std::endl;
