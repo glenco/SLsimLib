@@ -58,12 +58,26 @@ public:
 	/// get the redshift
 	PosType getZlens() const { return zlens; }
     
+  // set the position of the Halo in physical Mpc on the lens plane
+  //void setX(PosType PosX, PosType PosY) { posHalo[0] = PosX ; posHalo[1] = PosY ; }
+  // set the position of the Halo in physical Mpc on the lens plane
+  //void setX(PosType *PosXY) { posHalo[0] = PosXY[0] ; posHalo[1] = PosXY[1] ; }
+  
+  /// get the position of the Halo in physical Mpc on the lens plane
+  void getX(PosType * MyPosHalo) const { MyPosHalo[0] = posHalo[0]*Dist ; MyPosHalo[1] = posHalo[1]*Dist; }
+
   /// set the position of the Halo in radians
-  void setX(PosType PosX, PosType PosY) { posHalo[0] = PosX ; posHalo[1] = PosY ; }
+  void setTheta(PosType PosX, PosType PosY) { posHalo[0] = PosX ; posHalo[1] = PosY ; }
   /// set the position of the Halo in radians
-  void setX(PosType *PosXY) { posHalo[0] = PosXY[0] ; posHalo[1] = PosXY[1] ; }
+  void setTheta(PosType *PosXY) { posHalo[0] = PosXY[0] ; posHalo[1] = PosXY[1] ; }
   /// get the position of the Halo in radians
-  void getX(PosType * MyPosHalo) const { MyPosHalo[0] = posHalo[0] ; MyPosHalo[1] = posHalo[1]; }
+  void getTheta(PosType * MyPosHalo) const { MyPosHalo[0] = posHalo[0] ; MyPosHalo[1] = posHalo[1]; }
+  
+  /// Set the angular size distance to the halo.  This should be the distance to the lens plane.
+  void setDist(PosType my_Dist){Dist = my_Dist;}
+  /// return current angular size distance, ie conversion between angular and special coordinates.  This may not agree with
+  /// the getZ() value because of the projection onto the lens plane.
+  PosType getDist() const {return Dist;}
 
   /// get the position of the Halo in physical Mpc
   /// display the position of the halo
@@ -162,8 +176,12 @@ public:
   
 protected:
 
+  // make LensHalo uncopyable
+  void operator=(LensHalo &){};
+  LensHalo(LensHalo &){};
+
   size_t idnumber; /// Identification number of halo.  It is not always used.
-  
+  PosType Dist;
   
   PosType alpha_int(PosType x) const;
   PosType norm_int(PosType r_max);
@@ -457,7 +475,7 @@ protected:
   
   PosType zlens;
   
-  /// Position of the Halo
+  /// Position of the Halo in angle
   PosType posHalo[2];
   
   

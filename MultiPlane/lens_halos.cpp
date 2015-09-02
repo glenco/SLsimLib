@@ -15,6 +15,7 @@ LensHalo::LensHalo(){
 	mass = Rmax = xmax = posHalo[0] = posHalo[1] = 0.0;
 	stars_implanted = false;
   elliptical_flag = false;
+  Dist = 0.0;
 }
 
 LensHalo::LensHalo(InputParams& params){
@@ -22,6 +23,7 @@ LensHalo::LensHalo(InputParams& params){
 	stars_implanted = false;
   posHalo[0] = posHalo[1] = 0.0;
   elliptical_flag = false;
+  Dist = 0.0;
 }
 
 void LensHalo::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed){

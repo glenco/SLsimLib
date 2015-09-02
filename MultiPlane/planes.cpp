@@ -116,6 +116,7 @@ void LensPlaneSingular::force(PosType *alpha
 	}
 }
 
+/// It is assumed that the position of halo is in physical Mpc
 void LensPlaneSingular::addHalo(LensHalo* halo)
 {
 	halos.push_back(halo);

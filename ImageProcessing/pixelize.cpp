@@ -1798,9 +1798,10 @@ void MultiGridSmoother::smooth(int Nsmooth,PixelMap &map){
 
 void PixelMap::AddSource(Source &source){
   PosType y[2];
+  PosType tmp = resolution*resolution;
   for(size_t index =0 ;index < map.size(); ++index){
     find_position(y,index);
-    map[index] = source.SurfaceBrightness(y);
+    map[index] += source.SurfaceBrightness(y)*tmp;
   }
 }
 

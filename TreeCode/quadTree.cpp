@@ -539,7 +539,8 @@ void TreeQuad::neighbors(PosType ray[],PosType rmax,std::list<IndexType> &neighb
       decend = false;
     }else if((*it)->child0 == NULL){  // at leaf
       for(int i=0;i<(*it)->nparticles;++i){
-        if( (tree->xp[(*it)->particles[i]][0] - ray[0])*(tree->xp[(*it)->particles[i]][0] - ray[0]) + (tree->xp[(*it)->particles[i]][1] - ray[1])*(tree->xp[(*it)->particles[i]][1] - ray[1]) < r2) neighbors.push_back((*it)->particles[i]);
+        if( (tree->xp[(*it)->particles[i]][0] - ray[0])*(tree->xp[(*it)->particles[i]][0] - ray[0])
+           + (tree->xp[(*it)->particles[i]][1] - ray[1])*(tree->xp[(*it)->particles[i]][1] - ray[1]) < r2) neighbors.push_back((*it)->particles[i]);
       }
       decend = false;
     }

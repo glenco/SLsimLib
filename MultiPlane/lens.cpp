@@ -659,10 +659,11 @@ void Lens::createFieldPlanes(bool verbose)
       
       assert( field_Dl[i] > 0 );
 			// convert to proper distance on the lens plane
-      field_halos[j]->getX(tmp);
-      field_halos[j]->setX(tmp[0]*field_Dl[i]/(1+field_plane_redshifts[i])
-                           ,tmp[1]*field_Dl[i]/(1+field_plane_redshifts[i]));
-			//halo_pos[j][0] *= field_Dl[i]/(1+field_plane_redshifts[i]);
+      //field_halos[j]->getX(tmp);
+      //field_halos[j]->setX(tmp[0]*field_Dl[i]/(1+field_plane_redshifts[i])
+      //                     ,tmp[1]*field_Dl[i]/(1+field_plane_redshifts[i]));
+      field_halos[j]->setDist(field_Dl[i]/(1+field_plane_redshifts[i]));
+      //halo_pos[j][0] *= field_Dl[i]/(1+field_plane_redshifts[i]);
 			//halo_pos[j][1] *= field_Dl[i]/(1+field_plane_redshifts[i]);
 		}
 		
@@ -801,7 +802,7 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
     
     // Adding the randomly-generated halo into the substructure :
     substructure.halos.push_back(new LensHaloPowerLaw(mass,Rmax,redshift,Rmax,1.0,1.0,0,0));
-    substructure.halos.back()->setX(theta_pos);
+    substructure.halos.back()->setTheta(theta_pos);
     ++haloid;
     substructure.halos.back()->setID(haloid);
   }
@@ -990,7 +991,7 @@ void Lens::resetSubstructure(bool verbose){
     rmax_max = MAX(Rmax,rmax_max);
     
     substructure.halos.push_back(new LensHaloPowerLaw(mass,Rmax,redshift,Rmax,1.0,1.0,0,0));
-    substructure.halos.back()->setX(theta_pos);
+    substructure.halos.back()->setTheta(theta_pos);  // this will be converted to proper distence when planes are constructed
     ++haloid;
     substructure.halos.back()->setID(haloid);
   }
@@ -1006,6 +1007,7 @@ void Lens::resetSubstructure(bool verbose){
   lensing_planes[lplane_index] = field_planes[fplane_index] = substructure.plane = new LensPlaneTree(substructure.halos.data(), NhalosSub, 0, 0);
 }
 
+/// It is assumed that the position of halo is in physical Mpc
 void Lens::addMainHaloToPlane(LensHalo* halo)
 {
 	// the redshift and distance of the halo
@@ -1020,6 +1022,7 @@ void Lens::addMainHaloToPlane(LensHalo* halo)
 	{
 		// add to plane at (i-1)
 		main_planes[i-1]->addHalo(halo);
+    halo->setDist(main_Dl[i-1]/(1+main_plane_redshifts[i-1]));
 	}
 	else if(i == main_Dl.size())
 	{
@@ -1027,11 +1030,13 @@ void Lens::addMainHaloToPlane(LensHalo* halo)
 		main_planes.push_back(new LensPlaneSingular(&halo, 1));
 		main_plane_redshifts.push_back(halo_z);
 		main_Dl.push_back(halo_Dl);
+    halo->setDist(halo_Dl/(1+halo_z));
 	}
 	else if((main_Dl[i] - halo_Dl) < MIN_PLANE_DIST)
 	{
 		// add to existing plane at position i
 		main_planes[i]->addHalo(halo);
+    halo->setDist(main_Dl[i]/(1+main_plane_redshifts[i]));
 	}
 	else
 	{
@@ -1039,11 +1044,14 @@ void Lens::addMainHaloToPlane(LensHalo* halo)
 		main_planes.insert(main_planes.begin() + i, new LensPlaneSingular(&halo, 1));
 		main_plane_redshifts.insert(main_plane_redshifts.begin() + i, halo_z);
 		main_Dl.insert(main_Dl.begin() + i, halo_Dl);
+    halo->setDist(halo_Dl/(1+halo_z));
 	}
 }
 
 /* This adds halo to the closest (in angular size distance) plane.  Only if 
- there are no main_planes will it add one
+ there are no main_planes will it add one.
+
+ It is assumed that the position of halo is in physical Mpc
 */
 void Lens::addMainHaloToNearestPlane(LensHalo* halo)
 {
@@ -1052,15 +1060,16 @@ void Lens::addMainHaloToNearestPlane(LensHalo* halo)
   PosType halo_Dl = cosmo.coorDist(0, halo_z);
   
   if(main_Dl.size() == 0){
-    main_planes.push_back(new LensPlaneSingular(&halo, 1));
-    main_plane_redshifts.push_back(halo_z);
-    main_Dl.push_back(halo_Dl);
+      main_planes.push_back(new LensPlaneSingular(&halo, 1));
+      main_plane_redshifts.push_back(halo_z);
+      main_Dl.push_back(halo_Dl);
   }
   
   // find the position of the new lens plane
   std::size_t i = Utilities::closest(main_Dl,halo_Dl);
 
   main_planes[i]->addHalo(halo);
+  halo->setDist(main_Dl[i]/(1+main_plane_redshifts[i]));
 }
 
 
@@ -1088,7 +1097,7 @@ void Lens::createMainPlanes()
 		
 		// add plane to arrays
 		main_plane_redshifts.push_back((*it)->getZlens());
-		main_Dl.push_back(cosmo.coorDist(0, main_plane_redshifts.back()));
+		main_Dl.push_back(cosmo.coorDist(main_plane_redshifts.back()));
 		
 		// advance iterator
 		it = jt;
@@ -1254,6 +1263,8 @@ void Lens::clearMainHalos(bool verbose)
  * If addplanes is true new planes will be added otherwise 
  * the halo is added to the nearest plane and a plane is added only 
  * if none exited on entry.
+ *
+ *  The angular position of the halo should be preserved, but the x coordinates may change
  */
 void Lens::insertMainHalo(LensHalo* halo,bool addplanes,bool verbose)
 {
@@ -1274,6 +1285,8 @@ void Lens::insertMainHalo(LensHalo* halo,bool addplanes,bool verbose)
  * If addplanes is true new planes will be added otherwise
  * the halo is added to the nearest plane and a plane is added only
  * if none exited on entry.
+ *
+ *  The angular position of the halo should be preserved, but the x coordinates may change
  */
 void Lens::insertMainHalos(LensHalo** halos, std::size_t Nhalos,bool addplanes, bool verbose)
 {
@@ -1556,7 +1569,7 @@ void Lens::createFieldHalos(bool verbose)
 			}
       
 			//halo_pos_vec.push_back(theta_pos);
-      field_halos.back()->setX(theta_pos);
+      field_halos.back()->setTheta(theta_pos);  // this will be converted to proper distence when planes are constructed
       ++haloid;
       field_halos.back()->setID(haloid);
       
@@ -1586,7 +1599,7 @@ void Lens::createFieldHalos(bool verbose)
         theta2[0]=theta_pos[0]; theta2[1]=theta_pos[1]; theta2[2]=theta_pos[2];
         
         //halo_pos_vec.push_back(theta2);
-        field_halos.back()->setX(theta2);
+        field_halos.back()->setTheta(theta2);
         field_halos.back()->setID(haloid);
         
         ++j;
@@ -1634,7 +1647,7 @@ void Lens::readInputSimFileMillennium(bool verbose)
 	PosType rmax=0,rtmp=0;
   PosType theta[2];
   
-  size_t idnumber = 1;
+  //size_t idnumber = 1;
   
 	std::ifstream file_in(field_input_sim_file.c_str());
 	if(!file_in){
@@ -1799,7 +1812,7 @@ void Lens::readInputSimFileMillennium(bool verbose)
 			if(vdisp > V_max) V_max = vdisp;
       
 			//halo_pos_vec.push_back(theta);
-      field_halos.back()->setX(theta);
+      field_halos.back()->setTheta(theta);  // this will be converted to proper distence when planes are constructed
       
       /****** test **********
       {
@@ -1850,9 +1863,8 @@ void Lens::readInputSimFileMillennium(bool verbose)
         //theta2 = new PosType[2];
         //theta2[0]=theta[0]; theta2[1]=theta[1];
 				//halo_pos_vec.push_back(theta2);
-        field_halos.back()->setX(theta);
+        field_halos.back()->setTheta(theta);
         field_halos.back()->setID(haloid);
-
         
         /****** test **********
         {
@@ -2130,7 +2142,7 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose)
         
         //if(mass > 0.0) halo_pos_vec.push_back(theta);
         if(mass > 0.0){
-          field_halos.back()->setX(theta);
+          field_halos.back()->setTheta(theta);
           field_halos.back()->setID(haloid);
         }
         if(mass > mass_max) {
@@ -2169,7 +2181,7 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose)
           //theta2 = new PosType[2];
           //theta2[0]=theta[0]; theta2[1]=theta[1];
           //halo_pos_vec.push_back(theta2);
-          field_halos.back()->setX(theta);
+          field_halos.back()->setTheta(theta);
           field_halos.back()->setID(haloid);
           
           ++j;
@@ -2454,7 +2466,7 @@ void Lens::readInputSimFileObservedGalaxies(bool verbose)
     
     //if(mass > 0.0) halo_pos_vec.push_back(theta);
     if(mass > 0.0){
-      field_halos.back()->setX(theta);
+      field_halos.back()->setTheta(theta);
       field_halos.back()->setID(haloid);
     }
     if(mass > mass_max) {
