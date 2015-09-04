@@ -2650,9 +2650,12 @@ void Lens::combinePlanes(bool verbose)
   
   assert(lensing_planes.size() == field_planes.size() + main_planes.size());
   // std::cout << "assert : " << zsource << " , " << plane_redshifts.back() << std::endl ;
-  // assert(zsource > plane_redshifts.back()); // !!!
+  //assert(zsource > plane_redshifts.back()); // !!!
   
-  
+  if(zsource <= plane_redshifts.back()){
+    zsource = plane_redshifts.back() + 0.1;
+  }
+
   // add the pseudo-plane for rayshooting at the end of the arrays
   plane_redshifts.push_back(zsource);
   Dl.push_back(cosmo.coorDist(0, zsource));
