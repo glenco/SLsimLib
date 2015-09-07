@@ -95,6 +95,7 @@ public:
 	/// Set angular position of current source.
 	void setX(PosType my_theta[2]){galaxies[index].setX(my_theta);}
 	void setX(PosType my_x,PosType my_y){galaxies[index].setX(my_x, my_y);}
+
 	std::size_t getNumberOfGalaxies() const {return galaxies.size();}
 
 	void multiplier(PosType z,PosType mag_cut,int Multiplicity,Utilities::RandomNumbers_NR &ran);
@@ -129,6 +130,10 @@ public:
   }
 
 private:
+  // make it uncopyable
+  SourceMultiAnaGalaxy(SourceOverzierPlus &s){};
+  SourceMultiAnaGalaxy & operator=(SourceMultiAnaGalaxy &s){return s;}
+  
 	Band band;
 	float mag_limit;
 	std::size_t index;

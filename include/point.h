@@ -411,7 +411,7 @@ struct Point_2d{
   void rotate(PosType theta){
     PosType c = cos(theta),s = sin(theta);
     PosType tmp = x[0];
-    x[0] = c*tmp + s*x[1];
+    x[0] = c*tmp - s*x[1];
     x[1] = c*x[1] + s*tmp;
   }
   
@@ -512,14 +512,12 @@ struct Point_3d{
   /// a rotation theta around the z-axis followed by a rotation phi around the y-axis
   void rotate(PosType theta,PosType phi){
     PosType c = cos(theta),s = sin(theta);
-    PosType tmp = x[0];
-    x[0] = c*tmp + s*x[1];
-    x[1] = c*x[1] + s*tmp;
+    PosType tmp = c*x[0] - s*x[1];
+    x[1] = c*x[1] + s*x[0];
     
     c = cos(phi);
-    s = sin(phi);
-    tmp = x[0];
-    x[0] = c*tmp + s*x[2];
+    s = sin(phi);;
+    x[0]  = c*tmp - s*x[2];
     x[2] = c*x[2] + s*tmp;
   }
   

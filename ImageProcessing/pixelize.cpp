@@ -1805,6 +1805,23 @@ void PixelMap::AddSource(Source &source){
   }
 }
 
+void PixelMap::AddSource(Source &source,int oversample){
+  PosType y[2],x[2],bl;
+  PosType tmp_res = resolution*1.0/oversample;
+  PosType tmp = tmp_res*tmp_res;
+  
+  bl = resolution /2 - 0.5*tmp_res;
+  
+  for(size_t index =0 ;index < map.size(); ++index){
+    find_position(y,index);
+    for(int j=0;j<oversample*oversample;++j){
+      x[0] = y[0] - bl + ( j%oversample )*tmp_res;
+      x[1] = y[1] - bl + ( j/oversample )*tmp_res;
+      map[index] += source.SurfaceBrightness(x)*tmp;
+    }
+  }
+}
+
 
 
 

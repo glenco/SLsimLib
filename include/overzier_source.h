@@ -186,10 +186,21 @@ public:
   void setBand(Band band);
   static PosType *getx(SourceOverzierPlus &sourceo){return sourceo.getX();}
 
+  /// Reset the position of the source in radians
+  virtual inline void setX(PosType *xx){
+    source_x[0] = xx[0];
+    source_x[1] = xx[1];
+    spheroid->setX(xx);
+  }
+  virtual void setX(PosType my_x,PosType my_y){
+    source_x[0] = my_x;
+    source_x[1] = my_y;
+    spheroid->setX(my_x,my_y);
+  }
+
 private:
   int Narms;
   PosType Ad,mctalpha,arm_alpha;
-  //std::unique_ptr<SourceSersic> spheroid;
   SourceSersic *spheroid;
   std::vector<PosType> modes;
   PosType disk_phase;
