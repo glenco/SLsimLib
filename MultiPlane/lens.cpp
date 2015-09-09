@@ -1845,7 +1845,7 @@ void Lens::readInputSimFileMillennium(bool verbose)
             field_halos.push_back(new LensHaloRealNSIE(mass*field_galaxy_mass_fraction,z,sigma,0.0,fratio,pa,0));
             break;
           case pl_gal:
-            field_halos.push_back(new LensHaloPowerLaw(mass*field_galaxy_mass_fraction,R_max,z,0.0,field_int_prof_gal_slope,fratio,pa,0));
+            field_halos.push_back(new LensHaloPowerLaw(mass*field_galaxy_mass_fraction,R_max,z,0.0,field_int_prof_gal_slope,1,pa,0));
             break;
           case hern_gal:
             ERROR_MESSAGE();
