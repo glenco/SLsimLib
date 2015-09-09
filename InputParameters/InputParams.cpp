@@ -837,3 +837,55 @@ bool InputParams::exist(std::string label) const
 	
 	return true;
 }
+
+std::string to_string(Band &band){
+  
+  switch (band) {
+    case EUC_VIS:
+      return "EUC_VIS";
+    case EUC_Y:
+      return "EUC_Y";
+    case EUC_J:
+      return "EUC_J";
+    case EUC_H:
+      return "EUC_H";
+    case SDSS_U:
+      return "SDSS_U";
+    case SDSS_G:
+      return "SDSS_G";
+    case SDSS_R:
+      return "SDSS_R";
+    case SDSS_I:
+      return "SDSS_I";
+    case SDSS_Z:
+      return "SDSS_Z";
+    case J:
+      return "J";
+    case H:
+      return "H";
+    case Ks:
+      return "Ks";
+    case IRAC1:
+      return "IRAC1";
+    case IRAC2:
+      return "IRAC2";
+    case F435W:
+      return "F435W";
+    case F606W:
+      return "F606W";
+    case F775W:
+      return "F775W";
+    case F850LP:
+      return "F850LP";
+    case F814W:
+      return "F814W";
+    case F110W:
+      return "F110W";
+    case F160W:
+      return "F160W";
+    default:
+      return "UnknownBand";
+      break;
+  }
+  
+}

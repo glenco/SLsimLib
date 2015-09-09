@@ -494,7 +494,7 @@ void SourceShapelets::setActiveBand(Band band)
     }
   }
   std::cout << "The band is not available! Available bands are F435W,F606W,F775W,F850LP,F110W,F160W,SDSS_U,SDSS_G,SDSS_R,SDSS_I" << std::endl;
-  exit(1);
+  throw std::invalid_argument("band not supported");
 }
 
 SourceShapelets::SourceShapelets(

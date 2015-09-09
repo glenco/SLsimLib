@@ -1748,6 +1748,5 @@ PosType LensHalo::DALPHAYDM::operator()(PosType m){
   return m*kappa/(ap*bp*bp*bp*p2); // integrand of equation (29) in Schramm 1990
 }
 
-
 //bool LensHaloZcompare(LensHalo *lh1,LensHalo *lh2){return (lh1->getZlens() < lh2->getZlens());}
 //bool compare(LensHalo *lh1,LensHalo *lh2){return (lh1->getZlens() < lh2->getZlens());}

@@ -71,6 +71,9 @@ enum HaloCatFormats {MillenniumObs,MultiDarkHalos,ObservedData};
 /// Methods to make a previously isotropic halo elliptical
 enum EllipMethod {Fourier,Pseudo,Schramm,Keeton};
 
+/// convert a Band type to a string name.
+std::string to_string(Band &band);
+
 /** \brief Structure for reading and writing parameters to and from a parameter file as well as a container 
  * for passing the parameters to other classes and functions.
  *

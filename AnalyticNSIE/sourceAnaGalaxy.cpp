@@ -271,7 +271,8 @@ void SourceMultiAnaGalaxy::readDataFile(Utilities::RandomNumbers_NR &ran){
 		default:
 			std::cout << "Requested band is not an available option." << std::endl;
 			ERROR_MESSAGE();
-			exit(1);
+      throw std::invalid_argument("band not supported");
+
 		}
     
     color_cat << GalID << "  " << z_app << "  " << SDSS_u << "  " <<SDSS_g << "  " <<SDSS_r << "  " <<
@@ -354,7 +355,7 @@ void SourceMultiAnaGalaxy::assignParams(InputParams& params){
 	if(!params.get("source_band",band)){
 		std::cout << "ERROR: Must assign source_band in parameter file " << params.filename() << std::endl;
 		std::cout << "Could be that specified band is not available " << std::endl;
-		exit(1);
+    throw std::invalid_argument("band not supported");
 	}
 	if(!params.get("source_mag_limit",mag_limit)){
 		std::cout << "ERROR: Must assign source_mag_limit in parameter file " << params.filename() << std::endl;

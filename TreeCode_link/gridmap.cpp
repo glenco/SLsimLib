@@ -146,6 +146,36 @@ PixelMap GridMap::getPixelMap(int resf){
   return map;
 }
 
+void GridMap::getPixelMap(PixelMap &map){
+  
+  int resf = Ngrid_init/map.getNx();
+  
+  if(resf*map.getNx() != Ngrid_init) throw std::invalid_argument("PixelMap does not match GripMap!");
+  if(resf*map.getNy() != Ngrid_init2) throw std::invalid_argument("PixelMap does not match GripMap!");
+
+  size_t N = Ngrid_init*Ngrid_init2;
+
+  if(map.getCenter()[0] != (i_points[0].x[0] + i_points[N-1].x[0])/2) throw std::invalid_argument("PixelMap does not match GripMap!");
+  if(map.getCenter()[1] != (i_points[0].x[1] + i_points[N-1].x[1])/2) throw std::invalid_argument("PixelMap does not match GripMap!");
+  
+  if(resf <=0){
+    ERROR_MESSAGE();
+    throw std::invalid_argument("resf must be > 0");
+  }
+
+  map.Clean();
+  
+  int factor = resf*resf;
+  for(size_t i = 0 ; i < Ngrid_init ; ++i){
+    for(size_t j = 0 ; j < Ngrid_init2 ; ++j){
+      map.data()[i/resf + map.getNx() * (j / resf)] +=
+      i_points[ i + Ngrid_init * j].surface_brightness/factor;
+    }
+  }
+  
+  map.Renormalize(map.getResolution()*map.getResolution());
+}
+
 
 double GridMap::RefreshSurfaceBrightnesses(SourceHndl source){
   PosType total=0,tmp;

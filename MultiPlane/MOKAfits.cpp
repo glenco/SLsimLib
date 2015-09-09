@@ -177,7 +177,7 @@ void LensHaloMassMap::readMap(){
     //    mapbut[i+map->nx*j] = map->convergence[i+map->nx*j];
     //  }
     // map->convergence.resize(npixels*npixels);
-    // keep it like it is, even if is a rectangle
+    // keep it like it is, even if it is a rectangle
     if(map->ny!=map->nx){
       std:: cout << " " << std:: endl;
       std:: cout << " the plane maps are rectangles! " << std:: endl;

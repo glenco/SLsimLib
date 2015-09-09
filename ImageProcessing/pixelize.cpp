@@ -1797,8 +1797,18 @@ void MultiGridSmoother::smooth(int Nsmooth,PixelMap &map){
 }
 
 void PixelMap::AddSource(Source &source){
+  Point_2d s_center;
+  source.getX(s_center);
+  
+  if( s_center[0] + source.getRadius() < map_boundary_p1[0] ) return;
+  if( s_center[0] - source.getRadius() > map_boundary_p2[0] ) return;
+  if( s_center[1] + source.getRadius() < map_boundary_p1[1] ) return;
+  if( s_center[1] - source.getRadius() > map_boundary_p2[1] ) return;
+
   PosType y[2];
   PosType tmp = resolution*resolution;
+  
+  
   for(size_t index =0 ;index < map.size(); ++index){
     find_position(y,index);
     map[index] += source.SurfaceBrightness(y)*tmp;
@@ -1806,6 +1816,14 @@ void PixelMap::AddSource(Source &source){
 }
 
 void PixelMap::AddSource(Source &source,int oversample){
+  Point_2d s_center;
+  source.getX(s_center);
+  
+  if( s_center[0] + source.getRadius() < map_boundary_p1[0] ) return;
+  if( s_center[0] - source.getRadius() > map_boundary_p2[0] ) return;
+  if( s_center[1] + source.getRadius() < map_boundary_p1[1] ) return;
+  if( s_center[1] - source.getRadius() > map_boundary_p2[1] ) return;
+
   PosType y[2],x[2],bl;
   PosType tmp_res = resolution*1.0/oversample;
   PosType tmp = tmp_res*tmp_res;

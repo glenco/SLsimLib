@@ -49,6 +49,10 @@ struct GridMap{
   
   /// returns a PixelMap with the flux in pixels at a resolution of res times the original resolution
   PixelMap getPixelMap(int res);
+  /// update a PixelMap with the flux in pixels at a resolution of res times the original resolution.
+  /// The map must have precisely the right size and center to match or an exception will be thrown.
+  /// Constructing the map with PixelMap getPixelMap(int res) will insure that it does.
+  void getPixelMap(PixelMap &map);
   
 private:
   void xygridpoints(Point *points,double range,const double *center,long Ngrid
