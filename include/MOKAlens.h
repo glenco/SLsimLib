@@ -100,8 +100,10 @@ public:
 	double getRangeRad() const { return map->boxlrad; }
 	/// return range of input map in physical Mpc
 	double getRangeMpc() const { return map->boxlMpc; }
-	/// return number of pixels on a side in original map
-	size_t getN() const { return map->nx; }
+  /// return number of pixels on a x-axis side in original map
+  size_t getNx() const { return map->nx; }
+  /// return number of pixels on a y-axis side in original map
+  size_t getNy() const { return map->ny; }
 	
 private:
 	PixelMapType maptype;
