@@ -58,7 +58,9 @@ enum PixelMapType
 enum GalaxyLensHaloType
 {
 	null_gal,
-	nsie_gal
+	nsie_gal,
+  pl_gal,
+  hern_gal
 };
 
 /// names of clump and sb models

@@ -403,6 +403,7 @@ private: /* field */
 	bool flag_field_gal_on;
 	/// galaxy subhalo profile type; needs to be 0 or PowerLaw, 1 or NFW, 2 or PseudoNFW, 3 or NSIE, 4 or PointMass
 	GalaxyLensHaloType field_int_prof_gal_type;
+  PosType field_int_prof_gal_slope;
 	// mass fraction in the host galaxy
 	//PosType field_galaxy_mass_fraction;
 	
