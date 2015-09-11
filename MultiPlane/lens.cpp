@@ -1845,6 +1845,7 @@ void Lens::readInputSimFileMillennium(bool verbose)
             field_halos.push_back(new LensHaloRealNSIE(mass*field_galaxy_mass_fraction,z,sigma,0.0,fratio,pa,0));
             break;
           case pl_gal:
+            assert(field_int_prof_gal_slope>0);
             field_halos.push_back(new LensHaloPowerLaw(mass*field_galaxy_mass_fraction,R_max,z,0.0,field_int_prof_gal_slope,1,pa,0));
             break;
           case hern_gal:
@@ -2638,7 +2639,6 @@ void Lens::combinePlanes(bool verbose)
   assert(lensing_planes.size() == field_planes.size() + main_planes.size());
   // std::cout << "assert : " << zsource << " , " << plane_redshifts.back() << std::endl ;
   //assert(zsource > plane_redshifts.back()); // !!!
-  assert(plane_redshifts.size()>0);
   if(zsource <= plane_redshifts.back()){
     zsource = plane_redshifts.back() + 0.1;
   }
