@@ -428,7 +428,7 @@ private: /* main */
 	/// vector of all main halos
 	Utilities::MixedVector<LensHalo*> main_halos;
 	/// vector of own main halos that will be deleted
-	std::vector<LensHalo*> main_halos_created;
+	/// std::vector<LensHalo*> main_halos_created;
 	/// vector of all main planes
 	std::vector<LensPlane*> main_planes;
 	/// vector of main plane redshifts

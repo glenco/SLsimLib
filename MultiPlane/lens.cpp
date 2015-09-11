@@ -145,7 +145,7 @@ Lens::~Lens()
   
 	//Utilities::free_PosTypeMatrix(halo_pos, field_halos.size(), 3);
   
-	Utilities::delete_container(main_halos_created);
+	//Utilities::delete_container(main_halos_created);
 	Utilities::delete_container(field_halos);
   Utilities::delete_container(substructure.halos);
   std::cout << "In Lens structure" << std::endl;
@@ -1245,7 +1245,7 @@ void Lens::createMainHalos(InputParams& params)
 
 void Lens::clearMainHalos(bool verbose)
 {
-	Utilities::delete_container(main_halos_created);
+	//Utilities::delete_container(main_halos);
 	main_halos.clear();
 	
 	flag_switch_main_halo_on = false;
@@ -1301,7 +1301,7 @@ void Lens::insertMainHalos(LensHalo** halos, std::size_t Nhalos, bool verbose)
  */
 void Lens::replaceMainHalos(LensHalo* halo,bool verbose)
 {
-	Utilities::delete_container(main_halos_created);
+	//Utilities::delete_container(main_halos);
 	main_halos.clear();
 	
 	halo->setCosmology(cosmo);
@@ -1320,9 +1320,9 @@ void Lens::replaceMainHalos(LensHalo* halo,bool verbose)
  */
 void Lens::replaceMainHalos(LensHalo** halos, std::size_t Nhalos,bool verbose)
 {
-	Utilities::delete_container(main_halos_created);
+  //Utilities::delete_container(main_halos);
 	main_halos.clear();
-	
+  
 	for(std::size_t i = 0; i < Nhalos; ++i)
 	{
 		halos[i]->setCosmology(cosmo);
@@ -2638,7 +2638,7 @@ void Lens::combinePlanes(bool verbose)
   assert(lensing_planes.size() == field_planes.size() + main_planes.size());
   // std::cout << "assert : " << zsource << " , " << plane_redshifts.back() << std::endl ;
   //assert(zsource > plane_redshifts.back()); // !!!
-  
+  assert(plane_redshifts.size()>0);
   if(zsource <= plane_redshifts.back()){
     zsource = plane_redshifts.back() + 0.1;
   }
