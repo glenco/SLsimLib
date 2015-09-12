@@ -59,7 +59,9 @@ Lens::Lens(long* my_seed,PosType z_source, CosmoParamSet cosmoset,bool verbose)
   
   //charge = cosmo.angDist(zsource)/cosmo.angDist(0.3)/cosmo.angDist(0.3,zsource);
   //charge = 4*pi/cosmo.angDist(0.3);
+  PosType ztmp = zsource;
   combinePlanes(true);
+  if(zsource != ztmp) ResetSourcePlane(ztmp,false);
   std::cout << "number of field halos :" << field_halos.size() << std::endl;
 }
 
@@ -130,7 +132,9 @@ Lens::Lens(InputParams& params, long* my_seed, CosmoParamSet cosmoset, bool verb
   }
   
   // set up the lens contents :
+  PosType ztmp = zsource;
 	buildPlanes(params, verbose);
+  if(zsource != ztmp) ResetSourcePlane(ztmp,false);
   std::cout << "number of field halos :" << field_halos.size() << std::endl;
 
 }
@@ -2196,7 +2200,6 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose)
   
 	if(verbose) std::cout << "sorting in Lens::readInputSimFileMultiDarkHalos()" << std::endl;
 	// sort the field_halos by readshift
-	//Lens::quicksort(field_halos.data(),halo_pos,field_halos.size());
   std::sort(field_halos.begin(),field_halos.end(),LensHaloZcompare);
   
   
@@ -2505,7 +2508,7 @@ void Lens::readInputSimFileObservedGalaxies(bool verbose)
   if(verbose) std::cout << "sorting in Lens::readInputSimFileObservedGalaxies()" << std::endl;
   // sort the field_halos by readshift
   std::sort(field_halos.begin(),field_halos.end(),
-            [](LensHalo *lh1,LensHalo *lh2){return (lh1->getZlens() < lh1->getZlens());});
+            [](LensHalo *lh1,LensHalo *lh2){return (lh1->getZlens() < lh2->getZlens());});
   
   
   if(verbose) std::cout << "leaving Lens::readInputSimFileObservedGalaxies()" << std::endl;
@@ -2596,9 +2599,12 @@ void Lens::combinePlanes(bool verbose)
   
   assert(lensing_planes.size() == field_planes.size() + main_planes.size());
   // std::cout << "assert : " << zsource << " , " << plane_redshifts.back() << std::endl ;
-  // assert(zsource > plane_redshifts.back()); // !!!
+  //assert(zsource > plane_redshifts.back()); // !!!
   
-  
+  if(zsource <= plane_redshifts.back()){
+    zsource = plane_redshifts.back() + 0.1;
+  }
+
   // add the pseudo-plane for rayshooting at the end of the arrays
   plane_redshifts.push_back(zsource);
   Dl.push_back(cosmo.coorDist(0, zsource));
