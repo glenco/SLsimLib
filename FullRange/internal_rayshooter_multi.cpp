@@ -253,8 +253,8 @@ void *compute_rays_parallel(void *_p)
       assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
       assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
       assert(kappa == kappa);
-      if(isinf(kappa)) { std::cout << "xx = " << xx[0] << " " << xx[1] << std::endl ;}
-      assert(!isinf(kappa));
+      if(std::isinf(kappa)) { std::cout << "xx = " << xx[0] << " " << xx[1] << std::endl ;}
+      assert(!std::isinf(kappa));
       
       fac = 1/(1+p->plane_redshifts[j]);
       /* multiply by fac to obtain 1/comoving_distance/physical_distance
@@ -501,8 +501,8 @@ void *compute_rays_parallel(void *_p)
       assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
       assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
       assert(kappa == kappa);
-      if(isinf(kappa)) { std::cout << "xx = " << xx[0] << " " << xx[1] << std::endl ;}
-      assert(!isinf(kappa));
+      if(std::isinf(kappa)) { std::cout << "xx = " << xx[0] << " " << xx[1] << std::endl ;}
+      assert(!std::isinf(kappa));
       
       fac = 1/(1+p->plane_redshifts[j]);
       // multiply by fac to obtain 1/comoving_distance/physical_distance
