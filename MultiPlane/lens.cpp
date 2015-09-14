@@ -2657,7 +2657,7 @@ void Lens::combinePlanes(bool verbose)
   // std::cout << "assert : " << zsource << " , " << plane_redshifts.back() << std::endl ;
   //assert(zsource > plane_redshifts.back()); // !!!
   
-  if(zsource <= plane_redshifts.back()){
+  if(plane_redshifts.size() > 0 && zsource <= plane_redshifts.back()){
     zsource = plane_redshifts.back() + 0.1;
   }
 

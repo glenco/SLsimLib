@@ -1173,6 +1173,7 @@ namespace Utilities
   ){
     T tmp;
     size_t ran_t;
+    if(vec.size() < 2) return;
     for (size_t i = vec.size()-1; i>0; --i) {
       ran_t = (size_t)(ran()*(i+1));
       tmp = vec[ran_t];
