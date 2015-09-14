@@ -545,8 +545,19 @@ SourceShapelets::SourceShapelets(
   if(shap_file.empty())
     throw std::invalid_argument("Please enter a valid filename for the FITS file input");
   
-  std::auto_ptr<CCfits::FITS> fp(new CCfits::FITS(shap_file.c_str(), CCfits::Read));
-  
+  //std::auto_ptr<CCfits::FITS> fp(new CCfits::FITS(shap_file.c_str(), CCfits::Read));
+ 
+  std::auto_ptr<CCfits::FITS> fp(0);
+  try
+  {
+    fp.reset( new CCfits::FITS(shap_file.c_str(), CCfits::Read) );
+  }
+  catch (CCfits::FITS::CantOpen)
+  {
+    std::cerr << "Cannot open " << shap_file << std::endl;
+    exit(1);
+  }
+
   CCfits::PHDU& h0 = fp->pHDU();
   
   h0.readKey("BETA", source_r);
@@ -583,7 +594,19 @@ SourceShapelets::SourceShapelets(
   if(shap_file.empty())
     throw std::invalid_argument("Please enter a valid filename for the FITS file input");
   
-  std::auto_ptr<CCfits::FITS> fp(new CCfits::FITS(shap_file.c_str(), CCfits::Read));
+  //std::auto_ptr<CCfits::FITS> fp(new CCfits::FITS(shap_file.c_str(), CCfits::Read));
+  
+  std::auto_ptr<CCfits::FITS> fp(0);
+  try
+  {
+    fp.reset( new CCfits::FITS(shap_file.c_str(), CCfits::Read) );
+  }
+  catch (CCfits::FITS::CantOpen)
+  {
+    std::cerr << "Cannot open " << shap_file << std::endl;
+    exit(1);
+  }
+
   
   CCfits::PHDU& h0 = fp->pHDU();
   

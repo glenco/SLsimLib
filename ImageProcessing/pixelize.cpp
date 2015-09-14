@@ -131,7 +131,19 @@ PixelMap::PixelMap(
   if(fitsfilename.empty())
     throw std::invalid_argument("Please enter a valid filename for the FITS file input");
   
-  std::auto_ptr<CCfits::FITS> fp(new CCfits::FITS(fitsfilename, CCfits::Read));
+  //std::auto_ptr<CCfits::FITS> fp(new CCfits::FITS(fitsfilename, CCfits::Read));
+  
+  std::auto_ptr<CCfits::FITS> fp(0);
+  try
+  {
+    fp.reset( new CCfits::FITS (fitsfilename, CCfits::Read) );
+  }
+  catch (CCfits::FITS::CantOpen)
+  {
+    std::cerr << "Cannot open " << fitsfilename << std::endl;
+    exit(1);
+  }
+
   
   CCfits::PHDU& h0 = fp->pHDU();
   
@@ -647,8 +659,19 @@ void PixelMap::printFITS(std::string filename, bool verbose) const
   long naxes[2] = {(long)Nx, (long)Ny};
   
   // might throw CCfits::FITS::CantCreate
-  std::auto_ptr<CCfits::FITS> fout(new CCfits::FITS(filename, FLOAT_IMG, naxis, naxes));
-  
+  //std::auto_ptr<CCfits::FITS> fout(new CCfits::FITS(filename, FLOAT_IMG, naxis, naxes));
+
+  std::auto_ptr<CCfits::FITS> fout(0);
+  try
+  {
+    fout.reset( new CCfits::FITS(filename, FLOAT_IMG, naxis, naxes) );
+  }
+  catch (CCfits::FITS::CantOpen)
+  {
+    std::cerr << "Cannot open " << filename << std::endl;
+    exit(1);
+  }
+
   std::vector<long> naxex(2);
   naxex[0] = Nx;
   naxex[1] = Ny;
@@ -698,7 +721,19 @@ void PixelMap::printFITS(std::string filename,std::vector<std::tuple<std::string
   long naxes[2] = {(long)Nx, (long)Ny};
 
   // might throw CCfits::FITS::CantCreate
-  std::auto_ptr<CCfits::FITS> fout(new CCfits::FITS(filename, FLOAT_IMG, naxis, naxes));
+  //std::auto_ptr<CCfits::FITS> fout(new CCfits::FITS(filename, FLOAT_IMG, naxis, naxes));
+  
+  std::auto_ptr<CCfits::FITS> fout(0);
+  try
+  {
+    fout.reset( new CCfits::FITS(filename, FLOAT_IMG, naxis, naxes) );
+  }
+  catch (CCfits::FITS::CantOpen)
+  {
+    std::cerr << "Cannot open " << filename << std::endl;
+    exit(1);
+  }
+
   
   std::vector<long> naxex(2);
   naxex[0] = Nx;

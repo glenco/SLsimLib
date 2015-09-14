@@ -253,7 +253,19 @@ void InputParams::readMOKA()
 	
 	try
 	{
-		std::auto_ptr<CCfits::FITS> ff(new CCfits::FITS(MOKA_input_file, CCfits::Read));
+		//std::auto_ptr<CCfits::FITS> ff(new CCfits::FITS(MOKA_input_file, CCfits::Read));
+    
+    std::auto_ptr<CCfits::FITS> ff(0);
+    try
+    {
+      ff.reset( new CCfits::FITS(MOKA_input_file, CCfits::Read) );
+    }
+    catch (CCfits::FITS::CantOpen)
+    {
+      std::cerr << "Cannot open " << MOKA_input_file << std::endl;
+      exit(1);
+    }
+
 		
 		CCfits::PHDU* h0 = &ff->pHDU();
 		
