@@ -198,68 +198,51 @@ void LensHaloMassMap::readMap(){
       try{
         h0->readKey("WLOW",d1);
         d1=d1/cosmo.gethubble();
+	std:: cout << "CG: d1 " << d1 << std:: endl;
+	h0->readKey("WUP",d2);
+	d2=d2/cosmo.gethubble();
+	std:: cout << "CG: d2 " << d2 << std:: endl;	
       }
       catch(CCfits::HDU::NoSuchKeyword){
-        try{
-          h0->readKey("DLLOW",d1);
-        }
-        catch(CCfits::HDU::NoSuchKeyword){
-          d1 = d2 = 0;
-        }
+	d1 = d2 = 0;
+      }   
+      if(d2 != 0 ){
+	double dll = ( d1 + d2 )*0.5; // comoving dists
+	
+	std:: vector<double> zi;
+	int ni=2048;
+	std:: vector<double> dli(ni);
+	Utilities::fill_linear(zi,ni,0.,3.); // max redshift should be around 2.5!
+	for(int i=0;i<ni;i++) dli[i] = cosmo.angDist(zi[i])*(1+zi[i]);
+	//for(int i=0;i<ni;i++) std:: cout << zi[i] << "  " << dli[i] << std:: endl;
+	//exit(1);
+	if(dli[ni-1] < dll){
+	  std::cerr << "ERROR: redshift table in LensHaloMassMap::readMap() does not extend to high enough redshift" << std::endl;
+	  throw std::runtime_error("small redshift table");
+	}
         
-        try{
-          h0->readKey("WUP",d2);
-          d2=d2/cosmo.gethubble();
-        }
-        catch(CCfits::HDU::NoSuchKeyword){
-          try{
-            h0->readKey("DLUP",d2);
-          }
-          catch(CCfits::HDU::NoSuchKeyword){
-            d1 = d2 = 0;
-          }
-        }
-        if(d2 != 0 ){
-          double dll = ( d1 + d2 )*0.5; // comoving dists
-          
-          std:: vector<double> zi;
-          int ni=2048;
-          std:: vector<double> dli(ni);
-          Utilities::fill_linear(zi,ni,0.,5.); // max redshift should be around 2.5!
-          for(int i=0;i<ni;i++) dli[i] = cosmo.angDist(zi[i])*(1+zi[i]);
-          
-          if(dli[ni-1] < dll){
-            std::cerr << "ERROR: redshift table in LensHaloMassMap::readMap() does not extend to high enough redshift" << std::endl;
-            throw std::runtime_error("small redshift table");
-          }
-          
-          // set the redshift of the plane half distance between
-          // d1 and d2
-          
-          map->zlens = Utilities::InterpolateYvec(dli,zi,dll);
-          
-        }else{
-          
-          // if angular size distances are not set use ZLENS or REDSHIFT
-          
-          try {
-            h0->readKey("ZLENS",map->zlens);
-          }
-          catch(CCfits::HDU::NoSuchKeyword) {
-            try {
-              h0->readKey("REDSHIFT",map->zlens);
-            }
-            catch(CCfits::HDU::NoSuchKeyword){
-              std::cout << "unable to read fits mass map header keywords" << std::endl <<  "  either DLUP and DLLOW need to be set or ZLENS or REDSHIFT" << std::endl;
-              exit(1);
-            }
-            
-            
-          }
-          
-        }
+	// set the redshift of the plane half distance between
+	// d1 and d2
         
-      }
+	map->zlens = Utilities::InterpolateYvec(dli,zi,dll);
+	std:: cout << " CG: zl " << map->zlens << std:: endl;
+      }else{
+	
+	// if angular size distances are not set use ZLENS or REDSHIFT
+        
+	try {
+	  h0->readKey("ZLENS",map->zlens);
+	}
+	catch(CCfits::HDU::NoSuchKeyword) {
+	  try {
+	    h0->readKey("REDSHIFT",map->zlens);
+	  }
+	  catch(CCfits::HDU::NoSuchKeyword){
+	    std::cout << "unable to read fits mass map header keywords" << std::endl <<  "  either DLUP and DLLOW need to be set or ZLENS or REDSHIFT" << std::endl;
+	    exit(1);
+	  }
+	}
+      } 
     }
     if(map->zlens <= 0.0){
       std::cerr << "Pixel map lens planes cannot have zero or negative redshifts!" << std::endl;
@@ -289,74 +272,65 @@ void LensHaloMassMap::readMap(){
         //<< " DLOW - ?? Mpc/h" << std::endl
         //<< " DLUP - ?? Mpc/h" << std::endl
         << " PHYSICALSIZE - size of map in the x-direction (degrees)" << std::endl
-        << " PIXELUNIT - pixel units in solar masses" << std::endl;
-        
+        << " PIXELUNIT - pixel units in solar masses" << std::endl;   
         std::cout << " unable to read map PIXELUNITS" << std::endl;
-        exit(1);
-        
-      }
-      
+        // exit(1);
+      }  
     }
-    
-    
     try {
       h0->readKey("PIXELUNIT",pixelunit);
       pixelunit=pixelunit/pixLMpc/pixLMpc;
     }
     catch(CCfits::HDU::NoSuchKeyword) {
       
-      try {
-        h0->readKey("PIXELUNI",pixelunit);
-        pixelunit=pixelunit/pixLMpc/pixLMpc;
-      }
-      catch(CCfits::HDU::NoSuchKeyword) {
-        std::cerr << "fits mass map must have header keywords:" << std::endl
-        << " REDSHIFT - redshift of map plane" << std::endl
-        //<< " DLOW - ?? Mpc/h" << std::endl
-        //<< " DLUP - ?? Mpc/h" << std::endl
-        << " PHYSICALSIZE - size of map in the x-direction (degrees)" << std::endl
-        << " PIXELUNIT - pixel units in solar masses" << std::endl;
-        
-        std::cout << " unable to read map PIXELUNITS" << std::endl;
-        exit(1);
-      }
-    }
-      /*catch(CCfits::HDU::NoSuchKeyword) {
-        
-        std::cerr << "fits mass map should have header keywords:" << std::endl
-        << " REDSHIFT - redshift of map plane" << std::endl
-        //<< " DLOW - ?? Mpc/h" << std::endl
-        //<< " DLUP - ?? Mpc/h" << std::endl
-        << " PHYSICALSIZE - size of map in the x-direction (degrees)" << std::endl
-        << " PIXELUNIT - pixel units in solar masses" << std::endl;
-        
-        std::cout << "unable to read map PHYSICALSIZE" << std::endl;
-        std::cout << "assuming is the MultiDark file" << std::endl;
-        map->boxlarcsec = 8.7*60.*60.;    // W1 x-field of view
-        // map->boxlarcsec = 5.5*60.*60.;    // W4 x-field of view
-        pixLMpc = map->boxlarcsec/npixels/inarcsec;
-        map->boxlMpc = pixLMpc*npixels;
-        pixelunit = 1.e+10/cosmo.gethubble()/pixLMpc/pixLMpc; // by hand
-      }*/
+      // try {
+      //  h0->readKey("PIXELUNI",pixelunit);
+      //  pixelunit=pixelunit/pixLMpc/pixLMpc;
+      //}
+      //catch(CCfits::HDU::NoSuchKeyword) {
+      //  std::cerr << "fits mass map must have header keywords:" << std::endl
+      //		  << " REDSHIFT - redshift of map plane" << std::endl
+      //<< " DLOW - ?? Mpc/h" << std::endl
+      //<< " DLUP - ?? Mpc/h" << std::endl
+      //<< " PHYSICALSIZE - size of map in the x-direction (degrees)" << std::endl
+      //  << " PIXELUNIT - pixel units in solar masses" << std::endl;
       
-      
+      // std::cout << " unable to read map PIXELUNITS" << std::endl;
+      //  exit(1);
+      //}
+      // }
+      // catch(CCfits::HDU::NoSuchKeyword) {
+      std::cout << "unable to read map physical size and pixelunit" << std::endl;
+      std::cout << "assuming is the MultiDark file" << std::endl;
+      map->boxlarcsec = 6.*map->nx;  // assuming 6 arcsec per pixel !8.7*60.*60.;     // W1 x-field of view  
+      std:: cout << "  field of view " << map->boxlarcsec << " arcsec " << std:: endl;
+      // map->boxlarcsec = 5.5*60.*60.;     // W4 x-field of view                                                               
+      // map->boxlarcsec = 2.6*60*60/double(map->ny)*double(map->nx); // pice of STRIPE82 x-field of view                       
+      // map->boxlarcsec = 2.58*60*60/double(map->ny)*double(map->nx); // pice of STRIPE82_bis x-field of view                     
+      // map->boxlarcsec = 8.7*60.*60.;  // w1BOSS x-field of view                                                              
+      // map->boxlarcsec = 11.7*60.*60.; // w3BOSS x-field of view                                                              
+      // map->boxlarcsec = 5.7*60.*60.;  // w4BOSS x-field of view                                                              
+      pixLMpc = map->boxlarcsec/npixels/inarcsec;
+      map->boxlMpc = pixLMpc*npixels;
+      pixelunit = 1.e+10/cosmo.gethubble()/pixLMpc/pixLMpc; // by hand                                                          
+    }      
     
-      // made square // need to be
-      // 1. take the part located in the left side
-      //for(int i=0;i<npixels;i++) for(int j=0;j<npixels;j++){
-      //    map->convergence[i+npixels*j] = mapbut[i+map->nx*j]*pixelunit;
-      //    avkappa += map->convergence[i+npixels*j];
-      //  }
-      // 2. take the part located in the right side
-      // for(int i=0;i<npixels;i++) for(int j=0;j<npixels;j++){
-      //    map->convergence[i+npixels*j] = mapbut[(map->nx-npixels+i)+map->nx*j]*pixelunit;
-      //    avkappa += map->convergence[i+npixels*j];
-      //  }
-      // avkappa /= (npixels*npixels);
+    // made square // need to be
+    // 1. take the part located in the left side
+    //for(int i=0;i<npixels;i++) for(int j=0;j<npixels;j++){
+    //    map->convergence[i+npixels*j] = mapbut[i+map->nx*j]*pixelunit;
+    //    avkappa += map->convergence[i+npixels*j];
+    //  }
+    // 2. take the part located in the right side
+    // for(int i=0;i<npixels;i++) for(int j=0;j<npixels;j++){
+    //    map->convergence[i+npixels*j] = mapbut[(map->nx-npixels+i)+map->nx*j]*pixelunit;
+    //    avkappa += map->convergence[i+npixels*j];
+    //  }
+    // avkappa /= (npixels*npixels);
     
     for(int i=0;i<map->nx;i++) for(int j=0;j<map->ny;j++){
-      map->convergence[i+map->nx*j] *= pixelunit;
-    }
+	map->convergence[i+map->nx*j] *= pixelunit;
+      }
     
     if(zeromean){
       double avkappa = 0;
