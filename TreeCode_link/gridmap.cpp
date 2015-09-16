@@ -24,17 +24,20 @@ std::mutex GridMap::grid_mutex;
 GridMap::GridMap(
                  LensHndl lens       /// lens model for initializing grid
                  ,unsigned long Nx   /// Initial number of grid points in X dimension.
-                 ,const PosType center[2]  /// Center of grid.
+                 ,const PosType my_center[2]  /// Center of grid.
                  ,PosType rangeX   /// Full width of grid in x direction in whatever units will be used.
                  ,PosType rangeY  /// Full width of grid in y direction in whatever units will be used.
                  ): Ngrid_init(Nx),x_range(rangeX),axisratio(rangeY/rangeX){
   
   pointID = 0;
   
-	assert(Nx > 0);
-	assert(rangeX > 0 && rangeY >0);
+  center[0] = my_center[0];
+  center[1] = my_center[1];
 
-	if(Nx <= 0){ERROR_MESSAGE();
+  assert(Nx > 0);
+  assert(rangeX > 0 && rangeY >0);
+  
+  if(Nx <= 0){ERROR_MESSAGE();
     std::cout << "cannot make GridMap with no points" << std::endl;
     throw std::runtime_error("");
   }
@@ -83,7 +86,7 @@ GridMap::GridMap(
 GridMap::GridMap(
                  LensHndl lens               /// lens model for initializing grid
                  ,unsigned long N1d          /// Initial number of grid points in each dimension.
-                 ,const PosType center[2]    /// Center of grid.
+                 ,const PosType my_center[2]    /// Center of grid.
                  ,PosType range              /// Full width of grid in whatever units will be used.
                  ): Ngrid_init(N1d),Ngrid_init2(N1d),axisratio(1.0),x_range(range){
   
@@ -92,23 +95,94 @@ GridMap::GridMap(
 	assert(N1d > 0);
 	assert(range > 0);
   
-	if(N1d <= 0){ERROR_MESSAGE(); std::cout << "cannot make GridMap with no points" << std::endl; exit(1);}
-	if(range <= 0){ERROR_MESSAGE(); std::cout << "cannot make GridMap with no range" << std::endl; exit(1);}
+
+  center[0] = my_center[0];
+  center[1] = my_center[1];
+
   
-	i_points = NewPointArray(Ngrid_init*Ngrid_init);
-	xygridpoints(i_points,range,center,Ngrid_init,0);
-	s_points=LinkToSourcePoints(i_points,Ngrid_init*Ngrid_init);
+  if(N1d <= 0){ERROR_MESSAGE(); std::cout << "cannot make GridMap with no points" << std::endl; exit(1);}
+  if(range <= 0){ERROR_MESSAGE(); std::cout << "cannot make GridMap with no range" << std::endl; exit(1);}
   
+  i_points = NewPointArray(Ngrid_init*Ngrid_init);
+  xygridpoints(i_points,range,center.x,Ngrid_init,0);
+  s_points=LinkToSourcePoints(i_points,Ngrid_init*Ngrid_init);
+    
   {
     std::lock_guard<std::mutex> hold(grid_mutex);
   	lens->rayshooterInternal(Ngrid_init*Ngrid_init,i_points);
   }
+  
 }
 
 GridMap::~GridMap(){
   FreePointArray(i_points);
   FreePointArray(s_points);
 }
+
+void GridMap::ReInitializeGrid(LensHndl lens){
+  
+  {
+    std::lock_guard<std::mutex> hold(grid_mutex);
+    lens->rayshooterInternal(Ngrid_init*Ngrid_init,i_points);
+  }
+  ClearSurfaceBrightnesses();
+}
+
+PixelMap GridMap::getPixelMap(int resf){
+  
+  if(resf <=0){
+    ERROR_MESSAGE();
+    throw std::invalid_argument("resf must be > 0");
+  }
+  //PosType center[2];
+  
+  PixelMap map(center.x,Ngrid_init/resf,Ngrid_init2/resf,x_range*resf/(Ngrid_init-1));
+  
+  int factor = resf*resf;
+  for(size_t i = 0 ; i < Ngrid_init ; ++i){
+    for(size_t j = 0 ; j < Ngrid_init2 ; ++j){
+      map.data()[i/resf + map.getNx() * (j / resf)] +=
+      i_points[ i + Ngrid_init * j].surface_brightness/factor;
+    }
+  }
+  
+  map.Renormalize(map.getResolution()*map.getResolution());
+  
+  return map;
+}
+
+void GridMap::getPixelMap(PixelMap &map){
+  
+  int resf = Ngrid_init/map.getNx();
+  
+  if(resf*map.getNx() != Ngrid_init) throw std::invalid_argument("PixelMap does not match GripMap!");
+  if(resf*map.getNy() != Ngrid_init2) throw std::invalid_argument("PixelMap does not match GripMap!");
+  if(map.getResolution() != x_range*resf/(Ngrid_init-1)) throw std::invalid_argument("PixelMap does not match GripMap resolution!");
+  
+  size_t N = Ngrid_init*Ngrid_init2;
+
+  if(map.getCenter()[0] != (i_points[0].x[0] + i_points[N-1].x[0])/2) throw std::invalid_argument("PixelMap does not match GripMap!");
+  if(map.getCenter()[1] != (i_points[0].x[1] + i_points[N-1].x[1])/2) throw std::invalid_argument("PixelMap does not match GripMap!");
+  
+  if(resf <=0){
+    ERROR_MESSAGE();
+    throw std::invalid_argument("resf must be > 0");
+  }
+
+  map.Clean();
+  
+  int factor = resf*resf;
+  for(size_t i = 0 ; i < Ngrid_init ; ++i){
+    for(size_t j = 0 ; j < Ngrid_init2 ; ++j){
+      map.data()[i/resf + map.getNx() * (j / resf)] +=
+      i_points[ i + Ngrid_init * j].surface_brightness/factor;
+    }
+  }
+  
+  map.Renormalize(map.getResolution()*map.getResolution());
+}
+
+
 
 double GridMap::RefreshSurfaceBrightnesses(SourceHndl source){
 	PosType total=0,tmp;
@@ -316,3 +390,14 @@ void GridMap::xygridpoints(Point *i_points,PosType range,const PosType *center,l
   
   return;
 }
+
+PosType GridMap::EisnsteinArea() const{
+  size_t count = 0;
+  size_t N = Ngrid_init*Ngrid_init2;
+  for(size_t i=0;i<N;++i){
+    if(i_points[i].invmag < 0) ++count;
+  }
+  
+  return count*x_range*x_range/Ngrid_init/Ngrid_init;
+}
+
