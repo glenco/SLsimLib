@@ -34,9 +34,11 @@ struct GridMap{
   
 	/// return initial number of grid points in each direction
 	int getInitNgrid(){return Ngrid_init;}
-	/// return initial range of gridded region
+	/// return initial range of gridded region.  This is the distance from the first ray in a row to the last (unlike PixelMap)
 	double getXRange(){return x_range;}
 	double getYRange(){return x_range*axisratio;}
+  // resolution in radians
+  double getResolution(){return x_range/(Ngrid_init-1);}
   
   PixelMap writePixelMapUniform(const PosType center[],size_t Nx,size_t Ny,LensingVariable lensvar);
   void writePixelMapUniform(PixelMap &map,LensingVariable lensvar);
