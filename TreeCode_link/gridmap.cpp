@@ -134,9 +134,12 @@ PixelMap GridMap::getPixelMap(int resf){
     ERROR_MESSAGE();
     throw std::invalid_argument("resf must be > 0");
   }
-  //PosType center[2];
   
-  PixelMap map(center.x,Ngrid_init/resf,Ngrid_init2/resf,x_range*resf/(Ngrid_init-1));
+  // The number of pixels on a side of the new map will be
+  // N = (Ngrid_init-1)/resf + 1;
+  // so that the resolution is resf x the GridMap resolution
+  
+  PixelMap map(center.x,(Ngrid_init-1)/resf + 1 ,(Ngrid_init2-1)/resf + 1,resf*x_range/(Ngrid_init-1));
   
   int factor = resf*resf;
   for(size_t i = 0 ; i < Ngrid_init ; ++i){
@@ -153,12 +156,12 @@ PixelMap GridMap::getPixelMap(int resf){
 
 void GridMap::getPixelMap(PixelMap &map){
   
-  int resf = Ngrid_init/map.getNx();
+  int resf = (Ngrid_init-1)/(map.getNx()-1);
   
-  if(resf*map.getNx() != Ngrid_init) throw std::invalid_argument("PixelMap does not match GripMap!");
-  if(resf*map.getNy() != Ngrid_init2) throw std::invalid_argument("PixelMap does not match GripMap!");
+  if(resf*map.getNx() != Ngrid_init-1+resf) throw std::invalid_argument("PixelMap does not match GripMap!");
+  if(resf*map.getNy() != Ngrid_init2-1+resf) throw std::invalid_argument("PixelMap does not match GripMap!");
   if(map.getResolution() != x_range*resf/(Ngrid_init-1)) throw std::invalid_argument("PixelMap does not match GripMap resolution!");
-  
+
   size_t N = Ngrid_init*Ngrid_init2;
 
   if(map.getCenter()[0] != (i_points[0].x[0] + i_points[N-1].x[0])/2) throw std::invalid_argument("PixelMap does not match GripMap!");
@@ -224,6 +227,7 @@ PixelMap GridMap::writePixelMapUniform(
   
   if(getNumberOfPoints() == 0 ) return PixelMap();
   PixelMap map(center, Nx, Ny,x_range/(Nx-1));
+
   map.Clean();
   
   writePixelMapUniform(map,lensvar);
