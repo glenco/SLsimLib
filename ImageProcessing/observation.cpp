@@ -446,39 +446,40 @@ PixelMap Observation::AddNoise(PixelMap &pmap,long *seed)
     throw std::runtime_error("nonsquare");
   }
   
-	PixelMap outmap(pmap);
-	double Q = pow(10,0.4*(mag_zeropoint+48.6));
-	double res_in_arcsec = outmap.getResolution()*180.*60.*60/pi;
-	double back_mean = pow(10,-0.4*(48.6+back_mag))*res_in_arcsec*res_in_arcsec*Q*exp_time;
+  PixelMap outmap(pmap);
+  double Q = pow(10,0.4*(mag_zeropoint+48.6));
+  double res_in_arcsec = outmap.getResolution()*180.*60.*60/pi;
+  double back_mean = pow(10,-0.4*(48.6+back_mag))*res_in_arcsec*res_in_arcsec*Q*exp_time;
   std::cout << back_mean <<std::endl;
   std::cout << exp_num*ron*ron << std::endl;
-	double rms, noise;
-	double norm_map;
-	for (unsigned long i = 0; i < outmap.getNx()*outmap.getNy(); i++)
-	{
-		norm_map = outmap[i]*exp_time;
-		if (norm_map+back_mean > 500.)
-		{
-			rms = sqrt(exp_num*ron*ron+norm_map+back_mean);
-			noise = gasdev(seed)*rms;
-			outmap.AssignValue(i,double(norm_map+noise)/exp_time);
-		}
-		else
-		{
-			int k = 0;
-			double p = 1.;
-			double L = exp(-(norm_map+back_mean));
-			while (p > L)
-			{
-				k++;
-				p *= ran2(seed);
-			}
+  double rms, noise;
+  double norm_map;
+  
+  for (unsigned long i = 0; i < outmap.getNx()*outmap.getNy(); i++)
+  {
+    norm_map = outmap[i]*exp_time;
+    if (norm_map+back_mean > 500.)
+    {
+      rms = sqrt(exp_num*ron*ron+norm_map+back_mean);
+      noise = gasdev(seed)*rms;
+      outmap.AssignValue(i,double(norm_map+noise)/exp_time);
+    }
+    else
+    {
+      int k = 0;
+      double p = 1.;
+      double L = exp(-(norm_map+back_mean));
+      while (p > L)
+      {
+        k++;
+        p *= ran2(seed);
+      }
       rms = sqrt(exp_num*ron*ron);
- 			noise = gasdev(seed)*rms;
-			outmap.AssignValue(i,double(k-1+noise-back_mean)/exp_time);
-		}
-	}
-	return outmap;
+      noise = gasdev(seed)*rms;
+      outmap.AssignValue(i,double(k-1+noise-back_mean)/exp_time);
+    }
+  }
+  return outmap;
 }
 
 /// Translates photon flux (in photons/(cm^2*Hz)) into telescope pixel counts

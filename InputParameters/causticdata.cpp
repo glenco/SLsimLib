@@ -8,10 +8,11 @@
 
 #include "causticdata.h"
 
-CausticDataStore::CausticDataStore(std::string filename)
+CausticDataStore::CausticDataStore(std::string filename,bool verbose)
 :ncolumns(14),Nxp(0)
 {
-  readfile(filename);
+  readfile(filename,verbose);
+  
   for(size_t ii=0;ii<data.size();++ii){
     totalcritarea += data[ii].crit_area;
     totalcausticarea += data[ii].caustic_area;
@@ -143,7 +144,7 @@ CausticDataStore::~CausticDataStore(){
 }
 
 /// Read in data from a caustic catalog file
-void CausticDataStore::readfile(std::string filename){
+void CausticDataStore::readfile(std::string filename,bool verbose){
 
   data.clear();
 
@@ -164,13 +165,13 @@ void CausticDataStore::readfile(std::string filename){
     throw std::runtime_error(" Cannot open file.");
   }
   
-  std::cout << "Reading caustic information from " << filename << std::endl;
+  if(verbose) std::cout << "Reading caustic information from " << filename << std::endl;
   size_t i=0;
   while(file_in.peek() == '#'){
     file_in.ignore(10000,'\n');
     ++i;
   }
-  std::cout << "skipped "<< i << " comment lines in " << filename << std::endl;
+  if(verbose) std::cout << "skipped "<< i << " comment lines in " << filename << std::endl;
   
   size_t pos;
   CausticStructure tmp_data;
@@ -178,7 +179,7 @@ void CausticDataStore::readfile(std::string filename){
   while(getline(file_in,myline)){
     
 		if(myline[0] == '#'){
-      std::cout << "skipped line " << i << std::endl;
+      if(verbose) std::cout << "skipped line " << i << std::endl;
 			continue;
     }
 	/*

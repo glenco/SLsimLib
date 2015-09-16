@@ -61,7 +61,7 @@ Lens::Lens(long* my_seed,PosType z_source, CosmoParamSet cosmoset,bool verbose)
   //charge = 4*pi/cosmo.angDist(0.3);
 
   PosType ztmp = zsource;
-  combinePlanes(true);
+  combinePlanes(verbose);
   if(zsource != ztmp) ResetSourcePlane(ztmp,false);
 
   std::cout << "number of field halos :" << field_halos.size() << std::endl;

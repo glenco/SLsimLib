@@ -67,13 +67,16 @@ typedef enum {nfw,powerlaw,pointmass} ClumpInternal;
 enum IMFtype {One,Mono,BrokenPowerLaw,Salpeter,SinglePowerLaw,Kroupa,Chabrier};
 /// Photometric bands
 enum Band {EUC_VIS,EUC_Y,EUC_J,EUC_H,SDSS_U,SDSS_G,SDSS_R,SDSS_I,SDSS_Z,J,H,Ks,IRAC1,IRAC2,F435W,F606W,F775W,F850LP,F814W,F110W,F160W};
+std::ostream &operator<<(std::ostream &os, Band const &p);
+
 enum HaloCatFormats {MillenniumObs,MultiDarkHalos,ObservedData};
 /// Methods to make a previously isotropic halo elliptical
 enum EllipMethod {Fourier,Pseudo,Schramm,Keeton};
 
 /// convert a Band type to a string name.
-std::string to_string(Band &band);
-
+namespace Utilities{
+  std::string to_string(const Band &band);
+}
 /** \brief Structure for reading and writing parameters to and from a parameter file as well as a container 
  * for passing the parameters to other classes and functions.
  *

@@ -176,7 +176,18 @@ public:
   }
 
 #endif
-
+  /** \brief For a list of pixel indexes this will count and separated islands that are not connected.
+   
+   On return, 'pixel_index' is ordered into groups and the 'heads' list points to the first elemant 
+   in each group plus the end of the list so that heads[i] to heads[i+1] is a group for 0 <= i <= ngroups.
+   The number of groups is returned which is also heads.size() - 1
+   */
+  int count_islands(std::list<size_t> &pixel_index,std::vector<std::list<size_t>::iterator> &heads) const;
+  /// get a list of pixels above value
+  size_t threshold(std::list<size_t> &pixel_index,PosType value){
+    for(size_t i=0;i<map.size();++i) if(value < map[i]) pixel_index.push_back(i);
+  }
+  
 private:
 	std::valarray<double> map;
   void AddGrid_(const PointList &list,LensingVariable val);
@@ -191,6 +202,14 @@ private:
 	bool inMapBox(Branch * branch1) const;
 	bool inMapBox(double * branch1) const;
   
+  /// determines if pixels touch each other from i dimensional index
+  bool pixels_are_neighbors(size_t i,size_t j) const;
+  /** recursive function that finds all the pixels in reservoir beyond and including position 'group' that are attached to pixel current.
+   On exit reserve is ordered so that pixels that are in the same group are in sequence and 'group' points to the element in 'reservoir' that is one past the group elements
+   */
+  void _count_islands_(size_t current,std::list<size_t> &reservoir
+                       ,std::list<size_t>::iterator &group) const;
+
 };
 
 typedef enum {Euclid_VIS,Euclid_Y,Euclid_J,Euclid_H,KiDS_u,KiDS_g,KiDS_r,KiDS_i,HST_ACS_I,CFHT_u,CFHT_g,CFHT_r,CFHT_i,CFHT_z} Telescope;

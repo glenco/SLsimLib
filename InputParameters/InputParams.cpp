@@ -850,7 +850,7 @@ bool InputParams::exist(std::string label) const
 	return true;
 }
 
-std::string to_string(Band &band){
+std::string Utilities::to_string(const Band &band){
   
   switch (band) {
     case EUC_VIS:
@@ -899,5 +899,57 @@ std::string to_string(Band &band){
       return "UnknownBand";
       break;
   }
-  
 }
+
+std::ostream &operator<<(std::ostream &os, Band const &band) {
+  
+  switch (band) {
+    case EUC_VIS:
+      return os << "EUC_VIS";
+    case EUC_Y:
+      return os << "EUC_Y";
+    case EUC_J:
+      return os << "EUC_J";
+    case EUC_H:
+      return os << "EUC_H";
+    case SDSS_U:
+      return os << "SDSS_U";
+    case SDSS_G:
+      return os << "SDSS_G";
+    case SDSS_R:
+      return os << "SDSS_R";
+    case SDSS_I:
+      return os << "SDSS_I";
+    case SDSS_Z:
+      return os << "SDSS_Z";
+    case J:
+      return os << "J";
+    case H:
+      return os << "H";
+    case Ks:
+      return os << "Ks";
+    case IRAC1:
+      return os << "IRAC1";
+    case IRAC2:
+      return os << "IRAC2";
+    case F435W:
+      return os << "F435W";
+    case F606W:
+      return os << "F606W";
+    case F775W:
+      return os << "F775W";
+    case F850LP:
+      return os << "F850LP";
+    case F814W:
+      return os << "F814W";
+    case F110W:
+      return os << "F110W";
+    case F160W:
+      return os << "F160W";
+    default:
+      return os << "UnknownBand";
+      break;
+  }
+
+}
+

@@ -596,6 +596,82 @@ bool PixelMap::inMapBox(PosType * x) const{
   return true;
 }
 
+bool PixelMap::pixels_are_neighbors(size_t i,size_t j) const{
+  
+  long x = i%Nx - j%Nx;
+  if(std::abs(x) > 1) return false;
+  x = i/Nx - j/Nx;
+  if(std::abs(x) > 1) return false;
+  return true;
+}
+
+int PixelMap::count_islands(std::list<size_t> &pixel_index,std::vector<std::list<size_t>::iterator> &heads) const{
+  
+  heads.clear();
+  if(pixel_index.size() == 0) return 0;
+  
+  if(pixel_index.size() == 1){
+    heads.push_back(pixel_index.begin());
+    return 1;
+  }
+  
+  
+  int ngroups = 0;
+  pixel_index.sort();
+  
+  if(pixel_index.back() > Nx*Ny ){
+    throw std::invalid_argument("index out of range");
+  }
+  
+  size_t current;
+  std::list<size_t>::iterator group = pixel_index.begin();
+  
+  while(group != pixel_index.end()){
+    heads.push_back(group);
+    current = *group;
+    ++group;
+    _count_islands_(current, pixel_index, group);
+    
+    ++ngroups;
+  }
+  
+  heads.push_back(pixel_index.end());
+  
+  assert(ngroups == heads.size()-1);
+  
+  return ngroups;
+}
+
+void PixelMap::_count_islands_(size_t current,std::list<size_t> &reservoir
+                     ,std::list<size_t>::iterator &group) const{
+  
+  std::list<size_t>::iterator it = group;
+  
+  size_t imax = current + Nx + 1;  // maximum value of an index that can be a neighbor to current
+  
+  while( it != reservoir.end() && *it <= imax){
+    if(pixels_are_neighbors(current,*it)){
+
+      size_t tmp = *it;
+
+      if(group == it){
+        ++group;
+      }else{
+        reservoir.erase(it);
+        reservoir.insert(group,tmp);
+      }
+      
+      _count_islands_(tmp,reservoir,group);
+      it = group;
+      while(*it <= tmp && it != reservoir.end() ) ++it;  // skip forward to the next on in the list that hasn't been tested
+    }else{
+      ++it;
+    }
+  }
+  return;
+}
+
+
 //// Finds the area of the intersection between pixel i and branch1
 PosType PixelMap::LeafPixelArea(IndexType i,Branch * branch1){
   PosType area=0;
@@ -1574,7 +1650,6 @@ long PixelMap::find_index(PosType const x[],long &ix,long &iy){
   
   return ix + Nx*iy;
 }
-
 /// get the index for a position, returns -1 if out of map
 long PixelMap::find_index(PosType const x,PosType const y,long &ix,long &iy){
   
@@ -1595,7 +1670,6 @@ long PixelMap::find_index(PosType const x,PosType const y,long &ix,long &iy){
   
   return ix + Nx*iy;
 }
-
 /// get the index for a position, returns -1 if out of map
 long PixelMap::find_index(PosType const x[]){
   long ix,iy;

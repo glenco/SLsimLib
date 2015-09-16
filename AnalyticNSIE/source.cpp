@@ -740,7 +740,7 @@ void SourceMultiShapelets::readCatalog()
   int max_num = 37012;
   for (int i = 0; i < max_num+1; i++)
   {
-    std::string shap_file = shapelets_folder+"/obj_"+to_string(i)+"_mag_z.sif";
+    std::string shap_file = shapelets_folder+"/obj_"+ std::to_string(i)+"_mag_z.sif";
     std::ifstream shap_input(shap_file.c_str());
     if (shap_input)
     {

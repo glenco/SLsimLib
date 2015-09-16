@@ -64,7 +64,7 @@ class CausticDataStore{
   /// A class used within CausticDataStore class to store information on a caustic and critical curve pair
   
 public:
-  CausticDataStore(std::string filename);
+  CausticDataStore(std::string filename,bool verbose = false);
   /// creates an empty object 
   CausticDataStore(std::vector<ImageFinding::CriticalCurve> &crticurve_vec);
   CausticDataStore(const CausticDataStore &input);
@@ -103,7 +103,6 @@ public:
   size_t getNthIndexCritRadius(size_t n){return crit_radius_index[n];}
  
   
-  void readfile(std::string filename);
   /// sort caustics by size of critical curve radius from largest to smallest
   //void SortByCritSize();
   /// sort caustics by size of critical curve area from largest to smallest
@@ -133,7 +132,8 @@ public:
   bool findNearestCrit(PosType *x,long &index,CritType type);
   
 private:
-  
+  void readfile(std::string filename,bool verbose);
+
   int sort_type = -1;
   double totalcritarea = 0.0;
   double totalcausticarea = 0.0;
