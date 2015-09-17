@@ -475,6 +475,35 @@ void LensHaloFit::FindLensSimple(
 
 
 
+
+/** \ingroup FitLens
+ *
+ *  \brief Function that will compute dx_sub for FindLensSimple.
+ *
+ */
+
+
+double ** LensHaloFit::compute_dxSub(int Nimages)
+{
+  double ** dx_sub = Utilities::PosTypeMatrix(0,Nimages-1,0,1);
+
+  for (int i = 0; i < Nimages; i++)
+  {
+    for (int j = 0; j < 2; j++) dx_sub[i][j] = 0. ;
+  }
+  
+  // NEEDS TO BE WRITTEN !
+  // DIFFERENT PROBLEMS TO SOLVE :
+  // - case of only subtructure on the plane of the LensHaloFit
+  // - case where there are field planes (LoS or sub) before the LensHaloFit plane
+  // - case where there are field planes (LoS or sub) after the LensHaloFit plane
+  
+  
+  return dx_sub ;
+}
+
+
+
 /** \ingroup FitLens
  *
  *  \brief Wrapper that allows simple lens to be found with a single
