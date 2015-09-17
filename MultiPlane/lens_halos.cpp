@@ -752,6 +752,12 @@ void LensHalo::force_halo(
         force_halo_sym(alpha,kappa,gamma,phi,xcm,subtract_point,screening);
         //assert(!isinf(*kappa) );
 	}
+  assert(alpha[0]==alpha[0]);
+  assert(alpha[1]==alpha[1]);
+  if (isnan(alpha[0]) || isnan(alpha[1])){
+    ERROR_MESSAGE();
+    exit(1);
+  }
 }
 
 /** \brief returns the lensing quantities of a ray in center of mass coordinates for a symmetric halo
@@ -859,6 +865,7 @@ void LensHalo::force_halo_asym(
       if(main_ellip_method==Keeton){alphakappagamma3asym(r_size,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
       alpha_ellip[0]=alpha_tmp[0]/Rmax;
       alpha_ellip[1]=alpha_tmp[1]/Rmax;
+     
       
       double f1 = (Rmax - r)/(Rmax - r_size),f2 = (r - r_size)/(Rmax - r_size);
       
@@ -885,7 +892,7 @@ void LensHalo::force_halo_asym(
       
       alpha[0] +=  alpha_tmp[0]/Rmax;
       alpha[1] +=  alpha_tmp[1]/Rmax;
-
+      
       *kappa += kappa_tmp;
       gamma[0] += 0.5*gamma_tmp[0];
       gamma[1] += 0.5*gamma_tmp[1];

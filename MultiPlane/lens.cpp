@@ -1846,12 +1846,12 @@ void Lens::readInputSimFileMillennium(bool verbose)
             break;
           case pl_gal:
             assert(field_int_prof_gal_slope>0);
-            field_halos.push_back(new LensHaloPowerLaw(mass*field_galaxy_mass_fraction,R_max,z,0.0,field_int_prof_gal_slope,1,pa,0));
+            field_halos.push_back(new LensHaloPowerLaw(mass*field_galaxy_mass_fraction,rmaxNSIE(sigma, mass*field_galaxy_mass_fraction,0.99,0),z,0.0,field_int_prof_gal_slope,0.99,pa,0,Fourier));
             break;
           case hern_gal:
             ERROR_MESSAGE();
             std::cout << "Hernquist implementation not tested yet!!!!" << std::endl;
-            field_halos.push_back(new LensHaloHernquist(mass*field_galaxy_mass_fraction,R_max,z,0.0,fratio,pa,0));
+            field_halos.push_back(new LensHaloHernquist(mass*field_galaxy_mass_fraction,rmaxNSIE(sigma, mass*field_galaxy_mass_fraction,1,0),z,0.0,fratio,pa,0));
 
             break;
             
