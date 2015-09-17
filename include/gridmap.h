@@ -30,16 +30,33 @@ struct GridMap{
 	double RefreshSurfaceBrightnesses(SourceHndl source);
   void ClearSurfaceBrightnesses();
 	size_t getNumberOfPoints() const {return Ngrid_init*Ngrid_init2;}
+  void ReInitializeGrid(LensHndl lens);
   
 	/// return initial number of grid points in each direction
 	int getInitNgrid(){return Ngrid_init;}
-	/// return initial range of gridded region
+	/// return initial range of gridded region.  This is the distance from the first ray in a row to the last (unlike PixelMap)
 	double getXRange(){return x_range;}
 	double getYRange(){return x_range*axisratio;}
+  // resolution in radians
+  double getResolution(){return x_range/(Ngrid_init-1);}
   
   PixelMap writePixelMapUniform(const PosType center[],size_t Nx,size_t Ny,LensingVariable lensvar);
   void writePixelMapUniform(PixelMap &map,LensingVariable lensvar);
   void writeFitsUniform(const PosType center[],size_t Nx,size_t Ny,LensingVariable lensvar,std::string filename);
+  
+  /// returns a PixelMap with the flux in pixels at a resolution of res times the original resolution
+  PixelMap getPixelMap(int res);
+  /// update a PixelMap with the flux in pixels at a resolution of res times the original resolution.
+  /// The map must have precisely the right size and center to match or an exception will be thrown.
+  /// Constructing the map with PixelMap getPixelMap(int res) will insure that it does.
+  void getPixelMap(PixelMap &map);
+  
+  /// returns the area (radians^2) of the region with negative magnification at resolution of fixed grid
+  PosType EisnsteinArea() const;
+  
+  Point_2d getCenter(){return center;}
+  
+  Point * operator[](size_t i){return i_points + i;};
   
 private:
   void xygridpoints(Point *points,double range,const double *center,long Ngrid
@@ -56,6 +73,7 @@ private:
   
   Point *i_points;
   Point *s_points;
+  Point_2d center;
   
   static std::mutex grid_mutex;
 };
