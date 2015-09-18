@@ -181,7 +181,6 @@ void GridMap::getPixelMap(PixelMap &map){
   map.Renormalize(map.getResolution()*map.getResolution());
 }
 
-
 double GridMap::RefreshSurfaceBrightnesses(SourceHndl source){
   PosType total=0,tmp;
   
@@ -222,6 +221,7 @@ PixelMap GridMap::writePixelMapUniform(
   
   if(getNumberOfPoints() == 0 ) return PixelMap();
   PixelMap map(center, Nx, Ny,x_range/(Nx-1));
+
   map.Clean();
   
   writePixelMapUniform(map,lensvar);

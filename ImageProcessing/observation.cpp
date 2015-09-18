@@ -437,6 +437,28 @@ PixelMap Observation::ApplyPSF(PixelMap &pmap)
 #endif
 	}
 }
+/// Outputs rms of noise counts due to background and instrument
+/// in the unit decided by the user
+float Observation::getBackgroundNoise(float resolution, unitType unit)
+{
+    if (telescope==true && fabs(resolution-pix_size) > pix_size*1.0e-5)
+    {
+        std::cout << "The resolution is different from the one of the simulated instrument in Observation::getBackgroundNoise!" << std::endl;
+        throw std::runtime_error("The resolution is different from the one of the simulated instrument!");
+    }
+    double Q = pow(10,0.4*(mag_zeropoint+48.6));
+    double res_in_arcsec = resolution*180.*60.*60/pi;
+    double back_mean = pow(10,-0.4*(48.6+back_mag))*res_in_arcsec*res_in_arcsec*Q*exp_time;
+    
+    double rms = sqrt(exp_num*ron*ron+back_mean)/exp_time;
+    
+    if (unit==flux) rms *= pow(10,-0.4*mag_zeropoint);
+    
+    return rms;
+
+    
+    
+}
 
 /// Applies realistic noise (read-out + Poisson) on an image
 PixelMap Observation::AddNoise(PixelMap &pmap,long *seed)
@@ -446,40 +468,37 @@ PixelMap Observation::AddNoise(PixelMap &pmap,long *seed)
     throw std::runtime_error("nonsquare");
   }
   
-  PixelMap outmap(pmap);
-  double Q = pow(10,0.4*(mag_zeropoint+48.6));
-  double res_in_arcsec = outmap.getResolution()*180.*60.*60/pi;
-  double back_mean = pow(10,-0.4*(48.6+back_mag))*res_in_arcsec*res_in_arcsec*Q*exp_time;
-  std::cout << back_mean <<std::endl;
-  std::cout << exp_num*ron*ron << std::endl;
-  double rms, noise;
-  double norm_map;
-  
-  for (unsigned long i = 0; i < outmap.getNx()*outmap.getNy(); i++)
-  {
-    norm_map = outmap[i]*exp_time;
-    if (norm_map+back_mean > 500.)
-    {
-      rms = sqrt(exp_num*ron*ron+norm_map+back_mean);
-      noise = gasdev(seed)*rms;
-      outmap.AssignValue(i,double(norm_map+noise)/exp_time);
-    }
-    else
-    {
-      int k = 0;
-      double p = 1.;
-      double L = exp(-(norm_map+back_mean));
-      while (p > L)
-      {
-        k++;
-        p *= ran2(seed);
-      }
-      rms = sqrt(exp_num*ron*ron);
-      noise = gasdev(seed)*rms;
-      outmap.AssignValue(i,double(k-1+noise-back_mean)/exp_time);
-    }
-  }
-  return outmap;
+	PixelMap outmap(pmap);
+	double Q = pow(10,0.4*(mag_zeropoint+48.6));
+	double res_in_arcsec = outmap.getResolution()*180.*60.*60/pi;
+	double back_mean = pow(10,-0.4*(48.6+back_mag))*res_in_arcsec*res_in_arcsec*Q*exp_time;
+	double rms, noise;
+	double norm_map;
+	for (unsigned long i = 0; i < outmap.getNx()*outmap.getNy(); i++)
+	{
+		norm_map = outmap[i]*exp_time;
+		if (norm_map+back_mean > 500.)
+		{
+			rms = sqrt(exp_num*ron*ron+norm_map+back_mean);
+			noise = gasdev(seed)*rms;
+			outmap.AssignValue(i,double(norm_map+noise)/exp_time);
+		}
+		else
+		{
+			int k = 0;
+			double p = 1.;
+			double L = exp(-(norm_map+back_mean));
+			while (p > L)
+			{
+				k++;
+				p *= ran2(seed);
+			}
+            rms = sqrt(exp_num*ron*ron);
+ 			noise = gasdev(seed)*rms;
+			outmap.AssignValue(i,double(k-1+noise-back_mean)/exp_time);
+		}
+	}
+	return outmap;
 }
 
 /// Translates photon flux (in photons/(cm^2*Hz)) into telescope pixel counts

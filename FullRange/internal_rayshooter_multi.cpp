@@ -70,6 +70,33 @@ void Lens::rayshooterInternal(
   // To force the computation of convergence, shear... -----
   // -------------------------------------------------------
   
+  
+  assert(plane_redshifts.size() > 0);
+  if(plane_redshifts.size() == 1){  // case of no lens plane
+    
+    for(int ii = 0; ii < Npoints; ++ii){
+    
+      i_points[ii].image->x[0] = i_points[ii].x[0];
+      i_points[ii].image->x[1] = i_points[ii].x[1];
+      i_points[ii].kappa = 0;
+      i_points[ii].gamma[0] = i_points[ii].gamma[1]
+        = i_points[ii].gamma[2] = 0;
+      i_points[ii].dt = 0;
+      i_points[ii].invmag = 1;
+      
+      i_points[ii].image->invmag = i_points[ii].invmag;
+      i_points[ii].image->kappa = i_points[ii].kappa;
+      i_points[ii].image->gamma[0] = i_points[ii].gamma[0];
+      i_points[ii].image->gamma[1] = i_points[ii].gamma[1];
+      i_points[ii].image->gamma[2] = i_points[ii].gamma[2];
+      i_points[ii].image->dt = i_points[ii].dt;
+
+    }
+    
+    return;
+  }
+  
+  
   int NLastPlane;
   PosType tmpDs,tmpdDs,tmpZs;
   
@@ -253,8 +280,8 @@ void *compute_rays_parallel(void *_p)
       assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
       assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
       assert(kappa == kappa);
-      if(isinf(kappa)) { std::cout << "xx = " << xx[0] << " " << xx[1] << std::endl ;}
-      assert(!isinf(kappa));
+      if(std::isinf(kappa)) { std::cout << "xx = " << xx[0] << " " << xx[1] << std::endl ;}
+      assert(!std::isinf(kappa));
       
       fac = 1/(1+p->plane_redshifts[j]);
       /* multiply by fac to obtain 1/comoving_distance/physical_distance
@@ -501,8 +528,8 @@ void *compute_rays_parallel(void *_p)
       assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
       assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
       assert(kappa == kappa);
-      if(isinf(kappa)) { std::cout << "xx = " << xx[0] << " " << xx[1] << std::endl ;}
-      assert(!isinf(kappa));
+      if(std::isinf(kappa)) { std::cout << "xx = " << xx[0] << " " << xx[1] << std::endl ;}
+      assert(!std::isinf(kappa));
       
       fac = 1/(1+p->plane_redshifts[j]);
       // multiply by fac to obtain 1/comoving_distance/physical_distance
