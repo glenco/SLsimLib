@@ -70,6 +70,33 @@ void Lens::rayshooterInternal(
   // To force the computation of convergence, shear... -----
   // -------------------------------------------------------
   
+  
+  assert(plane_redshifts.size() > 0);
+  if(plane_redshifts.size() == 1){  // case of no lens plane
+    
+    for(int ii = 0; ii < Npoints; ++ii){
+    
+      i_points[ii].image->x[0] = i_points[ii].x[0];
+      i_points[ii].image->x[1] = i_points[ii].x[1];
+      i_points[ii].kappa = 0;
+      i_points[ii].gamma[0] = i_points[ii].gamma[1]
+        = i_points[ii].gamma[2] = 0;
+      i_points[ii].dt = 0;
+      i_points[ii].invmag = 1;
+      
+      i_points[ii].image->invmag = i_points[ii].invmag;
+      i_points[ii].image->kappa = i_points[ii].kappa;
+      i_points[ii].image->gamma[0] = i_points[ii].gamma[0];
+      i_points[ii].image->gamma[1] = i_points[ii].gamma[1];
+      i_points[ii].image->gamma[2] = i_points[ii].gamma[2];
+      i_points[ii].image->dt = i_points[ii].dt;
+
+    }
+    
+    return;
+  }
+  
+  
   int NLastPlane;
   PosType tmpDs,tmpdDs,tmpZs;
   
