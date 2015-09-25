@@ -2764,21 +2764,49 @@ void Lens::combinePlanes(bool verbose)
   if(verbose)
   {
     std::cout << std::endl << "Lens::combinePlanes before clearing." << std::endl ;
-    for(int i=0;i<plane_redshifts.size();i++) std::cout << plane_redshifts[i] << " " ;
-    std::cout << std::endl ;
-    for(int i=0;i<Dl.size();i++) std::cout << Dl[i] << " " ;
-    std::cout << std::endl ;
-    for(int i=0;i<dDl.size();i++) std::cout << dDl[i] << " " ;
-    std::cout << std::endl << std::endl ;
-    std::cout << "Lens::combinePlanes : field_planes.size() = " << field_planes.size() << " , main_planes.size() = " << main_planes.size() << std::endl ;
-    std::cout << "Lens::combinePlanes : field_plane_redshifts = " ;
-    for(int i=0;i<field_plane_redshifts.size();i++) std::cout << field_plane_redshifts[i] << " " ;
-    std::cout << std::endl ;
-    std::cout << "Lens::combinePlanes : main_plane_redshifts = " ;
 
-    for(int i=0;i<main_plane_redshifts.size();i++) std::cout << main_plane_redshifts[i] << " " ;
-    std::cout << std::endl ;
+    if(plane_redshifts.size() > 0)
+    {
+      std::cout << "Lens::combinePlanes : plane_redshifts[] = " ;
+      for(int i=0;i<plane_redshifts.size();i++) std::cout << plane_redshifts[i] << " " ;
+      std::cout << std::endl ;
+    }
+    else std::cout << "Lens::combinePlanes : plane_redshifts[] size is zero." << std::endl ;
+
+    if(Dl.size() > 0)
+    {
+      std::cout << "Lens::combinePlanes : Dl[] = " ;
+      for(int i=0;i<Dl.size();i++) std::cout << Dl[i] << " " ;
+      std::cout << std::endl ;
+    }
+    else std::cout << "Lens::combinePlanes : Dl[] size is zero." << std::endl ;
+    
+    if(dDl.size() > 0)
+    {
+      std::cout << "Lens::combinePlanes : dDl[] = " ;
+      for(int i=0;i<dDl.size();i++) std::cout << dDl[i] << " " ;
+      std::cout << std::endl << std::endl ;
+    }
+    else std::cout << "Lens::combinePlanes : dDl[] size is zero." << std::endl ;
+
+    if(field_plane_redshifts.size() > 0)
+    {
+      std::cout << "Lens::combinePlanes : field_plane_redshifts[] = " ;
+      for(int i=0;i<field_plane_redshifts.size();i++) std::cout << field_plane_redshifts[i] << " " ;
+      std::cout << std::endl ;
+    }
+    else std::cout << "Lens::combinePlanes : field_plane_redshifts[] size is zero." << std::endl ;
+    
+    if(main_plane_redshifts.size() > 0)
+    {
+      std::cout << "Lens::combinePlanes : main_plane_redshifts[] = " ;
+      for(int i=0;i<main_plane_redshifts.size();i++) std::cout << main_plane_redshifts[i] << " " ;
+      std::cout << std::endl ;
+    }
+    else std::cout << "Lens::combinePlanes : main_plane_redshifts[] size is zero." << std::endl ;
   }
+  
+  std::cout << "Lens::combinePlanes : field_planes.size() = " << field_planes.size() << " , main_planes.size() = " << main_planes.size() << std::endl ;
   
   // clear old plane configuration
   lensing_planes.clear();
@@ -2797,7 +2825,7 @@ void Lens::combinePlanes(bool verbose)
     Dl[i++] = main_Dl[j++];
   }
   
-  if(verbose)
+  if(verbose && Dl.size() > 0)
   {
     std::cout << "Lens::combinePlanes : before sorting : Dl master = " ;
     for(int i=0;i<Dl.size();i++) std::cout << std::setprecision(13) << Dl[i] << " " ;
@@ -2814,7 +2842,7 @@ void Lens::combinePlanes(bool verbose)
     if( (Dl[i] - Dl[i-1]) < MIN_PLANE_DIST) Dl[i] = Dl[i-1] + MIN_PLANE_DIST;
   }
 
-  if(verbose)
+  if(verbose && Dl.size() > 0)
   {
     std::cout << "Lens::combinePlanes : after sorting and adjusting distances : Dl master = " ;
     for(int i=0;i<Dl.size();i++) std::cout << std::setprecision(13) << Dl[i] << " " ;
@@ -2832,7 +2860,7 @@ void Lens::combinePlanes(bool verbose)
     }
   }
   
-  if(verbose)
+  if(verbose && plane_redshifts.size() > 0)
   {
     std::cout << "Lens::combinePlanes : redshifts = " ;
     for(int i=0;i<plane_redshifts.size();i++) std::cout << std::setprecision(13) << plane_redshifts[i] << " " ;
@@ -2858,7 +2886,6 @@ void Lens::combinePlanes(bool verbose)
   
   // output resulting setup
   if(verbose)
-
   {
     std::cout << "\ncombinePlanes()" << "\n---------------" << std::endl;
     std::cout << "\nz:";
