@@ -103,7 +103,7 @@ PosType SourceOverzier::SurfaceBrightness(
 	return sb;
 }
 
-PosType SourceOverzier::getTotalFlux(){
+PosType SourceOverzier::getTotalFlux() const{
 	return pow(10,-(48.6+mag)/2.5);
 }
 
@@ -292,5 +292,90 @@ void SourceOverzierPlus::setBand(Band band){
   }
 }
 
+void SourceOverzierPlus::randomize(Utilities::RandomNumbers_NR &ran){
+  
+  { // SourceOverzier variables
+    
+    Reff *= (1 + 0.2*(2*ran()-1.));
+    Rh *= (1 + 0.2*(2*ran()-1.));
+    
+    PosType tmp = 0.1*(2*ran()-1.);
+    
+    setUMag(getMag(SDSS_U) + tmp);
+     setGMag(getMag(SDSS_G) + tmp);
+     setRMag(getMag(SDSS_R) + tmp);
+     setIMag(getMag(SDSS_I) + tmp);
+     setZMag(getMag(SDSS_Z) + tmp);
+     setJMag(getMag(J) + tmp);
+     setKMag(getMag(Ks) + tmp);
+     mag += tmp;
+     
+    
+    PA = pi*ran();
+    inclination = 0.95*pi/2*ran();
+    
+    if(Rh > 0.0){
+      cxx = ( pow(cos(PA),2) + pow(sin(PA)/cos(inclination),2) )/Rh/Rh;
+      cyy = ( pow(sin(PA),2) + pow(cos(PA)/cos(inclination),2) )/Rh/Rh;
+      cxy = ( 2*cos(PA)*sin(PA)*(1-pow(1/cos(inclination),2)) )/Rh/Rh;
+    }else{
+      cxx = cyy = cxy = 0.0;
+    }
+    
+    if(Rh > 0.0) sbDo = pow(10,-mag/2.5)*0.159148*(1-BtoT)/pow(Rh,2);
+    else sbDo = 0.0;
+    if(Reff > 0.0) sbSo = pow(10,-mag/2.5)*94.484376*BtoT/pow(Reff,2);
+    else sbSo = 0.0;
+    
+    // radius
+    // weighted mean between the radii that enclose 99% of the flux
+    // in the pure De Vacouleur/exponential disk case
+    // 6.670 = 3.975*Re = 3.975*1.678*Rh
+    setRadius(6.670*Rh*(1-BtoT)+18.936*Reff*BtoT);
+  }
+  
+  float minA = 0.01,maxA = 0.2; // minimum and maximum amplitude of arms
+  Narms = (ran() > 0.2) ? 2 : 4;  // number of arms
+  arm_alpha = (21 + 10*(ran()-0.5)*2)*degreesTOradians; // arm pitch angle
+  mctalpha = Narms/tan(arm_alpha);
+  disk_phase = pi*ran(); // add phase of arms
+  Ad = minA + (maxA-minA)*ran();
+ 
+  // spheroid
+  
+  // extra cersic component
+  //double index = 4 + 3*(ran()-0.5)*2;
+  
+  double index = 4*pow(MAX(BtoT,0.03),0.4)*pow(10,0.2*(ran()-0.5));
+  
+  double q = 1 + (0.5-1)*ran();
+  
+  //double q = 0.5;
+  double muSo = mag-2.5*log10(BtoT);  // this is not correct!
+  /*std::cout << spheroid->getMag() << std::endl;
+  std::cout << getX()[0] << " " << getX()[1] << std::endl;
+  std::cout << spheroid->getX()[0] << " " << spheroid->getX()[1] << std::endl;
+  Point_2d tmp = getX();
+  tmp[0] += Reff;
+  std::cout << spheroid->SurfaceBrightness(tmp.x) << std::endl;
+  */
+  delete spheroid;
+  spheroid = new SourceSersic(muSo,Reff/arcsecTOradians,-PA + 10*(ran() - 0.5)*pi/180,index,q,zsource,getX());
+  
+  /*std::cout << spheroid->getMag() << std::endl;
+  std::cout << getX()[0] << " " << getX()[1] << std::endl;
+  std::cout << spheroid->getX()[0] << " " << spheroid->getX()[1] << std::endl;
+  std::cout << spheroid->SurfaceBrightness(tmp.x) << std::endl;
+*/
+  
+  cospa = cos(PA);
+  sinpa = sin(PA);
+  cosi  = cos(inclination);
+  
+  for(PosType &mod : modes){
+    mod = 5.0e-2*ran();
+  }
+  
+}
 
 

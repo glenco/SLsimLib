@@ -11,6 +11,7 @@
 #include "source.h"
 #include "overzier_source.h"
 #include "simpleTreeVec.h"
+#include "utilities.h"
 
 /**
  * \brief Source that represents an analytic galaxy surface brightness model.  It encapsulates a
@@ -43,7 +44,7 @@ public:
   }
 	
 	/// Total flux coming from the current galaxy in erg/sec/Hz/cm^2
-	PosType getTotalFlux(){return pow(10,-(48.6+galaxies[index].getMag())/2.5);}
+	PosType getTotalFlux() const {return pow(10,-(48.6+galaxies[index].getMag())/2.5);}
 
 	void printSource();
 	// Add a pre-constructed galaxy to the source collection
@@ -78,8 +79,8 @@ public:
 
 	/// Return redshift of current source.
 	PosType getZ(){return galaxies[index].getZ();}
-	//PosType getRadius(){return max(galaxies[index]->Reff,galaxies[index]->Rh);}
-	PosType getRadius(){return galaxies[index].getRadius();}
+	//PosType getRadius() const {return max(galaxies[index]->Reff,galaxies[index]->Rh);}
+	PosType getRadius() const {return galaxies[index].getRadius();}
 	/// Set redshift of current source.  Only changes the redshift while leaving position fixed.
 	void setZ(PosType my_z){	galaxies[index].setZ(my_z);}
   void resetBand(Band my_band){
@@ -157,7 +158,6 @@ bool idcompare(SourceOverzierPlus s1,SourceOverzierPlus s2);
  * Galaxies are read from files in a predifined directory and put into a std::vector that allows 
  * sorting in redshift and magnitude. An individual object can be get via CurrentGalaxy() or the overloaded operator [].
  *
- *</pre>
  */
 class SourceMultiShapelets: public Source{
 public:
@@ -174,10 +174,12 @@ public:
     }
     
 	void printSource();
-	std::size_t getNumberOfGalaxies() const {return galaxies.size();}
+  std::size_t getNumberOfGalaxies() const {return galaxies.size();}
+  /// number of galaxies
+  std::size_t size() const {return galaxies.size();}
 
     /// Total flux coming from the current galaxy in erg/sec/Hz/cm^2
-	PosType getTotalFlux(){return pow(10,-(48.6+galaxies[index].getMag())/2.5);}
+	PosType getTotalFlux() const {return pow(10,-(48.6+galaxies[index].getMag())/2.5);}
 
     /// Return angular position of current source.
 	PosType *getX(){return galaxies[index].getX();}
@@ -186,9 +188,9 @@ public:
 	void setX(PosType my_x,PosType my_y){galaxies[index].setX(my_x, my_y);}
 
     /// Return redshift of current source.
-	PosType getZ(){return galaxies[index].getZ();}
-	//PosType getRadius(){return max(galaxies[index]->Reff,galaxies[index]->Rh);}
-	PosType getRadius(){return galaxies[index].getRadius();}
+	PosType getZ() const {return galaxies[index].getZ();}
+	//PosType getRadius() const {return max(galaxies[index]->Reff,galaxies[index]->Rh);}
+	PosType getRadius() const {return galaxies[index].getRadius();}
 
 	/** Used to change the "current" source that is returned when the surface brightness is subsequently
 	 * called.
@@ -222,18 +224,22 @@ public:
         band = b;
         for (int i = 0; i < galaxies.size(); i++)
             galaxies[i].setActiveBand(band);
-    return galaxies[index];
-    }
+      return galaxies[index];
+  }
+  
+  /// If the sources are already sorted by redshift this will find the index of the first galaxy with redshift above z
+  int locateZ(PosType z) const {
+      return Utilities::locate<SourceShapelets,PosType>(galaxies, z, [](PosType z,const SourceShapelets &s){return (z < s.getZ());});
+  }
     
-
 private:
 	void assignParams(InputParams& params);
  	std::size_t index;
 	float mag_limit;
   Band band;
-   
+  std::vector<SourceShapelets> galaxies;
+
   void readCatalog();
- 	std::vector<SourceShapelets> galaxies;
 	std::string shapelets_folder;
     
 };

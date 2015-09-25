@@ -28,7 +28,7 @@ public:
 	
 	void setInternals(PosType mag,PosType BtoT,PosType Reff,PosType Rh,PosType PA,PosType inclination,unsigned long my_id,PosType my_z=0,const PosType *my_theta=0);
   virtual PosType SurfaceBrightness(PosType *x);
-	PosType getTotalFlux();
+	PosType getTotalFlux() const;
 	void printSource();
 	
 	/// Halo ID.
@@ -198,6 +198,8 @@ public:
     spheroid->setX(my_x,my_y);
   }
 
+  /// Randomly change some of the internal paramters and angles of the source
+  void randomize(Utilities::RandomNumbers_NR &ran);
 private:
   int Narms;
   PosType Ad,mctalpha,arm_alpha;

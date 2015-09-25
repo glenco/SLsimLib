@@ -65,7 +65,7 @@ public:
     sinPA = sin(x);
 	}
 	
-	inline PosType getTotalFlux() { return flux; }
+	inline PosType getTotalFlux() const { return flux; }
 	
 	PosType SurfaceBrightness(PosType *x);
 	void printSource();

@@ -131,6 +131,7 @@ public:
   bool findNearestCrit(PosType *x,long &index);
   bool findNearestCrit(PosType *x,long &index,CritType type);
   
+  std::vector<CausticStructure> data;
 private:
   void readfile(std::string filename,bool verbose);
 
@@ -142,8 +143,6 @@ private:
   std::vector<size_t> caus_area_index;
 
   int ncolumns;
-//  std::vector<CausticStructure> data;
-  std::vector<CausticStructure> data;
   std::vector<double> cummulative_area;
 
   void SetSearchTree();
