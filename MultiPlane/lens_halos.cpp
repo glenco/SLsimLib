@@ -1080,17 +1080,22 @@ void LensHaloRealNSIE::force_halo(
 	if(rcm2 < 1e-20) rcm2 = 1e-20;
   if(rcm2 < Rmax*Rmax)
     {
-		//PosType ellipR = ellipticRadiusNSIE(xcm,fratio,pa);
-      if(rcm2 > Rsize*Rsize)
+      PosType ellipR = ellipticRadiusNSIE(xcm,fratio,pa);
+      float units = pow(sigma/lightspeed,2)/Grav/sqrt(fratio); // mass/distance(physical)
+
+      //if(rcm2 > Rsize*Rsize)
+      if(ellipR > Rsize*Rsize)
       {
         // This is the case when the ray is within the NSIE's circular region of influence but outside its elliptical truncation
         
         PosType alpha_iso[2],alpha_ellip[2];
         //PosType prefac = -1.0*mass/Rmax/pi;
         PosType r = sqrt(rcm2);
-        float units = pow(sigma/lightspeed,2)/Grav/sqrt(fratio); // mass/distance(physical)
         
-        double f1 = (Rmax - r)/(Rmax - Rsize),f2 = (r - Rsize)/(Rmax - Rsize);
+        double Rin = sqrt(rcm2)*Rsize/ellipR;
+        
+        //double f1 = (Rmax - r)/(Rmax - Rsize),f2 = (r - Rsize)/(Rmax - Rsize);
+        double f1 = (Rmax - r)/(Rmax - Rin),f2 = (r - Rin)/(Rmax - Rin);
         
         // SIE solution
         alpha_ellip[0] = alpha_ellip[1] = 0;
@@ -1137,7 +1142,6 @@ void LensHaloRealNSIE::force_halo(
       else
       {
         PosType xt[2]={0,0},tmp[2]={0,0};
-        float units = pow(sigma/lightspeed,2)/Grav/sqrt(fratio); // mass/distance(physical)
         xt[0]=xcm[0];
         xt[1]=xcm[1];
         alphaNSIE(tmp,xt,fratio,rcore,pa);
