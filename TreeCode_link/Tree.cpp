@@ -65,9 +65,9 @@ Point::Point(){
   head = 0;
   in_image = NO;
   surface_brightness = 0;
-  leaf = NULL;
-  image = NULL;
-  next = prev = NULL;
+  leaf = nullptr;
+  image = nullptr;
+  next = prev = nullptr;
   kappa = dt = gridsize = 0;
   gamma[0] = gamma[1] = gamma[2] = 0;
   invmag = 1;

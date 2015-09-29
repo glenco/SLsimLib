@@ -563,13 +563,13 @@ protected:
   struct DMDR{
     DMDR(LensHalo *halo): halo(halo){};
     PosType operator()(PosType logR){
-      if(halo->get_flag_elliptical()){
+       if(halo->get_flag_elliptical()){
         LensHalo::DMDRDTHETA dmdrdtheta(exp(logR),halo);
         //std::cout << " R = " << exp(logR) << std::endl;
         
         if(exp(2*logR) == 0.0) return 0.0;
-        return Utilities::nintegrate<LensHalo::DMDRDTHETA,PosType>(dmdrdtheta,0,2*pi,1.0e-7)
-        *exp(2*logR);///halo->Rmax; /// for the elliptical case and 2D integration an extra term of 1/Rmax comes in here.
+         return Utilities::nintegrate<LensHalo::DMDRDTHETA,PosType>(dmdrdtheta,0,2*pi,1.0e-7)
+         *exp(2*logR);
       }else{
         PosType alpha[2] = {0,0},x[2] = {0,0};
         KappaType kappa = 0,gamma[3] = {0,0,0} ,phi=0;
