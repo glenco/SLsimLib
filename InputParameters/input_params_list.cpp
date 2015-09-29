@@ -98,7 +98,9 @@ namespace
 		{"main_sub_mass_max", "1.0e9", ""},
 		{"main_sub_mass_min", "1.0e6", ""},
 		{"main_sub_type", "1", ""},
-		
+		{"main_sub_is_on", "true", ""},
+    {"main_sub_dcontrast", "200.", ""},
+    
 		// Stars
 		{"main_stars_N", "0", "number of stars to be implanted"},
 		{"main_stars_fraction", "0.5", "stellar mass fraction"},
