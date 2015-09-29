@@ -664,6 +664,8 @@ LensHaloRealNSIE::LensHaloRealNSIE(float my_mass,PosType my_zlens,float my_sigma
   
   Rmax = 1.01*Rsize;
 	assert(Rmax >= Rsize);
+  if(fratio  != 1.0) elliptical_flag = true;
+  else elliptical_flag = false;
  }
 
 LensHaloRealNSIE::LensHaloRealNSIE(InputParams& params){
@@ -674,6 +676,9 @@ LensHaloRealNSIE::LensHaloRealNSIE(InputParams& params){
 	rcore = 0.;
 
 	assignParams(params);
+  assert(Rmax >= Rsize);
+  if(fratio  != 1.0) elliptical_flag = true;
+  else elliptical_flag = false;
 }
 
 void LensHaloRealNSIE::assignParams(InputParams& params){
@@ -1637,7 +1642,7 @@ bool LensHalo::test(){
   
   int N=22;
   PosType m1,m2;
-  for(int i=12;i<N;++i){
+  for(int i=1;i<N;++i){
     m1 = MassBy1DIntegation(Rmax*i/(N-2));
     m2 = MassBy2DIntegation(Rmax*i/(N-2));
     std::cout <<  i*1./(N-2) << "      " << m1 << "       "
@@ -1667,7 +1672,7 @@ bool LensHalo::test(){
   
   
     std::cout << "test average tangential shear's, gamma_t's, consistance with the average convergence at a radius, kappa(r) and average kappa within a radius calculated using alpha and Gauss' law.  gamma_t should be equal to <kappa>_R - kappa(R)" << std::endl;
-    std::cout << std::endl <<"R/Rmax        gamma_t       <kappa>_R-kappa(R)        <kappa>_R           kappa(R)      [<kappa>_R-kappa(R)]/gt  " << std::endl;
+    std::cout << std::endl <<"R/Rmax        gamma_t       <kappa>_R-kappa(R)       <kappa>_R            kappa(R)     [<kappa>_R-kappa(R)]/gt  " << std::endl;
   
   
     for(int i=1;i<N;++i){
@@ -1680,7 +1685,7 @@ bool LensHalo::test(){
       m1 = MassBy1DIntegation(r)/pi/r/r;
       
       
-      std::cout << r/Rmax << "       " << -1.0*average_gt << "         " << m1-average_kappa << "         " <<  m1 << "          " <<  average_kappa << "       "  << -1.0*(m1-average_kappa)/average_gt << std::endl;
+      std::cout << r/Rmax << "       " << -1.0*average_gt << "         " << m1-average_kappa << "         " <<  m1 << "          " <<  average_kappa << "         "  << -1.0*(m1-average_kappa)/average_gt << std::endl;
       
       
       PosType alpha[2] = {0,0},x[2] = {0,0};
