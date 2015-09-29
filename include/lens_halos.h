@@ -924,6 +924,10 @@ public:
   
 protected:
   
+  static size_t objectCount;
+  static std::vector<double> q_table;
+  static std::vector<double> Fofq_table;
+  
 	/// initialize from a simulation file
 	//void initFromFile(float my_mass, long *seed, float vmax, float r_halfmass);
 	/// initialize from a mass function
@@ -944,24 +948,10 @@ protected:
 	float pa;
 	/// core size of NSIE
 	float rcore;
-  double norm;
   
-  PosType rmax_calc(){
-    
-    renormalize();
-    return sqrt( pow(mass*Grav*lightspeed*lightspeed*fratio/pi/sigma/sigma + rcore,2) - rcore*rcore )/norm;
-  }
-  
-
-  void renormalize(){
-    if(fratio == 1.0){
-      norm = 1.0;
-    }else{
-      NormFuncer funcer(fratio);
-      norm = Utilities::nintegrate<NormFuncer,double>(funcer,0.0,pi/2,1.0e-6)*2/pi;
-    }
-  }
-  
+  /// for the set fratio, sigma and rcore calculate the radius that contains the correct mass
+  PosType rmax_calc();
+  void construct_ellip_tables();
   
   struct NormFuncer{
     NormFuncer(double my_q):q(my_q){};
@@ -975,6 +965,8 @@ protected:
   };
   
 };
+
+
 
 /** \ingroup DeflectionL2
  *
