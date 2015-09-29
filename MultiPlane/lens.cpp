@@ -837,6 +837,11 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
     assert(field_plane_redshifts.size() == field_Nplanes_original);
     assert(field_Dl.size() == field_Nplanes_original);
 
+    cout << "field : " << field_planes.size() << " " << field_plane_redshifts.size() << " " << field_Dl.size() << endl ;
+    cout << "field redshifts :" << endl;
+    for(int i=0;i<field_plane_redshifts.size();i++) cout << field_plane_redshifts[i] << " " ;
+    cout << endl;
+    
     std::vector<LensPlane*>::iterator it = field_planes.begin();
     std::vector<PosType>::iterator itz = field_plane_redshifts.begin();
     std::vector<PosType>::iterator itd = field_Dl.begin();
