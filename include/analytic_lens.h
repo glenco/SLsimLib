@@ -26,7 +26,8 @@ public:
 
   void PrintLens(bool show_substruct,bool show_stars);
 
-  double ** compute_dxSub(int Nimages);
+  void compute_dxSub(double ** dx_sub,int Nimages,std::vector<Point> & ImagePos,bool IsFieldOff = true,bool IsSubOn = false, bool verbose = false);
+
   
   void FindLensSimple(int Nimages,Point *image_positions,double *y,double **dx_sub);
   void FindLensSimple2(int Nimages,Point *image_positions,Point *FiducialLineShift,double *y,double **dx_sub);
