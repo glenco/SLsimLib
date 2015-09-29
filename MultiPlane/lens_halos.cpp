@@ -844,7 +844,7 @@ void LensHalo::force_halo_asym(
 		){
       
   float r_size=get_rsize()*Rmax;
-  assert(r_size<Rmax);
+  assert(r_size<=Rmax);
   PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
   PosType alpha_tmp[2],kappa_tmp,gamma_tmp[2],phi_tmp;
   if(rcm2 < 1e-20) rcm2 = 1e-20;
@@ -877,9 +877,11 @@ void LensHalo::force_halo_asym(
       alpha[1] += alpha_iso[1]*f2 + alpha_ellip[1]*f1;
       
       {
-        PosType tmp = -2.0*mass_norm_factor*mass/rcm2/pi/rcm2; // dev by mass_norm_factor
-        gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
-        gamma[1] += xcm[0]*xcm[1]*tmp;
+        //PosType tmp = -2.0*mass/rcm2/pi/rcm2; // dev by mass_norm_factor
+        //gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+        //gamma[1] += xcm[0]*xcm[1]*tmp;
+        gamma[0] += 0.5*gamma_tmp[0]*mass_norm_factor;
+        gamma[1] += 0.5*gamma_tmp[1]*mass_norm_factor;
         
         *phi += 0.5 * log(rcm2) * mass_norm_factor*mass / pi ; //  dev by mass_norm_factor
       }
@@ -894,8 +896,8 @@ void LensHalo::force_halo_asym(
       alpha[1] +=  alpha_tmp[1];
 
       *kappa += kappa_tmp;
-      gamma[0] += 0.5*gamma_tmp[0];
-      gamma[1] += 0.5*gamma_tmp[1];
+      gamma[0] += 0.5*gamma_tmp[0]*mass_norm_factor;
+      gamma[1] += 0.5*gamma_tmp[1]*mass_norm_factor;
       
       *phi += phi_tmp;
       
