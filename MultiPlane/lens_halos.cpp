@@ -690,6 +690,11 @@ LensHaloRealNSIE::LensHaloRealNSIE(InputParams& params){
   if(objectCount == 1){   // make table for calculating elliptical integrale
     construct_ellip_tables();
   }
+  //Rsize = rmaxNSIE(sigma,mass,fratio,rcore);
+  //Rmax = MAX(1.0,1.0/fratio)*Rsize;  // redefine
+  Rsize = rmax_calc();
+  Rmax = 1.2*Rsize;
+
   if(fratio > 1.0 || fratio < 0.01) throw std::invalid_argument("invalid fratio");
 }
 
@@ -710,11 +715,6 @@ void LensHaloRealNSIE::assignParams(InputParams& params){
   
   if(params.get("main_ellip_method",main_ellip_method)){std::cout << "main_ellip_method is NOT needed in file " << params.filename() << ". RealNSIE produces parametric ellipses!" << endl;};
   
-  
-  //Rsize = rmaxNSIE(sigma,mass,fratio,rcore);
-  //Rmax = MAX(1.0,1.0/fratio)*Rsize;  // redefine
-  Rsize = rmax_calc();
-  Rmax = 1.2*Rsize;
   
   if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
   else if(stars_N){
@@ -748,7 +748,7 @@ void LensHaloRealNSIE::construct_ellip_tables(){
 }
 
 PosType LensHaloRealNSIE::rmax_calc(){
-  
+ 
   if(fratio == 1.0) return sqrt( pow(mass*Grav*lightspeed*lightspeed/pi/sigma/sigma + rcore,2) - rcore*rcore );
   
   // This is because there is no easy way of finding the Rmax for a fixed mass when rcore != 0
