@@ -655,7 +655,8 @@ std::vector<double> LensHaloRealNSIE::q_table;
 std::vector<double> LensHaloRealNSIE::Fofq_table;
 
 LensHaloRealNSIE::LensHaloRealNSIE(float my_mass,PosType my_zlens,float my_sigma
-                                   , float my_rcore,float my_fratio,float my_pa,int my_stars_N):LensHalo(){
+                                   , float my_rcore,float my_fratio,float my_pa,int my_stars_N)
+:LensHalo(){
   mass=my_mass, zlens=my_zlens, rscale=1.0;
   
   sigma=my_sigma, rcore=my_rcore;
@@ -668,11 +669,18 @@ LensHaloRealNSIE::LensHaloRealNSIE(float my_mass,PosType my_zlens,float my_sigma
   if(objectCount == 1){   // make table for calculating elliptical integrale
     construct_ellip_tables();
   }
+
+  
   //Rsize = rmaxNSIE(sigma,mass,fratio,rcore);
   //Rmax = MAX(1.0,1.0/fratio)*Rsize;  // redefine
   Rsize = rmax_calc();
   Rmax = 1.2*Rsize;
   if(fratio > 1.0 || fratio < 0.01) throw std::invalid_argument("invalid fratio");
+  
+  if(rcore > 0.0){
+    mass = MassBy1DIntegation(Rsize);
+  }
+  
 }
 
 LensHaloRealNSIE::LensHaloRealNSIE(InputParams& params){
@@ -696,6 +704,11 @@ LensHaloRealNSIE::LensHaloRealNSIE(InputParams& params){
   Rmax = 1.2*Rsize;
 
   if(fratio > 1.0 || fratio < 0.01) throw std::invalid_argument("invalid fratio");
+  
+  if(rcore > 0.0){
+    mass = MassBy1DIntegation(Rsize);
+  }
+
 }
 
 void LensHaloRealNSIE::assignParams(InputParams& params){
@@ -749,10 +762,12 @@ void LensHaloRealNSIE::construct_ellip_tables(){
 
 PosType LensHaloRealNSIE::rmax_calc(){
  
-  if(fratio == 1.0) return sqrt( pow(mass*Grav*lightspeed*lightspeed/pi/sigma/sigma + rcore,2) - rcore*rcore );
+  if(fratio == 1.0 || rcore > 0.0)
+    return sqrt( pow(mass*Grav*lightspeed*lightspeed*sqrt(fratio)/pi/sigma/sigma + rcore,2)
+                                - rcore*rcore );
   
-  // This is because there is no easy way of finding the Rmax for a fixed mass when rcore != 0
-  if(rcore > 0.0) throw std::runtime_error("rcore must be zero for this constructor");
+  // This is because there is no easy way of finding the circular Rmax for a fixed mass when rcore != 0
+  //if(rcore > 0.0) throw std::runtime_error("rcore must be zero for this constructor");
   
   // asymmetric case
   //NormFuncer funcer(fratio);

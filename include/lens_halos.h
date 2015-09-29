@@ -890,9 +890,12 @@ public:
    }*/
   
   //LensHaloRealNSIE(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,float my_sigma, float my_rcore,float my_fratio,float my_pa,int my_stars_N);
-  /// explicit constructor
+  
+  /// explicit constructor, Warning: If my_rcore > 0.0 and my_fratio < 1 then the mass will be somewhat less than my_mass.
   LensHaloRealNSIE(float my_mass,PosType my_zlens,float my_sigma
-                     ,float my_rcore,float my_fratio,float my_pa,int my_stars_N);
+                   ,float my_rcore,float my_fratio,float my_pa,int my_stars_N);
+  
+  /// Warning: If my_rcore > 0.0 and my_fratio < 1 then the mass will be somewhat less than my_mass.
 	LensHaloRealNSIE(InputParams& params);
 	~LensHaloRealNSIE();
   
