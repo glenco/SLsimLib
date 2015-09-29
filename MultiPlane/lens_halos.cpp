@@ -659,10 +659,12 @@ LensHaloRealNSIE::LensHaloRealNSIE(float my_mass,PosType my_zlens,float my_sigma
   fratio=my_fratio, pa=my_pa, stars_N=my_stars_N;
   stars_implanted = false;
 	Rsize = rmaxNSIE(sigma,mass,fratio,rcore);
-	Rmax = MAX(1.0,1.0/fratio)*Rsize;  // redefine
+	//Rmax = MAX(1.0,1.0/fratio)*Rsize;  // redefine
+  Rsize = rmax_calc();
+  
+  Rmax = 1.01*Rsize;
 	assert(Rmax >= Rsize);
  }
-
 
 LensHaloRealNSIE::LensHaloRealNSIE(InputParams& params){
 	sigma = 0.;
@@ -1080,11 +1082,11 @@ void LensHaloRealNSIE::force_halo(
 	if(rcm2 < 1e-20) rcm2 = 1e-20;
   if(rcm2 < Rmax*Rmax)
     {
-      PosType ellipR = ellipticRadiusNSIE(xcm,fratio,pa);
-      float units = pow(sigma/lightspeed,2)/Grav/sqrt(fratio); // mass/distance(physical)
+      //PosType ellipR = ellipticRadiusNSIE(xcm,fratio,pa);
+      float units = pow(sigma/lightspeed,2)/Grav;///sqrt(fratio); // mass/distance(physical)
 
-      //if(rcm2 > Rsize*Rsize)
-      if(ellipR > Rsize*Rsize)
+      if(rcm2 > Rsize*Rsize)
+      //if(ellipR > Rsize*Rsize)
       {
         // This is the case when the ray is within the NSIE's circular region of influence but outside its elliptical truncation
         
@@ -1092,10 +1094,10 @@ void LensHaloRealNSIE::force_halo(
         //PosType prefac = -1.0*mass/Rmax/pi;
         PosType r = sqrt(rcm2);
         
-        double Rin = sqrt(rcm2)*Rsize/ellipR;
+        //double Rin = sqrt(rcm2)*Rsize/ellipR;
         
-        //double f1 = (Rmax - r)/(Rmax - Rsize),f2 = (r - Rsize)/(Rmax - Rsize);
-        double f1 = (Rmax - r)/(Rmax - Rin),f2 = (r - Rin)/(Rmax - Rin);
+        double f1 = (Rmax - r)/(Rmax - Rsize),f2 = (r - Rsize)/(Rmax - Rsize);
+        //double f1 = (Rmax - r)/(Rmax - Rin),f2 = (r - Rin)/(Rmax - Rin);
         
         // SIE solution
         alpha_ellip[0] = alpha_ellip[1] = 0;
@@ -1148,11 +1150,11 @@ void LensHaloRealNSIE::force_halo(
         
         //alpha[0] = units*tmp[0];  // minus sign removed because already included in alphaNSIE
         //alpha[1] = units*tmp[1];  // Why was the "+=" removed?
-        alpha[0] += units*tmp[0];
-        alpha[1] += units*tmp[1];
+        alpha[0] += units*tmp[0];//*sqrt(fratio);
+        alpha[1] += units*tmp[1];//*sqrt(fratio);
         {
           KappaType tmp[2]={0,0};
-          *kappa += units*kappaNSIE(xt,fratio,rcore,pa);
+          *kappa += units*kappaNSIE(xt,fratio,rcore,pa);///sqrt(fratio);
           gammaNSIE(tmp,xt,fratio,rcore,pa);
           gamma[0] += units*tmp[0];
           gamma[1] += units*tmp[1];
@@ -1621,6 +1623,7 @@ double LensHalo::test_average_gt(PosType R){
   return Utilities::nintegrate<test_gt_func>(f,0.0,2.*pi,1.0e-3);
 }
 
+// returns <kappa> x 2pi on a ring at R
 double LensHalo::test_average_kappa(PosType R){
   struct test_kappa_func f(R,this);
   return Utilities::nintegrate<test_kappa_func>(f,0.0,2.*pi,1.0e-3);
@@ -1645,7 +1648,8 @@ bool LensHalo::test(){
   
   PosType r;
   
-    std::cout << "test gamma_t's consistance with kappa and alpha by comparing gamma_t to alpha/r - kappa" << std::endl;
+  std::cout << "test gamma_t's consistance with kappa and alpha by comparing gamma_t to alpha/r - kappa along the x-axis" << std::endl
+  << "Not expected to be equal for asymmetric cases."<< std::endl;
     std::cout << std::endl <<"R/Rmax         gamma_t       alpha/r - kappa          alpha/r           kappa        delta/gt "  << std::endl;
     for(int i=1;i<N;++i){
       r = Rmax*i/(N-2);
@@ -1662,8 +1666,8 @@ bool LensHalo::test(){
     }
   
   
-    std::cout << "test gamma_t's consistance with kappa and alpha by comparing gamma_t to <kappa>_R - kappa(R)" << std::endl;
-    std::cout << std::endl <<"R/Rmax        gamma_t         m1-kappa             <kappa>_R=m1           kappa(R)         delta/gt  " << std::endl;
+    std::cout << "test average tangential shear's, gamma_t's, consistance with the average convergence at a radius, kappa(r) and average kappa within a radius calculated using alpha and Gauss' law.  gamma_t should be equal to <kappa>_R - kappa(R)" << std::endl;
+    std::cout << std::endl <<"R/Rmax        gamma_t       <kappa>_R-kappa(R)        <kappa>_R           kappa(R)      [<kappa>_R-kappa(R)]/gt  " << std::endl;
   
   
     for(int i=1;i<N;++i){
@@ -1676,7 +1680,7 @@ bool LensHalo::test(){
       m1 = MassBy1DIntegation(r)/pi/r/r;
       
       
-      std::cout << r/Rmax << "       " << -1.0*average_gt << "         " << m1-average_kappa << "         " <<  m1 << "          " <<  average_kappa << "     "  << -1.0*(m1-average_kappa)/average_gt << std::endl;
+      std::cout << r/Rmax << "       " << -1.0*average_gt << "         " << m1-average_kappa << "         " <<  m1 << "          " <<  average_kappa << "       "  << -1.0*(m1-average_kappa)/average_gt << std::endl;
       
       
       PosType alpha[2] = {0,0},x[2] = {0,0};
@@ -1705,8 +1709,6 @@ bool LensHalo::test(){
       
       
     }
-    
-  
   
   return true;
 };

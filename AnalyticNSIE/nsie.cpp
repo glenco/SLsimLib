@@ -154,8 +154,10 @@ PosType rmaxNSIE(
 		,PosType f       /// axis ratio
 		,PosType rc      /// core radius Mpc
 		){
+      
 	return sqrt( pow(mass*Grav*lightspeed*lightspeed*f/pi/sigma/sigma + rc,2) - rc*rc );
 }
+
 /** \ingroup function
  *  \brief Elliptical radius \f$ R^2 = x^2 + f^2 y^2 \f$ given f and position angle of model
  */

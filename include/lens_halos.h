@@ -569,7 +569,7 @@ protected:
         
         if(exp(2*logR) == 0.0) return 0.0;
         return Utilities::nintegrate<LensHalo::DMDRDTHETA,PosType>(dmdrdtheta,0,2*pi,1.0e-7)
-        *exp(2*logR)/halo->Rmax; /// for the elliptical case and 2D integration an extra term of 1/Rmax comes in here.
+        *exp(2*logR);///halo->Rmax; /// for the elliptical case and 2D integration an extra term of 1/Rmax comes in here.
       }else{
         PosType alpha[2] = {0,0},x[2] = {0,0};
         KappaType kappa = 0,gamma[3] = {0,0,0} ,phi=0;
@@ -944,6 +944,35 @@ protected:
 	float pa;
 	/// core size of NSIE
 	float rcore;
+  double norm;
+  
+  PosType rmax_calc(){
+    
+    renormalize();
+    return sqrt( pow(mass*Grav*lightspeed*lightspeed*fratio/pi/sigma/sigma + rcore,2) - rcore*rcore )/norm;
+  }
+  
+
+  void renormalize(){
+    if(fratio == 1.0){
+      norm = 1.0;
+    }else{
+      NormFuncer funcer(fratio);
+      norm = Utilities::nintegrate<NormFuncer,double>(funcer,0.0,pi/2,1.0e-6)*2/pi;
+    }
+  }
+  
+  
+  struct NormFuncer{
+    NormFuncer(double my_q):q(my_q){};
+    
+    double operator()(double t){
+      return 1.0/sqrt( 1 + (q*q-1)*sin(t)*sin(t));
+    };
+    
+  private:
+    double q;
+  };
   
 };
 
