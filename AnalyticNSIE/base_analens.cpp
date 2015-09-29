@@ -188,6 +188,8 @@ void LensHaloBaseNSIE::assignParams(InputParams& params){
     if(!params.get("main_sub_Rmax",sub_Rmax)) error_message1("main_sub_Rmax",params.filename());
     if(!params.get("main_sub_mass_max",sub_Mmax)) error_message1("main_sub_mass_max",params.filename());
     if(!params.get("main_sub_mass_min",sub_Mmin)) error_message1("main_sub_mass_min",params.filename());
+    if(!params.get("main_sub_is_on",sub_Mmin)) error_message1("main_sub_is_on",params.filename());
+    if(!params.get("main_sub_dcontrast",sub_Mmin)) error_message1("main_sub_dcontrast",params.filename());
     if(sub_Mmin < 1.0e3){
       ERROR_MESSAGE();
       std::cout << "Are you sure the minimum halo mass should be " << sub_Mmin << " Msun?" << std::endl;
