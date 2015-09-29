@@ -832,7 +832,7 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
     std::vector<LensPlane*>::iterator it = field_planes.begin();
     std::vector<PosType>::iterator itz = field_plane_redshifts.begin();
     std::vector<PosType>::iterator itd = field_Dl.begin();
-    while(*itz < redshift){
+    while(*itz < redshift && it != field_planes.end()){
       ++it;
       ++itz;
       ++itd;
