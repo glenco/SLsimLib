@@ -661,10 +661,6 @@ LensHaloRealNSIE::LensHaloRealNSIE(float my_mass,PosType my_zlens,float my_sigma
   sigma=my_sigma, rcore=my_rcore;
   fratio=my_fratio, pa=my_pa, stars_N=my_stars_N;
   stars_implanted = false;
-  //Rsize = rmaxNSIE(sigma,mass,fratio,rcore);
-  //Rmax = MAX(1.0,1.0/fratio)*Rsize;  // redefine
-  Rsize = rmax_calc();
-  Rmax = 1.2*Rsize;
   
   if(fratio  != 1.0) elliptical_flag = true;
   else elliptical_flag = false;
@@ -672,6 +668,10 @@ LensHaloRealNSIE::LensHaloRealNSIE(float my_mass,PosType my_zlens,float my_sigma
   if(objectCount == 1){   // make table for calculating elliptical integrale
     construct_ellip_tables();
   }
+  //Rsize = rmaxNSIE(sigma,mass,fratio,rcore);
+  //Rmax = MAX(1.0,1.0/fratio)*Rsize;  // redefine
+  Rsize = rmax_calc();
+  Rmax = 1.2*Rsize;
   if(fratio > 1.0 || fratio < 0.01) throw std::invalid_argument("invalid fratio");
 }
 
