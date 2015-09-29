@@ -173,7 +173,7 @@ protected:
   void force_halo_sym(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0);
   void force_halo_asym(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0);
   /// only used for force_halo_asym: inner radius in terms of Rmax of interpolation region between elliptical and isotropic alpha, e.g. Rsize=0.8 means that between 80 per cent of Rmax and Rmax alpha values are interpolated
-  float Rsize = 1;
+  float Rsize = 0.8;
   
   struct norm_func{
     norm_func(LensHalo& halo, PosType my_r_max): halo(halo), r_max(my_r_max){};
