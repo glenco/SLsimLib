@@ -146,7 +146,9 @@ LensHaloNFW::LensHaloNFW(float my_mass,float my_Rmax,PosType my_zlens,float my_c
     }
   }else set_flag_elliptical(false);
   
-  
+  Rsize = my_Rmax;
+  Rmax = 1.2*Rsize;
+  if(fratio > 1.0 || fratio < 0.01) throw std::invalid_argument("invalid fratio");
   
   
 }
@@ -193,6 +195,10 @@ LensHaloNFW::LensHaloNFW(InputParams& params)
       set_norm_factor();
     }
   }else set_flag_elliptical(false);
+
+  Rsize = Rmax;  /// This has to be relabeled: main_Rmax is ParamFile has the function of Rsize, as the actual Rmax is 20% larger than that for the interpolation region
+  Rmax = 1.2*Rsize;
+  if(fratio > 1.0 || fratio < 0.01) throw std::invalid_argument("invalid fratio");
 }
 
 void LensHaloNFW::make_tables(){
@@ -520,19 +526,16 @@ LensHaloPowerLaw::LensHaloPowerLaw(
                                    float my_mass       /// mass of halo in solar masses
                                    ,float my_Rmax      /// maximum radius of halo in Mpc
                                    ,PosType my_zlens   /// redshift of halo
-                                   ,float my_rscale    /// dummy scale,  not actually used
                                    ,PosType my_beta    /// logarithmic slop of surface density, kappa \propto r^{-beta}
                                    ,float my_fratio    /// axis ratio in asymetric case
                                    ,float my_pa        /// position angle
                                    ,int my_stars_N     /// number of stars, not yet implanted
                                    ,EllipMethod my_ellip_method /// ellipticizing method
 ){
-  mass=my_mass, Rmax=my_Rmax, zlens=my_zlens, rscale=my_rscale;
+  mass=my_mass, Rmax=my_Rmax, zlens=my_zlens;
   beta=my_beta;
   fratio=my_fratio, pa=my_pa, main_ellip_method=my_ellip_method, stars_N=my_stars_N;
   stars_implanted = false;
-  // rscale = xmax = 1.0; // Commented in order to have a correct computation of the potential term in the time delay.
-  // Replacing it by :
   rscale = 1;
   xmax = Rmax/rscale ; /// xmax needs to be in initialized before the mass_norm_factor for Pseudo ellip method is calculated via  set_norm_factor()
   //mnorm = renormalization(get_Rmax());
@@ -552,6 +555,9 @@ LensHaloPowerLaw::LensHaloPowerLaw(
     }
   }else set_flag_elliptical(false);
   
+  Rsize = my_Rmax;
+  Rmax = 1.2*Rsize;
+  if(fratio > 1.0 || fratio < 0.01) throw std::invalid_argument("invalid fratio");
   
 }
 
@@ -603,9 +609,11 @@ LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
   
   // rscale = xmax = 1.0;
   // mnorm = renormalization(get_Rmax());
-  mnorm = 1. ;
-  //std::cout << "mass normalization: " << mnorm << std::endl;
-  
+  mnorm = 1.;
+  Rsize = Rmax;  /// This has to be relabeled: main_Rmax is ParamFile has the function of Rsize, as the actual Rmax is 20% larger than that for the interpolation region
+  Rmax = 1.2*Rsize;
+  if(fratio > 1.0 || fratio < 0.01) throw std::invalid_argument("invalid fratio");
+
   
   
 }
@@ -908,8 +916,9 @@ void LensHalo::force_halo_asym(
                                ,PosType screening   /// the factor by which to scale the mass for screening of the point mass subtraction
 ){
   
-  float r_size=get_rsize()*Rmax;
-  assert(r_size<=Rmax);
+  //float r_size=get_rsize()*Rmax;
+  //Rmax=r_size*1.2;
+  
   PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
   PosType alpha_tmp[2],kappa_tmp,gamma_tmp[2],phi_tmp;
   if(rcm2 < 1e-20) rcm2 = 1e-20;
@@ -922,17 +931,17 @@ void LensHalo::force_halo_asym(
     double theta;
     if(xcm[0] == 0.0 && xcm[1] == 0.0) theta = 0.0;
     else theta=atan2(xcm[1],xcm[0]);
-    if(rcm2 > r_size*r_size){
+    if(rcm2 > Rsize*Rsize){
       PosType alpha_iso[2],alpha_ellip[2];
       alpha_ellip[0] = alpha_ellip[1] = 0;
-      if(main_ellip_method==Pseudo){alphakappagamma_asym(r_size,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
-      if(main_ellip_method==Fourier){alphakappagamma1asym(r_size,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
-      if(main_ellip_method==Schramm){alphakappagamma2asym(r_size,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
-      if(main_ellip_method==Keeton){alphakappagamma3asym(r_size,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
+      if(main_ellip_method==Pseudo){alphakappagamma_asym(Rsize,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
+      if(main_ellip_method==Fourier){alphakappagamma1asym(Rsize,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
+      if(main_ellip_method==Schramm){alphakappagamma2asym(Rsize,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
+      if(main_ellip_method==Keeton){alphakappagamma3asym(Rsize,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
       alpha_ellip[0]=alpha_tmp[0];
       alpha_ellip[1]=alpha_tmp[1];
       
-      double f1 = (Rmax - r)/(Rmax - r_size),f2 = (r - r_size)/(Rmax - r_size);
+      double f1 = (Rmax - r)/(Rmax - Rsize),f2 = (r - Rsize)/(Rmax - Rsize);
       
       PosType tmp = mass/Rmax/pi/r;
       alpha_iso[0] = -1.0*tmp*xcm[0];
@@ -1138,7 +1147,7 @@ void LensHalo::force_halo_asym(
  
  return;
  }
- /* */
+  */
 void LensHaloRealNSIE::force_halo(
                                   PosType *alpha
                                   ,KappaType *kappa

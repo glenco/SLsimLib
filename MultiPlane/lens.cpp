@@ -800,7 +800,7 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
     rmax_max = MAX(Rmax,rmax_max); // in PhysMpc
     
     // Adding the randomly-generated halo into the substructure :
-    substructure.halos.push_back(new LensHaloPowerLaw(mass,Rmax,redshift,Rmax,1.0,1.0,0,0));
+    substructure.halos.push_back(new LensHaloPowerLaw(mass,Rmax,redshift,1.0,1.0,0,0));
     substructure.halos.back()->setX(theta_pos);
     ++haloid;
     substructure.halos.back()->setID(haloid);
@@ -989,7 +989,7 @@ void Lens::resetSubstructure(bool verbose){
     
     rmax_max = MAX(Rmax,rmax_max);
     
-    substructure.halos.push_back(new LensHaloPowerLaw(mass,Rmax,redshift,Rmax,1.0,1.0,0,0));
+    substructure.halos.push_back(new LensHaloPowerLaw(mass,Rmax,redshift,1.0,1.0,0,0));
     substructure.halos.back()->setX(theta_pos);
     ++haloid;
     substructure.halos.back()->setID(haloid);
@@ -1488,7 +1488,7 @@ void Lens::createFieldHalos(bool verbose)
 					break;
 				case pl_lens:
 					//field_halos.push_back(new LensHaloPowerLaw);
-          field_halos.push_back(new LensHaloPowerLaw(mass*(1-field_galaxy_mass_fraction),Rmax,halo_zs_vec[i],Rmax/rscale,1.0,1.0,0,0));
+          field_halos.push_back(new LensHaloPowerLaw(mass*(1-field_galaxy_mass_fraction),Rmax,halo_zs_vec[i],1.0,1.0,0,0));
           
 					break;
 				case nsie_lens:
