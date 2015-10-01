@@ -117,13 +117,13 @@ LensHaloNFW::LensHaloNFW()
   gmax = InterpolateFromTable(gtable, xmax);
 }
 
-LensHaloNFW::LensHaloNFW(float my_mass,float my_Rmax,PosType my_zlens,float my_concentration,float my_fratio,float my_pa,int my_stars_N, EllipMethod my_ellip_method){
-  mass=my_mass, Rmax=my_Rmax, zlens=my_zlens, rscale=my_concentration;
+LensHaloNFW::LensHaloNFW(float my_mass,float my_Rsize,PosType my_zlens,float my_concentration,float my_fratio,float my_pa,int my_stars_N, EllipMethod my_ellip_method){
+  mass=my_mass, Rsize=my_Rsize, zlens=my_zlens;
   fratio=my_fratio, pa=my_pa, stars_N=my_stars_N, main_ellip_method=my_ellip_method;
   stars_implanted = false;
   
-  rscale = Rmax/rscale; // TODO make use of rscale/concentration in NFW clearer
-  xmax = Rmax/rscale;
+  rscale = Rsize/my_concentration; // TODO make use of rscale/concentration in NFW clearer
+  xmax = Rsize/rscale;
   
   make_tables();
   gmax = InterpolateFromTable(gtable, xmax);
@@ -132,6 +132,7 @@ LensHaloNFW::LensHaloNFW(float my_mass,float my_Rmax,PosType my_zlens,float my_c
   set_slope(1);
   /// If the axis ratio given in the parameter file is set to 1 all ellipticizing routines are skipped.
   if(fratio!=1){
+    Rmax = 1.2*Rsize;
     std::cout << getEllipMethod() << " method to ellipticise" << std::endl;
     if(getEllipMethod()==Fourier){
       std::cout << "NFW constructor: slope set to " << get_slope() << std::endl;
@@ -144,12 +145,9 @@ LensHaloNFW::LensHaloNFW(float my_mass,float my_Rmax,PosType my_zlens,float my_c
     if (getEllipMethod()==Pseudo or getEllipMethod()==Fourier){
       set_norm_factor();
     }
+    
   }else set_flag_elliptical(false);
-  
-  Rsize = my_Rmax;
-  Rmax = 1.2*Rsize;
-  if(fratio > 1.0 || fratio < 0.01) throw std::invalid_argument("invalid fratio");
-  
+  Rmax = Rsize;
   
 }
 
@@ -177,6 +175,8 @@ LensHaloNFW::LensHaloNFW(InputParams& params)
   set_slope(1);
   // If the axis ratio given in the parameter file is set to 1 all ellipticizing routines are skipped.
   if(fratio!=1){
+    Rsize = Rmax;  /// This has to be relabeled: main_Rmax is ParamFile has the function of Rsize, as the actual Rmax is 20% larger than that for the interpolation region
+    Rmax = 1.2*Rsize;
     std::cout << getEllipMethod() << " method to ellipticise" << std::endl;
     if(getEllipMethod()==Fourier){
       std::cout << "NFW constructor: slope set to " << get_slope() << std::endl;
@@ -196,9 +196,6 @@ LensHaloNFW::LensHaloNFW(InputParams& params)
     }
   }else set_flag_elliptical(false);
 
-  Rsize = Rmax;  /// This has to be relabeled: main_Rmax is ParamFile has the function of Rsize, as the actual Rmax is 20% larger than that for the interpolation region
-  Rmax = 1.2*Rsize;
-  if(fratio > 1.0 || fratio < 0.01) throw std::invalid_argument("invalid fratio");
 }
 
 void LensHaloNFW::make_tables(){
@@ -542,6 +539,8 @@ LensHaloPowerLaw::LensHaloPowerLaw(
   //std::cout << "PA in PowerLawConstructor: " << pa << std::endl;
   
   if(fratio!=1){
+    Rsize = my_Rmax;
+    Rmax = 1.2*Rsize;
     std::cout << getEllipMethod() << " method to ellipticise" << std::endl;
     if(getEllipMethod()==Fourier){
       calcModes(fratio, beta, pa, mod);
@@ -555,9 +554,6 @@ LensHaloPowerLaw::LensHaloPowerLaw(
     }
   }else set_flag_elliptical(false);
   
-  Rsize = my_Rmax;
-  Rmax = 1.2*Rsize;
-  if(fratio > 1.0 || fratio < 0.01) throw std::invalid_argument("invalid fratio");
   
 }
 
@@ -572,7 +568,9 @@ LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
   xmax = Rmax/rscale;
   
   if(fratio!=1){
-    
+    Rsize = Rmax;  /// This has to be relabeled: main_Rmax is ParamFile has the function of Rsize, as the actual Rmax is 20% larger than that for the interpolation region
+    Rmax = 1.2*Rsize;
+
     //for(int islope=1;islope<20;islope++){
     //beta=islope*0.1;
     /*
@@ -610,10 +608,6 @@ LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
   // rscale = xmax = 1.0;
   // mnorm = renormalization(get_Rmax());
   mnorm = 1.;
-  Rsize = Rmax;  /// This has to be relabeled: main_Rmax is ParamFile has the function of Rsize, as the actual Rmax is 20% larger than that for the interpolation region
-  Rmax = 1.2*Rsize;
-  if(fratio > 1.0 || fratio < 0.01) throw std::invalid_argument("invalid fratio");
-
   
   
 }

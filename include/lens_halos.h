@@ -141,7 +141,9 @@ public:
   PosType test_average_kappa(PosType R);
   
   /// In case of a pseudo-elliptical halo calculate normalization factor, the value 0.99999 is used as the norm integral should not include Rmax because all force_halo function make the case distinction rcm^2<rmax*rmax and not "<=", defining the force_halo functions differenly however creates occasional ring features. Setting Rsize to 0.9, i.e. 0.9*Rmax keeps the maximum deviation in terms of mass at the central radial position between Rsize and Rmax to be ~5%. Changing rsize to 0.8 increases the max. deviation to 10%. 
-  void set_norm_factor(){set_rsize(1);mass_norm_factor=mass/MassBy1DIntegation(0.99999*Rmax);set_rsize(0.9);}
+  //void set_norm_factor(){set_rsize(1);mass_norm_factor=mass/MassBy1DIntegation(0.99999*Rsize);set_rsize(0.9);}
+  void set_norm_factor(){mass_norm_factor=mass/MassBy1DIntegation(0.99999*Rsize);}
+  
   /// set radius rsize beyond which interpolation values between alpha_ellip and alpha_iso are computed
   void set_rsize(float my_rsize){ Rsize = my_rsize;};
 	float get_rsize(){return Rsize;};
