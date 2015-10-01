@@ -1626,7 +1626,7 @@ double LensHalo::test_average_kappa(PosType R){
 
 /// Three tests: 1st - Mass via 1D integration vs mass via 2D integration. 2nd: gamma_t=alpha/r - kappa(R) which can be used for spherical distributions. Deviations are expected for axis ratios <1. For the latter case we use the next test. 3rd: The average along a circular aperture of gamma_t should be equal to <kappa(<R)> minus the average along a circular aperture over kappa. Note that also  alpha/r - kappa is checked for consistency with kappa(<R)-<kappa(R)>. For axis ratios < 1 the factor between the two is expected to be of order O(10%).
 bool LensHalo::test(){
-  std::cout << "test alpha's consistance with kappa by comparing mass interior to a radius by 1D integration and Gauss' law and by 2D integration" << std::endl;
+  std::cout << "test alpha's consistance with kappa by comparing mass interior to a radius by 1D integration and Gauss' law and by 2D integration" << std::endl << "  The total internal mass is " << mass << std::endl;
   
   std::cout << "R/Rmax      Mass 1 D         Mass 2 D         (m1 - m2)/m1 " << std::endl;
   

@@ -119,6 +119,10 @@ public:
 	void print_unused() const;
 	/// Returns total number of parameters.
 	std::size_t Nparams() const { return params.size(); }
+  
+  // for printing to file or cout
+  friend std::ostream &operator<<(std::ostream &os, InputParams const &params);
+  
 	void PrintToFile(std::string filename, bool strip_unused = false) const;
 	/// Return name of the parameter file.
 	std::string filename() const{return paramfile_name;}
@@ -171,6 +175,7 @@ private:
 	// The number of times a parameter was retrieved by get
 	mutable counter use_counter;
 };
+std::ostream &operator<<(std::ostream &os, InputParams const &params);
 
 /** \brief Assigns to "value" the value of the parameter called "label".
  * If this parameter label does not appear in the parameter file false

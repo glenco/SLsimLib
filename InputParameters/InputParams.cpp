@@ -212,6 +212,24 @@ void InputParams::print_unused() const
 	std::cout << std::endl << n << " parameters where UNUSED out of a total of " << params.size() << " paramaters read from the parameter file." << std::endl;
 }
 
+std::ostream &operator<<(std::ostream &os, InputParams const &p) {
+  std::size_t n = 0;
+  for(InputParams::const_iterator it = p.params.begin(); it != p.params.end(); ++it)
+  {
+    if(!p.use_counter.is_used(it->first))
+    {
+      InputParams::const_iterator comment = p.comments.find(it->first);
+      if(comment != p.comments.end())
+        printrow(os, it->first, it->second, comment->second);
+      else
+        printrow(os, it->first, it->second);
+      ++n;
+    }
+  }
+  
+  return os;
+}
+
 /// Print all parameters to a file in the format needed for an input parameter file. Unused parameters can be stripped with the optional second argument.
 void InputParams::PrintToFile(std::string filename, bool strip_unused) const
 {
