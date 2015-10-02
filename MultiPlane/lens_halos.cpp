@@ -24,11 +24,11 @@ LensHalo::LensHalo(InputParams& params){
   elliptical_flag = false;
 }
 
-void LensHalo::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed){
+void LensHalo::initFromMassFunc(float my_mass, float my_Rsize, float my_rscale, PosType my_slope, long *seed){
   mass = my_mass;
-  Rmax = my_Rmax;
+  Rsize = my_Rsize;
   rscale = my_rscale;
-  xmax = Rmax/rscale;
+  xmax = Rsize/rscale;
 }
 
 void LensHalo::error_message1(std::string parameter,std::string file){
@@ -121,8 +121,7 @@ LensHaloNFW::LensHaloNFW(float my_mass,float my_Rsize,PosType my_zlens,float my_
   mass=my_mass, Rsize=my_Rsize, zlens=my_zlens;
   fratio=my_fratio, pa=my_pa, stars_N=my_stars_N, main_ellip_method=my_ellip_method;
   stars_implanted = false;
-  
-  rscale = Rsize/my_concentration; // TODO make use of rscale/concentration in NFW clearer
+  rscale = Rsize/my_concentration; // 1.2*Rsize must be put here otherwise the xtable causes trouble in the integration in set_norm_factor()
   xmax = Rsize/rscale;
   
   make_tables();
@@ -146,8 +145,10 @@ LensHaloNFW::LensHaloNFW(float my_mass,float my_Rsize,PosType my_zlens,float my_
       set_norm_factor();
     }
     
-  }else set_flag_elliptical(false);
-  Rmax = Rsize;
+  }else{
+    set_flag_elliptical(false);
+    Rmax = Rsize;
+  }
   
 }
 
@@ -346,15 +347,16 @@ void LensHaloNFW::initFromFile(float my_mass, long *seed, float vmax, float r_ha
   NFW_Utility nfw_util;
   
   // Find the NFW profile with the same mass, Vmax and R_halfmass
-  nfw_util.match_nfw(vmax,r_halfmass,mass,&rscale,&Rmax);
-  rscale = Rmax/rscale; // Was the concentration
-  xmax = Rmax/rscale;
+  nfw_util.match_nfw(vmax,r_halfmass,mass,&rscale,&Rsize);
+  rscale = Rsize/rscale; // Was the concentration
+  xmax = Rsize/rscale;
   gmax = InterpolateFromTable(gtable,xmax);
+
 }
 
-void LensHaloNFW::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long* seed)
+void LensHaloNFW::initFromMassFunc(float my_mass, float my_Rsize, float my_rscale, PosType my_slope, long* seed)
 {
-  LensHalo::initFromMassFunc(my_mass, my_Rmax, my_rscale, my_slope, seed);
+  LensHalo::initFromMassFunc(my_mass, my_Rsize, my_rscale, my_slope, seed);
   gmax = InterpolateFromTable(gtable,xmax);
 }
 
@@ -482,10 +484,10 @@ PosType LensHaloPseudoNFW::InterpolateFromTable(PosType y) const{
   return (mhattable[j+1]-mhattable[j])/(xtable[j+1]-xtable[j])*(y-xtable[j]) + mhattable[j];
 }
 
-void LensHaloPseudoNFW::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed){
-  LensHalo::initFromMassFunc(my_mass,my_Rmax,my_rscale,my_slope,seed);
+void LensHaloPseudoNFW::initFromMassFunc(float my_mass, float my_Rsize, float my_rscale, PosType my_slope, long *seed){
+  LensHalo::initFromMassFunc(my_mass,my_Rsize,my_rscale,my_slope,seed);
   beta = my_slope;
-  xmax = my_Rmax/my_rscale;
+  xmax = my_Rsize/my_rscale;
   make_tables();
 }
 
@@ -552,9 +554,10 @@ LensHaloPowerLaw::LensHaloPowerLaw(
     if (getEllipMethod()==Pseudo){
       set_norm_factor();
     }
-  }else set_flag_elliptical(false);
-  
-  
+  }else{
+    set_flag_elliptical(false);
+    Rmax = Rsize;
+  }
 }
 
 LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
@@ -612,10 +615,10 @@ LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
   
 }
 
-void LensHaloPowerLaw::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed){
-  LensHalo::initFromMassFunc(my_mass,my_Rmax,my_rscale,my_slope,seed);
+void LensHaloPowerLaw::initFromMassFunc(float my_mass, float my_Rsize, float my_rscale, PosType my_slope, long *seed){
+  LensHalo::initFromMassFunc(my_mass,my_Rsize,my_rscale,my_slope,seed);
   beta = my_slope;
-  xmax = my_Rmax/my_rscale;
+  xmax = my_Rsize/my_rscale;
 }
 
 void LensHaloPowerLaw::assignParams(InputParams& params){
@@ -917,7 +920,7 @@ void LensHalo::force_halo_asym(
   PosType alpha_tmp[2],kappa_tmp,gamma_tmp[2],phi_tmp;
   if(rcm2 < 1e-20) rcm2 = 1e-20;
   
-  //std::cout << "rsize , rmax,  mass_norm =" << r_size << " , " << Rmax << " , " << mass_norm_factor << std::endl;
+  //std::cout << "rsize , rmax,  mass_norm =" << Rsize << " , " << Rmax << " , " << mass_norm_factor << std::endl;
   
   /// intersecting, subtract the point particle
   if(rcm2 < Rmax*Rmax){
