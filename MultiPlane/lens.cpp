@@ -748,7 +748,7 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
   PosType *theta_pos;
   PosType r = Mass_min/Mass_max,f,mass;
   size_t haloid = offset;
-  PosType Rmax;
+  PosType Rsize;
   PosType AveMassTh;
   
   PosType rho = density_contrast*cosmo.rho_crit(0)*cosmo.getOmega_matter()*(1+redshift)*(1+redshift)*(1+redshift);
@@ -793,14 +793,14 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
     // keeping track of the highest substructure mass :
     mass_max = MAX(mass,mass_max); // in Msun
     
-    // Rmax from tidal truncation
-    Rmax = pow(mass/rho/4/pi,1.0/3.); // in [Msun / (Msun / PhysMpc^3)]^(1/3) = PhysMpc
+    // Rsize from tidal truncation
+    Rsize = pow(mass/rho/4/pi,1.0/3.); // in [Msun / (Msun / PhysMpc^3)]^(1/3) = PhysMpc
   
     // keeping track of the highest substructure rmax :
-    rmax_max = MAX(Rmax,rmax_max); // in PhysMpc
+    rmax_max = MAX(Rsize,rmax_max); // in PhysMpc
     
     // Adding the randomly-generated halo into the substructure :
-    substructure.halos.push_back(new LensHaloPowerLaw(mass,Rmax,redshift,1.0,1.0,0,0));
+    substructure.halos.push_back(new LensHaloPowerLaw(mass,Rsize,redshift,1.0,1.0,0,0));
     substructure.halos.back()->setX(theta_pos);
     ++haloid;
     substructure.halos.back()->setID(haloid);
@@ -953,7 +953,7 @@ void Lens::resetSubstructure(bool verbose){
   PosType *theta_pos;
   PosType r = substructure.Mmin/substructure.Mmax,f,mass;
   
-  PosType Rmax;
+  PosType Rsize;
 
   PosType rho = substructure.rho_tidal*cosmo.rho_crit(0)*cosmo.getOmega_matter()*(1+redshift)*(1+redshift)*(1+redshift);
   
@@ -984,12 +984,12 @@ void Lens::resetSubstructure(bool verbose){
     
     mass_max = MAX(mass,mass_max);
     
-    // Rmax from tidal truncation
-    Rmax = pow(mass/rho/4/pi,1.0/3.);
+    // Rsize from tidal truncation
+    Rsize = pow(mass/rho/4/pi,1.0/3.);
     
-    rmax_max = MAX(Rmax,rmax_max);
+    rmax_max = MAX(Rsize,rmax_max);
     
-    substructure.halos.push_back(new LensHaloPowerLaw(mass,Rmax,redshift,1.0,1.0,0,0));
+    substructure.halos.push_back(new LensHaloPowerLaw(mass,Rsize,redshift,1.0,1.0,0,0));
     substructure.halos.back()->setX(theta_pos);
     ++haloid;
     substructure.halos.back()->setID(haloid);
@@ -1456,9 +1456,9 @@ void Lens::createFieldHalos(bool verbose)
       
 			halo_calc->reset(mass,halo_zs_vec[i]);
       
-			float Rmax = halo_calc->getRvir();
-			float rscale = Rmax/halo_calc->getConcentration(0);
-      assert(rscale < Rmax);
+			float Rsize = halo_calc->getRvir();
+			float rscale = Rsize/halo_calc->getConcentration(0);
+      assert(rscale < Rsize);
       
       float sigma = 0;
       if(flag_field_gal_on){
@@ -1467,7 +1467,7 @@ void Lens::createFieldHalos(bool verbose)
         /pow(1+pow(mass/M1,be),(gam1-gam2)/be)/mass;
         if(field_galaxy_mass_fraction > 1.0) field_galaxy_mass_fraction = 1;
         sigma = 126*pow(mass*(1-field_galaxy_mass_fraction)/1.0e10,0.25); // From Tully-Fisher and Bell & de Jong 2001
-				//field_halos[j]->initFromMassFunc(mass*(1-field_galaxy_mass_fraction),Rmax,rscale,field_prof_internal_slope,seed);
+				//field_halos[j]->initFromMassFunc(mass*(1-field_galaxy_mass_fraction),Rsize,rscale,field_prof_internal_slope,seed);
       }else{
         field_galaxy_mass_fraction = 0;
       }
@@ -1480,15 +1480,15 @@ void Lens::createFieldHalos(bool verbose)
 					break;
 				case nfw_lens:
 					//field_halos.push_back(new LensHaloNFW);
-          field_halos.push_back(new LensHaloNFW(mass*(1-field_galaxy_mass_fraction),Rmax,halo_zs_vec[i],Rmax/rscale,1.0,0,0));
+          field_halos.push_back(new LensHaloNFW(mass*(1-field_galaxy_mass_fraction),Rsize,halo_zs_vec[i],Rsize/rscale,1.0,0,0));
 					break;
 				case pnfw_lens:
 					//field_halos.push_back(new LensHaloPseudoNFW);
-          field_halos.push_back(new LensHaloPseudoNFW(mass*(1-field_galaxy_mass_fraction),Rmax,halo_zs_vec[i],Rmax/rscale,3,1.0,0,0));
+          field_halos.push_back(new LensHaloPseudoNFW(mass*(1-field_galaxy_mass_fraction),Rsize,halo_zs_vec[i],Rsize/rscale,3,1.0,0,0));
 					break;
 				case pl_lens:
 					//field_halos.push_back(new LensHaloPowerLaw);
-          field_halos.push_back(new LensHaloPowerLaw(mass*(1-field_galaxy_mass_fraction),Rmax,halo_zs_vec[i],1.0,1.0,0,0));
+          field_halos.push_back(new LensHaloPowerLaw(mass*(1-field_galaxy_mass_fraction),Rsize,halo_zs_vec[i],1.0,1.0,0,0));
           
 					break;
 				case nsie_lens:
@@ -1514,11 +1514,11 @@ void Lens::createFieldHalos(bool verbose)
 					break;
 				case hern_lens:
 					//field_halos.push_back(new LensHaloHernquist);
-          field_halos.push_back(new LensHaloHernquist(mass*(1-field_galaxy_mass_fraction),Rmax,halo_zs_vec[i],rscale,1.0,0,0));
+          field_halos.push_back(new LensHaloHernquist(mass*(1-field_galaxy_mass_fraction),Rsize,halo_zs_vec[i],rscale,1.0,0,0));
 					break;
 				case jaffe_lens:
 					//field_halos.push_back(new LensHaloJaffe);
-          field_halos.push_back(new LensHaloJaffe(mass*(1-field_galaxy_mass_fraction),Rmax,halo_zs_vec[i],rscale,1.0,0,0));
+          field_halos.push_back(new LensHaloJaffe(mass*(1-field_galaxy_mass_fraction),Rsize,halo_zs_vec[i],rscale,1.0,0,0));
 					break;
 			}
       
@@ -1549,7 +1549,7 @@ void Lens::createFieldHalos(bool verbose)
             float pa = 2*pi*ran2(seed);  //TODO: This is a kluge.
             field_halos.push_back(new LensHaloRealNSIE(mass*field_galaxy_mass_fraction,halo_zs_vec[i],sigma,0.0,fratio,pa,0));
             
-            //field_halos[j]->initFromMassFunc(mass*field_galaxy_mass_fraction,Rmax,rscale,field_prof_internal_slope,seed);
+            //field_halos[j]->initFromMassFunc(mass*field_galaxy_mass_fraction,Rsize,rscale,field_prof_internal_slope,seed);
             break;
 				}
         

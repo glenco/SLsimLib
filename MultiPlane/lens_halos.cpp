@@ -12,7 +12,7 @@ using namespace std;
 /// Shell constructor
 LensHalo::LensHalo(){
   rscale = 1.0;
-  mass = Rmax = xmax = posHalo[0] = posHalo[1] = 0.0;
+  mass = Rsize = Rmax = xmax = posHalo[0] = posHalo[1] = 0.0;
   stars_implanted = false;
   elliptical_flag = false;
 }
@@ -39,7 +39,7 @@ void LensHalo::error_message1(std::string parameter,std::string file){
 
 void LensHalo::assignParams(InputParams& params){
   if(!params.get("mass",mass)) error_message1("mass",params.filename());
-  if(!params.get("Rmax",Rmax)) error_message1("Rmax",params.filename());
+  if(!params.get("Rsize",Rsize)) error_message1("Rsize",params.filename());
   if(!params.get("z_lens",zlens)) error_message1("z_lens",params.filename());
 }
 
@@ -121,7 +121,7 @@ LensHaloNFW::LensHaloNFW(float my_mass,float my_Rsize,PosType my_zlens,float my_
   mass=my_mass, Rsize=my_Rsize, zlens=my_zlens;
   fratio=my_fratio, pa=my_pa, stars_N=my_stars_N, main_ellip_method=my_ellip_method;
   stars_implanted = false;
-  rscale = Rsize/my_concentration; // 1.2*Rsize must be put here otherwise the xtable causes trouble in the integration in set_norm_factor()
+  rscale = Rsize/my_concentration;
   xmax = Rsize/rscale;
   
   make_tables();
@@ -131,7 +131,7 @@ LensHaloNFW::LensHaloNFW(float my_mass,float my_Rsize,PosType my_zlens,float my_
   set_slope(1);
   /// If the axis ratio given in the parameter file is set to 1 all ellipticizing routines are skipped.
   if(fratio!=1){
-    Rmax = 1.2*Rsize;
+    Rmax = Rmax_to_Rsize_ratio*Rsize;
     std::cout << getEllipMethod() << " method to ellipticise" << std::endl;
     if(getEllipMethod()==Fourier){
       std::cout << "NFW constructor: slope set to " << get_slope() << std::endl;
@@ -152,7 +152,7 @@ LensHaloNFW::LensHaloNFW(float my_mass,float my_Rsize,PosType my_zlens,float my_
   
 }
 
-/* LensHalo::LensHalo(mass,Rmax,zlens, // base
+/* LensHalo::LensHalo(mass,Rsize,zlens, // base
  rscale,fratio,pa,stars_N, //NFW,Hernquist, Jaffe
  rscale,fratio,pa,beta // Pseudo NFW
  rscale,fratio,pa,sigma,rcore // NSIE
@@ -169,15 +169,15 @@ LensHaloNFW::LensHaloNFW(InputParams& params)
   make_tables();
   gmax = InterpolateFromTable(gtable, xmax);
   
-  mnorm = renormalization(get_Rmax());
+  mnorm = renormalization(Rsize);
+  
   std::cout << "mass normalization: " << mnorm << std::endl;
   
   // If the 2nd argument in calcModes(fratio, slope, pa, mod), the slope, is set to 1 it yields an elliptical kappa contour of given axis ratio (fratio) at the radius where the slope of the 3D density profile is -2, which is defined as the scale radius for the NFW profile. To ellipticize the potential instead of the convergence use calcModes(fratio, 2-get_slope(), pa, mod), this produces also an ellipse in the convergence map, but at the radius where the slope is 2-get_slope().
   set_slope(1);
   // If the axis ratio given in the parameter file is set to 1 all ellipticizing routines are skipped.
   if(fratio!=1){
-    Rsize = Rmax;  /// This has to be relabeled: main_Rmax is ParamFile has the function of Rsize, as the actual Rmax is 20% larger than that for the interpolation region
-    Rmax = 1.2*Rsize;
+    Rmax = Rmax_to_Rsize_ratio*Rsize;
     std::cout << getEllipMethod() << " method to ellipticise" << std::endl;
     if(getEllipMethod()==Fourier){
       std::cout << "NFW constructor: slope set to " << get_slope() << std::endl;
@@ -195,8 +195,10 @@ LensHaloNFW::LensHaloNFW(InputParams& params)
     if (getEllipMethod()==Pseudo){
       set_norm_factor();
     }
-  }else set_flag_elliptical(false);
-
+  }else{
+    set_flag_elliptical(false);
+    Rmax = Rsize;
+  }
 }
 
 void LensHaloNFW::make_tables(){
@@ -303,7 +305,7 @@ PosType LensHaloNFW::InterpolateFromTable(PosType *table, PosType y) const{
 
 void LensHaloNFW::assignParams(InputParams& params){
   if(!params.get("main_mass",mass)) error_message1("main_mass",params.filename());
-  if(!params.get("main_Rmax",Rmax)) error_message1("main_Rmax",params.filename());
+  if(!params.get("main_Rsize",Rsize)) error_message1("main_Rsize",params.filename());
   if(!params.get("main_zlens",zlens)) error_message1("main_zlens",params.filename());
   if(!params.get("main_concentration",rscale)) error_message1("main_concentration",params.filename());
   if(!params.get("main_axis_ratio",fratio)){fratio=1; std::cout << "main_axis_ratio not defined in file " << params.filename() << ", hence set to 1." << std::endl;};
@@ -312,9 +314,8 @@ void LensHaloNFW::assignParams(InputParams& params){
   
   
   
-  rscale = Rmax/rscale; // was the concentration
-  xmax = Rmax/rscale;
-  
+  rscale = Rsize/rscale; // was the concentration
+  xmax = Rsize/rscale;
 }
 
 LensHaloNFW::~LensHaloNFW(){
@@ -374,9 +375,9 @@ LensHaloPseudoNFW::LensHaloPseudoNFW()
 /// constructor
 LensHaloPseudoNFW::LensHaloPseudoNFW(
                                      float my_mass             /// mass in solar masses
-                                     ,float my_Rmax            /// maximum radius in Mpc
+                                     ,float my_Rsize            /// maximum radius in Mpc
                                      ,PosType my_zlens         /// redshift
-                                     ,float my_concentration   /// Rmax/rscale
+                                     ,float my_concentration   /// Rsize/rscale
                                      ,PosType my_beta          /// large r slope, see class description
                                      ,float my_fratio          /// axis ratio
                                      ,float my_pa              /// position angle
@@ -385,7 +386,7 @@ LensHaloPseudoNFW::LensHaloPseudoNFW(
 )
 {
   mass = my_mass;
-  Rmax = my_Rmax;
+  Rsize = my_Rsize;
   zlens = my_zlens;
   beta = my_beta;
   fratio = my_fratio;
@@ -393,12 +394,13 @@ LensHaloPseudoNFW::LensHaloPseudoNFW(
   stars_N = my_stars_N;
   
   stars_implanted = false;
-  rscale = Rmax/my_concentration;
-  xmax = Rmax/rscale;
+  rscale = Rsize/my_concentration;
+  xmax = Rsize/rscale;
   
   make_tables();
   
   if(fratio!=1){
+    Rmax = Rmax_to_Rsize_ratio*Rsize;
     std::cout << getEllipMethod() << " method to ellipticise" << std::endl;
     if(getEllipMethod()==Fourier){
       std::cout << "Note: Fourier modes set to ellipticize kappa at slope main_slope+0.5, i.e. "<< get_slope()+0.5 << std::endl;
@@ -410,8 +412,10 @@ LensHaloPseudoNFW::LensHaloPseudoNFW(
     if (getEllipMethod()==Pseudo){
       set_norm_factor();
     }
-  }else set_flag_elliptical(false);
-  
+  }else{
+    set_flag_elliptical(false);
+    Rmax = Rsize;
+  }
 }
 
 /// The Fourier modes set to ellipticize kappa at slope main_slope+0.5, i.e. e.g. 1.5 for main_slope = 1. Note that set_slope is overridden for PseudoNFW to recalculate tables for different beta. But only fixed values of beta, i.e. 1,2 and >=3 are allowed!
@@ -420,6 +424,7 @@ LensHaloPseudoNFW::LensHaloPseudoNFW(InputParams& params)
   assignParams(params);
   make_tables();
   if(fratio!=1){
+    Rmax = Rmax_to_Rsize_ratio*Rsize;
     std::cout << getEllipMethod() << " method to ellipticise" << std::endl;
     if(getEllipMethod()==Fourier){
       std::cout << "Note: Fourier modes set to ellipticize kappa at slope main_slope+0.5, i.e. "<< get_slope()+0.5 << std::endl;
@@ -432,7 +437,10 @@ LensHaloPseudoNFW::LensHaloPseudoNFW(InputParams& params)
     if (getEllipMethod()==Pseudo){
       set_norm_factor();
     }
-  }else set_flag_elliptical(false);
+  }else{
+    set_flag_elliptical(false);
+    Rmax = Rsize;
+  }
 }
 
 /// Auxiliary function for PseudoNFW profile
@@ -493,7 +501,7 @@ void LensHaloPseudoNFW::initFromMassFunc(float my_mass, float my_Rsize, float my
 
 void LensHaloPseudoNFW::assignParams(InputParams& params){
   if(!params.get("main_mass",mass)) error_message1("main_mass",params.filename());
-  if(!params.get("main_Rmax",Rmax)) error_message1("main_Rmax",params.filename());
+  if(!params.get("main_Rsize",Rsize)) error_message1("main_Rsize",params.filename());
   if(!params.get("main_zlens",zlens)) error_message1("main_zlens",params.filename());
   if(!params.get("main_concentration",rscale)) error_message1("main_concentration",params.filename());
   if(!params.get("main_slope",beta)) error_message1("main_slope",params.filename());
@@ -501,8 +509,8 @@ void LensHaloPseudoNFW::assignParams(InputParams& params){
   if(!params.get("main_pos_angle",pa)){pa=0; std::cout << "main_pos_angle not defined in file " << params.filename() << ", hence set to 0." << std::endl;};
   if(!params.get("main_ellip_method",main_ellip_method)){if(fratio!=1){main_ellip_method=Pseudo;std::cout << "main_ellip_method is not defined in file " << params.filename() << ", hence set to Pseudo. CAUTION: Ellipticizing methods have not been tested with PseudoNFW yet!" << endl;};};
   
-  rscale = Rmax/rscale; // was the concentration
-  xmax = Rmax/rscale;
+  rscale = Rsize/rscale; // was the concentration
+  xmax = Rsize/rscale;
 }
 
 LensHaloPseudoNFW::~LensHaloPseudoNFW(){
@@ -523,7 +531,7 @@ LensHaloPowerLaw::LensHaloPowerLaw() : LensHalo(){
 /// constructor
 LensHaloPowerLaw::LensHaloPowerLaw(
                                    float my_mass       /// mass of halo in solar masses
-                                   ,float my_Rmax      /// maximum radius of halo in Mpc
+                                   ,float my_Rsize      /// maximum radius of halo in Mpc
                                    ,PosType my_zlens   /// redshift of halo
                                    ,PosType my_beta    /// logarithmic slop of surface density, kappa \propto r^{-beta}
                                    ,float my_fratio    /// axis ratio in asymetric case
@@ -531,18 +539,18 @@ LensHaloPowerLaw::LensHaloPowerLaw(
                                    ,int my_stars_N     /// number of stars, not yet implanted
                                    ,EllipMethod my_ellip_method /// ellipticizing method
 ){
-  mass=my_mass, Rmax=my_Rmax, zlens=my_zlens;
+  mass=my_mass, Rsize=my_Rsize, zlens=my_zlens;
   beta=my_beta;
   fratio=my_fratio, pa=my_pa, main_ellip_method=my_ellip_method, stars_N=my_stars_N;
   stars_implanted = false;
   rscale = 1;
-  xmax = Rmax/rscale ; /// xmax needs to be in initialized before the mass_norm_factor for Pseudo ellip method is calculated via  set_norm_factor()
+  xmax = Rsize/rscale ; /// xmax needs to be in initialized before the mass_norm_factor for Pseudo ellip method is calculated via  set_norm_factor()
   //mnorm = renormalization(get_Rmax());
   //std::cout << "PA in PowerLawConstructor: " << pa << std::endl;
   
+  
   if(fratio!=1){
-    Rsize = my_Rmax;
-    Rmax = 1.2*Rsize;
+    Rmax = Rmax_to_Rsize_ratio*Rsize;
     std::cout << getEllipMethod() << " method to ellipticise" << std::endl;
     if(getEllipMethod()==Fourier){
       calcModes(fratio, beta, pa, mod);
@@ -568,11 +576,10 @@ LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
   // rscale = xmax = 1.0; // Commented in order to have a correct computation of the potential term in the time delay.
   // Replacing it by :
   rscale = 1;
-  xmax = Rmax/rscale;
+  xmax = Rsize/rscale;
   
   if(fratio!=1){
-    Rsize = Rmax;  /// This has to be relabeled: main_Rmax is ParamFile has the function of Rsize, as the actual Rmax is 20% larger than that for the interpolation region
-    Rmax = 1.2*Rsize;
+     Rmax = Rmax_to_Rsize_ratio*Rsize;
 
     //for(int islope=1;islope<20;islope++){
     //beta=islope*0.1;
@@ -606,8 +613,10 @@ LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
     if (getEllipMethod()==Pseudo){
       set_norm_factor();
     }
-  }else set_flag_elliptical(false);
-  
+  }else{
+    set_flag_elliptical(false);
+    Rmax = Rsize;
+  }
   // rscale = xmax = 1.0;
   // mnorm = renormalization(get_Rmax());
   mnorm = 1.;
@@ -623,7 +632,7 @@ void LensHaloPowerLaw::initFromMassFunc(float my_mass, float my_Rsize, float my_
 
 void LensHaloPowerLaw::assignParams(InputParams& params){
   if(!params.get("main_mass",mass)) error_message1("main_mass",params.filename());
-  if(!params.get("main_Rmax",Rmax)) error_message1("main_Rmax",params.filename());
+  if(!params.get("main_Rsize",Rsize)) error_message1("main_Rsize",params.filename());
   if(!params.get("main_zlens",zlens)) error_message1("main_zlens",params.filename());
   if(!params.get("main_slope",beta)) error_message1("main_slope, example 1",params.filename());
   //if(beta>=2.0) error_message1("main_slope < 2",params.filename());
@@ -643,14 +652,14 @@ LensHaloPowerLaw::~LensHaloPowerLaw(){
 
 
 /*
- LensHaloRealNSIE::LensHaloRealNSIE(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,float my_sigma
+ LensHaloRealNSIE::LensHaloRealNSIE(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale,float my_sigma
  , float my_rcore,float my_fratio,float my_pa,int my_stars_N){
- mass=my_mass, Rmax=my_Rmax, zlens=my_zlens, rscale=my_rscale;
+ mass=my_mass, Rsize=my_Rsize, zlens=my_zlens, rscale=my_rscale;
  sigma=my_sigma, rcore=my_rcore;
  fratio=my_fratio, pa=my_pa, stars_N=my_stars_N;
  stars_implanted = false;
 	Rsize = rmaxNSIE(sigma,mass,fratio,rcore);
-	Rmax = MAX(1.0,1.0/fratio)*Rsize;  // redefine
+	Rsize = MAX(1.0,1.0/fratio)*Rsize;  // redefine
 	assert(Rmax >= Rsize);
  }
  */
@@ -679,7 +688,7 @@ LensHaloRealNSIE::LensHaloRealNSIE(float my_mass,PosType my_zlens,float my_sigma
   //Rsize = rmaxNSIE(sigma,mass,fratio,rcore);
   //Rmax = MAX(1.0,1.0/fratio)*Rsize;  // redefine
   Rsize = rmax_calc();
-  Rmax = 1.2*Rsize;
+  Rmax = Rmax_to_Rsize_ratio*Rsize;
   if(fratio > 1.0 || fratio < 0.01) throw std::invalid_argument("invalid fratio");
   
   if(rcore > 0.0){
@@ -706,7 +715,7 @@ LensHaloRealNSIE::LensHaloRealNSIE(InputParams& params){
   //Rsize = rmaxNSIE(sigma,mass,fratio,rcore);
   //Rmax = MAX(1.0,1.0/fratio)*Rsize;  // redefine
   Rsize = rmax_calc();
-  Rmax = 1.2*Rsize;
+  Rmax = Rmax_to_Rsize_ratio*Rsize;
 
   if(fratio > 1.0 || fratio < 0.01) throw std::invalid_argument("invalid fratio");
   
@@ -1191,7 +1200,7 @@ void LensHaloRealNSIE::force_halo(
       
       // point mass solution
       // PosType tmp = mass/rcm2/pi;
-      PosType tmp = mass/Rmax/pi/r;
+      PosType tmp = mass/Rsize/pi/r;
       alpha_iso[0] = -1.0*tmp*xcm[0];
       alpha_iso[1] = -1.0*tmp*xcm[1];
       
@@ -1304,19 +1313,20 @@ PosType* LensHaloHernquist::xgtable = NULL;
 	gmax = InterpolateFromTable(gtable,xmax);
  }
  */
-LensHaloHernquist::LensHaloHernquist(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,int my_stars_N, EllipMethod my_ellip_method){
+LensHaloHernquist::LensHaloHernquist(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,int my_stars_N, EllipMethod my_ellip_method){
   
-  mass=my_mass, Rmax=my_Rmax, zlens=my_zlens, rscale=my_rscale;
+  mass=my_mass, Rsize=my_Rsize, zlens=my_zlens, rscale=my_rscale;
   fratio=my_fratio, pa=my_pa, stars_N=my_stars_N;
   stars_implanted = false;
   
-  xmax = Rmax/rscale;
+  xmax = Rsize/rscale;
   make_tables();
   gmax = InterpolateFromTable(gtable,xmax);
   
   set_slope(1);
   /// If the axis ratio given in the parameter file is set to 1 all ellipticizing routines are skipped.
   if(fratio!=1){
+    Rmax = Rmax_to_Rsize_ratio*Rsize;
     std::cout << getEllipMethod() << " method to ellipticise" << std::endl;
     if(getEllipMethod()==Fourier){
       std::cout << "Hernquist constructor: slope set to " << get_slope() << std::endl;
@@ -1328,8 +1338,10 @@ LensHaloHernquist::LensHaloHernquist(float my_mass,float my_Rmax,PosType my_zlen
     if (getEllipMethod()==Pseudo){
       set_norm_factor();
     }
-  }else set_flag_elliptical(false);
-  
+  }else{
+    set_flag_elliptical(false);
+    Rmax = Rsize;
+  }
 }
 
 LensHaloHernquist::LensHaloHernquist(InputParams& params)
@@ -1403,10 +1415,10 @@ PosType LensHaloHernquist::InterpolateFromTable(PosType *table, PosType y) const
 
 void LensHaloHernquist::assignParams(InputParams& params){
   if(!params.get("main_mass",mass)) error_message1("main_mass",params.filename());
-  if(!params.get("main_Rmax",Rmax)) error_message1("main_Rmax",params.filename());
+  if(!params.get("main_Rsize",Rsize)) error_message1("main_Rsize",params.filename());
   if(!params.get("main_zlens",zlens)) error_message1("main_zlens",params.filename());
   if(!params.get("main_rscale",rscale)) error_message1("main_rscale",params.filename());
-  xmax = Rmax/rscale;
+  xmax = Rsize/rscale;
   if(!params.get("main_axis_ratio",fratio)){fratio=1; std::cout << "main_axis_ratio not defined in file " << params.filename() << ", hence set to 1." << std::endl;};
   if(!params.get("main_pos_angle",pa)){pa=0; std::cout << "main_pos_angle not defined in file " << params.filename() << ", hence set to 0." << std::endl;};
   if(!params.get("main_ellip_method",main_ellip_method)){if(fratio!=1){main_ellip_method=Pseudo;std::cout << "main_ellip_method is not defined in file " << params.filename() << ", hence set to Pseudo." << endl;};};
@@ -1414,7 +1426,7 @@ void LensHaloHernquist::assignParams(InputParams& params){
   else if(stars_N){
     assignParams_stars(params);
     
-    std::cout << "Rmax " << Rmax <<std::endl;
+    std::cout << "Rsize " << Rsize <<std::endl;
   }
   
 }
@@ -1451,17 +1463,18 @@ PosType* LensHaloJaffe::xgtable = NULL;
 	gmax = InterpolateFromTable(gtable,xmax);
  }
  */
-LensHaloJaffe::LensHaloJaffe(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,int my_stars_N, EllipMethod my_ellip_method){
+LensHaloJaffe::LensHaloJaffe(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,int my_stars_N, EllipMethod my_ellip_method){
   
-  mass=my_mass, Rmax=my_Rmax, zlens=my_zlens, rscale=my_rscale;
+  mass=my_mass, Rsize=my_Rsize, zlens=my_zlens, rscale=my_rscale;
   fratio=my_fratio, pa=my_pa, stars_N=my_stars_N;
   stars_implanted = false;
-  xmax = Rmax/rscale;
+  xmax = Rsize/rscale;
   make_tables();
   gmax = InterpolateFromTable(gtable,xmax);
   
   set_slope(1);
   if(fratio!=1){
+    Rmax = Rmax_to_Rsize_ratio*Rsize;
     std::cout << getEllipMethod() << " method to ellipticise" << std::endl;
     if(getEllipMethod()==Fourier){
       std::cout << "Jaffe constructor: slope set to " << get_slope() << std::endl;
@@ -1473,8 +1486,10 @@ LensHaloJaffe::LensHaloJaffe(float my_mass,float my_Rmax,PosType my_zlens,float 
     if (getEllipMethod()==Pseudo){
       set_norm_factor();
     }
-  }else set_flag_elliptical(false);
-  
+  }else{
+    set_flag_elliptical(false);
+    Rmax = Rsize;
+  }
 }
 
 LensHaloJaffe::LensHaloJaffe(InputParams& params)
@@ -1544,10 +1559,10 @@ PosType LensHaloJaffe::InterpolateFromTable(PosType *table, PosType y) const{
 
 void LensHaloJaffe::assignParams(InputParams& params){
   if(!params.get("main_mass",mass)) error_message1("main_mass",params.filename());
-  if(!params.get("main_Rmax",Rmax)) error_message1("main_Rmax",params.filename());
+  if(!params.get("main_Rsize",Rsize)) error_message1("main_Rsize",params.filename());
   if(!params.get("main_zlens",zlens)) error_message1("main_zlens",params.filename());
   if(!params.get("main_rscale",rscale)) error_message1("main_rscale",params.filename());
-  xmax = Rmax/rscale;
+  xmax = Rsize/rscale;
   if(!params.get("main_axis_ratio",fratio)){fratio=1; std::cout << "main_axis_ratio not defined in file " << params.filename() << ", hence set to 1." << std::endl;};
   if(!params.get("main_pos_angle",pa)){pa=0; std::cout << "main_pos_angle not defined in file " << params.filename() << ", hence set to 0." << std::endl;};
   
@@ -1581,8 +1596,8 @@ LensHaloDummy::LensHaloDummy()
   //	mass = 0.;
 }
 
-LensHaloDummy::LensHaloDummy(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale, int my_stars_N){
-  mass=my_mass, Rmax=my_Rmax, zlens=my_zlens, rscale=my_rscale;
+LensHaloDummy::LensHaloDummy(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale, int my_stars_N){
+  mass=my_mass, Rsize=my_Rsize, zlens=my_zlens, rscale=my_rscale;
   stars_N=my_stars_N;
   stars_implanted = false;
   posHalo[0] = posHalo[1] = 0.0;
@@ -1595,11 +1610,12 @@ LensHaloDummy::LensHaloDummy(InputParams& params)
   //	mass = 0.;
 }
 
-void LensHaloDummy::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed){
+void LensHaloDummy::initFromMassFunc(float my_mass, float my_Rsize, float my_rscale, PosType my_slope, long *seed){
   mass = 1.e-10;
-  Rmax = my_Rmax;
+  Rsize = my_Rsize;
   rscale = my_rscale;
-  xmax = Rmax/rscale;
+  xmax = Rsize/rscale;
+  Rmax = Rsize;
 }
 
 
@@ -1710,14 +1726,14 @@ double LensHalo::test_average_kappa(PosType R){
 bool LensHalo::test(){
   std::cout << "test alpha's consistance with kappa by comparing mass interior to a radius by 1D integration and Gauss' law and by 2D integration" << std::endl;
   
-  std::cout << "R/Rmax      Mass 1 D         Mass 2 D         (m1 - m2)/m1       m2/m1" << std::endl;
+  std::cout << "R/Rmax     R/Rsize     Mass 1 D         Mass 2 D         (m1 - m2)/m1       m2/m1" << std::endl;
   
   int N=25;
   PosType m1,m2;
   for(int i=1;i<N;++i){
     m1 = MassBy1DIntegation(Rmax*i/(N-4));
     m2 = MassBy2DIntegation(Rmax*i/(N-4));
-    std::cout <<  i*1./(N-4) << "      " << m1 << "       "
+    std::cout <<  i*1./(N-4) << "      " << Rmax/Rsize*i/(N-4) << "      " << m1 << "       "
     << m2 << "        "<< (m1-m2)/m1 << "      " << m2/m1  << std::endl;
     
   }
@@ -1727,7 +1743,7 @@ bool LensHalo::test(){
   
   std::cout << "test gamma_t's consistance with kappa and alpha by comparing gamma_t to alpha/r - kappa along the x-axis" << std::endl
   << "Not expected to be equal for asymmetric cases."<< std::endl;
-  std::cout << std::endl <<"R/Rmax         gamma_t       alpha/r - kappa          alpha/r           kappa        delta/gt "  << std::endl;
+  std::cout << std::endl <<"R/Rmax         R/Rsize         gamma_t       alpha/r - kappa          alpha/r           kappa        delta/gt "  << std::endl;
   for(int i=1;i<N;++i){
     r = Rmax*i/(N-2);
     
@@ -1739,12 +1755,12 @@ bool LensHalo::test(){
     
     force_halo(alpha,&kappa,gamma,&phi,x);
     
-    std::cout << r/Rmax << "       " <<  -gamma[0]  << "         " << -alpha[0]/r - kappa << "         " << -alpha[0]/r << "         " << kappa << "      " <<  (alpha[0]/r + kappa)/gamma[0]   <<std::endl;
+    std::cout << r/Rmax << "      " << r/Rsize << "       " <<  -gamma[0]  << "         " << -alpha[0]/r - kappa << "         " << -alpha[0]/r << "         " << kappa << "      " <<  (alpha[0]/r + kappa)/gamma[0]   <<std::endl;
   }
   
   
   std::cout << "test average tangential shear's, gamma_t's, consistance with the average convergence at a radius, kappa(r) and average kappa within a radius calculated using alpha and Gauss' law.  gamma_t should be equal to <kappa>_R - kappa(R)" << std::endl;
-  std::cout << std::endl <<"R/Rmax        gamma_t       <kappa>_R-kappa(R)       <kappa>_R            kappa(R)     [<kappa>_R-kappa(R)]/gt  " << std::endl;
+  std::cout << std::endl <<"R/Rmax         R/Rsize        gamma_t       <kappa>_R-kappa(R)       <kappa>_R            kappa(R)     [<kappa>_R-kappa(R)]/gt  " << std::endl;
   
   
   for(int i=1;i<N;++i){
@@ -1757,7 +1773,7 @@ bool LensHalo::test(){
     m1 = MassBy1DIntegation(r)/pi/r/r;
     
     
-    std::cout << r/Rmax << "       " << -1.0*average_gt << "         " << m1-average_kappa << "         " <<  m1 << "          " <<  average_kappa << "         "  << -1.0*(m1-average_kappa)/average_gt << std::endl;
+    std::cout << r/Rmax << "       "  << r/Rsize << "       " << -1.0*average_gt << "         " << m1-average_kappa << "         " <<  m1 << "          " <<  average_kappa << "         "  << -1.0*(m1-average_kappa)/average_gt << std::endl;
     
     
     PosType alpha[2] = {0,0},x[2] = {0,0};
@@ -1795,11 +1811,11 @@ PosType LensHalo::DALPHAXDM::operator()(PosType m){
   
   double ap = m*m*a2 + lambda,bp = m*m*b2 + lambda;
   double p2 = x[0]*x[0]/ap/ap/ap/ap + x[1]*x[1]/bp/bp/bp/bp;  // actually the inverse of equation (5) in Schramm 1990
-  PosType tmp = m*(isohalo->get_Rmax());
+  PosType tmp = m*(isohalo->get_Rsize());
   KappaType kappa=0;
   
   double xiso=tmp/isohalo->rscale;
-  //PosType alpha[2]={0,0},tm[2] = {m*(isohalo->get_Rmax()),0};
+  //PosType alpha[2]={0,0},tm[2] = {m*(isohalo->get_Rsize()),0};
   //KappaType kappam=0,gamma[2]={0,0},phi;
   
   kappa=isohalo->kappa_h(xiso)/pi/xiso/xiso*isohalo->mass;
@@ -1816,10 +1832,10 @@ PosType LensHalo::DALPHAYDM::operator()(PosType m){
   
   double ap = m*m*a2 + lambda,bp = m*m*b2 + lambda;
   double p2 = x[0]*x[0]/ap/ap/ap/ap + x[1]*x[1]/bp/bp/bp/bp;  // actually the inverse of equation (5) in Schramm 1990
-  PosType tmp = m*(isohalo->get_Rmax());
+  PosType tmp = m*(isohalo->get_Rsize());
   KappaType kappa=0;
   double xiso=tmp/isohalo->rscale;
-  //PosType alpha[2]={0,0},tm[2] = {m*(isohalo->get_Rmax()),0};
+  //PosType alpha[2]={0,0},tm[2] = {m*(isohalo->get_Rsize()),0};
   //KappaType kappam=0,gamma[2]={0,0},phi;
   
   kappa=isohalo->kappa_h(xiso)/pi/xiso/xiso*isohalo->mass;

@@ -20,7 +20,7 @@ class TreeQuad;
 /**
  * \brief A base class for all types of lensing halos.
  *
- * It contains the mass, maximum radius (Rmax), and scale radius (rscale) of the halo,
+ * It contains the mass, maximum radius (Rsize), and scale radius (rscale) of the halo,
  * as well as the redshift (zlens).
  *
  * It has get and set functions for the members as well as virtual functions like:
@@ -40,7 +40,7 @@ class TreeQuad;
  *
  * initFromMassFunc
  * is intended for the cases where the simulation is populated by lensing halos from
- * a mass function. Then one needs all parameters of the halo -- mass, Rmax, and rscale.
+ * a mass function. Then one needs all parameters of the halo -- mass, Rsize, and rscale.
  */
 
 class LensHalo{
@@ -49,8 +49,10 @@ public:
 	LensHalo(InputParams& params);
 	virtual ~LensHalo();
   
-	/// get the Rmax in Mpc
-	float get_Rmax() const { return Rmax; }
+  /// get the Rmax in Mpc
+  float get_Rmax() const { return Rmax; }
+  /// get the Rmax in Mpc
+  float get_Rsize() const { return Rsize; }
 	/// get the mass solar units
 	float get_mass() const { return mass; }
 	/// get the scale radius in Mpc
@@ -72,14 +74,14 @@ public:
 	/// initialize from a simulation file
 	virtual void initFromFile(float my_mass, long *seed, float vmax, float r_halfmass){};
 	/// initialize from a mass function
-	virtual void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed);
+	virtual void initFromMassFunc(float my_mass, float my_Rsize, float my_rscale, PosType my_slope, long *seed);
   
-	/// set Rmax (in Mpc)
-	virtual void set_Rmax(float my_Rmax){Rmax=my_Rmax; xmax = Rmax/rscale;};
+  /// set Rsize (in Mpc) and reset Ramx
+  virtual void set_Rsize(float my_Rsize){Rmax = Rmax*my_Rsize/Rsize; Rsize = my_Rsize; xmax = Rsize/rscale;};
 	/// set mass (in solar masses)
 	void set_mass(float my_mass){mass=my_mass;};
 	/// set scale radius (in Mpc)
-	virtual void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rmax/rscale;};
+	virtual void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rsize/rscale;};
 	/// set redshift
 	void setZlens(PosType my_zlens){ zlens=my_zlens; };
   /// set slope
@@ -140,8 +142,7 @@ public:
   PosType test_average_gt(PosType R);
   PosType test_average_kappa(PosType R);
   
-  /// In case of a pseudo-elliptical halo calculate normalization factor, the value 0.99999 is used as the norm integral should not include Rmax because all force_halo function make the case distinction rcm^2<rmax*rmax and not "<=", defining the force_halo functions differenly however creates occasional ring features. Setting Rsize to 0.9, i.e. 0.9*Rmax keeps the maximum deviation in terms of mass at the central radial position between Rsize and Rmax to be ~5%. Changing rsize to 0.8 increases the max. deviation to 10%. 
-  //void set_norm_factor(){set_rsize(1);mass_norm_factor=mass/MassBy1DIntegation(0.99999*Rsize);set_rsize(0.9);}
+  // renomalize to make mass match
   void set_norm_factor(){mass_norm_factor=mass/MassBy1DIntegation(Rsize);}
   
   /// set radius rsize beyond which interpolation values between alpha_ellip and alpha_iso are computed
@@ -174,8 +175,8 @@ protected:
   
   void force_halo_sym(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0);
   void force_halo_asym(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0);
-  /// only used for force_halo_asym: inner radius in terms of Rmax of interpolation region between elliptical and isotropic alpha, e.g. Rsize=0.8 means that between 80 per cent of Rmax and Rmax alpha values are interpolated
-  float Rsize = 1;
+  
+   float Rsize = 0;
   
   struct norm_func{
     norm_func(LensHalo& halo, PosType my_r_max): halo(halo), r_max(my_r_max){};
@@ -232,6 +233,9 @@ protected:
   /// to determine when a ray intersects an object.
   float Rmax;
   
+  /// The factor by which Rmax is larger than Rsize
+  const float Rmax_to_Rsize_ratio = 1.2;
+  
   /// scale length or core size.  Different meaning in different cases.  Not used in NSIE case.
   float rscale;
   // redshift
@@ -273,7 +277,7 @@ protected:
   virtual PosType inline dmoddq(int whichmod, PosType q, PosType b){return 0;};
   virtual PosType inline ddmoddq(int whichmod, PosType q, PosType b){return 0;};
   
-  PosType xmax;  /// This is Rmax/rscale !!
+  PosType xmax;  /// This is Rsize/rscale !!
   
   PosType mass_norm_factor=1;
   
@@ -637,7 +641,7 @@ public:
   /// Shell constructor that should be avoided
 	LensHaloNFW();
   LensHaloNFW(float my_mass   /// in solar masses
-              ,float my_Rmax  /// in Mpc
+              ,float my_Rsize  /// in Mpc
               ,PosType my_zlens   /// redshift
               ,float my_rscale    /// in Mpc
               ,float my_fratio    /// axis ratio
@@ -676,16 +680,16 @@ public:
                 ,PosType *center,PosType Sigma_crit);
   
 	void initFromFile(float my_mass, long *seed, float vmax, float r_halfmass);
-	void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed);
-  /// set Rmax
-  void set_Rmax(float my_Rmax){Rmax=my_Rmax; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
+	void initFromMassFunc(float my_mass, float my_Rsize, float my_rscale, PosType my_slope, long *seed);
+  /// set Rsize
+  void set_Rsize(float my_Rsize){Rsize=my_Rsize; xmax = Rsize/rscale; gmax = InterpolateFromTable(gtable,xmax);};
   /// set scale radius
-	void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
+	void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rsize/rscale; gmax = InterpolateFromTable(gtable,xmax);};
   
 protected:
 	/// table size
 	static const long NTABLE;
-	/// maximum Rmax/rscale
+	/// maximum Rsize/rscale
 	static const PosType maxrm;
 	/// keeps track of how many time the tables are created, default is just once
 	static int count;
@@ -716,8 +720,8 @@ protected:
 		return -0.5*x*x*InterpolateFromTable(g2table,x)/gmax;
 	}
 	inline KappaType phi_h(PosType x) const{
-    return 0.25*(InterpolateFromTable(htable,x) - InterpolateFromTable(htable,Rmax/rscale))/gmax + log(Rmax) ;
-    // The constant contribution is made to match with the point mass at x = Rmax/rscale.
+    return 0.25*(InterpolateFromTable(htable,x) - InterpolateFromTable(htable,Rsize/rscale))/gmax + log(Rsize) ;
+    // The constant contribution is made to match with the point mass at x = Rsize/rscale.
 	}
   inline KappaType phi_int(PosType x) const{
     return -1.0*InterpolateFromTable(xgtable,x)/gmax; //alpha_int(x);
@@ -748,7 +752,7 @@ class LensHaloPseudoNFW: public LensHalo{
 public:
   /// shell constructor, should be avoided
 	LensHaloPseudoNFW();
-  LensHaloPseudoNFW(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,PosType my_beta,float my_fratio,float my_pa,int my_stars_N, EllipMethod my_ellip_method=Pseudo);
+  LensHaloPseudoNFW(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale,PosType my_beta,float my_fratio,float my_pa,int my_stars_N, EllipMethod my_ellip_method=Pseudo);
 	LensHaloPseudoNFW(InputParams& params);
 	~LensHaloPseudoNFW();
   
@@ -759,15 +763,15 @@ public:
 	void set_slope(PosType my_slope){beta=my_slope; make_tables();};
 	/// initialize from a mass function
   PosType get_slope(){return beta;};
-  /// set Rmax
-  void set_Rmax(float my_Rmax){Rmax=my_Rmax; xmax = Rmax/rscale;};
+  /// set Rsize
+  //void set_Rsize(float my_Rsize){Rsize = my_Rsize; xmax = Rsize/rscale;};
 	
-	void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed);
+	void initFromMassFunc(float my_mass, float my_Rsize, float my_rscale, PosType my_slope, long *seed);
   
 private:
 	/// table size
 	static const long NTABLE;
-	/// maximum Rmax/rscale
+	/// maximum Rsize/rscale
 	static const PosType maxrm;
 	/// keeps track of how many time the tables are created, default is just once
 	static int count;
@@ -828,7 +832,7 @@ private:
 class LensHaloPowerLaw: public LensHalo{
 public:
 	LensHaloPowerLaw();
-  LensHaloPowerLaw(float my_mass,float my_Rmax,PosType my_zlens,PosType my_beta,float my_fratio,float my_pa, int my_stars_N, EllipMethod my_ellip_method=Pseudo);
+  LensHaloPowerLaw(float my_mass,float my_Rsize,PosType my_zlens,PosType my_beta,float my_fratio,float my_pa, int my_stars_N, EllipMethod my_ellip_method=Pseudo);
 	LensHaloPowerLaw(InputParams& params);
 	~LensHaloPowerLaw();
   
@@ -839,7 +843,7 @@ public:
   PosType get_slope(){return beta;};
   
 	/// initialize from a mass function
-	void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed);
+	void initFromMassFunc(float my_mass, float my_Rsize, float my_rscale, PosType my_slope, long *seed);
   
 private:
 	/// read-in parameters from the parameter file
@@ -869,10 +873,10 @@ private:
 		if(x==0) x=1e-6*xmax;
 		return -beta*pow(x/xmax,-beta+2);
 	}
-  /// this is phi Sigma_crit pi / mass, the constants are added so that it is continous over the bourder at Rmax
+  /// this is phi Sigma_crit pi / mass, the constants are added so that it is continous over the bourder at Rsize
  	inline KappaType phi_h(PosType x) const {
 		if(x==0) x=1e-6*xmax;
-    return ( pow(x/xmax,2-beta) - 1 )/(2-beta) + log(Rmax) ;
+    return ( pow(x/xmax,2-beta) - 1 )/(2-beta) + log(Rsize) ;
 	}
   inline KappaType phi_int(PosType x) const{
 		//return alpha_int(x);
@@ -891,7 +895,7 @@ public:
    sigma = zlens = fratio = pa = rcore = 0.;
    }*/
   
-  //LensHaloRealNSIE(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,float my_sigma, float my_rcore,float my_fratio,float my_pa,int my_stars_N);
+  //LensHaloRealNSIE(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale,float my_sigma, float my_rcore,float my_fratio,float my_pa,int my_stars_N);
   
   /// explicit constructor, Warning: If my_rcore > 0.0 and my_fratio < 1 then the mass will be somewhat less than my_mass.
   LensHaloRealNSIE(float my_mass,PosType my_zlens,float my_sigma
@@ -936,7 +940,7 @@ protected:
 	/// initialize from a simulation file
 	//void initFromFile(float my_mass, long *seed, float vmax, float r_halfmass);
 	/// initialize from a mass function
-	//void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed);
+	//void initFromMassFunc(float my_mass, float my_Rsize, float my_rscale, PosType my_slope, long *seed);
 	/// simple initialize from mass while setting a random position angle and ellipticity
 	//void initFromMass(float my_mass, long *seed);
   
@@ -945,7 +949,6 @@ protected:
   
 	/// velocity dispersion of NSIE
 	float sigma;
-	/// Actual edge of mass distribution in elliptical radius, Rmax is the range beyond which the halo is a point mass
 	float Rsize;
 	/// axis ratio of surface mass distribution
 	float fratio;
@@ -986,7 +989,7 @@ protected:
 class LensHaloHernquist: public LensHalo{
 public:
 	//LensHaloHernquist();
-  LensHaloHernquist(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,int my_stars_N, EllipMethod my_ellip_method=Pseudo);
+  LensHaloHernquist(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,int my_stars_N, EllipMethod my_ellip_method=Pseudo);
 	LensHaloHernquist(InputParams& params);
 	virtual ~LensHaloHernquist();
   
@@ -1005,16 +1008,16 @@ public:
    */
 	//void initFromFile(float my_mass, long *seed, float vmax, float r_halfmass);
   
-	/// set Rmax
-	void set_Rmax(float my_Rmax){Rmax=my_Rmax; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
+	/// set Rsize
+	//void set_Rsize(float my_Rsize){Rsize=my_Rsize; xmax = Rsize/rscale; gmax = InterpolateFromTable(gtable,xmax);};
 	/// set scale radius
-	void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
+	void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rsize/rscale; gmax = InterpolateFromTable(gtable,xmax);};
   // friend struct Ialpha_func;
   
 protected:
 	/// table size
 	static const long NTABLE;
-	/// maximum Rmax/rscale
+	/// maximum Rsize/rscale
 	static const PosType maxrm;
 	/// keeps track of how many time the tables are created, default is just once
 	static int count;
@@ -1066,14 +1069,14 @@ private:
 class LensHaloJaffe: public LensHalo{
 public:
 	//LensHaloJaffe();
-  LensHaloJaffe(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,int my_stars_N, EllipMethod my_ellip_method=Pseudo);
+  LensHaloJaffe(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,int my_stars_N, EllipMethod my_ellip_method=Pseudo);
 	LensHaloJaffe(InputParams& params);
 	virtual ~LensHaloJaffe();
   
-	/// set Rmax
-	void set_Rmax(float my_Rmax){Rmax=my_Rmax; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
+	/// set Rsize
+	//void set_Rsize(float my_Rsize){Rsize = my_Rsize; xmax = Rsize/rscale; gmax = InterpolateFromTable(gtable,xmax);};
 	/// set scale radius
-	void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rmax/rscale; gmax = InterpolateFromTable(gtable,xmax);};
+	void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rsize/rscale; gmax = InterpolateFromTable(gtable,xmax);};
   
   PosType ffunction(PosType x) const;
 	PosType gfunction(PosType x) const;
@@ -1087,7 +1090,7 @@ protected:
   
 	/// table size
 	static const long NTABLE;
-	/// maximum Rmax/rscale
+	/// maximum Rsize/rscale
 	static const PosType maxrm;
 	/// keeps track of how many time the tables are created, default is just once
 	static int count;
@@ -1142,7 +1145,7 @@ private:
 class LensHaloDummy: public LensHalo{
 public:
 	LensHaloDummy();
-  LensHaloDummy(float my_mass,float my_Rmax,PosType my_zlens,float my_rscale, int my_stars_N);
+  LensHaloDummy(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale, int my_stars_N);
 	LensHaloDummy(InputParams& params);
 	~LensHaloDummy(){};
 	
@@ -1151,7 +1154,7 @@ public:
   // void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xcm,bool subtract_point=false,PosType screening = 1.0);
   
 	/// initialize from a mass function
-	void initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed);
+	void initFromMassFunc(float my_mass, float my_Rsize, float my_rscale, PosType my_slope, long *seed);
   
 	
 private:
