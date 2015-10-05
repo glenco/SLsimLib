@@ -688,6 +688,7 @@ LensHaloRealNSIE::LensHaloRealNSIE(float my_mass,PosType my_zlens,float my_sigma
   //Rsize = rmaxNSIE(sigma,mass,fratio,rcore);
   //Rmax = MAX(1.0,1.0/fratio)*Rsize;  // redefine
   Rsize = rmax_calc();
+  std::cout << "Rsize constr Real NSIE " << Rsize << std::endl;
   Rmax = Rmax_to_Rsize_ratio*Rsize;
   if(fratio > 1.0 || fratio < 0.01) throw std::invalid_argument("invalid fratio");
   

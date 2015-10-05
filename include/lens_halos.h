@@ -143,7 +143,8 @@ public:
   PosType test_average_kappa(PosType R);
   
   // renomalize to make mass match
-  void set_norm_factor(){mass_norm_factor=mass/MassBy1DIntegation(Rsize);}
+  
+  void set_norm_factor(){mass_norm_factor=1;mass_norm_factor=mass/MassBy1DIntegation(Rsize);}
   
   /// set radius rsize beyond which interpolation values between alpha_ellip and alpha_iso are computed
   void set_rsize(float my_rsize){ Rsize = my_rsize;};
@@ -176,7 +177,7 @@ protected:
   void force_halo_sym(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0);
   void force_halo_asym(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0);
   
-   float Rsize = 0;
+  float Rsize = 0;
   
   struct norm_func{
     norm_func(LensHalo& halo, PosType my_r_max): halo(halo), r_max(my_r_max){};
@@ -949,7 +950,6 @@ protected:
   
 	/// velocity dispersion of NSIE
 	float sigma;
-	float Rsize;
 	/// axis ratio of surface mass distribution
 	float fratio;
 	/// position angle on sky, radians
