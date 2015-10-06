@@ -735,6 +735,8 @@ void LensHaloRealNSIE::initFromMassFunc(float my_mass, float my_Rmax, float my_r
  *  Warning: This adds to input value of alpha, kappa, gamma, and phi.  They need 
  *  to be zeroed out if the contribution of just this halo is wanted.
  */
+
+
 void LensHalo::force_halo(
                           PosType *alpha          /// deflection solar mass/Mpc
                           ,KappaType *kappa     /// surface density in Msun/Mpc^2 (?)
@@ -758,6 +760,11 @@ void LensHalo::force_halo(
     ERROR_MESSAGE();
     exit(1);
   }
+  
+    //if(sqrt(alpha[0]*alpha[0]+alpha[1]*alpha[1])>1e17)
+    //std::cout << sqrt(alpha[0]*alpha[0]+alpha[1]*alpha[1]) << std::endl;
+   
+  
 }
 
 /** \brief returns the lensing quantities of a ray in center of mass coordinates for a symmetric halo
@@ -843,6 +850,8 @@ void LensHalo::force_halo_asym(
 		){
       
   float r_size=get_rsize()*Rmax;
+      //assert(get_rsize()==1);
+  //std::cout << r_size << " " << get_rsize() << " "<< Rmax << std::endl;
   assert(r_size<=Rmax);
   PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
   PosType alpha_tmp[2],kappa_tmp,gamma_tmp[2],phi_tmp;
@@ -873,10 +882,15 @@ void LensHalo::force_halo_asym(
       alpha_iso[0] = -1.0*tmp*xcm[0];
       alpha_iso[1] = -1.0*tmp*xcm[1];
       
+// PosType atmp=sqrt((alpha_iso[0]*f2 + alpha_ellip[0]*f1)*(alpha_iso[0]*f2 + alpha_ellip[0]*f1) +  (alpha_iso[1]*f2 + alpha_ellip[1]*f1)*(alpha_iso[1]*f2 + alpha_ellip[1]*f1));
+  //    if(atmp>1e15)
+    //  std::cout << atmp << std::endl;
+      
       alpha[0] += alpha_iso[0]*f2 + alpha_ellip[0]*f1;
       alpha[1] += alpha_iso[1]*f2 + alpha_ellip[1]*f1;
       
       {
+        assert(mass_norm_factor==1);
         PosType tmp = -2.0*mass_norm_factor*mass/rcm2/pi/rcm2; // dev by mass_norm_factor
         gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
         gamma[1] += xcm[0]*xcm[1]*tmp;
@@ -892,6 +906,10 @@ void LensHalo::force_halo_asym(
       
       alpha[0] +=  alpha_tmp[0]/Rmax;
       alpha[1] +=  alpha_tmp[1]/Rmax;
+      
+      //PosType atmp=sqrt((alpha_tmp[0]/Rmax)*(alpha_tmp[0]/Rmax) +  (alpha_tmp[1]/Rmax)*(alpha_tmp[1]/Rmax));
+      //if(atmp>1e15)
+      //std::cout << atmp << std::endl;
       
       *kappa += kappa_tmp;
       gamma[0] += 0.5*gamma_tmp[0];

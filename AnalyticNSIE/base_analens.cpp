@@ -799,8 +799,7 @@ void LensHalo::alphakappagamma1asym(
   PosType alpha_iso=mass*alpha_h(x)/pi/x;  //-pow(x/xmax,-beta+1)
   PosType kappa_iso=mass*kappa_h(x)/pi/x/x;
   PosType gamma_iso=mass*gamma_h(x)/pi/x/x; // -beta*pow(x/xmax,-beta)
-  
- 
+
   faxial0(theta,f);
 
   //gradial(x,g);
@@ -820,8 +819,8 @@ void LensHalo::alphakappagamma1asym(
   alpha_r = (alpha_iso*(1+F*g[0])+phi_iso*F*g[1]); // with damping
   alpha_theta = (phi_iso*g[0]*f[1]/x); //  with damping
   
-  alpha[0] = (alpha_r*cos(theta) - alpha_theta*sin(theta));
-	alpha[1] = (alpha_r*sin(theta) + alpha_theta*cos(theta));
+  alpha[0] = (alpha_r*cos(theta) - alpha_theta*sin(theta))*Rmax;
+	alpha[1] = (alpha_r*sin(theta) + alpha_theta*cos(theta))*Rmax;
   
   //*kappa = (f[0]*kappa_iso-0.5*f[2]*phi_iso/x/x);//  w/o damping
   *kappa=(1+F*g[0])*kappa_iso-0.5*phi_iso*fac*(F*g[1]/x+F*g[2]+f[2]*g[0]/x/x)-F*g[1]*alpha_iso*x*x; /// with damping
@@ -838,6 +837,7 @@ void LensHalo::alphakappagamma1asym(
   
   *phi= f[0]*phi_iso; // w/o damping
   
+// std::cout << f[0] << " " << f[1] << " " << f[2] << std::endl;
   
   return;
 }

@@ -106,7 +106,7 @@ public:
   void error_message1(std::string name,std::string filename);
 
   virtual void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1);
-
+  
   // in randoimize_lens.c
   PosType averageSubMass();
 
@@ -149,7 +149,6 @@ public:
 
   
 protected:
-
   /// critical surface density
   PosType Sigma_crit;
    /// the time delay scale in days/Mpc^2

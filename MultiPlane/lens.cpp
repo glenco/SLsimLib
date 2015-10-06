@@ -32,6 +32,7 @@ namespace
 	};
 }
 
+
 /**
  * \brief Creates an empty lens. Main halos and field halos need to be inserted by hand from the user.
  */
@@ -1846,7 +1847,7 @@ void Lens::readInputSimFileMillennium(bool verbose)
             break;
           case pl_gal:
             assert(field_int_prof_gal_slope>0);
-            field_halos.push_back(new LensHaloPowerLaw(mass*field_galaxy_mass_fraction,rmaxNSIE(sigma, mass*field_galaxy_mass_fraction,0.99,0),z,0.0,field_int_prof_gal_slope,0.99,pa,0,Fourier));
+            field_halos.push_back(new LensHaloPowerLaw(mass*field_galaxy_mass_fraction,rmaxNSIE(sigma, mass*field_galaxy_mass_fraction,fratio,0),z,0.0,field_int_prof_gal_slope,fratio,pa,0,Fourier));
             break;
           case hern_gal:
             ERROR_MESSAGE();

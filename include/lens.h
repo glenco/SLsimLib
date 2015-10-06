@@ -87,8 +87,9 @@ public:
   
 	/// field of view in square degrees
 	PosType getfov(){return fieldofview;};
+  
 	void setfov(PosType fov){fieldofview=fov;};
-
+  
 	/// reset the number of planes, but keep the field halos and main lens
 	void resetFieldNplanes(std::size_t field_Nplanes, bool verbose = false);
 
@@ -101,7 +102,6 @@ public:
 	/// print the main parameters of the lens
 	void printMultiLens();
 
-  
   /// Redshift of first main lens plane
 	PosType getZlens(){
 		if(flag_switch_main_halo_on)
@@ -237,8 +237,7 @@ private:
   
   // the cosmology
 	COSMOLOGY cosmo;
-
-	
+  
 	void readCosmology(InputParams& params);
 	void assignParams(InputParams& params,bool verbose = false);
 	
