@@ -144,7 +144,7 @@ public:
   
   // renomalize to make mass match
   
-  void set_norm_factor(){mass_norm_factor=1;mass_norm_factor=mass/MassBy1DIntegation(Rsize);}
+  void set_norm_factor(){mass_norm_factor=1;mass_norm_factor=mass/MassBy1DIntegation(Rsize);std::cout << "mass_norm: " << mass_norm_factor << std::endl;}
   
   /// set radius rsize beyond which interpolation values between alpha_ellip and alpha_iso are computed
   void set_rsize(float my_rsize){ Rsize = my_rsize;};
