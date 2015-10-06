@@ -274,18 +274,6 @@ private:
 };
 
 typedef struct PointList *ListHndl;
-//bool AtTopList(ListHndl list);
-//bool AtBottomList(ListHndl list);
-
-
-//inline void MoveToTopList(ListHndl list);
-//inline void MoveToBottomList(ListHndl list);
-/*inline void MoveToTopList(ListHndl list){
-  list->current=list->top;
-};
-inline void MoveToBottomList(ListHndl list){
-  list->current=list->bottom;
-};*/
 
 // ***********************************************************
 //   routines for linked list of points
@@ -293,25 +281,18 @@ inline void MoveToBottomList(ListHndl list){
 
 Point *NewPoint(double *x,unsigned long id);
 
-//void JumpDownList(ListHndl list,int jump);
-//bool MoveDownList(ListHndl list);
-//bool MoveUpList(ListHndl list);
-
-
-
 void SwapPointsInList(ListHndl list,Point *p1,Point *p2);
 Point *sortList(long n, double arr[],ListHndl list,Point *firstpoint);
 
-//void UnionList(ListHndl list1,ListHndl list2);
-//bool ArePointsUniqueList(ListHndl list);
-//bool IntersectionList(ListHndl list1,ListHndl list2,ListHndl intersection);
-
 /**  \brief Class for representing points or vectors in 2 dimensions.  Not that the dereferencing operator is overridden.
- 
  */
 struct Point_2d{
   Point_2d(){
     x[0]=x[1]=0.0;
+  }
+  Point_2d(PosType my_x,PosType my_y){
+    x[0]=my_x;
+    x[1]=my_y;
   }
   ~Point_2d(){};
   
@@ -426,6 +407,11 @@ struct Point_3d{
   Point_3d(){
     x[0]=x[1]=x[2]=0.0;
   }
+  Point_3d(PosType my_x,PosType my_y,PosType my_z){
+    x[0]=my_x;
+    x[1]=my_y;
+    x[2]=my_z;
+  }
   ~Point_3d(){};
   
   Point_3d(const Point_3d &p){
@@ -496,7 +482,7 @@ struct Point_3d{
     return x[0]*p.x[0] + x[1]*p.x[1] + x[2]*p.x[2];
   }
   /// outer product
-  Point_3d operator^(const Point_3d &p){
+  Point_3d operator^(const Point_3d &p) const{
     Point_3d tmp;
     tmp[0] = x[1]*p.x[2] - x[2]*p.x[1];
     tmp[1] = x[2]*p.x[0] - x[0]*p.x[2];

@@ -1905,25 +1905,62 @@ void MultiGridSmoother::smooth(int Nsmooth,PixelMap &map){
   
 }
 
-void PixelMap::AddSource(Source &source){
+PosType PixelMap::AddSource(Source &source){
   Point_2d s_center;
   source.getX(s_center);
   
-  if( s_center[0] + source.getRadius() < map_boundary_p1[0] ) return;
-  if( s_center[0] - source.getRadius() > map_boundary_p2[0] ) return;
-  if( s_center[1] + source.getRadius() < map_boundary_p1[1] ) return;
-  if( s_center[1] - source.getRadius() > map_boundary_p2[1] ) return;
+  if( s_center[0] + source.getRadius() < map_boundary_p1[0] ) return 0.0;
+  if( s_center[0] - source.getRadius() > map_boundary_p2[0] ) return 0.0;
+  if( s_center[1] + source.getRadius() < map_boundary_p1[1] ) return 0.0;
+  if( s_center[1] - source.getRadius() > map_boundary_p2[1] ) return 0.0;
 
   PosType y[2];
   PosType tmp = resolution*resolution;
+  PosType total = 0;
   
   
   for(size_t index =0 ;index < map.size(); ++index){
     find_position(y,index);
     map[index] += source.SurfaceBrightness(y)*tmp;
+    total += source.SurfaceBrightness(y)*tmp;
   }
+  
+  return total;
 }
 
+PosType PixelMap::AddSource(Source &source,int oversample){
+  Point_2d s_center;
+  source.getX(s_center);
+  
+  if( s_center[0] + source.getRadius() < map_boundary_p1[0] ) return 0.0;
+  if( s_center[0] - source.getRadius() > map_boundary_p2[0] ) return 0.0;
+  if( s_center[1] + source.getRadius() < map_boundary_p1[1] ) return 0.0;
+  if( s_center[1] - source.getRadius() > map_boundary_p2[1] ) return 0.0;
+
+  PosType y[2],x[2],bl;
+  PosType tmp_res = resolution*1.0/oversample;
+  PosType tmp = tmp_res*tmp_res;
+  PosType total = 0.0;
+  
+  bl = resolution /2 - 0.5*tmp_res;
+  
+  for(size_t index =0 ;index < map.size(); ++index){
+    find_position(y,index);
+    y[0] -= bl;
+    y[1] -= bl;
+    for(int i = 0 ; i < oversample ; ++i){
+      x[0] = y[0] + i*tmp_res;
+      for(int j=0; j < oversample;++j){
+        x[1] = y[1] + j*tmp_res;
+        map[index] += source.SurfaceBrightness(x)*tmp;
+        total += source.SurfaceBrightness(x)*tmp;
+      }
+    }
+  }
+  return total;
+}
+
+/*
 void PixelMap::AddSource(Source &source,int oversample){
   Point_2d s_center;
   source.getX(s_center);
@@ -1932,23 +1969,45 @@ void PixelMap::AddSource(Source &source,int oversample){
   if( s_center[0] - source.getRadius() > map_boundary_p2[0] ) return;
   if( s_center[1] + source.getRadius() < map_boundary_p1[1] ) return;
   if( s_center[1] - source.getRadius() > map_boundary_p2[1] ) return;
-
-  PosType y[2],x[2],bl;
+  
   PosType tmp_res = resolution*1.0/oversample;
-  PosType tmp = tmp_res*tmp_res;
+  PosType tmp = resolution;
   
-  bl = resolution /2 - 0.5*tmp_res;
+  Point_2d dx,y;
+  PosType r = source.getRadius();
   
-  for(size_t index =0 ;index < map.size(); ++index){
-    find_position(y,index);
-    for(int j=0;j<oversample*oversample;++j){
-      x[0] = y[0] - bl + ( j%oversample )*tmp_res;
-      x[1] = y[1] - bl + ( j/oversample )*tmp_res;
-      map[index] += source.SurfaceBrightness(x)*tmp;
+  map[find_index(s_center[0],s_center[1])] += source.SurfaceBrightness(s_center.x)*tmp;
+  
+  dx[0] = 0;
+  for(dx[1] = r/oversample ; dx[1] <= r; dx[1] += r/oversample){
+      y = s_center + dx;
+      map[find_index(y[0],y[1])] += source.SurfaceBrightness(y.x)*tmp;
+      y = s_center - dx;
+      map[find_index(y[0],y[1])] += source.SurfaceBrightness(y.x)*tmp;
+  }
+  
+  for(dx[0] = r/oversample; dx[0] <= source.getRadius() ; dx[0] += r/oversample ){
+    
+    PosType range = sqrt(r*r - dx[0]*dx[0]);
+    for(dx[1] = 0 ; dx[1] <= range; dx[1] += r/oversample){
+      y = s_center + dx;
+      map[find_index(y[0],y[1])] += source.SurfaceBrightness(y.x)*tmp;
+      y = s_center - dx;
+      map[find_index(y[0],y[1])] += source.SurfaceBrightness(y.x)*tmp;
+    }
+  }
+  
+  for(dx[0] = -r/oversample; dx[0] >= -source.getRadius() ; dx[0] -= r/oversample ){
+    PosType range = sqrt(r*r - dx[0]*dx[0]);
+    for(dx[1] = r/oversample ; dx[1] <= range; dx[1] += r/oversample){
+      y = s_center + dx;
+      map[find_index(y[0],y[1])] += source.SurfaceBrightness(y.x)*tmp;
+      y = s_center - dx;
+      map[find_index(y[0],y[1])] += source.SurfaceBrightness(y.x)*tmp;
     }
   }
 }
-
+*/
 
 
 

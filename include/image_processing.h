@@ -55,9 +55,9 @@ public:
   void AddImages(ImageInfo *imageinfo,int Nimages,float rescale = 1.);
   void AddImages(std::vector<ImageInfo> &imageinfo,int Nimages,float rescale = 1.);
   void AddUniformImages(ImageInfo *imageinfo,int Nimages,double value);
-  void AddSource(Source &source);
+  PosType AddSource(Source &source);
   /// Add a source to the pixel map by oversamples the source so that oversample^2 points within each pixel are averaged
-  void AddSource(Source &source,int oversample);
+  PosType AddSource(Source &source,int oversample);
   
   void AddCurve(ImageInfo *curve,double value);
   void AddCurve(Kist<Point> *imagekist,PosType value);

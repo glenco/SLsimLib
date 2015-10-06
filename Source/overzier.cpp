@@ -312,12 +312,16 @@ void SourceOverzierPlus::randomize(Utilities::RandomNumbers_NR &ran){
      
     
     PA = pi*ran();
-    inclination = 0.95*pi/2*ran();
+    inclination = 0.9*pi/2*ran();
     
+    cospa = cos(PA);
+    sinpa = sin(PA);
+    cosi  = cos(inclination);
+
     if(Rh > 0.0){
-      cxx = ( pow(cos(PA),2) + pow(sin(PA)/cos(inclination),2) )/Rh/Rh;
-      cyy = ( pow(sin(PA),2) + pow(cos(PA)/cos(inclination),2) )/Rh/Rh;
-      cxy = ( 2*cos(PA)*sin(PA)*(1-pow(1/cos(inclination),2)) )/Rh/Rh;
+      cxx = ( cospa*cospa + pow(sinpa/cosi,2) )/Rh/Rh;
+      cyy = ( sinpa*sinpa + pow(cospa/cosi,2) )/Rh/Rh;
+      cxy = ( 2*cospa*sinpa*(1-1./cosi/cosi) )/Rh/Rh;
     }else{
       cxx = cyy = cxy = 0.0;
     }
@@ -368,9 +372,6 @@ void SourceOverzierPlus::randomize(Utilities::RandomNumbers_NR &ran){
   std::cout << spheroid->SurfaceBrightness(tmp.x) << std::endl;
 */
   
-  cospa = cos(PA);
-  sinpa = sin(PA);
-  cosi  = cos(inclination);
   
   for(PosType &mod : modes){
     mod = 5.0e-2*ran();
