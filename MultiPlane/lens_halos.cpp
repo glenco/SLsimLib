@@ -945,8 +945,8 @@ void LensHalo::force_halo_asym(
       if(main_ellip_method==Fourier){alphakappagamma1asym(Rsize,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
       if(main_ellip_method==Schramm){alphakappagamma2asym(Rsize,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
       if(main_ellip_method==Keeton){alphakappagamma3asym(Rsize,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
-      alpha_ellip[0]=alpha_tmp[0];
-      alpha_ellip[1]=alpha_tmp[1];
+      alpha_ellip[0]=alpha_tmp[0]*mass_norm_factor;
+      alpha_ellip[1]=alpha_tmp[1]*mass_norm_factor;
       
       double f1 = (Rmax - r)/(Rmax - Rsize),f2 = (r - Rsize)/(Rmax - Rsize);
       
@@ -973,8 +973,8 @@ void LensHalo::force_halo_asym(
       if(main_ellip_method==Schramm){alphakappagamma2asym(r,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
       if(main_ellip_method==Keeton){alphakappagamma3asym(r,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
       
-      alpha[0] +=  alpha_tmp[0];
-      alpha[1] +=  alpha_tmp[1];
+      alpha[0] +=  alpha_tmp[0]*mass_norm_factor;
+      alpha[1] +=  alpha_tmp[1]*mass_norm_factor;
 
       *kappa += kappa_tmp*mass_norm_factor;
       gamma[0] += 0.5*gamma_tmp[0]*mass_norm_factor;
