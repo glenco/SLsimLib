@@ -70,6 +70,11 @@ endif()
 if(ENABLE_FFTW)
 	include_directories(${FFTW3_INCLUDE_DIRS})
 endif()
+
+if(ENABLE_GSL)
+	include_directories(${GSL_INCLUDE_DIRS})
+endif()
+
 if(ENABLE_HEALPIX)
 	include_directories(${HEALPIX_INCLUDE_DIRS})
 endif()
