@@ -91,6 +91,9 @@ public:
   /// flag=True if halo elliptical
   bool get_flag_elliptical(){return elliptical_flag;};
   void set_flag_elliptical(bool ell){elliptical_flag=ell;};
+  bool get_switch_flag(){return switch_flag;};
+  void set_switch_flag(bool swt){switch_flag=swt;};
+  
   
   /// set cosmology for halo
 	virtual void setCosmology(const COSMOLOGY& cosmo) {}
@@ -286,6 +289,8 @@ protected:
   float pa;
   float fratio=1.0;
   bool elliptical_flag = false;
+  bool switch_flag = false;
+  
   
   void faxial(PosType x,PosType theta,PosType f[]);
   void faxial0(PosType theta,PosType f0[]);

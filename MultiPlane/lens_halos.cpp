@@ -143,6 +143,7 @@ LensHaloNFW::LensHaloNFW(float my_mass,float my_Rsize,PosType my_zlens,float my_
     }else set_flag_elliptical(true);
     if (getEllipMethod()==Pseudo or getEllipMethod()==Fourier){
       set_norm_factor();
+      set_switch_flag(true);
     }
     
   }else{
@@ -976,9 +977,19 @@ void LensHalo::force_halo_asym(
       alpha[0] +=  alpha_tmp[0]*mass_norm_factor;
       alpha[1] +=  alpha_tmp[1]*mass_norm_factor;
 
-      *kappa += kappa_tmp*mass_norm_factor;
-      gamma[0] += 0.5*gamma_tmp[0]*mass_norm_factor;
-      gamma[1] += 0.5*gamma_tmp[1]*mass_norm_factor;
+      if(get_switch_flag()==true){
+        *kappa += kappa_tmp*mass_norm_factor*mass_norm_factor;
+        gamma[0] += 0.5*gamma_tmp[0]*mass_norm_factor*mass_norm_factor;
+        gamma[1] += 0.5*gamma_tmp[1]*mass_norm_factor*mass_norm_factor;
+      }else{
+        *kappa += kappa_tmp*mass_norm_factor;
+        gamma[0] += 0.5*gamma_tmp[0]*mass_norm_factor;
+        gamma[1] += 0.5*gamma_tmp[1]*mass_norm_factor;
+      }
+      
+
+  
+      
       
       *phi += phi_tmp;
       
