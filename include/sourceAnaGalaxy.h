@@ -31,7 +31,7 @@
  */
 class SourceMultiAnaGalaxy: public Source{
 public:
-	SourceMultiAnaGalaxy(PosType mag, PosType BtoT, PosType Reff, PosType Rh, PosType PA, PosType inclination,PosType my_z,PosType *my_theta,Utilities::RandomNumbers_NR &ran);
+	SourceMultiAnaGalaxy(PosType mag, PosType mag_bulge, PosType Reff, PosType Rh, PosType PA, PosType inclination,PosType my_z,PosType *my_theta,Utilities::RandomNumbers_NR &ran);
 	SourceMultiAnaGalaxy(SourceOverzierPlus *my_galaxy);
 	SourceMultiAnaGalaxy(InputParams& params,Utilities::RandomNumbers_NR &ran);
 	~SourceMultiAnaGalaxy();
@@ -127,6 +127,25 @@ public:
   void findonsky(PosType theta[],float radius,std::list<size_t> &indexes){
     indexes.clear();
     searchtree->PointsWithinCircle(theta,radius,indexes);
+    return;
+  }
+  
+  /** \brief finds objects within radios of theta[] on unlensed sky and within a redshift range.    */
+  void findnear(PosType theta[],float radius,std::list<size_t> &indexes,PosType z_range[]){
+    indexes.clear();
+    searchtree->PointsWithinCircle(theta,radius,indexes);
+    
+    PosType z;
+    // make redshift cut for lens sources
+    for(std::list<size_t>::iterator itt = indexes.begin();
+        itt != indexes.end(); ++itt){
+      z = galaxies[*itt].getZ();
+      if(z < z_range[0] || z > z_range[1]){
+        indexes.erase(itt);
+        if(itt != indexes.begin()) --itt;
+      }
+    }
+    
     return;
   }
 

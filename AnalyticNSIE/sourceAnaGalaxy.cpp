@@ -12,7 +12,7 @@
 /// Source model for a single analytic galaxy model.
 SourceMultiAnaGalaxy::SourceMultiAnaGalaxy(
 		PosType mag              /// Total magnitude
-		,PosType BtoT            /// Bulge to total ratio
+		,PosType mag_bulge        /// magnitude of Bulge
 		,PosType Reff            /// Bulge half light radius (arcs)
 		,PosType Rh              /// disk scale hight (arcs)
 		,PosType PA              /// Position angle (radians)
@@ -22,7 +22,7 @@ SourceMultiAnaGalaxy::SourceMultiAnaGalaxy(
     ,Utilities::RandomNumbers_NR &ran
 		): Source(),index(0){
 	
-	galaxies.push_back(SourceOverzierPlus(mag,BtoT,Reff,Rh,PA,inclination,0,my_z,my_theta,ran));
+	galaxies.push_back(SourceOverzierPlus(mag,mag_bulge,Reff,Rh,PA,inclination,0,my_z,my_theta,ran));
 }
 /** Constructor for passing in a pointer to the galaxy model or a list of galaxies instead of constructing it internally.
 *   Useful when there is a list of pre-allocated sources.  The redshifts and sky positions need to be set separately.
@@ -312,25 +312,32 @@ void SourceMultiAnaGalaxy::readDataFile(Utilities::RandomNumbers_NR &ran){
       
 			/***************************/
 			galaxies.push_back(
-                         SourceOverzierPlus(mag,pow(10,-(mag_bulge-mag)/2.5),Ref,Rh
+                         SourceOverzierPlus(mag,mag_bulge,Ref,Rh
                                             ,pa,inclination,HaloID,z_cosm,theta,ran)
-                         //SourceOverzier(mag,pow(10,-(mag_bulge-mag)/2.5),Ref,Rh
-                         //                   ,pa,inclination,HaloID,z_cosm,theta)
 			);
 
 			galaxies.back().setUMag(SDSS_u);
+      galaxies.back().setMagBulge(SDSS_U,SDSS_u_Bulge);
 			galaxies.back().setGMag(SDSS_g);
+      galaxies.back().setMagBulge(SDSS_G,SDSS_g_Bulge);
 			galaxies.back().setRMag(SDSS_r);
+      galaxies.back().setMagBulge(SDSS_R,SDSS_r_Bulge);
 			galaxies.back().setIMag(SDSS_i);
+      galaxies.back().setMagBulge(SDSS_I,SDSS_i_Bulge);
 			galaxies.back().setZMag(SDSS_z);
+      galaxies.back().setMagBulge(SDSS_Z,SDSS_z_Bulge);
 			galaxies.back().setJMag(J_band);
+      galaxies.back().setMagBulge(J,J_band_Bulge);
 			galaxies.back().setHMag(H_band);
+      galaxies.back().setMagBulge(H,H_band_Bulge);
 			galaxies.back().setKMag(Ks_band);
+      galaxies.back().setMagBulge(Ks,Ks_band_Bulge);
 
 			//std::cout << "z:" << z_cosm << " mag " << SDSS_u << " Bulge to total " << pow(10,-(SDSS_u_Bulge-SDSS_u)/2.5)
 			//		<< " bulge size arcsec " << Ref  << " disk size arcsec " << pa << " position angle " << pa << " inclination " << inclination
 			//		<< " theta = " << theta[0] << " " << theta[1] << std::endl;
 
+      assert(galaxies.back().getMag(band) == galaxies.back().getMag() );
 			++j;
 		}
 	}
@@ -402,7 +409,7 @@ void SourceMultiAnaGalaxy::multiplier(
 				theta[0] = x1[0] + (x2[0] - x1[0])*ran();
 				theta[1] = x1[1] + (x2[1] - x1[1])*ran();
 
-				galaxies.push_back(SourceOverzierPlus(galaxies[i].getMag(),galaxies[i].getBtoT()
+				galaxies.push_back(SourceOverzierPlus(galaxies[i].getMag(),galaxies[i].getMagBulge()
                 ,galaxies[i].getReff(),galaxies[i].getRh(),ran()*pi,ran()*2*pi
 					,Nold+NtoAdd,galaxies[i].getZ(),theta,ran));
 

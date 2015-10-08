@@ -11,14 +11,14 @@
 
 /// sets everything to zero
 SourceOverzier::SourceOverzier()
-: haloID(0), Reff(0), Rh(0), BtoT(0), PA(0), inclination(0),
-  cxx(0), cyy(0), cxy(0), sbDo(0), sbSo(0), mag(0)
+: haloID(0), Reff(0), Rh(0),  PA(0), inclination(0),
+  cxx(0), cyy(0), cxy(0), sbDo(0), sbSo(0), mag(0), mag_bulge(0)
 {
 }
 
 SourceOverzier::SourceOverzier(
 		PosType my_mag              /// Total magnitude
-		,double my_BtoT            /// Bulge to total ratio
+		,double my_mag_bulge            /// Bulge to total ratio
 		,double my_Reff         /// Bulge half light radius (arcs)
 		,double my_Rh           /// disk scale hight (arcs)
 		,double my_PA           /// Position angle (radians)
@@ -27,7 +27,7 @@ SourceOverzier::SourceOverzier(
 		,double my_z            /// optional redshift
 		,const double *my_theta          /// optional angular position on the sky
 		){
-	setInternals(my_mag,my_BtoT,my_Reff,my_Rh,my_PA,my_inclination,my_id,my_z,my_theta);
+	setInternals(my_mag,my_mag_bulge,my_Reff,my_Rh,my_PA,my_inclination,my_id,my_z,my_theta);
 }
 
 SourceOverzier::~SourceOverzier()
@@ -35,14 +35,14 @@ SourceOverzier::~SourceOverzier()
 }
 
 /// Sets internal variables.  If default constructor is used this must be called before the surface brightness function.
-void SourceOverzier::setInternals(double my_mag,double my_BtoT,double my_Reff,double my_Rh,double my_PA,double incl,unsigned long my_id,double my_z,const double *my_theta){
+void SourceOverzier::setInternals(double my_mag,double my_mag_bulge,double my_Reff,double my_Rh,double my_PA,double incl,unsigned long my_id,double my_z,const double *my_theta){
 
 	haloID = my_id;
 
 	Reff = my_Reff*arcsecTOradians;
 	Rh = my_Rh*arcsecTOradians;
 	mag = my_mag;
-	BtoT = my_BtoT;
+  mag_bulge = my_mag_bulge;
 	PA = my_PA;
 	inclination = incl;
 
@@ -53,15 +53,9 @@ void SourceOverzier::setInternals(double my_mag,double my_BtoT,double my_Reff,do
 	}else{
 		cxx = cyy = cxy = 0.0;
 	}
-
-	//muDo = my_mag-2.5*log10(1-BtoT)+5*log10(Rh)+1.9955;
-	//muSo = my_mag-2.5*log10(BtoT)+5*log10(Reff)-4.9384;
-
-	if(Rh > 0.0) sbDo = pow(10,-my_mag/2.5)*0.159148*(1-BtoT)/pow(Rh,2);
-	else sbDo = 0.0;
-	if(Reff > 0.0) sbSo = pow(10,-my_mag/2.5)*94.484376*BtoT/pow(Reff,2);
-	else sbSo = 0.0;
 	
+  renormalize();
+  
 	// redshift
 	setZ(my_z);
 	
@@ -69,6 +63,7 @@ void SourceOverzier::setInternals(double my_mag,double my_BtoT,double my_Reff,do
 	// weighted mean between the radii that enclose 99% of the flux
 	// in the pure De Vacouleur/exponential disk case
 	// 6.670 = 3.975*Re = 3.975*1.678*Rh
+  float BtoT = getBtoT();
 	setRadius(6.670*Rh*(1-BtoT)+18.936*Reff*BtoT);
 	
 	// position
@@ -115,8 +110,173 @@ void SourceOverzier::assignParams(InputParams& /* params */)
 {
 }
 
-SourceOverzierPlus::SourceOverzierPlus(PosType my_mag,PosType my_BtoT,PosType my_Reff,PosType my_Rh,PosType my_PA,PosType inclination,unsigned long my_id,PosType my_z,const PosType *theta,Utilities::RandomNumbers_NR &ran):
-SourceOverzier(my_mag,my_BtoT,my_Reff,my_Rh,my_PA,inclination,my_id,my_z,theta)
+PosType SourceOverzier::getMag(Band band) const {
+  
+  switch(band){
+    case SDSS_U:
+      return mag_u;
+    case SDSS_G:
+      return mag_g;
+    case SDSS_R:
+      return mag_r;
+    case SDSS_I:
+      return mag_i;
+    case SDSS_Z:
+      return mag_z;
+    case J:
+      return mag_J;
+    case Ks:
+      return mag_Ks;
+      
+    default:
+      throw std::invalid_argument("band not supported");
+      return 0.0;
+      break;
+  }
+}
+PosType SourceOverzier::getMagBulge(Band band) const {
+  
+  switch(band){
+    case SDSS_U:
+      return mag_u_bulge;
+    case SDSS_G:
+      return mag_g_bulge;
+    case SDSS_R:
+      return mag_r_bulge;
+    case SDSS_I:
+      return mag_i_bulge;
+    case SDSS_Z:
+      return mag_z_bulge;
+    case J:
+      return mag_J_bulge;
+    case Ks:
+      return mag_Ks_bulge;
+      
+    default:
+      throw std::invalid_argument("band not supported");
+      return 0.0;
+      break;
+  }
+}
+
+void SourceOverzier::setMag(Band band,PosType my_mag){
+  switch(band){
+    case SDSS_U:
+      mag_u = my_mag;
+      break;
+    case SDSS_G:
+      mag_g = my_mag;
+      break;
+    case SDSS_R:
+      mag_r = my_mag;
+      break;
+    case SDSS_I:
+      mag_i = my_mag;
+      break;
+    case SDSS_Z:
+      mag_z = my_mag;
+      break;
+    case J:
+      mag_J = my_mag;
+      break;
+    case Ks:
+      mag_Ks = my_mag;
+      break;
+    case H:
+      mag_H = my_mag;
+      break;
+    default:
+      throw std::invalid_argument("band not supported");
+      break;
+  }
+}
+
+void SourceOverzier::setMagBulge(Band band,PosType my_mag){
+  switch(band){
+    case SDSS_U:
+      mag_u_bulge = my_mag;
+      break;
+    case SDSS_G:
+      mag_g_bulge = my_mag;
+      break;
+    case SDSS_R:
+      mag_r_bulge = my_mag;
+      break;
+    case SDSS_I:
+      mag_i_bulge = my_mag;
+      break;
+    case SDSS_Z:
+      mag_z_bulge = my_mag;
+      break;
+    case J:
+      mag_J_bulge = my_mag;
+      break;
+    case Ks:
+      mag_Ks_bulge = my_mag;
+      break;
+    case H:
+      mag_H_bulge = my_mag;
+      break;
+    default:
+      throw std::invalid_argument("band not supported");
+      break;
+  }
+}
+
+ void SourceOverzier::changeBand(Band band){
+  
+  switch(band){
+    case SDSS_U:
+      mag = mag_u;
+      mag_bulge = mag_u_bulge;
+      break;
+    case SDSS_G:
+      mag = mag_g;
+      mag_bulge = mag_g_bulge;
+      break;
+    case SDSS_R:
+      mag = mag_r;
+      mag_bulge = mag_r_bulge;
+      break;
+    case SDSS_I:
+      mag = mag_i;
+      mag_bulge = mag_i_bulge;
+      break;
+    case SDSS_Z:
+      mag = mag_z;
+      mag_bulge = mag_z_bulge;
+      break;
+    case J:
+      mag = mag_J;
+      mag_bulge = mag_J_bulge;
+      break;
+    case Ks:
+      mag = mag_Ks;
+      mag_bulge = mag_Ks_bulge;
+      break;
+    case H:
+      mag = mag_H;
+      mag_bulge = mag_H_bulge;
+      break;
+    default:
+      throw std::invalid_argument("band not supported");
+      break;
+  }
+  
+  renormalize();
+}
+
+void SourceOverzier::renormalize(){
+  float BtoT = getBtoT();
+  if(Rh > 0.0) sbDo = pow(10,-mag/2.5)*0.159148*(1-BtoT)/pow(Rh,2);
+  else sbDo = 0.0;
+  if(Reff > 0.0) sbSo = pow(10,-mag/2.5)*94.484376*BtoT/pow(Reff,2);
+  else sbSo = 0.0;
+}
+
+
+SourceOverzierPlus::SourceOverzierPlus(PosType my_mag,PosType my_mag_bulge,PosType my_Reff,PosType my_Rh,PosType my_PA,PosType inclination,unsigned long my_id,PosType my_z,const PosType *theta,Utilities::RandomNumbers_NR &ran):
+SourceOverzier(my_mag,my_mag_bulge,my_Reff,my_Rh,my_PA,inclination,my_id,my_z,theta)
 {
   
   float minA = 0.01,maxA = 0.2; // minimum and maximum amplitude of arms
@@ -126,21 +286,14 @@ SourceOverzier(my_mag,my_BtoT,my_Reff,my_Rh,my_PA,inclination,my_id,my_z,theta)
   disk_phase = pi*ran(); // add phase of arms
   Ad = minA + (maxA-minA)*ran();
   
-  // spheroid
-  
   // extra cersic component
   //double index = 4 + 3*(ran()-0.5)*2;
   
-  double index = 4*pow(MAX(BtoT,0.03),0.4)*pow(10,0.2*(ran()-0.5));
+  double index = 4*pow(MAX(getBtoT(),0.03),0.4)*pow(10,0.2*(ran()-0.5));
   
   double q = 1 + (0.5-1)*ran();
   
-  //double q = 0.5;
-  double muSo = my_mag-2.5*log10(BtoT);  // this is not correct!
-  //double muSo = my_mag-2.5*log10(BtoT)+5*log10(Reff)-4.9384;
-  
-  //spheroid.reset(new SourceSersic(muSo,Reff,-PA + 10*(ran() - 0.5)*pi/180,index,q,my_z,theta));
-  spheroid = new SourceSersic(muSo,my_Reff,-my_PA + 10*(ran() - 0.5)*pi/180,index,q,my_z,theta);
+  spheroid = new SourceSersic(my_mag_bulge,my_Reff,-my_PA + 10*(ran() - 0.5)*pi/180,index,q,my_z,theta);
   
   cospa = cos(PA);
   sinpa = sin(PA);
@@ -260,40 +413,50 @@ PosType SourceOverzierPlus::SurfaceBrightness(PosType *y){
 }
 
 void SourceOverzierPlus::setBand(Band band){
+
   switch(band){
     case SDSS_U:
       mag = mag_u;
+      mag_bulge = mag_u_bulge;
       break;
     case SDSS_G:
       mag = mag_g;
+      mag_bulge = mag_g_bulge;
       break;
     case SDSS_R:
       mag = mag_r;
+      mag_bulge = mag_r_bulge;
       break;
     case SDSS_I:
       mag = mag_i;
+      mag_bulge = mag_i_bulge;
       break;
     case SDSS_Z:
       mag = mag_z;
+      mag_bulge = mag_z_bulge;
       break;
     case J:
       mag = mag_J;
+      mag_bulge = mag_J_bulge;
       break;
     case Ks:
       mag = mag_Ks;
+      mag_bulge = mag_Ks_bulge;
       break;
     default:
       throw std::invalid_argument("band not supported");
       break;
   }
-  if(Rh > 0.0) sbDo = pow(10,(-mag+oldmag)/2.5);
+  
+  SourceOverzier::renormalize();
   if(Reff > 0.0){
-    spheroid->setMag(mag-2.5*log10(BtoT));
+    spheroid->setMag(mag_bulge);
   }
 }
 
 void SourceOverzierPlus::randomize(Utilities::RandomNumbers_NR &ran){
   
+  float BtoT;
   { // SourceOverzier variables
     
     Reff *= (1 + 0.2*(2*ran()-1.));
@@ -326,15 +489,13 @@ void SourceOverzierPlus::randomize(Utilities::RandomNumbers_NR &ran){
       cxx = cyy = cxy = 0.0;
     }
     
-    if(Rh > 0.0) sbDo = pow(10,-mag/2.5)*0.159148*(1-BtoT)/pow(Rh,2);
-    else sbDo = 0.0;
-    if(Reff > 0.0) sbSo = pow(10,-mag/2.5)*94.484376*BtoT/pow(Reff,2);
-    else sbSo = 0.0;
+    SourceOverzier::renormalize();
     
     // radius
     // weighted mean between the radii that enclose 99% of the flux
     // in the pure De Vacouleur/exponential disk case
     // 6.670 = 3.975*Re = 3.975*1.678*Rh
+    BtoT = getBtoT();
     setRadius(6.670*Rh*(1-BtoT)+18.936*Reff*BtoT);
   }
   
@@ -354,23 +515,8 @@ void SourceOverzierPlus::randomize(Utilities::RandomNumbers_NR &ran){
   
   double q = 1 + (0.5-1)*ran();
   
-  //double q = 0.5;
-  double muSo = mag-2.5*log10(BtoT);  // this is not correct!
-  /*std::cout << spheroid->getMag() << std::endl;
-  std::cout << getX()[0] << " " << getX()[1] << std::endl;
-  std::cout << spheroid->getX()[0] << " " << spheroid->getX()[1] << std::endl;
-  Point_2d tmp = getX();
-  tmp[0] += Reff;
-  std::cout << spheroid->SurfaceBrightness(tmp.x) << std::endl;
-  */
   delete spheroid;
-  spheroid = new SourceSersic(muSo,Reff/arcsecTOradians,-PA + 10*(ran() - 0.5)*pi/180,index,q,zsource,getX());
-  
-  /*std::cout << spheroid->getMag() << std::endl;
-  std::cout << getX()[0] << " " << getX()[1] << std::endl;
-  std::cout << spheroid->getX()[0] << " " << spheroid->getX()[1] << std::endl;
-  std::cout << spheroid->SurfaceBrightness(tmp.x) << std::endl;
-*/
+  spheroid = new SourceSersic(mag_bulge,Reff/arcsecTOradians,-PA + 10*(ran() - 0.5)*pi/180,index,q,zsource,getX());
   
   
   for(PosType &mod : modes){

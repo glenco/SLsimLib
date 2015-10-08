@@ -23,7 +23,7 @@ class SourceOverzier : public Source
 {
 public:
 	SourceOverzier();
-	SourceOverzier(PosType mag,PosType BtoT,PosType Reff,PosType Rh,PosType PA,PosType inclination,unsigned long my_id,PosType my_z=0,const PosType *theta=0);
+	SourceOverzier(PosType mag,PosType mag_bulge,PosType Reff,PosType Rh,PosType PA,PosType inclination,unsigned long my_id,PosType my_z=0,const PosType *theta=0);
 	virtual ~SourceOverzier();
 	
 	void setInternals(PosType mag,PosType BtoT,PosType Reff,PosType Rh,PosType PA,PosType inclination,unsigned long my_id,PosType my_z=0,const PosType *my_theta=0);
@@ -35,31 +35,10 @@ public:
 	unsigned long getID() { return haloID; }
 	
 	/// get magnitude of whole galaxy.  Which band this is in depends on which was passed in the constructor
-	PosType getMag() const { return mag; }
-  PosType getMag(Band band) const {
-
-    switch(band){
-      case SDSS_U:
-        return mag_u;
-      case SDSS_G:
-        return mag_g;
-      case SDSS_R:
-        return mag_r;
-      case SDSS_I:
-        return mag_i;
-      case SDSS_Z:
-        return mag_z;
-      case J:
-        return mag_J;
-      case Ks:
-        return mag_Ks;
-
-      default:
-        throw std::invalid_argument("band not supported");
-        return 0.0;
-        break;
-    }
-  }
+  PosType getMag() const { return mag; }
+  PosType getMag(Band band) const ;
+  PosType getMagBulge() const { return mag_bulge; }
+  PosType getMagBulge(Band band) const;
   
 	/// set u band magnitude
 	void setUMag(PosType m) { mag_u = m; }
@@ -77,46 +56,25 @@ public:
 	void setHMag(PosType m) { mag_H = m; }
 	/// set k band magnitude
 	void setKMag(PosType m) { mag_Ks = m; }
-	
+  
+  /// magnitude in specific band
+  void setMag(Band band,PosType my_mag);
+  
+  /// magnitude in specific band
+  void setMagBulge(Band band,PosType my_mag);
+  
 	/// bulge half light radius in radians
 	PosType getReff() const { return Reff/(pi/180/60/60); }
 	/// disk scale height in radians
 	PosType getRh() const { return Rh/(pi/180/60/60); }
 	
-	PosType getBtoT() const { return BtoT; }
+  /// the bulge to total flux ratio
+	PosType getBtoT() const { return pow(10,(-mag_bulge + mag)/2.5); }
 	PosType getPA() const { return PA; }
 	PosType getInclination() const { return inclination; }
-  PosType oldmag = 0;
-  virtual void setBand(Band band){
-    switch(band){
-      case SDSS_U:
-        mag = mag_u;
-        break;
-      case SDSS_G:
-        mag = mag_g;
-        break;
-      case SDSS_R:
-        mag = mag_r;
-        break;
-      case SDSS_I:
-        mag = mag_i;
-        break;
-      case SDSS_Z:
-        mag = mag_z;
-        break;
-      case J:
-        mag = mag_J;
-        break;
-      case Ks:
-        mag = mag_Ks;
-        break;
-      default:
-        throw std::invalid_argument("band not supported");
-        break;
-    }
-    if(Rh > 0.0) sbDo = pow(10,(-mag+oldmag)/2.5);
-    if(Reff > 0.0) sbSo = pow(10,(-mag+oldmag)/2.5);
-  }
+  
+  /// change the working band
+  virtual void changeBand(Band band);
 	
 	/** Returns minimum of the radii at which disk and bulge have a surf. brightness equal to a fraction f of the central one
 	* TODO: Fabio: Needs to be tested and improved (Bulge is so steep in the center that output values are very small)
@@ -126,6 +84,9 @@ public:
   static PosType *getx(SourceOverzier &sourceo){return sourceo.getX();}
 
 protected:
+  
+  // renormalize the disk and bulge to agree with current mag and mag_bulge
+  void renormalize();
 	void assignParams(InputParams& params);
 	
 	/// haloID
@@ -136,7 +97,7 @@ protected:
 	/// disk scale height
 	PosType Rh;
 	
-	PosType BtoT;
+	//PosType BtoT;
 	PosType PA;
 	PosType inclination;
 	
@@ -144,18 +105,31 @@ protected:
 	PosType sbDo;
 	PosType sbSo;
 	PosType mag;
+  PosType mag_bulge;
 	
-	// colors
-	PosType mag_u;
-	PosType mag_g;
-	PosType mag_r;
-	PosType mag_i;
-	PosType mag_z;
-	PosType mag_J;
-	PosType mag_H;
-	PosType mag_Ks;
-	PosType mag_i1;
-	PosType mag_i2;
+  // colors
+  PosType mag_u;
+  PosType mag_g;
+  PosType mag_r;
+  PosType mag_i;
+  PosType mag_z;
+  PosType mag_J;
+  PosType mag_H;
+  PosType mag_Ks;
+  PosType mag_i1;
+  PosType mag_i2;
+  
+  // bulge colors
+  PosType mag_u_bulge;
+  PosType mag_g_bulge;
+  PosType mag_r_bulge;
+  PosType mag_i_bulge;
+  PosType mag_z_bulge;
+  PosType mag_J_bulge;
+  PosType mag_H_bulge;
+  PosType mag_Ks_bulge;
+  PosType mag_i1_bulge;
+  PosType mag_i2_bulge;
 	
 	// optional position variables
 };
