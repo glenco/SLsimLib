@@ -649,7 +649,7 @@ public:
   LensHaloNFW(float my_mass   /// in solar masses
               ,float my_Rsize  /// in Mpc
               ,PosType my_zlens   /// redshift
-              ,float my_rscale    /// in Mpc
+              ,float my_concentration
               ,float my_fratio    /// axis ratio
               ,float my_pa
               ,int my_stars_N
