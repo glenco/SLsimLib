@@ -78,7 +78,7 @@ public:
 	}
 
 	/// Return redshift of current source.
-	PosType getZ(){return galaxies[index].getZ();}
+	PosType getZ() const {return galaxies[index].getZ();}
 	//PosType getRadius() const {return max(galaxies[index]->Reff,galaxies[index]->Rh);}
 	PosType getRadius() const {return galaxies[index].getRadius();}
 	/// Set redshift of current source.  Only changes the redshift while leaving position fixed.
