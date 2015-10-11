@@ -1060,8 +1060,6 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
 
 /// * RESET SUB STRUCTURE * ///
 
-
-
 void Lens::resetSubstructure(bool verbose){
 
   // test of whether insertSubstructures has been called :
@@ -1162,7 +1160,7 @@ void Lens::resetSubstructure(bool verbose){
   
   if(verbose){
     std::cout << "Lens::resetSubstructures : Max mass = " << mass_max << " , Max radius = "
-    << rmax_max << " number of substructure halos = " << substructure.halos.size() << std::endl ;
+    << rmax_max << " , number of substructure halos = " << substructure.halos.size() << std::endl ;
   }
   
   assert(substructure.halos.size() == NhalosSub);
@@ -1171,7 +1169,141 @@ void Lens::resetSubstructure(bool verbose){
   lensing_planes[lplane_index] = field_planes[fplane_index] = substructure.plane = new LensPlaneTree(substructure.halos.data(), NhalosSub, 0, 0);
 }
 
-/// It is assumed that the position of halo is in physical Mpc
+
+/// * RESET SUB STRUCTURE FOR TEST * ///
+
+// Structure to send back :
+/*
+struct dataResetSub {
+  PosType aveNhalos ;
+  std::size_t NhalosSub ;
+  PosType Dlsub ;
+  PosType rho ;
+  PosType mass_max, rmax_max ;
+  PosType mass_min ;
+};
+ */
+
+// The function that sends it back :
+Lens::dataResetSub Lens::resetSubstructureForTest(){
+  
+  Lens::dataResetSub DATA ;
+  
+  bool verbose = false ;
+  
+  // test of whether insertSubstructures has been called :
+  if(WasInsertSubStructuresCalled == NO)
+  {
+    ERROR_MESSAGE();
+    cout << "Lens::insertSubStructures() has to be called before Lens::resetSubStructure() !" << endl;
+    exit(0);
+  }
+  else if(WasInsertSubStructuresCalled == MAYBE)
+  {
+    
+    // Reconstructing the plane with arguments given to insertSubStructures :
+    
+    // Clearing the substructure halos :
+    Utilities::delete_container(substructure.halos);
+    // substructure.halos.clear();
+    
+    // Calling insertSubStructures :
+    assert(field_Nplanes_current == field_Nplanes_original);
+    assert(field_plane_redshifts.size() == field_plane_redshifts_original.size());
+    assert(field_Dl.size() == field_Dl_original.size());
+    insertSubstructures(substructure.Rregion,substructure.center.x,substructure.Ndensity,substructure.Mmin,substructure.Mmax,substructure.redshift,substructure.alpha,substructure.rho_tidal,verbose);
+    
+    WasInsertSubStructuresCalled = YES ;
+    return ;
+  }
+  // We have WasInsertSubStructuresCalled = YES after this point.
+  
+  // find which plane has the substructures on it
+  int fplane_index = 0,lplane_index = 0;
+  while(field_planes[fplane_index] != substructure.plane) ++fplane_index;
+  while(lensing_planes[lplane_index] != substructure.plane) ++lplane_index;
+  
+  PosType redshift = field_plane_redshifts[fplane_index];
+  PosType Dlsub = Dl[fplane_index]/(1+redshift);
+  DATA.Dlsub = Dlsub ;
+  
+  PosType aveNhalos = substructure.Ndensity*substructure.Rregion*substructure.Rregion*pi;
+  DATA.aveNhalos = aveNhalos ;
+  
+  std::size_t NhalosSub = static_cast<std::size_t>(poidev(float(aveNhalos), seed));
+  DATA.NhalosSub = NhalosSub ;
+  
+  //  Testing if NhalosSub = 0 :
+  if (NhalosSub == 0) std::cout << "Be careful ! NhalosSub = 0 in resetSubstructure !" << std::endl;
+  
+  size_t haloid = field_halos.size();
+  
+  PosType rr,theta;
+  PosType *theta_pos;
+  PosType r = substructure.Mmin/substructure.Mmax,f,mass;
+  
+  PosType Rmax;
+  
+  PosType rho = substructure.rho_tidal*cosmo.rho_crit(0)*cosmo.getOmega_matter()*(1+redshift)*(1+redshift)*(1+redshift);
+  DATA.rho = rho ;
+  
+  Utilities::delete_container(substructure.halos);
+  
+  assert(substructure.halos.size() == 0);
+  
+  PosType mass_max = 0, rmax_max = 0;
+  PosType mass_min = 1.e50 ;
+  
+  for(size_t ii=0;ii<NhalosSub;++ii){
+    
+    // random postion
+    rr = substructure.Rregion*sqrt(ran2(seed));
+    theta_pos = new PosType[3];
+    
+    theta = 2*pi*ran2(seed);
+    
+    // position in proper distance
+    theta_pos[0] = (rr*cos(theta) + substructure.center[0])*Dlsub;
+    theta_pos[1] = (rr*sin(theta) + substructure.center[1])*Dlsub;
+    theta_pos[2] = 0.0;
+    
+    f = ran2(seed);
+    
+    // mass from power law mass function
+    mass = substructure.Mmax * pow( f + pow(r,substructure.alpha+1)*(1-f), 1.0/(1+substructure.alpha) );
+    
+    mass_max = MAX(mass,mass_max);
+    mass_min = MIN(mass,mass_min);
+    DATA.mass_max = mass_max ;
+    DATA.mass_min = mass_min ;
+    
+    // Rmax from tidal truncation
+    Rmax = pow(mass/rho/4/pi,1.0/3.);
+    
+    rmax_max = MAX(Rmax,rmax_max);
+    DATA.rmax_max = rmax_max ;
+    
+    substructure.halos.push_back(new LensHaloPowerLaw(mass,Rmax,redshift,Rmax,1.0,1.0,0,0));
+    substructure.halos.back()->setX(theta_pos);
+    ++haloid;
+    substructure.halos.back()->setID(haloid);
+  }
+  
+  if(verbose){
+    std::cout << "Lens::resetSubstructures : Max mass = " << mass_max << " , Max radius = "
+    << rmax_max << " , number of substructure halos = " << substructure.halos.size() << std::endl ;
+  }
+  
+  assert(substructure.halos.size() == NhalosSub);
+  
+  delete substructure.plane;
+  lensing_planes[lplane_index] = field_planes[fplane_index] = substructure.plane = new LensPlaneTree(substructure.halos.data(), NhalosSub, 0, 0);
+  
+  return DATA;
+}
+
+
+
 void Lens::addMainHaloToPlane(LensHalo* halo)
 {
 	// the redshift and distance of the halo

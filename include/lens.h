@@ -173,7 +173,19 @@ public:
    The Lens::insertSubstructures() function must have been called on this instance of the Lens before.
    */
   void resetSubstructure(bool verbose = false);
+
   
+  // RESET SUB STRUCTURE FOR TEST :
+  struct dataResetSub {
+    PosType aveNhalos ;
+    std::size_t NhalosSub ;
+    PosType Dlsub ;
+    PosType rho ;
+    PosType mass_max, rmax_max ;
+    PosType mass_min ;
+  };
+  dataResetSub resetSubstructureForTest();
+    
 	/// get number of main halos
 	std::size_t getNMainHalos() const;
 	/// get number of main halos of given type
