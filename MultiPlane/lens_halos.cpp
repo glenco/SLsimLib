@@ -977,7 +977,7 @@ void LensHalo::force_halo_asym(
       alpha[0] +=  alpha_tmp[0]*mass_norm_factor;
       alpha[1] +=  alpha_tmp[1]*mass_norm_factor;
 
-      if(get_switch_flag()==true){
+      if(get_switch_flag()==true){  /// case distinction used for elliptical NFWs only (get_switch_flag==true)
         *kappa += kappa_tmp*mass_norm_factor*mass_norm_factor;
         gamma[0] += 0.5*gamma_tmp[0]*mass_norm_factor*mass_norm_factor;
         gamma[1] += 0.5*gamma_tmp[1]*mass_norm_factor*mass_norm_factor;

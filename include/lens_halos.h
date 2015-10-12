@@ -91,8 +91,8 @@ public:
   /// flag=True if halo elliptical
   bool get_flag_elliptical(){return elliptical_flag;};
   void set_flag_elliptical(bool ell){elliptical_flag=ell;};
-  bool get_switch_flag(){return switch_flag;};
-  void set_switch_flag(bool swt){switch_flag=swt;};
+  bool get_switch_flag(){return switch_flag;}; /// flag permits case distinction in force_halo_asym for elliptical NFWs only (get_switch_flag==true), in latter case the mass_norm_factor^2 is used instead of mass_norm_factor.
+  void set_switch_flag(bool swt){switch_flag=swt;}; /// used for elliptical NFWs only, in that case get_switch_flag==true
   
   
   /// set cosmology for halo
