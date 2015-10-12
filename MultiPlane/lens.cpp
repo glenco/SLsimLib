@@ -1414,6 +1414,7 @@ void Lens::createFieldHalos(bool verbose)
 	HALOCalculator *halo_calc = new HALOCalculator(&cosmo,field_min_mass,0.0);
   PosType mo=7.3113e10,M1=2.8575e10,gam1=7.17,gam2=0.201,be=0.557;
   PosType field_galaxy_mass_fraction = 0;
+  PosType r200=0, r_half_stel_mass=0;
   size_t haloid=0;
   
   if (field_min_mass < 1.0e5) {
@@ -1505,6 +1506,8 @@ void Lens::createFieldHalos(bool verbose)
         if(field_galaxy_mass_fraction > 1.0) field_galaxy_mass_fraction = 1;
         sigma = 126*pow(mass*(1-field_galaxy_mass_fraction)/1.0e10,0.25); // From Tully-Fisher and Bell & de Jong 2001
 				//field_halos[j]->initFromMassFunc(mass*(1-field_galaxy_mass_fraction),Rsize,rscale,field_prof_internal_slope,seed);
+        r200 = halo_calc->getR200(); // used for Kravtsov 2013 2013ApJ...764L..31K
+        r_half_stel_mass = pow(10.,(0.95*log10(0.015*r200*1000.)+0.015))/1000.; // in Mpc
       }else{
         field_galaxy_mass_fraction = 0;
       }
@@ -1652,10 +1655,11 @@ void Lens::readInputSimFileMillennium(bool verbose)
 	unsigned long i,j;
 	unsigned long haloid,idd,np;
 	const PosType mo=7.3113e10,M1=2.8575e10,gam1=7.17,gam2=0.201,be=0.557;
+	HALOCalculator *halo_calc = new HALOCalculator(&cosmo,field_min_mass,0.0);
   PosType field_galaxy_mass_fraction = 0;
-  
 	PosType rmax=0,rtmp=0;
   PosType theta[2];
+  PosType r_half_stel_mass=0, r200=0;
   
 	std::ifstream file_in(field_input_sim_file.c_str());
 	if(!file_in){
@@ -1745,6 +1749,8 @@ void Lens::readInputSimFileMillennium(bool verbose)
     tmp_sph_point.OrthographicProjection(central_point_sphere,theta);
     
     float mass = np*8.6e8/cosmo.gethubble(),sigma=0;
+    halo_calc->reset(mass,z);
+    
     
     if(flag_field_gal_on){
       // from Moster et al. 2010ApJ...710..903M
@@ -1752,6 +1758,8 @@ void Lens::readInputSimFileMillennium(bool verbose)
       /pow(1+pow(mass/M1,be),(gam1-gam2)/be)/mass;
       if(field_galaxy_mass_fraction > 1.0) field_galaxy_mass_fraction = 1;
       sigma = 126*pow(mass*(1-field_galaxy_mass_fraction)/1.0e10,0.25); // From Tully-Fisher and Bell & de Jong 2001
+      r200 = halo_calc->getR200(); // used for Kravtsov 2013 2013ApJ...764L..31K ;
+      r_half_stel_mass = pow(10.,(0.95*log10(0.015*r200*1000.)+0.015))/1000.; // in Mpc
     }else{
       field_galaxy_mass_fraction = 0;
     }
@@ -1860,13 +1868,13 @@ void Lens::readInputSimFileMillennium(bool verbose)
             break;
           case pl_gal:
             assert(field_int_prof_gal_slope>0);
-            field_halos.push_back(new LensHaloPowerLaw(mass*field_galaxy_mass_fraction,R_max,z,field_int_prof_gal_slope,(fratio*2.-1.)*0.1+0.9,pa,0,Pseudo));
+            field_halos.push_back(new LensHaloPowerLaw(mass*field_galaxy_mass_fraction,r_half_stel_mass/1.34,z,field_int_prof_gal_slope,(fratio*2.-1.)*0.1+0.9,pa,0,Pseudo)); // relation between r_half_stel_mass and effective radius according to Kravtsev 2013 used: r_half_stel_mass/1.34
             break;
           case hern_gal:
-            field_halos.push_back(new LensHaloHernquist(mass*field_galaxy_mass_fraction,R_max,z,0.0,fratio,pa,0));
+            field_halos.push_back(new LensHaloHernquist(mass*field_galaxy_mass_fraction,r_half_stel_mass/1.34,z,0.0,fratio,pa,0));
             break;
           case jaffe_gal:
-            field_halos.push_back(new LensHaloJaffe(mass*field_galaxy_mass_fraction,R_max,z,0.0,fratio,pa,0));
+            field_halos.push_back(new LensHaloJaffe(mass*field_galaxy_mass_fraction,r_half_stel_mass/1.34,z,0.0,fratio,pa,0));
             break;
             
           default:
@@ -1932,6 +1940,7 @@ void Lens::readInputSimFileMillennium(bool verbose)
   
   field_buffer = 0.0;
 	read_sim_file = true;
+ 	delete halo_calc;
   
 }
 
