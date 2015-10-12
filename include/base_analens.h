@@ -35,7 +35,7 @@
  *	main_sub_Ndensity      Number density of substructures.  They are distributed uniformly.  If zero the other substructure parameters are not needed.
  *	main_sub_beta               Logarithmic slope of the internal clump profile.  Used if main_sub_type == powerlaw
  *	main_sub_alpha              Logarithmic slope of the mass function.
- *	main_sub_Rmax               Maximum radius of most massive substructure (see Metcalf & Amara 2012)
+ *	main_sub_Rsize               Maximum radius of most massive substructure (see Metcalf & Amara 2012)
  *	main_sub_mass_max               Maximum mass
  *	main_sub_mass_min               Minimum mass
  *	main_sub_type               Mass profile of clumps - 0 or nfw,1 or powerlaw, 2 or pointmass
@@ -91,7 +91,7 @@ public:
   /// slope of mass function
   PosType sub_alpha;
   /// radius of largest mass substructures
-  PosType sub_Rmax;
+  PosType sub_Rsize;
   PosType sub_Mmax;
   PosType sub_Mmin;
   PosType sub_theta_force;
@@ -161,7 +161,7 @@ protected:
 
 	/// velocity dispersion of NSIE
 	float sigma;
-	/// Actual edge of mass distribution in elliptical radius, Rmax is the range beyond which the halo is a point mass
+	/// Actual edge of mass distribution in elliptical radius, Rsize is the range beyond which the halo is a point mass
 	float Rsize;
 	/// axis ratio of surface mass distribution
 	float fratio;
@@ -201,7 +201,7 @@ KappaType invmagNSIE(PosType *x,PosType f,PosType bc,PosType theta,float *gam,fl
 
 PosType rmaxNSIE(PosType sigma,PosType mass,PosType f,PosType rc );
 PosType ellipticRadiusNSIE(PosType const *x,PosType f,PosType pa);
-void quadMomNSIE(float mass,float Rmax,float f,float rc,float theta,PosType *quad);
+void quadMomNSIE(float mass,float Rsize,float f,float rc,float theta,PosType *quad);
 
 
 //  in powerlow.c
