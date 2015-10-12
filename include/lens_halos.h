@@ -289,7 +289,7 @@ protected:
   float pa;
   float fratio=1.0;
   bool elliptical_flag = false;
-  bool switch_flag = false;
+  bool switch_flag = false; /// If set to true the correct normalization is applied for asymmetric NFW profiles, the mass_norm_factor is different for the other halos. 
   
   
   void faxial(PosType x,PosType theta,PosType f[]);
