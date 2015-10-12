@@ -1734,6 +1734,7 @@ void Lens::readInputSimFileMillennium(bool verbose)
 			buffer.str(std::string());
 		}
     
+    if(np == 0) continue;
 		//PosType Ds = cosmo->angDist(0,z);
 		//theta[0] = -ra*pi/180.;
 		//theta[1] = dec*pi/180.;
