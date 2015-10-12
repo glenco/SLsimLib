@@ -177,6 +177,7 @@ public:
     PosType rho ;
     PosType mass_max, rmax_max ;
     PosType mass_min ;
+    PosType SumMassSub,AveMassTh ;
   };
   dataResetSub resetSubstructureForTest();
     

@@ -794,10 +794,6 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
     mass = Mass_max*pow( f + pow(r,alpha+1)*(1-f) , 1.0/(1+alpha) ); // in Msun, r = Mass_Min / Mass_Max is dimensionless.
     SumMassSub += mass ;
     
-    // Averaged mass estimated from theory :
-    AveMassTh = Mass_max * ((1+alpha)/(2+alpha)) * ((1-pow(r,2+alpha))/(1-pow(r,1+alpha))); // Average mass for one sub halo.
-    AveMassTh *= NhalosSub ; // Now for the total amount of sub halos.
-    
     // keeping track of the highest substructure mass :
     mass_max = MAX(mass,mass_max); // in Msun
     
@@ -813,6 +809,10 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
     ++haloid;
     substructure.halos.back()->setID(haloid);
   }
+  
+  // Averaged mass estimated from theory :
+  AveMassTh = Mass_max * ((1+alpha)/(2+alpha)) * ((1-pow(r,2+alpha))/(1-pow(r,1+alpha))); // Average mass for one sub halo.
+  AveMassTh *= NhalosSub ; // Now for the total amount of sub halos.
   
   if(verbose)
   {
@@ -946,6 +946,9 @@ void Lens::resetSubstructure(bool verbose){
   PosType redshift = field_plane_redshifts[fplane_index];
   PosType Dlsub = Dl[fplane_index]/(1+redshift);
   
+  // Variable for the sum of the substructure masses :
+  PosType SumMassSub = 0. ;
+  
   PosType aveNhalos = substructure.Ndensity*substructure.Rregion*substructure.Rregion*pi;
   
   if(verbose) std::cout << "Lens::resetSubstructures : Average number of Substructures : " << aveNhalos << std::endl;
@@ -963,8 +966,8 @@ void Lens::resetSubstructure(bool verbose){
   PosType rr,theta;
   PosType *theta_pos;
   PosType r = substructure.Mmin/substructure.Mmax,f,mass;
-  
   PosType Rmax;
+  PosType AveMassTh;
 
   PosType rho = substructure.rho_tidal*cosmo.rho_crit(0)*cosmo.getOmega_matter()*(1+redshift)*(1+redshift)*(1+redshift);
   
@@ -992,6 +995,7 @@ void Lens::resetSubstructure(bool verbose){
     
     // mass from power law mass function
     mass = substructure.Mmax * pow( f + pow(r,substructure.alpha+1)*(1-f), 1.0/(1+substructure.alpha) );
+    SumMassSub += mass ;
     
     mass_max = MAX(mass,mass_max);
     
@@ -1005,6 +1009,10 @@ void Lens::resetSubstructure(bool verbose){
     ++haloid;
     substructure.halos.back()->setID(haloid);
   }
+  
+  // Averaged mass estimated from theory :
+  AveMassTh = substructure.Mmax * ((1+substructure.alpha)/(2+substructure.alpha)) * ((1-pow(r,2+substructure.alpha))/(1-pow(r,1+substructure.alpha))); // Average mass for one sub halo.
+  AveMassTh *= NhalosSub ; // Now for the total amount of sub halos.
   
   if(verbose){
     std::cout << "Lens::resetSubstructures : Max mass = " << mass_max << " , Max radius = "
@@ -1075,6 +1083,9 @@ Lens::dataResetSub Lens::resetSubstructureForTest(){
   while(field_planes[fplane_index] != substructure.plane) ++fplane_index;
   while(lensing_planes[lplane_index] != substructure.plane) ++lplane_index;
   
+  // Variable for the sum of the substructure masses :
+  PosType SumMassSub = 0. ;
+  
   PosType redshift = field_plane_redshifts[fplane_index];
   PosType Dlsub = Dl[fplane_index]/(1+redshift);
   DATA.Dlsub = Dlsub ;
@@ -1093,8 +1104,8 @@ Lens::dataResetSub Lens::resetSubstructureForTest(){
   PosType rr,theta;
   PosType *theta_pos;
   PosType r = substructure.Mmin/substructure.Mmax,f,mass;
-  
   PosType Rmax;
+  PosType AveMassTh;
   
   PosType rho = substructure.rho_tidal*cosmo.rho_crit(0)*cosmo.getOmega_matter()*(1+redshift)*(1+redshift)*(1+redshift);
   DATA.rho = rho ;
@@ -1123,6 +1134,7 @@ Lens::dataResetSub Lens::resetSubstructureForTest(){
     
     // mass from power law mass function
     mass = substructure.Mmax * pow( f + pow(r,substructure.alpha+1)*(1-f), 1.0/(1+substructure.alpha) );
+    SumMassSub += mass ;
     
     mass_max = MAX(mass,mass_max);
     mass_min = MIN(mass,mass_min);
@@ -1140,6 +1152,13 @@ Lens::dataResetSub Lens::resetSubstructureForTest(){
     ++haloid;
     substructure.halos.back()->setID(haloid);
   }
+  
+  DATA.SumMassSub = SumMassSub ;
+  
+  // Averaged mass estimated from theory :
+  AveMassTh = substructure.Mmax * ((1+substructure.alpha)/(2+substructure.alpha)) * ((1-pow(r,2+substructure.alpha))/(1-pow(r,1+substructure.alpha))); // Average mass for one sub halo.
+  AveMassTh *= NhalosSub ; // Now for the total amount of sub halos.
+  DATA.AveMassTh = AveMassTh ;
   
   if(verbose){
     std::cout << "Lens::resetSubstructures : Max mass = " << mass_max << " , Max radius = "
