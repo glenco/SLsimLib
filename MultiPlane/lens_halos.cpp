@@ -132,7 +132,7 @@ LensHaloNFW::LensHaloNFW(float my_mass,float my_Rsize,PosType my_zlens,float my_
   /// If the axis ratio given in the parameter file is set to 1 all ellipticizing routines are skipped.
   if(fratio!=1){
     Rmax = Rmax_to_Rsize_ratio*Rsize;
-    std::cout << getEllipMethod() << " method to ellipticise" << std::endl;
+    //std::cout << getEllipMethod() << " method to ellipticise" << std::endl;
     if(getEllipMethod()==Fourier){
       std::cout << "NFW constructor: slope set to " << get_slope() << std::endl;
       calcModes(fratio, get_slope(), pa, mod); // to ellipticize potential instead of  kappa take calcModes(fratio, 2-get_slope(), pa, mod);
@@ -179,7 +179,7 @@ LensHaloNFW::LensHaloNFW(InputParams& params)
   // If the axis ratio given in the parameter file is set to 1 all ellipticizing routines are skipped.
   if(fratio!=1){
     Rmax = Rmax_to_Rsize_ratio*Rsize;
-    std::cout << getEllipMethod() << " method to ellipticise" << std::endl;
+    //std::cout << getEllipMethod() << " method to ellipticise" << std::endl;
     if(getEllipMethod()==Fourier){
       std::cout << "NFW constructor: slope set to " << get_slope() << std::endl;
       //for(int i=1;i<20;i++){
@@ -402,7 +402,7 @@ LensHaloPseudoNFW::LensHaloPseudoNFW(
   
   if(fratio!=1){
     Rmax = Rmax_to_Rsize_ratio*Rsize;
-    std::cout << getEllipMethod() << " method to ellipticise" << std::endl;
+    //std::cout << getEllipMethod() << " method to ellipticise" << std::endl;
     if(getEllipMethod()==Fourier){
       std::cout << "Note: Fourier modes set to ellipticize kappa at slope main_slope+0.5, i.e. "<< get_slope()+0.5 << std::endl;
       calcModes(fratio, get_slope()+0.5, pa, mod);
@@ -426,7 +426,7 @@ LensHaloPseudoNFW::LensHaloPseudoNFW(InputParams& params)
   make_tables();
   if(fratio!=1){
     Rmax = Rmax_to_Rsize_ratio*Rsize;
-    std::cout << getEllipMethod() << " method to ellipticise" << std::endl;
+    //std::cout << getEllipMethod() << " method to ellipticise" << std::endl;
     if(getEllipMethod()==Fourier){
       std::cout << "Note: Fourier modes set to ellipticize kappa at slope main_slope+0.5, i.e. "<< get_slope()+0.5 << std::endl;
       calcModes(fratio, get_slope()+0.5, pa, mod);
@@ -552,7 +552,7 @@ LensHaloPowerLaw::LensHaloPowerLaw(
   
   if(fratio!=1){
     Rmax = Rmax_to_Rsize_ratio*Rsize;
-    std::cout << getEllipMethod() << " method to ellipticise" << std::endl;
+    //std::cout << getEllipMethod() << " method to ellipticise" << std::endl;
     if(getEllipMethod()==Fourier){
       calcModes(fratio, beta, pa, mod);
       for(int i=1;i<Nmod;i++){
@@ -603,7 +603,7 @@ LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
      }
      
      */
-    std::cout << getEllipMethod() << " method to ellipticise" << std::endl;
+    //std::cout << getEllipMethod() << " method to ellipticise" << std::endl;
     if(getEllipMethod()==Fourier){
       calcModes(fratio, beta, pa, mod);
       for(int i=1;i<Nmod;i++){
@@ -1339,7 +1339,7 @@ LensHaloHernquist::LensHaloHernquist(float my_mass,float my_Rsize,PosType my_zle
   /// If the axis ratio given in the parameter file is set to 1 all ellipticizing routines are skipped.
   if(fratio!=1){
     Rmax = Rmax_to_Rsize_ratio*Rsize;
-    std::cout << getEllipMethod() << " method to ellipticise" << std::endl;
+    //std::cout << getEllipMethod() << " method to ellipticise" << std::endl;
     if(getEllipMethod()==Fourier){
       std::cout << "Hernquist constructor: slope set to " << get_slope() << std::endl;
       calcModes(fratio, get_slope(), pa, mod); // to ellipticize potential instead of kappa use (fratio, get_slope()-2, pa, mod)
@@ -1365,7 +1365,7 @@ LensHaloHernquist::LensHaloHernquist(InputParams& params)
   set_slope(1);
   /// If the axis ratio given in the parameter file is set to 1 all ellipticizing routines are skipped.
   if(fratio!=1){
-    std::cout << getEllipMethod() << " method to ellipticise" << std::endl;
+    //std::cout << getEllipMethod() << " method to ellipticise" << std::endl;
     if(getEllipMethod()==Fourier){
       std::cout << "Hernquist constructor: slope set to " << get_slope() << std::endl;
       calcModes(fratio, get_slope(), pa, mod); // to ellipticize potential instead of kappa use (fratio, get_slope()-2, pa, mod)
@@ -1487,7 +1487,7 @@ LensHaloJaffe::LensHaloJaffe(float my_mass,float my_Rsize,PosType my_zlens,float
   set_slope(1);
   if(fratio!=1){
     Rmax = Rmax_to_Rsize_ratio*Rsize;
-    std::cout << getEllipMethod() << " method to ellipticise" << std::endl;
+    //std::cout << getEllipMethod() << " method to ellipticise" << std::endl;
     if(getEllipMethod()==Fourier){
       std::cout << "Jaffe constructor: slope set to " << get_slope() << std::endl;
       calcModes(fratio, get_slope(), pa, mod);
@@ -1514,7 +1514,7 @@ LensHaloJaffe::LensHaloJaffe(InputParams& params)
   
   /// If the axis ratio given in the parameter file is set to 1 all ellipticizing routines are skipped.
   if(fratio!=1){
-    std::cout << getEllipMethod() << " method to ellipticise" << std::endl;
+    //std::cout << getEllipMethod() << " method to ellipticise" << std::endl;
     if(getEllipMethod()==Fourier){
       std::cout << "Jaffe constructor: slope set to " << get_slope() << std::endl;
       calcModes(fratio, get_slope(), pa, mod);

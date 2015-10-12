@@ -232,7 +232,16 @@ void Lens::assignParams(InputParams& params,bool verbose)
 				flag_field_gal_on = true;
 				
 			}
-			
+      if (field_int_prof_gal_type == pl_gal){
+        if(!params.get("field_internal_profile_galaxy_slope",field_int_prof_gal_slope)){
+          ERROR_MESSAGE();
+          std::cout << "field_internal_profile_galaxy_slope must be specified for field_internal_profile_galaxy PowerLaw in the parameter file "
+          << params.filename() << endl;
+          exit(0);
+        }
+			}
+      
+
 			if(!params.get("field_mass_func_alpha",mass_func_PL_slope))
 				mass_func_PL_slope = 1./6.;
 			if(!params.get("field_prof_internal_slope_pl",field_prof_internal_slope) && field_int_prof_type == pl_lens)
@@ -501,6 +510,15 @@ void Lens::printMultiLens(){
     case nsie_gal:
       std::cout << "NSIE galaxy" << endl;
       break;
+    case pl_gal:
+      std::cout << "PowerLaw galaxy" << endl;
+      break;
+    case hern_gal:
+      std::cout << "Hernquist galaxy" << endl;
+      break;
+    case jaffe_gal:
+      std::cout << "Jaffe galaxy" << endl;
+      break;
 	}
   
 	if(flag_switch_field_off == false){
@@ -578,6 +596,16 @@ void Lens::printMultiLens(){
       case nsie_gal:
         std::cout << "NSIE field galaxy type" << endl;
         break;
+      case pl_gal:
+        std::cout << "PowerLaw field galaxy type" << endl;
+        break;
+      case hern_gal:
+        std::cout << "Hernquist field galaxy type" << endl;
+        break;
+      case jaffe_gal:
+        std::cout << "Jaffe field galaxy type" << endl;
+        break;
+
 		}
 	}
   
@@ -1206,6 +1234,15 @@ void Lens::createMainHalos(InputParams& params)
       case nsie_gal:
         main_halos.push_back(new LensHaloRealNSIE(params));
         break;
+      case pl_gal:
+        main_halos.push_back(new LensHaloPowerLaw(params));
+        break;
+      case hern_gal:
+        main_halos.push_back(new LensHaloHernquist(params));
+        break;
+      case jaffe_gal:
+        main_halos.push_back(new LensHaloJaffe(params));
+        break;
 		}
 	}
   
@@ -1537,10 +1574,23 @@ void Lens::createFieldHalos(bool verbose)
       
 			if(flag_field_gal_on){
         switch(field_int_prof_gal_type){
+          case pl_gal:
+            ERROR_MESSAGE();
+            std::cout << "field_int_prof_gal_type 2, i.e. PowerLaw not yet implemented!!!" << std::endl;
+            break;
+          case hern_gal:
+            ERROR_MESSAGE();
+            std::cout << "field_int_prof_gal_type 3, i.e. Hernquist not yet implemented!!!" << std::endl;
+            break;
+          case jaffe_gal:
+            ERROR_MESSAGE();
+            std::cout << "field_int_prof_gal_type 4, i.e. Jaffe not yet implemented!!!" << std::endl;
+            break;
           case null_gal:
             ERROR_MESSAGE();
-            std::cout << "flag_field_gal_on is true, but field_int_prof_gal_type is null!!!!" << std::endl;
+            std::cout << "flag_field_gal_on is true, but field_int_prof_gal_type is null!!!" << std::endl;
             break;
+            
           case nsie_gal:
             
             float sigma = 126*pow(mass*field_galaxy_mass_fraction/1.0e10,0.25); // From Tully-Fisher and Bell & de Jong 2001
@@ -1796,7 +1846,7 @@ void Lens::readInputSimFileMillennium(bool verbose)
         
         //****** test lines taken out
         //field_galaxy_mass_fraction *= 2;
-        
+
         float fratio = (ran2(seed)+1)*0.5;  //TODO: Ben change this!  This is a kluge.
         float pa = 2*pi*ran2(seed);  //TODO: This is a kluge.
         
@@ -1808,8 +1858,19 @@ void Lens::readInputSimFileMillennium(bool verbose)
           case nsie_gal:
             field_halos.push_back(new LensHaloRealNSIE(mass*field_galaxy_mass_fraction,z,sigma,0.0,fratio,pa,0));
             break;
+          case pl_gal:
+            assert(field_int_prof_gal_slope>0);
+            field_halos.push_back(new LensHaloPowerLaw(mass*field_galaxy_mass_fraction,R_max,z,field_int_prof_gal_slope,(fratio*2.-1.)*0.1+0.9,pa,0,Pseudo));
+            break;
+          case hern_gal:
+            field_halos.push_back(new LensHaloHernquist(mass*field_galaxy_mass_fraction,R_max,z,0.0,fratio,pa,0));
+            break;
+          case jaffe_gal:
+            field_halos.push_back(new LensHaloJaffe(mass*field_galaxy_mass_fraction,R_max,z,0.0,fratio,pa,0));
+            break;
+            
           default:
-            throw std::runtime_error("Don't support any but NSIE galaxies yet!");
+            throw std::runtime_error("Don't support any but NSIE, PowerLaw, Hernquist and Jaffe galaxies yet!");
             break;
 				}
         
