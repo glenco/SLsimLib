@@ -236,6 +236,7 @@ protected:
   /// Radius of halo and NSIE if it exists,  This is the radius used in the tree force solver
   /// to determine when a ray intersects an object.
   float Rmax;
+  float Rmax_halo;
   
   /// The factor by which Rmax is larger than Rsize
   const float Rmax_to_Rsize_ratio = 1.2;

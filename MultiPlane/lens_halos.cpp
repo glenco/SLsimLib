@@ -123,7 +123,6 @@ LensHaloNFW::LensHaloNFW(float my_mass,float my_Rsize,PosType my_zlens,float my_
   stars_implanted = false;
   rscale = Rsize/my_concentration;
   xmax = Rsize/rscale;
-  
   make_tables();
   gmax = InterpolateFromTable(gtable, xmax);
   
@@ -347,13 +346,18 @@ void LensHaloNFW::initFromFile(float my_mass, long *seed, float vmax, float r_ha
   mass = my_mass;
   
   NFW_Utility nfw_util;
-  
   // Find the NFW profile with the same mass, Vmax and R_halfmass
-  nfw_util.match_nfw(vmax,r_halfmass,mass,&rscale,&Rsize);
-  rscale = Rsize/rscale; // Was the concentration
-  xmax = Rsize/rscale;
+  //nfw_util.match_nfw(vmax,r_halfmass,mass,&rscale,&Rmax);
+  //rscale = Rmax/rscale; // Was the concentration
+  //xmax = Rmax/rscale;
+  
+  
+  nfw_util.match_nfw(vmax,r_halfmass,mass,&rscale,&Rmax_halo);
+  rscale = Rmax_halo/rscale; // Was the concentration
+  xmax = Rmax_halo/rscale;
   gmax = InterpolateFromTable(gtable,xmax);
-
+ // std::cout << Rmax_halo << " " << Rsize << std::endl;
+  
 }
 
 void LensHaloNFW::initFromMassFunc(float my_mass, float my_Rsize, float my_rscale, PosType my_slope, long* seed)
@@ -689,7 +693,7 @@ LensHaloRealNSIE::LensHaloRealNSIE(float my_mass,PosType my_zlens,float my_sigma
   //Rsize = rmaxNSIE(sigma,mass,fratio,rcore);
   //Rmax = MAX(1.0,1.0/fratio)*Rsize;  // redefine
   Rsize = rmax_calc();
-  std::cout << "Rsize constr Real NSIE " << Rsize << std::endl;
+  //std::cout << "Rsize constr Real NSIE " << Rsize << std::endl;
   Rmax = Rmax_to_Rsize_ratio*Rsize;
   if(fratio > 1.0 || fratio < 0.01) throw std::invalid_argument("invalid fratio");
   

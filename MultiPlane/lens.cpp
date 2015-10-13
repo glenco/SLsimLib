@@ -1821,6 +1821,7 @@ void Lens::readInputSimFileMillennium(bool verbose)
       
 			field_halos[j]->setZlens(z);
       if(field_int_prof_type != nsie_lens){
+        
         field_halos[j]->initFromFile(mass*(1-field_galaxy_mass_fraction),seed,vmax,r_halfmass*cosmo.gethubble());
 			}
       
@@ -1869,7 +1870,7 @@ void Lens::readInputSimFileMillennium(bool verbose)
             break;
           case pl_gal:
             assert(field_int_prof_gal_slope>0);
-            field_halos.push_back(new LensHaloPowerLaw(mass*field_galaxy_mass_fraction,r_half_stel_mass/1.34,z,field_int_prof_gal_slope,(fratio*2.-1.)*0.1+0.9,pa,0,Pseudo)); // relation between r_half_stel_mass and effective radius according to Kravtsev 2013 used: r_half_stel_mass/1.34
+            field_halos.push_back(new LensHaloPowerLaw(mass*field_galaxy_mass_fraction,r_half_stel_mass/1.34,z,field_int_prof_gal_slope,(fratio*2.-1.)*0.1+0.9,pa,0,Pseudo)); // explanation for r_half_stel_mass/1.34: relation between r_half_stel_mass and effective radius according to Kravtsev 2013 used!
             break;
           case hern_gal:
             field_halos.push_back(new LensHaloHernquist(mass*field_galaxy_mass_fraction,r_half_stel_mass/1.34,z,0.0,fratio,pa,0));
