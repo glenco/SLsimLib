@@ -162,6 +162,8 @@ public:
         ,PosType density_contrast  ///
         ,bool verbose
   );
+  // Function that deletes the substructure :
+  void deleteSubstructures();
   /** \brief This function will randomize the substructure without changing the region, mass function, etc.
    
    The Lens::insertSubstructures() function must have been called on this instance of the Lens before.
