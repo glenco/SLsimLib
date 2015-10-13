@@ -919,7 +919,7 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
     // on previous planes. To do this we would need to be able to expand the vector
     // without copying it or have multiple substructure_halo vectors.
     
-    throw std::runtime_error("Lens::insertSubstructures : Can only add substructure halos ones to a lens.");
+    throw std::runtime_error("Lens::insertSubstructures : Can only add substructure halos once to a lens.");
   }
   
   PosType mass_max = 0,rmax_max = 0;
@@ -1056,7 +1056,31 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
 }
 
 
+/// * DELETE SUB STRUCTURE * ///
 
+void Lens::deleteSubstructures()
+{
+  if(WasInsertSubStructuresCalled == NO)
+  {
+    ERROR_MESSAGE();
+    cout << "Lens::insertSubStructures() has to be called before Lens::deleteSubstructure() !" << endl;
+    exit(0);
+  }
+  
+  // find which plane has the substructures on it :
+  int fplane_index = 0,lplane_index = 0;
+  while(field_planes[fplane_index] != substructure.plane) ++fplane_index;
+  while(lensing_planes[lplane_index] != substructure.plane) ++lplane_index;
+  
+  // deleting the field plane corresponding to the substructure :
+  delete field_planes[fplane_index];
+  
+  // Clearing the substructure halos :
+  Utilities::delete_container(substructure.halos);
+  
+  return ;
+}
+                               
 
 /// * RESET SUB STRUCTURE * ///
 

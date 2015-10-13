@@ -494,7 +494,7 @@ double ** LensHaloFit::compute_dxSub(int Nimages)
   
   // NEEDS TO BE WRITTEN !
   // DIFFERENT PROBLEMS TO SOLVE :
-  // - case of only subtructure on the plane of the LensHaloFit
+  // - case of only substructure on the plane of the LensHaloFit
   // - case where there are field planes (LoS or sub) before the LensHaloFit plane
   // - case where there are field planes (LoS or sub) after the LensHaloFit plane
   
