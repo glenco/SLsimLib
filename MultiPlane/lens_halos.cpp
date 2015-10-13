@@ -350,8 +350,9 @@ void LensHaloNFW::initFromFile(float my_mass, long *seed, float vmax, float r_ha
   
   // Find the NFW profile with the same mass, Vmax and R_halfmass
   nfw_util.match_nfw(vmax,r_halfmass,mass,&rscale,&Rmax);
-  rscale = Rmax/rscale; // Was the concentration
-  xmax = Rmax/rscale;
+  Rsize=Rmax;
+  rscale = Rsize/rscale; // Was the concentration
+  xmax = Rsize/rscale;
   gmax = InterpolateFromTable(gtable,xmax);
 
 }
