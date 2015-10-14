@@ -49,9 +49,11 @@ public:
 	LensHalo(InputParams& params);
 	virtual ~LensHalo();
   
-  /// get the Rmax in Mpc
+  /** get the Rmax which is larger than Rsize in Mpc.  This is the region exterior to which the
+   halo will be considered a point mass.  Between Rsize and Rmax the deflection and shear are interpolated.
+   */
   float get_Rmax() const { return Rmax; }
-  /// get the Rmax in Mpc
+  /// get the Rsize which is the size of the halo in Mpc
   float get_Rsize() const { return Rsize; }
 	/// get the mass solar units
 	float get_mass() const { return mass; }
@@ -175,11 +177,10 @@ protected:
   PosType alpha_int(PosType x) const;
   PosType norm_int(PosType r_max);
 
-  
-  
   void force_halo_sym(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0);
   void force_halo_asym(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0);
   
+  // This is the size of the halo beyond which it does not have the profile expected profile.
   float Rsize = 0;
   
   struct norm_func{
@@ -231,10 +232,10 @@ protected:
   /// error message printout
   void error_message1(std::string name,std::string filename);
   
-  
   float mass;
-  /// Radius of halo and NSIE if it exists,  This is the radius used in the tree force solver
-  /// to determine when a ray intersects an object.
+  
+  // Beyond Rmax the halo will be treated as a point mass.  Between Rsize and Rmax the deflection
+  // and shear are interpolated.  For circularly symmetric lenses Rmax should be equal to Rsize
   float Rmax;
   
   /// The factor by which Rmax is larger than Rsize
