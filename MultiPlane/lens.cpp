@@ -912,15 +912,15 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
   // rho in 1 * (M_sun/Mpc^3) * 1 * (1+z)^3 = M_sun / PhysMpc^3,
   // where Mpc \equiv comoving Mpc.
   
-  if(substructure.halos.size() > 0)
-  {
+  // if(substructure.halos.size() > 0)
+  // {
     // Problem: Expanding the vector is a problem if we want to add substructure
     // multiple times because if the vector is copied it will invalidate the pointers
     // on previous planes. To do this we would need to be able to expand the vector
     // without copying it or have multiple substructure_halo vectors.
     
-    throw std::runtime_error("Lens::insertSubstructures : Can only add substructure halos once to a lens.");
-  }
+    // throw std::runtime_error("Lens::insertSubstructures : Can only add substructure halos once to a lens.");
+  // }
   
   PosType mass_max = 0,rmax_max = 0;
  
@@ -984,6 +984,7 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
   // the new plane must be inserted in order of redshift
   if(field_Nplanes_current != 0)
   {
+    std::cout << field_planes.size() << " " << field_plane_redshifts.size() << " " << field_Dl.size() << " " << field_Nplanes_original << std::endl ;
     assert(field_planes.size() == field_Nplanes_original);
     assert(field_plane_redshifts.size() == field_Nplanes_original);
     assert(field_Dl.size() == field_Nplanes_original);
@@ -1045,7 +1046,7 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
   // assert(field_planes.size() == field_Nplanes);
   
   WasInsertSubStructuresCalled = YES ;
-  
+  std::cout << field_planes.size() << " " << field_Nplanes_current << std::endl ;
   assert(field_planes.size() == field_Nplanes_current);
 
   // Test :
@@ -1069,14 +1070,61 @@ void Lens::deleteSubstructures()
   
   // find which plane has the substructures on it :
   int fplane_index = 0,lplane_index = 0;
-  while(field_planes[fplane_index] != substructure.plane) ++fplane_index;
-  while(lensing_planes[lplane_index] != substructure.plane) ++lplane_index;
+  // while(field_planes[fplane_index] != substructure.plane) ++fplane_index;
+  // while(lensing_planes[lplane_index] != substructure.plane) ++lplane_index;
   
   // deleting the field plane corresponding to the substructure :
-  delete field_planes[fplane_index];
+  // delete field_planes[fplane_index];
+  // delete lensing_planes[lplane_index];
   
   // Clearing the substructure halos :
-  Utilities::delete_container(substructure.halos);
+  field_Nplanes_current -= 1;
+  // Utilities::delete_container(substructure.halos);
+  // Utilities::delete_container(substructure.plane);
+  // delete(lensing_planes[lplane_index]);
+  // delete(field_planes[fplane_index]);
+  
+  // We have to cancel that :
+  //     it = field_planes.insert(it, new LensPlaneTree(substructure.halos.data(), NhalosSub, 0., 0));
+  //     field_plane_redshifts.insert(itz,redshift);
+  //     field_Dl.insert(itd,Dl*(1+redshift));
+  //     substructure.plane = *it;
+  
+  // Let's cancel it :
+  std::cout << " ===== deleteSubstructure ===== " << std::endl ;
+  for(int i=0;i<field_planes.size();i++) std::cout << field_planes[i] << " " ;
+  std::cout << std::endl;
+  for(int i=0;i<field_plane_redshifts.size();i++) std::cout << field_plane_redshifts[i] << " " ;
+  std::cout << std::endl;
+  for(int i=0;i<field_Dl.size();i++) std::cout << field_Dl[i] << " " ;
+  std::cout << std::endl;
+  std::cout << " ========================= " << std::endl ;
+  std::vector<LensPlane*>::iterator it = field_planes.begin();
+  std::vector<PosType>::iterator itz = field_plane_redshifts.begin();
+  std::vector<PosType>::iterator itd = field_Dl.begin();
+  while(*itz < substructure.redshift && it != field_planes.end()){
+    ++it;
+    ++itz;
+    ++itd;
+  }
+  field_planes.erase(it);
+  field_plane_redshifts.erase(itz);
+  field_Dl.erase(itd);
+  // substructure.plane = new LensPlaneTree(substructure.halos.data(), 0, 0, 0);
+  
+  std::cout << " ===== deleteSubstructure ===== " << std::endl ;
+  for(int i=0;i<field_planes.size();i++) std::cout << field_planes[i] << " " ;
+  std::cout << std::endl;
+  for(int i=0;i<field_plane_redshifts.size();i++) std::cout << field_plane_redshifts[i] << " " ;
+  std::cout << std::endl;
+  for(int i=0;i<field_Dl.size();i++) std::cout << field_Dl[i] << " " ;
+  std::cout << std::endl;
+  std::cout << " ========================= " << std::endl ;
+  
+  combinePlanes(false);
+  
+  substructure.halos.clear();
+  substructure.plane = new LensPlaneTree(substructure.halos.data(), 0, 0, 0);
   
   return ;
 }
@@ -1095,7 +1143,6 @@ void Lens::resetSubstructure(bool verbose){
   }
   else if(WasInsertSubStructuresCalled == MAYBE)
   {
-    
     // Reconstructing the plane with arguments given to insertSubStructures :
 
     // Clearing the substructure halos :
@@ -1153,9 +1200,10 @@ void Lens::resetSubstructure(bool verbose){
   if(verbose) std::cout << "Lens::resetSubstructures : aveNhalos = " << aveNhalos << " , NhalosSub = " << NhalosSub << " , rho = " << rho << " , Dlsub = " << Dlsub << std::endl ;
 
   PosType mass_max = 0,rmax_max = 0;
-  for(size_t ii=0;ii<NhalosSub;++ii){
+  for(size_t ii=0;ii<NhalosSub;++ii)
+  {
     
-    // random postion
+    // random position
     rr = substructure.Rregion*sqrt(ran2(seed));
     theta_pos = new PosType[3];
     
