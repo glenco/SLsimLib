@@ -34,6 +34,93 @@ SourceOverzier::~SourceOverzier()
 {
 }
 
+SourceOverzier::SourceOverzier(const SourceOverzier &s)
+:Source(s){
+/// bulge half light radius
+  Reff = s.Rh;
+  Rh = s.Rh;
+  PA = s.PA;
+  inclination = s.inclination;
+
+  cxx = s.cxx;
+  cyy = s.cyy;
+  cxy = s.cxy;
+  sbDo = s.sbDo;
+  sbSo = s.sbSo;
+  mag = s.mag;
+  mag_bulge = s.mag_bulge;
+
+
+  // bulge colors
+  mag_u = s.mag_u;
+  mag_g = s.mag_g;
+  mag_r = s.mag_r;
+  mag_i = s.mag_i;
+  mag_z = s.mag_z ;
+  mag_J = s.mag_J;
+  mag_H = s.mag_H;
+  mag_Ks = s.mag_Ks;
+  mag_i1 = s.mag_i1;
+  mag_i2 = s.mag_i2;
+  
+  // bulge colors
+  mag_u_bulge = s.mag_u_bulge;
+  mag_g_bulge = s.mag_g_bulge;
+  mag_r_bulge = s.mag_r_bulge;
+  mag_i_bulge = s.mag_i_bulge;
+  mag_z_bulge = s.mag_z_bulge ;
+  mag_J_bulge = s.mag_J_bulge;
+  mag_H_bulge = s.mag_H_bulge;
+  mag_Ks_bulge = s.mag_Ks_bulge;
+  mag_i1_bulge = s.mag_i1_bulge;
+  mag_i2_bulge = s.mag_i2_bulge;
+}
+SourceOverzier& SourceOverzier::operator=(const SourceOverzier &s){
+  if(this == &s) return *this;
+  
+  Source::operator=(s);
+  /// bulge half light radius
+  Reff = s.Rh;
+  Rh = s.Rh;
+  PA = s.PA;
+  inclination = s.inclination;
+  
+  cxx = s.cxx;
+  cyy = s.cyy;
+  cxy = s.cxy;
+  sbDo = s.sbDo;
+  sbSo = s.sbSo;
+  mag = s.mag;
+  mag_bulge = s.mag_bulge;
+  
+  
+  // bulge colors
+  mag_u = s.mag_u;
+  mag_g = s.mag_g;
+  mag_r = s.mag_r;
+  mag_i = s.mag_i;
+  mag_z = s.mag_z ;
+  mag_J = s.mag_J;
+  mag_H = s.mag_H;
+  mag_Ks = s.mag_Ks;
+  mag_i1 = s.mag_i1;
+  mag_i2 = s.mag_i2;
+  
+  // bulge colors
+  mag_u_bulge = s.mag_u_bulge;
+  mag_g_bulge = s.mag_g_bulge;
+  mag_r_bulge = s.mag_r_bulge;
+  mag_i_bulge = s.mag_i_bulge;
+  mag_z_bulge = s.mag_z_bulge ;
+  mag_J_bulge = s.mag_J_bulge;
+  mag_H_bulge = s.mag_H_bulge;
+  mag_Ks_bulge = s.mag_Ks_bulge;
+  mag_i1_bulge = s.mag_i1_bulge;
+  mag_i2_bulge = s.mag_i2_bulge;
+  
+  return *this;
+}
+
 /// Sets internal variables.  If default constructor is used this must be called before the surface brightness function.
 void SourceOverzier::setInternals(double my_mag,double my_mag_bulge,double my_Reff,double my_Rh,double my_PA,double incl,unsigned long my_id,double my_z,const double *my_theta){
 

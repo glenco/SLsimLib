@@ -998,7 +998,6 @@ void PixelMap::drawdisk(
 ){
   
   PosType x1[2],x2[2];
-  PosType N = double(Nstrip);
   
   // To do the circle (easy) :
   // ========================

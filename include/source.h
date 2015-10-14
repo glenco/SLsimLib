@@ -24,15 +24,35 @@ public:
     source_r = source_x[0] = source_x[1] = zsource = 0;
     setSBlimit_magarcsec(30.);
   };
+  
+  virtual ~Source();
 
-	virtual ~Source();
+  Source(const Source &s):
+    source_r(s.source_r),
+    source_x(s.source_x),
+    zsource(s.zsource),
+    DlDs(s.DlDs),
+    sb_limit(s.sb_limit){}
+  
+  Source & operator=(const Source &s){
+    if(this == &s) return *this;
+    source_r = s.source_r;
+    source_x = s.source_x;
+    zsource = s.zsource;
+    DlDs = s.DlDs;
+    sb_limit = s.sb_limit;
+    
+    return *this;
+  }
+
+
 	
 	// in lens.cpp
 	// TODO: make SurfaceBrightness take a const double*
 	/// Surface brightness of source in grid coordinates not source centered coordinates.
-	virtual PosType SurfaceBrightness(PosType *y) = 0;
-	virtual PosType getTotalFlux() const = 0;
-	virtual void printSource() = 0;
+  virtual PosType SurfaceBrightness(PosType *y) = 0;
+  virtual PosType getTotalFlux() const = 0;
+  virtual void printSource() = 0;
 
 	/// Gets sb_limit in erg/cm^2/sec/rad^2/Hz
 	PosType getSBlimit(){return sb_limit;}
@@ -145,6 +165,38 @@ public:
 	SourceShapelets(PosType my_z, PosType my_mag, PosType my_scale, std::valarray<PosType> my_coeff, PosType* my_center = 0, PosType my_ang = 0.);
 	SourceShapelets(PosType my_z, PosType my_mag, std::string shap_file, PosType *my_center = 0, PosType my_ang = 0.);
 	SourceShapelets(std::string shap_file, PosType* my_center = 0, PosType my_ang = 0.);
+  
+  SourceShapelets(const SourceShapelets &s):Source(s){
+    coeff = s.coeff;
+    n1 = s.n1;
+    n2 = s.n2;
+    id = s.id;
+    flux = s.flux;
+    mag = s.mag;
+    ang = s.ang;
+    for(int i=0; i<10 ; ++i) mags[i] = s.mags[i];
+    for(int i=0; i<10 ; ++i) fluxes[i] = s.fluxes[i];
+    coeff_flux = s.coeff_flux;
+  }
+
+  SourceShapelets & operator= (const SourceShapelets &s){
+    if(this == &s) return *this;
+    
+    Source::operator=(s);
+    coeff = s.coeff;
+    n1 = s.n1;
+    n2 = s.n2;
+    id = s.id;
+    flux = s.flux;
+    mag = s.mag;
+    ang = s.ang;
+    for(int i=0; i<10 ; ++i) mags[i] = s.mags[i];
+    for(int i=0; i<10 ; ++i) fluxes[i] = s.fluxes[i];
+    coeff_flux = s.coeff_flux;
+
+    return *this;
+  }
+
 	PosType SurfaceBrightness(PosType *y);
 	void printSource();
 	inline PosType getTotalFlux() const {return flux;}
@@ -161,10 +213,11 @@ private:
 	void NormalizeFlux();
 	std::valarray<PosType> coeff;
 	int n1,n2;
-    int id;
+  int id;
 	PosType flux, mag;
 	PosType ang;
-  PosType mags[10], fluxes[10];
+  PosType mags[10];
+  PosType fluxes[10];
   PosType coeff_flux;
   static Band shape_band[10];
 };

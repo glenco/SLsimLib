@@ -238,7 +238,7 @@ void GridMap::writePixelMapUniform(
   map.Clean();
   
   std::thread thr[20];
-  int nthreads = N_THREADS;
+  int nthreads = Utilities::GetNThreads();
   
   int chunk_size;
   do{

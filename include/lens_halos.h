@@ -64,7 +64,8 @@ public:
   //void setX(PosType *PosXY) { posHalo[0] = PosXY[0] ; posHalo[1] = PosXY[1] ; }
   
   /// get the position of the Halo in physical Mpc on the lens plane
-  void getX(PosType * MyPosHalo) const { MyPosHalo[0] = posHalo[0]*Dist ; MyPosHalo[1] = posHalo[1]*Dist; }
+  void getX(PosType * MyPosHalo) const { MyPosHalo[0] = posHalo[0]*Dist ;
+    MyPosHalo[1] = posHalo[1]*Dist; }
 
   /// set the position of the Halo in radians
   void setTheta(PosType PosX, PosType PosY) { posHalo[0] = PosX ; posHalo[1] = PosY ; }
@@ -108,7 +109,6 @@ public:
 	virtual void setCosmology(const COSMOLOGY& cosmo) {}
 	
 	/// calculate the lensing properties -- deflection, convergence, and shear
-  
 	virtual void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening=1.0);
   
 	/// force tree calculation for stars
@@ -159,11 +159,9 @@ public:
   /// set radius rsize beyond which interpolation values between alpha_ellip and alpha_iso are computed
   void set_rsize(float my_rsize){ Rsize = my_rsize;};
 	float get_rsize(){return Rsize;};
-	
-  
+
   // all of the following functions were used for Ansatz III w derivatives of the Fourier modes
   
-
   /// perform some basic consistancy checks for halo
   bool test();
   
@@ -186,10 +184,9 @@ protected:
   PosType alpha_int(PosType x) const;
   PosType norm_int(PosType r_max);
 
-  
-  
   void force_halo_sym(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0);
   void force_halo_asym(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0);
+  
   /// only used for force_halo_asym: inner radius in terms of Rmax of interpolation region between elliptical and isotropic alpha, e.g. Rsize=0.8 means that between 80 per cent of Rmax and Rmax alpha values are interpolated
   float Rsize = 1;
   
@@ -200,9 +197,6 @@ protected:
     //PosType operator ()(PosType theta) {halo.alpha_asym(r_max, theta, alpha_arr); return alpha_arr[0]*cos(theta)*cos(theta)+alpha_arr[1]*sin(theta)*sin(theta);}
     PosType operator ()(PosType theta) {return halo.alpha_ell(r_max, theta);}
   };
-  
-  
-  //friend struct Ig_func;
   
   struct Ialpha_func{
     Ialpha_func(LensHalo& halo): halo(halo){};

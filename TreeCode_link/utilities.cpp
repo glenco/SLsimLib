@@ -643,6 +643,6 @@ unsigned long prevpower(unsigned long k){
     return map_out;
   }
 
-
+  int GetNThreads(){return N_THREADS;}
 }
 

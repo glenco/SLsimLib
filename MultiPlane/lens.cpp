@@ -657,12 +657,7 @@ void Lens::createFieldPlanes(bool verbose)
 		for(std::size_t j = k1; j < k2; ++j)
 		{
 			sb += field_halos[j]->get_mass();
-			
-			//** test lines********
-			//if(max_r < (tmp = halo_pos[j][0]*halo_pos[j][0] + halo_pos[j][1]*halo_pos[j][1])) max_r = tmp;
-			
-      PosType tmp[2];
-      
+			     
       assert( field_Dl[i] > 0 );
 			// convert to proper distance on the lens plane
       //field_halos[j]->getX(tmp);
@@ -1677,7 +1672,6 @@ void Lens::readInputSimFileMillennium(bool verbose)
 	// read in data
 	int j_max;
 	PosType mass_max=0,R_max=0,V_max=0,minmass=1e30;
-	//PosType *theta,*theta2;
 	int ncolumns = 9;
 	//int ncolumns = 13;
   
@@ -1739,7 +1733,6 @@ void Lens::readInputSimFileMillennium(bool verbose)
     if(rtmp > rmax) rmax = rtmp;
     
 		// position on lens plane
-		//theta = new PosType[2];
     tmp_sph_point.OrthographicProjection(central_point_sphere,theta);
     
     float mass = np*8.6e8/cosmo.gethubble(),sigma=0;
@@ -1819,14 +1812,6 @@ void Lens::readInputSimFileMillennium(bool verbose)
       
 			//halo_pos_vec.push_back(theta);
       field_halos.back()->setTheta(theta);  // this will be converted to proper distence when planes are constructed
-      
-      /****** test **********
-      {
-        PosType tmpx[2];
-        field_halos.back()->getX(tmpx);
-        std::cout << "halo " << tmpx[0] << "  " << tmpx[1] << " " << field_halos.back()->get_mass()
-        << " " << field_halos.back()->get_Rmax() << " " << field_halos.back()->getID() << std::endl;
-      }*/
       
 			if(mass > mass_max) {
 				mass_max = mass;

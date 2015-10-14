@@ -1326,5 +1326,8 @@ double bart(
 #undef ITMAX
 #undef SHFT
  */
+  
+  /// returns the compiler variable N_THREADS that is maximum number of threads to be used.
+  int GetNThreads();
 }
 #endif

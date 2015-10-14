@@ -122,7 +122,7 @@ void Lens::rayshooterInternal(
   
   // For refining the grid and shoot new rays.
   int nthreads, rc;
-  nthreads = N_THREADS;
+  nthreads = Utilities::GetNThreads();
   
   int chunk_size;
   do{

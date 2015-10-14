@@ -24,6 +24,10 @@ class SourceOverzier : public Source
 public:
 	SourceOverzier();
 	SourceOverzier(PosType mag,PosType mag_bulge,PosType Reff,PosType Rh,PosType PA,PosType inclination,unsigned long my_id,PosType my_z=0,const PosType *theta=0);
+  
+  SourceOverzier(const SourceOverzier &s);
+  
+  SourceOverzier& operator=(const SourceOverzier &s);
 	virtual ~SourceOverzier();
 	
 	void setInternals(PosType mag,PosType BtoT,PosType Reff,PosType Rh,PosType PA,PosType inclination,unsigned long my_id,PosType my_z=0,const PosType *my_theta=0);
