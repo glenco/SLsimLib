@@ -1066,31 +1066,11 @@ void Lens::deleteSubstructures()
     ERROR_MESSAGE();
     cout << "Lens::insertSubStructures() has to be called before Lens::deleteSubstructure() !" << endl;
     exit(0);
-  }
+  };
   
-  // find which plane has the substructures on it :
-  int fplane_index = 0,lplane_index = 0;
-  // while(field_planes[fplane_index] != substructure.plane) ++fplane_index;
-  // while(lensing_planes[lplane_index] != substructure.plane) ++lplane_index;
-  
-  // deleting the field plane corresponding to the substructure :
-  // delete field_planes[fplane_index];
-  // delete lensing_planes[lplane_index];
-  
-  // Clearing the substructure halos :
   field_Nplanes_current -= 1;
-  // Utilities::delete_container(substructure.halos);
-  // Utilities::delete_container(substructure.plane);
-  // delete(lensing_planes[lplane_index]);
-  // delete(field_planes[fplane_index]);
-  
-  // We have to cancel that :
-  //     it = field_planes.insert(it, new LensPlaneTree(substructure.halos.data(), NhalosSub, 0., 0));
-  //     field_plane_redshifts.insert(itz,redshift);
-  //     field_Dl.insert(itd,Dl*(1+redshift));
-  //     substructure.plane = *it;
-  
-  // Let's cancel it :
+
+  /*
   std::cout << " ===== deleteSubstructure ===== " << std::endl ;
   for(int i=0;i<field_planes.size();i++) std::cout << field_planes[i] << " " ;
   std::cout << std::endl;
@@ -1099,6 +1079,9 @@ void Lens::deleteSubstructures()
   for(int i=0;i<field_Dl.size();i++) std::cout << field_Dl[i] << " " ;
   std::cout << std::endl;
   std::cout << " ========================= " << std::endl ;
+   */
+  
+  // Finding the iterators that correspond to the substructure plane :
   std::vector<LensPlane*>::iterator it = field_planes.begin();
   std::vector<PosType>::iterator itz = field_plane_redshifts.begin();
   std::vector<PosType>::iterator itd = field_Dl.begin();
@@ -1107,11 +1090,13 @@ void Lens::deleteSubstructures()
     ++itz;
     ++itd;
   }
+  
+  // Erasing the corresponding quantities :
   field_planes.erase(it);
   field_plane_redshifts.erase(itz);
   field_Dl.erase(itd);
-  // substructure.plane = new LensPlaneTree(substructure.halos.data(), 0, 0, 0);
   
+  /*
   std::cout << " ===== deleteSubstructure ===== " << std::endl ;
   for(int i=0;i<field_planes.size();i++) std::cout << field_planes[i] << " " ;
   std::cout << std::endl;
@@ -1120,9 +1105,12 @@ void Lens::deleteSubstructures()
   for(int i=0;i<field_Dl.size();i++) std::cout << field_Dl[i] << " " ;
   std::cout << std::endl;
   std::cout << " ========================= " << std::endl ;
+   */
   
+  // Recombining the planes :
   combinePlanes(false);
   
+  // Clearing the substructure from the previous halos :
   substructure.halos.clear();
   substructure.plane = new LensPlaneTree(substructure.halos.data(), 0, 0, 0);
   
