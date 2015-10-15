@@ -484,6 +484,10 @@ Band SourceShapelets::shape_band[10] = {F435W,F606W,F775W,F850LP,F110W,F160W,SDS
 
 void SourceShapelets::setActiveBand(Band band)
 {
+  if(band == EUC_VIS) band = SDSS_I;
+  if(band == EUC_Y) band = F110W;
+  if(band == EUC_J) band = F110W;
+  if(band == EUC_H) band = F160W;
   for (int i = 0; i < 10; i++)
   {
     if (shape_band[i] == band)
@@ -493,6 +497,7 @@ void SourceShapelets::setActiveBand(Band band)
       return;
     }
   }
+  
   std::cout << "The band is not available! Available bands are F435W,F606W,F775W,F850LP,F110W,F160W,SDSS_U,SDSS_G,SDSS_R,SDSS_I" << std::endl;
   throw std::invalid_argument("band not supported");
 }

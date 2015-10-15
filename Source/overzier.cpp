@@ -215,6 +215,14 @@ PosType SourceOverzier::getMag(Band band) const {
     case Ks:
       return mag_Ks;
       
+    case EUC_VIS:
+      return mag_i;
+    case EUC_J:
+      return mag_J;
+    case EUC_H:
+      return mag_H;
+
+      
     default:
       throw std::invalid_argument("band not supported");
       return 0.0;
@@ -238,6 +246,14 @@ PosType SourceOverzier::getMagBulge(Band band) const {
       return mag_J_bulge;
     case Ks:
       return mag_Ks_bulge;
+
+    case EUC_VIS:
+      return mag_i_bulge;
+    case EUC_J:
+      return mag_J_bulge;
+    case EUC_H:
+      return mag_H_bulge;
+
       
     default:
       throw std::invalid_argument("band not supported");
@@ -342,6 +358,19 @@ void SourceOverzier::setMagBulge(Band band,PosType my_mag){
       mag_bulge = mag_Ks_bulge;
       break;
     case H:
+      mag = mag_H;
+      mag_bulge = mag_H_bulge;
+      break;
+      
+    case EUC_VIS:
+      mag = mag_i;
+      mag_bulge = mag_i_bulge;
+      break;
+    case EUC_J:
+      mag = mag_J;
+      mag_bulge = mag_J_bulge;
+      break;
+    case EUC_H:
       mag = mag_H;
       mag_bulge = mag_H_bulge;
       break;
@@ -530,6 +559,20 @@ void SourceOverzierPlus::setBand(Band band){
       mag = mag_Ks;
       mag_bulge = mag_Ks_bulge;
       break;
+      
+    case EUC_VIS:
+      mag = mag_i;
+      mag_bulge = mag_i_bulge;
+      break;
+    case EUC_J:
+      mag = mag_J;
+      mag_bulge = mag_J_bulge;
+      break;
+    case EUC_H:
+      mag = mag_H;
+      mag_bulge = mag_H_bulge;
+      break;
+      
     default:
       throw std::invalid_argument("band not supported");
       break;
