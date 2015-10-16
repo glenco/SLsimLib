@@ -168,6 +168,7 @@ public:
         ,PosType density_contrast  ///
         ,bool verbose
   );
+
   // Function that deletes the substructure :
   void deleteSubstructures();
   /** \brief This function will randomize the substructure without changing the region, mass function, etc.
@@ -179,16 +180,27 @@ public:
   
   // RESET SUB STRUCTURE FOR TEST :
   struct dataResetSub {
-    PosType aveNhalos ;
-    std::size_t NhalosSub ;
-    PosType Dlsub ;
-    PosType rho ;
-    PosType mass_max, rmax_max ;
-    PosType mass_min ;
-    PosType SumMassSub,AveMassTh ;
+    PosType aveNhalos = 0;
+    std::size_t NhalosSub = 0;
+    PosType Dlsub = 0.;
+    PosType rho = 0.;
+    PosType mass_max, rmax_max = 0.;
+    PosType mass_min = 0.;
+    PosType SumMassSub,AveMassTh = 0.;
   };
   dataResetSub resetSubstructureForTest();
-    
+  dataResetSub insertSubstructuresForTest(
+                                          PosType Rregion            /// radius of region in which substructures are inserted (radians)
+                                          ,PosType center[]          /// center of region in which the substructures are inserted (radians)
+                                          ,PosType NumberDensity     /// number density per radian^2 of all substructures
+                                          ,PosType Mass_min          /// minimum mass of substructures
+                                          ,PosType Mass_max          /// maximum mass of substructures
+                                          ,PosType redshift          /// redshift of substructures
+                                          ,PosType alpha             /// index of mass function (dN/dm \propto m^alpha)
+                                          ,PosType density_contrast  ///
+                                          ,bool verbose
+                                          );
+  
 	/// get number of main halos
 	std::size_t getNMainHalos() const;
 	/// get number of main halos of given type
