@@ -561,6 +561,8 @@ LensHaloPowerLaw::LensHaloPowerLaw(
       }
     }else set_flag_elliptical(true);
     if (getEllipMethod()==Pseudo){
+      fratio=0.00890632+0.99209115*pow(fratio,0.33697702); /// translate fratio's needed for kappa into fratio used for potential
+      //std::cout << "Pseudo-elliptical method requires fratio transformation, new fratio=" << fratio <<   std::endl;
       set_norm_factor();
     }
   }else{
