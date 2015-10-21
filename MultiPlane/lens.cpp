@@ -946,7 +946,7 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
     
     // keeping track of the highest/lowest substructure mass :
     mass_max = MAX(mass,mass_max); // in Msun
-    mass_min = MIN(mass,Mass_min);
+    mass_min = MIN(mass,mass_min);
     
     // Rsize from tidal truncation
     Rsize = pow(mass/rho/4/pi,1.0/3.); // in [Msun / (Msun / PhysMpc^3)]^(1/3) = PhysMpc
