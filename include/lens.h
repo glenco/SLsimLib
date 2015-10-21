@@ -159,7 +159,7 @@ public:
         ,PosType Mass_max          /// maximum mass of substructures
         ,PosType redshift          /// redshift of substructures
         ,PosType alpha             /// index of mass function (dN/dm \propto m^alpha)
-        ,PosType density_contrast  ///
+        ,PosType density_contrast  /// density contrast of the substructure
         ,bool verbose
   );
 
@@ -171,29 +171,21 @@ public:
    */
   void resetSubstructure(bool verbose = false);
 
-  
-  // RESET SUB STRUCTURE FOR TEST :
-  struct dataResetSub {
-    PosType aveNhalos = 0;
-    std::size_t NhalosSub = 0;
-    PosType Dlsub = 0.;
-    PosType rho = 0.;
-    PosType mass_max, rmax_max = 0.;
-    PosType mass_min = 0.;
-    PosType SumMassSub,AveMassTh = 0.;
-  };
-  dataResetSub resetSubstructureForTest();
-  dataResetSub insertSubstructuresForTest(
-                                          PosType Rregion            /// radius of region in which substructures are inserted (radians)
-                                          ,PosType center[]          /// center of region in which the substructures are inserted (radians)
-                                          ,PosType NumberDensity     /// number density per radian^2 of all substructures
-                                          ,PosType Mass_min          /// minimum mass of substructures
-                                          ,PosType Mass_max          /// maximum mass of substructures
-                                          ,PosType redshift          /// redshift of substructures
-                                          ,PosType alpha             /// index of mass function (dN/dm \propto m^alpha)
-                                          ,PosType density_contrast  ///
-                                          ,bool verbose
-                                          );
+  /// get the non-projected number of substructure halos
+  PosType getaveNhalos () { return substructure.Ndensity * pi * substructure.Rregion * substructure.Rregion ; }
+  /// get the projected number of substructure halos
+  std::size_t getNhalosSub () { return substructure.NhalosSub ; }
+  /// get substructure density
+  PosType getrhoSub () { return substructure.rho_tidal*cosmo.rho_crit(0)*cosmo.getOmega_matter()*(1+substructure.redshift)*(1+substructure.redshift)*(1+substructure.redshift) ; }
+  /// get real mass_min and mass_max of substructure
+  PosType getRealMminSub () { return substructure.mass_min ; }
+  PosType getRealMmaxSub () { return substructure.mass_max ; }
+  /// get rmax_max of substructure
+  PosType getrmax_max () { return substructure.rmax_max ; }
+  /// get the sum of the masses composing the substructure
+  PosType getSumMassSub () { return substructure.SumMassSub ; }
+  /// get the semi-theoretical averaged mass for the substructure
+  PosType getAveMassTh () { return substructure.AveMassTh ; }
   
 	/// get number of main halos
 	std::size_t getNMainHalos() const;
@@ -394,23 +386,29 @@ private: /* field */
   std::vector<PosType> field_Dl;
   /// original vector of field plane distances
   std::vector<PosType> field_Dl_original;
-  
+
+  // things for substructures
   struct SubStructureInfo{
-    // things for substructures
-    /// vector of all substructure halos
-    std::vector<LensHalo*> halos;
+    // Quantities that stay constant over the different realisations :
+    std::vector<LensHalo*> halos;     /// vector of all substructure halos
     LensPlane *plane;
-    PosType Rregion = 0;
-    PosType Mmax = 0;
-    PosType Mmin = 0;
-    PosType alpha = 0;
-    PosType Ndensity = 0;
-    Point_2d center;
-    PosType rho_tidal = 0;
-    // Added quantities for the resetting of the substructure
-    // (when WasInsertSubStructuresCalled = MAYBE) :
-    PosType redshift = 0;
-    bool verbose = false;
+    PosType Rregion = 0;       /// radius of region in which substructures are inserted (radians)
+    PosType Mmax = 0;          /// theoretical minimum mass of substructures
+    PosType Mmin = 0;          /// theoretical maximum mass of substructures
+    PosType alpha = 0;         /// slope of the substructure mass function
+    PosType Ndensity = 0;      /// number density of the substructure (number / unit^2)
+    Point_2d center;           /// center of region in which the substructures are inserted (radians)
+    PosType rho_tidal = 0;     /// density contrast of the substructure
+    PosType redshift = 0;      /// redshift of substructures
+    
+    // Quantities that vary over the different realisations (hence modified by Lens::resetSubstructure()):
+    bool verbose = false;      /// verbose option
+    std::size_t NhalosSub = 0; /// projected number of substructure halos
+    PosType mass_min = 0;      /// real mass_min of the substructure
+    PosType mass_max = 0;      /// real mass_max of the substructure
+    PosType rmax_max = 0;      /// rmax_max of substructure :
+    PosType SumMassSub = 0;    /// sum of the masses composing the substructure
+    PosType AveMassTh = 0;     /// semi-theoretical averaged mass for the substructure :
   };
   
   SubStructureInfo substructure;
