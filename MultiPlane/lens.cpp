@@ -767,7 +767,8 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
   PosType r = Mass_min/Mass_max,f,mass;
   size_t haloid = field_halos.size();
   PosType Rmax;
-  PosType mass_min = 1.e50;
+  PosType mass_min = 0.;
+  if(substructure.NhalosSub > 0) mass_min = 1.e50 ;
   PosType mass_max = 0.;
   PosType SumMassSub = 0.;
   PosType rmax_max = 0.;
@@ -794,6 +795,7 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
     mass = Mass_max*pow( f + pow(r,alpha+1)*(1-f) , 1.0/(1+alpha) ); // in Msun, r = Mass_Min / Mass_Max is dimensionless.
     // Variable for the sum of the substructure masses :
     SumMassSub += mass ;
+    assert(mass < 1.e50);
     
     // keeping track of the highest/lowest substructure mass :
     mass_max = MAX(mass,mass_max); // in Msun
@@ -982,7 +984,8 @@ void Lens::resetSubstructure(bool verbose){
   PosType r = substructure.Mmin/substructure.Mmax,f,mass;
   PosType Rmax;
   size_t haloid = field_halos.size();
-  PosType mass_min = 1.e50;
+  PosType mass_min = 0.;
+  if(substructure.NhalosSub > 0) mass_min = 1.e50 ;
   PosType mass_max = 0.;
   PosType SumMassSub = 0.;
   PosType rmax_max = 0.;
@@ -1013,6 +1016,7 @@ void Lens::resetSubstructure(bool verbose){
     mass = substructure.Mmax * pow( f + pow(r,substructure.alpha+1)*(1-f), 1.0/(1+substructure.alpha) );
     // Variable for the sum of the substructure masses :
     SumMassSub += mass ;
+    assert(mass < 1.e50);
     
     // keeping track of the highest/lowest substructure mass :
     mass_max = MAX(mass,mass_max); // in Msun
