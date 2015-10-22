@@ -729,6 +729,13 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
   substructure.Rregion = Rregion;
   substructure.redshift = redshift;
   
+  if(WasInsertSubStructuresCalled == YES || WasInsertSubStructuresCalled == MAYBE)
+  {
+    ERROR_MESSAGE();
+    cout << "Lens::insertSubStructures() cannot be called 2 times in a raw !" << endl;
+    exit(0);
+  }
+  
   if(alpha == -1) throw std::invalid_argument("alpha must not be -1 in Lens::createOneFieldPlane");
 
   // non-projected number of halos :
@@ -949,10 +956,11 @@ void Lens::resetSubstructure(bool verbose){
     assert(field_plane_redshifts.size() == field_plane_redshifts_original.size());
     assert(field_Dl.size() == field_Dl_original.size());
     
+    // Changing the flag :
+    WasInsertSubStructuresCalled = NO ;
+    
     // Reconstructing the plane with arguments given to insertSubStructures :
     insertSubstructures(substructure.Rregion,substructure.center.x,substructure.Ndensity,substructure.Mmin,substructure.Mmax,substructure.redshift,substructure.alpha,substructure.rho_tidal,verbose);
-
-    // WasInsertSubStructuresCalled = YES ;
     return ;
   }
   // We have WasInsertSubStructuresCalled = YES after this point.
@@ -1049,6 +1057,7 @@ void Lens::resetSubstructure(bool verbose){
   
   assert(substructure.halos.size() == substructure.NhalosSub);
 
+  // replacing the substructure plane with the new plane :
   delete substructure.plane;
   lensing_planes[lplane_index] = field_planes[fplane_index] = substructure.plane = new LensPlaneTree(substructure.halos.data(), substructure.NhalosSub, 0, 0);
 }
