@@ -881,7 +881,7 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
   if(WasInsertSubStructuresCalled == YES || WasInsertSubStructuresCalled == MAYBE)
   {
     ERROR_MESSAGE();
-    cout << "Lens::insertSubStructures() cannot be called 2 times in a raw !" << endl;
+    cout << "Lens::insertSubStructures() cannot be called 2 times !" << endl;
     exit(0);
   }
   
@@ -1294,6 +1294,9 @@ void Lens::deleteSubstructures()
   substructure.rmax_max = 0;
   substructure.SumMassSub = 0;
   substructure.AveMassTh = 0;
+  
+  // Resetting the flag :
+  WasInsertSubStructuresCalled = NO ;
   
   return ;
 }
