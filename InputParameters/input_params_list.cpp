@@ -66,7 +66,7 @@ namespace
 		// Main halos
 		{"main_mass", "1e15", "main halo mass"},
 		{"main_zlens", "0.42", "main halo redshift"},
-		{"main_Rmax", "1.0", "main halo radius"},
+		{"main_Rsize", "1.0", "main halo radius"},
 		{"main_concentration", "5", "main halo concentration parameter"},
 		{"main_slope", "1", "main halo slope"},
 		{"main_sigma", "250", "velocity dispersion in km/s"},
@@ -92,7 +92,7 @@ namespace
 		{"main_sub_Ndensity", "0.0e6", "number density of substructure"},
 		{"main_sub_beta", "-1.0", ""},
 		{"main_sub_alpha", "-1.9", ""},
-		{"main_sub_Rmax", "0.5e-3", ""},
+		{"main_sub_Rsize", "0.5e-3", ""},
 		{"main_sub_mass_max", "1.0e9", ""},
 		{"main_sub_mass_min", "1.0e6", ""},
 		{"main_sub_type", "1", ""},

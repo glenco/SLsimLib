@@ -117,7 +117,7 @@ private:
  *	main_sub_Ndensity      Number density of substructures.  They are distributed uniformly.  If zero the other substructure parameters are not needed.
  *	main_sub_beta               Logarithmic slope of the internal clump profile.  Used if main_sub_type == powerlaw
  *	main_sub_alpha              Logarithmic slope of the mass function.
- *	main_sub_Rmax               Maximum radius of most massive substructure (see Metcalf & Amara 2012)
+ *	main_sub_Rsize               Maximum radius of most massive substructure (see Metcalf & Amara 2012)
  *	main_sub_mass_max               Maximum mass
  *	main_sub_mass_min               Minimum mass
  *	main_sub_type               Mass profile of clumps - 0 or nfw,1 or powerlaw, 2 or pointmass
