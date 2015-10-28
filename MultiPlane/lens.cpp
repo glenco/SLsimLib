@@ -743,6 +743,8 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
   if(verbose) std::cout << "Lens::insertSubstructures : Average number of Substructures : " << aveNhalos << std::endl;
   // So numberDensity refers to the number density in 3D.
   
+  std::cout << "aveNhalos = " << aveNhalos << std::endl;
+  
   // projected number of halos (less than the non-projected, ie. 3D, number) :
   substructure.NhalosSub = static_cast<std::size_t>(poidev(float(aveNhalos), seed));
   if(verbose) std::cout << "Lens::insertSubstructures : Actual number of Substructures : " << substructure.NhalosSub << std::endl;
@@ -825,10 +827,19 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
   substructure.SumMassSub = SumMassSub;
   substructure.rmax_max = rmax_max;
   
-  // Averaged mass estimated from theory :
+  // Averaged mass estimated for 1 subhalo from theory :
   PosType AveMassTh = Mass_max * ((1+alpha)/(2+alpha)) * ((1-pow(r,2+alpha))/(1-pow(r,1+alpha))); // Average mass for one sub halo.
+  // Estimating the theoretical substructure density :
+  PosType SigmaSubTh = AveMassTh * NumberDensity ; // in (Number/radians^2) * Msun = Msun / radians^2.
+  // Averaged mass estimated for the whole subhalo population from theory :  //
   AveMassTh *= substructure.NhalosSub ; // Now for the total amount of sub halos.
   substructure.AveMassTh = AveMassTh;
+  // Estimating the real substructure density :
+  PosType SigmaSubReal = SumMassSub / (pi * Rregion * Rregion); // in (Number/radians^2) * Msun = Msun / radians^2.
+  
+  // Dimensionless kappa_sub or Sigma_Sub / Sigma_Crit :
+  PosType DimLessKappaSub = SumMassSub / (pi * Rregion * Rregion * cosmo.angDist(redshift) * cosmo.angDist(redshift)) / cosmo.SigmaCrit(redshift,zsource);
+  
   
   if(verbose)
   {
@@ -839,6 +850,9 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
     std::cout << "Lens::insertSubstructures : SumMassSub = " << SumMassSub << " Msun, Theoretical total averaged mass = " << AveMassTh << " Msun." << std::endl ;
     std::cout << "Lens::insertSubstructures : Sigma_crit = " << cosmo.SigmaCrit(redshift, zsource) << " Msun/PhysMpc^2." << std::endl ;
     std::cout << "Lens::insertSubstructures : 4 pi G = " << 4*pi*Grav << " Mpc/Msun." << std::endl ;
+    std::cout << "Lens::insertSubstructures : SigmaSubTh = " << SigmaSubTh << " Msun/radians^2 , SigmaSubReal = " << SigmaSubReal << " Msun/radians^2." << std::endl ;
+    std::cout << "Lens::insertSubstructures : SigmaSubTh = " << SigmaSubTh *cosmo.angDist(redshift)*cosmo.angDist(redshift)*(1+redshift)*(1+redshift)*1.e-6 << " Msun/Physkpc^2 , SigmaSubReal = " << SigmaSubReal*cosmo.angDist(redshift)*cosmo.angDist(redshift)*(1+redshift)*(1+redshift)*1.e-6 << " Msun/Physkpc^2." << std::endl ;
+    std::cout << "Lens::insertSubstructures : DimLessKappaSub = " << DimLessKappaSub << endl;
   }
 
   // Test :
@@ -1047,8 +1061,13 @@ void Lens::resetSubstructure(bool verbose){
   
   // Averaged mass estimated from theory :
   PosType AveMassTh = substructure.Mmax * ((1+substructure.alpha)/(2+substructure.alpha)) * ((1-pow(r,2+substructure.alpha))/(1-pow(r,1+substructure.alpha))); // Average mass for one sub halo.
+  // Estimating the theoretical substructure density :
+  // PosType SigmaSubTh = AveMassTh * substructure.Ndensity ; // in (Number/radians^2) * Msun = Msun / radians^2.
+  // Averaged mass estimated for the whole subhalo population from theory :  //
   AveMassTh *= substructure.NhalosSub ; // Now for the total amount of sub halos.
   substructure.AveMassTh = AveMassTh;
+  // Estimating the real substructure density :
+  // PosType SigmaSubReal = SumMassSub / (pi * substructure.Rregion * substructure.Rregion); // in (Number/radians^2) * Msun = Msun / radians^2.
   
   if(verbose){
     std::cout << "Lens::resetSubstructures : Max mass = " << mass_max << " , Max radius = "
