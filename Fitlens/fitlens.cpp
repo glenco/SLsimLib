@@ -384,8 +384,28 @@ void LensHaloFit::FindLensSimple(
   x_center[1] /= scale;
   
   //ERROR_MESSAGE();
-  ElliptisizeLens(Nimages,Nsources,1,pairing,xob,x_center,xg,0,perturb_beta,perturb_Nmodes
+  // try{
+        ElliptisizeLens(Nimages,Nsources,1,pairing,xob,x_center,xg,0,perturb_beta,perturb_Nmodes
                   ,mods,dx_sub,&re2,q); // The -1 in after perturb_Nmodes WAS MAKING FINDLENSSIMPLE UNSTABLE !
+  // }
+  // catch (int Flag) { cout << "ElliptisizeLens did not converge. Exception No. " << Flag << endl; exit(0);}
+  /*
+  catch (int Flag)
+  {
+    if (Flag==12345)
+    {
+      for(int j=1;j<perturb_Nmodes;++j) perturb_modes[j] = 0. ;
+      y[0] = y[1] = 0. ;
+      for(i=0;i<Nimages;++i) dx_sub[i][0] = dx_sub[i][1] = 0. ;
+      x_center[0] = x_center[1] = 0. ;
+      free_dmatrix(xob,0,Nimages-1,0,1);
+      free_dmatrix(xg,0,1,0,1);
+      free_dvector(mods,0,perturb_Nmodes + 2*Nsources + 1);
+      for(int i = 0 ; i < 7 ; i++) qpriv[i] = 0. ;
+      return ;
+    }
+  }
+   */
   
   // At this point we should have :
   // mod[0] = 0
@@ -874,14 +894,18 @@ double LensHaloFit::ElliptisizeLens(
   xi[5][1]=0.00;  xi[5][2]=0.0;     xi[5][3]=0.0;       xi[5][4]=0.0;        xi[5][5]=1.0e-3;
   
   oldsm=-1;
+  int boolFlag = 0; // 1 if it worked, 0 if it did not.
+
   if(sigG == 0.0){   /// keep center of lens fixed
     if(Nlenses==1 || count>1){
       Nmin=2;
-      powellD(q,xi,Nmin,1.0e-18,&iter,&sm,minEllip); // This should not affect the units of the modes.
+      boolFlag = powellDbool(q,xi,Nmin,1.0e-18,&iter,&sm,minEllip); // This should not affect the units of the modes.
+      cout << "boolFlag 1 = " << boolFlag << endl;
     }else{
       Nmin=3;
       if(count == 1) q[3]=1.0e-5;
-      powellD(q,xi,Nmin,1.0e-18,&iter,&sm,minEllip);
+      boolFlag = powellDbool(q,xi,Nmin,1.0e-18,&iter,&sm,minEllip);
+      cout << "boolFlag 2 = " << boolFlag << endl;
       *re2=q[3];
     }
   }else{
@@ -889,12 +913,14 @@ double LensHaloFit::ElliptisizeLens(
     q[4] = x_center[1];
     if(Nlenses==1){
       Nmin=4;
-      powellD(q,xi,Nmin,1.0e-18,&iter,&sm,minEllip);
+      boolFlag = powellDbool(q,xi,Nmin,1.0e-18,&iter,&sm,minEllip);
+      cout << "boolFlag 3 = " << boolFlag << endl;
       *re2=0.0;
     }else{
       Nmin=5;
       if(count == 1) q[5]=0.001;
-      powellD(q,xi,Nmin,1.0e-18,&iter,&sm,minEllip);
+      boolFlag = powellDbool(q,xi,Nmin,1.0e-18,&iter,&sm,minEllip);
+      cout << "boolFlag 4 = " << boolFlag << endl;
       *re2=q[5];
     }
     x_center[0] = q[3];
@@ -902,7 +928,7 @@ double LensHaloFit::ElliptisizeLens(
   }
   for(i=1;i<=Nmod+2*Nsources+1;++i) mod[i]=modTT[i];
   
-  //std::printf("iter = %i\n",iter);
+  // std::printf("iter = %i\n",iter);
   free_ivector(pairingT,0,Nimages-1);
   free_dmatrix(xobT,0,Nimages-1,0,1);
   free_dmatrix(dx_subT,0,Nimages-1,0,1);
@@ -913,6 +939,8 @@ double LensHaloFit::ElliptisizeLens(
   free_dmatrix(xgT,0,Nlenses-1,0,1);
   if(Nlenses>1) free_dmatrix(dx_subTt,0,Nimages-1,0,1);
   free_dmatrix(xi,1,5,1,5);
+
+  if (boolFlag==0) throw 12345;
   
   return sm;
 }
