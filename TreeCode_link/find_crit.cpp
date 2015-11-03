@@ -215,9 +215,15 @@ void ImageFinding::find_crit(
        --it;
        }
        // *******************************/
+      // Image plane hull
+      if (crtcurve[ii].type == tangential){
+        hull = Utilities::concave_hull(hull,10);
+      }else{
+        hull = Utilities::convex_hull(hull);
+      }
       
-      hull = Utilities::concave_hull(hull,10);
-      //hull = Utilities::convex_hull(hull);
+      //hull = Utilities::concave_hull(hull,10);
+      // hull = Utilities::convex_hull(hull);
       
       crtcurve[ii].critical_curve.resize(hull.size());
       crtcurve[ii].caustic_curve_intersecting.resize(hull.size());
@@ -245,8 +251,13 @@ void ImageFinding::find_crit(
       hull.clear();
       critcurve[jj].imagekist->TranformPlanes();
       hull = critcurve[jj].imagekist->copytovector();
-      hull = Utilities::concave_hull(hull,5);
-      //hull = Utilities::convex_hull(hull);
+      if (crtcurve[ii].type == tangential){
+        hull = Utilities::concave_hull(hull,5);
+      }else{
+        hull = Utilities::convex_hull(hull);
+      }
+      //hull = Utilities::concave_hull(hull,5);
+      // hull = Utilities::convex_hull(hull);
       
       crtcurve[ii].caustic_curve_outline.resize(hull.size());
       crtcurve[ii].caustic_center[0] = 0;
@@ -557,8 +568,13 @@ void ImageFinding::find_crit(
       //std::vector<Point *> hull = pseudocurve[i].innerborder->copytovector();
       std::vector<Point *> hull = pseudocurve[i].outerborder->copytovector();
       if(verbose) std::cout << " doing concave hull with " << hull.size() << " points..." << std::endl;
-      hull = Utilities::concave_hull(hull,10);
-      //hull = Utilities::convex_hull(hull);
+      if (crtcurve[ii].type == tangential){
+        hull = Utilities::concave_hull(hull,10);
+      }else{
+        hull = Utilities::convex_hull(hull);
+      }
+      //hull = Utilities::concave_hull(hull,10);
+      // hull = Utilities::convex_hull(hull);
       assert(hull.size() <= pseudocurve[i].outerborder->Nunits());
       
       if(crtcurve[ii].type != pseudo){
@@ -590,9 +606,13 @@ void ImageFinding::find_crit(
       pseudocurve[i].imagekist->TranformPlanes();
       hull = pseudocurve[i].imagekist->copytovector();
       if(verbose) std::cout << " doing concave hull with " << hull.size() << " points..." << std::endl;
-      
-      hull = Utilities::concave_hull(hull,10);
-      //hull = Utilities::convex_hull(hull);
+      if (crtcurve[ii].type == tangential){
+        hull = Utilities::concave_hull(hull,10);
+      }else{
+        hull = Utilities::convex_hull(hull);
+      }
+      //hull = Utilities::concave_hull(hull,10);
+      // hull = Utilities::convex_hull(hull);
       
       crtcurve[ii].caustic_curve_outline.resize(hull.size());
       crtcurve[ii].caustic_center[0] = 0;

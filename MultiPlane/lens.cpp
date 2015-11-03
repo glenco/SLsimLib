@@ -1508,6 +1508,7 @@ void Lens::createFieldHalos(bool verbose)
 				//field_halos[j]->initFromMassFunc(mass*(1-field_galaxy_mass_fraction),Rsize,rscale,field_prof_internal_slope,seed);
         r200 = halo_calc->getR200(); // used for Kravtsov 2013 2013ApJ...764L..31K
         r_half_stel_mass = pow(10.,(0.95*log10(0.015*r200*1000.)+0.015))/1000.; // in Mpc
+      
       }else{
         field_galaxy_mass_fraction = 0;
       }
@@ -1852,6 +1853,7 @@ void Lens::readInputSimFileMillennium(bool verbose)
       
       if(flag_field_gal_on){
         float sigma = 126*pow(mass*field_galaxy_mass_fraction/1.0e10,0.25); // From Tully-Fisher and Bell & de Jong 2001
+        
         //std::cout << "Warning: All galaxies are spherical" << std::endl;
         
         //****** test lines taken out
@@ -1867,10 +1869,16 @@ void Lens::readInputSimFileMillennium(bool verbose)
             break;
           case nsie_gal:
             field_halos.push_back(new LensHaloRealNSIE(mass*field_galaxy_mass_fraction,z,sigma,0.0,fratio,pa,0));
+            //std::cout << sigma << std::endl;
             break;
           case pl_gal:
             assert(field_int_prof_gal_slope>0);
-            field_halos.push_back(new LensHaloPowerLaw(mass*field_galaxy_mass_fraction,r_half_stel_mass/1.34,z,field_int_prof_gal_slope,fratio,pa,0,Pseudo)); // explanation for r_half_stel_mass/1.34: relation between r_half_stel_mass and effective radius according to Kravtsev 2013 used!
+          
+            field_halos.push_back(new LensHaloPowerLaw(mass*field_galaxy_mass_fraction,rmaxNSIE(sigma, mass*field_galaxy_mass_fraction, 1, 0.0),z,field_int_prof_gal_slope,1,0,0,Fourier));
+            //field_halos.push_back(new LensHaloPowerLaw(mass*field_galaxy_mass_fraction,r_half_stel_mass/1.6*2.5,z,field_int_prof_gal_slope,0.99,pa+pi/2.,0,Fourier)); // explanation for r_half_stel_mass/1.34: relation between r_half_stel_mass and effective radius according to Kravtsev 2013 used!
+            //field_halos.push_back(new LensHaloPowerLaw(mass*field_galaxy_mass_fraction,mass*Grav*lightspeed*lightspeed*sqrt(fratio)/pi/sigma/sigma,z,field_int_prof_gal_slope,fratio,pa,0,Fourier));
+            
+            //std::cout << "PL "<<r_half_stel_mass/1.34 << std::endl;
             break;
           case hern_gal:
             field_halos.push_back(new LensHaloHernquist(mass*field_galaxy_mass_fraction,r_half_stel_mass/1.34,z,0.0,fratio,pa,0));

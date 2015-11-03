@@ -627,6 +627,7 @@ LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
   
 }
 
+
 void LensHaloPowerLaw::initFromMassFunc(float my_mass, float my_Rsize, float my_rscale, PosType my_slope, long *seed){
   LensHalo::initFromMassFunc(my_mass,my_Rsize,my_rscale,my_slope,seed);
   beta = my_slope;
@@ -691,7 +692,7 @@ LensHaloRealNSIE::LensHaloRealNSIE(float my_mass,PosType my_zlens,float my_sigma
   //Rsize = rmaxNSIE(sigma,mass,fratio,rcore);
   //Rmax = MAX(1.0,1.0/fratio)*Rsize;  // redefine
   Rsize = rmax_calc();
-  //std::cout << "Rsize constr Real NSIE " << Rsize << std::endl;
+  //std::cout << "NSIE " << Rsize << std::endl;
   Rmax = Rmax_to_Rsize_ratio*Rsize;
   if(fratio > 1.0 || fratio < 0.01) throw std::invalid_argument("invalid fratio");
   
@@ -863,7 +864,6 @@ void LensHalo::force_halo_sym(
 {
   
   PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
-  
   if(rcm2 < 1e-20) rcm2 = 1e-20;
   
   /// intersecting, subtract the point particle
@@ -878,10 +878,12 @@ void LensHalo::force_halo_sym(
     
     *kappa += kappa_h(x)*prefac;
     
-    tmp = (gamma_h(x) + 2.0*subtract_point) * prefac / rcm2;
+    tmp = (gamma_h(x) + 2.0*subtract_point) * prefac; // / rcm2;
     gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
     gamma[1] += xcm[0]*xcm[1]*tmp;
-    
+    if (rcm2 < 1E-9){
+      std::cout << kappa_h(x)*prefac << " " << 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp << " "  << xcm[0]*xcm[1]*tmp << " " <<rcm2 << " " << beta << " " << get_slope() <<  std::endl;
+    }
     *phi += phi_h(x) * mass / pi ;
   }
   else // the point particle is not subtracted
@@ -902,7 +904,6 @@ void LensHalo::force_halo_sym(
       
       gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
       gamma[1] += xcm[0]*xcm[1]*tmp;
-      
       *phi += 0.5 * log(rcm2) * mass / pi ;
     }
   }
@@ -928,11 +929,11 @@ void LensHalo::force_halo_asym(
   
   //float r_size=get_rsize()*Rmax;
   //Rmax=r_size*1.2;
-  
+
   PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
   PosType alpha_tmp[2],kappa_tmp,gamma_tmp[2],phi_tmp;
-  if(rcm2 < 1e-20) rcm2 = 1e-20;
   
+  if(rcm2 < 1e-20) rcm2 = 1e-20;
   //std::cout << "rsize , rmax,  mass_norm =" << Rsize << " , " << Rmax << " , " << mass_norm_factor << std::endl;
   
   /// intersecting, subtract the point particle
@@ -950,7 +951,6 @@ void LensHalo::force_halo_asym(
       if(main_ellip_method==Keeton){alphakappagamma3asym(Rsize,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
       alpha_ellip[0]=alpha_tmp[0]*mass_norm_factor;
       alpha_ellip[1]=alpha_tmp[1]*mass_norm_factor;
-      
       double f1 = (Rmax - r)/(Rmax - Rsize),f2 = (r - Rsize)/(Rmax - Rsize);
       
       PosType tmp = mass/Rmax/pi/r;
@@ -989,14 +989,15 @@ void LensHalo::force_halo_asym(
         gamma[1] += 0.5*gamma_tmp[1]*mass_norm_factor;
       }
       
-
-  
-      
+      if (rcm2 < 1E-9){
+        std::cout << kappa_tmp*mass_norm_factor << " " << gamma_tmp[0]<< " "  << gamma_tmp[1] << " " <<rcm2 << " " << beta << " " << get_slope() << std::endl;
+      }
       
       *phi += phi_tmp;
       
       if(subtract_point){
-        PosType tmp =  screening*mass_norm_factor*mass/pi/rcm2; // *mass_norm_factor
+        //std::cout << "DO WE EVEN GET HERE??" << std::endl;
+        PosType tmp =  screening*mass/pi/rcm2; // *mass_norm_factor
         alpha[0] +=  tmp*xcm[0];
         alpha[1] +=  tmp*xcm[1];
         
@@ -1258,6 +1259,9 @@ void LensHaloRealNSIE::force_halo(
         gammaNSIE(tmp,xt,fratio,rcore,pa);
         gamma[0] += units*tmp[0];
         gamma[1] += units*tmp[1];
+        if (rcm2 < 1E-9){
+         std::cout << units*kappaNSIE(xt,fratio,rcore,pa) << " " <<  units*tmp[0] << " "  <<  units*tmp[1] << " " << rcm2 <<std::endl;
+        }
       }
     }
     
