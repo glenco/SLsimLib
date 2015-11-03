@@ -252,7 +252,6 @@ Lens::~Lens()
   
 	Utilities::delete_container(field_halos);
   Utilities::delete_container(substructure.halos);
-  std::cout << "In Lens structure" << std::endl;
 }
 
 /// read in Cosmological Parameters
