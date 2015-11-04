@@ -617,7 +617,7 @@ LensHaloPowerLaw::LensHaloPowerLaw(InputParams& params){
 void LensHaloPowerLaw::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed){
 	LensHalo::initFromMassFunc(my_mass,my_Rmax,my_rscale,my_slope,seed);
 	beta = my_slope;
-    xmax = my_Rmax/my_rscale;
+  xmax = my_Rmax/my_rscale;
 }
 
 void LensHaloPowerLaw::assignParams(InputParams& params){
@@ -895,7 +895,7 @@ void LensHalo::force_halo_asym(
       *phi += phi_tmp;
       
       if(subtract_point){
-        PosType tmp =  screening*mass_norm_factor*mass/pi/rcm2; // *mass_norm_factor
+        PosType tmp =  screening*mass_norm_factor*mass/pi/rcm2; // mass_norm_factor
         alpha[0] +=  tmp*xcm[0];
         alpha[1] +=  tmp*xcm[1];
 
@@ -1134,7 +1134,6 @@ void LensHaloRealNSIE::force_halo(
           gamma[1] += units*tmp_k[1]*f1;
            */
         }
-        
       }
       else
       {
@@ -1171,12 +1170,11 @@ void LensHaloRealNSIE::force_halo(
           gamma[1] += xcm[0]*xcm[1]*fac;
         }
       }
-      
     }
 	else
 	{
     // outside of the halo
-		if (subtract_point == false)
+		if (!subtract_point)
 		{
 			PosType prefac = mass/rcm2/pi;
 			alpha[0] += -1.0*prefac*xcm[0];
