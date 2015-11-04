@@ -63,7 +63,7 @@ public:
   
 	void drawline(double x1[],double x2[],double value);
   void drawcircle(PosType r_center[],PosType radius,PosType value);
-  void drawball(PosType r_center[],PosType radius,PosType value,int Nstrip);
+  void drawdisk(PosType r_center[],PosType radius,PosType value,int Nstrip);
 	void AddGrid(const Grid &grid,double value = 1.0);
   void AddGrid(const Grid &grid,LensingVariable val);
 
@@ -218,6 +218,7 @@ public:
 	float getZeropoint(){return mag_zeropoint;}
     /// pixel size in radians
   float getPixelSize(){return pix_size;}
+    float getBackgroundNoise(float resolution, unitType unit = counts_x_sec);
 	std::valarray<double> getPSF(){return map_psf;}
   void setPSF(std::string psf_file, float os = 1.);
 	PixelMap Convert (PixelMap &map, bool psf, bool noise,long *seed, unitType unit = counts_x_sec);

@@ -9,13 +9,13 @@
 #include "causticdata.h"
 
 CausticDataStore::CausticDataStore(std::string filename)
-:ncolumns(13),Nxp(0)
+:ncolumns(14),Nxp(0)
 {
   readfile(filename);
 }
 
 CausticDataStore::CausticDataStore(std::vector<ImageFinding::CriticalCurve> &critcurves_vec)
-:ncolumns(13),Nxp(0)
+:ncolumns(14),Nxp(0)
 {
   PosType rmax,rmin,rave;
   data.resize(critcurves_vec.size());
@@ -66,12 +66,15 @@ void CausticDataStore::addcrits(std::vector<ImageFinding::CriticalCurve> &critcu
     data[ii].caustic_radius[1] = rave;
     data[ii].caustic_area = critcurves_vec[jj].caustic_area;
   }
-
+  // rebuild search tree
+  if(critcurves_vec.size() > 0){
+    SetSearchTree();
+  }
 }
 
 
 CausticDataStore::CausticDataStore(const CausticDataStore &input)
-:ncolumns(13),Nxp(0)
+:ncolumns(14),Nxp(0)
 {
   data = input.data;
 }
@@ -96,7 +99,8 @@ void CausticDataStore::readfile(std::string filename){
   std::string myline;
   std::string space = " ";
 	double mydouble;
-  CritType myCritType = ND;
+  int myint;
+  
 
 	std::string strg;
 	std::string f=",";
@@ -140,7 +144,7 @@ void CausticDataStore::readfile(std::string filename){
 	 }*/
 
 		for(int l=0;l<ncolumns; l++){
-      pos = myline.find("|");
+			pos = myline.find("|");
 			strg.assign(myline,0,pos);
 			buffer << strg;
       switch (l) {
@@ -197,8 +201,8 @@ void CausticDataStore::readfile(std::string filename){
           tmp_data.caustic_area = mydouble;
           break;
         case 13:
-          buffer >> mydouble;
-          tmp_data.crit_type = myCritType;
+          buffer >> myint;
+          tmp_data.crit_type = static_cast<CritType>(myint);
           break;
         default:
           break;
@@ -221,7 +225,7 @@ void CausticDataStore::readfile(std::string filename){
     << " " << data[i].crit_radius[0] << " " << data[i].crit_radius[1]<< " " << data[i].crit_radius[2] << std::endl;
   }*/
 
-  SetSearchTree();
+  if(data.size() > 1) SetSearchTree();
  }
 
   /// create tree for searching. Assumes xp is not allocated yet!
@@ -244,11 +248,11 @@ void CausticDataStore::SetSearchTree(){
   Nxp = data.size();
 }
 
-/// Finds the nearest critical curve to the point x[].  If that point is within the largest radius of the critical curve it returns true.
-bool CausticDataStore::findNearestCrit(PosType x[2],size_t &index){
+/// Finds the nearest critical curve to the point x[].  If that point is within the largest radius of the critical curve it returns true.  If there are no caustics index = -1
+bool CausticDataStore::findNearestCrit(PosType *x,long &index){
   
   if(data.size() == 0){
-    index = 0;
+    index = -1;
     return false;
   }
   if(Nxp != data.size() ){
@@ -256,8 +260,12 @@ bool CausticDataStore::findNearestCrit(PosType x[2],size_t &index){
   }
 
   float radius;
+  size_t tmp_index;
+  searchtreevec->NearestNeighbors(x,1,&radius,&tmp_index);
+  index = tmp_index;
 
-  searchtreevec->NearestNeighbors(x,1,&radius,&index);
+
+//searchtreevec->NearestNeighbors(x,1,&radius,&index);
   
   /*********************** test result ***************
   PosType rmin = 1.0e60,r;
@@ -276,15 +284,16 @@ bool CausticDataStore::findNearestCrit(PosType x[2],size_t &index){
   assert(index == t_index);*/
 
   return (data[index].crit_radius[2] > radius);
+
 }
 
-/** \breaf Finds the nearest critical curve to the point x[] of type 'type'.
-If that point is within the largest radius of the critical curve it returns true.
+/** \brief Finds the nearest critical curve to the point x[] of type 'type'.
+ There are two bool types: found returns true if any neighbour was found, found_type is true if a neighbour with correct CritType "type" was found. If there are no caustics of CritType "type" index will be set to -1.
  */
-bool CausticDataStore::findNearestCrit(PosType x[2],size_t &index,CritType type){
+bool CausticDataStore::findNearestCrit(PosType *x,long &index,CritType type){
   
   if(data.size() == 0){
-    index = 0;
+    index = -1;
     return false;
   }
   if(Nxp != data.size() ){
@@ -293,22 +302,28 @@ bool CausticDataStore::findNearestCrit(PosType x[2],size_t &index,CritType type)
   
   std::vector<float> radius(10);
   std::vector<IndexType> neighbors(10);
-  
-  bool found = false;
+  bool found_type = false;
   int i;
-  for(int N=2 ; !found && N < data.size(); N += 1){
+
+  PosType rmin;
+  for(int N=2 ; !found_type && N < data.size(); N += 10){
+    
+    if(N > data.size()) N = data.size();
     
     if(N > radius.size()){
-      radius.resize(N+2);
-      neighbors.resize(N+2);
+      radius.resize(N+10);
+      neighbors.resize(N+10);
     }
     searchtreevec->NearestNeighbors(x,N,radius.data(),neighbors.data());
+    rmin=1E12; //radius[0];
     for(i=0;i<N;++i){
       if(data[neighbors[i]].crit_type == type){
         index = neighbors[i];
-        found = true;
+        found_type = true;
+        rmin = radius[i];
         break;
       }
+      if(found_type){break;}
     }
   };
   
@@ -408,7 +423,7 @@ void CausticDataStore::SortByCritSize(){
   std::sort(data.begin(),data.end(),[](const CausticStructure &c1,const CausticStructure &c2){
               return (c1.crit_radius[0] > c2.crit_radius[0]);});
 
-  SetSearchTree();
+  if(data.size() > 1) SetSearchTree();
 }
 
 void CausticDataStore::SortByCritArea(){
@@ -417,7 +432,7 @@ void CausticDataStore::SortByCritArea(){
 
   std::sort(data.begin(),data.end(),[](const CausticStructure &c1,const CausticStructure &c2){
     return (c1.crit_area > c2.crit_area);});
-  SetSearchTree();
+  if(data.size() > 1) SetSearchTree();
 }
 
 void CausticDataStore::SortByCausticArea(){
@@ -425,6 +440,13 @@ void CausticDataStore::SortByCausticArea(){
   //std::sort(data.begin(),data.end(),CausticDataStore::comparcausticarea);
   std::sort(data.begin(),data.end(),[](const CausticStructure &c1,const CausticStructure &c2){
     return (c1.caustic_area > c2.caustic_area);});
-  SetSearchTree();
+  if(data.size() > 1) SetSearchTree();
 }
+
+
+std::ostream &operator<<(std::ostream &os, CausticStructure const &caust) {
+  return os << " crit center: " << caust.crit_center << " caustic center: "
+  << caust.caustic_center << " type : " << caust.crit_type;
+}
+
 

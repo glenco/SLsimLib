@@ -84,7 +84,7 @@ public:
 
 	/// the total number of lens planes
 	int getNplanes(){return lensing_planes.size();}
-
+  
 	/// field of view in square degrees
 	PosType getfov(){return fieldofview;};
 	void setfov(PosType fov){fieldofview=fov;};
@@ -174,7 +174,7 @@ public:
 	template<typename HaloType>
 	HaloType* getMainHalo(std::size_t i);
 	
-	void rayshooterInternal(unsigned long Npoints, Point *i_points);
+	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool RSIverbose = false);
   void info_rayshooter(Point *i_point
                       ,std::vector<std::vector<double>> & ang_positions
                       ,std::vector<KappaType> & kappa_on_planes
@@ -221,7 +221,7 @@ public:
  
   // get the field_Off value :
   bool getfieldOff() {return flag_switch_field_off ;}
-
+  
 protected:
   /// field of view in square degrees
   PosType fieldofview;

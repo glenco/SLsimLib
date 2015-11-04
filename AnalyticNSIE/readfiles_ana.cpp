@@ -96,7 +96,8 @@ LensHaloAnaNSIE::LensHaloAnaNSIE(InputParams& params, bool verbose) : LensHaloBa
   
   assignParams(params);
   
-  if(perturb_Nmodes){
+  if(perturb_Nmodes)
+  {
     perturb_modes = new PosType[perturb_Nmodes+1];
     // zero perturbation modes until use LensHaloAnaNSIE::RandomlyDistortLens()
     for(int i=0;i< perturb_Nmodes+1 ;++i) perturb_modes[i] =  0;
@@ -104,13 +105,14 @@ LensHaloAnaNSIE::LensHaloAnaNSIE(InputParams& params, bool verbose) : LensHaloBa
   
   if(verbose) PrintLens(false,false);
 }
+
 LensHaloAnaNSIE::~LensHaloAnaNSIE(){
   if(perturb_Nmodes) delete [] perturb_modes;
 }
 
 LensHaloFit::LensHaloFit(const COSMOLOGY& cosmo, int MyNmodes, PosType beta,PosType zlensref, PosType zsourceref) : LensHaloBaseNSIE(){
   
-  //assignParams(params);
+  // assignParams(params);
   
   zlens = zlensref ;
   // zsource = zsourceref ;

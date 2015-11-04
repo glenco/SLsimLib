@@ -418,10 +418,10 @@ void TreeSimpleVec<T>::NearestNeighbors(
     PosType rneighbors[Nneighbors+Nbucket];
     IndexType neighbors[Nneighbors+Nbucket];
     
-    if(top->nparticles <= Nneighbors){
+    if(top->nparticles < Nneighbors){
         ERROR_MESSAGE();
         printf("ERROR: in NearestNeighbors, number of neighbors > total number of particles\n");
-        exit(1);
+      throw std::runtime_error("Asked for too many neighbors");
     }
     
     /* initalize distance to neighbors to a large number */
@@ -553,7 +553,8 @@ void TreeSimpleVec<T>::BuildTree(){
     IndexType i;
     short j;
   std::vector<PosType> p1(Ndimensions),p2(Ndimensions);
-    
+  
+  if(Nparticles > 0){
     for(j=0;j<Ndimensions;++j){
         p1[j] = position(points[0])[j];
         p2[j] = position(points[0])[j];
@@ -577,7 +578,22 @@ void TreeSimpleVec<T>::BuildTree(){
   
     /* build the tree */
     _BuildTree(Nparticles,index);
+  }else{
     
+    for(j=0;j<Ndimensions;++j){
+      p1[j] *= 0;
+      p2[j] *= 0;
+    }
+
+    top = current = new BranchV(Ndimensions,index,0,p1.data(),p2.data(),0,0);
+    if (!(top)){
+      ERROR_MESSAGE(); fprintf(stderr,"allocation failure in NewTree()\n");
+      exit(1);
+    }
+    
+    Nbranches = 1;
+    
+  }
     /* visit every branch to find center of mass and cutoff scale */
     moveTop();
 }

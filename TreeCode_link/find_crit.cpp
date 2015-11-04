@@ -176,11 +176,6 @@ void ImageFinding::find_crit(
   divide_images_kist(grid->i_tree,critcurve,Ncrits);
   for(int ii=0;ii<*Ncrits;++ii) critcurve[ii].imagekist->SetInImage(NO);
   if(verbose) std::cout << *Ncrits << " borders found." << std::endl;
-
-  /******* test **********************************
-  grid->writeFits(5,INVMAG,"!invmag_in_findcrit");
-  grid->writeFits(5,KAPPA,"!invmag_in_findcrit");
-  //************************************************/
   
   if(critcurve[0].imagekist->Nunits() == 0) *Ncrits=0;
   
@@ -1027,21 +1022,32 @@ CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
     // find point with minimum largest Eigenvalue
     negimage.imagekist->MoveCurrentToTop();
     current = negimage.imagekist->getCurrent();
-    //eigmin = 1-current->kappa + sqrt( current->gamma[0]*current->gamma[0]
-    //                                 + current->gamma[1]*current->gamma[1]) ;
-    eigmin = 1-current->kappa + sqrt( (1-current->kappa)*(1-current->kappa)
-                                     + current->invmag) ;
+    eigmin = 1 - current->kappa + sqrt( current->gamma[0]*current->gamma[0]
+                                      + current->gamma[1]*current->gamma[1]) ;
+    //eigmin = 1-current->kappa + sqrt( (1-current->kappa)*(1-current->kappa)
+    //                                 + current->invmag) ;
+    assert(!isnan(eigmin));
+    
+    if(eigmin < 0) paritypoints.InsertAfterCurrent(current);
+    
     pmin = negimage.imagekist->getCurrent();
     while(negimage.imagekist->Down()){
       current = negimage.imagekist->getCurrent();
-      tmp = 1-current->kappa + sqrt( (1-current->kappa)*(1-current->kappa)
-                                    + current->invmag) ;
+      tmp = 1 - current->kappa + sqrt( current->gamma[0]*current->gamma[0]
+                                     + current->gamma[1]*current->gamma[1]) ;
+     //tmp = 1-current->kappa + sqrt( (1-current->kappa)*(1-current->kappa)
+     //                               + current->invmag) ;
+      
+      assert(!isnan(tmp));
+      
       if(eigmin > tmp ){
         eigmin = tmp;
         pmin = current;
       }
+      
+      if(tmp < 0) paritypoints.InsertAfterCurrent(current);
     }
-    
+
     pseudocurve.imagekist->InsertAfterCurrent(pmin);
     pmin->in_image = YES;
     findborders4(grid->i_tree,&pseudocurve);
@@ -1052,10 +1058,11 @@ CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
       newpoints.MoveToTop();
       do{
         current = newpoints.getCurrent();
-        //tmp = 1-current->kappa + sqrt( current->gamma[0]*current->gamma[0]
-        //                              + current->gamma[1]*current->gamma[1]) ;
-        tmp = 1-current->kappa + sqrt( (1-current->kappa)*(1-current->kappa)
-                                      + current->invmag) ;
+        tmp = 1 - current->kappa + sqrt( current->gamma[0]*current->gamma[0]
+                                       + current->gamma[1]*current->gamma[1]) ;
+        //tmp = 1-current->kappa + sqrt( (1-current->kappa)*(1-current->kappa)
+        //                              + current->invmag) ;
+        assert(!isnan(tmp));
        if(eigmin > tmp ){
           eigmin = tmp;
           pmin->in_image = NO;

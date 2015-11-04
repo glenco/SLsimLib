@@ -30,8 +30,8 @@ public:
            ,PosType inclination /// position angle of ellipse
            )
   : inclination(inclination),isohalo(isohalo){
-    a = isohalo->get_Rmax()*sqrt(fratio);
-    b = isohalo->get_Rmax()/sqrt(fratio);
+    a = isohalo->get_Rsize()*sqrt(fratio);
+    b = isohalo->get_Rsize()/sqrt(fratio);
   };
   
   /// The deflection angle in solar mass/Mpc
