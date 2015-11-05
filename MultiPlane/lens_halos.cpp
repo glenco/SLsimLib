@@ -878,12 +878,12 @@ void LensHalo::force_halo_sym(
     
     *kappa += kappa_h(x)*prefac;
     
-    tmp = (gamma_h(x) + 2.0*subtract_point) * prefac; // / rcm2;
+    tmp = (gamma_h(x) + 2.0*subtract_point) * prefac / rcm2; // ;
     gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
     gamma[1] += xcm[0]*xcm[1]*tmp;
-    if (rcm2 < 1E-9){
-      std::cout << kappa_h(x)*prefac << " " << 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp << " "  << xcm[0]*xcm[1]*tmp << " " <<rcm2 << " " << beta << " " << get_slope() <<  std::endl;
-    }
+    /*if (rcm2 < 1E-6){
+      std::cout << kappa_h(x)*prefac << " " << 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*gamma_h(x)*prefac/rcm2 << " "  << xcm[0]*xcm[1]*gamma_h(x)*prefac/rcm2 << " " <<rcm2 << " " << alpha_h(x)*prefac*xcm[0] << " " <<  alpha_h(x)*prefac*xcm[1] <<  std::endl;
+    }*/
     *phi += phi_h(x) * mass / pi ;
   }
   else // the point particle is not subtracted
@@ -935,6 +935,7 @@ void LensHalo::force_halo_asym(
   
   if(rcm2 < 1e-20) rcm2 = 1e-20;
   //std::cout << "rsize , rmax,  mass_norm =" << Rsize << " , " << Rmax << " , " << mass_norm_factor << std::endl;
+  //std::cout << subtract_point << std::endl;
   
   /// intersecting, subtract the point particle
   if(rcm2 < Rmax*Rmax){
@@ -967,7 +968,9 @@ void LensHalo::force_halo_asym(
         //gamma[0] += 0.5*gamma_tmp[0]*mass_norm_factor;
         //gamma[1] += 0.5*gamma_tmp[1]*mass_norm_factor;
         
-        *phi += 0.5 * log(rcm2) * mass_norm_factor*mass / pi ; //  dev by mass_norm_factor
+        *phi += phi_tmp;
+  
+
       }
       
     }else{
@@ -976,8 +979,8 @@ void LensHalo::force_halo_asym(
       if(main_ellip_method==Schramm){alphakappagamma2asym(r,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
       if(main_ellip_method==Keeton){alphakappagamma3asym(r,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
       
-      alpha[0] +=  alpha_tmp[0]*mass_norm_factor;
-      alpha[1] +=  alpha_tmp[1]*mass_norm_factor;
+      alpha[0] +=  alpha_tmp[0]*mass_norm_factor;//-1.0*subtract_point*mass/rcm2/pi*xcm[0];
+      alpha[1] +=  alpha_tmp[1]*mass_norm_factor;//-1.0*subtract_point*mass/rcm2/pi*xcm[1];
 
       if(get_switch_flag()==true){  /// case distinction used for elliptical NFWs only (get_switch_flag==true)
         *kappa += kappa_tmp*mass_norm_factor*mass_norm_factor;
@@ -985,28 +988,30 @@ void LensHalo::force_halo_asym(
         gamma[1] += 0.5*gamma_tmp[1]*mass_norm_factor*mass_norm_factor;
       }else{
         *kappa += kappa_tmp*mass_norm_factor;
-        gamma[0] += 0.5*gamma_tmp[0]*mass_norm_factor;
-        gamma[1] += 0.5*gamma_tmp[1]*mass_norm_factor;
+        gamma[0] += 0.5*gamma_tmp[0]*mass_norm_factor;//+1.0*subtract_point*mass/rcm2/pi/rcm2*0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1]);
+        gamma[1] += 0.5*gamma_tmp[1]*mass_norm_factor;//-1.0*subtract_point*mass/rcm2/pi/rcm2*(xcm[0]*xcm[1]);
       }
       
-      if (rcm2 < 1E-9){
-        std::cout << kappa_tmp*mass_norm_factor << " " << gamma_tmp[0]<< " "  << gamma_tmp[1] << " " <<rcm2 << " " << beta << " " << get_slope() << std::endl;
+      /*if (rcm2 < 1E-6){
+        std::cout << kappa_tmp*mass_norm_factor << " " << 0.5*gamma_tmp[0]*mass_norm_factor<< " "  << 0.5*gamma_tmp[1]*mass_norm_factor << " " <<rcm2 << " " << alpha_tmp[0]*mass_norm_factor << " " << alpha_tmp[1]*mass_norm_factor << std::endl;
       }
-      
+      */
       *phi += phi_tmp;
+
+    }
+    
+    
+    if(subtract_point){
+      //std::cout << "DO WE EVEN GET HERE??" << std::endl;
+      PosType tmp =  subtract_point*mass/pi/rcm2; // *mass_norm_factor
+      alpha[0] +=  tmp*xcm[0];
+      alpha[1] +=  tmp*xcm[1];
       
-      if(subtract_point){
-        //std::cout << "DO WE EVEN GET HERE??" << std::endl;
-        PosType tmp =  screening*mass/pi/rcm2; // *mass_norm_factor
-        alpha[0] +=  tmp*xcm[0];
-        alpha[1] +=  tmp*xcm[1];
-        
-        tmp = 2.0*tmp/rcm2;
-        gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
-        gamma[1] += xcm[0]*xcm[1]*tmp;
-        
-        *phi += 0.5 * log(rcm2) * mass_norm_factor*mass / pi ; // mass_norm_factor
-      }
+      tmp = 2.0*tmp/rcm2;
+      gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+      gamma[1] += xcm[0]*xcm[1]*tmp;
+      
+      *phi += 0.5 * log(rcm2) * mass / pi ; // *mass_norm_factor
     }
     
   }
