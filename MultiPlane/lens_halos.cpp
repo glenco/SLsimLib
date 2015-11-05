@@ -1264,9 +1264,9 @@ void LensHaloRealNSIE::force_halo(
         gammaNSIE(tmp,xt,fratio,rcore,pa);
         gamma[0] += units*tmp[0];
         gamma[1] += units*tmp[1];
-        if (rcm2 < 1E-9){
-         std::cout << units*kappaNSIE(xt,fratio,rcore,pa) << " " <<  units*tmp[0] << " "  <<  units*tmp[1] << " " << rcm2 <<std::endl;
-        }
+        //if (rcm2 < 1E-9){
+         //std::cout << units*kappaNSIE(xt,fratio,rcore,pa) << " " <<  units*tmp[0] << " "  <<  units*tmp[1] << " " << rcm2 <<std::endl;
+        //}
       }
     }
     
