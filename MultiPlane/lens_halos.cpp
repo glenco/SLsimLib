@@ -998,21 +998,21 @@ void LensHalo::force_halo_asym(
       */
       *phi += phi_tmp;
 
-    
-    
-    
-      if(subtract_point){
-        PosType tmp =  subtract_point*mass/pi/rcm2; // *mass_norm_factor
-        alpha[0] +=  tmp*xcm[0];
-        alpha[1] +=  tmp*xcm[1];
-        
-        tmp = 2.0*tmp/rcm2;
-        gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
-        gamma[1] += xcm[0]*xcm[1]*tmp;
-        
-        *phi += 0.5 * log(rcm2) * mass / pi ; // *mass_norm_factor
-      }
     }
+    
+    
+    if(subtract_point){
+      PosType tmp =  subtract_point*mass/pi/rcm2; // *mass_norm_factor
+      alpha[0] +=  tmp*xcm[0];
+      alpha[1] +=  tmp*xcm[1];
+      
+      tmp = 2.0*tmp/rcm2;
+      gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+      gamma[1] += xcm[0]*xcm[1]*tmp;
+      
+      *phi += 0.5 * log(rcm2) * mass / pi ; // *mass_norm_factor
+    }
+    
   }
   else // the point particle is not subtracted
   {
