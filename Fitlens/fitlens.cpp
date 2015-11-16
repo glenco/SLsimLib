@@ -961,7 +961,9 @@ double minEllip(double *par){
   
   // elliptical integrals
   K = rfD(0,1./q/q,1);
-  E = K - (1-1./q/q)*rdD(0,1./q/q,1)/3;
+  int DidItWork = 1;
+  E = K - (1-1./q/q)*rdD(0,1./q/q,1,&DidItWork)/3;
+  if (DidItWork == 0) throw 12345 ;
   
   // fill in modes with their values for an elliptical lens
   modoT[3]=4*K/pi;
