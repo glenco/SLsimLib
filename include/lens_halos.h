@@ -149,7 +149,7 @@ public:
   
   // renomalize to make mass match
   
-  void set_norm_factor(){mass_norm_factor=1;mass_norm_factor=mass/MassBy1DIntegation(Rsize);std::cout << "mass_norm: " << mass_norm_factor << std::endl;}
+  void set_norm_factor(){mass_norm_factor=1;mass_norm_factor=mass/MassBy1DIntegation(Rsize);}
   
   /// set radius rsize beyond which interpolation values between alpha_ellip and alpha_iso are computed
   void set_rsize(float my_rsize){ Rsize = my_rsize;};
@@ -237,6 +237,7 @@ protected:
   // Beyond Rmax the halo will be treated as a point mass.  Between Rsize and Rmax the deflection
   // and shear are interpolated.  For circularly symmetric lenses Rmax should be equal to Rsize
   float Rmax;
+  float Rmax_halo;
   
   /// The factor by which Rmax is larger than Rsize
   const float Rmax_to_Rsize_ratio = 1.2;
@@ -844,10 +845,10 @@ public:
 	~LensHaloPowerLaw();
   
 	/// set the slope of the surface density profile
-	void set_slope(PosType my_slope){beta=my_slope;};
+	//void set_slope(PosType my_slope){beta=my_slope;};
   
   /// get slope
-  PosType get_slope(){return beta;};
+  //PosType get_slope(){return beta;};
   
 	/// initialize from a mass function
 	void initFromMassFunc(float my_mass, float my_Rsize, float my_rscale, PosType my_slope, long *seed);
@@ -857,7 +858,7 @@ private:
 	void assignParams(InputParams& params);
   
 	///	read in parameters from a parameterfile in InputParams params
-	PosType beta;
+	// PosType beta;
   
 	// Override internal structure of halos
   /// r |alpha(r)| pi Sigma_crit / Mass
@@ -878,6 +879,7 @@ private:
   /// this is |gamma| Sigma_crit pi (r/rscale)^2 / mass
 	inline KappaType gamma_h(PosType x) const {
 		if(x==0) x=1e-6*xmax;
+    assert(beta==1);
 		return -beta*pow(x/xmax,-beta+2);
 	}
   /// this is phi Sigma_crit pi / mass, the constants are added so that it is continous over the bourder at Rsize
