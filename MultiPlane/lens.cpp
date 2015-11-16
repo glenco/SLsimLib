@@ -94,7 +94,7 @@ Lens::Lens(long* my_seed,PosType z_source, const COSMOLOGY &cosmoset,bool verbos
   PosType ztmp = zsource;
   combinePlanes(true);
   if(zsource != ztmp) ResetSourcePlane(ztmp,false);
-  std::cout << "number of field halos :" << field_halos.size() << std::endl;
+  std::cout << "number of field halos : " << field_halos.size() << std::endl;
 }
 
 /**
@@ -167,7 +167,7 @@ Lens::Lens(InputParams& params, long* my_seed, CosmoParamSet cosmoset, bool verb
   PosType ztmp = zsource;
 	buildPlanes(params, verbose);
   if(zsource != ztmp) ResetSourcePlane(ztmp,false);
-  std::cout << "number of field halos :" << field_halos.size() << std::endl;
+  std::cout << "number of field halos : " << field_halos.size() << std::endl;
 
 }
 /**
@@ -583,7 +583,7 @@ void Lens::resetFieldHalos(bool verbose)
   if(WasInsertSubStructuresCalled == YES){
     WasInsertSubStructuresCalled = MAYBE ;
   }
-  std::cout << "number of field halos :" << field_halos.size() << std::endl;
+  std::cout << "number of field halos : " << field_halos.size() << std::endl;
 
 }
 
