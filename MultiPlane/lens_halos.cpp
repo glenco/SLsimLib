@@ -1352,13 +1352,14 @@ LensHaloHernquist::LensHaloHernquist(float my_mass,float my_Rsize,PosType my_zle
     Rmax = Rmax_to_Rsize_ratio*Rsize;
     //std::cout << getEllipMethod() << " method to ellipticise" << std::endl;
     if(getEllipMethod()==Fourier){
-      std::cout << "Hernquist constructor: slope set to " << get_slope() << std::endl;
+      //std::cout << "Hernquist constructor: slope set to " << get_slope() << std::endl;
       calcModes(fratio, get_slope(), pa, mod); // to ellipticize potential instead of kappa use (fratio, get_slope()-2, pa, mod)
       for(int i=1;i<Nmod;i++){
         if(mod[i]!=0){set_flag_elliptical(true);};
       }
     }else set_flag_elliptical(true);
     if (getEllipMethod()==Pseudo){
+      fratio=0.00890632+0.99209115*pow(fratio,0.33697702);
       set_norm_factor();
     }
   }else{
@@ -1500,13 +1501,14 @@ LensHaloJaffe::LensHaloJaffe(float my_mass,float my_Rsize,PosType my_zlens,float
     Rmax = Rmax_to_Rsize_ratio*Rsize;
     //std::cout << getEllipMethod() << " method to ellipticise" << std::endl;
     if(getEllipMethod()==Fourier){
-      std::cout << "Jaffe constructor: slope set to " << get_slope() << std::endl;
+      //std::cout << "Jaffe constructor: slope set to " << get_slope() << std::endl;
       calcModes(fratio, get_slope(), pa, mod);
       for(int i=1;i<Nmod;i++){
         if(mod[i]!=0){set_flag_elliptical(true);};
       }
     }else set_flag_elliptical(true);
     if (getEllipMethod()==Pseudo){
+      fratio=0.00890632+0.99209115*pow(fratio,0.33697702);
       set_norm_factor();
     }
   }else{

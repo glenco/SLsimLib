@@ -230,8 +230,25 @@ void Lens::assignParams(InputParams& params,bool verbose)
 			else
 			{
 				flag_field_gal_on = true;
-				
+        switch ( field_int_prof_gal_type )
+        {
+          case null_gal:
+            break;
+          case nsie_gal:
+            break;
+          case pl_gal:
+            break;
+          case hern_gal:
+            break;
+          case jaffe_gal:
+            break;
+          default :
+            ERROR_MESSAGE();
+            std::cout<<"field_internal_profile_galaxy must be Null, NSIE,PowerLaw, Hernquist or Jaffe"<<std::endl;
+            exit(0);
+        }
 			}
+      
       if (field_int_prof_gal_type == pl_gal){
         if(!params.get("field_internal_profile_galaxy_slope",field_int_prof_gal_slope)){
           ERROR_MESSAGE();
@@ -1881,10 +1898,10 @@ void Lens::readInputSimFileMillennium(bool verbose)
             //std::cout << "PL "<<r_half_stel_mass/1.34 << std::endl;
             break;
           case hern_gal:
-            field_halos.push_back(new LensHaloHernquist(mass*field_galaxy_mass_fraction,r_half_stel_mass/1.34,z,0.0,fratio,pa,0));
+            field_halos.push_back(new LensHaloHernquist(mass*field_galaxy_mass_fraction,rmaxNSIE(sigma, mass*field_galaxy_mass_fraction, fratio, 0.0),z,1,fratio,pa,0,Pseudo));
             break;
           case jaffe_gal:
-            field_halos.push_back(new LensHaloJaffe(mass*field_galaxy_mass_fraction,r_half_stel_mass/1.34,z,0.0,fratio,pa,0));
+            field_halos.push_back(new LensHaloJaffe(mass*field_galaxy_mass_fraction,rmaxNSIE(sigma, mass*field_galaxy_mass_fraction,fratio,0.0),z,1,fratio,pa,0,Pseudo));
             break;
             
           default:
