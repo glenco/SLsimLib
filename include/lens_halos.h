@@ -879,8 +879,7 @@ private:
   /// this is |gamma| Sigma_crit pi (r/rscale)^2 / mass
 	inline KappaType gamma_h(PosType x) const {
 		if(x==0) x=1e-6*xmax;
-    assert(beta==1);
-		return -beta*pow(x/xmax,-beta+2);
+    return -beta*pow(x/xmax,-beta+2);
 	}
   /// this is phi Sigma_crit pi / mass, the constants are added so that it is continous over the bourder at Rsize
  	inline KappaType phi_h(PosType x) const {
