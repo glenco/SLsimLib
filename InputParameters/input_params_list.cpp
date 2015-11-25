@@ -45,7 +45,9 @@ namespace
 		
 		// Field halos type
 		{"field_internal_profile", "NFW", "field halo type: nolens, NFW, PseudoNFW, PowerLaw, NSIE, AnaLens, UniLens, DummyLens"},
-		{"field_internal_profile_galaxy", "0", "if set, a field halo galaxy profile is chosen: 0 or none, 1 or NSIE"},
+		{"field_internal_profile_galaxy", "0", "if set, a field halo galaxy profile is chosen: 0 or none, 1 or NSIE, 2 or PowerLaw, 3 or Hernquist, 4 or Jaffe"},
+  	{"field_internal_profile_galaxy_slope", "-1", "slope of the field halo galaxy PowerLaw profile"},
+
 		{"field_prof_internal_slope_pnfw", "2", "slope of the PseudoNFW profile"},
 		{"field_prof_internal_slope_pl", "-1", "slope of the field halo PowerLaw profile"},
 		
