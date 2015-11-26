@@ -22,7 +22,7 @@ LensHaloParticles::LensHaloParticles(
   
   LensHalo::setZlens(redshift);
   LensHalo::setCosmology(cosmo);
-  LensHalo::set_Rmax(1.0e3);
+  LensHalo::set_Rsize(1.0e3);
   LensHalo::set_flag_elliptical(false);
   
   readPositionFileASCII(simulation_filename);
