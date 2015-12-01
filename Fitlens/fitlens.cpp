@@ -900,12 +900,10 @@ double LensHaloFit::ElliptisizeLens(
     if(Nlenses==1 || count>1){
       Nmin=2;
       boolFlag = powellDbool(q,xi,Nmin,1.0e-18,&iter,&sm,minEllip); // This should not affect the units of the modes.
-      cout << "boolFlag 1 = " << boolFlag << endl;
     }else{
       Nmin=3;
       if(count == 1) q[3]=1.0e-5;
       boolFlag = powellDbool(q,xi,Nmin,1.0e-18,&iter,&sm,minEllip);
-      cout << "boolFlag 2 = " << boolFlag << endl;
       *re2=q[3];
     }
   }else{
@@ -914,13 +912,11 @@ double LensHaloFit::ElliptisizeLens(
     if(Nlenses==1){
       Nmin=4;
       boolFlag = powellDbool(q,xi,Nmin,1.0e-18,&iter,&sm,minEllip);
-      cout << "boolFlag 3 = " << boolFlag << endl;
       *re2=0.0;
     }else{
       Nmin=5;
       if(count == 1) q[5]=0.001;
       boolFlag = powellDbool(q,xi,Nmin,1.0e-18,&iter,&sm,minEllip);
-      cout << "boolFlag 4 = " << boolFlag << endl;
       *re2=q[5];
     }
     x_center[0] = q[3];
