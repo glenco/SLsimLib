@@ -219,7 +219,7 @@ void ImageFinding::find_crit(
       if (crtcurve[ii].type == tangential){
         hull = Utilities::concave_hull(hull,10);
       }else{
-        hull = Utilities::convex_hull(hull);
+        hull = Utilities::concave_hull(hull,10);
       }
       
       //hull = Utilities::concave_hull(hull,10);
@@ -254,7 +254,7 @@ void ImageFinding::find_crit(
       if (crtcurve[ii].type == tangential){
         hull = Utilities::concave_hull(hull,5);
       }else{
-        hull = Utilities::convex_hull(hull);
+        hull = Utilities::concave_hull(hull,5);
       }
       //hull = Utilities::concave_hull(hull,5);
       // hull = Utilities::convex_hull(hull);
@@ -571,7 +571,7 @@ void ImageFinding::find_crit(
       if (crtcurve[ii].type == tangential){
         hull = Utilities::concave_hull(hull,10);
       }else{
-        hull = Utilities::convex_hull(hull);
+        hull = Utilities::concave_hull(hull,10);
       }
       //hull = Utilities::concave_hull(hull,10);
       // hull = Utilities::convex_hull(hull);
@@ -609,7 +609,7 @@ void ImageFinding::find_crit(
       if (crtcurve[ii].type == tangential){
         hull = Utilities::concave_hull(hull,10);
       }else{
-        hull = Utilities::convex_hull(hull);
+        hull = Utilities::concave_hull(hull,10);
       }
       //hull = Utilities::concave_hull(hull,10);
       // hull = Utilities::convex_hull(hull);

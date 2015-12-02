@@ -1184,8 +1184,9 @@ void LensHaloRealNSIE::force_halo(
                                   ,PosType screening   /// the factor by which to scale the mass for screening of the point mass subtraction
 )
 {
-  
   PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
+ 
+  
   if(rcm2 < 1e-20) rcm2 = 1e-20;
   if(rcm2 < Rmax*Rmax){
     //PosType ellipR = ellipticRadiusNSIE(xcm,fratio,pa);
@@ -1201,7 +1202,7 @@ void LensHaloRealNSIE::force_halo(
       PosType r = sqrt(rcm2);
       
       //double Rin = sqrt(rcm2)*Rsize/ellipR;
-      
+      //std::cout << Rmax << " " << Rsize << " " << Rmax/Rsize << std::endl;
       double f1 = (Rmax - r)/(Rmax - Rsize),f2 = (r - Rsize)/(Rmax - Rsize);
       //double f1 = (Rmax - r)/(Rmax - Rin),f2 = (r - Rin)/(Rmax - Rin);
       
@@ -1220,7 +1221,7 @@ void LensHaloRealNSIE::force_halo(
       
       // point mass solution
       // PosType tmp = mass/rcm2/pi;
-      PosType tmp = mass/Rsize/pi/r;
+      PosType tmp = mass/rcm2/pi;
       alpha_iso[0] = -1.0*tmp*xcm[0];
       alpha_iso[1] = -1.0*tmp*xcm[1];
       
@@ -1246,9 +1247,7 @@ void LensHaloRealNSIE::force_halo(
          */
       }
       
-    }
-    else
-    {
+    }else{
       PosType xt[2]={0,0},tmp[2]={0,0};
       xt[0]=xcm[0];
       xt[1]=xcm[1];
