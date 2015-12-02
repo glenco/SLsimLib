@@ -276,6 +276,10 @@ void ImageFinding::find_crit(
       
       crtcurve[ii].caustic_intersections = Utilities::Geometry::intersect(crtcurve[ii].caustic_curve_intersecting);
       
+      // take out infinitesimal cases
+      if(crtcurve[ii].type == tangential && crtcurve[ii].critical_area == 0.0) continue;
+      if(crtcurve[ii].type != tangential && crtcurve[ii].caustic_area == 0.0) continue;
+
       ++ii;
     }
     /******* test *****************
@@ -628,26 +632,16 @@ void ImageFinding::find_crit(
       crtcurve[ii].caustic_center[1] /= hull.size();
       
       Utilities::windings(crtcurve[ii].caustic_center.x,hull.data(),hull.size(),&(crtcurve[ii].caustic_area));
-      
+    
+      // take out infinitesimal cases
+      if(crtcurve[ii].type == tangential && crtcurve[ii].critical_area == 0.0) --ii;
+      if(crtcurve[ii].type != tangential && crtcurve[ii].caustic_area == 0.0) --ii;
     }
+    
     // remove cases that were ND type
     crtcurve.resize(ii+1);
-
-    /***** test lines *******
-     if(Npseudo >= 0){
-     PosType rmax,rmin,rave;
-     psecurve[0].CausticRadius(rmax,rmin,rave);
-     std::cout << "caustic " << rmax << " " << rmin << " " << rave << std::endl;
-     PixelMap map(psecurve[0].critical_center.x,1000,rmax/500);
-     map.AddCurve(psecurve[0].critical_curve,1.0);
-     map.AddCurve(psecurve[0].caustic_curve_outline,2.0);
-     map.printFITS("!test_pseudo.fits");
-     
-     psecurve[0].CriticalRadius(rmax,rmin,rave);
-     std::cout << "critical " << rmax << " " << rmin << " " << rave << std::endl;
-     
-     }// **/
   }
+  
   
   for(int ii=0;ii<negimage.size();++ii)
     negimage[ii].imagekist->SetInImage(NO);
@@ -856,9 +850,10 @@ void ImageFinding::find_crit(
     //**************************************************************/
     
   }
+
   if(verbose) std::cout << "********* find_crit() out **************" << std::endl;
   
-  return ;
+  return;
 }
 /*  This function is not meant for an external user.  It is only used by
  find_crit(). paritypoints must be empty on first entry.
@@ -1965,6 +1960,28 @@ void ImageFinding::find_contour(
   
   
   return ;
+}
+
+std::string to_string(CritType crit){
+  std::string s;
+  switch (crit) {
+    case ND:
+      s = "NotDefined";
+      break;
+    case radial:
+      s = "radial";
+      break;
+    case tangential:
+      s = "tangential";
+      break;
+    case pseudo:
+      s = "pseudo";
+      break;
+    default:
+      break;
+  }
+  
+  return s;
 }
 
 
