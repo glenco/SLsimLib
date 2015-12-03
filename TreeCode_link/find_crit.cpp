@@ -48,6 +48,7 @@ void ImageFinding::find_crit(
   //PosType maxgridsize,mingridsize;
   std::vector<ImageInfo> negimage(1);
   Kist<Point> newpoint_kist;
+  bool usingminpoint = false;
   
   if(verbose) std::cout << "****  find_crit() ****" << std::endl;
   
@@ -80,6 +81,7 @@ void ImageFinding::find_crit(
     
     // if there is no negative magnification points use maximum mag point
     negimage[0].imagekist->InsertAfterCurrent(minpoint);
+    usingminpoint = true;
   }
   
   /******* test *****************
@@ -141,6 +143,10 @@ void ImageFinding::find_crit(
       negimage[ii].imagekist->MoveToBottom();
       do{
         if(newpoint_kist.getCurrent()->invmag < invmag_min){
+          if(usingminpoint){
+            negimage[ii].imagekist->TakeOutCurrent();
+            usingminpoint = false;
+          }
           negimage[ii].imagekist->InsertAfterCurrent(newpoint_kist.getCurrent());
           newpoint_kist.getCurrent()->in_image = YES;
         }
