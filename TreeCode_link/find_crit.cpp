@@ -150,10 +150,19 @@ void ImageFinding::find_crit(
           negimage[ii].imagekist->InsertAfterCurrent(newpoint_kist.getCurrent());
           newpoint_kist.getCurrent()->in_image = YES;
         }
-      }while(newpoint_kist.Down());
+
+        // update minpoint
+        if(usingminpoint && newpoint_kist.getCurrent()->kappa > minpoint->kappa) minpoint = newpoint_kist.getCurrent();
+        
+       }while(newpoint_kist.Down());
       
+      // if no negative island has been found update negimage to minpoint
+      if(usingminpoint && minpoint != negimage[ii].imagekist->getCurrent()){
+        negimage[ii].imagekist->TakeOutCurrent();
+        negimage[ii].imagekist->InsertAfterCurrent(minpoint);
+      }
     }
-    
+  
     critcurve[ii].imagekist->copy(negimage[ii].innerborder);
     // set the old regions back to yes incase there are overlaping regions
     newpoint_kist.Empty();
