@@ -939,7 +939,8 @@ void LensHalo::force_halo_asym(
   
   /// intersecting, subtract the point particle
   if(rcm2 < Rmax*Rmax){
-    double r = sqrt(rcm2); ///rscale;
+    
+    double r = sqrt(rcm2); // devision by rscale for isotropic halos (see above) here taken out because not used for any halo. it should be taken out for the isotropic case too, if others not affected / make use of it ;
     double theta;
     if(xcm[0] == 0.0 && xcm[1] == 0.0) theta = 0.0;
     else theta=atan2(xcm[1],xcm[0]);
@@ -953,11 +954,11 @@ void LensHalo::force_halo_asym(
       alpha_ellip[0]=alpha_tmp[0]*mass_norm_factor;
       alpha_ellip[1]=alpha_tmp[1]*mass_norm_factor;
       double f1 = (Rmax - r)/(Rmax - Rsize),f2 = (r - Rsize)/(Rmax - Rsize);
-      
-      PosType tmp = mass/Rmax/pi/r;
+
+     // PosType tmp = mass/Rmax/pi/r;
+      PosType tmp = mass/rcm2/pi;
       alpha_iso[0] = -1.0*tmp*xcm[0];
       alpha_iso[1] = -1.0*tmp*xcm[1];
-      
       alpha[0] += alpha_iso[0]*f2 + alpha_ellip[0]*f1;
       alpha[1] += alpha_iso[1]*f2 + alpha_ellip[1]*f1;
       
@@ -1191,7 +1192,7 @@ void LensHaloRealNSIE::force_halo(
   if(rcm2 < Rmax*Rmax){
     //PosType ellipR = ellipticRadiusNSIE(xcm,fratio,pa);
     float units = pow(sigma/lightspeed,2)/Grav;///sqrt(fratio); // mass/distance(physical)
-    
+   // std::cout << "rsize , rmax,  mass_norm =" << Rsize << " , " << Rmax << " , " << mass_norm_factor << std::endl;
     if(rcm2 > Rsize*Rsize)
       //if(ellipR > Rsize*Rsize)
     {
@@ -1227,7 +1228,6 @@ void LensHaloRealNSIE::force_halo(
       
       alpha[0] += alpha_iso[0]*f2 + alpha_ellip[0]*f1;
       alpha[1] += alpha_iso[1]*f2 + alpha_ellip[1]*f1;
-      
       {
         PosType tmp = -2.0*mass/rcm2/pi/rcm2;
         
