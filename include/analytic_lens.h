@@ -57,7 +57,8 @@ public:
   void get_perturbmodes(std::vector<PosType> & ListModes);
   /// get the ouput of ElliptisizeLens :
   double * getq() { return qpriv; };
-
+  double * getxcenter() { return x_center_priv; };
+  
   /// set the velocity dispersion
   void set_sigma(PosType my_sigma){sigma = my_sigma; };
   
@@ -75,7 +76,8 @@ private:
   void setCosmology(const COSMOLOGY& cosmo);
   // output of ElliptisizeLens
   double qpriv[7];
-
+  double x_center_priv[2];
+  
   //void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *xg,double beta
   //               ,int N,int *degen,double *mod,double **v,double **dx);
 

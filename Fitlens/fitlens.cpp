@@ -446,6 +446,9 @@ void LensHaloFit::FindLensSimple(
   x_center[0] *= scale;
   x_center[1] *= scale;
   
+  x_center_priv[0] = x_center[0];
+  x_center_priv[1] = x_center[1];
+  
   //Einstein_ro = 0.0; // the monople is now included in the modes
   //sigma = 0.0;
     
