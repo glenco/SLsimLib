@@ -627,7 +627,8 @@ SourceShapelets::SourceShapelets(
   NormalizeFlux();
 }
 
-
+/// Returns surface brightness in erg/cm2/sec/Hz, normalized by hplanck.
+/// Given the units of hplanck, the final units are 1/sec/cm2.
 PosType SourceShapelets::SurfaceBrightness(PosType *y)
 {
   PosType sb = 0.;
