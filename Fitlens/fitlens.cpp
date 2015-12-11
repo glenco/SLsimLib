@@ -939,8 +939,9 @@ double LensHaloFit::ElliptisizeLens(
   if(Nlenses>1) free_dmatrix(dx_subTt,0,Nimages-1,0,1);
   free_dmatrix(xi,1,5,1,5);
 
-  if (boolFlag==0) throw 12345;
+  if (boolFlag==0) { std::cout << "Throw 12345 !" << std::endl; throw 12345; }
   
+  std::cout << "Elliptisize Lens worked !" << std::endl ;
   return sm;
 }
 
@@ -962,7 +963,7 @@ double minEllip(double *par){
   K = rfD(0,1./q/q,1);
   int DidItWork = 1;
   E = K - (1-1./q/q)*rdD(0,1./q/q,1,&DidItWork)/3;
-  if (DidItWork == 0) throw 12345 ;
+  if (DidItWork == 0) { std::cout << "Throw 12345 !" << std::endl; throw 12345 ; }
   
   // fill in modes with their values for an elliptical lens
   modoT[3]=4*K/pi;
