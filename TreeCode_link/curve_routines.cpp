@@ -1963,6 +1963,10 @@ namespace Utilities{
   {
     return (A[0] - O[0]) * (B[1] - O[1]) - (A[1] - O[1]) * (B[0] - O[0]);
   }
+  PosType crossD(Point_2d &O,Point_2d &A,Point_2d &B)
+  {
+    return (A[0] - O[0]) * (B[1] - O[1]) - (A[1] - O[1]) * (B[0] - O[0]);
+  }
   bool xorderD(double *p1,double *p2){
     return p1[0] < p2[0];
   }
@@ -1976,7 +1980,6 @@ std::vector<Point *> Utilities::convex_hull(std::vector<Point *> &P)
   
   if(P.size() <= 3){
     std::vector<Point *> H = P;
-    P.resize(0);
     return H;
   }
   
@@ -2020,7 +2023,6 @@ std::vector<double *> Utilities::convex_hull(std::vector<double *> &P)
   
   if(P.size() <= 3){
     std::vector<double *> H = P;
-    P.resize(0);
     return H;
   }
   
@@ -2031,7 +2033,7 @@ std::vector<double *> Utilities::convex_hull(std::vector<double *> &P)
   // Sort points lexicographically
   std::sort(P.begin(), P.end(),
             [](double *p1,double *p2){return p1[0] < p2[0];});
-
+  
   
   // Build lower hull
   for (size_t i = 0; i < n; i++) {
@@ -2056,6 +2058,86 @@ std::vector<double *> Utilities::convex_hull(std::vector<double *> &P)
   
   return H;
 }
+/// Returns a vector of points on the convex hull in counter-clockwise order.
+void Utilities::convex_hull(std::vector<Point_2d> &P,std::vector<Point_2d> &hull)
+{
+  
+  hull.clear();
+  
+  if(P.size() <= 3){
+    hull = P;
+    return;
+  }
+  
+  size_t n = P.size();
+  size_t k = 0;
+  hull.resize(2*n);
+  
+  // Sort points lexicographically
+  std::sort(P.begin(), P.end(),
+            [](Point_2d &p1,Point_2d &p2){return p1[0] < p2[0];});
+  
+  
+  // Build lower hull
+  for (size_t i = 0; i < n; i++) {
+    while (k >= 2 && crossD(hull[k-2], hull[k-1], P[i]) <= 0){
+      k--;
+    }
+    hull[k++] = P[i];
+  }
+  
+  // Build upper hull
+  for (long i = n-2, t = k+1; i >= 0; i--) {
+    while (k >= t && crossD(hull[k-2], hull[k-1], P[i]) <= 0){
+      k--;
+      assert(k > 1);
+    }
+    hull[k++] = P[i];
+  }
+  
+  
+  hull.resize(k);
+  hull.pop_back();
+  
+  return;
+}
+
+void Utilities::concave_hull(std::vector<Point_2d> &P
+                             ,std::vector<Point_2d> &hull,double scale)
+{
+  
+  convex_hull(P,hull);
+  
+  struct Edge{
+    Point_2d p1;
+    Point_2d p2;
+    double length;
+    Edge *next;
+  };
+  
+  std::list<Edge> edges(hull.size());
+  std::list<Edge>::iterator it = edges.begin();
+  
+  for(size_t i=0;i<hull.size()-1;++i,++it){
+    (*it).length = (hull[i] - hull[i+1]).length();
+    (*it).p1 = hull[i];
+    (*it).p2 = hull[i+1];
+    (*it).next = &(*(++it));
+  }
+  (*it).length = (hull.back() - hull[0]).length();
+  (*it).p1 = hull.back();
+  (*it).p2 = hull.front();
+  (*it).next = &(edges.front());
+
+  std::sort(edges.begin(),edges.end(),[](Edge &e1,Edge &e2){ return e1.length < e2.length;});
+  
+  while(edges.front().length > scale && edges.size() < P.size()){
+    
+  }
+  
+  return;
+}
+
 /*
  double * convex_hull(double P1[],double P2[],std::vector<double *> P)
  {
