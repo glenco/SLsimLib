@@ -1227,89 +1227,85 @@ namespace Utilities
    **/
   std::vector<double> AdaptiveSmooth(const std::vector<double> &map_in,size_t Nx,size_t Ny,double value);
 
-/*
-#define ITMAX 100
-#define SHFT(a,b,c,d) (a)=(b);(b)=(c);(c)=(d);
-*/
-/** \brief One dimensional minimization routine
- *
- *  ax < bx < cx and functor(ax) > functor(bx) and functor(cx) > functor(bx)
- * returns functor(xmin)
- * Based on NR's brent() function
- *
- */
-/*
-template <typename T>
-double bart(
-            double ax     /// lower boundary of x range
-            ,double bx    /// upper boundary of y range
-            , double cx   ///
-            ,T &functor   /// functor with () overriden to take double and return double
-            ,double tol
-            ,double *xmin
-            )
-{
-  int iter;
-  double a,b,d,etemp,fu,fv,fw,fx,p,q,r,tol1,tol2,u,v,w,x,xm;
-  double e=0.0;
   
-  a=(ax < cx ? ax : cx);
-  b=(ax > cx ? ax : cx);
-  x=w=v=bx;
-  fw=fv=fx=functor(x);
-  for (iter=1;iter<=ITMAX;iter++) {
-    xm=0.5*(a+b);
-    tol2=2.0*(tol1=tol*fabs(x)+1.0e-10);
-    if (fabs(x-xm) <= (tol2-0.5*(b-a))) {
-      *xmin=x;
-      return fx;
+  /// Read in data from an ASCII file with two columns
+  template <class T1,class T2>
+  void read2columnfile(
+                       std::string filename    /// input file name
+                       ,std::vector<T1> &x     /// vector that will contain the first column
+                       ,std::vector<T2> &y     /// vector that will contain the first column
+                       ,std::string delineator = " "  /// specific string the seporates columns, ex. ",", "|", etc.
+                       ,bool verbose = false
+                       
+                       ){
+    
+    x.clear();
+    y.clear();
+    
+    std::ifstream file_in(filename.c_str());
+    std::string myline;
+    std::string space = " ";
+    T1 myt1;
+    T2 myt2;
+    
+    std::string strg;
+    std::stringstream buffer;
+    
+    if(!file_in){
+      std::cout << "Can't open file " << filename << std::endl;
+      ERROR_MESSAGE();
+      throw std::runtime_error(" Cannot open file.");
     }
-    if (fabs(e) > tol1) {
-      r=(x-w)*(fx-fv);
-      q=(x-v)*(fx-fw);
-      p=(x-v)*q-(x-w)*r;
-      q=2.0*(q-r);
-      if (q > 0.0) p = -p;
-      q=fabs(q);
-      etemp=e;
-      e=d;
-      if (fabs(p) >= fabs(0.5*q*etemp) || p <= q*(a-x) || p >= q*(b-x))
-        d=0.3819660*(e=(x >= xm ? a-x : b-x));
-      else {
-        d=p/q;
-        u=x+d;
-        if (u-a < tol2 || b-u < tol2)
-          d = ((xm-x) >= 0.0 ? fabs(tol1) : -fabs(tol1));
+    
+    std::cout << "Reading caustic information from " << filename << std::endl;
+    size_t i=0;
+    while(file_in.peek() == '#'){
+      file_in.ignore(10000,'\n');
+      ++i;
+    }
+    std::cout << "skipped "<< i << " comment lines in " << filename << std::endl;
+    
+    size_t pos;
+    // read in data
+    while(getline(file_in,myline)){
+      
+      if(myline[0] == '#'){
+        std::cout << "skipped line " << i << std::endl;
+        continue;
       }
-    } else {
-      d=0.3819660*(e=(x >= xm ? a-x : b-x));
+      
+      pos= myline.find_first_not_of(space);
+      myline.erase(0,pos);
+      
+      
+      pos = myline.find(delineator);
+      strg.assign(myline,0,pos);
+      buffer << strg;
+      buffer >> myt1;
+      if(verbose) std::cout << myt1 << " ";
+      x.push_back(myt1);
+      
+      myline.erase(0,pos+1);
+      pos= myline.find_first_not_of(space);
+      myline.erase(0,pos);
+      
+      strg.clear();
+      buffer.clear();
+      
+      pos = myline.find(space);
+      strg.assign(myline,0,pos);
+      buffer << strg;
+      buffer >> myt2;
+      if(verbose)  std::cout << myt2 << std::endl;
+      y.push_back(myt2);
+      
+      strg.clear();
+      buffer.clear();
+      myline.clear();
+      
     }
-    u=(fabs(d) >= tol1 ? x+d : x+((d) >= 0.0 ? fabs(tol1) : -fabs(tol1)));
-    fu=functor(u);
-    if (fu <= fx) {
-      if (u >= x) a=x; else b=x;
-      SHFT(v,w,x,u)
-      SHFT(fv,fw,fx,fu)
-    } else {
-      if (u < x) a=u; else b=u;
-      if (fu <= fw || w == x) {
-        v=w;
-        w=u;
-        fv=fw;
-        fw=fu;
-      } else if (fu <= fv || v == x || v == w) {
-        v=u;
-        fv=fu;
-      }
-    }
+    std::cout << "Read " << x.size() << " lines from " << filename << std::endl;
   }
 
-  *xmin=x;
-  return fx;
-}
-
-#undef ITMAX
-#undef SHFT
- */
 }
 #endif
