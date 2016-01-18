@@ -48,6 +48,7 @@ void ImageFinding::find_crit(
   //PosType maxgridsize,mingridsize;
   std::vector<ImageInfo> negimage(1);
   Kist<Point> newpoint_kist;
+  bool usingminpoint = false;
   
   if(verbose) std::cout << "****  find_crit() ****" << std::endl;
   
@@ -80,6 +81,7 @@ void ImageFinding::find_crit(
     
     // if there is no negative magnification points use maximum mag point
     negimage[0].imagekist->InsertAfterCurrent(minpoint);
+    usingminpoint = true;
   }
   
   /******* test *****************
@@ -141,13 +143,26 @@ void ImageFinding::find_crit(
       negimage[ii].imagekist->MoveToBottom();
       do{
         if(newpoint_kist.getCurrent()->invmag < invmag_min){
+          if(usingminpoint){
+            negimage[ii].imagekist->TakeOutCurrent();
+            usingminpoint = false;
+          }
           negimage[ii].imagekist->InsertAfterCurrent(newpoint_kist.getCurrent());
           newpoint_kist.getCurrent()->in_image = YES;
         }
-      }while(newpoint_kist.Down());
+
+        // update minpoint
+        if(usingminpoint && newpoint_kist.getCurrent()->kappa > minpoint->kappa) minpoint = newpoint_kist.getCurrent();
+        
+       }while(newpoint_kist.Down());
       
+      // if no negative island has been found update negimage to minpoint
+      if(usingminpoint && minpoint != negimage[ii].imagekist->getCurrent()){
+        negimage[ii].imagekist->TakeOutCurrent();
+        negimage[ii].imagekist->InsertAfterCurrent(minpoint);
+      }
     }
-    
+  
     critcurve[ii].imagekist->copy(negimage[ii].innerborder);
     // set the old regions back to yes incase there are overlaping regions
     newpoint_kist.Empty();
@@ -215,9 +230,15 @@ void ImageFinding::find_crit(
        --it;
        }
        // *******************************/
+      // Image plane hull
+      if (crtcurve[ii].type == tangential){
+        hull = Utilities::concave_hull(hull,10);
+      }else{
+        hull = Utilities::convex_hull(hull);
+      }
       
-      hull = Utilities::concave_hull(hull,10);
-      //hull = Utilities::convex_hull(hull);
+      //hull = Utilities::concave_hull(hull,10);
+      // hull = Utilities::convex_hull(hull);
       
       crtcurve[ii].critical_curve.resize(hull.size());
       crtcurve[ii].caustic_curve_intersecting.resize(hull.size());
@@ -246,8 +267,13 @@ void ImageFinding::find_crit(
       hull.clear();
       critcurve[jj].imagekist->TranformPlanes();
       hull = critcurve[jj].imagekist->copytovector();
-      hull = Utilities::concave_hull(hull,10);
-      //hull = Utilities::convex_hull(hull);
+      if (crtcurve[ii].type == tangential){
+        hull = Utilities::concave_hull(hull,5);
+      }else{
+        hull = Utilities::convex_hull(hull);
+      }
+      //hull = Utilities::concave_hull(hull,5);
+      // hull = Utilities::convex_hull(hull);
       
       crtcurve[ii].caustic_curve_outline.resize(hull.size());
       crtcurve[ii].caustic_center[0] = 0;
@@ -266,6 +292,10 @@ void ImageFinding::find_crit(
       
       crtcurve[ii].caustic_intersections = Utilities::Geometry::intersect(crtcurve[ii].caustic_curve_intersecting);
       
+      // take out infinitesimal cases
+      if(crtcurve[ii].type == tangential && crtcurve[ii].critical_area == 0.0) continue;
+      if(crtcurve[ii].type != tangential && crtcurve[ii].caustic_area == 0.0) continue;
+
       ++ii;
     }
     /******* test *****************
@@ -558,8 +588,13 @@ void ImageFinding::find_crit(
       //std::vector<Point *> hull = pseudocurve[i].innerborder->copytovector();
       std::vector<Point *> hull = pseudocurve[i].outerborder->copytovector();
       if(verbose) std::cout << " doing concave hull with " << hull.size() << " points..." << std::endl;
-      hull = Utilities::concave_hull(hull,10);
-      //hull = Utilities::convex_hull(hull);
+      if (crtcurve[ii].type == tangential){
+        hull = Utilities::concave_hull(hull,10);
+      }else{
+        hull = Utilities::convex_hull(hull);
+      }
+      //hull = Utilities::concave_hull(hull,10);
+      // hull = Utilities::convex_hull(hull);
       assert(hull.size() <= pseudocurve[i].outerborder->Nunits());
       
       if(crtcurve[ii].type != pseudo){
@@ -598,9 +633,13 @@ void ImageFinding::find_crit(
       pseudocurve[i].imagekist->TranformPlanes();
       hull = pseudocurve[i].imagekist->copytovector();
       if(verbose) std::cout << " doing concave hull with " << hull.size() << " points..." << std::endl;
-      
-      hull = Utilities::concave_hull(hull,10);
-      //hull = Utilities::convex_hull(hull);
+      if (crtcurve[ii].type == tangential){
+        hull = Utilities::concave_hull(hull,10);
+      }else{
+        hull = Utilities::convex_hull(hull);
+      }
+      //hull = Utilities::concave_hull(hull,10);
+      // hull = Utilities::convex_hull(hull);
       
       crtcurve[ii].caustic_curve_outline.resize(hull.size());
       crtcurve[ii].caustic_center[0] = 0;
@@ -616,26 +655,16 @@ void ImageFinding::find_crit(
       crtcurve[ii].caustic_center[1] /= hull.size();
       
       Utilities::windings(crtcurve[ii].caustic_center.x,hull.data(),hull.size(),&(crtcurve[ii].caustic_area));
-      
+    
+      // take out infinitesimal cases
+      if(crtcurve[ii].type == tangential && crtcurve[ii].critical_area == 0.0) --ii;
+      if(crtcurve[ii].type != tangential && crtcurve[ii].caustic_area == 0.0) --ii;
     }
+    
     // remove cases that were ND type
     crtcurve.resize(ii+1);
-
-    /***** test lines *******
-     if(Npseudo >= 0){
-     PosType rmax,rmin,rave;
-     psecurve[0].CausticRadius(rmax,rmin,rave);
-     std::cout << "caustic " << rmax << " " << rmin << " " << rave << std::endl;
-     PixelMap map(psecurve[0].critical_center.x,1000,rmax/500);
-     map.AddCurve(psecurve[0].critical_curve,1.0);
-     map.AddCurve(psecurve[0].caustic_curve_outline,2.0);
-     map.printFITS("!test_pseudo.fits");
-     
-     psecurve[0].CriticalRadius(rmax,rmin,rave);
-     std::cout << "critical " << rmax << " " << rmin << " " << rave << std::endl;
-     
-     }// **/
   }
+  
   
   for(int ii=0;ii<negimage.size();++ii)
     negimage[ii].imagekist->SetInImage(NO);
@@ -844,9 +873,10 @@ void ImageFinding::find_crit(
     //**************************************************************/
     
   }
+
   if(verbose) std::cout << "********* find_crit() out **************" << std::endl;
   
-  return ;
+  return;
 }
 /*  This function is not meant for an external user.  It is only used by
  find_crit(). paritypoints must be empty on first entry.
@@ -1945,6 +1975,28 @@ void ImageFinding::find_contour(
   
   
   return ;
+}
+
+std::string to_string(CritType crit){
+  std::string s;
+  switch (crit) {
+    case ND:
+      s = "NotDefined";
+      break;
+    case radial:
+      s = "radial";
+      break;
+    case tangential:
+      s = "tangential";
+      break;
+    case pseudo:
+      s = "pseudo";
+      break;
+    default:
+      break;
+  }
+  
+  return s;
 }
 
 

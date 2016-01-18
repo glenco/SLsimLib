@@ -109,6 +109,10 @@ typedef struct Grid* GridHndl;
 
 /// enumerates the types of critical curves. ND is "not defined".
 enum CritType {ND,radial,tangential,pseudo};
+
+/// converts CritType into descriptive string
+std::string to_string(CritType crit);
+ 
 // in image_finder_kist.c
 namespace ImageFinding{
   

@@ -41,7 +41,7 @@ void LensHaloBaseNSIE::force_halo(
   if(sigma > 0.0){
     PosType xt[2]={0,0};
     float units = pow(sigma/lightspeed,2)/Grav ; /// sqrt(fratio); // in mass / PhysMpc
-    units *= 2. * Rmax / pi ; // units now in mass /// Multiplying by 2*Rmax/pi to match with Power Law
+    units *= 2. * Rsize / pi ; // units now in mass /// Multiplying by 2*Rsize/pi to match with Power Law
       
     xt[0]=xcm[0]; // in PhysMpc
     xt[1]=xcm[1];
@@ -185,7 +185,7 @@ void LensHaloBaseNSIE::assignParams(InputParams& params){
   else if(sub_Ndensity > 0){
     if(!params.get("main_sub_beta",sub_beta)) error_message1("main_sub_beta",params.filename());
     if(!params.get("main_sub_alpha",sub_alpha)) error_message1("main_sub_alpha",params.filename());
-    if(!params.get("main_sub_Rmax",sub_Rmax)) error_message1("main_sub_Rmax",params.filename());
+    if(!params.get("main_sub_Rsize",sub_Rsize)) error_message1("main_sub_Rsize",params.filename());
     if(!params.get("main_sub_mass_max",sub_Mmax)) error_message1("main_sub_mass_max",params.filename());
     if(!params.get("main_sub_mass_min",sub_Mmin)) error_message1("main_sub_mass_min",params.filename());
     if(sub_Mmin < 1.0e3){
@@ -310,7 +310,7 @@ void LensHaloBaseNSIE::PrintLens(bool show_substruct,bool show_stars){
 	if(sub_Ndensity > 0){
 		cout << "betaSubstruct "<<sub_beta << endl;
 		cout << "alphaSubstruct "<<sub_alpha << endl;
-		cout << "RmaxSubstruct "<<sub_Rmax << " Mpc" << endl;
+		cout << "RsizeSubstruct "<<sub_Rsize << " Mpc" << endl;
 		cout << "MmaxSubstruct "<<sub_Mmax << " Msun" << endl;
 		cout << "MminSubstruct "<<sub_Mmin << " Msun\n" << endl;
 	}
@@ -320,7 +320,7 @@ void LensHaloBaseNSIE::PrintLens(bool show_substruct,bool show_stars){
 		if(show_substruct){
 			if(substruct_implanted || sub_N > 0){
 				for(i=0;i<sub_N;++i){
-				  cout << "RcutSubstruct "<<i << " " <<subs[i].get_Rmax() << " Mpc" << endl;
+				  cout << "RcutSubstruct "<<i << " " <<subs[i].get_Rsize() << " Mpc" << endl;
 				  cout << "massSubstruct "<<i<<" "<<subs[i].get_mass() << " Msun" << endl;
 				  cout << "xSubstruct "<<i<<" "<<sub_x[i][0]<<" "<<sub_x[i][1] << " Mpc" << endl;
 					switch(main_sub_type){
@@ -543,7 +543,7 @@ void LensHalo::faxial2(PosType theta,PosType f[]){
 
 /// Derivatives of the potential damping factor with respect to r ... TODO: come up with a better damping faction
 void LensHalo::gradial(PosType r,PosType g[]){
-  double r_eps=0.3*Rmax;
+  double r_eps=0.3*Rsize;
 
   PosType x = (1+r/r_eps);
   g[0] = 1.0/x/x;
@@ -559,7 +559,7 @@ void LensHalo::gradial2(PosType r,PosType mu, PosType sigma, PosType g[]){
     //g[1] = g[0]*(-1.0*(x-mu)/sigma/sigma);
     //g[2] = g[0]*((x-mu)*(x-mu)-sigma*sigma)/pow(sigma,4);
 
-    double r_eps=Rmax;
+    double r_eps=Rsize;
     // former tweaked
     PosType x = (1+exp(-sigma*(r-mu)/r_eps));
     g[0] = 1.0-1.0/x;
@@ -751,9 +751,9 @@ void LensHalo::alphakappagamma_asym(
  PosType f[3],g[4],alpha_r,alpha_theta;
  PosType x=r/rscale;
  felliptical(x,fratio,theta,f,g);
- PosType alpha_isoG = mass_norm_factor*mass*alpha_h(f[0])/f[0]/pi;
- PosType kappa_isoG = mass_norm_factor*mass*kappa_h(f[0])/f[0]/f[0]/pi;
- PosType phi_isoG = mass_norm_factor*mass*phi_int(f[0])/pi;
+ PosType alpha_isoG = mass*alpha_h(f[0])/f[0]/pi;
+ PosType kappa_isoG = mass*kappa_h(f[0])/f[0]/f[0]/pi;
+ PosType phi_isoG = mass*phi_int(f[0])/pi;
  
  alpha_r = alpha_isoG * g[1]; // with damping
  alpha_theta = alpha_isoG * f[1]/x; //  with damping
@@ -795,7 +795,7 @@ void LensHalo::alphakappagamma1asym(
   PosType F;
   PosType x=r/rscale;
   PosType phi_iso=mass*(phi_int(x))/pi;
-  //PosType phi_iso=-1.0*mass*(phi_h(r/rscale)-log(Rmax)+1./(2-beta))/pi;    //  ( pow(x/xmax,2-beta) - 1 )/(2-beta) + log(Rmax)
+  //PosType phi_iso=-1.0*mass*(phi_h(r/rscale)-log(Rsize)+1./(2-beta))/pi;    //  ( pow(x/xmax,2-beta) - 1 )/(2-beta) + log(Rsize)
   PosType alpha_iso=mass*alpha_h(x)/pi/x;  //-pow(x/xmax,-beta+1)
   PosType kappa_iso=mass*kappa_h(x)/pi/x/x;
   PosType gamma_iso=mass*gamma_h(x)/pi/x/x; // -beta*pow(x/xmax,-beta)
@@ -851,8 +851,8 @@ void LensHalo::alphakappagamma2asym( // Schramm 1990
                                     ,PosType gamma[]
                                     ,PosType *phi
                                     ){
-  double a = Rmax*sqrt(fratio);
-  double b = Rmax/sqrt(fratio);
+  double a = Rsize*sqrt(fratio);
+  double b = Rsize/sqrt(fratio);
   double a2=a*a,b2 = b*b;
   double xm[2];
   xm[0]=r*cos(theta);
@@ -871,10 +871,10 @@ void LensHalo::alphakappagamma2asym( // Schramm 1990
   PosType mo = sqrt(xtmp[0]*xtmp[0]/a2 + xtmp[1]*xtmp[1]/b2);
   //std::cout<< mo << " " << lambda << " " << xtmp[0] << " " << xtmp[1] << " " << r << " " << theta << std::endl;
   //DALPHAXDM funcX(lambda,a2,b2,xtmp,this);
-  alpha[0] = -8*a*b*xtmp[0]*IDAXDM(lambda,a2,b2,xtmp,Rmax,mo)/pi;
+  alpha[0] = -8*a*b*xtmp[0]*IDAXDM(lambda,a2,b2,xtmp,Rsize,mo)/pi;
   //alpha[0] = -8*a*b*xtmp[0]*Utilities::nintegrate<DALPHAXDM,PosType>(funcX,0,MIN(mo,1.0),1.0e-1)/pi;
   //DALPHAYDM funcY(lambda,a2,b2,xtmp,this);
-  alpha[1] = -8*a*b*xtmp[1]*IDAYDM(lambda,a2,b2,xtmp,Rmax,mo)/pi;
+  alpha[1] = -8*a*b*xtmp[1]*IDAYDM(lambda,a2,b2,xtmp,Rsize,mo)/pi;
   //alpha[1] = -8*a*b*xtmp[1]*Utilities::nintegrate<DALPHAYDM,PosType>(funcY,0,MIN(mo,1.0),1.0e-1)/pi;
   double temp = alpha[0];
   //std::cout << c << " " << s <<  std::endl;
@@ -900,19 +900,19 @@ void LensHalo::alphakappagamma3asym( // Keeton's 2001 adaption of Schramm 1990
                                     ,PosType gamma[]
                                     ,PosType *phi
                                     ){
-  //double a = Rmax*sqrt(fratio);
-  //double b = Rmax/sqrt(fratio);
+  //double a = Rsize*sqrt(fratio);
+  //double b = Rsize/sqrt(fratio);
   //double a2=a*a,b2 = b*b;
   double xm[2];
-  xm[0]=r*cos(theta)/Rmax;
-  xm[1]=r*sin(theta)/Rmax;
+  xm[0]=r*cos(theta)/Rsize;
+  xm[1]=r*sin(theta)/Rsize;
   
-  //std::cout << "inside akg4: " << pa << " " << xm[0] << " " << Rmax <<  std::endl;
+  //std::cout << "inside akg4: " << pa << " " << xm[0] << " " << Rsize <<  std::endl;
   double c = cos(pa),s = sin(pa);
   double xtmp[2] = {xm[0]*c - xm[1]*s,xm[0]*s + xm[1]*c};
   
-  double j0=SCHRAMMJN(0,xtmp,Rmax);
-  double j1=SCHRAMMJN(1,xtmp,Rmax);
+  double j0=SCHRAMMJN(0,xtmp,Rsize);
+  double j1=SCHRAMMJN(1,xtmp,Rsize);
   
   
   alpha[0] = -fratio*xtmp[0]*j0*2.75;
@@ -925,12 +925,12 @@ void LensHalo::alphakappagamma3asym( // Keeton's 2001 adaption of Schramm 1990
   
   double xi=sqrt(xtmp[0]*xtmp[0]+xtmp[1]*xtmp[1]/fratio/fratio);
   *kappa = mass*kappa_h(xi)/pi/xi/xi;
-  double gt = 0.5*(2.0*fratio*xtmp[0]*xtmp[0]*SCHRAMMKN(0,xtmp,Rmax)+fratio*j0*2.75 - 2.0*fratio*xtmp[1]*xtmp[1]*SCHRAMMKN(2,xtmp,Rmax)-fratio*j1*2.25);
-  double g45 = -2.0*fratio*xtmp[0]*xtmp[1]*SCHRAMMKN(1,xtmp,Rmax);
+  double gt = 0.5*(2.0*fratio*xtmp[0]*xtmp[0]*SCHRAMMKN(0,xtmp,Rsize)+fratio*j0*2.75 - 2.0*fratio*xtmp[1]*xtmp[1]*SCHRAMMKN(2,xtmp,Rsize)-fratio*j1*2.25);
+  double g45 = -2.0*fratio*xtmp[0]*xtmp[1]*SCHRAMMKN(1,xtmp,Rsize);
   gamma[0] = (cos(2*theta)*gt - sin(2*theta)*g45);
   gamma[1] = (sin(2*theta)*gt + cos(2*theta)*g45);
   
-  *phi = -0.5*fratio*SCHRAMMI(xtmp,Rmax);
+  *phi = -0.5*fratio*SCHRAMMI(xtmp,Rsize);
   
 };
 
@@ -973,7 +973,7 @@ void LensHalo::felliptical(double r, double q, double theta, double f[], double 
     //reps=rmax
     //q=r/reps+q0*(1-r/reps) // q=q0 for small radii, q=1 for large radii
     //double eps=1.-1./q/q;
-    //double reps=0.5*Rmax;
+    //double reps=0.5*Rsize;
     //double dampslope=2;
   
     // no damping
@@ -983,10 +983,10 @@ void LensHalo::felliptical(double r, double q, double theta, double f[], double 
      
 
 /*    double sig2 = r_eps*r_eps;
-    double tmp = exp(-0.5*(r-Rmax)*(r-Rmax)/sig2);
+    double tmp = exp(-0.5*(r-Rsize)*(r-Rsize)/sig2);
     A[0] = q*q + (1-q*q)*tmp; // Compare the two cases: 1/q/q or q*q
-    A[1] = -(1-q*q)*tmp*(r-Rmax)/sig2; // no r dependence thus set to 0
-    A[2] = -(1-q*q)*tmp*(1 - (r-Rmax)*(r-Rmax)/sig2)/sig2;;
+    A[1] = -(1-q*q)*tmp*(r-Rsize)/sig2; // no r dependence thus set to 0
+    A[2] = -(1-q*q)*tmp*(1 - (r-Rsize)*(r-Rsize)/sig2)/sig2;;
 */ 
     //A[0]=1-eps*(1-pow(x/reps,dampslope));
     //A[1]=eps*dampslope/reps*pow((x/reps),dampslope-1.);
@@ -1067,7 +1067,7 @@ PosType LensHalo::kappa_asym(PosType r, PosType theta){ /// radius in Mpc (Not x
   
   
   //double beta=get_slope(); // needed for PowerLawHalos
-  //double phitwo = mass*(1-beta)*pow(f[0]/Rmax,-beta)/pi/Rmax/Rmax; // works for PowerLawHalos
+  //double phitwo = mass*(1-beta)*pow(f[0]/Rsize,-beta)/pi/Rsize/Rsize; // works for PowerLawHalos
   
   //phitwo=dgfunctiondx(G); // used for a check of values, leave it here for now.
   

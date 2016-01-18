@@ -45,7 +45,9 @@ namespace
 		
 		// Field halos type
 		{"field_internal_profile", "NFW", "field halo type: nolens, NFW, PseudoNFW, PowerLaw, NSIE, AnaLens, UniLens, DummyLens"},
-		{"field_internal_profile_galaxy", "0", "if set, a field halo galaxy profile is chosen: 0 or none, 1 or NSIE"},
+		{"field_internal_profile_galaxy", "0", "if set, a field halo galaxy profile is chosen: 0 or none, 1 or NSIE, 2 or PowerLaw, 3 or Hernquist, 4 or Jaffe"},
+  	{"field_internal_profile_galaxy_slope", "-1", "slope of the field halo galaxy PowerLaw profile"},
+
 		{"field_prof_internal_slope_pnfw", "2", "slope of the PseudoNFW profile"},
 		{"field_prof_internal_slope_pl", "-1", "slope of the field halo PowerLaw profile"},
 		
@@ -66,7 +68,7 @@ namespace
 		// Main halos
 		{"main_mass", "1e15", "main halo mass"},
 		{"main_zlens", "0.42", "main halo redshift"},
-		{"main_Rmax", "1.0", "main halo radius"},
+		{"main_Rsize", "1.0", "main halo radius"},
 		{"main_concentration", "5", "main halo concentration parameter"},
 		{"main_slope", "1", "main halo slope"},
 		{"main_sigma", "250", "velocity dispersion in km/s"},
@@ -92,7 +94,7 @@ namespace
 		{"main_sub_Ndensity", "0.0e6", "number density of substructure"},
 		{"main_sub_beta", "-1.0", ""},
 		{"main_sub_alpha", "-1.9", ""},
-		{"main_sub_Rmax", "0.5e-3", ""},
+		{"main_sub_Rsize", "0.5e-3", ""},
 		{"main_sub_mass_max", "1.0e9", ""},
 		{"main_sub_mass_min", "1.0e6", ""},
 		{"main_sub_type", "1", ""},

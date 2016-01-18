@@ -519,8 +519,25 @@ bool InputParams::get(std::string label, GalaxyLensHaloType& value) const
 		value = nsie_gal;
 		return true;
 	}
+	if(!it->second.compare("2") || !it->second.compare("PowerLaw"))
+	{
+		value = pl_gal;
+		return true;
+	}
+	if(!it->second.compare("3") || !it->second.compare("Hernquist"))
+	{
+		value = hern_gal;
+		return true;
+	}
+  if(!it->second.compare("4") || !it->second.compare("Jaffe"))
+	{
+		value = jaffe_gal;
+		return true;
+	}
+  
+  
+	std::cout << label << " in parameter file " << paramfile_name << " needs to be 0 or none, 1 or NSIE, 2 or PowerLaw, 3 or Hernquist, 4 or Jaffe" << std::endl;
 
-	std::cout << label << " in parameter file " << paramfile_name << " needs to be 0 or none, 1 or NSIE" << std::endl;
 	return false;
 }
 

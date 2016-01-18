@@ -154,8 +154,10 @@ PosType rmaxNSIE(
 		,PosType f       /// axis ratio
 		,PosType rc      /// core radius Mpc
 		){
+      
 	return sqrt( pow(mass*Grav*lightspeed*lightspeed*f/pi/sigma/sigma + rc,2) - rc*rc );
 }
+
 /** \ingroup function
  *  \brief Elliptical radius \f$ R^2 = x^2 + f^2 y^2 \f$ given f and position angle of model
  */
@@ -346,20 +348,20 @@ KappaType LensHaloBaseNSIE::phiNSIE(PosType const *xt    /// position on the ima
 /**\ingroup function
  *
  * Quadropole moment of an elliptically truncated NSIE
- * Units are unit[mass]*unit[Rmax]^2
+ * Units are unit[mass]*unit[Rsize]^2
  */
 void quadMomNSIE(
 		float mass     /// total mass
-		,float Rmax    /// elliptical maximum radius
+		,float Rsize    /// elliptical maximum radius
 		,float f       /// axis ratio of mass
-		,float rc      /// core size in same units as Rmax
+		,float rc      /// core size in same units as Rsize
 		,float theta   /// position angle of ellipsoid
 		,PosType *quad   /// output
 	){
 
 	PosType m3,b;
-	b = rc/Rmax;
-	m3 = f*Rmax*Rmax*mass*(1-f*f)*( (1-2*b*b)*sqrt(1+b*b) +2*b*b*b)/(sqrt(1+b*b)-b)/6/f/f;
+	b = rc/Rsize;
+	m3 = f*Rsize*Rsize*mass*(1-f*f)*( (1-2*b*b)*sqrt(1+b*b) +2*b*b*b)/(sqrt(1+b*b)-b)/6/f/f;
 
 	quad[0] = m3*cos(-2*theta);
 	quad[1] = -m3*cos(-2*theta);
