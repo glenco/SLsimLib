@@ -939,7 +939,8 @@ void LensHalo::force_halo_asym(
   
   /// intersecting, subtract the point particle
   if(rcm2 < Rmax*Rmax){
-    double r = sqrt(rcm2); ///rscale;
+    
+    double r = sqrt(rcm2); // devision by rscale for isotropic halos (see above) here taken out because not used for any halo. it should be taken out for the isotropic case too, if others not affected / make use of it ;
     double theta;
     if(xcm[0] == 0.0 && xcm[1] == 0.0) theta = 0.0;
     else theta=atan2(xcm[1],xcm[0]);
@@ -953,11 +954,11 @@ void LensHalo::force_halo_asym(
       alpha_ellip[0]=alpha_tmp[0]*mass_norm_factor;
       alpha_ellip[1]=alpha_tmp[1]*mass_norm_factor;
       double f1 = (Rmax - r)/(Rmax - Rsize),f2 = (r - Rsize)/(Rmax - Rsize);
-      
-      PosType tmp = mass/Rmax/pi/r;
+
+     // PosType tmp = mass/Rmax/pi/r;
+      PosType tmp = mass/rcm2/pi;
       alpha_iso[0] = -1.0*tmp*xcm[0];
       alpha_iso[1] = -1.0*tmp*xcm[1];
-      
       alpha[0] += alpha_iso[0]*f2 + alpha_ellip[0]*f1;
       alpha[1] += alpha_iso[1]*f2 + alpha_ellip[1]*f1;
       
@@ -982,14 +983,20 @@ void LensHalo::force_halo_asym(
       alpha[0] +=  alpha_tmp[0]*mass_norm_factor;//-1.0*subtract_point*mass/rcm2/pi*xcm[0];
       alpha[1] +=  alpha_tmp[1]*mass_norm_factor;//-1.0*subtract_point*mass/rcm2/pi*xcm[1];
 
-      if(get_switch_flag()==true){  /// case distinction used for elliptical NFWs only (get_switch_flag==true)
+      if(get_switch_flag()==true){  /// case distinction used for elliptical NFWs (true) only (get_switch_flag==true)
         *kappa += kappa_tmp*mass_norm_factor*mass_norm_factor;
         gamma[0] += 0.5*gamma_tmp[0]*mass_norm_factor*mass_norm_factor;
         gamma[1] += 0.5*gamma_tmp[1]*mass_norm_factor*mass_norm_factor;
       }else{
         *kappa += kappa_tmp*mass_norm_factor;
+
         gamma[0] += 0.5*gamma_tmp[0]*mass_norm_factor;//+1.0*subtract_point*mass/rcm2/pi/rcm2*0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1]);
         gamma[1] += 0.5*gamma_tmp[1]*mass_norm_factor;//-1.0*subtract_point*mass/rcm2/pi/rcm2*(xcm[0]*xcm[1]);
+        
+        //if(theta < 0.660 && theta> 0.659){
+        //assert(mass_norm_factor==1);
+        //std::cout << theta << " , " <<  0.5*gamma_tmp[0]*mass_norm_factor << " , " << 0.5*gamma_tmp[1]*mass_norm_factor << " , " << kappa_tmp*mass_norm_factor << " , " << alpha_tmp[0]*mass_norm_factor << " , " << alpha_tmp[1]*mass_norm_factor  <<  std::endl;
+        //}
       }
       
       /*if (rcm2 < 1E-6){
@@ -1003,7 +1010,7 @@ void LensHalo::force_halo_asym(
     
     if(subtract_point){
       //std::cout << "DO WE EVEN GET HERE??" << std::endl;
-      PosType tmp =  subtract_point*mass/pi/rcm2; // *mass_norm_factor
+      PosType tmp =  screening*mass/pi/rcm2; // *mass_norm_factor
       alpha[0] +=  tmp*xcm[0];
       alpha[1] +=  tmp*xcm[1];
       
@@ -1019,7 +1026,7 @@ void LensHalo::force_halo_asym(
   {
     if (subtract_point == false)
     {
-      PosType prefac = screening*mass/rcm2/pi;
+      PosType prefac = mass/rcm2/pi;
       alpha[0] += -1.0 * prefac * xcm[0];
       alpha[1] += -1.0 * prefac * xcm[1];
       
@@ -1184,13 +1191,14 @@ void LensHaloRealNSIE::force_halo(
                                   ,PosType screening   /// the factor by which to scale the mass for screening of the point mass subtraction
 )
 {
-  
   PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
+ 
+  
   if(rcm2 < 1e-20) rcm2 = 1e-20;
   if(rcm2 < Rmax*Rmax){
     //PosType ellipR = ellipticRadiusNSIE(xcm,fratio,pa);
     float units = pow(sigma/lightspeed,2)/Grav;///sqrt(fratio); // mass/distance(physical)
-    
+   // std::cout << "rsize , rmax,  mass_norm =" << Rsize << " , " << Rmax << " , " << mass_norm_factor << std::endl;
     if(rcm2 > Rsize*Rsize)
       //if(ellipR > Rsize*Rsize)
     {
@@ -1201,7 +1209,7 @@ void LensHaloRealNSIE::force_halo(
       PosType r = sqrt(rcm2);
       
       //double Rin = sqrt(rcm2)*Rsize/ellipR;
-      
+      //std::cout << Rmax << " " << Rsize << " " << Rmax/Rsize << std::endl;
       double f1 = (Rmax - r)/(Rmax - Rsize),f2 = (r - Rsize)/(Rmax - Rsize);
       //double f1 = (Rmax - r)/(Rmax - Rin),f2 = (r - Rin)/(Rmax - Rin);
       
@@ -1220,13 +1228,12 @@ void LensHaloRealNSIE::force_halo(
       
       // point mass solution
       // PosType tmp = mass/rcm2/pi;
-      PosType tmp = mass/Rsize/pi/r;
+      PosType tmp = mass/rcm2/pi;
       alpha_iso[0] = -1.0*tmp*xcm[0];
       alpha_iso[1] = -1.0*tmp*xcm[1];
       
       alpha[0] += alpha_iso[0]*f2 + alpha_ellip[0]*f1;
       alpha[1] += alpha_iso[1]*f2 + alpha_ellip[1]*f1;
-      
       {
         PosType tmp = -2.0*mass/rcm2/pi/rcm2;
         
@@ -1246,14 +1253,12 @@ void LensHaloRealNSIE::force_halo(
          */
       }
       
-    }
-    else
-    {
+    }else{
       PosType xt[2]={0,0},tmp[2]={0,0};
       xt[0]=xcm[0];
       xt[1]=xcm[1];
       alphaNSIE(tmp,xt,fratio,rcore,pa);
-      
+      PosType tmpa[2]={tmp[0],tmp[1]};
       //alpha[0] = units*tmp[0];  // minus sign removed because already included in alphaNSIE
       //alpha[1] = units*tmp[1];  // Why was the "+=" removed?
       alpha[0] += units*tmp[0];//*sqrt(fratio);
@@ -1264,6 +1269,12 @@ void LensHaloRealNSIE::force_halo(
         gammaNSIE(tmp,xt,fratio,rcore,pa);
         gamma[0] += units*tmp[0];
         gamma[1] += units*tmp[1];
+        double theta=atan2(xcm[1],xcm[0]);
+        //if(theta < 0.660 && theta> 0.659){
+         // std::cout << theta << " , " <<  units*tmp[0] << " , " << units*tmp[1] << " , " << units*kappaNSIE(xt,fratio,rcore,pa) << " , " << tmpa[0]*units << " , " << tmpa[0]*units  <<  std::endl;
+
+        
+        //}
         //if (rcm2 < 1E-9){
          //std::cout << units*kappaNSIE(xt,fratio,rcore,pa) << " " <<  units*tmp[0] << " "  <<  units*tmp[1] << " " << rcm2 <<std::endl;
         //}
