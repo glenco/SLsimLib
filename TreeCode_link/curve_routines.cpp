@@ -138,6 +138,7 @@ void split_order_curve4(OldImageInfo *curves,int Maxcurves,int *Ncurves){
   return ;
 }
 namespace Utilities{
+
   /** \ingroup Utill
    *
    * \brief Orders points on a closed curve.
@@ -1696,6 +1697,35 @@ namespace Utilities{
     return wn;
   }
   int windings(
+               Point_2d &x              /// Point for which the winding number is calculated
+               ,std::vector<Point_2d> &point         /// The points on the border.  These must be ordered.
+               ,PosType *area          /// returns absolute the area within the curve with oriented border
+  ){
+    int wn=0;
+    unsigned long k,i;
+    size_t Npoints = point.size();
+    
+    *area=0.0;
+    if(Npoints < 3) return 0;
+
+    for(i=0;i<Npoints;++i){
+      k= i < Npoints-1 ? i+1 : 0;
+      *area+=(point[i][0] + point[k][0])*(point[i][1] - point[k][1]);
+      
+      if(point[i][1] <= x[1]){
+        if(point[k][1] > x[1])
+          if( isLeft(point[i],point[k],x) > 0) ++wn;
+      }else{
+        if(point[k][1] <= x[1])
+          if( isLeft(point[i],point[k],x) < 0) --wn;
+      }
+    }
+    *area = fabs(*area)*0.5;
+    //std::printf("wn = %i\n",wn);
+    //if(abs(wn) > 0) exit(0);
+    return wn;
+  }
+  int windings(
                PosType *x              /// Point for which the winding number is calculated
                ,Kist<Point> * kist         /// Kist of points on the border.  These must be ordered.
                ,PosType *area          /// returns absolute the area within the curve with oriented border
@@ -2102,6 +2132,8 @@ void Utilities::convex_hull(std::vector<Point_2d> &P,std::vector<Point_2d> &hull
   return;
 }
 
+/*
+ New concave hull
 void Utilities::concave_hull(std::vector<Point_2d> &P
                              ,std::vector<Point_2d> &hull,double scale)
 {
@@ -2137,6 +2169,7 @@ void Utilities::concave_hull(std::vector<Point_2d> &P
   
   return;
 }
+*/
 
 /*
  double * convex_hull(double P1[],double P2[],std::vector<double *> P)
@@ -2185,7 +2218,7 @@ void Utilities::concave_hull(std::vector<Point_2d> &P
  proceedings).  This is a modified gift wrap algorithm using k neighbours.  The value
  of k will automatically increase when certain special cases are encountered.
  
- This is an overloaded vertion of the other concave_hull()
+ This is an overloaded version of the other concave_hull()
  
  */
 std::vector<double *> Utilities::concave_hull(std::vector<double *> &P,int k )
@@ -2598,6 +2631,34 @@ std::vector<Point *> Utilities::concave_hull(std::vector<Point *> &P,int k,bool 
   return hull;
 }
 
+size_t Utilities::RemoveIntersections(std::vector<Point_2d> &curve){
+  
+  if(curve.size() <=3) return 0;
+  
+  size_t N = curve.size(),count = 0;
+  
+  curve.push_back(curve[0]);
+  
+  for(size_t i=0;i<N-2;++i){
+    for(size_t j=i+2;j<N;++j){
+      if(Utilities::Geometry::intersect(curve[i].x,curve[i+1].x,curve[j].x,curve[j+1].x)){
+        
+        size_t k=i+1,l=j;
+        while(k != l){
+          std::swap(curve[k],curve[l]);
+          ++k;
+          --l;
+        }
+        ++count;
+      }
+    }
+  }
+  
+  assert(curve[0]==curve.back());
+  curve.pop_back();
+  
+  return count;
+}
 
 /** \brief Returns axis ratio, area and points of an ellipse engulfed by some contour (e.g. a contour of same convergence calculated with find_contour).
  

@@ -331,6 +331,10 @@ struct Point_2d{
     return *this;
   }
   
+  bool operator==(const Point_2d &p){
+    return (x[0] == p.x[0])*(x[1] == p.x[1]);
+  }
+  
   Point_2d & operator+=(const Point &p){
     x[0]+=p.x[0];
     x[1]+=p.x[1];

@@ -326,6 +326,9 @@ namespace Utilities{
   std::vector<Point *> concave_hull(std::vector<Point *> &P,int k,bool test=false);
   std::vector<double *> concave_hull(std::vector<double *> &P,int k);
   
+  /// removes the intersection of the curve
+  size_t RemoveIntersections(std::vector<Point_2d> &curve);
+  
   void contour_ellipse(std::vector<Point_2d> &P, Point_2d center, unsigned long Npoints ,std::vector<Point_2d> &C, double *ellipticity, double *ellipse_area) ;
   Point_2d contour_center(std::vector<Point_2d> &P, unsigned long Npoints);
 
@@ -651,15 +654,19 @@ namespace Utilities{
 	// Return: >0 for x left of the line through P0 and P1
 //         =0 for x on the line
 //         <0 for x right of the line
-	inline float isLeft( Point *p0, Point *p1, PosType *x ){
-
-		return (p1->x[0] - p0->x[0])*(x[1] - p0->x[1])
-			- (x[0] - p0->x[0])*(p1->x[1] - p0->x[1]);
-	};
+  inline float isLeft( Point *p0, Point *p1, PosType *x ){
+    
+    return (p1->x[0] - p0->x[0])*(x[1] - p0->x[1])
+    - (x[0] - p0->x[0])*(p1->x[1] - p0->x[1]);
+  };
+  inline float isLeft(Point_2d &p0,Point_2d &p1,Point_2d &x ){
+    return (p1[0] - p0[0])*(x[1] - p0[1]) - (x[0] - p0[0])*(p1[1] - p0[1]);
+  };
 	unsigned long prevpower(unsigned long k);
 
   int windings(PosType *x,Point *points,unsigned long Npoints,PosType *area,short image = 0 );
   int windings(PosType *x,Point **points,unsigned long Npoints,PosType *area,short image = 0 );
+  int windings(Point_2d &x,std::vector<Point_2d> &point,PosType *area);
 	int windings(PosType *x,Kist<Point> * kist,PosType *area,short image = 0);
   int windings2(PosType *x,Point *points,unsigned long Npoints,PosType *area,short image);
   /// returns 1 if it is in the curve and 0 if it is out.  Borders count as in.
