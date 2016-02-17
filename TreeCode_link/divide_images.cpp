@@ -224,12 +224,12 @@ void divide_images(TreeHndl i_tree,ImageInfo *imageinfo
  *   algorithm.
  *
  * on entering:
- *     imageinfo->imagekist must contain all the point in all the images in any order.
+ *     imageinfo[0].imagekist must contain all the point in all the images in any order.
  *     The flags in_image == NO for all points in i_tree and their images that
  *        are not in the image.  Not required that points in the image be
  *        flagged.
  * on exit:
- *     Nimages is updataed
+ *     Nimages is updated
  *     imageinfo[i].imagekist is set to the points in ith image
  *	   image point flags in_image == YES
  *	   the area and area_error of each image are calculated
@@ -249,6 +249,7 @@ void divide_images_kist(
 	Kist<Point> new_imagekist;
 	PosType tmp = 0;
 
+  
   assert(imageinfo.size() > 0);
 	if(imageinfo[0].imagekist->Nunits() < 2){
 		*Nimages = 1;
@@ -266,10 +267,23 @@ void divide_images_kist(
 		new_imagekist.Down();
 	}
 
+  /*{ //Test
+    size_t yeses = 0;
+    PointList::iterator i_tree_pointlist_current(i_tree->pointlist->Top());
+    for(size_t i=0;i<i_tree->pointlist->size();++i){
+      if( (*i_tree_pointlist_current)->in_image == YES) ++yeses;
+      --i_tree_pointlist_current;
+    }
+
+    assert(yeses == new_imagekist.Nunits());
+  }*/
+
 	i=0;
 	do{
 
     if(i > imageinfo.size()-1) imageinfo.resize(i+5);
+    //assert(imageinfo[i].imagekist->Nunits() == 0);
+
 		//printf("   new_imagekist %li\n",new_imagekist.Nunits());
 		imageinfo[i].area = partition_images_kist(new_imagekist.getCurrent(),imageinfo[i].imagekist,i_tree);
 
@@ -324,7 +338,9 @@ void divide_images_kist(
 		imageinfo[i].centroid[0] /= imageinfo[i].area;
 		imageinfo[i].centroid[1] /= imageinfo[i].area;
     imageinfo[i].gridrange[1] = imageinfo[i].gridrange[2];
-
+    
+    std::cout << imageinfo[i].imagekist->Nunits() << std::endl;
+     // Probably caused by a point outside the image having in_image == YES on entry
 		assert((Ntemp - new_imagekist.Nunits() - imageinfo[i].imagekist->Nunits()) == 0);
 		assert(new_imagekist.OffBottom());
 		++i;
