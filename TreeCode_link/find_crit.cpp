@@ -144,8 +144,8 @@ void ImageFinding::find_crit(
       do{
         if(newpoint_kist.getCurrent()->invmag < invmag_min){
           if(usingminpoint){
-            negimage[ii].imagekist->TakeOutCurrent();
-            usingminpoint = false;
+           negimage[ii].imagekist->TakeOutCurrent()->in_image = NO;
+           usingminpoint = false;
           }
           negimage[ii].imagekist->InsertAfterCurrent(newpoint_kist.getCurrent());
           newpoint_kist.getCurrent()->in_image = YES;
@@ -158,7 +158,7 @@ void ImageFinding::find_crit(
       
       // if no negative island has been found update negimage to minpoint
       if(usingminpoint && minpoint != negimage[ii].imagekist->getCurrent()){
-        negimage[ii].imagekist->TakeOutCurrent();
+        negimage[ii].imagekist->TakeOutCurrent()->in_image = NO;
         negimage[ii].imagekist->InsertAfterCurrent(minpoint);
       }
     }

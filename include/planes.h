@@ -29,26 +29,26 @@ public:
 /// A LensPlane with a TreeQuad on it to calculate the deflection caused by field lenses
 class LensPlaneTree : public LensPlane{
 public:
-	LensPlaneTree(LensHaloHndl *my_halos,IndexType Nhalos,PosType my_sigma_background,PosType my_inv_screening_scale = 0);
-	~LensPlaneTree();
-
-	void force(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType *xx);
+  LensPlaneTree(LensHaloHndl *my_halos,IndexType Nhalos,PosType my_sigma_background,PosType my_inv_screening_scale = 0);
+  ~LensPlaneTree();
+  
+  void force(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType *xx);
   void closestHalos(PosType *xx,std::list<LensHalo *> neighbors){
     
   };
-
-	void addHalo(LensHalo* halo);
-	void removeHalo(LensHalo* halo);
-	
-	std::vector<LensHalo*> getHalos();
-	std::vector<const LensHalo*> getHalos() const;
+  
+  void addHalo(LensHalo* halo);
+  void removeHalo(LensHalo* halo);
+  
+  std::vector<LensHalo*> getHalos();
+  std::vector<const LensHalo*> getHalos() const;
   /// Get the halos on this plane that are wthin rmax of ray[]
   void getNeighborHalos(PosType ray[],PosType rmax,std::vector<LensHalo*> &neighbors);
-	
+  
 private:
-	std::vector<LensHalo*> halos;
-	
-	TreeQuad* halo_tree;
+  std::vector<LensHalo*> halos;
+  
+  TreeQuad* halo_tree;
 };
 
 /** \brief A LensPlane with a list of LensHalo's in it.  

@@ -37,6 +37,7 @@
 #include "analytic_lens.h"
 #include "uniform_lens.h"
 #include "MOKAlens.h"
+#include "particle_halo.h"
 
 /**** sources ****/
 

@@ -6,4 +6,5 @@ add_sources(
 	lens_multi_dark.cpp
 	planes.cpp
 	profile.cpp
+	particle_lens.cpp
 )

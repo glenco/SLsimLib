@@ -93,25 +93,91 @@ public:
 	/// \brief Finds the points within an ellipse around center and puts their index numbers in a list
 	void PointsWithinEllipse(PosType center[2],float a_max,float a_min,float posangle,std::list<unsigned long> &neighborkist);
 	/// \brief Finds the nearest N neighbors and puts their index numbers in an array, also returns the distance to the Nth neighbor for calculating smoothing
-	void NearestNeighbors(PosType *ray,int Nneighbors,float *rsph,IndexType *neighbors);
+	void NearestNeighbors(PosType *ray,int Nneighbors,float *rsph,IndexType *neighbors) const;
 
+  class iterator{
+  public:
+    
+    iterator(BranchNB *branch){
+      current = top = branch;
+    }
+    iterator(const iterator &it){
+      current = it.current;
+      top = it.top;
+    }
+    
+    iterator & operator=(const iterator &it){
+      if(&it == this) return *this;
+      current = it.current;
+      top = it.top;
+      
+      return *this;
+    }
+    
+    BranchNB *operator*(){return current;}
+    
+    /// walk tree below branch last assigned to iterator.  Returnes false if it has completed walking subtree.
+    bool walk(bool decend){
+
+      if(decend && current->child1 != NULL){
+        current = current->child1;
+        return true;
+      }
+      if(decend && current->child2 != NULL){
+        current = current->child2;
+        return true;
+      }
+      
+      if(current->brother == top->brother) return false;
+
+      current = current->brother;
+      return true;
+    }
+    
+    bool up(){
+      if(current == top) return false;
+      current = current->prev;
+      return true;
+    }
+    
+    bool down(int child){
+      if(child == 1){
+        if(current->child1 == NULL) return false;
+        current = current->child1;
+        return true;
+      }
+      if(child == 2){
+        if(current->child2 == NULL) return false;
+        current = current->child2;
+        return true;
+      }
+      return false;
+    }
+    
+  private:
+         BranchNB *current;
+         BranchNB *top;
+  };
 protected:
 
-	int Ndim,incell,incell2;
+	int Ndim;//,incell2;
+  int incell;
 	TreeNBHndl tree;
 	IndexType *index;
 	IndexType Nparticles;
 	bool median_cut;
 	int Nbucket;
-	PosType realray[2];
+	PosType realray[3];
 	PosType **xp;
-
 
 	TreeNBHndl BuildTreeNB(PosType **xp,IndexType Nparticles,IndexType *particles,int Ndimensions,PosType theta);
 	void _BuildTreeNB(TreeNBHndl tree,IndexType nparticles,IndexType *particles);
 
 	void _PointsWithin(PosType *ray,float *rmax,std::list<unsigned long> &neighborkist);
 	void _NearestNeighbors(PosType *ray,int Nneighbors,unsigned long *neighbors,PosType *rneighbors);
+
+  void _NearestNeighbors(PosType *ray,PosType *realray,int Nneighbors,unsigned long *neighbors,PosType *rneighbors
+                                     ,TreeSimple::iterator &it,int &found) const ;
 
 	BranchNB *NewBranchNB(IndexType *particles,IndexType nparticles
 			  ,PosType boundary_p1[],PosType boundary_p2[]
@@ -141,7 +207,7 @@ protected:
 	inline bool atLeaf(){
 		return (tree->current->child1 == NULL)*(tree->current->child2 == NULL);
 	}
-	inline bool inbox(const PosType* center,PosType *p1,PosType *p2){
+	inline bool inbox(const PosType* center,PosType *p1,PosType *p2) const{
 	  return (center[0]>=p1[0])*(center[0]<=p2[0])*(center[1]>=p1[1])*(center[1]<=p2[1]);
 	}
 	

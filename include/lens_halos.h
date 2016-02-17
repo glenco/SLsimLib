@@ -78,7 +78,7 @@ public:
 	/// initialize from a mass function
 	virtual void initFromMassFunc(float my_mass, float my_Rsize, float my_rscale, PosType my_slope, long *seed);
   
-  /// set Rsize (in Mpc) and reset Ramx
+  /// set Rsize (in Mpc) and reset Rmax
   virtual void set_Rsize(float my_Rsize){Rmax = Rmax*my_Rsize/Rsize; Rsize = my_Rsize; xmax = Rsize/rscale;};
 	/// set mass (in solar masses)
 	void set_mass(float my_mass){mass=my_mass;};

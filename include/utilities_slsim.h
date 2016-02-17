@@ -55,8 +55,8 @@ namespace Utilities
     delete []matrix;
   }
   
-  PosType **PosTypeMatrix(long rows, long cols);
-  void free_PosTypeMatrix(PosType **matrix, long rows, long cols);
+  PosType **PosTypeMatrix(size_t rows, size_t cols);
+  void free_PosTypeMatrix(PosType **matrix, size_t rows, size_t cols);
   PosType **PosTypeMatrix(long rows1,long rows2, long cols1, long cols2);
   void free_PosTypeMatrix(PosType **matrix, long rows1,long rows2, long cols1, long cols2);
   
@@ -996,175 +996,6 @@ namespace Utilities
     
   };
   
-  /***************************************************************/
-  /*** isolated integrator used for cosmological calculations ***/
-  /***************************************************************/
-  
-  /// interpolation
-  template <typename T>
-  void polintT(T xa[], T ya[], int n, T x, T *y, T *dy)
-  {
-    int i,m,ns=1;
-    T den,dif,dift,ho,hp,w;
-    T *c,*d;
-    
-    dif=fabs(x-xa[1]);
-    
-    c = new T[n+1];
-    d = new T[n+1];
-    
-    for (i=1;i<=n;i++) {
-      if ( (dift=fabs(x-xa[i])) < dif) {
-        ns=i;
-        dif=dift;
-      }
-      c[i]=ya[i];
-      d[i]=ya[i];
-    }
-    *y=ya[ns--];
-    for (m=1;m<n;m++) {
-      for (i=1;i<=n-m;i++) {
-        ho=xa[i]-x;
-        hp=xa[i+m]-x;
-        w=c[i+1]-d[i];
-        if ( (den=ho-hp) == 0.0) throw std::runtime_error("Error in routine polint");
-        den=w/den;
-        d[i]=hp*den;
-        c[i]=ho*den;
-      }
-      *y += (*dy=(2*ns < (n-m) ? c[ns+1] : d[ns--]));
-    }
-    delete[] d;
-    delete[] c;
-  }
-  
-  /// used in trapizoidal integral
-  template <typename FunctorType,typename T = double>
-  T trapz(FunctorType &func, T a, T b, int n, T *s2)
-  {
-    T x,tnm,del,sum;
-    int it,j;
-    
-    if (n == 1) {
-      return (*s2=0.5*(b-a)*( func(a) + func(b) ));
-    } else {
-      
-      for (it=1,j=1;j<n-1;j++) it <<= 1;
-      tnm=it;
-      del=(b-a)/tnm;
-      x=a+0.5*del;
-      for (sum=0.0,j=1;j<=it;j++,x+=del) sum += func(x);
-      *s2=0.5*(*s2+(b-a)*sum/tnm);
-      
-      return *s2;
-    }
-  }
-  
-  /** \brief Numerical integrator.  The class or structure FunctorType must have a () operator that returns
-   a number of type T.  Other access functions or public variable can be used instead of global variables
-   to change variables within the integrand.
-   
-   <pre>
-   example:
-   
-   struct FunctorType{
-   
-   FunctionType(double my_a,double my_b): a(my_a),b(my_b){};
-   double a;
-   double b;
-   
-   
-   double operator () (double x) { return a*x + b*x*x;}
-   }
-   
-   ............ using it ..................
-   
-   FunctorType func(21,23.1);
-   
-   // change some internal variables
-   func.a = 3;
-   func.b = 10.3;
-   // use as a function
-   double tmp = func(10);
-   
-   result = Utilities::nintegrate<FunctorType,double>(func,1.0e-2,1.0e4,1.0e-4);
-   
-   
-   ***  now a double integral ****
-   
-   \int dy \int dx_y^{10} a*x + b*x*cos(x*y)
-   
-   struct FunctorType2{
-   FunctorType2(FunctorType1 *pfunc1,y): func1(pfunc1),{
-   
-   FunctorType1 *func1;
-   double y;
-   
-   double operator () (double x) { return func1->a*x + func1->b*x*cos(x*y);}
-   }
-   
-   
-   struct FunctorType1{
-   FunctionType1(double my_a,double my_b,double xrange1, double xrange2)
-   : a(my_a),b(my_b)
-   {
-   xrange[0] = xrange1;
-   xrange[1] = xrange2;
-   };
-   double a;
-   double b;
-   double xrange[2];
-   
-   double operator () (double y) {
-   FunctorType2 func2(this);
-   func2.a = a;
-   func2.b = b;
-   func2.y = y;
-   xrange[0] = y;
-   
-   return Utilities::nintegrate<FunctorType2,double>(func2,xrange[0],xrange[1],1.0e-4);
-   }
-   
-   }
-   
-   ............ using it ..................
-   
-   FunctorType1 func(21,23.1,0,10.0);
-   
-   result = Utilities::nintegrate<FunctorType1,double>(func,1.0e-3,5.0e-3,1.0e-4);
-   
-   <\pre>
-   */
-  
-  template <typename FunctorType,typename T = double>
-  T nintegrate(
-               FunctorType &func        /// struct or class to be integrated
-               ,T a      /// limit of integrations
-               ,T b      /// limit of integrations
-               ,T tols   /// target fractional error
-  )
-  {
-    const int JMAX = 34,K=6;
-    const int JMAXP = JMAX+1;
-    
-    T ss,dss;
-    T s2[JMAXP],h2[JMAXP+1];
-    T ss2=0;
-    
-    h2[1]=1.0;
-    for (int j=1;j<=JMAX;j++) {
-      s2[j] = Utilities::trapz<FunctorType,T>(func,a,b,j,&ss2);
-      if (j>=K) {
-        Utilities::polintT<T>(&h2[j-K],&s2[j-K],K,0.0,&ss,&dss);
-        if(fabs(dss) <= tols*fabs(ss)) return ss;
-      }
-      h2[j+1]=0.25*h2[j];
-    }
-    std::cout << "s2= "; for(int j=1;j<=JMAX;j++) std::cout << s2[j] << "  ";
-    std::cout << std::endl << "Too many steps in routine nintegrate<>\n";
-    return 0.0;
-  }
-  
   /// Shuffles a vector into a random order
   template <typename T, typename R>
   void shuffle(
@@ -1227,89 +1058,85 @@ namespace Utilities
    **/
   std::vector<double> AdaptiveSmooth(const std::vector<double> &map_in,size_t Nx,size_t Ny,double value);
 
-/*
-#define ITMAX 100
-#define SHFT(a,b,c,d) (a)=(b);(b)=(c);(c)=(d);
-*/
-/** \brief One dimensional minimization routine
- *
- *  ax < bx < cx and functor(ax) > functor(bx) and functor(cx) > functor(bx)
- * returns functor(xmin)
- * Based on NR's brent() function
- *
- */
-/*
-template <typename T>
-double bart(
-            double ax     /// lower boundary of x range
-            ,double bx    /// upper boundary of y range
-            , double cx   ///
-            ,T &functor   /// functor with () overriden to take double and return double
-            ,double tol
-            ,double *xmin
-            )
-{
-  int iter;
-  double a,b,d,etemp,fu,fv,fw,fx,p,q,r,tol1,tol2,u,v,w,x,xm;
-  double e=0.0;
   
-  a=(ax < cx ? ax : cx);
-  b=(ax > cx ? ax : cx);
-  x=w=v=bx;
-  fw=fv=fx=functor(x);
-  for (iter=1;iter<=ITMAX;iter++) {
-    xm=0.5*(a+b);
-    tol2=2.0*(tol1=tol*fabs(x)+1.0e-10);
-    if (fabs(x-xm) <= (tol2-0.5*(b-a))) {
-      *xmin=x;
-      return fx;
+  /// Read in data from an ASCII file with two columns
+  template <class T1,class T2>
+  void read2columnfile(
+                       std::string filename    /// input file name
+                       ,std::vector<T1> &x     /// vector that will contain the first column
+                       ,std::vector<T2> &y     /// vector that will contain the first column
+                       ,std::string delineator = " "  /// specific string the seporates columns, ex. ",", "|", etc.
+                       ,bool verbose = false
+                       
+                       ){
+    
+    x.clear();
+    y.clear();
+    
+    std::ifstream file_in(filename.c_str());
+    std::string myline;
+    std::string space = " ";
+    T1 myt1;
+    T2 myt2;
+    
+    std::string strg;
+    std::stringstream buffer;
+    
+    if(!file_in){
+      std::cout << "Can't open file " << filename << std::endl;
+      ERROR_MESSAGE();
+      throw std::runtime_error(" Cannot open file.");
     }
-    if (fabs(e) > tol1) {
-      r=(x-w)*(fx-fv);
-      q=(x-v)*(fx-fw);
-      p=(x-v)*q-(x-w)*r;
-      q=2.0*(q-r);
-      if (q > 0.0) p = -p;
-      q=fabs(q);
-      etemp=e;
-      e=d;
-      if (fabs(p) >= fabs(0.5*q*etemp) || p <= q*(a-x) || p >= q*(b-x))
-        d=0.3819660*(e=(x >= xm ? a-x : b-x));
-      else {
-        d=p/q;
-        u=x+d;
-        if (u-a < tol2 || b-u < tol2)
-          d = ((xm-x) >= 0.0 ? fabs(tol1) : -fabs(tol1));
+    
+    std::cout << "Reading caustic information from " << filename << std::endl;
+    size_t i=0;
+    while(file_in.peek() == '#'){
+      file_in.ignore(10000,'\n');
+      ++i;
+    }
+    std::cout << "skipped "<< i << " comment lines in " << filename << std::endl;
+    
+    size_t pos;
+    // read in data
+    while(getline(file_in,myline)){
+      
+      if(myline[0] == '#'){
+        std::cout << "skipped line " << i << std::endl;
+        continue;
       }
-    } else {
-      d=0.3819660*(e=(x >= xm ? a-x : b-x));
+      
+      pos= myline.find_first_not_of(space);
+      myline.erase(0,pos);
+      
+      
+      pos = myline.find(delineator);
+      strg.assign(myline,0,pos);
+      buffer << strg;
+      buffer >> myt1;
+      if(verbose) std::cout << myt1 << " ";
+      x.push_back(myt1);
+      
+      myline.erase(0,pos+1);
+      pos= myline.find_first_not_of(space);
+      myline.erase(0,pos);
+      
+      strg.clear();
+      buffer.clear();
+      
+      pos = myline.find(space);
+      strg.assign(myline,0,pos);
+      buffer << strg;
+      buffer >> myt2;
+      if(verbose)  std::cout << myt2 << std::endl;
+      y.push_back(myt2);
+      
+      strg.clear();
+      buffer.clear();
+      myline.clear();
+      
     }
-    u=(fabs(d) >= tol1 ? x+d : x+((d) >= 0.0 ? fabs(tol1) : -fabs(tol1)));
-    fu=functor(u);
-    if (fu <= fx) {
-      if (u >= x) a=x; else b=x;
-      SHFT(v,w,x,u)
-      SHFT(fv,fw,fx,fu)
-    } else {
-      if (u < x) a=u; else b=u;
-      if (fu <= fw || w == x) {
-        v=w;
-        w=u;
-        fv=fw;
-        fw=fu;
-      } else if (fu <= fv || v == x || v == w) {
-        v=u;
-        fv=fu;
-      }
-    }
+    std::cout << "Read " << x.size() << " lines from " << filename << std::endl;
   }
 
-  *xmin=x;
-  return fx;
-}
-
-#undef ITMAX
-#undef SHFT
- */
 }
 #endif

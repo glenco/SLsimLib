@@ -176,7 +176,6 @@ void CausticDataStore::readfile(std::string filename){
           buffer >> mydouble;
           tmp_data.crit_area = mydouble;
           break;
-
         case 7:
           buffer >> mydouble;
           tmp_data.caustic_center[0] = mydouble;
@@ -205,7 +204,6 @@ void CausticDataStore::readfile(std::string filename){
           buffer >> myint;
           tmp_data.crit_type = static_cast<CritType>(myint);
           break;
-          
         default:
           break;
       }
