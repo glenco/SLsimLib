@@ -2636,6 +2636,7 @@ size_t Utilities::RemoveIntersections(std::vector<Point_2d> &curve){
   if(curve.size() <=3) return 0;
   
   size_t N = curve.size(),count = 0;
+  Point_2d tmp;
   
   curve.push_back(curve[0]);
   
@@ -2644,8 +2645,10 @@ size_t Utilities::RemoveIntersections(std::vector<Point_2d> &curve){
       if(Utilities::Geometry::intersect(curve[i].x,curve[i+1].x,curve[j].x,curve[j+1].x)){
         
         size_t k=i+1,l=j;
-        while(k != l){
-          std::swap(curve[k],curve[l]);
+        while(k < l){
+          tmp = curve[k];
+          curve[k] = curve[l];
+          curve[l] = tmp;
           ++k;
           --l;
         }
