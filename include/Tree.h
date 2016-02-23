@@ -319,9 +319,14 @@ namespace Utilities{
   bool xorder(Point *p1,Point *p2);
   bool yorder(Point *p1,Point *p2);
   //
+  
+  PosType cross(const Point *O, const Point *A, const Point *B);
+  PosType crossD(const double *O, const double *A, const double *B);
+  PosType crossD(Point_2d &O,Point_2d &A,Point_2d &B);
+
   std::vector<Point *> convex_hull(std::vector<Point *> &P);
   std::vector<double *> convex_hull(std::vector<double *> &P);
-  void convex_hull(std::vector<Point_2d> &P,std::vector<Point_2d> &hull);
+  //void convex_hull(std::vector<Point_2d> &P,std::vector<Point_2d> &hull);
   
   std::vector<Point *> concave_hull(std::vector<Point *> &P,int k,bool test=false);
   std::vector<double *> concave_hull(std::vector<double *> &P,int k);

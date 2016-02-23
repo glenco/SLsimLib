@@ -48,6 +48,7 @@ struct Point{
   unsigned long head;         // marks beginning of allocated array of points for easy deallocation
   Boo in_image; // marks if point is in image
 
+  PosType operator[](int i){return x[i];}
   
   // redundant information in image and source points
   KappaType kappa;           // surface density
@@ -313,6 +314,11 @@ struct Point_2d{
   Point_2d(){
     x[0]=x[1]=0.0;
   }
+  Point_2d(double x1,double x2){
+    x[0]=x1;
+    x[1]=x2;
+  }
+  
   ~Point_2d(){};
   
   Point_2d(const Point_2d &p){
@@ -325,6 +331,7 @@ struct Point_2d{
     x[1]=p.x[1];
     return *this;
   }
+
   Point_2d & operator=(const Point &p){
     x[0]=p.x[0];
     x[1]=p.x[1];

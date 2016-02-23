@@ -144,6 +144,23 @@ public:
   void drawCurve(std::vector<Point *> points,PosType value){
     for(int i=0;i<points.size()-1;++i) drawline(points[i]->x,points[i+1]->x,value);
   }
+  void drawPoints(std::vector<Point_2d> points,PosType size,PosType value){
+    if(size < resolution*3){
+      size_t index;
+      for(int i=0;i<points.size();++i){
+        if(inMapBox(points[i].x)){
+          //index = Utilities::IndexFromPosition(x1,Nx,range,center);
+          index = find_index(points[i].x);
+          map[index] = value;
+        }
+      }
+    }else
+      for(int i=0;i<points.size();++i) drawcircle(points[i].x,0.01*rangeX,value);
+    
+  }
+  void drawCurve(std::vector<Point_2d> points,PosType value){
+    for(int i=0;i<points.size()-1;++i) drawline(points[i].x,points[i+1].x,value);
+  }
   /// Draw a rectangle
   void drawSquare(PosType p1[],PosType p2[],PosType value);
   void drawBox(PosType p1[],PosType p2[],PosType value,int Nstrip);
