@@ -223,9 +223,8 @@ void ImageFinding::find_crit(
       
       std::vector<Point> points(critcurve[jj].imagekist->Nunits());
       auto iter = critcurve[jj].imagekist->begin();
-      for(Point_2d &p : points){
-        p[0] = (*iter).x[0];
-        p[1] = (*iter).x[1];
+      for(Point &p : points){
+        p = *iter;
         ++iter;
       }
       
@@ -247,7 +246,8 @@ void ImageFinding::find_crit(
       crtcurve[ii].critical_center[0] = 0;
       crtcurve[ii].critical_center[1] = 0;
       size_t kk=0;
-      for(auto p : hull){
+      for(auto &p : hull){
+        //p.Print();
         crtcurve[ii].critical_curve[kk] = p;
         crtcurve[ii].caustic_curve_intersecting[kk++] = *(p.image);
         crtcurve[ii].critical_center[0] += p[0];
@@ -261,7 +261,7 @@ void ImageFinding::find_crit(
       
       std::vector<Point_2d> &short_cac = crtcurve[ii].caustic_curve_outline;
 
-      short_cac.reserve(points.size());
+      short_cac.resize(points.size());
       
       kk=0;
       PosType scale=0,tmp;
@@ -273,6 +273,8 @@ void ImageFinding::find_crit(
       
       //**** size scale ???
       Utilities::concave(short_cac,short_cac,std::sqrt(scale)*4);
+
+      assert(short_cac.size() > 0);
 
       // center of caustic
       crtcurve[ii].caustic_center[0] = 0;
@@ -589,10 +591,9 @@ void ImageFinding::find_crit(
       std::vector<Point> points(pseudocurve[i].outerborder->Nunits());
       auto iter = pseudocurve[i].outerborder->begin();
       PosType scale = 0,tmp;
-      for(Point_2d &p : points){
-        p[0] = (*iter).x[0];
-        p[1] = (*iter).x[1];
-        tmp = (*iter).leaf->area();
+      for(Point &p : points){
+        p = *iter;
+        tmp = p.leaf->area();
         if(scale < tmp ) scale = tmp;
         ++iter;
       }
@@ -601,6 +602,7 @@ void ImageFinding::find_crit(
       
       std::vector<Point> hull;
       
+      
       Utilities::concave(points,hull,std::sqrt(scale)*4);
       
       crtcurve[ii].critical_curve.resize(hull.size());
@@ -608,7 +610,7 @@ void ImageFinding::find_crit(
       crtcurve[ii].critical_center[0] = 0;
       crtcurve[ii].critical_center[1] = 0;
       size_t kk=0;
-      for(auto p : hull){
+      for(auto &p : hull){
         crtcurve[ii].critical_curve[kk] = p;
         crtcurve[ii].caustic_curve_intersecting[kk++] = *(p.image);
         crtcurve[ii].critical_center[0] += p[0];
@@ -633,6 +635,8 @@ void ImageFinding::find_crit(
       }
     
       Utilities::concave(short_cac,short_cac,std::sqrt(scale)*4);
+      
+      assert(short_cac.size() > 0);
       
       // center of caustic
       crtcurve[ii].caustic_center[0] = 0;

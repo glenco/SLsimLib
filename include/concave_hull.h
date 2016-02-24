@@ -188,7 +188,6 @@ void concave(std::vector<T> &init_points
       if((hull[index[j]][0] == (*pit)[0])*(hull[index[j]][1] == (*pit)[1])){
         ++j;
       }else{
-        //leftovers.push_back(Point_2d((*pit)[0],(*pit)[1]));
         leftovers.push_back(*pit);
       }
       

@@ -129,9 +129,9 @@ struct Branch;
 struct Point: public Point_2d{
     
   Point();
-  struct Point *next;    // pointer to next point in linked list
-  struct Point *prev;
-  struct Point *image;  // pointer to point on image or source plane
+  Point *next;    // pointer to next point in linked list
+  Point *prev;
+  Point *image;  // pointer to point on image or source plane
   unsigned long id;
   //double x[2];         // the position of the point
   unsigned long head;         // marks beginning of allocated array of points for easy deallocation
