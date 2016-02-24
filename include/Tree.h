@@ -331,8 +331,6 @@ namespace Utilities{
   std::vector<Point *> concave_hull(std::vector<Point *> &P,int k,bool test=false);
   std::vector<double *> concave_hull(std::vector<double *> &P,int k);
   
-  /// removes the intersection of the curve
-  size_t RemoveIntersections(std::vector<Point_2d> &curve);
   
   void contour_ellipse(std::vector<Point_2d> &P, Point_2d center, unsigned long Npoints ,std::vector<Point_2d> &C, double *ellipticity, double *ellipse_area) ;
   Point_2d contour_center(std::vector<Point_2d> &P, unsigned long Npoints);

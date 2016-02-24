@@ -30,6 +30,95 @@
 typedef enum {NO, YES, MAYBE} Boo;
 #endif
 
+/**  \brief Class for representing points or vectors in 2 dimensions.  Not that the dereferencing operator is overridden.
+ 
+ */
+
+struct Point_2d{
+  Point_2d(){
+    x[0]=x[1]=0.0;
+  }
+  Point_2d(double x1,double x2){
+    x[0]=x1;
+    x[1]=x2;
+  }
+  
+  ~Point_2d(){};
+  
+  Point_2d(const Point_2d &p){
+    x[0]=p.x[0];
+    x[1]=p.x[1];
+  }
+  Point_2d & operator=(const Point_2d &p){
+    if(this == &p) return *this;
+    x[0]=p.x[0];
+    x[1]=p.x[1];
+    return *this;
+  }
+  
+  bool operator==(const Point_2d &p){
+    return (x[0] == p.x[0])*(x[1] == p.x[1]);
+  }
+  
+  Point_2d  operator+(const Point_2d &p) const{
+    Point_2d tmp;
+    tmp.x[0] = x[0] + p.x[0];
+    tmp.x[1] = x[1] + p.x[1];
+    return tmp;
+  }
+  Point_2d  operator-(const Point_2d &p) const{
+    Point_2d tmp;
+    tmp.x[0] = x[0] - p.x[0];
+    tmp.x[1] = x[1] - p.x[1];
+    return tmp;
+  }
+  Point_2d & operator+=(const Point_2d &p){
+    x[0]+=p.x[0];
+    x[1]+=p.x[1];
+    return *this;
+  }
+  Point_2d & operator/=(PosType value){
+    x[0]/=value;
+    x[1]/=value;
+    return *this;
+  }
+  Point_2d & operator/(PosType value){
+    x[0]/=value;
+    x[1]/=value;
+    return *this;
+  }
+  Point_2d & operator*=(PosType value){
+    x[0]*=value;
+    x[1]*=value;
+    return *this;
+  }
+  /// scalar product
+  PosType operator*(const Point_2d &p){
+    return x[0]*p.x[0] + x[1]*p.x[1];
+  }
+  /// outer product
+  PosType operator^(const Point_2d &p){
+    return x[0]*p.x[1] - x[1]*p.x[0];
+  }
+  
+  /// length
+  PosType length(){
+    return sqrt(x[0]*x[0] + x[1]*x[1]);
+  }
+  
+  void rotate(PosType theta){
+    PosType c = cos(theta),s = sin(theta);
+    PosType tmp = x[0];
+    x[0] = c*tmp + s*x[1];
+    x[1] = c*x[1] + s*tmp;
+  }
+  
+  PosType x[2];
+  PosType & operator[](size_t i){return x[i];}
+};
+
+std::ostream &operator<<(std::ostream &os, Point_2d const &p);
+
 
 //struct branchstruct;
 struct Branch;
@@ -37,18 +126,18 @@ struct Branch;
 
 /** \brief A point on the source or image plane that contains a position and the lensing quantities */
 
-struct Point{
+struct Point: public Point_2d{
     
   Point();
   struct Point *next;    // pointer to next point in linked list
   struct Point *prev;
   struct Point *image;  // pointer to point on image or source plane
   unsigned long id;
-  double x[2];         // the position of the point
+  //double x[2];         // the position of the point
   unsigned long head;         // marks beginning of allocated array of points for easy deallocation
   Boo in_image; // marks if point is in image
 
-  PosType operator[](int i){return x[i];}
+  //PosType operator[](int i){return x[i];}
   
   // redundant information in image and source points
   KappaType kappa;           // surface density
@@ -62,18 +151,8 @@ struct Point{
   Branch *leaf;
   bool flag;
 
-  //void print();
   void Print();
   
-  /// cross product of points 2d positions
-  double cross(Point &p){
-    return x[0]*p.x[1] - x[1]*p.x[0];
-  }
-  /// dot product of points in 2d
-  double dot(Point &p){
-    return x[0]*p.x[0] + x[1]*p.x[1];
-  }
-
   static bool orderX(Point *p1,Point *p2){
     return (p1->x[0] < p2->x[0]);
   }
@@ -92,9 +171,9 @@ struct Point{
   
 private:
   // make a point uncopyable
-  Point(const Point &p);
-  Point &operator=(Point &p);
-  Point &operator=(const Point &p);
+  //Point(const Point &p);
+  //Point &operator=(Point &p);
+  //Point &operator=(const Point &p);
 };
 
 std::ostream &operator<<(std::ostream &os, Point const &p);
@@ -298,116 +377,12 @@ Point *NewPoint(double *x,unsigned long id);
 //bool MoveDownList(ListHndl list);
 //bool MoveUpList(ListHndl list);
 
-
-
 void SwapPointsInList(ListHndl list,Point *p1,Point *p2);
 Point *sortList(long n, double arr[],ListHndl list,Point *firstpoint);
 
 //void UnionList(ListHndl list1,ListHndl list2);
 //bool ArePointsUniqueList(ListHndl list);
 //bool IntersectionList(ListHndl list1,ListHndl list2,ListHndl intersection);
-
-/**  \brief Class for representing points or vectors in 2 dimensions.  Not that the dereferencing operator is overridden.
- 
- */
-struct Point_2d{
-  Point_2d(){
-    x[0]=x[1]=0.0;
-  }
-  Point_2d(double x1,double x2){
-    x[0]=x1;
-    x[1]=x2;
-  }
-  
-  ~Point_2d(){};
-  
-  Point_2d(const Point_2d &p){
-    x[0]=p.x[0];
-    x[1]=p.x[1];
-  }
-  Point_2d & operator=(const Point_2d &p){
-    if(this == &p) return *this;
-    x[0]=p.x[0];
-    x[1]=p.x[1];
-    return *this;
-  }
-
-  Point_2d & operator=(const Point &p){
-    x[0]=p.x[0];
-    x[1]=p.x[1];
-    return *this;
-  }
-  
-  bool operator==(const Point_2d &p){
-    return (x[0] == p.x[0])*(x[1] == p.x[1]);
-  }
-  
-  Point_2d & operator+=(const Point &p){
-    x[0]+=p.x[0];
-    x[1]+=p.x[1];
-    return *this;
-  }
-  Point_2d  operator+(const Point_2d &p) const{
-    Point_2d tmp;
-    tmp.x[0] = x[0] + p.x[0];
-    tmp.x[1] = x[1] + p.x[1];
-    return tmp;
-  }
-  Point_2d  operator-(const Point_2d &p) const{
-    Point_2d tmp;
-    tmp.x[0] = x[0] - p.x[0];
-    tmp.x[1] = x[1] - p.x[1];
-    return tmp;
-  }
-  Point_2d & operator+=(const Point_2d &p){
-    x[0]+=p.x[0];
-    x[1]+=p.x[1];
-    return *this;
-  }
-  Point_2d & operator/=(PosType value){
-    x[0]/=value;
-    x[1]/=value;
-    return *this;
-  }
-  Point_2d & operator/(PosType value){
-    x[0]/=value;
-    x[1]/=value;
-    return *this;
-  }
-  Point_2d & operator*=(PosType value){
-    x[0]*=value;
-    x[1]*=value;
-    return *this;
-  }
-  /// scalar product
-  PosType operator*(const Point_2d &p){
-    return x[0]*p.x[0] + x[1]*p.x[1];
-  }
-  /// outer product
-  PosType operator^(const Point_2d &p){
-    return x[0]*p.x[1] - x[1]*p.x[0];
-  }
-  
-  /// length
-  PosType length(){
-    return sqrt(x[0]*x[0] + x[1]*x[1]);
-  }
-  
-  void rotate(PosType theta){
-    PosType c = cos(theta),s = sin(theta);
-    PosType tmp = x[0];
-    x[0] = c*tmp + s*x[1];
-    x[1] = c*x[1] + s*tmp;
-  }
-  
-  PosType x[2];
-  PosType & operator[](size_t i){return x[i];}
-};
-
-std::ostream &operator<<(std::ostream &os, Point_2d const &p);
-
-inline double pointx(Point &p){return p.x[0];}
-inline double pointy(Point &p){return p.x[1];}
 
 /**  \brief Class for representing points or vectors in 3 dimensions.  Not that the dereferencing operator is overridden.
  
@@ -428,19 +403,6 @@ struct Point_3d{
     x[0]=p.x[0];
     x[1]=p.x[1];
     x[2]=p.x[2];
-    return *this;
-  }
-  Point_3d & operator=(const Point &p){
-    x[0]=p.x[0];
-    x[1]=p.x[1];
-    x[2]=p.x[2];
-    return *this;
-  }
-  
-  Point_3d & operator+=(const Point &p){
-    x[0]+=p.x[0];
-    x[1]+=p.x[1];
-    x[2]+=p.x[2];
     return *this;
   }
   Point_3d  operator+(const Point_3d &p) const{
@@ -471,7 +433,7 @@ struct Point_3d{
   }
   Point_3d & operator/(PosType value){
     Point_3d tmp;
-
+    
     tmp[0] = x[0]/value;
     tmp[1] = x[1]/value;
     tmp[2] = x[2]/value;
@@ -505,7 +467,10 @@ struct Point_3d{
   PosType & operator[](size_t i){return x[i];}
 };
 
+
 std::ostream &operator<<(std::ostream &os, Point_3d const &p);
 
+inline double pointx(Point &p){return p.x[0];}
+inline double pointy(Point &p){return p.x[1];}
 
 #endif

@@ -2551,37 +2551,6 @@ std::vector<Point *> Utilities::concave_hull(std::vector<Point *> &P,int k,bool 
   return hull;
 }
 
-size_t Utilities::RemoveIntersections(std::vector<Point_2d> &curve){
-  
-  if(curve.size() <=3) return 0;
-  
-  size_t N = curve.size(),count = 0;
-  Point_2d tmp;
-  
-  curve.push_back(curve[0]);
-  
-  for(size_t i=0;i<N-2;++i){
-    for(size_t j=i+2;j<N;++j){
-      if(Utilities::Geometry::intersect(curve[i].x,curve[i+1].x,curve[j].x,curve[j+1].x)){
-        
-        size_t k=i+1,l=j;
-        while(k < l){
-          tmp = curve[k];
-          curve[k] = curve[l];
-          curve[l] = tmp;
-          ++k;
-          --l;
-        }
-        ++count;
-      }
-    }
-  }
-  
-  assert(curve[0]==curve.back());
-  curve.pop_back();
-  
-  return count;
-}
 
 /** \brief Returns axis ratio, area and points of an ellipse engulfed by some contour (e.g. a contour of same convergence calculated with find_contour).
  
