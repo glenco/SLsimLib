@@ -962,7 +962,7 @@ double minEllip(double *par){
   // elliptical integrals
   K = rfD(0,1./q/q,1);
   int DidItWork = 1;
-  E = K - (1-1./q/q)*rdD(0,1./q/q,1,&DidItWork)/3;
+  E = K - (1-1./q/q)*rdDnew(0,1./q/q,1,&DidItWork)/3;
   if (DidItWork == 0) { std::cout << "Throw 12345 !" << std::endl; throw 12345 ; }
   
   // fill in modes with their values for an elliptical lens
