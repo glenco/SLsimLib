@@ -403,117 +403,9 @@ struct Point_2d{
 /**  \brief Class for representing points or vectors in 3 dimensions.  Not that the dereferencing operator is overridden.
  
  */
-struct Point_3d{
-  Point_3d(){
-    x[0]=x[1]=x[2]=0.0;
-  }
-  Point_3d(PosType my_x,PosType my_y,PosType my_z){
-    x[0]=my_x;
-    x[1]=my_y;
-    x[2]=my_z;
-  }
-  ~Point_3d(){};
-  
-  Point_3d(const Point_3d &p){
-    x[0]=p.x[0];
-    x[1]=p.x[1];
-    x[2]=p.x[2];
-  }
-  Point_3d(const PosType *p){
-    x[0]=p[0];
-    x[1]=p[1];
-    x[2]=p[2];
-  }
-  Point_3d & operator=(const Point_3d &p){
-    if(this == &p) return *this;
-    x[0]=p.x[0];
-    x[1]=p.x[1];
-    x[2]=p.x[2];
-    return *this;
-  }
-  
-  Point_3d  operator+(const Point_3d &p) const{
-    Point_3d tmp;
-    tmp.x[0] = x[0] + p.x[0];
-    tmp.x[1] = x[1] + p.x[1];
-    tmp.x[2] = x[2] + p.x[2];
-    return tmp;
-  }
-  Point_3d  operator-(const Point_3d &p) const{
-    Point_3d tmp;
-    tmp.x[0] = x[0] - p.x[0];
-    tmp.x[1] = x[1] - p.x[1];
-    tmp.x[2] = x[2] - p.x[2];
-    return tmp;
-  }
-
-  Point_3d & operator+=(const Point_3d &p){
-    x[0]+=p.x[0];
-    x[1]+=p.x[1];
-    x[2]+=p.x[2];
-    return *this;
-  }
-  Point_3d & operator-=(const Point_3d &p){
-    x[0]-=p.x[0];
-    x[1]-=p.x[1];
-    x[2]-=p.x[2];
-    return *this;
-  }
-  Point_3d & operator/=(PosType value){
-    x[0]/=value;
-    x[1]/=value;
-    x[2]/=value;
-    return *this;
-  }
-  Point_3d & operator/(PosType value){
-    x[0]/=value;
-    x[1]/=value;
-    x[2]/=value;
-    return *this;
-  }
-  Point_3d & operator*=(PosType value){
-    x[0]*=value;
-    x[1]*=value;
-    x[2]*=value;
-    return *this;
-  }
-  /// scalar product
-  PosType operator*(const Point_3d &p){
-    return x[0]*p.x[0] + x[1]*p.x[1] + x[2]*p.x[2];
-  }
-  /// outer product
-  Point_3d operator^(const Point_3d &p) const{
-    Point_3d tmp;
-    tmp[0] = x[1]*p.x[2] - x[2]*p.x[1];
-    tmp[1] = x[2]*p.x[0] - x[0]*p.x[2];
-    tmp[2] = x[0]*p.x[1] - x[1]*p.x[0];
-    return tmp;
-  }
-  
-  /// length
-  PosType length(){
-    return sqrt(x[0]*x[0] + x[1]*x[1] + x[2]*x[2]);
-  }
-  
-  /// a rotation theta around the z-axis followed by a rotation phi around the y-axis
-  void rotate(PosType theta,PosType phi){
-    PosType c = cos(theta),s = sin(theta);
-    PosType tmp = c*x[0] - s*x[1];
-    x[1] = c*x[1] + s*x[0];
-    
-    c = cos(phi);
-    s = sin(phi);;
-    x[0]  = c*tmp - s*x[2];
-    x[2] = c*x[2] + s*tmp;
-  }
-  
-  PosType x[3];
-  PosType & operator[](size_t i){return x[i];}
-};
 
 
 std::ostream &operator<<(std::ostream &os, Point_2d const &p);
-std::ostream &operator<<(std::ostream &os, Point_3d const &p);
 
 inline double pointx(Point &p){return p.x[0];}
 inline double pointy(Point &p){return p.x[1];}
@@ -604,11 +496,16 @@ struct Point_3d{
     return sqrt(x[0]*x[0] + x[1]*x[1] + x[2]*x[2]);
   }
   
-  void rotate(PosType theta){
+  /// a rotation theta around the z-axis followed by a rotation phi around the y-axis
+  void rotate(PosType theta,PosType phi){
     PosType c = cos(theta),s = sin(theta);
-    PosType tmp = x[0];
-    x[0] = c*tmp + s*x[1];
-    x[1] = c*x[1] + s*tmp;
+    PosType tmp = c*x[0] - s*x[1];
+    x[1] = c*x[1] + s*x[0];
+    
+    c = cos(phi);
+    s = sin(phi);;
+    x[0]  = c*tmp - s*x[2];
+    x[2] = c*x[2] + s*tmp;
   }
   
   PosType x[3];
@@ -616,6 +513,5 @@ struct Point_3d{
 };
 
 std::ostream &operator<<(std::ostream &os, Point_3d const &p);
-
 
 #endif
