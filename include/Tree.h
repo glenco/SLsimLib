@@ -303,8 +303,9 @@ namespace Utilities{
 	void double_sort_points(unsigned long n, PosType *arr, Point *brr);
 
 	void quicksortPoints(Point *pointarray,PosType *arr,unsigned long N);
-  //void quicksortPoints_multithread(Point *pointarray,PosType *arr,unsigned long N,int level = 0);
-	void quicksort(unsigned long *particles,PosType *arr,unsigned long N);
+  void quicksortPoints(Point *pointarray,double (*func)(Point &),unsigned long N);
+  
+  void quicksort(unsigned long *particles,PosType *arr,unsigned long N);
 	void quickPartition(PosType pivotvalue,unsigned long *pivotindex,unsigned long *particles
 		,PosType *arr,unsigned long N);
 	void quickPartitionPoints(PosType pivotvalue,unsigned long *pivotindex
