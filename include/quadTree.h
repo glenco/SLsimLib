@@ -255,8 +255,8 @@ protected:
 	  return (sigma > 0.0 ) ? (-2.0 + (2.0 + r2s2)*exp(-0.5*r2s2) ) : -2.0;
 	}
 	virtual inline PosType phi_h(PosType r2s2,PosType sigma) const{
-		ERROR_MESSAGE();  // not yet written
-		exit(1);
+		//ERROR_MESSAGE();  // not yet written
+		//exit(1);
 		return 0;
 	}
 

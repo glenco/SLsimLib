@@ -923,7 +923,7 @@ void TreeQuad::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alph
 						prefac = masses[MultiMass*branch->particles[i]]/rcm2/pi;
 						arg1 = rcm2/(sizes[tmp_index*MultiRadius]*sizes[tmp_index*MultiRadius]);
 						arg2 = sizes[tmp_index*MultiRadius];
-						tmp = sizes[tmp_index*MultiRadius];
+						tmp = 3*sizes[tmp_index*MultiRadius];
             
 						// intersecting, subtract the point particle
 						if(rcm2 < tmp*tmp)
