@@ -67,6 +67,36 @@ Lens::Lens(long* my_seed,PosType z_source, CosmoParamSet cosmoset,bool verbose)
   std::cout << "number of field halos :" << field_halos.size() << std::endl;
 }
 
+Lens::Lens(long* my_seed,PosType z_source, const COSMOLOGY &cosmoset,bool verbose)
+: seed(my_seed), cosmo(cosmoset),zsource(z_source), central_point_sphere(1,0,0), inv_ang_screening_scale(0)
+{
+  init_seed = 0;
+  
+  if((cosmo.getOmega_matter() + cosmo.getOmega_lambda()) != 1.0)
+  {
+    printf("ERROR: Lens can only handle flat universes at present. Must change cosmology.\n");
+    exit(1);
+  }
+  
+  read_sim_file = false;
+  
+  charge = 4*pi*Grav;
+  if(verbose) std::cout << "charge: " << charge << std::endl;
+  
+  // initially let source be the one inputed from parameter file
+  index_of_new_sourceplane = -1;
+  toggle_source_plane = false;
+  flag_switch_deflection_off = false;
+  flag_switch_lensing_off = false;
+  
+  //charge = cosmo.angDist(zsource)/cosmo.angDist(0.3)/cosmo.angDist(0.3,zsource);
+  //charge = 4*pi/cosmo.angDist(0.3);
+  PosType ztmp = zsource;
+  combinePlanes(true);
+  if(zsource != ztmp) ResetSourcePlane(ztmp,false);
+  std::cout << "number of field halos :" << field_halos.size() << std::endl;
+}
+
 /**
  * \ingroup Constructor
  * \brief allocates space for the halo trees and the inout lens, if there is any
@@ -139,6 +169,79 @@ Lens::Lens(InputParams& params, long* my_seed, CosmoParamSet cosmoset, bool verb
   if(zsource != ztmp) ResetSourcePlane(ztmp,false);
   std::cout << "number of field halos :" << field_halos.size() << std::endl;
 
+}
+/**
+ * \ingroup Constructor
+ * \brief allocates space for the halo trees and the inout lens, if there is any
+ */
+Lens::Lens(InputParams& params, long* my_seed, const COSMOLOGY &cosmoset, bool verbose)
+: seed(my_seed), cosmo(cosmoset), central_point_sphere(1,0,0), inv_ang_screening_scale(0)
+{
+  
+  //init_params = params;
+  init_seed = *my_seed;
+  
+  readCosmology(params);
+  
+  if((cosmo.getOmega_matter() + cosmo.getOmega_lambda()) != 1.0)
+  {
+    printf("ERROR: Lens can only handle flat universes at present. Must change cosmology.\n");
+    exit(1);
+  }
+  
+  assignParams(params);
+  
+  read_sim_file = false;
+  
+  charge = 4*pi*Grav;
+  if(verbose) std::cout << "charge: " << charge << std::endl;
+  
+  // initially let source be the one inputed from parameter file
+  index_of_new_sourceplane = -1;
+  toggle_source_plane = false;
+  
+  
+  if(flag_switch_field_off == false) {
+    std::cout << "Nzbins = " << Nzbins << std::endl ;
+    
+    // Resizing the "number of Halos" binning table :
+    zbins.resize(Nzbins) ;
+    NhalosbinZ.resize(Nzbins) ;
+    Nhaloestot_Tab.resize (NZSamples);
+    
+    // Initialising the "number of Halos" binning table :
+    for(int k=0 ; k<Nzbins ; k++)
+    {
+      zbins[k] = 0. ;
+      NhalosbinZ[k] = 0. ;
+    }
+    aveNhalosField = 0. ;
+    for(int k=0 ; k<NZSamples ; k++) Nhaloestot_Tab[k] = 0. ;
+    
+    // Computing the number of halos per bins :
+    if(sim_input_flag){
+      // Do Nothing ! No step is necessary here !
+    }
+    else {
+      if(field_buffer == 0.0){
+        field_buffer = pow(3.0e14/800/pi/cosmo.rho_crit(0),1.0/3.);
+        std::cout << "    Resetting field buffer to " << field_buffer << " Mpc." << std::endl;
+      }
+      // Compute the distribution variables :
+      ComputeHalosDistributionVariables();
+      // for (int i=0; i<Nzbins; i++) std::cout << NhalosbinZ[i] << " " ;
+      // std::cout << std::endl ;
+    }
+    
+    std::cout << "Lens : field_Nplanes_original = " << field_Nplanes_original << std::endl ;
+  }
+  
+  // set up the lens contents :
+  PosType ztmp = zsource;
+  buildPlanes(params, verbose);
+  if(zsource != ztmp) ResetSourcePlane(ztmp,false);
+  std::cout << "number of field halos :" << field_halos.size() << std::endl;
+  
 }
 
 Lens::~Lens()
@@ -2786,11 +2889,11 @@ void Lens::buildPlanes(InputParams& params, bool verbose)
       if(field_input_sim_format == MillenniumObs) readInputSimFileMillennium(verbose);
       if(field_input_sim_format == MultiDarkHalos) readInputSimFileMultiDarkHalos(verbose);
       if(field_input_sim_format == ObservedData) readInputSimFileObservedGalaxies(verbose);
-		}
+    }
     else{
       createFieldHalos(verbose);
 		}
-		// create field planes and sort halos onto them
+    // create field planes and sort halos onto them
 		createFieldPlanes(verbose);
 	}
   

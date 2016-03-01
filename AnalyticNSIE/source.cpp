@@ -663,7 +663,7 @@ PosType SourceShapelets::SurfaceBrightness(PosType *y)
   PosType y_norm[2],tmp;
   y_norm[0] = ((y[0]-source_x[0])*cos(ang)+(y[1]-source_x[1])*sin(ang))/source_r;
   y_norm[1] = ((y[0]-source_x[0])*sin(ang)-(y[1]-source_x[1])*cos(ang))/source_r;
-  PosType dist = sqrt(y_norm[0]*y_norm[0]+y_norm[1]*y_norm[1]);
+  //PosType dist = sqrt(y_norm[0]*y_norm[0]+y_norm[1]*y_norm[1]);
   std::vector<PosType> Her1,Her2;
   
   Hermite(Her1,n1,y_norm[0]);
@@ -681,7 +681,7 @@ PosType SourceShapelets::SurfaceBrightness(PosType *y)
       sb += norm*coeff[j*n1+i]*Her1[i]*Her2[j];
     }
   }
-  sb *= exp(-dist*dist/2.)/source_r;
+  sb *= exp(-0.5*(y_norm[0]*y_norm[0]+y_norm[1]*y_norm[1]) )/source_r;
   sb *= flux/coeff_flux;
   
   return max(sb,std::numeric_limits<PosType>::epsilon());

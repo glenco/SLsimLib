@@ -750,7 +750,10 @@ void LensHalo::alphakappagamma_asym(
  ){ // According to Ansatz II
  PosType f[3],g[4],alpha_r,alpha_theta;
  PosType x=r/rscale;
- felliptical(x,fratio,theta,f,g);
+ 
+ //Utilities::rotation(x,xt,theta);
+  
+ felliptical(x,fratio,theta+pa,f,g);
  PosType alpha_isoG = mass*alpha_h(f[0])/f[0]/pi;
  PosType kappa_isoG = mass*kappa_h(f[0])/f[0]/f[0]/pi;
  PosType phi_isoG = mass*phi_int(f[0])/pi;
@@ -800,7 +803,7 @@ void LensHalo::alphakappagamma1asym(
   PosType kappa_iso=mass*kappa_h(x)/pi/x/x;
   PosType gamma_iso=mass*gamma_h(x)/pi/x/x; // -beta*pow(x/xmax,-beta)
   
- 
+  theta=theta-pi/2.;
   faxial0(theta,f);
 
   //gradial(x,g);
@@ -820,8 +823,8 @@ void LensHalo::alphakappagamma1asym(
   alpha_r = (alpha_iso*(1+F*g[0])+phi_iso*F*g[1]); // with damping
   alpha_theta = (phi_iso*g[0]*f[1]/x); //  with damping
   
-  alpha[0] = (alpha_r*cos(theta) - alpha_theta*sin(theta));
-	alpha[1] = (alpha_r*sin(theta) + alpha_theta*cos(theta));
+  alpha[0] = (alpha_r*cos(theta+pi/2.) - alpha_theta*sin(theta+pi/2.));
+	alpha[1] = (alpha_r*sin(theta+pi/2.) + alpha_theta*cos(theta+pi/2.));
   
   //*kappa = (f[0]*kappa_iso-0.5*f[2]*phi_iso/x/x);//  w/o damping
   *kappa=(1+F*g[0])*kappa_iso-0.5*phi_iso*fac*(F*g[1]/x+F*g[2]+f[2]*g[0]/x/x)-F*g[1]*alpha_iso*x*x; /// with damping
@@ -832,9 +835,9 @@ void LensHalo::alphakappagamma1asym(
   
   PosType gt = (1+F*g[0])*gamma_iso+0.5*phi_iso*fac*(F*g[1]/x-F*g[2]+f[2]*g[0]/x/x)-F*g[1]*alpha_iso*x*x;// with damping
   PosType g45 = alpha_iso*f[1]*g[0]/x-phi_iso*fac*f[1]*g[1]/x+phi_iso/x/x*fac*f[1]*g[0];// with damping
-  
-  gamma[0] = (cos(2*theta)*gt - sin(2*theta)*g45);
-  gamma[1] = (sin(2*theta)*gt + cos(2*theta)*g45);
+  PosType tp = pi;
+  gamma[0] = (cos(2.*theta-tp)*gt + sin(2.*theta-tp)*g45);
+  gamma[1] = (sin(2.*theta-tp)*gt + cos(2.*theta-tp)*g45);
   
   *phi= f[0]*phi_iso; // w/o damping
   

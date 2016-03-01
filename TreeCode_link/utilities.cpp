@@ -250,7 +250,7 @@ unsigned long prevpower(unsigned long k){
 }
 
 
-  PosType **PosTypeMatrix(long rows, long cols)
+  PosType **PosTypeMatrix(size_t rows, size_t cols)
   {
     PosType **matrix = new PosType*[rows];
     matrix[0] = new PosType[rows*cols];
@@ -261,7 +261,7 @@ unsigned long prevpower(unsigned long k){
   }
   
   
-  void free_PosTypeMatrix(PosType **matrix, long rows, long cols){
+  void free_PosTypeMatrix(PosType **matrix, size_t rows, size_t cols){
     if(rows) delete[] matrix[0];
     delete[] matrix;
   }

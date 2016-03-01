@@ -519,4 +519,103 @@ inline double pointx(Point &p){return p.x[0];}
 inline double pointy(Point &p){return p.x[1];}
 inline PosType *positionfunc(Point &p){return p.x;}
 
+/**  \brief Class for representing points or vectors in 3 dimensions.  Not that the dereferencing operator is overridden.
+ 
+ */
+struct Point_3d{
+  Point_3d(){
+    x[0]=x[1]=x[2]=0.0;
+  }
+  ~Point_3d(){};
+  
+  Point_3d(const Point_3d &p){
+    x[0]=p.x[0];
+    x[1]=p.x[1];
+    x[2]=p.x[2];
+  }
+  Point_3d & operator=(const Point_3d &p){
+    if(this == &p) return *this;
+    x[0]=p.x[0];
+    x[1]=p.x[1];
+    x[2]=p.x[2];
+    return *this;
+  }
+  Point_3d & operator=(const Point &p){
+    x[0]=p.x[0];
+    x[1]=p.x[1];
+    x[2]=p.x[2];
+    return *this;
+  }
+  
+  Point_3d & operator+=(const Point &p){
+    x[0]+=p.x[0];
+    x[1]+=p.x[1];
+    x[2]+=p.x[2];
+    return *this;
+  }
+  Point_3d  operator+(const Point_3d &p) const{
+    Point_3d tmp;
+    tmp.x[0] = x[0] + p.x[0];
+    tmp.x[1] = x[1] + p.x[1];
+    tmp.x[2] = x[2] + p.x[2];
+    return tmp;
+  }
+  Point_3d  operator-(const Point_3d &p) const{
+    Point_3d tmp;
+    tmp.x[0] = x[0] - p.x[0];
+    tmp.x[1] = x[1] - p.x[1];
+    tmp.x[2] = x[2] - p.x[2];
+    return tmp;
+  }
+  Point_3d & operator+=(const Point_3d &p){
+    x[0]+=p.x[0];
+    x[1]+=p.x[1];
+    x[2]+=p.x[2];
+    return *this;
+  }
+  Point_3d & operator/=(PosType value){
+    x[0]/=value;
+    x[1]/=value;
+    x[2]/=value;
+    return *this;
+  }
+  Point_3d & operator/(PosType value){
+    Point_3d tmp;
+
+    tmp[0] = x[0]/value;
+    tmp[1] = x[1]/value;
+    tmp[2] = x[2]/value;
+    
+    return *this;
+  }
+  Point_3d & operator*=(PosType value){
+    x[0] *=value;
+    x[1] *=value;
+    x[2] *=value;
+    return *this;
+  }
+  /// scalar product
+  PosType operator*(const Point_3d &p){
+    return x[0]*p.x[0] + x[1]*p.x[1] + x[2]*p.x[2];
+  }
+  
+  /// length
+  PosType length(){
+    return sqrt(x[0]*x[0] + x[1]*x[1] + x[2]*x[2]);
+  }
+  
+  void rotate(PosType theta){
+    PosType c = cos(theta),s = sin(theta);
+    PosType tmp = x[0];
+    x[0] = c*tmp + s*x[1];
+    x[1] = c*x[1] + s*tmp;
+  }
+  
+  PosType x[3];
+  PosType & operator[](size_t i){return x[i];}
+};
+
+std::ostream &operator<<(std::ostream &os, Point_3d const &p);
+
+
 #endif

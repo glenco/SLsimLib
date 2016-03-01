@@ -32,6 +32,9 @@ namespace
 	{
 		str << std::left << std::setw(23) << label << " " << std::setw(11) << value << " # " << comment << std::endl;
 	}
+	
+	// whitespace characters
+	const std::string WS = " \t\r\n";
 }
 
 InputParams::counter::counter()
@@ -87,59 +90,57 @@ InputParams::InputParams(std::string paramfile)
 	}
 	paramfile_name = paramfile;
 
-	while(!file_in.eof())
+	for(std::string myline; std::getline(file_in, myline);)
 	{
-		std::string myline;
-		getline(file_in, myline);
-
-    //std::cout << myline << std::endl;
-    
-		// remove all tabs from the string
-		std::size_t np = myline.find('\t');
-		while(np != std::string::npos)
-		{
-			myline.replace(np, 1, " ");
-			np = myline.find('\t');
-		}
-
-		// strip of comments
+		// string leading whitespace if present
+		std::size_t np = myline.find_first_not_of(WS);
+		if(np != std::string::npos)
+			myline = myline.substr(np);
+		
+		// look for comment and store it
+		std::string comment;
 		np = myline.find_first_of('#');
-		if(np == std::string::npos)
-			np = myline.size(); // Case where no comment is found
-		if(np > 0)
+		if(np != std::string::npos)
+			comment = myline.substr(np);
+		
+		// strip comment
+		myline = myline.substr(0, np);
+		
+		// get label
+		np = myline.find_first_of(WS);
+		std::string label = myline.substr(0, np);
+		
+		// skip empty lines
+		if(label.empty())
+			continue;
+		
+		// check if label is known
+		if(!is_known(label))
+			std::cerr << "WARNING: unknown parameter '" << label << "' in file " << paramfile << "!" << std::endl;
+		
+		// skip over label
+		myline = myline.substr(np);
+		
+		// skip whitespace after label if present
+		np = myline.find_first_not_of(WS);
+		if(np != std::string::npos)
+			myline = myline.substr(np);
+		
+		// store value
+		np = myline.find_first_of(WS);
+		myline = myline.substr(0, np);
+		
+		// value is necessary
+		if(myline.empty())
 		{
-			std::string comment = myline.substr(np);
-			myline = myline.substr(0, np);  // strip out comments
-
-			// parse line
-			np = myline.find_first_of(' ');
-			if(np > 0)
-			{
-				std::string label = myline.substr(0, np);
-				
-				// check if label is known
-				if(!is_known(label))
-					std::cerr << "WARNING: unknown parameter '" << label << "' in file " << paramfile << "!" << std::endl;
-				
-				myline = myline.substr(np);  // should now just have the value plus white space
-				np = myline.find_first_not_of(' ');
-				if(np > 0)
-					myline = myline.substr(np);  // strip off spaces after value if they exist
-				np = myline.find_first_of(' ');
-				myline = myline.substr(0,np);
-				if(myline.size() <= 0)
-				{
-					std::cout << "ERROR: Paramters " << label << " does not have a valid value in parameter file " << paramfile_name << std::endl;
-					exit(1);
-				}
-
-				params.insert(std::make_pair(label, myline));
-				if(!comment.empty())
-					comments.insert(std::make_pair(label, comment));
-			}
+			std::cout << "ERROR: Paramters " << label << " does not have a valid value in parameter file " << paramfile_name << std::endl;
+			exit(1);
 		}
-
-		myline.clear();
+		
+		// now store parameter, value and optional comment
+		params.insert(std::make_pair(label, myline));
+		if(!comment.empty())
+			comments.insert(std::make_pair(label, comment));
 	}
 
 	std::cout << "number of lines read: " << params.size() << std::endl;
