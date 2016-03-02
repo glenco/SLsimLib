@@ -624,7 +624,7 @@ void ImageFinding::find_crit(
       
       std::vector<Point_2d> &short_cac = crtcurve[ii].caustic_curve_outline;
       
-      short_cac.reserve(points.size());
+      short_cac.resize(points.size());
       
       kk=0;
       scale = 0;

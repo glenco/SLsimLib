@@ -212,7 +212,7 @@ namespace Utilities{
         ++newpivotindex;
       }
     }
-    --newpivotindex;
+    if(newpivotindex != 0) --newpivotindex;
     
     quicksortPoints(pointarray,arr,newpivotindex);
     quicksortPoints(&pointarray[newpivotindex+1],&arr[newpivotindex+1],N-newpivotindex-1);
@@ -245,7 +245,7 @@ namespace Utilities{
         ++newpivotindex;
       }
     }
-    --newpivotindex;
+    if(newpivotindex != 0) --newpivotindex;
     
     quicksortPoints(pointarray,func,newpivotindex);
     quicksortPoints(&pointarray[newpivotindex+1],func,N-newpivotindex-1);
@@ -280,7 +280,7 @@ namespace Utilities{
         ++newpivotindex;
       }
     }
-    --newpivotindex;
+    if(newpivotindex != 0) --newpivotindex;
     
     quicksort(particles,arr,newpivotindex);
     quicksort(&particles[newpivotindex+1],&arr[newpivotindex+1],N-newpivotindex-1);

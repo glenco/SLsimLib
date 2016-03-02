@@ -371,7 +371,7 @@ namespace Utilities{
         ++newpivotindex;
       }
     }
-    --newpivotindex;
+    if(newpivotindex != 0) --newpivotindex;
     
     if(level < lev && N > 500){
       auto thread1 = std::async(std::launch::async, [&] {
@@ -417,7 +417,7 @@ namespace Utilities{
         ++newpivotindex;
       }
     }
-    --newpivotindex;
+    if(newpivotindex != 0) --newpivotindex;
     
     if(level < lev && N > 500){
       auto thread1 = std::async(std::launch::async, [&] {
@@ -460,7 +460,7 @@ namespace Utilities{
         ++newpivotindex;
       }
     }
-    --newpivotindex;
+    if(newpivotindex != 0 ) --newpivotindex;
     
     if(level < lev && N > 500){
       auto thread1 = std::async(std::launch::async, [&] {
