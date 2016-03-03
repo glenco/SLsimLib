@@ -420,6 +420,7 @@ void TreeStruct::_BuildTree(TreeStruct::iterator &current){
     //double_sort_points(cbranch->npoints,x-1,current->points);
     //Utilities::quicksortPoints_multithread<4>((*current)->points,x,cbranch->npoints);
     Utilities::quicksortPoints_multithread<4>(points,func,cbranch->npoints);
+    //Utilities::quicksortPoints(points,func,cbranch->npoints);
     //Utilities::quicksortPoints((*current)->points,x,cbranch->npoints);
 
     if(func(points[0]) == func(points[cbranch->npoints-1])){
@@ -431,6 +432,7 @@ void TreeStruct::_BuildTree(TreeStruct::iterator &current){
       //Utilities::quicksortPoints_multithread<4>((*current)->points,x,cbranch->npoints);
       //Utilities::quicksortPoints((*current)->points,x,cbranch->npoints);
       Utilities::quicksortPoints_multithread<4>(points,func,cbranch->npoints);
+      //Utilities::quicksortPoints(points,func,cbranch->npoints);
     }
 
 	  cut=cbranch->npoints/2;

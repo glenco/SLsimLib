@@ -7,6 +7,7 @@
 
 #include "slsimlib.h"
 #include "map_images.h"
+#include "concave_hull.h"
 
 #define NMAXCRITS 1000
 
@@ -220,7 +221,14 @@ void ImageFinding::find_crit(
        }
        ***************************************/
       
-      std::vector<Point *> hull = critcurve[jj].imagekist->copytovector();
+      std::vector<Point> points(critcurve[jj].imagekist->Nunits());
+      auto iter = critcurve[jj].imagekist->begin();
+      for(Point &p : points){
+        p = *iter;
+        ++iter;
+      }
+      
+      std::vector<Point> hull;// = critcurve[jj].imagekist->copytovector();
       
       /******* test *****************
        it = critcurve[jj].imagekist->TopIt();
@@ -230,64 +238,56 @@ void ImageFinding::find_crit(
        --it;
        }
        // *******************************/
-      // Image plane hull
-      if (crtcurve[ii].type == tangential){
-        hull = Utilities::concave_hull(hull,10);
-      }else{
-        hull = Utilities::convex_hull(hull);
-      }
       
-      //hull = Utilities::concave_hull(hull,10);
-      // hull = Utilities::convex_hull(hull);
+      Utilities::concave(points,hull,critcurve[jj].gridrange[1]*3);
       
       crtcurve[ii].critical_curve.resize(hull.size());
       crtcurve[ii].caustic_curve_intersecting.resize(hull.size());
       crtcurve[ii].critical_center[0] = 0;
       crtcurve[ii].critical_center[1] = 0;
+      size_t kk=0;
+      for(auto &p : hull){
+        //p.Print();
+        crtcurve[ii].critical_curve[kk] = p;
+        crtcurve[ii].caustic_curve_intersecting[kk++] = *(p.image);
+        crtcurve[ii].critical_center[0] += p[0];
+        crtcurve[ii].critical_center[1] += p[1];
+      }
+      crtcurve[ii].critical_center /= crtcurve[ii].critical_curve.size();
       
-      for(size_t kk=0;kk<hull.size();++kk){
-        crtcurve[ii].critical_curve[kk] = *hull[kk];
-        crtcurve[ii].caustic_curve_intersecting[kk] = *(hull[kk]->image);
-        crtcurve[ii].critical_center[0] += hull[kk]->x[0];
-        crtcurve[ii].critical_center[1] += hull[kk]->x[1];
+      Utilities::windings(crtcurve[ii].critical_center,crtcurve[ii].critical_curve,&(crtcurve[ii].critical_area));
+      
+      //***************** move to source plane ************/
+      
+      std::vector<Point_2d> &short_cac = crtcurve[ii].caustic_curve_outline;
+
+      short_cac.resize(points.size());
+      
+      kk=0;
+      PosType scale=0,tmp;
+      for(Point &p : points){
+        short_cac[kk++] = *(p.image);
+        tmp =  p.leaf->area();
+        if(scale < tmp) scale = tmp;
       }
       
-      /******* test *****************
-       {
-       map.AddCurve(crtcurve[ii].critical_curve,1);
-       }
-       // *******************************/
-      
-      
-      crtcurve[ii].critical_center /= hull.size();
-      
-      Utilities::windings(crtcurve[ii].critical_center.x,hull.data(),hull.size(),&(crtcurve[ii].critical_area));
-      
-      hull.clear();
-      critcurve[jj].imagekist->TranformPlanes();
-      hull = critcurve[jj].imagekist->copytovector();
-      if (crtcurve[ii].type == tangential){
-        hull = Utilities::concave_hull(hull,5);
-      }else{
-        hull = Utilities::convex_hull(hull);
-      }
-      //hull = Utilities::concave_hull(hull,5);
-      // hull = Utilities::convex_hull(hull);
-      
-      crtcurve[ii].caustic_curve_outline.resize(hull.size());
+      //**** size scale ???
+      Utilities::concave(short_cac,short_cac,std::sqrt(scale)*4);
+
+      assert(short_cac.size() > 0);
+
+      // center of caustic
       crtcurve[ii].caustic_center[0] = 0;
       crtcurve[ii].caustic_center[1] = 0;
-      
-      for(size_t kk=0;kk<hull.size();++kk){
-        crtcurve[ii].caustic_curve_outline[kk] = *hull[kk];
-        crtcurve[ii].caustic_center[0] += hull[kk]->x[0];
-        crtcurve[ii].caustic_center[1] += hull[kk]->x[1];
+      for(auto p  : short_cac){
+        crtcurve[ii].caustic_center[0] += p[0];
+        crtcurve[ii].caustic_center[1] += p[1];
       }
+      crtcurve[ii].caustic_center[0] /= short_cac.size();
+      crtcurve[ii].caustic_center[1] /= short_cac.size();
       
-      crtcurve[ii].caustic_center[0] /= hull.size();
-      crtcurve[ii].caustic_center[1] /= hull.size();
       
-      Utilities::windings(crtcurve[ii].caustic_center.x,hull.data(),hull.size(),&(crtcurve[ii].caustic_area));
+      Utilities::windings(crtcurve[ii].caustic_center,short_cac,&(crtcurve[ii].caustic_area));
       
       crtcurve[ii].caustic_intersections = Utilities::Geometry::intersect(crtcurve[ii].caustic_curve_intersecting);
       
@@ -585,13 +585,84 @@ void ImageFinding::find_crit(
       crtcurve[ii].type = types[i];
       
       //std::vector<Point *> hull = pseudocurve[i].innerborder->copytovector();
-      std::vector<Point *> hull = pseudocurve[i].outerborder->copytovector();
-      if(verbose) std::cout << " doing concave hull with " << hull.size() << " points..." << std::endl;
-      if (crtcurve[ii].type == tangential){
+      //std::vector<Point *> hull = pseudocurve[i].outerborder->copytovector();
+      
+      
+      std::vector<Point> points(pseudocurve[i].outerborder->Nunits());
+      auto iter = pseudocurve[i].outerborder->begin();
+      PosType scale = 0,tmp;
+      for(Point &p : points){
+        p = *iter;
+        tmp = p.leaf->area();
+        if(scale < tmp ) scale = tmp;
+        ++iter;
+      }
+      
+      if(verbose) std::cout << " doing concave hull with " << points.size() << " points..." << std::endl;
+      
+      std::vector<Point> hull;
+      
+      
+      Utilities::concave(points,hull,std::sqrt(scale)*4);
+      
+      crtcurve[ii].critical_curve.resize(hull.size());
+      crtcurve[ii].caustic_curve_intersecting.resize(hull.size());
+      crtcurve[ii].critical_center[0] = 0;
+      crtcurve[ii].critical_center[1] = 0;
+      size_t kk=0;
+      for(auto &p : hull){
+        crtcurve[ii].critical_curve[kk] = p;
+        crtcurve[ii].caustic_curve_intersecting[kk++] = *(p.image);
+        crtcurve[ii].critical_center[0] += p[0];
+        crtcurve[ii].critical_center[1] += p[1];
+      }
+      crtcurve[ii].critical_center /= crtcurve[ii].critical_curve.size();
+      
+      Utilities::windings(crtcurve[ii].critical_center,crtcurve[ii].critical_curve,&(crtcurve[ii].critical_area));
+      
+      //***************** move to source plane ************/
+      
+      std::vector<Point_2d> &short_cac = crtcurve[ii].caustic_curve_outline;
+      
+      short_cac.resize(points.size());
+      
+      kk=0;
+      scale = 0;
+      for(Point &p : points){
+        short_cac[kk++] = *(p.image);
+        tmp = p.image->leaf->area();
+        if(scale < tmp ) scale = tmp;
+      }
+    
+      Utilities::concave(short_cac,short_cac,std::sqrt(scale)*4);
+      
+      assert(short_cac.size() > 0);
+      
+      // center of caustic
+      crtcurve[ii].caustic_center[0] = 0;
+      crtcurve[ii].caustic_center[1] = 0;
+      for(auto p  : short_cac){
+        crtcurve[ii].caustic_center[0] += p[0];
+        crtcurve[ii].caustic_center[1] += p[1];
+      }
+      crtcurve[ii].caustic_center[0] /= short_cac.size();
+      crtcurve[ii].caustic_center[1] /= short_cac.size();
+      
+      
+      if(crtcurve[ii].type != pseudo)
+        Utilities::windings(crtcurve[ii].caustic_center,short_cac,&(crtcurve[ii].caustic_area));
+      else crtcurve[ii].critical_area = 0.0;
+
+      
+      crtcurve[ii].caustic_intersections = Utilities::Geometry::intersect(crtcurve[ii].caustic_curve_intersecting);
+      
+      
+      /*if (crtcurve[ii].type == tangential){
         hull = Utilities::concave_hull(hull,10);
       }else{
         hull = Utilities::convex_hull(hull);
       }
+      
       //hull = Utilities::concave_hull(hull,10);
       // hull = Utilities::convex_hull(hull);
       assert(hull.size() <= pseudocurve[i].outerborder->Nunits());
@@ -620,33 +691,56 @@ void ImageFinding::find_crit(
       if(crtcurve[ii].type != pseudo)
         Utilities::windings(crtcurve[ii].critical_center.x,hull.data(),hull.size(),&(crtcurve[ii].critical_area));
       else crtcurve[ii].critical_area = 0.0;
-      
+      */
       // caustic
-      pseudocurve[i].imagekist->TranformPlanes();
+      /*pseudocurve[i].imagekist->TranformPlanes();
       hull = pseudocurve[i].imagekist->copytovector();
       if(verbose) std::cout << " doing concave hull with " << hull.size() << " points..." << std::endl;
       if (crtcurve[ii].type == tangential){
         hull = Utilities::concave_hull(hull,10);
       }else{
         hull = Utilities::convex_hull(hull);
-      }
+      }*/
+      
+      
+       /*crtcurve[ii].caustic_curve_outline.resize(hull.size());
+       size_t i = 0;
+       for(Point* &p : hull){
+       crtcurve[ii].caustic_curve_outline[i++] = *(p->image);
+       }
+       
+       std::vector<Point_2d> &short_caus_curve = crtcurve[ii].caustic_curve_outline;
+       
+       crtcurve[ii].caustic_intersections =
+       Utilities::RemoveIntersections(short_caus_curve);
+*/
+      
       //hull = Utilities::concave_hull(hull,10);
       // hull = Utilities::convex_hull(hull);
       
-      crtcurve[ii].caustic_curve_outline.resize(hull.size());
-      crtcurve[ii].caustic_center[0] = 0;
+      //crtcurve[ii].caustic_curve_outline.resize(hull.size());
+      /*crtcurve[ii].caustic_center[0] = 0;
       crtcurve[ii].caustic_center[1] = 0;
-      
-      for(size_t jj=0;jj<hull.size();++jj){
+      // center of caustic
+      for(auto p  : short_caus_curve){
+        crtcurve[ii].caustic_center[0] += p[0];
+        crtcurve[ii].caustic_center[1] += p[1];
+      }*/
+      /*for(size_t jj=0;jj<hull.size();++jj){
         crtcurve[ii].caustic_curve_outline[jj] = *hull[jj];
         crtcurve[ii].caustic_center[0] += hull[jj]->x[0];
         crtcurve[ii].caustic_center[1] += hull[jj]->x[1];
-      }
-      
-      crtcurve[ii].caustic_center[0] /= hull.size();
+      }*/
+      /*
+       crtcurve[ii].caustic_center[0] /= hull.size();
       crtcurve[ii].caustic_center[1] /= hull.size();
+      */
+      //Utilities::windings(crtcurve[ii].caustic_center.x,hull.data(),hull.size(),&(crtcurve[ii].caustic_area));
       
-      Utilities::windings(crtcurve[ii].caustic_center.x,hull.data(),hull.size(),&(crtcurve[ii].caustic_area));
+      //Utilities::windings(crtcurve[ii].caustic_center,short_caus_curve,&(crtcurve[ii].caustic_area));
+
+      
+      //Utilities::windings(crtcurve[ii].caustic_center.x,hull.data(),hull.size(),&(crtcurve[ii].caustic_area));
     
       // take out infinitesimal cases
       if(crtcurve[ii].type == tangential && crtcurve[ii].critical_area == 0.0) --ii;

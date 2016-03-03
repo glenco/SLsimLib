@@ -789,7 +789,7 @@ void PixelMap::drawline(
 ){
   
   PosType x[2],s1,s2,r;
-  size_t index;
+  long index;
   PosType d = 0;
   
   r = sqrt( (x2[0] - x1[0])*(x2[0] - x1[0]) + (x2[1] - x1[1])*(x2[1] - x1[1]) );
@@ -812,7 +812,7 @@ void PixelMap::drawline(
     if(inMapBox(x)){
       //index = Utilities::IndexFromPosition(x,Nx,range,center);
       index = find_index(x);
-      map[index] = value;
+      if(index != -1) map[index] = value;
     }
     x[0] += s1*resolution;
     x[1] += s2*resolution;

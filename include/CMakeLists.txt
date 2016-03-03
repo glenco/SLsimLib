@@ -46,4 +46,5 @@ add_sources(
         elliptic.h
 	gridmap.h
 	particle_halo.h
+	concave_hull.h
 )
