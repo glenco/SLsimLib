@@ -3013,7 +3013,7 @@ void Lens::quicksort(LensHaloHndl *halos,PosType **pos,unsigned long N){
 			++newpivotindex;
 		}
 	}
-	--newpivotindex;
+	if(newpivotindex != 0) --newpivotindex;
   
 	quicksort(&halos[0],pos,newpivotindex);
 	quicksort(&halos[newpivotindex+1],&pos[newpivotindex+1],N-newpivotindex-1);

@@ -212,7 +212,7 @@ namespace Utilities{
         ++newpivotindex;
       }
     }
-    --newpivotindex;
+    if(newpivotindex != 0) --newpivotindex;
     
     quicksortPoints(pointarray,arr,newpivotindex);
     quicksortPoints(&pointarray[newpivotindex+1],&arr[newpivotindex+1],N-newpivotindex-1);
@@ -220,6 +220,38 @@ namespace Utilities{
     return ;
   }
   
+  void quicksortPoints(Point *pointarray,double (*func)(Point &),unsigned long N){
+    PosType pivotvalue;
+    unsigned long pivotindex,newpivotindex,i;
+    
+    if(N <= 1) return ;
+    
+    // pick pivot as the median of the first, last and middle values
+    if ((func(pointarray[0]) >= func(pointarray[N/2]) && func(pointarray[0]) <= func(pointarray[N-1]))
+        || (func(pointarray[0]) >= func(pointarray[N-1]) && func(pointarray[0]) <= func(pointarray[N/2]))) pivotindex = 0;
+    else if ((func(pointarray[N/2]) >= func(pointarray[0]) && func(pointarray[N/2]) <= func(pointarray[N-1]))
+             || (func(pointarray[N/2]) >= func(pointarray[N-1]) && func(pointarray[N/2]) <= func(pointarray[0]))) pivotindex = N/2;
+    else pivotindex = N-1;
+    pivotvalue=func(pointarray[pivotindex]);
+    
+    // move pivot to end of array
+    SwapPointsInArray(&pointarray[pivotindex],&pointarray[N-1]);
+    newpivotindex=0;
+    
+    // partition list and array
+    for(i=0;i<N;++i){
+      if(func(pointarray[i]) <= pivotvalue){
+        SwapPointsInArray(&pointarray[newpivotindex],&pointarray[i]);
+        ++newpivotindex;
+      }
+    }
+    if(newpivotindex != 0) --newpivotindex;
+    
+    quicksortPoints(pointarray,func,newpivotindex);
+    quicksortPoints(&pointarray[newpivotindex+1],func,N-newpivotindex-1);
+    
+    return ;
+  }
 
   void quicksort(unsigned long *particles,PosType *arr,unsigned long N){
     PosType pivotvalue;
@@ -248,7 +280,7 @@ namespace Utilities{
         ++newpivotindex;
       }
     }
-    --newpivotindex;
+    if(newpivotindex != 0) --newpivotindex;
     
     quicksort(particles,arr,newpivotindex);
     quicksort(&particles[newpivotindex+1],&arr[newpivotindex+1],N-newpivotindex-1);
