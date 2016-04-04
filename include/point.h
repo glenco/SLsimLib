@@ -83,8 +83,8 @@ struct Point_2d{
     return *this;
   }
   Point_2d & operator-=(const Point_2d &p){
-    x[0]+=p.x[0];
-    x[1]+=p.x[1];
+    x[0]-=p.x[0];
+    x[1]-=p.x[1];
     return *this;
   }
   Point_2d & operator/=(PosType value){
