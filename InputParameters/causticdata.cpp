@@ -171,7 +171,7 @@ void CausticDataStore::readfile(std::string filename,bool verbose){
     file_in.ignore(10000,'\n');
     ++i;
   }
-  if(verbose) std::cout << "skipped "<< i << " comment lines in " << filename << std::endl;
+  if(verbose) std::cout << "   skipped "<< i << " comment lines in " << filename << std::endl;
   
   size_t pos;
   CausticStructure tmp_data;
@@ -179,7 +179,7 @@ void CausticDataStore::readfile(std::string filename,bool verbose){
   while(getline(file_in,myline)){
     
 		if(myline[0] == '#'){
-      if(verbose) std::cout << "skipped line " << i << std::endl;
+      if(verbose) std::cout << "   skipped line " << i << std::endl;
 			continue;
     }
 	/*

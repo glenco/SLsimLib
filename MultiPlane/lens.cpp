@@ -1842,7 +1842,7 @@ void Lens::readInputSimFileMillennium(bool verbose)
 		file_in.ignore(10000,'\n');
 		++i;
 	}
-	if(verbose) std::cout << "skipped "<< i << " comment lines in file " << field_input_sim_file << std::endl;
+	if(verbose) std::cout << "   skipped "<< i << " comment lines in file " << field_input_sim_file << std::endl;
   
 	//std::vector<PosType *> halo_pos_vec;
   Utilities::Geometry::SphericalPoint tmp_sph_point(1,0,0);
@@ -2193,7 +2193,7 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose)
       file_in.ignore(10000,'\n');
       ++i;
     }
-    if(verbose) std::cout << "skipped "<< i << " comment lines in file " <<  filenames[jj]
+    if(verbose) std::cout << "   skipped "<< i << " comment lines in file " <<  filenames[jj]
       << std::endl;
     
     // read in data
@@ -2511,7 +2511,7 @@ void Lens::readInputSimFileObservedGalaxies(bool verbose)
     file_in.ignore(10000,'\n');
     ++i;
   }
-  if(verbose) std::cout << "skipped "<< i << " comment lines in file "
+  if(verbose) std::cout << "   skipped "<< i << " comment lines in file "
     << std::endl;
   
   // read in data

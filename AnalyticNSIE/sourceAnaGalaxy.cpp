@@ -119,7 +119,7 @@ void SourceMultiAnaGalaxy::readDataFile(Utilities::RandomNumbers_NR &ran){
 		file_in.ignore(10000,'\n');
 		++i;
 	}
-	std::cout << "skipped "<< i << " comment lines in " << input_gal_file << std::endl;
+	std::cout << "   skipped "<< i << " comment lines in " << input_gal_file << std::endl;
 
 	PosType theta[2] = {0.0,0.0};
 
