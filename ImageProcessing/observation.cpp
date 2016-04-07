@@ -510,3 +510,12 @@ PixelMap Observation::PhotonToCounts(PixelMap &pmap)
 	return outmap;
 }
 
+/// Inverse of the sun flux in units of PixelMap at redshift z
+/// Multiplying this by the pixel counts you get the mass inside the pixel in solar masses
+float Observation::MassToLight(COSMOLOGY& cosmo, float z, float sun_abs_mag)
+{
+    float dist = cosmo.lumDist(z) * 1.e+05; // luminosity distance of the lens in units of 10 pc
+    float sun_flux = std::pow(10.,-0.4*(sun_abs_mag+48.6)) / dist / dist; // sun flux at redshift z in erg sec-1 cm-2 Hz-1
+    return hplanck/sun_flux;
+}
+

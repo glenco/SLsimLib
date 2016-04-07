@@ -342,6 +342,7 @@ public:
 	PixelMap Convert (PixelMap &map, bool psf, bool noise,long *seed, unitType unit = counts_x_sec);
 	PixelMap Convert_back (PixelMap &map);
     void setExpTime(float time){exp_time = time;}
+    float MassToLight(COSMOLOGY& cosmo, float z, float sun_abs_mag);
 
 private:
 	float diameter;  // diameter of telescope (in cm)
