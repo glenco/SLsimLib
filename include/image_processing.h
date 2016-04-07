@@ -111,7 +111,8 @@ public:
 
 	inline double getValue(std::size_t i) const { return map[i]; }
 	inline double & operator[](std::size_t i) { return map[i]; };
-	inline double operator()(std::size_t i) const { return map[i]; };
+  inline double operator()(std::size_t i) const { return map[i]; };
+  inline double operator()(std::size_t i,std::size_t j) const { return map[i + Nx*j]; };
 	
 	PixelMap& operator+=(const PixelMap& rhs);
 	friend PixelMap operator+(const PixelMap&, const PixelMap&);

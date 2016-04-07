@@ -126,7 +126,11 @@ public:
 	}
 
 	/// remove all main halos
-	void clearMainHalos(bool verbose);
+	void clearMainHalos(bool verbose=false);
+  /// remaove all main halo of given type
+  template<typename HaloType>
+  void clearMainHalo(bool verbose=false);
+
 
 	/// inserts a single main lens halo and adds it to the existing ones
 	void insertMainHalo(LensHalo* halo,bool addplanes,bool verbose = false);
@@ -175,6 +179,9 @@ public:
 	/// get single main halo of given type
 	template<typename HaloType>
 	HaloType* getMainHalo(std::size_t i);
+  
+  
+  
 	
 	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool RSIverbose = false);
   void info_rayshooter(Point *i_point
@@ -434,7 +441,6 @@ private: /* main */
 	/// vector of all main halos
 	Utilities::MixedVector<LensHalo*> main_halos;
 	/// vector of own main halos that will be deleted
-	std::vector<LensHalo*> main_halos_created;
 	/// vector of all main planes
 	std::vector<LensPlane*> main_planes;
 	/// vector of main plane redshifts

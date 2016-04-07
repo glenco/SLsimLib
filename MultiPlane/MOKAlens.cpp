@@ -60,7 +60,7 @@ void cmass(int n, std::valarray<double> map, std:: vector<double> x, double &xcm
 }
 
 /**
- * \brief loads a MOKA map from a given filename
+ * \brief loads a mass map from a given filename
  */
 
 LensHaloMassMap::LensHaloMassMap(const std::string& filename, PixelMapType my_maptype,int pixel_map_zeropad,bool my_zeromean, const COSMOLOGY& lenscosmo)
@@ -72,6 +72,78 @@ maptype(my_maptype), cosmo(lenscosmo),zerosize(pixel_map_zeropad),zeromean(my_ze
  	
   // set redshift to value from map
   setZlens(map->zlens);
+}
+
+/** \brief Create a LensHalo from a PixelMap representing the mass.
+ 
+ This is especially useful for representing the visible stars from an image in
+ the lens model.
+ */
+LensHaloMassMap::LensHaloMassMap(
+                                 PixelMap &my_map        /// map of mass
+                                 ,double massconvertion  /// factor that converts the units of my_map to solar masses
+                                 ,double zlens           /// redshift of lens
+                                 ,double zsource         /// redshit of source
+                                 ,int pixel_map_zeropad  /// factor by which grid is expanded with padding when doing FFTs
+                                 ,const COSMOLOGY& lenscosmo  /// cosmology
+):
+LensHalo(),MOKA_input_file(""),maptype(pix_map),cosmo(lenscosmo),zerosize(pixel_map_zeropad),zeromean(false)
+{
+  
+  rscale = 1.0;
+  Dist = lenscosmo.angDist(zlens);
+
+  map = new MOKAmap();
+  
+  if(std::numeric_limits<float>::has_infinity)
+    Rmax = std::numeric_limits<float>::infinity();
+  else
+    Rmax = std::numeric_limits<float>::max();
+  
+  map->nx = my_map.getNx();
+  map->ny = my_map.getNy();
+  std::cout << "nx           ny " << std::endl;
+  std::cout << map->nx << "   " << map->ny << std::endl;
+  
+  std::size_t size = map->nx*map->ny;
+  
+  map->convergence.resize(size);
+  map->alpha1.resize(size,0.0);
+  map->alpha2.resize(size,0.0);
+  map->gamma1.resize(size,0.0);
+  map->gamma2.resize(size,0.0);
+  map->gamma3.resize(size,0.0);
+  map->phi.resize(size,0.0);
+  
+  
+  map->boxlarcsec = my_map.getRangeX()/arcsecTOradians;
+  map->boxlrad = my_map.getRangeX();
+  map->Dlens = Dist;
+  map->boxlMpc = map->boxlrad/Dist; // physical
+  
+  // convertion to solar masses per Mpc^2
+  double convert = massconvertion/(my_map.getResolution()*my_map.getResolution()*map->Dlens*map->Dlens);
+  
+  size_t Npixels = map->nx*map->ny;
+  LensHalo::mass = 0.0;
+  for(size_t i=0 ; i<Npixels ;++i){
+    map->convergence[i] = my_map(i)*convert;
+    LensHalo::mass += my_map(i)*massconvertion;
+  }
+  
+  map->zsource = zsource;
+  map->zlens = zlens;
+  
+  map->center[0] = map->center[1] = 0.0;
+  map->boxlrad = map->boxlarcsec*pi/180/3600.;
+
+  PreProcessFFTWMap();
+  
+  assert(map->nx*map->ny == map->convergence.size());
+  
+  LensHalo::setTheta(my_map.getCenter()[0],my_map.getCenter()[1]);
+  
+  setZlens(zlens);
 }
 
 /**
@@ -144,7 +216,6 @@ void LensHaloMassMap::initMap()
   
   map->center[0] = map->center[1] = 0.0;
   map->boxlrad = map->boxlarcsec*pi/180/3600.;
-  map->inarcsec  = 10800./M_PI/map->Dlens*60.; // Mpc/h to arcsec for MOKA while Mpc to arcsec for Pixeliz
   
   if(maptype == moka){
     
@@ -481,7 +552,20 @@ void LensHaloMassMap::force_halo(double *alpha
   
   Utilities::Interpolator<valarray<double> > interp(xx,map->nx,map->boxlMpc,map->ny
                                                     ,map->ny*map->boxlMpc/map->nx,map->center);
+
+  assert(map->nx == map->ny);
   
+  size_t N = map->nx * map->ny;
+  
+  map->convergence.size();
+  
+  assert(map->alpha1.size() == N);
+  assert(map->alpha2.size() == N);
+  assert(map->gamma1.size() == N);
+  assert(map->gamma2.size() == N);
+  assert(map->convergence.size() == N);
+  assert(map->phi.size() == N);
+
   alpha[0] = interp.interpolate(map->alpha1);
   alpha[1] = interp.interpolate(map->alpha2);
   gamma[0] = interp.interpolate(map->gamma1);

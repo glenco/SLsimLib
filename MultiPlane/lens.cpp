@@ -250,7 +250,6 @@ Lens::~Lens()
   
 	//Utilities::free_PosTypeMatrix(halo_pos, field_halos.size(), 3);
   
-	Utilities::delete_container(main_halos_created);
 	Utilities::delete_container(field_halos);
   Utilities::delete_container(substructure.halos);
   std::cout << "In Lens structure" << std::endl;
@@ -1405,17 +1404,16 @@ void Lens::createMainHalos(InputParams& params)
 
 void Lens::clearMainHalos(bool verbose)
 {
-	Utilities::delete_container(main_halos_created);
-	main_halos.clear();
-	
-	flag_switch_main_halo_on = false;
+  main_halos.clear();
   
-	
-	Utilities::delete_container(main_planes);
-	main_plane_redshifts.clear();
-	main_Dl.clear();
-	
-	combinePlanes(verbose);
+  flag_switch_main_halo_on = false;
+  
+  
+  Utilities::delete_container(main_planes);
+  main_plane_redshifts.clear();
+  main_Dl.clear();
+  
+  combinePlanes(verbose);
 }
 
 /**
@@ -1470,10 +1468,12 @@ void Lens::insertMainHalos(LensHalo** halos, std::size_t Nhalos,bool addplanes, 
 /**
  * \brief Inserts a single main lens halo and deletes all previous ones.
  * Then all lensing planes are updated accordingly.
+ *
+ * Note that this does not delete the halos that were there.  It just removes
+ * them from the lens.
  */
 void Lens::replaceMainHalos(LensHalo* halo,bool verbose)
 {
-	Utilities::delete_container(main_halos_created);
 	main_halos.clear();
 	
 	halo->setCosmology(cosmo);
@@ -1487,12 +1487,14 @@ void Lens::replaceMainHalos(LensHalo* halo,bool verbose)
 }
 
 /**
- * \brief Inserts a sequense of main lens halos and deletes all previous ones.
+ * \brief Inserts a sequense of main lens halos and remove all previous ones.
+ *
+ * Note that this does not delete the halos that were there.  It just removes 
+ * them from the lens.
  * Then all lensing planes are updated accordingly.
  */
 void Lens::replaceMainHalos(LensHalo** halos, std::size_t Nhalos,bool verbose)
 {
-	Utilities::delete_container(main_halos_created);
 	main_halos.clear();
 	
 	for(std::size_t i = 0; i < Nhalos; ++i)
