@@ -303,8 +303,9 @@ namespace Utilities{
 	void double_sort_points(unsigned long n, PosType *arr, Point *brr);
 
 	void quicksortPoints(Point *pointarray,PosType *arr,unsigned long N);
-  //void quicksortPoints_multithread(Point *pointarray,PosType *arr,unsigned long N,int level = 0);
-	void quicksort(unsigned long *particles,PosType *arr,unsigned long N);
+  void quicksortPoints(Point *pointarray,double (*func)(Point &),unsigned long N);
+  
+  void quicksort(unsigned long *particles,PosType *arr,unsigned long N);
 	void quickPartition(PosType pivotvalue,unsigned long *pivotindex,unsigned long *particles
 		,PosType *arr,unsigned long N);
 	void quickPartitionPoints(PosType pivotvalue,unsigned long *pivotindex
@@ -318,11 +319,20 @@ namespace Utilities{
   PosType cross(const Point *O, const Point *A, const Point *B);
   bool xorder(Point *p1,Point *p2);
   bool yorder(Point *p1,Point *p2);
+  //
+  
+  PosType cross(const Point *O, const Point *A, const Point *B);
+  PosType crossD(const double *O, const double *A, const double *B);
+  PosType crossD(Point_2d &O,Point_2d &A,Point_2d &B);
+
   std::vector<Point *> convex_hull(std::vector<Point *> &P);
   std::vector<double *> convex_hull(std::vector<double *> &P);
-  //std::vector<Point *> shrink_wrap(std::vector<Point *> P);
+  //void convex_hull(std::vector<Point_2d> &P,std::vector<Point_2d> &hull);
+  
   std::vector<Point *> concave_hull(std::vector<Point *> &P,int k,bool test=false);
   std::vector<double *> concave_hull(std::vector<double *> &P,int k);
+  
+  
   void contour_ellipse(std::vector<Point_2d> &P, Point_2d center, unsigned long Npoints ,std::vector<Point_2d> &C, double *ellipticity, double *ellipse_area) ;
   Point_2d contour_center(std::vector<Point_2d> &P, unsigned long Npoints);
 
@@ -361,7 +371,7 @@ namespace Utilities{
         ++newpivotindex;
       }
     }
-    --newpivotindex;
+    if(newpivotindex != 0) --newpivotindex;
     
     if(level < lev && N > 500){
       auto thread1 = std::async(std::launch::async, [&] {
@@ -407,7 +417,7 @@ namespace Utilities{
         ++newpivotindex;
       }
     }
-    --newpivotindex;
+    if(newpivotindex != 0) --newpivotindex;
     
     if(level < lev && N > 500){
       auto thread1 = std::async(std::launch::async, [&] {
@@ -450,7 +460,7 @@ namespace Utilities{
         ++newpivotindex;
       }
     }
-    --newpivotindex;
+    if(newpivotindex != 0 ) --newpivotindex;
     
     if(level < lev && N > 500){
       auto thread1 = std::async(std::launch::async, [&] {
@@ -648,15 +658,19 @@ namespace Utilities{
 	// Return: >0 for x left of the line through P0 and P1
 //         =0 for x on the line
 //         <0 for x right of the line
-	inline float isLeft( Point *p0, Point *p1, PosType *x ){
-
-		return (p1->x[0] - p0->x[0])*(x[1] - p0->x[1])
-			- (x[0] - p0->x[0])*(p1->x[1] - p0->x[1]);
-	};
+  inline float isLeft( Point *p0, Point *p1, PosType *x ){
+    
+    return (p1->x[0] - p0->x[0])*(x[1] - p0->x[1])
+    - (x[0] - p0->x[0])*(p1->x[1] - p0->x[1]);
+  };
+  inline float isLeft(Point_2d &p0,Point_2d &p1,Point_2d &x ){
+    return (p1[0] - p0[0])*(x[1] - p0[1]) - (x[0] - p0[0])*(p1[1] - p0[1]);
+  };
 	unsigned long prevpower(unsigned long k);
 
   int windings(PosType *x,Point *points,unsigned long Npoints,PosType *area,short image = 0 );
   int windings(PosType *x,Point **points,unsigned long Npoints,PosType *area,short image = 0 );
+  int windings(Point_2d &x,std::vector<Point_2d> &point,PosType *area);
 	int windings(PosType *x,Kist<Point> * kist,PosType *area,short image = 0);
   int windings2(PosType *x,Point *points,unsigned long Npoints,PosType *area,short image);
   /// returns 1 if it is in the curve and 0 if it is out.  Borders count as in.

@@ -138,6 +138,7 @@ void split_order_curve4(OldImageInfo *curves,int Maxcurves,int *Ncurves){
   return ;
 }
 namespace Utilities{
+
   /** \ingroup Utill
    *
    * \brief Orders points on a closed curve.
@@ -345,13 +346,13 @@ namespace Utilities{
   }
   
   /// Replaces curve with its convex hull.  The number of points will change.
-  void ordered_concavehull(Kist<Point> * curve){
+/*  void ordered_concavehull(Kist<Point> * curve){
     std::vector<Point *> copy = curve->copytovector();
     std::vector<Point *> hull = Utilities::concave_hull(copy,10);
     curve->copy(hull);
     
     return;
-  }
+  }*/
   
   /// gives the area within the convex hull of the curve
   PosType ConvexHullArea(Kist<Point> * curve){
@@ -1696,6 +1697,35 @@ namespace Utilities{
     return wn;
   }
   int windings(
+               Point_2d &x              /// Point for which the winding number is calculated
+               ,std::vector<Point_2d> &point         /// The points on the border.  These must be ordered.
+               ,PosType *area          /// returns absolute the area within the curve with oriented border
+  ){
+    int wn=0;
+    unsigned long k,i;
+    size_t Npoints = point.size();
+    
+    *area=0.0;
+    if(Npoints < 3) return 0;
+
+    for(i=0;i<Npoints;++i){
+      k= i < Npoints-1 ? i+1 : 0;
+      *area+=(point[i][0] + point[k][0])*(point[i][1] - point[k][1]);
+      
+      if(point[i][1] <= x[1]){
+        if(point[k][1] > x[1])
+          if( isLeft(point[i],point[k],x) > 0) ++wn;
+      }else{
+        if(point[k][1] <= x[1])
+          if( isLeft(point[i],point[k],x) < 0) --wn;
+      }
+    }
+    *area = fabs(*area)*0.5;
+    //std::printf("wn = %i\n",wn);
+    //if(abs(wn) > 0) exit(0);
+    return wn;
+  }
+  int windings(
                PosType *x              /// Point for which the winding number is calculated
                ,Kist<Point> * kist         /// Kist of points on the border.  These must be ordered.
                ,PosType *area          /// returns absolute the area within the curve with oriented border
@@ -1963,6 +1993,10 @@ namespace Utilities{
   {
     return (A[0] - O[0]) * (B[1] - O[1]) - (A[1] - O[1]) * (B[0] - O[0]);
   }
+  PosType crossD(Point_2d &O,Point_2d &A,Point_2d &B)
+  {
+    return (A[0] - O[0]) * (B[1] - O[1]) - (A[1] - O[1]) * (B[0] - O[0]);
+  }
   bool xorderD(double *p1,double *p2){
     return p1[0] < p2[0];
   }
@@ -1976,7 +2010,6 @@ std::vector<Point *> Utilities::convex_hull(std::vector<Point *> &P)
   
   if(P.size() <= 3){
     std::vector<Point *> H = P;
-    P.resize(0);
     return H;
   }
   
@@ -2020,7 +2053,6 @@ std::vector<double *> Utilities::convex_hull(std::vector<double *> &P)
   
   if(P.size() <= 3){
     std::vector<double *> H = P;
-    P.resize(0);
     return H;
   }
   
@@ -2031,7 +2063,7 @@ std::vector<double *> Utilities::convex_hull(std::vector<double *> &P)
   // Sort points lexicographically
   std::sort(P.begin(), P.end(),
             [](double *p1,double *p2){return p1[0] < p2[0];});
-
+  
   
   // Build lower hull
   for (size_t i = 0; i < n; i++) {
@@ -2056,6 +2088,9 @@ std::vector<double *> Utilities::convex_hull(std::vector<double *> &P)
   
   return H;
 }
+
+  
+
 /*
  double * convex_hull(double P1[],double P2[],std::vector<double *> P)
  {
@@ -2103,7 +2138,7 @@ std::vector<double *> Utilities::convex_hull(std::vector<double *> &P)
  proceedings).  This is a modified gift wrap algorithm using k neighbours.  The value
  of k will automatically increase when certain special cases are encountered.
  
- This is an overloaded vertion of the other concave_hull()
+ This is an overloaded version of the other concave_hull()
  
  */
 std::vector<double *> Utilities::concave_hull(std::vector<double *> &P,int k )
