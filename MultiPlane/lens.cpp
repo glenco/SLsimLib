@@ -931,6 +931,9 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
   PosType rmax_max = 0.;
   
   PosType rho = density_contrast*cosmo.rho_crit(0)*cosmo.getOmega_matter()*(1+redshift)*(1+redshift)*(1+redshift);
+  std::cout << "Lens::insertSubstructures : rho = " << rho << std::endl ;
+  std::cout << "Lens::insertSubstructures : density_contrast = " << density_contrast << std::endl ;
+  std::cout << "Lens::insertSubstructures : cosmo.rho_crit(0) = " << cosmo.rho_crit(0) << " , cosmo.getOmega_matter() = " << cosmo.getOmega_matter() << std::endl ;
   // rho in 1 * (M_sun/Mpc^3) * 1 * (1+z)^3 = M_sun / PhysMpc^3,
   // where Mpc \equiv comoving Mpc.
   
@@ -1161,9 +1164,15 @@ void Lens::resetSubstructure(bool verbose){
   PosType mass_max = 0.;
   PosType SumMassSub = 0.;
   PosType rmax_max = 0.;
+
+  PosType rho = substructure.rho_tidal *cosmo.rho_crit(0)*cosmo.getOmega_matter()*(1+redshift)*(1+redshift)*(1+redshift);
+  if(verbose)
+  {
+    std::cout << "Lens::resetSubstructures : substructure.rho_tidal = " << substructure.rho_tidal << std::endl ;
+    std::cout << "Lens::resetSubstructures : rho = " << rho << " , Dlsub = " << Dlsub << std::endl ;
+    std::cout << "Lens::resetSubstructures : cosmo.rho_crit(0) = " << cosmo.rho_crit(0) << " , cosmo.getOmega_matter() = " << cosmo.getOmega_matter() << std::endl ;
+  }
   
-  PosType rho = substructure.Ndensity *cosmo.rho_crit(0)*cosmo.getOmega_matter()*(1+redshift)*(1+redshift)*(1+redshift);
-  if(verbose) std::cout << "Lens::resetSubstructures : rho = " << rho << " , Dlsub = " << Dlsub << std::endl ;
   
   // Clearing the previous halos :
   Utilities::delete_container(substructure.halos);
@@ -1207,8 +1216,8 @@ void Lens::resetSubstructure(bool verbose){
   }
   substructure.mass_min = mass_min;
   substructure.mass_max = mass_max;
-  substructure.SumMassSub = SumMassSub;
   substructure.rmax_max = rmax_max;
+  substructure.SumMassSub = SumMassSub;
   
   // Averaged mass estimated from theory :
   PosType AveMassTh = substructure.Mmax * ((1+substructure.alpha)/(2+substructure.alpha)) * ((1-pow(r,2+substructure.alpha))/(1-pow(r,1+substructure.alpha))); // Average mass for one sub halo.
