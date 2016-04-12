@@ -1578,7 +1578,6 @@ void Lens::createFieldHalos(bool verbose)
 	int np;
 	PosType rr,theta,maxr;
 	HALOCalculator *halo_calc = new HALOCalculator(&cosmo,field_min_mass,0.0);
-  PosType mo=7.3113e10,M1=2.8575e10,gam1=7.17,gam2=0.201,be=0.557;
   PosType field_galaxy_mass_fraction = 0;
   PosType r200=0, r_half_stel_mass=0;
   size_t haloid=0;
@@ -1667,8 +1666,9 @@ void Lens::createFieldHalos(bool verbose)
       float sigma = 0;
       if(flag_field_gal_on){
         // from Moster et al. 2010ApJ...710..903M
-        field_galaxy_mass_fraction = mo*pow(mass/M1,gam1)
-        /pow(1+pow(mass/M1,be),(gam1-gam2)/be)/mass;
+        
+        field_galaxy_mass_fraction = HALOCalculator::MosterStellarMassFraction(mass);
+        
         if(field_galaxy_mass_fraction > 1.0) field_galaxy_mass_fraction = 1;
         sigma = 126*pow(mass*(1-field_galaxy_mass_fraction)/1.0e10,0.25); // From Tully-Fisher and Bell & de Jong 2001
 				//field_halos[j]->initFromMassFunc(mass*(1-field_galaxy_mass_fraction),Rsize,rscale,field_prof_internal_slope,seed);
@@ -1821,7 +1821,6 @@ void Lens::readInputSimFileMillennium(bool verbose)
 	PosType z,vmax,vdisp,r_halfmass;
 	unsigned long i,j;
 	unsigned long haloid,idd,np;
-	const PosType mo=7.3113e10,M1=2.8575e10,gam1=7.17,gam2=0.201,be=0.557;
 	HALOCalculator *halo_calc = new HALOCalculator(&cosmo,field_min_mass,0.0);
   PosType field_galaxy_mass_fraction = 0;
 	PosType rmax=0,rtmp=0;
@@ -1922,8 +1921,8 @@ void Lens::readInputSimFileMillennium(bool verbose)
     
     if(flag_field_gal_on){
       // from Moster et al. 2010ApJ...710..903M
-      field_galaxy_mass_fraction = mo*pow(mass/M1,gam1)
-      /pow(1+pow(mass/M1,be),(gam1-gam2)/be)/mass;
+      field_galaxy_mass_fraction = HALOCalculator::MosterStellarMassFraction(mass);
+      
       if(field_galaxy_mass_fraction > 1.0) field_galaxy_mass_fraction = 1;
       sigma = 126*pow(mass*(1-field_galaxy_mass_fraction)/1.0e10,0.25); // From Tully-Fisher and Bell & de Jong 2001
       r200 = halo_calc->getR200(); // used for Kravtsov 2013 2013ApJ...764L..31K ;
@@ -2134,7 +2133,6 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose)
   std::cout << "Reading Field Halos from " << field_input_sim_file << std::endl;
 	PosType z,zob,xpos,ypos,zpos,vx,vy,vz,mass;
 	unsigned long i,j;
-	const PosType mo=7.3113e10,M1=2.8575e10,gam1=7.17,gam2=0.201,be=0.557;
   PosType field_galaxy_mass_fraction = 0;
 //  const PosType masslimit =2.0e12;
   const PosType masslimit = 0.0;
@@ -2271,9 +2269,9 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose)
         float sigma=0;
         
         if(flag_field_gal_on){
-          // from Moster et al. 2010ApJ...710..903M
-          field_galaxy_mass_fraction = mo*pow(mass/M1,gam1)
-          /pow(1+pow(mass/M1,be),(gam1-gam2)/be)/mass;
+          
+          field_galaxy_mass_fraction = HALOCalculator::MosterStellarMassFraction(mass);
+          
           if(field_galaxy_mass_fraction > 1.0) field_galaxy_mass_fraction = 1;
           sigma = 126*pow(mass*(1-field_galaxy_mass_fraction)/1.0e10,0.25); // From Tully-Fisher and Bell & de Jong 2001
         }else{
@@ -2587,18 +2585,6 @@ void Lens::readInputSimFileObservedGalaxies(bool verbose)
     
     center[0] += tmp_sph_point.theta;
     center[1] += tmp_sph_point.phi;
-    
-    /*
-     if(flag_field_gal_on){
-     // from Moster et al. 2010ApJ...710..903M
-     field_galaxy_mass_fraction = mo*pow(mass/M1,gam1)
-     /pow(1+pow(mass/M1,be),(gam1-gam2)/be)/mass;
-     if(field_galaxy_mass_fraction > 1.0) field_galaxy_mass_fraction = 1;
-     sigma = 126*pow(mass*(1-field_galaxy_mass_fraction)/1.0e10,0.25); // From Tully-Fisher and Bell & de Jong 2001
-     }else{
-     field_galaxy_mass_fraction = 0;
-     }
-     */
     
     switch(field_int_prof_type)
     {
@@ -3022,3 +3008,4 @@ void Lens::quicksort(LensHaloHndl *halos,PosType **pos,unsigned long N){
   
 	return ;
 }
+
