@@ -28,7 +28,7 @@ public:
 
   double ** compute_dxSub(int Nimages);
   
-  void FindLensSimple(int Nimages,Point *image_positions,double *y,double **dx_sub);
+  void FindLensSimple(int Nimages,Point *image_positions,double *y,double **dx_sub,bool verbose);
   void FindLensSimple2(int Nimages,Point *image_positions,Point *FiducialLineShift,double *y,double **dx_sub);
   bool SafeFindLensSimple(int Nimages,Point *image_positions,double *y,double **dx_sub,int SafetyNum,PosType PixelSizeRad,std::vector<std::vector<PosType>> & PrecisionBackTracedPos,std::vector<std::vector<PosType>> & alphaTab,bool verbose);
   void FindLensSimple(ImageInfo *imageinfo,int Nimages,double *y,double **dx_sub);

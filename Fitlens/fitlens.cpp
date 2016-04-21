@@ -22,6 +22,7 @@ void LensHaloFit::FindLensSimple(
                                  ,Point *image_positions   /// Array of points with point[i].x set to the image positions
                                  ,double *y                /// output source position
                                  ,double **dx_sub          /// dx_sub[Nimages][2] pre-calculated deflections caused by substructures or external masses at each image
+                                 ,bool verbose             /// verbose option
 ){
   
   ImageInfo* imageinfo = new ImageInfo[Nimages];
@@ -33,9 +34,12 @@ void LensHaloFit::FindLensSimple(
   
   FindLensSimple(imageinfo,Nimages,y,dx_sub);
   
-  std::cout << "perturbation modes (in LensHaloFit::FindLensSimple)" << std::endl;
-  for(int i=0;i<perturb_Nmodes;++i) std::cout << perturb_modes[i] << " " ;
-  std::cout << std::endl;
+  if (verbose)
+  {
+    std::cout << "perturbation modes (in LensHaloFit::FindLensSimple)" << std::endl;
+    for(int i=0;i<perturb_Nmodes;++i) std::cout << perturb_modes[i] << " " ;
+    std::cout << std::endl;
+  }
   
   delete[] imageinfo;
 }
@@ -125,7 +129,7 @@ bool LensHaloFit::SafeFindLensSimple(
   {
     // Calling FindLensSimple (the one that really computes the modes) :
     ////////////////////////////////////////////////
-    FindLensSimple(Nimages,image_positions,y,dx_sub);
+    FindLensSimple(Nimages,image_positions,y,dx_sub,verbose);
     ////////////////////////////////////////////////
 
     // Test that no 'nan' occurs :
@@ -896,7 +900,7 @@ double LensHaloFit::ElliptisizeLens(
 
   if (boolFlag==0) { std::cout << "Throw 12345 !" << std::endl; throw 12345; }
   
-  std::cout << "Elliptisize Lens worked !" << std::endl ;
+  // std::cout << "Elliptisize Lens worked !" << std::endl ;
   return sm;
 }
 
