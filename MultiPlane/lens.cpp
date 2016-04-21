@@ -60,7 +60,7 @@ Lens::Lens(long* my_seed,PosType z_source, CosmoParamSet cosmoset,bool verbose)
   //charge = cosmo.angDist(zsource)/cosmo.angDist(0.3)/cosmo.angDist(0.3,zsource);
   //charge = 4*pi/cosmo.angDist(0.3);
   PosType ztmp = zsource;
-  combinePlanes(true);
+  combinePlanes(verbose);
   if(zsource != ztmp) ResetSourcePlane(ztmp,false);
   std::cout << "number of field halos : " << field_halos.size() << std::endl;
 }
@@ -90,7 +90,7 @@ Lens::Lens(long* my_seed,PosType z_source, const COSMOLOGY &cosmoset,bool verbos
   //charge = cosmo.angDist(zsource)/cosmo.angDist(0.3)/cosmo.angDist(0.3,zsource);
   //charge = 4*pi/cosmo.angDist(0.3);
   PosType ztmp = zsource;
-  combinePlanes(true);
+  combinePlanes(verbose);
   if(zsource != ztmp) ResetSourcePlane(ztmp,false);
   std::cout << "number of field halos :" << field_halos.size() << std::endl;
 }
@@ -2926,9 +2926,9 @@ void Lens::combinePlanes(bool verbose)
       std::cout << std::endl ;
     }
     else std::cout << "Lens::combinePlanes : main_plane_redshifts[] size is zero." << std::endl ;
+    
+    std::cout << "Lens::combinePlanes : field_planes.size() = " << field_planes.size() << " , main_planes.size() = " << main_planes.size() << std::endl ;
   }
-  
-  std::cout << "Lens::combinePlanes : field_planes.size() = " << field_planes.size() << " , main_planes.size() = " << main_planes.size() << std::endl ;
   
   // clear old plane configuration
   lensing_planes.clear();
