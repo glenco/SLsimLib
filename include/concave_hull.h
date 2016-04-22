@@ -177,7 +177,7 @@ void concave(std::vector<T> &init_points
     size_t i = 0;
     for(size_t &ind: index) ind = i++;
     std::sort(index.begin(),index.end(),
-              [&hull](size_t &p1,size_t &p2){
+              [&hull](size_t p1,size_t p2){
                 if(hull[p1][0] == hull[p2][0]) return hull[p1][1] < hull[p2][1];
                 return hull[p1][0] < hull[p2][0];});
     
