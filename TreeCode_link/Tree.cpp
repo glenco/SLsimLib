@@ -60,8 +60,7 @@
     //return branch;
 }*/
 
-Point::Point(){
-  x[0] = x[1] = 0;
+Point::Point():Point_2d(0,0){
   head = 0;
   in_image = NO;
   surface_brightness = 0;
