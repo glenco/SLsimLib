@@ -862,6 +862,7 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
                                PosType redshift,
                                PosType alpha,             // Careful ! alpha is opposite sign wrt Metcalf, Amara 2011.
                                PosType density_contrast,  // dimensionless
+                               ClumpInternal sub_type,    // Type of substructure
                                bool verbose
                                )
 {
@@ -875,6 +876,7 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
   substructure.rho_tidal = density_contrast;
   substructure.Rregion = Rregion;
   substructure.redshift = redshift;
+  substructure.Sub_Type = sub_type;
   
   if(WasInsertSubStructuresCalled == YES || WasInsertSubStructuresCalled == MAYBE)
   {
@@ -915,7 +917,7 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
     // throw std::runtime_error("Lens::insertSubstructures : Can only add substructure halos once to a lens.");
     std::cout << "Lens::insertSubstructures : Can only add substructure halos once to a lens. Calling deleteSubstructures." << std::endl ;
     deleteSubstructures();
-    insertSubstructures(Rregion,center,NumberDensity,Mass_min,Mass_max,redshift,alpha,density_contrast,verbose);
+    insertSubstructures(Rregion,center,NumberDensity,Mass_min,Mass_max,redshift,alpha,density_contrast,sub_type,verbose);
   }
   
   PosType Dl = cosmo.angDist(redshift),rr,theta; // angular distance of the lens in PhysMpc
@@ -967,7 +969,17 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
     rmax_max = MAX(Rsize,rmax_max); // in PhysMpc
     
     // Adding the randomly-generated halo into the substructure :
-    substructure.halos.push_back(new LensHaloPowerLaw(mass,Rsize,redshift,1.0,1.0,0,0));
+    switch(sub_type){
+      case nfw:
+        substructure.halos.push_back(new LensHaloNFW(mass,Rsize,redshift,1.0,1.0,0,0)); // TO DO : Have to choose the concentration !
+        break;
+      case powerlaw:
+        substructure.halos.push_back(new LensHaloPowerLaw(mass,Rsize,redshift,1.0,1.0,0,0));
+        break;
+      default:
+        substructure.halos.push_back(new LensHaloPowerLaw(mass,Rsize,redshift,1.0,1.0,0,0));
+        break;
+    }
     substructure.halos.back()->setX(theta_pos);
     ++haloid;
     substructure.halos.back()->setID(haloid);
@@ -1124,7 +1136,7 @@ void Lens::resetSubstructure(bool verbose){
     WasInsertSubStructuresCalled = NO ;
     
     // Reconstructing the plane with arguments given to insertSubStructures :
-    insertSubstructures(substructure.Rregion,substructure.center.x,substructure.Ndensity,substructure.Mmin,substructure.Mmax,substructure.redshift,substructure.alpha,substructure.rho_tidal,verbose);
+    insertSubstructures(substructure.Rregion,substructure.center.x,substructure.Ndensity,substructure.Mmin,substructure.Mmax,substructure.redshift,substructure.alpha,substructure.rho_tidal,substructure.Sub_Type,verbose);
     return ;
   }
   // We have WasInsertSubStructuresCalled = YES after this point.
