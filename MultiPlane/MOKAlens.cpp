@@ -94,7 +94,7 @@ LensHaloMassMap::LensHaloMassMap(
   rscale = 1.0;
   Dist = lenscosmo.angDist(zlens);
 
-  convertMap(MassMap,massconvertion,redshift);
+  setMap(MassMap,massconvertion,redshift);
   
   LensHalo::setTheta(MassMap.getCenter()[0],MassMap.getCenter()[1]);
   
@@ -104,7 +104,7 @@ LensHaloMassMap::LensHaloMassMap(
   setZlens(map->zlens);
   
 }
-
+/*
 LensHaloMassMap::LensHaloMassMap(
                                  PixelMap &my_map        /// map of mass
                                  ,double massconvertion  /// factor that converts the units of my_map to solar masses
@@ -171,7 +171,7 @@ LensHalo(),MOKA_input_file(""),maptype(pix_map),cosmo(lenscosmo),zerosize(pixel_
   
   setZlens(zlens);
 }
-
+*/
 /**
  * \brief allocates and reads the MOKA map in
  *
@@ -294,7 +294,7 @@ void LensHaloMassMap::convertmap(MOKAmap *map,PixelMapType maptype){
 /**
  * \brief reads in the fits file for the MOKA or mass map and saves it in the structure map
  */
-void LensHaloMassMap::convertMap(
+void LensHaloMassMap::setMap(
                                  const PixelMap &inputmap  // mass map
                                  ,double massconvertion    // convertion factor from pixel units to solar masses
                                  ,double z

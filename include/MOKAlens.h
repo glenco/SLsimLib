@@ -71,7 +71,7 @@ public:
                   , const COSMOLOGY& lenscosmo
                   );
   
-  LensHaloMassMap(PixelMap &map,double massconvertion,double zlens,double zsource,int pixel_map_zeropad,const COSMOLOGY& lenscosmo);
+  //LensHaloMassMap(PixelMap &map,double massconvertion,double zlens,double zsource,int pixel_map_zeropad,const COSMOLOGY& lenscosmo);
   
 	LensHaloMassMap(InputParams& params, const COSMOLOGY& lenscosmo);
 	
@@ -110,7 +110,7 @@ public:
 	void getDims();
 	void readMap();
   // set up map from a PixelMap of the surface density
-  void convertMap(const PixelMap &inputmap,double convertionfactor,double z);
+  void setMap(const PixelMap &inputmap,double convertionfactor,double z);
 
 	void writeImage(std::string fn);
   
