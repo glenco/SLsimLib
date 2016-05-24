@@ -1076,5 +1076,188 @@ namespace Utilities
 
   /// returns the compiler variable N_THREADS that is maximum number of threads to be used.
   int GetNThreads();
+  
+  /** \brief Read in data from an ASCII file with two columns
+   */
+  template <class T1,class T2>
+  void read2columnfile(
+                       std::string filename    /// input file name
+                       ,std::vector<T1> &x     /// vector that will contain the first column
+                       ,std::vector<T2> &y     /// vector that will contain the first column
+                       ,std::string delineator = " "  /// specific string the seporates columns, ex. ",", "|", etc.
+                       ,bool verbose = false
+                       
+                       ){
+    
+    x.clear();
+    y.clear();
+    
+    std::ifstream file_in(filename.c_str());
+    std::string myline;
+    std::string space = " ";
+    T1 myt1;
+    T2 myt2;
+    
+    std::string strg;
+    std::stringstream buffer;
+    
+    if(!file_in){
+      std::cout << "Can't open file " << filename << std::endl;
+      ERROR_MESSAGE();
+      throw std::runtime_error(" Cannot open file.");
+    }
+    
+    std::cout << "Reading caustic information from " << filename << std::endl;
+    size_t i=0;
+    while(file_in.peek() == '#'){
+      file_in.ignore(10000,'\n');
+      ++i;
+    }
+    std::cout << "skipped "<< i << " comment lines in " << filename << std::endl;
+    
+    size_t pos;
+    // read in data
+    while(getline(file_in,myline)){
+      
+      if(myline[0] == '#'){
+        std::cout << "skipped line " << i << std::endl;
+        continue;
+      }
+      
+      pos= myline.find_first_not_of(space);
+      myline.erase(0,pos);
+      
+      
+      pos = myline.find(delineator);
+      strg.assign(myline,0,pos);
+      buffer << strg;
+      buffer >> myt1;
+      if(verbose) std::cout << myt1 << " ";
+      x.push_back(myt1);
+      
+      myline.erase(0,pos+1);
+      pos= myline.find_first_not_of(space);
+      myline.erase(0,pos);
+      
+      strg.clear();
+      buffer.clear();
+      
+      pos = myline.find(space);
+      strg.assign(myline,0,pos);
+      buffer << strg;
+      buffer >> myt2;
+      if(verbose)  std::cout << myt2 << std::endl;
+      y.push_back(myt2);
+      
+      strg.clear();
+      buffer.clear();
+      myline.clear();
+      
+    }
+    std::cout << "Read " << x.size() << " lines from " << filename << std::endl;
+  }
+  /** \brief Read in data from an ASCII file with three columns
+   */
+  template <class T1,class T2,class T3>
+  void read3columnfile(
+                       std::string filename    /// input file name
+                       ,std::vector<T1> &x     /// vector that will contain the first column
+                       ,std::vector<T2> &y     /// vector that will contain the first column
+                       ,std::vector<T3> &z     /// vector that will contain the first column
+                       ,std::string delineator = " "  /// specific string the seporates columns, ex. ",", "|", etc.
+                       ,bool verbose = false
+                       
+                       ){
+    
+    
+    assert(0); // Untested!!!!
+    x.clear();
+    y.clear();
+    z.clear();
+    
+    std::ifstream file_in(filename.c_str());
+    std::string myline;
+    std::string space = " ";
+    T1 myt1;
+    T2 myt2;
+    T3 myt3;
+    
+    std::string strg;
+    std::stringstream buffer;
+    
+    if(!file_in){
+      std::cout << "Can't open file " << filename << std::endl;
+      ERROR_MESSAGE();
+      throw std::runtime_error(" Cannot open file.");
+    }
+    
+    std::cout << "Reading caustic information from " << filename << std::endl;
+    size_t i=0;
+    while(file_in.peek() == '#'){
+      file_in.ignore(10000,'\n');
+      ++i;
+    }
+    std::cout << "skipped "<< i << " comment lines in " << filename << std::endl;
+    
+    size_t pos;
+    // read in data
+    while(getline(file_in,myline)){
+      
+      if(myline[0] == '#'){
+        std::cout << "skipped line " << i << std::endl;
+        continue;
+      }
+      
+      pos= myline.find_first_not_of(space);
+      myline.erase(0,pos);
+      
+      
+      pos = myline.find(delineator);
+      strg.assign(myline,0,pos);
+      buffer << strg;
+      buffer >> myt1;
+      if(verbose) std::cout << myt1 << " ";
+      x.push_back(myt1);
+      
+      myline.erase(0,pos+1);
+      pos= myline.find_first_not_of(space);
+      myline.erase(0,pos);
+      
+      strg.clear();
+      buffer.clear();
+
+      // ******************
+      
+      
+      pos = myline.find(space);
+      strg.assign(myline,0,pos);
+      buffer << strg;
+      buffer >> myt2;
+      if(verbose)  std::cout << myt2 << std::endl;
+      y.push_back(myt2);
+
+      myline.erase(0,pos+1);
+      pos= myline.find_first_not_of(space);
+      myline.erase(0,pos);
+      
+      strg.clear();
+      buffer.clear();
+      
+      // ******************
+      pos = myline.find(space);
+      strg.assign(myline,0,pos);
+      buffer << strg;
+      buffer >> myt3;
+      if(verbose)  std::cout << myt3 << std::endl;
+      y.push_back(myt3);
+
+      strg.clear();
+      buffer.clear();
+      myline.clear();
+      
+    }
+    std::cout << "Read " << x.size() << " lines from " << filename << std::endl;
+  }
+
 }
 #endif

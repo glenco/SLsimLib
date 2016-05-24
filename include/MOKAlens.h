@@ -64,13 +64,26 @@ struct MOKAmap{
 class LensHaloMassMap : public LensHalo
 {
 public:
-	LensHaloMassMap(const std::string& filename, PixelMapType maptype,
-                  int pixel_map_zeropad,bool my_zeromean, const COSMOLOGY& lenscosmo);
+	LensHaloMassMap(const std::string& filename
+                  , PixelMapType maptype
+                  ,int pixel_map_zeropad
+                  ,bool my_zeromean
+                  , const COSMOLOGY& lenscosmo
+                  );
   
   LensHaloMassMap(PixelMap &map,double massconvertion,double zlens,double zsource,int pixel_map_zeropad,const COSMOLOGY& lenscosmo);
   
 	LensHaloMassMap(InputParams& params, const COSMOLOGY& lenscosmo);
 	
+  LensHaloMassMap(
+                  const PixelMap &MassMap   /// mass map in solar mass units
+                  ,double massconvertion    /// convertion factor from pixel units to solar masses
+                  ,double redshift          /// redshift of lens
+                  ,int pixel_map_zeropad    /// factor by which to zero pad in FFTs, ex. 4
+                  ,bool my_zeromean         /// if true, subtracts average density
+                  ,const COSMOLOGY& lenscosmo  /// cosmology
+  );
+
 	~LensHaloMassMap();
 	
 	std::string MOKA_input_file;
@@ -96,6 +109,9 @@ public:
 	
 	void getDims();
 	void readMap();
+  // set up map from a PixelMap of the surface density
+  void convertMap(const PixelMap &inputmap,double convertionfactor,double z);
+
 	void writeImage(std::string fn);
   
 	/// return center in physical Mpc
@@ -133,4 +149,6 @@ void make_friendship(int ii,int ji,int np,std:: vector<int> &friends, std:: vect
 
 int fof(double l,std:: vector<double> xci, std:: vector<double> yci, std:: vector<int> &groupid);
 #endif /* MOKALENS_H_ */
+
+
 

@@ -403,4 +403,5 @@ private:
   std::vector<PixelMap> maps;
   std::vector<Utilities::Interpolator<PixelMap>> interpolators;
 };
+
 #endif

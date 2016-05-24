@@ -47,4 +47,5 @@ add_sources(
 	gridmap.h
 	particle_halo.h
 	concave_hull.h
+        bands_etc.h
 )

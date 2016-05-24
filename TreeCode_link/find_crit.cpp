@@ -1158,7 +1158,7 @@ CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
                                       + current->gamma[1]*current->gamma[1]) ;
     //eigmin = 1-current->kappa + sqrt( (1-current->kappa)*(1-current->kappa)
     //                                 + current->invmag) ;
-    assert(!isnan(eigmin));
+    assert(eigmin == eigmin);
     
     if(eigmin < 0) paritypoints.InsertAfterCurrent(current);
     
@@ -1170,7 +1170,7 @@ CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
      //tmp = 1-current->kappa + sqrt( (1-current->kappa)*(1-current->kappa)
      //                               + current->invmag) ;
       
-      assert(!isnan(tmp));
+      assert(tmp == tmp);
       
       if(eigmin > tmp ){
         eigmin = tmp;
@@ -1194,7 +1194,7 @@ CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
                                        + current->gamma[1]*current->gamma[1]) ;
         //tmp = 1-current->kappa + sqrt( (1-current->kappa)*(1-current->kappa)
         //                              + current->invmag) ;
-        assert(!isnan(tmp));
+        assert(tmp == tmp);
        if(eigmin > tmp ){
           eigmin = tmp;
           pmin->in_image = NO;

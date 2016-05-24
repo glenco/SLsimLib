@@ -79,6 +79,32 @@ maptype(my_maptype), cosmo(lenscosmo),zerosize(pixel_map_zeropad),zeromean(my_ze
  This is especially useful for representing the visible stars from an image in
  the lens model.
  */
+/// constructor for making lens halo directly from a mass map
+LensHaloMassMap::LensHaloMassMap(
+                                 const PixelMap &MassMap   /// mass map in solar mass units
+                                 ,double massconvertion    /// convertion factor from pixel units to solar masses
+                                 ,double redshift          /// redshift of lens
+                                 ,int pixel_map_zeropad    /// factor by which to zero pad in FFTs, ex. 4
+                                 ,bool my_zeromean         /// if true, subtracts average density
+                                 ,const COSMOLOGY& lenscosmo  /// cosmology
+)
+:LensHalo()
+, flag_MOKA_analyze(0), flag_background_field(0),maptype(pix_map),cosmo(lenscosmo),zerosize(pixel_map_zeropad),zeromean(my_zeromean)
+{
+  rscale = 1.0;
+  Dist = lenscosmo.angDist(zlens);
+
+  convertMap(MassMap,massconvertion,redshift);
+  
+  LensHalo::setTheta(MassMap.getCenter()[0],MassMap.getCenter()[1]);
+  
+  setZlens(zlens);
+
+  // set redshift to value from map
+  setZlens(map->zlens);
+  
+}
+
 LensHaloMassMap::LensHaloMassMap(
                                  PixelMap &my_map        /// map of mass
                                  ,double massconvertion  /// factor that converts the units of my_map to solar masses
@@ -262,6 +288,82 @@ void LensHaloMassMap::convertmap(MOKAmap *map,PixelMapType maptype){
   // TODO: Need to check this
   //map->alpha1 *= fac*pixLMpc;
   //map->alpha2 *= fac*pixLMpc;
+  
+}
+
+/**
+ * \brief reads in the fits file for the MOKA or mass map and saves it in the structure map
+ */
+void LensHaloMassMap::convertMap(
+                                 const PixelMap &inputmap  // mass map
+                                 ,double massconvertion    // convertion factor from pixel units to solar masses
+                                 ,double z
+                                 ){
+  
+  // must be a square map
+  assert(inputmap.getNx() == inputmap.getNy());
+  
+  map = new MOKAmap();
+  
+  if(std::numeric_limits<float>::has_infinity)
+    Rmax = std::numeric_limits<float>::infinity();
+  else
+    Rmax = std::numeric_limits<float>::max();
+  
+  map->nx = map->ny = inputmap.getNx();
+  map->center[0] = map->center[1] = 0.0;
+  
+  std::size_t size = map->nx*map->ny;
+  
+  map->convergence.resize(size);
+  map->alpha1.resize(size);
+  map->alpha2.resize(size);
+  map->gamma1.resize(size);
+  map->gamma2.resize(size);
+  map->gamma3.resize(size);
+  map->phi.resize(size);
+  
+  map->zlens = z;
+  
+  assert(map->nx !=0);
+  // keep it like it is, even if is a rectangle
+  
+  map->Dlens = cosmo.angDist(0.,map->zlens);  // physical
+  map->boxlrad = inputmap.getRangeX();
+  map->boxlarcsec = inputmap.getRangeX()/arcsecTOradians;
+  map->boxlMpc = inputmap.getRangeX()/map->Dlens;
+  
+  double pixelarea = inputmap.getResolution()*map->Dlens;
+  pixelarea *= pixelarea;
+  
+  for(size_t i=0;i<size;++i){
+    map->convergence[i] = massconvertion*inputmap(i)/pixelarea;
+  }
+  
+  if(zeromean){
+    double avkappa = 0;
+    
+    for(size_t i=0;i<size;i++){
+      avkappa += map->convergence[i];
+    }
+    avkappa /= size;
+    
+    for(size_t i=0;i<size;i++){
+      map->convergence[i] -= avkappa;
+    }
+  }
+  
+  // kappa is not divided by the critical surface density
+  // they don't need to be preprocessed by fact
+  // create alpha and gamma arrays by FFT
+  // valid only to force the map to be square map->nx = map->ny = npixels;
+#ifdef ENABLE_FFTW
+  std:: cout << "  preProcessing Map " << std:: endl;
+  PreProcessFFTWMap();
+#else
+  std::cout << "Please enable the preprocessor flag ENABLE_FFTW !" << std::endl;
+  exit(1);
+#endif
   
 }
 

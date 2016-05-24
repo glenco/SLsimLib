@@ -47,7 +47,7 @@ public:
 
   size_t getN() const { return Npoints; };
   
-  /// rotate the simulation
+  /// rotate the simulation, radians
   void rotate(Point_2d theta);
   
   /// center of mass in input coordinates
