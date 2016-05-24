@@ -74,25 +74,6 @@ maptype(my_maptype), cosmo(lenscosmo),zerosize(pixel_map_zeropad),zeromean(my_ze
   setZlens(map->zlens);
 }
 
-/// constructor for making lens halo directly from a mass map
-LensHaloMassMap::LensHaloMassMap(
-                                 const PixelMap &MassMap   /// mass map in solar mass units
-                                 ,double redshift          /// redshift of lens
-                                 ,int pixel_map_zeropad    /// factor by which to zero pad in FFTs, ex. 4
-                                 ,bool my_zeromean         /// if true, subtracts average density
-                                 ,const COSMOLOGY& lenscosmo  /// cosmology
-                                 )
-:LensHalo()
-, flag_MOKA_analyze(0), flag_background_field(0),maptype(pix_map),cosmo(lenscosmo),zerosize(pixel_map_zeropad),zeromean(my_zeromean)
-{
-  convertMap(MassMap, redshift);
-  
-  posHalo[0] = MassMap.getCenter()[0];
-  posHalo[1] = MassMap.getCenter()[1];
- 	
-  // set redshift to value from map
-  setZlens(map->zlens);
-}
 
 /**
  * \brief allocates and reads the MOKA map in
