@@ -64,11 +64,24 @@ struct MOKAmap{
 class LensHaloMassMap : public LensHalo
 {
 public:
-	LensHaloMassMap(const std::string& filename, PixelMapType maptype,
-                  int pixel_map_zeropad,bool my_zeromean, const COSMOLOGY& lenscosmo);
+	LensHaloMassMap(const std::string& filename
+                  , PixelMapType maptype
+                  ,int pixel_map_zeropad
+                  ,bool my_zeromean
+                  , const COSMOLOGY& lenscosmo
+                  );
   
-	LensHaloMassMap(InputParams& params, const COSMOLOGY& lenscosmo);
-	
+  LensHaloMassMap(InputParams& params, const COSMOLOGY& lenscosmo);
+
+  LensHaloMassMap(
+                  const PixelMap &MassMap   /// mass map in solar mass units
+                  ,double redshift          /// redshift of lens
+                  ,int pixel_map_zeropad    /// factor by which to zero pad in FFTs, ex. 4
+                  ,bool my_zeromean         /// if true, subtracts average density
+                  ,const COSMOLOGY& lenscosmo  /// cosmology
+  );
+
+
 	~LensHaloMassMap();
 	
 	std::string MOKA_input_file;
@@ -94,6 +107,9 @@ public:
 	
 	void getDims();
 	void readMap();
+  // set up map from a PixelMap of the surface density
+  void convertMap(const PixelMap &inputmap,double z);
+
 	void writeImage(std::string fn);
   
 	/// return center in physical Mpc

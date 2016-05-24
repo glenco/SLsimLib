@@ -5,34 +5,44 @@
 //  Created by bmetcalf on 13/04/16.
 //
 //
+#include <assert.h>
 
 #ifndef bands_etc_h
 #define bands_etc_h
 
+/** \brief Class that contains information about bands.
+ *
+ * Not complete.
+*/
 class BandInfo{
 public:
   BandInfo(){};
   
   std::pair<double,double> range(Band band);  /// range in Angstroms
-  double lambdal(Band band);
+  double lambda_central(Band band);
 
 private:
   std::vector<Band> bands = {EUC_VIS,EUC_Y,EUC_J,EUC_H,SDSS_U,SDSS_G,SDSS_R,SDSS_I,SDSS_Z,J,H,Ks,IRAC1,IRAC2,F435W,F606W,F775W,F850LP,F814W,F110W,F160W};
+  // central wavelength in Angstroms
   std::vector<double> lambda = {7630,4660,1.26e4,1.62e4,3540,4750,6220,7630,9050,1.26e4,1.62e4,2.15e4
     ,3.5e4,4.5e4,0,0,0,0,0,0};
+  // width of band in Angstroms
   std::vector<double> width;
 };
-
+/** \brief Class that contains information about the solar SED and magnitudes
+ *
+ *    This is a very primative version that does not do the proper k-corretion
+ */
 class SunInfo{
   
 public:
   
-  SunInfo(){assert(wavelength.size() = sed.size();}
+  SunInfo(){assert(wavelengths.size() == sed.size());}
   
   /// absolute magnitude of the sun
   double AbsMag(Band band);
   /// k-corrected apparent magnitude
-  double mag(Band band,double z,const COSMOLOGY &como);
+  double mag(Band band,double z,const COSMOLOGY &cosmo);
                    
 private:
   BandInfo bandinfo;
