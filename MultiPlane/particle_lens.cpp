@@ -82,7 +82,7 @@ void LensHaloParticles::rotate(Point_2d theta){
   qtree =new TreeQuad(xp,masses.data(),sizes.data(),Npoints,multimass,true,0,20);
 }
 
-/** \breaf Reads number of particle and particle positons into Npoint and xp from a ASCII file.
+/** \brief Reads number of particle and particle positons into Npoint and xp from a ASCII file.
  *
  * Data file must have the lines "# nparticles ***" and "# mass ***" in the header.  All header
  * lines must begin with a "# "

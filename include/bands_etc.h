@@ -43,10 +43,12 @@ public:
   double AbsMag(Band band);
   /// k-corrected apparent magnitude
   double mag(Band band,double z,const COSMOLOGY &cosmo);
-                   
+  /// k-corrected flux in ergs/cm^2/s/Hz at center of band
+  double flux(Band band,double z,const COSMOLOGY &cosmo);
+
 private:
   BandInfo bandinfo;
-  
+  // data from ftp://ftp.stsci.edu/cdbs/cdbs2/calspec/sun_reference_stis_001.fits
   /// wavelength in angstroms
   std::vector<double> wavelengths = {
     1195.00,1205.00,1215.00,1225.00,1235.00,1245.00,1255.00,

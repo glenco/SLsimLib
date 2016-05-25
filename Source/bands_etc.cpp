@@ -37,5 +37,18 @@ double SunInfo::mag(Band band,double z,const COSMOLOGY &cosmo){
   
   auto it = std::lower_bound(wavelengths.begin(),wavelengths.end(),lambda);
   
-  return -2.5 * std::log10(sed[it - wavelengths.begin()]) - 48.6 + 5 * (std::log10(cosmo.lumDist(z)*1.0e6) - 1);
+  // remember that cosmo.lumDist(z) is the bolometric distance
+  return -2.5 * std::log10(sed[it - wavelengths.begin()]*(1+z)) - 48.6 + 5 * (std::log10(cosmo.lumDist(z)*1.0e6) - 1);
+}
+
+/// k-corrected flux in ergs/s/cm^2/Hz
+double SunInfo::flux(Band band,double z,const COSMOLOGY &cosmo){
+  
+  double wavelength = bandinfo.lambda_central(band);
+  double lambda = wavelength/(1+z);
+  
+  auto it = std::lower_bound(wavelengths.begin(),wavelengths.end(),lambda);
+  
+  // remember that cosmo.lumDist(z) is the bolometric distance
+  return (1+z)*sed[it - wavelengths.begin()]*pow(1.0e5/cosmo.lumDist(z),2);
 }

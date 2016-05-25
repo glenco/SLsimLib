@@ -316,7 +316,7 @@ typedef enum {counts_x_sec, flux} unitType;
  * \brief It creates a realistic image from the output of a ray-tracing simulation.
  *
  * It translates pixel values in observed units (counts/sec), applies PSF and noise.
- * Input must be in photons/(cm^2*Hz).
+ * Input must be in ergs/(s*cm^2*Hz*hplanck).
  */
 class Observation
 {
@@ -342,7 +342,6 @@ public:
 	PixelMap Convert (PixelMap &map, bool psf, bool noise,long *seed, unitType unit = counts_x_sec);
 	PixelMap Convert_back (PixelMap &map);
     void setExpTime(float time){exp_time = time;}
-    float MassToLight(COSMOLOGY& cosmo, float z, float sun_abs_mag);
 
 private:
 	float diameter;  // diameter of telescope (in cm)
