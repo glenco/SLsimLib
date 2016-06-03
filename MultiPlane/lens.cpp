@@ -888,14 +888,14 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
   
   if(alpha == -1) throw std::invalid_argument("alpha must not be -1 in Lens::createOneFieldPlane");
 
-  // non-projected number of halos :
+  // Initial projected number of halos:
   PosType aveNhalos = NumberDensity * pi*Rregion*Rregion; // in Number/radians^2 * radians^2 = dimensionless
   if(verbose) std::cout << "Lens::insertSubstructures : Average number of Substructures : " << aveNhalos << std::endl;
-  // So numberDensity refers to the number density in 3D.
+  // So numberDensity refers to the 2D number density.
   
   std::cout << "aveNhalos = " << aveNhalos << std::endl;
   
-  // projected number of halos (less than the non-projected, ie. 3D, number) :
+  // Real projected number of halos (due to the fact that it is a Poisson distribution):
   substructure.NhalosSub = static_cast<std::size_t>(poidev(float(aveNhalos), seed));
   if(verbose) std::cout << "Lens::insertSubstructures : Actual number of Substructures : " << substructure.NhalosSub << std::endl;
   
