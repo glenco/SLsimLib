@@ -38,7 +38,7 @@ struct MOKAmap{
   std::valarray<double> phi;
 	std::valarray<double> Signlambdar;
 	std::valarray<double> Signlambdat;
-	std:: vector<double> x;
+	std::vector<double> x;
   int nx,ny;
   // boxlMpc is Mpc/h for MOKA
 	/// lens and source properties
