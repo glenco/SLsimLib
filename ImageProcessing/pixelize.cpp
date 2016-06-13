@@ -308,7 +308,7 @@ PixelMap& PixelMap::operator=(PixelMap other)
 /// Zero the whole map
 void PixelMap::Clean()
 {
-  map = 0;
+  map *= 0;
 }
 
 /// Multiplies the whole map by a scalar factor
