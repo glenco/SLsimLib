@@ -330,10 +330,13 @@ PixelMap Observation::ApplyPSF(PixelMap &pmap)
     // rows and columns between first_p and last_p are copied in the zero-padded version
     long first_p = side_psf/2;
     long last_p = first_p + (Npix-1);
-    std::complex<double>* out=new std::complex<double> [Npix_zeropad*(Npix_zeropad/2+1)];
+    //std::complex<double>* out=new std::complex<double> [Npix_zeropad*(Npix_zeropad/2+1)];
+    //std::unique_ptr<std::complex<double> > out(new std::complex<double> [Npix_zeropad*(Npix_zeropad/2+1)]);
+    std::vector<std::complex<double> > out(Npix_zeropad*(Npix_zeropad/2+1));
     
     // add zero-padding
-    double* in_zeropad = new double[Npix_zeropad*Npix_zeropad];
+    //double* in_zeropad = new double[Npix_zeropad*Npix_zeropad];
+    std::vector<double> in_zeropad(Npix_zeropad*Npix_zeropad);
     for (int i = 0; i < Npix_zeropad*Npix_zeropad; i++)
     {
       long ix = i/Npix_zeropad;
@@ -344,21 +347,26 @@ PixelMap Observation::ApplyPSF(PixelMap &pmap)
         in_zeropad[i] = 0.;
     }
     
-    p = fftw_plan_dft_r2c_2d(Npix_zeropad,Npix_zeropad,in_zeropad, reinterpret_cast<fftw_complex*>(out), FFTW_ESTIMATE);
+    p = fftw_plan_dft_r2c_2d(Npix_zeropad,Npix_zeropad,in_zeropad.data()
+                             , reinterpret_cast<fftw_complex*>(out.data()), FFTW_ESTIMATE);
     fftw_execute(p);
     
     // creates plane for perform backward fft after convolution, sets output data 
     fftw_plan p2;
-    double* out2 = new double[Npix_zeropad*Npix_zeropad];
-    p2 = fftw_plan_dft_c2r_2d(Npix_zeropad,Npix_zeropad,reinterpret_cast<fftw_complex*>(out), out2, FFTW_ESTIMATE);
+    //double* out2 = new double[Npix_zeropad*Npix_zeropad];
+    std::vector<double> out2(Npix_zeropad*Npix_zeropad);
+    p2 = fftw_plan_dft_c2r_2d(Npix_zeropad,Npix_zeropad,reinterpret_cast<fftw_complex*>(out.data()), out2.data(), FFTW_ESTIMATE);
     
     
     // arrange psf data for fft, creates plane, then performs fft
     // psf data are moved into the four corners of psf_big_zeropad
     long psf_big_zeropad_Npixels = static_cast<int>((Npix+side_psf)*oversample);
-    double* psf_big_zeropad = new double[psf_big_zeropad_Npixels*psf_big_zeropad_Npixels];
-    std::complex<double>* out_psf=new std::complex<double> [psf_big_zeropad_Npixels*(psf_big_zeropad_Npixels/2+1)];
-    p_psf = fftw_plan_dft_r2c_2d(psf_big_zeropad_Npixels,psf_big_zeropad_Npixels,psf_big_zeropad, reinterpret_cast<fftw_complex*>(out_psf), FFTW_ESTIMATE);
+    //double* psf_big_zeropad = new double[psf_big_zeropad_Npixels*psf_big_zeropad_Npixels];
+    std::vector<double> psf_big_zeropad(psf_big_zeropad_Npixels*psf_big_zeropad_Npixels);
+    //std::complex<double>* out_psf=new std::complex<double> [psf_big_zeropad_Npixels*(psf_big_zeropad_Npixels/2+1)];
+    std::vector<std::complex<double> > out_psf(psf_big_zeropad_Npixels*(psf_big_zeropad_Npixels/2+1));
+    
+    p_psf = fftw_plan_dft_r2c_2d(psf_big_zeropad_Npixels,psf_big_zeropad_Npixels,psf_big_zeropad.data(), reinterpret_cast<fftw_complex*>(out_psf.data()), FFTW_ESTIMATE);
     long ix, iy;
     for (int i = 0; i < psf_big_zeropad_Npixels*psf_big_zeropad_Npixels; i++)
     {
