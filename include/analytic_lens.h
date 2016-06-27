@@ -63,6 +63,22 @@ public:
   /// set the velocity dispersion
   void set_sigma(PosType my_sigma){sigma = my_sigma; };
   
+  /// get the mass within the Einstein radius (valid for beta = 1 only !):
+  double get_massE()
+  {
+    double MassE = 0.; int k;
+    // To remove the normalisation of perturb_modes[i] in LensHaloFit::FindLensSimple :
+    double RemoveRenorm = 1./getSigma_crit() ;
+    
+    // Computing massE :
+    MassE = (mod[3]/2.)*(mod[3]/2.) ;
+    for(int i=4;i<perturb_Nmodes;i+=2){ k=i/2;
+      MassE += (k*k-1)*(k*k-1) * (perturb_modes[i]*perturb_modes[i] + perturb_modes[i+1]*perturb_modes[i+1]); }
+    MassE *= RemoveRenorm ;
+    
+    return MassE;
+  }
+  
 private:
 
    // Things added to manipulate and fit lenses.
