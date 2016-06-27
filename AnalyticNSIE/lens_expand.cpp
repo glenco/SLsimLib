@@ -116,8 +116,8 @@ PosType lens_expand(PosType beta,
     std::cout << "cos2theta = " << cos2theta << " , sin2theta = " << sin2theta << std::endl;
     std::cout << std::endl;
      */
-    
-    
+  
+  
     //printf("  lens_expand *phi = %e\n",*phi);
     return 0.5*(beta*beta*F+F2)*pow(r,beta-2) + mod[0];
 }
