@@ -71,7 +71,7 @@ public:
     double RemoveRenorm = 1./getSigma_crit() ;
     
     // Computing massE :
-    MassE = (mod[3]/2.)*(mod[3]/2.) ;
+    MassE = (perturb_modes[3]/2.)*(perturb_modes[3]/2.) ;
     for(int i=4;i<perturb_Nmodes;i+=2){ k=i/2;
       MassE += (k*k-1)*(k*k-1) * (perturb_modes[i]*perturb_modes[i] + perturb_modes[i+1]*perturb_modes[i+1]); }
     MassE *= RemoveRenorm ;
