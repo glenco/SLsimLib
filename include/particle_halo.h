@@ -12,19 +12,19 @@
 
 /**
  *  \brief A class that represents the lensing by a collection of simulation particles.
- *
- *  Smoothing is done according to the density of particles in 3D.  Smoothing sizes are
- *  either read in from a file (names simulation_filename + "." + Nsmooth + "sizes") or calculated 
- *  if the file does not exist (in which case the file is created).  This can be
- *  time and memory consuming when there are a large number of particles.
- *
- *  Input format:
- *    ASCCI - a table of three floats for positions in comoving Mpc
- *            The lines "# nparticles ...." and "# mass ...." must be in the
- *            near the top of the file. # is otherwise a comment character.  
- *            Only one type of particle in a single input file.
- *
- *   More input formats will be added in the future. 
+ 
+   Smoothing is done according to the density of particles in 3D.  Smoothing sizes are
+   either read in from a file (names simulation_filename + "." + Nsmooth + "sizes") or calculated
+   if the file does not exist (in which case the file is created).  This can be
+   time and memory consuming when there are a large number of particles.
+ 
+   Input format:
+     ASCCI - a table of three floats for positions in comoving Mpc (no h factor).
+             The lines "# nparticles ...." and "# mass ...." must be in
+             header at the top of the file. # is otherwise a comment character.
+             Only one type of particle in a single input file.
+ 
+    More input formats will be added in the future.
 */
 class LensHaloParticles : public LensHalo
 {
@@ -47,7 +47,7 @@ public:
 
   size_t getN() const { return Npoints; };
   
-  /// rotate the simulation, radians
+  /// rotate the simulation around the origin of the simulation coordinates, (radians)
   void rotate(Point_2d theta);
   
   /// center of mass in input coordinates
