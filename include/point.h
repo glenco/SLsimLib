@@ -119,7 +119,7 @@ struct Point_2d{
   void rotate(PosType theta){
     PosType c = cos(theta),s = sin(theta);
     PosType tmp = x[0];
-    x[0] = c*tmp + s*x[1];
+    x[0] = c*tmp - s*x[1];
     x[1] = c*x[1] + s*tmp;
   }
   
