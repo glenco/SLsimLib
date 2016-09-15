@@ -84,7 +84,7 @@ void LensHaloParticles::rotate(Point_2d theta){
   qtree =new TreeQuad(xp,masses.data(),sizes.data(),Npoints,multimass,true,0,20);
 }
 
-/** \breaf Reads number of particle and particle positons into Npoint and xp from a ASCII file.
+/** \brief Reads number of particle and particle positons into Npoint and xp from a ASCII file.
  *
  * Data file must have the lines "# nparticles ***" and "# mass ***" in the header.  All header
  * lines must begin with a "# "
@@ -280,7 +280,7 @@ void LensHaloParticles::rotate_particles(PosType theta_x,PosType theta_y){
 
 void LensHaloParticles::calculate_smoothing(int Nsmooth){
   std::cout << "Calculating smoothing of particles ..." << std::endl
-  << "  If there are a lot of particles this could take a while." << std::endl;
+  << Nsmooth << "neighbors.  If there are a lot of particles this could take a while." << std::endl;
   
   // make 3d tree of particle postions
   TreeSimple tree3d(xp,Npoints,10,3,true);

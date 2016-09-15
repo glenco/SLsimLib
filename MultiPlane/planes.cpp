@@ -45,7 +45,7 @@ std::vector<LensHalo*> LensPlaneTree::getHalos()
 }
 
 void LensPlaneTree::getNeighborHalos(PosType ray[],PosType rmax
-                                     ,std::vector<LensHalo*> &neighbors)
+                                     ,std::vector<LensHalo*> &neighbors) const
 {
   halo_tree->neighbors(ray,rmax,neighbors);
 }
@@ -116,6 +116,7 @@ void LensPlaneSingular::force(PosType *alpha
 	}
 }
 
+/// It is assumed that the position of halo is in physical Mpc
 void LensPlaneSingular::addHalo(LensHalo* halo)
 {
 	halos.push_back(halo);
@@ -139,7 +140,7 @@ std::vector<const LensHalo*> LensPlaneSingular::getHalos() const
 }
 
 void LensPlaneSingular::getNeighborHalos(PosType ray[],PosType rmax
-                                         ,std::vector<LensHalo*> &neighbors){
+                                         ,std::vector<LensHalo*> &neighbors) const{
   PosType x[2],r2 = rmax*rmax;
   for(int i=0;i<halos.size();i++){
      halos[i]->getX(x);

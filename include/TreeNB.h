@@ -27,7 +27,7 @@ typedef unsigned long IndexType;
 #endif
 
 namespace Utilities{
-	PosType **PosTypeMatrix(long nrl, long nrh, long ncl, long nch);
-	void free_PosTypeMatrix(PosType **m, long nrl, long nrh, long ncl, long nch);
+	//PosType **PosTypeMatrix(long nrl, long nrh, long ncl, long nch);
+	//void free_PosTypeMatrix(PosType **m, long nrl, long nrh, long ncl, long nch);
 }
 #endif

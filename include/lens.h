@@ -126,13 +126,17 @@ public:
 	}
 
 	/// remove all main halos
-	void clearMainHalos(bool verbose);
+	void clearMainHalos(bool verbose=false);
+  /// remaove all main halo of given type
+  template<typename HaloType>
+  void clearMainHalo(bool verbose=false);
+
 
 	/// inserts a single main lens halo and adds it to the existing ones
-	void insertMainHalo(LensHalo* halo,bool verbose = false);
+	void insertMainHalo(LensHalo* halo,bool addplanes,bool verbose = false);
 
 	/// inserts a sequence of main lens halos and adds them to the existing ones
-	void insertMainHalos(LensHalo** halos, std::size_t Nhalos,bool verbose = false);
+	void insertMainHalos(LensHalo** halos, std::size_t Nhalos,bool addplanes,bool verbose = false);
 
 	/// replaces existing main halos with a single main halo
 	void replaceMainHalos(LensHalo* halo,bool verbose = false);
@@ -175,16 +179,20 @@ public:
 	/// get single main halo of given type
 	template<typename HaloType>
 	HaloType* getMainHalo(std::size_t i);
+  
+  
+  
 	
 	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool RSIverbose = false);
   void info_rayshooter(Point *i_point
-                      ,std::vector<std::vector<double>> & ang_positions
+                      ,std::vector<Point_2d> & ang_positions
                       ,std::vector<KappaType> & kappa_on_planes
                       ,std::vector<std::vector<LensHalo*>> & halo_neighbors
-                      ,LensHalo *halo_max
+                      ,LensHalo **halo_max
                       ,KappaType &kappa_max
                       ,KappaType gamma_max[]
                       ,PosType rmax,short mode = 0  /// 0:physical distance, 1: comoving distance, 2: angular distance
+                      ,bool verbose = false
                                        );
 
 	// methods used for use with implanted sources
@@ -286,9 +294,10 @@ private: /* generation */
 	void createMainHalos(InputParams& params);
 	/// generate main halo from the parameter file
 	void createMainPlanes();
-	/// add a main halo to an existing plane, or create a new plane
+	/// add a main halo to an existing plane, or create a new one plane if it is not close enough
 	void addMainHaloToPlane(LensHalo* halo);
-	
+  void addMainHaloToNearestPlane(LensHalo* halo);
+
 	/// combine field and main planes
 	void combinePlanes(bool verbose);
 	
@@ -432,7 +441,6 @@ private: /* main */
 	/// vector of all main halos
 	Utilities::MixedVector<LensHalo*> main_halos;
 	/// vector of own main halos that will be deleted
-	std::vector<LensHalo*> main_halos_created;
 	/// vector of all main planes
 	std::vector<LensPlane*> main_planes;
 	/// vector of main plane redshifts

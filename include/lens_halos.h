@@ -62,12 +62,27 @@ public:
 	/// get the redshift
 	PosType getZlens() const { return zlens; }
     
+  // set the position of the Halo in physical Mpc on the lens plane
+  //void setX(PosType PosX, PosType PosY) { posHalo[0] = PosX ; posHalo[1] = PosY ; }
+  // set the position of the Halo in physical Mpc on the lens plane
+  //void setX(PosType *PosXY) { posHalo[0] = PosXY[0] ; posHalo[1] = PosXY[1] ; }
+  
+  /// get the position of the Halo in physical Mpc on the lens plane
+  void getX(PosType * MyPosHalo) const { MyPosHalo[0] = posHalo[0]*Dist ;
+    MyPosHalo[1] = posHalo[1]*Dist; }
+
   /// set the position of the Halo in radians
-  void setX(PosType PosX, PosType PosY) { posHalo[0] = PosX ; posHalo[1] = PosY ; }
+  void setTheta(PosType PosX, PosType PosY) { posHalo[0] = PosX ; posHalo[1] = PosY ; }
   /// set the position of the Halo in radians
-  void setX(PosType *PosXY) { posHalo[0] = PosXY[0] ; posHalo[1] = PosXY[1] ; }
+  void setTheta(PosType *PosXY) { posHalo[0] = PosXY[0] ; posHalo[1] = PosXY[1] ; }
   /// get the position of the Halo in radians
-  void getX(PosType * MyPosHalo) const { MyPosHalo[0] = posHalo[0] ; MyPosHalo[1] = posHalo[1]; }
+  void getTheta(PosType * MyPosHalo) const { MyPosHalo[0] = posHalo[0] ; MyPosHalo[1] = posHalo[1]; }
+  
+  /// Set the angular size distance to the halo.  This should be the distance to the lens plane.
+  void setDist(PosType my_Dist){Dist = my_Dist;}
+  /// return current angular size distance, ie conversion between angular and special coordinates.  This may not agree with
+  /// the getZ() value because of the projection onto the lens plane.
+  PosType getDist() const {return Dist;}
 
   /// get the position of the Halo in physical Mpc
   /// display the position of the halo
@@ -101,7 +116,6 @@ public:
 	virtual void setCosmology(const COSMOLOGY& cosmo) {}
 	
 	/// calculate the lensing properties -- deflection, convergence, and shear
-  
 	virtual void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening=1.0);
   
 	/// force tree calculation for stars
@@ -154,15 +168,13 @@ public:
   /// set radius rsize beyond which interpolation values between alpha_ellip and alpha_iso are computed
   void set_rsize(float my_rsize){ Rsize = my_rsize;};
 	float get_rsize(){return Rsize;};
-	
-  
+
   // all of the following functions were used for Ansatz III w derivatives of the Fourier modes
   
-
   /// perform some basic consistancy checks for halo
   bool test();
   
-  size_t getID(){return idnumber;}
+  size_t getID() const {return idnumber;}
   void setID(size_t id){idnumber = id;}
   
   PosType renormalization(PosType r_max);
@@ -171,8 +183,12 @@ public:
   
 protected:
 
+  // make LensHalo uncopyable
+  void operator=(LensHalo &){};
+  LensHalo(LensHalo &){};
+
   size_t idnumber; /// Identification number of halo.  It is not always used.
-  
+  PosType Dist;
   
   PosType alpha_int(PosType x) const;
   PosType norm_int(PosType r_max);
@@ -180,6 +196,7 @@ protected:
   void force_halo_sym(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0);
   void force_halo_asym(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0);
   
+
   // This is the size of the halo beyond which it does not have the profile expected profile.
   float Rsize = 0;
   
@@ -190,9 +207,6 @@ protected:
     //PosType operator ()(PosType theta) {halo.alpha_asym(r_max, theta, alpha_arr); return alpha_arr[0]*cos(theta)*cos(theta)+alpha_arr[1]*sin(theta)*sin(theta);}
     PosType operator ()(PosType theta) {return halo.alpha_ell(r_max, theta);}
   };
-  
-  
-  //friend struct Ig_func;
   
   struct Ialpha_func{
     Ialpha_func(LensHalo& halo): halo(halo){};
@@ -420,7 +434,7 @@ protected:
       double integrandA=m*kappa/(ap*ap*ap*bp*p2)*halo->mass;
       double integrandB=m*kappam/(ap*ap*ap*bp*p2);
       //std::cout << integrandA-integrandB << std::endl;
-      assert( abs((integrandA - integrandB)/integrandA)<1E-5);
+      assert( std::abs((integrandA - integrandB)/integrandA)<1E-5);
 
       assert(kappa >= 0.0);
 
@@ -448,7 +462,7 @@ protected:
       
       double integrandA=m*kappa/(ap*ap*ap*bp*p2)*halo->mass;
       double integrandB=m*kappam/(ap*bp*bp*bp*p2);
-      assert( abs((integrandA - integrandB)/integrandA)<1E-5);
+      assert( std::abs((integrandA - integrandB)/integrandA)<1E-5);
 
       assert(kappa >= 0.0);
       //return m*kappa/(ap*bp*bp*bp*p2)*halo->mass; // integrand of equation (28) in Schramm 1990
@@ -471,7 +485,7 @@ protected:
   
   PosType zlens;
   
-  /// Position of the Halo
+  /// Position of the Halo in angle
   PosType posHalo[2];
   
   
@@ -630,12 +644,9 @@ protected:
   
 };
 
-/** \ingroup DeflectionL2
- *
+/**
  * \brief A class for calculating the deflection, kappa and gamma caused by a collection of NFW
  * halos.
- *
- * Derived from the TreeQuad class.  The "particles" are replaced with spherical NFW halos.
  *
  * This class uses the true expressions for the NFW profile.  This is
  * time consuming and not usually necessary. See TreeQuadPseudoNFW for a faster alternative.
@@ -748,8 +759,7 @@ private:
  * \brief A class for calculating the deflection, kappa and gamma caused by a collection of
  * halos with a double power-law mass profile.
  *
- * Derived from the TreeQuad class.  The "particles" are replaced with spherical halos
- * with \f$ \Sigma \propto 1/(1 + r/r_s )^\beta \f$ so beta would usually be positive.
+ * Spherical halos with \f$ \Sigma \propto 1/(1 + r/r_s )^\beta \f$ so beta would usually be positive.
  *
  * An NFW profile is approximated beta = 2 .
  *
@@ -830,9 +840,7 @@ private:
  * \brief A class for calculating the deflection, kappa and gamma caused by a collection of halos
  * with truncated power-law mass profiles.
  *
- * Derived from the TreeQuad class.  The "particles" are replaced with spherical halos.
  *The truncation is in 2d not 3d. \f$ \Sigma \propto r^{-\beta} \f$ so beta would usually be positive.
- *
  *
  * The default value of theta = 0.1 generally gives better than 1% accuracy on alpha.
  * The shear and kappa is always more accurate than the deflection.
@@ -1175,7 +1183,8 @@ private:
 
 typedef LensHalo* LensHaloHndl;
 
-bool LensHaloZcompare(LensHalo *lh1,LensHalo *lh2);
+//bool LensHaloZcompare(LensHalo *lh1,LensHalo *lh2);//{return (lh1->getZlens() < lh2->getZlens());}
+//bool LensHaloZcompare(LensHalo lh1,LensHalo lh2){return (lh1.getZlens() < lh2.getZlens());}
 
 
 #endif /* LENS_HALOS_H_ */

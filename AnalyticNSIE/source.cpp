@@ -484,6 +484,10 @@ Band SourceShapelets::shape_band[10] = {F435W,F606W,F775W,F850LP,F110W,F160W,SDS
 
 void SourceShapelets::setActiveBand(Band band)
 {
+  if(band == EUC_VIS) band = SDSS_I;
+  if(band == EUC_Y) band = F110W;
+  if(band == EUC_J) band = F110W;
+  if(band == EUC_H) band = F160W;
   for (int i = 0; i < 10; i++)
   {
     if (shape_band[i] == band)
@@ -493,8 +497,9 @@ void SourceShapelets::setActiveBand(Band band)
       return;
     }
   }
+  
   std::cout << "The band is not available! Available bands are F435W,F606W,F775W,F850LP,F110W,F160W,SDSS_U,SDSS_G,SDSS_R,SDSS_I" << std::endl;
-  exit(1);
+  throw std::invalid_argument("band not supported");
 }
 
 SourceShapelets::SourceShapelets(
@@ -545,8 +550,19 @@ SourceShapelets::SourceShapelets(
   if(shap_file.empty())
     throw std::invalid_argument("Please enter a valid filename for the FITS file input");
   
-  std::auto_ptr<CCfits::FITS> fp(new CCfits::FITS(shap_file.c_str(), CCfits::Read));
-  
+  //std::auto_ptr<CCfits::FITS> fp(new CCfits::FITS(shap_file.c_str(), CCfits::Read));
+ 
+  std::auto_ptr<CCfits::FITS> fp(0);
+  try
+  {
+    fp.reset( new CCfits::FITS(shap_file.c_str(), CCfits::Read) );
+  }
+  catch (CCfits::FITS::CantOpen)
+  {
+    std::cerr << "Cannot open " << shap_file << std::endl;
+    exit(1);
+  }
+
   CCfits::PHDU& h0 = fp->pHDU();
   
   h0.readKey("BETA", source_r);
@@ -583,7 +599,19 @@ SourceShapelets::SourceShapelets(
   if(shap_file.empty())
     throw std::invalid_argument("Please enter a valid filename for the FITS file input");
   
-  std::auto_ptr<CCfits::FITS> fp(new CCfits::FITS(shap_file.c_str(), CCfits::Read));
+  //std::auto_ptr<CCfits::FITS> fp(new CCfits::FITS(shap_file.c_str(), CCfits::Read));
+  
+  std::auto_ptr<CCfits::FITS> fp(0);
+  try
+  {
+    fp.reset( new CCfits::FITS(shap_file.c_str(), CCfits::Read) );
+  }
+  catch (CCfits::FITS::CantOpen)
+  {
+    std::cerr << "Cannot open " << shap_file << std::endl;
+    exit(1);
+  }
+
   
   CCfits::PHDU& h0 = fp->pHDU();
   
@@ -718,7 +746,7 @@ void SourceMultiShapelets::readCatalog()
   int max_num = 37012;
   for (int i = 0; i < max_num+1; i++)
   {
-    std::string shap_file = shapelets_folder+"/obj_"+to_string(i)+"_mag_z.sif";
+    std::string shap_file = shapelets_folder+"/obj_"+ std::to_string(i)+"_mag_z.sif";
     std::ifstream shap_input(shap_file.c_str());
     if (shap_input)
     {

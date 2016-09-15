@@ -8,15 +8,50 @@
 
 #include "causticdata.h"
 
-CausticDataStore::CausticDataStore(std::string filename)
+CausticDataStore::CausticDataStore(std::string filename,bool verbose)
 :ncolumns(14),Nxp(0)
 {
-  readfile(filename);
+  readfile(filename,verbose);
+  
+  for(size_t ii=0;ii<data.size();++ii){
+    totalcritarea += data[ii].crit_area;
+    totalcausticarea += data[ii].caustic_area;
+  }
+
+  constructIndexes();
+}
+
+void CausticDataStore::constructIndexes(){
+  
+  std::vector<double> tmp(data.size());
+  
+  caus_area_index.resize(data.size());
+  for (size_t i = 0; i < caus_area_index.size(); ++i){
+    tmp[i] = data[i].caustic_area;
+    caus_area_index[i] = i;
+  }
+  Utilities::sort_indexes_decending(tmp,caus_area_index);
+  
+  crit_area_index.resize(data.size());
+  for (size_t i = 0; i < crit_area_index.size(); ++i){
+    tmp[i] = data[i].crit_area;
+    crit_area_index[i] = i;
+  }
+  Utilities::sort_indexes_decending(tmp,crit_area_index);
+
+  crit_radius_index.resize(data.size());
+  for (size_t i = 0; i < crit_radius_index.size(); ++i){
+    tmp[i] = data[i].crit_radius[1];
+    crit_radius_index[i] = i;
+  }
+  Utilities::sort_indexes_decending(tmp,crit_radius_index);
+
 }
 
 CausticDataStore::CausticDataStore(std::vector<ImageFinding::CriticalCurve> &critcurves_vec)
 :ncolumns(14),Nxp(0)
 {
+  
   PosType rmax,rmin,rave;
   data.resize(critcurves_vec.size());
   for(size_t ii=0;ii<critcurves_vec.size();++ii){
@@ -31,14 +66,20 @@ CausticDataStore::CausticDataStore(std::vector<ImageFinding::CriticalCurve> &cri
     data[ii].crit_area = critcurves_vec[ii].critical_area;
     data[ii].crit_type = critcurves_vec[ii].type;
     
+    totalcritarea += data[ii].crit_area;
+    
     data[ii].caustic_center[0] = critcurves_vec[ii].caustic_center[0];
     data[ii].caustic_center[1] = critcurves_vec[ii].caustic_center[1];
     critcurves_vec[ii].CausticRadius(rmax,rmin,rave);
     data[ii].caustic_radius[0] = rmax;
-    data[ii].caustic_radius[2] = rmin;
     data[ii].caustic_radius[1] = rave;
+    data[ii].caustic_radius[2] = rmin;
     data[ii].caustic_area = critcurves_vec[ii].caustic_area;
+    
+    totalcausticarea += data[ii].caustic_area;
   }
+  
+  constructIndexes();
 }
 
 void CausticDataStore::addcrits(std::vector<ImageFinding::CriticalCurve> &critcurves_vec){
@@ -65,11 +106,16 @@ void CausticDataStore::addcrits(std::vector<ImageFinding::CriticalCurve> &critcu
     data[ii].caustic_radius[2] = rmin;
     data[ii].caustic_radius[1] = rave;
     data[ii].caustic_area = critcurves_vec[jj].caustic_area;
+    
+    totalcritarea += data[ii].crit_area;
+    totalcausticarea += data[ii].caustic_area;
   }
   // rebuild search tree
   if(critcurves_vec.size() > 0){
     SetSearchTree();
   }
+  
+  constructIndexes();
 }
 
 
@@ -77,6 +123,13 @@ CausticDataStore::CausticDataStore(const CausticDataStore &input)
 :ncolumns(14),Nxp(0)
 {
   data = input.data;
+
+  for(size_t ii=0;ii<data.size();++ii){
+    totalcritarea += data[ii].crit_area;
+    totalcausticarea += data[ii].caustic_area;
+  }
+
+  constructIndexes();
 }
 
 
@@ -91,7 +144,7 @@ CausticDataStore::~CausticDataStore(){
 }
 
 /// Read in data from a caustic catalog file
-void CausticDataStore::readfile(std::string filename){
+void CausticDataStore::readfile(std::string filename,bool verbose){
 
   data.clear();
 
@@ -112,13 +165,13 @@ void CausticDataStore::readfile(std::string filename){
     throw std::runtime_error(" Cannot open file.");
   }
   
-  std::cout << "Reading caustic information from " << filename << std::endl;
+  if(verbose) std::cout << "Reading caustic information from " << filename << std::endl;
   size_t i=0;
   while(file_in.peek() == '#'){
     file_in.ignore(10000,'\n');
     ++i;
   }
-  std::cout << "skipped "<< i << " comment lines in " << filename << std::endl;
+  if(verbose) std::cout << "   skipped "<< i << " comment lines in " << filename << std::endl;
   
   size_t pos;
   CausticStructure tmp_data;
@@ -126,7 +179,7 @@ void CausticDataStore::readfile(std::string filename){
   while(getline(file_in,myline)){
     
 		if(myline[0] == '#'){
-      std::cout << "skipped line " << i << std::endl;
+      if(verbose) std::cout << "   skipped line " << i << std::endl;
 			continue;
     }
 	/*
@@ -418,12 +471,15 @@ void CausticDataStore::printfile(std::string filename,std::string paramfile,doub
 
 }*/
 
+/*
 void CausticDataStore::SortByCritSize(){
   cummulative_area.resize(0);  // this stops RandomLens from being miss used.
   std::sort(data.begin(),data.end(),[](const CausticStructure &c1,const CausticStructure &c2){
-              return (c1.crit_radius[0] > c2.crit_radius[0]);});
+              return (c1.crit_radius[1] > c2.crit_radius[1]);});
 
   if(data.size() > 1) SetSearchTree();
+  
+  constructIndexes();
 }
 
 void CausticDataStore::SortByCritArea(){
@@ -432,7 +488,9 @@ void CausticDataStore::SortByCritArea(){
 
   std::sort(data.begin(),data.end(),[](const CausticStructure &c1,const CausticStructure &c2){
     return (c1.crit_area > c2.crit_area);});
+  
   if(data.size() > 1) SetSearchTree();
+  constructIndexes();
 }
 
 void CausticDataStore::SortByCausticArea(){
@@ -440,7 +498,51 @@ void CausticDataStore::SortByCausticArea(){
   //std::sort(data.begin(),data.end(),CausticDataStore::comparcausticarea);
   std::sort(data.begin(),data.end(),[](const CausticStructure &c1,const CausticStructure &c2){
     return (c1.caustic_area > c2.caustic_area);});
+  
   if(data.size() > 1) SetSearchTree();
+  constructIndexes();
+}
+*/
+
+size_t CausticDataStore::init_for_random(
+                       short type              /// select according to: (1) critical curve area, (2) caustic curve area
+                       ,double limit     /// minimum accepted area
+){
+  
+  if(data.size() == 0) return 0;
+    
+  size_t i;
+  if(type == 1){
+    cummulative_area.resize(data.size());
+    cummulative_area[0] = 0;
+    for(i=0;(i<data.size()-1) && (data[crit_area_index[i]].crit_area > limit) ;++i)
+      cummulative_area[i+1] = data[crit_area_index[i]].crit_area + cummulative_area[i];
+    cummulative_area.resize(i);
+    sort_type = 1;
+  }
+  if(type == 2){
+    cummulative_area.resize(data.size());
+    cummulative_area[0] = 0;
+    for(i=0;(i<data.size()-1) && (data[caus_area_index[i]].caustic_area > limit) ;++i)
+      cummulative_area[i+1] = data[caus_area_index[i]].caustic_area + cummulative_area[i];
+    cummulative_area.resize(i);
+    sort_type = 2;
+  }
+  
+  return cummulative_area.size();
+}
+
+int CausticDataStore::RandomLens(Utilities::RandomNumbers_NR &ran){
+  if(cummulative_area.size() == 0 || sort_type == -1) throw std::runtime_error("CausticDataStore::RandomLens - CausticDataStore::init_for_random() must be set before using this!  You can also not reorder the caustics without reinitializing");
+  int i = Utilities::locate<double>(cummulative_area,ran()*cummulative_area.back());
+  
+  if(i < 0) return i;
+  if(sort_type == 1)
+    return crit_area_index[Utilities::locate<double>(cummulative_area,ran()*cummulative_area.back())];
+  if(sort_type == 2)
+    return caus_area_index[Utilities::locate<double>(cummulative_area,ran()*cummulative_area.back())];
+  
+  return -1;
 }
 
 

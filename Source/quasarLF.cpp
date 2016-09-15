@@ -191,7 +191,7 @@ double QuasarLF::getColor(Band band)
     {
         ERROR_MESSAGE();
         std::cout << "Required band is not present in the database: allowed bands are u,g,r,i,z" << std::endl;
-    exit(0);
+        throw std::invalid_argument("band not supported");
     }
 }
 
@@ -208,7 +208,7 @@ double QuasarLF::getFluxRatio(Band band)
     {
         ERROR_MESSAGE();
         std::cout << "Required band is not present in the database: allowed bands are u,g,r,i,z" << std::endl;
-        exit(0);
+        throw std::invalid_argument("band not supported");
     }
 }
 

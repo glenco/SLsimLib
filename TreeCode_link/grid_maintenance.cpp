@@ -293,8 +293,6 @@ PosType Grid::RefreshSurfaceBrightnesses(SourceHndl source){
   
   PointList::iterator s_tree_pointlist_current(s_tree->pointlist->Top());
 	for(unsigned long i=0;i<s_tree->pointlist->size();++i,--s_tree_pointlist_current){
-		//y[0] = s_tree->pointlist->current->x[0]; - source->getX()[0];
-		//y[1] = s_tree->pointlist->current->x[1]; - source->getX()[1];
 		tmp = source->SurfaceBrightness((*s_tree_pointlist_current)->x);
 		(*s_tree_pointlist_current)->surface_brightness = (*s_tree_pointlist_current)->image->surface_brightness
     = tmp;
@@ -1149,7 +1147,7 @@ PixelMap Grid::writePixelMapUniform(
   PixelMap map(center, Nx, Ny,i_tree->pointlist->Top()->gridsize);
   map.Clean();
   
-  int Nblocks = 16;
+  int Nblocks = Utilities::GetNThreads();
   std::vector<PointList> lists(Nblocks);
   
   bool allowDecent;
@@ -1157,7 +1155,6 @@ PixelMap Grid::writePixelMapUniform(
   int i = 0;
   do{
     if((*i_tree_current)->level == 4){
-      assert(i < 16);
       lists[i].setTop( (*i_tree_current)->points );
       lists[i].setN( (*i_tree_current)->npoints );
       ++i;
@@ -1167,12 +1164,12 @@ PixelMap Grid::writePixelMapUniform(
     }
   }while(i_tree_current.TreeWalkStep(allowDecent) && i < Nblocks);
   
-  std::thread thr[16];
+  std::vector<std::thread> thrs;
   
   for(int ii = 0; ii < i ;++ii){
-    thr[ii] = std::thread(&Grid::writePixelMapUniform_,this,lists[ii],&map,lensvar);
+    thrs.push_back(std::thread(&Grid::writePixelMapUniform_,this,lists[ii],&map,lensvar));
   }
-  for(int ii = 0; ii < i ;++ii) thr[ii].join();
+  for(int ii = 0; ii < i ;++ii) thrs[ii].join();
   
   return map;
 }

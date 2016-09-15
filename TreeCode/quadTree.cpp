@@ -521,7 +521,7 @@ void TreeQuad::force2D(const PosType *ray,PosType *alpha,KappaType *kappa,KappaT
 
 /** \brief Returns the halos that are within rmax of ray[]
  */
-void TreeQuad::neighbors(PosType ray[],PosType rmax,std::list<IndexType> &neighbors){
+void TreeQuad::neighbors(PosType ray[],PosType rmax,std::list<IndexType> &neighbors) const{
   QTreeNB::iterator it(tree);
   neighbors.clear();
   
@@ -539,7 +539,8 @@ void TreeQuad::neighbors(PosType ray[],PosType rmax,std::list<IndexType> &neighb
       decend = false;
     }else if((*it)->child0 == NULL){  // at leaf
       for(int i=0;i<(*it)->nparticles;++i){
-        if( (tree->xp[(*it)->particles[i]][0] - ray[0])*(tree->xp[(*it)->particles[i]][0] - ray[0]) + (tree->xp[(*it)->particles[i]][1] - ray[1])*(tree->xp[(*it)->particles[i]][1] - ray[1]) < r2) neighbors.push_back((*it)->particles[i]);
+        if( (tree->xp[(*it)->particles[i]][0] - ray[0])*(tree->xp[(*it)->particles[i]][0] - ray[0])
+           + (tree->xp[(*it)->particles[i]][1] - ray[1])*(tree->xp[(*it)->particles[i]][1] - ray[1]) < r2) neighbors.push_back((*it)->particles[i]);
       }
       decend = false;
     }
@@ -548,7 +549,7 @@ void TreeQuad::neighbors(PosType ray[],PosType rmax,std::list<IndexType> &neighb
 }
 /** \brief Returns the halos that are within rmax of ray[]
  */
-void TreeQuad::neighbors(PosType ray[],PosType rmax,std::vector<LensHalo *> &neighbors){
+void TreeQuad::neighbors(PosType ray[],PosType rmax,std::vector<LensHalo *> &neighbors) const{
   neighbors.clear();
   
   if(halos == NULL){
