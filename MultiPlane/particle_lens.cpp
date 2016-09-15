@@ -73,6 +73,9 @@ LensHaloParticles::~LensHaloParticles(){
 void LensHaloParticles::force_halo(double *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,double const *xcm
                 ,bool subtract_point,PosType screening){
   qtree->force2D_recur(xcm,alpha,kappa,gamma,phi);
+  
+  alpha[0] *= -1;
+  alpha[1] *= -1;
 }
 
 void LensHaloParticles::rotate(Point_2d theta){

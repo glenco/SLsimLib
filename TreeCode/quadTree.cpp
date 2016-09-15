@@ -832,7 +832,7 @@ void TreeQuad::force2D_recur(const PosType *ray,PosType *alpha,KappaType *kappa,
   alpha[1] -= ray[1]*sigma_background*(inv_screening_scale2 == 0);
   
   *kappa -= sigma_background;
-  
+    
   return;
 }
 
