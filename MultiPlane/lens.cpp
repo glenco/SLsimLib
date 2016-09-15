@@ -2860,7 +2860,7 @@ void Lens::buildPlanes(InputParams& params, bool verbose)
 }
 
 /**
- * \brief Changes the maximum redshift that the rays are shot to.
+ * \brief Changes the maximum redshift that the rays are shot to. Warning: Grids that have already been made with this Lens will not have this new source redshift. 
  *
  * The multilens must have been initially constructed with a source redshift that is higher
  * than this redshift.  This is used to rayshoot to a source whose line of sight passes through the

@@ -339,7 +339,7 @@ void divide_images_kist(
 		imageinfo[i].centroid[1] /= imageinfo[i].area;
     imageinfo[i].gridrange[1] = imageinfo[i].gridrange[2];
     
-    std::cout << imageinfo[i].imagekist->Nunits() << std::endl;
+    //std::cout << imageinfo[i].imagekist->Nunits() << std::endl;
      // Probably caused by a point outside the image having in_image == YES on entry
 		assert((Ntemp - new_imagekist.Nunits() - imageinfo[i].imagekist->Nunits()) == 0);
 		assert(new_imagekist.OffBottom());
