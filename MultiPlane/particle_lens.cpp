@@ -63,7 +63,6 @@ LensHaloParticles::LensHaloParticles(
   rotate_particles(theta_rotate[0],theta_rotate[1]);
 
   qtree = new TreeQuad(xp,masses.data(),sizes.data(),Npoints,multimass,true,0,20);
-  
 }
 
 LensHaloParticles::~LensHaloParticles(){

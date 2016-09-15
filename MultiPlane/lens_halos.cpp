@@ -672,8 +672,14 @@ size_t LensHaloRealNSIE::objectCount = 0;
 std::vector<double> LensHaloRealNSIE::q_table;
 std::vector<double> LensHaloRealNSIE::Fofq_table;
 
-LensHaloRealNSIE::LensHaloRealNSIE(float my_mass,PosType my_zlens,float my_sigma
-                                   , float my_rcore,float my_fratio,float my_pa,int my_stars_N)
+LensHaloRealNSIE::LensHaloRealNSIE(
+                                   float my_mass
+                                   ,PosType my_zlens
+                                   ,float my_sigma   /// in km/s
+                                   ,float my_rcore   /// in units of R_einstein
+                                   ,float my_fratio
+                                   ,float my_pa
+                                   ,int my_stars_N)
 :LensHalo(){
   mass=my_mass, zlens=my_zlens, rscale=1.0;
   
