@@ -115,12 +115,24 @@ struct Point_2d{
   PosType length(){
     return sqrt(x[0]*x[0] + x[1]*x[1]);
   }
+
+  /// length^2
+  PosType length_sqr(){
+    return x[0]*x[0] + x[1]*x[1];
+  }
   
   void rotate(PosType theta){
     PosType c = cos(theta),s = sin(theta);
     PosType tmp = x[0];
     x[0] = c*tmp - s*x[1];
     x[1] = c*x[1] + s*tmp;
+  }
+  
+  /// rescale to make a unit length vector
+  void unitize(){
+    PosType s = length();
+    x[0] /= s;
+    x[1] /= s;
   }
   
   PosType x[2];
@@ -444,6 +456,10 @@ struct Point_3d{
   PosType length(){
     return sqrt(x[0]*x[0] + x[1]*x[1] + x[2]*x[2]);
   }
+
+  PosType length_sqr(){
+    return x[0]*x[0] + x[1]*x[1] + x[2]*x[2];
+  }
   
   /// a rotation theta around the z-axis followed by a rotation phi around the y-axis
   void rotate(PosType theta,PosType phi){
@@ -455,6 +471,14 @@ struct Point_3d{
     s = sin(phi);;
     x[0]  = c*tmp - s*x[2];
     x[2] = c*x[2] + s*tmp;
+  }
+  
+  /// rescale to make a unit length vector
+  void unitize(){
+    PosType s = length();
+    x[0] /= s;
+    x[1] /= s;
+    x[2] /= s;
   }
   
   PosType x[3];
