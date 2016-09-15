@@ -306,6 +306,7 @@ void TreeSimple::_NearestNeighbors(PosType *ray,PosType *rlray,int Nneighbors,un
         
         Utilities::quicksort(neighbors,rneighbors,(*it)->nparticles);
         
+        
       }else{ /* keep going down the tree */
         
         if(it.down(1)){
@@ -561,7 +562,7 @@ void TreeSimple::_BuildTreeNB(TreeNBHndl tree,IndexType nparticles,IndexType *pa
 
       Utilities::quickPartition(xcut,&cut,particles
     		  ,x,cbranch->nparticles-cbranch->big_particle);
- }
+  }
 
   /* set particle numbers and pointers to particles */
   branch1.prev=cbranch;

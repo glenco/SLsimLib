@@ -76,7 +76,7 @@ void LensHaloAnaNSIE::PrintLens(bool show_substruct,bool show_stars){
   cout << endl << "**Host lens model**" << endl;
   // redshifts
   cout << "sigma " << sigma << "km/s" << endl;
-  cout << "core " << rcore << " Mpc" << endl;
+  cout << "core " << rcore << " Re" << endl;
   cout << "axis_ratio " << fratio << endl;
   cout << "position angle " <<pa << endl;
   

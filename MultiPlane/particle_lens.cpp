@@ -63,7 +63,6 @@ LensHaloParticles::LensHaloParticles(
   rotate_particles(theta_rotate[0],theta_rotate[1]);
 
   qtree = new TreeQuad(xp,masses.data(),sizes.data(),Npoints,multimass,true,0,20);
-  
 }
 
 LensHaloParticles::~LensHaloParticles(){
@@ -74,6 +73,9 @@ LensHaloParticles::~LensHaloParticles(){
 void LensHaloParticles::force_halo(double *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,double const *xcm
                 ,bool subtract_point,PosType screening){
   qtree->force2D_recur(xcm,alpha,kappa,gamma,phi);
+  
+  alpha[0] *= -1;
+  alpha[1] *= -1;
 }
 
 void LensHaloParticles::rotate(Point_2d theta){

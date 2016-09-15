@@ -1027,6 +1027,22 @@ namespace Utilities
     std::sort(index.begin(), index.end(),
               [&v](size_t i1, size_t i2) {return v[i1] < v[i2];});
   }
+  
+  template <typename T>
+  void sort_indexes(const T *v     /// the original data that is not changed
+                    ,std::vector<size_t> &index /// vector of indexes that if put into v will sort it
+                    ,size_t N) {
+    
+    // initialise original index locations
+    index.resize(N);
+
+    for (size_t i = 0; i != index.size(); ++i) index[i] = i;
+    
+    // sort indexes based on comparing values in v
+    std::sort(index.begin(), index.end(),
+              [v](size_t i1, size_t i2) {return v[i1] < v[i2];});
+  }
+
   /// Find the indexes that sort a vector in descending order
   template <typename T>
   void sort_indexes_decending(const std::vector<T> &v     /// the original data that is not changed
@@ -1040,6 +1056,32 @@ namespace Utilities
     // sort indexes based on comparing values in v
     std::sort(index.begin(), index.end(),
               [&v](size_t i1, size_t i2) {return v[i1] > v[i2];});
+  }
+
+  
+  // reorders vec according to index p
+  template <typename T>
+  void apply_permutation(
+                         T *vec,
+                         const std::vector<std::size_t>& p)
+  {
+    std::vector<T> copy(p.size());
+    
+    for(std::size_t i = 0; i < p.size(); ++i){
+      copy[i] = vec[i];
+    }
+    
+    for(std::size_t i = 0; i < p.size(); ++i){
+      vec[i] = copy[p[i]];
+    }
+  }
+
+  template <typename T>
+  void apply_permutation(
+                                  std::vector<T>& vec,
+                                  const std::vector<std::size_t>& p)
+  {
+    apply_permutation(vec.data(),p);
   }
   
 #ifdef ENABLE_FFTW
