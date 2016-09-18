@@ -16,8 +16,9 @@ LensHaloParticles::LensHaloParticles(
             ,const COSMOLOGY& cosmo /// cosmology
             ,Point_2d theta_rotate /// rotation of particles around the origin
             ,bool recenter
-            ,bool my_multimass
-        ): multimass(my_multimass),simfile(simulation_filename)
+            ,bool my_multimass   /// Set to true is particles have different sizes
+            ,PosType MinPSize    
+        ):min_size(MinPSize),multimass(my_multimass),simfile(simulation_filename)
 {
   
   LensHalo::setZlens(redshift);
@@ -27,10 +28,11 @@ LensHaloParticles::LensHaloParticles(
   
   readPositionFileASCII(simulation_filename);
   sizefile = simfile + "." + std::to_string(Nsmooth) + "sizes";
-  if(!readSizesFile(sizefile,Nsmooth)){
+  if(!readSizesFile(sizefile,Nsmooth,min_size)){
     // calculate sizes
     sizes.resize(Npoints);
     calculate_smoothing(Nsmooth);
+    for(size_t i=0; i<Npoints ; ++i) if(sizes[i] < min_size) sizes[i] = min_size;
   }
   
   // convert from comoving to physical coordinates
@@ -62,7 +64,11 @@ LensHaloParticles::LensHaloParticles(
   // rotate positions
   rotate_particles(theta_rotate[0],theta_rotate[1]);
 
+  //std::cout << " ****** WARNING TAKE THIS TEST OUT ********** " << std::endl;
+  //multimass = false;
+  
   qtree = new TreeQuad(xp,masses.data(),sizes.data(),Npoints,multimass,true,0,20);
+  
 }
 
 LensHaloParticles::~LensHaloParticles(){
@@ -181,12 +187,14 @@ void LensHaloParticles::readPositionFileASCII(const std::string &filename){
   
 }
 
-bool LensHaloParticles::readSizesFile(const std::string &filename,int Nsmooth){
+bool LensHaloParticles::readSizesFile(const std::string &filename,int Nsmooth
+                                      ,PosType min_size){
   
   std::ifstream myfile(filename);
   
   // find number of particles
   
+  PosType min=HUGE_VALF,max=0.0;
   if (myfile.is_open()){
     
     std::string str,label;
@@ -234,7 +242,9 @@ bool LensHaloParticles::readSizesFile(const std::string &filename,int Nsmooth){
       std::stringstream ss(str);
       
       ss >> sizes[row];
-      
+      if(min_size > sizes[row] ) sizes[row] = min_size;
+      min = min < sizes[row] ? min :  sizes[row];
+      max = max > sizes[row] ? max :  sizes[row];
       row++;
     }
     
@@ -248,8 +258,11 @@ bool LensHaloParticles::readSizesFile(const std::string &filename,int Nsmooth){
   }
   
   std::cout << Npoints << " particle sizes read from file " << filename << std::endl;
+  std::cout << "   maximun particle sizes " << max << " minimum " << min << " Mpc" << std::endl;
+  
   return true;
 }
+
 void LensHaloParticles::rotate_particles(PosType theta_x,PosType theta_y){
   
   if(theta_x == 0.0 && theta_y == 0.0) return;
@@ -280,7 +293,7 @@ void LensHaloParticles::rotate_particles(PosType theta_x,PosType theta_y){
 
 void LensHaloParticles::calculate_smoothing(int Nsmooth){
   std::cout << "Calculating smoothing of particles ..." << std::endl
-  << Nsmooth << "neighbors.  If there are a lot of particles this could take a while." << std::endl;
+  << Nsmooth << " neighbors.  If there are a lot of particles this could take a while." << std::endl;
   
   // make 3d tree of particle postions
   TreeSimple tree3d(xp,Npoints,10,3,true);
