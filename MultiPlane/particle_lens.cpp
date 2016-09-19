@@ -16,27 +16,35 @@ LensHaloParticles::LensHaloParticles(
             ,const COSMOLOGY& cosmo /// cosmology
             ,Point_2d theta_rotate /// rotation of particles around the origin
             ,bool recenter
-            ,bool my_multimass
-        ): multimass(my_multimass),simfile(simulation_filename)
+            ,bool my_multimass   /// Set to true is particles have different sizes
+            ,PosType MinPSize    
+        ):min_size(MinPSize),multimass(my_multimass),simfile(simulation_filename)
 {
   
   LensHalo::setZlens(redshift);
   LensHalo::setCosmology(cosmo);
   LensHalo::set_Rsize(1.0e3);
   LensHalo::set_flag_elliptical(false);
+  stars_N = 0;
+  stars_implanted = false;
+  
+  Rsize = Rmax = 1.0e3;
   
   readPositionFileASCII(simulation_filename);
+  
   sizefile = simfile + "." + std::to_string(Nsmooth) + "sizes";
-  if(!readSizesFile(sizefile,Nsmooth)){
+  if(!readSizesFile(sizefile,Nsmooth,min_size)){
     // calculate sizes
     sizes.resize(Npoints);
     calculate_smoothing(Nsmooth);
+    for(size_t i=0; i<Npoints ; ++i) if(sizes[i] < min_size) sizes[i] = min_size;
   }
   
   // convert from comoving to physical coordinates
   PosType scale_factor = 1/(1+redshift);
   mass = 0.0;
   mcenter *= 0.0;
+  PosType max_mass = 0.0,min_mass = HUGE_VALF;
   for(size_t i=0;i<Npoints;++i){
     xp[i][0] *= scale_factor;
     xp[i][1] *= scale_factor;
@@ -47,21 +55,33 @@ LensHaloParticles::LensHaloParticles(
     mcenter[2] += xp[i][2]*masses[multimass*i];
     
     mass += masses[multimass*i];
+
+    max_mass = (masses[multimass*i] > max_mass) ? masses[multimass*i] : max_mass;
+    min_mass = (masses[multimass*i] < min_mass) ? masses[multimass*i] : min_mass;
   }
   
   mcenter /= mass;
   
+  std::cout << "   Particle mass range : " << min_mass << " to " << max_mass << "  ratio of : " << max_mass/min_mass << std::endl;
+  
+
   if(recenter){
+    PosType r2,r2max=0;
     for(size_t i=0;i<Npoints;++i){
       xp[i][0] -= mcenter[0];
       xp[i][1] -= mcenter[1];
       xp[i][2] -= mcenter[2];
+      
+      r2 = xp[i][0]*xp[i][0] + xp[i][1]*xp[i][1] + xp[i][2]*xp[i][2];
+      if(r2 > r2max) r2max = r2;
     }
+    
+    Rsize = sqrt(r2max);
   }
   
   // rotate positions
   rotate_particles(theta_rotate[0],theta_rotate[1]);
-
+  
   qtree = new TreeQuad(xp,masses.data(),sizes.data(),Npoints,multimass,true,0,20);
 }
 
@@ -89,7 +109,7 @@ void LensHaloParticles::rotate(Point_2d theta){
  * Data file must have the lines "# nparticles ***" and "# mass ***" in the header.  All header
  * lines must begin with a "# "
  *
- * Coordinates of particles are in ???? units.
+ * Coordinates of particles are in physical Mpc units.
  */
 void LensHaloParticles::readPositionFileASCII(const std::string &filename){
   
@@ -181,12 +201,14 @@ void LensHaloParticles::readPositionFileASCII(const std::string &filename){
   
 }
 
-bool LensHaloParticles::readSizesFile(const std::string &filename,int Nsmooth){
+bool LensHaloParticles::readSizesFile(const std::string &filename,int Nsmooth
+                                      ,PosType min_size){
   
   std::ifstream myfile(filename);
   
   // find number of particles
   
+  PosType min=HUGE_VALF,max=0.0;
   if (myfile.is_open()){
     
     std::string str,label;
@@ -234,7 +256,9 @@ bool LensHaloParticles::readSizesFile(const std::string &filename,int Nsmooth){
       std::stringstream ss(str);
       
       ss >> sizes[row];
-      
+      if(min_size > sizes[row] ) sizes[row] = min_size;
+      min = min < sizes[row] ? min :  sizes[row];
+      max = max > sizes[row] ? max :  sizes[row];
       row++;
     }
     
@@ -248,8 +272,11 @@ bool LensHaloParticles::readSizesFile(const std::string &filename,int Nsmooth){
   }
   
   std::cout << Npoints << " particle sizes read from file " << filename << std::endl;
+  std::cout << "   maximun particle sizes " << max << " minimum " << min << " Mpc" << std::endl;
+  
   return true;
 }
+
 void LensHaloParticles::rotate_particles(PosType theta_x,PosType theta_y){
   
   if(theta_x == 0.0 && theta_y == 0.0) return;
@@ -280,7 +307,7 @@ void LensHaloParticles::rotate_particles(PosType theta_x,PosType theta_y){
 
 void LensHaloParticles::calculate_smoothing(int Nsmooth){
   std::cout << "Calculating smoothing of particles ..." << std::endl
-  << Nsmooth << "neighbors.  If there are a lot of particles this could take a while." << std::endl;
+  << Nsmooth << " neighbors.  If there are a lot of particles this could take a while." << std::endl;
   
   // make 3d tree of particle postions
   TreeSimple tree3d(xp,Npoints,10,3,true);

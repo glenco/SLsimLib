@@ -38,6 +38,7 @@ public:
                     ,bool recenter = false     /// re-center the coordinates to the center of mass
                     ,bool multimass = false     /** allows the particles to have different masses
                                                  , the masses for each particles must be provided as a 4th column in the particle data file */
+                    ,PosType MinPSize = 0.0    /// Minimum smoothing size of particles
                     );
   
   ~LensHaloParticles();
@@ -62,7 +63,7 @@ private:
   void smooth_(TreeSimple *tree3d,PosType **xp,float *sizes,size_t N,int Nsmooth);
 
   void readPositionFileASCII(const std::string& filename);
-  bool readSizesFile(const std::string& filename,int Nsmooth);
+  bool readSizesFile(const std::string& filename,int Nsmooth,PosType min_size);
   void writeSizes(const std::string& filename,int Nsmooth);
   
   void assignParams(InputParams& params);
@@ -70,6 +71,7 @@ private:
   PosType **xp;
   std::vector<float> masses;
   std::vector<float> sizes;
+  PosType min_size;
   bool multimass;
   
   Utilities::Geometry::SphericalPoint center;

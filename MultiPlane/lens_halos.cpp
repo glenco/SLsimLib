@@ -16,6 +16,7 @@ LensHalo::LensHalo(){
   stars_implanted = false;
   elliptical_flag = false;
   Dist = 0.0;
+  stars_N =0.0;
 }
 
 LensHalo::LensHalo(InputParams& params){
@@ -1770,15 +1771,15 @@ double LensHalo::test_average_kappa(PosType R){
 bool LensHalo::test(){
   std::cout << "test alpha's consistance with kappa by comparing mass interior to a radius by 1D integration and Gauss' law and by 2D integration" << std::endl << "  The total internal mass is " << mass << std::endl;
   
-  std::cout << "R/Rmax     R/Rsize     Mass 1 D         Mass 2 D         (m1 - m2)/m1       m2/m1" << std::endl;
+  std::cout << "R/Rmax     R/Rsize     Mass 1 D (from alpha)     Mass 2 D         (m1 - m2)/m1       m2/m1" << std::endl;
   
   int N=25;
   PosType m1,m2;
   for(int i=1;i<N;++i){
-    m1 = MassBy1DIntegation(Rmax*i/(N-4));
-    m2 = MassBy2DIntegation(Rmax*i/(N-4));
-    std::cout <<  i*1./(N-4) << "      " << Rmax/Rsize*i/(N-4) << "      " << m1 << "       "
-    << m2 << "        "<< (m1-m2)/m1 << "      " << m2/m1  << std::endl;
+    m1 = MassBy1DIntegation(Rsize*i/(N-4));
+    m2 = MassBy2DIntegation(Rsize*i/(N-4));
+    std::cout <<  i*1./(N-4) << "      " << i/(N-4) << "      " << m1 << "       "
+    << m2 << "        "<< (m1-m2)/m1 << "         " << m2/m1  << std::endl;
     
   }
   
@@ -1789,7 +1790,7 @@ bool LensHalo::test(){
   << "Not expected to be equal for asymmetric cases."<< std::endl;
   std::cout << std::endl <<"R/Rmax         R/Rsize         gamma_t       alpha/r - kappa          alpha/r           kappa        delta/gt "  << std::endl;
   for(int i=1;i<N;++i){
-    r = Rmax*i/(N-2);
+    r = Rsize*i/(N-2);
     
     PosType alpha[2] = {0,0},x[2] = {0,0};
     KappaType kappa = 0,gamma[3] = {0,0,0} ,phi=0;
@@ -1808,7 +1809,7 @@ bool LensHalo::test(){
   
   
   for(int i=1;i<N;++i){
-    r = Rmax*i/(N-2);
+    r = Rsize*i/(N-2);
     
     //integrate over t
     PosType average_gt, average_kappa;
