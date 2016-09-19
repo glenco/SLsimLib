@@ -25,8 +25,13 @@ LensHaloParticles::LensHaloParticles(
   LensHalo::setCosmology(cosmo);
   LensHalo::set_Rsize(1.0e3);
   LensHalo::set_flag_elliptical(false);
+  stars_N = 0;
+  stars_implanted = false;
+  
+  Rsize = Rmax = 1.0e3;
   
   readPositionFileASCII(simulation_filename);
+  
   sizefile = simfile + "." + std::to_string(Nsmooth) + "sizes";
   if(!readSizesFile(sizefile,Nsmooth,min_size)){
     // calculate sizes
@@ -39,6 +44,7 @@ LensHaloParticles::LensHaloParticles(
   PosType scale_factor = 1/(1+redshift);
   mass = 0.0;
   mcenter *= 0.0;
+  PosType max_mass = 0.0,min_mass = HUGE_VALF;
   for(size_t i=0;i<Npoints;++i){
     xp[i][0] *= scale_factor;
     xp[i][1] *= scale_factor;
@@ -49,26 +55,34 @@ LensHaloParticles::LensHaloParticles(
     mcenter[2] += xp[i][2]*masses[multimass*i];
     
     mass += masses[multimass*i];
+
+    max_mass = (masses[multimass*i] > max_mass) ? masses[multimass*i] : max_mass;
+    min_mass = (masses[multimass*i] < min_mass) ? masses[multimass*i] : min_mass;
   }
   
   mcenter /= mass;
   
+  std::cout << "   Particle mass range : " << min_mass << " to " << max_mass << "  ratio of : " << max_mass/min_mass << std::endl;
+  
+
   if(recenter){
+    PosType r2,r2max=0;
     for(size_t i=0;i<Npoints;++i){
       xp[i][0] -= mcenter[0];
       xp[i][1] -= mcenter[1];
       xp[i][2] -= mcenter[2];
+      
+      r2 = xp[i][0]*xp[i][0] + xp[i][1]*xp[i][1] + xp[i][2]*xp[i][2];
+      if(r2 > r2max) r2max = r2;
     }
+    
+    Rsize = sqrt(r2max);
   }
   
   // rotate positions
   rotate_particles(theta_rotate[0],theta_rotate[1]);
-
-  //std::cout << " ****** WARNING TAKE THIS TEST OUT ********** " << std::endl;
-  //multimass = false;
   
   qtree = new TreeQuad(xp,masses.data(),sizes.data(),Npoints,multimass,true,0,20);
-  
 }
 
 LensHaloParticles::~LensHaloParticles(){
@@ -95,7 +109,7 @@ void LensHaloParticles::rotate(Point_2d theta){
  * Data file must have the lines "# nparticles ***" and "# mass ***" in the header.  All header
  * lines must begin with a "# "
  *
- * Coordinates of particles are in ???? units.
+ * Coordinates of particles are in physical Mpc units.
  */
 void LensHaloParticles::readPositionFileASCII(const std::string &filename){
   
