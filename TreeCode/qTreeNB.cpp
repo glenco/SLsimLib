@@ -47,6 +47,7 @@ QTreeNB::QTreeNB(PosType **xp,IndexType *particles,IndexType nparticles
 
     Nbranches = 1;
     current = top;
+
 }
 
 /// Free treeNB. Does not free the particle positions, masses or sizes

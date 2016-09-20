@@ -260,6 +260,57 @@ protected:
 		return 0;
 	}
 
+  
+  /* cubic B-spline kernal for particle profile
+   
+   The lensing qunatities are added to and a point mass is subtacted
+  */
+  void b_spline_profile(
+                        PosType *xcm
+                        ,PosType r       // distance from center in Mpc
+                        ,PosType Mass
+                        ,PosType size    // size scale in Mpc
+                        ,PosType *alpha
+                        ,KappaType *kappa
+                        ,KappaType *gamma
+                        ,KappaType *phi
+                       ) const {
+    
+    PosType q = r/size;
+    PosType M,sigma;
+    if(q > 2){
+      sigma = 0;
+      M = 1;
+    }else{
+      PosType q2=q*q,q3=q2*q,q4=q2*q2,q5=q4*q;
+      
+      sigma = (8 - 12*q + 6*q2 - q3)/4;
+      if(q > 1){
+        sigma *= 10/size/size/7/pi;
+        M = (-1 + 20*q2*(1 - q + 3*q2/8 - q3/20) )/7;
+        *phi += Mass*(-1232. + 1200*q2 - 800.*q3 + 225.*q4 - 24*q5 + 120*log(2./q) )/840/pi;
+      }else{
+        sigma = 10*( sigma - 1 + 3*q - 3*q2 + q3)/size/size/7/pi;
+        M = 10*q2*(1 - 3*q/4 + 3*q3/10)/7;
+        
+        *phi += Mass*( phiintconst + 10*(q2/2 - 3*q4/4 + 3*q5/50)/7
+                      )/pi;
+      }
+    }
+                         
+    PosType alpha_r,gt;  // deflection * Sig_crit / Mass
+    alpha_r = (M-1)/pi/r;
+    gt = alpha_r/r - sigma;
+    
+    alpha[0] -= Mass*alpha_r*xcm[0]/r;
+    alpha[1] -= Mass*alpha_r*xcm[1]/r;
+    gamma[0] -= gt*Mass*(xcm[0]*xcm[0]-xcm[1]*xcm[1])/r/r;
+    gamma[1] -= gt*Mass*2*xcm[0]*xcm[1]/r/r;
+    *kappa += Mass*sigma;
+    *phi -= Mass*log(r)/pi;
+  }
+  
+  
 	QTreeNBHndl rotate_simulation(PosType **xp,IndexType Nparticles,IndexType *particles
 			,PosType **coord,PosType theta,float *rsph,float *mass
 			,bool MultiRadius,bool MultiMass);
@@ -271,6 +322,8 @@ protected:
 	 void walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi);
    void walkTree_iter(QTreeNB::iterator &treeit, PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma
                        ,KappaType *phi) const;
+
+  PosType phiintconst;
 
    };
 
