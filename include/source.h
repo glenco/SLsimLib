@@ -225,7 +225,11 @@ private:
 /// A uniform surface brightness circular source.
 class SourceUniform : public Source{
 public:
-	SourceUniform(InputParams& params);
+  SourceUniform(InputParams& params);
+  SourceUniform(PosType *position   /// postion on the sky in radians
+                ,PosType z          /// redshift of source
+                ,PosType radius_in_radians  /// radius of source in radians
+                );
 	~SourceUniform();
 
 	PosType SurfaceBrightness(PosType *y);
