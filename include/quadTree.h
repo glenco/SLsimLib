@@ -261,18 +261,18 @@ protected:
 	}
 
   
-  /* cubic B-spline kernal for particle profile
+  /* cubic B-spline kernel for particle profile
    
-   The lensing qunatities are added to and a point mass is subtacted
+   The lensing quantities are added to and a point mass is subtracted
   */
-  void b_spline_profile(
-                        PosType *xcm
-                        ,PosType r       // distance from center in Mpc
-                        ,PosType Mass
-                        ,PosType size    // size scale in Mpc
-                        ,PosType *alpha
-                        ,KappaType *kappa
-                        ,KappaType *gamma
+  inline void b_spline_profile(
+                        PosType *xcm       // vector in Mpc connecting ray to center of particle
+                        ,PosType r         // distance from center in Mpc
+                        ,PosType Mass      // mass in solar masses
+                        ,PosType size      // size scale in Mpc
+                        ,PosType *alpha    // deflection angle times Sigma_crit
+                        ,KappaType *kappa  // surface density
+                        ,KappaType *gamma  // shear times Sigma_crit
                         ,KappaType *phi
                        ) const {
     
@@ -310,7 +310,41 @@ protected:
     *phi -= Mass*log(r)/pi;
   }
   
-  
+  /* Exponential kernel for particle profile
+   
+   The lensing quantities are added to and a point mass is subtracted
+   */
+  inline void exponential_profile(
+                        PosType *xcm
+                        ,PosType rcm2       // distance from center in Mpc
+                        ,PosType Mass
+                        ,PosType size    // size scale in Mpc
+                        ,PosType *alpha
+                        ,KappaType *kappa
+                        ,KappaType *gamma
+                        ,KappaType *phi
+                        ) const {
+    
+    
+     PosType prefac = Mass/rcm2/pi;
+     PosType arg1 = rcm2/(size*size);
+     
+     PosType tmp = (alpha_h(arg1,size) + 1.0)*prefac;
+     alpha[0] += tmp*xcm[0];
+     alpha[1] += tmp*xcm[1];
+     
+     
+     *kappa += kappa_h(arg1,size)*prefac;
+     
+     tmp = (gamma_h(arg1,size) + 2.0)*prefac/rcm2;
+     
+     gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+     gamma[1] += xcm[0]*xcm[1]*tmp;
+     
+    // TODO: makes sure the normalization of phi_h agrees with this
+    //*phi += (phi_h(arg1,size) + 0.5*log(rcm2))*prefac*rcm2;
+  }
+
 	QTreeNBHndl rotate_simulation(PosType **xp,IndexType Nparticles,IndexType *particles
 			,PosType **coord,PosType theta,float *rsph,float *mass
 			,bool MultiRadius,bool MultiMass);

@@ -692,26 +692,6 @@ void TreeQuad::walkTree_iter(
               {
                 
                 b_spline_profile(xcm,sqrt(rcm2),masses[MultiMass*tmp_index],size,alpha,kappa,gamma,phi);
-                /*
-                prefac = masses[MultiMass*tmp_index]/rcm2/pi;
-                arg1 = rcm2/(size*size);
-
-                tmp = (alpha_h(arg1,size) + 1.0)*prefac;
-							  alpha[0] += tmp*xcm[0];
-							  alpha[1] += tmp*xcm[1];
-                
-    
-                *kappa += kappa_h(arg1,size)*prefac;
-                  
-                tmp = (gamma_h(arg1,size) + 2.0)*prefac/rcm2;
-                  
-                gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
-                gamma[1] += xcm[0]*xcm[1]*tmp;
-                
-                */
-                  // TODO: makes sure the normalization of phi_h agrees with this
-                //*phi += (phi_h(arg1,size) + 0.5*log(rcm2))*prefac*rcm2;
-                
 						  }
 					  }
 				  }
@@ -935,27 +915,6 @@ void TreeQuad::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alph
               
               b_spline_profile(xcm,sqrt(rcm2),masses[MultiMass*tmp_index],size,alpha,kappa,gamma,phi);
               
-              /*
-              prefac = masses[MultiMass*tmp_index]/rcm2/pi;
-              arg1 = rcm2/(size*size);
-              arg2 = size;
-              
-							tmp = (alpha_h(arg1,arg2) + 1.0)*prefac;
-							alpha[0] += tmp*xcm[0];
-							alpha[1] += tmp*xcm[1];
-              
-							
-              *kappa += kappa_h(arg1,arg2)*prefac;
-                
-              tmp = (gamma_h(arg1,arg2) + 2.0)*prefac/rcm2;
-                
-              gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
-              gamma[1] += xcm[0]*xcm[1]*tmp;
-                
-                // TODO: makes sure the normalization of phi_h agrees with this
-              *phi += (phi_h(arg1,arg2) + 0.5*log(rcm2))*prefac*rcm2;
-
-              */
 						}
 					}
 				}
