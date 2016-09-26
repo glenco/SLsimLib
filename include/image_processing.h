@@ -31,7 +31,8 @@ class PixelMap
 public:
 	PixelMap(const PixelMap& pmap, double res_ratio);
 	PixelMap();
-	PixelMap(const PixelMap& other);
+  PixelMap(const PixelMap& other);
+  PixelMap(PixelMap&& other);
 	PixelMap(const PixelMap& pmap, const double* center, std::size_t Npixels);
 	PixelMap(const double* center, std::size_t Npixels, double resolution);
 	PixelMap(const double* center, std::size_t Nx, std::size_t Ny, double resolution);
@@ -39,7 +40,7 @@ public:
 	~PixelMap();
 	
 	PixelMap& operator=(PixelMap other);
-	
+  
 	inline bool valid() const { return map.size(); };
 	inline std::size_t size() const { return map.size(); };
 	
@@ -135,6 +136,8 @@ public:
   
   /// return average pixel value
   PosType ave() const;
+  /// return sum of all pixel values
+  PosType sum() const;
   /// Total number of pixels
   size_t size(){return map.size();}
 	
@@ -254,6 +257,28 @@ public:
     return pixel_index.size();
   }
   
+  /// reflects the image about the horizontal mid-line
+  void flipY(){
+    for(size_t i=0;i<Nx;++i){
+      for(size_t j=0;j<(Ny-1)/2;++j){
+        std::swap( map[i + Nx*j],map[i + Nx*(Ny-j-1)] );
+      }
+    }
+  }
+  /// reflects the image about the vertical mid-line
+  void flipX(){
+    for(size_t i=0;i<(Nx-1)/2;++i){
+      for(size_t j=0;j<Ny;++j){
+        std::swap( map[i + Nx*j],map[Nx-i-1 + Nx*j] );
+      }
+    }
+  }
+  /// rotate the image by 180deg or equivalently reflect it through the origin
+  void doubleFlip(){
+    flipX();
+    flipY();
+  }
+  
 private:
 	std::valarray<double> map;
   void AddGrid_(const PointList &list,LensingVariable val);
@@ -339,8 +364,9 @@ public:
   float getBackgroundNoise(float resolution, unitType unit = counts_x_sec);
 	std::valarray<double> getPSF(){return map_psf;}
   void setPSF(std::string psf_file, float os = 1.);
-	PixelMap Convert (PixelMap &map, bool psf, bool noise,long *seed, unitType unit = counts_x_sec);
-	PixelMap Convert_back (PixelMap &map);
+	PixelMap Convert(PixelMap &map, bool psf, bool noise,long *seed, unitType unit = counts_x_sec);
+  double flux_convertion_factor();
+	PixelMap Convert_back(PixelMap &map);
     void setExpTime(float time){exp_time = time;}
 
 private:

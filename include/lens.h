@@ -278,12 +278,17 @@ private: /* generation */
 	/// computes the distribution variables for field halos as specified in the parameter file
   /// this material was before computed in createFieldHalos
   void ComputeHalosDistributionVariables ();
-	void createFieldHalos(bool verbose);
+  
+  enum DM_Light_Division {All_DM,Moster};
+
+	void createFieldHalos(bool verbose,DM_Light_Division division = Moster);
   
 	/// read field halo data in from a file in Millennium output format
-	void readInputSimFileMillennium(bool verbose);
+	void readInputSimFileMillennium(bool verbose,DM_Light_Division division = Moster);
+  
 	/// read field halo data in from a file in MultiDarkHalos output format
-	void readInputSimFileMultiDarkHalos(bool verbose);
+	void readInputSimFileMultiDarkHalos(bool verbose,DM_Light_Division division = Moster);
+  
   /// read field halo data in from a file in Cabriel Caminha's input format 
   void readInputSimFileObservedGalaxies(bool verbose);
   

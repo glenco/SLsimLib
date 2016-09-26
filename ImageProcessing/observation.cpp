@@ -280,21 +280,27 @@ void Observation::setPSF(std::string psf_file, float os)
  */
 PixelMap Observation::Convert (PixelMap &map, bool psf, bool noise, long *seed, unitType unit)
 {
-	if (telescope == true && fabs(map.getResolution()-pix_size) > pix_size*1.0e-5)
-	{
-		std::cout << "The resolution of the input map is different from the one of the simulated instrument in Observation::Convert!" << std::endl;
-		throw std::runtime_error("The resolution of the input map is different from the one of the simulated instrument!");
-	}
-	PixelMap outmap = PhotonToCounts(map);
-	if (psf == true)  outmap = ApplyPSF(outmap);
-	if (noise == true) outmap = AddNoise(outmap,seed);
-    
-    if (unit == flux)
-    {
-        double counts_to_flux = pow(10,-0.4*mag_zeropoint);
-        outmap.Renormalize(counts_to_flux);
-    }
-	return outmap;
+  if (telescope == true && fabs(map.getResolution()-pix_size) > pix_size*1.0e-5)
+  {
+    std::cout << "The resolution of the input map is different from the one of the simulated instrument in Observation::Convert!" << std::endl;
+    throw std::runtime_error("The resolution of the input map is different from the one of the simulated instrument!");
+  }
+  PixelMap outmap = PhotonToCounts(map);
+  if (psf == true)  outmap = ApplyPSF(outmap);
+  if (noise == true) outmap = AddNoise(outmap,seed);
+  
+  if (unit == flux)
+  {
+    double counts_to_flux = pow(10,-0.4*mag_zeropoint);
+    outmap.Renormalize(counts_to_flux);
+  }
+  return outmap;
+}
+
+/// returns factor by which code image units need to be multiplied by to get flux units
+double Observation::flux_convertion_factor()
+{
+  return pow(10,-0.4*mag_zeropoint);
 }
 
 /// Converts an observed image to the units of the lensing simulation

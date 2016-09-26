@@ -74,9 +74,34 @@ PixelMap::PixelMap(const PixelMap& other)
 Nx(other.Nx), Ny(other.Ny), resolution(other.resolution), rangeX(other.rangeX), rangeY(other.rangeY)
 {
   std::copy(other.center, other.center + 2, center);
-  
   std::copy(other.map_boundary_p1, other.map_boundary_p1 + 2, map_boundary_p1);
   std::copy(other.map_boundary_p2, other.map_boundary_p2 + 2, map_boundary_p2);
+}
+
+// move constructor
+PixelMap::PixelMap(PixelMap&& other)
+:Nx(0),Ny(0),map(std::move(other.map)),resolution(0), rangeX(0), rangeY(0){
+ 
+  Nx = other.Nx;
+  Ny = other.Ny;
+  resolution = other.resolution;
+  rangeX = other.rangeX;
+  rangeY = other.rangeY;
+  std::copy(other.center, other.center + 2, center);
+  std::copy(other.map_boundary_p1, other.map_boundary_p1 + 2, map_boundary_p1);
+  std::copy(other.map_boundary_p2, other.map_boundary_p2 + 2, map_boundary_p2);
+  
+  other.Nx = 0;
+  other.Ny = 0;
+  other.resolution = 0;
+  other.center[0] = 0;
+  other.center[1] = 0;
+  
+  other.map_boundary_p1[0] = 0;
+  other.map_boundary_p1[1] = 0;
+  other.map_boundary_p2[0] = 0;
+  other.map_boundary_p2[1] = 0;
+
 }
 
 /// make square PixelMap
@@ -314,9 +339,10 @@ PixelMap::~PixelMap()
 
 PixelMap& PixelMap::operator=(PixelMap other)
 {
-  PixelMap::swap(*this, other);
+  if(this != &other) PixelMap::swap(*this, other);
   return *this;
 }
+
 
 void PixelMap::swap(PixelMap &map1,PixelMap &map2)
 {
@@ -443,11 +469,14 @@ PixelMap operator*(const PixelMap& a, PosType b)
 }
 
 PosType PixelMap::ave() const{
+  return sum()/map.size();
+}
+PosType PixelMap::sum() const{
   PosType tmp=0;
   for(size_t i=0;i<map.size();++i){
     tmp += map[i];
   }
-  return tmp/map.size();
+  return tmp;
 }
 
 
