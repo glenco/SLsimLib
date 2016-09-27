@@ -1604,6 +1604,7 @@ void Utilities::ReadFileNames(
                               std::string dir              /// path to directory containing fits files
                               ,const std::string filespec /// string of charactors in file name that are matched. It can be an empty string.
                               ,std::vector<std::string> & filenames  /// output vector of PixelMaps
+                              ,const std::string file_non_spec /// string of charactors in file name that file must not have. 
                               ,bool verbose){
   
   DIR *dp = opendir( dir.c_str() );
@@ -1627,7 +1628,8 @@ void Utilities::ReadFileNames(
     if (S_ISDIR( filestat.st_mode ))         continue;
     
     filename = dirp->d_name;
-    if(filename.find(filespec) !=  std::string::npos){
+    if(filename.find(filespec) !=  std::string::npos &&
+       filename.find(file_non_spec) ==  std::string::npos ){
       if(verbose) std::cout << "adding " << filepath << std::endl;
       filenames.push_back(filename);
     }
