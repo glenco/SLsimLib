@@ -19,6 +19,13 @@ SourceUniform::SourceUniform(InputParams& params) : Source(){
   assignParams(params);
 }
 
+SourceUniform::SourceUniform(PosType MySource_r, PosType MySource_x, PosType MySource_y, PosType MySource_z) : Source() {
+  source_r = MySource_r ;
+  source_x[0] = MySource_x ;
+  source_x[1] = MySource_y ;
+  zsource = MySource_z ;
+} ;
+
 SourceGaussian::SourceGaussian(InputParams& params) : Source(){
   assignParams(params);
 }

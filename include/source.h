@@ -166,6 +166,7 @@ private:
 /// A uniform surface brightness circular source.
 class SourceUniform : public Source{
 public:
+  SourceUniform(PosType MySource_r, PosType MySource_x, PosType MySource_y, PosType MySource_z);
 	SourceUniform(InputParams& params);
 	~SourceUniform();
 
