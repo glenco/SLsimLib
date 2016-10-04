@@ -212,7 +212,20 @@ Observation::Observation(float diameter, float transmission, float exp_time, int
 
 #ifdef ENABLE_FITS
 
-	std::auto_ptr<CCfits::FITS> fp (new CCfits::FITS (psf_file.c_str(), CCfits::Read));
+	//std::auto_ptr<CCfits::FITS> fp (new CCfits::FITS (psf_file.c_str(), CCfits::Read));
+      
+      std::auto_ptr<CCfits::FITS> fp(0);
+      try
+      {
+        fp.reset( new CCfits::FITS (psf_file.c_str(), CCfits::Read) );
+      }
+      catch (CCfits::FITS::CantOpen)
+      {
+        std::cerr << "Cannot open " << psf_file << std::endl;
+        exit(1);
+      }
+
+      
 	CCfits::PHDU *h0=&fp->pHDU();
 	int side_psf = h0->axis(0);
 	int N_psf = side_psf*side_psf;
@@ -230,7 +243,19 @@ Observation::Observation(float diameter, float transmission, float exp_time, int
 void Observation::setPSF(std::string psf_file, float os)
 {
 #ifdef ENABLE_FITS
-    std::auto_ptr<CCfits::FITS> fp (new CCfits::FITS (psf_file.c_str(), CCfits::Read));
+   // std::auto_ptr<CCfits::FITS> fp (new CCfits::FITS (psf_file.c_str(), CCfits::Read));
+ 
+  std::auto_ptr<CCfits::FITS> fp(0);
+  try
+  {
+    fp.reset( new CCfits::FITS (psf_file.c_str(), CCfits::Read) );
+  }
+  catch (CCfits::FITS::CantOpen)
+  {
+    std::cerr << "Cannot open " << psf_file << std::endl;
+    exit(1);
+  }
+
 	CCfits::PHDU *h0=&fp->pHDU();
 	int side_psf = h0->axis(0);
 	int N_psf = side_psf*side_psf;
@@ -484,7 +509,7 @@ PixelMap Observation::AddNoise(PixelMap &pmap,long *seed)
 	return outmap;
 }
 
-/// Translates photon flux (in photons/(cm^2*Hz)) into telescope pixel counts
+/// Translates photon flux (in 1/(s*cm^2*Hz*hplanck)) into telescope pixel counts
 PixelMap Observation::PhotonToCounts(PixelMap &pmap)
 {
 	PixelMap outmap(pmap);

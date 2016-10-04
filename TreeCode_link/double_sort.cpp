@@ -254,6 +254,19 @@ namespace Utilities{
   }
 
   void quicksort(unsigned long *particles,PosType *arr,unsigned long N){
+    
+    std::vector<size_t> index(N);
+    
+    Utilities::sort_indexes(arr,index,N);
+    
+    Utilities::apply_permutation(particles,index);
+    Utilities::apply_permutation(arr,index);
+    
+    //std::cout << arr[0] << " " << arr[1] << " " << arr[2] << std::endl;
+    assert(arr[0] <= arr[N-1]);
+    return;
+
+    
     PosType pivotvalue;
     unsigned long pivotindex,newpivotindex,i;
     

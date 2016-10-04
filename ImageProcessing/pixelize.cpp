@@ -20,6 +20,7 @@
 #include "image_processing.h"
 #include "point.h"
 #include "source.h"
+#include "gridmap.h"
 
 #if __cplusplus < 201103L
 template<typename T>
@@ -130,7 +131,19 @@ PixelMap::PixelMap(
   if(fitsfilename.empty())
     throw std::invalid_argument("Please enter a valid filename for the FITS file input");
   
-  std::auto_ptr<CCfits::FITS> fp(new CCfits::FITS(fitsfilename, CCfits::Read));
+  //std::auto_ptr<CCfits::FITS> fp(new CCfits::FITS(fitsfilename, CCfits::Read));
+  
+  std::auto_ptr<CCfits::FITS> fp(0);
+  try
+  {
+    fp.reset( new CCfits::FITS (fitsfilename, CCfits::Read) );
+  }
+  catch (CCfits::FITS::CantOpen)
+  {
+    std::cerr << "Cannot open " << fitsfilename << std::endl;
+    exit(1);
+  }
+
   
   CCfits::PHDU& h0 = fp->pHDU();
   
@@ -301,8 +314,28 @@ PixelMap::~PixelMap()
 
 PixelMap& PixelMap::operator=(PixelMap other)
 {
-  swap(*this, other);
+  PixelMap::swap(*this, other);
   return *this;
+}
+
+void PixelMap::swap(PixelMap &map1,PixelMap &map2)
+{
+
+  std::swap(map1.map,map2.map);
+  std::swap(map1.Nx,map2.Ny);
+  std::swap(map1.resolution,map2.resolution);
+  std::swap(map1.rangeX,map2.rangeX);
+  std::swap(map1.rangeY,map2.rangeY);
+  std::swap(map1.center[0],map2.center[0]);
+  std::swap(map1.center[1],map2.center[1]);
+
+  std::swap(map1.map_boundary_p1[0],map2.map_boundary_p1[0]);
+  std::swap(map1.map_boundary_p1[1],map2.map_boundary_p1[1]);
+
+  std::swap(map1.map_boundary_p2[0],map2.map_boundary_p2[0]);
+  std::swap(map1.map_boundary_p2[1],map2.map_boundary_p2[1]);
+
+  return;
 }
 
 /// Zero the whole map
@@ -475,6 +508,16 @@ void PixelMap::AddImages(
   AddImages(imageinfo.data(),Nimages,rescale);
 }
 
+/*
+void PixelMap::AddImages(const GridMap &map){
+  Point_2d x;
+  for(size_t i=0; i < map.getNumberOfPoints(); ++i){
+    Utilities::PositionFromIndex(i,x.x,map.getInitNgrid(),map.getXRange,center);
+  }
+}
+*/
+
+
 /** \brief Add images with uniform surface brightness set by input parameter value.
  *
  *   This does not use the surface brightnesses stored in the image points.
@@ -553,6 +596,82 @@ bool PixelMap::inMapBox(PosType * x) const{
   return true;
 }
 
+bool PixelMap::pixels_are_neighbors(size_t i,size_t j) const{
+  
+  long x = i%Nx - j%Nx;
+  if(std::abs(x) > 1) return false;
+  x = i/Nx - j/Nx;
+  if(std::abs(x) > 1) return false;
+  return true;
+}
+
+int PixelMap::count_islands(std::list<size_t> &pixel_index,std::vector<std::list<size_t>::iterator> &heads) const{
+  
+  heads.clear();
+  if(pixel_index.size() == 0) return 0;
+  
+  if(pixel_index.size() == 1){
+    heads.push_back(pixel_index.begin());
+    return 1;
+  }
+  
+  
+  int ngroups = 0;
+  pixel_index.sort();
+  
+  if(pixel_index.back() > Nx*Ny ){
+    throw std::invalid_argument("index out of range");
+  }
+  
+  size_t current;
+  std::list<size_t>::iterator group = pixel_index.begin();
+  
+  while(group != pixel_index.end()){
+    heads.push_back(group);
+    current = *group;
+    ++group;
+    _count_islands_(current, pixel_index, group);
+    
+    ++ngroups;
+  }
+  
+  heads.push_back(pixel_index.end());
+  
+  assert(ngroups == heads.size()-1);
+  
+  return ngroups;
+}
+
+void PixelMap::_count_islands_(size_t current,std::list<size_t> &reservoir
+                     ,std::list<size_t>::iterator &group) const{
+  
+  std::list<size_t>::iterator it = group;
+  
+  size_t imax = current + Nx + 1;  // maximum value of an index that can be a neighbor to current
+  
+  while( it != reservoir.end() && *it <= imax){
+    if(pixels_are_neighbors(current,*it)){
+
+      size_t tmp = *it;
+
+      if(group == it){
+        ++group;
+      }else{
+        reservoir.erase(it);
+        reservoir.insert(group,tmp);
+      }
+      
+      _count_islands_(tmp,reservoir,group);
+      it = group;
+      while(*it <= tmp && it != reservoir.end() ) ++it;  // skip forward to the next on in the list that hasn't been tested
+    }else{
+      ++it;
+    }
+  }
+  return;
+}
+
+
 //// Finds the area of the intersection between pixel i and branch1
 PosType PixelMap::LeafPixelArea(IndexType i,Branch * branch1){
   PosType area=0;
@@ -616,8 +735,19 @@ void PixelMap::printFITS(std::string filename, bool verbose) const
   long naxes[2] = {(long)Nx, (long)Ny};
   
   // might throw CCfits::FITS::CantCreate
-  std::auto_ptr<CCfits::FITS> fout(new CCfits::FITS(filename, FLOAT_IMG, naxis, naxes));
-  
+  //std::auto_ptr<CCfits::FITS> fout(new CCfits::FITS(filename, FLOAT_IMG, naxis, naxes));
+
+  std::auto_ptr<CCfits::FITS> fout(0);
+  try
+  {
+    fout.reset( new CCfits::FITS(filename, FLOAT_IMG, naxis, naxes) );
+  }
+  catch (CCfits::FITS::CantOpen)
+  {
+    std::cerr << "Cannot open " << filename << std::endl;
+    exit(1);
+  }
+
   std::vector<long> naxex(2);
   naxex[0] = Nx;
   naxex[1] = Ny;
@@ -667,7 +797,19 @@ void PixelMap::printFITS(std::string filename,std::vector<std::tuple<std::string
   long naxes[2] = {(long)Nx, (long)Ny};
 
   // might throw CCfits::FITS::CantCreate
-  std::auto_ptr<CCfits::FITS> fout(new CCfits::FITS(filename, FLOAT_IMG, naxis, naxes));
+  //std::auto_ptr<CCfits::FITS> fout(new CCfits::FITS(filename, FLOAT_IMG, naxis, naxes));
+  
+  std::auto_ptr<CCfits::FITS> fout(0);
+  try
+  {
+    fout.reset( new CCfits::FITS(filename, FLOAT_IMG, naxis, naxes) );
+  }
+  catch (CCfits::FITS::CantOpen)
+  {
+    std::cerr << "Cannot open " << filename << std::endl;
+    exit(1);
+  }
+
   
   std::vector<long> naxex(2);
   naxex[0] = Nx;
@@ -856,7 +998,6 @@ void PixelMap::drawdisk(
 ){
   
   PosType x1[2],x2[2];
-  PosType N = double(Nstrip);
   
   // To do the circle (easy) :
   // ========================
@@ -865,13 +1006,19 @@ void PixelMap::drawdisk(
   // To fill the circle :
   // ====================
   
-  for(float theta = 0; theta < 2*pi; theta += pi/N){
+/*  for(float theta = 0; theta < 2*pi; theta += pi/N){
     x1[0] = r_center[0] - radius*cos(theta);
     x2[0] = r_center[0] + radius*cos(theta);
     x1[1] = x2[1] = r_center[1] + radius*sin(theta);
     drawline(x1,x2,value);
   }
-  
+  */
+  for(float y = -radius + resolution/2 ; y <= radius; y += resolution){
+    x1[0] = sqrt(radius*radius - y*y) + r_center[0];
+    x2[0] = -sqrt(radius*radius - y*y) + r_center[0];
+    x1[1] = x2[1] = r_center[1] + y;
+    drawline(x1,x2,value);
+  }
   return;
 }
 
@@ -1502,7 +1649,6 @@ long PixelMap::find_index(PosType const x[],long &ix,long &iy){
   
   return ix + Nx*iy;
 }
-
 /// get the index for a position, returns -1 if out of map
 long PixelMap::find_index(PosType const x,PosType const y,long &ix,long &iy){
   
@@ -1523,7 +1669,6 @@ long PixelMap::find_index(PosType const x,PosType const y,long &ix,long &iy){
   
   return ix + Nx*iy;
 }
-
 /// get the index for a position, returns -1 if out of map
 long PixelMap::find_index(PosType const x[]){
   long ix,iy;
@@ -1759,14 +1904,109 @@ void MultiGridSmoother::smooth(int Nsmooth,PixelMap &map){
   
 }
 
-void PixelMap::AddSource(Source &source){
+PosType PixelMap::AddSource(Source &source){
+  Point_2d s_center;
+  source.getX(s_center);
+  
+  if( s_center[0] + source.getRadius() < map_boundary_p1[0] ) return 0.0;
+  if( s_center[0] - source.getRadius() > map_boundary_p2[0] ) return 0.0;
+  if( s_center[1] + source.getRadius() < map_boundary_p1[1] ) return 0.0;
+  if( s_center[1] - source.getRadius() > map_boundary_p2[1] ) return 0.0;
+
   PosType y[2];
+  PosType tmp = resolution*resolution;
+  PosType total = 0;
+  
+  
   for(size_t index =0 ;index < map.size(); ++index){
     find_position(y,index);
-    map[index] = source.SurfaceBrightness(y);
+    map[index] += source.SurfaceBrightness(y)*tmp;
+    total += source.SurfaceBrightness(y)*tmp;
   }
+  
+  return total;
 }
 
+PosType PixelMap::AddSource(Source &source,int oversample){
+  Point_2d s_center;
+  source.getX(s_center);
+  
+  if( s_center[0] + source.getRadius() < map_boundary_p1[0] ) return 0.0;
+  if( s_center[0] - source.getRadius() > map_boundary_p2[0] ) return 0.0;
+  if( s_center[1] + source.getRadius() < map_boundary_p1[1] ) return 0.0;
+  if( s_center[1] - source.getRadius() > map_boundary_p2[1] ) return 0.0;
+
+  PosType y[2],x[2],bl;
+  PosType tmp_res = resolution*1.0/oversample;
+  PosType tmp = tmp_res*tmp_res;
+  PosType total = 0.0;
+  
+  bl = resolution /2 - 0.5*tmp_res;
+  
+  for(size_t index =0 ;index < map.size(); ++index){
+    find_position(y,index);
+    y[0] -= bl;
+    y[1] -= bl;
+    for(int i = 0 ; i < oversample ; ++i){
+      x[0] = y[0] + i*tmp_res;
+      for(int j=0; j < oversample;++j){
+        x[1] = y[1] + j*tmp_res;
+        map[index] += source.SurfaceBrightness(x)*tmp;
+        total += source.SurfaceBrightness(x)*tmp;
+      }
+    }
+  }
+  return total;
+}
+
+/*
+void PixelMap::AddSource(Source &source,int oversample){
+  Point_2d s_center;
+  source.getX(s_center);
+  
+  if( s_center[0] + source.getRadius() < map_boundary_p1[0] ) return;
+  if( s_center[0] - source.getRadius() > map_boundary_p2[0] ) return;
+  if( s_center[1] + source.getRadius() < map_boundary_p1[1] ) return;
+  if( s_center[1] - source.getRadius() > map_boundary_p2[1] ) return;
+  
+  PosType tmp_res = resolution*1.0/oversample;
+  PosType tmp = resolution;
+  
+  Point_2d dx,y;
+  PosType r = source.getRadius();
+  
+  map[find_index(s_center[0],s_center[1])] += source.SurfaceBrightness(s_center.x)*tmp;
+  
+  dx[0] = 0;
+  for(dx[1] = r/oversample ; dx[1] <= r; dx[1] += r/oversample){
+      y = s_center + dx;
+      map[find_index(y[0],y[1])] += source.SurfaceBrightness(y.x)*tmp;
+      y = s_center - dx;
+      map[find_index(y[0],y[1])] += source.SurfaceBrightness(y.x)*tmp;
+  }
+  
+  for(dx[0] = r/oversample; dx[0] <= source.getRadius() ; dx[0] += r/oversample ){
+    
+    PosType range = sqrt(r*r - dx[0]*dx[0]);
+    for(dx[1] = 0 ; dx[1] <= range; dx[1] += r/oversample){
+      y = s_center + dx;
+      map[find_index(y[0],y[1])] += source.SurfaceBrightness(y.x)*tmp;
+      y = s_center - dx;
+      map[find_index(y[0],y[1])] += source.SurfaceBrightness(y.x)*tmp;
+    }
+  }
+  
+  for(dx[0] = -r/oversample; dx[0] >= -source.getRadius() ; dx[0] -= r/oversample ){
+    PosType range = sqrt(r*r - dx[0]*dx[0]);
+    for(dx[1] = r/oversample ; dx[1] <= range; dx[1] += r/oversample){
+      y = s_center + dx;
+      map[find_index(y[0],y[1])] += source.SurfaceBrightness(y.x)*tmp;
+      y = s_center - dx;
+      map[find_index(y[0],y[1])] += source.SurfaceBrightness(y.x)*tmp;
+    }
+  }
+}
+*/
 
 
 

@@ -1004,6 +1004,7 @@ namespace Utilities
   ){
     T tmp;
     size_t ran_t;
+    if(vec.size() < 2) return;
     for (size_t i = vec.size()-1; i>0; --i) {
       ran_t = (size_t)(ran()*(i+1));
       tmp = vec[ran_t];
@@ -1025,6 +1026,62 @@ namespace Utilities
     // sort indexes based on comparing values in v
     std::sort(index.begin(), index.end(),
               [&v](size_t i1, size_t i2) {return v[i1] < v[i2];});
+  }
+  
+  template <typename T>
+  void sort_indexes(const T *v     /// the original data that is not changed
+                    ,std::vector<size_t> &index /// vector of indexes that if put into v will sort it
+                    ,size_t N) {
+    
+    // initialise original index locations
+    index.resize(N);
+
+    for (size_t i = 0; i != index.size(); ++i) index[i] = i;
+    
+    // sort indexes based on comparing values in v
+    std::sort(index.begin(), index.end(),
+              [v](size_t i1, size_t i2) {return v[i1] < v[i2];});
+  }
+
+  /// Find the indexes that sort a vector in descending order
+  template <typename T>
+  void sort_indexes_decending(const std::vector<T> &v     /// the original data that is not changed
+                    ,std::vector<size_t> &index /// vector of indexes that if put into v will sort it
+  ) {
+    
+    // initialise original index locations
+    index.resize(v.size());
+    for (size_t i = 0; i != index.size(); ++i) index[i] = i;
+    
+    // sort indexes based on comparing values in v
+    std::sort(index.begin(), index.end(),
+              [&v](size_t i1, size_t i2) {return v[i1] > v[i2];});
+  }
+
+  
+  // reorders vec according to index p
+  template <typename T>
+  void apply_permutation(
+                         T *vec,
+                         const std::vector<std::size_t>& p)
+  {
+    std::vector<T> copy(p.size());
+    
+    for(std::size_t i = 0; i < p.size(); ++i){
+      copy[i] = vec[i];
+    }
+    
+    for(std::size_t i = 0; i < p.size(); ++i){
+      vec[i] = copy[p[i]];
+    }
+  }
+
+  template <typename T>
+  void apply_permutation(
+                                  std::vector<T>& vec,
+                                  const std::vector<std::size_t>& p)
+  {
+    apply_permutation(vec.data(),p);
   }
   
 #ifdef ENABLE_FFTW
@@ -1052,14 +1109,18 @@ namespace Utilities
    The
    **/
   std::valarray<double> AdaptiveSmooth(const std::valarray<double> &map_in,size_t Nx,size_t Ny,double value);
+  
   /** \brief Smooth a 2 dimensional map stored in a valarray with a density dependent kernel.
    
    The smoothing is done by finding the circle around each point whose total pixel values are larger than value.  In the case of a density map made from particles if value = (mass of particle)*(number of neighbours) an approximate N nearest neighbour smoothing is done.
    **/
   std::vector<double> AdaptiveSmooth(const std::vector<double> &map_in,size_t Nx,size_t Ny,double value);
 
+  /// returns the compiler variable N_THREADS that is maximum number of threads to be used.
+  int GetNThreads();
   
-  /// Read in data from an ASCII file with two columns
+  /** \brief Read in data from an ASCII file with two columns
+   */
   template <class T1,class T2>
   void read2columnfile(
                        std::string filename    /// input file name
@@ -1130,6 +1191,108 @@ namespace Utilities
       if(verbose)  std::cout << myt2 << std::endl;
       y.push_back(myt2);
       
+      strg.clear();
+      buffer.clear();
+      myline.clear();
+      
+    }
+    std::cout << "Read " << x.size() << " lines from " << filename << std::endl;
+  }
+  /** \brief Read in data from an ASCII file with three columns
+   */
+  template <class T1,class T2,class T3>
+  void read3columnfile(
+                       std::string filename    /// input file name
+                       ,std::vector<T1> &x     /// vector that will contain the first column
+                       ,std::vector<T2> &y     /// vector that will contain the first column
+                       ,std::vector<T3> &z     /// vector that will contain the first column
+                       ,std::string delineator = " "  /// specific string the seporates columns, ex. ",", "|", etc.
+                       ,bool verbose = false
+                       
+                       ){
+    
+    
+    assert(0); // Untested!!!!
+    x.clear();
+    y.clear();
+    z.clear();
+    
+    std::ifstream file_in(filename.c_str());
+    std::string myline;
+    std::string space = " ";
+    T1 myt1;
+    T2 myt2;
+    T3 myt3;
+    
+    std::string strg;
+    std::stringstream buffer;
+    
+    if(!file_in){
+      std::cout << "Can't open file " << filename << std::endl;
+      ERROR_MESSAGE();
+      throw std::runtime_error(" Cannot open file.");
+    }
+    
+    std::cout << "Reading caustic information from " << filename << std::endl;
+    size_t i=0;
+    while(file_in.peek() == '#'){
+      file_in.ignore(10000,'\n');
+      ++i;
+    }
+    std::cout << "skipped "<< i << " comment lines in " << filename << std::endl;
+    
+    size_t pos;
+    // read in data
+    while(getline(file_in,myline)){
+      
+      if(myline[0] == '#'){
+        std::cout << "skipped line " << i << std::endl;
+        continue;
+      }
+      
+      pos= myline.find_first_not_of(space);
+      myline.erase(0,pos);
+      
+      
+      pos = myline.find(delineator);
+      strg.assign(myline,0,pos);
+      buffer << strg;
+      buffer >> myt1;
+      if(verbose) std::cout << myt1 << " ";
+      x.push_back(myt1);
+      
+      myline.erase(0,pos+1);
+      pos= myline.find_first_not_of(space);
+      myline.erase(0,pos);
+      
+      strg.clear();
+      buffer.clear();
+
+      // ******************
+      
+      
+      pos = myline.find(space);
+      strg.assign(myline,0,pos);
+      buffer << strg;
+      buffer >> myt2;
+      if(verbose)  std::cout << myt2 << std::endl;
+      y.push_back(myt2);
+
+      myline.erase(0,pos+1);
+      pos= myline.find_first_not_of(space);
+      myline.erase(0,pos);
+      
+      strg.clear();
+      buffer.clear();
+      
+      // ******************
+      pos = myline.find(space);
+      strg.assign(myline,0,pos);
+      buffer << strg;
+      buffer >> myt3;
+      if(verbose)  std::cout << myt3 << std::endl;
+      y.push_back(myt3);
+
       strg.clear();
       buffer.clear();
       myline.clear();

@@ -24,15 +24,35 @@ public:
     source_r = source_x[0] = source_x[1] = zsource = 0;
     setSBlimit_magarcsec(30.);
   };
+  
+  virtual ~Source();
 
-	virtual ~Source();
+  Source(const Source &s):
+    source_r(s.source_r),
+    source_x(s.source_x),
+    zsource(s.zsource),
+    DlDs(s.DlDs),
+    sb_limit(s.sb_limit){}
+  
+  Source & operator=(const Source &s){
+    if(this == &s) return *this;
+    source_r = s.source_r;
+    source_x = s.source_x;
+    zsource = s.zsource;
+    DlDs = s.DlDs;
+    sb_limit = s.sb_limit;
+    
+    return *this;
+  }
+
+
 	
 	// in lens.cpp
 	// TODO: make SurfaceBrightness take a const double*
 	/// Surface brightness of source in grid coordinates not source centered coordinates.
-	virtual PosType SurfaceBrightness(PosType *y) = 0;
-	virtual PosType getTotalFlux() = 0;
-	virtual void printSource() = 0;
+  virtual PosType SurfaceBrightness(PosType *y) = 0;
+  virtual PosType getTotalFlux() const = 0;
+  virtual void printSource() = 0;
 
 	/// Gets sb_limit in erg/cm^2/sec/rad^2/Hz
 	PosType getSBlimit(){return sb_limit;}
@@ -41,17 +61,23 @@ public:
 	
 	// accessor functions that will sometimes be over ridden in class derivatives
 	/// Redshift of source
-	virtual inline PosType getZ(){return zsource;}
+	virtual inline PosType getZ() const {return zsource;}
 	virtual void setZ(PosType my_z){zsource = my_z;}
 	/// Radius of source in radians
-	virtual inline PosType getRadius(){return source_r;}
+	virtual inline PosType getRadius() const {return source_r;}
   /// Reset the radius of the source in radians
 	virtual void setRadius(PosType my_radius){source_r = my_radius;}
-	/// position of source in radians
-	virtual inline PosType* getX(){return source_x.x;}
+  /// position of source in radians
+  virtual inline PosType* getX(){return source_x.x;}
+  /// position of source in radians
+  virtual inline void getX(PosType *x) const {x[0] = source_x.x[0]; x[1] = source_x.x[0];}
+  /// position of source in radians
+  virtual inline void getX(Point_2d &x) const {x = source_x;}
+  
   /// Reset the position of the source in radians
 	virtual inline void setX(PosType *xx){source_x[0] = xx[0]; source_x[1] = xx[1];}
-	void setX(PosType my_x,PosType my_y){source_x[0] = my_x; source_x[1] = my_y;}
+	virtual void setX(PosType my_x,PosType my_y){source_x[0] = my_x; source_x[1] = my_y;}
+  
 	/// In the case of a single plane lens, the ratio of angular size distances
 	virtual inline PosType getDlDs(){return DlDs;}
 	//TODO: BEN I think this need only be in the BLR source models
@@ -101,8 +127,8 @@ public:
 	~SourcePixelled();
 	PosType SurfaceBrightness(PosType *y);
 	void printSource();
-	inline PosType getTotalFlux(){return flux;}
-	inline PosType getRadius(){return source_r;}
+	inline PosType getTotalFlux() const {return flux;}
+	inline PosType getRadius() const {return source_r;}
 	inline PosType* getEll(){return ell;};
 	inline PosType getQuad(int i, int j){return quad[i][j];};
 	inline PosType getSize(){return size;};
@@ -139,13 +165,45 @@ public:
 	SourceShapelets(PosType my_z, PosType my_mag, PosType my_scale, std::valarray<PosType> my_coeff, PosType* my_center = 0, PosType my_ang = 0.);
 	SourceShapelets(PosType my_z, PosType my_mag, std::string shap_file, PosType *my_center = 0, PosType my_ang = 0.);
 	SourceShapelets(std::string shap_file, PosType* my_center = 0, PosType my_ang = 0.);
+  
+  SourceShapelets(const SourceShapelets &s):Source(s){
+    coeff = s.coeff;
+    n1 = s.n1;
+    n2 = s.n2;
+    id = s.id;
+    flux = s.flux;
+    mag = s.mag;
+    ang = s.ang;
+    for(int i=0; i<10 ; ++i) mags[i] = s.mags[i];
+    for(int i=0; i<10 ; ++i) fluxes[i] = s.fluxes[i];
+    coeff_flux = s.coeff_flux;
+  }
+
+  SourceShapelets & operator= (const SourceShapelets &s){
+    if(this == &s) return *this;
+    
+    Source::operator=(s);
+    coeff = s.coeff;
+    n1 = s.n1;
+    n2 = s.n2;
+    id = s.id;
+    flux = s.flux;
+    mag = s.mag;
+    ang = s.ang;
+    for(int i=0; i<10 ; ++i) mags[i] = s.mags[i];
+    for(int i=0; i<10 ; ++i) fluxes[i] = s.fluxes[i];
+    coeff_flux = s.coeff_flux;
+
+    return *this;
+  }
+
 	PosType SurfaceBrightness(PosType *y);
 	void printSource();
-	inline PosType getTotalFlux(){return flux;}
-	inline PosType getRadius(){return source_r*10.;}
-	inline PosType getMag(){return mag;}
-	inline PosType getMag(Band band){return mags[band];}
-  inline PosType getID(){return id;}
+	inline PosType getTotalFlux() const {return flux;}
+	inline PosType getRadius() const {return source_r*10.;}
+	inline PosType getMag() const {return mag;}
+	inline PosType getMag(Band band) const {return mags[band];}
+  inline PosType getID() const {return id;}
   void setActiveBand(Band band);
 
 private:
@@ -155,10 +213,11 @@ private:
 	void NormalizeFlux();
 	std::valarray<PosType> coeff;
 	int n1,n2;
-    int id;
+  int id;
 	PosType flux, mag;
 	PosType ang;
-  PosType mags[10], fluxes[10];
+  PosType mags[10];
+  PosType fluxes[10];
   PosType coeff_flux;
   static Band shape_band[10];
 };
@@ -173,7 +232,7 @@ public:
 	PosType SurfaceBrightness(PosType *y);
 	void assignParams(InputParams& params);
 	void printSource();
-	PosType getTotalFlux(){return pi*source_r*source_r;}
+	PosType getTotalFlux() const {return pi*source_r*source_r;}
 };
 
 /// A source with a Gaussian surface brightness profile
@@ -188,7 +247,7 @@ public:
 	PosType SurfaceBrightness(PosType *y);
 	void assignParams(InputParams& params);
 	void printSource();
-	PosType getTotalFlux(){return 2*pi*source_gauss_r2;/*std::cout << "No total flux in SourceGaussian yet" << std::endl; exit(1);*/}
+	PosType getTotalFlux() const {return 2*pi*source_gauss_r2;/*std::cout << "No total flux in SourceGaussian yet" << std::endl; exit(1);*/}
 };
 
 /// Base class for all sources representing the Broad Line Region (BLR) of a AGN/QSO
@@ -198,9 +257,9 @@ public:
 	~SourceBLR();
 	
 	void printSource();
-	PosType getTotalFlux(){std::cout << "No total flux in SourceBLR yet" << std::endl; exit(1);}
+	PosType getTotalFlux() const {std::cout << "No total flux in SourceBLR yet" << std::endl; exit(1);}
 	
-	virtual inline PosType getRadius(){return source_r_out;}
+	virtual inline PosType getRadius() const {return source_r_out;}
 	
 	/// lag time
 	PosType source_tau;
@@ -228,7 +287,7 @@ private:
 class SourceBLRDisk : public SourceBLR{
 public:
 	PosType SurfaceBrightness(PosType *y);
-	PosType getTotalFlux(){std::cout << "No total flux in SourceBLRDisk yet" << std::endl; exit(1);}
+	PosType getTotalFlux() const {std::cout << "No total flux in SourceBLRDisk yet" << std::endl; exit(1);}
 	
 	SourceBLRDisk(InputParams&);
 	~SourceBLRDisk();
@@ -238,7 +297,7 @@ public:
 class SourceBLRSph1 : public SourceBLR{
 public:
 	PosType SurfaceBrightness(PosType *y);
-	PosType getTotalFlux(){std::cout << "No total flux in SourceBLRSph1 yet" << std::endl; exit(1);}
+	PosType getTotalFlux() const {std::cout << "No total flux in SourceBLRSph1 yet" << std::endl; exit(1);}
 	
 	SourceBLRSph1(InputParams&);
 	~SourceBLRSph1();
@@ -248,7 +307,7 @@ public:
 class SourceBLRSph2 : public SourceBLR{
 public:
 	PosType SurfaceBrightness(PosType *y);
-	PosType getTotalFlux(){std::cout << "No total flux in SourceBLRSph2 yet" << std::endl; exit(1);}
+	PosType getTotalFlux() const {std::cout << "No total flux in SourceBLRSph2 yet" << std::endl; exit(1);}
 
 	SourceBLRSph2(InputParams&);
 	~SourceBLRSph2();

@@ -194,8 +194,8 @@ public:
                              ,KappaType *gamma,KappaType *phi);
   
   /// find all points within rmax of ray in 2D
-  void neighbors(PosType ray[],PosType rmax,std::list<IndexType> &neighbors);
-  void neighbors(PosType ray[],PosType rmax,std::vector<LensHalo *> &neighbors);
+  void neighbors(PosType ray[],PosType rmax,std::list<IndexType> &neighbors) const;
+  void neighbors(PosType ray[],PosType rmax,std::vector<LensHalo *> &neighbors) const;
   
   virtual void printParticlesInBranch(unsigned long number);
 

@@ -55,6 +55,11 @@ struct Point_2d{
     x[1]=p.x[1];
     return *this;
   }
+  Point_2d(const PosType *p){
+    x[0]=p[0];
+    x[1]=p[1];
+  }
+
   
   bool operator==(const Point_2d &p){
     return (x[0] == p.x[0])*(x[1] == p.x[1]);
@@ -75,6 +80,11 @@ struct Point_2d{
   Point_2d & operator+=(const Point_2d &p){
     x[0]+=p.x[0];
     x[1]+=p.x[1];
+    return *this;
+  }
+  Point_2d & operator-=(const Point_2d &p){
+    x[0]-=p.x[0];
+    x[1]-=p.x[1];
     return *this;
   }
   Point_2d & operator/=(PosType value){
@@ -105,12 +115,24 @@ struct Point_2d{
   PosType length(){
     return sqrt(x[0]*x[0] + x[1]*x[1]);
   }
+
+  /// length^2
+  PosType length_sqr(){
+    return x[0]*x[0] + x[1]*x[1];
+  }
   
   void rotate(PosType theta){
     PosType c = cos(theta),s = sin(theta);
     PosType tmp = x[0];
-    x[0] = c*tmp + s*x[1];
+    x[0] = c*tmp - s*x[1];
     x[1] = c*x[1] + s*tmp;
+  }
+  
+  /// rescale to make a unit length vector
+  void unitize(){
+    PosType s = length();
+    x[0] /= s;
+    x[1] /= s;
   }
   
   PosType x[2];
@@ -166,7 +188,7 @@ struct Point: public Point_2d{
     return (p1->x[1] > p2->x[1]);
   }
 
-  /// returns true if the image is double inverted
+  /// returns true if the image is double inverted,  At very low magnification this can fail.
   bool inverted(){ return 0 > (1 - kappa + sqrt( fabs((1-kappa)*(1-kappa) - invmag) ) ); }
   
 private:
@@ -354,35 +376,14 @@ private:
 };
 
 typedef struct PointList *ListHndl;
-//bool AtTopList(ListHndl list);
-//bool AtBottomList(ListHndl list);
-
-
-//inline void MoveToTopList(ListHndl list);
-//inline void MoveToBottomList(ListHndl list);
-/*inline void MoveToTopList(ListHndl list){
-  list->current=list->top;
-};
-inline void MoveToBottomList(ListHndl list){
-  list->current=list->bottom;
-};*/
 
 // ***********************************************************
 //   routines for linked list of points
 // ************************************************************
 
 Point *NewPoint(double *x,unsigned long id);
-
-//void JumpDownList(ListHndl list,int jump);
-//bool MoveDownList(ListHndl list);
-//bool MoveUpList(ListHndl list);
-
 void SwapPointsInList(ListHndl list,Point *p1,Point *p2);
 Point *sortList(long n, double arr[],ListHndl list,Point *firstpoint);
-
-//void UnionList(ListHndl list1,ListHndl list2);
-//bool ArePointsUniqueList(ListHndl list);
-//bool IntersectionList(ListHndl list1,ListHndl list2,ListHndl intersection);
 
 /**  \brief Class for representing points or vectors in 3 dimensions.  Not that the dereferencing operator is overridden.
  
@@ -455,12 +456,29 @@ struct Point_3d{
   PosType length(){
     return sqrt(x[0]*x[0] + x[1]*x[1] + x[2]*x[2]);
   }
+
+  PosType length_sqr(){
+    return x[0]*x[0] + x[1]*x[1] + x[2]*x[2];
+  }
   
-  void rotate(PosType theta){
+  /// a rotation theta around the z-axis followed by a rotation phi around the y-axis
+  void rotate(PosType theta,PosType phi){
     PosType c = cos(theta),s = sin(theta);
-    PosType tmp = x[0];
-    x[0] = c*tmp + s*x[1];
-    x[1] = c*x[1] + s*tmp;
+    PosType tmp = c*x[0] - s*x[1];
+    x[1] = c*x[1] + s*x[0];
+    
+    c = cos(phi);
+    s = sin(phi);;
+    x[0]  = c*tmp - s*x[2];
+    x[2] = c*x[2] + s*tmp;
+  }
+  
+  /// rescale to make a unit length vector
+  void unitize(){
+    PosType s = length();
+    x[0] /= s;
+    x[1] /= s;
+    x[2] /= s;
   }
   
   PosType x[3];

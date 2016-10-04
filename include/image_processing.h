@@ -55,8 +55,40 @@ public:
   void AddImages(ImageInfo *imageinfo,int Nimages,float rescale = 1.);
   void AddImages(std::vector<ImageInfo> &imageinfo,int Nimages,float rescale = 1.);
   void AddUniformImages(ImageInfo *imageinfo,int Nimages,double value);
-  void AddSource(Source &source);
-  
+  PosType AddSource(Source &source);
+  /// Add a source to the pixel map by oversamples the source so that oversample^2 points within each pixel are averaged
+  PosType AddSource(Source &source,int oversample);
+
+  /// Adds source to map.  This version breaks pixels up into blocks and does them in seporate threads.
+  template <typename T>
+  PosType AddSource_parallel(T &source,int oversample){
+    Point_2d s_center;
+    source.getX(s_center);
+    
+    if( s_center[0] + source.getRadius() < map_boundary_p1[0] ) return 0.0;
+    if( s_center[0] - source.getRadius() > map_boundary_p2[0] ) return 0.0;
+    if( s_center[1] + source.getRadius() < map_boundary_p1[1] ) return 0.0;
+    if( s_center[1] - source.getRadius() > map_boundary_p2[1] ) return 0.0;
+    
+    int nthreads = Utilities::GetNThreads();
+    PosType totals[nthreads];
+    std::vector<std::thread> thr;
+    
+    size_t block = map.size()/nthreads;
+    for(int i = 0; i < nthreads ;++i){
+      thr.push_back(std::thread(&PixelMap::addsource_<T>,this
+                                   ,i*block,std::min((i+1)*block-1,map.size()-1),
+                                oversample,std::ref(source),std::ref(totals[i])));
+    }
+ 
+    for(int ii=0;ii < nthreads;++ii) thr[ii].join();
+    
+    PosType total =0;
+    for(int ii=0;ii < nthreads;++ii) total += totals[ii];
+    
+    return total;
+  }
+
   void AddCurve(ImageInfo *curve,double value);
   void AddCurve(Kist<Point> *imagekist,PosType value);
   void AddCurve(std::vector<Point_2d> &curve,double value);
@@ -79,7 +111,8 @@ public:
 
 	inline double getValue(std::size_t i) const { return map[i]; }
 	inline double & operator[](std::size_t i) { return map[i]; };
-	inline double operator()(std::size_t i) const { return map[i]; };
+  inline double operator()(std::size_t i) const { return map[i]; };
+  inline double operator()(std::size_t i,std::size_t j) const { return map[i + Nx*j]; };
 	
 	PixelMap& operator+=(const PixelMap& rhs);
 	friend PixelMap operator+(const PixelMap&, const PixelMap&);
@@ -98,6 +131,7 @@ public:
 	bool agrees(const PixelMap& other) const;
 	
 	friend void swap(PixelMap&, PixelMap&);
+  void swap(PixelMap&, PixelMap&);
   
   /// return average pixel value
   PosType ave() const;
@@ -205,9 +239,21 @@ public:
     std::valarray<double> tmp = Utilities::AdaptiveSmooth(data(),Nx,Ny,value);
     map = tmp;
   }
-
 #endif
 
+  /** \brief For a list of pixel indexes this will count and separated islands that are not connected.
+   
+   On return, 'pixel_index' is ordered into groups and the 'heads' list points to the first elemant 
+   in each group plus the end of the list so that heads[i] to heads[i+1] is a group for 0 <= i <= ngroups.
+   The number of groups is returned which is also heads.size() - 1
+   */
+  int count_islands(std::list<size_t> &pixel_index,std::vector<std::list<size_t>::iterator> &heads) const;
+  /// get a list of pixels above value
+  size_t threshold(std::list<size_t> &pixel_index,PosType value){
+    for(size_t i=0;i<map.size();++i) if(value < map[i]) pixel_index.push_back(i);
+    return pixel_index.size();
+  }
+  
 private:
 	std::valarray<double> map;
   void AddGrid_(const PointList &list,LensingVariable val);
@@ -222,6 +268,44 @@ private:
 	bool inMapBox(Branch * branch1) const;
 	bool inMapBox(double * branch1) const;
   
+  /// determines if pixels touch each other from i dimensional index
+  bool pixels_are_neighbors(size_t i,size_t j) const;
+  /** recursive function that finds all the pixels in reservoir beyond and including position 'group' that are attached to pixel current.
+   On exit reserve is ordered so that pixels that are in the same group are in sequence and 'group' points to the element in 'reservoir' that is one past the group elements
+   */
+  void _count_islands_(size_t current,std::list<size_t> &reservoir
+                       ,std::list<size_t>::iterator &group) const;
+  
+  //void addsource_(size_t i1,size_t i2,int oversample,Source source,PosType &total);
+  //void addsource_(size_t i1,size_t i2,int oversample,Po,
+  //                   PosType &total);
+
+  template <typename T>
+    void addsource_(size_t i1,size_t i2,int oversample,
+                    T &source,
+                    PosType &total){
+    PosType tmp_res = resolution*1.0/oversample;
+    PosType tmp = tmp_res*tmp_res;
+    PosType bl = resolution /2 - 0.5*tmp_res;
+    PosType y[2],x[2];
+    
+    total = 0;
+    
+    for(size_t index = i1 ;index <= i2; ++index){
+      find_position(y,index);
+      y[0] -= bl;
+      y[1] -= bl;
+      for(int i = 0 ; i < oversample ; ++i){
+        x[0] = y[0] + i*tmp_res;
+        for(int j=0; j < oversample;++j){
+          x[1] = y[1] + j*tmp_res;
+          map[index] += source.SurfaceBrightness(x)*tmp;
+          total += source.SurfaceBrightness(x)*tmp;
+        }
+      }
+    }
+  }
+  
 };
 
 typedef enum {Euclid_VIS,Euclid_Y,Euclid_J,Euclid_H,KiDS_u,KiDS_g,KiDS_r,KiDS_i,HST_ACS_I,CFHT_u,CFHT_g,CFHT_r,CFHT_i,CFHT_z} Telescope;
@@ -232,7 +316,7 @@ typedef enum {counts_x_sec, flux} unitType;
  * \brief It creates a realistic image from the output of a ray-tracing simulation.
  *
  * It translates pixel values in observed units (counts/sec), applies PSF and noise.
- * Input must be in photons/(cm^2*Hz).
+ * Input must be in ergs/(s*cm^2*Hz*hplanck).
  */
 class Observation
 {
@@ -252,7 +336,7 @@ public:
 	float getZeropoint(){return mag_zeropoint;}
     /// pixel size in radians
   float getPixelSize(){return pix_size;}
-    float getBackgroundNoise(float resolution, unitType unit = counts_x_sec);
+  float getBackgroundNoise(float resolution, unitType unit = counts_x_sec);
 	std::valarray<double> getPSF(){return map_psf;}
   void setPSF(std::string psf_file, float os = 1.);
 	PixelMap Convert (PixelMap &map, bool psf, bool noise,long *seed, unitType unit = counts_x_sec);
@@ -318,4 +402,5 @@ private:
   std::vector<PixelMap> maps;
   std::vector<Utilities::Interpolator<PixelMap>> interpolators;
 };
+
 #endif

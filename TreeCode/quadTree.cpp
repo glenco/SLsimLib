@@ -43,7 +43,7 @@ TreeQuad::TreeQuad(
 	tree = BuildQTreeNB(xp,Npoints,index);
 
 	CalcMoments();
-
+  
 	return;
 }
 /** \brief Constructor meant for halos with internal structure parameters.  This is a protected constructor because
@@ -72,7 +72,7 @@ MultiMass(true),MultiRadius(true),masses(NULL),sizes(NULL)
   xp = Utilities::PosTypeMatrix(Npoints,2);
   for(ii=0;ii<Npoints;++ii) halos[ii]->getX(xp[ii]);
 
-	haloON = true; //use internal halo parameters
+	haloON = true;  //use internal halo parameters
 
 	tree = BuildQTreeNB(xp,Npoints,index);
 
@@ -521,7 +521,7 @@ void TreeQuad::force2D(const PosType *ray,PosType *alpha,KappaType *kappa,KappaT
 
 /** \brief Returns the halos that are within rmax of ray[]
  */
-void TreeQuad::neighbors(PosType ray[],PosType rmax,std::list<IndexType> &neighbors){
+void TreeQuad::neighbors(PosType ray[],PosType rmax,std::list<IndexType> &neighbors) const{
   QTreeNB::iterator it(tree);
   neighbors.clear();
   
@@ -539,7 +539,8 @@ void TreeQuad::neighbors(PosType ray[],PosType rmax,std::list<IndexType> &neighb
       decend = false;
     }else if((*it)->child0 == NULL){  // at leaf
       for(int i=0;i<(*it)->nparticles;++i){
-        if( (tree->xp[(*it)->particles[i]][0] - ray[0])*(tree->xp[(*it)->particles[i]][0] - ray[0]) + (tree->xp[(*it)->particles[i]][1] - ray[1])*(tree->xp[(*it)->particles[i]][1] - ray[1]) < r2) neighbors.push_back((*it)->particles[i]);
+        if( (tree->xp[(*it)->particles[i]][0] - ray[0])*(tree->xp[(*it)->particles[i]][0] - ray[0])
+           + (tree->xp[(*it)->particles[i]][1] - ray[1])*(tree->xp[(*it)->particles[i]][1] - ray[1]) < r2) neighbors.push_back((*it)->particles[i]);
       }
       decend = false;
     }
@@ -548,7 +549,7 @@ void TreeQuad::neighbors(PosType ray[],PosType rmax,std::list<IndexType> &neighb
 }
 /** \brief Returns the halos that are within rmax of ray[]
  */
-void TreeQuad::neighbors(PosType ray[],PosType rmax,std::vector<LensHalo *> &neighbors){
+void TreeQuad::neighbors(PosType ray[],PosType rmax,std::vector<LensHalo *> &neighbors) const{
   neighbors.clear();
   
   if(halos == NULL){
@@ -643,14 +644,14 @@ void TreeQuad::walkTree_iter(
 					  alpha[0] += tmp*xcm[0];
 					  alpha[1] += tmp*xcm[1];
             
-					  {
-						  tmp = -2.0*prefac/rcm2;
+					  
+            tmp = -2.0*prefac/rcm2;
               
-						  gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
-						  gamma[1] += xcm[0]*xcm[1]*tmp;
+            gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+            gamma[1] += xcm[0]*xcm[1]*tmp;
               
-              *phi += prefac*rcm2*0.5*log(rcm2);              
-					  }
+            *phi += prefac*rcm2*0.5*log(rcm2);
+          
 				  } // end of for
 			  } // end of if(tree->atLeaf())
         
@@ -677,29 +678,33 @@ void TreeQuad::walkTree_iter(
 						  if(rcm2 < 1e-20) rcm2 = 1e-20;
 						  //rcm = sqrt(rcm2);
               
-						  prefac = masses[MultiMass*tmp_index]/rcm2/pi;
-						  arg1 = rcm2/(sizes[tmp_index*MultiRadius]*sizes[tmp_index*MultiRadius]);
-						  arg2 = sizes[tmp_index*MultiRadius];
-						  tmp = sizes[tmp_index*MultiRadius];
+						  //prefac = masses[MultiMass*tmp_index]/rcm2/pi;
+						  //arg1 = rcm2/(sizes[tmp_index*MultiRadius]*sizes[tmp_index*MultiRadius]);
+						  //arg2 = sizes[tmp_index*MultiRadius];
+						  //tmp = sizes[tmp_index*MultiRadius];
+              
+              PosType size = sizes[tmp_index*MultiRadius];
               
 						  // intersecting, subtract the point particle
-						  if(rcm2 < tmp*tmp)
+						  if(rcm2 < 9*size*size)
               {
-							  tmp = (alpha_h(arg1,arg2) + 1.0)*prefac;
+                prefac = masses[MultiMass*tmp_index]/rcm2/pi;
+                arg1 = rcm2/(size*size);
+
+                tmp = (alpha_h(arg1,size) + 1.0)*prefac;
 							  alpha[0] += tmp*xcm[0];
 							  alpha[1] += tmp*xcm[1];
                 
-							  // can turn off kappa and gamma calculations to save times
-							  {
-								  *kappa += kappa_h(arg1,arg2)*prefac;
+                {
+								  *kappa += kappa_h(arg1,size)*prefac;
                   
-								  tmp = (gamma_h(arg1,arg2) + 2.0)*prefac/rcm2;
+								  tmp = (gamma_h(arg1,size) + 2.0)*prefac/rcm2;
                   
 								  gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 								  gamma[1] += xcm[0]*xcm[1]*tmp;
                   
                   // TODO: makes sure the normalization of phi_h agrees with this
-                  *phi += (phi_h(arg1,arg2) + 0.5*log(rcm2))*prefac*rcm2;
+                  *phi += (phi_h(arg1,size) + 0.5*log(rcm2))*prefac*rcm2;
                   
 							  }
 						  }
@@ -832,14 +837,13 @@ void TreeQuad::force2D_recur(const PosType *ray,PosType *alpha,KappaType *kappa,
   alpha[1] -= ray[1]*sigma_background*(inv_screening_scale2 == 0);
   
   *kappa -= sigma_background;
-  
+    
   return;
 }
 
 
 
 void TreeQuad::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma, KappaType *phi){
-  
   
 	PosType xcm[2],rcm2cell,rcm2,tmp,boxsize2;
 	IndexType i;
@@ -885,7 +889,6 @@ void TreeQuad::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alph
           alpha[0] += -1.0*prefac*xcm[0];
           alpha[1] += -1.0*prefac*xcm[1];
           
-          // can turn off kappa and gamma calculations to save times
           {
             tmp = -2.0*prefac/rcm2;
             
@@ -920,19 +923,19 @@ void TreeQuad::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alph
 						if(rcm2 < 1e-20) rcm2 = 1e-20;
 						//rcm = sqrt(rcm2);
             
-						prefac = masses[MultiMass*branch->particles[i]]/rcm2/pi;
-						arg1 = rcm2/(sizes[tmp_index*MultiRadius]*sizes[tmp_index*MultiRadius]);
-						arg2 = sizes[tmp_index*MultiRadius];
-						tmp = 3*sizes[tmp_index*MultiRadius];
+            PosType size = sizes[tmp_index*MultiRadius];
             
 						// intersecting, subtract the point particle
-						if(rcm2 < tmp*tmp)
+						if(rcm2 < 9*size*size)
             {
+              prefac = masses[MultiMass*tmp_index]/rcm2/pi;
+              arg1 = rcm2/(size*size);
+              arg2 = size;
+              
 							tmp = (alpha_h(arg1,arg2) + 1.0)*prefac;
 							alpha[0] += tmp*xcm[0];
 							alpha[1] += tmp*xcm[1];
               
-							// can turn off kappa and gamma calculations to save times
 							{
 								*kappa += kappa_h(arg1,arg2)*prefac;
                 
