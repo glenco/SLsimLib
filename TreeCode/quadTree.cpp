@@ -123,6 +123,9 @@ QTreeNBHndl TreeQuad::BuildQTreeNB(PosType **xp,IndexType Nparticles,IndexType *
   original_xl = lengths[0];
   original_yl = lengths[1];
  
+  assert(lengths[0] != 0);
+  assert(lengths[1] != 0);
+  
   // If region is not square, make it square.
   j = lengths[0] > lengths[1] ? 1 : 0;
   p2[j] = p1[j] + lengths[!j];
