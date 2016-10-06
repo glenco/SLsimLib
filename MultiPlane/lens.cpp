@@ -32,6 +32,7 @@ namespace
 	};
 }
 
+
 /**
  * \brief Creates an empty lens. Main halos and field halos need to be inserted by hand from the user.
  */
@@ -45,6 +46,9 @@ Lens::Lens(long* my_seed,PosType z_source, CosmoParamSet cosmoset,bool verbose)
 		printf("ERROR: Lens can only handle flat universes at present. Must change cosmology.\n");
 		exit(1);
 	}
+  
+  field_Nplanes_current = 0 ;
+  field_Nplanes_original = 0;
 	
 	read_sim_file = false;
 	
@@ -64,7 +68,6 @@ Lens::Lens(long* my_seed,PosType z_source, CosmoParamSet cosmoset,bool verbose)
   combinePlanes(verbose);
   if(zsource != ztmp) ResetSourcePlane(ztmp,false);
   std::cout << "number of field halos : " << field_halos.size() << std::endl;
-
 }
 
 Lens::Lens(long* my_seed,PosType z_source, const COSMOLOGY &cosmoset,bool verbose)
@@ -96,6 +99,7 @@ Lens::Lens(long* my_seed,PosType z_source, const COSMOLOGY &cosmoset,bool verbos
   if(zsource != ztmp) ResetSourcePlane(ztmp,false);
   std::cout << "number of field halos :" << field_halos.size() << std::endl;
 }
+
 
 /**
  * \ingroup Constructor
@@ -933,9 +937,6 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
   PosType rmax_max = 0.;
   
   PosType rho = density_contrast*cosmo.rho_crit(0)*cosmo.getOmega_matter()*(1+redshift)*(1+redshift)*(1+redshift);
-  std::cout << "Lens::insertSubstructures : rho = " << rho << std::endl ;
-  std::cout << "Lens::insertSubstructures : density_contrast = " << density_contrast << std::endl ;
-  std::cout << "Lens::insertSubstructures : cosmo.rho_crit(0) = " << cosmo.rho_crit(0) << " , cosmo.getOmega_matter() = " << cosmo.getOmega_matter() << std::endl ;
   // rho in 1 * (M_sun/Mpc^3) * 1 * (1+z)^3 = M_sun / PhysMpc^3,
   // where Mpc \equiv comoving Mpc.
   
@@ -1018,11 +1019,6 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
     std::cout << "Lens::insertSubstructures : DimLessKappaSub = " << DimLessKappaSub << endl;
   }
 
-  // Test :
-  // std::cout << " field_plane_redshifts.begin() : " << field_plane_redshifts.size() << std::endl ;
-  // for(int i = 0 ; i < field_plane_redshifts.size() ; i++) std::cout << field_plane_redshifts[i] << " " ;
-  // std::cout << std::endl ;
-  
   // the new plane must be inserted in order of redshift
   if(field_Nplanes_current != 0)
   {
@@ -1066,6 +1062,9 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
     
     // Insertion :
     if(verbose) std::cout << "Lens::insertSubstructures : inserting a new plane at redshift z = " << redshift << std::endl;
+    std::cout << "xxx " << substructure.NhalosSub << std::endl;
+
+    assert(substructure.NhalosSub == substructure.halos.size());
     field_planes.push_back(new LensPlaneTree(substructure.halos.data(), substructure.NhalosSub, 0, 0));
     field_plane_redshifts.push_back(redshift);
     field_Dl.push_back(Dl*(1+redshift));
@@ -1090,11 +1089,6 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
   WasInsertSubStructuresCalled = YES ;
   std::cout << field_planes.size() << " " << field_Nplanes_current << std::endl ;
   assert(field_planes.size() == field_Nplanes_current);
-
-  // Test :
-  // std::cout << "field_plane and field_plane_redshifts : " << std::endl ;
-  // for(int k=0 ; k<field_planes.size() ; k++) std::cout << field_planes[k] << " " << field_plane_redshifts[k] << std::endl ;
-  // std::cout << std::endl ;
 
 }
 
@@ -1602,7 +1596,7 @@ void Lens::clearMainHalos(bool verbose)
 /**
  * \brief Inserts a single main lens halo.
  * Then all lensing planes are updated accordingly.
- * If addplanes is true new planes will be added otherwise 
+ * If addplanes is true new planes will be added otherwise
  * the halo is added to the nearest plane and a plane is added only 
  * if none exited on entry.
  *
