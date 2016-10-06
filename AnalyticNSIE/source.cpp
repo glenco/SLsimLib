@@ -19,12 +19,15 @@ SourceUniform::SourceUniform(InputParams& params) : Source(){
   assignParams(params);
 }
 
-SourceUniform::SourceUniform(PosType MySource_r, PosType MySource_x, PosType MySource_y, PosType MySource_z) : Source() {
-  source_r = MySource_r ;
-  source_x[0] = MySource_x ;
-  source_x[1] = MySource_y ;
-  zsource = MySource_z ;
-} ;
+SourceUniform::SourceUniform(PosType *position,PosType z,PosType radius_in_radians):
+  Source()
+{
+  source_r = radius_in_radians;
+  source_x[0] = position[0];
+  source_x[1] = position[1];
+  setSBlimit_magarcsec(100.);
+  zsource = z;
+}
 
 SourceGaussian::SourceGaussian(InputParams& params) : Source(){
   assignParams(params);
