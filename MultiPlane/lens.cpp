@@ -45,21 +45,16 @@ Lens::Lens(long* my_seed,PosType z_source, CosmoParamSet cosmoset,bool verbose)
 		printf("ERROR: Lens can only handle flat universes at present. Must change cosmology.\n");
 		exit(1);
 	}
-	
-	read_sim_file = false;
-	
-  charge = 4*pi*Grav;
-	if(verbose) std::cout << "charge: " << charge << std::endl;
-	
-	// initially let source be the one inputed from parameter file
-	index_of_new_sourceplane = -1;
-	toggle_source_plane = false;
-  flag_switch_deflection_off = false;
-  flag_switch_lensing_off = false;
-  
-  //charge = cosmo.angDist(zsource)/cosmo.angDist(0.3)/cosmo.angDist(0.3,zsource);
-  //charge = 4*pi/cosmo.angDist(0.3);
 
+  defaultParams(z_source,verbose);
+  if(verbose) std::cout << "charge: " << charge << std::endl;
+
+  // initially let source be the one inputed from parameter file
+	//index_of_new_sourceplane = -1;
+	//toggle_source_plane = false;
+  //flag_switch_deflection_off = false;
+  //flag_switch_lensing_off = false;
+  
   PosType ztmp = zsource;
   combinePlanes(verbose);
   if(zsource != ztmp) ResetSourcePlane(ztmp,false);
@@ -78,19 +73,15 @@ Lens::Lens(long* my_seed,PosType z_source, const COSMOLOGY &cosmoset,bool verbos
     exit(1);
   }
   
-  read_sim_file = false;
-  
-  charge = 4*pi*Grav;
+  defaultParams(z_source,verbose);
   if(verbose) std::cout << "charge: " << charge << std::endl;
-  
+
   // initially let source be the one inputed from parameter file
-  index_of_new_sourceplane = -1;
-  toggle_source_plane = false;
-  flag_switch_deflection_off = false;
-  flag_switch_lensing_off = false;
+  //index_of_new_sourceplane = -1;
+  //toggle_source_plane = false;
+  //flag_switch_deflection_off = false;
+  //flag_switch_lensing_off = false;
   
-  //charge = cosmo.angDist(zsource)/cosmo.angDist(0.3)/cosmo.angDist(0.3,zsource);
-  //charge = 4*pi/cosmo.angDist(0.3);
   PosType ztmp = zsource;
   combinePlanes(true);
   if(zsource != ztmp) ResetSourcePlane(ztmp,false);
@@ -532,6 +523,66 @@ void Lens::assignParams(InputParams& params,bool verbose)
 	if(verbose) printMultiLens();
 }
 
+// Set default values for internal variables.  Used in constructor that don't take a InputParams.
+void Lens::defaultParams(PosType z_source,bool verbose)
+{
+  
+  charge = 4*pi*Grav;
+
+  read_sim_file = false;
+  index_of_new_sourceplane = -1;
+  toggle_source_plane = false;
+
+
+  // toggles for testing
+  flag_switch_deflection_off = false;
+  flag_switch_lensing_off = false;
+
+  
+  flag_switch_main_halo_on = true;
+  main_halo_type = null_lens;
+  main_galaxy_halo_type = null_gal;
+  
+  read_redshift_planes = false;
+  flag_switch_field_off = false;
+  
+  // perameters related to simulating field halos or reading in feild halo information
+
+  field_Nplanes_original = 0;
+  field_Nplanes_current = field_Nplanes_original;
+  field_int_prof_type = null_lens;
+  
+  flag_field_gal_on = false;
+  field_int_prof_gal_type = null_gal;
+  mass_func_PL_slope =0;
+  field_prof_internal_slope = 0;
+  field_input_sim_file = "";
+  field_mass_func_type = PressSchechter;
+  
+  sim_input_flag = false;
+  field_min_mass = 0;
+  field_buffer = 0.0;
+  fieldofview = 0.0;
+
+  field_input_sim_format = null_cat;
+  
+  // spherical coordinates of center of field
+  central_point_sphere.phi = 0.0;
+  central_point_sphere.theta = 0.0;
+  sim_angular_radius = 0.0;
+
+  // read Pixelized map parameters
+  
+  pixel_map_on = 0;
+  pixel_map_input_file = "";
+  pixel_map_zeropad = 0;
+  pixel_map_zeromean = false;
+
+  zsource = z_source;
+  
+  if(verbose) printMultiLens();
+}
+
 void Lens::resetFieldNplanes(std::size_t Np, bool verbose)
 {
 	Utilities::delete_container(field_planes);
@@ -655,13 +706,13 @@ void Lens::printMultiLens(){
 		std::cout << "Mass function type: "<< endl;
     
 		switch(field_mass_func_type){
-      case PS:
+      case PressSchechter:
         std::cout << "  Press-Schechter mass function " << endl;
         break;
-      case ST:
+      case ShethTormen:
         std::cout << "  Sheth-Tormen mass function " << endl;
         break;
-      case PL:
+      case PowerLaw:
         std::cout << "  Power law mass function " << endl;
         std::cout << "  slope: " << mass_func_PL_slope << endl;
         break;
@@ -925,8 +976,8 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
     theta = 2*pi*ran2(seed);       // in radians
     
     // position in proper distance
-    theta_pos[0] = (rr*cos(theta) + center[0]);//*Dl; // in radians * angular Distance in PhysMpc = PhysMpc
-    theta_pos[1] = (rr*sin(theta) + center[1]);//*Dl; // same : PhysMpc
+    theta_pos[0] = (rr*cos(theta) + center[0]); // in radians * angular Distance in PhysMpc = PhysMpc
+    theta_pos[1] = (rr*sin(theta) + center[1]); // same : PhysMpc
     theta_pos[2] = 0.0;
 
     f = ran2(seed); // dimensionless and between 0 and 1
@@ -1010,6 +1061,7 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
     
     // Insertion :
     if(verbose) std::cout << "Lens::insertSubstructures : inserting a new plane at redshift z = " << redshift << std::endl;
+    assert(NhalosSub == substructure.halos.size());
     field_planes.push_back(new LensPlaneTree(substructure.halos.data(), NhalosSub, 0, 0));
     field_plane_redshifts.push_back(redshift);
     field_Dl.push_back(Dl*(1+redshift));
@@ -2096,7 +2148,7 @@ void Lens::readInputSimFileMillennium(bool verbose)
 	std::cout << "    It is now " << fieldofview << " deg^2" << std::endl;
   
 	if(verbose) std::cout << "Setting mass function to Sheth-Tormen." << std::endl;
-	field_mass_func_type = ST; // set mass function
+	field_mass_func_type = ShethTormen; // set mass function
   
 	if(verbose) std::cout << "sorting in Lens::readInputSimFileMillennium()" << std::endl;
 	// sort the field_halos by readshift
@@ -2437,7 +2489,7 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose)
   }
   
 	if(verbose) std::cout << "Setting mass function to Sheth-Tormen." << std::endl;
-	field_mass_func_type = ST; // set mass function
+	field_mass_func_type = ShethTormen; // set mass function
   
 	if(verbose) std::cout << "sorting in Lens::readInputSimFileMultiDarkHalos()" << std::endl;
 	// sort the field_halos by readshift

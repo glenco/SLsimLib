@@ -251,6 +251,7 @@ private:
 	
 	void readCosmology(InputParams& params);
 	void assignParams(InputParams& params,bool verbose = false);
+  void defaultParams(PosType zsource,bool verbose = true);
 	
 	/// turns source plane on and off
 	bool toggle_source_plane;
