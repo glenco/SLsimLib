@@ -15,8 +15,19 @@ LensHalo::LensHalo(){
   mass = Rsize = Rmax = xmax = posHalo[0] = posHalo[1] = 0.0;
   stars_implanted = false;
   elliptical_flag = false;
-  Dist = 0.0;
+  Dist = -1;
   stars_N =0.0;
+  zlens = 0.0;
+}
+
+LensHalo::LensHalo(PosType z,COSMOLOGY &cosmo){
+  rscale = 1.0;
+  mass = Rsize = Rmax = xmax = posHalo[0] = posHalo[1] = 0.0;
+  stars_implanted = false;
+  elliptical_flag = false;
+  Dist = cosmo.angDist(z);
+  stars_N =0.0;
+  zlens = z;
 }
 
 LensHalo::LensHalo(InputParams& params){
@@ -24,7 +35,7 @@ LensHalo::LensHalo(InputParams& params){
   stars_implanted = false;
   posHalo[0] = posHalo[1] = 0.0;
   elliptical_flag = false;
-  Dist = 0.0;
+  Dist = -1;
 }
 
 void LensHalo::initFromMassFunc(float my_mass, float my_Rsize, float my_rscale, PosType my_slope, long *seed){
@@ -1645,7 +1656,7 @@ LensHaloDummy::LensHaloDummy(float my_mass,float my_Rsize,PosType my_zlens,float
   mass=my_mass, Rsize=my_Rsize, zlens=my_zlens, rscale=my_rscale;
   stars_N=my_stars_N;
   stars_implanted = false;
-  posHalo[0] = posHalo[1] = 0.0;
+  setTheta(0.0,0.0);
 }
 
 LensHaloDummy::LensHaloDummy(InputParams& params)

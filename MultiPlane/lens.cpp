@@ -861,7 +861,9 @@ void Lens::createFieldPlanes(bool verbose)
       //field_halos[j]->getX(tmp);
       //field_halos[j]->setX(tmp[0]*field_Dl[i]/(1+field_plane_redshifts[i])
       //                     ,tmp[1]*field_Dl[i]/(1+field_plane_redshifts[i]));
-      field_halos[j]->setDist(field_Dl[i]/(1+field_plane_redshifts[i]));
+      //field_halos[j]->setDist(field_Dl[i]/(1+field_plane_redshifts[i]));
+      
+      field_halos[j]->setZlensDist(field_plane_redshifts[i],cosmo);
       //halo_pos[j][0] *= field_Dl[i]/(1+field_plane_redshifts[i]);
 			//halo_pos[j][1] *= field_Dl[i]/(1+field_plane_redshifts[i]);
 		}
@@ -1225,7 +1227,8 @@ void Lens::addMainHaloToPlane(LensHalo* halo)
 	{
 		// add to plane at (i-1)
 		main_planes[i-1]->addHalo(halo);
-    halo->setDist(main_Dl[i-1]/(1+main_plane_redshifts[i-1]));
+    //halo->setDist(main_Dl[i-1]/(1+main_plane_redshifts[i-1]));
+    halo->setZlensDist(main_plane_redshifts[i-1],cosmo);
 	}
 	else if(i == main_Dl.size())
 	{
@@ -1233,13 +1236,15 @@ void Lens::addMainHaloToPlane(LensHalo* halo)
 		main_planes.push_back(new LensPlaneSingular(&halo, 1));
 		main_plane_redshifts.push_back(halo_z);
 		main_Dl.push_back(halo_Dl);
-    halo->setDist(halo_Dl/(1+halo_z));
+    //halo->setDist(halo_Dl/(1+halo_z));
+    halo->setZlensDist(halo_z,cosmo);
 	}
 	else if((main_Dl[i] - halo_Dl) < MIN_PLANE_DIST)
 	{
 		// add to existing plane at position i
 		main_planes[i]->addHalo(halo);
-    halo->setDist(main_Dl[i]/(1+main_plane_redshifts[i]));
+    //halo->setDist(main_Dl[i]/(1+main_plane_redshifts[i]));
+    halo->setZlensDist(main_plane_redshifts[i],cosmo);
 	}
 	else
 	{
@@ -1247,7 +1252,8 @@ void Lens::addMainHaloToPlane(LensHalo* halo)
 		main_planes.insert(main_planes.begin() + i, new LensPlaneSingular(&halo, 1));
 		main_plane_redshifts.insert(main_plane_redshifts.begin() + i, halo_z);
 		main_Dl.insert(main_Dl.begin() + i, halo_Dl);
-    halo->setDist(halo_Dl/(1+halo_z));
+    //halo->setDist(halo_Dl/(1+halo_z));
+    halo->setZlensDist(halo_z,cosmo);
 	}
 }
 
@@ -1272,7 +1278,8 @@ void Lens::addMainHaloToNearestPlane(LensHalo* halo)
   std::size_t i = Utilities::closest(main_Dl,halo_Dl);
 
   main_planes[i]->addHalo(halo);
-  halo->setDist(main_Dl[i]/(1+main_plane_redshifts[i]));
+  //halo->setDist(main_Dl[i]/(1+main_plane_redshifts[i]));
+  halo->setZlensDist(main_plane_redshifts[i],cosmo);
 }
 
 
