@@ -951,7 +951,7 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
     theta_pos[0] = (rr*cos(theta) + center[0]);//*Dl; // in radians * angular Distance in PhysMpc = PhysMpc
     theta_pos[1] = (rr*sin(theta) + center[1]);//*Dl; // same : PhysMpc
     theta_pos[2] = 0.0;
-
+    
     f = ran2(seed); // dimensionless and between 0 and 1
     
     // mass from power law mass function (inversing the integration of Eq. (9) in Metcalf, Amara 2011 with f \equiv (eta(m)/eta_*)*(sigma/sigma_*) ) :

@@ -71,7 +71,7 @@ MultiMass(true),MultiRadius(true),masses(NULL),sizes(NULL)
   // copy halo positions into xp array to make compatable with QTreeNB
   xp = Utilities::PosTypeMatrix(Npoints,2);
   for(ii=0;ii<Npoints;++ii) halos[ii]->getX(xp[ii]);
-
+  
 	haloON = true;  //use internal halo parameters
 
 	tree = BuildQTreeNB(xp,Npoints,index);
