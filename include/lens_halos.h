@@ -46,6 +46,7 @@ class TreeQuad;
 class LensHalo{
 public:
 	LensHalo();
+  LensHalo(PosType z,COSMOLOGY &cosmo);
 	LensHalo(InputParams& params);
 	virtual ~LensHalo();
   
@@ -68,8 +69,11 @@ public:
   //void setX(PosType *PosXY) { posHalo[0] = PosXY[0] ; posHalo[1] = PosXY[1] ; }
   
   /// get the position of the Halo in physical Mpc on the lens plane
-  void getX(PosType * MyPosHalo) const { MyPosHalo[0] = posHalo[0]*Dist ;
-    MyPosHalo[1] = posHalo[1]*Dist; }
+  void getX(PosType * MyPosHalo) const {
+    assert(Dist != -1);
+    MyPosHalo[0] = posHalo[0]*Dist;
+    MyPosHalo[1] = posHalo[1]*Dist;
+  }
 
   /// set the position of the Halo in radians
   void setTheta(PosType PosX, PosType PosY) { posHalo[0] = PosX ; posHalo[1] = PosY ; }
@@ -79,7 +83,7 @@ public:
   void getTheta(PosType * MyPosHalo) const { MyPosHalo[0] = posHalo[0] ; MyPosHalo[1] = posHalo[1]; }
   
   /// Set the angular size distance to the halo.  This should be the distance to the lens plane.
-  void setDist(PosType my_Dist){Dist = my_Dist;}
+  void setDist(COSMOLOGY &co){Dist = co.angDist(zlens);}
   /// return current angular size distance, ie conversion between angular and special coordinates.  This may not agree with
   /// the getZ() value because of the projection onto the lens plane.
   PosType getDist() const {return Dist;}
@@ -100,7 +104,12 @@ public:
 	/// set scale radius (in Mpc)
 	virtual void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rsize/rscale;};
 	/// set redshift
-	void setZlens(PosType my_zlens){ zlens=my_zlens; };
+  void setZlens(PosType my_zlens){zlens=my_zlens; Dist=-1;}
+  // ste redshift and distance
+  void setZlensDist(PosType my_zlens,const COSMOLOGY &cos){
+    zlens=my_zlens;
+    Dist = cos.angDist(zlens);
+  }
   /// set slope
 	virtual void set_slope(PosType my_slope){beta=my_slope;};
   /// get slope
@@ -180,16 +189,21 @@ public:
   PosType renormalization(PosType r_max);
   PosType mnorm;
   
-  
+private:
+  size_t idnumber; /// Identification number of halo.  It is not always used.
+  PosType Dist;
+  /// Position of the Halo in angle
+  PosType posHalo[2];
+
 protected:
+
+  PosType zlens;
 
   // make LensHalo uncopyable
   void operator=(LensHalo &){};
   LensHalo(LensHalo &){};
 
-  size_t idnumber; /// Identification number of halo.  It is not always used.
-  PosType Dist;
-  
+ 
   PosType alpha_int(PosType x) const;
   PosType norm_int(PosType r_max);
 
@@ -481,12 +495,6 @@ protected:
   PosType mod1[Nmod];
   PosType mod2[Nmod];
   PosType r_eps;
-  
-  
-  PosType zlens;
-  
-  /// Position of the Halo in angle
-  PosType posHalo[2];
   
   
   // These are stucts used in doing tests
@@ -830,9 +838,6 @@ private:
         return -1.0*alpha_int(x)/InterpolateFromTable(xmax) ;
     }
 };
-
-
-
 
 
 /** \ingroup DeflectionL2

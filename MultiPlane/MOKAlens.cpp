@@ -92,16 +92,15 @@ LensHaloMassMap::LensHaloMassMap(
 , flag_MOKA_analyze(0), flag_background_field(0),maptype(pix_map),cosmo(lenscosmo),zerosize(pixel_map_zeropad),zeromean(my_zeromean)
 {
   rscale = 1.0;
-  Dist = lenscosmo.angDist(redshift);
 
   setMap(MassMap,massconvertion,redshift);
   
   LensHalo::setTheta(MassMap.getCenter()[0],MassMap.getCenter()[1]);
   
-  setZlens(redshift);
-
+  setZlensDist(map->zlens,cosmo);
+  //setZlens(redshift);
   // set redshift to value from map
-  setZlens(map->zlens);
+  //setZlens(map->zlens);
   
 }
 /*

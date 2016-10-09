@@ -115,14 +115,14 @@ QTreeNBHndl TreeQuad::BuildQTreeNB(PosType **xp,IndexType Nparticles,IndexType *
 	  p2[1]=0.25;
   }
   
-  
   // store true dimensions of simulation
   PosType lengths[2] = {p2[0]-p1[0],p2[1]-p1[1]};
   original_xl = lengths[0];
   original_yl = lengths[1];
  
-  assert(lengths[0] != 0);
-  assert(lengths[1] != 0);
+  if(lengths[0] == 0 || lengths[1] == 0){
+    throw std::invalid_argument("particles in same place.");
+  }
   
   // If region is not square, make it square.
   j = lengths[0] > lengths[1] ? 1 : 0;
