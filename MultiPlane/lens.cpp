@@ -1661,6 +1661,7 @@ void Lens::clearMainHalos(bool verbose)
 void Lens::insertMainHalo(LensHalo* halo,bool addplanes,bool verbose)
 {
 	halo->setCosmology(cosmo);
+  halo->setDist(cosmo);
 	main_halos.push_back(halo);
   
 	flag_switch_main_halo_on = true;
@@ -1685,6 +1686,7 @@ void Lens::insertMainHalos(LensHalo** halos, std::size_t Nhalos,bool addplanes, 
 	for(std::size_t i = 0; i < Nhalos; ++i)
 	{
 		halos[i]->setCosmology(cosmo);
+    halos[i]->setDist(cosmo);
 		main_halos.push_back(halos[i]);
 		if(addplanes) addMainHaloToPlane(halos[i]);
     else addMainHaloToNearestPlane(halos[i]);
@@ -1710,6 +1712,7 @@ void Lens::replaceMainHalos(LensHalo* halo,bool verbose)
 	main_halos.clear();
 	
 	halo->setCosmology(cosmo);
+  halo->setDist(cosmo);
 	main_halos.push_back(halo);
 	
 	flag_switch_main_halo_on = true;
@@ -1733,6 +1736,7 @@ void Lens::replaceMainHalos(LensHalo** halos, std::size_t Nhalos,bool verbose)
 	for(std::size_t i = 0; i < Nhalos; ++i)
 	{
 		halos[i]->setCosmology(cosmo);
+    halos[i]->setDist(cosmo);
 		main_halos.push_back(halos[i]);
 	}
 	
