@@ -176,7 +176,7 @@ public:
     spheroid->setX(my_x,my_y);
   }
 
-  /// Randomly change some of the internal paramters and angles of the source
+  /// Randomly change some of the internal parameters and angles of the source
   void randomize(Utilities::RandomNumbers_NR &ran);
 private:
   int Narms;
