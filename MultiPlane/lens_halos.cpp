@@ -719,7 +719,7 @@ LensHaloRealNSIE::LensHaloRealNSIE(InputParams& params){
   rcore = 0.;
   
   assignParams(params);
-
+  
   if(fratio  != 1.0) elliptical_flag = true;
   else elliptical_flag = false;
   ++objectCount;

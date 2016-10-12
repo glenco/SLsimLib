@@ -133,7 +133,7 @@ InputParams::InputParams(std::string paramfile)
 		// value is necessary
 		if(myline.empty())
 		{
-			std::cout << "ERROR: Paramters " << label << " does not have a valid value in parameter file " << paramfile_name << std::endl;
+			std::cout << "ERROR: Parameters " << label << " does not have a valid value in parameter file " << paramfile_name << std::endl;
 			exit(1);
 		}
 		
