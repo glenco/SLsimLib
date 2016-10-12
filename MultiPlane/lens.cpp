@@ -89,7 +89,6 @@ Lens::Lens(long* my_seed,PosType z_source, const COSMOLOGY &cosmoset,bool verbos
 }
 
 /**
- * \ingroup Constructor
  * \brief allocates space for the halo trees and the inout lens, if there is any
  */
 Lens::Lens(InputParams& params, long* my_seed, CosmoParamSet cosmoset, bool verbose)
@@ -162,7 +161,6 @@ Lens::Lens(InputParams& params, long* my_seed, CosmoParamSet cosmoset, bool verb
 
 }
 /**
- * \ingroup Constructor
  * \brief allocates space for the halo trees and the inout lens, if there is any
  */
 Lens::Lens(InputParams& params, long* my_seed, const COSMOLOGY &cosmoset, bool verbose)
@@ -1458,6 +1456,7 @@ void Lens::createMainHalos(InputParams& params)
   
 	for(std::size_t i = 0; i < main_halos.size(); ++i){
 		main_halos[i]->setCosmology(cosmo);
+    main_halos[i]->setDist();
   }
 }
 

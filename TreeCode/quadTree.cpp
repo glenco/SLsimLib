@@ -120,7 +120,7 @@ QTreeNBHndl TreeQuad::BuildQTreeNB(PosType **xp,IndexType Nparticles,IndexType *
   original_xl = lengths[0];
   original_yl = lengths[1];
  
-  if(lengths[0] != 0 || lengths[1] != 0){
+  if(lengths[0] == 0 || lengths[1] == 0){
     throw std::invalid_argument("particles in same place.");
   }
   
