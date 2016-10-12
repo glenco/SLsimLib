@@ -1456,7 +1456,7 @@ void Lens::createMainHalos(InputParams& params)
   
 	for(std::size_t i = 0; i < main_halos.size(); ++i){
 		main_halos[i]->setCosmology(cosmo);
-    main_halos[i]->setDist();
+    main_halos[i]->setDist(cosmo);
   }
 }
 
