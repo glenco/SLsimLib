@@ -99,7 +99,7 @@ public:
 	virtual void initFromMassFunc(float my_mass, float my_Rsize, float my_rscale, PosType my_slope, long *seed);
   
   /// set Rsize (in Mpc) and reset Rmax
-  virtual void set_Rsize(float my_Rsize){Rmax = Rmax*my_Rsize/Rsize; Rsize = my_Rsize; xmax = Rsize/rscale;};
+  virtual void set_RsizeRmax(float my_Rsize){Rmax = Rmax*my_Rsize/Rsize; Rsize = my_Rsize; xmax = Rsize/rscale;};
 	/// set mass (in solar masses)
 	void set_mass(float my_mass){mass=my_mass;};
 	/// set scale radius (in Mpc)
@@ -713,10 +713,11 @@ public:
   
 	void initFromFile(float my_mass, long *seed, float vmax, float r_halfmass);
 	void initFromMassFunc(float my_mass, float my_Rsize, float my_rscale, PosType my_slope, long *seed);
-  /// set Rsize
-  void set_Rsize(float my_Rsize){LensHalo::setRsize(my_Rsize); xmax = LensHalo::getRsize()/rscale; gmax = InterpolateFromTable(gtable,xmax);};
+  /// set Rsize, xmax and gmax
+  void set_RsizeXmax(float my_Rsize){LensHalo::setRsize(my_Rsize); xmax = LensHalo::getRsize()/rscale; gmax = InterpolateFromTable(gtable,xmax);};
   /// set scale radius
-	void set_rscale(float my_rscale){rscale=my_rscale; xmax = LensHalo::getRsize()/rscale; gmax = InterpolateFromTable(gtable,xmax);};
+  /// set rscale, xmax and gmax
+	void set_rscaleXmax(float my_rscale){rscale=my_rscale; xmax = LensHalo::getRsize()/rscale; gmax = InterpolateFromTable(gtable,xmax);};
   
 protected:
 	/// table size
@@ -1033,8 +1034,6 @@ public:
    */
 	//void initFromFile(float my_mass, long *seed, float vmax, float r_halfmass);
   
-	/// set Rsize
-	//void set_Rsize(float my_Rsize){Rsize=my_Rsize; xmax = Rsize/rscale; gmax = InterpolateFromTable(gtable,xmax);};
 	/// set scale radius
   void set_rscale(float my_rscale){rscale=my_rscale; xmax = LensHalo::getRsize()/rscale; gmax = InterpolateFromTable(gtable,xmax);};
   // friend struct Ialpha_func;
@@ -1098,8 +1097,6 @@ public:
 	LensHaloJaffe(InputParams& params);
 	virtual ~LensHaloJaffe();
   
-	/// set Rsize
-	//void set_Rsize(float my_Rsize){Rsize = my_Rsize; xmax = Rsize/rscale; gmax = InterpolateFromTable(gtable,xmax);};
 	/// set scale radius
   void set_rscale(float my_rscale){rscale=my_rscale; xmax = LensHalo::getRsize()/rscale; gmax = InterpolateFromTable(gtable,xmax);};
   

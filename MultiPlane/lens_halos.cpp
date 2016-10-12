@@ -62,7 +62,7 @@ void LensHalo::error_message1(std::string parameter,std::string file){
 
 void LensHalo::assignParams(InputParams& params,bool needRsize){
   if(!params.get("main_mass",mass)) error_message1("main_mass",params.filename());
-  if(needRsize){
+  if(needRsize){  // this might not be required for lenses like NSIE
     if(!params.get("main_Rsize",Rsize)) error_message1("main_Rsize",params.filename());
   }
   if(!params.get("main_zlens",zlens)) error_message1("main_zlens",params.filename());
@@ -732,7 +732,6 @@ LensHaloRealNSIE::LensHaloRealNSIE(
 
 LensHaloRealNSIE::LensHaloRealNSIE(InputParams& params):LensHalo(params,false){
   sigma = 0.;
-  LensHalo::setZlens(0.0);
   fratio = 0.;
   pa = 0.;
   rcore = 0.;

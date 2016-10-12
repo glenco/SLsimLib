@@ -253,7 +253,7 @@ void LensHaloAnaNSIE::RandomizeSubstructure2(PosType rangeInRei,long *seed){
 		}while(subs[k].get_mass() < sub_Mmin);  // not sure why this is necessary
 
 		// average density of a substructure does not scale with host
-		subs[k].set_Rsize(sub_Rsize*pow(scale,1./3.)
+		subs[k].set_RsizeRmax(sub_Rsize*pow(scale,1./3.)
 				*pow(subs[k].get_mass()/sub_Mmax/scale,1/3.));
 
 		subs[k].set_slope(sub_beta);
@@ -384,7 +384,7 @@ void LensHaloAnaNSIE::RandomizeSubstructure3(PosType rangeInRei,long *seed){
 		}while(subs[k].get_mass() < sub_Mmin);  // not sure why this is necessary
 
 		// average density of a substructure does not scale with host
-		subs[k].set_Rsize(sub_Rsize*pow(subs[k].get_mass()/sub_Mmax,1/3.));
+		subs[k].set_RsizeRmax(sub_Rsize*pow(subs[k].get_mass()/sub_Mmax,1/3.));
 
 		// maximum radius for a substructure of this mass
 		rmax = (Einstein_ro_save*rangeInRei + subs[k].getRsize()

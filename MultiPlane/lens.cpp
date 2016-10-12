@@ -1452,6 +1452,7 @@ void Lens::createMainHalos(InputParams& params)
         main_halos.push_back(new LensHaloJaffe(params));
         break;
 		}
+    
 	}
   
 	for(std::size_t i = 0; i < main_halos.size(); ++i){

@@ -23,7 +23,6 @@ LensHaloParticles::LensHaloParticles(
   
   LensHalo::setZlens(redshift);
   LensHalo::setCosmology(cosmo);
-  LensHalo::set_Rsize(1.0e3);
   LensHalo::set_flag_elliptical(false);
   
   stars_N = 0;
