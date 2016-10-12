@@ -159,8 +159,11 @@ void LensHaloBaseNSIE::force_halo(
  * force calculation.
  */
 void LensHaloBaseNSIE::assignParams(InputParams& params){
-	if(!params.get("main_mass",mass)) error_message1("main_mass",params.filename());
-	if(!params.get("main_zlens",zlens)) error_message1("main_zlens",params.filename());
+  double tmp;
+	if(!params.get("main_mass",tmp)) error_message1("main_mass",params.filename());
+  LensHalo::setMass(tmp);
+	if(!params.get("main_zlens",tmp)) error_message1("main_zlens",params.filename());
+  LensHalo::setZlens(tmp);
 	if(!params.get("main_sigma",sigma)) error_message1("main_sigma",params.filename());
 	if(!params.get("main_core",rcore)) error_message1("main_core",params.filename());
 	if(!params.get("main_axis_ratio",fratio)) error_message1("main_axis_ratio",params.filename());
@@ -171,7 +174,7 @@ void LensHaloBaseNSIE::assignParams(InputParams& params){
   }
 	if(!params.get("main_pos_angle",pa)) error_message1("main_pos_angle",params.filename());
   
-	Rsize = rmaxNSIE(sigma,mass,fratio,rcore);
+	Rsize = rmaxNSIE(sigma,get_mass(),fratio,rcore);
   
 	Rmax = MAX(1.0,1.0/fratio)*Rsize;  // redefine
   
@@ -320,7 +323,7 @@ void LensHaloBaseNSIE::PrintLens(bool show_substruct,bool show_stars){
 		if(show_substruct){
 			if(substruct_implanted || sub_N > 0){
 				for(i=0;i<sub_N;++i){
-				  cout << "RcutSubstruct "<<i << " " <<subs[i].get_Rsize() << " Mpc" << endl;
+				  cout << "RcutSubstruct "<<i << " " <<subs[i].getRsize() << " Mpc" << endl;
 				  cout << "massSubstruct "<<i<<" "<<subs[i].get_mass() << " Msun" << endl;
 				  cout << "xSubstruct "<<i<<" "<<sub_x[i][0]<<" "<<sub_x[i][1] << " Mpc" << endl;
 					switch(main_sub_type){

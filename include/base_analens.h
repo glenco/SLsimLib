@@ -71,7 +71,7 @@ public:
 	/// get the velocity dispersion
 	virtual PosType get_sigma(){return sigma;};
 	/// get the NSIE radius
-	//PosType get_Rsize(){return Rsize;};
+	//PosType getRsize(){return Rsize;};
 	/// get the axis ratio
 	virtual PosType get_fratio(){return fratio;};
 	/// get the position angle

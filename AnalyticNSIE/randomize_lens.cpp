@@ -258,10 +258,10 @@ void LensHaloAnaNSIE::RandomizeSubstructure2(PosType rangeInRei,long *seed){
 
 		subs[k].set_slope(sub_beta);
 
-		subs[k].set_rscale(0.1*subs[k].get_Rsize());
+		subs[k].set_rscale(0.1*subs[k].getRsize());
 
 		// maximum radius for a substructure of this mass
-		rmax = (Einstein_ro_save*rangeInRei + subs[k].get_Rsize()
+		rmax = (Einstein_ro_save*rangeInRei + subs[k].getRsize()
 		     + pow(2*subs[k].get_mass()*Einstein_ro_save/pi/Sigma_crit/sheartol,1./3.) );
 
 		//std::cout << "RcutSubstruct[%i] = %e\n",k,RcutSubstruct[k]);
@@ -275,7 +275,7 @@ void LensHaloAnaNSIE::RandomizeSubstructure2(PosType rangeInRei,long *seed){
 			rav[0] += sub_x[k][0];
 			rav[1] += sub_x[k][1];
 			r2av += r*r;
-			area_av += pow(subs[k].get_Rsize(),2);
+			area_av += pow(subs[k].getRsize(),2);
 			++k;
 		}
 	}
@@ -387,7 +387,7 @@ void LensHaloAnaNSIE::RandomizeSubstructure3(PosType rangeInRei,long *seed){
 		subs[k].set_Rsize(sub_Rsize*pow(subs[k].get_mass()/sub_Mmax,1/3.));
 
 		// maximum radius for a substructure of this mass
-		rmax = (Einstein_ro_save*rangeInRei + subs[k].get_Rsize()
+		rmax = (Einstein_ro_save*rangeInRei + subs[k].getRsize()
 		     + pow(2*subs[k].get_mass()*Einstein_ro_save/pi/Sigma_crit/sheartol,1./3.) );
 
 		//std::cout << "RcutSubstruct[%i] = %e\n",k,RcutSubstruct[k]);
@@ -401,7 +401,7 @@ void LensHaloAnaNSIE::RandomizeSubstructure3(PosType rangeInRei,long *seed){
 			rav[0] += sub_x[k][0];
 			rav[1] += sub_x[k][1];
 			r2av += r*r;
-			area_av += pow(subs[k].get_Rsize(),2);
+			area_av += pow(subs[k].getRsize(),2);
 			++k;
 		}
 	}
