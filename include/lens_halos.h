@@ -47,21 +47,22 @@ class LensHalo{
 public:
 	LensHalo();
   LensHalo(PosType z,COSMOLOGY &cosmo);
-	LensHalo(InputParams& params);
+  LensHalo(InputParams& params,COSMOLOGY &cosmo,bool needRsize = true);
+  LensHalo(InputParams& params,bool needRsize = true);
 	virtual ~LensHalo();
   
   /** get the Rmax which is larger than Rsize in Mpc.  This is the region exterior to which the
    halo will be considered a point mass.  Between Rsize and Rmax the deflection and shear are interpolated.
    */
-  float get_Rmax() const { return Rmax; }
+  inline float get_Rmax() const { return Rmax; }
   /// get the Rsize which is the size of the halo in Mpc
-  float get_Rsize() const { return Rsize; }
+  inline float getRsize() const { return Rsize; }
 	/// get the mass solar units
-	float get_mass() const { return mass; }
+	inline float get_mass() const { return mass; }
 	/// get the scale radius in Mpc
-	float get_rscale() const { return rscale; }
+	inline float get_rscale() const { return rscale; }
 	/// get the redshift
-	PosType getZlens() const { return zlens; }
+	inline PosType getZlens() const { return zlens; }
     
   // set the position of the Halo in physical Mpc on the lens plane
   //void setX(PosType PosX, PosType PosY) { posHalo[0] = PosX ; posHalo[1] = PosY ; }
@@ -105,11 +106,16 @@ public:
 	virtual void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rsize/rscale;};
 	/// set redshift
   void setZlens(PosType my_zlens){zlens=my_zlens; Dist=-1;}
+  void setRsize(PosType R){Rsize = R;}
+  
   // ste redshift and distance
   void setZlensDist(PosType my_zlens,const COSMOLOGY &cos){
     zlens=my_zlens;
     Dist = cos.angDist(zlens);
   }
+  void setMass(PosType m){mass = m;}
+  
+  
   /// set slope
 	virtual void set_slope(PosType my_slope){beta=my_slope;};
   /// get slope
@@ -194,10 +200,14 @@ private:
   PosType Dist;
   /// Position of the Halo in angle
   PosType posHalo[2];
+  PosType zlens;
+  float mass;
+  // This is the size of the halo beyond which it does not have the profile expected profile.
+  float Rsize = 0;
+
 
 protected:
 
-  PosType zlens;
 
   // make LensHalo uncopyable
   void operator=(LensHalo &){};
@@ -210,9 +220,6 @@ protected:
   void force_halo_sym(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0);
   void force_halo_asym(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0);
   
-
-  // This is the size of the halo beyond which it does not have the profile expected profile.
-  float Rsize = 0;
   
   struct norm_func{
     norm_func(LensHalo& halo, PosType my_r_max): halo(halo), r_max(my_r_max){};
@@ -253,14 +260,12 @@ protected:
   
   
   /// read in parameters from a parameterfile in InputParams params
-  void assignParams(InputParams& params);
+  void assignParams(InputParams& params,bool needRsize);
   /// read in star parameters. This is valid for all halos and not overloaded.
   void assignParams_stars(InputParams& params);
   
   /// error message printout
   void error_message1(std::string name,std::string filename);
-  
-  float mass;
   
   // Beyond Rmax the halo will be treated as a point mass.  Between Rsize and Rmax the deflection
   // and shear are interpolated.  For circularly symmetric lenses Rmax should be equal to Rsize
@@ -709,9 +714,9 @@ public:
 	void initFromFile(float my_mass, long *seed, float vmax, float r_halfmass);
 	void initFromMassFunc(float my_mass, float my_Rsize, float my_rscale, PosType my_slope, long *seed);
   /// set Rsize
-  void set_Rsize(float my_Rsize){Rsize=my_Rsize; xmax = Rsize/rscale; gmax = InterpolateFromTable(gtable,xmax);};
+  void set_Rsize(float my_Rsize){LensHalo::setRsize(my_Rsize); xmax = LensHalo::getRsize()/rscale; gmax = InterpolateFromTable(gtable,xmax);};
   /// set scale radius
-	void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rsize/rscale; gmax = InterpolateFromTable(gtable,xmax);};
+	void set_rscale(float my_rscale){rscale=my_rscale; xmax = LensHalo::getRsize()/rscale; gmax = InterpolateFromTable(gtable,xmax);};
   
 protected:
 	/// table size
@@ -747,7 +752,7 @@ protected:
 		return -0.5*x*x*InterpolateFromTable(g2table,x)/gmax;
 	}
 	inline KappaType phi_h(PosType x) const{
-    return 0.25*(InterpolateFromTable(htable,x) - InterpolateFromTable(htable,Rsize/rscale))/gmax + log(Rsize) ;
+    return 0.25*(InterpolateFromTable(htable,x) - InterpolateFromTable(htable,LensHalo::getRsize()/rscale))/gmax + log(LensHalo::getRsize()) ;
     // The constant contribution is made to match with the point mass at x = Rsize/rscale.
 	}
   inline KappaType phi_int(PosType x) const{
@@ -897,7 +902,7 @@ private:
   /// this is phi Sigma_crit pi / mass, the constants are added so that it is continous over the bourder at Rsize
  	inline KappaType phi_h(PosType x) const {
 		if(x==0) x=1e-6*xmax;
-    return ( pow(x/xmax,2-beta) - 1 )/(2-beta) + log(Rsize) ;
+    return ( pow(x/xmax,2-beta) - 1 )/(2-beta) + log(LensHalo::getRsize()) ;
 	}
   inline KappaType phi_int(PosType x) const{
 		//return alpha_int(x);
@@ -933,7 +938,7 @@ public:
 	/// get the velocity dispersion
 	float get_sigma(){return sigma;};
 	/// get the NSIE radius
-	float get_Rsize(){return Rsize;};
+	//float get_Rsize(){return Rsize;};
 	/// get the axis ratio
 	float get_fratio(){return fratio;};
 	/// get the position angle
@@ -944,7 +949,7 @@ public:
 	/// set the velocity dispersion
 	void set_sigma(float my_sigma){sigma=my_sigma;};
 	/// set the NSIE radius
-	void set_Rsize(float my_Rsize){Rsize=my_Rsize;};
+	//void set_Rsize(float my_Rsize){Rsize=my_Rsize;};
 	///set the axis ratio
 	void set_fratio(float my_fratio){fratio=my_fratio;};
 	/// set the position angle
@@ -1031,7 +1036,7 @@ public:
 	/// set Rsize
 	//void set_Rsize(float my_Rsize){Rsize=my_Rsize; xmax = Rsize/rscale; gmax = InterpolateFromTable(gtable,xmax);};
 	/// set scale radius
-	void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rsize/rscale; gmax = InterpolateFromTable(gtable,xmax);};
+  void set_rscale(float my_rscale){rscale=my_rscale; xmax = LensHalo::getRsize()/rscale; gmax = InterpolateFromTable(gtable,xmax);};
   // friend struct Ialpha_func;
   
 protected:
@@ -1096,7 +1101,7 @@ public:
 	/// set Rsize
 	//void set_Rsize(float my_Rsize){Rsize = my_Rsize; xmax = Rsize/rscale; gmax = InterpolateFromTable(gtable,xmax);};
 	/// set scale radius
-	void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rsize/rscale; gmax = InterpolateFromTable(gtable,xmax);};
+  void set_rscale(float my_rscale){rscale=my_rscale; xmax = LensHalo::getRsize()/rscale; gmax = InterpolateFromTable(gtable,xmax);};
   
   PosType ffunction(PosType x) const;
 	PosType gfunction(PosType x) const;

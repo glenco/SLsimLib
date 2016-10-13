@@ -186,7 +186,7 @@ LensHaloMassMap::LensHaloMassMap(InputParams& params, const COSMOLOGY& lenscosmo
   initMap();
   
   // set redshift if necessary
-  if(zlens == -1)
+  if(LensHalo::getZlens() == -1)
     setZlens(map->zlens);
 }
 
@@ -385,9 +385,12 @@ void LensHaloMassMap::checkCosmology()
 
 void LensHaloMassMap::assignParams(InputParams& params)
 {
-  if(!params.get("z_lens", zlens))
-    zlens = -1; // set to -1 so that it will be set to the MOKA map value
-  
+  PosType tmp;
+  if(!params.get("z_lens", tmp)){
+    LensHalo::setZlens(-1); // set to -1 so that it will be set to the MOKA map value
+  }else{
+    LensHalo::setZlens(tmp);
+  }
   if(!params.get("MOKA_input_file", MOKA_input_file))
   {
     ERROR_MESSAGE();
