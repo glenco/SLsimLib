@@ -44,6 +44,7 @@ TreeQuad::TreeQuad(
 
 	CalcMoments();
   
+  phiintconst = (120*log(2.) - 631.)/840 + 19./70;
 	return;
 }
 /** \brief Constructor meant for halos with internal structure parameters.  This is a protected constructor because
@@ -78,6 +79,7 @@ MultiMass(true),MultiRadius(true),masses(NULL),sizes(NULL)
 
 	CalcMoments();
 
+  phiintconst = (120*log(2.) - 631.)/840 + 19./70;
 	return;
 }
 
@@ -689,27 +691,10 @@ void TreeQuad::walkTree_iter(
               PosType size = sizes[tmp_index*MultiRadius];
               
 						  // intersecting, subtract the point particle
-						  if(rcm2 < 9*size*size)
+						  if(rcm2 < 4*size*size)
               {
-                prefac = masses[MultiMass*tmp_index]/rcm2/pi;
-                arg1 = rcm2/(size*size);
-
-                tmp = (alpha_h(arg1,size) + 1.0)*prefac;
-							  alpha[0] += tmp*xcm[0];
-							  alpha[1] += tmp*xcm[1];
                 
-                {
-								  *kappa += kappa_h(arg1,size)*prefac;
-                  
-								  tmp = (gamma_h(arg1,size) + 2.0)*prefac/rcm2;
-                  
-								  gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
-								  gamma[1] += xcm[0]*xcm[1]*tmp;
-                  
-                  // TODO: makes sure the normalization of phi_h agrees with this
-                  *phi += (phi_h(arg1,size) + 0.5*log(rcm2))*prefac*rcm2;
-                  
-							  }
+                b_spline_profile(xcm,sqrt(rcm2),masses[MultiMass*tmp_index],size,alpha,kappa,gamma,phi);
 						  }
 					  }
 				  }
@@ -924,32 +909,15 @@ void TreeQuad::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alph
  					}else{  // case of no halos just particles and no class derived from TreeQuad
             
 						if(rcm2 < 1e-20) rcm2 = 1e-20;
-						//rcm = sqrt(rcm2);
             
             PosType size = sizes[tmp_index*MultiRadius];
             
 						// intersecting, subtract the point particle
-						if(rcm2 < 9*size*size)
+						if(rcm2 < 4*size*size)
             {
-              prefac = masses[MultiMass*tmp_index]/rcm2/pi;
-              arg1 = rcm2/(size*size);
-              arg2 = size;
               
-							tmp = (alpha_h(arg1,arg2) + 1.0)*prefac;
-							alpha[0] += tmp*xcm[0];
-							alpha[1] += tmp*xcm[1];
+              b_spline_profile(xcm,sqrt(rcm2),masses[MultiMass*tmp_index],size,alpha,kappa,gamma,phi);
               
-							{
-								*kappa += kappa_h(arg1,arg2)*prefac;
-                
-								tmp = (gamma_h(arg1,arg2) + 2.0)*prefac/rcm2;
-                
-								gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
-								gamma[1] += xcm[0]*xcm[1]*tmp;
-                
-                // TODO: makes sure the normalization of phi_h agrees with this
-                *phi += (phi_h(arg1,arg2) + 0.5*log(rcm2))*prefac*rcm2;
-							}
 						}
 					}
 				}
