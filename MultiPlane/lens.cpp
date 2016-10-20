@@ -1604,7 +1604,7 @@ void Lens::clearMainHalos(bool verbose)
 void Lens::insertMainHalo(LensHalo* halo,bool addplanes,bool verbose)
 {
 	halo->setCosmology(cosmo);
-  halo->setDist(cosmo);
+  halo->setDist(cosmo.angDist(getZlens()));
 	main_halos.push_back(halo);
   
 	flag_switch_main_halo_on = true;
@@ -1614,6 +1614,23 @@ void Lens::insertMainHalo(LensHalo* halo,bool addplanes,bool verbose)
   
 	combinePlanes(verbose);
 }
+
+
+void Lens::insertMainHalo(LensHalo* halo,PosType zlens, bool addplanes,bool verbose)
+{
+  halo->setCosmology(cosmo);
+  halo->setDist(cosmo.angDist(getZlens()));
+  halo->setZlens(zlens);
+  main_halos.push_back(halo);
+  
+  flag_switch_main_halo_on = true;
+  
+  if(addplanes) addMainHaloToPlane(halo);
+  else addMainHaloToNearestPlane(halo);
+  
+  combinePlanes(verbose);
+}
+
 
 /**
  * \brief Inserts a sequense of main lens halos and ads them to the existing ones.
@@ -1629,7 +1646,7 @@ void Lens::insertMainHalos(LensHalo** halos, std::size_t Nhalos,bool addplanes, 
 	for(std::size_t i = 0; i < Nhalos; ++i)
 	{
 		halos[i]->setCosmology(cosmo);
-    halos[i]->setDist(cosmo);
+    halos[i]->setDist(cosmo.angDist(getZlens()));
 		main_halos.push_back(halos[i]);
 		if(addplanes) addMainHaloToPlane(halos[i]);
     else addMainHaloToNearestPlane(halos[i]);
@@ -1655,7 +1672,7 @@ void Lens::replaceMainHalos(LensHalo* halo,bool verbose)
 	main_halos.clear();
 	
 	halo->setCosmology(cosmo);
-  halo->setDist(cosmo);
+  halo->setDist(cosmo.angDist(getZlens()));
 	main_halos.push_back(halo);
 	
 	flag_switch_main_halo_on = true;
@@ -1664,6 +1681,24 @@ void Lens::replaceMainHalos(LensHalo* halo,bool verbose)
 	createMainPlanes();
 	combinePlanes(verbose);
 }
+
+
+void Lens::replaceMainHalos(LensHalo* halo, PosType zlens, bool verbose)
+{
+  main_halos.clear();
+  
+  halo->setCosmology(cosmo);
+  halo->setZlens(zlens);
+  halo->setDist(cosmo.angDist(getZlens()));
+  main_halos.push_back(halo);
+  
+  flag_switch_main_halo_on = true;
+  
+  Utilities::delete_container(main_planes);
+  createMainPlanes();
+  combinePlanes(verbose);
+}
+
 
 /**
  * \brief Inserts a sequense of main lens halos and remove all previous ones.
@@ -1679,7 +1714,7 @@ void Lens::replaceMainHalos(LensHalo** halos, std::size_t Nhalos,bool verbose)
 	for(std::size_t i = 0; i < Nhalos; ++i)
 	{
 		halos[i]->setCosmology(cosmo);
-    halos[i]->setDist(cosmo);
+    halos[i]->setDist(cosmo.angDist(getZlens()));
 		main_halos.push_back(halos[i]);
 	}
 	
