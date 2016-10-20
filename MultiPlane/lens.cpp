@@ -1674,6 +1674,7 @@ void Lens::insertMainHalo(LensHalo* halo,bool addplanes,bool verbose)
 void Lens::insertMainHalo(LensHalo* halo,PosType zlens, bool addplanes,bool verbose)
 {
   halo->setCosmology(cosmo);
+  halo->setDist(cosmo);
   halo->setZlens(zlens);
   main_halos.push_back(halo);
   
@@ -1743,6 +1744,7 @@ void Lens::replaceMainHalos(LensHalo* halo, PosType zlens, bool verbose)
   
   halo->setCosmology(cosmo);
   halo->setZlens(zlens);
+  halo->setDist(cosmo);
   main_halos.push_back(halo);
   
   flag_switch_main_halo_on = true;
