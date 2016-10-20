@@ -1484,18 +1484,19 @@ void Lens::clearMainHalos(bool verbose)
  *
  *  The angular position of the halo should be preserved, but the x coordinates may change
  */
-void Lens::insertMainHalo(LensHalo* halo,bool addplanes,bool verbose)
+
+void Lens::insertMainHalo(LensHalo* halo,PosType zlens, bool addplanes,bool verbose)
 {
-	halo->setCosmology(cosmo);
-  halo->setDist(cosmo);
-	main_halos.push_back(halo);
+  halo->setCosmology(cosmo);
+  halo->setZlensDist(zlens,cosmo);
+  main_halos.push_back(halo);
   
-	flag_switch_main_halo_on = true;
-	
-	if(addplanes) addMainHaloToPlane(halo);
+  flag_switch_main_halo_on = true;
+  
+  if(addplanes) addMainHaloToPlane(halo);
   else addMainHaloToNearestPlane(halo);
   
-	combinePlanes(verbose);
+  combinePlanes(verbose);
 }
 
 /**
@@ -1533,20 +1534,19 @@ void Lens::insertMainHalos(LensHalo** halos, std::size_t Nhalos,bool addplanes, 
  * Note that this does not delete the halos that were there.  It just removes
  * them from the lens.
  */
-void Lens::replaceMainHalos(LensHalo* halo,bool verbose)
+void Lens::replaceMainHalo(LensHalo* halo,PosType zlens, bool addplanes,bool verbose)
 {
-	main_halos.clear();
-	
-	halo->setCosmology(cosmo);
-  halo->setDist(cosmo);
+  main_halos.clear();
   
-	main_halos.push_back(halo);
-	
-	flag_switch_main_halo_on = true;
-	
-	Utilities::delete_container(main_planes);
-	createMainPlanes();
-	combinePlanes(verbose);
+  halo->setCosmology(cosmo);
+  halo->setZlensDist(zlens,cosmo);
+  main_halos.push_back(halo);
+  
+  flag_switch_main_halo_on = true;
+  
+  Utilities::delete_container(main_planes);
+  createMainPlanes();
+  combinePlanes(verbose);
 }
 
 /**
