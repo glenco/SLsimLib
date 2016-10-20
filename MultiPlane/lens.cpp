@@ -1438,6 +1438,21 @@ void Lens::insertMainHalo(LensHalo* halo,bool addplanes,bool verbose)
 	combinePlanes(verbose);
 }
 
+void Lens::insertMainHalo(LensHalo* halo,PosType zlens, bool addplanes,bool verbose)
+{
+  halo->setCosmology(cosmo);
+  halo->setZlens(zlens);
+  main_halos.push_back(halo);
+  
+  flag_switch_main_halo_on = true;
+  
+  if(addplanes) addMainHaloToPlane(halo);
+  else addMainHaloToNearestPlane(halo);
+  
+  combinePlanes(verbose);
+}
+
+
 /**
  * \brief Inserts a sequense of main lens halos and ads them to the existing ones.
  * Then all lensing planes are updated accordingly.
@@ -1485,6 +1500,22 @@ void Lens::replaceMainHalos(LensHalo* halo,bool verbose)
 	createMainPlanes();
 	combinePlanes(verbose);
 }
+
+void Lens::replaceMainHalos(LensHalo* halo, PosType zlens, bool verbose)
+{
+  main_halos.clear();
+  
+  halo->setCosmology(cosmo);
+  halo->setZlens(zlens);
+  main_halos.push_back(halo);
+  
+  flag_switch_main_halo_on = true;
+  
+  Utilities::delete_container(main_planes);
+  createMainPlanes();
+  combinePlanes(verbose);
+}
+
 
 /**
  * \brief Inserts a sequense of main lens halos and remove all previous ones.
