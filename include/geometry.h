@@ -72,8 +72,69 @@ namespace Utilities {
      *  This is faster than the windings() functions which also calulate the area
      */
     int incurve(PosType x[],std::vector<double *> curve);
+    
+    /// K=3
+    class HealPixPoint{
+    public:
+      HealPixPoint(int h=4):H(h)
+      {
+        theta_c = asin( 2./3. );
+      }
+      HealPixPoint(const SphericalPoint &sp,int h=4):H(h)
+      {
+        theta_c = asin( 2./3. );
+        hp2sp(sp);
+      }
+      HealPixPoint(double x,double y,int h=4):H(h)
+      {
+        theta_c = asin( 2./3. );
+        xx[0] = x;
+        xx[1] = y;
+      }
+    
+      /// set a HealPix point coordinates from sphereical coordinates
+      void hp2sp(const SphericalPoint &sp){
+        
+        if(fabs(sp.theta) < theta_c){
+          xx[0] = sp.phi;
+          xx[1] = 1.5*pi*sin(sp.theta)/H;
+        }else{
+          
+          double sigma = sqrt(3*(1 - fabs(sin(sp.theta)) ) );
+          xx[0] = std::copysign(1.0,sp.theta)*pi*(2-sigma)/H;
+          
+          double phi_c = -pi + ( 2*std::floor( (sp.phi + pi)*H/2/pi ) + 1 )*pi/H;
 
-  }  
+          xx[1] = phi_c + (sp.phi - phi_c)*sigma;
+        }
+      }
+      
+      /// output HealPix point in spherical coordinates
+      SphericalPoint sp2hp(){
+        SphericalPoint sp;
+        if(fabs(xx[1]) < pi/H){
+          sp.phi = xx[0];
+          sp.theta = asin(xx[1]*H/pi/1.5);
+        }else{
+          double sigma = 2 - fabs(xx[1]*H)/pi;
+          double xc = -pi +(2*std::floor((xx[0]+pi)*H/2/pi) +1)*pi/H;
+          sp.phi = xc + (xx[0] -xc)/sigma;
+          sp.theta = std::copysign(1,xx[1])*asin(1-sigma*sigma/3);
+        }
+        
+        return sp;
+      }
+      
+      double x(){return xx[0];}
+      double y(){return xx[1];}
+      
+    private:
+      Point_2d xx;
+      double theta_c;
+      int H;
+    
+    };
+}
 }
 
 #endif /* defined(__GLAMER__geometry__) */

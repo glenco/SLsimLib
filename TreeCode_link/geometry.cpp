@@ -23,12 +23,12 @@ void Utilities::Geometry::SphericalPoint::cartisianTOspherical(PosType const x[]
   theta = asin(x[2]/r);
   phi = atan2(x[1],x[0]);
 }
-      
-      /** \brief Calculates the stereographic projection of the point onto a plane.
-       *
-       * The result is in radian units.  Near the central point this is a rectolinear projection
-       * onto a tangent plane.
-       */
+
+/** \brief Calculates the stereographic projection of the point onto a plane.
+*
+* The result is in radian units.  Near the central point this is a rectolinear 
+* projection onto a tangent plane.
+*/
 void Utilities::Geometry::SphericalPoint::StereographicProjection(
       const SphericalPoint &central   /// point on the sphere where the tangent plane touches
       ,PosType x[]             /// 2D output coordinate on projection
