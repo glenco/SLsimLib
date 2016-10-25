@@ -124,6 +124,7 @@ void GridMap::ReInitializeGrid(LensHndl lens){
   ClearSurfaceBrightnesses();
 }
 
+/// Output a PixelMap of the surface brightness with same res as the GridMap
 PixelMap GridMap::getPixelMap(int resf){
   
   if(resf <=0){
@@ -150,6 +151,7 @@ PixelMap GridMap::getPixelMap(int resf){
   return map;
 }
 
+/// surface brightness map
 void GridMap::getPixelMap(PixelMap &map){
   
   int resf = (Ngrid_init-1)/(map.getNx()-1);
@@ -221,7 +223,21 @@ PixelMap GridMap::writePixelMapUniform(
   
   if(getNumberOfPoints() == 0 ) return PixelMap();
   PixelMap map(center, Nx, Ny,x_range/(Nx-1));
+  
+  map.Clean();
+  
+  writePixelMapUniform(map,lensvar);
+  
+  return map;
+}
 
+PixelMap GridMap::writePixelMapUniform(
+              LensingVariable lensvar  /// which quantity is to be displayed
+){
+  size_t Nx =  Ngrid_init;
+  size_t Ny = Ngrid_init2;
+  
+  PixelMap map( center.x, Nx, Ny,x_range/(Nx-1) );
   map.Clean();
   
   writePixelMapUniform(map,lensvar);
