@@ -2347,6 +2347,8 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose)
           minmass = mass;
         }
         
+        if(field_halos.back()->get_Rmax() > R_max) R_max = field_halos.back()->get_Rmax();
+        
         ++j;
         
         if(flag_field_gal_on){
