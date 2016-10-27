@@ -8,4 +8,11 @@
 
 #include "lightcone_construction.h"
 
+void LightCone::ReadBoxRockStar(std::string filename,std::vector<DataRockStar> &output){
+  
+}
+void LightCone::PrintConeRockStar(std::string outfile){
+  
+}
+
 

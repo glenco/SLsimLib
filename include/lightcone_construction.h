@@ -12,6 +12,9 @@
 #include <stdio.h>
 #include "point.h"
 
+
+/*** \brief Class for constructing light cones form boxes
+ */
 class LightCone{
   LightCone(Point_3d x_observer,Point_3d v_direction,double angular_radius):
   xo(x_observer),v(v_direction),r_theta(angular_radius)
@@ -19,8 +22,20 @@ class LightCone{
       v = v/v.length();
     };
   
+  
+  struct DataRockStar{
+    double Vmax;
+    Point_3d x;
+  };
+
+  void ReadBoxRockStar(std::string filename,std::vector<DataRockStar> &output);
+  void PrintConeRockStar(std::string outfile);
+  
+  
+  
+  /// select the halos from the box that are within the light cone
   template <typename T>
-  void select(int nrange,double Length,double rlow,double rhigh,std::vector<T> &input
+  void select(double Length,double rlow,double rhigh,std::vector<T> &input
               ,std::vector<T> &incone){
     Point_3d dx,x;
     double vx,r2,xp;
