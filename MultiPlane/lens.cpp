@@ -9,6 +9,7 @@
 #include <algorithm>
 #include "lens_halos.h"
 #include <iomanip>      // std::setprecision
+#include "lightcone_construction.h"
 
 using namespace std;
 
@@ -558,12 +559,32 @@ void Lens::resetFieldHalos(bool verbose)
   field_plane_redshifts = field_plane_redshifts_original;
   field_Dl = field_Dl_original;
   
-	if(sim_input_flag){
-		if(read_sim_file == false){
+  if(sim_input_flag){
+    if(read_sim_file == false){
       if(field_input_sim_format == MillenniumObs) readInputSimFileMillennium(verbose);
       if(field_input_sim_format == MultiDarkHalos) readInputSimFileMultiDarkHalos(verbose);
       if(field_input_sim_format == ObservedData) readInputSimFileObservedGalaxies(verbose);
+      
+      switch (field_input_sim_format) {
+        case MillenniumObs:
+          readInputSimFileMillennium(verbose);
+          break;
+        case MultiDarkHalos:
+          readInputSimFileMultiDarkHalos(verbose);
+          break;
+        case ObservedData:
+          readInputSimFileObservedGalaxies(verbose);
+          break;
+        case LightConeFormat:
+          readLightCone(verbose);
+          break;
+        default:
+          ERROR_MESSAGE();
+          throw std::runtime_error("field_input_sim_format is not set");
+          break;
+      }
     }
+
 	}
 	else{
 		createFieldHalos(verbose);
@@ -1802,6 +1823,19 @@ void Lens::createFieldHalos(bool verbose)
 }
 
 
+/* Read information in from a lightcone file written with LightCone::WriteLightCone()
+ * Here these are made into
+ */
+void Lens::readLightCone(bool verbose){
+  
+  std::cout << "Reading Field Halos from " << field_input_sim_file << std::endl;
+
+  LightCone::ReadLightConeNFW(field_input_sim_file,cosmo,field_halos);
+  
+  field_buffer = 0.0;
+  read_sim_file = true;
+}
+
 /**
  * \brief Read in information from a Virgo Millennium Data Base http://gavo.mpa-garching.mpg.de/MyMillennium/
  *
@@ -2878,9 +2912,26 @@ void Lens::buildPlanes(InputParams& params, bool verbose)
 
 		// create or read the field halos
 		if(sim_input_flag){
-      if(field_input_sim_format == MillenniumObs) readInputSimFileMillennium(verbose);
-      if(field_input_sim_format == MultiDarkHalos) readInputSimFileMultiDarkHalos(verbose);
-      if(field_input_sim_format == ObservedData) readInputSimFileObservedGalaxies(verbose);
+      
+      switch (field_input_sim_format) {
+        case MillenniumObs:
+          readInputSimFileMillennium(verbose);
+          break;
+        case MultiDarkHalos:
+          readInputSimFileMultiDarkHalos(verbose);
+          break;
+        case ObservedData:
+          readInputSimFileObservedGalaxies(verbose);
+          break;
+        case LightConeFormat:
+          readLightCone(verbose);
+          break;
+        default:
+          ERROR_MESSAGE();
+          throw std::runtime_error("field_input_sim_format is not set");
+          break;
+      }
+      
     }
     else{
       createFieldHalos(verbose);

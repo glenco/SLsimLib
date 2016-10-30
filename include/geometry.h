@@ -23,7 +23,7 @@ namespace Utilities {
   /// Namespace for geometrical functions mostly having to do with spherical coordinates
   namespace Geometry{
     
-    /// represents a point in spherical coordinates theta = 0 is equator
+    /// represents a point in spherical coordinates theta = 0 is the equator
     class SphericalPoint{
       
     public:
@@ -31,10 +31,7 @@ namespace Utilities {
       SphericalPoint():r(0),theta(0),phi(0){};
 
       SphericalPoint &operator=(Point_3d &x){
-        r = x.length();
-        theta = atan(x[1]/x[0]);
-        phi = atan(sqrt(x[0]*x[0] + x[1]*x[1])/x[2]);
-        
+        cartisianTOspherical(x.x);
         return *this;
       }
       
@@ -81,7 +78,8 @@ namespace Utilities {
      */
     int incurve(PosType x[],std::vector<double *> curve);
 
-  }  
+  }
 }
 
+std::ostream &operator<<(std::ostream &os,const Utilities::Geometry::SphericalPoint &p);
 #endif /* defined(__GLAMER__geometry__) */

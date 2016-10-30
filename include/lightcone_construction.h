@@ -15,7 +15,9 @@
 #include "geometry.h"
 
 
-/*** \brief Class for constructing light cones form boxes
+/*** \brief Class for constructing light cones form simulation boxes.
+*
+*
  */
 class LightCone{
 public:
@@ -29,14 +31,23 @@ public:
     double Rscale;   // in comoving units
   };
 
+  
+  /*** Read the points in from a snapshot of the halos created by RockStar.
+     The output will be the halos in the cone in coordinates where the x-axis is 
+   the center of the cone.  Changing the observer, xo, and direction of view, V,
+   effectively translates and rotates the box, respectively.  Only halos with radii 
+   between rlow and rhigh are added.
+   */
   void ReadBoxRockStar(std::string filename,Point_3d xo,Point_3d V
                                   ,double rlow,double rhigh
                                   ,std::vector<DataRockStar> &conehalos);
   
-  static void ReadLightCone(std::string filename,COSMOLOGY &cosmo
+  static void ReadLightConeNFW(std::string filename,COSMOLOGY &cosmo
                      ,std::vector<LensHalo* > &lensVec);
   
   static void WriteLightCone(std::string filename,std::vector<DataRockStar> &vec);
+  
+private:
   
   /// select the halos from the box that are within the light cone
   template <typename T>
@@ -104,8 +115,6 @@ public:
     }
   }
   
-  
-private:
   //Point_3d xo; // position of observer
   //Point_3d v; // direction of center of cone
   double r_theta; // angular radius of light cone (radians)

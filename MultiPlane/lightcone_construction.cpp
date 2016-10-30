@@ -8,14 +8,26 @@
 
 #include "lightcone_construction.h"
 
-LightCone::LightCone(double angular_radius):
+LightCone::LightCone(
+                     double angular_radius    /// angular radius of lightcone in radians
+                     ):
   r_theta(angular_radius)
 {
   sin_theta_sqrt = pow(sin(r_theta),2);
 };
 
-void LightCone::ReadLightCone(std::string filename,COSMOLOGY &cosmo
-                   ,std::vector<LensHalo* > &lensVec){
+/** \brief Read in a lightcone data file and render them into NFW halos
+ *
+ *   filename file should be the output of LightCone::WriteLightCone() to 
+ *   be in the right format.
+ */
+void LightCone::ReadLightConeNFW(
+                                 std::string filename   /// name of file to read
+                                 ,COSMOLOGY &cosmo      /// cosmology for changing distance to redshift
+                                 ,std::vector<LensHalo* > &lensVec  /// output LensHalos
+){
+  
+  Utilities::delete_container(lensVec);
   
   std::ifstream file(filename.c_str());
   std::string myline;
@@ -27,12 +39,12 @@ void LightCone::ReadLightCone(std::string filename,COSMOLOGY &cosmo
   size_t haloid;
   double mass,Rvir,Rscale;
   Utilities::Geometry::SphericalPoint sph_point;
-  Point_3d point;
+  Point_3d tmp_point;
   
   addr[0] = &haloid;
-  addr[1] = &(point.x[0]);
-  addr[2] = &(point.x[1]);
-  addr[3] = &(point.x[2]);
+  addr[1] = &(tmp_point.x[0]);
+  addr[2] = &(tmp_point.x[1]);
+  addr[3] = &(tmp_point.x[2]);
   addr[4] = &mass;
   addr[5] = &Rvir;
   addr[6] = &Rscale;
@@ -71,8 +83,10 @@ void LightCone::ReadLightCone(std::string filename,COSMOLOGY &cosmo
     }
     
     // convert to shereical coordinates and redshift
-    sph_point = point;
+    sph_point = tmp_point;
     z = cosmo.invCoorDist(sph_point.r);
+    
+    std::cout << tmp_point << std::endl << sph_point << std::endl;
     
     //***** read in data from light cone file
     lensVec.push_back(new LensHaloNFW(mass,Rvir,z,Rvir/Rscale,1,0,0) );
@@ -82,9 +96,14 @@ void LightCone::ReadLightCone(std::string filename,COSMOLOGY &cosmo
   file.close();
 }
 
-void LightCone::ReadBoxRockStar(std::string filename,Point_3d xo,Point_3d V
-                                ,double rlow,double rhigh
-                                ,std::vector<DataRockStar> &conehalos){
+void LightCone::ReadBoxRockStar(
+              std::string filename    /// input file name
+              ,Point_3d xo     /// observers location within the box in comoving Mpc
+              ,Point_3d V      /// direction of view
+              ,double rlow     /// lowest radial distance accepted
+              ,double rhigh    /// highest radial distance accepted
+              ,std::vector<DataRockStar> &conehalos  /// output list of halos, added to and not cleared
+                                ){
   
   std::cout <<" Opening " << filename << std::endl;
   std::ifstream file(filename.c_str());
