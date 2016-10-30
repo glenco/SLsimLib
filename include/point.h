@@ -432,14 +432,14 @@ struct Point_3d{
     x[2]/=value;
     return *this;
   }
-  Point_3d & operator/(PosType value){
-    Point_3d tmp;
+  Point_3d operator/(PosType value){
+    Point_3d p;
     
-    tmp[0] = x[0]/value;
-    tmp[1] = x[1]/value;
-    tmp[2] = x[2]/value;
+    p[0] = x[0]/value;
+    p[1] = x[1]/value;
+    p[2] = x[2]/value;
     
-    return *this;
+    return p;
   }
   Point_3d & operator*=(PosType value){
     x[0] *=value;
@@ -455,17 +455,25 @@ struct Point_3d{
     return p;
   }
   
+  Point_3d cross(Point_3d &v) const{
+    Point_3d p;
+    p[0] = x[1]*v[2] - x[2]*v[1];
+    p[1] = x[2]*v[0] - x[0]*v[2];
+    p[2] = x[0]*v[1] - x[1]*v[0];
+    return p;
+  }
+  
   /// scalar product
-  PosType operator*(const Point_3d &p){
+  PosType operator*(const Point_3d &p) const{
     return x[0]*p.x[0] + x[1]*p.x[1] + x[2]*p.x[2];
   }
   
   /// length
-  PosType length(){
+  PosType length() const{
     return sqrt(x[0]*x[0] + x[1]*x[1] + x[2]*x[2]);
   }
 
-  PosType length_sqr(){
+  PosType length_sqr() const{
     return x[0]*x[0] + x[1]*x[1] + x[2]*x[2];
   }
   

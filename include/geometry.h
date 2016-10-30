@@ -29,6 +29,14 @@ namespace Utilities {
     public:
       SphericalPoint(PosType r,PosType theta,PosType phi):r(r),theta(theta),phi(phi){};
       SphericalPoint():r(0),theta(0),phi(0){};
+
+      SphericalPoint &operator=(Point_3d &x){
+        r = x.length();
+        theta = atan(x[1]/x[0]);
+        phi = atan(sqrt(x[0]*x[0] + x[1]*x[1])/x[2]);
+        
+        return *this;
+      }
       
       PosType r;
       PosType theta;
