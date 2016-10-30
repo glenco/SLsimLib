@@ -40,7 +40,8 @@ public:
    */
   void ReadBoxRockStar(std::string filename,Point_3d xo,Point_3d V
                                   ,double rlow,double rhigh
-                                  ,std::vector<DataRockStar> &conehalos);
+                                  ,std::vector<DataRockStar> &conehalos
+                       ,bool periodic_boundaries = true);
   
   static void ReadLightConeNFW(std::string filename,COSMOLOGY &cosmo
                      ,std::vector<LensHalo* > &lensVec);
@@ -52,7 +53,10 @@ private:
   /// select the halos from the box that are within the light cone
   template <typename T>
   void select(Point_3d xo,Point_3d v,double Length,double rlow,double rhigh
-              ,std::vector<T> &input,std::vector<T> &incone){
+              ,std::vector<T> &input,std::vector<T> &incone,bool periodic_boundaries = true){
+
+    if(input.size() == 0) return;
+    
     Point_3d dx,x;
     double r2,xp;
     Point_3d n;
@@ -72,13 +76,17 @@ private:
     y_axis /= y_axis.length();
     z_axis = v.cross(y_axis);
 
-    std::cout << v*y_axis << " " << v*z_axis << " " << y_axis*z_axis << std::endl;
+    //std::cout << v*y_axis << " " << v*z_axis << " " << y_axis*z_axis << std::endl;
 
     // we can do better than this !!!!
     int n0[2] = {(int)((rhigh + xo[0])/Length),(int)((xo[0] - rhigh)/Length) - 1 };
     int n1[2] = {(int)((rhigh + xo[1])/Length),(int)((xo[1] - rhigh)/Length) - 1 };
     int n2[2] = {(int)((rhigh + xo[2])/Length),(int)((xo[2] - rhigh)/Length) - 1 };
-    
+    if(!periodic_boundaries){
+      n0[0] = n0[1] = 0;
+      n1[0] = n1[1] = 0;
+      n2[0] = n2[1] = 0;
+    }
     for(auto a : input){
       dx = a.x - xo;
       
@@ -93,8 +101,8 @@ private:
               
               if( r2*sin_theta_sqrt > r2 - xp*xp){
                 if(r2 > rlow2 && r2 < rhigh2){
-                  std::cout << n << " | " << xo << " | "
-                            << v << " |  " << x << std::endl;
+                  //std::cout << n << " | " << xo << " | "
+                  //          << v << " |  " << x << std::endl;
                   
                   b = a;
                   b.x = x;
@@ -103,7 +111,7 @@ private:
                   b.x[1] = y_axis*x;
                   b.x[2] = z_axis*x;
                   
-                  std::cout << "b = " << b.x << std::endl;
+                  //std::cout << "b = " << b.x << std::endl;
                   
                   incone.push_back(b);
                 }
@@ -115,8 +123,6 @@ private:
     }
   }
   
-  //Point_3d xo; // position of observer
-  //Point_3d v; // direction of center of cone
   double r_theta; // angular radius of light cone (radians)
   double sin_theta_sqrt;
 };

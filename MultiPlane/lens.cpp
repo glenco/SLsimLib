@@ -561,9 +561,6 @@ void Lens::resetFieldHalos(bool verbose)
   
   if(sim_input_flag){
     if(read_sim_file == false){
-      if(field_input_sim_format == MillenniumObs) readInputSimFileMillennium(verbose);
-      if(field_input_sim_format == MultiDarkHalos) readInputSimFileMultiDarkHalos(verbose);
-      if(field_input_sim_format == ObservedData) readInputSimFileObservedGalaxies(verbose);
       
       switch (field_input_sim_format) {
         case MillenniumObs:

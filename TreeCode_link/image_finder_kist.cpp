@@ -1572,7 +1572,7 @@ void ImageFinding::find_images_microlens_exper(
 }
 
 
-/** \ingroup ImageFindingL2
+/*
  *
  * \brief Finds images for a given source position and size
  *

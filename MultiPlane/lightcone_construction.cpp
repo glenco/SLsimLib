@@ -10,15 +10,15 @@
 
 LightCone::LightCone(
                      double angular_radius    /// angular radius of lightcone in radians
-                     ):
-  r_theta(angular_radius)
+):
+r_theta(angular_radius)
 {
   sin_theta_sqrt = pow(sin(r_theta),2);
 };
 
 /** \brief Read in a lightcone data file and render them into NFW halos
  *
- *   filename file should be the output of LightCone::WriteLightCone() to 
+ *   filename file should be the output of LightCone::WriteLightCone() to
  *   be in the right format.
  */
 void LightCone::ReadLightConeNFW(
@@ -57,10 +57,10 @@ void LightCone::ReadLightConeNFW(
   
   // skip first line
   std::getline(file,myline);
-
+  
   std::stringstream buffer;
   
-    // read a line of data
+  // read a line of data
   while(std::getline(file,myline)){
     
     if(myline[0] == '#')
@@ -89,7 +89,9 @@ void LightCone::ReadLightConeNFW(
     std::cout << tmp_point << std::endl << sph_point << std::endl;
     
     //***** read in data from light cone file
-    lensVec.push_back(new LensHaloNFW(mass,Rvir,z,Rvir/Rscale,1,0,0) );
+    LensHaloNFW * halo = new LensHaloNFW(mass,Rvir,z,Rvir/Rscale,1,0,0);
+    halo->extendRadiius(2);
+    lensVec.push_back( halo );
     lensVec.back()->setTheta(sph_point.phi,sph_point.theta);
   }
   
@@ -97,13 +99,14 @@ void LightCone::ReadLightConeNFW(
 }
 
 void LightCone::ReadBoxRockStar(
-              std::string filename    /// input file name
-              ,Point_3d xo     /// observers location within the box in comoving Mpc
-              ,Point_3d V      /// direction of view
-              ,double rlow     /// lowest radial distance accepted
-              ,double rhigh    /// highest radial distance accepted
-              ,std::vector<DataRockStar> &conehalos  /// output list of halos, added to and not cleared
-                                ){
+                  std::string filename    /// input file name
+                 ,Point_3d xo     /// observers location within the box in comoving Mpc
+                 ,Point_3d V      /// direction of view, doesn't need to be normalized
+                 ,double rlow     /// lowest radial distance accepted
+                 ,double rhigh    /// highest radial distance accepted
+                 ,std::vector<DataRockStar> &conehalos  /// output list of halos, added to and not cleared
+                 ,bool periodic_boundaries  /// if false the cone will intersect the box at most once, otherwise when the cone can be extended through an unending series of repeated boxes
+){
   
   std::cout <<" Opening " << filename << std::endl;
   std::ifstream file(filename.c_str());
@@ -124,7 +127,7 @@ void LightCone::ReadBoxRockStar(
   void *addr[ncolumns];
   DataRockStar halo;
   double tmp;
-
+  
   addr[0] = &(halo.id);
   addr[1] = &tmp;
   addr[2] = &(halo.mass);
@@ -148,7 +151,7 @@ void LightCone::ReadBoxRockStar(
   std::stringstream buffer;
   int i_block = 0;
   
-  while(boxhalos.size() > 0 ){
+  do{
     boxhalos.clear();
     
     while ( boxhalos.size() < blocksize && getline(file,myline)) {
@@ -210,16 +213,17 @@ void LightCone::ReadBoxRockStar(
       
       boxhalos.push_back(halo);
       
-      std::cout << boxhalos.back().id << " " << boxhalos.back().x[1] << std::endl;
+      //std::cout << boxhalos.back().id << " " << boxhalos.back().x[1] << std::endl;
     }
     
-    select(xo,V,BoxLength,rlow,rhigh,boxhalos,conehalos);
+    select(xo,V,BoxLength,rlow,rhigh,boxhalos,conehalos,periodic_boundaries);
     
     i_block += boxhalos.size();
     
-    std::cout << i_block << " halos from " << filename << ", total in cone "
-    << conehalos.size() << std::endl;
-  }
+    if(boxhalos.size() > 0) std::cout << i_block << " halos from " << filename << ", total in cone currently:"
+    << conehalos.size() << "...." << std::endl;
+  }while(boxhalos.size() > 0);
+  std::cout << "done" << std::endl;
   
   file.close();
 }

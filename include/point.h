@@ -198,6 +198,8 @@ private:
   //Point &operator=(const Point &p);
 };
 
+
+
 std::ostream &operator<<(std::ostream &os, Point const &p);
 
 /// The box representing a branch of a binary tree structure.  Used specifically in TreeStruct for organizing points in the grid.

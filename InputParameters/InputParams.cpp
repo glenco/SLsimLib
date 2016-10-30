@@ -609,8 +609,13 @@ bool InputParams::get(std::string label, HaloCatFormats& value) const
     value = ObservedData;
     return true;
   }
+  if(!it->second.compare("LightConeFormat"))
+  {
+    value = LightConeFormat;
+    return true;
+  }
   
-	std::cout << label << " in parameter file " << paramfile_name << " needs to be MillenniumObs, MultiDarkHalos or ObservedData!" << std::endl;
+	std::cout << label << " in parameter file " << paramfile_name << " needs to be MillenniumObs, MultiDarkHalos, ObservedData or LightConeFormat!" << std::endl;
 	return false;
 }
 
