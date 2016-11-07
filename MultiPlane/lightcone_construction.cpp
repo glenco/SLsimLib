@@ -106,6 +106,7 @@ void LightCone::ReadBoxRockStar(
                  ,double rhigh    /// highest radial distance accepted
                  ,std::vector<DataRockStar> &conehalos  /// output list of halos, added to and not cleared
                  ,bool periodic_boundaries  /// if false the cone will intersect the box at most once, otherwise when the cone can be extended through an unending series of repeated boxes
+                 ,bool allow_subhalos   /// if false only host halos are used
 ){
   
   std::cout <<" Opening " << filename << std::endl;
@@ -123,10 +124,13 @@ void LightCone::ReadBoxRockStar(
   std::vector<DataRockStar> boxhalos(1);
   boxhalos.reserve(blocksize);
   
-  const int ncolumns = 11;
+  //const int ncolumns = 11;
+  const int ncolumns = 42;
+  
   void *addr[ncolumns];
   DataRockStar halo;
   double tmp;
+  double parent_id;
   
   addr[0] = &(halo.id);
   addr[1] = &tmp;
@@ -139,6 +143,8 @@ void LightCone::ReadBoxRockStar(
   addr[8] = &(halo.x[0]);
   addr[9] = &(halo.x[1]);
   addr[10] = &(halo.x[2]);
+  for(int i=11 ; i < 41 ;++i) addr[i] = &tmp;
+  addr[41] = &parent_id;
   
   unsigned int mysize_t;
   int myint;
@@ -190,10 +196,11 @@ void LightCone::ReadBoxRockStar(
         strg.assign(myline,0,pos);
         buffer << strg;
         
+        std::cout << l << "  " << strg << std::endl;
         if(l == 0){
           buffer >> mysize_t;
           *((unsigned int *)addr[l]) = mysize_t;
-        }else if(l == 1){
+        }else if(l == 1 ){
           buffer >> myint;
           *((int *)addr[l]) = myint;
         }else{
@@ -211,7 +218,7 @@ void LightCone::ReadBoxRockStar(
       halo.Rscale *= scale_factor/h;
       halo.Rvir *= scale_factor/h;
       
-      boxhalos.push_back(halo);
+      if(parent_id == -1 || allow_subhalos )boxhalos.push_back(halo);
       
       //std::cout << boxhalos.back().id << " " << boxhalos.back().x[1] << std::endl;
     }

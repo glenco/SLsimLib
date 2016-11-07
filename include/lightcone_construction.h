@@ -41,7 +41,8 @@ public:
   void ReadBoxRockStar(std::string filename,Point_3d xo,Point_3d V
                                   ,double rlow,double rhigh
                                   ,std::vector<DataRockStar> &conehalos
-                       ,bool periodic_boundaries = true);
+                       ,bool periodic_boundaries = true
+                       ,bool allow_subhalos = false);
   
   static void ReadLightConeNFW(std::string filename,COSMOLOGY &cosmo
                      ,std::vector<LensHalo* > &lensVec);
