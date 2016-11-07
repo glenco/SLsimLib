@@ -196,7 +196,7 @@ void LightCone::ReadBoxRockStar(
         strg.assign(myline,0,pos);
         buffer << strg;
         
-        std::cout << l << "  " << strg << std::endl;
+        //std::cout << l << "  " << strg << std::endl;
         if(l == 0){
           buffer >> mysize_t;
           *((unsigned int *)addr[l]) = mysize_t;
