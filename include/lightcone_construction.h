@@ -90,6 +90,8 @@ private:
     for(auto a : input){
       dx = a.x - xo;
       
+      int count = 0;
+      
       for(n[0] = n0[1]; n[0] <= n0[0] ; ++n[0]){
         for(n[1] = n1[1]; n[1] <= n1[0] ; ++n[1]){
           for(n[2] = n2[1]; n[2] <= n2[0] ; ++n[2]){
@@ -114,12 +116,14 @@ private:
                   //std::cout << "b = " << b.x << std::endl;
                   
                   incone.push_back(b);
+                  ++count;
                 }
               }
             }
           }
         }
       }
+      if(count > 1) std::cout << " Warning: Same halo appears " << count << " times in light-cone." << std::endl;
     }
   }
   
