@@ -6,6 +6,8 @@
 //
 //
 
+#include <mutex>
+#include <thread>
 #include "lightcone_construction.h"
 
 LightCone::LightCone(
@@ -116,11 +118,13 @@ void LightCone::ReadBoxRockStar(
     ERROR_MESSAGE();
     throw std::runtime_error(" Cannot open file.");
   }
-  conehalos.clear();
+  if(rlow > rhigh) std::swap(rlow,rhigh);
+  if(rlow == rhigh) return;
+  if(rlow < 0) rlow = 0.0;
   
   std::string myline;
   
-  const size_t blocksize = 100000;
+  const size_t blocksize = 500000;
   std::vector<DataRockStar> boxhalos(1);
   boxhalos.reserve(blocksize);
   
@@ -223,8 +227,34 @@ void LightCone::ReadBoxRockStar(
       //std::cout << boxhalos.back().id << " " << boxhalos.back().x[1] << std::endl;
     }
     
-    select(xo,V,BoxLength,rlow,rhigh,boxhalos,conehalos,periodic_boundaries);
+    /*{
+      std::vector<std::thread> thr;
+      int nthreads = Utilities::GetNThreads();
+      
+      int chunk_size;
+      do{
+        chunk_size =  boxhalos.size()/nthreads;
+        if(chunk_size == 0) nthreads /= 2;
+      }while(chunk_size == 0);
+      
+      size_t n;
+      for(int ii = 0; ii < nthreads ;++ii){
+        n = MIN( (ii+1)*chunk_size,boxhalos.size() );
+        thr.push_back(std::thread(
+                      &LightCone::select<DataRockStar>,this,xo,V,BoxLength,rlow,rhigh
+                      ,boxhalos.data() + ii*chunk_size
+                      ,boxhalos.data() + n
+                      ,conehalos,periodic_boundaries) );
+        
+      }
+      for(int ii = 0; ii < nthreads ;++ii) thr[ii].join();
+    }*/
     
+    select(xo,V,BoxLength,rlow,rhigh
+     ,boxhalos.data()
+     ,boxhalos.data() + boxhalos.size()
+     ,conehalos,periodic_boundaries);
+     
     i_block += boxhalos.size();
     
     if(boxhalos.size() > 0) std::cout << i_block << " halos from " << filename << ", total in cone currently:"

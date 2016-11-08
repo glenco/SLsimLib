@@ -54,9 +54,11 @@ private:
   /// select the halos from the box that are within the light cone
   template <typename T>
   void select(Point_3d xo,Point_3d v,double Length,double rlow,double rhigh
-              ,std::vector<T> &input,std::vector<T> &incone,bool periodic_boundaries = true){
+              ,T* begin
+              ,T* end
+              ,std::vector<T> &incone,bool periodic_boundaries = true){
 
-    if(input.size() == 0) return;
+    if(begin == end) return;
     
     Point_3d dx,x;
     double r2,xp;
@@ -88,8 +90,8 @@ private:
       n1[0] = n1[1] = 0;
       n2[0] = n2[1] = 0;
     }
-    for(auto a : input){
-      dx = a.x - xo;
+    for(auto a = begin ; a != end ; ++a){
+      dx = (*a).x - xo;
       
       int count = 0;
       
@@ -102,12 +104,12 @@ private:
             if(xp > 0){
               r2 = x.length_sqr();
               
-              if( r2*sin_theta_sqrt > r2 - xp*xp){
-                if(r2 > rlow2 && r2 < rhigh2){
+              if(r2 > rlow2 && r2 < rhigh2){
+                if( r2*sin_theta_sqrt > r2 - xp*xp){
                   //std::cout << n << " | " << xo << " | "
                   //          << v << " |  " << x << std::endl;
                   
-                  b = a;
+                  b = *a;
                   b.x = x;
                   // rotate to standard reference frame
                   b.x[0] = xp;

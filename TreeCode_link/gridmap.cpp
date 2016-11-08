@@ -32,7 +32,7 @@ GridMap::GridMap(
   pointID = 0;
   
   center = my_center;
-
+  
   assert(Nx > 0);
   assert(rangeX > 0 && rangeY >0);
   
@@ -102,7 +102,7 @@ GridMap::GridMap(
   i_points = NewPointArray(Ngrid_init*Ngrid_init);
   xygridpoints(i_points,range,center.x,Ngrid_init,0);
   s_points=LinkToSourcePoints(i_points,Ngrid_init*Ngrid_init);
-    
+  
   {
     std::lock_guard<std::mutex> hold(grid_mutex);
     lens->rayshooterInternal(Ngrid_init*Ngrid_init,i_points);
@@ -161,7 +161,7 @@ void GridMap::getPixelMap(PixelMap &map){
   if(map.getResolution() != x_range*resf/(Ngrid_init-1)) throw std::invalid_argument("PixelMap does not match GripMap resolution! Use the other GridMap::getPixelMap() to contruct a PixelMap.");
   
   size_t N = Ngrid_init*Ngrid_init2;
-
+  
   if(map.getCenter()[0] != center[0]) throw std::invalid_argument("PixelMap does not match GripMap!");
   if(map.getCenter()[1] != center[1]) throw std::invalid_argument("PixelMap does not match GripMap!");
   
@@ -169,7 +169,7 @@ void GridMap::getPixelMap(PixelMap &map){
     ERROR_MESSAGE();
     throw std::invalid_argument("resf must be > 0");
   }
-
+  
   map.Clean();
   
   int factor = resf*resf;
@@ -232,7 +232,7 @@ PixelMap GridMap::writePixelMapUniform(
 }
 
 PixelMap GridMap::writePixelMapUniform(
-              LensingVariable lensvar  /// which quantity is to be displayed
+                                       LensingVariable lensvar  /// which quantity is to be displayed
 ){
   size_t Nx =  Ngrid_init;
   size_t Ny = Ngrid_init2;
