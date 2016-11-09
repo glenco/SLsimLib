@@ -310,8 +310,12 @@ void MultiLightCone::ReadBoxRockStar(std::string filename
     throw std::runtime_error(" Cannot open file.");
   }
   if(conehalos.size() != cones.size() ){
-    std::cerr << " conhalos vector passed into MultiLightCone::ReadBoxRockStar does does not mathch the size expected." << std::endl;
-    throw std::invalid_argument("conehalos wrong size.");
+    if(conehalos.size() ==0 ){
+      conehalos.resize(cones.size());
+    }else{
+      std::cerr << " conhalos vector passed into MultiLightCone::ReadBoxRockStar does does not mathch the size expected." << std::endl;
+      throw std::invalid_argument("conehalos wrong size.");
+    }
   }
     
   for(auto c : conehalos ) std::cout << c.size() << " halos already in cone." << std::endl;
