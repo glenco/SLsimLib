@@ -99,8 +99,8 @@ LensHalo::~LensHalo()
 {
 }
 
-const long LensHaloNFW::NTABLE = 10000;
-const PosType LensHaloNFW::maxrm = 100.0;
+const long LensHaloNFW::NTABLE = 50000;
+const PosType LensHaloNFW::maxrm = 500.0;
 int LensHaloNFW::count = 0;
 
 PosType* LensHaloNFW::xtable = NULL;

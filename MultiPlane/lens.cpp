@@ -203,7 +203,7 @@ Lens::Lens(InputParams& params, long* my_seed, const COSMOLOGY &cosmoset, bool v
   
   
   if(flag_switch_field_off == false) {
-    std::cout << "Nzbins = " << Nzbins << std::endl ;
+    //std::cout << "Nzbins = " << Nzbins << std::endl ;
     
     // Resizing the "number of Halos" binning table :
     zbins.resize(Nzbins) ;
@@ -1828,7 +1828,10 @@ void Lens::readLightCone(bool verbose){
   std::cout << "Reading Field Halos from " << field_input_sim_file << std::endl;
 
   LightCone::ReadLightConeNFW(field_input_sim_file,cosmo,field_halos);
-  
+
+  std::sort(field_halos.begin(),field_halos.end(),[](LensHalo *lh1,LensHalo *lh2)
+            {return (lh1->getZlens() < lh2->getZlens());});
+
   field_buffer = 0.0;
   read_sim_file = true;
 }
@@ -2080,24 +2083,9 @@ void Lens::readInputSimFileMillennium(bool verbose)
             break;
 				}
         
-        //field_halos[j]->setZlens(z);
-				//field_halos[j]->initFromFile(mass*field_galaxy_mass_fraction,seed,vmax,r_halfmass*cosmo.gethubble());
-        
-        // Another copy of this position must be made to avoid rescaling it twice when it is converted into
-        // distance on the lens plane in Lens::buildLensPlanes()
-        //theta2 = new PosType[2];
-        //theta2[0]=theta[0]; theta2[1]=theta[1];
-				//halo_pos_vec.push_back(theta2);
         field_halos.back()->setTheta(theta);
         field_halos.back()->setID(haloid);
         
-        /****** test **********
-        {
-          PosType tmpx[2];
-          field_halos.back()->getX(tmpx);
-          std::cout << "gal " << tmpx[0] << "  " << tmpx[1] << " " << field_halos.back()->get_mass()
-          << " " << field_halos.back()->get_Rmax() << " " << sigma << " " << fratio << " " << field_halos.back()->getID() << std::endl;
-        }*/
 				++j;
 			}
       
@@ -2115,13 +2103,6 @@ void Lens::readInputSimFileMillennium(bool verbose)
 		field_buffer = 0.0;
 	}
   
-	//halo_pos = Utilities::PosTypeMatrix(field_halos.size(), 3);
-  
-	//for(i = 0; i < field_halos.size(); ++i)
-	//{
-	//	halo_pos[i] = halo_pos_vec[i];
-	//}
-  
 	std::cout << "Overiding input file field of view to make it fit the simulation light cone." << std::endl;
 	fieldofview = pi*rmax*rmax*pow(180/pi,2);  // Resets field of view to range of input galaxies
 	std::cout << "    It is now " << fieldofview << " deg^2" << std::endl;
@@ -2131,21 +2112,8 @@ void Lens::readInputSimFileMillennium(bool verbose)
   
 	if(verbose) std::cout << "sorting in Lens::readInputSimFileMillennium()" << std::endl;
 	// sort the field_halos by readshift
-	//Lens::quicksort(field_halos.data(),halo_pos,field_halos.size());
-  
-  //for(size_t ii=0;ii<4;++ii){
-  //  std::cout << field_halos[ii]->getZlens() << " " << field_halos[ii+1]->getZlens() << std::endl;
-  //}
-  //std::cout << std::endl;
-
-  //std::sort(field_halos.begin(),field_halos.end(),LensHaloZcompare);
   std::sort(field_halos.begin(),field_halos.end(),[](LensHalo *lh1,LensHalo *lh2)
   {return (lh1->getZlens() < lh2->getZlens());});
-  
-  //for(size_t ii=0;ii<field_halos.size()-1;++ii){
-  //  std::cout << field_halos[ii]->getZlens() << " " << field_halos[ii+1]->getZlens() << std::endl;
-  //  assert(field_halos[ii]->getZlens() <= field_halos[ii+1]->getZlens());
-  //}
   
 	if(verbose) std::cout << "leaving Lens::readInputSimFileMillennium()" << std::endl;
   

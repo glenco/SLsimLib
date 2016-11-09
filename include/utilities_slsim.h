@@ -922,6 +922,14 @@ namespace Utilities
     return std::max(l, std::min(u, x));
   }
   
+  template<typename T>
+  void update_range(T range[],T current)
+  {
+    range[0] = range[0] < current ? range[0] : current;
+    range[1] = range[1] > current ? range[1] : current;
+  }
+
+  
 #ifdef ENABLE_CLANG
   /// This is a class for generating random numbers. It is actually just a rapper for some std random classes.
   class RandomNumbers{
