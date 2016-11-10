@@ -20,6 +20,7 @@
 #include <sys/types.h>
 
 #endif
+#include <mutex>
 
 namespace Utilities
 {
@@ -931,7 +932,7 @@ namespace Utilities
 
   
 #ifdef ENABLE_CLANG
-  /// This is a class for generating random numbers. It is actually just a rapper for some std random classes.
+  /// This is a class for generating random numbers. It is actually just a wrapper for some std random classes.
   class RandomNumbers{
   public:
     
@@ -1308,6 +1309,75 @@ namespace Utilities
     }
     std::cout << "Read " << x.size() << " lines from " << filename << std::endl;
   }
+  
+  
+  /** \brief This is a thread-safe container wrapper.
+   A reference to it can be passed to multiple threads without 
+   worrying about them interfering.  It is mostly meant as dynamical 
+   push only storage with STL data conatiners.  The functions mirror those
+   of the STL data conatiners.
+   */
+  template<typename Container>
+  class LockableContainer
+  {
+  public:
+    typedef typename Container::value_type value_type;
+//    typedef typename Container::reference_type reference_type;
+    typedef typename Container::value_type& reference_type;
+
+    LockableContainer(){}
+    ~LockableContainer(){}
+    
+    // make it uncopyable
+    LockableContainer(const LockableContainer&) = delete;
+    LockableContainer& operator=(const LockableContainer&) = delete;
+    
+    void push_back(reference_type const t) {
+      std::lock_guard<std::mutex> lock(m);
+      container.push_back(t);
+    }
+    
+    void push_front(reference_type const t) {
+      std::lock_guard<std::mutex> lock(m);
+      container.push_front(t);
+    }
+    
+    void resize(size_t N){
+      std::lock_guard<std::mutex> lock(m);
+      container.resize(N);
+    }
+
+    void reserve(size_t N){
+      std::lock_guard<std::mutex> lock(m);
+      container.reserve(N);
+    }
+
+    void clear(){
+      std::lock_guard<std::mutex> lock(m);
+      container.clear();
+    }
+    
+    value_type operator[](size_t i) const{
+      return container[i];
+    }
+    
+    size_t capacity() const{
+      return container.capacity();
+    }
+    size_t size() const{
+      return container.size();
+    }
+    
+    /// swap contents of conatiners
+    void swap(Container &output){
+      std::lock_guard<std::mutex> lock(m);
+      std::swap(output,container);
+    }
+    
+  private:
+    Container container;
+    std::mutex m;
+  };
 
 }
 #endif

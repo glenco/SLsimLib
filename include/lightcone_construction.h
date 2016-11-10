@@ -32,17 +32,11 @@ public:
   };
 
   
-  /*** Read the points in from a snapshot of the halos created by RockStar.
-     The output will be the halos in the cone in coordinates where the x-axis is 
-   the center of the cone.  Changing the observer, xo, and direction of view, V,
-   effectively translates and rotates the box, respectively.  Only halos with radii 
-   between rlow and rhigh are added.
-   */
-  void ReadBoxRockStar(std::string filename,Point_3d xo,Point_3d V
-                                  ,double rlow,double rhigh
-                                  ,std::vector<DataRockStar> &conehalos
-                       ,bool periodic_boundaries = true
-                       ,bool allow_subhalos = false);
+  //void ReadBoxRockStar(std::string filename,Point_3d xo,Point_3d V
+  //                                ,double rlow,double rhigh
+  //                                ,std::vector<DataRockStar> &conehalos
+  //                     ,bool periodic_boundaries = true
+  //                     ,bool allow_subhalos = false);
   
   static void ReadLightConeNFW(std::string filename,COSMOLOGY &cosmo
                      ,std::vector<LensHalo* > &lensVec);
@@ -53,11 +47,13 @@ public:
   
   /// select the halos from the box that are within the light cone
   template <typename T>
-  void select(Point_3d &xo,Point_3d &v,double Length,double rlow,double rhigh
+  void select(Point_3d xo,Point_3d v,double Length,double rlow,double rhigh
               ,T* begin
               ,T* end
-              ,std::vector<T> &incone,bool periodic_boundaries = true){
-
+              //,std::vector<T> &incone
+              ,Utilities::LockableContainer<std::vector<T> > &incone
+              ,bool periodic_boundaries = true){
+    
     if(begin == end) return;
     
     Point_3d dx,x;
@@ -78,9 +74,9 @@ public:
     
     y_axis /= y_axis.length();
     z_axis = v.cross(y_axis);
-
+    
     //std::cout << v*y_axis << " " << v*z_axis << " " << y_axis*z_axis << std::endl;
-
+    
     // we can do better than this !!!!
     int n0[2] = {(int)((rhigh + xo[0])/Length),(int)((xo[0] - rhigh)/Length) - 1 };
     int n1[2] = {(int)((rhigh + xo[1])/Length),(int)((xo[1] - rhigh)/Length) - 1 };
@@ -131,10 +127,11 @@ public:
   }
   
   /* select the halos from the box that are within the light cone
-  void select(Point_3d xo,Point_3d v,double Length,double rlow,double rhigh
-              ,DataRockStar* begin
-              ,DataRockStar* end
-              ,DataRockStar *incone,bool periodic_boundaries = true){
+  void select_par(Point_3d xo,Point_3d v,double Length,double rlow,double rhigh
+                  ,LightCone::DataRockStar* begin
+                  ,LightCone::DataRockStar* end
+                  ,std::vector<LightCone::DataRockStar> &incone
+                  ,bool periodic_boundaries = true){
     
     if(begin == end) return;
     
@@ -143,7 +140,7 @@ public:
     Point_3d n;
     double rhigh2 = rhigh*rhigh;
     double rlow2 = rlow*rlow;
-    DataRockStar b;
+    LightCone::DataRockStar b;
     
     v /= v.length();
     
@@ -223,6 +220,12 @@ public:
     for(int i=0;i<observers.size(); ++i) cones.push_back(angular_radius);
   }
   
+  /** Read the points in from a snapshot of the halos created by RockStar.
+   The output will be the halos in the cone in coordinates where the x-axis is
+   the center of the cone.  Changing the observer, xo, and direction of view, V,
+   effectively translates and rotates the box, respectively.  Only halos with radii
+   between rlow and rhigh are added.
+   */
   void ReadBoxRockStar(std::string filename
                        ,double rlow,double rhigh
                        ,std::vector<std::vector<LightCone::DataRockStar> > &conehalos
@@ -235,5 +238,6 @@ private:
   std::vector<Point_3d> vs;
   std::vector<LightCone> cones;
 };
+
 
 #endif /* defined(__GLAMER__lightcone_construction__) */
