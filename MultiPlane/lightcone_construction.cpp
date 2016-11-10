@@ -93,7 +93,7 @@ void LightCone::ReadLightConeNFW(
     sph_point = tmp_point;
     z = cosmo.invCoorDist(sph_point.r);
     
-    std::cout << tmp_point << std::endl << sph_point << std::endl;
+    //std::cout << tmp_point << std::endl << sph_point << std::endl;
     
     //***** read in data from light cone file
     LensHaloNFW * halo = new LensHaloNFW(mass,Rvir/1.0e3,z,Rvir/Rscale,1,0,0);
@@ -251,7 +251,7 @@ void MultiLightCone::ReadBoxRockStar(std::string filename
         buffer.str(std::string());
       }
       
-      std::cout << halo.id << " " << halo.x << std::endl;
+      //std::cout << halo.id << " " << halo.x << std::endl;
       
       halo.x /= h;
       halo.mass /= h;
@@ -283,7 +283,7 @@ void MultiLightCone::ReadBoxRockStar(std::string filename
           
           n = MIN( (ii+1)*chunk_size,boxhalos.size() );
           
-          std::cout << ii*chunk_size << " " << n << std::endl;
+          //std::cout << ii*chunk_size << " " << n << std::endl;
           
           thr[ii] = std::thread(&LightCone::select<LightCone::DataRockStar>,cones[j]
                                 ,xos[j],vs[j],BoxLength,rlow,rhigh
