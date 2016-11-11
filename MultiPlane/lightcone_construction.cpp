@@ -266,11 +266,11 @@ void MultiLightCone::ReadBoxRockStar(std::string filename
       int nthreads = Utilities::GetNThreads();
       int chunk_size;
       do{
-        chunk_size =  (boxhalos.size() + 1)/nthreads;
+        chunk_size =  boxhalos.size()/nthreads;
         if(chunk_size == 0) nthreads /= 2;
       }while(chunk_size == 0);
       
-      size_t n;
+      int remainder =  boxhalos.size()%chunk_size;
       
       
       for(int j=0; j< cones.size() ; ++j ){
@@ -279,16 +279,15 @@ void MultiLightCone::ReadBoxRockStar(std::string filename
         Utilities::LockableContainer<std::vector<LightCone::DataRockStar> > halos;
         halos.swap(conehalos[j]);
         
+        assert(nthreads*chunk_size + remainder == boxhalos.size() );
         for(int ii =0; ii< nthreads ; ++ii){
-          
-          n = MIN( (ii+1)*chunk_size,boxhalos.size() );
           
           //std::cout << ii*chunk_size << " " << n << std::endl;
           
           thr[ii] = std::thread(&LightCone::select<LightCone::DataRockStar>,cones[j]
                                 ,xos[j],vs[j],BoxLength,rlow,rhigh
                                 ,boxhalos.data() + ii*chunk_size
-                                ,boxhalos.data() + n
+                                ,boxhalos.data() + (ii+1)*chunk_size + (ii==nthreads-1)*remainder
                                 //,std::ref(conehalos[j])
                                 ,std::ref( halos )
                                 ,periodic_boundaries );
