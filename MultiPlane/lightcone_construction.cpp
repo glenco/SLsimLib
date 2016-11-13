@@ -97,7 +97,7 @@ void LightCone::ReadLightConeNFW(
     
     //***** read in data from light cone file
     LensHaloNFW * halo = new LensHaloNFW(mass,Rvir/1.0e3,z,Rvir/Rscale,1,0,0);
-    halo->extendRadiius(2);
+    //halo->extendRadiius(2);
     lensVec.push_back( halo );
     lensVec.back()->setTheta(sph_point.phi,sph_point.theta);
     
