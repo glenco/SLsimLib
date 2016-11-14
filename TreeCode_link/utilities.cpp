@@ -428,11 +428,11 @@ unsigned long prevpower(unsigned long k){
                        ,double boxly
                        ,std::vector<double> &ll
                        ,std::vector<double> &Pl
-                       ,double zeropaddingfactor
+                       ,int zeropaddingfactor
                        )
   {
     // go in the fourir space doing the zero padding
-    int zerosize = 4;
+    int zerosize = (zeropaddingfactor==0) ? 1 : zeropaddingfactor;
     
     int nl = ll.size();
     Pl.resize(nl);
