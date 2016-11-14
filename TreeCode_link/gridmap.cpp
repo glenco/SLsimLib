@@ -160,7 +160,7 @@ void GridMap::getPixelMap(PixelMap &map){
   if(resf*map.getNy() != Ngrid_init2-1+resf) throw std::invalid_argument("PixelMap does not match GripMap! Use the other GridMap::getPixelMap() to contruct a PixelMap.");
   if(map.getResolution() != x_range*resf/(Ngrid_init-1)) throw std::invalid_argument("PixelMap does not match GripMap resolution! Use the other GridMap::getPixelMap() to contruct a PixelMap.");
   
-  size_t N = Ngrid_init*Ngrid_init2;
+  //size_t N = Ngrid_init*Ngrid_init2;
   
   if(map.getCenter()[0] != center[0]) throw std::invalid_argument("PixelMap does not match GripMap!");
   if(map.getCenter()[1] != center[1]) throw std::invalid_argument("PixelMap does not match GripMap!");

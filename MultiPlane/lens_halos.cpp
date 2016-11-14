@@ -1267,7 +1267,7 @@ void LensHaloRealNSIE::force_halo(
       xt[0]=xcm[0];
       xt[1]=xcm[1];
       alphaNSIE(tmp,xt,fratio,rcore,pa);
-      PosType tmpa[2]={tmp[0],tmp[1]};
+      //PosType tmpa[2]={tmp[0],tmp[1]};
       //alpha[0] = units*tmp[0];  // minus sign removed because already included in alphaNSIE
       //alpha[1] = units*tmp[1];  // Why was the "+=" removed?
       alpha[0] += units*tmp[0];//*sqrt(fratio);
@@ -1278,7 +1278,7 @@ void LensHaloRealNSIE::force_halo(
         gammaNSIE(tmp,xt,fratio,rcore,pa);
         gamma[0] += units*tmp[0];
         gamma[1] += units*tmp[1];
-        double theta=atan2(xcm[1],xcm[0]);
+        //double theta=atan2(xcm[1],xcm[0]);
         //if(theta < 0.660 && theta> 0.659){
          // std::cout << theta << " , " <<  units*tmp[0] << " , " << units*tmp[1] << " , " << units*kappaNSIE(xt,fratio,rcore,pa) << " , " << tmpa[0]*units << " , " << tmpa[0]*units  <<  std::endl;
 

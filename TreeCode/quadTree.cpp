@@ -585,7 +585,7 @@ void TreeQuad::walkTree_iter(
   IndexType i;
   bool allowDescent=true;
   unsigned long count=0,tmp_index;
-  PosType arg1, arg2, prefac;
+  PosType prefac;
   //bool notscreen = true;
   
   assert(tree);
@@ -833,7 +833,7 @@ void TreeQuad::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alph
 	PosType xcm[2],rcm2cell,rcm2,tmp,boxsize2;
 	IndexType i;
 	std::size_t tmp_index;
-	PosType arg1, arg2, prefac;
+	PosType prefac;
   /*bool notscreen = true;
   
   if(inv_screening_scale2 != 0) notscreen = BoxIntersectCircle(ray,3*sqrt(1.0/inv_screening_scale2), branch->boundary_p1, branch->boundary_p2);

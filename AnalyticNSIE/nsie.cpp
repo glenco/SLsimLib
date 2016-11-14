@@ -338,7 +338,8 @@ KappaType LensHaloBaseNSIE::phiNSIE(PosType const *xt    /// position on the ima
     // Possible test :
     // Compare kappa, gamma, alpha as computed with lens_expand with kappaNSIE, gammaNSIE, alphaNSIE
     // in order to validate the elliptization of phi.
-     
+    
+    return 0.0;
   }
 
 }

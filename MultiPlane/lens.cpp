@@ -437,6 +437,18 @@ void Lens::assignParams(InputParams& params,bool verbose)
         }
 			}
       if(!params.get("field_fov",fieldofview));
+      
+      if(!params.get("field_mass_func_type",field_mass_func_type))
+      {
+        std::cout << "Warning: field_mass_func_type needs to be set in the parameter file " << params.filename() << " if the background is to be subtracted."<< endl;
+      }
+      
+      if(!params.get("field_min_mass",field_min_mass))
+      {
+        std::cout << "Warning: field_min_mass needs to be set in the parameter file " << params.filename() << " if the background is to be subtracted." << endl;
+        exit(0);
+      }
+
 		}
 		else
 		{

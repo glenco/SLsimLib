@@ -514,7 +514,7 @@ namespace Utilities{
                  ,PosType my_range_y   /// Range of map in y in same units as x[]
                  ,PosType *my_center /// Center of map in same units as x[]
                  ):
-    N(my_Nx),range(my_range_x),map_p(NULL),range_y(my_range_y),Ny(my_Ny)
+    range(my_range_x),range_y(my_range_y),map_p(NULL),N(my_Nx),Ny(my_Ny)
     {
       center[0] = my_center[0];
       center[1] = my_center[1];
