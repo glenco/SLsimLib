@@ -29,6 +29,7 @@ public:
     double mass;
     double Rvir;     // in comoving units
     double Rscale;   // in comoving units
+    double Vmax;
   };
 
   

@@ -812,7 +812,7 @@ void Lens::createFieldPlanes(bool verbose)
 		else
 		{
 			z2 = cosmo.invCoorDist(0.5*(field_Dl[i] + field_Dl[i+1]));
-			k2 = Utilities::lower_bound<LensHalo>(field_halos, z2);
+			k2 = Utilities::lower_bound<LensHalo>(field_halos, z2) + 1;
 		}
 		
 		/*
@@ -836,6 +836,8 @@ void Lens::createFieldPlanes(bool verbose)
 			sb += field_halos[j]->get_mass();
 			     
       assert( field_Dl[i] > 0 );
+      assert(field_halos[j]->getZlens() >= z1);
+      assert(field_halos[j]->getZlens() <= z2);
 			// convert to proper distance on the lens plane
       //field_halos[j]->getX(tmp);
       //field_halos[j]->setX(tmp[0]*field_Dl[i]/(1+field_plane_redshifts[i])
@@ -852,7 +854,8 @@ void Lens::createFieldPlanes(bool verbose)
     
     assert(sb == sb);
     
-    if(verbose) std::cout << "sigma_back from mass function " << sigma_back
+    // ???? if(verbose)
+      std::cout << "sigma_back from mass function " << sigma_back
       << " from sum of halos " << sb << " " << sb/sigma_back - 1 << std::endl;
 		if(sim_input_flag) sigma_back = sb;
 		//sigma_back = sb;

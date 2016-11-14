@@ -117,11 +117,11 @@ void LightCone::ReadLightConeNFW(
 void LightCone::WriteLightCone(std::string filename,std::vector<DataRockStar> &vec){
   
   std::ofstream file(filename);
-  file << "ID,x,y,z,mass,Rvir(kpc),Rscale(kpc)" << std::endl;
+  file << "ID,x,y,z,mass,Rvir(kpc),Rscale(kpc),Vmax(km/s)" << std::endl;
   
   for(auto h : vec){
     file << h.id << "," << h.x[0] << "," << h.x[1] << "," << h.x[2] << "," << h.mass
-    << "," << h.Rvir << "," << h.Rscale << std::endl;
+    << "," << h.Rvir << "," << h.Rscale << "," << h.Vmax << std::endl;
   }
   
   file.close();
@@ -173,7 +173,7 @@ void MultiLightCone::ReadBoxRockStar(std::string filename
   addr[0] = &(halo.id);
   addr[1] = &tmp;
   addr[2] = &(halo.mass);
-  addr[3] = &tmp;
+  addr[3] = &(halo.Vmax);
   addr[4] = &tmp;
   addr[5] = &(halo.Rvir);
   addr[6] = &(halo.Rscale);
