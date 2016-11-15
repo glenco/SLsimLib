@@ -81,6 +81,10 @@ PosType Utilities::Geometry::Seporation(const SphericalPoint &p1,const Spherical
 PosType Utilities::Geometry::AngleSeporation(const SphericalPoint &p1,const SphericalPoint &p2){
   return acos(sin(p1.theta)*sin(p2.theta) + cos(p1.theta)*cos(p2.theta)*cos(p1.phi-p2.phi));
 }
+PosType Utilities::Geometry::SphericalPoint::AngleSeporation(const SphericalPoint &p2){
+  return acos(sin(theta)*sin(p2.theta) + cos(theta)*cos(p2.theta)*cos(phi-p2.phi));
+}
+
 
 bool Utilities::Geometry::intersect(const PosType a1[],const PosType a2[],const PosType b1[],const PosType b2[]){
   

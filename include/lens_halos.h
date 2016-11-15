@@ -705,7 +705,7 @@ public:
   /// set scale radius
 	void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rsize/rscale; gmax = InterpolateFromTable(gtable,xmax);};
   
-  /// Extend redius of halo without changing the scale length or central velocity
+  /// Extend radius of halo without changing the scale length or central density
   void extendRadiius(float fac /// factor by which radius is increased
                      ){
     NFW_Utility nfw;

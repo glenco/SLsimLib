@@ -440,13 +440,12 @@ void Lens::assignParams(InputParams& params,bool verbose)
       
       if(!params.get("field_mass_func_type",field_mass_func_type))
       {
-        std::cout << "Warning: field_mass_func_type needs to be set in the parameter file " << params.filename() << " if the background is to be subtracted."<< endl;
+        field_mass_func_type = ST;
       }
       
       if(!params.get("field_min_mass",field_min_mass))
       {
-        std::cout << "Warning: field_min_mass needs to be set in the parameter file " << params.filename() << " if the background is to be subtracted." << endl;
-        exit(0);
+        field_min_mass = 1.0e10;
       }
 
 		}
@@ -854,8 +853,7 @@ void Lens::createFieldPlanes(bool verbose)
     
     assert(sb == sb);
     
-    // ???? if(verbose)
-      std::cout << "sigma_back from mass function " << sigma_back
+    if(verbose) std::cout << "sigma_back from mass function " << sigma_back
       << " from sum of halos " << sb << " " << sb/sigma_back - 1 << std::endl;
 		if(sim_input_flag) sigma_back = sb;
 		//sigma_back = sb;
@@ -1842,7 +1840,19 @@ void Lens::readLightCone(bool verbose){
   
   std::cout << "Reading Field Halos from " << field_input_sim_file << std::endl;
 
-  LightCone::ReadLightConeNFW(field_input_sim_file,cosmo,field_halos);
+  PosType rmax;
+  LightCone::ReadLightConeNFW(field_input_sim_file,cosmo,field_halos,rmax);
+  
+  fieldofview = pi*rmax*rmax*pow(180/pi,2);
+  inv_ang_screening_scale = 0.0;
+  
+  
+  if(verbose) std::cout << "Setting mass function to Sheth-Tormen." << std::endl;
+  field_mass_func_type = ST; // set mass function
+  
+  if(verbose) std::cout << "sorting in Lens::readInputSimFileMultiDarkHalos()" << std::endl;
+  // sort the field_halos by readshift
+
 
   std::sort(field_halos.begin(),field_halos.end(),[](LensHalo *lh1,LensHalo *lh2)
             {return (lh1->getZlens() < lh2->getZlens());});

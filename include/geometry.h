@@ -45,6 +45,8 @@ namespace Utilities {
       void StereographicProjection(const SphericalPoint &central,PosType x[]) const;
       void OrthographicProjection(const SphericalPoint &central,PosType x[]) const;
       void InverseOrthographicProjection(const SphericalPoint &central,PosType const x[]);
+      PosType AngleSeporation(const SphericalPoint &p2);
+
     };
     
     ///  3 dimensional distance between points

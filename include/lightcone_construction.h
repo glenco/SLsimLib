@@ -40,7 +40,8 @@ public:
   //                     ,bool allow_subhalos = false);
   
   static void ReadLightConeNFW(std::string filename,COSMOLOGY &cosmo
-                     ,std::vector<LensHalo* > &lensVec);
+                               ,std::vector<LensHalo* > &lensVec
+                               ,PosType &theta_max);
   
   static void WriteLightCone(std::string filename,std::vector<DataRockStar> &vec);
   
