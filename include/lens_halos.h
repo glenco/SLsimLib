@@ -645,11 +645,8 @@ protected:
 };
 
 /**
- * \brief A class for calculating the deflection, kappa and gamma caused by a collection of NFW
+ * \brief A class for calculating the deflection, kappa and gamma caused by NFW
  * halos.
- *
- * This class uses the true expressions for the NFW profile.  This is
- * time consuming and not usually necessary. See TreeQuadPseudoNFW for a faster alternative.
  *
  * The default value of theta = 0.1 generally gives better than 1% accuracy on alpha.
  * The shear and kappa is always more accurate than the deflection.
@@ -690,14 +687,14 @@ public:
   //PosType ddmod(PosType x, int modnumber, PosType my_slope, PosType my_fratio);   // was used for Ansatz III w derivatives of the Fourier modes
   
   
-	// TODO: BEN: the below functions alphaNFW, kappaNFW and gammaNFW are obsolete and better to be deleted to avoid confusion
+	/*/ TODO: BEN: the below functions alphaNFW, kappaNFW and gammaNFW are obsolete and better to be deleted to avoid confusion
 	void alphaNFW(PosType *alpha,PosType *x,PosType Rtrunc,PosType mass,PosType r_scale
                 ,PosType *center,PosType Sigma_crit);
 	KappaType kappaNFW(PosType *x,PosType Rtrunc,PosType mass,PosType r_scale
                      ,PosType *center,PosType Sigma_crit);
 	void gammaNFW(KappaType *gamma,PosType *x,PosType Rtrunc,PosType mass,PosType r_scale
                 ,PosType *center,PosType Sigma_crit);
-  
+  */
 	void initFromFile(float my_mass, long *seed, float vmax, float r_halfmass);
 	void initFromMassFunc(float my_mass, float my_Rsize, float my_rscale, PosType my_slope, long *seed);
   /// set Rsize
@@ -706,14 +703,7 @@ public:
 	void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rsize/rscale; gmax = InterpolateFromTable(gtable,xmax);};
   
   /// Extend radius of halo without changing the scale length or central density
-  void extendRadiius(float fac /// factor by which radius is increased
-                     ){
-    NFW_Utility nfw;
-    mass = nfw.NFW_M(xmax*fac,Rmax/rscale,mass);
-    Rmax *= fac;
-    xmax *=fac;
-    Rsize *= fac;
-  }
+  void extendRadius(float fac);
   
 protected:
 	/// table size
