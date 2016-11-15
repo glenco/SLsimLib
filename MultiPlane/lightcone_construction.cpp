@@ -28,11 +28,19 @@ void LightCone::ReadLightConeNFW(
                                  std::string filename   /// name of file to read
                                  ,COSMOLOGY &cosmo      /// cosmology for changing distance to redshift
                                  ,std::vector<LensHalo* > &lensVec  /// output LensHalos
+                                 ,PosType &theta_max   /// largest angular seporation from theta=0,phi=0
 ){
   
   Utilities::delete_container(lensVec);
   
   std::ifstream file(filename.c_str());
+  if(!file){
+    std::cout << "Can't open file " << filename << std::endl;
+    ERROR_MESSAGE();
+    throw std::runtime_error(" Cannot open file.");
+  }
+
+  
   std::string myline;
   
   while(file.peek() == '#') file.ignore(10000,'\n');
@@ -41,7 +49,7 @@ void LightCone::ReadLightConeNFW(
   void *addr[ncolumns];
   size_t haloid;
   double mass,Rvir,Rscale;
-  Utilities::Geometry::SphericalPoint sph_point;
+  Utilities::Geometry::SphericalPoint sph_point,sph_center(0,0,0);
   Point_3d tmp_point;
   
   addr[0] = &haloid;
@@ -58,9 +66,9 @@ void LightCone::ReadLightConeNFW(
   double myPosType;
   double z;
   
-  double mass_range[2],z_range[2],rvir_range[2];
-  mass_range[0] = z_range[0] = rvir_range[0] = HUGE_VALF;
-  mass_range[1] = z_range[1] = rvir_range[1] = 0.0;
+  double mass_range[2],z_range[2],rvir_range[2],theta_range[2];
+  mass_range[0] = z_range[0] = rvir_range[0] = theta_range[0] = HUGE_VALF;
+  mass_range[1] = z_range[1] = rvir_range[1] = theta_range[1] = 0.0;
   
   // skip first line
   std::getline(file,myline);
@@ -101,13 +109,15 @@ void LightCone::ReadLightConeNFW(
     lensVec.push_back( halo );
     lensVec.back()->setTheta(sph_point.phi,sph_point.theta);
     
+    
+    Utilities::update_range(theta_range,sph_center.AngleSeporation(sph_point));
     Utilities::update_range(mass_range,mass);
     Utilities::update_range(z_range,z);
     Utilities::update_range(rvir_range,Rvir);
   }
+  theta_max = theta_range[1];
   
   file.close();
-  
   std::cout << mass_range[0] << " <= mass <= " << mass_range[1] << std::endl;
   std::cout << z_range[0] << " <= z <= " << z_range[1] << std::endl;
   std::cout << rvir_range[0] << " <= Rvir <= " << rvir_range[1] << std::endl;
@@ -117,11 +127,11 @@ void LightCone::ReadLightConeNFW(
 void LightCone::WriteLightCone(std::string filename,std::vector<DataRockStar> &vec){
   
   std::ofstream file(filename);
-  file << "ID,x,y,z,mass,Rvir(kpc),Rscale(kpc)" << std::endl;
+  file << "ID,x,y,z,mass,Rvir(kpc),Rscale(kpc),Vmax(km/s)" << std::endl;
   
   for(auto h : vec){
     file << h.id << "," << h.x[0] << "," << h.x[1] << "," << h.x[2] << "," << h.mass
-    << "," << h.Rvir << "," << h.Rscale << std::endl;
+    << "," << h.Rvir << "," << h.Rscale << "," << h.Vmax << std::endl;
   }
   
   file.close();
@@ -173,7 +183,7 @@ void MultiLightCone::ReadBoxRockStar(std::string filename
   addr[0] = &(halo.id);
   addr[1] = &tmp;
   addr[2] = &(halo.mass);
-  addr[3] = &tmp;
+  addr[3] = &(halo.Vmax);
   addr[4] = &tmp;
   addr[5] = &(halo.Rvir);
   addr[6] = &(halo.Rscale);

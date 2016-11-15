@@ -1332,12 +1332,12 @@ namespace Utilities
     LockableContainer(const LockableContainer&) = delete;
     LockableContainer& operator=(const LockableContainer&) = delete;
     
-    void push_back(const reference_type t) {
+    void push_back(value_type &t) {
       std::lock_guard<std::mutex> lock(m);
       container.push_back(t);
     }
     
-    void push_front(const reference_type t) {
+    void push_front(value_type &t) {
       std::lock_guard<std::mutex> lock(m);
       container.push_front(t);
     }

@@ -440,13 +440,12 @@ void Lens::assignParams(InputParams& params,bool verbose)
       
       if(!params.get("field_mass_func_type",field_mass_func_type))
       {
-        std::cout << "Warning: field_mass_func_type needs to be set in the parameter file " << params.filename() << " if the background is to be subtracted."<< endl;
+        field_mass_func_type = ST;
       }
       
       if(!params.get("field_min_mass",field_min_mass))
       {
-        std::cout << "Warning: field_min_mass needs to be set in the parameter file " << params.filename() << " if the background is to be subtracted." << endl;
-        exit(0);
+        field_min_mass = 1.0e10;
       }
 
 		}
@@ -812,7 +811,7 @@ void Lens::createFieldPlanes(bool verbose)
 		else
 		{
 			z2 = cosmo.invCoorDist(0.5*(field_Dl[i] + field_Dl[i+1]));
-			k2 = Utilities::lower_bound<LensHalo>(field_halos, z2);
+			k2 = Utilities::lower_bound<LensHalo>(field_halos, z2) + 1;
 		}
 		
 		/*
@@ -836,6 +835,8 @@ void Lens::createFieldPlanes(bool verbose)
 			sb += field_halos[j]->get_mass();
 			     
       assert( field_Dl[i] > 0 );
+      assert(field_halos[j]->getZlens() >= z1);
+      assert(field_halos[j]->getZlens() <= z2);
 			// convert to proper distance on the lens plane
       //field_halos[j]->getX(tmp);
       //field_halos[j]->setX(tmp[0]*field_Dl[i]/(1+field_plane_redshifts[i])
@@ -1839,7 +1840,19 @@ void Lens::readLightCone(bool verbose){
   
   std::cout << "Reading Field Halos from " << field_input_sim_file << std::endl;
 
-  LightCone::ReadLightConeNFW(field_input_sim_file,cosmo,field_halos);
+  PosType rmax;
+  LightCone::ReadLightConeNFW(field_input_sim_file,cosmo,field_halos,rmax);
+  
+  fieldofview = pi*rmax*rmax*pow(180/pi,2);
+  inv_ang_screening_scale = 0.0;
+  
+  
+  if(verbose) std::cout << "Setting mass function to Sheth-Tormen." << std::endl;
+  field_mass_func_type = ST; // set mass function
+  
+  if(verbose) std::cout << "sorting in Lens::readInputSimFileMultiDarkHalos()" << std::endl;
+  // sort the field_halos by readshift
+
 
   std::sort(field_halos.begin(),field_halos.end(),[](LensHalo *lh1,LensHalo *lh2)
             {return (lh1->getZlens() < lh2->getZlens());});
