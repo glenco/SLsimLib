@@ -2314,7 +2314,7 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose)
               HALOCalculator hcalc(&cosmo,mass*(1-field_galaxy_mass_fraction),z);
               
               LensHaloNFW *tmp_halo = new LensHaloNFW(mass*(1-field_galaxy_mass_fraction),hcalc.getRvir(),z,hcalc.getConcentration(),1.0,0.0,0);
-              tmp_halo->extendRadiius(2.0);
+              tmp_halo->extendRadius(2.0);
               field_halos.push_back(tmp_halo);
             }
             break;

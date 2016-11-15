@@ -5,7 +5,7 @@
 
 #include "lens_halos.h"
 
-/// deflection caused by NFW halo
+/*// deflection caused by NFW halo
 void LensHaloNFW::alphaNFW(PosType *alpha,PosType *x,PosType Rtrunc,PosType mass,PosType r_scale
 		,PosType *center,PosType Sigma_crit){
 	PosType r,b=0;
@@ -78,7 +78,7 @@ void LensHaloNFW::gammaNFW(KappaType *gamma,PosType *x,PosType Rtrunc,PosType ma
 	gamma[1]=-2*gt*(x[0]-center[0])*(x[1]-center[1])/r/r;
 
 	return ;
-}
+}*/
 
 PosType LensHaloNFW::gfunction(PosType x) const{
 	PosType ans;

@@ -365,6 +365,17 @@ void LensHaloNFW::initFromMassFunc(float my_mass, float my_Rsize, float my_rscal
   gmax = InterpolateFromTable(gtable,xmax);
 }
 
+void LensHaloNFW::extendRadius(float fac /// factor by which radius is increased
+                               ){
+  NFW_Utility nfw;
+  mass = nfw.NFW_M(xmax*fac,Rmax/rscale,mass);
+  Rmax *= fac;
+  xmax *=fac;
+  Rsize *= fac;
+  gmax = InterpolateFromTable(gtable,xmax);
+}
+
+
 const long LensHaloPseudoNFW::NTABLE = 10000;
 const PosType LensHaloPseudoNFW::maxrm = 100.0;
 int LensHaloPseudoNFW::count = 0;
@@ -376,6 +387,9 @@ LensHaloPseudoNFW::LensHaloPseudoNFW()
 : LensHalo()
 {
 }
+
+
+
 /// constructor
 LensHaloPseudoNFW::LensHaloPseudoNFW(
                                      float my_mass             /// mass in solar masses
