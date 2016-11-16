@@ -882,7 +882,7 @@ namespace Utilities
   /// delete the objects that are pointed to in a container of pointers
   template<typename Container>
   void delete_container(Container& c) { while(!c.empty()) delete c.back(), c.pop_back(); }
-    
+  
   /** \brief Class for calculating the Hilbert curve distance in two dimensions
    *
    *  The Hilbert Curve maps two dimensional positions on a grid into distance in one dimension.
@@ -929,7 +929,7 @@ namespace Utilities
     range[0] = range[0] < current ? range[0] : current;
     range[1] = range[1] > current ? range[1] : current;
   }
-
+  
   
 #ifdef ENABLE_CLANG
   /// This is a class for generating random numbers. It is actually just a wrapper for some std random classes.
@@ -1044,18 +1044,18 @@ namespace Utilities
     
     // initialise original index locations
     index.resize(N);
-
+    
     for (size_t i = 0; i != index.size(); ++i) index[i] = i;
     
     // sort indexes based on comparing values in v
     std::sort(index.begin(), index.end(),
               [v](size_t i1, size_t i2) {return v[i1] < v[i2];});
   }
-
+  
   /// Find the indexes that sort a vector in descending order
   template <typename T>
   void sort_indexes_decending(const std::vector<T> &v     /// the original data that is not changed
-                    ,std::vector<size_t> &index /// vector of indexes that if put into v will sort it
+                              ,std::vector<size_t> &index /// vector of indexes that if put into v will sort it
   ) {
     
     // initialise original index locations
@@ -1066,7 +1066,7 @@ namespace Utilities
     std::sort(index.begin(), index.end(),
               [&v](size_t i1, size_t i2) {return v[i1] > v[i2];});
   }
-
+  
   
   // reorders vec according to index p
   template <typename T>
@@ -1084,11 +1084,11 @@ namespace Utilities
       vec[i] = copy[p[i]];
     }
   }
-
+  
   template <typename T>
   void apply_permutation(
-                                  std::vector<T>& vec,
-                                  const std::vector<std::size_t>& p)
+                         std::vector<T>& vec,
+                         const std::vector<std::size_t>& p)
   {
     apply_permutation(vec.data(),p);
   }
@@ -1108,7 +1108,7 @@ namespace Utilities
                        ,std::vector<double> &ll      /// output multiplot number of bins
                        ,std::vector<double> &Pl      /// output binned power spectrum
                        ,int zeropaddingfactor
-  );
+                       );
 #endif
   
   
@@ -1124,7 +1124,7 @@ namespace Utilities
    The smoothing is done by finding the circle around each point whose total pixel values are larger than value.  In the case of a density map made from particles if value = (mass of particle)*(number of neighbours) an approximate N nearest neighbour smoothing is done.
    **/
   std::vector<double> AdaptiveSmooth(const std::vector<double> &map_in,size_t Nx,size_t Ny,double value);
-
+  
   /// returns the compiler variable N_THREADS that is maximum number of threads to be used.
   int GetNThreads();
   
@@ -1276,7 +1276,7 @@ namespace Utilities
       
       strg.clear();
       buffer.clear();
-
+      
       // ******************
       
       
@@ -1286,7 +1286,7 @@ namespace Utilities
       buffer >> myt2;
       if(verbose)  std::cout << myt2 << std::endl;
       y.push_back(myt2);
-
+      
       myline.erase(0,pos+1);
       pos= myline.find_first_not_of(space);
       myline.erase(0,pos);
@@ -1301,7 +1301,7 @@ namespace Utilities
       buffer >> myt3;
       if(verbose)  std::cout << myt3 << std::endl;
       y.push_back(myt3);
-
+      
       strg.clear();
       buffer.clear();
       myline.clear();
@@ -1312,8 +1312,8 @@ namespace Utilities
   
   
   /** \brief This is a thread-safe container wrapper.
-   A reference to it can be passed to multiple threads without 
-   worrying about them interfering.  It is mostly meant as dynamical 
+   A reference to it can be passed to multiple threads without
+   worrying about them interfering.  It is mostly meant as dynamical
    push only storage with STL data conatiners.  The functions mirror those
    of the STL data conatiners.
    */
@@ -1322,9 +1322,9 @@ namespace Utilities
   {
   public:
     typedef typename Container::value_type value_type;
-//    typedef typename Container::reference_type reference_type;
+    //    typedef typename Container::reference_type reference_type;
     typedef typename Container::value_type& reference_type;
-
+    
     LockableContainer(){}
     ~LockableContainer(){}
     
@@ -1346,12 +1346,12 @@ namespace Utilities
       std::lock_guard<std::mutex> lock(m);
       container.resize(N);
     }
-
+    
     void reserve(size_t N){
       std::lock_guard<std::mutex> lock(m);
       container.reserve(N);
     }
-
+    
     void clear(){
       std::lock_guard<std::mutex> lock(m);
       container.clear();
@@ -1377,6 +1377,59 @@ namespace Utilities
   private:
     Container container;
     std::mutex m;
+  };
+
+  template<class T>
+  struct LinearLookUpTable{
+  public:
+    LinearLookUpTable(std::function<T(T)> func,T xmin,T xmax,size_t N){
+      Utilities::fill_linear(x,N,xmin,xmax);
+      y.resize(N);
+      for(size_t i = 0;i<N; ++i){
+        y[i] = func(x[i]);
+      }
+    }
+    
+    bool operator()(T my_x,T &my_y){
+      long int i = Utilities::locate<T>(x,my_x);
+      if(i == -1 || i == x.size()){   // out of bounds
+        return false;
+      }
+      
+      my_y = y[i] + (y[i+1] - y[i])*(my_x - x[i])/(x[i+1] - x[i]);
+      return true;
+    }
+    
+  private:
+    std::vector<T> y;
+    std::vector<T> x;
+  };
+  
+  template <class T>
+  class LogLookUpTable{
+  public:
+    LogLookUpTable(std::function<T(T)> func,T xmin,T xmax,size_t N){
+      Utilities::fill_linear(x,N,log(xmin),log(xmax));
+      y.resize(N);
+      for(size_t i = 0;i<N; ++i){
+        y[i] = log(func(x[i]));
+      }
+    }
+    
+    bool operator()(T my_x,T &my_y){
+      T lgx = log(my_x);
+      long int i = Utilities::locate(x,lgx);
+      if(i == -1 || i == x.size()){   // out of bounds
+        return false;
+      }
+      
+      my_y = exp( y[i] + (y[i+1] - y[i])*(lgx - x[i])/(x[i+1] - x[i]) );
+      return true;
+    }
+    
+  private:
+    std::vector<T> y;
+    std::vector<T> x;
   };
 
 }

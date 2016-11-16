@@ -41,6 +41,11 @@ void LightCone::ReadLightConeNFW(
   }
 
   
+  // make lookup table for sigm(m)
+  Utilities::LogLookUpTable<double> tophat(
+      std::bind(&COSMOLOGY::TopHatVarianceM,cosmo,std::placeholders::_1,0)
+                                           ,1.0e6,1.0e16,1000);
+  
   std::string myline;
   
   while(file.peek() == '#') file.ignore(10000,'\n');
@@ -105,7 +110,13 @@ void LightCone::ReadLightConeNFW(
     
     //***** read in data from light cone file
     LensHaloNFW * halo = new LensHaloNFW(mass,Rvir/1.0e3,z,Rvir/Rscale,1,0,0);
-    halo->extendRadius(2);
+    
+    double nu;
+    tophat(mass,nu);  // look up sigm(M)^2
+    nu = cosmo.delta_c()/sqrt(nu)/cosmo.Dgrowth(z);
+    
+    // Formula for splash redius from More,Diemer & Kravtsov, 2014
+    halo->extendRadius(0.81*(1+0.97*exp(-nu/2.44)));
     lensVec.push_back( halo );
     lensVec.back()->setTheta(sph_point.phi,sph_point.theta);
     
