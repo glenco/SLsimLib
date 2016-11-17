@@ -198,7 +198,24 @@ private:
   //Point &operator=(const Point &p);
 };
 
-
+/** \brief A point that is automatically linked to its source point eliminating the
+ need for using LinkToSourcePoint().  Useful when a limited number of Points are needed and they do not need to be in continuous memory.
+*/
+struct RAY: public Point{
+  RAY(){
+    image = &source_point;
+    image->image = this;
+  }
+  ~RAY(){};
+  
+  /// postions on image plane
+  PosType *pos_image(){return x;};
+  /// postions on source plane
+  PosType *pos_source(){return image->x;}
+  
+private:
+  Point source_point;
+};
 
 std::ostream &operator<<(std::ostream &os, Point const &p);
 
@@ -367,10 +384,8 @@ struct PointList{
 private:
   Point *top;
   Point *bottom;
-  //Point *current;
   unsigned long Npoints;
   
-private:
   // make a point uncopyable
   //PointList(const PointList &p);
   PointList &operator=(const PointList &p);
