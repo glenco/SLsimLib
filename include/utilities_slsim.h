@@ -1379,10 +1379,19 @@ namespace Utilities
     std::mutex m;
   };
 
+  /** \brief Class that make constructing and using a linear numerical lookput table easier.
+   
+   Uses linear interpolation.  std::bind() can be useful to get a function or method into a form that 
+   will be accepted by the constructor.
+   **/
   template<class T>
   struct LinearLookUpTable{
   public:
-    LinearLookUpTable(std::function<T(T)> func,T xmin,T xmax,size_t N){
+    LinearLookUpTable(std::function<T(T)> func    /// function to sample from
+                      ,T xmin                     /// minimum x value of table
+                      ,T xmax                     /// maximum x value of table
+                      ,size_t N                   /// number of points in table
+                      ){
       Utilities::fill_linear(x,N,xmin,xmax);
       y.resize(N);
       for(size_t i = 0;i<N; ++i){
@@ -1390,9 +1399,10 @@ namespace Utilities
       }
     }
     
+    /// get linear interpolate at my_x, returns false if out of bounds
     bool operator()(T my_x,T &my_y){
       long int i = Utilities::locate<T>(x,my_x);
-      if(i == -1 || i == x.size()){   // out of bounds
+      if(i == -1 || i == x.size()-1){   // out of bounds
         return false;
       }
       
@@ -1405,10 +1415,20 @@ namespace Utilities
     std::vector<T> x;
   };
   
+  /** \brief Class that make constructing and using a linear numerical lookput table easier.
+   Uses linear interpolation on the log values of both x and y.  
+   
+   std::bind() can be useful to get a function or method into a form that
+   will be accepted by the constructor.
+   **/
   template <class T>
   class LogLookUpTable{
   public:
-    LogLookUpTable(std::function<T(T)> func,T xmin,T xmax,size_t N){
+    LogLookUpTable(std::function<T(T)> func    /// function to sample from
+                        ,T xmin                     /// minimum x value of table
+                        ,T xmax                     /// maximum x value of table
+                        ,size_t N                   /// number of points in table
+                        ){
       Utilities::fill_linear(x,N,log(xmin),log(xmax));
       y.resize(N);
       for(size_t i = 0;i<N; ++i){
@@ -1419,7 +1439,7 @@ namespace Utilities
     bool operator()(T my_x,T &my_y){
       T lgx = log(my_x);
       long int i = Utilities::locate(x,lgx);
-      if(i == -1 || i == x.size()){   // out of bounds
+      if(i == -1 || i == x.size()-1){   // out of bounds
         return false;
       }
       

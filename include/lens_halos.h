@@ -667,22 +667,6 @@ public:
 	LensHaloNFW(InputParams& params);
 	virtual ~LensHaloNFW();
   
-	PosType ffunction(PosType x) const;
-	PosType gfunction(PosType x) const;
-  PosType dgfunctiondx(PosType x);
-	PosType g2function(PosType x) const;
-	PosType hfunction(PosType x) const;
-  PosType dhfunction(PosType x) const;
-  PosType ddhfunction(PosType x, bool numerical);
-  PosType dddhfunction(PosType x, bool numerical);
-  PosType bfunction(PosType x);
-  PosType dbfunction(PosType x);
-  PosType ddbfunction(PosType x);
-  PosType dmoddb(int whichmod, PosType q, PosType b);
-  PosType ddmoddb(int whichmod, PosType q, PosType b);
-  PosType dmoddq(int whichmod, PosType q, PosType b);
-  PosType ddmoddq(int whichmod, PosType q, PosType b);
-  
   //PosType dmod(PosType x, int modnumber, PosType my_slope, PosType my_fratio);    // was used for Ansatz III w derivatives of the Fourier modes
   //PosType ddmod(PosType x, int modnumber, PosType my_slope, PosType my_fratio);   // was used for Ansatz III w derivatives of the Fourier modes
   
@@ -706,7 +690,24 @@ public:
   void extendRadius(float fac);
   
 protected:
-	/// table size
+  
+  PosType ffunction(PosType x) const;
+  PosType gfunction(PosType x) const;
+  PosType dgfunctiondx(PosType x);
+  PosType g2function(PosType x) const;
+  PosType hfunction(PosType x) const;
+  PosType dhfunction(PosType x) const;
+  PosType ddhfunction(PosType x, bool numerical);
+  PosType dddhfunction(PosType x, bool numerical);
+  PosType bfunction(PosType x);
+  PosType dbfunction(PosType x);
+  PosType ddbfunction(PosType x);
+  PosType dmoddb(int whichmod, PosType q, PosType b);
+  PosType ddmoddb(int whichmod, PosType q, PosType b);
+  PosType dmoddq(int whichmod, PosType q, PosType b);
+  PosType ddmoddq(int whichmod, PosType q, PosType b);
+
+  /// table size
 	static const long NTABLE;
 	/// maximum Rsize/rscale
 	static const PosType maxrm;

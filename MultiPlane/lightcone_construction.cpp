@@ -190,28 +190,36 @@ void MultiLightCone::ReadBoxRockStar(std::string filename
   LightCone::DataRockStar halo;
   double tmp;
   double parent_id;
+  double m200c,m200b,R200,Mvir_all,rs_klypin;
+  for(int i=0 ; i < 42 ;++i) addr[i] = &tmp;
   
   addr[0] = &(halo.id);
-  addr[1] = &tmp;
+  
   addr[2] = &(halo.mass);
   addr[3] = &(halo.Vmax);
-  addr[4] = &tmp;
+
   addr[5] = &(halo.Rvir);
   addr[6] = &(halo.Rscale);
-  addr[7] = &tmp;
+
   addr[8] = &(halo.x[0]);
   addr[9] = &(halo.x[1]);
   addr[10] = &(halo.x[2]);
-  for(int i=11 ; i < 41 ;++i) addr[i] = &tmp;
-  addr[41] = &parent_id;
   
+  addr[18] = &rs_klypin;
+  addr[19] = &Mvir_all;
+  addr[20] = &m200b;
+  addr[21] = &m200c;
+
+  addr[41] = &parent_id;
+
   unsigned int mysize_t;
   int myint;
   std::string strg;
   std::string delim=" ";
   double mydouble;
-  double h,scale_factor;
+  double h,scale_factor,Omega;
   double BoxLength =0;
+  double totalmass = 0.0;
   
   std::stringstream buffer;
   int i_block = 0;
@@ -229,6 +237,12 @@ void MultiLightCone::ReadBoxRockStar(std::string filename
           buffer << myline;
           buffer >> scale_factor;
           buffer.clear();
+        }
+        pos = myline.find("Om = ");
+        if(pos != -1){
+          myline.erase(0,pos+5);
+          buffer << myline.substr(0,6);
+          buffer >> Omega;
         }
         pos = myline.find("h = ");
         if(pos != -1){
@@ -278,6 +292,8 @@ void MultiLightCone::ReadBoxRockStar(std::string filename
       halo.mass /= h;
       halo.Rscale *= scale_factor/h;
       halo.Rvir *= scale_factor/h;
+      
+      totalmass += halo.mass;
       
       if(parent_id == -1 || allow_subhalos )boxhalos.push_back(halo);
       
@@ -334,6 +350,11 @@ void MultiLightCone::ReadBoxRockStar(std::string filename
     }
   }while(boxhalos.size() > 0);
   std::cout << "done" << std::endl;
+  std::cout << "Total mass in halos: " << totalmass << " Msun." << std::endl
+  << "Mass density in halos: " << totalmass/BoxLength/BoxLength/BoxLength
+  << " Msun/Mpc^3 comoving." << std::endl;
+  
+  
   
   file.close();
 }
