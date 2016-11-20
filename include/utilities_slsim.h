@@ -1378,34 +1378,41 @@ namespace Utilities
     Container container;
     std::mutex m;
   };
-
+  
   /** \brief Class that make constructing and using a linear numerical lookput table easier.
    
-   Uses linear interpolation.  std::bind() can be useful to get a function or method into a form that 
+   Uses linear interpolation.  std::bind() can be useful to get a function or method into a form that
    will be accepted by the constructor.
    **/
   template<class T>
   struct LinearLookUpTable{
   public:
     LinearLookUpTable(std::function<T(T)> func    /// function to sample from
-                      ,T xmin                     /// minimum x value of table
-                      ,T xmax                     /// maximum x value of table
+                      ,T my_xmin                     /// minimum x value of table
+                      ,T my_xmax                     /// maximum x value of table
                       ,size_t N                   /// number of points in table
-                      ){
+                      ):xmax(my_xmax),xmin(my_xmin)
+    {
       Utilities::fill_linear(x,N,xmin,xmax);
       y.resize(N);
       for(size_t i = 0;i<N; ++i){
         y[i] = func(x[i]);
       }
+      dx = x[1] - x[0];
     }
     
     /// get linear interpolate at my_x, returns false if out of bounds
     bool operator()(T my_x,T &my_y){
-      long int i = Utilities::locate<T>(x,my_x);
-      if(i == -1 || i == x.size()-1){   // out of bounds
+      
+      if(my_x < xmin || my_x >= xmax){   // out of bounds
+        if(xmax == my_x){
+          my_y = y.back();
+          return true;
+        }
         return false;
       }
       
+      size_t i = (size_t)( (my_x - xmin)/dx );
       my_y = y[i] + (y[i+1] - y[i])*(my_x - x[i])/(x[i+1] - x[i]);
       return true;
     }
@@ -1413,10 +1420,13 @@ namespace Utilities
   private:
     std::vector<T> y;
     std::vector<T> x;
+    double dx;
+    double xmin;
+    double xmax;
   };
   
   /** \brief Class that make constructing and using a linear numerical lookput table easier.
-   Uses linear interpolation on the log values of both x and y.  
+   Uses linear interpolation on the log values of both x and y.
    
    std::bind() can be useful to get a function or method into a form that
    will be accepted by the constructor.
@@ -1425,23 +1435,33 @@ namespace Utilities
   class LogLookUpTable{
   public:
     LogLookUpTable(std::function<T(T)> func    /// function to sample from
-                        ,T xmin                     /// minimum x value of table
-                        ,T xmax                     /// maximum x value of table
-                        ,size_t N                   /// number of points in table
-                        ){
+                   ,T xmin                     /// minimum x value of table
+                   ,T xmax                     /// maximum x value of table
+                   ,size_t N                   /// number of points in table
+    ){
       Utilities::fill_linear(x,N,log(xmin),log(xmax));
       y.resize(N);
       for(size_t i = 0;i<N; ++i){
-        y[i] = log(func(x[i]));
+        y[i] = log(func( exp(x[i]) ));
       }
+      dx = x[1] - x[0];
+      xmin = x[0];
+      xmax = x.back();
     }
     
     bool operator()(T my_x,T &my_y){
       T lgx = log(my_x);
-      long int i = Utilities::locate(x,lgx);
-      if(i == -1 || i == x.size()-1){   // out of bounds
+      
+      if(lgx < xmin || lgx >= xmax){   // out of bounds
+        if(xmax == lgx){
+          my_y = exp( y.back() );
+          return true;
+        }
+
         return false;
       }
+      
+      size_t i = (size_t)( (lgx - xmin)/dx );
       
       my_y = exp( y[i] + (y[i+1] - y[i])*(lgx - x[i])/(x[i+1] - x[i]) );
       return true;
@@ -1450,7 +1470,10 @@ namespace Utilities
   private:
     std::vector<T> y;
     std::vector<T> x;
+    double dx;
+    double xmin;
+    double xmax;
   };
-
+  
 }
 #endif

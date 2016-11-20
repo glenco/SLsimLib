@@ -1641,7 +1641,7 @@ void Lens::createFieldHalos(bool verbose)
   // sort redshifts
   std::sort(halo_zs_vec.begin(),halo_zs_vec.end());
   
-  assert(halo_zs_vec[0] < halo_zs_vec[1]);
+  assert(halo_zs_vec[0] <= halo_zs_vec[1]);
   assert(halo_zs_vec[0] < halo_zs_vec[Nhalos-1]);
   
 	PosType *theta_pos,*theta2;
