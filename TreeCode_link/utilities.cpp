@@ -465,6 +465,7 @@ unsigned long prevpower(unsigned long k){
         }
         Na[i+Nnx*j]=aa[ii+nx*jj];
         Nb[i+Nnx*j]=bb[ii+nx*jj];
+        
       }
     }
     

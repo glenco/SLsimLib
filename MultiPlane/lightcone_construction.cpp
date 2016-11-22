@@ -108,15 +108,21 @@ void LightCone::ReadLightConeNFW(
     
     //std::cout << tmp_point << std::endl << sph_point << std::endl;
     
-    //***** read in data from light cone file
-    LensHaloNFW * halo = new LensHaloNFW(mass,Rvir/1.0e3,z,Rvir/Rscale,1,0,0);
     
     double nu;
     tophat(mass,nu);  // look up sigm(M)^2
     nu = cosmo.delta_c()/sqrt(nu)/cosmo.Dgrowth(z);
+
+    //mass *= 0.82*(1+0.63*exp(-nu/3.52));
+    
+    //***** read in data from light cone file
+    LensHaloNFW * halo = new LensHaloNFW(mass,Rvir/1.0e3,z,Rvir/Rscale,1,0,0);
     
     // Formula for splash redius from More,Diemer & Kravtsov, 2014
-    halo->extendRadius(0.81*(1+0.97*exp(-nu/2.44)));
+    //halo->extendRadius(0.81*(1+0.97*exp(-nu/2.44)));
+    
+    //halo->LensHalo::set_Rsize(Rvir*0.81*(1+0.97*exp(-nu/2.44)));
+    
     lensVec.push_back( halo );
     lensVec.back()->setTheta(sph_point.phi,sph_point.theta);
     

@@ -223,18 +223,51 @@ public:
                      ,std::vector<PosType> &lvec            /// output l values of bands
                      ,int zeropaddingfactor = 1
                      ,bool overwrite = true                 /// if false add power to existing power_spectrum (used for averaging over many fields
+                     ,bool antialias =false
                      ){
     
     if(power_spectrum.size() != lvec.size()) throw std::invalid_argument("these must be the same size");
     
-    if(overwrite) Utilities::powerspectrum2d(map,map,Nx,Ny,rangeX,rangeY, lvec, power_spectrum,zeropaddingfactor);
-    else{
+    double shotnoise = 0;
+    if(antialias){
+      // find variance of map
+      double ave = 0,var = 0,tmp;
+      size_t count=0;
+
+      for(size_t j=1;j<Ny-1;++j){
+        for(size_t i=1;i<Nx-1;++i){
+          size_t k = i + j*Nx;
+          tmp = map[k] - (map[k+1] + map[k-1] + map[k+Nx] + map[k-Nx])/4;
+          var += map[k]*tmp;
+          ++count;
+        }
+      }
+      assert(count == (Nx-2)*(Ny-2));
+      
+      /*for(auto a : map){
+        ave += a;
+        var += a*a;
+      }
+      var -= map.size()*ave*ave;
+      */
+      var /= (map.size() -1);
+      
+      shotnoise = resolution*resolution*var/pi/pi/4.0;
+    }
+    
+    
+    if(overwrite){
+      Utilities::powerspectrum2d(map,map,Nx,Ny,rangeX,rangeY, lvec, power_spectrum,zeropaddingfactor);
+      if(antialias){
+        for(auto &p : power_spectrum) p -= shotnoise;
+      }
+    }else{
       std::vector<PosType> tmp_power(power_spectrum.size());
       Utilities::powerspectrum2d(map,map,Nx,Ny,rangeX,rangeY, lvec, tmp_power,zeropaddingfactor);
-      for(size_t ii=0;ii<power_spectrum.size();++ii) power_spectrum[ii] += tmp_power[ii];
+      for(size_t ii=0;ii<power_spectrum.size();++ii) power_spectrum[ii] += tmp_power[ii] - shotnoise;
     }
   }
-
+  
   void AdaptiveSmooth(PosType value){
     
     std::valarray<double> tmp = Utilities::AdaptiveSmooth(data(),Nx,Ny,value);
