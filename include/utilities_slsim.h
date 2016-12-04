@@ -202,7 +202,7 @@ namespace Utilities
       iterator& operator=(const iterator& rhs) { it = rhs.it; return *this; }
       
       reference operator*() { return (reference)(**it); }
-      const reference operator*() const { return (const reference)(**it); }
+      const reference operator*() const { return (reference)(**it); }
       
       pointer operator->() { return (pointer)(*it); }
       const pointer operator->() const { return (const pointer)(*it); }
@@ -219,7 +219,7 @@ namespace Utilities
       iterator& operator-=(difference_type n) { it -= n; return *this; }
       
       reference operator[](difference_type n) { return (reference)*it[n]; }
-      const reference operator[](difference_type n) const { return (const reference)*it[n]; }
+      const reference operator[](difference_type n) const { return (reference)*it[n]; }
       
       friend iterator operator+(const iterator& i, difference_type n) { return iterator(i.it + n); }
       friend iterator operator+(difference_type n, const iterator& i) { return iterator(i.it + n); }
@@ -558,7 +558,7 @@ namespace Utilities
       iterator& operator=(const iterator& rhs) { it = rhs.it; return *this; }
       
       reference operator*() { return (reference)*it; }
-      const reference operator*() const { return (const reference)*it; }
+      const reference operator*() const { return (reference)*it; }
       
       iterator& operator++() { ++it; return *this; }
       iterator operator++(int) { iterator tmp(*this); ++it; return tmp; }

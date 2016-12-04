@@ -31,7 +31,6 @@ public:
     double Rscale;   // in comoving units
     double Vmax;
   };
-
   
   //void ReadBoxRockStar(std::string filename,Point_3d xo,Point_3d V
   //                                ,double rlow,double rhigh
@@ -234,6 +233,12 @@ public:
                        ,bool periodic_boundaries = true
                        ,bool allow_subhalos = false);
   
+  void ReadBoxXYZ(std::string filename
+                                  ,double rlow,double rhigh
+                                  ,std::vector<std::vector<Point_3d> > &conehalos
+                                  ,bool periodic_boundaries
+                                  );
+
 private:
 
   std::vector<Point_3d> xos;

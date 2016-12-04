@@ -365,4 +365,177 @@ void MultiLightCone::ReadBoxRockStar(std::string filename
   file.close();
 }
 
+void MultiLightCone::ReadBoxXYZ(std::string filename
+                                     ,double rlow,double rhigh
+                                     ,std::vector<std::vector<Point_3d> > &conehalos
+                                     ,bool periodic_boundaries
+                                     ){
+  
+  
+  std::cout <<" Opening " << filename << std::endl;
+  std::ifstream file(filename.c_str());
+  if(!file){
+    std::cout << "Can't open file " << filename << std::endl;
+    ERROR_MESSAGE();
+    throw std::runtime_error(" Cannot open file.");
+  }
+  if(conehalos.size() != cones.size() ){
+    if(conehalos.size() ==0 ){
+      conehalos.resize(cones.size());
+    }else{
+      std::cerr << " conhalos vector passed into MultiLightCone::ReadBoxXYZ does does not mathch the size expected." << std::endl;
+      throw std::invalid_argument("conehalos wrong size.");
+    }
+  }
+  
+  for(auto c : conehalos ) std::cout << c.size() << " halos already in cone." << std::endl;
+  
+  if(rlow > rhigh) std::swap(rlow,rhigh);
+  if(rlow == rhigh) return;
+  if(rlow < 0) rlow = 0.0;
+  
+  std::string myline;
+  
+  const size_t blocksize = 500000;
+  std::vector<Point_3d> boxhalos;
+  boxhalos.reserve(blocksize);
+  
+  const int ncolumns = 3;
+  
+  void *addr[ncolumns];
+  Point_3d halo;
+  double tmp;
+  for(int i=0 ; i < 42 ;++i) addr[i] = &tmp;
+  
+  addr[0] = &(halo.x[0]);
+  addr[1] = &(halo.x[1]);
+  addr[2] = &(halo.x[2]);
+  
+  unsigned int mysize_t;
+  int myint;
+  std::string strg;
+  std::string delim=" ";
+  double mydouble;
+  double h,scale_factor,Omega;
+  double BoxLength =0;
+  double totalmass = 0.0;
+  
+  std::stringstream buffer;
+  int i_block = 0;
+  
+  do{
+    boxhalos.clear();
+    
+    while ( boxhalos.size() < blocksize && getline(file,myline)) {
+      if(myline[0] == '#'){
+        int pos;
+        
+        pos = myline.find("a = ");
+        if(pos != -1){
+          myline.erase(0,pos+4);
+          buffer << myline;
+          buffer >> scale_factor;
+          buffer.clear();
+        }
+        pos = myline.find("Om = ");
+        if(pos != -1){
+          myline.erase(0,pos+5);
+          buffer << myline.substr(0,6);
+          buffer >> Omega;
+        }
+        pos = myline.find("h = ");
+        if(pos != -1){
+          myline.erase(0,pos+4);
+          buffer << myline;
+          buffer >> h;
+          buffer.clear();
+        }
+        pos = myline.find("Box size: ");
+        if(pos != -1){
+          myline.erase(0,pos+10);
+          myline.erase(9,1000);
+          buffer << myline;
+          buffer >> BoxLength;
+          buffer.clear();
+          BoxLength /= h;
+        }
+        
+        continue;
+      }
+      
+      for(int l=0;l<ncolumns; l++){
+        int pos = myline.find(delim);
+        strg.assign(myline,0,pos);
+        buffer << strg;
+        
+        //std::cout << l << "  " << strg << std::endl;
+        if(l == 0){
+          buffer >> mysize_t;
+          *((unsigned int *)addr[l]) = mysize_t;
+        }else if(l == 1 ){
+          buffer >> myint;
+          *((int *)addr[l]) = myint;
+        }else{
+          buffer >> mydouble;
+          *((double *)addr[l]) = mydouble;
+        }
+        myline.erase(0,pos+1);
+        strg.clear();
+        buffer.clear();
+        buffer.str(std::string());
+      }
+    }
+    
+    if(boxhalos.size() > 0){
+      int nthreads = Utilities::GetNThreads();
+      int chunk_size;
+      do{
+        chunk_size =  boxhalos.size()/nthreads;
+        if(chunk_size == 0) nthreads /= 2;
+      }while(chunk_size == 0);
+      
+      int remainder =  boxhalos.size()%chunk_size;
+      
+      
+      for(int j=0; j< cones.size() ; ++j ){
+        
+        std::vector<std::thread> thr(nthreads);
+        Utilities::LockableContainer<std::vector<Point_3d> > halos;
+        halos.swap(conehalos[j]);
+        
+        assert(nthreads*chunk_size + remainder == boxhalos.size() );
+        for(int ii =0; ii< nthreads ; ++ii){
+          
+          //std::cout << ii*chunk_size << " " << n << std::endl;
+          
+          thr[ii] = std::thread(&LightCone::select<LightCone::DataRockStar>,cones[j]
+                                ,xos[j],vs[j],BoxLength,rlow,rhigh
+                                ,boxhalos.data() + ii*chunk_size
+                                ,boxhalos.data() + (ii+1)*chunk_size + (ii==nthreads-1)*remainder
+                                //,std::ref(conehalos[j])
+                                ,std::ref( halos )
+                                ,periodic_boundaries );
+        }
+        for(int ii = 0; ii < nthreads ;++ii){ if(thr[ii].joinable() ) thr[ii].join();}
+        halos.swap(conehalos[j]);
+      }
+      
+      i_block += boxhalos.size();
+      
+      if(boxhalos.size() > 0 && i_block % 10000000 == 0 ){
+        std::cout << i_block << " halos from " << filename << ", total in cones currently: "
+        << std::endl;
+        for(auto c : conehalos) std::cout << "    " << c.size() << "...." << std::endl;
+      }
+    }
+  }while(boxhalos.size() > 0);
+  
+  std::cout << "done" << std::endl;
+  std::cout << "Total mass in halos: " << totalmass << " Msun." << std::endl
+  << "Mass density in halos: " << totalmass/BoxLength/BoxLength/BoxLength
+  << " Msun/Mpc^3 comoving." << std::endl;
+  
+  file.close();
+}
+
 
