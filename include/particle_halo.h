@@ -41,6 +41,16 @@ public:
                     ,PosType MinPSize = 0.0    /// Minimum smoothing size of particles
                     );
   
+  LensHaloParticles(
+                    PosType **positions    /// 3d positions in physical coordinates, only first two are used
+                    ,std::vector<float> &my_sizes  /// smoothing sizes
+                    ,std::vector<float> &my_masses /// masses
+                    ,PosType redshift     /// redshift of origin
+                    ,const COSMOLOGY& cosmo /// cosmology
+                    ,bool my_multimass   /// Set to true is particles have different sizes
+                    ,PosType sigma_back  /// background mass sheet
+                    );
+  
   ~LensHaloParticles();
   
   void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,double const *xcm
@@ -54,7 +64,11 @@ public:
   /// center of mass in input coordinates
   Point_3d CenterOfMass(){return mcenter;}
   
+  static void find_smoothing(PosType **xp,size_t N,std::vector<float> &s,int Nneighbores);
+
 private:
+
+  static void find_smoothing_(TreeSimple *tree3d,PosType **xp,float *sizes,size_t N,int Nsmooth);
 
   Point_3d mcenter;
   void rotate_particles(PosType theta_x,PosType theta_y);

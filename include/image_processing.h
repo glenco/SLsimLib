@@ -250,7 +250,7 @@ public:
       }
       var -= map.size()*ave*ave;
       */
-      var /= (map.size() -1);
+      var /= (count -1);
       
       shotnoise = resolution*resolution*var/pi/pi/4.0;
     }
