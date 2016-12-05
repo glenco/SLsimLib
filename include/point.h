@@ -49,6 +49,12 @@ struct Point_2d{
     x[0]=p.x[0];
     x[1]=p.x[1];
   }
+  Point_2d(Point_2d &&p){
+    x[0]=p.x[0];
+    x[1]=p.x[1];
+  }
+  
+  
   Point_2d & operator=(const Point_2d &p){
     if(this == &p) return *this;
     x[0]=p.x[0];
@@ -416,6 +422,12 @@ struct Point_3d{
     x[1]=p.x[1];
     x[2]=p.x[2];
   }
+  Point_3d(Point_3d &&p){
+    x[0]=p.x[0];
+    x[1]=p.x[1];
+    x[2]=p.x[2];
+  }
+
   Point_3d & operator=(const Point_3d &p){
     if(this == &p) return *this;
     x[0]=p.x[0];

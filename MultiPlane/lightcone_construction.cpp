@@ -154,6 +154,18 @@ void LightCone::WriteLightCone(std::string filename,std::vector<DataRockStar> &v
   file.close();
 }
 
+void LightCone::WriteLightCone(std::string filename,std::vector<Point_3d> &vec){
+  
+  std::ofstream file(filename);
+  file << "x,y,z" << std::endl;
+  
+  for(auto h : vec){
+    file << h[0] << "," << h[1] << "," << h[2] << std::endl;
+  }
+  
+  file.close();
+}
+
 void MultiLightCone::ReadBoxRockStar(std::string filename
                                      ,double rlow,double rhigh
                                      ,std::vector<std::vector<LightCone::DataRockStar> > &conehalos
@@ -508,7 +520,7 @@ void MultiLightCone::ReadBoxXYZ(std::string filename
           
           //std::cout << ii*chunk_size << " " << n << std::endl;
           
-          thr[ii] = std::thread(&LightCone::select<LightCone::DataRockStar>,cones[j]
+          thr[ii] = std::thread(&LightCone::select<Point_3d>,cones[j]
                                 ,xos[j],vs[j],BoxLength,rlow,rhigh
                                 ,boxhalos.data() + ii*chunk_size
                                 ,boxhalos.data() + (ii+1)*chunk_size + (ii==nthreads-1)*remainder
