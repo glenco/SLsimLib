@@ -62,10 +62,13 @@ private:
 
 class MultiLightCone{
 public:
-  MultiLightCone(double angular_radius
-     ,const std::vector<Point_3d> &observers    /// postion of observers within the simulation box
-      ,const std::vector<Point_3d> &directions  /// direction of light cones
-                 ):xos(observers),vs(directions){
+  MultiLightCone(
+                 double angular_radius
+                 ,const std::vector<Point_3d> &observers    /// postion of observers within the simulation box
+                 ,const std::vector<Point_3d> &directions   /// direction of light cones
+                 ):
+  xos(observers),vs(directions)
+  {
     assert(observers.size() == directions.size());
     for(int i=0;i<observers.size(); ++i) cones.push_back(angular_radius);
   }
@@ -83,10 +86,12 @@ public:
                        ,bool allow_subhalos = false);
   
   void ReadBoxXYZ(std::string filename
-                                  ,double rlow,double rhigh
-                                  ,std::vector<std::vector<Point_3d> > &conehalos
-                                  ,bool periodic_boundaries
-                                  );
+                  ,double rlow,double rhigh
+                  ,std::vector<std::vector<Point_3d> > &conehalos
+                  ,double hubble
+                  ,double BoxLength
+                  ,bool periodic_boundaries = true
+                  );
 
 private:
 

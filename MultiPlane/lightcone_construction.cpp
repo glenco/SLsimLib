@@ -209,7 +209,7 @@ void MultiLightCone::ReadBoxRockStar(std::string filename
   double tmp;
   double parent_id;
   double m200c,m200b,R200,Mvir_all,rs_klypin;
-  for(int i=0 ; i < 42 ;++i) addr[i] = &tmp;
+  for(int i=0 ; i < ncolumns ;++i) addr[i] = &tmp;
   
   addr[0] = &(halo.id);
   
@@ -378,10 +378,12 @@ void MultiLightCone::ReadBoxRockStar(std::string filename
 }
 
 void MultiLightCone::ReadBoxXYZ(std::string filename
-                                     ,double rlow,double rhigh
-                                     ,std::vector<std::vector<Point_3d> > &conehalos
-                                     ,bool periodic_boundaries
-                                     ){
+                                ,double rlow,double rhigh
+                                ,std::vector<std::vector<Point_3d> > &conehalos
+                                ,double hubble
+                                ,double BoxLength
+                                ,bool periodic_boundaries
+                                ){
   
   
   std::cout <<" Opening " << filename << std::endl;
@@ -414,23 +416,9 @@ void MultiLightCone::ReadBoxXYZ(std::string filename
   
   const int ncolumns = 3;
   
-  void *addr[ncolumns];
   Point_3d halo;
-  double tmp;
-  for(int i=0 ; i < 42 ;++i) addr[i] = &tmp;
-  
-  addr[0] = &(halo.x[0]);
-  addr[1] = &(halo.x[1]);
-  addr[2] = &(halo.x[2]);
-  
-  unsigned int mysize_t;
-  int myint;
   std::string strg;
-  std::string delim=" ";
-  double mydouble;
-  double h,scale_factor,Omega;
-  double BoxLength =0;
-  double totalmass = 0.0;
+  std::string delim = " ";
   
   std::stringstream buffer;
   int i_block = 0;
@@ -438,64 +426,33 @@ void MultiLightCone::ReadBoxXYZ(std::string filename
   do{
     boxhalos.clear();
     
-    while ( boxhalos.size() < blocksize && getline(file,myline)) {
-      if(myline[0] == '#'){
-        int pos;
-        
-        pos = myline.find("a = ");
-        if(pos != -1){
-          myline.erase(0,pos+4);
-          buffer << myline;
-          buffer >> scale_factor;
-          buffer.clear();
-        }
-        pos = myline.find("Om = ");
-        if(pos != -1){
-          myline.erase(0,pos+5);
-          buffer << myline.substr(0,6);
-          buffer >> Omega;
-        }
-        pos = myline.find("h = ");
-        if(pos != -1){
-          myline.erase(0,pos+4);
-          buffer << myline;
-          buffer >> h;
-          buffer.clear();
-        }
-        pos = myline.find("Box size: ");
-        if(pos != -1){
-          myline.erase(0,pos+10);
-          myline.erase(9,1000);
-          buffer << myline;
-          buffer >> BoxLength;
-          buffer.clear();
-          BoxLength /= h;
-        }
-        
-        continue;
-      }
+    while ( boxhalos.size() < blocksize
+           && getline(file,myline)) {
+      
+      int pos = myline.find_first_not_of(delim);
+      myline.erase(0,pos);
       
       for(int l=0;l<ncolumns; l++){
-        int pos = myline.find(delim);
+        pos = myline.find(delim);
         strg.assign(myline,0,pos);
         buffer << strg;
         
         //std::cout << l << "  " << strg << std::endl;
-        if(l == 0){
-          buffer >> mysize_t;
-          *((unsigned int *)addr[l]) = mysize_t;
-        }else if(l == 1 ){
-          buffer >> myint;
-          *((int *)addr[l]) = myint;
-        }else{
-          buffer >> mydouble;
-          *((double *)addr[l]) = mydouble;
-        }
+        buffer >> halo[l];
+        //std::cout << halo << std::endl;
+        
         myline.erase(0,pos+1);
+        pos = myline.find_first_not_of(delim);
+        myline.erase(0,pos);
+        
         strg.clear();
         buffer.clear();
         buffer.str(std::string());
       }
+      
+      halo /= hubble;
+      
+      boxhalos.push_back(halo);
     }
     
     if(boxhalos.size() > 0){
@@ -543,9 +500,6 @@ void MultiLightCone::ReadBoxXYZ(std::string filename
   }while(boxhalos.size() > 0);
   
   std::cout << "done" << std::endl;
-  std::cout << "Total mass in halos: " << totalmass << " Msun." << std::endl
-  << "Mass density in halos: " << totalmass/BoxLength/BoxLength/BoxLength
-  << " Msun/Mpc^3 comoving." << std::endl;
   
   file.close();
 }
