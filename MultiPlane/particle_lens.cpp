@@ -36,8 +36,16 @@ LensHaloParticles::LensHaloParticles(
   if(!readSizesFile(sizefile,Nsmooth,min_size)){
     // calculate sizes
     sizes.resize(Npoints);
-    calculate_smoothing(Nsmooth);
+    //calculate_smoothing(Nsmooth);
+
+    std::cout << "Calculating smoothing of particles ..." << std::endl
+    << Nsmooth << " neighbors.  If there are a lot of particles this could take a while." << std::endl;
+
+    find_smoothing(xp,Npoints,sizes,Nsmooth);
     for(size_t i=0; i<Npoints ; ++i) if(sizes[i] < min_size) sizes[i] = min_size;
+    
+    // save result to a file for future use
+    writeSizes(sizefile,Nsmooth);
   }
   
   // convert from comoving to physical coordinates
@@ -373,7 +381,7 @@ void LensHaloParticles::find_smoothing_(TreeSimple *tree3d,PosType **xp,float *s
   }
 }
 
-void LensHaloParticles::calculate_smoothing(int Nsmooth){
+/*void LensHaloParticles::calculate_smoothing(int Nsmooth){
   std::cout << "Calculating smoothing of particles ..." << std::endl
   << Nsmooth << " neighbors.  If there are a lot of particles this could take a while." << std::endl;
   
@@ -413,7 +421,7 @@ void LensHaloParticles::smooth_(TreeSimple *tree3d,PosType **xp,float *sizesp,si
   for(size_t i=0;i<N;++i){
     tree3d->NearestNeighbors(xp[i],Nsmooth,sizesp + i,neighbors);
   }
-}
+}*/
 
 void LensHaloParticles::writeSizes(const std::string &filename,int Nsmooth){
   

@@ -73,8 +73,8 @@ private:
   Point_3d mcenter;
   void rotate_particles(PosType theta_x,PosType theta_y);
 
-  void calculate_smoothing(int Nsmooth);
-  void smooth_(TreeSimple *tree3d,PosType **xp,float *sizes,size_t N,int Nsmooth);
+  //void calculate_smoothing(int Nsmooth);
+  //void smooth_(TreeSimple *tree3d,PosType **xp,float *sizes,size_t N,int Nsmooth);
 
   void readPositionFileASCII(const std::string& filename);
   bool readSizesFile(const std::string& filename,int Nsmooth,PosType min_size);

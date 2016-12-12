@@ -28,6 +28,9 @@ namespace Utilities {
       
     public:
       SphericalPoint(PosType r,PosType theta,PosType phi):r(r),theta(theta),phi(phi){};
+      SphericalPoint(const Point_3d &x){
+        cartisianTOspherical(x.x);
+      }
       SphericalPoint():r(0),theta(0),phi(0){};
 
       SphericalPoint &operator=(Point_3d &x){
