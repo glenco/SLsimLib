@@ -5,10 +5,12 @@
 //  Created by bmetcalf on 16/06/15.
 //
 //
-#include "quadTree.h"
 
 #ifndef GLAMER_particle_halo_h
 #define GLAMER_particle_halo_h
+
+#include "quadTree.h"
+#include "geometry.h"
 
 /**
  *  \brief A class that represents the lensing by a collection of simulation particles.
@@ -43,8 +45,8 @@ public:
   
   LensHaloParticles(
                     PosType **positions    /// 3d positions in physical coordinates, only first two are used
-                    ,std::vector<float> &my_sizes  /// smoothing sizes
-                    ,std::vector<float> &my_masses /// masses
+                    ,std::vector<float> &my_sizes  /// smoothing sizes, will be swapped so returns empty
+                    ,std::vector<float> &my_masses /// masses, will be swapped so returns empty
                     ,PosType redshift     /// redshift of origin
                     ,const COSMOLOGY& cosmo /// cosmology
                     ,bool my_multimass   /// Set to true is particles have different sizes
@@ -63,6 +65,8 @@ public:
   
   /// center of mass in input coordinates
   Point_3d CenterOfMass(){return mcenter;}
+  
+  void setSigmaBackground(PosType sigma_back){qtree->SetSigmaBackground(sigma_back); }
   
   static void find_smoothing(PosType **xp,size_t N,std::vector<float> &s,int Nneighbores);
 

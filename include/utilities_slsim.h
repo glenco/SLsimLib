@@ -923,12 +923,30 @@ namespace Utilities
     return std::max(l, std::min(u, x));
   }
   
+
+  /// class for keeping track of the range of a variable
   template<typename T>
-  void update_range(T range[],T current)
-  {
-    range[0] = range[0] < current ? range[0] : current;
-    range[1] = range[1] > current ? range[1] : current;
-  }
+  class Range{
+  public:
+    Range(T init_max,T init_min){
+      range[0] = std::max(init_min,init_max);
+      range[1] = std::min(init_min,init_max);
+    }
+    Range(T first_value){
+      range[0] = range[1] = first_value;
+    }
+    
+    void update(const T &val){
+      range[0] = range[0] < val ? range[0] : val;
+      range[1] = range[1] > val ? range[1] : val;
+    }
+    
+    T max(){return range[1];}
+    T min(){return range[0];}
+    
+  private:
+    T range[2];
+  };
   
   
 #ifdef ENABLE_CLANG

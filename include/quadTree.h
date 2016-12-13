@@ -197,10 +197,11 @@ public:
   void neighbors(PosType ray[],PosType rmax,std::list<IndexType> &neighbors) const;
   void neighbors(PosType ray[],PosType rmax,std::vector<LensHalo *> &neighbors) const;
   
-  virtual void printParticlesInBranch(unsigned long number);
+  void printParticlesInBranch(unsigned long number);
 
-	virtual void printBranchs(int level = -1);
+	void printBranchs(int level = -1);
 
+  void SetSigmaBackground(PosType my_sigma_background){sigma_background = my_sigma_background;}
 protected:
 
 	PosType **xp;

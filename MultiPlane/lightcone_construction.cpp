@@ -76,9 +76,11 @@ void LightCone::ReadLightConeNFW(
   double myPosType;
   double z;
   
-  double mass_range[2],z_range[2],rvir_range[2],theta_range[2];
-  mass_range[0] = z_range[0] = rvir_range[0] = theta_range[0] = HUGE_VALF;
-  mass_range[1] = z_range[1] = rvir_range[1] = theta_range[1] = 0.0;
+  //double mass_range[2],z_range[2],rvir_range[2],theta_range[2];
+  //mass_range[0] = z_range[0] = rvir_range[0] = theta_range[0] = HUGE_VALF;
+  //mass_range[1] = z_range[1] = rvir_range[1] = theta_range[1] = 0.0;
+  
+  Utilities::Range<double> mass_range(HUGE_VALF,0),z_range(HUGE_VALF,0),rvir_range(HUGE_VALF,0),theta_range(HUGE_VALF,0);
   
   // skip first line
   std::getline(file,myline);
@@ -131,18 +133,17 @@ void LightCone::ReadLightConeNFW(
     lensVec.push_back( halo );
     lensVec.back()->setTheta(sph_point.phi,sph_point.theta);
     
-    
-    Utilities::update_range(theta_range,sph_center.AngleSeporation(sph_point));
-    Utilities::update_range(mass_range,mass);
-    Utilities::update_range(z_range,z);
-    Utilities::update_range(rvir_range,Rvir);
+    theta_range.update(sph_center.AngleSeporation(sph_point));
+    mass_range.update(mass);
+    z_range.update(z);
+    rvir_range.update(Rvir);
   }
-  theta_max = theta_range[1];
+  theta_max = theta_range.max();
   
   file.close();
-  std::cout << mass_range[0] << " <= mass <= " << mass_range[1] << std::endl;
-  std::cout << z_range[0] << " <= z <= " << z_range[1] << std::endl;
-  std::cout << rvir_range[0] << " <= Rvir <= " << rvir_range[1] << std::endl;
+  std::cout << mass_range.min() << " <= mass <= " << mass_range.max() << std::endl;
+  std::cout << z_range.min() << " <= z <= " << z_range.max() << std::endl;
+  std::cout << rvir_range.min() << " <= Rvir <= " << rvir_range.max() << std::endl;
 }
 
 /** \brief Read in a lightcone data file and render them into LensHaloParticles
@@ -150,15 +151,19 @@ void LightCone::ReadLightConeNFW(
 *   filename file should be the output of LightCone::WriteLightCone() to
 *   be in the right format.
 */
+using Utilities::Geometry::SphericalPoint;
+
 void LightCone::ReadLightConeParticles(
                                        std::string filename   /// name of file to read
                                        ,COSMOLOGY &cosmo      /// cosmology for changing distance to redshift
                                        ,std::vector<LensHalo* > &lensVec  /// output LensHalos
                                        ,float particle_mass
                                        ,int Nplanes
+                                       ,double theta_r
                                        ){
+  bool smooth = true;
+  SphericalPoint center;
   
-  using Utilities::Geometry::SphericalPoint;
   Utilities::delete_container(lensVec);
   
   std::ifstream file(filename.c_str());
@@ -188,7 +193,8 @@ void LightCone::ReadLightConeParticles(
   std::vector<SphericalPoint> particles;
   particles.reserve(1000000);
   Point_3d point;
-  
+  Utilities::Range<double> theta_range(HUGE_VALF,-1);
+
   while (getline(file,myline) && i < 100) {
     
     std::cout << myline << std::endl;
@@ -211,6 +217,7 @@ void LightCone::ReadLightConeParticles(
     std::cout << point << std::endl;
     
     particles.push_back(point);
+    theta_range.update(center.AngleSeporation(particles.back()));
     
     ++i;
   }
@@ -225,9 +232,9 @@ void LightCone::ReadLightConeParticles(
   std::vector<float> sizes = {0.0};
   //PosType **xp = Utilities::PosTypeMatrix(100,3);
 
-/*  // find smoothing
+// find smoothing
   //sizefile = simfile + "." + std::to_string(Nsmooth) + "sizes";
-  if(smooth){
+/*  if(smooth){
 //  if(!readSizesFile(sizefile,Nsmooth,min_size)){
     // calculate sizes
     sizes.resize(Npoints);
@@ -239,37 +246,45 @@ void LightCone::ReadLightConeParticles(
     LensHaloParticles::find_smoothing(xp,Npoints,sizes,Nsmooth);
     
     // save result to a file for future use
-    writeSizes(sizefile,Nsmooth);
+    //writeSizes(sizefile,Nsmooth);
   }
 */
   
-  std::vector<double> planes(Nplanes + 1);
-  for(int i = 0 ; i <= Nplanes ; ++i ) planes[i] = i*particles.back().r/Nplanes;
+  std::vector<double> planes(Nplanes);
+  std::vector<size_t> pnumbers(Nplanes);
   
-  auto it = particles.begin();
-  for(int i = 1 ; i < Nplanes ; ++i ){
-    it = std::lower_bound(it,particles.end(),planes[i+1],[](SphericalPoint &p){return p.r;});
+  double vol = pi*theta_range.max()*theta_range.max()*(pow(particles.back().r,3) - pow(particles[0].r,3))/3;
+  double psize = pow(vol/particles.size(),1.0/3.0);
+  PosType **xp;
+  
+  // break up into slices redshift bins
+  for(int i = 0 ; i < Nplanes ; ++i ) planes[i] = (2*i+1)*(particles.back().r - particles[0].r)/Nplanes/2 + particles[0].r;
+  std::vector<SphericalPoint>::iterator it1 = particles.begin(),it2;
+  for(int i = 0 ; i < Nplanes ; ++i ){
+    it2 = std::lower_bound(it1,particles.end(),(i+1)*particles.back().r/Nplanes
+                           ,[](SphericalPoint &p,double v){return p.r < v;});
+    
+    assert(it2-it1 > 0);
+    
+    pnumbers[i] = it2 - it1;
+    
+    double z = cosmo.invCoorDist(planes[i]);
+    double Dl = planes[i]/(1+z);
+    double sigma_back = particle_mass*pnumbers[i]/pi/Dl/Dl/theta_range.max()/theta_range.max();
+    
+    // project onto planes
+    xp = Utilities::PosTypeMatrix(it2-it1,2);
+    for(auto it = it1 ; it != it2 + 1 ; ++it){
+      xp[i][0] = (*it).theta*Dl;
+      xp[i][1] = (*it).phi*Dl;
+    }
+    // volume of shell
+    std::vector<float> sizes(pnumbers[i],psize/(1+z));
+    std::vector<float> masses = {particle_mass};
+    lensVec.push_back(new LensHaloParticles(xp,sizes,masses,z,cosmo,false,sigma_back));
+    
+    it1 = it2 + 1;
   }
-  
-  // break up into slices redshift bins ????
-  // project onto planes ???
-  
-  //std::cout << tmp_point << std::endl << sph_point << std::endl;
-  
-  
-  //***** read in data from light cone file
-  
-  std::vector<float> masses = {particle_mass};  // ???
-  double sigma_back; // ???
-  
-  double z = cosmo.invCoorDist(sqrt( xp[i][0]*xp[i][0] + xp[i][1]*xp[i][1] + xp[i][2]*xp[i][2] ));
-  LensHaloParticles *halo = new LensHaloParticles(&xp[0],sizes,masses,z,cosmo,false,sigma_back);
-  
-  
-  //lensVec.push_back( halo );
-  //lensVec.back()->setTheta(sph_point.phi,sph_point.theta);
-
-  std::cout << z_range[0] << " <= z <= " << z_range[1] << std::endl;
 }
 
 
