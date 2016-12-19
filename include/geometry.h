@@ -42,34 +42,76 @@ namespace Utilities {
       void OrthographicProjection(const SphericalPoint &central,PosType x[]) const;
       void InverseOrthographicProjection(const SphericalPoint &central,PosType const x[]);
     };
+    /** \brief Quaternion class that is especially useful for rotations.
+     
+     
+     <pre>
+     The Quaternion can be easily transformed between classes Point_3d and Utilities::Geomotry::SphericalPoint.
+     
+     Below is an example of a rotation of a vector initially defined as a Utilities::Geometry::SphericalPoint.
+     
+     
+     #include "geometry.h"
+     {
+     using Utilities::Geometry::SphericalPoint;
+     using Utilities::Geometry::Quaternion;
+     
+     SphericalPoint sp;
+     
+     sp.phi = -pi/2;
+     sp.theta = pi/3;
+     sp.r = 1.0;
+     
+     cout << sp.r << " " << sp.theta << " " << sp.phi << endl;
+     
+     // make a rotation Quaternion that will rotate the vector to the x-axis.
+     Quaternion R = Quaternion::q_y_rotation(-sp.theta)*Quaternion::q_z_rotation(-sp.phi);
+     
+     
+     // construct a Quaternion from a SphericalPoint
+     Quaternion q(sp);
+     
+     // apply the rotation
+     q = q.Rotate(R);
+     
+     // convert to a Point_3d
+     Point_3d p = q.to_point_3d();
+     
+     cout << q.to_point_3d() << endl;
+     
+     // convert back to a SphericalPoint
+     cout << q.to_SpericalPoint() << endl;
+     }
+     
+     <\pre>
+     */
     
-    
-    class Quaternian{
+    class Quaternion{
     public:
-      Quaternian(double s,double x,double y,double z){
+      Quaternion(double s,double x,double y,double z){
         v[0] = s;
         v[1] = x;
         v[2] = y;
         v[3] = z;
       }
-      Quaternian(const Quaternian &q){
+      Quaternion(const Quaternion &q){
         v[0] = q.v[0];
         v[1] = q.v[1];
         v[2] = q.v[2];
         v[3] = q.v[3];
       }
-      Quaternian(Point_3d p){
+      Quaternion(Point_3d p){
         v[0] = 0;
         v[1] = p[0];
         v[2] = p[1];
         v[3] = p[2];
       }
-      Quaternian(SphericalPoint sp){
+      Quaternion(SphericalPoint sp){
         sp.sphericalTOcartisian(v+1);
         v[0] = 0;
       }
       
-      Quaternian &operator=(const Quaternian &q){
+      Quaternion &operator=(const Quaternion &q){
         v[0] = q.v[0];
         v[1] = q.v[1];
         v[2] = q.v[2];
@@ -78,64 +120,79 @@ namespace Utilities {
         return *this;
       }
       
-      Quaternian operator*(const Quaternian &q) const{
-        return Quaternian(
+      Quaternion operator*(const Quaternion &q) const{
+        return Quaternion(
                           v[0]*q.v[0] - v[1]*q.v[1] - v[2]*q.v[2] - v[3]*q.v[3],
                           v[0]*q.v[1] + v[1]*q.v[0] + v[2]*q.v[3] - v[3]*q.v[2],
                           v[0]*q.v[2] - v[1]*q.v[3] + v[2]*q.v[0] + v[3]*q.v[1],
                           v[0]*q.v[3] + v[1]*q.v[2] - v[2]*q.v[1] + v[3]*q.v[0]);
       }
       
-      /// returns the conjugate of the quaternian
-      Quaternian conj() const{
-        return Quaternian(v[0],-v[1],-v[2],-v[3]);
+      /// returns the conjugate of the Quaternion
+      Quaternion conj() const{
+        return Quaternion(v[0],-v[1],-v[2],-v[3]);
       }
-      /** \brief returns the reciprocal of the quaternian
+      /** \brief returns the reciprocal of the Quaternion
       
-      This is the quaternian whose product with the original quaternian is 
+      This is the Quaternion whose product with the original Quaternion is 
        the real number 1.
       */
-      Quaternian inverse() const{
+      Quaternion inverse() const{
         return this->conj()/(v[0]*v[0] + v[1]*v[1] + v[2]*v[2] + v[3]*v[3]);
       }
       
-      /// the norm of the quaternian
+      /// the norm of the Quaternion
       double norm() const{
         return sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2] + v[3]*v[3]);
       }
       
-      /// returns the quaternian rotated around the x-axis by theta in radians
-      Quaternian RotateX(double theta){
-        Quaternian R = q_x_rotation(theta);
+      /// returns the Quaternion rotated around the x-axis by theta in radians
+      Quaternion RotateX(double theta){
+        Quaternion R = q_x_rotation(theta);
         return R*(*this)*R.conj();
       }
-      /// returns the quaternian rotated around the y-axis by theta in radians
-      Quaternian RotateY(double theta){
-        Quaternian R = q_y_rotation(theta);
+      /// returns the Quaternion rotated around the y-axis by theta in radians
+      Quaternion RotateY(double theta){
+        Quaternion R = q_y_rotation(theta);
         return R*(*this)*R.conj();
       }
-      /// returns the quaternian rotated around the z-axis by theta in radians
-      Quaternian RotateZ(double theta){
-        Quaternian R = q_z_rotation(theta);
+      /// returns the Quaternion rotated around the z-axis by theta in radians
+      Quaternion RotateZ(double theta){
+        Quaternion R = q_z_rotation(theta);
         return R*(*this)*R.conj();
       }
-      /** returns the quaternian rotated first around the z-axis by phi and then
+      /** returns the Quaternion rotated first around the z-axis by phi and then
       around the z-axis by theta, this is more efficient than doing two rotation 
        sequentially.  Usefull for recentering a field of points.
        */
-      Quaternian RotateYZ(double theta,double phi){
-        Quaternian R = q_z_rotation(theta)*q_z_rotation(phi);
+      Quaternion RotateYZ(double theta,double phi){
+        Quaternion R = q_z_rotation(theta)*q_z_rotation(phi);
         return R*(*this)*R.conj();
       }
 
-      /** returns the quaternian rotated with the rotation quaternian R.
+      /** returns the Quaternion rotated with the rotation Quaternion R.
        It is assumed that R has norm = 1, ie ||R|| = 1 */
-      Quaternian Rotate(const Quaternian &R) const{
+      Quaternion Rotate(const Quaternion &R) const{
         return R*(*this)*R.conj();
       }
       
-      Quaternian operator+(const Quaternian &q) const{
-        Quaternian p = q;
+      
+      /// rotate a Point_3d using a rotation Quaternion
+      static Point_3d Rotate(const Point_3d &p,const Quaternion &R){
+        Quaternion q(p);
+        q.Rotate(R);
+        return q.to_point_3d();
+      }
+
+      /// rotate a SpericalPoint using a rotation Quaternion
+      static SphericalPoint Rotate(const SphericalPoint &p,const Quaternion &R){
+        Quaternion q(p);
+        q.Rotate(R);
+        return q.to_SpericalPoint();
+      }
+      
+      Quaternion operator+(const Quaternion &q) const{
+        Quaternion p = q;
         
         p.v[0] += v[0];
         p.v[1] += v[1];
@@ -144,8 +201,8 @@ namespace Utilities {
         
         return p;
       }
-      Quaternian operator-(const Quaternian &q) const{
-        Quaternian p = *this;
+      Quaternion operator-(const Quaternion &q) const{
+        Quaternion p = *this;
         
         p.v[0] -= q.v[0];
         p.v[1] -= q.v[1];
@@ -156,31 +213,30 @@ namespace Utilities {
       }
       
       /// division by a scaler
-      Quaternian operator/(double s) const{
-       return Quaternian(v[0]/s,v[1]/s,v[2]/s,v[3]/s);
+      Quaternion operator/(double s) const{
+       return Quaternion(v[0]/s,v[1]/s,v[2]/s,v[3]/s);
       }
-      /// division by a scaler
-
-      Quaternian operator*(double s) const{
-        return Quaternian(v[0]*s,v[1]*s,v[2]*s,v[3]*s);
+      /// multiply by a scaler
+      Quaternion operator*(double s) const{
+        return Quaternion(v[0]*s,v[1]*s,v[2]*s,v[3]*s);
       }
       
       /// cross (outer) product
-      Quaternian cross(const Quaternian &q) const{
-        return (*this*q - this->conj()*q.conj());
+      Point_3d cross(const Quaternion &q) const{
+        return (*this*q).to_point_3d();
       }
 
-      /// scalar product of vector part of the quaternians
-      double scalor(const Quaternian &q) const{
+      /// scalar product of vector part of the Quaternions
+      double scalor(const Quaternion &q) const{
         return v[1]*q.v[1] + v[2]*q.v[2] + v[3]*q.v[3];
       }
       
-      /// returns the vector part of the quaternian as a Point_3d
+      /// returns the vector part of the Quaternion as a Point_3d
       Point_3d to_point_3d() const{
         return Point_3d(v[1],v[2],v[3]);
       }
 
-      /// returns the vector part of the quaternian as a SpericalPoint
+      /// returns the vector part of the Quaternion as a SpericalPoint
       SphericalPoint to_SpericalPoint() const{
         SphericalPoint sp;
         sp.cartisianTOspherical(v+1);
@@ -188,20 +244,20 @@ namespace Utilities {
       }
 
       
-      /// the components of the quaternian
+      /// the components of the Quaternion
       double v[4];
 
-      /// returns the rotation quaternian for a ratation around the x-axis
-      static Quaternian q_x_rotation(double theta){
-        return Quaternian(cos(theta/2),sin(theta/2),0,0);
+      /// returns the rotation Quaternion for a ratation around the x-axis
+      static Quaternion q_x_rotation(double theta){
+        return Quaternion(cos(theta/2),sin(theta/2),0,0);
       }
-      /// returns the rotation quaternian for a ratation around the y-axis
-      static Quaternian q_y_rotation(double theta){
-        return Quaternian(cos(theta/2),0,sin(theta/2),0);
+      /// returns the rotation Quaternion for a ratation around the y-axis
+      static Quaternion q_y_rotation(double theta){
+        return Quaternion(cos(theta/2),0,-sin(theta/2),0);
       }
-      /// returns the rotation quaternian for a ratation around the z-axis
-      static Quaternian q_z_rotation(double theta){
-        return Quaternian(cos(theta/2),0,0,sin(theta/2));
+      /// returns the rotation Quaternion for a ratation around the z-axis
+      static Quaternion q_z_rotation(double theta){
+        return Quaternion(cos(theta/2),0,0,sin(theta/2));
       }
       
     };
@@ -241,5 +297,7 @@ namespace Utilities {
 
   }  
 }
+
+std::ostream &operator<<(std::ostream &os, Utilities::Geometry::SphericalPoint const &p);
 
 #endif /* defined(__GLAMER__geometry__) */

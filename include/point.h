@@ -286,7 +286,8 @@ struct PointList{
       current = p;
     }
     
-    Point *operator*(){return current;}
+    Point * operator*(){return current;}
+    
     PointList::iterator &operator=(PointList::iterator &p){
       if(&p == this) return *this;
       current = p.current;

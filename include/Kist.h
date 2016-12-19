@@ -173,6 +173,8 @@ public:
           unit = unit->prev;
           return *this;
        }
+      
+      Data * operator->(){return unit->data;}
 
         iterator operator++(int){
           
