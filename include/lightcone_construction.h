@@ -42,8 +42,10 @@ public:
                                ,std::vector<LensHalo* > &lensVec
                                ,PosType &theta_max);
   static void ReadLightConeParticles(std::string filename,COSMOLOGY &cosmo
-                                     ,std::vector<LensHalo* > &lensVec,float particle_mass
-                                     ,int Nplanes,double theta_r);
+                                     ,std::vector<LensHalo* > &lensVec
+                                     ,std::vector<float> &particle_masses
+                                     ,std::vector<float> &particle_sizes
+                                     ,int Nplanes);
   
   static void WriteLightCone(std::string filename,std::vector<DataRockStar> &vec);
   static void WriteLightCone(std::string filename,std::vector<Point_3d> &vec);

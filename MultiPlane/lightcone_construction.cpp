@@ -157,9 +157,9 @@ void LightCone::ReadLightConeParticles(
                                        std::string filename   /// name of file to read
                                        ,COSMOLOGY &cosmo      /// cosmology for changing distance to redshift
                                        ,std::vector<LensHalo* > &lensVec  /// output LensHalos
-                                       ,float particle_mass
+                                       ,std::vector<float> &particle_masses
+                                       ,std::vector<float> &particle_sizes
                                        ,int Nplanes
-                                       ,double theta_r
                                        ){
   bool smooth = true;
   SphericalPoint center;
