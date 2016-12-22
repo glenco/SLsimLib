@@ -1111,6 +1111,33 @@ namespace Utilities
     apply_permutation(vec.data(),p);
   }
   
+  
+  /// This should reorder the vector in place according to the permutation index p
+  template <typename T>
+  void apply_permutation_in_place(
+                                  std::vector<T>& vec,
+                                  const std::vector<std::size_t>& p)
+  {
+    std::vector<bool> done(vec.size());
+    for (std::size_t i = 0; i < vec.size(); ++i)
+    {
+      if (done[i])
+      {
+        continue;
+      }
+      done[i] = true;
+      std::size_t prev_j = i;
+      std::size_t j = p[i];
+      while (i != j)
+      {
+        std::swap(vec[prev_j], vec[j]);
+        done[j] = true;
+        prev_j = j;
+        j = p[j];
+      }
+    }
+  }
+  
 #ifdef ENABLE_FFTW
   /** \brief Calculates power spectrum from a 2d map or the cross-power spectrum between two 2d maps.
    *
