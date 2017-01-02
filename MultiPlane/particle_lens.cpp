@@ -95,6 +95,7 @@ LensHaloParticles::LensHaloParticles(
 
 LensHaloParticles::LensHaloParticles(
                                      PosType **positions
+                                     ,size_t Nparticles
                                      ,std::vector<float> &my_sizes
                                      ,std::vector<float> &my_masses
                                      ,PosType redshift
@@ -102,7 +103,7 @@ LensHaloParticles::LensHaloParticles(
                                      ,bool my_multimass
                                      ,PosType sigma_back
                                      ):
-xp(positions),min_size(0),multimass(my_multimass)
+xp(positions),min_size(0),multimass(my_multimass),Npoints(Nparticles)
 {
   
   LensHalo::setZlens(redshift);

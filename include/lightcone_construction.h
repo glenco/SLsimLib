@@ -43,10 +43,11 @@ public:
                                ,PosType &theta_max);
   
   static void ReadLightConeParticles(std::string filename,COSMOLOGY &cosmo
-                                     ,std::vector<LensHalo* > &lensVec
+                                     ,std::vector<LensHaloParticles *> &lensVec
                                      ,int Nplanes
                                      ,float particle_mass
                                      ,float particle_size
+                                     ,bool angular_sizes = false
                                      ,bool verbose = false);
   
   static void WriteLightCone(std::string filename,std::vector<DataRockStar> &vec);

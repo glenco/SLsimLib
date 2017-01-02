@@ -45,6 +45,7 @@ public:
   
   LensHaloParticles(
                     PosType **positions    /// 3d positions in physical coordinates, only first two are used
+                    ,size_t Nparticles    /// number of particles
                     ,std::vector<float> &my_sizes  /// smoothing sizes, will be swapped so returns empty
                     ,std::vector<float> &my_masses /// masses, will be swapped so returns empty
                     ,PosType redshift     /// redshift of origin

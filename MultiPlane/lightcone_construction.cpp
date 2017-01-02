@@ -6,11 +6,12 @@
 //
 //
 
-#include <mutex>
-#include <thread>
+//#include <mutex>
+//#include <thread>
 
 #include <boost/iostreams/device/mapped_file.hpp> // for mmap
 #include <boost/iostreams/stream.hpp>             // for stream
+#include <deque>
 
 #include "particle_halo.h"
 #include "lightcone_construction.h"
@@ -153,25 +154,25 @@ void LightCone::ReadLightConeNFW(
  */
 using Utilities::Geometry::SphericalPoint;
 
+/** \brief Reads particle data in from a csv file and puts them on multiple planes.
+ 
+ The data file must be in csv format with a header.  The first three columns must be labeled 
+ "x,y,z". These coordinates should be in comoving Mpc (no h factor).  The file can have additional columns "mass" and "size" to give each particle a different size or mass.  If both are present "mass" must come after "z".  There can be no other columns.  "size" values should be in physical Mpc.
+ 
+ If there is no "size" size column the input "particle_size" will be assigned to all particles.  If "angulare_size" is set to true, "particle_size" is interpreted as an 
+ angular size and thus will be a different physical size on different planes.  It is 
+ ignored when a "size" column is present.
+ */
 void LightCone::ReadLightConeParticles(
                                        std::string filename   /// name of file to read
                                        ,COSMOLOGY &cosmo      /// cosmology for changing distance to redshift
-                                       ,std::vector<LensHalo* > &lensVec  /// output LensHalos
+                                       ,std::vector<LensHaloParticles *> &lensVec  /// output LensHalos
                                        ,int Nplanes           /// number of planes to create
-                                       ,float particle_mass   /// these will be used only if they are not in the input file
-                                       ,float particle_size   /// these will be used only if they are not in the input file
+                                       ,float particle_mass   /// these will be used only if they are not in the input file, solar masses
+                                       ,float particle_size   /// these will be used only if they are not in the input file, physical Mpc or radians see angular_size parameter.
+                                       ,bool angular_sizes  /// if yes partical_size will be interpreted as an angular size in radians
                                        ,bool verbose
 ){
-  SphericalPoint center;
-  
-  bool multimass;
-  bool multisize;
-  
-  std::vector<float> particle_masses;
-  std::vector<float> particle_sizes;
-  
-  Utilities::delete_container(lensVec);
-  
   std::ifstream file(filename.c_str());
   if(!file){
     std::cerr << "Can't open file " << filename << std::endl;
@@ -179,6 +180,17 @@ void LightCone::ReadLightConeParticles(
     throw std::runtime_error(" Cannot open file.");
   }
   
+  SphericalPoint center;
+  
+  bool multimass;
+  bool multisize;
+  
+  std::deque<float> particle_masses;
+  std::deque<float> particle_sizes;
+  
+  Utilities::delete_container(lensVec);
+  //lensVec.clear();
+
   std::string myline;
   
   // skip first line
@@ -192,8 +204,8 @@ void LightCone::ReadLightConeParticles(
   //z_range[0] = theta_range[0] = HUGE_VALF;
   //z_range[1] = theta_range[1] = 0.0;
   
-  std::vector<SphericalPoint> particles;
-  particles.reserve(1000000);
+  std::deque<SphericalPoint> particles;
+  //particles.reserve(1000000);
   Point_3d point;
   Utilities::Range<double> theta_range(HUGE_VALF,-1);
   
@@ -228,7 +240,7 @@ void LightCone::ReadLightConeParticles(
     multisize = true;
   }
   
-  while (getline(file,myline) && i < 10000) {  // ???? need to take out limit
+  while (getline(file,myline) ) { 
     
     if(verbose) std::cout << myline << std::endl;
     
@@ -300,7 +312,7 @@ void LightCone::ReadLightConeParticles(
       Utilities::apply_permutation_in_place(particles,index);
     }
     
-    std::vector<float> tmp_v(Npoints);
+    assert(particles[0].r < particles.back().r);
     
     if(multimass){
       assert(Npoints == particle_masses.size());
@@ -311,73 +323,84 @@ void LightCone::ReadLightConeParticles(
       Utilities::apply_permutation_in_place(particle_sizes,index);
     }
     
-    assert(particles[0].r <= particles.back().r);
   }
   
+  assert(particles[0].r <= particles.back().r);
   std::cout << particles.size() << " particles read in from cone."
     << std::endl;
     
-  std::vector<double> planes(Nplanes);
-  std::vector<size_t> pnumbers(Nplanes);
+  std::vector<double> D_planes(Nplanes);
   
   //double vol = pi*theta_range.max()*theta_range.max()*(pow(particles.back().r,3) - pow(particles[0].r,3))/3;
   //double psize = pow(vol/particles.size(),1.0/3.0);
   PosType **xp;
   
   // break up into slices redshift bins
-  for(int i = 0 ; i < Nplanes ; ++i ) planes[i] = (2*i+1)*(particles.back().r - particles[0].r)/Nplanes/2 + particles[0].r;
+  for(int i = 0 ; i < Nplanes ; ++i ) D_planes[i] = (2*i+1)*(particles.back().r - particles[0].r)/Nplanes/2 + particles[0].r;
   
-  std::vector<SphericalPoint>::iterator it1 = particles.begin(),it2;
+  std::deque<SphericalPoint>::iterator it1 = particles.begin(),it2;
   size_t i1 =0;
   for(int i = 0 ; i < Nplanes ; ++i ){
-    it2 = std::lower_bound(it1,particles.end(),(i+1)*particles.back().r/Nplanes
+    it2 = std::lower_bound(particles.begin(),particles.end()
+                           ,(i+1)*particles.back().r*1.001/Nplanes
                            ,[](SphericalPoint &p,double v){return p.r < v;});
     
-    assert(it2-it1 > 0);
-    
-    pnumbers[i] = it2 - it1;
-    
-    double z = cosmo.invCoorDist(planes[i]);
-    double Dl = planes[i]/(1+z);
+    assert(it2-it1 >= 0);
+
+    double z = cosmo.invCoorDist(D_planes[i]);
+    double Dl = D_planes[i]/(1+z);
     double total_mass = 0.0;
     
     // project onto planes
-    size_t Np_on_plane = it2-it1;
+    size_t Np_on_plane = it2 - particles.begin();
+    
+    if(verbose) std::cout << "Number of particles on plane " << i << " : " << Np_on_plane
+    << " z = " << z << std::endl;
+    
     xp = Utilities::PosTypeMatrix(Np_on_plane,2);
     size_t j = i1;
-    for(size_t i = 0 ; i < Np_on_plane ; ++i,++j){
+    for(size_t i = 0 ; i < Np_on_plane ; ++i){
       //for(auto it = it1 ; it != it2 + 1 ; ++it){
       //xp[i][0] = (*it).theta*Dl;
       //xp[i][1] = (*it).phi*Dl;
-      xp[i][0] = particles[j].theta*Dl;
-      xp[i][1] = particles[j].phi*Dl;
+      xp[i][0] = particles.front().theta*Dl;
+      xp[i][1] = particles.front().phi*Dl;
       total_mass += particle_masses[j*multimass];
+      particles.pop_front();
     }
     
     double sigma_back = total_mass/pi/Dl/Dl/theta_range.max()/theta_range.max();
     
-    //
+    // transfer the sizes and masses to a vector
+    
+    std::vector<float> sizes(Np_on_plane*multisize + !multisize);
     if(multisize){
-      j = i1 + Np_on_plane;
+      for(size_t i=0 ; i < Np_on_plane ; ++i){
+        sizes[i] = particle_sizes.front();
+        particle_sizes.pop_front();
+      }
     }else{
-      j = 1;
+      sizes[0] = particle_size;
+      if(angular_sizes) sizes[0] *= Dl;
     }
-    std::vector<float> sizes(particle_sizes.begin() + i1*multisize
-                             ,particle_sizes.begin() + j);
     
-    if(multimass){
-      j = i1 + Np_on_plane;
+    std::vector<float> masses(Np_on_plane*multimass + !multimass);
+    if(multisize){
+      for(size_t i=0 ; i < Np_on_plane ; ++i){
+        masses[i] = particle_masses.front();
+        particle_masses.pop_front();
+      }
     }else{
-      j = 1;
+      masses[0] = particle_mass;
     }
-    std::vector<float> masses(particle_masses.begin() + i1*multimass
-                              ,particle_masses.begin() + j);
     
-    lensVec.push_back(new LensHaloParticles(xp,sizes,masses,z,cosmo,multimass,sigma_back));
+    lensVec.push_back(new LensHaloParticles(xp,Np_on_plane,sizes,masses,z,cosmo,multimass,sigma_back));
     
-    it1 = it2 + 1;
+    it1 = it2;
     i1 += Np_on_plane;
   }
+  
+  assert(i1 == Npoints);
 }
 
 
