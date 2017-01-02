@@ -95,6 +95,7 @@ LensHaloParticles::LensHaloParticles(
 
 LensHaloParticles::LensHaloParticles(
                                      PosType **positions
+                                     ,size_t Nparticles
                                      ,std::vector<float> &my_sizes
                                      ,std::vector<float> &my_masses
                                      ,PosType redshift
@@ -102,7 +103,7 @@ LensHaloParticles::LensHaloParticles(
                                      ,bool my_multimass
                                      ,PosType sigma_back
                                      ):
-xp(positions),min_size(0),multimass(my_multimass)
+xp(positions),min_size(0),multimass(my_multimass),Npoints(Nparticles)
 {
   
   LensHalo::setZlens(redshift);
@@ -118,7 +119,6 @@ xp(positions),min_size(0),multimass(my_multimass)
   std::swap(masses,my_masses);
   
   // convert from comoving to physical coordinates
-  PosType scale_factor = 1/(1+redshift);
   mass = 0.0;
   mcenter *= 0.0;
   
@@ -130,8 +130,9 @@ LensHaloParticles::~LensHaloParticles(){
   Utilities::free_PosTypeMatrix(xp,Npoints,3);
 }
 
-void LensHaloParticles::force_halo(double *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,double const *xcm
-                ,bool subtract_point,PosType screening){
+void LensHaloParticles::force_halo(double *alpha,KappaType *kappa,KappaType *gamma
+                                   ,KappaType *phi,double const *xcm
+                                   ,bool subtract_point,PosType screening){
   qtree->force2D_recur(xcm,alpha,kappa,gamma,phi);
   
   alpha[0] *= -1;
