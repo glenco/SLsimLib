@@ -73,7 +73,10 @@ namespace Utilities{
         brr[l+1]=brr[j];
         brr[j]=b;
         jstack += 2;
-        if (jstack > NSTACK) nrerror("NSTACK too small in double_sort");
+        if (jstack > NSTACK){
+          ERROR_MESSAGE();
+          throw std::runtime_error("NSTACK too small in double_sort");
+        }
         if (ir-i+1 >= j-l) {
           istack[jstack]=ir;
           istack[jstack-1]=i;
