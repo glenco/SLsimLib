@@ -46,11 +46,10 @@ public:
   LensHaloParticles(
                     PosType **positions    /// 3d positions in physical coordinates, only first two are used
                     ,size_t Nparticles    /// number of particles
-                    ,std::vector<float> &my_sizes  /// smoothing sizes, will be swapped so returns empty
-                    ,std::vector<float> &my_masses /// masses, will be swapped so returns empty
+                    ,std::vector<float> &my_sizes  /// smoothing sizes, will be swapped so returns empty, if size 1 the first size will be used for all the particles
+                    ,std::vector<float> &my_masses /// masses, will be swapped so returns empty, if size 1 the first mass will be used for all the particles
                     ,PosType redshift     /// redshift of origin
                     ,const COSMOLOGY& cosmo /// cosmology
-                    ,bool my_multimass   /// Set to true is particles have different sizes
                     ,PosType sigma_back  /// background mass sheet
                     );
   

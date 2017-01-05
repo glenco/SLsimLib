@@ -169,7 +169,7 @@ QTreeNBHndl TreeQuad::BuildQTreeNB(PosType **xp,IndexType Nparticles,IndexType *
 // This is a iterative replacement for the recursive combination of BuildQTreeNB() and _BuildQTreeNB()
 QTreeNBHndl TreeQuad::BuildQTreeNB_iter(PosType **xp,IndexType Nparticles,IndexType *particles){
   
-  std::cout << "In TreeQuad::BuildQTreeNB_iter()" << std::endl;
+  //std::cout << "In TreeQuad::BuildQTreeNB_iter()" << std::endl;
   IndexType i;
   short j;
   PosType p1[2],p2[2];
@@ -230,7 +230,7 @@ QTreeNBHndl TreeQuad::BuildQTreeNB_iter(PosType **xp,IndexType Nparticles,IndexT
     }
   }
   
-  std::cout << "Out TreeQuad::BuildQTreeNB_iter(), " << tree->getNbranches() << " Branches" << std::endl;
+  //std::cout << "Out TreeQuad::BuildQTreeNB_iter(), " << tree->getNbranches() << " Branches" << std::endl;
 
 
   return tree;

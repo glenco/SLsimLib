@@ -100,10 +100,9 @@ LensHaloParticles::LensHaloParticles(
                                      ,std::vector<float> &my_masses
                                      ,PosType redshift
                                      ,const COSMOLOGY& cosmo
-                                     ,bool my_multimass
                                      ,PosType sigma_back
                                      ):
-xp(positions),min_size(0),multimass(my_multimass),Npoints(Nparticles)
+xp(positions),min_size(0),Npoints(Nparticles)
 {
   
   LensHalo::setZlens(redshift);
@@ -122,7 +121,9 @@ xp(positions),min_size(0),multimass(my_multimass),Npoints(Nparticles)
   mass = 0.0;
   mcenter *= 0.0;
   
-  qtree = new TreeQuad(xp,masses.data(),sizes.data(),Npoints,multimass,true,sigma_back,20);
+  multimass = (masses.size() == Npoints);
+  
+  qtree = new TreeQuad(xp,masses.data(),sizes.data(),Npoints,multimass,(sizes.size() == Npoints),sigma_back,20);
 }
 
 LensHaloParticles::~LensHaloParticles(){

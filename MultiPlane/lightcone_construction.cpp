@@ -392,7 +392,7 @@ void LightCone::ReadLightConeParticles(
       masses[0] = particle_mass;
     }
     
-    lensVec.push_back(new LensHaloParticles(xp,Np_on_plane,sizes,masses,z,cosmo,multimass,sigma_back));
+    lensVec.push_back(new LensHaloParticles(xp,Np_on_plane,sizes,masses,z,cosmo,sigma_back));
 
     i1 += Np_on_plane;
   }
