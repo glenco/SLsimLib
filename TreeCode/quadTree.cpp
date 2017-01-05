@@ -137,16 +137,6 @@ QTreeNBHndl TreeQuad::BuildQTreeNB(PosType **xp,IndexType Nparticles,IndexType *
       if(xp[i][j] > p2[j] ) p2[j]=xp[i][j];
     }
   }
-<<<<<<< HEAD
-
-  if(Nparticles <= 1){
-	  p1[0]=-0.25;
-	  p1[1]=-0.25;
-	  p2[0]=0.25;
-	  p2[1]=0.25;
-  }
-=======
->>>>>>> ebd31cb21ce0568a30472aebc91f902a14625c65
   
   if(Nparticles <= 1){
     p1[0]=-0.25;
