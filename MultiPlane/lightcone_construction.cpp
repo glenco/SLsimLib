@@ -240,7 +240,7 @@ void LightCone::ReadLightConeParticles(
     multisize = true;
   }
   
-  while (getline(file,myline) ) { 
+  while (getline(file,myline) ) {
     
     if(verbose) std::cout << myline << std::endl;
     
@@ -333,19 +333,17 @@ void LightCone::ReadLightConeParticles(
   
   //double vol = pi*theta_range.max()*theta_range.max()*(pow(particles.back().r,3) - pow(particles[0].r,3))/3;
   //double psize = pow(vol/particles.size(),1.0/3.0);
-  PosType **xp;
   
   // break up into slices redshift bins
   for(int i = 0 ; i < Nplanes ; ++i ) D_planes[i] = (2*i+1)*(particles.back().r - particles[0].r)/Nplanes/2 + particles[0].r;
   
-  std::deque<SphericalPoint>::iterator it1 = particles.begin(),it2;
-  size_t i1 =0;
+  PosType **xp;
+  std::deque<SphericalPoint>::iterator it2;
+  size_t i1 = 0;
   for(int i = 0 ; i < Nplanes ; ++i ){
     it2 = std::lower_bound(particles.begin(),particles.end()
                            ,(i+1)*particles.back().r*1.001/Nplanes
                            ,[](SphericalPoint &p,double v){return p.r < v;});
-    
-    assert(it2-it1 >= 0);
 
     double z = cosmo.invCoorDist(D_planes[i]);
     double Dl = D_planes[i]/(1+z);
@@ -395,8 +393,7 @@ void LightCone::ReadLightConeParticles(
     }
     
     lensVec.push_back(new LensHaloParticles(xp,Np_on_plane,sizes,masses,z,cosmo,multimass,sigma_back));
-    
-    it1 = it2;
+
     i1 += Np_on_plane;
   }
   
@@ -471,7 +468,7 @@ void MultiLightCone::ReadBoxRockStar(std::string filename
   LightCone::DataRockStar halo;
   double tmp;
   double parent_id;
-  double m200c,m200b,R200,Mvir_all,rs_klypin;
+  double m200c,m200b,Mvir_all,rs_klypin;
   for(int i=0 ; i < ncolumns ;++i) addr[i] = &tmp;
   
   addr[0] = &(halo.id);

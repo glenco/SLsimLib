@@ -119,7 +119,6 @@ xp(positions),min_size(0),multimass(my_multimass),Npoints(Nparticles)
   std::swap(masses,my_masses);
   
   // convert from comoving to physical coordinates
-  PosType scale_factor = 1/(1+redshift);
   mass = 0.0;
   mcenter *= 0.0;
   
@@ -131,8 +130,9 @@ LensHaloParticles::~LensHaloParticles(){
   Utilities::free_PosTypeMatrix(xp,Npoints,3);
 }
 
-void LensHaloParticles::force_halo(double *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,double const *xcm
-                ,bool subtract_point,PosType screening){
+void LensHaloParticles::force_halo(double *alpha,KappaType *kappa,KappaType *gamma
+                                   ,KappaType *phi,double const *xcm
+                                   ,bool subtract_point,PosType screening){
   qtree->force2D_recur(xcm,alpha,kappa,gamma,phi);
   
   alpha[0] *= -1;

@@ -231,7 +231,7 @@ public:
     double shotnoise = 0;
     if(antialias){
       // find variance of map
-      double ave = 0,var = 0,tmp;
+      double var = 0,tmp;
       size_t count=0;
 
       for(size_t j=1;j<Ny-1;++j){

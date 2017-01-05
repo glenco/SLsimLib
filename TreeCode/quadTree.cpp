@@ -12,6 +12,7 @@
 #include "slsimlib.h"
 #include "Tree.h"
 
+
 /** \brief Constructor meant for point particles, simulation particles
  */
 TreeQuad::TreeQuad(
@@ -32,6 +33,8 @@ TreeQuad::TreeQuad(
   ,Nbucket(bucket),force_theta(theta_force),periodic_buffer(my_periodic_buffer)
   ,inv_screening_scale2(my_inv_screening_scale*my_inv_screening_scale)
 {
+  
+  
 	index = new IndexType[Npoints];
 	IndexType ii;
 
@@ -40,10 +43,34 @@ TreeQuad::TreeQuad(
 	haloON = false; // don't use internal halo parameters
 	halos = NULL;
 
-	tree = BuildQTreeNB(xp,Npoints,index);
+  tree = BuildQTreeNB_iter(xp,Npoints,index);
+  //tree = BuildQTreeNB(xp,Npoints,index);  // ???
+  //std::cout << "Nbranches " << tree->getNbranches() << std::endl;
 
 	CalcMoments();
-  
+
+  // test lines ????
+  /*{
+    size_t i=0;
+    tree->moveTop();
+    QBranchNB *tmp;
+    do{
+      ++i;
+      tmp = tree->current;
+      assert(tree->current->constructed);
+      
+      std::cout << tree->current->level << "," << tree->current->nparticles << ","
+      << tree->current->Nbig_particles << "," << tree->current->number << ","
+      << tree->current->mass << "|"
+      << tree->current->boundary_p1[0] << "," << tree->current->boundary_p1[1] << ","
+      << tree->current->boundary_p2[0] << "," << tree->current->boundary_p2[1]
+      << std::endl;
+      
+    }while( tree->WalkStep(true) );
+    assert(i == tree->getNbranches());
+    exit(0);
+  }*/
+
   phiintconst = (120*log(2.) - 631.)/840 + 19./70;
 	return;
 }
@@ -75,8 +102,9 @@ MultiMass(true),MultiRadius(true),masses(NULL),sizes(NULL)
 
 	haloON = true;  //use internal halo parameters
 
-	tree = BuildQTreeNB(xp,Npoints,index);
-
+  tree = BuildQTreeNB_iter(xp,Npoints,index);
+  //tree = BuildQTreeNB(xp,Npoints,index);
+  
 	CalcMoments();
 
   phiintconst = (120*log(2.) - 631.)/840 + 19./70;
@@ -96,12 +124,12 @@ QTreeNBHndl TreeQuad::BuildQTreeNB(PosType **xp,IndexType Nparticles,IndexType *
   IndexType i;
   short j;
   PosType p1[2],p2[2];
-
+  
   for(j=0;j<2;++j){
     p1[j]=xp[0][j];
     p2[j]=xp[0][j];
   }
-
+  
   // Find borders that enclose all particles
   for(i=0;i<Nparticles;++i){
     for(j=0;j<2;++j){
@@ -109,6 +137,7 @@ QTreeNBHndl TreeQuad::BuildQTreeNB(PosType **xp,IndexType Nparticles,IndexType *
       if(xp[i][j] > p2[j] ) p2[j]=xp[i][j];
     }
   }
+<<<<<<< HEAD
 
   if(Nparticles <= 1){
 	  p1[0]=-0.25;
@@ -116,25 +145,103 @@ QTreeNBHndl TreeQuad::BuildQTreeNB(PosType **xp,IndexType Nparticles,IndexType *
 	  p2[0]=0.25;
 	  p2[1]=0.25;
   }
+=======
+>>>>>>> ebd31cb21ce0568a30472aebc91f902a14625c65
   
+  if(Nparticles <= 1){
+    p1[0]=-0.25;
+    p1[1]=-0.25;
+    p2[0]=0.25;
+    p2[1]=0.25;
+  }
   
   // store true dimensions of simulation
   PosType lengths[2] = {p2[0]-p1[0],p2[1]-p1[1]};
   original_xl = lengths[0];
   original_yl = lengths[1];
- 
+  
   // If region is not square, make it square.
   j = lengths[0] > lengths[1] ? 1 : 0;
   p2[j] = p1[j] + lengths[!j];
-
+  
   /* Initialize tree root */
   tree = new QTreeNB(xp,particles,Nparticles,p1,p2);
-
+  
   /* build the tree */
-  _BuildQTreeNB(Nparticles,particles);
-
+  _BuildQTreeNB();
+  
   /* visit every branch to find center of mass and cutoff scale */
   tree->moveTop();
+  
+  return tree;
+}
+
+// This is a iterative replacement for the recursive combination of BuildQTreeNB() and _BuildQTreeNB()
+QTreeNBHndl TreeQuad::BuildQTreeNB_iter(PosType **xp,IndexType Nparticles,IndexType *particles){
+  
+  std::cout << "In TreeQuad::BuildQTreeNB_iter()" << std::endl;
+  IndexType i;
+  short j;
+  PosType p1[2],p2[2];
+  
+  for(j=0;j<2;++j){
+    p1[j]=xp[0][j];
+    p2[j]=xp[0][j];
+  }
+  
+  // Find borders that enclose all particles
+  for(i=0;i<Nparticles;++i){
+    for(j=0;j<2;++j){
+      if(xp[i][j] < p1[j] ) p1[j]=xp[i][j];
+      if(xp[i][j] > p2[j] ) p2[j]=xp[i][j];
+    }
+  }
+  
+  if(Nparticles <= 1){
+    p1[0]=-0.25;
+    p1[1]=-0.25;
+    p2[0]=0.25;
+    p2[1]=0.25;
+  }
+  
+  // store true dimensions of simulation
+  PosType lengths[2] = {p2[0]-p1[0],p2[1]-p1[1]};
+  original_xl = lengths[0];
+  original_yl = lengths[1];
+  
+  // If region is not square, make it square.
+  j = lengths[0] > lengths[1] ? 1 : 0;
+  p2[j] = p1[j] + lengths[!j];
+  
+  // Initialize tree root
+  tree = new QTreeNB(xp,particles,Nparticles,p1,p2);
+  QBranchNB *branch = tree->top;
+  for(;;){
+    
+    if(branch->constructed){
+      if(branch->child0->constructed == false){
+        branch = branch->child0;
+      }else if(branch->child1->constructed == false){
+        branch = branch->child1;
+      }else if(branch->child2->constructed == false){
+        branch = branch->child2;
+      }else if(branch->child3->constructed == false){
+        branch = branch->child3;
+      }else{
+        if(branch == tree->top) break;
+        branch = branch->prev;
+      }
+    }else{
+      // make the children of branch
+      if(!MakeChildren(branch)){
+        if(branch == tree->top) break;
+        branch = branch->prev;
+      }
+    }
+  }
+  
+  std::cout << "Out TreeQuad::BuildQTreeNB_iter(), " << tree->getNbranches() << " Branches" << std::endl;
+
 
   return tree;
 }
@@ -145,14 +252,47 @@ inline short TreeQuad::WhichQuad(PosType *x,QBranchNB &branch){
 }
 
 /// tree must be created and first branch must be set before start
-void TreeQuad::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
+//void TreeQuad::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
+void TreeQuad::_BuildQTreeNB(){
+  
+  if(MakeChildren(tree->current)){
+  
+    tree->moveToChild(0);
+    //_BuildQTreeNB(child0->nparticles,child0->particles);
+    _BuildQTreeNB();
+    tree->moveUp();
+  
+    tree->moveToChild(1);
+    //_BuildQTreeNB(child1->nparticles,child1->particles);
+    _BuildQTreeNB();
+    tree->moveUp();
+  
+    tree->moveToChild(2);
+    //_BuildQTreeNB(child2->nparticles,child2->particles);
+    _BuildQTreeNB();
+    tree->moveUp();
+  
+    tree->moveToChild(3);
+    //_BuildQTreeNB(child3->nparticles,child3->particles);
+    _BuildQTreeNB();
+    tree->moveUp();
+    
+  }
+}
 
-	QBranchNB *cbranch = tree->current; /* pointer to current branch */
-	IndexType i,j,cut,cut2,jt;
+// return true if branch cbranch is divided and false otherwise
+bool TreeQuad::MakeChildren(QBranchNB *cbranch){
+
+  if(cbranch->constructed) return false;
+  cbranch->constructed = true;
+	//QBranchNB *cbranch = tree->current; // pointer to current branch
+  IndexType *particles = cbranch->particles;
+
+  IndexType i,j,cut,cut2,jt;
 
 	cbranch->center[0] = (cbranch->boundary_p1[0] + cbranch->boundary_p2[0])/2;
 	cbranch->center[1] = (cbranch->boundary_p1[1] + cbranch->boundary_p2[1])/2;
-	cbranch->quad[0]=cbranch->quad[1]=cbranch->quad[2]=0;
+	cbranch->quad[0] = cbranch->quad[1] = cbranch->quad[2] = 0;
 	cbranch->mass = 0.0;
 
 
@@ -167,7 +307,6 @@ void TreeQuad::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
 			}else{
 				r = sizes[jt];
 			}
-			//r = haloON ? halos[particles[i]*MultiRadius].Rmax	: sizes[particles[i]*MultiRadius];
 			if(r < (cbranch->boundary_p2[0]-cbranch->boundary_p1[0])) ++cbranch->Nbig_particles;
 		}
 		if(cbranch->Nbig_particles){
@@ -179,7 +318,6 @@ void TreeQuad::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
 				}else{
 					r = sizes[jt];
 				}
-				//r = haloON ? halos[particles[i]*MultiRadius].Rmax	: sizes[particles[i]*MultiRadius];
 				if(r < (cbranch->boundary_p2[0]-cbranch->boundary_p1[0])) cbranch->big_particles[j++] = particles[i];
 			}
 		}
@@ -187,36 +325,56 @@ void TreeQuad::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
 			cbranch->big_particles = NULL;
 		}
 
-		return;
+		return false;
 	}
 
 	// find particles too big to be in children
 
-	PosType *x = new PosType[cbranch->nparticles];
+	//PosType *x = new PosType[cbranch->nparticles];
 
-	cbranch->Nbig_particles=0;
+	cbranch->Nbig_particles = 0;
 
 	if(MultiRadius){
 		// store the particles that are too large to be in a child at the end of the list of particles in cbranch
-		for(i=0;i<cbranch->nparticles;++i){
+		/*for(i=0;i<cbranch->nparticles;++i){
 			if(haloON){
 				x[i] = halos[particles[i]]->get_Rmax();
 			}else{
 				x[i] = sizes[particles[i]];
 			}
-			//x[i] =  haloON ? halos[particles[i]].Rmax : sizes[particles[i]];
-		}
+		}*/
 		PosType maxsize = (cbranch->boundary_p2[0]-cbranch->boundary_p1[0])/2;
 
 		// sort particles in size
-		//quicksort(particles,x,cbranch->nparticles);
-		Utilities::quickPartition(maxsize,&cut,particles,x,cbranch->nparticles);
+		//Utilities::quickPartition(maxsize,&cut,particles,x,cbranch->nparticles);
+    
+    if(haloON){
+      LensHalo **tmp = halos;
+      cut = Utilities::Partition(maxsize,particles,cbranch->nparticles
+                                  ,[tmp](IndexType i){return tmp[i]->get_Rmax();}  );
+    }else{
+      float *tmp = sizes;
+      cut = Utilities::Partition(maxsize,particles,cbranch->nparticles
+                                 ,[tmp](IndexType i){return tmp[i];}  );
+    }
+
 
 		if(cut < cbranch->nparticles){
-			if(tree->atTop()){
+			if(cbranch == tree->top){
 				cbranch->Nbig_particles = cut2 = cbranch->nparticles-cut;
 			}else{
-				Utilities::quickPartition(2*maxsize,&cut2,&particles[cut],&x[cut],cbranch->nparticles-cut);
+				//Utilities::quickPartition(2*maxsize,&cut2,&particles[cut],&x[cut],cbranch->nparticles-cut);
+        
+        if(haloON){
+          LensHalo **tmp = halos;
+          cut2 = Utilities::Partition(2*maxsize,&particles[cut],cbranch->nparticles - cut
+                                     ,[tmp](IndexType i){return tmp[i]->get_Rmax();}  );
+        }else{
+          float *tmp = sizes;
+          cut2 = Utilities::Partition(2*maxsize,&particles[cut],cbranch->nparticles - cut
+                                     ,[tmp](IndexType i){return tmp[i];}  );
+        }
+        
 				cbranch->Nbig_particles = cut2;
 			}
 
@@ -225,14 +383,14 @@ void TreeQuad::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
 		}
 
 	}else{
+    float tmp;
 		if(haloON){
-			x[0] = halos[0]->get_Rmax();
+			tmp = halos[0]->get_Rmax();
 		}else{
-			x[0] = sizes[0];
+			tmp = sizes[0];
 		}
-		//x[0] =  haloON ? halos[0].Rmax : sizes[0];
-		if(x[0] > (cbranch->boundary_p2[0]-cbranch->boundary_p1[0])/2
-				&& x[0] < (cbranch->boundary_p2[0]-cbranch->boundary_p1[0])){
+		if(tmp > (cbranch->boundary_p2[0]-cbranch->boundary_p1[0])/2
+				&& tmp < (cbranch->boundary_p2[0]-cbranch->boundary_p1[0])){
 			cbranch->Nbig_particles = cbranch->nparticles;
 			cbranch->big_particles = cbranch->particles;
 		}
@@ -243,19 +401,47 @@ void TreeQuad::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
 	assert(NpInChildren >= 0);
 
 	if(NpInChildren == 0){
-		delete[] x;
-		return;
+		//delete[] x;
+		return false;
 	}
 
 	IndexType cutx,cuty;
 	PosType xcut,ycut;
 
-	QBranchNB *child0 = new QBranchNB();
-	QBranchNB *child1 = new QBranchNB();
-	QBranchNB *child2 = new QBranchNB();
-	QBranchNB *child3 = new QBranchNB();
+	QBranchNB *child0;
+	QBranchNB *child1;
+	QBranchNB *child2;
+	QBranchNB *child3;
 
-	tree->attachChildrenToCurrent(child0,child1,child2,child3);
+	//tree->attachChildrenToCurrent(child0,child1,child2,child3);
+  {  // construct children
+    tree->Nbranches += 4;
+    cbranch->child0 = child0 = new QBranchNB();
+    assert(child0->constructed == false);
+    cbranch->child1 = child1 = new QBranchNB();
+        assert(child1->constructed == false);
+    cbranch->child2 = child2 = new QBranchNB();
+        assert(child2->constructed == false);
+    cbranch->child3 = child3 = new QBranchNB();
+        assert(child3->constructed == false);
+    
+    int level = cbranch->level + 1;
+    child0->level = level;
+    child1->level = level;
+    child2->level = level;
+    child3->level = level;
+  
+    // work out brothers for children
+    child0->brother = child1;
+    child1->brother = child2;
+    child2->brother = child3;
+    child3->brother = cbranch->brother;
+  
+    child0->prev = cbranch;
+    child1->prev = cbranch;
+    child2->prev = cbranch;
+    child3->prev = cbranch;
+  }
 
 	// initialize boundaries of children
 
@@ -286,14 +472,27 @@ void TreeQuad::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
 	ycut = cbranch->center[1];
 
 	// divide along y direction
-	for(i=0;i<NpInChildren;++i) x[i] = tree->xp[particles[i]][1];
-	Utilities::quickPartition(ycut,&cuty,particles,x,NpInChildren);
+	//for(i=0;i<NpInChildren;++i) x[i] = tree->xp[particles[i]][1];
+	//Utilities::quickPartition(ycut,&cuty,particles,x,NpInChildren);
+  
+  {
+    PosType **tmp = tree->xp;
+    cuty = Utilities::Partition(ycut,particles,NpInChildren
+                       ,[tmp](IndexType i){return tmp[i][1];}  );
+  }
 
 	if(cuty > 0){
 	  // divide first group in the x direction
-      for(i=0;i<cuty;++i) x[i] = tree->xp[particles[i]][0];
-      Utilities::quickPartition(xcut,&cutx,particles,x,cuty);
+      //for(i=0;i<cuty;++i) x[i] = tree->xp[particles[i]][0];
+      //Utilities::quickPartition(xcut,&cutx,particles,x,cuty);
 
+    {
+      PosType **tmp = tree->xp;
+      cutx = Utilities::Partition(xcut,particles,cuty
+                                  ,[tmp](IndexType i){return tmp[i][0];}  );
+    }
+
+    
       child3->nparticles=cutx;
       assert(child3->nparticles >= 0);
       if(child3->nparticles > 0)
@@ -316,8 +515,13 @@ void TreeQuad::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
 
 	if(cuty < NpInChildren){
 	  // divide second group in the x direction
-	  for(i=cuty;i<NpInChildren;++i) x[i-cuty] = tree->xp[particles[i]][0];
-	  Utilities::quickPartition(xcut,&cutx,&particles[cuty],x,NpInChildren-cuty);
+	  //for(i=cuty;i<NpInChildren;++i) x[i-cuty] = tree->xp[particles[i]][0];
+	  //Utilities::quickPartition(xcut,&cutx,&particles[cuty],x,NpInChildren-cuty);
+    {
+      PosType **tmp = tree->xp;
+      cutx = Utilities::Partition(xcut,&particles[cuty],NpInChildren-cuty
+                                  ,[tmp](IndexType i){return tmp[i][0];}  );
+    }
 
 	  child1->nparticles=cutx;
 	  assert(child1->nparticles >= 0);
@@ -339,25 +543,9 @@ void TreeQuad::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
 	  child0->particles = NULL;
 	}
 
-	delete[] x;
+	//delete[] x;
 
-	tree->moveToChild(0);
-	_BuildQTreeNB(child0->nparticles,child0->particles);
-	tree->moveUp();
-
-	tree->moveToChild(1);
-	_BuildQTreeNB(child1->nparticles,child1->particles);
-	tree->moveUp();
-
-	tree->moveToChild(2);
-	_BuildQTreeNB(child2->nparticles,child2->particles);
-	tree->moveUp();
-
-	tree->moveToChild(3);
-	_BuildQTreeNB(child3->nparticles,child3->particles);
-	tree->moveUp();
-
-	return;
+	return true;
 }
 
 // calculates moments of the mass and the cutoff scale for each box
@@ -368,7 +556,9 @@ void TreeQuad::CalcMoments(){
 	PosType rcom,xcm[2],xcut;
 	QBranchNB *cbranch;
 	PosType tmp;
+  size_t Ncheck = 0;
 
+  
 	tree->moveTop();
 	do{
 		cbranch=tree->current; /* pointer to current branch */
@@ -379,7 +569,7 @@ void TreeQuad::CalcMoments(){
 		// calculate mass
 		for(i=0,cbranch->mass=0;i<cbranch->nparticles;++i)
 			if(haloON ){
-				cbranch->mass +=  halos[cbranch->particles[i]]->get_mass();
+				cbranch->mass += halos[cbranch->particles[i]]->get_mass();
 			}else{
 				cbranch->mass += masses[cbranch->particles[i]*MultiMass];
 			}
@@ -444,8 +634,10 @@ void TreeQuad::CalcMoments(){
 		}*/
 		//cbranch->rcrit_angle += cbranch->rcrit_part;
 
+    ++Ncheck;
 	}while(tree->WalkStep(true));
 
+  assert(Ncheck == tree->getNbranches());
 	return;
 }
 

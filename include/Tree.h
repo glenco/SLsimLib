@@ -306,8 +306,49 @@ namespace Utilities{
   void quicksortPoints(Point *pointarray,double (*func)(Point &),unsigned long N);
   
   void quicksort(unsigned long *particles,PosType *arr,unsigned long N);
-	void quickPartition(PosType pivotvalue,unsigned long *pivotindex,unsigned long *particles
-		,PosType *arr,unsigned long N);
+  void quickPartition(PosType pivotvalue,unsigned long *pivotindex,unsigned long *particles
+                      ,PosType *arr,unsigned long N);
+  
+  /** \brief Partions an array into those larger than and those less than a value.  Returns 
+   * the number of values above "pivotvalue" which is also the index of the first value in 
+   * the second partition.
+   *
+   *   This can also be used to partion an index for an array without effection the array.
+    <p>
+   
+   Partiion(float_value,float_array,N);
+   
+   Partition(value,index,N,[&vector](IndexType i){return vector[i].fval;});
+   <\p>
+   */
+  template <typename T,typename I,typename Func>
+  size_t Partition(T pivotvalue,I *vec,size_t N,Func compare){
+    size_t pivot = 0;
+    
+    for(size_t i=0;i<N;++i){
+      if(compare(vec[i]) <= pivotvalue){
+        std::swap(vec[i],vec[pivot]);
+        ++pivot;
+      }
+    }
+    
+    return pivot;
+  }
+
+  template <typename T>
+  size_t Partition(T pivotvalue,T *vec,size_t N){
+    size_t pivot = 0;
+    
+    for(size_t i=0;i<N;++i){
+      if(vec[i] <= pivotvalue){
+        swap(vec[i],vec[pivot]);
+        ++pivot;
+      }
+    }
+    
+    return pivot;
+  }
+  
 	void quickPartitionPoints(PosType pivotvalue,unsigned long *pivotindex
 		,Point *pointsarray,PosType *arr,unsigned long N);
   void quickPartitionPoints(PosType pivotvalue,unsigned long *pivotindex
