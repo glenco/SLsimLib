@@ -337,6 +337,7 @@ void LightCone::ReadLightConeParticles(
   // break up into slices redshift bins
   for(int i = 0 ; i < Nplanes ; ++i ) D_planes[i] = (2*i+1)*(particles.back().r - particles[0].r)/Nplanes/2 + particles[0].r;
   
+  Utilities::RandomNumbers_NR ran(1234);
   PosType **xp;
   std::deque<SphericalPoint>::iterator it2;
   size_t i1 = 0;
@@ -363,6 +364,13 @@ void LightCone::ReadLightConeParticles(
       //xp[i][1] = (*it).phi*Dl;
       xp[i][0] = particles.front().theta*Dl;
       xp[i][1] = particles.front().phi*Dl;
+      
+      /// ?????
+      double tmp = theta_range.max()*sqrt(ran()),tmp_t = 2*pi*ran();
+      xp[i][0] = tmp*cos(tmp_t)*Dl;
+      xp[i][1] = tmp*sin(tmp_t)*Dl;
+
+      
       total_mass += particle_masses[j*multimass];
       particles.pop_front();
     }
