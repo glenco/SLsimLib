@@ -597,7 +597,7 @@ int fof(double l,std:: vector<double> xci, std:: vector<double> yci, std:: vecto
 }
 
 /**
- * \brief pre-process sourface mass density map computing deflection angles and shear in FFT,
+ * \brief pre-process surface mass density map computing deflection angles and shear in FFT,
  *  generalized to work with rectangular maps
  */
 

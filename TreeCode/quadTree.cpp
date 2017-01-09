@@ -44,12 +44,12 @@ TreeQuad::TreeQuad(
 	halos = NULL;
 
   tree = BuildQTreeNB_iter(xp,Npoints,index);
-  //tree = BuildQTreeNB(xp,Npoints,index);  // ???
+  //tree = BuildQTreeNB(xp,Npoints,index);
   //std::cout << "Nbranches " << tree->getNbranches() << std::endl;
 
 	CalcMoments();
 
-  // test lines ????
+  // test lines
   /*{
     size_t i=0;
     tree->moveTop();

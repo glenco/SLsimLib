@@ -566,14 +566,18 @@ void LightCone::ReadLightConeParticles(
   for(int i = 0 ; i < Nplanes ; ++i ) D_planes[i] = (2*i+1)*(particles.back().r - particles[0].r)/Nplanes/2 + particles[0].r;
   
   //Utilities::RandomNumbers_NR ran(1234);
-  PosType **xp;
+  //PosType **xp;
   std::deque<SphericalPoint>::iterator it2;
   size_t i1 = 0;
   
   Point_2d center_cart;
-  PixelMap massmap(center_cart.x,(size_t)(2*theta_range.max()/angular_resolution)
-                   ,(size_t)(2*theta_range.max()/angular_resolution),angular_resolution);
+  
+  PixelMap massmap(center_cart.x,(size_t)(sqrt(2)*theta_range.max()/angular_resolution)
+                   ,(size_t)(sqrt(2)*theta_range.max()/angular_resolution),angular_resolution);
+  //PixelMap massmap(center_cart.x,(size_t)(2*theta_range.max()/angular_resolution)
+  //                 ,(size_t)(2*theta_range.max()/angular_resolution),angular_resolution);
 
+  size_t count = 0;
   for(int i = 0 ; i < Nplanes ; ++i ){
     
     it2 = std::lower_bound(particles.begin(),particles.end()
@@ -593,35 +597,56 @@ void LightCone::ReadLightConeParticles(
     //xp = Utilities::PosTypeMatrix(Np_on_plane,2);
     size_t j = i1;
     long index = -1;
-    for(int ii = 0 ; ii < Np_on_plane ; ++ii,++j){
+     for(int ii = 0 ; ii < Np_on_plane ; ++ii,++j){
       //for(auto it = it1 ; it != it2 + 1 ; ++it){
       //xp[i][0] = (*it).theta*Dl;
       //xp[i][1] = (*it).phi*Dl;
       //xp[i][0] = particles.front().theta*Dl;
       //xp[i][1] = particles.front().phi*Dl;
       
-      index = massmap.find_index(particles.front().theta,particles.front().theta);
+      index = massmap.find_index(particles.front().theta,particles.front().phi);
       
       if(index != -1){
         massmap[index] += particle_masses[j*multimass];
+        total_mass += particle_masses[j*multimass];
+        
+        //std::cout << " index " << index << "  " << particles.front().theta
+        //  << " " << particles.front().phi << std::endl;
+        ++count;
       }
       /// test lines for randomizing positions
       //double tmp = theta_range.max()*sqrt(ran()),tmp_t = 2*pi*ran();
       //xp[i][0] = tmp*cos(tmp_t)*Dl;
       //xp[i][1] = tmp*sin(tmp_t)*Dl;
       
-      total_mass += particle_masses[ii*multimass];
       particles.pop_front();
     }
     
     //double sigma_back = total_mass/pi/Dl/Dl/theta_range.max()/theta_range.max();
     
-    lensVec.push_back(new LensHaloMassMap(massmap,1.0,z,0,true,cosmo));
+    //std::cout << " total mass " << massmap.ave()*massmap.size() << std::endl;
+    //massmap.printFITS("!test_map.fits");
+    lensVec.push_back(new LensHaloMassMap(massmap,1.0,z,1.0,true,cosmo));
+    
+    /*{
+      size_t tmp = lensVec.back()->map->nx*lensVec.back()->map->ny;
+      double temp =0;
+      for(size_t i=0;i<tmp ; ++i){
+        std::cout <<
+        lensVec.back()->map->convergence[i] << "," <<
+        lensVec.back()->map->gamma1[i] << "," <<
+        std::endl;
+        temp += lensVec.back()->map->convergence[i];
+      }
+      std::cout << " total " << temp << std::endl;
+    }*/
     
     i1 += Np_on_plane;
     
     massmap.Clean();
   }
+  
+  //std::cout << "fraction of particles on map : "  << count*1.0/Npoints << std::endl;
   
   assert(i1 == Npoints);
 }

@@ -1655,14 +1655,19 @@ long PixelMap::find_index(PosType const x,PosType const y,long &ix,long &iy){
   //ix = (long)((x - map_boundary_p1[0])/resolution + 0.5);
   //iy = (long)((y - map_boundary_p1[1])/resolution + 0.5);
   
-  ix = (long)((x - map_boundary_p1[0])/resolution );
-  iy = (long)((y - map_boundary_p1[1])/resolution );
+  double dx = (x - map_boundary_p1[0])/resolution ;
+  double dy = (y - map_boundary_p1[1])/resolution ;
   
-  if( ix < 0 || ix >= Nx){
+  if( dx < 0 || dy < 0) return -1;
+  
+  ix = (long)(dx);
+  iy = (long)(dy);
+  
+  if(ix >= Nx){
     ix = iy = -1;
     return -1;
   }
-  if( iy < 0 || iy >= Ny){
+  if(iy >= Ny){
     ix = iy = -1;
     return -1;
   }
