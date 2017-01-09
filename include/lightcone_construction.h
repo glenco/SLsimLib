@@ -49,6 +49,13 @@ public:
                                      ,float particle_size
                                      ,bool angular_sizes = false
                                      ,bool verbose = false);
+
+  static void ReadLightConeParticles(std::string filename,COSMOLOGY &cosmo
+                                     ,std::vector<LensHaloMassMap *> &lensVec
+                                     ,int Nplanes
+                                     ,float particle_mass
+                                     ,float angular_resolution
+                                     ,bool verbose = false);
   
   static void WriteLightCone(std::string filename,std::vector<DataRockStar> &vec);
   static void WriteLightCone(std::string filename,std::vector<Point_3d> &vec);
