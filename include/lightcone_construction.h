@@ -107,12 +107,49 @@ public:
                   ,double BoxLength
                   ,bool periodic_boundaries = true
                   );
+  
+  void ReadBoxToMaps(std::string filename
+                     ,double rlow,double rhigh
+                     ,std::vector<std::vector<PixelMap>  > &maps
+                     ,double hubble
+                     ,double BoxLength
+                     ,bool periodic_boundaries = true
+                     );
+  
+  
 
 private:
 
   std::vector<Point_3d> xos;
   std::vector<Point_3d> vs;
   std::vector<LightCone> cones;
+};
+
+
+class MultiPlaneLightCones{
+  
+public:
+  MultiPlaneLightCones(COSMOLOGY &cosmo,int Nplanes,float max_redshift,double BoxLength,double hubble
+                       ,std::vector<std::string> snap_filenames
+                       ,std::vector<float> snap_redshifts
+                       ,std::vector<std::vector<PixelMap> > &maps
+                       ,const std::vector<Point_3d> &observers    /// postion of observers within the simulation box
+                       ,const std::vector<Point_3d> &directions   /// direction of light cones
+                       ,double range
+                       ,double resolution
+                       ,bool angular = true
+                       ,bool verbose = false
+                       ){
+    
+    d_max = cosmo.coorDist(max_redshift);
+    
+    
+  };
+  
+  void OutputConeData(std::string basefilename);
+  
+private:
+  double d_max;
 };
 
 /// select the halos from the box that are within the light cone
