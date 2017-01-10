@@ -286,7 +286,8 @@ struct PointList{
       current = p;
     }
     
-    Point *operator*(){return current;}
+    Point * operator*(){return current;}
+    
     PointList::iterator &operator=(PointList::iterator &p){
       if(&p == this) return *this;
       current = p.current;
@@ -409,6 +410,11 @@ struct Point_3d{
   Point_3d(){
     x[0]=x[1]=x[2]=0.0;
   }
+  Point_3d(PosType xx,PosType yy,PosType zz){
+    x[0]=xx;
+    x[1]=yy;
+    x[2]=zz;
+  }
   ~Point_3d(){};
   
   Point_3d(const Point_3d &p){
@@ -416,6 +422,7 @@ struct Point_3d{
     x[1]=p.x[1];
     x[2]=p.x[2];
   }
+  
   Point_3d & operator=(const Point_3d &p){
     if(this == &p) return *this;
     x[0]=p.x[0];
