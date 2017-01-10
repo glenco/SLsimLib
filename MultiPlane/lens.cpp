@@ -982,6 +982,7 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
         substructure.halos.push_back(new LensHaloPowerLaw(mass,Rsize,redshift,1.0,1.0,0,0));
         break;
     }
+    substructure.halos.back()->setDist(cosmo.angDist(substructure.halos.back()->getZlens()));
     substructure.halos.back()->setTheta(theta_pos);
     ++haloid;
     substructure.halos.back()->setID(haloid);
@@ -1062,7 +1063,7 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
     
     // Insertion :
     if(verbose) std::cout << "Lens::insertSubstructures : inserting a new plane at redshift z = " << redshift << std::endl;
-    std::cout << "xxx " << substructure.NhalosSub << std::endl;
+    std::cout << "Lens::insertSubstructures : NhalosSub = " << substructure.NhalosSub << std::endl;
 
     assert(substructure.NhalosSub == substructure.halos.size());
     field_planes.push_back(new LensPlaneTree(substructure.halos.data(), substructure.NhalosSub, 0, 0));
@@ -1213,6 +1214,7 @@ void Lens::resetSubstructure(bool verbose){
     rmax_max = MAX(Rsize,rmax_max);
 
     substructure.halos.push_back(new LensHaloPowerLaw(mass,Rsize,redshift,1.0,1.0,0,0));
+    substructure.halos.back()->setDist(cosmo.angDist(substructure.halos.back()->getZlens()));
     substructure.halos.back()->setTheta(theta_pos);
 
     ++haloid;
@@ -1604,7 +1606,7 @@ void Lens::clearMainHalos(bool verbose)
 void Lens::insertMainHalo(LensHalo* halo,bool addplanes,bool verbose)
 {
 	halo->setCosmology(cosmo);
-  halo->setDist(cosmo.angDist(getZlens()));
+  halo->setDist(cosmo.angDist(halo->getZlens()));
 	main_halos.push_back(halo);
   
 	flag_switch_main_halo_on = true;
@@ -1619,7 +1621,7 @@ void Lens::insertMainHalo(LensHalo* halo,bool addplanes,bool verbose)
 void Lens::insertMainHalo(LensHalo* halo,PosType zlens, bool addplanes,bool verbose)
 {
   halo->setCosmology(cosmo);
-  halo->setDist(cosmo.angDist(getZlens()));
+  halo->setDist(cosmo.angDist(halo->getZlens()));
   halo->setZlens(zlens);
   main_halos.push_back(halo);
   
@@ -1646,7 +1648,7 @@ void Lens::insertMainHalos(LensHalo** halos, std::size_t Nhalos,bool addplanes, 
 	for(std::size_t i = 0; i < Nhalos; ++i)
 	{
 		halos[i]->setCosmology(cosmo);
-    halos[i]->setDist(cosmo.angDist(getZlens()));
+    halos[i]->setDist(cosmo.angDist(halos[i]->getZlens()));
 		main_halos.push_back(halos[i]);
 		if(addplanes) addMainHaloToPlane(halos[i]);
     else addMainHaloToNearestPlane(halos[i]);
@@ -1672,7 +1674,7 @@ void Lens::replaceMainHalos(LensHalo* halo,bool verbose)
 	main_halos.clear();
 	
 	halo->setCosmology(cosmo);
-  halo->setDist(cosmo.angDist(getZlens()));
+  halo->setDist(cosmo.angDist(halo->getZlens()));
 	main_halos.push_back(halo);
 	
 	flag_switch_main_halo_on = true;
@@ -1689,7 +1691,7 @@ void Lens::replaceMainHalos(LensHalo* halo, PosType zlens, bool verbose)
   
   halo->setCosmology(cosmo);
   halo->setZlens(zlens);
-  halo->setDist(cosmo.angDist(getZlens()));
+  halo->setDist(cosmo.angDist(halo->getZlens()));
   main_halos.push_back(halo);
   
   flag_switch_main_halo_on = true;
@@ -1714,7 +1716,7 @@ void Lens::replaceMainHalos(LensHalo** halos, std::size_t Nhalos,bool verbose)
 	for(std::size_t i = 0; i < Nhalos; ++i)
 	{
 		halos[i]->setCosmology(cosmo);
-    halos[i]->setDist(cosmo.angDist(getZlens()));
+    halos[i]->setDist(cosmo.angDist(halos[i]->getZlens()));
 		main_halos.push_back(halos[i]);
 	}
 	
