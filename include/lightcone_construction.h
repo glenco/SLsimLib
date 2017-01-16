@@ -140,16 +140,67 @@ public:
                        ,bool angular = true
                        ,bool verbose = false
                        ){
+
+    // set coordinate distances for planes
+    double d_max = cosmo.coorDist(max_redshift);
+    d_planes.resize(Nplanes);
+    for(int i = 0 ; i < Nplanes ; ++i ) d_planes[i] = (2*i+1)*d_max/Nplanes/2;
+
+    maps.clear();
+    Point_2d center;
+    double angular_resolution = resolution;
+    // allocate mamory for all maps
+    maps.resize(Nplanes);
+    for(auto &map_v : maps){  // loop through cones
+      map_v.reserve(Nplanes);
+      for(int i=0;i<Nplanes;++i){
+        if(!angular) angular_resolution = resolution/d_planes[i];
+        map_v.emplace_back(center.x
+                                   ,(size_t)(range/angular_resolution)
+                                   ,(size_t)(range/angular_resolution)
+                                   ,angular_resolution);
+      }
+    }
     
-    d_max = cosmo.coorDist(max_redshift);
+    // find unique redshifts
+    std::vector<double> z_unique(1,snap_redshifts[0]);
+    for(auto z : snap_redshifts) if(z != z_unique.back() ) z_unique.push_back(z);
     
+    // find redshift ranges for each snapshot
+    
+    
+    // loop through files
+    for(int i_file=0 ; i_file < snap_filenames.size() ; ++i_file){
+      
+      //open file
+      if(verbose) std::cout <<" Opening " << snap_filenames[i_file] << std::endl;
+      std::ifstream file(snap_filenames[i_file].c_str());
+      if(!file){
+        std::cout << "Can't open file " << snap_filenames[i_file] << std::endl;
+        ERROR_MESSAGE();
+        throw std::runtime_error(" Cannot open file.");
+      }
+    
+
+      // read header ??
+      // find r range using snap_redshifts
+      // loop lines / read
+        // loop cones
+          // see if in cone
+          // find nearest plane
+          // find pixel
+          // add mass or distribute mass to pixels
+      // close file
+      file.close();
+    }
     
   };
   
   void OutputConeData(std::string basefilename);
+  static void InportConeData(std::string basefile,std::vector<PixelMap> &mass_maps);
   
 private:
-  double d_max;
+  std::vector<double> d_planes;
 };
 
 /// select the halos from the box that are within the light cone
