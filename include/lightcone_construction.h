@@ -149,7 +149,7 @@ namespace LightCones{
       if(count > 1) std::cout << " Warning: Same halo appears " << count << " times in light-cone." << std::endl;
     }
   }
-
+  
   class MultiLightCone{
   public:
     MultiLightCone(
@@ -199,10 +199,14 @@ namespace LightCones{
     std::vector<LightCone> cones;
   };
   
-  /** \brief 
+  /** \brief
    
    The Born approximation is used.
    */
+  
+  using Utilities::Geometry::Quaternion;
+  using Utilities::Geometry::SphericalPoint;
+  
   class FastLightCones{
     
   public:
@@ -233,7 +237,7 @@ namespace LightCones{
         std::cerr << "Size of direction and observers must match." << std::endl;
         throw std::invalid_argument("");
       }
-
+      
       double zs_max=0;
       for(auto z: zsources) zs_max = (z > zs_max) ? z : zs_max;
       
@@ -273,7 +277,11 @@ namespace LightCones{
       for(int i=0 ; i<Nmaps ; ++i) dsources[i] = cosmo.coorDist(zsources[i]);
       
       // make rotation Quaturnions to the direction frames
-      std::vector<Utilities::Geometry::Qu
+      std::vector<Quaternion> rotationQs(Ncones);
+      for(int i = 0 ; i<Ncones ; ++i ){
+        SphericalPoint sp(directions[i]);
+        rotationQs[i] = Quaternion::q_y_rotation(-sp.theta)*Quaternion::q_z_rotation(-sp.phi);
+      }
       
       
       // loop through files
@@ -287,7 +295,7 @@ namespace LightCones{
           ERROR_MESSAGE();
           throw std::runtime_error(" Cannot open file.");
         }
-      
+        
         // read header ??
         
         // find r range using snap_redshifts
@@ -298,7 +306,7 @@ namespace LightCones{
         Point_3d halo;
         std::stringstream buffer;
         std::string strg;
-
+        
         
         // loop lines / read
         while (getline(file,myline)) {
@@ -328,50 +336,30 @@ namespace LightCones{
           
           // loop cones
           for(int icone=0;icone<Ncones;++icone){
-          
+            
             // loop through repitions of box ???
             
             Point_3d x = halo - observers[icone];
             
-            // rotate to cone frame  ???
+            // rotate to cone frame - direction[i] is the x-axis
+            x = rotationQs[icone].Rotate(x);
+            SphericalPoint sp(x);
             
-            xcen[0] = x*directions[icone];
+            // find pixel
+            long image_index = maps[icone][0].find_index(sp.theta,sp.phi);
             
-            // see if in cone
-            if(xcen[0] < costheta){
-              
-              {
-              directions[icone] /= directions[icone].length();
-              
-              // standard coordinates so cone is always centered on the x-axis
-              Point_3d y_axis,z_axis;
-              
-              y_axis[0] = -directions[1];
-              y_axis[1] =  directions[0];
-              y_axis[2] =  0;
-              
-              y_axis /= y_axis.length();
-              z_axis = directions.cross(y_axis);
-              }
-            
-              Utilities::Geometry::SphericalPoint sp(x);
-              
-              // find pixel
-              long image_index = maps[icone][0].find_index(sp.theta,sp.phi);
-              
-              if(image_index != -1){
-                for(int isource = 0 ; isource < Nmaps ; ++isource){
-                  if(dsources[isource] > sp.r  ){
-                    // add mass or distribute mass to pixels
-                    maps[icone][isource][image_index] += dsources[isource] - sp.r;  /// this is assuming flatt ???
-                  }
+            if(image_index != -1){
+              for(int isource = 0 ; isource < Nmaps ; ++isource){
+                if(dsources[isource] > sp.r  ){
+                  // add mass or distribute mass to pixels
+                  maps[icone][isource][image_index] += dsources[isource] - sp.r;  /// this is assuming flatt ???
                 }
               }
             }
           }
         }
-
-       file.close();
+        
+        file.close();
       }
       
       // renormalize maps

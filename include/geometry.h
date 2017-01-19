@@ -188,16 +188,16 @@ namespace Utilities {
       
       
       /// rotate a Point_3d using a rotation Quaternion
-      static Point_3d Rotate(const Point_3d &p,const Quaternion &R){
+      Point_3d Rotate(const Point_3d &p){
         Quaternion q(p);
-        q.Rotate(R);
+        q.Rotate(*this);
         return q.to_point_3d();
       }
 
       /// rotate a SpericalPoint using a rotation Quaternion
-      static SphericalPoint Rotate(const SphericalPoint &p,const Quaternion &R){
+      SphericalPoint Rotate(const SphericalPoint &p){
         Quaternion q(p);
-        q.Rotate(R);
+        q.Rotate(*this);
         return q.to_SpericalPoint();
       }
       
