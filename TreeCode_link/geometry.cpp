@@ -185,7 +185,8 @@ int Utilities::Geometry::incurve(PosType x[],std::vector<double *> curve){
   return number == 0 ? 0 : 1;
 }
 
-std::ostream &operator<<(std::ostream &os,const Utilities::Geometry::SphericalPoint &p) {
-  return os << " r: " << p.r << " theta: " << p.theta << " phi : " << p.phi;
+std::ostream &operator<<(std::ostream &os, Utilities::Geometry::SphericalPoint &p){
+  return os << "r: " << p.r << " theta: " << p.theta << " phi: " << p.phi;
+
 }
 
