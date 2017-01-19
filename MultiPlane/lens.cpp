@@ -1841,7 +1841,7 @@ void Lens::readLightCone(bool verbose){
   std::cout << "Reading Field Halos from " << field_input_sim_file << std::endl;
 
   PosType rmax;
-  LightCone::ReadLightConeNFW(field_input_sim_file,cosmo,field_halos,rmax);
+  LightCones::ReadLightConeNFW(field_input_sim_file,cosmo,field_halos,rmax);
   
   fieldofview = pi*rmax*rmax*pow(180/pi,2);
   inv_ang_screening_scale = 0.0;
