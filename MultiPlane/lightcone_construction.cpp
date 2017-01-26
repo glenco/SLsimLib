@@ -1015,4 +1015,283 @@ namespace LightCones{
     file.close();
   }
   
+  struct DkappaDz{
+    DkappaDz(const COSMOLOGY &cos,double zsource):cosmo(cos),zs(zsource){
+      rho = cosmo.getOmega_matter()*cosmo.rho_crit(0);
+    };
+    
+    double operator()(double z){
+      double x = 1+z;
+      return cosmo.drdz(x)*rho*x*x*x/cosmo.SigmaCrit(z,zs)/cosmo.getHubble();
+    }
+    
+    const COSMOLOGY &cosmo;
+    double zs;
+    double rho;
+  };
+
+  using Utilities::Geometry::Quaternion;
+  using Utilities::Geometry::SphericalPoint;
+  
+  void FastLightCones(
+                      const COSMOLOGY &cosmo
+                      ,const std::vector<double> &zsources
+                      ,std::vector<std::vector<PixelMap> > &maps
+                      ,double range
+                      ,double angular_resolution
+                      ,std::vector<Point_3d> &observers
+                      ,std::vector<Point_3d> &directions
+                      ,const std::vector<std::string> snap_filenames
+                      ,const std::vector<float> snap_redshifts
+                      ,double BoxLength
+                      ,double particle_mass
+                      ,bool verbose
+                      ,bool addtocone
+  ){
+    
+    const std::string delim = " ";
+    
+    assert(cosmo.getOmega_matter() + cosmo.getOmega_lambda() == 1.0);
+    // set coordinate distances for planes
+    
+    int Nmaps = zsources.size();    // number of source planes per cone
+    int Ncones = observers.size();  // number of cones
+    
+    if(directions.size() != observers.size()){
+      std::cerr << "Size of direction and observers must match." << std::endl;
+      throw std::invalid_argument("");
+    }
+    
+    double zs_max=0;
+    for(auto z: zsources) zs_max = (z > zs_max) ? z : zs_max;
+    
+    Point_2d center;
+    
+    if(!addtocone){
+      // allocate mamory for all maps
+      maps.clear();
+      maps.resize(Ncones);
+      for(auto &map_v : maps){  // loop through cones
+        map_v.reserve(Nmaps);
+        for(int i=0;i<Nmaps;++i){
+          map_v.emplace_back(center.x
+                             ,(size_t)(range/angular_resolution)
+                             ,(size_t)(range/angular_resolution)
+                             ,angular_resolution);
+        }
+      }
+    }else{
+      /// check the sizes
+      if(maps.size() != Ncones){
+        std::cerr << "FastLightCones: You must have enough maps allocated or use addtocones = false " << std::endl;
+        throw std::invalid_argument("Too few maps.");
+      }
+      for(auto &map_v : maps){  // loop through cones
+        if(map_v.size() != Nmaps){
+          std::cerr << "FastLightCones: You must have enough maps allocated or use addtocones = false " << std::endl;
+          throw std::invalid_argument("Too few maps");
+        }
+      }
+    }
+    
+    // find unique redshifts
+    std::vector<double> z_unique(1,snap_redshifts[0]);
+    for(auto z : snap_redshifts) if(z != z_unique.back() ) z_unique.push_back(z);
+    std::sort(z_unique.begin(),z_unique.end());
+    
+    // find redshift ranges for each snapshot
+    // shift the redshifts to between the snapshots
+    std::vector<double> abins(z_unique.size() + 1);
+    abins[0] = 1.0/(1+z_unique[0]);
+    for(int i=1;i<z_unique.size()-1;++i){
+      abins[i] = ( 1/(1+z_unique[i]) + 1/(1+z_unique[i+1]) )/2 ;
+    }
+    abins.back() = 1.0/( 1 + std::max(zs_max,z_unique.back() ) );
+    
+    std::vector<double> dbins(abins.size());
+    for(int i=0 ; i<abins.size() ; ++i) dbins[i] = cosmo.coorDist(1.0/abins[i] - 1);
+    
+    std::vector<double> dsources(zsources.size());
+    for(int i=0 ; i<Nmaps ; ++i) dsources[i] = cosmo.coorDist(zsources[i]);
+    
+    // make rotation Quaturnions to the observer frames
+    std::vector<Quaternion> rotationQs(Ncones);
+    for(int i = 0 ; i<Ncones ; ++i ){
+      directions[i].unitize();
+      SphericalPoint sp(directions[i]);
+      rotationQs[i] = Quaternion::q_y_rotation(-sp.theta)*Quaternion::q_z_rotation(-sp.phi);
+    }
+    
+    
+    // loop through files
+    for(int i_file=0 ; i_file < snap_filenames.size() ; ++i_file){
+      
+      //open file
+      if(verbose) std::cout <<" Opening " << snap_filenames[i_file] << std::endl;
+      FILE *pFile = fopen(snap_filenames[i_file].c_str(),"r");
+      
+      //std::ifstream file(snap_filenames[i_file].c_str());
+      if(pFile == nullptr){
+        std::cout << "Can't open file " << snap_filenames[i_file] << std::endl;
+        ERROR_MESSAGE();
+        throw std::runtime_error(" Cannot open file.");
+      }
+      
+      // read header ??
+      
+      // find r range using snap_redshifts
+      int i;
+      for(i=0;i<z_unique.size();++i) if(snap_redshifts[i_file] == z_unique[i]) break;
+      double dmin = dbins[i],dmax = dbins[i+1];
+      
+      // find the box range for each cone
+      std::vector<Point_3d> max_box(Ncones),min_box(Ncones);
+      for(int icone=0;icone<Ncones;++icone){
+        for(int i=0;i<3;++i){
+          
+          double cos1,cos2;
+          {
+            double theta1,theta2;
+            theta1 = acos(fabs(directions[icone][i])) - range/sqrt(2.);
+            theta2 = pi - acos(fabs(directions[icone][i])) - range/sqrt(2.);
+            
+            if(theta1 > 0.0){
+              cos1 = cos(theta1);
+            }else cos1 = 1.0;
+            
+            if(theta2 > pi/2){
+              cos2 = 0.0;
+            }else if(theta2 < 0.0){
+              cos2 = 1.0;
+            }else{
+              cos2 = cos(theta2);
+            }
+          }
+          
+          if(directions[icone][i] < 0.0) std::swap(cos1,cos2);
+          
+          max_box[icone][i] = (int)((observers[icone][i] + cos1*dmax)/BoxLength);
+          double d2 = ((observers[icone][i] - cos2*dmax)/BoxLength);
+          if(d2 > 0) min_box[icone][i] = 0;
+          else min_box[icone][i] = (int)(d2) - 1;
+          
+        }
+      }
+      
+      std::string myline;
+      Point_3d halo;
+      std::stringstream buffer;
+      std::string strg;
+      
+      /*{
+      /// fined length of file
+      file.seekg (0, file.end);
+      size_t length = file.tellg();
+      file.seekg (0, file.beg);
+      
+      getline(file,myline);
+      int linesize = myline.size();
+      int chuncksize = 100000;
+      strg.resize(linesize*chuncksize);
+      file.read(c,linesize*chuncksize);
+      }*/
+      
+      
+      // break up into chunks ???
+      
+      // loop lines / read
+      size_t Nlines = 0;
+      //while (getline(file,myline)) {
+      float tmpf;
+      while(fscanf(pFile,"%lf %lf %lf %e %e %e",&halo[0],&halo[1],&halo[2],&tmpf,&tmpf,&tmpf) != EOF){
+/*
+        { // pars line
+          int pos = myline.find_first_not_of(delim);
+          myline.erase(0,pos);
+        
+          for(int l=0;l<ncolumns; l++){
+            pos = myline.find(delim);
+            strg.assign(myline,0,pos);
+            buffer << strg;
+          
+            //std::cout << l << "  " << strg << std::endl;
+            buffer >> halo[l];
+            //std::cout << halo << std::endl;
+          
+            myline.erase(0,pos+1);
+            pos = myline.find_first_not_of(delim);
+            myline.erase(0,pos);
+          
+            buffer.clear();
+          }
+          strg.clear();
+          buffer.str(std::string());
+        }*/
+        
+        // factors of hubble ????
+        
+        halo /= cosmo.gethubble();
+        
+        //std::cout << halo << std::endl;
+        
+        // loop cones
+        for(int icone=0;icone<Ncones;++icone){
+          
+          // loop through repitions of box ??? this could be done better
+          Point_3d dn;
+          for(dn[0] = min_box[icone][0] ; dn[0] <= max_box[icone][0] ; ++dn[0]){
+            for(dn[1] = min_box[icone][1] ; dn[1] <= max_box[icone][1] ; ++dn[1]){
+              for(dn[2] = min_box[icone][2] ; dn[2] <= max_box[icone][2] ; ++dn[2]){
+                
+                Point_3d x = halo - observers[icone] + dn*BoxLength;
+                double r = x.length();
+                if( r > dmin && r < dmax ){
+                  // rotate to cone frame - direction[i] is the x-axis
+                  x = rotationQs[icone].Rotate(x);
+                  SphericalPoint sp(x);
+                  
+                  // find pixel
+                  long image_index = maps[icone][0].find_index(sp.theta,sp.phi);
+                  
+                  if(image_index != -1){
+                    for(int isource = 0 ; isource < Nmaps ; ++isource){
+                      if(dsources[isource] > sp.r  ){
+                        // add mass or distribute mass to pixels
+                        maps[icone][isource][image_index] += (dsources[isource] - sp.r)/sp.r;  /// this is assuming flat ???
+                      }
+                    }
+                  }
+                }
+              }}}
+        }
+        
+        ++Nlines;
+        if(Nlines%1000000 == 0) std::cout << "=" << std::flush ;
+        if(Nlines%10000000 == 0) std::cout << std::endl;
+        if(Nlines%100000000 == 0) std::cout << std::endl;
+      }
+      std::cout << std::endl;
+      //file.close();
+      fclose(pFile);
+    }
+    
+    
+    size_t Npixels = maps[0][0].size();
+    for(int i=0;i<Nmaps;++i){
+      // renormalize map
+      double norm = 4*pi*particle_mass*Grav/dsources[i]/angular_resolution/angular_resolution;
+      
+      // calculate expected average kappa
+      DkappaDz dkappadz(cosmo,zsources[i]);
+      double avekappa = Utilities::nintegrate<DkappaDz,double>(dkappadz,0,zsources[i],1.0e-6);
+      
+      for(auto &cone_maps: maps){
+        cone_maps[i] *= norm;
+        // subtract average
+        //double ave = cone_maps[i].ave();
+        for(size_t ii=0 ; ii<Npixels ; ++ii) cone_maps[i][ii] -= avekappa;
+      }
+    }
+  };
+  
 }

@@ -161,57 +161,12 @@ public:
   
   /// draw a grid on the image that divides the each demension into N cells
   void drawgrid(int N,PosType value);
-  void drawPoints(std::vector<Point *> points,PosType size,PosType value){
-    if(size < resolution*3){
-      size_t index;
-      for(int i=0;i<points.size();++i){
-        if(inMapBox(points[i]->x)){
-          //index = Utilities::IndexFromPosition(x1,Nx,range,center);
-          index = find_index(points[i]->x);
-          map[index] = value;
-        }
-      }
-    }else
-      for(int i=0;i<points.size();++i) drawcircle(points[i]->x,0.01*rangeX,value);
-    
-  }
-  void drawPoints(std::vector<Point> points,PosType size,PosType value){
-    if(size < resolution*3){
-      size_t index;
-      for(int i=0;i<points.size();++i){
-        if(inMapBox(points[i].x)){
-          //index = Utilities::IndexFromPosition(x1,Nx,range,center);
-          index = find_index(points[i].x);
-          map[index] = value;
-        }
-      }
-    }else
-      for(int i=0;i<points.size();++i) drawcircle(points[i].x,0.01*rangeX,value);
-    
-  }
-  void drawCurve(std::vector<Point *> points,PosType value){
-    for(int i=0;i<points.size()-1;++i) drawline(points[i]->x,points[i+1]->x,value);
-  }
-  void drawCurve(std::vector<Point> points,PosType value){
-    for(int i=0;i<points.size()-1;++i) drawline(points[i].x,points[i+1].x,value);
-  }
-  void drawPoints(std::vector<Point_2d> points,PosType size,PosType value){
-    if(size < resolution*3){
-      size_t index;
-      for(int i=0;i<points.size();++i){
-        if(inMapBox(points[i].x)){
-          //index = Utilities::IndexFromPosition(x1,Nx,range,center);
-          index = find_index(points[i].x);
-          map[index] = value;
-        }
-      }
-    }else
-      for(int i=0;i<points.size();++i) drawcircle(points[i].x,0.01*rangeX,value);
-    
-  }
-  void drawCurve(std::vector<Point_2d> points,PosType value){
-    for(int i=0;i<points.size()-1;++i) drawline(points[i].x,points[i+1].x,value);
-  }
+  void drawPoints(std::vector<Point *> points,PosType size,PosType value);
+  void drawPoints(std::vector<Point> points,PosType size,PosType value);
+  void drawCurve(std::vector<Point *> points,PosType value);
+  void drawCurve(std::vector<Point> points,PosType value);
+  void drawPoints(std::vector<Point_2d> points,PosType size,PosType value);
+  void drawCurve(std::vector<Point_2d> points,PosType value);
   /// Draw a rectangle
   void drawSquare(PosType p1[],PosType p2[],PosType value);
   void drawBox(PosType p1[],PosType p2[],PosType value,int Nstrip);
@@ -224,55 +179,16 @@ public:
                      ,int zeropaddingfactor = 1
                      ,bool overwrite = true                 /// if false add power to existing power_spectrum (used for averaging over many fields
                      ,bool antialias =false
-                     ){
-    
-    if(power_spectrum.size() != lvec.size()) throw std::invalid_argument("these must be the same size");
-    
-    double shotnoise = 0;
-    if(antialias){
-      // find variance of map
-      double var = 0,tmp;
-      size_t count=0;
-
-      for(size_t j=1;j<Ny-1;++j){
-        for(size_t i=1;i<Nx-1;++i){
-          size_t k = i + j*Nx;
-          tmp = map[k] - (map[k+1] + map[k-1] + map[k+Nx] + map[k-Nx])/4;
-          var += map[k]*tmp;
-          ++count;
-        }
-      }
-      assert(count == (Nx-2)*(Ny-2));
-      
-      /*for(auto a : map){
-        ave += a;
-        var += a*a;
-      }
-      var -= map.size()*ave*ave;
-      */
-      var /= (count -1);
-      
-      shotnoise = resolution*resolution*var/pi/pi/4.0;
-    }
-    
-    
-    if(overwrite){
-      Utilities::powerspectrum2d(map,map,Nx,Ny,rangeX,rangeY, lvec, power_spectrum,zeropaddingfactor);
-      if(antialias){
-        for(auto &p : power_spectrum) p -= shotnoise;
-      }
-    }else{
-      std::vector<PosType> tmp_power(power_spectrum.size());
-      Utilities::powerspectrum2d(map,map,Nx,Ny,rangeX,rangeY, lvec, tmp_power,zeropaddingfactor);
-      for(size_t ii=0;ii<power_spectrum.size();++ii) power_spectrum[ii] += tmp_power[ii] - shotnoise;
-    }
-  }
+                     );
   
   void AdaptiveSmooth(PosType value){
-    
     std::valarray<double> tmp = Utilities::AdaptiveSmooth(data(),Nx,Ny,value);
     map = tmp;
   }
+  
+  /// Calculate the deplection and shear from a convergence map using the single plane approximation
+  void Shear(PixelMap &alpha1,PixelMap &alpha2,PixelMap &gamma1,PixelMap &gamma2,double zerosize);
+
 #endif
 
   /** \brief For a list of pixel indexes this will count and separated islands that are not connected.
@@ -287,7 +203,12 @@ public:
     for(size_t i=0;i<map.size();++i) if(value < map[i]) pixel_index.push_back(i);
     return pixel_index.size();
   }
-  
+  /// check if two maps are the same in dimension and center
+  bool compare(const PixelMap &m){
+    return (Nx==m.Nx)*(Ny==m.Ny)*(rangeX==m.rangeX)*(rangeY==m.rangeY)
+    *(center[0] == m.center[0])*(center[1] == m.center[1]);
+  };
+
 private:
 	std::valarray<double> map;
   void AddGrid_(const PointList &list,LensingVariable val);
@@ -436,5 +357,249 @@ private:
   std::vector<PixelMap> maps;
   std::vector<Utilities::Interpolator<PixelMap>> interpolators;
 };
+
+/**
+ * \brief Computing deflection angles and shear by FFT from a rectangular map of the convergence / surface density
+ */
+
+template <typename V>  // V type must be like a vector - have resize() and [] operator
+void ShearByFFT(
+                       const V &convergence  /// vector or valarray of convergence or surface density
+                       ,V &alpha1            /// output deflection
+                       ,V &alpha2            /// output deflection
+                       ,V &gamma1            /// output shear
+                       ,V &gamma2            /// output shear
+                       ,size_t nx            /// number of pixels in x direction
+                       ,size_t ny            /// number of pixels in y direction
+                       ,double length        /// length of x in units that will be used for derivatives
+                       ,double zeropadding = 1.0  /// factor my which the
+                       ){
+#ifdef ENABLE_FFTW
+  // initialize the quantities
+  //int npix_filter = 0;   // filter the map if you want on a given number of pixels: CHECK IT NOT IMPLEMENTED YET
+  
+  // size of the new map in x and y directions, factor by which each size is increased
+  int Nnx=int(zeropadding*nx);
+  int Nny=int(zeropadding*ny);
+  double Nboxlx = length*zeropadding;
+  double Nboxly = length*zeropadding*ny/nx;
+  
+  std:: valarray<float> Nmap;
+  try{
+    Nmap.resize( Nnx*Nny );
+  }catch(std::exception &e){
+    std::cerr << "exception thrown in LensHaloMassMap::PreProcessFFTWMap(): " << e.what() << std::endl;
+  }
+  // assume locate in a rectangular map and build up the new one
+  for( int j=0; j<Nny; j++ ){
+    for( int i=0; i<Nnx; i++ ){
+      Nmap[i+Nnx*j]=0;
+      if(i>=int(Nnx/2-nx/2) && i<int(Nnx/2+nx/2) && j>=int(Nny/2-ny/2) && j<int(Nny/2+ny/2)){
+        int ii = i-int(Nnx/2-nx/2);
+        int jj = j-int(Nny/2-ny/2);
+        
+        if(ii>=nx || jj>=ny){
+          std::cout << " 1 error mapping " << ii << "  " << jj << std::endl;
+          exit(1);
+        }
+        if(ii<0 || jj<0){
+          std::cout << " 2 error mapping " << ii << "  " << jj << std::endl;
+          exit(1);
+        }
+        Nmap[i+Nnx*j]=convergence[ii+nx*jj];
+      }
+    }
+  }
+  
+  double *dNmap=new double[Nnx*Nny];
+  double *input=new double[Nnx*Nny];
+  fftw_complex *fNmap=new fftw_complex[Nny*(Nnx/2+1)];
+  fftw_complex *output=new fftw_complex[Nny*(Nnx/2+1)];
+  for(int k=0;k<Nnx*Nny;k++) dNmap[k] = double(Nmap[k]);
+  fftw_plan p;
+  p=fftw_plan_dft_r2c_2d(Nny,Nnx,input,output,FFTW_ESTIMATE);
+  
+  for(int i=0;i<Nnx*Nny;i++) input[i] = dNmap[i];
+  fftw_execute( p );
+  for(int i=0; i<Nny*(Nnx/2+1);i++){
+    fNmap[i][0] = output[i][0];
+    fNmap[i][1] = output[i][1];
+  }
+  delete[] input;
+  delete[] output;
+  delete[] dNmap;
+  fftw_destroy_plan(p);
+  
+  // fourier space
+  // std:: cout << " allocating fourier space maps " << std:: endl;
+  
+  
+  fftw_complex *fphi   = new fftw_complex[Nny*(Nnx/2+1)];
+  // build modes for each pixel in the fourier space
+  for( int i=0; i<Nnx/2+1; i++ ){
+    double kx=double(i);
+    kx=kx*2.*M_PI/Nboxlx;
+    for( int j=0; j<Nny; j++ ){
+      double ky=(j<Nny/2)?double(j):double(j-Nny);
+      ky=ky*2.*M_PI/Nboxly;
+      double k2 = kx*kx+ky*ky;
+      //smooth if you want to IMPLEMENT
+      // if(npix_filter>0){
+      // fNmap[j+(Nnpixels/2+1)*i][0] = fNmap[j+(Nnpixels/2+1)*i][0]*exp(-k2/sigmag/sigmag/2.);
+      // fNmap[j+(Nnpixels/2+1)*i][1] = fNmap[j+(Nnpixels/2+1)*i][1]*exp(-k2/sigmag/sigmag/2.);
+      // }
+      
+      // fphi
+      fphi[i+(Nnx/2+1)*j][0]= -2.*fNmap[i+(Nnx/2+1)*j][0]/k2;
+      fphi[i+(Nnx/2+1)*j][1]= -2.*fNmap[i+(Nnx/2+1)*j][1]/k2;
+      // null for k2 = 0 no divergence
+      if(k2 == 0){
+        fphi[i+(Nnx/2+1)*j][0] = 0.;
+        fphi[i+(Nnx/2+1)*j][1] = 0.;
+      }
+    }
+  }
+  
+  delete[] fNmap;
+  
+  
+  fftw_complex *fft= new fftw_complex[Nny*(Nnx/2+1)];
+  double *realsp = new double[Nnx*Nny];
+  //fftw_plan pp = fftw_plan_dft_c2r_2d(Nny,Nnx,fft,realsp,FFTW_ESTIMATE);
+  fftw_plan pp = fftw_plan_dft_c2r_2d(Nny,Nnx,fft,realsp,FFTW_MEASURE);
+  
+  // alpha1
+  {
+    
+    // build modes for each pixel in the fourier space
+    for( int i=0; i<Nnx/2+1; i++ ){
+      double kx=double(i);
+      kx=kx*2.*M_PI/Nboxlx;
+      for( int j=0; j<Nny; j++ ){
+        double ky=(j<Nny/2)?double(j):double(j-Nny);
+        ky=ky*2.*M_PI/Nboxly;
+        
+        fft[i+(Nnx/2+1)*j][0] = -kx*fphi[i+(Nnx/2+1)*j][1];
+        fft[i+(Nnx/2+1)*j][1] =  kx*fphi[i+(Nnx/2+1)*j][0];
+      }
+    }
+    
+    fftw_execute( pp );
+    
+    alpha1.resize(nx*ny);
+    
+    for( int j=Nny/2-ny/2; j<Nny/2+ny/2; j++ ){
+      for( int i=Nnx/2-nx/2; i<Nnx/2+nx/2; i++ ){
+        int ii = i-int(Nnx/2-nx/2);
+        int jj = j-int(Nny/2-ny/2);
+        
+        alpha1[ii+nx*jj] = -1*float(realsp[i+Nnx*j]/Nnx/Nny);
+      }
+    }
+  }
+  
+  // alpha2
+  {
+    
+    // build modes for each pixel in the fourier space
+    for( int i=0; i<Nnx/2+1; i++ ){
+      double kx=double(i);
+      kx=kx*2.*M_PI/Nboxlx;
+      for( int j=0; j<Nny; j++ ){
+        double ky=(j<Nny/2)?double(j):double(j-Nny);
+        ky=ky*2.*M_PI/Nboxly;
+        
+        // alpha
+        fft[i+(Nnx/2+1)*j][0] = -ky*fphi[i+(Nnx/2+1)*j][1];
+        fft[i+(Nnx/2+1)*j][1] =  ky*fphi[i+(Nnx/2+1)*j][0];
+        
+      }
+    }
+    
+    fftw_execute( pp );
+    
+    alpha2.resize(nx*ny);
+    
+    for( int j=Nny/2-ny/2; j<Nny/2+ny/2; j++ ){
+      for( int i=Nnx/2-nx/2; i<Nnx/2+nx/2; i++ ){
+        int ii = i-int(Nnx/2-nx/2);
+        int jj = j-int(Nny/2-ny/2);
+        
+        alpha2[ii+nx*jj] = -1*float(realsp[i+Nnx*j]/Nnx/Nny);
+      }
+    }
+  }
+  // gamma1
+  {
+    
+    // build modes for each pixel in the fourier space
+    for( int i=0; i<Nnx/2+1; i++ ){
+      double kx=double(i);
+      kx=kx*2.*M_PI/Nboxlx;
+      for( int j=0; j<Nny; j++ ){
+        double ky=(j<Nny/2)?double(j):double(j-Nny);
+        ky=ky*2.*M_PI/Nboxly;
+        
+        // gamma
+        fft[i+(Nnx/2+1)*j][0] = 0.5*(kx*kx-ky*ky)*fphi[i+(Nnx/2+1)*j][0];
+        fft[i+(Nnx/2+1)*j][1] = 0.5*(kx*kx-ky*ky)*fphi[i+(Nnx/2+1)*j][1];
+        
+      }
+    }
+    
+    fftw_execute( pp );
+    
+    gamma1.resize(nx*ny);
+    
+    for( int j=Nny/2-ny/2; j<Nny/2+ny/2; j++ ){
+      for( int i=Nnx/2-nx/2; i<Nnx/2+nx/2; i++ ){
+        int ii = i-int(Nnx/2-nx/2);
+        int jj = j-int(Nny/2-ny/2);
+        
+        gamma1[ii+nx*jj] = float( realsp[i+Nnx*j]/Nnx/Nny);
+        
+      }
+    }
+  }
+  // gamma2
+  {
+    
+    // build modes for each pixel in the fourier space
+    for( int i=0; i<Nnx/2+1; i++ ){
+      double kx=double(i);
+      kx=kx*2.*M_PI/Nboxlx;
+      for( int j=0; j<Nny; j++ ){
+        double ky=(j<Nny/2)?double(j):double(j-Nny);
+        ky=ky*2.*M_PI/Nboxly;
+        
+        // gamma
+        fft[i+(Nnx/2+1)*j][0] = kx*ky*fphi[i+(Nnx/2+1)*j][0];
+        fft[i+(Nnx/2+1)*j][1] = kx*ky*fphi[i+(Nnx/2+1)*j][1];
+        
+      }
+    }
+    
+    fftw_execute( pp );
+    
+    gamma2.resize(nx*ny);
+    
+    for( int j=Nny/2-ny/2; j<Nny/2+ny/2; j++ ){
+      for( int i=Nnx/2-nx/2; i<Nnx/2+nx/2; i++ ){
+        int ii = i-int(Nnx/2-nx/2);
+        int jj = j-int(Nny/2-ny/2);
+        
+        gamma2[ii+nx*jj] = float(-realsp[i+Nnx*j]/Nnx/Nny);
+        
+      }
+    }
+  }
+  
+  
+  // std:: cout << " remapping the map in the original size " << std:: endl;
+  delete[] fft;
+  delete[] realsp;
+  delete[] fphi;
+#endif
+}
 
 #endif

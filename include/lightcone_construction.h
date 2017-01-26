@@ -14,6 +14,7 @@
 #include "lens_halos.h"
 #include "geometry.h"
 
+
 namespace LightCones{
   struct DataRockStar{
     unsigned int id;
@@ -203,176 +204,22 @@ namespace LightCones{
    
    The Born approximation is used.
    */
-  
-  using Utilities::Geometry::Quaternion;
-  using Utilities::Geometry::SphericalPoint;
-  
-  class FastLightCones{
-    
-  public:
-    FastLightCones(
-                   COSMOLOGY &cosmo
-                   ,const std::vector<double> &zsources    // vector of source redshifts desired
-                   ,std::vector<std::vector<PixelMap> > &maps
-                   ,double range
-                   ,double angular_resolution
-                   ,const std::vector<Point_3d> &observers    /// position of observers within the simulation box
-                   ,const std::vector<Point_3d> &directions   /// direction of light cones
-                   ,const std::vector<std::string> snap_filenames
-                   ,const std::vector<float> snap_redshifts
-                   ,double BoxLength
-                   ,bool verbose = false
-                   ){
-      
-      const std::string delim = ",";
-      const int ncolumns = 3;
-      const double costheta = cos(range/sqrt(2.0));
-      
-      // set coordinate distances for planes
-      
-      int Nmaps = zsources.size();    // number of source planes per cone
-      int Ncones = observers.size();  // number of cones
-      
-      if(directions.size() != observers.size()){
-        std::cerr << "Size of direction and observers must match." << std::endl;
-        throw std::invalid_argument("");
-      }
-      
-      double zs_max=0;
-      for(auto z: zsources) zs_max = (z > zs_max) ? z : zs_max;
-      
-      Point_2d center;
-      
-      // allocate mamory for all maps
-      maps.clear();
-      maps.resize(Ncones);
-      for(auto &map_v : maps){  // loop through cones
-        map_v.reserve(Nmaps);
-        for(int i=0;i<Nmaps;++i){
-          map_v.emplace_back(center.x
-                             ,(size_t)(range/angular_resolution)
-                             ,(size_t)(range/angular_resolution)
-                             ,angular_resolution);
-        }
-      }
-      
-      // find unique redshifts
-      std::vector<double> z_unique(1,snap_redshifts[0]);
-      for(auto z : snap_redshifts) if(z != z_unique.back() ) z_unique.push_back(z);
-      std::sort(z_unique.begin(),z_unique.end());
-      
-      // find redshift ranges for each snapshot
-      // shift the redshifts to between the snapshots
-      std::vector<double> abins(z_unique.size() + 1);
-      abins[0] = 1.0/(1+z_unique[0]);
-      for(int i=1;i<z_unique.size()-1;++i){
-        abins[i] = ( 1/(1+z_unique[i]) + 1/(1+z_unique[i+1]) )/2 ;
-      }
-      abins.back() = 1.0/( 1 + std::max(zs_max,z_unique.back() ) );
-      
-      std::vector<double> dbins(abins.size());
-      for(int i=0 ; i<abins.size() ; ++i) dbins[i] = cosmo.coorDist(1.0/abins[i] - 1);
-      
-      std::vector<double> dsources(zsources.size());
-      for(int i=0 ; i<Nmaps ; ++i) dsources[i] = cosmo.coorDist(zsources[i]);
-      
-      // make rotation Quaturnions to the direction frames
-      std::vector<Quaternion> rotationQs(Ncones);
-      for(int i = 0 ; i<Ncones ; ++i ){
-        SphericalPoint sp(directions[i]);
-        rotationQs[i] = Quaternion::q_y_rotation(-sp.theta)*Quaternion::q_z_rotation(-sp.phi);
-      }
-      
-      
-      // loop through files
-      for(int i_file=0 ; i_file < snap_filenames.size() ; ++i_file){
-        
-        //open file
-        if(verbose) std::cout <<" Opening " << snap_filenames[i_file] << std::endl;
-        std::ifstream file(snap_filenames[i_file].c_str());
-        if(!file){
-          std::cout << "Can't open file " << snap_filenames[i_file] << std::endl;
-          ERROR_MESSAGE();
-          throw std::runtime_error(" Cannot open file.");
-        }
-        
-        // read header ??
-        
-        // find r range using snap_redshifts
-        int i;
-        for(i=0;i<z_unique.size();++i) if(snap_redshifts[i_file] == z_unique[i]) break;
-        double dmin = dbins[i],dmax = dbins[i+1];
-        std::string myline;
-        Point_3d halo;
-        std::stringstream buffer;
-        std::string strg;
-        
-        
-        // loop lines / read
-        while (getline(file,myline)) {
-          
-          int pos = myline.find_first_not_of(delim);
-          myline.erase(0,pos);
-          
-          for(int l=0;l<ncolumns; l++){
-            pos = myline.find(delim);
-            strg.assign(myline,0,pos);
-            buffer << strg;
-            
-            //std::cout << l << "  " << strg << std::endl;
-            buffer >> halo[l];
-            //std::cout << halo << std::endl;
-            
-            myline.erase(0,pos+1);
-            pos = myline.find_first_not_of(delim);
-            myline.erase(0,pos);
-            
-            strg.clear();
-            buffer.clear();
-            buffer.str(std::string());
-          }
-          
-          // factors of hubble ????
-          
-          // loop cones
-          for(int icone=0;icone<Ncones;++icone){
-            
-            // loop through repitions of box ???
-            
-            Point_3d x = halo - observers[icone];
-            
-            // rotate to cone frame - direction[i] is the x-axis
-            x = rotationQs[icone].Rotate(x);
-            SphericalPoint sp(x);
-            
-            // find pixel
-            long image_index = maps[icone][0].find_index(sp.theta,sp.phi);
-            
-            if(image_index != -1){
-              for(int isource = 0 ; isource < Nmaps ; ++isource){
-                if(dsources[isource] > sp.r  ){
-                  // add mass or distribute mass to pixels
-                  maps[icone][isource][image_index] += dsources[isource] - sp.r;  /// this is assuming flatt ???
-                }
-              }
-            }
-          }
-        }
-        
-        file.close();
-      }
-      
-      // renormalize maps
-      // subtract average
-      // FFT all maps to find shear
-    };
-    
-    void OutputConeData(std::string basefilename);
-    static void InportConeData(std::string basefile,std::vector<PixelMap> &mass_maps);
-    
-  private:
-    std::vector<double> d_planes;
-  };
+  void FastLightCones(
+                      const COSMOLOGY &cosmo
+                      ,const std::vector<double> &zsources    // vector of source redshifts desired
+                      ,std::vector<std::vector<PixelMap> > &maps
+                      ,double range
+                      ,double angular_resolution
+                      ,std::vector<Point_3d> &observers    /// position of observers within the simulation box
+                      ,std::vector<Point_3d> &directions   /// direction of light cones
+                      ,const std::vector<std::string> snap_filenames
+                      ,const std::vector<float> snap_redshifts
+                      ,double BoxLength
+                      ,double particle_mass
+                      ,bool verbose = false
+                      ,bool addtocone = false  /// if false the maps will be cleared and new maps made, if false particles are added to the existing maps
+  );
+
   
   
 }

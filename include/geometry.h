@@ -98,6 +98,9 @@ namespace Utilities {
     
     class Quaternion{
     public:
+      Quaternion(){
+        v[0] = v[1] = v[2] = v[3] = 0.0;
+      }
       Quaternion(double s,double x,double y,double z){
         v[0] = s;
         v[1] = x;
