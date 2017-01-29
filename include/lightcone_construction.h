@@ -220,6 +220,88 @@ namespace LightCones{
                       ,bool addtocone = false  /// if false the maps will be cleared and new maps made, if false particles are added to the existing maps
   );
 
+  using Utilities::Geometry::Quaternion;
+  using Utilities::Geometry::SphericalPoint;
+  
+  /** \brief class for generating positions in proportion to mass in an NFW profiles
+   */
+  class NFWgenerator{
+  public:
+    NFWgenerator(Utilities::RandomNumbers_NR &ran_in,double max_cons)
+    :ran(ran_in)
+    {
+      X.resize(N);
+      F.resize(N);
+      X[0] = F[0] = 0.0;
+      dx = max_cons/(N-1);
+      for(int i=1;i<N;++i){
+        X[i] = i*dx;
+        F[i] = log(1+X[i]) - X[i]/(1+X[i]) ;
+      }
+    }
+    
+    /// returns a vector of points drawn from a spherical halo
+    void drawSpherical(std::vector<Point_3d> &points  /// output points
+                       ,double cons                   /// concentration
+                       ,double Rvir                   /// maximum elliptical radius
+                       ){
+      double Fmax = log(1+cons) - cons/(1+cons);
+      double rs = Rvir/cons;
+      for(auto p : points){
+        double f = Fmax*ran();
+        size_t i = Utilities::locate(F,f);
+        double x = X[i] + dx*(f - F[i])/(F[i+1] - F[i]);
+        
+        p[0] = ran.gauss();
+        p[1] = ran.gauss();
+        p[2] = ran.gauss();
+        
+        p *= x*rs/p.length();
+      }
+    }
+    
+    ///  STILL UNDER CONSTRUCTION returns a vector of points drawn from a triaxial halo,
+    void drawTriAxial(std::vector<Point_3d> &points  /// output points
+                      ,double cons                   /// concentration
+                      ,double Rvir                   /// maximum elliptical radius
+                      ,double f1                     /// axis ratio 1 to 3
+                      ,double f2                     /// axis ratio 2 to 3
+                      ,SphericalPoint v              /// direction of axis 3
+                      ){
+      
+      double a3 = 1.0/pow(f1*f2,1.0/3.0);
+      double a1 = f1*a3,a2 = f2*a3;
+      Quaternion rot = Quaternion::q_z_rotation( v.phi )*Quaternion::q_y_rotation( v.theta );
+      
+      double Fmax = log(1+cons) - cons/(1+cons);
+      double rs = Rvir/cons;
+      for(auto p : points){
+
+        p[0] = ran.gauss();
+        p[1] = ran.gauss();
+        p[2] = ran.gauss();
+
+        double f = Fmax*ran();
+        size_t i = Utilities::locate(F,f);
+        double x = X[i] + dx*(f - F[i])/(F[i+1] - F[i]);
+        
+        p *= x*rs/p.length();
+
+        p[0] *= a1;
+        p[1] *= a2;
+        p[2] *= a3;
+        
+        p = rot.Rotate(p);
+      }
+    }
+    
+  private:
+    Utilities::RandomNumbers_NR &ran;
+    double dx;
+    std::vector<double> X;
+    std::vector<double> F;
+    const int N = 1000;
+  };
   
   
 }
