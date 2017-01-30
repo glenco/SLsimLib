@@ -49,6 +49,26 @@ public:
 	inline double getRangeY() const { return rangeY; }
 	inline const double* getCenter() const{ return center; }
 	inline double getResolution() const { return resolution; }
+  
+  inline double getValue(std::size_t i) const { return map[i]; }
+  inline double & operator[](std::size_t i) { return map[i]; };
+  inline double operator()(std::size_t i) const { return map[i]; };
+  inline double operator()(std::size_t i,std::size_t j) const { return map[i + Nx*j]; };
+  
+  PixelMap& operator+=(const PixelMap& rhs);
+  friend PixelMap operator+(const PixelMap&, const PixelMap&);
+  
+  PixelMap& operator-=(const PixelMap& rhs);
+  friend PixelMap operator-(const PixelMap&, const PixelMap&);
+  
+  PixelMap& operator*=(const PixelMap& rhs);
+  friend PixelMap operator*(const PixelMap&, const PixelMap&);
+  
+  PixelMap& operator*=(PosType b);
+  friend PixelMap operator*(const PixelMap&, PosType b);
+  
+  std::valarray<double>& data() { return map; }
+
 	
 	void Clean();
 
@@ -108,25 +128,6 @@ public:
   void printFITS(std::string filename,std::vector<std::tuple<std::string,double,std::string>> &extra_header_info, bool verbose) const;
 
 	void smooth(double sigma);
-
-	inline double getValue(std::size_t i) const { return map[i]; }
-	inline double & operator[](std::size_t i) { return map[i]; };
-  inline double operator()(std::size_t i) const { return map[i]; };
-  inline double operator()(std::size_t i,std::size_t j) const { return map[i + Nx*j]; };
-	
-	PixelMap& operator+=(const PixelMap& rhs);
-	friend PixelMap operator+(const PixelMap&, const PixelMap&);
-
-	PixelMap& operator-=(const PixelMap& rhs);
-	friend PixelMap operator-(const PixelMap&, const PixelMap&);
-    
-	PixelMap& operator*=(const PixelMap& rhs);
-	friend PixelMap operator*(const PixelMap&, const PixelMap&);
-
-	PixelMap& operator*=(PosType b);
-	friend PixelMap operator*(const PixelMap&, PosType b);
-	
-	std::valarray<double>& data() { return map; }
 	
 	bool agrees(const PixelMap& other) const;
 	

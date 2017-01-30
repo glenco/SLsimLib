@@ -19,6 +19,9 @@
 
 namespace LightCones{
   
+  std::mutex clmoo;
+
+  
   LightCone::LightCone(
                        double angular_radius    /// angular radius of lightcone in radians
   ):
@@ -1041,8 +1044,8 @@ namespace LightCones{
                       ,double angular_resolution
                       ,std::vector<Point_3d> &observers
                       ,std::vector<Point_3d> &directions
-                      ,const std::vector<std::string> snap_filenames
-                      ,const std::vector<float> snap_redshifts
+                      ,const std::vector<std::string> &snap_filenames
+                      ,const std::vector<float> &snap_redshifts
                       ,double BoxLength
                       ,double particle_mass
                       ,bool verbose
@@ -1122,20 +1125,13 @@ namespace LightCones{
       rotationQs[i] = Quaternion::q_y_rotation(-sp.theta)*Quaternion::q_z_rotation(-sp.phi);
     }
     
+    //const int blocksize = 1000000;  ????
+    const int blocksize = 100000;
+    std::vector<Point_3d> points(blocksize);
     
     // loop through files
     for(int i_file=0 ; i_file < snap_filenames.size() ; ++i_file){
       
-      //open file
-      if(verbose) std::cout <<" Opening " << snap_filenames[i_file] << std::endl;
-      FILE *pFile = fopen(snap_filenames[i_file].c_str(),"r");
-      
-      //std::ifstream file(snap_filenames[i_file].c_str());
-      if(pFile == nullptr){
-        std::cout << "Can't open file " << snap_filenames[i_file] << std::endl;
-        ERROR_MESSAGE();
-        throw std::runtime_error(" Cannot open file.");
-      }
       
       // read header ??
       
@@ -1178,120 +1174,194 @@ namespace LightCones{
         }
       }
       
-      std::string myline;
-      Point_3d halo;
-      std::stringstream buffer;
-      std::string strg;
-      
-      /*{
-      /// fined length of file
-      file.seekg (0, file.end);
-      size_t length = file.tellg();
-      file.seekg (0, file.beg);
-      
-      getline(file,myline);
-      int linesize = myline.size();
-      int chuncksize = 100000;
-      strg.resize(linesize*chuncksize);
-      file.read(c,linesize*chuncksize);
-      }*/
-      
-      
-      // break up into chunks ???
-      
-      // loop lines / read
+      //open file
+      if(verbose) std::cout <<" Opening " << snap_filenames[i_file] << std::endl;
+      FILE *pFile = fopen(snap_filenames[i_file].c_str(),"r");
+      if(pFile == nullptr){
+        std::cout << "Can't open file " << snap_filenames[i_file] << std::endl;
+        ERROR_MESSAGE();
+        throw std::runtime_error(" Cannot open file.");
+      }
+      points.resize(blocksize);
       size_t Nlines = 0;
-      //while (getline(file,myline)) {
-      float tmpf;
-      while(fscanf(pFile,"%lf %lf %lf %e %e %e",&halo[0],&halo[1],&halo[2],&tmpf,&tmpf,&tmpf) != EOF){
-/*
-        { // pars line
-          int pos = myline.find_first_not_of(delim);
-          myline.erase(0,pos);
+      while(!feof(pFile)){  // loop through blocks
         
-          for(int l=0;l<ncolumns; l++){
-            pos = myline.find(delim);
-            strg.assign(myline,0,pos);
-            buffer << strg;
+        {  // read in a block of points
+          size_t i=0;
+          float tmpf;
+          while(i < blocksize &&
+                fscanf(pFile,"%lf %lf %lf %e %e %e",&points[i][0],&points[i][1],&points[i][2],&tmpf,&tmpf,&tmpf) != EOF)
+            ++i;
+          points.resize(i);
+        }
+        
+        if(points.size() > 0){  // multi-thread the sorting into cones and projection onto planes
+          int nthreads = Utilities::GetNThreads();
+          int chunk_size;
+          do{
+            chunk_size =  points.size()/nthreads;
+            if(chunk_size == 0) nthreads /= 2;
+          }while(chunk_size == 0);
+          if(nthreads == 0) nthreads = 1;
           
-            //std::cout << l << "  " << strg << std::endl;
-            buffer >> halo[l];
-            //std::cout << halo << std::endl;
+          int remainder =  points.size()%chunk_size;
           
-            myline.erase(0,pos+1);
-            pos = myline.find_first_not_of(delim);
-            myline.erase(0,pos);
-          
-            buffer.clear();
+          assert(nthreads*chunk_size + remainder == points.size() );
+
+          std::vector<std::thread> thr(nthreads);
+          for(int ii =0; ii< nthreads ; ++ii){
+            
+            //std::cout << ii*chunk_size << " " << n << std::endl;
+            
+            thr[ii] = std::thread(_fastplanes_parallel_
+                                  ,points.data() + ii*chunk_size
+                                  ,points.data() + (ii+1)*chunk_size + (ii==nthreads-1)*remainder
+                                  ,cosmo,std::ref(max_box),std::ref(min_box)
+                                  ,std::ref(observers),std::ref(rotationQs)
+                                  ,std::ref(dsources),std::ref(maps)
+                                  ,dmin,dmax,BoxLength);
           }
-          strg.clear();
-          buffer.str(std::string());
-        }*/
+          for(int ii = 0; ii < nthreads ;++ii){ if(thr[ii].joinable() ) thr[ii].join();}
+        }
         
-        // factors of hubble ????
-        
-        halo /= cosmo.gethubble();
-        
-        //std::cout << halo << std::endl;
-        
-        // loop cones
-        for(int icone=0;icone<Ncones;++icone){
+        /*
+        _fastplanes_parallel_(points.data(),points.data() + points.size()
+                       ,cosmo,max_box,min_box
+                       ,observers,rotationQs
+                       ,dsources,maps
+                       ,dmin,dmax,BoxLength);
+         */
+        /*
+        // loop lines / read
+        for(auto &halo : points){
           
-          // loop through repitions of box ??? this could be done better
-          Point_3d dn;
-          for(dn[0] = min_box[icone][0] ; dn[0] <= max_box[icone][0] ; ++dn[0]){
-            for(dn[1] = min_box[icone][1] ; dn[1] <= max_box[icone][1] ; ++dn[1]){
-              for(dn[2] = min_box[icone][2] ; dn[2] <= max_box[icone][2] ; ++dn[2]){
-                
-                Point_3d x = halo - observers[icone] + dn*BoxLength;
-                double r = x.length();
-                if( r > dmin && r < dmax ){
-                  // rotate to cone frame - direction[i] is the x-axis
-                  x = rotationQs[icone].Rotate(x);
-                  SphericalPoint sp(x);
+          halo /= cosmo.gethubble();
+          
+          //std::cout << halo << std::endl;
+          
+          // loop cones
+          for(int icone=0;icone<Ncones;++icone){
+            
+            // loop through repitions of box ??? this could be done better
+            Point_3d dn;
+            for(dn[0] = min_box[icone][0] ; dn[0] <= max_box[icone][0] ; ++dn[0]){
+              for(dn[1] = min_box[icone][1] ; dn[1] <= max_box[icone][1] ; ++dn[1]){
+                for(dn[2] = min_box[icone][2] ; dn[2] <= max_box[icone][2] ; ++dn[2]){
                   
-                  // find pixel
-                  long image_index = maps[icone][0].find_index(sp.theta,sp.phi);
-                  
-                  if(image_index != -1){
-                    for(int isource = 0 ; isource < Nmaps ; ++isource){
-                      if(dsources[isource] > sp.r  ){
-                        // add mass or distribute mass to pixels
-                        maps[icone][isource][image_index] += (dsources[isource] - sp.r)/sp.r;  /// this is assuming flat ???
+                  Point_3d x = halo - observers[icone] + dn*BoxLength;
+                  double r = x.length();
+                  if( r > dmin && r < dmax ){
+                    // rotate to cone frame - direction[i] is the x-axis
+                    x = rotationQs[icone].Rotate(x);
+                    SphericalPoint sp(x);
+                    
+                    // find pixel
+                    long image_index = maps[icone][0].find_index(sp.theta,sp.phi);
+                    
+                    if(image_index != -1){
+                      for(int isource = 0 ; isource < Nmaps ; ++isource){
+                        if(dsources[isource] > sp.r  ){
+                          // add mass or distribute mass to pixels
+                          maps[icone][isource][image_index] += (dsources[isource] - sp.r)/sp.r;  /// this is assuming flat ???
+                        }
                       }
                     }
                   }
-                }
-              }}}
+                }}}
+          }
+          
+          Nlines += blocksize;
+          if(Nlines%1000000 == 0) std::cout << "=" << std::flush ;
+          if(Nlines%10000000 == 0) std::cout << std::endl;
+          if(Nlines%100000000 == 0) std::cout << std::endl;
         }
+        */
         
-        ++Nlines;
+        Nlines += blocksize;
         if(Nlines%1000000 == 0) std::cout << "=" << std::flush ;
         if(Nlines%10000000 == 0) std::cout << std::endl;
         if(Nlines%100000000 == 0) std::cout << std::endl;
+        std::cout << std::endl;
       }
-      std::cout << std::endl;
-      //file.close();
       fclose(pFile);
     }
     
     
     size_t Npixels = maps[0][0].size();
-    for(int i=0;i<Nmaps;++i){
+    for(int isource=0;isource<Nmaps;++isource){
       // renormalize map
-      double norm = 4*pi*particle_mass*Grav/dsources[i]/angular_resolution/angular_resolution;
+      double norm = 4*pi*particle_mass*Grav/dsources[isource]/angular_resolution/angular_resolution;
       
       // calculate expected average kappa
-      DkappaDz dkappadz(cosmo,zsources[i]);
-      double avekappa = Utilities::nintegrate<DkappaDz,double>(dkappadz,0,zsources[i],1.0e-6);
+      DkappaDz dkappadz(cosmo,zsources[isource]);
+      double avekappa = Utilities::nintegrate<DkappaDz,double>(dkappadz,0,zsources[isource],1.0e-6);
       
-      for(auto &cone_maps: maps){
-        cone_maps[i] *= norm;
+      for(int icone=0 ; icone<Ncones ; ++icone){
+      //for(auto &cone_maps: maps){
+        maps[icone][isource] *= norm;
         // subtract average
         //double ave = cone_maps[i].ave();
-        for(size_t ii=0 ; ii<Npixels ; ++ii) cone_maps[i][ii] -= avekappa;
+        for(size_t ii=0 ; ii<Npixels ; ++ii)
+          maps[icone][isource][ii] -= avekappa;
       }
     }
   };
   
+  
+  void _fastplanes_parallel_(Point_3d *begin,Point_3d *end
+                 ,const COSMOLOGY &cosmo
+                 ,std::vector<Point_3d> &max_box
+                 ,std::vector<Point_3d> &min_box
+                 ,std::vector<Point_3d> &observers
+                 ,std::vector<Quaternion> &rotationQs
+                 ,std::vector<double> &dsources
+                 ,std::vector<std::vector<PixelMap> > &maps
+                 ,double dmin
+                 ,double dmax
+                 ,double BoxLength
+){
+    // loop lines / read
+    
+    int Ncones = maps.size();
+    int Nmaps = maps[0].size();
+    
+    for(Point_3d *phalo = begin ; phalo != end ; ++phalo){
+      
+      *phalo /= cosmo.gethubble();
+      
+      // loop cones
+      for(int icone=0;icone<Ncones;++icone){
+        
+        // loop through repitions of box ??? this could be done better
+        Point_3d dn;
+        for(dn[0] = min_box[icone][0] ; dn[0] <= max_box[icone][0] ; ++dn[0]){
+          for(dn[1] = min_box[icone][1] ; dn[1] <= max_box[icone][1] ; ++dn[1]){
+            for(dn[2] = min_box[icone][2] ; dn[2] <= max_box[icone][2] ; ++dn[2]){
+              
+              Point_3d x = *phalo - observers[icone] + dn*BoxLength;
+              double r = x.length();
+              if( r > dmin && r < dmax ){
+                // rotate to cone frame - direction[i] is the x-axis
+                x = rotationQs[icone].Rotate(x);
+                SphericalPoint sp(x);
+                
+                // find pixel
+                long image_index = maps[icone][0].find_index(sp.theta,sp.phi);
+                
+                if(image_index != -1){
+                  for(int isource = 0 ; isource < Nmaps ; ++isource){
+                    if(dsources[isource] > sp.r  ){
+                      std::lock_guard<std::mutex> lock(LightCones::clmoo);
+                      // add mass or distribute mass to pixels
+                      maps[icone][isource][image_index] += (dsources[isource] - sp.r)/sp.r;  /// this is assuming flat ???
+                    }
+                  }
+                }
+              }
+            }}}
+      }
+      
+    }
+    
+  }
 }

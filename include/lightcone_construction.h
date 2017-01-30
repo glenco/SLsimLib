@@ -16,6 +16,7 @@
 
 
 namespace LightCones{
+  
   struct DataRockStar{
     unsigned int id;
     Point_3d x;
@@ -212,8 +213,8 @@ namespace LightCones{
                       ,double angular_resolution
                       ,std::vector<Point_3d> &observers    /// position of observers within the simulation box
                       ,std::vector<Point_3d> &directions   /// direction of light cones
-                      ,const std::vector<std::string> snap_filenames
-                      ,const std::vector<float> snap_redshifts
+                      ,const std::vector<std::string> &snap_filenames
+                      ,const std::vector<float> &snap_redshifts
                       ,double BoxLength
                       ,double particle_mass
                       ,bool verbose = false
@@ -222,6 +223,21 @@ namespace LightCones{
 
   using Utilities::Geometry::Quaternion;
   using Utilities::Geometry::SphericalPoint;
+
+  void _fastplanes_parallel_(Point_3d *begin,Point_3d *end
+                 ,const COSMOLOGY &cosmo
+                 ,std::vector<Point_3d> &max_box
+                 ,std::vector<Point_3d> &min_box
+                 ,std::vector<Point_3d> &observers
+                 ,std::vector<Quaternion> &rotationQs
+                 ,std::vector<double> &dsources
+                 ,std::vector<std::vector<PixelMap> > &maps
+                 ,double dmin
+                 ,double dmax
+                 ,double BoxLength
+                 );
+
+  
   
   /** \brief class for generating positions in proportion to mass in an NFW profiles
    */
